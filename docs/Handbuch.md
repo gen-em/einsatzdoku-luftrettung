@@ -49,14 +49,15 @@ gedrückt halten** startest du hier die Geräte-Kopplung.
   1 Frei → 2 Alarmierung (= Einsatzbeginn) → 3 Abflug → 4 Ankunft Einsatzort →
   5 Ankunft PatientIn → 6 Transportbeginn → 7 Landung Krankenhaus →
   8 Übergabezeit → 9 Endzeit → 10 Beendigung (= Einsatzende, zurück zu 1).
-- **lang START** öffnet das **Schnellmenü**: eine Phase direkt anspringen
-  (erneutes Setzen erzeugt einen *zusätzlichen* Zeitstempel — nichts wird
+- **lang START** öffnet das **Schnellmenü** — vorausgewählt ist die
+  „Einsatzübersicht" (Liste aller Zeitstempel); ein Schritt nach oben liegt
+  „Einsatztag beenden", nach unten folgen die Phasen 2, 3, 4 … (endlos
+  scrollbar). Erneutes Setzen einer Phase erzeugt einen *zusätzlichen*
+  Zeitstempel — nichts wird überschrieben.
 
   Drückst du während des langen START-Drucks zusätzlich eine andere Taste,
   bleibt das Menü zu — die App erkennt daran die **Tastensperre** der Uhr. So
   kollidiert das Sperren nicht mehr mit dem Schnellmenü.
-  überschrieben), „Einsatzübersicht Zeiten" (Liste aller Zeitstempel) und
-  „Einsatztag beenden".
 - **BACK** fragt nach, bevor die App verlassen wird.
 
 
@@ -73,16 +74,19 @@ kurz; der Countdown bleibt rot auf 0:00 stehen, bis er neu gestartet wird.
 
 | Taste | Wirkung |
 |---|---|
-| kurz START | Reanimation **beginnen** / Countdown manuell neu starten |
+| kurz START | Reanimation **beginnen**; läuft sie schon: **Untermenü** öffnen |
 | lang UP | **Adrenalingabe** dokumentieren |
 | lang DOWN | **Rhythmuskontrolle** dokumentieren (setzt Countdown auf 2:00) |
-| lang START | Untermenü öffnen |
+| lang START | Countdown manuell auf 2:00 **neu starten** |
 | kurz UP/DOWN | Oberfläche wechseln (Timer laufen weiter) |
 | BACK | zurück zur Hauptanzeige (Timer laufen weiter) |
 
-**Untermenü** (farbcodiert, endlos scrollbar): Defibrillation, Intubation,
-Amiodaron, Sonographie, ROSC, Tod — je ein Zeitstempel; **Übersicht** zeigt
-alle Zeiten der laufenden Rea; **„Rea beenden"** (rot) schließt die
+**Untermenü** (farbcodiert, endlos scrollbar, Darstellung wie das Schnellmenü
+der Hauptseite): „Timer neu starten" setzt den Countdown auf 2:00;
+Rhythmuskontrolle und **Defibrillation** dokumentieren das Ereignis und
+starten den Countdown ebenfalls neu; Adrenalin, Amiodaron, Zugang, Intubation,
+Sonographie, ROSC und Tod setzen je einen Zeitstempel; **Übersicht** zeigt
+alle Zeiten der laufenden Rea; **„Rea BEENDEN"** (rot) schließt die
 Reanimation nach Sicherheitsabfrage. Danach startet **kurz START** eine
 *neue* Reanimation — mehrere pro Einsatz sind möglich, jede bekommt im Web
 ihre eigene Tabelle. Bei Einsatzende wird eine laufende Rea automatisch

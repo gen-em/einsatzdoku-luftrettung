@@ -10,6 +10,26 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.4.0] — 2026-07-25
+
+### Geändert — Schnellmenü umsortiert, Reanimations-Bedienung
+- **Schnellmenü der Hauptseite:** Beim Öffnen (lang START) ist jetzt die
+  **Einsatzübersicht** vorausgewählt; ein Schritt nach oben liegt „Einsatztag
+  beenden", nach unten folgen die Phasen 2, 3, 4 … Das Endlos-Scrollen durch
+  alle Punkte bleibt erhalten.
+- **Reanimation, kurz START:** löst bei laufender Rea kein Ereignis mehr aus,
+  sondern öffnet das Untermenü. Ohne laufende Rea beginnt kurz START weiterhin
+  die Reanimation.
+- **Reanimation, lang START:** startet den 2:00-Countdown neu (bisher öffnete
+  der lange Druck das Untermenü). Der Neustart steht zusätzlich als erster
+  Menüpunkt „Timer neu starten" bereit.
+- **Countdown-Neustart auch bei Defibrillation:** Wie die Rhythmuskontrolle
+  setzt jetzt auch die Defibrillation (Menüauswahl) den 2:00-Countdown neu an.
+- **Rea-Untermenü im Design des Schnellmenüs:** gleiche Zeilenhöhe und
+  Darstellung wie auf der Hauptseite (fünf sichtbare Zeilen, gefüllte
+  Auswahl); die Ereignisfarben bleiben erhalten, die Gruppen-Trennlinien
+  entfallen.
+
 ## [Web 2.2.3] — 2026-07-23
 
 ### Geändert — Favicon robuster eingebunden

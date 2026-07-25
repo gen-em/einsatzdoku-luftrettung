@@ -1,6 +1,6 @@
 # Projektübergabe — HEMS Einsatzdokumentation
 
-**Stand:** 23. Juli 2026 · **Web 2.2.3** · **Uhr 1.3.6**
+**Stand:** 25. Juli 2026 · **Web 2.2.3** · **Uhr 1.4.0**
 Dieses Dokument ist so geschrieben, dass jemand ohne Vorwissen nahtlos
 weiterarbeiten kann. Es beschreibt den Ist-Zustand, die Begründungen hinter den
 Entscheidungen und die Fallen, in die wir bereits getappt sind.
@@ -386,7 +386,7 @@ enthielten. `logo_src()` prüft jetzt den tatsächlichen Dateibestand.
 
 ## 8. Was funktioniert
 
-**Uhr (1.3.6):** Phasenerfassung, GPS-Aufzeichnung mit Ausdünnung,
+**Uhr (1.4.0):** Phasenerfassung, GPS-Aufzeichnung mit Ausdünnung,
 Reanimationsprotokoll, Übertragung mit Warteschlange, Kopplung per Einmalcode,
 Dienstende beendet die App sauber, Tastensperre löst kein Menü mehr aus
 (Vorbehalt: am Gerät noch nicht bestätigt), Store-taugliche Einstellungstexte.

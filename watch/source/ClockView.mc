@@ -294,10 +294,13 @@ class QuickMenuView extends WatchUi.View {
 
     function initialize() {
         View.initialize();
+        // Reihenfolge: Uebersicht ist beim Oeffnen vorausgewaehlt (index 0);
+        // ein Schritt nach OBEN landet per Umlauf auf "Einsatztag beenden",
+        // nach UNTEN folgen die Phasen 2, 3, 4 ... Endlos-Scrollen bleibt.
+        items.add(["Einsatzübersicht", 0xFFFF00, :overview]);          // gelb
         for (var p = 2; p <= 9; p++) {
             items.add([p.toString() + " " + Const.PHASE_LABELS[p], 0xFFFFFF, p]);
         }
-        items.add(["Einsatzübersicht", 0xFFFF00, :overview]);          // gelb
         if (Model.missionActive()) {
             items.add(["Einsatz abschließen", 0x00FF00, :finish]);     // gruen
         }

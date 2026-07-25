@@ -1,6 +1,7 @@
 // Einsatzdoku — Reanimationslogik, app-weit (laeuft beim Navigieren weiter).
 // Grosser Timer: 2:00-Countdown, vibriert bei 0:00 und BLEIBT stehen.
-// Neustart: Rhythmuskontrolle (lang DOWN) oder manuell kurz START.
+// Neustart: lang START oder Menuepunkt "Timer neu starten" — und automatisch
+// bei Rhythmuskontrolle (lang DOWN bzw. Menue) und Defibrillation (Menue).
 using Toybox.Timer;
 using Toybox.Lang;
 using Toybox.WatchUi;
@@ -24,7 +25,7 @@ module Cpr {
     var _vibeMore as Lang.Number = 0;          // Zyklusende-Vibration Teil 2
 
     function start() as Void {
-        if (active) { restartCycle(); return; }  // kurz START = manueller Neustart
+        if (active) { restartCycle(); return; }  // Sicherheitsnetz (regulaer oeffnet kurz START dann das Menue)
         active = true;
         startEpoch = Util.epochNow();
         Model.resusStart();                      // legt eine NEUE Sitzung an
@@ -124,6 +125,11 @@ module Cpr {
     function markRhythmus() as Void {
         Model.resusEvent(Const.R_RHYTHMUS);
         restartCycle();                        // fachliche Kopplung (Anf. 1.4)
+    }
+
+    function markDefi() as Void {
+        Model.resusEvent(Const.R_DEFI);
+        restartCycle();                        // Defi setzt den Zyklus neu an
     }
 
     function markEvent(type as Lang.String) as Void { Model.resusEvent(type); }
