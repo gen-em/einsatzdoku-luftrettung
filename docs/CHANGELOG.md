@@ -10,6 +10,15 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.3.3] — 2026-07-26
+
+### Neu — Einsatzort erkennt zusätzlich Grad/Minuten/Sekunden (DMS)
+- Nachtrag zu 2.3.2: Das Einsatzort-Feld erkennt jetzt auch das Format
+  **Grad/Minuten/Sekunden** (z. B. `47°39'11.6"N 10°21'34.3"E`), das im
+  ursprünglichen Konzept bewusst ausgeschlossen war, um den Umfang klein zu
+  halten. Umrechnung wie bei den übrigen Formaten vollständig lokal im
+  Browser, keine Server-Änderung.
+
 ## [Web 2.3.2] — 2026-07-26
 
 ### Neu — Einsatzort akzeptiert Koordinaten und Plus Codes

@@ -531,6 +531,7 @@ let locErkennung = { typ: null };
 const LOC_MELDUNGEN = {
   'plus': 'Plus Code erkannt — Pin erscheint auf der Karte.',
   'gdm': 'Koordinaten erkannt (Grad/Dezimalminuten) — Pin erscheint auf der Karte.',
+  'dms': 'Koordinaten erkannt (Grad/Minuten/Sekunden) — Pin erscheint auf der Karte.',
   'dezimal': 'Koordinaten erkannt (Dezimalgrad) — Pin erscheint auf der Karte.',
   'plus-kurz': 'Plus-Code-Kurzform erkannt — bitte Vollcode eingeben ' +
     '(in der Karten-App ohne Ortsangabe kopieren).',
@@ -557,7 +558,7 @@ locIn.addEventListener('input', () => {
   locErkennung = (typeof EdLoc !== 'undefined')
     ? EdLoc.erkenneEinsatzort(locIn.value) : { typ: null };
 
-  if (['dezimal', 'gdm', 'plus'].includes(locErkennung.typ)) {
+  if (['dezimal', 'gdm', 'dms', 'plus'].includes(locErkennung.typ)) {
     document.getElementById('loclat').value = locErkennung.lat;
     document.getElementById('loclon').value = locErkennung.lon;
     locIn.value = locErkennung.anzeige; // F3: normalisierte Darstellung

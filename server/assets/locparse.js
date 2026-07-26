@@ -6,8 +6,8 @@
  * alles Weitere faellt auf die bestehende Adresssuche zurueck.
  *
  * Reihenfolge der Pruefung (erste Uebereinstimmung gewinnt): Plus Code
- * (kollisionsfreier Zeichensatz) -> Grad/Dezimalminuten (enthaelt stets
- * Hemisphaeren-Buchstaben) -> Dezimalgrad -> sonst Adresse. Regex-Aufbau
+ * (kollisionsfreier Zeichensatz) -> Grad/Dezimalminuten (GDM) ->
+ * Grad/Minuten/Sekunden (DMS) -> Dezimalgrad -> sonst Adresse. Regex-Aufbau
  * bewusst defensiv: erst harte Ausschluesse, dann Match — eine faelschlich
  * als Koordinate erkannte Adresse waere der schlimmere Fehler, weil sie die
  * Adresssuche unterdrueckt.
@@ -16,7 +16,7 @@
  *   {typ: null}                                    kein Format erkannt (-> Adresssuche)
  *   {typ: 'ungueltig'}                              Format erkannt, Wert ausserhalb des gueltigen Bereichs
  *   {typ: 'plus-kurz'}                              Plus-Code-Kurzform (kein Vollcode)
- *   {typ:'plus'|'gdm'|'dezimal', lat, lon, anzeige} erfolgreich erkannt und umgerechnet
+ *   {typ:'plus'|'gdm'|'dms'|'dezimal', lat, lon, anzeige} erfolgreich erkannt und umgerechnet
  *
  * Benoetigt fuer den Plus-Code-Zweig die gevendorte Bibliothek
  * assets/openlocationcode.js (globales Objekt OpenLocationCode). Fehlt sie
@@ -150,6 +150,54 @@
   }
 
   // ---------------------------------------------------------------------
+  // Grad/Minuten/Sekunden (DMS) — Erweiterung ggue. der urspruenglichen
+  // Spezifikation (die DMS bewusst ausschloss, um den Umfang klein zu
+  // halten), auf Anwenderwunsch nachgeruestet. Gleicher Aufbau wie GDM:
+  // Praefix/Suffix-Hemisphaere als exklusive Alternativen, jeder Trenner
+  // (Grad->Minuten, Minuten->Sekunden) muss nicht-leer sein (Grad-/Minuten-
+  // Zeichen ODER mindestens ein Leerzeichen) — sonst waere z. B. eine reine
+  // Dezimalzahl wieder ueber einen Nullbreite-Trenner in Grad/Minuten/
+  // Sekunden zerlegbar (dieselbe Falle wie bei GDM).
+  const DMS_TRENNER_GM = GDM_TRENNER; // Grad -> Minuten: Gradzeichen oder Leerraum
+  const DMS_TRENNER_MS = '(?:\\s*[\'\\u2032]\\s*|\\s+)'; // Minuten -> Sekunden: Minutenzeichen oder Leerraum
+  const DMS_SEKUNDEN = '(\\d{1,2}(?:[.,]\\d+)?)\\s*[\"\\u2033]?'; // optionales Sekundenzeichen
+  const DMS_PRAEFIX = '([NSEOWnseow])\\s*(\\d{1,3})' + DMS_TRENNER_GM +
+    '(\\d{1,2})' + DMS_TRENNER_MS + DMS_SEKUNDEN;
+  const DMS_SUFFIX = '(\\d{1,3})' + DMS_TRENNER_GM + '(\\d{1,2})' + DMS_TRENNER_MS +
+    DMS_SEKUNDEN + '\\s*([NSEOWnseow])';
+  // 8 Gruppen je Komponente (4 je Alternative).
+  const DMS_KOMPONENTE = '(?:' + DMS_PRAEFIX + '|' + DMS_SUFFIX + ')';
+  const DMS_MUSTER = new RegExp(
+    '^' + DMS_KOMPONENTE + '\\s*[,;]?\\s*' + DMS_KOMPONENTE + '$', 'i'
+  );
+
+  function erkenneDms(s) {
+    const m = s.match(DMS_MUSTER);
+    if (!m) return null;
+    let [, hVorn1, grad1, min1, sek1, grad1s, min1s, sek1s, hHinten1,
+            hVorn2, grad2, min2, sek2, grad2s, min2s, sek2s, hHinten2] = m;
+    const hemi1 = (hVorn1 || hHinten1 || '').toUpperCase() || null;
+    const hemi2 = (hVorn2 || hHinten2 || '').toUpperCase() || null;
+    grad1 = grad1 || grad1s; min1 = min1 || min1s; sek1 = sek1 || sek1s;
+    grad2 = grad2 || grad2s; min2 = min2 || min2s; sek2 = sek2 || sek2s;
+    if (!hemi1 || !hemi2) return null; // Pflichtfeld fehlt -> kein DMS, koennte Adresse sein
+
+    const g1 = parseInt(grad1, 10);
+    const g2 = parseInt(grad2, 10);
+    const min1i = parseInt(min1, 10);
+    const min2i = parseInt(min2, 10);
+    const sek1f = parseFloat(sek1.replace(',', '.'));
+    const sek2f = parseFloat(sek2.replace(',', '.'));
+    if (min1i >= 60 || min2i >= 60 || sek1f >= 60 || sek2f >= 60) return { typ: 'ungueltig' };
+
+    const zahl1 = g1 + min1i / 60 + sek1f / 3600;
+    const zahl2 = g2 + min2i / 60 + sek2f / 3600;
+    const res = baueAusKomponenten(zahl1, hemi1, zahl2, hemi2);
+    if (res === 'ungueltig') return { typ: 'ungueltig' };
+    return { typ: 'dms', lat: res.lat, lon: res.lon, anzeige: anzeigeDezimal(res.lat, res.lon) };
+  }
+
+  // ---------------------------------------------------------------------
   // 4.2 Dezimalgrad
   // ---------------------------------------------------------------------
 
@@ -214,7 +262,7 @@
 
   /**
    * @param {string} eingabe Rohtext aus dem Einsatzort-Feld.
-   * @returns {{typ:'plus'|'plus-kurz'|'gdm'|'dezimal'|'ungueltig'|null,
+   * @returns {{typ:'plus'|'plus-kurz'|'gdm'|'dms'|'dezimal'|'ungueltig'|null,
    *            lat?:number, lon?:number, anzeige?:string}}
    */
   function erkenneEinsatzort(eingabe) {
@@ -226,6 +274,9 @@
 
     const gdm = erkenneGdm(s);
     if (gdm) return gdm;
+
+    const dms = erkenneDms(s);
+    if (dms) return dms;
 
     const dez = erkenneDezimalgrad(s);
     if (dez) return dez;
