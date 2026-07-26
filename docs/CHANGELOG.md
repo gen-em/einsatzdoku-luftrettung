@@ -10,6 +10,29 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.3.2] — 2026-07-26
+
+### Neu — Einsatzort akzeptiert Koordinaten und Plus Codes
+- Das Einsatzort-Feld erkennt beim Tippen automatisch drei zusätzliche
+  Formate und wandelt sie **vollständig lokal im Browser** in Koordinaten
+  um, ohne die bestehende Adresssuche (Photon) zu verändern:
+  **Dezimalgrad** (`47.7261, 10.3170`), **Grad/Dezimalminuten**
+  (`47°43.57'N 010°19.02'E`) und **Plus-Code-Vollcodes** (`8FWH4HJM+7Q`).
+  Wird eines der Formate erkannt, entfällt die Photon-Anfrage; die
+  Statuszeile meldet das erkannte Format, ungültige bzw. unvollständige
+  Werte werden als solche kenntlich gemacht.
+- Neue Datei `assets/locparse.js` (reine Formaterkennung/Parser, keine
+  DOM-/Netzwerk-Zugriffe) sowie die gevendorte Bibliothek
+  `assets/openlocationcode.js` (`google/open-location-code`,
+  Apache-2.0) für die Plus-Code-Dekodierung.
+- Bewusste Ausschlüsse: **kein What3Words** (proprietär, nur per externer
+  API dekodierbar — Datenschutz-Veto), **keine Plus-Code-Kurzformen**
+  (bräuchten Geocoding eines Referenzorts), **kein Reverse-Geocoding**
+  erkannter Koordinaten (kein Serverkontakt bei Koordinaten-/Plus-Code-
+  Eingabe), kein UTM/MGRS und keine Grad/Minuten/Sekunden-Formate.
+- Datenmodell (`pat_blob` → `loc: {addr, lat?, lon?}`) und die Konsumenten
+  `einsatz.php`, `index.php`, `zeitraum.php` bleiben unverändert.
+
 ## [Web 2.3.1] — 2026-07-26
 
 ### Geändert — Lesbare Fehlermeldungen statt leerem HTTP 500

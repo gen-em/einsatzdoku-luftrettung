@@ -111,6 +111,14 @@ Hüllen fehlen; dieselbe Seite entsperrt nach einem Passwort-Reset per
 Wiederherstellungsschlüssel. Passwort-Ändern re-wrappt clientseitig; eine
 Admin-Passwortvergabe existiert bewusst nicht.
 
+**Einsatzort-Feld (`einsatz_form.php`):** Erkennt beim Tippen zusätzlich zur
+Adresssuche (Photon) drei Koordinatenformate — Dezimalgrad, Grad/Dezimal-
+minuten und Plus-Code-Vollcodes — und wandelt sie clientseitig um, ohne
+dabei einen Netzwerk-Request auszulösen. Formaterkennung/Parser liegt in
+`assets/locparse.js` (reine Funktionen, keine DOM-/Fetch-Abhängigkeiten);
+die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
+`assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
+
 > **Historie:** Ältere Konten mit `kdf_ver = 0` (Passwort ging im Klartext zum
 > Server) wurden in Web 2.1.0 vollständig entfernt. Es gibt keinen
 > unverschlüsselten Anmeldeweg mehr; Browser ohne Web-Krypto erhalten eine

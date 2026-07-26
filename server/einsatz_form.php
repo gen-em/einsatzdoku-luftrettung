@@ -280,7 +280,7 @@ function fieldValue(string $col) {
       <div class="loc-widget">
         <label>Adresse Einsatzort
           <input type="text" id="locaddr" maxlength="255" autocomplete="off"
-                 placeholder="tippen für Vorschläge, z. B. Ringstr. 18, Enger">
+                 placeholder="tippen für Vorschläge — auch Koordinaten oder Plus Code">
         </label>
         <input type="hidden" id="loclat">
         <input type="hidden" id="loclon">
@@ -376,6 +376,8 @@ function fieldValue(string $col) {
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
+<script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+<script src="<?= asset('assets/locparse.js') ?>"></script>
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_encode($prefillRows) ?>;
@@ -523,7 +525,22 @@ function locLabel(p) {
   if (city) parts.push(city);
   return parts.join(', ');
 }
+// Zuletzt erkanntes Format (Koordinaten/Plus Code) — beeinflusst die
+// Statuszeile; {typ: null} bedeutet "kein Spezialformat, Bestandsverhalten".
+let locErkennung = { typ: null };
+const LOC_MELDUNGEN = {
+  'plus': 'Plus Code erkannt — Pin erscheint auf der Karte.',
+  'gdm': 'Koordinaten erkannt (Grad/Dezimalminuten) — Pin erscheint auf der Karte.',
+  'dezimal': 'Koordinaten erkannt (Dezimalgrad) — Pin erscheint auf der Karte.',
+  'plus-kurz': 'Plus-Code-Kurzform erkannt — bitte Vollcode eingeben ' +
+    '(in der Karten-App ohne Ortsangabe kopieren).',
+  'ungueltig': 'Koordinaten unvollständig oder außerhalb des gültigen Bereichs.',
+};
 function locSetState() {
+  if (locErkennung.typ && LOC_MELDUNGEN[locErkennung.typ]) {
+    locState.textContent = LOC_MELDUNGEN[locErkennung.typ];
+    return;
+  }
   locState.textContent = document.getElementById('loclat').value
     ? 'Koordinaten gespeichert — Pin erscheint auf der Karte.'
     : (locIn.value ? 'Nur Text (kein Vorschlag gewählt) — kein Karten-Pin.' : '');
@@ -532,8 +549,30 @@ locSetState();
 locIn.addEventListener('input', () => {
   document.getElementById('loclat').value = '';
   document.getElementById('loclon').value = '';
-  locSetState();
   clearTimeout(locTimer);
+
+  // F1/F5: Formaterkennung (Koordinaten, Plus Code) laeuft rein lokal und
+  // hat Vorrang vor der Photon-Anfrage — bei Treffer wird kein Netzwerk-
+  // Request ausgeloest (siehe assets/locparse.js fuer die Regeln).
+  locErkennung = (typeof EdLoc !== 'undefined')
+    ? EdLoc.erkenneEinsatzort(locIn.value) : { typ: null };
+
+  if (['dezimal', 'gdm', 'plus'].includes(locErkennung.typ)) {
+    document.getElementById('loclat').value = locErkennung.lat;
+    document.getElementById('loclon').value = locErkennung.lon;
+    locIn.value = locErkennung.anzeige; // F3: normalisierte Darstellung
+    locList.hidden = true;
+    locSetState();
+    return;
+  }
+  if (['plus-kurz', 'ungueltig'].includes(locErkennung.typ)) {
+    locList.hidden = true;
+    locSetState();
+    return;
+  }
+
+  // F2: kein Spezialformat erkannt -> unveraendertes Bestandsverhalten.
+  locSetState();
   const q = locIn.value.trim();
   if (q.length < 3) { locList.hidden = true; return; }
   locTimer = setTimeout(async () => {

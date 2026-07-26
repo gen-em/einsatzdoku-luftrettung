@@ -192,6 +192,21 @@ Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
 Koordinaten und setzt den Pin auf den Karten. Freitext ohne Vorschlag geht
 auch — dann ohne Pin.
 
+Alternativ zur Adresse erkennt das Feld auch drei Koordinatenformate direkt
+beim Tippen — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
+Anfrage an einen externen Server gestellt:
+- **Dezimalgrad**, z. B. `47.7261, 10.3170`
+- **Grad/Dezimalminuten**, z. B. `47°43.57'N 010°19.02'E`
+- **Plus Code** (Open Location Code), aber nur als **Vollcode**,
+  z. B. `8FWH4HJM+7Q` — Kurzformen (z. B. `4HJM+7Q Kempten`) werden
+  erkannt, aber nicht umgewandelt; das Feld weist dann darauf hin, den
+  Vollcode einzugeben (in der Karten-App ohne Ortsangabe kopieren).
+
+Wird eines dieser Formate erkannt, setzt die Statuszeile unter dem Feld
+den Pin direkt, ohne Adressvorschläge einzublenden. Werte außerhalb des
+gültigen Bereichs (z. B. eine Breite über 90°) werden als ungültig
+gemeldet.
+
 Dazu die weiteren Zusatzfelder: Einsatznummer, Transportziel, Beschreibung
 Einsatzort (nur in der Detailansicht), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
