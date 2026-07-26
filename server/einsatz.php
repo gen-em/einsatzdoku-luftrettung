@@ -47,7 +47,6 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
   <dl class="fieldlist" id="fieldlist" hidden></dl>
 
   <div id="map" class="map map-tall"></div>
-  <p><button id="phasetoggle" class="btn-danger" hidden>Phasen ausblenden</button></p>
 
   <section>
     <h2>Phasen</h2>
@@ -68,6 +67,8 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
+<script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
 
@@ -82,8 +83,8 @@ function zeigeLadeFehler(msg){
 }
 
 const map = L.map('map');
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+attachBaseLayers(map);
+attachFullscreenControl(map);
 
 // Tracklinien: Staerke waechst beim Rauszoomen, damit kurze Tracks auf der
 // Uebersicht sichtbar bleiben (smoothFactor 0: keine Wegvereinfachung).
@@ -111,11 +112,19 @@ map.on('zoomend', () => {
 });
 
 let phaseMarkers = [];        // [{marker, idx}]
-let phasesVisible = true;
+let phasesVisible = false;    // Standard: Aus, keine Persistenz -> nach jedem
+                               // Laden der Seite wieder aus
+let phaseToggleBtn = null;
 
 function buildPhaseMarkers(phases){
   // Kachel an der GPS-Position des Zeitstempels (nur wo die Uhr Fix hatte);
-  // gestapelte gleiche Positionen leicht nebeneinander versetzt.
+  // gestapelte gleiche Positionen leicht nebeneinander versetzt. Marker
+  // werden erzeugt, aber NICHT sofort der Karte hinzugefuegt -- erst der
+  // Toggle blendet sie ein. Die Hover-/Klick-Kopplung wird erst gebunden,
+  // wenn ein Marker tatsaechlich auf der Karte landet (das DOM-Element
+  // existiert vorher noch nicht); Leaflet feuert dafuer bei jedem
+  // addTo(map) ein eigenes 'add'-Ereignis, auch bei spaeterem Wieder-
+  // Einblenden.
   const groups = {};
   phases.forEach((p, idx) => {
     if (p.lat == null || p.lon == null) return;
@@ -130,20 +139,46 @@ function buildPhaseMarkers(phases){
         iconSize: [24, 24],
         iconAnchor: [12 - k * 20, 12]
       });
-      const mk = L.marker([e2.p.lat, e2.p.lon], { icon, keyboard: false }).addTo(map);
+      const mk = L.marker([e2.p.lat, e2.p.lon], { icon, keyboard: false });
+      mk.on('add', () => bindMarkerHover(mk, e2.idx));
+      if (phasesVisible) { mk.addTo(map); }
       phaseMarkers.push({ marker: mk, idx: e2.idx });
-      bindMarkerHover(mk, e2.idx);
     });
   });
-  const btn = document.getElementById('phasetoggle');
-  if (phaseMarkers.length) {
-    btn.hidden = false;
-    btn.addEventListener('click', () => {
-      phasesVisible = !phasesVisible;
-      phaseMarkers.forEach(e2 => phasesVisible ? e2.marker.addTo(map) : map.removeLayer(e2.marker));
-      btn.textContent = phasesVisible ? 'Phasen ausblenden' : 'Phasen anzeigen';
-    });
-  }
+  if (phaseMarkers.length) { attachPhaseToggleControl(); }
+}
+
+function attachPhaseToggleControl(){
+  const PhaseToggleControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const wrap = L.DomUtil.create('div', 'leaflet-bar map-ctrl-phase');
+      const btn = L.DomUtil.create('a', '', wrap);
+      btn.href = '#';
+      phaseToggleBtn = btn;
+      aktualisierePhaseToggleBtn();
+      L.DomEvent.disableClickPropagation(wrap);
+      L.DomEvent.on(btn, 'click', L.DomEvent.stop)
+        .on(btn, 'click', () => {
+          phasesVisible = !phasesVisible;
+          phaseMarkers.forEach(e2 =>
+            phasesVisible ? e2.marker.addTo(map) : map.removeLayer(e2.marker));
+          aktualisierePhaseToggleBtn();
+        });
+      return wrap;
+    }
+  });
+  // Position 'topleft' unterhalb des Vollbild-Controls (P1), das beim
+  // Karten-Aufbau bereits als erstes Control in dieser Ecke haengt --
+  // Leaflet stapelt mehrere Controls derselben Ecke in Einfuegereihenfolge.
+  map.addControl(new PhaseToggleControl());
+}
+
+function aktualisierePhaseToggleBtn(){
+  if (!phaseToggleBtn) { return; }
+  phaseToggleBtn.textContent = phasesVisible ? 'Phasen ausblenden' : 'Phasen anzeigen';
+  phaseToggleBtn.title = phaseToggleBtn.textContent;
+  phaseToggleBtn.classList.toggle('active', phasesVisible);
 }
 
 function bindMarkerHover(mk, idx){
@@ -231,8 +266,7 @@ async function init(){
     tr.addEventListener('click', () => hlPhase(idx, 'toggle'));
     pb.appendChild(tr);
   });
-  // Phasen-Marker vorerst deaktiviert (auf Wunsch; Code bleibt fuer spaeter)
-  // buildPhaseMarkers(m.phases);
+  buildPhaseMarkers(m.phases);
 
   // Reanimationen: eine Zeiten-Tabelle je Sitzung
   if (m.resus && m.resus.length) {

@@ -145,7 +145,11 @@ vorausgewählt. Pro Tag:
   mit Orange/Blau/Rot) und dem Ruhe-Track in Schwarz. Die Einsatzort-Pins
   tragen die Farbe des jeweiligen Einsatzes. Die Karte zoomt automatisch so,
   dass alle Tracks sichtbar sind; Tracklinien werden beim Rauszoomen etwas
-  dicker.
+  dicker. Oben links lässt sich die Karte per Klick auf **Vollbild**
+  stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
+  rechts zwischen **Standard-**, **Wander-** (mit Höhenlinien) und
+  **Topo-Kartenlayer** umschalten — diese beiden Controls stehen auf allen
+  drei Kartenseiten der Anwendung zur Verfügung.
 - **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
   der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
   Sekundärtransport, Kilometer. Alle Spalten sind zentriert und in
@@ -160,9 +164,13 @@ vorausgewählt. Pro Tag:
 Titel „Einsatz N · Uhrzeit" (N = Nummer des Tages nach Alarmierungszeit),
 darunter **Bearbeiten** und **Löschen**. Es folgt eine Karte mit dem Track
 (Start grün, Ende rot) und — sofern vorhanden — dem Einsatzort-Pin aus den
-lokal entschlüsselten Koordinaten. Auf dem Track sitzen **Phasen-Nummern** an
-den GPS-Positionen der Zeitstempel. Zeigt man auf eine Phasenzeile oder einen
-Kartenpunkt, leuchtet das Gegenstück orange auf (am Handy: antippen).
+lokal entschlüsselten Koordinaten. Auf dem Track sitzen an den
+GPS-Positionen der Zeitstempel **Phasen-Nummern**, die standardmäßig
+**ausgeblendet** sind — ein Control auf der Karte („Phasen anzeigen") blendet
+sie ein, sofern mindestens eine Phase über GPS-Koordinaten verfügt; der
+Zustand wird nicht gespeichert, nach einem Neuladen ist er wieder aus.
+Zeigt man auf eine Phasenzeile oder einen eingeblendeten Kartenpunkt,
+leuchtet das Gegenstück orange auf (am Handy: antippen).
 
 Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort** —
 erscheinen mit einem Schloss-Symbol 🔒 in der Feldliste und **nur hier**, nicht

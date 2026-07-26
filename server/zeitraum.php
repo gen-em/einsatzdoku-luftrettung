@@ -93,6 +93,8 @@ $titel = $monat !== ''
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
+<script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
 const JAHR  = <?= json_encode($jahr) ?>;
 const MONAT = <?= json_encode($monat) ?>;
@@ -102,8 +104,8 @@ const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei
 // mehreren hundert Einsaetzen.
 const map = L.map('rangemap', { preferCanvas: true });
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+attachBaseLayers(map);
+attachFullscreenControl(map);
 
 let missions = [];
 let sortKey = 'day', sortAsc = true;

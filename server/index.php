@@ -127,6 +127,8 @@ if ($selDay === null) {
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
+<script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
 const CSRF = '<?= e($_SESSION['csrf']) ?>';
 const SEL_DAY = <?= json_encode($selDay) ?>;
@@ -137,8 +139,8 @@ const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F
 let currentDay = null;
 
 const map = L.map('map');
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+attachBaseLayers(map);
+attachFullscreenControl(map);
 map.setView([48.5, 10.5], 7); // Fallback, bis Daten da sind
 
 let layerGroup = L.layerGroup().addTo(map);

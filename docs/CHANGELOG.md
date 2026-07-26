@@ -10,6 +10,33 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.5.0] — 2026-07-26
+
+### Neu — Vollbildmodus für alle Karten
+- Jede Karte (Tagesübersicht, Einsatzansicht, Zeitraum-Übersicht) hat jetzt
+  oben links ein Vollbild-Control. Nutzt primär die native Fullscreen-API des
+  Browsers; wo diese nicht auf beliebige Elemente anwendbar ist (u. a. iOS
+  Safari), greift automatisch ein CSS-Overlay-Fallback mit eigener
+  ESC-Behandlung. Als gemeinsame, wiederverwendbare Komponente umgesetzt
+  (`assets/map_fullscreen.js`), keine neue externe Abhängigkeit.
+
+### Neu — Umschaltbarer Kartenlayer mit topographischen Varianten
+- Alle Karten bieten jetzt oben rechts einen Layer-Umschalter (Leaflet-
+  Standardcontrol) zwischen dem bisherigen Standard-OSM-Layer und zwei
+  Varianten mit Höhenlinien: „Wanderkarte (OpenHikingMap)" und
+  „Topographisch (OpenTopoMap)". Beide sind reine Kachel-Layer ohne
+  Standort- oder Patientendatenübertragung, ebenso gemeinsam umgesetzt
+  (`assets/map_layers.js`).
+
+### Geändert — Phasenmarker in der Einsatzansicht: Standard „Aus"
+- Die zuvor deaktivierten Phasenmarker auf der Karte sind wieder aktiv,
+  starten aber bei jedem Seitenaufruf ausgeblendet (keine Persistenz). Der
+  Toggle („Phasen anzeigen"/„Phasen ausblenden") ist von unterhalb der Karte
+  auf die Karte selbst gewandert (eigenes Control, unterhalb des
+  Vollbild-Controls) und bleibt dadurch auch im Vollbildmodus bedienbar.
+  Hover-/Klick-Kopplung zur Phasentabelle unverändert; löst keinen Fehler
+  aus, wenn Marker gerade ausgeblendet sind.
+
 ## [Web 2.4.4] — 2026-07-26
 
 ### Geändert — Rollenspezifischer Cursor-Fokus bei Besatzung

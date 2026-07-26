@@ -51,7 +51,8 @@ hems/
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand
 │   ├── api/               day.php · mission.php · range.php · backup_data.php · backup_restore.php
-│   ├── assets/            style.css, crypto.js (WebCrypto), patient.js, daylist.js, confirm.js
+│   ├── assets/            style.css, crypto.js (WebCrypto), patient.js, daylist.js, confirm.js,
+│   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.)
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
@@ -125,6 +126,43 @@ Sonderfall im Formular. Formaterkennung/Parser liegt in
 `assets/locparse.js` (reine Funktionen, keine DOM-/Fetch-Abhängigkeiten);
 die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
 `assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
+
+**Karten-Controls (`assets/map_fullscreen.js`, `assets/map_layers.js`, ab Web
+2.5.0):** Beide Dateien exportieren je eine Funktion
+(`attachFullscreenControl(map)` / `attachBaseLayers(map)`) und kapseln ihren
+Zustand vollständig in Closures — keine globalen Variablen, damit mehrere
+Karten pro Seite (aktuell max. eine) nicht kollidieren würden. Alle drei
+Kartenseiten (`index.php`, `einsatz.php`, `zeitraum.php`) rufen dieselben
+zwei Funktionen auf, kein Duplikat-Code je Seite.
+
+`attachFullscreenControl` nutzt primär die native Fullscreen-API auf dem
+Karten-Container (inkl. `webkit`-Präfix); wo diese für beliebige Elemente
+nicht verfügbar ist (v. a. iOS Safari), greift ein CSS-Overlay-Fallback
+(Klasse `map-fs`, `position:fixed`, `z-index:2000` — höher als alle
+bestehenden UI-Ebenen) mit eigener ESC-Behandlung. In beiden Fällen folgt
+ein verzögerter `map.invalidateSize()`-Aufruf, sonst bleibt die
+Kacheldarstellung nach dem Umschalten unvollständig.
+
+`attachBaseLayers` ergänzt den bisherigen OSM-Standardlayer um zwei
+topographische Varianten mit Höhenlinien (OpenHikingMap über
+`tile.openmaps.fr`, OpenTopoMap über `tile.opentopomap.org`) und hängt
+Leaflets eingebautes `L.control.layers()` an — kein zusätzliches Plugin.
+Wie beim bisherigen OSM-Layer werden dabei ausschließlich Kartenkacheln
+anhand des sichtbaren Ausschnitts angefragt, keine Standort- oder
+Patientendaten (gleiches Datenschutzprinzip wie beim Verzicht auf
+What3Words in der Ortssuche). Beide zusätzlichen Anbieter sind
+spendenfinanzierte Community-Server ohne Verfügbarkeitsgarantie; die
+Attribution enthält deshalb die jeweils geforderten Hinweise (inkl.
+Spenden-Link bei OpenHikingMap, CC-BY-SA-Hinweis bei OpenTopoMap).
+
+Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
+(Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
+DOM-Button unter der Karte — dadurch im Vollbildmodus mitbedienbar. Marker
+werden beim Laden erzeugt, aber standardmäßig nicht der Karte hinzugefügt
+(`phasesVisible = false`, keine Persistenz); die Hover-/Klick-Kopplung zur
+Phasentabelle bindet sich über Leaflets `'add'`-Ereignis des Markers, da das
+zugehörige DOM-Element erst beim tatsächlichen Hinzufügen zur Karte
+entsteht.
 
 > **Historie:** Ältere Konten mit `kdf_ver = 0` (Passwort ging im Klartext zum
 > Server) wurden in Web 2.1.0 vollständig entfernt. Es gibt keinen

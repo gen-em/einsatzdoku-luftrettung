@@ -79,6 +79,29 @@ h2{font-family:var(--head);font-weight:600;font-size:1rem;letter-spacing:.08em;
 .map{height:380px;border:1px solid var(--line);border-radius:6px;margin-bottom:1rem}
 .map-tall{height:460px}
 
+/* Vollbildmodus: native Fullscreen-API rendert den Container bereits
+   randlos/flaechenfuellend -- hier nur Rand/Radius entfernen. Das
+   CSS-Overlay (Fallback ohne Fullscreen-API, z. B. iOS Safari) braucht die
+   volle Positionierung selbst. */
+.map:fullscreen,.map:-webkit-full-screen{border:0;border-radius:0;margin:0}
+.map.map-fs{position:fixed;inset:0;z-index:2000;width:100vw;
+  height:100vh;height:100dvh;border:0;border-radius:0;margin:0}
+body.map-fs-lock{overflow:hidden}
+
+/* Eigene Karten-Controls (Vollbild, Phasen-Toggle) in der Optik der
+   Leaflet-Standardcontrols (Zoom): weisser Hintergrund, dezenter Hover. */
+.map-ctrl-fs a{width:30px;height:30px;line-height:30px;display:flex;
+  align-items:center;justify-content:center;background:#fff;color:var(--ink);
+  text-decoration:none;cursor:pointer}
+.map-ctrl-fs a:hover{background:#f4f4f4}
+.map-ctrl-fs a.active{background:var(--accent-light);color:var(--accent-dark)}
+.map-ctrl-fs svg{width:16px;height:16px}
+.map-ctrl-phase a{display:block;padding:0 .6rem;height:30px;line-height:30px;
+  background:#fff;color:var(--rot);text-decoration:none;cursor:pointer;
+  font:600 .78rem/30px 'Open Sans',sans-serif;white-space:nowrap}
+.map-ctrl-phase a:hover{background:var(--rot-light)}
+.map-ctrl-phase a.active{background:var(--rot-light)}
+
 /* Statistik-Kacheln (Zeitraum-Uebersicht) */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1.2rem}
 .stat-tile{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
