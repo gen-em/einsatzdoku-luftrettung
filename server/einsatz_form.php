@@ -525,18 +525,25 @@ function locLabel(p) {
   if (city) parts.push(city);
   return parts.join(', ');
 }
-// Zuletzt erkanntes Format (Koordinaten/Plus Code) — beeinflusst die
-// Statuszeile; {typ: null} bedeutet "kein Spezialformat, Bestandsverhalten".
+// Zuletzt erkanntes Format (Koordinaten/Plus Code) — beeinflusst nur die
+// Meldungen fuer nicht uebernehmbare Zwischenzustaende (Kurzform, ungueltig);
+// {typ: null} bedeutet "kein Spezialformat bzw. noch nicht bestaetigt".
 let locErkennung = { typ: null };
 const LOC_MELDUNGEN = {
-  'plus': 'Plus Code erkannt — Pin erscheint auf der Karte.',
-  'gdm': 'Koordinaten erkannt (Grad/Dezimalminuten) — Pin erscheint auf der Karte.',
-  'dms': 'Koordinaten erkannt (Grad/Minuten/Sekunden) — Pin erscheint auf der Karte.',
-  'dezimal': 'Koordinaten erkannt (Dezimalgrad) — Pin erscheint auf der Karte.',
   'plus-kurz': 'Plus-Code-Kurzform erkannt — bitte Vollcode eingeben ' +
     '(in der Karten-App ohne Ortsangabe kopieren).',
   'ungueltig': 'Koordinaten unvollständig oder außerhalb des gültigen Bereichs.',
 };
+// Text des Vorschlags-Eintrags fuer ein erkanntes Koordinaten-/Plus-Code-Format.
+function locVorschlagText(erg) {
+  const bezeichnung = {
+    dezimal: 'Koordinaten übernehmen (Dezimalgrad)',
+    gdm: 'Koordinaten übernehmen (Grad/Dezimalminuten)',
+    dms: 'Koordinaten übernehmen (Grad/Minuten/Sekunden)',
+    plus: 'Plus Code übernehmen',
+  }[erg.typ];
+  return `${bezeichnung}: ${erg.anzeige}`;
+}
 function locSetState() {
   if (locErkennung.typ && LOC_MELDUNGEN[locErkennung.typ]) {
     locState.textContent = LOC_MELDUNGEN[locErkennung.typ];
@@ -554,15 +561,28 @@ locIn.addEventListener('input', () => {
 
   // F1/F5: Formaterkennung (Koordinaten, Plus Code) laeuft rein lokal und
   // hat Vorrang vor der Photon-Anfrage — bei Treffer wird kein Netzwerk-
-  // Request ausgeloest (siehe assets/locparse.js fuer die Regeln).
+  // Request ausgeloest (siehe assets/locparse.js fuer die Regeln). Ablauf ist
+  // dabei identisch zur Adresssuche: ein Eintrag in derselben Vorschlagsliste
+  // zur Bestaetigung, statt das Feld sofort umzuschreiben.
   locErkennung = (typeof EdLoc !== 'undefined')
     ? EdLoc.erkenneEinsatzort(locIn.value) : { typ: null };
 
   if (['dezimal', 'gdm', 'dms', 'plus'].includes(locErkennung.typ)) {
-    document.getElementById('loclat').value = locErkennung.lat;
-    document.getElementById('loclon').value = locErkennung.lon;
-    locIn.value = locErkennung.anzeige; // F3: normalisierte Darstellung
-    locList.hidden = true;
+    const erg = locErkennung;
+    locList.innerHTML = '';
+    const li = document.createElement('li');
+    li.textContent = locVorschlagText(erg);
+    li.addEventListener('mousedown', ev => {           // mousedown: vor blur
+      ev.preventDefault();
+      locIn.value = erg.anzeige;                        // F3: normalisierte Darstellung
+      document.getElementById('loclat').value = erg.lat;
+      document.getElementById('loclon').value = erg.lon;
+      locList.hidden = true;
+      locErkennung = { typ: null };
+      locSetState();
+    });
+    locList.appendChild(li);
+    locList.hidden = false;
     locSetState();
     return;
   }

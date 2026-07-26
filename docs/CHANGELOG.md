@@ -10,6 +10,22 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.3.4] — 2026-07-26
+
+### Geändert — Koordinaten/Plus Code jetzt als Vorschlag statt Direktumschreiben
+- Erkannte Koordinaten (Dezimalgrad, GDM, DMS) und Plus-Code-Vollcodes
+  schreiben das Einsatzort-Feld nicht mehr sofort um, sondern erscheinen —
+  wie ein Adresstreffer — als anklickbarer Eintrag in derselben Vorschlags-
+  liste (z. B. „Koordinaten übernehmen (Dezimalgrad): 47.72610, 10.31700"
+  bzw. „Plus Code übernehmen: 8FWH4HJM+7Q"). Erst mit der Auswahl werden
+  `lat`/`lon` gesetzt und das Feld auf die normalisierte Darstellung
+  aktualisiert. Ablauf dadurch für Adresse, Koordinate und Plus Code
+  identisch. Kurzform- und Bereichsfehler-Hinweise bleiben als reine
+  Statuszeilen-Meldung bestehen (kein Vorschlag, da nichts zu übernehmen).
+- Keine Netzwerk-Anfrage weiterhin für alle vier Fälle (Koordinate, DMS,
+  Plus Code, Kurzform/ungültig) — nur bei Adresstext wird wie bisher Photon
+  angefragt.
+
 ## [Web 2.3.3] — 2026-07-26
 
 ### Neu — Einsatzort erkennt zusätzlich Grad/Minuten/Sekunden (DMS)

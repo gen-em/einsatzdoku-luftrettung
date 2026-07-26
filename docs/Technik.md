@@ -112,9 +112,13 @@ Wiederherstellungsschlüssel. Passwort-Ändern re-wrappt clientseitig; eine
 Admin-Passwortvergabe existiert bewusst nicht.
 
 **Einsatzort-Feld (`einsatz_form.php`):** Erkennt beim Tippen zusätzlich zur
-Adresssuche (Photon) drei Koordinatenformate — Dezimalgrad, Grad/Dezimal-
-minuten und Plus-Code-Vollcodes — und wandelt sie clientseitig um, ohne
-dabei einen Netzwerk-Request auszulösen. Formaterkennung/Parser liegt in
+Adresssuche (Photon) vier Koordinatenformate — Dezimalgrad, Grad/Dezimal-
+minuten, Grad/Minuten/Sekunden und Plus-Code-Vollcodes — und wandelt sie
+clientseitig um, ohne dabei einen Netzwerk-Request auszulösen. Ein Treffer
+erscheint als Eintrag in derselben Vorschlagsliste wie ein Adresstreffer
+(`#locsuggest`); erst die Auswahl setzt `lat`/`lon` und normalisiert den
+Feldtext — derselbe Ablauf wie bei Photon-Adressvorschlägen, kein
+Sonderfall im Formular. Formaterkennung/Parser liegt in
 `assets/locparse.js` (reine Funktionen, keine DOM-/Fetch-Abhängigkeiten);
 die Plus-Code-Dekodierung nutzt die gevendorte Bibliothek
 `assets/openlocationcode.js` (`google/open-location-code`, Apache-2.0).
