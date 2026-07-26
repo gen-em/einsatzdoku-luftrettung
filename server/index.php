@@ -6,14 +6,19 @@ require_once __DIR__ . '/auth_guard.php';
 
 // Gewaehlter Tag: ?day=YYYY-MM-DD, sonst der neueste
 // Stammdaten fuer die Flugtag-Dropdowns
-$SD_BASES = db()->prepare('SELECT id, name, is_default FROM bases WHERE user_id = ? ORDER BY name');
+$SD_BASES = db()->prepare('SELECT id, name FROM bases WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
 $SD_BASES->execute([$userId]); $SD_BASES = $SD_BASES->fetchAll();
-$SD_AC = db()->prepare('SELECT id, registration, p1, p2, hems, fr, other, is_default FROM aircraft
-                        WHERE user_id = ? ORDER BY registration');
+$SD_AC = db()->prepare('SELECT id, registration, p1, p2, hems, fr, other FROM aircraft
+                        WHERE (user_id = ? OR user_id IS NULL) ORDER BY registration');
 $SD_AC->execute([$userId]); $SD_AC = $SD_AC->fetchAll();
 $DEF_AC = 0; $DEF_BASE = 0;
-foreach ($SD_AC as $a) { if ((int)($a['is_default'] ?? 0)) { $DEF_AC = (int)$a['id']; } }
-$SD_CREW = db()->prepare('SELECT role, name FROM crew_presets WHERE user_id = ? ORDER BY name');
+$defs = db()->prepare('SELECT kind, item_id FROM user_defaults WHERE user_id = ?');
+$defs->execute([$userId]);
+foreach ($defs->fetchAll() as $d) {
+    if ($d['kind'] === 'base') { $DEF_BASE = (int)$d['item_id']; }
+    if ($d['kind'] === 'aircraft') { $DEF_AC = (int)$d['item_id']; }
+}
+$SD_CREW = db()->prepare('SELECT role, name FROM crew_presets WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
 $SD_CREW->execute([$userId]);
 $SD_PRESETS = ['p1' => [], 'p2' => [], 'hems' => [], 'fr' => [], 'other' => []];
 foreach ($SD_CREW->fetchAll() as $c) { $SD_PRESETS[$c['role']][] = $c['name']; }
@@ -127,7 +132,7 @@ const CSRF = '<?= e($_SESSION['csrf']) ?>';
 const SEL_DAY = <?= json_encode($selDay) ?>;
 const DEF_AC = <?= (int)$DEF_AC ?>;
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-const DEF_BASE = <?php $d = 0; foreach ($SD_BASES as $b) { if ((int)($b['is_default'] ?? 0)) $d = (int)$b['id']; } echo $d; ?>;
+const DEF_BASE = <?= (int)$DEF_BASE ?>;
 const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
 let currentDay = null;
 

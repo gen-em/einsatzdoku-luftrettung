@@ -20,6 +20,10 @@ declare(strict_types=1);
  *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓)
  *   'day_label' => 'Winde'          Spaltentitel (sonst 'label')
  *   'placeholder'
+ *   'suggest_src'                   nur bei 'text': Name einer Stammdaten-
+ *                                   Tabelle (aktuell 'transport_dests'),
+ *                                   deren Eintraege als <datalist>-Vorschlaege
+ *                                   angeboten werden; Freitext bleibt moeglich
  *
  * Der Einsatzort (Adresse + Koordinaten, Photon-Autocomplete) ist bewusst
  * KEIN Eintrag hier — er liegt Ende-zu-Ende-verschlüsselt im pat_blob.
@@ -32,6 +36,7 @@ return [
     'transport_dest' => [
         'label' => 'Transportziel', 'type' => 'text', 'max' => 190,
         'placeholder' => 'z. B. Klinikum Kempten',
+        'suggest_src' => 'transport_dests',
         'children' => [
             'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
         ],

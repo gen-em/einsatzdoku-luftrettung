@@ -73,19 +73,33 @@ function edbak_build(int $userId): string {
         $days[] = $d;
     }
 
+    // Standard-Markierungen liegen seit user_defaults nicht mehr an der Zeile
+    // selbst, werden im Exportformat aber weiterhin als is_default-Flag je
+    // Zeile abgebildet (Abwaertskompatibilitaet, s. docs/Backup-Format.md)
+    $defBaseId = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "base"', [$userId])[0]['item_id'] ?? 0);
+    $defAcId   = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "aircraft"', [$userId])[0]['item_id'] ?? 0);
+
+    $bases = $q('SELECT id, name FROM bases WHERE user_id = ? ORDER BY name', [$userId]);
+    foreach ($bases as &$b) { $b['is_default'] = (int)$b['id'] === $defBaseId ? 1 : 0; unset($b['id']); }
+    unset($b);
+    $aircraft = $q('SELECT id, registration, p1, p2, hems, fr, other
+                    FROM aircraft WHERE user_id = ? ORDER BY registration', [$userId]);
+    foreach ($aircraft as &$a) { $a['is_default'] = (int)$a['id'] === $defAcId ? 1 : 0; unset($a['id']); }
+    unset($a);
+
     $data = [
         'format' => 'einsatzdoku-backup',
-        'version' => 2,
+        'version' => 3,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-luftrettung',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
         'stammdaten' => [
-            'bases'        => $q('SELECT name, is_default FROM bases WHERE user_id = ? ORDER BY name', [$userId]),
-            'aircraft'     => $q('SELECT registration, p1, p2, hems, fr, other, is_default
-                                  FROM aircraft WHERE user_id = ? ORDER BY registration', [$userId]),
-            'crew_presets' => $q('SELECT role, name FROM crew_presets WHERE user_id = ? ORDER BY role, name', [$userId]),
-            'bw_units'     => $q('SELECT name FROM bw_units WHERE user_id = ? ORDER BY name', [$userId]),
-            'resources'    => $q('SELECT name FROM resources WHERE user_id = ? ORDER BY name', [$userId]),
+            'bases'           => $bases,
+            'aircraft'        => $aircraft,
+            'crew_presets'    => $q('SELECT role, name FROM crew_presets WHERE user_id = ? ORDER BY role, name', [$userId]),
+            'bw_units'        => $q('SELECT name FROM bw_units WHERE user_id = ? ORDER BY name', [$userId]),
+            'resources'       => $q('SELECT name FROM resources WHERE user_id = ? ORDER BY name', [$userId]),
+            'transport_dests' => $q('SELECT name FROM transport_dests WHERE user_id = ? ORDER BY name', [$userId]),
         ],
         'days' => $days,
         'missions' => $missions,
@@ -100,37 +114,79 @@ function edbak_build(int $userId): string {
 function edbak_restore(int $userId, array $data): array {
     $pdo = db();
     $stats = ['missions' => 0, 'missions_skipped' => 0, 'rests' => 0, 'rests_skipped' => 0,
-              'days' => 0, 'stammdaten' => 0, 'pat_module' => 'unverändert'];
+              'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0, 'pat_module' => 'unverändert'];
 
     $pdo->beginTransaction();
     try {
-        /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel) */
+        /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel; zentral
+         * vorhandene Eintraege werden uebersprungen und gezaehlt, s. 6.3/8) */
         $sd = $data['stammdaten'] ?? [];
-        $hasDefBase = (bool)$pdo->query("SELECT COUNT(*) FROM bases WHERE user_id = $userId AND is_default = 1")->fetchColumn();
+        $hasDefBase = (bool)$pdo->query("SELECT COUNT(*) FROM user_defaults WHERE user_id = $userId AND kind = 'base'")->fetchColumn();
+        $newDefBaseName = null;
         foreach (($sd['bases'] ?? []) as $b) {
-            $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name, is_default) VALUES (?,?,?)');
-            $st->execute([$userId, (string)$b['name'], $hasDefBase ? 0 : (int)($b['is_default'] ?? 0)]);
+            $name = (string)$b['name'];
+            if (stammdaten_dup_global('bases', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name) VALUES (?,?)');
+            $st->execute([$userId, $name]);
             $stats['stammdaten'] += $st->rowCount();
+            if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
-        $hasDefAc = (bool)$pdo->query("SELECT COUNT(*) FROM aircraft WHERE user_id = $userId AND is_default = 1")->fetchColumn();
+        $hasDefAc = (bool)$pdo->query("SELECT COUNT(*) FROM user_defaults WHERE user_id = $userId AND kind = 'aircraft'")->fetchColumn();
+        $newDefAcReg = null;
         foreach (($sd['aircraft'] ?? []) as $a) {
+            $reg = (string)$a['registration'];
+            if (stammdaten_dup_global('aircraft', 'registration', $reg)) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO aircraft
-                (user_id, registration, p1, p2, hems, fr, other, is_default) VALUES (?,?,?,?,?,?,?,?)');
-            $st->execute([$userId, (string)$a['registration'],
+                (user_id, registration, p1, p2, hems, fr, other) VALUES (?,?,?,?,?,?,?)');
+            $st->execute([$userId, $reg,
                 (int)($a['p1'] ?? 0), (int)($a['p2'] ?? 0), (int)($a['hems'] ?? 0),
-                (int)($a['fr'] ?? 0), (int)($a['other'] ?? 0),
-                $hasDefAc ? 0 : (int)($a['is_default'] ?? 0)]);
+                (int)($a['fr'] ?? 0), (int)($a['other'] ?? 0)]);
             $stats['stammdaten'] += $st->rowCount();
+            if (!$hasDefAc && (int)($a['is_default'] ?? 0)) { $newDefAcReg = $reg; }
+        }
+        // is_default-Flags aus dem Backup in user_defaults schreiben (nur wenn
+        // noch kein Default des Typs existiert — bestehende Semantik $hasDefBase/$hasDefAc)
+        if ($newDefBaseName !== null) {
+            $x = $pdo->prepare('SELECT id FROM bases WHERE user_id = ? AND name = ?');
+            $x->execute([$userId, $newDefBaseName]);
+            if ($bid = $x->fetchColumn()) {
+                $pdo->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"base",?)
+                               ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $bid]);
+            }
+        }
+        if ($newDefAcReg !== null) {
+            $x = $pdo->prepare('SELECT id FROM aircraft WHERE user_id = ? AND registration = ?');
+            $x->execute([$userId, $newDefAcReg]);
+            if ($aid = $x->fetchColumn()) {
+                $pdo->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"aircraft",?)
+                               ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $aid]);
+            }
         }
         foreach (($sd['crew_presets'] ?? []) as $c) {
             if (!in_array($c['role'] ?? '', ['p1','p2','hems','fr','other'], true)) { continue; }
+            if (stammdaten_dup_global('crew_presets', 'name', (string)$c['name'], 'role', $c['role'])) {
+                $stats['stammdaten_skipped']++; continue;
+            }
             $st = $pdo->prepare('INSERT IGNORE INTO crew_presets (user_id, role, name) VALUES (?,?,?)');
             $st->execute([$userId, $c['role'], (string)$c['name']]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['bw_units'] ?? []) as $w) {
+            if (stammdaten_dup_global('bw_units', 'name', (string)$w['name'])) { $stats['stammdaten_skipped']++; continue; }
             $st = $pdo->prepare('INSERT IGNORE INTO bw_units (user_id, name) VALUES (?,?)');
             $st->execute([$userId, (string)$w['name']]);
+            $stats['stammdaten'] += $st->rowCount();
+        }
+        foreach (($sd['resources'] ?? []) as $r) {
+            if (stammdaten_dup_global('resources', 'name', (string)$r['name'])) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO resources (user_id, name) VALUES (?,?)');
+            $st->execute([$userId, (string)$r['name']]);
+            $stats['stammdaten'] += $st->rowCount();
+        }
+        foreach (($sd['transport_dests'] ?? []) as $t) {
+            if (stammdaten_dup_global('transport_dests', 'name', (string)$t['name'])) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO transport_dests (user_id, name) VALUES (?,?)');
+            $st->execute([$userId, (string)$t['name']]);
             $stats['stammdaten'] += $st->rowCount();
         }
 

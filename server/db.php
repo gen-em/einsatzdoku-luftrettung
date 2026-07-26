@@ -19,6 +19,42 @@ function db(): PDO {
 }
 
 /**
+ * Zentrale Stammdaten (Konzept: Zentrale Stammdaten & Transportziele):
+ * user_id IS NULL kennzeichnet globale (Admin-)Eintraege. Die UNIQUE-Keys
+ * (user_id, name) greifen bei NULL nicht (MySQL erlaubt mehrere NULLs),
+ * daher muss die Duplikatpruefung in der Anwendung erfolgen.
+ */
+
+/** True, wenn bereits ein GLOBALER Eintrag mit gleichem (Vergleichs-)Namen
+ *  existiert (case-insensitiv, optional zusaetzliches Gleichheitskriterium
+ *  wie role/registration). $excludeId blendet den eigenen Datensatz beim
+ *  Umbenennen aus. */
+function stammdaten_dup_global(string $table, string $col, string $val,
+                                ?string $extraCol = null, ?string $extraVal = null,
+                                int $excludeId = 0): bool {
+    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NULL AND LOWER($col) = LOWER(?)";
+    $params = [$val];
+    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
+    if ($excludeId > 0) { $sql .= " AND id != ?"; $params[] = $excludeId; }
+    $st = db()->prepare($sql);
+    $st->execute($params);
+    return (bool)$st->fetchColumn();
+}
+
+/** Anzahl PERSOENLICHER Eintraege (aller NutzerInnen) mit gleichem
+ *  (Vergleichs-)Namen wie der uebergebene — fuer die Duplikat-Warnung
+ *  (Nutzer-Ansicht) bzw. den Admin-Hinweis "N Nutzer haben ...". */
+function stammdaten_dup_personal_count(string $table, string $col, string $val,
+                                        ?string $extraCol = null, ?string $extraVal = null): int {
+    $sql = "SELECT COUNT(*) FROM $table WHERE user_id IS NOT NULL AND LOWER($col) = LOWER(?)";
+    $params = [$val];
+    if ($extraCol !== null) { $sql .= " AND $extraCol = ?"; $params[] = $extraVal; }
+    $st = db()->prepare($sql);
+    $st->execute($params);
+    return (int)$st->fetchColumn();
+}
+
+/**
  * Adresse einer statischen Datei mit angehaengter Version.
  * Nach einem Update aendert sich dadurch die Adresse, und der Browser laedt
  * Stylesheet bzw. Skript neu — ohne dass jemand den Zwischenspeicher leeren muss.

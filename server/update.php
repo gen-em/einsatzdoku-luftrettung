@@ -417,6 +417,42 @@ $MIGRATIONS = [
             }
         },
     ],
+    [
+        'id'    => '2026_07_26_zentrale_stammdaten',
+        'label' => 'Zentrale (globale) Stammdaten durch Admin, Transportziele als Stammdaten, '
+                 . 'nutzerbezogene Standard-Vorbelegung (user_defaults)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'transport_dests'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            "ALTER TABLE bases MODIFY user_id INT UNSIGNED NULL",
+            "ALTER TABLE aircraft MODIFY user_id INT UNSIGNED NULL",
+            "ALTER TABLE crew_presets MODIFY user_id INT UNSIGNED NULL",
+            "ALTER TABLE resources MODIFY user_id INT UNSIGNED NULL",
+            "ALTER TABLE bw_units MODIFY user_id INT UNSIGNED NULL",
+            "CREATE TABLE transport_dests (
+               id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               user_id INT UNSIGNED NULL,
+               name VARCHAR(190) NOT NULL,
+               UNIQUE KEY uq_user_name (user_id, name),
+               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "CREATE TABLE user_defaults (
+               id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               user_id INT UNSIGNED NOT NULL,
+               kind ENUM('base','aircraft') NOT NULL,
+               item_id INT UNSIGNED NOT NULL,
+               UNIQUE KEY uq_user_kind (user_id, kind),
+               FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            "INSERT INTO user_defaults (user_id, kind, item_id)
+               SELECT user_id, 'base', id FROM bases WHERE is_default = 1 AND user_id IS NOT NULL",
+            "INSERT INTO user_defaults (user_id, kind, item_id)
+               SELECT user_id, 'aircraft', id FROM aircraft WHERE is_default = 1 AND user_id IS NOT NULL",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

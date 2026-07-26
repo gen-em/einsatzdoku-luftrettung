@@ -42,6 +42,7 @@ hems/
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── admin.php + admin_user.php  Nutzerverwaltung · geraete.php (Weiterleitung)
+│   ├── admin_stammdaten.php  Zentrale (globale) Stammdaten aller sechs Typen
 │   ├── flugtag_neu.php    Flugtag von Hand anlegen
 │   ├── einsatz_loeschen.php · flugtag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
@@ -73,10 +74,12 @@ hems/
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen |
-| `bases` / `aircraft` / `crew_presets` | Stammdaten je NutzerIn: Standorte, Maschinen (mit Rollen-Häkchen), Besatzungsnamen je Rolle |
-| `resources` | Vorbelegung „Andere Rettungsmittel" je NutzerIn |
+| `bases` / `aircraft` / `crew_presets` | Stammdaten: Standorte, Maschinen (mit Rollen-Häkchen), Besatzungsnamen je Rolle; `user_id` NULL = **zentral** (vom Admin gepflegt, für alle NutzerInnen), sonst persönlich |
+| `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral, sonst persönlich |
 | `mission_resources` | Rettungsmittel-Zuordnung je Einsatz (eigene Zeilen, einzeln entfernbar) |
-| `bw_units` | Bergwacht-Bereitschaften je NutzerIn |
+| `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral, sonst persönlich |
+| `transport_dests` | Vorbelegung „Transportziel" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK); `user_id` NULL = zentral, sonst persönlich |
+| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Flugtage (`kind` in `base`/`aircraft`, `item_id` verweist auf `bases.id` bzw. `aircraft.id`, persönlich oder zentral); ersetzt die Alt-Spalten `bases.is_default`/`aircraft.is_default` (bleiben nur wegen Alt-Backup-Import im Schema) |
 | `days` | Flugtag-Metadaten; **Verknüpfung über natürlichen Schlüssel `(user_id, day)`**, entsteht lazy beim ersten Speichern |
 | `pair_codes` | Kopplungscodes für die Uhr (5 Zeichen, 60 min, einmalig; Aufräumjob) |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr |

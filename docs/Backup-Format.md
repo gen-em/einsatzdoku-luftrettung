@@ -40,7 +40,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 2,
+  "version": 3,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "app": "einsatzdoku-luftrettung",
   "user": { "email": "...", "name": "..." },   // informativ
@@ -50,7 +50,9 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "aircraft":     [ { "registration": "Christoph 17", "p1": 1, "p2": 0,
                         "hems": 1, "fr": 0, "other": 0, "is_default": 1 } ],
     "crew_presets": [ { "role": "p1|p2|hems|fr|other", "name": "…" } ],
-    "bw_units":     [ { "name": "Bereitschaft Oberstdorf" } ]
+    "bw_units":     [ { "name": "Bereitschaft Oberstdorf" } ],
+    "resources":    [ { "name": "RTW Kempten 21/83" } ],
+    "transport_dests": [ { "name": "Klinikum Kempten" } ]   // seit Version 3
   },
 
   // Flugtage; Maschinen-/Standort-Verweise sind als NAMEN aufgelöst
@@ -107,6 +109,13 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 - `day` ist das **lokale** Kalenderdatum des Beginns (Tageswechsel 0:00).
 - Zusatzfelder der Einsätze folgen `server/mission_fields.php`; künftige
   Versionen können Felder ergänzen (Import ignoriert Unbekanntes).
+- `is_default` bei `bases`/`aircraft`: intern seit Version 3 in einer
+  nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
+  weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
+- **Zentrale (globale) Stammdaten** (vom Admin gepflegt, seit Version 3)
+  gehören nicht dem Konto und werden **nicht** exportiert. Beim Import werden
+  Einträge, die zentral bereits (case-insensitiv) vorhanden sind, still
+  übersprungen und in der Ergebnismeldung gezählt.
 
 ## 3. Import-Verhalten
 

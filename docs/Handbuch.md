@@ -341,7 +341,8 @@ weiteren Dialoge dieser Seite anzeigen" ankreuzen — danach würden Löschungen
 kommentarlos durchlaufen. Seiteneigene Fenster kann der Browser nicht
 abschalten.
 
-Stammdaten (Standorte, Maschinen, Besatzung, Rettungsmittel, Bergwacht) und
+Stammdaten (Standorte, Maschinen, Besatzung, Rettungsmittel, Bergwacht,
+Transportziele) und
 Geräte werden direkt nach einer kurzen Rückfrage gelöscht — sie sind schnell
 wieder angelegt. **Bereits dokumentierte Flugtage bleiben davon unberührt:**
 Besatzungsnamen und Bergwacht-Angaben stehen ohnehin als Text im Flugtag, und
@@ -354,7 +355,7 @@ zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 ## 8. Stammdaten (Standortdaten)
 
 Unter **⚙ Einstellungen → „Standortdaten"** pflegst du deine Vorbelegungen. Die
-fünf Bereiche sind aufklappbare Abschnitte und starten zugeklappt.
+sechs Bereiche sind aufklappbare Abschnitte und starten zugeklappt.
 
 ### 8.1 Standorte, Hubschrauber, Besatzung, Bergwacht
 
@@ -363,7 +364,7 @@ Namenslisten je Rolle und Bergwacht-Bereitschaften. Am Flugtag wählst du
 Maschine und Standort dann per Dropdown; die beim Hubschrauber angehakten
 Rollen erscheinen als Besatzungs-Dropdowns mit deinen Vorbelegungen. Mit
 „Als Standard" (★) markierte Maschine und Standort werden bei neuen Flugtagen
-vorbelegt.
+vorbelegt — das gilt auch für vom Admin zentral hinterlegte Einträge (s. 8.4).
 
 ### 8.2 Andere Rettungsmittel
 
@@ -378,6 +379,26 @@ Einsatz.
 Löschst du später ein Rettungsmittel aus der Vorbelegung, behalten bereits
 dokumentierte Einsätze ihren Eintrag: Die Zuordnung wird je Einsatz gespeichert
 und hängt nicht an der Liste.
+
+### 8.3 Transportziele
+
+Vorbelegung für das Feld **Transportziel** im Einsatz. Anders als bei den
+Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit Vorschlagsliste
+(Tastatur-Pfeiltasten bzw. Antippen) — Freitext ist weiterhin uneingeschränkt
+möglich.
+
+### 8.4 Zentrale Stammdaten (vom Admin gepflegt)
+
+Der Admin kann alle sechs Bereiche zusätzlich **zentral** hinterlegen (siehe
+Abschnitt 10). Solche Einträge erscheinen bei allen NutzerInnen mit dem
+Kennzeichen **„zentral"**, stehen automatisch in allen Vorbelegungen zur
+Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
+einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
+Hinweis abgelehnt — der zentrale Eintrag steht dir ja bereits zur Verfügung.
+Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
+Namen zentral anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
+Warnhinweis („identisch mit zentralem Eintrag") — du kannst ihn dann bei
+Bedarf löschen.
 
 ---
 
@@ -398,6 +419,12 @@ NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
 NutzerIn öffnet die Editierseite: Rolle wechseln, E-Mail ändern und die
 verbundenen Geräte einsehen (aktivieren/deaktivieren/löschen — Löschen lässt
 hochgeladene Daten bestehen).
+
+Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
+unter Standortdaten (8.1–8.3), jedoch für **alle** NutzerInnen gemeinsam
+(siehe 8.4). Namensgleiche Einträge werden auch hier abgelehnt; existieren
+bereits persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen,
+weist ein Hinweis darauf hin (keine Blockade).
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb).

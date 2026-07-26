@@ -7,7 +7,7 @@ $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $editing = $id > 0;
 
 // Andere Rettungsmittel: Vorbelegungen und bereits zugeordnete Eintraege
-$rmVorlagen = db()->prepare('SELECT name FROM resources WHERE user_id = ? ORDER BY name');
+$rmVorlagen = db()->prepare('SELECT DISTINCT name FROM resources WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
 $rmVorlagen->execute([$userId]);
 $rmVorlagen = $rmVorlagen->fetchAll(PDO::FETCH_COLUMN);
 $rmGewaehlt = [];
@@ -294,13 +294,25 @@ function fieldValue(string $col) {
       // Optionslisten aus Stammdaten aufloesen (options_src)
       $optSrc = function (array $f) use ($userId): array {
           if (($f['options_src'] ?? '') === 'bw_units') {
-              $q = db()->prepare('SELECT name FROM bw_units WHERE user_id = ? ORDER BY name');
+              $q = db()->prepare('SELECT DISTINCT name FROM bw_units WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
               $q->execute([$userId]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
           }
           return $f['options'] ?? [];
       };
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc): void {
+      // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
+      // persoenlich + zentral, dedupliziert, alphabetisch — natives <datalist>,
+      // Freitext bleibt uneingeschraenkt moeglich.
+      $suggestSrc = function (array $f) use ($userId): array {
+          if (($f['suggest_src'] ?? '') === 'transport_dests') {
+              $q = db()->prepare('SELECT DISTINCT name FROM transport_dests
+                                  WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
+              $q->execute([$userId]);
+              return $q->fetchAll(PDO::FETCH_COLUMN);
+          }
+          return [];
+      };
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           if ($type === 'resources') { ?>
@@ -353,7 +365,13 @@ function fieldValue(string $col) {
               <input type="<?= $type === 'number' ? 'number' : 'text' ?>"
                 name="f_<?= e($col) ?>" value="<?= e($val) ?>"
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>
+                <?= isset($f['suggest_src']) ? 'list="dl_' . e($col) . '"' : '' ?>
                 placeholder="<?= e($f['placeholder'] ?? '') ?>" step="any">
+              <?php if (isset($f['suggest_src'])): $sugg = $suggestSrc($f); ?>
+                <datalist id="dl_<?= e($col) ?>">
+                  <?php foreach ($sugg as $s): ?><option value="<?= e($s) ?>"><?php endforeach; ?>
+                </datalist>
+              <?php endif; ?>
             </label>
             <?php if (!empty($f['children'])): ?>
               <div class="childfields">

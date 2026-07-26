@@ -103,29 +103,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
-            if ($bid > 0) {
+            if (stammdaten_dup_global('bases', 'name', $n)) {
+                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+            } elseif ($bid > 0) {
                 db()->prepare('UPDATE bases SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $bid, $userId]);
+                $notice = 'Standort gespeichert.';
             } else {
                 db()->prepare('INSERT IGNORE INTO bases (user_id, name) VALUES (?,?)')
                     ->execute([$userId, $n]);
+                $notice = 'Standort gespeichert.';
             }
-            $notice = 'Standort gespeichert.';
         }
     }
     if ($action === 'base_default') {
         $bid = (int)($_POST['id'] ?? 0);
-        db()->prepare('UPDATE bases SET is_default = 0 WHERE user_id = ?')->execute([$userId]);
-        db()->prepare('UPDATE bases SET is_default = 1 WHERE id = ? AND user_id = ?')
-            ->execute([$bid, $userId]);
-        $notice = 'Standard-Standort gesetzt.';
+        // item_id muss ein fuer den Nutzer sichtbarer Eintrag sein (persoenlich oder global)
+        $chk = db()->prepare('SELECT COUNT(*) FROM bases WHERE id = ? AND (user_id = ? OR user_id IS NULL)');
+        $chk->execute([$bid, $userId]);
+        if ($chk->fetchColumn()) {
+            db()->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"base",?)
+                           ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')
+                ->execute([$userId, $bid]);
+            $notice = 'Standard-Standort gesetzt.';
+        }
     }
     if ($action === 'ac_default') {
         $aid = (int)($_POST['id'] ?? 0);
-        db()->prepare('UPDATE aircraft SET is_default = 0 WHERE user_id = ?')->execute([$userId]);
-        db()->prepare('UPDATE aircraft SET is_default = 1 WHERE id = ? AND user_id = ?')
-            ->execute([$aid, $userId]);
-        $notice = 'Standard-Maschine gesetzt.';
+        $chk = db()->prepare('SELECT COUNT(*) FROM aircraft WHERE id = ? AND (user_id = ? OR user_id IS NULL)');
+        $chk->execute([$aid, $userId]);
+        if ($chk->fetchColumn()) {
+            db()->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"aircraft",?)
+                           ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')
+                ->execute([$userId, $aid]);
+            $notice = 'Standard-Maschine gesetzt.';
+        }
     }
     if ($action === 'base_del') {
         // Standortnamen in den Flugtagen sichern (siehe ac_del)
@@ -133,6 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        JOIN bases b ON b.id = d.base_id
                           SET d.base = b.name
                         WHERE d.user_id = ? AND d.base_id = ?')
+            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
+        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
             ->execute([$userId, (int)($_POST['id'] ?? 0)]);
         db()->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
@@ -142,20 +156,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reg = mb_substr(trim($_POST['registration'] ?? ''), 0, 64);
         $acId = (int)($_POST['id'] ?? 0);
         if ($reg !== '') {
-            $flags = [];
-            foreach (['p1','p2','hems','fr','other'] as $r) { $flags[] = isset($_POST[$r]) ? 1 : 0; }
-            if ($acId > 0) {
-                db()->prepare('UPDATE aircraft SET registration=?, p1=?, p2=?, hems=?, fr=?, other=?
-                               WHERE id = ? AND user_id = ?')
-                    ->execute(array_merge([$reg], $flags, [$acId, $userId]));
-                $notice = 'Hubschrauber gespeichert.';
+            if (stammdaten_dup_global('aircraft', 'registration', $reg)) {
+                $error = "„$reg“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
             } else {
-                try {
-                    db()->prepare('INSERT INTO aircraft (user_id, registration, p1, p2, hems, fr, other)
-                                   VALUES (?,?,?,?,?,?,?)')
-                        ->execute(array_merge([$userId, $reg], $flags));
-                    $notice = 'Hubschrauber angelegt.';
-                } catch (PDOException $ex) { $error = 'Diese Kennung existiert bereits.'; }
+                $flags = [];
+                foreach (['p1','p2','hems','fr','other'] as $r) { $flags[] = isset($_POST[$r]) ? 1 : 0; }
+                if ($acId > 0) {
+                    db()->prepare('UPDATE aircraft SET registration=?, p1=?, p2=?, hems=?, fr=?, other=?
+                                   WHERE id = ? AND user_id = ?')
+                        ->execute(array_merge([$reg], $flags, [$acId, $userId]));
+                    $notice = 'Hubschrauber gespeichert.';
+                } else {
+                    try {
+                        db()->prepare('INSERT INTO aircraft (user_id, registration, p1, p2, hems, fr, other)
+                                       VALUES (?,?,?,?,?,?,?)')
+                            ->execute(array_merge([$userId, $reg], $flags));
+                        $notice = 'Hubschrauber angelegt.';
+                    } catch (PDOException $ex) { $error = 'Diese Kennung existiert bereits.'; }
+                }
             }
         }
     }
@@ -168,6 +186,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           SET d.aircraft = a.registration
                         WHERE d.user_id = ? AND d.aircraft_id = ?')
             ->execute([$userId, (int)($_POST['id'] ?? 0)]);
+        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "aircraft" AND item_id = ?')
+            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
         db()->prepare('DELETE FROM aircraft WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Hubschrauber gelöscht.';
@@ -177,14 +197,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $cid = (int)($_POST['id'] ?? 0);
         if ($n !== '' && in_array($role, ['p1','p2','hems','fr','other'], true)) {
-            if ($cid > 0) {
+            if (stammdaten_dup_global('crew_presets', 'name', $n, 'role', $role)) {
+                $error = "„$n“ ist für diese Rolle bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+            } elseif ($cid > 0) {
                 db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $cid, $userId]);
+                $notice = 'Eintrag gespeichert.';
             } else {
                 db()->prepare('INSERT IGNORE INTO crew_presets (user_id, role, name) VALUES (?,?,?)')
                     ->execute([$userId, $role, $n]);
+                $notice = 'Eintrag gespeichert.';
             }
-            $notice = 'Eintrag gespeichert.';
         }
     }
     if ($action === 'crew_del') {
@@ -196,14 +219,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
-            if ($wid > 0) {
+            if (stammdaten_dup_global('resources', 'name', $n)) {
+                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+            } elseif ($wid > 0) {
                 db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
+                $notice = 'Rettungsmittel gespeichert.';
             } else {
                 db()->prepare('INSERT IGNORE INTO resources (user_id, name) VALUES (?,?)')
                     ->execute([$userId, $n]);
+                $notice = 'Rettungsmittel gespeichert.';
             }
-            $notice = 'Rettungsmittel gespeichert.';
         }
     }
     if ($action === 'res_del') {
@@ -217,20 +243,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
-            if ($wid > 0) {
+            if (stammdaten_dup_global('bw_units', 'name', $n)) {
+                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+            } elseif ($wid > 0) {
                 db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
+                $notice = 'Bereitschaft gespeichert.';
             } else {
                 db()->prepare('INSERT IGNORE INTO bw_units (user_id, name) VALUES (?,?)')
                     ->execute([$userId, $n]);
+                $notice = 'Bereitschaft gespeichert.';
             }
-            $notice = 'Bereitschaft gespeichert.';
         }
     }
     if ($action === 'bw_del') {
         db()->prepare('DELETE FROM bw_units WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Bereitschaft gelöscht.';
+    }
+
+    if ($action === 'td_save') {
+        $n = mb_substr(trim($_POST['name'] ?? ''), 0, 190);
+        $tid = (int)($_POST['id'] ?? 0);
+        if ($n !== '') {
+            if (stammdaten_dup_global('transport_dests', 'name', $n)) {
+                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+            } elseif ($tid > 0) {
+                db()->prepare('UPDATE transport_dests SET name = ? WHERE id = ? AND user_id = ?')
+                    ->execute([$n, $tid, $userId]);
+                $notice = 'Transportziel gespeichert.';
+            } else {
+                db()->prepare('INSERT IGNORE INTO transport_dests (user_id, name) VALUES (?,?)')
+                    ->execute([$userId, $n]);
+                $notice = 'Transportziel gespeichert.';
+            }
+        }
+    }
+    if ($action === 'td_del') {
+        db()->prepare('DELETE FROM transport_dests WHERE id = ? AND user_id = ?')
+            ->execute([(int)($_POST['id'] ?? 0), $userId]);
+        $notice = 'Transportziel gelöscht.';
     }
 
     // Nach dem Speichern zurueck zum passenden Abschnitt umleiten. Das oeffnet
@@ -242,18 +294,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'crew_save' => 'besatzung',   'crew_del' => 'besatzung',
         'res_save'  => 'rettungsmittel', 'res_del' => 'rettungsmittel',
         'bw_save'   => 'bergwacht',   'bw_del'   => 'bergwacht',
+        'td_save'   => 'transportziele', 'td_del' => 'transportziele',
     ][$action] ?? null;
-    if ($abschnitt !== null && $notice !== null) {
-        $_SESSION['flash_notice'] = $notice;
+    if ($abschnitt !== null && ($notice !== null || $error !== null)) {
+        if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
+        if ($error !== null) { $_SESSION['flash_error'] = $error; }
         header('Location: einstellungen.php?t=stammdaten#' . $abschnitt);
         exit;
     }
 }
 
-// Meldung aus der Umleitung uebernehmen
+// Meldung/Fehler aus der Umleitung uebernehmen
 if (!empty($_SESSION['flash_notice'])) {
     $notice = $_SESSION['flash_notice'];
     unset($_SESSION['flash_notice']);
+}
+if (!empty($_SESSION['flash_error'])) {
+    $error = $_SESSION['flash_error'];
+    unset($_SESSION['flash_error']);
 }
 
 $ROLE_LABELS = ['p1' => 'Pilot 1', 'p2' => 'Pilot 2', 'hems' => 'HEMS',
@@ -348,30 +406,54 @@ if ($tab === 'geraete') {
 
   <?php elseif ($tab === 'stammdaten'): ?>
     <?php
-      $bases = db()->prepare('SELECT id, name, is_default FROM bases WHERE user_id = ? ORDER BY name');
+      // Leseregel (Konzept Abschnitt 4): persoenliche UND zentrale (globale,
+      // user_id IS NULL) Eintraege gemischt alphabetisch; user_id zusaetzlich
+      // selektieren, um in der UI zwischen beiden zu unterscheiden.
+      $bases = db()->prepare('SELECT id, name, user_id FROM bases WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
       $bases->execute([$userId]); $bases = $bases->fetchAll();
-      $acs = db()->prepare('SELECT * FROM aircraft WHERE user_id = ? ORDER BY registration');
+      $acs = db()->prepare('SELECT * FROM aircraft WHERE (user_id = ? OR user_id IS NULL) ORDER BY registration');
       $acs->execute([$userId]); $acs = $acs->fetchAll();
-      $crew = db()->prepare('SELECT id, role, name FROM crew_presets WHERE user_id = ? ORDER BY name');
+      $crew = db()->prepare('SELECT id, role, name, user_id FROM crew_presets WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
       $crew->execute([$userId]); $crew = $crew->fetchAll();
-      $bw = db()->prepare('SELECT id, name FROM bw_units WHERE user_id = ? ORDER BY name');
+      $bw = db()->prepare('SELECT id, name, user_id FROM bw_units WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
       $bw->execute([$userId]); $bw = $bw->fetchAll();
-      $res = db()->prepare('SELECT id, name FROM resources WHERE user_id = ? ORDER BY name');
+      $res = db()->prepare('SELECT id, name, user_id FROM resources WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
       $res->execute([$userId]); $res = $res->fetchAll();
-      $pick = function (array $rows, string $param) {
-          foreach ($rows as $r) { if ((int)$r['id'] === (int)($_GET[$param] ?? 0)) { return $r; } }
+      $tds = db()->prepare('SELECT id, name, user_id FROM transport_dests WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
+      $tds->execute([$userId]); $tds = $tds->fetchAll();
+
+      // Standard-Vorbelegung (user_defaults ersetzt is_default, Abschnitt 7)
+      $defs = db()->prepare("SELECT kind, item_id FROM user_defaults WHERE user_id = ?");
+      $defs->execute([$userId]);
+      $DEF_BASE_ID = 0; $DEF_AC_ID = 0;
+      foreach ($defs->fetchAll() as $d) {
+          if ($d['kind'] === 'base') { $DEF_BASE_ID = (int)$d['item_id']; }
+          if ($d['kind'] === 'aircraft') { $DEF_AC_ID = (int)$d['item_id']; }
+      }
+
+      // Bearbeiten ist nur fuer eigene, persoenliche Eintraege moeglich —
+      // globale Zeilen haben in der Nutzer-Ansicht keine Bearbeiten-/Loeschen-Buttons.
+      $pick = function (array $rows, string $param) use ($userId) {
+          foreach ($rows as $r) {
+              if ((int)$r['id'] === (int)($_GET[$param] ?? 0) && (int)$r['user_id'] === $userId) { return $r; }
+          }
           return null;
       };
       $editAc = $pick($acs, 'ac');    $editBase = $pick($bases, 'eb');
       $editBw = $pick($bw, 'ew');
       $editRes = $pick($res, 'er');
+      $editTd = $pick($tds, 'et');
       $editCrew = null;
-      foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCrew = $c; } }
+      foreach ($crew as $c) {
+          if ((int)$c['id'] === (int)($_GET['ec'] ?? 0) && (int)$c['user_id'] === $userId) { $editCrew = $c; }
+      }
     ?>
     <h1>Standortdaten</h1>
     <p class="muted">Vorbelegungen für die Flugtag- und Einsatzdokumentation, alphabetisch
        sortiert. Löschen entfernt nur den Listeneintrag — gespeicherte Flugtage bleiben
-       unverändert. ★ markiert die Vorbelegung neuer Flugtage.</p>
+       unverändert. ★ markiert die Vorbelegung neuer Flugtage. Das Kennzeichen
+       „zentral“ markiert vom Admin gepflegte Einträge — diese stehen automatisch zur
+       Verfügung und lassen sich hier nicht bearbeiten oder löschen.</p>
 
       <details class="stammblock" id="standorte">
     <summary>Standorte</summary>
@@ -380,25 +462,31 @@ if ($tab === 'geraete') {
       <thead><tr><th>Name</th><th>Standard</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
       <?php if (!$bases): ?><tr><td colspan="3" class="muted">Noch keine Standorte.</td></tr><?php endif; ?>
-      <?php foreach ($bases as $b): ?>
+      <?php foreach ($bases as $b): $global = $b['user_id'] === null;
+            $dup = !$global && stammdaten_dup_global('bases', 'name', $b['name']); ?>
         <tr>
-          <td><?= e($b['name']) ?></td>
-          <td class="checkcol"><?= (int)$b['is_default'] ? '★' : '' ?></td>
+          <td><?= e($b['name']) ?>
+            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+          </td>
+          <td class="checkcol"><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
           <td><div class="rowactions">
-            <?php if (!(int)$b['is_default']): ?>
+            <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
               <form method="post" action="einstellungen.php?t=stammdaten#standorte">
                 <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
                 <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
                 <button class="btn-plain">Als Standard</button>
               </form>
             <?php endif; ?>
-            <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
-            <form method="post" action="einstellungen.php?t=stammdaten#standorte"
-                  data-confirm="Standort löschen?">
-              <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
-              <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-              <button class="btn-red">Löschen</button>
-            </form>
+            <?php if (!$global): ?>
+              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
+              <form method="post" action="einstellungen.php?t=stammdaten#standorte"
+                    data-confirm="Standort löschen?">
+                <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
+                <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
+                <button class="btn-red">Löschen</button>
+              </form>
+            <?php endif; ?>
           </div></td>
         </tr>
       <?php endforeach; ?>
@@ -424,28 +512,34 @@ if ($tab === 'geraete') {
       <thead><tr><th>Kennung</th><th>Rollen</th><th>Standard</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
       <?php if (!$acs): ?><tr><td colspan="4" class="muted">Noch keine Hubschrauber.</td></tr><?php endif; ?>
-      <?php foreach ($acs as $a): ?>
+      <?php foreach ($acs as $a): $global = $a['user_id'] === null;
+            $dup = !$global && stammdaten_dup_global('aircraft', 'registration', $a['registration']); ?>
         <tr>
-          <td><?= e($a['registration']) ?></td>
+          <td><?= e($a['registration']) ?>
+            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+          </td>
           <td><?php $r = [];
             foreach ($ROLE_LABELS as $k => $lbl) { if ((int)$a[$k]) { $r[] = $lbl; } }
             echo e($r ? implode(' · ', $r) : '–'); ?></td>
-          <td class="checkcol"><?= (int)$a['is_default'] ? '★' : '' ?></td>
+          <td class="checkcol"><?= (int)$a['id'] === $DEF_AC_ID ? '★' : '' ?></td>
           <td><div class="rowactions">
-            <?php if (!(int)$a['is_default']): ?>
+            <?php if ((int)$a['id'] !== $DEF_AC_ID): ?>
               <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber">
                 <?= csrf_field() ?><input type="hidden" name="action" value="ac_default">
                 <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
                 <button class="btn-plain">Als Standard</button>
               </form>
             <?php endif; ?>
-            <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ac=<?= (int)$a['id'] ?>#hubschrauber">Bearbeiten</a>
-            <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber"
-                  data-confirm="Hubschrauber löschen?">
-              <?= csrf_field() ?><input type="hidden" name="action" value="ac_del">
-              <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-              <button class="btn-red">Löschen</button>
-            </form>
+            <?php if (!$global): ?>
+              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ac=<?= (int)$a['id'] ?>#hubschrauber">Bearbeiten</a>
+              <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber"
+                    data-confirm="Hubschrauber löschen?">
+                <?= csrf_field() ?><input type="hidden" name="action" value="ac_del">
+                <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                <button class="btn-red">Löschen</button>
+              </form>
+            <?php endif; ?>
           </div></td>
         </tr>
       <?php endforeach; ?>
@@ -481,17 +575,24 @@ if ($tab === 'geraete') {
       <h3 class="rolehead"><?= e($lbl) ?></h3>
       <table class="data">
         <tbody>
-        <?php $any = false; foreach ($crew as $c): if ($c['role'] !== $rk) continue; $any = true; ?>
+        <?php $any = false; foreach ($crew as $c): if ($c['role'] !== $rk) continue; $any = true;
+              $global = $c['user_id'] === null;
+              $dup = !$global && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role', $rk); ?>
           <tr>
-            <td><?= e($c['name']) ?></td>
+            <td><?= e($c['name']) ?>
+              <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            </td>
             <td class="th-act"><div class="rowactions">
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
-              <form method="post" action="einstellungen.php?t=stammdaten#besatzung"
-                    data-confirm="Eintrag löschen?">
-                <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
-                <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                <button class="btn-red">Löschen</button>
-              </form>
+              <?php if (!$global): ?>
+                <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
+                <form method="post" action="einstellungen.php?t=stammdaten#besatzung"
+                      data-confirm="Eintrag löschen?">
+                  <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
+                  <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                  <button class="btn-red">Löschen</button>
+                </form>
+              <?php endif; ?>
             </div></td>
           </tr>
         <?php endforeach; ?>
@@ -522,17 +623,23 @@ if ($tab === 'geraete') {
     <table class="data">
       <tbody>
       <?php if (!$res): ?><tr><td class="muted">Noch keine Rettungsmittel.</td><td></td></tr><?php endif; ?>
-      <?php foreach ($res as $r): ?>
+      <?php foreach ($res as $r): $global = $r['user_id'] === null;
+            $dup = !$global && stammdaten_dup_global('resources', 'name', $r['name']); ?>
         <tr>
-          <td><?= e($r['name']) ?></td>
+          <td><?= e($r['name']) ?>
+            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+          </td>
           <td class="th-act"><div class="rowactions">
-            <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#rettungsmittel">Bearbeiten</a>
-            <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel"
-                  data-confirm="Rettungsmittel aus der Vorbelegung l&ouml;schen? Bereits dokumentierte Eins&auml;tze behalten ihren Eintrag.">
-              <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
-              <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-              <button class="btn-red">L&ouml;schen</button>
-            </form>
+            <?php if (!$global): ?>
+              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#rettungsmittel">Bearbeiten</a>
+              <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel"
+                    data-confirm="Rettungsmittel aus der Vorbelegung l&ouml;schen? Bereits dokumentierte Eins&auml;tze behalten ihren Eintrag.">
+                <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
+                <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                <button class="btn-red">L&ouml;schen</button>
+              </form>
+            <?php endif; ?>
           </div></td>
         </tr>
       <?php endforeach; ?>
@@ -555,17 +662,23 @@ if ($tab === 'geraete') {
     <table class="data">
       <tbody>
       <?php if (!$bw): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
-      <?php foreach ($bw as $b): ?>
+      <?php foreach ($bw as $b): $global = $b['user_id'] === null;
+            $dup = !$global && stammdaten_dup_global('bw_units', 'name', $b['name']); ?>
         <tr>
-          <td><?= e($b['name']) ?></td>
+          <td><?= e($b['name']) ?>
+            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+          </td>
           <td class="th-act"><div class="rowactions">
-            <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$b['id'] ?>#bergwacht">Bearbeiten</a>
-            <form method="post" action="einstellungen.php?t=stammdaten#bergwacht"
-                  data-confirm="Bereitschaft löschen?">
-              <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
-              <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-              <button class="btn-red">Löschen</button>
-            </form>
+            <?php if (!$global): ?>
+              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$b['id'] ?>#bergwacht">Bearbeiten</a>
+              <form method="post" action="einstellungen.php?t=stammdaten#bergwacht"
+                    data-confirm="Bereitschaft löschen?">
+                <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
+                <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
+                <button class="btn-red">Löschen</button>
+              </form>
+            <?php endif; ?>
           </div></td>
         </tr>
       <?php endforeach; ?>
@@ -578,6 +691,47 @@ if ($tab === 'geraete') {
              placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($editBw['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editBw ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
       <?php if ($editBw): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+    </form>
+
+    <hr class="sep">
+      </details>
+
+  <details class="stammblock" id="transportziele">
+    <summary>Transportziele</summary>
+
+    <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.</p>
+    <table class="data">
+      <tbody>
+      <?php if (!$tds): ?><tr><td class="muted">Noch keine Transportziele.</td><td></td></tr><?php endif; ?>
+      <?php foreach ($tds as $t): $global = $t['user_id'] === null;
+            $dup = !$global && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
+        <tr>
+          <td><?= e($t['name']) ?>
+            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+          </td>
+          <td class="th-act"><div class="rowactions">
+            <?php if (!$global): ?>
+              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;et=<?= (int)$t['id'] ?>#transportziele">Bearbeiten</a>
+              <form method="post" action="einstellungen.php?t=stammdaten#transportziele"
+                    data-confirm="Transportziel löschen?">
+                <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
+                <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
+                <button class="btn-red">Löschen</button>
+              </form>
+            <?php endif; ?>
+          </div></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    <form method="post" action="einstellungen.php?t=stammdaten#transportziele" class="inline-form">
+      <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
+      <input type="hidden" name="id" value="<?= $editTd ? (int)$editTd['id'] : 0 ?>">
+      <input type="text" name="name" maxlength="190" required
+             placeholder="z. B. Klinikum Kempten" value="<?= e($editTd['name'] ?? '') ?>">
+      <button class="btn-primary"><?= $editTd ? 'Änderung speichern' : 'Transportziel hinzufügen' ?></button>
+      <?php if ($editTd): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
     </form>
   </details>
 
@@ -715,7 +869,8 @@ if ($tab === 'geraete') {
         const s = out.stats;
         impState.textContent = `Import fertig: ${s.missions} Einsätze übernommen `
           + `(${s.missions_skipped} bereits vorhanden), ${s.rests} Ruhesegmente, `
-          + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge.`;
+          + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
+          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits zentral vorhanden)` : '') + `.`;
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }

@@ -155,6 +155,9 @@ section{margin-bottom:1.8rem}
 .add-link:hover{text-decoration:underline}
 .badge-manual{background:var(--accent-light);color:#8A5A00;border-radius:4px;
   padding:.05em .45em;font-size:.8rem;font-weight:600}
+.badge-central{background:var(--blau-light);color:var(--navy);border-radius:4px;
+  padding:.05em .45em;font-size:.75rem;font-weight:600;margin-left:.4em;
+  text-transform:uppercase;letter-spacing:.03em}
 .fieldlist{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
   padding:.6rem .9rem;margin:0 0 1rem;display:grid;grid-template-columns:auto 1fr;
   gap:.15rem .9rem;align-items:center}

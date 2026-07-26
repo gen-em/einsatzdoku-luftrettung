@@ -45,6 +45,7 @@ function ui_settings_sidebar(string $active): void {
     ];
     if ($userRole === 'admin') {
         $items['admin'] = ['admin.php', 'Administration'];
+        $items['admin_stammdaten'] = ['admin_stammdaten.php', 'Zentrale Stammdaten'];
     }
     ?>
   <aside class="daylist">

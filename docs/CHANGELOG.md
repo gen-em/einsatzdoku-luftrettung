@@ -10,6 +10,35 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.4.0] — 2026-07-26
+
+### Neu — Zentrale (globale) Stammdaten durch Admin, Transportziele als Stammdaten
+- Transportziele lassen sich wie die anderen Rettungsmittel unter
+  *Einstellungen → Standortdaten* als Vorbelegung pflegen. Im Einsatzformular
+  bleibt das Feld „Transportziel“ Freitext, erhält aber Autocomplete-
+  Vorschläge (natives `<datalist>`) aus der eigenen und der zentralen Liste.
+- Der Admin kann auf einer neuen Seite „Zentrale Stammdaten“ alle sechs Typen
+  (Standorte, Hubschrauber, Besatzungen, Rettungsmittel, Bergwacht-
+  Bereitschaften, Transportziele) zentral hinterlegen. Diese Einträge stehen
+  automatisch allen NutzerInnen als Vorbelegung zur Verfügung und erscheinen
+  in der persönlichen Übersicht mit dem Kennzeichen „zentral“ (nicht editier-
+  oder löschbar).
+- Beim Anlegen oder Umbenennen eines persönlichen Eintrags wird case-
+  insensitiv gegen die zentrale Liste geprüft; bei Treffer wird gespeichert
+  abgelehnt mit dem Hinweis „… ist bereits zentral hinterlegt“. Legt der Admin
+  nachträglich einen Namen zentral an, der bei einzelnen NutzerInnen bereits
+  persönlich existiert, erhält deren Zeile stattdessen den Warnhinweis
+  „identisch mit zentralem Eintrag — kann gelöscht werden“ (beide Zeilen
+  bleiben sichtbar).
+- Die Standard-Vorbelegung (★) für Standort und Hubschrauber ist jetzt
+  nutzerbezogen (neue Tabelle `user_defaults`) und funktioniert dadurch auch
+  für zentrale Einträge — jede NutzerIn kann unabhängig von den anderen einen
+  persönlichen oder zentralen Eintrag als eigenen Standard markieren.
+- Backup: Export bleibt nutzerbezogen (Transportziele neu enthalten,
+  Formatversion 2 → 3); Import überspringt Einträge, die zentral bereits
+  vorhanden sind, und zählt sie in der Ergebnismeldung. Alt-Backups (Version 2)
+  bleiben importierbar.
+
 ## [Web 2.3.4] — 2026-07-26
 
 ### Geändert — Koordinaten/Plus Code jetzt als Vorschlag statt Direktumschreiben

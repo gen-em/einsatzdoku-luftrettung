@@ -122,30 +122,30 @@ CREATE TABLE rest_segments (
 -- Besatzungs-Vorbelegungen, Bergwacht-Bereitschaften
 CREATE TABLE bases (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
   name VARCHAR(120) NOT NULL,
-  is_default TINYINT(1) NOT NULL DEFAULT 0,        -- Flugtag-Vorbelegung
+  is_default TINYINT(1) NOT NULL DEFAULT 0,        -- Alt, ersetzt durch user_defaults
   UNIQUE KEY uq_user_name (user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE aircraft (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
   registration VARCHAR(64) NOT NULL,               -- Kennung
   p1 TINYINT(1) NOT NULL DEFAULT 0,                -- Pilot 1 an Bord
   p2 TINYINT(1) NOT NULL DEFAULT 0,                -- Pilot 2
   hems TINYINT(1) NOT NULL DEFAULT 0,              -- HEMS-TC
   fr TINYINT(1) NOT NULL DEFAULT 0,                -- Flugretter
   other TINYINT(1) NOT NULL DEFAULT 0,             -- Sonstige
-  is_default TINYINT(1) NOT NULL DEFAULT 0,        -- Flugtag-Vorbelegung
+  is_default TINYINT(1) NOT NULL DEFAULT 0,        -- Alt, ersetzt durch user_defaults
   UNIQUE KEY uq_user_reg (user_id, registration),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE crew_presets (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
   role ENUM('p1','p2','hems','fr','other') NOT NULL,
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_role_name (user_id, role, name),
@@ -155,7 +155,7 @@ CREATE TABLE crew_presets (
 -- Vorbelegung: andere Rettungsmittel (RTW, NEF, weitere Hubschrauber ...)
 CREATE TABLE resources (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_res (user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -172,9 +172,32 @@ CREATE TABLE mission_resources (
 
 CREATE TABLE bw_units (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
   name VARCHAR(120) NOT NULL,
   UNIQUE KEY uq_user_name (user_id, name),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vorbelegung: Transportziele (Vorschlagsliste fuer missions.transport_dest,
+-- dieses Feld selbst bleibt Freitext ohne FK-Referenz)
+CREATE TABLE transport_dests (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NULL,                       -- NULL = zentral (Admin-Eintrag)
+  name VARCHAR(190) NOT NULL,
+  UNIQUE KEY uq_user_name (user_id, name),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Nutzerbezogene Standard-Vorbelegung fuer Flugtage (Standort/Maschine),
+-- ersetzt bases.is_default/aircraft.is_default; funktioniert fuer
+-- persoenliche UND zentrale Eintraege (item_id verweist je nach kind auf
+-- bases.id bzw. aircraft.id, kein FK moeglich wegen zwei Zieltabellen)
+CREATE TABLE user_defaults (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  kind ENUM('base','aircraft') NOT NULL,
+  item_id INT UNSIGNED NOT NULL,
+  UNIQUE KEY uq_user_kind (user_id, kind),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
