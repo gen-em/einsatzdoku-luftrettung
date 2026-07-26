@@ -101,8 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'crew_del') {
+        $cid = (int)($_POST['id'] ?? 0);
+        $rq = db()->prepare('SELECT role FROM crew_presets WHERE id = ? AND user_id IS NULL');
+        $rq->execute([$cid]);
+        $role = (string)($rq->fetchColumn() ?: '');
         db()->prepare('DELETE FROM crew_presets WHERE id = ? AND user_id IS NULL')
-            ->execute([(int)($_POST['id'] ?? 0)]);
+            ->execute([$cid]);
         $notice = 'Eintrag gelöscht.';
     }
 
@@ -183,6 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'bw_save'   => 'bergwacht',      'bw_del'   => 'bergwacht',
         'td_save'   => 'transportziele', 'td_del'   => 'transportziele',
     ][$action] ?? null;
+    // Besatzung: rollenspezifischen Anker anhaengen (besatzung-p1 usw.), damit
+    // sich beim Wiederaufklappen gezielt das Namensfeld der richtigen Rolle
+    // fokussieren laesst (siehe Hash-Skript unten).
+    if ($abschnitt === 'besatzung' && in_array($action, ['crew_save', 'crew_del'], true)
+        && in_array($role ?? '', ['p1','p2','hems','fr','other'], true)) {
+        $abschnitt .= '-' . $role;
+    }
     if ($abschnitt !== null && ($notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
@@ -337,7 +348,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
               <?php if ($n > 0): ?><br><span class="muted">⚠ <?= $n ?> Nutzer haben einen gleichnamigen persönlichen Eintrag</span><?php endif; ?>
             </td>
             <td class="th-act"><div class="rowactions">
-              <a class="btn-yellow" href="admin_stammdaten.php?ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
+              <a class="btn-yellow" href="admin_stammdaten.php?ec=<?= (int)$c['id'] ?>#besatzung-<?= $rk ?>">Bearbeiten</a>
               <form method="post" action="admin_stammdaten.php#besatzung" data-confirm="Zentralen Eintrag löschen?">
                 <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
                 <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
@@ -354,7 +365,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
         <input type="hidden" name="role" value="<?= $rk ?>">
         <input type="hidden" name="id"
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? (int)$editCrew['id'] : 0 ?>">
-        <input type="text" name="name" placeholder="Name" maxlength="120" class="focus-target"
+        <input type="text" name="name" placeholder="Name" maxlength="120" class="focus-target" data-role="<?= $rk ?>"
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? e($editCrew['name']) : '' ?>">
         <button class="btn-primary"><?= ($editCrew && $editCrew['role'] === $rk) ? 'Speichern' : 'Anlegen' ?></button>
         <?php if ($editCrew && $editCrew['role'] === $rk): ?>
@@ -465,12 +476,18 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 
 <script>
 (function(){
-  function oeffne(id){
-    const d = document.getElementById(id);
+  function oeffne(hashId){
+    // hashId kann z. B. "besatzung-p1" sein (rollenspezifischer Fokus);
+    // das eigentliche <details>-Element traegt aber nur die Basis-ID.
+    const teil = hashId.split('-');
+    const baseId = teil[0];
+    const rolle = teil.slice(1).join('-');
+    const d = document.getElementById(baseId);
     if (d && d.tagName === 'DETAILS') {
       d.open = true;
       d.scrollIntoView({ block: 'start' });
-      const f = d.querySelector('.focus-target');
+      let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
+      if (!f) { f = d.querySelector('.focus-target'); }
       if (f) { f.focus(); }
     }
   }

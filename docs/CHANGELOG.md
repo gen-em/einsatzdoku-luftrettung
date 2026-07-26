@@ -10,6 +10,17 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.4.4] — 2026-07-26
+
+### Geändert — Rollenspezifischer Cursor-Fokus bei Besatzung
+- Der Cursor springt nach Anlegen/Bearbeiten/Löschen eines Besatzungs-Eintrags
+  jetzt gezielt in das Namensfeld der **richtigen Rolle** (z. B. HEMS), nicht
+  mehr immer in das erste (Pilot 1). Umgesetzt über einen rollenspezifischen
+  Anker (`#besatzung-hems` usw.), gilt für Standortdaten und zentrale
+  Stammdaten gleichermaßen.
+- Hubschrauber-Tabelle (Standortdaten): Inhalt der Spalte „Rollen" ist jetzt
+  ebenfalls zentriert (bisher nur die Spaltenüberschrift).
+
 ## [Web 2.4.3] — 2026-07-26
 
 ### Neu — Cursor-Fokus nach dem Anlegen

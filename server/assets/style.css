@@ -275,6 +275,7 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 th.sortable:hover{color:var(--navy)}
 th.sortable .arrow{color:var(--blau)}
 .checkcol{text-align:center;color:var(--navy);font-weight:700}
+.centercol{text-align:center}
 
 /* Einheitliche Aktions-Buttons (Stammdaten & Co.) */
 .btn-yellow{display:inline-block;background:#F5C518;color:#3A2E00;

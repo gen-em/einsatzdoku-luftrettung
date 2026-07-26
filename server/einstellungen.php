@@ -211,8 +211,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'crew_del') {
+        $cid = (int)($_POST['id'] ?? 0);
+        $rq = db()->prepare('SELECT role FROM crew_presets WHERE id = ? AND user_id = ?');
+        $rq->execute([$cid, $userId]);
+        $role = (string)($rq->fetchColumn() ?: '');
         db()->prepare('DELETE FROM crew_presets WHERE id = ? AND user_id = ?')
-            ->execute([(int)($_POST['id'] ?? 0), $userId]);
+            ->execute([$cid, $userId]);
         $notice = 'Eintrag gelöscht.';
     }
     if ($action === 'res_save') {
@@ -296,6 +300,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'bw_save'   => 'bergwacht',   'bw_del'   => 'bergwacht',
         'td_save'   => 'transportziele', 'td_del' => 'transportziele',
     ][$action] ?? null;
+    // Besatzung: rollenspezifischen Anker anhaengen (besatzung-p1 usw.), damit
+    // sich beim Wiederaufklappen gezielt das Namensfeld der richtigen Rolle
+    // fokussieren laesst (siehe Hash-Skript unten).
+    if ($abschnitt === 'besatzung' && in_array($action, ['crew_save', 'crew_del'], true)
+        && in_array($role ?? '', ['p1','p2','hems','fr','other'], true)) {
+        $abschnitt .= '-' . $role;
+    }
     if ($abschnitt !== null && ($notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
@@ -518,7 +529,7 @@ if ($tab === 'geraete') {
           <td><?= e($a['registration']) ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
-          <td><?php $r = [];
+          <td class="centercol"><?php $r = [];
             foreach ($ROLE_LABELS as $k => $lbl) { if ((int)$a[$k]) { $r[] = $lbl; } }
             echo e($r ? implode(' · ', $r) : '–'); ?></td>
           <td class="checkcol"><?= (int)$a['id'] === $DEF_AC_ID ? '★' : '' ?></td>
@@ -585,7 +596,7 @@ if ($tab === 'geraete') {
             <td class="th-act"><div class="rowactions">
               <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
               <?php if (!$global): ?>
-                <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
+                <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung-<?= $rk ?>">Bearbeiten</a>
                 <form method="post" action="einstellungen.php?t=stammdaten#besatzung"
                       data-confirm="Eintrag löschen?">
                   <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
@@ -604,7 +615,7 @@ if ($tab === 'geraete') {
         <input type="hidden" name="role" value="<?= $rk ?>">
         <input type="hidden" name="id"
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? (int)$editCrew['id'] : 0 ?>">
-        <input type="text" name="name" class="focus-target" placeholder="Name" maxlength="120" required
+        <input type="text" name="name" class="focus-target" data-role="<?= $rk ?>" placeholder="Name" maxlength="120" required
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? e($editCrew['name']) : '' ?>">
         <button class="btn-primary"><?= ($editCrew && $editCrew['role'] === $rk) ? 'Änderung speichern' : 'Hinzufügen' ?></button>
         <?php if ($editCrew && $editCrew['role'] === $rk): ?>
@@ -969,12 +980,18 @@ if ($tab === 'geraete') {
    * wurde. Unabhaengig vom aktiven Tab eingebunden (nicht nur im jeweiligen
    * Tab-Zweig), da der Redirect-Anker tab-uebergreifend funktionieren muss. */
   (function(){
-    function oeffne(id){
-      const d = document.getElementById(id);
+    function oeffne(hashId){
+      // hashId kann z. B. "besatzung-p1" sein (rollenspezifischer Fokus);
+      // das eigentliche <details>-Element traegt aber nur die Basis-ID.
+      const teil = hashId.split('-');
+      const baseId = teil[0];
+      const rolle = teil.slice(1).join('-');
+      const d = document.getElementById(baseId);
       if (d && d.tagName === 'DETAILS') {
         d.open = true;
         d.scrollIntoView({ block: 'start' });
-        const f = d.querySelector('.focus-target');
+        let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
+        if (!f) { f = d.querySelector('.focus-target'); }
         if (f) { f.focus(); }
       }
     }
