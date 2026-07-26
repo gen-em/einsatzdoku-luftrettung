@@ -68,8 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 // Der Browser leitet aus dem Passwort zwei Schluessel ab: das Auth-Token
 // (geht zum Server) und den Daten-Schluessel (bleibt hier, entsperrt das
-// PatientInnendaten-Modul). Das Passwort selbst verlaesst den Browser nur
-// noch ein einziges Mal bei Alt-Konten (Umstellung).
+// PatientInnendaten-Modul). Das Passwort selbst verlaesst den Browser nie.
 document.getElementById('loginform').addEventListener('submit', async ev => {
   const f = ev.target;
   if (f.dataset.ready === '1') return;               // zweiter Durchlauf: senden
