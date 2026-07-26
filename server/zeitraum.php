@@ -221,7 +221,7 @@ function zeigeFehler(msg){
       zeigeFehler(txt.replace(/<[^>]*>/g, ' ').trim().slice(0, 300) || ('HTTP ' + res.status));
       return;
     }
-    if (d.error) { zeigeFehler(d.error); return; }
+    if (d.error) { zeigeFehler(d.error + (d.meldung ? ': ' + d.meldung : '')); return; }
   } catch (e) { zeigeFehler(e.message); return; }
 
   missions = d.missions;

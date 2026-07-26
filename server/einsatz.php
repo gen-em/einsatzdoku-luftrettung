@@ -37,6 +37,8 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
     </div>
   </div>
 
+  <div id="loaderror" class="alert" hidden></div>
+
   <?php if ($nachtrag): ?>
     <p class="alert alert-ok">Einsatz gespeichert.
       <a class="btn-edit" href="einsatz_form.php?day=<?= e((string)$missionDay) ?>">Weiteren Einsatz nachtragen</a></p>
@@ -72,6 +74,12 @@ const MID = <?= $mid ?>;
 function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
 function fmtKm(m){ return m == null ? '–' : (m / 1000).toFixed(1).replace('.', ',') + ' km'; }
+function zeigeLadeFehler(msg){
+  document.getElementById('title').textContent = 'Einsatz nicht geladen';
+  const box = document.getElementById('loaderror');
+  box.textContent = 'Die Einsatzdaten konnten nicht geladen werden: ' + msg;
+  box.hidden = false;
+}
 
 const map = L.map('map');
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -162,8 +170,19 @@ function hlPhase(idx, on){
 
 async function init(){
   const res = await fetch('api/mission.php?id=' + MID);
-  if (!res.ok) { document.getElementById('title').textContent = 'Einsatz nicht gefunden'; return; }
-  const m = await res.json();
+  const txt = await res.text();
+  let m;
+  try { m = JSON.parse(txt); }
+  catch (e) {
+    zeigeLadeFehler(txt.replace(/<[^>]*>/g, ' ').trim().slice(0, 300) || ('HTTP ' + res.status));
+    return;
+  }
+  if (!res.ok || m.error) {
+    zeigeLadeFehler(m.error === 'not_found'
+      ? 'Einsatz nicht gefunden.'
+      : (m.error || ('HTTP ' + res.status)) + (m.meldung ? ': ' + m.meldung : ''));
+    return;
+  }
 
   document.getElementById('title').textContent =
     `Einsatz ${m.day_no} · ${m.start_hhmm} Uhr`;

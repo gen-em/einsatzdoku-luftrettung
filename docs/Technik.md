@@ -206,6 +206,15 @@ der `days`-Tabelle statt `COUNT(DISTINCT day)` aus `missions` — zählt also
 auch einsatzfreie Flugtage mit (Divisor der Durchschnittswerte). Die
 geschützten Angaben entschlüsselt der Browser wie überall selbst.
 
+**Fehlerbehandlung der Lese-/Schreib-APIs:** `api/range.php`, `api/day.php`,
+`api/mission.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in
+try/catch (Muster ursprünglich aus `api/backup_restore.php`) und antworten bei
+einer Ausnahme mit `{"error": "<endpunkt>", "meldung": "<Exception-Message>"}`
+statt eines leeren HTTP 500 — wichtig z. B. direkt nach einem Deploy mit
+DB-Änderung, aber vor dem Aufruf von `/update.php`. Neue Endpunkte sollten
+demselben Muster folgen. Die jeweiligen Frontends (`zeitraum.php`,
+`einsatz.php`, `index.php`) zeigen `error`+`meldung` in einer Fehlerbox an.
+
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
 Tagesliste, Backup) filtern darauf. `trash_lib.php` bündelt Umfangsermittlung,

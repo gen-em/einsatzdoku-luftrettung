@@ -10,6 +10,19 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.3.1] — 2026-07-26
+
+### Geändert — Lesbare Fehlermeldungen statt leerem HTTP 500
+- `api/range.php`, `api/day.php`, `api/mission.php` und `api/backup_data.php`
+  kapseln ihre Datenbankzugriffe jetzt in try/catch (Muster wie bisher schon
+  bei `api/backup_restore.php`) und antworten bei einer Ausnahme mit
+  `{"error": "...", "meldung": "..."}` statt eines leeren HTTP 500. Anlass:
+  Nach dem Ausliefern von 2.3.0, aber **vor** dem Aufruf von `/update.php`,
+  fehlte die Spalte `site_ele_m` noch — `zeitraum.php` zeigte dadurch nur
+  „HTTP 500" ohne jeden Hinweis auf die Ursache.
+- `zeitraum.php` und `einsatz.php` zeigen das Feld `meldung` jetzt mit an
+  (`index.php` tat das für `api/day.php` bereits vorher).
+
 ## [Web 2.3.0] — 2026-07-26
 
 ### Neu — Karte und Statistik in der Zeitraum-Übersicht

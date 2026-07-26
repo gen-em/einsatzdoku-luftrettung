@@ -13,6 +13,11 @@ require_once __DIR__ . '/../backup_lib.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
 
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
-echo edbak_build($userId);
+try {
+    $out = edbak_build($userId);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo $out;
+} catch (Throwable $ex) {
+    json_out(['error' => 'backup', 'meldung' => $ex->getMessage()], 500);
+}
