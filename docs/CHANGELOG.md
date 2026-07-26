@@ -10,6 +10,23 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.4.3] — 2026-07-26
+
+### Neu — Cursor-Fokus nach dem Anlegen
+- Nach dem Anlegen, Bearbeiten oder Löschen eines Stammdaten-Eintrags (alle
+  sechs Typen, Standortdaten **und** zentrale Stammdaten) springt der Cursor
+  automatisch ins Namensfeld des jeweiligen Abschnitts — der nächste Eintrag
+  lässt sich ohne Klick direkt eintippen.
+
+### Geändert — Besatzung im Admin-Bereich rollengetrennt
+- Die Besatzungs-Vorbelegungen unter „Zentrale Stammdaten" sind jetzt wie bei
+  den Standortdaten nach Rolle getrennt (eigene Tabelle/Eingabefeld je Pilot 1,
+  Pilot 2, HEMS, Flugretter, Sonstige) statt einem gemeinsamen Formular mit
+  Rollen-Dropdown.
+- Das Kennzeichen „systemweit" steht in den Standortdaten-Tabellen jetzt
+  rechtsbündig in der Aktionen-Spalte (dort, wo bei persönlichen Einträgen
+  „Bearbeiten"/„Löschen" stünden), nicht mehr direkt neben dem Namen.
+
 ## [Web 2.4.2] — 2026-07-26
 
 ### Behoben — Abschnitt bleibt nach Löschen/Bearbeiten zugeklappt

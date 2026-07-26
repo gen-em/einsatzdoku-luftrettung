@@ -466,11 +466,11 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('bases', 'name', $b['name']); ?>
         <tr>
           <td><?= e($b['name']) ?>
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="checkcol"><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
           <td><div class="rowactions">
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
               <form method="post" action="einstellungen.php?t=stammdaten#standorte">
                 <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
@@ -495,7 +495,7 @@ if ($tab === 'geraete') {
     <form method="post" action="einstellungen.php?t=stammdaten#standorte" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
       <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-      <input type="text" name="name" maxlength="120" required
+      <input type="text" name="name" class="focus-target" maxlength="120" required
              placeholder="z. B. Kempten" value="<?= e($editBase['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
       <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
@@ -516,7 +516,6 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('aircraft', 'registration', $a['registration']); ?>
         <tr>
           <td><?= e($a['registration']) ?>
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td><?php $r = [];
@@ -524,6 +523,7 @@ if ($tab === 'geraete') {
             echo e($r ? implode(' · ', $r) : '–'); ?></td>
           <td class="checkcol"><?= (int)$a['id'] === $DEF_AC_ID ? '★' : '' ?></td>
           <td><div class="rowactions">
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ((int)$a['id'] !== $DEF_AC_ID): ?>
               <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber">
                 <?= csrf_field() ?><input type="hidden" name="action" value="ac_default">
@@ -549,7 +549,7 @@ if ($tab === 'geraete') {
       <?= csrf_field() ?><input type="hidden" name="action" value="ac_save">
       <input type="hidden" name="id" value="<?= $editAc ? (int)$editAc['id'] : 0 ?>">
       <div class="inline-form">
-        <input type="text" name="registration" maxlength="64" required
+        <input type="text" name="registration" class="focus-target" maxlength="64" required
                placeholder="Kennung, z. B. Christoph 17"
                value="<?= e($editAc['registration'] ?? '') ?>">
         <button class="btn-primary"><?= $editAc ? 'Änderungen speichern' : 'Hubschrauber anlegen' ?></button>
@@ -580,10 +580,10 @@ if ($tab === 'geraete') {
               $dup = !$global && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role', $rk); ?>
           <tr>
             <td><?= e($c['name']) ?>
-              <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
               <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
             </td>
             <td class="th-act"><div class="rowactions">
+              <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
               <?php if (!$global): ?>
                 <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
                 <form method="post" action="einstellungen.php?t=stammdaten#besatzung"
@@ -604,7 +604,7 @@ if ($tab === 'geraete') {
         <input type="hidden" name="role" value="<?= $rk ?>">
         <input type="hidden" name="id"
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? (int)$editCrew['id'] : 0 ?>">
-        <input type="text" name="name" placeholder="Name" maxlength="120" required
+        <input type="text" name="name" class="focus-target" placeholder="Name" maxlength="120" required
                value="<?= ($editCrew && $editCrew['role'] === $rk) ? e($editCrew['name']) : '' ?>">
         <button class="btn-primary"><?= ($editCrew && $editCrew['role'] === $rk) ? 'Änderung speichern' : 'Hinzufügen' ?></button>
         <?php if ($editCrew && $editCrew['role'] === $rk): ?>
@@ -627,10 +627,10 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('resources', 'name', $r['name']); ?>
         <tr>
           <td><?= e($r['name']) ?>
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if (!$global): ?>
               <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#rettungsmittel">Bearbeiten</a>
               <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel"
@@ -648,7 +648,7 @@ if ($tab === 'geraete') {
     <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
       <input type="hidden" name="id" value="<?= $editRes ? (int)$editRes['id'] : 0 ?>">
-      <input type="text" name="name" maxlength="120" required
+      <input type="text" name="name" class="focus-target" maxlength="120" required
              placeholder="z. B. RTW Kempten 21/83" value="<?= e($editRes['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editRes ? '&Auml;nderung speichern' : 'Rettungsmittel hinzuf&uuml;gen' ?></button>
       <?php if ($editRes): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
@@ -666,10 +666,10 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('bw_units', 'name', $b['name']); ?>
         <tr>
           <td><?= e($b['name']) ?>
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if (!$global): ?>
               <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$b['id'] ?>#bergwacht">Bearbeiten</a>
               <form method="post" action="einstellungen.php?t=stammdaten#bergwacht"
@@ -687,7 +687,7 @@ if ($tab === 'geraete') {
     <form method="post" action="einstellungen.php?t=stammdaten#bergwacht" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
       <input type="hidden" name="id" value="<?= $editBw ? (int)$editBw['id'] : 0 ?>">
-      <input type="text" name="name" maxlength="120" required
+      <input type="text" name="name" class="focus-target" maxlength="120" required
              placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($editBw['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editBw ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
       <?php if ($editBw): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
@@ -707,10 +707,10 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
         <tr>
           <td><?= e($t['name']) ?>
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
             <?php if (!$global): ?>
               <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;et=<?= (int)$t['id'] ?>#transportziele">Bearbeiten</a>
               <form method="post" action="einstellungen.php?t=stammdaten#transportziele"
@@ -728,7 +728,7 @@ if ($tab === 'geraete') {
     <form method="post" action="einstellungen.php?t=stammdaten#transportziele" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
       <input type="hidden" name="id" value="<?= $editTd ? (int)$editTd['id'] : 0 ?>">
-      <input type="text" name="name" maxlength="190" required
+      <input type="text" name="name" class="focus-target" maxlength="190" required
              placeholder="z. B. Klinikum Kempten" value="<?= e($editTd['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editTd ? 'Änderung speichern' : 'Transportziel hinzufügen' ?></button>
       <?php if ($editTd): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
@@ -974,6 +974,8 @@ if ($tab === 'geraete') {
       if (d && d.tagName === 'DETAILS') {
         d.open = true;
         d.scrollIntoView({ block: 'start' });
+        const f = d.querySelector('.focus-target');
+        if (f) { f.focus(); }
       }
     }
     if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }

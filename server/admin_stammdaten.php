@@ -269,7 +269,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <form method="post" action="admin_stammdaten.php#standorte" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
       <input type="hidden" name="id" value="<?= (int)($editBase['id'] ?? 0) ?>">
-      <input type="text" name="name" maxlength="120" placeholder="Standortname"
+      <input type="text" name="name" class="focus-target" maxlength="120" placeholder="Standortname"
              value="<?= e($editBase['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editBase ? 'Speichern' : 'Anlegen' ?></button>
       <?php if ($editBase): ?><a class="btn-red" href="admin_stammdaten.php#standorte">Abbrechen</a><?php endif; ?>
@@ -308,7 +308,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
       <?= csrf_field() ?><input type="hidden" name="action" value="ac_save">
       <input type="hidden" name="id" value="<?= (int)($editAc['id'] ?? 0) ?>">
       <div class="inline-form">
-        <input type="text" name="registration" maxlength="64" placeholder="Kennung"
+        <input type="text" name="registration" class="focus-target" maxlength="64" placeholder="Kennung"
                value="<?= e($editAc['registration'] ?? '') ?>">
         <button class="btn-primary"><?= $editAc ? 'Speichern' : 'Anlegen' ?></button>
         <?php if ($editAc): ?><a class="btn-red" href="admin_stammdaten.php#hubschrauber">Abbrechen</a><?php endif; ?>
@@ -325,41 +325,42 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 
   <details class="stammblock" id="besatzung">
     <summary>Besatzung</summary>
-    <table class="data">
-      <thead><tr><th>Rolle</th><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
-      <tbody>
-      <?php if (!$crew): ?><tr><td colspan="3" class="muted">Noch keine systemweiten Besatzungs-Vorbelegungen.</td></tr><?php endif; ?>
-      <?php foreach ($crew as $c): $n = stammdaten_dup_personal_count('crew_presets', 'name', $c['name'], 'role', $c['role']); ?>
-        <tr>
-          <td><?= e($ROLE_LABELS[$c['role']] ?? $c['role']) ?></td>
-          <td><?= e($c['name']) ?>
-            <?php if ($n > 0): ?><br><span class="muted">⚠ <?= $n ?> Nutzer haben einen gleichnamigen persönlichen Eintrag</span><?php endif; ?>
-          </td>
-          <td><div class="rowactions">
-            <a class="btn-yellow" href="admin_stammdaten.php?ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
-            <form method="post" action="admin_stammdaten.php#besatzung" data-confirm="Zentralen Eintrag löschen?">
-              <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
-              <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-              <button class="btn-red">Löschen</button>
-            </form>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="admin_stammdaten.php#besatzung" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
-      <input type="hidden" name="id" value="<?= (int)($editCrew['id'] ?? 0) ?>">
-      <select name="role">
-        <?php foreach ($ROLE_LABELS as $k => $lbl): ?>
-          <option value="<?= $k ?>" <?= ($editCrew['role'] ?? '') === $k ? 'selected' : '' ?>><?= $lbl ?></option>
+
+    <?php foreach ($ROLE_LABELS as $rk => $lbl): ?>
+      <h3 class="rolehead"><?= e($lbl) ?></h3>
+      <table class="data">
+        <tbody>
+        <?php $any = false; foreach ($crew as $c): if ($c['role'] !== $rk) continue; $any = true;
+              $n = stammdaten_dup_personal_count('crew_presets', 'name', $c['name'], 'role', $rk); ?>
+          <tr>
+            <td><?= e($c['name']) ?>
+              <?php if ($n > 0): ?><br><span class="muted">⚠ <?= $n ?> Nutzer haben einen gleichnamigen persönlichen Eintrag</span><?php endif; ?>
+            </td>
+            <td class="th-act"><div class="rowactions">
+              <a class="btn-yellow" href="admin_stammdaten.php?ec=<?= (int)$c['id'] ?>#besatzung">Bearbeiten</a>
+              <form method="post" action="admin_stammdaten.php#besatzung" data-confirm="Zentralen Eintrag löschen?">
+                <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
+                <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                <button class="btn-red">Löschen</button>
+              </form>
+            </div></td>
+          </tr>
         <?php endforeach; ?>
-      </select>
-      <input type="text" name="name" maxlength="120" placeholder="Name"
-             value="<?= e($editCrew['name'] ?? '') ?>">
-      <button class="btn-primary"><?= $editCrew ? 'Speichern' : 'Anlegen' ?></button>
-      <?php if ($editCrew): ?><a class="btn-red" href="admin_stammdaten.php#besatzung">Abbrechen</a><?php endif; ?>
-    </form>
+        <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
+        </tbody>
+      </table>
+      <form method="post" action="admin_stammdaten.php#besatzung" class="inline-form">
+        <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
+        <input type="hidden" name="role" value="<?= $rk ?>">
+        <input type="hidden" name="id"
+               value="<?= ($editCrew && $editCrew['role'] === $rk) ? (int)$editCrew['id'] : 0 ?>">
+        <input type="text" name="name" placeholder="Name" maxlength="120" class="focus-target"
+               value="<?= ($editCrew && $editCrew['role'] === $rk) ? e($editCrew['name']) : '' ?>">
+        <button class="btn-primary"><?= ($editCrew && $editCrew['role'] === $rk) ? 'Speichern' : 'Anlegen' ?></button>
+        <?php if ($editCrew && $editCrew['role'] === $rk): ?>
+          <a class="btn-red" href="admin_stammdaten.php#besatzung">Abbrechen</a><?php endif; ?>
+      </form>
+    <?php endforeach; ?>
   </details>
 
   <details class="stammblock" id="rettungsmittel">
@@ -388,7 +389,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <form method="post" action="admin_stammdaten.php#rettungsmittel" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
       <input type="hidden" name="id" value="<?= (int)($editRes['id'] ?? 0) ?>">
-      <input type="text" name="name" maxlength="120" placeholder="Rettungsmittel"
+      <input type="text" name="name" class="focus-target" maxlength="120" placeholder="Rettungsmittel"
              value="<?= e($editRes['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editRes ? 'Speichern' : 'Anlegen' ?></button>
       <?php if ($editRes): ?><a class="btn-red" href="admin_stammdaten.php#rettungsmittel">Abbrechen</a><?php endif; ?>
@@ -421,7 +422,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <form method="post" action="admin_stammdaten.php#bergwacht" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
       <input type="hidden" name="id" value="<?= (int)($editBw['id'] ?? 0) ?>">
-      <input type="text" name="name" maxlength="120" placeholder="Bereitschaft"
+      <input type="text" name="name" class="focus-target" maxlength="120" placeholder="Bereitschaft"
              value="<?= e($editBw['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editBw ? 'Speichern' : 'Anlegen' ?></button>
       <?php if ($editBw): ?><a class="btn-red" href="admin_stammdaten.php#bergwacht">Abbrechen</a><?php endif; ?>
@@ -455,7 +456,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <form method="post" action="admin_stammdaten.php#transportziele" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
       <input type="hidden" name="id" value="<?= (int)($editTd['id'] ?? 0) ?>">
-      <input type="text" name="name" maxlength="190" placeholder="z. B. Klinikum Kempten"
+      <input type="text" name="name" class="focus-target" maxlength="190" placeholder="z. B. Klinikum Kempten"
              value="<?= e($editTd['name'] ?? '') ?>">
       <button class="btn-primary"><?= $editTd ? 'Speichern' : 'Anlegen' ?></button>
       <?php if ($editTd): ?><a class="btn-red" href="admin_stammdaten.php#transportziele">Abbrechen</a><?php endif; ?>
@@ -466,7 +467,12 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 (function(){
   function oeffne(id){
     const d = document.getElementById(id);
-    if (d && d.tagName === 'DETAILS') { d.open = true; d.scrollIntoView({ block: 'start' }); }
+    if (d && d.tagName === 'DETAILS') {
+      d.open = true;
+      d.scrollIntoView({ block: 'start' });
+      const f = d.querySelector('.focus-target');
+      if (f) { f.focus(); }
+    }
   }
   if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
   window.addEventListener('hashchange', () => {
