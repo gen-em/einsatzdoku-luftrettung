@@ -364,7 +364,7 @@ Namenslisten je Rolle und Bergwacht-Bereitschaften. Am Flugtag wählst du
 Maschine und Standort dann per Dropdown; die beim Hubschrauber angehakten
 Rollen erscheinen als Besatzungs-Dropdowns mit deinen Vorbelegungen. Mit
 „Als Standard" (★) markierte Maschine und Standort werden bei neuen Flugtagen
-vorbelegt — das gilt auch für vom Admin zentral hinterlegte Einträge (s. 8.4).
+vorbelegt — das gilt auch für vom Admin systemweit hinterlegte Einträge (s. 8.4).
 
 ### 8.2 Andere Rettungsmittel
 
@@ -389,15 +389,15 @@ möglich.
 
 ### 8.4 Zentrale Stammdaten (vom Admin gepflegt)
 
-Der Admin kann alle sechs Bereiche zusätzlich **zentral** hinterlegen (siehe
+Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen (siehe
 Abschnitt 10). Solche Einträge erscheinen bei allen NutzerInnen mit dem
-Kennzeichen **„zentral"**, stehen automatisch in allen Vorbelegungen zur
+Kennzeichen **„systemweit"**, stehen automatisch in allen Vorbelegungen zur
 Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
 einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
-Hinweis abgelehnt — der zentrale Eintrag steht dir ja bereits zur Verfügung.
+Hinweis abgelehnt — der systemweite Eintrag steht dir ja bereits zur Verfügung.
 Existiert umgekehrt schon ein persönlicher Eintrag, bevor der Admin denselben
-Namen zentral anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
-Warnhinweis („identisch mit zentralem Eintrag") — du kannst ihn dann bei
+Namen systemweit anlegt, bleibt dein Eintrag bestehen und erhält lediglich einen
+Warnhinweis („identisch mit systemweitem Eintrag") — du kannst ihn dann bei
 Bedarf löschen.
 
 ---

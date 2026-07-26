@@ -46,6 +46,7 @@ body{margin:0;background:var(--rauch);color:var(--ink);
 .daylist{border-right:1px solid var(--line);padding:1rem;background:var(--schnee)}
 .daylist h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);margin:.2rem 0 .7rem}
+.daylist h2.sidebar-subhead{margin-top:1.6rem}
 /* Gilt fuer Einsatztage- UND Einstellungsmenue: keine Aufzaehlungspunkte.
    (Beim Umbau der Tagesleiste auf das Akkordeon war diese Regel entfallen,
    wodurch im Einstellungsmenue Punkte auftauchten.) */

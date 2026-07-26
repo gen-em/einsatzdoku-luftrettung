@@ -41,7 +41,7 @@ hems/
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
-│   ├── admin.php + admin_user.php  Nutzerverwaltung · geraete.php (Weiterleitung)
+│   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail) · geraete.php (Weiterleitung)
 │   ├── admin_stammdaten.php  Zentrale (globale) Stammdaten aller sechs Typen
 │   ├── flugtag_neu.php    Flugtag von Hand anlegen
 │   ├── einsatz_loeschen.php · flugtag_loeschen.php · papierkorb.php  Löschen mit Vorschau

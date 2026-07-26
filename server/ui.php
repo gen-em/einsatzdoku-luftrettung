@@ -31,9 +31,10 @@ function ui_topbar(string $active): void {
 <?php }
 
 /**
- * Untermenue der Einstellungen — identisch auf einstellungen.php, admin.php
- * und admin_user.php. Die Administration erscheint nur fuer Admins.
- * $active: profil | stammdaten | backup | geraete | admin
+ * Untermenue der Einstellungen — identisch auf einstellungen.php, admin_users.php,
+ * admin_user.php und admin_stammdaten.php. Die Administration (eigener,
+ * abgesetzter Block) erscheint nur fuer Admins.
+ * $active: profil | stammdaten | backup | geraete | admin | admin_stammdaten
  */
 function ui_settings_sidebar(string $active): void {
     global $userRole;
@@ -43,10 +44,6 @@ function ui_settings_sidebar(string $active): void {
         'backup'     => ['einstellungen.php?t=backup', 'Backup'],
         'geraete'    => ['einstellungen.php?t=geraete', 'Geräte'],
     ];
-    if ($userRole === 'admin') {
-        $items['admin'] = ['admin.php', 'Administration'];
-        $items['admin_stammdaten'] = ['admin_stammdaten.php', 'Zentrale Stammdaten'];
-    }
     ?>
   <aside class="daylist">
     <h2>Einstellungen</h2>
@@ -57,6 +54,13 @@ function ui_settings_sidebar(string $active): void {
       <li><a href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"
              data-confirm-tone="normal">Abmelden</a></li>
     </ul>
+    <?php if ($userRole === 'admin'): ?>
+      <h2 class="sidebar-subhead">Administration</h2>
+      <ul>
+        <li><a href="admin_users.php" <?= $active === 'admin' ? 'class="active"' : '' ?>>NutzerInnenverwaltung</a></li>
+        <li><a href="admin_stammdaten.php" <?= $active === 'admin_stammdaten' ? 'class="active"' : '' ?>>Zentrale Stammdaten</a></li>
+      </ul>
+    <?php endif; ?>
   </aside>
 <?php }
 

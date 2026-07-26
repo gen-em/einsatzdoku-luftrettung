@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
             if (stammdaten_dup_global('bases', 'name', $n)) {
-                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($bid > 0) {
                 db()->prepare('UPDATE bases SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $bid, $userId]);
@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $acId = (int)($_POST['id'] ?? 0);
         if ($reg !== '') {
             if (stammdaten_dup_global('aircraft', 'registration', $reg)) {
-                $error = "„$reg“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $reg . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } else {
                 $flags = [];
                 foreach (['p1','p2','hems','fr','other'] as $r) { $flags[] = isset($_POST[$r]) ? 1 : 0; }
@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cid = (int)($_POST['id'] ?? 0);
         if ($n !== '' && in_array($role, ['p1','p2','hems','fr','other'], true)) {
             if (stammdaten_dup_global('crew_presets', 'name', $n, 'role', $role)) {
-                $error = "„$n“ ist für diese Rolle bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $n . '“ ' . 'ist für diese Rolle bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($cid > 0) {
                 db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $cid, $userId]);
@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
             if (stammdaten_dup_global('resources', 'name', $n)) {
-                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($wid > 0) {
                 db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
@@ -244,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $wid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
             if (stammdaten_dup_global('bw_units', 'name', $n)) {
-                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($wid > 0) {
                 db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
@@ -267,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tid = (int)($_POST['id'] ?? 0);
         if ($n !== '') {
             if (stammdaten_dup_global('transport_dests', 'name', $n)) {
-                $error = "„$n“ ist bereits zentral hinterlegt und steht dir automatisch zur Verfügung.";
+                $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($tid > 0) {
                 db()->prepare('UPDATE transport_dests SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $tid, $userId]);
@@ -452,22 +452,22 @@ if ($tab === 'geraete') {
     <p class="muted">Vorbelegungen für die Flugtag- und Einsatzdokumentation, alphabetisch
        sortiert. Löschen entfernt nur den Listeneintrag — gespeicherte Flugtage bleiben
        unverändert. ★ markiert die Vorbelegung neuer Flugtage. Das Kennzeichen
-       „zentral“ markiert vom Admin gepflegte Einträge — diese stehen automatisch zur
+       „systemweit“ markiert vom Admin gepflegte Einträge — diese stehen automatisch zur
        Verfügung und lassen sich hier nicht bearbeiten oder löschen.</p>
 
       <details class="stammblock" id="standorte">
     <summary>Standorte</summary>
 
     <table class="data">
-      <thead><tr><th>Name</th><th>Standard</th><th class="th-act">Aktionen</th></tr></thead>
+      <thead><tr><th>Name</th><th>Standard</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$bases): ?><tr><td colspan="3" class="muted">Noch keine Standorte.</td></tr><?php endif; ?>
       <?php foreach ($bases as $b): $global = $b['user_id'] === null;
             $dup = !$global && stammdaten_dup_global('bases', 'name', $b['name']); ?>
         <tr>
           <td><?= e($b['name']) ?>
-            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="checkcol"><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
           <td><div class="rowactions">
@@ -509,15 +509,15 @@ if ($tab === 'geraete') {
 
     <p class="muted">Die angehakten Rollen bestimmen, welche Besatzungsfelder am Flugtag erscheinen.</p>
     <table class="data">
-      <thead><tr><th>Kennung</th><th>Rollen</th><th>Standard</th><th class="th-act">Aktionen</th></tr></thead>
+      <thead><tr><th>Kennung</th><th>Rollen</th><th>Standard</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$acs): ?><tr><td colspan="4" class="muted">Noch keine Hubschrauber.</td></tr><?php endif; ?>
       <?php foreach ($acs as $a): $global = $a['user_id'] === null;
             $dup = !$global && stammdaten_dup_global('aircraft', 'registration', $a['registration']); ?>
         <tr>
           <td><?= e($a['registration']) ?>
-            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td><?php $r = [];
             foreach ($ROLE_LABELS as $k => $lbl) { if ((int)$a[$k]) { $r[] = $lbl; } }
@@ -580,8 +580,8 @@ if ($tab === 'geraete') {
               $dup = !$global && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role', $rk); ?>
           <tr>
             <td><?= e($c['name']) ?>
-              <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+              <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
             </td>
             <td class="th-act"><div class="rowactions">
               <?php if (!$global): ?>
@@ -627,8 +627,8 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('resources', 'name', $r['name']); ?>
         <tr>
           <td><?= e($r['name']) ?>
-            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
             <?php if (!$global): ?>
@@ -666,8 +666,8 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('bw_units', 'name', $b['name']); ?>
         <tr>
           <td><?= e($b['name']) ?>
-            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
             <?php if (!$global): ?>
@@ -707,8 +707,8 @@ if ($tab === 'geraete') {
             $dup = !$global && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
         <tr>
           <td><?= e($t['name']) ?>
-            <?php if ($global): ?><span class="badge-central">zentral</span><?php endif; ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit zentralem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
+            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
           </td>
           <td class="th-act"><div class="rowactions">
             <?php if (!$global): ?>
@@ -870,7 +870,7 @@ if ($tab === 'geraete') {
         impState.textContent = `Import fertig: ${s.missions} Einsätze übernommen `
           + `(${s.missions_skipped} bereits vorhanden), ${s.rests} Ruhesegmente, `
           + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
-          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits zentral vorhanden)` : '') + `.`;
+          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.`;
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }

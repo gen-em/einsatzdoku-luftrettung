@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Flugtage
             db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
-            header('Location: admin.php');
+            header('Location: admin_users.php');
             exit;
         }
     }
@@ -86,7 +86,7 @@ $devices = $dv->fetchAll();
   <?php ui_settings_sidebar('admin'); ?>
 
   <main class="page">
-  <p><a href="admin.php" class="add-link">← zurück zur Nutzerverwaltung</a></p>
+  <p><a href="admin_users.php" class="add-link">← zurück zur Nutzerverwaltung</a></p>
   <h1><?= e($u['name'] ?: $u['email']) ?></h1>
   <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
   <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>

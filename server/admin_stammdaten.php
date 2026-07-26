@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($n === '') {
             $error = 'Bitte einen Namen angeben.';
         } elseif (stammdaten_dup_global('bases', 'name', $n, null, null, $bid)) {
-            $error = "„$n“ ist bereits zentral hinterlegt.";
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt.';
         } elseif ($bid > 0) {
             db()->prepare('UPDATE bases SET name = ? WHERE id = ? AND user_id IS NULL')
                 ->execute([$n, $bid]);
             $notice = 'Standort gespeichert.';
         } else {
             db()->prepare('INSERT INTO bases (user_id, name) VALUES (NULL, ?)')->execute([$n]);
-            $notice = 'Standort zentral angelegt.';
+            $notice = 'Standort systemweit angelegt.';
         }
     }
     if ($action === 'base_del') {
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($reg === '') {
             $error = 'Bitte eine Kennung angeben.';
         } elseif (stammdaten_dup_global('aircraft', 'registration', $reg, null, null, $acId)) {
-            $error = "„$reg“ ist bereits zentral hinterlegt.";
+            $error = '„' . $reg . '“ ' . 'ist bereits systemweit hinterlegt.';
         } else {
             $flags = [];
             foreach (['p1','p2','hems','fr','other'] as $r) { $flags[] = isset($_POST[$r]) ? 1 : 0; }
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare('INSERT INTO aircraft (user_id, registration, p1, p2, hems, fr, other)
                                VALUES (NULL,?,?,?,?,?,?)')
                     ->execute(array_merge([$reg], $flags));
-                $notice = 'Hubschrauber zentral angelegt.';
+                $notice = 'Hubschrauber systemweit angelegt.';
             }
         }
     }
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($n === '' || !in_array($role, ['p1','p2','hems','fr','other'], true)) {
             $error = 'Bitte Name und Rolle angeben.';
         } elseif (stammdaten_dup_global('crew_presets', 'name', $n, 'role', $role, $cid)) {
-            $error = "„$n“ ist für diese Rolle bereits zentral hinterlegt.";
+            $error = '„' . $n . '“ ' . 'ist für diese Rolle bereits systemweit hinterlegt.';
         } elseif ($cid > 0) {
             db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id IS NULL')
                 ->execute([$n, $cid]);
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             db()->prepare('INSERT INTO crew_presets (user_id, role, name) VALUES (NULL,?,?)')
                 ->execute([$role, $n]);
-            $notice = 'Eintrag zentral angelegt.';
+            $notice = 'Eintrag systemweit angelegt.';
         }
     }
     if ($action === 'crew_del') {
@@ -112,14 +112,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($n === '') {
             $error = 'Bitte einen Namen angeben.';
         } elseif (stammdaten_dup_global('resources', 'name', $n, null, null, $wid)) {
-            $error = "„$n“ ist bereits zentral hinterlegt.";
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt.';
         } elseif ($wid > 0) {
             db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id IS NULL')
                 ->execute([$n, $wid]);
             $notice = 'Rettungsmittel gespeichert.';
         } else {
             db()->prepare('INSERT INTO resources (user_id, name) VALUES (NULL, ?)')->execute([$n]);
-            $notice = 'Rettungsmittel zentral angelegt.';
+            $notice = 'Rettungsmittel systemweit angelegt.';
         }
     }
     if ($action === 'res_del') {
@@ -134,14 +134,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($n === '') {
             $error = 'Bitte einen Namen angeben.';
         } elseif (stammdaten_dup_global('bw_units', 'name', $n, null, null, $wid)) {
-            $error = "„$n“ ist bereits zentral hinterlegt.";
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt.';
         } elseif ($wid > 0) {
             db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id IS NULL')
                 ->execute([$n, $wid]);
             $notice = 'Bereitschaft gespeichert.';
         } else {
             db()->prepare('INSERT INTO bw_units (user_id, name) VALUES (NULL, ?)')->execute([$n]);
-            $notice = 'Bereitschaft zentral angelegt.';
+            $notice = 'Bereitschaft systemweit angelegt.';
         }
     }
     if ($action === 'bw_del') {
@@ -156,14 +156,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($n === '') {
             $error = 'Bitte einen Namen angeben.';
         } elseif (stammdaten_dup_global('transport_dests', 'name', $n, null, null, $tid)) {
-            $error = "„$n“ ist bereits zentral hinterlegt.";
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt.';
         } elseif ($tid > 0) {
             db()->prepare('UPDATE transport_dests SET name = ? WHERE id = ? AND user_id IS NULL')
                 ->execute([$n, $tid]);
             $notice = 'Transportziel gespeichert.';
         } else {
             db()->prepare('INSERT INTO transport_dests (user_id, name) VALUES (NULL, ?)')->execute([$n]);
-            $notice = 'Transportziel zentral angelegt.';
+            $notice = 'Transportziel systemweit angelegt.';
         }
     }
     if ($action === 'td_del') {
@@ -173,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Nach dem Speichern zurueck zum passenden Abschnitt umleiten (verhindert
-    // erneutes Absenden beim Neuladen; Fehlermeldung bleibt ohne Umleitung
-    // stehen, damit die Eingabe im Formular erhalten bleibt).
+    // erneutes Absenden beim Neuladen) und den Abschnitt dort wieder aufklappen
+    // (siehe Hash-Skript unten). Gilt fuer Erfolg UND Fehlermeldung.
     $abschnitt = [
         'base_save' => 'standorte',      'base_del' => 'standorte',
         'ac_save'   => 'hubschrauber',   'ac_del'   => 'hubschrauber',
@@ -183,8 +183,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'bw_save'   => 'bergwacht',      'bw_del'   => 'bergwacht',
         'td_save'   => 'transportziele', 'td_del'   => 'transportziele',
     ][$action] ?? null;
-    if ($abschnitt !== null && $notice !== null) {
-        $_SESSION['flash_notice'] = $notice;
+    if ($abschnitt !== null && ($notice !== null || $error !== null)) {
+        if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
+        if ($error !== null) { $_SESSION['flash_error'] = $error; }
         header('Location: admin_stammdaten.php#' . $abschnitt);
         exit;
     }
@@ -193,6 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (!empty($_SESSION['flash_notice'])) {
     $notice = $_SESSION['flash_notice'];
     unset($_SESSION['flash_notice']);
+}
+if (!empty($_SESSION['flash_error'])) {
+    $error = $_SESSION['flash_error'];
+    unset($_SESSION['flash_error']);
 }
 
 $ROLE_LABELS = ['p1' => 'Pilot 1', 'p2' => 'Pilot 2', 'hems' => 'HEMS',
@@ -235,15 +240,15 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 
   <h1>Zentrale Stammdaten</h1>
   <p class="muted">Diese Einträge stehen automatisch allen NutzerInnen als Vorbelegung zur
-     Verfügung (Kennzeichnung „zentral“ in der persönlichen Übersicht) und können nur hier
+     Verfügung (Kennzeichnung „systemweit“ in der persönlichen Übersicht) und können nur hier
      vom Admin gepflegt werden.</p>
 
   <details class="stammblock" id="standorte">
     <summary>Standorte</summary>
     <table class="data">
-      <thead><tr><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
+      <thead><tr><th>Name</th><th class="th-act"></th></tr></thead>
       <tbody>
-      <?php if (!$bases): ?><tr><td colspan="2" class="muted">Noch keine zentralen Standorte.</td></tr><?php endif; ?>
+      <?php if (!$bases): ?><tr><td colspan="2" class="muted">Noch keine systemweiten Standorte.</td></tr><?php endif; ?>
       <?php foreach ($bases as $b): $n = stammdaten_dup_personal_count('bases', 'name', $b['name']); ?>
         <tr>
           <td><?= e($b['name']) ?>
@@ -274,9 +279,9 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
   <details class="stammblock" id="hubschrauber">
     <summary>Hubschrauber</summary>
     <table class="data">
-      <thead><tr><th>Kennung</th><th>P1</th><th>P2</th><th>HEMS</th><th>FR</th><th>Sonst.</th><th class="th-act">Aktionen</th></tr></thead>
+      <thead><tr><th>Kennung</th><th>P1</th><th>P2</th><th>HEMS</th><th>FR</th><th>Sonst.</th><th class="th-act"></th></tr></thead>
       <tbody>
-      <?php if (!$acs): ?><tr><td colspan="7" class="muted">Noch keine zentralen Hubschrauber.</td></tr><?php endif; ?>
+      <?php if (!$acs): ?><tr><td colspan="7" class="muted">Noch keine systemweiten Hubschrauber.</td></tr><?php endif; ?>
       <?php foreach ($acs as $a): $n = stammdaten_dup_personal_count('aircraft', 'registration', $a['registration']); ?>
         <tr>
           <td><?= e($a['registration']) ?>
@@ -299,13 +304,15 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
       <?php endforeach; ?>
       </tbody>
     </table>
-    <form method="post" action="admin_stammdaten.php#hubschrauber" class="inline-form">
+    <form method="post" action="admin_stammdaten.php#hubschrauber" class="ac-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="ac_save">
       <input type="hidden" name="id" value="<?= (int)($editAc['id'] ?? 0) ?>">
-      <input type="text" name="registration" maxlength="64" placeholder="Kennung"
-             value="<?= e($editAc['registration'] ?? '') ?>">
-      <button class="btn-primary"><?= $editAc ? 'Speichern' : 'Anlegen' ?></button>
-      <?php if ($editAc): ?><a class="btn-red" href="admin_stammdaten.php#hubschrauber">Abbrechen</a><?php endif; ?>
+      <div class="inline-form">
+        <input type="text" name="registration" maxlength="64" placeholder="Kennung"
+               value="<?= e($editAc['registration'] ?? '') ?>">
+        <button class="btn-primary"><?= $editAc ? 'Speichern' : 'Anlegen' ?></button>
+        <?php if ($editAc): ?><a class="btn-red" href="admin_stammdaten.php#hubschrauber">Abbrechen</a><?php endif; ?>
+      </div>
       <div class="rolechecks">
         <span class="rolechecks-hint">Rollen auf dem Hubschrauber:</span>
         <?php foreach ($ROLE_LABELS as $k => $lbl): ?>
@@ -321,7 +328,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <table class="data">
       <thead><tr><th>Rolle</th><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
-      <?php if (!$crew): ?><tr><td colspan="3" class="muted">Noch keine zentralen Besatzungs-Vorbelegungen.</td></tr><?php endif; ?>
+      <?php if (!$crew): ?><tr><td colspan="3" class="muted">Noch keine systemweiten Besatzungs-Vorbelegungen.</td></tr><?php endif; ?>
       <?php foreach ($crew as $c): $n = stammdaten_dup_personal_count('crew_presets', 'name', $c['name'], 'role', $c['role']); ?>
         <tr>
           <td><?= e($ROLE_LABELS[$c['role']] ?? $c['role']) ?></td>
@@ -360,7 +367,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <table class="data">
       <thead><tr><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
-      <?php if (!$res): ?><tr><td colspan="2" class="muted">Noch keine zentralen Rettungsmittel.</td></tr><?php endif; ?>
+      <?php if (!$res): ?><tr><td colspan="2" class="muted">Noch keine systemweiten Rettungsmittel.</td></tr><?php endif; ?>
       <?php foreach ($res as $r): $n = stammdaten_dup_personal_count('resources', 'name', $r['name']); ?>
         <tr>
           <td><?= e($r['name']) ?>
@@ -393,7 +400,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <table class="data">
       <thead><tr><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
-      <?php if (!$bw): ?><tr><td colspan="2" class="muted">Noch keine zentralen Bergwacht-Bereitschaften.</td></tr><?php endif; ?>
+      <?php if (!$bw): ?><tr><td colspan="2" class="muted">Noch keine systemweiten Bergwacht-Bereitschaften.</td></tr><?php endif; ?>
       <?php foreach ($bw as $w): $n = stammdaten_dup_personal_count('bw_units', 'name', $w['name']); ?>
         <tr>
           <td><?= e($w['name']) ?>
@@ -427,7 +434,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
     <table class="data">
       <thead><tr><th>Name</th><th class="th-act">Aktionen</th></tr></thead>
       <tbody>
-      <?php if (!$tds): ?><tr><td colspan="2" class="muted">Noch keine zentralen Transportziele.</td></tr><?php endif; ?>
+      <?php if (!$tds): ?><tr><td colspan="2" class="muted">Noch keine systemweiten Transportziele.</td></tr><?php endif; ?>
       <?php foreach ($tds as $t): $n = stammdaten_dup_personal_count('transport_dests', 'name', $t['name']); ?>
         <tr>
           <td><?= e($t['name']) ?>

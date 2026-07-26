@@ -10,6 +10,28 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.4.1] — 2026-07-26
+
+### Geändert — Feinschliff an den zentralen Stammdaten (2.4.0)
+- Formularfehler bei den Hubschrauber-Rollen-Häkchen im Admin-Bereich behoben
+  (falsche CSS-Verschachtelung erzeugte großen Abstand zwischen Kästchen und
+  Beschriftung).
+- Einstellungsmenü: „Administration" ist jetzt eine eigene, abgesetzte
+  Überschrift mit den Punkten „NutzerInnenverwaltung" und „Zentrale
+  Stammdaten" darunter.
+- `admin.php` in `admin_users.php` umbenannt (klarere Abgrenzung zu
+  `admin_user.php`, der Detailseite einer einzelnen NutzerIn).
+- Überflüssige „Aktionen"-Spaltenüberschrift bei Standorte/Hubschrauber
+  entfernt (Standortdaten und zentrale Stammdaten).
+- Nach Anlegen/Bearbeiten/Löschen eines Stammdaten-Eintrags kehrt die Seite
+  jetzt auch bei einer Fehlermeldung (z. B. Namenskonflikt) zum bearbeiteten
+  Abschnitt zurück und klappt ihn wieder auf — bisher galt das nur bei Erfolg.
+- Die Kennzeichnung „zentral" heißt jetzt „systemweit" (Badge, Warnhinweise,
+  Fehlermeldungen, Leerzustände) — klarer verständlich als isoliertes Wort.
+- Fehlermeldung bei Namenskonflikt zeigte den eingegebenen Namen nicht an
+  (Ursache: Sonderzeichen direkt nach der Variable in der Zeichenkette);
+  behoben durch Verkettung statt Interpolation.
+
 ## [Web 2.4.0] — 2026-07-26
 
 ### Neu — Zentrale (globale) Stammdaten durch Admin, Transportziele als Stammdaten
