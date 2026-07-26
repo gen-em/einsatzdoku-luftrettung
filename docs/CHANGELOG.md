@@ -10,6 +10,21 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.4.2] — 2026-07-26
+
+### Behoben — Abschnitt bleibt nach Löschen/Bearbeiten zugeklappt
+- Root Cause gefunden: Das Skript, das einen Standortdaten-Abschnitt nach dem
+  Speichern/Löschen wieder aufklappt, war versehentlich nur innerhalb des
+  Backup-Tabs eingebunden und lief daher auf dem Standortdaten-Tab nie. Jetzt
+  unabhängig vom aktiven Tab eingebunden.
+
+### Geändert — Spaltenüberschriften zentriert
+- In den Tabellen Standorte und Hubschrauber (Standortdaten **und** zentrale
+  Stammdaten) sind die Spaltenüberschriften jetzt zentriert. Ursache für das
+  vorherige Fehlschlagen einer einfachen CSS-Regel: `table.data th` (Linksbündig)
+  hat höhere Spezifität als eine einfache Klassenregel — behoben über
+  `table.data.data-centered th`.
+
 ## [Web 2.4.1] — 2026-07-26
 
 ### Geändert — Feinschliff an den zentralen Stammdaten (2.4.0)

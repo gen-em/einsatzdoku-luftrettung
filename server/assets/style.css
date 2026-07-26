@@ -97,6 +97,10 @@ table.data th{font-family:var(--head);font-weight:600;font-size:.8rem;
   padding:.5rem .8rem;border-bottom:2px solid var(--navy)}
 table.data td{padding:.5rem .8rem;border-bottom:1px solid var(--line)}
 table.data tbody tr:last-child td{border-bottom:0}
+/* ACHTUNG Spezifitaet: table.data th{text-align:left} oben (0-1-2) ist
+   staerker als eine einfache .data-centered-Regel; table.data.data-centered
+   (0-2-2) muss daher explizit beide Klassen tragen, um zu greifen. */
+table.data.data-centered th{text-align:center}
 #missions tbody tr{cursor:pointer}
 #missions tbody tr:hover{background:var(--accent-light)}
 .mono{font-family:var(--mono);font-size:.92rem;font-variant-numeric:tabular-nums}

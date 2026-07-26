@@ -458,7 +458,7 @@ if ($tab === 'geraete') {
       <details class="stammblock" id="standorte">
     <summary>Standorte</summary>
 
-    <table class="data">
+    <table class="data data-centered">
       <thead><tr><th>Name</th><th>Standard</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$bases): ?><tr><td colspan="3" class="muted">Noch keine Standorte.</td></tr><?php endif; ?>
@@ -508,7 +508,7 @@ if ($tab === 'geraete') {
     <summary>Hubschrauber</summary>
 
     <p class="muted">Die angehakten Rollen bestimmen, welche Besatzungsfelder am Flugtag erscheinen.</p>
-    <table class="data">
+    <table class="data data-centered">
       <thead><tr><th>Kennung</th><th>Rollen</th><th>Standard</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$acs): ?><tr><td colspan="4" class="muted">Noch keine Hubschrauber.</td></tr><?php endif; ?>
@@ -875,22 +875,7 @@ if ($tab === 'geraete') {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }
     });
-    
-/* Standortdaten: Abschnitt oeffnen, wenn er angesprungen oder bearbeitet wird */
-(function(){
-  function oeffne(id){
-    const d = document.getElementById(id);
-    if (d && d.tagName === 'DETAILS') {
-      d.open = true;
-      d.scrollIntoView({ block: 'start' });
-    }
-  }
-  if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
-  window.addEventListener('hashchange', () => {
-    if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
-  });
-})();
-</script>
+    </script>
 
   <?php else: ?>
     <h1>Geräte</h1>
@@ -977,6 +962,26 @@ if ($tab === 'geraete') {
       <button class="btn-primary">Gerät anlegen</button>
     </form>
   <?php endif; ?>
+
+  <script>
+  /* Standortdaten (und ggf. andere Tabs): Abschnitt oeffnen, wenn er per
+   * Anker angesprungen oder nach dem Speichern/Loeschen dorthin umgeleitet
+   * wurde. Unabhaengig vom aktiven Tab eingebunden (nicht nur im jeweiligen
+   * Tab-Zweig), da der Redirect-Anker tab-uebergreifend funktionieren muss. */
+  (function(){
+    function oeffne(id){
+      const d = document.getElementById(id);
+      if (d && d.tagName === 'DETAILS') {
+        d.open = true;
+        d.scrollIntoView({ block: 'start' });
+      }
+    }
+    if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
+    window.addEventListener('hashchange', () => {
+      if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
+    });
+  })();
+  </script>
 
   <?php ui_footer(); ?>
   </main>

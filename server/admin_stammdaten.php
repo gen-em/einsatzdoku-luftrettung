@@ -245,7 +245,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 
   <details class="stammblock" id="standorte">
     <summary>Standorte</summary>
-    <table class="data">
+    <table class="data data-centered">
       <thead><tr><th>Name</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$bases): ?><tr><td colspan="2" class="muted">Noch keine systemweiten Standorte.</td></tr><?php endif; ?>
@@ -278,7 +278,7 @@ foreach ($crew as $c) { if ((int)$c['id'] === (int)($_GET['ec'] ?? 0)) { $editCr
 
   <details class="stammblock" id="hubschrauber">
     <summary>Hubschrauber</summary>
-    <table class="data">
+    <table class="data data-centered">
       <thead><tr><th>Kennung</th><th>P1</th><th>P2</th><th>HEMS</th><th>FR</th><th>Sonst.</th><th class="th-act"></th></tr></thead>
       <tbody>
       <?php if (!$acs): ?><tr><td colspan="7" class="muted">Noch keine systemweiten Hubschrauber.</td></tr><?php endif; ?>
