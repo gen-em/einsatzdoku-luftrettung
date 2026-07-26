@@ -38,7 +38,6 @@ return [
     ],
     'site_desc' => [
         'label' => 'Beschreibung Einsatzort', 'type' => 'text', 'max' => 190,
-        'placeholder' => 'kurze Beschreibung (Detailansicht)',
     ],
     'winch' => [
         'label' => 'Windeneinsatz', 'type' => 'checkbox',

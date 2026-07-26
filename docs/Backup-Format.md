@@ -69,6 +69,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "ended_at":   "2026-07-19 09:02:00",  // null = kein Abschluss
     "manual": 0, "final": 1,
     "distance_m": 38400, "ascent_m": 550,
+    "site_ele_m": 712,                    // wird beim Restore neu berechnet, nicht uebernommen
     "mission_no": "…", "transport_dest": "…", "site_desc": "…",
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,

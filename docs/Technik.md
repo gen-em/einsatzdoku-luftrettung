@@ -1,7 +1,7 @@
 # Einsatzdoku — Technische Dokumentation
 
-*Stand: 23.07.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
-Historie: `CHANGELOG.md` · Übergabe: `Uebergabe.md`.*
+*Stand: 26.07.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
 
@@ -27,7 +27,7 @@ Daten erst nach Server-Bestätigung.
 
 ```
 hems/
-├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag, Uebergabe
+├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local), Aufräumjob
@@ -38,7 +38,7 @@ hems/
 │   ├── einrichtung.php    E2E-Ersteinrichtung (Wiederherstellungsschlüssel) & Entsperren
 │   ├── index.php          Tagesübersicht (Karte + Tabelle)
 │   ├── einsatz.php        Einsatzansicht · einsatz_form.php Nachtragen/Bearbeiten
-│   ├── zeitraum.php       Jahres-/Monatsübersicht (Tabelle, ohne Karte)
+│   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── admin.php + admin_user.php  Nutzerverwaltung · geraete.php (Weiterleitung)
@@ -68,7 +68,7 @@ hems/
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`, `kdf_ver` immer 1) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt) |
 | `password_resets` | Token-Hashes (sha256), 1 h gültig; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -122,7 +122,7 @@ Wiederherstellungsschlüssel. Der Browser entpackt damit den Inhaltsschlüssel,
 leitet aus dem neuen Passwort Salz + Token ab und verpackt den Schlüssel neu;
 der Server schreibt Token-Hash, Salz und Hülle in **einer Transaktion**. Passt
 der Schlüssel nicht, bricht der Vorgang im Browser ab, bevor etwas gesendet
-wird — das Konto bleibt unverändert. (Fehlerhistorie in `Uebergabe.md`, 6.4.)
+wird — das Konto bleibt unverändert.
 
 **Backup (portabel):** `api/backup_data.php` liefert alle Daten der NutzerIn als
 Roh-JSON (geschützte Angaben weiterhin als Chiffretext). Der Browser
@@ -150,6 +150,15 @@ unterdrücken, was die Rückfrage wirkungslos machen würde. Eingebunden über
 `ui_footer()`. Sicherheitskritische Löschungen hängen ohnehin nicht daran,
 sondern an den serverseitigen Zwischenseiten.
 
+**Verlassen-Warnung & Strg-Enter:** `assets/forms.js` ist reines Opt-in per
+Attribut (`data-dirty-track`, `data-submit-on-ctrl-enter`), global über
+Event-Delegation (kein Einbinden pro Feld nötig). Das reguläre Absenden setzt
+das Dirty-Flag zurück, bevor `beforeunload` greifen kann — auch bei
+Formularen, die selbst per `fetch()` speichern (`preventDefault()` in deren
+eigenem Handler ändert daran nichts, das Submit-Ereignis feuert davor).
+Eingebunden auf `einsatz_form.php`, `index.php` (`#dayform`) und
+`flugtag_neu.php`.
+
 **Einsatztage-Leiste:** `ui_days_sidebar()` gruppiert die Tage serverseitig
 nach Jahr und Monat (`<details>`-Verschachtelung); welches Jahr/welcher Monat
 offen ist, bestimmt PHP anhand von `$currentDay` bzw. des jüngsten Tages —
@@ -158,7 +167,7 @@ kein JavaScript nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
 Ebene) für Klicks ohne Seitenwechsel und trennt die Klickbereiche:
 Beschriftung → `zeitraum.php`, Dreieck → nur auf/zu.
 
-> **CSS-Falle (dokumentiert in `Uebergabe.md`, 6.2):** `.daylist a{display:block}`
+> **CSS-Falle:** `.daylist a{display:block}`
 > hat höhere Spezifität als `.trashlink` und steht weiter unten — Regeln für
 > Menüpunkte müssen daher `.daylist a.klasse` lauten und **nach** `.daylist a`
 > stehen.
@@ -176,9 +185,25 @@ Wert gespeichert, wenn es **nicht** aus einem Geburtsdatum ableitbar ist.
 einzeln entfernbar). Das Löschen einer Vorbelegung lässt dokumentierte Einsätze
 unverändert. Backup exportiert/importiert beide.
 
+**Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
+die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
+PatientIn", Fallback Phase 6, Toleranz 300 s (Konstante
+`SITE_ELE_TOLERANCE_S`) zum zeitlich nächstgelegenen `track_points.ele`.
+Aufgerufen von `ingest.php` (nach jedem Uhr-Upload), `einsatz_form.php` (nach
+manuellem Speichern — Phasen ändern sich, der Track bleibt gleich),
+`backup_lib.php` (nach Restore — aus den gerade eingespielten Phasen/Track neu
+berechnet statt aus der Datei übernommen) und `update.php` (Backfill bei der
+Migration). Kein Formularfeld, daher nicht in `mission_fields.php`.
+
 **Zeitraum-API:** `api/range.php` liefert alle Einsätze eines Jahres oder Monats
 **bewusst ohne Trackpunkte** — bei einem ganzen Jahr wären das
-Hunderttausende Koordinaten, und die Zeitraumansicht hat keine Karte. Die
+Hunderttausende Koordinaten. Die Karte der Zeitraumansicht (Einsatzort-Pins)
+nutzt stattdessen die Koordinaten im `pat_blob`, die der Browser für die
+Tabellenspalten ohnehin entschlüsselt — keine zweite Entschlüsselung, keine
+Serveränderung nötig. Zusätzlich liefert die API `winch_cycles` und
+`site_ele_m` je Einsatz (Grundlage der Statistiktabelle) sowie `tage` neu aus
+der `days`-Tabelle statt `COUNT(DISTINCT day)` aus `missions` — zählt also
+auch einsatzfreie Flugtage mit (Divisor der Durchschnittswerte). Die
 geschützten Angaben entschlüsselt der Browser wie überall selbst.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
@@ -201,7 +226,7 @@ beim Speichern im Bearbeitungsformular bzw. bei Handanlage.
 (Europe/Berlin). Das Formular rechnet lokale Eingaben nach UTC um; Zeiten
 „nach Mitternacht" (kleiner als die vorherige) erhalten +1 Tag.
 
-> **PHP-Falle (dokumentiert in `Uebergabe.md`, 6.3):** Numerische
+> **PHP-Falle:** Numerische
 > Array-Schlüssel werden zu Ganzzahlen; unter `strict_types` bricht `e()` dann
 > ab. Bei Jahr/Monat-Gruppierungen überall `(string)`-Umwandlung und `str_pad`.
 
@@ -303,7 +328,7 @@ SFTP-only-Hoster brauchen einen anderen Workflow.
 **„Der Fix wirkt nicht":** Zuerst prüfen, ob auf dem Server wirklich der
 aktuelle Code liegt — den Quelltext der betroffenen Seite ansehen (Version in
 der Fußzeile, `?v=`-Anhang an den Assets). Mehrfach lag die Ursache an
-veralteten Dateien, nicht am Code (siehe `Uebergabe.md`, 6.10).
+veralteten Dateien, nicht am Code.
 
 **Karte zeigt „Access blocked":** Referrer-Policy prüfen
 (muss `strict-origin-when-cross-origin` sein), Hard-Reload.
@@ -322,7 +347,5 @@ erfolgreichem Upload.
 5. Geräte-Limit pro NutzerIn
 6. Weitere Zielgeräte (Fenix 7/8, Touch-Bedienung)
 7. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
-8. Content-Security-Policy als zusätzliche Verteidigungslinie (Details:
-   `Uebergabe.md`, 8.2)
-9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen (offen, siehe
-   `Uebergabe.md`, 8.1)
+8. Content-Security-Policy als zusätzliche Verteidigungslinie
+9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen

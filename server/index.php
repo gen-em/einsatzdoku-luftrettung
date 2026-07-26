@@ -49,7 +49,7 @@ if ($selDay === null) {
     <details class="daymeta" id="daymeta">
       <summary>Flugtag-Daten <span id="metahint" class="muted"></span>
         <span id="metanotes" class="metanotes"></span></summary>
-      <form id="dayform" class="meta-form">
+      <form id="dayform" class="meta-form" data-dirty-track data-submit-on-ctrl-enter>
         <label>Maschine
           <select name="aircraft_id" id="acsel">
             <option value="">–</option>
@@ -120,6 +120,7 @@ if ($selDay === null) {
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const CSRF = '<?= e($_SESSION['csrf']) ?>';

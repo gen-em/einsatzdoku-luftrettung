@@ -4,10 +4,11 @@ require_once __DIR__ . '/../auth_guard.php';
 
 /**
  * Einsaetze eines Jahres oder Monats — Grundlage der Zeitraum-Uebersicht.
- * Bewusst OHNE Trackpunkte: Die Ansicht zeigt keine Karte, und bei einem
- * ganzen Jahr waeren das schnell hunderttausende Koordinaten.
- * Verschluesselte Angaben gehen wie ueberall als `pat_blob` an den Browser,
- * der sie selbst entschluesselt.
+ * Bewusst OHNE Trackpunkte: Bei einem ganzen Jahr waeren das schnell
+ * hunderttausende Koordinaten. Die Kartenansicht (Einsatzort-Pins) kommt
+ * stattdessen aus den Koordinaten im `pat_blob`, die der Browser fuer die
+ * Tabellenspalten ohnehin entschluesselt. Verschluesselte Angaben gehen wie
+ * ueberall als `pat_blob` an den Browser, der sie selbst entschluesselt.
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -34,7 +35,7 @@ if ($monat !== '') {
 }
 
 $st = db()->prepare('SELECT id, day, started_at, distance_m,
-                       site_desc, winch, bergwacht, secondary, pat_blob,
+                       site_desc, winch, bergwacht, secondary, winch_cycles, site_ele_m, pat_blob,
                        (SELECT MAX(occurred_at) FROM mission_phases p
                         WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
                      FROM missions
@@ -59,12 +60,17 @@ foreach ($st->fetchAll() as $m) {
         'winch'      => (int)$m['winch'] === 1,
         'bergwacht'  => (int)$m['bergwacht'] === 1,
         'secondary'  => (int)$m['secondary'] === 1,
+        'winch_cycles' => $m['winch_cycles'] !== null ? (int)$m['winch_cycles'] : null,
+        'site_ele_m'   => $m['site_ele_m']   !== null ? (int)$m['site_ele_m']   : null,
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
     ];
 }
 
-// Kennzahlen fuer die Kopfzeile
-$tage = db()->prepare('SELECT COUNT(DISTINCT day) FROM missions
+// Kennzahl 'tage': alle im Zeitraum ANGELEGTEN Flugtage, auch ohne Einsatz —
+// bewusste Semantikaenderung (vorher: COUNT(DISTINCT day) aus missions, zaehlte
+// also nur Tage mit dokumentiertem Einsatz). Divisor der Durchschnittswerte
+// in der Statistiktabelle der Zeitraum-Uebersicht.
+$tage = db()->prepare('SELECT COUNT(*) FROM days
                        WHERE user_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL');
 $tage->execute([$userId, $von, $bis]);
 

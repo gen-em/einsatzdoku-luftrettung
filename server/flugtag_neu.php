@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="muted">Für Tage, an denen die Uhr nicht mitgelaufen ist. Der Tag
          erscheint danach in der Liste links; Maschine, Besatzung und Einsätze
          trägst du dort nach.</p>
-      <form method="post" class="inline-form">
+      <form method="post" class="inline-form" data-dirty-track data-submit-on-ctrl-enter>
         <?= csrf_field() ?>
         <label>Datum
           <input type="date" name="day" required value="<?= e($tag) ?>"
@@ -65,5 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php ui_footer(); ?>
   </main>
 </div>
+<script src="<?= asset('assets/forms.js') ?>"></script>
 </body>
 </html>

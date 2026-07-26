@@ -10,6 +10,62 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.3.0] — 2026-07-26
+
+### Neu — Karte und Statistik in der Zeitraum-Übersicht
+- **Karte mit Einsatzort-Pins:** Monats- und Jahresansicht zeigen jetzt eine
+  Leaflet-Karte mit einem Pin (Max Blau, weißer Rand) je Einsatz mit
+  gespeicherten Koordinaten. Popup zeigt Datum und Adresse. Keine
+  Trackpunkte (unverändert bewusst nicht ausgeliefert) und kein Clustering.
+  Karte bleibt ausgeblendet, wenn kein Einsatz Koordinaten hat oder der
+  Inhaltsschlüssel gesperrt ist.
+- **Statistiktabelle** oberhalb der Einsatzliste mit acht Kennzahlen:
+  durchschnittliche Einsätze/Flugtag, durchschnittliche Windenzyklen/Flugtag,
+  Anzahl Windeneinsätze, Anzahl Einsätze, Anzahl Sekundärtransporte, längste
+  Flugstrecke, längste Einsatzdauer, höchster Einsatzort. Divisor der
+  Durchschnittswerte sind alle im Zeitraum angelegten Flugtage, **auch ohne
+  Einsatz** — eine bewusste Semantikänderung der Kopfzeile (vorher nur Tage
+  mit dokumentiertem Einsatz).
+- **Neues Feld „Einsatzort-Höhe" (`site_ele_m`):** Höhe am Patientenkontakt
+  (Phase 5, Fallback Phase 6), aus dem GPS-Track berechnet und in der
+  Einsatz-Detailansicht angezeigt. Neuberechnung bei jedem Uhr-Upload,
+  jedem manuellen Speichern und jedem Backup-Restore — eine einzige
+  Implementierung (`site_elevation_lib.php`). Migration mit Backfill für
+  Bestandseinsätze.
+- **Button „Weiteren Einsatz nachtragen"** auf der Einsatzansicht direkt nach
+  Neuanlage eines manuellen Einsatzes — führt zur Neuanlage für denselben
+  Flugtag. Erscheint nicht beim Bearbeiten bestehender Einsätze.
+
+### Neu — Verlassen-Warnung und Strg-/Cmd-Enter
+- Einsatz-Formular, Flugtag-Metadaten und Flugtag-Anlage fragen jetzt beim
+  Verlassen mit ungespeicherten Änderungen nach (Browser-Dialog); das
+  reguläre Absenden löst keine Abfrage aus. Gemeinsamer Helfer
+  `assets/forms.js`.
+- **Strg-Enter** (bzw. Cmd-Enter auf macOS) sendet dieselben Formulare ab;
+  in Textareas bleibt einfaches Enter ein Zeilenumbruch, die
+  Enter-Sonderbehandlung im Einsatzort-Autocomplete ist unberührt.
+
+### Behoben
+- **Schockraum-Haken beim Transportziel** wurde nie angezeigt: Der
+  Formular-Renderer gab Unterfelder nur bei Checkbox-Elternfeldern aus,
+  „Transportziel" ist aber ein Textfeld. Der Haken erscheint jetzt stets
+  sichtbar unter dem Feld, unabhängig von dessen Inhalt.
+- **Phasenzeilen wurden nicht zeitlich einsortiert:** Ein nachträglich am
+  Listenende ergänzter, zeitlich früherer Eintrag führte zu einer falschen
+  Tagesüberschritt-Erkennung (`$dayOffset`) und einem falschen `started_at`.
+  Die Zeilen werden vor der Verarbeitung nach Phasennummer sortiert (Phasen
+  2–9 sind fachlich chronologisch); nach dem Speichern erscheint die Liste
+  beim erneuten Öffnen automatisch sortiert.
+
+### Geändert
+- **Zusatz „(bei Einsatz)" beim Alter entfernt** — die Detailansicht zeigt
+  nur noch die Zahl (Berechnung zum Einsatztag bleibt unverändert).
+- **Zweistellige Jahreszahlen beim Geburtsdatum** (z. B. „23.04.33") werden
+  jetzt korrekt interpretiert: gleitende Fensterregel 2000+JJ, bei
+  Zukunftsdatum stattdessen 1900+JJ.
+- Platzhaltertext „kurze Beschreibung (Detailansicht)" beim Feld
+  „Beschreibung Einsatzort" entfernt.
+
 ## [Uhr 1.4.0] — 2026-07-25
 
 ### Geändert — Schnellmenü umsortiert, Reanimations-Bedienung

@@ -35,6 +35,10 @@ $collect = function (string $col, array $f) use (&$collect, &$fields, $m) {
     if ($v !== null && $v !== '') {
         $fields[] = ['label' => $f['label'], 'value' => (string)$v];
     }
+    // Unterfelder von Nicht-Checkbox-Eltern (z. B. Schockraum unter
+    // Transportziel) werden unabhaengig vom Elternwert verarbeitet — anders
+    // als bei Checkbox-Eltern, wo sie an den Haken gebunden sind.
+    foreach (($f['children'] ?? []) as $cc => $cf) { $collect($cc, $cf); }
 };
 foreach ($FIELDS as $col => $f) { $collect($col, $f); }
 
@@ -92,6 +96,7 @@ json_out([
     'end_hhmm'   => fmt_local($m['ended_at']),
     'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
     'ascent_m'   => $m['ascent_m']   !== null ? (int)$m['ascent_m']   : null,
+    'site_ele_m' => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
     'manual'     => (int)($m['manual'] ?? 0) === 1,
     'day_no'     => $dayNo,
     'has_p9'     => $p9at !== null,

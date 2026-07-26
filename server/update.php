@@ -391,6 +391,32 @@ $MIGRATIONS = [
             }
         },
     ],
+    [
+        'id'    => '2026_07_25_einsatzort_hoehe',
+        'label' => 'Einsatzort-Höhe (site_ele_m): neues Feld + Backfill aus Track',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions' AND column_name = 'site_ele_m'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'run'   => function (PDO $pdo): void {
+            $pdo->exec('ALTER TABLE missions ADD COLUMN site_ele_m INT NULL AFTER ascent_m');
+
+            // Backfill: alle Einsaetze mit Phase 5 oder 6 und vorhandenem Track.
+            // Dieselbe Logik wie bei Uhr-Upload/manuellem Speichern — eine
+            // einzige Implementierung in site_elevation_lib.php.
+            require_once __DIR__ . '/site_elevation_lib.php';
+            $ids = $pdo->query("SELECT DISTINCT m.id FROM missions m
+                                JOIN mission_phases p ON p.mission_id = m.id AND p.phase IN (5, 6)
+                                WHERE EXISTS (SELECT 1 FROM track_points t
+                                              WHERE t.owner_type = 'mission' AND t.owner_id = m.id)")
+                        ->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($ids as $mid) {
+                compute_site_elevation($pdo, (int)$mid);
+            }
+        },
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

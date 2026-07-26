@@ -164,6 +164,7 @@ function edbak_restore(int $userId, array $data): array {
         $insPoint = $pdo->prepare('INSERT INTO track_points
             (owner_type, owner_id, seq, lat, lon, ele, ts) VALUES (?,?,?,?,?,?,?)');
         $FIELDS = require __DIR__ . '/mission_fields.php';
+        require_once __DIR__ . '/site_elevation_lib.php';
         $extraCols = [];
         $collectCols = function (array $fs) use (&$collectCols, &$extraCols) {
             foreach ($fs as $col => $f) {
@@ -221,6 +222,12 @@ function edbak_restore(int $userId, array $data): array {
                 $insPoint->execute(['mission', $mid, (int)$p[0], (float)$p[1],
                                     (float)$p[2], $p[3], (int)$p[4]]);
             }
+
+            // Einsatzort-Hoehe aus den soeben eingespielten Phasen/Track neu
+            // berechnen, statt einen exportierten Wert zu uebernehmen — eine
+            // einzige Implementierung, siehe site_elevation_lib.php.
+            compute_site_elevation($pdo, $mid);
+
             $stats['missions']++;
         }
 

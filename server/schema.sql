@@ -46,6 +46,7 @@ CREATE TABLE missions (
   ended_at   DATETIME NULL,                          -- UTC, NULL solange final=0
   distance_m INT UNSIGNED NULL,
   ascent_m   INT UNSIGNED NULL,
+  site_ele_m INT NULL,                              -- Hoehe Einsatzort bei PatientInnenkontakt (berechnet, s. site_elevation_lib.php)
   final      TINYINT(1) NOT NULL DEFAULT 0,
   manual     TINYINT(1) NOT NULL DEFAULT 0,           -- von Hand angelegt/bearbeitet: Uhr ueberschreibt nicht mehr
   mission_no VARCHAR(64) NULL,                        -- Zusatzfelder (mission_fields.php):
@@ -273,4 +274,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_22_tag_zuordnung', 'skipped'),
   ('2026_07_22_papierkorb', 'skipped'),
   ('2026_07_23_sekundaer_schockraum', 'skipped'),
-  ('2026_07_24_rettungsmittel', 'skipped');
+  ('2026_07_24_rettungsmittel', 'skipped'),
+  ('2026_07_25_einsatzort_hoehe', 'skipped');

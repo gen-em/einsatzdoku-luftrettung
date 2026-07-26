@@ -9,6 +9,7 @@ $mq = db()->prepare('SELECT day FROM missions WHERE id = ? AND user_id = ? AND d
 $mq->execute([$mid, $userId]);
 $missionDay = $mq->fetchColumn();
 if ($missionDay === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+$nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 ?><!doctype html>
 <html lang="de">
 <head>
@@ -35,6 +36,11 @@ if ($missionDay === false) { http_response_code(404); exit('Einsatz nicht gefund
       <a class="btn-red" href="einsatz_loeschen.php?id=<?= $mid ?>">Löschen</a>
     </div>
   </div>
+
+  <?php if ($nachtrag): ?>
+    <p class="alert alert-ok">Einsatz gespeichert.
+      <a class="btn-edit" href="einsatz_form.php?day=<?= e((string)$missionDay) ?>">Weiteren Einsatz nachtragen</a></p>
+  <?php endif; ?>
 
   <dl class="fieldlist" id="fieldlist" hidden></dl>
 
@@ -170,6 +176,9 @@ async function init(){
   m.fields.forEach(f => {
     dl.insertAdjacentHTML('beforeend', `<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`);
   });
+  if (m.site_ele_m != null) {
+    dl.insertAdjacentHTML('beforeend', `<dt>Höhe Einsatzort</dt><dd>${m.site_ele_m} m</dd>`);
+  }
   dl.hidden = dl.children.length === 0;
 
   // Karte: Track (Start gruen, Ende rot), Einsatzort-Pin in Trackfarbe
@@ -244,8 +253,7 @@ async function init(){
         }
         const alter = EdPat.alterAnzeige(o, m.day);
         if (alter != null) {
-          const zusatz = (o.dob != null) ? ' <span class="muted small">(bei Einsatz)</span>' : '';
-          dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}${zusatz}</dd>`);
+          dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}</dd>`);
         }
         if (o.dx != null) {
           dl.insertAdjacentHTML('beforeend', `<dt>Diagnose 🔒</dt><dd>${esc(String(o.dx))}</dd>`);

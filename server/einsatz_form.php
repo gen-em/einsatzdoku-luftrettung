@@ -57,24 +57,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $day = $_POST['day'] ?? $day;
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) { $error = 'Ungültiges Datum.'; }
 
-    // Phasenzeilen einsammeln (chronologische Eingabe; Zeiten "nach Mitternacht"
-    // werden automatisch dem Folgetag zugerechnet)
-    $rows = [];
+    // Phasenzeilen einsammeln. Vor der Mitternachts-Logik wird nach
+    // Phasennummer aufsteigend sortiert (stabil: Index als Tie-Breaker bei
+    // doppelten Nummern) — Phasen 2..9 sind fachlich chronologisch, waehrend
+    // eine reine Eingabereihenfolge-Verarbeitung eine nachtraeglich am Ende
+    // ergaenzte, zeitlich fruehere Zeile faelschlich als Tagesueberschritt
+    // deutet (z. B. 23:50 -> 00:10). Danach lasst die bestehende Prefill-
+    // Abfrage (ORDER BY occurred_at) die Liste beim naechsten Oeffnen sortiert
+    // erscheinen.
+    $eingesammelt = [];
     if (!$error) {
         $nos = $_POST['ph_no'] ?? []; $times = $_POST['ph_time'] ?? [];
-        $prev = null; $dayOffset = 0;
         foreach ((array)$nos as $i => $no) {
             $t = trim((string)($times[$i] ?? ''));
             if ($t === '') continue;
             $no = (int)$no;
             if ($no < 2 || $no > 9) continue;
-            $ts = local_to_utc($day, $t, $dayOffset);
+            $eingesammelt[] = ['no' => $no, 'time' => $t, 'idx' => $i];
+        }
+        usort($eingesammelt, fn($a, $b) => $a['no'] <=> $b['no'] ?: $a['idx'] <=> $b['idx']);
+    }
+
+    $rows = [];
+    if (!$error) {
+        $prev = null; $dayOffset = 0;
+        foreach ($eingesammelt as $z) {
+            $ts = local_to_utc($day, $z['time'], $dayOffset);
             if ($ts !== null && $prev !== null && $ts < $prev) {
                 $dayOffset += 1;                       // Mitternacht ueberschritten
-                $ts = local_to_utc($day, $t, $dayOffset);
+                $ts = local_to_utc($day, $z['time'], $dayOffset);
             }
             if ($ts === null) { $error = 'Ungültige Uhrzeit in den Phasen.'; break; }
-            $rows[] = [$no, $ts];
+            $rows[] = [$z['no'], $ts];
             $prev = $ts;
         }
         if (!$error && count($rows) === 0) { $error = 'Mindestens eine Phase mit Uhrzeit eintragen.'; }
@@ -112,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($v === '') { $v = null; }
             }
             $fieldCols[] = $col; $fieldVals[] = $v;
+            foreach (($f['children'] ?? []) as $cc => $cf) { $readField($cc, $cf, $parentOn); }
         };
         foreach ($FIELDS as $col => $f) { $readField($col, $f); }
 
@@ -165,6 +180,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
+            // Einsatzort-Hoehe neu ermitteln: Der Track bleibt unveraendert,
+            // aber die Phasenzeiten (Referenz Phase 5/6) koennen sich gerade
+            // geaendert haben — eine einzige Implementierung, siehe
+            // site_elevation_lib.php.
+            require_once __DIR__ . '/site_elevation_lib.php';
+            compute_site_elevation(db(), $id);
+
             // Rettungsmittel als eigene Zeilen speichern (einzeln entfernbar).
             // Doppelte und leere Eintraege werden dabei verworfen.
             $rm = $_POST['f_other_resources'] ?? [];
@@ -178,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $insR = db()->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?, ?)');
             foreach ($sauber as $name) { $insR->execute([$id, $name]); }
 
-            header('Location: einsatz.php?id=' . $id);
+            header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;
         } catch (Throwable $ex) {
             $pdo->rollBack();
@@ -225,7 +247,7 @@ function fieldValue(string $col) {
   <?php endif; ?>
   <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
 
-  <form method="post" id="missionform" class="formcol">
+  <form method="post" id="missionform" class="formcol" data-dirty-track data-submit-on-ctrl-enter>
     <?= csrf_field() ?>
     <?php if ($editing): ?><input type="hidden" name="id" value="<?= $id ?>"><?php endif; ?>
 
@@ -315,6 +337,11 @@ function fieldValue(string $col) {
                 <?php endforeach; ?>
               </select>
             </label>
+            <?php if (!empty($f['children'])): ?>
+              <div class="childfields">
+                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+              </div>
+            <?php endif; ?>
           <?php return; }
           if ($type === 'textarea') { ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"><?= e($f['label']) ?>
@@ -328,6 +355,11 @@ function fieldValue(string $col) {
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>
                 placeholder="<?= e($f['placeholder'] ?? '') ?>" step="any">
             </label>
+            <?php if (!empty($f['children'])): ?>
+              <div class="childfields">
+                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+              </div>
+            <?php endif; ?>
       <?php };
       foreach ($FIELDS as $col => $f) { $renderField($col, $f); }
     ?>
@@ -343,6 +375,7 @@ function fieldValue(string $col) {
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<script src="<?= asset('assets/forms.js') ?>"></script>
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_encode($prefillRows) ?>;
@@ -419,7 +452,23 @@ function zeigeAlter(){
     hint.textContent = dob !== '' ? 'Geburtsdatum unvollständig' : '';
   }
 }
-document.getElementById('pat_dob').addEventListener('input', zeigeAlter);
+// Zweistellige Jahreszahlen (z. B. "23.04.33"): Der native Date-Picker
+// liefert dafuer teils "0033-04-23" statt "1933-04-23". Korrektur per
+// gleitender Fensterregel: zunaechst 2000+JJ; laege das Datum damit in der
+// Zukunft, stattdessen 1900+JJ. Greift vor der Altersberechnung; die
+// bestehende max-Grenze (heute) des Feldes bleibt unangetastet.
+function korrigiereZweistelligesJahr(){
+  const feld = document.getElementById('pat_dob');
+  const m = feld.value.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
+  if (!m || parseInt(m[1], 10) >= 100) return;
+  const jj = parseInt(m[1], 10);
+  let jahr = 2000 + jj;
+  const kandidat = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
+  if (new Date(kandidat + 'T00:00:00') > new Date()) { jahr = 1900 + jj; }
+  feld.value = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
+}
+document.getElementById('pat_dob').addEventListener('input', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
+document.getElementById('pat_dob').addEventListener('change', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
 zeigeAlter();
 
 document.getElementById('missionform').addEventListener('submit', async ev => {

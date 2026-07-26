@@ -1,6 +1,6 @@
 # Einsatzdoku — Handbuch
 
-*Stand: 23.07.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Stand: 26.07.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 ## 1. Was ist die Einsatzdoku?
@@ -166,18 +166,28 @@ Kartenpunkt, leuchtet das Gegenstück orange auf (am Handy: antippen).
 
 Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort** —
 erscheinen mit einem Schloss-Symbol 🔒 in der Feldliste und **nur hier**, nicht
-in den Übersichten. Darunter die Phasen-Tabelle und je Reanimation eine eigene
-Zeiten-Tabelle.
+in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
+ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste. Darunter
+die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
 Das Formular dient beidem. Phasen werden als Zeilen erfasst (Phase wählen,
 Uhrzeit eintragen, Zeilen hinzufügen/entfernen — auch dieselbe Phase mehrfach).
 **In chronologischer Reihenfolge eintragen**; Zeiten nach Mitternacht werden
-automatisch dem Folgetag zugerechnet.
+automatisch dem Folgetag zugerechnet. Trägst du eine Zeile nachträglich mit
+einer früheren Uhrzeit ein, sortiert sich die Liste nach dem Speichern von
+selbst richtig ein.
+
+**Strg-Enter** (bzw. Cmd-Enter auf macOS) sendet das Formular ab, ohne die
+Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
+Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
+nach; das gilt auch für die Flugtag-Formulare.
 
 **Geschützte Angaben** (Abschnitt 6) stehen gebündelt unter „PatientInnendaten
-& Einsatzort". Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
+& Einsatzort". Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
+(z. B. „23.04.33") — die Anwendung ergänzt automatisch das plausible
+Jahrhundert. Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
 Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
 Koordinaten und setzt den Pin auf den Karten. Freitext ohne Vorschlag geht
 auch — dann ohne Pin.
@@ -193,6 +203,10 @@ Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern ist er als
 GPS-Track wird weiter ergänzt). Das Formular weist vorher darauf hin.
 Reanimations-Zeiten lassen sich im Formular derzeit nicht erfassen.
 
+Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
+„Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
+Flugtag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
+
 ### 4.4 Einsatztage-Leiste, Jahres- und Monatsübersicht
 
 Die Leiste links ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur
@@ -200,11 +214,17 @@ ein Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein ander
 Jahr anzuklicken schließt das vorherige automatisch. Springst du auf einen Tag
 in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf.
 
-Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Tabelle
-aller Einsätze dieses Zeitraums — mit Datum statt Tagesnummer, ohne Karte,
-sortierbar. Die Kopfzeile nennt Anzahl der Einsätze, Flugtage und
-Gesamtkilometer; jede Zeile führt zum Einsatz. Ein Klick auf das **Dreieck**
-davor klappt dagegen nur die Unterpunkte auf oder zu.
+Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Übersicht
+dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
+vorhanden und die geschützten Angaben entsperrt sind), darunter eine
+Statistiktabelle — durchschnittliche Einsätze und Windenzyklen pro Flugtag,
+Anzahl Windeneinsätze, Anzahl Einsätze, Anzahl Sekundärtransporte, längste
+Flugstrecke, längste Einsatzdauer, höchster Einsatzort — und schließlich die
+Tabelle aller Einsätze mit Datum statt Tagesnummer, sortierbar. Die
+Durchschnittswerte der Statistik rechnen mit **allen angelegten Flugtagen**
+des Zeitraums, auch mit einsatzfreien. Jede Zeile der Einsatztabelle führt
+zum Einsatz; ein Klick auf das **Dreieck** davor klappt dagegen nur die
+Unterpunkte auf oder zu.
 
 ### 4.5 Flugtag von Hand anlegen
 

@@ -154,6 +154,17 @@ try {
 
     $pdo->prepare('UPDATE devices SET last_seen = NOW() WHERE id = ?')->execute([$dev['id']]);
     $pdo->commit();
+
+    if ($kind === 'mission' && $ownerType === 'mission') {
+        try {
+            require_once __DIR__ . '/site_elevation_lib.php';
+            compute_site_elevation($pdo, $ownerId);
+        } catch (Throwable $ex) {
+            // Hoehe ist ein Komfortwert; ein Fehler hier darf den Upload von
+            // der Uhr nicht gefaehrden (bewusst still, wie run_cleanup_if_due).
+        }
+    }
+
     run_cleanup_if_due();   // taegliche Wartung, huckepack auf Uhr-Uploads
     json_out(['ok' => true, 'id' => $ownerId, 'stored_points' => $stored, 'next_seq' => $nextSeq]);
 } catch (Throwable $ex) {
