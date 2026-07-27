@@ -41,7 +41,39 @@ try {
         // als bei Checkbox-Eltern, wo sie an den Haken gebunden sind.
         foreach (($f['children'] ?? []) as $cc => $cf) { $collect($cc, $cf); }
     };
-    foreach ($FIELDS as $col => $f) { $collect($col, $f); }
+    foreach ($FIELDS as $col => $f) {
+        // Die Besatzung bekommt unten einen eigenen Block ('crew_effektiv'),
+        // der Tages- und Einsatzwerte bereits zusammenfuehrt. Ohne diese
+        // Ausnahme stuende sie doppelt auf der Seite ("Abweichende Besatzung:
+        // Ja" + Unterfelder). Ruecknahme = diese Zeile entfernen.
+        if ($col === 'crew_override') { continue; }
+        $collect($col, $f);
+    }
+
+    // Effektive Besatzung: Einsatzwert nur bei gesetztem Haken, sonst Tagescrew
+    // (COALESCE-Regel). Die days-Zeile wird bewusst separat geladen statt per
+    // JOIN — 'SELECT *' oben und days tragen dieselben Spaltennamen (crew_p1
+    // usw.), ein JOIN wuerde sie ueberschreiben.
+    $dq = db()->prepare('SELECT crew_p1, crew_p2, crew_hems, crew_fr, crew_other
+                         FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NULL');   // Datentrennung!
+    $dq->execute([$userId, $m['day']]);
+    $dayCrew = $dq->fetch() ?: [];
+
+    $crewEff = [];
+    $ovOn = (int)($m['crew_override'] ?? 0) === 1;
+    foreach (($FIELDS['crew_override']['children'] ?? []) as $col => $cf) {
+        $role  = substr($col, 5);                       // 'crew_p1' -> 'p1'
+        $mVal  = trim((string)($m[$col] ?? ''));
+        $dVal  = trim((string)($dayCrew[$col] ?? ''));
+        $nutzt = $ovOn && $mVal !== '';                  // Abweichung greift
+        $eff   = $nutzt ? $mVal : $dVal;
+        if ($eff === '') { continue; }                   // nur belegte Rollen
+        $crewEff[$role] = [
+            'label' => $cf['label'],
+            'name'  => $eff,
+            'abw'   => $nutzt && $mVal !== $dVal,
+        ];
+    }
 
     // Tagesnummer nach Alarmierungszeit (frueheste = 1)
     $no = db()->prepare('SELECT COUNT(*) + 1 FROM missions
@@ -102,6 +134,7 @@ try {
         'day_no'     => $dayNo,
         'has_p9'     => $p9at !== null,
         'fields'     => $fields,
+        'crew_effektiv' => (object)$crewEff,
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
         'pat_wrap'   => $patWrapPw,
         'track' => $track, 'phases' => $phases, 'resus' => $resus,

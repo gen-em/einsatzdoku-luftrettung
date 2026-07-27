@@ -70,7 +70,7 @@ hems/
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`, `kdf_ver` immer 1) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt) |
 | `password_resets` | Token-Hashes (sha256), 1 h gültig; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -238,6 +238,31 @@ Wert gespeichert, wenn es **nicht** aus einem Geburtsdatum ableitbar ist.
 einzeln entfernbar). Das Löschen einer Vorbelegung lässt dokumentierte Einsätze
 unverändert. Backup exportiert/importiert beide.
 
+**Effektive Besatzung (Crew-Override, ab Web 2.6.0):** Die Besatzung wird
+einmal je Flugtag in `days.crew_*` gepflegt. Ein einzelner Einsatz kann davon
+abweichen (fachlicher Anlass: Pilotenwechsel im laufenden Dienst) — dafür trägt
+`missions` die Spalten `crew_override` (0/1) und `crew_p1`…`crew_other`.
+**Bewusst redundanzfrei:** Ohne Abweichung bleiben die `missions`-Spalten NULL;
+es gibt keine Kopie der Tagescrew am Einsatz. Die Regel lautet je Rolle
+`crew_override = 1 AND missions.crew_X IS NOT NULL ? missions.crew_X :
+days.crew_X`. Sie ist **einmal** implementiert, in `api/mission.php`, das das
+Ergebnis als `crew_effektiv` (`{rolle: {label, name, abw}}`, nur belegte
+Rollen) liefert; `einsatz.php` rendert es unverändert im Block „Besatzung".
+Die `days`-Zeile wird dort **separat** geladen statt per JOIN — `SELECT *` auf
+`missions` und `days` tragen dieselben Spaltennamen, ein JOIN würde sie
+überschreiben.
+
+Das Leeren beim Entfernen des Hakens erledigt die generische
+Checkbox-Kindlogik in `einsatz_form.php` ohne Sonderfall (Kinder werden bei
+Haken = 0 auf NULL gesetzt). Die Auswahllisten kommen über
+`options_src => 'crew:<rolle>'` aus `crew_presets` — wie überall seit den
+zentralen Stammdaten mit `(user_id = ? OR user_id IS NULL)`. Ein gespeicherter
+Wert, der nicht mehr in den Stammdaten steht, wird beim Rendern vorangestellt
+statt verworfen (gilt für alle `options_src`-Selects, also auch `bw_unit`) —
+sonst ginge er beim nächsten Speichern still verloren.
+
+Die Uhr kennt keine Besatzung; `ingest.php` ist davon unberührt.
+
 **Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
 die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
 PatientIn", Fallback Phase 6, Toleranz 300 s (Konstante
@@ -372,8 +397,12 @@ erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.
 
 **Neue Zusatzfelder für Einsätze:** 1) Migration in `update.php` ergänzen
 (`ALTER TABLE missions ADD COLUMN …`) und die ID zusätzlich in die
-`skipped`-Liste in `schema.sql` eintragen, 2) Eintrag in `mission_fields.php`.
-Formular, Speichern, API und Anzeige übernehmen automatisch.
+`skipped`-Liste in `schema.sql` eintragen, 2) Spalte auch ans `CREATE TABLE
+missions` in `schema.sql` anfügen (sonst weichen Neuinstallation und
+migrierter Bestand voneinander ab), 3) Eintrag in `mission_fields.php`.
+Formular, Speichern, API und Detailanzeige übernehmen es dann automatisch.
+**Ausnahme:** `day_col` wirkt derzeit **nicht** automatisch — die Spalten der
+Tagestabelle sind hartkodiert (Backlog Nr. 10).
 
 **Backup:** regelmäßiger MySQL-Dump (alle Tabellen; `mysqldump` oder
 Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt
@@ -411,3 +440,11 @@ erfolgreichem Upload.
 7. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
 8. Content-Security-Policy als zusätzliche Verteidigungslinie
 9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen
+10. **`day_col` generisch auswerten.** Der Schlüssel `day_col` in
+    `mission_fields.php` ist derzeit reine Dokumentation: Die Spalten der
+    Tagestabelle sind an drei Stellen hartkodiert — `api/day.php` (SELECT +
+    JSON), `index.php` (`<thead>`) und `index.php` (Zeilenrendering +
+    `sortVal()`). Solange das so ist, erscheint die Spalte „abw. Crew"
+    (Crew-Override, Web 2.6.0) nicht in der Tagesübersicht, obwohl sie
+    definiert ist. Auflösung = einmalige generische Auswertung; berührt
+    zusätzlich die CSS-Spaltenklassen (`c-winde`, `c-bw`, `c-sek`).

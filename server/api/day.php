@@ -23,10 +23,14 @@ try {
         }
         $trim = fn($k, $max) => mb_substr(trim((string)($b[$k] ?? '')), 0, $max) ?: null;
 
-        // Dropdown-IDs nur uebernehmen, wenn sie der NutzerIn gehoeren
+        // Dropdown-IDs nur uebernehmen, wenn sie der NutzerIn gehoeren ODER
+        // zentral sind (user_id IS NULL). Muss zu der Liste passen, aus der
+        // index.php das Dropdown baut — sonst wird eine zentrale Maschine oder
+        // Basis beim Speichern stillschweigend auf NULL zurueckgesetzt.
         $checkId = function (?int $id, string $table) use ($userId): ?int {
             if ($id === null || $id <= 0) { return null; }
-            $q = db()->prepare("SELECT id FROM `$table` WHERE id = ? AND user_id = ?");
+            $q = db()->prepare("SELECT id FROM `$table`
+                                WHERE id = ? AND (user_id = ? OR user_id IS NULL)");
             $q->execute([$id, $userId]);
             return $q->fetchColumn() !== false ? $id : null;
         };

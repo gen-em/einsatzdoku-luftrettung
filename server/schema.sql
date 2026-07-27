@@ -63,6 +63,12 @@ CREATE TABLE missions (
   bw_info    VARCHAR(190) NULL,
   other_ema  VARCHAR(190) NULL,
   other_resources VARCHAR(190) NULL,
+  crew_override TINYINT(1) NOT NULL DEFAULT 0,     -- abweichende Besatzung (z. B. Pilotenwechsel im Dienst)
+  crew_p1    VARCHAR(120) NULL,                    -- nur belegt, wenn crew_override = 1; sonst gilt days.crew_*
+  crew_p2    VARCHAR(120) NULL,
+  crew_hems  VARCHAR(120) NULL,
+  crew_fr    VARCHAR(120) NULL,
+  crew_other VARCHAR(120) NULL,
   pat_blob   TEXT NULL,                              -- E2E-verschluesselt: Diagnose, Alter, Einsatzort (Server: nur Chiffretext)
   notes      TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -298,4 +304,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_22_papierkorb', 'skipped'),
   ('2026_07_23_sekundaer_schockraum', 'skipped'),
   ('2026_07_24_rettungsmittel', 'skipped'),
-  ('2026_07_25_einsatzort_hoehe', 'skipped');
+  ('2026_07_25_einsatzort_hoehe', 'skipped'),
+  ('2026_07_26_zentrale_stammdaten', 'skipped'),
+  ('2026_07_27_crew_override', 'skipped');

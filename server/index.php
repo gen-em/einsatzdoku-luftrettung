@@ -183,8 +183,6 @@ function sortVal(m, key){
     case 'winch': return m.winch ? 1 : 0;
     case 'bw':    return m.bergwacht ? 1 : 0;
     case 'sec':   return m.secondary ? 1 : 0;
-    case 'winch': return m.winch ? 1 : 0;
-    case 'bw':    return m.bergwacht ? 1 : 0;
     case 'km':    return m.distance_m == null ? -1 : m.distance_m;
   }
   return 0;

@@ -46,6 +46,11 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 
   <dl class="fieldlist" id="fieldlist" hidden></dl>
 
+  <section id="crew-section" hidden>
+    <h2>Besatzung</h2>
+    <dl class="fieldlist" id="crewlist"></dl>
+  </section>
+
   <div id="map" class="map map-tall"></div>
 
   <section>
@@ -234,6 +239,16 @@ async function init(){
     dl.insertAdjacentHTML('beforeend', `<dt>Höhe Einsatzort</dt><dd>${m.site_ele_m} m</dd>`);
   }
   dl.hidden = dl.children.length === 0;
+
+  // Besatzung: Tagescrew, einzelne Rollen ggf. durch den Einsatz ueberschrieben
+  // (Server hat die COALESCE-Regel bereits angewandt, siehe api/mission.php).
+  const crewList = document.getElementById('crewlist');
+  Object.values(m.crew_effektiv || {}).forEach(c => {
+    crewList.insertAdjacentHTML('beforeend',
+      `<dt>${esc(c.label)}</dt><dd>${esc(c.name)}`
+      + (c.abw ? ' <span class="muted">(abw.)</span>' : '') + '</dd>');
+  });
+  document.getElementById('crew-section').hidden = crewList.children.length === 0;
 
   // Karte: Track (Start gruen, Ende rot), Einsatzort-Pin in Trackfarbe
   const bounds = [];

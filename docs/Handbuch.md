@@ -175,8 +175,16 @@ leuchtet das Gegenstück orange auf (am Handy: antippen).
 Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort** —
 erscheinen mit einem Schloss-Symbol 🔒 in der Feldliste und **nur hier**, nicht
 in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
-ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste. Darunter
-die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
+ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
+
+Darunter folgt der Block **Besatzung**. Er zeigt die für **diesen Einsatz**
+gültige Besatzung: normalerweise die Besatzung des Flugtags, bei einer
+abweichenden Besatzung (Abschnitt 4.3) die abweichende Person. Geänderte
+Rollen sind mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne Zusatz
+daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
+hinterlegt, entfällt der Block ganz.
+
+Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
@@ -223,6 +231,25 @@ Einsatzort (nur in der Detailansicht), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
 aus den Stammdaten plus Namen/Infos), Sekundärtransport, Schockraum, Anderer
 Notarzt, **Weitere Rettungsmittel** (Abschnitt 8.2) und Notizen.
+
+**Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
+des Flugtags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
+wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
+Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
+**„Abweichende Besatzung"**. Darunter erscheinen fünf Auswahlfelder (Pilot 1,
+Pilot 2, HEMS-TC, Flugretter, Sonstige), gefüllt aus deinen Besatzungs-
+Vorbelegungen und den zentralen Stammdaten (Abschnitt 8.1 bzw. 8.4).
+
+Es müssen **nur die tatsächlich abweichenden Rollen** ausgefüllt werden. Alle
+übrigen bleiben leer und werden weiterhin vom Flugtag übernommen — so steht
+dieselbe Person nie doppelt in der Datenbank. Entfernst du den Haken wieder,
+werden die fünf Felder geleert und der Einsatz erbt vollständig die Tagescrew.
+In der Einsatzansicht (Abschnitt 4.2) zeigt der Block „Besatzung" immer das
+Ergebnis beider Ebenen.
+
+Ist eine früher eingetragene Person inzwischen aus den Stammdaten entfernt
+worden, bleibt ihr Name im Auswahlfeld trotzdem stehen und geht beim nächsten
+Speichern nicht verloren.
 
 Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern ist er als
 „manuell" markiert — die Uhr überschreibt ihn dann nicht mehr (nur der

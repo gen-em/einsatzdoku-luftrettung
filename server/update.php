@@ -453,6 +453,28 @@ $MIGRATIONS = [
                SELECT user_id, 'aircraft', id FROM aircraft WHERE is_default = 1 AND user_id IS NOT NULL",
         ],
     ],
+    [
+        'id'    => '2026_07_27_crew_override',
+        'label' => 'Abweichende Besatzung je Einsatz (Crew-Override)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions' AND column_name = 'crew_override'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            // Ein einziges ALTER: entweder alle sechs Spalten oder keine.
+            // Die Spalten bleiben NULL, solange keine Abweichung vorliegt —
+            // die Tagescrew (days.crew_*) bleibt die einzige Wahrheit.
+            "ALTER TABLE missions
+               ADD COLUMN crew_override TINYINT(1) NOT NULL DEFAULT 0 AFTER other_resources,
+               ADD COLUMN crew_p1    VARCHAR(120) NULL AFTER crew_override,
+               ADD COLUMN crew_p2    VARCHAR(120) NULL AFTER crew_p1,
+               ADD COLUMN crew_hems  VARCHAR(120) NULL AFTER crew_p2,
+               ADD COLUMN crew_fr    VARCHAR(120) NULL AFTER crew_hems,
+               ADD COLUMN crew_other VARCHAR(120) NULL AFTER crew_fr",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

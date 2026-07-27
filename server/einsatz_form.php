@@ -293,9 +293,21 @@ function fieldValue(string $col) {
     <?php
       // Optionslisten aus Stammdaten aufloesen (options_src)
       $optSrc = function (array $f) use ($userId): array {
-          if (($f['options_src'] ?? '') === 'bw_units') {
+          $src = (string)($f['options_src'] ?? '');
+          if ($src === 'bw_units') {
               $q = db()->prepare('SELECT DISTINCT name FROM bw_units WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
               $q->execute([$userId]);
+              return $q->fetchAll(PDO::FETCH_COLUMN);
+          }
+          // 'crew:<rolle>' — Besatzungs-Vorbelegungen der Rolle. Wie ueberall
+          // seit den zentralen Stammdaten: persoenlich UND zentral
+          // (user_id IS NULL), sonst fehlten die Admin-Eintraege.
+          if (str_starts_with($src, 'crew:')) {
+              $role = substr($src, 5);
+              if (!in_array($role, ['p1', 'p2', 'hems', 'fr', 'other'], true)) { return []; }
+              $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
+                                  WHERE (user_id = ? OR user_id IS NULL) AND role = ? ORDER BY name');
+              $q->execute([$userId, $role]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
           }
           return $f['options'] ?? [];
@@ -340,7 +352,15 @@ function fieldValue(string $col) {
               <?php endif; ?>
             </div>
           <?php return; }
-          if ($type === 'select') { $opts = $optSrc($f); ?>
+          if ($type === 'select') { $opts = $optSrc($f);
+              // Stammdaten sind aenderbar: Ein gespeicherter Wert, der nicht
+              // mehr in der Liste steht (Person ausgeschieden, Bereitschaft
+              // umbenannt), wuerde sonst unmarkiert bleiben und beim naechsten
+              // Speichern still verloren gehen. Deshalb voranstellen. Gilt nur
+              // fuer options_src-Listen — feste 'options' bleiben streng.
+              if (isset($f['options_src']) && $val !== '' && !in_array($val, $opts, true)) {
+                  array_unshift($opts, $val);
+              } ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"><?= e($f['label']) ?>
               <select name="f_<?= e($col) ?>">
                 <option value="">–</option>

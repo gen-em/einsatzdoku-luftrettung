@@ -13,8 +13,16 @@ declare(strict_types=1);
  *                                   Unterfelder, nur sichtbar/gespeichert,
  *                                   wenn der Haken gesetzt ist
  *   'select'                        Dropdown; 'options' = feste Werteliste
- *                                   ODER 'options_src' => 'bw_units'
- *                                   (Bergwacht-Bereitschaften aus Stammdaten)
+ *                                   ODER 'options_src':
+ *                                     'bw_units'   Bergwacht-Bereitschaften
+ *                                     'crew:<rolle>'  Besatzungs-Vorbelegungen
+ *                                                  der Rolle (p1|p2|hems|fr|
+ *                                                  other) aus crew_presets
+ *                                   Beide liefern persoenliche UND zentrale
+ *                                   Stammdaten; Freitext bleibt speicherbar
+ *                                   (Stammdaten sind aenderbar), ein nicht
+ *                                   mehr gelisteter Altwert wird beim Rendern
+ *                                   ergaenzt statt stillschweigend verworfen
  *
  * Weitere Schluessel:
  *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓)
@@ -84,6 +92,27 @@ return [
         // Sonderfall: nicht als Spalte in missions, sondern als eigene Zeilen
         // in mission_resources (einzeln entfernbar). Siehe einsatz_form.php.
         'label' => 'Weitere Rettungsmittel', 'type' => 'resources',
+    ],
+    'crew_override' => [
+        // Abweichende Besatzung fuer genau diesen Einsatz (fachlicher Anlass:
+        // Pilotenwechsel waehrend eines Flugtags). Ohne Haken gilt die
+        // Tagescrew aus days.crew_* — die Unterfelder bleiben dann NULL, es
+        // wird also nichts doppelt gespeichert. Die effektive Besatzung
+        // (COALESCE-Regel) liefert api/mission.php als 'crew_effektiv'.
+        //
+        // Hinweis: 'day_col' wirkt derzeit noch nicht — die Spalten der
+        // Tagestabelle sind in index.php und api/day.php hartkodiert. Der
+        // Eintrag steht hier, damit die Spalte automatisch erscheint, sobald
+        // 'day_col' generisch ausgewertet wird (Backlog).
+        'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
+        'day_col' => 'check', 'day_label' => 'abw. Crew',
+        'children' => [
+            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'select', 'options_src' => 'crew:p1',    'max' => 120],
+            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'select', 'options_src' => 'crew:p2',    'max' => 120],
+            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'select', 'options_src' => 'crew:hems',  'max' => 120],
+            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'select', 'options_src' => 'crew:fr',    'max' => 120],
+            'crew_other' => ['label' => 'Sonstige',   'type' => 'select', 'options_src' => 'crew:other', 'max' => 120],
+        ],
     ],
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,

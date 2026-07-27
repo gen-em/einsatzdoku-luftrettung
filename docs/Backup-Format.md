@@ -77,6 +77,13 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
     "other_ema": null, "other_resources": null, "notes": null,
 
+    // Abweichende Besatzung (seit Web 2.6.0). crew_override = 0 -> die fünf
+    // Felder sind null und der Einsatz erbt die Besatzung seines Flugtags
+    // (siehe "days" oben). Nur belegte Rollen weichen ab.
+    "crew_override": 0,
+    "crew_p1": null, "crew_p2": null, "crew_hems": null,
+    "crew_fr": null, "crew_other": null,
+
     // Geschützte Angaben — im Container KLARTEXT (der Container selbst ist
     // ja verschlüsselt). Beim Import werden sie mit dem Inhaltsschlüssel des
     // Zielkontos verschlüsselt und als `pat_blob` gespeichert.

@@ -10,6 +10,55 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.6.0] — 2026-07-27
+
+### Neu — Abweichende Besatzung je Einsatz
+- Ein einzelner Einsatz kann jetzt von der Besatzung des Flugtags abweichen —
+  gedacht für den Fall, dass während des Dienstes jemand wechselt (typisch:
+  Pilotenwechsel am Nachmittag). Im Einsatzformular öffnet der Haken
+  **„Abweichende Besatzung"** fünf Auswahlfelder (Pilot 1, Pilot 2, HEMS-TC,
+  Flugretter, Sonstige), gefüllt aus den persönlichen **und** den zentralen
+  Besatzungs-Vorbelegungen.
+- Es müssen nur die tatsächlich abweichenden Rollen gefüllt werden; alle
+  übrigen erbt der Einsatz weiterhin vom Flugtag. Bewusst redundanzfrei: Ohne
+  Abweichung bleiben die neuen Spalten leer, es entsteht keine Kopie der
+  Tagescrew am Einsatz. Haken entfernen leert die Felder wieder, der Einsatz
+  erbt dann vollständig.
+- Die Einsatzansicht zeigt dafür den neuen Block **„Besatzung"** mit dem
+  Ergebnis beider Ebenen; abweichende Rollen sind mit „(abw.)" markiert,
+  unbelegte Rollen entfallen.
+- Neue Spalten `missions.crew_override` und `missions.crew_p1`…`crew_other`
+  (Migration `2026_07_27_crew_override`).
+- Die Uhr-App ist davon nicht betroffen — sie kennt keine Besatzung.
+
+### Behoben — Zentrale Maschine oder Basis ging beim Speichern des Flugtags verloren
+- Root Cause gefunden: Seit den zentralen Stammdaten (Web 2.4.x) baut
+  `index.php` die Flugtag-Dropdowns aus persönlichen **und** zentralen
+  Einträgen (`user_id IS NULL`), die Prüfung beim Speichern in `api/day.php`
+  akzeptierte aber weiterhin nur persönliche. Eine ausgewählte zentrale
+  Maschine oder Basis wurde dadurch stillschweigend auf „–" zurückgesetzt —
+  ohne Fehlermeldung. Die Prüfung folgt jetzt derselben Regel wie die Liste,
+  aus der ausgewählt wird.
+
+### Behoben — Ausgeschiedene Personen und Bereitschaften gingen still verloren
+- Stand in einem Auswahlfeld mit Stammdaten-Herkunft (Bergwacht-Bereitschaft,
+  ab sofort auch Besatzung) ein Wert, der inzwischen aus den Stammdaten
+  entfernt worden war, blieb das Feld beim Öffnen des Formulars unmarkiert —
+  beim nächsten Speichern war der Wert weg. Ein solcher Altwert wird jetzt
+  der Liste vorangestellt und bleibt erhalten.
+
+### Behoben — Fehlende Migrations-ID in `schema.sql`
+- Die ID `2026_07_26_zentrale_stammdaten` fehlte in der `skipped`-Liste am
+  Ende von `schema.sql`. Folgenlos, weil die Sprungprüfung der Migration
+  ohnehin griff, aber ein Verstoß gegen die dort dokumentierte Regel —
+  nachgetragen. Neuinstallation und migrierter Bestand liefern jetzt
+  nachweislich identische Tabellendefinitionen.
+
+### Aufgeräumt
+- `index.php`: In der Sortierfunktion der Tagestabelle standen die Zweige
+  `winch` und `bw` doppelt (toter Code seit Einführung der Spalte
+  Sekundärtransport) — entfernt, Verhalten unverändert.
+
 ## [Web 2.5.1] — 2026-07-26
 
 ### Behoben — Layer-Umschalter zeigte verzerrte Radiobuttons
