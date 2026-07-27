@@ -30,7 +30,7 @@ hems/
 ├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
-│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local), Aufräumjob
+│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
 │   ├── ui.php             Kopf-/Seitenleisten, Fußzeile
 │   ├── auth_guard.php     Session/CSRF/Rollen
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
@@ -42,6 +42,8 @@ hems/
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
+│   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
+│   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail) · geraete.php (Weiterleitung)
 │   ├── admin_stammdaten.php  Zentrale (globale) Stammdaten aller sechs Typen
 │   ├── flugtag_neu.php    Flugtag von Hand anlegen
@@ -51,9 +53,13 @@ hems/
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand
-│   ├── api/               day.php · mission.php · range.php · backup_data.php · backup_restore.php
+│   ├── api/               day.php · mission.php · range.php · backup_data.php · backup_restore.php ·
+│   │                      import_commit.php (Abgleich + Übernahme des Imports)
 │   ├── assets/            style.css, crypto.js (WebCrypto), patient.js, daylist.js, confirm.js,
-│   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.)
+│   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
+│   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung)
+│   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0,
+│   │                      lokal vendoriert (kein CDN)
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
@@ -351,6 +357,49 @@ beim Speichern im Bearbeitungsformular bzw. bei Handanlage.
 > **PHP-Falle:** Numerische
 > Array-Schlüssel werden zu Ganzzahlen; unter `strict_types` bricht `e()` dann
 > ab. Bei Jahr/Monat-Gruppierungen überall `(string)`-Umwandlung und `str_pad`.
+
+**Import fremder Einsatzlisten** (`import.php`, Web 2.8.0): Läuft bis auf den
+letzten Schritt vollständig im Browser — nicht aus Bequemlichkeit, sondern
+zwingend: Die Dateien enthalten Name, Geburtsdatum, Diagnose und Einsatzort,
+und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
+Datei-Upload ist damit ausgeschlossen. Kette:
+
+1. `assets/vendor/xlsx.full.min.js` (SheetJS 0.18.5, Apache-2.0, lokal
+   vendoriert) liest xlsx/xls/csv/ods.
+2. `assets/import_profiles.js` beschreibt **deklarativ**, wo die Daten stehen
+   und wie jede Quellspalte auf ein Zielfeld abgebildet wird
+   (Blatt, Kopfzeile, `expectedHeaders`, `columns` mit Parserkette,
+   `params` für Angaben, die die Datei nicht enthält). Ein weiteres Format
+   heißt: einen Eintrag ergänzen — an der Pipeline ändert sich nichts.
+3. `assets/import.js` ist reine Rechenlogik ohne Oberfläche und ohne
+   Netzverkehr: Parser-Registry, Profilerkennung über Kopfzeilen-Treffer,
+   zeilenweise Prüfung (`ok`/`warn`/`error`), Gruppierung nach Flugtag.
+   Die Tagesbesatzung ist die der frühesten Zeile; abweichende spätere Zeilen
+   werden zu `crew_override` am einzelnen Einsatz.
+4. `assets/import_ui.js` zeigt die Review-Tabelle, nimmt Korrekturen entgegen
+   (jede Änderung rechnet die Prüfung komplett neu), löst Konflikte auf und
+   verschlüsselt die Patientendaten mit `EdCrypto`.
+5. `api/import_commit.php` kennt zwei Aktionen. `check` gleicht mit dem
+   Bestand ab und bekommt dafür **nur** Datum, Uhrzeit und Einsatznummer zu
+   sehen; `commit` schreibt in **einer** Transaktion.
+
+Zwei Fallstricke, die dort bewusst gelöst sind:
+
+- **Excel-Zeiten niemals über `Date` einlesen.** Excel speichert Uhrzeiten als
+  Bruchteil eines Tages ab 1899; ein daraus gebautes JavaScript-Datum bekommt
+  die damalige Zonenzeit aufgerechnet (Mitteleuropa: 53 Minuten). Aus 10:41
+  würde lautlos 09:48. `import.js` zerlegt die Rohzahl selbst
+  (`XLSX.SSF.parse_date_code`), ohne Zeitzonenbezug.
+- **Jeder importierte Einsatz braucht eine Phasenzeile (Phase 2).** Das
+  Einsatzformular rekonstruiert Beginn und Ende aus den Phasen; ohne sie ließe
+  sich ein importierter Einsatz nicht mehr bearbeiten.
+
+Importierte Einsätze hängen am selben virtuellen Gerät `manual-<userId>` wie
+von Hand angelegte (`final=1, manual=1`) — dadurch überschreibt die Uhr sie
+nie, und in der Geräteliste tauchen sie nicht auf. `local_to_utc()` ist dafür
+von `einsatz_form.php` nach `db.php` gewandert; zwei Kopien derselben
+Zeitrechnung wären die sicherste Art, sich später eine Stunde Versatz
+einzuhandeln.
 
 **Aufräumjob:** `run_cleanup_if_due()` (db.php) läuft max. 1×/Tag, huckepack
 auf `auth_guard.php` (Web) und `ingest.php` (Uhr) — kein Cron nötig. Marke

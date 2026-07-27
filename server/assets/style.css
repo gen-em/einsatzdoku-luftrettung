@@ -650,3 +650,25 @@ input[type=checkbox]{accent-color:var(--blau)}
    align-items:center beide zwangslaeufig auf eine gemeinsame Mitte setzt. */
 .daylist a.trashlink svg{height:1.3em;width:1.156em;flex:0 0 auto;display:block}
 .daylist a.trashlink span{white-space:nowrap;line-height:1.3;display:block}
+
+/* ---- Import-Review (import.php) -----------------------------------------
+   .btn-primary traegt global width:100% — ausserhalb von .settings-form muss
+   das jedes Mal zurueckgesetzt werden, sonst laeuft der Knopf ueber die
+   ganze Spaltenbreite. */
+#schritt3 .btn-primary{width:auto}
+.imp-wrap{overflow-x:auto;margin-bottom:1.4rem}
+.imp-table{border-collapse:collapse;font-size:.86rem;min-width:100%}
+.imp-table th,.imp-table td{border:1px solid var(--line);padding:.2rem .35rem;
+  text-align:left;vertical-align:middle;white-space:nowrap}
+.imp-table th{background:var(--rauch);font-family:var(--head);font-weight:600}
+.imp-table input.imp-cell{border:0;background:transparent;font:inherit;
+  padding:.1rem .2rem;min-width:5.5rem;width:100%}
+.imp-table input.imp-cell:focus{background:#fff;outline:2px solid var(--accent)}
+.imp-daygroup td{background:var(--sand);font-family:var(--head);font-weight:600;
+  white-space:normal}
+.imp-table td.imp-warn{background:#FDF3D0}
+.imp-table td.imp-error{background:var(--rot-light)}
+.imp-row.imp-skipped{opacity:.45;text-decoration:line-through}
+.imp-row.imp-dupe td:first-child{border-left:3px solid var(--accent)}
+.imp-skip{white-space:nowrap;font-size:.82rem}
+span.imp-warn{color:#8A6D00}

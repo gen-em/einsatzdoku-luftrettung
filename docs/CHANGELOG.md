@@ -10,6 +10,84 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.8.0] — 2026-07-27
+
+### Neu — Import bestehender Einsatzlisten (Excel/CSV)
+
+Neuer Eintrag **Einstellungen → Import / Export**: Eine vorhandene
+Einsatzliste — etwa eine über Jahre gepflegte Excel-Jahresliste — lässt sich
+in einem Durchgang übernehmen. Bedienung: `docs/Handbuch.md`, Abschnitt 7.
+
+- **Die Datei wird nicht hochgeladen.** Lesen, Prüfen und Verschlüsseln
+  passieren vollständig im Browser; der Server erhält Name, Geburtsdatum,
+  Diagnose und Einsatzort ausschließlich als Chiffretext. Das ist keine
+  Bequemlichkeit, sondern die einzige mit der Ende-zu-Ende-Verschlüsselung
+  vereinbare Bauweise. Ist die Verschlüsselung gesperrt, bleibt der Import
+  gesperrt — unverschlüsselt wird nichts gesendet.
+- **Formate sind deklarativ beschrieben** (`assets/import_profiles.js`):
+  Blatt, Kopfzeile, erwartete Überschriften und je Spalte das Zielfeld samt
+  Parserkette. Ein weiteres Dateiformat heißt künftig, dort einen Eintrag zu
+  ergänzen — an der Verarbeitung ändert sich nichts. Mitgeliefert ist das
+  Profil „Einsatzdoku Christoph 17 (Jahresliste)".
+- **Review-Tabelle mit Korrektur:** Jede Zeile wird geprüft und nach Flugtag
+  gruppiert angezeigt, Hinweise gelb, Fehler rot, jede Zelle direkt änderbar
+  mit sofortiger Neuprüfung. Fehlerhafte Zeilen blockieren nur sich selbst und
+  lassen sich einzeln überspringen.
+- **Dubletten** werden über die Einsatznummer, ersatzweise über Tag und
+  Alarmzeit erkannt; je Zeile wählbar zwischen überspringen, überschreiben
+  und trotzdem anlegen. Der Abgleich mit dem Bestand kommt mit Datum, Uhrzeit
+  und Einsatznummer aus — Patientendaten sind dafür nicht nötig und werden
+  auch nicht gesendet.
+- **Pilotenwechsel im laufenden Dienst** wird automatisch abgebildet: Als
+  Besatzung des Flugtags gilt die des ersten Einsatzes; abweichende spätere
+  Zeilen erhalten eine abweichende Besatzung am Einsatz (aus Web 2.6.0).
+- **Alles oder nichts:** Die Übernahme läuft in einer einzigen Transaktion.
+  Bricht sie ab, bleibt kein halb eingespielter Jahresbestand zurück.
+- Neu vendoriert: `assets/vendor/xlsx.full.min.js` — SheetJS Community
+  Edition 0.18.5, Apache-2.0, lokal im Repo statt von einem fremden Server.
+  Ein CDN-Aufruf würde verraten, wann jemand Einsatzdaten verarbeitet.
+
+### Behoben — Excel-Uhrzeiten wären um 53 Minuten verschoben gewesen
+
+- **Root Cause:** Excel speichert Uhrzeiten als Bruchteil eines Tages, gezählt
+  ab 1899. Lässt man die übliche Bibliotheksfunktion daraus ein
+  JavaScript-Datum bauen, rechnet der Browser die *damalige* Zonenzeit ein —
+  für Mitteleuropa 53 Minuten. Aus einer Alarmzeit 10:41 wäre lautlos 09:48
+  geworden, in jeder importierten Zeile. Die Rohzahl wird deshalb selbst
+  zerlegt, ohne jeden Zeitzonenbezug.
+- Beim Zerlegen mehrfacher Rettungsmittel wird nur an Komma und Semikolon
+  getrennt, nicht am Schrägstrich — sonst zerfiele der Funkrufname „KE 71/1"
+  in zwei Einträge.
+
+### Behoben — Unmögliche Uhrzeiten wurden zum stillen Datumssprung
+
+- **Root Cause:** `local_to_utc()` prüfte die Uhrzeit nur gegen das Muster
+  `\d{2}:\d{2}`. Eine Eingabe wie „25:00" passt darauf, und die
+  Datumsrechnung machte daraus klaglos den nächsten Tag 00:00 — der Einsatz
+  wäre stillschweigend einen Tag verrutscht statt als Fehler aufzufallen.
+  Jetzt wird zusätzlich der Wertebereich geprüft. Betrifft neben dem Import
+  auch das Einsatzformular, das den Fall bereits sauber meldet („Ungültige
+  Uhrzeit in den Phasen") — die Meldung kam bisher nur nie.
+
+### Geändert — Intern
+
+- `local_to_utc()` ist von `einsatz_form.php` nach `db.php` gewandert und
+  steht jetzt neben seinem Gegenstück `fmt_local()`. Mit dem Import gibt es
+  einen zweiten Aufrufer; zwei Kopien derselben Zeitrechnung wären die
+  sicherste Art, sich später eine Stunde Versatz einzuhandeln.
+- Importierte Einsätze hängen am selben virtuellen Gerät `manual-<userId>`
+  wie von Hand nachgetragene (`final=1`, `manual=1`) — die Uhr überschreibt
+  sie dadurch nie, und in der Geräteliste tauchen sie nicht auf.
+- Jeder importierte Einsatz erhält eine Phasenzeile (Phase 2, Alarmierung).
+  Ohne sie ließe er sich nicht im Einsatzformular öffnen, weil das Formular
+  Beginn und Ende aus den Phasen rekonstruiert.
+- `docs/JSON-Vertrag.md` grenzt seinen Geltungsbereich jetzt ausdrücklich auf
+  die Strecke Uhr → Server ab; die Browser-Endpunkte unter `server/api/`
+  stehen in `docs/Technik.md`, Abschnitt 4.
+- Handbuch: neuer Abschnitt 7, die folgenden Abschnitte sind auf 8–12
+  gerückt. Ein Querverweis auf die Verschlüsselung zeigte bislang auf das
+  Backup-Kapitel und ist berichtigt.
+
 ## [Web 2.7.1] — 2026-07-27
 
 ### Verbessert — Abweichende Besatzung zeigt nur die Rollen der Maschine

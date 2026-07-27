@@ -4,6 +4,12 @@
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
+> **Geltungsbereich:** Dieses Dokument beschreibt ausschließlich den Vertrag
+> zwischen Uhr und Server (`ingest.php`). Die JSON-Endpunkte, die die
+> Weboberfläche im Browser benutzt (`server/api/*.php`, darunter
+> `import_commit.php`), gehören nicht dazu und sind in `Technik.md`,
+> Abschnitt 4 beschrieben.
+
 ## 1. Authentifizierung (jede Anfrage)
 
 | Header | Inhalt |

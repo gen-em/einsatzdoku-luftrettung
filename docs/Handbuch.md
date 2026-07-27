@@ -112,7 +112,8 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
 Luftrettung – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
 **Übersicht**, **Administration** (nur Admin) und **⚙ Einstellungen** (Profil,
-Standortdaten, Backup, Geräte; Abmelden fragt sicherheitshalber nach). Nach
+Standortdaten, Backup, Import / Export, Geräte; Abmelden fragt sicherheitshalber
+nach). Nach
 30 Minuten ohne Aktivität meldet das System automatisch ab. Die Kopfleiste
 bleibt beim Scrollen oben stehen.
 
@@ -157,7 +158,7 @@ vorausgewählt. Pro Tag:
   Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung
   bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
 - **„+ Einsatz nachtragen"** öffnet das Eingabeformular für diesen Tag,
-  **„Tag löschen"** entfernt den gesamten Flugtag (Abschnitt 7).
+  **„Tag löschen"** entfernt den gesamten Flugtag (Abschnitt 8).
 
 ### 4.2 Einsatzansicht
 
@@ -200,7 +201,7 @@ Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
 nach; das gilt auch für die Flugtag-Formulare.
 
-**Geschützte Angaben** (Abschnitt 6) stehen gebündelt unter „PatientInnendaten
+**Geschützte Angaben** (Abschnitt 5) stehen gebündelt unter „PatientInnendaten
 & Einsatzort". Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
 (z. B. „23.04.33") — die Anwendung ergänzt automatisch das plausible
 Jahrhundert. Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
@@ -230,14 +231,14 @@ Dazu die weiteren Zusatzfelder: Einsatznummer, Transportziel, Beschreibung
 Einsatzort (nur in der Detailansicht), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
 aus den Stammdaten plus Namen/Infos), Sekundärtransport, Schockraum, Anderer
-Notarzt, **Weitere Rettungsmittel** (Abschnitt 8.2) und Notizen.
+Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 
 **Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
 des Flugtags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
 **„Abweichende Besatzung"**. Darunter erscheinen die Auswahlfelder, gefüllt aus
-deinen Besatzungs-Vorbelegungen und den zentralen Stammdaten (Abschnitt 8.1
+deinen Besatzungs-Vorbelegungen und den zentralen Stammdaten (Abschnitt 9.1
 bzw. 8.4).
 
 Gezeigt werden **nur die Rollen, die der Hubschrauber des Flugtags vorsieht** —
@@ -357,7 +358,63 @@ sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
 ---
 
-## 7. Löschen und Papierkorb
+## 7. Import bestehender Einsatzlisten
+
+Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
+Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
+Jahresliste.
+
+Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
+geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum,
+Diagnose und Einsatzort nur als Chiffretext zu sehen. Das ist keine
+Bequemlichkeit, sondern die einzige Möglichkeit, die die
+Ende-zu-Ende-Verschlüsselung (Abschnitt 5) offen lässt. Aus demselben Grund
+ist der Import gesperrt, solange die Verschlüsselung nicht bereitsteht — dann
+hilft ein Ab- und Neuanmelden.
+
+**1. Datei wählen.** Das passende Format wird an den Spaltenüberschriften
+selbst erkannt. Angaben, die in der Datei fehlen, werden darüber abgefragt —
+bei der Christoph-17-Jahresliste ist das die Jahreszahl, weil die Datumsspalte
+nur „14.3." enthält. Vorgeschlagen wird das Jahr aus der Titelzeile; du kannst
+es überschreiben. Außerdem wählst du Hubschrauber und Basis für Flugtage, die
+neu angelegt werden — bestehende Tage bleiben davon unberührt, und beides
+lässt sich später je Tag in der Tagesübersicht ändern.
+
+**2. Prüfen und korrigieren.** Die Tabelle zeigt jede Zeile der Datei, nach
+Flugtagen gruppiert. **Gelb** ist ein Hinweis (die Zeile geht durch, sieh sie
+dir aber an), **Rot** ein Fehler. Jede Zelle ist direkt änderbar; nach jeder
+Änderung wird sofort neu geprüft. Fehlerhafte Zeilen blockieren nur sich
+selbst: Entweder du korrigierst sie oder du hakst „überspringen" an. Solange
+eine Fehlerzeile weder korrigiert noch übersprungen ist, bleibt der Import
+gesperrt.
+
+Zwei Sonderfälle werden dabei erkannt:
+
+- **Dubletten.** Ein Einsatz, dessen Einsatznummer schon vergeben ist oder für
+  den es an diesem Tag bereits einen Einsatz zur selben Alarmzeit gibt. Du
+  wählst je Zeile: überspringen (Voreinstellung), überschreiben oder trotzdem
+  anlegen. Gelöschte Einsätze im Papierkorb zählen bewusst nicht als
+  vorhanden.
+- **Abweichende Besatzung.** Als Besatzung des Flugtags gilt die des ersten
+  Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
+  klassische Pilotenwechsel im laufenden Dienst —, trägt dieser Einsatz
+  automatisch eine abweichende Besatzung (Abschnitt 4.3). Gibt es den Flugtag
+  schon mit einer anderen Besatzung, entscheidest du je Tag, ob die
+  gespeicherte gilt oder die aus der Datei.
+
+**3. Übernehmen.** Der Import läuft als Ganzes: Entweder alle Zeilen werden
+übernommen oder — falls unterwegs etwas schiefgeht — keine einzige. Am Ende
+steht, wie viele Einsätze angelegt, überschrieben und übersprungen wurden,
+mit einem Link auf den ersten importierten Tag.
+
+Importierte Einsätze verhalten sich wie von Hand nachgetragene: Sie lassen
+sich normal öffnen und bearbeiten, und die Uhr überschreibt sie nicht. Da eine
+Liste in aller Regel nur die Alarmzeit kennt, tragen sie genau eine Phase
+(Alarmierung); Track, Flugzeiten und weitere Phasen fehlen naturgemäß.
+
+---
+
+## 8. Löschen und Papierkorb
 
 Einsätze und ganze Flugtage landen beim Löschen zunächst im **Papierkorb** und
 bleiben dort **90 Tage** wiederherstellbar; danach räumt das System sie
@@ -396,12 +453,12 @@ zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 
 ---
 
-## 8. Stammdaten (Standortdaten)
+## 9. Stammdaten (Standortdaten)
 
 Unter **⚙ Einstellungen → „Standortdaten"** pflegst du deine Vorbelegungen. Die
 sechs Bereiche sind aufklappbare Abschnitte und starten zugeklappt.
 
-### 8.1 Standorte, Hubschrauber, Besatzung, Bergwacht
+### 9.1 Standorte, Hubschrauber, Besatzung, Bergwacht
 
 Standorte, Hubschrauber (Kennung plus Häkchen, welche Rollen an Bord sind),
 Namenslisten je Rolle und Bergwacht-Bereitschaften. Am Flugtag wählst du
@@ -410,7 +467,7 @@ Rollen erscheinen als Besatzungs-Dropdowns mit deinen Vorbelegungen. Mit
 „Als Standard" (★) markierte Maschine und Standort werden bei neuen Flugtagen
 vorbelegt — das gilt auch für vom Admin systemweit hinterlegte Einträge (s. 8.4).
 
-### 8.2 Andere Rettungsmittel
+### 9.2 Andere Rettungsmittel
 
 Hier legst du RTW, NEF oder weitere Hubschrauber als Vorbelegung an. Im
 Einsatzformular tippst du im Feld **Weitere Rettungsmittel** mindestens zwei
@@ -424,17 +481,17 @@ Löschst du später ein Rettungsmittel aus der Vorbelegung, behalten bereits
 dokumentierte Einsätze ihren Eintrag: Die Zuordnung wird je Einsatz gespeichert
 und hängt nicht an der Liste.
 
-### 8.3 Transportziele
+### 9.3 Transportziele
 
 Vorbelegung für das Feld **Transportziel** im Einsatz. Anders als bei den
 Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit Vorschlagsliste
 (Tastatur-Pfeiltasten bzw. Antippen) — Freitext ist weiterhin uneingeschränkt
 möglich.
 
-### 8.4 Zentrale Stammdaten (vom Admin gepflegt)
+### 9.4 Zentrale Stammdaten (vom Admin gepflegt)
 
 Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen (siehe
-Abschnitt 10). Solche Einträge erscheinen bei allen NutzerInnen mit dem
+Abschnitt 11). Solche Einträge erscheinen bei allen NutzerInnen mit dem
 Kennzeichen **„systemweit"**, stehen automatisch in allen Vorbelegungen zur
 Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
 einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
@@ -446,7 +503,7 @@ Bedarf löschen.
 
 ---
 
-## 9. Geräte
+## 10. Geräte
 
 Unter **⚙ Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
 **„Gerät anlegen"** erzeugt Geräte-ID und API-Schlüssel — der Schlüssel wird
@@ -456,7 +513,7 @@ bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
 
 ---
 
-## 10. Administration (nur Admin)
+## 11. Administration (nur Admin)
 
 NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
 (**Achtung:** entfernt alle Daten der Person unwiderruflich). Ein Klick auf eine
@@ -475,7 +532,7 @@ Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 
 ---
 
-## 11. Eine neue Uhr einrichten (Kurzanleitung)
+## 12. Eine neue Uhr einrichten (Kurzanleitung)
 
 1. App auf die Uhr laden (siehe `Technik.md`). Die Server-Adresse trägst du in
    Garmin Connect ein; die Domain genügt (z. B. `luftrettung.net`).

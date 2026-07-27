@@ -42,6 +42,9 @@ function ui_settings_sidebar(string $active): void {
         'profil'     => ['einstellungen.php?t=profil', 'Profil'],
         'stammdaten' => ['einstellungen.php?t=stammdaten', 'Standortdaten'],
         'backup'     => ['einstellungen.php?t=backup', 'Backup'],
+        // Eigene Seite (import.php), erscheint aber als Eintrag der
+        // Einstellungen — wie admin_stammdaten.php.
+        'import'     => ['import.php', 'Import / Export'],
         'geraete'    => ['einstellungen.php?t=geraete', 'Geräte'],
     ];
     ?>

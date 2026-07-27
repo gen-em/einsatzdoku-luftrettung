@@ -24,17 +24,10 @@ if (($_POST['f_other_resources'] ?? null) !== null && is_array($_POST['f_other_r
 }
 $error = null;
 
-/* ---- Helfer: lokale Uhrzeit (Berlin) -> UTC-DATETIME ---------------------- */
-function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
-    global $CFG;
-    if (!preg_match('/^\d{2}:\d{2}$/', $hhmm)) return null;
-    $dt = DateTime::createFromFormat('Y-m-d H:i', "$day $hhmm",
-        new DateTimeZone($CFG['app']['timezone']));
-    if ($dt === false) return null;
-    if ($addDays > 0) { $dt->modify("+$addDays day"); }
-    $dt->setTimezone(new DateTimeZone('UTC'));
-    return $dt->format('Y-m-d H:i:s');
-}
+/* ---- Helfer: lokale Uhrzeit (Berlin) -> UTC-DATETIME ----------------------
+   local_to_utc() steht seit Web 2.8.0 in db.php (neben fmt_local), weil der
+   Import denselben Weg braucht. Hier bewusst KEINE zweite Definition — PHP
+   wuerde das mit einem Fatal Error quittieren. */
 
 /* ---- Bestehenden Einsatz laden (nur eigene!) ------------------------------ */
 $mission = null; $phases = [];

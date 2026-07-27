@@ -110,6 +110,31 @@ function fmt_local(?string $utc, string $format = 'H:i'): string {
     return $dt->format($format);
 }
 
+/**
+ * Ortszeit (App-Zeitzone) -> UTC-DATETIME. Gegenstueck zu fmt_local().
+ *
+ * Lag frueher in einsatz_form.php. Seit dem Import (import_commit.php) gibt es
+ * einen zweiten Aufrufer; zwei Kopien derselben Zeitrechnung waeren die
+ * sicherste Art, sich spaeter eine Stunde Versatz einzuhandeln.
+ *
+ * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Flugtag gehoeren.
+ */
+function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
+    global $CFG;
+    // Nicht nur das Muster pruefen, sondern auch den Wertebereich: "25:00"
+    // passt auf \d{2}:\d{2}, und DateTime rechnet daraus klaglos den naechsten
+    // Tag 00:00. Eine Falscheingabe waere so als stiller Datumssprung
+    // durchgerutscht statt als Fehler aufzufallen.
+    if (!preg_match('/^(\d{2}):(\d{2})$/', $hhmm, $t)) return null;
+    if ((int)$t[1] > 23 || (int)$t[2] > 59) return null;
+    $dt = DateTime::createFromFormat('Y-m-d H:i', "$day $hhmm",
+        new DateTimeZone($CFG['app']['timezone']));
+    if ($dt === false) return null;
+    if ($addDays > 0) { $dt->modify("+$addDays day"); }
+    $dt->setTimezone(new DateTimeZone('UTC'));
+    return $dt->format('Y-m-d H:i:s');
+}
+
 /** ISO-8601-UTC (Uhr) -> 'Y-m-d H:i:s' fuer DATETIME-Spalten; null bei Murks */
 function iso_to_sql(?string $iso): ?string {
     if ($iso === null) return null;
