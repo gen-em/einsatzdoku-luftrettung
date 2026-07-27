@@ -16,6 +16,10 @@
   --accent-dark:#E67C0E;
   --accent-light:#FFEBD6;              /* Philipp Hellorange */
   --blau:#4280E5; --blau-light:#D9ECFD;
+  --blau-dark:#3670D8;                 /* Max Blau eine Stufe dunkler:
+                                          4,6:1 auf Schnee, damit auch kleine
+                                          Beschriftungen die Kontrastschwelle
+                                          erreichen (reines Max Blau: 3,8:1) */
   --rot:#D63338;  --rot-light:#FCE2D6;
   --line:#E3DAC6;                      /* aufgehelltes Sand */
   --muted:#6E6459;
@@ -61,6 +65,10 @@ h1{font-family:var(--head);font-weight:600;font-size:1.7rem;
 h2{font-family:var(--head);font-weight:600;font-size:1rem;letter-spacing:.08em;
   text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .5rem}
 .muted{color:var(--muted)}
+
+/* Markiert einen Wert, der vom uebergeordneten Stand abweicht — derzeit die
+   Besatzung eines einzelnen Einsatzes gegenueber der Besatzung des Flugtags. */
+.abw{color:var(--blau-dark);font-weight:600;white-space:nowrap}
 
 /* Flugtag-Daten (aufklappbar ueber der Karte) */
 .daymeta{background:var(--schnee);border:1px solid var(--line);border-radius:6px;

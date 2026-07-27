@@ -281,6 +281,23 @@ sonst ginge er beim nächsten Speichern still verloren.
 
 Die Uhr kennt keine Besatzung; `ingest.php` ist davon unberührt.
 
+**Rollenfilter der Besatzungsfelder (ab Web 2.7.1):** Welche der fünf Rollen im
+Einsatzformular erscheinen, bestimmen die Häkchen `aircraft.p1`…`aircraft.other`
+des am Flugtag eingetragenen Hubschraubers. Deklariert wird das je Feld über
+`role_gate` in `mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal
+per `days JOIN aircraft` und setzt beim Rendern nur das `hidden`-Attribut.
+**Nicht gerenderte Felder wären ein Datenverlust-Pfad** — der Browser sendet
+sie dann nicht mit, und `readField()` liest fehlend als leer und überschreibt
+den Bestand mit NULL. Deshalb wird immer gerendert und nur versteckt (`hidden`
+verhindert das Absenden nicht). Zwei Rückfallregeln: Ein Feld mit Wert bleibt
+sichtbar (sonst unerreichbar nach Maschinenwechsel am Flugtag), und ohne
+bekannte Rollen (kein Flugtag oder kein Hubschrauber) werden alle gezeigt,
+sonst wäre der Haken funktionslos.
+
+Das Flugtag-Formular filtert nach denselben Häkchen, dort aber clientseitig
+(`index.php`, `updateCrewFields()`), weil der Hubschrauber im Formular selbst
+gewechselt werden kann. Im Einsatzformular steht er fest, daher serverseitig.
+
 **Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
 die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
 PatientIn", Fallback Phase 6, Toleranz 300 s (Konstante

@@ -324,9 +324,29 @@ function fieldValue(string $col) {
           }
           return [];
       };
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc): void {
+      // Rollen des Hubschraubers, der an diesem Flugtag eingetragen ist.
+      // Steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ist kein
+      // Flugtag oder kein Hubschrauber hinterlegt, bleibt das Array leer und
+      // alle Rollen werden gezeigt — sonst waere der Haken funktionslos.
+      $crewRoles = [];
+      $rq = db()->prepare('SELECT a.p1, a.p2, a.hems, a.fr, a.other
+                           FROM days d JOIN aircraft a ON a.id = d.aircraft_id
+                           WHERE d.user_id = ? AND d.day = ? AND d.deleted_at IS NULL');
+      $rq->execute([$userId, $day]);                                  // Datentrennung!
+      if ($r = $rq->fetch(PDO::FETCH_ASSOC)) {
+          foreach ($r as $rk => $rv) { if ((int)$rv === 1) { $crewRoles[$rk] = true; } }
+      }
+      $rolesBekannt = $crewRoles !== [];
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $crewRoles, $rolesBekannt): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
+          // Rollenfilter: verstecken, aber immer rendern (siehe mission_fields.php).
+          // Ein belegtes Feld bleibt sichtbar, sonst kaeme man an einen Wert
+          // nicht mehr heran, wenn der Flugtag spaeter die Maschine wechselt.
+          $gate = (string)($f['role_gate'] ?? '');
+          $hide = $gate !== '' && $rolesBekannt && empty($crewRoles[$gate]) && $val === '';
+          $hideAttr = $hide ? ' hidden' : '';
           if ($type === 'resources') { ?>
             <label class="fld">
               <span><?= e($f['label']) ?></span>
@@ -340,7 +360,7 @@ function fieldValue(string $col) {
           <?php return; }
           if ($type === 'checkbox') {
               $on = ($val === '1' || $val === 1); ?>
-            <div class="fld-check<?= $depth ? ' fld-sub' : '' ?>">
+            <div class="fld-check<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
               <label class="checklabel">
                 <input type="checkbox" name="f_<?= e($col) ?>" class="parentcheck"
                        data-target="ch_<?= e($col) ?>" <?= $on ? 'checked' : '' ?>>
@@ -361,7 +381,7 @@ function fieldValue(string $col) {
               if (isset($f['options_src']) && $val !== '' && !in_array($val, $opts, true)) {
                   array_unshift($opts, $val);
               } ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"><?= e($f['label']) ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <select name="f_<?= e($col) ?>">
                 <option value="">–</option>
                 <?php foreach ($opts as $o): ?>
@@ -376,12 +396,12 @@ function fieldValue(string $col) {
             <?php endif; ?>
           <?php return; }
           if ($type === 'textarea') { ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"><?= e($f['label']) ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <textarea name="f_<?= e($col) ?>" rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
                 placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= e($val) ?></textarea>
             </label>
           <?php return; } ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"><?= e($f['label']) ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <input type="<?= $type === 'number' ? 'number' : 'text' ?>"
                 name="f_<?= e($col) ?>" value="<?= e($val) ?>"
                 <?= isset($f['max']) ? 'maxlength="' . (int)$f['max'] . '"' : '' ?>

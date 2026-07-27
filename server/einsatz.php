@@ -246,7 +246,7 @@ async function init(){
   Object.values(m.crew_effektiv || {}).forEach(c => {
     crewList.insertAdjacentHTML('beforeend',
       `<dt>${esc(c.label)}</dt><dd>${esc(c.name)}`
-      + (c.abw ? ' <span class="muted">(abw.)</span>' : '') + '</dd>');
+      + (c.abw ? ' <span class="abw">(abw.)</span>' : '') + '</dd>');
   });
   document.getElementById('crew-section').hidden = crewList.children.length === 0;
 

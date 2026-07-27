@@ -26,6 +26,15 @@ declare(strict_types=1);
  *
  * Weitere Schluessel:
  *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓)
+ *
+ *   'role_gate' => 'p1'|'p2'|'hems'|'fr'|'other'
+ *                                   Feld nur zeigen, wenn der Hubschrauber des
+ *                                   Flugtags diese Rolle vorsieht. Es wird
+ *                                   trotzdem gerendert und nur versteckt —
+ *                                   sonst sendet der Browser es nicht mit und
+ *                                   die Speicherlogik wuerde einen vorhandenen
+ *                                   Wert loeschen. Ein bereits belegtes Feld
+ *                                   bleibt darum immer sichtbar.
  *   'day_label' => 'Winde'          Spaltentitel (sonst 'label')
  *   'placeholder'
  *   'suggest_src'                   nur bei 'text': Name einer Stammdaten-
@@ -107,11 +116,11 @@ return [
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
         'day_col' => 'check', 'day_label' => 'abw. Crew',
         'children' => [
-            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'select', 'options_src' => 'crew:p1',    'max' => 120],
-            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'select', 'options_src' => 'crew:p2',    'max' => 120],
-            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'select', 'options_src' => 'crew:hems',  'max' => 120],
-            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'select', 'options_src' => 'crew:fr',    'max' => 120],
-            'crew_other' => ['label' => 'Sonstige',   'type' => 'select', 'options_src' => 'crew:other', 'max' => 120],
+            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'select', 'options_src' => 'crew:p1',    'max' => 120, 'role_gate' => 'p1'],
+            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'select', 'options_src' => 'crew:p2',    'max' => 120, 'role_gate' => 'p2'],
+            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'select', 'options_src' => 'crew:hems',  'max' => 120, 'role_gate' => 'hems'],
+            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'select', 'options_src' => 'crew:fr',    'max' => 120, 'role_gate' => 'fr'],
+            'crew_other' => ['label' => 'Sonstige',   'type' => 'select', 'options_src' => 'crew:other', 'max' => 120, 'role_gate' => 'other'],
         ],
     ],
     'notes' => [

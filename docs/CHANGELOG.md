@@ -10,6 +10,28 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.7.1] — 2026-07-27
+
+### Verbessert — Abweichende Besatzung zeigt nur die Rollen der Maschine
+- Der Haken „Abweichende Besatzung" öffnete bisher immer alle fünf Rollen.
+  Jetzt erscheinen nur die, die der **Hubschrauber des Flugtags** laut
+  Stammdaten überhaupt vorsieht — bei einer Maschine mit Pilot 1 und HEMS-TC
+  also auch nur diese beiden. Dieselbe Regel gilt im Flugtag-Formular schon
+  länger; beide folgen jetzt denselben Häkchen am Hubschrauber.
+- **Kein Datenverlust dabei:** Eine nicht vorgesehene Rolle wird trotzdem
+  eingeblendet, sobald bereits ein Wert darin steht. Sonst käme man an einen
+  Eintrag nicht mehr heran, wenn der Flugtag später auf eine andere Maschine
+  umgestellt wird. Ist am Flugtag noch kein Hubschrauber hinterlegt, werden
+  wie bisher alle fünf Rollen gezeigt — der Haken wäre sonst funktionslos.
+
+### Verbessert — Abweichungen sind farblich erkennbar
+- Die Markierung **„(abw.)"** im Block „Besatzung" steht jetzt in Max Blau
+  und halbfett statt in Grau. Verwendet wird eine um eine Stufe abgedunkelte
+  Variante (`--blau-dark`): Reines Max Blau erreicht auf dem hellen
+  Hintergrund ein Kontrastverhältnis von 3,8:1 und liegt damit unter der
+  Schwelle von 4,5:1 für kleine Schrift — die dunklere Stufe erreicht 4,6:1
+  und bleibt bei Sonnenlicht lesbar.
+
 ## [Web 2.7.0] — 2026-07-27
 
 ### Behoben — Neu angelegte Zugänge konnten kein Passwort setzen

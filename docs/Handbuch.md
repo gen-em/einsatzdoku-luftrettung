@@ -180,8 +180,8 @@ ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
 Darunter folgt der Block **Besatzung**. Er zeigt die für **diesen Einsatz**
 gültige Besatzung: normalerweise die Besatzung des Flugtags, bei einer
 abweichenden Besatzung (Abschnitt 4.3) die abweichende Person. Geänderte
-Rollen sind mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne Zusatz
-daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
+Rollen sind blau mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne
+Zusatz daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
 hinterlegt, entfällt der Block ganz.
 
 Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
@@ -236,9 +236,17 @@ Notarzt, **Weitere Rettungsmittel** (Abschnitt 8.2) und Notizen.
 des Flugtags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
-**„Abweichende Besatzung"**. Darunter erscheinen fünf Auswahlfelder (Pilot 1,
-Pilot 2, HEMS-TC, Flugretter, Sonstige), gefüllt aus deinen Besatzungs-
-Vorbelegungen und den zentralen Stammdaten (Abschnitt 8.1 bzw. 8.4).
+**„Abweichende Besatzung"**. Darunter erscheinen die Auswahlfelder, gefüllt aus
+deinen Besatzungs-Vorbelegungen und den zentralen Stammdaten (Abschnitt 8.1
+bzw. 8.4).
+
+Gezeigt werden **nur die Rollen, die der Hubschrauber des Flugtags vorsieht** —
+dieselben Häkchen, nach denen sich auch das Flugtag-Formular richtet. Fliegt
+die Maschine mit Pilot 1 und HEMS-TC, erscheinen auch nur diese beiden. Ist am
+Flugtag noch kein Hubschrauber eingetragen, werden alle fünf gezeigt. Steht in
+einer eigentlich nicht vorgesehenen Rolle bereits ein Eintrag — etwa weil der
+Flugtag nachträglich auf eine andere Maschine umgestellt wurde —, bleibt sie
+sichtbar, damit du sie weiterhin ändern kannst.
 
 Es müssen **nur die tatsächlich abweichenden Rollen** ausgefüllt werden. Alle
 übrigen bleiben leer und werden weiterhin vom Flugtag übernommen — so steht
