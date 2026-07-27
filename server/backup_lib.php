@@ -114,7 +114,7 @@ function edbak_build(int $userId): string {
 function edbak_restore(int $userId, array $data): array {
     $pdo = db();
     $stats = ['missions' => 0, 'missions_skipped' => 0, 'rests' => 0, 'rests_skipped' => 0,
-              'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0, 'pat_module' => 'unverändert'];
+              'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0];
 
     $pdo->beginTransaction();
     try {
@@ -306,17 +306,12 @@ function edbak_restore(int $userId, array $data): array {
             $stats['rests']++;
         }
 
-        /* PatientInnendaten-Modul: nur uebernehmen, wenn das Konto noch keins hat */
-        $pm = $data['pat_module'] ?? null;
-        if ($pm && !empty($pm['wrap_pw'])) {
-            $cur = $pdo->prepare('SELECT pat_wrap_pw FROM users WHERE id = ?');
-            $cur->execute([$userId]);
-            if ($cur->fetchColumn() === null) {
-                $pdo->prepare('UPDATE users SET pat_wrap_pw = ?, pat_wrap_rc = ? WHERE id = ?')
-                    ->execute([$pm['wrap_pw'], $pm['wrap_rc'] ?? null, $userId]);
-                $stats['pat_module'] = 'übernommen';
-            }
-        }
+        // Hinweis: Bis Formatversion 1 enthielt das Backup einen Block
+        // `pat_module` mit den Schluessel-Huellen des Ursprungskontos, der hier
+        // uebernommen wurde. Seit Version 2 liegen die geschuetzten Angaben im
+        // (selbst verschluesselten) Container als Klartext und werden vom
+        // Browser mit dem Schluessel des ZIELKONTOS verschluesselt — fremde
+        // Huellen werden nie mehr geschrieben.
 
         $pdo->commit();
     } catch (Throwable $ex) {

@@ -475,6 +475,21 @@ $MIGRATIONS = [
                ADD COLUMN crew_other VARCHAR(120) NULL AFTER crew_fr",
         ],
     ],
+    [
+        'id'    => '2026_07_28_kdf_ver_entfernt',
+        'label' => 'Spalte users.kdf_ver entfernt (wurde geschrieben, aber nie gelesen)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users' AND column_name = 'kdf_ver'");
+            return (int)$q->fetchColumn() === 0;
+        },
+        'sql'   => [
+            // Seit der Umstellung auf Browser-Schluesselableitung gibt es nur
+            // noch einen Login-Weg; eine Versionskennung wird nicht gebraucht.
+            "ALTER TABLE users DROP COLUMN kdf_ver",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

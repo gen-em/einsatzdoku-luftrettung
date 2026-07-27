@@ -10,6 +10,79 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.7.0] — 2026-07-27
+
+### Behoben — Neu angelegte Zugänge konnten kein Passwort setzen
+- **Root Cause:** Der Link aus der Einladungsmail führte auf `reset_confirm.php`.
+  Diese Seite kannte nur den Fall „bestehendes Konto, Passwort vergessen" und
+  verlangte deshalb bedingungslos den Wiederherstellungsschlüssel. Ein frisch
+  angelegtes Konto hat noch keinen — das Formular brach ab, bevor überhaupt
+  etwas abgesendet wurde. Neue NutzerInnen konnten sich dadurch **nie** anmelden.
+- Passwortvergabe und Passwort-Reset liegen jetzt gemeinsam in der neuen Datei
+  **`pw_handling.php`**. Der Server bestimmt die Betriebsart allein aus dem
+  Kontostand, nie aus dem, was der Browser mitschickt:
+  - **Erstvergabe** (noch kein Inhaltsschlüssel): nur Passwortfelder. Der
+    Browser erzeugt Inhalts- und Wiederherstellungsschlüssel, zeigt letzteren
+    **einmalig** an und lässt ihn per Haken bestätigen; die Passwortfelder
+    werden dabei schreibgeschützt, damit die bereits berechnete Hülle zum
+    Passwort passt. Erst danach werden Passwort-Hash, Salz und **beide** Hüllen
+    gemeinsam in einer Transaktion gespeichert.
+  - **Reset** (Inhaltsschlüssel vorhanden): verlangt wie bisher den
+    Wiederherstellungsschlüssel; `pat_wrap_rc` bleibt unberührt, der bekannte
+    Schlüssel gilt also weiter.
+- `einrichtung.php` und `reset_confirm.php` sind **entfallen**. Die früher in
+  `auth_guard.php` erzwungene Ersteinrichtung nach dem ersten Anmelden entfällt
+  ersatzlos: Ein anmeldbares Konto ohne Hüllen kann es nicht mehr geben.
+
+### Behoben — Der Installer legte einen Administrator an, der sich nicht anmelden konnte
+- **Root Cause:** `install.php` speicherte den Hash des **Klartext-Passworts**,
+  während `login.php` seit der Umstellung auf Browser-Schlüsselableitung
+  ausschließlich gegen das abgeleitete Auth-Token prüft. Beides konnte nie
+  zusammenpassen — eine Neuinstallation war ohne Umweg über „Passwort
+  vergessen" nicht benutzbar.
+- Der Installer fragt jetzt **kein** Passwort mehr ab. Er legt den Zugang ohne
+  Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen Einmal-Link
+  auf `pw_handling.php`. Das Passwort verlässt damit auch bei der Installation
+  nie den Browser.
+
+### Behoben — Passwortwechsel konnte die geschützten Angaben unlesbar machen
+- **Root Cause:** In `einstellungen.php` wurden Passwort-Hash und Schlüssel-Hülle
+  in zwei getrennten Anweisungen geschrieben, und die Hülle nur „falls
+  vorhanden". Schlug das Umpacken im Browser fehl, fing ein leeres `catch` das
+  ab und das Formular wurde trotzdem abgeschickt: Das neue Passwort galt, die
+  Hülle hing noch am alten — die geschützten Angaben waren nicht mehr lesbar.
+- Der Wechsel läuft jetzt **atomar**: Lässt sich der Inhaltsschlüssel nicht
+  umpacken, bricht der Browser ab und der Server ändert nichts. Beide
+  Schreibvorgänge liegen in einer Transaktion.
+
+### Behoben — Löschen über die Nutzer-Detailseite funktionierte nie
+- **Root Cause:** In `admin_user.php` verglich die Sicherheitsabfrage die
+  eingetippte E-Mail-Adresse mit `$u['email']`, obwohl `$u` erst **nach** der
+  POST-Verarbeitung geladen wurde. Der Vergleich lief immer gegen einen leeren
+  String, die Meldung „stimmt nicht überein" erschien auch bei korrekter
+  Eingabe. Der Datensatz wird jetzt vor der Verarbeitung geladen und danach für
+  die Anzeige aufgefrischt. (Der Löschen-Knopf in der Liste war nicht betroffen.)
+
+### Behoben — Schlüssel blieben nach dem Abmelden im Browser
+- `logout.php` beendete nur die PHP-Sitzung; Daten- und Inhaltsschlüssel
+  blieben im `sessionStorage` liegen, weil die Weiterleitung per HTTP-Header
+  geschah und damit nie JavaScript lief. Die vorhandene Funktion
+  `EdCrypto.clearSession()` wurde nirgends aufgerufen.
+- Abmelden räumt die Schlüssel jetzt ab. Zusätzlich verwerfen `login.php` und
+  der Passwortwechsel Reste einer früheren Sitzung, bevor sie neue Schlüssel
+  setzen — wichtig beim Kontowechsel im selben Tab.
+
+### Entfernt
+- Spalte `users.kdf_ver` (Migration `2026_07_28_kdf_ver_entfernt`). Sie wurde an
+  drei Stellen geschrieben, aber nirgends gelesen — seit dem Wegfall des
+  Klartext-Logins in Web 2.1.0 gibt es nur noch einen Anmeldeweg.
+- Toter Übernahme-Zweig in `backup_lib.php`: Bis Backup-Formatversion 1 enthielt
+  die Datei die Schlüssel-Hüllen des Ursprungskontos, die beim Restore
+  übernommen wurden. Seit Version 2 liegen die geschützten Angaben im (selbst
+  verschlüsselten) Container als Klartext und werden vom Browser mit dem
+  Schlüssel des **Zielkontos** verschlüsselt. Der Zweig konnte nur noch fremde
+  Hüllen in ein Konto schreiben.
+
 ## [Web 2.6.0] — 2026-07-27
 
 ### Neu — Abweichende Besatzung je Einsatz

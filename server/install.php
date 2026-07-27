@@ -31,6 +31,7 @@ if (file_exists($configPath) || file_exists($lockPath)) {
 
 $errors = [];
 $done = false;
+$setupLink = '';
 
 /* ---- Formular verarbeiten ---------------------------------------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $dbHost = $in('db_host'); $dbName = $in('db_name');
     $dbUser = $in('db_user'); $dbPass = (string)($_POST['db_pass'] ?? '');
-    $adminEmail = $in('admin_email'); $adminPw = (string)($_POST['admin_pass'] ?? '');
+    $adminEmail = $in('admin_email');
     $baseUrl = rtrim($in('base_url'), '/');
     $timezone = $in('timezone') ?: 'Europe/Berlin';
     $logoPath = $in('logo_path') ?: 'assets/images/gen-em_logo_helicopter.svg';
@@ -60,9 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Bitte eine gültige Admin-E-Mail angeben.';
-    }
-    if (strlen($adminPw) < 10) {
-        $errors[] = 'Das Admin-Passwort muss mindestens 10 Zeichen haben.';
     }
     if (!preg_match('#^https?://#', $baseUrl)) {
         $errors[] = 'Die Basis-URL muss mit http:// oder https:// beginnen.';
@@ -108,8 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             run_sql_file($pdo, $schemaPath);
 
-            $pdo->prepare('INSERT INTO users (email, role, password_hash) VALUES (?, "admin", ?)')
-                ->execute([$adminEmail, password_hash($adminPw, PASSWORD_DEFAULT)]);
+            // Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
+            // Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
+            // zugleich Inhalts- und Wiederherstellungsschluessel.
+            $pdo->prepare('INSERT INTO users (email, role) VALUES (?, "admin")')
+                ->execute([$adminEmail]);
+            $adminId = (int)$pdo->lastInsertId();
+            $setupToken = bin2hex(random_bytes(32));
+            $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
+                           VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))')
+                ->execute([$adminId, hash('sha256', $setupToken)]);
+            $setupLink = $baseUrl . '/pw_handling.php?token=' . $setupToken;
         } catch (Throwable $ex) {
             $errors[] = 'Beim Anlegen der Tabellen/des Admins ist ein Fehler aufgetreten: '
                       . h($ex->getMessage())
@@ -157,8 +164,14 @@ if ($done) {
     render_page('Einrichtung abgeschlossen',
         '<p class="alert alert-ok">Einrichtung erfolgreich. Die Konfiguration wurde '
         . 'gespeichert und der Installer ist jetzt gesperrt.</p>'
-        . '<p>Du kannst dich mit der Admin-E-Mail und dem gewählten Passwort anmelden.</p>'
-        . '<p><a class="btn-link" href="index.php">Zur Anwendung</a></p>'
+        . '<p><strong>Letzter Schritt:</strong> Über den folgenden Link legst du das '
+        . 'Passwort des Administrator-Zugangs fest. Dabei wird einmalig dein '
+        . 'Wiederherstellungsschlüssel angezeigt — bitte sicher notieren. '
+        . 'Der Link ist 24 Stunden gültig.</p>'
+        . '<p><a class="btn-link" href="' . h($setupLink) . '">Passwort jetzt festlegen</a></p>'
+        . '<p class="muted small">Falls der Link verlorengeht: Auf der Anmeldeseite '
+        . 'lässt sich über „Passwort vergessen oder erstmalig setzen“ ein neuer '
+        . 'anfordern (setzt funktionierende SMTP-Angaben voraus).</p>'
         . '<p class="muted small">Empfehlung: <code>install.php</code> jetzt vom Server '
         . 'löschen. Solange <code>install.lock</code> existiert, ist eine erneute '
         . 'Ausführung ohnehin blockiert.</p>');
@@ -195,7 +208,9 @@ function render_form(array $v, array $errors): void {
       <fieldset>
         <legend>Administrator-Zugang</legend>
         <label>E-Mail (= Login) <input type="email" name="admin_email" value="<?= $val('admin_email') ?>" required></label>
-        <label>Passwort (min. 10 Zeichen) <input type="password" name="admin_pass" minlength="10" required></label>
+        <p class="muted small">Das Passwort wird nicht hier gesetzt: Es verlässt den
+           Browser nie. Nach der Einrichtung erscheint ein Link, über den du es
+           festlegst — zusammen mit dem Wiederherstellungsschlüssel.</p>
       </fieldset>
 
       <fieldset>

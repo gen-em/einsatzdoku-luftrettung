@@ -295,16 +295,18 @@ Schlüssel aus deinem Login-Passwort; der Server speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
 Pflicht.
 
-**Ersteinrichtung:** Beim ersten Anmelden führt das System einmalig auf die
-Einrichtungsseite. Dort wird dein **Wiederherstellungsschlüssel** erzeugt und
-**nur dieses eine Mal** angezeigt — ausdrucken und sicher ablegen, dann per
-Haken bestätigen.
+**Ersteinrichtung:** Sie passiert direkt beim Festlegen des Passworts. Wenn du
+über den Einladungslink dein Passwort vergibst, erzeugt der Browser im selben
+Schritt deinen **Wiederherstellungsschlüssel** und zeigt ihn **nur dieses eine
+Mal** an — ausdrucken und sicher ablegen, dann per Haken bestätigen. Erst danach
+wird gespeichert. Eine getrennte Einrichtungsseite nach dem ersten Anmelden gibt
+es nicht mehr.
 
 **Unbedingt wissen:**
 
 - Normales Passwort-Ändern (mit altem Passwort) ist völlig unkritisch — die
   Daten bleiben ohne Zutun lesbar.
-- Bei „Passwort vergessen" verlangt die Seite mit dem neuen Passwort zugleich
+- Bei „Passwort vergessen“ verlangt die Seite mit dem neuen Passwort zugleich
   den **Wiederherstellungsschlüssel**. Damit übernimmt der Browser die
   verschlüsselten Angaben auf das neue Passwort, sodass nach dem Zurücksetzen
   sofort alles lesbar ist. Passt der Schlüssel nicht, wird **nichts** geändert
@@ -314,8 +316,7 @@ Haken bestätigen.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
-- Zeigt eine Seite „gesperrt", genügt ab- und neu anmelden bzw. der
-  Entsperr-Link.
+- Zeigt eine Seite „gesperrt“, genügt ab- und neu anmelden.
 
 **Alter aus Geburtsdatum:** Das Alter berechnet die Anwendung aus dem
 Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz von

@@ -5,9 +5,8 @@ CREATE TABLE users (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   email         VARCHAR(190) NOT NULL UNIQUE,
   name          VARCHAR(120) NULL,                   -- Anzeigename (Kopfleiste)
-  password_hash VARCHAR(255) NULL,                   -- Hash des Auth-Tokens (kdf_ver 1) bzw. Passworts (0)
+  password_hash VARCHAR(255) NULL,                   -- Hash des im Browser abgeleiteten Auth-Tokens
   kdf_salt      VARCHAR(64) NULL,                    -- Salt der Browser-Schluesselableitung
-  kdf_ver       TINYINT NOT NULL DEFAULT 0,          -- 0 = Alt (Klartext-Login), 1 = abgeleitetes Token
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
   role          ENUM('user','admin') NOT NULL DEFAULT 'user',

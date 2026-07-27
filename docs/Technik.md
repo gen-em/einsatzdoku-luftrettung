@@ -32,10 +32,11 @@ hems/
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local), Aufräumjob
 │   ├── ui.php             Kopf-/Seitenleisten, Fußzeile
-│   ├── auth_guard.php     Session/CSRF/Rollen, erzwungene E2E-Einrichtung
+│   ├── auth_guard.php     Session/CSRF/Rollen
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
-│   ├── login/logout/reset_request/reset_confirm.php   Auth-Flows
-│   ├── einrichtung.php    E2E-Ersteinrichtung (Wiederherstellungsschlüssel) & Entsperren
+│   ├── login/logout/reset_request.php   Auth-Flows
+│   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
+│   │                      Inhalts- + Wiederherstellungsschlüssel) und Reset
 │   ├── index.php          Tagesübersicht (Karte + Tabelle)
 │   ├── einsatz.php        Einsatzansicht · einsatz_form.php Nachtragen/Bearbeiten
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
@@ -67,8 +68,8 @@ hems/
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`, `kdf_ver` immer 1) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt) |
-| `password_resets` | Token-Hashes (sha256), 1 h gültig; Aufräumjob entsorgt Altbestand |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden |
+| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
@@ -110,10 +111,12 @@ AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
 
-`auth_guard.php` erzwingt die Ersteinrichtung (`einrichtung.php`), solange die
-Hüllen fehlen; dieselbe Seite entsperrt nach einem Passwort-Reset per
-Wiederherstellungsschlüssel. Passwort-Ändern re-wrappt clientseitig; eine
-Admin-Passwortvergabe existiert bewusst nicht.
+Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
+(siehe unten). Ein anmeldbares Konto ohne Hüllen kann es dadurch nicht geben;
+die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
+Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
+Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
+geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
 
 **Einsatzort-Feld (`einsatz_form.php`):** Erkennt beim Tippen zusätzlich zur
 Adresssuche (Photon) vier Koordinatenformate — Dezimalgrad, Grad/Dezimal-
@@ -165,17 +168,32 @@ zugehörige DOM-Element erst beim tatsächlichen Hinzufügen zur Karte
 entsteht.
 
 > **Historie:** Ältere Konten mit `kdf_ver = 0` (Passwort ging im Klartext zum
-> Server) wurden in Web 2.1.0 vollständig entfernt. Es gibt keinen
+> Server) wurden in Web 2.1.0 vollständig entfernt; die Spalte `kdf_ver` selbst
+> ist in Web 2.7.0 entfallen, da sie nur noch geschrieben, aber nie gelesen wurde. Es gibt keinen
 > unverschlüsselten Anmeldeweg mehr; Browser ohne Web-Krypto erhalten eine
 > klare Fehlermeldung. `auth_salt.php` liefert Salts, für unbekannte Adressen
 > ein deterministisches Pseudo-Salt gegen User-Enumeration.
 
-**Passwort-Reset:** `reset_confirm.php` verlangt das neue Passwort **und** den
-Wiederherstellungsschlüssel. Der Browser entpackt damit den Inhaltsschlüssel,
-leitet aus dem neuen Passwort Salz + Token ab und verpackt den Schlüssel neu;
-der Server schreibt Token-Hash, Salz und Hülle in **einer Transaktion**. Passt
-der Schlüssel nicht, bricht der Vorgang im Browser ab, bevor etwas gesendet
-wird — das Konto bleibt unverändert.
+**Passwortvergabe (`pw_handling.php`):** Die einzige Stelle, an der ein Passwort
+über einen Einmal-Link gesetzt wird. Der Server bestimmt die Betriebsart allein
+aus dem Kontostand — nie aus dem, was der Browser mitschickt:
+
+- **Erstvergabe** (`pat_wrap_rc IS NULL`): Das Konto hat noch keinen
+  Inhaltsschlüssel. Der Browser erzeugt ihn zusammen mit dem
+  Wiederherstellungsschlüssel, zeigt letzteren **einmalig** an und lässt ihn per
+  Haken bestätigen; die Passwortfelder werden dabei schreibgeschützt, damit die
+  bereits berechnete Hülle zum Passwort passt. Erst danach wandern
+  Token-Hash, Salz und **beide** Hüllen gemeinsam in die Datenbank.
+- **Reset** (`pat_wrap_rc` vorhanden): verlangt das neue Passwort **und** den
+  Wiederherstellungsschlüssel. Der Browser entpackt damit den Inhaltsschlüssel
+  und verpackt ihn für das neue Passwort neu; `pat_wrap_rc` bleibt unberührt,
+  der bekannte Wiederherstellungsschlüssel gilt also weiter.
+
+Geschrieben wird in beiden Fällen in **einer Transaktion**. Passt der Schlüssel
+nicht, bricht der Vorgang im Browser ab, bevor etwas gesendet wird — das Konto
+bleibt unverändert. Denselben Weg nutzt auch `install.php`: Der Installer legt
+den Administrator **ohne** Passwort an und zeigt auf der Erfolgsseite den
+Einmal-Link.
 
 **Backup (portabel):** `api/backup_data.php` liefert alle Daten der NutzerIn als
 Roh-JSON (geschützte Angaben weiterhin als Chiffretext). Der Browser
@@ -410,7 +428,11 @@ unberührt. Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten
 idempotent nach, sofern lokal noch vorhanden.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
-Installer; nach Erfolg sperrt `install.lock`; `install.php` danach löschen.
+Installer. Der Installer fragt **kein** Admin-Passwort mehr ab; er legt den
+Zugang ohne Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen
+Einmal-Link auf `pw_handling.php`, über den Passwort und
+Wiederherstellungsschlüssel im Browser entstehen. Nach Erfolg sperrt
+`install.lock`; `install.php` danach löschen.
 
 **Deploy schlägt fehl:** Actions-Log lesen. `ENOTFOUND` = `FTP_SERVER`-Secret
 prüfen (nur Hostname, kein Schema/Pfad). Auth-Fehler = Zugangsdaten;

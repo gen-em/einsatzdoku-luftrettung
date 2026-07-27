@@ -76,6 +76,9 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   const state = document.getElementById('loginstate');
   try {
     state.textContent = 'Schlüssel wird abgeleitet…';
+    // Schluessel einer frueheren Sitzung verwerfen — sonst wuerde ein alter
+    // Inhaltsschluessel weiterverwendet (etwa nach Kontowechsel im selben Tab).
+    EdCrypto.clearSession();
     const email = f.elements['email'].value.trim().toLowerCase();
     const pw = f.elements['password'].value;
     const r = await fetch('auth_salt.php', {

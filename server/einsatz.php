@@ -338,7 +338,7 @@ async function init(){
       } catch (e) { /* Blob passt nicht zum Schluessel */ }
     } else {
       dl.insertAdjacentHTML('beforeend',
-        '<dt>Verschlüsselt 🔒</dt><dd class="muted">gesperrt — <a href="einrichtung.php">entsperren</a> oder neu anmelden</dd>');
+        '<dt>Verschlüsselt 🔒</dt><dd class="muted">gesperrt — bitte ab- und neu anmelden</dd>');
       dl.hidden = false;
     }
   }

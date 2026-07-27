@@ -41,19 +41,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  (string)$u['password_hash']);
         $newTok = (string)($_POST['new_token'] ?? '');
         $newSalt = (string)($_POST['new_salt'] ?? '');
+        $wrapPw = (string)($_POST['wrap_pw'] ?? '');
         if (!$oldOk) {
             $error = 'Das aktuelle Passwort ist nicht korrekt.';
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
             $error = 'Passwortwechsel unvollständig (JavaScript nötig).';
+        } elseif ($patReady && !preg_match('#^[A-Za-z0-9+/=]{20,4000}$#', $wrapPw)) {
+            // Frueher wurde die Huelle hier stillschweigend uebersprungen —
+            // das Passwort galt dann, die Daten waren aber nicht mehr lesbar.
+            // Jetzt wird gar nichts geaendert.
+            $error = 'Der Inhaltsschlüssel konnte nicht umgepackt werden — '
+                   . 'das Passwort wurde NICHT geändert. Bitte Seite neu laden '
+                   . 'und erneut versuchen.';
         } else {
-            db()->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?, kdf_ver = 1 WHERE id = ?')
-                ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt, $userId]);
-            if (!empty($_POST['wrap_pw'])) {
-                db()->prepare('UPDATE users SET pat_wrap_pw = ? WHERE id = ?')
-                    ->execute([mb_substr((string)$_POST['wrap_pw'], 0, 4000), $userId]);
+            // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
+            // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
+            $pdo = db();
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ? WHERE id = ?')
+                    ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt, $userId]);
+                if ($patReady) {
+                    $pdo->prepare('UPDATE users SET pat_wrap_pw = ? WHERE id = ?')
+                        ->execute([mb_substr($wrapPw, 0, 4000), $userId]);
+                }
+                $pdo->commit();
+                $notice = 'Passwort geändert.';
+            } catch (Throwable $ex) {
+                $pdo->rollBack();
+                $error = 'Passwortwechsel fehlgeschlagen. Es wurde nichts geändert.';
             }
-            $notice = 'Passwort geändert.';
         }
     }
 
@@ -401,13 +419,21 @@ if ($tab === 'geraete') {
         const nk = await EdCrypto.deriveKeys(n1, salt);
         document.getElementById('pw_newtok').value = nk.authToken;
         document.getElementById('pw_newsalt').value = salt;
-        // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken
-        if (WRAP_PW && oldDataKey) {
+        // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken.
+        // Klappt das nicht, wird NICHT abgeschickt: ein geaendertes Passwort
+        // ohne passende Huelle machte die geschuetzten Angaben unlesbar.
+        if (WRAP_PW) {
+          let ck;
           try {
-            const ck = await EdCrypto.decrypt(oldDataKey, WRAP_PW);
-            document.getElementById('pw_wrap').value = await EdCrypto.encrypt(nk.dataKeyHex, ck);
-          } catch (e) { /* Wrap passt nicht (Reset-Fall) — unveraendert lassen */ }
+            ck = await EdCrypto.decrypt(oldDataKey, WRAP_PW);
+          } catch (e) {
+            st.textContent = 'Die geschützten Angaben lassen sich mit dem aktuellen '
+                           + 'Passwort nicht entschlüsseln. Es wurde nichts geändert.';
+            return;
+          }
+          document.getElementById('pw_wrap').value = await EdCrypto.encrypt(nk.dataKeyHex, ck);
         }
+        EdCrypto.clearSession();                         // alten Inhaltsschluessel verwerfen
         EdCrypto.setDataKey(nk.dataKeyHex);
         f.dataset.ready = '1';
         f.submit();
@@ -758,8 +784,7 @@ if ($tab === 'geraete') {
        einspielen. Format-Beschreibung: <code>docs/Backup-Format.md</code>.</p>
 
     <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
-      nicht entschlüsseln — bitte ab- und neu anmelden bzw.
-      <a href="einrichtung.php">mit Wiederherstellungsschlüssel entsperren</a>.</div>
+      nicht entschlüsseln — bitte ab- und neu anmelden.</div>
 
     <h2>Exportieren</h2>
     <div class="settings-form">

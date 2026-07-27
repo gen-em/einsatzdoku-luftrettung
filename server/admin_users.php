@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$uid, hash('sha256', $token)]);
             smtp_send($email, 'Zugang zur Einsatzdoku',
                 "Hallo,\n\nfür dich wurde ein Zugang angelegt. Setze hier dein Passwort (Link 24 h gültig):\n\n"
-                . $CFG['app']['base_url'] . '/reset_confirm.php?token=' . $token . "\n");
+                . $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token . "\n");
             $notice = 'Nutzer angelegt — Setz-Link per E-Mail verschickt.';
         } else { $notice = 'Ungültige E-Mail-Adresse.'; }
     }

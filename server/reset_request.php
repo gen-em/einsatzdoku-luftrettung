@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
             ->execute([(int)$u['id'], hash('sha256', $token)]);
-        $link = $CFG['app']['base_url'] . '/reset_confirm.php?token=' . $token;
+        $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
         smtp_send($email, 'Passwort setzen — Einsatzdoku',
             "Hallo,\n\nüber diesen Link kannst du dein Passwort setzen (gültig 1 Stunde):\n\n"
             . $link . "\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail.\n");

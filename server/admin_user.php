@@ -6,6 +6,14 @@ if ($userRole !== 'admin') { http_response_code(403); exit('Nur für Admins.'); 
 $uid = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $notice = null; $error = null;
 
+// Muss VOR der POST-Verarbeitung stehen: die Loeschbestaetigung vergleicht
+// die Eingabe mit $u['email']. Nach dem Block wird erneut gelesen, damit die
+// Anzeige die soeben geaenderten Werte zeigt.
+$st = db()->prepare('SELECT * FROM users WHERE id = ?');
+$st->execute([$uid]);
+$u = $st->fetch();
+if (!$u) { http_response_code(404); exit('NutzerIn nicht gefunden.'); }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = $_POST['action'] ?? '';
@@ -64,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$st = db()->prepare('SELECT * FROM users WHERE id = ?');
+// Auffrischen: zeigt Rolle, Name und E-Mail nach einer Aenderung aktuell an.
 $st->execute([$uid]);
 $u = $st->fetch();
 if (!$u) { http_response_code(404); exit('NutzerIn nicht gefunden.'); }

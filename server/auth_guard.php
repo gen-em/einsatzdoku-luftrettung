@@ -51,22 +51,13 @@ $userEmail = $row ? (string)$row['email'] : '';
 $userName  = ($row && isset($row['name'])) ? $row['name'] : null;
 
 // Pflicht-Verschlüsselung: aktiv, sobald der Inhaltsschluessel verpackt
-// vorliegt. Ohne Huelle wird die Ersteinrichtung erzwungen (unten).
+// vorliegt. Seit Web 2.7.0 entstehen Passwort und beide Huellen gemeinsam in
+// pw_handling.php — ein anmeldbares Konto ohne Huelle kann es nicht mehr
+// geben, deshalb entfaellt die frueher hier erzwungene Ersteinrichtung.
 $patWrapPw = ($row && isset($row['pat_wrap_pw'])) ? $row['pat_wrap_pw'] : null;
 $patReady  = $patWrapPw !== null;
 $kdfSalt   = ($row && isset($row['kdf_salt'])) ? $row['kdf_salt'] : null;
 
-// Erzwungene Ersteinrichtung: Konto ist auf Browser-Schluessel umgestellt,
-// hat aber noch keinen Inhaltsschluessel -> zuerst einrichtung.php.
-// Ausgenommen: die Einrichtung selbst, Abmelden, Wartung und die JSON-APIs.
-if (!$patReady) {
-    $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
-    $isApi = strpos((string)($_SERVER['SCRIPT_NAME'] ?? ''), '/api/') !== false;
-    if (!$isApi && !in_array($script, ['einrichtung.php', 'logout.php', 'update.php'], true)) {
-        header('Location: einrichtung.php');
-        exit;
-    }
-}
 require_once __DIR__ . '/ui.php';
 
 run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen
