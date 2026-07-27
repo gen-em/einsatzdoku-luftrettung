@@ -102,6 +102,22 @@ body.map-fs-lock{overflow:hidden}
 .map-ctrl-phase a:hover{background:var(--rot-light)}
 .map-ctrl-phase a.active{background:var(--rot-light)}
 
+/* Layer-Umschalter (Leaflet-Standardcontrol): an die App-Optik angepasst.
+   Ursache fuer zunaechst verzerrte Radiobuttons (Kreis weit rechts, Text
+   weit links): die globale Regel "input,select{width:100%;padding:...;
+   border:...}" (fuer Formular-Textfelder gedacht) traf auch die Leaflet-
+   Radios. Wie bei anderen Checkbox-Kontexten der Anwendung (.rolechecks,
+   .checklabel, .patfields) hier gezielt ueber die von Leaflet vergebene
+   Klasse zurueckgesetzt statt den Elementselektor zu verbreitern. */
+.leaflet-control-layers{border:1px solid var(--line);border-radius:6px;
+  font-family:'Open Sans',sans-serif;box-shadow:0 1px 5px rgba(0,0,0,.25)}
+.leaflet-control-layers-expanded{padding:.55rem .8rem}
+.leaflet-control-layers label{margin:.3rem 0;font-size:.85rem;color:var(--ink)}
+.leaflet-control-layers-selector{width:auto;padding:0;border:0;
+  background:none;accent-color:var(--blau);margin:0 .45rem 0 0;
+  vertical-align:middle}
+.leaflet-control-layers-separator{margin:.4rem -.8rem .4rem -.2rem}
+
 /* Statistik-Kacheln (Zeitraum-Uebersicht) */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1.2rem}
 .stat-tile{background:var(--schnee);border:1px solid var(--line);border-radius:6px;

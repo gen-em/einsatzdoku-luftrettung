@@ -10,6 +10,19 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.5.1] — 2026-07-26
+
+### Behoben — Layer-Umschalter zeigte verzerrte Radiobuttons
+- Root Cause gefunden: Die globale Regel `input,select{width:100%;padding:…;
+  border:…}` (für Formular-Textfelder gedacht) griff auch in den neuen
+  Kartenlayer-Umschalter (2.5.0) und zog dessen Radiobuttons zu breiten,
+  unsichtbaren Kästchen mit dem Kreis am rechten statt am linken Rand.
+  Behoben über die von Leaflet vergebene Klasse
+  `.leaflet-control-layers-selector` (`width:auto`, kein Padding/Rahmen) —
+  derselbe Musterfehler wie beim dokumentierten `.btn-primary`-Fall, hier für
+  `input` statt `button`. Control zusätzlich optisch an die App angeglichen
+  (Rahmen, Abstände, Akzentfarbe der Radiobuttons).
+
 ## [Web 2.5.0] — 2026-07-26
 
 ### Neu — Vollbildmodus für alle Karten
