@@ -311,6 +311,9 @@ async function init(){
     if (ck) {
       try {
         const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+        if (o.mission_no != null && String(o.mission_no) !== '') {
+          dl.insertAdjacentHTML('beforeend', `<dt>Einsatznummer 🔒</dt><dd>${esc(String(o.mission_no))}</dd>`);
+        }
         const pname = EdPat.name(o);
         if (pname !== '') {
           dl.insertAdjacentHTML('beforeend', `<dt>Name 🔒</dt><dd>${esc(pname)}</dd>`);

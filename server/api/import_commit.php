@@ -8,19 +8,17 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  * POST api/import_commit.php   JSON-Body, Header X-CSRF wie bei api/day.php
  *
  *   { action: 'check',
- *     days:        ["2026-05-21", ...],       // Flugtage der Datei
- *     mission_nos: ["2026-0001", ...] }       // Einsatznummern der Datei
+ *     days: ["2026-05-21", ...] }             // Flugtage der Datei
  *
  * Antwort:
  *   { days: { "2026-05-21": { crew: {p1,p2,hems,fr,other},
  *                             aircraft_id, base_id,
- *                             missions: [{id, hhmm, mission_no}] } },
- *     mission_nos: { "2026-0001": 4711 } }    // Nummer -> vorhandener Einsatz
+ *                             missions: [{id, hhmm, pat_blob}] } } }
  *
  *   { action: 'commit',
  *     days:     [{day, crew_p1..crew_other, aircraft_id, base_id,
  *                 mode:'insert'|'keep'|'update'}],
- *     missions: [{day, started_local:'HH:MM', mission_no, transport_dest, winch,
+ *     missions: [{day, started_local:'HH:MM', transport_dest, winch,
  *                 resources:[], crew_override, crew_p1..crew_other,
  *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id}] }
  *
@@ -28,10 +26,16 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  *   { ok, days_inserted, days_updated, missions_inserted,
  *     missions_overwritten, missions_skipped, first_day }
  *
- * WARUM SO WENIG: Die Anfrage enthaelt ausschliesslich Datum, Uhrzeit und
- * Einsatznummer. Name, Geburtsdatum, Diagnose und Einsatzort bleiben im
- * Browser — der Server kann und soll nicht wissen, um welche Personen es
- * geht. Fuer die Duplikaterkennung reichen die drei Angaben aus.
+ * WARUM SO WENIG: Die Anfrage enthaelt ausschliesslich Datum und Uhrzeit.
+ * Name, Geburtsdatum, Diagnose, Einsatzort und seit Web 2.9.0 auch die
+ * Einsatznummer bleiben im Browser — der Server kann und soll nicht wissen,
+ * um welche Personen es geht. Fuer die Duplikaterkennung ueber die Nummer
+ * liefert 'check' deshalb je vorhandenem Einsatz den pat_blob mit; der
+ * Browser entschluesselt ihn lokal und vergleicht dort (siehe
+ * assets/import_ui.js, bestandEinsatznummernIndex). Erkannt werden
+ * Nummerndubletten dadurch nur noch innerhalb der Flugtage, die in der
+ * Importdatei vorkommen — das ist der Preis der Verschluesselung
+ * (docs/Technik.md).
  *
  * Die Uhrzeiten gehen als ORTSZEIT (HH:MM) zurueck, nicht als UTC-Zeitstempel.
  * Der Browser vergleicht sie unmittelbar mit den Zeiten aus der Datei, die
@@ -151,12 +155,12 @@ function import_commit(array $b, int $userId): never
         /* ---- Einsaetze ---------------------------------------------------- */
         $insE = $pdo->prepare(
             'INSERT INTO missions (user_id, device_id, client_ref, day, started_at, ended_at,
-                                   final, manual, mission_no, transport_dest, winch,
+                                   final, manual, transport_dest, winch,
                                    crew_override, crew_p1, crew_p2, crew_hems, crew_fr,
                                    crew_other, pat_blob)
-             VALUES (?,?,?,?,?,?,1,1,?,?,?,?,?,?,?,?,?,?)');
+             VALUES (?,?,?,?,?,?,1,1,?,?,?,?,?,?,?,?)');
         $updE = $pdo->prepare(
-            'UPDATE missions SET day = ?, started_at = ?, ended_at = ?, mission_no = ?,
+            'UPDATE missions SET day = ?, started_at = ?, ended_at = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
                                  crew_p1 = ?, crew_p2 = ?, crew_hems = ?, crew_fr = ?,
                                  crew_other = ?, pat_blob = ?, manual = 1
@@ -192,7 +196,6 @@ function import_commit(array $b, int $userId): never
             }
 
             $werte = [
-                $txt($m['mission_no'] ?? null, 64),
                 $txt($m['transport_dest'] ?? null, 190),
                 !empty($m['winch']) ? 1 : 0,
                 !empty($m['crew_override']) ? 1 : 0,
@@ -285,16 +288,7 @@ try {
     }
     $tage = array_keys($tage);
 
-    $nummern = [];
-    foreach ((array)($b['mission_nos'] ?? []) as $n) {
-        $n = mb_substr(trim((string)$n), 0, 64);
-        if ($n !== '') { $nummern[$n] = true; }
-        if (count($nummern) >= 2000) { break; }
-    }
-    $nummern = array_keys($nummern);
-
     $antwortTage = [];
-    $antwortNummern = [];
 
     /* ---- Flugtage samt vorhandener Einsaetze ------------------------------ */
     if ($tage) {
@@ -323,8 +317,10 @@ try {
         }
 
         // Einsaetze dieser Tage — auch wenn der Flugtag selbst fehlt (moeglich,
-        // wenn ein Einsatz ohne angelegten Tag existiert).
-        $st = db()->prepare("SELECT id, day, started_at, mission_no
+        // wenn ein Einsatz ohne angelegten Tag existiert). pat_blob geht als
+        // Chiffretext mit, damit der Browser die Einsatznummer fuer den
+        // Dublettenabgleich lokal entschluesseln kann (siehe Kopfkommentar).
+        $st = db()->prepare("SELECT id, day, started_at, pat_blob
                              FROM missions
                              WHERE user_id = ? AND deleted_at IS NULL
                                AND day IN ($platz)
@@ -337,29 +333,14 @@ try {
                                       'base_id' => null, 'missions' => []];
             }
             $antwortTage[$tag]['missions'][] = [
-                'id'         => (int)$m['id'],
-                'hhmm'       => fmt_local($m['started_at']),
-                'mission_no' => $m['mission_no'] !== null ? (string)$m['mission_no'] : null,
+                'id'       => (int)$m['id'],
+                'hhmm'     => fmt_local($m['started_at']),
+                'pat_blob' => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
             ];
         }
     }
 
-    /* ---- Bereits vergebene Einsatznummern --------------------------------- */
-    if ($nummern) {
-        // In Bloecken abfragen, damit die Platzhalterliste nicht ausufert.
-        foreach (array_chunk($nummern, 500) as $block) {
-            $platz = implode(',', array_fill(0, count($block), '?'));
-            $st = db()->prepare("SELECT id, mission_no FROM missions
-                                 WHERE user_id = ? AND deleted_at IS NULL
-                                   AND mission_no IN ($platz)");
-            $st->execute(array_merge([$userId], $block));
-            foreach ($st->fetchAll() as $m) {
-                $antwortNummern[(string)$m['mission_no']] = (int)$m['id'];
-            }
-        }
-    }
-
-    json_out(['days' => $antwortTage, 'mission_nos' => $antwortNummern]);
+    json_out(['days' => $antwortTage]);
 } catch (Throwable $ex) {
     // Lesbare Meldung statt leerem HTTP 500 — die Seite zeigt sie an.
     json_out(['error' => 'check', 'meldung' => $ex->getMessage()], 500);

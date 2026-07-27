@@ -10,6 +10,36 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.9.0] — 2026-07-28
+
+### Geändert — Einsatznummer verschlüsselt
+- Die Einsatznummer (Leitstellen-Nummer) ist ein Fallbezeichner, über den sich
+  bei der Leitstelle die betroffene Person ermitteln lässt — sie gehört damit
+  zu den geschützten Angaben. Sie liegt jetzt Ende-zu-Ende-verschlüsselt im
+  `pat_blob` statt im Klartext in `missions.mission_no`; die Spalte entfällt.
+- Migration `2026_07_29_einsatznummer_verschluesselt` entfernt die Spalte
+  `missions.mission_no` ersatzlos. Vom Betreiber bestätigt: In der
+  Produktivinstanz war zum Zeitpunkt der Migration keine einzige
+  Einsatznummer belegt, eine Übernahme ist deshalb nicht nötig — der Server
+  könnte bestehende Klartextwerte mangels Schlüssel ohnehin nicht selbst in
+  den `pat_blob` überführen. Aus demselben Grund gilt: Backups, die vor
+  Web 2.9.0 erstellt wurden, enthalten die Einsatznummer noch als Klartextfeld
+  auf Einsatzebene statt im `pat_blob` — Backups zählen ab dieser Version neu,
+  ältere werden nicht mehr unterstützt.
+- Das Formularfeld ist ins Feld für PatientInnendaten gewandert (jetzt an
+  erster Stelle, oberhalb von Nachname) und wird nur noch clientseitig
+  gespeichert.
+- **Import bestehender Einsatzlisten:** Der Abgleich mit dem Bestand
+  (`api/import_commit.php`, `action=check`) bekommt seit dieser Version nur
+  noch Datum und Uhrzeit zu sehen, nicht mehr die Einsatznummer. Für den
+  Nummernabgleich liefert `check` stattdessen die `pat_blob`s vorhandener
+  Einsätze mit; der Browser entschlüsselt sie lokal. Dadurch werden
+  Nummerndubletten **nur noch innerhalb der Flugtage erkannt, die in der
+  Importdatei vorkommen** — der Preis der Verschlüsselung. Tag und Alarmzeit
+  bleiben als zweites, uneingeschränktes Merkmal wirksam.
+- `docs/Backup-Format.md`, `docs/Technik.md` und `docs/Handbuch.md`
+  entsprechend nachgezogen.
+
 ## [Web 2.8.0] — 2026-07-27
 
 ### Neu — Import bestehender Einsatzlisten (Excel/CSV)

@@ -44,12 +44,12 @@ declare(strict_types=1);
  *
  * Der Einsatzort (Adresse + Koordinaten, Photon-Autocomplete) ist bewusst
  * KEIN Eintrag hier — er liegt Ende-zu-Ende-verschlüsselt im pat_blob.
+ *
+ * Die Einsatznummer ist bewusst KEIN Eintrag hier — sie liegt seit Web 2.9.0
+ * Ende-zu-Ende-verschlüsselt im pat_blob, weil sich über sie bei der
+ * Leitstelle die betroffene Person ermitteln lässt.
  */
 return [
-    'mission_no' => [
-        'label' => 'Einsatznummer', 'type' => 'text', 'max' => 64,
-        'placeholder' => 'z. B. Leitstellen-Nr.',
-    ],
     'transport_dest' => [
         'label' => 'Transportziel', 'type' => 'text', 'max' => 190,
         'placeholder' => 'z. B. Klinikum Kempten',

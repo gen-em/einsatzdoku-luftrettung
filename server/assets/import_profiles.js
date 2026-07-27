@@ -22,9 +22,9 @@
  *   dedupeKey        Reihenfolge der Merkmale fuer die Duplikatpruefung
  *
  * target-Werte, die die Pipeline kennt:
- *   day, alarm, mission_no, transport_dest, winch, resources
+ *   day, alarm, transport_dest, winch, resources
  *   dayCrew.p1 | dayCrew.p2 | dayCrew.hems | dayCrew.fr | dayCrew.other
- *   pat.last+first, pat.dob, pat.dx, pat.loc.addr
+ *   pat.last+first, pat.dob, pat.dx, pat.loc.addr, pat.mission_no
  *   null = Spalte wird bewusst nicht uebernommen
  *
  * 'sensitive: true' markiert Felder, die im pat_blob landen und den Browser
@@ -87,11 +87,15 @@
             'Winde': { target: 'winch', parse: ['boolJN'] },
             'HEMS': { target: 'dayCrew.hems', parse: ['trim', 'max:120'] },
             'Pilot': { target: 'dayCrew.p1', parse: ['trim', 'max:120'] },
-            'Einsatz-Nr': { target: 'mission_no', parse: ['trim', 'max:64'] }
+            'Einsatz-Nr': { target: 'pat.mission_no', parse: ['trim', 'max:64'], sensitive: true }
         },
 
-        // Zuerst ueber die Einsatznummer, ersatzweise ueber Tag + Alarmzeit.
-        dedupeKey: ['mission_no', 'day+alarm'],
+        // Seit Web 2.9.0 ist die Einsatznummer Teil des pat_blob und wird dem
+        // Server beim Abgleich nicht mehr im Klartext uebergeben — er kennt
+        // dafuer nur noch Tag + Alarmzeit. Der Abgleich ueber die Nummer
+        // passiert clientseitig gegen die entschluesselten Bestandsdaten
+        // (siehe import_ui.js, bestandPruefen/dublette).
+        dedupeKey: ['day+alarm'],
 
         // Spaltenreihenfolge fuer den Export (Paket 3). Bewusst dieselbe
         // Liste wie oben, damit Import und Export nicht auseinanderlaufen.

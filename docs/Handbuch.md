@@ -227,7 +227,7 @@ Koordinaten und Pin übernommen:
 
 
 
-Dazu die weiteren Zusatzfelder: Einsatznummer, Transportziel, Beschreibung
+Dazu die weiteren Zusatzfelder: Transportziel, Beschreibung
 Einsatzort (nur in der Detailansicht), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
 aus den Stammdaten plus Namen/Infos), Sekundärtransport, Schockraum, Anderer
@@ -298,9 +298,10 @@ Besatzung und nachgetragene Einsätze wie gewohnt erfassen.
 
 ## 5. Verschlüsselung der Patientendaten (Pflicht)
 
-Nachname, Vorname, Geburtsdatum, Alter, Diagnose und Einsatzort sind
-**Ende-zu-Ende-verschlüsselt**: Der Browser ver- und entschlüsselt mit einem
-Schlüssel aus deinem Login-Passwort; der Server speichert nur Chiffretext. Es
+Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort und die
+Einsatznummer sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
+entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
+speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
 Pflicht.
 
@@ -332,8 +333,8 @@ Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz vo
 vor Jahren zeigt weiterhin das damalige Alter. Bei gesetztem Geburtsdatum ist
 das Feld gesperrt und mit „aus Geburtsdatum" gekennzeichnet. Ist kein
 Geburtsdatum bekannt (bei unbekannten Personen der Regelfall), bleibt das Alter
-von Hand eintragbar. **Name und Geburtsdatum erscheinen bewusst nur in der
-Einsatzansicht**, nie in den Übersichten.
+von Hand eintragbar. **Name, Geburtsdatum und Einsatznummer erscheinen
+bewusst nur in der Einsatzansicht bzw. im Formular**, nie in den Übersichten.
 
 ---
 
@@ -366,7 +367,7 @@ Jahresliste.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
 geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum,
-Diagnose und Einsatzort nur als Chiffretext zu sehen. Das ist keine
+Diagnose, Einsatzort und Einsatznummer nur als Chiffretext zu sehen. Das ist keine
 Bequemlichkeit, sondern die einzige Möglichkeit, die die
 Ende-zu-Ende-Verschlüsselung (Abschnitt 5) offen lässt. Aus demselben Grund
 ist der Import gesperrt, solange die Verschlüsselung nicht bereitsteht — dann
@@ -391,10 +392,14 @@ gesperrt.
 Zwei Sonderfälle werden dabei erkannt:
 
 - **Dubletten.** Ein Einsatz, dessen Einsatznummer schon vergeben ist oder für
-  den es an diesem Tag bereits einen Einsatz zur selben Alarmzeit gibt. Du
-  wählst je Zeile: überspringen (Voreinstellung), überschreiben oder trotzdem
-  anlegen. Gelöschte Einsätze im Papierkorb zählen bewusst nicht als
-  vorhanden.
+  den es an diesem Tag bereits einen Einsatz zur selben Alarmzeit gibt. Der
+  Abgleich über die Einsatznummer erkennt seit Web 2.9.0 nur noch Dubletten
+  **innerhalb der Flugtage, die in der Importdatei vorkommen** — die Nummer
+  liegt verschlüsselt vor und wird dafür lokal in deinem Browser mit den
+  vorhandenen Einsätzen abgeglichen. Tag und Alarmzeit bleiben unabhängig
+  davon wirksam. Du wählst je Zeile: überspringen (Voreinstellung),
+  überschreiben oder trotzdem anlegen. Gelöschte Einsätze im Papierkorb
+  zählen bewusst nicht als vorhanden.
 - **Abweichende Besatzung.** Als Besatzung des Flugtags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel im laufenden Dienst —, trägt dieser Einsatz

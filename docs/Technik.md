@@ -77,7 +77,7 @@ hems/
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -111,8 +111,8 @@ PBKDF2-SHA256 (310 000 Runden) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
 gespeichert) und einen Datenschlüssel (bleibt im Browser, `sessionStorage`).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
-verschlüsselt `pat_blob` (`{last, first, dob, dx, age, loc:{addr,lat,lon}}`,
-AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
+verschlüsselt `pat_blob` (`{last, first, dob, dx, age, mission_no,
+loc:{addr,lat,lon}}`, AES-256-GCM) und liegt doppelt verpackt in `users`: mit dem Datenschlüssel
 (`pat_wrap_pw`) und mit dem aus dem Wiederherstellungsschlüssel abgeleiteten
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
@@ -380,8 +380,15 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    (jede Änderung rechnet die Prüfung komplett neu), löst Konflikte auf und
    verschlüsselt die Patientendaten mit `EdCrypto`.
 5. `api/import_commit.php` kennt zwei Aktionen. `check` gleicht mit dem
-   Bestand ab und bekommt dafür **nur** Datum, Uhrzeit und Einsatznummer zu
-   sehen; `commit` schreibt in **einer** Transaktion.
+   Bestand ab und bekommt dafür seit Web 2.9.0 **nur** Datum und Uhrzeit zu
+   sehen — die Einsatznummer liegt verschlüsselt im `pat_blob` und wird dem
+   Server nicht mehr im Klartext übergeben. Für den Nummernabgleich liefert
+   `check` deshalb je vorhandenem Einsatz den `pat_blob` mit; `import_ui.js`
+   entschlüsselt ihn lokal (`bestandEinsatznummernIndex`) und vergleicht dort.
+   Dadurch werden Nummerndubletten nur noch innerhalb der Flugtage erkannt,
+   die in der Importdatei vorkommen — der Preis der Verschlüsselung. Tag und
+   Alarmzeit bleiben als zweites, uneingeschränktes Merkmal wirksam.
+   `commit` schreibt in **einer** Transaktion.
 
 Zwei Fallstricke, die dort bewusst gelöst sind:
 

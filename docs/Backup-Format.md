@@ -72,7 +72,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "manual": 0, "final": 1,
     "distance_m": 38400, "ascent_m": 550,
     "site_ele_m": 712,                    // wird beim Restore neu berechnet, nicht uebernommen
-    "mission_no": "…", "transport_dest": "…", "site_desc": "…",
+    "transport_dest": "…", "site_desc": "…",
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
     "other_ema": null, "other_resources": null, "notes": null,
@@ -87,7 +87,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     // Geschützte Angaben — im Container KLARTEXT (der Container selbst ist
     // ja verschlüsselt). Beim Import werden sie mit dem Inhaltsschlüssel des
     // Zielkontos verschlüsselt und als `pat_blob` gespeichert.
-    "pat": { "dx": "Polytrauma", "age": 41,
+    "pat": { "dx": "Polytrauma", "age": 41, "mission_no": "2026-0042",
              "loc": { "addr": "Ringstr. 18, 87439 Kempten",
                       "lat": 47.72, "lon": 10.31 } },
     // "pat_unreadable": true  -> stand beim Export nicht zur Verfügung

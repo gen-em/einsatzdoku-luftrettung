@@ -309,7 +309,7 @@
         switch (target) {
         case 'day': case 'alarm':
             zeile.mission[target] = wert; break;
-        case 'mission_no': case 'transport_dest': case 'winch':
+        case 'transport_dest': case 'winch':
             zeile.mission[target] = wert; break;
         case 'resources':
             zeile.mission.resources = wert || []; break;
@@ -318,6 +318,7 @@
             break;
         case 'pat.dob': zeile.pat.dob = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
+        case 'pat.mission_no': zeile.pat.mission_no = wert; break;
         case 'pat.loc.addr':
             if (wert) { zeile.pat.loc = { addr: wert }; }
             break;
@@ -334,8 +335,8 @@
      *
      * Jede Zeile:
      *   { srcRow, status:'ok'|'warn'|'error', issues:[{spalte,level,text}],
-     *     mission:{day, alarm, mission_no, transport_dest, winch, resources},
-     *     pat:{last, first, dob, dx, loc:{addr}}, dayCrew:{p1, hems, ...} }
+     *     mission:{day, alarm, transport_dest, winch, resources},
+     *     pat:{last, first, dob, dx, mission_no, loc:{addr}}, dayCrew:{p1, hems, ...} }
      */
     function verarbeite(mappe, profil, params, kopfzeile) {
         return verarbeiteMatrix(matrix(mappe, profil), profil, params, kopfzeile);
@@ -385,9 +386,9 @@
             var z = {
                 srcRow: r + 1,                 // 1-basiert wie in Excel angezeigt
                 status: 'ok', issues: [],
-                mission: { day: null, alarm: null, mission_no: null,
+                mission: { day: null, alarm: null,
                     transport_dest: null, winch: 0, resources: [] },
-                pat: { last: null, first: null, dob: null, dx: null, loc: null },
+                pat: { last: null, first: null, dob: null, dx: null, mission_no: null, loc: null },
                 dayCrew: {}
             };
 
@@ -470,7 +471,6 @@
                     srcRow: z.srcRow,
                     day: tag,
                     alarm: z.mission.alarm,
-                    mission_no: z.mission.mission_no,
                     transport_dest: z.mission.transport_dest,
                     winch: z.mission.winch,
                     resources: z.mission.resources,

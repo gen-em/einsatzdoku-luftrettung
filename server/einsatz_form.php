@@ -260,6 +260,9 @@ function fieldValue(string $col) {
     <div id="patlocked" class="alert" hidden>Entschlüsselung nicht möglich —
       bitte einmal ab- und neu anmelden. Vorhandene verschlüsselte Angaben bleiben unverändert.</div>
     <div id="patfields">
+      <label>Einsatznummer
+        <input type="text" id="pat_mission_no" maxlength="64" autocomplete="off"
+               placeholder="z. B. Leitstellen-Nr."></label>
       <div class="patname">
         <label>Nachname <input type="text" id="pat_last" maxlength="120" autocomplete="off"></label>
         <label>Vorname <input type="text" id="pat_first" maxlength="120" autocomplete="off"></label>
@@ -471,6 +474,7 @@ let PAT_CK = null;
   if (PAT_PREV) {
     let o = {};
     try { o = JSON.parse(await EdCrypto.decrypt(PAT_CK, PAT_PREV)) || {}; } catch (e) { }
+    if (o.mission_no != null) document.getElementById('pat_mission_no').value = o.mission_no;
     if (o.last != null) document.getElementById('pat_last').value = o.last;
     if (o.first != null) document.getElementById('pat_first').value = o.first;
     if (o.dob != null) document.getElementById('pat_dob').value = o.dob;
@@ -529,11 +533,13 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   if (f.dataset.patDone === '1' || !PAT_CK) return;   // gesperrt: Blob bleibt
   ev.preventDefault();
   const o = {};
+  const missionNo = document.getElementById('pat_mission_no').value.trim();
   const last  = document.getElementById('pat_last').value.trim();
   const first = document.getElementById('pat_first').value.trim();
   const dob   = document.getElementById('pat_dob').value.trim();
   const dx    = document.getElementById('pat_dx').value.trim();
   const age   = document.getElementById('pat_age').value.trim();
+  if (missionNo !== '') o.mission_no = missionNo;
   if (last !== '')  o.last  = last;
   if (first !== '') o.first = first;
   if (dob !== '')   o.dob   = dob;

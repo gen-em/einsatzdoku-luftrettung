@@ -490,6 +490,23 @@ $MIGRATIONS = [
             "ALTER TABLE users DROP COLUMN kdf_ver",
         ],
     ],
+    [
+        'id'    => '2026_07_29_einsatznummer_verschluesselt',
+        'label' => 'Einsatznummer wandert in den verschlüsselten pat_blob',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions' AND column_name = 'mission_no'");
+            return (int)$q->fetchColumn() === 0;
+        },
+        // Vom Betreiber bestaetigt: In der Produktivinstanz ist keine einzige
+        // Einsatznummer belegt — die Spalte kann deshalb verlustfrei entfernt
+        // werden, ohne vorherige Ueberfuehrung in den pat_blob (dazu braeuchte
+        // der Server ohnehin den Schluessel, den er nach Bauart nicht hat).
+        'sql'   => [
+            "ALTER TABLE missions DROP COLUMN mission_no",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

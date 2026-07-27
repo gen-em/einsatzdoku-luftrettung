@@ -108,37 +108,69 @@
         zeichnen();
     }
 
-    /** Abgleich mit dem Bestand — nur Datum, Uhrzeit und Einsatznummer gehen raus. */
+    /**
+     * Abgleich mit dem Bestand — dem Server gehen nur noch Datum und Uhrzeit
+     * hinaus, die Einsatznummer sieht er seit Web 2.9.0 nicht mehr (sie liegt
+     * verschluesselt im pat_blob). Fuer den Abgleich ueber die Nummer liefert
+     * 'check' je vorhandenem Einsatz zusaetzlich seinen pat_blob mit; der
+     * Browser entschluesselt diese hier lokal und baut daraus den Index
+     * missionNoIndex fuer dublette().
+     */
     async function bestandPruefen() {
         var tage = S.tage.map(function (t) { return t.day; });
-        var nummern = [];
-        S.tage.forEach(function (t) {
-            t.missionen.forEach(function (m) {
-                if (m.mission_no) { nummern.push(m.mission_no); }
-            });
-        });
-        if (!tage.length) { S.bestand = { days: {}, mission_nos: {} }; return; }
+        if (!tage.length) { S.bestand = { days: {}, missionNoIndex: {} }; return; }
         try {
             var res = await fetch('api/import_commit.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-                body: JSON.stringify({ action: 'check', days: tage, mission_nos: nummern })
+                body: JSON.stringify({ action: 'check', days: tage })
             });
             var d = await res.json();
             if (d.error) { throw new Error(d.meldung || d.error); }
             S.bestand = d;
+            S.bestand.missionNoIndex = await bestandEinsatznummernIndex(d);
         } catch (e) {
-            S.bestand = { days: {}, mission_nos: {} };
+            S.bestand = { days: {}, missionNoIndex: {} };
             fehler('Der Abgleich mit den vorhandenen Einsätzen ist fehlgeschlagen ('
                  + e.message + '). Dubletten werden deshalb nicht erkannt.');
         }
     }
 
+    /**
+     * Entschluesselt die pat_blobs der vorhandenen Einsaetze aus der
+     * 'check'-Antwort und liefert einen Index Einsatznummer -> Einsatz-Id.
+     * Ist die Verschluesselung gesperrt, bleibt der Index leer — die
+     * Dublettenpruefung greift dann nur noch ueber Tag und Alarmzeit.
+     *
+     * Bewusst in Kauf genommen: Erkannt werden Nummerndubletten nur noch
+     * innerhalb der Flugtage, die in der Importdatei vorkommen (siehe
+     * docs/Technik.md).
+     */
+    async function bestandEinsatznummernIndex(d) {
+        var index = {};
+        var ck = await EdCrypto.getContentKey(PAT_WRAP);
+        if (!ck) { return index; }
+        for (var tag in (d.days || {})) {
+            if (!Object.prototype.hasOwnProperty.call(d.days, tag)) { continue; }
+            var missions = d.days[tag].missions || [];
+            for (var i = 0; i < missions.length; i++) {
+                var m = missions[i];
+                if (!m.pat_blob) { continue; }
+                try {
+                    var o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+                    if (o.mission_no) { index[o.mission_no] = m.id; }
+                } catch (e) { /* Blob passt nicht zum Schluessel — ueberspringen */ }
+            }
+        }
+        return index;
+    }
+
     /** Liegt dieser Einsatz schon vor? Erst ueber die Nummer, dann ueber Tag+Zeit. */
     function dublette(m) {
-        var b = S.bestand || { days: {}, mission_nos: {} };
-        if (m.mission_no && b.mission_nos[m.mission_no]) {
-            return { grund: 'Einsatznummer bereits vergeben', id: b.mission_nos[m.mission_no] };
+        var b = S.bestand || { days: {}, missionNoIndex: {} };
+        var nummer = m.pat && m.pat.mission_no;
+        if (nummer && b.missionNoIndex && b.missionNoIndex[nummer]) {
+            return { grund: 'Einsatznummer bereits vergeben', id: b.missionNoIndex[nummer] };
         }
         var tag = b.days[m.day];
         if (tag) {
@@ -338,6 +370,7 @@
                 // Nur belegte Felder verschluesseln; ist nichts belegt, bleibt
                 // pat_blob leer statt ein leeres Objekt zu verschluesseln.
                 pat = {};
+                if (m.pat.mission_no) { pat.mission_no = m.pat.mission_no; }
                 if (m.pat.last) { pat.last = m.pat.last; }
                 if (m.pat.first) { pat.first = m.pat.first; }
                 if (m.pat.dob) { pat.dob = m.pat.dob; }
@@ -349,7 +382,6 @@
                 missionen.push({
                     day: m.day,
                     started_local: m.alarm,
-                    mission_no: m.mission_no,
                     transport_dest: m.transport_dest,
                     winch: m.winch ? 1 : 0,
                     resources: m.resources || [],
