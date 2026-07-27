@@ -20,9 +20,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))')
                 ->execute([$uid, hash('sha256', $token)]);
-            smtp_send($email, 'Zugang zur Einsatzdoku',
-                "Hallo,\n\nfür dich wurde ein Zugang angelegt. Setze hier dein Passwort (Link 24 h gültig):\n\n"
-                . $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token . "\n");
+            smtp_send($email, 'Willkommen bei der Gen-EM Einsatzdokumentation Luftrettung',
+                "Hallo,\n\n"
+                . "für dich wurde ein Zugang zur Gen-EM Einsatzdokumentation Luftrettung angelegt.\n"
+                . "Über den folgenden Link legst du dein persönliches Passwort fest — der Link ist\n"
+                . "24 Stunden gültig:\n\n"
+                . $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token . "\n\n"
+                . "Dabei wird auch dein Wiederherstellungsschlüssel angezeigt. Bitte notiere ihn dir\n"
+                . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
+                . "Passwort-Reset nicht wiederherstellen.\n\n"
+                . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+                . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n");
             $notice = 'Nutzer angelegt — Setz-Link per E-Mail verschickt.';
         } else { $notice = 'Ungültige E-Mail-Adresse.'; }
     }

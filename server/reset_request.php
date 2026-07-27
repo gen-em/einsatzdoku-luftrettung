@@ -15,9 +15,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR))')
             ->execute([(int)$u['id'], hash('sha256', $token)]);
         $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
-        smtp_send($email, 'Passwort setzen — Einsatzdoku',
-            "Hallo,\n\nüber diesen Link kannst du dein Passwort setzen (gültig 1 Stunde):\n\n"
-            . $link . "\n\nFalls du das nicht angefordert hast, ignoriere diese E-Mail.\n");
+        smtp_send($email, 'Neues Passwort — Gen-EM Einsatzdokumentation Luftrettung',
+            "Hallo,\n\n"
+            . "für deinen Zugang zur Gen-EM Einsatzdokumentation Luftrettung wurde ein neues\n"
+            . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
+            . "eine Stunde gültig:\n\n"
+            . $link . "\n\n"
+            . "Dafür brauchst du deinen Wiederherstellungsschlüssel, den du bei der Einrichtung\n"
+            . "erhalten hast.\n\n"
+            . "Falls du das nicht angefordert hast, kannst du diese E-Mail einfach ignorieren —\n"
+            . "es wurde nichts geändert.\n\n"
+            . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+            . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n");
     }
     // Immer gleiche Antwort — verraet nicht, ob die Adresse existiert.
     $done = true;

@@ -72,6 +72,14 @@ Gesamtprojekts, vor der getrennten Zählung.
   der Passwortwechsel Reste einer früheren Sitzung, bevor sie neue Schlüssel
   setzen — wichtig beim Kontowechsel im selben Tab.
 
+### Geändert — E-Mail-Texte und Anmeldeseite
+- Einladungs- und Reset-Mail (`admin_users.php`, `reset_request.php`) sind
+  ausführlicher und nennen jetzt „Gen-EM Einsatzdokumentation Luftrettung" als
+  Absender sowie `philipp@gen-em.org` als Kontakt bei Fragen/Problemen.
+- `login.php`: Link zu „Passwort vergessen oder erstmalig setzen" heißt jetzt
+  schlicht „Passwort vergessen?" — beide Fälle laufen ohnehin über denselben
+  Weg (`reset_request.php` → `pw_handling.php`).
+
 ### Entfernt
 - Spalte `users.kdf_ver` (Migration `2026_07_28_kdf_ver_entfernt`). Sie wurde an
   drei Stellen geschrieben, aber nirgends gelesen — seit dem Wegfall des

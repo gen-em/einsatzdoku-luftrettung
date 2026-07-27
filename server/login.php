@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </label>
     <button type="submit" class="btn-primary">Anmelden</button>
   </form>
-  <p class="login-aux"><a href="reset_request.php">Passwort vergessen oder erstmalig setzen</a></p>
+  <p class="login-aux"><a href="reset_request.php">Passwort vergessen?</a></p>
   <p class="muted" id="loginstate" style="min-height:1.2em"></p>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
