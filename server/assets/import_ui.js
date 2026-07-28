@@ -22,8 +22,19 @@
         nutzlast: null
     };
 
-    var SPALTEN_ANZEIGE = ['Datum', 'Zeit', 'Name', 'Geb.dat', 'Einsatzort', 'RTW',
-        'Diagnose', 'Transport', 'Winde', 'HEMS', 'Pilot', 'Einsatz-Nr'];
+    /**
+     * Spalten der Pruef-Tabelle. Jedes Profil bringt seine eigene Liste mit
+     * (reviewColumns) — das vollstaendige CSV hat 75 Spalten, die als Tabelle
+     * niemand mehr lesen koennte. Ohne Angabe werden alle uebernommenen
+     * Spalten des Profils gezeigt.
+     */
+    function anzeigeSpalten() {
+        if (!S.profil) { return []; }
+        if (S.profil.reviewColumns) { return S.profil.reviewColumns; }
+        return Object.keys(S.profil.columns).filter(function (n) {
+            return !!S.profil.columns[n].target;
+        });
+    }
 
     // ------------------------------------------------------------- Anzeigen
 
@@ -66,11 +77,114 @@
         });
     }
 
+    /**
+     * Passwortabfrage fuer ein verschluesseltes Archiv.
+     *
+     * Baut denselben Dialogtyp wie confirm.js (gleiche CSS-Klassen), aber mit
+     * einem Eingabefeld. Das Passwort bleibt in dieser Funktion und wird
+     * nirgends gespeichert oder gesendet.
+     */
+    function passwortAbfragen(text) {
+        return new Promise(function (aufloesen) {
+            var d = document.createElement('dialog');
+            d.className = 'confirmbox';
+            d.innerHTML =
+                '<p class="confirmtext"></p>' +
+                '<p><input type="password" class="imp-pw" autocomplete="off" ' +
+                'style="width:100%"></p>' +
+                '<div class="confirmbtns">' +
+                '<button type="button" data-w="ab" class="btn-plain">Abbrechen</button>' +
+                '<button type="button" data-w="ok" class="btn-primary">Öffnen</button>' +
+                '</div>';
+            d.querySelector('.confirmtext').textContent = text;
+            document.body.appendChild(d);
+
+            var feld = d.querySelector('.imp-pw');
+            function fertig(wert) {
+                d.close();
+                d.remove();
+                aufloesen(wert);
+            }
+            d.querySelector('[data-w="ok"]').addEventListener('click', function () {
+                fertig(feld.value || null);
+            });
+            d.querySelector('[data-w="ab"]').addEventListener('click', function () { fertig(null); });
+            feld.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter') { ev.preventDefault(); fertig(feld.value || null); }
+            });
+            d.addEventListener('cancel', function (ev) { ev.preventDefault(); fertig(null); });
+            d.showModal();
+            feld.focus();
+        });
+    }
+
+    /** Ein .zip erkennen. Ein .xlsx ist technisch auch ein ZIP — deshalb wird
+     *  ausschliesslich nach der Endung entschieden, nicht nach dem Inhalt. */
+    function istArchiv(name) {
+        return /\.zip$/i.test(String(name || ''));
+    }
+
+    /**
+     * Aus einem Exportarchiv die Tabellendatei holen.
+     *
+     * Gesucht werden die 'archiveMember' aller bekannten Profile — heute nur
+     * einsaetze.csv. Ist das Archiv verschluesselt, wird einmal nach dem
+     * Passwort gefragt; ein falsches Passwort meldet zip.js als Fehler.
+     */
+    async function ausArchiv(bytes) {
+        if (!window.zip) {
+            throw new Error('Die Bibliothek zum Öffnen von Archiven ist nicht geladen.');
+        }
+        var gesucht = window.ImportProfile.liste()
+            .map(function (p) { return p.archiveMember; })
+            .filter(Boolean);
+
+        async function lies(passwort) {
+            var leser = new window.zip.ZipReader(new window.zip.Uint8ArrayReader(bytes),
+                passwort ? { password: passwort } : {});
+            try {
+                var eintraege = await leser.getEntries();
+                var treffer = eintraege.filter(function (e) {
+                    return gesucht.indexOf(e.filename) >= 0;
+                })[0];
+                if (!treffer) {
+                    throw new Error('Im Archiv steckt keine der bekannten Tabellen ('
+                        + gesucht.join(', ') + ').');
+                }
+                if (treffer.encrypted && !passwort) { return { braucht: true }; }
+                return { daten: await treffer.getData(new window.zip.Uint8ArrayWriter()) };
+            } finally {
+                await leser.close();
+            }
+        }
+
+        var erg = await lies(null);
+        if (erg.braucht) {
+            var pw = await passwortAbfragen('Dieses Archiv ist mit einem Passwort '
+                + 'geschützt. Bitte das Passwort eingeben, mit dem es erstellt wurde.');
+            if (!pw) { return null; }
+            erg = await lies(pw);
+        }
+        return erg.daten || null;
+    }
+
+    function warnungZeigen(profil) {
+        var el = $('profilwarnung');
+        if (!el) { return; }
+        el.textContent = (profil && profil.warning) || '';
+        el.hidden = !(profil && profil.warning);
+    }
+
     async function dateiGewaehlt(datei) {
         fehler('');
+        warnungZeigen(null);
         try {
-            var puffer = await datei.arrayBuffer();
-            S.mappe = ImportCore.leseArbeitsmappe(new Uint8Array(puffer));
+            var daten = new Uint8Array(await datei.arrayBuffer());
+            if (istArchiv(datei.name)) {
+                daten = await ausArchiv(daten);
+                if (!daten) { return; }          // abgebrochen oder nichts gefunden
+            }
+            S.mappe = ImportCore.leseArbeitsmappe(daten);
         } catch (e) {
             fehler('Die Datei konnte nicht gelesen werden: ' + e.message);
             return;
@@ -85,6 +199,7 @@
         S.profil = erkannt.profil;
         S.kopfzeile = erkannt.kopfzeile;
         $('profil').value = S.profil.id;
+        warnungZeigen(S.profil);
 
         paramsFuellen(ImportCore.paramVorschlaege(S.mappe, S.profil, S.kopfzeile, datei.name));
         S.mat = ImportCore.matrix(S.mappe, S.profil);
@@ -103,7 +218,7 @@
             fehler(e.message);
             return;
         }
-        S.tage = ImportCore.gruppiere(S.erg.zeilen);
+        S.tage = ImportCore.gruppiere(S.erg.zeilen, S.profil);
         await bestandPruefen();
         zeichnen();
     }
@@ -236,7 +351,7 @@
     function zeichnen() {
         var tab = $('tabelle');
         var kopf = '<thead><tr><th>Zeile</th>' +
-            SPALTEN_ANZEIGE.map(function (s) { return '<th>' + esc(s) + '</th>'; }).join('') +
+            anzeigeSpalten().map(function (s) { return '<th>' + esc(s) + '</th>'; }).join('') +
             '<th>Aktion</th></tr></thead>';
 
         // Zeilen den Tagen zuordnen; Fehlerzeilen ohne verwertbares Datum
@@ -249,7 +364,7 @@
 
         var ohneTag = S.erg.zeilen.filter(function (z) { return !proZeile[z.srcRow]; });
         var koerper = '';
-        var spaltenZahl = SPALTEN_ANZEIGE.length + 2;
+        var spaltenZahl = anzeigeSpalten().length + 2;
 
         if (ohneTag.length) {
             koerper += '<tr class="imp-daygroup"><td colspan="' + spaltenZahl + '">' +
@@ -307,7 +422,7 @@
         var hinweise = z.issues.map(function (i) { return i.spalte + ': ' + i.text; }).join(' | ');
         return '<tr class="' + klasse + '"' + (hinweise ? ' title="' + esc(hinweise) + '"' : '') + '>' +
             '<td class="muted">' + z.srcRow + (m && m.crew_override ? ' <span title="abweichende Besatzung">*</span>' : '') + '</td>' +
-            SPALTEN_ANZEIGE.map(function (s) { return zelle(z, s); }).join('') +
+            anzeigeSpalten().map(function (s) { return zelle(z, s); }).join('') +
             aktionZelle(z, dup) + '</tr>';
     }
 
@@ -326,6 +441,36 @@
         return S.erg.zeilen.filter(function (z) {
             return z.status === 'error' && !(S.wahlZeile[z.srcRow] || {}).skip;
         }).length;
+    }
+
+    function nummerOderNull(v) {
+        return (typeof v === 'number' && isFinite(v)) ? v : null;
+    }
+
+    /**
+     * Phasen der Zeile in die Form bringen, die api/import_commit.php erwartet.
+     *
+     * Zwei Quellen, weil die beiden Exportformate unterschiedlich genau sind:
+     * das vollstaendige CSV liefert ganze Zeitstempel ('at', schon in UTC), das
+     * Standard-Excel nur eine Uhrzeit ohne Zone ('local'). Der Server rechnet
+     * 'local' genauso um wie die Alarmzeit.
+     */
+    function phasenListe(m) {
+        var out = [], n;
+        for (n = 2; n <= 9; n++) {
+            var p = (m.phases || {})[n];
+            var lokal = (m.phasesLocal || {})[n] || null;
+            if (!p && !lokal) { continue; }
+            if (p && !p.at && !lokal && p.lat === null && p.lon === null) { continue; }
+            out.push({
+                phase: n,
+                at: (p && p.at) || null,
+                local: lokal,
+                lat: (p && typeof p.lat === 'number') ? p.lat : null,
+                lon: (p && typeof p.lon === 'number') ? p.lon : null
+            });
+        }
+        return out.length ? out : null;
     }
 
     /**
@@ -375,7 +520,13 @@
                 if (m.pat.first) { pat.first = m.pat.first; }
                 if (m.pat.dob) { pat.dob = m.pat.dob; }
                 if (m.pat.dx) { pat.dx = m.pat.dx; }
-                if (m.pat.loc && m.pat.loc.addr) { pat.loc = { addr: m.pat.loc.addr }; }
+                if (m.pat.loc && (m.pat.loc.addr || m.pat.loc.lat !== undefined)) {
+                    pat.loc = {};
+                    if (m.pat.loc.addr) { pat.loc.addr = m.pat.loc.addr; }
+                    if (typeof m.pat.loc.lat === 'number') { pat.loc.lat = m.pat.loc.lat; }
+                    if (typeof m.pat.loc.lon === 'number') { pat.loc.lon = m.pat.loc.lon; }
+                    if (!Object.keys(pat.loc).length) { delete pat.loc; }
+                }
                 keys = Object.keys(pat);
                 blob = keys.length ? await EdCrypto.encrypt(ck, JSON.stringify(pat)) : null;
 
@@ -392,6 +543,29 @@
                     crew_fr: m.crew_fr || null,
                     crew_other: m.crew_other || null,
                     pat_blob: blob,
+
+                    // Ab Web 2.10.0: Felder, die nur der Rueckimport der
+                    // eigenen Exportformate liefert. Profile, die sie nicht
+                    // kennen, senden hier ueberall null/0 — der Server setzt
+                    // dann dieselben Werte wie vor dieser Version.
+                    ended_utc: m.ended || null,
+                    site_desc: m.site_desc || null,
+                    site_ele_m: nummerOderNull(m.site_ele_m),
+                    distance_m: nummerOderNull(m.distance_m),
+                    ascent_m: nummerOderNull(m.ascent_m),
+                    schockraum: m.schockraum ? 1 : 0,
+                    secondary: m.secondary ? 1 : 0,
+                    winch_cycles: nummerOderNull(m.winch_cycles),
+                    winch_cycles_pat: nummerOderNull(m.winch_cycles_pat),
+                    winch_airload: m.winch_airload ? 1 : 0,
+                    bergwacht: m.bergwacht ? 1 : 0,
+                    bw_unit: m.bw_unit || null,
+                    bw_info: m.bw_info || null,
+                    other_ema: m.other_ema || null,
+                    notes: m.notes || null,
+                    phases: phasenListe(m),
+                    rea: m.rea || null,
+
                     dup: dup ? (w.dup || 'skip') : 'insert',
                     overwrite_id: (dup && w.dup === 'overwrite') ? dup.id : null
                 });
@@ -469,6 +643,7 @@
             var p = window.ImportProfile.profiles[$('profil').value];
             if (!p || !S.mappe) { return; }
             S.profil = p;
+            warnungZeigen(p);
             var g = ImportCore.findeKopfzeile(ImportCore.matrix(S.mappe, p), p);
             S.kopfzeile = g ? g.zeile : 0;
             S.mat = ImportCore.matrix(S.mappe, p);

@@ -359,7 +359,7 @@ sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
 ---
 
-## 7. Import bestehender Einsatzlisten
+## 7. Import und Export
 
 Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
@@ -415,7 +415,63 @@ mit einem Link auf den ersten importierten Tag.
 Importierte Einsätze verhalten sich wie von Hand nachgetragene: Sie lassen
 sich normal öffnen und bearbeiten, und die Uhr überschreibt sie nicht. Da eine
 Liste in aller Regel nur die Alarmzeit kennt, tragen sie genau eine Phase
-(Alarmierung); Track, Flugzeiten und weitere Phasen fehlen naturgemäß.
+(Alarmierung); Track, Flugzeiten und weitere Phasen fehlen naturgemäß. Der
+Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" unten.
+
+### 7.1 Export
+
+Auf derselben Seite, unterhalb des Importbereichs, steht der **Export**. Er ist
+zum Weiterverarbeiten in anderen Programmen gedacht — **nicht als Backup**. Für
+eine vollständige Sicherung gibt es Abschnitt 6.
+
+Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
+geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
+„Patientendaten einschließen" schickt der Server sie gar nicht erst mit.
+
+Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format:
+
+- **Excel — Standard**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
+  alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Flugtag ohne
+  Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
+- **Excel — GuteSeele-Layout**: das gewohnte Listenlayout zur Weitergabe an
+  Dritte. Bei mehreren Jahren entsteht je Jahr ein Blatt.
+- **CSV — vollständig**: ein Archiv mit allen Feldern, die das System kennt,
+  dazu Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die
+  GPX-Tracks. Das ist das Format für Auswertungen und für den Rückweg.
+
+**Patientendaten einschließen** ist standardmäßig aus. Wird es gesetzt, kommt
+vorher ein Hinweis: Ab dem Speichern schützt die Verschlüsselung dieser
+Anwendung die Daten nicht mehr — Name, Geburtsdatum, Diagnose und Einsatzort
+stehen dann lesbar in der Datei. Ist die Verschlüsselung gerade gesperrt (nach
+einem Neustart des Browsers), lässt sich der Haken nicht setzen; ein Export ohne
+Patientendaten bleibt möglich.
+
+**Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Das ist die
+empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
+ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
+Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
+können solche Archive nicht öffnen. Beide Programme sind kostenlos. Das Passwort
+lässt sich nicht wiederherstellen; ohne es ist die Datei wertlos.
+
+### 7.2 Zurücklesen
+
+Beide Exceltabellen und das CSV-Archiv lassen sich wieder importieren — auch in
+ein anderes Konto. Ein `.zip` kann direkt gewählt werden, die Tabelle darin wird
+von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefragt.
+
+- Das **vollständige CSV** liest alles zurück: alle Phasen samt Koordinaten, die
+  Reanimationsdokumentation und sämtliche Einsatzfelder. Nicht übernommen werden
+  die internen Nummern der Einsätze (sie werden neu vergeben) und die
+  GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
+- Beim **Standard-Excel** steht vor dem Import, welche Felder danach leer
+  bleiben: die Phasen zwischen Abflug und Übergabe, alle Koordinaten, die
+  Reanimationsdokumentation und der Track samt Flugkilometern. Diese Angaben
+  stehen in der Datei nie drin — sie gehen nicht verloren, sie werden nur nicht
+  befüllt.
+
+Für eine echte Wiederherstellung ist und bleibt das Backup der richtige Weg.
+
+Die genaue Feldliste jedes Formats steht in `docs/Export-Format.md`.
 
 ---
 

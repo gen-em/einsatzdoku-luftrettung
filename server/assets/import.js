@@ -178,6 +178,113 @@
                 if (s !== '') { out.push(s); }
             }
             return out.length ? out : null;
+        },
+
+        // ---------------------------------------------------------------
+        // Ab hier: Parser fuer den Rueckimport der eigenen Exportformate.
+        // ---------------------------------------------------------------
+
+        /** "-" (Fuellzeichen in Profil A) gilt als leer. */
+        dashLeer: function (v) {
+            if (typeof v === 'string' && v.trim() === '-') { return null; }
+            return v;
+        },
+
+        /** "JJJJ-MM-TT" (auch als Excel-Datumszelle) -> JJJJ-MM-TT */
+        dateIso: function (v) {
+            if (istLeer(v)) { return null; }
+            var z = zelleZuZeit(v);
+            if (z && z.y > 1900) {
+                if (!istEchtesDatum(z.y, z.m, z.d)) { return { error: 'Kein gueltiges Datum' }; }
+                return z.y + '-' + zahl2(z.m) + '-' + zahl2(z.d);
+            }
+            var t = /^((?:19|20)\d{2})-(\d{2})-(\d{2})$/.exec(String(v).trim());
+            if (!t) { return { error: 'Datum nicht lesbar (erwartet "JJJJ-MM-TT")' }; }
+            if (!istEchtesDatum(+t[1], +t[2], +t[3])) { return { error: 'Diesen Tag gibt es nicht' }; }
+            return t[1] + '-' + t[2] + '-' + t[3];
+        },
+
+        /**
+         * ISO 8601 mit Zonenversatz -> UTC-Zeitstempel "JJJJ-MM-TTTHH:MM:SSZ".
+         *
+         * Bewusst ueber den Zonenversatz IN der Zeichenkette, nicht ueber die
+         * Zeitzone des Browsers: Eine Datei, die im Winter erzeugt wurde, muss
+         * auch im Sommer und auf einem Rechner in einer anderen Zone dieselben
+         * Zeitpunkte ergeben.
+         */
+        isoTs: function (v) {
+            if (istLeer(v)) { return null; }
+            var s = String(v).trim();
+            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})$/.test(s)) {
+                return { error: 'Zeitstempel nicht lesbar (erwartet ISO 8601 mit Zone)' };
+            }
+            var d = new Date(s);
+            if (isNaN(d.getTime())) { return { error: 'Zeitstempel nicht lesbar' }; }
+            return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+        },
+
+        /** "a|b|c" -> ['a','b','c'] (Trennzeichen des CSV-Exports) */
+        pipeList: function (v) {
+            if (istLeer(v)) { return null; }
+            var teile = String(v).split('|'), out = [], i, s;
+            for (i = 0; i < teile.length; i++) {
+                s = teile[i].replace(/\s+/g, ' ').trim();
+                if (s !== '') { out.push(s); }
+            }
+            return out.length ? out : null;
+        },
+
+        /** Ganze Zahl aus Text oder Zahl; leer bleibt leer. */
+        ganzzahl: function (v) {
+            if (istLeer(v)) { return null; }
+            if (typeof v === 'number') { return isFinite(v) ? Math.round(v) : { error: 'Zahl nicht lesbar' }; }
+            var s = String(v).trim().replace(/\s/g, '');
+            if (!/^-?\d+$/.test(s)) { return { error: 'Ganze Zahl erwartet' }; }
+            return parseInt(s, 10);
+        },
+
+        /**
+         * Dezimalzahl. Der eigene Export schreibt einen Punkt; ein Komma wird
+         * trotzdem angenommen, weil Tabellenprogramme beim Zwischenspeichern
+         * gern auf die Ortseinstellung umstellen.
+         */
+        dezimal: function (v) {
+            if (istLeer(v)) { return null; }
+            if (typeof v === 'number') { return isFinite(v) ? v : { error: 'Zahl nicht lesbar' }; }
+            var s = String(v).trim().replace(/\s/g, '').replace(',', '.');
+            if (!/^-?\d+(\.\d+)?$/.test(s)) { return { error: 'Dezimalzahl erwartet' }; }
+            return parseFloat(s);
+        },
+
+        /**
+         * rea_json -> [{started_at, events:[{type, at}]}] mit UTC-Zeitstempeln.
+         * 'bezeichnung' aus der Datei wird verworfen: Der Klartext steht nur
+         * fuer Menschen darin, massgeblich ist der Schluessel 'typ'.
+         */
+        jsonRea: function (v) {
+            if (istLeer(v)) { return null; }
+            var roh;
+            try { roh = JSON.parse(String(v)); } catch (e) {
+                return { error: 'Reanimationsdaten sind kein gueltiges JSON' };
+            }
+            if (!Array.isArray(roh)) { return { error: 'Reanimationsdaten: Liste erwartet' }; }
+            var out = [], i, j, s, ev, at;
+            for (i = 0; i < roh.length; i++) {
+                s = roh[i] || {};
+                at = PARSERS.isoTs(s.beginn);
+                if (!at || at.error) { return { error: 'Reanimationsbeginn nicht lesbar' }; }
+                ev = [];
+                var liste = Array.isArray(s.ereignisse) ? s.ereignisse : [];
+                for (j = 0; j < liste.length; j++) {
+                    var zeit = PARSERS.isoTs(liste[j].zeit);
+                    if (!zeit || zeit.error) { return { error: 'Zeitpunkt eines Ereignisses nicht lesbar' }; }
+                    var typ = String(liste[j].typ || '').trim().slice(0, 24);
+                    if (typ === '') { continue; }
+                    ev.push({ type: typ, at: zeit });
+                }
+                out.push({ started_at: at, events: ev });
+            }
+            return out.length ? out : null;
         }
     };
 
@@ -305,26 +412,58 @@
 
     // ----------------------------------------------------- Zeilen aufbereiten
 
+    // Felder, die unveraendert nach zeile.mission durchgereicht werden.
+    var EINFACHE_ZIELE = ['day', 'alarm', 'ended', 'transport_dest', 'winch',
+        'notes', 'site_desc', 'site_ele_m', 'distance_m', 'ascent_m',
+        'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
+        'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
+        'crew_override', 'rea'];
+
+    function phasenFach(zeile, n) {
+        if (!zeile.mission.phases[n]) { zeile.mission.phases[n] = { at: null, lat: null, lon: null }; }
+        return zeile.mission.phases[n];
+    }
+
     function setzeZiel(zeile, target, wert) {
+        if (EINFACHE_ZIELE.indexOf(target) >= 0) {
+            zeile.mission[target] = wert;
+            return;
+        }
         switch (target) {
-        case 'day': case 'alarm':
-            zeile.mission[target] = wert; break;
-        case 'transport_dest': case 'winch':
-            zeile.mission[target] = wert; break;
         case 'resources':
             zeile.mission.resources = wert || []; break;
         case 'pat.last+first':
             if (wert) { zeile.pat.last = wert.last; zeile.pat.first = wert.first; }
             break;
+        case 'pat.last': zeile.pat.last = wert; break;
+        case 'pat.first': zeile.pat.first = wert; break;
         case 'pat.dob': zeile.pat.dob = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
         case 'pat.mission_no': zeile.pat.mission_no = wert; break;
+        // Die drei Ortsangaben koennen in beliebiger Spaltenreihenfolge
+        // kommen — deshalb zusammenfuehren statt ueberschreiben.
         case 'pat.loc.addr':
-            if (wert) { zeile.pat.loc = { addr: wert }; }
+            if (wert) { zeile.pat.loc = zeile.pat.loc || {}; zeile.pat.loc.addr = wert; }
+            break;
+        case 'pat.loc.lat':
+            if (wert !== null) { zeile.pat.loc = zeile.pat.loc || {}; zeile.pat.loc.lat = wert; }
+            break;
+        case 'pat.loc.lon':
+            if (wert !== null) { zeile.pat.loc = zeile.pat.loc || {}; zeile.pat.loc.lon = wert; }
             break;
         default:
             if (target.indexOf('dayCrew.') === 0) {
                 zeile.dayCrew[target.slice(8)] = wert;
+            } else if (target.indexOf('crew.') === 0) {
+                zeile.crew[target.slice(5)] = wert;
+            } else if (target.indexOf('phaseLat:') === 0) {
+                phasenFach(zeile, parseInt(target.slice(9), 10)).lat = wert;
+            } else if (target.indexOf('phaseLon:') === 0) {
+                phasenFach(zeile, parseInt(target.slice(9), 10)).lon = wert;
+            } else if (target.indexOf('phaseLocal:') === 0) {
+                zeile.mission.phasesLocal[parseInt(target.slice(11), 10)] = wert;
+            } else if (target.indexOf('phase:') === 0) {
+                phasenFach(zeile, parseInt(target.slice(6), 10)).at = wert;
             }
         }
     }
@@ -386,10 +525,23 @@
             var z = {
                 srcRow: r + 1,                 // 1-basiert wie in Excel angezeigt
                 status: 'ok', issues: [],
-                mission: { day: null, alarm: null,
-                    transport_dest: null, winch: 0, resources: [] },
+                mission: {
+                    day: null, alarm: null, ended: null,
+                    transport_dest: null, winch: 0, resources: [],
+                    notes: null, site_desc: null, site_ele_m: null,
+                    distance_m: null, ascent_m: null,
+                    schockraum: 0, secondary: 0,
+                    winch_cycles: null, winch_cycles_pat: null, winch_airload: 0,
+                    bergwacht: 0, bw_unit: null, bw_info: null, other_ema: null,
+                    // phases:      Phase-Nr -> { at:'...Z', lat, lon }
+                    // phasesLocal: Phase-Nr -> 'HH:MM' (Ortszeit, wenn die Datei
+                    //              keinen vollstaendigen Zeitstempel liefert)
+                    phases: {}, phasesLocal: {}, rea: null,
+                    crew_override: 0
+                },
                 pat: { last: null, first: null, dob: null, dx: null, mission_no: null, loc: null },
-                dayCrew: {}
+                dayCrew: {},
+                crew: {}                       // ausdrueckliche Einsatzbesatzung
             };
 
             for (name in profil.columns) {
@@ -413,6 +565,29 @@
                     z.issues.push({ spalte: name, level: 'warn', text: w });
                 });
                 setzeZiel(z, def.target, erg.wert);
+            }
+
+            // Ein Flugtag OHNE Einsatz steht in Profil A als eine einzige Zeile
+            // mit Hubschrauber, Standort und Datum — alle uebrigen Zellen
+            // tragen "-" (SPEC_Export.md 3.2). Solche Zeilen legen den Flugtag
+            // an, aber keinen Einsatz. Ohne diese Unterscheidung entstuende
+            // beim Rueckimport ein Einsatz ohne Alarmzeit.
+            z.dayOnly = !!(profil.emptyDayRows && z.mission.day && !z.mission.alarm);
+
+            // Pflichtangaben erst JETZT pruefen: Das Fuellzeichen "-" ist beim
+            // Einlesen nicht leer, wird von 'dashLeer' aber zu null. Die
+            // Pruefung vor der Parserkette (oben) sieht das nicht.
+            if (!z.dayOnly) {
+                for (name in profil.columns) {
+                    if (!Object.prototype.hasOwnProperty.call(profil.columns, name)) { continue; }
+                    var pd = profil.columns[name];
+                    if (!pd.required || !pd.target) { continue; }
+                    if (z.mission[pd.target] !== null && z.mission[pd.target] !== undefined) { continue; }
+                    var schonGemeldet = z.issues.some(function (i) { return i.spalte === name; });
+                    if (!schonGemeldet) {
+                        z.issues.push({ spalte: name, level: 'error', text: 'Pflichtangabe fehlt' });
+                    }
+                }
             }
 
             z.status = z.issues.some(function (i) { return i.level === 'error'; })
@@ -446,7 +621,15 @@
      * Fehlerzeilen bleiben aussen vor: Sie haben kein verwertbares Datum und
      * duerfen die Tagescrew nicht verfaelschen.
      */
-    function gruppiere(zeilen) {
+    // Einsatzfelder, die unveraendert von der Zeile in den Einsatz wandern.
+    var UEBERNAHME = ['alarm', 'ended', 'transport_dest', 'winch', 'resources',
+        'notes', 'site_desc', 'site_ele_m', 'distance_m', 'ascent_m',
+        'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
+        'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
+        'phases', 'phasesLocal', 'rea'];
+
+    function gruppiere(zeilen, profil) {
+        var explizit = !!(profil && profil.explicitCrew);
         var proTag = {}, reihenfolge = [];
         zeilen.forEach(function (z) {
             if (z.status === 'error' || !z.mission.day) { return; }
@@ -461,29 +644,43 @@
                 return a.mission.alarm < b.mission.alarm ? -1 : 1;
             });
 
+            // Die Tagesbesatzung kommt von der fruehesten Zeile MIT Einsatz.
+            // Eine reine Flugtagszeile (Profil A, Tag ohne Einsatz) traegt in
+            // Profil A ohnehin nur "-" und wuerde die Besatzung sonst leeren.
+            var crewQuelle = gruppe.filter(function (z) { return !z.dayOnly; })[0] || gruppe[0];
             var crew = {};
             ROLLEN.forEach(function (r) {
-                if (gruppe[0].dayCrew[r]) { crew[r] = gruppe[0].dayCrew[r]; }
+                if (crewQuelle.dayCrew[r]) { crew[r] = crewQuelle.dayCrew[r]; }
             });
 
-            var missionen = gruppe.map(function (z) {
-                var m = {
-                    srcRow: z.srcRow,
-                    day: tag,
-                    alarm: z.mission.alarm,
-                    transport_dest: z.mission.transport_dest,
-                    winch: z.mission.winch,
-                    resources: z.mission.resources,
-                    pat: z.pat,
-                    crew_override: 0
-                };
-                ROLLEN.forEach(function (r) {
-                    var w = z.dayCrew[r];
-                    if (w && w !== (crew[r] || null)) {
-                        m.crew_override = 1;
-                        m['crew_' + r] = w;
+            var missionen = gruppe.filter(function (z) { return !z.dayOnly; }).map(function (z) {
+                var m = { srcRow: z.srcRow, day: tag, pat: z.pat, crew_override: 0 };
+                UEBERNAHME.forEach(function (f) { m[f] = z.mission[f]; });
+
+                if (explizit) {
+                    // Die Datei nennt Tages- und Einsatzbesatzung getrennt und
+                    // sagt selbst, ob abgewichen wurde — dann wird nicht noch
+                    // einmal geraten. Genau das macht den Rundlauf verlustfrei:
+                    // Ein Einsatz, dessen abweichende Besatzung zufaellig der
+                    // Tagesbesatzung gleicht, behaelt sein crew_override.
+                    m.crew_override = z.mission.crew_override ? 1 : 0;
+                    if (m.crew_override) {
+                        ROLLEN.forEach(function (r) {
+                            if (z.crew[r]) { m['crew_' + r] = z.crew[r]; }
+                        });
                     }
-                });
+                } else {
+                    // Sonst gilt die Besatzung der fruehesten Zeile als
+                    // Tagesbesatzung; jede Abweichung wird zur abweichenden
+                    // Besatzung am einzelnen Einsatz ("Pilotenwechsel").
+                    ROLLEN.forEach(function (r) {
+                        var w = z.dayCrew[r];
+                        if (w && w !== (crew[r] || null)) {
+                            m.crew_override = 1;
+                            m['crew_' + r] = w;
+                        }
+                    });
+                }
                 return m;
             });
 

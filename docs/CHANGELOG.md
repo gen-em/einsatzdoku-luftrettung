@@ -10,6 +10,55 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.10.0] — 2026-07-28
+
+### Neu — Export (Excel · vollständiges CSV · GuteSeele) und Rückimport
+- Auf der Seite **Import / Export** gibt es unterhalb des Importbereichs einen
+  Exportblock. Der Aufbau der Datei passiert vollständig im Browser: Der Server
+  liefert nur Rohdaten, die geschützten Angaben werden lokal entschlüsselt.
+  Ohne Haken „Patientendaten einschließen" sendet der Server den `pat_blob`
+  gar nicht erst mit.
+- **Profil A — Standard-Excel** (`.xlsx`, ein Blatt „Einsätze"): eine Zeile je
+  Einsatz, alle Zeiten in Ortszeit, leere Werte als `-`. Ein Flugtag ohne
+  Einsatz erscheint als eine Zeile mit Hubschrauber, Standort und Datum. Ohne
+  Patientendaten entfallen die sechs geschützten Spalten ersatzlos.
+- **Profil B — vollständiges CSV** (`.zip`): `einsaetze.csv`, `flugtage.csv`,
+  `ruhezeiten.csv`, `felder.csv`, `LIESMICH.txt` und auf Wunsch GPX-Tracks.
+  Verlustfrei und Grundlage des Rückimports. Semikolon, UTF-8 mit BOM, CRLF,
+  Zeitstempel nach ISO 8601 mit Zonenversatz. Der Spaltensatz ist **immer
+  gleich**: Ohne Patientendaten bleiben die `pat_`-Spalten vorhanden und leer,
+  damit ein einlesendes Programm nicht zwei Fälle unterscheiden muss.
+- **Profil C — GuteSeele-Layout** (`.xlsx`): erhält das bisherige Listenlayout
+  für die Weitergabe an Dritte; bei mehreren Kalenderjahren ein Blatt je Jahr.
+- **Passwortschutz** (optional, alle Profile): AES-256 nach WinZip-Standard über
+  die neu mitgelieferte Bibliothek zip.js 2.8.34. ZipCrypto wird nicht
+  verwendet. Zum Öffnen wird 7-Zip (Windows) oder Keka/The Unarchiver (macOS)
+  gebraucht — der Windows-Explorer kann solche Archive nicht öffnen. Das
+  Passwort wird nirgends gespeichert und nicht an den Server gesendet.
+- **Rückimport** über zwei neue Formate: `export_csv_v1` liest `einsaetze.csv`
+  (auch direkt aus dem `.zip`, bei Bedarf nach Passwortabfrage) und übernimmt
+  Phasen, Koordinaten, Reanimationsdokumentation und alle Einsatzfelder.
+  `export_excel_v1` liest den Standard-Excel-Export und zeigt vorher an,
+  welche Felder danach leer bleiben.
+- Neuer, ausschließlich lesender Endpunkt `api/export_data.php`.
+- Neu: `docs/Export-Format.md` mit der vollständigen Feldliste je Profil.
+
+### Geändert
+- `api/import_commit.php` schreibt jetzt **alle** Phasen 2–9 samt Koordinaten
+  sowie die Reanimationsdokumentation, nicht mehr nur Phase 2. Formate, die
+  diese Angaben nicht liefern, verhalten sich unverändert: Es wird weiterhin
+  nur Phase 2 angelegt, und eine vorhandene Reanimationsdokumentation bleibt
+  unangetastet.
+- Die Prüftabelle in Schritt 2 zeigt die Spalten, die das erkannte Format
+  vorgibt — das vollständige CSV hat 75 Spalten und wäre sonst unlesbar.
+
+### Bekannte Eigenheit
+- Beim Rundlauf über das CSV wird eine abweichende Besatzung nach dem
+  Rückimport **ausdrücklich** in allen Rollen gespeichert, während vorher
+  einzelne Rollen vom Flugtag geerbt wurden. Der Export schreibt die
+  *effektive* Besatzung; die erneut exportierte Datei ist deshalb identisch,
+  nur die Speicherung ist expliziter.
+
 ## [Web 2.9.0] — 2026-07-28
 
 ### Geändert — Einsatznummer verschlüsselt

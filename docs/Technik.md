@@ -27,7 +27,8 @@ Daten erst nach Server-Bestätigung.
 
 ```
 hems/
-├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag
+├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag,
+│                          Backup-Format, Export-Format
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
@@ -54,12 +55,15 @@ hems/
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand
 │   ├── api/               day.php · mission.php · range.php · backup_data.php · backup_restore.php ·
-│   │                      import_commit.php (Abgleich + Übernahme des Imports)
+│   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
+│   │                      export_data.php (nur lesend, Rohdaten für den Export)
 │   ├── assets/            style.css, crypto.js (WebCrypto), patient.js, daylist.js, confirm.js,
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
-│   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung)
-│   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0,
-│   │                      lokal vendoriert (kein CDN)
+│   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
+│   │                      export.js (alle drei Exportprofile, Aufbau im Browser)
+│   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
+│   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256);
+│   │                      beide lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
@@ -407,6 +411,59 @@ nie, und in der Geräteliste tauchen sie nicht auf. `local_to_utc()` ist dafür
 von `einsatz_form.php` nach `db.php` gewandert; zwei Kopien derselben
 Zeitrechnung wären die sicherste Art, sich später eine Stunde Versatz
 einzuhandeln.
+
+**Export** (`api/export_data.php` + `assets/export.js`, seit Web 2.10.0): Der
+Endpunkt ist **ausschließlich lesend** und bewusst von `api/range.php` getrennt
+— jenes bedient `zeitraum.php` und wurde schlank gehalten; eine Erweiterung
+hätte diese Seite mitverändert. `action=meta` liefert Flugtage, Einsätze
+(inklusive Phasen, weiterer Rettungsmittel, Reanimation und der *Anzahl*
+Trackpunkte) und Ruhesegmente; `action=track` liefert die Punkte blockweise für
+höchstens 25 IDs. Zeitstempel gehen als UTC nach ISO 8601 hinaus, die Umrechnung
+in Ortszeit passiert im Browser — so nutzen Excel- und CSV-Profil dieselbe
+Quelle. Obergrenze 5000 Einsätze je Anfrage.
+
+Der gesamte Dateiaufbau läuft im Browser, weil der `pat_blob` nur dort
+entschlüsselt werden kann. Ohne den Haken „Patientendaten einschließen" wird das
+Feld schon serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
+Verpackt wird mit zip.js (AES-256 nach WinZip, `encryptionStrength: 3`);
+ZipCrypto ist ausgeschlossen. Feldlisten und Konventionen: `Export-Format.md`.
+
+Stolpersteine, die dabei aufgefallen sind:
+
+- **SheetJS typisiert Datumszellen als `'n'`, nicht als `'d'`.** Eine Prüfung
+  auf `cell.t === 'd'` greift nie; das deutsche Datumsformat wird dann still
+  verworfen. `cell.z` wird deshalb ohne Typprüfung gesetzt.
+- **Fette Schrift und Fensterfixierung kann die freie SheetJS-Ausgabe nicht
+  schreiben.** `!freeze` wird beim Schreiben ignoriert, `cell.s` landet nicht in
+  der `styles.xml` — beides sind kostenpflichtige Pro-Funktionen. Profil A
+  verzichtet darauf, statt eine Datei zu erzeugen, die es vorgibt.
+- **Der Spaltensatz des CSV hängt nicht am Patientendaten-Haken.** Ohne Haken
+  bleiben die `pat_`-Spalten vorhanden und leer. Ein wechselnder Spaltensatz
+  würde jeden einlesenden Importer zwingen, zwei Fälle zu unterscheiden.
+
+**Rückimport** (`export_csv_v1`, `export_excel_v1`): Die Pipeline aus Web 2.8.0
+bleibt unverändert, die neuen Formate sind reine Profileinträge plus zusätzliche
+Parser (`isoTs`, `pipeList`, `jsonRea`, `dateIso`, `ganzzahl`, `dezimal`,
+`dashLeer`). Drei Erweiterungen waren nötig:
+
+- `api/import_commit.php` schrieb bisher nur Phase 2. Es schreibt jetzt alle
+  Phasen 2–9 samt Koordinaten und die Reanimationsdokumentation — aber **nur,
+  wenn die Nutzlast sie enthält**. Formate ohne diese Angaben verhalten sich
+  unverändert, und eine vorhandene Reanimationsdokumentation wird von einem
+  Format, das Reanimationen gar nicht kennt, nicht gelöscht.
+- `explicitCrew` am Profil: Nennt die Datei Tages- und Einsatzbesatzung getrennt
+  und sagt selbst, ob abgewichen wurde, rechnet `gruppiere()` das nicht noch
+  einmal aus. Ohne das Flag bliebe die alte Heuristik (früheste Zeile = Tagescrew)
+  und ein Einsatz, dessen abweichende Besatzung zufällig der Tagesbesatzung
+  gleicht, verlöre sein `crew_override`.
+- `emptyDayRows` am Profil: In Profil A steht ein Flugtag ohne Einsatz als eine
+  Zeile mit Datum und lauter `-`. Ohne diese Unterscheidung entstünde daraus
+  beim Rückimport ein Einsatz ohne Alarmzeit. Solche Zeilen legen den Flugtag an
+  und keinen Einsatz.
+
+Pflichtangaben werden beim Rückimport **nach** der Parserkette geprüft: Das
+Füllzeichen `-` ist beim Einlesen nicht leer, wird aber zu `null` — die Prüfung
+vor der Kette sieht das nicht.
 
 **Aufräumjob:** `run_cleanup_if_due()` (db.php) läuft max. 1×/Tag, huckepack
 auf `auth_guard.php` (Web) und `ingest.php` (Uhr) — kein Cron nötig. Marke

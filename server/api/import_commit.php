@@ -20,7 +20,24 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  *                 mode:'insert'|'keep'|'update'}],
  *     missions: [{day, started_local:'HH:MM', transport_dest, winch,
  *                 resources:[], crew_override, crew_p1..crew_other,
- *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id}] }
+ *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id,
+ *
+ *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
+ *                 // Exportformate; die Jahreslisten-Profile senden sie nicht)
+ *                 ended_utc, site_desc, site_ele_m, distance_m, ascent_m,
+ *                 schockraum, secondary, winch_cycles, winch_cycles_pat,
+ *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema, notes,
+ *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null,
+ *                           lat, lon}],
+ *                 rea:    [{started_at:'...Z', events:[{type, at:'...Z'}]}] }] }
+ *
+ * ZEITEN IN DER NUTZLAST: 'started_local' ist Ortszeit (HH:MM) und bleibt es —
+ * der Browser vergleicht damit unmittelbar die Zeiten aus der Datei. Die
+ * Phasen- und Reanimationszeiten kommen dagegen als UTC-Zeitstempel, weil die
+ * Quelldatei dort einen vollstaendigen Zeitpunkt samt Zonenversatz liefert;
+ * eine zweite Umrechnung hier waere eine zusaetzliche Fehlerquelle. Wo eine
+ * Phase nur als Ortszeit vorliegt (Standard-Excel kennt nur HH:MM), traegt sie
+ * 'local' statt 'at' und wird hier wie 'started_local' umgerechnet.
  *
  * Antwort:
  *   { ok, days_inserted, days_updated, missions_inserted,
@@ -62,6 +79,27 @@ function import_commit(array $b, int $userId): never
     $txt = function ($v, int $max): ?string {
         $s = mb_substr(trim((string)$v), 0, $max);
         return $s === '' ? null : $s;
+    };
+
+    /** Ganzzahl im erlaubten Bereich, sonst NULL (statt einer 0, die eine
+     *  echte Messung vortaeuschen wuerde). */
+    $zahl = function ($v, int $min, int $max): ?int {
+        if ($v === null || $v === '' || !is_numeric($v)) { return null; }
+        $n = (int)$v;
+        return ($n < $min || $n > $max) ? null : $n;
+    };
+
+    $flag = static fn ($v): int => !empty($v) ? 1 : 0;
+
+    /** "2026-03-14T09:50:00Z" -> "2026-03-14 09:50:00" (UTC, wie gespeichert). */
+    $utc = function ($v): ?string {
+        if (!is_string($v) || $v === '') { return null; }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/', $v)) { return null; }
+        try {
+            return (new DateTime($v, new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+        } catch (Throwable $e) {
+            return null;
+        }
     };
 
     $pdo = db();
@@ -153,24 +191,45 @@ function import_commit(array $b, int $userId): never
         $devId = (int)$devId;
 
         /* ---- Einsaetze ---------------------------------------------------- */
+        // Die zusaetzlichen Felder ab Web 2.10.0 haengen hinten an. Profile,
+        // die sie nicht liefern, schreiben dort NULL beziehungsweise 0 — das
+        // entspricht dem Zustand vor dieser Version.
         $insE = $pdo->prepare(
             'INSERT INTO missions (user_id, device_id, client_ref, day, started_at, ended_at,
                                    final, manual, transport_dest, winch,
                                    crew_override, crew_p1, crew_p2, crew_hems, crew_fr,
-                                   crew_other, pat_blob)
-             VALUES (?,?,?,?,?,?,1,1,?,?,?,?,?,?,?,?)');
+                                   crew_other, pat_blob,
+                                   site_desc, site_ele_m, distance_m, ascent_m,
+                                   schockraum, secondary, winch_cycles, winch_cycles_pat,
+                                   winch_airload, bergwacht, bw_unit, bw_info,
+                                   other_ema, notes)
+             VALUES (?,?,?,?,?,?,1,1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $updE = $pdo->prepare(
             'UPDATE missions SET day = ?, started_at = ?, ended_at = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
                                  crew_p1 = ?, crew_p2 = ?, crew_hems = ?, crew_fr = ?,
-                                 crew_other = ?, pat_blob = ?, manual = 1
+                                 crew_other = ?, pat_blob = ?,
+                                 site_desc = ?, site_ele_m = ?, distance_m = ?, ascent_m = ?,
+                                 schockraum = ?, secondary = ?, winch_cycles = ?,
+                                 winch_cycles_pat = ?, winch_airload = ?, bergwacht = ?,
+                                 bw_unit = ?, bw_info = ?, other_ema = ?, notes = ?,
+                                 manual = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $insPhase = $pdo->prepare(
-            'INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?, 2, ?)');
+            'INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon)
+             VALUES (?,?,?,?,?)');
         $hatPhase2 = $pdo->prepare(
             'SELECT id FROM mission_phases WHERE mission_id = ? AND phase = 2 LIMIT 1');
+        $delPhasen = $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?');
         $delRes = $pdo->prepare('DELETE FROM mission_resources WHERE mission_id = ?');
         $insRes = $pdo->prepare('INSERT INTO mission_resources (mission_id, name) VALUES (?, ?)');
+        // resus_events haengt per FOREIGN KEY ... ON DELETE CASCADE an
+        // resus_sessions — das Loeschen der Sitzungen raeumt die Ereignisse mit.
+        $delRea = $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?');
+        $insReaS = $pdo->prepare(
+            'INSERT INTO resus_sessions (mission_id, started_at) VALUES (?, ?)');
+        $insReaE = $pdo->prepare(
+            'INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
 
         $neu = 0; $ersetzt = 0; $uebersprungen = 0; $ersterTag = null;
 
@@ -195,20 +254,39 @@ function import_commit(array $b, int $userId): never
                 if (!preg_match('#^[A-Za-z0-9+/=]{20,60000}$#', $blob)) { $blob = null; }
             }
 
+            // Endzeit: Liefert die Datei eine, wird sie uebernommen; sonst
+            // bleibt es beim bisherigen Verhalten (Ende = Beginn), damit sich
+            // fuer die Jahreslisten-Profile nichts aendert.
+            $endedAt = $utc($m['ended_utc'] ?? null) ?? $startedAt;
+
             $werte = [
                 $txt($m['transport_dest'] ?? null, 190),
-                !empty($m['winch']) ? 1 : 0,
-                !empty($m['crew_override']) ? 1 : 0,
+                $flag($m['winch'] ?? null),
+                $flag($m['crew_override'] ?? null),
                 $txt($m['crew_p1'] ?? null, 120), $txt($m['crew_p2'] ?? null, 120),
                 $txt($m['crew_hems'] ?? null, 120), $txt($m['crew_fr'] ?? null, 120),
                 $txt($m['crew_other'] ?? null, 120),
                 $blob,
+                $txt($m['site_desc'] ?? null, 190),
+                $zahl($m['site_ele_m'] ?? null, -500, 9000),
+                $zahl($m['distance_m'] ?? null, 0, 100000000),
+                $zahl($m['ascent_m'] ?? null, 0, 1000000),
+                $flag($m['schockraum'] ?? null),
+                $flag($m['secondary'] ?? null),
+                $zahl($m['winch_cycles'] ?? null, 0, 127),
+                $zahl($m['winch_cycles_pat'] ?? null, 0, 127),
+                $flag($m['winch_airload'] ?? null),
+                $flag($m['bergwacht'] ?? null),
+                $txt($m['bw_unit'] ?? null, 120),
+                $txt($m['bw_info'] ?? null, 190),
+                $txt($m['other_ema'] ?? null, 190),
+                $txt($m['notes'] ?? null, 2000),
             ];
 
             $id = null;
             if (($m['dup'] ?? '') === 'overwrite' && !empty($m['overwrite_id'])) {
                 $id = (int)$m['overwrite_id'];
-                $updE->execute(array_merge([$tag, $startedAt, $startedAt], $werte, [$id, $userId]));
+                $updE->execute(array_merge([$tag, $startedAt, $endedAt], $werte, [$id, $userId]));
                 if ($updE->rowCount() === 0) {
                     // Gehoert jemand anderem oder ist inzwischen geloescht.
                     $uebersprungen++; continue;
@@ -217,17 +295,79 @@ function import_commit(array $b, int $userId): never
             } else {
                 $insE->execute(array_merge(
                     [$userId, $devId, 'imp-' . bin2hex(random_bytes(12)),
-                     $tag, $startedAt, $startedAt],
+                     $tag, $startedAt, $endedAt],
                     $werte));
                 $id = (int)$pdo->lastInsertId();
                 $neu++;
             }
 
-            // Ohne eine Phasenzeile laesst sich der Einsatz spaeter nicht im
-            // Formular oeffnen: Das Formular rekonstruiert Beginn und Ende aus
-            // den Phasen. Phase 2 = Alarmierung.
-            $hatPhase2->execute([$id]);
-            if ($hatPhase2->fetchColumn() === false) { $insPhase->execute([$id, $startedAt]); }
+            /* ---- Phasen ---------------------------------------------------
+             * Liefert die Datei Phasen (Rueckimport der eigenen Exporte), wird
+             * der komplette Satz ersetzt — ein Mischen aus alt und neu waere
+             * nicht nachvollziehbar. Liefert sie keine (Jahreslisten), bleibt
+             * es beim bisherigen Verhalten: Phase 2 anlegen, falls sie fehlt.
+             *
+             * Ohne wenigstens eine Phasenzeile laesst sich der Einsatz spaeter
+             * nicht im Formular oeffnen — es rekonstruiert Beginn und Ende aus
+             * den Phasen. Phase 2 = Alarmierung.
+             */
+            $phasen = is_array($m['phases'] ?? null) ? $m['phases'] : [];
+            $gesetzt = [];
+            if ($phasen) {
+                $delPhasen->execute([$id]);
+                foreach ($phasen as $p) {
+                    $nr = (int)($p['phase'] ?? 0);
+                    // Phase 10 wurde mit 2026_07_19_phase10_entfernen abgeschafft.
+                    if ($nr < 2 || $nr > 9 || isset($gesetzt[$nr])) { continue; }
+                    $wann = $utc($p['at'] ?? null);
+                    if ($wann === null && !empty($p['local'])
+                        && preg_match('/^\d{2}:\d{2}$/', (string)$p['local'])) {
+                        $wann = local_to_utc($tag, (string)$p['local']);
+                    }
+                    if ($wann === null) { continue; }
+                    $lat = isset($p['lat']) && is_numeric($p['lat']) ? (float)$p['lat'] : null;
+                    $lon = isset($p['lon']) && is_numeric($p['lon']) ? (float)$p['lon'] : null;
+                    if ($lat !== null && ($lat < -90 || $lat > 90)) { $lat = null; }
+                    if ($lon !== null && ($lon < -180 || $lon > 180)) { $lon = null; }
+                    $insPhase->execute([$id, $nr, $wann, $lat, $lon]);
+                    $gesetzt[$nr] = true;
+                }
+            }
+            if (!isset($gesetzt[2])) {
+                $hatPhase2->execute([$id]);
+                if ($hatPhase2->fetchColumn() === false) {
+                    $insPhase->execute([$id, 2, $startedAt, null, null]);
+                }
+            }
+
+            /* ---- Reanimation ----------------------------------------------
+             * Ebenfalls ersetzend, und nur wenn die Datei etwas liefert. Ein
+             * Einsatz ohne 'rea' in der Nutzlast behaelt seine vorhandene
+             * Dokumentation — ein Import mit einem Format, das Reanimationen
+             * gar nicht kennt, darf sie nicht loeschen.
+             */
+            if (is_array($m['rea'] ?? null)) {
+                $delRea->execute([$id]);
+                $anzS = 0;
+                foreach ($m['rea'] as $s) {
+                    if (++$anzS > 20) { break; }
+                    $beginn = $utc($s['started_at'] ?? null);
+                    if ($beginn === null) { continue; }
+                    $insReaS->execute([$id, $beginn]);
+                    $sid = (int)$pdo->lastInsertId();
+                    $anzE = 0;
+                    foreach ((is_array($s['events'] ?? null) ? $s['events'] : []) as $e) {
+                        if (++$anzE > 200) { break; }
+                        $typ = mb_substr(trim((string)($e['type'] ?? '')), 0, 24);
+                        // Nur bekannte Schluessel — ein freier Text hier waere
+                        // im Formular spaeter nicht darstellbar.
+                        if ($typ === '' || !array_key_exists($typ, RESUS_LABELS)) { continue; }
+                        $wann = $utc($e['at'] ?? null);
+                        if ($wann === null) { continue; }
+                        $insReaE->execute([$sid, $typ, $wann]);
+                    }
+                }
+            }
 
             // Weitere Rettungsmittel als eigene Zeilen (einzeln entfernbar),
             // doppelte und leere verworfen — gleiche Regel wie im Formular.
