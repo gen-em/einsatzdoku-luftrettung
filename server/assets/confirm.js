@@ -15,11 +15,25 @@
 (function () {
   'use strict';
 
-  let dlg = null;
-
+  /* Je Aufruf ein EIGENES <dialog>. Vorher gab es ein einziges,
+   * wiederverwendetes Element — das ist bei zwei aufeinanderfolgenden
+   * Rückfragen stillschweigend schiefgegangen:
+   *
+   *   1. Dialog 1, Klick auf OK -> done() entfernt den eigenen
+   *      close-Zuhörer und ruft d.close(). Das close-Ereignis wird dabei nur
+   *      EINGEREIHT, es feuert nicht sofort.
+   *   2. Das Versprechen löst auf, der Aufrufer macht weiter und öffnet
+   *      Dialog 2 — der seinen eigenen close-Zuhörer anmeldet.
+   *   3. Jetzt erst wird das alte Ereignis aus Schritt 1 zugestellt und
+   *      landet beim Zuhörer von Dialog 2: done(false). Dialog 2 schließt
+   *      sich sofort selbst und meldet „abgebrochen".
+   *
+   * Der Aufrufer sah daraufhin einen stillen Abbruch ohne jede Meldung. Ein
+   * eigenes Element je Aufruf schließt diesen ganzen Fall aus: Ein
+   * nachlaufendes Ereignis kann keinen späteren Aufruf mehr erreichen.
+   */
   function build() {
-    if (dlg) return dlg;
-    dlg = document.createElement('dialog');
+    const dlg = document.createElement('dialog');
     dlg.className = 'confirmbox';
     dlg.innerHTML =
       '<p class="confirmtext"></p>' +
@@ -44,15 +58,16 @@
     ok.className = (tone === 'normal') ? 'btn-primary' : 'btn-red';
 
     return new Promise(resolve => {
+      let erledigt = false;
       function done(v) {
-        d.removeEventListener('close', onClose);
-        ok.onclick = null;
-        d.querySelector('[data-act="no"]').onclick = null;
-        if (d.open) d.close();
+        // Zweite Schutzschicht gegen Doppelklicks und nachlaufende Ereignisse.
+        if (erledigt) { return; }
+        erledigt = true;
+        if (d.open) { d.close(); }
+        d.remove();
         resolve(v);
       }
-      function onClose() { done(false); }        // Escape-Taste
-      d.addEventListener('close', onClose);
+      d.addEventListener('close', () => done(false));   // Escape-Taste
       ok.onclick = () => done(true);
       d.querySelector('[data-act="no"]').onclick = () => done(false);
       d.showModal();

@@ -138,12 +138,12 @@ foreach ($defs->fetchAll() as $d) {
         <label>Bis <input type="date" id="exp_bis"></label>
       </p>
 
-      <div class="rolechecks">
-        <span class="rolechecks-hint">Format:</span>
-        <label><input type="radio" name="exp_fmt" value="a" checked> Excel — Standard</label>
-        <label><input type="radio" name="exp_fmt" value="c"> Excel — GuteSeele-Layout</label>
-        <label><input type="radio" name="exp_fmt" value="b"> CSV — vollständig</label>
-      </div>
+      <label>Format
+        <select id="exp_fmt">
+          <option value="b">CSV (Standard)</option>
+          <option value="a" selected>Excel (Standard)</option>
+          <option value="c">Excel (GuteSeele)</option>
+        </select></label>
       <div class="rolechecks" id="exp_gpx_row" hidden>
         <label><input type="checkbox" id="exp_gpx" checked> GPX-Tracks einschließen</label>
       </div>
@@ -164,9 +164,11 @@ foreach ($defs->fetchAll() as $d) {
         <label>Passwort wiederholen
           <input type="password" id="exp_pw2" autocomplete="new-password"></label>
       </div>
-      <p class="muted">Ohne dieses Passwort ist die Datei wertlos — es wird nirgends
-         gespeichert. Zum Öffnen wird 7-Zip (Windows) oder Keka/The Unarchiver
-         (macOS) benötigt.</p>
+      <p class="muted">Das Passwort wird nirgends gespeichert und lässt sich nicht
+         zurücksetzen. Geht es verloren, lässt sich die Datei nicht mehr öffnen —
+         die Daten darin sind dann endgültig nicht mehr lesbar. Zum Öffnen wird
+         zusätzlich 7-Zip (Windows) oder Keka bzw. The Unarchiver (macOS)
+         benötigt; der Windows-Explorer kann solche Archive nicht öffnen.</p>
 
       <button type="button" class="btn-primary" id="exp_go">Export erstellen</button>
       <p class="muted" id="exp_state" style="min-height:1.3em"></p>

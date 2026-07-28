@@ -15,12 +15,20 @@ Es gibt drei Profile:
 
 | Profil | Datei | Zielgruppe | Verlustfrei |
 |---|---|---|---|
-| A — Standard-Excel | `einsatzdoku_<von>_bis_<bis>.xlsx` | Menschen | nein |
-| B — vollständiges CSV | `einsatzdoku_<von>_bis_<bis>.zip` | Maschinen | ja |
-| C — GuteSeele-Layout | `einsatzdoku_<von>_bis_<bis>.xlsx` | Dritte | nein |
+| CSV (Standard) | `…_csv.zip` | Maschinen | ja |
+| Excel (Standard) | `…_standard.xlsx` | Menschen | nein |
+| Excel (GuteSeele) | `…_guteseele.xlsx` | Dritte | nein |
 
-Bei „Alles" heißt die Datei `einsatzdoku_gesamt.*`. Mit Passwortschutz entsteht
-in allen Fällen ein `.zip`.
+Dateiname durchgängig:
+
+```
+luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
+```
+
+Das Datum ist der **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der
+steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`). `<profil>` ist
+`standard`, `guteseele` oder `csv`. Mit Passwortschutz entsteht in allen Fällen
+ein `.zip`.
 
 ---
 
@@ -98,7 +106,9 @@ einschließen" nicht gesetzt ist; die übrigen rücken auf.
 **Bewusst nicht in Profil A** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
-Datensatzes.
+Datensatzes. Seit Web 2.11.0 ebenfalls nicht mehr enthalten, weil in einer
+Übersichtstabelle entbehrlich: Windenzyklen mit PatientIn, Luftverladung und
+die Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
 belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Flugtag. Woher der

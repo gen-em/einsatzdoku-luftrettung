@@ -450,8 +450,15 @@ Patientendaten bleibt möglich.
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
-können solche Archive nicht öffnen. Beide Programme sind kostenlos. Das Passwort
-lässt sich nicht wiederherstellen; ohne es ist die Datei wertlos.
+können solche Archive nicht öffnen. Beide Programme sind kostenlos.
+
+Das Passwort wird nirgends gespeichert und lässt sich nicht zurücksetzen. Geht
+es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin sind
+dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
+über die Anwendung.
+
+Die fertige Datei heißt `luftrettungsdokumentation_export_TT-MM-JJJJ_…` mit dem
+Tag der Erstellung und dem gewählten Format am Ende.
 
 ### 7.2 Zurücklesen
 

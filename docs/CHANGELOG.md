@@ -10,6 +10,54 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 2.11.0] — 2026-07-28
+
+### Behoben — Export brach mit Patientendaten oder Passwort still ab
+- **Ursache in `assets/confirm.js`**, nicht im Export: Alle Rückfragen teilten
+  sich ein einziges `<dialog>`-Element. Beim Schließen des ersten Dialogs wird
+  das `close`-Ereignis nur *eingereiht*; es traf deshalb erst ein, nachdem der
+  zweite Dialog seinen eigenen Zuhörer angemeldet hatte — und schloss diesen
+  sofort als „abgebrochen". Betroffen war jede Stelle mit zwei aufeinander-
+  folgenden Rückfragen; im Export waren das genau die Fälle „Patientendaten
+  einschließen" und „Mit Passwort schützen". Jeder Aufruf bekommt jetzt ein
+  eigenes Dialogelement, dazu eine Sperre gegen Doppelauflösung.
+- Die Rückfragen im Export liegen jetzt **innerhalb** der Fehlerbehandlung. Der
+  Abbruch blieb vorher völlig stumm, weil sie davor standen.
+- `syncPasswordGate()` löschte mit `setState('')` bei jeder Umschaltung die
+  Statuszeile — auch Erfolgs- und Fehlermeldungen. Es räumt jetzt nur noch die
+  eigene Begründung weg.
+
+### Geändert — Export
+- Dateiname einheitlich
+  `luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>` mit
+  `<profil>` = `standard`, `guteseele` oder `csv`. Das Datum ist der Tag der
+  Erstellung; der ausgewählte Zeitraum steht in der Datei selbst.
+- Formatauswahl ist ein Auswahlfeld statt Optionsfeldern, mit derselben
+  Benennung und Reihenfolge wie beim Import: CSV (Standard), Excel (Standard),
+  Excel (GuteSeele).
+- **Profil A** hat drei Spalten weniger: „davon an PatientIn", „Lastaufnahme"
+  und „Bergwacht-Zusatz". In einer Übersichtstabelle sind sie entbehrlich; im
+  vollständigen CSV bleiben sie erhalten. Damit hat Profil A jetzt 29 statt 32
+  Spalten (davon 7 geschützte).
+- Begriffe an `mission_fields.php` angeglichen: „Sekundäreinsatz" heißt jetzt
+  „Sekundärtransport". Das Feld `winch_airload` hieß im Export irrtümlich
+  „Lastaufnahme" — es heißt im Formular **Luftverladung**; die Beschreibung in
+  `felder.csv` ist entsprechend korrigiert, ebenso „Cycles mit Patient" und
+  „Bergwacht: Namen / Infos".
+- Klarere Aussage zum Passwort: Es lässt sich nicht zurücksetzen, und ohne es
+  ist die Datei nicht mehr zu öffnen (vorher stand dort „wertlos", was eher
+  nach geringem Wert als nach Datenverlust klang).
+- Die Abschlussmeldung nennt jetzt die Zahl der enthaltenen GPX-Tracks —
+  einschließlich des Falls „im gewählten Zeitraum sind zu keinem Einsatz
+  Trackpunkte gespeichert". Ob ein Archiv Tracks enthält, war vorher erst nach
+  dem Entpacken zu sehen.
+
+### Geändert — Import
+- Die Formate heißen jetzt CSV (Standard), Excel (Standard) und
+  Excel (GuteSeele) und stehen in dieser Reihenfolge im Auswahlfeld. „Excel
+  (GuteSeele)" hieß vorher „Einsatzdoku Christoph 17 (Jahresliste)".
+- `export_excel_v1` liest die drei entfernten Spalten nicht mehr ein.
+
 ## [Web 2.10.0] — 2026-07-28
 
 ### Neu — Export (Excel · vollständiges CSV · GuteSeele) und Rückimport

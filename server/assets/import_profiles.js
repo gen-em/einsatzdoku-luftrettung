@@ -62,7 +62,7 @@
     // ----------------------------------------------------------------------
     var ch17 = {
         id: 'ch17_jahresliste',
-        label: 'Einsatzdoku Christoph 17 (Jahresliste)',
+        label: 'Excel (GuteSeele)',
         sheet: 0,
         headerRow: 'auto',
         minHeaderMatch: 8,
@@ -219,7 +219,7 @@
 
     var exportCsv = {
         id: 'export_csv_v1',
-        label: 'Einsatzdoku — vollständiges CSV (eigener Export)',
+        label: 'CSV (Standard)',
         sheet: 0,
         headerRow: 'auto',
         // Hoch angesetzt: Die Kopfzeile dieses Formats ist unverwechselbar,
@@ -243,7 +243,7 @@
     // ----------------------------------------------------------------------
     var exportExcel = {
         id: 'export_excel_v1',
-        label: 'Einsatzdoku — Standard-Excel (eigener Export)',
+        label: 'Excel (Standard)',
         sheet: 0,
         headerRow: 'auto',
         minHeaderMatch: 10,
@@ -251,9 +251,8 @@
             'Endzeit', 'Dauer', 'Einsatznummer', 'Nachname', 'Vorname',
             'Geburtsdatum', 'Alter', 'Einsatzort', 'Diagnose', 'Pilot 1',
             'Pilot 2', 'HEMS', 'Flugretter', 'Sonstige Besatzung',
-            'Sekundäreinsatz', 'Transportziel', 'Schockraum', 'Windeneinsatz',
-            'Windenzyklen gesamt', 'davon an PatientIn', 'Lastaufnahme',
-            'Bergwacht', 'Bergwacht-Einheit', 'Bergwacht-Zusatz',
+            'Sekundärtransport', 'Transportziel', 'Schockraum', 'Windeneinsatz',
+            'Windenzyklen gesamt', 'Bergwacht', 'Bergwacht-Einheit',
             'Weitere Rettungsmittel', 'Höhe Einsatzort (m)', 'Flugkilometer',
             'Notizen'],
         params: [],
@@ -296,16 +295,13 @@
             'Flugretter': { target: 'dayCrew.fr', parse: ['dashLeer', 'trim', 'max:120'] },
             'Sonstige Besatzung': { target: 'dayCrew.other', parse: ['dashLeer', 'trim', 'max:120'] },
 
-            'Sekundäreinsatz': { target: 'secondary', parse: ['boolJN'] },
+            'Sekundärtransport': { target: 'secondary', parse: ['boolJN'] },
             'Transportziel': { target: 'transport_dest', parse: ['dashLeer', 'trim', 'max:190'] },
             'Schockraum': { target: 'schockraum', parse: ['boolJN'] },
             'Windeneinsatz': { target: 'winch', parse: ['boolJN'] },
             'Windenzyklen gesamt': { target: 'winch_cycles', parse: ['dashLeer', 'ganzzahl'] },
-            'davon an PatientIn': { target: 'winch_cycles_pat', parse: ['dashLeer', 'ganzzahl'] },
-            'Lastaufnahme': { target: 'winch_airload', parse: ['boolJN'] },
             'Bergwacht': { target: 'bergwacht', parse: ['boolJN'] },
             'Bergwacht-Einheit': { target: 'bw_unit', parse: ['dashLeer', 'trim', 'max:120'] },
-            'Bergwacht-Zusatz': { target: 'bw_info', parse: ['dashLeer', 'trim', 'max:190'] },
             'Weitere Rettungsmittel': { target: 'resources', parse: ['dashLeer', 'trim', 'splitList', 'maxEach:120'] },
             'Höhe Einsatzort (m)': { target: 'site_ele_m', parse: ['dashLeer', 'ganzzahl'] },
             // Flugkilometer sind aus dem Track gerechnet. Ohne Track waere ein
@@ -327,10 +323,12 @@
     };
 
     global.ImportProfile = {
+        // Reihenfolge = Reihenfolge im Auswahlfeld (liste() laeuft in
+        // Einfuegereihenfolge). Bewusst das verlustfreie eigene Format zuerst.
         profiles: {
-            ch17_jahresliste: ch17,
             export_csv_v1: exportCsv,
-            export_excel_v1: exportExcel
+            export_excel_v1: exportExcel,
+            ch17_jahresliste: ch17
         },
         liste: function () {
             var out = [], k;

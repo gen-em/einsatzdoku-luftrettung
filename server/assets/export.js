@@ -30,12 +30,14 @@
         'Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
 
     var DIALOG_PASSWORT =
-        'Zum Öffnen wird ein Zusatzprogramm gebraucht. Das Archiv wird mit ' +
-        'AES-256 verschlüsselt. Der Windows-Explorer und das Archivprogramm ' +
-        'von macOS können solche Archive nicht öffnen. Du brauchst dafür unter ' +
-        'Windows 7-Zip (7-zip.org) oder unter macOS Keka (keka.io) oder The ' +
-        'Unarchiver — beide kostenlos. Ohne Passwort entsteht ein normales ' +
-        'Archiv, das überall aufgeht. Das Passwort kann nicht wiederhergestellt werden.';
+        'Merke dir das Passwort. Es wird nirgends gespeichert und lässt sich ' +
+        'nicht zurücksetzen — geht es verloren, lässt sich die Datei nicht ' +
+        'mehr öffnen, und die Daten darin sind endgültig nicht mehr lesbar. ' +
+        'Zum Öffnen wird ausserdem ein Zusatzprogramm gebraucht: Der ' +
+        'Windows-Explorer und das Archivprogramm von macOS können ' +
+        'AES-verschlüsselte Archive nicht öffnen. Unter Windows geht 7-Zip ' +
+        '(7-zip.org), unter macOS Keka (keka.io) oder The Unarchiver — beide ' +
+        'kostenlos. Ohne Passwort entsteht ein normales Archiv, das überall aufgeht.';
 
     var DIALOG_KEIN_BACKUP =
         'Dies ist kein Backup. Ein Export ist zum Weiterverarbeiten in anderen ' +
@@ -183,16 +185,15 @@
         { label: 'HEMS', star: false },
         { label: 'Flugretter', star: false },
         { label: 'Sonstige Besatzung', star: false },
-        { label: 'Sekundäreinsatz', star: false },
+        // 'Sekundärtransport' ist der Wortlaut aus mission_fields.php — die
+        // Tabelle soll dieselben Begriffe verwenden wie das Formular.
+        { label: 'Sekundärtransport', star: false },
         { label: 'Transportziel', star: false },
         { label: 'Schockraum', star: false },
         { label: 'Windeneinsatz', star: false },
         { label: 'Windenzyklen gesamt', star: false },
-        { label: 'davon an PatientIn', star: false },
-        { label: 'Lastaufnahme', star: false },
         { label: 'Bergwacht', star: false },
         { label: 'Bergwacht-Einheit', star: false },
-        { label: 'Bergwacht-Zusatz', star: false },
         { label: 'Weitere Rettungsmittel', star: false },
         { label: 'Höhe Einsatzort (m)', star: false },
         { label: 'Flugkilometer', star: false },
@@ -238,16 +239,13 @@
                 case 'HEMS': return txtOrDash(eff.hems);
                 case 'Flugretter': return txtOrDash(eff.fr);
                 case 'Sonstige Besatzung': return txtOrDash(eff.other);
-                case 'Sekundäreinsatz': return jaOrDash(m.secondary);
+                case 'Sekundärtransport': return jaOrDash(m.secondary);
                 case 'Transportziel': return txtOrDash(m.transport_dest);
                 case 'Schockraum': return jaOrDash(m.schockraum);
                 case 'Windeneinsatz': return jaOrDash(m.winch);
                 case 'Windenzyklen gesamt': return numOrDash(m.winch_cycles);
-                case 'davon an PatientIn': return numOrDash(m.winch_cycles_pat);
-                case 'Lastaufnahme': return jaOrDash(m.winch_airload);
                 case 'Bergwacht': return jaOrDash(m.bergwacht);
                 case 'Bergwacht-Einheit': return txtOrDash(m.bw_unit);
-                case 'Bergwacht-Zusatz': return txtOrDash(m.bw_info);
                 case 'Weitere Rettungsmittel':
                     return (m.resources && m.resources.length) ? m.resources.join(', ') : '-';
                 case 'Höhe Einsatzort (m)': return numOrDash(m.site_ele_m);
@@ -547,14 +545,14 @@
             { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel', get: function (c) { return orEmpty(c.m.transport_dest); } },
             { feld: 'site_desc', typ: 'text', einheit: '', beschreibung: 'Beschreibung Einsatzort', get: function (c) { return orEmpty(c.m.site_desc); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
-            { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundäreinsatz', get: function (c) { return c.m.secondary; } },
+            { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
             { feld: 'winch', typ: '0/1', einheit: '', beschreibung: 'Windeneinsatz', get: function (c) { return c.m.winch; } },
-            { feld: 'winch_cycles', typ: 'int', einheit: '', beschreibung: 'Windenzyklen gesamt', get: function (c) { return numOrEmpty(c.m.winch_cycles); } },
-            { feld: 'winch_cycles_pat', typ: 'int', einheit: '', beschreibung: 'davon an PatientIn', get: function (c) { return numOrEmpty(c.m.winch_cycles_pat); } },
-            { feld: 'winch_airload', typ: '0/1', einheit: '', beschreibung: 'Lastaufnahme', get: function (c) { return c.m.winch_airload; } },
+            { feld: 'winch_cycles', typ: 'int', einheit: '', beschreibung: 'Windenzyklen gesamt (Formular: „Cycles")', get: function (c) { return numOrEmpty(c.m.winch_cycles); } },
+            { feld: 'winch_cycles_pat', typ: 'int', einheit: '', beschreibung: 'Windenzyklen mit PatientIn (Formular: „Cycles mit Patient")', get: function (c) { return numOrEmpty(c.m.winch_cycles_pat); } },
+            { feld: 'winch_airload', typ: '0/1', einheit: '', beschreibung: 'Luftverladung', get: function (c) { return c.m.winch_airload; } },
             { feld: 'bergwacht', typ: '0/1', einheit: '', beschreibung: 'Bergwacht beteiligt', get: function (c) { return c.m.bergwacht; } },
             { feld: 'bw_unit', typ: 'text', einheit: '', beschreibung: 'Bergwacht-Einheit', get: function (c) { return orEmpty(c.m.bw_unit); } },
-            { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht-Zusatzangabe', get: function (c) { return orEmpty(c.m.bw_info); } },
+            { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht: Namen / Infos', get: function (c) { return orEmpty(c.m.bw_info); } },
             { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Anderer Notarzt', get: function (c) { return orEmpty(c.m.other_ema); } },
             { feld: 'weitere_rettungsmittel', typ: 'text', einheit: '', beschreibung: 'mission_resources.name, mit | verkettet', get: function (c) { return pipeList(c.m.resources); } },
             { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'missions.notes', get: function (c) { return orEmpty(c.m.notes); } },
@@ -702,8 +700,8 @@
         var files = [];
         var fileByMission = {}, fileByRest = {};
 
-        var missionIds = data.missions.filter(function (m) { return m.track_points > 0; }).map(function (m) { return m.id; });
-        var restIds = data.rests.filter(function (r) { return r.track_points > 0; }).map(function (r) { return r.id; });
+        var missionIds = (data.missions || []).filter(function (m) { return m.track_points > 0; }).map(function (m) { return m.id; });
+        var restIds = (data.rests || []).filter(function (r) { return r.track_points > 0; }).map(function (r) { return r.id; });
         var total = missionIds.length + restIds.length;
         var done = 0;
         if (onProgress) { onProgress('Tracks 0 / ' + total); }
@@ -783,7 +781,7 @@
             { name: 'ruhezeiten.csv', content: ruhezeitenCsv }
         ].concat(tracks.files);
 
-        return { files: files, count: einsRows.length };
+        return { files: files, count: einsRows.length, tracks: tracks.files.length };
     }
 
     /** Packt Dateien (Text oder Uint8Array) mit zip.js — mit Passwort
@@ -814,9 +812,23 @@
         $('exp_bis').disabled = alles;
     }
 
+    function gewaehltesFormat() { return $('exp_fmt').value; }
+
     function syncFormat() {
-        var fmt = document.querySelector('input[name="exp_fmt"]:checked').value;
-        $('exp_gpx_row').hidden = (fmt !== 'b');
+        $('exp_gpx_row').hidden = (gewaehltesFormat() !== 'b');
+    }
+
+    /** Dateiname nach dem Muster
+     *  luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
+     *  Das Datum ist der Tag der Erstellung, nicht der Zeitraum — der steht in
+     *  der Datei selbst (Titelzeile bzw. LIESMICH.txt). */
+    var PROFIL_KUERZEL = { a: 'standard', c: 'guteseele', b: 'csv' };
+
+    function dateiName(fmt, endung) {
+        var j = new Date();
+        var datum = pad2(j.getDate()) + '-' + pad2(j.getMonth() + 1) + '-' + j.getFullYear();
+        return 'luftrettungsdokumentation_export_' + datum + '_'
+            + (PROFIL_KUERZEL[fmt] || 'export') + '.' + endung;
     }
 
     async function syncPatientLock() {
@@ -843,13 +855,18 @@
             else if (p1 !== p2) { reason = 'Passwörter stimmen nicht überein.'; }
         }
         $('exp_go').disabled = !!reason;
-        setState(reason);
+        // Nur die eigene Begruendung setzen bzw. wieder wegnehmen. Ein
+        // pauschales setState('') wuerde sonst jede Erfolgs- oder
+        // Fehlermeldung des letzten Exports loeschen, sobald hier etwas
+        // umgeschaltet wird.
+        if (reason) { setState(reason); }
+        else if (/^Passw/.test($('exp_state').textContent)) { setState(''); }
     }
 
     function setState(text) { $('exp_state').textContent = text || ''; }
 
     async function runExport() {
-        var fmt = document.querySelector('input[name="exp_fmt"]:checked').value;
+        var fmt = gewaehltesFormat();
 
         var alles = document.querySelector('input[name="exp_zr"]:checked').value === 'all';
         var von = alles ? null : $('exp_von').value;
@@ -872,20 +889,21 @@
         }
         var gpx = (fmt === 'b') ? $('exp_gpx').checked : false;
 
-        if (patient) {
-            var ok1 = await window.edConfirm(DIALOG_PATIENT, 'Verstanden, fortfahren', 'normal');
-            if (!ok1) return;
-        }
-        if (pwOn) {
-            var ok2 = await window.edConfirm(DIALOG_PASSWORT, 'Verstanden, fortfahren', 'normal');
-            if (!ok2) return;
-        }
-        var ok3 = await window.edConfirm(DIALOG_KEIN_BACKUP, 'Export erstellen', 'normal');
-        if (!ok3) return;
-
         var goBtn = $('exp_go');
         goBtn.disabled = true;
         try {
+            // Die Rueckfragen liegen bewusst INNERHALB von try: Scheitert hier
+            // etwas, soll es als Meldung sichtbar werden. Vorher standen sie
+            // davor — ein Fehler im Dialog brach den Export dann still ab,
+            // ohne dass irgendetwas unter dem Knopf stand.
+            if (patient) {
+                if (!await window.edConfirm(DIALOG_PATIENT, 'Verstanden, fortfahren', 'normal')) { return; }
+            }
+            if (pwOn) {
+                if (!await window.edConfirm(DIALOG_PASSWORT, 'Verstanden, fortfahren', 'normal')) { return; }
+            }
+            if (!await window.edConfirm(DIALOG_KEIN_BACKUP, 'Export erstellen', 'normal')) { return; }
+
             setState('Daten werden geladen…');
             var data = await fetchMeta(von, bis, patient);
 
@@ -896,7 +914,6 @@
                 await decryptPatients(data.missions || [], key);
             }
 
-            var suffix = alles ? 'gesamt' : (von + '_bis_' + bis);
             var titel = alles
                 ? 'Einsatzdokumentation – gesamter Zeitraum'
                 : 'Einsatzdokumentation ' + dmyDE(von) + ' – ' + dmyDE(bis);
@@ -911,20 +928,35 @@
                 if (pwOn) {
                     setState('Datei wird verschlüsselt…');
                     await zipAndDownload(
-                        [{ name: 'einsatzdoku_' + suffix + '.xlsx', content: new Uint8Array(bytesXlsx) }],
-                        password, 'einsatzdoku_' + suffix + '.zip');
+                        [{ name: dateiName(fmt, 'xlsx'), content: new Uint8Array(bytesXlsx) }],
+                        password, dateiName(fmt, 'zip'));
                 } else {
-                    triggerDownload(bytesXlsx, 'einsatzdoku_' + suffix + '.xlsx', MIME_XLSX);
+                    triggerDownload(bytesXlsx, dateiName(fmt, 'xlsx'), MIME_XLSX);
                 }
             } else {
                 built = await buildProfilB(data, {
                     patient: patient, gpx: gpx, von: von, bis: bis, onProgress: setState
                 });
                 setState('Archiv wird ' + (pwOn ? 'verschlüsselt und ' : '') + 'gepackt…');
-                await zipAndDownload(built.files, pwOn ? password : null, 'einsatzdoku_' + suffix + '.zip');
+                await zipAndDownload(built.files, pwOn ? password : null, dateiName(fmt, 'zip'));
             }
 
-            setState('Fertig: ' + built.count + ' Einsätze exportiert.');
+            // Die Trackzahl steht bewusst mit in der Meldung: Ob ein Archiv
+            // GPX-Dateien enthaelt, sieht man ihm sonst erst nach dem Entpacken
+            // an — und "keine Tracks vorhanden" ist etwas anderes als
+            // "Tracks vergessen".
+            var schluss = 'Fertig: ' + built.count + ' Einsätze exportiert.';
+            if (fmt === 'b') {
+                if (!gpx) {
+                    schluss += ' GPX-Tracks waren abgewählt.';
+                } else if (built.tracks) {
+                    schluss += ' ' + built.tracks + ' GPX-Tracks enthalten.';
+                } else {
+                    schluss += ' Keine GPX-Tracks — im gewählten Zeitraum sind '
+                             + 'zu keinem Einsatz Trackpunkte gespeichert.';
+                }
+            }
+            setState(schluss);
         } catch (e) {
             setState('Export fehlgeschlagen: ' + e.message);
         } finally {
@@ -938,9 +970,7 @@
         document.querySelectorAll('input[name="exp_zr"]').forEach(function (r) {
             r.addEventListener('change', syncZeitraum);
         });
-        document.querySelectorAll('input[name="exp_fmt"]').forEach(function (r) {
-            r.addEventListener('change', syncFormat);
-        });
+        $('exp_fmt').addEventListener('change', syncFormat);
         $('exp_pw').addEventListener('change', syncPasswordGate);
         $('exp_pw1').addEventListener('input', syncPasswordGate);
         $('exp_pw2').addEventListener('input', syncPasswordGate);
