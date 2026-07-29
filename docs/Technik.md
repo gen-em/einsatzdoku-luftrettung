@@ -81,7 +81,7 @@ hems/
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** (Schutz vor Uhr-Überschreiben); `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -349,10 +349,17 @@ Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schrei
 die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
 Zwischenseiten mit Umfangsanzeige statt über Browser-Dialoge.
 
-**Schutz manueller Einsätze:** Beim Ingest wird vor dem Upsert der
+**Schutz bearbeiteter Einsätze:** Beim Ingest wird vor dem Upsert der
 `manual`-Marker geprüft. Ist er gesetzt, werden Metadaten/Phasen/Rea **nicht**
-angefasst; Trackpunkte laufen weiter ein (append-only). Gesetzt wird der Marker
-beim Speichern im Bearbeitungsformular bzw. bei Handanlage.
+angefasst; Trackpunkte laufen weiter ein (append-only). Gesetzt wird der
+Marker beim Speichern im Bearbeitungsformular, bei Handanlage und beim
+Import. Die **Herkunft** eines Einsatzes (`origin`: `watch`/`manual`/`import`)
+ist davon unabhängig — sie wird einmalig beim Anlegen gesetzt und danach nie
+mehr verändert, auch nicht durch einen erneuten Import. Ob ein Einsatz nach
+dem Anlegen verändert wurde, steht separat in `edited`. Ein von der Uhr
+aufgezeichneter, später bearbeiteter Einsatz bleibt also `origin='watch'`
+und bekommt `edited=1` — er wird in der Einsatzansicht als „Uhr" +
+„editiert" angezeigt, nicht als „manuell" (Abschnitt Handbuch 4.2).
 
 **Zeitbehandlung:** Speicherung UTC (`DATETIME`), Anzeige über `fmt_local()`
 (Europe/Berlin). Das Formular rechnet lokale Eingaben nach UTC um; Zeiten
@@ -406,11 +413,13 @@ Zwei Fallstricke, die dort bewusst gelöst sind:
   sich ein importierter Einsatz nicht mehr bearbeiten.
 
 Importierte Einsätze hängen am selben virtuellen Gerät `manual-<userId>` wie
-von Hand angelegte (`final=1, manual=1`) — dadurch überschreibt die Uhr sie
-nie, und in der Geräteliste tauchen sie nicht auf. `local_to_utc()` ist dafür
-von `einsatz_form.php` nach `db.php` gewandert; zwei Kopien derselben
-Zeitrechnung wären die sicherste Art, sich später eine Stunde Versatz
-einzuhandeln.
+von Hand angelegte (`final=1, manual=1, origin='import'`) — dadurch
+überschreibt die Uhr sie nie, und in der Geräteliste tauchen sie nicht auf.
+Ein erneuter Import auf einen bereits bestehenden Einsatz ändert `origin`
+nicht (Herkunft bleibt unveränderlich), setzt aber `edited=1`.
+`local_to_utc()` ist dafür von `einsatz_form.php` nach `db.php` gewandert;
+zwei Kopien derselben Zeitrechnung wären die sicherste Art, sich später eine
+Stunde Versatz einzuhandeln.
 
 **Export** (`api/export_data.php` + `assets/export.js`, seit Web 2.10.0): Der
 Endpunkt ist **ausschließlich lesend** und bewusst von `api/range.php` getrennt

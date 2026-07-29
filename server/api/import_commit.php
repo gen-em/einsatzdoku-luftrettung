@@ -196,14 +196,14 @@ function import_commit(array $b, int $userId): never
         // entspricht dem Zustand vor dieser Version.
         $insE = $pdo->prepare(
             'INSERT INTO missions (user_id, device_id, client_ref, day, started_at, ended_at,
-                                   final, manual, transport_dest, winch,
+                                   final, manual, origin, transport_dest, winch,
                                    crew_override, crew_p1, crew_p2, crew_hems, crew_fr,
                                    crew_other, pat_blob,
                                    site_desc, site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
                                    winch_airload, bergwacht, bw_unit, bw_info,
                                    other_ema, notes)
-             VALUES (?,?,?,?,?,?,1,1,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $updE = $pdo->prepare(
             'UPDATE missions SET day = ?, started_at = ?, ended_at = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
@@ -213,7 +213,7 @@ function import_commit(array $b, int $userId): never
                                  schockraum = ?, secondary = ?, winch_cycles = ?,
                                  winch_cycles_pat = ?, winch_airload = ?, bergwacht = ?,
                                  bw_unit = ?, bw_info = ?, other_ema = ?, notes = ?,
-                                 manual = 1
+                                 manual = 1, edited = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $insPhase = $pdo->prepare(
             'INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon)

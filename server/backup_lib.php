@@ -89,7 +89,7 @@ function edbak_build(int $userId): string {
 
     $data = [
         'format' => 'einsatzdoku-backup',
-        'version' => 3,
+        'version' => 4,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-luftrettung',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -109,6 +109,42 @@ function edbak_build(int $userId): string {
 }
 
 /* ======================= Import ======================= */
+
+/**
+ * Leitet Herkunft (origin) und Bearbeitungsstatus (edited) fuer einen
+ * wiederherzustellenden Einsatz ab. Enthaelt der Datensatz gueltige Werte,
+ * werden diese uebernommen (Formatversion 4). Fehlen sie (Version <= 3),
+ * gilt dieselbe Ableitungsregel wie in der Migration
+ * 2026_07_30_herkunft_bearbeitungsstatus (update.php): client_ref-Praefix
+ * 'man-' -> manual, 'imp-' -> import, sonst watch; edited = 1 nur, wenn
+ * manual = 1 und kein solches Praefix vorliegt. Absichtlich an einer
+ * einzigen Stelle formuliert, damit Migration und Restore die Regel nicht
+ * zweimal unterschiedlich hinschreiben.
+ */
+function edbak_origin_edited(array $m): array {
+    $ref = (string)($m['client_ref'] ?? '');
+    $erlaubt = ['watch', 'manual', 'import'];
+
+    if (isset($m['origin']) && in_array($m['origin'], $erlaubt, true)) {
+        $origin = $m['origin'];
+    } elseif (str_starts_with($ref, 'man-')) {
+        $origin = 'manual';
+    } elseif (str_starts_with($ref, 'imp-')) {
+        $origin = 'import';
+    } else {
+        $origin = 'watch';
+    }
+
+    if (isset($m['edited'])) {
+        $edited = (int)$m['edited'];
+    } else {
+        $edited = ((int)($m['manual'] ?? 0) === 1
+                   && !str_starts_with($ref, 'man-')
+                   && !str_starts_with($ref, 'imp-')) ? 1 : 0;
+    }
+
+    return ['origin' => $origin, 'edited' => $edited];
+}
 
 /** @return array Zusammenfassung (Zaehler) */
 function edbak_restore(int $userId, array $data): array {
@@ -237,11 +273,13 @@ function edbak_restore(int $userId, array $data): array {
             $exists->execute([$userId, (string)($m['client_ref'] ?? '')]);
             if ($exists->fetchColumn()) { $stats['missions_skipped']++; continue; }
 
+            $oe = edbak_origin_edited($m);
+
             $cols = ['user_id', 'client_ref', 'day', 'started_at', 'ended_at',
-                     'manual', 'final', 'distance_m', 'ascent_m'];
-            $vals = [$userId, $m['client_ref'] ?? ('imp-' . bin2hex(random_bytes(6))),
+                     'manual', 'origin', 'edited', 'final', 'distance_m', 'ascent_m'];
+            $vals = [$userId, $m['client_ref'] ?? ('bak-' . bin2hex(random_bytes(6))),
                      $m['day'], $m['started_at'], $m['ended_at'] ?? null,
-                     (int)($m['manual'] ?? 0), (int)($m['final'] ?? 1),
+                     (int)($m['manual'] ?? 0), $oe['origin'], $oe['edited'], (int)($m['final'] ?? 1),
                      $m['distance_m'] ?? null, $m['ascent_m'] ?? null];
             foreach ($extraCols as $c) {
                 if (array_key_exists($c, $m)) { $cols[] = $c; $vals[] = $m[$c]; }

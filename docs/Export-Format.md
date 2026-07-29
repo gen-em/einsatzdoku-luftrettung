@@ -15,20 +15,12 @@ Es gibt drei Profile:
 
 | Profil | Datei | Zielgruppe | Verlustfrei |
 |---|---|---|---|
-| CSV (Standard) | `…_csv.zip` | Maschinen | ja |
-| Excel (Standard) | `…_standard.xlsx` | Menschen | nein |
-| Excel (GuteSeele) | `…_guteseele.xlsx` | Dritte | nein |
+| A — Standard-Excel | `einsatzdoku_<von>_bis_<bis>.xlsx` | Menschen | nein |
+| B — vollständiges CSV | `einsatzdoku_<von>_bis_<bis>.zip` | Maschinen | ja |
+| C — GuteSeele-Layout | `einsatzdoku_<von>_bis_<bis>.xlsx` | Dritte | nein |
 
-Dateiname durchgängig:
-
-```
-luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
-```
-
-Das Datum ist der **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der
-steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`). `<profil>` ist
-`standard`, `guteseele` oder `csv`. Mit Passwortschutz entsteht in allen Fällen
-ein `.zip`.
+Bei „Alles" heißt die Datei `einsatzdoku_gesamt.*`. Mit Passwortschutz entsteht
+in allen Fällen ein `.zip`.
 
 ---
 
@@ -106,9 +98,7 @@ einschließen" nicht gesetzt ist; die übrigen rücken auf.
 **Bewusst nicht in Profil A** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
-Datensatzes. Seit Web 2.11.0 ebenfalls nicht mehr enthalten, weil in einer
-Übersichtstabelle entbehrlich: Windenzyklen mit PatientIn, Luftverladung und
-die Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
+Datensatzes.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
 belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Flugtag. Woher der
@@ -217,7 +207,7 @@ verworfen — maßgeblich ist `typ`.
 | `uhrzeit_ortszeit` | time | — | Alarmzeit HH:MM, für Tabellenprogramme |
 | `herkunft` | text | — | uhr | manuell | import |
 | `final` | 0/1 | — | abgeschlossen |
-| `manual` | 0/1 | — | von Hand bearbeitet |
+| `manual` | 0/1 | — | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe `herkunft`) |
 | `hubschrauber` | text | — | Kennzeichen (Flugtag) |
 | `standort` | text | — | Basis (Flugtag) |
 | `tag_crew_p1` | text | — | Besatzung des Flugtags: Pilot 1 |

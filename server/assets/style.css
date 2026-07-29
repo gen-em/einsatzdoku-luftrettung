@@ -127,13 +127,17 @@ body.map-fs-lock{overflow:hidden}
 .leaflet-control-layers-separator{margin:.4rem -.8rem .4rem -.2rem}
 
 /* Statistik-Kacheln (Zeitraum-Uebersicht) */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1.2rem}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.7rem;margin-bottom:1.2rem}
 .stat-tile{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
   padding:.7rem .5rem;text-align:center}
 .stat-value{display:block;font-family:var(--head);font-weight:600;font-size:1.35rem;
   color:var(--navy);font-variant-numeric:tabular-nums}
 .stat-label{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;
   letter-spacing:.04em;margin-top:.15rem}
+.stat-tile-link{cursor:pointer}
+.stat-tile-link:hover{border-color:#D63338}
+.stat-tile-link.aktiv{border-color:#D63338;box-shadow:0 0 0 1px #D63338}
+@media (max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:820px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* Tabellen — das Flight-Log */
@@ -205,8 +209,11 @@ section{margin-bottom:1.8rem}
 /* Manuelle Einsaetze */
 .add-link{color:var(--accent-dark);font-weight:600;text-decoration:none}
 .add-link:hover{text-decoration:underline}
-.badge-manual{background:var(--accent-light);color:#8A5A00;border-radius:4px;
-  padding:.05em .45em;font-size:.8rem;font-weight:600}
+.badge{border-radius:4px;padding:.05em .45em;font-size:.8rem;font-weight:600}
+.badge-uhr{background:#D9ECFD;color:#1A2E4D}          /* Max Hellblau / Dunkelblau */
+.badge-manuell{background:var(--accent-light);color:#8A5A00}
+.badge-import{background:#F7F5ED;color:#5B5F66}       /* Rauch */
+.badge-editiert{background:#FCE2D6;color:#8A2E31}     /* Newroz Rosa */
 .badge-central{background:var(--blau-light);color:var(--navy);border-radius:4px;
   padding:.05em .45em;font-size:.75rem;font-weight:600;margin-left:.4em;
   text-transform:uppercase;letter-spacing:.03em}
@@ -571,11 +578,12 @@ input[type=checkbox]{accent-color:var(--blau)}
 .yearblock > summary,.monthblock > summary{
   cursor:pointer;list-style:none;user-select:none;
   display:flex;align-items:center;gap:.4rem;
-  padding:.35rem .5rem;border-radius:5px}
+  padding:.35rem .5rem .35rem .15rem;border-radius:5px;min-height:1.9rem}
 .yearblock > summary::-webkit-details-marker,
 .monthblock > summary::-webkit-details-marker{display:none}
 .yearblock > summary::before,.monthblock > summary::before{
-  content:'▸';display:inline-block;width:.9em;color:var(--blau);
+  content:'▸';width:1.9em;color:var(--blau);text-align:center;
+  display:flex;align-items:center;justify-content:center;align-self:stretch;
   transition:transform .12s;flex:0 0 auto}
 .yearblock[open] > summary::before,.monthblock[open] > summary::before{transform:rotate(90deg)}
 
@@ -615,6 +623,7 @@ input[type=checkbox]{accent-color:var(--blau)}
 #rangetable tbody tr:nth-child(odd){background:var(--schnee)}
 #rangetable tbody tr:nth-child(even){background:var(--rauch)}
 #rangetable tbody tr:hover{background:var(--accent-light)}
+#rangetable tbody tr.hl-extrem td{background:#FCE2D6}
 
 /* Jahr/Monat in der Leiste: Beschriftung ist ein Link, Dreieck bleibt Umschalter */
 .zeitlink{color:inherit;text-decoration:none;flex:1 1 auto}

@@ -163,7 +163,22 @@ vorausgewählt. Pro Tag:
 ### 4.2 Einsatzansicht
 
 Titel „Einsatz N · Uhrzeit" (N = Nummer des Tages nach Alarmierungszeit),
-darunter **Bearbeiten** und **Löschen**. Es folgt eine Karte mit dem Track
+darunter **Bearbeiten** und **Löschen**. In der Kopfzeile darunter stehen
+Datum, Zeitraum, Flugkilometer und am Ende genau ein **Herkunftskennzeichen**:
+
+| Kennzeichen | Bedeutung |
+|---|---|
+| **Uhr** | Von der Garmin-Uhr aufgezeichnet |
+| **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
+| **importiert** | Über Import/Export eingespielt |
+
+Wurde der Einsatz nach dem Anlegen verändert, erscheint zusätzlich das
+Bearbeitungskennzeichen **„editiert"** — unabhängig von der Herkunft. Ein von
+der Uhr aufgezeichneter, später bearbeiteter Einsatz zeigt also „Uhr" **und**
+„editiert", nicht „manuell": „manuell" beschreibt ausschließlich, **wie** ein
+Einsatz entstanden ist, „editiert" ob er danach verändert wurde.
+
+Es folgt eine Karte mit dem Track
 (Start grün, Ende rot) und — sofern vorhanden — dem Einsatzort-Pin aus den
 lokal entschlüsselten Koordinaten. Auf dem Track sitzen an den
 GPS-Positionen der Zeitstempel **Phasen-Nummern**, die standardmäßig
@@ -260,10 +275,12 @@ Ist eine früher eingetragene Person inzwischen aus den Stammdaten entfernt
 worden, bleibt ihr Name im Auswahlfeld trotzdem stehen und geht beim nächsten
 Speichern nicht verloren.
 
-Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern ist er als
-„manuell" markiert — die Uhr überschreibt ihn dann nicht mehr (nur der
-GPS-Track wird weiter ergänzt). Das Formular weist vorher darauf hin.
-Reanimations-Zeiten lassen sich im Formular derzeit nicht erfassen.
+Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern überschreibt
+die Uhr ihn nicht mehr (nur der GPS-Track wird weiter ergänzt), und die
+Einsatzansicht zeigt zusätzlich zum Herkunftskennzeichen „Uhr" das
+Bearbeitungskennzeichen „editiert" (Details siehe Abschnitt 4.2). Das
+Formular weist vorher darauf hin. Reanimations-Zeiten lassen sich im
+Formular derzeit nicht erfassen.
 
 Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
@@ -278,15 +295,24 @@ in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf.
 
 Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Übersicht
 dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
-vorhanden und die geschützten Angaben entsperrt sind), darunter eine
-Statistiktabelle — durchschnittliche Einsätze und Windenzyklen pro Flugtag,
-Anzahl Windeneinsätze, Anzahl Einsätze, Anzahl Sekundärtransporte, längste
-Flugstrecke, längste Einsatzdauer, höchster Einsatzort — und schließlich die
-Tabelle aller Einsätze mit Datum statt Tagesnummer, sortierbar. Die
-Durchschnittswerte der Statistik rechnen mit **allen angelegten Flugtagen**
-des Zeitraums, auch mit einsatzfreien. Jede Zeile der Einsatztabelle führt
-zum Einsatz; ein Klick auf das **Dreieck** davor klappt dagegen nur die
-Unterpunkte auf oder zu.
+vorhanden und die geschützten Angaben entsperrt sind), darunter zehn
+Statistik-Kacheln — Einsätze, Flugtage, Ø Einsätze/Flugtag, Anzahl
+Winden-Cycles, Ø Winden-Cycles/Flugtag, Sekundärtransporte, Flugkilometer
+gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — und
+schließlich die Tabelle aller Einsätze mit Datum statt Tagesnummer,
+sortierbar. Die Durchschnittswerte der Statistik rechnen mit **allen
+angelegten Flugtagen** des Zeitraums, auch mit einsatzfreien.
+
+Die drei Kacheln **„Längste Flugstrecke"**, **„Längste Einsatzdauer"** und
+**„Höchster Einsatzort"** sind interaktiv: Zeigt man darauf, leuchten der
+zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
+Klick fixiert diese Hervorhebung und springt zur Tabellenzeile — praktisch,
+um den Extremwert-Einsatz auf einen Blick zu finden. Ein zweiter Klick auf
+dieselbe Kachel oder ein Klick auf eine freie Stelle der Seite löst die
+Fixierung wieder.
+
+Jede Zeile der Einsatztabelle führt zum Einsatz; ein Klick auf das
+**Dreieck** davor klappt dagegen nur die Unterpunkte auf oder zu.
 
 ### 4.5 Flugtag von Hand anlegen
 
@@ -450,15 +476,8 @@ Patientendaten bleibt möglich.
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
-können solche Archive nicht öffnen. Beide Programme sind kostenlos.
-
-Das Passwort wird nirgends gespeichert und lässt sich nicht zurücksetzen. Geht
-es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin sind
-dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
-über die Anwendung.
-
-Die fertige Datei heißt `luftrettungsdokumentation_export_TT-MM-JJJJ_…` mit dem
-Tag der Erstellung und dem gewählten Format am Ende.
+können solche Archive nicht öffnen. Beide Programme sind kostenlos. Das Passwort
+lässt sich nicht wiederherstellen; ohne es ist die Datei wertlos.
 
 ### 7.2 Zurücklesen
 

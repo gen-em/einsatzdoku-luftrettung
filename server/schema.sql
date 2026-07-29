@@ -47,7 +47,9 @@ CREATE TABLE missions (
   ascent_m   INT UNSIGNED NULL,
   site_ele_m INT NULL,                              -- Hoehe Einsatzort bei PatientInnenkontakt (berechnet, s. site_elevation_lib.php)
   final      TINYINT(1) NOT NULL DEFAULT 0,
-  manual     TINYINT(1) NOT NULL DEFAULT 0,           -- von Hand angelegt/bearbeitet: Uhr ueberschreibt nicht mehr
+  manual     TINYINT(1) NOT NULL DEFAULT 0,           -- ausschliesslich: Uhr ueberschreibt Metadaten/Phasen/Rea nicht mehr (NICHT "von Hand angelegt" -- dafuer siehe origin)
+  origin     ENUM('watch','manual','import') NOT NULL DEFAULT 'watch', -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert
+  edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
   transport_dest VARCHAR(190) NULL,                    -- Zusatzfelder (mission_fields.php):
   site_desc  VARCHAR(190) NULL,
   winch      TINYINT(1) NOT NULL DEFAULT 0,
@@ -305,4 +307,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_25_einsatzort_hoehe', 'skipped'),
   ('2026_07_26_zentrale_stammdaten', 'skipped'),
   ('2026_07_27_crew_override', 'skipped'),
-  ('2026_07_29_einsatznummer_verschluesselt', 'skipped');
+  ('2026_07_28_kdf_ver_entfernt', 'skipped'),
+  ('2026_07_29_einsatznummer_verschluesselt', 'skipped'),
+  ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped');

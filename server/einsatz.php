@@ -226,9 +226,19 @@ async function init(){
 
   document.getElementById('title').textContent =
     `Einsatz ${m.day_no} · ${m.start_hhmm} Uhr`;
+
+  const ORIGIN_LABEL = { watch: 'Uhr', manual: 'manuell', import: 'importiert' };
+  const ORIGIN_KLASSE = { watch: 'badge-uhr', manual: 'badge-manuell', import: 'badge-import' };
+  const zeitteil = m.has_p9
+    ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
+    : `${m.start_hhmm} Uhr – kein Ende`;
+  const kennzeichen =
+    `<span class="badge ${ORIGIN_KLASSE[m.origin] || 'badge-uhr'}">${ORIGIN_LABEL[m.origin] || 'Uhr'}</span>`
+    + (m.edited ? ' · <span class="badge badge-editiert">editiert</span>' : '');
+
   document.getElementById('meta').innerHTML =
-    esc(`${fmtDay(m.day)} · ${m.start_hhmm}–${m.has_p9 ? m.end_hhmm : 'kein Ende'} Uhr · ${fmtKm(m.distance_m)}`)
-    + (m.manual ? ' · <span class="badge-manual">manuell</span>' : '');
+    esc(`${fmtDay(m.day)} · ${zeitteil} · Flugkilometer ${fmtKm(m.distance_m)}`)
+    + ' · ' + kennzeichen;
 
   // Zusatzfelder (Server liefert nur befuellte)
   const dl = document.getElementById('fieldlist');

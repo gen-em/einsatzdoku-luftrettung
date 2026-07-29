@@ -507,6 +507,37 @@ $MIGRATIONS = [
             "ALTER TABLE missions DROP COLUMN mission_no",
         ],
     ],
+    [
+        'id'    => '2026_07_30_herkunft_bearbeitungsstatus',
+        'label' => 'Herkunft (origin) und Bearbeitungsstatus (edited) getrennt von manual',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions' AND column_name = 'origin'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            "ALTER TABLE missions
+               ADD COLUMN origin ENUM('watch','manual','import') NOT NULL DEFAULT 'watch' AFTER manual,
+               ADD COLUMN edited TINYINT(1) NOT NULL DEFAULT 0 AFTER origin",
+            // Herkunft laesst sich fuer Bestandsdaten zuverlaessig aus client_ref
+            // rekonstruieren, weil jede anlegende Stelle ein eigenes Praefix
+            // vergibt: einsatz_form.php -> 'man-', api/import_commit.php ->
+            // 'imp-'. Uhr-Uploads liefern das client_ref der Uhr (kein Praefix).
+            "UPDATE missions SET origin = 'manual' WHERE client_ref LIKE 'man-%'",
+            "UPDATE missions SET origin = 'import' WHERE client_ref LIKE 'imp-%'",
+            // Ein Einsatz mit manual = 1, der weder von Hand angelegt noch
+            // importiert wurde, kann diesen Marker nur durch eine Bearbeitung
+            // bekommen haben. Fuer Hand- und Importeintraege laesst sich eine
+            // spaetere Bearbeitung rueckwirkend nicht mehr feststellen; sie
+            // starten deshalb bewusst mit edited = 0 (nicht im Changelog oder
+            // Handbuch zu erwaehnen — der betroffene Bestand ist ueberschaubar
+            // und dem Betreiber bekannt. Diese Begruendung bleibt hier stehen,
+            // damit sie spaeter nicht versehentlich als Fehler "korrigiert" wird).
+            "UPDATE missions SET edited = 1
+               WHERE manual = 1 AND client_ref NOT LIKE 'man-%' AND client_ref NOT LIKE 'imp-%'",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

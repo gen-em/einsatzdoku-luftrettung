@@ -10,53 +10,47 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 2.11.0] — 2026-07-28
+## [Web 2.11.0] — 2026-07-29
 
-### Behoben — Export brach mit Patientendaten oder Passwort still ab
-- **Ursache in `assets/confirm.js`**, nicht im Export: Alle Rückfragen teilten
-  sich ein einziges `<dialog>`-Element. Beim Schließen des ersten Dialogs wird
-  das `close`-Ereignis nur *eingereiht*; es traf deshalb erst ein, nachdem der
-  zweite Dialog seinen eigenen Zuhörer angemeldet hatte — und schloss diesen
-  sofort als „abgebrochen". Betroffen war jede Stelle mit zwei aufeinander-
-  folgenden Rückfragen; im Export waren das genau die Fälle „Patientendaten
-  einschließen" und „Mit Passwort schützen". Jeder Aufruf bekommt jetzt ein
-  eigenes Dialogelement, dazu eine Sperre gegen Doppelauflösung.
-- Die Rückfragen im Export liegen jetzt **innerhalb** der Fehlerbehandlung. Der
-  Abbruch blieb vorher völlig stumm, weil sie davor standen.
-- `syncPasswordGate()` löschte mit `setState('')` bei jeder Umschaltung die
-  Statuszeile — auch Erfolgs- und Fehlermeldungen. Es räumt jetzt nur noch die
-  eigene Begründung weg.
+### Neu
+- **Zeitraum-Übersicht:** Die drei Extremwert-Kacheln „Längste Flugstrecke",
+  „Längste Einsatzdauer" und „Höchster Einsatzort" sind jetzt interaktiv.
+  Hovern hebt den zugehörigen Karten-Pin (rot) und die Tabellenzeile (rosa)
+  hervor; ein Klick fixiert die Hervorhebung und springt zur Tabellenzeile.
+  Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf freie Fläche löst
+  die Fixierung wieder.
+- **Einsatzansicht:** Kopfzeile zeigt jetzt ein Herkunftskennzeichen (Uhr /
+  manuell / importiert) und — falls zutreffend — zusätzlich „editiert".
 
-### Geändert — Export
-- Dateiname einheitlich
-  `luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>` mit
-  `<profil>` = `standard`, `guteseele` oder `csv`. Das Datum ist der Tag der
-  Erstellung; der ausgewählte Zeitraum steht in der Datei selbst.
-- Formatauswahl ist ein Auswahlfeld statt Optionsfeldern, mit derselben
-  Benennung und Reihenfolge wie beim Import: CSV (Standard), Excel (Standard),
-  Excel (GuteSeele).
-- **Profil A** hat drei Spalten weniger: „davon an PatientIn", „Lastaufnahme"
-  und „Bergwacht-Zusatz". In einer Übersichtstabelle sind sie entbehrlich; im
-  vollständigen CSV bleiben sie erhalten. Damit hat Profil A jetzt 29 statt 32
-  Spalten (davon 7 geschützte).
-- Begriffe an `mission_fields.php` angeglichen: „Sekundäreinsatz" heißt jetzt
-  „Sekundärtransport". Das Feld `winch_airload` hieß im Export irrtümlich
-  „Lastaufnahme" — es heißt im Formular **Luftverladung**; die Beschreibung in
-  `felder.csv` ist entsprechend korrigiert, ebenso „Cycles mit Patient" und
-  „Bergwacht: Namen / Infos".
-- Klarere Aussage zum Passwort: Es lässt sich nicht zurücksetzen, und ohne es
-  ist die Datei nicht mehr zu öffnen (vorher stand dort „wertlos", was eher
-  nach geringem Wert als nach Datenverlust klang).
-- Die Abschlussmeldung nennt jetzt die Zahl der enthaltenen GPX-Tracks —
-  einschließlich des Falls „im gewählten Zeitraum sind zu keinem Einsatz
-  Trackpunkte gespeichert". Ob ein Archiv Tracks enthält, war vorher erst nach
-  dem Entpacken zu sehen.
+### Geändert
+- **Zeitraum-Übersicht:** Kachelsatz auf zehn Kacheln (2×5) umgestellt:
+  „Windeneinsätze" entfällt, „Anzahl Winden-Cycles" ist neu; „Einsätze" und
+  „Flugtage" sind jetzt eigene Kacheln. Die bisherige Textzusammenfassung
+  über der Karte entfällt ersatzlos.
+- **Einsatztage-Leiste:** Trefferfläche des Aufklapp-Dreiecks in Jahres- und
+  Monatszeile vergrößert (mind. 28 × 28 px) — mit dem Finger jetzt zuverlässig
+  zu treffen.
+- **Einsatzansicht — Kopfzeile:** Zeitangaben durch einen Halbgeviertstrich
+  getrennt (statt Bindestrich ohne Abstand); die Kilometerangabe trägt jetzt
+  die Beschriftung „Flugkilometer".
+- **Datenmodell:** `missions.manual` bedeutet ab sofort ausschließlich „Uhr
+  überschreibt Metadaten/Phasen/Rea nicht mehr". Herkunft (`origin`:
+  Uhr/manuell/import) und Bearbeitungsstatus (`edited`) sind neue, eigene
+  Spalten. Migration und Bestandsdaten-Backfill sind automatisch.
+- **Backup-Format:** Version auf 4 angehoben (zwei neue Felder `origin` und
+  `edited` je Einsatz). Backups der Version 3 lassen sich weiterhin
+  einspielen; die Werte werden dabei abgeleitet.
 
-### Geändert — Import
-- Die Formate heißen jetzt CSV (Standard), Excel (Standard) und
-  Excel (GuteSeele) und stehen in dieser Reihenfolge im Auswahlfeld. „Excel
-  (GuteSeele)" hieß vorher „Einsatzdoku Christoph 17 (Jahresliste)".
-- `export_excel_v1` liest die drei entfernten Spalten nicht mehr ein.
+### Behoben
+- **Einsatzansicht:** Das Kennzeichen „manuell" erschien fälschlich auch nach
+  jeder nachträglichen Bearbeitung eines von der Uhr aufgezeichneten
+  Einsatzes. Ursache: Die Spalte `missions.manual` trug zwei Bedeutungen
+  gleichzeitig (Herkunft und Schutz vor Uhr-Überschreiben). Behoben durch
+  Auftrennung in `manual`, `origin` und `edited` (siehe Datenmodell oben).
+- **Wartung:** In der Bootstrap-Liste der Migrationen (`schema.sql`) fehlte
+  die ID `2026_07_28_kdf_ver_entfernt`. Betraf ausschließlich frische
+  Neuinstallationen (überflüssige, aber folgenlose Prüfung beim ersten
+  Aufruf von `update.php`); bestehende Installationen waren nicht betroffen.
 
 ## [Web 2.10.0] — 2026-07-28
 

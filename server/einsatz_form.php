@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = db(); $pdo->beginTransaction();
         try {
             if ($editing) {
-                $set = 'started_at = ?, ended_at = ?, manual = 1';
+                $set = 'started_at = ?, ended_at = ?, manual = 1, edited = 1';
                 foreach ($fieldCols as $c) { $set .= ", `$c` = ?"; }
                 $pdo->prepare("UPDATE missions SET $set WHERE id = ? AND user_id = ?")
                     ->execute(array_merge([$startedAt, $endedAt], $fieldVals, [$id, $userId]));
@@ -156,8 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    'Manuelle Einträge']);
                     $devId = (int)$pdo->lastInsertId();
                 }
-                $cols = 'user_id, device_id, client_ref, day, started_at, ended_at, final, manual';
-                $qms  = '?,?,?,?,?,?,1,1';
+                $cols = 'user_id, device_id, client_ref, day, started_at, ended_at, final, manual, origin';
+                $qms  = "?,?,?,?,?,?,1,1,'manual'";
                 foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
                 $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
                     ->execute(array_merge(

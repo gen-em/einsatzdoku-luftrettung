@@ -40,7 +40,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 3,
+  "version": 4,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "app": "einsatzdoku-luftrettung",
   "user": { "email": "...", "name": "..." },   // informativ
@@ -70,6 +70,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "started_at": "2026-07-19 08:15:00",  // DATETIME, UTC
     "ended_at":   "2026-07-19 09:02:00",  // null = kein Abschluss
     "manual": 0, "final": 1,
+    "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
     "distance_m": 38400, "ascent_m": 550,
     "site_ele_m": 712,                    // wird beim Restore neu berechnet, nicht uebernommen
     "transport_dest": "…", "site_desc": "…",
@@ -123,6 +124,13 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
   gehören nicht dem Konto und werden **nicht** exportiert. Beim Import werden
   Einträge, die zentral bereits (case-insensitiv) vorhanden sind, still
   übersprungen und in der Ergebnismeldung gezählt.
+- **`origin`** (`watch`/`manual`/`import`, seit Version 4): Herkunft des
+  Einsatzes, wird beim Anlegen einmalig gesetzt. **`edited`** (seit Version
+  4): wurde der Einsatz nach dem Anlegen verändert. Wie bei Version 3 gilt:
+  ältere Backups bleiben lesbar — fehlen die Felder (Version ≤ 3), werden sie
+  beim Import aus `client_ref` abgeleitet: Präfix `man-` → `origin=manual`,
+  `imp-` → `origin=import`, sonst `origin=watch`; `edited=1` nur, wenn
+  `manual=1` und keines der beiden Präfixe zutrifft, sonst `edited=0`.
 
 ## 3. Import-Verhalten
 

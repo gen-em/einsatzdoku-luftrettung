@@ -41,7 +41,6 @@ $titel = $monat !== ''
 
   <main class="page">
     <h1><?= e($titel) ?></h1>
-    <p class="muted" id="summary">wird geladen …</p>
     <div id="loaderror" class="alert" hidden></div>
 
     <p id="lockbanner" class="alert alert-info" hidden>
@@ -52,21 +51,25 @@ $titel = $monat !== ''
     <div id="rangemap" class="map" hidden></div>
 
     <div class="stats-grid" id="statsgrid" hidden>
-      <div class="stat-tile"><span class="stat-value" id="st-avgmissions">–</span>
-        <span class="stat-label">Ø Einsätze / Flugtag</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-avgwinch">–</span>
-        <span class="stat-label">Ø Winden / Flugtag</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-winchcount">–</span>
-        <span class="stat-label">Windeneinsätze</span></div>
       <div class="stat-tile"><span class="stat-value" id="st-missioncount">–</span>
         <span class="stat-label">Einsätze</span></div>
+      <div class="stat-tile"><span class="stat-value" id="st-flightdays">–</span>
+        <span class="stat-label">Flugtage</span></div>
+      <div class="stat-tile"><span class="stat-value" id="st-avgmissions">–</span>
+        <span class="stat-label">Ø Einsätze / Flugtag</span></div>
+      <div class="stat-tile"><span class="stat-value" id="st-winchcycles">–</span>
+        <span class="stat-label">Anzahl Winden-Cycles</span></div>
+      <div class="stat-tile"><span class="stat-value" id="st-avgwinch">–</span>
+        <span class="stat-label">Ø Winden-Cycles / Flugtag</span></div>
       <div class="stat-tile"><span class="stat-value" id="st-secondary">–</span>
         <span class="stat-label">Sekundärtransporte</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-maxkm">–</span>
+      <div class="stat-tile"><span class="stat-value" id="st-totalkm">–</span>
+        <span class="stat-label">Flugkilometer gesamt</span></div>
+      <div class="stat-tile" id="tile-maxkm"><span class="stat-value" id="st-maxkm">–</span>
         <span class="stat-label">Längste Flugstrecke</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-maxdauer">–</span>
+      <div class="stat-tile" id="tile-maxdauer"><span class="stat-value" id="st-maxdauer">–</span>
         <span class="stat-label">Längste Einsatzdauer</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-maxhoehe">–</span>
+      <div class="stat-tile" id="tile-maxhoehe"><span class="stat-value" id="st-maxhoehe">–</span>
         <span class="stat-label">Höchster Einsatzort</span></div>
     </div>
 
@@ -109,6 +112,10 @@ attachFullscreenControl(map);
 
 let missions = [];
 let sortKey = 'day', sortAsc = true;
+let fixierteMid = null;   // per Klick festgesetzte Einsatz-ID oder null
+
+const FARBE_HERVOR = '#D63338';  // Newroz Rot
+const FARBE_NORMAL  = '#4280E5'; // Max Blau
 
 function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 function fmtTag(iso){ const [y,m,d] = iso.split('-'); return `${d}.${m}.${y}`; }
@@ -122,29 +129,121 @@ function extractOrt(addr){
 }
 function fmtDe1(n){ return n.toFixed(1).replace('.', ','); }
 
-// Statistiktabelle: alle acht Kennzahlen kommen unverschluesselt aus
-// api/range.php, sind also sofort verfuegbar — unabhaengig von der lokalen
-// Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose).
+// Statistiktabelle: alle Kennzahlen kommen unverschluesselt aus api/range.php,
+// sind also sofort verfuegbar — unabhaengig von der lokalen Entschluesselung
+// der geschuetzten Felder (Ort/Alter/Diagnose).
 function zeichneStatistik(liste, tage){
   const n = liste.length;
   const windenSumme = liste.reduce((s, m) => s + (m.winch_cycles || 0), 0);
-  const distanzen = liste.map(m => m.distance_m).filter(v => v != null);
-  const dauern    = liste.map(m => m.duration_s).filter(v => v != null);
-  const hoehen    = liste.map(m => m.site_ele_m).filter(v => v != null);
+  const kmSumme     = liste.reduce((s, m) => s + (m.distance_m || 0), 0);
 
-  document.getElementById('st-avgmissions').textContent = tage > 0 ? fmtDe1(n / tage) : '–';
-  document.getElementById('st-avgwinch').textContent    = tage > 0 ? fmtDe1(windenSumme / tage) : '–';
-  document.getElementById('st-winchcount').textContent  = liste.filter(m => m.winch).length;
   document.getElementById('st-missioncount').textContent = n;
-  document.getElementById('st-secondary').textContent   = liste.filter(m => m.secondary).length;
-  document.getElementById('st-maxkm').textContent =
-    distanzen.length ? (Math.max(...distanzen) / 1000).toFixed(1).replace('.', ',') + ' km' : '–';
-  document.getElementById('st-maxdauer').textContent =
-    dauern.length ? fmtDur(Math.max(...dauern)) : '–';
-  document.getElementById('st-maxhoehe').textContent =
-    hoehen.length ? Math.max(...hoehen) + ' m' : '–';
+  document.getElementById('st-flightdays').textContent   = tage;
+  document.getElementById('st-avgmissions').textContent  = tage > 0 ? fmtDe1(n / tage) : '–';
+  document.getElementById('st-winchcycles').textContent  = windenSumme;
+  document.getElementById('st-avgwinch').textContent     = tage > 0 ? fmtDe1(windenSumme / tage) : '–';
+  document.getElementById('st-secondary').textContent    = liste.filter(m => m.secondary).length;
+  document.getElementById('st-totalkm').textContent      =
+    (kmSumme / 1000).toFixed(1).replace('.', ',') + ' km';
+
+  // Extremwert-Kacheln: EIN Durchlauf ermittelt Wert UND Traeger-Einsatz.
+  // Gleichstand: es gewinnt der zuerst gefundene Einsatz — api/range.php
+  // liefert ORDER BY started_at, also der zeitlich frueheste. Deshalb strikt
+  // "grösser als" statt "grösser gleich" vergleichen.
+  let maxKmMid = null, maxKmWert = null;
+  let maxDauerMid = null, maxDauerWert = null;
+  let maxHoeheMid = null, maxHoeheWert = null;
+  liste.forEach(m => {
+    if (m.distance_m != null && (maxKmWert == null || m.distance_m > maxKmWert)) {
+      maxKmWert = m.distance_m; maxKmMid = m.id;
+    }
+    if (m.duration_s != null && (maxDauerWert == null || m.duration_s > maxDauerWert)) {
+      maxDauerWert = m.duration_s; maxDauerMid = m.id;
+    }
+    if (m.site_ele_m != null && (maxHoeheWert == null || m.site_ele_m > maxHoeheWert)) {
+      maxHoeheWert = m.site_ele_m; maxHoeheMid = m.id;
+    }
+  });
+
+  setzeExtremKachel('tile-maxkm', 'st-maxkm', maxKmMid,
+    maxKmWert != null ? (maxKmWert / 1000).toFixed(1).replace('.', ',') + ' km' : '–');
+  setzeExtremKachel('tile-maxdauer', 'st-maxdauer', maxDauerMid,
+    maxDauerWert != null ? fmtDur(maxDauerWert) : '–');
+  setzeExtremKachel('tile-maxhoehe', 'st-maxhoehe', maxHoeheMid,
+    maxHoeheWert != null ? maxHoeheWert + ' m' : '–');
+
   document.getElementById('statsgrid').hidden = false;
 }
+
+// Beschriftet eine Extremwert-Kachel und macht sie interaktiv, sofern es
+// einen Traeger-Einsatz gibt. Ohne Kandidat (Anzeige "–") bleibt die Kachel
+// ohne data-mid und ohne Interaktions-Klasse.
+function setzeExtremKachel(tileId, valueId, mid, text){
+  document.getElementById(valueId).textContent = text;
+  const tile = document.getElementById(tileId);
+  if (mid != null) {
+    tile.dataset.mid = mid;
+    tile.classList.add('stat-tile-link');
+  } else {
+    delete tile.dataset.mid;
+    tile.classList.remove('stat-tile-link', 'aktiv');
+  }
+}
+
+// Wendet den zur angegebenen Einsatz-ID gehoerenden Hervorhebungszustand auf
+// Tabellenzeile und Karten-Pin an (mid === null loescht jede Hervorhebung).
+// Einzige Stelle, die Hervorhebung anwendet — kein Aufaddieren von Klassen.
+function wendeHervorhebungAn(mid){
+  document.querySelectorAll('#rangebody tr.hl-extrem').forEach(tr => tr.classList.remove('hl-extrem'));
+  if (mid != null) {
+    const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
+    if (zeile) { zeile.classList.add('hl-extrem'); }
+  }
+  missions.forEach(m => {
+    if (!m._marker) return;   // regulaer: keine Koordinaten oder Inhaltsschluessel gesperrt
+    if (mid != null && m.id === mid) {
+      m._marker.setStyle({ fillColor: FARBE_HERVOR, radius: 9 });
+      m._marker.bringToFront();
+    } else {
+      m._marker.setStyle({ fillColor: FARBE_NORMAL, radius: 6, weight: 2, color: '#fff' });
+    }
+  });
+}
+
+function loeseFixierung(){
+  if (fixierteMid == null) return;
+  fixierteMid = null;
+  document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
+  wendeHervorhebungAn(null);
+}
+
+['tile-maxkm', 'tile-maxdauer', 'tile-maxhoehe'].forEach(id => {
+  const tile = document.getElementById(id);
+  tile.addEventListener('mouseenter', () => {
+    if (tile.dataset.mid == null) return;
+    wendeHervorhebungAn(Number(tile.dataset.mid));
+  });
+  tile.addEventListener('mouseleave', () => {
+    wendeHervorhebungAn(fixierteMid);
+  });
+  tile.addEventListener('click', () => {
+    if (tile.dataset.mid == null) return;
+    const mid = Number(tile.dataset.mid);
+    if (fixierteMid === mid) { loeseFixierung(); return; }
+    document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
+    fixierteMid = mid;
+    tile.classList.add('aktiv');
+    wendeHervorhebungAn(mid);
+    const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
+    if (zeile) { zeile.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  });
+});
+
+document.addEventListener('click', ev => {
+  if (ev.target.closest('.stat-tile')) { return; }   // Kacheln haben eigene Logik
+  if (ev.target.closest('.leaflet-marker-icon, .leaflet-interactive')) { return; }
+  loeseFixierung();
+});
 
 function sortWert(m, key){
   switch(key){
@@ -173,6 +272,7 @@ function zeichne(){
   sortiert.forEach(m => {
     const tr = document.createElement('tr');
     tr.className = 'clickable';
+    tr.dataset.mid = m.id;
     tr.innerHTML =
       `<td class="mono c-date">${fmtTag(m.day)}</td>
        <td class="mono c-mid">${m.start_hhmm}</td>
@@ -189,6 +289,7 @@ function zeichne(){
   });
   document.getElementById('leer').hidden = missions.length > 0;
   document.getElementById('rangetable').hidden = missions.length === 0;
+  wendeHervorhebungAn(fixierteMid);
 }
 
 document.querySelectorAll('#rangetable th.sortable').forEach(th => {
@@ -208,7 +309,6 @@ function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
   box.textContent = 'Die Daten konnten nicht geladen werden: ' + msg;
   box.hidden = false;
-  document.getElementById('summary').textContent = '';
 }
 
 (async () => {
@@ -227,9 +327,6 @@ function zeigeFehler(msg){
   } catch (e) { zeigeFehler(e.message); return; }
 
   missions = d.missions;
-  const km = missions.reduce((s, m) => s + (m.distance_m || 0), 0);
-  document.getElementById('summary').textContent =
-    `${missions.length} Einsätze an ${d.tage} Flugtagen · ${(km/1000).toFixed(1).replace('.', ',')} km`;
   zeichne();
   zeichneStatistik(missions, d.tage);
 
@@ -250,8 +347,8 @@ function zeigeFehler(msg){
         if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
         // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
         if (o.loc && o.loc.lat != null) {
-          L.circleMarker([o.loc.lat, o.loc.lon], {
-            radius: 6, weight: 2, color: '#fff', fillColor: '#4280E5', fillOpacity: 1
+          m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
+            radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
           }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
           pinBounds.push([o.loc.lat, o.loc.lon]);
         }
