@@ -10,6 +10,75 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.1.0] — 2026-07-29
+
+### Neu
+- **Suche über den gesamten Einsatzbestand** (neuer Menüpunkt „Suche"). Ein
+  Freitextfeld durchsucht Einsatznummer, Name, Geburtsdatum, Diagnose,
+  Einsatzort, Transportziel, Beschreibung, Bergwacht-Angaben, anderen Notarzt,
+  weitere Rettungsmittel, Standort, Maschine, Besatzung und Notizen; mehrere
+  Wörter werden UND-verknüpft, dürfen aber in verschiedenen Feldern stehen.
+  Dazu rund 30 weitere Filter (Zeitraum, Alarmzeit auch über Mitternacht,
+  Wochentag, Winde samt Cycles und Luftverladung, Bergwacht, Sekundärtransport,
+  Schockraum, Reanimation und Ereignisarten, Herkunft, Standort, Maschine,
+  Besatzung je Rolle, Rettungsmittel, Transportziel, Alter, Flugstrecke,
+  Einsatzdauer, Höhe des Einsatzorts).
+- Der Filterzustand steht vollständig im URL-Fragment. Die Adresse lässt sich
+  als Lesezeichen speichern oder weitergeben und stellt dieselbe Suche wieder
+  her. Fragmente werden nicht an den Server gesendet — der Suchbegriff taucht
+  damit in keinem Zugriffsprotokoll auf.
+- Die Suche läuft vollständig im Browser: Der Bestand wird einmal je Sitzung
+  geladen (neuer Endpunkt `api/suchindex.php`), danach kostet kein Tastendruck
+  eine Serveranfrage. Anders ginge es nicht — die geschützten Angaben liegen
+  Ende-zu-Ende-verschlüsselt, der Server kann nicht in ihnen suchen.
+
+### Geändert
+- Trefferliste und Zeitraum-Übersicht teilen sich jetzt einen gemeinsamen
+  Baustein (`assets/missiontable.js`): gleiche Spalten, gleiche Sortierung,
+  gleicher Zeilenaufbau. Die Zeitraum-Übersicht verhält sich unverändert,
+  inklusive der Kopplung zwischen Extremwert-Kacheln, Karten-Pin und
+  Tabellenzeile.
+- Die Kopfleiste enthält zwischen „Übersicht" und dem Zahnrad den neuen
+  Menüpunkt „Suche".
+
+### Hinweis zur Herkunft
+Der Filter „Herkunft" wertet die Spalte `origin` aus (von der Uhr / von Hand /
+importiert), nicht `manual`. `manual` bedeutet seit Web 2.11.0 ausschließlich
+„die Uhr überschreibt diesen Einsatz nicht mehr" und sagt nichts darüber aus,
+wie er entstanden ist.
+
+## [Web 3.0.0] — 2026-07-29
+
+Haupt-Sprung, weil der Umgang mit dem Inhaltsschlüssel selbst umgebaut wurde:
+Er lässt sich ab sofort mitten in der Sitzung wiederherstellen, statt nur beim
+Anmelden zu entstehen.
+
+### Neu
+- **Geschützte Angaben entsperren, ohne sich neu anzumelden.** Sind die
+  Ende-zu-Ende-verschlüsselten Angaben in der Sitzung gesperrt — weil ein Link
+  in einem neuen Tab geöffnet, der Browser neu gestartet oder das Passwort ohne
+  Wiederherstellungsschlüssel zurückgesetzt wurde —, fragt jetzt ein Dialog
+  direkt auf der Seite nach dem Kontopasswort und gibt den Inhaltsschlüssel
+  wieder frei. Das Ab- und Neuanmelden entfällt. Das Passwort wird
+  ausschließlich im Browser verwendet und verlässt ihn zu keinem Zeitpunkt.
+  Betroffen sind Tagesübersicht, Einsatzansicht, Einsatzformular,
+  Zeitraumübersicht, Import, Export und das Backup in den Einstellungen.
+- Jeder Sperrhinweis trägt einen Knopf **„Entsperren"**. Damit lässt sich der
+  Dialog nach einem Abbruch jederzeit erneut öffnen.
+
+### Geändert
+- Die Sperrhinweise auf allen betroffenen Seiten verweisen nicht mehr auf
+  „bitte ab- und neu anmelden", sondern auf das Entsperren an Ort und Stelle.
+- **Einsatzformular:** Nach erfolgreichem Entsperren werden die zuvor
+  gesperrten Eingabefelder wieder freigegeben und vorhandene verschlüsselte
+  Angaben nachgeladen — ohne die Seite neu zu laden.
+
+### Behoben
+- **Tagesübersicht:** Bei gesperrtem Schlüssel erschien kein Hinweis, warum
+  Einsatzort, Alter und Diagnose leer blieben. Das Skript sprach ein Element
+  `#lockbanner` an, das es im Seitenaufbau von `index.php` gar nicht gab —
+  die Anzeige scheiterte still. Der Hinweis ist jetzt vorhanden.
+
 ## [Web 2.11.0] — 2026-07-29
 
 ### Neu

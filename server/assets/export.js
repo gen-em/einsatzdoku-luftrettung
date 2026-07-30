@@ -4,7 +4,8 @@
  * Profil B (Vollständiges CSV inkl. GPX, ZIP mit optionaler AES-256-
  * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
  *
- * Erwartet aus der Seite: PAT_WRAP, CSRF, APP_TZ, WEB_VERSION, EdCrypto, EdPat,
+ * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, APP_TZ, WEB_VERSION,
+ * EdCrypto, EdUnlock, EdPat,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
  *
@@ -819,8 +820,12 @@
         $('exp_gpx_row').hidden = (fmt !== 'b');
     }
 
+    /* Prueft den Inhaltsschluessel und bietet bei Bedarf den Entsperrdialog
+     * an. Laeuft parallel zum gleichlautenden Aufruf in import_ui.js — der
+     * Sperrmechanismus in unlock.js sorgt dafuer, dass trotzdem nur ein
+     * einziger Dialog erscheint. */
     async function syncPatientLock() {
-        var key = await EdCrypto.getContentKey(PAT_WRAP);
+        var key = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
         var cb = $('exp_pat');
         var hint = $('exp_pat_hint');
         if (!key) {
@@ -944,6 +949,9 @@
         $('exp_pw').addEventListener('change', syncPasswordGate);
         $('exp_pw1').addEventListener('input', syncPasswordGate);
         $('exp_pw2').addEventListener('input', syncPasswordGate);
+
+        var unlockBtn = $('exp_pat_unlock');
+        if (unlockBtn) { unlockBtn.addEventListener('click', function () { syncPatientLock(); }); }
 
         syncZeitraum();
         syncFormat();

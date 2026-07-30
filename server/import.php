@@ -58,8 +58,9 @@ foreach ($defs->fetchAll() as $d) {
        Name, Geburtsdatum, Diagnose und Einsatzort ausschließlich als Chiffretext.</p>
 
     <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
-      nicht verschlüsseln — bitte ab- und neu anmelden. Ohne Verschlüsselung ist kein
-      Import möglich.</div>
+      nicht verschlüsseln — die Verschlüsselung ist in dieser Sitzung gesperrt. Ohne
+      sie ist kein Import möglich.
+      <button type="button" class="btn-plain unlockbtn" id="lockwarn_unlock">Entsperren</button></div>
     <div id="fehler" class="alert" hidden></div>
 
     <!-- ---------------------------------------------------------------- 1 -->
@@ -152,8 +153,8 @@ foreach ($defs->fetchAll() as $d) {
         <label><input type="checkbox" id="exp_pat"> Patientendaten einschließen</label>
       </div>
       <p class="muted" id="exp_pat_hint" hidden>Gesperrt — geschützte Angaben lassen sich
-         gerade nicht entschlüsseln (ab- und neu anmelden). Export ohne Patientendaten
-         bleibt möglich.</p>
+         gerade nicht entschlüsseln. Export ohne Patientendaten bleibt möglich.
+         <button type="button" class="btn-plain unlockbtn" id="exp_pat_unlock">Entsperren</button></p>
 
       <div class="rolechecks">
         <label><input type="checkbox" id="exp_pw"> Mit Passwort schützen (AES-256)</label>
@@ -177,11 +178,13 @@ foreach ($defs->fetchAll() as $d) {
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <script src="<?= asset('assets/crypto.js') ?>"></script>
+    <script src="<?= asset('assets/unlock.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
     <script>
       const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+      const KDF_SALT = <?= json_encode($kdfSalt) ?>;
       const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
       const APP_TZ = <?= json_encode($CFG['app']['timezone']) ?>;
       const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;

@@ -44,8 +44,9 @@ $titel = $monat !== ''
     <div id="loaderror" class="alert" hidden></div>
 
     <p id="lockbanner" class="alert alert-info" hidden>
-      Geschützte Angaben sind gesperrt — bitte neu anmelden, um Einsatzort,
-      Alter und Diagnose zu sehen.
+      Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben
+      verborgen, bis die Verschlüsselung entsperrt ist.
+      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
     </p>
 
     <div id="rangemap" class="map" hidden></div>
@@ -73,19 +74,10 @@ $titel = $monat !== ''
         <span class="stat-label">Höchster Einsatzort</span></div>
     </div>
 
+    <!-- Spalten, Sortierung und Zeilenaufbau kommen aus assets/missiontable.js,
+         gemeinsam mit suche.php. Kopf und Rumpf bleiben hier leer. -->
     <table class="data" id="rangetable">
-      <thead><tr>
-        <th class="sortable c-date" data-key="day">Datum</th>
-        <th class="sortable c-mid"  data-key="start">Beginn</th>
-        <th class="sortable c-mid"  data-key="dur">Dauer</th>
-        <th class="sortable"        data-key="site">Einsatzort</th>
-        <th class="sortable c-mid"  data-key="age">Alter</th>
-        <th class="sortable"        data-key="dx">Diagnose</th>
-        <th class="sortable c-winde" data-key="winch">Winde</th>
-        <th class="sortable c-bw"    data-key="bw">Bergwacht</th>
-        <th class="sortable c-sek"   data-key="sec">Sekundär<br>Transport</th>
-        <th class="sortable c-mid"   data-key="km">Flug&nbsp;km</th>
-      </tr></thead>
+      <thead></thead>
       <tbody id="rangebody"></tbody>
     </table>
     <p id="leer" class="muted" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
@@ -94,7 +86,9 @@ $titel = $monat !== ''
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
@@ -102,6 +96,7 @@ $titel = $monat !== ''
 const JAHR  = <?= json_encode($jahr) ?>;
 const MONAT = <?= json_encode($monat) ?>;
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 
 // Karte bleibt ausgeblendet (CSS [hidden]), bis feststeht, dass mindestens
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei
@@ -111,22 +106,17 @@ attachBaseLayers(map);
 attachFullscreenControl(map);
 
 let missions = [];
-let sortKey = 'day', sortAsc = true;
 let fixierteMid = null;   // per Klick festgesetzte Einsatz-ID oder null
 
 const FARBE_HERVOR = '#D63338';  // Newroz Rot
 const FARBE_NORMAL  = '#4280E5'; // Max Blau
 
-function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-function fmtTag(iso){ const [y,m,d] = iso.split('-'); return `${d}.${m}.${y}`; }
-function fmtDur(s){ if(s==null) return 'kein Ende'; const h=Math.floor(s/3600),m=Math.round(s%3600/60);
-  return h? `${h}h ${String(m).padStart(2,'0')}min` : `${m}min`; }
-function fmtKm(m){ return m==null ? '<span class="dash">–</span>' : (m/1000).toFixed(1).replace('.',',')+' km'; }
-function extractOrt(addr){
-  const parts = addr.split(',');
-  let last = parts[parts.length - 1].trim();
-  return last.replace(/^\d{4,5}\s+/, '');
-}
+// Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
+// Definitionen stehen in assets/missiontable.js.
+const esc        = EdMissionTable.esc;
+const fmtTag     = EdMissionTable.fmtTag;
+const fmtDur     = EdMissionTable.fmtDur;
+const extractOrt = EdMissionTable.extractOrt;
 function fmtDe1(n){ return n.toFixed(1).replace('.', ','); }
 
 // Statistiktabelle: alle Kennzahlen kommen unverschluesselt aus api/range.php,
@@ -245,65 +235,26 @@ document.addEventListener('click', ev => {
   loeseFixierung();
 });
 
-function sortWert(m, key){
-  switch(key){
-    case 'day':   return m.day;
-    case 'start': return m.start_hhmm;
-    case 'dur':   return m.duration_s == null ? -1 : m.duration_s;
-    case 'site':  return (m._ort || '').toLowerCase();
-    case 'age':   return m._age == null ? -1 : m._age;
-    case 'dx':    return (m._dx || '').toLowerCase();
-    case 'winch': return m.winch ? 1 : 0;
-    case 'bw':    return m.bergwacht ? 1 : 0;
-    case 'sec':   return m.secondary ? 1 : 0;
-    case 'km':    return m.distance_m == null ? -1 : m.distance_m;
+/* Die Trefferliste selbst (Spalten, Sortierung, Zeilenaufbau, Klick auf die
+ * Zeile) steckt in assets/missiontable.js und wird mit suche.php geteilt.
+ * Hier bleibt nur, was zu dieser Seite gehoert: das Ein-/Ausblenden von
+ * Tabelle und Leermeldung sowie die Hervorhebung aus den Extremwert-Kacheln,
+ * die nach jedem Neuzeichnen erneut angewendet werden muss — die Zeilen sind
+ * dann neu und haetten ihre Markierung sonst verloren.
+ * pfeilInitial bleibt aus: die Seite zeigte den Sortierpfeil bisher erst nach
+ * dem ersten Klick auf einen Spaltenkopf. */
+const tabelle = EdMissionTable.erzeuge({
+  table: document.getElementById('rangetable'),
+  sortKey: 'day', sortAsc: true,
+  pfeilInitial: false,
+  onAfterDraw: () => {
+    document.getElementById('leer').hidden = missions.length > 0;
+    document.getElementById('rangetable').hidden = missions.length === 0;
+    wendeHervorhebungAn(fixierteMid);
   }
-  return '';
-}
-
-function zeichne(){
-  const tb = document.getElementById('rangebody');
-  tb.innerHTML = '';
-  const sortiert = missions.slice().sort((a,b) => {
-    const x = sortWert(a, sortKey), y = sortWert(b, sortKey);
-    const r = (x > y) - (x < y);
-    return sortAsc ? r : -r;
-  });
-  sortiert.forEach(m => {
-    const tr = document.createElement('tr');
-    tr.className = 'clickable';
-    tr.dataset.mid = m.id;
-    tr.innerHTML =
-      `<td class="mono c-date">${fmtTag(m.day)}</td>
-       <td class="mono c-mid">${m.start_hhmm}</td>
-       <td class="c-mid">${fmtDur(m.duration_s)}</td>
-       <td${m._ort ? '' : ' class="dash"'}>${m._ort ? esc(m._ort) : '–'}</td>
-       <td class="mono c-mid${m._age != null ? '' : ' dash'}">${m._age != null ? m._age : '–'}</td>
-       <td${m._dx ? '' : ' class="dash"'}>${m._dx ? esc(m._dx) : '–'}</td>
-       <td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>
-       <td class="checkcol c-bw">${m.bergwacht ? '✓' : ''}</td>
-       <td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>
-       <td class="mono c-mid">${fmtKm(m.distance_m)}</td>`;
-    tr.addEventListener('click', () => { location.href = 'einsatz.php?id=' + m.id; });
-    tb.appendChild(tr);
-  });
-  document.getElementById('leer').hidden = missions.length > 0;
-  document.getElementById('rangetable').hidden = missions.length === 0;
-  wendeHervorhebungAn(fixierteMid);
-}
-
-document.querySelectorAll('#rangetable th.sortable').forEach(th => {
-  th.addEventListener('click', () => {
-    const k = th.dataset.key;
-    if (sortKey === k) { sortAsc = !sortAsc; } else { sortKey = k; sortAsc = true; }
-    document.querySelectorAll('#rangetable th .arrow').forEach(a => a.remove());
-    const pfeil = document.createElement('span');
-    pfeil.className = 'arrow';
-    pfeil.textContent = sortAsc ? ' ▲' : ' ▼';
-    th.appendChild(pfeil);
-    zeichne();
-  });
 });
+
+function zeichne(){ tabelle.setData(missions); }
 
 function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
@@ -330,41 +281,49 @@ function zeigeFehler(msg){
   zeichne();
   zeichneStatistik(missions, d.tage);
 
-  if (PAT_WRAP) {
-    const ck = await EdCrypto.getContentKey(PAT_WRAP);
-    const banner = document.getElementById('lockbanner');
-    if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
-    banner.hidden = true;
-    let geaendert = false;
-    const pinBounds = [];
-    for (const m of missions) {
-      if (!m.pat_blob) continue;
-      try {
-        const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
-        if (o.dx != null) { m._dx = o.dx; geaendert = true; }
-        const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
-        if (alter != null) { m._age = alter; geaendert = true; }
-        if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
-        // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
-        if (o.loc && o.loc.lat != null) {
-          m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
-            radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
-          }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
-          pinBounds.push([o.loc.lat, o.loc.lon]);
-        }
-      } catch (e) { /* einzelner Datensatz nicht lesbar: Rest trotzdem zeigen */ }
-    }
-    if (geaendert) { zeichne(); }
-    if (pinBounds.length) {
-      // Karte war bis hierhin ausgeblendet (display:none) -> Groesse war beim
-      // Initialisieren unbekannt; invalidateSize() vor fitBounds ist Pflicht,
-      // sonst bleiben die Kacheln grau/falsch zugeschnitten.
-      document.getElementById('rangemap').hidden = false;
-      map.invalidateSize();
-      map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 });
-    }
-  }
+  if (PAT_WRAP) { await entschluesselePat(); }
 })();
+
+/* Geschuetzte Angaben nachtragen. Ist der Inhaltsschluessel gesperrt, bietet
+ * EdUnlock den Entsperrdialog an; bei Abbruch bleibt es beim Sperrhinweis,
+ * dessen Knopf diese Funktion erneut aufruft. Ein zweiter Durchlauf ist
+ * gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
+async function entschluesselePat(){
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+  const banner = document.getElementById('lockbanner');
+  if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
+  banner.hidden = true;
+  let geaendert = false;
+  const pinBounds = [];
+  for (const m of missions) {
+    if (!m.pat_blob) continue;
+    try {
+      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+      if (o.dx != null) { m._dx = o.dx; geaendert = true; }
+      const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
+      if (alter != null) { m._age = alter; geaendert = true; }
+      if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
+      // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
+      if (o.loc && o.loc.lat != null) {
+        m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
+          radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
+        }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
+        pinBounds.push([o.loc.lat, o.loc.lon]);
+      }
+    } catch (e) { /* einzelner Datensatz nicht lesbar: Rest trotzdem zeigen */ }
+  }
+  if (geaendert) { zeichne(); }
+  if (pinBounds.length) {
+    // Karte war bis hierhin ausgeblendet (display:none) -> Groesse war beim
+    // Initialisieren unbekannt; invalidateSize() vor fitBounds ist Pflicht,
+    // sonst bleiben die Kacheln grau/falsch zugeschnitten.
+    document.getElementById('rangemap').hidden = false;
+    map.invalidateSize();
+    map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 });
+  }
+}
+
+document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
 </script>
 </body>
 </html>

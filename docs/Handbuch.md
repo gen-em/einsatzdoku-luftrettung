@@ -111,11 +111,12 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
 Luftrettung – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
-**Übersicht**, **Administration** (nur Admin) und **⚙ Einstellungen** (Profil,
-Standortdaten, Backup, Import / Export, Geräte; Abmelden fragt sicherheitshalber
-nach). Nach
-30 Minuten ohne Aktivität meldet das System automatisch ab. Die Kopfleiste
-bleibt beim Scrollen oben stehen.
+**Übersicht**, **Suche** (Abschnitt 4.6) und **⚙ Einstellungen**. Hinter dem
+Zahnrad liegen Profil, Standortdaten, Backup, Import / Export, Geräte und
+Abmelden (fragt sicherheitshalber nach); Admins finden dort zusätzlich die
+Rubrik **Administration** mit NutzerInnenverwaltung und Zentralen Stammdaten
+(Abschnitt 11). Nach 30 Minuten ohne Aktivität meldet das System automatisch
+ab. Die Kopfleiste bleibt beim Scrollen oben stehen.
 
 Die **Einsatztage-Leiste** links begleitet alle Inhaltsseiten — auch
 Einsatzansicht und Formular. Sie ist nach Jahr und Monat gruppiert
@@ -314,11 +315,75 @@ Fixierung wieder.
 Jede Zeile der Einsatztabelle führt zum Einsatz; ein Klick auf das
 **Dreieck** davor klappt dagegen nur die Unterpunkte auf oder zu.
 
+**Zeitraum-Übersicht oder Suche?** Die beiden Seiten zeigen dieselbe
+Einsatztabelle, beantworten aber verschiedene Fragen. Die Zeitraum-Übersicht
+ist auf *einen* Monat oder *ein* Jahr festgelegt und liefert dafür Karte und
+Kennzahlen — sie beantwortet „wie war dieser Zeitraum?". Die **Suche**
+(Abschnitt 4.6) geht über den gesamten Bestand, kennt rund 30 Filter bis hin zu
+Diagnose, Besatzung und Alter, hat dafür aber weder Karte noch Kennzahlen — sie
+beantwortet „wo war nochmal der eine Einsatz mit …?". Ein Zeitraum lässt sich
+in der Suche über „Datum von / bis" nachbilden; Kennzahlen dazu gibt es aber
+nur in der Zeitraum-Übersicht.
+
 ### 4.5 Flugtag von Hand anlegen
 
 Lief die Uhr an einem Tag nicht, legst du den Flugtag über **+ Flugtag
 anlegen** unten in der Einsatztage-Leiste an. Danach lassen sich Maschine,
 Besatzung und nachgetragene Einsätze wie gewohnt erfassen.
+
+### 4.6 Suche
+
+Über **Suche** in der Kopfleiste durchsuchst du deinen gesamten Bestand — nicht
+nur einen Tag oder einen Zeitraum. Die Trefferliste hat dieselben Spalten wie
+die Zeitraum-Übersicht, lässt sich genauso über die Spaltenköpfe sortieren, und
+ein Klick auf eine Zeile öffnet den Einsatz.
+
+**Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
+Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
+Bergwacht-Bereitschaft und -Infos, anderen Notarzt, weitere Rettungsmittel,
+Standort, Maschine, Besatzung und Notizen. Groß- und Kleinschreibung spielt
+keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
+vorkommen — aber nicht im selben Feld. „müller kempten" findet also auch einen
+Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
+Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
+„1985-03-12".
+
+**Weitere Filter.** Aufklappbar darunter, gruppiert nach Zeit, Art des
+Einsatzes, Beteiligten und Werten. Alle gesetzten Filter gelten gleichzeitig
+(UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
+Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
+enthalten nur, was in deinem Bestand tatsächlich vorkommt. Zwei Besonderheiten:
+
+- **Alarmzeit** darf über Mitternacht gehen. „von 22:00 bis 06:00" findet die
+  Nachteinsätze.
+- **Reanimations-Ereignis** ist eine Mehrfachauswahl. Wählst du mehrere, muss
+  der Einsatz alle davon enthalten.
+
+Rechts neben **Filter zurücksetzen** steht immer, wie viele Einsätze von wie
+vielen gerade angezeigt werden.
+
+**Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
+(Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose und
+Einsatzort nicht durchsucht, der Altersfilter ist abgeschaltet und die
+entsprechenden Spalten bleiben leer. Alle übrigen Filter arbeiten normal
+weiter. Über **Entsperren** im Hinweis oben nimmst du die Sperre auf, danach
+sucht die Seite sofort mit den vollständigen Daten weiter — ohne Neuladen.
+
+**Suche teilen oder aufheben.** Der komplette Filterzustand steht in der
+Adresszeile hinter dem `#`. Du kannst die Adresse als Lesezeichen speichern
+oder weitergeben; beim Öffnen sind dieselben Filter wieder gesetzt. Weil alles
+hinter dem `#` steht, wird der Suchbegriff **nicht** an den Server übertragen
+und taucht in keinem Server-Protokoll auf. Beim Weitergeben lohnt trotzdem ein
+Blick: Ein Suchbegriff wie ein Nachname ist selbst ein Patientendatum, und die
+empfangende Person sieht ihn in ihrer Adresszeile — die Treffer allerdings nur,
+soweit sie ohnehin Zugriff auf die eigenen Daten hat. Fremde Einsätze werden
+nie angezeigt.
+
+**Wo gesucht wird.** Die Suche läuft vollständig in deinem Browser. Beim ersten
+Öffnen holt die Seite deinen Bestand einmal vom Server; danach kostet kein
+Tastendruck mehr eine Anfrage. Das ist keine Spielerei, sondern Bedingung: Die
+geschützten Angaben liegen Ende-zu-Ende-verschlüsselt auf dem Server, er könnte
+gar nicht darin suchen.
 
 ---
 
@@ -352,7 +417,35 @@ es nicht mehr.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
-- Zeigt eine Seite „gesperrt“, genügt ab- und neu anmelden.
+- Zeigt eine Seite „gesperrt“, lässt sich das direkt dort beheben — siehe
+  **„Gesperrt: entsperren statt neu anmelden“** weiter unten.
+
+**Gesperrt: entsperren statt neu anmelden.** Die Anmeldung und der Schlüssel
+für die geschützten Angaben haben unterschiedliche Lebensdauern. Der Schlüssel
+gilt nur im jeweiligen Browser-Tab; die Anmeldung dagegen hält bis zu 30 Minuten
+ohne Aktivität. Deshalb kommt es im Alltag regelmäßig vor, dass du angemeldet
+bist, die geschützten Angaben aber gesperrt sind — typischerweise, wenn du einen
+Link in einem **neuen Tab** öffnest oder den **Browser neu gestartet** hast.
+
+In diesem Fall erscheint ein Fenster **„Geschützte Angaben entsperren“**, das
+nach deinem Kontopasswort fragt. Nach der Eingabe sind Einsatznummer, Name,
+Geburtsdatum, Alter, Diagnose und Einsatzort sofort wieder sichtbar — ohne die
+Seite neu zu laden und ohne Ab- und Neuanmelden. Das Passwort wird dabei nur in
+deinem Browser verwendet; es wird **nicht** an den Server geschickt. Die
+Prüfung dauert je nach Gerät eine knappe Sekunde, solange steht „Schlüssel wird
+abgeleitet …“.
+
+Brichst du das Fenster ab, bleibt die Seite normal bedienbar — nur die
+geschützten Angaben bleiben verborgen, und ein Hinweis sagt das. Der Knopf
+**„Entsperren“** in diesem Hinweis öffnet das Fenster jederzeit erneut.
+
+Zwei Dinge sind dabei wichtig:
+
+- **Im Einsatzformular werden vorhandene verschlüsselte Angaben beim Speichern
+  nicht angetastet, solange gesperrt ist.** Du kannst also einen Einsatz auch
+  im gesperrten Zustand bearbeiten, ohne Patientendaten zu verlieren.
+- **Import und Export der Patientendaten brauchen den Schlüssel.** Ohne ihn ist
+  der Import gesperrt und der Export nur ohne Patientendaten möglich.
 
 **Alter aus Geburtsdatum:** Das Alter berechnet die Anwendung aus dem
 Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz von
@@ -397,7 +490,8 @@ Diagnose, Einsatzort und Einsatznummer nur als Chiffretext zu sehen. Das ist kei
 Bequemlichkeit, sondern die einzige Möglichkeit, die die
 Ende-zu-Ende-Verschlüsselung (Abschnitt 5) offen lässt. Aus demselben Grund
 ist der Import gesperrt, solange die Verschlüsselung nicht bereitsteht — dann
-hilft ein Ab- und Neuanmelden.
+hilft der Knopf „Entsperren“ im Hinweis über dem Importbereich
+(siehe Abschnitt 5).
 
 **1. Datei wählen.** Das passende Format wird an den Spaltenüberschriften
 selbst erkannt. Angaben, die in der Datei fehlen, werden darüber abgefragt —
@@ -470,7 +564,8 @@ vorher ein Hinweis: Ab dem Speichern schützt die Verschlüsselung dieser
 Anwendung die Daten nicht mehr — Name, Geburtsdatum, Diagnose und Einsatzort
 stehen dann lesbar in der Datei. Ist die Verschlüsselung gerade gesperrt (nach
 einem Neustart des Browsers), lässt sich der Haken nicht setzen; ein Export ohne
-Patientendaten bleibt möglich.
+Patientendaten bleibt möglich. Über „Entsperren“ im Hinweis daneben lässt sich
+die Sperre aufheben (siehe Abschnitt 5).
 
 **Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Das ist die
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
@@ -609,8 +704,8 @@ verbundenen Geräte einsehen (aktivieren/deaktivieren/löschen — Löschen läs
 hochgeladene Daten bestehen).
 
 Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
-unter Standortdaten (8.1–8.3), jedoch für **alle** NutzerInnen gemeinsam
-(siehe 8.4). Namensgleiche Einträge werden auch hier abgelehnt; existieren
+unter Standortdaten (9.1–9.3), jedoch für **alle** NutzerInnen gemeinsam
+(siehe 9.4). Namensgleiche Einträge werden auch hier abgelehnt; existieren
 bereits persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen,
 weist ein Hinweis darauf hin (keine Blockade).
 

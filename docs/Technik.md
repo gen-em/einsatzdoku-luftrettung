@@ -41,6 +41,7 @@ hems/
 │   ├── index.php          Tagesübersicht (Karte + Tabelle)
 │   ├── einsatz.php        Einsatzansicht · einsatz_form.php Nachtragen/Bearbeiten
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
+│   ├── suche.php          Suche über den gesamten Bestand (filtert im Browser, s. u.)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
@@ -54,10 +55,12 @@ hems/
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand
-│   ├── api/               day.php · mission.php · range.php · backup_data.php · backup_restore.php ·
+│   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export)
-│   ├── assets/            style.css, crypto.js (WebCrypto), patient.js, daylist.js, confirm.js,
+│   ├── assets/            style.css, crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
+│   │                      patient.js, daylist.js, confirm.js,
+│   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser)
@@ -127,6 +130,71 @@ die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
 Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
 geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
+
+**Entsperren des Inhaltsschlüssels in der Sitzung (`assets/unlock.js`, ab Web
+3.0.0):** Anmeldung und Inhaltsschlüssel haben unterschiedliche Lebensdauern —
+die Anmeldung hängt am PHP-Sitzungscookie (`SESSION_TIMEOUT_S`, 30 min
+Inaktivität), der Schlüssel dagegen am `sessionStorage` des jeweiligen Tabs
+(`edk` = Datenschlüssel, `pck` = Inhaltsschlüssel). Der Zustand „angemeldet,
+aber gesperrt" tritt daher regelmäßig auf: Link im neuen Tab, Browser-Neustart,
+Passwort-Reset ohne Wiederherstellungsschlüssel (der Wrap passt dann nicht mehr,
+`getContentKey()` liefert `null`).
+
+`unlock.js` exportiert genau eine Funktion:
+
+```
+EdUnlock.ensureContentKey(wrap, kdfSalt) -> Promise<string|null>
+```
+
+Sie liefert den Inhaltsschlüssel, wenn er in der Sitzung liegt; sonst zeigt sie
+einen modalen Dialog und leitet den Schlüssel neu ab:
+
+1. `EdCrypto.deriveKeys(passwort, kdfSalt)` → `dataKeyHex`
+2. `EdCrypto.decrypt(dataKeyHex, wrap)` versuchen. Gelingt es, war das Passwort
+   richtig — die Echtheitsprüfung steckt bereits in AES-GCM, ein separater
+   Abgleich entfällt.
+3. `EdCrypto.setDataKey(dataKeyHex)`, danach `EdCrypto.getContentKey(wrap)`.
+
+Bei Abbruch kommt `null` zurück; die aufrufende Seite verhält sich dann wie
+bisher im gesperrten Zustand. Kein neuer Endpunkt, keine Passwortübertragung —
+der Ablauf ist vollständig clientseitig, `auth_guard.php` stellt `$kdfSalt` und
+`$patWrapPw` jeder eingeloggten Seite ohnehin bereit.
+
+Drei Punkte, die bei Änderungen zu beachten sind:
+
+- **Nur ein Dialog gleichzeitig.** Solange einer offen ist, hängen sich weitere
+  Aufrufe an dasselbe Promise (Modulvariable `laufend`). Ohne das öffnete
+  `import.php` mehrere Dialoge übereinander, weil `import_ui.js` (drei Stellen)
+  und `export.js` auf derselben Seite laufen.
+- **Escape während der Ableitung wird unterdrückt** (`cancel`-Ereignis mit
+  `preventDefault()`), sonst nimmt die aufrufende Seite „abgebrochen" an,
+  während die Rechnung weiterläuft. Die 310 000 PBKDF2-Runden dauern je nach
+  Gerät 0,3–1 s; solange sind Knöpfe und Feld gesperrt und es steht ein
+  Wartehinweis.
+- **Kein `window.prompt` als Rückfallebene.** Fehlt `<dialog>` oder das Salt,
+  kommt `null` zurück — ein Prompt zeigte das Passwort im Klartext.
+
+Aufrufstellen: `index.php`, `zeitraum.php`, `einsatz.php` (bezieht den Wrap aus
+der API-Antwort `m.pat_wrap`, das Salt zusätzlich aus PHP), `einsatz_form.php`,
+`import.php` über `assets/import_ui.js` und `assets/export.js`, sowie
+`einstellungen.php` im Backup-Block. **Nicht** umgestellt ist der
+Passwortwechsel im Profil-Block von `einstellungen.php`: Er leitet Schlüssel in
+einem anderen Zusammenhang ab (Re-Wrap mit dem alten Passwort) und hat mit dem
+Entsperren nichts zu tun.
+
+Jeder Sperrhinweis trägt einen Knopf `.unlockbtn`, der denselben Ablauf erneut
+anstößt. Wichtig dabei: Die Funktionen hinter diesen Knöpfen müssen ein
+zweites Mal aufrufbar sein, ohne doppelt zu zeichnen — in `zeitraum.php` und
+`index.php` ist das gegeben, weil ohne Schlüssel vorher kein Pin entsteht; in
+`einsatz.php` wird der Sperr-Eintrag (`#patlockdt`/`#patlockdd`) zu Beginn
+entfernt.
+
+**Schutz beim Speichern (`einsatz_form.php`):** Ist `PAT_CK` null, verlässt der
+Submit-Handler die Blob-Erzeugung vorzeitig (`if (f.dataset.patDone === '1' ||
+!PAT_CK) return;`). Ein Speichern im gesperrten Zustand lässt den vorhandenen
+`pat_blob` also unangetastet. Dieses Verhalten ist beim Entsperr-Umbau bewusst
+erhalten geblieben und darf nicht wegfallen — sonst löscht ein Speichern ohne
+Schlüssel die Patientendaten.
 
 **Einsatzort-Feld (`einsatz_form.php`):** Erkennt beim Tippen zusätzlich zur
 Adresssuche (Photon) vier Koordinatenformate — Dezimalgrad, Grad/Dezimal-
@@ -330,13 +398,98 @@ auch einsatzfreie Flugtage mit (Divisor der Durchschnittswerte). Die
 geschützten Angaben entschlüsselt der Browser wie überall selbst.
 
 **Fehlerbehandlung der Lese-/Schreib-APIs:** `api/range.php`, `api/day.php`,
-`api/mission.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in
+`api/mission.php`, `api/suchindex.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in
 try/catch (Muster ursprünglich aus `api/backup_restore.php`) und antworten bei
 einer Ausnahme mit `{"error": "<endpunkt>", "meldung": "<Exception-Message>"}`
 statt eines leeren HTTP 500 — wichtig z. B. direkt nach einem Deploy mit
 DB-Änderung, aber vor dem Aufruf von `/update.php`. Neue Endpunkte sollten
 demselben Muster folgen. Die jeweiligen Frontends (`zeitraum.php`,
-`einsatz.php`, `index.php`) zeigen `error`+`meldung` in einer Fehlerbox an.
+`einsatz.php`, `index.php`, `suche.php`) zeigen `error`+`meldung` in einer
+Fehlerbox an.
+
+**Suche (`suche.php`, `api/suchindex.php`, ab Web 3.1.0).** Gefiltert wird
+vollständig im Browser. Das ist keine Optimierung, sondern eine Folge der
+Ende-zu-Ende-Verschlüsselung: Einsatznummer, Name, Geburtsdatum, Diagnose und
+Einsatzort liegen im `pat_blob`, der Server sieht davon nur Chiffretext und
+kann darin nicht suchen. Zusätzlich wäre ein Suchbegriff wie ein Nachname
+selbst schon ein Patientendatum — er darf den Browser gar nicht verlassen.
+`api/suchindex.php` nimmt deshalb **keine Suchparameter entgegen**; es liefert
+den kompletten aktiven Bestand der angemeldeten Person.
+
+Mengengerüst: erwartet werden 50–80 Einsätze pro Jahr, nach zwei Jahrzehnten
+also unter etwa 1 600 Datensätze — für einen einmaligen Abruf je Sitzung
+unproblematisch. Trackpunkte und Phasenlisten sind bewusst **nicht** enthalten;
+sie wären um Größenordnungen größer als alles andere und werden zum Filtern
+nicht gebraucht. Der Endpunkt kommt mit sechs Abfragen aus, unabhängig von der
+Zahl der Einsätze (kein N+1): Einsätze, Flugtage, Standorte, Maschinen,
+Rettungsmittel, Reanimationen.
+
+Zwei Fallen, die dort dokumentiert sind und bei Änderungen zu beachten bleiben:
+
+- **days wird nicht per JOIN angebunden.** `missions` und `days` tragen beide
+  `crew_p1`…`crew_other`; ein JOIN würde sie überschreiben. Dieselbe Falle ist
+  in `api/mission.php` beschrieben. Die effektive Besatzung folgt derselben
+  COALESCE-Regel: Einsatzwert nur, wenn `crew_override = 1` **und** das
+  Rollenfeld belegt ist, sonst die Tagescrew.
+- **`origin`, nicht `manual`.** Der Herkunftsfilter wertet `origin`
+  ('watch' | 'manual' | 'import') aus. `manual` bedeutet seit Web 2.11.0
+  ausschließlich „die Uhr überschreibt diesen Einsatz nicht mehr" — der
+  Kommentar am Spaltenkopf in `schema.sql` sagt das ausdrücklich.
+
+`start_min` (Minuten seit Mitternacht, Grundlage des Alarmzeitfilters) wird aus
+derselben `fmt_local()`-Umrechnung abgeleitet wie `start_hhmm`, damit Anzeige
+und Filter nicht auseinanderlaufen können. Standort und Maschine fallen auf die
+Alt-Freitextspalten `days.base` / `days.aircraft` zurück, wenn die
+Stammdaten-Verknüpfung fehlt — sonst wären Flugtage von vor der Umstellung
+nach diesen Kriterien nicht auffindbar.
+
+**Filterzustand im URL-Fragment.** Der gesamte Zustand steht hinter dem `#`,
+nie im Query-String: Fragmente werden nicht an den Server gesendet und landen
+damit nicht im Zugriffsprotokoll. Geschrieben wird mit `history.replaceState`,
+nicht über `location.hash` — sonst wüchse die Chronik mit jedem Tastendruck im
+Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
+**nicht** umbenannt werden:
+
+| Kurz | Filter | Kurz | Filter |
+|------|--------|------|--------|
+| `q`  | Freitext | `hk` | Herkunft (`watch`/`manual`/`import`) |
+| `dv` / `db` | Datum von / bis | `st` | Standort |
+| `zv` / `zb` | Alarmzeit von / bis | `ac` | Maschine |
+| `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
+| `wi` | Windeneinsatz (`j`/`n`) | `rm` | Weiteres Rettungsmittel |
+| `cv` / `cb` | Cycles von / bis | `tz` | Transportziel |
+| `pv` / `pb` | Cycles mit Patient von / bis | `av` / `ab` | Alter von / bis |
+| `lv` | Luftverladung (`j`/`n`) | `kv` / `kb` | Flugstrecke von / bis (km) |
+| `bw` | Bergwacht (`j`/`n`) | `ev` / `eb` | Einsatzdauer von / bis (min) |
+| `bu` | Bergwacht-Bereitschaft | `hv` / `hb` | Höhe Einsatzort von / bis (m) |
+| `se` | Sekundärtransport (`j`/`n`) | `s` | Sortierspalte |
+| `sr` | Schockraum (`j`/`n`) | `sd` | Sortierrichtung (`a`/`d`) |
+| `re` | Reanimation (`j`/`n`) | | |
+| `rt` | Reanimations-Ereignisse (kommagetrennt) | | |
+
+Ein neuer Filter braucht drei Dinge: einen Eintrag in der Liste `FILTER` in
+`suche.php`, sein Feld im Formular und seine Zeile in `trifft()`. Auslesen,
+Schreiben ins Fragment, Wiederherstellen und das Zählen aktiver Filter leiten
+sich alle aus `FILTER` ab.
+
+Bei gesperrtem Inhaltsschlüssel bleiben die geschützten Felder aus dem
+Heuhaufen der Freitextsuche und der Altersfilter ist abgeschaltet — sonst wäre
+mit gesetztem Altersfilter jeder Einsatz ein Nicht-Treffer. Nach dem Entsperren
+wird der Heuhaufen neu gebaut und sofort neu gefiltert.
+
+**Gemeinsame Einsatztabelle (`assets/missiontable.js`, ab Web 3.1.0).**
+`zeitraum.php` und `suche.php` zeigen dieselbe Liste; Spalten, Sortierung und
+Zeilenaufbau stehen deshalb genau einmal dort. `EdMissionTable.erzeuge()` baut
+Kopf und Rumpf in ein übergebenes `<table>`; die Formatierer (`fmtTag`,
+`fmtDur`, `fmtKm`, `extractOrt`, `esc`) sind zusätzlich einzeln exportiert,
+weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. Eine neue
+Spalte ist ein Eintrag in `SPALTEN` und erscheint auf beiden Seiten.
+
+Zwei Rücksichten auf `zeitraum.php`, die sonst als Regression auffielen:
+`pfeilInitial: false` erhält das bisherige Verhalten (Sortierpfeil erst nach
+dem ersten Klick auf einen Spaltenkopf), und `onAfterDraw` wendet die
+Hervorhebung der Extremwert-Kacheln erneut an — die Zeilen sind nach jedem
+Zeichnen neu und hätten ihre Markierung sonst verloren.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
@@ -609,3 +762,7 @@ erfolgreichem Upload.
     (Crew-Override, Web 2.6.0) nicht in der Tagesübersicht, obwohl sie
     definiert ist. Auflösung = einmalige generische Auswertung; berührt
     zusätzlich die CSS-Spaltenklassen (`c-winde`, `c-bw`, `c-sek`).
+    Die Tagestabelle in `index.php` ist bewusst **nicht** auf
+    `assets/missiontable.js` umgestellt: Sie zeigt Tagesnummer und Farbmarkierung
+    statt Datum und gehört zu einem anderen Zusammenhang. Erst wenn `day_col`
+    generisch ausgewertet wird, lohnt die Frage nach einer Zusammenführung.

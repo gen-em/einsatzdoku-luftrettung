@@ -6,7 +6,8 @@
  * fertige (verschluesselte) Nutzlast bauen. Die eigentliche Rechenarbeit
  * steckt in import.js, die Formatkenntnis in import_profiles.js.
  *
- * Erwartet aus der Seite: PAT_WRAP, CSRF, EdCrypto, ImportCore, ImportProfile.
+ * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, EdCrypto, EdUnlock,
+ * ImportCore, ImportProfile.
  */
 (function () {
     'use strict';
@@ -263,7 +264,7 @@
      */
     async function bestandEinsatznummernIndex(d) {
         var index = {};
-        var ck = await EdCrypto.getContentKey(PAT_WRAP);
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
         if (!ck) { return index; }
         for (var tag in (d.days || {})) {
             if (!Object.prototype.hasOwnProperty.call(d.days, tag)) { continue; }
@@ -480,7 +481,7 @@
      * VOR dem Klick auffallen und nicht mittendrin.
      */
     async function baueNutzlast() {
-        var ck = await EdCrypto.getContentKey(PAT_WRAP);
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
         if (!ck) { return null; }
 
         var acId = $('acsel').value ? parseInt($('acsel').value, 10) : null;
@@ -690,11 +691,21 @@
 
     // ---------------------------------------------------------------- Start
 
+    /* Sperrstatus pruefen und bei Bedarf entsperren lassen. Bricht die Person
+     * den Dialog ab, bleibt der Hinweis stehen — sein Knopf stoesst denselben
+     * Versuch erneut an. */
+    async function sperrstatus() {
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+        $('lockwarn').hidden = !!ck;
+        $('datei').disabled = !ck;
+        return ck;
+    }
+
     (async function () {
         profileFuellen();
         verdrahten();
-        var ck = await EdCrypto.getContentKey(PAT_WRAP);
-        $('lockwarn').hidden = !!ck;
-        $('datei').disabled = !ck;
+        var btn = $('lockwarn_unlock');
+        if (btn) { btn.addEventListener('click', function () { sperrstatus(); }); }
+        await sperrstatus();
     }());
 }());

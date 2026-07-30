@@ -94,6 +94,11 @@ if ($selDay === null) {
         <span id="savestate" class="muted"></span>
       </form>
     </details>
+    <p id="lockbanner" class="alert alert-info" hidden>
+      Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben
+      verborgen, bis die Verschlüsselung entsperrt ist.
+      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
+    </p>
     <div id="map" class="map"></div>
     <table class="data" id="missions">
       <thead><tr>
@@ -124,6 +129,7 @@ if ($selDay === null) {
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -134,6 +140,7 @@ const CSRF = '<?= e($_SESSION['csrf']) ?>';
 const SEL_DAY = <?= json_encode($selDay) ?>;
 const DEF_AC = <?= (int)$DEF_AC ?>;
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 const DEF_BASE = <?= (int)$DEF_BASE ?>;
 const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
 let currentDay = null;
@@ -323,39 +330,7 @@ async function loadDay(day){
     }
   });
   renderMissionTable();
-  if (PAT_WRAP) {
-    (async () => {
-      const ck = await EdCrypto.getContentKey(PAT_WRAP);
-      const banner = document.getElementById('lockbanner');
-      if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
-      if (banner) banner.hidden = true;
-      let changed = false;
-      const pinBounds = [];
-      for (const m of dayMissions) {
-        if (!m.pat_blob) continue;
-        try {
-          const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
-          if (o.dx != null) { m._dx = o.dx; changed = true; }
-          // Alter: aus dem Geburtsdatum zum Einsatztag, sonst der eingetragene
-          // Wert. Name und Geburtsdatum bleiben bewusst aus der Uebersicht.
-          const alter = EdPat.alterAnzeige(o, currentDay);
-          if (alter != null) { m._age = alter; changed = true; }
-          if (o.loc && o.loc.addr) {
-            m._ort = extractOrt(o.loc.addr);
-            changed = true;
-            if (o.loc.lat != null) {
-              layerGroup.addLayer(L.marker([o.loc.lat, o.loc.lon],
-                { icon: locPin(m._col), keyboard: false })
-                .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
-              pinBounds.push([o.loc.lat, o.loc.lon]);
-            }
-          }
-        } catch (e) { }
-      }
-      if (changed) renderMissionTable();
-      if (pinBounds.length && !mapHasBounds) { map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 }); }
-    })();
-  }
+  if (PAT_WRAP) { entschluesselePat(); }
 
   document.getElementById('empty').hidden = d.missions.length > 0;
   document.getElementById('missions').hidden = d.missions.length === 0;
@@ -369,6 +344,43 @@ async function loadDay(day){
   }
 }
 
+/* Geschuetzte Angaben nachtragen. Ist der Inhaltsschluessel gesperrt, bietet
+ * EdUnlock den Entsperrdialog an; bei Abbruch bleibt es beim Sperrhinweis.
+ * Bewusst ohne await aufgerufen — der Kartenausschnitt unten soll nicht auf
+ * die Entschluesselung warten. Ein erneuter Aufruf ueber den Entsperrknopf
+ * ist gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
+async function entschluesselePat(){
+  const banner = document.getElementById('lockbanner');
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+  if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
+  if (banner) banner.hidden = true;
+  let changed = false;
+  const pinBounds = [];
+  for (const m of dayMissions) {
+    if (!m.pat_blob) continue;
+    try {
+      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+      if (o.dx != null) { m._dx = o.dx; changed = true; }
+      // Alter: aus dem Geburtsdatum zum Einsatztag, sonst der eingetragene
+      // Wert. Name und Geburtsdatum bleiben bewusst aus der Uebersicht.
+      const alter = EdPat.alterAnzeige(o, currentDay);
+      if (alter != null) { m._age = alter; changed = true; }
+      if (o.loc && o.loc.addr) {
+        m._ort = extractOrt(o.loc.addr);
+        changed = true;
+        if (o.loc.lat != null) {
+          layerGroup.addLayer(L.marker([o.loc.lat, o.loc.lon],
+            { icon: locPin(m._col), keyboard: false })
+            .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
+          pinBounds.push([o.loc.lat, o.loc.lon]);
+        }
+      }
+    } catch (e) { }
+  }
+  if (changed) renderMissionTable();
+  if (pinBounds.length && !mapHasBounds) { map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 }); }
+}
+
 function updateCrewFields(){
   const sel = document.getElementById('acsel');
   const opt = sel.options[sel.selectedIndex];
@@ -380,6 +392,7 @@ function updateCrewFields(){
 
 async function init(){
   document.getElementById('acsel').addEventListener('change', updateCrewFields);
+  document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
   document.querySelectorAll('#missions th.sortable').forEach(th => {
     th.addEventListener('click', () => {
       if (sortKey === th.dataset.key) { sortDir = -sortDir; }

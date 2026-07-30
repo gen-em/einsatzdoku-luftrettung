@@ -10,7 +10,7 @@ function ui_user_label(): string {
     return ($userName !== null && $userName !== '') ? $userName : (string)$userEmail;
 }
 
-/** Kopfleiste: Vogel-Icon + Titel + Name; Menü Übersicht / Administration / ⚙ */
+/** Kopfleiste: Vogel-Icon + Titel + Name; Menü Übersicht / Suche / ⚙ */
 function ui_topbar(string $active): void {
     global $userRole; ?>
 <header class="topbar">
@@ -20,6 +20,7 @@ function ui_topbar(string $active): void {
   </a>
   <nav class="mainnav">
     <a href="index.php" <?= $active === 'uebersicht' ? 'class="active"' : '' ?>>Übersicht</a>
+    <a href="suche.php" <?= $active === 'suche' ? 'class="active"' : '' ?>>Suche</a>
     <a class="gearlink <?= $active === 'einstellungen' ? 'active' : '' ?>"
        href="einstellungen.php?t=profil" title="Einstellungen" aria-label="Einstellungen">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">

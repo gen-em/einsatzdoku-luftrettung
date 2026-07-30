@@ -784,7 +784,8 @@ if ($tab === 'geraete') {
        einspielen. Format-Beschreibung: <code>docs/Backup-Format.md</code>.</p>
 
     <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
-      nicht entschlüsseln — bitte ab- und neu anmelden.</div>
+      nicht entschlüsseln — die Verschlüsselung ist in dieser Sitzung gesperrt.
+      <button type="button" class="btn-plain unlockbtn" id="lockwarn_unlock">Entsperren</button></div>
 
     <h2>Exportieren</h2>
     <div class="settings-form">
@@ -813,17 +814,24 @@ if ($tab === 'geraete') {
     </div>
 
     <script src="<?= asset('assets/crypto.js') ?>"></script>
+    <script src="<?= asset('assets/unlock.js') ?>"></script>
     <script>
     const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+    const KDF_SALT = <?= json_encode($kdfSalt) ?>;
     const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
 
+    /* Liefert den Inhaltsschluessel; ist er gesperrt, bietet EdUnlock den
+     * Entsperrdialog an. Wird er abgebrochen, bleibt der Hinweis stehen —
+     * sein Knopf ruft dieselbe Funktion erneut auf. Export und Import des
+     * Backups brauchen den Schluessel beide. */
     async function ck() {
-      const k = await EdCrypto.getContentKey(PAT_WRAP);
+      const k = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
       document.getElementById('lockwarn').hidden = !!k;
       return k;
     }
+    document.getElementById('lockwarn_unlock').addEventListener('click', () => ck());
     ck();
 
     // ---- Export: Daten holen, entschlüsseln, versiegeln, herunterladen ----

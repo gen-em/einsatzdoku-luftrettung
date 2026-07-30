@@ -258,7 +258,9 @@ function fieldValue(string $col) {
       <span class="muted" style="font-weight:400">(Ende-zu-Ende-verschlüsselt)</span></h2>
     <input type="hidden" name="pat_blob" id="pat_blob">
     <div id="patlocked" class="alert" hidden>Entschlüsselung nicht möglich —
-      bitte einmal ab- und neu anmelden. Vorhandene verschlüsselte Angaben bleiben unverändert.</div>
+      die geschützten Angaben sind in dieser Sitzung gesperrt. Vorhandene
+      verschlüsselte Angaben bleiben beim Speichern unverändert.
+      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button></div>
     <div id="patfields">
       <label>Einsatznummer
         <input type="text" id="pat_mission_no" maxlength="64" autocomplete="off"
@@ -428,6 +430,7 @@ function fieldValue(string $col) {
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
@@ -459,18 +462,25 @@ function addRow(no, time) {
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
 // Bezugstag fuer die Altersberechnung: der Einsatztag, nicht heute
 const MISSION_DAY = <?= json_encode($mission['day'] ?? date('Y-m-d')) ?>;
 let PAT_CK = null;
 
-(async () => {
-  PAT_CK = await EdCrypto.getContentKey(PAT_WRAP);
+/* Geschuetzte Angaben laden. Bei gesperrtem Schluessel bietet EdUnlock den
+ * Entsperrdialog an; wird er abgebrochen, bleibt es beim bisherigen Verhalten
+ * (Hinweis sichtbar, Felder gesperrt) — und damit auch beim Schutz aus
+ * speicherePat(): ohne PAT_CK wird der vorhandene Blob nicht angefasst. */
+async function patLaden(){
+  PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
   if (!PAT_CK) {
     document.getElementById('patlocked').hidden = false;
     document.querySelectorAll('#patfields input').forEach(i => i.disabled = true);
     return;
   }
+  document.getElementById('patlocked').hidden = true;
+  document.querySelectorAll('#patfields input').forEach(i => i.disabled = false);
   if (PAT_PREV) {
     let o = {};
     try { o = JSON.parse(await EdCrypto.decrypt(PAT_CK, PAT_PREV)) || {}; } catch (e) { }
@@ -490,7 +500,10 @@ let PAT_CK = null;
     }
   }
   locSetState();
-})();
+  zeigeAlter();   // sperrt das Altersfeld wieder, wenn ein Geburtsdatum steht
+}
+patLaden();
+document.getElementById('unlockbtn').addEventListener('click', () => patLaden());
 
 // Alter aus dem Geburtsdatum: Feld fuellen und sperren, solange ein
 // Geburtsdatum gesetzt ist. Ohne Geburtsdatum (unbekannte Person) bleibt es

@@ -1,0 +1,147 @@
+/* Einsatzdoku — Entsperren der geschuetzten Angaben an Ort und Stelle.
+ *
+ * Warum es diesen Baustein gibt:
+ *   Die Anmeldung haengt am PHP-Sitzungscookie (30 min Inaktivitaet), der
+ *   Inhaltsschluessel dagegen am sessionStorage des Tabs. Beide Lebensdauern
+ *   laufen auseinander — ein Link in einem neuen Tab, ein Browser-Neustart
+ *   oder ein Passwort-Reset ohne Wiederherstellungsschluessel fuehren
+ *   regelmaessig zu "angemeldet, aber geschuetzte Angaben gesperrt".
+ *   Bisher half nur vollstaendiges Ab- und Neuanmelden.
+ *
+ * Verfahren (vollstaendig im Browser, das Passwort verlaesst ihn nie):
+ *   1. EdCrypto.deriveKeys(passwort, kdfSalt) -> dataKeyHex
+ *   2. EdCrypto.decrypt(dataKeyHex, wrap) versuchen.
+ *      Gelingt es, war das Passwort richtig — die Echtheitspruefung steckt
+ *      bereits in AES-GCM, ein zusaetzlicher Abgleich waere ueberfluessig.
+ *   3. EdCrypto.setDataKey(dataKeyHex), danach EdCrypto.getContentKey(wrap).
+ *
+ * Sicherheit: Wer eine offene Sitzung uebernimmt, bekommt den Wrap ohnehin
+ * mit jeder ausgelieferten Seite. Der Dialog eroeffnet also keinen neuen
+ * Angriffsweg; er macht bequem zugaenglich, was die Seite schon enthaelt.
+ * Ein Rateangriff gegen den Wrap ist durch die 310 000 PBKDF2-Runden teuer.
+ *
+ * Verwendung:
+ *   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+ *   if (!ck) { ...bisheriges Verhalten bei gesperrtem Schluessel... }
+ *
+ * Erwartet aus der Seite: EdCrypto.
+ */
+'use strict';
+const EdUnlock = (() => {
+
+  // Solange ein Dialog offen ist, haengen sich weitere Aufrufe an dasselbe
+  // Versprechen. Ohne das oeffnet z. B. import_ui.js mit seinen drei
+  // Aufrufstellen mehrere Dialoge uebereinander.
+  let laufend = null;
+
+  function baueDialog() {
+    const d = document.createElement('dialog');
+    d.className = 'unlockbox';
+    d.innerHTML =
+      '<h2 class="unlocktitle">Geschützte Angaben entsperren</h2>' +
+      '<p class="unlocktext">Die verschlüsselten Angaben sind in dieser Sitzung' +
+      ' gesperrt. Zum Entsperren bitte das Kontopasswort eingeben — es wird' +
+      ' nur im Browser verwendet und nicht übertragen.</p>' +
+      '<label class="unlocklabel">Kontopasswort' +
+      '  <input type="password" autocomplete="current-password"></label>' +
+      '<p class="unlockmsg" hidden></p>' +
+      '<div class="unlockbtns">' +
+      '  <button type="button" class="btn-plain" data-act="no">Abbrechen</button>' +
+      '  <button type="button" class="btn-primary" data-act="yes">Entsperren</button>' +
+      '</div>';
+    document.body.appendChild(d);
+    return d;
+  }
+
+  /** Zeigt den Dialog; liefert den Inhaltsschluessel oder null bei Abbruch. */
+  function frage(wrap, kdfSalt) {
+    const d = baueDialog();
+    const feld = d.querySelector('input');
+    const ok = d.querySelector('[data-act="yes"]');
+    const nein = d.querySelector('[data-act="no"]');
+    const msg = d.querySelector('.unlockmsg');
+
+    return new Promise(resolve => {
+      let erledigt = false;      // gegen nachlaufende close-Ereignisse
+      let beschaeftigt = false;  // gegen Doppelklick waehrend der Ableitung
+
+      function done(v) {
+        if (erledigt) { return; }
+        erledigt = true;
+        if (d.open) { d.close(); }
+        d.remove();
+        resolve(v);
+      }
+
+      function melde(text, art) {
+        msg.textContent = text;
+        msg.className = 'unlockmsg' + (art ? ' ' + art : '');
+        msg.hidden = false;
+      }
+
+      async function pruefe() {
+        if (beschaeftigt) { return; }
+        const pw = feld.value;
+        if (pw === '') { melde('Bitte das Kontopasswort eingeben.', 'err'); feld.focus(); return; }
+
+        // Die Ableitung dauert je nach Geraet 0,3–1 s. Ohne sichtbare
+        // Rueckmeldung wirkt die Oberflaeche in dieser Zeit eingefroren.
+        beschaeftigt = true;
+        ok.disabled = nein.disabled = feld.disabled = true;
+        melde('Schlüssel wird abgeleitet …', '');
+
+        let ck = null;
+        try {
+          const abgeleitet = await EdCrypto.deriveKeys(pw, kdfSalt);
+          // Gelingt das Entpacken, war das Passwort richtig.
+          await EdCrypto.decrypt(abgeleitet.dataKeyHex, wrap);
+          EdCrypto.setDataKey(abgeleitet.dataKeyHex);
+          ck = await EdCrypto.getContentKey(wrap);
+        } catch (e) { ck = null; }
+
+        beschaeftigt = false;
+        if (ck) { done(ck); return; }
+
+        ok.disabled = nein.disabled = feld.disabled = false;
+        melde('Passwort falsch — bitte erneut versuchen.', 'err');
+        feld.select();
+        feld.focus();
+      }
+
+      // Escape waehrend der Ableitung ignorieren: sonst laeuft die Rechnung
+      // weiter, waehrend die aufrufende Seite bereits "abgebrochen" annimmt.
+      d.addEventListener('cancel', ev => { if (beschaeftigt) { ev.preventDefault(); } });
+      d.addEventListener('close', () => done(null));
+      ok.onclick = pruefe;
+      nein.onclick = () => { if (!beschaeftigt) { done(null); } };
+      feld.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); pruefe(); }
+      });
+
+      d.showModal();
+      feld.focus();
+    });
+  }
+
+  /**
+   * Liefert den Inhaltsschluessel. Ist er in der Sitzung vorhanden, kommt er
+   * sofort zurueck; sonst erscheint der Entsperrdialog. Bei Abbruch — oder
+   * wenn ueberhaupt nichts zu entsperren ist — kommt null zurueck, die
+   * aufrufende Seite verhaelt sich dann wie bisher im gesperrten Zustand.
+   */
+  async function ensureContentKey(wrap, kdfSalt) {
+    if (!wrap) { return null; }
+    const vorhanden = await EdCrypto.getContentKey(wrap);
+    if (vorhanden) { return vorhanden; }
+
+    // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>
+    // bekommen bewusst keinen window.prompt (Passwort im Klartext sichtbar).
+    if (!kdfSalt || typeof HTMLDialogElement === 'undefined') { return null; }
+
+    if (laufend) { return laufend; }
+    laufend = frage(wrap, kdfSalt).finally(() => { laufend = null; });
+    return laufend;
+  }
+
+  return { ensureContentKey };
+})();

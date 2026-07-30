@@ -17,6 +17,7 @@ declare(strict_types=1);
  *
  * Die Uhr-App zaehlt getrennt (watch/source/Const.mc) — deshalb im Changelog
  * die Praefixe "Web" und "Uhr". Der Sprung auf 2.0.0 grenzt die eigenstaendige
- * Zaehlung von den fruehen Spezifikations-Staenden 1.0-1.2 ab.
+ * Zaehlung von den fruehen Spezifikations-Staenden 1.0-1.2 ab; 3.0.0 markiert
+ * den Umbau am Lebenszyklus des Inhaltsschluessels (Entsperren in der Sitzung).
  */
-const WEB_VERSION = '2.11.0';
+const WEB_VERSION = '3.1.0';

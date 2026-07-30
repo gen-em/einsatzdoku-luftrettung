@@ -70,12 +70,16 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
+// Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
+// kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.
+const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 
 function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
@@ -316,44 +320,58 @@ async function init(){
   }
 
   // Verschluesselte Angaben (Diagnose, Alter, Einsatzort) lokal entschluesseln
-  if (m.pat_blob && m.pat_wrap) {
-    const ck = await EdCrypto.getContentKey(m.pat_wrap);
-    if (ck) {
-      try {
-        const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
-        if (o.mission_no != null && String(o.mission_no) !== '') {
-          dl.insertAdjacentHTML('beforeend', `<dt>Einsatznummer 🔒</dt><dd>${esc(String(o.mission_no))}</dd>`);
+  if (m.pat_blob && m.pat_wrap) { await zeigePat(m, dl, bounds); }
+}
+
+/* Geschuetzte Angaben anzeigen. Ist der Inhaltsschluessel gesperrt, bietet
+ * EdUnlock den Entsperrdialog an; bei Abbruch bleibt der Sperrhinweis stehen,
+ * dessen Knopf diese Funktion erneut aufruft. Der Hinweis wird zu Beginn
+ * entfernt, damit er beim zweiten Durchlauf nicht doppelt erscheint. */
+async function zeigePat(m, dl, bounds){
+  ['patlockdt', 'patlockdd'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.remove(); }
+  });
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT);
+  if (ck) {
+    try {
+      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+      if (o.mission_no != null && String(o.mission_no) !== '') {
+        dl.insertAdjacentHTML('beforeend', `<dt>Einsatznummer 🔒</dt><dd>${esc(String(o.mission_no))}</dd>`);
+      }
+      const pname = EdPat.name(o);
+      if (pname !== '') {
+        dl.insertAdjacentHTML('beforeend', `<dt>Name 🔒</dt><dd>${esc(pname)}</dd>`);
+      }
+      if (o.dob != null) {
+        dl.insertAdjacentHTML('beforeend',
+          `<dt>Geburtsdatum 🔒</dt><dd>${esc(EdPat.datumDe(o.dob))}</dd>`);
+      }
+      const alter = EdPat.alterAnzeige(o, m.day);
+      if (alter != null) {
+        dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}</dd>`);
+      }
+      if (o.dx != null) {
+        dl.insertAdjacentHTML('beforeend', `<dt>Diagnose 🔒</dt><dd>${esc(String(o.dx))}</dd>`);
+      }
+      if (o.loc && o.loc.addr) {
+        dl.insertAdjacentHTML('beforeend', `<dt>Einsatzort 🔒</dt><dd>${esc(o.loc.addr)}</dd>`);
+        if (o.loc.lat != null) {
+          L.marker([o.loc.lat, o.loc.lon], { icon: locPin('#FF8F1F'), keyboard: false })
+            .addTo(map).bindPopup('Einsatzort<br>' + esc(o.loc.addr));
+          if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
         }
-        const pname = EdPat.name(o);
-        if (pname !== '') {
-          dl.insertAdjacentHTML('beforeend', `<dt>Name 🔒</dt><dd>${esc(pname)}</dd>`);
-        }
-        if (o.dob != null) {
-          dl.insertAdjacentHTML('beforeend',
-            `<dt>Geburtsdatum 🔒</dt><dd>${esc(EdPat.datumDe(o.dob))}</dd>`);
-        }
-        const alter = EdPat.alterAnzeige(o, m.day);
-        if (alter != null) {
-          dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}</dd>`);
-        }
-        if (o.dx != null) {
-          dl.insertAdjacentHTML('beforeend', `<dt>Diagnose 🔒</dt><dd>${esc(String(o.dx))}</dd>`);
-        }
-        if (o.loc && o.loc.addr) {
-          dl.insertAdjacentHTML('beforeend', `<dt>Einsatzort 🔒</dt><dd>${esc(o.loc.addr)}</dd>`);
-          if (o.loc.lat != null) {
-            L.marker([o.loc.lat, o.loc.lon], { icon: locPin('#FF8F1F'), keyboard: false })
-              .addTo(map).bindPopup('Einsatzort<br>' + esc(o.loc.addr));
-            if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
-          }
-        }
-        dl.hidden = dl.children.length === 0;
-      } catch (e) { /* Blob passt nicht zum Schluessel */ }
-    } else {
-      dl.insertAdjacentHTML('beforeend',
-        '<dt>Verschlüsselt 🔒</dt><dd class="muted">gesperrt — bitte ab- und neu anmelden</dd>');
-      dl.hidden = false;
-    }
+      }
+      dl.hidden = dl.children.length === 0;
+    } catch (e) { /* Blob passt nicht zum Schluessel */ }
+  } else {
+    dl.insertAdjacentHTML('beforeend',
+      '<dt id="patlockdt">Verschlüsselt 🔒</dt>' +
+      '<dd id="patlockdd" class="muted">gesperrt — ' +
+      '<button type="button" class="btn-plain unlockbtn">Entsperren</button></dd>');
+    dl.hidden = false;
+    document.querySelector('#patlockdd .unlockbtn')
+      .addEventListener('click', () => zeigePat(m, dl, bounds));
   }
 }
 init();
