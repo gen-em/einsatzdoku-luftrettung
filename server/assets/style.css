@@ -432,32 +432,63 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
   border-radius:6px;cursor:pointer;font:inherit;line-height:1.2;
   box-sizing:border-box}
 
-/* Suchseite (suche.php) — Filterflaeche ueber der Trefferliste. */
-.suchbox{background:var(--schnee);border:1px solid var(--line);border-radius:8px;
-  padding:.9rem 1rem;margin-bottom:1.1rem}
-.suchfreitext{display:block;font-weight:600}
-.suchfreitext input{width:100%;box-sizing:border-box;margin-top:.3rem}
-.suchhinweis{margin:.4rem 0 .8rem;font-size:.85rem}
-.filterblock{border-top:1px solid var(--line);padding-top:.7rem}
-.filterblock>summary{cursor:pointer;font-weight:600}
-.filterblock fieldset{border:1px solid var(--line);border-radius:6px;
-  margin:.8rem 0 0;padding:.7rem .9rem .9rem}
-.filterblock legend{padding:0 .35rem;font-weight:600;font-size:.9rem}
-/* Zweispaltig ab Tablet; auf dem Telefon untereinander. */
-.filtergrid{display:grid;grid-template-columns:1fr;gap:.55rem .9rem}
-@media (min-width:640px){ .filtergrid{grid-template-columns:1fr 1fr} }
-@media (min-width:1000px){ .filtergrid{grid-template-columns:1fr 1fr 1fr} }
-.filtergrid label{display:flex;flex-direction:column;font-size:.88rem;gap:.2rem}
-.filtergrid input,.filtergrid select{width:100%;box-sizing:border-box;margin:0}
+/* Suchseite (suche.php) — Filter in der linken Spalte.
+   Die Einsatztage-Leiste entfaellt hier; einzelne Tage sind bei einer Suche
+   ueber den Gesamtbestand ohne Nutzen. Bewusst eine eigene Klasse statt
+   .daylist: jene ist auf feste Fensterhoehe mit overflow:hidden gesetzt und
+   wuerde die Filterliste abschneiden. */
+.layout-suche{grid-template-columns:280px 1fr}
+.filterspalte{border-right:1px solid var(--line);background:var(--schnee);
+  padding:1rem;position:sticky;top:50px;align-self:start;
+  height:calc(100vh - 50px);display:flex;flex-direction:column;
+  box-sizing:border-box;overflow:hidden}
+.filterspalte>h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);margin:.2rem 0 .7rem;flex:0 0 auto}
+/* Nur die Gruppen scrollen — Ueberschrift und Fuss bleiben stehen. */
+.filtergruppen{flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin}
+.filtergruppe{border-top:1px solid var(--line)}
+.filtergruppe:last-child{border-bottom:1px solid var(--line)}
+.filtergruppe>summary{cursor:pointer;padding:.55rem .2rem;font-weight:600;
+  font-size:.9rem;display:flex;align-items:center;justify-content:space-between;
+  list-style:none}
+.filtergruppe>summary::-webkit-details-marker{display:none}
+.filtergruppe>summary::after{content:'\25B8';color:var(--muted);font-size:.75rem}
+.filtergruppe[open]>summary::after{content:'\25BE'}
+.filtergruppe>summary:hover{background:var(--accent-light)}
+.filterfelder{display:flex;flex-direction:column;gap:.55rem;padding:.1rem .2rem .9rem}
+.filterfelder label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem}
+.filterfelder input,.filterfelder select{width:100%;box-sizing:border-box;margin:0}
+.filterfuss{flex:0 0 auto;border-top:1px solid var(--line);margin-top:.6rem;
+  padding-top:.7rem;display:flex;flex-direction:column;align-items:flex-start;
+  gap:.35rem}
+/* Gegen das globale width:100% der Formularknoepfe. */
+.filterfuss .btn-plain{width:auto;margin:0}
+/* Wochentage und Reanimationsarten: mehrere Haken nebeneinander, umbrechend. */
 .wochentage,.reatypen{display:flex;flex-wrap:wrap;align-items:center;
-  gap:.3rem .9rem;margin-top:.7rem;font-size:.88rem}
-.wochentage label,.reatypen label{display:inline-flex;align-items:center;gap:.25rem}
-.wtlabel{font-weight:600;margin-right:.3rem}
+  gap:.3rem .7rem;font-size:.85rem}
+.wochentage label,.reatypen label{display:inline-flex;align-items:center;gap:.25rem;
+  flex-direction:row}
+.wtlabel{display:block;width:100%;font-weight:600;margin-bottom:.15rem}
 /* Gesperrtes Filterfeld: sichtbar, aber erkennbar nicht bedienbar. */
 .feld-gesperrt{opacity:.55}
-.suchaktionen{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;
-  margin:.9rem 0 0}
-.suchaktionen .btn-plain{width:auto;margin:0}
+
+/* Hauptspalte der Suchseite */
+.suchbox{margin-bottom:1rem}
+.suchfreitext{display:block;font-weight:600}
+.suchfreitext input{width:100%;box-sizing:border-box;margin-top:.3rem}
+.suchhinweis{margin:.4rem 0 0;font-size:.85rem}
+.ergebniszeile{margin:0 0 .8rem}
+
+/* Unter 720 px klappt die Spalte wie die Einsatztage-Leiste ueber den Inhalt.
+   Diese Regeln muessen NACH .layout-suche stehen: Die Grundregel im
+   allgemeinen 720-px-Block greift nur .layout und wuerde sonst von der
+   spaeteren, gleich spezifischen Regel oben wieder ausgehebelt. */
+@media (max-width:720px){
+  .layout-suche{grid-template-columns:1fr}
+  .filterspalte{position:static;height:auto;overflow:visible;
+    border-right:0;border-bottom:1px solid var(--line)}
+  .filtergruppen{overflow:visible}
+}
 
 /* Entsperrdialog fuer die geschuetzten Angaben (unlock.js).
    Bewusst dasselbe Muster wie .confirmbox — inklusive der Gegenmassnahme

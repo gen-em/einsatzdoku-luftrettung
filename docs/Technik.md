@@ -468,9 +468,25 @@ Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
 | `rt` | Reanimations-Ereignisse (kommagetrennt) | | |
 
 Ein neuer Filter braucht drei Dinge: einen Eintrag in der Liste `FILTER` in
-`suche.php`, sein Feld im Formular und seine Zeile in `trifft()`. Auslesen,
-Schreiben ins Fragment, Wiederherstellen und das Zählen aktiver Filter leiten
-sich alle aus `FILTER` ab.
+`suche.php` (mit `gruppe`), sein Feld im passenden `<details class="filtergruppe">`
+der Filterspalte und seine Zeile in `trifft()`. Auslesen, Schreiben ins
+Fragment, Wiederherstellen, das Zählen aktiver Filter und das Aufklappen der
+Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab.
+
+**Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
+ruft `ui_days_sidebar()` **nicht** auf — einzelne Flugtage sind bei einer Suche
+über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
+`.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
+`overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
+`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Zwei Stolpersteine
+sind dort im CSS vermerkt: Die 720-px-Regel für `.layout-suche` muss **nach**
+der Grundregel stehen, weil der allgemeine 720-px-Block nur `.layout` greift
+und sonst von der gleich spezifischen, später notierten Regel ausgehebelt
+würde; und `.filterfuss .btn-plain` setzt `width:auto` gegen die globale
+Formularregel. `daylist.js` steigt ohne `.dayyears` von selbst aus, die
+Filter-`<details>` liegen ausserhalb und werden deshalb nicht wie das
+Tages-Akkordeon gegenseitig verkoppelt — die Blöcke lassen sich einzeln
+öffnen.
 
 Bei gesperrtem Inhaltsschlüssel bleiben die geschützten Felder aus dem
 Heuhaufen der Freitextsuche und der Altersfilter ist abgeschaltet — sonst wäre

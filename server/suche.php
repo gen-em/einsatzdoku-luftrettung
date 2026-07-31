@@ -31,8 +31,94 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 </head>
 <body>
 <?php ui_topbar('suche'); ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
+<div class="layout layout-suche">
+  <!-- Statt der Einsatztage-Leiste: die Filter. Auf der Suchseite waeren
+       einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
+       Bewusst NICHT die Klasse .daylist wiederverwendet — die ist auf feste
+       Fensterhoehe mit overflow:hidden gesetzt und wuerde eine lange
+       Filterliste abschneiden. -->
+  <aside class="filterspalte">
+    <h2>Filter</h2>
+
+    <div class="filtergruppen">
+      <details class="filtergruppe" data-gruppe="zeit">
+        <summary>Zeit</summary>
+        <div class="filterfelder">
+          <label>Datum von <input type="date" id="f-dv"></label>
+          <label>Datum bis <input type="date" id="f-db"></label>
+          <label>Alarmzeit von <input type="time" id="f-zv"></label>
+          <label>Alarmzeit bis <input type="time" id="f-zb"></label>
+          <div class="wochentage" id="f-wd">
+            <span class="wtlabel">Wochentag</span>
+            <label><input type="checkbox" value="1"> Mo</label>
+            <label><input type="checkbox" value="2"> Di</label>
+            <label><input type="checkbox" value="3"> Mi</label>
+            <label><input type="checkbox" value="4"> Do</label>
+            <label><input type="checkbox" value="5"> Fr</label>
+            <label><input type="checkbox" value="6"> Sa</label>
+            <label><input type="checkbox" value="7"> So</label>
+          </div>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="art">
+        <summary>Art des Einsatzes</summary>
+        <div class="filterfelder">
+          <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
+          <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
+          <label>Cycles bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
+          <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
+          <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
+          <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
+          <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
+          <label>Bereitschaft <select id="f-bu"></select></label>
+          <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
+          <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
+          <label>Reanimation <select id="f-re" class="dreiwert"></select></label>
+          <label>Herkunft <select id="f-hk"></select></label>
+          <div class="reatypen" id="f-rt">
+            <span class="wtlabel">Reanimations-Ereignis</span>
+          </div>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="wer">
+        <summary>Beteiligte und Ziel</summary>
+        <div class="filterfelder">
+          <label>Standort <select id="f-st"></select></label>
+          <label>Maschine <select id="f-ac"></select></label>
+          <label>Pilot 1 <select id="f-c1"></select></label>
+          <label>Pilot 2 <select id="f-c2"></select></label>
+          <label>HEMS-TC <select id="f-c3"></select></label>
+          <label>Flugretter <select id="f-c4"></select></label>
+          <label>Sonstige <select id="f-c5"></select></label>
+          <label>Weiteres Rettungsmittel <select id="f-rm"></select></label>
+          <label>Transportziel <select id="f-tz"></select></label>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="werte">
+        <summary>Werte</summary>
+        <div class="filterfelder">
+          <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
+          <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
+          <label>Flugstrecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
+          <label>Flugstrecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
+          <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
+          <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
+          <label>Höhe Einsatzort von (m) <input type="number" id="f-hv" step="1"></label>
+          <label>Höhe Einsatzort bis (m) <input type="number" id="f-hb" step="1"></label>
+          <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
+            entschlüsselten Angaben und ist deshalb gesperrt.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="filterfuss">
+      <button type="button" class="btn-plain" id="reset">Filter zurücksetzen</button>
+      <span class="muted" id="filtercount"></span>
+    </div>
+  </aside>
 
   <main class="page">
     <h1>Suche</h1>
@@ -52,89 +138,11 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
       </label>
       <p class="muted suchhinweis">Durchsucht Einsatznummer, Name, Geburtsdatum,
         Diagnose, Einsatzort, Transportziel, Beschreibung, Bergwacht-Angaben,
-        anderen Notarzt, weitere Rettungsmittel, Besatzung und Notizen.</p>
-
-      <details id="filterdetails" class="filterblock">
-        <summary>Weitere Filter <span class="muted" id="filtercount"></span></summary>
-
-        <fieldset>
-          <legend>Zeit</legend>
-          <div class="filtergrid">
-            <label>Datum von <input type="date" id="f-dv"></label>
-            <label>Datum bis <input type="date" id="f-db"></label>
-            <label>Alarmzeit von <input type="time" id="f-zv"></label>
-            <label>Alarmzeit bis <input type="time" id="f-zb"></label>
-          </div>
-          <div class="wochentage" id="f-wd">
-            <span class="wtlabel">Wochentag</span>
-            <label><input type="checkbox" value="1"> Mo</label>
-            <label><input type="checkbox" value="2"> Di</label>
-            <label><input type="checkbox" value="3"> Mi</label>
-            <label><input type="checkbox" value="4"> Do</label>
-            <label><input type="checkbox" value="5"> Fr</label>
-            <label><input type="checkbox" value="6"> Sa</label>
-            <label><input type="checkbox" value="7"> So</label>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Art des Einsatzes</legend>
-          <div class="filtergrid">
-            <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
-            <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
-            <label>Cycles bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
-            <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
-            <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
-            <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
-            <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
-            <label>Bereitschaft <select id="f-bu"></select></label>
-            <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
-            <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
-            <label>Reanimation <select id="f-re" class="dreiwert"></select></label>
-            <label>Herkunft <select id="f-hk"></select></label>
-          </div>
-          <div class="reatypen" id="f-rt">
-            <span class="wtlabel">Reanimations-Ereignis</span>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Beteiligte und Ziel</legend>
-          <div class="filtergrid">
-            <label>Standort <select id="f-st"></select></label>
-            <label>Maschine <select id="f-ac"></select></label>
-            <label>Pilot 1 <select id="f-c1"></select></label>
-            <label>Pilot 2 <select id="f-c2"></select></label>
-            <label>HEMS-TC <select id="f-c3"></select></label>
-            <label>Flugretter <select id="f-c4"></select></label>
-            <label>Sonstige <select id="f-c5"></select></label>
-            <label>Weiteres Rettungsmittel <select id="f-rm"></select></label>
-            <label>Transportziel <select id="f-tz"></select></label>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Werte</legend>
-          <div class="filtergrid">
-            <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
-            <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
-            <label>Flugstrecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
-            <label>Flugstrecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
-            <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
-            <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
-            <label>Höhe Einsatzort von (m) <input type="number" id="f-hv" step="1"></label>
-            <label>Höhe Einsatzort bis (m) <input type="number" id="f-hb" step="1"></label>
-          </div>
-          <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
-            entschlüsselten Angaben und ist deshalb gesperrt.</p>
-        </fieldset>
-      </details>
-
-      <p class="suchaktionen">
-        <button type="button" class="btn-plain" id="reset">Filter zurücksetzen</button>
-        <span class="muted" id="ergebniszeile">Bestand wird geladen …</span>
-      </p>
+        anderen Notarzt, weitere Rettungsmittel, Besatzung und Notizen.
+        Weitere Filter in der Spalte links.</p>
     </div>
+
+    <p class="muted ergebniszeile" id="ergebniszeile">Bestand wird geladen …</p>
 
     <p id="leer" class="muted" hidden>Keine Treffer.</p>
     <table class="data" id="suchtable" hidden>
@@ -164,7 +172,10 @@ const $ = id => document.getElementById(id);
  * Filterkatalog — EINE Liste, aus der sich alles ableitet: Auslesen der
  * Oberflaeche, Schreiben ins URL-Fragment, Wiederherstellen daraus und
  * das Zaehlen aktiver Filter. Ein neuer Filter braucht genau einen
- * Eintrag hier plus sein Feld im Formular oben und seine Zeile in trifft().
+ * Eintrag hier plus sein Feld in der Filterspalte und seine Zeile in trifft().
+ * 'gruppe' sagt, in welchem aufklappbaren Block das Feld steht — daraus
+ * leitet sich ab, welche Bloecke bei einem geteilten Link aufgehen. Der
+ * Freitext steht in der Hauptspalte und hat deshalb keine Gruppe.
  *
  * 'kurz' ist der Parametername im Fragment. Diese Namen sind Teil der
  * geteilten Links und duerfen nicht nachtraeglich umbenannt werden —
@@ -172,42 +183,42 @@ const $ = id => document.getElementById(id);
  * dokumentiert.
  * ================================================================== */
 const FILTER = [
-  { kurz: 'q',  el: 'f-q',  art: 'text' },
-  { kurz: 'dv', el: 'f-dv', art: 'text' },
-  { kurz: 'db', el: 'f-db', art: 'text' },
-  { kurz: 'zv', el: 'f-zv', art: 'text' },
-  { kurz: 'zb', el: 'f-zb', art: 'text' },
-  { kurz: 'wd', el: 'f-wd', art: 'haken' },
-  { kurz: 'wi', el: 'f-wi', art: 'text' },
-  { kurz: 'cv', el: 'f-cv', art: 'text' },
-  { kurz: 'cb', el: 'f-cb', art: 'text' },
-  { kurz: 'pv', el: 'f-pv', art: 'text' },
-  { kurz: 'pb', el: 'f-pb', art: 'text' },
-  { kurz: 'lv', el: 'f-lv', art: 'text' },
-  { kurz: 'bw', el: 'f-bw', art: 'text' },
-  { kurz: 'bu', el: 'f-bu', art: 'text' },
-  { kurz: 'se', el: 'f-se', art: 'text' },
-  { kurz: 'sr', el: 'f-sr', art: 'text' },
-  { kurz: 're', el: 'f-re', art: 'text' },
-  { kurz: 'rt', el: 'f-rt', art: 'haken' },
-  { kurz: 'hk', el: 'f-hk', art: 'text' },
-  { kurz: 'st', el: 'f-st', art: 'text' },
-  { kurz: 'ac', el: 'f-ac', art: 'text' },
-  { kurz: 'c1', el: 'f-c1', art: 'text' },
-  { kurz: 'c2', el: 'f-c2', art: 'text' },
-  { kurz: 'c3', el: 'f-c3', art: 'text' },
-  { kurz: 'c4', el: 'f-c4', art: 'text' },
-  { kurz: 'c5', el: 'f-c5', art: 'text' },
-  { kurz: 'rm', el: 'f-rm', art: 'text' },
-  { kurz: 'tz', el: 'f-tz', art: 'text' },
-  { kurz: 'av', el: 'f-av', art: 'text' },
-  { kurz: 'ab', el: 'f-ab', art: 'text' },
-  { kurz: 'kv', el: 'f-kv', art: 'text' },
-  { kurz: 'kb', el: 'f-kb', art: 'text' },
-  { kurz: 'ev', el: 'f-ev', art: 'text' },
-  { kurz: 'eb', el: 'f-eb', art: 'text' },
-  { kurz: 'hv', el: 'f-hv', art: 'text' },
-  { kurz: 'hb', el: 'f-hb', art: 'text' }
+  { kurz: 'q', el: 'f-q', art: 'text', gruppe: null },
+  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'zeit' },
+  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'zeit' },
+  { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'zeit' },
+  { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'zeit' },
+  { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'zeit' },
+  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'art' },
+  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'art' },
+  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'art' },
+  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'art' },
+  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'art' },
+  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'art' },
+  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'art' },
+  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'art' },
+  { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'art' },
+  { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'art' },
+  { kurz: 're', el: 'f-re', art: 'text', gruppe: 'art' },
+  { kurz: 'rt', el: 'f-rt', art: 'haken', gruppe: 'art' },
+  { kurz: 'hk', el: 'f-hk', art: 'text', gruppe: 'art' },
+  { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer' },
+  { kurz: 'ac', el: 'f-ac', art: 'text', gruppe: 'wer' },
+  { kurz: 'c1', el: 'f-c1', art: 'text', gruppe: 'wer' },
+  { kurz: 'c2', el: 'f-c2', art: 'text', gruppe: 'wer' },
+  { kurz: 'c3', el: 'f-c3', art: 'text', gruppe: 'wer' },
+  { kurz: 'c4', el: 'f-c4', art: 'text', gruppe: 'wer' },
+  { kurz: 'c5', el: 'f-c5', art: 'text', gruppe: 'wer' },
+  { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer' },
+  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'wer' },
+  { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'werte' },
+  { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'werte' },
+  { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'werte' },
+  { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'werte' },
+  { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'werte' },
+  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'werte' },
+  { kurz: 'hv', el: 'f-hv', art: 'text', gruppe: 'werte' },
+  { kurz: 'hb', el: 'f-hb', art: 'text', gruppe: 'werte' }
 ];
 
 /* ---- Werte lesen und setzen ---------------------------------------- */
@@ -473,6 +484,15 @@ function trifft(m) {
   return true;
 }
 
+/** Blöcke aufklappen, in denen etwas gesetzt ist. Wird nur beim Start
+ *  gerufen — später soll der Zustand der Person erhalten bleiben, auch wenn
+ *  sie einen Block mit gesetztem Filter von Hand zuklappt. */
+function gruppenOeffnen() {
+  document.querySelectorAll('.filtergruppe').forEach(d => {
+    d.open = FILTER.some(f => f.gruppe === d.dataset.gruppe && wertLesen(f) !== '');
+  });
+}
+
 /* ---- Anzeige -------------------------------------------------------- */
 
 const tabelle = EdMissionTable.erzeuge({
@@ -532,9 +552,9 @@ function verdrahten() {
   // input deckt Tippen, Datums-, Zeit- und Zahlenfelder ab; change ergänzt
   // Auswahllisten und Haken.
   $('f-q').addEventListener('input', anwenden);
-  document.querySelectorAll('.suchbox input, .suchbox select').forEach(el => {
-    el.addEventListener('change', anwenden);
-  });
+  // Freitext steht in der Hauptspalte, alle uebrigen Filter in der linken.
+  document.querySelectorAll('#f-q, .filterspalte input, .filterspalte select')
+    .forEach(el => { el.addEventListener('change', anwenden); });
   $('reset').addEventListener('click', () => {
     FILTER.forEach(f => wertSetzen(f, ''));
     anwenden();
@@ -559,7 +579,8 @@ function verdrahten() {
   verdrahten();
   // Erst die Auswahllisten füllen, dann das Fragment anwenden — sonst hätten
   // die <select> die gespeicherten Werte noch gar nicht zur Auswahl.
-  if (fragmentLesen()) { $('filterdetails').open = true; }
+  fragmentLesen();
+  gruppenOeffnen();   // Blöcke aus einem geteilten Link sichtbar machen
   missions.forEach(baueHeuhaufen);
   anwenden();
 

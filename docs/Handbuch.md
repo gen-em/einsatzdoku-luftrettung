@@ -348,9 +348,14 @@ Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
 
-**Weitere Filter.** Aufklappbar darunter, gruppiert nach Zeit, Art des
-Einsatzes, Beteiligten und Werten. Alle gesetzten Filter gelten gleichzeitig
-(UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
+**Weitere Filter.** In der linken Spalte — dort, wo auf den anderen Seiten die
+Einsatztage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
+den Gesamtbestand geht. Die Filter liegen in vier Blöcken: **Zeit**, **Art des
+Einsatzes**, **Beteiligte und Ziel**, **Werte**. Jeder Block klappt einzeln auf
+und zu; beim Öffnen der Seite sind alle zugeklappt, damit die Spalte ruhig
+bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke auf, in denen
+etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig (UND); leere
+Felder schränken nichts ein. Die Auswahllisten für Standort,
 Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
 enthalten nur, was in deinem Bestand tatsächlich vorkommt. Zwei Besonderheiten:
 
@@ -359,8 +364,9 @@ enthalten nur, was in deinem Bestand tatsächlich vorkommt. Zwei Besonderheiten:
 - **Reanimations-Ereignis** ist eine Mehrfachauswahl. Wählst du mehrere, muss
   der Einsatz alle davon enthalten.
 
-Rechts neben **Filter zurücksetzen** steht immer, wie viele Einsätze von wie
-vielen gerade angezeigt werden.
+Unten in der Filterspalte steht **Filter zurücksetzen** und darunter, wie viele
+Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze von
+wie vielen angezeigt werden.
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
 (Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose und

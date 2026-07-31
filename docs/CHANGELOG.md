@@ -10,6 +10,20 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.1.1] — 2026-07-29
+
+### Geändert
+- **Suchseite: Filter in der linken Spalte.** Die rund 30 Filter standen bisher
+  in einem einzigen Aufklappbereich über der Trefferliste. Sie sitzen jetzt in
+  der linken Spalte, aufgeteilt in vier einzeln aufklappbare Blöcke (Zeit, Art
+  des Einsatzes, Beteiligte und Ziel, Werte), die beim Öffnen der Seite alle
+  zugeklappt sind. Öffnet man einen geteilten Link, gehen genau die Blöcke auf,
+  in denen ein Filter gesetzt ist. Das Freitextfeld bleibt oben in der
+  Hauptspalte, „Filter zurücksetzen" wandert an den Fuß der Filterspalte.
+- Die Einsatztage-Leiste entfällt auf der Suchseite. Einzelne Flugtage sind bei
+  einer Suche über den Gesamtbestand ohne Nutzen; die Fläche wird für die
+  Filter gebraucht. Alle übrigen Seiten behalten sie unverändert.
+
 ## [Web 3.1.0] — 2026-07-29
 
 ### Neu
