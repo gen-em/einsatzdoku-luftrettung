@@ -10,6 +10,43 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.5.0] — 2026-08-02
+
+### Geändert — Reanimations-Bedienung
+
+Diese Umbauten standen bereits im Eintrag „Uhr 1.4.0", wurden dort aber **nicht
+ausgeliefert**: Der Code blieb auf dem alten Stand, nur der Changelog-Text lief
+voraus. Der Eintrag 1.4.0 ist entsprechend richtiggestellt; ausgeliefert wird
+das Beschriebene jetzt mit 1.5.0.
+
+- **Kurz START öffnet bei laufender Reanimation das Untermenü.** Bisher setzte
+  der kurze Druck den 2:00-Countdown neu an. Der häufigste Griff unter
+  Reanimationsbedingungen ist aber das Dokumentieren eines Ereignisses, nicht
+  der Timer — der kürzeste Weg gehört deshalb dorthin. Läuft **keine**
+  Reanimation, beginnt kurz START sie weiterhin.
+- **Lang START startet den Countdown neu** (bisher öffnete der lange Druck das
+  Untermenü). Läuft keine Reanimation, ist der lange Druck **ohne Funktion** —
+  er startet insbesondere keine Reanimation, damit ein zu langes Drücken beim
+  Beginnen nicht unbemerkt ins Leere läuft und auch nichts Falsches auslöst.
+- **Neuer erster Menüpunkt „Timer neu starten"** (weiß). Er setzt den
+  Countdown neu an, ohne einen Zeitstempel zu schreiben. Weiß, weil er kein
+  dokumentiertes Ereignis ist — die Farben bleiben den Ereignissen vorbehalten.
+- **Defibrillation setzt den Countdown neu an.** Wie die Rhythmuskontrolle
+  markiert sie damit den Beginn eines neuen Zyklus. Bisher schrieb sie nur
+  einen Zeitstempel: Die dafür vorgesehene Funktion `Cpr.markDefi()` existierte
+  zwar, wurde aber von keiner Stelle aufgerufen — die im Eintrag 1.4.0
+  angekündigte Kopplung war also nie wirksam.
+- **Rea-Untermenü im Design des Schnellmenüs:** gleiche Zeilenhöhe und
+  Darstellung wie auf der Hauptanzeige (fünf sichtbare Zeilen statt vier,
+  gefüllte Auswahl). Die Ereignisfarben bleiben erhalten, die
+  Gruppen-Trennlinien entfallen. Ein einheitliches Menübild spart im Einsatz
+  Umdenken. Sehr lange Beschriftungen fallen in der Auswahlzeile eine
+  Schriftstufe zurück, statt am Feldrand abgeschnitten zu werden.
+
+Das Untermenü hat damit zwölf statt elf Einträge. An Datenmodell, JSON-Vertrag
+und Server ändert sich nichts; die Defibrillation wird unverändert als
+Ereignis `defibrillation` übertragen.
+
 ## [Web 3.1.1] — 2026-07-29
 
 ### Geändert
@@ -697,23 +734,20 @@ in einem Durchgang übernehmen. Bedienung: `docs/Handbuch.md`, Abschnitt 7.
 
 ## [Uhr 1.4.0] — 2026-07-25
 
-### Geändert — Schnellmenü umsortiert, Reanimations-Bedienung
+### Geändert — Schnellmenü umsortiert
 - **Schnellmenü der Hauptseite:** Beim Öffnen (lang START) ist jetzt die
   **Einsatzübersicht** vorausgewählt; ein Schritt nach oben liegt „Einsatztag
   beenden", nach unten folgen die Phasen 2, 3, 4 … Das Endlos-Scrollen durch
   alle Punkte bleibt erhalten.
-- **Reanimation, kurz START:** löst bei laufender Rea kein Ereignis mehr aus,
-  sondern öffnet das Untermenü. Ohne laufende Rea beginnt kurz START weiterhin
-  die Reanimation.
-- **Reanimation, lang START:** startet den 2:00-Countdown neu (bisher öffnete
-  der lange Druck das Untermenü). Der Neustart steht zusätzlich als erster
-  Menüpunkt „Timer neu starten" bereit.
-- **Countdown-Neustart auch bei Defibrillation:** Wie die Rhythmuskontrolle
-  setzt jetzt auch die Defibrillation (Menüauswahl) den 2:00-Countdown neu an.
-- **Rea-Untermenü im Design des Schnellmenüs:** gleiche Zeilenhöhe und
-  Darstellung wie auf der Hauptseite (fünf sichtbare Zeilen, gefüllte
-  Auswahl); die Ereignisfarben bleiben erhalten, die Gruppen-Trennlinien
-  entfallen.
+
+> **Richtigstellung (nachgetragen mit Uhr 1.5.0).** Dieser Eintrag nannte
+> ursprünglich vier weitere Punkte zur Reanimations-Bedienung (kurz START
+> öffnet das Untermenü, lang START startet den Countdown neu, neuer Menüpunkt
+> „Timer neu starten", Countdown-Neustart bei Defibrillation, Untermenü im
+> Design des Schnellmenüs). Diese Änderungen waren geplant, sind mit 1.4.0
+> aber **nicht** ausgeliefert worden — der Code blieb unverändert. Sie stehen
+> jetzt in [Uhr 1.5.0]. Der Eintrag ist deshalb auf das tatsächlich
+> Ausgelieferte gekürzt.
 
 ## [Web 2.2.3] — 2026-07-23
 

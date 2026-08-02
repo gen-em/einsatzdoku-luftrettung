@@ -1,6 +1,6 @@
 # Einsatzdoku — Handbuch
 
-*Stand: 26.07.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Stand: 02.08.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 ## 1. Was ist die Einsatzdoku?
@@ -76,26 +76,47 @@ in Garmin Connect einzutragen; erst danach erscheint der Kopplungshinweis.
 
 ### 2.3 Reanimationsmodus
 
-Zwei Timer: oben klein und **lila** die Gesamtdauer seit Rea-Beginn, mittig
-groß der **2:00-Countdown** für den Zyklus. Bei 0:00 vibriert die Uhr zweimal
-kurz; der Countdown bleibt rot auf 0:00 stehen, bis er neu gestartet wird.
+Zwei Timer: oben im schwarzen Kopfbalken die **Gesamtdauer** seit Rea-Beginn,
+mittig groß der **2:00-Countdown** für den Zyklus, darunter ein
+Fortschrittsbalken. Bei 0:00 vibriert die Uhr fünfmal kräftig; der Countdown
+bleibt rot auf 0:00 stehen, bis er neu gestartet wird.
 
 | Taste | Wirkung |
 |---|---|
-| kurz START | Reanimation **beginnen** / Countdown manuell neu starten |
+| kurz START, **keine** Rea läuft | Reanimation **beginnen** |
+| kurz START, Rea **läuft** | **Untermenü** öffnen |
+| lang START, Rea **läuft** | Countdown **neu starten** (2:00) |
+| lang START, **keine** Rea läuft | ohne Funktion |
 | lang UP | **Adrenalingabe** dokumentieren |
 | lang DOWN | **Rhythmuskontrolle** dokumentieren (setzt Countdown auf 2:00) |
-| lang START | Untermenü öffnen |
 | kurz UP/DOWN | Oberfläche wechseln (Timer laufen weiter) |
 | BACK | zurück zur Hauptanzeige (Timer laufen weiter) |
 
-**Untermenü** (farbcodiert, endlos scrollbar): Defibrillation, Intubation,
-Amiodaron, Sonographie, ROSC, Tod — je ein Zeitstempel; **Übersicht** zeigt
-alle Zeiten der laufenden Rea; **„Rea beenden"** (rot) schließt die
-Reanimation nach Sicherheitsabfrage. Danach startet **kurz START** eine
-*neue* Reanimation — mehrere pro Einsatz sind möglich, jede bekommt im Web
-ihre eigene Tabelle. Bei Einsatzende wird eine laufende Rea automatisch
-geschlossen.
+Der häufigste Griff während einer laufenden Reanimation ist das Dokumentieren
+eines Ereignisses. Deshalb liegt das Untermenü auf dem **kurzen** Druck — der
+lange Druck ist dem Countdown vorbehalten.
+
+**Untermenü** (farbcodiert, endlos scrollbar, in derselben Darstellung wie das
+Schnellmenü der Hauptanzeige) in dieser Reihenfolge:
+
+| Eintrag | Wirkung |
+|---|---|
+| Timer neu starten | setzt den Countdown auf 2:00 — **ohne** Zeitstempel |
+| Rhythmuskontrolle | Zeitstempel **und** Countdown-Neustart |
+| Defibrillation | Zeitstempel **und** Countdown-Neustart |
+| Adrenalin | Zeitstempel |
+| Amiodaron | Zeitstempel |
+| Zugang | Zeitstempel |
+| Intubation | Zeitstempel |
+| Sonographie | Zeitstempel |
+| ROSC | Zeitstempel |
+| Tod | Zeitstempel |
+| Übersicht | zeigt alle Zeiten der laufenden Rea |
+| Rea BEENDEN | schließt die Reanimation nach Sicherheitsabfrage |
+
+Nach dem Beenden startet **kurz START** eine *neue* Reanimation — mehrere pro
+Einsatz sind möglich, jede bekommt im Web ihre eigene Tabelle. Bei Einsatzende
+wird eine laufende Rea automatisch geschlossen.
 
 ### 2.4 Datenübertragung
 
