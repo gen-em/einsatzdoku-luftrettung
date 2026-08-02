@@ -782,3 +782,26 @@ erfolgreichem Upload.
     `assets/missiontable.js` umgestellt: Sie zeigt Tagesnummer und Farbmarkierung
     statt Datum und gehört zu einem anderen Zusammenhang. Erst wenn `day_col`
     generisch ausgewertet wird, lohnt die Frage nach einer Zusammenführung.
+11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
+    kann.** Beobachtet ohne hinterlegte Server-Adresse: Die Seite zeigt
+    gleichzeitig das grüne „Sync vollständig" mit Haken **und** unten den
+    gelben Hinweis „Erst Server-Adresse setzen". Dasselbe tritt auf, wenn die
+    Adresse gesetzt, das Gerät aber noch nicht gekoppelt ist.
+    Ursache: `SyncView.onUpdate` wertet zwei voneinander unabhängige Größen
+    aus und stellt sie unverbunden nebeneinander. `Model.backlogCount()`
+    beantwortet ausschließlich die Frage „liegen abgeschlossene Pakete zum
+    Senden bereit?" — vor dem ersten Dienst ist das zu Recht `0`. Daraus wird
+    im Text aber „vollständig" und damit eine Aussage über den Übertragungsweg,
+    den die Uhr zu diesem Zeitpunkt nie benutzt hat. `Uploader.lastError`
+    bleibt dabei `null`, weil `SyncView.refresh()` `syncAll()` nur bei
+    vorhandenem Rückstand anstößt — es gibt also nicht einmal eine Fehlerzeile,
+    die den Widerspruch auflösen würde.
+    Reine Anzeigefrage, kein Datenverlust: Wird ohne Einrichtung dokumentiert,
+    puffert die Uhr korrekt und der Rückstand erscheint.
+    Richtung der Auflösung: Der grüne Zustand setzt zusätzlich
+    `Uploader.hasServer()` **und** `hasCredentials()` voraus. Fehlt eines von
+    beidem, tritt an seine Stelle ein neutraler Einrichtungs-Zustand, und der
+    heute unten stehende gelbe Hinweis wird zur Hauptaussage der Seite statt
+    zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
+    Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
+    abgebildet und bleibt.
