@@ -10,6 +10,81 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.6.6] — 2026-08-03
+
+### Behoben — Einrichtungshinweis lief weiter über den Rand
+
+Der Hinweis war in der unteren Zone des Startbildschirms zentriert. Dort läuft
+der Kreis so weit zu, dass **keine** Schriftgröße mehr gepasst hätte — die
+automatische Schriftwahl hatte keine Wahl, die hineingegangen wäre.
+
+- Der Hinweis hängt jetzt **unter dem Hauptblock** statt in der unteren Zone.
+  Dort ist die nutzbare Breite noch deutlich größer.
+- Er ist **einzeilig und kurz**: „Server fehlt" bzw. „Nicht gekoppelt". Eine
+  zweite Zeile säße zwangsläufig tiefer und passte auf keinem der drei Geräte
+  zuverlässig hinein, auch nicht in der kleinsten Schrift. Was zu tun ist,
+  steht ausführlich auf der Sync-Seite — einen Schritt nach unten.
+
+## [Uhr 1.6.5] — 2026-08-03
+
+### Behoben — Schriftwahl maß an der falschen Stelle
+
+Die mit 1.6.4 eingeführte Anpassung an die Displayrundung prüfte die Breite in
+der **Mitte** der Textzeile. Der Kreis läuft aber schon innerhalb einer
+einzigen Zeile spürbar zu: Eine Zeile unterhalb der Displaymitte ist an ihrer
+Unterkante deutlich schmaler als in ihrer Mitte. Lange Bezeichnungen wie
+„Ankunft PatientIn" wurden dadurch weiterhin angeschnitten, obwohl die
+Prüfung sie durchgehen ließ.
+
+`Ui.fitFont()` bekommt jetzt Oberkante und Höhe der Zeile und misst an der
+Kante, die weiter von der Displaymitte entfernt liegt — unterhalb der Mitte
+also unten, oberhalb der Mitte oben. Der Sicherheitsrand wurde von 10 auf 16
+Bezugspixel erhöht. Betrifft Hauptanzeige, Startbildschirm, Sync-Seite und die
+Rea-Übersicht.
+
+### Geändert — Rea-Übersicht: zweiter Trennbalken
+
+Die Liste läuft um; hinter dem letzten Zeitstempel folgt wieder „Rea beenden".
+Dort stießen Zeiten und Entscheidungen unvermittelt aneinander. Am Listenende
+steht jetzt ein zweiter grauer Balken **„Aktionen"**, sodass beide Übergänge
+markiert sind.
+
+## [Uhr 1.6.4] — 2026-08-03
+
+### Geändert — Rea-Übersicht selbst gezeichnet
+
+Die Übersicht war das letzte Systemmenü der App und passte weder zum übrigen
+Bild noch zur Venu 3s. Sie wird jetzt wie Schnellmenü und Rea-Untermenü selbst
+gezeichnet: gleiche Zeilenhöhe, fünf sichtbare Zeilen, gefüllte Auswahl.
+
+- Ist die Reanimation pausiert, stehen **Rea beenden** (rot) und **Rea
+  fortsetzen** (grün) oben; ein **schmaler Trennbalken „Zeiten"** in halber
+  Zeilenhöhe schneidet sie von den Zeitstempeln ab.
+- Der Trennbalken ist nicht anwählbar — das Blättern überspringt ihn.
+- Läuft die Reanimation normal, entfallen Entscheidungen und Trennbalken; es
+  bleibt die reine Zeitenliste.
+
+### Behoben — Texte liefen über den Displayrand
+
+Auf einem runden Display läuft der Kreis oben und unten zu. Eine Zeile, die
+in der Mitte passt, wird dort abgeschnitten — „Ankunft Einsatzort" auf der
+Hauptanzeige und die Einrichtungshinweise des Startbildschirms waren betroffen,
+auf Fenix 6 Pro und Venu 3s.
+
+- `Ui.chordW()` berechnet die tatsächlich nutzbare Breite in der jeweiligen
+  Höhe, `Ui.fitFont()` wählt die größte Schrift, die dort noch hineingeht.
+  Angewandt auf die Phasenbezeichnung, die Hinweiszeilen beider Seiten und die
+  Einträge der Rea-Übersicht.
+- Die Hinweise des Startbildschirms sind kürzer gefasst: „Server-Adresse
+  fehlt / in Garmin Connect" statt „Server in Garmin Connect / eintragen".
+
+### Behoben — Hinweisschrift auf der Venu 3s zu klein
+
+Schriftgrößen sind Gerätekonstanten und skalieren **nicht** mit der
+Displayhöhe. Auf der Venu 3s war `FONT_XTINY` im Verhältnis zum Display
+deutlich kleiner als auf der Fenix. `Ui.fontHint()` wählt ab 320 Pixeln
+Displayhöhe eine Stufe größer; betroffen sind Startbildschirm und Sync-Seite.
+
 ## [Uhr 1.6.3] — 2026-08-03
 
 ### Geändert — Sync-Seite folgt der Farblogik

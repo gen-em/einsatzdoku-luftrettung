@@ -9,6 +9,7 @@
 // Damit bleibt die Fenix pixelgenau wie zuvor — das ist Abnahmekriterium.
 using Toybox.Graphics;
 using Toybox.Lang;
+using Toybox.Math;
 
 module Ui {
 
@@ -47,6 +48,47 @@ module Ui {
         return (dc.getFontHeight(font) * NUM_VIS_PCT) / 100;
     }
 
+    // Nutzbare Breite eines RUNDEN Displays auf Hoehe y (Mitte der Textzeile).
+    // Nahe Ober- und Unterkante laeuft der Kreis zu — eine Zeile, die in der
+    // Mitte passt, wird dort abgeschnitten. Alle drei Zielgeraete sind rund.
+    function chordW(dc as Graphics.Dc, y as Lang.Number) as Lang.Number {
+        var d = (dc.getWidth() < dc.getHeight()) ? dc.getWidth() : dc.getHeight();
+        var r = d / 2;
+        var dy = y - (dc.getHeight() / 2);
+        if (dy < 0) { dy = -dy; }
+        if (dy >= r) { return 0; }
+        var half = Math.sqrt((r * r - dy * dy).toFloat());
+        var w = (half * 2).toNumber() - s(dc, 16);   // Sicherheitsrand
+        return (w > 0) ? w : 0;
+    }
+
+    // Groesste Schrift aus der Liste, die in dieser Zeile vollstaendig passt.
+    // Reihenfolge: von gross nach klein.
+    //
+    // top ist die OBERKANTE der Zeile, lineH ihre Hoehe. Gemessen wird an der
+    // Kante, die weiter von der Displaymitte entfernt liegt — bei einer Zeile
+    // unterhalb der Mitte also unten, oberhalb der Mitte oben. Die Zeilenmitte
+    // zu messen reicht nicht: Der Kreis laeuft innerhalb einer einzigen
+    // Textzeile schon spuerbar zu, und die Schrift wuerde an ihrer engsten
+    // Stelle abgeschnitten.
+    function fitFont(dc as Graphics.Dc, text as Lang.String, top as Lang.Number,
+                     lineH as Lang.Number, fonts as Lang.Array) as Graphics.FontType {
+        var mid = dc.getHeight() / 2;
+        var edge = (top + lineH / 2 >= mid) ? (top + lineH) : top;
+        var avail = chordW(dc, edge);
+        for (var i = 0; i < fonts.size(); i++) {
+            if (dc.getTextWidthInPixels(text, fonts[i]) <= avail) { return fonts[i]; }
+        }
+        return fonts[fonts.size() - 1];
+    }
+
+    // Schrift fuer Hinweiszeilen. Auf grossen Displays eine Stufe groesser:
+    // Schriften sind Geraetekonstanten und skalieren NICHT mit s() — auf der
+    // Venu 3s waere FONT_XTINY im Verhaeltnis zum Display zu klein.
+    function fontHint(dc as Graphics.Dc) as Graphics.FontType {
+        return (dc.getHeight() >= 320) ? Graphics.FONT_TINY : Graphics.FONT_XTINY;
+    }
+
     // Markenfarben (Brand Guidelines). Geraete mit kleiner Palette runden
     // selbst auf den naechsten darstellbaren Ton.
     const ORANGE = 0xFF8F1F;         // Philipp Orange
@@ -59,7 +101,7 @@ module Ui {
     function drawResusMarker(dc as Graphics.Dc) as Void {
         if (!Cpr.active) { return; }
         var txt = Cpr.paused ? "REA pausiert" : "REA läuft";
-        dc.setColor(Cpr.paused ? Graphics.COLOR_YELLOW : ROT,
+        dc.setColor(Cpr.paused ? BLAU : ROT,
             Graphics.COLOR_TRANSPARENT);
         dc.drawText(dc.getWidth() / 2, dc.getHeight() - s(dc, 32),
             Graphics.FONT_XTINY, txt, Graphics.TEXT_JUSTIFY_CENTER);

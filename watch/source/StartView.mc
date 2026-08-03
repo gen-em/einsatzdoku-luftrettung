@@ -50,7 +50,8 @@ class StartView extends WatchUi.View {
         // groesser nach der Bildmarke.
         var hTitel   = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var hFrage   = dc.getFontHeight(Graphics.FONT_SMALL);
-        var hHinweis = dc.getFontHeight(Graphics.FONT_XTINY);
+        var fHinweis = Ui.fontHint(dc);
+        var hHinweis = dc.getFontHeight(fHinweis);
         var gLogo    = Ui.s(dc, 6);      // Bildmarke -> Titel
         var gTitel   = Ui.s(dc, 10);     // Titel -> Frage
         var gFrage   = Ui.s(dc, 2);      // Frage -> Bedienhinweis (eng)
@@ -74,24 +75,40 @@ class StartView extends WatchUi.View {
         y += hFrage + gFrage;
 
         dc.setColor(Ui.BLAU, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, Graphics.FONT_XTINY, Input.lSelect() + " drücken",
+        dc.drawText(cx, y, fHinweis, Input.lSelect() + " drücken",
             Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Untere Zone: Einrichtung in der richtigen Reihenfolge — erst die
-        // Server-Adresse (App-Einstellungen in Garmin Connect), dann koppeln.
-        var hy = zone + (dc.getHeight() - zone - hHinweis * 2) / 2;
-        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+        // Einrichtungshinweise direkt UNTER dem Hauptblock, nicht in der
+        // unteren Zone zentriert. Ganz unten laeuft der Kreis so weit zu, dass
+        // dort keine Textzeile mehr Platz findet — der Hinweis wurde dann
+        // abgeschnitten, egal wie klein die Schrift gewaehlt wurde.
+        // Reihenfolge der Einrichtung: erst die Server-Adresse (App-
+        // Einstellungen in Garmin Connect), dann koppeln.
+        // EINE Zeile, bewusst kurz. Zwei Zeilen passen hier nicht: Die zweite
+        // saesse so tief, dass der zulaufende Kreis selbst in der kleinsten
+        // Schrift keine 17 Zeichen mehr traegt. Was zu tun ist, steht
+        // ausfuehrlich auf der Sync-Seite — einen Schritt nach unten.
+        var warn = null;
         if (!Uploader.hasServer()) {
-            dc.drawText(cx, hy, Graphics.FONT_XTINY,
-                "Server in Garmin Connect", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, hy + hHinweis, Graphics.FONT_XTINY,
-                "eintragen", Graphics.TEXT_JUSTIFY_CENTER);
+            warn = "Server fehlt";
         } else if (!Uploader.hasCredentials()) {
-            dc.drawText(cx, hy, Graphics.FONT_XTINY,
-                "Nicht gekoppelt —", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, hy + hHinweis, Graphics.FONT_XTINY,
-                Input.lPageDown(), Graphics.TEXT_JUSTIFY_CENTER);
+            warn = "Nicht gekoppelt";
         }
+        if (warn == null) { return; }
+
+        var hy = y + hHinweis + Ui.s(dc, 16);
+        var f  = fHinweis;
+        if (!_fits(dc, warn, hy, dc.getFontHeight(f), f)) {
+            f = Graphics.FONT_XTINY;
+        }
+        dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);   // Warnung, nicht Hinweis
+        dc.drawText(cx, hy, f, warn, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    // Passt der Text in seiner Zeile noch vollstaendig auf das runde Display?
+    function _fits(dc as Graphics.Dc, txt as Lang.String, top as Lang.Number,
+                   lh as Lang.Number, font as Graphics.FontType) as Lang.Boolean {
+        return dc.getTextWidthInPixels(txt, font) <= Ui.chordW(dc, top + lh);
     }
 }
 

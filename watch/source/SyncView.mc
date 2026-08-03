@@ -47,7 +47,8 @@ class SyncView extends WatchUi.View {
         // Einrichtungshinweis und Version bilden unten einen eigenen Block.
         // Eine Ueberschrift braucht die Seite nicht, die Aussage traegt sich
         // selbst.
-        var hKlein = dc.getFontHeight(Graphics.FONT_XTINY);
+        var fKlein = Ui.fontHint(dc);
+        var hKlein = dc.getFontHeight(fKlein);
         var hGross = dc.getFontHeight(Graphics.FONT_LARGE);
         var hZahl  = Ui.numH(dc, Graphics.FONT_NUMBER_MILD);
         var hMitte = dc.getFontHeight(Graphics.FONT_SMALL);
@@ -111,7 +112,7 @@ class SyncView extends WatchUi.View {
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
         dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, Graphics.FONT_XTINY, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, y, fKlein, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
         y += hKlein + gGps;
 
         if (open == 0) {
@@ -137,8 +138,10 @@ class SyncView extends WatchUi.View {
         // --- Unterer Block zeichnen -----------------------------------------
         for (var i = 0; i < lines.size(); i++) {
             dc.setColor(lines[i][1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, untenY, Graphics.FONT_XTINY, lines[i][0] as Lang.String,
-                Graphics.TEXT_JUSTIFY_CENTER);
+            var txt = lines[i][0] as Lang.String;
+            dc.drawText(cx, untenY,
+                Ui.fitFont(dc, txt, untenY, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                txt, Graphics.TEXT_JUSTIFY_CENTER);
             untenY += hKlein;
         }
     }

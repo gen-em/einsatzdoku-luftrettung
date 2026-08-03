@@ -80,7 +80,7 @@ class CprView extends WatchUi.View {
             // FONT_LARGE, nicht FONT_NUMBER_*: Die Ziffernschriften enthalten
             // ausschliesslich Zahlen, Doppelpunkt und Punkt. Buchstaben
             // erscheinen dort als leere Kaestchen.
-            dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(Ui.BLAU, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_LARGE,
                 "PAUSE", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
@@ -103,7 +103,7 @@ class CprView extends WatchUi.View {
             if (passed > Const.CPR_CYCLE_S) { passed = Const.CPR_CYCLE_S; }
             var fill = (bw * passed) / Const.CPR_CYCLE_S;
             if (fill > 0) {
-                dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(Ui.BLAU, Graphics.COLOR_TRANSPARENT);
                 dc.fillRectangle(bx, by, fill, bh);
             }
         }
@@ -291,51 +291,140 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    // Uebersicht der aktuellen (letzten) Rea-Sitzung als scrollbare Liste.
-    // Ist die Rea pausiert, stehen die beiden Entscheidungen ganz oben —
-    // fortsetzen oder beenden. Ohne Entscheidung bleibt es bei der Pause;
-    // BACK schliesst die Liste, die Rea bleibt angehalten.
+    // Uebersicht der aktuellen (letzten) Rea-Sitzung. Selbst gezeichnet wie die
+    // uebrigen Menues — das Systemmenue kann weder Farben noch Trennbalken.
     static function pushResusOverview() as Void {
-        var menu = new WatchUi.Menu2({ :title => "Rea-Zeiten" });
-        if (Cpr.active && Cpr.paused) {
-            menu.addItem(new WatchUi.MenuItem("Rea beenden", null, :finish, null));
-            menu.addItem(new WatchUi.MenuItem("Rea fortsetzen", null, :resume, null));
-            menu.addItem(new WatchUi.MenuItem("— Zeiten —", null, :none, null));
-        }
-        var sess = Model.currentResus();
-        if (sess == null) {
-            menu.addItem(new WatchUi.MenuItem("Keine Reanimation", null, :none, null));
-        } else {
-            menu.addItem(new WatchUi.MenuItem(
-                (sess["startLocal"] as Lang.String) + "  Beginn", null, :none, null));
-            var evs = sess["events"] as Lang.Array;
-            for (var i = 0; i < evs.size(); i++) {
-                var ev = evs[i];
-                menu.addItem(new WatchUi.MenuItem(
-                    (ev[2] as Lang.String) + "  " + Const.RESUS_LABELS[ev[0]],
-                    null, :none, null));
-            }
-        }
-        WatchUi.pushView(menu, new ResusOverviewDelegate(), WatchUi.SLIDE_LEFT);
+        var v = new ResusOverviewView();
+        WatchUi.pushView(v, new ResusOverviewDelegate(v), WatchUi.SLIDE_LEFT);
     }
 }
 
-// Uebersicht der Rea-Zeiten. Die Zeiteintraege sind reine Anzeige; nur die
-// beiden Entscheidungen im pausierten Zustand loesen etwas aus.
-class ResusOverviewDelegate extends WatchUi.Menu2InputDelegate {
+// ---------------------------------------------------------------------------
+// Rea-Uebersicht: Entscheidungen oben, darunter die Zeitstempel
+// ---------------------------------------------------------------------------
+//
+// Ist die Reanimation pausiert, stehen "Rea beenden" und "Rea fortsetzen" ganz
+// oben — die Entscheidung faellt damit mit den dokumentierten Zeiten vor Augen.
+// Ein schmaler Trennbalken schneidet die Entscheidungen von den Zeiten ab. Er
+// ist nicht anwaehlbar; das Blaettern ueberspringt ihn.
+class ResusOverviewView extends WatchUi.View {
 
-    function initialize() { Menu2InputDelegate.initialize(); }
+    var items as Lang.Array = [];      // [Label, Farbe, ID]
+    var index as Lang.Number = 0;
 
-    function onSelect(item as WatchUi.MenuItem) as Void {
-        var id = item.getId();
-        if (id == :resume) {
-            Cpr.resume();
-            WatchUi.popView(WatchUi.SLIDE_RIGHT);
-        } else if (id == :finish) {
-            Cpr.stopRecording();
-            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+    function initialize() {
+        View.initialize();
+        if (Cpr.active && Cpr.paused) {
+            items.add(["Rea beenden",    0xFF0000, :finish]);   // rot
+            items.add(["Rea fortsetzen", 0x00FF00, :resume]);   // gruen
+            items.add(["Zeiten",         0xAAAAAA, :sep]);
+        }
+        var sess = Model.currentResus();
+        if (sess == null) {
+            items.add(["Keine Reanimation", 0xFFFFFF, :none]);
+        } else {
+            items.add([(sess["startLocal"] as Lang.String) + "  Beginn",
+                       0xFFFFFF, :none]);
+            var evs = sess["events"] as Lang.Array;
+            for (var i = 0; i < evs.size(); i++) {
+                var ev = evs[i];
+                items.add([(ev[2] as Lang.String) + "  " + Const.RESUS_LABELS[ev[0]],
+                           0xFFFFFF, :none]);
+            }
+        }
+        // Zweiter Trennbalken ans Listenende: Die Liste laeuft um, hinter dem
+        // letzten Zeitstempel folgt wieder "Rea beenden". Ohne Balken stiessen
+        // Zeiten und Entscheidungen dort unvermittelt aneinander.
+        if (Cpr.active && Cpr.paused) {
+            items.add(["Aktionen", 0xAAAAAA, :sep]);
         }
     }
 
-    function onBack() as Void { WatchUi.popView(WatchUi.SLIDE_RIGHT); }
+    function onUpdate(dc as Graphics.Dc) as Void {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+        var cx = dc.getWidth() / 2;
+        var cy = dc.getHeight() / 2;
+        var rowH = Ui.s(dc, 38);
+        var pad  = Ui.s(dc, 14);
+        var boxW = dc.getWidth() - 2 * pad;
+        var n = items.size();
+
+        for (var off = -2; off <= 2; off++) {
+            var i = ((index + off) % n + n) % n;
+            var item = items[i];
+            var y = cy + off * rowH;
+            var col = item[1] as Lang.Number;
+            var label = item[0] as Lang.String;
+
+            if (item[2] == :sep) {
+                // Trennbalken: halbe Zeilenhoehe, dunkel gefuellt
+                var sh = rowH / 2;
+                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(pad, y - sh / 2, boxW, sh);
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(cx, y, Graphics.FONT_XTINY, label,
+                    Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            } else if (off == 0) {
+                // Auswahl: gefuelltes Feld, schwarzer Text
+                dc.setColor(col, Graphics.COLOR_TRANSPARENT);
+                dc.fillRoundedRectangle(pad, y - rowH / 2 + Ui.s(dc, 2),
+                    boxW, rowH - Ui.s(dc, 4), Ui.s(dc, 8));
+                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(cx, y,
+                    Ui.fitFont(dc, label, y - rowH / 2, rowH,
+                        [Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY]),
+                    label, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            } else {
+                dc.setColor(col, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(cx, y,
+                    Ui.fitFont(dc, label, y - rowH / 2, rowH,
+                        [Graphics.FONT_TINY, Graphics.FONT_XTINY]),
+                    label, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+        }
+    }
+}
+
+class ResusOverviewDelegate extends WatchUi.BehaviorDelegate {
+
+    var _v as ResusOverviewView;
+
+    function initialize(v as ResusOverviewView) {
+        BehaviorDelegate.initialize();
+        _v = v;
+    }
+
+    // Blaettern ueberspringt Trennbalken — sie sind keine Auswahl
+    private function _step(dir as Lang.Number) as Lang.Boolean {
+        var n = _v.items.size();
+        var i = _v.index;
+        for (var k = 0; k < n; k++) {
+            i = ((i + dir) % n + n) % n;
+            if (_v.items[i][2] != :sep) { break; }
+        }
+        _v.index = i;
+        WatchUi.requestUpdate();
+        return true;
+    }
+
+    function onPreviousPage() as Lang.Boolean { return _step(-1); }
+    function onNextPage() as Lang.Boolean { return _step(1); }
+
+    function onSelect() as Lang.Boolean {
+        var id = _v.items[_v.index][2];
+        if (id == :resume) {
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+            Cpr.resume();
+        } else if (id == :finish) {
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+            Cpr.stopRecording();
+        }
+        return true;                          // Zeitstempel sind reine Anzeige
+    }
+
+    function onBack() as Lang.Boolean {
+        WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        return true;
+    }
 }

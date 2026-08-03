@@ -67,15 +67,20 @@ class ClockView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER);
         y += hNr + gNr;
 
+        // Die Phasenbezeichnung steht dicht ueber dem unteren Kreisrand.
+        // "Ankunft Einsatzort" passt dort in FONT_TINY nicht mehr, deshalb
+        // wird die groesste Schrift gewaehlt, die in dieser Hoehe hineingeht.
+        var label = Const.PHASE_LABELS[Model.phase] as Lang.String;
+        var fName = Ui.fitFont(dc, label, y, hName,
+            [Graphics.FONT_TINY, Graphics.FONT_XTINY]);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, Graphics.FONT_TINY, Const.PHASE_LABELS[Model.phase],
-            Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, y, fName, label, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Laufende Reanimation: roter Ring entlang der Luenette — peripher
         // erkennbar, ohne eine Textzeile zu belegen.
         if (Cpr.active) {
             dc.setPenWidth(Ui.s(dc, 9));
-            dc.setColor(Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT,
+            dc.setColor(Cpr.paused ? Ui.BLAU : Ui.ROT,
                 Graphics.COLOR_TRANSPARENT);
             var rad = (dc.getWidth() < dc.getHeight() ? dc.getWidth() : dc.getHeight()) / 2
                       - Ui.s(dc, 5);
