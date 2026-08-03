@@ -4,9 +4,22 @@ project.manifest = manifest.xml
 # Zur Laufzeit ist das nicht ermittelbar — Connect IQ kennt keine Abfrage
 # "hat UP/DOWN". Deshalb liefert je Profil eine eigene DeviceProfile.mc die
 # Konstante HAS_UP_DOWN. Gemessene Grundlage: docs/Geraete-Eingabe.md.
-fenix6pro.sourcePath = $(fenix6pro.sourcePath);source-tasten5
-fr945.sourcePath     = $(fr945.sourcePath);source-tasten5
-venu3s.sourcePath    = $(venu3s.sourcePath);source-tasten3
+#
+# WICHTIG: Die Pfade werden VOLLSTAENDIG zugewiesen, nicht mit
+# $(<geraet>.sourcePath) erweitert. Ein Selbstbezug faellt auf eine Vorgabe
+# zurueck, die alle source*-Ordner einsammelt — dann landen beide Profile im
+# Build und der Compiler meldet "Redefinition of HAS_UP_DOWN".
+base.sourcePath      = source;source-tasten5
 
-# Launcher-Icon der Venu 3s misst 70x70 statt 40x40.
-venu3s.resourcePath  = $(venu3s.resourcePath);resources-venu3s
+fenix6pro.sourcePath = source;source-tasten5
+fr945.sourcePath     = source;source-tasten5
+venu3s.sourcePath    = source;source-tasten3
+
+# Launcher-Icon und Bildmarke der Venu 3s sind groesser (70x70 statt 40x40).
+# Gleiche Regel: vollstaendig zuweisen. Der spaetere Pfad gewinnt bei
+# gleichnamigen Ressourcen-IDs.
+base.resourcePath    = resources
+
+fenix6pro.resourcePath = resources
+fr945.resourcePath     = resources
+venu3s.resourcePath    = resources;resources-venu3s

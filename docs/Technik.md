@@ -771,6 +771,27 @@ Zwei Punkte sind bewusst so gebaut:
 pausiert war — Einsatzabschluss und Dienstende brauchen deshalb keine
 Sonderbehandlung.
 
+### 5.1b Geräteprofile im Jungle
+
+`monkey.jungle` weist jedem Gerät seinen Quell- und Ressourcenpfad **vollständig**
+zu:
+
+```
+fenix6pro.sourcePath = source;source-tasten5
+venu3s.sourcePath    = source;source-tasten3
+venu3s.resourcePath  = resources;resources-venu3s
+```
+
+**Nicht** `$(<gerät>.sourcePath);source-tasten5` schreiben. Der Selbstbezug
+fällt auf eine Vorgabe zurück, die alle `source*`-Ordner einsammelt; dann
+landen beide `DeviceProfile.mc` im Build und der Compiler meldet
+`Redefinition of 'HAS_UP_DOWN'`. Dasselbe gilt für `resourcePath` — sonst
+bekäme die Fenix das 70×70-Icon der Venu 3s.
+
+`base.sourcePath` steht auf dem Fünf-Tasten-Profil: Ein Gerät, das jemand ins
+Manifest einträgt ohne hier eine Zeile zu ergänzen, baut damit gegen das
+konservativere Profil.
+
 ### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
 
 Bevor ein Gerät in `watch/manifest.xml` aufgenommen wird, muss gemessen sein,

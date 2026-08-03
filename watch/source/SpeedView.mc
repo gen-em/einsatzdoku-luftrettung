@@ -16,7 +16,7 @@ class SpeedView extends WatchUi.View {
         dc.clear();
         var cx = dc.getWidth() / 2;
 
-        var hZahl  = dc.getFontHeight(Graphics.FONT_NUMBER_THAI_HOT);
+        var hZahl  = Ui.numH(dc, Graphics.FONT_NUMBER_THAI_HOT);
         var hEinh  = dc.getFontHeight(Graphics.FONT_TINY);
         var hDist  = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var gEinh  = Ui.s(dc, 0);        // Zahl -> km/h: eng

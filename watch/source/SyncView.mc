@@ -49,7 +49,7 @@ class SyncView extends WatchUi.View {
         // selbst.
         var hKlein = dc.getFontHeight(Graphics.FONT_XTINY);
         var hGross = dc.getFontHeight(Graphics.FONT_LARGE);
-        var hZahl  = dc.getFontHeight(Graphics.FONT_NUMBER_MILD);
+        var hZahl  = Ui.numH(dc, Graphics.FONT_NUMBER_MILD);
         var hMitte = dc.getFontHeight(Graphics.FONT_SMALL);
 
         // --- GPS-Guete -----------------------------------------------------
@@ -70,16 +70,43 @@ class SyncView extends WatchUi.View {
             }
         }
 
+        // --- Unterer Block zuerst -------------------------------------------
+        // Meldungen und Version stehen unten. Ihre Zeilenzahl schwankt, deshalb
+        // wird ihr Platz VOR dem Mittelblock bestimmt — sonst waechst der untere
+        // Block dem oberen entgegen und beide ueberlappen.
+        var lines = [];
+        if (Uploader.lastError != null) {
+            lines.add([Uploader.lastError as Lang.String, Graphics.COLOR_LT_GRAY]);
+        }
+        if (Pair.status != null) {
+            var ok = Pair.status.substring(0, 3).equals("Gek");
+            lines.add([Pair.status, ok ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW]);
+        }
+        if (Cpr.active) {
+            lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
+                       Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT]);
+        } else if (!Uploader.hasServer()) {
+            lines.add(["Erst Server-Adresse setzen", Graphics.COLOR_YELLOW]);
+        } else if (!Uploader.hasCredentials()) {
+            lines.add([Input.lSelectHold() + ": Gerät koppeln", Graphics.COLOR_YELLOW]);
+        }
+        lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
+
+        var untenY = h - Ui.s(dc, 22) - lines.size() * hKlein;
+
         // --- Mittelblock ----------------------------------------------------
         // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
         // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
+        // Zentriert wird im Raum OBERHALB des unteren Blocks.
         var open = Model.backlogCount();
         var gGps = Ui.s(dc, 14);
         var hHaken = Ui.s(dc, 26);
         var blockH = (open == 0)
             ? hKlein + gGps + hGross + hHaken
             : hKlein + gGps + hZahl + hMitte;
-        var y = (h - blockH) / 2;
+        var zone = untenY - Ui.s(dc, 8);
+        var y = (zone - blockH) / 2;
+        if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
         dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y, Graphics.FONT_XTINY, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
@@ -105,33 +132,12 @@ class SyncView extends WatchUi.View {
                 Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        // --- Unterer Block: Meldungen und Version ---------------------------
-        // Erst sammeln, dann als Ganzes vom unteren Rand nach oben setzen.
-        // So bleibt der Abstand gleich, egal wie viele Zeilen anfallen.
-        var lines = [];
-        if (Uploader.lastError != null) {
-            lines.add([Uploader.lastError as Lang.String, Graphics.COLOR_LT_GRAY]);
-        }
-        if (Pair.status != null) {
-            var ok = Pair.status.substring(0, 3).equals("Gek");
-            lines.add([Pair.status, ok ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW]);
-        }
-        if (Cpr.active) {
-            lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
-                       Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT]);
-        } else if (!Uploader.hasServer()) {
-            lines.add(["Erst Server-Adresse setzen", Graphics.COLOR_YELLOW]);
-        } else if (!Uploader.hasCredentials()) {
-            lines.add([Input.lSelectHold() + ": Gerät koppeln", Graphics.COLOR_YELLOW]);
-        }
-        lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
-
-        var uy = h - Ui.s(dc, 24) - lines.size() * hKlein;
+        // --- Unterer Block zeichnen -----------------------------------------
         for (var i = 0; i < lines.size(); i++) {
             dc.setColor(lines[i][1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, uy, Graphics.FONT_XTINY, lines[i][0] as Lang.String,
+            dc.drawText(cx, untenY, Graphics.FONT_XTINY, lines[i][0] as Lang.String,
                 Graphics.TEXT_JUSTIFY_CENTER);
-            uy += hKlein;
+            untenY += hKlein;
         }
     }
 }

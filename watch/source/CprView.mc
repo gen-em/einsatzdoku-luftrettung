@@ -61,14 +61,19 @@ class CprView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.fillRectangle(0, 0, w, topH);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, topH / 2, Graphics.FONT_NUMBER_MILD, _mmss(Cpr.elapsedS()),
+        // Nicht in der Feldmitte: Oben verengt sich das runde Display, dort
+        // wirkt mittig zu hoch und zu nah am Rand. 62 % des Feldes sitzt besser.
+        dc.drawText(cx, (topH * 62) / 100, Graphics.FONT_NUMBER_MILD,
+            _mmss(Cpr.elapsedS()),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // 2) Mittleres Feld: Countdown und Fortschrittsbalken als ein Block,
         //    darin vertikal zentriert.
         var bh = Ui.s(dc, 20);                       // Balkenhoehe
         var gap = Ui.s(dc, 18);                      // Countdown -> Balken
-        var hCd = dc.getFontHeight(Graphics.FONT_NUMBER_THAI_HOT);
+        // Sichtbare Ziffernhoehe, nicht die Schriftbox: sonst zoege die leere
+        // Unterlaenge den ganzen Block nach oben.
+        var hCd = Ui.numH(dc, Graphics.FONT_NUMBER_THAI_HOT);
         var blockY = midY + (midH - (hCd + gap + bh)) / 2;
 
         if (Cpr.paused) {
@@ -79,8 +84,8 @@ class CprView extends WatchUi.View {
             var r = Cpr.cycleRemainingS();
             dc.setColor(r == 0 ? Ui.ROT : Graphics.COLOR_BLACK,
                 Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_NUMBER_THAI_HOT,
-                _mmss(r), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(cx, blockY, Graphics.FONT_NUMBER_THAI_HOT,
+                _mmss(r), Graphics.TEXT_JUSTIFY_CENTER);
         }
 
         // Fortschrittsbalken: fuellt sich im Lauf des Zyklus von links nach

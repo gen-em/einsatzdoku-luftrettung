@@ -37,13 +37,13 @@ class ClockView extends WatchUi.View {
         // werden als Ganzes vertikal zentriert. Zwischen Datum und Phase steht
         // bewusst ein groesserer Abstand: Das sind zwei verschiedene Aussagen —
         // oben wann, unten wo im Einsatz.
-        var hZeit  = dc.getFontHeight(Graphics.FONT_NUMBER_THAI_HOT);
+        var hZeit  = Ui.numH(dc, Graphics.FONT_NUMBER_THAI_HOT);
         var hDatum = dc.getFontHeight(Graphics.FONT_TINY);
-        var hNr    = dc.getFontHeight(Graphics.FONT_LARGE);
+        var hNr    = Ui.numH(dc, Graphics.FONT_LARGE);
         var hName  = dc.getFontHeight(Graphics.FONT_TINY);
-        var gZeit  = Ui.s(dc, 2);      // Uhrzeit -> Datum: eng, gehoert zusammen
-        var gDatum = Ui.s(dc, 22);     // Datum -> Phase: Absatz
-        var gNr    = Ui.s(dc, 2);      // Nummer -> Bezeichnung: eng
+        var gZeit  = Ui.s(dc, 6);      // Uhrzeit -> Datum: eng, gehoert zusammen
+        var gDatum = Ui.s(dc, 14);     // Datum -> Phase: Absatz
+        var gNr    = Ui.s(dc, 4);      // Nummer -> Bezeichnung: eng
 
         var blockH = hZeit + gZeit + hDatum + gDatum + hNr + gNr + hName;
         var y = (dc.getHeight() - blockH) / 2;

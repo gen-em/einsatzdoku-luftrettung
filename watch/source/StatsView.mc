@@ -17,7 +17,7 @@ class StatsView extends WatchUi.View {
         var cx = dc.getWidth() / 2;
 
         var hKopf  = dc.getFontHeight(Graphics.FONT_TINY);
-        var hZahl  = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
+        var hZahl  = Ui.numH(dc, Graphics.FONT_NUMBER_HOT);
         var hLabel = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var gKopf  = Ui.s(dc, 14);
         var gZahl  = Ui.s(dc, 4);

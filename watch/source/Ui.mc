@@ -24,6 +24,20 @@ module Ui {
         return (dc.getHeight() * p) / 100;
     }
 
+    // Sichtbare Hoehe einer Schrift.
+    //
+    // getFontHeight() liefert die volle Schriftbox samt Unterlaenge. Bei den
+    // Ziffernschriften bleibt die leer — rechnet man Bloecke damit, entsteht
+    // unter jeder Zahl eine Luecke von rund 15 Pixeln, und der Block wirkt zu
+    // weit oben. Fuer alles, was direkt unter einer Zahl steht, ist deshalb
+    // diese Hoehe die richtige.
+    function numH(dc as Graphics.Dc, font as Graphics.FontType) as Lang.Number {
+        if (dc has :getFontDescent) {
+            return dc.getFontHeight(font) - dc.getFontDescent(font);
+        }
+        return (dc.getFontHeight(font) * 78) / 100;   // Naeherung, falls nicht verfuegbar
+    }
+
     // Markenfarben (Brand Guidelines). Geraete mit kleiner Palette runden
     // selbst auf den naechsten darstellbaren Ton.
     const ORANGE = 0xFF8F1F;         // Philipp Orange
