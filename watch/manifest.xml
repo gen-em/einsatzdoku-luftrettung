@@ -7,8 +7,13 @@
                     launcherIcon="@Drawables.LauncherIcon"
                     minApiLevel="3.1.0">
         <iq:products>
-            <iq:product id="fenix6pro"/>
-            <!-- spaeter ergaenzbar: fenix7, fenix8solar47mm, ... -->
+            <!-- Vor jedem neuen Geraet: Eingabeverhalten mit
+                 tools/eingabe-probe messen und in docs/Geraete-Eingabe.md
+                 festhalten. Ohne Langdruck-Faehigkeit ist die App nicht
+                 bedienbar. -->
+            <iq:product id="fenix6pro"/>   <!-- 260x260, 5 Tasten, kein Touch -->
+            <iq:product id="fr945"/>       <!-- 240x240, 5 Tasten, kein Touch -->
+            <iq:product id="venu3s"/>      <!-- 390x390, 2 nutzbare Tasten, Touch -->
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="Positioning"/>

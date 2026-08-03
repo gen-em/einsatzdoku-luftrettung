@@ -1,1 +1,12 @@
 project.manifest = manifest.xml
+
+# Geraeteprofil zur Bauzeit: Welche Tasten hat das Geraet ueberhaupt?
+# Zur Laufzeit ist das nicht ermittelbar — Connect IQ kennt keine Abfrage
+# "hat UP/DOWN". Deshalb liefert je Profil eine eigene DeviceProfile.mc die
+# Konstante HAS_UP_DOWN. Gemessene Grundlage: docs/Geraete-Eingabe.md.
+fenix6pro.sourcePath = $(fenix6pro.sourcePath);source-tasten5
+fr945.sourcePath     = $(fr945.sourcePath);source-tasten5
+venu3s.sourcePath    = $(venu3s.sourcePath);source-tasten3
+
+# Launcher-Icon der Venu 3s misst 70x70 statt 40x40.
+venu3s.resourcePath  = $(venu3s.resourcePath);resources-venu3s

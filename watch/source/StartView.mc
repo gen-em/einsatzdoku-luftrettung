@@ -1,4 +1,10 @@
 // Einsatzdoku — Startbildschirm "Dienst beginnen" (Anforderungen 1.1)
+//
+// Aufbau: Die oberen 75 % der Displayhoehe tragen den Block aus Bildmarke,
+// Titel, Frage und Bedienhinweis — darin vertikal zentriert. Die unteren 25 %
+// sind den Einrichtungshinweisen vorbehalten. Die Trennung ist unsichtbar,
+// sorgt aber dafuer, dass der Block nicht springt, wenn unten ein Hinweis
+// erscheint oder verschwindet.
 using Toybox.WatchUi;
 using Toybox.Graphics;
 using Toybox.System;
@@ -8,6 +14,7 @@ using Toybox.Timer;
 class StartView extends WatchUi.View {
 
     var _timer as Timer.Timer or Null = null;
+    var _logo as WatchUi.BitmapResource or Null = null;
 
     function initialize() { View.initialize(); }
 
@@ -31,53 +38,81 @@ class StartView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         var cx = dc.getWidth() / 2;
-        var cy = dc.getHeight() / 2;
 
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 50, Graphics.FONT_MEDIUM, "Einsatzdoku",
+        if (_logo == null) {
+            _logo = WatchUi.loadResource(Rez.Drawables.Logo) as WatchUi.BitmapResource;
+        }
+        var logoH = _logo.getHeight();
+        var logoW = _logo.getWidth();
+
+        // Blockhoehe aus den Einzelhoehen. Die Abstaende sind bewusst eng
+        // zwischen Frage und Bedienhinweis (sie gehoeren zusammen) und
+        // groesser nach der Bildmarke.
+        var hTitel   = dc.getFontHeight(Graphics.FONT_MEDIUM);
+        var hFrage   = dc.getFontHeight(Graphics.FONT_SMALL);
+        var hHinweis = dc.getFontHeight(Graphics.FONT_XTINY);
+        var gLogo    = Ui.s(dc, 6);      // Bildmarke -> Titel
+        var gTitel   = Ui.s(dc, 10);     // Titel -> Frage
+        var gFrage   = Ui.s(dc, 2);      // Frage -> Bedienhinweis (eng)
+
+        var blockH = logoH + gLogo + hTitel + gTitel + hFrage + gFrage + hHinweis;
+        var zone   = Ui.pct(dc, 75);                  // obere Zone
+        var y      = (zone - blockH) / 2;
+        if (y < Ui.s(dc, 4)) { y = Ui.s(dc, 4); }     // Notbremse bei engen Displays
+
+        dc.drawBitmap(cx - logoW / 2, y, _logo);
+        y += logoH + gLogo;
+
+        dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, y, Graphics.FONT_MEDIUM, "Einsatzdoku",
             Graphics.TEXT_JUSTIFY_CENTER);
+        y += hTitel + gTitel;
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy, Graphics.FONT_SMALL, "Dienst beginnen?",
+        dc.drawText(cx, y, Graphics.FONT_SMALL, "Dienst beginnen?",
             Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 40, Graphics.FONT_TINY, "START drücken",
+        y += hFrage + gFrage;
+
+        dc.setColor(Ui.BLAU, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, y, Graphics.FONT_XTINY, Input.lSelect() + " drücken",
             Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Einrichtung in der richtigen Reihenfolge anzeigen: erst die
+        // Untere Zone: Einrichtung in der richtigen Reihenfolge — erst die
         // Server-Adresse (App-Einstellungen in Garmin Connect), dann koppeln.
+        var hy = zone + (dc.getHeight() - zone - hHinweis * 2) / 2;
+        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
         if (!Uploader.hasServer()) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 52, Graphics.FONT_XTINY,
+            dc.drawText(cx, hy, Graphics.FONT_XTINY,
                 "Server in Garmin Connect", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(cx, dc.getHeight() - 38, Graphics.FONT_XTINY,
+            dc.drawText(cx, hy + hHinweis, Graphics.FONT_XTINY,
                 "eintragen", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (!Uploader.hasCredentials()) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 52, Graphics.FONT_XTINY,
-                "Nicht gekoppelt — DOWN drücken", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, hy, Graphics.FONT_XTINY,
+                "Nicht gekoppelt —", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, hy + hHinweis, Graphics.FONT_XTINY,
+                Input.lPageDown(), Graphics.TEXT_JUSTIFY_CENTER);
         }
-
     }
 }
 
-class StartDelegate extends WatchUi.BehaviorDelegate {
+class StartDelegate extends ActionDelegate {
 
-    function initialize() { BehaviorDelegate.initialize(); }
+    function initialize() { ActionDelegate.initialize(false); }
 
-    // DOWN: Sync-Status & App-Version anzeigen
-    function onNextPage() as Lang.Boolean {
+    // Sync-Status & App-Version (kurz DOWN bzw. Wischen nach unten)
+    function actPageNext() as Lang.Boolean {
         WatchUi.pushView(new SyncView(true), new SyncDelegate(true), WatchUi.SLIDE_UP);
         return true;
     }
 
-    function onSelect() as Lang.Boolean {          // START
+    function actSelectShort() as Lang.Boolean {
         Model.beginService();
         Util.vibrateTwice();                       // fuehlbar: Aufzeichnung laeuft
         Nav.goTo(:clock);
         return true;
     }
 
-    function onBack() as Lang.Boolean {
+    function actBack() as Lang.Boolean {
         System.exit();
         return true;
     }

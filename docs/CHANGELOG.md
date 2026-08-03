@@ -10,6 +10,89 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.6.0] — 2026-08-03
+
+### Neu — Forerunner 945 und Venu 3s werden unterstützt
+
+Die App lief bisher nur auf der Fenix 6 Pro. Dazu kommen zwei Geräte mit
+anderen Voraussetzungen: die FR945 mit kleinerem Display (240×240) und die
+Venu 3s mit größerem Display (390×390), Touchscreen und nur **zwei** für Apps
+erreichbaren Tasten — die mittlere ist systemseitig belegt und erreicht
+Connect-IQ-Apps nicht.
+
+- **Gemeinsames Eingabemodell (`Input.mc`).** Die Langdruck-Erkennung, die
+  bisher in drei Oberflächen einzeln stand, liegt jetzt an einer Stelle,
+  ebenso die Tastensperre und die geräteabhängige Menü-Taste. Die Oberflächen
+  beschreiben nur noch, was bei welcher *Aktion* passieren soll.
+- **Bedienung der Venu 3s:** Wischen hoch und runter blättert, Wischen rechts
+  wirkt wie Zurück. Der lange Druck liegt bewusst doppelt — auf der
+  Action-Taste *und* auf der Zurück-Taste. Grund: Das Handbuch der Venu 3
+  nennt ein Steuerungsmenü nach zwei Sekunden Halten der Action-Taste. Im
+  Simulator trat es nicht auf, auf echter Hardware ist es ungeprüft. Fängt die
+  Uhr den langen Action-Druck ab, bleibt die App über den langen
+  Zurück-Druck vollständig bedienbar.
+- **Tippen auf den Bildschirm bleibt auf den Hauptseiten wirkungslos.** In den
+  Menüs kann es den markierten Eintrag auswählen — bewusst hingenommen, weil
+  Tasten- und Bildschirmauswahl technisch nicht unterscheidbar sind.
+- **Adrenalin und Rhythmuskontrolle** sind auf der Venu 3s nur über das
+  Rea-Untermenü erreichbar; die langen UP/DOWN-Drücke gibt es dort nicht.
+- **Neue App-Einstellung „Touchbedienung verwenden"** (Vorgabe: an). Sie
+  greift erst bei Uhren, die Touch **und** UP/DOWN haben (Fenix 7 und neuer),
+  und wird auf der Venu 3s ignoriert — ohne Touch wäre sie unbedienbar.
+- **Bedienhinweise passen sich dem Gerät an:** „START halten" auf der Fenix,
+  „Action halten" auf der Venu; „DOWN drücken" wird zu „nach unten wischen".
+- Neues Dokument `docs/Geraete-Eingabe.md` mit dem gemessenen Eingabeverhalten
+  je Uhr, neues Werkzeug `tools/eingabe-probe` zum Ausmessen weiterer Geräte.
+
+### Geändert — Alle Oberflächen neu ausgemessen
+
+Die Maße waren fest auf 260×260 verdrahtet. Sie werden jetzt relativ zur
+Displayhöhe gerechnet und ergeben bei 260 **exakt** die bisherigen Pixelwerte;
+auf der Fenix 6 Pro ändert sich dadurch nichts.
+
+- **Startbildschirm:** Bildmarke (70×70, auf der Venu 105×105) über dem Titel.
+  „Einsatzdoku" im Markenorange, „START drücken" kleiner und im Markenblau,
+  enger an „Dienst beginnen?" gerückt. Der Block sitzt vertikal zentriert in
+  den oberen 75 % der Höhe; die Einrichtungshinweise haben die unteren 25 %
+  für sich und lassen ihn nicht mehr springen.
+- **Hauptanzeige:** alles vertikal zentriert, größerer Abstand zwischen Datum
+  und Phasennummer.
+- **Geschwindigkeit:** „km/h" rückt an die Zahl heran, der Absatz zur Distanz
+  bleibt; alles vertikal zentriert.
+- **Statistik:** vertikal zentriert.
+- **Sync:** Die Überschrift „Sync" entfällt. Die GPS-Güte steht jetzt über der
+  Hauptaussage, diese sitzt vertikal in der Mitte. Fehlergrund,
+  Kopplungsmeldung, Einrichtungshinweis und Version bilden unten einen Block
+  mit gleichbleibendem Abstand zum Rand.
+- **Reanimationsseite:** oberes und unteres Feld je 25 % der Displayhöhe, das
+  mittlere 50 %; jedes Feld trägt seinen Inhalt vertikal zentriert.
+
+### Geändert — Reanimation beenden ist jetzt zweistufig
+
+Bisher fragte „Rea BEENDEN" einmal nach und schloss die Sitzung. Wer sich
+vertippte, hatte die Dokumentation zu.
+
+- **„Rea BEENDEN" hält die Reanimation an** und öffnet die Übersicht. Dort
+  stehen ganz oben **Rea fortsetzen** und **Rea beenden** — die Entscheidung
+  fällt also mit den dokumentierten Zeiten vor Augen. Der
+  Bestätigungsdialog entfällt dafür.
+- Ohne Entscheidung bleibt die Reanimation **pausiert**; die Zurück-Taste
+  schließt nur die Liste. Der Pausenzustand übersteht einen Neustart der App.
+- Während der Pause steht der 2:00-Countdown. **Die Gesamtdauer läuft
+  weiter** — sie ist die tatsächlich verstrichene Reanimationszeit und darf
+  nicht zu kurz dokumentiert werden.
+- Uhr-, Tempo-, Statistik- und Sync-Seite zeigen „REA pausiert" statt „REA
+  läuft"; der rote Ring der Hauptanzeige wird gelb.
+- Wird der Einsatz abgeschlossen oder der Dienst beendet, während eine Rea
+  pausiert ist, wird sie automatisch geschlossen — wie bisher eine laufende.
+- **Im Rea-Untermenü** steht „Übersicht" jetzt hinter „Rea BEENDEN" und damit
+  einen Schritt nach oben vom Öffnungspunkt. „Übersicht" ist im Markenblau
+  gehalten, damit sie sich an der Umlaufgrenze von „Timer neu starten"
+  unterscheidet.
+
+Am Datenmodell, am JSON-Vertrag und am Server ändert sich nichts. Die Pause
+ist ein reiner Bedienzustand und wird nicht übertragen.
+
 ## [Uhr 1.5.0] — 2026-08-02
 
 ### Geändert — Reanimations-Bedienung

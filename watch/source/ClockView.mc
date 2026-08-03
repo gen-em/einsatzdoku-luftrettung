@@ -33,88 +33,62 @@ class ClockView extends WatchUi.View {
         var cx = dc.getWidth() / 2;
         var cy = dc.getHeight() / 2;
 
-        // Uhrzeit gross
+        // Uhrzeit, Datum, Phasennummer und Phasenname bilden einen Block und
+        // werden als Ganzes vertikal zentriert. Zwischen Datum und Phase steht
+        // bewusst ein groesserer Abstand: Das sind zwei verschiedene Aussagen —
+        // oben wann, unten wo im Einsatz.
+        var hZeit  = dc.getFontHeight(Graphics.FONT_NUMBER_THAI_HOT);
+        var hDatum = dc.getFontHeight(Graphics.FONT_TINY);
+        var hNr    = dc.getFontHeight(Graphics.FONT_LARGE);
+        var hName  = dc.getFontHeight(Graphics.FONT_TINY);
+        var gZeit  = Ui.s(dc, 2);      // Uhrzeit -> Datum: eng, gehoert zusammen
+        var gDatum = Ui.s(dc, 22);     // Datum -> Phase: Absatz
+        var gNr    = Ui.s(dc, 2);      // Nummer -> Bezeichnung: eng
+
+        var blockH = hZeit + gZeit + hDatum + gDatum + hNr + gNr + hName;
+        var y = (dc.getHeight() - blockH) / 2;
+
         var t = System.getClockTime();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 44, Graphics.FONT_NUMBER_THAI_HOT,
+        dc.drawText(cx, y, Graphics.FONT_NUMBER_THAI_HOT,
             t.hour.format("%02d") + ":" + t.min.format("%02d"),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            Graphics.TEXT_JUSTIFY_CENTER);
+        y += hZeit + gZeit;
 
-        // Datum klein darunter
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 4, Graphics.FONT_TINY,
-            Util.localDateShort(),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(cx, y, Graphics.FONT_TINY, Util.localDateShort(),
+            Graphics.TEXT_JUSTIFY_CENTER);
+        y += hDatum + gDatum;
 
-        // Phase darunter: Nummer gross, Bezeichnung klein
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 40, Graphics.FONT_LARGE,
-            Model.phase.toString(),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, y, Graphics.FONT_LARGE, Model.phase.toString(),
+            Graphics.TEXT_JUSTIFY_CENTER);
+        y += hNr + gNr;
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 68, Graphics.FONT_TINY,
-            Const.PHASE_LABELS[Model.phase],
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(cx, y, Graphics.FONT_TINY, Const.PHASE_LABELS[Model.phase],
+            Graphics.TEXT_JUSTIFY_CENTER);
 
         // Laufende Reanimation: roter Ring entlang der Luenette — peripher
         // erkennbar, ohne eine Textzeile zu belegen.
         if (Cpr.active) {
-            dc.setPenWidth(9);
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            var rad = (dc.getWidth() < dc.getHeight() ? dc.getWidth() : dc.getHeight()) / 2 - 5;
+            dc.setPenWidth(Ui.s(dc, 9));
+            dc.setColor(Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT,
+                Graphics.COLOR_TRANSPARENT);
+            var rad = (dc.getWidth() < dc.getHeight() ? dc.getWidth() : dc.getHeight()) / 2
+                      - Ui.s(dc, 5);
             dc.drawCircle(cx, cy, rad);
             dc.setPenWidth(1);
         }
     }
 }
 
-class ClockDelegate extends WatchUi.BehaviorDelegate {
+class ClockDelegate extends ActionDelegate {
 
-    var _timer as Timer.Timer or Null = null;
-    var _holding as Lang.Boolean = false;
-    var _longFired as Lang.Boolean = false;
-    var _combo as Lang.Boolean = false;        // zweite Taste waehrend START gedrueckt
+    function initialize() { ActionDelegate.initialize(false); }
 
-    function initialize() { BehaviorDelegate.initialize(); }
-
-    function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        if (evt.getKey() == WatchUi.KEY_ENTER) {
-            _holding = true;
-            _longFired = false;
-            _combo = false;
-            if (_timer == null) { _timer = new Timer.Timer(); }
-            _timer.start(method(:onHoldTimeout), Const.LONG_PRESS_MS, false);
-            return true;
-        }
-        // Andere Taste, waehrend START gehalten wird: Das ist die
-        // Tastensperre der Uhr (START + beliebige Taste) und kein Menuewunsch.
-        // Schnellmenue unterdruecken und das Ereignis schlucken, damit auch
-        // die Seitenwahl nicht anspringt.
-        if (_holding) {
-            _combo = true;
-            if (_timer != null) { _timer.stop(); }
-            return true;
-        }
-        return false;
-    }
-
-    // Nach 1 s Halten: Schnellmenue oeffnet sofort (nicht erst beim Loslassen)
-    function onHoldTimeout() as Void {
-        if (!_holding || _combo) { return; }
-        _longFired = true;
-        _pushQuickMenu();
-    }
-
-    function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        if (evt.getKey() != WatchUi.KEY_ENTER) {
-            // Loslassen der Zweittaste: Kombination bleibt bis START losgelassen wird
-            return _holding;
-        }
-        if (!_holding) { return false; }
-        _holding = false;
-        if (_timer != null) { _timer.stop(); }
-        if (_combo) { _combo = false; return true; }           // Tastensperre: nichts tun
-        if (_longFired) { _longFired = false; return true; }   // lang: schon offen
+    // kurz START: naechste Phase; nach Phase 9 die Abschluss-Bestaetigung
+    function actSelectShort() as Lang.Boolean {
         if (Model.missionActive() && Model.phase >= 9) {
             pushFinishConfirm();               // Haltezustand: Abschluss bestaetigen
         } else {
@@ -124,14 +98,11 @@ class ClockDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    function onKey(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        // ENTER selbst verarbeiten (verhindert doppeltes onSelect)
-        return evt.getKey() == WatchUi.KEY_ENTER;
-    }
-
-    function _pushQuickMenu() as Void {
+    // lang START: farbcodiertes Schnellmenue
+    function actSelectLong() as Lang.Boolean {
         var v = new QuickMenuView();
         WatchUi.pushView(v, new QuickMenuDelegate(v), WatchUi.SLIDE_LEFT);
+        return true;
     }
 
     static function pushFinishConfirm() as Void {
@@ -139,10 +110,10 @@ class ClockDelegate extends WatchUi.BehaviorDelegate {
         WatchUi.pushView(dlg, new FinishConfirmDelegate(), WatchUi.SLIDE_LEFT);
     }
 
-    function onNextPage() as Lang.Boolean { Nav.go(1); return true; }       // kurz DOWN
-    function onPreviousPage() as Lang.Boolean { Nav.go(-1); return true; }  // kurz UP
+    function actPageNext() as Lang.Boolean { Nav.go(1); return true; }
+    function actPagePrev() as Lang.Boolean { Nav.go(-1); return true; }
 
-    function onBack() as Lang.Boolean {
+    function actBack() as Lang.Boolean {
         // Versehentliches Beenden verhindern: Dienst laeuft weiter, App bleibt offen
         var dlg = new WatchUi.Confirmation("Dienst läuft. App verlassen?");
         WatchUi.pushView(dlg, new ExitConfirmDelegate(), WatchUi.SLIDE_LEFT);
@@ -312,7 +283,7 @@ class QuickMenuView extends WatchUi.View {
         dc.clear();
         var cx = dc.getWidth() / 2;
         var cy = dc.getHeight() / 2;
-        var rowH = 38;
+        var rowH = Ui.s(dc, 38);
         var n = items.size();
 
         for (var off = -2; off <= 2; off++) {
@@ -321,8 +292,8 @@ class QuickMenuView extends WatchUi.View {
             var y = cy + off * rowH;
             if (off == 0) {
                 dc.setColor(item[1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
-                dc.fillRoundedRectangle(14, y - rowH / 2 + 2,
-                    dc.getWidth() - 28, rowH - 4, 8);
+                dc.fillRoundedRectangle(Ui.s(dc, 14), y - rowH / 2 + Ui.s(dc, 2),
+                    dc.getWidth() - Ui.s(dc, 28), rowH - Ui.s(dc, 4), Ui.s(dc, 8));
                 dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(cx, y, Graphics.FONT_SMALL,
                     item[0] as Lang.String,

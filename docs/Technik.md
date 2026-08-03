@@ -27,8 +27,9 @@ Daten erst nach Server-Bestätigung.
 
 ```
 hems/
-├── docs/                  Handbuch, Technik, Changelog, JSON-Vertrag,
-│                          Backup-Format, Export-Format
+├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
+│                          Backup-Format, Export-Format,
+│                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
@@ -72,8 +73,13 @@ hems/
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
 ├── watch/                 Connect-IQ-Projekt (Monkey C)
-│   ├── manifest.xml, monkey.jungle, resources/
+│   ├── manifest.xml, monkey.jungle
+│   ├── resources/         Vorgabe für alle Geräte
+│   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
+├── tools/                 Werkzeuge, werden nicht ausgeliefert
+│   └── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
+│                          verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -664,11 +670,14 @@ Referrer-Policy `strict-origin-when-cross-origin` (OSM-Kacheln).
 | `HemsApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync) |
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
-| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart) |
+| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
 | `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()` |
+| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1) |
+| `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
+| `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
-| `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; lange Tastendrücke manuell via `onKeyPressed/Released` (`Const.LONG_PRESS_MS`); Tastensperre-Erkennung (zweite Taste während START) |
+| `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
 | `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete), App-Version, Kopplung per START-Halten |
 | `Pair.mc` | Kopplungscode-Eingabe → tauscht Code gegen Geräte-Zugang (`Storage 'cred'`) |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
@@ -680,8 +689,110 @@ Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klasse
 > zuverlässig und wurde gelöscht. Eine künftige Kartenansicht wird neu
 > aufgebaut; die alte Fassung liegt in der Git-Historie.
 
+### 5.1 Tastenbelegung je Geräteprofil
+
+Die Zielgeräte unterscheiden sich in zwei Achsen: **fünf oder drei Tasten**
+und **mit oder ohne Touch**. Daraus ergeben sich die Belegungen unten. Was das
+einzelne Gerät technisch hergibt, steht gemessen in `Geraete-Eingabe.md` —
+dieser Abschnitt beschreibt, was die App daraus macht.
+
+**Profil A — fünf Tasten, kein Touch** (`fenix6pro`, `fr945`)
+
+| Eingabe | Hauptseiten | Reanimationsseite | Listen und Menüs |
+|---|---|---|---|
+| kurz UP | Seite zurück | Seite zurück | Eintrag hoch |
+| kurz DOWN | Seite vor | Seite vor | Eintrag runter |
+| kurz START | — | Rea beginnen bzw. Untermenü | Eintrag wählen |
+| lang START | Schnellmenü; Sync-Seite: Kopplung | Countdown neu starten | — |
+| lang UP | — | Adrenalin | — |
+| lang DOWN | — | Rhythmuskontrolle | — |
+| BACK | App verlassen (Abfrage) | zurück zur Uhrseite | Liste schließen |
+| START + beliebige Taste | Tastensperre, wirkungslos | Tastensperre, wirkungslos | — |
+
+LIGHT wird auf beiden Geräten nicht zugestellt und ist unbelegt.
+
+**Profil B — drei Tasten, Touch** (`venu3s`)
+
+Nur zwei der drei Tasten sind für Connect-IQ-Apps erreichbar; die mittlere ist
+systemseitig belegt. Ohne Touch ist das Gerät deshalb nicht bedienbar.
+
+| Eingabe | Wirkung |
+|---|---|
+| kurz Action | wie kurz START in Profil A |
+| lang Action | wie lang START in Profil A |
+| lang Zurück | wie lang START in Profil A (zweiter Weg, s. u.) |
+| kurz Zurück | wie BACK in Profil A |
+| Wischen hoch / runter | Seite vor / zurück, in Listen Eintrag runter / hoch |
+| Wischen rechts | wie BACK |
+| Wischen links | unbelegt |
+| Tippen | auf Hauptseiten wirkungslos; in Menüs kann es den markierten Eintrag wählen |
+
+Ersatz für fehlende Tasten:
+
+- **UP/DOWN** werden durch Wischen ersetzt. Das System leitet Wischgesten
+  selbst in `onNextPage`/`onPreviousPage` um; eigener Wisch-Code ist weder
+  nötig noch möglich (das Roh-Ereignis wird gar nicht erst zugestellt).
+- **Lang UP und lang DOWN** haben auf der Venu keine Entsprechung. Adrenalin
+  und Rhythmuskontrolle sind dort nur über das Rea-Untermenü erreichbar —
+  ein Bedienschritt mehr.
+- **Der lange Druck liegt bewusst doppelt**, auf Action *und* Zurück. Grund:
+  Das Handbuch der Venu 3 nennt ein Steuerungsmenü nach zwei Sekunden Halten
+  der Action-Taste. Im Simulator trat es nicht auf, auf echter Hardware ist es
+  ungeprüft. Fängt die Uhr den langen Action-Druck ab, bleibt die App über den
+  langen Zurück-Druck vollständig bedienbar. Beide Wege sind gegeneinander
+  entprellt.
+- **Die Tastensperre** (START + zweite Taste) entfällt auf der Venu, weil nur
+  eine Taste sinnvoll erreichbar ist.
+
+**Profil C — fünf Tasten mit Touch** (Fenix 7 und neuer) ist vorbereitet, aber
+nicht ausgeliefert. Dafür existiert die App-Einstellung `touchEnabled`
+(Vorgabe: an), mit der sich die Touchbedienung abschalten lässt — auf
+Profil B hat sie keine Wirkung, weil das Gerät sonst unbedienbar wäre.
+
+### 5.1a Pausenzustand der Reanimation
+
+`Cpr.mc` kennt drei Zustände: `active=false` (keine Rea), `active=true,
+paused=false` (läuft) und `active=true, paused=true` (angehalten). Die Pause
+entsteht ausschließlich über „Rea BEENDEN" im Untermenü: Der 2:00-Countdown
+steht, die Übersicht öffnet sich, und dort wird fortgesetzt oder endgültig
+geschlossen.
+
+Zwei Punkte sind bewusst so gebaut:
+
+- **Die Gesamtdauer läuft während der Pause weiter.** Sie ist die tatsächlich
+  verstrichene Reanimationszeit; ein Anhalten würde sie zu kurz dokumentieren.
+  Nur der Countdown steht.
+- **Die Pause wird nicht übertragen.** Sie ist ein reiner Bedienzustand, im
+  JSON-Vertrag gibt es sie nicht. Persistiert wird sie trotzdem (`Storage`
+  `"cpr"`, Schlüssel `"p"`), damit ein Neustart der App keine Entscheidung
+  erzwingt oder unterschlägt.
+
+`stopRecording()` schließt die Sitzung unabhängig davon, ob sie lief oder
+pausiert war — Einsatzabschluss und Dienstende brauchen deshalb keine
+Sonderbehandlung.
+
+### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
+
+Bevor ein Gerät in `watch/manifest.xml` aufgenommen wird, muss gemessen sein,
+welche Tasten überhaupt bei der App ankommen, welche Behaviors das System
+daraus ableitet und ob die Langdruck-Erkennung dort funktioniert. Datenblätter
+reichen dafür nicht: Auf der Venu 3s ist eine der drei Tasten systemseitig
+belegt und für Connect-IQ-Apps unsichtbar — das steht in keiner Übersicht.
+
+Dafür liegt unter `tools/eingabe-probe/` ein eigenständiges Connect-IQ-Projekt.
+Es wird nie ausgeliefert, hat eine eigene UUID und keine Berechtigungen. Es
+protokolliert jedes Eingabeereignis mit Millisekunden-Stempel auf Konsole und
+Display und startet bei jedem Tastendruck einen 1000-ms-Timer — denselben
+Mechanismus, den die App über `Const.LONG_PRESS_MS` für Langdrücke benutzt.
+Steht `HALTE-TIMER` im Protokoll vor dem `KeyReleased`, sind Langdrücke
+möglich; steht es danach oder gar nicht, sind sie es nicht.
+
+Messfolge und Auswertung: `tools/eingabe-probe/LIESMICH.md`.
+Ergebnisse gehören nach `Geraete-Eingabe.md`.
+
 **Build:** VS Code + Monkey-C-Erweiterung + Connect-IQ-SDK + JDK;
-Entwickler-Schlüssel via „Generate a Developer Key". Ziel `fenix6pro`,
+Entwickler-Schlüssel via „Generate a Developer Key". Ziele `fenix6pro`, `fr945`
+und `venu3s` (s. Abschnitt 5.1 und `Geraete-Eingabe.md`),
 Debug-Build; Sideload: `.prg` nach `GARMIN/Apps/`. Server-Adresse, Geräte-ID und
 API-Schlüssel sind **App-Einstellungen ohne Vorgabewert** (Garmin Connect); die
 Zugangsdaten füllt die **Kopplung per Code** (Web: Einstellungen → Geräte; Uhr:
@@ -759,49 +870,8 @@ aktiv? Connect-IQ-Einstellungen (Server-Domain, ID, Schlüssel)? Uhr online
 (Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
 erfolgreichem Upload.
 
-## 8. Backlog (bewusst offen)
+## 8. Backlog
 
-1. Reanimations-Zeiten im Nachtrage-/Bearbeitungsformular
-2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
-3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
-4. Geteilte Flugtage (Crew-weit statt je NutzerIn)
-5. Geräte-Limit pro NutzerIn
-6. Weitere Zielgeräte (Fenix 7/8, Touch-Bedienung)
-7. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
-8. Content-Security-Policy als zusätzliche Verteidigungslinie
-9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen
-10. **`day_col` generisch auswerten.** Der Schlüssel `day_col` in
-    `mission_fields.php` ist derzeit reine Dokumentation: Die Spalten der
-    Tagestabelle sind an drei Stellen hartkodiert — `api/day.php` (SELECT +
-    JSON), `index.php` (`<thead>`) und `index.php` (Zeilenrendering +
-    `sortVal()`). Solange das so ist, erscheint die Spalte „abw. Crew"
-    (Crew-Override, Web 2.6.0) nicht in der Tagesübersicht, obwohl sie
-    definiert ist. Auflösung = einmalige generische Auswertung; berührt
-    zusätzlich die CSS-Spaltenklassen (`c-winde`, `c-bw`, `c-sek`).
-    Die Tagestabelle in `index.php` ist bewusst **nicht** auf
-    `assets/missiontable.js` umgestellt: Sie zeigt Tagesnummer und Farbmarkierung
-    statt Datum und gehört zu einem anderen Zusammenhang. Erst wenn `day_col`
-    generisch ausgewertet wird, lohnt die Frage nach einer Zusammenführung.
-11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
-    kann.** Beobachtet ohne hinterlegte Server-Adresse: Die Seite zeigt
-    gleichzeitig das grüne „Sync vollständig" mit Haken **und** unten den
-    gelben Hinweis „Erst Server-Adresse setzen". Dasselbe tritt auf, wenn die
-    Adresse gesetzt, das Gerät aber noch nicht gekoppelt ist.
-    Ursache: `SyncView.onUpdate` wertet zwei voneinander unabhängige Größen
-    aus und stellt sie unverbunden nebeneinander. `Model.backlogCount()`
-    beantwortet ausschließlich die Frage „liegen abgeschlossene Pakete zum
-    Senden bereit?" — vor dem ersten Dienst ist das zu Recht `0`. Daraus wird
-    im Text aber „vollständig" und damit eine Aussage über den Übertragungsweg,
-    den die Uhr zu diesem Zeitpunkt nie benutzt hat. `Uploader.lastError`
-    bleibt dabei `null`, weil `SyncView.refresh()` `syncAll()` nur bei
-    vorhandenem Rückstand anstößt — es gibt also nicht einmal eine Fehlerzeile,
-    die den Widerspruch auflösen würde.
-    Reine Anzeigefrage, kein Datenverlust: Wird ohne Einrichtung dokumentiert,
-    puffert die Uhr korrekt und der Rückstand erscheint.
-    Richtung der Auflösung: Der grüne Zustand setzt zusätzlich
-    `Uploader.hasServer()` **und** `hasCredentials()` voraus. Fehlt eines von
-    beidem, tritt an seine Stelle ein neutraler Einrichtungs-Zustand, und der
-    heute unten stehende gelbe Hinweis wird zur Hauptaussage der Seite statt
-    zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
-    Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
-    abgebildet und bleibt.
+Die offenen Punkte stehen in einer eigenen Datei: **`Backlog.md`**. Dort sind
+sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
+(z. B. „Backlog Nr. 10").

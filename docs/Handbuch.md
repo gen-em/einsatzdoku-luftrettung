@@ -1,6 +1,6 @@
 # Einsatzdoku — Handbuch
 
-*Stand: 02.08.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Stand: 03.08.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 ## 1. Was ist die Einsatzdoku?
@@ -21,6 +21,34 @@ Patientendaten hinein.
 ---
 
 ## 2. Die Uhr-App
+
+### 2.0 Unterstützte Uhren und ihre Bedienung
+
+Die App läuft auf der **Fenix 6 Pro**, der **Forerunner 945** und der
+**Venu 3s**. Fenix und Forerunner werden gleich bedient. Die Venu 3s hat nur
+zwei Tasten, die Apps überhaupt erreichen — die mittlere ist von Garmin
+belegt — und wird deshalb zusätzlich über den Touchscreen bedient:
+
+| Auf Fenix / Forerunner | Auf der Venu 3s |
+|---|---|
+| kurz UP / DOWN | nach oben / unten wischen |
+| kurz START | kurz Action (Taste oben rechts) |
+| lang START | lang Action **oder** lang Zurück |
+| lang UP / lang DOWN | nicht verfügbar — die Ereignisse liegen im Rea-Untermenü |
+| BACK | kurz Zurück (Taste unten rechts) oder nach rechts wischen |
+
+Der lange Druck liegt auf der Venu bewusst doppelt: Sollte die Uhr den langen
+Druck der Action-Taste für ihr eigenes Steuerungsmenü abfangen, bleibt die App
+über den langen Zurück-Druck vollständig bedienbar.
+
+**Tippen auf den Bildschirm bewirkt auf den Hauptseiten nichts.** Das ist
+Absicht — unter Einsatzbedingungen soll eine versehentliche Berührung nichts
+auslösen. In Menüs kann ein Tippen den gerade markierten Eintrag auswählen.
+
+Uhren mit Touchscreen **und** UP/DOWN-Tasten (Fenix 7 und neuer) werden noch
+nicht ausgeliefert. Für sie gibt es in den App-Einstellungen bereits den
+Schalter **„Touchbedienung verwenden"**; auf der Venu 3s hat er keine Wirkung,
+weil sie ohne Touch unbedienbar wäre.
 
 ### 2.1 Dienst beginnen und beenden
 
@@ -111,12 +139,32 @@ Schnellmenü der Hauptanzeige) in dieser Reihenfolge:
 | Sonographie | Zeitstempel |
 | ROSC | Zeitstempel |
 | Tod | Zeitstempel |
+| Rea BEENDEN | hält die Reanimation an und öffnet die Übersicht (s. u.) |
 | Übersicht | zeigt alle Zeiten der laufenden Rea |
-| Rea BEENDEN | schließt die Reanimation nach Sicherheitsabfrage |
+
+Das Menü öffnet auf „Timer neu starten". Ein Schritt **nach oben** landet auf
+„Übersicht", zwei Schritte auf „Rea BEENDEN".
+
+**Reanimation beenden — zweistufig.** „Rea BEENDEN" schließt die Rea nicht
+sofort, sondern **hält sie an** und öffnet die Übersicht. Ganz oben stehen dort
+zwei Einträge:
+
+- **Rea fortsetzen** — weiter mit frischem 2:00-Zyklus.
+- **Rea beenden** — die Reanimation ist endgültig abgeschlossen.
+
+So fällt die Entscheidung mit den dokumentierten Zeiten vor Augen, und ein
+Vertippen schließt nichts mehr versehentlich. Triffst du keine Entscheidung
+und gehst mit BACK zurück, bleibt die Rea **pausiert** — alle Seiten zeigen
+das an, der rote Ring der Hauptanzeige wird gelb. Der Zustand übersteht auch
+einen Neustart der Uhr.
+
+Während der Pause steht der Countdown. Die **Gesamtdauer läuft weiter**: Sie
+ist die tatsächlich verstrichene Reanimationszeit und würde sonst zu kurz
+dokumentiert.
 
 Nach dem Beenden startet **kurz START** eine *neue* Reanimation — mehrere pro
 Einsatz sind möglich, jede bekommt im Web ihre eigene Tabelle. Bei Einsatzende
-wird eine laufende Rea automatisch geschlossen.
+wird eine laufende oder pausierte Rea automatisch geschlossen.
 
 ### 2.4 Datenübertragung
 

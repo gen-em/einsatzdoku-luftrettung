@@ -1,5 +1,8 @@
 // Einsatzdoku — Oberflaeche: Statistik des laufenden Einsatztags
 // Einsaetze = abgeschlossene Einsaetze des Tages (Alarmierung + Ende)
+//
+// Ueberschrift, Zahl und Beschriftung bilden einen Block und werden als
+// Ganzes vertikal zentriert. Der Rea-Marker bleibt am unteren Rand.
 using Toybox.WatchUi;
 using Toybox.Graphics;
 using Toybox.Lang;
@@ -12,33 +15,37 @@ class StatsView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         var cx = dc.getWidth() / 2;
-        var cy = dc.getHeight() / 2;
+
+        var hKopf  = dc.getFontHeight(Graphics.FONT_TINY);
+        var hZahl  = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
+        var hLabel = dc.getFontHeight(Graphics.FONT_MEDIUM);
+        var gKopf  = Ui.s(dc, 14);
+        var gZahl  = Ui.s(dc, 4);
+
+        var blockH = hKopf + gKopf + hZahl + gZahl + hLabel;
+        var y = (dc.getHeight() - blockH) / 2;
 
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, 26, Graphics.FONT_TINY, "Heute",
+        dc.drawText(cx, y, Graphics.FONT_TINY, "Heute",
             Graphics.TEXT_JUSTIFY_CENTER);
+        y += hKopf + gKopf;
 
-        // abgeschlossene Einsaetze des Tages
-        dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 12, Graphics.FONT_NUMBER_HOT,
-            Model.dayMissions.toString(),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, y, Graphics.FONT_NUMBER_HOT,
+            Model.dayMissions.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        y += hZahl + gZahl;
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy + 40, Graphics.FONT_MEDIUM, "Einsätze",
+        dc.drawText(cx, y, Graphics.FONT_MEDIUM, "Einsätze",
             Graphics.TEXT_JUSTIFY_CENTER);
 
-
-        if (Cpr.active) {
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 28, Graphics.FONT_XTINY,
-                "REA läuft", Graphics.TEXT_JUSTIFY_CENTER);
-        }
+        Ui.drawResusMarker(dc);
     }
 }
 
-class StatsDelegate extends WatchUi.BehaviorDelegate {
-    function initialize() { BehaviorDelegate.initialize(); }
-    function onNextPage() as Lang.Boolean { Nav.go(1); return true; }
-    function onPreviousPage() as Lang.Boolean { Nav.go(-1); return true; }
-    function onBack() as Lang.Boolean { Nav.goTo(:clock); return true; }
+class StatsDelegate extends ActionDelegate {
+    function initialize() { ActionDelegate.initialize(false); }
+    function actPageNext() as Lang.Boolean { Nav.go(1); return true; }
+    function actPagePrev() as Lang.Boolean { Nav.go(-1); return true; }
+    function actBack() as Lang.Boolean { Nav.goTo(:clock); return true; }
 }

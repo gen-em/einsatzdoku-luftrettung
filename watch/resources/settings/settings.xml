@@ -11,4 +11,8 @@
              title="API-Schlüssel (wird beim Koppeln automatisch gesetzt)">
         <settingConfig type="alphaNumeric"/>
     </setting>
+    <setting propertyKey="@Properties.touchEnabled"
+             title="Touchbedienung verwenden (nur bei Uhren mit Touch und UP/DOWN-Tasten)">
+        <settingConfig type="boolean"/>
+    </setting>
 </settings>

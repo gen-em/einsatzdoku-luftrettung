@@ -9,10 +9,15 @@
 //         BACK verlaesst die Oberflaeche
 // Der haeufigste Griff unter Reanimationsbedingungen ist das Dokumentieren
 // eines Ereignisses — deshalb liegt das Untermenue auf dem kurzen Druck.
-// Lang-Druecke werden manuell ueber onKeyPressed/onKeyReleased erkannt.
+// Auf Geraeten ohne UP/DOWN sind Adrenalin und Rhythmuskontrolle nur ueber
+// das Untermenue erreichbar (docs/Geraete-Eingabe.md).
+//
+// Aufbau der Seite: oberes und unteres Feld je 25 % der Displayhoehe, das
+// mittlere 50 %. Jedes Feld traegt seinen Inhalt vertikal zentriert.
+//
 // Das Untermenue ist selbst gezeichnet (Menu2 kann keine Farben) und enthaelt
-// "Rea BEENDEN": schliesst die laufende Rea; erneuter Start beginnt
-// eine neue Reanimation (mehrere pro Einsatz).
+// "Rea BEENDEN": haelt die Rea an und oeffnet die Uebersicht, wo fortgesetzt
+// oder endgueltig geschlossen wird.
 using Toybox.WatchUi;
 using Toybox.Graphics;
 using Toybox.System;
@@ -27,59 +32,84 @@ class CprView extends WatchUi.View {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var cx = w / 2;
-        var cy = h / 2;
 
         // Heller Grund (transflektives Display: bei Tageslicht am besten lesbar)
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
         dc.clear();
 
         if (!Cpr.active) {
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy - 40, Graphics.FONT_MEDIUM, "Reanimation",
+            var hT = dc.getFontHeight(Graphics.FONT_MEDIUM);
+            var hH = dc.getFontHeight(Graphics.FONT_SMALL);
+            var g  = Ui.s(dc, 10);
+            var y0 = (h - (hT + g + hH)) / 2;
+            dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y0, Graphics.FONT_MEDIUM, "Reanimation",
                 Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy + 4, Graphics.FONT_SMALL, "START = Beginn",
-                Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(cx, y0 + hT + g, Graphics.FONT_SMALL,
+                Input.lSelect() + " = Beginn", Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
 
-        // 1) Kopfbalken: Gesamtdauer der Reanimation
+        var topH = Ui.pct(dc, 25);          // oberes Feld
+        var midH = Ui.pct(dc, 50);          // mittleres Feld
+        var midY = topH;
+        var botY = topH + midH;
+        var botH = h - botY;
+
+        // 1) Oberes Feld: Kopfbalken mit der Gesamtdauer der Reanimation
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.fillRectangle(0, 0, w, 56);          // bis an die Oberkante
+        dc.fillRectangle(0, 0, w, topH);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, 30, Graphics.FONT_NUMBER_MILD, _mmss(Cpr.elapsedS()),
+        dc.drawText(cx, topH / 2, Graphics.FONT_NUMBER_MILD, _mmss(Cpr.elapsedS()),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        // 2) Grosser 2:00-Countdown, mittig
-        var r = Cpr.cycleRemainingS();
-        dc.setColor(r == 0 ? Graphics.COLOR_RED : Graphics.COLOR_BLACK,
-            Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, cy - 6, Graphics.FONT_NUMBER_THAI_HOT, _mmss(r),
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        // 2) Mittleres Feld: Countdown und Fortschrittsbalken als ein Block,
+        //    darin vertikal zentriert.
+        var bh = Ui.s(dc, 20);                       // Balkenhoehe
+        var gap = Ui.s(dc, 18);                      // Countdown -> Balken
+        var hCd = dc.getFontHeight(Graphics.FONT_NUMBER_THAI_HOT);
+        var blockY = midY + (midH - (hCd + gap + bh)) / 2;
 
-        // 3) Fortschrittsbalken: fuellt sich im Lauf des Zyklus von links
-        //    nach rechts (leer bei Zyklusstart, voll bei 0:00)
-        var bx = 34;
-        var bw = w - 68;
-        var by = cy + 44;
-        var bh = 20;
-        var passed = Const.CPR_CYCLE_S - r;
-        if (passed < 0) { passed = 0; }
-        if (passed > Const.CPR_CYCLE_S) { passed = Const.CPR_CYCLE_S; }
-        var fill = (bw * passed) / Const.CPR_CYCLE_S;
-        if (fill > 0) {
-            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(bx, by, fill, bh);
+        if (Cpr.paused) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_NUMBER_MILD,
+                "PAUSE", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        } else {
+            var r = Cpr.cycleRemainingS();
+            dc.setColor(r == 0 ? Ui.ROT : Graphics.COLOR_BLACK,
+                Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_NUMBER_THAI_HOT,
+                _mmss(r), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+
+        // Fortschrittsbalken: fuellt sich im Lauf des Zyklus von links nach
+        // rechts (leer bei Zyklusstart, voll bei 0:00)
+        var bx = Ui.s(dc, 34);
+        var bw = w - 2 * bx;
+        var by = blockY + hCd + gap;
+        if (!Cpr.paused) {
+            var rem = Cpr.cycleRemainingS();
+            var passed = Const.CPR_CYCLE_S - rem;
+            if (passed < 0) { passed = 0; }
+            if (passed > Const.CPR_CYCLE_S) { passed = Const.CPR_CYCLE_S; }
+            var fill = (bw * passed) / Const.CPR_CYCLE_S;
+            if (fill > 0) {
+                dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(bx, by, fill, bh);
+            }
+        }
+        dc.setColor(Cpr.paused ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_BLACK,
+            Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRectangle(bx, by, bw, bh);      // Rahmen: leerer Balken sichtbar
+        dc.drawRectangle(bx, by, bw, bh);           // Rahmen: leerer Balken sichtbar
         dc.setPenWidth(1);
 
-        // 4) Trennlinie und aktuelle Uhrzeit
-        dc.drawLine(30, by + bh + 14, w - 30, by + bh + 14);
+        // 3) Unteres Feld: Trennlinie an der Feldgrenze, Uhrzeit darin zentriert
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(Ui.s(dc, 30), botY, w - Ui.s(dc, 30), botY);
         var t = System.getClockTime();
-        dc.drawText(cx, by + bh + 34, Graphics.FONT_NUMBER_MILD,
+        dc.drawText(cx, botY + botH / 2, Graphics.FONT_NUMBER_MILD,
             t.hour.format("%02d") + ":" + t.min.format("%02d"),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
@@ -89,80 +119,36 @@ class CprView extends WatchUi.View {
     }
 }
 
-class CprDelegate extends WatchUi.BehaviorDelegate {
+class CprDelegate extends ActionDelegate {
 
-    var _timer as Timer.Timer or Null = null;
-    var _heldKey = null;                       // gerade gehaltene Taste
-    var _longFired as Lang.Boolean = false;    // lange Aktion schon ausgeloest?
-    var _combo as Lang.Boolean = false;        // zweite Taste dazugekommen (Tastensperre)
+    // true: lange UP/DOWN-Druecke selbst verarbeiten (Adrenalin, Rhythmus)
+    function initialize() { ActionDelegate.initialize(true); }
 
-    function initialize() { BehaviorDelegate.initialize(); }
+    function actPagePrev() as Lang.Boolean { Nav.go(-1); return true; }
+    function actPageNext() as Lang.Boolean { Nav.go(1); return true; }
 
-    function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        var k = evt.getKey();
-        // Zweite Taste, waehrend schon eine gehalten wird: Tastensperre der
-        // Uhr — lange Aktion verwerfen (siehe ClockDelegate).
-        if (_heldKey != null && k != _heldKey) {
-            _combo = true;
-            if (_timer != null) { _timer.stop(); }
-            return true;
-        }
-        if (k == WatchUi.KEY_UP || k == WatchUi.KEY_DOWN || k == WatchUi.KEY_ENTER) {
-            _heldKey = k;
-            _longFired = false;
-            _combo = false;
-            if (_timer == null) { _timer = new Timer.Timer(); }
-            _timer.start(method(:onHoldTimeout), Const.LONG_PRESS_MS, false);
-            return true;
-        }
-        return false;
-    }
-
-    // Feuert nach 1 s Halten — waehrend die Taste noch gedrueckt ist.
-    // _longFired wird auch dann gesetzt, wenn nichts passiert (lang START ohne
-    // laufende Rea): Der lange Druck darf beim Loslassen nicht zusaetzlich als
-    // kurzer Druck durchschlagen und die Reanimation starten.
-    function onHoldTimeout() as Void {
-        if (_combo) { return; }
-        _longFired = true;
-        if (_heldKey == WatchUi.KEY_UP)         { Cpr.markAdrenalin(); }
-        else if (_heldKey == WatchUi.KEY_DOWN)  { Cpr.markRhythmus(); }
-        else if (_heldKey == WatchUi.KEY_ENTER) {
-            if (Cpr.active) { Cpr.restartCycle(); }   // sonst ohne Funktion
-        }
-        WatchUi.requestUpdate();
-    }
-
-    function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        var k = evt.getKey();
-        if (k != _heldKey) { return _heldKey != null; }
-        if (_timer != null) { _timer.stop(); }
-        _heldKey = null;
-        if (_combo) { _combo = false; return true; }           // Tastensperre: nichts tun
-        if (_longFired) { _longFired = false; return true; }   // lang: schon erledigt
-        // kurz:
-        if (k == WatchUi.KEY_UP)        { Nav.go(-1); }
-        else if (k == WatchUi.KEY_DOWN) { Nav.go(1); }
-        else if (Cpr.active)            { _pushMenu(); }   // Ereignis dokumentieren
-        else                            { Cpr.start(); }   // Reanimation beginnen
+    function actSelectShort() as Lang.Boolean {
+        if (Cpr.active) { _pushMenu(); }          // Ereignis dokumentieren
+        else            { Cpr.start(); }          // Reanimation beginnen
         return true;
     }
 
-    // Falls das System lang-UP zusaetzlich als onMenu meldet: nicht doppeln
-    function onMenu() as Lang.Boolean {
-        if (!_longFired && Cpr.active) {
-            _longFired = true;
-            Cpr.markAdrenalin();
-        }
+    function actSelectLong() as Lang.Boolean {
+        if (Cpr.active && !Cpr.paused) { Cpr.restartCycle(); }   // sonst ohne Funktion
         return true;
     }
 
-    function onKey(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        var k = evt.getKey();
-        return (k == WatchUi.KEY_UP || k == WatchUi.KEY_DOWN || k == WatchUi.KEY_ENTER);
+    function actMarkA() as Lang.Boolean {
+        if (Cpr.active && !Cpr.paused) { Cpr.markAdrenalin(); }
+        return true;
     }
 
-    function onBack() as Lang.Boolean { Nav.goTo(:clock); return true; }
+    function actMarkB() as Lang.Boolean {
+        if (Cpr.active && !Cpr.paused) { Cpr.markRhythmus(); }
+        return true;
+    }
+
+    function actBack() as Lang.Boolean { Nav.goTo(:clock); return true; }
 
     function _pushMenu() as Void {
         var v = new CprMenuView();
@@ -177,9 +163,11 @@ class CprDelegate extends WatchUi.BehaviorDelegate {
 class CprMenuView extends WatchUi.View {
 
     // [Label, Farbe, ID] — Reihenfolge und Farben wie im Rea-Protokoll.
-    // "Timer neu starten" steht vorn und ist weiss: Es ist kein dokumentiertes
-    // Ereignis, sondern ein reiner Timer-Befehl — die Farben bleiben dadurch
-    // den Ereignissen vorbehalten.
+    // Das Menue oeffnet auf "Timer neu starten". Ein Schritt nach OBEN landet
+    // per Umlauf auf "Übersicht", zwei Schritte auf "Rea BEENDEN".
+    // "Timer neu starten" ist weiss (reiner Timer-Befehl), "Übersicht" blau —
+    // sonst waeren die beiden Nicht-Ereignisse an der Umlaufgrenze nicht
+    // auseinanderzuhalten. Die Farben bleiben den Ereignissen vorbehalten.
     static const ITEMS = [
         ["Timer neu starten", 0xFFFFFF, :restart],           // weiss
         ["Rhythmuskontrolle", 0xFFFF00, Const.R_RHYTHMUS],   // gelb
@@ -191,8 +179,8 @@ class CprMenuView extends WatchUi.View {
         ["Sonographie",       0x00FFAA, Const.R_SONO],       // tuerkis
         ["ROSC",              0x00FF00, Const.R_ROSC],       // gruen
         ["Tod",               0xAAAAAA, Const.R_TOD],        // grau
-        ["Übersicht",         0xFFFFFF, :overview],          // weiss
-        ["Rea BEENDEN",       0xFF0000, :stopRec]            // rot
+        ["Rea BEENDEN",       0xFF0000, :stopRec],           // rot
+        ["Übersicht",         0x4280E5, :overview]           // Markenblau
     ];
 
     var index as Lang.Number = 0;
@@ -207,7 +195,7 @@ class CprMenuView extends WatchUi.View {
         // Darstellung wie das Schnellmenue der Hauptseite (QuickMenuView):
         // gleiche Zeilenhoehe, fuenf sichtbare Zeilen, gefuellte Auswahl.
         // Ein einheitliches Menuebild spart im Einsatz Umdenken.
-        var rowH = 38;
+        var rowH = Ui.s(dc, 38);
         var n = ITEMS.size();
 
         // 5 Zeilen: 2 davor, Auswahl, 2 danach — endlos (Modulo)
@@ -219,15 +207,17 @@ class CprMenuView extends WatchUi.View {
             var label = item[0] as Lang.String;
             if (off == 0) {
                 // Auswahl: gefuelltes Feld, schwarzer Text
-                var boxW = dc.getWidth() - 28;
+                var pad = Ui.s(dc, 14);
+                var boxW = dc.getWidth() - 2 * pad;
                 // Sicherung fuer lange Begriffe ("Rhythmuskontrolle"): faellt
                 // eine Stufe zurueck, statt am Feldrand abgeschnitten zu werden
                 var font = Graphics.FONT_SMALL;
-                if (dc.getTextWidthInPixels(label, font) > boxW - 12) {
+                if (dc.getTextWidthInPixels(label, font) > boxW - Ui.s(dc, 12)) {
                     font = Graphics.FONT_TINY;
                 }
                 dc.setColor(col, Graphics.COLOR_TRANSPARENT);
-                dc.fillRoundedRectangle(14, y - rowH / 2 + 2, boxW, rowH - 4, 8);
+                dc.fillRoundedRectangle(pad, y - rowH / 2 + Ui.s(dc, 2),
+                    boxW, rowH - Ui.s(dc, 4), Ui.s(dc, 8));
                 dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(cx, y, font, label,
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
@@ -240,14 +230,6 @@ class CprMenuView extends WatchUi.View {
     }
 }
 
-class StopRecConfirmDelegate extends WatchUi.ConfirmationDelegate {
-    function initialize() { ConfirmationDelegate.initialize(); }
-    function onResponse(response) as Lang.Boolean {
-        if (response == WatchUi.CONFIRM_YES) { Cpr.stopRecording(); }
-        return true;
-    }
-}
-
 class CprMenuDelegate extends WatchUi.BehaviorDelegate {
 
     var _v as CprMenuView;
@@ -257,30 +239,32 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
         _v = v;
     }
 
-    function onPreviousPage() as Lang.Boolean {           // UP: endlos
+    function onPreviousPage() as Lang.Boolean {           // UP bzw. Wischen hoch
         var n = CprMenuView.ITEMS.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
         return true;
     }
 
-    function onNextPage() as Lang.Boolean {               // DOWN: endlos
+    function onNextPage() as Lang.Boolean {               // DOWN bzw. Wischen runter
         _v.index = (_v.index + 1) % CprMenuView.ITEMS.size();
         WatchUi.requestUpdate();
         return true;
     }
 
-    function onSelect() as Lang.Boolean {                 // START
+    function onSelect() as Lang.Boolean {                 // START bzw. Action
         var id = CprMenuView.ITEMS[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :restart) {
-            if (Cpr.active) { Cpr.restartCycle(); }       // reiner Timer-Befehl
+            if (Cpr.active && !Cpr.paused) { Cpr.restartCycle(); }
         } else if (id == :overview) {
-            _pushOverview();
+            pushResusOverview();
         } else if (id == :stopRec) {
-            // Sicherheitsabfrage vor dem Beenden der Rea-Aufzeichnung
-            var dlg = new WatchUi.Confirmation("Rea beenden?");
-            WatchUi.pushView(dlg, new StopRecConfirmDelegate(), WatchUi.SLIDE_LEFT);
+            // Kein Bestaetigungsdialog mehr: anhalten und die Uebersicht
+            // zeigen. Dort wird fortgesetzt oder endgueltig geschlossen —
+            // mit den dokumentierten Zeiten vor Augen.
+            Cpr.pause();
+            pushResusOverview();
         } else if (Const.R_RHYTHMUS.equals(id)) {
             Cpr.markRhythmus();                           // inkl. Countdown-Reset
         } else if (Const.R_DEFI.equals(id)) {
@@ -298,23 +282,50 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    // Uebersicht der aktuellen (letzten) Rea-Sitzung als scrollbare Liste
-    function _pushOverview() as Void {
+    // Uebersicht der aktuellen (letzten) Rea-Sitzung als scrollbare Liste.
+    // Ist die Rea pausiert, stehen die beiden Entscheidungen ganz oben —
+    // fortsetzen oder beenden. Ohne Entscheidung bleibt es bei der Pause;
+    // BACK schliesst die Liste, die Rea bleibt angehalten.
+    static function pushResusOverview() as Void {
         var menu = new WatchUi.Menu2({ :title => "Rea-Zeiten" });
+        if (Cpr.active && Cpr.paused) {
+            menu.addItem(new WatchUi.MenuItem("Rea fortsetzen", null, :resume, null));
+            menu.addItem(new WatchUi.MenuItem("Rea beenden", null, :finish, null));
+        }
         var sess = Model.currentResus();
         if (sess == null) {
-            menu.addItem(new WatchUi.MenuItem("Keine Reanimation", null, 0, null));
+            menu.addItem(new WatchUi.MenuItem("Keine Reanimation", null, :none, null));
         } else {
             menu.addItem(new WatchUi.MenuItem(
-                (sess["startLocal"] as Lang.String) + "  Beginn", null, -1, null));
+                (sess["startLocal"] as Lang.String) + "  Beginn", null, :none, null));
             var evs = sess["events"] as Lang.Array;
             for (var i = 0; i < evs.size(); i++) {
                 var ev = evs[i];
                 menu.addItem(new WatchUi.MenuItem(
                     (ev[2] as Lang.String) + "  " + Const.RESUS_LABELS[ev[0]],
-                    null, i, null));
+                    null, :none, null));
             }
         }
-        WatchUi.pushView(menu, new ListCloseDelegate(), WatchUi.SLIDE_LEFT);
+        WatchUi.pushView(menu, new ResusOverviewDelegate(), WatchUi.SLIDE_LEFT);
     }
+}
+
+// Uebersicht der Rea-Zeiten. Die Zeiteintraege sind reine Anzeige; nur die
+// beiden Entscheidungen im pausierten Zustand loesen etwas aus.
+class ResusOverviewDelegate extends WatchUi.Menu2InputDelegate {
+
+    function initialize() { Menu2InputDelegate.initialize(); }
+
+    function onSelect(item as WatchUi.MenuItem) as Void {
+        var id = item.getId();
+        if (id == :resume) {
+            Cpr.resume();
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        } else if (id == :finish) {
+            Cpr.stopRecording();
+            WatchUi.popView(WatchUi.SLIDE_RIGHT);
+        }
+    }
+
+    function onBack() as Void { WatchUi.popView(WatchUi.SLIDE_RIGHT); }
 }

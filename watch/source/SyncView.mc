@@ -38,39 +38,23 @@ class SyncView extends WatchUi.View {
     function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        var cx = dc.getWidth() / 2;
-        var cy = dc.getHeight() / 2;
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var cx = w / 2;
 
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, 26, Graphics.FONT_TINY, "Sync",
-            Graphics.TEXT_JUSTIFY_CENTER);
+        // Aufbau: GPS-Guete, darunter die Hauptaussage zum Rueckstand — dieser
+        // Block sitzt vertikal in der Mitte. Fehlergrund, Kopplungsmeldung,
+        // Einrichtungshinweis und Version bilden unten einen eigenen Block.
+        // Eine Ueberschrift braucht die Seite nicht, die Aussage traegt sich
+        // selbst.
+        var hKlein = dc.getFontHeight(Graphics.FONT_XTINY);
+        var hGross = dc.getFontHeight(Graphics.FONT_LARGE);
+        var hZahl  = dc.getFontHeight(Graphics.FONT_NUMBER_MILD);
+        var hMitte = dc.getFontHeight(Graphics.FONT_SMALL);
 
-        // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
-        // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
-        var open = Model.backlogCount();
-        if (open == 0) {
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy - 30, Graphics.FONT_LARGE, "Sync vollständig",
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            // Haken selbst zeichnen (die Geraeteschrift kennt das Glyph nicht)
-            dc.setPenWidth(5);
-            dc.drawLine(cx - 14, cy + 6, cx - 4, cy + 16);
-            dc.drawLine(cx - 4, cy + 16, cx + 15, cy - 5);
-            dc.setPenWidth(1);
-        } else {
-            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy - 44, Graphics.FONT_NUMBER_MILD, open.toString(),
-                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, cy - 8, Graphics.FONT_SMALL,
-                open == 1 ? "Paket offen" : "Pakete offen",
-                Graphics.TEXT_JUSTIFY_CENTER);
-        }
-
-        // GPS-Guete: spiegelt exakt die Schwelle, ab der Track.mc Punkte
-        // speichert (< QUALITY_POOR wird verworfen) — sonst waere die
-        // Anzeige irrefuehrend.
-        var y = cy + 34;
+        // --- GPS-Guete -----------------------------------------------------
+        // Spiegelt exakt die Schwelle, ab der Track.mc Punkte speichert
+        // (< QUALITY_POOR wird verworfen) — sonst waere die Anzeige irrefuehrend.
         var gpsTxt = "GPS aus (kein Dienst)";
         var gpsCol = Graphics.COLOR_DK_GRAY;
         if (Model.serviceActive) {
@@ -82,106 +66,102 @@ class SyncView extends WatchUi.View {
             } else if (q >= Position.QUALITY_POOR) {
                 gpsTxt = "GPS ausreichend"; gpsCol = Graphics.COLOR_GREEN;
             } else {
-                gpsTxt = "GPS zu schwach"; gpsCol = Graphics.COLOR_RED;
+                gpsTxt = "GPS zu schwach"; gpsCol = Ui.ROT;
             }
         }
+
+        // --- Mittelblock ----------------------------------------------------
+        // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
+        // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
+        var open = Model.backlogCount();
+        var gGps = Ui.s(dc, 14);
+        var hHaken = Ui.s(dc, 26);
+        var blockH = (open == 0)
+            ? hKlein + gGps + hGross + hHaken
+            : hKlein + gGps + hZahl + hMitte;
+        var y = (h - blockH) / 2;
+
         dc.setColor(gpsCol, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y, Graphics.FONT_XTINY, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
+        y += hKlein + gGps;
 
-        // Fehlergrund (z. B. "Nicht gekoppelt", "Upload 401")
+        if (open == 0) {
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y, Graphics.FONT_LARGE, "Sync vollständig",
+                Graphics.TEXT_JUSTIFY_CENTER);
+            // Haken selbst zeichnen (die Geraeteschrift kennt das Glyph nicht)
+            var hy = y + hGross + Ui.s(dc, 8);
+            dc.setPenWidth(Ui.s(dc, 5));
+            dc.drawLine(cx - Ui.s(dc, 14), hy, cx - Ui.s(dc, 4), hy + Ui.s(dc, 10));
+            dc.drawLine(cx - Ui.s(dc, 4), hy + Ui.s(dc, 10), cx + Ui.s(dc, 15), hy - Ui.s(dc, 11));
+            dc.setPenWidth(1);
+        } else {
+            dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y, Graphics.FONT_NUMBER_MILD, open.toString(),
+                Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y + hZahl, Graphics.FONT_SMALL,
+                open == 1 ? "Paket offen" : "Pakete offen",
+                Graphics.TEXT_JUSTIFY_CENTER);
+        }
+
+        // --- Unterer Block: Meldungen und Version ---------------------------
+        // Erst sammeln, dann als Ganzes vom unteren Rand nach oben setzen.
+        // So bleibt der Abstand gleich, egal wie viele Zeilen anfallen.
+        var lines = [];
         if (Uploader.lastError != null) {
-            y += 22;
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y, Graphics.FONT_XTINY,
-                Uploader.lastError as Lang.String, Graphics.TEXT_JUSTIFY_CENTER);
+            lines.add([Uploader.lastError as Lang.String, Graphics.COLOR_LT_GRAY]);
         }
-
-        // Kopplungs-Rueckmeldung (nach Code-Eingabe)
         if (Pair.status != null) {
-            y += 22;
             var ok = Pair.status.substring(0, 3).equals("Gek");
-            dc.setColor(ok ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW,
-                Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y, Graphics.FONT_XTINY,
-                Pair.status, Graphics.TEXT_JUSTIFY_CENTER);
+            lines.add([Pair.status, ok ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW]);
         }
-
-        // eine Zeile: REA-Warnung vor Einrichtungs-Hinweis
         if (Cpr.active) {
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 52, Graphics.FONT_XTINY,
-                "REA läuft", Graphics.TEXT_JUSTIFY_CENTER);
+            lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
+                       Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT]);
         } else if (!Uploader.hasServer()) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 52, Graphics.FONT_XTINY,
-                "Erst Server-Adresse setzen", Graphics.TEXT_JUSTIFY_CENTER);
+            lines.add(["Erst Server-Adresse setzen", Graphics.COLOR_YELLOW]);
         } else if (!Uploader.hasCredentials()) {
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dc.getHeight() - 52, Graphics.FONT_XTINY,
-                "START halten: Gerät koppeln", Graphics.TEXT_JUSTIFY_CENTER);
+            lines.add([Input.lSelectHold() + ": Gerät koppeln", Graphics.COLOR_YELLOW]);
         }
+        lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
 
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, dc.getHeight() - 30, Graphics.FONT_XTINY,
-            "Version " + Const.APP_VERSION, Graphics.TEXT_JUSTIFY_CENTER);
+        var uy = h - Ui.s(dc, 24) - lines.size() * hKlein;
+        for (var i = 0; i < lines.size(); i++) {
+            dc.setColor(lines[i][1] as Lang.Number, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, uy, Graphics.FONT_XTINY, lines[i][0] as Lang.String,
+                Graphics.TEXT_JUSTIFY_CENTER);
+            uy += hKlein;
+        }
     }
 }
 
-class SyncDelegate extends WatchUi.BehaviorDelegate {
+class SyncDelegate extends ActionDelegate {
 
     var _fromStart as Lang.Boolean;
-    var _timer as Timer.Timer or Null = null;
-    var _holding as Lang.Boolean = false;
-    var _longFired as Lang.Boolean = false;
 
     function initialize(fromStart as Lang.Boolean) {
-        BehaviorDelegate.initialize();
+        ActionDelegate.initialize(false);
         _fromStart = fromStart;
     }
 
-    // START halten (1 s): Geraete-Kopplung — Code-Eingabe oeffnen.
-    // Gleiches Haltemuster wie auf der Hauptanzeige (ClockDelegate).
-    function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        if (evt.getKey() == WatchUi.KEY_ENTER) {
-            _holding = true;
-            _longFired = false;
-            if (_timer == null) { _timer = new Timer.Timer(); }
-            _timer.start(method(:onHoldTimeout), Const.LONG_PRESS_MS, false);
-            return true;
-        }
-        return false;
-    }
-
-    function onHoldTimeout() as Void {
-        if (!_holding) { return; }
-        _longFired = true;
+    // Geraete-Kopplung: Code-Eingabe oeffnen (START halten bzw. Action halten)
+    function actSelectLong() as Lang.Boolean {
         Pair.openInput();
+        return true;
     }
 
-    function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        if (evt.getKey() != WatchUi.KEY_ENTER) { return false; }
-        if (!_holding) { return false; }
-        _holding = false;
-        if (_timer != null) { _timer.stop(); }
-        if (_longFired) { _longFired = false; }
-        return true;                               // kurz START: keine Aktion
-    }
-
-    function onKey(evt as WatchUi.KeyEvent) as Lang.Boolean {
-        return evt.getKey() == WatchUi.KEY_ENTER;  // ENTER selbst verarbeiten
-    }
-
-    function onNextPage() as Lang.Boolean {
+    function actPageNext() as Lang.Boolean {
         if (_fromStart) { return true; }           // vom Start: keine Nachbarseiten
         Nav.go(1); return true;
     }
 
-    function onPreviousPage() as Lang.Boolean {
+    function actPagePrev() as Lang.Boolean {
         if (_fromStart) { return true; }
         Nav.go(-1); return true;
     }
 
-    function onBack() as Lang.Boolean {
+    function actBack() as Lang.Boolean {
         if (_fromStart) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);   // zurueck zum Startbildschirm
         } else {

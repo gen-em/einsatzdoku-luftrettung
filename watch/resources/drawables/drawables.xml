@@ -1,3 +1,6 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+    <!-- Bildmarke auf dem Startbildschirm. Groesse geraeteabhaengig:
+         70x70 als Vorgabe, 105x105 fuer die Venu 3s (resources-venu3s). -->
+    <bitmap id="Logo" filename="logo.png"/>
 </drawables>

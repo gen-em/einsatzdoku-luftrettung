@@ -7,4 +7,8 @@
     <!-- Werden beim Koppeln automatisch gefuellt — normalerweise nichts eintragen. -->
     <property id="deviceId"  type="string"></property>
     <property id="apiKey"    type="string"></property>
+    <!-- Touchbedienung. Wirkt nur auf Geraeten, die UP/DOWN UND Touch haben
+         (Fenix 7 und neuer). Auf Geraeten ohne UP/DOWN wird der Wert
+         ignoriert — ohne Touch waeren sie unbedienbar. -->
+    <property id="touchEnabled" type="boolean">true</property>
 </properties>
