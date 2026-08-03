@@ -41,12 +41,14 @@ class ClockView extends WatchUi.View {
         var hDatum = dc.getFontHeight(Graphics.FONT_TINY);
         var hNr    = Ui.numH(dc, Graphics.FONT_LARGE);
         var hName  = dc.getFontHeight(Graphics.FONT_TINY);
-        var gZeit  = Ui.s(dc, 6);      // Uhrzeit -> Datum: eng, gehoert zusammen
+        var gZeit  = Ui.s(dc, 2);      // Uhrzeit -> Datum: eng, gehoert zusammen
         var gDatum = Ui.s(dc, 14);     // Datum -> Phase: Absatz
         var gNr    = Ui.s(dc, 4);      // Nummer -> Bezeichnung: eng
 
         var blockH = hZeit + gZeit + hDatum + gDatum + hNr + gNr + hName;
-        var y = (dc.getHeight() - blockH) / 2;
+        // Leicht nach unten versetzt: Die Ziffernschrift laesst oben mehr Luft
+        // als unten, rechnerisch mittig wirkt dadurch zu hoch.
+        var y = (dc.getHeight() - blockH) / 2 + Ui.s(dc, 8);
 
         var t = System.getClockTime();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);

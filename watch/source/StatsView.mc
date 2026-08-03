@@ -19,8 +19,10 @@ class StatsView extends WatchUi.View {
         var hKopf  = dc.getFontHeight(Graphics.FONT_TINY);
         var hZahl  = Ui.numH(dc, Graphics.FONT_NUMBER_HOT);
         var hLabel = dc.getFontHeight(Graphics.FONT_MEDIUM);
-        var gKopf  = Ui.s(dc, 14);
-        var gZahl  = Ui.s(dc, 4);
+        // Ungleiche Werte ergeben GLEICHE optische Abstaende: Ueber der Zahl
+        // wirkt zusaetzlich die Unterlaenge von "Heute", unter ihr nicht.
+        var gKopf  = Ui.s(dc, 8);
+        var gZahl  = Ui.s(dc, 12);
 
         var blockH = hKopf + gKopf + hZahl + gZahl + hLabel;
         var y = (dc.getHeight() - blockH) / 2;

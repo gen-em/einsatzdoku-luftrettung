@@ -10,6 +10,53 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.6.1] — 2026-08-03
+
+Korrekturen aus dem ersten Simulatordurchlauf von 1.6.0. **1.6.0 wurde nie
+verteilt** — die Trennung dient allein dazu, Bauten auseinanderhalten zu
+können.
+
+### Behoben
+
+- **„PAUSE" erschien als fünf leere Kästchen.** Der Text wurde in
+  `FONT_NUMBER_MILD` gezeichnet. Die Ziffernschriften von Connect IQ enthalten
+  ausschließlich Zahlen, Doppelpunkt und Punkt — Buchstaben haben dort kein
+  Zeichen. Jetzt `FONT_LARGE` und in Rot, damit der angehaltene Zustand auf
+  der Reanimationsseite nicht zu übersehen ist.
+- **Rahmen des Fortschrittsbalkens** auf der Reanimationsseite lag als
+  einziger Wert noch absolut bei 2 Pixeln und wäre auf der Venu 3s zu dünn
+  geraten. Er skaliert jetzt wie alles andere mit der Displayhöhe.
+- **Sync-Seite:** Der Mittelblock wurde im ganzen Bildschirm zentriert, der
+  untere Block vom Rand aus gesetzt — bei drei Meldungen überlappten sie sich.
+  Jetzt wird zuerst der untere Block bestimmt und der Mittelblock im freien
+  Raum darüber zentriert.
+
+### Geändert — Feinschliff der Geometrie
+
+Die Blockhöhen wurden mit der vollen Schriftbox gerechnet. Bei den
+Ziffernschriften bleibt deren Unterlänge leer, wodurch unter jeder Zahl eine
+Lücke entstand und die Blöcke zu hoch wirkten. `Ui.numH()` rechnet jetzt mit
+der sichtbaren Höhe.
+
+- **Hauptanzeige:** Uhrzeit und Datum enger, Block etwas tiefer.
+- **Geschwindigkeit:** „km/h" rückt an die Zahl heran.
+- **Statistik:** Die Zahl sitzt optisch mittig zwischen „Heute" und
+  „Einsätze".
+- **Reanimation:** Countdown und Fortschrittsbalken sitzen mittig im
+  50-%-Feld, die Gesamtdauer etwas tiefer im Kopfbalken, die Uhrzeit etwas
+  höher im Fußbereich. Die Trennlinie über der Uhrzeit entfällt — der
+  Fortschrittsbalken trennt bereits genug.
+- **Rea-Übersicht:** „Rea beenden" steht über „Rea fortsetzen", darunter
+  trennt eine Zeile „— Zeiten —" die Entscheidungen von den Zeitstempeln.
+
+### Hinweis für spätere Zielgeräte
+
+`monkey.jungle` weist Quell- und Ressourcenpfade jetzt **vollständig** zu.
+Die Schreibweise `$(<gerät>.sourcePath);…` sieht nach „Vorgabe erweitern" aus,
+ist aber ein Selbstbezug und sammelt alle `source*`-Ordner ein — der Compiler
+meldet dann `Redefinition of 'HAS_UP_DOWN'`. Festgehalten in `Technik.md`
+Abschnitt 5.1b.
+
 ## [Uhr 1.6.0] — 2026-08-03
 
 ### Neu — Forerunner 945 und Venu 3s werden unterstützt

@@ -77,8 +77,11 @@ class CprView extends WatchUi.View {
         var blockY = midY + (midH - (hCd + gap + bh)) / 2;
 
         if (Cpr.paused) {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_NUMBER_MILD,
+            // FONT_LARGE, nicht FONT_NUMBER_*: Die Ziffernschriften enthalten
+            // ausschliesslich Zahlen, Doppelpunkt und Punkt. Buchstaben
+            // erscheinen dort als leere Kaestchen.
+            dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, blockY + hCd / 2, Graphics.FONT_LARGE,
                 "PAUSE", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         } else {
             var r = Cpr.cycleRemainingS();
@@ -106,15 +109,16 @@ class CprView extends WatchUi.View {
         }
         dc.setColor(Cpr.paused ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_BLACK,
             Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
+        dc.setPenWidth(Ui.s(dc, 2));
         dc.drawRectangle(bx, by, bw, bh);           // Rahmen: leerer Balken sichtbar
         dc.setPenWidth(1);
 
-        // 3) Unteres Feld: Trennlinie an der Feldgrenze, Uhrzeit darin zentriert
+        // 3) Unteres Feld: nur die Uhrzeit. Eine Trennlinie braucht es nicht —
+        // der Fortschrittsbalken darueber trennt bereits sichtbar genug.
+        // Etwas oberhalb der Feldmitte, weil das runde Display unten zulaeuft.
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(Ui.s(dc, 30), botY, w - Ui.s(dc, 30), botY);
         var t = System.getClockTime();
-        dc.drawText(cx, botY + botH / 2, Graphics.FONT_NUMBER_MILD,
+        dc.drawText(cx, botY + (botH * 42) / 100, Graphics.FONT_NUMBER_MILD,
             t.hour.format("%02d") + ":" + t.min.format("%02d"),
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
@@ -294,8 +298,9 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
     static function pushResusOverview() as Void {
         var menu = new WatchUi.Menu2({ :title => "Rea-Zeiten" });
         if (Cpr.active && Cpr.paused) {
-            menu.addItem(new WatchUi.MenuItem("Rea fortsetzen", null, :resume, null));
             menu.addItem(new WatchUi.MenuItem("Rea beenden", null, :finish, null));
+            menu.addItem(new WatchUi.MenuItem("Rea fortsetzen", null, :resume, null));
+            menu.addItem(new WatchUi.MenuItem("— Zeiten —", null, :none, null));
         }
         var sess = Model.currentResus();
         if (sess == null) {
