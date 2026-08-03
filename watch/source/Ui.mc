@@ -32,15 +32,19 @@ module Ui {
     // weit oben. Fuer alles, was direkt unter einer Zahl steht, ist deshalb
     // diese Hoehe die richtige.
     //
-    // Bewusst OHNE "dc has :getFontDescent": Ein has-Test verengt den Typ von
-    // dc auf genau dieses eine Symbol, danach kennt der Typpruefer
-    // getFontHeight nicht mehr. Stattdessen faengt die Plausibilitaetspruefung
-    // unbrauchbare Rueckgaben ab.
+    // Warum ein fester Faktor und keine Abfrage: Toybox.Graphics.Dc kennt
+    // weder getFontDescent noch getFontAscent. Ein "dc has :getFontDescent"
+    // uebersteht zwar den Compiler, verengt aber den Typ von dc auf genau
+    // dieses Symbol — danach ist getFontHeight nicht mehr auffindbar.
+    //
+    // NUM_VIS_PCT ist empirisch: Auf der Fenix 6 Pro misst FONT_NUMBER_THAI_HOT
+    // 72 px Schriftbox bei rund 15 px leerer Unterlaenge. Wer die Abstaende
+    // unter Zahlen aendern will, dreht hier — an einer Stelle fuer alle
+    // Oberflaechen.
+    const NUM_VIS_PCT = 78;
+
     function numH(dc as Graphics.Dc, font as Graphics.FontType) as Lang.Number {
-        var h = dc.getFontHeight(font);
-        var d = dc.getFontDescent(font);
-        if (d <= 0 || d >= h) { return (h * 78) / 100; }   // Naeherung
-        return h - d;
+        return (dc.getFontHeight(font) * NUM_VIS_PCT) / 100;
     }
 
     // Markenfarben (Brand Guidelines). Geraete mit kleiner Palette runden
