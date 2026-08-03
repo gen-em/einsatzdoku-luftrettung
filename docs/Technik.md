@@ -29,7 +29,8 @@ Daten erst nach Server-Bestätigung.
 hems/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
 │                          Backup-Format, Export-Format,
-│                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr)
+│                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
+│                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
@@ -688,6 +689,11 @@ Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klasse
 > **Kartenseite entfernt (1.3.5):** `MapPage.mc` funktionierte am Gerät nicht
 > zuverlässig und wurde gelöscht. Eine künftige Kartenansicht wird neu
 > aufgebaut; die alte Fassung liegt in der Git-Historie.
+
+> **Vor jeder Änderung an einer Oberfläche:** `Uhr-Layout.md` lesen. Dort
+> stehen die Regeln zu Schriften, runden Displays und vertikalen Blöcken —
+> jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
+> aufgefallen ist.
 
 ### 5.1 Tastenbelegung je Geräteprofil
 

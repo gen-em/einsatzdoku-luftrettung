@@ -8,6 +8,9 @@ Die Werte stammen nicht aus Datenblättern, sondern aus Messungen mit
 `tools/eingabe-probe` im Connect-IQ-Simulator. Wie ein neues Gerät ergänzt
 wird, steht in Abschnitt 5.
 
+Zur **Darstellung** auf den Geräten — Schriften, runde Displays, Aufbau der
+Oberflächen — siehe `Uhr-Layout.md`.
+
 ---
 
 ## 1. Überblick
