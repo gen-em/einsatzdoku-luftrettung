@@ -21,6 +21,9 @@ class PairCb {
 module Pair {
 
     var status as Lang.String or Null = null;   // Anzeige auf dem Startbildschirm
+    // Art der Meldung, damit die Oberflaeche die Farbe waehlen kann, ohne den
+    // Text auseinandernehmen zu muessen: :ok, :busy, :error
+    var statusKind as Lang.Symbol = :busy;
     var _cb as PairCb or Null = null;
 
     function openInput() as Void {
@@ -32,10 +35,12 @@ module Pair {
         var base = Uploader.serverBase();
         if (base.length() == 0) {
             status = "Erst Server-Domain setzen";
+            statusKind = :error;
             WatchUi.requestUpdate();
             return;
         }
         status = "Kopple…";
+        statusKind = :busy;
         WatchUi.requestUpdate();
         if (_cb == null) { _cb = new PairCb(); }
         Communications.makeWebRequest(
@@ -56,10 +61,13 @@ module Pair {
             });
             Uploader.lastError = null;
             status = "Gekoppelt";   // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
+            statusKind = :ok;
         } else if (code == 404) {
             status = "Code ungültig/abgelaufen";
+            statusKind = :error;
         } else {
             status = "Kopplung fehlgeschlagen (" + code.toString() + ")";
+            statusKind = :error;
         }
         WatchUi.requestUpdate();
     }

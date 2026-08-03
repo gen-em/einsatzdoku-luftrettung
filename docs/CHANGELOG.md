@@ -10,6 +10,47 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.6.3] — 2026-08-03
+
+### Geändert — Sync-Seite folgt der Farblogik
+
+- **Warnungen in Rot** statt Gelb: „Erst Server-Adresse setzen", „Gerät
+  koppeln" und der letzte Übertragungsfehler. Letzterer war bisher hellgrau
+  und damit kaum als Fehler zu erkennen.
+- **„REA pausiert" in Blau**, wie auf allen anderen Oberflächen.
+
+Damit gilt durchgängig: **Rot** heißt laufende Reanimation oder Warnung,
+**Blau** heißt pausiert, **Grün** heißt erledigt.
+
+### Behoben — Kopplungsmeldungen waren teils falsch eingefärbt
+
+Die Farbe der Kopplungsmeldung wurde aus den ersten drei Zeichen des Textes
+abgeleitet. Damit galt alles außer „Gekoppelt" als Fehler — auch der
+Zwischenstand „Kopple…", der noch gar nichts aussagt. Zudem hätte die Prüfung
+„Kopple…" und „Kopplung fehlgeschlagen" nicht auseinanderhalten können, wenn
+sie auf mehr Zeichen erweitert worden wäre.
+
+`Pair.mc` führt jetzt neben dem Text eine Statusart (`:ok`, `:busy`,
+`:error`). Die Oberfläche wählt die Farbe danach und muss den Text nicht mehr
+auseinandernehmen: Grün bei Erfolg, Hellgrau während des Kopplungsversuchs,
+Rot bei Fehlschlag.
+
+## [Uhr 1.6.2] — 2026-08-03
+
+### Geändert — Farbgebung nach Markenvorgabe
+
+Der pausierte Zustand hat jetzt durchgängig eine eigene Farbe, und Warnungen
+sind als solche erkennbar.
+
+- **Pausierte Reanimation ist blau:** der Schriftzug „PAUSE" auf der
+  Reanimationsseite, der Ring der Hauptanzeige und der Hinweis „REA pausiert"
+  auf Tempo- und Statistikseite. Vorher gelb bzw. rot — Rot ist der laufenden
+  Reanimation vorbehalten.
+- **Fortschrittsbalken** unter dem 2:00-Countdown in Markenblau statt Orange.
+- **Einrichtungshinweise auf dem Startbildschirm** („Server in Garmin Connect
+  eintragen", „Nicht gekoppelt") in Rot statt Gelb. Es sind Warnungen: Ohne
+  Server-Adresse kann die Uhr nichts senden.
+
 ## [Uhr 1.6.1] — 2026-08-03
 
 Korrekturen aus dem ersten Simulatordurchlauf von 1.6.0. **1.6.0 wurde nie

@@ -76,19 +76,21 @@ class SyncView extends WatchUi.View {
         // Block dem oberen entgegen und beide ueberlappen.
         var lines = [];
         if (Uploader.lastError != null) {
-            lines.add([Uploader.lastError as Lang.String, Graphics.COLOR_LT_GRAY]);
+            lines.add([Uploader.lastError as Lang.String, Ui.ROT]);
         }
         if (Pair.status != null) {
-            var ok = Pair.status.substring(0, 3).equals("Gek");
-            lines.add([Pair.status, ok ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW]);
+            var pc = Ui.ROT;                       // :error
+            if (Pair.statusKind == :ok) { pc = Graphics.COLOR_GREEN; }
+            else if (Pair.statusKind == :busy) { pc = Graphics.COLOR_LT_GRAY; }
+            lines.add([Pair.status, pc]);
         }
         if (Cpr.active) {
             lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
-                       Cpr.paused ? Graphics.COLOR_YELLOW : Ui.ROT]);
+                       Cpr.paused ? Ui.BLAU : Ui.ROT]);
         } else if (!Uploader.hasServer()) {
-            lines.add(["Erst Server-Adresse setzen", Graphics.COLOR_YELLOW]);
+            lines.add(["Erst Server-Adresse setzen", Ui.ROT]);
         } else if (!Uploader.hasCredentials()) {
-            lines.add([Input.lSelectHold() + ": Gerät koppeln", Graphics.COLOR_YELLOW]);
+            lines.add([Input.lSelectHold() + ": Gerät koppeln", Ui.ROT]);
         }
         lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
 
