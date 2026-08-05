@@ -15,15 +15,8 @@ Nummer. Neue Punkte hängen sich hinten an.
 1. Reanimations-Zeiten im Nachtrage-/Bearbeitungsformular
 2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
 3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
-4. Geteilte Flugtage (Crew-weit statt je NutzerIn)
 5. Geräte-Limit pro NutzerIn
-6. **Weitere Zielgeräte.** Fenix 7/8 — Uhren mit Touch **und** UP/DOWN. Der
-    Schalter „Touchbedienung verwenden" und das Profil dafür sind in
-    `Input.mc` vorbereitet, aber ohne Zielgerät ungetestet. Vor der Aufnahme
-    das Eingabeverhalten mit `tools/eingabe-probe` messen und in
-    `Geraete-Eingabe.md` festhalten. *(FR945 und Venu 3s sind mit Uhr 1.6.0
-    erledigt.)*
-7. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
+5. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
 8. Content-Security-Policy als zusätzliche Verteidigungslinie
 9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen
 10. **`day_col` generisch auswerten.** Der Schlüssel `day_col` in
@@ -61,16 +54,3 @@ Nummer. Neue Punkte hängen sich hinten an.
     zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
     Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
     abgebildet und bleibt.
-
----
-
-## Erledigt
-
-*(Nummern bleiben erhalten, damit alte Verweise gültig bleiben.)*
-
-12. **Langer Action-Druck auf der Venu 3s am echten Gerät prüfen.** Im
-    Simulator wurde ein Halten über 4,6 s nicht abgefangen; das Handbuch der
-    Venu 3 nennt ein Steuerungsmenü nach 2 s. Bis das an der Uhr geprüft ist,
-    liegt SELECT_LONG zusätzlich auf dem langen Zurück-Druck. Bestätigt sich
-    das Abfangen, gehört es nach `Geraete-Eingabe.md`; bleibt es aus, kann der
-    zweite Weg bestehen bleiben — er schadet nicht.
