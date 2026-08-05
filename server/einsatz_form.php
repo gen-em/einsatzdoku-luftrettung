@@ -619,12 +619,27 @@ const locState = document.getElementById('locstate');
 const locChips = document.getElementById('locchips');
 let locTimer = null;
 
+/* Sind Koordinaten gesetzt, ist das Textfeld reines Bezeichnungsfeld: keine
+ * Formaterkennung, keine Adresssuche, keine Vorschlagsliste. Sonst wuerde ein
+ * Klick auf einen Adressvorschlag die bestaetigten Koordinaten stillschweigend
+ * ueberschreiben. Nach dem Entfernen des Chips arbeitet die Suche wieder wie
+ * gewohnt — ausgeloest vom naechsten Tastenanschlag. */
+function locHatKoordinaten() {
+  return document.getElementById('loclat').value !== '';
+}
+const LOC_PLATZHALTER = document.getElementById('locaddr').placeholder;
+function locPlatzhalter() {
+  locIn.placeholder = locHatKoordinaten()
+    ? 'Bezeichnung des Einsatzortes' : LOC_PLATZHALTER;
+}
+
 /* Koordinaten-Chip: eigene, sichtbare Darstellung ausserhalb des Textfeldes.
  * Gleiche Klassen wie die Rettungsmittel-Chips (.rmchip/.rmx) — kein zweites
  * Aussehen fuer dieselbe Sache. Der Chip ist reine ANZEIGE; Wertträger bleiben
  * die versteckten Felder #loclat und #loclon. */
 function zeichneLocChip() {
   locChips.innerHTML = '';
+  locPlatzhalter();
   const la = document.getElementById('loclat').value;
   const lo = document.getElementById('loclon').value;
   if (la === '' || lo === '') { return; }
@@ -638,8 +653,8 @@ function zeichneLocChip() {
   x.addEventListener('click', () => {
     document.getElementById('loclat').value = '';
     document.getElementById('loclon').value = '';
-    zeichneLocChip();
-    locSetState();          // Textfeld bleibt unangetastet (E2)
+    zeichneLocChip();       // Textfeld bleibt unangetastet (E2)
+    locSetState();          // ab jetzt sucht das Feld wieder normal
   });
   chip.appendChild(x);
   locChips.appendChild(chip);
@@ -677,10 +692,15 @@ function locSetState() {
     locState.textContent = LOC_MELDUNGEN[locErkennung.typ];
     return;
   }
-  // Gesetzte Koordinaten meldet der Chip selbst — hier bleibt nur der Hinweis
-  // auf reinen Text ohne Koordinaten.
   locState.classList.remove('locstate-fehler');
-  locState.textContent = (!document.getElementById('loclat').value && locIn.value)
+  if (locHatKoordinaten()) {
+    // Die Koordinaten selbst zeigt der Chip. Der Hinweis erklaert, warum hier
+    // keine Vorschlaege mehr erscheinen — sonst wirkt das Feld defekt.
+    locState.textContent = 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung. '
+      + 'Für eine Adresssuche zuerst die Koordinaten entfernen (✕).';
+    return;
+  }
+  locState.textContent = locIn.value
     ? 'Nur Text (kein Vorschlag gewählt) — kein Karten-Pin.' : '';
 }
 locSetState();
@@ -691,6 +711,18 @@ locIn.addEventListener('input', () => {
   // nimmt das Kreuz am Chip oder waehlt einen anderen Adressvorschlag.
   // Wiedereinbau dieser Zeilen = Bezeichnung tippen vernichtet die Koordinaten.
   clearTimeout(locTimer);
+
+  // Stehen bereits Koordinaten, ist hier Schluss: Das Feld traegt nur noch die
+  // Bezeichnung. Weder Formaterkennung noch Adresssuche laufen weiter — beide
+  // wuerden beim Uebernehmen eines Vorschlags die bestaetigten Koordinaten
+  // ueberschreiben. Der Weg zurueck fuehrt ueber das Kreuz am Chip.
+  if (locHatKoordinaten()) {
+    locErkennung = { typ: null };     // keine Meldung aus einem alten Zustand
+    locList.innerHTML = '';           // kein alter Eintrag, der spaeter aufblitzt
+    locList.hidden = true;
+    locSetState();
+    return;
+  }
 
   // F1/F5: Formaterkennung (Koordinaten, Plus Code) laeuft rein lokal und
   // hat Vorrang vor der Photon-Anfrage — bei Treffer wird kein Netzwerk-

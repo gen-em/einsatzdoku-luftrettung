@@ -301,8 +301,13 @@ sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
 Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem ✕ zum
 Entfernen, genau wie bei den weiteren Rettungsmitteln. Das Textfeld bleibt
 davon unberührt: Du kannst dort weiterschreiben, ohne die Koordinaten zu
-verlieren. Die Koordinaten verschwinden nur durch das ✕ oder wenn du einen
-anderen Adressvorschlag auswählst.
+verlieren.
+
+**Solange Koordinaten gesetzt sind, sucht das Feld nicht mehr.** Es ist dann
+reines Bezeichnungsfeld: keine Adressvorschläge, keine Erkennung weiterer
+Koordinatenformate. Andernfalls würde ein Klick auf einen Vorschlag die
+bestätigten Koordinaten stillschweigend überschreiben. Entfernst du sie über
+das ✕, arbeitet die Suche ab dem nächsten Tastenanschlag wieder wie gewohnt.
 
 Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine

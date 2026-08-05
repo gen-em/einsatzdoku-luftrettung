@@ -20,4 +20,4 @@ declare(strict_types=1);
  * Zaehlung von den fruehen Spezifikations-Staenden 1.0-1.2 ab; 3.0.0 markiert
  * den Umbau am Lebenszyklus des Inhaltsschluessels (Entsperren in der Sitzung).
  */
-const WEB_VERSION = '3.3.1';
+const WEB_VERSION = '3.3.2';

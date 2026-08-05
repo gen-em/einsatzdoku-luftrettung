@@ -10,6 +10,22 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.3.2] — 2026-08-05
+
+### Behoben — Adresssuche überschrieb bestätigte Koordinaten
+
+Nach dem Bestätigen von Koordinaten lief im Einsatzort-Feld beides weiter: die
+Formaterkennung und die Adresssuche. Ein Klick auf einen Adressvorschlag setzte
+`#loclat`/`#loclon` neu — die eben bestätigten Koordinaten waren damit
+stillschweigend weg, obwohl der Chip nur die Bezeichnung erwarten ließ.
+
+Solange Koordinaten gesetzt sind, ist das Textfeld jetzt reines
+Bezeichnungsfeld: Der `input`-Zuhörer steigt früh aus, es gibt keine
+Vorschlagsliste und keine Anfrage an Photon. Placeholder („Bezeichnung des
+Einsatzortes") und Meldungszeile weisen darauf hin, damit das Feld nicht defekt
+wirkt. Nach dem Entfernen der Koordinaten über das ✕ am Chip arbeitet die Suche
+ab dem nächsten Tastenanschlag wieder unverändert.
+
 ## [Web 3.3.1] — 2026-08-05
 
 ### Entfernt — Klartextspalte `missions.site_desc` und die Seite „Beschreibungen sichern"

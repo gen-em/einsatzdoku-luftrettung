@@ -213,7 +213,13 @@ hängenden Kartenpin, und genau sie würde eine über den Koordinaten getippte
 Bezeichnung beim ersten Buchstaben vernichten. Wer sie als „vergessene
 Aufräumzeile" wiederherstellt, baut den alten Fehler wieder ein. Entfernt
 werden die Koordinaten nur über das Kreuz am Chip oder durch Auswahl eines
-anderen Adressvorschlags. Sind Koordinaten gesetzt und das Textfeld leer,
+anderen Adressvorschlags. **Solange `#loclat` belegt ist, steigt der
+`input`-Zuhörer früh aus** — weder Formaterkennung noch Photon-Anfrage laufen,
+und die Vorschlagsliste wird geleert und verborgen. Grund: Beide
+Vorschlagszweige schreiben `#loclat`/`#loclon` beim Übernehmen neu und würden
+die bestätigten Koordinaten überschreiben. Placeholder und Meldungszeile folgen
+demselben Zustand, damit das Feld nicht defekt wirkt. Sind Koordinaten gesetzt
+und das Textfeld leer,
 verhindert eine Prüfung vor dem Verschlüsseln das Absenden — sie sitzt hinter
 dem `PAT_CK`-Riegel, damit sie bei gesperrter Verschlüsselung nicht zuschlägt
 (dort sind die Felder leer und der Blob wird ohnehin nicht angefasst).
