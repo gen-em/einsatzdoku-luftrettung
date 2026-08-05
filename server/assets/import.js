@@ -414,7 +414,7 @@
 
     // Felder, die unveraendert nach zeile.mission durchgereicht werden.
     var EINFACHE_ZIELE = ['day', 'alarm', 'ended', 'transport_dest', 'winch',
-        'notes', 'site_desc', 'site_ele_m', 'distance_m', 'ascent_m',
+        'notes', 'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
         'crew_override', 'rea'];
@@ -439,6 +439,7 @@
         case 'pat.first': zeile.pat.first = wert; break;
         case 'pat.dob': zeile.pat.dob = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
+        case 'pat.site_desc': zeile.pat.site_desc = wert; break;
         case 'pat.mission_no': zeile.pat.mission_no = wert; break;
         // Die drei Ortsangaben koennen in beliebiger Spaltenreihenfolge
         // kommen — deshalb zusammenfuehren statt ueberschreiben.
@@ -528,7 +529,7 @@
                 mission: {
                     day: null, alarm: null, ended: null,
                     transport_dest: null, winch: 0, resources: [],
-                    notes: null, site_desc: null, site_ele_m: null,
+                    notes: null, site_ele_m: null,
                     distance_m: null, ascent_m: null,
                     schockraum: 0, secondary: 0,
                     winch_cycles: null, winch_cycles_pat: null, winch_airload: 0,
@@ -539,7 +540,8 @@
                     phases: {}, phasesLocal: {}, rea: null,
                     crew_override: 0
                 },
-                pat: { last: null, first: null, dob: null, dx: null, mission_no: null, loc: null },
+                pat: { last: null, first: null, dob: null, dx: null, mission_no: null,
+                       loc: null, site_desc: null },
                 dayCrew: {},
                 crew: {}                       // ausdrueckliche Einsatzbesatzung
             };
@@ -623,7 +625,7 @@
      */
     // Einsatzfelder, die unveraendert von der Zeile in den Einsatz wandern.
     var UEBERNAHME = ['alarm', 'ended', 'transport_dest', 'winch', 'resources',
-        'notes', 'site_desc', 'site_ele_m', 'distance_m', 'ascent_m',
+        'notes', 'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
         'phases', 'phasesLocal', 'rea'];

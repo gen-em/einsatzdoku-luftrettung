@@ -521,6 +521,7 @@
                 if (m.pat.first) { pat.first = m.pat.first; }
                 if (m.pat.dob) { pat.dob = m.pat.dob; }
                 if (m.pat.dx) { pat.dx = m.pat.dx; }
+                if (m.pat.site_desc) { pat.site_desc = m.pat.site_desc; }
                 if (m.pat.loc && (m.pat.loc.addr || m.pat.loc.lat !== undefined)) {
                     pat.loc = {};
                     if (m.pat.loc.addr) { pat.loc.addr = m.pat.loc.addr; }
@@ -550,7 +551,6 @@
                     // kennen, senden hier ueberall null/0 — der Server setzt
                     // dann dieselben Werte wie vor dieser Version.
                     ended_utc: m.ended || null,
-                    site_desc: m.site_desc || null,
                     site_ele_m: nummerOderNull(m.site_ele_m),
                     distance_m: nummerOderNull(m.distance_m),
                     ascent_m: nummerOderNull(m.ascent_m),

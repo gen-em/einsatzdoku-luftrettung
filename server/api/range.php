@@ -36,7 +36,7 @@ if ($monat !== '') {
 
 try {
     $st = db()->prepare('SELECT id, day, started_at, distance_m,
-                           site_desc, winch, bergwacht, secondary, winch_cycles, site_ele_m, pat_blob,
+                           winch, bergwacht, secondary, winch_cycles, site_ele_m, pat_blob,
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
                          FROM missions
@@ -57,7 +57,6 @@ try {
             'start_hhmm' => fmt_local($m['started_at']),
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-            'site_desc'  => $m['site_desc'] !== null ? (string)$m['site_desc'] : null,
             'winch'      => (int)$m['winch'] === 1,
             'bergwacht'  => (int)$m['bergwacht'] === 1,
             'secondary'  => (int)$m['secondary'] === 1,

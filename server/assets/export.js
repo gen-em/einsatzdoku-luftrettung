@@ -544,7 +544,6 @@
             { feld: 'hoehe_einsatzort_m', typ: 'int', einheit: 'm', beschreibung: 'Höhe des Einsatzorts', get: function (c) { return numOrEmpty(c.m.site_ele_m); } },
 
             { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel', get: function (c) { return orEmpty(c.m.transport_dest); } },
-            { feld: 'site_desc', typ: 'text', einheit: '', beschreibung: 'Beschreibung Einsatzort', get: function (c) { return orEmpty(c.m.site_desc); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
             { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
             { feld: 'winch', typ: '0/1', einheit: '', beschreibung: 'Windeneinsatz', get: function (c) { return c.m.winch; } },
@@ -566,6 +565,7 @@
             { feld: 'pat_ort_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.loc.addr', patient: true, get: function (c) { return (c.pat && c.pat.loc) ? orEmpty(c.pat.loc.addr) : ''; } },
             { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },
             { feld: 'pat_ort_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lon', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lon != null) ? c.pat.loc.lon : ''; } },
+            { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
 
             { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 4.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },

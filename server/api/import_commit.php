@@ -24,7 +24,7 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  *
  *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
  *                 // Exportformate; die Jahreslisten-Profile senden sie nicht)
- *                 ended_utc, site_desc, site_ele_m, distance_m, ascent_m,
+ *                 ended_utc, site_ele_m, distance_m, ascent_m,
  *                 schockraum, secondary, winch_cycles, winch_cycles_pat,
  *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema, notes,
  *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null,
@@ -199,7 +199,7 @@ function import_commit(array $b, int $userId): never
                                    final, manual, origin, transport_dest, winch,
                                    crew_override, crew_p1, crew_p2, crew_hems, crew_fr,
                                    crew_other, pat_blob,
-                                   site_desc, site_ele_m, distance_m, ascent_m,
+                                   site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
                                    winch_airload, bergwacht, bw_unit, bw_info,
                                    other_ema, notes)
@@ -209,7 +209,7 @@ function import_commit(array $b, int $userId): never
                                  transport_dest = ?, winch = ?, crew_override = ?,
                                  crew_p1 = ?, crew_p2 = ?, crew_hems = ?, crew_fr = ?,
                                  crew_other = ?, pat_blob = ?,
-                                 site_desc = ?, site_ele_m = ?, distance_m = ?, ascent_m = ?,
+                                 site_ele_m = ?, distance_m = ?, ascent_m = ?,
                                  schockraum = ?, secondary = ?, winch_cycles = ?,
                                  winch_cycles_pat = ?, winch_airload = ?, bergwacht = ?,
                                  bw_unit = ?, bw_info = ?, other_ema = ?, notes = ?,
@@ -267,7 +267,6 @@ function import_commit(array $b, int $userId): never
                 $txt($m['crew_hems'] ?? null, 120), $txt($m['crew_fr'] ?? null, 120),
                 $txt($m['crew_other'] ?? null, 120),
                 $blob,
-                $txt($m['site_desc'] ?? null, 190),
                 $zahl($m['site_ele_m'] ?? null, -500, 9000),
                 $zahl($m['distance_m'] ?? null, 0, 100000000),
                 $zahl($m['ascent_m'] ?? null, 0, 1000000),

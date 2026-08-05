@@ -276,15 +276,23 @@ function fieldValue(string $col) {
         <span class="muted small" id="agehint"></span></label>
       <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
       <div class="loc-widget">
-        <label>Adresse Einsatzort
+        <label>Einsatzort
+          <span class="muted small">Adresse, Koordinaten oder Plus Code</span>
           <input type="text" id="locaddr" maxlength="255" autocomplete="off"
                  placeholder="tippen für Vorschläge — auch Koordinaten oder Plus Code">
         </label>
         <input type="hidden" id="loclat">
         <input type="hidden" id="loclon">
         <ul id="locsuggest" class="loc-suggest" hidden></ul>
+        <!-- Bestaetigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
+             darin (E2) — sonst vernichtet die erste getippte Bezeichnung sie. -->
+        <div class="rmchips" id="locchips"></div>
         <p class="muted" id="locstate"></p>
       </div>
+      <label>Beschreibung Einsatzort
+        <span class="muted small">Zufahrt, Besonderheiten, Lage vor Ort</span>
+        <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
+      </label>
     </div>
 
     <h2>Weitere Angaben</h2>
@@ -489,9 +497,13 @@ async function patLaden(){
     if (o.first != null) document.getElementById('pat_first').value = o.first;
     if (o.dob != null) document.getElementById('pat_dob').value = o.dob;
     if (o.dx != null) document.getElementById('pat_dx').value = o.dx;
+    if (o.site_desc != null) document.getElementById('pat_site_desc').value = o.site_desc;
     if (o.age != null) document.getElementById('pat_age').value = o.age;
     zeigeAlter();
     if (o.loc) {
+      // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
+      // Zahlendarstellung aus einem Altdatensatz liegt (E11, kein stilles
+      // Umschreiben). Erst beim naechsten Speichern verlangt E4 eine Bezeichnung.
       document.getElementById('locaddr').value = o.loc.addr || '';
       if (o.loc.lat != null) {
         document.getElementById('loclat').value = o.loc.lat;
@@ -499,6 +511,7 @@ async function patLaden(){
       }
     }
   }
+  zeichneLocChip();
   locSetState();
   zeigeAlter();   // sperrt das Altersfeld wieder, wenn ein Geburtsdatum steht
 }
@@ -545,18 +558,36 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   const f = ev.target;
   if (f.dataset.patDone === '1' || !PAT_CK) return;   // gesperrt: Blob bleibt
   ev.preventDefault();
+  // E4: Koordinaten ohne Bezeichnung ergaeben in den Listen wieder ein
+  // Zahlenfragment. Die Pruefung steht VOR dem Verschluesseln, damit erst gar
+  // kein Blob entsteht — und hinter dem PAT_CK-Riegel oben: bei gesperrter
+  // Verschluesselung sind die Felder leer und gesperrt, dort waere die
+  // Forderung nach einer Bezeichnung nicht erfuellbar (V5).
+  if (document.getElementById('locaddr').value.trim() === ''
+      && document.getElementById('loclat').value !== '') {
+    locState.textContent = 'Bezeichnung fehlt — bitte zu den Koordinaten einen '
+      + 'Namen eintragen (z. B. „Talstation Nebelhorn“).';
+    locState.classList.add('locstate-fehler');
+    document.getElementById('locaddr').focus();
+    return;
+  }
+  locState.classList.remove('locstate-fehler');
   const o = {};
   const missionNo = document.getElementById('pat_mission_no').value.trim();
   const last  = document.getElementById('pat_last').value.trim();
   const first = document.getElementById('pat_first').value.trim();
   const dob   = document.getElementById('pat_dob').value.trim();
   const dx    = document.getElementById('pat_dx').value.trim();
+  const siteDesc = document.getElementById('pat_site_desc').value.trim();
   const age   = document.getElementById('pat_age').value.trim();
   if (missionNo !== '') o.mission_no = missionNo;
   if (last !== '')  o.last  = last;
   if (first !== '') o.first = first;
   if (dob !== '')   o.dob   = dob;
   if (dx !== '')    o.dx    = dx;
+  // Eigener Schluessel auf oberster Ebene, NICHT in loc: 'loc' entsteht nur bei
+  // gefuellter Adresse, eine Beschreibung ohne Ortsangabe ginge sonst verloren (E5).
+  if (siteDesc !== '') o.site_desc = siteDesc;
   // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum folgt — sonst
   // muesste es bei jeder Korrektur des Geburtsdatums nachgezogen werden.
   if (age !== '' && EdPat.alterAm(dob, MISSION_DAY) === null) o.age = parseInt(age, 10);
@@ -585,7 +616,34 @@ document.querySelectorAll('.parentcheck').forEach(cb => {
 const locIn = document.getElementById('locaddr');
 const locList = document.getElementById('locsuggest');
 const locState = document.getElementById('locstate');
+const locChips = document.getElementById('locchips');
 let locTimer = null;
+
+/* Koordinaten-Chip: eigene, sichtbare Darstellung ausserhalb des Textfeldes.
+ * Gleiche Klassen wie die Rettungsmittel-Chips (.rmchip/.rmx) — kein zweites
+ * Aussehen fuer dieselbe Sache. Der Chip ist reine ANZEIGE; Wertträger bleiben
+ * die versteckten Felder #loclat und #loclon. */
+function zeichneLocChip() {
+  locChips.innerHTML = '';
+  const la = document.getElementById('loclat').value;
+  const lo = document.getElementById('loclon').value;
+  if (la === '' || lo === '') { return; }
+  const chip = document.createElement('span');
+  chip.className = 'rmchip';
+  chip.appendChild(document.createTextNode(
+    `${parseFloat(la).toFixed(5)}, ${parseFloat(lo).toFixed(5)}`));
+  const x = document.createElement('button');
+  x.type = 'button'; x.className = 'rmx'; x.textContent = '\u00d7';
+  x.title = 'Koordinaten entfernen';
+  x.addEventListener('click', () => {
+    document.getElementById('loclat').value = '';
+    document.getElementById('loclon').value = '';
+    zeichneLocChip();
+    locSetState();          // Textfeld bleibt unangetastet (E2)
+  });
+  chip.appendChild(x);
+  locChips.appendChild(chip);
+}
 function locLabel(p) {
   const parts = [];
   if (p.name) parts.push(p.name);
@@ -619,14 +677,19 @@ function locSetState() {
     locState.textContent = LOC_MELDUNGEN[locErkennung.typ];
     return;
   }
-  locState.textContent = document.getElementById('loclat').value
-    ? 'Koordinaten gespeichert — Pin erscheint auf der Karte.'
-    : (locIn.value ? 'Nur Text (kein Vorschlag gewählt) — kein Karten-Pin.' : '');
+  // Gesetzte Koordinaten meldet der Chip selbst — hier bleibt nur der Hinweis
+  // auf reinen Text ohne Koordinaten.
+  locState.classList.remove('locstate-fehler');
+  locState.textContent = (!document.getElementById('loclat').value && locIn.value)
+    ? 'Nur Text (kein Vorschlag gewählt) — kein Karten-Pin.' : '';
 }
 locSetState();
 locIn.addEventListener('input', () => {
-  document.getElementById('loclat').value = '';
-  document.getElementById('loclon').value = '';
+  // E3: KEIN Leeren von #loclat/#loclon mehr. Frueher stand hier eine
+  // Aufraeumzeile, weil die Zugehoerigkeit von Text und Koordinaten unsichtbar
+  // war; mit dem Chip ist sie sichtbar. Wer die Koordinaten loswerden will,
+  // nimmt das Kreuz am Chip oder waehlt einen anderen Adressvorschlag.
+  // Wiedereinbau dieser Zeilen = Bezeichnung tippen vernichtet die Koordinaten.
   clearTimeout(locTimer);
 
   // F1/F5: Formaterkennung (Koordinaten, Plus Code) laeuft rein lokal und
@@ -644,12 +707,16 @@ locIn.addEventListener('input', () => {
     li.textContent = locVorschlagText(erg);
     li.addEventListener('mousedown', ev => {           // mousedown: vor blur
       ev.preventDefault();
-      locIn.value = erg.anzeige;                        // F3: normalisierte Darstellung
+      // E2: Textfeld LEEREN statt mit der Zahlendarstellung ueberschreiben —
+      // es gehoert ab hier der Bezeichnung. Die Koordinaten stehen im Chip.
       document.getElementById('loclat').value = erg.lat;
       document.getElementById('loclon').value = erg.lon;
+      locIn.value = '';
       locList.hidden = true;
       locErkennung = { typ: null };
+      zeichneLocChip();
       locSetState();
+      locIn.focus();
     });
     locList.appendChild(li);
     locList.hidden = false;
@@ -680,6 +747,7 @@ locIn.addEventListener('input', () => {
           document.getElementById('loclat').value = ft.geometry.coordinates[1];
           document.getElementById('loclon').value = ft.geometry.coordinates[0];
           locList.hidden = true;
+          zeichneLocChip();     // gleiche Darstellung wie bei Koordinateneingabe
           locSetState();
         });
         locList.appendChild(li);

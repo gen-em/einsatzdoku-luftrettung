@@ -10,6 +10,116 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.3.0] — 2026-08-06
+
+### Neu — Bezeichnung zu Koordinaten
+
+Wird der Einsatzort über Koordinaten oder einen Plus Code eingegeben, blieb
+bisher kein lesbarer Ortsname übrig: Das Textfeld wurde beim Bestätigen mit der
+normalisierten Zahlendarstellung überschrieben, und in allen Listen stand
+danach ein Zahlenfragment.
+
+Bestätigte Koordinaten erscheinen jetzt **unter** dem Textfeld als Chip mit
+Kreuz zum Entfernen — dieselbe Darstellung wie bei den weiteren
+Rettungsmitteln. Das Textfeld wird dabei geleert und gehört ab dann der
+Bezeichnung. Damit die Zuordnung sichtbar bleibt, leert der `input`-Zuhörer die
+versteckten Koordinatenfelder **nicht** mehr; eine getippte Bezeichnung
+vernichtet die Koordinaten also nicht. Entfernt werden sie nur über das Kreuz
+am Chip oder durch Auswahl eines anderen Adressvorschlags.
+
+Sind Koordinaten gesetzt und das Textfeld leer, lässt sich der Einsatz nicht
+speichern. Die Prüfung greift vor dem Verschlüsseln und nur bei entsperrter
+Verschlüsselung — bei gesperrter bleibt der vorhandene Blob wie bisher
+unangetastet. Ohne Koordinaten ist der Einsatzort weiterhin vollständig
+freiwillig.
+
+Bei einem gewählten Adressvorschlag ändert sich nichts am Ablauf: Das Label
+steht im Textfeld und gilt als Bezeichnung; zusätzlich erscheint der Chip,
+damit beide Wege gleich aussehen.
+
+### Neu — Seite „Beschreibungen sichern"
+
+`site_desc_rettung.php` gibt den verbliebenen Klartextbestand der Spalte
+`missions.site_desc` als Textdatei aus: je Einsatz eine Zeile mit Datum, Beginn
+in Ortszeit, interner Einsatznummer und Text. Damit lassen sich die alten Werte
+von Hand nachtragen; ein automatischer Umzug ist nicht möglich, weil der
+`pat_blob` ausschließlich im Browser entsteht.
+
+Die Seite ist **vorübergehend**. Sie erscheint in der Einstellungsleiste nur,
+solange überhaupt noch Werte vorhanden sind, und wird zusammen mit der Spalte
+entfernt.
+
+### Geändert — „Beschreibung Einsatzort" ist Ende-zu-Ende-verschlüsselt
+
+Das Feld lag als Klartext in `missions.site_desc`. Es steht jetzt als eigener
+Schlüssel `site_desc` auf oberster Ebene des `pat_blob` — nicht innerhalb von
+`loc`, weil `loc` nur bei gefüllter Adresse entsteht und eine Beschreibung ohne
+Ortsangabe sonst verloren ginge.
+
+Im Formular steht das Feld nun im verschlüsselten Block direkt unter dem
+Einsatzort; bei gesperrter Verschlüsselung ist es deaktiviert und wird beim
+Speichern nicht verändert. In der Einsatzansicht erscheint es mit Schloss-Zeichen
+unter dem Einsatzort statt in der generischen Zusatzfeldliste. **Die Suche
+findet seinen Inhalt erst nach dem Entsperren** — dieselbe Bedingung, unter der
+Diagnose und Einsatzort schon vorher standen.
+
+Der Eintrag hat `mission_fields.php` verlassen; damit verschwindet das Feld
+zugleich aus Formularausgabe, Formularauswertung, `api/mission.php` und der
+Backup-Wiederherstellung, die alle generisch über `$FIELDS` laufen. Ebenfalls
+entfernt: die Auswahl in `api/day.php`, `api/range.php`, `api/suchindex.php` und
+`api/export_data.php` (in `day.php` und `range.php` wurde das Feld von keiner
+Seite ausgewertet).
+
+**Nichts wird gelöscht.** Die Spalte `missions.site_desc` bleibt bestehen, es
+gibt keine Migration. Eine Löschmigration liefe beim Öffnen von `update.php`
+sofort und würde den Klartext vor jeder Sicherung vernichten; das Entfernen der
+Spalte ist eine eigene, spätere Auslieferung.
+
+### Geändert — Export, Import, Backup
+
+- CSV: `site_desc` entfällt aus dem ungeschützten Bereich; neu im geschützten
+  Bereich hinter `pat_ort_lon` die Spalte **`pat_ort_beschreibung`**. Ohne den
+  Haken „Patientendaten einschließen" ist sie vorhanden und leer.
+- Rückimport: `pat_ort_beschreibung` wird dem verschlüsselten Block zugeordnet.
+  Die alte Kopfzeile `site_desc` wird weiterhin angenommen und zeigt auf
+  dasselbe Ziel, damit Exportdateien früherer Versionen lesbar bleiben.
+- Backup-Format auf **Version 5**: Die Beschreibung steckt im Block `pat` und
+  ist damit für den Server unsichtbar. `edbak_build()` liest die Einsätze mit
+  `SELECT *` und entfernt die Klartextspalte deshalb ausdrücklich — sonst
+  stünde sie weiterhin im Backup.
+- Excel (Standard) und Excel (GuteSeele) führen die Beschreibung wie bisher
+  nicht.
+
+### Geändert — Beschriftungen im Formular
+
+„Adresse Einsatzort" heißt jetzt **Einsatzort** mit dem Zusatz „Adresse,
+Koordinaten oder Plus Code"; die Beschreibung trägt den Zusatz „Zufahrt,
+Besonderheiten, Lage vor Ort". Ohne diese Zusätze waren die beiden
+untereinanderstehenden Felder beim Ausfüllen nicht auseinanderzuhalten.
+
+### Behoben — Import legte keine Einsätze mehr an
+
+`api/import_commit.php` bereitete die INSERT-Anweisung für Einsätze mit **32
+Spalten, aber nur 31 Werten** vor (`notes` hatte keinen Platzhalter). Da die
+Datenbankverbindung ohne Prepare-Emulation und mit Ausnahmen arbeitet
+(`db.php`), scheitert bereits das Vorbereiten der Anweisung — der gesamte
+Import-Abschluss brach ab, für jedes Profil und unabhängig von der Datei. Der
+Fehler bestand seit Web 2.10.0, als die zusätzlichen Felder angehängt wurden,
+und fiel hier nur auf, weil dieselbe Anweisung für `site_desc` angefasst wurde.
+
+### Behoben — Ortsspalte zeigte bei Koordinaten ein Fragment
+
+`extractOrt()` (`assets/missiontable.js`) nahm den letzten Bestandteil nach dem
+Komma und entfernte eine führende Postleitzahl. Aus `47.72800, 10.31600` wurde
+damit `10.31600`. Die Zerlegung greift jetzt nur noch, wenn der letzte
+Bestandteil überhaupt Buchstaben enthält — also nach einer Adresse mit Ortsteil
+aussieht. Andernfalls wird der Text vollständig durchgereicht.
+
+Wirkt gleichermaßen auf Einsatzliste, Zeitraum-Übersicht und Suche, weil alle
+drei dieselbe Funktion verwenden. Altdatensätze mit Koordinatentext in `addr`
+zeigen dadurch die vollständige Koordinate; ihre Bezeichnung tragen sie beim
+nächsten Bearbeiten nach, eine Migration gibt es nicht.
+
 ## [Web 3.2.0] — 2026-08-05
 
 ### Behoben — „Export erstellen" reagierte überhaupt nicht mehr

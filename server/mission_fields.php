@@ -58,9 +58,6 @@ return [
             'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
         ],
     ],
-    'site_desc' => [
-        'label' => 'Beschreibung Einsatzort', 'type' => 'text', 'max' => 190,
-    ],
     'winch' => [
         'label' => 'Windeneinsatz', 'type' => 'checkbox',
         'day_col' => 'check', 'day_label' => 'Winde',

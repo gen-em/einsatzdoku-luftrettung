@@ -127,7 +127,7 @@ function export_meta(array $b, int $userId): never
     $patCol = $patient ? ', pat_blob' : '';
     $st = $pdo->prepare(
         "SELECT id, day, started_at, ended_at, distance_m, ascent_m, site_ele_m,
-                final, manual, client_ref, transport_dest, site_desc, winch,
+                final, manual, client_ref, transport_dest, winch,
                 winch_cycles, winch_cycles_pat, winch_airload, bergwacht,
                 bw_unit, bw_info, secondary, schockraum, other_ema,
                 crew_override, crew_p1, crew_p2, crew_hems, crew_fr, crew_other,
@@ -224,7 +224,6 @@ function export_meta(array $b, int $userId): never
             'manual'           => (int)$r['manual'],
             'source'           => $source,
             'transport_dest'   => $r['transport_dest'],
-            'site_desc'        => $r['site_desc'],
             'winch'            => (int)$r['winch'],
             'winch_cycles'     => $r['winch_cycles'] !== null ? (int)$r['winch_cycles'] : null,
             'winch_cycles_pat' => $r['winch_cycles_pat'] !== null ? (int)$r['winch_cycles_pat'] : null,

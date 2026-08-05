@@ -26,10 +26,18 @@ const EdMissionTable = (() => {
   function fmtKm(m) {
     return m == null ? '<span class="dash">–</span>' : (m / 1000).toFixed(1).replace('.', ',') + ' km';
   }
-  /* Ortsanteil aus der Adresse: letzter Bestandteil ohne fuehrende PLZ. */
+  /* Ortsanteil aus der Adresse: letzter Bestandteil ohne fuehrende PLZ.
+   *
+   * Die Zerlegung greift nur, wenn der letzte Teil nach dem Komma ueberhaupt
+   * Buchstaben enthaelt — also nach einer Adresse mit Ortsteil aussieht. Sonst
+   * wird der Text unveraendert durchgereicht: Eine von Hand eingetragene
+   * Bezeichnung bleibt vollstaendig stehen, und ein Altdatensatz mit
+   * Koordinatentext in addr ("47.72800, 10.31600") zeigt die ganze Koordinate
+   * statt des Fragments "10.31600" (E11). */
   function extractOrt(addr) {
     const parts = addr.split(',');
     const last = parts[parts.length - 1].trim();
+    if (!/\p{L}/u.test(last)) { return addr.trim(); }
     return last.replace(/^\d{4,5}\s+/, '');
   }
 

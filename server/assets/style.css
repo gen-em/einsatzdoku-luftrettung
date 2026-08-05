@@ -301,6 +301,8 @@ a.btn-danger{text-decoration:none;display:inline-block}
   border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
 .loc-suggest li{padding:.4rem .7rem;cursor:pointer}
 .loc-suggest li:hover{background:var(--accent-light)}
+/* Meldungszeile des Einsatzort-Widgets im Fehlerfall (fehlende Bezeichnung) */
+.locstate-fehler{color:var(--rot)}
 
 /* Bedingte Unterfelder im Einsatzformular */
 .fld-check{margin:.7rem 0 .2rem}

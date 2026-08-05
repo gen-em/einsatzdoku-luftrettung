@@ -396,13 +396,16 @@ function inBereich(wert, von, bis) {
  */
 function baueHeuhaufen(m) {
   const teile = [
-    m.transport_dest, m.site_desc, m.bw_unit, m.bw_info, m.other_ema, m.notes,
+    m.transport_dest, m.bw_unit, m.bw_info, m.other_ema, m.notes,
     m.base, m.aircraft,
     m.crew.p1, m.crew.p2, m.crew.hems, m.crew.fr, m.crew.other
   ].concat(m.resources);
 
   if (m._pat) {
     teile.push(m._pat.mission_no, m._pat.last, m._pat.first, m._pat.dx);
+    // Beschreibung Einsatzort liegt seit Web 3.3.0 im pat_blob und ist damit
+    // erst nach dem Entsperren durchsuchbar — wie Diagnose und Einsatzort.
+    if (m._pat.site_desc) { teile.push(m._pat.site_desc); }
     if (m._pat.loc && m._pat.loc.addr) { teile.push(m._pat.loc.addr); }
     // Geburtsdatum in beiden Schreibweisen, damit sowohl "1985-03-12" als
     // auch "12.03.1985" gefunden wird.

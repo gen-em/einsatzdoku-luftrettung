@@ -362,6 +362,12 @@ async function zeigePat(m, dl, bounds){
           if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
         }
       }
+      // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
+      // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
+      if (o.site_desc != null) {
+        dl.insertAdjacentHTML('beforeend',
+          `<dt>Beschreibung Einsatzort 🔒</dt><dd>${esc(String(o.site_desc))}</dd>`);
+      }
       dl.hidden = dl.children.length === 0;
     } catch (e) { /* Blob passt nicht zum Schluessel */ }
   } else {

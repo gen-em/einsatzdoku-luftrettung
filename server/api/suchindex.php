@@ -28,7 +28,7 @@ try {
     $st = db()->prepare(
         'SELECT m.id, m.day, m.started_at, m.distance_m, m.site_ele_m,
                 m.origin, m.edited,
-                m.transport_dest, m.site_desc, m.schockraum,
+                m.transport_dest, m.schockraum,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
                 m.bergwacht, m.bw_unit, m.bw_info,
                 m.secondary, m.other_ema, m.notes,
@@ -166,7 +166,6 @@ try {
             'origin'      => (string)($m['origin'] ?? 'watch'),
             'edited'      => (int)($m['edited'] ?? 0) === 1,
             'transport_dest' => $m['transport_dest'] !== null ? (string)$m['transport_dest'] : null,
-            'site_desc'   => $m['site_desc'] !== null ? (string)$m['site_desc'] : null,
             'schockraum'  => (int)$m['schockraum'] === 1,
             'winch'       => (int)$m['winch'] === 1,
             'winch_cycles'     => $m['winch_cycles']     !== null ? (int)$m['winch_cycles']     : null,

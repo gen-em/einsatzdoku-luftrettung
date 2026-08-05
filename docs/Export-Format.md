@@ -166,7 +166,15 @@ Gelten für alle drei Tabellen:
 ### 3.2 Stabiler Spaltensatz
 
 Der Spaltensatz hängt **nicht** am Haken „Patientendaten einschließen". Ohne
-Haken bleiben die `pat_`-Spalten vorhanden und leer. Ein Programm, das diese
+Haken bleiben die `pat_`-Spalten vorhanden und leer.
+
+Mit Web 3.3.0 hat sich der Satz um eine Spalte verschoben — nicht in der Zahl,
+aber in der Zuordnung: `site_desc` ist aus dem ungeschützten Bereich
+verschwunden und als `pat_ort_beschreibung` in den geschützten gewandert. Ohne
+Haken ist die Beschreibung also nicht mehr enthalten. Beim **Zurücklesen** wird
+die alte Kopfzeile `site_desc` weiterhin angenommen und auf dasselbe Ziel
+abgebildet, damit Exportdateien früherer Versionen lesbar bleiben; der Wert
+landet dann ebenfalls im verschlüsselten Block. Ein Programm, das diese
 Dateien einliest, muss deshalb nicht zwei Fälle unterscheiden. `felder.csv`
 beschreibt immer den vollen Formatumfang.
 
@@ -265,7 +273,6 @@ verworfen — maßgeblich ist `typ`.
 | `hoehenmeter_m` | int | m | Höhenmeter (ascent_m) |
 | `hoehe_einsatzort_m` | int | m | Höhe des Einsatzorts |
 | `transport_dest` | text | — | Transportziel |
-| `site_desc` | text | — | Beschreibung Einsatzort |
 | `schockraum` | 0/1 | — | Schockraum alarmiert |
 | `secondary` | 0/1 | — | Sekundärtransport |
 | `winch` | 0/1 | — | Windeneinsatz |
@@ -286,6 +293,7 @@ verworfen — maßgeblich ist `typ`.
 | `pat_ort_adresse` | text | — | pat_blob.loc.addr |
 | `pat_ort_lat` | dec | — | pat_blob.loc.lat |
 | `pat_ort_lon` | dec | — | pat_blob.loc.lon |
+| `pat_ort_beschreibung` | text | — | pat_blob.site_desc (bis Web 3.2.0: ungeschützte Spalte `site_desc`) |
 | `rea_json` | json | — | Reanimationssitzungen mit Ereignissen, siehe 4.4; leer wenn keine Reanimation |
 | `track_datei` | text | — | relativer Pfad unter tracks/, oder leer |
 | `track_punkte` | int | — | Anzahl Trackpunkte |

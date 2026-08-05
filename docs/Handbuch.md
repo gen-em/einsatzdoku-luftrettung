@@ -12,7 +12,8 @@ Die Web-Oberfläche (luftrettung.net) zeigt Flugtage mit Karte, Einsatz-Details
 und Reanimations-Protokollen — und erlaubt Nachtragen und Bearbeiten von Hand.
 
 **Patientendaten sind geschützt.** Nachname, Vorname, Geburtsdatum, Alter,
-Diagnose und der Einsatzort werden **Ende-zu-Ende-verschlüsselt** gespeichert:
+Diagnose, der Einsatzort und seine Beschreibung werden
+**Ende-zu-Ende-verschlüsselt** gespeichert:
 Der Browser ver- und entschlüsselt sie mit einem Schlüssel aus deinem
 Login-Passwort, der Server sieht nur Chiffretext (Abschnitt 5). Notizen und
 Freitextfelder sind davon **nicht** erfasst — dort gehören keine
@@ -258,8 +259,9 @@ Zustand wird nicht gespeichert, nach einem Neuladen ist er wieder aus.
 Zeigt man auf eine Phasenzeile oder einen eingeblendeten Kartenpunkt,
 leuchtet das Gegenstück orange auf (am Handy: antippen).
 
-Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort** —
-erscheinen mit einem Schloss-Symbol 🔒 in der Feldliste und **nur hier**, nicht
+Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort,
+Beschreibung Einsatzort** — erscheinen mit einem Schloss-Symbol 🔒 in der
+Feldliste und **nur hier**, nicht
 in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
 ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
 
@@ -294,12 +296,27 @@ Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
 Koordinaten und setzt den Pin auf den Karten. Freitext ohne Vorschlag geht
 auch — dann ohne Pin.
 
+**Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
+sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
+Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem ✕ zum
+Entfernen, genau wie bei den weiteren Rettungsmitteln. Das Textfeld bleibt
+davon unberührt: Du kannst dort weiterschreiben, ohne die Koordinaten zu
+verlieren. Die Koordinaten verschwinden nur durch das ✕ oder wenn du einen
+anderen Adressvorschlag auswählst.
+
 Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
 Anfrage an einen externen Server gestellt. Wie bei einer Adresse erscheint
 dann ein Eintrag in der Vorschlagsliste (z. B. „Koordinaten übernehmen
 (Dezimalgrad): 47.72610, 10.31700"); erst mit dessen Auswahl werden
-Koordinaten und Pin übernommen:
+Koordinaten und Pin übernommen. **Das Textfeld wird dabei geleert** — es
+gehört ab dann der Bezeichnung, die du selbst einträgst (z. B. „Talstation
+Nebelhorn", „Wanderweg 401, Ostrachtal"). Ohne diese Bezeichnung lässt sich
+der Einsatz nicht speichern; in den Listen stünde sonst nur eine Zahlenreihe
+statt eines Ortsnamens. Bei einem Adressvorschlag bleibt es beim gewohnten
+Verhalten: Das Label steht im Feld und gilt als Bezeichnung.
+
+Die vier Formate:
 - **Dezimalgrad**, z. B. `47.7261, 10.3170`
 - **Grad/Dezimalminuten**, z. B. `47°43.57'N 010°19.02'E`
 - **Grad/Minuten/Sekunden**, z. B. `47°39'11.6"N 10°21'34.3"E`
@@ -310,10 +327,16 @@ Koordinaten und Pin übernommen:
   kopieren). Werte außerhalb des gültigen Bereichs (z. B. eine Breite über
   90°) werden ebenso als ungültig gemeldet statt als Vorschlag angeboten.
 
+Direkt darunter steht **Beschreibung Einsatzort** (Zufahrt, Besonderheiten,
+Lage vor Ort). Das Feld gehört seit Web 3.3.0 zum verschlüsselten Block: Bei
+gesperrter Verschlüsselung ist es deaktiviert und bleibt beim Speichern
+unverändert, und die Suche findet seinen Inhalt erst nach dem Entsperren.
+Ausfüllen ist freiwillig.
 
 
-Dazu die weiteren Zusatzfelder: Transportziel, Beschreibung
-Einsatzort (nur in der Detailansicht), **Windeneinsatz** (Haken öffnet Cycles,
+
+Dazu die weiteren Zusatzfelder: Transportziel,
+**Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
 aus den Stammdaten plus Namen/Infos), Sekundärtransport, Schockraum, Anderer
 Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
@@ -438,8 +461,8 @@ Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze vo
 wie vielen angezeigt werden.
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
-(Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose und
-Einsatzort nicht durchsucht, der Altersfilter ist abgeschaltet und die
+(Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort
+und dessen Beschreibung nicht durchsucht, der Altersfilter ist abgeschaltet und die
 entsprechenden Spalten bleiben leer. Alle übrigen Filter arbeiten normal
 weiter. Über **Entsperren** im Hinweis oben nimmst du die Sperre auf, danach
 sucht die Seite sofort mit den vollständigen Daten weiter — ohne Neuladen.
@@ -464,8 +487,8 @@ gar nicht darin suchen.
 
 ## 5. Verschlüsselung der Patientendaten (Pflicht)
 
-Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort und die
-Einsatznummer sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
+Nachname, Vorname, Geburtsdatum, Alter, Diagnose, Einsatzort, die Beschreibung
+des Einsatzortes und die Einsatznummer sind **Ende-zu-Ende-verschlüsselt**: Der Browser ver- und
 entschlüsselt mit einem Schlüssel aus deinem Login-Passwort; der Server
 speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
@@ -529,6 +552,25 @@ das Feld gesperrt und mit „aus Geburtsdatum" gekennzeichnet. Ist kein
 Geburtsdatum bekannt (bei unbekannten Personen der Regelfall), bleibt das Alter
 von Hand eintragbar. **Name, Geburtsdatum und Einsatznummer erscheinen
 bewusst nur in der Einsatzansicht bzw. im Formular**, nie in den Übersichten.
+
+---
+
+### 5.1 Beschreibungen aus der Zeit vor Web 3.3.0 sichern
+
+Bis Web 3.2.0 stand die **Beschreibung Einsatzort** unverschlüsselt in der
+Datenbank. Mit Web 3.3.0 ist sie in den verschlüsselten Block umgezogen — die
+alten Werte konnten dabei nicht mitwandern, weil der verschlüsselte Block
+ausschließlich im Browser entsteht und der Server nichts hineinschreiben kann.
+
+Solange noch solche Werte vorhanden sind, erscheint in der Einstellungsleiste
+der Eintrag **Beschreibungen sichern**. Die Seite gibt eine Textdatei aus: je
+Einsatz eine Zeile mit Datum, Beginn (Ortszeit), interner Einsatznummer und dem
+Text. Damit lassen sich die Beschreibungen von Hand in die Einsätze nachtragen.
+
+Zwei Dinge dazu: Die alten Werte verschwinden durch das Nachtragen **nicht**
+von selbst — die Datenbankspalte wird erst in einer späteren Auslieferung
+entfernt. Und der Eintrag in der Leiste erscheint nur, solange es überhaupt
+noch etwas zu sichern gibt; danach verschwindet er von selbst.
 
 ---
 

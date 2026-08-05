@@ -40,7 +40,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 4,
+  "version": 5,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "app": "einsatzdoku-luftrettung",
   "user": { "email": "...", "name": "..." },   // informativ
@@ -73,7 +73,7 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
     "distance_m": 38400, "ascent_m": 550,
     "site_ele_m": 712,                    // wird beim Restore neu berechnet, nicht uebernommen
-    "transport_dest": "…", "site_desc": "…",
+    "transport_dest": "…",
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
     "other_ema": null, "other_resources": null, "notes": null,
@@ -90,7 +90,9 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
     // Zielkontos verschlüsselt und als `pat_blob` gespeichert.
     "pat": { "dx": "Polytrauma", "age": 41, "mission_no": "2026-0042",
              "loc": { "addr": "Ringstr. 18, 87439 Kempten",
-                      "lat": 47.72, "lon": 10.31 } },
+                      "lat": 47.72, "lon": 10.31 },
+             "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß" },
+                                            // site_desc seit Version 5
     // "pat_unreadable": true  -> stand beim Export nicht zur Verfügung
 
     "phases": [ { "phase": 2, "occurred_at": "2026-07-19 08:15:00",

@@ -29,7 +29,7 @@
  *
  * target-Werte, die die Pipeline kennt:
  *   day, alarm, ended, transport_dest, winch, resources, notes
- *   site_desc, site_ele_m, distance_m, ascent_m
+ *   site_ele_m, distance_m, ascent_m
  *   schockraum, secondary, winch_cycles, winch_cycles_pat, winch_airload
  *   bergwacht, bw_unit, bw_info, other_ema
  *   phase:N | phaseLat:N | phaseLon:N   (N = 2..9)
@@ -37,7 +37,7 @@
  *   crew_override, crew.p1 | crew.p2 | crew.hems | crew.fr | crew.other
  *   dayCrew.p1 | dayCrew.p2 | dayCrew.hems | dayCrew.fr | dayCrew.other
  *   pat.last+first, pat.last, pat.first, pat.dob, pat.dx, pat.loc.addr,
- *   pat.loc.lat, pat.loc.lon, pat.mission_no
+ *   pat.loc.lat, pat.loc.lon, pat.mission_no, pat.site_desc
  *   null = Spalte wird bewusst nicht uebernommen
  *
  * 'sensitive: true' markiert Felder, die im pat_blob landen und den Browser
@@ -179,7 +179,9 @@
         'hoehe_einsatzort_m': { target: 'site_ele_m', parse: ['ganzzahl'] },
 
         'transport_dest': { target: 'transport_dest', parse: ['trim', 'max:190'] },
-        'site_desc': { target: 'site_desc', parse: ['trim', 'max:190'] },
+        // Alte Kopfzeile aus Exporten bis Web 3.2.0. Zeigt auf dasselbe Ziel wie
+        // 'pat_ort_beschreibung' (E10), damit frühere Dateien lesbar bleiben.
+        'site_desc': { target: 'pat.site_desc', parse: ['trim', 'max:190'], sensitive: true },
         'schockraum': { target: 'schockraum', parse: ['boolJN'] },
         'secondary': { target: 'secondary', parse: ['boolJN'] },
         'winch': { target: 'winch', parse: ['boolJN'] },
@@ -201,6 +203,7 @@
         'pat_ort_adresse': { target: 'pat.loc.addr', parse: ['trim'], sensitive: true },
         'pat_ort_lat': { target: 'pat.loc.lat', parse: ['dezimal'], sensitive: true },
         'pat_ort_lon': { target: 'pat.loc.lon', parse: ['dezimal'], sensitive: true },
+        'pat_ort_beschreibung': { target: 'pat.site_desc', parse: ['trim', 'max:190'], sensitive: true },
 
         'rea_json': { target: 'rea', parse: ['jsonRea'] },
         'track_datei': { target: null },                 // GPX wird nicht eingelesen

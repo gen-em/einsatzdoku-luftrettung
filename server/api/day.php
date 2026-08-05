@@ -81,7 +81,7 @@ try {
                          WHERE owner_type = ? AND owner_id = ? ORDER BY seq');
 
     $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           site_desc, winch, bergwacht, secondary, pat_blob,
+                           winch, bergwacht, secondary, pat_blob,
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
                          FROM missions WHERE user_id = ? AND day = ? AND deleted_at IS NULL
@@ -103,7 +103,6 @@ try {
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'final'      => (bool)$m['final'],
             'has_p9'     => $m['p9_at'] !== null,
-            'site_desc'  => $m['site_desc'] !== null ? (string)$m['site_desc'] : null,
             'winch'      => (int)$m['winch'] === 1,
             'bergwacht'  => (int)$m['bergwacht'] === 1,
             'secondary'  => (int)$m['secondary'] === 1,

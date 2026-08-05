@@ -31,7 +31,12 @@ function edbak_build(int $userId): string {
     $missions = [];
     foreach ($q('SELECT * FROM missions WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]) as $m) {
         $mid = (int)$m['id'];
-        foreach (['id', 'user_id', 'device_id'] as $drop) { unset($m[$drop]); }
+        // 'site_desc' ist seit Web 3.3.0 Teil des pat_blob und kommt ueber den
+        // Block 'pat' mit. Die gleichnamige Spalte existiert nur noch als
+        // Restbestand fuer die Rettungsausgabe (site_desc_rettung.php) und
+        // gehoert nicht ins Backup — sonst stuende sie dort im Klartext.
+        // Diese Zeile entfaellt zusammen mit der Spalte.
+        foreach (['id', 'user_id', 'device_id', 'site_desc'] as $drop) { unset($m[$drop]); }
         $m['phases'] = array_map(
             fn($p) => ['phase' => (int)$p['phase'], 'occurred_at' => $p['occurred_at'],
                        'lat' => $p['lat'] !== null ? (float)$p['lat'] : null,
@@ -89,7 +94,7 @@ function edbak_build(int $userId): string {
 
     $data = [
         'format' => 'einsatzdoku-backup',
-        'version' => 4,
+        'version' => 5,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-luftrettung',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -267,6 +272,9 @@ function edbak_restore(int $userId, array $data): array {
             }
         };
         $collectCols($FIELDS);
+        // 'site_desc' steht bewusst NICHT hier: Das Feld hat mission_fields.php
+        // mit Web 3.3.0 verlassen und liegt im pat_blob. Ein Wiedereintragen
+        // wuerde es beim Restore in die Klartextspalte zurueckholen.
         $extraCols = array_merge($extraCols, ['pat_blob']);   // Alt-Backups: loc_* wird ignoriert
 
         foreach (($data['missions'] ?? []) as $m) {
