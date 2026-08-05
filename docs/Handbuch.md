@@ -625,14 +625,18 @@ geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Hak
 
 Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format:
 
-- **Excel — Standard**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
+- **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
+  Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
+  ist das Format für Auswertungen und für den Rückweg.
+- **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
   alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Flugtag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
-- **Excel — GuteSeele-Layout**: das gewohnte Listenlayout zur Weitergabe an
-  Dritte. Bei mehreren Jahren entsteht je Jahr ein Blatt.
-- **CSV — vollständig**: ein Archiv mit allen Feldern, die das System kennt,
-  dazu Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die
-  GPX-Tracks. Das ist das Format für Auswertungen und für den Rückweg.
+- **Excel (GuteSeele)**: das gewohnte Listenlayout zur Weitergabe an Dritte. Bei
+  mehreren Jahren entsteht je Jahr ein Blatt.
+
+Die Namen sind dieselben wie im Auswahlfeld des Imports — was hier
+herausgeschrieben wird, lässt sich dort unter demselben Namen wieder
+einlesen.
 
 **Patientendaten einschließen** ist standardmäßig aus. Wird es gesetzt, kommt
 vorher ein Hinweis: Ab dem Speichern schützt die Verschlüsselung dieser
@@ -646,8 +650,19 @@ die Sperre aufheben (siehe Abschnitt 5).
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
-können solche Archive nicht öffnen. Beide Programme sind kostenlos. Das Passwort
-lässt sich nicht wiederherstellen; ohne es ist die Datei wertlos.
+können solche Archive nicht öffnen. Beide Programme sind kostenlos.
+
+Das Passwort wird nirgends gespeichert und lässt sich nicht zurücksetzen. Geht
+es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin sind
+dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
+über die Anwendung.
+
+Die fertige Datei heißt `luftrettungsdokumentation_export_TT-MM-JJJJ_…` mit dem
+Tag der Erstellung und dem gewählten Format am Ende.
+
+Beim CSV nennt die Abschlussmeldung unter dem Knopf auch, wie viele GPX-Tracks
+im Archiv liegen — „keine Tracks vorhanden" ist etwas anderes als „Tracks
+vergessen", und das war vorher erst nach dem Entpacken zu sehen.
 
 ### 7.2 Zurücklesen
 
@@ -655,11 +670,11 @@ Beide Exceltabellen und das CSV-Archiv lassen sich wieder importieren — auch i
 ein anderes Konto. Ein `.zip` kann direkt gewählt werden, die Tabelle darin wird
 von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefragt.
 
-- Das **vollständige CSV** liest alles zurück: alle Phasen samt Koordinaten, die
+- Das **CSV (Standard)** liest alles zurück: alle Phasen samt Koordinaten, die
   Reanimationsdokumentation und sämtliche Einsatzfelder. Nicht übernommen werden
   die internen Nummern der Einsätze (sie werden neu vergeben) und die
   GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
-- Beim **Standard-Excel** steht vor dem Import, welche Felder danach leer
+- Beim **Excel (Standard)** steht vor dem Import, welche Felder danach leer
   bleiben: die Phasen zwischen Abflug und Übergabe, alle Koordinaten, die
   Reanimationsdokumentation und der Track samt Flugkilometern. Diese Angaben
   stehen in der Datei nie drin — sie gehen nicht verloren, sie werden nur nicht

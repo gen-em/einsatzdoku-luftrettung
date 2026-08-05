@@ -10,6 +10,89 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.2.0] — 2026-08-05
+
+### Behoben — „Export erstellen" reagierte überhaupt nicht mehr
+
+Der Knopf hatte gar keinen Klick-Zuhörer. Der Fehler passierte schon beim Laden
+der Seite, nicht beim Klick — deshalb blieb auch die Statuszeile darunter leer.
+
+Mit Web 2.11.0 wurde die Formatauswahl in `import.php` von Optionsfeldern auf
+ein Auswahlfeld (`<select id="exp_fmt">`) umgestellt. `assets/export.js` fragte
+an drei Stellen weiterhin `input[name="exp_fmt"]:checked` ab. `querySelector`
+liefert dafür `null`; `syncFormat()` warf beim `DOMContentLoaded` einen
+`TypeError` und brach den Init-Block ab. Die Registrierung des Klick-Zuhörers
+auf `#exp_go` ist dessen **letzte** Anweisung und kam damit nie zum Zug.
+Mitbetroffen: die GPX-Zeile erschien beim Umschalten auf CSV nicht mehr, und der
+Haken „Patientendaten einschließen" wurde bei gesperrter Verschlüsselung nicht
+mehr gesperrt.
+
+**Ursache im Repo:** Der Stand von `assets/export.js` aus der Auslieferung
+Web 2.11.0 („Export-Fehlerbehebung", Commit `7237ee9`) wurde durch den
+Folgecommit `1413ab5` mit einem älteren Arbeitsstand überschrieben —
+`git diff c14caf7 1413ab5 -- server/assets/export.js` ergibt genau eine Zeile
+Unterschied, die Datei entsprach also wieder Web 2.10.0. `import.php`,
+`confirm.js` und `import_profiles.js` waren an diesem Commit nicht beteiligt und
+behielten den korrigierten Stand — daher der Bruch. `docs/CHANGELOG.md`,
+`docs/Export-Format.md` und `docs/Handbuch.md` wurden dabei ebenfalls
+zurückgesetzt; der Changelog-Abschnitt zu Web 2.11.0 (Export) fehlte seitdem
+vollständig. Die betroffenen Punkte sind unten unter „Geändert — Export"
+aufgeführt, weil sie erst mit dieser Auslieferung tatsächlich im Repository
+ankommen; der Eintrag zu Web 2.11.0 trägt einen entsprechenden Hinweis.
+
+### Behoben — mit demselben Stand wiederhergestellt
+
+- Die Rückfragen vor dem Export liegen wieder **innerhalb** der
+  Fehlerbehandlung. Vorher stand ein Fehler im Dialog für einen völlig stummen
+  Abbruch.
+- `syncPasswordGate()` löschte mit `setState('')` bei jeder Umschaltung die
+  Statuszeile — auch Erfolgs- und Fehlermeldungen des letzten Exports. Es räumt
+  wieder nur die eigene Begründung weg.
+- Fehlende Null-Absicherung beim Zusammenstellen der Tracks (`data.missions`
+  bzw. `data.rests` ohne Inhalt) wieder eingesetzt.
+
+### Behoben — Rückimport des eigenen Standard-Excel-Exports
+
+Profil A schrieb die Spalte „Sekundäreinsatz" und drei Zusatzspalten, während
+das Importprofil `export_excel_v1` bereits „Sekundärtransport" ohne diese
+Spalten erwartete. Ein Standard-Excel-Export ließ sich dadurch nicht mehr sauber
+zurücklesen: vier unbekannte Spalten, eine fehlende, und `secondary` ging still
+verloren. Beide Listen stimmen wieder überein.
+
+### Geändert — Export
+
+- Dateiname einheitlich
+  `luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>` mit
+  `<profil>` = `standard`, `guteseele` oder `csv`. Das Datum ist der Tag der
+  Erstellung; der ausgewählte Zeitraum steht in der Datei selbst.
+- **Profil A** hat drei Spalten weniger: „davon an PatientIn", „Lastaufnahme"
+  und „Bergwacht-Zusatz". In einer Übersichtstabelle sind sie entbehrlich; im
+  vollständigen CSV bleiben sie erhalten. Damit hat Profil A 29 statt 32
+  Spalten (davon 7 geschützte).
+- Begriffe an `mission_fields.php` angeglichen: „Sekundäreinsatz" heißt wieder
+  „Sekundärtransport". Das Feld `winch_airload` hieß im Export irrtümlich
+  „Lastaufnahme" — es heißt im Formular **Luftverladung**; die Beschreibung in
+  `felder.csv` ist entsprechend korrigiert, ebenso „Cycles mit Patient" und
+  „Bergwacht: Namen / Infos".
+- Die Abschlussmeldung nennt beim CSV wieder die Zahl der enthaltenen
+  GPX-Tracks — einschließlich des Falls „im gewählten Zeitraum sind zu keinem
+  Einsatz Trackpunkte gespeichert". Ob ein Archiv Tracks enthält, war sonst erst
+  nach dem Entpacken zu sehen.
+- Klarere Aussage zum Passwort im Rückfragedialog: Es lässt sich nicht
+  zurücksetzen, und ohne es ist die Datei nicht mehr zu öffnen.
+
+### Dokumentation
+
+- `Export-Format.md`: Profiltabelle und Dateinamensschema aktualisiert; die
+  Spaltentabelle zu Profil A stand seit Web 2.11.0 auf 32 Spalten, obwohl der
+  Fließtext daneben bereits 29 beschrieb — jetzt durchgängig 29.
+- `Handbuch.md`: Formatnamen und ihre Reihenfolge an das Auswahlfeld
+  angeglichen (CSV (Standard), Excel (Standard), Excel (GuteSeele)); Passwort-
+  und Dateinamenshinweis ergänzt.
+- `Technik.md`: zwei Stolpersteine ergänzt — die Bindung von `#exp_fmt` an
+  `gewaehltesFormat()` und die Kopplung von `SPALTEN_A` an die
+  `expectedHeaders` von `export_excel_v1`.
+
 ## [Uhr 1.6.6] — 2026-08-03
 
 ### Behoben — Einrichtungshinweis lief weiter über den Rand
@@ -377,6 +460,14 @@ Anmelden zu entstehen.
   die Anzeige scheiterte still. Der Hinweis ist jetzt vorhanden.
 
 ## [Web 2.11.0] — 2026-07-29
+
+> **Nachtrag (Web 3.2.0):** Zu dieser Auslieferung gehörte ein zweiter Teil
+> („Export-Fehlerbehebung") mit Änderungen an `assets/export.js`,
+> `assets/confirm.js`, `assets/import_profiles.js` und `import.php`. Nur die
+> letzten drei Dateien sind im Repository angekommen; `export.js` wurde vom
+> Folgecommit mit einem älteren Arbeitsstand überschrieben, ebenso dieser
+> Changelog-Abschnitt. Die Export-Seite war dadurch ab Web 2.11.0 nicht mehr
+> bedienbar. Nachgeholt mit Web 3.2.0 — siehe dort.
 
 ### Neu
 - **Zeitraum-Übersicht:** Die drei Extremwert-Kacheln „Längste Flugstrecke",

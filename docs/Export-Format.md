@@ -15,12 +15,22 @@ Es gibt drei Profile:
 
 | Profil | Datei | Zielgruppe | Verlustfrei |
 |---|---|---|---|
-| A — Standard-Excel | `einsatzdoku_<von>_bis_<bis>.xlsx` | Menschen | nein |
-| B — vollständiges CSV | `einsatzdoku_<von>_bis_<bis>.zip` | Maschinen | ja |
-| C — GuteSeele-Layout | `einsatzdoku_<von>_bis_<bis>.xlsx` | Dritte | nein |
+| CSV (Standard) | `…_csv.zip` | Maschinen | ja |
+| Excel (Standard) | `…_standard.xlsx` | Menschen | nein |
+| Excel (GuteSeele) | `…_guteseele.xlsx` | Dritte | nein |
 
-Bei „Alles" heißt die Datei `einsatzdoku_gesamt.*`. Mit Passwortschutz entsteht
-in allen Fällen ein `.zip`.
+Benennung und Reihenfolge sind dieselben wie im Auswahlfeld des Imports.
+
+Dateiname durchgängig:
+
+```
+luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
+```
+
+Das Datum ist der **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der
+steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`). `<profil>` ist
+`standard`, `guteseele` oder `csv`. Mit Passwortschutz entsteht in allen Fällen
+ein `.zip`.
 
 ---
 
@@ -80,25 +90,28 @@ einschließen" nicht gesetzt ist; die übrigen rücken auf.
 | 16 | HEMS |
 | 17 | Flugretter |
 | 18 | Sonstige Besatzung |
-| 19 | Sekundäreinsatz |
+| 19 | Sekundärtransport |
 | 20 | Transportziel |
 | 21 | Schockraum |
 | 22 | Windeneinsatz |
 | 23 | Windenzyklen gesamt |
-| 24 | davon an PatientIn |
-| 25 | Lastaufnahme |
-| 26 | Bergwacht |
-| 27 | Bergwacht-Einheit |
-| 28 | Bergwacht-Zusatz |
-| 29 | Weitere Rettungsmittel |
-| 30 | Höhe Einsatzort (m) |
-| 31 | Flugkilometer |
-| 32 | Notizen |
+| 24 | Bergwacht |
+| 25 | Bergwacht-Einheit |
+| 26 | Weitere Rettungsmittel |
+| 27 | Höhe Einsatzort (m) |
+| 28 | Flugkilometer |
+| 29 | Notizen |
+
+29 Spalten, davon 7 geschützte. Die Beschriftungen folgen dem Wortlaut aus
+`server/mission_fields.php` — die Tabelle soll dieselben Begriffe verwenden wie
+das Eingabeformular.
 
 **Bewusst nicht in Profil A** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
-Datensatzes.
+Datensatzes. Ebenfalls nicht enthalten, weil in einer Übersichtstabelle
+entbehrlich: Windenzyklen mit PatientIn, Luftverladung und die
+Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
 belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Flugtag. Woher der
@@ -254,14 +267,14 @@ verworfen — maßgeblich ist `typ`.
 | `transport_dest` | text | — | Transportziel |
 | `site_desc` | text | — | Beschreibung Einsatzort |
 | `schockraum` | 0/1 | — | Schockraum alarmiert |
-| `secondary` | 0/1 | — | Sekundäreinsatz |
+| `secondary` | 0/1 | — | Sekundärtransport |
 | `winch` | 0/1 | — | Windeneinsatz |
-| `winch_cycles` | int | — | Windenzyklen gesamt |
-| `winch_cycles_pat` | int | — | davon an PatientIn |
-| `winch_airload` | 0/1 | — | Lastaufnahme |
+| `winch_cycles` | int | — | Windenzyklen gesamt (Formular: „Cycles") |
+| `winch_cycles_pat` | int | — | Windenzyklen mit PatientIn (Formular: „Cycles mit Patient") |
+| `winch_airload` | 0/1 | — | Luftverladung |
 | `bergwacht` | 0/1 | — | Bergwacht beteiligt |
 | `bw_unit` | text | — | Bergwacht-Einheit |
-| `bw_info` | text | — | Bergwacht-Zusatzangabe |
+| `bw_info` | text | — | Bergwacht: Namen / Infos |
 | `other_ema` | text | — | Anderer Notarzt |
 | `weitere_rettungsmittel` | text | — | mission_resources.name, mit | verkettet |
 | `notizen` | text | — | missions.notes |
@@ -323,7 +336,7 @@ Rettungsmitteln mit `, ` verkettet, `HEMS` und `Pilot` als effektive Besatzung.
 
 **`Vers.` bleibt leer** — das Feld wird im System nicht geführt und wurde schon
 beim Import bewusst verworfen. Es wird insbesondere *nicht* aus
-„Sekundäreinsatz" hergeleitet.
+„Sekundärtransport" hergeleitet.
 
 Umfasst der Zeitraum mehrere Kalenderjahre, entsteht **je Jahr ein Blatt**,
 benannt nach dem Jahr. Ohne Patientendaten bleiben Name, Geb.dat, Diagnose und

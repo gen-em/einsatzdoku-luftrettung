@@ -625,6 +625,20 @@ Stolpersteine, die dabei aufgefallen sind:
 - **Der Spaltensatz des CSV hängt nicht am Patientendaten-Haken.** Ohne Haken
   bleiben die `pat_`-Spalten vorhanden und leer. Ein wechselnder Spaltensatz
   würde jeden einlesenden Importer zwingen, zwei Fälle zu unterscheiden.
+- **Die Formatauswahl `#exp_fmt` ist ein `<select>`, kein Optionsfeld.** In
+  `export.js` wird sie ausschließlich über `gewaehltesFormat()` gelesen. Wird
+  daraus wieder ein `input[name="exp_fmt"]:checked`, liefert `querySelector`
+  `null`, `syncFormat()` wirft beim `DOMContentLoaded` — und weil die
+  Registrierung des Klick-Zuhörers die **letzte** Anweisung im Init-Block ist,
+  bleibt „Export erstellen" danach vollständig tot, ohne sichtbare Meldung.
+  Genau das ist in Web 3.1.1 passiert (behoben in 3.2.0). Beim Umbau von
+  Bedienelementen auf dieser Seite gehören Markup und Skript zusammen.
+- **Profil A und `export_excel_v1` sind aneinander gebunden.** Die
+  Spaltenbeschriftungen in `SPALTEN_A` (export.js) müssen Wort für Wort den
+  `expectedHeaders` des Importprofils (import_profiles.js) entsprechen, sonst
+  lässt sich der eigene Export nicht mehr sauber zurücklesen: Der Importer
+  meldet die abweichenden Spalten als unbekannt und lässt die zugehörigen
+  Felder leer. Beide Listen folgen dem Wortlaut aus `mission_fields.php`.
 
 **Rückimport** (`export_csv_v1`, `export_excel_v1`): Die Pipeline aus Web 2.8.0
 bleibt unverändert, die neuen Formate sind reine Profileinträge plus zusätzliche
