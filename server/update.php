@@ -538,6 +538,23 @@ $MIGRATIONS = [
                WHERE manual = 1 AND client_ref NOT LIKE 'man-%' AND client_ref NOT LIKE 'imp-%'",
         ],
     ],
+    [
+        'id'    => '2026_08_05_site_desc_entfernt',
+        'label' => 'Beschreibung Einsatzort: Klartextspalte entfernen (liegt seit Web 3.3.0 im verschlüsselten Block)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions' AND column_name = 'site_desc'");
+            return (int)$q->fetchColumn() === 0;
+        },
+        'sql'   => [
+            // Der Klartextbestand wurde vor dieser Auslieferung ueber die
+            // Seite site_desc_rettung.php gesichert und von Hand in den
+            // verschluesselten Block nachgetragen. Ein automatischer Umzug war
+            // nie moeglich: pat_blob entsteht ausschliesslich im Browser.
+            "ALTER TABLE missions DROP COLUMN site_desc",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

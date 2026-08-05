@@ -32,21 +32,6 @@ function ui_topbar(string $active): void {
 <?php }
 
 /**
- * Vorübergehend (bis die Spalte missions.site_desc entfaellt): Gibt es noch
- * Einsaetze mit einer Beschreibung im Klartext? Steuert den Leisteneintrag zur
- * Rettungsausgabe. Entfaellt zusammen mit site_desc_rettung.php.
- */
-function site_desc_rest_vorhanden(): bool {
-    global $userId;
-    if (!isset($userId)) { return false; }
-    $q = db()->prepare("SELECT 1 FROM missions
-                         WHERE user_id = ? AND deleted_at IS NULL
-                           AND site_desc IS NOT NULL AND site_desc <> '' LIMIT 1");   // Datentrennung!
-    $q->execute([$userId]);
-    return $q->fetchColumn() !== false;
-}
-
-/**
  * Untermenue der Einstellungen — identisch auf einstellungen.php, admin_users.php,
  * admin_user.php und admin_stammdaten.php. Die Administration (eigener,
  * abgesetzter Block) erscheint nur fuer Admins.
@@ -63,11 +48,6 @@ function ui_settings_sidebar(string $active): void {
         'import'     => ['import.php', 'Import / Export'],
         'geraete'    => ['einstellungen.php?t=geraete', 'Geräte'],
     ];
-    // Nur solange noch Klartextwerte da sind — der Eintrag verschwindet von
-    // selbst, sobald alles nachgetragen wurde.
-    if (site_desc_rest_vorhanden()) {
-        $items['site_desc'] = ['site_desc_rettung.php', 'Beschreibungen sichern'];
-    }
     ?>
   <aside class="daylist">
     <h2>Einstellungen</h2>

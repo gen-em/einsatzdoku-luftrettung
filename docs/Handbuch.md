@@ -555,25 +555,6 @@ bewusst nur in der Einsatzansicht bzw. im Formular**, nie in den Übersichten.
 
 ---
 
-### 5.1 Beschreibungen aus der Zeit vor Web 3.3.0 sichern
-
-Bis Web 3.2.0 stand die **Beschreibung Einsatzort** unverschlüsselt in der
-Datenbank. Mit Web 3.3.0 ist sie in den verschlüsselten Block umgezogen — die
-alten Werte konnten dabei nicht mitwandern, weil der verschlüsselte Block
-ausschließlich im Browser entsteht und der Server nichts hineinschreiben kann.
-
-Solange noch solche Werte vorhanden sind, erscheint in der Einstellungsleiste
-der Eintrag **Beschreibungen sichern**. Die Seite gibt eine Textdatei aus: je
-Einsatz eine Zeile mit Datum, Beginn (Ortszeit), interner Einsatznummer und dem
-Text. Damit lassen sich die Beschreibungen von Hand in die Einsätze nachtragen.
-
-Zwei Dinge dazu: Die alten Werte verschwinden durch das Nachtragen **nicht**
-von selbst — die Datenbankspalte wird erst in einer späteren Auslieferung
-entfernt. Und der Eintrag in der Leiste erscheint nur, solange es überhaupt
-noch etwas zu sichern gibt; danach verschwindet er von selbst.
-
----
-
 ## 6. Backup
 
 Unter **⚙ Einstellungen → „Backup"** lädst du alle deine Daten als einzelne

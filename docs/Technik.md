@@ -45,8 +45,6 @@ hems/
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── suche.php          Suche über den gesamten Bestand (filtert im Browser, s. u.)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
-│   ├── site_desc_rettung.php  VORÜBERGEHEND: Textdatei mit dem Klartextbestand
-│   │                      der Spalte missions.site_desc (entfällt mit ihr)
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
@@ -93,7 +91,7 @@ hems/
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr); **`site_desc`** = Restbestand der früheren Klartextspalte, wird nicht mehr geschrieben und entfällt in einer späteren Auslieferung (siehe `site_desc_rettung.php`) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
@@ -358,15 +356,16 @@ des Einsatzortes liegt seither als eigener Schlüssel auf oberster Ebene des
 entsteht und eine Beschreibung ohne Ortsangabe sonst verloren ginge. Mit dem
 Eintrag in der Definitionsliste sind zugleich Formularausgabe,
 Formularauswertung, `api/mission.php` und die Backup-Wiederherstellung
-verschwunden, die alle generisch über `$FIELDS` laufen. **Ein Wiedereintragen
-dort holt das Feld unbemerkt in den Klartext zurück.** Die Spalte
-`missions.site_desc` besteht vorerst weiter, wird von der Anwendung aber nicht
-mehr geschrieben; `edbak_build()` entfernt sie ausdrücklich aus dem Backup
-(`SELECT *`). Gelesen wird sie nur noch von `site_desc_rettung.php` — einer
-vorübergehenden Seite, die den Klartextbestand als Textdatei zum Nachtragen von
-Hand ausgibt. Sie entfällt zusammen mit der Spalte, dem Leisteneintrag in
-`ui.php` und `site_desc_rest_vorhanden()`; ein automatischer Umzug ist nicht
-möglich, weil der `pat_blob` ausschließlich im Browser entsteht.
+verschwunden, die alle generisch über `$FIELDS` laufen.
+
+Die gleichnamige Klartextspalte ist mit Web 3.3.1 gefallen (Migration
+`2026_08_05_site_desc_entfernt`); der Altbestand wurde vorher über eine
+vorübergehende Seite als Textdatei gesichert und von Hand nachgetragen. **Ein
+Wiedereintragen in `mission_fields.php` würde daher nicht nur den Klartext
+zurückholen, sondern gegen eine nicht mehr vorhandene Spalte schreiben.** Die
+CSV-Kopfzeile `site_desc` wird beim Import weiterhin angenommen und dem
+verschlüsselten Block zugeordnet, damit Exportdateien bis Web 3.2.0 lesbar
+bleiben (`assets/import_profiles.js`).
 
 **Rettungsmittel:** `other_resources` hat in `mission_fields.php` den Sondertyp
 `resources` und **keine** `missions`-Spalte. Vorbelegungen stehen in

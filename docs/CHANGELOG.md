@@ -10,7 +10,30 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 3.3.0] — 2026-08-06
+## [Web 3.3.1] — 2026-08-05
+
+### Entfernt — Klartextspalte `missions.site_desc` und die Seite „Beschreibungen sichern"
+
+Der Altbestand von 13 Beschreibungen wurde über die Textdatei gesichert und von
+Hand in den verschlüsselten Block nachgetragen. Damit hat die Spalte ihren
+Zweck erfüllt: Die Migration `2026_08_05_site_desc_entfernt` entfernt sie
+(`ALTER TABLE missions DROP COLUMN site_desc`), `schema.sql` führt sie nicht
+mehr, und `site_desc_rettung.php`, der Leisteneintrag in `ui.php` sowie
+`site_desc_rest_vorhanden()` sind weggefallen.
+
+Der `pat_blob` ist davon **nicht** betroffen — sein Schlüssel `site_desc` trägt
+die Beschreibung seit Web 3.3.0 und bleibt unverändert. Ebenso bleibt die
+CSV-Kopfzeile `site_desc` beim Import erhalten, damit Exportdateien bis
+Web 3.2.0 lesbar bleiben.
+
+Ebenfalls entfallen: Die Zeile in `edbak_build()`, die die Spalte ausdrücklich
+aus dem Backup entfernte. Sie war nur nötig, solange `SELECT *` sie noch
+lieferte.
+
+**Reihenfolge beim Einspielen:** erst die Dateien, dann `update.php` öffnen. Die
+Migration läuft ohne Rückfrage, sobald die Seite aufgerufen wird.
+
+## [Web 3.3.0] — 2026-08-05
 
 ### Neu — Bezeichnung zu Koordinaten
 

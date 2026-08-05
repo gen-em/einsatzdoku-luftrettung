@@ -51,7 +51,6 @@ CREATE TABLE missions (
   origin     ENUM('watch','manual','import') NOT NULL DEFAULT 'watch', -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert
   edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
   transport_dest VARCHAR(190) NULL,                    -- Zusatzfelder (mission_fields.php):
-  site_desc  VARCHAR(190) NULL,
   winch      TINYINT(1) NOT NULL DEFAULT 0,
   winch_cycles TINYINT NULL,
   winch_cycles_pat TINYINT NULL,
@@ -309,4 +308,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_27_crew_override', 'skipped'),
   ('2026_07_28_kdf_ver_entfernt', 'skipped'),
   ('2026_07_29_einsatznummer_verschluesselt', 'skipped'),
-  ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped');
+  ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped'),
+  ('2026_08_05_site_desc_entfernt', 'skipped');
