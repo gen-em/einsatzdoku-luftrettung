@@ -10,6 +10,51 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.5.0] — 2026-08-06
+
+### Behoben — Alter fehlte im Excel-Export, wenn kein Geburtsdatum vorlag
+
+Die Spalte „Alter" in Excel (Standard) las das Alter über `EdPat.alterAm()` und
+damit ausschließlich aus dem Geburtsdatum. Bei unbekannten Personen — dem
+Regelfall für ein von Hand eingetragenes Alter — stand dort ein Bindestrich,
+obwohl die Einsatzansicht den Wert anzeigt. Sie nutzt `EdPat.alterAnzeige()`,
+das nach dem Geburtsdatum auf den gespeicherten `age` zurückfällt; genau so
+lesen es auch Tages- und Zeitraumübersicht sowie die Suche. `export.js` war die
+einzige Stelle mit der falschen der beiden Funktionen und zieht nun nach.
+
+### Neu — Spalte `pat_alter` im vollständigen CSV
+
+`einsaetze.csv` führt das Alter jetzt als eigene Spalte, direkt hinter
+`pat_geburtsdatum`. Sie trägt den **Rohwert** `pat_blob.age` und ist deshalb bei
+einem Einsatz mit Geburtsdatum leer: Die Anwendung speichert das Alter nur,
+wenn es sich nicht aus dem Geburtsdatum ergibt, und eine zweite, hineingerechnete
+Quelle liefe auseinander, sobald jemand das Geburtsdatum korrigiert. Wer das
+Alter auswerten will, rechnet es aus `pat_geburtsdatum` und `flugtag` und greift
+auf `pat_alter` zurück, wenn das Geburtsdatum fehlt — dieselbe Reihenfolge wie in
+der Anwendung. `Export-Format.md` hält das in einem eigenen Abschnitt (3.7) fest.
+
+Der Rückimport übernimmt die Spalte (`pat_alter` → `pat_blob.age`). Beim Bauen
+des verschlüsselten Blocks gilt dieselbe Regel wie im Formular: Ein Alter wird
+nur gespeichert, wenn es nicht aus dem Geburtsdatum derselben Zeile folgt — das
+fängt von Hand nachbearbeitete Dateien ab, in denen beides steht. Exportdateien
+bis Web 3.4.0 ohne die Spalte lassen sich unverändert weiter einlesen; die
+Formaterkennung zählt Treffer gegen 78 erwartete Spaltennamen bei einem
+Schwellwert von 20.
+
+Der CSV-Spaltensatz wächst damit von 76 auf 77 Spalten (`felder.csv` und
+`einsaetze.csv` bleiben deckungsgleich). Excel (Standard) bleibt bei 29 Spalten
+— das Alter stand dort schon, es war nur nicht immer gefüllt.
+
+**Excel (GuteSeele) bleibt unverändert bei 13 Spalten.** Das Layout ist die
+Absprache mit dem Empfänger und deckungsgleich mit dem Importprofil
+`ch17_jahresliste`; eine zusätzliche Spalte würde beides verschieben. Das Feld
+„Geb.dat" ist eine Datumsspalte und nimmt kein Alter auf.
+
+**Grenze beim Rückweg über Excel (Standard):** Die dortige Spalte „Alter" führt
+mal einen gerechneten, mal einen gespeicherten Wert und wird beim Import
+weiterhin verworfen. Der Warnhinweis vor dem Import nennt sie jetzt ausdrücklich.
+Für einen vollständigen Rückweg ist das CSV zuständig.
+
 ## [Web 3.4.0] — 2026-08-06
 
 ### Behoben — bearbeiteter Uhr-Einsatz stand im Export als „manuell"

@@ -36,7 +36,7 @@
  *   rea
  *   crew_override, crew.p1 | crew.p2 | crew.hems | crew.fr | crew.other
  *   dayCrew.p1 | dayCrew.p2 | dayCrew.hems | dayCrew.fr | dayCrew.other
- *   pat.last+first, pat.last, pat.first, pat.dob, pat.dx, pat.loc.addr,
+ *   pat.last+first, pat.last, pat.first, pat.dob, pat.age, pat.dx, pat.loc.addr,
  *   pat.loc.lat, pat.loc.lon, pat.mission_no, pat.site_desc
  *   null = Spalte wird bewusst nicht uebernommen
  *
@@ -205,6 +205,7 @@
         'pat_nachname': { target: 'pat.last', parse: ['trim'], sensitive: true },
         'pat_vorname': { target: 'pat.first', parse: ['trim'], sensitive: true },
         'pat_geburtsdatum': { target: 'pat.dob', parse: ['dateFull'], sensitive: true },
+        'pat_alter': { target: 'pat.age', parse: ['alterJahre'], sensitive: true },
         'pat_diagnose': { target: 'pat.dx', parse: ['trim'], sensitive: true },
         'pat_ort_adresse': { target: 'pat.loc.addr', parse: ['trim'], sensitive: true },
         'pat_ort_lat': { target: 'pat.loc.lat', parse: ['dezimal'], sensitive: true },
@@ -273,8 +274,9 @@
             + 'Nach dem Import bleiben leer: die Phasen Abflug, Ankunft '
             + 'Einsatzort, Ankunft PatientIn, Transportbeginn, Landung '
             + 'Krankenhaus und Übergabezeit, sämtliche Koordinaten, die '
-            + 'Reanimationsdokumentation und der Track (und damit auch die '
-            + 'Flugkilometer). Für einen vollständigen Rückweg nutze den '
+            + 'Reanimationsdokumentation, der Track (und damit auch die '
+            + 'Flugkilometer) sowie ein von Hand eingetragenes Alter ohne '
+            + 'Geburtsdatum. Für einen vollständigen Rückweg nutze den '
             + 'CSV-Export, für eine echte Wiederherstellung das Backup.',
 
         columns: {
@@ -289,6 +291,13 @@
             // Gerechnet, nicht gespeichert — wuerde zu Widerspruechen fuehren,
             // sobald jemand eine Zeit korrigiert (SPEC_Export.md 7.2).
             'Dauer': { target: null },
+            // 'Alter' ist in dieser Datei das ANGEZEIGTE Alter: bei gesetztem
+            // Geburtsdatum daraus gerechnet, sonst der gespeicherte Wert. Ein
+            // Rueckimport muesste beide Faelle auseinanderhalten und ein
+            // gerechnetes Alter verwerfen, sonst stuende es dauerhaft im
+            // pat_blob und liefe bei jeder Korrektur des Geburtsdatums
+            // auseinander. Der verlustfreie Weg ist die CSV-Spalte
+            // 'pat_alter', die den Rohwert fuehrt.
             'Alter': { target: null },
 
             'Einsatznummer': { target: 'pat.mission_no', parse: ['dashLeer', 'trim', 'max:64'], sensitive: true },

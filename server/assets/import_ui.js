@@ -520,6 +520,14 @@
                 if (m.pat.last) { pat.last = m.pat.last; }
                 if (m.pat.first) { pat.first = m.pat.first; }
                 if (m.pat.dob) { pat.dob = m.pat.dob; }
+                // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum
+                // folgt — dieselbe Regel wie im Formular (einsatz_form.php).
+                // Der eigene CSV-Export schreibt ohnehin nur diesen Fall; die
+                // Pruefung faengt von Hand nachbearbeitete Dateien ab, in
+                // denen beides steht.
+                if (m.pat.age != null && EdPat.alterAm(m.pat.dob, m.day) === null) {
+                    pat.age = m.pat.age;
+                }
                 if (m.pat.dx) { pat.dx = m.pat.dx; }
                 if (m.pat.site_desc) { pat.site_desc = m.pat.site_desc; }
                 if (m.pat.loc && (m.pat.loc.addr || m.pat.loc.lat !== undefined)) {

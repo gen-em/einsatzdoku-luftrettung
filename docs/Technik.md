@@ -352,9 +352,20 @@ Beschriftung → `zeitraum.php`, Dreieck → nur auf/zu.
 **Geschützte Zusatzfelder & berechnetes Alter:** `assets/patient.js` (EdPat)
 berechnet das Alter aus dem Geburtsdatum bezogen auf den **Einsatztag** und
 liefert Namens-/Datumsformatierung. Genutzt von Formular, Einsatzansicht,
-Tages- und Zeitraumübersicht. Name und Geburtsdatum erscheinen nur in der
-Einsatzansicht, nie in den Tabellenübersichten. Das Alter wird nur dann als
-Wert gespeichert, wenn es **nicht** aus einem Geburtsdatum ableitbar ist.
+Tages- und Zeitraumübersicht, Suche und Export. Name und Geburtsdatum erscheinen
+nur in der Einsatzansicht, nie in den Tabellenübersichten. Das Alter wird nur
+dann als Wert gespeichert, wenn es **nicht** aus einem Geburtsdatum ableitbar
+ist.
+
+> **`alterAm` vs. `alterAnzeige`.** `alterAm(dob, tag)` kennt nur das
+> Geburtsdatum und liefert ohne eines `null`; `alterAnzeige(pat, tag)` fällt
+> danach auf den gespeicherten `age` zurück. Überall, wo ein Alter **angezeigt**
+> wird, gehört `alterAnzeige` hin — mit `alterAm` bleibt die Angabe bei
+> unbekannten Personen leer, also genau dort, wo sie von Hand eingetragen wurde.
+> `alterAm` ist für Entscheidungen gedacht: im Formular, um das Eingabefeld zu
+> sperren, und in `import_ui.js`, um ein gerechnetes Alter nicht in den
+> `pat_blob` zu schreiben. Web 3.4.0 hatte an dieser Stelle in `export.js` die
+> falsche der beiden Funktionen (behoben in 3.5.0).
 
 **`site_desc` hat `mission_fields.php` verlassen (Web 3.3.0).** Die Beschreibung
 des Einsatzortes liegt seither als eigener Schlüssel auf oberster Ebene des

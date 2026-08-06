@@ -106,6 +106,11 @@ einschließen" nicht gesetzt ist; die übrigen rücken auf.
 `server/mission_fields.php` — die Tabelle soll dieselben Begriffe verwenden wie
 das Eingabeformular.
 
+**Alter** ist der angezeigte Wert: bei bekanntem Geburtsdatum daraus gerechnet
+(bezogen auf den Einsatztag, nicht auf heute), sonst der von Hand eingetragene.
+Die Spalte bleibt damit auch bei unbekannten Personen gefüllt. Das CSV
+unterscheidet die beiden Fälle, siehe 3.7.
+
 **Bewusst nicht in Excel (Standard)** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
@@ -252,7 +257,26 @@ Bearbeitung ist rückwirkend nicht mehr feststellbar. Für diesen Altbestand ist
 `edited` also als „mindestens" zu lesen, nicht als „genau". `herkunft` ist davon
 nicht betroffen und für den gesamten Bestand belastbar.
 
-### 3.7 Feldlisten
+### 3.7 `pat_alter` und `pat_geburtsdatum`
+
+Die Anwendung führt das Alter auf zwei Wegen: Ist ein Geburtsdatum bekannt,
+rechnet sie es bezogen auf den Einsatztag aus und speichert es **nicht**. Ist
+keines bekannt — bei unbekannten Personen der Regelfall — lässt es sich von Hand
+eintragen und liegt dann als `age` im `pat_blob`.
+
+`pat_alter` führt genau diesen gespeicherten Wert und ist deshalb bei einem
+Einsatz mit Geburtsdatum leer. Das ist Absicht: Ein zusätzlich hineingerechnetes
+Alter wäre eine zweite Quelle für dieselbe Angabe und liefe auseinander, sobald
+jemand das Geburtsdatum korrigiert. Wer das Alter für eine Auswertung braucht,
+rechnet es aus `pat_geburtsdatum` und `flugtag` und greift auf `pat_alter`
+zurück, wenn das Geburtsdatum fehlt — dieselbe Reihenfolge, die die Anwendung
+selbst anwendet.
+
+Excel (Standard) verhält sich umgekehrt und zeigt in der Spalte `Alter` immer
+den angezeigten Wert: Dort liest ein Mensch, und eine leere Zelle neben einem
+leeren Geburtsdatum wäre für ihn nur eine fehlende Angabe.
+
+### 3.8 Feldlisten
 
 ### `einsaetze.csv`
 
@@ -326,6 +350,7 @@ nicht betroffen und für den gesamten Bestand belastbar.
 | `pat_nachname` | text | — | pat_blob.last |
 | `pat_vorname` | text | — | pat_blob.first |
 | `pat_geburtsdatum` | date | — | pat_blob.dob |
+| `pat_alter` | int | Jahre | pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus `pat_geburtsdatum` und `flugtag` (siehe 3.7) |
 | `pat_diagnose` | text | — | pat_blob.dx |
 | `pat_ort_adresse` | text | — | pat_blob.loc.addr |
 | `pat_ort_lat` | dec | — | pat_blob.loc.lat |
@@ -418,9 +443,10 @@ Beim Einlesen entsteht er neu: Die Herkunft wird auf „importiert" gesetzt, der
 Bearbeitungsstatus beim Aktualisieren eines bestehenden Einsatzes. Ein Wert aus
 der Datei wäre an dieser Stelle eine Aussage über ein fremdes Konto.
 
-Eine Exportdatei **ohne** die Spalte `edited` (Auslieferungen bis Web 3.3.2)
-lässt sich unverändert einlesen — die Formaterkennung zählt Treffer gegen die
-erwarteten Spaltennamen, und eine fehlende von 77 ändert daran nichts.
+Eine Exportdatei ohne die Spalte `edited` (Auslieferungen bis Web 3.3.2) oder
+ohne `pat_alter` (bis Web 3.4.0) lässt sich unverändert einlesen — die
+Formaterkennung zählt Treffer gegen die erwarteten Spaltennamen bei einem
+Schwellwert von 20, und ein oder zwei fehlende von 78 ändern daran nichts.
 
 Dubletten werden zuerst über die Einsatznummer erkannt (clientseitig gegen die
 entschlüsselten Bestandsdaten), hilfsweise über Tag und Alarmzeit.
@@ -439,18 +465,26 @@ angezeigt:
 > Diese Datei enthält nicht alle Felder, die das System kennt. Nach dem Import
 > bleiben leer: die Phasen Abflug, Ankunft Einsatzort, Ankunft PatientIn,
 > Transportbeginn, Landung Krankenhaus und Übergabezeit, sämtliche Koordinaten,
-> die Reanimationsdokumentation und der Track (und damit auch die
-> Flugkilometer). Für einen vollständigen Rückweg nutze den CSV-Export, für eine
-> echte Wiederherstellung das Backup.
+> die Reanimationsdokumentation, der Track (und damit auch die Flugkilometer)
+> sowie ein von Hand eingetragenes Alter ohne Geburtsdatum. Für einen
+> vollständigen Rückweg nutze den CSV-Export, für eine echte Wiederherstellung
+> das Backup.
 
 Die Aussagerichtung ist bewusst „bleibt leer" und nicht „geht verloren": Die
 Angaben stehen in dieser Datei nie drin, es werden lediglich Felder nicht
 befüllt.
 
-**Ignorierte Spalten:** `Dauer` und `Alter` sind gerechnet, nicht gespeichert.
-Sie zu übernehmen würde zu Widersprüchen führen, sobald jemand eine Zeit
-korrigiert. `Flugkilometer` wird ebenfalls verworfen, weil der Wert aus dem
-Track stammt und ohne Track nicht nachvollziehbar wäre.
+**Ignorierte Spalten:** `Dauer` ist gerechnet, nicht gespeichert; sie zu
+übernehmen würde zu Widersprüchen führen, sobald jemand eine Zeit korrigiert.
+`Flugkilometer` wird ebenfalls verworfen, weil der Wert aus dem Track stammt und
+ohne Track nicht nachvollziehbar wäre.
+
+`Alter` wird ebenfalls verworfen, aber aus einem anderen Grund: Die Spalte führt
+mal einen gerechneten, mal einen gespeicherten Wert (siehe 2), und beim Einlesen
+lassen sich die beiden Fälle nur über das Geburtsdatum derselben Zeile
+auseinanderhalten. Ein gerechnetes Alter, das dabei versehentlich im `pat_blob`
+landet, liefe bei der nächsten Korrektur des Geburtsdatums auseinander. Der
+verlustfreie Weg ist `pat_alter` im CSV.
 
 `Alarmzeit` setzt Phase 2, `Endzeit` setzt Phase 9. Eine Zeile für einen
 **Flugtag ohne Einsatz** (nur Hubschrauber, Standort und Datum gefüllt) legt den

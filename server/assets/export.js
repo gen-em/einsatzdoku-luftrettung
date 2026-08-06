@@ -229,8 +229,12 @@
                 case 'Vorname': return pat ? txtOrDash(pat.first) : '-';
                 case 'Geburtsdatum': return pat && pat.dob ? EdPat.datumDe(pat.dob) : '-';
                 case 'Alter': {
-                    if (!pat || !pat.dob) return '-';
-                    var alter = EdPat.alterAm(pat.dob, m.day);
+                    // alterAnzeige, NICHT alterAm: Ohne Geburtsdatum traegt der
+                    // pat_blob den von Hand eingetragenen Wert (bei unbekannten
+                    // Personen der Regelfall). alterAm kennt nur das Geburtsdatum
+                    // und liesse die Spalte in genau diesen Faellen leer, obwohl
+                    // die Einsatzansicht das Alter zeigt.
+                    var alter = EdPat.alterAnzeige(pat, m.day);
                     return alter === null ? '-' : alter;
                 }
                 case 'Einsatzort': return pat && pat.loc ? txtOrDash(pat.loc.addr) : '-';
@@ -567,6 +571,13 @@
             { feld: 'pat_nachname', typ: 'text', einheit: '', beschreibung: 'pat_blob.last', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.last) : ''; } },
             { feld: 'pat_vorname', typ: 'text', einheit: '', beschreibung: 'pat_blob.first', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.first) : ''; } },
             { feld: 'pat_geburtsdatum', typ: 'date', einheit: '', beschreibung: 'pat_blob.dob', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.dob) : ''; } },
+            // Rohwert aus dem pat_blob, kein gerechnetes Alter: Der Schluessel
+            // 'age' ist nur belegt, wenn kein verwertbares Geburtsdatum
+            // vorliegt (Regel aus einsatz_form.php). Steht ein Geburtsdatum in
+            // der Zeile, folgt das Alter aus 'pat_geburtsdatum' und 'flugtag' —
+            // eine zweite, gerechnete Quelle waere beim Rueckimport eine
+            // Widerspruchsquelle.
+            { feld: 'pat_alter', typ: 'int', einheit: 'Jahre', beschreibung: 'pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und flugtag', patient: true, get: function (c) { return (c.pat && c.pat.age != null) ? c.pat.age : ''; } },
             { feld: 'pat_diagnose', typ: 'text', einheit: '', beschreibung: 'pat_blob.dx', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.dx) : ''; } },
             { feld: 'pat_ort_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.loc.addr', patient: true, get: function (c) { return (c.pat && c.pat.loc) ? orEmpty(c.pat.loc.addr) : ''; } },
             { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },

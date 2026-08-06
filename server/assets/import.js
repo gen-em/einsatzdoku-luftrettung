@@ -155,6 +155,22 @@
             return iso;
         },
 
+        /**
+         * Alter in Jahren. Grenzen wie im Eingabefeld (einsatz_form.php:
+         * min=0, max=120) — darueber hinaus ein Hinweis statt einer
+         * Ablehnung, damit eine einzelne krumme Zelle nicht die ganze Zeile
+         * verwirft. Ein Alter, das aus dem Geburtsdatum folgt, gehoert nicht
+         * hierher; darum kuemmert sich import_ui.js beim Bauen des pat_blob.
+         */
+        alterJahre: function (v) {
+            if (istLeer(v)) { return null; }
+            var n = PARSERS.ganzzahl(v);
+            if (n !== null && typeof n === 'object') { return { error: 'Alter: ganze Zahl erwartet' }; }
+            if (n === null) { return null; }
+            if (n < 0 || n > 120) { return { warn: 'Alter unplausibel', wert: n }; }
+            return n;
+        },
+
         /** j / ja / x / 1 / y -> 1, leer -> 0, alles andere -> 0 mit Hinweis */
         boolJN: function (v) {
             if (istLeer(v)) { return 0; }
@@ -438,6 +454,7 @@
         case 'pat.last': zeile.pat.last = wert; break;
         case 'pat.first': zeile.pat.first = wert; break;
         case 'pat.dob': zeile.pat.dob = wert; break;
+        case 'pat.age': zeile.pat.age = wert; break;
         case 'pat.dx': zeile.pat.dx = wert; break;
         case 'pat.site_desc': zeile.pat.site_desc = wert; break;
         case 'pat.mission_no': zeile.pat.mission_no = wert; break;
@@ -476,7 +493,7 @@
      * Jede Zeile:
      *   { srcRow, status:'ok'|'warn'|'error', issues:[{spalte,level,text}],
      *     mission:{day, alarm, transport_dest, winch, resources},
-     *     pat:{last, first, dob, dx, mission_no, loc:{addr}}, dayCrew:{p1, hems, ...} }
+     *     pat:{last, first, dob, age, dx, mission_no, loc:{addr}}, dayCrew:{p1, hems, ...} }
      */
     function verarbeite(mappe, profil, params, kopfzeile) {
         return verarbeiteMatrix(matrix(mappe, profil), profil, params, kopfzeile);
@@ -540,8 +557,8 @@
                     phases: {}, phasesLocal: {}, rea: null,
                     crew_override: 0
                 },
-                pat: { last: null, first: null, dob: null, dx: null, mission_no: null,
-                       loc: null, site_desc: null },
+                pat: { last: null, first: null, dob: null, age: null, dx: null,
+                       mission_no: null, loc: null, site_desc: null },
                 dayCrew: {},
                 crew: {}                       // ausdrueckliche Einsatzbesatzung
             };

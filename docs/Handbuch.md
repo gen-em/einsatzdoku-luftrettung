@@ -558,6 +558,13 @@ Geburtsdatum bekannt (bei unbekannten Personen der Regelfall), bleibt das Alter
 von Hand eintragbar. **Name, Geburtsdatum und Einsatznummer erscheinen
 bewusst nur in der Einsatzansicht bzw. im Formular**, nie in den Übersichten.
 
+In den Exporten schlägt sich das unterschiedlich nieder: **Excel (Standard)**
+zeigt in der Spalte „Alter" immer den Wert, den auch die Einsatzansicht anzeigt
+— gerechnet oder von Hand eingetragen. Das **CSV** führt daneben die Spalte
+`pat_alter`, die nur das von Hand eingetragene Alter enthält und bei einem
+Einsatz mit Geburtsdatum leer bleibt. So steht jede Angabe genau einmal in der
+Datei und kann nicht auseinanderlaufen.
+
 ---
 
 ## 6. Backup
@@ -707,9 +714,12 @@ von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefrag
   GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
 - Beim **Excel (Standard)** steht vor dem Import, welche Felder danach leer
   bleiben: die Phasen zwischen Abflug und Übergabe, alle Koordinaten, die
-  Reanimationsdokumentation und der Track samt Flugkilometern. Diese Angaben
-  stehen in der Datei nie drin — sie gehen nicht verloren, sie werden nur nicht
-  befüllt.
+  Reanimationsdokumentation, der Track samt Flugkilometern und ein von Hand
+  eingetragenes Alter ohne Geburtsdatum. Diese Angaben stehen in der Datei nie
+  drin — sie gehen nicht verloren, sie werden nur nicht befüllt. (Beim Alter ist
+  es etwas anderes: Es steht in der Tabelle, lässt sich beim Einlesen aber nicht
+  sicher von einem aus dem Geburtsdatum gerechneten Wert unterscheiden. Für den
+  Rückweg ist auch hier das CSV zuständig.)
 
 Für eine echte Wiederherstellung ist und bleibt das Backup der richtige Weg.
 
