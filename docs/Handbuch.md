@@ -655,7 +655,10 @@ Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format:
 
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
   Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
-  ist das Format für Auswertungen und für den Rückweg.
+  ist das Format für Auswertungen und für den Rückweg. Es führt je Einsatz auch
+  die **Herkunft** (Uhr, manuell, importiert) und den **Bearbeitungsstatus** mit
+  — dieselben beiden Angaben, die in der Einsatzansicht als Kennzeichen stehen
+  (Abschnitt 4.2). Die beiden Exceltabellen führen sie nicht.
 - **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
   alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Flugtag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.

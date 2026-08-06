@@ -645,6 +645,22 @@ höchstens 25 IDs. Zeitstempel gehen als UTC nach ISO 8601 hinaus, die Umrechnun
 in Ortszeit passiert im Browser — so nutzen Excel- und CSV-Profil dieselbe
 Quelle. Obergrenze 5000 Einsätze je Anfrage.
 
+**Herkunft und Bearbeitungsstatus** stammen ausschliesslich aus
+`missions.origin` und `missions.edited`. Bis Web 3.3.2 berechnete
+`api/export_data.php` die Spalte `herkunft` bei jedem Export neu aus `manual`
+und dem Präfix von `client_ref` — eine Regel aus der Zeit vor der Migration
+`2026_07_30_herkunft_bearbeitungsstatus`. Sie lieferte für genau einen Fall
+etwas Falsches: Ein von der Uhr aufgezeichneter und danach im Formular
+bearbeiteter Einsatz bekommt `manual = 1` und erschien deshalb als „manuell",
+obwohl `origin` korrekt auf `watch` stand. Die Ableitung ist ersatzlos
+entfallen, `client_ref` wird im Export nicht mehr gelesen. Die Abbildung auf die
+deutschen Ausgabewerte steht in `EXPORT_ORIGIN_LABEL`.
+
+**Die gleichlautende Ableitungsregel in `backup_lib.php`
+(`edbak_origin_edited()`) bleibt bestehen** — dort ist sie nötig, weil Backups
+der Formatversion 3 und älter die beiden Spalten nicht kennen. Diese Doppelung
+ist gewollt und darf nicht als Rest der alten Logik entfernt werden.
+
 Der gesamte Dateiaufbau läuft im Browser, weil der `pat_blob` nur dort
 entschlüsselt werden kann. Ohne den Haken „Patientendaten einschließen" wird das
 Feld schon serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
@@ -658,8 +674,8 @@ Stolpersteine, die dabei aufgefallen sind:
   verworfen. `cell.z` wird deshalb ohne Typprüfung gesetzt.
 - **Fette Schrift und Fensterfixierung kann die freie SheetJS-Ausgabe nicht
   schreiben.** `!freeze` wird beim Schreiben ignoriert, `cell.s` landet nicht in
-  der `styles.xml` — beides sind kostenpflichtige Pro-Funktionen. Profil A
-  verzichtet darauf, statt eine Datei zu erzeugen, die es vorgibt.
+  der `styles.xml` — beides sind kostenpflichtige Pro-Funktionen. Excel
+  (Standard) verzichtet darauf, statt eine Datei zu erzeugen, die es vorgibt.
 - **Der Spaltensatz des CSV hängt nicht am Patientendaten-Haken.** Ohne Haken
   bleiben die `pat_`-Spalten vorhanden und leer. Ein wechselnder Spaltensatz
   würde jeden einlesenden Importer zwingen, zwei Fälle zu unterscheiden.
@@ -671,7 +687,7 @@ Stolpersteine, die dabei aufgefallen sind:
   bleibt „Export erstellen" danach vollständig tot, ohne sichtbare Meldung.
   Genau das ist in Web 3.1.1 passiert (behoben in 3.2.0). Beim Umbau von
   Bedienelementen auf dieser Seite gehören Markup und Skript zusammen.
-- **Profil A und `export_excel_v1` sind aneinander gebunden.** Die
+- **Excel (Standard) und `export_excel_v1` sind aneinander gebunden.** Die
   Spaltenbeschriftungen in `SPALTEN_A` (export.js) müssen Wort für Wort den
   `expectedHeaders` des Importprofils (import_profiles.js) entsprechen, sonst
   lässt sich der eigene Export nicht mehr sauber zurücklesen: Der Importer
@@ -693,7 +709,8 @@ Parser (`isoTs`, `pipeList`, `jsonRea`, `dateIso`, `ganzzahl`, `dezimal`,
   einmal aus. Ohne das Flag bliebe die alte Heuristik (früheste Zeile = Tagescrew)
   und ein Einsatz, dessen abweichende Besatzung zufällig der Tagesbesatzung
   gleicht, verlöre sein `crew_override`.
-- `emptyDayRows` am Profil: In Profil A steht ein Flugtag ohne Einsatz als eine
+- `emptyDayRows` am Profil: Im Excel (Standard) steht ein Flugtag ohne Einsatz
+  als eine
   Zeile mit Datum und lauter `-`. Ohne diese Unterscheidung entstünde daraus
   beim Rückimport ein Einsatz ohne Alarmzeit. Solche Zeilen legen den Flugtag an
   und keinen Einsatz.

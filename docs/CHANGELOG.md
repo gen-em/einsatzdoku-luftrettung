@@ -10,6 +10,68 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.4.0] — 2026-08-06
+
+### Behoben — bearbeiteter Uhr-Einsatz stand im Export als „manuell"
+
+Die Spalte `herkunft` im vollständigen CSV wurde bei jedem Export neu aus
+`manual` und dem Präfix von `client_ref` berechnet — eine Regel aus der Zeit vor
+der Spalte `missions.origin`. Wer einen von der Uhr aufgezeichneten Einsatz im
+Formular korrigierte, bekam damit `manual = 1` und im Export „manuell", obwohl
+`origin` korrekt auf `watch` stand. Von den vier möglichen Fällen war genau
+dieser eine falsch.
+
+Die Herkunft kommt jetzt aus `missions.origin`, der Ausgabewert entsteht über
+eine feste Abbildung (`watch → uhr`, `manual → manuell`, `import → import`).
+`client_ref` wird im Export nicht mehr gelesen. Die Einsatzansicht war schon
+vorher richtig — der Export zieht damit nach, beide zeigen für denselben Einsatz
+dasselbe.
+
+Die gleichlautende Ableitungsregel in `backup_lib.php` bleibt bestehen: Backups
+der Formatversion 3 und älter kennen `origin` und `edited` nicht, dort wird sie
+weiterhin gebraucht.
+
+### Neu — Spalte `edited` im vollständigen CSV
+
+`einsaetze.csv` führt den Bearbeitungsstatus jetzt als eigene Spalte, direkt
+hinter `manual`. Damit stehen drei Angaben nebeneinander, die drei verschiedene
+Fragen beantworten: `herkunft` wie der Einsatz entstanden ist, `edited` ob er
+danach verändert wurde, `manual` ob die Uhr ihn noch überschreiben darf.
+`Export-Format.md` grenzt sie in einem eigenen Abschnitt (3.6) gegeneinander ab.
+
+Beim Rückimport werden `herkunft` und `edited` **nicht** übernommen — beide
+beschreiben, wie ein Datensatz in der Installation entstanden ist, aus der die
+Datei stammt. Beim Einlesen entsteht er neu. Exportdateien bis Web 3.3.2 ohne
+die Spalte lassen sich unverändert weiter einlesen; die Formaterkennung zählt
+Treffer gegen 77 erwartete Spaltennamen bei einem Schwellwert von 20.
+
+Die beiden Excelformate bleiben unverändert bei 29 Spalten und führen weder
+Herkunft noch Bearbeitungsstatus. Die Übersichtstabelle ist zum Ansehen,
+Sortieren und Filtern gedacht, und zusätzliche Spalten würden die
+`expectedHeaders` des Importprofils `export_excel_v1` mitverändern.
+
+**Grenze für Altbestand:** Für Einsätze von vor dem 30.07.2026 ließ sich
+`edited` nur bei Uhr-Einsätzen zuverlässig herleiten. Von Hand angelegte und
+importierte Einsätze starten mit `edited = 0`, auch wenn sie bearbeitet worden
+sind — rückwirkend ist das nicht mehr feststellbar. In `Export-Format.md`
+festgehalten, damit Auswertende die Spalte für diesen Bestand als „mindestens"
+lesen und nicht als „genau".
+
+### Geändert — Dokumentation der Exportformate
+
+`Export-Format.md` benennt die drei Formate durchgängig so wie das Auswahlfeld:
+CSV (Standard), Excel (Standard), Excel (GuteSeele). Die Bezeichnungen „Profil
+A/B/C" stammten aus der ursprünglichen Spezifikation und tauchten in der
+Anwendung nirgends auf; sie sind ersatzlos entfallen, im Export-Abschnitt von
+`Technik.md` ebenso. Die Tastenprofile A/B/C der Uhr-App (Technik.md 5.1) sind
+etwas anderes und bleiben.
+
+Nebenbei behoben: Zwei Feldbeschreibungen enthielten ein unmaskiertes `|` und
+sprengten damit die Tabellenspalte (`herkunft`, `weitere_rettungsmittel`), und
+zwei Querverweise zeigten ins Leere (`rea_json` auf 4.4 statt 3.4, `crew_p1` auf
+den Abschnitt zu `rea_json` statt auf die Regel zur effektiven Besatzung —
+diese steht jetzt in 3.3).
+
 ## [Web 3.3.2] — 2026-08-05
 
 ### Behoben — Adresssuche überschrieb bestätigte Koordinaten

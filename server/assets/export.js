@@ -495,9 +495,15 @@
         { feld: 'flugtag', typ: 'date', einheit: '', beschreibung: 'missions.day', get: function (c) { return c.m.day; } },
         { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'identisch zu flugtag, für Tabellenprogramme', get: function (c) { return c.m.day; } },
         { feld: 'uhrzeit_ortszeit', typ: 'time', einheit: '', beschreibung: 'Alarmzeit HH:MM, für Tabellenprogramme', get: function (c) { return hhmmLocal(phaseAt(c.m, 2), APP_TZ) || ''; } },
-        { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'uhr | manuell | import', get: function (c) { return c.m.source; } },
+        { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'wie der Einsatz entstanden ist (missions.origin): uhr | manuell | import', get: function (c) { return c.m.source; } },
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.m.final; } },
         { feld: 'manual', typ: '0/1', einheit: '', beschreibung: 'Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft)', get: function (c) { return c.m.manual; } },
+        // 'edited' steht unmittelbar hinter 'manual', weil genau dort die
+        // Verwechslung droht: 'edited' sagt, dass jemand den Datensatz nach dem
+        // Anlegen veraendert hat, 'manual' nur, dass die Uhr ihn nicht mehr
+        // ueberschreibt. Ein bearbeiteter Uhr-Einsatz hat beides auf 1 und
+        // bleibt trotzdem herkunft = uhr.
+        { feld: 'edited', typ: '0/1', einheit: '', beschreibung: 'nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual', get: function (c) { return c.m.edited; } },
 
         { feld: 'hubschrauber', typ: 'text', einheit: '', beschreibung: 'Kennzeichen (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.aircraft) : ''; } },
         { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Basis (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.base) : ''; } },
@@ -508,7 +514,7 @@
         { feld: 'tag_crew_other', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Sonstige', get: function (c) { return c.day ? orEmpty(c.day.crew_other) : ''; } },
 
         { feld: 'crew_abweichend', typ: '0/1', einheit: '', beschreibung: 'missions.crew_override', get: function (c) { return c.m.crew_override; } },
-        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.4)', get: function (c) { return orEmpty(c.eff.p1); } },
+        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3)', get: function (c) { return orEmpty(c.eff.p1); } },
         { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 2', get: function (c) { return orEmpty(c.eff.p2); } },
         { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: HEMS', get: function (c) { return orEmpty(c.eff.hems); } },
         { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Flugretter', get: function (c) { return orEmpty(c.eff.fr); } },
@@ -567,7 +573,7 @@
             { feld: 'pat_ort_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lon', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lon != null) ? c.pat.loc.lon : ''; } },
             { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
 
-            { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 4.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
+            { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
             { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.m.track_points; } }
         ]);

@@ -148,9 +148,15 @@
         'flugtag': { target: 'day', parse: ['trim', 'dateIso'], required: true },
         'datum': { target: null },                       // Dublette von flugtag
         'uhrzeit_ortszeit': { target: 'alarm', parse: ['timeHHMM'], required: true },
+        // Herkunft und Bearbeitungsstatus beschreiben, wie ein Datensatz IN
+        // DIESER Installation entstanden ist. Beim Einlesen entsteht er neu —
+        // api/import_commit.php vergibt origin = 'import' und setzt edited beim
+        // Aktualisieren selbst. Ein Wert aus der Datei waere dort eine Aussage
+        // ueber ein fremdes Konto.
         'herkunft': { target: null },                    // wird beim Import neu gesetzt
         'final': { target: null },
         'manual': { target: null },
+        'edited': { target: null },                      // wird beim Import neu gesetzt
 
         'hubschrauber': { target: null },
         'standort': { target: null },

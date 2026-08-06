@@ -42,6 +42,34 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  * deleted_at IS NULL und user_id = ?.
  */
 
+/**
+ * Herkunft: missions.origin -> Wert der CSV-Spalte 'herkunft'.
+ *
+ * Der Wertevorrat der Exportspalte bleibt bewusst deutsch, obwohl die
+ * Datenbank seit der Migration 2026_07_30_herkunft_bearbeitungsstatus
+ * 'watch'/'manual'/'import' fuehrt: Bereits ausgelieferte Exportdateien tragen
+ * die deutschen Werte, und jede darauf aufbauende Auswertung bliebe sonst
+ * stehen.
+ *
+ * Bis Web 3.3.2 wurde der Wert stattdessen bei jedem Export aus 'manual' und
+ * dem Praefix von 'client_ref' neu berechnet. Diese Regel stammt aus der Zeit
+ * vor der Spalte 'origin' und lieferte fuer genau einen Fall etwas Falsches:
+ * Ein von der Uhr aufgezeichneter und danach im Formular bearbeiteter Einsatz
+ * bekommt 'manual = 1' (einsatz_form.php) und erschien deshalb als 'manuell',
+ * obwohl 'origin' korrekt auf 'watch' stand. NICHT wieder einfuehren —
+ * 'manual' bedeutet ausschliesslich "die Uhr ueberschreibt Metadaten, Phasen
+ * und Reanimation nicht mehr" (schema.sql:50).
+ *
+ * Die gleichlautende Ableitungsregel in backup_lib.php bleibt bestehen: Dort
+ * ist sie noetig, weil Backups der Formatversion 3 und aelter die Spalten
+ * 'origin' und 'edited' nicht kennen.
+ */
+const EXPORT_ORIGIN_LABEL = [
+    'watch'  => 'uhr',
+    'manual' => 'manuell',
+    'import' => 'import',
+];
+
 /** Chunkweises IN(...) fuer grosse ID-Listen (Sicherheitsabstand zu
  *  MySQL/MariaDB-Parametergrenzen und zu grossen Einzel-Statements). */
 function export_fetch_chunked(PDO $pdo, string $sqlTemplate, array $ids, array $leadParams = []): array
@@ -127,7 +155,7 @@ function export_meta(array $b, int $userId): never
     $patCol = $patient ? ', pat_blob' : '';
     $st = $pdo->prepare(
         "SELECT id, day, started_at, ended_at, distance_m, ascent_m, site_ele_m,
-                final, manual, client_ref, transport_dest, winch,
+                final, manual, origin, edited, transport_dest, winch,
                 winch_cycles, winch_cycles_pat, winch_airload, bergwacht,
                 bw_unit, bw_info, secondary, schockraum, other_ema,
                 crew_override, crew_p1, crew_p2, crew_hems, crew_fr, crew_other,
@@ -203,14 +231,7 @@ function export_meta(array $b, int $userId): never
     $missions = [];
     foreach ($missionRows as $r) {
         $id = (int)$r['id'];
-        $manual = (int)$r['manual'] === 1;
-        if ($manual && strncmp((string)$r['client_ref'], 'imp-', 4) === 0) {
-            $source = 'import';
-        } elseif ($manual) {
-            $source = 'manuell';
-        } else {
-            $source = 'uhr';
-        }
+        $source = EXPORT_ORIGIN_LABEL[(string)$r['origin']] ?? 'uhr';
 
         $missions[] = [
             'id'               => $id,
@@ -223,6 +244,7 @@ function export_meta(array $b, int $userId): never
             'final'            => (int)$r['final'],
             'manual'           => (int)$r['manual'],
             'source'           => $source,
+            'edited'           => (int)$r['edited'],
             'transport_dest'   => $r['transport_dest'],
             'winch'            => (int)$r['winch'],
             'winch_cycles'     => $r['winch_cycles'] !== null ? (int)$r['winch_cycles'] : null,

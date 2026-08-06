@@ -53,7 +53,7 @@ die GPX-Dateinamen. Erlaubt sind Datum, Uhrzeit und die interne Einsatz-ID.
 
 ---
 
-## 2. Profil A — Standard-Excel
+## 2. Excel (Standard)
 
 Ein Blatt namens `Einsätze`.
 
@@ -106,7 +106,7 @@ einschließen" nicht gesetzt ist; die übrigen rücken auf.
 `server/mission_fields.php` — die Tabelle soll dieselben Begriffe verwenden wie
 das Eingabeformular.
 
-**Bewusst nicht in Profil A** (nur im CSV): Anderer Notarzt, Beschreibung
+**Bewusst nicht in Excel (Standard)** (nur im CSV): Anderer Notarzt, Beschreibung
 Einsatzort, Höhenmeter, alle Phasen außer Alarmierung und Endzeit, sämtliche
 Koordinaten, Reanimationsdokumentation, Tracks, Ruhezeiten und die Herkunft des
 Datensatzes. Ebenfalls nicht enthalten, weil in einer Übersichtstabelle
@@ -125,7 +125,7 @@ Spaltenbreiten, Autofilter und echte Datumszellen funktionieren.
 
 ---
 
-## 3. Profil B — vollständiges CSV
+## 3. CSV (Standard)
 
 Ein ZIP-Archiv:
 
@@ -156,8 +156,9 @@ Gelten für alle drei Tabellen:
   `uhrzeit_ortszeit`.
 - **Datum ohne Zeit:** `JJJJ-MM-TT`.
 - **Wahrheitswerte:** `1` / `0`, nie `Ja`/`Nein`.
-- **Leere Werte:** leeres Feld. (Anders als in Profil A, wo `-` steht: Dort
-  liest ein Mensch, hier würde `-` von jedem Importer als Text eingelesen.)
+- **Leere Werte:** leeres Feld. (Anders als in Excel (Standard), wo `-` steht:
+  Dort liest ein Mensch, hier würde `-` von jedem Importer als Text
+  eingelesen.)
 - **Dezimaltrennzeichen: Punkt.** Das Semikolon als Feldtrenner würde zwar auch
   das deutsche Komma erlauben, aber dann liest jedes nicht-deutsche Werkzeug
   falsch. Der Punkt ist eindeutig.
@@ -178,8 +179,9 @@ landet dann ebenfalls im verschlüsselten Block. Ein Programm, das diese
 Dateien einliest, muss deshalb nicht zwei Fälle unterscheiden. `felder.csv`
 beschreibt immer den vollen Formatumfang.
 
-(Profil A verhält sich bewusst anders: Dort entfallen die geschützten Spalten,
-weil eine dauerhaft leere Spalte für eine lesende Person nur Ballast ist.)
+(Excel (Standard) verhält sich bewusst anders: Dort entfallen die geschützten
+Spalten, weil eine dauerhaft leere Spalte für eine lesende Person nur Ballast
+ist.)
 
 ### 3.3 Gewollte Redundanz
 
@@ -189,6 +191,12 @@ soll ein vollständiges Bild haben, ohne nachschlagen zu müssen.
 
 **Bei Abweichungen gilt `einsaetze.csv`.** `flugtage.csv` wird nur für Tage ohne
 Einsatz und für Tagesnotizen gebraucht.
+
+**Effektive Besatzung:** `crew_p1` bis `crew_other` in `einsaetze.csv` sind die
+Namen, die für diesen Einsatz tatsächlich gelten — bei gesetztem
+`crew_abweichend` und belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert
+vom Flugtag. Die `tag_crew_`-Spalten daneben führen den unveränderten Wert des
+Flugtags, sodass sich beides gegeneinander halten lässt.
 
 ### 3.4 Struktur von `rea_json`
 
@@ -216,7 +224,35 @@ verworfen — maßgeblich ist `typ`.
 - `<metadata><time>` = Erzeugungszeit des Exports.
 - Einsätze ohne Punkte bekommen **keine** Datei; `track_datei` bleibt leer.
 
-### 3.6 Feldlisten
+### 3.6 `herkunft`, `edited` und `manual`
+
+Drei Spalten, die nach einer Angabe aussehen und drei verschiedene Dinge sagen:
+
+| Spalte | Antwortet auf | Ändert sich später |
+|---|---|---|
+| `herkunft` | Wie ist der Einsatz entstanden? | nein, wird beim Anlegen vergeben |
+| `edited` | Wurde er danach verändert? | ja, sobald jemand ihn bearbeitet |
+| `manual` | Darf die Uhr ihn noch überschreiben? | ja, als Nebenwirkung einer Bearbeitung |
+
+Der Fall, an dem der Unterschied hängt: Ein von der Uhr aufgezeichneter Einsatz,
+den jemand im Formular korrigiert, behält `herkunft = uhr` und bekommt
+`edited = 1`. Er bekommt zusätzlich `manual = 1` — nicht, weil er von Hand
+angelegt worden wäre, sondern damit ein späterer Upload derselben Uhr die
+Korrektur nicht wieder überschreibt. Wer die Herkunft auswerten will, nimmt
+`herkunft`; `manual` ist ein Schutzschalter und taugt dafür nicht.
+
+Die Einsatzansicht der Anwendung zeigt dieselben beiden Angaben als Kennzeichen
+„Uhr / manuell / importiert" und zusätzlich „editiert".
+
+**Einschränkung für Altbestand:** Für Einsätze, die vor dem 30.07.2026 angelegt
+wurden, ließ sich `edited` nur dort zuverlässig herleiten, wo der Einsatz von
+der Uhr stammt. Von Hand angelegte und importierte Einsätze starten mit
+`edited = 0`, auch wenn sie tatsächlich bearbeitet worden sind — eine frühere
+Bearbeitung ist rückwirkend nicht mehr feststellbar. Für diesen Altbestand ist
+`edited` also als „mindestens" zu lesen, nicht als „genau". `herkunft` ist davon
+nicht betroffen und für den gesamten Bestand belastbar.
+
+### 3.7 Feldlisten
 
 ### `einsaetze.csv`
 
@@ -226,9 +262,10 @@ verworfen — maßgeblich ist `typ`.
 | `flugtag` | date | — | missions.day |
 | `datum` | date | — | identisch zu flugtag, für Tabellenprogramme |
 | `uhrzeit_ortszeit` | time | — | Alarmzeit HH:MM, für Tabellenprogramme |
-| `herkunft` | text | — | uhr | manuell | import |
+| `herkunft` | text | — | wie der Einsatz entstanden ist (`missions.origin`): `uhr` \| `manuell` \| `import` |
 | `final` | 0/1 | — | abgeschlossen |
 | `manual` | 0/1 | — | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe `herkunft`) |
+| `edited` | 0/1 | — | nach dem Anlegen verändert (`missions.edited`) — unabhängig von der Herkunft, nicht zu verwechseln mit `manual` |
 | `hubschrauber` | text | — | Kennzeichen (Flugtag) |
 | `standort` | text | — | Basis (Flugtag) |
 | `tag_crew_p1` | text | — | Besatzung des Flugtags: Pilot 1 |
@@ -237,7 +274,7 @@ verworfen — maßgeblich ist `typ`.
 | `tag_crew_fr` | text | — | Besatzung des Flugtags: Flugretter |
 | `tag_crew_other` | text | — | Besatzung des Flugtags: Sonstige |
 | `crew_abweichend` | 0/1 | — | missions.crew_override |
-| `crew_p1` | text | — | tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.4) |
+| `crew_p1` | text | — | tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3) |
 | `crew_p2` | text | — | tatsächliche Besatzung: Pilot 2 |
 | `crew_hems` | text | — | tatsächliche Besatzung: HEMS |
 | `crew_fr` | text | — | tatsächliche Besatzung: Flugretter |
@@ -283,7 +320,7 @@ verworfen — maßgeblich ist `typ`.
 | `bw_unit` | text | — | Bergwacht-Einheit |
 | `bw_info` | text | — | Bergwacht: Namen / Infos |
 | `other_ema` | text | — | Anderer Notarzt |
-| `weitere_rettungsmittel` | text | — | mission_resources.name, mit | verkettet |
+| `weitere_rettungsmittel` | text | — | mission_resources.name, mit `\|` verkettet |
 | `notizen` | text | — | missions.notes |
 | `pat_mission_no` | text | — | Einsatznummer (pat_blob.mission_no) |
 | `pat_nachname` | text | — | pat_blob.last |
@@ -294,7 +331,7 @@ verworfen — maßgeblich ist `typ`.
 | `pat_ort_lat` | dec | — | pat_blob.loc.lat |
 | `pat_ort_lon` | dec | — | pat_blob.loc.lon |
 | `pat_ort_beschreibung` | text | — | pat_blob.site_desc (bis Web 3.2.0: ungeschützte Spalte `site_desc`) |
-| `rea_json` | json | — | Reanimationssitzungen mit Ereignissen, siehe 4.4; leer wenn keine Reanimation |
+| `rea_json` | json | — | Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation |
 | `track_datei` | text | — | relativer Pfad unter tracks/, oder leer |
 | `track_punkte` | int | — | Anzahl Trackpunkte |
 
@@ -328,7 +365,7 @@ verworfen — maßgeblich ist `typ`.
 
 ---
 
-## 4. Profil C — GuteSeele-Layout
+## 4. Excel (GuteSeele)
 
 Erhält das bisherige Listenlayout für die Weitergabe an Dritte. Aufbau exakt wie
 das Importprofil `ch17_jahresliste`:
@@ -374,6 +411,16 @@ Drei bewusste Ausnahmen:
 - **Hubschrauber und Standort** werden wie bei jedem Import oben auf der Seite
   ausgewählt. Ein Kennzeichen aus der Datei würde sonst stillschweigend neue
   Stammdaten anlegen.
+
+Ebenfalls nicht übernommen werden **`herkunft` und `edited`**. Beide beschreiben,
+wie ein Datensatz *in der Installation entstanden ist, aus der die Datei stammt*.
+Beim Einlesen entsteht er neu: Die Herkunft wird auf „importiert" gesetzt, der
+Bearbeitungsstatus beim Aktualisieren eines bestehenden Einsatzes. Ein Wert aus
+der Datei wäre an dieser Stelle eine Aussage über ein fremdes Konto.
+
+Eine Exportdatei **ohne** die Spalte `edited` (Auslieferungen bis Web 3.3.2)
+lässt sich unverändert einlesen — die Formaterkennung zählt Treffer gegen die
+erwarteten Spaltennamen, und eine fehlende von 77 ändert daran nichts.
 
 Dubletten werden zuerst über die Einsatznummer erkannt (clientseitig gegen die
 entschlüsselten Bestandsdaten), hilfsweise über Tag und Alarmzeit.
