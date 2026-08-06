@@ -698,6 +698,16 @@ Stolpersteine, die dabei aufgefallen sind:
   bleibt „Export erstellen" danach vollständig tot, ohne sichtbare Meldung.
   Genau das ist in Web 3.1.1 passiert (behoben in 3.2.0). Beim Umbau von
   Bedienelementen auf dieser Seite gehören Markup und Skript zusammen.
+- **Die Marker im Dateinamen gehören nur nach aussen.** `dateiName()` hängt
+  seit Web 3.6.0 `mit-pat`/`ohne-pat`, `verschl`/`unverschl` und eine Kennung
+  des Kontos an. Die Namen **innerhalb** des CSV-Archivs (`einsaetze.csv`,
+  `felder.csv`, `LIESMICH.txt`, `tracks/`) bleiben davon unberührt: Sie sind
+  Teil des Formats, und `import_ui.js` sucht im Archiv nach dem
+  `archiveMember` des Profils — ein Marker daran würde den Rückimport
+  verschlossener Archive brechen. Die Kontokennung kommt über `KONTO_NAME`
+  und `KONTO_MAIL` aus `import.php` (Quelle: `auth_guard.php`); die
+  Bereinigung zu einem dateisystemsicheren Segment (`slug()`) passiert im
+  Browser.
 - **Excel (Standard) und `export_excel_v1` sind aneinander gebunden.** Die
   Spaltenbeschriftungen in `SPALTEN_A` (export.js) müssen Wort für Wort den
   `expectedHeaders` des Importprofils (import_profiles.js) entsprechen, sonst

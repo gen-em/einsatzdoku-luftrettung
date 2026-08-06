@@ -695,8 +695,32 @@ es verloren, lässt sich die Datei **nicht mehr öffnen** — die Daten darin si
 dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
 über die Anwendung.
 
-Die fertige Datei heißt `luftrettungsdokumentation_export_TT-MM-JJJJ_…` mit dem
-Tag der Erstellung und dem gewählten Format am Ende.
+**Der Dateiname sagt, was drin ist.** Er ist so aufgebaut:
+
+```
+luftrettungsdokumentation_export_06-08-2026_standard_mit-pat_verschl_philipp-mueller.zip
+```
+
+Der Reihe nach: der Tag der Erstellung, das gewählte Format (`standard`,
+`guteseele` oder `csv`), ob Patientendaten enthalten sind (`mit-pat` oder
+`ohne-pat`), ob die Datei verschlüsselt ist (`verschl` oder `unverschl`) und
+zuletzt das Konto, aus dem der Export stammt — der Name aus den Einstellungen,
+und wenn dort keiner steht, die E-Mail-Adresse. So ist auch Wochen später und
+in einem Ordner voller Exporte zu sehen, welche Datei vorsichtig zu behandeln
+ist, ohne dass man sie öffnen muss.
+
+Zwei Feinheiten:
+
+- Die Angabe zur Verschlüsselung gilt immer für **genau diese Datei**. Ein
+  passwortgeschütztes Excel steckt in einem Archiv `…_verschl.zip`, die
+  Tabelle darin heißt `…_unverschl.xlsx` — denn sobald sie entpackt ist, liegt
+  sie offen.
+- Enthält der Name Umlaute oder Leerzeichen, werden sie umgeschrieben
+  (`Philipp Müller` → `philipp-mueller`), weil nicht jedes Betriebssystem und
+  nicht jedes Programm damit zurechtkommt. Bei einer E-Mail-Adresse entfallen
+  `@` und Punkte ebenso (`max@gen-em.de` → `max-gen-em-de`).
+
+Bedenke beim Weitergeben: Die Kontokennung steht damit auch im Dateinamen.
 
 Beim CSV nennt die Abschlussmeldung unter dem Knopf auch, wie viele GPX-Tracks
 im Archiv liegen — „keine Tracks vorhanden" ist etwas anderes als „Tracks

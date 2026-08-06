@@ -188,6 +188,11 @@ foreach ($defs->fetchAll() as $d) {
       const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
       const APP_TZ = <?= json_encode($CFG['app']['timezone']) ?>;
       const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
+      // Kennung des Kontos fuer den Exportdateinamen (export.js). Beide Werte
+      // stammen aus auth_guard.php; die Bereinigung zu einem
+      // dateisystemsicheren Segment passiert im Browser.
+      const KONTO_NAME = <?= json_encode($userName ?? '') ?>;
+      const KONTO_MAIL = <?= json_encode($userEmail ?? '') ?>;
     </script>
     <script src="<?= asset('assets/import_ui.js') ?>"></script>
     <script src="<?= asset('assets/export.js') ?>"></script>

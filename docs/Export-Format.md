@@ -15,22 +15,52 @@ Es gibt drei Profile:
 
 | Profil | Datei | Zielgruppe | Verlustfrei |
 |---|---|---|---|
-| CSV (Standard) | `…_csv.zip` | Maschinen | ja |
-| Excel (Standard) | `…_standard.xlsx` | Menschen | nein |
-| Excel (GuteSeele) | `…_guteseele.xlsx` | Dritte | nein |
+| CSV (Standard) | `…_csv_….zip` | Maschinen | ja |
+| Excel (Standard) | `…_standard_….xlsx` | Menschen | nein |
+| Excel (GuteSeele) | `…_guteseele_….xlsx` | Dritte | nein |
 
 Benennung und Reihenfolge sind dieselben wie im Auswahlfeld des Imports.
 
 Dateiname durchgängig:
 
 ```
-luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
+luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
 ```
 
-Das Datum ist der **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der
-steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`). `<profil>` ist
-`standard`, `guteseele` oder `csv`. Mit Passwortschutz entsteht in allen Fällen
-ein `.zip`.
+| Segment | Werte | Bedeutung |
+|---|---|---|
+| `TT-MM-JJJJ` | Datum | **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`) |
+| `<profil>` | `standard`, `guteseele`, `csv` | gewähltes Format |
+| `<inhalt>` | `mit-pat`, `ohne-pat` | ob Patientendaten enthalten sind |
+| `<schutz>` | `verschl`, `unverschl` | ob **diese** Datei verschlüsselt ist |
+| `<konto>` | bereinigter Anzeigename, sonst bereinigte E-Mail-Adresse | aus welchem Konto der Export stammt |
+
+Beispiele:
+
+```
+luftrettungsdokumentation_export_06-08-2026_standard_ohne-pat_unverschl_philipp-mueller.xlsx
+luftrettungsdokumentation_export_06-08-2026_csv_mit-pat_verschl_philipp-mueller.zip
+```
+
+Mit Passwortschutz entsteht in allen Fällen ein `.zip`.
+
+**Beide Marker stehen immer da, auch im Negativfall.** Ohne den Negativfall
+liesse sich eine Datei ohne Patientendaten nicht von einer Datei aus einem
+Stand vor dieser Regel unterscheiden.
+
+**`<schutz>` beschreibt die Datei, an der er steht — nicht den Vorgang.** Bei
+den Excel-Profilen mit Passwort liegt in einem Archiv `…_verschl.zip` eine
+Tabelle `…_unverschl.xlsx`: Nach dem Entpacken ist sie offen, und genau das ist
+die Angabe, auf die es beim Aufbewahren ankommt. Die festen Namen im
+CSV-Archiv (`einsaetze.csv`, `felder.csv`, `LIESMICH.txt`, `tracks/`) tragen
+keine Marker — sie sind Teil des Formats und werden vom Rückimport gesucht.
+
+**Bereinigung von `<konto>`:** Kleinbuchstaben, Umlaute nach deutscher Lesart
+ausgeschrieben (`ä`→`ae`, `ß`→`ss`), übrige Akzente auf den Grundbuchstaben
+zurückgeführt, alles Weitere zu `-` zusammengezogen, auf 40 Zeichen gekürzt.
+Aus `max@gen-em.de` wird so `max-gen-em-de` — die Punkte müssen weg, sonst
+sieht der Name nach mehrfacher Dateiendung aus. Bleibt von Name und Adresse
+nichts übrig, steht `konto` da.
 
 ---
 
@@ -48,8 +78,13 @@ beide kostenlos. Ohne Passwort entsteht ein normales Archiv, das überall aufgeh
 Das Passwort wird nirgends gespeichert, nicht protokolliert und nicht an den
 Server gesendet. Es lässt sich nicht wiederherstellen.
 
-Dateinamen enthalten **nie** einen Patientenbezug — weder der Archivname noch
-die GPX-Dateinamen. Erlaubt sind Datum, Uhrzeit und die interne Einsatz-ID.
+Dateinamen enthalten **nie** einen Bezug auf eine bestimmte Person — weder der
+Archivname noch die GPX-Dateinamen. Erlaubt sind Datum, Uhrzeit, die interne
+Einsatz-ID und die Kennung des exportierenden Kontos. Der Marker `mit-pat`
+sagt nur, **dass** Patientendaten enthalten sind, nicht **wessen**; er ist als
+Warnetikett für den Umgang mit der Datei gedacht. Wer sie weitergibt, gibt
+damit allerdings auch die Kontokennung — im Zweifel die E-Mail-Adresse —
+mit heraus.
 
 ---
 

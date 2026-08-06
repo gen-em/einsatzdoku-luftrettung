@@ -10,6 +10,77 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 3.6.0] — 2026-08-06
+
+### Neu — Exportdateinamen sagen, was in der Datei steckt
+
+Bisher hieß eine Exportdatei
+`luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>`. Ob darin Patientendaten
+lagen und ob sie verschlüsselt war, ließ sich erst nach dem Öffnen sagen — in
+einem Ordner mit mehreren Exporten die falsche Reihenfolge, weil genau diese
+beiden Angaben darüber entscheiden, wie die Datei zu behandeln ist. Der Name
+lautet jetzt:
+
+```
+luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
+
+luftrettungsdokumentation_export_06-08-2026_standard_ohne-pat_unverschl_philipp-mueller.xlsx
+luftrettungsdokumentation_export_06-08-2026_csv_mit-pat_verschl_philipp-mueller.zip
+```
+
+`<inhalt>` ist `mit-pat` oder `ohne-pat`, `<schutz>` ist `verschl` oder
+`unverschl`. **Beide Marker stehen immer da, auch im Negativfall** — fehlte der
+Negativfall, wäre eine Datei ohne Patientendaten nicht von einer Datei aus
+einem Stand vor dieser Regel zu unterscheiden.
+
+`<schutz>` beschreibt die Datei, an der er steht, nicht den Vorgang: Bei den
+Excel-Profilen mit Passwort liegt in einem Archiv `…_verschl.zip` eine Tabelle
+`…_unverschl.xlsx`. Nach dem Entpacken ist sie offen, und das ist die Angabe,
+auf die es beim Aufbewahren ankommt.
+
+### Neu — Kontokennung im Exportdateinamen
+
+`<konto>` benennt das Konto, aus dem der Export stammt: der Anzeigename aus den
+Einstellungen, und wenn dort keiner hinterlegt ist, die E-Mail-Adresse. Beides
+wird zu einem dateisystemsicheren Segment bereinigt — Kleinbuchstaben, Umlaute
+nach deutscher Lesart ausgeschrieben (`Philipp Müller` → `philipp-mueller`),
+übrige Akzente auf den Grundbuchstaben zurückgeführt, alles Weitere zu `-`
+zusammengezogen, auf 40 Zeichen gekürzt. Bei der E-Mail-Adresse entfallen `@`
+und Punkte (`max@gen-em.de` → `max-gen-em-de`); blieben die Punkte stehen, sähe
+der Name nach mehrfacher Dateiendung aus. Bleibt von Name und Adresse nichts
+übrig, steht `konto` da, damit das Segment nie leer ist.
+
+Ein eigenes Nachnamenfeld gibt es nicht — `users` führt nur `email` und den
+freien Anzeigenamen `name`. Deshalb wandert der vollständige Anzeigename in den
+Namen und nicht sein letztes Wort: Eine Heuristik darauf bricht bei
+Namenszusätzen („van der Berg\") und bei Konten, die gar keine Person benennen.
+
+**Beim Weitergeben zu bedenken:** Der Dateiname nennt damit auch das Konto, im
+Zweifel die E-Mail-Adresse. Einen Bezug auf eine bestimmte **Patientin oder
+einen Patienten** enthält er weiterhin nicht — `mit-pat` sagt nur, *dass*
+Patientendaten enthalten sind.
+
+### Unverändert
+
+- **Die Namen innerhalb der Archive.** `einsaetze.csv`, `felder.csv`,
+  `LIESMICH.txt` und `tracks/` sind Teil des Formats; der Rückimport sucht im
+  Archiv nach genau diesen Namen. Ein Marker daran hätte das Zurücklesen
+  verschlüsselter CSV-Archive gebrochen.
+- **Das Backup (`.edbak`).** Es ist immer verschlüsselt und enthält immer
+  Patientendaten — Marker hätten dort keinen Informationswert.
+- Alle Feldlisten und Spaltensätze der drei Profile.
+
+### Dokumentation
+
+- `Export-Format.md`: Namensschema als Tabelle mit allen Segmenten, Beispielen,
+  der Bereinigungsregel und der Abgrenzung zwischen „Marker\" und
+  „Patientenbezug\".
+- `Handbuch.md` 7.1: neuer Absatz zum Dateinamen mit den beiden Feinheiten
+  (Schutzmarker der inneren Datei, Umschreibung von Umlauten) und dem Hinweis
+  zur Weitergabe.
+- `Technik.md`: Stolperstein ergänzt, dass die Marker nur nach aussen gehören
+  und die Archivnamen unberührt bleiben.
+
 ## [Web 3.5.0] — 2026-08-06
 
 ### Behoben — Alter fehlte im Excel-Export, wenn kein Geburtsdatum vorlag

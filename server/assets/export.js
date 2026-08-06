@@ -5,7 +5,7 @@
  * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
  *
  * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, APP_TZ, WEB_VERSION,
- * EdCrypto, EdUnlock, EdPat,
+ * KONTO_NAME, KONTO_MAIL, EdCrypto, EdUnlock, EdPat,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
  *
@@ -837,16 +837,54 @@
     }
 
     /** Dateiname nach dem Muster
-     *  luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>.<endung>
+     *  luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
      *  Das Datum ist der Tag der Erstellung, nicht der Zeitraum — der steht in
      *  der Datei selbst (Titelzeile bzw. LIESMICH.txt). */
     var PROFIL_KUERZEL = { a: 'standard', c: 'guteseele', b: 'csv' };
 
-    function dateiName(fmt, endung) {
+    /** Freitext -> dateisystemsicheres Segment. Umlaute werden nach deutscher
+     *  Lesart ausgeschrieben (Mueller, nicht Muller oder Mller), uebrige
+     *  Akzente auf den Grundbuchstaben zurueckgefuehrt, alles Weitere zu
+     *  Bindestrichen zusammengezogen. Die Laengengrenze haelt den ohnehin
+     *  langen Dateinamen im Rahmen. */
+    function slug(text) {
+        var s = String(text === null || text === undefined ? '' : text).toLowerCase();
+        s = s.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+             .replace(/ß/g, 'ss');
+        if (s.normalize) { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+        s = s.replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+        return s.replace(/^-+|-+$/g, '');
+    }
+
+    /** Kennung des Kontos im Dateinamen: der Anzeigename, sonst die
+     *  E-Mail-Adresse. Bleibt von beidem nichts uebrig — etwa bei einem Namen
+     *  ganz ausserhalb des lateinischen Alphabets — steht 'konto' da, damit
+     *  das Segment nie leer ist und der Name nicht zwei Unterstriche
+     *  hintereinander bekommt. */
+    function kontoKuerzel() {
+        var name = (typeof KONTO_NAME === 'undefined') ? '' : KONTO_NAME;
+        var mail = (typeof KONTO_MAIL === 'undefined') ? '' : KONTO_MAIL;
+        return slug(name) || slug(mail) || 'konto';
+    }
+
+    /**
+     * Beide Marker sind immer gesetzt, auch im Negativfall: Fehlt der Marker,
+     * liesse sich eine Datei ohne Patientendaten nicht von einer aelteren
+     * Datei ohne Markerlogik unterscheiden.
+     *
+     * `verschluesselt` beschreibt immer DIESE Datei, nicht den Vorgang. Die
+     * Tabelle in einem passwortgeschuetzten Archiv traegt deshalb `unverschl`
+     * — nach dem Entpacken liegt sie offen, und genau das ist die Angabe, auf
+     * die es beim Aufbewahren ankommt.
+     */
+    function dateiName(fmt, endung, patient, verschluesselt) {
         var j = new Date();
         var datum = pad2(j.getDate()) + '-' + pad2(j.getMonth() + 1) + '-' + j.getFullYear();
         return 'luftrettungsdokumentation_export_' + datum + '_'
-            + (PROFIL_KUERZEL[fmt] || 'export') + '.' + endung;
+            + (PROFIL_KUERZEL[fmt] || 'export') + '_'
+            + (patient ? 'mit-pat' : 'ohne-pat') + '_'
+            + (verschluesselt ? 'verschl' : 'unverschl') + '_'
+            + kontoKuerzel() + '.' + endung;
     }
 
     /* Prueft den Inhaltsschluessel und bietet bei Bedarf den Entsperrdialog
@@ -950,17 +988,21 @@
                 if (pwOn) {
                     setState('Datei wird verschlüsselt…');
                     await zipAndDownload(
-                        [{ name: dateiName(fmt, 'xlsx'), content: new Uint8Array(bytesXlsx) }],
-                        password, dateiName(fmt, 'zip'));
+                        [{
+                            name: dateiName(fmt, 'xlsx', patient, false),
+                            content: new Uint8Array(bytesXlsx)
+                        }],
+                        password, dateiName(fmt, 'zip', patient, true));
                 } else {
-                    triggerDownload(bytesXlsx, dateiName(fmt, 'xlsx'), MIME_XLSX);
+                    triggerDownload(bytesXlsx, dateiName(fmt, 'xlsx', patient, false), MIME_XLSX);
                 }
             } else {
                 built = await buildProfilB(data, {
                     patient: patient, gpx: gpx, von: von, bis: bis, onProgress: setState
                 });
                 setState('Archiv wird ' + (pwOn ? 'verschlüsselt und ' : '') + 'gepackt…');
-                await zipAndDownload(built.files, pwOn ? password : null, dateiName(fmt, 'zip'));
+                await zipAndDownload(built.files, pwOn ? password : null,
+                    dateiName(fmt, 'zip', patient, pwOn));
             }
 
             // Die Trackzahl steht bewusst mit in der Meldung: Ob ein Archiv
