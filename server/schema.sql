@@ -3,13 +3,16 @@ SET NAMES utf8mb4;
 
 CREATE TABLE users (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  email         VARCHAR(190) NOT NULL UNIQUE,
+  email         VARCHAR(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL UNIQUE,  -- Sortierregel ausdruecklich: sonst haengt die Anmeldung an der Standardregel der Installation
   name          VARCHAR(120) NULL,                   -- Anzeigename (Kopfleiste)
   password_hash VARCHAR(255) NULL,                   -- Hash des im Browser abgeleiteten Auth-Tokens
   kdf_salt      VARCHAR(64) NULL,                    -- Salt der Browser-Schluesselableitung
+  kdf_iter      INT UNSIGNED NOT NULL DEFAULT 310000, -- Rundenzahl der Ableitung, je Konto aenderbar
   pat_wrap_pw   TEXT NULL,                           -- Inhaltsschluessel, passwortverpackt (Pflicht-Verschlüsselung)
   pat_wrap_rc   TEXT NULL,                           -- Inhaltsschluessel, mit Wiederherstellungsschluessel verpackt
+  pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
   role          ENUM('user','admin') NOT NULL DEFAULT 'user',
+  session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -247,9 +250,25 @@ CREATE TABLE pair_codes (
 CREATE TABLE deleted_refs (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   device_id INT UNSIGNED NOT NULL,
+  owner_type ENUM('mission','rest') NOT NULL DEFAULT 'mission',  -- Sperrliste gilt fuer BEIDE Arten
   client_ref VARCHAR(64) NOT NULL,
   deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_dev_ref (device_id, client_ref)
+  UNIQUE KEY uq_dev_type_ref (device_id, owner_type, client_ref)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Ratenschutz: Zaehlung von Fehlversuchen je Kontokennung UND je IP-Adresse.
+-- Liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zaehlung, die
+-- der Aufrufer durch Wegwerfen seines Cookies zuruecksetzen kann, ist keine.
+-- Aufraeumjob entsorgt abgelaufene Zeilen.
+CREATE TABLE rate_limits (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  topf          VARCHAR(32)  NOT NULL,          -- login | salt | reset | pair
+  merkmal       VARCHAR(190) NOT NULL,          -- 'ip:<adresse>' oder 'id:<kennung>'
+  versuche      INT UNSIGNED NOT NULL DEFAULT 0,
+  fenster_start DATETIME     NOT NULL,
+  gesperrt_bis  DATETIME     NULL,
+  UNIQUE KEY uq_topf_merkmal (topf, merkmal),
+  INDEX idx_fenster (fenster_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Kleiner Schluessel/Wert-Speicher fuer App-interne Zustaende (z. B. Wartung)
@@ -309,4 +328,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_28_kdf_ver_entfernt', 'skipped'),
   ('2026_07_29_einsatznummer_verschluesselt', 'skipped'),
   ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped'),
-  ('2026_08_05_site_desc_entfernt', 'skipped');
+  ('2026_08_05_site_desc_entfernt', 'skipped'),
+  ('2026_08_08_review_bausteine', 'skipped');

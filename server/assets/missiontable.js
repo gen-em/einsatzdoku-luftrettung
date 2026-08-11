@@ -16,6 +16,30 @@
 const EdMissionTable = (() => {
 
   /* ---- Formatierung (auch nach aussen gegeben, s. u.) ------------------ */
+
+  /* Maskierung fuer HTML (Baustein B7) — die kanonische Fassung.
+   *
+   * WARUM ES SIE GIBT: Dieselbe Aufgabe wird im Browser an drei Stellen
+   * wortgleich geloest, und alle drei maskieren nur DREI Zeichen. Die
+   * serverseitige Entsprechung (e() in db.php) maskiert FUENF: zusaetzlich
+   * beide Anfuehrungszeichen. Zwei Bausteine mit demselben Zweck und
+   * unterschiedlichem Umfang, ohne dass der Unterschied irgendwo steht.
+   *
+   * Fuer Textpositionen reichen drei Zeichen, und heute gibt es keine
+   * Attributposition — der Unterschied ist also derzeit folgenlos. Genau
+   * deshalb ist er gefaehrlich: Wer das naechste Mal einen Wert in ein
+   * title="…" schreibt, hat keinen Anhaltspunkt, dass diese Fassung dafuer
+   * nicht taugt.
+   *
+   * Diese Fassung deckt beide Positionen ab. Die drei Kopien werden in einem
+   * folgenden Schritt hierauf umgestellt.
+   */
+  function escape(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
   function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
   function fmtDur(s) {
@@ -162,5 +186,5 @@ const EdMissionTable = (() => {
     };
   }
 
-  return { erzeuge, SPALTEN, esc, fmtTag, fmtDur, fmtKm, extractOrt };
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt };
 })();

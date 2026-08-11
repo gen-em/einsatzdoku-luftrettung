@@ -10,6 +10,83 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.0.0] — 2026-08-08
+
+### Neu — Gemeinsame Bausteine und Schemaänderungen für die Review-Umsetzung
+
+Ein Code-Review in sieben Durchgängen hat 117 Befunde ergeben, keinen davon
+kritisch. Diese Auslieferung ist der **erste von mehreren Schritten** ihrer
+Behebung. Sie legt ausschließlich die Grundlagen: neun gemeinsame Bausteine
+und sechs Schemaänderungen.
+
+**Für den laufenden Betrieb ändert sich nichts.** Das ist beabsichtigt: Die
+Bausteine existieren und sind einsatzbereit, werden aber noch nicht verwendet.
+Einzige Ausnahme ist der Ratenschutz, der ab der nächsten Auslieferung
+gebraucht wird und deshalb bereits vollständig funktioniert.
+
+**Neue Bausteine (`server/`, `server/assets/`)**
+
+| Datei | Aufgabe |
+|---|---|
+| `validate_lib.php` | Eine Prüfschicht für Einsatzdaten — Wertebereiche, Längen, Formate, Mengen. Die Regeln stammen aus `api/import_commit.php` und sind dorthin gehoben, nicht neu erfunden. Enthält auch die Kalendertagsprüfung. |
+| `ratelimit_lib.php` | Ratenschutz je Kontokennung **und** IP-Adresse, in der Datenbank statt in der Sitzung. |
+| `session_lib.php` | Ein Sitzungsende für beide Wege (Abmelden und Ablauf), das die Schlüssel im Browser räumt und den Grund nennt. |
+| `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. |
+| `assets/pwquality.js` | Passwortgüte: Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. |
+
+Dazu erweitert: `assets/crypto.js` (Prüfsumme des Inhaltsschlüssels,
+Hüllenkennung), `assets/patient.js` (eine Entschlüsselungsschleife, die
+zwischen „keine Angaben" und „nicht lesbar" unterscheidet),
+`assets/missiontable.js` (eine Maskierungsfassung, die auch in
+Attributpositionen sicher ist).
+
+**Warum die Kalendertagsprüfung nötig war.** Die Datumsumwandlung liefert bei
+einem unmöglichen Tag kein Fehlerergebnis, sondern rechnet weiter: Aus dem
+30. Februar wird der 2. März. Sichtbar wird das ausschließlich über die
+Warnungsabfrage der Datumsklasse — und die wurde nirgends abgefragt. Ein
+Tippfehler in einer Importdatei wurde so zu einem stillen Datumssprung.
+
+**Warum es zwei Grenzen für den verschlüsselten Patientenblock gibt.** Die
+Untergrenze ist jetzt hergeleitet statt geschätzt: AES-256-GCM legt 12 Byte
+Zufallswert davor und hängt 16 Byte Prüfwert an — auch bei leerem Klartext
+sind das 28 Byte, in base64 also 40 Zeichen. Kürzer *kann* ein gültiger Block
+nicht sein. Im Umlauf waren bisher drei verschiedene Untergrenzen (16, 20 und
+gar keine), alle unterhalb des überhaupt Möglichen. Die Obergrenze bleibt bei
+60000 Zeichen: Ohne sie entscheidet die Datenbank, und ihre Entscheidung ist
+entweder ein Abbruch oder stilles Abschneiden — ein abgeschnittener
+Chiffretext ist dauerhaft unlesbar.
+
+### Datenbank — sechs Änderungen in einer Migration
+
+Anzuwenden über **Verwaltung → Datenbank-Update**.
+
+| | Änderung |
+|---|---|
+| `users.kdf_iter` | Rundenzahl der Schlüsselableitung, je Konto. Bestand auf den heutigen Wert (310000) gesetzt. |
+| `users.pat_key_check` | Prüfsumme des Inhaltsschlüssels. Bleibt für Bestandskonten leer — der Server kann sie nicht berechnen, er kennt den Schlüssel nicht. |
+| `users.session_epoch` | Zähler, mit dem ein Passwortwechsel offene Sitzungen beenden kann. |
+| `rate_limits` | Neue Tabelle für den Ratenschutz. Wird vom Aufräumjob mitentsorgt. |
+| `deleted_refs.owner_type` | Die Sperrliste gilt jetzt auch für Ruhe-Segmente. Schlüssel entsprechend erweitert. |
+| `users.email` | Sortierregel ausdrücklich festgelegt (`utf8mb4_unicode_ci`). |
+
+**Zur Rundenzahl, weil es die heikelste Änderung ist:** Sie wird hier **nur
+angelegt und gefüllt**. Kein Code liest sie, der Salt-Endpunkt bleibt
+unverändert. Der Grund ist Vorsicht — ein Fehler an der Schlüsselableitung
+sperrt nicht ein Konto aus, sondern alle gleichzeitig. Die drei Folgeschritte
+(Salt-Endpunkt liefert die Zahl mit, Browser rechnet damit, stille Anhebung
+bei der nächsten Anmeldung) folgen einzeln und jeweils rückwärtsverträglich.
+
+**Zur Sortierregel:** Dass die Anmeldung heute trotz uneinheitlicher
+Normalisierung der E-Mail-Adresse funktioniert, lag allein an der
+Standardsortierregel der Datenbank. Auf einer Installation mit
+unterscheidender Sortierregel schlüge sie für jede Adresse fehl, die nicht
+exakt wie beim Anlegen eingetippt wird — mit der Meldung „Anmeldung
+fehlgeschlagen" und ohne Hinweis auf die Ursache. Das Projekt liegt offen;
+diese Annahme sollte nicht ungeschrieben bleiben.
+
+Nach der Migration melden sich bestehende Konten unverändert an, und
+bestehende Sicherungsdateien lassen sich unverändert öffnen.
+
 ## [Web 3.6.0] — 2026-08-06
 
 ### Neu — Exportdateinamen sagen, was in der Datei steckt

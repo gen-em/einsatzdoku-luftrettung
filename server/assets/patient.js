@@ -55,5 +55,81 @@
     return `${t}.${m}.${j}`;
   }
 
-  window.EdPat = { alterAm, alterAnzeige, name, datumDe };
+  /* ---- Entschluesseln und anzeigen (Baustein B8) ------------------------
+   *
+   * WARUM ES DIESEN BAUSTEIN GIBT
+   * Fuenf Stellen entschluesseln je Datensatz den Patientenblock und fangen
+   * einen Fehlschlag ab, ohne ihn nach aussen sichtbar zu machen. Die Absicht
+   * ist richtig — ein unlesbarer Datensatz darf die Liste nicht zerstoeren —,
+   * es fehlt aber die Unterscheidung:
+   *
+   *   Einsatz OHNE Angaben        zeigt "–"
+   *   Einsatz NICHT ENTSCHLUESSELBAR  zeigt ebenfalls "–"
+   *
+   * Das ist der Anfang einer Kette, an deren Ende Daten verschwinden: Wer den
+   * Unterschied nicht sieht, merkt nicht, dass sein Inhaltsschluessel nicht
+   * mehr passt — und erstellt als Naechstes eine Sicherung.
+   *
+   * Diese Schleife liefert deshalb je Datensatz einen ZUSTAND und zaehlt mit.
+   */
+
+  /** Anzeigezeichen fuer einen Datensatz, der sich nicht entschluesseln laesst.
+   *  Bewusst NICHT der Gedankenstrich, der "keine Angaben" bedeutet. */
+  const ZEICHEN_UNLESBAR = '⚠';
+
+  /**
+   * Entschluesselt den Patientenblock einer Liste von Einsaetzen.
+   *
+   * Schreibt je Einsatz:
+   *   m._pat      entschluesseltes Objekt (oder null)
+   *   m._patState 'ok' | 'leer' | 'unlesbar'
+   *
+   * @param {Array}  liste     Einsaetze mit dem Feld pat_blob
+   * @param {string} ck        Inhaltsschluessel (hex) oder null/leer
+   * @returns {Promise<{ok:number, leer:number, unlesbar:number, gesperrt:boolean}>}
+   */
+  async function entschluessleListe(liste, ck) {
+    const zahl = { ok: 0, leer: 0, unlesbar: 0, gesperrt: !ck };
+    for (const m of (liste || [])) {
+      const blob = m && m.pat_blob;
+      if (!blob) { m._pat = null; m._patState = 'leer'; zahl.leer++; continue; }
+      if (!ck)   { m._pat = null; m._patState = 'leer'; continue; }
+      try {
+        m._pat = JSON.parse(await EdCrypto.decrypt(ck, blob));
+        m._patState = 'ok';
+        zahl.ok++;
+      } catch (e) {
+        // Fehlschlag wird NICHT verschluckt: Der Zustand bleibt am Datensatz
+        // stehen, damit die Anzeige ihn kenntlich machen kann.
+        m._pat = null;
+        m._patState = 'unlesbar';
+        zahl.unlesbar++;
+      }
+    }
+    return zahl;
+  }
+
+  /**
+   * Hinweistext, wenn Datensaetze unlesbar sind — oder eine leere Zeichenkette.
+   *
+   * Sind es VIELE, ist die Ursache grundsaetzlich (falscher Inhaltsschluessel)
+   * und nicht ein beschaedigter Einzeldatensatz. Der Text unterscheidet die
+   * beiden Faelle, weil die Antwort darauf eine andere ist.
+   */
+  function hinweisUnlesbar(zahl) {
+    if (!zahl || !zahl.unlesbar) { return ''; }
+    if (zahl.ok === 0 && zahl.unlesbar > 1) {
+      return `Keiner der ${zahl.unlesbar} geschützten Einträge lässt sich entschlüsseln. `
+           + 'Das deutet auf einen nicht passenden Schlüssel hin — die Daten sind '
+           + 'vorhanden, aber ohne den richtigen Schlüssel nicht lesbar. Vor weiteren '
+           + 'Schritten bitte den Wiederherstellungsschlüssel bereithalten.';
+    }
+    return zahl.unlesbar === 1
+      ? '1 Eintrag lässt sich nicht entschlüsseln und ist mit ' + ZEICHEN_UNLESBAR + ' gekennzeichnet.'
+      : `${zahl.unlesbar} Einträge lassen sich nicht entschlüsseln und sind mit `
+        + ZEICHEN_UNLESBAR + ' gekennzeichnet.';
+  }
+
+  window.EdPat = { alterAm, alterAnzeige, name, datumDe,
+                   entschluessleListe, hinweisUnlesbar, ZEICHEN_UNLESBAR };
 })();

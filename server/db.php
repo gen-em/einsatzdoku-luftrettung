@@ -199,6 +199,12 @@ function run_cleanup_if_due(): void {
                        OR created_at < DATE_SUB(NOW(), INTERVAL 1 HOUR)");
         $pdo->exec("DELETE FROM deleted_refs
                     WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
+        // Ratenschutz: abgelaufene Zaehler und Sperren. Ein Tag Nachlauf,
+        // damit auch der laengste Beobachtungszeitraum (1 h) sicher
+        // abgeschlossen ist.
+        $pdo->exec("DELETE FROM rate_limits
+                    WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                      AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())");
         // Papierkorb: abgelaufene Eintraege endgueltig entfernen
         require_once __DIR__ . '/trash_lib.php';
         trash_purge_expired($pdo);

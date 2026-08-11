@@ -88,6 +88,39 @@ const EdCrypto = (() => {
     return toHex(d);
   }
 
+  /* ---- Prüfsumme des Inhaltsschlüssels (Baustein B4) ------------------
+   * Ein Baustein für drei Zwecke:
+   *   (a) Passwortwechsel: Stimmt die mitgesendete Prüfsumme nicht mit der
+   *       gespeicherten überein, wird abgelehnt und nichts geändert. Ohne das
+   *       kann ein Fehler im Browser eine Hülle speichern, die einen ANDEREN
+   *       Inhaltsschlüssel enthält — danach ist jeder vorhandene Datensatz
+   *       unlesbar, und zwar endgültig.
+   *   (b) Bindung des zwischengespeicherten Schlüssels (siehe keyguard.js).
+   *   (c) Einspielen einer Sicherung: erkennt, ob ein mitgeführter
+   *       Chiffretext aus demselben Konto stammt.
+   *
+   * WAS DER SERVER DADURCH LERNT: nichts. Der Inhaltsschlüssel ist 256 Bit
+   * Zufall; aus seinem Hashwert lässt er sich nicht zurückrechnen, und
+   * Durchprobieren scheidet bei 256 Bit aus. Der Server gewinnt ausschließlich
+   * die Fähigkeit, den einen Fehler zu erkennen, der alles kostet.
+   *
+   * 128 Bit (32 Hexzeichen) genügen: Es geht um das Erkennen einer
+   * Verwechslung, nicht um eine Signatur.
+   */
+  async function contentKeyCheck(ckHex) {
+    if (!ckHex) return null;
+    const d = await crypto.subtle.digest('SHA-256', te.encode('edk-ckchk:' + ckHex));
+    return toHex(d).slice(0, 32);
+  }
+
+  /* Kurze Kennung einer Schlüsselhülle — für die Bindung in keyguard.js.
+   * Sie steht nur im Browser und geht nie zum Server. */
+  async function wrapFingerprint(wrap) {
+    if (!wrap) return null;
+    const d = await crypto.subtle.digest('SHA-256', te.encode('edk-wrap:' + wrap));
+    return toHex(d).slice(0, 16);
+  }
+
   /* ---- Sitzung: dataKey / Inhaltsschlüssel ---------------------------- */
   const S_DK = 'edk', S_CK = 'pck';
   const setDataKey = hex => sessionStorage.setItem(S_DK, hex);
@@ -175,6 +208,7 @@ const EdCrypto = (() => {
 
   return { deriveKeys, encrypt, decrypt, randomHex,
            newRecoveryCode, recoveryKeyHex,
+           contentKeyCheck, wrapFingerprint,
            setDataKey, getDataKey, getContentKey, clearSession,
            sealBackup, openBackup, isBackupFile };
 })();

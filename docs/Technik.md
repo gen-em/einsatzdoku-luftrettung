@@ -28,6 +28,7 @@ Daten erst nach Server-Bestätigung.
 ```
 hems/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
+│                          Review-Umsetzung (Stand der Review-Behebung),
 │                          Backup-Format, Export-Format,
 │                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
 │                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen)
@@ -55,13 +56,17 @@ hems/
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
+│   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
+│   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
+│   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden UND Ablauf)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export)
 │   ├── assets/            style.css, crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
-│   │                      patient.js, daylist.js, confirm.js,
+│   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
+│   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
@@ -72,6 +77,7 @@ hems/
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
+│   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
 │   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
 ├── watch/                 Connect-IQ-Projekt (Monkey C)
 │   ├── manifest.xml, monkey.jungle
@@ -88,7 +94,7 @@ hems/
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt`) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet. `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
@@ -104,7 +110,8 @@ hems/
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Flugtage (`kind` in `base`/`aircraft`, `item_id` verweist auf `bases.id` bzw. `aircraft.id`, persönlich oder zentral); ersetzt die Alt-Spalten `bases.is_default`/`aircraft.is_default` (bleiben nur wegen Alt-Backup-Import im Schema) |
 | `days` | Flugtag-Metadaten; **Verknüpfung über natürlichen Schlüssel `(user_id, day)`**, entsteht lazy beim ersten Speichern |
 | `pair_codes` | Kopplungscodes für die Uhr (5 Zeichen, 60 min, einmalig; Aufräumjob) |
-| `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr |
+| `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
+| `rate_limits` | Ratenschutz: Fehlversuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine; Aufräumjob entsorgt Altbestand |
 | `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `salt_secret`) |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -750,9 +757,71 @@ darf keine Anfrage brechen).
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
-Passwörter/Schlüssel nur als Hash, Bruteforce-Bremse am Login, Ingest mit
+Passwörter/Schlüssel nur als Hash, Ratenschutz am Login (s. 4.99), Ingest mit
 Größen- (512 KB) und Wertevalidierung, sensible Dateien per .htaccess gesperrt,
 Referrer-Policy `strict-origin-when-cross-origin` (OSM-Kacheln).
+
+### 4.99 Gemeinsame Bausteine
+
+Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
+Prüftiefe verlief historisch **umgekehrt zur Vertrauenswürdigkeit der Quelle**:
+
+| Prüfung | Formular | Import | Uhr | Sicherung |
+|---|---|---|---|---|
+| Datumsformat | ja | ja | ja | nein |
+| Zeitstempel geprüft | ja | ja | ja | nein |
+| Zeichenketten auf Spaltenlänge | ja | ja | teilweise | nein |
+| Zahlenbereiche | ja | ja | nein | nein |
+| Patientenblock-Muster | 16…8000 | 20…60000 | — | nein |
+| Phasennummer 2–9 | — | ja | ja | nein |
+| Koordinaten ±90 / ±180 | — | ja | nein | nein |
+| Reanimationsart gegen Liste | — | ja | ja | nein |
+| Mengenbegrenzungen | — | ja | keine | keine |
+
+Die Reihenfolge nach Sorgfalt lautete Import → Formular → Uhr → Sicherung, die
+nach Vertrauenswürdigkeit der Quelle genau umgekehrt. Ziel ist, dass in allen
+vier Spalten überall „ja" steht — **und zwar durch denselben Baustein**. Die
+folgenden Bausteine sind dafür die eine Stelle:
+
+| Baustein | Datei | Aufgabe |
+|---|---|---|
+| Prüfschicht | `validate_lib.php` | Wertebereiche, Längen, Formate, Mengen aller Einsatz- und Ruhesegmentfelder. Unterscheidet „Wert war ungültig" von „Wert war nicht vorhanden" (`Pruefliste`), damit ein Fehler nicht als Erfolg gemeldet werden kann. |
+| Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
+| Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. |
+| Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
+| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. |
+| Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden **und** Ablauf, räumt die Schlüssel im Browser und nennt den Grund. |
+| Maskierung | `assets/missiontable.js` (`escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). |
+| Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". |
+| Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. |
+
+**Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`
+in `validate_lib.php`): 40 bis 60000 Zeichen, für alle vier Schreibwege
+dieselben.
+
+* Untergrenze **hergeleitet, nicht geschätzt**: AES-256-GCM legt 12 Byte
+  Zufallswert davor und hängt 16 Byte Prüfwert an — auch bei leerem Klartext
+  sind das 28 Byte, base64 also 40 Zeichen. Kürzer kann ein gültiger Block
+  nicht sein.
+* Obergrenze: 60000 Zeichen = 60000 Byte (base64 ist ASCII); die Spalte fasst
+  65535 Byte, also 5535 Byte Luft, entsprechend rund 44972 Byte Klartext.
+* Die Grenze bleibt bewusst erhalten. Ohne sie entscheidet die Datenbank, und
+  ihre Entscheidung ist entweder ein Abbruch oder stilles Abschneiden — ein
+  abgeschnittener Chiffretext ist **dauerhaft** unlesbar.
+
+**Mehrfache Einträge derselben Phasennummer sind ausdrücklich erlaubt.** Eine
+erneut gesetzte Phase ist eine Korrektur und damit eine Information, die
+erhalten bleibt (so auch der JSON-Vertrag). Die Mengenbegrenzung
+(`LIMIT_PHASEN`) ist deshalb bewusst hoch angesetzt und darf nicht als
+Überlaufschutz für eine Entdoppelung herhalten.
+
+**Warum die Passwortgüte nur im Browser geprüft werden kann.** Der Server
+sieht das Passwort nie — er bekommt ausschließlich das daraus abgeleitete
+Auth-Token. Das ist der Kern des Verfahrens, nicht eine Nachlässigkeit, und
+die Kehrseite ist, dass er die Stärke prinzipiell nicht prüfen kann. Der
+Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
+Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
+ist eine bewusste Entscheidung und gehört genau so dokumentiert.
 
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 

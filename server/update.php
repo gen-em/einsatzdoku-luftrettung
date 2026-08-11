@@ -555,6 +555,115 @@ $MIGRATIONS = [
             "ALTER TABLE missions DROP COLUMN site_desc",
         ],
     ],
+    [
+        'id'    => '2026_08_08_review_bausteine',
+        'label' => 'Ableitungsrunden, Schlüssel-Prüfsumme, Sitzungszähler, Ratenschutz, '
+                 . 'Sperrliste für Ruhe-Segmente, festgelegte Sortierregel',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users' AND column_name = 'kdf_iter'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* --- S1: Rundenzahl der Schluesselableitung je Konto -----------
+             * BESONDERE SORGFALT. Nicht wegen der Datenmenge, sondern weil
+             * die Aenderung die Schluesselableitung beruehrt und ein Fehler
+             * dort ALLE KONTEN GLEICHZEITIG AUSSPERRT.
+             *
+             * Dieser Schritt legt die Spalte NUR AN und fuellt sie mit dem
+             * heutigen Wert (ITER in assets/crypto.js). Kein Code liest sie;
+             * der Salt-Endpunkt bleibt unveraendert. Das Verhalten aendert
+             * sich durch diese Migration nicht.
+             *
+             * Die drei Folgeschritte (Salt-Endpunkt liefert die Zahl mit;
+             * Browser rechnet mit dem gelieferten Wert; stille Anhebung bei
+             * der naechsten Anmeldung) folgen in einer eigenen Auslieferung,
+             * jeder Schritt fuer sich rueckwaertsvertraeglich.
+             *
+             * Der Vorgabewert ist wesentlich: Zwischen dieser Migration und
+             * dem Zeitpunkt, an dem der Code die Spalte kennt, koennen neue
+             * Konten entstehen, deren Einfuegeanweisung sie noch nicht nennt.
+             */
+            'ALTER TABLE users
+               ADD COLUMN kdf_iter INT UNSIGNED NOT NULL DEFAULT 310000 AFTER kdf_salt',
+            'UPDATE users SET kdf_iter = 310000 WHERE kdf_iter = 0',
+
+            /* --- S2: Pruefsumme des Inhaltsschluessels ---------------------
+             * Bleibt fuer Bestandskonten LEER. Eine fehlende Pruefsumme ist
+             * ein gueltiger Zustand: Konten ohne sie werden weiter
+             * angenommen und bekommen sie beim naechsten Setzen des
+             * Passworts. Alles andere wuerde bestehende Konten aussperren,
+             * weil der Server die Pruefsumme nicht selbst berechnen kann —
+             * er kennt den Inhaltsschluessel nicht.
+             */
+            'ALTER TABLE users
+               ADD COLUMN pat_key_check CHAR(32) NULL AFTER pat_wrap_rc',
+
+            /* --- S3: Sitzungszaehler ---------------------------------------
+             * Wird beim Passwortwechsel erhoeht und bei jeder Anfrage gegen
+             * die Sitzung geprueft. Damit endet eine offene Sitzung, wenn das
+             * Passwort gewechselt wird — heute laeuft sie weiter, was genau
+             * den Zweck des Wechsels verfehlt, wenn er wegen eines Verdachts
+             * erfolgt.
+             */
+            'ALTER TABLE users
+               ADD COLUMN session_epoch INT UNSIGNED NOT NULL DEFAULT 0 AFTER role',
+
+            /* --- S4: Ratenschutz -------------------------------------------
+             * Zaehlung je Kontokennung UND je IP-Adresse, mit Zeitfenster.
+             * Der Aufraeumjob entsorgt die Tabelle mit.
+             * Einzige Schemaaenderung dieser Auslieferung, die bereits
+             * benutzt wird — der Ratenschutz ist ab der naechsten
+             * Auslieferung Pflicht (Kopplung).
+             */
+            "CREATE TABLE rate_limits (
+               id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               topf          VARCHAR(32)  NOT NULL,
+               merkmal       VARCHAR(190) NOT NULL,
+               versuche      INT UNSIGNED NOT NULL DEFAULT 0,
+               fenster_start DATETIME     NOT NULL,
+               gesperrt_bis  DATETIME     NULL,
+               UNIQUE KEY uq_topf_merkmal (topf, merkmal),
+               INDEX idx_fenster (fenster_start)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+
+            /* --- S5: Sperrliste auch fuer Ruhe-Segmente ---------------------
+             * Die Sperrliste war an beiden Enden nur fuer Einsaetze
+             * umgesetzt: Sie wurde nur fuer Einsaetze befuellt und nur im
+             * Einsatz-Zweig abgefragt. Ein endgueltig geloeschtes
+             * Ruhe-Segment wird deshalb von der naechsten Nachlieferung
+             * wieder angelegt — und beim erneuten Loeschen wieder.
+             *
+             * Der Bestand besteht ausschliesslich aus Einsaetzen, deshalb ist
+             * der Vorgabewert 'mission' fuer vorhandene Zeilen richtig.
+             * Reihenfolge: erst den neuen Schluessel anlegen, dann den alten
+             * entfernen.
+             */
+            "ALTER TABLE deleted_refs
+               ADD COLUMN owner_type ENUM('mission','rest') NOT NULL DEFAULT 'mission' AFTER device_id",
+            'ALTER TABLE deleted_refs
+               ADD UNIQUE KEY uq_dev_type_ref (device_id, owner_type, client_ref)',
+            'ALTER TABLE deleted_refs DROP INDEX uq_dev_ref',
+
+            /* --- S6: Sortierregel der E-Mail-Spalte ausdruecklich festlegen -
+             * Dass die Anmeldung heute trotz uneinheitlicher Normalisierung
+             * der Adresse funktioniert, liegt ALLEIN an der
+             * Standardsortierregel der Datenbank. Auf einer Installation mit
+             * unterscheidender Sortierregel schluege sie fuer jede Adresse
+             * fehl, die nicht exakt wie beim Anlegen eingetippt wird — mit
+             * der Meldung "Anmeldung fehlgeschlagen", ohne Hinweis auf die
+             * Ursache. Das Projekt liegt offen; diese Annahme darf nicht
+             * ungeschrieben bleiben.
+             *
+             * utf8mb4_unicode_ci ist wie die bisherigen Standardregeln
+             * unterscheidungsfrei bei Gross-/Kleinschreibung — an bestehenden
+             * Installationen aendert sich nichts.
+             */
+            'ALTER TABLE users
+               MODIFY email VARCHAR(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 
