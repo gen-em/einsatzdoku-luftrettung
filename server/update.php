@@ -667,7 +667,23 @@ $MIGRATIONS = [
     // Naechste Migration hier anhaengen.
 ];
 
-/* ---- Runner --------------------------------------------------------------- */
+/* ---- Zweistufiger Ablauf ---------------------------------------------------
+ *
+ * FRUEHER WAR DER AUFRUF DIESER SEITE BEREITS DIE AUSFUEHRUNG. Wer sie
+ * versehentlich oeffnete, oder aus dem Verlauf, oder weil ein Vorschau-Abruf
+ * des Browsers ihr folgte, hatte die Migrationen laufen lassen — darunter
+ * solche, die Spalten LOESCHEN. Eine unwiderrufliche Handlung auf einen GET
+ * hin ist immer falsch; hier war sie es besonders, weil die Seite kein
+ * Formular-Token brauchte und der Rat, vorher eine Sicherung zu erstellen,
+ * erst DANACH zu lesen war.
+ *
+ * Jetzt gilt:
+ *   Aufruf (GET)   zeigt an, WAS anstuende. Aendert nichts.
+ *   Knopf (POST)   fuehrt aus, mit Formular-Token.
+ *
+ * Der Notausgang ueber die Kommandozeile bleibt einstufig: Wer "php
+ * update.php" eintippt, hat die bewusste Handlung bereits vollzogen.
+ */
 $pdo = db();
 $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (
               id         VARCHAR(120) NOT NULL PRIMARY KEY,
@@ -675,48 +691,96 @@ $pdo->exec('CREATE TABLE IF NOT EXISTS schema_migrations (
               status     VARCHAR(16) NOT NULL DEFAULT "applied"
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 
+$istCli = php_sapi_name() === 'cli';
+$ausfuehren = $istCli
+    || ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'run');
+if ($ausfuehren && !$istCli) { csrf_check(); }
+
 $applied = $pdo->query('SELECT id FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN);
 $results = [];   // [id, label, status, detail]
 $ranSomething = false;
+$offen = 0;      // Zahl der Migrationen, die tatsaechlich etwas taeten
 
-foreach ($MIGRATIONS as $m) {
-    if (in_array($m['id'], $applied, true)) {
-        $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.'];
-        continue;
-    }
-
-    if (isset($m['skip']) && ($m['skip'])($pdo)) {
-        $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "skipped")')
-            ->execute([$m['id']]);
-        $results[] = [$m['id'], $m['label'], 'ok', 'Nicht nötig (Schema bereits aktuell) — als erledigt vermerkt.'];
-        continue;
-    }
-
-    try {
-        if (isset($m['run'])) { ($m['run'])($pdo); }
-        foreach (($m['sql'] ?? []) as $stmt) {
-            try {
-                $pdo->exec($stmt);
-            } catch (PDOException $inner) {
-                // Nach einem Teil-Lauf koennen einzelne Schritte schon
-                // erledigt sein: 1060 Spalte existiert, 1061 Index existiert,
-                // 1091 zu loeschendes Objekt fehlt, 1050 Tabelle existiert.
-                // Diese Faelle sind harmlos -> weitermachen.
-                $code = (int)($inner->errorInfo[1] ?? 0);
-                if (!in_array($code, [1050, 1060, 1061, 1091], true)) { throw $inner; }
-            }
+if (!$ausfuehren) {
+    /* ---- VORSCHAU: nur lesen, nichts schreiben ------------------------
+     * Auch die skip-Pruefungen laufen hier — sie fragen ausschliesslich
+     * information_schema ab und aendern nichts. Ihr Ergebnis wird aber NICHT
+     * verbucht: Selbst dieser harmlose Eintrag waere eine Schreiboperation
+     * auf einen Seitenaufruf hin. */
+    foreach ($MIGRATIONS as $m) {
+        if (in_array($m['id'], $applied, true)) {
+            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.'];
+            continue;
         }
-        $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "applied")')
-            ->execute([$m['id']]);
-        $results[] = [$m['id'], $m['label'], 'ok', 'Erfolgreich angewendet.'];
-        $ranSomething = true;
-    } catch (Throwable $ex) {
-        // Nicht verbuchen -> naechster Aufruf versucht es erneut
-        $results[] = [$m['id'], $m['label'], 'fail',
-                      'Fehler: ' . $ex->getMessage() . ' — Migration wurde NICHT als erledigt vermerkt.'];
-        break;   // Reihenfolge wahren: nachfolgende Migrationen nicht ausfuehren
+        $nichtNoetig = false;
+        try {
+            $nichtNoetig = isset($m['skip']) && ($m['skip'])($pdo);
+        } catch (Throwable $ex) {
+            $results[] = [$m['id'], $m['label'], 'warn',
+                          'Zustand nicht feststellbar: ' . $ex->getMessage()];
+            $offen++;
+            continue;
+        }
+        if ($nichtNoetig) {
+            $results[] = [$m['id'], $m['label'], 'ok',
+                          'Nicht nötig (Schema bereits aktuell) — wird beim Ausführen als erledigt vermerkt.'];
+            $offen++;
+            continue;
+        }
+        $results[] = [$m['id'], $m['label'], 'todo',
+                      'STEHT AN — wird beim Ausführen angewendet.'];
+        $offen++;
+    }
+} else {
+    /* ---- AUSFUEHRUNG ---------------------------------------------------- */
+    foreach ($MIGRATIONS as $m) {
+        if (in_array($m['id'], $applied, true)) {
+            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.'];
+            continue;
+        }
+
+        if (isset($m['skip']) && ($m['skip'])($pdo)) {
+            $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "skipped")')
+                ->execute([$m['id']]);
+            $results[] = [$m['id'], $m['label'], 'ok', 'Nicht nötig (Schema bereits aktuell) — als erledigt vermerkt.'];
+            continue;
+        }
+
+        try {
+            if (isset($m['run'])) { ($m['run'])($pdo); }
+            foreach (($m['sql'] ?? []) as $stmt) {
+                try {
+                    $pdo->exec($stmt);
+                } catch (PDOException $inner) {
+                    // Nach einem Teil-Lauf koennen einzelne Schritte schon
+                    // erledigt sein: 1060 Spalte existiert, 1061 Index existiert,
+                    // 1091 zu loeschendes Objekt fehlt, 1050 Tabelle existiert.
+                    // Diese Faelle sind harmlos -> weitermachen.
+                    $code = (int)($inner->errorInfo[1] ?? 0);
+                    if (!in_array($code, [1050, 1060, 1061, 1091], true)) { throw $inner; }
+                }
+            }
+            $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "applied")')
+                ->execute([$m['id']]);
+            $results[] = [$m['id'], $m['label'], 'ok', 'Erfolgreich angewendet.'];
+            $ranSomething = true;
+        } catch (Throwable $ex) {
+            // Nicht verbuchen -> naechster Aufruf versucht es erneut
+            $results[] = [$m['id'], $m['label'], 'fail',
+                          'Fehler: ' . $ex->getMessage() . ' — Migration wurde NICHT als erledigt vermerkt.'];
+            break;   // Reihenfolge wahren: nachfolgende Migrationen nicht ausfuehren
+        }
     }
 }
+
+// Kommandozeile: Ergebnis als Text ausgeben und beenden — ohne HTML-Geruest.
+if ($istCli) {
+    foreach ($results as [$id, $label, $status, $detail]) {
+        printf("%-6s %-46s %s\n", strtoupper($status), $id, $detail);
+    }
+    exit($ranSomething ? 0 : 0);
+}
+
 ?><!doctype html>
 <html lang="de">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -728,26 +792,62 @@ foreach ($MIGRATIONS as $m) {
 
 <main class="page">
   <h1>Datenbank-Update</h1>
+
   <?php if (!$results): ?>
     <p class="alert alert-info">Keine Migrationen definiert.</p>
-  <?php else: ?>
-    <?php if ($ranSomething): ?>
-      <p class="alert alert-info">Updates wurden angewendet — Details unten.</p>
+
+  <?php elseif (!$ausfuehren): ?>
+    <?php /* ---- Vorschau: es wurde noch NICHTS geändert ---- */ ?>
+    <?php if ($offen === 0): ?>
+      <p class="alert alert-info">Die Datenbank ist auf dem aktuellen Stand.
+         Es steht nichts an.</p>
+    <?php else: ?>
+      <p class="alert alert-warn"><strong>Es wurde noch nichts geändert.</strong>
+         <?= (int)$offen ?> Eintrag/Einträge stehen aus. Unten steht, was
+         passieren würde.</p>
+      <p class="alert alert-warn"><strong>Vorher eine Sicherung erstellen.</strong>
+         Migrationen können Spalten und Daten unwiderruflich entfernen. Die
+         Sicherung liegt unter
+         <a href="einstellungen.php?t=backup">Einstellungen → Backup</a> und
+         dauert eine Minute — eine verlorene Spalte dagegen ist verloren.</p>
     <?php endif; ?>
+  <?php elseif ($ranSomething): ?>
+    <p class="alert alert-info">Updates wurden angewendet — Details unten.</p>
+  <?php else: ?>
+    <p class="alert alert-info">Es war nichts anzuwenden.</p>
+  <?php endif; ?>
+
+  <?php if ($results): ?>
     <table class="data">
       <thead><tr><th>Update</th><th>Status</th><th>Details</th></tr></thead>
       <tbody>
       <?php foreach ($results as [$id, $label, $status, $detail]): ?>
         <tr>
           <td><?= e($label) ?><br><span class="muted"><code><?= e($id) ?></code></span></td>
-          <td><?= $status === 'ok' ? '✔' : '✖' ?></td>
+          <td><?= match ($status) {
+                    'ok'   => '✔',
+                    'todo' => '●',
+                    'warn' => '!',
+                    default => '✖',
+                  } ?></td>
           <td><?= e($detail) ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
     </table>
-    <p class="muted">Diese Seite kann gefahrlos mehrfach aufgerufen werden —
-       bereits erledigte Updates werden übersprungen.</p>
+
+    <?php if (!$ausfuehren && $offen > 0): ?>
+      <form method="post" action="update.php" style="margin-top:1rem">
+        <?= csrf_field() ?><input type="hidden" name="action" value="run">
+        <button type="submit" class="btn-primary" style="width:auto">
+          Updates jetzt anwenden</button>
+      </form>
+      <p class="muted">Der Aufruf dieser Seite ändert nichts. Erst dieser Knopf
+         führt die Updates aus.</p>
+    <?php elseif ($ausfuehren): ?>
+      <p class="muted">Bereits erledigte Updates werden übersprungen —
+         ein erneuter Lauf ist ungefährlich.</p>
+    <?php endif; ?>
   <?php endif; ?>
 <?php ui_footer(); ?>
 </main>

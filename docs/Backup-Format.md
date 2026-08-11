@@ -35,6 +35,30 @@ roh = AESGCM(key).decrypt(b[25:37], b[37:], b[0:9])
 daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```
 
+## 1a. Unlesbare Angaben (seit Web 4.1.0)
+
+Der Export entschlüsselt die geschützten Angaben, bevor er die Datei
+versiegelt — das ist der Grund, warum sich ein Backup in **jedes** Konto
+einspielen lässt. Wenn ein Einsatz sich mit dem aktuellen Inhaltsschlüssel
+*nicht* entschlüsseln lässt, gilt seit Web 4.1.0:
+
+* Der **Chiffretext bleibt in der Datei** (Feld `pat_blob` neben dem
+  Kennzeichen `pat_unreadable`).
+* Der Export **nennt die Zahl** der betroffenen Einsätze in der Meldung.
+
+Vorher wurde der Chiffretext auch im Fehlerfall entfernt und der Vorgang als
+„Fertig" gemeldet. Das war die gefährlichste Stelle des ganzen Formats: In der
+Datenbank lagen die Daten noch und wären mit dem richtigen Schlüssel lesbar
+gewesen — in der Datei waren sie weg. Und wer den Verdacht hat, dass mit
+seinen Daten etwas nicht stimmt, erstellt als Erstes eine Sicherung. Genau
+diese Handlung vollendete den Verlust.
+
+**Was mit dem mitgeführten Chiffretext beim Einspielen geschieht:** Er wird
+unverändert übernommen. Zurück in dasselbe Konto gespielt, sind die Angaben
+damit wieder lesbar. In einem *fremden* Konto bleiben sie unlesbar — die
+Erkennung dieses Falls und ein entsprechender Hinweis folgen mit der Prüfsumme
+des Inhaltsschlüssels (`users.pat_key_check`).
+
 ## 2. Inneres JSON
 
 ```jsonc
@@ -93,7 +117,11 @@ daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
                       "lat": 47.72, "lon": 10.31 },
              "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß" },
                                             // site_desc seit Version 5
-    // "pat_unreadable": true  -> stand beim Export nicht zur Verfügung
+    // Ließ sich ein Einsatz beim Export NICHT entschlüsseln, steht statt
+    // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
+    // unveränderte Chiffretext `pat_blob` in der Datei:
+    // "pat_unreadable": true,
+    // "pat_blob": "Base64 …"   -> unverändert übernommener Chiffretext
 
     "phases": [ { "phase": 2, "occurred_at": "2026-07-19 08:15:00",
                   "lat": 47.72, "lon": 10.31 } ],

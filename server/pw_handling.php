@@ -126,6 +126,11 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <p>Diagnose, Alter und Einsatzort werden <strong>Ende-zu-Ende-verschlüsselt</strong>
        gespeichert. Der Schlüssel entsteht aus deinem Passwort und verlässt deinen
        Browser nie — der Server kann die Angaben nicht lesen.</p>
+    <p><strong>Deshalb ist die Stärke deines Passworts unmittelbar die Stärke der
+       Verschlüsselung.</strong> Weil der Server das Passwort nie sieht, kann er
+       seine Güte auch nicht prüfen und ein schwaches nicht ausgleichen — es gibt
+       keine zweite Hürde dahinter. Wähle etwas Langes, das du dir merken kannst;
+       vier zufällige Wörter sind besser als acht verdrehte Zeichen.</p>
     <p><strong>Wichtig:</strong> Nach dem Festlegen wird einmalig dein persönlicher
        <strong>Wiederherstellungsschlüssel</strong> angezeigt. Er ist nach einem
        Passwort-Reset der einzige Weg zu deinen Daten — ausdrucken oder sicher ablegen.</p>

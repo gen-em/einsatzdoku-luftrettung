@@ -865,7 +865,10 @@ bereits persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen,
 weist ein Hinweis darauf hin (keine Blockade).
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
-(siehe Technik-Doku, Betrieb).
+(siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt
+nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
+anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen können
+Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
 
 ---
 
@@ -874,7 +877,10 @@ Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 1. App auf die Uhr laden (siehe `Technik.md`). Die Server-Adresse trägst du in
    Garmin Connect ein; die Domain genügt (z. B. `luftrettung.net`).
 2. Im Web unter **⚙ Einstellungen → „Geräte" → „Kopplungscode erzeugen"** —
-   der 5-Zeichen-Code ist 60 Minuten gültig und einmal verwendbar.
+   der **6-Zeichen-Code ist 10 Minuten gültig und genau einmal verwendbar**.
+   Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
+   je Konto immer höchstens einen offenen Code. Wird der Code zu oft falsch
+   eingegeben, weist der Server weitere Versuche vorübergehend ab.
 3. Auf der Uhr auf der Sync-Seite **START halten**, den Code eintippen und
    bestätigen — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
    erscheint im Web in der Geräteliste.

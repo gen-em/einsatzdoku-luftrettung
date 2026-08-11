@@ -10,6 +10,103 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.1.0] — 2026-08-08
+
+### Sofortmaßnahmen aus dem Code-Review
+
+Sieben Änderungen, alle klein, die drei der vier gefundenen Befundketten an je
+einer Stelle unterbrechen. Sie bauen auf den Bausteinen aus Web 4.0.0 auf.
+
+### Geändert — Kopplung der Uhr: 6 Zeichen, 10 Minuten, wirklich einmalig
+
+Der Kopplungscode ist jetzt **sechs Zeichen** lang (vorher fünf) und **10
+Minuten** gültig (vorher 60). Je Konto gibt es höchstens **einen offenen
+Code**; ein neu erzeugter macht den vorherigen ungültig. Wiederholte
+Fehlversuche werden abgewiesen.
+
+Der Grund in Zahlen: Fünf Zeichen aus einem Alphabet von 32 sind 25 Bit, also
+33,5 Millionen Möglichkeiten. Die einzige Bremse war eine feste Verzögerung von
+0,3 Sekunden je Anfrage — die verzögert die *einzelne* Anfrage, behindert
+parallele aber überhaupt nicht. Mit 2000 gleichzeitigen Verbindungen war der
+gesamte Coderaum in **rund 1,4 Stunden** durchlaufbar, und die Codes waren eine
+Stunde gültig. Sechs Zeichen sind 30 Bit (1,07 Milliarden); zusammen mit dem
+Ratenschutz und der kürzeren Gültigkeit liegt die Trefferchance je Code jetzt
+unter einem Millionstel Prozent. **Der Ratenschutz trägt dabei die Hauptlast** —
+die Codelänge allein täte es nicht.
+
+Das Prüfmuster bildet außerdem das tatsächliche Alphabet ab. Vorher ließ es
+vier bis acht Zeichen zu und ausdrücklich auch `0`, `O`, `1` und `I` — die im
+Alphabet bewusst fehlen, weil sie auf einem Uhrendisplay nicht zu unterscheiden
+sind. Ein Muster, das mehr erlaubt, als der Erzeuger je ausgibt, prüft nichts.
+
+Die Uhr-App braucht dafür keine Änderung.
+
+### Behoben — Ein Kopplungscode war nicht wirklich einmalig
+
+Bisher suchte erst eine Abfrage den Code und entwertete ihn dann — das Ergebnis
+der Entwertung wurde nicht ausgewertet. Zwei gleichzeitige Anfragen mit
+demselben Code fanden ihn deshalb **beide** gültig und legten **beide** ein
+Gerät an. Die Dokumentation sicherte die Einmaligkeit zu, der Code setzte sie
+nicht durch. Jetzt entwertet die Anfrage zuerst und nimmt den Code erst über
+das Ergebnis dieser Entwertung als gültig an: Die Datenbank entscheidet, und
+genau eine Anfrage gewinnt.
+
+### Behoben — Eine Sicherung konnte Daten vernichten statt sie zu sichern
+
+Ließ sich ein Einsatz beim Erstellen einer Sicherung nicht entschlüsseln, wurde
+sein Chiffretext **trotzdem entfernt** — das Entfernen stand hinter dem
+Fehlerblock und lief deshalb auch im Fehlerfall. Gemeldet wurde „Fertig". In
+der Datenbank lagen die Daten noch und wären mit dem richtigen Schlüssel lesbar
+gewesen; in der Datei waren sie weg.
+
+Das ist die gefährlichste der gefundenen Ketten, weil sie erwartbares Verhalten
+bestraft: Wer merkt, dass mit seinen Daten etwas nicht stimmt, erstellt als
+Erstes eine Sicherung. Jetzt bleibt der Chiffretext in der Datei (Format
+`.edbak`, Feld `pat_blob` neben `pat_unreadable`), und die Meldung nennt die
+Zahl der betroffenen Einsätze deutlich. Zurück in dasselbe Konto gespielt, sind
+die Angaben wieder lesbar.
+
+### Behoben — Ein Serverfehler erzeugte eine echte, aber leere Sicherungsdatei
+
+Antwortete der Server beim Datenabruf mit einem Fehler — was er ausdrücklich
+vorsieht —, liefen alle Schleifen über nichts, und es entstand eine echte
+`.edbak`-Datei mit korrektem Kopf und richtigem Passwort, die ausschließlich
+die Fehlermeldung enthielt. Sie ließ sich öffnen und wäre erst beim Einspielen
+als leer aufgefallen, möglicherweise Monate später. Jetzt wird der
+Antwortstatus geprüft und abgebrochen, **bevor** eine Datei entsteht. Eine
+fehlende Einsatzliste gilt dabei als Fehler, nicht als leerer Bestand; bei
+tatsächlich leerem Bestand erscheint ein Hinweis statt „Fertig".
+
+### Behoben — Die Anmeldeseite verriet, welche Konten existieren
+
+Zu einer unbekannten E-Mail-Adresse liefert der Server ein Pseudo-Salt, damit
+die Antwort nicht von der eines echten Kontos zu unterscheiden ist. Sie war es
+aber: Ein echtes Salt hat **32** Hexzeichen, das Pseudo-Salt hatte **64**. Die
+bloße Länge der Antwort sagte damit, ob zu dieser Adresse ein eingerichtetes
+Konto existiert — die gesamte Vorkehrung war wirkungslos. Behoben durch
+Zuschnitt auf 32 Zeichen; Zeichenvorrat und Verteilung stimmten bereits überein.
+
+### Geändert — Die Wartungsseite führt beim Aufrufen nichts mehr aus
+
+`update.php` läuft zweistufig: Der **Aufruf zeigt an**, welche Migrationen
+anstünden und ändert nichts; erst der Knopf **„Updates jetzt anwenden"** führt
+sie aus, mit Formular-Token. Der Rat, vorher eine Sicherung zu erstellen, steht
+jetzt **vor** dem Lauf statt danach.
+
+Vorher war der Aufruf der Seite bereits die Ausführung — auch aus dem Verlauf
+heraus oder durch einen Vorschau-Abruf des Browsers. Unter den Migrationen sind
+solche, die Spalten samt Inhalt löschen. Eine unwiderrufliche Handlung auf
+einen GET hin ist immer falsch. Der Notausgang über die Kommandozeile
+(`php update.php`) bleibt einstufig und gibt sein Ergebnis jetzt als Text aus.
+
+### Geändert — Klartext bei der Ersteinrichtung
+
+Die bisherige Aussage („der Server kann die Angaben nicht lesen") war richtig
+und unvollständig. Ergänzt ist jetzt, was daraus folgt: **Die Stärke des
+Passworts ist unmittelbar die Stärke der Verschlüsselung.** Weil der Server das
+Passwort nie sieht, kann er seine Güte auch nicht prüfen und ein schwaches
+nicht ausgleichen — es gibt keine zweite Hürde dahinter.
+
 ## [Web 4.0.0] — 2026-08-08
 
 ### Neu — Gemeinsame Bausteine und Schemaänderungen für die Review-Umsetzung

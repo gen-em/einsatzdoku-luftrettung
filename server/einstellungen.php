@@ -91,16 +91,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Status geändert.';
     }
     if ($action === 'pair_code') {
-        $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // ohne 0/O und 1/I
+        // Hoechstens EIN offener Code je Konto: Ein neuer entwertet den alten.
+        // Sonst haetten mehrere gleichzeitig gueltige Codes den Raum, den ein
+        // Angreifer treffen kann, mit jedem Klick vergroessert — und liegen
+        // gebliebene Codes aus abgebrochenen Kopplungsversuchen waeren bis zum
+        // Ablauf weiter einloesbar.
+        db()->prepare('UPDATE pair_codes SET used_at = NOW()
+                       WHERE user_id = ? AND used_at IS NULL')
+            ->execute([$userId]);
+
+        // Laenge, Alphabet und Gueltigkeit stehen in db.php — dieselbe Quelle,
+        // aus der auch pair.php sein Pruefmuster bildet.
         for ($try = 0; $try < 5; $try++) {
             $code = '';
-            for ($i = 0; $i < 5; $i++) { $code .= $chars[random_int(0, strlen($chars) - 1)]; }
+            for ($i = 0; $i < PAIR_LEN; $i++) {
+                $code .= PAIR_CHARS[random_int(0, strlen(PAIR_CHARS) - 1)];
+            }
             try {
                 db()->prepare('INSERT INTO pair_codes (user_id, code) VALUES (?,?)')
                     ->execute([$userId, $code]);
                 $pairCode = $code;
                 break;
             } catch (PDOException $ex) { /* Kollision -> neuer Versuch */ }
+        }
+        if ($pairCode === null) {
+            // Fuenf Kollisionen hintereinander sind bei 32^6 Moeglichkeiten
+            // praktisch ausgeschlossen — dann liegt ein anderer Fehler vor,
+            // und die NutzerIn soll ihn sehen statt vor einer leeren Kachel
+            // zu stehen.
+            $error = 'Es konnte kein Kopplungscode erzeugt werden. Bitte erneut versuchen.';
         }
     }
     if ($action === 'rename') {
@@ -845,17 +864,63 @@ if ($tab === 'geraete') {
       if (!key) { expState.textContent = 'Entschlüsselung gesperrt — siehe Hinweis oben.'; return; }
       try {
         expState.textContent = 'Daten werden geladen…';
-        const data = await (await fetch('api/backup_data.php')).json();
+
+        /* ANTWORTSTATUS PRÜFEN, BEVOR IRGENDETWAS ENTSTEHT.
+         *
+         * Der Server sieht einen Fehlerfall ausdrücklich vor und antwortet
+         * dann mit {error, meldung} und einem 4xx/5xx-Status. Ohne diese
+         * Prüfung liefen alle Schleifen unten über nichts — und es entstand
+         * eine echte .edbak-Datei mit korrektem Kopf und richtigem Passwort,
+         * die ausschließlich die Fehlermeldung enthielt. Sie ließe sich
+         * öffnen und wäre erst beim Einspielen als leer zu erkennen,
+         * möglicherweise Monate später. */
+        const res = await fetch('api/backup_data.php');
+        if (!res.ok) {
+          let grund = 'HTTP ' + res.status;
+          try { const j = await res.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
+          throw new Error('Die Daten konnten nicht geladen werden (' + grund + '). '
+                        + 'Es wurde KEINE Datei erzeugt.');
+        }
+        const data = await res.json();
+
+        /* Eine FEHLENDE Einsatzliste ist kein leerer Bestand, sondern ein
+         * Fehler: Der Server liefert das Feld immer, notfalls als leere
+         * Liste. Fehlt es, stimmt etwas mit der Antwort nicht. */
+        if (!Array.isArray(data.missions)) {
+          throw new Error('Die Antwort des Servers ist unvollständig. Es wurde KEINE Datei erzeugt.');
+        }
+        if (!data.missions.length && !(data.rest_segments || []).length
+            && !(data.days || []).length) {
+          expState.textContent = 'Es sind keine Daten vorhanden, die gesichert werden könnten. '
+                               + 'Es wurde keine Datei erzeugt.';
+          return;
+        }
 
         expState.textContent = 'Geschützte Angaben werden entschlüsselt…';
-        let n = 0;
+        let n = 0, unlesbar = 0;
         for (const m of (data.missions || [])) {
           if (!m.pat_blob) continue;
           try {
             m.pat = JSON.parse(await EdCrypto.decrypt(key, m.pat_blob));
             n++;
-          } catch (e) { m.pat_unreadable = true; }
-          delete m.pat_blob;
+            /* Das Entfernen des Chiffretexts gehört in DIESEN Zweig.
+             *
+             * Vorher stand es hinter dem Fehlerblock und lief deshalb auch im
+             * Fehlerfall: Ein Einsatz, dessen Angaben sich gerade NICHT
+             * entschlüsseln ließen, verlor beim Sichern seinen Chiffretext —
+             * und die Meldung lautete „Fertig". In der Datenbank lägen die
+             * Daten noch und wären mit dem richtigen Schlüssel lesbar; in der
+             * Datei waren sie weg. Wer den Verdacht hat, dass etwas nicht
+             * stimmt, erstellt als Erstes eine Sicherung — genau die Handlung
+             * vollendete den Verlust. */
+            delete m.pat_blob;
+          } catch (e) {
+            /* Nicht lesbar: Chiffretext MITNEHMEN statt verwerfen. Die Datei
+             * trägt die Angaben damit weiterhin, nur eben verschlüsselt.
+             * Zurück in dasselbe Konto gespielt, sind sie wieder lesbar. */
+            m.pat_unreadable = true;
+            unlesbar++;
+          }
         }
 
         expState.textContent = 'Datei wird verschlüsselt…';
@@ -869,7 +934,14 @@ if ($tab === 'geraete') {
         expState.textContent = `Fertig: ${(data.missions || []).length} Einsätze `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(data.rest_segments || []).length} Ruhesegmente, `
-          + `${(data.days || []).length} Flugtage.`;
+          + `${(data.days || []).length} Flugtage.`
+          + (unlesbar
+              ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
+                + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '
+                + 'lesbar, wenn die Sicherung in DIESES Konto zurückgespielt wird. '
+                + 'Bitte klären, warum der Schlüssel nicht passt, bevor weitere '
+                + 'Schritte unternommen werden.'
+              : '');
       } catch (e) {
         expState.textContent = 'Export fehlgeschlagen: ' + e.message;
       }
@@ -931,13 +1003,14 @@ if ($tab === 'geraete') {
        (Sync-Seite der Uhr → <strong>START gedrückt halten</strong> → Code eintippen;
        die Sync-Seite erreichst du vom Startbildschirm mit DOWN).
        Die Uhr holt sich ihre Zugangsdaten dann selbst — kein Abtippen langer
-       Schlüssel. Der Code ist <strong>60 Minuten</strong> gültig und
-       <strong>einmal</strong> verwendbar.</p>
+       Schlüssel. Der Code ist <strong><?= PAIR_TTL_MIN ?> Minuten</strong> gültig und
+       <strong>genau einmal</strong> verwendbar. Ein neuer Code macht einen
+       vorher erzeugten ungültig.</p>
     <?php if ($pairCode): ?>
       <div class="keybox paircode">
         <strong>Kopplungscode</strong>
         <p class="codebig"><?= e($pairCode) ?></p>
-        <p class="muted">Gültig bis <?= e(fmt_local(gmdate('Y-m-d H:i:s', time() + 3600), 'H:i')) ?> Uhr.
+        <p class="muted">Gültig bis <?= e(fmt_local(gmdate('Y-m-d H:i:s', time() + PAIR_TTL_MIN * 60), 'H:i')) ?> Uhr.
            Das Gerät erscheint nach der Kopplung unten in der Liste.</p>
       </div>
     <?php endif; ?>

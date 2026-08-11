@@ -14,7 +14,7 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | Paket | Inhalt | Version | Stand |
 |---|---|---|---|
 | P0 | Gemeinsame Bausteine und Migration | Web 4.0.0 | **erledigt** |
-| P1 | Sofortmaßnahmen | — | offen |
+| P1 | Sofortmaßnahmen | Web 4.1.0 | **erledigt** |
 | P7 | Dokumentation und Verträge | — | offen |
 | P2 | Kette „unlesbarer Schlüssel" schließen | — | offen |
 | P3 | Gemeinsame Prüfschicht anwenden | — | offen |
@@ -23,6 +23,62 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P1 — Sofortmaßnahmen (Web 4.1.0)
+
+Sieben Änderungen, die drei der vier Befundketten an je einer Stelle
+unterbrechen. Wenn nur ein Paket umgesetzt würde, dann dieses.
+
+| Befund | Änderung | Datei |
+|---|---|---|
+| M1-01 | Pseudo-Salt von 64 auf 32 Zeichen — die Antwortlänge verriet, ob ein Konto existiert | `auth_salt.php` |
+| M4-01 | Kopplungscode 6 Zeichen, 10 Minuten, Ratenschutz, Prüfmuster auf das tatsächliche Alphabet, höchstens ein offener Code je Konto | `pair.php`, `einstellungen.php`, `db.php` |
+| M4-03 | Entwerten vor dem Prüfen — der Code war nicht wirklich einmalig | `pair.php` |
+| M5-01 (1) | Chiffretext bei fehlgeschlagener Entschlüsselung behalten (Formatänderung S8) | `einstellungen.php` |
+| M5-03 | Antwortstatus prüfen, bevor eine Sicherungsdatei entsteht | `einstellungen.php` |
+| M6-01 (1) | Wartungsseite zweistufig, Sicherungsrat vor den Lauf | `update.php` |
+| M2-02 (3) | Passwortstärke = Verschlüsselungsstärke, in Worten | `pw_handling.php` |
+
+### Zahlen zur Kopplung
+
+| | vorher | jetzt |
+|---|---|---|
+| Coderaum | 5 Zeichen aus 32 = **25 Bit** (33,5 Mio.) | 6 Zeichen aus 32 = **30 Bit** (1,07 Mrd.) |
+| Gültigkeit | 60 Minuten | 10 Minuten |
+| Bremse | 0,3 s je Anfrage, **nicht parallelisierungsfest** | Ratenschutz je IP, greift vor jeder Arbeit |
+| voller Durchlauf | **1,4 Stunden** bei 2000 parallelen Anfragen | praktisch unerreichbar |
+| Prüfmuster | `[A-Z0-9]{4,8}` — ließ 0/O/1/I zu, die es nie gibt | genau das Alphabet, genau 6 Zeichen |
+
+### Nachweis
+
+Gegen MariaDB 10.11 geprüft: Zwei gleichzeitige Einlösungen desselben Codes —
+die erste ändert eine Zeile und gewinnt, die zweite ändert null und wird
+abgewiesen. Ein 30 Minuten alter Code wird abgelehnt (vorher wäre er noch
+gültig gewesen). Ein neuer Code entwertet den alten.
+
+Zur Wartungsseite: Bei ausstehender Migration ändert der Aufruf nachweislich
+nichts — `schema_migrations` bleibt bei 25 Einträgen, die Spalte entsteht
+nicht. Erst der Knopf legt sie an und verbucht die Migration.
+
+Zur Sicherung: Ein Einsatz mit fremdem Schlüssel behält seinen Chiffretext und
+ist nach dem Zurückspielen ins Ursprungskonto wieder lesbar; die alte
+Reihenfolge (Entfernen hinter dem Fehlerblock) verlor ihn nachweislich.
+
+### Was in diesem Paket bewusst offen bleibt
+
+* **M5-01 Teile 2 und 3** (Meldung getrennt zählen, Chiffretext beim
+  Einspielen über die Prüfsumme dem Konto zuordnen) gehören zu P2. Der
+  mitgeführte Chiffretext wird beim Einspielen heute schon unverändert
+  übernommen — in ein *fremdes* Konto gespielt bleibt er unlesbar, ohne
+  Hinweis. Das ist gegenüber dem bisherigen Zustand (Daten weg) die bessere
+  Richtung, aber noch nicht der Zielzustand.
+* **M4-01 Ratenschutz beim Koppeln** ist hier vollständig; die übrigen
+  Endpunkte (Anmeldung, Salt, Zurücksetzen) folgen in P4.
+* **M6-01 Teil 2** (Inhaltsprüfung destruktiver Migrationen) gehört zu P9.
+* **M2-02 Teile 1 und 2** (Prüfung im Skript, Stärkeanzeige) gehören zu P9;
+  der Baustein dafür liegt seit P0 bereit.
 
 ---
 

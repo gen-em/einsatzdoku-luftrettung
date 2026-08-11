@@ -191,6 +191,9 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
   padding:.55rem .8rem;border-radius:5px}
 .alert-info{background:var(--blau-light);border-color:#A9C9EE;color:#255A9E}
 .alert-ok{background:#EBF7EC;border-color:#ABD8B0;color:#1E7A2E}
+/* Warnung: steht zwischen Hinweis (blau) und Fehler (rot) — fuer
+   Handlungen, die noch nicht geschehen sind, aber unumkehrbar waeren */
+.alert-warn{background:var(--accent-light);border-color:#EFC9A0;color:#8A4A00}
 .keybox{background:var(--accent-light);border:1px solid #EFC9A0;border-radius:6px;
   padding:.8rem 1rem;margin-bottom:1.2rem}
 .keybox code{font-family:var(--mono);background:var(--schnee);

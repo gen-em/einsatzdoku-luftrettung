@@ -160,6 +160,28 @@ const PHASE_LABELS = [
     8 => 'Übergabezeit', 9 => 'Endzeit des Einsatzes', 10 => 'Beendigung Einsatz',
 ];
 
+/* ---- Kopplungscodes: Alphabet, Laenge, Gueltigkeit -----------------------
+ * An EINER Stelle, weil die Angaben an DREI Stellen gebraucht werden: beim
+ * Erzeugen (einstellungen.php), beim Einloesen (pair.php) und beim Aufraeumen
+ * (unten). Frueher standen sie dreimal verschieden im Code — das Pruefmuster
+ * liess vier bis acht Zeichen zu und ausdruecklich auch solche, die das
+ * Alphabet gar nicht enthaelt.
+ *
+ * SECHS Zeichen aus 32 sind 30 Bit, also rund 1,07 Milliarden Moeglichkeiten.
+ * Die eigentliche Arbeit macht aber der Ratenschutz (ratelimit_lib.php): Ohne
+ * ihn war der frühere Coderaum (5 Zeichen, 60 Minuten gueltig, keine Bremse
+ * ausser 0,3 s je Anfrage) mit genuegend parallelen Anfragen in gut einer
+ * Stunde vollstaendig durchlaufbar. Der Ratenschutz ist deshalb PFLICHT und
+ * keine Ergaenzung.
+ *
+ * Zehn Minuten Gueltigkeit statt sechzig: Die Kopplung geschieht mit der Uhr
+ * in der Hand: Wer den Code erzeugt, tippt ihn unmittelbar danach ein.
+ */
+const PAIR_CHARS   = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // ohne 0/O und 1/I
+const PAIR_LEN     = 6;
+const PAIR_TTL_MIN = 10;
+const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
+
 const RESUS_LABELS = [
     'zugang' => 'Zugang',
     'beginn' => 'Reanimationsbeginn', 'adrenalin' => 'Adrenalingabe',
@@ -196,7 +218,7 @@ function run_cleanup_if_due(): void {
                     WHERE tp.owner_type = 'rest' AND r.id IS NULL");
         $pdo->exec("DELETE FROM pair_codes
                     WHERE used_at IS NOT NULL
-                       OR created_at < DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+                       OR created_at < DATE_SUB(NOW(), INTERVAL " . PAIR_TTL_MIN . " MINUTE)");
         $pdo->exec("DELETE FROM deleted_refs
                     WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
         // Ratenschutz: abgelaufene Zaehler und Sperren. Ein Tag Nachlauf,

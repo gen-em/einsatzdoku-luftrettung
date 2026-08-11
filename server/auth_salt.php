@@ -7,6 +7,16 @@ declare(strict_types=1);
  * Unbekannte Adressen bekommen ein DETERMINISTISCHES Pseudo-Salt (HMAC mit
  * Server-Geheimnis) — Antworten sind damit nicht von echten unterscheidbar
  * und verraten nicht, welche Adressen existieren.
+ *
+ * HINWEIS FUER SPAETERE AENDERUNGEN AN DIESER DATEI
+ * Sie ist einer der wenigen Endpunkte, die ohne Anmeldung erreichbar sind,
+ * und jede Ungleichheit zwischen den beiden Antwortzweigen ist eine Auskunft
+ * darueber, welche Konten es gibt. Gleich sein muessen: LAENGE,
+ * ZEICHENVORRAT und AUFBAU der Antwort — und, sobald weitere Angaben
+ * hinzukommen, auch deren WERTE. Wird der Endpunkt spaeter um die Rundenzahl
+ * der Ableitung erweitert (users.kdf_iter), muss er fuer unbekannte Adressen
+ * dieselbe Zahl nennen wie fuer echte Konten, sonst entsteht die soeben
+ * geschlossene Luecke an neuer Stelle.
  */
 require_once __DIR__ . '/db.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -35,7 +45,22 @@ if ($sec === false) {
         ->execute([$sec]);
 }
 
-// Unbekannte Adresse: Pseudo-Salt in derselben Form — die Antwort ist damit
-// nicht von einer echten unterscheidbar. Die Anmeldung scheitert anschliessend
-// am Token, ohne zu verraten, ob die Adresse existiert.
-echo json_encode(['salt' => hash_hmac('sha256', $email, (string)$sec)]);
+/* Unbekannte Adresse: Pseudo-Salt in derselben Form — die Antwort ist damit
+ * nicht von einer echten unterscheidbar. Die Anmeldung scheitert anschliessend
+ * am Token, ohne zu verraten, ob die Adresse existiert.
+ *
+ * ENTSCHEIDEND IST DIE LAENGE. Ein echtes Salt entsteht aus 16 Zufallsbytes
+ * und ist damit 32 Hexzeichen lang (EdCrypto.randomHex(16) in
+ * assets/crypto.js; die Pruefung in pw_handling.php verlangt genau 32). Der
+ * volle HMAC liefert 64. Wer beide Antworten nebeneinanderlegt, musste sie
+ * gar nicht ansehen — die blosse Laenge sagte, ob zu dieser Adresse ein
+ * eingerichtetes Konto existiert. Damit war die gesamte Vorkehrung
+ * wirkungslos.
+ *
+ * Die ersten 32 Zeichen des Hashwerts: Zeichenvorrat (Hex) und Verteilung
+ * stimmen bereits ueberein, es fehlte nur der Zuschnitt. Ein gekuerzter HMAC
+ * ist hier unbedenklich — er soll nicht faelschungssicher sein, sondern
+ * gleich aussehen und fuer dieselbe Adresse immer denselben Wert liefern
+ * (sonst waere die blosse Wiederholung der Anfrage die naechste Auskunft).
+ */
+echo json_encode(['salt' => substr(hash_hmac('sha256', $email, (string)$sec), 0, 32)]);

@@ -109,7 +109,7 @@ hems/
 | `transport_dests` | Vorbelegung „Transportziel" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK); `user_id` NULL = zentral, sonst persönlich |
 | `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Flugtage (`kind` in `base`/`aircraft`, `item_id` verweist auf `bases.id` bzw. `aircraft.id`, persönlich oder zentral); ersetzt die Alt-Spalten `bases.is_default`/`aircraft.is_default` (bleiben nur wegen Alt-Backup-Import im Schema) |
 | `days` | Flugtag-Metadaten; **Verknüpfung über natürlichen Schlüssel `(user_id, day)`**, entsteht lazy beim ersten Speichern |
-| `pair_codes` | Kopplungscodes für die Uhr (5 Zeichen, 60 min, einmalig; Aufräumjob) |
+| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Fehlversuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine; Aufräumjob entsorgt Altbestand |
 | `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `salt_secret`) |
@@ -757,9 +757,24 @@ darf keine Anfrage brechen).
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
-Passwörter/Schlüssel nur als Hash, Ratenschutz am Login (s. 4.99), Ingest mit
-Größen- (512 KB) und Wertevalidierung, sensible Dateien per .htaccess gesperrt,
-Referrer-Policy `strict-origin-when-cross-origin` (OSM-Kacheln).
+Passwörter/Schlüssel nur als Hash, Ratenschutz an Kopplung und Login
+(s. 4.99), Ingest mit Größen- (512 KB) und Wertevalidierung, sensible Dateien
+per .htaccess gesperrt, Referrer-Policy `strict-origin-when-cross-origin`
+(OSM-Kacheln).
+
+**Zwei Stellen, an denen die Gleichheit von Antworten zählt.** Der
+Salt-Endpunkt (`auth_salt.php`) und die Kopplung (`pair.php`) sind ohne
+Anmeldung erreichbar. Beide müssen für "gibt es" und "gibt es nicht"
+Antworten liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer**
+nicht unterscheiden. Beim Salt war es zuletzt die Länge, die alles verriet:
+Ein echtes Salt hat 32 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas
+ändert, prüft bitte beide Zweige nebeneinander.
+
+**Der Aufruf einer Seite darf nichts verändern.** `update.php` führt
+Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
+Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
+eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
+wenn nur Verwaltende die Seite erreichen.
 
 ### 4.99 Gemeinsame Bausteine
 
