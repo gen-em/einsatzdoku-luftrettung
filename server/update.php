@@ -548,10 +548,17 @@ $MIGRATIONS = [
             return (int)$q->fetchColumn() === 0;
         },
         'sql'   => [
-            // Der Klartextbestand wurde vor dieser Auslieferung ueber die
-            // Seite site_desc_rettung.php gesichert und von Hand in den
-            // verschluesselten Block nachgetragen. Ein automatischer Umzug war
-            // nie moeglich: pat_blob entsteht ausschliesslich im Browser.
+            // Der Klartextbestand wurde vor dieser Auslieferung ueber eine
+            // einmalige Rettungsseite gesichert und von Hand in den
+            // verschluesselten Block nachgetragen; die Seite ist seit Web 3.4.0
+            // entfernt (Changelog). Ein automatischer Umzug war nie moeglich:
+            // pat_blob entsteht ausschliesslich im Browser.
+            //
+            // ACHTUNG, DIE SPALTE WIRD GELOESCHT: Auf einer Installation, die
+            // den Klartextbestand NICHT vorher gerettet hat, gehen die
+            // Beschreibungen des Einsatzorts hier verloren. Die Pruefung auf
+            // Inhalt vor destruktiven Migrationen folgt; bis dahin gilt der
+            // Rat auf der Wartungsseite: vorher eine Sicherung erstellen.
             "ALTER TABLE missions DROP COLUMN site_desc",
         ],
     ],

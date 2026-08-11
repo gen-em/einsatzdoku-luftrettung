@@ -98,7 +98,7 @@ hems/
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
-| `mission_phases` | Phasen-Zeitstempel (2–10, Mehrfach-Einträge erlaubt) inkl. Position |
+| `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen |
@@ -762,6 +762,13 @@ Passwörter/Schlüssel nur als Hash, Ratenschutz an Kopplung und Login
 per .htaccess gesperrt, Referrer-Policy `strict-origin-when-cross-origin`
 (OSM-Kacheln).
 
+**Format der Client-Kennung.** `client_ref` wird von vier Stellen erzeugt, und
+an ihrem Präfix hängt Verhalten: `m-`/`r-` (Uhr, Einsatz/Ruhe-Segment), `man-`
+(Formular), `imp-` (Import), `bak-` (Wiedereinspielen ohne eigene Kennung).
+Beim endgültigen Löschen wird die Kennung gesperrt, damit eine Uhr den
+Datensatz nicht nachliefert — für `man-` bewusst nicht, dort gibt es keine Uhr.
+Die verbindliche Beschreibung steht im JSON-Vertrag, Abschnitt 8.
+
 **Zwei Stellen, an denen die Gleichheit von Antworten zählt.** Der
 Salt-Endpunkt (`auth_salt.php`) und die Kopplung (`pair.php`) sind ohne
 Anmeldung erreichbar. Beide müssen für "gibt es" und "gibt es nicht"
@@ -775,6 +782,48 @@ Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
 Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
 eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
 wenn nur Verwaltende die Seite erreichen.
+
+### 4.98 Was im verschlüsselten Block liegt — und was nicht
+
+Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
+Stelle stehen, **welche Felder darin liegen**: Wer das nicht weiß, kann weder
+eine Auskunft nach Datenschutzrecht beantworten noch beurteilen, was ein
+Datenbank-Abzug preisgibt — und niemand kann prüfen, ob ein neues Feld
+versehentlich im Klartext gelandet ist.
+
+**Im verschlüsselten Block** (`pat_blob`, AES-256-GCM, Schlüssel nur im
+Browser), erzeugt in `einsatz_form.php`:
+
+| Schlüssel | Inhalt |
+|---|---|
+| `last`, `first` | Nachname, Vorname |
+| `dob` | Geburtsdatum |
+| `age` | Alter — nur gespeichert, wenn es **nicht** aus `dob` folgt |
+| `dx` | Diagnose |
+| `mission_no` | Einsatznummer der Leitstelle |
+| `loc.addr` | Adresse des Einsatzorts |
+| `loc.lat`, `loc.lon` | Koordinaten des Einsatzorts |
+| `site_desc` | Beschreibung des Einsatzorts (Zufahrt, Landestelle) |
+
+Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
+`__CLEAR__` übertragen und löscht den vorhandenen.
+
+> **`site_desc` ist ein aktives Feld, kein Altbestand.** Es sieht wie ein Rest
+> der früheren Klartextspalte aus, ist aber Teil des verschlüsselten Blocks und
+> wird an acht Stellen gelesen und geschrieben. Es zu entfernen zerstörte
+> stillschweigend vorhandene Patientendaten.
+
+**Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen, Track,
+Distanz und Steigung, Reanimationsereignisse, Besatzung, Einsatzmittel,
+Flugtag- und Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben
+sind für Auswertung, Sortierung und Statistik nötig, die der Server leisten
+muss. Sie sind für sich genommen nicht personenbeziehbar; **in Verbindung mit
+Ort und Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine
+Installation betreibt, sollte das wissen und den Datenbankzugang entsprechend
+behandeln.
+
+Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
+verschlüsselten Block.
 
 ### 4.99 Gemeinsame Bausteine
 

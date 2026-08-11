@@ -10,6 +10,30 @@ allen Fällen richtig aus.
 Zum Eingabeverhalten der Geräte siehe `Geraete-Eingabe.md`, zu Build und
 Geräteprofilen `Technik.md` Abschnitt 5.
 
+## 0. Worauf sich die Zahlen in diesem Dokument beziehen
+
+Die Regeln hier sind **an Geräten beobachtet**, nicht aus einer Spezifikation
+abgeleitet. Ohne die Angabe, an welchem Gerät, ist eine solche Regel nicht
+nachprüfbar und beim nächsten Zielgerät nicht bewertbar: Wer nicht weiß, ob
+„85 %" auf einem runden 260er oder einem runden 390er Display gemessen wurde,
+kann nicht entscheiden, ob die Zahl auf einem eckigen 416er noch gilt.
+
+Geprüft wird auf drei Geräten, in zwei Profilen:
+
+| Gerät | Profil | Display | Rolle |
+|---|---|---|---|
+| Fenix 6 Pro | `source-tasten5` | 260 × 260, rund | **Bezugsgerät.** `Ui.s()` liefert hier exakt den Bezugswert |
+| Forerunner 945 | `source-tasten5` | 240 × 240, rund | kleinster Fall |
+| Venu 3s | `source-tasten3` | 390 × 390, rund, Touch | größter Fall, andere Tastenzahl |
+
+**Konvention für dieses Dokument:** Jede empirische Zahl nennt das Gerät, an
+dem sie entstand, und ob sie auf den anderen beiden gegengeprüft wurde. Fehlt
+die Angabe, ist das ein Mangel — und kein Hinweis darauf, dass die Regel
+überall gilt.
+
+Alle drei Geräte sind **rund**. Sämtliche Aussagen in Abschnitt 4 hängen daran;
+für ein eckiges Display sind sie neu zu prüfen, nicht zu übertragen.
+
 ---
 
 ## 1. Der Werkzeugkasten in `Ui.mc`
@@ -69,7 +93,10 @@ Lücke, und der ganze Block wirkt zu weit oben.
 
 Deshalb `Ui.numH()` für alles, was direkt unter einer Zahl steht. Der Faktor
 `NUM_VIS_PCT = 78` ist **empirisch**, nicht gemessen — `Toybox.Graphics.Dc`
-kennt weder `getFontAscent` noch `getFontDescent`. Wer die Abstände unter
+kennt weder `getFontAscent` noch `getFontDescent`. Ermittelt am Bezugsgerät
+(Fenix 6 Pro), auf FR945 und Venu 3s im Simulator gegengeprüft: Der Wert trägt
+auf allen dreien. Ob er auf einem Gerät mit deutlich anderer Schriftfamilie
+trägt, ist offen — dann dort nachmessen. Wer die Abstände unter
 Zahlen ändern will, dreht dort, an einer Stelle für alle Oberflächen.
 
 > **Achtung bei `has`:** `if (dc has :getFontDescent)` übersteht den Compiler,
@@ -104,7 +131,9 @@ hilft nicht, Glyphenbreiten entscheiden.
 ### 4.3 Ganz unten und ganz oben passt gar nichts
 
 Unterhalb von etwa 85 % der Höhe trägt der Kreis keine sinnvolle Textzeile
-mehr. Dort hilft auch die kleinste Schrift nicht — `fitFont` hat dann keine
+mehr. Die 85 % gelten auf allen drei runden Geräten (Fenix 6 Pro, FR945,
+Venu 3s) — die Grenze folgt der Kreisgeometrie und nicht der Auflösung,
+deshalb ist sie ein Prozentwert und keine Pixelzahl. Dort hilft auch die kleinste Schrift nicht — `fitFont` hat dann keine
 Option mehr, die passt, und liefert notgedrungen die kleinste.
 
 Konsequenz für den Entwurf: **Text nicht in der unteren Zone zentrieren**,
@@ -134,12 +163,18 @@ wird der Block deshalb um `Ui.s(dc, 8)` nach unten versetzt.
 Dasselbe bei Feldern im oberen Viertel: Die Gesamtdauer auf der
 Reanimationsseite steht auf 62 % ihres Feldes, nicht auf 50 %.
 
+Beide Werte sind am Bezugsgerät (Fenix 6 Pro) nach Augenschein festgelegt und
+auf FR945 und Venu 3s nachgesehen. Weil `Ui.s()` mitskaliert, verschieben sie
+sich proportional mit — die 8 sind 7 auf der FR945 und 12 auf der Venu 3s. Der
+Prozentwert 62 ist auflösungsunabhängig.
+
 ### 5.3 Ungleiche Abstände können gleich aussehen
 
 Steht eine Zahl zwischen zwei Textzeilen, wirkt oberhalb zusätzlich die
 Unterlänge der Textzeile mit, unterhalb der Zahl dagegen nichts. Für optisch
 gleiche Abstände muss der Wert oben **kleiner** sein als unten (Statistikseite:
-8 gegen 12).
+8 gegen 12 Bezugspixel, am Bezugsgerät festgelegt, auf beiden anderen
+gegengesehen).
 
 ---
 

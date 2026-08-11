@@ -10,6 +10,82 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.1.1] — 2026-08-08
+
+### Berichtigt — Der JSON-Vertrag beschrieb eine Phase, die es nicht gibt
+
+Der Vertrag zwischen Uhr und Server (`docs/JSON-Vertrag.md`, jetzt Fassung 1.2)
+führte an drei Stellen eine **Phase 10** auf: als Auslöser des Uploads, in der
+Nummernreferenz und in der Regel, dass sie als letzter Eintrag mitgesendet
+werde. Phase 10 wurde mit der Migration `2026_07_19_phase10_entfernen`
+abgeschafft.
+
+Das war nicht nur veraltet, sondern **irreführend**: Alle Schreibwege lehnten
+Phasennummern außerhalb von 2 bis 9 bereits ab. Wer nach dem Vertrag
+implementierte, sendete eine Phase 10, bekam keine Fehlermeldung und hatte
+einen Eintrag weniger. Der Abschluss eines Einsatzes läuft über `final: true`
+zusammen mit `ended_at` — beides zusammen, und keine Phase.
+
+Ebenfalls entfernt: die Beschriftung „Beendigung Einsatz" für Phase 10 in
+`db.php`. Sie ließ einen Altbestand als gültigen Zustand erscheinen; ohne sie
+erscheint er als unbekannte Phase — und das ist er.
+
+### Neu — Der Vertrag legt jetzt fest, was vorher offen war
+
+- **Führende Listen.** Die Reanimationsarten liegen in Uhr-App und Server
+  zusätzlich als Konstante vor. Welche Fassung gilt, stand nirgends. Jetzt
+  gilt der Vertrag, und dort steht auch, dass eine neue Art an drei Stellen zu
+  ergänzen ist.
+- **Grenzen und Mengen** (Phasennummern, Koordinaten, Längen, Höchstzahlen je
+  Einsatz) stehen erstmals an einer Stelle statt verteilt im Code.
+- **Fehlende gegen leere Liste.** Ein fehlender Schlüssel heißt „dazu sage ich
+  nichts", eine leere Liste „es gibt keine" — und löscht nichts. Der Grund ist
+  der Weg dorthin: Eine leere Liste entsteht viel wahrscheinlicher durch einen
+  Fehler beim Aufbau der Nachricht als durch die Absicht, eine dokumentierte
+  Reanimation zu entfernen.
+- **Format der Client-Kennung.** Sie wird von vier Stellen erzeugt (`m-`, `r-`,
+  `man-`, `imp-`, `bak-`), und an ihrem Präfix hängt Verhalten: Beim endgültigen
+  Löschen kommt die Kennung auf eine Sperrliste — für `man-` bewusst nicht,
+  dort gibt es keine Uhr, die etwas nachliefern könnte. Das stand nur im Code.
+
+**Neu ist außerdem ein Abschnitt „Stand der Durchsetzung".** Er sagt offen,
+welche Regeln der Server heute schon durchsetzt und welche noch nicht. Ein
+Vertrag, der etwas zusichert, was der Code nicht einhält, ist schlimmer als gar
+keiner. Der Abschnitt verschwindet, sobald alle Zeilen „durchgesetzt" lauten.
+
+### Neu — Wo die geschützten Angaben liegen, steht jetzt in der Technikdoku
+
+`Technik.md` listet auf, **welche Felder im verschlüsselten Block liegen**
+(Name, Geburtsdatum, Alter, Diagnose, Einsatznummer, Adresse, Koordinaten,
+Ortsbeschreibung) und welche im Klartext in der Datenbank stehen. Der Server
+kann den Block nicht lesen — genau deshalb muss die Liste woanders stehen, sonst
+lässt sich weder eine Auskunft nach Datenschutzrecht beantworten noch
+beurteilen, was ein Datenbankabzug preisgibt.
+
+Festgehalten ist dort auch, dass die Klartextangaben für sich genommen nicht
+personenbeziehbar sind, **in Verbindung mit Ort und Zeitpunkt eines Einsatzes
+aber werden können**.
+
+### Geändert — Die Zahlen in den Uhr-Dokumenten nennen ihr Gerät
+
+`Uhr-Layout.md` beschreibt Regeln, die an Geräten beobachtet und nicht aus
+einer Spezifikation abgeleitet wurden. Ohne die Angabe, an welchem Gerät, ist
+eine solche Regel beim nächsten Zielgerät nicht bewertbar: Wer nicht weiß, ob
+„85 %" auf einem runden 260er oder einem runden 390er Display gemessen wurde,
+kann nicht entscheiden, ob die Zahl auf einem eckigen 416er noch gilt. Ein
+neuer Abschnitt 0 nennt die drei Prüfgeräte samt Profil und macht die Angabe
+zur Konvention.
+
+### Kleinere Berichtigungen
+
+- Handbuch: „Einsätze bei Phase 10" → beim Abschluss des Einsatzes.
+- Handbuch: Die **Sperrliste gegen Nachlieferungen hält 90 Tage** — bisher nur
+  die Papierkorbfrist genannt. Relevant für eine lange abgeschaltete Uhr.
+- `schema.sql`: Der Kommentar zu den Kopplungscodes nannte weiterhin 60 Minuten
+  und sicherte Einmaligkeit zu, die erst seit Web 4.1.0 durchgesetzt ist.
+- `update.php`: Der Kommentar zur Migration `site_desc` verwies auf eine
+  Rettungsseite, die es seit Web 3.4.0 nicht mehr gibt.
+
 ## [Web 4.1.0] — 2026-08-08
 
 ### Sofortmaßnahmen aus dem Code-Review

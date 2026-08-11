@@ -1,14 +1,46 @@
 # JSON-Vertrag Uhr → Server
 
-**Version:** 1.1 — mehrere Reanimationen pro Einsatz (resus_sessions)
+**Version:** 1.2 — Phase 10 berichtigt, führende Listen und Grenzen festgelegt
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
+
+> **Dieses Dokument ist die führende Quelle.** Wer einen neuen Client baut,
+> implementiert gegen diesen Text. Wo Uhr-App und Server dieselbe Liste oder
+> denselben Wertebereich doppelt führen, gilt im Zweifel, was hier steht — und
+> die Abweichung ist ein Fehler in der Umsetzung, nicht im Vertrag.
 
 > **Geltungsbereich:** Dieses Dokument beschreibt ausschließlich den Vertrag
 > zwischen Uhr und Server (`ingest.php`). Die JSON-Endpunkte, die die
 > Weboberfläche im Browser benutzt (`server/api/*.php`, darunter
 > `import_commit.php`), gehören nicht dazu und sind in `Technik.md`,
 > Abschnitt 4 beschrieben.
+
+## 0. Stand der Durchsetzung
+
+Ein Vertrag, der etwas zusichert, was der Code nicht einhält, ist schlimmer als
+gar keiner — wer danach implementiert, verlässt sich auf eine Zusage, die nicht
+gilt. Deshalb steht hier offen, welche Regeln dieses Dokuments der Server heute
+schon durchsetzt und welche noch nicht.
+
+| Regel | Stand |
+|---|---|
+| Phasennummern 2–9 (Abschnitt 7) | durchgesetzt |
+| Mehrfache Phaseneinträge bleiben erhalten (3) | durchgesetzt |
+| Reanimationsarten gegen die Liste (3.3) | durchgesetzt |
+| Idempotenz über Gerät + `client_ref` (2) | durchgesetzt |
+| Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht geprüft |
+| Kalendertag muss existieren (3.2) | **noch nicht** auf dem Uhr-Weg |
+| Koordinatenbereiche, Mengenbegrenzungen (3.2) | **noch nicht** auf dem Uhr-Weg |
+| Leere Liste löscht nichts (3.1) | **noch nicht** — eine leere Phasenliste löscht heute die vorhandenen |
+| Antwortfelder `kept_*` und `rejected` (5) | **noch nicht** vorhanden |
+| Zufallsanteil in der Client-Kennung (8) | **noch nicht** in der Uhr-App |
+
+Die als „noch nicht" gekennzeichneten Punkte beschreiben den **Zielzustand**
+und werden in den folgenden Auslieferungen eingelöst. Bis dahin gilt für einen
+Client: Er darf sich auf die Regeln verlassen, wenn er sie **einhält**, aber
+nicht darauf, dass ein Verstoß gemeldet wird.
+
+Diese Tabelle verschwindet, sobald alle Zeilen „durchgesetzt" lauten.
 
 ## 1. Authentifizierung (jede Anfrage)
 
@@ -29,7 +61,13 @@ Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 
 ## 3. Nachricht `mission` (Einsatz)
 
-Gesendet bei Phase 10 (`final: true`) sowie optional zwischendurch als Teil-Upload (`final: false`).
+Gesendet beim **Abschluss des Einsatzes** (`final: true`) sowie optional
+zwischendurch als Teil-Upload (`final: false`).
+
+Der Abschluss ist **keine Phase**. Er wird über das Kennzeichen `final: true`
+und den Endzeitpunkt `ended_at` übertragen — beides zusammen. Frühere Fassungen
+dieses Dokuments beschrieben dafür eine „Phase 10"; die gibt es nicht mehr
+(siehe Abschnitt 7).
 
 ```json
 {
@@ -70,11 +108,67 @@ Gesendet bei Phase 10 (`final: true`) sowie optional zwischendurch als Teil-Uplo
 Regeln:
 
 - `ended_at` ist `null`, solange `final: false`.
-- `phases[]` enthält **alle bisher gesetzten** Phasen-Zeitstempel (vollständige Liste, kein Delta) — der Server ersetzt die Phasenliste des Einsatzes bei jedem Upload. Mehrfache Einträge derselben Phasennummer sind erlaubt (erneutes Setzen einer früheren Phase, siehe Anforderungen 1.2).
-- `resus_sessions` ist eine **Liste** — jede Reanimation des Einsatzes ist ein Eintrag (mehrere pro Einsatz möglich; „Aufzeichnung beenden" auf der Uhr schließt eine Sitzung, ein erneuter Start eröffnet die nächste). Fehlt oder leer = keine Reanimation. Vollständige Liste, Server ersetzt. Das ältere Einzelobjekt `resus` wird aus Kompatibilität weiterhin akzeptiert.
-- `events[].type` ∈ `adrenalin`, `rhythmuskontrolle`, `defibrillation`, `intubation`, `amiodaron`, `sonographie`, `zugang`, `rosc`, `tod`.
-- `track.points`: Array aus `[lat, lon, ele_m, epoch_s]`. `ele_m` darf `null` sein. Die Sequenznummer des i-ten Punkts ist `seq_from + i`.
+- `phases[]` enthält **alle bisher gesetzten** Phasen-Zeitstempel (vollständige Liste, kein Delta) — der Server ersetzt die Phasenliste des Einsatzes bei jedem Upload. **Mehrfache Einträge derselben Phasennummer sind erlaubt** und bleiben erhalten: Eine erneut gesetzte Phase ist eine Korrektur und damit eine Information. Kein Client und kein Schreibweg darf sie entdoppeln.
+- `resus_sessions` ist eine **Liste** — jede Reanimation des Einsatzes ist ein Eintrag (mehrere pro Einsatz möglich; „Aufzeichnung beenden" auf der Uhr schließt eine Sitzung, ein erneuter Start eröffnet die nächste). Vollständige Liste, Server ersetzt. Das ältere Einzelobjekt `resus` wird aus Kompatibilität weiterhin akzeptiert.
+- `track.points`: Array aus `[lat, lon, ele_m, epoch_s]`. `ele_m` darf `null` sein. Die Sequenznummer des i-ten Punkts ist `seq_from + i`. Muss eine **Liste** sein; ein Objekt mit den Schlüsseln `"0"`, `"1"` … wird abgelehnt.
 - `distance_m` / `ascent_m` werden von der Uhr fortlaufend berechnet und beim `final`-Upload als verbindlich übernommen.
+
+### 3.1 Fehlende und leere Listen — der Unterschied zählt
+
+Für `phases[]`, `resus_sessions[]` und `track.points[]` gilt:
+
+| Zustand | Bedeutung | Verhalten des Servers |
+|---|---|---|
+| Schlüssel **fehlt** | „dazu sage ich nichts" | Vorhandene Daten bleiben unverändert |
+| Liste ist **leer** | „es gibt keine" | Vorhandene Daten bleiben erhalten; der Server vermerkt es in der Antwort |
+| Liste **gefüllt** | vollständiger Stand | Ersetzt den vorhandenen Stand |
+
+Eine leere Liste löscht also **nichts**. Der Grund ist der Weg dorthin: Eine
+leere Liste entsteht viel wahrscheinlicher durch einen Fehler beim Aufbau der
+Nachricht als durch die Absicht, eine bereits dokumentierte Reanimation wieder
+zu entfernen. Wer wirklich löschen will, tut das in der Weboberfläche.
+
+Der Server nennt diesen Fall in der Antwort (`kept_*`, siehe Abschnitt 5),
+damit er auf der Uhr auffällt statt still zu verschwinden.
+
+### 3.2 Grenzen und Mengen
+
+Werte außerhalb dieser Grenzen werden **je Feld verworfen und gemeldet** — der
+gesamte Upload scheitert daran nicht.
+
+| Feld | Grenze |
+|---|---|
+| `phases[].phase` | ganze Zahl 2 bis 9 |
+| `phases[]` | höchstens 500 Einträge je Einsatz |
+| `lat` | −90 bis +90 |
+| `lon` | −180 bis +180 |
+| `resus_sessions[]` | höchstens 20 je Einsatz |
+| `resus_sessions[].events[]` | höchstens 200 je Sitzung |
+| `track.points[]` | höchstens 2000 je Anfrage (Richtwert 500, siehe Abschnitt 6) |
+| `client_ref` | höchstens 64 Zeichen |
+| `day` | `YYYY-MM-DD`, muss ein **existierender Kalendertag** sein |
+| Zeitstempel | `YYYY-MM-DDThh:mm[:ss]Z`, Kalendertag muss existieren |
+
+Zum Kalendertag: Ein unmöglicher Tag wie der 30. Februar wird abgelehnt, nicht
+stillschweigend auf den 2. März verschoben.
+
+### 3.3 Reanimationsarten
+
+`events[].type` ∈ `zugang`, `beginn`, `adrenalin`, `rhythmuskontrolle`,
+`defibrillation`, `intubation`, `amiodaron`, `sonographie`, `rosc`, `tod`.
+
+**Diese Liste ist die führende.** Sie liegt zusätzlich als Konstante im Server
+(`RESUS_LABELS` in `db.php`) und in der Uhr-App (`Const.mc`) vor und wird von
+Hand synchron gehalten. Eine neue Art ist deshalb an *drei* Stellen zu
+ergänzen — und diese hier zuerst, damit nachvollziehbar bleibt, was gilt.
+
+Die Uhr-App führt bewusst eine **Teilmenge**: `beginn` kennt sie nicht, weil
+der Beginn einer Reanimation dort über `resus_sessions[].started_at` übertragen
+wird. Ein Client *darf* weniger Arten erzeugen als der Vertrag kennt; er darf
+keine erzeugen, die nicht darin stehen.
+
+Unbekannte Arten werden vom Server verworfen und gemeldet; ein freier Text
+ließe sich in der Weboberfläche später nicht darstellen.
 
 ## 4. Nachricht `rest_segment` (Ruhe-Track-Segment)
 
@@ -108,6 +202,18 @@ Erfolg (`200`):
 - `id`: Server-ID des Einsatzes/Segments.
 - `next_seq`: erste noch nicht gespeicherte Sequenznummer → Uhr sendet beim nächsten Mal `seq_from = next_seq` und darf lokal alles davor verwerfen.
 
+Zusätzlich können auftreten:
+
+| Feld | Bedeutung |
+|---|---|
+| `kept_phases` | eine leere Phasenliste wurde übergangen, der vorhandene Stand bleibt |
+| `kept_resus` | dasselbe für die Reanimationen |
+| `rejected` | Liste verworfener Einzelwerte mit Ursache (z. B. `phase außerhalb 2…9`) |
+
+Ein `ok: true` mit gefülltem `rejected` bedeutet: Der Upload ist angekommen,
+aber **nicht vollständig übernommen**. Die Uhr sollte das anzeigen und nicht
+als reinen Erfolg behandeln.
+
 Fehler:
 
 | Code | Body | Bedeutung / Verhalten der Uhr |
@@ -125,6 +231,49 @@ Fehler:
 
 ## 7. Phasen-Nummern (Referenz)
 
-`1` Frei · `2` Alarmierung · `3` Abflug · `4` Ankunft Einsatzort · `5` Ankunft PatientIn · `6` Transportbeginn · `7` Landung Krankenhaus · `8` Übergabezeit · `9` Endzeit des Einsatzes · `10` Beendigung Einsatz.
+`1` Frei · `2` Alarmierung · `3` Abflug · `4` Ankunft Einsatzort ·
+`5` Ankunft PatientIn · `6` Transportbeginn · `7` Landung Krankenhaus ·
+`8` Übergabezeit · `9` Endzeit des Einsatzes.
 
-Phase 1 und 10 erzeugen keine eigenen Einträge in `phases[]` außer: Phase 10 wird als letzter Eintrag mitgesendet (sie liefert `ended_at`).
+**Übertragen werden ausschließlich die Nummern 2 bis 9.**
+
+- **Phase 1 („Frei")** ist ein Anzeigezustand der Uhr und erzeugt keinen
+  Eintrag.
+- **Eine Phase 10 gibt es nicht.** Sie wurde abgeschafft; der Abschluss eines
+  Einsatzes läuft über `final: true` zusammen mit `ended_at` (Abschnitt 3).
+  Frühere Fassungen dieses Dokuments beschrieben eine Phase 10 als übertragen —
+  das war zu keinem Zeitpunkt mehr richtig: Die Schreibwege lehnten alles außer
+  2 bis 9 bereits ab. Wer nach der alten Fassung implementierte, sendete eine
+  Phase 10 und bekam keine Fehlermeldung, sondern einen Eintrag weniger.
+
+## 8. Format der Client-Kennung (`client_ref`)
+
+Die Kennung identifiziert einen Einsatz oder ein Ruhe-Segment eindeutig **je
+Gerät**; zusammen mit der Gerätekennung bildet sie den Idempotenz-Anker. Sie
+wird von vier Stellen erzeugt, und an ihrem **Präfix hängt Verhalten** —
+deshalb gehört sie in den Vertrag und nicht nur in den Code.
+
+| Präfix | Erzeuger | Bedeutung |
+|---|---|---|
+| `m-` | Uhr-App | Einsatz |
+| `r-` | Uhr-App | Ruhe-Segment |
+| `man-` | Weboberfläche, Einsatzformular | von Hand angelegt |
+| `imp-` | Import | aus einer Datei übernommen |
+| `bak-` | Wiedereinspielen | aus einer Sicherung, ohne eigene Kennung |
+
+**Das Verhalten, das daran hängt:** Beim endgültigen Löschen wird die Kennung
+auf eine Sperrliste gesetzt, damit eine Uhr mit gepufferten Daten den Datensatz
+nicht wieder anlegt. Für `man-` geschieht das bewusst **nicht** — dort gibt es
+keine Uhr, die etwas nachliefern könnte.
+
+Regeln:
+
+- höchstens 64 Zeichen, keine Leerzeichen
+- innerhalb eines Geräts eindeutig und über die Lebensdauer des Datensatzes
+  **unveränderlich** — sie ist der Anker, an dem die Idempotenz hängt
+- die Uhr bildet sie aus Präfix, Zeitstempel und einem Zufallsanteil. Der
+  Zufallsanteil ist nötig, weil eine allein aus der Uhrzeit gebildete Kennung
+  nach einem Zurücksetzen der Uhr kollidieren kann — der Upload träfe dann
+  einen fremden alten Einsatz **desselben** Geräts.
+- der Server prüft das Präfix nicht; ein Client mit anderem Präfix
+  funktioniert, bekommt aber die Sperrlisten-Sonderbehandlung von `man-` nicht

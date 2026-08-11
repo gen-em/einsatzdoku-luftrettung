@@ -169,7 +169,7 @@ wird eine laufende oder pausierte Rea automatisch geschlossen.
 
 ### 2.4 Datenübertragung
 
-Die Uhr lädt selbstständig hoch: Einsätze bei Phase 10, den Ruhe-Track etwa
+Die Uhr lädt selbstständig hoch: Einsätze beim Abschluss des Einsatzes, den Ruhe-Track etwa
 stündlich, den Rest beim Dienstende. Ohne Verbindung puffert die Uhr sicher im
 Speicher und sendet später nach — gelöscht wird lokal erst, wenn der Server
 den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
@@ -770,8 +770,14 @@ automatisch endgültig weg.
 
 Solange etwas im Papierkorb liegt, nimmt der Server Nachlieferungen der Uhr
 für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
-wachsen also nicht wieder an. Erst beim endgültigen Löschen wird die Referenz
-dauerhaft gesperrt, sodass die Uhr sie nicht neu anlegt.
+wachsen also nicht wieder an. Beim endgültigen Löschen kommt die Referenz auf
+eine Sperrliste, sodass die Uhr sie nicht neu anlegt.
+
+**Die Sperrliste hält 90 Tage**, danach räumt das System sie ebenfalls weg. Das
+ist in der Praxis reichlich — eine Uhr, die 90 Tage lang keine Verbindung
+hatte, gibt es im Betrieb nicht. Wer eine lange abgeschaltete Uhr wieder in
+Dienst nimmt, sollte aber wissen, dass gepufferte Einsätze von damals wieder
+auftauchen können, und nach dem ersten Abgleich kurz in die Tagesliste sehen.
 
 Alle Rückfragen erscheinen als Fenster **innerhalb der Seite**, nicht als
 Browser-Dialog. Das ist Absicht: Bei Browser-Dialogen lässt sich „keine

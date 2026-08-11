@@ -154,10 +154,24 @@ function json_out(array $data, int $code = 200): never {
 
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
+/**
+ * Beschriftungen der Phasen.
+ *
+ * Uebertragen und gespeichert werden ausschliesslich 2 bis 9. Phase 1 ("Frei")
+ * ist ein Anzeigezustand der Uhr und erzeugt keinen Zeitstempel; sie steht hier
+ * nur fuer die Anzeige.
+ *
+ * EINE PHASE 10 GIBT ES NICHT. Sie wurde mit der Migration
+ * 2026_07_19_phase10_entfernen abgeschafft — der Abschluss eines Einsatzes
+ * laeuft seither ueber das Kennzeichen 'final' und den Endzeitpunkt. Die
+ * Beschriftung stand danach noch hier und liess einen Altbestand als
+ * GUELTIGEN Zustand erscheinen. Ohne sie erscheint er als unbekannte Phase —
+ * und das ist er.
+ */
 const PHASE_LABELS = [
     1 => 'Frei', 2 => 'Alarmierung', 3 => 'Abflug', 4 => 'Ankunft Einsatzort',
     5 => 'Ankunft PatientIn', 6 => 'Transportbeginn', 7 => 'Landung Krankenhaus',
-    8 => 'Übergabezeit', 9 => 'Endzeit des Einsatzes', 10 => 'Beendigung Einsatz',
+    8 => 'Übergabezeit', 9 => 'Endzeit des Einsatzes',
 ];
 
 /* ---- Kopplungscodes: Alphabet, Laenge, Gueltigkeit -----------------------

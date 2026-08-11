@@ -233,8 +233,12 @@ CREATE TABLE days (
   FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Kopplungscodes: kurzlebige Einmal-Codes (60 min), mit denen sich eine Uhr
--- selbst Zugangsdaten holt (pair.php) — ohne Abtippen langer Schluessel.
+-- Kopplungscodes, mit denen sich eine Uhr selbst Zugangsdaten holt (pair.php)
+-- — ohne Abtippen langer Schluessel. Laenge, Alphabet und Gueltigkeit stehen in
+-- db.php (PAIR_LEN, PAIR_CHARS, PAIR_TTL_MIN), damit sie nicht an drei Stellen
+-- auseinanderlaufen. Die Einmaligkeit ist DURCHGESETZT: pair.php entwertet den
+-- Code, bevor es ihn als gueltig annimmt (used_at wechselt genau einmal von
+-- NULL auf einen Wert), nicht nur zugesichert.
 CREATE TABLE pair_codes (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL,

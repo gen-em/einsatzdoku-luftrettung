@@ -15,7 +15,7 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 |---|---|---|---|
 | P0 | Gemeinsame Bausteine und Migration | Web 4.0.0 | **erledigt** |
 | P1 | Sofortmaßnahmen | Web 4.1.0 | **erledigt** |
-| P7 | Dokumentation und Verträge | — | offen |
+| P7 | Dokumentation und Verträge | Web 4.1.1 | **erledigt** |
 | P2 | Kette „unlesbarer Schlüssel" schließen | — | offen |
 | P3 | Gemeinsame Prüfschicht anwenden | — | offen |
 | P5 | Papierkorb und gelöschte Flugtage | — | offen |
@@ -23,6 +23,52 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P7 — Dokumentation und Verträge (Web 4.1.1)
+
+Das einzige Paket, das fast keinen Code berührt — und trotzdem nicht ans Ende
+gehört: Eine falsche Zusicherung im Vertrag richtet Schaden an, solange sie
+dort steht.
+
+| Befund | Änderung |
+|---|---|
+| M7-01 | Phase 10 aus dem JSON-Vertrag entfernt (drei Stellen), Abschluss über `final` + `ended_at` beschrieben |
+| M3-09 | Beschriftung für Phase 10 aus `PHASE_LABELS` entfernt |
+| M7-05 | Reanimationsarten: der Vertrag ist die führende Liste |
+| M7-06 | Format und Präfixe der Client-Kennung festgelegt, samt daran hängendem Verhalten |
+| M4-02 | Fehlende gegen leere Liste ausdrücklich geregelt |
+| M6-11 | Festgehalten, welche Felder im verschlüsselten Block liegen und welche nicht |
+| M7-04 | Zwei Zusicherungen richtiggestellt (Kopplungscode-Kommentar in `schema.sql`, Rettungsseiten-Verweis in `update.php`) |
+| M7-09 | Gerätebezug in `Uhr-Layout.md` ergänzt, Prüfgeräte und Konvention benannt |
+| M5-17 | Aufbewahrungsfrist der Sperrliste (90 Tage) im Handbuch genannt |
+| — | Grenzen und Mengen aus B1 in den Vertrag übernommen |
+
+### Der neue Abschnitt „Stand der Durchsetzung"
+
+Der Vertrag beschreibt jetzt Regeln, die der Server **noch nicht** durchsetzt —
+Kalendertagsprüfung, Wertebereiche und Mengen auf dem Uhr-Weg (P3), das
+Verhalten bei leeren Listen und die Antwortfelder `kept_*`/`rejected` (P8), der
+Zufallsanteil in der Client-Kennung (Uhr-App).
+
+Das ist genau der Fehler, den M7-04 rügt — außer man legt ihn offen. Deshalb
+steht in Abschnitt 0 des Vertrags eine Tabelle, die je Regel sagt, ob sie
+durchgesetzt ist. Sie verschwindet, wenn alle Zeilen „durchgesetzt" lauten.
+
+Die Alternative wäre gewesen, den Vertrag erst nach P3 und P8 zu ergänzen.
+Dagegen spricht die Reihenfolge des Konzepts: P7 steht bewusst vorn, weil die
+falschen Angaben *jetzt* Schaden anrichten und nicht erst am Ende.
+
+### Bewusst nicht geändert
+
+- **Das Label der Migration `2026_07_20_kopplung`** („5 Zeichen, 60 Minuten
+  gültig") beschreibt korrekt, was diese Migration damals tat. Ein
+  Migrationslabel ist ein historischer Eintrag; es nachträglich umzuschreiben
+  wäre dasselbe wie das Umschreiben eines Changelog-Eintrags.
+- **`docs/archiv/Anforderungen_v1.2.md`** nennt weiterhin Phase 10 und den
+  Bereich 2–10. Das Archiv gibt den Stand von damals wieder und wird nicht
+  fortgeschrieben.
 
 ---
 
