@@ -78,6 +78,45 @@
   const ZEICHEN_UNLESBAR = '⚠';
 
   /**
+   * Entschluesselt EINEN Patientenblock.
+   *
+   * Der eine Ort, an dem die Unterscheidung getroffen wird. Die Seiten, die
+   * darauf aufbauen, brauchen ihre eigene Darstellung — sie sollen sich aber
+   * nicht jede fuer sich ueberlegen, was ein Fehlschlag bedeutet.
+   *
+   * @returns {Promise<{zustand:'ok'|'leer'|'unlesbar', daten:Object|null}>}
+   */
+  async function entschluessle(ck, blob) {
+    if (!blob || !ck) { return { zustand: 'leer', daten: null }; }
+    try {
+      return { zustand: 'ok', daten: JSON.parse(await EdCrypto.decrypt(ck, blob)) || {} };
+    } catch (e) {
+      return { zustand: 'unlesbar', daten: null };
+    }
+  }
+
+  /**
+   * Setzt oder entfernt den Hinweis auf unlesbare Datensaetze.
+   *
+   * Legt das Hinweisfeld bei Bedarf als erstes Kind von <main class="page">
+   * an, damit jede Seite es bekommt, ohne dass ihr Aufbau angefasst werden
+   * muss.
+   */
+  function zeigeUnlesbar(zahl) {
+    const main = document.querySelector('main.page');
+    if (!main) { return; }
+    let el = document.getElementById('patwarn');
+    if (!zahl || !zahl.unlesbar) { if (el) { el.remove(); } return; }
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'patwarn';
+      el.className = 'alert alert-warn';
+      main.insertBefore(el, main.firstChild);
+    }
+    el.textContent = hinweisUnlesbar(zahl);
+  }
+
+  /**
    * Entschluesselt den Patientenblock einer Liste von Einsaetzen.
    *
    * Schreibt je Einsatz:
@@ -94,17 +133,13 @@
       const blob = m && m.pat_blob;
       if (!blob) { m._pat = null; m._patState = 'leer'; zahl.leer++; continue; }
       if (!ck)   { m._pat = null; m._patState = 'leer'; continue; }
-      try {
-        m._pat = JSON.parse(await EdCrypto.decrypt(ck, blob));
-        m._patState = 'ok';
-        zahl.ok++;
-      } catch (e) {
-        // Fehlschlag wird NICHT verschluckt: Der Zustand bleibt am Datensatz
-        // stehen, damit die Anzeige ihn kenntlich machen kann.
-        m._pat = null;
-        m._patState = 'unlesbar';
-        zahl.unlesbar++;
-      }
+      const r = await entschluessle(ck, blob);
+      m._pat = r.daten;
+      m._patState = r.zustand;
+      // Fehlschlag wird NICHT verschluckt: Der Zustand bleibt am Datensatz
+      // stehen, damit die Anzeige ihn kenntlich machen kann.
+      if (r.zustand === 'unlesbar') { m._patFehler = true; zahl.unlesbar++; }
+      else { zahl.ok++; }
     }
     return zahl;
   }
@@ -131,5 +166,6 @@
   }
 
   window.EdPat = { alterAm, alterAnzeige, name, datumDe,
-                   entschluessleListe, hinweisUnlesbar, ZEICHEN_UNLESBAR };
+                   entschluessle, entschluessleListe, hinweisUnlesbar,
+                   zeigeUnlesbar, ZEICHEN_UNLESBAR };
 })();

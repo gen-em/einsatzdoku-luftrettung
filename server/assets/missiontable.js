@@ -41,6 +41,28 @@ const EdMissionTable = (() => {
   }
 
   function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+  /* Zelle fuer eine Angabe aus dem verschluesselten Block.
+   *
+   * DER GRUND FUER DIESE FUNKTION: Bisher zeigten diese Spalten einen
+   * Gedankenstrich, und zwar in ZWEI voellig verschiedenen Faellen — der
+   * Einsatz hat keine Angaben, oder er hat welche, die sich nicht
+   * entschluesseln lassen. Der zweite Fall ist ein Alarmzeichen und sah aus
+   * wie der erste. Wer den Unterschied nicht sieht, merkt nicht, dass sein
+   * Inhaltsschluessel nicht mehr passt — und erstellt als Naechstes eine
+   * Sicherung.
+   *
+   * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
+   */
+  function zelleGeschuetzt(m, wert, formatiere, klassen) {
+    const kl = klassen ? klassen + ' ' : '';
+    if (m._patFehler) {
+      return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
+           + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
+    }
+    const leer = wert == null || wert === '';
+    return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : formatiere(wert)}</td>`;
+  }
   function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
   function fmtDur(s) {
     if (s == null) return 'kein Ende';
@@ -82,13 +104,13 @@ const EdMissionTable = (() => {
       zelle: m => `<td class="c-mid">${fmtDur(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
-      zelle: m => `<td${m._ort ? '' : ' class="dash"'}>${m._ort ? esc(m._ort) : '–'}</td>` },
+      zelle: m => zelleGeschuetzt(m, m._ort, v => esc(v)) },
     { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => `<td class="mono c-mid${m._age != null ? '' : ' dash'}">${m._age != null ? m._age : '–'}</td>` },
+      zelle: m => zelleGeschuetzt(m, m._age, v => v, 'mono c-mid') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
-      zelle: m => `<td${m._dx ? '' : ' class="dash"'}>${m._dx ? esc(m._dx) : '–'}</td>` },
+      zelle: m => zelleGeschuetzt(m, m._dx, v => esc(v)) },
     { key: 'winch', kopf: 'Winde',                 thClass: 'c-winde',
       wert: m => m.winch ? 1 : 0,
       zelle: m => `<td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>` },

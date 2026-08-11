@@ -16,13 +16,62 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P0 | Gemeinsame Bausteine und Migration | Web 4.0.0 | **erledigt** |
 | P1 | Sofortmaßnahmen | Web 4.1.0 | **erledigt** |
 | P7 | Dokumentation und Verträge | Web 4.1.1 | **erledigt** |
-| P2 | Kette „unlesbarer Schlüssel" schließen | — | offen |
+| P2 | Kette „unlesbarer Schlüssel" schließen | Web 4.1.2 | **erledigt** |
 | P3 | Gemeinsame Prüfschicht anwenden | — | offen |
 | P5 | Papierkorb und gelöschte Flugtage | — | offen |
 | P4 | Ratenschutz und unangemeldete Endpunkte | — | offen |
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P2 — Die Kette „unlesbarer Schlüssel" schließen (Web 4.1.2)
+
+| Befund | Änderung | Baustein |
+|---|---|---|
+| M1-12 | Prüfsumme beim Neuverpacken prüfen — passt sie nicht, wird nichts geändert | B4, S2 |
+| M2-05 | Zwischengespeicherter Schlüssel an seine Hülle gebunden, läuft mit der Sitzung ab | B5 |
+| M6-02 | Unlesbare Datensätze mit ⚠ statt – , Hinweis über der Liste | B8 |
+| M1-03 | Sitzungsablauf räumt die Schlüssel im Browser | B6 |
+| M1-04 | Grund des Sitzungsendes wird angezeigt | B6 |
+| M5-01 (2+3) | Sicherung trägt ihr Herkunftskonto, Einspielen entscheidet und fragt | B4 |
+
+### Ein Fehler, den erst der Test gezeigt hat
+
+Der in P0 angelegte Baustein B5 räumte beim Verwerfen eines nicht passenden
+Schlüssels **auch den Datenschlüssel** mit weg. Der wird aber unmittelbar
+danach gebraucht, um die Hülle neu zu entpacken. Die Folge wäre nicht ein
+neuer Entsperrvorgang gewesen, sondern **gar kein Schlüssel** — also genau der
+Zustand, den der Baustein verhindern soll, und noch dazu nur beim Kontowechsel,
+dem seltensten Fall.
+
+Aufgefallen ist das an zwei fehlgeschlagenen Prüfungen, nicht beim Lesen des
+Codes. Behoben: `verwerfeInhalt()` räumt nur den Inhaltsschlüssel samt Bindung,
+`beenden()` räumt beides.
+
+### Entschieden: Der Sicherungslauf bricht NICHT ab, wenn alles unlesbar ist
+
+Das Konzept stellt es zur Erwägung. Dagegen spricht seit Web 4.1.0 ein starkes
+Argument: Die Sicherung **nimmt den Chiffretext jetzt mit**. Sie ist damit
+genau das Richtige, was jemand mit einem nicht passenden Schlüssel tun sollte —
+sie bewahrt die Daten, statt sie zu verlieren. Ein Abbruch nähme ihm das
+einzige Mittel aus der Hand, das hilft.
+
+Stattdessen: deutliche Meldung mit Zahl und Ursache (seit Web 4.1.0) und der
+Hinweis, vor weiteren Schritten den Wiederherstellungsschlüssel bereitzuhalten.
+
+### Nachweis
+
+- **Kontowechsel im selben Tab:** Konto B bekommt seinen eigenen Schlüssel; die
+  ungeprüfte Fassung lieferte im Gegentest nachweislich den fremden.
+- **Ablauf:** Ein Schlüssel jenseits der 30-Minuten-Frist wird verworfen und
+  neu entpackt.
+- **M1-12 gegen echte Datenbank:** Bestandskonto ohne Prüfsumme wird angenommen
+  und bekommt sie; richtige Prüfsumme angenommen; falsche, fehlende und
+  unbrauchbare abgelehnt, ohne etwas zu ändern.
+- **M6-02:** Die drei Zustände (`ok`, `leer`, `unlesbar`) werden getrennt
+  gezählt, `_patFehler` steht nur am unlesbaren Datensatz.
 
 ---
 

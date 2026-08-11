@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Browser-Krypto: alt wird per Token (oder Alt-Passwort) belegt,
         // neu kommt als Token+Salt; bei aktivem Modul zusaetzlich der neu
         // verpackte Inhaltsschluessel (Server sieht weiterhin nichts).
-        $st = db()->prepare('SELECT password_hash FROM users WHERE id = ?');
+        $st = db()->prepare('SELECT password_hash, pat_key_check FROM users WHERE id = ?');
         $st->execute([$userId]);
         $u = $st->fetch();
         $oldOk = password_verify((string)($_POST['old_token'] ?? ''),
@@ -42,6 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newTok = (string)($_POST['new_token'] ?? '');
         $newSalt = (string)($_POST['new_salt'] ?? '');
         $wrapPw = (string)($_POST['wrap_pw'] ?? '');
+        $keyChk = (string)($_POST['key_check'] ?? '');
+        // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
+        $chkSoll = $u['pat_key_check'] ?? null;
         if (!$oldOk) {
             $error = 'Das aktuelle Passwort ist nicht korrekt.';
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
@@ -54,6 +57,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Der Inhaltsschlüssel konnte nicht umgepackt werden — '
                    . 'das Passwort wurde NICHT geändert. Bitte Seite neu laden '
                    . 'und erneut versuchen.';
+        } elseif ($patReady && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
+            $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar — '
+                   . 'das Passwort wurde NICHT geändert.';
+        } elseif ($patReady && $chkSoll !== null && $keyChk !== $chkSoll) {
+            /* DIE ENTSCHEIDENDE PRUEFUNG (M1-12).
+             *
+             * Der Server kann die neue Huelle nicht oeffnen — er kennt den
+             * Schluessel nicht. Er kann bisher also NICHT erkennen, ob darin
+             * wirklich derselbe Inhaltsschluessel steckt. Enthielte sie einen
+             * anderen, waere anschliessend JEDER vorhandene Datensatz
+             * unlesbar, und zwar endgueltig: Die alte Huelle ist dann
+             * ueberschrieben.
+             *
+             * Mit der Pruefsumme (im Browser gerechnet, siehe
+             * EdCrypto.contentKeyCheck) laesst sich genau dieser eine Fehler
+             * erkennen, ohne dass der Server etwas ueber den Schluessel lernt:
+             * Er vergleicht zwei Hashwerte.
+             *
+             * Bestandskonten haben keine gespeicherte Pruefsumme
+             * (pat_key_check IS NULL). Sie werden weiter angenommen und
+             * bekommen sie unten beim Speichern — sonst waeren sie ausgesperrt,
+             * denn der Server kann sie nicht nachtraeglich berechnen.
+             */
+            $error = 'Der umgepackte Inhaltsschlüssel gehört nicht zu diesem Konto — '
+                   . 'das Passwort wurde NICHT geändert. Bitte die Seite neu laden '
+                   . 'und erneut versuchen. Sollte das wiederholt auftreten, bitte '
+                   . 'nichts weiter unternehmen, bevor eine Sicherung erstellt ist.';
         } else {
             // Passwort und Huelle gemeinsam — sonst entstuende ein Konto, das
             // sich zwar anmelden laesst, dessen Angaben aber unlesbar waeren.
@@ -63,8 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ? WHERE id = ?')
                     ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt, $userId]);
                 if ($patReady) {
-                    $pdo->prepare('UPDATE users SET pat_wrap_pw = ? WHERE id = ?')
-                        ->execute([mb_substr($wrapPw, 0, 4000), $userId]);
+                    // Pruefsumme mitschreiben: Bestandskonten bekommen sie
+                    // hier erstmals, alle anderen bestaetigen den alten Wert.
+                    $pdo->prepare('UPDATE users SET pat_wrap_pw = ?, pat_key_check = ? WHERE id = ?')
+                        ->execute([mb_substr($wrapPw, 0, 4000),
+                                   $keyChk !== '' ? $keyChk : null, $userId]);
                 }
                 $pdo->commit();
                 $notice = 'Passwort geändert.';
@@ -410,6 +443,7 @@ if ($tab === 'geraete') {
       <input type="hidden" name="new_token" id="pw_newtok">
       <input type="hidden" name="new_salt" id="pw_newsalt">
       <input type="hidden" name="wrap_pw" id="pw_wrap">
+      <input type="hidden" name="key_check" id="pw_keychk">
       <label>Aktuelles Passwort <input type="password" name="old" id="pw_old" required autocomplete="current-password"></label>
       <label>Neues Passwort (mind. 10 Zeichen) <input type="password" name="new1" id="pw_new1" required minlength="10" autocomplete="new-password"></label>
       <label>Neues Passwort wiederholen <input type="password" name="new2" id="pw_new2" required autocomplete="new-password"></label>
@@ -451,6 +485,11 @@ if ($tab === 'geraete') {
             return;
           }
           document.getElementById('pw_wrap').value = await EdCrypto.encrypt(nk.dataKeyHex, ck);
+          // Pruefsumme des Inhaltsschluessels mitsenden. Der Server kann die
+          // Huelle nicht oeffnen und darum bisher nicht erkennen, ob darin
+          // derselbe Schluessel steckt. Er lernt dadurch nichts ueber den
+          // Schluessel — er vergleicht zwei Hashwerte.
+          document.getElementById('pw_keychk').value = await EdCrypto.contentKeyCheck(ck);
         }
         EdCrypto.clearSession();                         // alten Inhaltsschluessel verwerfen
         EdCrypto.setDataKey(nk.dataKeyHex);
@@ -833,9 +872,11 @@ if ($tab === 'geraete') {
     </div>
 
     <script src="<?= asset('assets/crypto.js') ?>"></script>
+    <script src="<?= asset('assets/keyguard.js') ?>"></script>
     <script src="<?= asset('assets/unlock.js') ?>"></script>
     <script>
     const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
+    const PAT_KEY_CHECK = <?= json_encode($patKeyCheck) ?>;
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
     const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
     const expState = document.getElementById('expstate');
@@ -967,11 +1008,46 @@ if ($tab === 'geraete') {
         const data = await EdCrypto.openBackup(pw, bytes);
 
         impState.textContent = 'Angaben werden für dieses Konto verschlüsselt…';
+
+        /* DREI FÄLLE, und sie müssen auseinandergehalten werden:
+         *
+         *  1. `pat` vorhanden  → beim Sichern lesbar gewesen; für DIESES Konto
+         *     neu verschlüsseln. Deshalb lässt sich eine Sicherung überhaupt
+         *     in ein fremdes Konto einspielen.
+         *  2. `pat_blob` vorhanden, `pat` nicht → beim Sichern NICHT lesbar
+         *     gewesen. Der Chiffretext ist unverändert mitgeführt (seit Web
+         *     4.1.0). Er bleibt, wie er ist — umschlüsseln geht nicht, wir
+         *     haben den Klartext nie gesehen.
+         *  3. weder noch → keine geschützten Angaben.
+         *
+         * Für Fall 2 entscheidet die Prüfsumme, ob die Angaben hier lesbar
+         * sein werden: Stammt die Datei aus DIESEM Konto, sind sie es. Sonst
+         * werden sie übernommen und bleiben unlesbar — das ist immer noch
+         * besser, als sie wegzuwerfen, aber es muss dabeistehen. */
+        let uebernommen = 0, uebernommenFremd = 0;
+        const gleichesKonto = PAT_KEY_CHECK != null && data.pat_key_check != null
+                              && PAT_KEY_CHECK === data.pat_key_check;
         for (const m of (data.missions || [])) {
           if (m.pat && Object.keys(m.pat).length) {
             m.pat_blob = await EdCrypto.encrypt(key, JSON.stringify(m.pat));
+          } else if (m.pat_blob) {
+            if (gleichesKonto) { uebernommen++; } else { uebernommenFremd++; }
           }
           delete m.pat;
+          delete m.pat_unreadable;
+        }
+        if (uebernommenFremd) {
+          const w = data.pat_key_check == null
+            ? 'Die Datei nennt kein Herkunftskonto (vor Web 4.1.1 erstellt), '
+              + 'die Zuordnung ist daher unbekannt.'
+            : 'Die Datei stammt aus einem anderen Konto.';
+          if (!confirm(`${uebernommenFremd} Einsätze enthalten geschützte Angaben, die `
+              + `beim Erstellen der Sicherung nicht entschlüsselt werden konnten. `
+              + `${w} Diese Angaben werden übernommen, sind hier aber `
+              + `voraussichtlich NICHT lesbar. Trotzdem fortfahren?`)) {
+            impState.textContent = 'Abgebrochen — es wurde nichts übernommen.';
+            return;
+          }
         }
 
         impState.textContent = 'Daten werden übertragen…';
@@ -983,10 +1059,17 @@ if ($tab === 'geraete') {
         const out = await res.json();
         if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
         const s = out.stats;
+        const zusatz = uebernommen
+          ? ` ${uebernommen} Einsätze brachten ihre geschützten Angaben verschlüsselt `
+            + `mit und sind wieder lesbar.`
+          : (uebernommenFremd
+              ? ` ${uebernommenFremd} Einsätze brachten verschlüsselte Angaben mit, die `
+                + `in diesem Konto nicht lesbar sind.`
+              : '');
         impState.textContent = `Import fertig: ${s.missions} Einsätze übernommen `
           + `(${s.missions_skipped} bereits vorhanden), ${s.rests} Ruhesegmente, `
           + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
-          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.`;
+          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz;
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }

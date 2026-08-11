@@ -70,6 +70,7 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -334,8 +335,24 @@ async function zeigePat(m, dl, bounds){
   });
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT);
   if (ck) {
-    try {
-      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+    const r = await EdPat.entschluessle(ck, m.pat_blob);
+    if (r.zustand === 'unlesbar') {
+      // Hier ist der Fall besonders deutlich zu benennen: Auf der Einzelansicht
+      // sieht die NutzerIn genau einen Einsatz. Ein stiller Fehlschlag sieht
+      // hier aus wie "keine geschuetzten Angaben erfasst" — also wie ein
+      // normaler, unauffaelliger Zustand.
+      dl.insertAdjacentHTML('beforeend',
+        '<dt id="patlockdt">Verschlüsselt ⚠</dt>' +
+        '<dd id="patlockdd" class="patfehler">Für diesen Einsatz sind geschützte ' +
+        'Angaben gespeichert, sie lassen sich mit dem aktuellen Schlüssel aber ' +
+        '<strong>nicht lesen</strong>. Die Daten sind vorhanden und nicht verloren. ' +
+        'Bitte den Wiederherstellungsschlüssel bereithalten und vor weiteren ' +
+        'Schritten klären, warum der Schlüssel nicht passt.</dd>');
+      dl.hidden = false;
+      return;
+    }
+    {
+      const o = r.daten || {};
       if (o.mission_no != null && String(o.mission_no) !== '') {
         dl.insertAdjacentHTML('beforeend', `<dt>Einsatznummer 🔒</dt><dd>${esc(String(o.mission_no))}</dd>`);
       }
@@ -369,7 +386,7 @@ async function zeigePat(m, dl, bounds){
           `<dt>Beschreibung Einsatzort 🔒</dt><dd>${esc(String(o.site_desc))}</dd>`);
       }
       dl.hidden = dl.children.length === 0;
-    } catch (e) { /* Blob passt nicht zum Schluessel */ }
+    }
   } else {
     dl.insertAdjacentHTML('beforeend',
       '<dt id="patlockdt">Verschlüsselt 🔒</dt>' +

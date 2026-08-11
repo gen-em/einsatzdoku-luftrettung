@@ -86,6 +86,7 @@ $titel = $monat !== ''
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
@@ -294,11 +295,15 @@ async function entschluesselePat(){
   if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
   banner.hidden = true;
   let geaendert = false;
+  const zahl = { ok: 0, leer: 0, unlesbar: 0 };
   const pinBounds = [];
   for (const m of missions) {
-    if (!m.pat_blob) continue;
-    try {
-      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+    if (!m.pat_blob) { zahl.leer++; continue; }
+    const r = await EdPat.entschluessle(ck, m.pat_blob);
+    if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; geaendert = true; continue; }
+    zahl.ok++;
+    {
+      const o = r.daten;
       if (o.dx != null) { m._dx = o.dx; geaendert = true; }
       const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
       if (alter != null) { m._age = alter; geaendert = true; }
@@ -310,8 +315,9 @@ async function entschluesselePat(){
         }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
         pinBounds.push([o.loc.lat, o.loc.lon]);
       }
-    } catch (e) { /* einzelner Datensatz nicht lesbar: Rest trotzdem zeigen */ }
+    }
   }
+  EdPat.zeigeUnlesbar(zahl);
   if (geaendert) { zeichne(); }
   if (pinBounds.length) {
     // Karte war bis hierhin ausgeblendet (display:none) -> Groesse war beim

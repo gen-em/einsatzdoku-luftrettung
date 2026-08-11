@@ -36,10 +36,21 @@ function csrf_check(): void {
 // Inaktivitaets-Timeout: nach 30 Minuten ohne Anfrage neu anmelden
 const SESSION_TIMEOUT_S = 1800;
 if (isset($_SESSION['last_seen']) && (time() - (int)$_SESSION['last_seen']) > SESSION_TIMEOUT_S) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php?timeout=1');
-    exit;
+    /* ABGELAUFENE SITZUNG: ueber den gemeinsamen Weg beenden.
+     *
+     * Frueher stand hier eine reine Weiterleitung per Kopfzeile. Die fuehrt
+     * NIE JavaScript aus — Daten- und Inhaltsschluessel blieben also im
+     * sessionStorage des Tabs liegen, obwohl die Sitzung abgelaufen war. Wer
+     * seinen Rechner nach der Frist stehen laesst, hatte eine abgelaufene
+     * Sitzung und einen liegengebliebenen Schluessel.
+     *
+     * Der Abmeldeweg loeste dasselbe Problem bereits richtig; session_lib.php
+     * ist die eine Fassung fuer beide, damit sie nicht wieder auseinander-
+     * laufen. Sie nennt ausserdem den GRUND: Der frueher angehaengte
+     * Parameter ?timeout=1 wurde von der Anmeldeseite gar nicht ausgewertet.
+     */
+    require_once __DIR__ . '/session_lib.php';
+    session_beenden('abgelaufen');
 }
 $_SESSION['last_seen'] = time();
 
@@ -56,6 +67,9 @@ $userName  = ($row && isset($row['name'])) ? $row['name'] : null;
 // geben, deshalb entfaellt die frueher hier erzwungene Ersteinrichtung.
 $patWrapPw = ($row && isset($row['pat_wrap_pw'])) ? $row['pat_wrap_pw'] : null;
 $patReady  = $patWrapPw !== null;
+// Pruefsumme des Inhaltsschluessels (NULL bei Konten aus der Zeit vor Web
+// 4.0.0 — ein gueltiger Zustand, siehe M1-12).
+$patKeyCheck = ($row && isset($row['pat_key_check'])) ? $row['pat_key_check'] : null;
 $kdfSalt   = ($row && isset($row['kdf_salt'])) ? $row['kdf_salt'] : null;
 
 require_once __DIR__ . '/ui.php';

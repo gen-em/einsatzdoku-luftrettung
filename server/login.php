@@ -2,10 +2,21 @@
 declare(strict_types=1);
 if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/session_lib.php';
 session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/']);
 session_start();
 
 if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
+
+/* Grund des Sitzungsendes anzeigen.
+ *
+ * Wer nach Ablauf der Frist weiterarbeiten wollte, landete bisher OHNE JEDE
+ * ERKLAERUNG auf dieser Seite: Der Ablaufpfad haengte ?timeout=1 an, und diese
+ * Seite wertete den Parameter nicht aus. Aus Sicht der NutzerIn verschwand die
+ * Anwendung einfach. Der alte Parametername wird weiter erkannt, damit ein
+ * offener Tab mit alter Adresse nicht ins Leere laeuft. */
+$hinweis = session_ende_text($_GET['ende'] ?? null);
+if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('abgelaufen'); }
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -51,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        alt="GenEM" class="login-logo">
   <h1>Einsatzdoku</h1>
   <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php if ($hinweis && !$error): ?><p class="alert alert-info"><?= e($hinweis) ?></p><?php endif; ?>
   <form method="post" autocomplete="on" id="loginform">
     <input type="hidden" name="token" id="tok">
     <label>E-Mail

@@ -762,6 +762,28 @@ Passwörter/Schlüssel nur als Hash, Ratenschutz an Kopplung und Login
 per .htaccess gesperrt, Referrer-Policy `strict-origin-when-cross-origin`
 (OSM-Kacheln).
 
+**Die Prüfsumme des Inhaltsschlüssels (`users.pat_key_check`).** Der Server
+kann die Schlüsselhüllen nicht öffnen und daher nicht erkennen, ob eine neu
+gespeicherte Hülle denselben Inhaltsschlüssel enthält wie die alte. Enthielte
+sie einen anderen, wäre jeder vorhandene Datensatz endgültig unlesbar. Die im
+Browser gerechnete Prüfsumme schließt genau diese eine Lücke, ohne dass der
+Server etwas über den Schlüssel lernt — er vergleicht zwei Hashwerte, und der
+Schlüssel ist 256 Bit Zufall.
+
+Sie wird geprüft beim Passwortwechsel, beim Zurücksetzen über den
+Wiederherstellungsschlüssel und beim Einspielen einer Sicherung; gesetzt wird
+sie bei der Ersteinrichtung und bei jedem Setzen des Passworts. **`NULL` ist ein
+gültiger Zustand** (Konten vor Web 4.0.0): Der Server kann sie nicht
+nachträglich berechnen, also werden solche Konten angenommen und bekommen sie
+beim nächsten Mal.
+
+**Zwei Wege, auf denen eine Sitzung endet.** Abmelden und Ablauf der Frist —
+beide laufen über `session_lib.php`. Der Grund für die gemeinsame Fassung: Eine
+reine Weiterleitung per Kopfzeile führt nie JavaScript aus, die Schlüssel im
+`sessionStorage` bleiben also liegen. Der Abmeldeweg löste das von Anfang an
+richtig, der Ablaufpfad nicht — und weil die Lösung nur an einer der beiden
+Stellen stand, war der Unterschied nicht zu sehen.
+
 **Format der Client-Kennung.** `client_ref` wird von vier Stellen erzeugt, und
 an ihrem Präfix hängt Verhalten: `m-`/`r-` (Uhr, Einsatz/Ruhe-Segment), `man-`
 (Formular), `imp-` (Import), `bak-` (Wiedereinspielen ohne eigene Kennung).
@@ -853,7 +875,7 @@ folgenden Bausteine sind dafür die eine Stelle:
 | Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
 | Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
-| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. |
+| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden **und** Ablauf, räumt die Schlüssel im Browser und nennt den Grund. |
 | Maskierung | `assets/missiontable.js` (`escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". |

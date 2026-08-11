@@ -194,6 +194,12 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
 /* Warnung: steht zwischen Hinweis (blau) und Fehler (rot) — fuer
    Handlungen, die noch nicht geschehen sind, aber unumkehrbar waeren */
 .alert-warn{background:var(--accent-light);border-color:#EFC9A0;color:#8A4A00}
+/* Angaben, die verschluesselt vorliegen, sich aber nicht lesen lassen.
+   Bewusst NICHT wie 'keine Angaben' (.dash) dargestellt — der
+   Unterschied zwischen 'nichts erfasst' und 'nicht lesbar' ist der
+   ganze Zweck. */
+td.patfehler{color:var(--rot);text-align:center;font-weight:600}
+dd.patfehler{color:#8A4A00}
 .keybox{background:var(--accent-light);border:1px solid #EFC9A0;border-radius:6px;
   padding:.8rem 1rem;margin-bottom:1.2rem}
 .keybox code{font-family:var(--mono);background:var(--schnee);

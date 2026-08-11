@@ -44,11 +44,26 @@ const EdKeyGuard = (() => {
     } catch (e) { /* Speicher nicht verfügbar — dann gilt der Schlüssel als ungebunden */ }
   }
 
-  function raeumen() {
+  /**
+   * Verwirft NUR den zwischengespeicherten Inhaltsschlüssel samt Bindung.
+   *
+   * Der Datenschlüssel bleibt bewusst liegen: Er gehört zur laufenden
+   * Anmeldung und wird gebraucht, um die Hülle gleich neu zu entpacken. Ihn
+   * hier mitzuräumen war ein Fehler — die Folge war, dass ein nicht passender
+   * Zwischenspeicher nicht zu einem neuen Entpacken führte, sondern zu gar
+   * keinem Schlüssel.
+   */
+  function verwerfeInhalt() {
     try {
+      sessionStorage.removeItem('pck');
       sessionStorage.removeItem(S_BIND);
       sessionStorage.removeItem(S_TIME);
-    } catch (e) { /* s. o. */ }
+    } catch (e) { /* Speicher nicht verfügbar */ }
+  }
+
+  /** Alles räumen — Daten- UND Inhaltsschlüssel. Nur beim Sitzungsende. */
+  function raeumen() {
+    verwerfeInhalt();
     EdCrypto.clearSession();
   }
 
@@ -74,8 +89,10 @@ const EdKeyGuard = (() => {
     if (vorhanden) {
       const gebunden = sessionStorage.getItem(S_BIND);
       if (gebunden === erwartet && frisch()) { return vorhanden; }
-      // Passt nicht oder zu alt: verwerfen statt weiterreichen.
-      raeumen();
+      // Passt nicht oder zu alt: verwerfen statt weiterreichen. NUR den
+      // Inhaltsschlüssel — der Datenschlüssel wird gleich zum Entpacken
+      // gebraucht.
+      verwerfeInhalt();
     }
 
     const ck = await EdCrypto.getContentKey(wrap);

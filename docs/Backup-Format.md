@@ -54,12 +54,32 @@ seinen Daten etwas nicht stimmt, erstellt als Erstes eine Sicherung. Genau
 diese Handlung vollendete den Verlust.
 
 **Was mit dem mitgeführten Chiffretext beim Einspielen geschieht:** Er wird
-unverändert übernommen. Zurück in dasselbe Konto gespielt, sind die Angaben
-damit wieder lesbar. In einem *fremden* Konto bleiben sie unlesbar — die
-Erkennung dieses Falls und ein entsprechender Hinweis folgen mit der Prüfsumme
-des Inhaltsschlüssels (`users.pat_key_check`).
+unverändert übernommen — umschlüsseln ist unmöglich, der Klartext wurde nie
+gesehen. Zurück in dasselbe Konto gespielt, sind die Angaben damit wieder
+lesbar.
+
+Ob es dasselbe Konto ist, entscheidet seit Web 4.1.2 das Feld `pat_key_check`
+im Kopf der Datei (siehe Abschnitt 2): Es enthält die Prüfsumme des
+Inhaltsschlüssels, mit dem die Sicherung erstellt wurde. Stimmt sie mit der des
+Zielkontos überein, sind die Angaben dort lesbar. Stimmt sie nicht oder fehlt
+sie (Dateien vor Web 4.1.2), fragt das Einspielen ausdrücklich nach und
+übernimmt die Angaben nur nach Bestätigung — sie sind dann vorhanden, aber
+nicht lesbar.
+
+Die Prüfsumme verrät nichts über den Schlüssel: Er ist 256 Bit Zufall und aus
+einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
+
+Im Kopf der Datei steht neben `format`, `version`, `created_at` und `user`
+seit Web 4.1.2 auch:
+
+```jsonc
+  // Prüfsumme des Inhaltsschlüssels, mit dem diese Sicherung erstellt wurde.
+  // Dient beim Einspielen der Frage, ob mitgeführter Chiffretext im Zielkonto
+  // lesbar wäre. `null` bei Konten aus der Zeit vor Web 4.0.0.
+  "pat_key_check": "3f2a…"   // 32 Hexzeichen oder null
+```
 
 ```jsonc
 {

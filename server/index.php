@@ -129,6 +129,7 @@ if ($selDay === null) {
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
@@ -355,11 +356,16 @@ async function entschluesselePat(){
   if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
   if (banner) banner.hidden = true;
   let changed = false;
+  const zahl = { ok: 0, leer: 0, unlesbar: 0 };
   const pinBounds = [];
   for (const m of dayMissions) {
-    if (!m.pat_blob) continue;
-    try {
-      const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
+    if (!m.pat_blob) { zahl.leer++; continue; }
+    // Eine Stelle entscheidet, was ein Fehlschlag bedeutet (EdPat).
+    const r = await EdPat.entschluessle(ck, m.pat_blob);
+    if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; changed = true; continue; }
+    zahl.ok++;
+    {
+      const o = r.daten;
       if (o.dx != null) { m._dx = o.dx; changed = true; }
       // Alter: aus dem Geburtsdatum zum Einsatztag, sonst der eingetragene
       // Wert. Name und Geburtsdatum bleiben bewusst aus der Uebersicht.
@@ -375,8 +381,9 @@ async function entschluesselePat(){
           pinBounds.push([o.loc.lat, o.loc.lon]);
         }
       }
-    } catch (e) { }
+    }
   }
+  EdPat.zeigeUnlesbar(zahl);
   if (changed) renderMissionTable();
   if (pinBounds.length && !mapHasBounds) { map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 }); }
 }

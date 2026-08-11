@@ -155,6 +155,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 </div>
 
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
@@ -534,16 +535,21 @@ async function entschluesselePat() {
   $('alterlock').hidden = entsperrt;
 
   if (ck) {
+    const zahl = { ok: 0, leer: 0, unlesbar: 0 };
     for (const m of missions) {
-      if (!m.pat_blob) { continue; }
-      try {
-        const o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
-        m._pat = o;
-        m._dx  = o.dx != null ? o.dx : null;
-        m._age = EdPat.alterAnzeige(o, m.day);
-        if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
-      } catch (e) { /* einzelner Datensatz nicht lesbar: Rest trotzdem zeigen */ }
+      if (!m.pat_blob) { zahl.leer++; continue; }
+      // Ein unlesbarer Datensatz darf die Liste nicht zerstoeren — er darf
+      // aber auch nicht aussehen wie einer ohne Angaben (EdPat).
+      const r = await EdPat.entschluessle(ck, m.pat_blob);
+      if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; continue; }
+      zahl.ok++;
+      const o = r.daten;
+      m._pat = o;
+      m._dx  = o.dx != null ? o.dx : null;
+      m._age = EdPat.alterAnzeige(o, m.day);
+      if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }
     }
+    EdPat.zeigeUnlesbar(zahl);
   }
   missions.forEach(baueHeuhaufen);
   anwenden();

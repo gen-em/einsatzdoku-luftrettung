@@ -18,7 +18,7 @@ function edbak_build(int $userId): string {
         $st = $pdo->prepare($sql); $st->execute($p); return $st->fetchAll(PDO::FETCH_ASSOC);
     };
 
-    $u = $q('SELECT email, name FROM users WHERE id = ?', [$userId])[0];
+    $u = $q('SELECT email, name, pat_key_check FROM users WHERE id = ?', [$userId])[0];
 
     $tracks = function (string $type, int $id) use ($q): array {
         return array_map(
@@ -93,6 +93,18 @@ function edbak_build(int $userId): string {
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-luftrettung',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
+        /* Pruefsumme des Inhaltsschluessels dieses Kontos.
+         *
+         * Sie steht hier, damit sich beim Wiedereinspielen entscheiden laesst,
+         * ob ein in der Datei MITGEFUEHRTER Chiffretext (Einsaetze, die beim
+         * Sichern nicht entschluesselt werden konnten) in diesem Konto
+         * ueberhaupt lesbar waere. Ohne diese Angabe bliebe nur Raten.
+         *
+         * Sie verraet nichts: Der Inhaltsschluessel ist 256 Bit Zufall, aus
+         * seinem Hashwert nicht zurueckrechenbar. Bei Konten aus der Zeit vor
+         * Web 4.0.0 kann sie fehlen (null) — dann ist die Zuordnung eben
+         * unbekannt, und das Einspielen sagt das auch. */
+        'pat_key_check' => $u['pat_key_check'] ?? null,
         'stammdaten' => [
             'bases'           => $bases,
             'aircraft'        => $aircraft,

@@ -15,6 +15,9 @@
  *      bereits in AES-GCM, ein zusaetzlicher Abgleich waere ueberfluessig.
  *   3. EdCrypto.setDataKey(dataKeyHex), danach EdCrypto.getContentKey(wrap).
  *
+ * Erwartet aus der Seite: EdCrypto UND EdKeyGuard (assets/keyguard.js), das
+ * vor dieser Datei geladen werden muss.
+ *
  * Sicherheit: Wer eine offene Sitzung uebernimmt, bekommt den Wrap ohnehin
  * mit jeder ausgelieferten Seite. Der Dialog eroeffnet also keinen neuen
  * Angriffsweg; er macht bequem zugaenglich, was die Seite schon enthaelt.
@@ -97,6 +100,8 @@ const EdUnlock = (() => {
           await EdCrypto.decrypt(abgeleitet.dataKeyHex, wrap);
           EdCrypto.setDataKey(abgeleitet.dataKeyHex);
           ck = await EdCrypto.getContentKey(wrap);
+          // Frisch entpackt: an die Huelle binden, aus der er stammt.
+          if (ck) { await EdKeyGuard.binden(wrap); }
         } catch (e) { ck = null; }
 
         beschaeftigt = false;
@@ -131,7 +136,13 @@ const EdUnlock = (() => {
    */
   async function ensureContentKey(wrap, kdfSalt) {
     if (!wrap) { return null; }
-    const vorhanden = await EdCrypto.getContentKey(wrap);
+    // NICHT EdCrypto.getContentKey: Jene Fassung liefert einen
+    // zwischengespeicherten Schluessel zurueck, ohne zu pruefen, ob er zu
+    // DIESER Huelle gehoert. Die Richtigkeit haengt dann allein daran, dass
+    // jeder Weg, auf dem das Konto wechseln koennte, vorher aufraeumt — vier
+    // Stellen tun das, eine nicht. EdKeyGuard prueft es selbst und verwirft
+    // einen fremden oder zu alten Schluessel.
+    const vorhanden = await EdKeyGuard.contentKey(wrap);
     if (vorhanden) { return vorhanden; }
 
     // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>

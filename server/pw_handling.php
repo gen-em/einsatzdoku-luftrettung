@@ -31,7 +31,7 @@ const WRAP_RE = '#^[A-Za-z0-9+/=]{20,4000}$#';
 $token = (string)($_GET['token'] ?? $_POST['token'] ?? '');
 $row = null;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
-    $st = db()->prepare('SELECT r.id, r.user_id, u.pat_wrap_rc
+    $st = db()->prepare('SELECT r.id, r.user_id, u.pat_key_check, u.pat_wrap_rc
                          FROM password_resets r
                          JOIN users u ON u.id = r.user_id
                          WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > NOW()');
@@ -49,6 +49,8 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $neuSalt = (string)($_POST['new_salt'] ?? '');
     $wrapPw  = (string)($_POST['wrap_pw'] ?? '');
     $wrapRc  = (string)($_POST['wrap_rc'] ?? '');
+    $keyChk  = (string)($_POST['key_check'] ?? '');
+    $chkSoll = $row['pat_key_check'] ?? null;
 
     if (!preg_match('/^[0-9a-f]{64}$/', $neuTok) || !preg_match('/^[0-9a-f]{32}$/', $neuSalt)) {
         // Kommt nur vor, wenn JavaScript fehlt oder abbricht.
@@ -59,6 +61,18 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
             : 'Der Wiederherstellungsschlüssel passt nicht. Es wurde nichts geändert.';
     } elseif ($erstvergabe && !preg_match(WRAP_RE, $wrapRc)) {
         $error = 'Die Schlüssel konnten nicht erzeugt werden. Es wurde nichts geändert.';
+    } elseif ($keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
+        $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar. Es wurde nichts geändert.';
+    } elseif (!$erstvergabe && $chkSoll !== null && $keyChk !== $chkSoll) {
+        /* Beim Zuruecksetzen wird der Inhaltsschluessel aus der
+         * Wiederherstellungs-Huelle entpackt und in eine neue Passwort-Huelle
+         * gepackt. Der Server kann keine der beiden oeffnen. Passt die
+         * Pruefsumme nicht, steckt ein ANDERER Schluessel in der neuen Huelle
+         * — danach waere jeder vorhandene Datensatz endgueltig unlesbar.
+         * Bestandskonten ohne gespeicherte Pruefsumme werden angenommen und
+         * bekommen sie unten; der Server kann sie nicht selbst berechnen. */
+        $error = 'Der Inhaltsschlüssel gehört nicht zu diesem Konto. '
+               . 'Es wurde nichts geändert.';
     } else {
         $pdo = db();
         $pdo->beginTransaction();
@@ -67,19 +81,22 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Passwort und BEIDE Huellen in einem Zug — ein Konto ohne
                 // Wiederherstellungs-Huelle waere nach einem Reset verloren.
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
-                                                pat_wrap_pw = ?, pat_wrap_rc = ?
+                                                pat_wrap_pw = ?, pat_wrap_rc = ?,
+                                                pat_key_check = ?
                                WHERE id = ?')
                     ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
-                               $wrapPw, $wrapRc, (int)$row['user_id']]);
+                               $wrapPw, $wrapRc, $keyChk !== '' ? $keyChk : null,
+                               (int)$row['user_id']]);
             } else {
                 // Reset: der Inhaltsschluessel bleibt derselbe, nur seine
                 // Passwort-Huelle wird ersetzt. pat_wrap_rc bleibt unberuehrt,
                 // damit der bekannte Wiederherstellungsschluessel gueltig bleibt.
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
-                                                pat_wrap_pw = ?
+                                                pat_wrap_pw = ?, pat_key_check = ?
                                WHERE id = ?')
                     ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
-                               $wrapPw, (int)$row['user_id']]);
+                               $wrapPw, $keyChk !== '' ? $keyChk : null,
+                               (int)$row['user_id']]);
             }
             $pdo->prepare('UPDATE password_resets SET used_at = NOW() WHERE id = ?')
                 ->execute([(int)$row['id']]);
@@ -148,6 +165,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="hidden" name="new_salt"  id="new_salt">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
       <input type="hidden" name="wrap_rc"   id="wrap_rc">
+      <input type="hidden" name="key_check" id="key_check">
       <label>Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
@@ -169,6 +187,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
+      <input type="hidden" name="key_check" id="key_check">
       <label>Wiederherstellungsschlüssel
         <input type="text" id="rc" required autocomplete="off" autocapitalize="characters"
                placeholder="ABCD-EFGH-JKMN-PQRS-TVWX">
@@ -237,6 +256,12 @@ if (ERSTVERGABE) {
       document.getElementById('new_token').value = k.authToken;
       document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
       document.getElementById('wrap_rc').value   = await EdCrypto.encrypt(rk, ck);
+      // Pruefsumme des Inhaltsschluessels: Sie wird hier erstmals gesetzt und
+      // ist ab jetzt der Massstab, an dem jedes spaetere Umpacken gemessen
+      // wird. Ohne sie koennte ein Fehler beim Passwortwechsel eine Huelle
+      // speichern, die einen ANDEREN Schluessel enthaelt — danach waere jeder
+      // Datensatz endgueltig unlesbar.
+      document.getElementById('key_check').value = await EdCrypto.contentKeyCheck(ck);
 
       // Ab hier darf das Passwort nicht mehr geaendert werden — die Huelle
       // ist bereits an den daraus abgeleiteten Schluessel gebunden.
@@ -283,6 +308,7 @@ if (ERSTVERGABE) {
       document.getElementById('new_salt').value  = salt;
       document.getElementById('new_token').value = k.authToken;
       document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
+      document.getElementById('key_check').value = await EdCrypto.contentKeyCheck(ck);
 
       form.dataset.ready = '1';
       form.submit();

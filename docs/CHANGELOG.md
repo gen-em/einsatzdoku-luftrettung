@@ -10,6 +10,106 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.1.2] — 2026-08-08
+
+### Die Kette „unlesbarer Schlüssel" ist geschlossen
+
+Fünf Befunde, die einzeln je harmlos aussehen und zusammen dazu führen können,
+dass geschützte Angaben unbemerkt unlesbar werden und der Verlust erst auffällt,
+wenn er nicht mehr rückgängig zu machen ist.
+
+### Behoben — Ein Fehler beim Passwortwechsel konnte alle Angaben endgültig unlesbar machen
+
+Beim Passwortwechsel wird der Inhaltsschlüssel im Browser aus der alten Hülle
+geholt und in eine neue gepackt. Der Server kann keine der beiden öffnen — er
+konnte deshalb **nicht erkennen, ob darin überhaupt derselbe Schlüssel steckt**.
+Enthielte die neue Hülle einen anderen, wäre danach jeder vorhandene Datensatz
+unlesbar, und zwar endgültig: Die alte Hülle ist dann überschrieben.
+
+Jetzt sendet der Browser eine **Prüfsumme des Inhaltsschlüssels** mit
+(`users.pat_key_check`, seit Web 4.0.0 vorhanden). Stimmt sie nicht mit der
+gespeicherten überein, wird abgelehnt und **nichts geändert**. Der Server lernt
+dadurch nichts über den Schlüssel — er vergleicht zwei Hashwerte, und der
+Schlüssel selbst ist 256 Bit Zufall.
+
+Konten aus der Zeit davor haben keine gespeicherte Prüfsumme. Sie werden weiter
+angenommen und bekommen sie beim nächsten Setzen des Passworts — alles andere
+sperrte sie aus, denn der Server kann sie nicht nachträglich berechnen. Die
+Prüfung greift ebenso beim Zurücksetzen über den Wiederherstellungsschlüssel
+und beim erstmaligen Einrichten.
+
+### Behoben — Ein Kontowechsel im selben Tab konnte einen fremden Schlüssel durchreichen
+
+Der Zwischenspeicher lieferte den Inhaltsschlüssel zurück, **ohne zu prüfen, ob
+er zur übergebenen Hülle gehört**. Die Richtigkeit hing allein daran, dass jeder
+Weg, auf dem das Konto wechseln kann, vorher aufräumt — vier Stellen taten das,
+eine nicht. Ein Schlüssel aus Konto A entschlüsselt in Konto B nichts, und der
+Fehlschlag sah aus wie „keine Angaben vorhanden".
+
+Statt fünf Aufrufer zur Disziplin zu erziehen, korrigiert sich der
+Zwischenspeicher jetzt selbst (`assets/keyguard.js`): Er merkt sich eine kurze
+Kennung der Hülle, aus der der Schlüssel stammt, und verwirft ihn, wenn sie
+nicht passt. Zusätzlich läuft er nach derselben Frist ab wie die Sitzung
+(30 Minuten) — vorher hing er am Tab und überdauerte sie.
+
+### Behoben — Unlesbare Einträge sahen aus wie leere
+
+Fünf Stellen entschlüsselten je Datensatz und fingen den Fehlschlag ab, ohne
+ihn nach außen sichtbar zu machen. Die Absicht ist richtig — ein unlesbarer
+Datensatz darf die Liste nicht zerstören. Es fehlte die Unterscheidung:
+
+| | vorher | jetzt |
+|---|---|---|
+| keine Angaben erfasst | `–` | `–` |
+| vorhanden, nicht lesbar | `–` | **⚠** |
+
+Dazu erscheint über der Liste ein Hinweis mit der Zahl der betroffenen Einträge.
+Sind **alle** unlesbar, nennt er die wahrscheinliche Ursache (nicht passender
+Schlüssel) und rät, den Wiederherstellungsschlüssel bereitzuhalten, bevor
+weitere Schritte unternommen werden. In der Einzelansicht steht statt der
+Angaben ein ausdrücklicher Absatz — dort sieht man nur einen Einsatz, und ein
+stiller Fehlschlag wäre von „nichts erfasst" nicht zu unterscheiden.
+
+Warum das zählt: Wer den Unterschied nicht sieht, merkt nicht, dass sein
+Schlüssel nicht mehr passt.
+
+### Behoben — Eine abgelaufene Sitzung ließ die Schlüssel im Browser liegen
+
+Es gibt zwei Wege, auf denen eine Sitzung endet. Das Abmelden löste es richtig:
+Eine reine Weiterleitung per Kopfzeile führt nie JavaScript aus, deshalb wurde
+dort eine kurze Seite ausgeliefert, die die Schlüssel räumt. Der **Ablauf der
+30-Minuten-Frist** tat genau das nicht — Daten- und Inhaltsschlüssel blieben im
+Tab liegen, obwohl die Sitzung vorbei war. Wer seinen Rechner stehen lässt,
+hatte eine abgelaufene Sitzung und einen liegengebliebenen Schlüssel.
+
+Beide Wege laufen jetzt über dieselbe Funktion (`session_lib.php`), damit sie
+nicht wieder auseinanderlaufen.
+
+### Behoben — Nach Ablauf der Frist stand man ohne Erklärung auf der Anmeldeseite
+
+Der Ablaufpfad hängte `?timeout=1` an die Adresse — einen Parameter, den die
+Anmeldeseite gar nicht auswertete. Aus Sicht der NutzerIn verschwand die
+Anwendung einfach. Jetzt steht dort, was passiert ist. Der alte Parametername
+wird weiter erkannt, damit ein offener Tab mit alter Adresse nicht ins Leere
+läuft.
+
+### Geändert — Sicherungen tragen jetzt ihr Herkunftskonto
+
+Seit Web 4.1.0 nimmt eine Sicherung den Chiffretext mit, wenn ein Einsatz sich
+beim Erstellen nicht entschlüsseln ließ. Beim Einspielen war bisher nicht zu
+entscheiden, ob diese Angaben im Zielkonto lesbar sein würden.
+
+Der Dateikopf enthält deshalb jetzt `pat_key_check`, die Prüfsumme des
+Inhaltsschlüssels der Herkunft. Stimmt sie mit dem Zielkonto überein, werden
+die Angaben übernommen und sind wieder lesbar; die Meldung sagt es. Stimmt sie
+nicht oder fehlt sie (ältere Dateien), fragt das Einspielen ausdrücklich nach
+und nennt den Grund. Übernommen wird auch dann — die Angaben zu verwerfen wäre
+schlechter —, aber nicht unbemerkt.
+
+Damit ist das Kennzeichen `pat_unreadable` **benutzt** statt erzeugt, in die
+Datei geschrieben und beim Einspielen weggeworfen. Der Zwischenzustand war der
+schlechteste von dreien.
+
 ## [Web 4.1.1] — 2026-08-08
 
 ### Berichtigt — Der JSON-Vertrag beschrieb eine Phase, die es nicht gibt
