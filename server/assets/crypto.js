@@ -162,6 +162,23 @@ const EdCrypto = (() => {
     return new Uint8Array(await new Response(s).arrayBuffer());
   }
   async function gunzip(bytes) {
+    /* Verfuegbarkeit pruefen wie beim Packen (M2-11).
+     *
+     * gzip() oben fragt seit jeher nach, ob CompressionStream existiert, und
+     * legt die Sicherung sonst ungepackt an. gunzip() fragte nicht — auf
+     * einem Browser ohne DecompressionStream endete das Oeffnen einer
+     * gepackten Sicherung in einem ReferenceError, der weiter oben als
+     * "Passwort falsch oder Datei beschaedigt" ankam.
+     *
+     * Das ist die denkbar irrefuehrendste Auskunft: Die Datei ist in Ordnung,
+     * das Passwort stimmt, und die betroffene Person tippt es zehnmal neu.
+     * Der Fall trifft ausserdem genau die aelteren Browser, auf denen die
+     * Sicherung urspruenglich ungepackt entstanden waere — beim Wechsel des
+     * Geraets ist er also nicht abwegig. */
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('Dieser Browser kann gepackte Sicherungen nicht öffnen. '
+                    + 'Bitte einen aktuellen Browser verwenden — die Datei ist in Ordnung.');
+    }
     const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     return new Uint8Array(await new Response(s).arrayBuffer());
   }

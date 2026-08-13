@@ -22,6 +22,10 @@ require_once __DIR__ . '/../auth_guard.php';
  * Abfragen: sechs Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
  */
 
+// Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
+// Endpunkten: Was nichts aendert, beantwortet auch kein POST.
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+
 try {
     // ---- Einsaetze -------------------------------------------------------
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.

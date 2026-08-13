@@ -2,6 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
 
+// Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
+// Endpunkten: Was nichts aendert, beantwortet auch kein POST.
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+
 try {
     $id = (int)($_GET['id'] ?? 0);
 

@@ -16,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405)
 try {
     $out = edbak_build($userId);
     header('Content-Type: application/json; charset=utf-8');
+    // Dieser Weg gibt das Paket direkt aus, nicht ueber json_out() — der
+    // Kopf gegen das Zwischenspeichern muss deshalb hier stehen (M3-11).
     header('Cache-Control: no-store');
     echo $out;
 } catch (Throwable $ex) {

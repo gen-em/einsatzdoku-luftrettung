@@ -116,11 +116,11 @@ seit Web 4.1.2 auch:
     "manual": 0, "final": 1,
     "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
     "distance_m": 38400, "ascent_m": 550,
-    "site_ele_m": 712,                    // wird beim Restore neu berechnet, nicht uebernommen
+    "site_ele_m": 712,                    // NICHT uebernommen (s. Hinweis unten)
     "transport_dest": "…",
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
-    "other_ema": null, "other_resources": null, "notes": null,
+    "other_ema": null, "notes": null,
 
     // Abweichende Besatzung (seit Web 2.6.0). crew_override = 0 -> die fünf
     // Felder sind null und der Einsatz erbt die Besatzung seines Flugtags
@@ -194,3 +194,32 @@ seit Web 4.1.2 auch:
   Chiffretext.
 - Standard-Markierungen (★) werden nur importiert, wenn noch kein Standard
   gesetzt ist (es bleibt bei genau einem).
+
+## 4. Was NICHT in der Datei steht — und was nicht zurückkommt
+
+Seit Web 4.5.2 ist das Format **aufgezählt** statt „alles, was in der Tabelle
+steht". Vorher ergab es sich aus dem Datenbankschema: Jede neue Spalte war
+automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
+
+**Nicht in der Datei:**
+
+- `id`, `user_id`, `device_id` — interne Verweise. Sie gelten nur in der
+  Datenbank, aus der die Sicherung stammt; eine Sicherung soll sich auch in
+  ein anderes Konto und eine andere Installation einspielen lassen.
+- `other_resources` (in `missions`) — tote Altspalte. Die weiteren
+  Rettungsmittel liegen seit der Migration `2026_07` als einzelne Zeilen in
+  `mission_resources` und stehen in der Datei unter `resources`. Die Spalte
+  wurde damals nur nicht gelöscht und wanderte bis Web 4.5.1 leer mit.
+
+**In der Datei, kommt beim Einspielen aber nicht zurück:**
+
+- `site_ele_m` (Einsatzort-Höhe). Der Einspielweg schreibt die Felder aus
+  `mission_fields.php` plus `pat_blob`; die Höhe steht dort nicht, weil sie
+  beim Uhr-Upload aus dem Track gerechnet und nicht eingegeben wird. Sie bleibt
+  in der Datei, damit diese den Bestand vollständig abbildet — beim Einspielen
+  ist das Feld danach leer.
+
+**Kommt eine Spalte hinzu, die mitgesichert werden soll**, ist sie in
+`backup_lib.php` einzutragen (Liste `$missionSpalten` beziehungsweise die
+Aufzählungen für `rest_segments` und `days`) und hier zu ergänzen. Das ist
+Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.

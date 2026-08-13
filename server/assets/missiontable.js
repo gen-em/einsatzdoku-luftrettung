@@ -131,7 +131,6 @@ const EdMissionTable = (() => {
    * opts.table        <table> mit <thead> und <tbody> (beide duerfen leer sein)
    * opts.sortKey      Voreinstellung, Standard 'day'
    * opts.sortAsc      Voreinstellung, Standard true
-   * opts.pfeilInitial Sortierpfeil schon vor dem ersten Klick zeigen
    *                   (zeitraum.php tut das historisch nicht — dort false)
    * opts.onAfterDraw  wird nach jedem Zeichnen mit der Zeilenzahl gerufen
    *
@@ -141,7 +140,12 @@ const EdMissionTable = (() => {
     const table = opts.table;
     let sortKey = opts.sortKey || 'day';
     let sortAsc = opts.sortAsc !== false;
-    let pfeilZeigen = !!opts.pfeilInitial;
+    /* Der Sortierpfeil wird IMMER gezeigt (M6-10).
+     *
+     * Vorher gab es dafuer einen Schalter: Die Suche zeigte ihn sofort, die
+     * Zeitraum-Uebersicht erst nach dem ersten Klick. Beide Tabellen sind
+     * beim Oeffnen sortiert — die eine sagte es, die andere liess es raten.
+     * Der Unterschied war historisch gewachsen, nicht gewollt. */
     let daten = [];
 
     let thead = table.tHead;
@@ -156,7 +160,7 @@ const EdMissionTable = (() => {
         th.className = 'sortable' + (sp.thClass ? ' ' + sp.thClass : '');
         th.dataset.key = sp.key;
         th.innerHTML = sp.kopf;
-        if (pfeilZeigen && sp.key === sortKey) {
+        if (sp.key === sortKey) {
           const pfeil = document.createElement('span');
           pfeil.className = 'arrow';
           pfeil.textContent = sortAsc ? ' ▲' : ' ▼';
@@ -164,7 +168,6 @@ const EdMissionTable = (() => {
         }
         th.addEventListener('click', () => {
           if (sortKey === sp.key) { sortAsc = !sortAsc; } else { sortKey = sp.key; sortAsc = true; }
-          pfeilZeigen = true;
           zeichne();
           if (opts.onSortChange) { opts.onSortChange(sortKey, sortAsc); }
         });
@@ -198,7 +201,7 @@ const EdMissionTable = (() => {
 
     function setSort(key, asc) {
       if (!SPALTEN.some(s => s.key === key)) { return; }
-      sortKey = key; sortAsc = !!asc; pfeilZeigen = true;
+      sortKey = key; sortAsc = !!asc;
     }
 
     return {

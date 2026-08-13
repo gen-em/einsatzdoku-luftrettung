@@ -18,6 +18,27 @@ $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
 $schemaPath = __DIR__ . '/schema.sql';
 
+/* Sitzung des Einrichters wie die der Anwendung absichern (M1-19).
+ *
+ * Hier stand ein blankes session_start(). Die Anwendung setzt an ihrer
+ * Sitzung seit jeher httponly/secure/SameSite — der Einrichter nicht, obwohl
+ * er das Datenbank-Passwort im Formular fuehrt und die Sitzung das
+ * Formular-Token traegt.
+ *
+ * use_strict_mode zusaetzlich: Ohne das uebernimmt PHP eine Sitzungskennung,
+ * die der Browser mitbringt, auch wenn es sie nie vergeben hat. Wer eine
+ * Kennung setzen kann, kennt damit die Sitzung, in der gleich eingerichtet
+ * wird. Der Einrichter laeuft genau einmal und ungeschuetzt — das ist der
+ * Zeitpunkt, an dem so etwas zaehlt.
+ *
+ * SameSite=Lax statt Strict: Der Einrichter wird typischerweise ueber einen
+ * Link aus einer Anleitung oder dem Kundenmenue des Hosters geoeffnet.
+ */
+session_set_cookie_params([
+    'httponly' => true, 'secure' => !empty($_SERVER['HTTPS']),
+    'samesite' => 'Lax', 'path' => '/',
+]);
+ini_set('session.use_strict_mode', '1');
 session_start();
 if (empty($_SESSION['inst_csrf'])) { $_SESSION['inst_csrf'] = bin2hex(random_bytes(32)); }
 

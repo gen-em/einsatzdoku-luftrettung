@@ -208,19 +208,28 @@ function trash_purge_day(int $userId, string $day): void {
 /* ---- Aufraeumjob: abgelaufene Papierkorb-Eintraege --------------------- */
 
 function trash_purge_expired(PDO $pdo): void {
-    $grenze = TRASH_DAYS;
+    /* Die Frist als Parameter, nicht im SQL-Text (M5-06).
+     *
+     * TRASH_DAYS ist eine Konstante dieser Datei — eingesetzt wurde also
+     * nichts Fremdes. Trotzdem: Es waren die einzigen Stellen im Projekt,
+     * an denen ein Wert im Anweisungstext stand, und "das ist eine
+     * Konstante" muss man erst nachschlagen. INTERVAL nimmt keinen
+     * Platzhalter, deshalb rechnet die Grenze hier in PHP. */
+    $grenze = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+                ->modify('-' . TRASH_DAYS . ' days')->format('Y-m-d H:i:s');
 
     // Tage zuerst (nimmt die daran haengenden Einsaetze/Segmente mit)
-    $st = $pdo->query("SELECT user_id, day FROM days
-                       WHERE deleted_at IS NOT NULL
-                         AND deleted_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL {$grenze} DAY)");
+    $st = $pdo->prepare('SELECT user_id, day FROM days
+                         WHERE deleted_at IS NOT NULL AND deleted_at < ?');
+    $st->execute([$grenze]);
     foreach ($st->fetchAll() as $d) {
         trash_purge_day((int)$d['user_id'], (string)$d['day']);
     }
     // Einzeln geloeschte Einsaetze
-    $st = $pdo->query("SELECT id, user_id FROM missions
-                       WHERE deleted_at IS NOT NULL AND deleted_with_day = 0
-                         AND deleted_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL {$grenze} DAY)");
+    $st = $pdo->prepare('SELECT id, user_id FROM missions
+                         WHERE deleted_at IS NOT NULL AND deleted_with_day = 0
+                           AND deleted_at < ?');
+    $st->execute([$grenze]);
     foreach ($st->fetchAll() as $m) {
         trash_purge_mission((int)$m['user_id'], (int)$m['id']);
     }

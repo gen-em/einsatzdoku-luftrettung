@@ -84,7 +84,23 @@ $_SESSION['last_seen'] = time();
  * keine zusaetzliche Abfrage, und die Sitzungskopie der Rolle entfaellt
  * ersatzlos.
  */
-$u = db()->prepare('SELECT * FROM users WHERE id = ?');
+/* Spalten benennen statt SELECT * (M1-20).
+ *
+ * Diese Abfrage laeuft bei JEDER Anfrage. Mit * kam die ganze Zeile ins
+ * Gedaechtnis des Prozesses, darunter password_hash — der Hash des
+ * Anmeldetokens, der hier nirgends gebraucht wird. Ein Speicherabbild, ein
+ * Fehlerbericht mit vollem Kontext oder ein var_dump beim Suchen enthielt ihn
+ * damit ebenfalls, und zwar auf jeder einzelnen Seite.
+ *
+ * Der zweite Grund ist Lesbarkeit: Was diese Datei aus der Nutzerzeile
+ * braucht, steht jetzt hier und nicht verteilt in acht Zugriffen weiter
+ * unten. Kommt eine Spalte hinzu, wandert sie nicht mehr automatisch mit.
+ *
+ * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
+ * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
+$u = db()->prepare('SELECT id, email, name, role, session_epoch,
+                           pat_wrap_pw, pat_key_check, kdf_salt
+                    FROM users WHERE id = ?');
 $u->execute([$userId]);
 $row = $u->fetch();
 

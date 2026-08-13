@@ -242,12 +242,10 @@ document.addEventListener('click', ev => {
  * Tabelle und Leermeldung sowie die Hervorhebung aus den Extremwert-Kacheln,
  * die nach jedem Neuzeichnen erneut angewendet werden muss — die Zeilen sind
  * dann neu und haetten ihre Markierung sonst verloren.
- * pfeilInitial bleibt aus: die Seite zeigte den Sortierpfeil bisher erst nach
- * dem ersten Klick auf einen Spaltenkopf. */
+ */
 const tabelle = EdMissionTable.erzeuge({
   table: document.getElementById('rangetable'),
   sortKey: 'day', sortAsc: true,
-  pfeilInitial: false,
   onAfterDraw: () => {
     document.getElementById('leer').hidden = missions.length > 0;
     document.getElementById('rangetable').hidden = missions.length === 0;

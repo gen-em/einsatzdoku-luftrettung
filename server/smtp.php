@@ -92,7 +92,34 @@ function antwort_abschliessen(): bool {
  */
 function smtp_send(string $toEmail, string $subject, string $textBody,
                    int $zeitlimit = 15): bool {
-    $cfg = (require __DIR__ . '/config.php')['smtp'];
+    /* Einmal laden, beides entnehmen (M1-14).
+     *
+     * config.php wurde zweimal eingelesen — hier fuer den SMTP-Teil und
+     * weiter unten noch einmal fuer die Basisadresse im EHLO. Das ist nicht
+     * nur ein zweiter Dateizugriff: Zwei Ladevorgaenge koennen zwei
+     * verschiedene Staende sehen, wenn die Datei dazwischen ersetzt wird.
+     * Unwahrscheinlich, aber es gibt keinen Grund dafuer. */
+    $alles = require __DIR__ . '/config.php';
+    $cfg   = $alles['smtp'];
+
+    /* ZEILENUMBRUECHE IM EMPFAENGER ABLEHNEN (M1-14).
+     *
+     * $toEmail geht ungeprueft in zwei Zeilen des Protokolls: in
+     * "RCPT TO:<...>" und in den Kopf "To: <...>". Enthaelt die Adresse ein
+     * CR oder LF, endet die Zeile dort — und alles danach ist fuer den
+     * Mailserver eine EIGENE Anweisung beziehungsweise eine eigene Kopfzeile.
+     * Damit lassen sich stille Mitleser (Bcc) eintragen oder der Nachricht
+     * ein fremder Inhalt anhaengen.
+     *
+     * Seit Web 4.5.0 kommen alle Aufrufer aus email_pruefen() und koennen
+     * gar keine solche Adresse liefern. Diese Pruefung steht trotzdem hier:
+     * Die Absicherung gehoert an die Stelle, die das Protokoll spricht, nicht
+     * in die Disziplin der Aufrufer. */
+    if ($toEmail === '' || strcspn($toEmail, "\r\n") !== strlen($toEmail)
+        || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+        error_log('SMTP: unzulaessige Empfaengeradresse abgewiesen');
+        return false;
+    }
 
     $fp = @stream_socket_client('ssl://' . $cfg['host'] . ':' . $cfg['port'],
         $errno, $errstr, $zeitlimit, STREAM_CLIENT_CONNECT,
@@ -108,7 +135,7 @@ function smtp_send(string $toEmail, string $subject, string $textBody,
     $send = function (string $cmd) use ($fp): void { fwrite($fp, $cmd . "\r\n"); };
 
     $ok = $expect('220');
-    $send('EHLO ' . parse_url((require __DIR__ . '/config.php')['app']['base_url'], PHP_URL_HOST));
+    $send('EHLO ' . parse_url($alles['app']['base_url'], PHP_URL_HOST));
     $ok = $ok && $expect('250');
     $send('AUTH LOGIN');                        $ok = $ok && $expect('334');
     $send(base64_encode($cfg['user']));         $ok = $ok && $expect('334');

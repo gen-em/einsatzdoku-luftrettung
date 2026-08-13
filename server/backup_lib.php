@@ -20,22 +20,87 @@ function edbak_build(int $userId): string {
 
     $u = $q('SELECT email, name, pat_key_check FROM users WHERE id = ?', [$userId])[0];
 
-    $tracks = function (string $type, int $id) use ($q): array {
+    /* Umwandeln nur, wenn dabei auch eine Zahl herauskommt (M2-12).
+     *
+     * (float)$p['ele'] liefert fuer jede Eingabe klaglos ein Ergebnis: aus
+     * "" wird 0.0, aus "Unfug" ebenfalls. Die Hoehe 0 ist aber ein GUELTIGER
+     * Wert (Meereshoehe) — in der Sicherung waere danach nicht mehr zu
+     * unterscheiden, ob dort eine gemessene Null stand oder ein Rest, den die
+     * Umwandlung erzeugt hat.
+     *
+     * Aus der Datenbank kommen an dieser Stelle nur Zahlen oder NULL; die
+     * Spalten sind DOUBLE. Der Befund zielt auf den Fall, in dem das einmal
+     * nicht mehr stimmt — eine Sicherung ist das letzte, was stillschweigend
+     * Ersatzwerte erfinden darf. */
+    $zahl = fn($v, bool $ganz = false) =>
+        (is_numeric($v) ? ($ganz ? (int)$v : (float)$v) : null);
+
+    $tracks = function (string $type, int $id) use ($q, $zahl): array {
         return array_map(
-            fn($p) => [(int)$p['seq'], (float)$p['lat'], (float)$p['lon'],
-                       $p['ele'] !== null ? (float)$p['ele'] : null, (int)$p['ts']],
+            fn($p) => [$zahl($p['seq'], true), $zahl($p['lat']), $zahl($p['lon']),
+                       $zahl($p['ele']), $zahl($p['ts'], true)],
             $q('SELECT seq, lat, lon, ele, ts FROM track_points
                 WHERE owner_type = ? AND owner_id = ? ORDER BY seq', [$type, $id]));
     };
 
     $missions = [];
-    foreach ($q('SELECT * FROM missions WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]) as $m) {
+    /* SPALTEN AUFZAEHLEN, NICHT ALLE NEHMEN (M5-07).
+     *
+     * Vorher stand hier SELECT * und darunter ein unset() fuer die drei
+     * internen Spalten. Das FORMAT der Sicherung war damit nicht definiert,
+     * sondern ERGAB SICH: Was in der Tabelle stand, landete in der Datei.
+     *
+     * Zwei Folgen, beide unangenehm:
+     *  - Jede neue Spalte war automatisch in jeder Sicherung — auch eine,
+     *    die dort nichts zu suchen hat. Wer eine interne Spalte ergaenzt,
+     *    denkt nicht daran, dass er damit das Ausgabeformat aendert.
+     *  - Das Wiedereinspielen und der Export prueften gegen eine Liste, die
+     *    hier nirgends stand. Ob beide dasselbe meinten, liess sich nur
+     *    durch Ausprobieren feststellen.
+     *
+     * Kommt kuenftig eine Spalte hinzu, die mitgesichert werden soll, ist sie
+     * hier einzutragen — und genau das ist der Punkt: Es ist eine
+     * Entscheidung, keine Nebenwirkung. */
+    $missionSpalten = 'client_ref, day, started_at, ended_at, distance_m, ascent_m,
+                       site_ele_m, final, manual, origin, edited, transport_dest,
+                       winch, winch_cycles, winch_cycles_pat, winch_airload,
+                       bergwacht, secondary, schockraum, bw_unit, bw_info,
+                       other_ema, crew_override,
+                       crew_p1, crew_p2, crew_hems, crew_fr, crew_other,
+                       pat_blob, notes, created_at, deleted_at, deleted_with_day';
+    /* NICHT in der Liste, und zwar mit Absicht:
+     *
+     *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER
+     *                            Datenbank; eine Sicherung soll sich auch in
+     *                            eine andere einspielen lassen.
+     *
+     *   other_resources          TOTE ALTSPALTE. Seit der Migration
+     *                            2026_07 liegen die weiteren Rettungsmittel
+     *                            als einzelne Zeilen in mission_resources
+     *                            (dort einzeln entfernbar) und werden unten
+     *                            als 'resources' mitgesichert. Die Spalte
+     *                            wurde damals nur nicht geloescht. Mit
+     *                            SELECT * ging sie trotzdem in jede
+     *                            Sicherung — ein Feld, das seit Monaten
+     *                            niemand mehr fuellt und das beim
+     *                            Einspielen verworfen wird.
+     *
+     * WAS BEIM EINSPIELEN NICHT ANKOMMT (vorgefunden, hier nicht geaendert):
+     * Der Einspielweg schreibt die Spalten aus mission_fields.php plus
+     * pat_blob. site_ele_m steht dort nicht — die Einsatzort-Hoehe wird beim
+     * Uhr-Upload gerechnet, nicht eingegeben. Sie ist in der Sicherung
+     * enthalten (die Datei soll den Bestand vollstaendig abbilden), kommt
+     * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
+     * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
+     * aendern, und das ist ein eigener Vorgang. */
+    foreach ($q("SELECT id, $missionSpalten FROM missions
+                 WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at", [$userId]) as $m) {
         $mid = (int)$m['id'];
-        foreach (['id', 'user_id', 'device_id'] as $drop) { unset($m[$drop]); }
+        unset($m['id']);        // nur fuer die Unterabfragen gebraucht
         $m['phases'] = array_map(
-            fn($p) => ['phase' => (int)$p['phase'], 'occurred_at' => $p['occurred_at'],
-                       'lat' => $p['lat'] !== null ? (float)$p['lat'] : null,
-                       'lon' => $p['lon'] !== null ? (float)$p['lon'] : null],
+            fn($p) => ['phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at'],
+                       'lat' => $zahl($p['lat']),
+                       'lon' => $zahl($p['lon'])],
             $q('SELECT phase, occurred_at, lat, lon FROM mission_phases
                 WHERE mission_id = ? ORDER BY occurred_at', [$mid]));
         $m['resources'] = $q('SELECT name FROM mission_resources
@@ -55,21 +120,25 @@ function edbak_build(int $userId): string {
     }
 
     $rests = [];
-    foreach ($q('SELECT * FROM rest_segments WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]) as $r) {
+    foreach ($q('SELECT id, client_ref, day, started_at, ended_at, final,
+                        deleted_at, deleted_with_day
+                 FROM rest_segments
+                 WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]) as $r) {
         $rid = (int)$r['id'];
-        foreach (['id', 'user_id', 'device_id'] as $drop) { unset($r[$drop]); }
+        unset($r['id']);
         $r['track'] = $tracks('rest', $rid);
         $rests[] = $r;
     }
 
     // Flugtage: Verweise fuer Portabilitaet in Namen aufloesen
     $days = [];
-    foreach ($q('SELECT d.*, a.registration AS aircraft_reg, b.name AS base_name
+    foreach ($q('SELECT d.day, d.crew_p1, d.crew_p2, d.crew_hems, d.crew_fr,
+                        d.crew_other, d.aircraft, d.base, d.crew, d.notes, d.deleted_at,
+                        a.registration AS aircraft_reg, b.name AS base_name
                  FROM days d
                  LEFT JOIN aircraft a ON a.id = d.aircraft_id
                  LEFT JOIN bases b ON b.id = d.base_id
                  WHERE d.user_id = ? AND d.deleted_at IS NULL ORDER BY d.day', [$userId]) as $d) {
-        foreach (['id', 'user_id', 'aircraft_id', 'base_id'] as $drop) { unset($d[$drop]); }
         $days[] = $d;
     }
 
@@ -185,7 +254,17 @@ function edbak_restore(int $userId, array $data): array {
         /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel; zentral
          * vorhandene Eintraege werden uebersprungen und gezaehlt, s. 6.3/8) */
         $sd = $data['stammdaten'] ?? [];
-        $hasDefBase = (bool)$pdo->query("SELECT COUNT(*) FROM user_defaults WHERE user_id = $userId AND kind = 'base'")->fetchColumn();
+        /* Vorbereitete Anweisung, nicht eingesetzter Wert (M5-06).
+         *
+         * $userId ist hier ein int aus der Sitzung — hineingeschmuggelt
+         * werden kann nichts. Der Befund zielt auch nicht darauf: Diese vier
+         * Stellen waren die EINZIGEN im Projekt, an denen ein Wert im
+         * SQL-Text stand. Eine Regel mit vier Ausnahmen ist keine Regel mehr;
+         * beim naechsten Umbau ist nicht mehr zu sehen, welche Ausnahme
+         * geprueft wurde und welche nur so aussieht. */
+        $hd = $pdo->prepare("SELECT COUNT(*) FROM user_defaults WHERE user_id = ? AND kind = 'base'");
+        $hd->execute([$userId]);
+        $hasDefBase = (bool)$hd->fetchColumn();
         $newDefBaseName = null;
         foreach (($sd['bases'] ?? []) as $b) {
             $name = (string)$b['name'];
@@ -195,7 +274,9 @@ function edbak_restore(int $userId, array $data): array {
             $stats['stammdaten'] += $st->rowCount();
             if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
-        $hasDefAc = (bool)$pdo->query("SELECT COUNT(*) FROM user_defaults WHERE user_id = $userId AND kind = 'aircraft'")->fetchColumn();
+        $ha = $pdo->prepare("SELECT COUNT(*) FROM user_defaults WHERE user_id = ? AND kind = 'aircraft'");
+        $ha->execute([$userId]);
+        $hasDefAc = (bool)$ha->fetchColumn();
         $newDefAcReg = null;
         foreach (($sd['aircraft'] ?? []) as $a) {
             $reg = (string)$a['registration'];

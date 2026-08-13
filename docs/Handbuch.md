@@ -240,6 +240,11 @@ Die abgemeldete Seite sagt, warum: „Das Passwort dieses Kontos wurde geändert
 Ebenso, wenn ein Konto von der Verwaltung gelöscht wurde — dann endet die
 Sitzung beim nächsten Klick, nicht erst beim nächsten Anmelden.
 
+**Schlägt ein Passwortwechsel fehl, ändert sich nichts.** Bis Web 4.5.1 konnte
+ein abgelehnter Versuch — falsches aktuelles Passwort, zu lange offenes
+Formular — dazu führen, dass die geschützten Angaben im selben Tab nicht mehr
+lesbar waren, bis man sich neu anmeldete. Das ist behoben.
+
 **Rollenänderungen wirken sofort.** Wird jemandem die Admin-Rolle gegeben oder
 genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig.
 
@@ -624,6 +629,12 @@ Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Flugtage.
+
+Öffnet sich eine Sicherung nicht und die Meldung nennt den Browser, liegt es
+weder an der Datei noch am Passwort: Sehr alte Browser können gepackte
+Sicherungen nicht entpacken. Ein aktueller Browser öffnet dieselbe Datei ohne
+Weiteres. (Bis Web 4.5.1 stand in diesem Fall „Passwort falsch oder Datei
+beschädigt" — was beides nicht stimmte.)
 
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.

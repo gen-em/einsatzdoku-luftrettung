@@ -1,8 +1,15 @@
 /* Geschuetzte PatientInnendaten — gemeinsame Hilfsfunktionen.
  *
  * Diese Datei rechnet nur; sie sieht die Daten erst, nachdem crypto.js sie
- * entschluesselt hat. Eingebunden von index.php, einsatz.php, einsatz_form.php
- * und zeitraum.php, damit alle vier dieselbe Altersberechnung verwenden.
+ * entschluesselt hat.
+ *
+ * Eingebunden von: einsatz.php, einsatz_form.php, import.php, index.php,
+ * suche.php, zeitraum.php — damit alle dieselbe Altersberechnung verwenden.
+ *
+ * (Der Kopf nannte bis Web 4.5.2 vier Seiten; import.php und suche.php waren
+ * inzwischen dazugekommen, ohne dass er nachgezogen wurde. Eine Liste, die
+ * nicht stimmt, ist schlechter als keine: Wer sie liest, glaubt zu wissen,
+ * welche Seiten eine Aenderung hier trifft.)
  */
 (function () {
   'use strict';

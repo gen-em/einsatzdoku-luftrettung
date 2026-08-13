@@ -17,6 +17,40 @@ function db(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
+        /* ZEITZONE DER VERBINDUNG AUSDRUECKLICH SETZEN (M5-09).
+         *
+         * Ohne diese Zeile rechnet NOW() in der Zeitzone des Datenbank-
+         * servers — und die ist eine Einstellung des Hosters, kein Teil
+         * dieser Anwendung. Sie kann sich beim naechsten Serverumzug aendern,
+         * ohne dass hier jemand etwas tut.
+         *
+         * WARUM DAS ZWEI VERSCHIEDENE FOLGEN HAETTE
+         * Die Anwendung benutzt beide Zeitfunktionen, und zwar mit Absicht:
+         *
+         *   UTC_TIMESTAMP()  fuer den Papierkorb. Dessen Frist laeuft ueber
+         *                    30 Tage; eine Zeitumstellung mitten darin darf
+         *                    nichts verschieben.
+         *   NOW()            fuer alles Kurzlebige — Ratenschutz-Fenster,
+         *                    Gueltigkeit von Tokens und Kopplungscodes. Diese
+         *                    Werte werden in derselben Zeitrechnung
+         *                    geschrieben und gelesen, oft im Abstand von
+         *                    Sekunden.
+         *
+         * Solange beide dieselbe Zeitrechnung meinen, ist der Unterschied
+         * folgenlos. Steht die Serverzone aber auf einer Ortszeit, laufen sie
+         * um den Zonenversatz auseinander: Ein Ratenschutz-Fenster, das mit
+         * NOW() geschrieben und mit UTC verglichen wird, ist eine oder zwei
+         * Stunden zu frueh oder zu spaet abgelaufen.
+         *
+         * Mit UTC auf der Verbindung sind NOW() und UTC_TIMESTAMP() identisch.
+         * Der Unterschied im Code bleibt trotzdem stehen — er sagt, WAS
+         * gemeint ist, und ueberlebt damit eine kuenftige Aenderung dieser
+         * Zeile.
+         *
+         * Die ANZEIGE ist davon unberuehrt: Sie rechnet in PHP nach
+         * $CFG['app']['timezone'] um (siehe fmt_dt()).
+         */
+        $pdo->exec("SET time_zone = '+00:00'");
     }
     return $pdo;
 }
@@ -151,6 +185,20 @@ function iso_to_sql(?string $iso): ?string {
 function json_out(array $data, int $code = 200): never {
     http_response_code($code);
     header('Content-Type: application/json');
+    /* Kein Zwischenspeichern (M3-11).
+     *
+     * Bisher setzte GENAU EIN Endpunkt diesen Kopf: die Sicherung. Vier
+     * weitere liefern denselben Chiffretext aus — Tagesdaten, Zeitraum,
+     * Suchindex, Einzeleinsatz —, und die durften Zwischenspeicher auf dem
+     * Weg befuellen. Das ist kein theoretischer Einwand: An einem
+     * gemeinsamen Rechner reicht die Zurueck-Taste, um eine Antwort aus dem
+     * Speicher des Browsers zu holen, nachdem sich jemand abgemeldet hat.
+     * Der Inhalt ist verschluesselt, die Huelle drumherum — Datum, Uhrzeit,
+     * Einsatznummer, Koordinaten — nicht.
+     *
+     * Der Kopf gehoert deshalb an die Stelle, durch die JEDE Antwort geht,
+     * und nicht in die Zustaendigkeit des einzelnen Endpunkts. */
+    header('Cache-Control: no-store');
     echo json_encode($data);
     exit;
 }

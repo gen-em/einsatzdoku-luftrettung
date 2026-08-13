@@ -11,6 +11,13 @@ require_once __DIR__ . '/../auth_guard.php';
  * ueberall als `pat_blob` an den Browser, der sie selbst entschluesselt.
  */
 
+/* Nur lesen (M3-11). Die Uebersicht war fuer jede Methode offen — ein POST
+ * mit einem Formular von fremder Seite bekam dieselbe Antwort wie ein GET.
+ * Gelesen wird dabei nichts Fremdes (die Abfrage haengt an $userId), aber
+ * ein lesender Endpunkt, der POST beantwortet, ist eine Einladung, die
+ * niemand aussprechen wollte. */
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
+
 header('Content-Type: application/json; charset=utf-8');
 
 $jahr  = (string)($_GET['y'] ?? '');

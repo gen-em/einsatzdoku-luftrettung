@@ -142,7 +142,6 @@ function import_commit(array $b, int $userId): never
                crew_other = COALESCE(?, crew_other)
              WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
 
-        $bekannteTage = [];
         // Tage im Papierkorb einmal vorab feststellen, statt je Zeile zu fragen.
         $imPapierkorb = [];
         $q2 = $pdo->prepare('SELECT day FROM days WHERE user_id = ? AND deleted_at IS NOT NULL');
@@ -159,7 +158,6 @@ function import_commit(array $b, int $userId): never
                 $tageUebersprungen++;
                 continue;
             }
-            $bekannteTage[$tag] = true;
             $modus = (string)($t['mode'] ?? 'keep');
             $crew = [
                 $txt($t['crew_p1'] ?? null, 120), $txt($t['crew_p2'] ?? null, 120),

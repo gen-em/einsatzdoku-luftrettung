@@ -10,6 +10,105 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.5.2] — 2026-08-13
+
+Zweiter Teil des Aufräumens: siebzehn Stellen ohne gemeinsames Thema außer
+diesem — an jeder wich der Code von einer Regel ab, die er sonst überall
+befolgt. Keine neuen Funktionen, keine Schemaänderung.
+
+### Die Zeitzone der Datenbankverbindung hing am Hoster
+
+Die Anwendung benutzt zwei Zeitfunktionen, und zwar mit Absicht: `UTC` für den
+Papierkorb, dessen Frist über 30 Tage läuft, und die Serverzeit für alles
+Kurzlebige — Ratenschutz-Fenster, Gültigkeit von Tokens und Kopplungscodes.
+
+Welche Zeit die Serverzeit ist, war nirgends festgelegt. Sie kam aus der
+Einstellung des Datenbankservers, also vom Hoster, und konnte sich bei einem
+Serverumzug ändern, ohne dass hier jemand etwas tut. Steht sie auf einer
+Ortszeit, laufen beide Zeitrechnungen um den Zonenversatz auseinander: Ein
+Ratenschutz-Fenster, das in Ortszeit geschrieben und gegen UTC verglichen wird,
+ist ein bis zwei Stunden zu früh oder zu spät abgelaufen.
+
+Die Verbindung setzt jetzt ausdrücklich UTC. Der Unterschied im Code bleibt
+stehen — er sagt, was gemeint ist. Die **Anzeige** ist davon unberührt; sie
+rechnet weiter in die eingestellte Ortszeit um.
+
+### Eine Notiz „0" verschwand beim Speichern
+
+Beim Speichern der Flugtag-Angaben stand eine Prüfung auf Wahrheitswert. Die
+Zeichenkette `0` ist in PHP unwahr, genau wie eine leere Eingabe — ein Feld,
+in dem nur eine Null stand, wurde damit zu „nichts" und war nach dem Speichern
+fort. Betroffen waren alle Felder des Flugtags, auch die Notiz. `00` kam
+dagegen durch, was den Fehler schwer bemerkbar machte.
+
+### Antworten der Oberfläche werden nicht mehr zwischengespeichert
+
+Den Kopf gegen das Zwischenspeichern setzte genau ein Weg: die Sicherung. Vier
+weitere liefern denselben verschlüsselten Inhalt aus — Tagesdaten, Zeitraum,
+Suche, Einzeleinsatz. Der Inhalt ist verschlüsselt, die Hülle darum herum
+(Datum, Uhrzeit, Einsatznummer, Koordinaten) nicht. An einem gemeinsam
+genutzten Rechner reichte die Zurück-Taste, um eine Antwort aus dem Speicher
+des Browsers zu holen, nachdem sich jemand abgemeldet hatte.
+
+Der Kopf sitzt jetzt an der Stelle, durch die jede Antwort geht. Außerdem
+weisen die nur lesenden Wege andere Anfragearten mit einer klaren Meldung ab,
+statt sie wie eine Leseanfrage zu behandeln.
+
+### Ein fehlgeschlagener Passwortwechsel hinterließ einen kaputten Zustand
+
+Der Browser verwarf den alten Schlüssel und setzte den neuen, **bevor** der
+Server überhaupt gefragt war. Lehnte der Server ab — falsches aktuelles
+Passwort, abgelaufenes Formular, Ratenschutz —, lag im Tab danach ein
+Schlüssel, der nicht zu den gespeicherten Angaben passte. Die geschützten
+Angaben waren unlesbar, und zwar so, wie es aussieht, wenn es sie gar nicht
+gäbe.
+
+Der neue Schlüssel wandert jetzt in ein Vormerkfach und wird erst übernommen,
+wenn der Server den Wechsel bestätigt hat. Bei einem Fehlschlag bleibt der
+alte unberührt.
+
+### Weitere Stellen
+
+* **Der Einrichtungsassistent** sichert seine Sitzung jetzt wie die
+  Anwendung — er führt das Datenbank-Passwort im Formular und lief bis eben
+  ohne diese Vorkehrungen.
+* **Zeilenumbrüche in einer Empfängeradresse** werden beim Mailversand
+  abgewiesen. Eine solche Adresse hätte eigene Anweisungen und Kopfzeilen in
+  die Nachricht einschleusen können. Die Konfiguration wird dabei einmal
+  statt zweimal gelesen.
+* **Eine gepackte Sicherung** auf einem Browser ohne Entpackfunktion meldete
+  bisher „Passwort falsch oder Datei beschädigt" — die denkbar
+  irreführendste Auskunft. Jetzt steht dort, woran es wirklich liegt.
+* **Das Format der Sicherung ist jetzt aufgezählt** statt „alles, was in der
+  Tabelle steht". Dabei fiel eine tote Altspalte auf: `other_resources` wurde
+  seit der Umstellung auf einzeln entfernbare Rettungsmittel von niemandem
+  mehr gefüllt, wanderte aber in jede Sicherung. Sie ist jetzt draußen; die
+  Rettungsmittel selbst sind wie bisher enthalten.
+* **Die Nutzerzeile** wird mit benannten Spalten gelesen. Der Hash des
+  Anmeldetokens liegt damit nicht mehr bei jeder Anfrage im Speicher.
+* **Vier Stellen mit Werten im SQL-Text** verwenden jetzt vorbereitete
+  Anweisungen — es waren die einzigen Abweichungen von einer sonst lückenlosen
+  Regel.
+* **Der Sortierpfeil** erscheint auf allen Tabellen sofort. Die
+  Zeitraumübersicht zeigte ihn erst nach dem ersten Klick, obwohl sie beim
+  Öffnen sortiert ist.
+* **Ein leeres `<section>`** in der Nutzerverwaltung, ein Kommentarkopf mit
+  veralteter Seitenliste, eine befüllte aber nie gelesene Variable im Import
+  und ein Platzhalterbau, der an einem literalen Prozentzeichen hart
+  abgebrochen wäre: entfernt beziehungsweise berichtigt.
+* **Die Weiterleitung von `geraete.php`** hat ein Ablaufdatum bekommen
+  (Web 5.0.0) statt unbefristet liegen zu bleiben.
+* **Höhenangaben** werden nur noch umgewandelt, wenn dabei auch eine Zahl
+  herauskommt. Die Meereshöhe 0 ist ein gültiger Wert und war von einem
+  Umwandlungsrest nicht zu unterscheiden.
+
+### Bekannt und hier nicht geändert
+
+Die Einsatzort-Höhe steht in der Sicherung, kommt beim Einspielen aber nicht
+zurück — der Einspielweg kennt nur die eingebbaren Felder, und die Höhe wird
+beim Uhr-Upload gerechnet. Das Aufzählen der Spalten hat diese Asymmetrie
+sichtbar gemacht; sie zu beheben hieße, den Einspielweg zu ändern.
+
 ## [Web 4.5.1] — 2026-08-13
 
 Aufräumen: fünfzehn Stellen, an denen die Fehlerbehandlung zu viel oder zu

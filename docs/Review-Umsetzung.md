@@ -22,8 +22,78 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P4 | Ratenschutz und unangemeldete Endpunkte | Web 4.4.0 | **erledigt** |
 | P6 | Sitzung, Rollen, Konten | Web 4.5.0 | **erledigt** |
 | P8a | Aufräumen, Bündel 1+2 | Web 4.5.1 | **erledigt** |
+| P8b | Aufräumen, Bündel 3+4 | Web 4.5.2 | **erledigt** |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P8b — Aufräumen, Bündel 3 und 4 (Web 4.5.2)
+
+Siebzehn Stellen, an denen der Code von einer Regel abwich, die er sonst
+überall befolgt. Keine Schemaänderung.
+
+| Befund | Änderung |
+|---|---|
+| M3-11 | `Cache-Control: no-store` in `json_out()`; Methodenprüfung bei den lesenden Endpunkten |
+| M3-13 | Prüfung auf Wahrheitswert → Vergleich auf die leere Zeichenkette |
+| M5-06 | Vier Werteinsetzungen ins SQL auf vorbereitete Anweisungen |
+| M5-09 | Zeitzone der Verbindung ausdrücklich auf UTC |
+| M1-19 | Cookie-Parameter und `use_strict_mode` im Einrichter |
+| M1-14 | `config.php` einmal statt zweimal; CR/LF im Empfänger abgewiesen |
+| M2-07 | Schlüsseltausch erst nach bestätigtem Erfolg |
+| M1-17 | Leeres `<section>` in der Nutzerverwaltung |
+| M1-20 | `SELECT *` → benannte Spalten in `auth_guard.php` |
+| M2-09 | Kommentarkopf von `patient.js` mit den tatsächlichen sechs Einbindern |
+| M2-11 | `DecompressionStream` prüfen wie schon `CompressionStream` |
+| M2-12 | Zahlenumwandlung nur bei numerischem Ergebnis |
+| M3-14 | Platzhalterbau ohne Formatzeichenkette |
+| M4-12 | Weiterleitungsrest mit Ablaufdatum (Web 5.0.0) |
+| M5-07 | Spalten der Sicherung aufgezählt |
+| M6-10 | Sortierpfeil-Sonderfall abgeschafft |
+| D13 | Befüllte, nie gelesene Variable im Import |
+
+### M5-09 ist ein Fehler, kein Schönheitsproblem
+
+Gemessen: Mit `SET time_zone = '+02:00'` laufen `NOW()` und `UTC_TIMESTAMP()`
+um den Zonenversatz auseinander. Der Papierkorb schreibt in UTC, Ratenschutz
+und Token in der Serverzeit. Auf einem Server mit Ortszone wäre ein
+Ratenschutz-Fenster ein bis zwei Stunden zu früh oder zu spät abgelaufen —
+und das hing allein an einer Einstellung des Hosters.
+
+Die Verbindung setzt jetzt UTC. Der Unterschied zwischen den beiden Funktionen
+im Code bleibt: Er sagt, was gemeint ist, und überlebt damit eine künftige
+Änderung dieser Zeile.
+
+### M5-07 hat eine tote Altspalte ans Licht gebracht
+
+`missions.other_resources` wird seit der Migration `2026_07` von niemandem
+mehr gefüllt — die weiteren Rettungsmittel liegen als einzelne Zeilen in
+`mission_resources`. Die Spalte wurde damals nur nicht gelöscht. Mit `SELECT *`
+ging sie trotzdem in jede Sicherung: ein Feld, das seit Monaten leer ist und
+beim Einspielen verworfen wird. Sie ist jetzt draußen.
+
+**Vorgefunden und hier nicht geändert:** `site_ele_m` steht in der Sicherung,
+kommt beim Einspielen aber nicht zurück. Der Einspielweg schreibt die Spalten
+aus `mission_fields.php` plus `pat_blob`; die Einsatzort-Höhe steht dort nicht,
+weil sie beim Uhr-Upload gerechnet und nicht eingegeben wird. Das Aufzählen hat
+die Asymmetrie sichtbar gemacht — sie zu beheben hieße, den Einspielweg zu
+ändern, und das ist ein eigener Vorgang.
+
+### M2-07: warum ein Vormerkfach und kein zweiter Aufruf
+
+Der Wechsel läuft als gewöhnliches Formular mit anschließendem Neuladen. Nach
+dem Neuladen kann der Browser den neuen Datenschlüssel nicht erneut ableiten —
+das Passwort ist fort. Er legt ihn deshalb vor dem Absenden in ein Vormerkfach
+im `sessionStorage` (gleiche Lebensdauer wie der Schlüssel, den es ersetzt) und
+löst es nach dem Neuladen auf: bei Erfolg übernehmen, sonst verwerfen.
+
+### M1-17: nur eine kaputte Stelle, nicht zwei
+
+Der Befund nennt zwei. Geprüft wurde die Tag-Bilanz aller dreizehn gerenderten
+Seiten samt der Reihenfolge von Fußzeile und Abschluss-Tags; gefunden wurde ein
+verwaistes, leeres `<section>` in `admin_users.php`. Die zweite Stelle ist
+offenbar in einem früheren Paket beiläufig mit repariert worden.
 
 ---
 

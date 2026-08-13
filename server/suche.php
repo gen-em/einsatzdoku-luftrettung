@@ -502,7 +502,6 @@ function gruppenOeffnen() {
 const tabelle = EdMissionTable.erzeuge({
   table: $('suchtable'),
   sortKey: 'day', sortAsc: false,   // neueste zuerst
-  pfeilInitial: true,
   onSortChange: fragmentSchreiben,
   onAfterDraw: n => {
     $('leer').hidden = n > 0;

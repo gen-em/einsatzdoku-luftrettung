@@ -4,7 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 
 $tab = $_GET['t'] ?? 'profil';
 if (!in_array($tab, ['profil', 'geraete', 'stammdaten', 'backup'], true)) { $tab = 'profil'; }
-$notice = null; $error = null; $newKey = null; $pairCode = null;
+$notice = null; $error = null; $pwGewechselt = false; $newKey = null; $pairCode = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -159,6 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
                         . 'Kontos sind damit beendet; noch offene Links zum '
                         . 'Zurücksetzen sind ungültig.';
+                /* Signal fuer das Browser-Skript (M2-07): Erst JETZT darf es
+                 * den neuen Datenschluessel uebernehmen. */
+                $pwGewechselt = true;
             } catch (Throwable $ex) {
                 $pdo->rollBack();
                 $error = 'Passwortwechsel fehlgeschlagen. Es wurde nichts geändert.';
@@ -545,6 +548,20 @@ if ($tab === 'geraete') {
     </form>
     <script src="<?= asset('assets/crypto.js') ?>"></script>
     <script>
+    /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
+     * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
+    (() => {
+      const neu = sessionStorage.getItem('edk_neu');
+      if (neu === null) { return; }
+      sessionStorage.removeItem('edk_neu');
+      if (<?= $pwGewechselt ? 'true' : 'false' ?>) {
+        EdCrypto.clearSession();          // alten Inhaltsschluessel verwerfen
+        EdCrypto.setDataKey(neu);         // neuer Datenschluessel gilt ab jetzt
+      }
+      // Sonst: nichts tun. Der Wechsel ist nicht zustande gekommen, der alte
+      // Schluessel im Tab passt weiterhin zur gespeicherten Huelle.
+    })();
+
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
     const WRAP_PW = <?= json_encode($patWrapPw) ?>;
     document.getElementById('pwform').addEventListener('submit', async ev => {
@@ -584,8 +601,30 @@ if ($tab === 'geraete') {
           // Schluessel — er vergleicht zwei Hashwerte.
           document.getElementById('pw_keychk').value = await EdCrypto.contentKeyCheck(ck);
         }
-        EdCrypto.clearSession();                         // alten Inhaltsschluessel verwerfen
-        EdCrypto.setDataKey(nk.dataKeyHex);
+        /* SCHLUESSEL ERST NACH BESTAETIGTEM ERFOLG TAUSCHEN (M2-07).
+         *
+         * Hier stand clearSession() + setDataKey() VOR dem Absenden. Damit
+         * war der alte Inhaltsschluessel verworfen und der neue
+         * Datenschluessel gesetzt, BEVOR der Server ueberhaupt gefragt
+         * worden war.
+         *
+         * Lehnt der Server ab — falsches aktuelles Passwort, abgelaufenes
+         * Formular-Token, Ratenschutz, ein Fehler beim Speichern —, dann
+         * liegt in diesem Tab jetzt ein Datenschluessel, zu dem die
+         * gespeicherte Huelle nicht passt. Die geschuetzten Angaben sind
+         * damit unlesbar, und zwar so, wie es aussieht, wenn es sie nicht
+         * gaebe: "keine Angaben vorhanden". Ein FEHLGESCHLAGENER Vorgang
+         * hinterliess also einen kaputten Zustand.
+         *
+         * Jetzt wandert der neue Schluessel in ein VORMERKFACH. Nach dem
+         * Neuladen entscheidet die Antwort des Servers:
+         *   Erfolg    -> uebernehmen und Fach leeren
+         *   Fehlschlag-> Fach leeren, der alte Schluessel bleibt unberuehrt
+         *
+         * Das Vormerkfach liegt im sessionStorage, also im selben Tab und nur
+         * bis zu dessen Ende — dieselbe Lebensdauer wie der Schluessel, den
+         * es ersetzen soll. */
+        sessionStorage.setItem('edk_neu', nk.dataKeyHex);
         f.dataset.ready = '1';
         f.submit();
       } catch (e) { st.textContent = 'Fehler bei der Schlüsselableitung.'; }

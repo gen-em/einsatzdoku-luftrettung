@@ -172,8 +172,6 @@ $users   = db()->query('SELECT id, email, name, role, created_at FROM users ORDE
       <button class="btn-primary">Nutzer anlegen</button>
     </form>
   </section>
-
-  <section>
 <?php ui_footer(); ?>
 </main>
 </div>

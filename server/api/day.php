@@ -12,6 +12,12 @@ require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
  *                                Header X-CSRF muss zum Session-Token passen
  */
 
+// Dieser Endpunkt kennt zwei Methoden — jede andere ist ein Irrtum und wird
+// benannt, statt stillschweigend als GET behandelt zu werden (M3-11).
+if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
+    json_out(['error' => 'method'], 405);
+}
+
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
@@ -47,7 +53,23 @@ try {
                                  . 'gespeichert. Bitte den Tag zuerst wiederherstellen '
                                  . '(Einstellungen → Papierkorb).'], 409);
         }
-        $trim = fn($k, $max) => mb_substr(trim((string)($b[$k] ?? '')), 0, $max) ?: null;
+        /* Leer heisst leer — "0" heisst "0" (M3-13).
+         *
+         * Hier stand der Kurzschlussoperator ?:, der auf WAHRHEITSWERT
+         * prueft. Die Zeichenkette "0" ist in PHP unwahr, ebenso wie "".
+         * Ein Feld, in dem genau eine Null steht, wurde damit zu NULL —
+         * beim Speichern verschwunden, ohne Meldung.
+         *
+         * Betroffen war nicht nur ein Besatzungsname (den es geben mag oder
+         * nicht): $trim gilt fuer ALLE Felder des Flugtags, auch die Notiz.
+         * Eine Notiz "0" — etwa als Zaehlung — verschwand.
+         *
+         * Der Vergleich auf die leere Zeichenkette ist die Schreibweise, die
+         * an acht anderen Stellen des Projekts ohnehin steht. */
+        $trim = function (string $k, int $max) use ($b): ?string {
+            $v = mb_substr(trim((string)($b[$k] ?? '')), 0, $max);
+            return $v !== '' ? $v : null;
+        };
 
         // Dropdown-IDs nur uebernehmen, wenn sie der NutzerIn gehoeren ODER
         // zentral sind (user_id IS NULL). Muss zu der Liste passen, aus der
