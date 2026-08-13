@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/validate_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
 
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
@@ -48,7 +49,11 @@ $day = $editing ? $mission['day']
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $day = $_POST['day'] ?? $day;
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) { $error = 'Ungültiges Datum.'; }
+    // Kalendertag statt blossem Muster: Das Muster liess den 30. Februar
+    // durch, und local_to_utc() haette ihn danach stillschweigend auf den
+    // 2. Maerz verschoben — die Phasenzeiten eines ganzen Einsatzes lagen
+    // dann am falschen Tag (B2).
+    if (pruef_kalendertag($day, 'Datum') === null) { $error = 'Ungültiges Datum.'; }
 
     // Phasenzeilen einsammeln. Vor der Mitternachts-Logik wird nach
     // Phasennummer aufsteigend sortiert (stabil: Index als Tie-Breaker bei
@@ -128,12 +133,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Leerer Wert = Blob nicht anfassen (z. B. Sitzung nicht entsperrt).
         if ($patReady) {
             $pb = (string)($_POST['pat_blob'] ?? '');
-            if ($pb !== '' && preg_match('/^[A-Za-z0-9+\/=]{16,8000}$/', $pb)) {
-                $fieldCols[] = 'pat_blob'; $fieldVals[] = $pb;
-            } elseif ($pb === '__CLEAR__') {
+            if ($pb === '__CLEAR__') {
                 $fieldCols[] = 'pat_blob'; $fieldVals[] = null;
+            } elseif ($pb !== '') {
+                /* MUSTERVERLETZUNG MELDEN STATT UEBERGEHEN.
+                 *
+                 * Frueher wurde die Spalte bei einem unpassenden Wert einfach
+                 * nicht in die Aktualisierung aufgenommen: kein Fehler, keine
+                 * Meldung, der bisherige Block blieb stehen. Wer eine Diagnose
+                 * korrigiert und "gespeichert" liest, hatte danach die ALTE
+                 * Diagnose in der Datenbank — und keinen Anhaltspunkt dafuer.
+                 *
+                 * Dieselbe Stelle ist beim Passwortwechsel bereits so geloest;
+                 * dort steht das stille Uebergehen ausdruecklich als frueherer
+                 * Fehler im Kommentar. Hier war es noch drin.
+                 *
+                 * Grenzen jetzt aus validate_lib.php (40…60000 statt 16…8000):
+                 * Die Untergrenze ist hergeleitet, nicht geschaetzt — kuerzer
+                 * als 40 Zeichen KANN ein AES-GCM-Chiffretext nicht sein. */
+                $geprueft = new Pruefliste();
+                $ok = pruef_pat_blob($pb, 'Geschützte Angaben', $geprueft);
+                if ($ok === null) {
+                    $error = 'Die geschützten Angaben konnten nicht gespeichert werden ('
+                           . $geprueft->text() . '). Es wurde NICHTS geändert — bitte die '
+                           . 'Seite neu laden und erneut versuchen.';
+                } else {
+                    $fieldCols[] = 'pat_blob'; $fieldVals[] = $ok;
+                }
             }
         }
+
+        /* Ein hier erst entstandener Fehler MUSS das Speichern verhindern.
+         * Der umgebende Block laeuft unter !$error, geprueft VOR dem Einlesen
+         * der Felder. Ohne diese zweite Abfrage wuerde ein Fehler aus der
+         * Blockpruefung oben gemeldet UND gespeichert — die schlechteste aller
+         * Kombinationen. */
+        if (!$error) {
 
         $pdo = db(); $pdo->beginTransaction();
         try {
@@ -199,6 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen.';
         }
+
+        }   // Ende: nur speichern, wenn kein Fehler entstanden ist
     }
 }
 

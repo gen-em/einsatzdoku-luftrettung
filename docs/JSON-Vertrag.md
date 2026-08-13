@@ -29,10 +29,11 @@ schon durchsetzt und welche noch nicht.
 | Reanimationsarten gegen die Liste (3.3) | durchgesetzt |
 | Idempotenz über Gerät + `client_ref` (2) | durchgesetzt |
 | Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht geprüft |
-| Kalendertag muss existieren (3.2) | **noch nicht** auf dem Uhr-Weg |
-| Koordinatenbereiche, Mengenbegrenzungen (3.2) | **noch nicht** auf dem Uhr-Weg |
+| Kalendertag muss existieren (3.2) | durchgesetzt |
+| Koordinatenbereiche, Mengenbegrenzungen (3.2) | durchgesetzt |
 | Leere Liste löscht nichts (3.1) | **noch nicht** — eine leere Phasenliste löscht heute die vorhandenen |
-| Antwortfelder `kept_*` und `rejected` (5) | **noch nicht** vorhanden |
+| Antwortfeld `rejected` (5) | durchgesetzt |
+| Antwortfelder `kept_*` (5) | **noch nicht** vorhanden |
 | Zufallsanteil in der Client-Kennung (8) | **noch nicht** in der Uhr-App |
 
 Die als „noch nicht" gekennzeichneten Punkte beschreiben den **Zielzustand**
@@ -206,9 +207,9 @@ Zusätzlich können auftreten:
 
 | Feld | Bedeutung |
 |---|---|
-| `kept_phases` | eine leere Phasenliste wurde übergangen, der vorhandene Stand bleibt |
-| `kept_resus` | dasselbe für die Reanimationen |
-| `rejected` | Liste verworfener Einzelwerte mit Ursache (z. B. `phase außerhalb 2…9`) |
+| `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
+| `kept_phases` | eine leere Phasenliste wurde übergangen, der vorhandene Stand bleibt — *noch nicht umgesetzt* |
+| `kept_resus` | dasselbe für die Reanimationen — *noch nicht umgesetzt* |
 
 Ein `ok: true` mit gefülltem `rejected` bedeutet: Der Upload ist angekommen,
 aber **nicht vollständig übernommen**. Die Uhr sollte das anzeigen und nicht

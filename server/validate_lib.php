@@ -291,6 +291,38 @@ function pruef_utc($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = null): ?s
 }
 
 /**
+ * Zeitstempel in UTC — entweder im Uhr-Format oder in Datenbankschreibweise.
+ *
+ * Der Uhr-Weg liefert "2026-03-14T09:50:00Z", eine Sicherungsdatei dagegen
+ * "2026-03-14 09:50:00", weil sie die Werte so uebernimmt, wie sie in der
+ * Datenbank stehen. Beide meinen dasselbe. Diese Funktion nimmt beides an —
+ * damit nicht wieder zwei Massstaebe entstehen, nur weil zwei Formate im
+ * Umlauf sind.
+ */
+function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = null): ?string
+{
+    if ($wert === null || $wert === '') { return null; }
+    if (!is_string($wert)) {
+        $p?->melde($feld, 'kein Zeitstempel');
+        return null;
+    }
+    $s = trim($wert);
+    // Uhr-Format: an das Z erkennbar
+    if (str_ends_with($s, 'Z')) { return pruef_utc($s, $feld, $p); }
+
+    if (!preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(:(\d{2}))?$/', $s, $t)) {
+        $p?->melde($feld, 'kein Zeitstempel (JJJJ-MM-TT hh:mm[:ss])');
+        return null;
+    }
+    if (pruef_kalendertag($t[1], $feld, $p) === null) { return null; }
+    if ((int)$t[2] > 23 || (int)$t[3] > 59 || (int)($t[5] ?? 0) > 59) {
+        $p?->melde($feld, 'Uhrzeit ausserhalb 00:00:00…23:59:59');
+        return null;
+    }
+    return $t[1] . ' ' . $t[2] . ':' . $t[3] . ':' . (($t[5] ?? '') !== '' ? $t[5] : '00');
+}
+
+/**
  * Ortszeit (App-Zeitzone) -> UTC, mit Kalendertagspruefung.
  *
  * Gegenstueck zu local_to_utc() in db.php, um B2 erweitert. Die dortige
@@ -335,7 +367,11 @@ function pruef_koordinate($wert, float $grenze, string $feld = 'Koordinate', ?Pr
     }
     $f = (float)$wert;
     if (!is_finite($f) || $f < -$grenze || $f > $grenze) {
-        $p?->melde($feld, 'ausserhalb von ±' . rtrim(rtrim(number_format($grenze, 0, ',', ''), '0'), ','));
+        // Ganzzahlig ausgeben, ohne Nachkommastellen abzuschneiden. Die
+        // fruehere Fassung strich nachlaufende Nullen und machte aus der
+        // Grenze 90 die Meldung "ausserhalb von ±9" — eine Fehlermeldung,
+        // die selbst falsch ist, kostet mehr Zeit als gar keine.
+        $p?->melde($feld, 'ausserhalb von ±' . (string)(int)$grenze);
         return null;
     }
     return $f;

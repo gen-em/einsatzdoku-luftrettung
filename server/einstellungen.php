@@ -1067,7 +1067,14 @@ if ($tab === 'geraete') {
                 + `in diesem Konto nicht lesbar sind.`
               : '');
         impState.textContent = `Import fertig: ${s.missions} Einsätze übernommen `
-          + `(${s.missions_skipped} bereits vorhanden), ${s.rests} Ruhesegmente, `
+          + `(${s.missions_skipped} übersprungen${
+                s.skipped_reasons && Object.keys(s.skipped_reasons).length
+                  ? ': ' + Object.entries(s.skipped_reasons)
+                      .map(([k, v]) => ({bereits_vorhanden:'bereits vorhanden',
+                                         datum_oder_zeit:'unbrauchbares Datum oder Zeit',
+                                         aufbau:'unbrauchbarer Aufbau'}[k] || k) + ' ' + v)
+                      .join(', ')
+                  : ''}), ${s.rests} Ruhesegmente, `
           + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
           + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz;
       } catch (e) {

@@ -10,6 +10,110 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.2.0] — 2026-08-08
+
+### Alle vier Schreibwege prüfen jetzt gleich
+
+Dieselben Tabellen werden über vier unabhängige Wege beschrieben: Formular,
+Uhr, Import und Wiedereinspielen einer Sicherung. Jeder führte eigene
+Prüfungen — und die Sorgfalt verlief **genau umgekehrt zur
+Vertrauenswürdigkeit der Quelle**:
+
+| | Formular | Import | Uhr | Sicherung |
+|---|---|---|---|---|
+| vorher | 5 von 9 | 8 von 9 | 5 von 9 | **0 von 9** |
+| jetzt | alle | alle | alle | alle |
+
+Ausgerechnet das Wiedereinspielen prüfte gar nichts — dabei kann die Datei aus
+beliebiger Herkunft stammen, während der Uhr-Weg immerhin einen Schlüssel
+verlangt. Seit dieser Auslieferung ruft jeder Weg dieselbe Prüfschicht auf
+(`server/validate_lib.php`, seit Web 4.0.0 vorhanden).
+
+### Behoben — Ein unmöglicher Kalendertag wurde stillschweigend verschoben
+
+Die Datumsumwandlung liefert bei einem unmöglichen Tag kein Fehlerergebnis,
+sondern rechnet weiter: Aus dem 30. Februar wird der 2. März. Sichtbar wird das
+nur über die Warnungsabfrage der Datumsklasse, und die wurde nirgends
+abgefragt. Ein Tippfehler in einer Importdatei verschob damit die Phasenzeiten
+eines ganzen Einsatzes auf einen falschen Tag — ohne jede Meldung. Jetzt wird
+ein solcher Tag abgelehnt, auf allen vier Wegen.
+
+### Behoben — Das Wiedereinspielen brach beim ersten schlechten Wert komplett ab
+
+Ein einziger ungültiger Wert ließ die **gesamte** Wiederherstellung scheitern,
+statt die eine Zeile zu überspringen. Das ist die falsche Richtung: Wer eine
+Wiederherstellung startet, hat meist keinen zweiten Versuch. Jetzt wird je
+Datensatz übersprungen und am Ende gesagt, wie viele und warum.
+
+Damit ist auch der letzte Weg geschlossen, über den **Phase 10** noch in die
+Datenbank zurückkehren konnte.
+
+### Behoben — Ein Import verlor genau die Korrektur, um die es ging
+
+Beim Überschreiben eines vorhandenen Einsatzes wurde die Zugehörigkeit aus der
+Zahl der geänderten Zeilen erschlossen. Die Datenbank liefert aber die Zahl der
+**geänderten**, nicht der **getroffenen** Zeilen: Wer alle Werte auf das setzt,
+was schon dasteht, bekommt null zurück. Daraus schloss der Code „gehört jemand
+anderem" und übersprang den Einsatz — samt der danach folgenden Blöcke für
+Phasen, Reanimation und Rettungsmittel.
+
+Der praktisch wichtigste Fall ist zugleich der schlimmste: Jemand importiert
+erneut, weil er **nur die Phasenzeiten korrigiert** hat. Die Kopfdaten sind
+unverändert, also greift der Fehlschluss — und genau die Korrektur wird
+verworfen. Gemeldet wurde „übersprungen", was nach „war schon da" klingt.
+Jetzt wird die Zugehörigkeit direkt abgefragt.
+
+### Behoben — Mehrfach gesetzte Phasen gingen beim Import verloren
+
+Der Import verwarf die zweite Zeile mit derselben Phasennummer. Das
+widerspricht dem JSON-Vertrag: Mehrfache Einträge sind ausdrücklich erlaubt,
+weil eine erneut gesetzte Phase eine **Korrektur** ist und damit eine
+Information. Der Uhr-Weg speicherte sie, der Import warf sie weg — dieselben
+Daten ergaben je nach Weg einen anderen Bestand, und ein Rückimport der eigenen
+Exporte verlor stillschweigend Zeilen.
+
+Statt der Entdoppelung begrenzt jetzt eine Mengengrenze (500 Phasen je Einsatz).
+Sie ist bewusst hoch: Sie schützt vor einer entgleisten Nutzlast und ist kein
+Ersatz für die Entdoppelung.
+
+### Behoben — Geschützte Angaben konnten unbemerkt ungespeichert bleiben
+
+Passte der Chiffretext nicht zum erwarteten Muster, wurde die Spalte im
+Formular einfach nicht in die Aktualisierung aufgenommen: kein Fehler, keine
+Meldung, der bisherige Block blieb stehen. Wer eine Diagnose korrigierte und
+„gespeichert" las, hatte danach die **alte** Diagnose in der Datenbank. Jetzt
+wird gemeldet und nichts geändert.
+
+Dieselbe Stelle war beim Passwortwechsel längst so gelöst — dort steht das
+stille Übergehen sogar als früherer Fehler im Kommentar.
+
+### Geändert — Eine Grenze für den Patientenblock statt dreier
+
+40 bis 60000 Zeichen, auf allen vier Wegen. Vorher: 16…8000 im Formular,
+20…60000 im Import, gar keine beim Wiedereinspielen. Die Untergrenze ist jetzt
+hergeleitet statt geschätzt — AES-256-GCM legt 12 Byte Zufallswert davor und
+hängt 16 Byte Prüfwert an, also mindestens 28 Byte oder 40 base64-Zeichen. Alle
+drei alten Untergrenzen lagen darunter.
+
+### Neu — Verworfene Werte werden genannt
+
+Bisher verschwand ein verworfener Wert spurlos; der Upload meldete Erfolg, und
+die Phase fehlte trotzdem.
+
+- **Uhr:** Die Antwort enthält jetzt bei Bedarf `rejected` mit den Ursachen.
+  `ok: true` zusammen mit `rejected` heißt: angekommen, aber nicht vollständig
+  übernommen.
+- **Import und Wiedereinspielen:** Die übersprungenen Datensätze werden nach
+  Ursache aufgeschlüsselt. „40 übersprungen" war nicht deutbar — es konnte
+  „alles war schon da" heißen (gut) oder „alles war kaputt" (schlecht). Vier
+  verschiedene Gründe fielen in einen Zähler.
+
+### Kleinigkeit
+
+Die Meldung zu Koordinaten außerhalb des gültigen Bereichs lautete „außerhalb
+von ±9" statt „±90" — nachlaufende Nullen wurden abgeschnitten. Eine
+Fehlermeldung, die selbst falsch ist, kostet mehr Zeit als gar keine.
+
 ## [Web 4.1.2] — 2026-08-08
 
 ### Die Kette „unlesbarer Schlüssel" ist geschlossen

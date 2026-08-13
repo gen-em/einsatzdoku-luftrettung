@@ -164,6 +164,13 @@ function edbak_restore(int $userId, array $data): array {
     $stats = ['missions' => 0, 'missions_skipped' => 0, 'rests' => 0, 'rests_skipped' => 0,
               'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0];
 
+    /* URSACHEN GETRENNT ZAEHLEN (M5-14).
+     * "40 uebersprungen" ist nicht deutbar: Es kann heissen "alles war schon
+     * da" (gut) oder "alles war kaputt" (schlecht). Genau diese Unterscheidung
+     * braucht, wer eine Wiederherstellung beurteilen muss. */
+    $grund = ['bereits_vorhanden' => 0, 'datum_oder_zeit' => 0, 'aufbau' => 0];
+    $pruef = new Pruefliste();
+
     $pdo->beginTransaction();
     try {
         /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel; zentral
@@ -282,19 +289,59 @@ function edbak_restore(int $userId, array $data): array {
         $extraCols = array_merge($extraCols, ['pat_blob']);   // Alt-Backups: loc_* wird ignoriert
 
         foreach (($data['missions'] ?? []) as $m) {
+            if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }
             $exists->execute([$userId, (string)($m['client_ref'] ?? '')]);
-            if ($exists->fetchColumn()) { $stats['missions_skipped']++; continue; }
+            if ($exists->fetchColumn()) {
+                $stats['missions_skipped']++; $grund['bereits_vorhanden']++; continue;
+            }
+
+            /* PRUEFUNG DIESES WEGES — sie fehlte bisher VOLLSTAENDIG.
+             *
+             * Das ist die auffaelligste Stelle des ganzen Reviews: Von den
+             * neun Pruefungen, die der Import durchfuehrt, fand hier keine
+             * einzige statt — obwohl die Datei aus BELIEBIGER Herkunft stammen
+             * kann, waehrend der Uhr-Weg immerhin einen Schluessel verlangt.
+             * Die Pruefsorgfalt verlief genau umgekehrt zur
+             * Vertrauenswuerdigkeit der Quelle.
+             *
+             * Vier Folgen hatte das:
+             *  - Phase 10 kehrte ueber diesen Weg in die Datenbank zurueck.
+             *    Nach der Migration war das der einzige verbliebene Weg dorthin.
+             *  - Reanimationsarten waren ungeprueft.
+             *  - Der Patientenblock hatte keine Laengengrenze; die Datenbank
+             *    haette ihn abgeschnitten — ein abgeschnittener Chiffretext ist
+             *    DAUERHAFT unlesbar.
+             *  - Ein einziger ungueltiger Wert brach die GESAMTE
+             *    Wiederherstellung ab, statt die eine Zeile zu ueberspringen.
+             *    Bei einer Wiederherstellung ist das die falsche Richtung:
+             *    Wer sie startet, hat meist keinen zweiten Versuch.
+             */
+            $tag       = pruef_kalendertag($m['day'] ?? null, 'day', $pruef);
+            $startedAt = pruef_utc_oder_sql($m['started_at'] ?? null, 'started_at', $pruef);
+            if ($tag === null || $startedAt === null) {
+                $stats['missions_skipped']++; $grund['datum_oder_zeit']++; continue;
+            }
+            $endedAt = pruef_utc_oder_sql($m['ended_at'] ?? null, 'ended_at', $pruef);
 
             $oe = edbak_origin_edited($m);
 
             $cols = ['user_id', 'client_ref', 'day', 'started_at', 'ended_at',
                      'manual', 'origin', 'edited', 'final', 'distance_m', 'ascent_m'];
-            $vals = [$userId, $m['client_ref'] ?? ('bak-' . bin2hex(random_bytes(6))),
-                     $m['day'], $m['started_at'], $m['ended_at'] ?? null,
+            $vals = [$userId,
+                     pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
+                        ?? ('bak-' . bin2hex(random_bytes(6))),
+                     $tag, $startedAt, $endedAt,
                      (int)($m['manual'] ?? 0), $oe['origin'], $oe['edited'], (int)($m['final'] ?? 1),
-                     $m['distance_m'] ?? null, $m['ascent_m'] ?? null];
+                     pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
+                     pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef)];
             foreach ($extraCols as $c) {
-                if (array_key_exists($c, $m)) { $cols[] = $c; $vals[] = $m[$c]; }
+                if (!array_key_exists($c, $m)) { continue; }
+                // Der Patientenblock bekommt dieselbe Grenze wie ueberall
+                // sonst; alles andere wird auf seine Spaltenlaenge gestutzt.
+                $wert = $c === 'pat_blob'
+                    ? pruef_pat_blob($m[$c], 'pat_blob', $pruef)
+                    : $m[$c];
+                $cols[] = $c; $vals[] = $wert;
             }
             $sql = 'INSERT INTO missions (' . implode(',', $cols) . ') VALUES ('
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
@@ -310,23 +357,40 @@ function edbak_restore(int $userId, array $data): array {
                         ->execute([$mid, $rname]);
                 }
             }
-            foreach (($m['phases'] ?? []) as $p) {
-                $insPh->execute([$mid, (int)$p['phase'], $p['occurred_at'],
-                                 $p['lat'] ?? null, $p['lon'] ?? null]);
+            // Phasen: Nummer 2 bis 9. Mehrfache Eintraege derselben Nummer
+            // bleiben erhalten — sie sind Korrekturen (JSON-Vertrag 3).
+            foreach (pruef_menge($m['phases'] ?? [], LIMIT_PHASEN, 'phases', $pruef) as $p) {
+                if (!is_array($p)) { continue; }
+                $nr   = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
+                $wann = pruef_utc_oder_sql($p['occurred_at'] ?? null, 'phases.occurred_at', $pruef);
+                if ($nr === null || $wann === null) { continue; }
+                $insPh->execute([$mid, $nr, $wann,
+                                 pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
+                                 pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
             }
-            foreach (($m['resus'] ?? []) as $r) {
+            foreach (pruef_menge($m['resus'] ?? [], LIMIT_REA_SESSION, 'resus', $pruef) as $r) {
+                if (!is_array($r)) { continue; }
+                $rStart = pruef_utc_oder_sql($r['started_at'] ?? null, 'resus.started_at', $pruef);
+                if ($rStart === null) { continue; }
                 $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)')
-                    ->execute([$mid, $r['started_at']]);
+                    ->execute([$mid, $rStart]);
                 $sid = (int)$pdo->lastInsertId();
                 $insEv = $pdo->prepare('INSERT INTO resus_events
                     (session_id, type, occurred_at) VALUES (?,?,?)');
-                foreach (($r['events'] ?? []) as $e2) {
-                    $insEv->execute([$sid, (string)$e2['type'], $e2['occurred_at']]);
+                foreach (pruef_menge($r['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef) as $e2) {
+                    if (!is_array($e2)) { continue; }
+                    $typ  = pruef_reanimationsart($e2['type'] ?? null, 'resus.events.type', $pruef);
+                    $wann = pruef_utc_oder_sql($e2['occurred_at'] ?? null, 'resus.events.at', $pruef);
+                    if ($typ === null || $wann === null) { continue; }
+                    $insEv->execute([$sid, $typ, $wann]);
                 }
             }
-            foreach (($m['track'] ?? []) as $p) {
-                $insPoint->execute(['mission', $mid, (int)$p[0], (float)$p[1],
-                                    (float)$p[2], $p[3], (int)$p[4]]);
+            foreach (pruef_menge($m['track'] ?? [], LIMIT_TRACKPUNKTE, 'track', $pruef) as $p) {
+                if (!is_array($p) || count($p) < 5) { continue; }
+                $la = pruef_breite($p[1], 'track.lat', $pruef);
+                $lo = pruef_laenge($p[2], 'track.lon', $pruef);
+                if ($la === null || $lo === null) { continue; }
+                $insPoint->execute(['mission', $mid, (int)$p[0], $la, $lo, $p[3], (int)$p[4]]);
             }
 
             // Einsatzort-Hoehe aus den soeben eingespielten Phasen/Track neu
@@ -362,6 +426,10 @@ function edbak_restore(int $userId, array $data): array {
         // (selbst verschluesselten) Container als Klartext und werden vom
         // Browser mit dem Schluessel des ZIELKONTOS verschluesselt — fremde
         // Huellen werden nie mehr geschrieben.
+
+        // Aufschluesselung mitgeben: Der Aufrufer zeigt sie an.
+        $stats['skipped_reasons'] = array_filter($grund);
+        $stats['rejected'] = $pruef->nachUrsache();
 
         $pdo->commit();
     } catch (Throwable $ex) {

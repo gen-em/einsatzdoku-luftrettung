@@ -623,9 +623,35 @@
             var d = await res.json();
             if (!d.ok) { throw new Error(d.meldung || d.error || ('HTTP ' + res.status)); }
 
+            /* Übersprungene und verworfene Werte AUFSCHLÜSSELN.
+             *
+             * „40 übersprungen" ist nicht deutbar: Es kann „alles war schon
+             * da" heißen (gut) oder „alles war kaputt" (schlecht). Vorher
+             * fielen vier verschiedene Ursachen in diese eine Zahl. */
+            var ursachen = {
+                bereits_vorhanden:    'bereits vorhanden',
+                auswahl:              'von dir übersprungen',
+                datum:                'unbrauchbares Datum',
+                uhrzeit:              'unbrauchbare Uhrzeit',
+                fremd_oder_geloescht: 'nicht mehr vorhanden oder fremd'
+            };
+            var teile = [];
+            for (var k in (d.skipped_reasons || {})) {
+                teile.push((ursachen[k] || k) + ': ' + d.skipped_reasons[k]);
+            }
+            var verworfen = [];
+            for (var u in (d.rejected || {})) {
+                verworfen.push(esc(u) + ' (' + d.rejected[u] + '×)');
+            }
+
             zustand.innerHTML = 'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
-                + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen; '
+                + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
+                + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
                 + d.days_inserted + ' Flugtage angelegt, ' + d.days_updated + ' aktualisiert.'
+                + (verworfen.length
+                   ? '<br><span class="muted">Einzelne Werte verworfen: '
+                     + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
+                   : '')
                 + (d.first_day ? ' <a href="index.php?day=' + esc(d.first_day) + '">Ersten Tag öffnen</a>' : '');
 
             // Ein zweiter Klick wuerde alles ein weiteres Mal anlegen. Der Weg

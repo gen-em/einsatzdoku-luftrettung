@@ -1,6 +1,28 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/validate_lib.php';
+
+/**
+ * Aufnahme der Uhr-Daten.
+ *
+ * PRUEFTIEFE: Dieser Weg wird seit dieser Auslieferung ueber dieselbe
+ * Pruefschicht gefuehrt wie Formular, Import und Wiedereinspielen
+ * (validate_lib.php). Vorher fehlten hier Koordinatenbereiche und
+ * Mengenbegrenzungen — ungeprueft gingen Koordinaten in die Phasen, in die
+ * Spur UND in die Hoehenberechnung des Einsatzorts ein, wo ein Ausreisser
+ * nicht nur einen Kartenpunkt verschiebt, sondern eine berechnete Zahl.
+ *
+ * GRUNDSATZ: Ein einzelner unbrauchbarer Wert verwirft den WERT, nicht den
+ * Upload. Die Uhr kann nichts nachliefern, was sie schon geloescht hat —
+ * ein Abbruch wegen einer krummen Koordinate koennte einen ganzen Einsatz
+ * kosten. Verworfene Werte werden im Feld 'rejected' der Antwort genannt,
+ * damit der Verlust sichtbar ist statt still.
+ *
+ * NICHT umgesetzt und ausdruecklich so gewollt: eine Entdoppelung mehrfacher
+ * Phasennummern. Eine erneut gesetzte Phase ist eine Korrektur und damit eine
+ * Information (JSON-Vertrag, Abschnitt 3).
+ */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
 
@@ -16,23 +38,41 @@ $dev = $st->fetch();
 if (!$dev || !password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
-// --- Payload pruefen ----------------------------------------------------------
+// --- Nutzlast pruefen ---------------------------------------------------------
 $b = json_decode($raw, true);
+$pruef = new Pruefliste();
+
 $kind = $b['kind'] ?? '';
-$clientRef = (string)($b['client_ref'] ?? '');
-$day = (string)($b['day'] ?? '');
-$startedAt = iso_to_sql($b['started_at'] ?? null);
-if (!is_array($b) || $clientRef === '' || $startedAt === null
-    || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)
+$clientRef = pruef_text($b['client_ref'] ?? null, 64, 'client_ref', $pruef);
+
+/* Der Kalendertag wird jetzt als KALENDERTAG geprueft, nicht nur als Muster.
+ * Das alte Muster liess den 30. Februar durch; die Umwandlung haette ihn
+ * anschliessend stillschweigend auf den 2. Maerz verschoben (B2). */
+$day       = pruef_kalendertag($b['day'] ?? null, 'day', $pruef);
+$startedAt = pruef_utc($b['started_at'] ?? null, 'started_at', $pruef);
+
+/* Diese vier Angaben sind das Geruest des Datensatzes. Fehlt eines, ist die
+ * Nachricht als Ganzes unbrauchbar — hier ist ein Abbruch richtig. */
+if (!is_array($b) || $clientRef === null || $startedAt === null || $day === null
     || !in_array($kind, ['mission', 'rest_segment'], true)) {
-    json_out(['error' => 'payload'], 400);
+    json_out(['error' => 'payload', 'grund' => $pruef->text()], 400);
 }
-$endedAt = iso_to_sql($b['ended_at'] ?? null);
-$final   = !empty($b['final']) ? 1 : 0;
+
+$endedAt = pruef_utc($b['ended_at'] ?? null, 'ended_at', $pruef);
+$final   = pruef_flag($b['final'] ?? null);
+
+// Strecke und Steigung: bei Unsinn NULL statt 0 — eine 0 taeuschte eine
+// Messung vor, die es nie gab, und landet in jeder Jahresstatistik.
+$distanceM = pruef_zahl($b['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef);
+$ascentM   = pruef_zahl($b['ascent_m']   ?? null, 0, 100000,    'ascent_m',   $pruef);
+
 $points  = $b['track']['points'] ?? [];
 $seqFrom = (int)($b['track']['seq_from'] ?? 0);
 if ($seqFrom < 0) json_out(['error' => 'payload'], 400);
-if (!is_array($points) || count($points) > 2000) json_out(['error' => 'payload'], 400);
+// Muss eine LISTE sein: Ein JSON-Objekt mit den Schluesseln "0", "1" wird in
+// PHP zum selben Feldtyp und liefe sonst unbemerkt durch.
+if (!ist_liste($points)) { json_out(['error' => 'payload'], 400); }
+$points = pruef_menge($points, LIMIT_TRACKPUNKTE, 'track.points', $pruef);
 
 $pdo = db();
 $pdo->beginTransaction();
@@ -76,22 +116,27 @@ try {
                          ascent_m = VALUES(ascent_m), final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
             ->execute([$dev['user_id'], $dev['id'], $clientRef, $day, $startedAt, $endedAt,
-                       isset($b['distance_m']) ? (int)$b['distance_m'] : null,
-                       isset($b['ascent_m'])   ? (int)$b['ascent_m']   : null, $final]);
+                       $distanceM, $ascentM, $final]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
 
-        // Phasenliste vollstaendig ersetzen (Vertrag: kein Delta)
+        // Phasenliste vollstaendig ersetzen (Vertrag: kein Delta).
+        // MEHRFACHE EINTRAEGE DERSELBEN NUMMER BLEIBEN ERHALTEN — eine erneut
+        // gesetzte Phase ist eine Korrektur, keine Dublette (JSON-Vertrag 3).
         if (isset($b['phases']) && is_array($b['phases'])) {
+            $phasen = pruef_menge($b['phases'], LIMIT_PHASEN, 'phases', $pruef);
             $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
             $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
-            foreach ($b['phases'] as $p) {
-                $at = iso_to_sql($p['at'] ?? null);
-                $ph = (int)($p['phase'] ?? 0);
-                if ($at === null || $ph < 2 || $ph > 9) continue;
+            foreach ($phasen as $p) {
+                if (!is_array($p)) { $pruef->melde('phases', 'kein Objekt'); continue; }
+                $at = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
+                $ph = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
+                if ($at === null || $ph === null) continue;
+                // Koordinaten geprueft: sie gehen nicht nur in die Karte, sondern
+                // auch in die Hoehenberechnung des Einsatzorts ein.
                 $ins->execute([$ownerId, $ph, $at,
-                    isset($p['lat']) ? (float)$p['lat'] : null,
-                    isset($p['lon']) ? (float)$p['lon'] : null]);
+                    pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
+                    pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
             }
         }
 
@@ -105,18 +150,24 @@ try {
             $sessions = [$b['resus']];
         }
         if ($sessions !== null) {
+            $sessions = pruef_menge($sessions, LIMIT_REA_SESSION, 'resus_sessions', $pruef);
             $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
             $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
             $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
             foreach ($sessions as $sess) {
-                $rStart = iso_to_sql($sess['started_at'] ?? null);
+                if (!is_array($sess)) { $pruef->melde('resus_sessions', 'kein Objekt'); continue; }
+                $rStart = pruef_utc($sess['started_at'] ?? null, 'resus.started_at', $pruef);
                 if ($rStart === null) continue;
                 $insS->execute([$ownerId, $rStart]);
                 $sid = (int)$pdo->lastInsertId();
-                foreach (($sess['events'] ?? []) as $ev) {
-                    $at = iso_to_sql($ev['at'] ?? null);
-                    $ty = (string)($ev['type'] ?? '');
-                    if ($at !== null && isset(RESUS_LABELS[$ty]) && $ty !== 'beginn') {
+                $events = pruef_menge($sess['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef);
+                foreach ($events as $ev) {
+                    if (!is_array($ev)) { $pruef->melde('resus.events', 'kein Objekt'); continue; }
+                    $at = pruef_utc($ev['at'] ?? null, 'resus.events.at', $pruef);
+                    // 'beginn' wird nicht als Ereignis gefuehrt — der Beginn
+                    // steckt in started_at der Sitzung (JSON-Vertrag 3.3).
+                    $ty = pruef_reanimationsart($ev['type'] ?? null, 'resus.events.type', $pruef);
+                    if ($at !== null && $ty !== null && $ty !== 'beginn') {
                         $insE->execute([$sid, $ty, $at]);
                     }
                 }
@@ -140,9 +191,17 @@ try {
         $ins = $pdo->prepare('INSERT IGNORE INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
         foreach ($points as $i => $pt) {
-            if (!is_array($pt) || count($pt) < 4) continue;
-            $ins->execute([$ownerType, $ownerId, $seqFrom + $i,
-                (float)$pt[0], (float)$pt[1],
+            if (!is_array($pt) || count($pt) < 4) {
+                $pruef->melde('track.points', 'kein Punkt aus vier Werten');
+                continue;
+            }
+            // Ein Punkt ohne brauchbare Koordinaten ist kein Punkt. Frueher
+            // wurde er mit (float)"Unfug" = 0.0 gespeichert — als Position im
+            // Golf von Guinea, mitten in der Flugspur.
+            $la = pruef_breite($pt[0], 'track.lat', $pruef);
+            $lo = pruef_laenge($pt[1], 'track.lon', $pruef);
+            if ($la === null || $lo === null) { continue; }
+            $ins->execute([$ownerType, $ownerId, $seqFrom + $i, $la, $lo,
                 $pt[2] === null ? null : (float)$pt[2], (int)$pt[3]]);
             $stored += $ins->rowCount();
         }
@@ -166,7 +225,20 @@ try {
     }
 
     run_cleanup_if_due();   // taegliche Wartung, huckepack auf Uhr-Uploads
-    json_out(['ok' => true, 'id' => $ownerId, 'stored_points' => $stored, 'next_seq' => $nextSeq]);
+
+    /* Verworfene Werte NENNEN.
+     *
+     * 'ok' => true mit gefuelltem 'rejected' heisst: angekommen, aber nicht
+     * vollstaendig uebernommen. Ohne diese Angabe waere ein verworfener Wert
+     * von einem uebernommenen nicht zu unterscheiden — der Upload meldete
+     * Erfolg, und die Phase fehlte trotzdem. Das Feld erscheint nur, wenn es
+     * etwas zu berichten gibt (JSON-Vertrag, Abschnitt 5). */
+    $antwort = ['ok' => true, 'id' => $ownerId,
+                'stored_points' => $stored, 'next_seq' => $nextSeq];
+    if (!$pruef->sauber()) {
+        $antwort['rejected'] = $pruef->nachUrsache();
+    }
+    json_out($antwort);
 } catch (Throwable $ex) {
     $pdo->rollBack();
     json_out(['error' => 'server'], 500);

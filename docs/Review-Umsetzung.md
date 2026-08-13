@@ -17,12 +17,72 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P1 | Sofortmaßnahmen | Web 4.1.0 | **erledigt** |
 | P7 | Dokumentation und Verträge | Web 4.1.1 | **erledigt** |
 | P2 | Kette „unlesbarer Schlüssel" schließen | Web 4.1.2 | **erledigt** |
-| P3 | Gemeinsame Prüfschicht anwenden | — | offen |
+| P3 | Gemeinsame Prüfschicht anwenden | Web 4.2.0 | **erledigt** |
 | P5 | Papierkorb und gelöschte Flugtage | — | offen |
 | P4 | Ratenschutz und unangemeldete Endpunkte | — | offen |
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P3 — Gemeinsame Prüfschicht anwenden (Web 4.2.0)
+
+Die aufwendigste und wirkungsvollste strukturelle Änderung: Alle vier
+Schreibwege rufen jetzt `validate_lib.php` auf.
+
+| Befund | Änderung | Weg |
+|---|---|---|
+| M5-02 | Wiedereinspielen prüft überhaupt erst — vorher 0 von 9 Prüfungen | Sicherung |
+| M4-05 | Koordinatenbereiche und Mengenbegrenzungen ergänzt | Uhr |
+| M3-04 | Eine Grenze für den Patientenblock (40…60000) statt dreier | alle |
+| M2-04 | Musterverletzung wird gemeldet statt übergangen | Formular |
+| M3-02 | Kalendertagsprüfung angewendet | alle |
+| M6-04 | Kalendertagsprüfung bei der Flugtag-Anlage | Formular |
+| M7-02 | Entdoppelung der Phasen entfernt, Mengengrenze stattdessen | Import |
+| M3-03 | Zugehörigkeit direkt abfragen statt aus der Zeilenzahl erschließen | Import |
+| M5-14 | Übersprungene Datensätze nach Ursache aufschlüsseln | Import, Sicherung |
+
+### Zwei Grundsätze, die die Umsetzung geprägt haben
+
+**Ein schlechter Wert verwirft den Wert, nicht den Vorgang.** Auf dem Uhr-Weg,
+weil die Uhr nichts nachliefern kann, was sie gelöscht hat — ein Abbruch wegen
+einer krummen Koordinate könnte einen ganzen Einsatz kosten. Beim
+Wiedereinspielen, weil wer eine Wiederherstellung startet, meist keinen zweiten
+Versuch hat.
+
+**Was verworfen wird, wird genannt.** Sonst wäre die Prüfung nur eine leisere
+Art des Datenverlusts. Uhr: `rejected` in der Antwort. Import und
+Wiedereinspielen: Aufschlüsselung nach Ursache in der Meldung.
+
+### Ein Fehler aus P0, den erst dieser Einsatz gezeigt hat
+
+Die Meldung zu Koordinaten lautete „außerhalb von ±9" statt „±90" — die
+Formatierung schnitt nachlaufende Nullen ab. Aufgefallen an der Testausgabe,
+nicht beim Lesen. Behoben.
+
+### Nachweis
+
+Eine bösartige Nutzlast mit je einem Fehler pro Kategorie gegen die Prüfschicht:
+unmöglicher Kalendertag verworfen, gültiger Zeitstempel erhalten, zu kurzer
+Chiffretext verworfen, `"viel"` wird NULL statt 0, Phase 10 verworfen,
+**drei Einträge derselben Phase 5 bleiben erhalten**, Koordinate 91 verworfen
+ohne die Phase zu verlieren, unbekannte Reanimationsart verworfen — und jede
+Ursache einzeln benannt.
+
+Zu M3-03 gegen echte Datenbank: Eine Aktualisierung mit unveränderten
+Kopfdaten liefert nachweislich 0 geänderte Zeilen; die neue Abfrage auf
+Kennung, Nutzerkennung und Löschzustand liefert dagegen korrekt 1.
+
+Zusätzlich 9 Fälle für die neue Funktion `pruef_utc_oder_sql`, die beide
+Zeitformate annimmt (Uhr mit `Z`, Sicherung in Datenbankschreibweise).
+
+### Der Vertrag ist ehrlicher geworden
+
+Drei Zeilen der Tabelle „Stand der Durchsetzung" im JSON-Vertrag stehen jetzt
+auf „durchgesetzt": Kalendertag, Wertebereiche und Mengen, Antwortfeld
+`rejected`. Offen bleiben das Verhalten bei leeren Listen samt `kept_*` (P8)
+und der Zufallsanteil in der Client-Kennung (P9).
 
 ---
 

@@ -852,22 +852,36 @@ verschlüsselten Block.
 Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
 Prüftiefe verlief historisch **umgekehrt zur Vertrauenswürdigkeit der Quelle**:
 
+Der Zustand vor Web 4.2.0 — die Reihenfolge nach Sorgfalt lautete Import →
+Formular → Uhr → Sicherung, die nach Vertrauenswürdigkeit der Quelle genau
+umgekehrt:
+
 | Prüfung | Formular | Import | Uhr | Sicherung |
 |---|---|---|---|---|
-| Datumsformat | ja | ja | ja | nein |
+| Datumsformat | Muster | Muster | Muster | nein |
+| Kalendertag existiert | nein | nein | nein | nein |
 | Zeitstempel geprüft | ja | ja | ja | nein |
 | Zeichenketten auf Spaltenlänge | ja | ja | teilweise | nein |
 | Zahlenbereiche | ja | ja | nein | nein |
 | Patientenblock-Muster | 16…8000 | 20…60000 | — | nein |
-| Phasennummer 2–9 | — | ja | ja | nein |
+| Phasennummer 2–9 | ja | ja | ja | nein |
 | Koordinaten ±90 / ±180 | — | ja | nein | nein |
 | Reanimationsart gegen Liste | — | ja | ja | nein |
 | Mengenbegrenzungen | — | ja | keine | keine |
 
-Die Reihenfolge nach Sorgfalt lautete Import → Formular → Uhr → Sicherung, die
-nach Vertrauenswürdigkeit der Quelle genau umgekehrt. Ziel ist, dass in allen
-vier Spalten überall „ja" steht — **und zwar durch denselben Baustein**. Die
-folgenden Bausteine sind dafür die eine Stelle:
+**Seit Web 4.2.0 steht in allen vier Spalten „ja" — und zwar durch denselben
+Baustein.** `validate_lib.php` ist die eine Stelle; die vier Wege rufen sie auf,
+statt je eigene Regeln zu führen. Weicht ein Weg ab, ist das ein Fehler in
+diesem Weg und nicht eine zulässige Eigenheit.
+
+Zwei Ausnahmen sind gewollt und keine Lücke:
+
+* Der **Patientenblock** wird auf dem Uhr-Weg nicht geprüft, weil die Uhr
+  keinen sendet — sie kennt die geschützten Angaben nicht.
+* **Koordinaten und Reanimationsarten** kommen im Formular nicht vor; es
+  erfasst sie nicht.
+
+Die Bausteine im Einzelnen:
 
 | Baustein | Datei | Aufgabe |
 |---|---|---|

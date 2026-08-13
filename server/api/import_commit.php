@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
+require_once __DIR__ . '/../validate_lib.php';
 
 /**
  * Import: Abgleich mit dem Bestand.
@@ -76,31 +77,19 @@ function import_commit(array $b, int $userId): never
                   'meldung' => 'Zu viele Zeilen auf einmal. Bitte in Jahresabschnitten importieren.'], 413);
     }
 
-    $txt = function ($v, int $max): ?string {
-        $s = mb_substr(trim((string)$v), 0, $max);
-        return $s === '' ? null : $s;
-    };
+    /* Diese vier Kurzformen waren die URSPRUNGSFASSUNG der Pruefungen; sie
+     * sind nach validate_lib.php gehoben worden, damit alle vier Schreibwege
+     * denselben Massstab haben. Hier bleiben sie als duenne Weiterleitung
+     * stehen, weil sie im Aufbau der Wertelisten unten dutzendfach vorkommen
+     * und eine Umbenennung nur Laerm erzeugen wuerde.
+     *
+     * Der Unterschied zu frueher: Sie melden jetzt, WARUM sie etwas verwerfen. */
+    $pruef = new Pruefliste();
 
-    /** Ganzzahl im erlaubten Bereich, sonst NULL (statt einer 0, die eine
-     *  echte Messung vortaeuschen wuerde). */
-    $zahl = function ($v, int $min, int $max): ?int {
-        if ($v === null || $v === '' || !is_numeric($v)) { return null; }
-        $n = (int)$v;
-        return ($n < $min || $n > $max) ? null : $n;
-    };
-
-    $flag = static fn ($v): int => !empty($v) ? 1 : 0;
-
-    /** "2026-03-14T09:50:00Z" -> "2026-03-14 09:50:00" (UTC, wie gespeichert). */
-    $utc = function ($v): ?string {
-        if (!is_string($v) || $v === '') { return null; }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/', $v)) { return null; }
-        try {
-            return (new DateTime($v, new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
-        } catch (Throwable $e) {
-            return null;
-        }
-    };
+    $txt  = fn ($v, int $max) => pruef_text($v, $max, 'Feld', $pruef);
+    $zahl = fn ($v, int $min, int $max) => pruef_zahl($v, $min, $max, 'Zahl', $pruef);
+    $flag = static fn ($v): int => pruef_flag($v);
+    $utc  = fn ($v) => pruef_utc($v, 'Zeitpunkt', $pruef);
 
     $pdo = db();
     $pdo->beginTransaction();
@@ -233,26 +222,42 @@ function import_commit(array $b, int $userId): never
 
         $neu = 0; $ersetzt = 0; $uebersprungen = 0; $ersterTag = null;
 
-        foreach ($einsaetze as $m) {
-            $tag = (string)($m['day'] ?? '');
-            $hhmm = (string)($m['started_local'] ?? '');
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tag)
-                || !preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
-                $uebersprungen++; continue;
-            }
-            if (($m['dup'] ?? 'insert') === 'skip') { $uebersprungen++; continue; }
+        /* URSACHEN GETRENNT ZAEHLEN.
+         *
+         * Bisher fielen VIER voellig verschiedene Gruende in einen einzigen
+         * Zaehler: ungueltiges Datum, von der NutzerIn selbst gewaehltes
+         * Ueberspringen, nicht umrechenbare Uhrzeit und "gehoert jemand
+         * anderem". Wer 40 uebersprungene Einsaetze sieht, kann daraus nicht
+         * erkennen, ob das gut ist (alles schon da) oder schlecht (alles
+         * kaputt) — und genau diese Unterscheidung braucht er. */
+        $grund = ['datum' => 0, 'uhrzeit' => 0, 'auswahl' => 0,
+                  'fremd_oder_geloescht' => 0];
 
-            $startedAt = local_to_utc($tag, $hhmm);
-            if ($startedAt === null) { $uebersprungen++; continue; }
+        // Zugehoerigkeit direkt feststellen (M3-03), statt sie aus der Zahl
+        // geaenderter Zeilen zu erschliessen.
+        $gehoert = $pdo->prepare('SELECT 1 FROM missions
+                                  WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+
+        foreach ($einsaetze as $m) {
+            $tag  = pruef_kalendertag($m['day'] ?? null, 'day', $pruef);
+            $hhmm = (string)($m['started_local'] ?? '');
+            if ($tag === null || !preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
+                $grund['datum']++; $uebersprungen++; continue;
+            }
+            if (($m['dup'] ?? 'insert') === 'skip') {
+                $grund['auswahl']++; $uebersprungen++; continue;
+            }
+
+            // Ortszeit mit Kalendertagspruefung (B2)
+            $startedAt = pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef);
+            if ($startedAt === null) { $grund['uhrzeit']++; $uebersprungen++; continue; }
 
             // Chiffretext nur formal pruefen — der Inhalt geht den Server
-            // nichts an. Was hier nicht nach Base64 aussieht, waere entweder
-            // ein Fehler oder Klartext; beides wird nicht gespeichert.
-            $blob = $m['pat_blob'] ?? null;
-            if ($blob !== null) {
-                $blob = (string)$blob;
-                if (!preg_match('#^[A-Za-z0-9+/=]{20,60000}$#', $blob)) { $blob = null; }
-            }
+            // nichts an. Grenzen jetzt aus validate_lib.php (40…60000), damit
+            // alle vier Schreibwege denselben Massstab haben; hier galt bisher
+            // 20 als Untergrenze, im Formular 16 — beide unterhalb dessen, was
+            // ein AES-GCM-Chiffretext ueberhaupt sein kann.
+            $blob = pruef_pat_blob($m['pat_blob'] ?? null, 'pat_blob', $pruef);
 
             // Endzeit: Liefert die Datei eine, wird sie uebernommen; sonst
             // bleibt es beim bisherigen Verhalten (Ende = Beginn), damit sich
@@ -285,11 +290,28 @@ function import_commit(array $b, int $userId): never
             $id = null;
             if (($m['dup'] ?? '') === 'overwrite' && !empty($m['overwrite_id'])) {
                 $id = (int)$m['overwrite_id'];
-                $updE->execute(array_merge([$tag, $startedAt, $endedAt], $werte, [$id, $userId]));
-                if ($updE->rowCount() === 0) {
-                    // Gehoert jemand anderem oder ist inzwischen geloescht.
+
+                /* ZUGEHOERIGKEIT DIREKT PRUEFEN.
+                 *
+                 * Frueher wurde sie aus der Zahl der geaenderten Zeilen
+                 * erschlossen — und die Datenbank liefert die Zahl der
+                 * GEAENDERTEN, nicht der getroffenen Zeilen. Wer alle Werte auf
+                 * das setzt, was schon dasteht, bekommt null zurueck. Daraus
+                 * schloss der Code "gehoert jemand anderem" und uebersprang den
+                 * Einsatz samt der danach folgenden Bloecke fuer Phasen,
+                 * Reanimation und Rettungsmittel.
+                 *
+                 * Praktisch wichtigster Fall: Jemand importiert erneut, weil er
+                 * NUR die Phasenzeiten korrigiert hat. Die Kopfdaten sind
+                 * unveraendert — genau dann greift der Fehlschluss, und genau
+                 * die Korrektur, um die es ging, wird verworfen. Gemeldet wird
+                 * "uebersprungen", was nach "war schon da" klingt. */
+                $gehoert->execute([$id, $userId]);
+                if ($gehoert->fetchColumn() === false) {
+                    $grund['fremd_oder_geloescht']++;
                     $uebersprungen++; continue;
                 }
+                $updE->execute(array_merge([$tag, $startedAt, $endedAt], $werte, [$id, $userId]));
                 $ersetzt++;
             } else {
                 $insE->execute(array_merge(
@@ -313,22 +335,37 @@ function import_commit(array $b, int $userId): never
             $phasen = is_array($m['phases'] ?? null) ? $m['phases'] : [];
             $gesetzt = [];
             if ($phasen) {
+                /* KEINE ENTDOPPELUNG MEHR.
+                 *
+                 * Frueher wurde die zweite Zeile mit derselben Phasennummer
+                 * verworfen. Das widerspricht dem JSON-Vertrag: Mehrfache
+                 * Eintraege sind ausdruecklich erlaubt, weil eine erneut
+                 * gesetzte Phase eine KORREKTUR ist und damit eine
+                 * Information. Der Uhr-Weg speichert sie, dieser Weg warf sie
+                 * weg — dieselben Daten ergaben je nach Weg einen anderen
+                 * Bestand, und ein Rueckimport der eigenen Exporte verlor
+                 * stillschweigend Zeilen.
+                 *
+                 * Statt der Entdoppelung begrenzt jetzt LIMIT_PHASEN die
+                 * Menge. Sie ist bewusst hoch (500) — sie schuetzt vor einer
+                 * entgleisten Nutzlast und darf nicht als Ersatz fuer die
+                 * Entdoppelung dienen. */
+                $phasen = pruef_menge($phasen, LIMIT_PHASEN, 'phases', $pruef);
                 $delPhasen->execute([$id]);
                 foreach ($phasen as $p) {
-                    $nr = (int)($p['phase'] ?? 0);
-                    // Phase 10 wurde mit 2026_07_19_phase10_entfernen abgeschafft.
-                    if ($nr < 2 || $nr > 9 || isset($gesetzt[$nr])) { continue; }
-                    $wann = $utc($p['at'] ?? null);
-                    if ($wann === null && !empty($p['local'])
-                        && preg_match('/^\d{2}:\d{2}$/', (string)$p['local'])) {
-                        $wann = local_to_utc($tag, (string)$p['local']);
+                    if (!is_array($p)) { continue; }
+                    $nr = pruef_phase($p['phase'] ?? null, 'phases.phase', $pruef);
+                    if ($nr === null) { continue; }
+                    $wann = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
+                    if ($wann === null && !empty($p['local'])) {
+                        // Ortszeit mit Kalendertagspruefung (B2)
+                        $wann = pruef_ortszeit_zu_utc($tag, (string)$p['local'], 0,
+                                                      'phases.local', $pruef);
                     }
                     if ($wann === null) { continue; }
-                    $lat = isset($p['lat']) && is_numeric($p['lat']) ? (float)$p['lat'] : null;
-                    $lon = isset($p['lon']) && is_numeric($p['lon']) ? (float)$p['lon'] : null;
-                    if ($lat !== null && ($lat < -90 || $lat > 90)) { $lat = null; }
-                    if ($lon !== null && ($lon < -180 || $lon > 180)) { $lon = null; }
-                    $insPhase->execute([$id, $nr, $wann, $lat, $lon]);
+                    $insPhase->execute([$id, $nr, $wann,
+                        pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
+                        pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
                     $gesetzt[$nr] = true;
                 }
             }
@@ -347,22 +384,21 @@ function import_commit(array $b, int $userId): never
              */
             if (is_array($m['rea'] ?? null)) {
                 $delRea->execute([$id]);
-                $anzS = 0;
-                foreach ($m['rea'] as $s) {
-                    if (++$anzS > 20) { break; }
-                    $beginn = $utc($s['started_at'] ?? null);
+                foreach (pruef_menge($m['rea'], LIMIT_REA_SESSION, 'rea', $pruef) as $s) {
+                    if (!is_array($s)) { continue; }
+                    $beginn = pruef_utc($s['started_at'] ?? null, 'rea.started_at', $pruef);
                     if ($beginn === null) { continue; }
                     $insReaS->execute([$id, $beginn]);
                     $sid = (int)$pdo->lastInsertId();
-                    $anzE = 0;
-                    foreach ((is_array($s['events'] ?? null) ? $s['events'] : []) as $e) {
-                        if (++$anzE > 200) { break; }
-                        $typ = mb_substr(trim((string)($e['type'] ?? '')), 0, 24);
-                        // Nur bekannte Schluessel — ein freier Text hier waere
-                        // im Formular spaeter nicht darstellbar.
-                        if ($typ === '' || !array_key_exists($typ, RESUS_LABELS)) { continue; }
-                        $wann = $utc($e['at'] ?? null);
-                        if ($wann === null) { continue; }
+                    $ereignisse = pruef_menge($s['events'] ?? [], LIMIT_REA_EREIGN,
+                                              'rea.events', $pruef);
+                    foreach ($ereignisse as $e) {
+                        if (!is_array($e)) { continue; }
+                        // Nur bekannte Schluessel — ein freier Text waere im
+                        // Formular spaeter nicht darstellbar.
+                        $typ  = pruef_reanimationsart($e['type'] ?? null, 'rea.events.type', $pruef);
+                        $wann = pruef_utc($e['at'] ?? null, 'rea.events.at', $pruef);
+                        if ($typ === null || $wann === null) { continue; }
                         $insReaE->execute([$sid, $typ, $wann]);
                     }
                 }
@@ -375,7 +411,7 @@ function import_commit(array $b, int $userId): never
             foreach ($rm as $name) {
                 $name = mb_substr(trim((string)$name), 0, 120);
                 if ($name !== '' && !in_array($name, $sauber, true)) { $sauber[] = $name; }
-                if (count($sauber) >= 40) { break; }
+                if (count($sauber) >= LIMIT_RESSOURCEN) { break; }
             }
             $delRes->execute([$id]);
             foreach ($sauber as $name) { $insRes->execute([$id, $name]); }
@@ -391,6 +427,10 @@ function import_commit(array $b, int $userId): never
             'missions_inserted'     => $neu,
             'missions_overwritten'  => $ersetzt,
             'missions_skipped'      => $uebersprungen,
+            // Aufgeschluesselt nach Ursache: Die blosse Zahl war nicht
+            // deutbar (M5-14).
+            'skipped_reasons'       => array_filter($grund),
+            'rejected'              => $pruef->nachUrsache(),
             'first_day'             => $ersterTag,
         ]);
     } catch (Throwable $ex) {
