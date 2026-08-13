@@ -168,7 +168,16 @@ function edbak_restore(int $userId, array $data): array {
      * "40 uebersprungen" ist nicht deutbar: Es kann heissen "alles war schon
      * da" (gut) oder "alles war kaputt" (schlecht). Genau diese Unterscheidung
      * braucht, wer eine Wiederherstellung beurteilen muss. */
-    $grund = ['bereits_vorhanden' => 0, 'datum_oder_zeit' => 0, 'aufbau' => 0];
+    $grund = ['bereits_vorhanden' => 0, 'datum_oder_zeit' => 0, 'aufbau' => 0,
+              'tag_im_papierkorb' => 0, 'tag_unbrauchbar' => 0];
+
+    // Flugtage im Papierkorb einmal vorab feststellen (D1).
+    $tageImPapierkorb = [];
+    $qT = $pdo->prepare('SELECT day FROM days WHERE user_id = ? AND deleted_at IS NOT NULL');
+    $qT->execute([$userId]);
+    foreach ($qT->fetchAll(PDO::FETCH_COLUMN) as $dTrash) {
+        $tageImPapierkorb[(string)$dTrash] = true;
+    }
     $pruef = new Pruefliste();
 
     $pdo->beginTransaction();
@@ -247,6 +256,9 @@ function edbak_restore(int $userId, array $data): array {
 
         /* Flugtage (bestehende Tage bleiben unangetastet) */
         foreach (($data['days'] ?? []) as $d) {
+            $tagWert = pruef_kalendertag($d['day'] ?? null, 'days.day', $pruef);
+            if ($tagWert === null) { $grund['tag_unbrauchbar']++; continue; }
+
             $acId = null; $baseId = null;
             if (!empty($d['aircraft_reg'])) {
                 $x = $pdo->prepare('SELECT id FROM aircraft WHERE user_id = ? AND registration = ?');
@@ -258,11 +270,22 @@ function edbak_restore(int $userId, array $data): array {
                 $x->execute([$userId, $d['base_name']]);
                 $baseId = $x->fetchColumn() ?: null;
             }
+            /* FLUGTAG IM PAPIERKORB: ABLEHNEN UND ZAEHLEN (D1).
+             *
+             * Ohne diese Pruefung tat INSERT IGNORE hier zwar nichts — der
+             * eindeutige Schluessel greift —, aber eben STILL: Der Tag wurde
+             * weder eingespielt noch gezaehlt noch erwaehnt. Wer eine
+             * Sicherung zurueckspielt und seine Flugtage vermisst, hat
+             * keinen Anhaltspunkt. Jetzt wird der Fall benannt. */
+            if (isset($tageImPapierkorb[$tagWert])) {
+                $grund['tag_im_papierkorb']++;
+                continue;
+            }
             $st = $pdo->prepare('INSERT IGNORE INTO days
                 (user_id, day, aircraft_id, base_id, crew_p1, crew_p2, crew_hems, crew_fr,
                  crew_other, aircraft, base, crew, notes)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
-            $st->execute([$userId, $d['day'], $acId, $baseId,
+            $st->execute([$userId, $tagWert, $acId, $baseId,
                 $d['crew_p1'] ?? null, $d['crew_p2'] ?? null, $d['crew_hems'] ?? null,
                 $d['crew_fr'] ?? null, $d['crew_other'] ?? null,
                 $d['aircraft'] ?? null, $d['base'] ?? null, $d['crew'] ?? null,

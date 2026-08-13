@@ -773,6 +773,14 @@ für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
 wachsen also nicht wieder an. Beim endgültigen Löschen kommt die Referenz auf
 eine Sperrliste, sodass die Uhr sie nicht neu anlegt.
 
+**Ein Flugtag im Papierkorb nimmt keine Änderungen an.** Trägst du Maschine,
+Basis oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
+bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt
+für Import und das Einspielen einer Sicherung: Beide überspringen solche Tage
+und sagen es. Der Grund: Das Löschen war eine bewusste Handlung, und sie
+nebenbei rückgängig zu machen wäre eine Überraschung. Stelle den Tag zuerst
+wieder her.
+
 **Die Sperrliste hält 90 Tage**, danach räumt das System sie ebenfalls weg. Das
 ist in der Praxis reichlich — eine Uhr, die 90 Tage lang keine Verbindung
 hatte, gibt es im Betrieb nicht. Wer eine lange abgeschaltete Uhr wieder in

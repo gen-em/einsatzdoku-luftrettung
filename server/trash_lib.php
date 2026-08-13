@@ -132,11 +132,28 @@ function trash_restore_day(int $userId, string $day): void {
 
 /* ---- Endgueltig entfernen ---------------------------------------------- */
 
-/** Sperrliste fuellen, damit die Uhr den Einsatz nicht neu anlegt. */
-function trash_block_ref(PDO $pdo, array $m): void {
+/**
+ * Sperrliste fuellen, damit die Uhr den Datensatz nicht neu anlegt.
+ *
+ * $ownerType unterscheidet 'mission' und 'rest'. Die Unterscheidung ist noetig,
+ * weil beide Arten ihre Kennungen unabhaengig vergeben — ein gemeinsamer
+ * Eintrag koennte sonst die falsche Art sperren.
+ *
+ * FRUEHER GALT DIE LISTE NUR FUER EINSAETZE, und zwar an BEIDEN Enden: Sie
+ * wurde nur fuer Einsaetze befuellt und nur im Einsatz-Zweig abgefragt. Ein
+ * endgueltig geloeschtes Ruhe-Segment wurde deshalb von der naechsten
+ * Nachlieferung wieder angelegt — und beim erneuten Loeschen wieder. Wer eine
+ * Uhr im Einsatz hat, kam aus dieser Schleife nicht heraus.
+ *
+ * Von Hand angelegte Datensaetze ('man-') werden bewusst NICHT gesperrt: Dort
+ * gibt es keine Uhr, die etwas nachliefern koennte, und die Kennung koennte
+ * spaeter erneut vergeben werden.
+ */
+function trash_block_ref(PDO $pdo, array $m, string $ownerType = 'mission'): void {
     if ($m['device_id'] !== null && strpos((string)$m['client_ref'], 'man-') !== 0) {
-        $pdo->prepare('INSERT IGNORE INTO deleted_refs (device_id, client_ref) VALUES (?,?)')
-            ->execute([(int)$m['device_id'], $m['client_ref']]);
+        $pdo->prepare('INSERT IGNORE INTO deleted_refs (device_id, owner_type, client_ref)
+                       VALUES (?,?,?)')
+            ->execute([(int)$m['device_id'], $ownerType, $m['client_ref']]);
     }
 }
 
@@ -171,13 +188,16 @@ function trash_purge_day(int $userId, string $day): void {
                 ->execute([(int)$m['id']]);
             $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([(int)$m['id']]);
         }
-        $ss = $pdo->prepare('SELECT id FROM rest_segments
+        $ss = $pdo->prepare('SELECT id, device_id, client_ref FROM rest_segments
                              WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
         $ss->execute([$userId, $day]);
-        foreach ($ss->fetchAll(PDO::FETCH_COLUMN) as $sid) {
+        foreach ($ss->fetchAll() as $seg) {
+            // Auch Ruhe-Segmente sperren — sonst legt die naechste
+            // Nachlieferung derselben Uhr sie wieder an.
+            trash_block_ref($pdo, $seg, 'rest');
             $pdo->prepare("DELETE FROM track_points WHERE owner_type = 'rest' AND owner_id = ?")
-                ->execute([(int)$sid]);
-            $pdo->prepare('DELETE FROM rest_segments WHERE id = ?')->execute([(int)$sid]);
+                ->execute([(int)$seg['id']]);
+            $pdo->prepare('DELETE FROM rest_segments WHERE id = ?')->execute([(int)$seg['id']]);
         }
         $pdo->prepare('DELETE FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL')
             ->execute([$userId, $day]);

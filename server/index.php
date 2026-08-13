@@ -266,6 +266,28 @@ async function loadDay(day){
     if (d.error) { showLoadError(d.error + (d.meldung ? ': ' + d.meldung : '')); return; }
   } catch (e) { showLoadError(e.message); return; }
   document.getElementById('loaderror').hidden = true;
+
+  /* Liegt der Tag im Papierkorb, steht das jetzt in der Antwort. Ohne diesen
+   * Hinweis wären fehlende Flugtagangaben nicht von "noch nichts eingetragen"
+   * zu unterscheiden — wer seine Eingaben vermisst, sucht den Fehler bei sich. */
+  {
+    let hinweis = document.getElementById('daytrash');
+    if (d.day_deleted_at) {
+      if (!hinweis) {
+        hinweis = document.createElement('p');
+        hinweis.id = 'daytrash';
+        hinweis.className = 'alert alert-warn';
+        const main = document.querySelector('main.page');
+        main.insertBefore(hinweis, main.firstChild);
+      }
+      hinweis.textContent = 'Dieser Flugtag liegt im Papierkorb. Angaben zu Maschine, '
+        + 'Basis und Besatzung werden nicht angezeigt und können nicht gespeichert '
+        + 'werden, solange er dort liegt. Wiederherstellen unter '
+        + 'Einstellungen → Papierkorb.';
+    } else if (hinweis) {
+      hinweis.remove();
+    }
+  }
   currentDay = d.day;
   document.getElementById('daytitle').textContent = 'Flugtag ' + fmtDay(d.day);
   const ddl = document.getElementById('daydellink');
@@ -423,8 +445,21 @@ async function init(){
       headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
       body: JSON.stringify(body)
     });
-    state.textContent = res.ok ? 'Gespeichert.' : 'Fehler beim Speichern.';
-    if (res.ok) loadDay(currentDay);
+    if (res.ok) {
+      state.textContent = 'Gespeichert.';
+      loadDay(currentDay);
+    } else {
+      /* Den GRUND zeigen, nicht nur "Fehler".
+       * Der wichtigste Fall ist ein Flugtag im Papierkorb: Die Angaben
+       * wurden dann NICHT gespeichert, und das muss dastehen — vorher
+       * meldete diese Stelle Erfolg für einen Vorgang, der nichts tat. */
+      let grund = 'Fehler beim Speichern.';
+      try {
+        const d = await res.json();
+        if (d.meldung) { grund = d.meldung; }
+      } catch (e) { /* keine JSON-Antwort */ }
+      state.textContent = grund;
+    }
   });
   if (SEL_DAY) { loadDay(SEL_DAY); }
   else document.getElementById('daytitle').textContent = 'Noch keine Daten';

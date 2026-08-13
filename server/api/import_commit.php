@@ -107,15 +107,21 @@ function import_commit(array $b, int $userId): never
         $tageNeu = 0; $tageGeaendert = 0;
 
         // 'insert': Tag anlegen. Existiert er wider Erwarten doch (zwischen
-        // Pruefung und Uebernahme angelegt, oder im Papierkorb), werden nur
-        // LEERE Felder gefuellt und der Tag aus dem Papierkorb geholt —
+        // Pruefung und Uebernahme angelegt), werden nur LEERE Felder gefuellt —
         // vorhandene Angaben werden nie ueberschrieben.
+        //
+        // EIN TAG IM PAPIERKORB WIRD NICHT MEHR ZURUECKGEHOLT (D1). Frueher
+        // stand hier deleted_at = NULL: Ein Import legte einen bewusst
+        // geloeschten Flugtag stillschweigend wieder an, samt seiner alten
+        // Angaben. Das Loeschen war eine bewusste Handlung; sie durch eine
+        // Nebenwirkung rueckgaengig zu machen, ist eine Ueberraschung — und
+        // eine, die niemand sieht. Solche Tage werden jetzt uebersprungen und
+        // in der Meldung genannt.
         $insTag = $pdo->prepare(
             'INSERT INTO days (user_id, day, aircraft_id, base_id,
                                crew_p1, crew_p2, crew_hems, crew_fr, crew_other)
              VALUES (?,?,?,?,?,?,?,?,?)
              ON DUPLICATE KEY UPDATE
-               deleted_at  = NULL,
                aircraft_id = COALESCE(aircraft_id, VALUES(aircraft_id)),
                base_id     = COALESCE(base_id,     VALUES(base_id)),
                crew_p1     = COALESCE(crew_p1,     VALUES(crew_p1)),
@@ -128,18 +134,31 @@ function import_commit(array $b, int $userId): never
         // uebernehmen — hier wird ueberschrieben, aber nur wo die Datei etwas
         // liefert (COALESCE andersherum).
         $updTag = $pdo->prepare(
-            'UPDATE days SET deleted_at = NULL,
+            'UPDATE days SET
                crew_p1    = COALESCE(?, crew_p1),
                crew_p2    = COALESCE(?, crew_p2),
                crew_hems  = COALESCE(?, crew_hems),
                crew_fr    = COALESCE(?, crew_fr),
                crew_other = COALESCE(?, crew_other)
-             WHERE user_id = ? AND day = ?');
+             WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
 
         $bekannteTage = [];
+        // Tage im Papierkorb einmal vorab feststellen, statt je Zeile zu fragen.
+        $imPapierkorb = [];
+        $q2 = $pdo->prepare('SELECT day FROM days WHERE user_id = ? AND deleted_at IS NOT NULL');
+        $q2->execute([$userId]);
+        foreach ($q2->fetchAll(PDO::FETCH_COLUMN) as $d2) { $imPapierkorb[(string)$d2] = true; }
+        $tageUebersprungen = 0;
+
         foreach ($tage as $t) {
-            $tag = (string)($t['day'] ?? '');
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tag)) { continue; }
+            $tag = pruef_kalendertag($t['day'] ?? null, 'tag.day', $pruef);
+            if ($tag === null) { continue; }
+            if (isset($imPapierkorb[$tag])) {
+                // Ablehnen statt zurueckholen (D1) — und sagen, dass es
+                // geschehen ist.
+                $tageUebersprungen++;
+                continue;
+            }
             $bekannteTage[$tag] = true;
             $modus = (string)($t['mode'] ?? 'keep');
             $crew = [
@@ -424,6 +443,7 @@ function import_commit(array $b, int $userId): never
             'ok' => true,
             'days_inserted'         => $tageNeu,
             'days_updated'          => $tageGeaendert,
+            'days_skipped_trash'    => $tageUebersprungen,
             'missions_inserted'     => $neu,
             'missions_overwritten'  => $ersetzt,
             'missions_skipped'      => $uebersprungen,

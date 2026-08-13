@@ -77,33 +77,52 @@ $points = pruef_menge($points, LIMIT_TRACKPUNKTE, 'track.points', $pruef);
 $pdo = db();
 $pdo->beginTransaction();
 try {
-    if ($kind === 'mission') {
-        // Im Web geloeschte Einsaetze nicht wieder anlegen (Sperrliste):
-        // wir bestaetigen der Uhr den Empfang, verwerfen aber die Daten.
-        $bl = $pdo->prepare('SELECT 1 FROM deleted_refs WHERE device_id = ? AND client_ref = ?');
-        $bl->execute([$dev['id'], $clientRef]);
-        if ($bl->fetchColumn()) {
-            $pdo->commit();
-            json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
-                      'next_seq' => $seqFrom + count($points)]);
-        }
+    /* ---- Sperrliste und Papierkorb: fuer BEIDE Arten ----------------------
+     *
+     * Diese beiden Pruefungen standen frueher INNERHALB des Einsatz-Zweigs und
+     * galten damit nur fuer Einsaetze. Zwei Luecken auf dem Ruhe-Weg:
+     *
+     *   1. Ein endgueltig geloeschtes Ruhe-Segment wurde von der naechsten
+     *      Nachlieferung wieder angelegt — und beim erneuten Loeschen wieder.
+     *      Wer eine Uhr im Einsatz hat, kam aus dieser Schleife nicht heraus.
+     *   2. Ein Segment im Papierkorb sammelte weiter Spurpunkte, weil auch die
+     *      Papierkorb-Pruefung fehlte.
+     *
+     * Deshalb stehen sie jetzt VOR der Fallunterscheidung. Die Sperrliste
+     * unterscheidet seit Web 4.0.0 ueber owner_type, welche Art gemeint ist.
+     */
+    $ownerTypePruef = $kind === 'mission' ? 'mission' : 'rest';
 
+    // Im Web geloescht: Empfang bestaetigen, Daten aber verwerfen. Die Uhr
+    // soll ihren Puffer freigeben duerfen — sonst versucht sie es endlos.
+    $bl = $pdo->prepare('SELECT 1 FROM deleted_refs
+                         WHERE device_id = ? AND owner_type = ? AND client_ref = ?');
+    $bl->execute([$dev['id'], $ownerTypePruef, $clientRef]);
+    if ($bl->fetchColumn()) {
+        $pdo->commit();
+        json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
+                  'next_seq' => $seqFrom + count($points)]);
+    }
+
+    // Im Papierkorb: ebenfalls bestaetigen und verwerfen — sonst wuerde ein
+    // geloeschter Datensatz durch Nachlieferungen wieder wachsen. Erst das
+    // endgueltige Loeschen traegt ihn in die Sperrliste ein.
+    $tabelle = $kind === 'mission' ? 'missions' : 'rest_segments';
+    $chk = $pdo->prepare("SELECT id, deleted_at" . ($kind === 'mission' ? ', manual' : '')
+                       . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
+    $chk->execute([$dev['id'], $clientRef]);
+    $existing = $chk->fetch();
+
+    if ($existing && $existing['deleted_at'] !== null) {
+        $pdo->commit();
+        json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
+                  'next_seq' => $seqFrom + count($points)]);
+    }
+
+    if ($kind === 'mission') {
         // Manuell bearbeitete Einsaetze schuetzen: Uhr-Uploads duerfen
         // Metadaten/Phasen/Rea nicht mehr ueberschreiben; Trackpunkte werden
         // weiterhin ergaenzt (Append-only, unkritisch).
-        $chk = $pdo->prepare('SELECT id, manual, deleted_at FROM missions
-                              WHERE device_id = ? AND client_ref = ?');
-        $chk->execute([$dev['id'], $clientRef]);
-        $existing = $chk->fetch();
-
-        // Im Papierkorb: Empfang bestaetigen, Daten aber verwerfen — sonst
-        // wuerde ein geloeschter Einsatz durch Nachlieferungen wieder wachsen.
-        // Erst das endgueltige Loeschen traegt ihn in die Sperrliste ein.
-        if ($existing && $existing['deleted_at'] !== null) {
-            $pdo->commit();
-            json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
-                      'next_seq' => $seqFrom + count($points)]);
-        }
         if ($existing && (int)$existing['manual'] === 1) {
             $ownerId = (int)$existing['id'];
             $ownerType = 'mission';

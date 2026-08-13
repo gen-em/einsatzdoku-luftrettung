@@ -10,6 +10,49 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.3.0] — 2026-08-08
+
+### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen
+
+Drei Schreibwege führen zu einem Flugtag, und alle drei verhielten sich falsch,
+wenn er im Papierkorb lag:
+
+- **Formular:** Die Aktualisierung hatte keine Bedingung auf den Löschzustand.
+  Sie überschrieb die Angaben und ließ den Tag gelöscht — die Eingabe verschwand
+  spurlos, die Meldung lautete „Gespeichert." Jetzt wird abgelehnt und der Grund
+  genannt.
+- **Import:** Er holte den Tag stillschweigend aus dem Papierkorb zurück, samt
+  alter Angaben. Jetzt wird er übersprungen und in der Meldung genannt.
+- **Wiedereinspielen:** Es tat nichts — aber eben still, ohne Zählung und ohne
+  Erwähnung. Jetzt wird der Fall benannt.
+
+**Warum ablehnen und nicht zurückholen:** Das Löschen war eine bewusste
+Handlung. Sie durch eine Nebenwirkung rückgängig zu machen, ist eine
+Überraschung — und zwar eine, die niemand sieht. Der Papierkorb hat eine eigene
+Wiederherstellungsfunktion.
+
+Auch beim **Lesen** wird der Zustand jetzt gemeldet. Vorher lieferte die
+Schnittstelle für einen gelöschten Tag schlicht nichts, nicht unterscheidbar
+von „für diesen Tag wurde noch nichts eingetragen". Wer seine Angaben vermisste,
+suchte den Fehler bei sich. Die Tagesansicht zeigt nun einen Hinweis.
+
+### Behoben — Ein gelöschtes Ruhesegment kehrte immer wieder zurück
+
+Die Sperrliste, die verhindert, dass die Uhr einen gelöschten Datensatz neu
+anlegt, war an **beiden** Enden nur für Einsätze umgesetzt: Sie wurde nur für
+Einsätze befüllt und nur im Einsatz-Zweig abgefragt. Ein endgültig gelöschtes
+Ruhesegment wurde deshalb von der nächsten Nachlieferung wieder angelegt — und
+beim erneuten Löschen wieder. Wer eine Uhr im Einsatz hat, kam aus dieser
+Schleife nicht heraus.
+
+Im selben Zweig fehlte auch die Prüfung auf „im Papierkorb", sodass ein
+gelöschtes Ruhesegment weiter Spurpunkte sammelte.
+
+Beide Prüfungen stehen jetzt **vor** der Fallunterscheidung und gelten damit für
+beide Arten. Die Sperrliste unterscheidet über `owner_type` (seit Web 4.0.0),
+welche Art gemeint ist — Einsätze und Ruhesegmente vergeben ihre Kennungen
+unabhängig voneinander.
+
 ## [Web 4.2.0] — 2026-08-08
 
 ### Alle vier Schreibwege prüfen jetzt gleich

@@ -18,11 +18,43 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P7 | Dokumentation und Verträge | Web 4.1.1 | **erledigt** |
 | P2 | Kette „unlesbarer Schlüssel" schließen | Web 4.1.2 | **erledigt** |
 | P3 | Gemeinsame Prüfschicht anwenden | Web 4.2.0 | **erledigt** |
-| P5 | Papierkorb und gelöschte Flugtage | — | offen |
+| P5 | Papierkorb und gelöschte Flugtage | Web 4.3.0 | **erledigt** |
 | P4 | Ratenschutz und unangemeldete Endpunkte | — | offen |
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P5 — Papierkorb und gelöschte Flugtage (Web 4.3.0)
+
+Eine Entscheidung (D1: ablehnen und melden, nicht still wiederherstellen), vier
+Stellen.
+
+| Befund | Änderung |
+|---|---|
+| M3-01 | Tages-Schnittstelle lehnt ab und meldet; auch das Lesen nennt den Zustand |
+| M3-16 | Import holt gelöschte Tage nicht mehr zurück, überspringt und zählt |
+| M5-10 | Wiedereinspielen lehnt ab und benennt den Fall |
+| M4-04 | Sperrliste und Papierkorbprüfung gelten für **beide** Arten |
+
+### Nachweis gegen MariaDB
+
+- Alte Fassung belegt: `ON DUPLICATE KEY UPDATE` ohne Bedingung auf den
+  Löschzustand überschreibt den Tag und lässt ihn gelöscht — die Eingabe ist
+  weg, die Antwort lautet „ok".
+- Neue Vorabprüfung findet den Tag im Papierkorb (1 Treffer) und lehnt ab.
+- Import-`UPDATE` mit `deleted_at IS NULL` ändert 0 Zeilen statt den Tag
+  zurückzuholen.
+- Sperrliste trennt sauber: `r-123` als Ruhesegment gesperrt (1 Treffer), als
+  Einsatz nicht (0 Treffer).
+
+### Umsetzungsdetail zu M4-04
+
+Beide Prüfungen (Sperrliste, Papierkorb) sind aus dem Einsatz-Zweig **vor** die
+Fallunterscheidung gezogen. Damit ist die Lücke nicht nur geschlossen, sondern
+strukturell nicht wiederholbar: Ein künftiger dritter Datensatztyp bekäme sie
+automatisch.
 
 ---
 

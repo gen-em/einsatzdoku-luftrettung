@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
+require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
 
 /**
  * GET  api/day.php            -> { days: ["2026-07-16", ...], latest: "..." }
@@ -17,9 +18,34 @@ try {
             json_out(['error' => 'csrf'], 403);
         }
         $b = json_decode(file_get_contents('php://input'), true);
-        $day = (string)($b['day'] ?? '');
-        if (!is_array($b) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
+        $day = pruef_kalendertag($b['day'] ?? null, 'day');
+        if (!is_array($b) || $day === null) {
             json_out(['error' => 'payload'], 400);
+        }
+
+        /* FLUGTAG IM PAPIERKORB: ABLEHNEN UND MELDEN (D1).
+         *
+         * Die Aktualisierung unten hat keine Bedingung auf deleted_at. Sie
+         * traf deshalb auch einen Tag, der im Papierkorb liegt, ueberschrieb
+         * seine Angaben und liess ihn geloescht — die Eingabe verschwand
+         * spurlos, und die Antwort lautete "ok". Dieselbe Schnittstelle
+         * bedient das Formular; wer dort Besatzung oder Maschine eintraegt und
+         * speichert, bekam eine Bestaetigung fuer nichts.
+         *
+         * Warum ABLEHNEN und nicht STILL WIEDERHERSTELLEN (D1): Das Loeschen
+         * war eine bewusste Handlung. Sie durch eine Nebenwirkung
+         * rueckgaengig zu machen, ist eine Ueberraschung — und zwar eine, die
+         * niemand sieht. Der Papierkorb hat eine eigene
+         * Wiederherstellungsfunktion; wer den Tag zurueckholen will, soll sie
+         * benutzen. */
+        $imPapierkorb = db()->prepare(
+            'SELECT deleted_at FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
+        $imPapierkorb->execute([$userId, $day]);
+        if ($imPapierkorb->fetchColumn() !== false) {
+            json_out(['error' => 'day_deleted',
+                      'meldung' => 'Dieser Flugtag liegt im Papierkorb. Es wurde nichts '
+                                 . 'gespeichert. Bitte den Tag zuerst wiederherstellen '
+                                 . '(Einstellungen → Papierkorb).'], 409);
         }
         $trim = fn($k, $max) => mb_substr(trim((string)($b[$k] ?? '')), 0, $max) ?: null;
 
@@ -63,7 +89,19 @@ try {
         json_out(['days' => $days, 'latest' => $days[0] ?? null]);
     }
 
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) json_out(['error' => 'payload'], 400);
+    if (pruef_kalendertag($day, 'day') === null) json_out(['error' => 'payload'], 400);
+
+    /* AUCH BEIM LESEN MELDEN.
+     *
+     * Die Abfrage unten filtert auf deleted_at IS NULL und liefert dann
+     * schlicht null — nicht unterscheidbar von "fuer diesen Tag wurde noch
+     * nichts eingetragen". Wer seine Angaben vermisst, sucht den Fehler bei
+     * sich. Der Zustand gehoert genannt, damit die Oberflaeche ihn zeigen
+     * kann. */
+    $geloescht = db()->prepare(
+        'SELECT deleted_at FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
+    $geloescht->execute([$userId, $day]);
+    $dayDeletedAt = $geloescht->fetchColumn();
 
     // Flugtag-Metadaten (null, wenn noch keine gespeichert)
     $mt = db()->prepare('SELECT d.aircraft_id, d.base_id, d.crew_p1, d.crew_p2, d.crew_hems,
@@ -120,7 +158,13 @@ try {
         if ($track) $rest[] = $track;
     }
 
-    json_out(['day' => $day, 'meta' => $meta, 'missions' => $missions, 'rest_segments' => $rest]);
+    $antwort = ['day' => $day, 'meta' => $meta,
+                'missions' => $missions, 'rest_segments' => $rest];
+    // Zustand nennen statt ihn als "nichts eingetragen" erscheinen zu lassen.
+    if ($dayDeletedAt !== false && $dayDeletedAt !== null) {
+        $antwort['day_deleted_at'] = $dayDeletedAt;
+    }
+    json_out($antwort);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 eine lesbare Fehlermeldung — das Frontend
     // (index.php) zeigt error+meldung bereits an.
