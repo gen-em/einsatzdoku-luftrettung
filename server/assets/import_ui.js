@@ -6,7 +6,7 @@
  * fertige (verschluesselte) Nutzlast bauen. Die eigentliche Rechenarbeit
  * steckt in import.js, die Formatkenntnis in import_profiles.js.
  *
- * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, EdCrypto, EdUnlock,
+ * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, CSRF, EdCrypto, EdUnlock,
  * ImportCore, ImportProfile.
  */
 (function () {
@@ -265,7 +265,7 @@
      */
     async function bestandEinsatznummernIndex(d) {
         var index = {};
-        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         if (!ck) { return index; }
         for (var tag in (d.days || {})) {
             if (!Object.prototype.hasOwnProperty.call(d.days, tag)) { continue; }
@@ -484,7 +484,7 @@
      * VOR dem Klick auffallen und nicht mittendrin.
      */
     async function baueNutzlast() {
-        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         if (!ck) { return null; }
 
         var acId = $('acsel').value ? parseInt($('acsel').value, 10) : null;
@@ -732,7 +732,7 @@
      * den Dialog ab, bleibt der Hinweis stehen — sein Knopf stoesst denselben
      * Versuch erneut an. */
     async function sperrstatus() {
-        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         $('lockwarn').hidden = !!ck;
         $('datei').disabled = !ck;
         return ck;

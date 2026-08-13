@@ -162,6 +162,11 @@ const SEL_DAY = <?= json_encode($selDay) ?>;
 const DEF_AC = <?= (int)$DEF_AC ?>;
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+   bekommt einen anderen Schluessel. */
+const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const DEF_BASE = <?= (int)$DEF_BASE ?>;
 const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
 let currentDay = null;
@@ -396,7 +401,7 @@ async function loadDay(day){
  * ist gefahrlos: ohne Schluessel wurde vorher kein Pin gezeichnet. */
 async function entschluesselePat(){
   const banner = document.getElementById('lockbanner');
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
   if (banner) banner.hidden = true;
   let changed = false;

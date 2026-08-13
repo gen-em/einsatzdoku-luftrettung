@@ -134,7 +134,7 @@ Phasen/Rea werden je Upload **vollständig ersetzt** (kein Delta). Die Uhr darf
 lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 
 **Ende-zu-Ende-Verschlüsselung (Pflicht):** Beim Login leitet der Browser per
-PBKDF2-SHA256 (310 000 Runden) aus Passwort + `kdf_salt` zwei Werte ab: ein
+PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
 gespeichert) und einen Datenschlüssel (bleibt im Browser, `sessionStorage`).
 Ein zufälliger **Inhaltsschlüssel** (256 Bit, nicht vom Passwort abgeleitet)
@@ -150,6 +150,38 @@ die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
 Web 2.7.0 ersatzlos. Passwort-Ändern re-wrappt clientseitig **und atomar**:
 Lässt sich der Inhaltsschlüssel nicht umpacken, wird auch das Passwort nicht
 geändert. Eine Admin-Passwortvergabe existiert bewusst nicht.
+
+**Stille Anhebung der Rundenzahl (seit Web 5.0.0, M2-01 Schritt 4).** Steht ein
+Konto noch auf einer niedrigeren Rundenzahl als `KDF_ITER_ZIEL`, wird sie beim
+nächsten Anmelden im Hintergrund angehoben. Der Weg führt über ein Vormerkfach
+im `sessionStorage` (`edkvor`), weil Passwort und Schlüsselhülle nie gleichzeitig
+vorliegen: Bei der Anmeldung hat der Browser das Passwort, aber nicht die Hülle;
+auf der ersten angemeldeten Seite ist es umgekehrt.
+
+1. `login.php` leitet für **jede** vom Salz-Endpunkt genannte Rundenzahl ab und
+   legt Datenschlüssel und Token je Zahl ins Vormerkfach. Welche gilt, weiß es
+   nicht — der Endpunkt darf es nicht verraten.
+2. Der Server wählt anhand von `users.kdf_iter` das passende Token.
+3. Die erste Seite, die den Inhaltsschlüssel braucht, kennt `KDF_ITER`, nimmt
+   den zugehörigen Datenschlüssel aus dem Fach, packt den Inhaltsschlüssel um
+   und schickt ihn mit beiden Token an `api/kdf_upgrade.php`.
+
+Der Endpunkt verlangt das **alte** Token als Nachweis (er setzt den Hash, gegen
+den sich das Konto anmeldet — ohne Nachweis wäre er ein Weg, aus einer
+übernommenen Sitzung ein beliebiges Passwort zu setzen), akzeptiert nur Werte
+aus `KDF_ITER_LISTE`, lehnt Senkungen ab, verlangt eine unveränderte
+`pat_key_check` und erhöht `session_epoch` **nicht** — anders als der
+Passwortwechsel, denn hier hat sich das Passwort nicht geändert.
+
+Nach erfolgreicher Anhebung ist `PAT_WRAP` auf der laufenden Seite **veraltet**.
+Der Inhaltsschlüssel wird deshalb direkt abgelegt (`EdCrypto.setContentKey()`)
+und an die alte Hülle gebunden; beim nächsten Seitenaufbau verwirft
+`EdKeyGuard` ihn wegen der abweichenden Bindung und entpackt ihn aus der neuen
+Hülle. Ohne das erschiene der Entsperrdialog unmittelbar nach jedem Anmelden —
+das Gegenteil einer stillen Anhebung.
+
+Ein Fehlschlag ändert nichts: Das Konto behält seine Rundenzahl und versucht es
+beim nächsten Anmelden erneut. Gemeldet wird er nicht.
 
 **Entsperren des Inhaltsschlüssels in der Sitzung (`assets/unlock.js`, ab Web
 3.0.0):** Anmeldung und Inhaltsschlüssel haben unterschiedliche Lebensdauern —
@@ -188,9 +220,8 @@ Drei Punkte, die bei Änderungen zu beachten sind:
   und `export.js` auf derselben Seite laufen.
 - **Escape während der Ableitung wird unterdrückt** (`cancel`-Ereignis mit
   `preventDefault()`), sonst nimmt die aufrufende Seite „abgebrochen" an,
-  während die Rechnung weiterläuft. Die 310 000 PBKDF2-Runden dauern je nach
-  Gerät 0,3–1 s; solange sind Knöpfe und Feld gesperrt und es steht ein
-  Wartehinweis.
+  während die Rechnung weiterläuft. Die PBKDF2-Runden dauern je nach Gerät
+  0,3–1 s; solange sind Knöpfe und Feld gesperrt und es steht ein Wartehinweis.
 - **Kein `window.prompt` als Rückfallebene.** Fehlt `<dialog>` oder das Salt,
   kommt `null` zurück — ein Prompt zeigte das Passwort im Klartext.
 
@@ -335,8 +366,9 @@ Einmal-Link.
 **Backup (portabel):** `api/backup_data.php` liefert alle Daten der NutzerIn als
 Roh-JSON (geschützte Angaben weiterhin als Chiffretext). Der Browser
 entschlüsselt sie mit dem Inhaltsschlüssel, ersetzt sie durch Klartext und
-versiegelt das Ganze per `EdCrypto.sealBackup()` (AES-256-GCM, PBKDF2 310 000,
-gzip via CompressionStream) zur `.edbak`-Datei. Beim Import öffnet der Browser
+versiegelt das Ganze per `EdCrypto.sealBackup()` (AES-256-GCM, PBKDF2 mit der
+Rundenzahl des Kontos — sie steht seit Web 5.0.0 im Dateikopf, gzip via
+CompressionStream) zur `.edbak`-Datei. Beim Import öffnet der Browser
 die Datei, verschlüsselt die Angaben mit dem Schlüssel des **Zielkontos** neu
 und schickt sie an `api/backup_restore.php`. Dadurch sind Backups zwischen
 Konten übertragbar; der Server sieht nie Klartext. Aufbau: `docs/Backup-Format.md`.
@@ -1056,6 +1088,7 @@ Die Bausteine im Einzelnen:
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Sicherungslauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `update.php` (`inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Sicherung. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
+| Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 

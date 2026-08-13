@@ -82,6 +82,11 @@ const MID = <?= $mid ?>;
 // Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
 // kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+   bekommt einen anderen Schluessel. */
+const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
@@ -336,7 +341,7 @@ async function zeigePat(m, dl, bounds){
     const el = document.getElementById(id);
     if (el) { el.remove(); }
   });
-  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT);
+  const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (ck) {
     const r = await EdPat.entschluessle(ck, m.pat_blob);
     if (r.zustand === 'unlesbar') {

@@ -9,7 +9,7 @@
  *   Bisher half nur vollstaendiges Ab- und Neuanmelden.
  *
  * Verfahren (vollstaendig im Browser, das Passwort verlaesst ihn nie):
- *   1. EdCrypto.deriveKeys(passwort, kdfSalt) -> dataKeyHex
+ *   1. EdCrypto.deriveKeys(passwort, kdfSalt, kdfIter) -> dataKeyHex
  *   2. EdCrypto.decrypt(dataKeyHex, wrap) versuchen.
  *      Gelingt es, war das Passwort richtig — die Echtheitspruefung steckt
  *      bereits in AES-GCM, ein zusaetzlicher Abgleich waere ueberfluessig.
@@ -21,10 +21,11 @@
  * Sicherheit: Wer eine offene Sitzung uebernimmt, bekommt den Wrap ohnehin
  * mit jeder ausgelieferten Seite. Der Dialog eroeffnet also keinen neuen
  * Angriffsweg; er macht bequem zugaenglich, was die Seite schon enthaelt.
- * Ein Rateangriff gegen den Wrap ist durch die 310 000 PBKDF2-Runden teuer.
+ * Ein Rateangriff gegen den Wrap ist durch die PBKDF2-Runden teuer; ihre Zahl
+ * steht je Konto in der Datenbank und kommt als KDF_ITER aus auth_guard.php.
  *
  * Verwendung:
- *   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+ *   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
  *   if (!ck) { ...bisheriges Verhalten bei gesperrtem Schluessel... }
  *
  * Erwartet aus der Seite: EdCrypto.
@@ -57,7 +58,7 @@ const EdUnlock = (() => {
   }
 
   /** Zeigt den Dialog; liefert den Inhaltsschluessel oder null bei Abbruch. */
-  function frage(wrap, kdfSalt) {
+  function frage(wrap, kdfSalt, kdfIter) {
     const d = baueDialog();
     const feld = d.querySelector('input');
     const ok = d.querySelector('[data-act="yes"]');
@@ -95,7 +96,7 @@ const EdUnlock = (() => {
 
         let ck = null;
         try {
-          const abgeleitet = await EdCrypto.deriveKeys(pw, kdfSalt);
+          const abgeleitet = await EdCrypto.deriveKeys(pw, kdfSalt, kdfIter);
           // Gelingt das Entpacken, war das Passwort richtig.
           await EdCrypto.decrypt(abgeleitet.dataKeyHex, wrap);
           EdCrypto.setDataKey(abgeleitet.dataKeyHex);
@@ -134,8 +135,115 @@ const EdUnlock = (() => {
    * wenn ueberhaupt nichts zu entsperren ist — kommt null zurueck, die
    * aufrufende Seite verhaelt sich dann wie bisher im gesperrten Zustand.
    */
-  async function ensureContentKey(wrap, kdfSalt) {
+  /* ---- Vormerkfach der Anmeldung auflösen (M2-01, Schritt 3+4) ---------
+   *
+   * Die Anmeldung konnte den Datenschlüssel nicht setzen: Sie hat für mehrere
+   * Rundenzahlen abgeleitet und wusste nicht, welche gilt. DIESE Seite weiß
+   * es — KDF_ITER kommt aus der Nutzerzeile.
+   *
+   * Läuft still. Ein Fehlschlag kostet nichts: Dann bleibt der Schlüssel
+   * gesperrt, und der Entsperrdialog fragt wie eh und je nach dem Passwort.
+   *
+   * Liefert den Inhaltsschlüssel zurück, wenn die Anhebung gelaufen ist —
+   * siehe unten, warum er in diesem Fall nicht mehr aus der Hülle der Seite
+   * zu holen wäre. Sonst null; dann geht der normale Weg weiter.
+   */
+  async function loeseVormerkung(wrap, kdfIter) {
+    const vor = EdCrypto.holeAbleitungen();
+    if (!vor) { return null; }
+    const dk = vor.dk[String(kdfIter)];
+    if (!dk) {
+      // Die Rundenzahl des Kontos stand nicht in der Liste — dann gehört das
+      // Fach zu einer anderen Anmeldung und ist wertlos.
+      EdCrypto.vergissAbleitungen();
+      return null;
+    }
+    EdCrypto.setDataKey(dk);
+
+    /* ---- Stille Anhebung (Schritt 4) ----------------------------------
+     *
+     * Jetzt liegt alles beisammen, was sie braucht, und zwar nur jetzt: das
+     * Passwort ist zwar längst weg, aber seine beiden Ableitungen sind da,
+     * und die Schlüsselhülle liefert diese Seite mit.
+     *
+     * Der Inhaltsschlüssel wird mit dem ALTEN Datenschlüssel entpackt und mit
+     * dem NEUEN wieder verpackt. Er selbst ändert sich nicht — deshalb bleibt
+     * die Prüfsumme gleich, und deshalb bleiben alle verschlüsselten Angaben
+     * unangetastet.
+     */
+    const ziel = (typeof KDF_ITER_ZIEL !== 'undefined') ? KDF_ITER_ZIEL : null;
+    if (ziel && ziel !== kdfIter && vor.dk[String(ziel)] && vor.tk[String(kdfIter)]
+        && vor.tk[String(ziel)] && typeof CSRF !== 'undefined') {
+      try {
+        const nutzlast = {
+          alt_token: vor.tk[String(kdfIter)],
+          neu_token: vor.tk[String(ziel)],
+          neu_iter:  ziel
+        };
+        let ck = null;
+        if (wrap) {
+          ck = await EdCrypto.decrypt(dk, wrap);
+          nutzlast.wrap_pw   = await EdCrypto.encrypt(vor.dk[String(ziel)], ck);
+          nutzlast.key_check = await EdCrypto.contentKeyCheck(ck);
+        }
+        const r = await fetch('api/kdf_upgrade.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+          body: JSON.stringify(nutzlast)
+        });
+        const d = await r.json().catch(() => ({}));
+        if (d && d.ok) {
+          /* Erst JETZT den neuen Datenschlüssel übernehmen — der Server hat
+           * bestätigt. Andersherum stünde im Browser ein Schlüssel, zu dem
+           * die gespeicherte Hülle nicht passt (M2-07). */
+          EdCrypto.setDataKey(vor.dk[String(ziel)]);
+          EdCrypto.vergissAbleitungen();
+          if (ck) {
+            /* DIE HÜLLE DIESER SEITE IST JETZT VERALTET.
+             *
+             * PAT_WRAP wurde gerendert, bevor die Anhebung lief — in der
+             * Datenbank steht seit einer Zeile eine andere. Mit dem neuen
+             * Datenschlüssel lässt sich die alte Hülle nicht mehr öffnen, und
+             * der Entsperrdialog erschiene unmittelbar nach dem Anmelden.
+             * Genau das soll eine STILLE Anhebung nicht tun.
+             *
+             * Der Inhaltsschlüssel ist aber bekannt — er wurde oben entpackt.
+             * Er wird abgelegt und an die Hülle DIESER Seite gebunden. Beim
+             * nächsten Seitenaufbau trägt die Seite die neue Hülle; die
+             * Bindung passt dann nicht mehr, EdKeyGuard verwirft den
+             * zwischengespeicherten Schlüssel und entpackt ihn neu — diesmal
+             * aus der neuen Hülle mit dem neuen Datenschlüssel. */
+            EdCrypto.setContentKey(ck);
+            await EdKeyGuard.binden(wrap);
+            return ck;
+          }
+        }
+      } catch (e) {
+        /* Bewusst still. Die Anhebung ist eine Verbesserung, kein Vorgang,
+         * dessen Scheitern jemanden aufhalten dürfte — beim nächsten Anmelden
+         * wird es erneut versucht. Eine Meldung an dieser Stelle wäre für die
+         * Person weder verständlich noch handhabbar.
+         *
+         * Der Datenschlüssel bleibt in diesem Fall der ALTE, und die Hülle
+         * der Seite passt weiterhin zu ihm. */
+      }
+    }
+    EdCrypto.vergissAbleitungen();
+    return null;
+  }
+
+  async function ensureContentKey(wrap, kdfSalt, kdfIter) {
     if (!wrap) { return null; }
+
+    /* Zuerst das Vormerkfach: Direkt nach einer Anmeldung während einer
+     * Umstellung liegt der Datenschlüssel dort und nirgends sonst. Ohne
+     * diesen Schritt erschiene der Entsperrdialog unmittelbar nach dem
+     * Anmelden — und zwar bei jedem Anmelden. */
+    if (!EdCrypto.getDataKey()) {
+      const ausVormerkung = await loeseVormerkung(wrap, kdfIter);
+      if (ausVormerkung) { return ausVormerkung; }
+    }
+
     // NICHT EdCrypto.getContentKey: Jene Fassung liefert einen
     // zwischengespeicherten Schluessel zurueck, ohne zu pruefen, ob er zu
     // DIESER Huelle gehoert. Die Richtigkeit haengt dann allein daran, dass
@@ -147,10 +255,10 @@ const EdUnlock = (() => {
 
     // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>
     // bekommen bewusst keinen window.prompt (Passwort im Klartext sichtbar).
-    if (!kdfSalt || typeof HTMLDialogElement === 'undefined') { return null; }
+    if (!kdfSalt || !kdfIter || typeof HTMLDialogElement === 'undefined') { return null; }
 
     if (laufend) { return laufend; }
-    laufend = frage(wrap, kdfSalt).finally(() => { laufend = null; });
+    laufend = frage(wrap, kdfSalt, kdfIter).finally(() => { laufend = null; });
     return laufend;
   }
 

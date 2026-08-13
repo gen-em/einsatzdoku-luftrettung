@@ -113,11 +113,16 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $wrapPw  = (string)($_POST['wrap_pw'] ?? '');
     $wrapRc  = (string)($_POST['wrap_rc'] ?? '');
     $keyChk  = (string)($_POST['key_check'] ?? '');
+    $neuIter = (int)($_POST['new_iter'] ?? 0);
     $chkSoll = $row['pat_key_check'] ?? null;
 
     if (!preg_match('/^[0-9a-f]{64}$/', $neuTok) || !preg_match('/^[0-9a-f]{32}$/', $neuSalt)) {
         // Kommt nur vor, wenn JavaScript fehlt oder abbricht.
         $error = 'Speichern unvollständig — bitte JavaScript aktivieren und erneut versuchen.';
+    } elseif (!in_array($neuIter, KDF_ITER_LISTE, true)) {
+        // Nur Werte, die diese Fassung kennt (M2-01).
+        $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar. '
+               . 'Es wurde nichts geändert.';
     } elseif (!preg_match(WRAP_RE, $wrapPw)) {
         $error = $erstvergabe
             ? 'Die Schlüssel konnten nicht erzeugt werden. Es wurde nichts geändert.'
@@ -144,21 +149,25 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Passwort und BEIDE Huellen in einem Zug — ein Konto ohne
                 // Wiederherstellungs-Huelle waere nach einem Reset verloren.
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
+                                                kdf_iter = ?,
                                                 pat_wrap_pw = ?, pat_wrap_rc = ?,
                                                 pat_key_check = ?
                                WHERE id = ?')
                     ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
-                               $wrapPw, $wrapRc, $keyChk !== '' ? $keyChk : null,
+                               $neuIter, $wrapPw, $wrapRc,
+                               $keyChk !== '' ? $keyChk : null,
                                (int)$row['user_id']]);
             } else {
                 // Reset: der Inhaltsschluessel bleibt derselbe, nur seine
                 // Passwort-Huelle wird ersetzt. pat_wrap_rc bleibt unberuehrt,
                 // damit der bekannte Wiederherstellungsschluessel gueltig bleibt.
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
+                                                kdf_iter = ?,
                                                 pat_wrap_pw = ?, pat_key_check = ?
                                WHERE id = ?')
                     ->execute([password_hash($neuTok, PASSWORD_DEFAULT), $neuSalt,
-                               $wrapPw, $keyChk !== '' ? $keyChk : null,
+                               $neuIter, $wrapPw,
+                               $keyChk !== '' ? $keyChk : null,
                                (int)$row['user_id']]);
             }
             /* ALLE offenen Tokens dieses Kontos entwerten, nicht nur den
@@ -255,6 +264,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="post" id="pwform">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
+      <?php /* Rundenzahl der Ableitung (M2-01). Sie muss mitkommen, sonst
+               stuende in der Nutzerzeile eine andere als die, mit der das
+               Token entstanden ist — und die naechste Anmeldung scheiterte. */ ?>
+      <input type="hidden" name="new_iter"  id="new_iter">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
       <input type="hidden" name="wrap_rc"   id="wrap_rc">
       <input type="hidden" name="key_check" id="key_check">
@@ -278,6 +291,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="post" id="pwform">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
+      <?php /* Rundenzahl der Ableitung (M2-01). Sie muss mitkommen, sonst
+               stuende in der Nutzerzeile eine andere als die, mit der das
+               Token entstanden ist — und die naechste Anmeldung scheiterte. */ ?>
+      <input type="hidden" name="new_iter"  id="new_iter">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
       <input type="hidden" name="key_check" id="key_check">
       <label>Wiederherstellungsschlüssel
@@ -314,6 +331,9 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
 const WRAP_RC = <?= json_encode($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
+// Zielwert der Rundenzahl (M2-01). Diese Seite baut die Ableitung immer neu
+// auf und nimmt deshalb nie einen Altwert.
+const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const state = document.getElementById('state');
 const form  = document.getElementById('pwform');
 
@@ -362,12 +382,15 @@ if (ERSTVERGABE) {
     try {
       state.textContent = 'Schlüssel werden erzeugt …';
       const salt = EdCrypto.randomHex(16);
-      const k    = await EdCrypto.deriveKeys(pw1, salt);
+      // Neues Konto: immer der Zielwert (M2-01). Es gibt keinen Altbestand,
+      // der beruecksichtigt werden muesste.
+      const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
       const ck   = EdCrypto.randomHex(32);          // Inhaltsschluessel
       const rc   = EdCrypto.newRecoveryCode();
       const rk   = await EdCrypto.recoveryKeyHex(rc);
 
       document.getElementById('new_salt').value  = salt;
+      document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
       document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
       document.getElementById('wrap_rc').value   = await EdCrypto.encrypt(rk, ck);
@@ -456,9 +479,12 @@ if (ERSTVERGABE) {
 
       state.textContent = 'Neues Passwort wird eingerichtet …';
       const salt = EdCrypto.randomHex(16);
-      const k    = await EdCrypto.deriveKeys(pw1, salt);
+      // Zuruecksetzen baut die Ableitung vollstaendig neu auf — also gleich
+      // mit dem Zielwert (M2-01).
+      const k    = await EdCrypto.deriveKeys(pw1, salt, KDF_ITER_ZIEL);
 
       document.getElementById('new_salt').value  = salt;
+      document.getElementById('new_iter').value  = KDF_ITER_ZIEL;
       document.getElementById('new_token').value = k.authToken;
       document.getElementById('wrap_pw').value   = await EdCrypto.encrypt(k.dataKeyHex, ck);
       document.getElementById('key_check').value = await EdCrypto.contentKeyCheck(ck);

@@ -26,8 +26,111 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | — | Nachträge aus dem Betrieb | Web 4.5.3 | **erledigt** |
 | P8c | Aufräumen, Bündel 5 und 6 | Web 4.6.0 | **erledigt** |
 | P9a | Einrichtung, Migrationen, Passwortgüte | Web 4.7.0 | **erledigt** |
-| P9b | Ableitungsrunden (M2-01, S7) | — | offen |
+| P9b | Ableitungsrunden (M2-01, S7) | Web 5.0.0 | **erledigt** |
 | P9c | Formatkennung (M2-10), Uhr-App | — | offen |
+
+---
+
+## P9b — Ableitungsrunden (Web 5.0.0)
+
+M2-01 Schritte 2 bis 4 und S7. Keine Schemaänderung; die Spalte `users.kdf_iter`
+gibt es seit P0 und wird jetzt erstmals gelesen.
+
+### Entschieden: Zielwert 320 000, nicht 600 000 und nicht 310 000
+
+Zunächst war beschlossen, nur den Mechanismus zu bauen und den Wert bei 310 000
+zu belassen. Beim Schreiben von Schritt 4 zeigte sich die Folge: Der Pfad liefe
+dann **nie**. Toter Code, der in der Produktion noch nie ausgeführt wurde, ist
+genau das, was bricht, wenn man ihn Jahre später zum ersten Mal scharf schaltet
+— und zwar an der einzigen Stelle des Projekts, die sich nicht reparieren lässt.
+
+320 000 ist deshalb kein Sicherheitswert, sondern ein Prüfwert: Der Mechanismus
+läuft einmal für jedes Konto wirklich durch, bei etwa drei Prozent mehr
+Wartezeit. Ein späterer Sprung auf 600 000 ist danach eine Zeile auf einem
+erprobten Weg.
+
+### Entschieden: der Salz-Endpunkt nennt eine Liste
+
+Der Kommentar in `auth_salt.php` hatte diesen Fall wörtlich vorweggenommen: Die
+Rundenzahl muss für unbekannte Adressen dieselbe sein wie für echte Konten.
+Nennte der Endpunkt den Wert **des Kontos**, wäre während der Umstellung jede
+Adresse mit dem alten Wert nachweislich ein echtes, seither nicht benutztes
+Konto.
+
+Die Liste löst das vollständig: Die Antwort ist für alle Adressen nicht bloß
+ununterscheidbar, sondern **buchstäblich gleich**. Welche Zahl gilt, entscheidet
+der Server bei der Anmeldung — also nach dem Nachweis, dass jemand das Passwort
+kennt. Es bleibt bei genau einer bcrypt-Prüfung.
+
+Der Preis: doppelte Ableitungszeit bei der Anmeldung, solange die Liste zwei
+Einträge hat. In `db.php` steht, wann ein Wert entfernt werden darf — erst,
+wenn kein Konto ihn mehr trägt. Vorher wäre das Entfernen eine unwiderrufliche
+Aussperrung genau dieser Konten.
+
+### Entschieden: die Rundenzahl ist ein Pflichtparameter
+
+`deriveKeys()` hat keinen Vorgabewert. Ein Vorgabewert ließe jede vergessene
+Aufrufstelle stillschweigend mit 310 000 rechnen, und weil heute alle Konten
+diesen Wert tragen, fiele das nicht auf — sondern erst bei der nächsten
+Anhebung, und dann als „Passwort falsch" bei richtiger Eingabe. Lieber ein
+lauter Fehler beim Entwickeln als ein leiser im Betrieb.
+
+### Der Weg der stillen Anhebung
+
+Passwort und Schlüsselhülle liegen nie gleichzeitig vor: Bei der Anmeldung hat
+der Browser das Passwort, aber nicht die Hülle; auf der ersten angemeldeten
+Seite ist es umgekehrt. Gelöst über das Vormerkfach, dasselbe Verfahren wie
+beim Passwortwechsel seit Web 4.5.0 (M2-07).
+
+Der Endpunkt `api/kdf_upgrade.php` ist funktional eine Passwortänderung.
+Deshalb: altes Token als Nachweis (sonst wäre er ein Weg, aus einer übernommenen
+Sitzung ein beliebiges Passwort zu setzen), nur Werte aus der Liste, nur nach
+oben, unveränderte Prüfsumme — und **kein** erhöhter Sitzungszähler, denn das
+Passwort hat sich nicht geändert.
+
+### Ein Fehler, den erst die Ende-zu-Ende-Prüfung gezeigt hat
+
+Nach der Anhebung passte der neue Datenschlüssel nicht mehr zu der Hülle, die
+die Seite mitgebracht hatte — `PAT_WRAP` wird gerendert, bevor die Anhebung
+läuft. Der Entsperrdialog wäre unmittelbar nach jedem Anmelden erschienen: das
+Gegenteil einer stillen Anhebung, und die Art Fehler, die im Betrieb niemand
+meldet, weil man sich an die Abfrage gewöhnt.
+
+Der Inhaltsschlüssel wird deshalb direkt abgelegt (`EdCrypto.setContentKey()`,
+neu) und an die Hülle der laufenden Seite gebunden; beim nächsten Seitenaufbau
+verwirft `EdKeyGuard` ihn wegen der abweichenden Bindung und entpackt ihn aus
+der neuen Hülle.
+
+Die Einzelprüfungen konnten das nicht sehen — sie prüften den Endpunkt, nicht
+den Weg dorthin.
+
+### S7 — Containerformat 3
+
+Kopf von 9 auf 13 Byte, Rundenzahl als 4 Byte big endian, in der AAD gebunden.
+Fassung 2 wird weiterhin gelesen (dort galt immer 310 000, die Fassungsnummer
+ersetzt die fehlende Angabe). Eine neuere Fassung wird als solche benannt statt
+als falsches Passwort.
+
+### Nachweis
+
+79 automatische Prüfungen, alle bestanden.
+
+* **43 zu Endpunkt und Anmeldung**, echter HTTP-Verkehr gegen den PHP-Server,
+  echte Ableitung mit WebCrypto: identische Antwort des Salz-Endpunkts für
+  bekannte und erfundene Adressen (Felder, Werte, Salzlänge); Serverauswahl des
+  passenden Tokens; sechs Abwehrfälle mit anschließender Prüfung, dass
+  Rundenzahl, Hülle und Sitzungszähler unverändert sind; Anmeldung vor und nach
+  der Anhebung; Konto ohne Schlüsselhülle.
+* **18 zum vollständigen Browserweg**: Anmeldung mit Vormerkfach, Auflösung,
+  Anhebung, Entsperren ohne Dialog, zweite Anmeldung mit dem neuen Wert,
+  Verwerfen eines fremden Vormerkfachs.
+* **18 zum Containerformat**: Fassung 3 schreiben und lesen, von Hand gebaute
+  Fassung-2-Datei, gefälschte Rundenzahl im Kopf, zu neue Fassung, Pflichtwert.
+  Zusätzlich wurde das Python-Beispiel aus `Backup-Format.md` gegen eine echte
+  Fassung-3-Datei laufen gelassen.
+
+**Nicht ohne Testinstallation prüfbar:** die tatsächliche Dauer der Ableitung
+auf den benutzten Geräten und das Verhalten in mehreren offenen Tabs.
 
 ---
 
@@ -908,7 +1011,7 @@ nicht. Einzige Ausnahme ist der Ratenschutz, der ab P1 gebraucht wird.
 
 | | Änderung | Benutzt ab |
 |---|---|---|
-| S1 | `users.kdf_iter`, Bestand auf 310000 | P9 (M2-01) |
+| S1 | `users.kdf_iter`, Bestand auf 310000 | P9b (M2-01) — seit Web 5.0.0 gelesen |
 | S2 | `users.pat_key_check`, Bestand bleibt leer | P2 (M1-12) |
 | S3 | `users.session_epoch`, Vorgabe 0 | **P6** (M1-09) |
 | S4 | Tabelle `rate_limits` | **P1** (M4-01) |

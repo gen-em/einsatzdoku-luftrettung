@@ -99,7 +99,7 @@ $_SESSION['last_seen'] = time();
  * (name existiert seit der Migration von Web 2.x; wer die nicht gefahren hat,
  * kann sich schon heute nicht anmelden — die Spalte wird in ui.php gelesen.) */
 $u = db()->prepare('SELECT id, email, name, role, session_epoch,
-                           pat_wrap_pw, pat_key_check, kdf_salt
+                           pat_wrap_pw, pat_key_check, kdf_salt, kdf_iter
                     FROM users WHERE id = ?');
 $u->execute([$userId]);
 $row = $u->fetch();
@@ -188,6 +188,15 @@ $patReady  = $patWrapPw !== null;
 // 4.0.0 — ein gueltiger Zustand, siehe M1-12).
 $patKeyCheck = $row['pat_key_check'] ?? null;
 $kdfSalt     = $row['kdf_salt'] ?? null;
+/* Rundenzahl der Schluesselableitung dieses Kontos (M2-01).
+ *
+ * Sie gehoert zum Salz wie die Hausnummer zur Strasse: Wer mit dem einen
+ * rechnet und das andere raet, bekommt einen anderen Schluessel. Beide werden
+ * deshalb ueberall gemeinsam an den Browser gegeben.
+ *
+ * Der Rueckfall auf den Zielwert greift nur fuer Zeilen, die aelter sind als
+ * die Spalte — sie kann seit P0 nicht mehr NULL sein. */
+$kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
 
 require_once __DIR__ . '/ui.php';
 

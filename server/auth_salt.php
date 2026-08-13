@@ -13,10 +13,20 @@ declare(strict_types=1);
  * und jede Ungleichheit zwischen den beiden Antwortzweigen ist eine Auskunft
  * darueber, welche Konten es gibt. Gleich sein muessen: LAENGE,
  * ZEICHENVORRAT, AUFBAU und DAUER der Antwort — und, sobald weitere Angaben
- * hinzukommen, auch deren WERTE. Wird der Endpunkt spaeter um die Rundenzahl
- * der Ableitung erweitert (users.kdf_iter), muss er fuer unbekannte Adressen
- * dieselbe Zahl nennen wie fuer echte Konten, sonst entsteht die soeben
- * geschlossene Luecke an neuer Stelle.
+ * hinzukommen, auch deren WERTE.
+ *
+ * ---- DIE RUNDENZAHL (seit Web 5.0.0, M2-01 Schritt 2) --------------------
+ *
+ * Genau dieser Fall ist eingetreten, und der Hinweis von damals ist eingeloest:
+ * Der Endpunkt nennt die Rundenzahl NICHT je Konto, sondern als feste Liste
+ * aus db.php — fuer jede Adresse dieselbe. Naehme er den Wert aus der
+ * Nutzerzeile, waere waehrend einer Umstellung jede Adresse, die den alten
+ * Wert zurueckliefert, nachweislich ein echtes, seither nicht benutztes Konto.
+ *
+ * Die Antwort ist damit fuer alle Adressen buchstaeblich identisch — nicht nur
+ * ununterscheidbar, sondern gleich. Welche Rundenzahl fuer ein Konto gilt,
+ * entscheidet der Server bei der Anmeldung (login.php), also erst NACH dem
+ * Nachweis, dass jemand das Passwort kennt.
  */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ratelimit_lib.php';
@@ -72,9 +82,13 @@ $st = $pdo->prepare('SELECT kdf_salt FROM users WHERE email = ?');
 $st->execute([$email]);
 $u = $st->fetch();
 
+/* Die Rundenzahlen stehen in BEIDEN Zweigen gleich — sie sind kein Wert
+ * dieses Kontos, sondern die Liste dessen, was diese Fassung unterstuetzt. */
+$runden = KDF_ITER_LISTE;
+
 if ($u && $u['kdf_salt'] !== null) {
     rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-    echo json_encode(['salt' => $u['kdf_salt']]);
+    echo json_encode(['salt' => $u['kdf_salt'], 'iter' => $runden]);
     exit;
 }
 
@@ -106,4 +120,4 @@ if ($sec === false) {
  */
 $pseudo = substr(hash_hmac('sha256', $email, (string)$sec), 0, 32);
 rate_gleiche_dauer($t0, SALT_MINDESTDAUER);
-echo json_encode(['salt' => $pseudo]);
+echo json_encode(['salt' => $pseudo, 'iter' => $runden]);

@@ -10,6 +10,140 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.0.0] — 2026-08-13
+
+Paket P9b: die Rundenzahl der Schlüsselableitung wird änderbar (M2-01, Schritte
+2 bis 4) und wandert in den Kopf der Sicherungsdatei (S7). Keine
+Schemaänderung — die Spalte `users.kdf_iter` gibt es seit Web 4.0.0, sie wurde
+bisher nur von keiner Zeile gelesen.
+
+**Hauptversion, weil sich das Dateiformat der Sicherung ändert** und die
+Anmeldung ein anderes Feld sendet. Beides ist rückwärtsverträglich; die Zählung
+folgt dem Format, nicht dem Risiko.
+
+### Warum das überhaupt nötig war
+
+Die Rundenzahl stand als Konstante im Browser-Code. Sie anzuheben hätte
+bedeutet: Aus demselben Passwort entsteht ein anderes Token, der gespeicherte
+Hash passt nicht mehr — **alle Konten gleichzeitig ausgesperrt**, und zwar
+unwiderruflich für die geschützten Angaben. Dieselbe Konstante steckte im
+Schlüssel jeder Sicherungsdatei; eine Anhebung hätte auch jede bereits
+erzeugte Datei unlesbar gemacht, ohne Fehlermeldung, die den Grund nennt.
+
+Beides ist jetzt behoben. Der Zielwert steigt von 310 000 auf **320 000** —
+absichtlich nur ein kleiner Schritt: Der Gewinn ist gering, aber der
+Mechanismus läuft dadurch einmal für jedes Konto wirklich durch, unter
+Beobachtung. Ein späterer Sprung auf einen deutlich höheren Wert ist danach
+eine Zeile auf einem erprobten Weg statt ein Sprung ins Dunkle.
+
+### Der Salz-Endpunkt nennt eine Liste, keinen Wert
+
+`auth_salt.php` ist ohne Anmeldung erreichbar und muss für erfundene Adressen
+genauso antworten wie für echte. Nennte er die Rundenzahl **des Kontos**, wäre
+während einer Umstellung jede Adresse, die den alten Wert zurückliefert,
+nachweislich ein echtes, seither nicht benutztes Konto — die Auskunftslücke,
+die derselbe Endpunkt in Web 4.4.0 gerade geschlossen hatte, an neuer Stelle.
+
+Er nennt deshalb **jeder Adresse dieselbe Liste**. Der Browser leitet für jeden
+Eintrag ab und schickt alle Token; der Server nimmt das, das zur gespeicherten
+Rundenzahl gehört. Es gibt weiterhin genau eine bcrypt-Prüfung — kein
+Durchprobieren.
+
+Der Preis steht im Handbuch: Solange die Liste zwei Einträge hat, dauert die
+Anmeldung doppelt so lange. Das ist der Übergangszustand, nicht der
+Dauerzustand. In `db.php` steht, wann ein Wert aus der Liste verschwinden darf
+— nämlich erst, wenn `SELECT COUNT(*) FROM users WHERE kdf_iter = <Wert>` null
+ergibt.
+
+### Die Rundenzahl ist ein Pflichtparameter
+
+`EdCrypto.deriveKeys(passwort, salt, runden)` hat **keinen Vorgabewert** und
+wirft, wenn die Zahl fehlt. Das ist die wichtigste Sicherung des Umbaus: Ein
+Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit 310 000
+rechnen — und weil heute noch alle Konten diesen Wert tragen, fiele das *nicht
+auf*. Es fiele erst an dem Tag auf, an dem der Zielwert angehoben wird, und
+dann als „Passwort falsch" bei Leuten, die richtig getippt haben.
+
+Umgestellt sind sieben Ableitungen und zehn Aufrufe von `ensureContentKey()`.
+`auth_guard.php` liefert `$kdfIter`, sieben Seiten geben ihn als `KDF_ITER`
+aus. Erstvergabe, Zurücksetzen und Passwortwechsel bauen die Ableitung
+vollständig neu auf und nehmen deshalb immer den Zielwert — der Passwortwechsel
+ist damit die zweite Gelegenheit, bei der ein Konto die Anhebung mitnimmt.
+
+### Die stille Anhebung
+
+Steht ein Konto noch auf der alten Zahl, wird sie beim nächsten Anmelden im
+Hintergrund angehoben. Der Weg führt über ein Vormerkfach, weil Passwort und
+Schlüsselhülle nie gleichzeitig vorliegen: Bei der Anmeldung hat der Browser
+das Passwort, aber nicht die Hülle; auf der ersten angemeldeten Seite ist es
+umgekehrt. Dasselbe Verfahren benutzt der Passwortwechsel seit Web 4.5.0.
+
+Der neue Endpunkt `api/kdf_upgrade.php` ist funktional eine Passwortänderung —
+er setzt den Hash, gegen den sich das Konto anmeldet. Entsprechend abgesichert:
+
+* **Das alte Token ist Pflicht.** Ohne Nachweis wäre der Endpunkt ein Weg, aus
+  einer übernommenen Sitzung ein beliebiges Passwort zu setzen.
+* **Nur Werte aus der Liste, nur nach oben.** Eine frei wählbare Rundenzahl
+  wäre ein Weg, ein Konto auf einen absurd niedrigen Wert zu setzen, ohne dass
+  jemand es merkt — die Anmeldung liefe weiter.
+* **Die Prüfsumme des Inhaltsschlüssels muss gleich bleiben.** Es ist derselbe
+  Schlüssel, nur anders verpackt.
+* **`session_epoch` wird nicht erhöht.** Beim Passwortwechsel ist das
+  Hinauswerfen anderer Sitzungen der Zweck; hier wäre es ein Fehler — das
+  Passwort hat sich nicht geändert, und niemand verstünde, warum bei jeder
+  Anmeldung stillschweigend alle anderen Fenster fliegen.
+
+Ein Fehlschlag ändert nichts und meldet nichts: Das Konto behält seine
+Rundenzahl und versucht es beim nächsten Anmelden erneut.
+
+### Ein Fehler, den erst die Ende-zu-Ende-Prüfung gezeigt hat
+
+Nach der Anhebung passte der neue Datenschlüssel nicht mehr zu der
+Schlüsselhülle, die die Seite mitgebracht hatte — `PAT_WRAP` wird gerendert,
+bevor die Anhebung läuft. Folge wäre gewesen: Der Entsperrdialog erscheint
+unmittelbar nach jedem Anmelden und fragt nach dem Passwort. Also genau das
+Gegenteil einer *stillen* Anhebung, und die Art Fehler, die im Betrieb niemand
+meldet — man gewöhnt sich an die Abfrage.
+
+Der Inhaltsschlüssel ist in dem Moment bekannt (er wurde eine Zeile vorher
+entpackt, um ihn neu zu verpacken). Er wird jetzt abgelegt und an die Hülle der
+laufenden Seite gebunden; beim nächsten Seitenaufbau verwirft `EdKeyGuard` ihn
+wegen der abweichenden Bindung und entpackt ihn aus der neuen Hülle.
+
+### Sicherungsdateien: Containerformat 3
+
+Der Kopf wächst von 9 auf 13 Byte und trägt die Rundenzahl als 4 Byte, big
+endian. Sie geht in die AAD ein und lässt sich damit nicht fälschen.
+
+* **Fassung 2 wird weiterhin gelesen** — die Fassungsnummer ersetzt die
+  fehlende Angabe (dort galt immer 310 000). Geschrieben wird sie nicht mehr.
+* Eine Datei aus einer **neueren** Fassung meldet „stammt aus einer neueren
+  Fassung, bitte die Anwendung aktualisieren" statt „Passwort falsch" — sonst
+  sucht die lesende Person den Fehler an der falschen Stelle.
+* `docs/Backup-Format.md` beschreibt beide Fassungen; das Python-Beispiel dort
+  behandelt beide und wurde gegen eine echte Datei geprüft.
+
+### Behobene Review-Befunde
+
+M2-01 (Schritte 2–4), S7. Damit ist die Schemaänderung S1 aus P0 vollständig
+eingelöst.
+
+### Geprüft
+
+79 automatische Prüfungen, alle bestanden: 43 zu Salz-Endpunkt, Anmeldung und
+Anhebungs-Endpunkt (echter HTTP-Verkehr, echte Ableitung mit WebCrypto), 18 zum
+vollständigen Browserweg von der Anmeldung bis zur abgeschlossenen Anhebung,
+18 zum Containerformat.
+
+Belegt sind unter anderem: identische Antwort des Salz-Endpunkts für bekannte
+und erfundene Adressen; Anmeldung vor und nach der Anhebung; sechs Abwehrfälle,
+nach denen Rundenzahl, Hülle und Sitzungszähler unverändert sind; dass die neue
+Hülle denselben Inhaltsschlüssel enthält; dass eine von Hand gebaute
+Fassung-2-Datei weiterhin aufgeht.
+
+Nicht ohne Testinstallation prüfbar: die tatsächliche Dauer der Ableitung auf
+den benutzten Geräten und das Verhalten in mehreren offenen Tabs.
+
 ## [Web 4.7.0] — 2026-08-13
 
 Paket P9a der Review-Umsetzung: die vier Befunde aus P9, die weder die

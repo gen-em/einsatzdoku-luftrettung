@@ -7,7 +7,32 @@ zu keinem Zeitpunkt Klartext. Weil die geschützten Angaben dabei entschlüsselt
 in den Container wandern und beim Import mit dem Schlüssel des Zielkontos neu
 verschlüsselt werden, lässt sich ein Backup **in jedes Konto** einspielen.
 
-## 1. Container, Version 2
+## 1. Container, Version 3 (seit Web 5.0.0)
+
+| Bytes   | Inhalt                                                          |
+|---------|-----------------------------------------------------------------|
+| 0–7     | Magie: ASCII `EDBAK2` + `0x00` + Formatversion `0x03`           |
+| 8       | Flag: `1` = Inhalt gzip-komprimiert, `0` = roh                  |
+| 9–12    | **Rundenzahl der Schlüsselableitung** (4 Bytes, big endian)     |
+| 13–28   | Salt für die Schlüsselableitung (16 Bytes, zufällig)            |
+| 29–40   | AES-GCM-Initialisierungsvektor (12 Bytes, zufällig)             |
+| ab 41   | Chiffretext, die letzten 16 Bytes sind das GCM-Auth-Tag         |
+
+- **Schlüssel:** `PBKDF2-SHA256(Backup-Passwort, Salt, Runden aus dem Kopf, 32 Bytes)`
+- **Verfahren:** AES-256-GCM; die ersten **13 Bytes** (Magie + Flag + Runden)
+  sind als *additional authenticated data* gebunden. Jede Änderung am Kopf oder
+  am Inhalt lässt die Entschlüsselung scheitern — kein stilles Korrumpieren.
+  Insbesondere lässt sich die Rundenzahl nicht fälschen.
+- **Klartext:** JSON (UTF-8), bei gesetztem Flag gzip-komprimiert.
+
+**Warum die Rundenzahl in den Kopf gehört.** Sie stand bis Web 4.7.0 nur als
+Konstante im Code. Wer sie anhebt, macht damit jede bereits erzeugte
+Sicherungsdatei unlesbar — und zwar ohne Fehlermeldung, die den Grund nennt: Es
+sieht aus wie ein falsches Passwort. Sicherungen werden aber gerade für den
+Fall aufbewahrt, dass etwas schiefgeht; eine Datei, die genau dann nicht mehr
+aufgeht, ist keine.
+
+## 1a. Container, Version 2 (bis Web 4.7.0) — wird weiterhin gelesen
 
 | Bytes   | Inhalt                                                          |
 |---------|-----------------------------------------------------------------|
@@ -17,21 +42,33 @@ verschlüsselt werden, lässt sich ein Backup **in jedes Konto** einspielen.
 | 25–36   | AES-GCM-Initialisierungsvektor (12 Bytes, zufällig)             |
 | ab 37   | Chiffretext, die letzten 16 Bytes sind das GCM-Auth-Tag         |
 
-- **Schlüssel:** `PBKDF2-SHA256(Backup-Passwort, Salt, 310 000 Runden, 32 Bytes)`
-- **Verfahren:** AES-256-GCM; die ersten **9 Bytes** (Magie + Flag) sind als
-  *additional authenticated data* gebunden. Jede Änderung am Kopf oder am
-  Inhalt lässt die Entschlüsselung scheitern — kein stilles Korrumpieren.
-- **Klartext:** JSON (UTF-8), bei gesetztem Flag gzip-komprimiert.
+Rundenzahl: **immer 310 000**, nirgends vermerkt. AAD: die ersten 9 Bytes.
+Die Fassungsnummer ersetzt die fehlende Angabe — deshalb bleiben diese Dateien
+lesbar. Geschrieben werden sie nicht mehr.
 
-Entschlüsselung von Hand (Beispiel, Python):
+Eine Datei mit einer **höheren** Fassungsnummer als 3 wird nicht als „Passwort
+falsch" gemeldet, sondern als „stammt aus einer neueren Fassung" — sonst sucht
+die lesende Person den Fehler an der falschen Stelle.
+
+Entschlüsselung von Hand (Beispiel, Python; behandelt beide Fassungen):
 
 ```python
-import hashlib, gzip, json
+import hashlib, gzip, json, struct
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 b = open('backup.edbak', 'rb').read()
-key = hashlib.pbkdf2_hmac('sha256', passwort.encode(), b[9:25], 310_000, 32)
-roh = AESGCM(key).decrypt(b[25:37], b[37:], b[0:9])
+assert b[0:6] == b'EDBAK2'
+version = (b[6] << 8) | b[7]
+if version == 3:
+    kopf, runden = 13, struct.unpack('>I', b[9:13])[0]
+elif version == 2:
+    kopf, runden = 9, 310_000
+else:
+    raise SystemExit(f'Unbekannte Containerversion {version}')
+
+key = hashlib.pbkdf2_hmac('sha256', passwort.encode(),
+                          b[kopf:kopf+16], runden, 32)
+roh = AESGCM(key).decrypt(b[kopf+16:kopf+28], b[kopf+28:], b[0:kopf])
 daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```
 

@@ -4,7 +4,7 @@
  * Profil B (Vollständiges CSV inkl. GPX, ZIP mit optionaler AES-256-
  * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
  *
- * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, APP_TZ, WEB_VERSION,
+ * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, KDF_ITER, CSRF, APP_TZ, WEB_VERSION,
  * KONTO_NAME, KONTO_MAIL, EdCrypto, EdUnlock, EdPat, EdPwQuality,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
@@ -947,7 +947,7 @@
      * Sperrmechanismus in unlock.js sorgt dafuer, dass trotzdem nur ein
      * einziger Dialog erscheint. */
     async function syncPatientLock() {
-        var key = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+        var key = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         var cb = $('exp_pat');
         var hint = $('exp_pat_hint');
         if (!key) {

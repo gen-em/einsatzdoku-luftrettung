@@ -1,8 +1,8 @@
 /* Einsatzdoku — Ende-zu-Ende-Krypto für das PatientInnendaten-Modul.
  *
  * Prinzip (angelehnt an Bitwarden):
- *  - Aus dem Login-Passwort leitet der Browser per PBKDF2 (310 000 Runden,
- *    SHA-256, nutzerspezifisches Salt) 512 Bit ab und teilt sie:
+ *  - Aus dem Login-Passwort leitet der Browser per PBKDF2 (Rundenzahl je
+ *    Konto, SHA-256, nutzerspezifisches Salt) 512 Bit ab und teilt sie:
  *      · dataKey  (256 Bit): bleibt IM BROWSER, verschlüsselt Daten
  *      · authToken (256 Bit): geht statt des Passworts zum Server
  *    Der Server sieht das Passwort damit nie und kann nichts entschlüsseln.
@@ -14,8 +14,26 @@
 'use strict';
 const EdCrypto = (() => {
 
-  const ITER = 310000;
+  /* Rundenzahl der Ableitung — KEINE Konstante mehr (M2-01).
+   *
+   * Sie stand hier fest verdrahtet, und damit war ihre Aenderung eine
+   * Aussperrung aller Bestandskonten: Aus demselben Passwort entstuende ein
+   * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert
+   * kommt jetzt je Konto vom Server (users.kdf_iter).
+   *
+   * ITER_ALT ist nur noch fuer EINEN Zweck da: Sicherungsdateien im
+   * Containerformat 2 tragen die Rundenzahl nicht im Kopf, dort galt immer
+   * dieser Wert. Fuer die Kontoableitung darf er NICHT verwendet werden. */
+  const ITER_ALT = 310000;
   const te = new TextEncoder(), td = new TextDecoder();
+
+  /** Rundenzahl pruefen. Wirft statt zu raten — siehe deriveKeys. */
+  function pruefeRunden(iter, wofuer) {
+    if (!Number.isInteger(iter) || iter < 1000 || iter > 10000000) {
+      throw new Error('Rundenzahl fehlt oder ist unbrauchbar (' + wofuer + '): ' + iter);
+    }
+    return iter;
+  }
 
   /* ---- Helfer: hex / base64 ------------------------------------------- */
   const toHex = buf => [...new Uint8Array(buf)]
@@ -29,12 +47,25 @@ const EdCrypto = (() => {
     return toHex(crypto.getRandomValues(new Uint8Array(nBytes)));
   }
 
-  /* ---- Schlüsselableitung aus dem Passwort ---------------------------- */
-  async function deriveKeys(password, saltHex) {
+  /* ---- Schlüsselableitung aus dem Passwort ----------------------------
+   *
+   * DIE RUNDENZAHL IST PFLICHT UND HAT KEINEN VORGABEWERT (M2-01).
+   *
+   * Das ist die wichtigste Sicherung dieses Umbaus. Ein Vorgabewert würde
+   * jede vergessene Aufrufstelle stillschweigend mit der alten Zahl rechnen
+   * lassen — und weil heute fast alle Konten noch die alte Zahl tragen, fiele
+   * das NICHT AUF. Es fiele erst an dem Tag auf, an dem jemand den Zielwert
+   * anhebt, und dann als „Passwort falsch" bei Konten, die ihr Passwort
+   * richtig eingegeben haben.
+   *
+   * Lieber ein lauter Fehler beim Entwickeln als ein leiser im Betrieb.
+   */
+  async function deriveKeys(password, saltHex, iter) {
+    pruefeRunden(iter, 'deriveKeys');
     const base = await crypto.subtle.importKey(
       'raw', te.encode(password), 'PBKDF2', false, ['deriveBits']);
     const bits = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', hash: 'SHA-256', salt: fromHex(saltHex), iterations: ITER },
+      { name: 'PBKDF2', hash: 'SHA-256', salt: fromHex(saltHex), iterations: iter },
       base, 512);
     const all = new Uint8Array(bits);
     return {
@@ -219,6 +250,18 @@ const EdCrypto = (() => {
   const S_DK = 'edk', S_CK = 'pck';
   const setDataKey = hex => sessionStorage.setItem(S_DK, hex);
   const getDataKey = () => sessionStorage.getItem(S_DK);
+  /* Einen bereits entpackten Inhaltsschlüssel ablegen.
+   *
+   * Sonst entsteht er ausschließlich in getContentKey() aus Hülle und
+   * Datenschlüssel. Genau das geht in einem Fall nicht: Direkt nach der
+   * stillen Anhebung (M2-01) hat der Browser den neuen Datenschlüssel, die
+   * Seite trägt aber noch die ALTE Hülle — sie wurde gerendert, bevor die
+   * Anhebung lief. Ein Entpacken müsste dort scheitern, und der
+   * Entsperrdialog erschiene unmittelbar nach dem Anmelden.
+   *
+   * Der Schlüssel ist in diesem Moment aber bekannt: Er wurde eine Zeile
+   * vorher mit dem alten Datenschlüssel entpackt, um ihn neu zu verpacken. */
+  const setContentKey = hex => sessionStorage.setItem(S_CK, hex);
   async function getContentKey(wrapPw) {
     let ck = sessionStorage.getItem(S_CK);
     if (ck) return ck;
@@ -230,23 +273,82 @@ const EdCrypto = (() => {
       return ck;
     } catch (e) { return null; }               // Wrap passt nicht (z. B. nach Reset)
   }
-  const clearSession = () => { sessionStorage.removeItem(S_DK); sessionStorage.removeItem(S_CK); };
+  /* ---- Vormerkfach für die Anmeldung (M2-01) ---------------------------
+   *
+   * WARUM ES DAS BRAUCHT
+   * Die Anmeldung leitet für mehrere Rundenzahlen ab, weiß aber nicht, welche
+   * für dieses Konto gilt — das darf der Salz-Endpunkt nicht verraten. Erst
+   * die nächste, angemeldete Seite kennt den Wert. Zwischen beiden liegt ein
+   * Seitenwechsel, und der löscht alles, was nur im Speicher stand.
+   *
+   * WAS DARIN LIEGT
+   * Je Rundenzahl der Datenschlüssel UND das Auth-Token. Der Datenschlüssel
+   * liegt dort ohnehin schon (S_DK) — er entschlüsselt alle geschützten
+   * Angaben. Das Token kommt hinzu, weil die stille Anhebung es als Nachweis
+   * braucht: Ohne ihn könnte, wer eine offene Sitzung übernimmt, ein
+   * beliebiges neues Token setzen — das wäre nichts anderes als eine
+   * Passwortänderung ohne Kenntnis des Passworts.
+   *
+   * WIE LANGE
+   * Einen Seitenwechsel. Die erste Seite, die den Inhaltsschlüssel braucht,
+   * räumt das Fach ab (unlock.js). Beim Abmelden und bei jedem Anmeldeversuch
+   * wird es geleert.
+   */
+  const S_VOR = 'edkvor';
 
-  /* ---- Backup-Container (.edbak v2) -----------------------------------
-   * Aufbau:  "EDBAK2" 0x00 0x02 | Flag(1) | Salt(16) | IV(12) | AES-GCM
-   * Flag:    1 = Inhalt gzip-komprimiert, 0 = roh
-   * Schlüssel: PBKDF2-SHA256(Backup-Passwort, Salt, 310 000, 256 Bit)
-   * AAD:     die ersten 9 Bytes (Magie + Flag) — Kopfmanipulation fliegt auf.
+  function merkeAbleitungen(datenschluessel, tokens) {
+    sessionStorage.setItem(S_VOR, JSON.stringify({ dk: datenschluessel, tk: tokens }));
+  }
+  function holeAbleitungen() {
+    try {
+      const o = JSON.parse(sessionStorage.getItem(S_VOR) || 'null');
+      return (o && o.dk && o.tk) ? o : null;
+    } catch (e) { return null; }
+  }
+  const vergissAbleitungen = () => sessionStorage.removeItem(S_VOR);
+
+  const clearSession = () => {
+    sessionStorage.removeItem(S_DK);
+    sessionStorage.removeItem(S_CK);
+    vergissAbleitungen();
+  };
+
+  /* ---- Backup-Container ------------------------------------------------
+   *
+   * FASSUNG 3 (seit Web 5.0.0, S7)
+   *   "EDBAK2" 0x00 0x03 | Flag(1) | Runden(4, big endian) | Salt(16) | IV(12) | AES-GCM
+   *   AAD: die ersten 13 Bytes (Magie + Flag + Runden)
+   *
+   * FASSUNG 2 (bis Web 4.7.0) — wird weiterhin GELESEN
+   *   "EDBAK2" 0x00 0x02 | Flag(1) | Salt(16) | IV(12) | AES-GCM
+   *   AAD: die ersten 9 Bytes. Rundenzahl: immer 310 000, nirgends vermerkt.
+   *
+   * Flag: 1 = Inhalt gzip-komprimiert, 0 = roh
+   * Schlüssel: PBKDF2-SHA256(Backup-Passwort, Salt, Runden, 256 Bit)
+   *
+   * WARUM DIE RUNDENZAHL IN DEN KOPF MUSSTE (S7)
+   * Sie stand nur als Konstante im Code. Wer sie anhebt, macht damit JEDE
+   * bereits erzeugte Sicherungsdatei unlesbar — und zwar ohne Fehlermeldung,
+   * die den Grund nennt: Es sähe aus wie ein falsches Passwort. Sicherungen
+   * werden aber gerade für den Fall aufbewahrt, dass etwas schiefgeht; eine
+   * Datei, die genau dann nicht mehr aufgeht, ist keine.
+   *
+   * Die Rundenzahl steht deshalb in der Datei und wird von dort gelesen. Alte
+   * Dateien bleiben lesbar, weil ihre Fassungsnummer die fehlende Angabe
+   * ersetzt.
+   *
    * Der Inhalt ist bereits KLARTEXT: Der Browser entschlüsselt vor dem
    * Versiegeln, damit sich das Backup in jedes Konto einspielen lässt.
    */
-  const MAGIC2 = new Uint8Array([69, 68, 66, 65, 75, 50, 0, 2]);   // "EDBAK2"
+  const MAGIC_PRAEFIX = new Uint8Array([69, 68, 66, 65, 75, 50]);   // "EDBAK2"
+  const CONTAINER_VERSION = 3;
 
-  async function fileKey(password, salt) {
+  async function fileKey(password, salt, iter) {
+    pruefeRunden(iter, 'fileKey');
     const base = await crypto.subtle.importKey('raw', te.encode(password),
       'PBKDF2', false, ['deriveBits']);
     const bits = await crypto.subtle.deriveBits(
-      { name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256' }, base, 256);
+      { name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, base, 256);
     return crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['encrypt', 'decrypt']);
   }
 
@@ -277,50 +379,76 @@ const EdCrypto = (() => {
     return new Uint8Array(await new Response(s).arrayBuffer());
   }
 
-  async function sealBackup(password, jsonText) {
+  /** Erzeugt eine Sicherungsdatei in der aktuellen Fassung (3). */
+  async function sealBackup(password, jsonText, iter) {
+    pruefeRunden(iter, 'sealBackup');
     const raw = te.encode(jsonText);
     const packed = await gzip(raw);
     const flag = packed ? 1 : 0;
     const body = packed || raw;
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const head = new Uint8Array(9);
-    head.set(MAGIC2, 0); head[8] = flag;
-    const key = await fileKey(password, salt);
+    // Kopf: 6 Magie + 2 Fassung + 1 Flag + 4 Runden = 13
+    const head = new Uint8Array(13);
+    head.set(MAGIC_PRAEFIX, 0);
+    head[6] = 0; head[7] = CONTAINER_VERSION;
+    head[8] = flag;
+    new DataView(head.buffer).setUint32(9, iter, false);   // big endian
+    const key = await fileKey(password, salt, iter);
     const ct = new Uint8Array(await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv, additionalData: head }, key, body));
-    const out = new Uint8Array(9 + 16 + 12 + ct.length);
-    out.set(head, 0); out.set(salt, 9); out.set(iv, 25); out.set(ct, 37);
+    const out = new Uint8Array(13 + 16 + 12 + ct.length);
+    out.set(head, 0); out.set(salt, 13); out.set(iv, 29); out.set(ct, 41);
     return out;
   }
 
+  /** Liest Fassung 2 UND 3. Die Fassungsnummer bestimmt Kopflänge und Runden. */
   async function openBackup(password, bytes) {
-    const head = bytes.slice(0, 9);
-    for (let i = 0; i < 8; i++) {
-      if (head[i] !== MAGIC2[i]) throw new Error('Keine .edbak-Datei (Version 2).');
+    for (let i = 0; i < 6; i++) {
+      if (bytes[i] !== MAGIC_PRAEFIX[i]) throw new Error('Keine .edbak-Datei.');
     }
-    const key = await fileKey(password, bytes.slice(9, 25));
+    const version = (bytes[6] << 8) | bytes[7];
+    let kopfLen, iter;
+    if (version === 2) {
+      kopfLen = 9;  iter = ITER_ALT;      // Fassung 2 vermerkt sie nicht
+    } else if (version === 3) {
+      kopfLen = 13; iter = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+                            .getUint32(9, false);
+    } else {
+      // Eine NEUERE Fassung als diese Installation kennt. Die Meldung sagt
+      // das auch — sonst sucht jemand den Fehler beim Passwort.
+      throw new Error('Diese Sicherungsdatei stammt aus einer neueren Fassung '
+                    + '(Format ' + version + '). Bitte die Anwendung aktualisieren.');
+    }
+    const head = bytes.slice(0, kopfLen);
+    const key = await fileKey(password, bytes.slice(kopfLen, kopfLen + 16), iter);
     let body;
     try {
       body = new Uint8Array(await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: bytes.slice(25, 37), additionalData: head },
-        key, bytes.slice(37)));
+        { name: 'AES-GCM', iv: bytes.slice(kopfLen + 16, kopfLen + 28),
+          additionalData: head },
+        key, bytes.slice(kopfLen + 28)));
     } catch (e) { throw new Error('Passwort falsch oder Datei beschädigt.'); }
     if (head[8] === 1) { body = await gunzip(body); }
     return JSON.parse(td.decode(body));
   }
 
-  /** Ist das eine Backup-Datei dieses Programms? */
+  /** Ist das eine Backup-Datei dieses Programms? Beide Fassungen. */
   function isBackupFile(bytes) {
     if (!bytes || bytes.length < 40) return false;
-    for (let i = 0; i < 8; i++) { if (bytes[i] !== MAGIC2[i]) return false; }
-    return true;
+    for (let i = 0; i < 6; i++) { if (bytes[i] !== MAGIC_PRAEFIX[i]) return false; }
+    const version = (bytes[6] << 8) | bytes[7];
+    // Auch eine unbekannte Fassung ist eine .edbak-Datei. Sie hier abzuweisen
+    // hiesse, sie als "fremde Datei" zu melden statt als "zu neu" — und die
+    // erste Meldung schickt die suchende Person in die falsche Richtung.
+    return version >= 2 && version <= 99;
   }
 
   return { deriveKeys, encrypt, decrypt, randomHex,
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
-           setDataKey, getDataKey, getContentKey, clearSession,
+           setDataKey, getDataKey, getContentKey, setContentKey, clearSession,
+           merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
            sealBackup, openBackup, isBackupFile };
 })();

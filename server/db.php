@@ -353,6 +353,56 @@ const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
  */
 const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxVKhLdRmbJy';
 
+/* ---- Rundenzahl der Schluesselableitung (M2-01, S1) ----------------------
+ *
+ * WAS DIESE ZAHL IST
+ * Der Browser leitet aus dem Passwort per PBKDF2-SHA256 mit dieser Rundenzahl
+ * zwei Schluessel ab: den Datenschluessel (bleibt im Browser) und das
+ * Auth-Token (ersetzt das Passwort zum Server). Wer die Zahl anhebt, macht
+ * das Durchprobieren gestohlener Hashes teurer — und das Anmelden langsamer.
+ *
+ * WARUM SIE JE KONTO GESPEICHERT WIRD (users.kdf_iter)
+ * Stuende sie nur als Konstante im Browser, waere ihre Aenderung eine
+ * Aussperrung aller Bestandskonten: Aus demselben Passwort entstuende ein
+ * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert steht
+ * deshalb an der Nutzerzeile und wird gelesen, nicht angenommen.
+ *
+ * ---- KDF_ITER_LISTE: WARUM EINE LISTE UND NICHT EIN WERT -----------------
+ *
+ * Der Salz-Endpunkt (auth_salt.php) ist ohne Anmeldung erreichbar und muss
+ * fuer unbekannte Adressen genauso antworten wie fuer echte Konten. Nennte er
+ * die Rundenzahl DES KONTOS, waere waehrend der Umstellung jede Adresse, die
+ * den alten Wert zurueckliefert, nachweislich ein echtes, seither nicht
+ * benutztes Konto — die Auskunftsluecke, die derselbe Endpunkt gerade
+ * geschlossen hat, an neuer Stelle.
+ *
+ * Er nennt deshalb JEDER Adresse dieselbe Liste. Der Browser leitet fuer
+ * jeden Eintrag ab und schickt alle Token; der Server nimmt das, das zur
+ * gespeicherten Rundenzahl gehoert. Die Antwort ist damit fuer alle Adressen
+ * buchstaeblich identisch.
+ *
+ * DER PREIS: Solange die Liste zwei Eintraege hat, rechnet jede Anmeldung
+ * zweimal ab — aus knapp einer Sekunde werden knapp zwei. Das ist der
+ * Uebergangszustand, nicht der Dauerzustand.
+ *
+ * ---- WANN EIN WERT AUS DER LISTE VERSCHWINDEN DARF -----------------------
+ *
+ * ERST, WENN KEIN KONTO IHN MEHR TRAEGT. Die Pruefung dazu ist eine Zeile:
+ *
+ *     SELECT COUNT(*) FROM users WHERE kdf_iter = <alter Wert>;
+ *
+ * Ist das Ergebnis nicht 0, sperrt das Entfernen genau diese Konten aus, und
+ * zwar unwiderruflich fuer die geschuetzten Angaben — ihre Schluesselhuelle
+ * laesst sich ohne die richtige Rundenzahl nicht mehr oeffnen. Wer aufraeumen
+ * will, wartet, bis sich alle angemeldet haben, oder laesst den Eintrag
+ * stehen: Er kostet nur Rechenzeit.
+ *
+ * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
+ * nach (er schickt alle Token), aber neue Konten bekommen den ersten Eintrag.
+ */
+const KDF_ITER_ZIEL  = 320000;
+const KDF_ITER_LISTE = [320000, 310000];
+
 /* ---- Geraete je Konto: Obergrenze und Hinweisfenster ---------------------
  *
  * WARUM ES EINE OBERGRENZE GIBT

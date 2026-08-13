@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newSalt = (string)($_POST['new_salt'] ?? '');
         $wrapPw = (string)($_POST['wrap_pw'] ?? '');
         $keyChk = (string)($_POST['key_check'] ?? '');
+        $newIter = (int)($_POST['new_iter'] ?? 0);
         // Gespeicherte Pruefsumme des Inhaltsschluessels (NULL bei Altbestand)
         $chkSoll = $u['pat_key_check'] ?? null;
         if (!$oldOk) {
@@ -60,6 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
             $error = 'Passwortwechsel unvollständig (JavaScript nötig).';
+        } elseif (!in_array($newIter, KDF_ITER_LISTE, true)) {
+            /* Nur Werte, die diese Fassung kennt (M2-01). Eine frei waehlbare
+             * Rundenzahl waere ein Weg, das eigene Konto auf einen absurd
+             * niedrigen Wert zu setzen — die Anmeldung liefe weiter, und
+             * niemand saehe es. */
+            $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar — '
+                   . 'das Passwort wurde NICHT geändert.';
         } elseif ($patReady && !preg_match('#^[A-Za-z0-9+/=]{20,4000}$#', $wrapPw)) {
             // Frueher wurde die Huelle hier stillschweigend uebersprungen —
             // das Passwort galt dann, die Daten waren aber nicht mehr lesbar.
@@ -115,9 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * Passwort ohne erhoehten Zaehler ist genau der Zustand, den
                  * dieser Befund beschreibt. */
                 $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
+                                                kdf_iter = ?,
                                                 session_epoch = session_epoch + 1
                                WHERE id = ?')
-                    ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt, $userId]);
+                    ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt,
+                               $newIter, $userId]);
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
                     // hier erstmals, alle anderen bestaetigen den alten Wert.
@@ -538,6 +548,10 @@ if ($tab === 'geraete') {
       <input type="hidden" name="old_token" id="pw_oldtok">
       <input type="hidden" name="new_token" id="pw_newtok">
       <input type="hidden" name="new_salt" id="pw_newsalt">
+      <?php /* Rundenzahl, mit der das NEUE Passwort abgeleitet wurde (M2-01).
+               Ohne sie stuende in der Nutzerzeile weiter die alte, und die
+               naechste Anmeldung rechnete mit der falschen Zahl. */ ?>
+      <input type="hidden" name="new_iter" id="pw_newiter">
       <input type="hidden" name="wrap_pw" id="pw_wrap">
       <input type="hidden" name="key_check" id="pw_keychk">
       <label>Aktuelles Passwort <input type="password" name="old" id="pw_old" required autocomplete="current-password"></label>
@@ -567,6 +581,11 @@ if ($tab === 'geraete') {
     })();
 
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+       gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+       bekommt einen anderen Schluessel. */
+    const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+    const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
     const WRAP_PW = <?= json_encode($patWrapPw) ?>;
     EdPwQuality.beobachte(document.getElementById('pw_new1'),
                           document.getElementById('pw_guete'));
@@ -583,14 +602,19 @@ if ($tab === 'geraete') {
       st.textContent = 'Schlüssel werden neu abgeleitet…';
       try {
         let oldDataKey = null;
-        // Aktuelles Passwort pruefen: der Server bekommt nur das Token
-        const ok = await EdCrypto.deriveKeys(oldPw, KDF_SALT);
+        /* Das ALTE Passwort mit der Rundenzahl dieses Kontos ableiten, das
+         * NEUE mit dem Zielwert (M2-01). Ein Passwortwechsel ist ohnehin ein
+         * vollstaendiger Neuaufbau der Ableitung — er ist damit die zweite
+         * Gelegenheit, bei der ein Konto die Anhebung mitnimmt, neben der
+         * stillen Anhebung beim Anmelden. */
+        const ok = await EdCrypto.deriveKeys(oldPw, KDF_SALT, KDF_ITER);
         document.getElementById('pw_oldtok').value = ok.authToken;
         oldDataKey = ok.dataKeyHex;
         const salt = EdCrypto.randomHex(16);
-        const nk = await EdCrypto.deriveKeys(n1, salt);
+        const nk = await EdCrypto.deriveKeys(n1, salt, KDF_ITER_ZIEL);
         document.getElementById('pw_newtok').value = nk.authToken;
         document.getElementById('pw_newsalt').value = salt;
+        document.getElementById('pw_newiter').value = KDF_ITER_ZIEL;
         // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken.
         // Klappt das nicht, wird NICHT abgeschickt: ein geaendertes Passwort
         // ohne passende Huelle machte die geschuetzten Angaben unlesbar.
@@ -1043,6 +1067,11 @@ if ($tab === 'geraete') {
     const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
     const PAT_KEY_CHECK = <?= json_encode($patKeyCheck) ?>;
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+       gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+       bekommt einen anderen Schluessel. */
+    const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+    const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_encode($userEmail) ?>;
     const KONTO_NAME = <?= json_encode($userName) ?>;
@@ -1055,7 +1084,7 @@ if ($tab === 'geraete') {
      * sein Knopf ruft dieselbe Funktion erneut auf. Export und Import des
      * Backups brauchen den Schluessel beide. */
     async function ck() {
-      const k = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+      const k = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       document.getElementById('lockwarn').hidden = !!k;
       return k;
     }
@@ -1107,7 +1136,7 @@ if ($tab === 'geraete') {
         }
         expState.textContent = 'Kontopasswort wird geprüft…';
         try {
-          const k = await EdCrypto.deriveKeys(pw, KDF_SALT);
+          const k = await EdCrypto.deriveKeys(pw, KDF_SALT, KDF_ITER);
           await EdCrypto.decrypt(k.dataKeyHex, PAT_WRAP);
         } catch (e) {
           expState.textContent = 'Das ist nicht dein Kontopasswort. Es wurde keine '
@@ -1194,7 +1223,13 @@ if ($tab === 'geraete') {
         }
 
         expState.textContent = 'Datei wird verschlüsselt…';
-        const bytes = await EdCrypto.sealBackup(pw, JSON.stringify(data));
+        /* Die Rundenzahl der Datei ist die des Kontos — nicht der Zielwert.
+         *
+         * Beides waere vertretbar; entscheidend ist, dass sie IN DER DATEI
+         * steht (S7) und beim Oeffnen von dort gelesen wird. Der Wert des
+         * Kontos ist der ehrlichere: Er sagt, unter welchen Bedingungen diese
+         * Sicherung entstanden ist. */
+        const bytes = await EdCrypto.sealBackup(pw, JSON.stringify(data), KDF_ITER);
         const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
         const a = document.createElement('a');
         a.href = url;

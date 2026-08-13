@@ -63,17 +63,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $st = db()->prepare('SELECT id, password_hash, session_epoch FROM users WHERE email = ?');
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter
+                             FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
 
-        $token = (string)($_POST['token'] ?? '');
+        /* ---- Ein Token je Rundenzahl (M2-01, Schritt 3) -------------------
+         *
+         * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste von
+         * Rundenzahlen, damit er nicht verraet, welche Konten es gibt. Der
+         * Browser kann daher nicht wissen, welche fuer dieses Konto gilt — er
+         * leitet fuer JEDE ab und schickt alle Token mit.
+         *
+         * DER SERVER WEISS ES und sucht sich das passende heraus. Das ist der
+         * Grund, warum hier kein Durchprobieren stattfindet: Es gibt genau
+         * EINE bcrypt-Pruefung, wie zuvor auch.
+         *
+         * Format: {"<runden>": "<64 Hexzeichen>", ...}. Streng geprueft, weil
+         * es unangemeldet hereinkommt. Das alte Feld 'token' wird weiterhin
+         * angenommen — ein Browser mit zwischengespeichertem alten Skript
+         * schickt es noch, und die Anmeldung soll daran nicht scheitern.
+         */
+        $tokenNach = [];
+        $roh = json_decode((string)($_POST['tokens'] ?? ''), true);
+        if (is_array($roh)) {
+            foreach ($roh as $runde => $tk) {
+                $r = (int)$runde;
+                if (in_array($r, KDF_ITER_LISTE, true) && is_string($tk)
+                    && preg_match('/^[0-9a-f]{64}$/', $tk)) {
+                    $tokenNach[$r] = $tk;
+                }
+            }
+        }
+        if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}$/', (string)$_POST['token'])) {
+            // Altes Feld: es galt immer die frueher fest verdrahtete Zahl.
+            $tokenNach[310000] = $tokenNach[310000] ?? (string)$_POST['token'];
+        }
+
         if ($u && $u['password_hash'] !== null) {
+            $konto = (int)($u['kdf_iter'] ?? 0) ?: 310000;
+            $token = $tokenNach[$konto] ?? '';
             $ok = $token !== '' && password_verify($token, $u['password_hash']);
         } else {
             // Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
             // eine bcrypt-Pruefung, damit dieser Zweig nicht schneller ist.
-            password_verify($token, AUTH_VERGLEICHSWERT);
+            password_verify(reset($tokenNach) ?: '', AUTH_VERGLEICHSWERT);
             $ok = false;
         }
 
@@ -121,7 +155,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
   <?php if ($hinweis && !$error): ?><p class="alert alert-info"><?= e($hinweis) ?></p><?php endif; ?>
   <form method="post" autocomplete="on" id="loginform">
-    <input type="hidden" name="token" id="tok">
+    <?php /* Ein Token je Rundenzahl (M2-01). Das alte Feld 'token' entfaellt —
+             der Server nimmt es weiterhin an, aber diese Seite fuellt es nicht
+             mehr, weil sie nicht weiss, welche Rundenzahl fuer das Konto gilt. */ ?>
+    <input type="hidden" name="tokens" id="toks">
     <label>E-Mail
       <input type="email" name="email" required autofocus autocomplete="username">
     </label>
@@ -168,9 +205,44 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
       return;
     }
     const d = await r.json();
-    const k = await EdCrypto.deriveKeys(pw, d.salt);
-    document.getElementById('tok').value = k.authToken;
-    EdCrypto.setDataKey(k.dataKeyHex);               // fuer diese Sitzung
+
+    /* ---- Für jede genannte Rundenzahl ableiten (M2-01, Schritt 3) --------
+     *
+     * Der Salz-Endpunkt nennt jeder Adresse dieselbe Liste — er darf nicht
+     * verraten, welche Zahl für dieses Konto gilt, sonst wäre die Antwort für
+     * echte und erfundene Adressen wieder unterscheidbar. Der Browser rechnet
+     * deshalb für alle und schickt alle Token; der Server nimmt das passende.
+     *
+     * WAS DAS KOSTET: Solange die Liste zwei Einträge hat, dauert die
+     * Anmeldung doppelt so lange. Das ist der Übergangszustand während einer
+     * Anhebung, nicht der Dauerzustand — steht nur ein Wert in der Liste, ist
+     * alles wie vorher.
+     *
+     * Deshalb die Zwischenmeldung: Ohne sie wirkt die Seite in dieser Zeit
+     * eingefroren, und zwar doppelt so lange wie gewohnt. */
+    const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
+    state.textContent = 'Schlüssel werden abgeleitet …';
+    const tokens = {}, datenschluessel = {};
+    for (const it of runden) {
+      const k = await EdCrypto.deriveKeys(pw, d.salt, it);
+      tokens[it] = k.authToken;
+      datenschluessel[it] = k.dataKeyHex;
+    }
+    document.getElementById('toks').value = JSON.stringify(tokens);
+
+    /* Der Datenschlüssel kann erst gesetzt werden, wenn feststeht, welche
+     * Rundenzahl gilt — und das weiß erst die nächste, angemeldete Seite
+     * (KDF_ITER aus auth_guard.php). Bei nur einer Zahl gibt es nichts zu
+     * entscheiden, dann läuft es wie bisher.
+     *
+     * Die Ablage im Vormerkfach ist dasselbe Verfahren, das der
+     * Passwortwechsel seit Web 4.5.0 benutzt (M2-07): Der neue Stand liegt
+     * bereit, wird aber erst übernommen, wenn der Server ihn bestätigt hat. */
+    if (runden.length === 1) {
+      EdCrypto.setDataKey(datenschluessel[runden[0]]);
+    } else {
+      EdCrypto.merkeAbleitungen(datenschluessel, tokens);
+    }
     f.elements['password'].value = '';               // verlaesst den Browser nie
     f.dataset.ready = '1';
     state.textContent = '';

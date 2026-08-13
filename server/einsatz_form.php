@@ -536,6 +536,11 @@ function addRow(no, time) {
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+   bekommt einen anderen Schluessel. */
+const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
 // Bezugstag fuer die Altersberechnung: der Einsatztag, nicht heute
 const MISSION_DAY = <?= json_encode($mission['day'] ?? date('Y-m-d')) ?>;
@@ -546,7 +551,7 @@ let PAT_CK = null;
  * (Hinweis sichtbar, Felder gesperrt) — und damit auch beim Schutz aus
  * speicherePat(): ohne PAT_CK wird der vorhandene Blob nicht angefasst. */
 async function patLaden(){
-  PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+  PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!PAT_CK) {
     document.getElementById('patlocked').hidden = false;
     document.querySelectorAll('#patfields input').forEach(i => i.disabled = true);

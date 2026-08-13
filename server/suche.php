@@ -163,6 +163,11 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 <script>
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+   bekommt einen anderen Schluessel. */
+const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const RESUS_LABELS = <?= json_encode(RESUS_LABELS, JSON_UNESCAPED_UNICODE) ?>;
 
 let missions = [];        // gesamter Bestand aus api/suchindex.php
@@ -526,7 +531,7 @@ function anwenden() {
 /* ---- Geschützte Angaben --------------------------------------------- */
 
 async function entschluesselePat() {
-  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT);
+  const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   entsperrt = !!ck;
   $('lockbanner').hidden = entsperrt || !missions.some(m => m.pat_blob);
   $('f-av').disabled = $('f-ab').disabled = !entsperrt;

@@ -190,6 +190,11 @@ foreach ($defs->fetchAll() as $d) {
     <script>
       const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
       const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+      /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+         gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+         bekommt einen anderen Schluessel. */
+      const KDF_ITER      = <?= json_encode($kdfIter) ?>;
+      const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
       const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
       const APP_TZ = <?= json_encode($CFG['app']['timezone']) ?>;
       const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;

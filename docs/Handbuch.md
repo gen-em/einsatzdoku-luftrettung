@@ -564,6 +564,11 @@ es nicht mehr.
   — das alte Passwort gilt weiter. **Ohne den Schlüssel sind die Angaben
   unwiederbringlich verloren**, auch Admins können nicht helfen (deshalb gibt
   es keine Admin-Passwortvergabe).
+- **Die Anmeldung kann eine Zeitlang länger dauern.** Nach dem Update auf 5.0.0
+  rechnet der Browser bei der ersten Anmeldung jedes Kontos zweimal — er weiß
+  noch nicht, welche Einstellung für dein Konto gilt, und der Server darf es
+  ihm vor der Anmeldung nicht verraten. Ab der zweiten Anmeldung ist es wieder
+  wie vorher. Es ist nichts kaputt.
 - **Beim Abtippen hilft die Seite mit.** Unter dem Eingabefeld steht sofort,
   wenn etwas nicht stimmt: ein Zeichen, das im Schlüssel gar nicht vorkommt,
   oder eine unvollständige Länge. Die Zeichen **0, 1, I, L, O und U werden
@@ -650,6 +655,12 @@ selbst; der Server bekommt es nicht zu sehen.
 
 Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
 soll — dann bekommt der Empfänger das Anmeldepasswort mit.
+
+**Sicherungsdateien bleiben lesbar, auch nach einem Update.** In der Datei steht
+seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde. Ältere
+Dateien lassen sich unverändert öffnen. Kommt eine Datei aus einer *neueren*
+Fassung des Programms, sagt die Meldung genau das — und nicht „Passwort
+falsch".
 
 **Woher die Datei stammt, steht dabei.** Sobald die Sicherung geöffnet ist —
 also nach Eingabe des Backup-Passworts —, nennt eine Zeile das Konto und den
