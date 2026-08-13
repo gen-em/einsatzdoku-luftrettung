@@ -14,6 +14,12 @@ declare(strict_types=1);
  *   2. Kurze Gueltigkeit        PAIR_TTL_MIN Minuten
  *   3. Eine wirksame Bremse     Ratenschutz (ratelimit_lib.php)
  *
+ * Seit Web 4.4.0 kommen zwei Dinge fuer den Fall dazu, dass es doch einmal
+ * gelingt: eine Obergrenze fuer Geraete je Konto (MAX_GERAETE) und eine
+ * E-Mail an den Kontoinhaber, sobald ein Geraet hinzukommt. Beides aendert
+ * nichts an der Wahrscheinlichkeit, aber viel daran, wie lange ein fremdes
+ * Geraet unbemerkt bleibt.
+ *
  * Punkt 3 traegt die Hauptlast. Die frueher hier stehende feste Verzoegerung
  * von 0,3 s je Anfrage war KEINE Bremse: Sie verzoegert die einzelne Anfrage,
  * behindert parallele Anfragen aber ueberhaupt nicht. Mit genuegend
@@ -22,6 +28,7 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ratelimit_lib.php';
+require_once __DIR__ . '/smtp.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -94,13 +101,37 @@ $st = $pdo->prepare('SELECT user_id FROM pair_codes WHERE code = ?');
 $st->execute([$code]);
 $ownerId = $st->fetchColumn();
 if ($ownerId === false) { abweisen(404, 'invalid'); }
+$ownerId = (int)$ownerId;
+
+/* ---- Obergrenze fuer Geraete je Konto (M4-10) -----------------------------
+ *
+ * Ohne sie konnte ein Konto beliebig viele Zugangsdatensaetze ansammeln — ein
+ * eingeschleustes Geraet stuende einfach als weitere Zeile in einer Liste, die
+ * niemand zaehlt. Die Grenze steht in db.php (MAX_GERAETE).
+ *
+ * DER CODE IST HIER BEREITS VERBRAUCHT, und das bleibt so. Ihn wieder gueltig
+ * zu machen hiesse, einen Code je nach Kontostand mehrfach anlaufen zu duerfen
+ * — genau die Eigenschaft, die M4-03 beseitigt hat. Die Kosten sind ein
+ * Klick: neuen Code erzeugen, nachdem ein Geraet geloescht wurde.
+ *
+ * Eigener Fehlerschluessel, damit die Ursache nicht in "invalid" verschwindet.
+ * Kein rate_misserfolg: Der Code war richtig, hier ist niemand am Raten.
+ */
+if (geraete_grenze_erreicht($pdo, $ownerId)) {
+    rate_gleiche_dauer($t0);
+    http_response_code(409);
+    echo json_encode(['error'   => 'device_limit',
+                      'meldung' => 'Es sind bereits ' . MAX_GERAETE . ' Geraete mit diesem '
+                                 . 'Konto verbunden. Erst eines loeschen, dann neu koppeln.']);
+    exit;
+}
 
 $devId = 'dev-' . bin2hex(random_bytes(4));
 $key   = bin2hex(random_bytes(24));
 try {
     $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label)
                    VALUES (?,?,?,?)')
-        ->execute([(int)$ownerId, $devId,
+        ->execute([$ownerId, $devId,
                    password_hash($key, PASSWORD_DEFAULT),
                    'Uhr (gekoppelt ' . date('d.m.Y') . ')']);
 } catch (Throwable $ex) {
@@ -119,3 +150,43 @@ try {
 // nicht spaeter aussperrt.
 rate_erfolg('pair');
 echo json_encode(['device_id' => $devId, 'api_key' => $key]);
+
+/* ---- Den Kontoinhaber benachrichtigen (M4-10) -----------------------------
+ *
+ * Dies ist die Stelle, an der ein abgefangener Kopplungscode zu einem fremden
+ * Geraet wird — und die einzige, an der die betroffene Person es erfahren
+ * kann, ohne sich zufaellig anzumelden. Die Weboberflaeche zeigt neu
+ * hinzugekommene Geraete zusaetzlich an; das erreicht aber nur, wer hinsieht.
+ *
+ * ERST ANTWORTEN, DANN VERSENDEN. Die Uhr wartet auf diese Antwort, und ihr
+ * Code ist bereits verbraucht: Bricht sie wegen eines langsamen Mailservers
+ * ab, haelt sie die Kopplung fuer gescheitert, obwohl das Geraet angelegt ist.
+ * Deshalb der Abschluss der Antwort davor und ein kurzes Zeitlimit dahinter.
+ *
+ * Ein Fehlschlag des Versands darf die Kopplung nicht beruehren — sie ist
+ * abgeschlossen und die Antwort ist raus. Er landet im Fehlerprotokoll.
+ */
+antwort_abschliessen();
+try {
+    $ust = $pdo->prepare('SELECT email FROM users WHERE id = ?');
+    $ust->execute([$ownerId]);
+    $mail = $ust->fetchColumn();
+    if ($mail !== false && $mail !== null && $mail !== '') {
+        smtp_send((string)$mail,
+            'Neues Gerät gekoppelt — Gen-EM Einsatzdokumentation Luftrettung',
+            "Hallo,\n\n"
+            . "mit deinem Konto der Gen-EM Einsatzdokumentation Luftrettung wurde soeben ein\n"
+            . "neues Gerät gekoppelt:\n\n"
+            . "  Geräte-ID: " . $devId . "\n"
+            . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
+            . "War das deine Uhr, ist alles in Ordnung — du musst nichts tun.\n\n"
+            . "War es das nicht, deaktiviere oder lösche das Gerät bitte umgehend unter\n"
+            . "Einstellungen → Geräte. Ab diesem Moment kann es keine Daten mehr hochladen.\n"
+            . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
+            . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+            . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n",
+            5);
+    }
+} catch (Throwable $ex) {
+    error_log('Hinweis auf neues Geraet konnte nicht verschickt werden: ' . $ex->getMessage());
+}

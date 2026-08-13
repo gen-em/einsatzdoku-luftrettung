@@ -201,6 +201,19 @@ Zurücksetzen wird zusätzlich der Wiederherstellungsschlüssel abgefragt
 (Abschnitt 5); bei der Erst-Einrichtung entfällt das, weil noch keine
 verschlüsselten Daten vorliegen.
 
+**Es gilt immer nur der zuletzt verschickte Link.** Forderst du einen neuen an,
+wird der vorherige damit ungültig. Nimm also die neueste E-Mail — eine ältere
+führt zu „Link ungültig oder abgelaufen".
+
+**Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
+Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
+den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
+Anmeldung einmal gelingt, ist die Zählung zurückgesetzt.
+
+Dasselbe gilt für „Passwort vergessen": Wer den Knopf zu oft drückt, bekommt
+eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
+sie verrät nie, ob es zu einer Adresse ein Konto gibt.
+
 ---
 
 ## 4. Einsätze ansehen und bearbeiten
@@ -862,6 +875,21 @@ Unter **⚙ Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
 sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
 bleiben erhalten, und **Aktivieren** schaltet dasselbe Gerät wieder frei.
 
+**Höchstens fünf Geräte je Konto.** Die Seite zeigt den Zählstand („belegt:
+3 von 5"). Deaktivierte Geräte zählen mit — ihre Zugangsdaten bestehen weiter
+und lassen sich mit einem Klick wieder freischalten. Erst **Löschen** gibt
+einen Platz frei. Ist die Grenze erreicht, lässt sich weder ein Gerät anlegen
+noch ein Kopplungscode erzeugen; die Meldung sagt, was zu tun ist.
+
+**Du wirst benachrichtigt, wenn ein Gerät hinzukommt.** Nach jeder erfolgreichen
+Kopplung geht eine E-Mail an deine Adresse — mit Gerätekennung, Zeitpunkt und
+dem Weg, das Gerät wieder zu entfernen. Zusätzlich steht auf der Übersicht und
+im Geräte-Reiter ein Hinweis auf alles, was in den letzten sieben Tagen dazukam.
+
+**Kommt dir ein Gerät unbekannt vor, lösche es.** Ab diesem Moment kann es
+nichts mehr hochladen. Bereits hochgeladene Daten bleiben erhalten, damit du
+sie in Ruhe ansehen kannst.
+
 ---
 
 ## 11. Administration (nur Admin)
@@ -894,10 +922,12 @@ Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
    der **6-Zeichen-Code ist 10 Minuten gültig und genau einmal verwendbar**.
    Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
    je Konto immer höchstens einen offenen Code. Wird der Code zu oft falsch
-   eingegeben, weist der Server weitere Versuche vorübergehend ab.
+   eingegeben, weist der Server weitere Versuche vorübergehend ab. Sind bereits
+   fünf Geräte verbunden, lässt sich kein Code mehr erzeugen — erst ein nicht
+   mehr genutztes Gerät löschen.
 3. Auf der Uhr auf der Sync-Seite **START halten**, den Code eintippen und
    bestätigen — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
-   erscheint im Web in der Geräteliste.
+   erscheint im Web in der Geräteliste, und du bekommst eine E-Mail darüber.
 4. Alternative ohne Code: Gerät manuell anlegen und Geräte-ID/API-Schlüssel
    in die Connect-Einstellungen eintragen (nur nötig, wenn die Kopplung nicht
    möglich ist).

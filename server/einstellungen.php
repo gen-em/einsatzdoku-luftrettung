@@ -110,20 +110,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Geräte (Selbstverwaltung) ------------------------------------- */
     if ($action === 'add') {
-        $label = trim($_POST['label'] ?? '');
-        $devId = 'dev-' . bin2hex(random_bytes(4));
-        $key   = bin2hex(random_bytes(24));
-        db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
-            ->execute([$userId, $devId, password_hash($key, PASSWORD_DEFAULT), $label ?: null]);
-        $newKey = ['device_id' => $devId, 'api_key' => $key];
-        $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
+        // Dieselbe Obergrenze wie beim Koppeln (MAX_GERAETE, db.php). Sie an
+        // nur einem der beiden Wege zu pruefen hiesse, sie gar nicht zu haben.
+        if (geraete_grenze_erreicht(db(), $userId)) {
+            $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
+                   . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — Deaktivieren '
+                   . 'genügt nicht, die Zugangsdaten bleiben dabei bestehen.';
+        } else {
+            $label = trim($_POST['label'] ?? '');
+            $devId = 'dev-' . bin2hex(random_bytes(4));
+            $key   = bin2hex(random_bytes(24));
+            db()->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
+                ->execute([$userId, $devId, password_hash($key, PASSWORD_DEFAULT), $label ?: null]);
+            $newKey = ['device_id' => $devId, 'api_key' => $key];
+            $notice = 'Gerät angelegt. Schlüssel unten JETZT notieren — er wird nur einmal angezeigt.';
+        }
     }
     if ($action === 'toggle') {
         db()->prepare('UPDATE devices SET active = 1 - active WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
         $notice = 'Status geändert.';
     }
-    if ($action === 'pair_code') {
+    if ($action === 'pair_code' && geraete_grenze_erreicht(db(), $userId)) {
+        // Schon hier abfangen statt erst beim Einloesen: Der Code waere sonst
+        // verbraucht, ohne dass ein Geraet entstanden ist (pair.php entwertet
+        // vor der Pruefung, und das ist dort richtig so).
+        $error = 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem Konto verbunden. '
+               . 'Bitte zuerst ein nicht mehr genutztes Gerät löschen — dann lässt sich '
+               . 'wieder ein Kopplungscode erzeugen.';
+    } elseif ($action === 'pair_code') {
         // Hoechstens EIN offener Code je Konto: Ein neuer entwertet den alten.
         // Sonst haetten mehrere gleichzeitig gueltige Codes den Raum, den ein
         // Angreifer treffen kann, mit jedem Klick vergroessert — und liegen
@@ -398,14 +413,21 @@ if (!empty($_SESSION['flash_error'])) {
 $ROLE_LABELS = ['p1' => 'Pilot 1', 'p2' => 'Pilot 2', 'hems' => 'HEMS',
                 'fr' => 'Flugretter', 'other' => 'Sonstige'];
 
-$devices = []; $editDev = null;
+$devices = []; $editDev = null; $devNeu = 0;
 if ($tab === 'geraete') {
-    $st = db()->prepare('SELECT id, device_id, label, active, last_seen FROM devices
-                         WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
-    $st->execute([$userId]);
+    /* Das Kennzeichen "neu" rechnet die Datenbank, nicht PHP: created_at ist
+     * ein TIMESTAMP und kommt in der Zeitrechnung der Datenbank an. Ein
+     * Vergleich gegen eine in PHP gebildete Grenze haette stillschweigend
+     * angenommen, dass beide dieselbe Zeitzone benutzen. */
+    $st = db()->prepare('SELECT id, device_id, label, active, last_seen, created_at,
+                                (created_at > DATE_SUB(NOW(), INTERVAL ? DAY)) AS ist_neu
+                         FROM devices
+                         WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY created_at');
+    $st->execute([GERAETE_NEU_TAGE, $userId]);
     $devices = $st->fetchAll();
     foreach ($devices as $d) {
         if ((int)$d['id'] === (int)($_GET['ed'] ?? 0)) { $editDev = $d; }
+        if ((int)$d['ist_neu']) { $devNeu++; }
     }
 }
 ?><!doctype html>
@@ -1086,7 +1108,20 @@ if ($tab === 'geraete') {
   <?php else: ?>
     <h1>Geräte</h1>
     <p class="muted">Jedes Gerät (Uhr) bekommt eigene Zugangsdaten für den Upload.
-       Deaktivieren sperrt den Schlüssel — bereits hochgeladene Daten bleiben erhalten.</p>
+       Deaktivieren sperrt den Schlüssel — bereits hochgeladene Daten bleiben erhalten.
+       Je Konto sind <strong><?= MAX_GERAETE ?> Geräte</strong> möglich
+       (belegt: <?= count($devices) ?>). Deaktivierte zählen mit, weil ihre
+       Zugangsdaten bestehen bleiben; erst Löschen gibt einen Platz frei.</p>
+
+    <?php if ($devNeu > 0): ?>
+      <?php /* Zweite Spur neben der E-Mail beim Koppeln: Wer die Post nicht
+               liest, sieht ein neu hinzugekommenes Gerät wenigstens hier. */ ?>
+      <p class="alert alert-warn">
+        <?= $devNeu === 1 ? 'Ein Gerät ist' : $devNeu . ' Geräte sind' ?> in den
+        letzten <?= GERAETE_NEU_TAGE ?> Tagen hinzugekommen — unten mit
+        <strong>neu</strong> gekennzeichnet. Kommt dir davon etwas unbekannt vor,
+        lösche es hier; danach kann es nichts mehr hochladen.</p>
+    <?php endif; ?>
 
     <h2>Uhr koppeln (empfohlen)</h2>
     <p class="muted">Erzeuge einen Code und gib ihn auf der Uhr ein
@@ -1140,7 +1175,11 @@ if ($tab === 'geraete') {
       <?php endif; ?>
       <?php foreach ($devices as $d): ?>
         <tr>
-          <td><code><?= e($d['device_id']) ?></code></td>
+          <td><code><?= e($d['device_id']) ?></code>
+              <?php if ((int)$d['ist_neu']): ?>
+                <br><strong>neu</strong>
+                <span class="muted">seit <?= e(fmt_local($d['created_at'], 'd.m.Y H:i')) ?></span>
+              <?php endif; ?></td>
           <td><?= e($d['label'] ?? '–') ?></td>
           <td><?= (int)$d['active'] ? 'aktiv' : '<span class="muted">deaktiviert</span>' ?></td>
           <td><?= e($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie') ?></td>

@@ -162,6 +162,23 @@ function rate_misserfolg(string $topf, ?string $konto = null): void
 }
 
 /**
+ * Eine Anfrage verbuchen, ohne dass es einen Misserfolg gaebe.
+ *
+ * Zwei der vier Toepfe kennen kein Scheitern: Der Salz-Endpunkt antwortet
+ * jeder Adresse — das ist gerade der Sinn des Pseudo-Salts. Und die
+ * Zuruecksetzen-Anforderung antwortet immer gleich, egal ob es das Konto gibt.
+ * An beiden Stellen ist die MENGE der Anfragen das, was begrenzt werden soll,
+ * nicht ein Fehlversuch.
+ *
+ * Technisch dasselbe wie rate_misserfolg(); der eigene Name steht hier, damit
+ * an der Aufrufstelle nicht "Misserfolg" steht, wo es keinen gibt.
+ */
+function rate_zaehlen(string $topf, ?string $konto = null): void
+{
+    rate_misserfolg($topf, $konto);
+}
+
+/**
  * Nach einem Erfolg die Zaehler der beteiligten Merkmale leeren.
  *
  * Bewusst auch fuer die IP-Adresse: Wer sich erfolgreich anmeldet, ist mit

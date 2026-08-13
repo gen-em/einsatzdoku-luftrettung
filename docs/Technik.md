@@ -60,7 +60,7 @@ hems/
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden UND Ablauf)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
-│   ├── smtp.php           SMTPS-Versand
+│   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export)
@@ -95,8 +95,8 @@ hems/
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet. `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert) |
+| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
@@ -111,7 +111,7 @@ hems/
 | `days` | Flugtag-Metadaten; **Verknüpfung über natürlichen Schlüssel `(user_id, day)`**, entsteht lazy beim ersten Speichern |
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
-| `rate_limits` | Ratenschutz: Fehlversuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine; Aufräumjob entsorgt Altbestand |
+| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
 | `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `salt_secret`) |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -757,10 +757,74 @@ darf keine Anfrage brechen).
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
 JSON-POSTs (Header `X-CSRF`), PDO Prepared Statements durchgängig,
-Passwörter/Schlüssel nur als Hash, Ratenschutz an Kopplung und Login
-(s. 4.99), Ingest mit Größen- (512 KB) und Wertevalidierung, sensible Dateien
-per .htaccess gesperrt, Referrer-Policy `strict-origin-when-cross-origin`
-(OSM-Kacheln).
+Passwörter/Schlüssel nur als Hash, Ratenschutz an **allen** ohne Anmeldung
+erreichbaren Endpunkten — Anmeldung, Salz-Abfrage, Zurücksetzen-Anforderung,
+Kopplung (s. 4.99) —, Ingest mit Größen- (512 KB) und Wertevalidierung,
+sensible Dateien per .htaccess gesperrt, Referrer-Policy
+`strict-origin-when-cross-origin` (OSM-Kacheln).
+
+### Die Antwortzeit als Auskunft
+
+Vier Endpunkte antworten für „gibt es nicht" und „gibt es" absichtlich
+gleichlautend. Wortgleichheit allein genügt aber nicht: Wo der eine Zweig
+rechnet und der andere nicht, ist die **Dauer** dieselbe Auskunft, nur leiser.
+Drei Fälle gab es, alle seit Web 4.4.0 geschlossen:
+
+| Endpunkt | Was den Unterschied machte | Wie er geschlossen ist |
+|---|---|---|
+| `login.php` | bei unbekannter Adresse lief keine bcrypt-Prüfung | Prüfung gegen `AUTH_VERGLEICHSWERT`, dazu `rate_gleiche_dauer()` |
+| `ingest.php` | bei unbekannter Gerätekennung lief keine bcrypt-Prüfung | dasselbe |
+| `reset_request.php` | bei vorhandenem Konto lief ein vollständiges Mailgespräch | Antwort wird **vor** dem Versand abgeschlossen, dazu 0,5 s Mindestdauer |
+| `auth_salt.php` | der unbekannte Zweig macht *mehr* Arbeit (zweite Abfrage, HMAC) | 50 ms Mindestdauer, drei Größenordnungen über dem Unterschied |
+
+**Wie der Mailversand aus der Antwortzeit herauskommt.** `antwort_abschliessen()`
+(`smtp.php`) beendet die Antwort, dann erst läuft `smtp_send()`. Zwei Wege, in
+dieser Reihenfolge:
+
+1. `fastcgi_finish_request()` (PHP-FPM) bzw. `litespeed_finish_request()`
+   (LiteSpeed) — verbindlich.
+2. Sonst Längenangabe und angekündigtes Verbindungsende. Der Gegenpart hat den
+   Rumpf damit vollständig und wartet üblicherweise nicht weiter — aber
+   „üblicherweise" ist keine Zusicherung, weil ein vorgelagerter Server puffern
+   darf.
+
+Welcher Weg auf der eigenen Installation greift, steht auf der **Wartungsseite
+unter „Umgebung"**. Es ist die Eigenschaft, an der die Gleichheit beider Zweige
+hängt, und sie ließ sich sonst nirgends ablesen.
+
+**Bewusst keine Warteschlange.** Es gibt keinen Cronjob; die Wartung läuft
+huckepack, höchstens einmal täglich. Eine Warteschlange hätte den Link zum
+Zurücksetzen genau so lange liegen lassen, bis zufällig jemand eine Seite
+aufruft. Der Preis des gewählten Weges: Auf Hosts ohne FPM oder LiteSpeed
+bleibt der PHP-Arbeitsprozess nach dem Abschluss der Antwort noch bis zum
+Zeitlimit des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist
+das klein, aber nicht null — deshalb steht das Zeitlimit bei der Kopplung, wo
+die Uhr wartet, auf fünf statt fünfzehn Sekunden.
+
+### Geräte je Konto
+
+Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft beim Koppeln
+(`pair.php`) und beim manuellen Anlegen (`einstellungen.php`). Gezählt werden
+aktive **und** deaktivierte — ein deaktiviertes Gerät ist ein weiterhin
+vorhandener Zugangsdatensatz, der sich mit einem Klick wieder scharf schalten
+lässt. Löschen gibt einen Platz frei, Deaktivieren nicht.
+
+Nicht mitgezählt wird das virtuelle Gerät `manual-<konto>` („Manuelle
+Einträge"). Es entsteht von selbst beim Anlegen oder Importieren eines
+Einsatzes, ist dauerhaft deaktiviert und taucht schon in der Geräteliste nicht
+auf (`GERAETE_ECHT_SQL`). Zählte es mit, nennten Grenze und angezeigte Liste
+verschiedene Zahlen.
+
+Ist die Grenze erreicht, wird **gar kein Kopplungscode mehr erzeugt** — sonst
+wäre er beim Einlösen verbraucht, ohne dass ein Gerät entsteht (`pair.php`
+entwertet vor der Prüfung, und das ist dort richtig so). Wird trotzdem einer
+eingelöst, antwortet `pair.php` mit 409 und `error: device_limit`.
+
+**Hinweis bei neuen Geräten,** zwei Spuren: eine E-Mail an den Kontoinhaber
+unmittelbar nach der Kopplung (erreicht die Person auch dann, wenn sie sich
+gerade nicht anmeldet — genau der Fall eines abgefangenen Codes), und ein
+Hinweis auf der Startseite sowie im Geräte-Reiter für alles, was in den letzten
+`GERAETE_NEU_TAGE` Tagen hinzugekommen ist.
 
 **Die Prüfsumme des Inhaltsschlüssels (`users.pat_key_check`).** Der Server
 kann die Schlüsselhüllen nicht öffnen und daher nicht erkennen, ob eine neu
@@ -887,7 +951,9 @@ Die Bausteine im Einzelnen:
 |---|---|---|
 | Prüfschicht | `validate_lib.php` | Wertebereiche, Längen, Formate, Mengen aller Einsatz- und Ruhesegmentfelder. Unterscheidet „Wert war ungültig" von „Wert war nicht vorhanden" (`Pruefliste`), damit ein Fehler nicht als Erfolg gemeldet werden kann. |
 | Kalendertag | `validate_lib.php` | Ein unmöglicher Tag wird abgelehnt statt still verschoben (30. Februar → 2. März). Sichtbar nur über die Warnungsabfrage der Datumsklasse. |
-| Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. |
+| Ratenschutz | `ratelimit_lib.php` | Zählung je Konto **und** IP, in der Datenbank. Greift **vor** teuren Prüfungen (bcrypt, PBKDF2), Antwortzeit bei Misserfolg konstant. Seit Web 4.4.0 an allen vier Töpfen angewendet: `login`, `salt`, `reset`, `pair`. |
+| Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. |
+| Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden **und** Ablauf, räumt die Schlüssel im Browser und nennt den Grund. |

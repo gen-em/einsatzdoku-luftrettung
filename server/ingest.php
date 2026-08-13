@@ -29,13 +29,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
 $raw = file_get_contents('php://input');
 if (strlen($raw) > $CFG['app']['max_body_bytes']) json_out(['error' => 'too_large'], 413);
 
-// --- Geraet authentifizieren -------------------------------------------------
+/* --- Geraet authentifizieren -------------------------------------------------
+ *
+ * ANTWORTZEIT (M4-07): Bei unbekannter Gerätekennung kam die Abweisung frueher
+ * sofort, bei bekannter lief erst eine bcrypt-Pruefung. Der Unterschied ist
+ * ohne jede Zugangsdaten messbar und beantwortet die Frage, welche
+ * Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen, was ein
+ * Upload braucht. Deshalb laeuft auch der unbekannte Zweig gegen einen festen
+ * Vergleichswert (AUTH_VERGLEICHSWERT, db.php).
+ *
+ * Die Abfolge bleibt sonst unveraendert: Der Fehlerschluessel 'auth' deckt
+ * beide Faelle ab und sagt nicht, welcher es war.
+ */
 $deviceId = $_SERVER['HTTP_X_DEVICE_ID'] ?? '';
 $apiKey   = $_SERVER['HTTP_X_API_KEY']   ?? '';
 $st = db()->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
 $st->execute([$deviceId]);
 $dev = $st->fetch();
-if (!$dev || !password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
+if (!$dev) {
+    password_verify($apiKey, AUTH_VERGLEICHSWERT);
+    json_out(['error' => 'auth'], 401);
+}
+if (!password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
 // --- Nutzlast pruefen ---------------------------------------------------------

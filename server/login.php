@@ -3,6 +3,11 @@ declare(strict_types=1);
 if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/session_lib.php';
+require_once __DIR__ . '/ratelimit_lib.php';
+
+// Zeitpunkt fuer die konstante Antwortdauer im Fehlerzweig — muss VOR jeder
+// Arbeit stehen, sonst misst er nicht die ganze Anfrage.
+$t0 = microtime(true);
 session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/']);
 session_start();
 
@@ -18,34 +23,71 @@ if (!empty($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 $hinweis = session_ende_text($_GET['ende'] ?? null);
 if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('abgelaufen'); }
 
+/* ---- Anmeldung ------------------------------------------------------------
+ *
+ * DIE BREMSE LAG FRUEHER IN DER SITZUNG DES AUFRUFERS. Fuenf Fehlversuche,
+ * dann dreissig Sekunden Pause — gezaehlt in $_SESSION. Wer das Cookie
+ * wegwarf, hatte wieder fuenf Versuche frei; ein Skript, das gar kein Cookie
+ * annimmt, hatte nie eines verbraucht. Das war keine Bremse, sondern eine
+ * Bequemlichkeit gegen Vertippen. Gezaehlt wird jetzt in der Datenbank, je
+ * Kontokennung UND je IP-Adresse (ratelimit_lib.php).
+ *
+ * ZWEI EIGENSCHAFTEN, DIE HIER DIE ARBEIT MACHEN
+ *   1. Die Sperre greift VOR der Abfrage und vor bcrypt. Sonst kann ein
+ *      Gesperrter den Server weiter rechnen lassen.
+ *   2. Der Fehlerzweig dauert immer gleich lang. Bei unbekannter Adresse lief
+ *      frueher gar keine Passwortpruefung, bei bekannter eine bcrypt-Pruefung
+ *      — der Unterschied sagte, welche Adressen es gibt. Deshalb der
+ *      Vergleich gegen einen festen Wert plus rate_gleiche_dauer().
+ *
+ * BEWUSST IN KAUF GENOMMEN: Wer eine Adresse kennt, kann das Konto durch
+ * Fehlversuche zeitweise sperren. Die Sperre ist kurz und die Meldung nennt
+ * ihr Ende; die Alternative — nur nach IP zaehlen — liesse ein verteiltes
+ * Durchprobieren einer einzelnen Adresse voellig ungebremst.
+ */
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // simple Bremse: nach 5 Fehlversuchen 30 s Pause
-    $fails = (int)($_SESSION['login_fails'] ?? 0);
-    if ($fails >= 5 && time() - (int)($_SESSION['login_last'] ?? 0) < 30) {
-        $error = 'Zu viele Versuche — bitte kurz warten.';
+    $email = trim($_POST['email'] ?? '');
+
+    if (!rate_erlaubt('login', $email)) {
+        $bis = rate_gesperrt_bis('login', $email);
+        $error = 'Zu viele Anmeldeversuche. Bitte später erneut versuchen'
+               . ($bis !== null ? ' — frühestens ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.');
+        rate_gleiche_dauer($t0);
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
         $st = db()->prepare('SELECT id, password_hash, role FROM users WHERE email = ?');
-        $st->execute([trim($_POST['email'] ?? '')]);
+        $st->execute([$email]);
         $u = $st->fetch();
 
-        $ok = false;
+        $token = (string)($_POST['token'] ?? '');
         if ($u && $u['password_hash'] !== null) {
-            $token = (string)($_POST['token'] ?? '');
             $ok = $token !== '' && password_verify($token, $u['password_hash']);
+        } else {
+            // Unbekannte Adresse oder Konto ohne gesetztes Passwort: trotzdem
+            // eine bcrypt-Pruefung, damit dieser Zweig nicht schneller ist.
+            password_verify($token, AUTH_VERGLEICHSWERT);
+            $ok = false;
         }
+
         if ($ok) {
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
             $_SESSION['role']    = $u['role'];
+            // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
+            // Fassung angemeldet waren, liegen die beiden Werte noch herum.
             unset($_SESSION['login_fails'], $_SESSION['login_last']);
+            rate_erfolg('login', $email);
+            // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
+            // verbraucht dort einen Versuch, und wer sich erfolgreich
+            // anmeldet, soll sich nicht selbst aussperren.
+            rate_erfolg('salt', $email);
             header('Location: index.php'); exit;
         }
-        $_SESSION['login_fails'] = $fails + 1;
-        $_SESSION['login_last']  = time();
+        rate_misserfolg('login', $email);
         $error = 'Anmeldung fehlgeschlagen. E-Mail oder Passwort prüfen.';
+        rate_gleiche_dauer($t0);
     }
 }
 ?><!doctype html>
@@ -97,6 +139,19 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
+    // Der Salz-Endpunkt hat seit Web 4.4.0 einen Ratenschutz. Ohne diese
+    // Abfrage lief eine Sperre in den catch-Zweig und meldete "Dieser Browser
+    // unterstuetzt die noetige Verschluesselung nicht" — eine Auskunft, die
+    // nicht nur unbrauchbar, sondern falsch ist.
+    if (r.status === 429) {
+      const d429 = await r.json().catch(() => ({}));
+      state.textContent = d429.meldung || 'Zu viele Versuche. Bitte später erneut.';
+      return;
+    }
+    if (!r.ok) {
+      state.textContent = 'Anmeldung derzeit nicht möglich. Bitte später erneut.';
+      return;
+    }
     const d = await r.json();
     const k = await EdCrypto.deriveKeys(pw, d.salt);
     document.getElementById('tok').value = k.authToken;

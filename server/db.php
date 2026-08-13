@@ -196,6 +196,95 @@ const PAIR_LEN     = 6;
 const PAIR_TTL_MIN = 10;
 const PAIR_RE      = '/^[' . PAIR_CHARS . ']{' . PAIR_LEN . '}$/';
 
+/* ---- Fester Vergleichswert fuer unbekannte Kennungen ---------------------
+ *
+ * An zwei Stellen wird ein Geheimnis gegen einen gespeicherten bcrypt-Hash
+ * geprueft: die Anmeldung (login.php, Auth-Token) und die Uhr (ingest.php,
+ * Geraeteschluessel). An beiden lief die Pruefung nur, WENN es die Kennung
+ * gab. Bei unbekannter Kennung kam die Abweisung sofort — und dieser
+ * Zeitunterschied beantwortet dieselbe Frage wie eine unterschiedliche
+ * Meldung: Gibt es dieses Konto, gibt es dieses Geraet?
+ *
+ * Deshalb laeuft auch der unbekannte Zweig gegen diesen Wert. Er ist kein
+ * Geheimnis — er darf offen im Code stehen, weil zu ihm kein Passwort
+ * gehoert, das jemand einsetzen koennte. Seine einzige Aufgabe ist, denselben
+ * Rechenaufwand zu erzeugen.
+ *
+ * ZUR RUNDENZAHL ($2y$10$): Sie entspricht der, mit der PASSWORD_DEFAULT auf
+ * PHP 8.1 bis 8.3 arbeitet — also der Rundenzahl aller hier gespeicherten
+ * Hashes. Legt eine spaetere PHP-Fassung teurere Hashes an, gehoert dieser
+ * Wert nachgezogen, sonst faellt der unbekannte Zweig wieder aus dem Takt.
+ */
+const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxVKhLdRmbJy';
+
+/* ---- Geraete je Konto: Obergrenze und Hinweisfenster ---------------------
+ *
+ * WARUM ES EINE OBERGRENZE GIBT
+ * Ein Geraet ist ein Satz Zugangsdaten, mit dem sich Einsaetze in ein Konto
+ * schreiben lassen. Ohne Obergrenze konnte ein Konto beliebig viele davon
+ * ansammeln, und niemand haette es bemerkt: Wer einen Kopplungscode abfaengt,
+ * legt sich ein Geraet an, das neben den echten unauffaellig in der Liste
+ * steht. Die Grenze macht aus "faellt niemandem auf" ein "geht nicht mehr,
+ * ohne dass jemand aufraeumt".
+ *
+ * WAS GEZAEHLT WIRD
+ * Alle Geraete eines Kontos, AKTIVE WIE DEAKTIVIERTE — ein deaktiviertes
+ * Geraet ist ein weiterhin vorhandener Zugangsdatensatz, der sich mit einem
+ * Klick wieder scharf schalten laesst. Loeschen gibt einen Platz frei,
+ * Deaktivieren nicht.
+ *
+ * WAS NICHT GEZAEHLT WIRD
+ * Das virtuelle Geraet "Manuelle Einträge" (device_id 'manual-<konto>'). Es
+ * entsteht von selbst, sobald jemand einen Einsatz von Hand anlegt oder
+ * importiert, ist dauerhaft deaktiviert und kann nie hochladen. Es taucht
+ * schon in der Geraeteliste nicht auf (derselbe Filter) und darf deshalb auch
+ * keinen Platz kosten — sonst haetten die Grenze und die angezeigte Liste
+ * verschiedene Zahlen, und wer fuenf Geraete sieht, verstuende nicht, warum
+ * das sechste abgewiesen wird.
+ *
+ * ZUR ZAHL FUENF: Im Betrieb traegt eine Person eine Uhr. Fuenf lassen Raum
+ * fuer eine Ersatzuhr, ein Testgeraet und ein noch nicht geloeschtes Altgeraet
+ * und sind trotzdem eine Zahl, bei der ein zusaetzlicher Eintrag auffaellt.
+ */
+const MAX_GERAETE      = 5;
+const GERAETE_NEU_TAGE = 7;   // so lange gilt ein Geraet in der Oberflaeche als "neu"
+
+/** Bedingung, die das virtuelle Geraet "Manuelle Einträge" ausschliesst. */
+const GERAETE_ECHT_SQL = "device_id NOT LIKE 'manual-%'";
+
+/** Zahl der echten Geraete eines Kontos (aktive und deaktivierte). */
+function geraete_zahl(PDO $pdo, int $userId): int {
+    $st = $pdo->prepare('SELECT COUNT(*) FROM devices
+                         WHERE user_id = ? AND ' . GERAETE_ECHT_SQL);
+    $st->execute([$userId]);
+    return (int)$st->fetchColumn();
+}
+
+/** True, wenn kein weiteres Geraet mehr angelegt werden darf. */
+function geraete_grenze_erreicht(PDO $pdo, int $userId): bool {
+    return geraete_zahl($pdo, $userId) >= MAX_GERAETE;
+}
+
+/**
+ * Geraete, die in den letzten GERAETE_NEU_TAGE Tagen hinzugekommen sind.
+ *
+ * Grundlage des Hinweises in der Oberflaeche (M4-10). Die eigentliche
+ * Benachrichtigung ist die E-Mail beim Koppeln — sie erreicht die Person auch
+ * dann, wenn sie sich gerade nicht anmeldet, und genau das ist der Fall, um
+ * den es geht. Der Hinweis hier ist die zweite, langsamere Spur fuer alle, die
+ * ihre Post nicht lesen.
+ *
+ * @return array<int, array{device_id: string, label: ?string, created_at: string}>
+ */
+function geraete_neu(PDO $pdo, int $userId): array {
+    $st = $pdo->prepare('SELECT device_id, label, created_at FROM devices
+                         WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . '
+                           AND created_at > DATE_SUB(NOW(), INTERVAL ? DAY)
+                         ORDER BY created_at DESC');
+    $st->execute([$userId, GERAETE_NEU_TAGE]);
+    return $st->fetchAll();
+}
+
 const RESUS_LABELS = [
     'zugang' => 'Zugang',
     'beginn' => 'Reanimationsbeginn', 'adrenalin' => 'Adrenalingabe',

@@ -856,6 +856,27 @@ if ($istCli) {
          ein erneuter Lauf ist ungefährlich.</p>
     <?php endif; ?>
   <?php endif; ?>
+
+  <?php /* ---- Umgebung ------------------------------------------------------
+     * Ob der Mailversand aus der messbaren Antwortzeit herausgehalten werden
+     * kann, haengt an der PHP-Anbindung des Webspace und laesst sich sonst
+     * nirgends ablesen. Bei „Passwort vergessen“ ist genau das die
+     * Eigenschaft, an der die Gleichheit beider Antwortzweige haengt — sie
+     * gehoert deshalb sichtbar gemacht und nicht nur in die Doku. */ ?>
+  <h2>Umgebung</h2>
+  <?php require_once __DIR__ . '/smtp.php'; ?>
+  <?php if (antwort_entkoppelbar()): ?>
+    <p class="muted">Mailversand: <strong>entkoppelt</strong> — die Antwort wird
+       abgeschlossen, bevor der Versand beginnt. Die Anforderung „Passwort
+       vergessen“ dauert damit für vorhandene und unbekannte Adressen gleich lang.</p>
+  <?php else: ?>
+    <p class="alert alert-warn">Mailversand: <strong>nicht sicher entkoppelbar</strong>
+       — diese PHP-Anbindung kennt weder <code>fastcgi_finish_request</code> noch
+       <code>litespeed_finish_request</code>. Die Antwort wird zwar mit
+       Längenangabe abgeschlossen, was üblicherweise reicht; verbindlich ist es
+       nicht. Im ungünstigen Fall bleibt die Dauer der Anforderung „Passwort
+       vergessen“ ein Hinweis darauf, ob es zu einer Adresse ein Konto gibt.</p>
+  <?php endif; ?>
 <?php ui_footer(); ?>
 </main>
 </body>

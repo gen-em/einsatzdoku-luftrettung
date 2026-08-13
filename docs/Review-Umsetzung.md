@@ -19,10 +19,105 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P2 | Kette „unlesbarer Schlüssel" schließen | Web 4.1.2 | **erledigt** |
 | P3 | Gemeinsame Prüfschicht anwenden | Web 4.2.0 | **erledigt** |
 | P5 | Papierkorb und gelöschte Flugtage | Web 4.3.0 | **erledigt** |
-| P4 | Ratenschutz und unangemeldete Endpunkte | — | offen |
+| P4 | Ratenschutz und unangemeldete Endpunkte | Web 4.4.0 | **erledigt** |
 | P6 | Sitzung, Rollen, Konten | — | offen |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P4 — Ratenschutz und unangemeldete Endpunkte (Web 4.4.0)
+
+Fünf Endpunkte sind ohne Anmeldung erreichbar: Anmeldung, Salz-Abfrage,
+Zurücksetzen-Anforderung, Kopplung und Upload der Uhr. An allen fünf ließ sich
+etwas ablesen oder etwas beliebig oft wiederholen.
+
+| Befund | Änderung |
+|---|---|
+| M1-02 | Anmeldung: Sitzungszähler ersetzt durch den Ratenschutz aus P0 |
+| M1-08 | Salz-Abfrage und Zurücksetzen-Anforderung mit Ratenschutz; höchstens ein gültiger Token je Konto |
+| M1-07 | Antwort wird abgeschlossen, bevor der Mailversand beginnt |
+| M4-07 | Unbekannte Gerätekennung prüft gegen einen festen Vergleichswert |
+| M4-10 | Fünf Geräte je Konto; E-Mail und Oberflächenhinweis bei neuen Geräten |
+| M4-01 | bereits in P1 vollständig erledigt — hier nur nachgewiesen (A14) |
+
+### Warum kein Sitzungszähler
+
+Die alte Bremse zählte in `$_SESSION`. Wer das Cookie wegwarf, hatte wieder
+fünf Versuche frei; ein Programm, das gar kein Cookie annimmt, verbrauchte nie
+eines. Nachgewiesen: Zwölf Anmeldeversuche ohne Cookie werden jetzt ab dem
+elften abgewiesen — vorher liefen alle zwölf durch.
+
+Die Kontosperre als Nebenwirkung ist bewusst hingenommen: Wer eine Adresse
+kennt, kann das Konto fünfzehn Minuten lang aussperren. Die Alternative — nur
+nach IP zählen — ließe ein über viele Rechner verteiltes Durchprobieren einer
+einzelnen Adresse völlig ungebremst.
+
+### Warum keine Warteschlange für den Mailversand
+
+Auf dieser Installation gibt es keinen Cronjob; die Wartung läuft huckepack auf
+Anfragen, höchstens einmal täglich. Eine Warteschlange hätte den Link zum
+Zurücksetzen genau so lange liegen lassen, bis zufällig jemand eine Seite
+aufruft. Stattdessen wird die Antwort abgeschlossen, bevor der Versand beginnt
+— über `fastcgi_finish_request()` bzw. `litespeed_finish_request()`, sonst über
+Längenangabe und angekündigtes Verbindungsende.
+
+**Der Preis:** Auf Hosts ohne FPM oder LiteSpeed bleibt der PHP-Arbeitsprozess
+nach dem Abschluss der Antwort noch bis zum Zeitlimit des Mailversands belegt.
+Bei fünf Anforderungen je Stunde und Konto ist das klein, aber nicht null.
+Welcher Weg auf der eigenen Installation greift, steht auf der Wartungsseite
+unter **Umgebung**.
+
+### Nachweis — 116 Prüfungen gegen MariaDB und echten HTTP-Verkehr
+
+**M1-07, der entscheidende Fall.** Gegen einen Mailserver, der die Verbindung
+annimmt und nie antwortet (Zeitlimit 15 s):
+
+| Zweig | vorher zu erwarten | gemessen |
+|---|---|---|
+| vorhandenes Konto | ~15 s | **0,51 s** |
+| unbekannte Adresse | ~0,5 s | **0,51 s** |
+
+Abweichung 0,0 %. Gemessen auf einem Webserver **ohne**
+`fastcgi_finish_request` — also über den schwächeren der beiden Wege. Die
+Kopplung der Uhr kam unter denselben Bedingungen in 0,07 s zurück.
+
+**M4-07.** Bekannte Kennung mit falschem Schlüssel gegen unbekannte Kennung:
+75 ms zu 76 ms, Abweichung 1,1 %. Eine einzelne Passwortprüfung kostet auf
+derselben Maschine 113 ms — genau der Betrag, der vorher fehlte.
+
+**M1-02.** Fehlerdauer bei bekannter und unbekannter Adresse: 351 ms zu 351 ms.
+Auch das richtige Token wird während einer Sperre abgewiesen (die Sperre greift
+vor der Prüfung). Eine erfolgreiche Anmeldung leert die Zähler beider Töpfe.
+
+**M1-08.** Salz-Abfrage: Sperre greift beim 31. Aufruf, Antwortlängen beider
+Zweige identisch (43 Zeichen), Dauer 51 ms zu 51 ms. Zurücksetzen: nach
+beliebig vielen Anforderungen bleibt genau **ein** gültiger Token; die alte
+Fassung hätte drei gehabt. Eine gesperrte Anforderung zeigt dieselbe
+Antwortseite und legt nichts an.
+
+**M4-10.** Obergrenze greift auf beiden Wegen. Das virtuelle Gerät
+`manual-<konto>` zählt nicht mit. Fünf deaktivierte Geräte sperren das sechste
+— Deaktivieren gibt keinen Platz frei, Löschen schon. An der Grenze wird gar
+kein Kopplungscode erzeugt; wird trotzdem einer eingelöst, kommt 409
+`device_limit` und der Code **bleibt verbraucht** (M4-03 bleibt gewahrt).
+
+### Zwei Prüffälle, die erst falsch waren
+
+Beim Fensterablauf hatte nur die Konto-Zeile zurückdatiert werden sollen —
+`rate_erlaubt()` prüft aber beide Merkmale, und die IP trug die Fehlversuche
+der vorherigen Fälle. Der Fehlschlag war korrektes Verhalten aus einem anderen
+Grund als dem gemessenen.
+
+Ein zweiter Prüffall behauptete „deaktivierte Geräte geben keinen Platz frei",
+maß aber nur, dass ein viertes Gerät durchgeht. Neu gefasst: fünf deaktivierte
+Geräte sperren das sechste, und die Meldung nennt den Grund.
+
+### Offen aus diesem Paket
+
+Die Uhr zeigt bei 409 „Kopplung fehlgeschlagen (409)", weil `Pair.mc` nur 200
+und 404 unterscheidet. Eine eigene Meldung gehört nach P9, wo alle
+Uhr-Änderungen liegen.
 
 ---
 

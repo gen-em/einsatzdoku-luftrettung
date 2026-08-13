@@ -2,18 +2,103 @@
 declare(strict_types=1);
 
 /**
+ * DIE ANTWORT ABSCHLIESSEN, BEVOR LANGSAME ARBEIT BEGINNT.
+ *
+ * WARUM DAS HIER STEHT
+ * Bei "Passwort vergessen" ist der Antworttext fuer eine vorhandene und eine
+ * unbekannte Adresse absichtlich derselbe — die DAUER war es nicht: Bei einem
+ * vorhandenen Konto lief ein vollstaendiges Mailgespraech, sonst kam die
+ * Antwort sofort. Der Unterschied ist mit einer einzigen Anfrage je Adresse
+ * messbar und verraet dasselbe wie eine unterschiedliche Meldung, nur leiser.
+ *
+ * Die Loesung ist nicht, den schnellen Zweig kuenstlich zu bremsen (das
+ * verlangsamt jede Anfrage und schlaegt bei einem langsamen Mailserver
+ * trotzdem durch), sondern den Versand aus der messbaren Antwortzeit
+ * herauszunehmen: erst antworten, dann versenden.
+ *
+ * ZWEI WEGE, IN DIESER REIHENFOLGE
+ *   1. fastcgi_finish_request() (PHP-FPM) bzw. litespeed_finish_request()
+ *      (LiteSpeed). Beide beenden die Antwort verbindlich; das Skript laeuft
+ *      danach ohne Zuhoerer weiter. Das ist der belastbare Weg.
+ *   2. Sonst: Laenge nennen und Verbindungsende ankuendigen. Der Gegenpart
+ *      hat den Rumpf dann vollstaendig und wartet ueblicherweise nicht
+ *      weiter — aber "ueblicherweise" ist keine Zusicherung, weil ein
+ *      vorgelagerter Server puffern darf.
+ *
+ * Rueckgabe: true nur bei Weg 1. Wer die Gleichheit der Antwortzeit
+ * SICHERSTELLEN muss, prueft das ueber antwort_entkoppelbar() und legt bei
+ * false zusaetzlich eine Mindestdauer darunter.
+ *
+ * Kein Cronjob noetig — und bewusst auch keine Warteschlange: Auf dieser
+ * Installation laeuft die Wartung huckepack auf Anfragen, hoechstens einmal
+ * taeglich. Eine Warteschlange haette den Link zum Zuruecksetzen genau so
+ * lange liegen lassen, bis zufaellig jemand eine Seite aufruft.
+ */
+function antwort_entkoppelbar(): bool {
+    return function_exists('fastcgi_finish_request')
+        || function_exists('litespeed_finish_request');
+}
+
+function antwort_abschliessen(): bool {
+    // Ohne diese Zeile beendet PHP das Skript, sobald der Gegenpart die
+    // Verbindung schliesst — und genau das tut er hier gleich.
+    ignore_user_abort(true);
+
+    if (function_exists('fastcgi_finish_request')) {
+        while (ob_get_level() > 0) { @ob_end_flush(); }
+        @flush();
+        fastcgi_finish_request();
+        return true;
+    }
+    if (function_exists('litespeed_finish_request')) {
+        while (ob_get_level() > 0) { @ob_end_flush(); }
+        @flush();
+        litespeed_finish_request();
+        return true;
+    }
+
+    // Weg 2 braucht die Kopfzeilen. Sind sie schon raus, bleibt nur noch,
+    // die Puffer zu leeren.
+    if (headers_sent()) {
+        while (ob_get_level() > 0) { @ob_end_flush(); }
+        @flush();
+        return false;
+    }
+
+    // Alles bisher Ausgegebene einsammeln. Aeussere Puffer stehen im
+    // Ausgabestrom VOR den inneren, ob_get_clean() liefert aber von innen
+    // nach aussen — deshalb wird vorn angefuegt.
+    $inhalt = '';
+    while (ob_get_level() > 0) {
+        $stueck = ob_get_clean();
+        if ($stueck !== false) { $inhalt = $stueck . $inhalt; }
+    }
+    header('Connection: close');
+    header('Content-Length: ' . strlen($inhalt));
+    echo $inhalt;
+    @flush();
+    return false;
+}
+
+/**
  * Minimaler SMTPS-Versand (implizites TLS, z. B. Port 465 bei Stalwart).
  * Bewusst ohne Composer-Abhaengigkeit, damit es auf jedem Webspace laeuft.
  * Rueckgabe: true bei Erfolg, sonst false (Details im error_log).
+ *
+ * $zeitlimit ist die Frist fuer Verbindungsaufbau und jede einzelne Antwort
+ * des Mailservers. Der Vorgabewert gilt fuer Wege, bei denen niemand wartet.
+ * Wo doch jemand wartet — die Uhr bei der Kopplung —, gehoert ein kuerzeres
+ * Limit hin: Eine Kopplung darf nicht an einem langsamen Mailserver scheitern.
  */
-function smtp_send(string $toEmail, string $subject, string $textBody): bool {
+function smtp_send(string $toEmail, string $subject, string $textBody,
+                   int $zeitlimit = 15): bool {
     $cfg = (require __DIR__ . '/config.php')['smtp'];
 
     $fp = @stream_socket_client('ssl://' . $cfg['host'] . ':' . $cfg['port'],
-        $errno, $errstr, 15, STREAM_CLIENT_CONNECT,
+        $errno, $errstr, $zeitlimit, STREAM_CLIENT_CONNECT,
         stream_context_create(['ssl' => ['verify_peer' => true]]));
     if (!$fp) { error_log("SMTP connect: $errstr"); return false; }
-    stream_set_timeout($fp, 15);
+    stream_set_timeout($fp, $zeitlimit);
 
     $expect = function (string $code) use ($fp): bool {
         do { $line = fgets($fp, 1024); if ($line === false) return false; }

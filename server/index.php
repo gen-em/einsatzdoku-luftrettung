@@ -33,6 +33,12 @@ if ($selDay === null) {
     $q->execute([$userId, $userId, $userId]);
     $selDay = $q->fetchColumn() ?: null;
 }
+
+/* Neu hinzugekommene Geraete (M4-10). Die Startseite ist die Seite, auf der
+ * nach der Anmeldung jede/r landet — ein Hinweis, der nur im Geraete-Reiter
+ * stuende, erreichte genau die Person nicht, die dort nie hinsieht. Die
+ * eigentliche Benachrichtigung ist die E-Mail beim Koppeln (pair.php). */
+$neueGeraete = geraete_neu(db(), $userId);
 ?><!doctype html>
 <html lang="de">
 <head>
@@ -49,6 +55,19 @@ if ($selDay === null) {
   <?php ui_days_sidebar($selDay); ?>
 
   <main class="page">
+    <?php if ($neueGeraete): ?>
+      <p class="alert alert-warn">
+        <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
+        mit deinem Konto verbunden:
+        <?php $teile = [];
+              foreach ($neueGeraete as $g) {
+                  $teile[] = ($g['label'] ?? $g['device_id']) . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
+              }
+              echo e(implode(', ', $teile)); ?>.
+        Warst du das nicht, entferne
+        <?= count($neueGeraete) === 1 ? 'das Gerät' : 'die Geräte' ?> unter
+        <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.</p>
+    <?php endif; ?>
     <h1 id="daytitle">–</h1>
     <div id="loaderror" class="alert" hidden></div>
     <details class="daymeta" id="daymeta">

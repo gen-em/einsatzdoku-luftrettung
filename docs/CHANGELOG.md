@@ -10,7 +10,107 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 4.3.0] — 2026-08-08
+## [Web 4.4.0] — 2026-08-12
+
+Dieses Paket betrifft die Endpunkte, die **ohne Anmeldung** erreichbar sind:
+Anmeldung, Salz-Abfrage, Passwort-Zurücksetzen, Kopplung und Upload der Uhr. Sie
+alle sind Türen nach außen, und an allen fünf ließ sich bisher etwas ablesen
+oder etwas beliebig oft wiederholen.
+
+### Die Bremse bei der Anmeldung liegt nicht mehr im Browser des Aufrufers
+
+Nach fünf Fehlversuchen kamen dreißig Sekunden Pause — gezählt in der Sitzung.
+Wer das Cookie wegwarf, hatte wieder fünf Versuche frei; ein Programm, das gar
+kein Cookie annimmt, verbrauchte nie eines. Das war keine Bremse, sondern eine
+Bequemlichkeit gegen Vertippen.
+
+Gezählt wird jetzt in der Datenbank, **je Kontokennung und je IP-Adresse**:
+zehn Fehlversuche in fünfzehn Minuten, dann fünfzehn Minuten gesperrt. Die
+Meldung nennt, ab wann es wieder geht. Eine erfolgreiche Anmeldung setzt die
+Zähler zurück.
+
+Bewusst in Kauf genommen: Wer eine E-Mail-Adresse kennt, kann das zugehörige
+Konto durch Fehlversuche zeitweise sperren. Die Sperre ist kurz und ihr Ende
+steht in der Meldung. Nur nach IP zu zählen hieße, ein über viele Rechner
+verteiltes Durchprobieren einer einzelnen Adresse völlig ungebremst zu lassen.
+
+### Ratenschutz auch auf Salz-Abfrage und Passwort-Zurücksetzen
+
+Beide Endpunkte waren ohne Anmeldung und ohne jede Begrenzung erreichbar. Der
+eine taugte damit als Adressenprüfer im Großen, der andere zusätzlich als
+Mailschleuder auf fremde Postfächer. Gezählt wird jetzt jede Anfrage — beide
+Endpunkte kennen kein Scheitern, begrenzt wird die Menge: dreißig Salz-Abfragen
+je Viertelstunde, fünf Zurücksetzen-Anforderungen je Stunde.
+
+### Beim Zurücksetzen gilt immer nur der zuletzt verschickte Link
+
+Jede Anforderung legte bisher einen weiteren Token an, und alle blieben eine
+Stunde gültig. Wer den Knopf zehnmal drückte, hatte zehn gültige Links in der
+Welt, von denen jeder einzelne genügt. Jetzt entwertet ein neuer Link den
+vorherigen — es gibt zu jedem Zeitpunkt höchstens einen. Die E-Mail sagt das
+auch.
+
+### Behoben — Die Antwortzeit verriet, welche Konten es gibt
+
+Der Antworttext beim Zurücksetzen war für eine vorhandene und eine unbekannte
+Adresse absichtlich derselbe. **Die Dauer war es nicht:** Bei einem vorhandenen
+Konto lief ein vollständiges Mailgespräch, sonst kam die Antwort sofort. Eine
+einzige Anfrage je Adresse genügte, um Konten zu finden — dieselbe Auskunft wie
+eine unterschiedliche Meldung, nur leiser.
+
+Die Antwort wird jetzt **abgeschlossen, bevor der Versand beginnt**. Gemessen
+gegen einen Mailserver, der annimmt und nie antwortet (Zeitlimit fünfzehn
+Sekunden): beide Zweige 0,51 Sekunden, Unterschied 0,0 %. Vorher wären es
+15 Sekunden gegen 0,5 gewesen.
+
+Wo die PHP-Anbindung des Webspace das nicht verbindlich zusagen kann, steht das
+jetzt auf der Wartungsseite unter **Umgebung** — es ist die Eigenschaft, an der
+die Gleichheit beider Zweige hängt, und sie ließ sich sonst nirgends ablesen.
+
+### Behoben — Die Antwortzeit verriet auch, welche Geräte es gibt
+
+Dieselbe Lücke beim Upload der Uhr und bei der Anmeldung: Bei unbekannter
+Kennung kam die Abweisung sofort, bei bekannter lief erst eine
+Passwortprüfung. Der Unterschied war ohne jede Zugangsdaten messbar — und eine
+Gerätekennung ist die Hälfte dessen, was ein Upload braucht. Beide Wege prüfen
+jetzt auch im unbekannten Fall gegen einen festen Vergleichswert. Gemessen:
+Abweichung 1,1 % statt einer ganzen Passwortprüfung.
+
+### Höchstens fünf Geräte je Konto, und ein Hinweis bei jedem neuen
+
+Ein Gerät ist ein Satz Zugangsdaten. Ohne Obergrenze konnte ein Konto beliebig
+viele davon ansammeln — ein eingeschleustes Gerät stünde einfach als weitere
+Zeile in einer Liste, die niemand zählt.
+
+- **Fünf Geräte je Konto**, geprüft beim Koppeln *und* beim manuellen Anlegen.
+  Deaktivierte zählen mit, weil ihre Zugangsdaten bestehen bleiben; erst Löschen
+  gibt einen Platz frei. Das virtuelle Gerät „Manuelle Einträge" zählt nicht mit
+  — es steht schon in der Geräteliste nicht.
+- Ist die Grenze erreicht, wird **gar kein Kopplungscode mehr erzeugt**. Sonst
+  wäre der Code beim Einlösen verbraucht, ohne dass ein Gerät entsteht.
+- **E-Mail an den Kontoinhaber**, sobald ein Gerät gekoppelt wurde, mit
+  Gerätekennung, Zeitpunkt und dem Weg zum Entfernen. Sie erreicht die Person
+  auch dann, wenn sie sich gerade nicht anmeldet — und genau das ist der Fall,
+  um den es geht.
+- **Hinweis auf der Startseite und im Geräte-Reiter** für Geräte, die in den
+  letzten sieben Tagen hinzugekommen sind. Die zweite, langsamere Spur für alle,
+  die ihre Post nicht lesen.
+
+### Geändert
+
+- `smtp_send()` nimmt ein Zeitlimit entgegen. Bei der Kopplung steht es auf
+  fünf Sekunden: Die Uhr wartet auf die Antwort, und ihr Code ist bereits
+  verbraucht — eine Kopplung darf nicht an einem langsamen Mailserver scheitern.
+- Der Geräte-Reiter nennt den Zählstand („belegt: 3 von 5").
+- Die Anmeldeseite meldet eine Sperre der Salz-Abfrage jetzt als solche. Vorher
+  lief sie in den allgemeinen Fehlerzweig und behauptete, der Browser
+  unterstütze die nötige Verschlüsselung nicht.
+
+### Keine Datenbankänderung
+
+Dieses Paket kommt ohne Migration aus.
+
+
 
 ### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen
 
