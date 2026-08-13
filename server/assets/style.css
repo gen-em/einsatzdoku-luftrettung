@@ -194,6 +194,22 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
 /* Warnung: steht zwischen Hinweis (blau) und Fehler (rot) — fuer
    Handlungen, die noch nicht geschehen sind, aber unumkehrbar waeren */
 .alert-warn{background:var(--accent-light);border-color:#EFC9A0;color:#8A4A00}
+/* Passwortgüte (Baustein B9). Die Stufen sind bewusst nur vier plus
+   "zu schwach" — eine feinere Skala taeuscht eine Genauigkeit vor, die
+   eine Schaetzung nicht hat. */
+.pwquality{display:block;font-size:.85rem;margin:.2rem 0 .1rem;color:var(--muted)}
+.pwquality.pwq-0{color:#9E2226}
+.pwquality.pwq-1{color:#8A4A00}
+.pwquality.pwq-2{color:#8A4A00}
+.pwquality.pwq-3{color:#1E7A2E}
+.pwquality.pwq-4{color:#1E7A2E}
+
+/* Wartungsseite: Zeile einer Migration, die Daten vernichten wuerde und
+   deshalb NICHT ausgefuehrt wird (M6-01). Sie muss sich beim Ueberfliegen
+   der Tabelle von den uebrigen abheben — wer die Liste durchsieht, sucht
+   genau diese Zeile und nicht die neunzehn erledigten. */
+tr.warnzeile>td{background:var(--rot-light)}
+.loeschhinweis{color:#9E2226}
 /* Angaben, die verschluesselt vorliegen, sich aber nicht lesen lassen.
    Bewusst NICHT wie 'keine Angaben' (.dash) dargestellt — der
    Unterschied zwischen 'nichts erfasst' und 'nicht lesbar' ist der

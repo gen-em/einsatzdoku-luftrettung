@@ -25,7 +25,134 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P8b | Aufräumen, Bündel 3+4 | Web 4.5.2 | **erledigt** |
 | — | Nachträge aus dem Betrieb | Web 4.5.3 | **erledigt** |
 | P8c | Aufräumen, Bündel 5 und 6 | Web 4.6.0 | **erledigt** |
-| P9 | Größere Vorhaben | — | offen |
+| P9a | Einrichtung, Migrationen, Passwortgüte | Web 4.7.0 | **erledigt** |
+| P9b | Ableitungsrunden (M2-01, S7) | — | offen |
+| P9c | Formatkennung (M2-10), Uhr-App | — | offen |
+
+---
+
+## P9a — Einrichtung, Migrationen, Passwortgüte (Web 4.7.0)
+
+Die vier Befunde aus P9, die weder die Schlüsselableitung noch das Format des
+Chiffretexts berühren. Keine Schemaänderung.
+
+### Entschieden: P9 wird aufgeteilt
+
+P9 enthält die beiden gefährlichsten Änderungen des ganzen Reviews — die
+Rundenzahl der Schlüsselableitung (ein Fehler sperrt alle Konten gleichzeitig
+aus) und eine Formatkennung vor jedem Chiffretext (berührt jeden `pat_blob`).
+Sie zusammen mit vier harmlosen Befunden auszuliefern hieße, im Fehlerfall
+nicht zu wissen, woran es lag.
+
+Dazu kommt: Sechs Pakete (P3 bis P8c) sind auf der Testinstallation noch
+ungeprüft. Nach der Reihenfolge P9a → Testinstallation nachziehen → P9b → P9c
+steht im Fehlerfall jeweils eine überschaubare Menge zur Auswahl.
+
+| Paket | Inhalt | Version |
+|---|---|---|
+| P9a | M6-01, M1-11, M2-02, M2-03 | 4.7.0 |
+| P9b | M2-01 Schritte 2–4, S7 | 5.0.0 |
+| P9c | M2-10, M7-03, Pair.mc 409 | 5.1.0 + Uhr 1.7.0 |
+
+### Entschieden: nicht jede destruktive Migration prüft den Inhalt
+
+Der Befund verlangt, dass die Sprungprüfung destruktiver Migrationen nach dem
+Inhalt fragt statt nach der Struktur. Wörtlich umgesetzt hätte das zwei
+Migrationen dauerhaft blockiert, bei denen das Löschen der **Zweck** ist:
+`phase10_entfernen` (die Phase gibt es nicht mehr, ihre Zeitstempel sind
+bedeutungslos) und die Zeitzonen-Migration (kurzlebige Ratenschutz-Zähler).
+
+Deshalb zwei getrennte Angaben:
+
+* `zerstoert` — Klartext, was verlorenginge. Hebt die Zeile in der Vorschau
+  hervor. Tragen **alle** destruktiven Migrationen.
+* `inhalt` — die Spalten, deren Inhalt die Migration vernichten würde. Tragen
+  nur die, deren Spalten von Hand eingegebene Daten hielten: `loc_addr`,
+  `loc_lat`, `loc_lon`, `mission_no`, `site_desc`.
+
+Die Strukturprüfung in `skip` bleibt daneben bestehen — sie beantwortet die
+andere Frage, nämlich ob die Änderung überhaupt noch aussteht. Eine bereits
+gelöschte Spalte hat keinen Inhalt mehr und wäre sonst von einer leeren nicht
+zu unterscheiden.
+
+### Entschieden: eine blockierte Migration hält die Kette nicht an
+
+Ein **Fehler** bricht die Schleife ab, weil er auf halbem Weg stehengeblieben
+sein kann. Eine **blockierte** Migration hat dagegen nichts getan; die
+Datenbank steht exakt wie zuvor, als gäbe es sie nicht.
+
+Der Unterschied ist nicht akademisch: Hielte eine blockierte Migration die
+Kette an, käme auf einer Installation mit Altbestand in `site_desc` keine
+spätere Migration mehr durch — darunter die Sicherheitsbausteine aus
+`2026_08_08`. Ein Datenschutz, der die Sicherheitsupdates blockiert, wäre ein
+schlechter Tausch.
+
+Dazu ein **Ausweg**, den der Befund nicht verlangt: je blockierter Migration
+ein eigenes Häkchen. Ohne ihn säße der Betreiber fest — die Daten lassen sich
+nicht automatisch in den verschlüsselten Block überführen, er entsteht
+ausschließlich im Browser. Auf der Kommandozeile gibt es die Stufe bewusst
+nicht.
+
+### Entschieden: die Nachweiskennung steht im Dateinamen
+
+Ein Nachweis, der nur im **Inhalt** einer Datei mit festem Namen steht, ist bei
+Einfachhosting keiner: Dort liegt das Anwendungsverzeichnis im
+Web-Wurzelverzeichnis, und die Datei wäre über die Adresszeile abrufbar. Die
+Kennung steht deshalb im Dateinamen — 128 Bit Zufall, die nur nennen kann, wer
+das Verzeichnis sieht. Die `.htaccess` sperrt die Datei zusätzlich, als zweite
+Schranke.
+
+### Ein Fehler, den erst die Prüfung gezeigt hat
+
+Der erste Entwurf band die Kennung an die **Sitzung**. Die Prüfung im Container
+förderte zutage, dass damit jeder Aufruf der Seite eine weitere Datei liegen
+lässt — auch der eines Neugierigen, auch ein Vorschau-Abruf des Browsers. Wer
+danach ins Verzeichnis sieht, findet mehrere und weiß nicht, welche seine ist.
+
+Die Sitzungsbindung braucht es auch gar nicht: Die Kennung ist geheim, weil man
+das Verzeichnis sehen muss, um sie zu lesen. Eine vorhandene Datei wird jetzt
+übernommen statt ersetzt. Das schließt zugleich eine Lücke, die die erste
+Fassung geöffnet hätte: Wer die Datei bei jedem Aufruf neu schreiben ließe,
+könnte einem Betreiber mitten in der Einrichtung die Kennung unter den Händen
+wegziehen.
+
+### Entschieden: das Kontopasswort nur für die Sicherung, nicht für den Export
+
+Beide Dateipasswörter steigen von 8 auf 10 Zeichen und laufen über B9. Das
+Angebot, stattdessen das Kontopasswort zu verwenden, gilt aber nur für die
+Sicherung: Sie ist für einen selbst. Die Exportdatei ist ausdrücklich zum
+Weitergeben gedacht — wer sie mit seinem Kontopasswort verschlüsselt, gibt es
+dem Empfänger mit.
+
+Geprüft wird das Kontopasswort im Browser, ohne den Server zu fragen: Aus
+Passwort und Salz entsteht der Datenschlüssel, und mit dem muss sich die
+gespeicherte Hülle öffnen lassen.
+
+### Nachweis
+
+74 automatische Prüfungen, alle bestanden.
+
+* **M6-01 gegen eine echte Altinstallation:** Spalte `site_desc`
+  wiederhergestellt und teilweise gefüllt, dann die Wartungsseite über echten
+  HTTP-Verkehr bedient. Vorschau nennt Spalte und Zeilenzahl und ändert nichts;
+  Ausführen ohne Häkchen lässt Spalte, Daten und Verbuchung unangetastet und
+  lässt die **spätere** Migration trotzdem durchlaufen; Ausführen mit Häkchen
+  löscht und protokolliert die Freigabe; der zweite Lauf ist unauffällig.
+  Leere Zeichenketten zählen nicht als Inhalt, eine Spalte voller NULL ist eine
+  leere Spalte, eine fehlende Spalte wird übergangen.
+* **M1-11 als echte Ersteinrichtung:** eigener Webserver auf einer Kopie des
+  Verzeichnisses, Datenbank mit einer Fremdtabelle. Ohne Nachweis und mit
+  falschem Nachweis passiert nichts — und es gibt auch keine Auskunft darüber,
+  ob die Datenbankverbindung stünde. Mit richtigem Nachweis läuft die
+  Einrichtung durch, die Fremdtabelle bleibt unangetastet, die Nachweisdatei
+  wird entfernt, der erneute Aufruf ist gesperrt. Mehrfache Aufrufe aus
+  verschiedenen Sitzungen erzeugen genau eine Datei.
+* **B9:** Mindestlänge, Allerweltswörter (auch „Luftrettung1“ und
+  „Passwort123!“), Muster, Stärkestufen.
+
+**Nicht ohne Testinstallation prüfbar:** Darstellung der Stärkeanzeige, das
+Häkchen „Kontopasswort verwenden“ im Zusammenspiel mit dem Entsperrdialog, das
+Verhalten der `.htaccess` auf einem echten Apache.
 
 ---
 

@@ -261,6 +261,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
       <label>Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
+      <span class="pwquality" id="pwq"></span>
       <label>Wiederholen
         <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
       </label>
@@ -290,6 +291,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
       <label>Neues Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
+      <span class="pwquality" id="pwq"></span>
       <label>Wiederholen
         <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
       </label>
@@ -305,6 +307,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php if ($row && !$done): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<?php /* Passwortguete (Baustein B9). Er lag seit Web 4.0.0 fertig da und war
+         an keiner Stelle eingebunden — die Mindestlaenge stand hier als
+         HTML-Attribut und im Skript, die Staerkeanzeige gab es nicht (M2-02). */ ?>
+<script src="<?= asset('assets/pwquality.js') ?>"></script>
 <script>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
 const WRAP_RC = <?= json_encode($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
@@ -315,6 +321,19 @@ const form  = document.getElementById('pwform');
 // Inhaltsschluessel im sessionStorage wuerde nach der Anmeldung faelschlich
 // wiederverwendet und die Entschluesselung scheitern lassen.
 EdCrypto.clearSession();
+
+/* Passwortguete: Anzeige waehrend der Eingabe, Pruefung beim Absenden (M2-02).
+ *
+ * Die Laengenpruefung stand bisher zweimal da — als HTML-Attribut minlength
+ * und als Vergleich im Skript. Das Attribut haelt niemanden auf, der die
+ * Entwicklerwerkzeuge oeffnet, und der Vergleich sagte nur "zu kurz". Beides
+ * ersetzt jetzt EdPwQuality: dieselbe Regel wie an jeder anderen Stelle, mit
+ * einer Begruendung statt einer Zahl.
+ *
+ * Die Anzeige haengt an pw1; die Wiederholung braucht keine — sie soll gleich
+ * sein, nicht gut. */
+EdPwQuality.beobachte(document.getElementById('pw1'),
+                      document.getElementById('pwq'));
 
 /* ---- Erstvergabe: Schluessel erzeugen, anzeigen, bestaetigen ---------- */
 if (ERSTVERGABE) {
@@ -336,8 +355,9 @@ if (ERSTVERGABE) {
 
     const pw1 = document.getElementById('pw1').value;
     const pw2 = document.getElementById('pw2').value;
-    if (pw1.length < 10) { state.textContent = 'Mindestens 10 Zeichen.'; return; }
-    if (pw1 !== pw2)     { state.textContent = 'Die Passwörter stimmen nicht überein.'; return; }
+    const guete = EdPwQuality.pruefe(pw1);
+    if (!guete.erlaubt) { state.textContent = guete.meldung; return; }
+    if (pw1 !== pw2)    { state.textContent = 'Die Passwörter stimmen nicht überein.'; return; }
 
     try {
       state.textContent = 'Schlüssel werden erzeugt …';
@@ -413,8 +433,9 @@ if (ERSTVERGABE) {
       rcFeld.focus();
       return;
     }
-    if (pw1.length < 10) { state.textContent = 'Mindestens 10 Zeichen.'; return; }
-    if (pw1 !== pw2)     { state.textContent = 'Die Passwörter stimmen nicht überein.'; return; }
+    const guete = EdPwQuality.pruefe(pw1);
+    if (!guete.erlaubt) { state.textContent = guete.meldung; return; }
+    if (pw1 !== pw2)    { state.textContent = 'Die Passwörter stimmen nicht überein.'; return; }
 
     try {
       state.textContent = 'Wiederherstellungsschlüssel wird geprüft …';

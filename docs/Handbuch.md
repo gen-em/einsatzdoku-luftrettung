@@ -627,7 +627,9 @@ Datei und kann nicht auseinanderlaufen.
 
 Unter **⚙ Einstellungen → „Backup"** lädst du alle deine Daten als einzelne
 verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
-8 Zeichen, wird nirgends gespeichert (ohne Passwort ist die Datei wertlos).
+10 Zeichen, wird nirgends gespeichert. In dieser Datei stehen **alle
+geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
+die Hand bekommt, steht nur dieses Passwort.
 
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
@@ -638,6 +640,16 @@ Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Flugtage.
+
+**Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
+der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
+**„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
+gibt es ein Passwort weniger zu verwahren, und die Datei ist genauso geschützt
+wie die Daten in der Datenbank. Ob das Passwort stimmt, prüft der Browser
+selbst; der Server bekommt es nicht zu sehen.
+
+Nicht geeignet ist das Kontopasswort, wenn die Datei an jemand anderen gehen
+soll — dann bekommt der Empfänger das Anmeldepasswort mit.
 
 **Woher die Datei stammt, steht dabei.** Sobald die Sicherung geöffnet ist —
 also nach Eingabe des Backup-Passworts —, nennt eine Zeile das Konto und den
@@ -773,7 +785,10 @@ verhindert, dass Excel oder LibreOffice die Zelle als **Formel** ausführen.
 Zahlen sind ausgenommen, negative Werte bleiben also Zahlen. Die beiden
 Excel-Formate brauchen das nicht — dort entstehen echte Textzellen.
 
-**Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Das ist die
+**Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Mindestens zehn
+Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als beim Backup wird
+hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine Exportdatei ist
+zum Weitergeben gedacht. Das ist die
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
@@ -1015,6 +1030,17 @@ Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
 anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen können
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
+
+Ein Update, das eine Spalte löscht, ist seit 4.7.0 in der Liste **mit ⚠
+gekennzeichnet** und mit einem Satz versehen, was verlorenginge. Steht in einer
+solchen Spalte noch etwas, wird das Update **nicht ausgeführt** — die Zeile
+nennt stattdessen Spalte und Zeilenzahl. Alle übrigen Updates laufen trotzdem
+durch.
+
+Diese Daten lassen sich nicht automatisch in den verschlüsselten Block
+überführen; er entsteht ausschließlich im Browser. Wer sie behalten will, trägt
+sie vorher von Hand in den jeweiligen Einsatz ein (oder sichert sie außerhalb)
+und setzt danach das Häkchen an genau dieser einen Zeile.
 
 ---
 

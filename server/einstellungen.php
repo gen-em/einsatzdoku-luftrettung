@@ -542,11 +542,15 @@ if ($tab === 'geraete') {
       <input type="hidden" name="key_check" id="pw_keychk">
       <label>Aktuelles Passwort <input type="password" name="old" id="pw_old" required autocomplete="current-password"></label>
       <label>Neues Passwort (mind. 10 Zeichen) <input type="password" name="new1" id="pw_new1" required minlength="10" autocomplete="new-password"></label>
+      <span class="pwquality" id="pw_guete"></span>
       <label>Neues Passwort wiederholen <input type="password" name="new2" id="pw_new2" required autocomplete="new-password"></label>
       <button class="btn-primary">Passwort ändern</button>
       <span class="muted" id="pwstate"></span>
     </form>
     <script src="<?= asset('assets/crypto.js') ?>"></script>
+    <?php /* Passwortguete (Baustein B9) — dieselbe Regel wie bei Erstvergabe
+             und Zuruecksetzen (M2-02). */ ?>
+    <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
@@ -564,12 +568,17 @@ if ($tab === 'geraete') {
 
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
     const WRAP_PW = <?= json_encode($patWrapPw) ?>;
+    EdPwQuality.beobachte(document.getElementById('pw_new1'),
+                          document.getElementById('pw_guete'));
     document.getElementById('pwform').addEventListener('submit', async ev => {
       const f = ev.target;
       if (f.dataset.ready === '1') return;
       ev.preventDefault();
       const st = document.getElementById('pwstate');
       const oldPw = f.elements['old'].value, n1 = f.elements['new1'].value;
+      // Guete im SKRIPT pruefen, nicht nur als HTML-Attribut (M2-02).
+      const guete = EdPwQuality.pruefe(n1);
+      if (!guete.erlaubt) { st.textContent = guete.meldung; return; }
       if (n1 !== f.elements['new2'].value) { st.textContent = 'Neue Passwörter ungleich.'; return; }
       st.textContent = 'Schlüssel werden neu abgeleitet…';
       try {
@@ -979,12 +988,27 @@ if ($tab === 'geraete') {
 
     <h2>Exportieren</h2>
     <div class="settings-form">
-      <label>Backup-Passwort (mind. 8 Zeichen)
-        <input type="password" id="bpw1" minlength="8" autocomplete="new-password"></label>
-      <label>Passwort wiederholen
+      <?php /* WAS IN DER DATEI STEHT, GEHOERT VOR DIE PASSWORTWAHL (M2-03).
+               Vorher stand hier "ohne dieses Passwort ist die Datei wertlos" —
+               richtig, aber es beantwortet die falsche Frage. Wer ein Passwort
+               waehlt, muss wissen, WAS er damit schuetzt. */ ?>
+      <p class="alert alert-warn">In dieser Datei stehen <strong>alle geschützten
+         Angaben im Klartext</strong> — Namen, Geburtsdaten, Diagnosen,
+         Einsatzorte. Zwischen ihnen und jedem, der die Datei in die Hand
+         bekommt, steht <strong>nur dieses Passwort</strong>. Es wird nirgends
+         gespeichert und lässt sich nicht zurücksetzen.</p>
+      <label class="check"><input type="checkbox" id="bpwkonto">
+        Mein Kontopasswort verwenden</label>
+      <p class="muted small" id="bpwkontohinweis" hidden>Das Kontopasswort schützt
+         dieselben Angaben bereits in der Datenbank — die Datei wird dadurch
+         nicht schwächer geschützt, und es ist ein Passwort weniger zu
+         verwahren. <strong>Nicht</strong> geeignet, wenn die Datei an jemand
+         anderen gehen soll.</p>
+      <label>Backup-Passwort (mind. 10 Zeichen)
+        <input type="password" id="bpw1" minlength="10" autocomplete="new-password"></label>
+      <span class="pwquality" id="bpwguete"></span>
+      <label id="bpw2label">Passwort wiederholen
         <input type="password" id="bpw2" autocomplete="new-password"></label>
-      <p class="muted">Ohne dieses Passwort ist die Datei wertlos — es wird nirgends
-         gespeichert. Es darf, muss aber nicht dein Login-Passwort sein.</p>
       <button class="btn-primary" id="expbtn">Backup erstellen</button>
       <p class="muted" id="expstate" style="min-height:1.3em"></p>
     </div>
@@ -1011,8 +1035,10 @@ if ($tab === 'geraete') {
     <script src="<?= asset('assets/keyguard.js') ?>"></script>
     <script src="<?= asset('assets/unlock.js') ?>"></script>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
-             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt. */ ?>
+             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt;
+             pwquality.js die Guetepruefung des Backup-Passworts (B9, M2-03). */ ?>
     <script src="<?= asset('assets/patient.js') ?>"></script>
+    <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script>
     const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
     const PAT_KEY_CHECK = <?= json_encode($patKeyCheck) ?>;
@@ -1036,13 +1062,70 @@ if ($tab === 'geraete') {
     document.getElementById('lockwarn_unlock').addEventListener('click', () => ck());
     ck();
 
+    /* ---- Kontopasswort als Backup-Passwort anbieten (M2-03, D4) ----------
+     *
+     * WARUM DAS SICHER GEHT, OHNE DEN SERVER ZU FRAGEN
+     * Das Kontopasswort liegt hier nicht vor — die Sitzung führt nur die
+     * abgeleiteten Schlüssel. Wer es benutzen will, tippt es also erneut ein.
+     * Ob es stimmt, lässt sich im Browser selbst feststellen: Aus Passwort und
+     * Salz entsteht der Datenschlüssel, und mit dem muss sich die gespeicherte
+     * Hülle öffnen lassen. Passt es nicht, ist es das falsche Passwort.
+     *
+     * WARUM ES NUR HIER ANGEBOTEN WIRD UND NICHT BEIM EXPORT
+     * Eine Sicherung ist für einen selbst. Eine Exportdatei ist ausdrücklich
+     * zum Weitergeben gedacht — wer sie mit seinem Kontopasswort verschlüsselt,
+     * gibt es dem Empfänger mit. */
+    const bpw1 = document.getElementById('bpw1');
+    const bpw2 = document.getElementById('bpw2');
+    const bpwKonto = document.getElementById('bpwkonto');
+    const bpwGuete = document.getElementById('bpwguete');
+    EdPwQuality.beobachte(bpw1, bpwGuete);
+
+    bpwKonto.addEventListener('change', () => {
+      const an = bpwKonto.checked;
+      document.getElementById('bpwkontohinweis').hidden = !an;
+      // Die Wiederholung entfällt: Ein falsch getipptes Kontopasswort fällt
+      // unten beim Öffnen der Hülle auf, nicht erst beim Öffnen der Datei.
+      document.getElementById('bpw2label').hidden = an;
+      bpw1.parentElement.firstChild.textContent = an
+        ? 'Kontopasswort'
+        : 'Backup-Passwort (mind. 10 Zeichen)';
+      bpwGuete.hidden = an;
+      bpw1.value = '';
+      expState.textContent = '';
+    });
+
+    /** Prüft das eingegebene Passwort und liefert es zurück — oder null. */
+    async function backupPasswort() {
+      const pw = bpw1.value;
+      if (bpwKonto.checked) {
+        if (pw === '') { expState.textContent = 'Bitte das Kontopasswort eingeben.'; return null; }
+        if (!PAT_WRAP) {
+          expState.textContent = 'Für dieses Konto liegt keine Schlüsselhülle vor — '
+                               + 'bitte ein eigenes Backup-Passwort wählen.';
+          return null;
+        }
+        expState.textContent = 'Kontopasswort wird geprüft…';
+        try {
+          const k = await EdCrypto.deriveKeys(pw, KDF_SALT);
+          await EdCrypto.decrypt(k.dataKeyHex, PAT_WRAP);
+        } catch (e) {
+          expState.textContent = 'Das ist nicht dein Kontopasswort. Es wurde keine '
+                               + 'Datei erzeugt.';
+          return null;
+        }
+        return pw;
+      }
+      const guete = EdPwQuality.pruefe(pw);
+      if (!guete.erlaubt) { expState.textContent = guete.meldung; return null; }
+      if (pw !== bpw2.value) { expState.textContent = 'Die Passwörter stimmen nicht überein.'; return null; }
+      return pw;
+    }
+
     // ---- Export: Daten holen, entschlüsseln, versiegeln, herunterladen ----
     document.getElementById('expbtn').addEventListener('click', async () => {
-      const pw = document.getElementById('bpw1').value;
-      if (pw.length < 8 || pw !== document.getElementById('bpw2').value) {
-        expState.textContent = 'Passwörter ungleich oder kürzer als 8 Zeichen.';
-        return;
-      }
+      const pw = await backupPasswort();
+      if (pw === null) { return; }
       const key = await ck();
       if (!key) { expState.textContent = 'Entschlüsselung gesperrt — siehe Hinweis oben.'; return; }
       try {

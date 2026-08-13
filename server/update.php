@@ -26,6 +26,35 @@ if (php_sapi_name() === 'cli') {
  *           Datenbank nicht noetig ist (z. B. frisch mit aktuellem Schema
  *           installiert) -> wird als "uebersprungen" verbucht
  * 'sql'   : Liste der auszufuehrenden Statements
+ * 'run'   : alternativ eine Funktion statt einer Anweisungsliste
+ *
+ * ---- Zwei Angaben fuer destruktive Migrationen (M6-01) ---------------------
+ *
+ * 'zerstoert' : Klartext, WAS unwiderruflich verlorengeht. Allein diese
+ *               Angabe hebt die Migration in der Vorschau hervor.
+ * 'inhalt'    : Liste [Tabelle, Spalte, Beschreibung] der Spalten, deren
+ *               INHALT diese Migration vernichten wuerde. Steht dort etwas
+ *               drin, wird die Migration NICHT ausgefuehrt, sondern gemeldet.
+ *
+ * WARUM BEIDE UND NICHT EINE
+ * Nicht jede destruktive Migration darf am Inhalt scheitern. Bei
+ * 2026_07_19_phase10_entfernen IST das Loeschen der Zweck, und die Werte sind
+ * bedeutungslos geworden — eine Inhaltspruefung wuerde die Migration dauerhaft
+ * blockieren und damit genau das Gegenteil bewirken. Die Inhaltspruefung gilt
+ * deshalb nur dort, wo eine Spalte VON HAND EINGEGEBENE Daten enthielt und
+ * die Migration davon ausgeht, dass sie anderswo gerettet wurden.
+ *
+ * WARUM DAS NOETIG IST
+ * Fuer die Betreiberinstallation ist jeder dieser Faelle dokumentiert
+ * erledigt. Das Projekt liegt aber offen: Eine zweite Station verliert die
+ * betroffenen Spalten in dem Moment, in dem jemand die Wartungsseite oeffnet
+ * und den Knopf drueckt — ohne je gelesen zu haben, dass sie vorher etwas
+ * haette retten muessen.
+ *
+ * Die STRUKTURPRUEFUNG in 'skip' bleibt daneben bestehen: Sie beantwortet die
+ * andere Frage, naemlich ob die Aenderung ueberhaupt noch aussteht. Eine
+ * bereits geloeschte Spalte hat keinen Inhalt mehr — ohne 'skip' waere sie
+ * damit von einer vollen nicht zu unterscheiden.
  */
 $MIGRATIONS = [
     [
@@ -117,6 +146,12 @@ $MIGRATIONS = [
     [
         'id'    => '2026_07_19_phase10_entfernen',
         'label' => 'Phase 10 abgeschafft: alte Zeitstempel löschen, Einsatzende = Phase 9',
+        'zerstoert' => 'Alle Zeitstempel der Phase 10 werden gelöscht.',
+        // BEWUSST OHNE Inhaltspruefung: Das Loeschen IST der Zweck. Die Phase
+        // gibt es nicht mehr (JSON-Vertrag, PHASE_LABELS), ihre Zeitstempel
+        // sind bedeutungslos, und der Einsatzschluss wird eine Zeile darueber
+        // aus Phase 9 nachgetragen. Eine Inhaltspruefung wuerde die Migration
+        // genau auf den Installationen blockieren, auf denen sie gebraucht wird.
         'sql'   => [
             "UPDATE missions m
                JOIN (SELECT mission_id, MAX(occurred_at) AS t FROM mission_phases
@@ -306,6 +341,17 @@ $MIGRATIONS = [
     [
         'id'    => '2026_07_21_pflicht_e2e',
         'label' => 'Pflicht-Verschlüsselung: Einsatzort wandert in den verschlüsselten Block (Klartext-Altdaten entfallen), Felder Diagnose/Alter, Modul-Schalter entfallen',
+        'zerstoert' => 'Die Klartext-Spalten des Einsatzorts (Adresse, Koordinaten) '
+                     . 'werden gelöscht. Ein automatischer Umzug in den verschlüsselten '
+                     . 'Block ist nicht möglich — pat_blob entsteht ausschließlich im '
+                     . 'Browser, der Server hat den Schlüssel nach Bauart nicht.',
+        'inhalt' => [
+            ['missions', 'loc_addr', 'Einsatzort im Klartext'],
+            ['missions', 'loc_lat',  'Einsatzort-Koordinate'],
+            ['missions', 'loc_lon',  'Einsatzort-Koordinate'],
+        ],
+        // users.pat_enabled/pat_fields stehen bewusst NICHT in der Liste: Das
+        // sind Modulschalter, keine eingegebenen Daten.
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
@@ -478,6 +524,11 @@ $MIGRATIONS = [
     [
         'id'    => '2026_07_28_kdf_ver_entfernt',
         'label' => 'Spalte users.kdf_ver entfernt (wurde geschrieben, aber nie gelesen)',
+        'zerstoert' => 'Die Spalte users.kdf_ver wird gelöscht.',
+        // OHNE Inhaltspruefung: Die Spalte trug eine Versionskennung, die nie
+        // ein Codepfad gelesen hat. Sie ist per Definition gefuellt und per
+        // Definition bedeutungslos — eine Inhaltspruefung wuerde hier jede
+        // Installation blockieren, ohne dass irgendetwas zu retten waere.
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
@@ -493,6 +544,8 @@ $MIGRATIONS = [
     [
         'id'    => '2026_07_29_einsatznummer_verschluesselt',
         'label' => 'Einsatznummer wandert in den verschlüsselten pat_blob',
+        'zerstoert' => 'Die Spalte missions.mission_no wird gelöscht.',
+        'inhalt' => [['missions', 'mission_no', 'Einsatznummer im Klartext']],
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
@@ -541,6 +594,10 @@ $MIGRATIONS = [
     [
         'id'    => '2026_08_05_site_desc_entfernt',
         'label' => 'Beschreibung Einsatzort: Klartextspalte entfernen (liegt seit Web 3.3.0 im verschlüsselten Block)',
+        'zerstoert' => 'Die Spalte missions.site_desc wird gelöscht. Auf einer '
+                     . 'Installation, die den Klartextbestand nicht vorher gerettet '
+                     . 'hat, sind die Beschreibungen des Einsatzorts danach weg.',
+        'inhalt' => [['missions', 'site_desc', 'Beschreibung des Einsatzorts im Klartext']],
         'skip'  => function (PDO $pdo): bool {
             $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
                               WHERE table_schema = DATABASE()
@@ -555,10 +612,11 @@ $MIGRATIONS = [
             // pat_blob entsteht ausschliesslich im Browser.
             //
             // ACHTUNG, DIE SPALTE WIRD GELOESCHT: Auf einer Installation, die
-            // den Klartextbestand NICHT vorher gerettet hat, gehen die
-            // Beschreibungen des Einsatzorts hier verloren. Die Pruefung auf
-            // Inhalt vor destruktiven Migrationen folgt; bis dahin gilt der
-            // Rat auf der Wartungsseite: vorher eine Sicherung erstellen.
+            // den Klartextbestand NICHT vorher gerettet hat, gingen die
+            // Beschreibungen des Einsatzorts hier verloren. Seit Web 4.7.0
+            // fangen 'zerstoert' und 'inhalt' oben genau diesen Fall ab: Steht
+            // in der Spalte noch etwas, wird sie nicht geloescht, sondern
+            // gemeldet (M6-01).
             "ALTER TABLE missions DROP COLUMN site_desc",
         ],
     ],
@@ -674,6 +732,12 @@ $MIGRATIONS = [
     [
         'id'    => '2026_08_13_zeitzonen_umstellung',
         'label' => 'Zeitzonen-Umstellung: Ratenschutz-Zähler aus der Zeit davor entfernen',
+        'zerstoert' => 'Ratenschutz-Zähler mit einem Fenster in der Zukunft werden '
+                     . 'gelöscht (laufende Anmeldesperren enden dadurch sofort).',
+        // OHNE Inhaltspruefung: Das Loeschen IST der Zweck, und die Zeilen sind
+        // kurzlebige Zaehler, keine Daten. Eine Pruefung wuerde die Migration
+        // ausgerechnet dort blockieren, wo Zeilen aus der alten Zeitrechnung
+        // liegen — also genau im Anwendungsfall.
         /* WARUM ES DIESE MIGRATION GIBT
          *
          * Web 4.5.2 hat die Zeitzone der Datenbankverbindung ausdruecklich auf
@@ -764,10 +828,74 @@ $ausfuehren = $istCli
     || ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'run');
 if ($ausfuehren && !$istCli) { csrf_check(); }
 
+/* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
+ *
+ * Liefert je Spalte aus 'inhalt', wie viele Zeilen dort etwas stehen haben.
+ * Eine leere Rueckgabe heisst: Es ist nichts zu verlieren.
+ *
+ * Gezaehlt wird NICHT NULL und nicht leer — eine Spalte voller NULL-Werte ist
+ * dasselbe wie eine leere Spalte, und ein leerer Text ist keine Angabe.
+ *
+ * Fehlt die Spalte bereits, wird sie uebergangen: Dann hat die Migration ihre
+ * Arbeit getan, und die Frage stellt sich nicht mehr. Das ist auch der Grund,
+ * warum 'skip' danebenstehen bleibt — ohne die Strukturpruefung waere eine
+ * bereits geloeschte Spalte von einer leeren nicht zu unterscheiden.
+ */
+function inhalt_zaehlen(PDO $pdo, array $spalten): array
+{
+    $gefunden = [];
+    foreach ($spalten as [$tabelle, $spalte, $was]) {
+        $q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.columns
+                            WHERE table_schema = DATABASE()
+                              AND table_name = ? AND column_name = ?');
+        $q->execute([$tabelle, $spalte]);
+        if ((int)$q->fetchColumn() === 0) { continue; }   // Spalte gibt es nicht mehr
+
+        /* Tabellen- und Spaltenname stehen fest im Code dieser Datei und
+         * kommen von nirgendwo sonst her; sie lassen sich in einer
+         * vorbereiteten Anweisung nicht als Parameter uebergeben. Die
+         * Ruecksicherung ist die Abfrage oben: Was nicht in
+         * information_schema steht, kommt hier nicht an. */
+        $c = $pdo->query("SELECT COUNT(*) FROM `$tabelle`
+                          WHERE `$spalte` IS NOT NULL AND `$spalte` <> ''")->fetchColumn();
+        if ((int)$c > 0) { $gefunden[] = [$tabelle . '.' . $spalte, (int)$c, $was]; }
+    }
+    return $gefunden;
+}
+
+/** Kurztext fuer die Anzeige einer Inhaltspruefung. */
+function inhalt_text(array $gefunden): string
+{
+    $teile = [];
+    foreach ($gefunden as [$spalte, $zahl, $was]) {
+        $teile[] = $spalte . ': ' . $zahl . ' Zeile' . ($zahl === 1 ? '' : 'n')
+                 . ' (' . $was . ')';
+    }
+    return implode(', ', $teile);
+}
+
+/* Welche destruktiven Migrationen sollen trotz Inhalt laufen?
+ *
+ * Der gewoehnliche Knopf fuehrt sie NICHT aus. Wer die Daten anderswo
+ * gesichert hat, hakt die betroffene Migration einzeln an — das ist die
+ * zweite Stufe aus D10, und sie ist bewusst kein globales "trotzdem":
+ * Angehakt wird genau die eine Migration, deren Meldung man gerade gelesen
+ * hat.
+ *
+ * Auf der Kommandozeile gibt es die Stufe nicht. Dort blockiert eine
+ * Migration mit Inhalt immer und nennt den Weg ueber die Wartungsseite —
+ * ein Argument "--force" waere zu leicht aus einer Anleitung abgeschrieben.
+ */
+$forcieren = [];
+if (!$istCli && $ausfuehren && isset($_POST['forcieren']) && is_array($_POST['forcieren'])) {
+    foreach ($_POST['forcieren'] as $fid) { $forcieren[(string)$fid] = true; }
+}
+
 $applied = $pdo->query('SELECT id FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN);
-$results = [];   // [id, label, status, detail]
+$results = [];   // [id, label, status, detail, zerstoert, blockiertId]
 $ranSomething = false;
 $offen = 0;      // Zahl der Migrationen, die tatsaechlich etwas taeten
+$blockiert = 0;  // destruktive Migrationen, die wegen Inhalt nicht laufen (M6-01)
 
 if (!$ausfuehren) {
     /* ---- VORSCHAU: nur lesen, nichts schreiben ------------------------
@@ -785,34 +913,74 @@ if (!$ausfuehren) {
             $nichtNoetig = isset($m['skip']) && ($m['skip'])($pdo);
         } catch (Throwable $ex) {
             $results[] = [$m['id'], $m['label'], 'warn',
-                          'Zustand nicht feststellbar: ' . $ex->getMessage()];
+                          'Zustand nicht feststellbar: ' . $ex->getMessage(),
+                          $m['zerstoert'] ?? null, null];
             $offen++;
             continue;
         }
         if ($nichtNoetig) {
             $results[] = [$m['id'], $m['label'], 'ok',
-                          'Nicht nötig (Schema bereits aktuell) — wird beim Ausführen als erledigt vermerkt.'];
+                          'Nicht nötig (Schema bereits aktuell) — wird beim Ausführen als erledigt vermerkt.',
+                          null, null];
             $offen++;
             continue;
         }
+        // Destruktive Migration mit Inhalt: in der Vorschau BENENNEN, was
+        // verlorenginge — genau dafuer ist die Vorschau da (M6-01).
+        $gefunden = isset($m['inhalt']) ? inhalt_zaehlen($pdo, $m['inhalt']) : [];
+        if ($gefunden) {
+            $results[] = [$m['id'], $m['label'], 'stopp',
+                          'WIRD NICHT AUSGEFÜHRT — dort stehen noch Daten: '
+                          . inhalt_text($gefunden) . '.',
+                          $m['zerstoert'] ?? null, $m['id']];
+            $blockiert++;
+            continue;
+        }
         $results[] = [$m['id'], $m['label'], 'todo',
-                      'STEHT AN — wird beim Ausführen angewendet.'];
+                      'STEHT AN — wird beim Ausführen angewendet.',
+                      $m['zerstoert'] ?? null, null];
         $offen++;
     }
 } else {
     /* ---- AUSFUEHRUNG ---------------------------------------------------- */
     foreach ($MIGRATIONS as $m) {
         if (in_array($m['id'], $applied, true)) {
-            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.'];
+            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.', null, null];
             continue;
         }
 
         if (isset($m['skip']) && ($m['skip'])($pdo)) {
             $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "skipped")')
                 ->execute([$m['id']]);
-            $results[] = [$m['id'], $m['label'], 'ok', 'Nicht nötig (Schema bereits aktuell) — als erledigt vermerkt.'];
+            $results[] = [$m['id'], $m['label'], 'ok',
+                          'Nicht nötig (Schema bereits aktuell) — als erledigt vermerkt.', null, null];
             continue;
         }
+
+        /* ---- Destruktive Migration mit Inhalt: NICHT ausfuehren (M6-01) ----
+         *
+         * Und zwar OHNE die Schleife zu verlassen. Das ist der Unterschied zu
+         * einem FEHLER weiter unten: Eine blockierte Migration hat NICHTS
+         * getan — die Datenbank steht exakt so da wie zuvor, als gaebe es sie
+         * nicht. Ein Fehler dagegen kann auf halbem Weg stehengeblieben sein,
+         * und dann ist jede nachfolgende Migration eine Wette.
+         *
+         * Der Unterschied ist wichtig: Wuerde eine blockierte Migration die
+         * Kette anhalten, kaeme auf einer Installation mit Altbestand in
+         * site_desc keine spaetere Migration mehr durch — darunter die
+         * Sicherheitsbausteine aus 2026_08_08. Ein Datenschutz, der die
+         * Sicherheitsupdates blockiert, waere ein schlechter Tausch.
+         */
+        $gefunden = isset($m['inhalt']) ? inhalt_zaehlen($pdo, $m['inhalt']) : [];
+        if ($gefunden && !isset($forcieren[$m['id']])) {
+            $results[] = [$m['id'], $m['label'], 'stopp',
+                          'NICHT AUSGEFÜHRT — dort stehen noch Daten: '
+                          . inhalt_text($gefunden) . '. Es wurde nichts geändert.',
+                          $m['zerstoert'] ?? null, $m['id']];
+            $blockiert++;
+            continue;
+        }
+        $freigegeben = $gefunden && isset($forcieren[$m['id']]);
 
         try {
             if (isset($m['run'])) { ($m['run'])($pdo); }
@@ -854,12 +1022,20 @@ if (!$ausfuehren) {
                 $detail = 'Angewendet: ' . $gemacht . ' von ' . $gesamt . ' Teilschritten '
                         . 'ausgeführt, ' . $uebersprungen . ' waren bereits erledigt.';
             }
-            $results[] = [$m['id'], $m['label'], 'ok', $detail];
+            if ($freigegeben) {
+                // Ausdruecklich benennen, was gerade passiert ist — diese Zeile
+                // ist spaeter der einzige Beleg dafuer, dass jemand die
+                // Freigabe bewusst gesetzt hat.
+                $detail = 'AUF AUSDRÜCKLICHE FREIGABE ausgeführt, obwohl Daten '
+                        . 'betroffen waren (' . inhalt_text($gefunden) . '). ' . $detail;
+            }
+            $results[] = [$m['id'], $m['label'], 'ok', $detail, $m['zerstoert'] ?? null, null];
             $ranSomething = true;
         } catch (Throwable $ex) {
             // Nicht verbuchen -> naechster Aufruf versucht es erneut
             $results[] = [$m['id'], $m['label'], 'fail',
-                          'Fehler: ' . $ex->getMessage() . ' — Migration wurde NICHT als erledigt vermerkt.'];
+                          'Fehler: ' . $ex->getMessage() . ' — Migration wurde NICHT als erledigt vermerkt.',
+                          $m['zerstoert'] ?? null, null];
             break;   // Reihenfolge wahren: nachfolgende Migrationen nicht ausfuehren
         }
     }
@@ -867,8 +1043,14 @@ if (!$ausfuehren) {
 
 // Kommandozeile: Ergebnis als Text ausgeben und beenden — ohne HTML-Geruest.
 if ($istCli) {
-    foreach ($results as [$id, $label, $status, $detail]) {
+    foreach ($results as [$id, $label, $status, $detail, $zerstoert, $blockId]) {
         printf("%-6s %-46s %s\n", strtoupper($status), $id, $detail);
+        // Auf der Kommandozeile gibt es die Freigabe nicht (siehe oben) —
+        // dafuer den Weg dorthin.
+        if ($status === 'stopp') {
+            printf("%-6s %-46s %s\n", '', '',
+                   '-> Daten sichern, dann auf der Wartungsseite einzeln freigeben.');
+        }
     }
     exit($ranSomething ? 0 : 0);
 }
@@ -910,6 +1092,17 @@ if ($istCli) {
          <a href="einstellungen.php?t=backup">Einstellungen → Backup</a> und
          dauert eine Minute — eine verlorene Spalte dagegen ist verloren.</p>
     <?php endif; ?>
+    <?php if ($blockiert > 0): ?>
+      <p class="alert"><strong><?= (int)$blockiert ?> Migration(en) werden
+         NICHT ausgeführt</strong>, weil sie Spalten löschen würden, in denen
+         noch Daten stehen. Unten ist je Eintrag genannt, um welche Spalte und
+         wie viele Zeilen es geht.<br>
+         Diese Daten lassen sich <strong>nicht automatisch</strong> in den
+         verschlüsselten Block überführen — er entsteht ausschließlich im
+         Browser. Wer sie behalten will, trägt sie vorher von Hand in den
+         jeweiligen Einsatz ein (oder sichert sie außerhalb) und gibt die
+         Migration danach einzeln frei.</p>
+    <?php endif; ?>
   <?php elseif ($ranSomething): ?>
     <p class="alert alert-info">Updates wurden angewendet — Details unten.</p>
   <?php else: ?>
@@ -920,29 +1113,48 @@ if ($istCli) {
     <table class="data">
       <thead><tr><th>Update</th><th>Status</th><th>Details</th></tr></thead>
       <tbody>
-      <?php foreach ($results as [$id, $label, $status, $detail]): ?>
-        <tr>
+      <?php foreach ($results as [$id, $label, $status, $detail, $zerstoert, $blockId]): ?>
+        <tr<?= $status === 'stopp' ? ' class="warnzeile"' : '' ?>>
           <td><?= e($label) ?><br><span class="muted"><code><?= e($id) ?></code></span></td>
           <td><?= match ($status) {
-                    'ok'   => '✔',
-                    'todo' => '●',
-                    'warn' => '!',
+                    'ok'    => '✔',
+                    'todo'  => '●',
+                    'warn'  => '!',
+                    'stopp' => '⚠',
                     default => '✖',
                   } ?></td>
-          <td><?= e($detail) ?></td>
+          <td>
+            <?= e($detail) ?>
+            <?php /* Destruktive Migration: benennen, WAS verlorenginge — und
+                     zwar an der Zeile, nicht in einem allgemeinen Hinweis
+                     ueber der Tabelle (M6-01). */ ?>
+            <?php if ($zerstoert !== null): ?>
+              <br><strong class="loeschhinweis">Löscht Daten:</strong>
+              <span class="muted"><?= e($zerstoert) ?></span>
+            <?php endif; ?>
+            <?php if ($blockId !== null && !$ausfuehren): ?>
+              <br><label class="check">
+                <input type="checkbox" name="forcieren[]" form="migform"
+                       value="<?= e($blockId) ?>">
+                Daten sind gesichert — diese eine Migration trotzdem ausführen
+              </label>
+            <?php endif; ?>
+          </td>
         </tr>
       <?php endforeach; ?>
       </tbody>
     </table>
 
-    <?php if (!$ausfuehren && $offen > 0): ?>
-      <form method="post" action="update.php" style="margin-top:1rem">
+    <?php if (!$ausfuehren && ($offen > 0 || $blockiert > 0)): ?>
+      <form method="post" action="update.php" id="migform" style="margin-top:1rem">
         <?= csrf_field() ?><input type="hidden" name="action" value="run">
         <button type="submit" class="btn-primary" style="width:auto">
           Updates jetzt anwenden</button>
       </form>
       <p class="muted">Der Aufruf dieser Seite ändert nichts. Erst dieser Knopf
-         führt die Updates aus.</p>
+         führt die Updates aus.<?php if ($blockiert > 0): ?> Die mit ⚠
+         gekennzeichneten Einträge bleiben dabei unangetastet, solange ihr
+         Häkchen nicht gesetzt ist.<?php endif; ?></p>
     <?php elseif ($ausfuehren): ?>
       <p class="muted">Bereits erledigte Updates werden übersprungen —
          ein erneuter Lauf ist ungefährlich.</p>

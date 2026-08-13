@@ -60,6 +60,80 @@ $errors = [];
 $done = false;
 $setupLink = '';
 
+/* ---- Nachweis von Dateisystemzugriff (M1-11, D9) --------------------------
+ *
+ * WAS DIESE SEITE OHNE IHN IST
+ * Ein unangemeldeter Endpunkt, der eine Datenbank einrichtet, einen
+ * Administrator anlegt und einen Einrichtungslink dafuer ausgibt. Wer eine
+ * frisch hochgeladene Installation vor ihrem Betreiber findet, richtet sie
+ * ein — und ist Administrator. Das Zeitfenster ist kurz, aber es ist genau
+ * das Fenster, in dem niemand hinsieht.
+ *
+ * WAS IHN SCHLIESST
+ * Die Seite legt eine Datei mit einer Zufallskennung an und verlangt diese
+ * Kennung im Formular. Wer sie nennen kann, hat Zugriff auf das Verzeichnis —
+ * und wer den hat, koennte die Anwendung ohnehin beliebig veraendern. Der
+ * Nachweis kostet den Betreiber einen Blick in den Dateimanager seines
+ * Hosters und den Angreifer den Angriff.
+ *
+ * DIE KENNUNG STEHT IM DATEINAMEN, nicht nur im Inhalt. Das ist der
+ * eigentliche Kniff: Liegt das Verzeichnis im Web-Wurzelverzeichnis — was bei
+ * Einfachhosting die Regel ist —, waere eine Datei mit festem Namen ueber die
+ * Adresszeile abrufbar, und der Nachweis waere keiner. Einen Namen aus 128 Bit
+ * Zufall kann dagegen nur nennen, wer das Verzeichnis SIEHT; ein
+ * Verzeichnislisting gibt es bei keinem verbreiteten Webserver von selbst.
+ * Die .htaccess sperrt die Datei zusaetzlich — als zweite Schranke, nicht als
+ * erste.
+ *
+ * DIE KENNUNG HAENGT AN DER DATEI, NICHT AN DER SITZUNG. Ein erster Entwurf
+ * legte sie in der Sitzung ab und erzeugte je Sitzung eine eigene Datei. Die
+ * Pruefung im Container hat gezeigt, wohin das fuehrt: Jeder Aufruf der Seite
+ * — auch der eines Neugierigen, auch ein Vorschau-Abruf des Browsers — liess
+ * eine weitere Datei liegen. Wer danach ins Verzeichnis sieht, findet mehrere
+ * und weiss nicht, welche seine ist.
+ *
+ * Die Sitzungsbindung braucht es auch gar nicht: Die Kennung ist deshalb
+ * geheim, weil man das Verzeichnis SEHEN muss, um sie zu lesen — nicht, weil
+ * sie an eine Sitzung gebunden waere. Eine vorhandene Datei wird deshalb
+ * uebernommen statt ersetzt. Das haelt zugleich einen Aerger fern, den die
+ * Sitzungsfassung geoeffnet haette: Wer die Datei bei jedem Aufruf neu
+ * schreiben liesse, koennte einem Betreiber mitten in der Einrichtung die
+ * Kennung unter den Haenden wegziehen.
+ */
+$nachweisMuster = 'install-nachweis-';
+$nachweisOk     = true;
+$nachweis       = '';
+
+$vorhanden = glob(__DIR__ . '/' . $nachweisMuster . '*.txt') ?: [];
+sort($vorhanden);
+foreach ($vorhanden as $i => $datei) {
+    if (!preg_match('/' . preg_quote($nachweisMuster, '/') . '([0-9a-f]{32})\.txt$/',
+                    $datei, $tr)) { continue; }
+    if ($nachweis === '') { $nachweis = $tr[1]; }
+    elseif ($tr[1] !== $nachweis) { @unlink($datei); }   // Rest aus alten Staenden
+}
+if ($nachweis === '') { $nachweis = bin2hex(random_bytes(16)); }   // 128 Bit
+
+$nachweisDatei = __DIR__ . '/' . $nachweisMuster . $nachweis . '.txt';
+
+if (!is_writable(__DIR__)) {
+    // Ohne Schreibrecht kann die Einrichtung ohnehin keine config.php
+    // anlegen. Das gehoert an den Anfang und nicht ans Ende.
+    $nachweisOk = false;
+} elseif (!file_exists($nachweisDatei)) {
+    $inhalt = $nachweis . "\n\n"
+            . "Diese Datei gehoert zur Ersteinrichtung der Einsatzdoku.\n"
+            . "Die Zeichenfolge oben ist im Einrichtungsformular einzutragen.\n"
+            . "Sie beweist, dass die einrichtende Person Zugriff auf dieses\n"
+            . "Verzeichnis hat. Nach der Einrichtung wird die Datei geloescht;\n"
+            . "sie kann auch jederzeit von Hand geloescht werden.\n";
+    if (@file_put_contents($nachweisDatei, $inhalt, LOCK_EX) === false) {
+        $nachweisOk = false;
+    } else {
+        @chmod($nachweisDatei, 0640);
+    }
+}
+
 /* ---- Formular verarbeiten ---------------------------------------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($_SESSION['inst_csrf'] ?? '', $_POST['csrf'] ?? '')) {
@@ -74,13 +148,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $baseUrl = rtrim($in('base_url'), '/');
     $timezone = $in('timezone') ?: 'Europe/Berlin';
     $logoPath = $in('logo_path') ?: 'assets/images/gen-em_logo_helicopter.svg';
-    $dropExisting = !empty($_POST['drop_existing']);
 
     $smtp = [
         'host' => $in('smtp_host'), 'port' => (int)($in('smtp_port') ?: 465),
         'user' => $in('smtp_user'), 'pass' => (string)($_POST['smtp_pass'] ?? ''),
         'from' => $in('smtp_from'), 'from_name' => $in('smtp_from_name') ?: 'Einsatzdoku',
     ];
+
+    /* Nachweis zuerst pruefen (M1-11).
+     *
+     * Vor allem anderen: Wer ihn nicht hat, soll auch keine Rueckmeldung
+     * darueber bekommen, ob eine Datenbankverbindung zustande kaeme. Der
+     * Vergleich laeuft ueber hash_equals — die Kennung ist ein Geheimnis.
+     *
+     * Grosszuegig beim Format: Wer statt der Zeichenfolge den ganzen
+     * Dateinamen hineinkopiert, hat verstanden, was gemeint war. */
+    $eingabe = strtolower(trim($in('nachweis')));
+    $eingabe = preg_replace('/^' . preg_quote($nachweisMuster, '/') . '/', '', $eingabe);
+    $eingabe = preg_replace('/\.txt$/', '', (string)$eingabe);
+    if (!hash_equals($nachweis, (string)$eingabe)) {
+        $errors[] = 'Der Nachweis stimmt nicht. Bitte die Zeichenfolge aus dem '
+                  . 'Dateinamen im Anwendungsverzeichnis eintragen (siehe unten).';
+    }
 
     // Validierung
     if ($dbHost === '' || $dbName === '' || $dbUser === '') {
@@ -120,17 +209,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Schema einspielen + Admin anlegen
     if (!$errors && $pdo !== null) {
         try {
-            if ($dropExisting) {
-                // Tabellenliste direkt aus schema.sql lesen — so bleibt sie
-                // automatisch vollstaendig, wenn spaeter Tabellen dazukommen.
-                preg_match_all('/CREATE TABLE(?:\s+IF NOT EXISTS)?\s+`?(\w+)`?/i',
-                    (string)file_get_contents($schemaPath), $mm);
-                $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
-                foreach ($mm[1] as $t) {
-                    $pdo->exec("DROP TABLE IF EXISTS `{$t}`");
-                }
-                $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
-            }
+            /* HIER STAND EIN HAEKCHEN "Vorhandene Tabellen vorher loeschen"
+             * (M1-11, D9). Es ist ersatzlos entfallen.
+             *
+             * Es war die einzige Stelle im ganzen Projekt, an der ein
+             * unangemeldeter Aufruf jede Tabelle der Datenbank haette leeren
+             * koennen — abgesichert durch nichts als die Annahme, dass diese
+             * Seite nur einmal und nur vom Betreiber aufgerufen wird.
+             *
+             * Ersetzt wurde es NICHT durch eine Sicherheitsabfrage, sondern
+             * gestrichen: Im Betrieb wird es nicht gebraucht. Wer eine
+             * Datenbank mit Altbestand neu einrichten will, legt eine leere
+             * Datenbank an oder leert die vorhandene mit dem Werkzeug seines
+             * Hosters — beides bewusste Handlungen an der richtigen Stelle. */
             run_sql_file($pdo, $schemaPath);
 
             // Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
@@ -147,8 +238,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Throwable $ex) {
             $errors[] = 'Beim Anlegen der Tabellen/des Admins ist ein Fehler aufgetreten: '
                       . $ex->getMessage()
-                      . ' — Tipp: eine leere Datenbank verwenden oder oben '
-                      . '„vorhandene Tabellen löschen" anhaken.';
+                      . ' — Tipp: eine leere Datenbank verwenden. Bestehende '
+                      . 'Tabellen werden von der Einrichtung bewusst nicht mehr '
+                      . 'gelöscht.';
         }
     }
 
@@ -170,6 +262,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             @chmod($configPath, 0640);
             file_put_contents($lockPath, 'installed ' . date('c') . "\n");
+            // Nachweisdatei hat ihren Zweck erfuellt (M1-11). Sie bleibt nicht
+            // liegen — eine Datei mit einem Geheimnis im Namen soll nicht
+            // laenger existieren als noetig.
+            @unlink($nachweisDatei);
             $done = true;
         }
     }
@@ -205,11 +301,12 @@ if ($done) {
     exit;
 }
 
-render_form($_POST ?? [], $errors);
+render_form($_POST ?? [], $errors, $nachweis, $nachweisMuster, $nachweisOk);
 
 
 /* ---- Templates ---------------------------------------------------------- */
-function render_form(array $v, array $errors): void {
+function render_form(array $v, array $errors, string $nachweis,
+                     string $nachweisMuster, bool $nachweisOk): void {
     $val = fn(string $k, string $d = ''): string => h((string)($v[$k] ?? $d));
     $guessUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'einsatz.example.de');
     ob_start(); ?>
@@ -230,13 +327,35 @@ function render_form(array $v, array $errors): void {
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">
 
       <fieldset>
+        <legend>Nachweis</legend>
+        <?php if (!$nachweisOk): ?>
+          <p class="alert">Im Anwendungsverzeichnis lässt sich keine Datei anlegen.
+             Damit kann die Einrichtung weder den Nachweis erzeugen noch später
+             <code>config.php</code> schreiben. Bitte Schreibrechte auf das
+             Verzeichnis <code><?= h(basename(__DIR__)) ?></code> setzen und die
+             Seite neu laden.</p>
+        <?php else: ?>
+          <p class="muted small">Im Anwendungsverzeichnis liegt jetzt eine Datei, deren
+             Name mit <code><?= h($nachweisMuster) ?></code> beginnt. Trage die
+             Zeichenfolge aus dem Dateinamen hier ein (oder den ganzen Dateinamen,
+             oder den Inhalt der Datei — alle drei enthalten dieselbe Angabe).</p>
+          <p class="muted small">Das belegt, dass du Zugriff auf dieses Verzeichnis
+             hast. Ohne diesen Nachweis könnte jemand, der die frisch hochgeladene
+             Installation vor dir findet, sich selbst als Administrator eintragen.</p>
+          <label>Zeichenfolge aus dem Dateinamen
+            <input name="nachweis" value="<?= $val('nachweis') ?>" required
+                   autocomplete="off" spellcheck="false"></label>
+        <?php endif; ?>
+      </fieldset>
+
+      <fieldset>
         <legend>Datenbank</legend>
         <label>Host <input name="db_host" value="<?= $val('db_host', 'localhost') ?>" required></label>
         <label>Datenbank-Name <input name="db_name" value="<?= $val('db_name') ?>" required></label>
         <label>Benutzer <input name="db_user" value="<?= $val('db_user') ?>" required></label>
         <label>Passwort <input type="password" name="db_pass"></label>
-        <label class="check"><input type="checkbox" name="drop_existing" value="1">
-          Vorhandene Tabellen vorher löschen (Achtung: löscht alle Daten dieser DB)</label>
+        <p class="muted small">Bitte eine <strong>leere</strong> Datenbank verwenden.
+           Vorhandene Tabellen werden nicht gelöscht.</p>
       </fieldset>
 
       <fieldset>

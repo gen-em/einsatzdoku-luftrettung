@@ -5,7 +5,7 @@
  * Verschlüsselung via zip.js) ist seit Paket E3 mit umgesetzt.
  *
  * Erwartet aus der Seite: PAT_WRAP, KDF_SALT, CSRF, APP_TZ, WEB_VERSION,
- * KONTO_NAME, KONTO_MAIL, EdCrypto, EdUnlock, EdPat,
+ * KONTO_NAME, KONTO_MAIL, EdCrypto, EdUnlock, EdPat, EdPwQuality,
  * ImportProfile, XLSX (vendor/xlsx.full.min.js), zip (vendor/zipjs.min.js),
  * edConfirm (confirm.js).
  *
@@ -958,16 +958,28 @@
         return key;
     }
 
-    /** Passwortfelder müssen übereinstimmen, Mindestlänge 8 — sonst bleibt
-     *  der Knopf gesperrt mit Begründung (1.1). */
+    /** Passwortfelder müssen übereinstimmen und die Güteprüfung bestehen —
+     *  sonst bleibt der Knopf gesperrt mit Begründung (1.1).
+     *
+     *  Die Mindestlänge lag hier bei 8 und damit unter der des Kontos (10),
+     *  obwohl beide dieselben Angaben schützen: In dieser Datei stehen die
+     *  Patientendaten im Klartext, sobald der Haken gesetzt ist. Seit Web
+     *  4.7.0 gilt überall dieselbe Regel aus EdPwQuality (M2-03, D4).
+     *
+     *  KEIN Angebot, das Kontopasswort zu verwenden — anders als bei der
+     *  Sicherung. Eine Exportdatei ist zum Weitergeben gedacht; wer sie mit
+     *  seinem Kontopasswort verschlüsselt, gibt es dem Empfänger mit. */
     function syncPasswordGate() {
         var on = $('exp_pw').checked;
         $('exp_pw_fields').hidden = !on;
         var reason = '';
         if (on) {
             var p1 = $('exp_pw1').value, p2 = $('exp_pw2').value;
-            if (p1.length < 8) { reason = 'Passwort muss mindestens 8 Zeichen haben.'; }
+            var g = EdPwQuality.pruefe(p1);
+            if (!g.erlaubt)     { reason = g.meldung; }
             else if (p1 !== p2) { reason = 'Passwörter stimmen nicht überein.'; }
+            EdPwQuality.anzeige($('exp_pw_guete'), g);
+            if (p1 === '') { $('exp_pw_guete').textContent = ''; }
         }
         $('exp_go').disabled = !!reason;
         // Nur die eigene Begruendung setzen bzw. wieder wegnehmen. Ein
@@ -998,7 +1010,8 @@
         var patient = $('exp_pat').checked;
         var pwOn = $('exp_pw').checked;
         var password = pwOn ? $('exp_pw1').value : null;
-        if (pwOn && (password.length < 8 || password !== $('exp_pw2').value)) {
+        if (pwOn && (!EdPwQuality.pruefe(password).erlaubt
+                     || password !== $('exp_pw2').value)) {
             syncPasswordGate();
             return;
         }

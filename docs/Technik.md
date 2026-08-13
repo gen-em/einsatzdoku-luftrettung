@@ -1054,9 +1054,10 @@ Die Bausteine im Einzelnen:
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
 | Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Sicherungslauf) und schreibt je Einsatz `_pat` und `_patState`. |
+| Migrationsschutz | `update.php` (`inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Sicherung. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
-| Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. |
+| Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
 
 **Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`
 in `validate_lib.php`): 40 bis 60000 Zeichen, für alle vier Schreibwege
@@ -1301,6 +1302,25 @@ Zugang ohne Passwort an und zeigt auf der Erfolgsseite einen 24 h gültigen
 Einmal-Link auf `pw_handling.php`, über den Passwort und
 Wiederherstellungsschlüssel im Browser entstehen. Nach Erfolg sperrt
 `install.lock`; `install.php` danach löschen.
+
+**Dateizugriffsnachweis (seit 4.7.0, M1-11):** Der Installer legt beim ersten
+Aufruf eine Datei `install-nachweis-<32 Hexzeichen>.txt` im Verzeichnis
+`server/` an und verlangt diese Kennung im Formular. Sie steht im **Dateinamen**
+und nicht nur im Inhalt — bei Einfachhosting liegt `server/` im
+Web-Wurzelverzeichnis, und eine Datei mit festem Namen wäre abrufbar. Die
+`.htaccess` sperrt sie zusätzlich.
+
+Die Kennung hängt an der **Datei**, nicht an der Sitzung: Eine vorhandene wird
+übernommen. Sonst ließe jeder Aufruf der Seite eine weitere Datei liegen, und
+niemand wüsste mehr, welche gilt. Nach erfolgreicher Einrichtung wird die Datei
+gelöscht; sie darf auch jederzeit von Hand entfernt werden (der nächste Aufruf
+legt eine neue an).
+
+Ein Häkchen „Vorhandene Tabellen vorher löschen“ gibt es **nicht mehr** — es
+war die einzige Stelle im Projekt, an der ein unangemeldeter Aufruf jede
+Tabelle der Datenbank hätte leeren können. Für eine Neuinstallation auf einer
+belegten Datenbank: leere Datenbank anlegen oder die vorhandene beim Hoster
+leeren.
 
 **Deploy schlägt fehl:** Actions-Log lesen. `ENOTFOUND` = `FTP_SERVER`-Secret
 prüfen (nur Hostname, kein Schema/Pfad). Auth-Fehler = Zugangsdaten;

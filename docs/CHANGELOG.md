@@ -10,6 +10,130 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.7.0] — 2026-08-13
+
+Paket P9a der Review-Umsetzung: die vier Befunde aus P9, die weder die
+Schlüsselableitung noch das Format des Chiffretexts berühren. Keine
+Schemaänderung. P9b (Ableitungsrunden) und P9c (Formatkennung, Uhr-App)
+folgen getrennt — die beiden gefährlichsten Änderungen des ganzen Reviews
+sollen einzeln prüfbar bleiben.
+
+### Migrationen löschen keine Spalte mehr, in der noch etwas steht
+
+Vier Migrationen entfernen Spalten, und alle vier gehen davon aus, dass ihr
+Inhalt anderswo gerettet wurde. Für die Betreiberinstallation stimmt das und
+ist dokumentiert. Das Projekt liegt aber offen: Eine zweite Station verlor die
+betroffenen Spalten in dem Moment, in dem jemand die Wartungsseite öffnete und
+den Knopf drückte — ohne je gelesen zu haben, dass vorher etwas zu retten
+gewesen wäre.
+
+Die Migrationsliste kennt jetzt zwei zusätzliche Angaben. `zerstoert`
+beschreibt in Klartext, was verlorenginge, und hebt die Zeile in der Vorschau
+hervor. `inhalt` nennt die Spalten, deren Inhalt die Migration vernichten
+würde — steht dort etwas, wird sie **nicht ausgeführt**, sondern mit Spalte und
+Zeilenzahl gemeldet.
+
+**Nicht jede destruktive Migration prüft den Inhalt**, und das ist Absicht. Bei
+`phase10_entfernen` und der Zeitzonen-Migration ist das Löschen der Zweck; eine
+Inhaltsprüfung hätte sie genau dort blockiert, wo sie gebraucht werden. Geprüft
+wird nur, wo eine Spalte von Hand eingegebene Daten hielt: `loc_addr`,
+`loc_lat`, `loc_lon`, `mission_no`, `site_desc`.
+
+Zwei Punkte, die sich beim Bauen ergaben:
+
+* Eine blockierte Migration **hält die Kette nicht an**, anders als ein Fehler.
+  Sie hat nichts getan; die Datenbank steht exakt wie zuvor. Andernfalls käme
+  auf einer Installation mit Altbestand in `site_desc` keine spätere Migration
+  mehr durch — darunter die Sicherheitsbausteine aus `2026_08_08`. Ein
+  Datenschutz, der die Sicherheitsupdates blockiert, wäre ein schlechter Tausch.
+* Es gibt einen **Ausweg**: je blockierter Migration ein eigenes Häkchen
+  „Daten sind gesichert — diese eine Migration trotzdem ausführen“. Ohne ihn
+  säße der Betreiber fest. Auf der Kommandozeile gibt es die Stufe bewusst
+  nicht; dort steht nur der Weg zur Wartungsseite. Ein `--force` wäre zu leicht
+  aus einer Anleitung abgeschrieben.
+
+Wurde eine Migration freigegeben, sagt die Ergebniszeile das ausdrücklich —
+sie ist später der einzige Beleg dafür, dass jemand die Entscheidung bewusst
+getroffen hat.
+
+### Die Einrichtung kann keine Datenbank mehr leeren, und Fremde können sie nicht ausführen
+
+Der Einrichtungs-Assistent hatte ein Häkchen „Vorhandene Tabellen vorher
+löschen“. Es war die einzige Stelle im Projekt, an der ein **unangemeldeter**
+Aufruf jede Tabelle der Datenbank hätte leeren können — abgesichert durch
+nichts als die Annahme, dass diese Seite nur einmal und nur vom Betreiber
+geöffnet wird. Es ist ersatzlos entfallen: Wer mit Altbestand neu einrichten
+will, legt eine leere Datenbank an oder leert die vorhandene beim Hoster.
+Beides sind bewusste Handlungen an der richtigen Stelle.
+
+Dieselbe Annahme trug auch den Rest der Seite. Wer eine frisch hochgeladene
+Installation vor ihrem Betreiber findet, richtete sie ein und war
+Administrator. Deshalb legt die Seite jetzt eine Datei im Anwendungsverzeichnis
+an und verlangt deren Kennung im Formular. Wer sie nennen kann, hat Zugriff
+auf das Verzeichnis — und wer den hat, könnte die Anwendung ohnehin beliebig
+verändern.
+
+**Die Kennung steht im Dateinamen, nicht nur im Inhalt.** Bei Einfachhosting
+liegt das Verzeichnis im Web-Wurzelverzeichnis; eine Datei mit festem Namen
+wäre über die Adresszeile abrufbar, und der Nachweis wäre keiner. Einen Namen
+aus 128 Bit Zufall kann nur nennen, wer das Verzeichnis sieht. Die `.htaccess`
+sperrt die Datei zusätzlich — als zweite Schranke, nicht als erste.
+
+Beim Prüfen zeigte sich ein Fehler im ersten Entwurf: Die Kennung hing an der
+Sitzung, und **jeder** Aufruf der Seite ließ eine weitere Datei liegen. Wer
+danach ins Verzeichnis sieht, findet mehrere und weiß nicht, welche seine ist.
+Die Kennung hängt jetzt an der Datei; eine vorhandene wird übernommen statt
+ersetzt. Das hält zugleich einen Ärger fern, den die erste Fassung geöffnet
+hätte: Wer die Datei bei jedem Aufruf neu schreiben ließe, könnte einem
+Betreiber mitten in der Einrichtung die Kennung unter den Händen wegziehen.
+
+### Die Passwortprüfung wird endlich benutzt
+
+Baustein B9 (`assets/pwquality.js`) entstand in P0 und lag seither an **keiner
+einzigen Stelle** eingebunden da. Die Mindestlänge stand stattdessen als
+HTML-Attribut und als Längenvergleich im Skript — ein Attribut hält niemanden
+auf, der die Entwicklerwerkzeuge öffnet, und „zu kurz“ ist keine Begründung.
+
+Jetzt an vier Stellen: Erstvergabe, Zurücksetzen, Passwortwechsel und die
+beiden Dateipasswörter. Überall dieselbe Regel, mit Stärkeanzeige während der
+Eingabe und einem Satz dazu, warum ein Passwort abgelehnt wird.
+
+### Dateipasswörter: mindestens zehn Zeichen, und das Kontopasswort ist erlaubt
+
+Sicherung (`.edbak`) und Export-Archiv verlangten acht Zeichen — weniger als
+das Konto, obwohl in beiden Dateien dieselben Angaben stehen, im Export sogar
+im Klartext. Beide liegen jetzt bei zehn und laufen über dieselbe Prüfung.
+
+Beim **Backup** lässt sich zusätzlich das Kontopasswort verwenden. Ob es
+stimmt, stellt der Browser selbst fest: Aus Passwort und Salz entsteht der
+Datenschlüssel, und mit dem muss sich die gespeicherte Hülle öffnen lassen. Der
+Server wird dafür nicht gefragt.
+
+Beim **Export-Archiv** wird das bewusst **nicht** angeboten: Diese Datei ist
+ausdrücklich zum Weitergeben gedacht. Wer sie mit seinem Kontopasswort
+verschlüsselt, gibt es dem Empfänger mit.
+
+Der Hinweis über dem Backup-Passwortfeld sagt außerdem jetzt, **was** in der
+Datei steht — alle geschützten Angaben im Klartext — statt nur, dass die Datei
+ohne Passwort wertlos sei. Das beantwortete die falsche Frage: Wer ein Passwort
+wählt, muss wissen, was er damit schützt.
+
+### Behobene Review-Befunde
+
+M6-01, M1-11, M2-02, M2-03.
+
+### Geprüft
+
+74 automatische Prüfungen, alle bestanden: 24 zur Wartungsseite (Inhaltsprüfung
+gegen eine Datenbank mit gefüllter `site_desc`-Spalte, über echten
+HTTP-Verkehr), 23 zum Einrichter (eigener Webserver auf einer Kopie des
+Verzeichnisses, echte Ersteinrichtung gegen eine Datenbank mit Fremdtabelle),
+20 zur Passwortprüfung, 7 zur Inhaltszählung.
+
+Nicht ohne Testinstallation prüfbar: Darstellung der Stärkeanzeige, das
+Häkchen „Kontopasswort verwenden“ im Zusammenspiel mit dem Entsperrdialog und
+das Verhalten der `.htaccess` auf einem echten Apache.
+
 ## [Web 4.6.0] — 2026-08-13
 
 Paket P8c der Review-Umsetzung: Bündel 5 (Leistung) und Bündel 6. Zehn Befunde,

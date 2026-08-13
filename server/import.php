@@ -160,8 +160,9 @@ foreach ($defs->fetchAll() as $d) {
         <label><input type="checkbox" id="exp_pw"> Mit Passwort schützen (AES-256)</label>
       </div>
       <div class="rolechecks" id="exp_pw_fields" hidden>
-        <label>Passwort (mind. 8 Zeichen)
-          <input type="password" id="exp_pw1" minlength="8" autocomplete="new-password"></label>
+        <label>Passwort (mind. 10 Zeichen)
+          <input type="password" id="exp_pw1" minlength="10" autocomplete="new-password"></label>
+        <span class="pwquality" id="exp_pw_guete"></span>
         <label>Passwort wiederholen
           <input type="password" id="exp_pw2" autocomplete="new-password"></label>
       </div>
@@ -181,6 +182,8 @@ foreach ($defs->fetchAll() as $d) {
     <script src="<?= asset('assets/keyguard.js') ?>"></script>
     <script src="<?= asset('assets/unlock.js') ?>"></script>
     <script src="<?= asset('assets/html.js') ?>"></script>
+    <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
+    <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
