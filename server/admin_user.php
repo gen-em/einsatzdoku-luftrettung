@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
-if ($userRole !== 'admin') { http_response_code(403); exit('Nur für Admins.'); }
+// Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
+// eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
+require_admin();
 
 $uid = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $notice = null; $error = null;
@@ -34,14 +36,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Name geändert.';
     }
     if ($action === 'email') {
-        $email = trim($_POST['email'] ?? '');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Bitte eine gültige E-Mail-Adresse angeben.';
+        $email = email_pruefen($_POST['email'] ?? '');
+        if ($email === null) {
+            $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
         } else {
             try {
                 db()->prepare('UPDATE users SET email = ? WHERE id = ?')->execute([$email, $uid]);
                 $notice = 'E-Mail-Adresse geändert.';
-            } catch (PDOException $ex) { $error = 'Diese E-Mail-Adresse wird bereits verwendet.'; }
+            } catch (PDOException $ex) {
+                /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
+                 * Vorher wurde JEDER Datenbankfehler so gemeldet — eine volle
+                 * Platte, eine abgerissene Verbindung, ein Rechteproblem: alles
+                 * erschien als Dublette und schickte die Fehlersuche
+                 * zuverlaessig in die falsche Richtung. */
+                if (ist_dublettenfehler($ex)) {
+                    $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
+                } else {
+                    error_log('admin_user email: ' . $ex->getMessage());
+                    $error = 'Die E-Mail-Adresse konnte nicht gespeichert werden. '
+                           . 'Es wurde nichts geändert.';
+                }
+            }
         }
     }
     if ($action === 'user_delete') {

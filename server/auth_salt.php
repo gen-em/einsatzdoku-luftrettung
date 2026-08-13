@@ -41,7 +41,9 @@ $t0 = microtime(true);
 const SALT_MINDESTDAUER = 0.05;
 
 $b = json_decode(file_get_contents('php://input'), true);
-$email = strtolower(trim((string)($b['email'] ?? '')));
+// Gemeinsame Schreibweise (M1-13). Bisher stand die Normalisierung hier
+// als einzige Stelle richtig — jetzt an allen acht Stellen dieselbe.
+$email = email_normalisieren($b['email'] ?? '');
 
 /* Sperre VOR jeder Arbeit pruefen. Der Endpunkt ist ohne Anmeldung erreichbar
  * und beantwortet je Aufruf die Frage "gibt es dieses Konto?" — nicht ueber

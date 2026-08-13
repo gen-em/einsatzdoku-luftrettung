@@ -214,6 +214,29 @@ Dasselbe gilt für „Passwort vergessen": Wer den Knopf zu oft drückt, bekommt
 eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
 sie verrät nie, ob es zu einer Adresse ein Konto gibt.
 
+**Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
+`Max@Beispiel.de` und `max@beispiel.de` sind dasselbe Konto.
+
+**Der Link aus der E-Mail braucht Cookies.** Beim ersten Öffnen nimmt die Seite
+ihn aus der Adresszeile — er soll weder im Verlauf des Browsers noch in
+Serverprotokollen stehen bleiben. Wer Cookies für die Seite blockiert, bekommt
+statt der Passwortseite den Hinweis „Cookie nötig". Ein neuer Link hilft dann
+nicht; die Einstellung muss geändert werden.
+
+**Ein Passwortwechsel meldet alle anderen Sitzungen ab.** Wer sein Passwort
+ändert, ist danach überall sonst ausgeloggt — auf dem zweiten Rechner, auf dem
+Tablet, in einem anderen Browser. Am Gerät, an dem der Wechsel stattfindet,
+bleibt man angemeldet. Wer den Verdacht hat, dass jemand anders Zugriff hat,
+erreicht damit genau das Gewünschte. Noch offene Links zum Zurücksetzen werden
+gleichzeitig ungültig.
+
+Die abgemeldete Seite sagt, warum: „Das Passwort dieses Kontos wurde geändert."
+Ebenso, wenn ein Konto von der Verwaltung gelöscht wurde — dann endet die
+Sitzung beim nächsten Klick, nicht erst beim nächsten Anmelden.
+
+**Rollenänderungen wirken sofort.** Wird jemandem die Admin-Rolle gegeben oder
+genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig.
+
 ---
 
 ## 4. Einsätze ansehen und bearbeiten
@@ -899,6 +922,23 @@ NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
 NutzerIn öffnet die Editierseite: Rolle wechseln, E-Mail ändern und die
 verbundenen Geräte einsehen (aktivieren/deaktivieren/löschen — Löschen lässt
 hochgeladene Daten bestehen).
+
+**Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
+zutrifft:
+
+- *Nutzer angelegt — Setz-Link per E-Mail verschickt.* Alles in Ordnung.
+- *Es gibt bereits ein Konto mit dieser E-Mail-Adresse.* Es wurde nichts
+  angelegt.
+- *Nutzer angelegt — die E-Mail konnte NICHT verschickt werden.* Das Konto
+  steht, nur der Versand scheiterte. Die Seite zeigt dann den Einladungslink
+  an; er ist 24 Stunden gültig und muss auf einem anderen Weg weitergegeben
+  werden. **Nur an die Person selbst** — wer den Link hat, kann das Passwort
+  des Kontos setzen. Die Ursache des Fehlschlags steht im Fehlerprotokoll des
+  Webspace.
+
+**Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
+angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
+Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
 Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
 unter Standortdaten (9.1–9.3), jedoch für **alle** NutzerInnen gemeinsam

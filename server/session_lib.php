@@ -34,6 +34,32 @@ require_once __DIR__ . '/db.php';
 const SESSION_ENDE_GRUENDE = ['abgemeldet', 'abgelaufen', 'passwort', 'konto', 'ende'];
 
 /**
+ * Sitzung beenden OHNE Ausgabe.
+ *
+ * Fuer die Datenabrufe unter server/api/: Dort wuerde die Seite aus
+ * session_beenden() als HTML in einem fetch() landen, das JSON erwartet — der
+ * Aufrufer saehe einen Syntaxfehler beim Auswerten statt einer Aussage. Diese
+ * Fassung raeumt nur die Sitzung; die Antwort formuliert die aufrufende
+ * Stelle (auth_guard.php) als 401 mit Grund.
+ *
+ * Die Schluessel im Browser bleiben dabei zunaechst liegen. Das ist hier
+ * richtig: Ein Datenabruf laeuft im Hintergrund, waehrend die Seite offen
+ * bleibt — die naechste Seitenanfrage laeuft in auth_guard.php ohne
+ * Sitzungskennung auf und geht ueber login.php, das die Schluessel raeumt.
+ */
+function session_verwerfen(): void
+{
+    if (session_status() === PHP_SESSION_NONE) { return; }
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+                  $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+    }
+    session_destroy();
+}
+
+/**
  * Beendet die Sitzung und liefert eine kurze Seite aus, die die Schluessel im
  * Browser raeumt und danach zur Anmeldung wechselt.
  *
@@ -106,8 +132,8 @@ function session_ende_text(?string $grund): string
         'abgelaufen' => 'Die Sitzung ist nach 30 Minuten ohne Aktivität abgelaufen. '
                       . 'Bitte melde dich erneut an.',
         'abgemeldet' => 'Du wurdest abgemeldet.',
-        'passwort'   => 'Das Passwort wurde geändert. Bitte melde dich mit dem neuen '
-                      . 'Passwort an.',
+        'passwort'   => 'Das Passwort dieses Kontos wurde geändert. Diese Sitzung ist '
+                      . 'damit beendet — bitte mit dem neuen Passwort anmelden.',
         'konto'      => 'Das Konto steht nicht mehr zur Verfügung.',
         default      => '',
     };

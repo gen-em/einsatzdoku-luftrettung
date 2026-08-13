@@ -10,6 +10,113 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.5.0] — 2026-08-12
+
+Bis hierher endete eine Sitzung nur durch Abmelden oder Zeitablauf. Weder ein
+Rollenentzug noch ein gelöschtes Konto noch ein Passwortwechsel erreichten sie
+— und das sind genau die drei Handgriffe, mit denen man jemandem den Zugang
+nimmt.
+
+### Rolle und Konto werden bei jeder Anfrage geprüft
+
+Die Rolle wurde bei der Anmeldung **einmal** in die Sitzung geschrieben und nie
+wieder nachgesehen. Wem die Administratorrolle entzogen wurde, behielt seine
+Rechte, solange der Tab offen blieb. Wessen Konto gelöscht wurde, blieb
+angemeldet und arbeitete weiter.
+
+Beides kommt jetzt aus der Nutzerzeile — die bei jeder Anfrage ohnehin gelesen
+wurde, nur eben erst weiter unten und nur für den Anzeigenamen. Der Rollenentzug
+wirkt damit beim nächsten Klick. Ein gelöschtes Konto beendet die Sitzung mit
+einer Meldung, statt sie stehen zu lassen.
+
+### Ein Passwortwechsel beendet die anderen Sitzungen
+
+Wer sein Passwort wechselt, **weil** er Missbrauch vermutet, will genau eines
+erreichen: dass der andere draußen ist. Das erreichte er bisher nicht — eine
+offene Sitzung hängt am Sitzungscookie, nicht am Passwort.
+
+Jeder Passwortwechsel erhöht jetzt einen Zähler am Konto. Jede Anfrage
+vergleicht ihren Stand dagegen; wer noch den alten trägt, wird abgemeldet und
+bekommt den Grund genannt. Die Sitzung, die den Wechsel auslöst, zieht den
+neuen Stand mit und bleibt bestehen — beim Weg über „Passwort vergessen" ist
+ohnehin niemand angemeldet, dort fallen alle.
+
+Gleichzeitig werden **alle** offenen Links zum Zurücksetzen entwertet, nicht
+nur der gerade benutzte. Ein Einladungslink aus der Nutzerverwaltung ist 24
+Stunden gültig und hätte den soeben gewählten Zustand sonst wieder
+überschreiben können — mit einem Passwort, das jemand anders kennt.
+
+### Der Zurücksetzen-Link steht nicht mehr in der Adresszeile
+
+Der Token stand als Parameter in der Adresse und landete damit im Verlauf des
+Browsers, im Zugriffsprotokoll des Webservers und in jedem Screenshot der
+Seite. Wer ihn hat, kann das Passwort setzen.
+
+Beim ersten Öffnen wandert er jetzt in eine eigene Sitzung, und die Seite ruft
+sich ohne Parameter neu auf. Zusätzlich unterbindet die Seite das Mitsenden der
+Herkunftsadresse und hält sich aus dem Zwischenspeicher.
+
+Der dafür nötige Cookie trägt einen **eigenen Namen** und berührt die Sitzung
+der Anwendung nicht. Wer Cookies für die Seite blockiert, bekommt das gesagt
+(„Cookie nötig") statt eines irreführenden „Link ungültig".
+
+### Nutzer anlegen sagt jetzt, was passiert ist
+
+Drei Dinge an derselben Stelle:
+
+* Eine bereits vorhandene Adresse führte zu einer ungefangenen Ausnahme — der
+  Admin sah eine weiße Seite statt einer Auskunft.
+* Konto und Setz-Token entstanden in zwei getrennten Schritten. Scheiterte der
+  zweite, blieb ein Konto ohne jeden Weg zu einem Passwort zurück.
+* Das Ergebnis des Mailversands wurde weggeworfen und in jedem Fall
+  „verschickt" gemeldet. Bei einem Fehlschlag existierte das Konto, ein
+  gültiger Token lag in der Datenbank — nur hatte niemand den Link.
+
+Jetzt: Vorabprüfung mit verständlicher Meldung, Konto und Token in einer
+Transaktion, und bei fehlgeschlagenem Versand wird der Link zur Weitergabe auf
+anderem Weg angezeigt.
+
+### „Adresse bereits verwendet" nur noch, wenn es stimmt
+
+Beim Ändern einer E-Mail-Adresse wurde **jeder** Datenbankfehler als Dublette
+gemeldet. Eine volle Platte, eine abgerissene Verbindung, ein Rechteproblem:
+alles erschien als „diese Adresse wird bereits verwendet" und schickte die
+Fehlersuche zuverlässig in die falsche Richtung. Geprüft wird jetzt der
+tatsächliche Schlüsselkonflikt; alles andere bekommt eine ehrliche Meldung und
+landet im Fehlerprotokoll.
+
+### Eine Schreibweise für E-Mail-Adressen
+
+Die Adresse ist die Kontokennung und wurde an acht Stellen unterschiedlich
+behandelt — mal kleingeschrieben, mal nur von Leerzeichen befreit. Dass das
+funktionierte, lag allein an der Sortierregel der Datenbank, nicht am Code.
+
+Nebenbei behoben: Die Anmeldung meldete ihren Erfolg an den Zähler der
+Salz-Abfrage mit der Adresse **wie getippt**, während die Salz-Abfrage
+kleingeschrieben zählt. Wer „Max@…" tippte, gab seinen Versuch dort nie
+zurück.
+
+Bestehende Einträge werden nicht angefasst: Die Spalte trägt seit 4.0.0 eine
+Sortierregel ohne Rücksicht auf Groß- und Kleinschreibung, der Vergleich trifft
+also ohnehin.
+
+### Sitzungsende bei Datenabrufen
+
+Endet die Sitzung mitten in einem Abruf der Oberfläche, antwortet der Server
+jetzt mit einem Fehlercode und JSON statt mit der HTML-Seite. Das Skript sah
+vorher HTML, wo es JSON erwartete, und meldete irgendetwas Allgemeines statt
+„die Sitzung ist beendet".
+
+### Technisch
+
+* Neu: `server/email_lib.php` — Normalisierung, Prüfung und Dublettenerkennung
+  für E-Mail-Adressen, ohne Abhängigkeiten (auch von `install.php` nutzbar).
+* `session_lib.php`: `session_verwerfen()` beendet eine Sitzung ohne Ausgabe.
+* `auth_guard.php`: `ist_admin()` als einzige Rollenprüfung; `require_admin()`
+  setzt darauf auf.
+* Keine Migration nötig — `session_epoch` und die Sortierregel liegen seit
+  4.0.0 im Schema.
+
 ## [Web 4.4.0] — 2026-08-12
 
 Dieses Paket betrifft die Endpunkte, die **ohne Anmeldung** erreichbar sind:
@@ -111,6 +218,49 @@ Zeile in einer Liste, die niemand zählt.
 Dieses Paket kommt ohne Migration aus.
 
 
+
+### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen
+
+Drei Schreibwege führen zu einem Flugtag, und alle drei verhielten sich falsch,
+wenn er im Papierkorb lag:
+
+- **Formular:** Die Aktualisierung hatte keine Bedingung auf den Löschzustand.
+  Sie überschrieb die Angaben und ließ den Tag gelöscht — die Eingabe verschwand
+  spurlos, die Meldung lautete „Gespeichert." Jetzt wird abgelehnt und der Grund
+  genannt.
+- **Import:** Er holte den Tag stillschweigend aus dem Papierkorb zurück, samt
+  alter Angaben. Jetzt wird er übersprungen und in der Meldung genannt.
+- **Wiedereinspielen:** Es tat nichts — aber eben still, ohne Zählung und ohne
+  Erwähnung. Jetzt wird der Fall benannt.
+
+**Warum ablehnen und nicht zurückholen:** Das Löschen war eine bewusste
+Handlung. Sie durch eine Nebenwirkung rückgängig zu machen, ist eine
+Überraschung — und zwar eine, die niemand sieht. Der Papierkorb hat eine eigene
+Wiederherstellungsfunktion.
+
+Auch beim **Lesen** wird der Zustand jetzt gemeldet. Vorher lieferte die
+Schnittstelle für einen gelöschten Tag schlicht nichts, nicht unterscheidbar
+von „für diesen Tag wurde noch nichts eingetragen". Wer seine Angaben vermisste,
+suchte den Fehler bei sich. Die Tagesansicht zeigt nun einen Hinweis.
+
+### Behoben — Ein gelöschtes Ruhesegment kehrte immer wieder zurück
+
+Die Sperrliste, die verhindert, dass die Uhr einen gelöschten Datensatz neu
+anlegt, war an **beiden** Enden nur für Einsätze umgesetzt: Sie wurde nur für
+Einsätze befüllt und nur im Einsatz-Zweig abgefragt. Ein endgültig gelöschtes
+Ruhesegment wurde deshalb von der nächsten Nachlieferung wieder angelegt — und
+beim erneuten Löschen wieder. Wer eine Uhr im Einsatz hat, kam aus dieser
+Schleife nicht heraus.
+
+Im selben Zweig fehlte auch die Prüfung auf „im Papierkorb", sodass ein
+gelöschtes Ruhesegment weiter Spurpunkte sammelte.
+
+Beide Prüfungen stehen jetzt **vor** der Fallunterscheidung und gelten damit für
+beide Arten. Die Sperrliste unterscheidet über `owner_type` (seit Web 4.0.0),
+welche Art gemeint ist — Einsätze und Ruhesegmente vergeben ihre Kennungen
+unabhängig voneinander.
+
+## [Web 4.3.0] — 2026-08-08
 
 ### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen
 

@@ -48,7 +48,7 @@ $done = false;
 $mailAuftrag = null;      // erst NACH dem Abschluss der Antwort ausgefuehrt
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $email = email_normalisieren($_POST['email'] ?? '');
     $done  = true;        // die Antwort ist in jedem Fall dieselbe
 
     if (rate_erlaubt('reset', $email)) {

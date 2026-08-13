@@ -28,7 +28,70 @@ require_once __DIR__ . '/db.php';
 
 const WRAP_RE = '#^[A-Za-z0-9+/=]{20,4000}$#';
 
-$token = (string)($_GET['token'] ?? $_POST['token'] ?? '');
+/* ---- Der Token gehoert nicht in die Adresszeile (M1-06) --------------------
+ *
+ * WAS DARAN FALSCH WAR
+ * Der Token stand als Parameter in der Adresse. Damit landete er im Verlauf
+ * des Browsers, im Zugriffsprotokoll des Webservers, in jedem Screenshot der
+ * Seite — und ueber die Herkunftsadresse potenziell bei jeder Gegenstelle, die
+ * von dieser Seite aus angefragt wird. Wer ihn hat, kann das Passwort setzen.
+ *
+ * STUFE 1 — Herkunftsadresse unterbinden.
+ * Referrer-Policy: no-referrer nimmt die Vervielfachung durch Unterabrufe
+ * heraus. Cache-Control: no-store haelt die Seite aus dem Zwischenspeicher.
+ *
+ * STUFE 2 — den Token gegen einen sitzungsgebundenen Wert tauschen.
+ * Beim ersten Aufruf wandert er in eine Sitzung und die Seite leitet auf sich
+ * selbst weiter, ohne Parameter. Ab da steht er in keiner Adresszeile mehr.
+ *
+ * WARUM EIN EIGENER SITZUNGSNAME UND SameSite=Lax
+ * Der Klick kommt aus dem Mailprogramm, also von einer FREMDEN Seite. Ein
+ * Cookie mit SameSite=Strict kaeme bei der Weiterleitung nicht zurueck — die
+ * Seite waere danach eine Sackgasse. Lax wird bei Seitenaufrufen dieser Art
+ * gesendet und haelt zugleich fremde POST-Anfragen ab.
+ *
+ * Der EIGENE Name (nicht der der Anwendung) ist dabei nicht Kosmetik: Wuerde
+ * hier der Sitzungscookie der Anwendung mit Lax neu gesetzt, verloere eine
+ * parallel offene, angemeldete Sitzung im selben Browser ihren Strict-Schutz.
+ * Zwei Namen, zwei Sitzungen, keine Wechselwirkung.
+ */
+const PW_SESSION_NAME = 'EDPWSESS';
+
+header('Referrer-Policy: no-referrer');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+
+function pw_session_start(): void {
+    if (session_status() !== PHP_SESSION_NONE) { return; }
+    session_name(PW_SESSION_NAME);
+    session_set_cookie_params([
+        'httponly' => true, 'secure' => true, 'samesite' => 'Lax', 'path' => '/',
+    ]);
+    session_start();
+}
+
+$tokenAusAdresse = (string)($_GET['token'] ?? '');
+$getauscht       = isset($_GET['w']);        // "weitergeleitet", zweiter Aufruf
+
+if ($tokenAusAdresse !== '') {
+    // Erster Aufruf: Token einlagern und ohne Parameter neu aufrufen. Ob er
+    // gueltig ist, wird danach geprueft — die Weiterleitung erfolgt in jedem
+    // Fall, sonst waere schon die Adresszeile die Auskunft, ob ein Token zieht.
+    pw_session_start();
+    session_regenerate_id(true);
+    $_SESSION['pw_token'] = $tokenAusAdresse;
+    header('Location: pw_handling.php?w=1', true, 302);
+    exit;
+}
+
+pw_session_start();
+$token = (string)($_SESSION['pw_token'] ?? '');
+
+/* Kein Token in der Sitzung, obwohl die Weiterleitung gelaufen ist: Der
+ * Browser hat den Cookie nicht angenommen. Das ist die einzige Sackgasse
+ * dieses Weges — sie wird benannt, statt als "Link ungueltig" zu erscheinen
+ * und die Person einen zweiten, ebenso wirkungslosen Link anfordern zu lassen. */
+$keinCookie = ($token === '' && $getauscht);
+
 $row = null;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
     $st = db()->prepare('SELECT r.id, r.user_id, u.pat_key_check, u.pat_wrap_rc
@@ -98,10 +161,27 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
                                $wrapPw, $keyChk !== '' ? $keyChk : null,
                                (int)$row['user_id']]);
             }
-            $pdo->prepare('UPDATE password_resets SET used_at = NOW() WHERE id = ?')
-                ->execute([(int)$row['id']]);
+            /* ALLE offenen Tokens dieses Kontos entwerten, nicht nur den
+             * benutzten (M1-09). reset_request.php laesst seit Web 4.4.0 zwar
+             * nur noch einen gueltigen zu — aber der Einladungslink aus der
+             * Nutzerverwaltung ist 24 Stunden gueltig und entsteht auf einem
+             * anderen Weg. Wer sein Passwort setzt, soll danach keinen
+             * fremden Weg mehr offen haben. */
+            $pdo->prepare('UPDATE password_resets SET used_at = NOW()
+                           WHERE user_id = ? AND used_at IS NULL')
+                ->execute([(int)$row['user_id']]);
+            /* Sitzungszaehler erhoehen (M1-09/D6): beendet jede offene Sitzung
+             * dieses Kontos. Hier ist keine davon die eigene — wer diese Seite
+             * benutzt, ist nicht angemeldet. Genau der Fall, um dessentwillen
+             * der Zaehler existiert: Passwort zuruecksetzen, weil jemand
+             * anders drin ist. */
+            $pdo->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')
+                ->execute([(int)$row['user_id']]);
             $pdo->commit();
             $done = true;
+            // Der Token hat seinen Zweck erfuellt — die Sitzung dieser Seite
+            // wird nicht laenger gebraucht (M1-06).
+            unset($_SESSION['pw_token']);
         } catch (Throwable $ex) {
             $pdo->rollBack();
             $error = 'Speichern fehlgeschlagen. Bitte erneut versuchen.';
@@ -132,6 +212,19 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
     <p class="login-aux"><a href="login.php">Zur Anmeldung</a></p>
 
+  <?php elseif ($keinCookie): ?>
+    <h1>Cookie nötig</h1>
+    <p class="alert">Dieser Browser hat den nötigen Cookie nicht angenommen.
+       Der Link lässt sich deshalb nicht öffnen.</p>
+    <p class="muted">Der Link aus der E-Mail wird beim ersten Öffnen aus der
+       Adresszeile genommen und in einem Cookie abgelegt — er soll weder im
+       Verlauf noch in Protokollen stehen bleiben. Ohne Cookies geht dieser
+       Weg nicht; die Anmeldung selbst braucht ebenfalls einen.</p>
+    <p class="muted">Bitte Cookies für diese Seite erlauben (auch ein privates
+       Fenster mit strengen Einstellungen kann die Ursache sein) und den Link
+       aus der E-Mail erneut öffnen.</p>
+    <p class="login-aux"><a href="reset_request.php">Neuen Link anfordern</a></p>
+
   <?php elseif (!$row): ?>
     <h1>Link ungültig</h1>
     <p class="alert">Dieser Link ist ungültig oder abgelaufen.</p>
@@ -160,7 +253,6 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <form method="post" id="pwform">
-      <input type="hidden" name="token"     value="<?= e($token) ?>">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
@@ -183,7 +275,6 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
        Damit sie lesbar bleiben, brauchst du hier den
        <strong>Wiederherstellungsschlüssel</strong> aus der Einrichtung.</p>
     <form method="post" id="pwform">
-      <input type="hidden" name="token"     value="<?= e($token) ?>">
       <input type="hidden" name="new_token" id="new_token">
       <input type="hidden" name="new_salt"  id="new_salt">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">

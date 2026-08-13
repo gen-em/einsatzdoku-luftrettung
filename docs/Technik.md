@@ -36,7 +36,8 @@ hems/
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
 │   ├── ui.php             Kopf-/Seitenleisten, Fußzeile
-│   ├── auth_guard.php     Session/CSRF/Rollen
+│   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
+│   │                       Sitzungszähler, ist_admin())
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
 │   ├── login/logout/reset_request.php   Auth-Flows
 │   ├── pw_handling.php    Passwortvergabe über Einmal-Link: Erstvergabe (erzeugt
@@ -58,7 +59,10 @@ hems/
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
-│   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden UND Ablauf)
+│   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
+│   │                       gelöschtes Konto, Passwortwechsel)
+│   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
+│   │                       (ohne Abhängigkeiten — auch für install.php)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
@@ -94,8 +98,8 @@ hems/
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet. `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin |
+| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
@@ -286,6 +290,24 @@ entsteht.
 > unverschlüsselten Anmeldeweg mehr; Browser ohne Web-Krypto erhalten eine
 > klare Fehlermeldung. `auth_salt.php` liefert Salts, für unbekannte Adressen
 > ein deterministisches Pseudo-Salt gegen User-Enumeration.
+
+**Der Zurücksetzen-Token steht nicht in der Adresszeile** (ab Web 4.5.0).
+`pw_handling.php` nimmt ihn beim ersten Aufruf aus dem Parameter, legt ihn in
+eine Sitzung und ruft sich ohne Parameter neu auf; dazu `Referrer-Policy:
+no-referrer` und `Cache-Control: no-store`. Zwei Entscheidungen daran sind
+nicht beliebig:
+
+* **Eigener Sitzungsname** (`EDPWSESS`), nicht der der Anwendung. Sonst würde
+  eine parallel offene, angemeldete Sitzung im selben Browser die Attribute
+  ihres Cookies mitgeändert bekommen.
+* **`SameSite=Lax`**, nicht `Strict`. Der Link wird im Mailprogramm angeklickt,
+  also von einer fremden Seite aus; ein `Strict`-Cookie käme bei der
+  Weiterleitung nicht zurück und die Seite wäre eine Sackgasse. `Lax` hält
+  fremde POST-Anfragen trotzdem ab.
+
+Blockiert der Browser Cookies, wird genau das gesagt („Cookie nötig") statt
+„Link ungültig" — sonst forderte die Person einen zweiten, ebenso wirkungslosen
+Link an.
 
 **Passwortvergabe (`pw_handling.php`):** Die einzige Stelle, an der ein Passwort
 über einen Einmal-Link gesetzt wird. Der Server bestimmt die Betriebsart allein
@@ -841,12 +863,38 @@ gültiger Zustand** (Konten vor Web 4.0.0): Der Server kann sie nicht
 nachträglich berechnen, also werden solche Konten angenommen und bekommen sie
 beim nächsten Mal.
 
-**Zwei Wege, auf denen eine Sitzung endet.** Abmelden und Ablauf der Frist —
-beide laufen über `session_lib.php`. Der Grund für die gemeinsame Fassung: Eine
-reine Weiterleitung per Kopfzeile führt nie JavaScript aus, die Schlüssel im
+**Vier Wege, auf denen eine Sitzung endet** (ab Web 4.5.0). Abmelden, Ablauf
+der Frist, gelöschtes Konto und Passwortwechsel — alle laufen über
+`session_lib.php`. Der Grund für die gemeinsame Fassung: Eine reine
+Weiterleitung per Kopfzeile führt nie JavaScript aus, die Schlüssel im
 `sessionStorage` bleiben also liegen. Der Abmeldeweg löste das von Anfang an
 richtig, der Ablaufpfad nicht — und weil die Lösung nur an einer der beiden
 Stellen stand, war der Unterschied nicht zu sehen.
+
+Bei Abrufen unter `server/api/` antwortet `auth_guard.php` stattdessen mit
+**401 und JSON** (`session_verwerfen()`): Ein `fetch()`, das JSON erwartet,
+sähe in der HTML-Seite nur einen Syntaxfehler beim Auswerten. Die Schlüssel
+räumt dort die nächste Seitenanfrage, die ohnehin auf der Anmeldeseite landet.
+
+**Rolle und Existenz des Kontos kommen bei jeder Anfrage aus der Datenbank**
+(ab Web 4.5.0). Vorher stand die Rolle in der Sitzung, einmal bei der Anmeldung
+geschrieben: Ein Rollenentzug wirkte erst nach dem nächsten Anmelden, ein
+gelöschtes Konto arbeitete weiter. Die Nutzerzeile wurde ohnehin bei jeder
+Anfrage gelesen — sie steht jetzt nur früher, und `$_SESSION['role']` gibt es
+nicht mehr. Die eine Rollenprüfung heißt `ist_admin()`; `require_admin()` setzt
+darauf auf, ebenso die Anzeigeentscheidungen in `ui.php`.
+
+**Der Sitzungszähler (`users.session_epoch`).** Jeder Passwortwechsel erhöht
+ihn in derselben Transaktion wie das Passwort; jede Anfrage vergleicht ihren
+mitgeführten Stand dagegen. Wer noch den alten trägt, wird abgemeldet. Beides
+in einer Transaktion ist wichtig: Ein erhöhter Zähler ohne geändertes Passwort
+spülte alle Sitzungen hinaus, ohne dass etwas geschehen wäre; ein geändertes
+Passwort ohne erhöhten Zähler ist genau der Zustand, den es zu beheben galt.
+
+Die Sitzung, die den Wechsel auslöst, zieht den neuen Stand mit und bleibt
+bestehen — sie soll ja nicht sich selbst aussperren. Sitzungen aus der Zeit vor
+4.5.0 führen den Wert nicht mit; sie werden beim ersten Zugriff übernommen,
+statt beim Aufspielen alle Angemeldeten auszusperren.
 
 **Format der Client-Kennung.** `client_ref` wird von vier Stellen erzeugt, und
 an ihrem Präfix hängt Verhalten: `m-`/`r-` (Uhr, Einsatz/Ruhe-Segment), `man-`
@@ -956,7 +1004,9 @@ Die Bausteine im Einzelnen:
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
-| Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden **und** Ablauf, räumt die Schlüssel im Browser und nennt den Grund. |
+| Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
+| E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
+| Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
 | Maskierung | `assets/missiontable.js` (`escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). |
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. |

@@ -47,7 +47,13 @@ if ($hinweis === '' && isset($_GET['timeout'])) { $hinweis = session_ende_text('
  */
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    /* Eine Schreibweise fuer alle Stellen (M1-13, email_lib.php). Hier stand
+     * bisher nur trim(): Dass die Anmeldung trotzdem funktionierte, lag allein
+     * an der Sortierregel der Datenbank. Nebenbei behoben: rate_erfolg('salt',
+     * ...) unten meldete den Erfolg mit der Adresse WIE GETIPPT, waehrend
+     * auth_salt.php unter der kleingeschriebenen zaehlt — wer "Max@..." tippte,
+     * leerte seinen Salz-Zaehler nie. */
+    $email = email_normalisieren($_POST['email'] ?? '');
 
     if (!rate_erlaubt('login', $email)) {
         $bis = rate_gesperrt_bis('login', $email);
@@ -57,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $st = db()->prepare('SELECT id, password_hash, role FROM users WHERE email = ?');
+        $st = db()->prepare('SELECT id, password_hash, session_epoch FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
 
@@ -74,10 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($ok) {
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$u['id'];
-            $_SESSION['role']    = $u['role'];
+            /* Stand des Sitzungszaehlers mitfuehren (M1-09). Jede Anfrage
+             * vergleicht ihn in auth_guard.php gegen die Zeile; ein
+             * Passwortwechsel erhoeht ihn und beendet damit alle Sitzungen,
+             * die noch den alten Stand tragen. */
+            $_SESSION['epoch']   = (int)($u['session_epoch'] ?? 0);
+            /* Die Rolle wird NICHT mehr hier abgelegt (M1-05). Sie kam
+             * frueher aus dieser einen Zeile und wurde nie wieder geprueft —
+             * ein Rollenentzug wirkte erst nach dem naechsten Anmelden.
+             * auth_guard.php liest sie jetzt bei jeder Anfrage aus der
+             * Nutzerzeile, die dort ohnehin gelesen wird. */
             // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
             // Fassung angemeldet waren, liegen die beiden Werte noch herum.
-            unset($_SESSION['login_fails'], $_SESSION['login_last']);
+            unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
             rate_erfolg('login', $email);
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich

@@ -13,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Profil: Name & E-Mail ---------------------------------------- */
     if ($action === 'profile') {
         $name  = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
-        $email = trim($_POST['email'] ?? '');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'Bitte eine gültige E-Mail-Adresse angeben.';
+        $email = email_pruefen($_POST['email'] ?? '');
+        if ($email === null) {
+            $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
         } else {
             try {
                 db()->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
@@ -24,7 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userEmail = $email;
                 $notice = 'Profil gespeichert.';
             } catch (PDOException $ex) {
-                $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
+                /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
+                 * Jeder andere Datenbankfehler bekommt eine ehrliche Meldung —
+                 * "diese Adresse wird bereits verwendet" bei einer vollen
+                 * Platte kostet mehr Zeit als gar keine Meldung. */
+                if (ist_dublettenfehler($ex)) {
+                    $error = 'Diese E-Mail-Adresse wird bereits verwendet.';
+                } else {
+                    error_log('profil speichern: ' . $ex->getMessage());
+                    $error = 'Das Profil konnte nicht gespeichert werden. '
+                           . 'Es wurde nichts geändert.';
+                }
             }
         }
     }
@@ -90,7 +100,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = db();
             $pdo->beginTransaction();
             try {
-                $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ? WHERE id = ?')
+                /* Sitzungszaehler mit erhoehen (M1-09/D6).
+                 *
+                 * Wer sein Passwort wechselt, weil er Missbrauch vermutet,
+                 * will genau eines erreichen: dass der andere draussen ist.
+                 * Das Passwort allein erreicht das nicht — eine offene
+                 * Sitzung haengt am Sitzungscookie. Der erhoehte Zaehler
+                 * beendet jede Sitzung dieses Kontos, die noch den alten
+                 * Stand traegt (auth_guard.php).
+                 *
+                 * IN DERSELBEN TRANSAKTION wie das Passwort: Ein erhoehter
+                 * Zaehler ohne geaendertes Passwort spuelte alle Sitzungen
+                 * hinaus, ohne dass etwas geschehen waere; ein geaendertes
+                 * Passwort ohne erhoehten Zaehler ist genau der Zustand, den
+                 * dieser Befund beschreibt. */
+                $pdo->prepare('UPDATE users SET password_hash = ?, kdf_salt = ?,
+                                                session_epoch = session_epoch + 1
+                               WHERE id = ?')
                     ->execute([password_hash($newTok, PASSWORD_DEFAULT), $newSalt, $userId]);
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
@@ -99,8 +125,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ->execute([mb_substr($wrapPw, 0, 4000),
                                    $keyChk !== '' ? $keyChk : null, $userId]);
                 }
+                /* Offene Links zum Zuruecksetzen entwerten. Sie sind bis zu
+                 * einer Stunde gueltig und haetten den soeben gewaehlten
+                 * Zustand wieder ueberschrieben — mit einem Passwort, das
+                 * jemand anders kennt. */
+                $pdo->prepare('UPDATE password_resets SET used_at = NOW()
+                               WHERE user_id = ? AND used_at IS NULL')
+                    ->execute([$userId]);
                 $pdo->commit();
-                $notice = 'Passwort geändert.';
+
+                /* Die EIGENE Sitzung zieht den neuen Stand mit und bleibt
+                 * bestehen (Abnahmekriterium A5: "alle ANDEREN Sitzungen").
+                 * Der Browser hat den neuen Datenschluessel in diesem Moment
+                 * bereits gesetzt; die handelnde Person hier abzumelden waere
+                 * kein Sicherheitsgewinn, sondern nur laestig. */
+                $st2 = $pdo->prepare('SELECT session_epoch FROM users WHERE id = ?');
+                $st2->execute([$userId]);
+                $_SESSION['epoch'] = (int)$st2->fetchColumn();
+
+                $notice = 'Passwort geändert. Alle anderen offenen Sitzungen dieses '
+                        . 'Kontos sind damit beendet; noch offene Links zum '
+                        . 'Zurücksetzen sind ungültig.';
             } catch (Throwable $ex) {
                 $pdo->rollBack();
                 $error = 'Passwortwechsel fehlgeschlagen. Es wurde nichts geändert.';

@@ -20,9 +20,80 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P3 | Gemeinsame Prüfschicht anwenden | Web 4.2.0 | **erledigt** |
 | P5 | Papierkorb und gelöschte Flugtage | Web 4.3.0 | **erledigt** |
 | P4 | Ratenschutz und unangemeldete Endpunkte | Web 4.4.0 | **erledigt** |
-| P6 | Sitzung, Rollen, Konten | — | offen |
+| P6 | Sitzung, Rollen, Konten | Web 4.5.0 | **erledigt** |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P6 — Sitzung, Rollen, Konten (Web 4.5.0)
+
+Bis hierher endete eine Sitzung nur durch Abmelden oder Zeitablauf. Weder ein
+Rollenentzug noch ein gelöschtes Konto noch ein Passwortwechsel erreichten sie
+— alle drei sind aber genau die Handgriffe, mit denen man jemandem den Zugang
+nimmt.
+
+| Befund | Änderung |
+|---|---|
+| M1-05 | Rolle und Existenz des Kontos kommen bei **jeder** Anfrage aus der Datenbank; `$_SESSION['role']` entfällt |
+| M1-09 | Passwortwechsel erhöht `session_epoch` und entwertet alle offenen Links zum Zurücksetzen |
+| M1-06 | Zurücksetzen-Token wird beim ersten Öffnen aus der Adresszeile in eine eigene Sitzung getauscht |
+| M1-10 | Nutzer anlegen: Dublette abgefangen, Konto und Token in einer Transaktion, Mailversand ausgewertet |
+| M1-13 | Eine Fassung für Normalisierung und Prüfung von E-Mail-Adressen (`email_lib.php`) |
+| M1-15 | Eine Rollenprüfung (`ist_admin()`/`require_admin()`) statt fünf unabhängiger Formulierungen |
+| M1-16 | „Adresse bereits verwendet" nur noch beim tatsächlichen Schlüsselkonflikt |
+
+Keine Migration nötig: `session_epoch` (S3) und die Sortierregel der
+E-Mail-Spalte (S6) liegen seit P0 im Schema.
+
+### Warum die eigene Sitzung den Passwortwechsel überlebt
+
+Der erhöhte Zähler beendet jede Sitzung des Kontos, die noch den alten Stand
+trägt. Die Sitzung, die den Wechsel auslöst, zieht den neuen Stand mit und
+bleibt bestehen. Das ist Absicht: Wer sein Passwort wechselt, will die
+**anderen** draußen haben, nicht sich selbst. Beim Weg über „Passwort
+vergessen" ist ohnehin niemand angemeldet — dort fallen alle Sitzungen.
+
+Sitzungen aus der Zeit vor 4.5.0 führen den Stand noch nicht mit. Sie werden
+beim ersten Zugriff übernommen, statt beim Aufspielen alle Angemeldeten
+auszusperren.
+
+### Warum der Token-Tausch einen eigenen Cookie braucht
+
+Der Link aus der E-Mail wird im Mailprogramm angeklickt, also von einer
+**fremden** Seite aus. Ein Cookie mit `SameSite=Strict` käme bei der
+Weiterleitung nicht zurück; die Seite wäre eine Sackgasse. Deshalb `Lax` — und
+deshalb ein **eigener Cookie-Name** (`EDPWSESS`): Würde hier der Sitzungscookie
+der Anwendung mit `Lax` neu gesetzt, verlöre eine parallel offene, angemeldete
+Sitzung im selben Browser ihren `Strict`-Schutz.
+
+Wer Cookies für die Seite blockiert, kommt diesen Weg nicht — das wird benannt
+(„Cookie nötig") statt als „Link ungültig" zu erscheinen und die Person einen
+zweiten, ebenso wirkungslosen Link anfordern zu lassen. Die Anmeldung selbst
+braucht ohnehin einen Cookie.
+
+### Sitzungsende bei Datenabrufen
+
+Endet die Sitzung mitten in einem Abruf unter `server/api/`, antwortet der
+Server jetzt mit **401 und JSON** statt mit der HTML-Seite, die die Schlüssel
+im Browser räumt. Ein `fetch()`, das JSON erwartet, sah vorher einen
+Syntaxfehler beim Auswerten und meldete irgendetwas Allgemeines. Die Schlüssel
+räumt die nächste Seitenanfrage, die ohnehin auf der Anmeldeseite landet.
+
+### Bestandsadressen werden nicht angefasst
+
+`email_lib.php` normalisiert beim Schreiben und beim Suchen. Vorhandene Zeilen
+bleiben, wie sie sind: Die Spalte trägt seit P0 `utf8mb4_unicode_ci`, der
+Vergleich trifft also ohnehin. Eine Datenänderung ohne Wirkung wäre Risiko ohne
+Gegenwert.
+
+### Nebenbefund, mit behoben
+
+`login.php` meldete den Erfolg an den Zähler des Salz-Endpunkts mit der Adresse
+**wie getippt**, während `auth_salt.php` unter der kleingeschriebenen Fassung
+zählt. Wer „Max@…" tippte, leerte seinen Salz-Zähler nie — jede Anmeldung
+verbrauchte dort einen Versuch, ohne ihn je zurückzugeben. Mit der
+gemeinsamen Normalisierung fällt das weg.
 
 ---
 
@@ -390,10 +461,10 @@ nicht. Einzige Ausnahme ist der Ratenschutz, der ab P1 gebraucht wird.
 |---|---|---|
 | S1 | `users.kdf_iter`, Bestand auf 310000 | P9 (M2-01) |
 | S2 | `users.pat_key_check`, Bestand bleibt leer | P2 (M1-12) |
-| S3 | `users.session_epoch`, Vorgabe 0 | P6 (M1-09) |
+| S3 | `users.session_epoch`, Vorgabe 0 | **P6** (M1-09) |
 | S4 | Tabelle `rate_limits` | **P1** (M4-01) |
 | S5 | `deleted_refs.owner_type`, Schlüssel erweitert | P5 (M4-04) |
-| S6 | Sortierregel `users.email` festgelegt | P6 (M1-13) |
+| S6 | Sortierregel `users.email` festgelegt | **P6** (M1-13) |
 | S9 | Ratenschutz-Tabelle im Aufräumjob (Teil) | sofort |
 
 S7 und S8 (Sicherungsformat) sind Formatänderungen ohne Schemaanteil; sie

@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/version.php';
+// E-Mail-Normalisierung (M1-13). Eigene Datei ohne Abhaengigkeiten, weil
+// install.php sie ebenfalls braucht und dort noch keine config.php existiert.
+require_once __DIR__ . '/email_lib.php';
 
 $CFG = require __DIR__ . '/config.php';
 

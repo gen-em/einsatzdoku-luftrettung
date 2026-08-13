@@ -2,7 +2,8 @@
 declare(strict_types=1);
 /**
  * Gemeinsame Layout-Bausteine (Topbar, Einsatztage-Leiste, Fusszeile).
- * Voraussetzung: auth_guard.php ist geladen ($userId, $userRole, $userEmail, $userName).
+ * Voraussetzung: auth_guard.php ist geladen ($userId, $userEmail, $userName)
+ * samt ist_admin() — die eine Rollenpruefung (M1-15).
  */
 
 function ui_user_label(): string {
@@ -11,8 +12,7 @@ function ui_user_label(): string {
 }
 
 /** Kopfleiste: Vogel-Icon + Titel + Name; Menü Übersicht / Suche / ⚙ */
-function ui_topbar(string $active): void {
-    global $userRole; ?>
+function ui_topbar(string $active): void { ?>
 <header class="topbar">
   <a class="brand" href="index.php">
     <img src="<?= asset('assets/images/gen-em_logo_helicopter_weiss.svg') ?>" alt="">
@@ -38,7 +38,6 @@ function ui_topbar(string $active): void {
  * $active: profil | stammdaten | backup | geraete | admin | admin_stammdaten
  */
 function ui_settings_sidebar(string $active): void {
-    global $userRole;
     $items = [
         'profil'     => ['einstellungen.php?t=profil', 'Profil'],
         'stammdaten' => ['einstellungen.php?t=stammdaten', 'Standortdaten'],
@@ -58,7 +57,7 @@ function ui_settings_sidebar(string $active): void {
       <li><a href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"
              data-confirm-tone="normal">Abmelden</a></li>
     </ul>
-    <?php if ($userRole === 'admin'): ?>
+    <?php if (ist_admin()): ?>
       <h2 class="sidebar-subhead">Administration</h2>
       <ul>
         <li><a href="admin_users.php" <?= $active === 'admin' ? 'class="active"' : '' ?>>NutzerInnenverwaltung</a></li>

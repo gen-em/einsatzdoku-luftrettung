@@ -8,6 +8,12 @@ declare(strict_types=1);
  * Diese Datei benötigt selbst KEINE config.php.
  */
 
+// E-Mail-Normalisierung (M1-13). Diese Datei laeuft VOR der Ersteinrichtung
+// und kann weder db.php noch validate_lib.php laden — beide brauchen die
+// config.php, die es hier noch nicht gibt. Deshalb die abhaengigkeitsfreie
+// email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
+require_once __DIR__ . '/email_lib.php';
+
 $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
 $schemaPath = __DIR__ . '/schema.sql';
@@ -43,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $dbHost = $in('db_host'); $dbName = $in('db_name');
     $dbUser = $in('db_user'); $dbPass = (string)($_POST['db_pass'] ?? '');
-    $adminEmail = $in('admin_email');
+    $adminEmail = email_normalisieren($_POST['admin_email'] ?? '');
     $baseUrl = rtrim($in('base_url'), '/');
     $timezone = $in('timezone') ?: 'Europe/Berlin';
     $logoPath = $in('logo_path') ?: 'assets/images/gen-em_logo_helicopter.svg';
