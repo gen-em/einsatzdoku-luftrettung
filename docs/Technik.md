@@ -71,6 +71,7 @@ hems/
 │   ├── assets/            style.css, crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
+│   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
@@ -472,6 +473,16 @@ manuellem Speichern — Phasen ändern sich, der Track bleibt gleich),
 berechnet statt aus der Datei übernommen) und `update.php` (Backfill bei der
 Migration). Kein Formularfeld, daher nicht in `mission_fields.php`.
 
+Auf dem Uhr-Weg und beim Wiedereinspielen läuft die Berechnung **nach** dem
+Abschluss der Transaktion und in einem eigenen Fehlerblock: Die Höhe ist ein
+Komfortwert, und ein Fehler darin darf weder einen Upload noch eine
+Wiederherstellung kosten (seit Web 4.6.0 auch beim Wiedereinspielen, vorher
+stand der Aufruf dort innerhalb der Transaktion). Der Unterschied zwischen
+beiden Wegen ist die Meldung: Der Uhr-Weg schweigt (die Uhr kann mit der
+Auskunft nichts anfangen), das Wiedereinspielen zählt die Fehlschläge und gibt
+sie als `hoehe_fehler` zurück — dort wertet ein Mensch aus, was angekommen
+ist.
+
 **Zeitraum-API:** `api/range.php` liefert alle Einsätze eines Jahres oder Monats
 **bewusst ohne Trackpunkte** — bei einem ganzen Jahr wären das
 Hunderttausende Koordinaten. Die Karte der Zeitraumansicht (Einsatzort-Pins)
@@ -584,7 +595,9 @@ wird der Heuhaufen neu gebaut und sofort neu gefiltert.
 Zeilenaufbau stehen deshalb genau einmal dort. `EdMissionTable.erzeuge()` baut
 Kopf und Rumpf in ein übergebenes `<table>`; die Formatierer (`fmtTag`,
 `fmtDur`, `fmtKm`, `extractOrt`, `esc`) sind zusätzlich einzeln exportiert,
-weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. Eine neue
+weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. `esc` und
+`escape` zeigen seit Web 4.6.0 beide auf `EdHtml.escape` (`assets/html.js`);
+die Datei muss deshalb **vor** `missiontable.js` geladen werden. Eine neue
 Spalte ist ein Eintrag in `SPALTEN` und erscheint auf beiden Seiten.
 
 Zwei Rücksichten auf `zeitraum.php`, die sonst als Regression auffielen:
@@ -1039,8 +1052,10 @@ Die Bausteine im Einzelnen:
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
-| Maskierung | `assets/missiontable.js` (`escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). |
-| Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". |
+| Maskierung | `assets/html.js` (`EdHtml.escape`) | Eine Fassung, auch in Attributpositionen sicher (fünf Zeichen statt drei). Seit Web 4.6.0 in einer eigenen Datei statt in `missiontable.js` — die wird nur von zwei Seiten geladen, gebraucht wird die Maskierung auf fünf. `EdMissionTable.escape`/`.esc` bleiben als Weiterleitung. **Nicht dasselbe** wie `xmlEscape()` in `export.js`: GPX ist XML mit eigenen Regeln. |
+| Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Sicherungslauf) und schreibt je Einsatz `_pat` und `_patState`. |
+| Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Sicherung. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
+| Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. |
 
 **Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`

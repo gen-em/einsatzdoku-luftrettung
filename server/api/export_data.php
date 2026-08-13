@@ -70,30 +70,12 @@ const EXPORT_ORIGIN_LABEL = [
     'import' => 'import',
 ];
 
-/** Chunkweises IN(...) fuer grosse ID-Listen (Sicherheitsabstand zu
- *  MySQL/MariaDB-Parametergrenzen und zu grossen Einzel-Statements). */
-function export_fetch_chunked(PDO $pdo, string $sqlTemplate, array $ids, array $leadParams = []): array
-{
-    /* Platzhalter einsetzen OHNE sprintf (M3-14).
-     *
-     * $sqlTemplate ist eine Formatzeichenkette mit %s an der Stelle der
-     * Platzhalterliste. Damit ist jedes weitere Prozentzeichen im SQL-Text
-     * ein Formatbefehl: Ein kuenftiges LIKE '%tag%' oder MOD(x, 100) %% 7
-     * wuerde stillschweigend verstuemmelt — und der Fehler zeigte sich als
-     * unverstaendliche SQL-Meldung weit weg von der Ursache.
-     *
-     * Die Vorlagen tragen deshalb jetzt eine unverwechselbare Marke, die
-     * schlicht ersetzt wird. Ein Prozentzeichen ist danach ein
-     * Prozentzeichen. */
-    $out = [];
-    foreach (array_chunk($ids, 1000) as $chunk) {
-        $platz = implode(',', array_fill(0, count($chunk), '?'));
-        $st = $pdo->prepare(str_replace('{IDS}', $platz, $sqlTemplate));
-        $st->execute(array_merge($leadParams, $chunk));
-        foreach ($st->fetchAll() as $row) { $out[] = $row; }
-    }
-    return $out;
-}
+/* Die chunkweise IN(...)-Abfrage stand bis Web 4.5.3 HIER und war die einzige
+ * Umsetzung im Projekt. Tagesansicht und Sicherung fragten stattdessen je
+ * Datensatz einzeln — den Weg, den dieser Kommentar seit jeher beschreibt,
+ * ist ihm niemand gefolgt, weil er nur hier zu finden war. Seit Web 4.6.0
+ * steht er als sql_in_bloecken() in db.php und wird von allen drei Stellen
+ * benutzt (M3-15, M5-12). */
 
 /** UTC-DATETIME (aus DB, ohne Zonenangabe) -> ISO 8601 mit 'Z'. */
 function export_iso_utc(?string $utc): ?string
@@ -208,7 +190,7 @@ function export_meta(array $b, int $userId): never
     $resusSessionsByMission = [];
 
     if ($ids) {
-        foreach (export_fetch_chunked($pdo,
+        foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, phase, occurred_at, lat, lon
                  FROM mission_phases WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
                 $ids) as $r) {
@@ -220,28 +202,28 @@ function export_meta(array $b, int $userId): never
             ];
         }
 
-        foreach (export_fetch_chunked($pdo,
+        foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, name FROM mission_resources
                  WHERE mission_id IN ({IDS}) ORDER BY mission_id, id',
                 $ids) as $r) {
             $resourcesByMission[(int)$r['mission_id']][] = (string)$r['name'];
         }
 
-        foreach (export_fetch_chunked($pdo,
+        foreach (sql_in_bloecken($pdo,
                 "SELECT owner_id, COUNT(*) AS c FROM track_points
                  WHERE owner_type = 'mission' AND owner_id IN ({IDS}) GROUP BY owner_id",
                 $ids) as $r) {
             $trackCountByMission[(int)$r['owner_id']] = (int)$r['c'];
         }
 
-        $sessionRows = export_fetch_chunked($pdo,
+        $sessionRows = sql_in_bloecken($pdo,
             'SELECT id, mission_id, started_at FROM resus_sessions
              WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at',
             $ids);
         $sessionIds = array_map(static fn($r) => (int)$r['id'], $sessionRows);
         $eventsBySession = [];
         if ($sessionIds) {
-            foreach (export_fetch_chunked($pdo,
+            foreach (sql_in_bloecken($pdo,
                     'SELECT session_id, type, occurred_at FROM resus_events
                      WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at',
                     $sessionIds) as $r) {
@@ -315,7 +297,7 @@ function export_meta(array $b, int $userId): never
 
     $trackCountByRest = [];
     if ($restIds) {
-        foreach (export_fetch_chunked($pdo,
+        foreach (sql_in_bloecken($pdo,
                 "SELECT owner_id, COUNT(*) AS c FROM track_points
                  WHERE owner_type = 'rest' AND owner_id IN ({IDS}) GROUP BY owner_id",
                 $restIds) as $r) {
@@ -363,7 +345,7 @@ function export_track(array $b, int $userId): never
     // Datentrennung + Papierkorb: nur IDs zulassen, die dem Konto gehoeren
     // und nicht geloescht sind (I3, I4).
     $table = $ownerType === 'mission' ? 'missions' : 'rest_segments';
-    $owned = export_fetch_chunked($pdo,
+    $owned = sql_in_bloecken($pdo,
         "SELECT id FROM `$table` WHERE user_id = ? AND deleted_at IS NULL AND id IN ({IDS})",
         $ids, [$userId]);
     $validIds = array_map(static fn($r) => (int)$r['id'], $owned);
@@ -372,7 +354,7 @@ function export_track(array $b, int $userId): never
     foreach ($validIds as $id) { $result[(string)$id] = []; }
 
     if ($validIds) {
-        $rows = export_fetch_chunked($pdo,
+        $rows = sql_in_bloecken($pdo,
             "SELECT owner_id, lat, lon, ele, ts FROM track_points
              WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq",
             $validIds, [$ownerType]);

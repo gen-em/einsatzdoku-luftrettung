@@ -31,9 +31,9 @@ schon durchsetzt und welche noch nicht.
 | Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht geprüft |
 | Kalendertag muss existieren (3.2) | durchgesetzt |
 | Koordinatenbereiche, Mengenbegrenzungen (3.2) | durchgesetzt |
-| Leere Liste löscht nichts (3.1) | **noch nicht** — eine leere Phasenliste löscht heute die vorhandenen |
+| Leere oder zu kurze Liste löscht nichts (3.1) | durchgesetzt |
 | Antwortfeld `rejected` (5) | durchgesetzt |
-| Antwortfelder `kept_*` (5) | **noch nicht** vorhanden |
+| Antwortfelder `kept_*` (5) | durchgesetzt |
 | Zufallsanteil in der Client-Kennung (8) | **noch nicht** in der Uhr-App |
 
 Die als „noch nicht" gekennzeichneten Punkte beschreiben den **Zielzustand**
@@ -116,21 +116,41 @@ Regeln:
 
 ### 3.1 Fehlende und leere Listen — der Unterschied zählt
 
-Für `phases[]`, `resus_sessions[]` und `track.points[]` gilt:
+Für `phases[]` und `resus_sessions[]` gilt:
 
 | Zustand | Bedeutung | Verhalten des Servers |
 |---|---|---|
 | Schlüssel **fehlt** | „dazu sage ich nichts" | Vorhandene Daten bleiben unverändert |
 | Liste ist **leer** | „es gibt keine" | Vorhandene Daten bleiben erhalten; der Server vermerkt es in der Antwort |
-| Liste **gefüllt** | vollständiger Stand | Ersetzt den vorhandenen Stand |
+| Liste ist **kürzer** als der vorhandene Stand | vermutlich unvollständig aufgebaut | Vorhandene Daten bleiben erhalten; der Server vermerkt es in der Antwort |
+| Liste ist **gleich lang oder länger** | vollständiger Stand | Ersetzt den vorhandenen Stand |
 
 Eine leere Liste löscht also **nichts**. Der Grund ist der Weg dorthin: Eine
 leere Liste entsteht viel wahrscheinlicher durch einen Fehler beim Aufbau der
 Nachricht als durch die Absicht, eine bereits dokumentierte Reanimation wieder
 zu entfernen. Wer wirklich löschen will, tut das in der Weboberfläche.
 
-Der Server nennt diesen Fall in der Antwort (`kept_*`, siehe Abschnitt 5),
-damit er auf der Uhr auffällt statt still zu verschwinden.
+**Dieselbe Überlegung gilt für eine zu kurze Liste.** Eine halb aufgebaute
+Nachricht ist derselbe Fehler wie eine leere, nur unauffällig: Sie kommt mit
+drei Phasen an, wo acht stehen, und der Verlust fällt niemandem auf. Der Server
+zählt deshalb, was er hätte, und übergeht jede Liste, die weniger enthält.
+
+Das ist für einen Client folgenlos, der sich an diesen Vertrag hält: Beide
+Listen wachsen nur. Eine erneut gesetzte Phase ist eine Korrektur und damit ein
+**zusätzlicher** Eintrag (Abschnitt 3), und eine abgeschlossene Reanimation
+verschwindet nicht wieder. Wer eine kürzere Liste sendet, hat sie nicht
+vollständig aufgebaut.
+
+Gezählt wird **nach der Prüfung**: Zehn Einträge, von denen neun gegen
+Abschnitt 3.2 verstoßen, sind ein Eintrag. Die verworfenen erscheinen wie
+gewohnt in `rejected`.
+
+`track.points[]` ist von dieser Regel nicht berührt: Spurpunkte werden
+**angehängt**, nie ersetzt (Abschnitt 2). Eine leere Punktliste speichert
+nichts und löscht auch nichts.
+
+Der Server nennt einen übergangenen Fall in der Antwort (`kept_*`, siehe
+Abschnitt 5), damit er auf der Uhr auffällt statt still zu verschwinden.
 
 ### 3.2 Grenzen und Mengen
 
@@ -208,12 +228,15 @@ Zusätzlich können auftreten:
 | Feld | Bedeutung |
 |---|---|
 | `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
-| `kept_phases` | eine leere Phasenliste wurde übergangen, der vorhandene Stand bleibt — *noch nicht umgesetzt* |
-| `kept_resus` | dasselbe für die Reanimationen — *noch nicht umgesetzt* |
+| `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand); der Wert nennt die **Anzahl der behaltenen** Einträge |
+| `kept_resus` | dasselbe für die Reanimationssitzungen |
 
-Ein `ok: true` mit gefülltem `rejected` bedeutet: Der Upload ist angekommen,
-aber **nicht vollständig übernommen**. Die Uhr sollte das anzeigen und nicht
-als reinen Erfolg behandeln.
+Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
+Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte
+das anzeigen und nicht als reinen Erfolg behandeln. Die beiden Fälle
+unterscheiden sich: `rejected` nennt einzelne verworfene Werte, ein `kept_*`
+sagt, dass eine ganze Liste übergangen wurde und der Serverstand unverändert
+blieb.
 
 Fehler:
 

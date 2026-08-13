@@ -24,8 +24,124 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P8a | Aufräumen, Bündel 1+2 | Web 4.5.1 | **erledigt** |
 | P8b | Aufräumen, Bündel 3+4 | Web 4.5.2 | **erledigt** |
 | — | Nachträge aus dem Betrieb | Web 4.5.3 | **erledigt** |
-| P8 | Aufräumen ohne Verhaltensänderung | — | offen |
+| P8c | Aufräumen, Bündel 5 und 6 | Web 4.6.0 | **erledigt** |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P8c — Aufräumen, Bündel 5 und 6 (Web 4.6.0)
+
+Zehn Befunde: die beiden Leistungsbefunde und die sechs Befunde vom Grad M ohne
+Abhängigkeit zu anderen Paketen. Keine Schemaänderung. **Damit ist P8
+abgeschlossen.**
+
+| Befund | Änderung | Baustein |
+|---|---|---|
+| M3-15 | Spurpunkte der Tagesansicht gebündelt statt je Datensatz | `sql_in_bloecken()` |
+| M5-12 | Sicherungsaufbau gebündelt: 226 → 16 Abfragen bei 43 Einsätzen | `sql_in_bloecken()` |
+| M5-04 | Formelzeichen im CSV-Export neutralisiert, Zahlen ausgenommen | — |
+| M4-02 | Leere und zu kurze Listen löschen nichts mehr, `kept_*` in der Antwort | — |
+| M5-05 | Höhenberechnung beim Wiedereinspielen aus der Transaktion genommen | — |
+| M5-13 | Herkunftskonto der Sicherung wird beim Einspielen angezeigt | — |
+| M6-03 | Maskierung vereinheitlicht | B7 |
+| M6-05 | Vier Kopien durch eine ersetzt, jetzt in `assets/html.js` | B7 |
+| M6-06 | Fünf Entschlüsselungsschleifen durch `entschluessleListe()` ersetzt | B8 |
+| M2-06 | Wiederherstellungsschlüssel wird vor der Ableitung geprüft | — |
+
+### Entschieden: M4-02 geht bewusst weiter als der Befund
+
+Der Befund beschreibt die **leere** Liste. Umgesetzt ist die allgemeinere
+Regel: Übergangen wird jede Liste, die weniger gültige Einträge enthält als der
+gespeicherte Stand.
+
+Der Grund ist derselbe wie beim leeren Fall, nur weniger sichtbar. Eine halb
+aufgebaute Nachricht kommt mit drei Phasen an, wo acht stehen — und der Verlust
+fällt niemandem auf, weil die Antwort „ok“ lautet.
+
+**Für den einzigen vorhandenen Client kostet das nichts.** Nachgesehen in
+`watch/source/Model.mc`: `setPhase()` hängt an, ein erneutes Setzen erzeugt
+einen weiteren Zeitstempel statt einen bestehenden zu ändern (das ist die
+Korrektur-Regel aus JSON-Vertrag 3). Eine kürzere Liste kann auf der Uhr nicht
+entstehen.
+
+Gezählt wird **nach** der Prüfung, nicht davor: Zehn Einträge, von denen neun
+gegen die Wertegrenzen verstoßen, sind ein Eintrag. Sonst könnte eine Nachricht
+voller unbrauchbarer Werte einen guten Stand verdrängen.
+
+Der JSON-Vertrag ist entsprechend geändert: Abschnitt 3.1 hat eine vierte
+Zeile bekommen, `track.points` ist ausdrücklich ausgenommen (Spurpunkte werden
+angehängt, nie ersetzt), und zwei Zeilen der Tabelle „Stand der Durchsetzung“
+stehen jetzt auf „durchgesetzt“. Offen bleibt dort nur noch der Zufallsanteil
+in der Client-Kennung (P9).
+
+### Entschieden: M5-13 zeigt an, statt zu fragen
+
+Eine Sicherung in ein fremdes Konto einzuspielen ist ein **vorgesehener**
+Vorgang — dafür verschlüsselt der Browser die Angaben neu. Eine Rückfrage wäre
+eine Warnung vor etwas Erlaubtem und würde nach dem dritten Mal weggeklickt;
+danach wirkt sie auch dort nicht mehr, wo sie nötig ist.
+
+Deshalb: Herkunftskonto und Erstellungszeitpunkt stehen nach dem Öffnen der
+Datei als Zeile über der Statusanzeige. Die vorhandene Rückfrage bleibt dem
+Fall vorbehalten, in dem mitgeführter Chiffretext im Zielkonto **unlesbar**
+bliebe — sie nennt jetzt zusätzlich die Herkunftsadresse.
+
+### Entschieden: B7 wandert aus der Tabellenkomponente heraus
+
+Das Konzept sagt, die Maskierung solle „aus der vorhandenen gemeinsamen
+Tabellenkomponente bereitgestellt“ werden. Beim Umstellen der Aufrufer zeigte
+sich, dass das nicht trägt: `missiontable.js` wird von `suche.php` und
+`zeitraum.php` geladen, gebraucht wird die Maskierung aber auf fünf Seiten.
+Die drei übrigen hätten die vollständige Tabellenkomponente laden müssen, um an
+eine Funktion mit fünf Zeilen zu kommen.
+
+Sie steht deshalb jetzt in `assets/html.js`. `EdMissionTable.escape` und `.esc`
+bleiben als Weiterleitung bestehen — vorhandene Aufrufe bleiben gültig, und an
+der Aufrufstelle ist zu sehen, dass es nur noch eine Fassung gibt.
+
+**Nicht vereinheitlicht:** `xmlEscape()` in `export.js`. Es erzeugt GPX, also
+XML, und benutzt `&apos;` statt `&#39;`. Zwei Aufgaben, die sich ähneln, sind
+nicht dieselbe Aufgabe; das steht als Kommentar dabei, damit es nicht beim
+nächsten Aufräumen doch zusammengelegt wird.
+
+### Ein Fund, der nicht im Review steht
+
+Beim Umstellen des Exports auf B8: **Der Export ließ unlesbare Angaben
+stillschweigend leer.** Wer mit einem nicht passenden Schlüssel exportiert,
+bekam eine Datei, deren Patientenspalten leer sind — sie sieht vollständig aus
+und ist es nicht. Das ist dieselbe Kette wie bei M6-02, nur einen Schritt
+weiter: Dort ging es um die Anzeige, hier um eine Datei, die weitergegeben
+wird.
+
+Jetzt kommt vorher eine Rückfrage mit der Zahl der betroffenen Einsätze.
+
+### Nachweis
+
+75 automatische Prüfungen gegen MariaDB 10.11 und echten HTTP-Verkehr, alle
+bestanden.
+
+* **M5-12 gemessen, nicht geschätzt:** 43 Einsätze mit je einer
+  Reanimationssitzung — alte Fassung 226 Abfragen, neue Fassung 16. Bei drei
+  Einsätzen sind es ebenfalls 16; die Zahl hängt nicht mehr am Bestand.
+* **M3-15:** Spuren landen beim richtigen Einsatz, in `seq`-Reihenfolge (auch
+  bei verdrehter Einfügereihenfolge), ein Ruhesegment ohne Punkte erscheint
+  nicht in der Antwort.
+* **M4-02:** leere Liste, kürzere Liste, gleich lange Liste (ersetzt), längere
+  Liste (ersetzt, mehrfache Phasennummern bleiben erhalten), Liste mit vier von
+  fünf unbrauchbaren Einträgen (übergangen, Ursachen in `rejected`), fehlender
+  Schlüssel (unverändert, kein `kept_*`), neuer Einsatz mit leerer Liste (kein
+  `kept_*`, weil nichts behalten wurde).
+* **M5-05 nachgestellt:** Bei erzwungenem Fehler in der Höhenberechnung bleiben
+  alle Einsätze gespeichert, `hoehe_fehler` nennt die Zahl. Vorher hätte
+  derselbe Fehler die gesamte Wiederherstellung zurückgerollt.
+* **M5-04:** `=1+1`, `+49 170`, `@user` und `-abc` bekommen den Apostroph,
+  `-5`, `-5.5` und `0` nicht.
+* **M2-06:** leere Eingabe, zu kurz, zu lang, Zeichen außerhalb des Alphabets
+  — jeweils mit eigener Ursache; Bindestriche und Kleinschreibung stören nicht.
+
+**Nicht ohne Testinstallation prüfbar:** Darstellung, Karten-Popups, Dialoge
+und das Zusammenspiel der Skripte im Browser — insbesondere, dass `html.js` auf
+allen fünf Seiten vor den abhängigen Skripten geladen wird.
 
 ---
 
@@ -484,8 +600,8 @@ Zeitformate annimmt (Uhr mit `Z`, Sicherung in Datenbankschreibweise).
 
 Drei Zeilen der Tabelle „Stand der Durchsetzung" im JSON-Vertrag stehen jetzt
 auf „durchgesetzt": Kalendertag, Wertebereiche und Mengen, Antwortfeld
-`rejected`. Offen bleiben das Verhalten bei leeren Listen samt `kept_*` (P8)
-und der Zufallsanteil in der Client-Kennung (P9).
+`rejected`. Offen blieben damals das Verhalten bei leeren Listen samt `kept_*`
+(mit P8c erledigt) und der Zufallsanteil in der Client-Kennung (P9).
 
 ---
 
@@ -562,7 +678,8 @@ dort steht.
 Der Vertrag beschreibt jetzt Regeln, die der Server **noch nicht** durchsetzt —
 Kalendertagsprüfung, Wertebereiche und Mengen auf dem Uhr-Weg (P3), das
 Verhalten bei leeren Listen und die Antwortfelder `kept_*`/`rejected` (P8), der
-Zufallsanteil in der Client-Kennung (Uhr-App).
+Zufallsanteil in der Client-Kennung (Uhr-App). Bis auf die letzte Zeile sind
+alle inzwischen eingelöst.
 
 Das ist genau der Fehler, den M7-04 rügt — außer man legt ihn offen. Deshalb
 steht in Abschnitt 0 des Vertrags eine Tabelle, die je Regel sagt, ob sie

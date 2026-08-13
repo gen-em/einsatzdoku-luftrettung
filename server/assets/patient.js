@@ -3,13 +3,15 @@
  * Diese Datei rechnet nur; sie sieht die Daten erst, nachdem crypto.js sie
  * entschluesselt hat.
  *
- * Eingebunden von: einsatz.php, einsatz_form.php, import.php, index.php,
- * suche.php, zeitraum.php — damit alle dieselbe Altersberechnung verwenden.
+ * Eingebunden von: einsatz.php, einsatz_form.php, einstellungen.php,
+ * import.php, index.php, suche.php, zeitraum.php — damit alle dieselbe
+ * Altersberechnung und dieselbe Entschluesselungsschleife verwenden.
  *
  * (Der Kopf nannte bis Web 4.5.2 vier Seiten; import.php und suche.php waren
  * inzwischen dazugekommen, ohne dass er nachgezogen wurde. Eine Liste, die
  * nicht stimmt, ist schlechter als keine: Wer sie liest, glaubt zu wissen,
- * welche Seiten eine Aenderung hier trifft.)
+ * welche Seiten eine Aenderung hier trifft. einstellungen.php kam mit Web
+ * 4.6.0 dazu — der Sicherungslauf benutzt seither entschluessleListe.)
  */
 (function () {
   'use strict';

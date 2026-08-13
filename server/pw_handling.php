@@ -283,6 +283,10 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" id="rc" required autocomplete="off" autocapitalize="characters"
                placeholder="ABCD-EFGH-JKMN-PQRS-TVWX">
       </label>
+      <?php /* Sofortmeldung zur Eingabe (M2-06). Sie steht direkt am Feld,
+               weil sie waehrend des Abtippens hilft — nicht erst, wenn alles
+               eingegeben ist und der Knopf gedrueckt wurde. */ ?>
+      <p class="muted small" id="rcstate" style="min-height:1.2em"></p>
       <label>Neues Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
@@ -371,13 +375,44 @@ if (ERSTVERGABE) {
 
 /* ---- Reset: Inhaltsschluessel umpacken -------------------------------- */
 } else {
+  /* SOFORTPRUEFUNG DER EINGABE (M2-06).
+   *
+   * Sie meldet, WAS an der Eingabe nicht stimmt — ein Zeichen, das es im
+   * Alphabet nicht gibt, oder eine unvollstaendige Laenge. Ohne sie lautet
+   * die einzige Rueckmeldung „passt nicht", und die bekommt man erst nach
+   * dem Absenden und ohne Unterscheidung zwischen Tippfehler und falschem
+   * Zettel. Der Knopf bleibt trotzdem bedienbar: Die Meldung ist eine Hilfe,
+   * keine Sperre. */
+  const rcFeld  = document.getElementById('rc');
+  const rcState = document.getElementById('rcstate');
+  function rcPruefen() {
+    const wert = rcFeld.value.trim();
+    if (wert === '') { rcState.textContent = ''; return null; }
+    const p = EdCrypto.pruefeRecoveryCode(wert);
+    rcState.textContent = p.ok
+      ? 'Schlüssel vollständig.'
+      : EdCrypto.recoveryCodeMeldung(p);
+    return p;
+  }
+  rcFeld.addEventListener('input', rcPruefen);
+  rcFeld.addEventListener('blur', rcPruefen);
+
   form.addEventListener('submit', async ev => {
     if (form.dataset.ready === '1') return;
     ev.preventDefault();
 
     const pw1 = document.getElementById('pw1').value;
     const pw2 = document.getElementById('pw2').value;
-    const rc  = document.getElementById('rc').value.trim();
+    const rc  = rcFeld.value.trim();
+    // Erst der Schluessel: Ein Tippfehler darin ist der wahrscheinlichste
+    // Grund fuer ein Scheitern, und er ist behebbar, ohne etwas zu verlieren.
+    const rcPruef = EdCrypto.pruefeRecoveryCode(rc);
+    if (!rcPruef.ok) {
+      rcState.textContent = EdCrypto.recoveryCodeMeldung(rcPruef);
+      state.textContent = 'Der Wiederherstellungsschlüssel ist noch nicht vollständig.';
+      rcFeld.focus();
+      return;
+    }
     if (pw1.length < 10) { state.textContent = 'Mindestens 10 Zeichen.'; return; }
     if (pw1 !== pw2)     { state.textContent = 'Die Passwörter stimmen nicht überein.'; return; }
 
@@ -388,7 +423,13 @@ if (ERSTVERGABE) {
       try {
         ck = await EdCrypto.decrypt(rk, WRAP_RC);       // Inhaltsschluessel entpacken
       } catch (e) {
-        state.textContent = 'Der Wiederherstellungsschlüssel passt nicht.';
+        /* Ab hier ist der Schluessel FORMAL in Ordnung — Laenge und Alphabet
+         * stimmen. Dass er trotzdem nicht passt, heisst also: falscher
+         * Zettel oder falsches Konto, kein Tippfehler. Genau das sagt die
+         * Meldung jetzt auch (M2-06). */
+        state.textContent = 'Der Schlüssel ist formal korrekt, passt aber nicht zu '
+                          + 'diesem Konto. Kein Tippfehler — vermutlich der Schlüssel '
+                          + 'eines anderen Kontos oder aus einer früheren Einrichtung.';
         return;                                        // nichts absenden
       }
 

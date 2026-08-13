@@ -189,6 +189,18 @@ Gelten für alle drei Tabellen:
   `pandas.read_csv(sep=';')` ohne weitere Angaben gelesen.
 - Quoting nach RFC 4180: Felder mit `;`, `"` oder Zeilenumbruch stehen in
   Anführungszeichen, enthaltene Anführungszeichen sind verdoppelt.
+- **Formelschutz (seit Web 4.6.0):** Ein Textwert, der mit `=`, `+`, `-`, `@`,
+  Tabulator oder Wagenrücklauf beginnt, bekommt einen vorangestellten
+  Apostroph. Er gehört **nicht zum Wert**, sondern verhindert, dass ein
+  Tabellenprogramm die Zelle als Formel ausführt — das tun Excel und
+  LibreOffice auch bei einer Zelle in Anführungszeichen, weil das Quoting zum
+  Dateiformat gehört und nicht zum Zellinhalt.
+  **Zahlen sind ausgenommen:** Ein Wert der Form `-12` oder `-3.5` bleibt
+  unverändert und damit eine Zahl. Wer die Dateien maschinell liest, entfernt
+  einen führenden Apostroph aus Textspalten.
+  Der XLSX-Weg (Profile Standard und GuteSeele) ist **nicht** betroffen und
+  bekommt deshalb auch keinen Apostroph: Dort entstehen echte Zellen vom Typ
+  Zeichenkette, die per Dateiformat nie als Formel gelesen werden.
 - Genau **eine** Kopfzeile mit stabilen technischen Namen. Keine Titelzeile,
   keine Leerzeile — die Datei ist maschinenlesbar, nicht hübsch.
 - **Zeitstempel:** ISO 8601 mit Zonenversatz, z. B. `2026-03-14T11:50:00+01:00`.

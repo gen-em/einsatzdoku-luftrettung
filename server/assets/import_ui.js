@@ -45,11 +45,12 @@
         el.hidden = !text;
     }
 
-    function esc(s) {
-        return String(s === null || s === undefined ? '' : s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
+    /* Maskierung: eine Fassung fuer das ganze Projekt (B7, assets/html.js).
+     * Hier stand eine eigene Kopie, die das einfache Anfuehrungszeichen
+     * ausliess — folgenlos, solange jedes Attribut mit doppelten
+     * Anfuehrungszeichen geschrieben wird, und genau deshalb eine Falle fuer
+     * die naechste Aenderung (M6-03, M6-05). */
+    var esc = EdHtml.escape;
 
     // ------------------------------------------------------- Profil und Datei
 
@@ -269,13 +270,15 @@
         for (var tag in (d.days || {})) {
             if (!Object.prototype.hasOwnProperty.call(d.days, tag)) { continue; }
             var missions = d.days[tag].missions || [];
+            // Entschluesseln samt Fehlerbehandlung an einer Stelle (M6-06,
+            // Baustein B8). Ein Datensatz, der nicht zum Schluessel passt,
+            // liefert hier keine Einsatznummer — er wird uebersprungen, wie
+            // zuvor auch. Dass er unlesbar ist, faellt auf den Anzeigeseiten
+            // auf; die Dublettenpruefung ist dafuer der falsche Ort.
+            await EdPat.entschluessleListe(missions, ck);
             for (var i = 0; i < missions.length; i++) {
-                var m = missions[i];
-                if (!m.pat_blob) { continue; }
-                try {
-                    var o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {};
-                    if (o.mission_no) { index[o.mission_no] = m.id; }
-                } catch (e) { /* Blob passt nicht zum Schluessel — ueberspringen */ }
+                var o = missions[i]._pat;
+                if (o && o.mission_no) { index[o.mission_no] = missions[i].id; }
             }
         }
         return index;

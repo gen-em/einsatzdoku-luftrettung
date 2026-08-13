@@ -89,6 +89,10 @@ if ($seqFrom < 0) json_out(['error' => 'payload'], 400);
 if (!ist_liste($points)) { json_out(['error' => 'payload'], 400); }
 $points = pruef_menge($points, LIMIT_TRACKPUNKTE, 'track.points', $pruef);
 
+/* Uebergangene Listen (M4-02). Bleibt leer, wenn nichts uebergangen wurde;
+ * nur dann erscheinen die Felder kept_* in der Antwort. */
+$behalten = [];
+
 $pdo = db();
 $pdo->beginTransaction();
 try {
@@ -154,13 +158,37 @@ try {
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
 
-        // Phasenliste vollstaendig ersetzen (Vertrag: kein Delta).
-        // MEHRFACHE EINTRAEGE DERSELBEN NUMMER BLEIBEN ERHALTEN — eine erneut
-        // gesetzte Phase ist eine Korrektur, keine Dublette (JSON-Vertrag 3).
+        /* ---- Phasenliste ersetzen — aber nur, wenn dabei nichts verlorengeht
+         *      (M4-02, JSON-Vertrag 3.1) ------------------------------------
+         *
+         * WAS HIER FALSCH WAR
+         * Die Bedingung lautete "Schluessel vorhanden und ein Feld". Eine
+         * LEERE Liste besteht beide Pruefungen: Sie loeschte den vorhandenen
+         * Stand und fuegte nichts ein. Aus "dazu sage ich nichts" und "es gibt
+         * keine" wurde dasselbe — und die Antwort lautete "ok".
+         *
+         * Der Weg zu einer leeren Liste ist viel wahrscheinlicher ein Fehler
+         * beim Aufbau der Nachricht als der Wunsch, eine dokumentierte Phase
+         * wieder loszuwerden. Wer wirklich loeschen will, tut das im Web.
+         *
+         * WARUM ES NICHT BEI DER LEEREN LISTE BLEIBT
+         * Eine halb aufgebaute Nachricht ist derselbe Fehler, nur unauffaellig:
+         * Sie kommt mit drei Phasen an, wo acht stehen, und der Verlust faellt
+         * niemandem auf. Die Uhr fuegt Phasen ausschliesslich HINZU
+         * (Model.mc: setPhase() haengt an, ein erneutes Setzen ist eine
+         * Korrektur und damit ein weiterer Eintrag) — eine kuerzere Liste kann
+         * bei ihr also gar nicht entstehen. Die Regel kostet den einzigen
+         * vorhandenen Client damit nichts und faengt beide Faelle.
+         *
+         * Gezaehlt wird nach der PRUEFUNG: Zehn Eintraege, von denen neun
+         * unbrauchbar sind, sind ein Eintrag.
+         *
+         * MEHRFACHE EINTRAEGE DERSELBEN NUMMER BLEIBEN ERHALTEN — eine erneut
+         * gesetzte Phase ist eine Korrektur, keine Dublette (JSON-Vertrag 3).
+         */
         if (isset($b['phases']) && is_array($b['phases'])) {
             $phasen = pruef_menge($b['phases'], LIMIT_PHASEN, 'phases', $pruef);
-            $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
-            $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+            $neuePhasen = [];
             foreach ($phasen as $p) {
                 if (!is_array($p)) { $pruef->melde('phases', 'kein Objekt'); continue; }
                 $at = pruef_utc($p['at'] ?? null, 'phases.at', $pruef);
@@ -168,9 +196,24 @@ try {
                 if ($at === null || $ph === null) continue;
                 // Koordinaten geprueft: sie gehen nicht nur in die Karte, sondern
                 // auch in die Hoehenberechnung des Einsatzorts ein.
-                $ins->execute([$ownerId, $ph, $at,
+                $neuePhasen[] = [$ph, $at,
                     pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
-                    pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
+                    pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)];
+            }
+            $zaehl = $pdo->prepare('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?');
+            $zaehl->execute([$ownerId]);
+            $vorhandenePhasen = (int)$zaehl->fetchColumn();
+
+            if (count($neuePhasen) >= $vorhandenePhasen) {
+                $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$ownerId]);
+                $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
+                foreach ($neuePhasen as $np) {
+                    $ins->execute([$ownerId, $np[0], $np[1], $np[2], $np[3]]);
+                }
+            } else {
+                // Behalten und NENNEN — sonst waere der uebergangene Upload von
+                // einem uebernommenen nicht zu unterscheiden (JSON-Vertrag 5).
+                $behalten['kept_phases'] = $vorhandenePhasen;
             }
         }
 
@@ -185,16 +228,16 @@ try {
         }
         if ($sessions !== null) {
             $sessions = pruef_menge($sessions, LIMIT_REA_SESSION, 'resus_sessions', $pruef);
-            $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
-            $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
-            $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+            // Erst pruefen und sammeln, dann entscheiden — dieselbe Regel wie
+            // bei den Phasen (M4-02). Verglichen werden SITZUNGEN; sie sind
+            // die Eintraege dieser Liste.
+            $neueSitzungen = [];
             foreach ($sessions as $sess) {
                 if (!is_array($sess)) { $pruef->melde('resus_sessions', 'kein Objekt'); continue; }
                 $rStart = pruef_utc($sess['started_at'] ?? null, 'resus.started_at', $pruef);
                 if ($rStart === null) continue;
-                $insS->execute([$ownerId, $rStart]);
-                $sid = (int)$pdo->lastInsertId();
                 $events = pruef_menge($sess['events'] ?? [], LIMIT_REA_EREIGN, 'resus.events', $pruef);
+                $gepruefteEreignisse = [];
                 foreach ($events as $ev) {
                     if (!is_array($ev)) { $pruef->melde('resus.events', 'kein Objekt'); continue; }
                     $at = pruef_utc($ev['at'] ?? null, 'resus.events.at', $pruef);
@@ -202,9 +245,28 @@ try {
                     // steckt in started_at der Sitzung (JSON-Vertrag 3.3).
                     $ty = pruef_reanimationsart($ev['type'] ?? null, 'resus.events.type', $pruef);
                     if ($at !== null && $ty !== null && $ty !== 'beginn') {
-                        $insE->execute([$sid, $ty, $at]);
+                        $gepruefteEreignisse[] = [$ty, $at];
                     }
                 }
+                $neueSitzungen[] = ['start' => $rStart, 'events' => $gepruefteEreignisse];
+            }
+            $zaehl = $pdo->prepare('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?');
+            $zaehl->execute([$ownerId]);
+            $vorhandeneSitzungen = (int)$zaehl->fetchColumn();
+
+            if (count($neueSitzungen) >= $vorhandeneSitzungen) {
+                $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$ownerId]);
+                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
+                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                foreach ($neueSitzungen as $ns) {
+                    $insS->execute([$ownerId, $ns['start']]);
+                    $sid = (int)$pdo->lastInsertId();
+                    foreach ($ns['events'] as $ne) {
+                        $insE->execute([$sid, $ne[0], $ne[1]]);
+                    }
+                }
+            } else {
+                $behalten['kept_resus'] = $vorhandeneSitzungen;
             }
         }
         }   // Ende: nicht-manueller Einsatz
@@ -303,6 +365,10 @@ try {
     if (!$pruef->sauber()) {
         $antwort['rejected'] = $pruef->nachUrsache();
     }
+    /* Eine uebergangene Liste ist genauso zu nennen wie ein verworfener Wert
+     * (M4-02): Der vorhandene Stand blieb, die gesendete Liste wurde NICHT
+     * uebernommen. Ohne diese Angabe sieht das aus wie ein Erfolg. */
+    foreach ($behalten as $feld => $zahl) { $antwort[$feld] = $zahl; }
     json_out($antwort);
 } catch (Throwable $ex) {
     $pdo->rollBack();

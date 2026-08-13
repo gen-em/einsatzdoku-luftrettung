@@ -72,6 +72,7 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
+<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -82,7 +83,9 @@ const MID = <?= $mid ?>;
 // kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 
-function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+// Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
+// ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
+const esc = EdHtml.escape;
 function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
 function fmtKm(m){ return m == null ? '–' : (m / 1000).toFixed(1).replace('.', ',') + ' km'; }
 function zeigeLadeFehler(msg){

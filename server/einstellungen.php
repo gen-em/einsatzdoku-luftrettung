@@ -1000,16 +1000,26 @@ if ($tab === 'geraete') {
       <label>Backup-Passwort
         <input type="password" id="ipw" autocomplete="off"></label>
       <button class="btn-primary" id="impbtn">Backup importieren</button>
+      <?php /* Herkunft der geoeffneten Datei (M5-13). Steht ueber der
+               Statuszeile, weil es die Frage beantwortet, die man VOR dem
+               Einspielen hat: Ist das die richtige Datei? */ ?>
+      <p class="muted" id="impherkunft" hidden></p>
       <p class="muted" id="impstate" style="min-height:1.3em"></p>
     </div>
 
     <script src="<?= asset('assets/crypto.js') ?>"></script>
     <script src="<?= asset('assets/keyguard.js') ?>"></script>
     <script src="<?= asset('assets/unlock.js') ?>"></script>
+    <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
+             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt. */ ?>
+    <script src="<?= asset('assets/patient.js') ?>"></script>
     <script>
     const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
     const PAT_KEY_CHECK = <?= json_encode($patKeyCheck) ?>;
     const KDF_SALT = <?= json_encode($kdfSalt) ?>;
+    // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
+    const KONTO_MAIL = <?= json_encode($userEmail) ?>;
+    const KONTO_NAME = <?= json_encode($userName) ?>;
     const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
@@ -1070,12 +1080,14 @@ if ($tab === 'geraete') {
         }
 
         expState.textContent = 'Geschützte Angaben werden entschlüsselt…';
-        let n = 0, unlesbar = 0;
+        /* Entschlüsseln und zählen an EINER Stelle (M6-06, Baustein B8) — was
+         * mit dem Ergebnis geschieht, bleibt Sache dieser Seite, denn hier ist
+         * es etwas anderes als auf einer Anzeigeseite. */
+        const zahl = await EdPat.entschluessleListe(data.missions || [], key);
+        const n = zahl.ok, unlesbar = zahl.unlesbar;
         for (const m of (data.missions || [])) {
-          if (!m.pat_blob) continue;
-          try {
-            m.pat = JSON.parse(await EdCrypto.decrypt(key, m.pat_blob));
-            n++;
+          if (m._patState === 'ok') {
+            m.pat = m._pat;
             /* Das Entfernen des Chiffretexts gehört in DIESEN Zweig.
              *
              * Vorher stand es hinter dem Fehlerblock und lief deshalb auch im
@@ -1087,13 +1099,15 @@ if ($tab === 'geraete') {
              * stimmt, erstellt als Erstes eine Sicherung — genau die Handlung
              * vollendete den Verlust. */
             delete m.pat_blob;
-          } catch (e) {
+          } else if (m._patState === 'unlesbar') {
             /* Nicht lesbar: Chiffretext MITNEHMEN statt verwerfen. Die Datei
              * trägt die Angaben damit weiterhin, nur eben verschlüsselt.
              * Zurück in dasselbe Konto gespielt, sind sie wieder lesbar. */
             m.pat_unreadable = true;
-            unlesbar++;
           }
+          // Arbeitsfelder gehören nicht in die Datei — das Format zählt seine
+          // Spalten auf (M5-07), und das gilt auch hier.
+          delete m._pat; delete m._patState; delete m._patFehler;
         }
 
         expState.textContent = 'Datei wird verschlüsselt…';
@@ -1139,6 +1153,42 @@ if ($tab === 'geraete') {
         impState.textContent = 'Datei wird geöffnet…';
         const data = await EdCrypto.openBackup(pw, bytes);
 
+        /* HERKUNFT DER DATEI NENNEN (M5-13).
+         *
+         * Der Block `user` steht seit dem ersten Dateiformat in jeder
+         * Sicherung und wurde beim Einspielen nie angesehen. Wer zwei Konten
+         * betreut oder eine Datei aus einer Übergabe bekommt, hatte damit
+         * keine Möglichkeit zu prüfen, ob es die richtige ist — es blieb der
+         * Dateiname, und der sagt nur das Datum.
+         *
+         * Die Angabe wird ANGEZEIGT, nicht abgefragt: Eine Sicherung in ein
+         * fremdes Konto einzuspielen ist ein vorgesehener Vorgang (deshalb
+         * verschlüsselt der Browser die Angaben neu). Eine Rückfrage an
+         * dieser Stelle wäre eine Warnung vor etwas Erlaubtem — und würde
+         * nach dem dritten Mal weggeklickt. Die Rückfrage bleibt dem Fall
+         * vorbehalten, in dem tatsächlich etwas unlesbar bliebe (unten). */
+        const herkunftEl = document.getElementById('impherkunft');
+        const fremdesKonto = data.user && data.user.email
+                             && data.user.email !== KONTO_MAIL;
+        herkunftEl.hidden = false;
+        if (data.user && (data.user.email || data.user.name)) {
+          const wer = data.user.name
+            ? `${data.user.name} (${data.user.email || 'ohne Adresse'})`
+            : data.user.email;
+          const wann = data.created_at ? new Date(data.created_at) : null;
+          const wannText = (wann && !isNaN(wann.getTime()))
+            ? ` vom ${wann.toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE',
+                  { hour: '2-digit', minute: '2-digit' })} Uhr`
+            : '';
+          herkunftEl.textContent = `Sicherung${wannText} aus dem Konto ${wer}.`
+            + (fremdesKonto
+                ? ` Das ist NICHT das angemeldete Konto (${KONTO_MAIL}) — `
+                  + `die geschützten Angaben werden dabei für dieses Konto neu verschlüsselt.`
+                : '');
+        } else {
+          herkunftEl.textContent = 'Die Datei nennt kein Herkunftskonto.';
+        }
+
         impState.textContent = 'Angaben werden für dieses Konto verschlüsselt…';
 
         /* DREI FÄLLE, und sie müssen auseinandergehalten werden:
@@ -1169,13 +1219,18 @@ if ($tab === 'geraete') {
           delete m.pat_unreadable;
         }
         if (uebernommenFremd) {
+          // Die Prüfsumme sagt, OB die Angaben hier lesbar wären; der
+          // user-Block sagt, WOHER sie kommen. Beides gehört in dieselbe
+          // Rückfrage, sonst muss man es sich zusammensuchen (M5-13).
+          const woher = (data.user && data.user.email)
+            ? ` Sie stammt aus dem Konto ${data.user.email}.` : '';
           const w = data.pat_key_check == null
-            ? 'Die Datei nennt kein Herkunftskonto (vor Web 4.1.1 erstellt), '
+            ? 'Die Datei nennt keine Schlüssel-Prüfsumme (vor Web 4.1.1 erstellt), '
               + 'die Zuordnung ist daher unbekannt.'
             : 'Die Datei stammt aus einem anderen Konto.';
           if (!confirm(`${uebernommenFremd} Einsätze enthalten geschützte Angaben, die `
               + `beim Erstellen der Sicherung nicht entschlüsselt werden konnten. `
-              + `${w} Diese Angaben werden übernommen, sind hier aber `
+              + `${w}${woher} Diese Angaben werden übernommen, sind hier aber `
               + `voraussichtlich NICHT lesbar. Trotzdem fortfahren?`)) {
             impState.textContent = 'Abgebrochen — es wurde nichts übernommen.';
             return;
@@ -1208,7 +1263,15 @@ if ($tab === 'geraete') {
                       .join(', ')
                   : ''}), ${s.rests} Ruhesegmente, `
           + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
-          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz;
+          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz
+          /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
+           * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
+           * (M5-05). Wenn das passiert, gehört es gesagt — sonst fehlt später
+           * eine Höhenangabe ohne erkennbaren Grund. */
+          + (s.hoehe_fehler
+              ? ` Bei ${s.hoehe_fehler} Einsätzen ließ sich die Einsatzort-Höhe nicht `
+                + `berechnen; die Einsätze selbst sind vollständig übernommen.`
+              : '');
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }

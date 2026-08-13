@@ -81,10 +81,104 @@ const EdCrypto = (() => {
     }
     return s;
   }
-  // Aus dem (normalisierten) Code einen AES-Schlüssel machen
+  const RC_LEN = 20;   // 20 Zeichen aus RC_CHARS, Gruppen à 4 (rund 98 Bit)
+
+  /* Die im Alphabet ausgelassenen Zeichen, aus RC_CHARS abgeleitet statt
+   * danebengeschrieben — sonst stimmt die Meldung nach der nächsten Änderung
+   * des Alphabets nicht mehr. Ergibt heute: 0, 1, I, L, O und U. */
+  const RC_UNGENUTZT = (() => {
+    const fehlt = [];
+    for (const c of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') {
+      if (RC_CHARS.indexOf(c) < 0) { fehlt.push(c); }
+    }
+    return fehlt.length > 1
+      ? fehlt.slice(0, -1).join(', ') + ' und ' + fehlt[fehlt.length - 1]
+      : fehlt.join('');
+  })();
+
+  /**
+   * Prüft einen eingegebenen Wiederherstellungsschlüssel (M2-06).
+   *
+   * WARUM DAS NÖTIG IST
+   * Normalisiert und gehasht wurde bisher alles, was ankam — ohne zu prüfen,
+   * ob die Länge stimmt oder die Zeichen überhaupt aus dem Alphabet stammen.
+   * Das Alphabet lässt die klassischen Verwechslungszeichen bewusst weg
+   * (0/O, 1/I/L, U). Tippt jemand eines davon, bleibt es nach der
+   * Normalisierung stehen, ergibt einen anderen Hashwert und damit einen
+   * falschen Schlüssel. Die Meldung lautete dann „passt nicht" — dieselbe
+   * Meldung wie bei einem falschen Zettel.
+   *
+   * Und das passiert in genau der Lage, in der jemand ohnehin unter Druck
+   * steht: Er hat sein Passwort verloren und tippt seinen letzten Zettel ab.
+   *
+   * NICHT nötig ist eine Streckung der Ableitung: 30^20 sind rund 98 Bit;
+   * die Verzerrung durch die Restklassenbildung in newRecoveryCode() kostet
+   * davon rechnerisch 0,0 Bit. Ein einfacher Hash genügt.
+   *
+   * @returns {{ok:boolean, code:string, grund:string}} `grund` unterscheidet
+   *          'leer', 'zeichen', 'kurz', 'lang' — der Aufrufer kann daraus
+   *          eine Meldung machen, die dem Menschen weiterhilft.
+   */
+  function pruefeRecoveryCode(code) {
+    // Normalisierung wie in recoveryKeyHex: Großschreibung, Trennzeichen und
+    // Leerraum weg. Sie ist gewollt großzügig — Bindestriche und Leerzeichen
+    // sind eine Lesehilfe, kein Teil des Schlüssels.
+    const norm = String(code == null ? '' : code).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (norm === '') { return { ok: false, code: norm, grund: 'leer' }; }
+    for (const c of norm) {
+      if (RC_CHARS.indexOf(c) < 0) {
+        return { ok: false, code: norm, grund: 'zeichen', zeichen: c };
+      }
+    }
+    if (norm.length < RC_LEN) { return { ok: false, code: norm, grund: 'kurz' }; }
+    if (norm.length > RC_LEN) { return { ok: false, code: norm, grund: 'lang' }; }
+    return { ok: true, code: norm, grund: '' };
+  }
+
+  /** Meldung zu einem Prüfergebnis — an einer Stelle formuliert, damit
+   *  Sofortprüfung im Feld und Prüfung beim Absenden dasselbe sagen. */
+  function recoveryCodeMeldung(pruef) {
+    if (pruef.ok) { return ''; }
+    switch (pruef.grund) {
+      case 'leer':
+        return 'Bitte den Wiederherstellungsschlüssel eingeben.';
+      case 'zeichen':
+        /* WELCHES Zeichen fehlt, ist die eigentliche Auskunft. Welches
+         * stattdessen gemeint ist, sagen wir bewusst NICHT: Das Alphabet
+         * lässt beide Seiten jeder klassischen Verwechslung weg (0 UND O,
+         * 1 UND I UND L, dazu U) — ein Rateversuch führte hier eher in die
+         * Irre, als dass er hülfe. Die Liste stammt aus RC_CHARS, damit sie
+         * nicht bei der nächsten Änderung des Alphabets falsch wird. */
+        return `Das Zeichen „${pruef.zeichen}" kommt im Wiederherstellungsschlüssel `
+             + `nicht vor — ${RC_UNGENUTZT} werden nicht verwendet, weil sie zu leicht `
+             + 'zu verwechseln sind. Bitte diese Stelle auf dem Zettel noch einmal ansehen.';
+      case 'kurz':
+        return `Der Schlüssel ist unvollständig: ${pruef.code.length} von ${RC_LEN} `
+             + 'Zeichen (Bindestriche zählen nicht mit).';
+      case 'lang':
+        return `Der Schlüssel ist zu lang: ${pruef.code.length} statt ${RC_LEN} `
+             + 'Zeichen (Bindestriche zählen nicht mit).';
+      default:
+        return 'Der Wiederherstellungsschlüssel ist nicht lesbar.';
+    }
+  }
+
+  /* Aus dem (normalisierten) Code einen AES-Schlüssel machen.
+   *
+   * Prüft VOR der Ableitung (M2-06) und wirft bei einer unbrauchbaren
+   * Eingabe — sonst entsteht klaglos ein Schlüssel, der nur eben nicht
+   * passt, und der Unterschied zwischen Tippfehler und falschem Zettel geht
+   * verloren. Wer die Unterscheidung selbst anzeigen will, ruft vorher
+   * pruefeRecoveryCode() auf. */
   async function recoveryKeyHex(code) {
-    const norm = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const d = await crypto.subtle.digest('SHA-256', te.encode('edk-rc:' + norm));
+    const p = pruefeRecoveryCode(code);
+    if (!p.ok) {
+      const fehler = new Error(recoveryCodeMeldung(p));
+      fehler.name = 'RecoveryCodeFehler';
+      fehler.grund = p.grund;
+      throw fehler;
+    }
+    const d = await crypto.subtle.digest('SHA-256', te.encode('edk-rc:' + p.code));
     return toHex(d);
   }
 
@@ -225,6 +319,7 @@ const EdCrypto = (() => {
 
   return { deriveKeys, encrypt, decrypt, randomHex,
            newRecoveryCode, recoveryKeyHex,
+           pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
            setDataKey, getDataKey, getContentKey, clearSession,
            sealBackup, openBackup, isBackupFile };

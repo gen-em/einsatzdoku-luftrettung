@@ -157,6 +157,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
+<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script>
@@ -534,16 +535,14 @@ async function entschluesselePat() {
   $('alterlock').hidden = entsperrt;
 
   if (ck) {
-    const zahl = { ok: 0, leer: 0, unlesbar: 0 };
+    /* Ein unlesbarer Datensatz darf die Liste nicht zerstoeren — er darf aber
+     * auch nicht aussehen wie einer ohne Angaben. Beides entscheidet EdPat,
+     * nicht diese Seite (M6-06, Baustein B8). _pat setzt die Schleife dort
+     * bereits; hier bleibt nur, was die Suche daraus macht. */
+    const zahl = await EdPat.entschluessleListe(missions, ck);
     for (const m of missions) {
-      if (!m.pat_blob) { zahl.leer++; continue; }
-      // Ein unlesbarer Datensatz darf die Liste nicht zerstoeren — er darf
-      // aber auch nicht aussehen wie einer ohne Angaben (EdPat).
-      const r = await EdPat.entschluessle(ck, m.pat_blob);
-      if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; continue; }
-      zahl.ok++;
-      const o = r.daten;
-      m._pat = o;
+      if (m._patState !== 'ok') { continue; }
+      const o = m._pat;
       m._dx  = o.dx != null ? o.dx : null;
       m._age = EdPat.alterAnzeige(o, m.day);
       if (o.loc && o.loc.addr) { m._ort = EdMissionTable.extractOrt(o.loc.addr); }

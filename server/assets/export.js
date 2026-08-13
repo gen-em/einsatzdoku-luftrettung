@@ -151,18 +151,23 @@
         return data;
     }
 
-    /** Entschlüsselt pat_blob je Einsatz zu m.pat (oder null bei Fehler/Fehlen). */
+    /** Entschlüsselt pat_blob je Einsatz zu m.pat (null bei Fehler/Fehlen).
+     *
+     *  Die Schleife samt Fehlerbehandlung stand hier ausgeschrieben — eine von
+     *  fünf fast gleichen im Projekt (M6-06). Sie liegt jetzt in EdPat
+     *  (Baustein B8); hier bleibt die Übersetzung auf die Feldnamen, die der
+     *  Export erwartet.
+     *
+     *  Liefert die Zählung zurück: Ein Export, der Patientendaten enthalten
+     *  SOLL und sie stillschweigend weglässt, weil der Schlüssel nicht passt,
+     *  ist die gefährlichste Datei von allen — sie sieht vollständig aus. */
     async function decryptPatients(missions, key) {
+        var zahl = await EdPat.entschluessleListe(missions, key);
         for (var i = 0; i < missions.length; i++) {
             var m = missions[i];
-            m.pat = null;
-            if (!m.pat_blob) continue;
-            try {
-                m.pat = JSON.parse(await EdCrypto.decrypt(key, m.pat_blob));
-            } catch (e) {
-                m.pat = null;
-            }
+            m.pat = (m._patState === 'ok') ? m._pat : null;
         }
+        return zahl;
     }
 
     /* ------------------------------------------------------- Profil A --- */
@@ -455,9 +460,52 @@
         return (ms >= 0) ? Math.round(ms / 60000) : '';
     }
 
+    /* Reine Zahl im Ausgabeformat dieser Dateien: optionales Minus, Ziffern,
+     * Punkt als Dezimaltrennzeichen. Absichtlich eng — sie entscheidet nur
+     * darüber, ob ein Wert von der Formel-Neutralisierung ausgenommen wird. */
+    var CSV_ZAHL = /^-?\d+(\.\d+)?$/;
+
+    /* Zeichen, mit denen ein Tabellenprogramm eine Zelle als FORMEL liest.
+     * Tabulator und Wagenrücklauf stehen mit in der Liste, weil Excel eine
+     * damit beginnende Zelle beim Einfügen zerlegt. */
+    var CSV_FORMELSTART = /^[=+\-@\t\r]/;
+
+    /**
+     * Maskierung EINER Zelle. Zwei voneinander unabhängige Vorkehrungen:
+     *
+     * 1. QUOTING nach RFC 4180 — Trennzeichen, Anführungszeichen und
+     *    Zeilenumbrüche. Das war hier schon immer richtig gelöst.
+     *
+     * 2. FORMEL-NEUTRALISIERUNG (M5-04). Tabellenprogramme werten eine Zelle,
+     *    die mit = + - @ beginnt, als Formel aus — AUCH in Anführungszeichen,
+     *    denn das Quoting gehört zum CSV-Format und nicht zum Zellinhalt. Ein
+     *    fremder Text der Form =HYPERLINK(...) oder =cmd|... wird damit beim
+     *    bloßen Öffnen der Datei ausgeführt oder verschickt Daten. Fremder
+     *    Text gelangt über zentrale Stammdaten und über eingespielte Daten in
+     *    die Textspalten, und Exportdateien sind ausdrücklich zum Weitergeben
+     *    gedacht.
+     *
+     *    Neutralisiert wird mit einem vorangestellten Apostroph, dem
+     *    üblichen Textkennzeichen von Tabellenprogrammen.
+     *
+     *    ZAHLEN SIND AUSGENOMMEN. Sonst bekäme jede negative Zahl (z. B. eine
+     *    Höhe unter Meeresspiegel oder eine Differenz) ein Textkennzeichen und
+     *    wäre für die auswertende Maschine keine Zahl mehr — das Format ist
+     *    laut LIESMICH.txt maschinenlesbar, und das ist keine Nebensache.
+     *
+     * WICHTIG — DER WEG ÜBER DAS TABELLENFORMAT IST NICHT BETROFFEN:
+     * Profil A und C schreiben über SheetJS echte Zellen vom Typ
+     * Zeichenkette ('s'). Eine solche Zelle ist per Dateiformat Text und wird
+     * nie als Formel gelesen; eine Neutralisierung dort würde den Apostroph
+     * SICHTBAR in die Zelle schreiben. Dieser Unterschied ist
+     * sicherheitsrelevant und darf nicht versehentlich eingeebnet werden,
+     * indem jemand csvEscape() „der Einheitlichkeit halber" auch dort
+     * anwendet.
+     */
     function csvEscape(v) {
         if (v === null || v === undefined) return '';
         var s = String(v);
+        if (CSV_FORMELSTART.test(s) && !CSV_ZAHL.test(s)) { s = "'" + s; }
         if (/[;"\r\n]/.test(s)) { s = '"' + s.replace(/"/g, '""') + '"'; }
         return s;
     }
@@ -670,6 +718,13 @@
             'Feldtrenner Missverständnisse mit anderen Ländern aus, die das Komma',
             'als Dezimaltrennzeichen verwenden. Mehrfachwerte in einer Zelle mit |',
             'getrennt, ohne Leerzeichen.',
+            '',
+            'Textwerte, die mit = + - @ beginnen, tragen einen vorangestellten',
+            'Apostroph. Er ist NICHT Teil des Werts, sondern verhindert, dass',
+            'Tabellenprogramme die Zelle als Formel ausführen. Zahlen sind davon',
+            'ausgenommen, negative Zahlen stehen also unverändert da. Wer die',
+            'Dateien maschinell liest, entfernt einen führenden Apostroph aus',
+            'Textspalten.',
             '',
             'hubschrauber, standort und die Tagesbesatzung stehen sowohl in',
             'einsaetze.csv als auch in flugtage.csv — beabsichtigt, damit die',
@@ -971,7 +1026,18 @@
                 var key = await syncPatientLock();
                 if (!key) { setState('Entschlüsselung gesperrt — siehe Hinweis oben.'); return; }
                 setState('Geschützte Angaben werden entschlüsselt…');
-                await decryptPatients(data.missions || [], key);
+                var patZahl = await decryptPatients(data.missions || [], key);
+                if (patZahl.unlesbar) {
+                    if (!await window.edConfirm(patZahl.unlesbar + ' von ' +
+                            (patZahl.unlesbar + patZahl.ok) + ' Einsätzen mit geschützten '
+                            + 'Angaben lassen sich mit dem aktuellen Schlüssel NICHT lesen. '
+                            + 'Ihre Patientendaten blieben in der Datei leer — die Datei sähe '
+                            + 'vollständig aus, wäre es aber nicht. Trotzdem erzeugen?',
+                            'Export trotzdem erzeugen', 'normal')) {
+                        setState('Abgebrochen — es wurde keine Datei erzeugt.');
+                        return;
+                    }
+                }
             }
 
             var titel = alles

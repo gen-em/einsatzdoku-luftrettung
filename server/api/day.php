@@ -137,8 +137,33 @@ try {
     $mt->execute([$userId, $day]);
     $meta = $mt->fetch() ?: null;
 
-    $pt = db()->prepare('SELECT lat, lon, ts FROM track_points
-                         WHERE owner_type = ? AND owner_id = ? ORDER BY seq');
+    /* SPURPUNKTE GEBUENDELT HOLEN, NICHT JE EINSATZ EINZELN (M3-15).
+     *
+     * Hier stand eine vorbereitete Abfrage, die in zwei Schleifen je Einsatz
+     * und je Ruhesegment erneut ausgefuehrt wurde. Ein Flugtag mit acht
+     * Einsaetzen und den zugehoerigen Ruhezeiten kam so auf ueber ein Dutzend
+     * Abfragen fuer eine Ansicht, die beim Blaettern durch die Tage bei JEDEM
+     * Tageswechsel neu laedt.
+     *
+     * api/export_data.php loest dieselbe Aufgabe seit jeher gebuendelt und
+     * hat den Weg im Kommentar vermerkt. Er stand nur dort — deshalb liegt
+     * die Funktion jetzt in db.php.
+     *
+     * Die Reihenfolge innerhalb eines Besitzers kommt weiterhin aus dem SQL
+     * (ORDER BY owner_id, seq); die Zuordnung im Speicher aendert sie nicht.
+     */
+    $spurLaden = function (string $ownerType, array $ids): array {
+        $nach = [];
+        foreach ($ids as $id) { $nach[$id] = []; }
+        if (!$ids) { return $nach; }
+        foreach (sql_in_bloecken(db(),
+                'SELECT owner_id, lat, lon FROM track_points
+                 WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq',
+                $ids, [$ownerType]) as $p) {
+            $nach[(int)$p['owner_id']][] = [(float)$p['lat'], (float)$p['lon']];
+        }
+        return $nach;
+    };
 
     $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
                            winch, bergwacht, secondary, pat_blob,
@@ -147,9 +172,12 @@ try {
                          FROM missions WHERE user_id = ? AND day = ? AND deleted_at IS NULL
                          ORDER BY started_at');
     $st->execute([$userId, $day]);
+    $missionZeilen = $st->fetchAll();
+    $spurEinsatz = $spurLaden('mission',
+        array_map(static fn($m) => (int)$m['id'], $missionZeilen));
+
     $missions = [];
-    foreach ($st->fetchAll() as $m) {
-        $pt->execute(['mission', (int)$m['id']]);
+    foreach ($missionZeilen as $m) {
         // Dauer = Alarmierung bis Phase 9; ohne Phase 9 bewusst null
         // (Anzeige "kein Ende" — auch bei abgeschlossenen Einsaetzen ohne 9er)
         $dur = null;
@@ -167,16 +195,18 @@ try {
             'bergwacht'  => (int)$m['bergwacht'] === 1,
             'secondary'  => (int)$m['secondary'] === 1,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
-            'track'      => array_map(fn($p) => [(float)$p['lat'], (float)$p['lon']], $pt->fetchAll()),
+            'track'      => $spurEinsatz[(int)$m['id']] ?? [],
         ];
     }
 
     $st = db()->prepare('SELECT id FROM rest_segments WHERE user_id = ? AND day = ? AND deleted_at IS NULL ORDER BY started_at');
     $st->execute([$userId, $day]);
+    $restZeilen = $st->fetchAll();
+    $spurRuhe = $spurLaden('rest',
+        array_map(static fn($r) => (int)$r['id'], $restZeilen));
     $rest = [];
-    foreach ($st->fetchAll() as $r) {
-        $pt->execute(['rest', (int)$r['id']]);
-        $track = array_map(fn($p) => [(float)$p['lat'], (float)$p['lon']], $pt->fetchAll());
+    foreach ($restZeilen as $r) {
+        $track = $spurRuhe[(int)$r['id']] ?? [];
         if ($track) $rest[] = $track;
     }
 

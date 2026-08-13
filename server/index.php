@@ -150,6 +150,7 @@ $neueGeraete = geraete_neu(db(), $userId);
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
+<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -257,7 +258,9 @@ function extractOrt(addr){
   return last;
 }
 
-function esc(t){ const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+// Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
+// ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
+const esc = EdHtml.escape;
 
 function fmtDur(s){ if(s==null) return 'kein Ende'; const h=Math.floor(s/3600),m=Math.round(s%3600/60);
   // kompakt ohne Leerzeichen vor der Einheit, damit die Spalte einzeilig bleibt
@@ -397,30 +400,32 @@ async function entschluesselePat(){
   if (!ck) { if (banner) banner.hidden = !dayMissions.some(m => m.pat_blob); return; }
   if (banner) banner.hidden = true;
   let changed = false;
-  const zahl = { ok: 0, leer: 0, unlesbar: 0 };
   const pinBounds = [];
+  /* ENTSCHLUESSELN UND ZAEHLEN GESCHIEHT AN EINER STELLE (M6-06, Baustein B8).
+   *
+   * Hier stand die Schleife ausgeschrieben — eine von fuenf fast gleichen im
+   * Projekt. Sie unterschieden sich in Kleinigkeiten (welcher Zaehler wann
+   * hochgeht, ob _pat gesetzt wird), und genau solche Kleinigkeiten sind es,
+   * die beim naechsten Mal auseinanderlaufen. Was ANZUZEIGEN ist, bleibt
+   * Sache der Seite; was ein Fehlschlag BEDEUTET, entscheidet EdPat. */
+  const zahl = await EdPat.entschluessleListe(dayMissions, ck);
   for (const m of dayMissions) {
-    if (!m.pat_blob) { zahl.leer++; continue; }
-    // Eine Stelle entscheidet, was ein Fehlschlag bedeutet (EdPat).
-    const r = await EdPat.entschluessle(ck, m.pat_blob);
-    if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; changed = true; continue; }
-    zahl.ok++;
-    {
-      const o = r.daten;
-      if (o.dx != null) { m._dx = o.dx; changed = true; }
-      // Alter: aus dem Geburtsdatum zum Einsatztag, sonst der eingetragene
-      // Wert. Name und Geburtsdatum bleiben bewusst aus der Uebersicht.
-      const alter = EdPat.alterAnzeige(o, currentDay);
-      if (alter != null) { m._age = alter; changed = true; }
-      if (o.loc && o.loc.addr) {
-        m._ort = extractOrt(o.loc.addr);
-        changed = true;
-        if (o.loc.lat != null) {
-          layerGroup.addLayer(L.marker([o.loc.lat, o.loc.lon],
-            { icon: locPin(m._col), keyboard: false })
-            .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
-          pinBounds.push([o.loc.lat, o.loc.lon]);
-        }
+    if (m._patState === 'unlesbar') { changed = true; continue; }
+    if (m._patState !== 'ok') { continue; }
+    const o = m._pat;
+    if (o.dx != null) { m._dx = o.dx; changed = true; }
+    // Alter: aus dem Geburtsdatum zum Einsatztag, sonst der eingetragene
+    // Wert. Name und Geburtsdatum bleiben bewusst aus der Uebersicht.
+    const alter = EdPat.alterAnzeige(o, currentDay);
+    if (alter != null) { m._age = alter; changed = true; }
+    if (o.loc && o.loc.addr) {
+      m._ort = extractOrt(o.loc.addr);
+      changed = true;
+      if (o.loc.lat != null) {
+        layerGroup.addLayer(L.marker([o.loc.lat, o.loc.lon],
+          { icon: locPin(m._col), keyboard: false })
+          .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
+        pinBounds.push([o.loc.lat, o.loc.lon]);
       }
     }
   }

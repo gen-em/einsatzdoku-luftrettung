@@ -35,12 +35,32 @@ function edbak_build(int $userId): string {
     $zahl = fn($v, bool $ganz = false) =>
         (is_numeric($v) ? ($ganz ? (int)$v : (float)$v) : null);
 
-    $tracks = function (string $type, int $id) use ($q, $zahl): array {
-        return array_map(
-            fn($p) => [$zahl($p['seq'], true), $zahl($p['lat']), $zahl($p['lon']),
-                       $zahl($p['ele']), $zahl($p['ts'], true)],
-            $q('SELECT seq, lat, lon, ele, ts FROM track_points
-                WHERE owner_type = ? AND owner_id = ? ORDER BY seq', [$type, $id]));
+    /* SPUREN GEBUENDELT HOLEN (M5-12).
+     *
+     * Hier stand eine Funktion, die JE EINSATZ und JE RUHESEGMENT eine eigene
+     * Abfrage absetzte — zusammen mit Phasen, Rettungsmitteln und Reanimation
+     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EINE Sicherung.
+     * Eine Obergrenze gab es nicht: Die Zahl waechst mit dem Bestand, und die
+     * Sicherung ist genau die Handlung, die jemand ausfuehrt, wenn er ohnehin
+     * schon beunruhigt ist.
+     *
+     * Jetzt: eine Abfrage je Tabelle, in Bloecken (sql_in_bloecken, db.php).
+     * Die Reihenfolge kommt weiterhin aus dem SQL — sie ist Teil des
+     * Dateiformats, nicht Zufall.
+     */
+    $spuren = function (string $type, array $ids) use ($pdo, $zahl): array {
+        $nach = [];
+        foreach ($ids as $id) { $nach[$id] = []; }
+        if (!$ids) { return $nach; }
+        foreach (sql_in_bloecken($pdo,
+                'SELECT owner_id, seq, lat, lon, ele, ts FROM track_points
+                 WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq',
+                $ids, [$type]) as $p) {
+            $nach[(int)$p['owner_id']][] = [
+                $zahl($p['seq'], true), $zahl($p['lat']), $zahl($p['lon']),
+                $zahl($p['ele']), $zahl($p['ts'], true)];
+        }
+        return $nach;
     };
 
     $missions = [];
@@ -93,40 +113,72 @@ function edbak_build(int $userId): string {
      * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
      * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
      * aendern, und das ist ein eigener Vorgang. */
-    foreach ($q("SELECT id, $missionSpalten FROM missions
-                 WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at", [$userId]) as $m) {
-        $mid = (int)$m['id'];
-        unset($m['id']);        // nur fuer die Unterabfragen gebraucht
-        $m['phases'] = array_map(
-            fn($p) => ['phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at'],
-                       'lat' => $zahl($p['lat']),
-                       'lon' => $zahl($p['lon'])],
-            $q('SELECT phase, occurred_at, lat, lon FROM mission_phases
-                WHERE mission_id = ? ORDER BY occurred_at', [$mid]));
-        $m['resources'] = $q('SELECT name FROM mission_resources
-                              WHERE mission_id = ? ORDER BY id', [$mid]);
-        $m['resources'] = array_column($m['resources'], 'name');
-        $m['resus'] = [];
-        foreach ($q('SELECT id, started_at FROM resus_sessions
-                     WHERE mission_id = ? ORDER BY started_at', [$mid]) as $s) {
-            $m['resus'][] = [
+    $missionZeilen = $q("SELECT id, $missionSpalten FROM missions
+                         WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at", [$userId]);
+    $missionIds = array_map(static fn($m) => (int)$m['id'], $missionZeilen);
+
+    // Phasen, Rettungsmittel, Reanimation: je eine Abfrage statt je Einsatz
+    // (M5-12). Die Zuordnung geschieht im Speicher.
+    $phasenNach = $mittelNach = $sitzungenNach = [];
+    if ($missionIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT mission_id, phase, occurred_at, lat, lon FROM mission_phases
+                 WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
+                $missionIds) as $p) {
+            $phasenNach[(int)$p['mission_id']][] = [
+                'phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at'],
+                'lat' => $zahl($p['lat']), 'lon' => $zahl($p['lon'])];
+        }
+        foreach (sql_in_bloecken($pdo,
+                'SELECT mission_id, name FROM mission_resources
+                 WHERE mission_id IN ({IDS}) ORDER BY mission_id, id',
+                $missionIds) as $r) {
+            $mittelNach[(int)$r['mission_id']][] = (string)$r['name'];
+        }
+        $sitzungen = sql_in_bloecken($pdo,
+            'SELECT id, mission_id, started_at FROM resus_sessions
+             WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at',
+            $missionIds);
+        $ereignisseNach = [];
+        $sitzungsIds = array_map(static fn($s) => (int)$s['id'], $sitzungen);
+        if ($sitzungsIds) {
+            foreach (sql_in_bloecken($pdo,
+                    'SELECT session_id, type, occurred_at FROM resus_events
+                     WHERE session_id IN ({IDS}) ORDER BY session_id, occurred_at',
+                    $sitzungsIds) as $e) {
+                $ereignisseNach[(int)$e['session_id']][] = [
+                    'type' => $e['type'], 'occurred_at' => $e['occurred_at']];
+            }
+        }
+        foreach ($sitzungen as $s) {
+            $sitzungenNach[(int)$s['mission_id']][] = [
                 'started_at' => $s['started_at'],
-                'events' => $q('SELECT type, occurred_at FROM resus_events
-                                WHERE session_id = ? ORDER BY occurred_at', [(int)$s['id']]),
+                'events'     => $ereignisseNach[(int)$s['id']] ?? [],
             ];
         }
-        $m['track'] = $tracks('mission', $mid);
+    }
+    $spurNachEinsatz = $spuren('mission', $missionIds);
+
+    foreach ($missionZeilen as $m) {
+        $mid = (int)$m['id'];
+        unset($m['id']);        // nur fuer die Zuordnung gebraucht
+        $m['phases']    = $phasenNach[$mid]    ?? [];
+        $m['resources'] = $mittelNach[$mid]    ?? [];
+        $m['resus']     = $sitzungenNach[$mid] ?? [];
+        $m['track']     = $spurNachEinsatz[$mid] ?? [];
         $missions[] = $m;
     }
 
     $rests = [];
-    foreach ($q('SELECT id, client_ref, day, started_at, ended_at, final,
-                        deleted_at, deleted_with_day
-                 FROM rest_segments
-                 WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]) as $r) {
+    $restZeilen = $q('SELECT id, client_ref, day, started_at, ended_at, final,
+                             deleted_at, deleted_with_day
+                      FROM rest_segments
+                      WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]);
+    $spurNachRuhe = $spuren('rest', array_map(static fn($r) => (int)$r['id'], $restZeilen));
+    foreach ($restZeilen as $r) {
         $rid = (int)$r['id'];
         unset($r['id']);
-        $r['track'] = $tracks('rest', $rid);
+        $r['track'] = $spurNachRuhe[$rid] ?? [];
         $rests[] = $r;
     }
 
@@ -248,6 +300,7 @@ function edbak_restore(int $userId, array $data): array {
         $tageImPapierkorb[(string)$dTrash] = true;
     }
     $pruef = new Pruefliste();
+    $hoeheOffen = [];   // Einsatz-IDs fuer die Hoehenberechnung nach dem Commit (M5-05)
 
     $pdo->beginTransaction();
     try {
@@ -497,10 +550,23 @@ function edbak_restore(int $userId, array $data): array {
                 $insPoint->execute(['mission', $mid, (int)$p[0], $la, $lo, $p[3], (int)$p[4]]);
             }
 
-            // Einsatzort-Hoehe aus den soeben eingespielten Phasen/Track neu
-            // berechnen, statt einen exportierten Wert zu uebernehmen — eine
-            // einzige Implementierung, siehe site_elevation_lib.php.
-            compute_site_elevation($pdo, $mid);
+            /* Einsatzort-Hoehe: NACH dem Abschluss, nicht hier (M5-05).
+             *
+             * Der Aufruf stand an dieser Stelle — INNERHALB der Transaktion,
+             * ohne eigenen Fehlerblock, je Einsatz in der Schleife. Ein
+             * Fehler darin riss die GESAMTE Wiederherstellung mit sich, und
+             * zwar wegen eines Komfortwerts: Die Hoehe ist eine Anzeige, kein
+             * Datum, das jemand eingegeben hat.
+             *
+             * Auf dem Uhr-Weg steht derselbe Aufruf laengst nach dem Commit
+             * und in einem eigenen Fehlerblock, mit genau dieser Begruendung
+             * (ingest.php). Erschwerend kam hinzu, dass die Eingangsdaten
+             * hier am wenigsten geprueft sind — die Datei kann aus beliebiger
+             * Herkunft stammen.
+             *
+             * Die IDs werden gesammelt und unten abgearbeitet.
+             */
+            $hoeheOffen[] = $mid;
 
             $stats['missions']++;
         }
@@ -540,5 +606,27 @@ function edbak_restore(int $userId, array $data): array {
         $pdo->rollBack();
         throw $ex;
     }
+
+    /* Einsatzort-Hoehe: nach dem Abschluss, je Einsatz eingefasst (M5-05).
+     *
+     * Ab hier sind die Daten sicher gespeichert. Ein Fehler kostet nur die
+     * Hoehenanzeige des betroffenen Einsatzes; sie laesst sich spaeter
+     * nachrechnen (update.php).
+     *
+     * ANDERS ALS AUF DEM UHR-WEG WIRD ER GEZAEHLT UND GEMELDET. Dort ist das
+     * Schweigen richtig — die Uhr kann mit der Auskunft nichts anfangen. Eine
+     * Wiederherstellung wertet dagegen ein Mensch aus, der wissen will, was
+     * angekommen ist und was nicht.
+     */
+    $hoeheFehler = 0;
+    foreach ($hoeheOffen as $mid) {
+        try {
+            compute_site_elevation($pdo, $mid);
+        } catch (Throwable $ex) {
+            $hoeheFehler++;
+        }
+    }
+    if ($hoeheFehler > 0) { $stats['hoehe_fehler'] = $hoeheFehler; }
+
     return $stats;
 }

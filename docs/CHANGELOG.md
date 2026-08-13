@@ -10,6 +10,165 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.6.0] — 2026-08-13
+
+Paket P8c der Review-Umsetzung: Bündel 5 (Leistung) und Bündel 6. Zehn Befunde,
+keine Schemaänderung. Damit ist P8 abgeschlossen; offen bleibt P9.
+
+### Eine Sicherung braucht nicht mehr Tausende Abfragen
+
+`edbak_build()` fragte je Einsatz die Phasen, die Rettungsmittel, die
+Reanimationssitzungen und die Spurpunkte einzeln ab, dazu je Sitzung deren
+Ereignisse. Gemessen an 43 Einsätzen mit je einer Reanimationssitzung:
+**226 Abfragen vorher, 16 nachher** — und die 16 bleiben 16, egal wie groß der
+Bestand ist. Auf die im Review genannten 1600 Einsätze hochgerechnet sind das
+rund 8300 Abfragen gegen unverändert 16.
+
+Dieselbe Sache in kleinerem Maßstab in der Tagesansicht: `api/day.php` holte
+die Spurpunkte je Einsatz und je Ruhesegment einzeln, bei jedem Tageswechsel
+neu.
+
+Die chunkweise `IN(…)`-Abfrage gab es längst — sie stand in
+`api/export_data.php`, mitsamt einem Kommentar, der genau diesen Weg
+beschreibt. Sie stand eben **nur dort**, und deshalb ist ihr niemand gefolgt.
+Jetzt liegt sie als `sql_in_bloecken()` in `db.php` und wird von allen drei
+Stellen benutzt.
+
+### Eine leere Phasenliste löscht keine Phasen mehr
+
+Der Uhr-Weg ersetzte Phasen und Reanimationssitzungen, sobald der Schlüssel im
+Datensatz vorhanden und ein Feld war. Eine **leere** Liste bestand beide
+Prüfungen: Sie löschte den vorhandenen Stand und fügte nichts ein. Die Antwort
+lautete „ok“.
+
+Der Weg zu einer leeren Liste ist viel wahrscheinlicher ein Fehler beim Aufbau
+der Nachricht als der Wunsch, eine dokumentierte Reanimation wieder
+loszuwerden. Wer wirklich löschen will, tut das in der Weboberfläche.
+
+**Die Regel geht bewusst weiter als der Befund.** Übergangen wird jede Liste,
+die weniger gültige Einträge enthält als der gespeicherte Stand — eine halb
+aufgebaute Nachricht ist derselbe Fehler wie eine leere, nur unauffällig: Sie
+kommt mit drei Phasen an, wo acht stehen, und der Verlust fällt niemandem auf.
+Für die Uhr ist das folgenlos: `Model.mc` fügt Phasen ausschließlich hinzu, ein
+erneutes Setzen ist eine Korrektur und damit ein zusätzlicher Eintrag. Eine
+kürzere Liste kann bei ihr gar nicht entstehen.
+
+Gezählt wird **nach** der Prüfung: Zehn Einträge, von denen neun unbrauchbar
+sind, sind ein Eintrag. Wird eine Liste übergangen, steht das als `kept_phases`
+bzw. `kept_resus` in der Antwort — sonst wäre der übergangene Upload von einem
+übernommenen nicht zu unterscheiden. `docs/JSON-Vertrag.md` beschreibt beide
+Felder jetzt als durchgesetzt statt als Zielzustand.
+
+### Ein Fehler in der Höhenberechnung kostet keine Wiederherstellung mehr
+
+Die Einsatzort-Höhe wurde beim Wiedereinspielen **innerhalb** der Transaktion
+und ohne eigenen Fehlerblock berechnet, je Einsatz in der Schleife. Ein Fehler
+darin riss die gesamte Wiederherstellung mit sich — wegen eines Komfortwerts,
+und ausgerechnet an der Stelle, an der die Eingangsdaten am wenigsten geprüft
+sind. Auf dem Uhr-Weg stand derselbe Aufruf längst hinter dem Abschluss, mit
+genau dieser Begründung.
+
+Jetzt läuft er auch beim Wiedereinspielen nach dem Commit, je Einsatz
+eingefasst. Anders als auf dem Uhr-Weg wird ein Fehlschlag aber **gezählt und
+gemeldet** (`hoehe_fehler`): Die Uhr kann mit der Auskunft nichts anfangen,
+eine Wiederherstellung wertet dagegen ein Mensch aus.
+
+Nachgestellt und gemessen: Bei erzwungenem Fehler bleiben alle Einsätze
+gespeichert, und die Meldung nennt die Zahl.
+
+### CSV-Exporte führen keine Formeln mehr aus
+
+Tabellenprogramme werten eine Zelle, die mit `=`, `+`, `-` oder `@` beginnt,
+als Formel aus — auch in Anführungszeichen, denn das Quoting gehört zum
+CSV-Format und nicht zum Zellinhalt. Fremder Text gelangt über zentrale
+Stammdaten und über eingespielte Daten in die Textspalten, und Exportdateien
+sind ausdrücklich zum Weitergeben gedacht.
+
+Solche Werte tragen jetzt einen vorangestellten Apostroph. **Zahlen sind
+ausgenommen**, damit eine negative Zahl eine Zahl bleibt — die Dateien sind
+maschinenlesbar, und das ist keine Nebensache. `LIESMICH.txt` im Archiv und
+`docs/Export-Format.md` beschreiben die Regel.
+
+Der Weg über das Tabellenformat (Profile Standard und GuteSeele) ist **nicht**
+betroffen: Dort entstehen echte Zellen vom Typ Zeichenkette, die nie als Formel
+gelesen werden. Ein Apostroph wäre dort sichtbar. Dieser Unterschied steht als
+Warnung im Code, damit ihn niemand der Einheitlichkeit halber einebnet.
+
+### Der Wiederherstellungsschlüssel sagt jetzt, was an ihm nicht stimmt
+
+Die Eingabe wurde normalisiert und gehasht, ohne zu prüfen, ob die Länge stimmt
+oder die Zeichen überhaupt aus dem Alphabet stammen. Ein Tippfehler ergab
+klaglos einen anderen Schlüssel, und die Meldung lautete „passt nicht“ — dieselbe
+Meldung wie bei einem falschen Zettel. Das passiert in genau der Lage, in der
+jemand ohnehin unter Druck steht.
+
+Jetzt steht unter dem Feld sofort, welches Zeichen es im Schlüssel nicht gibt
+oder wie viele Zeichen noch fehlen. Und ist der Schlüssel formal in Ordnung,
+passt aber trotzdem nicht, sagt die Meldung genau das: kein Tippfehler,
+sondern ein anderer Schlüssel.
+
+Die Liste der nicht verwendeten Zeichen wird aus dem Alphabet **abgeleitet**
+statt danebengeschrieben — sie lautet heute 0, 1, I, L, O und U. Beide Seiten
+jeder klassischen Verwechslung fehlen also; deshalb sagt die Meldung
+ausdrücklich **nicht**, welches Zeichen stattdessen gemeint sei.
+
+Eine Streckung der Ableitung ist bewusst nicht dazugekommen: rund 98 Bit
+Entropie, die Verzerrung durch die Restklassenbildung kostet davon 0,0 Bit.
+
+### Die Sicherung nennt beim Einspielen ihr Herkunftskonto
+
+Der Block mit Kontoname und Adresse steht seit dem ersten Dateiformat in jeder
+Sicherung und wurde beim Einspielen nie angesehen. Wer zwei Konten betreut oder
+eine Datei aus einer Übergabe bekommt, hatte keine Möglichkeit zu prüfen, ob es
+die richtige ist — es blieb der Dateiname, und der nennt nur das Datum.
+
+Die Angabe wird **angezeigt, nicht abgefragt**: Eine Sicherung in ein fremdes
+Konto einzuspielen ist ein vorgesehener Vorgang, und eine Warnung vor etwas
+Erlaubtem wird nach dem dritten Mal weggeklickt. Die Rückfrage bleibt dem Fall
+vorbehalten, in dem tatsächlich etwas unlesbar bliebe — sie nennt jetzt
+zusätzlich die Herkunftsadresse.
+
+### Zwei Bausteine werden endlich benutzt
+
+Beide entstanden in P0 und lagen seither ungenutzt neben ihren Kopien.
+
+**Maskierung (B7).** Es gab vier Umsetzungen derselben Aufgabe in zwei
+Bauarten, und alle vier maskierten drei Zeichen statt fünf — die
+serverseitige Entsprechung `e()` maskiert beide Anführungszeichen mit. Für
+Textpositionen reicht das, und Attributpositionen gibt es heute keine. Genau
+deshalb war es gefährlich: Wer als Nächstes einen Wert in ein `title="…"`
+schreibt, hat keinen Anhaltspunkt, dass die Fassung dafür nicht taugt.
+
+Die kanonische Fassung stand in `missiontable.js` — einer Datei, die nur zwei
+von fünf betroffenen Seiten laden. Sie ist deshalb nach `assets/html.js`
+gewandert; `EdMissionTable.escape` und `.esc` bleiben als Weiterleitung.
+`xmlEscape()` in `export.js` bleibt bewusst eigenständig: GPX ist XML und hat
+eigene Regeln. Zwei Aufgaben, die sich ähneln, sind nicht dieselbe Aufgabe.
+
+**Patientenanzeige (B8).** Fünf Seiten schrieben ihre Entschlüsselungsschleife
+selbst aus und unterschieden sich dabei in Kleinigkeiten — welcher Zähler wann
+hochgeht, ob `_pat` gesetzt wird. Genau solche Kleinigkeiten laufen beim
+nächsten Mal auseinander. Alle benutzen jetzt `EdPat.entschluessleListe()`.
+
+Dabei ist eine Lücke aufgefallen, die im Review nicht steht: **Der Export ließ
+unlesbare Angaben stillschweigend leer.** Wer mit nicht passendem Schlüssel
+exportiert, bekam eine Datei, die vollständig aussieht und es nicht ist. Jetzt
+kommt vorher eine Rückfrage mit der Zahl der betroffenen Einsätze.
+
+### Behobene Review-Befunde
+
+M3-15, M5-12 (Bündel 5) · M5-04, M4-02, M5-05, M5-13, M6-03, M6-05, M6-06,
+M2-06 (Bündel 6). Damit sind alle für P8 vorgesehenen Befunde erledigt.
+
+### Geprüft
+
+75 automatische Prüfungen gegen MariaDB 10.11 und echten HTTP-Verkehr, alle
+bestanden: 36 zu `sql_in_bloecken`, Sicherungsaufbau und Wiedereinspielen,
+25 zum Uhr-Weg, 14 zur Tagesansicht. Dazu die Maskierung des CSV-Exports und
+die Prüfung des Wiederherstellungsschlüssels als reine Funktionsprüfungen.
+Nicht ohne Testinstallation prüfbar: Darstellung, Karten-Popups, Dialoge und
+das Zusammenspiel der Skripte im Browser.
+
 ## [Web 4.5.3] — 2026-08-13
 
 Zwei Nachträge aus dem Betrieb, beide beim Durchprüfen von 4.5.1/4.5.2

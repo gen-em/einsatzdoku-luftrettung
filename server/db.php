@@ -206,6 +206,42 @@ function json_out(array $data, int $code = 200): never {
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**
+ * Eine Abfrage ueber eine ID-Liste, in Bloecken ausgefuehrt (M3-15, M5-12).
+ *
+ * WARUM SIE HIER STEHT
+ * Dieselbe Aufgabe — "hole alle Unterzeilen zu diesen n Datensaetzen, aber
+ * nicht mit n Abfragen" — faellt an drei Stellen an: Export, Tagesansicht und
+ * Sicherung. Der Export hat sie als Erstes geloest und den Weg im Kommentar
+ * vermerkt; die beiden anderen sind ihm nicht gefolgt und fragten je
+ * Datensatz einzeln. Bei 1600 Einsaetzen waren das ueber 6000 Abfragen fuer
+ * EINE Sicherung.
+ *
+ * Die Vorlage traegt {IDS} an der Stelle der Platzhalterliste. Bewusst KEINE
+ * Formatzeichenkette mit %s: Damit waere jedes weitere Prozentzeichen im
+ * SQL-Text ein Formatbefehl, und ein kuenftiges LIKE '%tag%' wuerde
+ * stillschweigend verstuemmelt (M3-14).
+ *
+ * Die Blockgroesse haelt Abstand zur Parametergrenze von MySQL/MariaDB und
+ * verhindert Einzelanweisungen von mehreren hundert Kilobyte.
+ *
+ * @param array $ids         ID-Liste; eine leere Liste liefert ein leeres
+ *                           Ergebnis, ohne die Datenbank zu behelligen.
+ * @param array $leadParams  Parameter, die im SQL VOR {IDS} stehen.
+ */
+function sql_in_bloecken(PDO $pdo, string $sqlVorlage, array $ids,
+                         array $leadParams = [], int $blockGroesse = 1000): array
+{
+    $out = [];
+    foreach (array_chunk(array_values($ids), max(1, $blockGroesse)) as $block) {
+        $platz = implode(',', array_fill(0, count($block), '?'));
+        $st = $pdo->prepare(str_replace('{IDS}', $platz, $sqlVorlage));
+        $st->execute(array_merge($leadParams, $block));
+        foreach ($st->fetchAll() as $row) { $out[] = $row; }
+    }
+    return $out;
+}
+
+/**
  * Einen Ausnahmefehler protokollieren und eine Kennung dafuer liefern (M3-10).
  *
  * WAS DARAN FALSCH WAR

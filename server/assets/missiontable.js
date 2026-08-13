@@ -10,37 +10,26 @@
  * an die Einsatzobjekte geschrieben. Ist der Inhaltsschluessel gesperrt,
  * fehlen sie schlicht — die Tabelle zeigt dann Gedankenstriche.
  *
- * Erwartet aus der Seite: nichts. Reine DOM-Arbeit, keine Abhaengigkeiten.
+ * Erwartet aus der Seite: EdHtml (assets/html.js). Sonst reine DOM-Arbeit.
  */
 'use strict';
 const EdMissionTable = (() => {
 
   /* ---- Formatierung (auch nach aussen gegeben, s. u.) ------------------ */
 
-  /* Maskierung fuer HTML (Baustein B7) — die kanonische Fassung.
+  /* Maskierung fuer HTML: Baustein B7, seit Web 4.6.0 in assets/html.js
+   * (M6-03, M6-05). Hier steht nur noch die Weiterleitung — sie haelt die
+   * vorhandenen Aufrufe EdMissionTable.escape/.esc gueltig und macht zugleich
+   * sichtbar, dass es NUR NOCH EINE Fassung gibt.
    *
-   * WARUM ES SIE GIBT: Dieselbe Aufgabe wird im Browser an drei Stellen
-   * wortgleich geloest, und alle drei maskieren nur DREI Zeichen. Die
-   * serverseitige Entsprechung (e() in db.php) maskiert FUENF: zusaetzlich
-   * beide Anfuehrungszeichen. Zwei Bausteine mit demselben Zweck und
-   * unterschiedlichem Umfang, ohne dass der Unterschied irgendwo steht.
-   *
-   * Fuer Textpositionen reichen drei Zeichen, und heute gibt es keine
-   * Attributposition — der Unterschied ist also derzeit folgenlos. Genau
-   * deshalb ist er gefaehrlich: Wer das naechste Mal einen Wert in ein
-   * title="…" schreibt, hat keinen Anhaltspunkt, dass diese Fassung dafuer
-   * nicht taugt.
-   *
-   * Diese Fassung deckt beide Positionen ab. Die drei Kopien werden in einem
-   * folgenden Schritt hierauf umgestellt.
+   * esc() war bis dahin eine zweite, eigene Umsetzung ueber ein Hilfselement
+   * (textContent -> innerHTML). Sie maskierte drei Zeichen, escape() fuenf —
+   * zwei Namen fuer dieselbe Aufgabe mit unterschiedlichem Umfang, und an der
+   * Aufrufstelle war nicht zu sehen, welche der beiden man erwischt hatte.
+   * Beide zeigen jetzt auf denselben Baustein.
    */
-  function escape(t) {
-    return String(t == null ? '' : t)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
-  function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  const escape = EdHtml.escape;
+  const esc    = EdHtml.escape;
 
   /* Zelle fuer eine Angabe aus dem verschluesselten Block.
    *

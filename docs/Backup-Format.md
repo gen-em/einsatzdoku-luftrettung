@@ -87,7 +87,8 @@ seit Web 4.1.2 auch:
   "version": 5,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "app": "einsatzdoku-luftrettung",
-  "user": { "email": "...", "name": "..." },   // informativ
+  "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
+                                               // Einspielen angezeigt
 
   "stammdaten": {
     "bases":        [ { "name": "Kempten", "is_default": 1 } ],
@@ -216,8 +217,15 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
 - `site_ele_m` (Einsatzort-Höhe). Der Einspielweg schreibt die Felder aus
   `mission_fields.php` plus `pat_blob`; die Höhe steht dort nicht, weil sie
   beim Uhr-Upload aus dem Track gerechnet und nicht eingegeben wird. Sie bleibt
-  in der Datei, damit diese den Bestand vollständig abbildet — beim Einspielen
-  ist das Feld danach leer.
+  in der Datei, damit diese den Bestand vollständig abbildet — der Wert aus der
+  Datei wird aber **nicht übernommen**, sondern nach dem Einspielen aus den
+  gerade eingespielten Phasen und Spurpunkten neu berechnet
+  (`site_elevation_lib.php`).
+
+  Diese Berechnung läuft seit Web 4.6.0 **nach** dem Abschluss der Transaktion
+  und je Einsatz eingefasst: Ein Fehler darin darf die Wiederherstellung nicht
+  kosten. Scheitert sie, bleibt das Feld leer und die Antwort nennt die Zahl
+  der betroffenen Einsätze als `hoehe_fehler`.
 
 **Kommt eine Spalte hinzu, die mitgesichert werden soll**, ist sie in
 `backup_lib.php` einzutragen (Liste `$missionSpalten` beziehungsweise die

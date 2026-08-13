@@ -88,6 +88,7 @@ $titel = $monat !== ''
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script src="<?= asset('assets/keyguard.js') ?>"></script>
 <script src="<?= asset('assets/unlock.js') ?>"></script>
+<script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -293,26 +294,23 @@ async function entschluesselePat(){
   if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
   banner.hidden = true;
   let geaendert = false;
-  const zahl = { ok: 0, leer: 0, unlesbar: 0 };
   const pinBounds = [];
+  // Entschluesseln und zaehlen an einer Stelle (M6-06, Baustein B8).
+  const zahl = await EdPat.entschluessleListe(missions, ck);
   for (const m of missions) {
-    if (!m.pat_blob) { zahl.leer++; continue; }
-    const r = await EdPat.entschluessle(ck, m.pat_blob);
-    if (r.zustand !== 'ok') { m._patFehler = true; zahl.unlesbar++; geaendert = true; continue; }
-    zahl.ok++;
-    {
-      const o = r.daten;
-      if (o.dx != null) { m._dx = o.dx; geaendert = true; }
-      const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
-      if (alter != null) { m._age = alter; geaendert = true; }
-      if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
-      // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
-      if (o.loc && o.loc.lat != null) {
-        m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
-          radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
-        }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
-        pinBounds.push([o.loc.lat, o.loc.lon]);
-      }
+    if (m._patState === 'unlesbar') { geaendert = true; continue; }
+    if (m._patState !== 'ok') { continue; }
+    const o = m._pat;
+    if (o.dx != null) { m._dx = o.dx; geaendert = true; }
+    const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
+    if (alter != null) { m._age = alter; geaendert = true; }
+    if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
+    // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
+    if (o.loc && o.loc.lat != null) {
+      m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
+        radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
+      }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
+      pinBounds.push([o.loc.lat, o.loc.lon]);
     }
   }
   EdPat.zeigeUnlesbar(zahl);

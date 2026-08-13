@@ -564,6 +564,15 @@ es nicht mehr.
   — das alte Passwort gilt weiter. **Ohne den Schlüssel sind die Angaben
   unwiederbringlich verloren**, auch Admins können nicht helfen (deshalb gibt
   es keine Admin-Passwortvergabe).
+- **Beim Abtippen hilft die Seite mit.** Unter dem Eingabefeld steht sofort,
+  wenn etwas nicht stimmt: ein Zeichen, das im Schlüssel gar nicht vorkommt,
+  oder eine unvollständige Länge. Die Zeichen **0, 1, I, L, O und U werden
+  nicht verwendet** — genau weil sie beim Ablesen zu leicht zu verwechseln
+  sind. Bindestriche sind eine Lesehilfe und dürfen weggelassen werden,
+  Groß- und Kleinschreibung spielt keine Rolle.
+  Ist der Schlüssel vollständig und passt trotzdem nicht, sagt die Meldung das
+  ausdrücklich: Dann liegt kein Tippfehler vor, sondern es ist der Schlüssel
+  eines anderen Kontos oder aus einer früheren Einrichtung.
 - Verschlüsselte Felder sind serverseitig nicht durchsuchbar; der Schutz wirkt
   gegen Datenbank-Diebstahl und Mitleser, prinzipbedingt nicht gegen einen
   vollständig übernommenen Server.
@@ -629,6 +638,13 @@ Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Flugtage.
+
+**Woher die Datei stammt, steht dabei.** Sobald die Sicherung geöffnet ist —
+also nach Eingabe des Backup-Passworts —, nennt eine Zeile das Konto und den
+Zeitpunkt, zu dem sie erstellt wurde. Stammt sie aus einem anderen Konto als
+dem angemeldeten, steht das ausdrücklich da. Ein Abbruch ist das nicht: Eine
+Sicherung in ein anderes Konto einzuspielen ist vorgesehen. Die Angabe ist
+dafür da, die richtige Datei von einer ähnlich benannten zu unterscheiden.
 
 Öffnet sich eine Sicherung nicht und die Meldung nennt den Browser, liegt es
 weder an der Datei noch am Passwort: Sehr alte Browser können gepackte
@@ -743,6 +759,19 @@ stehen dann lesbar in der Datei. Ist die Verschlüsselung gerade gesperrt (nach
 einem Neustart des Browsers), lässt sich der Haken nicht setzen; ein Export ohne
 Patientendaten bleibt möglich. Über „Entsperren“ im Hinweis daneben lässt sich
 die Sperre aufheben (siehe Abschnitt 5).
+
+**Wenn sich Angaben nicht entschlüsseln lassen, fragt der Export nach.** Passt
+der Schlüssel für einzelne Einsätze nicht, blieben ihre Patientenspalten in der
+Datei einfach leer — die Datei sähe vollständig aus, wäre es aber nicht.
+Deshalb kommt in diesem Fall eine Rückfrage mit der Zahl der betroffenen
+Einsätze. Sie ist ein Grund zum Innehalten: Vor einem Export gehört geklärt,
+warum der Schlüssel nicht passt (Abschnitt 5).
+
+**Formeln in CSV-Dateien.** Beginnt ein Textwert mit `=`, `+`, `-` oder `@`,
+steht im CSV-Export ein Apostroph davor. Er gehört nicht zum Wert; er
+verhindert, dass Excel oder LibreOffice die Zelle als **Formel** ausführen.
+Zahlen sind ausgenommen, negative Werte bleiben also Zahlen. Die beiden
+Excel-Formate brauchen das nicht — dort entstehen echte Textzellen.
 
 **Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Das ist die
 empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
