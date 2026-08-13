@@ -10,6 +10,54 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.5.3] — 2026-08-13
+
+Zwei Nachträge aus dem Betrieb, beide beim Durchprüfen von 4.5.1/4.5.2
+gefunden.
+
+### Die Anmeldesperre nannte 2 Stunden 15 Minuten statt 15 Minuten
+
+Die Sperre selbst dauerte 15 Minuten — falsch war die **Meldung**. Sie kam
+durch eine doppelte Umrechnung zustande: Der Endzeitpunkt wurde in der
+Zeitzone des Datenbankservers geschrieben (Ortszeit), und die Anzeige las ihn
+als Weltzeit und rechnete den Zonenversatz noch einmal drauf.
+
+Dasselbe betraf vier weitere Anzeigen: „zuletzt gesehen" und „seit" im
+Geräte-Reiter, dieselben Angaben auf der Admin-Nutzerseite, den Hinweis auf
+neu gekoppelte Geräte auf der Startseite und die Spalte „angelegt" in der
+Nutzerliste. Alle zeigten um den Zonenversatz zu späte Zeiten.
+
+**Behoben ist das bereits mit 4.5.2**, wo die Zeitzone der Verbindung
+ausdrücklich auf UTC gesetzt wurde. Was fehlte, war der Übergang: Zeilen aus
+der Zeit davor tragen noch Ortszeit und wirken deshalb um den Zonenversatz in
+der Zukunft — eine beim Umstieg laufende Anmeldesperre hielt entsprechend
+länger. Eine Migration räumt diese Zeilen jetzt weg.
+
+Betroffen war dabei nur ein Spaltentyp, und das ist der Punkt: `TIMESTAMP`
+rechnet MySQL beim Schreiben selbst in Weltzeit um und beim Lesen zurück —
+Kopplungscodes, Gerätezeiten und Anlegedaten waren also nie falsch
+**gespeichert**, nur falsch **angezeigt**. `DATETIME` speichert dagegen, was
+dasteht. Von den mit der Serverzeit gefüllten `DATETIME`-Spalten bleiben zwei:
+die Ratenschutz-Zähler (werden geräumt) und die Gültigkeit offener
+Passwort-Links. Letztere werden bewusst nicht angefasst — ein Einladungslink,
+der jemandem unter den Händen ungültig wird, wäre der größere Schaden als
+einer, der ein bis zwei Stunden zu lange lebt.
+
+Die Einsatzzeiten und der Papierkorb waren nie betroffen; beide rechnen seit
+jeher ausdrücklich in Weltzeit.
+
+### Die Wartungsseite ist jetzt erreichbar
+
+`update.php` war nur über die direkte Adresse aufzurufen — es gab keinen
+Menüeintrag. Damit war die Auskunft aus 4.5.1 wertlos: Sie meldet, dass der
+Aufräumjob dauerhaft scheitert, auf einer Seite, die niemand öffnet.
+
+Unter **Administration** steht jetzt der Eintrag **Wartung**. Die Seite hat
+außerdem die Seitenleiste bekommen, die ihr fehlte — wer dort landete, kam
+vorher nur über den Zurück-Knopf wieder heraus. Am Verhalten ändert sich
+nichts: Das bloße Aufrufen führt weiterhin keine Migration aus, es zeigt nur
+an, was anstünde.
+
 ## [Web 4.5.2] — 2026-08-13
 
 Zweiter Teil des Aufräumens: siebzehn Stellen ohne gemeinsames Thema außer

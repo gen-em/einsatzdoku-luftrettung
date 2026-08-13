@@ -23,8 +23,78 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P6 | Sitzung, Rollen, Konten | Web 4.5.0 | **erledigt** |
 | P8a | Aufräumen, Bündel 1+2 | Web 4.5.1 | **erledigt** |
 | P8b | Aufräumen, Bündel 3+4 | Web 4.5.2 | **erledigt** |
+| — | Nachträge aus dem Betrieb | Web 4.5.3 | **erledigt** |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## Nachträge aus dem Betrieb (Web 4.5.3)
+
+Zwei Dinge, die beim Durchprüfen von 4.5.1 und 4.5.2 auf der laufenden
+Installation auffielen — keine Review-Befunde, sondern Funde aus der Benutzung.
+
+### Teilaspekt zu M1-02: die Sperrmeldung nannte 2 h 15 min
+
+Beobachtet: „Zu viele Anmeldeversuche … frühestens ab 11:32 Uhr", während es
+09:17 Uhr war. Vorgesehen sind 15 Minuten.
+
+**Die Sperre selbst war korrekt.** `rate_erlaubt()` vergleicht
+`gesperrt_bis > NOW()` — beide Seiten in derselben Zone. Falsch war die
+Anzeige: `gesperrt_bis` wurde bis 4.5.1 in der Zone des Datenbankservers
+geschrieben (Ortszeit), und `fmt_local()` liest jeden Wert als UTC und rechnet
+den Versatz ein zweites Mal drauf.
+
+Nachgemessen:
+
+| | gespeichert | angezeigt | tatsächlich |
+|---|---|---|---|
+| bis 4.5.1 (Server auf Europe/Berlin) | `09:32:34` | „ab **11:32** Uhr" | 09:17 Uhr |
+| ab 4.5.2 (Verbindung auf UTC) | `07:32:34` | „ab **09:32** Uhr" | 09:17 Uhr |
+
+Dieselbe Verschiebung betraf vier weitere Anzeigen: `devices.last_seen` und
+`devices.created_at` (Geräte-Reiter und Admin-Nutzerseite), den Hinweis auf
+neue Geräte auf der Startseite und `users.created_at` in der Nutzerliste.
+
+**Das ist die Wirkung von M5-09 in der Praxis** — der Befund war als
+Einheitlichkeitsproblem beschrieben, war aber ein sichtbarer Fehler.
+
+### Was an M5-09 nachzutragen war
+
+Der Übergang wurde nicht bedacht: Zeilen aus der Zeit vor 4.5.2 tragen noch
+Ortszeit, während `NOW()` danach UTC liefert. Sie wirken um den Zonenversatz in
+der Zukunft. Eine beim Umstieg laufende Anmeldesperre hielt entsprechend
+länger.
+
+**Die Analyse ergab eine wichtige Unterscheidung, die vorher nirgends stand:**
+
+| Typ | Verhalten | Betroffene Spalten | War die Speicherung falsch? |
+|---|---|---|---|
+| `TIMESTAMP` | MySQL rechnet beim Schreiben in UTC um, beim Lesen zurück | `pair_codes`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs` | **nein**, nur die Anzeige |
+| `DATETIME` | speichert unverändert, was dasteht | `rate_limits.fenster_start`/`gesperrt_bis`, `password_resets.expires_at` | **ja** |
+
+Die Einsatzzeiten (`local_to_utc()`) und der Papierkorb (`UTC_TIMESTAMP()`)
+sind ebenfalls `DATETIME`, wurden aber nie aus der Sitzungszone gefüllt und
+waren nie betroffen.
+
+Es blieben also zwei Stellen. Die Migration `2026_08_13_zeitzonen_umstellung`
+räumt `rate_limits` mit der Bedingung `fenster_start > NOW()` — ein
+Beobachtungszeitraum kann nicht in der Zukunft beginnen, die Bedingung trifft
+also genau die Altzeilen und lässt eine laufende, korrekte Sperre stehen.
+`password_resets` bleibt bewusst unberührt: Ein Einladungslink, der jemandem
+unter den Händen ungültig wird, wäre der größere Schaden als einer, der ein bis
+zwei Stunden zu lange lebt.
+
+Der Zustand heilt sich ohnehin von selbst, sobald der Zonenversatz verstrichen
+ist. Wer 4.5.3 später aufspielt, findet nichts mehr vor — das ist der
+Normalfall, kein Fehler.
+
+### Die Wartungsseite war nicht erreichbar
+
+`update.php` hatte keinen Menüeintrag und keine Seitenleiste. Die Auskunft aus
+M3-05 war damit wertlos: Sie meldet einen dauerhaft scheiternden Aufräumjob auf
+einer Seite, die niemand öffnet. Beides ist ergänzt; am Verhalten ändert sich
+nichts (A19 gilt unverändert).
 
 ---
 

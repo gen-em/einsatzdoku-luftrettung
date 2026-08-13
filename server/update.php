@@ -671,6 +671,67 @@ $MIGRATIONS = [
                MODIFY email VARCHAR(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL',
         ],
     ],
+    [
+        'id'    => '2026_08_13_zeitzonen_umstellung',
+        'label' => 'Zeitzonen-Umstellung: Ratenschutz-Zähler aus der Zeit davor entfernen',
+        /* WARUM ES DIESE MIGRATION GIBT
+         *
+         * Web 4.5.2 hat die Zeitzone der Datenbankverbindung ausdruecklich auf
+         * UTC gesetzt (M5-09). Vorher kam sie aus der Einstellung des
+         * Datenbankservers — bei einer Ortszeit schrieb NOW() also um den
+         * Zonenversatz vor der Weltzeit.
+         *
+         * BETROFFEN IST NUR EIN SPALTENTYP, UND DAS IST DER SPRINGENDE PUNKT.
+         * MySQL behandelt die beiden Zeittypen grundverschieden:
+         *
+         *   TIMESTAMP  wird beim Schreiben in UTC umgerechnet und beim Lesen
+         *              zurueck. Der gespeicherte Wert war IMMER richtig, egal
+         *              welche Zone die Sitzung hatte. Betroffen war nur die
+         *              ANZEIGE (fmt_local rechnete ein zweites Mal um) — und
+         *              die stimmt seit 4.5.2 von selbst.
+         *              Das sind: pair_codes, devices.last_seen/created_at,
+         *              users.created_at, missions.created_at, deleted_refs.
+         *
+         *   DATETIME   speichert, was dasteht, ohne jede Umrechnung. Wurde es
+         *              mit NOW() aus einer Ortszeit-Sitzung gefuellt, steht
+         *              dort Ortszeit — und die wird jetzt gegen UTC
+         *              verglichen.
+         *              Mit NOW() gefuellt werden: rate_limits.fenster_start
+         *              und .gesperrt_bis sowie password_resets.expires_at.
+         *              Die Einsatzzeiten kommen aus local_to_utc() und die
+         *              Papierkorb-Zeiten aus UTC_TIMESTAMP() — beide waren
+         *              schon immer UTC und sind unberuehrt.
+         *
+         * Bleiben also zwei Stellen, und nur eine davon wird angefasst:
+         *
+         *   rate_limits          Eine Anmeldesperre haelt laenger als die
+         *                        vorgesehenen 15 Minuten. Genau das wurde im
+         *                        Betrieb beobachtet: Die Meldung nannte
+         *                        2 Stunden 15 Minuten. -> wird geraeumt.
+         *
+         *   password_resets      Ein offener Link lebt ein bis zwei Stunden
+         *                        laenger als vorgesehen. BEWUSST NICHT
+         *                        angefasst: Dort koennte jemand auf einen
+         *                        Einladungslink warten, und ein Link, der
+         *                        unter den Haenden ungueltig wird, waere der
+         *                        groessere Schaden als einer, der etwas zu
+         *                        lange lebt.
+         *
+         * WARUM "fenster_start > NOW()" GENAU DAS RICHTIGE TRIFFT
+         * Ein Beobachtungszeitraum kann nicht in der Zukunft beginnen. Wo das
+         * doch so aussieht, stammt die Zeile aus der Zeit vor der Umstellung —
+         * und nur dann. Eine laufende, korrekt geschriebene Sperre gegen einen
+         * tatsaechlichen Angriff bleibt damit bestehen.
+         *
+         * DAS HEILT SICH AUCH VON SELBST, sobald der Zonenversatz verstrichen
+         * ist. Diese Migration nimmt nur vorweg, was sonst Stunden dauert —
+         * wer sie spaeter aufspielt, findet nichts mehr vor. Das ist kein
+         * Fehler, sondern der Normalfall.
+         */
+        'sql'   => [
+            'DELETE FROM rate_limits WHERE fenster_start > NOW()',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 
@@ -819,10 +880,17 @@ if ($istCli) {
 <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
 <?= favicon_tags() ?></head>
 <body>
-<?php ui_topbar(''); ?>
+<?php ui_topbar('einstellungen'); ?>
+
+<?php /* Seitenleiste wie auf den uebrigen Verwaltungsseiten.
+   Bis Web 4.5.2 stand diese Seite ohne sie da — sie war ja nur ueber die
+   direkte Adresse erreichbar und damit ohnehin eine Sackgasse: Wer hier
+   landete, kam nur ueber den Zurueck-Knopf wieder heraus. */ ?>
+<div class="layout">
+  <?php ui_settings_sidebar('wartung'); ?>
 
 <main class="page">
-  <h1>Datenbank-Update</h1>
+  <h1>Wartung &amp; Datenbank-Update</h1>
 
   <?php if (!$results): ?>
     <p class="alert alert-info">Keine Migrationen definiert.</p>
@@ -942,5 +1010,6 @@ if ($istCli) {
   <?php endif; ?>
 <?php ui_footer(); ?>
 </main>
+</div>
 </body>
 </html>

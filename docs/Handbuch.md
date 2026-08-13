@@ -970,6 +970,11 @@ scheitert einer der Aufräumschritte dauerhaft — dann wird unter anderem der
 Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
 Webspace unter dem Suchwort `cleanup:`.
 
+Unter **„Wartung"** stehen zwei Dinge: ob Datenbank-Updates anstehen (nach
+dem Aufspielen einer neuen Fassung dort nachsehen) und ob der tägliche
+Aufräumjob durchläuft. Das bloße Öffnen der Seite ändert nichts — sie zeigt
+erst an, was anstünde, und wartet auf eine Bestätigung.
+
 Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
 unter Standortdaten (9.1–9.3), jedoch für **alle** NutzerInnen gemeinsam
 (siehe 9.4). Namensgleiche Einträge werden auch hier abgelehnt; existieren
