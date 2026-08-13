@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (Throwable $ex) {
-            $errors[] = 'Datenbank-Verbindung fehlgeschlagen: ' . h($ex->getMessage());
+            $errors[] = 'Datenbank-Verbindung fehlgeschlagen: ' . $ex->getMessage();
         }
     }
 
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $setupLink = $baseUrl . '/pw_handling.php?token=' . $setupToken;
         } catch (Throwable $ex) {
             $errors[] = 'Beim Anlegen der Tabellen/des Admins ist ein Fehler aufgetreten: '
-                      . h($ex->getMessage())
+                      . $ex->getMessage()
                       . ' — Tipp: eine leere Datenbank verwenden oder oben '
                       . '„vorhandene Tabellen löschen" anhaken.';
         }
@@ -196,7 +196,14 @@ function render_form(array $v, array $errors): void {
     <p class="muted">Diese Angaben werden in <code>config.php</code> gespeichert und die
        Datenbank wird angelegt. Der Installer läuft nur dieses eine Mal.</p>
 
-    <?php foreach ($errors as $e): ?><p class="alert"><?= $e ?></p><?php endforeach; ?>
+    <?php /* Maskierung HIER, an der Ausgabestelle (M1-18).
+       Vorher maskierten zwei der zehn Meldungen ihren variablen Teil selbst,
+       und die Ausgabe gab alles unmaskiert weiter. Das ging gut, solange
+       niemand eine elfte Meldung mit Fremdtext ergänzt — genau die wäre dann
+       eine Lücke gewesen, und zwar eine unsichtbare: Neun Meldungen ohne h()
+       sahen ja richtig aus. Maskieren am Ausgabepunkt kann man nicht
+       vergessen; es gibt nur diese eine Stelle. */ ?>
+    <?php foreach ($errors as $e): ?><p class="alert"><?= h($e) ?></p><?php endforeach; ?>
 
     <form method="post" autocomplete="off">
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">

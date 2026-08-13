@@ -219,10 +219,35 @@ try {
         $ownerType = 'rest';
     }
 
-    // Trackpunkte anhaengen: bereits bekannte Sequenzen ueberspringen (idempotent)
+    /* ---- Trackpunkte anhaengen (M4-06) ----------------------------------
+     *
+     * WARUM HIER KEIN "INSERT IGNORE" MEHR STEHT
+     * IGNORE unterdrueckt nicht nur den Schluesselkonflikt, sondern JEDEN
+     * Fehler dieser Anweisung. Gedacht war es fuer die Wiederholung: Laedt die
+     * Uhr dieselben Punkte erneut hoch, sollen die bekannten Sequenznummern
+     * stillschweigend uebergangen werden. Getan hat es mehr.
+     *
+     * Der Schaden ist dauerhaft, und das ist der Punkt. Die Fortsetzungsmarke,
+     * die die Uhr zurueckbekommt, ist MAX(seq)+1. Ein Punkt, der beim
+     * Einfuegen scheitert, hinterlaesst eine Luecke — die Marke springt
+     * darueber hinweg, die Uhr setzt dahinter fort und sendet ihn NIE WIEDER.
+     * Der Upload meldete dabei Erfolg. Aus einem vollstaendigen Flugweg wurde
+     * ein Flugweg mit einem Loch, von dem niemand etwas erfuhr.
+     *
+     * Jetzt: Der Schluesselkonflikt wird weiterhin uebergangen — das ist die
+     * Wiederholung, und die soll funktionieren. Jeder andere Fehler bricht den
+     * Upload ab; die Transaktion wird zurueckgerollt und die Uhr versucht es
+     * beim naechsten Mal erneut, mit derselben Fortsetzungsmarke wie zuvor.
+     * Ein sichtbar gescheiterter Upload ist besser als ein stillschweigend
+     * unvollstaendiger.
+     *
+     * Punkte, die an der WERTEPRUEFUNG scheitern, bleiben ein anderer Fall:
+     * Sie werden gezaehlt und in 'rejected' benannt (seit Web 4.2.0). Sie
+     * erneut zu senden brauchte niemand — sie wuerden wieder abgelehnt.
+     */
     $stored = 0;
     if ($points) {
-        $ins = $pdo->prepare('INSERT IGNORE INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
+        $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
         foreach ($points as $i => $pt) {
             if (!is_array($pt) || count($pt) < 4) {
@@ -235,9 +260,15 @@ try {
             $la = pruef_breite($pt[0], 'track.lat', $pruef);
             $lo = pruef_laenge($pt[1], 'track.lon', $pruef);
             if ($la === null || $lo === null) { continue; }
-            $ins->execute([$ownerType, $ownerId, $seqFrom + $i, $la, $lo,
-                $pt[2] === null ? null : (float)$pt[2], (int)$pt[3]]);
-            $stored += $ins->rowCount();
+            try {
+                $ins->execute([$ownerType, $ownerId, $seqFrom + $i, $la, $lo,
+                    $pt[2] === null ? null : (float)$pt[2], (int)$pt[3]]);
+                $stored += $ins->rowCount();
+            } catch (PDOException $ex) {
+                // Diese Sequenznummer gibt es schon: erneuter Upload derselben
+                // Punkte. Genau dafuer war IGNORE gedacht.
+                if (!ist_dublettenfehler($ex)) { throw $ex; }
+            }
         }
     }
 
@@ -275,5 +306,14 @@ try {
     json_out($antwort);
 } catch (Throwable $ex) {
     $pdo->rollBack();
-    json_out(['error' => 'server'], 500);
+    /* Kennung statt Schweigen (M3-10/M4-06).
+     *
+     * Die Uhr zeigt nur, DASS der Upload scheiterte — mehr braucht sie auch
+     * nicht. Wer der Ursache nachgehen will, hat jetzt aber eine: Der volle
+     * Text steht im Fehlerprotokoll des Webspace unter dieser Kennung.
+     *
+     * Seit M4-06 landet hier auch ein gescheitertes Einfuegen von Spurpunkten.
+     * Der Rollback ist dabei wesentlich: Die Fortsetzungsmarke bleibt, wo sie
+     * war, und die Uhr sendet dieselben Punkte beim naechsten Versuch erneut. */
+    json_out(['error' => 'server', 'kennung' => fehler_kennung($ex, 'ingest')], 500);
 }

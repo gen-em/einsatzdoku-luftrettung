@@ -121,9 +121,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($patReady) {
                     // Pruefsumme mitschreiben: Bestandskonten bekommen sie
                     // hier erstmals, alle anderen bestaetigen den alten Wert.
+                    /* Kein Abschneiden mehr (M2-08).
+                     *
+                     * mb_substr(..., 0, 4000) konnte nie greifen: WRAP_RE
+                     * laesst hoechstens 4000 Zeichen durch, laengere Eingaben
+                     * sind vorher abgewiesen. Toter Code — aber gefaehrlicher
+                     * toter Code. Wuerde die Obergrenze der Pruefung je
+                     * angehoben, ohne dass jemand an diese Zeile denkt,
+                     * schnitte sie die Schluesselhuelle stillschweigend ab.
+                     * Eine abgeschnittene Huelle laesst sich nicht mehr
+                     * oeffnen, und auffallen wuerde es erst beim naechsten
+                     * Anmelden — dann sind die Patientenangaben verloren.
+                     *
+                     * Die Laenge gehoert in die Pruefung, nicht ins
+                     * Speichern. Dort steht sie. */
                     $pdo->prepare('UPDATE users SET pat_wrap_pw = ?, pat_key_check = ? WHERE id = ?')
-                        ->execute([mb_substr($wrapPw, 0, 4000),
-                                   $keyChk !== '' ? $keyChk : null, $userId]);
+                        ->execute([$wrapPw, $keyChk !== '' ? $keyChk : null, $userId]);
                 }
                 /* Offene Links zum Zuruecksetzen entwerten. Sie sind bis zu
                  * einer Stunde gueltig und haetten den soeben gewaehlten
@@ -205,7 +218,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ->execute([$userId, $code]);
                 $pairCode = $code;
                 break;
-            } catch (PDOException $ex) { /* Kollision -> neuer Versuch */ }
+            } catch (PDOException $ex) {
+                /* NUR die Kollision rechtfertigt einen neuen Versuch (M4-09).
+                 *
+                 * Vorher galt jeder Datenbankfehler als Kollision. Fehlte die
+                 * Tabelle oder war die Verbindung weg, versuchte es die Schleife
+                 * fuenfmal mit fuenf frischen Zufallscodes und meldete danach
+                 * "Bitte erneut versuchen." — eine Aufforderung, die nie zum
+                 * Ziel fuehren konnte, weil die Ursache eine ganz andere war.
+                 *
+                 * Ein Zusammentreffen zweier Codes ist ohnehin so selten, dass
+                 * die fuenf Versuche eher Formsache sind. Ein echter Fehler
+                 * dagegen soll durchschlagen. */
+                if (!ist_dublettenfehler($ex)) { throw $ex; }
+            }
         }
         if ($pairCode === null) {
             // Fuenf Kollisionen hintereinander sind bei 32^6 Moeglichkeiten

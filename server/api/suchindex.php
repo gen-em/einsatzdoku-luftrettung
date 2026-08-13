@@ -196,5 +196,5 @@ try {
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 (z. B. fehlende Spalte nach vergessener
     // Migration) eine lesbare Meldung — das Frontend zeigt sie an.
-    json_out(['error' => 'suchindex', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'suchindex');
 }

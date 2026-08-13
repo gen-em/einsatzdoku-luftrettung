@@ -168,5 +168,5 @@ try {
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 eine lesbare Fehlermeldung — das Frontend
     // (index.php) zeigt error+meldung bereits an.
-    json_out(['error' => 'day', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'day');
 }

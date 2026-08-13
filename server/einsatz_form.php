@@ -92,6 +92,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$error && count($rows) === 0) { $error = 'Mindestens eine Phase mit Uhrzeit eintragen.'; }
     }
 
+    if (!$error && count($rows) === 0) {
+        /* Doppelt gesichert (M5-11).
+         *
+         * Oben steht bereits eine Pruefung auf mindestens eine Phase — aber
+         * nur im else-Zweig einer Fallunterscheidung. Kommt spaeter ein
+         * dritter Weg zu $rows hinzu, greift sie nicht mehr, und $rows[0][1]
+         * ist dann ein Zugriff auf einen nicht vorhandenen Index: In PHP 8
+         * eine Warnung und ein Nullwert, der als started_at in die Datenbank
+         * ginge. Der Zugriff auf die erste Zeile prueft deshalb selbst, ob es
+         * sie gibt — direkt dort, wo er stattfindet. */
+        $error = 'Mindestens eine Phase mit Uhrzeit eintragen.';
+    }
+
     if (!$error) {
         $startedAt = $rows[0][1];
         $endedAt   = $rows[count($rows) - 1][1];
@@ -180,8 +193,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Virtuelles Geraet "Manuelle Einträge" (deaktiviert: kann nie hochladen)
                 $devKey = 'manual-' . $userId;
-                $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ?');
-                $q->execute([$devKey]);
+                /* Die Nutzerkennung gehoert IN die Abfrage (M3-12/M6-09).
+                 *
+                 * Gesucht wurde allein ueber device_id. Dass 'manual-<id>' die
+                 * Zugehoerigkeit im Namen traegt, machte die Abfrage praktisch
+                 * richtig — aber nur, weil eine Zeichenkette zufaellig dasselbe
+                 * aussagt wie eine Spalte. Steht die Bedingung nicht in der Abfrage,
+                 * gibt es auch nichts, was sie durchsetzt: Ein spaeter geaendertes
+                 * Namensschema, ein Tippfehler beim Zusammenbauen des Schluessels,
+                 * und die gefundene Zeile gehoert jemand anderem. Das Ergebnis waere
+                 * ein Einsatz am Geraet einer fremden Person.
+                 *
+                 * user_id ist ausserdem die Spalte, auf der die Fremdschluessel und
+                 * alle uebrigen Abfragen dieser Datei arbeiten. Eine Ausnahme davon
+                 * faellt bei der Durchsicht nicht auf. */
+                $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
+                $q->execute([$devKey, $userId]);
                 $devId = $q->fetchColumn();
                 if ($devId === false) {
                     $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)

@@ -10,6 +10,111 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 4.5.1] — 2026-08-13
+
+Aufräumen: fünfzehn Stellen, an denen die Fehlerbehandlung zu viel oder zu
+wenig gefangen hat. Keine neue Funktion, keine Änderung am Schema.
+
+### Der Aufräumjob hielt sich selbst auf
+
+Die tägliche Wartung läuft huckepack auf Anfragen. Sie setzte ihre Tagesmarke,
+bevor sie anfing (richtig — sonst räumen zwei gleichzeitige Anfragen doppelt
+auf), und ihr Fehlerblock war leer. Zusammen ergab das eine Falle ohne
+Ausgang: Scheiterte ein Schritt, brach der gemeinsame Block ab, alle folgenden
+Schritte entfielen — und weil die Marke schon stand, lief an diesem Tag nichts
+mehr. Am nächsten Tag begann es von vorn und scheiterte an derselben Stelle.
+Dauerhaft, und nirgends stand etwas davon.
+
+Am spürbarsten beim Papierkorb: Er stand als vorletzter Schritt. „Endgültig
+nach 30 Tagen" wäre stillschweigend zu „nie" geworden.
+
+Jetzt hat jeder der sieben Schritte seinen eigenen Fehlerblock, Fehler landen
+im Fehlerprotokoll des Webspace, und eine zweite Marke hält fest, wann zuletzt
+ein Lauf **vollständig** durchging. Die Wartungsseite zeigt beide an: Klaffen
+sie auseinander, scheitert etwas dauerhaft.
+
+### Ein Spurpunkt kann nicht mehr spurlos verschwinden
+
+Beim Hochladen von der Uhr stand `INSERT IGNORE`. Gedacht war es für die
+Wiederholung — lädt die Uhr dieselben Punkte erneut hoch, sollen bekannte
+Sequenznummern übergangen werden. Unterdrückt hat es jeden Fehler.
+
+Der Schaden war dauerhaft: Die Fortsetzungsmarke, die die Uhr zurückbekommt,
+ist die höchste gespeicherte Nummer plus eins. Ein Punkt, der beim Einfügen
+scheiterte, hinterließ eine Lücke — die Marke sprang darüber hinweg, die Uhr
+setzte dahinter fort und sendete ihn **nie wieder**. Der Upload meldete dabei
+Erfolg.
+
+Jetzt wird nur noch der Schlüsselkonflikt übergangen. Jeder andere Fehler
+bricht den Upload ab und rollt zurück; die Uhr versucht es beim nächsten Mal
+mit derselben Marke erneut. Ein sichtbar gescheiterter Upload ist besser als
+ein stillschweigend unvollständiger.
+
+### Fehlermeldungen der Endpunkte nennen keine Interna mehr
+
+Neun Endpunkte gaben den Text der Ausnahme unverändert nach außen — Tabellen-
+und Spaltennamen, Teile der Abfrage, bei Verbindungsfehlern auch Hostnamen.
+Das Skript zeigte den Text direkt an, er stand also auf dem Bildschirm und in
+jedem Screenshot, den jemand zur Fehlersuche verschickte.
+
+Für die Fehlersuche war er trotzdem unbrauchbar: Was auf dem Bildschirm stand,
+stand nirgends sonst. Jetzt geht der volle Text ins Fehlerprotokoll, nach außen
+geht eine achtstellige Kennung — kurz genug fürs Telefon, eindeutig genug fürs
+Protokoll.
+
+Der Einrichtungs-Assistent und die Wartungsseite zeigen ihre Fehler weiterhin
+im Klartext. Beide laufen nur für Verwaltende, und bei der Ersteinrichtung gibt
+es noch kein Protokoll, in dem man nachsehen könnte.
+
+### Ein halber Zeitraum beim Export ergab den gesamten Bestand
+
+Der Zeitraumfilter griff nur, wenn **beide** Grenzen gesetzt waren. Fehlte
+eine, fiel die Bedingung stillschweigend weg. Wer „ab 01.01.2026" eingab, bekam
+eine Datei mit allem seit Beginn — ohne Fehler, ohne Meldung, nur größer als
+erwartet. Bei Patientendaten ist das keine Kleinigkeit. Beide Grenzen leer
+heißt weiterhin „alles"; genau eine Grenze wird jetzt abgelehnt.
+
+### Eine Monatsangabe außerhalb von 01–12 lieferte einen falschen Monat
+
+Die Übersicht prüfte nur, dass zwei Ziffern kamen. `m=00` ergab den Dezember
+des Vorjahres, weil die Datumsrechnung stillschweigend auf einen Ersatzwert
+zurückfiel. Eine Übersicht, die einen anderen Monat zeigt als den angefragten,
+ist schlimmer als eine, die sich weigert.
+
+### Weitere Änderungen
+
+* **Endgültiges Löschen im Papierkorb** prüft das Datumsformat jetzt genauso
+  wie das Wiederherstellen. Vorher war ausgerechnet die unumkehrbare Handlung
+  schwächer geprüft.
+* **Gerätekennungen** entstehen aus 16 statt 4 Zufallsbytes. Vorhandene Geräte
+  behalten ihre Kennung und müssen nicht neu gekoppelt werden.
+* **Das virtuelle Gerät „Manuelle Einträge"** wird über Kennung *und*
+  Nutzerkennung gesucht. Vorher trug allein der Name die Zugehörigkeit.
+* **Kopplungscodes:** Ein neuer Versuch nur noch beim tatsächlichen
+  Zusammentreffen zweier Codes. Vorher galt jeder Datenbankfehler als
+  Kollision — bei fehlender Tabelle lief die Schleife fünfmal ins Leere und
+  riet dann zum erneuten Versuch.
+* **Der Migrationsbericht** unterscheidet ausgeführte von bereits erledigten
+  Teilschritten. „Erfolgreich angewendet" stand vorher auch dort, wo nichts zu
+  tun war.
+* **Der Einrichtungs-Assistent** maskiert Fehlermeldungen an der Ausgabestelle
+  statt an zwei von zehn Quellen.
+* **Beim Passwortwechsel** entfällt ein Abschneiden der Schlüsselhülle, das nie
+  greifen konnte — aber bei einer späteren Anhebung der Prüfgrenze
+  stillschweigend Patientendaten unlesbar gemacht hätte.
+* **Ein Zugriff auf die erste Phase** eines Einsatzes prüft selbst, ob es sie
+  gibt.
+
+### Technisch
+
+* `fehler_kennung()` und `json_fehler()` in `db.php`.
+* `ist_dublettenfehler()` (aus 4.5.0) trägt jetzt auch die Unterscheidung beim
+  Spurpunkt-Upload und bei der Codeerzeugung.
+* Zweiter Zustandsschlüssel `last_cleanup_ok` in `app_state` — kein
+  Schemawechsel, die Tabelle nimmt beliebige Schlüssel auf.
+* Bereits durch 4.2.0 erledigt und hier nur nachgewiesen: Spurpunkte müssen als
+  Liste kommen (`ist_liste()`).
+
 ## [Web 4.5.0] — 2026-08-12
 
 Bis hierher endete eine Sitzung nur durch Abmelden oder Zeitablauf. Weder ein

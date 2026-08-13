@@ -19,5 +19,5 @@ try {
     header('Cache-Control: no-store');
     echo $out;
 } catch (Throwable $ex) {
-    json_out(['error' => 'backup', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'backup');
 }

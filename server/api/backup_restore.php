@@ -33,5 +33,5 @@ try {
     $stats = edbak_restore($userId, $data);
     json_out(['ok' => true, 'stats' => $stats]);
 } catch (Throwable $ex) {
-    json_out(['error' => 'restore', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'restore');
 }

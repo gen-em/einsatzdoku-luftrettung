@@ -21,8 +21,73 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P5 | Papierkorb und gelöschte Flugtage | Web 4.3.0 | **erledigt** |
 | P4 | Ratenschutz und unangemeldete Endpunkte | Web 4.4.0 | **erledigt** |
 | P6 | Sitzung, Rollen, Konten | Web 4.5.0 | **erledigt** |
+| P8a | Aufräumen, Bündel 1+2 | Web 4.5.1 | **erledigt** |
 | P8 | Aufräumen ohne Verhaltensänderung | — | offen |
 | P9 | Größere Vorhaben | — | offen |
+
+---
+
+## P8a — Aufräumen, Bündel 1 und 2 (Web 4.5.1)
+
+Fünfzehn Befunde ohne gemeinsames Thema außer diesem: An jeder dieser Stellen
+fing die Fehlerbehandlung zu viel oder zu wenig. Keine Schemaänderung.
+
+| Befund | Änderung |
+|---|---|
+| M3-05 | Aufräumjob: sieben Schritte einzeln abgesichert, Protokollspur, zweite Marke für den letzten **vollständigen** Lauf |
+| M1-18 | Einrichtungs-Assistent maskiert an der Ausgabestelle |
+| M3-06 | Monat muss 01–12 sein |
+| M3-10 | Neun Endpunkte: Kennung statt Ausnahmetext |
+| M4-06 | Spurpunkte: nur noch der Schlüsselkonflikt wird übergangen |
+| M4-09 | Kopplungscode: neuer Versuch nur bei echter Kollision |
+| M5-11 | Existenzprüfung am Zugriff auf die erste Phase |
+| M6-08 | Migrationsbericht unterscheidet ausgeführt / bereits erledigt |
+| M3-12, M6-09 | Virtuelles Gerät über Kennung **und** Nutzerkennung |
+| M4-08 | Gerätekennung 128 statt 32 Bit |
+| M5-08 | Endgültiges Löschen prüft wie das Wiederherstellen |
+| M3-07 | Halber Zeitraum beim Export wird abgelehnt |
+| M2-08 | Nicht greifendes Abschneiden der Schlüsselhülle entfernt |
+| M4-11 | **Bereits durch P3 erledigt** — hier nur nachgewiesen (`ist_liste()`) |
+
+### Warum der Aufräumjob der schwerwiegendste dieser Befunde war
+
+Die Marke stand vor der Arbeit, der Fehlerblock war leer. Ein scheiternder
+Schritt brach den gemeinsamen Block ab und ließ alle folgenden entfallen — für
+diesen Tag, und am nächsten Tag wieder, weil die Ursache dieselbe blieb. Nichts
+davon war irgendwo ablesbar.
+
+Die Marke bleibt bewusst **vor** der Arbeit: Sie danach zu setzen hieße, dass
+zwei gleichzeitige Anfragen beide aufräumen. Das ist der teurere Fehler. Die
+Abschottung der Schritte gegeneinander löst das Problem an der richtigen
+Stelle.
+
+### Warum bei den Spurpunkten jetzt abgebrochen wird
+
+Ein verworfener Punkt ist nicht wiederzubeschaffen: Die Fortsetzungsmarke ist
+`MAX(seq)+1`, sie springt über die Lücke, und die Uhr sendet den Punkt nie
+wieder. Deshalb bricht jeder Fehler außer dem Schlüsselkonflikt den Upload ab
+und rollt zurück. Das ist strenger als vorher — ein Upload, der bisher „Erfolg"
+meldete und dabei einen Punkt verlor, scheitert jetzt sichtbar.
+
+Punkte, die an der **Werteprüfung** scheitern, bleiben ein anderer Fall: Sie
+werden gezählt und in `rejected` benannt (seit Web 4.2.0). Sie erneut zu senden
+brächte nichts — sie würden wieder abgelehnt.
+
+### Was bei M3-10 bewusst ausgenommen ist
+
+`install.php` und `update.php` zeigen ihre Ausnahmen weiterhin im Klartext.
+Beide laufen nur für Verwaltende, beide in Lagen — Ersteinrichtung, Migration —
+in denen der genaue Text die eigentliche Auskunft ist. Bei `install.php` gibt
+es zu diesem Zeitpunkt zudem noch kein Fehlerprotokoll, in dem man nachsehen
+könnte.
+
+### Ein Fund bei der Prüfung
+
+Ein NULL-Wert in einer Spalte ohne Nullwert-Erlaubnis trägt ebenfalls SQLSTATE
+23000, aber Treibercode 1048. Hätte `ist_dublettenfehler()` nur die Klasse
+geprüft, wäre bei M4-06 genau dieser Fall als „schon vorhanden" durchgegangen
+und der Punkt spurlos verschwunden — dasselbe Verhalten wie vorher, nur mit
+mehr Code. Der Fall ist als eigene Prüfung festgehalten.
 
 ---
 

@@ -100,7 +100,7 @@ hems/
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
@@ -116,7 +116,7 @@ hems/
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `salt_secret`) |
+| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -772,9 +772,26 @@ vor der Kette sieht das nicht.
 **Aufräumjob:** `run_cleanup_if_due()` (db.php) läuft max. 1×/Tag, huckepack
 auf `auth_guard.php` (Web) und `ingest.php` (Uhr) — kein Cron nötig. Marke
 `last_cleanup` wird *vor* dem Lauf gesetzt (verhindert Parallel-Läufe);
-entsorgt Trackpunkt-Waisen, alte Reset-Tokens, abgelaufene Kopplungscodes und
-endgültig fällige Papierkorb-Einträge; scheitert grundsätzlich still (Wartung
-darf keine Anfrage brechen).
+entsorgt Trackpunkt-Waisen, alte Reset-Tokens, abgelaufene Kopplungscodes,
+Ratenschutz-Zähler, Einträge der Sperrliste und endgültig fällige
+Papierkorb-Einträge; scheitert **gegenüber der Anfrage** still (Wartung darf
+keine Anfrage brechen).
+
+Seit Web 4.5.1 hat jeder der sieben Schritte einen **eigenen** Fehlerblock, und
+Fehler gehen ins Fehlerprotokoll des Webspace (Suchwort `cleanup:`). Vorher
+teilten sich alle Schritte einen Block: Scheiterte einer, entfielen alle
+folgenden — und weil die Marke bereits stand, lief an diesem Tag nichts mehr.
+Am nächsten Tag scheiterte es an derselben Stelle wieder. Am spürbarsten beim
+Papierkorb, der als vorletzter Schritt stand.
+
+Die Marke bleibt bewusst *vor* der Arbeit. Sie danach zu setzen hieße, dass
+zwei gleichzeitige Anfragen beide aufräumen; das ist der teurere Fehler.
+
+Eine zweite Marke `last_cleanup_ok` hält fest, wann zuletzt ein Lauf
+**vollständig** durchging. `update.php` zeigt beide an — weichen sie
+voneinander ab, scheitert dauerhaft ein Schritt. Ohne diese Auskunft ist ein
+kaputter Aufräumjob von einem laufenden nicht zu unterscheiden, bis irgendwann
+auffällt, dass der Papierkorb seit Monaten nicht geleert wurde.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
@@ -1004,6 +1021,7 @@ Die Bausteine im Einzelnen:
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
+| Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |

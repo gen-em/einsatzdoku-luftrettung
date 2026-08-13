@@ -185,8 +185,22 @@ function import_commit(array $b, int $userId): never
         // selben virtuellen Geraet, damit die Uhr sie nie ueberschreibt und sie
         // in der Geraeteliste nicht auftauchen (Filter 'manual-%').
         $devKey = 'manual-' . $userId;
-        $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ?');
-        $q->execute([$devKey]);
+        /* Die Nutzerkennung gehoert IN die Abfrage (M3-12/M6-09).
+         *
+         * Gesucht wurde allein ueber device_id. Dass 'manual-<id>' die
+         * Zugehoerigkeit im Namen traegt, machte die Abfrage praktisch
+         * richtig — aber nur, weil eine Zeichenkette zufaellig dasselbe
+         * aussagt wie eine Spalte. Steht die Bedingung nicht in der Abfrage,
+         * gibt es auch nichts, was sie durchsetzt: Ein spaeter geaendertes
+         * Namensschema, ein Tippfehler beim Zusammenbauen des Schluessels,
+         * und die gefundene Zeile gehoert jemand anderem. Das Ergebnis waere
+         * ein Einsatz am Geraet einer fremden Person.
+         *
+         * user_id ist ausserdem die Spalte, auf der die Fremdschluessel und
+         * alle uebrigen Abfragen dieser Datei arbeiten. Eine Ausnahme davon
+         * faellt bei der Durchsicht nicht auf. */
+        $q = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
+        $q->execute([$devKey, $userId]);
         $devId = $q->fetchColumn();
         if ($devId === false) {
             $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
@@ -455,7 +469,7 @@ function import_commit(array $b, int $userId): never
         ]);
     } catch (Throwable $ex) {
         $pdo->rollBack();
-        json_out(['error' => 'commit', 'meldung' => $ex->getMessage()], 500);
+        json_fehler($ex, 'commit');
     }
 }
 
@@ -542,5 +556,5 @@ try {
     json_out(['days' => $antwortTage]);
 } catch (Throwable $ex) {
     // Lesbare Meldung statt leerem HTTP 500 — die Seite zeigt sie an.
-    json_out(['error' => 'check', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'check');
 }

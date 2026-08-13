@@ -214,6 +214,12 @@ Dasselbe gilt für „Passwort vergessen": Wer den Knopf zu oft drückt, bekommt
 eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
 sie verrät nie, ob es zu einer Adresse ein Konto gibt.
 
+**Wenn eine Fehlermeldung eine Kennung nennt** — acht Zeichen aus Ziffern und
+Buchstaben —, dann notiere sie. Der vollständige Fehlertext steht unter dieser
+Kennung im Fehlerprotokoll des Webspace; ohne sie ist er dort nicht
+wiederzufinden. Auf dem Bildschirm steht er bewusst nicht: Solche Texte nennen
+Interna der Datenbank, die niemanden etwas angehen.
+
 **Groß- und Kleinschreibung der E-Mail-Adresse spielt keine Rolle.**
 `Max@Beispiel.de` und `max@beispiel.de` sind dasselbe Konto.
 
@@ -694,7 +700,14 @@ Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
 „Patientendaten einschließen" schickt der Server sie gar nicht erst mit.
 
-Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format:
+Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format.
+
+**Ein Zeitraum braucht beide Grenzen.** Wer nur „Von" ausfüllt und „Bis" leer
+lässt, bekommt seit 4.5.1 eine Rückfrage. Vorher wurde die halbe Angabe
+stillschweigend übergangen und **der gesamte Bestand** ausgeleitet — ohne
+Hinweis, nur mit einer größeren Datei als erwartet. Beide Felder leer heißt
+weiterhin „alles"; das ist eine bewusste Angabe.
+
 
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
   Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
@@ -939,6 +952,12 @@ zutrifft:
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
+
+Unter **„Wartung/Update"** steht seit 4.5.1 zusätzlich, wann der tägliche
+Aufräumjob zuletzt **vollständig** durchgelaufen ist. Steht dort eine Warnung,
+scheitert einer der Aufräumschritte dauerhaft — dann wird unter anderem der
+Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
+Webspace unter dem Suchwort `cleanup:`.
 
 Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
 unter Standortdaten (9.1–9.3), jedoch für **alle** NutzerInnen gemeinsam

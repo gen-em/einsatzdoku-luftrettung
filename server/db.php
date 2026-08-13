@@ -158,6 +158,55 @@ function json_out(array $data, int $code = 200): never {
 function e(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
 
 /**
+ * Einen Ausnahmefehler protokollieren und eine Kennung dafuer liefern (M3-10).
+ *
+ * WAS DARAN FALSCH WAR
+ * Neun Endpunkte gaben den Text der Ausnahme unveraendert nach aussen:
+ *
+ *     json_out(['error' => 'day', 'meldung' => $ex->getMessage()], 500);
+ *
+ * Solche Texte nennen Tabellen- und Spaltennamen, gelegentlich Teile der
+ * Abfrage, bei Verbindungsfehlern auch Hostnamen und Benutzernamen der
+ * Datenbank. Das Browser-Skript zeigt `meldung` direkt an — der Text stand
+ * also auf dem Bildschirm und in jedem Screenshot, den jemand zur Fehlersuche
+ * verschickt.
+ *
+ * ZUGLEICH WAR ER FUER DIE FEHLERSUCHE UNBRAUCHBAR: Was auf dem Bildschirm
+ * stand, stand nirgends sonst. Wer eine Woche spaeter nachsehen wollte, hatte
+ * nur die Erinnerung an einen Screenshot.
+ *
+ * Beides loest dieselbe Aenderung: Der volle Text geht ins Fehlerprotokoll
+ * des Webspace, nach aussen geht eine Kennung. Sie ist kurz genug, um sie am
+ * Telefon durchzugeben, und lang genug, um im Protokoll eindeutig zu sein.
+ *
+ * Bewusst NICHT geaendert: install.php und update.php zeigen ihre Ausnahmen
+ * weiterhin im Klartext. Beide laufen nur fuer Verwaltende, beide in Lagen
+ * (Ersteinrichtung, Migration), in denen der genaue Text die eigentliche
+ * Auskunft ist — und bei install.php gibt es noch kein Fehlerprotokoll, in
+ * dem man nachsehen koennte.
+ */
+function fehler_kennung(Throwable $ex, string $bereich): string
+{
+    $kennung = strtoupper(bin2hex(random_bytes(4)));
+    error_log('[' . $kennung . '] ' . $bereich . ': ' . $ex->getMessage()
+              . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
+    return $kennung;
+}
+
+/**
+ * Die Standardantwort eines Endpunkts auf einen unerwarteten Fehler (M3-10).
+ * Beendet die Anfrage mit 500 und nennt nur die Kennung.
+ */
+function json_fehler(Throwable $ex, string $bereich): never
+{
+    $kennung = fehler_kennung($ex, $bereich);
+    json_out(['error'   => $bereich,
+              'kennung' => $kennung,
+              'meldung' => 'Es ist ein unerwarteter Fehler aufgetreten (Kennung '
+                         . $kennung . '). Er steht im Fehlerprotokoll des Webspace.'], 500);
+}
+
+/**
  * Beschriftungen der Phasen.
  *
  * Uebertragen und gespeichert werden ausschliesslich 2 bis 9. Phase 1 ("Frei")
@@ -303,6 +352,37 @@ const RESUS_LABELS = [
  * Passwort-Reset-Tokens. Scheitert leise, falls die app_state-Tabelle noch
  * nicht existiert (Migration noch nicht gelaufen).
  */
+/**
+ * Taegliche Wartung — huckepack auf Web-Anfragen und Uhr-Uploads (M3-05).
+ *
+ * WAS AN DER ALTEN FASSUNG FALSCH WAR
+ * Die Tagesmarke wurde VOR der Arbeit gesetzt (richtig: verhindert
+ * Doppellaeufe paralleler Anfragen), und der Fehlerblock war leer. Zusammen
+ * ergab das eine Falle, aus der es kein Herauskommen gab:
+ *
+ *   Scheitert ein Schritt, bricht der gemeinsame try-Block ab. Alle
+ *   nachfolgenden Schritte entfallen. Die Marke steht aber schon auf heute,
+ *   also laeuft an diesem Tag nichts mehr. Am naechsten Tag beginnt es von
+ *   vorn — und scheitert an derselben Stelle wieder. Dauerhaft, und ohne
+ *   dass irgendwo etwas davon stuende.
+ *
+ * Am spuerbarsten beim Papierkorb: Er stand als letzter Schritt vor den
+ * Passwort-Tokens und wurde nie geleert. "Endgueltig nach 30 Tagen" waere
+ * stillschweigend zu "nie" geworden.
+ *
+ * DREI ÄNDERUNGEN
+ *  1. Jeder Schritt hat seinen eigenen Fehlerblock. Einer, der scheitert,
+ *     haelt die anderen sechs nicht auf.
+ *  2. Fehler landen im Fehlerprotokoll des Webspace. Weiterhin still
+ *     GEGENUEBER DER ANFRAGE — die Wartung darf keine Seite kaputt machen —
+ *     aber nicht mehr spurlos.
+ *  3. Ein zweiter Zustandsschluessel haelt fest, wann zuletzt ein Lauf
+ *     VOLLSTAENDIG durchging. update.php zeigt beides an: Klaffen die Daten
+ *     auseinander, scheitert etwas dauerhaft.
+ *
+ * Die Marke bleibt bewusst VOR der Arbeit. Sie danach zu setzen hiesse, dass
+ * zwei gleichzeitige Anfragen beide aufraeumen; das ist der teurere Fehler.
+ */
 function run_cleanup_if_due(): void {
     try {
         $pdo = db();
@@ -315,32 +395,75 @@ function run_cleanup_if_due(): void {
         $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')
             ->execute(['last_cleanup', $today]);
-
-        $pdo->exec("DELETE tp FROM track_points tp
-                    LEFT JOIN missions m ON m.id = tp.owner_id
-                    WHERE tp.owner_type = 'mission' AND m.id IS NULL");
-        $pdo->exec("DELETE tp FROM track_points tp
-                    LEFT JOIN rest_segments r ON r.id = tp.owner_id
-                    WHERE tp.owner_type = 'rest' AND r.id IS NULL");
-        $pdo->exec("DELETE FROM pair_codes
-                    WHERE used_at IS NOT NULL
-                       OR created_at < DATE_SUB(NOW(), INTERVAL " . PAIR_TTL_MIN . " MINUTE)");
-        $pdo->exec("DELETE FROM deleted_refs
-                    WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
-        // Ratenschutz: abgelaufene Zaehler und Sperren. Ein Tag Nachlauf,
-        // damit auch der laengste Beobachtungszeitraum (1 h) sicher
-        // abgeschlossen ist.
-        $pdo->exec("DELETE FROM rate_limits
-                    WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                      AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())");
-        // Papierkorb: abgelaufene Eintraege endgueltig entfernen
-        require_once __DIR__ . '/trash_lib.php';
-        trash_purge_expired($pdo);
-
-        $pdo->exec("DELETE FROM password_resets
-                    WHERE used_at IS NOT NULL
-                       OR expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");
     } catch (Throwable $ex) {
-        // bewusst still: Wartung darf nie eine Anfrage kaputt machen
+        // Schon der Anlauf scheitert (Datenbank weg?). Nichts weiter zu tun —
+        // die Marke steht dann auch nicht, der naechste Aufruf versucht es neu.
+        error_log('cleanup: Anlauf fehlgeschlagen: ' . $ex->getMessage());
+        return;
+    }
+
+    /* ---- Die einzelnen Schritte, jeder fuer sich ------------------------- */
+    $schritte = [
+        'verwaiste Spurpunkte (Einsaetze)' => function (PDO $pdo): void {
+            $pdo->exec("DELETE tp FROM track_points tp
+                        LEFT JOIN missions m ON m.id = tp.owner_id
+                        WHERE tp.owner_type = 'mission' AND m.id IS NULL");
+        },
+        'verwaiste Spurpunkte (Ruhesegmente)' => function (PDO $pdo): void {
+            $pdo->exec("DELETE tp FROM track_points tp
+                        LEFT JOIN rest_segments r ON r.id = tp.owner_id
+                        WHERE tp.owner_type = 'rest' AND r.id IS NULL");
+        },
+        'Kopplungscodes' => function (PDO $pdo): void {
+            $pdo->exec("DELETE FROM pair_codes
+                        WHERE used_at IS NOT NULL
+                           OR created_at < DATE_SUB(NOW(), INTERVAL " . PAIR_TTL_MIN . " MINUTE)");
+        },
+        'Sperrliste geloeschter Kennungen' => function (PDO $pdo): void {
+            $pdo->exec("DELETE FROM deleted_refs
+                        WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
+        },
+        'Ratenschutz-Zaehler' => function (PDO $pdo): void {
+            // Ein Tag Nachlauf, damit auch der laengste Beobachtungszeitraum
+            // (1 h) sicher abgeschlossen ist.
+            $pdo->exec("DELETE FROM rate_limits
+                        WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
+                          AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())");
+        },
+        'Papierkorb' => function (PDO $pdo): void {
+            require_once __DIR__ . '/trash_lib.php';
+            trash_purge_expired($pdo);
+        },
+        'Passwort-Tokens' => function (PDO $pdo): void {
+            $pdo->exec("DELETE FROM password_resets
+                        WHERE used_at IS NOT NULL
+                           OR expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        },
+    ];
+
+    $fehler = 0;
+    foreach ($schritte as $name => $schritt) {
+        try {
+            $schritt($pdo);
+        } catch (Throwable $ex) {
+            $fehler++;
+            // Still gegenueber der Anfrage, aber nachlesbar. Ohne diese Zeile
+            // war ein dauerhaft scheiternder Aufraeumjob von einem laufenden
+            // nicht zu unterscheiden.
+            error_log('cleanup: Schritt "' . $name . '" fehlgeschlagen: ' . $ex->getMessage());
+        }
+    }
+
+    /* Nur ein vollstaendig durchgelaufener Tag wird als solcher vermerkt.
+     * Der Unterschied zwischen diesem Wert und last_cleanup ist die Antwort
+     * auf "laeuft die Wartung eigentlich noch?" — sie steht in update.php. */
+    if ($fehler === 0) {
+        try {
+            $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                           ON DUPLICATE KEY UPDATE v = VALUES(v)')
+                ->execute(['last_cleanup_ok', $today]);
+        } catch (Throwable $ex) {
+            error_log('cleanup: Erfolgsmarke nicht schreibbar: ' . $ex->getMessage());
+        }
     }
 }

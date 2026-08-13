@@ -106,6 +106,27 @@ function export_meta(array $b, int $userId): never
     if ($to !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
         json_out(['error' => 'zeitraum', 'meldung' => 'Ungültiges Bis-Datum.'], 400);
     }
+    /* Ein halber Zeitraum ist keine Angabe (M3-07).
+     *
+     * Vorher griff der Filter nur, wenn BEIDE Grenzen gesetzt waren. Fehlte
+     * eine, fiel die Bedingung stillschweigend weg — und statt der
+     * angeforderten Auswahl kam DER GESAMTE BESTAND. Kein Fehler, keine
+     * Meldung, nur eine viel groessere Datei als erwartet.
+     *
+     * Das ist die unangenehmste Sorte Fehler an einer Ausleitung: Wer "ab
+     * 01.01.2026" eingibt und eine Datei mit allem seit 2019 bekommt, merkt es
+     * unter Umstaenden erst, wenn die Datei bereits weitergegeben ist. Bei
+     * Patientendaten ist das keine Kleinigkeit.
+     *
+     * Beide Grenzen leer heisst weiterhin "alles" — das ist eine bewusste
+     * Angabe. Nur GENAU EINE Grenze wird abgelehnt. */
+    if (($from === null) !== ($to === null)) {
+        json_out(['error'   => 'zeitraum',
+                  'meldung' => 'Für einen Zeitraum werden beide Grenzen gebraucht. '
+                             . 'Bitte Von- und Bis-Datum angeben — oder beide leer '
+                             . 'lassen, um den gesamten Bestand auszuleiten.'], 400);
+    }
+
     $patient = !empty($b['patient']);
 
     $whereTag = ' AND deleted_at IS NULL';
@@ -376,5 +397,5 @@ try {
     json_out(['error' => 'action'], 400);
 } catch (Throwable $ex) {
     // Lesbare Meldung statt leerem HTTP 500 — Muster wie in api/import_commit.php.
-    json_out(['error' => 'export', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'export');
 }

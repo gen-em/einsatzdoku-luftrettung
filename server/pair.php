@@ -126,7 +126,27 @@ if (geraete_grenze_erreicht($pdo, $ownerId)) {
     exit;
 }
 
-$devId = 'dev-' . bin2hex(random_bytes(4));
+/* ---- Gerätekennung: 128 statt 32 Bit (M4-08) ------------------------------
+ *
+ * Vier Zufallsbytes ergeben rund vier Milliarden Möglichkeiten. Das klingt
+ * viel und ist es nicht: Beim Geburtstagsproblem liegt die Wahrscheinlichkeit
+ * eines Zusammentreffens schon bei einigen zehntausend Geraeten bei 50 %. Ein
+ * Zusammentreffen ist hier kein kosmetisches Problem — die Kennung ist der
+ * Schluessel, ueber den ein Upload seinem Konto zugeordnet wird.
+ *
+ * Auffangen wuerde es der eindeutige Schluessel auf der Spalte; die Kopplung
+ * schluege dann fehl und muesste wiederholt werden. Sechzehn Bytes machen den
+ * Fall so unwahrscheinlich, dass er praktisch nicht mehr vorkommt.
+ *
+ * Die Kennung ist KEIN Geheimnis — sie steht im Kopf jeder Anfrage; die
+ * Berechtigung haengt am api_key. Der Zugewinn liegt allein darin, dass sich
+ * Kennungen weder zufaellig treffen noch durchzaehlen lassen.
+ *
+ * BESTANDSGERAETE BEHALTEN IHRE KURZE KENNUNG. Die Spalte ist VARCHAR(64), die
+ * neue Kennung braucht 36 Zeichen — kein Schemawechsel, keine Migration, kein
+ * Grund, eine gekoppelte Uhr neu zu verbinden.
+ */
+$devId = 'dev-' . bin2hex(random_bytes(16));
 $key   = bin2hex(random_bytes(24));
 try {
     $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label)

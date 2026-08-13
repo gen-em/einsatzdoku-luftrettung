@@ -755,21 +755,45 @@ if (!$ausfuehren) {
 
         try {
             if (isset($m['run'])) { ($m['run'])($pdo); }
+            /* Teilschritte zaehlen (M6-08).
+             *
+             * Vorher meldete jede Migration "Erfolgreich angewendet." — auch
+             * eine, bei der ALLE Teilschritte uebersprungen wurden, weil sie
+             * laengst erledigt waren. Wer nach einem abgebrochenen Lauf
+             * nachsehen wollte, was tatsaechlich passiert ist, bekam dieselbe
+             * Zeile wie bei einer frisch durchgelaufenen Migration.
+             *
+             * Das ist genau die Auskunft, die man an dieser Stelle braucht:
+             * Migrationen koennen Spalten loeschen, und "es war schon so" ist
+             * eine andere Aussage als "ich habe es gerade getan". */
+            $gemacht = 0; $uebersprungen = 0;
             foreach (($m['sql'] ?? []) as $stmt) {
                 try {
                     $pdo->exec($stmt);
+                    $gemacht++;
                 } catch (PDOException $inner) {
                     // Nach einem Teil-Lauf koennen einzelne Schritte schon
                     // erledigt sein: 1060 Spalte existiert, 1061 Index existiert,
                     // 1091 zu loeschendes Objekt fehlt, 1050 Tabelle existiert.
-                    // Diese Faelle sind harmlos -> weitermachen.
+                    // Diese Faelle sind harmlos -> weitermachen, aber zaehlen.
                     $code = (int)($inner->errorInfo[1] ?? 0);
                     if (!in_array($code, [1050, 1060, 1061, 1091], true)) { throw $inner; }
+                    $uebersprungen++;
                 }
             }
             $pdo->prepare('INSERT INTO schema_migrations (id, status) VALUES (?, "applied")')
                 ->execute([$m['id']]);
-            $results[] = [$m['id'], $m['label'], 'ok', 'Erfolgreich angewendet.'];
+            $gesamt = $gemacht + $uebersprungen;
+            if ($uebersprungen === 0) {
+                $detail = 'Erfolgreich angewendet.';
+            } elseif ($gemacht === 0) {
+                $detail = 'Als erledigt vermerkt — alle ' . $gesamt . ' Teilschritte waren '
+                        . 'bereits vorhanden, es wurde nichts geändert.';
+            } else {
+                $detail = 'Angewendet: ' . $gemacht . ' von ' . $gesamt . ' Teilschritten '
+                        . 'ausgeführt, ' . $uebersprungen . ' waren bereits erledigt.';
+            }
+            $results[] = [$m['id'], $m['label'], 'ok', $detail];
             $ranSomething = true;
         } catch (Throwable $ex) {
             // Nicht verbuchen -> naechster Aufruf versucht es erneut
@@ -876,6 +900,45 @@ if ($istCli) {
        Längenangabe abgeschlossen, was üblicherweise reicht; verbindlich ist es
        nicht. Im ungünstigen Fall bleibt die Dauer der Anforderung „Passwort
        vergessen“ ein Hinweis darauf, ob es zu einer Adresse ein Konto gibt.</p>
+  <?php endif; ?>
+
+  <?php /* ---- Wartung (M3-05) ------------------------------------------------
+     * Der Aufraeumjob laeuft huckepack auf Anfragen und ist gegenueber der
+     * Anfrage still. Genau deshalb ist ein dauerhaft scheiternder Job von
+     * einem laufenden sonst nicht zu unterscheiden — bis irgendwann auffaellt,
+     * dass der Papierkorb seit Monaten nicht mehr geleert wird.
+     *
+     * Zwei Marken: der letzte VERSUCH und der letzte VOLLSTAENDIGE Lauf.
+     * Klaffen sie auseinander, scheitert mindestens ein Schritt. Die Ursache
+     * steht im Fehlerprotokoll des Webspace. */
+  $wartung = [];
+  foreach (['last_cleanup', 'last_cleanup_ok'] as $k) {
+      $stw = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+      $stw->execute([$k]);
+      $wartung[$k] = $stw->fetchColumn();
+  }
+  $wVersuch = $wartung['last_cleanup']    ?: null;
+  $wErfolg  = $wartung['last_cleanup_ok'] ?: null;
+  ?>
+  <h2>Wartung</h2>
+  <?php if ($wVersuch === null): ?>
+    <p class="muted">Der Aufräumjob ist noch nie gelaufen. Das ist auf einer
+       frischen Installation normal — er startet bei der ersten Anfrage des
+       nächsten Tages.</p>
+  <?php elseif ($wErfolg === null): ?>
+    <p class="alert alert-warn">Letzter Versuch: <strong><?= e((string)$wVersuch) ?></strong> —
+       aber <strong>noch kein einziger vollständiger Lauf</strong>. Mindestens ein
+       Schritt scheitert dauerhaft; die Ursache steht im Fehlerprotokoll des
+       Webspace (Suchwort <code>cleanup:</code>). Solange das so bleibt, wird
+       unter anderem der Papierkorb nicht geleert.</p>
+  <?php elseif ($wErfolg !== $wVersuch): ?>
+    <p class="alert alert-warn">Letzter Versuch: <strong><?= e((string)$wVersuch) ?></strong>,
+       letzter <strong>vollständiger</strong> Lauf: <strong><?= e((string)$wErfolg) ?></strong>.
+       Es scheitert mindestens ein Schritt — Ursache im Fehlerprotokoll des
+       Webspace (Suchwort <code>cleanup:</code>).</p>
+  <?php else: ?>
+    <p class="muted">Aufräumjob zuletzt vollständig durchgelaufen:
+       <strong><?= e((string)$wErfolg) ?></strong>.</p>
   <?php endif; ?>
 <?php ui_footer(); ?>
 </main>

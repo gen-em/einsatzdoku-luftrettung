@@ -20,7 +20,15 @@ if (!preg_match('/^\d{4}$/', $jahr)) {
     echo json_encode(['error' => 'Ungültiges Jahr']);
     exit;
 }
-if ($monat !== '' && !preg_match('/^\d{2}$/', $monat)) {
+/* Der Wertebereich zaehlt, nicht nur die Ziffernzahl (M3-06).
+ *
+ * Vorher genuegten zwei Ziffern. "00" und "13" kamen damit durch, und dann
+ * ging es schief: strtotime('2026-00-01') scheitert und liefert false,
+ * date('Y-m-t', false) rechnet mit dem Zeitpunkt 0 weiter. Herausgekommen ist
+ * kein Fehler, sondern ein FALSCHER ZEITRAUM — bei m=00 der Dezember des
+ * Vorjahres. Eine Uebersicht, die stillschweigend einen anderen Monat zeigt
+ * als den angefragten, ist schlimmer als eine, die sich weigert. */
+if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) {
     http_response_code(400);
     echo json_encode(['error' => 'Ungültiger Monat']);
     exit;
@@ -85,5 +93,5 @@ try {
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 (z. B. fehlende Spalte nach vergessener
     // Migration) eine lesbare Fehlermeldung — das Frontend zeigt sie an.
-    json_out(['error' => 'range', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'range');
 }

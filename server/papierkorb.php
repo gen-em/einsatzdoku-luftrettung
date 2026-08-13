@@ -24,11 +24,26 @@ if ($isPost && $action === 'restore_mission' && $id > 0) {
     trash_restore_mission($userId, $id);
     header('Location: index.php'); exit;
 }
-if ($isPost && $action === 'purge_day' && ($_POST['confirm'] ?? '') === 'ja') {
+/* Dieselbe Formatpruefung wie beim Wiederherstellen (M5-08).
+ *
+ * Vorher stand hier nur die Rueckfrage. Das Wiederherstellen — die UMKEHRBARE
+ * Handlung — pruefte das Datumsformat, das endgueltige Loeschen nicht. Die
+ * Zwischenseite weiter unten prueft zwar auch, aber erst NACH diesem Block:
+ * Ein POST mit confirm=ja kam nie dort an.
+ *
+ * Praktisch ausgenutzt haette man das kaum — trash_purge_day() arbeitet mit
+ * vorbereiteten Anweisungen, ein unsinniges Datum trifft schlicht nichts. Aber
+ * die schwaechere Pruefung ausgerechnet am unumkehrbaren Weg ist die falsche
+ * Richtung, und beim naechsten Umbau von trash_purge_day() waere sie die
+ * Stelle, an der es weh tut. */
+if ($isPost && $action === 'purge_day' && ($_POST['confirm'] ?? '') === 'ja'
+    && preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
     trash_purge_day($userId, $day);
     header('Location: index.php'); exit;
 }
-if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja') {
+if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja' && $id > 0) {
+    // Ebenso: Das Wiederherstellen verlangt $id > 0, das endgueltige Loeschen
+    // verlangte gar nichts (M5-08).
     trash_purge_mission($userId, $id);
     header('Location: index.php'); exit;
 }

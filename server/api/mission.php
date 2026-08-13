@@ -142,5 +142,5 @@ try {
     ]);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 eine lesbare Fehlermeldung.
-    json_out(['error' => 'mission', 'meldung' => $ex->getMessage()], 500);
+    json_fehler($ex, 'mission');
 }
