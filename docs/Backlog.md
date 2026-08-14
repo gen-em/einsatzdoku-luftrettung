@@ -54,3 +54,24 @@ Nummer. Neue Punkte hängen sich hinten an.
     zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
     Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
     abgebildet und bleibt.
+12. **Schriften und Leaflet selbst ausliefern.** Beide werden zur Laufzeit aus
+    dem Netz geladen: Bricolage Grotesque und Open Sans per `@import` von
+    `fonts.googleapis.com`/`fonts.gstatic.com`, Leaflet von `unpkg.com`. Zwei
+    Gründe, das zu ändern:
+    * **Datenschutz.** Jeder Seitenaufruf meldet die IP-Adresse an Google
+      beziehungsweise unpkg. In einer Anwendung, deren ganzer Zweck darin
+      besteht, dass Patientendaten den Browser nicht unverschlüsselt verlassen,
+      ist das ein Bruch in der Linie — und der einzige verbliebene.
+    * **Ausfallsicherheit.** Wird der Abruf blockiert (Werbeblocker, strenger
+      Trackingschutz), greift bei den Schriften die Ersatzliste; bei Leaflet
+      fällt die Karte ganz aus. Der Schriftausfall ist seit Web 5.1.1
+      unauffällig, weil die Ersatzliste normal breit ist — vorher wurde die
+      halbe Oberfläche gedrungen (`'Arial Narrow'` als Ersatz für eine normal
+      breite Grotesk).
+    Umsetzung: die vier woff2-Dateien nach `assets/fonts/` und per
+    `@font-face` mit `font-display:swap` einbinden; Leaflet-CSS und -JS als
+    lokale Kopie mit fester Fassungsnummer. Berührt `style.css` und die
+    `<head>`-Blöcke der Kartenseiten. Nebeneffekt: eine Content-Security-Policy
+    (Nr. 8) wird damit überhaupt erst eng fassbar, weil keine fremden Quellen
+    mehr erlaubt werden müssen.
+

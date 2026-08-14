@@ -29,7 +29,142 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P9b | Ableitungsrunden (M2-01, S7) | Web 5.0.0 | **erledigt** |
 | — | Nachträge aus dem Betrieb | Web 5.0.1 | **erledigt** |
 | P9c (Web) | Formatkennung (M2-10) | Web 5.1.0 | **erledigt** |
-| P9c (Uhr) | M7-03, 409-Behandlung in `Pair.mc` | — | offen |
+| P9c (Uhr) | M7-03, 409-Behandlung in `Pair.mc` | Uhr 1.7.0 | **erledigt** |
+| — | Nachträge aus dem Betrieb | Web 5.1.1 | **erledigt** |
+
+---
+
+## Nachträge aus dem Betrieb (Web 5.1.1)
+
+Vier Rückmeldungen von der Testinstallation, keine davon aus dem Review.
+
+### Ein Ersatz, der aussah wie ein Gestaltungsfehler
+
+Die Oberfläche wirkte gedrungen — Kopfleiste, Knöpfe, Überschriften,
+Tabellenköpfe. Die Ursache stand seit jeher in der Ersatzliste:
+`'Bricolage Grotesque','Arial Narrow',…`. Bricolage Grotesque ist normal breit,
+Arial Narrow schmal. Solange die Webschrift geladen wurde, fiel das nicht auf;
+kam sie nicht durch, wurde die halbe Oberfläche schmal.
+
+**Die Lehre ist allgemeiner als der Fall:** Eine Ersatzangabe wird erst im
+Ausfall sichtbar, und genau dann prüft sie niemand mehr. Sie muss deshalb schon
+beim Aufschreiben so gewählt sein, dass der Ausfall nicht auffällt.
+
+Dahinter steht ein größerer Punkt, der als **Backlog Nr. 12** aufgenommen ist:
+Schriften und Leaflet werden zur Laufzeit von Google beziehungsweise unpkg
+geladen. Jeder Seitenaufruf meldet die IP-Adresse dorthin — in einer Anwendung,
+deren ganzer Zweck darin besteht, dass Patientendaten den Browser nicht
+unverschlüsselt verlassen, ist das der letzte verbliebene Bruch in der Linie.
+
+### Eine Änderung an der Vergabe erreicht den Bestand nicht
+
+Web 5.0.1 hatte nur geändert, wie `pair.php` neue Gerätenamen vergibt. Der
+Altbestand trug das Kopplungsdatum weiter im Namen, und der Hinweis auf der
+Startseite zeigte es deshalb weiterhin zweimal. Nachgereicht als Migration, die
+**nur** exakt das automatisch vergebene Muster ersetzt.
+
+Der erste Entwurf lief als SQL-`REGEXP` und ist am Maskieren gescheitert:
+Klammern und Punkte hätten doppelt maskiert werden müssen, einmal für PHP und
+einmal für MariaDB, und was am Ende ankommt, war dem Quelltext nicht mehr
+anzusehen. Die Migration läuft jetzt als Funktion, mit dem Muster als
+gewöhnlichem regulärem Ausdruck an einer Stelle.
+
+### Ein Ausweg, den man nicht sieht
+
+„Verstanden, das war ich" stand als unterstrichener Text unter dem Absatz.
+Damit war der Hinweis praktisch weiterhin nicht wegzuklicken — die Funktion
+war da, nur nicht auffindbar. Der Knopf sitzt jetzt im Rahmen des Hinweises.
+
+### Eine Entwarnung, die niemand braucht
+
+Der Abschnitt „Schlüsselableitung" auf der Wartungsseite meldete auch den
+Normalfall. Das ist wieder entfallen: Eine Wartungsseite, die Nicht-Probleme
+aufzählt, macht die echten Meldungen schwerer zu finden. Die Prüfung bleibt —
+sie fängt den Fehler ab, den jemand macht, der `KDF_ITER_ZIEL` anhebt und den
+bisherigen Wert nicht in der Liste stehen lässt.
+
+### Zwei Meldungen, die bleiben
+
+Die Leaflet-Veraltungshinweise (`mozPressure`, `mozInputSource`) und Firefox'
+Meldung zur Schriftsichtbarkeit stammen nicht aus diesem Projekt und lassen
+sich hier nicht abstellen. Beide sind keine Fehlfunktion.
+
+### Nachweis
+
+16 automatische Prüfungen über echten HTTP-Verkehr, alle bestanden: Migration
+(automatischer Name bereinigt, drei Varianten selbst vergebener Namen
+unberührt, zweiter Lauf ohne Arbeit), Hinweis mit Knopf im Rahmen, Quittieren,
+Wartungsseite mit und ohne Problem.
+
+---
+
+## P9c, Uhr-Teil — Client-Kennung und Kopplungsmeldungen (Uhr 1.7.0)
+
+M7-03 und die in P4 nachgetragene 409-Behandlung. Kein Serveranteil; die App
+lässt sich unabhängig von der Weboberfläche einspielen.
+
+**Damit ist der Review vollständig abgearbeitet — 94 von 94 Befunden.**
+
+### Entschieden: der Zeitstempel entfällt, statt ergänzt zu werden
+
+Das Konzept sagt zu M7-03: „Zufallsanteil anhängen." Das behebt die
+Kollision — aber nicht die zweite Folge, die derselbe Befund nennt: dass die
+Kennung den Startzeitpunkt auf die Sekunde verrät. Ein angehängter Zufallsteil
+lässt den Zeitstempel ja stehen.
+
+Die Kennung besteht deshalb jetzt aus Präfix, einem **fortlaufenden Zähler im
+Gerätespeicher** und zwei Zufallswerten. Der Zähler ist die eigentliche
+Zusicherung: Er überlebt Neustarts und Zeitsprünge und wiederholt sich nicht,
+ganz gleich, was die Uhrzeit tut. Ein Zufallsanteil allein wäre schwächer — er
+hinge daran, wie der Generator nach einem Neustart gestreut wird, und genau
+dieser Neustart ist der Fall, um den es geht.
+
+Verträglich, weil der Server das Format nicht prüft: Alte Kennungen bleiben
+gültig, gepufferte Uploads laufen unverändert durch.
+
+### Entschieden: zwei Meldungszeilen statt einer langen
+
+`Pair.mc` unterschied nur 200 und 404. Beim Schreiben der neuen Texte fiel auf,
+dass sie so nicht funktionieren würden: Die Meldungszeile wird mit `drawText`
+gezeichnet und **nicht umgebrochen** — was breiter ist als das Display, fällt
+weg, ohne dass man es merkt. In der Hinweisschrift sind das rund 26 Zeichen.
+„Zu viele Geräte — erst eines im Web löschen" wäre genau um den Teil gekürzt
+worden, der sagt, was zu tun ist.
+
+Also `Pair.statusHint` als zweite, gedämpfte Zeile: **was** los ist, und **was
+hilft**. `SyncView` hängt beide als eigene Einträge in seine Zeilenliste; deren
+Höhe geht ohnehin in die Platzberechnung ein, der Block darüber weicht von
+selbst aus.
+
+### Entschieden: eigene Texte für bekannte Fälle, Servertext für den Rest
+
+Die Notiz aus P4 fragt, ob `Pair.mc` die Meldung aus dem Antwortfeld `meldung`
+verwenden sollte, statt sie doppelt zu führen. Für die bekannten Fälle: nein.
+Die Servermeldungen sind für die Weboberfläche geschrieben — ganze Sätze, ohne
+Umlaute (der Server schreibt „Geraete"), deutlich zu lang für ein Uhrendisplay.
+
+Für **unbekannte** Fälle dagegen ja: Der Servertext erscheint als zweite Zeile,
+gekürzt auf die Displaybreite. So erscheint ein künftiger Fehlerfall nicht
+wieder als nackte Zahl, nur weil die Uhr ihn noch nicht kennt.
+
+Entschieden wird am Feld `error`, nicht am Zahlencode: Der Schlüssel benennt die
+Ursache, der Code nur ihre Klasse.
+
+### Nachweis — und seine Grenze
+
+**Diese Auslieferung ist die am wenigsten geprüfte des ganzen Projekts**, und
+das lässt sich hier nicht ändern: Monkey C braucht das Connect-IQ-SDK, das im
+Container nicht verfügbar ist. Weder Übersetzung noch Ausführung waren möglich.
+
+Belegt ist nur die Logik der Kennung, in einem Nachbau: Form, 5001 Kennungen
+ohne Dublette, Neustart nach einem Zeitsprung auf dieselbe Sekunde (die alte
+Fassung erzeugt dort nachweislich eine Dublette, die neue nicht),
+Zählerüberlauf. 6 Prüfungen.
+
+**Offen und nur auf dem Gerät zu klären:** ob `Math.rand`/`Math.srand` und
+`Storage` sich wie erwartet verhalten, ob `Number.format("%05d")` dort so
+formatiert wie in `Util.mc` sonst auch, und wie die zweiteilige Meldung auf den
+verschiedenen Displaygrößen aussieht.
 
 ---
 

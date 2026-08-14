@@ -6,6 +6,23 @@
      Max Blau #4280E5 · Newroz Rot #D63338 (+ helle Varianten)
    Typografie: Bricolage Grotesque (Ueberschriften/Buttons), Open Sans (Fliesstext) */
 
+/* ---- Schriften ------------------------------------------------------------
+ *
+ * ACHTUNG, EXTERNE ABHAENGIGKEIT: Beide Schriften kommen bei jedem Seitenaufruf
+ * von Google. Das hat zwei Folgen, die man kennen sollte:
+ *
+ *   1. Faellt der Abruf aus — Werbeblocker, strenger Trackingschutz, kein Netz
+ *      zu fonts.gstatic.com —, greift die Ersatzliste unten. Sie muss deshalb
+ *      etwas ergeben, das wie die Vorlage aussieht.
+ *   2. Jeder Seitenaufruf meldet die IP-Adresse der NutzerIn an Google. In
+ *      einer Anwendung, deren ganzer Zweck darin besteht, dass Patientendaten
+ *      den Browser nicht unverschluesselt verlassen, ist das ein Bruch in der
+ *      Linie — siehe Hinweis in docs/Technik.md.
+ *
+ * Behebung waere, die vier woff2-Dateien selbst auszuliefern und hier per
+ * @font-face einzubinden. Solange das nicht geschehen ist, traegt wenigstens
+ * die Ersatzliste den Ausfall.
+ */
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600&family=Open+Sans:wght@400;600;700&display=swap');
 
 :root{
@@ -24,7 +41,19 @@
   --line:#E3DAC6;                      /* aufgehelltes Sand */
   --muted:#6E6459;
   --mono:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Consolas,monospace;
-  --head:'Bricolage Grotesque','Arial Narrow',system-ui,sans-serif;
+  /* Ersatzliste fuer Ueberschriften und Knoepfe.
+   *
+   * HIER STAND 'Arial Narrow' AN ZWEITER STELLE. Das war der Fehler: Bricolage
+   * Grotesque ist eine normal breite Grotesk, Arial Narrow eine schmale. Kam
+   * die Webschrift nicht durch, wurde die ganze Oberflaeche gedrungen —
+   * Kopfleiste, Knoepfe, Ueberschriften, Tabellenkoepfe. Es sah nach einem
+   * Gestaltungsfehler aus, war aber ein fehlgeschlagener Download.
+   *
+   * Der Ersatz ist jetzt normal breit: erst die Systemschrift, dann die
+   * ueblichen Verdaechtigen je Betriebssystem. Faellt die Webschrift aus,
+   * faellt es kaum noch auf. */
+  --head:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,
+         'Helvetica Neue',Arial,sans-serif;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--rauch);color:var(--ink);
@@ -438,12 +467,19 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 .trashactions form{display:inline}
 .trashactions .btn-link{background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:underline}
 
-/* Quittung in einem Hinweisfeld ("Verstanden, das war ich"). Der Knopf sieht
-   aus wie ein Link und steht in derselben Zeile — ein farbiger Knopf hätte
-   mehr Gewicht als der Hinweis selbst. */
-.hinweis-quittung{display:inline;margin:0}
-.hinweis-quittung .btn-link{background:none;border:0;padding:0;font:inherit;
-  color:inherit;cursor:pointer;text-decoration:underline}
+/* Gerätehinweis auf der Tagesübersicht: Text und Quittungsknopf in EINEM
+   Rahmen. Der Knopf stand zuerst als unterstrichener Text unter dem Absatz
+   und war kaum zu finden — ein Hinweis, dessen Ausweg man nicht sieht, ist
+   derselbe Hinweis, der nicht wegzuklicken ist.
+   Gedeckte Farben statt des orangen Standardknopfs: Er soll auffindbar sein,
+   aber nicht mehr Gewicht haben als die Warnung selbst. */
+.geraetehinweis{display:flex;gap:.9rem;align-items:flex-start;
+  justify-content:space-between;flex-wrap:wrap}
+.geraetehinweis p{margin:0;flex:1;min-width:16rem}
+.geraetehinweis form{margin:0;flex:0 0 auto}
+.geraetehinweis button{background:#8A4A00;color:var(--schnee);
+  padding:.35rem .8rem;font-size:.85rem;white-space:nowrap}
+.geraetehinweis button:hover{background:#6E3B00}
 
 /* W2/W9: Platzhalter und Spaltentitel */
 #missions td.dash,#missions .dash{text-align:center;color:#9AA0A6}

@@ -67,21 +67,29 @@ $neueGeraete = geraete_neu(db(), $userId);
 
   <main class="page">
     <?php if ($neueGeraete): ?>
-      <p class="alert alert-warn">
-        <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
-        mit deinem Konto verbunden:
-        <?php $teile = [];
-              foreach ($neueGeraete as $g) {
-                  $teile[] = ($g['label'] ?? $g['device_id']) . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
-              }
-              echo e(implode(', ', $teile)); ?>.
-        Warst du das nicht, entferne
-        <?= count($neueGeraete) === 1 ? 'das Gerät' : 'die Geräte' ?> unter
-        <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
-        <form method="post" action="index.php" class="hinweis-quittung">
+      <div class="alert alert-warn geraetehinweis">
+        <p>
+          <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
+          mit deinem Konto verbunden:
+          <?php $teile = [];
+                foreach ($neueGeraete as $g) {
+                    $teile[] = ($g['label'] ?? $g['device_id'])
+                             . ' (' . fmt_local($g['created_at'], 'd.m.Y H:i') . ')';
+                }
+                echo e(implode(', ', $teile)); ?>.
+          Warst du das nicht, entferne
+          <?= count($neueGeraete) === 1 ? 'das Gerät' : 'die Geräte' ?> unter
+          <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
+        </p>
+        <?php /* Der Knopf gehoert IN den Rahmen und muss wie ein Knopf
+                 aussehen. Als unterstrichener Text unter dem Absatz war er
+                 kaum zu sehen — und ein Hinweis, dessen Ausweg man nicht
+                 findet, ist derselbe Hinweis, der nicht wegzuklicken ist. */ ?>
+        <form method="post" action="index.php">
           <?= csrf_field() ?><input type="hidden" name="action" value="geraete_ok">
-          <button type="submit" class="btn-link">Verstanden, das war ich</button>
-        </form></p>
+          <button type="submit">Verstanden, das war ich</button>
+        </form>
+      </div>
     <?php endif; ?>
     <h1 id="daytitle">–</h1>
     <div id="loaderror" class="alert" hidden></div>

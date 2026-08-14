@@ -10,6 +10,99 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.1.1] — 2026-08-14
+
+Vier Rückmeldungen aus dem Betrieb. Keine Schemaänderung; **eine Migration**,
+die Gerätenamen bereinigt.
+
+### Die Oberfläche wirkte gedrungen — die Ersatzschrift war schuld
+
+Kopfleiste, Knöpfe, Überschriften und Tabellenköpfe sahen zusammengeschoben
+aus. Die Ursache stand in der Ersatzliste für die Überschriftenschrift:
+
+```
+--head:'Bricolage Grotesque','Arial Narrow',system-ui,sans-serif;
+```
+
+Bricolage Grotesque ist eine **normal breite** Grotesk, Arial Narrow eine
+**schmale**. Solange die Webschrift geladen wurde, fiel das nicht auf. Kam sie
+nicht durch — Werbeblocker, strenger Trackingschutz, Aussetzer bei
+fonts.gstatic.com —, wurde die halbe Oberfläche schmal. Es sah nach einem
+Gestaltungsfehler aus und war ein fehlgeschlagener Download.
+
+Die Ersatzliste ist jetzt normal breit (Systemschrift, dann die üblichen je
+Betriebssystem). Fällt die Webschrift aus, fällt es kaum noch auf.
+
+**Der eigentliche Punkt bleibt bestehen und steht als Warnung im CSS:** Beide
+Schriften kommen bei jedem Seitenaufruf von Google. Das meldet die IP-Adresse
+jeder Nutzerin an Google — in einer Anwendung, deren ganzer Zweck darin
+besteht, dass Patientendaten den Browser nicht unverschlüsselt verlassen, ist
+das ein Bruch in der Linie. Behebung wäre, die vier woff2-Dateien selbst
+auszuliefern.
+
+### Gerätenamen: das Kopplungsdatum verschwindet auch aus dem Altbestand
+
+Web 5.0.1 hatte nur die *Vergabe* geändert — neu gekoppelte Geräte heißen „Uhr“.
+Bereits vorhandene trugen weiter „Uhr (gekoppelt 11.08.2026)“, und der Hinweis
+auf der Startseite zeigte das Datum deshalb weiterhin zweimal.
+
+Eine Migration bereinigt das. Geändert wird **nur**, was exakt dem automatisch
+vergebenen Muster entspricht; ein selbst vergebener Name — „Uhr Philipp“,
+„Christoph 17“, auch „Uhr (gekoppelt, alt)“ — bleibt unberührt. Es geht keine
+Angabe verloren: Das Datum steht in `devices.created_at` und wird in der
+Geräteliste als „seit …“ angezeigt.
+
+Die Migration ist bewusst **nicht** als destruktiv gekennzeichnet: Hier wird
+nichts vernichtet, sondern eine doppelt geführte Angabe auf ihre eine Quelle
+zurückgeführt. Die rote Kennzeichnung bleibt den Fällen vorbehalten, in denen
+wirklich etwas verlorengeht — sonst gewöhnt man sich an sie.
+
+Beim Bauen ist der erste Entwurf gescheitert: Als SQL-`REGEXP` hätten Klammern
+und Punkte doppelt maskiert werden müssen, einmal für PHP und einmal für die
+Datenbank, und was am Ende bei MariaDB ankommt, war dem Quelltext nicht mehr
+anzusehen. Die Migration läuft deshalb als Funktion, mit dem Muster als
+gewöhnlichem regulärem Ausdruck an genau einer Stelle.
+
+### Der Quittungsknopf steht jetzt im Rahmen des Hinweises
+
+„Verstanden, das war ich“ stand als unterstrichener Text unter dem Absatz und
+war kaum zu finden. Ein Hinweis, dessen Ausweg man nicht sieht, ist derselbe
+Hinweis, der sich nicht wegklicken lässt. Er sitzt jetzt als Knopf im Rahmen,
+rechts neben dem Text — gedeckt eingefärbt, damit er auffindbar ist, ohne mehr
+Gewicht zu haben als die Warnung selbst.
+
+### Die Wartungsseite meldet die Schlüsselableitung nur noch im Problemfall
+
+Der Abschnitt zeigte auch eine Entwarnung („Alle Konten rechnen mit einer
+Rundenzahl, die diese Fassung anbietet“). Sie ist entfallen: Eine Wartungsseite,
+die Nicht-Probleme aufzählt, macht die echten Meldungen schwerer zu finden — und
+wer sie liest, überfliegt beim nächsten Mal auch die Zeile, die zählt.
+
+**Die Prüfung selbst bleibt.** Sie fängt den Fehler ab, den jemand macht, der
+`KDF_ITER_ZIEL` anhebt und vergisst, den bisherigen Wert in `KDF_ITER_LISTE`
+stehen zu lassen: Dann kann sich kein Bestandskonto mehr anmelden, und an der
+Anmeldemaske ist die Ursache nicht zu erkennen.
+
+### Nicht geändert: zwei Meldungen in der Browser-Konsole
+
+Beide stammen **nicht** aus diesem Projekt und lassen sich hier nicht abstellen:
+
+* `MouseEvent.mozPressure is deprecated` und `mozInputSource` beim Klick auf
+  die Karte — aus `Util.js` von Leaflet 1.9.4. Ein Hinweis von Firefox an
+  Leaflets Entwickler, keine Fehlfunktion. Er verschwindet mit einer künftigen
+  Leaflet-Fassung.
+* `Request for font "Cascadia Mono" blocked at visibility level 1` — Firefox
+  verhindert, dass Webseiten die installierten Schriften auslesen. Die Zeile
+  erscheint für jede in einer Schriftliste genannte Schrift, die nicht zum
+  Grundbestand gehört. Auch das ist kein Fehler.
+
+### Geprüft
+
+16 automatische Prüfungen über echten HTTP-Verkehr, alle bestanden: Migration
+(automatischer Name bereinigt, drei Varianten selbst vergebener Namen
+unberührt, zweiter Lauf ohne Arbeit), Hinweis mit Knopf im Rahmen, Quittieren,
+Wartungsseite mit und ohne Problem.
+
 ## [Web 5.1.0] — 2026-08-14
 
 Paket P9c, Web-Teil: **M2-10, Formatkennung vor jedem Chiffretext.** Keine
@@ -1991,6 +2084,87 @@ verloren. Beide Listen stimmen wieder überein.
 - `Technik.md`: zwei Stolpersteine ergänzt — die Bindung von `#exp_fmt` an
   `gewaehltesFormat()` und die Kopplung von `SPALTEN_A` an die
   `expectedHeaders` von `export_excel_v1`.
+
+## [Uhr 1.7.0] — 2026-08-14
+
+Der Uhr-Teil von P9c und damit **der letzte Punkt des Reviews**. Zwei Befunde,
+beide ohne Serveranteil: Die App lässt sich unabhängig von der Weboberfläche
+einspielen.
+
+### Die Client-Kennung enthält keinen Zeitstempel mehr (M7-03)
+
+Sie bestand aus Präfix plus Sekunden seit 1970 (`m-1785000000`). Das hatte zwei
+Folgen:
+
+1. **Springt die Uhrzeit zurück** — nach einem Zurücksetzen des Geräts, nach
+   einem Zeitzonenwechsel im Flugmodus —, entstehen erneut Kennungen, die es
+   schon gab. Der nächste Upload trifft dann einen **fremden alten Einsatz
+   desselben Geräts** und überschreibt ihn. Für einen Angriff taugt das nicht,
+   weil der eindeutige Schlüssel die Gerätekennung enthält; als Datenverlust
+   im eigenen Bestand taugt es sehr wohl.
+2. Sie verriet den Startzeitpunkt **auf die Sekunde**, auch wenn er später im
+   Web korrigiert wurde.
+
+Neu: Präfix, ein fortlaufender Zähler im Gerätespeicher und zwei Zufallswerte,
+zum Beispiel `m-42-1837704912`. Der Zähler überlebt Neustarts und Zeitsprünge
+und ist die eigentliche Zusicherung — er wiederholt sich nicht, ganz gleich,
+was die Uhrzeit tut. Der Zufallsanteil verhindert, dass sich Reihenfolge oder
+Zeitpunkt ablesen lassen.
+
+**Der Zeitstempel ist ganz entfallen, nicht bloß ergänzt worden.** Das Konzept
+sah vor, einen Zufallsanteil anzuhängen; damit wäre Punkt 2 bestehen geblieben.
+Der Startzeitpunkt steht ohnehin als `started_at` im Datensatz — dort gehört er
+hin, und dort ist er korrigierbar.
+
+**Kennungen der alten Form bleiben gültig.** Es gibt keine Umstellung: Der
+Server prüft das Format nicht, die Idempotenz hängt allein an der Gleichheit der
+Zeichenkette. Eine Uhr, die beim Update noch ungesendete Daten im Puffer hat,
+liefert sie unverändert nach.
+
+### Kopplung: Meldungen, die sagen, was zu tun ist
+
+`Pair.mc` unterschied nur 200 und 404. Alles andere endete in „Kopplung
+fehlgeschlagen (409)" — einer Meldung, die den Zahlencode nennt und sonst
+nichts. Ausgerechnet die 409 ist aber der Fall, den man selbst beheben kann: Es
+sind bereits fünf Geräte verbunden, eines muss weg. Wer stattdessen eine Zahl
+liest, tippt den Code mehrmals neu ein und läuft am Ende noch in die Sperre —
+die dann ebenfalls nur als Zahl erschien.
+
+Unterschieden werden jetzt: zu viele Geräte, zu viele Versuche, ungültiger
+Code und fehlende Telefonverbindung. Entschieden wird am Feld `error` der
+Antwort, nicht am Zahlencode: Der Schlüssel benennt die Ursache, der Code nur
+ihre Klasse.
+
+**Zweizeilig, weil eine Zeile nicht reicht.** Die Meldungszeile wird ohne
+Umbruch gezeichnet — was breiter ist als das Display, fällt weg, ohne dass man
+es merkt. In der Hinweisschrift sind das rund 26 Zeichen; „Zu viele Geräte —
+erst eines im Web löschen" wäre genau um den Teil gekürzt worden, der sagt, was
+zu tun ist. Deshalb zwei kurze Zeilen: **was** los ist, und **was hilft**. Die
+zweite Zeile erscheint nur, wenn es etwas zu tun gibt, und geht in die
+Platzberechnung des Bildschirms ein — der Block darüber weicht von selbst aus.
+
+Für unbekannte Fehler wird die Meldung des Servers als zweite Zeile
+übernommen, gekürzt auf die Displaybreite. So erscheint ein künftiger Fehlerfall
+nicht wieder als nackte Zahl, nur weil die Uhr ihn noch nicht kennt. Für die
+bekannten Fälle stehen die Texte in der App: Die Servermeldungen sind für die
+Weboberfläche geschrieben, ganze Sätze ohne Umlaute und zu lang für ein
+Uhrendisplay.
+
+### Behobene Review-Befunde
+
+M7-03 sowie die in P4 nachgetragene 409-Behandlung. **Damit ist der Review
+vollständig abgearbeitet.**
+
+### Geprüft
+
+Nur soweit ohne Gerät möglich: Die Erzeugung der Kennung wurde nachgebaut und
+mit 6 Prüfungen belegt — Form, 5001 Kennungen ohne Dublette, Neustart nach
+einem Zeitsprung auf dieselbe Sekunde (die alte Fassung erzeugt dort eine
+Dublette, die neue nicht), Zählerüberlauf.
+
+**Nicht geprüft und nur auf dem Gerät prüfbar:** Übersetzung mit dem
+Connect-IQ-SDK, `Math.rand`/`Math.srand` und `Storage` im echten Lauf, die
+Darstellung der zweiteiligen Meldung auf den verschiedenen Displaygrößen.
 
 ## [Uhr 1.6.6] — 2026-08-03
 

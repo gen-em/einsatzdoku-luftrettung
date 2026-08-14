@@ -19,6 +19,24 @@ if (php_sapi_name() === 'cli') {
     require_admin();
 }
 
+/**
+ * IDs der Geraete, deren Name exakt dem automatisch vergebenen Muster
+ * "Uhr (gekoppelt TT.MM.JJJJ)" entspricht (Migration vom 14.08.2026).
+ *
+ * Bewusst eng: Ein selbst vergebener Name — "Uhr Philipp", "Christoph 17",
+ * auch "Uhr (gekoppelt, alt)" — passt nicht und bleibt unberuehrt.
+ */
+function _geraete_mit_datumsname(PDO $pdo): array
+{
+    $ids = [];
+    foreach ($pdo->query('SELECT id, label FROM devices')->fetchAll() as $z) {
+        if (preg_match('/^Uhr \(gekoppelt \d{2}\.\d{2}\.\d{4}\)$/', (string)$z['label'])) {
+            $ids[] = (int)$z['id'];
+        }
+    }
+    return $ids;
+}
+
 /* ---- Migrationsliste ------------------------------------------------------
  * 'id'    : eindeutiger, aufsteigender Name (Datum_stichwort)
  * 'label' : Beschreibung fuer die Anzeige
@@ -796,6 +814,46 @@ $MIGRATIONS = [
             'DELETE FROM rate_limits WHERE fenster_start > NOW()',
         ],
     ],
+    [
+        'id'    => '2026_08_14_geraetename_ohne_datum',
+        'label' => 'Gerätenamen: automatisch vergebenes Kopplungsdatum aus dem Namen entfernen',
+        /* WARUM
+         *
+         * pair.php vergab beim Koppeln den Namen "Uhr (gekoppelt 11.08.2026)".
+         * Dieselbe Angabe steht in devices.created_at, und beide werden
+         * angezeigt — im Hinweis auf der Startseite stand das Datum deshalb
+         * zweimal hintereinander. Seit Web 5.0.1 heisst ein neu gekoppeltes
+         * Geraet nur noch "Uhr"; der Altbestand traegt das Datum aber weiter.
+         *
+         * WARUM DAS HIER GEFAHRLOS IST
+         * Geaendert wird NUR, was exakt dem automatisch vergebenen Muster
+         * entspricht. Ein selbst vergebener Name — "Uhr Philipp", "Christoph
+         * 17", auch "Uhr (gekoppelt, alt)" — passt nicht auf das Muster und
+         * bleibt unberuehrt. Es geht keine Angabe verloren: Das Datum steht in
+         * created_at und wird in der Geraeteliste als "seit …" angezeigt.
+         *
+         * Deshalb KEINE Kennzeichnung als destruktiv: Hier wird nichts
+         * vernichtet, sondern eine doppelt gefuehrte Angabe auf ihre eine
+         * Quelle zurueckgefuehrt. Die rote Kennzeichnung ist den Faellen
+         * vorbehalten, in denen wirklich etwas verlorengeht — sonst gewoehnt
+         * man sich an sie.
+         */
+        /* Als Funktion statt als SQL: Das Muster steht damit EINMAL da, als
+         * gewoehnlicher regulaerer Ausdruck. Derselbe Ausdruck in einer
+         * SQL-Zeichenkette braeuchte Klammern und Punkte doppelt maskiert —
+         * einmal fuer PHP, einmal fuer die Datenbank —, und was am Ende
+         * wirklich bei MariaDB ankommt, sieht man dem Quelltext nicht mehr an.
+         * Genau daran ist der erste Entwurf gescheitert. */
+        'skip'  => function (PDO $pdo): bool {
+            return count(_geraete_mit_datumsname($pdo)) === 0;
+        },
+        'run'   => function (PDO $pdo): void {
+            $up = $pdo->prepare('UPDATE devices SET label = ? WHERE id = ?');
+            foreach (_geraete_mit_datumsname($pdo) as $id) {
+                $up->execute(['Uhr', $id]);
+            }
+        },
+    ],
     // Naechste Migration hier anhaengen.
 ];
 
@@ -1188,12 +1246,21 @@ if ($istCli) {
   $stk->execute($kdfListe);
   $kdfVerwaist = $stk->fetchAll();
   ?>
-  <h2>Schlüsselableitung</h2>
-  <?php if (!$kdfVerwaist): ?>
-    <p class="muted">Alle Konten rechnen mit einer Rundenzahl, die diese Fassung
-       anbietet (<?= e(implode(', ', array_map('strval', $kdfListe))) ?>).
-       Zielwert: <strong><?= (int)KDF_ITER_ZIEL ?></strong>.</p>
-  <?php else: ?>
+  <?php /* NUR IM PROBLEMFALL ANZEIGEN.
+     *
+     * Zuerst stand hier auch eine Entwarnung ("Alle Konten rechnen mit einer
+     * Rundenzahl, die diese Fassung anbietet"). Sie ist wieder entfallen: Eine
+     * Wartungsseite, die Nicht-Probleme aufzaehlt, macht die echten Meldungen
+     * schwerer zu finden — und wer sie liest, ueberfliegt beim naechsten Mal
+     * auch die Zeile, die zaehlt.
+     *
+     * Die Pruefung selbst bleibt. Sie kostet eine Abfrage und faengt den
+     * Fehler ab, den jemand macht, der KDF_ITER_ZIEL anhebt und vergisst, den
+     * bisherigen Wert in KDF_ITER_LISTE stehen zu lassen: Dann kann sich kein
+     * Bestandskonto mehr anmelden, und an der Anmeldemaske ist die Ursache
+     * nicht zu erkennen. */ ?>
+  <?php if ($kdfVerwaist): ?>
+    <h2>Schlüsselableitung</h2>
     <p class="alert"><strong>Achtung: <?php
         $summe = array_sum(array_column($kdfVerwaist, 'n'));
         echo (int)$summe; ?> Konto/Konten können sich nicht anmelden.</strong>

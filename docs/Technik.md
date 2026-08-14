@@ -68,7 +68,8 @@ hems/
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export)
-│   ├── assets/            style.css, crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
+│   ├── assets/            style.css (Schriften kommen per @import von Google —
+│   │                      siehe Hinweis unten), crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
@@ -127,7 +128,10 @@ Punkte-PK tragen das auf Jahre problemlos (~1 Mio. Punkte/Jahr).
 ## 4. Zentrale Abläufe
 
 **Upload & Idempotenz** (Details: `JSON-Vertrag.md`): Die Uhr sendet je
-Einsatz/Segment eine `client_ref` und Punkte ab `seq_from`; der Server
+Einsatz/Segment eine `client_ref` (seit Uhr 1.7.0 aus Präfix, einem
+fortlaufenden Zähler im Gerätespeicher und einem Zufallsanteil — **kein
+Zeitstempel mehr**, siehe `JSON-Vertrag.md` Abschnitt 8) und Punkte ab
+`seq_from`; der Server
 antwortet mit `next_seq` (erste noch fehlende Sequenz). Wiederholungen sind
 unschädlich (`INSERT IGNORE` auf den Punkte-PK, Upsert auf `client_ref`).
 Phasen/Rea werden je Upload **vollständig ersetzt** (kein Delta). Die Uhr darf
@@ -1353,12 +1357,31 @@ Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt
 unberührt. Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten
 idempotent nach, sofern lokal noch vorhanden.
 
-**Wartungsseite, Abschnitt „Schlüsselableitung" (seit Web 5.0.1):** Meldet
-Konten, deren `kdf_iter` nicht in `KDF_ITER_LISTE` steht. Sie können sich nicht
+**Wartungsseite, Abschnitt „Schlüsselableitung" (seit Web 5.0.1):** Erscheint
+**nur, wenn es etwas zu melden gibt** — Konten, deren `kdf_iter` nicht in
+`KDF_ITER_LISTE` steht. Sie können sich nicht
 anmelden, und an der Anmeldemaske ist die Ursache nicht zu erkennen — der
 Browser leitet nur für die gelisteten Werte ab, das entstehende Token passt zu
 keinem gespeicherten Hash. Behebung: den fehlenden Wert wieder in die Liste
 aufnehmen.
+
+**Externe Abhängigkeiten zur Laufzeit.** Zwei Dinge lädt jede Seite aus dem
+Netz: die Schriften Bricolage Grotesque und Open Sans von
+`fonts.googleapis.com`/`fonts.gstatic.com` (per `@import` in `style.css`) und
+Leaflet von `unpkg.com`. Beides hat Folgen, die man kennen sollte:
+
+* **Ausfall.** Wird der Abruf blockiert (Werbeblocker, strenger Trackingschutz,
+  kein Netz), greift die Ersatzliste. Sie muss deshalb etwas ergeben, das wie
+  die Vorlage aussieht — bis Web 5.1.1 stand dort `'Arial Narrow'`, eine
+  schmale Schrift als Ersatz für eine normal breite; die halbe Oberfläche wurde
+  dann gedrungen.
+* **Datenschutz.** Jeder Seitenaufruf meldet die IP-Adresse an Google
+  beziehungsweise an unpkg. In einer Anwendung, deren ganzer Zweck darin
+  besteht, dass Patientendaten den Browser nicht unverschlüsselt verlassen, ist
+  das ein Bruch in der Linie.
+
+Behebung wäre, beides selbst auszuliefern: die vier woff2-Dateien per
+`@font-face` und Leaflet als lokale Kopie. Steht als **Backlog Nr. 12**.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
 Installer. Der Installer fragt **kein** Admin-Passwort mehr ab; er legt den
