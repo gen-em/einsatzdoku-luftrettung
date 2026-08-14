@@ -1,7 +1,6 @@
 # Einsatzdoku — Backlog
 
-Bewusst offene Punkte. Ausgelagert aus `Technik.md`, damit die Liste wachsen
-kann, ohne die technische Dokumentation zu überfrachten.
+Bewusst offene Punkte. 
 
 **Nummern sind dauerhaft.** Verweise aus Code und Dokumentation nennen sie
 (z. B. „Backlog Nr. 10"). Erledigte Punkte werden deshalb nicht gelöscht,
@@ -69,10 +68,10 @@ Nummer. Neue Punkte hängen sich hinten an.
       unauffällig, weil die Ersatzliste normal breit ist — vorher wurde die
       halbe Oberfläche gedrungen (`'Arial Narrow'` als Ersatz für eine normal
       breite Grotesk).
-    Umsetzung: die vier woff2-Dateien nach `assets/fonts/` und per
-    `@font-face` mit `font-display:swap` einbinden; Leaflet-CSS und -JS als
-    lokale Kopie mit fester Fassungsnummer. Berührt `style.css` und die
-    `<head>`-Blöcke der Kartenseiten. Nebeneffekt: eine Content-Security-Policy
-    (Nr. 8) wird damit überhaupt erst eng fassbar, weil keine fremden Quellen
-    mehr erlaubt werden müssen.
+      Umsetzung: die vier woff2-Dateien nach `assets/fonts/` und per
+      `@font-face` mit `font-display:swap` einbinden; Leaflet-CSS und -JS als
+      lokale Kopie mit fester Fassungsnummer. Berührt `style.css` und die
+      `<head>`-Blöcke der Kartenseiten. Nebeneffekt: eine Content-Security-Policy
+      (Nr. 8) wird damit überhaupt erst eng fassbar, weil keine fremden Quellen
+      mehr erlaubt werden müssen.
 
