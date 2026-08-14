@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 
 /**
  * Passwort setzen — die einzige Stelle, an der ein Passwort ueber einen
@@ -26,7 +27,8 @@ require_once __DIR__ . '/db.php';
  * sich zwar anmelden laesst, dessen Daten aber unlesbar waeren.
  */
 
-const WRAP_RE = '#^[A-Za-z0-9+/=]{20,4000}$#';
+/* WRAP_RE steht seit Web 5.1.0 in validate_lib.php — eine Fassung fuer die
+ * drei Stellen, die eine Schluesselhuelle pruefen (M2-10). */
 
 /* ---- Der Token gehoert nicht in die Adresszeile (M1-06) --------------------
  *

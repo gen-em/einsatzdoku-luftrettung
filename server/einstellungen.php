@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 
 $tab = $_GET['t'] ?? 'profil';
 if (!in_array($tab, ['profil', 'geraete', 'stammdaten', 'backup'], true)) { $tab = 'profil'; }
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Anmeldung liefe weiter, und niemand saehe es. */
             $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar — '
                    . 'das Passwort wurde NICHT geändert.';
-        } elseif ($patReady && !preg_match('#^[A-Za-z0-9+/=]{20,4000}$#', $wrapPw)) {
+        } elseif ($patReady && !preg_match(WRAP_RE, $wrapPw)) {
             // Frueher wurde die Huelle hier stillschweigend uebersprungen —
             // das Passwort galt dann, die Daten waren aber nicht mehr lesbar.
             // Jetzt wird gar nichts geaendert.

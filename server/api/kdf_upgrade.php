@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';      // liefert $userId, $kdfIter
+require_once __DIR__ . '/../validate_lib.php';   // WRAP_RE, Formatkennung
 
 /**
  * POST api/kdf_upgrade.php — stille Anhebung der Rundenzahl (M2-01, Schritt 4)
@@ -76,7 +77,7 @@ if ($neuIter <= $kdfIter) { json_out(['error' => 'nicht_noetig'], 400); }
 
 // Dieselbe Laengengrenze wie beim Passwortwechsel (M2-08): Die Pruefung
 // begrenzt, das Speichern schneidet NICHT ab.
-if ($wrapPw !== null && !preg_match('#^[A-Za-z0-9+/=]{20,4000}$#', $wrapPw)) {
+if ($wrapPw !== null && !preg_match(WRAP_RE, $wrapPw)) {
     json_out(['error' => 'wrap'], 400);
 }
 if ($keyChk !== null && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {

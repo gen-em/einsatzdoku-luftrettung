@@ -10,6 +10,82 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.1.0] — 2026-08-14
+
+Paket P9c, Web-Teil: **M2-10, Formatkennung vor jedem Chiffretext.** Keine
+Schemaänderung, keine Migration. Die beiden Uhr-Befunde aus P9c (M7-03 und die
+409-Behandlung in `Pair.mc`) folgen als eigene Uhr-Auslieferung.
+
+### Warum eine Kennung
+
+Ein Chiffretext bestand aus Zufallswert und Nutzdaten — ohne jede Angabe
+darüber, mit welchem Verfahren er entstanden ist. Wird das Verfahren je
+gewechselt, und irgendwann wird es das, gibt es kein Merkmal, an dem sich alt
+von neu unterscheiden ließe. Man müsste raten und am Fehlschlag erkennen, dass
+man falsch geraten hat — nur sieht ein Fehlschlag beim Entschlüsseln genauso
+aus wie ein falscher Schlüssel.
+
+Der Sicherungscontainer macht es seit jeher richtig vor: Er trägt eine
+Fassungsnummer im Kopf. Der Aufwand ist jetzt klein und wäre später groß.
+
+### `edk1:` — ein Textpräfix, kein Kennungsbyte
+
+Der Doppelpunkt gehört nicht zum base64-Zeichenvorrat. Die Kennung ist damit
+auf den ersten Blick zu erkennen, auch in der Datenbankspalte, und ohne dass
+irgendetwas entschlüsselt werden müsste. Ein Byte **innerhalb** der Daten wäre
+von einem Zufallswert nur durch Ausprobieren zu unterscheiden — man müsste
+beide Deutungen durchrechnen.
+
+**Die Kennung gilt für jeden Chiffretext**, nicht nur für `pat_blob`: Auch die
+beiden Schlüsselhüllen `pat_wrap_pw` und `pat_wrap_rc` kommen aus derselben
+Funktion. Eine halb gekennzeichnete Verschlüsselung wäre genau die
+Inkonsistenz, die der Befund abschaffen soll.
+
+### Beim Lesen großzügig, ohne Umstellung des Bestands
+
+Ein Chiffretext **ohne** Kennung ist die erste Fassung. Eine Umstellung des
+Bestands gibt es nicht und kann es nicht geben: Der Server hat den Schlüssel
+nach Bauart nicht und kann die Kennung deshalb nicht nachtragen. Beide Formen
+stehen dauerhaft nebeneinander; ein Datensatz bekommt die Kennung, wenn er das
+nächste Mal gespeichert wird.
+
+Eine **unbekannte** Kennung meldet „wurde mit einer neueren Fassung des
+Programms verschlüsselt" statt „Schlüssel passt nicht" — sonst sucht die
+lesende Person den Fehler beim Schlüssel und findet ihn nie. Derselbe Gedanke
+wie beim Sicherungscontainer in Web 5.0.0.
+
+### Drei Kopien einer Prüfregel beseitigt
+
+Das Muster für Schlüsselhüllen stand dreifach im Projekt: als Konstante
+`WRAP_RE` in `pw_handling.php` und wortgleich als Zeichenkette in
+`einstellungen.php` und `api/kdf_upgrade.php`. Mit der Kennung wären daraus
+drei Stellen geworden, die einzeln nachzuziehen gewesen wären — und eine
+vergessene hätte eine **gültige** Hülle abgewiesen, mit dem Ergebnis, dass ein
+Passwortwechsel scheitert. `WRAP_RE` liegt jetzt neben `PAT_BLOB_RE` in
+`validate_lib.php`.
+
+### Zum Rückschritt
+
+Ein Rückschritt auf 5.0.1 ist nur so lange gefahrlos, wie **kein
+Patientendatensatz gespeichert und kein Passwort gewechselt** wurde. Danach
+trägt der betroffene Chiffretext die Kennung, und die ältere Fassung liest sie
+nicht. Bei einer Schlüsselhülle heißt das: kein Zugriff auf die geschützten
+Angaben, bis das Passwort über den Wiederherstellungsschlüssel zurückgesetzt
+wird.
+
+### Behobene Review-Befunde
+
+M2-10. Damit sind alle Web-Befunde des Reviews erledigt; offen bleiben nur
+noch die beiden Uhr-Befunde M7-03 und die 409-Behandlung in `Pair.mc`.
+
+### Geprüft
+
+31 automatische Prüfungen, alle bestanden: 13 im Browser (Kennung schreiben,
+beide Formen lesen, falscher Schlüssel bei beiden Formen, unbekannte Kennung
+wird als solche gemeldet, Hüllen, Eindeutigkeit der Hüllen-Bindung), 18
+serverseitig (beide Formen, Längengrenzen mit und ohne Kennung, fremde Kennung,
+Doppelpunkt an falscher Stelle, Platz in der Spalte).
+
 ## [Web 5.0.1] — 2026-08-14
 
 Vier Befunde aus dem Betrieb der Testinstallation. Keine Schemaänderung.

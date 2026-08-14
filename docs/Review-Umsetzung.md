@@ -28,7 +28,60 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P9a | Einrichtung, Migrationen, Passwortgüte | Web 4.7.0 | **erledigt** |
 | P9b | Ableitungsrunden (M2-01, S7) | Web 5.0.0 | **erledigt** |
 | — | Nachträge aus dem Betrieb | Web 5.0.1 | **erledigt** |
-| P9c | Formatkennung (M2-10), Uhr-App | — | offen |
+| P9c (Web) | Formatkennung (M2-10) | Web 5.1.0 | **erledigt** |
+| P9c (Uhr) | M7-03, 409-Behandlung in `Pair.mc` | — | offen |
+
+---
+
+## P9c, Web-Teil — Formatkennung (Web 5.1.0)
+
+M2-10. Keine Schemaänderung. **Damit sind alle Web-Befunde des Reviews
+erledigt**; offen bleiben nur noch die beiden Uhr-Befunde.
+
+### Entschieden: Textpräfix statt Kennungsbyte
+
+Das Konzept schlägt „ein vorangestelltes Kennungsbyte" vor. Ein Byte
+**innerhalb** der Daten hat einen Haken: Es ist von einem Zufallswert nicht zu
+unterscheiden, ohne beide Deutungen durchzurechnen. `edk1:` als Textpräfix ist
+eindeutig, weil der Doppelpunkt nicht zum base64-Zeichenvorrat gehört — die
+Kennung ist auch in der Datenbankspalte auf den ersten Blick zu erkennen.
+
+### Entschieden: die Kennung gilt für jeden Chiffretext
+
+Nicht nur für `pat_blob`, sondern auch für `pat_wrap_pw` und `pat_wrap_rc` —
+sie kommen aus derselben Funktion. Eine halb gekennzeichnete Verschlüsselung
+wäre genau die Inkonsistenz, die der Befund abschaffen soll.
+
+**Preis dieser Entscheidung:** Der Rückschritt auf 5.0.1 ist nur so lange
+gefahrlos, wie kein Patientendatensatz gespeichert und kein Passwort gewechselt
+wurde. Bei einer gekennzeichneten Schlüsselhülle wäre der Zugriff auf die
+geschützten Angaben sonst nur noch über den Wiederherstellungsschlüssel zu
+bekommen. Steht so im Prüfplan.
+
+### Keine Umstellung des Bestands — und das ist keine Nachlässigkeit
+
+Der Server hat den Schlüssel nach Bauart nicht und kann die Kennung deshalb
+nicht nachtragen. Beide Formen stehen dauerhaft nebeneinander; ein Datensatz
+bekommt die Kennung, wenn er das nächste Mal gespeichert wird. Ein Chiffretext
+ohne Kennung **ist** die erste Fassung — das ist die Definition, nicht eine
+Vermutung.
+
+### Nebenbei: drei Kopien einer Prüfregel
+
+`WRAP_RE` stand als Konstante in `pw_handling.php` und wortgleich als
+Zeichenkette in `einstellungen.php` und `api/kdf_upgrade.php`. Mit der Kennung
+wären daraus drei einzeln nachzuziehende Stellen geworden — eine vergessene
+hätte eine **gültige** Hülle abgewiesen und einen Passwortwechsel scheitern
+lassen. Die Regel liegt jetzt neben `PAT_BLOB_RE` in `validate_lib.php`.
+
+### Nachweis
+
+31 automatische Prüfungen, alle bestanden — 13 im Browser gegen echte
+WebCrypto, 18 gegen die serverseitigen Prüfmuster. Belegt sind unter anderem:
+beide Formen lesbar, falscher Schlüssel wird bei beiden Formen als solcher
+gemeldet, eine unbekannte Kennung dagegen als neuere Fassung; Längengrenzen
+greifen mit und ohne Kennung; ein Doppelpunkt an falscher Stelle wird
+abgewiesen; die Höchstlänge passt weiterhin in die TEXT-Spalte.
 
 ---
 

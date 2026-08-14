@@ -144,6 +144,29 @@ loc:{addr,lat,lon}, site_desc}`, AES-256-GCM) und liegt doppelt verpackt in `use
 Schlüssel (`pat_wrap_rc`). Weil der Inhaltsschlüssel vom Passwort getrennt ist,
 kostet ein Passwortwechsel kein Neuverschlüsseln — nur die Hülle wird erneuert.
 
+**Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
+erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
+beiden Hüllen. Ohne eine solche Kennung gäbe es beim nächsten Verfahrenswechsel
+kein Merkmal, an dem sich alt von neu unterscheiden ließe; man müsste raten,
+und ein falscher Rateversuch sieht aus wie ein falscher Schlüssel.
+
+Ein Textpräfix statt eines Kennungsbytes, weil der Doppelpunkt nicht zum
+base64-Zeichenvorrat gehört: Die Kennung ist damit auch in der Datenbankspalte
+auf den ersten Blick zu erkennen, ohne etwas zu entschlüsseln.
+
+**Beim Lesen großzügig, ohne Umstellung des Bestands.** Ein Chiffretext ohne
+Kennung ist die erste Fassung. Der Server kann die Kennung nicht nachtragen —
+er hat den Schlüssel nach Bauart nicht. Beide Formen stehen deshalb dauerhaft
+nebeneinander; ein Datensatz bekommt die Kennung, wenn er das nächste Mal
+gespeichert wird. Eine **unbekannte** Kennung meldet „mit einer neueren Fassung
+verschlüsselt" statt „Schlüssel passt nicht".
+
+Serverseitig prüfen `PAT_BLOB_RE` und `WRAP_RE` (beide `validate_lib.php`)
+beide Formen. `WRAP_RE` stand bis Web 5.0.1 dreifach im Projekt — als Konstante
+in `pw_handling.php` und wortgleich in `einstellungen.php` und
+`api/kdf_upgrade.php`; eine davon beim Nachziehen zu vergessen hätte einen
+Passwortwechsel scheitern lassen.
+
 Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
 (siehe unten). Ein anmeldbares Konto ohne Hüllen kann es dadurch nicht geben;
 die früher in `auth_guard.php` erzwungene Ersteinrichtung entfällt seit
@@ -1088,6 +1111,7 @@ Die Bausteine im Einzelnen:
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Sicherungslauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `update.php` (`inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert). Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Sicherung. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
+| Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |

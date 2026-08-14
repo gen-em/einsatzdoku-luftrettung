@@ -70,8 +70,45 @@ const PAT_BLOB_MIN = 40;
  */
 const PAT_BLOB_MAX = 60000;
 
-/** Zeichenvorrat des Chiffretexts (base64 mit Fuellzeichen). */
-const PAT_BLOB_RE = '#^[A-Za-z0-9+/=]{' . PAT_BLOB_MIN . ',' . PAT_BLOB_MAX . '}$#';
+/**
+ * Formatkennung vor einem Chiffretext (M2-10).
+ *
+ * WARUM ES SIE GIBT
+ * Ein Chiffretext bestand bisher aus Zufallswert und Nutzdaten, ohne jede
+ * Angabe darueber, mit welchem Verfahren er entstanden ist. Wird das Verfahren
+ * je gewechselt — und irgendwann wird es das —, gibt es kein Merkmal, an dem
+ * sich alt von neu unterscheiden liesse. Der Sicherungscontainer macht es seit
+ * jeher richtig vor: Er traegt eine Fassungsnummer im Kopf.
+ *
+ * Der Doppelpunkt gehoert NICHT zum base64-Zeichenvorrat. Die Kennung ist
+ * deshalb eindeutig zu erkennen, ohne etwas zu entschluesseln — anders als ein
+ * Kennungsbyte INNERHALB der Daten, das man von einem Zufallswert nur durch
+ * Ausprobieren unterscheiden koennte.
+ *
+ * BEIM LESEN GROSSZUEGIG: Ein Chiffretext OHNE Kennung ist die erste Fassung.
+ * Es gibt keine Umstellung des Bestands — der Server kann sie nicht
+ * entschluesseln und die Kennung deshalb nicht nachtragen. Beide Formen stehen
+ * dauerhaft nebeneinander; ein Datensatz bekommt die Kennung, wenn er das
+ * naechste Mal gespeichert wird.
+ */
+const CHIFFRE_PRAEFIX = 'edk1:';
+const CHIFFRE_PRAEFIX_RE = '(?:edk1:)?';
+
+/** Zeichenvorrat des Chiffretexts (base64 mit Fuellzeichen), mit oder ohne
+ *  Formatkennung. Die Laengengrenzen gelten fuer den base64-Teil. */
+const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
+                  . '[A-Za-z0-9+/=]{' . PAT_BLOB_MIN . ',' . PAT_BLOB_MAX . '}$#';
+
+/**
+ * Zeichenvorrat einer Schluesselhuelle (pat_wrap_pw, pat_wrap_rc).
+ *
+ * Stand bis Web 5.0.1 dreimal im Projekt: als Konstante in pw_handling.php und
+ * als wortgleiche Zeichenkette in einstellungen.php und api/kdf_upgrade.php.
+ * Mit der Formatkennung waeren daraus drei Stellen geworden, die man einzeln
+ * haette nachziehen muessen — und eine vergessene haette eine gueltige Huelle
+ * abgewiesen, mit dem Ergebnis, dass ein Passwortwechsel scheitert.
+ */
+const WRAP_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
 
 /**
  * Mengenbegrenzungen je Einsatz.

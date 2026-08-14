@@ -81,6 +81,30 @@ const EdCrypto = (() => {
   }
 
   // Klartext (String) -> base64(iv || ciphertext)
+  /* ---- Formatkennung vor dem Chiffretext (M2-10) -----------------------
+   *
+   * Ein Chiffretext bestand bis Web 5.0.1 aus Zufallswert und Nutzdaten, ohne
+   * jede Angabe darüber, mit welchem Verfahren er entstanden ist. Wird das
+   * Verfahren je gewechselt — und irgendwann wird es das —, gibt es kein
+   * Merkmal, an dem sich alt von neu unterscheiden ließe. Man müsste raten
+   * und am Fehlschlag erkennen, dass man falsch geraten hat; ein
+   * Fehlschlag beim Entschlüsseln sieht aber genauso aus wie ein falscher
+   * Schlüssel.
+   *
+   * WARUM EIN TEXTPRÄFIX UND KEIN KENNUNGSBYTE
+   * Ein Byte INNERHALB der Daten wäre von einem Zufallswert nur durch
+   * Ausprobieren zu unterscheiden — man müsste beide Deutungen durchrechnen.
+   * Der Doppelpunkt gehört nicht zum base64-Zeichenvorrat; die Kennung ist
+   * damit auf den ersten Blick zu erkennen, auch in der Datenbankspalte.
+   *
+   * BEIM LESEN GROSSZÜGIG: Kein Präfix heißt erste Fassung. Es gibt keine
+   * Umstellung des Bestands — der Server kann sie nicht entschlüsseln und die
+   * Kennung deshalb nicht nachtragen. Beide Formen stehen dauerhaft
+   * nebeneinander; ein Datensatz bekommt die Kennung, wenn er das nächste Mal
+   * gespeichert wird.
+   */
+  const CHIFFRE_PRAEFIX = 'edk1:';
+
   async function encrypt(keyHex, plaintext) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const key = await aesKey(keyHex, ['encrypt']);
@@ -88,12 +112,26 @@ const EdCrypto = (() => {
       key, te.encode(plaintext));
     const out = new Uint8Array(iv.length + ct.byteLength);
     out.set(iv); out.set(new Uint8Array(ct), iv.length);
-    return toB64(out);
+    return CHIFFRE_PRAEFIX + toB64(out);
   }
 
-  // base64(iv || ciphertext) -> Klartext; wirft bei falschem Schlüssel
-  async function decrypt(keyHex, blobB64) {
-    const raw = fromB64(blobB64);
+  // [edk1:]base64(iv || ciphertext) -> Klartext; wirft bei falschem Schlüssel
+  async function decrypt(keyHex, blob) {
+    let text = String(blob == null ? '' : blob);
+    const doppelpunkt = text.indexOf(':');
+    if (doppelpunkt >= 0) {
+      const kennung = text.slice(0, doppelpunkt + 1);
+      if (kennung !== CHIFFRE_PRAEFIX) {
+        /* Eine Kennung, die diese Fassung nicht kennt. Die Meldung sagt das
+         * auch — sonst sucht jemand den Fehler beim Schlüssel und findet ihn
+         * nie. Derselbe Gedanke wie beim Sicherungscontainer. */
+        throw new Error('Dieser Datensatz wurde mit einer neueren Fassung des '
+                      + 'Programms verschlüsselt (' + kennung + '). Bitte die '
+                      + 'Anwendung aktualisieren.');
+      }
+      text = text.slice(doppelpunkt + 1);
+    }
+    const raw = fromB64(text);
     const key = await aesKey(keyHex, ['decrypt']);
     const pt = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: raw.slice(0, 12) }, key, raw.slice(12));
@@ -449,6 +487,7 @@ const EdCrypto = (() => {
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
            setDataKey, getDataKey, getContentKey, setContentKey, clearSession,
+           CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
            sealBackup, openBackup, isBackupFile };
 })();

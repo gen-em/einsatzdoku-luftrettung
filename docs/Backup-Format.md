@@ -179,7 +179,13 @@ seit Web 4.1.2 auch:
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:
     // "pat_unreadable": true,
-    // "pat_blob": "Base64 …"   -> unverändert übernommener Chiffretext
+    // "pat_blob": "edk1:Base64 …"   -> unverändert übernommener Chiffretext
+    //
+    // Seit Web 5.1.0 trägt ein neu geschriebener Chiffretext die Formatkennung
+    // `edk1:` (M2-10). Ältere tragen sie nicht — beide Formen sind gültig und
+    // stehen dauerhaft nebeneinander, weil der Server sie nicht nachtragen
+    // kann (er hat den Schlüssel nach Bauart nicht). Der Einspielweg nimmt
+    // beide an.
 
     "phases": [ { "phase": 2, "occurred_at": "2026-07-19 08:15:00",
                   "lat": 47.72, "lon": 10.31 } ],
