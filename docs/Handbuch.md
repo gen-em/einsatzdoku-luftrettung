@@ -1083,3 +1083,16 @@ und setzt danach das Häkchen an genau dieser einen Zeile.
 4. Alternative ohne Code: Gerät manuell anlegen und Geräte-ID/API-Schlüssel
    in die Connect-Einstellungen eintragen (nur nötig, wenn die Kopplung nicht
    möglich ist).
+
+**Wenn die Kopplung nicht klappt**, sagt die Uhr seit Version 1.7.0, woran es
+liegt und was hilft — in zwei kurzen Zeilen:
+
+| Meldung auf der Uhr | Was zu tun ist |
+|---|---|
+| „Zu viele Geräte" | Im Web ein nicht mehr genutztes Gerät löschen, dann neuen Code erzeugen. |
+| „Zu viele Versuche" | Kurz warten. Weiteres Eintippen verlängert die Sperre nur. |
+| „Code ungültig/abgelaufen" | Im Web einen neuen Code erzeugen — er gilt 10 Minuten und nur einmal. |
+| „Keine Verbindung" | Telefon in Reichweite? Bluetooth an? Der Code ist noch gültig. |
+
+Vorher stand dort in all diesen Fällen nur „Kopplung fehlgeschlagen" mit einer
+Zahl.

@@ -28,6 +28,7 @@ schon durchsetzt und welche noch nicht.
 | Mehrfache Phaseneinträge bleiben erhalten (3) | durchgesetzt |
 | Reanimationsarten gegen die Liste (3.3) | durchgesetzt |
 | Idempotenz über Gerät + `client_ref` (2) | durchgesetzt |
+| Zufallsanteil in der Client-Kennung (8) | durchgesetzt seit Uhr 1.7.0 |
 | Präfixe der Client-Kennung (8) | beschrieben, vom Server bewusst nicht geprüft |
 | Kalendertag muss existieren (3.2) | durchgesetzt |
 | Koordinatenbereiche, Mengenbegrenzungen (3.2) | durchgesetzt |
@@ -295,9 +296,24 @@ Regeln:
 - höchstens 64 Zeichen, keine Leerzeichen
 - innerhalb eines Geräts eindeutig und über die Lebensdauer des Datensatzes
   **unveränderlich** — sie ist der Anker, an dem die Idempotenz hängt
-- die Uhr bildet sie aus Präfix, Zeitstempel und einem Zufallsanteil. Der
-  Zufallsanteil ist nötig, weil eine allein aus der Uhrzeit gebildete Kennung
-  nach einem Zurücksetzen der Uhr kollidieren kann — der Upload träfe dann
-  einen fremden alten Einsatz **desselben** Geräts.
+- die Uhr bildet sie seit **Uhr 1.7.0** aus Präfix, einem fortlaufenden Zähler
+  im Gerätespeicher und einem Zufallsanteil — zum Beispiel `m-42-1837704912`.
+  **Kein Zeitstempel mehr.** Bis Uhr 1.6.6 war es Präfix plus Sekunden seit
+  1970 (`m-1785000000`); das hatte zwei Folgen:
+  1. Springt die Uhrzeit zurück (Zurücksetzen des Geräts, Zeitzonenwechsel im
+     Flugmodus), entstehen erneut Kennungen, die es schon gab — der Upload
+     träfe dann einen fremden alten Einsatz **desselben** Geräts.
+  2. Die Kennung verriet den Startzeitpunkt auf die Sekunde, auch wenn er
+     später im Web korrigiert wurde.
+
+  Der Zähler überlebt Neustarts und Zeitsprünge und ist die eigentliche
+  Zusicherung; der Zufallsanteil verhindert, dass sich Reihenfolge oder
+  Zeitpunkt ablesen lassen. Der Startzeitpunkt steht als `started_at` im
+  Datensatz — dort gehört er hin, und dort ist er korrigierbar.
+
+  **Kennungen der alten Form bleiben gültig.** Es gibt keine Umstellung: Der
+  Server prüft das Format nicht, und die Idempotenz hängt allein an der
+  Gleichheit der Zeichenkette. Eine Uhr, die beim Update noch ungesendete
+  Daten im Puffer hat, liefert sie unverändert nach.
 - der Server prüft das Präfix nicht; ein Client mit anderem Präfix
   funktioniert, bekommt aber die Sperrlisten-Sonderbehandlung von `man-` nicht

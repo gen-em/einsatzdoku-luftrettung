@@ -84,6 +84,13 @@ class SyncView extends WatchUi.View {
             if (Pair.statusKind == :ok) { pc = Graphics.COLOR_GREEN; }
             else if (Pair.statusKind == :busy) { pc = Graphics.COLOR_LT_GRAY; }
             lines.add([Pair.status, pc]);
+            /* Zweite Zeile: was zu tun ist. Sie kommt nur bei den Faellen, wo
+             * es etwas zu tun gibt. Bewusst gedaempft — die Ursache steht
+             * darueber, das hier ist der Weg heraus. Die Zeilenzahl geht in
+             * untenY ein, der Mittelblock weicht also von selbst aus. */
+            if (Pair.statusHint != null) {
+                lines.add([Pair.statusHint as Lang.String, Graphics.COLOR_LT_GRAY]);
+            }
         }
         if (Cpr.active) {
             lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",

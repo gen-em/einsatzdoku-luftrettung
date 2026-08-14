@@ -5,8 +5,70 @@ using Toybox.Time.Gregorian;
 using Toybox.Lang;
 using Toybox.Attention;
 using Toybox.System;
+using Toybox.Math;
+using Toybox.Application.Storage;
 
 module Util {
+
+    // ---- Client-Kennung fuer Einsaetze und Ruhesegmente (M7-03) -----------
+    //
+    // WAS SIE IST
+    // Die Kennung ("client_ref") ist der Anker der Idempotenz: Der Server
+    // erkennt an ihr, ob ein Upload denselben Einsatz betrifft wie ein
+    // frueherer. Sie muss auf DIESEM Geraet eindeutig sein und darf sich
+    // niemals wiederholen — der eindeutige Schluessel auf dem Server lautet
+    // (Geraetekennung, client_ref).
+    //
+    // WAS VORHER FALSCH WAR
+    // Sie bestand aus Praefix plus Zeitstempel in Sekunden ("m-1785000000").
+    // Zwei Folgen:
+    //
+    //   1. SPRINGT DIE UHRZEIT ZURUECK — nach einem Zuruecksetzen des Geraets,
+    //      nach einem Wechsel der Zeitzone im Flugmodus —, entstehen erneut
+    //      Kennungen, die es schon gab. Der naechste Upload trifft dann einen
+    //      FREMDEN, alten Einsatz desselben Geraets und ueberschreibt ihn.
+    //   2. Sie verraet den Startzeitpunkt auf die Sekunde, auch wenn er
+    //      spaeter im Web korrigiert wurde.
+    //
+    // WIE SIE JETZT ENTSTEHT
+    // Ein fortlaufender Zaehler im Geraetespeicher plus zwei Zufallswerte.
+    // Der Zaehler ueberlebt Neustarts und Zeitspruenge und ist die eigentliche
+    // Zusicherung: Er wiederholt sich nicht, ganz gleich, was die Uhrzeit tut.
+    // Der Zufallsanteil verhindert, dass sich aus der Kennung die Reihenfolge
+    // oder ein Zeitpunkt ablesen laesst.
+    //
+    // DER ZEITSTEMPEL IST GANZ ENTFALLEN, nicht nur ergaenzt worden — sonst
+    // bliebe Punkt 2 bestehen. Der Startzeitpunkt steht ohnehin als
+    // "startedAt" im Datensatz, dort gehoert er hin und dort ist er
+    // korrigierbar.
+    //
+    // VERTRAEGLICH: Der Server prueft das Format nicht; die Idempotenz haengt
+    // allein an der Gleichheit der Zeichenkette. Kennungen, die vor dem Update
+    // entstanden und noch in der Warteschlange liegen, bleiben gueltig.
+    var _refSeeded as Lang.Boolean = false;
+
+    function newRef(kind as Lang.String) as Lang.String {
+        // Zaehler zuerst und sofort sichern: Ein Absturz zwischen Lesen und
+        // Schreiben darf hoechstens eine Nummer ueberspringen, niemals eine
+        // doppelt vergeben.
+        var n = Storage.getValue("refseq");
+        if (!(n instanceof Lang.Number) || n < 0) { n = 0; }
+        n = n + 1;
+        if (n > 2000000000) { n = 1; }        // Ueberlauf des 32-Bit-Werts meiden
+        Storage.setValue("refseq", n);
+
+        if (!_refSeeded) {
+            // Einmal je App-Start streuen. Der Zaehler geht mit ein, damit
+            // zwei Starts nach einem Zuruecksetzen der Uhrzeit nicht dieselbe
+            // Folge liefern.
+            Math.srand(Time.now().value() ^ n);
+            _refSeeded = true;
+        }
+        var a = Math.rand() & 0xFFFF;
+        var b = Math.rand() & 0xFFFF;
+        return kind + "-" + n.format("%d") + "-"
+             + a.format("%05d") + b.format("%05d");
+    }
 
     // Aktueller Zeitpunkt als ISO 8601 UTC ("2026-07-16T08:31:05Z")
     function isoNow() as Lang.String {

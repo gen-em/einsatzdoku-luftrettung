@@ -144,7 +144,7 @@ module Model {
     function _startMission() as Void {
         _closeRestSegment();
         mission = {
-            "ref" => "m-" + Util.epochNow().toString(),
+            "ref" => Util.newRef("m"),      // Zaehler + Zufall, kein Zeitstempel (M7-03)
             "day" => Util.localDay(),      // Tag des EINSATZbeginns (0:00-Wechsel)
             "startedAt" => Util.isoNow(), "endedAt" => null,
             "phases" => [], "resus" => [],
@@ -182,7 +182,7 @@ module Model {
 
     function _startRestSegment() as Void {
         restSegment = {
-            "ref" => "r-" + Util.epochNow().toString(),
+            "ref" => Util.newRef("r"),      // wie beim Einsatz (M7-03)
             "day" => Util.localDay(),      // Tag des Segmentbeginns
             "startedAt" => Util.isoNow(), "endedAt" => null, "final" => false
         };
