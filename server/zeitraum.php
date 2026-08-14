@@ -109,6 +109,19 @@ const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei
 // mehreren hundert Einsaetzen.
 const map = L.map('rangemap', { preferCanvas: true });
+/* AUSGANGSAUSSCHNITT SETZEN, BEVOR EIN PIN DAZUKOMMT.
+ *
+ * Ohne ihn gilt die Karte als "noch nicht bereit": Leaflet nimmt eine Ebene
+ * dann zwar entgegen, stellt sie aber zurueck (whenReady) und rechnet ihre
+ * Bildschirmposition NICHT aus. Ein spaeteres setStyle() auf so einen Pin
+ * scheitert mit "this._point is undefined" — genau das stand beim Aufbau der
+ * Zeitraumansicht in der Browser-Konsole, weil die Hervorhebung nach jedem
+ * Neuzeichnen der Tabelle ueber alle Pins laeuft, waehrend fitBounds() erst
+ * danach kommt.
+ *
+ * index.php loest das seit jeher mit derselben Zeile. Der Ausschnitt ist ein
+ * Platzhalter; fitBounds() ueberschreibt ihn, sobald die Pins stehen. */
+map.setView([48.5, 10.5], 7);   // Fallback, bis Daten da sind
 attachBaseLayers(map);
 attachFullscreenControl(map);
 

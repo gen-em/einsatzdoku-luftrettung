@@ -61,11 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
                   || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
             $error = 'Passwortwechsel unvollständig (JavaScript nötig).';
-        } elseif (!in_array($newIter, KDF_ITER_LISTE, true)) {
-            /* Nur Werte, die diese Fassung kennt (M2-01). Eine frei waehlbare
-             * Rundenzahl waere ein Weg, das eigene Konto auf einen absurd
-             * niedrigen Wert zu setzen — die Anmeldung liefe weiter, und
-             * niemand saehe es. */
+        } elseif ($newIter !== KDF_ITER_ZIEL) {
+            /* Nur der Zielwert (M2-01). Ein Passwortwechsel baut die Ableitung
+             * vollstaendig neu auf; es gibt keinen Grund, dabei auf einem
+             * Altwert zu landen. Eine frei waehlbare Rundenzahl waere ein Weg,
+             * das eigene Konto auf einen absurd niedrigen Wert zu setzen — die
+             * Anmeldung liefe weiter, und niemand saehe es. */
             $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar — '
                    . 'das Passwort wurde NICHT geändert.';
         } elseif ($patReady && !preg_match('#^[A-Za-z0-9+/=]{20,4000}$#', $wrapPw)) {

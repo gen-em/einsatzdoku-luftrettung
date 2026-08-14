@@ -564,11 +564,12 @@ es nicht mehr.
   — das alte Passwort gilt weiter. **Ohne den Schlüssel sind die Angaben
   unwiederbringlich verloren**, auch Admins können nicht helfen (deshalb gibt
   es keine Admin-Passwortvergabe).
-- **Die Anmeldung kann eine Zeitlang länger dauern.** Nach dem Update auf 5.0.0
-  rechnet der Browser bei der ersten Anmeldung jedes Kontos zweimal — er weiß
-  noch nicht, welche Einstellung für dein Konto gilt, und der Server darf es
-  ihm vor der Anmeldung nicht verraten. Ab der zweiten Anmeldung ist es wieder
-  wie vorher. Es ist nichts kaputt.
+- **Die Anmeldung kann nach einem Update eine Zeitlang länger dauern.** Wenn
+  die Einstellungen der Verschlüsselung angehoben werden, rechnet der Browser
+  eine Übergangszeit lang zweimal — er weiß noch nicht, welche Einstellung für
+  dein Konto gilt, und der Server darf es ihm vor der Anmeldung nicht verraten.
+  Sobald alle Konten nachgezogen sind, ist es wieder wie vorher. Es ist nichts
+  kaputt.
 - **Beim Abtippen hilft die Seite mit.** Unter dem Eingabefeld steht sofort,
   wenn etwas nicht stimmt: ein Zeichen, das im Schlüssel gar nicht vorkommt,
   oder eine unvollständige Länge. Die Zeichen **0, 1, I, L, O und U werden
@@ -661,6 +662,11 @@ seit 5.0.0 vermerkt, mit welchen Einstellungen sie verschlüsselt wurde. Ältere
 Dateien lassen sich unverändert öffnen. Kommt eine Datei aus einer *neueren*
 Fassung des Programms, sagt die Meldung genau das — und nicht „Passwort
 falsch".
+
+**Der Hinweis auf ein neu verbundenes Gerät lässt sich bestätigen.** Auf der
+Tagesübersicht erscheint nach dem Koppeln einer Uhr ein Hinweis mit Name und
+Zeitpunkt. Mit „Verstanden, das war ich" verschwindet er. Wird danach ein
+weiteres Gerät verbunden, erscheint er erneut.
 
 **Woher die Datei stammt, steht dabei.** Sobald die Sicherung geöffnet ist —
 also nach Eingabe des Backup-Passworts —, nennt eine Zeile das Konto und den
@@ -1041,6 +1047,11 @@ Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
 anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen können
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
+
+Die Seite zeigt außerdem unter **„Schlüsselableitung"**, ob alle Konten mit
+Einstellungen rechnen, die diese Programmfassung anbietet. Steht dort eine
+Warnung, können sich die genannten Konten **nicht anmelden** — die Behebung
+steht dabei.
 
 Ein Update, das eine Spalte löscht, ist seit 4.7.0 in der Liste **mit ⚠
 gekennzeichnet** und mit einem Satz versehen, was verlorenginge. Steht in einer

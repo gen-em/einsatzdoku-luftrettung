@@ -12,6 +12,22 @@ declare(strict_types=1);
  * Daten (edbak_build) und spielt sie zurueck (edbak_restore).
  */
 
+/* Pruefschicht ausdruecklich laden.
+ *
+ * WARUM DAS HIER STEHEN MUSS
+ * edbak_restore() benutzt Pruefliste und die pruef_*-Funktionen. Sie standen
+ * nur zufaellig zur Verfuegung, wenn die aufrufende Seite validate_lib.php
+ * schon geladen hatte — api/backup_restore.php tat das NICHT. Das
+ * Wiedereinspielen brach deshalb mit "Class Pruefliste not found" ab, und zwar
+ * seit die Pruefschicht eingefuehrt wurde.
+ *
+ * Gefunden auf der Testinstallation, nicht durch die automatische Pruefung:
+ * Deren Skript hatte validate_lib.php selbst geladen und den fehlenden
+ * require damit verdeckt. Wer eine Bibliothek prueft, muss sie so laden, wie
+ * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
+ */
+require_once __DIR__ . '/validate_lib.php';
+
 function edbak_build(int $userId): string {
     $pdo = db();
     $q = function (string $sql, array $p) use ($pdo): array {

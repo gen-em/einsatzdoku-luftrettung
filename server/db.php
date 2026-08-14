@@ -367,7 +367,7 @@ const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxV
  * anderes Token, und der gespeicherte Hash passte nicht mehr. Der Wert steht
  * deshalb an der Nutzerzeile und wird gelesen, nicht angenommen.
  *
- * ---- KDF_ITER_LISTE: WARUM EINE LISTE UND NICHT EIN WERT -----------------
+ * ---- WARUM EINE LISTE UND NICHT EIN WERT --------------------------------
  *
  * Der Salz-Endpunkt (auth_salt.php) ist ohne Anmeldung erreichbar und muss
  * fuer unbekannte Adressen genauso antworten wie fuer echte Konten. Nennte er
@@ -385,23 +385,39 @@ const AUTH_VERGLEICHSWERT = '$2y$10$ZX1Xrc9GGuRDFtXcHFnamOR.a5ztKtqmvlaxsdApTgxV
  * zweimal ab — aus knapp einer Sekunde werden knapp zwei. Das ist der
  * Uebergangszustand, nicht der Dauerzustand.
  *
+ * ---- !!! BEIM ANHEBEN DES ZIELWERTS ZU TUN !!! ---------------------------
+ *
+ * WER KDF_ITER_ZIEL AENDERT, MUSS DEN BISHERIGEN WERT IN KDF_ITER_LISTE
+ * STEHEN LASSEN. Beispiel fuer einen Sprung auf 600000:
+ *
+ *     const KDF_ITER_ZIEL  = 600000;
+ *     const KDF_ITER_LISTE = [600000, 320000];
+ *
+ * Wird das vergessen, kann sich KEIN Bestandskonto mehr anmelden: Der Browser
+ * leitet dann nur noch fuer den neuen Wert ab, und das dabei entstehende
+ * Token passt zu keinem gespeicherten Hash. Die Meldung lautet "Anmeldung
+ * fehlgeschlagen", und die Ursache steht nirgends.
+ *
+ * Die Wartungsseite prueft genau das und meldet es (update.php, Betriebslage).
+ *
  * ---- WANN EIN WERT AUS DER LISTE VERSCHWINDEN DARF -----------------------
  *
- * ERST, WENN KEIN KONTO IHN MEHR TRAEGT. Die Pruefung dazu ist eine Zeile:
+ * ERST, WENN KEIN KONTO IHN MEHR TRAEGT:
  *
  *     SELECT COUNT(*) FROM users WHERE kdf_iter = <alter Wert>;
  *
  * Ist das Ergebnis nicht 0, sperrt das Entfernen genau diese Konten aus, und
  * zwar unwiderruflich fuer die geschuetzten Angaben — ihre Schluesselhuelle
- * laesst sich ohne die richtige Rundenzahl nicht mehr oeffnen. Wer aufraeumen
- * will, wartet, bis sich alle angemeldet haben, oder laesst den Eintrag
- * stehen: Er kostet nur Rechenzeit.
+ * laesst sich ohne die richtige Rundenzahl nicht mehr oeffnen. Es besteht
+ * keine Eile: Ein zusaetzlicher Eintrag kostet nur Rechenzeit.
+ *
+ * 310000 ist am 14.08.2026 entfallen, nachdem die Abfrage 0 ergab.
  *
  * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
- * nach (er schickt alle Token), aber neue Konten bekommen den ersten Eintrag.
+ * nach (er schickt alle Token), aber die Reihenfolge ist die Lesart.
  */
 const KDF_ITER_ZIEL  = 320000;
-const KDF_ITER_LISTE = [320000, 310000];
+const KDF_ITER_LISTE = [320000];
 
 /* ---- Geraete je Konto: Obergrenze und Hinweisfenster ---------------------
  *
@@ -462,13 +478,52 @@ function geraete_grenze_erreicht(PDO $pdo, int $userId): bool {
  *
  * @return array<int, array{device_id: string, label: ?string, created_at: string}>
  */
+/**
+ * Neu hinzugekommene Geraete fuer den Hinweis auf der Startseite.
+ *
+ * BERUECKSICHTIGT DIE BESTAETIGUNG DES HINWEISES.
+ * Der Hinweis stand sonst sieben Tage lang auf jeder Seite und liess sich
+ * nicht wegklicken — auch dann nicht, wenn man ihn gelesen und die Kopplung
+ * als richtig erkannt hatte. Eine Warnung, die man nicht loswird, wird nach
+ * dem dritten Mal nicht mehr gelesen; genau dann steht sie da, wenn sie
+ * einmal wirklich gemeint ist.
+ *
+ * Bestaetigt wird je Zeitpunkt, nicht je Geraet: Wer bestaetigt, sagt "alles
+ * bis hierher kenne ich". Ein danach gekoppeltes Geraet erzeugt den Hinweis
+ * erneut.
+ *
+ * Das Kennzeichen "neu" in der Geraeteliste bleibt davon UNBERUEHRT — dort
+ * ist es keine Warnung, sondern eine Angabe.
+ */
 function geraete_neu(PDO $pdo, int $userId): array {
+    $seit = geraete_hinweis_stand($pdo, $userId);
     $st = $pdo->prepare('SELECT device_id, label, created_at FROM devices
                          WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . '
                            AND created_at > DATE_SUB(NOW(), INTERVAL ? DAY)
+                           AND (? IS NULL OR created_at > ?)
                          ORDER BY created_at DESC');
-    $st->execute([$userId, GERAETE_NEU_TAGE]);
+    $st->execute([$userId, GERAETE_NEU_TAGE, $seit, $seit]);
     return $st->fetchAll();
+}
+
+/** Zeitpunkt der letzten Bestaetigung, oder null. */
+function geraete_hinweis_stand(PDO $pdo, int $userId): ?string {
+    try {
+        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute(['geraetehinweis:' . $userId]);
+        $v = $st->fetchColumn();
+        return $v === false || $v === null ? null : (string)$v;
+    } catch (Throwable $ex) {
+        // app_state fehlt (Migration noch nicht gelaufen) -> wie bisher
+        return null;
+    }
+}
+
+/** Hinweis bestaetigen: alles bis JETZT gilt als gesehen. */
+function geraete_hinweis_bestaetigen(PDO $pdo, int $userId): void {
+    $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                   ON DUPLICATE KEY UPDATE v = VALUES(v)')
+        ->execute(['geraetehinweis:' . $userId, gmdate('Y-m-d H:i:s')]);
 }
 
 const RESUS_LABELS = [

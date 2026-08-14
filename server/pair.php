@@ -153,7 +153,20 @@ try {
                    VALUES (?,?,?,?)')
         ->execute([$ownerId, $devId,
                    password_hash($key, PASSWORD_DEFAULT),
-                   'Uhr (gekoppelt ' . date('d.m.Y') . ')']);
+                   /* Nur "Uhr", OHNE Datum.
+                    *
+                    * Der Name trug bis Web 5.0.0 das Kopplungsdatum ('Uhr
+                    * (gekoppelt 11.08.2026)'). Dieselbe Angabe steht in
+                    * devices.created_at und wird von der Geraeteliste und vom
+                    * Hinweis auf der Startseite ohnehin ausgegeben — dort
+                    * stand sie deshalb zweimal hintereinander.
+                    *
+                    * Eine Angabe, die an zwei Stellen gefuehrt wird, laeuft
+                    * frueher oder spaeter auseinander: Wer das Geraet
+                    * umbenennt, hat ein Datum im Namen, das mit nichts mehr
+                    * zusammenhaengt. Der Name ist frei waehlbar, das Datum
+                    * gehoert der Zeile. */
+                   'Uhr']);
 } catch (Throwable $ex) {
     // Der Code bleibt in diesem Fall verbraucht. Das ist die sichere
     // Richtung: Ein Code, der nach einem Fehlschlag wieder gueltig waere,

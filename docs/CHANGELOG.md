@@ -10,6 +10,86 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.0.1] — 2026-08-14
+
+Vier Befunde aus dem Betrieb der Testinstallation. Keine Schemaänderung.
+
+### Das Wiedereinspielen einer Sicherung brach hart ab
+
+`api/backup_restore.php` antwortete mit 500, im Fehlerprotokoll stand
+`Class "Pruefliste" not found`. `backup_lib.php` benutzt die Prüfschicht,
+lud sie aber nie — sie stand nur dann zur Verfügung, wenn die aufrufende Seite
+`validate_lib.php` zufällig schon eingebunden hatte. Der Sicherungs-Endpunkt
+tat das nicht.
+
+**Der Fehler bestand, seit die Prüfschicht eingeführt wurde (P3, Web 4.2.0).**
+Aufgefallen ist er erst jetzt, weil er nur den Einspielweg trifft.
+
+Bemerkenswert ist, warum ihn keine der 36 automatischen Prüfungen zum
+Sicherungsweg gesehen hat: Das Prüfskript lud `validate_lib.php` selbst, bevor
+es `backup_lib.php` einband — und verdeckte damit genau die Lücke, die es hätte
+finden sollen. Die Prüfung lädt jetzt nur noch das, was auch
+`api/backup_restore.php` lädt.
+
+### Zeitraumansicht: Fehler in der Browser-Konsole beim Aufbau
+
+`Uncaught TypeError: can't access property "subtract", this._point is
+undefined` — bei jedem Aufbau der Seite. Die Karte bekam keinen
+Ausgangsausschnitt. Ohne ihn nimmt Leaflet eine Ebene zwar entgegen, stellt sie
+aber zurück und rechnet ihre Bildschirmposition nicht aus; das `setStyle()` der
+Hervorhebung, die nach jedem Neuzeichnen der Tabelle über alle Pins läuft,
+scheitert dann. `fitBounds()` kommt erst danach.
+
+`index.php` löst das seit jeher mit einer Zeile. Sie fehlte auf der
+Zeitraumansicht — und auf `einsatz.php` ebenfalls, dort bisher folgenlos, weil
+`fitBounds()` rechtzeitig kommt. Beide haben sie jetzt.
+
+### Der Gerätehinweis nannte das Datum zweimal und ließ sich nicht wegklicken
+
+„Ein neues Gerät wurde mit deinem Konto verbunden: Uhr (gekoppelt 11.08.2026)
+(11.08.2026 17:01)."
+
+Der beim Koppeln vergebene Name enthielt das Datum, und der Hinweis gab
+zusätzlich `created_at` aus. Der Name lautet jetzt nur noch „Uhr": Eine Angabe,
+die an zwei Stellen geführt wird, läuft auseinander, sobald jemand das Gerät
+umbenennt — dann steht ein Datum im Namen, das mit nichts mehr zusammenhängt.
+Das Kopplungsdatum gehört der Zeile, nicht dem Namen; die Geräteliste zeigt es
+ohnehin.
+
+Der Hinweis stand außerdem sieben Tage lang auf der Startseite und war nicht
+wegzuklicken. Eine Warnung, die man nicht loswird, wird nach dem dritten Mal
+überlesen — und dann steht sie unbemerkt da, wenn sie einmal wirklich gemeint
+ist. Es gibt jetzt „Verstanden, das war ich"; bestätigt wird je Zeitpunkt, ein
+später gekoppeltes Gerät meldet sich erneut. Das Kennzeichen „neu" in der
+Geräteliste bleibt unberührt — dort ist es keine Warnung, sondern eine Angabe.
+
+### 310 000 ist aus der Rundenzahl-Liste entfernt
+
+Alle Konten stehen auf 320 000 (`SELECT COUNT(*) FROM users WHERE kdf_iter =
+310000` ergab 0). Die Anmeldung rechnet damit wieder nur einmal ab und ist so
+schnell wie vor Web 5.0.0.
+
+**Dazu neu auf der Wartungsseite: ein Abschnitt „Schlüsselableitung".** Er
+meldet, wenn ein Konto eine Rundenzahl trägt, die `KDF_ITER_LISTE` nicht mehr
+anbietet — solche Konten können sich nicht anmelden, und an der Anmeldemaske
+ist die Ursache nicht zu erkennen. Genau das passiert, wenn jemand
+`KDF_ITER_ZIEL` anhebt und vergisst, den bisherigen Wert in der Liste stehen zu
+lassen. Der Abschnitt nennt die betroffene Zahl, die Anzahl der Konten und die
+Behebung. In `db.php` steht die Anweisung jetzt als erstes im Kommentarblock,
+nicht mehr am Ende.
+
+### Behobene Befunde
+
+Ohne Review-Kennung — alle vier stammen aus dem Betrieb.
+
+### Geprüft
+
+27 automatische Prüfungen, alle bestanden: 8 zum Wiedereinspielen über den
+echten Ladeweg (ohne Vorladen der Prüfschicht), 11 zum Gerätehinweis,
+8 zur Warnung der Wartungsseite. Dazu die 44 + 18 Prüfungen aus P9b erneut —
+die stille Anhebung gegen eine Kopie des Servers mit zweielementiger Liste,
+also gegen den Zustand nach einer künftigen Anhebung.
+
 ## [Web 5.0.0] — 2026-08-13
 
 Paket P9b: die Rundenzahl der Schlüsselableitung wird änderbar (M2-01, Schritte

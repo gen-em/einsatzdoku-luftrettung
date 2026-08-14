@@ -119,8 +119,9 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!preg_match('/^[0-9a-f]{64}$/', $neuTok) || !preg_match('/^[0-9a-f]{32}$/', $neuSalt)) {
         // Kommt nur vor, wenn JavaScript fehlt oder abbricht.
         $error = 'Speichern unvollständig — bitte JavaScript aktivieren und erneut versuchen.';
-    } elseif (!in_array($neuIter, KDF_ITER_LISTE, true)) {
-        // Nur Werte, die diese Fassung kennt (M2-01).
+    } elseif ($neuIter !== KDF_ITER_ZIEL) {
+        // Nur der Zielwert (M2-01): Diese Seite baut die Ableitung immer neu
+        // auf und hat keinen Grund, auf einem Altwert zu landen.
         $error = 'Die Rundenzahl der Schlüsselableitung ist unbrauchbar. '
                . 'Es wurde nichts geändert.';
     } elseif (!preg_match(WRAP_RE, $wrapPw)) {

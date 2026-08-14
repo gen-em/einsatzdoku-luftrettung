@@ -101,6 +101,15 @@ function zeigeLadeFehler(msg){
 }
 
 const map = L.map('map');
+/* Ausgangsausschnitt sofort setzen — dieselbe Zeile wie auf der Tages- und
+ * der Zeitraumansicht. Ohne sie nimmt Leaflet Ebenen zwar entgegen, rechnet
+ * ihre Bildschirmposition aber erst aus, wenn ein Ausschnitt feststeht; jeder
+ * Zugriff auf einen so eingereihten Pin scheitert bis dahin. Hier faellt es
+ * heute nicht auf, weil fitBounds() rechtzeitig kommt — auf der
+ * Zeitraumansicht tat es das nicht. Der Wert ist derselbe, den diese Seite
+ * ohnehin verwendet, wenn ein Einsatz keine Spur hat: kein zusaetzlicher
+ * Sprung im Bild. */
+map.setView([47.7, 10.3], 9);
 attachBaseLayers(map);
 attachFullscreenControl(map);
 

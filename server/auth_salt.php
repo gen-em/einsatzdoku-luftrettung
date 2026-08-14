@@ -83,7 +83,7 @@ $st->execute([$email]);
 $u = $st->fetch();
 
 /* Die Rundenzahlen stehen in BEIDEN Zweigen gleich — sie sind kein Wert
- * dieses Kontos, sondern die Liste dessen, was diese Fassung unterstuetzt. */
+ * dieses Kontos, sondern die Liste dessen, was diese Fassung anbietet. */
 $runden = KDF_ITER_LISTE;
 
 if ($u && $u['kdf_salt'] !== null) {

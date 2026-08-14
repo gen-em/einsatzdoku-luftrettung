@@ -438,6 +438,13 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 .trashactions form{display:inline}
 .trashactions .btn-link{background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:underline}
 
+/* Quittung in einem Hinweisfeld ("Verstanden, das war ich"). Der Knopf sieht
+   aus wie ein Link und steht in derselben Zeile — ein farbiger Knopf hätte
+   mehr Gewicht als der Hinweis selbst. */
+.hinweis-quittung{display:inline;margin:0}
+.hinweis-quittung .btn-link{background:none;border:0;padding:0;font:inherit;
+  color:inherit;cursor:pointer;text-decoration:underline}
+
 /* W2/W9: Platzhalter und Spaltentitel */
 #missions td.dash,#missions .dash{text-align:center;color:#9AA0A6}
 .data th{text-align:center}

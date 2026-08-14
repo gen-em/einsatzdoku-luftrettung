@@ -27,7 +27,80 @@ davon 94 zu beheben und 23 als bewusst richtig bestätigt.
 | P8c | Aufräumen, Bündel 5 und 6 | Web 4.6.0 | **erledigt** |
 | P9a | Einrichtung, Migrationen, Passwortgüte | Web 4.7.0 | **erledigt** |
 | P9b | Ableitungsrunden (M2-01, S7) | Web 5.0.0 | **erledigt** |
+| — | Nachträge aus dem Betrieb | Web 5.0.1 | **erledigt** |
 | P9c | Formatkennung (M2-10), Uhr-App | — | offen |
+
+---
+
+## Nachträge aus dem Betrieb (Web 5.0.1)
+
+Vier Befunde von der Testinstallation, keiner davon aus dem Review.
+
+### Ein Fehler, der seit P3 bestand — und den die eigene Prüfung verdeckt hat
+
+`backup_lib.php` benutzt `Pruefliste` und die `pruef_*`-Funktionen, lud
+`validate_lib.php` aber nie. Sie standen nur zur Verfügung, wenn die aufrufende
+Seite sie zufällig schon eingebunden hatte; `api/backup_restore.php` tat das
+nicht. Das Wiedereinspielen einer Sicherung brach deshalb mit HTTP 500 ab,
+seit die Prüfschicht eingeführt wurde.
+
+**Warum keine der 36 Prüfungen zum Sicherungsweg das gesehen hat:** Das
+Prüfskript lud `validate_lib.php` selbst, bevor es `backup_lib.php` einband. Es
+hat damit genau die Lücke geschlossen, die es finden sollte.
+
+Die Lehre ist allgemein und gehört in die Arbeitsweise: **Wer eine Bibliothek
+prüft, muss sie so laden, wie die Anwendung sie lädt.** Jedes zusätzliche
+`require` im Prüfskript ist eine Annahme über die Umgebung, und diese Annahme
+wird mitgeprüft statt geprüft.
+
+### Eine Karte ohne Ausgangsausschnitt
+
+`L.map('rangemap')` bekam keinen Ausschnitt. Leaflet nimmt Ebenen dann zwar
+entgegen, stellt sie aber zurück und projiziert sie nicht — jedes spätere
+`setStyle()` scheitert mit `this._point is undefined`. Auf der Zeitraumansicht
+lief genau das bei jedem Aufbau, weil die Hervorhebung nach jedem Neuzeichnen
+über alle Pins geht und `fitBounds()` erst danach kommt.
+
+`index.php` hatte die nötige Zeile seit jeher. `zeitraum.php` und
+`einsatz.php` haben sie jetzt auch — bei `einsatz.php` vorsorglich, dort war
+es bisher folgenlos.
+
+### Eine Angabe an zwei Stellen
+
+Der beim Koppeln vergebene Gerätename enthielt das Kopplungsdatum, und der
+Hinweis auf der Startseite gab zusätzlich `created_at` aus — das Datum stand
+zweimal hintereinander. Der Name lautet jetzt „Uhr". Wer das Gerät umbenennt,
+hätte sonst ein Datum im Namen, das mit nichts mehr zusammenhängt.
+
+Der Hinweis ließ sich außerdem sieben Tage lang nicht wegklicken. Eine Warnung,
+die man nicht loswird, wird überlesen. Es gibt jetzt eine Bestätigung
+(`app_state`, je Konto und Zeitpunkt); ein später gekoppeltes Gerät meldet sich
+erneut.
+
+### 310 000 entfernt — und eine Warnung an die Stelle gesetzt
+
+Nach Bestätigung, dass kein Konto den Wert mehr trägt, ist er aus
+`KDF_ITER_LISTE` verschwunden. Die Anmeldung rechnet wieder einmal.
+
+Ein Zwischenentwurf hatte die Liste aus dem Bestand gelesen, damit sie sich von
+selbst aufräumt. Das ist verworfen worden: Es gibt bisher keine zweite
+Installation, und eine Abfrage bei jeder Anmeldung ist ein hoher Preis für
+einen Fall, den es nicht gibt.
+
+Der Risikorest wird stattdessen **sichtbar gemacht**: Die Wartungsseite hat
+einen Abschnitt „Schlüsselableitung" bekommen, der meldet, wenn ein Konto eine
+Rundenzahl trägt, die die Liste nicht anbietet. Solche Konten können sich nicht
+anmelden, und an der Anmeldemaske ist die Ursache nicht zu erkennen — genau der
+Fehler, den jemand macht, der `KDF_ITER_ZIEL` anhebt und den alten Wert nicht
+in der Liste stehen lässt. Die Anweisung dazu steht in `db.php` jetzt am Anfang
+des Kommentarblocks statt am Ende.
+
+### Nachweis
+
+27 automatische Prüfungen, alle bestanden: 8 zum Wiedereinspielen über den
+echten Ladeweg, 11 zum Gerätehinweis, 8 zur Warnung der Wartungsseite. Dazu die
+Prüfungen aus P9b erneut — die stille Anhebung gegen eine Kopie des Servers mit
+zweielementiger Liste, also gegen den Zustand nach einer künftigen Anhebung.
 
 ---
 

@@ -1167,6 +1167,46 @@ if ($istCli) {
      * nirgends ablesen. Bei „Passwort vergessen“ ist genau das die
      * Eigenschaft, an der die Gleichheit beider Antwortzweige haengt — sie
      * gehoert deshalb sichtbar gemacht und nicht nur in die Doku. */ ?>
+  <?php /* ---- Rundenzahl der Schluesselableitung (M2-01) -------------------
+     *
+     * Der Browser leitet nur fuer die Werte in KDF_ITER_LISTE ab. Traegt ein
+     * Konto eine Zahl, die dort NICHT steht, entsteht bei ihm nie das richtige
+     * Token — es kann sich nicht mehr anmelden, und die Meldung lautet
+     * schlicht "Anmeldung fehlgeschlagen".
+     *
+     * Das passiert, wenn jemand KDF_ITER_ZIEL anhebt und vergisst, den
+     * bisherigen Wert in der Liste stehen zu lassen. Der Fehler ist an der
+     * Anmeldemaske nicht zu erkennen und trifft alle Bestandskonten
+     * gleichzeitig — deshalb steht die Pruefung hier, wo jemand nach einem
+     * Update ohnehin vorbeikommt. */
+  $kdfListe = KDF_ITER_LISTE;
+  $platz    = implode(',', array_fill(0, count($kdfListe), '?'));
+  $stk = $pdo->prepare("SELECT kdf_iter, COUNT(*) AS n FROM users
+                        WHERE password_hash IS NOT NULL
+                          AND kdf_iter NOT IN ($platz)
+                        GROUP BY kdf_iter ORDER BY kdf_iter");
+  $stk->execute($kdfListe);
+  $kdfVerwaist = $stk->fetchAll();
+  ?>
+  <h2>Schlüsselableitung</h2>
+  <?php if (!$kdfVerwaist): ?>
+    <p class="muted">Alle Konten rechnen mit einer Rundenzahl, die diese Fassung
+       anbietet (<?= e(implode(', ', array_map('strval', $kdfListe))) ?>).
+       Zielwert: <strong><?= (int)KDF_ITER_ZIEL ?></strong>.</p>
+  <?php else: ?>
+    <p class="alert"><strong>Achtung: <?php
+        $summe = array_sum(array_column($kdfVerwaist, 'n'));
+        echo (int)$summe; ?> Konto/Konten können sich nicht anmelden.</strong>
+       Sie tragen eine Rundenzahl, die diese Fassung nicht mehr anbietet:
+       <?php $t = [];
+             foreach ($kdfVerwaist as $z) { $t[] = $z['kdf_iter'] . ' (' . $z['n'] . '×)'; }
+             echo e(implode(', ', $t)); ?>.
+       Angeboten wird nur <?= e(implode(', ', array_map('strval', $kdfListe))) ?>.<br>
+       <strong>Behebung:</strong> Den fehlenden Wert in <code>KDF_ITER_LISTE</code>
+       (<code>server/db.php</code>) wieder aufnehmen. Danach melden sich die
+       Konten wie gewohnt an und werden beim nächsten Mal still angehoben.</p>
+  <?php endif; ?>
+
   <h2>Umgebung</h2>
   <?php require_once __DIR__ . '/smtp.php'; ?>
   <?php if (antwort_entkoppelbar()): ?>

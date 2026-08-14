@@ -16,7 +16,7 @@ require_once __DIR__ . '/../auth_guard.php';      // liefert $userId, $kdfIter
  * Body: {
  *   "alt_token": 64 Hex,     Nachweis: das Token der BISHERIGEN Rundenzahl
  *   "neu_token": 64 Hex,     Token der neuen Rundenzahl
- *   "neu_iter":  Zahl aus KDF_ITER_LISTE,
+ *   "neu_iter":  muss KDF_ITER_ZIEL sein,
  *   "wrap_pw":   neue Schluesselhuelle (entfaellt bei Konten ohne Huelle),
  *   "key_check": Pruefsumme des Inhaltsschluessels (32 Hex, optional)
  * }
@@ -66,10 +66,11 @@ if (!preg_match('/^[0-9a-f]{64}$/', $altToken)
     || !preg_match('/^[0-9a-f]{64}$/', $neuToken)) {
     json_out(['error' => 'token'], 400);
 }
-/* Nur Werte aus der Liste. Eine frei waehlbare Rundenzahl waere ein Weg,
- * ein Konto auf einen absurd niedrigen Wert zu setzen — und der Betroffene
- * saehe davon nichts, weil die Anmeldung weiterhin funktioniert. */
-if (!in_array($neuIter, KDF_ITER_LISTE, true)) { json_out(['error' => 'iter'], 400); }
+/* Nur der Zielwert. Eine frei waehlbare Rundenzahl waere ein Weg, ein Konto
+ * auf einen absurd niedrigen Wert zu setzen — und der Betroffene saehe davon
+ * nichts, weil die Anmeldung weiterhin funktioniert. Angehoben wird immer auf
+ * den einen Wert, den diese Fassung anstrebt. */
+if ($neuIter !== KDF_ITER_ZIEL) { json_out(['error' => 'iter'], 400); }
 // Nur nach oben. Eine Anhebung, die senkt, ist keine.
 if ($neuIter <= $kdfIter) { json_out(['error' => 'nicht_noetig'], 400); }
 

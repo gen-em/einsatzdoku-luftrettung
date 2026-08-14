@@ -89,8 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (is_array($roh)) {
             foreach ($roh as $runde => $tk) {
                 $r = (int)$runde;
-                if (in_array($r, KDF_ITER_LISTE, true) && is_string($tk)
-                    && preg_match('/^[0-9a-f]{64}$/', $tk)) {
+                /* Keine Pruefung gegen eine Liste erlaubter Werte: Der Server
+                 * greift gleich unten NUR den Eintrag heraus, der zur
+                 * gespeicherten Rundenzahl des Kontos gehoert. Ein Token unter
+                 * einem beliebigen anderen Schluessel wird nie angesehen. */
+                if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}$/', $tk)) {
                     $tokenNach[$r] = $tk;
                 }
             }

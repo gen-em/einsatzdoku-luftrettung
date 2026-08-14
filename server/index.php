@@ -37,7 +37,18 @@ if ($selDay === null) {
 /* Neu hinzugekommene Geraete (M4-10). Die Startseite ist die Seite, auf der
  * nach der Anmeldung jede/r landet — ein Hinweis, der nur im Geraete-Reiter
  * stuende, erreichte genau die Person nicht, die dort nie hinsieht. Die
- * eigentliche Benachrichtigung ist die E-Mail beim Koppeln (pair.php). */
+ * eigentliche Benachrichtigung ist die E-Mail beim Koppeln (pair.php).
+ *
+ * Der Hinweis laesst sich bestaetigen. Vorher stand er sieben Tage lang da
+ * und war nicht wegzuklicken — eine Warnung, die man nicht loswird, wird
+ * ueberlesen, und dann steht sie unbemerkt da, wenn sie einmal wirklich
+ * gemeint ist. Post/Redirect/Get, damit ein Neuladen sie nicht wiederholt. */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'geraete_ok') {
+    csrf_check();
+    geraete_hinweis_bestaetigen(db(), $userId);
+    header('Location: index.php' . ($selDay !== null ? '?day=' . urlencode((string)$selDay) : ''));
+    exit;
+}
 $neueGeraete = geraete_neu(db(), $userId);
 ?><!doctype html>
 <html lang="de">
@@ -66,7 +77,11 @@ $neueGeraete = geraete_neu(db(), $userId);
               echo e(implode(', ', $teile)); ?>.
         Warst du das nicht, entferne
         <?= count($neueGeraete) === 1 ? 'das Gerät' : 'die Geräte' ?> unter
-        <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.</p>
+        <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
+        <form method="post" action="index.php" class="hinweis-quittung">
+          <?= csrf_field() ?><input type="hidden" name="action" value="geraete_ok">
+          <button type="submit" class="btn-link">Verstanden, das war ich</button>
+        </form></p>
     <?php endif; ?>
     <h1 id="daytitle">–</h1>
     <div id="loaderror" class="alert" hidden></div>
