@@ -54,6 +54,7 @@ Nummer. Neue Punkte hängen sich hinten an.
     zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
     Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
     abgebildet und bleibt.
+
 12. **Schriften und Leaflet selbst ausliefern.** Beide werden zur Laufzeit aus
     dem Netz geladen: Bricolage Grotesque und Open Sans per `@import` von
     `fonts.googleapis.com`/`fonts.gstatic.com`, Leaflet von `unpkg.com`. Zwei
