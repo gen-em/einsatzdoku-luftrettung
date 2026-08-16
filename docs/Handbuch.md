@@ -408,9 +408,15 @@ Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 des Flugtags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
-**„Abweichende Besatzung"**. Darunter erscheinen die Auswahlfelder, gefüllt aus
-deinen Besatzungs-Vorbelegungen und den zentralen Stammdaten (Abschnitt 9.1
-bzw. 8.4).
+**„Abweichende Besatzung"**. Darunter erscheinen fünf Textfelder mit
+Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
+Feld deine Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen
+Rolle vor (Abschnitt 9.1 bzw. 8.4).
+
+**Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
+Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
+ist oft niemand, der regelmäßig auf dieser Maschine fliegt. Die Vorschläge
+bleiben die bequeme Abkürzung, sie sind nur keine Schranke mehr.
 
 Gezeigt werden **nur die Rollen, die der Hubschrauber des Flugtags vorsieht** —
 dieselben Häkchen, nach denen sich auch das Flugtag-Formular richtet. Fliegt
@@ -428,15 +434,37 @@ In der Einsatzansicht (Abschnitt 4.2) zeigt der Block „Besatzung" immer das
 Ergebnis beider Ebenen.
 
 Ist eine früher eingetragene Person inzwischen aus den Stammdaten entfernt
-worden, bleibt ihr Name im Auswahlfeld trotzdem stehen und geht beim nächsten
+worden, bleibt ihr Name im Feld trotzdem stehen und geht beim nächsten
 Speichern nicht verloren.
+
+**Reanimation.** Ganz unten im Formular steht der Abschnitt **Reanimation** —
+seit Web 5.5.0, vorher konnten diese Zeiten nur von der Uhr kommen. „+
+Reanimation hinzufügen" legt einen Block an: oben der **Reanimationsbeginn**,
+darunter „+ Ereignis hinzufügen" für jedes weitere Ereignis, jeweils Art
+(Zugang, Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation,
+Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das ✕ am Beginn entfernt die
+ganze Reanimation, das ✕ an einer Ereigniszeile nur diese.
+
+Gab es an einem Einsatz **mehrere Reanimationen**, legst du einfach mehrere
+Blöcke an. Eine Zeile ohne Uhrzeit wird nicht gespeichert — du musst eine
+versehentlich hinzugefügte Zeile also nicht erst wieder entfernen. Zeiten nach
+Mitternacht werden wie bei den Phasen automatisch dem Folgetag zugerechnet.
+In der Einsatzansicht erscheinen die Einträge in derselben Tabelle wie die von
+der Uhr gelieferten; ein Unterschied ist dort nicht zu sehen und auch keiner
+vorhanden.
+
+**Abbrechen.** Unter dem Speichern-Knopf steht **Abbrechen** — beim Bearbeiten
+führt es zurück zum Einsatz, beim Nachtragen zur Tagesansicht. Hast du im
+Formular etwas eingetragen, fragt es vorher nach; ein unverändertes Formular
+verlässt du ohne Rückfrage. Dasselbe gilt beim Anlegen eines Flugtags.
 
 Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern überschreibt
 die Uhr ihn nicht mehr (nur der GPS-Track wird weiter ergänzt), und die
 Einsatzansicht zeigt zusätzlich zum Herkunftskennzeichen „Uhr" das
 Bearbeitungskennzeichen „editiert" (Details siehe Abschnitt 4.2). Das
-Formular weist vorher darauf hin. Reanimations-Zeiten lassen sich im
-Formular derzeit nicht erfassen.
+Formular weist vorher darauf hin. Das betrifft auch die Reanimationszeiten:
+Trägst du sie im Formular ein, bleiben sie so stehen — eine später
+nachliefernde Uhr ersetzt sie nicht mehr.
 
 Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben

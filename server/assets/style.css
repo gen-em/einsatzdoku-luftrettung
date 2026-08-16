@@ -351,6 +351,25 @@ section{margin-bottom:1.8rem}
 .phase-row select{flex:1;width:auto}
 .phase-row input.zeitfeld{width:110px}
 .phase-row .btn-danger{padding:.35rem .6rem}
+
+/* REANIMATION IM EINSATZFORMULAR (A4.3, Web 5.5.0).
+   Eigene Klasse statt .phase-row: Die beiden Bloecke sehen gleich aus, aber
+   das Skript sucht die Phasen ueber ihre Klasse ab, um die naechste
+   Phasennummer zu raten. Eine gemeinsame Klasse haette die
+   Reanimationsereignisse dort mitgezaehlt.
+   Je Reanimation ein abgesetzter Block, damit sichtbar ist, welche Ereignisse
+   zu welchem Beginn gehoeren — bei mehreren Reanimationen je Einsatz ist das
+   die einzige Auskunft darueber. */
+.rea-row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}
+.rea-row select{flex:1;width:auto}
+.rea-row input.zeitfeld{width:110px}
+.rea-row .btn-danger{padding:.35rem .6rem}
+.rea-sitzung{border-left:3px solid var(--line);padding:.1rem 0 .1rem .6rem;
+  margin:.6rem 0 .9rem}
+.rea-kopf label{display:flex;gap:.5rem;align-items:center;flex:1;
+  font-weight:600;margin:0}
+.rea-ereignisse{margin-left:.9rem}
+.rea-sitzung p{margin:.2rem 0 0 .9rem}
 #meta a{color:var(--accent-dark)}
 /* Zeiteingabe als Textfeld mit Maske (Auftragspunkt 4, E1). Native
    <input type=time> zeigen je nach Spracheinstellung des Systems 12 Stunden

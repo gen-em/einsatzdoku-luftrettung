@@ -11,6 +11,81 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.5.0] — 2026-08-16
+
+Vierter Block der Verbesserungsrunde Web (A4 „Einsatzformular"). Keine
+Schemaänderung, keine Migration — `resus_sessions` und `resus_events` gibt es
+seit Web 2.x, sie waren im Formular nur nicht erreichbar.
+
+### Reanimationszeiten lassen sich nachtragen
+
+Bis hierher konnten `resus_sessions` und `resus_events` **ausschließlich** von
+der Uhr befüllt werden. Wer einen Einsatz von Hand nachtrug — weil die Uhr
+nicht lief, weil sie ausfiel, weil der Einsatz aus einem Import stammt —,
+konnte die Reanimation nicht dokumentieren. Genau die Einsätze, bei denen am
+meisten passiert, waren die, bei denen am wenigsten zu erfassen war.
+
+Das Formular hat jetzt einen Abschnitt **Reanimation**: Reanimationsbeginn und
+darunter beliebig viele Ereignisse aus der bekannten Liste (Zugang,
+Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation, Amiodaron,
+Sonographie, ROSC, Tod). Mehrere Reanimationen je Einsatz sind möglich — das
+Datenmodell sah sie ohnehin vor. Jede Reanimation und jedes Ereignis lässt sich
+einzeln wieder entfernen; beim Bearbeiten steht der vorhandene Bestand
+vorbelegt da.
+
+Zwei Regeln, beide von den Phasen übernommen: Eine Zeile ohne Uhrzeit ist kein
+Ereignis und wird nicht gespeichert, und eine Zeit, die vor ihrer Bezugszeit
+liegt, gehört dem Folgetag. Bezug ist beim Beginn die Alarmierung, bei jedem
+Ereignis das vorhergehende — eine Reanimation von 23:50 bis 00:20 landet damit
+richtig herum in der Datenbank. Gespeichert wird UTC, wie überall.
+
+In der Einsatzansicht sind die so eingetragenen Zeiten von denen der Uhr nicht
+zu unterscheiden: Es sind dieselben Tabellen und derselbe Endpunkt. Ein über
+das Formular gespeicherter Einsatz trägt außerdem `manual = 1`; eine
+nachliefernde Uhr überschreibt die Eingaben also nicht. (Backlog Nr. 1)
+
+### Abweichende Besatzung nimmt jetzt Freitext an
+
+Die fünf Felder unter „Abweichende Besatzung" waren reine Auswahlfelder über
+die Vorbelegungen. Wer aushilft, steht dort aber oft nicht — und genau dieser
+Fall ist der Anlass, überhaupt eine abweichende Besatzung einzutragen. Aus den
+Auswahlfeldern sind Textfelder mit Vorschlagsliste geworden: Die Vorbelegungen
+der jeweiligen Rolle erscheinen weiterhin, persönliche wie zentrale, aber jeder
+andere Name lässt sich ebenfalls eintragen.
+
+Ein Nebeneffekt, der vorher ein Ärgernis war: Ein gespeicherter Name, der
+später aus den Stammdaten verschwindet, kann jetzt gar nicht mehr verloren
+gehen — er steht einfach im Feld. Am Rollenfilter ändert sich nichts: Ein Feld,
+das die Maschine des Flugtags nicht vorsieht, bleibt versteckt, ein bereits
+belegtes bleibt sichtbar.
+
+### Abbrechen — in beiden Formularen, in beiden Zuständen
+
+Das Einsatzformular bot einen Abbrechen-Weg **nur** beim Bearbeiten. Wer einen
+Einsatz nachtrug und es sich anders überlegte, kam nur über die Seitenleiste
+oder den Zurück-Knopf des Browsers heraus. Beide Formulare — Einsatz und
+Flugtag — haben den Weg jetzt in jedem Zustand.
+
+Die Rückfrage erscheint **nur, wenn tatsächlich etwas eingegeben wurde**. Ein
+unverändertes Formular zu verlassen fragt nichts; eine Rückfrage, die immer
+kommt, wird weggeklickt und schützt dann auch dort nicht mehr, wo etwas zu
+verlieren wäre. Woran „eingegeben" erkannt wird, ist dasselbe Kennzeichen, das
+die Verlassen-Warnung des Browsers ohnehin führt. Das Ziel des Abbruchs ist
+fest: beim Bearbeiten der Einsatz, beim Nachtragen die Tagesansicht, beim
+Flugtag die Übersicht.
+
+### Geändert
+
+* `server/einsatz_form.php` — Abschnitt Reanimation (Anzeige, Einlesen,
+  Speichern), Vorschlagsquellen `crew:<rolle>`, Abbrechen in beiden Zuständen.
+* `server/mission_fields.php` — die fünf Crew-Felder von `select` auf `text`
+  mit `suggest_src`; `suggest_src` im Kopfvertrag erweitert.
+* `server/flugtag_neu.php` — Abbrechen mit Rückfrage.
+* `server/assets/forms.js` — `data-cancel-form`, `window.EdForms`.
+* `server/assets/style.css` — Darstellung der Reanimationszeilen.
+* `server/version.php`, `docs/Backlog.md`, `docs/Technik.md`,
+  `docs/Handbuch.md`.
+
 ## [Web 5.4.0] — 2026-08-16
 
 Dritter Block der Verbesserungsrunde Web (A3 „Technische Schulden"). Keine

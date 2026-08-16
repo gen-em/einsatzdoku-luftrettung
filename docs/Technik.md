@@ -449,6 +449,20 @@ eigenem Handler ändert daran nichts, das Submit-Ereignis feuert davor).
 Eingebunden auf `einsatz_form.php`, `index.php` (`#dayform`) und
 `flugtag_neu.php`.
 
+**Abbrechen (ab Web 5.5.0, Block A4.1):** Ein Verweis mit
+`data-cancel-form="<id des formulars>"` fragt vor dem Verlassen nach — aber
+**nur**, wenn das genannte Formular das Dirty-Flag trägt. Dieselbe Quelle wie
+die Verlassen-Warnung, bewusst keine zweite: Zwei Kennzeichen für dieselbe
+Frage laufen auseinander. Die Rückfrage selbst kommt aus `assets/confirm.js`
+(`window.edConfirm`); dessen eigener Weg `data-confirm` passt hier nicht, weil
+er bedingungslos fragt. Nach einem bestätigten Abbruch wird das Flag gelöscht,
+bevor navigiert wird — sonst käme direkt hinterher noch die `beforeunload`-
+Abfrage des Browsers, und zweimal dasselbe zu fragen heißt, die erste Frage
+nicht ernst zu nehmen. Der Text lässt sich je Verweis über
+`data-cancel-confirm` setzen. Nach außen gibt die Datei
+`window.EdForms.istGeaendert(form)` und `.vergessen(form)`, damit eigene
+Abbruchwege nicht doch ein zweites Kennzeichen einführen.
+
 **Einsatztage-Leiste:** `ui_days_sidebar()` gruppiert die Tage serverseitig
 nach Jahr und Monat (`<details>`-Verschachtelung); welches Jahr/welcher Monat
 offen ist, bestimmt PHP anhand von `$currentDay` bzw. des jüngsten Tages —
@@ -519,12 +533,26 @@ Die `days`-Zeile wird dort **separat** geladen statt per JOIN — `SELECT *` auf
 
 Das Leeren beim Entfernen des Hakens erledigt die generische
 Checkbox-Kindlogik in `einsatz_form.php` ohne Sonderfall (Kinder werden bei
-Haken = 0 auf NULL gesetzt). Die Auswahllisten kommen über
-`options_src => 'crew:<rolle>'` aus `crew_presets` — wie überall seit den
-zentralen Stammdaten mit `(user_id = ? OR user_id IS NULL)`. Ein gespeicherter
-Wert, der nicht mehr in den Stammdaten steht, wird beim Rendern vorangestellt
-statt verworfen (gilt für alle `options_src`-Selects, also auch `bw_unit`) —
-sonst ginge er beim nächsten Speichern still verloren.
+Haken = 0 auf NULL gesetzt).
+
+**Freitext statt Auswahl (ab Web 5.5.0, Block A4.2).** Die fünf Felder sind
+`'type' => 'text'` mit `suggest_src => 'crew:<rolle>'`: ein `<datalist>` mit
+den Vorbelegungen der Rolle aus `crew_presets`, wie überall mit
+`(user_id = ? OR user_id IS NULL)`, aber ohne Schranke. Fachlicher Grund: Wer
+aushilft, steht typischerweise **nicht** in den Stammdaten — genau der Anlass,
+aus dem eine abweichende Besatzung überhaupt eingetragen wird.
+
+Bis dahin waren es `select` mit `options_src`. Dort brauchte es eine
+Sonderregel, damit ein gespeicherter Wert, der nicht mehr in den Stammdaten
+steht, nicht still verloren geht: Er wird beim Rendern der Liste vorangestellt.
+Diese Regel gilt weiterhin für alle verbliebenen `options_src`-Selects (also
+`bw_unit`); für die Besatzungsfelder ist sie gegenstandslos geworden — ein
+Textfeld zeigt seinen Wert, ob er in einer Liste steht oder nicht.
+
+Am Einlesen war dafür nichts zu ändern (Prüfschritt P4): `readField()`
+behandelt `select` mit `options_src` und `text` identisch — leer wird NULL,
+sonst auf `max` gekürzt. Die Spalten bleiben `VARCHAR(120)`, das `maxlength`
+des Textfeldes zieht die Grenze jetzt auch sichtbar.
 
 Die Uhr kennt keine Besatzung; `ingest.php` ist davon unberührt.
 
@@ -1113,8 +1141,8 @@ umgekehrt:
 | Patientenblock-Muster | 16…8000 | 20…60000 | — | nein |
 | Phasennummer 2–9 | ja | ja | ja | nein |
 | Koordinaten ±90 / ±180 | — | ja | nein | nein |
-| Reanimationsart gegen Liste | — | ja | ja | nein |
-| Mengenbegrenzungen | — | ja | keine | keine |
+| Reanimationsart gegen Liste | ja (ab 5.5.0) | ja | ja | nein |
+| Mengenbegrenzungen | ja (ab 5.5.0) | ja | keine | keine |
 
 **Seit Web 4.2.0 steht in allen vier Spalten „ja" — und zwar durch denselben
 Baustein.** `validate_lib.php` ist die eine Stelle; die vier Wege rufen sie auf,
@@ -1125,8 +1153,26 @@ Zwei Ausnahmen sind gewollt und keine Lücke:
 
 * Der **Patientenblock** wird auf dem Uhr-Weg nicht geprüft, weil die Uhr
   keinen sendet — sie kennt die geschützten Angaben nicht.
-* **Koordinaten und Reanimationsarten** kommen im Formular nicht vor; es
-  erfasst sie nicht.
+* **Koordinaten** kommen im Formular nicht vor; es erfasst sie nicht.
+
+**Reanimationen im Formular (ab Web 5.5.0, Block A4.3).** Bis dahin galt auch
+für Reanimationsarten „kommt im Formular nicht vor". Seit `einsatz_form.php`
+`resus_sessions` und `resus_events` schreibt, benutzt es dieselben Bausteine
+wie die anderen Wege: `pruef_reanimationsart()` gegen `RESUS_LABELS`, dazu
+`LIMIT_REA_SESSION` und `LIMIT_REA_EREIGN`. Zwei Eigenheiten dieses Weges:
+
+* `beginn` ist **keine** Ereignisart. Der Beginn steckt in
+  `resus_sessions.started_at` (JSON-Vertrag 3.3); die Auswahl im Formular
+  bietet ihn nicht an, und das Einlesen weist ihn zusätzlich ab.
+* Die Zeitrechnung folgt den Phasen: Eine Zeit vor ihrer Bezugszeit gehört dem
+  Folgetag. Bezug ist beim Beginn `missions.started_at`, bei jedem Ereignis
+  das vorhergehende. Umgesetzt über `local_to_utc($day, $hhmm, $addDays)`.
+
+Der Schreibweg ersetzt vollständig (`DELETE` je Einsatz, dann `INSERT`) — wie
+`ingest.php`, nur ohne dessen Vergleich der Sitzungszahl: Was im Formular
+steht, ist die Absicht der Person, und ein Formular kann nichts „unvollständig
+nachliefern". Die Ereignisse räumt der Fremdschlüssel mit ab
+(`ON DELETE CASCADE`).
 
 Die Bausteine im Einzelnen:
 

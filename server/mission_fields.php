@@ -49,10 +49,18 @@ declare(strict_types=1);
  *                                   unmaskiert ausgegeben und darf deshalb
  *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
  *   'placeholder'
- *   'suggest_src'                   nur bei 'text': Name einer Stammdaten-
- *                                   Tabelle (aktuell 'transport_dests'),
- *                                   deren Eintraege als <datalist>-Vorschlaege
- *                                   angeboten werden; Freitext bleibt moeglich
+ *   'suggest_src'                   nur bei 'text': Quelle der <datalist>-
+ *                                   Vorschlaege; Freitext bleibt moeglich.
+ *                                     'transport_dests'  Stammdaten-Tabelle
+ *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
+ *                                                        der Rolle (p1|p2|hems|
+ *                                                        fr|other)
+ *                                   Beide liefern persoenliche UND zentrale
+ *                                   Eintraege. Unterschied zu 'options_src':
+ *                                   Dort ist die Liste die Auswahl, hier nur
+ *                                   ein Vorschlag — ein Wert ausserhalb der
+ *                                   Liste bleibt erhalten, weil er gar nicht
+ *                                   erst geprueft wird
  *
  * Der Einsatzort (Adresse + Koordinaten, Photon-Autocomplete) ist bewusst
  * KEIN Eintrag hier — er liegt Ende-zu-Ende-verschlüsselt im pat_blob.
@@ -128,11 +136,16 @@ return [
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
         'day_col' => 'check', 'day_label' => 'abw. Crew',
         'children' => [
-            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'select', 'options_src' => 'crew:p1',    'max' => 120, 'role_gate' => 'p1'],
-            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'select', 'options_src' => 'crew:p2',    'max' => 120, 'role_gate' => 'p2'],
-            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'select', 'options_src' => 'crew:hems',  'max' => 120, 'role_gate' => 'hems'],
-            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'select', 'options_src' => 'crew:fr',    'max' => 120, 'role_gate' => 'fr'],
-            'crew_other' => ['label' => 'Sonstige',   'type' => 'select', 'options_src' => 'crew:other', 'max' => 120, 'role_gate' => 'other'],
+            // Textfelder mit Vorschlagsliste, nicht Auswahlfelder (Web 5.5.0,
+            // Entscheidung E8): Wer aushilft, steht oft nicht in den
+            // Stammdaten — eine reine Auswahl liess genau diesen Fall nicht
+            // dokumentieren. Die Vorbelegungen der Rolle bleiben als
+            // Vorschlaege erhalten, Freitext ist zusaetzlich moeglich.
+            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'text', 'suggest_src' => 'crew:p1',    'max' => 120, 'role_gate' => 'p1'],
+            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'text', 'suggest_src' => 'crew:p2',    'max' => 120, 'role_gate' => 'p2'],
+            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'text', 'suggest_src' => 'crew:hems',  'max' => 120, 'role_gate' => 'hems'],
+            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'text', 'suggest_src' => 'crew:fr',    'max' => 120, 'role_gate' => 'fr'],
+            'crew_other' => ['label' => 'Sonstige',   'type' => 'text', 'suggest_src' => 'crew:other', 'max' => 120, 'role_gate' => 'other'],
         ],
     ],
     'notes' => [

@@ -53,13 +53,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="muted">Für Tage, an denen die Uhr nicht mitgelaufen ist. Der Tag
          erscheint danach in der Liste links; Maschine, Besatzung und Einsätze
          trägst du dort nach.</p>
-      <form method="post" class="inline-form" data-dirty-track data-submit-on-ctrl-enter>
+      <form method="post" id="flugtagform" class="inline-form" data-dirty-track data-submit-on-ctrl-enter>
         <?= csrf_field() ?>
         <label>Datum
           <input type="date" name="day" required value="<?= e($tag) ?>"
                  max="<?= e(date('Y-m-d')) ?>"></label>
         <button class="btn-primary">Flugtag anlegen</button>
-        <a class="btn-plain" href="index.php">Abbrechen</a>
+        <?php /* Abbrechen mit Rückfrage (A4.1) — sie erscheint nur, wenn das
+                 Datum tatsaechlich geaendert wurde. Beim unveraenderten
+                 Vorschlag (heute) waere sie eine Frage nach nichts. */ ?>
+        <a class="btn-plain" href="index.php"
+           data-cancel-form="flugtagform"
+           data-cancel-confirm="Das gewählte Datum geht verloren. Trotzdem abbrechen?"
+           >Abbrechen</a>
       </form>
     </div>
     <?php ui_footer(); ?>

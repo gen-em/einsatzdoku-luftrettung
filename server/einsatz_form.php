@@ -109,6 +109,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $startedAt = $rows[0][1];
         $endedAt   = $rows[count($rows) - 1][1];
 
+        /* ---- Reanimationen einsammeln (A4.3, Backlog Nr. 1) -----------------
+         *
+         * Aufbau im Formular: rea[<n>][start] sowie rea[<n>][ev][<m>][typ] und
+         * [zeit]. Die Nummern sind laufende Zaehler des Browsers ohne eigene
+         * Bedeutung — gewertet wird die Reihenfolge, in der sie ankommen.
+         * Deshalb muss beim Entfernen einer Zeile auch nichts umnummeriert
+         * werden.
+         *
+         * ZEITRECHNUNG. Wie bei den Phasen gehoert eine Zeit, die vor ihrer
+         * Bezugszeit liegt, dem Folgetag. Bezug ist beim Reanimationsbeginn
+         * der Beginn des Einsatzes — frueher kann nicht reanimiert worden
+         * sein — und bei jedem Ereignis das vorhergehende. Ohne diese Regel
+         * landete eine Reanimation, die um 23:50 beginnt und um 00:10 endet,
+         * mit dem Ende zwanzig Stunden vor ihrem Anfang.
+         *
+         * EINE ZEILE OHNE ZEIT IST KEIN EREIGNIS. Dieselbe Regel gilt oben
+         * fuer die Phasen. Wer eine Zeile hinzufuegt und sie doch nicht
+         * braucht, soll sie nicht erst wieder entfernen muessen. */
+        $reaSitzungen = [];
+        $reaRoh = $_POST['rea'] ?? [];
+        if (!is_array($reaRoh)) { $reaRoh = []; }
+        if (count($reaRoh) > LIMIT_REA_SESSION) {
+            $error = 'Zu viele Reanimationen (höchstens ' . LIMIT_REA_SESSION . ').';
+        }
+        // Zeit einordnen: nie vor der Bezugszeit; sonst Folgetag.
+        $reaZeit = function (string $hhmm, string $nichtVor) use ($day): ?string {
+            $ts = local_to_utc($day, $hhmm, 0);
+            if ($ts === null) { return null; }
+            return $ts < $nichtVor ? local_to_utc($day, $hhmm, 1) : $ts;
+        };
+        foreach ($reaRoh as $sitz) {
+            if ($error) { break; }
+            if (!is_array($sitz)) { continue; }
+            $start = trim((string)($sitz['start'] ?? ''));
+            $evRoh = (isset($sitz['ev']) && is_array($sitz['ev'])) ? $sitz['ev'] : [];
+
+            $getippt = [];
+            foreach ($evRoh as $ev) {
+                if (!is_array($ev)) { continue; }
+                $t = trim((string)($ev['zeit'] ?? ''));
+                if ($t === '') { continue; }
+                $getippt[] = [trim((string)($ev['typ'] ?? '')), $t];
+            }
+            // Vollstaendig leere Reanimation: still verwerfen, nicht bemaengeln.
+            if ($start === '' && !$getippt) { continue; }
+            if ($start === '') {
+                $error = 'Zu einer Reanimation fehlt der Reanimationsbeginn.';
+                break;
+            }
+            if (count($getippt) > LIMIT_REA_EREIGN) {
+                $error = 'Zu viele Ereignisse in einer Reanimation (höchstens '
+                       . LIMIT_REA_EREIGN . ').';
+                break;
+            }
+
+            $rStart = $reaZeit($start, $startedAt);
+            if ($rStart === null) {
+                $error = 'Ungültige Uhrzeit beim Reanimationsbeginn.';
+                break;
+            }
+            $vorher = $rStart; $ereignisse = [];
+            foreach ($getippt as [$typ, $t]) {
+                /* 'beginn' steht nicht in resus_events — der Beginn steckt in
+                 * started_at der Sitzung (JSON-Vertrag 3.3). Die Auswahl im
+                 * Formular bietet ihn deshalb gar nicht erst an; die Pruefung
+                 * hier ist die Absicherung dagegen, dass er auf anderem Weg
+                 * hereinkommt. */
+                $art = pruef_reanimationsart($typ, 'Reanimationsart');
+                if ($art === null || $art === 'beginn') {
+                    $error = 'Unbekannte Art eines Reanimationsereignisses.';
+                    break;
+                }
+                $ts = $reaZeit($t, $vorher);
+                if ($ts === null) {
+                    $error = 'Ungültige Uhrzeit bei einem Reanimationsereignis.';
+                    break;
+                }
+                $ereignisse[] = [$art, $ts];
+                $vorher = $ts;
+            }
+            if ($error) { break; }
+            $reaSitzungen[] = ['start' => $rStart, 'ereignisse' => $ereignisse];
+        }
+
         // Zusatzfelder generisch aus der zentralen Definition uebernehmen.
         // Checkbox-Unterfelder werden nur gespeichert, wenn der Haken gesetzt
         // ist — sonst geleert (kein Geister-Inhalt hinter "Nein").
@@ -233,6 +317,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins = $pdo->prepare('INSERT INTO mission_phases (mission_id, phase, occurred_at) VALUES (?,?,?)');
             foreach ($rows as $r) { $ins->execute([$id, $r[0], $r[1]]); }
 
+            /* Reanimationen ebenso vollstaendig ersetzen (A4.3). Die Ereignisse
+             * raeumt der Fremdschluessel mit ab (ON DELETE CASCADE), sie
+             * brauchen kein eigenes DELETE. Beim Nachtragen laeuft das DELETE
+             * ins Leere — das ist billiger als eine Fallunterscheidung, die
+             * beim naechsten Umbau vergessen wuerde.
+             *
+             * Ein ueber dieses Formular gespeicherter Einsatz traegt danach
+             * manual = 1; ingest.php ruehrt seine Reanimationen dann nicht mehr
+             * an. Eine nachliefernde Uhr kann die hier eingetragenen Zeiten
+             * also nicht ueberschreiben. */
+            $pdo->prepare('DELETE FROM resus_sessions WHERE mission_id = ?')->execute([$id]);
+            if ($reaSitzungen) {
+                $insS = $pdo->prepare('INSERT INTO resus_sessions (mission_id, started_at) VALUES (?,?)');
+                $insE = $pdo->prepare('INSERT INTO resus_events (session_id, type, occurred_at) VALUES (?,?,?)');
+                foreach ($reaSitzungen as $sitz) {
+                    $insS->execute([$id, $sitz['start']]);
+                    $sid = (int)$pdo->lastInsertId();
+                    foreach ($sitz['ereignisse'] as $e2) { $insE->execute([$sid, $e2[0], $e2[1]]); }
+                }
+            }
+
             $pdo->commit();
 
             // Einsatzort-Hoehe neu ermitteln: Der Track bleibt unveraendert,
@@ -276,6 +381,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     $prefillRows[] = [2, ''];                          // Alarmierung als Startzeile
 }
+
+/* Vorbelegung der Reanimationen (A4.3). Aufbau je Sitzung:
+   ['start' => 'HH:MM', 'ev' => [['typ' => 'adrenalin', 'zeit' => 'HH:MM'], …]]
+   Nach einem fehlgeschlagenen Absenden gilt die Eingabe, nicht der Bestand —
+   sonst verschwaende die Arbeit an der Fehlermeldung. */
+$reaPrefill = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    foreach ((array)($_POST['rea'] ?? []) as $sitz) {
+        if (!is_array($sitz)) { continue; }
+        $ev = [];
+        foreach ((array)($sitz['ev'] ?? []) as $e2) {
+            if (!is_array($e2)) { continue; }
+            $ev[] = ['typ'  => (string)($e2['typ'] ?? ''),
+                     'zeit' => (string)($e2['zeit'] ?? '')];
+        }
+        $reaPrefill[] = ['start' => (string)($sitz['start'] ?? ''), 'ev' => $ev];
+    }
+} elseif ($editing) {
+    $rs = db()->prepare('SELECT id, started_at FROM resus_sessions
+                         WHERE mission_id = ? ORDER BY started_at');
+    $rs->execute([$id]);
+    $evQ = db()->prepare('SELECT type, occurred_at FROM resus_events
+                          WHERE session_id = ? ORDER BY occurred_at');
+    foreach ($rs->fetchAll() as $sitz) {
+        $evQ->execute([(int)$sitz['id']]);
+        $ev = [];
+        foreach ($evQ->fetchAll() as $e2) {
+            $ev[] = ['typ' => (string)$e2['type'], 'zeit' => fmt_local($e2['occurred_at'])];
+        }
+        $reaPrefill[] = ['start' => fmt_local($sitz['started_at']), 'ev' => $ev];
+    }
+}
+
+/* Auswahl der Ereignisarten: RESUS_LABELS ohne 'beginn'. Der Beginn ist kein
+   Ereignis, sondern die Sitzung selbst (JSON-Vertrag 3.3) — stuende er in der
+   Liste, liesse sich eine Reanimation mit zwei Anfaengen eintragen. */
+$REA_ARTEN = RESUS_LABELS;
+unset($REA_ARTEN['beginn']);
 function fieldValue(string $col) {
     global $mission;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -392,14 +535,37 @@ function fieldValue(string $col) {
       // Vorschlagslisten fuer Text-Felder mit suggest_src (Konzept Abschnitt 6.4):
       // persoenlich + zentral, dedupliziert, alphabetisch — natives <datalist>,
       // Freitext bleibt uneingeschraenkt moeglich.
-      $suggestSrc = function (array $f) use ($userId): array {
-          if (($f['suggest_src'] ?? '') === 'transport_dests') {
+      //
+      // Seit Web 5.5.0 auch 'crew:<rolle>' (E8). Die Abfrage ist dieselbe wie
+      // in $optSrc; der Unterschied liegt nicht in den Daten, sondern darin,
+      // was mit ihnen geschieht: Bei 'options_src' IST die Liste die Auswahl,
+      // bei 'suggest_src' ist sie nur ein Vorschlag.
+      //
+      // Ergebnis je Quelle gemerkt: Die fuenf Besatzungsfelder fragen fuenf
+      // verschiedene Rollen ab, ein Formular mit mehreren Feldern derselben
+      // Quelle wuerde sie sonst mehrfach laden.
+      $suggestCache = [];
+      $suggestSrc = function (array $f) use ($userId, &$suggestCache): array {
+          $src = (string)($f['suggest_src'] ?? '');
+          if ($src === '') { return []; }
+          if (array_key_exists($src, $suggestCache)) { return $suggestCache[$src]; }
+
+          $liste = [];
+          if ($src === 'transport_dests') {
               $q = db()->prepare('SELECT DISTINCT name FROM transport_dests
                                   WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
               $q->execute([$userId]);
-              return $q->fetchAll(PDO::FETCH_COLUMN);
+              $liste = $q->fetchAll(PDO::FETCH_COLUMN);
+          } elseif (str_starts_with($src, 'crew:')) {
+              $role = substr($src, 5);
+              if (in_array($role, ['p1', 'p2', 'hems', 'fr', 'other'], true)) {
+                  $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
+                                      WHERE (user_id = ? OR user_id IS NULL) AND role = ? ORDER BY name');
+                  $q->execute([$userId, $role]);
+                  $liste = $q->fetchAll(PDO::FETCH_COLUMN);
+              }
           }
-          return [];
+          return $suggestCache[$src] = $liste;
       };
       // Rollen des Hubschraubers, der an diesem Flugtag eingetragen ist.
       // Steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ist kein
@@ -499,10 +665,29 @@ function fieldValue(string $col) {
       foreach ($FIELDS as $col => $f) { $renderField($col, $f); }
     ?>
 
+    <h2>Reanimation</h2>
+    <p class="muted">Nur ausfüllen, wenn reanimiert wurde. Mehrere Reanimationen
+       je Einsatz sind möglich. Zeiten nach Mitternacht werden automatisch dem
+       Folgetag zugerechnet; eine Zeile ohne Uhrzeit wird nicht gespeichert.</p>
+    <div id="rearows"></div>
+    <p><a href="#" id="addrea" class="add-link">+ Reanimation hinzufügen</a></p>
+
     <button type="submit" class="btn-primary"><?= $editing ? 'Änderungen speichern' : 'Einsatz anlegen' ?></button>
-    <?php if ($editing): ?>
-      <p class="login-aux"><a href="einsatz.php?id=<?= $id ?>">Abbrechen</a></p>
-    <?php endif; ?>
+    <?php /* Abbrechen in BEIDEN Zustaenden (A4.1). Beim Nachtragen fehlte der
+             Weg bisher ganz — wer das Formular offen hatte, kam nur ueber die
+             Seitenleiste oder den Zurueck-Knopf des Browsers heraus.
+             Rücksprungziel ist fest (E7): beim Bearbeiten der Einsatz, beim
+             Nachtragen die Tagesansicht. Ein Rücksprung auf die tatsaechlich
+             zuletzt besuchte Seite waere fehleranfaellig und der Gewinn gering.
+             Die Rückfrage erscheint nur bei tatsaechlichen Eingaben — die
+             Bedingung steckt in assets/forms.js. */ ?>
+    <p class="login-aux"><a
+       href="<?= $editing ? 'einsatz.php?id=' . $id : 'index.php?day=' . e(urlencode($day)) ?>"
+       data-cancel-form="missionform"
+       data-cancel-confirm="<?= $editing
+           ? 'Die Änderungen an diesem Einsatz gehen verloren. Trotzdem abbrechen?'
+           : 'Der nachgetragene Einsatz wird nicht gespeichert. Trotzdem abbrechen?' ?>"
+       >Abbrechen</a></p>
   </form>
 <?php ui_footer(); ?>
 </main>
@@ -519,6 +704,8 @@ function fieldValue(string $col) {
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_encode($prefillRows) ?>;
+const REA_ARTEN = <?= json_encode($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
+const REA_START = <?= json_encode($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
 
 function addRow(no, time) {
   const div = document.createElement('div');
@@ -544,6 +731,88 @@ function addRow(no, time) {
   div.append(sel, t, rm);
   document.getElementById('phaserows').appendChild(div);
   return sel;
+}
+
+/* ---- Reanimationen (A4.3) ------------------------------------------------
+ * Aufbau wie bei den Phasen: Die Zeilen entstehen im Browser, die Zeitfelder
+ * tragen nur die Klasse 'zeitfeld' — assets/zeitfeld.js erfasst sie ueber
+ * seinen Beobachter, ohne dass hier etwas davon zu wissen ist.
+ *
+ * Die Namen der Felder tragen laufende Zaehler (rea[<n>][ev][<m>]…). Sie
+ * werden nie wiederverwendet und beim Entfernen einer Zeile auch nicht
+ * nachgezogen: Die Serverseite wertet die Reihenfolge aus, in der die Felder
+ * ankommen, nicht die Zahlen darin. Umnummerieren waere Arbeit, die niemand
+ * sieht — und eine Fehlerquelle, sobald zwei Zeilen gleichzeitig verschwinden.
+ */
+let reaZaehler = 0;
+
+function reaEreignisZeile(box, evBox, daten) {
+  const n = box.dataset.nr;
+  const m = Number(box.dataset.evNr || 0);
+  box.dataset.evNr = m + 1;
+
+  const row = document.createElement('div');
+  row.className = 'rea-row';
+  const sel = document.createElement('select');
+  sel.name = `rea[${n}][ev][${m}][typ]`;
+  Object.keys(REA_ARTEN).forEach(k => {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = REA_ARTEN[k];
+    if (daten && daten.typ === k) { o.selected = true; }
+    sel.appendChild(o);
+  });
+  const t = document.createElement('input');
+  t.type = 'text'; t.className = 'zeitfeld';
+  t.name = `rea[${n}][ev][${m}][zeit]`;
+  t.value = (daten && daten.zeit && daten.zeit !== '–') ? daten.zeit : '';
+  const weg = document.createElement('button');
+  weg.type = 'button'; weg.className = 'btn-danger'; weg.textContent = '✕';
+  weg.title = 'Dieses Ereignis entfernen';
+  weg.addEventListener('click', () => row.remove());
+
+  row.append(sel, t, weg);
+  evBox.appendChild(row);
+  return t;
+}
+
+function reaSitzung(daten) {
+  const n = reaZaehler++;
+  const box = document.createElement('div');
+  box.className = 'rea-sitzung';
+  box.dataset.nr = n;
+
+  const kopf = document.createElement('div');
+  kopf.className = 'rea-row rea-kopf';
+  const lab = document.createElement('label');
+  lab.textContent = 'Reanimationsbeginn';
+  const start = document.createElement('input');
+  start.type = 'text'; start.className = 'zeitfeld';
+  start.name = `rea[${n}][start]`;
+  start.value = (daten && daten.start && daten.start !== '–') ? daten.start : '';
+  lab.appendChild(start);
+  const weg = document.createElement('button');
+  weg.type = 'button'; weg.className = 'btn-danger'; weg.textContent = '✕';
+  weg.title = 'Diese Reanimation entfernen';
+  weg.addEventListener('click', () => box.remove());
+  kopf.append(lab, weg);
+
+  const evBox = document.createElement('div');
+  evBox.className = 'rea-ereignisse';
+
+  const add = document.createElement('a');
+  add.href = '#'; add.className = 'add-link';
+  add.textContent = '+ Ereignis hinzufügen';
+  add.addEventListener('click', ev => {
+    ev.preventDefault();
+    reaEreignisZeile(box, evBox, null).focus();   // direkt per Tastatur bedienbar
+  });
+  const addP = document.createElement('p');
+  addP.appendChild(add);
+
+  box.append(kopf, evBox, addP);
+  document.getElementById('rearows').appendChild(box);
+  ((daten && daten.ev) || []).forEach(ev => reaEreignisZeile(box, evBox, ev));
+  return start;
 }
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
@@ -876,9 +1145,17 @@ locIn.addEventListener('blur', () => setTimeout(() => { locList.hidden = true; }
 START_ROWS.forEach(r => addRow(r[0], r[1] === '–' ? '' : r[1]));
 document.getElementById('addrow').addEventListener('click', ev => {
   ev.preventDefault();
-  const rows = document.querySelectorAll('.phase-row select');
+  // Auswahlfelder AUS DEM PHASENBLOCK, nicht alle der Seite: Seit Web 5.5.0
+  // stehen weiter unten die Reanimationsereignisse, ebenfalls mit Auswahl.
+  const rows = document.querySelectorAll('#phaserows .phase-row select');
   const last = rows.length ? parseInt(rows[rows.length - 1].value) : 1;
   addRow(Math.min(last + 1, 10), '').focus();   // direkt per Tastatur bedienbar
+});
+
+REA_START.forEach(s => reaSitzung(s));
+document.getElementById('addrea').addEventListener('click', ev => {
+  ev.preventDefault();
+  reaSitzung(null).focus();
 });
 
 /* ---- Andere Rettungsmittel: Eingabe mit Vorschlaegen ------------------- */

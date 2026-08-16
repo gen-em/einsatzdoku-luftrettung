@@ -16,7 +16,6 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
 ## Offen
 
-1. Reanimations-Zeiten im Nachtrage-/Bearbeitungsformular
 2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
 3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
@@ -55,6 +54,23 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
     weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
     abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
     `server/pair.php`.
+15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.** Totes
+    Nutzdatum: `suche.php` ist der einzige Abnehmer des Endpunkts und wertet
+    `edited` nirgends aus. Aufgefallen bei A2 der Verbesserungsrunde Web;
+    dort bewusst stehen gelassen, weil außerhalb des Auftrags. Zwei Zeilen —
+    ein Kandidat für die nächste Runde, die diese Datei ohnehin öffnet.
+16. **Zeilen der Tagesübersicht sind nicht mit der Tastatur erreichbar.**
+    `index.php` setzt `cursor: pointer` und einen Klick-Handler auf `tr`, aber
+    kein `tabindex` und keine Tastaturbedienung — anders als die Trefferliste
+    von Suche und Zeitraum-Übersicht, die das seit Web 5.2.0 (A1.4) über
+    `assets/missiontable.js` mitbringt (`tabIndex = 0`, `role="link"`,
+    Enter/Leertaste). Die Tagesübersicht ist damit die einzige der drei
+    Tabellen, die sich nur mit der Maus öffnen lässt. Aufgefallen beim
+    Prüfstand zu A4. Auflösung: dieselben drei Zeilen wie in
+    `missiontable.js`; die Frage nach der Zusammenführung beider Tabellen
+    (siehe Nr. 10) beantwortet sie nicht, aber sie wartet auch nicht darauf.
+
+*Neu aufgenommen in Web 5.4.0: Nr. 13, 14. In Web 5.5.0: Nr. 15, 16.*
 
 ---
 
@@ -101,3 +117,13 @@ Reihenfolge ihrer Erledigung.
     Datum und gehört zu einem anderen Zusammenhang. Diese Frage lässt sich
     jetzt beurteilen — beide Tabellen haben nun einen Spaltenkatalog, sie sind
     nur nicht derselbe.
+1. **Reanimations-Zeiten im Nachtrage- und Bearbeitungsformular.** Erledigt in
+   Web 5.5.0 (Block A4.3). `resus_sessions` und `resus_events` wurden bis dahin
+   ausschließlich von der Uhr befüllt; wer einen Einsatz von Hand nachtrug,
+   konnte die Reanimation nicht dokumentieren. Das Formular hat jetzt einen
+   eigenen Abschnitt: Reanimationsbeginn plus beliebig viele Ereignisse aus
+   `RESUS_LABELS`, mehrere Reanimationen je Einsatz, jede Zeile einzeln
+   entfernbar. Zeiten werden über `local_to_utc()` als UTC gespeichert; eine
+   Zeit vor ihrer Bezugszeit gehört dem Folgetag, wie bei den Phasen. In
+   `einsatz.php` sind die Einträge von den Zeiten der Uhr nicht zu
+   unterscheiden — es sind dieselben Tabellen.
