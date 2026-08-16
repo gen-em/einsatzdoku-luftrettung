@@ -879,10 +879,21 @@
 
     var state = null;
 
+    /* Bei „Alles" verschwinden die Zeitraumfelder VOLLSTÄNDIG (A6.3, Web
+     * 5.7.0). Vorher blieben sie sichtbar und ausgegraut — ein Feld, das
+     * dasteht und sich nicht bedienen lässt, wirft die Frage auf, was daran
+     * kaputt ist. Beantwortet ist sie damit nicht, denn die Antwort steht
+     * eine Zeile darüber in der Zeitraumwahl.
+     *
+     * Die Felder bleiben IM FORMULAR, nur eben verborgen: runExport() liest
+     * sie weiterhin (und verwirft sie bei „Alles"), und `disabled` bleibt
+     * zusätzlich gesetzt — ein verborgenes Pflichtfeld wäre sonst ein
+     * Kandidat für eine Browserprüfung, die niemand sehen kann. */
     function syncZeitraum() {
         var alles = document.querySelector('input[name="exp_zr"]:checked').value === 'all';
         $('exp_von').disabled = alles;
         $('exp_bis').disabled = alles;
+        $('exp_zeitraum_row').hidden = alles;
     }
 
     function gewaehltesFormat() { return $('exp_fmt').value; }
@@ -955,7 +966,23 @@
         } else {
             cb.disabled = false; hint.hidden = true;
         }
+        syncSchutzhinweis();
         return key;
+    }
+
+    /* Hinweis unter dem Passwortkästchen (A6.4, Web 5.7.0).
+     *
+     * Er erscheint, sobald die Datei OHNE geschützte Angaben erzeugt würde.
+     * Was er ausdrücklich NICHT tut: den Passwortschutz selbst abschalten.
+     * Eine Datei ohne Patientendaten ist nicht harmlos — sie enthält
+     * Besatzungsnamen, Bergwacht-Angaben, den anderen Notarzt, Notizen und
+     * über die Phasen die Koordinaten des Einsatzortes. Wer den Schutz
+     * weglässt, soll das entscheiden, nicht als Nebenwirkung eines anderen
+     * Hakens erleben. */
+    function syncSchutzhinweis() {
+        var hint = $('exp_pw_hint');
+        if (!hint) { return; }
+        hint.hidden = $('exp_pat').checked;
     }
 
     /** Passwortfelder müssen übereinstimmen und die Güteprüfung bestehen —
@@ -1117,6 +1144,7 @@
         $('exp_pw').addEventListener('change', syncPasswordGate);
         $('exp_pw1').addEventListener('input', syncPasswordGate);
         $('exp_pw2').addEventListener('input', syncPasswordGate);
+        $('exp_pat').addEventListener('change', syncSchutzhinweis);
 
         var unlockBtn = $('exp_pat_unlock');
         if (unlockBtn) { unlockBtn.addEventListener('click', function () { syncPatientLock(); }); }

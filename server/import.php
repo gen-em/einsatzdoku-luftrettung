@@ -134,7 +134,10 @@ foreach ($defs->fetchAll() as $d) {
         <label><input type="radio" name="exp_zr" value="range" checked> Von–Bis</label>
         <label><input type="radio" name="exp_zr" value="all"> Alles</label>
       </div>
-      <p>
+      <?php /* Eigene Kennung, damit assets/export.js bei „Alles" die ganze
+               Zeile ausblenden kann statt nur die Felder auszugrauen
+               (A6.3). */ ?>
+      <p id="exp_zeitraum_row">
         <label>Von <input type="date" id="exp_von"></label>
         <label>Bis <input type="date" id="exp_bis"></label>
       </p>
@@ -156,9 +159,24 @@ foreach ($defs->fetchAll() as $d) {
          gerade nicht entschlüsseln. Export ohne Patientendaten bleibt möglich.
          <button type="button" class="btn-plain unlockbtn" id="exp_pat_unlock">Entsperren</button></p>
 
+      <?php /* Vorbelegt auf AN (A6.4, Web 5.7.0). In dieser Datei stehen die
+               geschützten Angaben im Klartext; der Schutz ist der Normalfall,
+               nicht die Ausnahme. Abwählen bleibt eine Handlung, Anwählen war
+               vorher eine — die Vorbelegung dreht nur um, welche der beiden
+               man bewusst treffen muss. */ ?>
       <div class="rolechecks">
-        <label><input type="checkbox" id="exp_pw"> Mit Passwort schützen (AES-256)</label>
+        <label><input type="checkbox" id="exp_pw" checked> Mit Passwort schützen (AES-256)</label>
       </div>
+      <?php /* Erscheint nur ohne geschützte Angaben. Kein selbsttätiges
+               Abschalten: Auch eine Datei ohne Patientendaten enthält
+               personenbezogene Angaben (Besatzung, Bergwacht-Infos, anderer
+               Notarzt, Notizen) und die Koordinaten der Phasen. Wer den Schutz
+               weglässt, soll das entscheiden und nicht bemerken. */ ?>
+      <p class="muted small" id="exp_pw_hint" hidden>Ohne geschützte Angaben enthält
+         die Datei keine Patientendaten. <strong>Personenbezogen ist sie
+         trotzdem:</strong> Besatzungsnamen, Bergwacht-Angaben, anderer Notarzt,
+         Notizen und die Koordinaten der Phasen bleiben enthalten. Der
+         Passwortschutz lässt sich abwählen — nötig ist das nicht.</p>
       <div class="rolechecks" id="exp_pw_fields" hidden>
         <label>Passwort (mind. 10 Zeichen)
           <input type="password" id="exp_pw1" minlength="10" autocomplete="new-password"></label>

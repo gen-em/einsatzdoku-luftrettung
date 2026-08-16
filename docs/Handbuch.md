@@ -890,11 +890,19 @@ verhindert, dass Excel oder LibreOffice die Zelle als **Formel** ausführen.
 Zahlen sind ausgenommen, negative Werte bleiben also Zahlen. Die beiden
 Excel-Formate brauchen das nicht — dort entstehen echte Textzellen.
 
-**Mit Passwort schützen** verschlüsselt die Datei mit AES-256. Mindestens zehn
-Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als beim Backup wird
-hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine Exportdatei ist
-zum Weitergeben gedacht. Das ist die
-empfohlene Einstellung, sobald Patientendaten enthalten sind. Zum Öffnen wird
+**Mit Passwort schützen** ist seit Web 5.7.0 **vorbelegt** — der Schutz ist der
+Normalfall, nicht die Ausnahme. Abwählen bleibt jederzeit möglich; nur muss man
+es jetzt bewusst tun statt es zu vergessen. Verschlüsselt wird mit AES-256,
+mindestens zehn Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
+beim Backup wird hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine
+Exportdatei ist zum Weitergeben gedacht.
+
+Exportierst du **ohne** Patientendaten, erscheint unter dem Kästchen ein
+Hinweis: Die Datei enthält dann zwar keine Patientendaten, aber weiterhin
+personenbezogene Angaben — Besatzungsnamen, Bergwacht-Angaben, den anderen
+Notarzt, Notizen und über die Phasen die Koordinaten des Einsatzortes. Der
+Schutz schaltet sich deshalb **nicht** von selbst ab; die Entscheidung bleibt
+bei dir. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
 können solche Archive nicht öffnen. Beide Programme sind kostenlos.

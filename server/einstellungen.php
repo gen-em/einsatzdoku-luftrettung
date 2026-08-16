@@ -1005,8 +1005,14 @@ if ($tab === 'geraete') {
        geschützten Angaben) in eine einzelne Datei (<code>.edbak</code>), verschlüsselt
        mit einem Passwort deiner Wahl (AES-256-GCM). Ver- und Entschlüsselung passieren
        vollständig <strong>in deinem Browser</strong> — der Server sieht die Inhalte nie.
+       <?php /* Der Satz „Format-Beschreibung: docs/Backup-Format.md" stand hier
+                bis Web 5.7.0 (A6.1). Der Pfad ist für Nutzende nicht
+                erreichbar — er zeigt in das Quellverzeichnis, nicht auf den
+                Server. Die Datei bleibt bestehen, die Verweise darauf im Code
+                (backup_lib.php) ebenfalls; sie richten sich an
+                Entwicklerinnen. */ ?>
        Dadurch lässt sich ein Backup auch in ein <strong>anderes Konto</strong>
-       einspielen. Format-Beschreibung: <code>docs/Backup-Format.md</code>.</p>
+       einspielen.</p>
 
     <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
       nicht entschlüsseln — die Verschlüsselung ist in dieser Sitzung gesperrt.

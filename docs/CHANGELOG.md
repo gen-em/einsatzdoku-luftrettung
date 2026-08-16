@@ -11,6 +11,61 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.7.0] — 2026-08-16
+
+Sechster Block der Verbesserungsrunde Web (A6 „Einstellungen, Import, Export").
+Vier kleinere Unstimmigkeiten auf den Nutzerseiten. Keine Schemaänderung, keine
+Migration.
+
+### Der Pfadverweis auf der Backup-Seite ist weg
+
+Der Text zum Backup nannte `docs/Backup-Format.md` als Formatbeschreibung. Für
+Nutzende ist dieser Pfad nicht erreichbar — er zeigt in das Quellverzeichnis
+des Projekts, nicht auf den Server. Der Satz ist entfallen; die Datei und die
+Verweise darauf im Code bleiben, sie richten sich an Entwicklerinnen.
+
+### Kästchen und Text stehen auf einer Linie
+
+Auf der Backup-Seite saß das Kästchen von „Mein Kontopasswort verwenden" höher
+als der Text daneben. Die Ursache war nicht ein falscher Wert, sondern ein
+fehlender: Die Klasse `.check` stand im Markup, hatte im Stylesheet aber
+**überhaupt keine Regel**. Sie teilt sich jetzt eine Regel mit `.checklabel`,
+die dasselbe schon richtig machte — beide stehen nebeneinander, damit sie nicht
+wieder auseinanderlaufen. Wirkt überall, wo `.check` verwendet wird.
+
+### Beim Export verschwinden die Zeitraumfelder, statt auszugrauen
+
+Wählt man beim Export „Alles", waren die Felder „Von" und „Bis" bisher sichtbar
+und ausgegraut. Ein Feld, das dasteht und sich nicht bedienen lässt, wirft die
+Frage auf, was daran kaputt ist — beantwortet ist sie eine Zeile darüber, in
+der Zeitraumwahl. Jetzt verschwindet die Zeile. Die Felder bleiben im Formular
+und bleiben zusätzlich `disabled`, damit die Auswertung unverändert bleibt und
+kein verborgenes Feld eine Browserprüfung auslösen kann, die niemand sieht.
+
+### Der Passwortschutz ist vorbelegt
+
+„Mit Passwort schützen" ist beim Öffnen der Exportseite angehakt, die
+Passwortfelder sind sichtbar. In dieser Datei stehen die geschützten Angaben im
+Klartext; der Schutz ist der Normalfall. Abwählen bleibt möglich — die
+Vorbelegung dreht nur um, welche der beiden Entscheidungen man bewusst treffen
+muss.
+
+**Kein selbsttätiges Abschalten.** Wird „Patientendaten einschließen"
+abgewählt, erscheint stattdessen ein Hinweis: Die Datei enthält dann keine
+Patientendaten, ist aber weiterhin personenbezogen — Besatzungsnamen,
+Bergwacht-Angaben, anderer Notarzt, Notizen und über die Phasen die Koordinaten
+des Einsatzortes bleiben enthalten. Wer den Schutz weglässt, soll das
+entscheiden und nicht als Nebenwirkung eines anderen Hakens erleben.
+
+### Geändert
+
+* `server/einstellungen.php` — Pfadverweis entfernt.
+* `server/assets/style.css` — `.check` teilt sich die Regel mit `.checklabel`.
+* `server/import.php` — Kennung für die Zeitraumzeile, Vorbelegung des
+  Passwortschutzes, Hinweistext.
+* `server/assets/export.js` — Zeitraumzeile ausblenden, Hinweis steuern.
+* `server/version.php`, `docs/Handbuch.md`.
+
 ## [Web 5.6.0] — 2026-08-16
 
 Fünfter Block der Verbesserungsrunde Web (A5 „Tages- und Einsatzzuordnung").
