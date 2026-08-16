@@ -11,6 +11,95 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.6.0] — 2026-08-16
+
+Fünfter Block der Verbesserungsrunde Web (A5 „Tages- und Einsatzzuordnung").
+Keine Schemaänderung, keine Migration. Der Block macht Fehlzuordnungen
+korrigierbar — und ist zugleich Vorarbeit für den Betrieb mit mehreren
+Diensten je Kalendertag.
+
+### Zwei Fehler, die bisher niemand beheben konnte
+
+Bis hierher war die Tageszugehörigkeit endgültig. Das Datumsfeld im
+Einsatzformular ist beim Bearbeiten `readonly`, und für das Datum eines ganzen
+Flugtags gab es überhaupt keinen Weg. Wer sich beim Nachtragen vertan hatte
+oder wessen Uhr falsch gestellt war, konnte den Fehler nur durch Löschen und
+neu Erfassen beseitigen — samt GPS-Track, den es dann nicht mehr gibt.
+
+Die beiden Fälle sehen sich ähnlich und sind es ausdrücklich nicht:
+
+* **Ein einzelner Einsatz gehört zum falschen Tag** — seine Uhrzeiten stimmen.
+  Typisch beim Nachtragen eines Dienstes über Mitternacht. Dafür gibt es jetzt
+  auf der Einsatzseite **Aktionen → Verschieben**. Die Uhrzeiten bleiben
+  unangetastet.
+* **Die Uhr war falsch gestellt** — dann sind Datum *und* Uhrzeit falsch.
+  Dafür gibt es in der Tagesübersicht **Datum ändern**. Hier wandern alle
+  Zeitstempel mit.
+
+Beide Seiten benennen den Unterschied und verweisen aufeinander. Wer den
+falschen Weg öffnet, sieht das, bevor er handelt.
+
+### Einsatz verschieben
+
+Eine eigene Seite statt eines still freigeschalteten Datumsfeldes: Die
+Nebenwirkung — der Einsatz wechselt die Tageszugehörigkeit — wäre an einem
+plötzlich beschreibbaren Feld nicht zu sehen.
+
+Existiert am Zieldatum noch kein Flugtag, wird einer angelegt, mit der
+Standard-Vorbelegung für Standort und Maschine. Alles andere zwänge dazu, vor
+dem Verschieben von Hand einen Tag anzulegen. Liegt der Zieltag im Papierkorb,
+wird abgelehnt statt still wiederhergestellt — dieselbe Haltung wie beim
+Speichern eines Flugtags.
+
+Ein späterer Upload derselben Uhr zieht den Einsatz **nicht** zurück: Der
+Upsert in `ingest.php` schreibt die Spalte `day` nicht mit.
+
+### Datum eines Flugtags ändern
+
+Verschoben werden `days`, `missions` und `rest_segments` samt allem, was daran
+hängt: Phasenzeiten, Reanimationsprotokolle und die GPS-Spurpunkte — letztere
+in der Unix-Epoche statt als Zeitstempel, und deshalb leicht zu übersehen.
+Alles davon geschieht in **einer** Transaktion; ein Abbruch in der Mitte
+hinterlässt den Tag unverändert am alten Datum.
+
+Verschoben wird um den Abstand der beiden **Ortsmitternachte**, nicht um
+`Tage × 86400` Sekunden. Der Unterschied wird genau dann sichtbar, wenn die
+Verschiebung über eine Zeitumstellung läuft: Eine feste Sekundenzahl verschöbe
+dann jede dokumentierte Uhrzeit um eine Stunde. So bleibt sie stehen — und die
+abgelesene Uhrzeit ist das, was jemand dokumentiert hat.
+
+Liegt am Zieldatum bereits ein Einsatztag, wird abgelehnt. Zusammengeführt wird
+nicht: Das würfe Fragen zu widersprüchlichen Tagesangaben auf (Standort,
+Maschine, Besatzung), die sich nicht automatisch beantworten lassen. Ein Tag im
+**Papierkorb** belegt sein Datum dabei ebenso — `days` trägt einen eindeutigen
+Schlüssel auf (Konto, Datum), und ein übergangener Papierkorb-Eintrag wäre ein
+Datenbankfehler statt einer lesbaren Meldung.
+
+Vor der Ausführung nennt die Seite, was betroffen ist: Zahl der Einsätze, der
+Ruhesegmente, der Trackpunkte — Papierkorb-Einträge getrennt ausgewiesen, denn
+sie wandern mit. Danach kommt die übliche Rückfrage.
+
+### Ein Menü statt zweier Schaltflächen
+
+Die Einsatzseite trug oben rechts **Bearbeiten** und **Löschen**. Mit
+„Verschieben" wären es drei Schaltflächen nebeneinander geworden; stattdessen
+gibt es jetzt ein Menü **Aktionen** mit diesen drei Einträgen. Gebaut aus
+`<details>`/`<summary>`, damit die Tastaturbedienung vom Browser kommt und
+nicht halb nachgebaut wird: Tabulator auf den Kopf, Enter oder Leertaste
+öffnet, Tabulator läuft weiter durch die Einträge, Escape schließt und gibt den
+Fokus zurück.
+
+### Geändert
+
+* `server/tageszuordnung_lib.php` — neu: beide Handlungen samt Prüfungen und
+  Transaktion.
+* `server/einsatz_verschieben.php`, `server/flugtag_datum.php` — neu.
+* `server/einsatz.php` — Aktionsmenü, Rückmeldung nach dem Verschieben.
+* `server/index.php` — „Datum ändern" in den Tagesaktionen, Rückmeldung nach
+  dem Umdatieren.
+* `server/assets/style.css` — Darstellung des Aktionsmenüs.
+* `server/version.php`, `docs/Technik.md`, `docs/Handbuch.md`.
+
 ## [Web 5.5.0] — 2026-08-16
 
 Vierter Block der Verbesserungsrunde Web (A4 „Einsatzformular"). Keine

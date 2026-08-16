@@ -702,6 +702,33 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 .pagehead-text h1{margin-bottom:.2rem}
 .pagehead-actions{display:flex;gap:.6rem;flex:0 0 auto;padding-top:.45rem}
 .pagehead-actions a{text-decoration:none;white-space:nowrap}
+
+/* AKTIONSMENÜ auf der Einsatzseite (A5.1, Web 5.6.0).
+   <details>/<summary> statt eines eigenen Widgets — die Tastaturbedienung
+   kommt damit vom Browser. Der Marker (Dreieck) wird entfernt, weil der
+   Kopf wie eine Schaltfläche aussehen soll; das Zeichen dahinter dreht sich
+   stattdessen mit.
+   z-index bewusst 850: über dem Seiteninhalt, aber unter dem Kopfbereich
+   (900) — die Liste soll beim Scrollen nicht darüber stehen bleiben. */
+.aktionsmenu{position:relative}
+.aktionsmenu>summary{list-style:none;cursor:pointer;user-select:none}
+.aktionsmenu>summary::-webkit-details-marker{display:none}
+.aktionsmenu>summary::after{content:'▾';margin-left:.4rem;font-size:.8em;
+  display:inline-block;transition:transform .12s}
+.aktionsmenu[open]>summary::after{transform:rotate(180deg)}
+.aktionsliste{position:absolute;right:0;top:calc(100% + .35rem);z-index:850;
+  min-width:11rem;display:flex;flex-direction:column;
+  background:var(--schnee);border:1px solid var(--line);border-radius:.4rem;
+  box-shadow:0 6px 18px rgba(0,0,0,.14);overflow:hidden}
+.aktionsliste a{padding:.55rem .8rem;color:inherit;text-decoration:none}
+.aktionsliste a:hover,.aktionsliste a:focus-visible{background:var(--line)}
+.aktionsliste a.gefahr{color:var(--rot)}
+
+/* Reihenfolge der Aktionen auf schmalen Geräten: Der Kopf bleibt einzeilig,
+   die Liste darf die volle Breite nehmen. */
+@media (max-width:520px){
+  .aktionsliste{right:auto;left:0;min-width:min(14rem,80vw)}
+}
 .btn-plain{display:inline-block;text-decoration:none;padding:.45rem 1rem;border-radius:6px;
   border:1px solid #D8D3C8;background:#FFFCFA;color:#1A0500;cursor:pointer;font:inherit}
 .btn-plain:hover{background:#F3EFE7}

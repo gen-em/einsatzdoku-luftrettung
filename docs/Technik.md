@@ -49,6 +49,8 @@ hems/
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── mission_fields_lib.php  Abgeleitete Sichten auf den Feldkatalog
 │   │                       (mf_tagesspalten() = Spalten der Tagestabelle)
+│   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
+│   ├── einsatz_verschieben.php · flugtag_datum.php  die zugehörigen Seiten
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
@@ -448,6 +450,43 @@ Formularen, die selbst per `fetch()` speichern (`preventDefault()` in deren
 eigenem Handler ändert daran nichts, das Submit-Ereignis feuert davor).
 Eingebunden auf `einsatz_form.php`, `index.php` (`#dayform`) und
 `flugtag_neu.php`.
+
+**Tages- und Einsatzzuordnung korrigieren (ab Web 5.6.0, Block A5).**
+`tageszuordnung_lib.php` trägt beide Handlungen; die Seiten
+`einsatz_verschieben.php` und `flugtag_datum.php` bringen nur Markup und
+Rückfrage mit. Sie sehen sich ähnlich und sind ausdrücklich verschieden:
+
+| | `tz_einsatz_verschieben()` | `tz_tag_datum_aendern()` |
+|---|---|---|
+| Anlass | Fehlzuordnung eines Einsatzes | falsch gestellte Uhr |
+| Umfang | ein Einsatz | ganzer Tag samt Anhang |
+| Zeitstempel | **bleiben** | **wandern mit** |
+| Tabellen | `missions` (+ ggf. `days`) | `days`, `missions`, `rest_segments`, `mission_phases`, `resus_sessions`, `resus_events`, `track_points` |
+
+Drei Punkte, die beim Lesen leicht untergehen:
+
+* **Verschoben wird um den Abstand der Ortsmitternachte**, nicht um
+  `Tage × 86400` Sekunden. Läuft die Verschiebung über eine Zeitumstellung,
+  ist der Abstand um eine Stunde größer oder kleiner — genau darum bleibt die
+  dokumentierte Ortszeit stehen. Eine feste Sekundenzahl verschöbe sie.
+* **`track_points.ts` trägt die Unix-Epoche**, nicht ein `DATETIME`, und die
+  Spalte ist `UNSIGNED`. Eine Rückwärtsverschiebung unter null wäre ein
+  Datenbankfehler mitten in der Transaktion; sie wird vorher geprüft und
+  benannt.
+* **Papierkorb-Einträge wandern mit.** Sie hängen über den natürlichen
+  Schlüssel `(user_id, day)` am Tag; blieben sie liegen, kämen sie beim
+  Wiederherstellen an einem Datum zurück, das es nicht mehr gibt. Umgekehrt
+  belegt ein Tag im Papierkorb sein Datum weiterhin (`uq_user_day`) — die
+  Kollisionsprüfung schließt ihn deshalb ein, sonst gäbe es statt einer
+  lesbaren Meldung einen Fehler aus der Datenbank.
+
+Warum ein Einsatz nicht zurückgezogen wird (Prüfschritt P5): `ingest.php:150`
+führt beim Upsert ein `ON DUPLICATE KEY UPDATE`, das die Spalte `day` **nicht**
+mitschreibt. Außer den beiden Funktionen hier schreiben nur `ingest.php` und
+`einsatz_form.php` (beim Anlegen), `api/import_commit.php` (beim Import, und
+beim Überschreiben nur auf ausdrückliche Wahl in der Import-Maske) sowie
+`backup_lib.php` (nur einfügend) auf `day`. Kein automatischer Weg fasst den
+Tag eines bestehenden Einsatzes an.
 
 **Abbrechen (ab Web 5.5.0, Block A4.1):** Ein Verweis mit
 `data-cancel-form="<id des formulars>"` fragt vor dem Verlassen nach — aber

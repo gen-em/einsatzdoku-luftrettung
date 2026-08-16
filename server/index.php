@@ -141,6 +141,11 @@ $neueGeraete = geraete_neu(db(), $userId);
         <span id="savestate" class="muted"></span>
       </form>
     </details>
+    <?php if (($_GET['umdatiert'] ?? '') === '1' && $selDay): ?>
+      <p class="alert alert-ok">Der Einsatztag liegt jetzt am
+        <?= e(date('d.m.Y', strtotime((string)$selDay))) ?>. Alle Zeitstempel
+        sind mitgewandert; die Uhrzeiten stehen unverändert da.</p>
+    <?php endif; ?>
     <p id="lockbanner" class="alert alert-info" hidden>
       Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben
       verborgen, bis die Verschlüsselung entsperrt ist.
@@ -171,6 +176,13 @@ $neueGeraete = geraete_neu(db(), $userId);
     <p id="empty" class="muted" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
     <div class="dayactions">
       <a href="einsatz_form.php" id="addmission" class="btn-primary">+ Einsatz nachtragen</a>
+      <?php /* Umdatieren (A5.3): steht bewusst neben „Tag löschen" und nicht im
+               Flugtag-Formular. Es ist keine Angabe zum Tag, sondern ein
+               Eingriff in seine Zuordnung — mit Wirkung auf jeden Zeitstempel
+               des Tages. */ ?>
+      <a class="btn-plain" id="daydatelink"
+         href="flugtag_datum.php?day=<?= e((string)$selDay) ?>"
+         <?= $selDay ? '' : 'hidden' ?>>Datum ändern</a>
       <a class="btn-red" id="daydellink"
          href="flugtag_loeschen.php?day=<?= e((string)$selDay) ?>"
          <?= $selDay ? '' : 'hidden' ?>>Tag löschen</a>
@@ -374,6 +386,9 @@ async function loadDay(day){
   const ddl = document.getElementById('daydellink');
   ddl.href = 'flugtag_loeschen.php?day=' + encodeURIComponent(d.day);
   ddl.hidden = false;
+  const dat = document.getElementById('daydatelink');
+  dat.href = 'flugtag_datum.php?day=' + encodeURIComponent(d.day);
+  dat.hidden = false;
 
   // Flugtag-Felder befuellen
   const f = document.getElementById('dayform');

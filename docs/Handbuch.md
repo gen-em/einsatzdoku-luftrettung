@@ -280,12 +280,17 @@ vorausgewählt. Pro Tag:
   (Abschnitt 5). Wer nachträgt, sieht damit auf einen Blick, an welchen
   Einsätzen des Tages jemand anderes an Bord war.
 - **„+ Einsatz nachtragen"** öffnet das Eingabeformular für diesen Tag,
+  **„Datum ändern"** korrigiert das Datum des ganzen Tages (Abschnitt 4.2a),
   **„Tag löschen"** entfernt den gesamten Flugtag (Abschnitt 8).
 
 ### 4.2 Einsatzansicht
 
 Titel „Einsatz N · Uhrzeit" (N = Nummer des Tages nach Alarmierungszeit),
-darunter **Bearbeiten** und **Löschen**. In der Kopfzeile darunter stehen
+darunter das Menü **Aktionen** mit **Bearbeiten**, **Verschieben** und
+**Löschen** (seit Web 5.6.0; vorher standen dort zwei Schaltflächen). Das Menü
+lässt sich vollständig mit der Tastatur bedienen: Tabulator auf den Kopf, Enter
+oder Leertaste öffnet, Tabulator läuft weiter durch die Einträge, Escape
+schließt wieder. In der Kopfzeile darunter stehen
 Datum, Zeitraum, Flugkilometer und am Ende genau ein **Herkunftskennzeichen**:
 
 | Kennzeichen | Bedeutung |
@@ -324,6 +329,44 @@ Zusatz daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
 hinterlegt, entfällt der Block ganz.
 
 Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
+
+### 4.2a Falsche Tageszuordnung korrigieren
+
+Seit Web 5.6.0 lässt sich beides korrigieren: ein Einsatz, der beim falschen
+Tag gelandet ist, und ein ganzer Flugtag, der am falschen Datum steht. Das sind
+**zwei verschiedene Fälle**, und die Wahl entscheidet darüber, was mit den
+Uhrzeiten passiert.
+
+**Ein einzelner Einsatz gehört zum falschen Tag.** Seine Uhrzeiten stimmen —
+nur die Zuordnung nicht. Der klassische Fall ist der Dienst über Mitternacht:
+Beim Nachtragen landet ein Einsatz auf dem Kalendertag, an dem er begann,
+obwohl er zum Flugtag davor gehört. Auf der Einsatzseite: **Aktionen →
+Verschieben**, Zieldatum wählen, fertig. Die **Uhrzeiten bleiben unverändert**.
+
+Gibt es am Zieldatum noch keinen Flugtag, wird einer angelegt — mit deiner
+Standard-Vorbelegung für Standort und Maschine (Abschnitt 9.1). Liegt der
+Zieltag im Papierkorb, wird die Verschiebung abgelehnt; hol ihn erst zurück.
+Ein späterer Upload derselben Uhr zieht den Einsatz nicht wieder auf den alten
+Tag.
+
+**Die Uhr war falsch gestellt.** Dann sind Datum *und* Uhrzeit falsch, und der
+ganze Tag steht am falschen Datum. In der Tagesübersicht: **„Datum ändern"**.
+Hier **wandern alle Zeitstempel mit** — Einsätze, Ruhesegmente, Phasenzeiten,
+Reanimationsprotokolle und die GPS-Spur. Die abgelesenen Uhrzeiten bleiben
+dabei stehen; verschoben wird nur das Datum, auch über eine Zeitumstellung
+hinweg.
+
+Bevor etwas geschieht, zeigt die Seite, was betroffen ist: wie viele Einsätze,
+Ruhesegmente und Trackpunkte, und ob Einträge aus dem Papierkorb dabei sind
+(die wandern mit). Danach kommt die übliche Rückfrage. Alles davon geschieht
+**gemeinsam oder gar nicht** — bricht etwas ab, steht der Tag unverändert am
+alten Datum.
+
+Steht am Zieldatum bereits ein Flugtag, wird die Änderung **abgelehnt**. Zwei
+Tage lassen sich nicht zusammenführen: Welcher Standort, welche Maschine,
+welche Besatzung dann gälte, kann niemand automatisch beantworten. Ein Tag im
+Papierkorb belegt sein Datum ebenfalls. Wähle in dem Fall ein freies Datum oder
+löse den vorhandenen Tag zuerst auf.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 

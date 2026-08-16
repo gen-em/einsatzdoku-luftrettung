@@ -32,12 +32,39 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
       <p id="meta" class="muted"></p>
     </div>
     <div class="pagehead-actions">
-      <a class="btn-edit" href="einsatz_form.php?id=<?= $mid ?>">Bearbeiten</a>
-      <a class="btn-red" href="einsatz_loeschen.php?id=<?= $mid ?>">Löschen</a>
+      <?php /* AKTIONSMENÜ (A5.1, E4). Aus zwei Schaltflächen ist ein Menü mit
+               drei Einträgen geworden — „Verschieben" kam hinzu.
+
+               Gebaut aus <details>/<summary>, nicht aus einem eigenen
+               Menü-Widget: Damit ist die Tastaturbedienung von Haus aus
+               vollständig (Tabulator auf den Kopf, Enter oder Leertaste öffnet,
+               Tabulator läuft weiter durch die Einträge), ohne dass sie hier
+               nachgebaut und dabei halb vergessen würde.
+
+               Bewusst OHNE role="menu"/"menuitem": Diese Rollen versprechen
+               Bedienung mit den Pfeiltasten. Wer sie vergibt, ohne sie zu
+               liefern, macht die Sache für Vorleseprogramme schlechter als
+               ohne — angekündigt wird ein Menü, das sich dann nicht wie eines
+               bedienen lässt. Drei Verweise untereinander sind hier die
+               ehrlichere Beschreibung. */ ?>
+      <details class="aktionsmenu" id="aktionsmenu">
+        <summary class="btn-edit">Aktionen</summary>
+        <div class="aktionsliste">
+          <a href="einsatz_form.php?id=<?= $mid ?>">Bearbeiten</a>
+          <a href="einsatz_verschieben.php?id=<?= $mid ?>">Verschieben</a>
+          <a class="gefahr" href="einsatz_loeschen.php?id=<?= $mid ?>">Löschen</a>
+        </div>
+      </details>
     </div>
   </div>
 
   <div id="loaderror" class="alert" hidden></div>
+
+  <?php if (($_GET['verschoben'] ?? '') === '1'): ?>
+    <p class="alert alert-ok">Der Einsatz gehört jetzt zum
+      <?= e(date('d.m.Y', strtotime((string)$missionDay))) ?>.
+      Die Uhrzeiten sind unverändert geblieben.</p>
+  <?php endif; ?>
 
   <?php if ($nachtrag): ?>
     <p class="alert alert-ok">Einsatz gespeichert.
@@ -78,6 +105,26 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
+/* Aktionsmenü schließen, wenn daneben geklickt oder Escape gedrückt wird
+   (A5.1). <details> bringt Öffnen und Schließen selbst mit; was fehlt, ist
+   das Schließen ohne einen zweiten Klick auf den Kopf — ein offenes Menü, das
+   über der Seite stehen bleibt, verdeckt die Angaben darunter. Der Fokus
+   wandert dabei zurück auf den Kopf, sonst stünde er nach Escape in einem
+   Bereich, den es nicht mehr gibt. */
+(function () {
+  const menu = document.getElementById('aktionsmenu');
+  if (!menu) { return; }
+  document.addEventListener('click', ev => {
+    if (menu.open && !menu.contains(ev.target)) { menu.open = false; }
+  });
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && menu.open) {
+      menu.open = false;
+      menu.querySelector('summary').focus();
+    }
+  });
+})();
+
 const MID = <?= $mid ?>;
 // Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
 // kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.

@@ -25,4 +25,4 @@ declare(strict_types=1);
  * 4.0.0 den Beginn der Umsetzung des Code-Reviews (gemeinsame Bausteine und
  * Schemaaenderungen, siehe Changelog).
  */
-const WEB_VERSION = '5.5.0';
+const WEB_VERSION = '5.6.0';
