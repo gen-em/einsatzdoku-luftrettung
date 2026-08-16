@@ -503,19 +503,23 @@ Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 
 **Weitere Filter.** In der linken Spalte — dort, wo auf den anderen Seiten die
 Einsatztage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
-den Gesamtbestand geht. Die Filter liegen in vier Blöcken: **Zeit**, **Art des
-Einsatzes**, **Beteiligte und Ziel**, **Werte**. Jeder Block klappt einzeln auf
-und zu; beim Öffnen der Seite sind alle zugeklappt, damit die Spalte ruhig
-bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke auf, in denen
-etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig (UND); leere
-Felder schränken nichts ein. Die Auswahllisten für Standort,
+den Gesamtbestand geht. Die Filter liegen in sechs Blöcken: **Zeit**,
+**Winde**, **Bergwacht**, **Transport**, **Beteiligte**, **Werte**. Jeder Block
+klappt einzeln auf und zu; beim Öffnen der Seite sind alle zugeklappt, damit die
+Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
+auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
+(UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
 Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
-enthalten nur, was in deinem Bestand tatsächlich vorkommt. Zwei Besonderheiten:
+enthalten nur, was in deinem Bestand tatsächlich vorkommt. Eine Besonderheit:
 
 - **Alarmzeit** darf über Mitternacht gehen. „von 22:00 bis 06:00" findet die
   Nachteinsätze. Eingabe wie überall als `HH:MM`; Ziffern genügen.
-- **Reanimations-Ereignis** ist eine Mehrfachauswahl. Wählst du mehrere, muss
-  der Einsatz alle davon enthalten.
+
+**Entfallene Filter (ab Web 5.3.0).** Herkunft, Reanimation,
+Reanimations-Ereignis sowie Höhe Einsatzort von/bis gibt es in der Suche nicht
+mehr. Die Angaben selbst bleiben vollständig erhalten — sie stehen weiterhin in
+der Einsatzansicht und im Export. Ältere geteilte Links funktionieren weiter;
+der entfallene Teil wird dabei stillschweigend übergangen.
 
 Unten in der Filterspalte steht **Filter zurücksetzen** und darunter, wie viele
 Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze von

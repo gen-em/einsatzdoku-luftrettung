@@ -10,6 +10,67 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.3.0] — 2026-08-16
+
+Zweiter Block der Verbesserungsrunde Web (A2 „Suche aufräumen"). Keine
+Schemaänderung, keine Migration. **Keine Datenbankspalte entfernt** — alle
+Angaben bleiben vollständig erhalten, sie sind nur nicht mehr Filterkriterium.
+
+### Vier Filter entfallen
+
+Aus der Suche entfernt: **Herkunft**, **Reanimation**,
+**Reanimations-Ereignis** sowie **Höhe Einsatzort von/bis**. Sie waren im
+Betrieb nie gesetzt worden und verlängerten die Filterspalte um Zeilen, an
+denen der Blick jedes Mal vorbeimusste.
+
+Die Angaben selbst sind unberührt: Herkunft und Bearbeitungsstand stehen
+weiterhin in der Einsatzansicht, Reanimationszeiten ebenso, die Höhe des
+Einsatzortes in der Feldliste und im Export. Entfallen ist ausschließlich die
+Möglichkeit, danach zu filtern.
+
+Ältere geteilte Links und Lesezeichen führen zu keinem Fehler. Der
+Filterzustand steht im URL-Fragment, und beim Einlesen werden unbekannte
+Parameter still verworfen — ein Link mit `hk=manual` setzt eben diesen einen
+Filter nicht mehr, alle übrigen greifen wie bisher. Die Kurznamen `hk`, `re`,
+`rt`, `hv` und `hb` bleiben deshalb dauerhaft gesperrt und werden nicht neu
+vergeben.
+
+### Die Filterspalte ist nach Themen geordnet
+
+Der Block „Art des Einsatzes" war ein Sammelbecken: Windencycles standen neben
+Bergwacht-Bereitschaft neben Schockraum. Er ist durch drei Blöcke ersetzt, die
+je einen Zusammenhang tragen:
+
+* **Winde** — Windeneinsatz, Cycles, Cycles mit Patient, Luftverladung
+* **Bergwacht** — Bergwacht, Bereitschaft
+* **Transport** — Transportziel, Sekundärtransport, Schockraum
+
+Das **Transportziel** ist dabei aus „Beteiligte und Ziel" hierher gewandert;
+jener Block heißt jetzt schlicht **Beteiligte**. Die Spalte hat damit sechs
+Blöcke statt vier: Zeit, Winde, Bergwacht, Transport, Beteiligte, Werte. Am
+Verhalten ändert sich nichts — jeder Block klappt einzeln auf, und bei einem
+geteilten Link gehen genau die Blöcke auf, in denen etwas gesetzt ist. Weil
+diese Zuordnung aus der Filterliste in `suche.php` abgeleitet wird, war dafür
+kein zusätzlicher Code nötig.
+
+### Der Suchindex trägt nur noch, was gebraucht wird
+
+`api/suchindex.php` liefert den Bestand, über den der Browser lokal filtert.
+Mit den vier Filtern sind auch die Felder `origin`, `site_ele_m`,
+`resus_count` und `resus_types` aus diesem Paket entfallen — und damit zwei
+Datenbankabfragen über `resus_sessions` und `resus_events`, die bei jedem
+Öffnen der Suchseite liefen. Der Endpunkt kommt jetzt mit fünf Abfragen aus
+statt mit sechs.
+
+Die Spalten selbst bleiben unangetastet. Einsatzansicht, Zeitraum-Übersicht und
+Export beziehen sie über eigene Endpunkte und sind nicht betroffen.
+
+### Nebenbei aufgeräumt: tote CSS-Regel
+
+Mit dem Filter „Reanimations-Ereignis" verliert die Klasse `.reatypen` ihr
+letztes Element. Sie war in zwei Regeln mit `.wochentage` zusammengefasst; die
+Selektoren sind entfernt, die Regeln für die Wochentage bleiben unverändert.
+
 ## [Web 5.2.0] — 2026-08-16
 
 Erster Block der Verbesserungsrunde Web (A1 „Darstellung und Formate"): fünf

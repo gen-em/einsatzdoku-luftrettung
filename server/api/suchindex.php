@@ -19,7 +19,7 @@ require_once __DIR__ . '/../auth_guard.php';
  * an den Browser. Der Server sieht sie nicht und filtert nicht danach —
  * deshalb nimmt dieser Endpunkt auch keinerlei Suchparameter entgegen.
  *
- * Abfragen: sechs Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
+ * Abfragen: fuenf Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
  */
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
@@ -30,8 +30,7 @@ try {
     // ---- Einsaetze -------------------------------------------------------
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.
     $st = db()->prepare(
-        'SELECT m.id, m.day, m.started_at, m.distance_m, m.site_ele_m,
-                m.origin, m.edited,
+        'SELECT m.id, m.day, m.started_at, m.distance_m, m.edited,
                 m.transport_dest, m.schockraum,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
                 m.bergwacht, m.bw_unit, m.bw_info,
@@ -84,29 +83,6 @@ try {
     $mittel = [];
     foreach ($rq->fetchAll() as $r) { $mittel[(int)$r['mission_id']][] = (string)$r['name']; }
 
-    // ---- Reanimationen: Anzahl Sitzungen und vorkommende Ereignisarten ----
-    $sq = db()->prepare(
-        'SELECT s.mission_id, COUNT(*) AS n
-           FROM resus_sessions s
-           JOIN missions m ON m.id = s.mission_id
-          WHERE m.user_id = ? AND m.deleted_at IS NULL
-          GROUP BY s.mission_id'
-    );
-    $sq->execute([$userId]);
-    $reaAnzahl = [];
-    foreach ($sq->fetchAll() as $s) { $reaAnzahl[(int)$s['mission_id']] = (int)$s['n']; }
-
-    $eq = db()->prepare(
-        'SELECT DISTINCT s.mission_id, e.type
-           FROM resus_events e
-           JOIN resus_sessions s ON s.id = e.session_id
-           JOIN missions m ON m.id = s.mission_id
-          WHERE m.user_id = ? AND m.deleted_at IS NULL'
-    );
-    $eq->execute([$userId]);
-    $reaTypen = [];
-    foreach ($eq->fetchAll() as $e2) { $reaTypen[(int)$e2['mission_id']][] = (string)$e2['type']; }
-
     // ---- Zusammenbauen ---------------------------------------------------
     $ROLLEN = ['p1', 'p2', 'hems', 'fr', 'other'];
 
@@ -153,12 +129,6 @@ try {
             $crew[$r] = $eff !== '' ? $eff : null;
         }
 
-        $typen = $reaTypen[$id] ?? [];
-        // 'beginn' ist kein Ereignis in resus_events, sondern der Startzeit-
-        // punkt der Sitzung. Damit die Auswahlliste des Filters lueckenlos zu
-        // RESUS_LABELS passt, wird er hier ergaenzt.
-        if (($reaAnzahl[$id] ?? 0) > 0) { array_unshift($typen, 'beginn'); }
-
         $missions[] = [
             'id'          => $id,
             'day'         => $tag,
@@ -166,8 +136,6 @@ try {
             'start_min'   => $startMin,
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-            'site_ele_m'  => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
-            'origin'      => (string)($m['origin'] ?? 'watch'),
             'edited'      => (int)($m['edited'] ?? 0) === 1,
             'transport_dest' => $m['transport_dest'] !== null ? (string)$m['transport_dest'] : null,
             'schockraum'  => (int)$m['schockraum'] === 1,
@@ -190,8 +158,6 @@ try {
             'aircraft'    => $textOderId($d, 'aircraft_id', 'aircraft', $maschinen),
             'crew'        => (object)$crew,
             'resources'   => $mittel[$id] ?? [],
-            'resus_count' => $reaAnzahl[$id] ?? 0,
-            'resus_types' => array_values(array_unique($typen)),
             'pat_blob'    => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
         ];
     }

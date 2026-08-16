@@ -61,8 +61,8 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
         </div>
       </details>
 
-      <details class="filtergruppe" data-gruppe="art">
-        <summary>Art des Einsatzes</summary>
+      <details class="filtergruppe" data-gruppe="winde">
+        <summary>Winde</summary>
         <div class="filterfelder">
           <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
           <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
@@ -70,20 +70,28 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
           <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
           <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
           <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="bergwacht">
+        <summary>Bergwacht</summary>
+        <div class="filterfelder">
           <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
           <label>Bereitschaft <select id="f-bu"></select></label>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="transport">
+        <summary>Transport</summary>
+        <div class="filterfelder">
+          <label>Transportziel <select id="f-tz"></select></label>
           <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
           <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
-          <label>Reanimation <select id="f-re" class="dreiwert"></select></label>
-          <label>Herkunft <select id="f-hk"></select></label>
-          <div class="reatypen" id="f-rt">
-            <span class="wtlabel">Reanimations-Ereignis</span>
-          </div>
         </div>
       </details>
 
       <details class="filtergruppe" data-gruppe="wer">
-        <summary>Beteiligte und Ziel</summary>
+        <summary>Beteiligte</summary>
         <div class="filterfelder">
           <label>Standort <select id="f-st"></select></label>
           <label>Maschine <select id="f-ac"></select></label>
@@ -93,7 +101,6 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
           <label>Flugretter <select id="f-c4"></select></label>
           <label>Sonstige <select id="f-c5"></select></label>
           <label>Weiteres Rettungsmittel <select id="f-rm"></select></label>
-          <label>Transportziel <select id="f-tz"></select></label>
         </div>
       </details>
 
@@ -106,8 +113,6 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
           <label>Flugstrecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
           <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
           <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
-          <label>Höhe Einsatzort von (m) <input type="number" id="f-hv" step="1"></label>
-          <label>Höhe Einsatzort bis (m) <input type="number" id="f-hb" step="1"></label>
           <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
             entschlüsselten Angaben und ist deshalb gesperrt.</p>
         </div>
@@ -169,7 +174,6 @@ const KDF_SALT = <?= json_encode($kdfSalt) ?>;
    bekommt einen anderen Schluessel. */
 const KDF_ITER      = <?= json_encode($kdfIter) ?>;
 const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
-const RESUS_LABELS = <?= json_encode(RESUS_LABELS, JSON_UNESCAPED_UNICODE) ?>;
 
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
@@ -197,19 +201,17 @@ const FILTER = [
   { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'zeit' },
   { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'zeit' },
   { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'zeit' },
-  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'art' },
-  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'art' },
-  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'art' },
-  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'art' },
-  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'art' },
-  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'art' },
-  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'art' },
-  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'art' },
-  { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'art' },
-  { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'art' },
-  { kurz: 're', el: 'f-re', art: 'text', gruppe: 'art' },
-  { kurz: 'rt', el: 'f-rt', art: 'haken', gruppe: 'art' },
-  { kurz: 'hk', el: 'f-hk', art: 'text', gruppe: 'art' },
+  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'winde' },
+  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'winde' },
+  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'winde' },
+  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'winde' },
+  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'winde' },
+  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'winde' },
+  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'bergwacht' },
+  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergwacht' },
+  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport' },
+  { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'transport' },
+  { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'transport' },
   { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer' },
   { kurz: 'ac', el: 'f-ac', art: 'text', gruppe: 'wer' },
   { kurz: 'c1', el: 'f-c1', art: 'text', gruppe: 'wer' },
@@ -218,15 +220,12 @@ const FILTER = [
   { kurz: 'c4', el: 'f-c4', art: 'text', gruppe: 'wer' },
   { kurz: 'c5', el: 'f-c5', art: 'text', gruppe: 'wer' },
   { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer' },
-  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'wer' },
   { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'werte' },
   { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'werte' },
   { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'werte' },
   { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'werte' },
   { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'werte' },
-  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'werte' },
-  { kurz: 'hv', el: 'f-hv', art: 'text', gruppe: 'werte' },
-  { kurz: 'hb', el: 'f-hb', art: 'text', gruppe: 'werte' }
+  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'werte' }
 ];
 
 /* ---- Werte lesen und setzen ---------------------------------------- */
@@ -314,14 +313,6 @@ function baueAuswahllisten() {
                    '<option value="j">ja</option><option value="n">nein</option>';
   });
 
-  fuelleSelect('f-hk', []);
-  [['watch', 'von der Uhr'], ['manual', 'von Hand'], ['import', 'importiert']]
-    .forEach(([v, t]) => {
-      const o = document.createElement('option');
-      o.value = v; o.textContent = t;
-      $('f-hk').appendChild(o);
-    });
-
   fuelleSelect('f-bu', optionen(missions.map(m => m.bw_unit)));
   fuelleSelect('f-st', optionen(missions.map(m => m.base)));
   fuelleSelect('f-ac', optionen(missions.map(m => m.aircraft)));
@@ -332,20 +323,6 @@ function baueAuswahllisten() {
   fuelleSelect('f-c5', optionen(missions.map(m => m.crew.other)));
   fuelleSelect('f-rm', optionen(missions.flatMap(m => m.resources)));
   fuelleSelect('f-tz', optionen(missions.map(m => m.transport_dest)));
-
-  // Reanimations-Ereignisse: nur Arten, die im Bestand auch vorkommen.
-  const vorhanden = new Set(missions.flatMap(m => m.resus_types));
-  const box = $('f-rt');
-  box.querySelectorAll('label').forEach(l => l.remove());
-  Object.keys(RESUS_LABELS).filter(t => vorhanden.has(t)).forEach(t => {
-    const lab = document.createElement('label');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.value = t;
-    lab.appendChild(cb);
-    lab.appendChild(document.createTextNode(' ' + RESUS_LABELS[t]));
-    box.appendChild(lab);
-  });
-  box.hidden = vorhanden.size === 0;
 }
 
 /* ---- Filterlogik ---------------------------------------------------- */
@@ -460,13 +437,6 @@ function trifft(m) {
   if (!gleich('f-bu', m.bw_unit)) { return false; }
   if (!dreiwert('f-se', m.secondary)) { return false; }
   if (!dreiwert('f-sr', m.schockraum)) { return false; }
-  if (!dreiwert('f-re', m.resus_count > 0)) { return false; }
-
-  const rt = hakenWerte('f-rt');
-  // Mehrfachauswahl: der Einsatz muss ALLE gewählten Ereignisarten enthalten.
-  if (rt.length && !rt.every(t => m.resus_types.includes(t))) { return false; }
-
-  if ($('f-hk').value !== '' && m.origin !== $('f-hk').value) { return false; }
 
   if (!gleich('f-st', m.base)) { return false; }
   if (!gleich('f-ac', m.aircraft)) { return false; }
@@ -489,8 +459,6 @@ function trifft(m) {
 
   const ev = zahl('f-ev'), eb = zahl('f-eb');
   if (!inBereich(m.duration_s, ev == null ? null : ev * 60, eb == null ? null : eb * 60)) { return false; }
-
-  if (!inBereich(m.site_ele_m, zahl('f-hv'), zahl('f-hb'))) { return false; }
 
   return true;
 }

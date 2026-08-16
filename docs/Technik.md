@@ -580,21 +580,24 @@ Mengengerüst: erwartet werden 50–80 Einsätze pro Jahr, nach zwei Jahrzehnten
 also unter etwa 1 600 Datensätze — für einen einmaligen Abruf je Sitzung
 unproblematisch. Trackpunkte und Phasenlisten sind bewusst **nicht** enthalten;
 sie wären um Größenordnungen größer als alles andere und werden zum Filtern
-nicht gebraucht. Der Endpunkt kommt mit sechs Abfragen aus, unabhängig von der
+nicht gebraucht. Der Endpunkt kommt mit fünf Abfragen aus, unabhängig von der
 Zahl der Einsätze (kein N+1): Einsätze, Flugtage, Standorte, Maschinen,
-Rettungsmittel, Reanimationen.
+Rettungsmittel.
 
-Zwei Fallen, die dort dokumentiert sind und bei Änderungen zu beachten bleiben:
+Der Index liefert nur, was die Suche auch auswertet. Mit den Filtern Herkunft,
+Reanimation, Reanimations-Ereignis und Höhe Einsatzort (Web 5.3.0) sind die
+Felder `origin`, `site_ele_m`, `resus_count` und `resus_types` aus dem Index
+entfallen, samt der beiden Abfragen über `resus_sessions` und `resus_events`.
+Die Spalten selbst bleiben unverändert; Export, Einsatzansicht und Zeitraum-
+Übersicht beziehen sie über eigene Endpunkte.
+
+Eine Falle, die dort dokumentiert ist und bei Änderungen zu beachten bleibt:
 
 - **days wird nicht per JOIN angebunden.** `missions` und `days` tragen beide
   `crew_p1`…`crew_other`; ein JOIN würde sie überschreiben. Dieselbe Falle ist
   in `api/mission.php` beschrieben. Die effektive Besatzung folgt derselben
   COALESCE-Regel: Einsatzwert nur, wenn `crew_override = 1` **und** das
   Rollenfeld belegt ist, sonst die Tagescrew.
-- **`origin`, nicht `manual`.** Der Herkunftsfilter wertet `origin`
-  ('watch' | 'manual' | 'import') aus. `manual` bedeutet seit Web 2.11.0
-  ausschließlich „die Uhr überschreibt diesen Einsatz nicht mehr" — der
-  Kommentar am Spaltenkopf in `schema.sql` sagt das ausdrücklich.
 
 `start_min` (Minuten seit Mitternacht, Grundlage des Alarmzeitfilters) wird aus
 derselben `fmt_local()`-Umrechnung abgeleitet wie `start_hhmm`, damit Anzeige
@@ -612,26 +615,34 @@ Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
 
 | Kurz | Filter | Kurz | Filter |
 |------|--------|------|--------|
-| `q`  | Freitext | `hk` | Herkunft (`watch`/`manual`/`import`) |
-| `dv` / `db` | Datum von / bis | `st` | Standort |
-| `zv` / `zb` | Alarmzeit von / bis | `ac` | Maschine |
-| `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
-| `wi` | Windeneinsatz (`j`/`n`) | `rm` | Weiteres Rettungsmittel |
-| `cv` / `cb` | Cycles von / bis | `tz` | Transportziel |
-| `pv` / `pb` | Cycles mit Patient von / bis | `av` / `ab` | Alter von / bis |
-| `lv` | Luftverladung (`j`/`n`) | `kv` / `kb` | Flugstrecke von / bis (km) |
-| `bw` | Bergwacht (`j`/`n`) | `ev` / `eb` | Einsatzdauer von / bis (min) |
-| `bu` | Bergwacht-Bereitschaft | `hv` / `hb` | Höhe Einsatzort von / bis (m) |
-| `se` | Sekundärtransport (`j`/`n`) | `s` | Sortierspalte |
-| `sr` | Schockraum (`j`/`n`) | `sd` | Sortierrichtung (`a`/`d`) |
-| `re` | Reanimation (`j`/`n`) | | |
-| `rt` | Reanimations-Ereignisse (kommagetrennt) | | |
+| `q`  | Freitext | `st` | Standort |
+| `dv` / `db` | Datum von / bis | `ac` | Maschine |
+| `zv` / `zb` | Alarmzeit von / bis | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
+| `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `rm` | Weiteres Rettungsmittel |
+| `wi` | Windeneinsatz (`j`/`n`) | `av` / `ab` | Alter von / bis |
+| `cv` / `cb` | Cycles von / bis | `kv` / `kb` | Flugstrecke von / bis (km) |
+| `pv` / `pb` | Cycles mit Patient von / bis | `ev` / `eb` | Einsatzdauer von / bis (min) |
+| `lv` | Luftverladung (`j`/`n`) | `s` | Sortierspalte |
+| `bw` | Bergwacht (`j`/`n`) | `sd` | Sortierrichtung (`a`/`d`) |
+| `bu` | Bergwacht-Bereitschaft | | |
+| `tz` | Transportziel | | |
+| `se` | Sekundärtransport (`j`/`n`) | | |
+| `sr` | Schockraum (`j`/`n`) | | |
+
+**Zurückgezogene Kurznamen (bis Web 5.2.0).** `hk` (Herkunft), `re`
+(Reanimation), `rt` (Reanimations-Ereignisse), `hv` / `hb` (Höhe Einsatzort).
+Sie werden **nicht neu vergeben**: Ein alter geteilter Link mit `hk=manual`
+würde sonst unbemerkt einen anderen Filter setzen. `fragmentLesen()` verwirft
+unbekannte Parameter still, alte Links führen also zu keinem Fehler — sie
+ignorieren nur den entfallenen Teil.
 
 Ein neuer Filter braucht drei Dinge: einen Eintrag in der Liste `FILTER` in
 `suche.php` (mit `gruppe`), sein Feld im passenden `<details class="filtergruppe">`
 der Filterspalte und seine Zeile in `trifft()`. Auslesen, Schreiben ins
 Fragment, Wiederherstellen, das Zählen aktiver Filter und das Aufklappen der
-Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab.
+Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab. Die Gruppen
+sind `zeit`, `winde`, `bergwacht`, `transport`, `wer` und `werte`; der Freitext
+steht in der Hauptspalte und hat keine Gruppe.
 
 **Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
 ruft `ui_days_sidebar()` **nicht** auf — einzelne Flugtage sind bei einer Suche
