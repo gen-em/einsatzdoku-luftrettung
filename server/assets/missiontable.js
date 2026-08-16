@@ -180,7 +180,25 @@ const EdMissionTable = (() => {
         tr.className = 'clickable';
         tr.dataset.mid = m.id;
         tr.innerHTML = SPALTEN.map(s => s.zelle(m)).join('');
-        tr.addEventListener('click', () => { location.href = 'einsatz.php?id=' + m.id; });
+        /* Die Zeile ist die Schaltflaeche. Ohne tabindex und Tastenbehandlung
+         * waere das Oeffnen eines Einsatzes eine reine Mausfunktion — die
+         * Hervorhebung beim Ueberfahren gaebe es dann fuer die Tastatur zwar
+         * per :focus-visible, aber nichts zum Ausloesen (Auftragspunkt 9).
+         * role="link" statt "button", weil die Handlung ein Seitenwechsel ist
+         * und der Screenreader das ansagen soll. */
+        tr.tabIndex = 0;
+        tr.setAttribute('role', 'link');
+        const oeffne = () => { location.href = 'einsatz.php?id=' + m.id; };
+        tr.addEventListener('click', oeffne);
+        tr.addEventListener('keydown', ev => {
+          /* Leertaste bewusst mit: Sie ist die uebliche Ausloesung fuer
+           * fokussierte Bedienelemente, und ohne preventDefault scrollt die
+           * Seite stattdessen weg. */
+          if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+            ev.preventDefault();
+            oeffne();
+          }
+        });
         tbody.appendChild(tr);
       });
       if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length); }

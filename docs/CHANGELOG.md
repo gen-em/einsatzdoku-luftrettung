@@ -10,6 +10,112 @@ Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
 Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
 Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.2.0] — 2026-08-16
+
+Erster Block der Verbesserungsrunde Web (A1 „Darstellung und Formate"): fünf
+sichtbare Unstimmigkeiten der Oberfläche und die letzte externe Abhängigkeit im
+laufenden Betrieb. Keine Schemaänderung, keine Migration.
+
+### Kartenbedienung schob sich über die Kopfleiste
+
+Beim Scrollen legten sich Zoom, Ebenenwahl und Quellenangabe der Karte über die
+klebende Kopfleiste. Die Kartenflächen selbst verschwanden korrekt darunter —
+das machte den Fehler erst auffällig.
+
+Die Ursache steckte in Leaflets eigenem Stylesheet: `.leaflet-top` und
+`.leaflet-bottom` stehen dort auf `z-index: 1000`, unsere Kopfleiste auf 900.
+Die Bedienelemente liegen jetzt auf 800. Bewusst nicht niedriger: Der Wert muss
+über der obersten Kartenebene (Popups, 700) bleiben, sonst verdeckt ein
+geöffnetes Popup die Bedienung. Der Kartenvollbildmodus bleibt unberührt — er
+bildet einen eigenen Stapelkontext, die Werte darin zählen nur untereinander.
+
+### Uhrzeiten stehen jetzt überall im 24-Stunden-Format
+
+Je nach Sprach- und Regionseinstellung des Betriebssystems zeigten die
+Zeitfelder „01:30 PM" statt „13:30" — auch bei deutscher Oberfläche. Das ist
+keine Einstellungssache der Anwendung: Das Anzeigeformat von
+`<input type="time">` folgt ausschließlich dem System und lässt sich weder per
+HTML noch per CSS oder JavaScript erzwingen. In einer Notfalldokumentation ist
+eine Uhrzeit mit AM/PM eine Fehlerquelle.
+
+Die Zeitfelder sind deshalb jetzt gewöhnliche Textfelder mit Maske. Die neue
+Datei `assets/zeitfeld.js` setzt Format, Zifferntastatur auf dem Telefon und
+Rückmeldung: Ziffern tippen genügt, der Doppelpunkt setzt sich selbst, aus
+`930` wird beim Verlassen `09:30`. Was keine gültige Uhrzeit ergibt, färbt das
+Feld rot und wird nicht gespeichert. Betroffen sind die Phasenzeiten im
+Einsatzformular und die beiden Alarmzeit-Filter der Suche.
+
+**Datumsfelder bleiben nativ.** Dort ist die Anzeige kosmetisch — der
+übertragene Wert ist immer ISO —, und ein selbstgebauter Kalender wäre auf dem
+Telefon deutlich schlechter zu bedienen.
+
+Die verbindliche Prüfung lag und liegt auf dem Server: `local_to_utc()` prüft
+Muster **und** Wertebereich („25:00" passt auf `\d{2}:\d{2}` und ergäbe sonst
+stillschweigend den nächsten Tag). Die Maske im Browser ist Bequemlichkeit,
+keine Sicherung.
+
+### Der Hinweis „Koordinaten gesetzt …" bezog sich sichtbar auf nichts
+
+Die Meldungszeile des Einsatzort-Feldes stand hinter dem Koordinaten-Chip und
+in derselben Größe und Farbe wie jeder andere Nebentext. Beim Lesen war nicht
+zu erkennen, worauf sie sich bezieht — sie sagt aber etwas über das Textfeld
+darüber aus, nicht über den Chip.
+
+Sie steht jetzt unmittelbar unter dem Feld, kleiner gesetzt und in Max Blau.
+Genauer: in der eine Stufe dunkleren Variante, weil nur die bei dieser
+Schriftgröße die Kontrastschwelle erreicht (4,6:1 statt 3,8:1). Der Fehlerfall
+(„Bezeichnung fehlt") bleibt rot.
+
+### Suchergebnisse sahen nicht anklickbar aus
+
+Ein Klick auf eine Trefferzeile öffnete den Einsatz schon immer — nur sah man
+es der Zeile nicht an. Der Grund war schlicht: `assets/missiontable.js` setzte
+die Klasse `clickable`, und im Stylesheet gab es dazu keine einzige Regel.
+
+Jetzt wechselt der Zeiger, und die Zeile hebt sich beim Überfahren hervor. Und
+weil eine reine Mausfunktion keine Lösung ist: Die Zeilen sind mit der
+Tabulatortaste erreichbar, Enter und Leertaste öffnen den Einsatz, der
+Tastaturfokus ist sichtbar. Betrifft Suche und Zeitraum-Übersicht gemeinsam,
+weil beide dieselbe Tabelle benutzen.
+
+### Schriften und Leaflet kommen nicht mehr aus dem Netz
+
+Bis hierher lud jede Seite zwei Dinge von fremden Servern: die Schriften von
+Google, Leaflet von unpkg. Das hatte zwei Folgen, die im Code seit Längerem als
+Warnung standen. Erstens meldete jeder Seitenaufruf die IP-Adresse an Google
+beziehungsweise unpkg — in einer Anwendung, deren ganzer Zweck darin besteht,
+dass Patientendaten den Browser nicht unverschlüsselt verlassen, war das der
+letzte verbliebene Bruch in der Linie. Zweitens fiel bei blockiertem Abruf
+(Werbeblocker, strenger Trackingschutz) die Karte vollständig aus.
+
+Beides liegt jetzt lokal:
+
+* **Schriften** als woff2 unter `assets/fonts/`, eingebunden per `@font-face`
+  mit `font-display:swap`. Übernommen wurden nur die tatsächlich benutzten
+  Schnitte — Bricolage Grotesque 500/600, Open Sans 400/600/700 —, je in den
+  Subsets latin und latin-ext. `unicode-range` trennt die beiden: latin-ext
+  lädt nur, wenn ein Zeichen daraus vorkommt, etwa in einem osteuropäischen
+  Namen. Zusammen rund 170 KB, und der Browser holt davon im Regelfall nur
+  einen Teil.
+* **Leaflet 1.9.4** unter `assets/vendor/leaflet/` — CSS, JS und die von der
+  CSS referenzierten Bilder. Nach demselben Muster wie SheetJS und zip.js:
+  Herkunft und SHA-256 der Originaldatei stehen im Dateikopf.
+
+Die Ersatzschriftenliste bleibt trotzdem bestehen und bleibt normal breit
+(siehe Web 5.1.1). Sie trägt jetzt nur noch den Fall, dass eine Datei fehlt.
+
+Nebeneffekt, der so vorgesehen war: Eine Content-Security-Policy (Backlog
+Nr. 8) lässt sich erst jetzt eng formulieren, weil keine fremde Quelle mehr
+erlaubt werden muss.
+
+### Nebenbei aufgeräumt: totes Zahnradmenü
+
+`style.css` trug noch die Regeln eines aufklappenden Zahnradmenüs in der
+Kopfleiste, das es seit Längerem nicht mehr gibt — die Kopfleiste enthält
+stattdessen einen einfachen Verweis auf die Einstellungen. Elf Zeilen ohne
+zugehöriges Element sind entfallen. Aufgefallen ist das bei der Suche nach
+Elementen, die über der Kopfleiste liegen (siehe oben).
+
 ## [Web 5.1.1] — 2026-08-14
 
 Vier Rückmeldungen aus dem Betrieb. Keine Schemaänderung; **eine Migration**,

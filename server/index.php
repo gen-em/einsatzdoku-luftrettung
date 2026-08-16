@@ -55,7 +55,7 @@ $neueGeraete = geraete_neu(db(), $userId);
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tagesübersicht — Einsatzdoku</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
 <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
 <?= favicon_tags() ?>
 </head>
@@ -176,7 +176,7 @@ $neueGeraete = geraete_neu(db(), $userId);
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>

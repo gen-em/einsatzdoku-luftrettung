@@ -326,7 +326,14 @@ Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
 Das Formular dient beidem. Phasen werden als Zeilen erfasst (Phase wählen,
 Uhrzeit eintragen, Zeilen hinzufügen/entfernen — auch dieselbe Phase mehrfach).
 **In chronologischer Reihenfolge eintragen**; Zeiten nach Mitternacht werden
-automatisch dem Folgetag zugerechnet. Trägst du eine Zeile nachträglich mit
+automatisch dem Folgetag zugerechnet.
+
+Uhrzeiten stehen immer im **24-Stunden-Format `HH:MM`**, unabhängig davon, wie
+dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
+`930` wird `09:30`, aus `9` wird `09:00`, der Doppelpunkt setzt sich von
+selbst. Ergibt die Eingabe keine gültige Uhrzeit, färbt sich das Feld rot, und
+gespeichert wird sie nicht. Datumsfelder bleiben die gewohnten Kalenderfelder
+deines Geräts. Trägst du eine Zeile nachträglich mit
 einer früheren Uhrzeit ein, sortiert sich die Liste nach dem Speichern von
 selbst richtig ein.
 
@@ -480,7 +487,9 @@ Besatzung und nachgetragene Einsätze wie gewohnt erfassen.
 Über **Suche** in der Kopfleiste durchsuchst du deinen gesamten Bestand — nicht
 nur einen Tag oder einen Zeitraum. Die Trefferliste hat dieselben Spalten wie
 die Zeitraum-Übersicht, lässt sich genauso über die Spaltenköpfe sortieren, und
-ein Klick auf eine Zeile öffnet den Einsatz.
+ein Klick auf eine Zeile öffnet den Einsatz. Die Zeile hebt sich dabei hervor,
+sobald der Zeiger darüber steht. Ohne Maus geht es auch: Mit der Tabulatortaste
+springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz.
 
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
@@ -504,7 +513,7 @@ Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
 enthalten nur, was in deinem Bestand tatsächlich vorkommt. Zwei Besonderheiten:
 
 - **Alarmzeit** darf über Mitternacht gehen. „von 22:00 bis 06:00" findet die
-  Nachteinsätze.
+  Nachteinsätze. Eingabe wie überall als `HH:MM`; Ziffern genügen.
 - **Reanimations-Ereignis** ist eine Mehrfachauswahl. Wählst du mehrere, muss
   der Einsatz alle davon enthalten.
 

@@ -30,7 +30,7 @@ $titel = $monat !== ''
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= e($titel) ?> · Einsatzdoku</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
   <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
   <?= favicon_tags() ?>
 </head>
@@ -91,7 +91,7 @@ $titel = $monat !== ''
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>

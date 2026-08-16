@@ -348,10 +348,17 @@ function fieldValue(string $col) {
         <input type="hidden" id="loclat">
         <input type="hidden" id="loclon">
         <ul id="locsuggest" class="loc-suggest" hidden></ul>
+        <!-- Meldungszeile unmittelbar unter dem Feld (Auftragspunkt 5): Sie
+             sagt etwas ueber DIESES Eingabefeld aus ("Koordinaten gesetzt —
+             dieses Feld ist die Bezeichnung", "Bezeichnung fehlt"), nicht ueber
+             den Chip darunter. Stand sie hinter dem Chip, war der Bezug beim
+             Lesen nicht mehr eindeutig. Nicht mehr .muted, sondern .locstate:
+             kleiner gesetzt und blau, im Fehlerfall zusaetzlich
+             .locstate-fehler (rot). -->
+        <p class="locstate" id="locstate"></p>
         <!-- Bestaetigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
              darin (E2) — sonst vernichtet die erste getippte Bezeichnung sie. -->
         <div class="rmchips" id="locchips"></div>
-        <p class="muted" id="locstate"></p>
       </div>
       <label>Beschreibung Einsatzort
         <span class="muted small">Zufahrt, Besonderheiten, Lage vor Ort</span>
@@ -508,6 +515,7 @@ function fieldValue(string $col) {
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
+<script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_encode($prefillRows) ?>;
@@ -524,7 +532,12 @@ function addRow(no, time) {
     sel.appendChild(o);
   }
   const t = document.createElement('input');
-  t.type = 'time'; t.name = 'ph_time[]'; t.value = time || '';
+  // Textfeld statt type="time" (E1): Native Zeitfelder zeigen je nach
+  // Systemsprache 12 Stunden mit AM/PM. Format und Maske sichert
+  // assets/zeitfeld.js — die Klasse genuegt, das Feld wird auch nachtraeglich
+  // erfasst. Serverseitig prueft weiterhin local_to_utc().
+  t.type = 'text'; t.className = 'zeitfeld';
+  t.name = 'ph_time[]'; t.value = time || '';
   const rm = document.createElement('button');
   rm.type = 'button'; rm.className = 'btn-danger'; rm.textContent = '✕';
   rm.addEventListener('click', () => div.remove());

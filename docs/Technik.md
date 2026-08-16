@@ -68,8 +68,9 @@ hems/
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export)
-│   ├── assets/            style.css (Schriften kommen per @import von Google —
-│   │                      siehe Hinweis unten), crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
+│   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
+│   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
+│   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
@@ -78,8 +79,11 @@ hems/
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
-│   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256);
-│   │                      beide lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
+│   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
+│   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
+│   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
+│   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
+│   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
@@ -1365,23 +1369,50 @@ Browser leitet nur für die gelisteten Werte ab, das entstehende Token passt zu
 keinem gespeicherten Hash. Behebung: den fehlenden Wert wieder in die Liste
 aufnehmen.
 
-**Externe Abhängigkeiten zur Laufzeit.** Zwei Dinge lädt jede Seite aus dem
-Netz: die Schriften Bricolage Grotesque und Open Sans von
-`fonts.googleapis.com`/`fonts.gstatic.com` (per `@import` in `style.css`) und
-Leaflet von `unpkg.com`. Beides hat Folgen, die man kennen sollte:
+**Externe Abhängigkeiten zur Laufzeit: keine (seit Web 5.2.0).** Bis dahin
+holte jede Seite zwei Dinge aus dem Netz — die Schriften Bricolage Grotesque
+und Open Sans von `fonts.googleapis.com`/`fonts.gstatic.com` (per `@import` in
+`style.css`) und Leaflet von `unpkg.com`. Beides wird jetzt selbst
+ausgeliefert:
 
-* **Ausfall.** Wird der Abruf blockiert (Werbeblocker, strenger Trackingschutz,
-  kein Netz), greift die Ersatzliste. Sie muss deshalb etwas ergeben, das wie
-  die Vorlage aussieht — bis Web 5.1.1 stand dort `'Arial Narrow'`, eine
-  schmale Schrift als Ersatz für eine normal breite; die halbe Oberfläche wurde
-  dann gedrungen.
-* **Datenschutz.** Jeder Seitenaufruf meldet die IP-Adresse an Google
-  beziehungsweise an unpkg. In einer Anwendung, deren ganzer Zweck darin
-  besteht, dass Patientendaten den Browser nicht unverschlüsselt verlassen, ist
-  das ein Bruch in der Linie.
+* **Schriften** als woff2 in `server/assets/fonts/`, eingebunden per
+  `@font-face` mit `font-display:swap`. Übernommen wurden nur die tatsächlich
+  benutzten Schnitte (Bricolage 500/600, Open Sans 400/600/700), je in den
+  Subsets latin und latin-ext; `unicode-range` trennt die beiden, latin-ext
+  lädt also nur, wenn ein Zeichen daraus vorkommt. Wer einen weiteren Schnitt
+  braucht, legt die Datei dazu **und** trägt sie in `style.css` ein — ohne
+  `@font-face` nutzt die Datei nichts.
+* **Leaflet 1.9.4** in `server/assets/vendor/leaflet/` (CSS, JS und die von der
+  CSS referenzierten Bilder unter `images/`), nach demselben Muster wie
+  SheetJS und zip.js: Herkunft und SHA-256 der Originaldatei stehen im
+  Dateikopf.
 
-Behebung wäre, beides selbst auszuliefern: die vier woff2-Dateien per
-`@font-face` und Leaflet als lokale Kopie. Steht als **Backlog Nr. 12**.
+Damit entfallen beide bisherigen Folgen: Es meldet kein Seitenaufruf mehr die
+IP-Adresse an Google oder unpkg, und ein Werbeblocker oder strenger
+Trackingschutz kann die Karte nicht mehr ausfallen lassen. Die
+Ersatzschriftenliste in `style.css` bleibt trotzdem bestehen und bleibt normal
+breit (siehe Web 5.1.1) — sie trägt jetzt nur noch den Fall einer fehlenden
+Datei.
+
+Nebeneffekt: Eine Content-Security-Policy (**Backlog Nr. 8**) lässt sich jetzt
+überhaupt erst eng formulieren, weil keine fremde Quelle mehr erlaubt werden
+muss.
+
+**Zeiteingaben (seit Web 5.2.0).** Uhrzeiten werden **nicht** über
+`<input type="time">` erfasst, sondern über Textfelder mit der Klasse
+`zeitfeld`; `assets/zeitfeld.js` setzt Maske, `inputmode`, `pattern` und die
+Rückmeldung im Browser. Grund: Das Anzeigeformat nativer Zeitfelder folgt der
+Sprach- bzw. Regionseinstellung des Betriebssystems und zeigt dort, wo diese
+auf 12 Stunden steht, „01:30 PM" — auch bei deutscher Oberfläche. Erzwingen
+lässt sich das weder per HTML noch per CSS oder JavaScript. **Datumsfelder
+bleiben nativ:** Dort ist die Anzeige kosmetisch (der übertragene Wert ist
+immer ISO), und ein selbstgebauter Kalender wäre mobil schlechter zu bedienen.
+
+Die Prüfschicht liegt weiterhin auf dem Server: `local_to_utc()` in `db.php`
+prüft Muster **und** Wertebereich. `zeitfeld.js` ist Bequemlichkeit im
+Browser, keine Sicherung. Betroffen sind die Phasenzeiten im Einsatzformular
+(`ph_time[]`, dynamisch erzeugt) und die beiden Alarmzeit-Filter der Suche;
+letztere sind reine Clientfilter und erreichen den Server nie.
 
 **Neuinstallation:** leere DB + `server/` hochladen → `index.php` leitet zum
 Installer. Der Installer fragt **kein** Admin-Passwort mehr ab; er legt den

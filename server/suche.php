@@ -46,8 +46,8 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
         <div class="filterfelder">
           <label>Datum von <input type="date" id="f-dv"></label>
           <label>Datum bis <input type="date" id="f-db"></label>
-          <label>Alarmzeit von <input type="time" id="f-zv"></label>
-          <label>Alarmzeit bis <input type="time" id="f-zb"></label>
+          <label>Alarmzeit von <input type="text" class="zeitfeld" id="f-zv"></label>
+          <label>Alarmzeit bis <input type="text" class="zeitfeld" id="f-zb"></label>
           <div class="wochentage" id="f-wd">
             <span class="wtlabel">Wochentag</span>
             <label><input type="checkbox" value="1"> Mo</label>
@@ -160,6 +160,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
+<script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
@@ -569,6 +570,10 @@ function verdrahten() {
     .forEach(el => { el.addEventListener('change', anwenden); });
   $('reset').addEventListener('click', () => {
     FILTER.forEach(f => wertSetzen(f, ''));
+    // Zeitfelder bewerten ihren Zustand selbst, aber nur auf Ereignisse hin;
+    // wertSetzen() schreibt den Wert direkt. Ohne diese Zeile bliebe die rote
+    // Markierung einer vorher ungueltigen Eingabe stehen.
+    EdZeitfeld.pruefeAlle();
     anwenden();
   });
   $('unlockbtn').addEventListener('click', () => entschluesselePat());
