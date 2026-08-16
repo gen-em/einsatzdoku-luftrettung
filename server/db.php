@@ -92,12 +92,45 @@ function stammdaten_dup_personal_count(string $table, string $col, string $val,
 }
 
 /**
- * Adresse einer statischen Datei mit angehaengter Version.
- * Nach einem Update aendert sich dadurch die Adresse, und der Browser laedt
+ * Adresse einer statischen Datei mit angehaengtem Erkennungswert.
+ * Aendert sich die Datei, aendert sich die Adresse, und der Browser laedt
  * Stylesheet bzw. Skript neu — ohne dass jemand den Zwischenspeicher leeren muss.
+ *
+ * Seit Web 5.4.0 ist das der ZEITSTEMPEL DER DATEI, nicht mehr WEB_VERSION
+ * (Backlog Nr. 9). Vorher entwertete jede Versionserhoehung den
+ * Zwischenspeicher aller Dateien — auch derer, die sich nicht geaendert
+ * hatten. Bei einer Korrekturfassung, die eine einzige Zeile im Stylesheet
+ * anfasst, luden Besucher trotzdem saemtliche Skripte erneut.
+ *
+ * Zum Auslieferungsweg (Pruefschritt P8): Der FTP-Deploy uebertraegt nur
+ * Dateien, deren Inhalt sich geaendert hat — er fuehrt dafuer auf dem Server
+ * eine Zustandsdatei mit Pruefsummen. Unveraenderte Dateien werden also nicht
+ * angefasst und behalten ihren Zeitstempel; uebertragene bekommen den
+ * Zeitpunkt des Hochladens, was genau der gewuenschte Wechsel ist. Der
+ * Zeitstempel muss dabei NICHT erhalten bleiben — er dient hier als
+ * Aenderungsmarke, nicht als Datum.
+ *
+ * Rueckfall auf WEB_VERSION, wenn die Datei nicht gefunden wird: Dann ist der
+ * Verweis ohnehin falsch, und ein fehlender Erkennungswert waere der
+ * unangenehmere der beiden Fehler — die Adresse bliebe fuer immer dieselbe.
+ *
+ * Die Pfade sind seitenrelativ ('assets/style.css'); alle aufrufenden Seiten
+ * liegen in diesem Verzeichnis, weshalb __DIR__ die richtige Wurzel ist.
  */
 function asset(string $pfad): string {
-    return $pfad . '?v=' . WEB_VERSION;
+    // Je Anfrage wird dieselbe Datei mehrfach erfragt (Kopf- und Fusszeile,
+    // favicon_tags()); das Ergebnis wird deshalb gemerkt. Der stat-Aufruf
+    // selbst ist billig und zusaetzlich vom Dateistatus-Zwischenspeicher von
+    // PHP gedeckt.
+    static $merker = [];
+    if (!array_key_exists($pfad, $merker)) {
+        // Ohne Anfuehrungszeichen im Fehlerfall: Eine fehlende Datei ist hier
+        // kein Grund fuer eine Warnung im Protokoll, der Rueckfall darunter
+        // behandelt sie.
+        $zeit = @filemtime(__DIR__ . '/' . ltrim($pfad, '/'));
+        $merker[$pfad] = $zeit !== false ? (string)$zeit : WEB_VERSION;
+    }
+    return $pfad . '?v=' . $merker[$pfad];
 }
 
 /**

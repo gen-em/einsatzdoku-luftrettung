@@ -700,10 +700,22 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
 #missions th.c-swatch,#missions td.c-swatch{width:1.7rem;padding-left:.2rem}
 #missions th.c-no,   #missions td.c-no    {width:2.6rem}
 #missions th.c-mid,  #missions td.c-mid   {width:5.2rem}   /* Beginn, Dauer, Alter */
-#missions th.c-winde,#missions td.c-winde {width:4.4rem}
-#missions th.c-bw,   #missions td.c-bw    {width:6.2rem}
-#missions th.c-sek,  #missions td.c-sek   {width:6.4rem;white-space:normal}
 #missions th.c-km,   #missions td.c-km    {width:5.4rem}
+
+/* SPALTEN AUS 'day_col' (mission_fields.php, seit Web 5.4.0).
+   Vorher hiessen sie .c-winde/.c-bw/.c-sek und waren an die feste Spaltenfolge
+   von index.php gebunden. Jetzt traegt jede Spalte .c-dc plus .c-dc-<spalte>:
+   .c-dc setzt eine brauchbare Vorgabe, damit ein neues Feld im Katalog ohne
+   Eintrag hier auskommt; die Klasse je Spalte ueberschreibt sie, wo die
+   Vorgabe nicht passt. Umbruch erlaubt — der Titel kommt aus dem Katalog und
+   ist nicht auf eine Zeile zugeschnitten.
+   Die gleichnamigen Klassen von #rangetable (assets/missiontable.js, weiter
+   unten) sind davon unberuehrt: Jene Tabelle hat einen eigenen Spaltenkatalog. */
+#missions th.c-dc,              #missions td.c-dc              {width:5.4rem;white-space:normal}
+#missions th.c-dc-winch,        #missions td.c-dc-winch        {width:4.4rem}
+#missions th.c-dc-bergwacht,    #missions td.c-dc-bergwacht    {width:6.2rem}
+#missions th.c-dc-secondary,    #missions td.c-dc-secondary    {width:6.4rem}
+#missions th.c-dc-crew_override,#missions td.c-dc-crew_override{width:5.4rem}
 
 /* Alle Spalten mittig — auch Einsatzort und Diagnose */
 #missions th,#missions td{text-align:center}

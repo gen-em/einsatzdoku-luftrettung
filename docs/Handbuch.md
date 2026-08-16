@@ -271,10 +271,14 @@ vorausgewählt. Pro Tag:
   drei Kartenseiten der Anwendung zur Verfügung.
 - **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
   der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
-  Sekundärtransport, Kilometer. Alle Spalten sind zentriert und in
-  abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz, ein
-  Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung
-  bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
+  Sekundärtransport, **abw. Crew**, Kilometer. Alle Spalten sind zentriert und
+  in abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz,
+  ein Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der
+  Alarmierung bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
+  Die Spalte **abw. Crew** ist seit Web 5.4.0 zu sehen: Sie setzt einen Haken,
+  wenn für den Einsatz eine vom Flugtag abweichende Besatzung eingetragen ist
+  (Abschnitt 5). Wer nachträgt, sieht damit auf einen Blick, an welchen
+  Einsätzen des Tages jemand anderes an Bord war.
 - **„+ Einsatz nachtragen"** öffnet das Eingabeformular für diesen Tag,
   **„Tag löschen"** entfernt den gesamten Flugtag (Abschnitt 8).
 

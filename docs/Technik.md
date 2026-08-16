@@ -47,6 +47,8 @@ hems/
 │   ├── zeitraum.php       Jahres-/Monatsübersicht (Karte, Statistik, Tabelle)
 │   ├── suche.php          Suche über den gesamten Bestand (filtert im Browser, s. u.)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
+│   ├── mission_fields_lib.php  Abgeleitete Sichten auf den Feldkatalog
+│   │                       (mf_tagesspalten() = Spalten der Tagestabelle)
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
@@ -405,10 +407,27 @@ und schickt sie an `api/backup_restore.php`. Dadurch sind Backups zwischen
 Konten übertragbar; der Server sieht nie Klartext. Aufbau: `docs/Backup-Format.md`.
 
 **Versionierung & Zwischenspeicher:** `WEB_VERSION` steht ausschließlich in
-`server/version.php`. `asset($pfad)` (in `db.php`) hängt `?v=<Version>` an jede
-Stylesheet- und Skript-Adresse; nach dem Erhöhen der Nummer lädt der Browser
-geänderte Dateien von selbst neu — das manuelle Leeren des Zwischenspeichers
-entfällt. **Beim Ausliefern immer die Version erhöhen.** `favicon_tags()`
+`server/version.php` und erscheint in der Fußzeile. `asset($pfad)` (in
+`db.php`) hängt an jede Stylesheet- und Skript-Adresse einen Erkennungswert an;
+ändert er sich, lädt der Browser die Datei neu — das manuelle Leeren des
+Zwischenspeichers entfällt. **Beim Ausliefern immer die Version erhöhen.**
+
+Seit Web 5.4.0 ist dieser Erkennungswert der **Zeitstempel der jeweiligen
+Datei** statt der globalen Version (Backlog Nr. 9). Vorher entwertete jede
+Versionserhöhung den Zwischenspeicher *aller* Dateien, auch der unveränderten:
+Eine Korrekturfassung, die eine Zeile im Stylesheet ändert, ließ Besucher
+sämtliche Skripte erneut laden. `WEB_VERSION` bleibt der Rückfall, wenn eine
+Datei nicht gefunden wird — dann ist der Verweis ohnehin falsch, und eine
+Adresse ohne wechselnden Erkennungswert wäre der unangenehmere Fehler.
+Verträglich mit dem Auslieferungsweg (Prüfschritt P8): Der FTP-Deploy überträgt
+nur inhaltlich geänderte Dateien und führt dafür auf dem Server eine
+Zustandsdatei mit Prüfsummen; unveränderte Dateien behalten ihren Zeitstempel,
+übertragene bekommen den Zeitpunkt des Hochladens. Der Zeitstempel muss also
+nicht erhalten bleiben — er ist Änderungsmarke, nicht Datum. Zwei Fälle, in
+denen einmalig alles neu geladen wird: die erste Auslieferung nach dieser
+Umstellung und ein Deploy, bei dem die Zustandsdatei auf dem Server fehlt.
+
+`favicon_tags()`
 erzeugt zentral die Symbol-Verweise (PNG mit Version, ICO im Wurzelverzeichnis,
 apple-touch-icon), wurzelbezogen über `SCRIPT_NAME`. `logo_src()` liefert das
 Login-/Einrichtungslogo und prüft dabei, ob die in der Konfiguration angegebene
@@ -1364,8 +1383,12 @@ erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.
 missions` in `schema.sql` anfügen (sonst weichen Neuinstallation und
 migrierter Bestand voneinander ab), 3) Eintrag in `mission_fields.php`.
 Formular, Speichern, API und Detailanzeige übernehmen es dann automatisch.
-**Ausnahme:** `day_col` wirkt derzeit **nicht** automatisch — die Spalten der
-Tagestabelle sind hartkodiert (Backlog Nr. 10).
+Seit Web 5.4.0 gilt das auch für `day_col`: Der Schlüssel wird an genau einer
+Stelle ausgewertet — `mf_tagesspalten()` in `mission_fields_lib.php` —, und
+`api/day.php` liefert die Spalte daraufhin von selbst mit, `index.php` zeigt
+und sortiert sie (Backlog Nr. 10). Optional bleibt eine Spaltenbreite in
+`style.css` unter der Klasse `c-dc-<spalte>`; ohne sie greift die Vorgabe von
+`.c-dc`.
 
 **Backup:** regelmäßiger MySQL-Dump (alle Tabellen; `mysqldump` oder
 Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt

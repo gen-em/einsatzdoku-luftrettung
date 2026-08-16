@@ -4,11 +4,104 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/).
 
 **Weboberfläche** und **Uhr-App** werden getrennt gezählt, weil sie unabhängig
 voneinander ausgeliefert werden: `server/version.php` bzw.
-`watch/source/Const.mc`. Die Web-Version steht in der Fußzeile jeder Seite und
-hängt an allen Stylesheet- und Skript-Adressen — nach einem Update lädt der
-Browser sie dadurch von selbst neu. Die Uhr-Version steht auf der Sync-Seite.
-Die Stände 1.0 bis 1.2 unten sind die frühen Spezifikations-Stände des
-Gesamtprojekts, vor der getrennten Zählung.
+`watch/source/Const.mc`. Die Web-Version steht in der Fußzeile jeder Seite. Bis
+Web 5.3.0 hing sie zusätzlich an allen Stylesheet- und Skript-Adressen; seit
+Web 5.4.0 steht dort der Zeitstempel der jeweiligen Datei, damit nach einem
+Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
+Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
+frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
+
+## [Web 5.4.0] — 2026-08-16
+
+Dritter Block der Verbesserungsrunde Web (A3 „Technische Schulden"). Keine
+Schemaänderung, keine Migration. Der Block räumt zwei Altlasten aus, die den
+kommenden Umbau für bodengebundene Einsätze sonst verteuert hätten, und bringt
+das Backlog in einen widerspruchsfreien Zustand.
+
+### Neu sichtbar: die Spalte „abw. Crew" in der Tagesübersicht
+
+Die Tagesübersicht zeigt jetzt eine zehnte Spalte: **abw. Crew**. Sie setzt
+einen Haken, wenn für den Einsatz eine vom Flugtag abweichende Besatzung
+eingetragen ist — der Fall, für den es die Funktion seit Web 2.6.0 gibt
+(Pilotenwechsel während eines Flugtags). Wer einen Tag nachträgt oder
+durchsieht, erkennt so ohne Aufklappen, an welchen Einsätzen jemand anderes an
+Bord war. Sortieren lässt sie sich wie jede andere Spalte.
+
+Die Spalte war die ganze Zeit definiert, nur nicht angeschlossen — siehe unten.
+
+### Ein Feldkatalog, eine Auswertung
+
+`mission_fields.php` ist der zentrale Katalog der Zusatzfelder. Sein Schlüssel
+`day_col` sollte sagen, welche Felder als Spalte in der Tagesübersicht
+erscheinen; tatsächlich war er reine Dokumentation. Die Spalten standen an drei
+Stellen fest verdrahtet: im SELECT und im JSON-Aufbau von `api/day.php` sowie
+im Tabellenkopf und im Zeilenaufbau von `index.php`. Ein Eintrag im Katalog
+allein bewirkte nichts — deshalb fehlte „abw. Crew".
+
+Die neue Datei `server/mission_fields_lib.php` wertet den Katalog jetzt an
+**einer** Stelle aus (`mf_tagesspalten()`); Tabellenkopf, Zeilen, Sortierung
+und die Antwort von `api/day.php` leiten sich daraus ab. Ein neues Feld mit
+`day_col` erscheint damit ohne weitere Codeänderung. Auch die Spaltenklassen im
+Stylesheet sind nicht mehr an eine feste Reihenfolge gebunden: Sie heißen
+`c-dc-<spalte>`, und `.c-dc` gibt eine Vorgabe vor, mit der eine neue Spalte
+ohne eigenen Eintrag auskommt.
+
+Am ausgelieferten JSON ändert sich für bestehende Felder nichts — `winch`,
+`bergwacht` und `secondary` heißen weiterhin so; `crew_override` kommt hinzu.
+(Backlog Nr. 10)
+
+### Ein Update lädt nur noch, was sich geändert hat
+
+`asset()` hängte bisher die globale Versionsnummer an jede Stylesheet- und
+Skript-Adresse. Folge: Jede Versionserhöhung entwertete den Zwischenspeicher
+**aller** Dateien. Eine Korrekturfassung, die eine Zeile im Stylesheet ändert,
+ließ jeden Besucher sämtliche Skripte, die Schriften und Leaflet erneut laden —
+nach der lokalen Auslieferung der Schriften (Web 5.2.0) sind das einige hundert
+Kilobyte.
+
+Jetzt steht dort der Zeitstempel der jeweiligen Datei. Unveränderte Dateien
+behalten ihre Adresse und bleiben im Zwischenspeicher; geänderte bekommen eine
+neue. Wird eine Datei nicht gefunden, tritt wie bisher die Versionsnummer an
+ihre Stelle. Der Auslieferungsweg trägt das mit: Der FTP-Deploy überträgt nur
+inhaltlich geänderte Dateien und führt dafür auf dem Server eine Zustandsdatei
+mit Prüfsummen. Zweimal wird trotzdem einmalig alles neu geladen — bei dieser
+Auslieferung selbst und bei einem Deploy, bei dem jene Zustandsdatei auf dem
+Server fehlt. (Backlog Nr. 9)
+
+**Für die Auslieferung unverändert:** Die Version in `server/version.php` wird
+weiterhin bei jeder Auslieferung erhöht. Sie steht in der Fußzeile und ist die
+Nummer, über die eine Meldung zugeordnet wird.
+
+### Das Backlog widerspricht sich nicht mehr
+
+`docs/Backlog.md` erklärt im Kopf, dass Nummern dauerhaft sind und Erledigtes
+nach unten wandert — hielt sich aber selbst nicht daran. Aufgeräumt:
+
+* Die **Nummer 5 war doppelt vergeben**. Sie bleibt beim Geräte-Limit; die
+  Typprüfer-Warnungen im Uhr-Code haben die freie Nummer **13** bekommen.
+* Das **Geräte-Limit (Nr. 5)** ist längst umgesetzt und steht jetzt unter
+  *Erledigt*.
+* Die **Nummern 4, 6 und 7** fehlen ersatzlos und sind nicht mehr
+  rekonstruierbar. Statt sie stillschweigend zu übergehen, sagt eine Notiz im
+  Kopf, dass sie dauerhaft frei bleiben.
+* Neu aufgenommen als **Nr. 14**: der Kopplungsablauf der Uhr — vor einer
+  Neukopplung die bestehende abfragen und trennen, damit bei einem Fehlschlag
+  nicht stillschweigend weiter auf das vorherige Konto dokumentiert wird.
+* Nach *Erledigt* verschoben: **Nr. 9** und **Nr. 10** aus diesem Block.
+
+### Geändert
+
+* `server/mission_fields_lib.php` — neu: abgeleitete Sichten auf den
+  Feldkatalog, derzeit `mf_tagesspalten()`.
+* `server/api/day.php` — Spaltenliste und Antwortaufbau aus dem Feldkatalog.
+* `server/index.php` — Tabellenkopf, Zeilenaufbau und `sortVal()` aus dem
+  Feldkatalog; neue Konstante `DAY_COLS`.
+* `server/assets/style.css` — Spaltenklassen `c-dc`/`c-dc-<spalte>` statt
+  `c-winde`/`c-bw`/`c-sek` für die Tagestabelle. Die gleichnamigen Klassen der
+  Zeitraum- und Suchtabelle (`#rangetable`) sind unberührt.
+* `server/db.php` — `asset()` auf Dateizeitstempel.
+* `server/version.php`, `server/mission_fields.php` — Kommentare nachgezogen.
+* `docs/Backlog.md`, `docs/Technik.md`, `docs/Handbuch.md`.
 
 ## [Web 5.3.0] — 2026-08-16
 

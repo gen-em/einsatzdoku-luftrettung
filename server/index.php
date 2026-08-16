@@ -3,6 +3,11 @@ declare(strict_types=1);
 // Noch nicht eingerichtet? -> Installer starten (erledigt sich nach 1x selbst).
 if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/mission_fields_lib.php';   // Spalten der Tagestabelle
+
+// Spalten der Tagestabelle aus dem Feldkatalog (mission_fields.php, 'day_col').
+// Tabellenkopf, Zeilenaufbau und Sortierung unten leiten sich alle hieraus ab.
+$TAGESSPALTEN = mf_tagesspalten();
 
 // Gewaehlter Tag: ?day=YYYY-MM-DD, sonst der neueste
 // Stammdaten fuer die Flugtag-Dropdowns
@@ -151,9 +156,14 @@ $neueGeraete = geraete_neu(db(), $userId);
         <th class="sortable"        data-key="site">Einsatzort</th>
         <th class="sortable c-mid"   data-key="age">Alter</th>
         <th class="sortable"        data-key="dx">Diagnose</th>
-        <th class="sortable c-winde" data-key="winch">Winde</th>
-        <th class="sortable c-bw"    data-key="bw">Bergwacht</th>
-        <th class="sortable c-sek"   data-key="sec">Sekundär<br>Transport</th>
+        <?php /* Spaltentitel aus dem Feldkatalog. Bewusst unmaskiert: Der Wert
+                 ist 'day_label' aus mission_fields.php und darf Auszeichnung
+                 enthalten (Sekundär<br>Transport). Er stammt aus einer Datei
+                 des Projekts, nie aus einer Eingabe. */
+              foreach ($TAGESSPALTEN as $dc): ?>
+        <th class="sortable c-dc <?= e($dc['klasse']) ?>"
+            data-key="dc:<?= e($dc['col']) ?>"><?= $dc['label'] ?></th>
+        <?php endforeach; ?>
         <th class="sortable c-km"    data-key="km">Flug&nbsp;km</th>
       </tr></thead>
       <tbody></tbody>
@@ -191,6 +201,13 @@ const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 const KDF_ITER      = <?= json_encode($kdfIter) ?>;
 const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const DEF_BASE = <?= (int)$DEF_BASE ?>;
+/* Spalten der Tagestabelle — dieselbe Liste, aus der oben der Tabellenkopf
+   entstanden ist. Der Titel fehlt hier bewusst: Er steht bereits im <thead>,
+   und das Skript baut nur noch Zellen. */
+const DAY_COLS = <?= json_encode(array_map(
+        static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
+                                        'klasse' => $dc['klasse']],
+        $TAGESSPALTEN), JSON_UNESCAPED_UNICODE) ?>;
 const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
 let currentDay = null;
 
@@ -229,6 +246,16 @@ let dayMissions = [];
 let sortKey = 'start', sortDir = 1;
 
 function sortVal(m, key){
+  // Spalten aus dem Feldkatalog tragen den Schluessel 'dc:<spalte>'. Haken
+  // sortieren als 0/1, Textspalten als kleingeschriebene Zeichenkette — wie
+  // die uebrigen Textspalten der Tabelle auch.
+  if (key.startsWith('dc:')) {
+    const col = key.slice(3);
+    const def = DAY_COLS.find(d => d.col === col);
+    const v = m[col];
+    if (!def || def.art === 'check') return v ? 1 : 0;
+    return String(v ?? '').toLowerCase();
+  }
   switch (key) {
     case 'no':
     case 'start': return m._no;
@@ -236,9 +263,6 @@ function sortVal(m, key){
     case 'site':  return (m._ort || '').toLowerCase();
     case 'age':   return m._age == null ? -1 : m._age;
     case 'dx':    return (m._dx || '').toLowerCase();
-    case 'winch': return m.winch ? 1 : 0;
-    case 'bw':    return m.bergwacht ? 1 : 0;
-    case 'sec':   return m.secondary ? 1 : 0;
     case 'km':    return m.distance_m == null ? -1 : m.distance_m;
   }
   return 0;
@@ -253,6 +277,15 @@ function renderMissionTable(){
   });
   list.forEach(m => {
     const tr = document.createElement('tr');
+    // Zellen der Katalogspalten in der Reihenfolge des Tabellenkopfes
+    const dcZellen = DAY_COLS.map(d => {
+      const v = m[d.col];
+      if (d.art === 'check') {
+        return `<td class="checkcol c-dc ${d.klasse}">${v ? '✓' : ''}</td>`;
+      }
+      const t = (v == null || v === '') ? '' : String(v);
+      return `<td class="c-dc ${d.klasse}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
+    }).join('');
     tr.innerHTML = `<td class="c-swatch"><span class="swatch" style="background:${m._col}"></span></td>
       <td class="mono c-no">${m._no}</td>
       <td class="mono c-mid">${m.start_hhmm}</td>
@@ -260,9 +293,7 @@ function renderMissionTable(){
       <td${m._ort ? '' : ' class="dash"'}>${m._ort ? esc(m._ort) : '–'}</td>
       <td class="mono c-mid${m._age != null ? '' : ' dash'}">${m._age != null ? m._age : '–'}</td>
       <td${m._dx ? '' : ' class="dash"'}>${m._dx ? esc(m._dx) : '–'}</td>
-      <td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>
-      <td class="checkcol c-bw">${m.bergwacht ? '✓' : ''}</td>
-      <td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>
+      ${dcZellen}
       <td class="mono c-km">${fmtKm(m.distance_m)}</td>`;
     tr.addEventListener('click', () => location.href = 'einsatz.php?id=' + m.id);
     tbody.appendChild(tr);

@@ -7,6 +7,11 @@ Bewusst offene Punkte.
 sondern nach unten in den Abschnitt *Erledigt* verschoben und behalten ihre
 Nummer. Neue Punkte hängen sich hinten an.
 
+**Zu den fehlenden Nummern 4, 6 und 7.** Sie waren vergeben und sind ohne
+Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
+deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
+Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
+
 ---
 
 ## Offen
@@ -14,22 +19,9 @@ Nummer. Neue Punkte hängen sich hinten an.
 1. Reanimations-Zeiten im Nachtrage-/Bearbeitungsformular
 2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
 3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
-5. Geräte-Limit pro NutzerIn
-5. Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen
-8. Content-Security-Policy als zusätzliche Verteidigungslinie
-9. `asset()` auf Datei-Zeitstempel statt globale Version umstellen
-10. **`day_col` generisch auswerten.** Der Schlüssel `day_col` in
-    `mission_fields.php` ist derzeit reine Dokumentation: Die Spalten der
-    Tagestabelle sind an drei Stellen hartkodiert — `api/day.php` (SELECT +
-    JSON), `index.php` (`<thead>`) und `index.php` (Zeilenrendering +
-    `sortVal()`). Solange das so ist, erscheint die Spalte „abw. Crew"
-    (Crew-Override, Web 2.6.0) nicht in der Tagesübersicht, obwohl sie
-    definiert ist. Auflösung = einmalige generische Auswertung; berührt
-    zusätzlich die CSS-Spaltenklassen (`c-winde`, `c-bw`, `c-sek`).
-    Die Tagestabelle in `index.php` ist bewusst **nicht** auf
-    `assets/missiontable.js` umgestellt: Sie zeigt Tagesnummer und Farbmarkierung
-    statt Datum und gehört zu einem anderen Zusammenhang. Erst wenn `day_col`
-    generisch ausgewertet wird, lohnt die Frage nach einer Zusammenführung.
+8. Content-Security-Policy als zusätzliche Verteidigungslinie.
+   Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
+   (Nr. 12), die Regel muss also nichts von außen erlauben.
 11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
     kann.** Beobachtet ohne hinterlegte Server-Adresse: Die Seite zeigt
     gleichzeitig das grüne „Sync vollständig" mit Haken **und** unten den
@@ -53,6 +45,16 @@ Nummer. Neue Punkte hängen sich hinten an.
     zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
     Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
     abgebildet und bleibt.
+13. **Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen.**
+    Stand bis Web 5.4.0 irrtümlich als zweite Nummer 5 in dieser Liste — die
+    5 gehört dem Geräte-Limit (siehe *Erledigt*). Inhalt unverändert, nur die
+    Nummer ist neu vergeben; ältere Verweise auf „Nr. 5b" meinen diesen Punkt.
+14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
+    abfragen und trennen.** Fall: eine geteilt genutzte Uhr. Wird sie neu
+    gekoppelt und schlägt der Vorgang fehl, dokumentiert sie stillschweigend
+    weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
+    abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
+    `server/pair.php`.
 
 ---
 
@@ -61,6 +63,11 @@ Nummer. Neue Punkte hängen sich hinten an.
 Nummern bleiben vergeben (siehe Kopf). Die Einträge stehen hier in der
 Reihenfolge ihrer Erledigung.
 
+5. **Geräte-Limit pro NutzerIn.** War bereits vor dieser Verbesserungsrunde
+   umgesetzt und stand nur noch versehentlich unter *Offen*; hier nachgetragen
+   (Web 5.4.0, Entscheidung E10 der Verbesserungsrunde Web). Die Nummer 5 war
+   doppelt vergeben — der zweite Eintrag (Typprüfer-Warnungen im Uhr-Code) hat
+   die freie Nummer 13 bekommen.
 12. **Schriften und Leaflet selbst ausliefern.** Erledigt in Web 5.2.0
     (Block A1.5). Bricolage Grotesque und Open Sans liegen als woff2 in
     `server/assets/fonts/` und werden per `@font-face` mit `font-display:swap`
@@ -72,3 +79,25 @@ Reihenfolge ihrer Erledigung.
     Ersatzschriftenliste bleibt als zweite Ebene bestehen. Nebeneffekt wie
     vorgesehen: Nr. 8 (Content-Security-Policy) ist jetzt eng fassbar, weil
     keine fremde Quelle mehr erlaubt werden muss.
+9. **`asset()` auf Datei-Zeitstempel statt globale Version umstellen.**
+   Erledigt in Web 5.4.0 (Block A3.2). `asset()` (`db.php`) hängt jetzt den
+   Zeitstempel der jeweiligen Datei an, nicht mehr `WEB_VERSION`; eine
+   Versionserhöhung ohne Änderung an einer Datei lässt sie damit nicht mehr
+   neu laden. `WEB_VERSION` bleibt der Rückfall für den Fall, dass eine Datei
+   nicht gefunden wird. Der FTP-Deploy überträgt nur inhaltlich geänderte
+   Dateien (Zustandsdatei mit Prüfsummen auf dem Server), unveränderte behalten
+   deshalb ihren Zeitstempel — Prüfschritt P8 der Verbesserungsrunde.
+10. **`day_col` generisch auswerten.** Erledigt in Web 5.4.0 (Block A3.1).
+    Der Schlüssel `day_col` in `mission_fields.php` war reine Dokumentation:
+    Die Spalten der Tagestabelle standen an drei Stellen fest — `api/day.php`
+    (SELECT + JSON), `index.php` (`<thead>`) und `index.php` (Zeilenrendering +
+    `sortVal()`). Die Spalte „abw. Crew" (Crew-Override, Web 2.6.0) erschien
+    dadurch nicht, obwohl sie definiert war. Jetzt wertet `mf_tagesspalten()`
+    in der neuen Datei `server/mission_fields_lib.php` den Katalog als einzige
+    Stelle aus; die CSS-Spaltenklassen heißen `c-dc-<spalte>` mit `.c-dc` als
+    Vorgabe und sind nicht mehr an eine feste Spaltenfolge gebunden.
+    Weiterhin **nicht** umgestellt ist die Tagestabelle auf
+    `assets/missiontable.js`: Sie zeigt Tagesnummer und Farbmarkierung statt
+    Datum und gehört zu einem anderen Zusammenhang. Diese Frage lässt sich
+    jetzt beurteilen — beide Tabellen haben nun einen Spaltenkatalog, sie sind
+    nur nicht derselbe.

@@ -25,7 +25,17 @@ declare(strict_types=1);
  *                                   ergaenzt statt stillschweigend verworfen
  *
  * Weitere Schluessel:
- *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓)
+ *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓).
+ *                                   Seit Web 5.4.0 generisch ausgewertet:
+ *                                   mf_tagesspalten() in mission_fields_lib.php
+ *                                   ist die EINZIGE Stelle, die diesen
+ *                                   Schluessel liest. api/day.php liefert die
+ *                                   Spalte daraufhin von selbst mit, index.php
+ *                                   zeigt und sortiert sie. Ein neues Feld
+ *                                   braucht hier einen Eintrag und sonst
+ *                                   nichts — hoechstens eine Spaltenbreite in
+ *                                   style.css (Klasse `c-dc-<spalte>`).
+ *                                   Gilt auch fuer Unterfelder.
  *
  *   'role_gate' => 'p1'|'p2'|'hems'|'fr'|'other'
  *                                   Feld nur zeigen, wenn der Hubschrauber des
@@ -35,7 +45,9 @@ declare(strict_types=1);
  *                                   die Speicherlogik wuerde einen vorhandenen
  *                                   Wert loeschen. Ein bereits belegtes Feld
  *                                   bleibt darum immer sichtbar.
- *   'day_label' => 'Winde'          Spaltentitel (sonst 'label')
+ *   'day_label' => 'Winde'          Spaltentitel (sonst 'label'). Wird
+ *                                   unmaskiert ausgegeben und darf deshalb
+ *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
  *   'placeholder'
  *   'suggest_src'                   nur bei 'text': Name einer Stammdaten-
  *                                   Tabelle (aktuell 'transport_dests'),
@@ -89,7 +101,11 @@ return [
 
     'secondary' => [
         'label' => 'Sekundärtransport', 'type' => 'checkbox',
-        'day_col' => 'check', 'day_label' => 'Sekundär&shy;transport',
+        // Harter Umbruch statt weichem Trennstrich: Die Zeitraum- und die
+        // Suchtabelle (assets/missiontable.js) beschriften diese Spalte
+        // ebenso. Solange 'day_col' wirkungslos war, fiel der Unterschied
+        // nicht auf (Web 5.4.0).
+        'day_col' => 'check', 'day_label' => 'Sekundär<br>Transport',
     ],
     'other_ema' => [
         'label' => 'Anderer Notarzt', 'type' => 'text', 'max' => 190,
@@ -106,10 +122,9 @@ return [
         // wird also nichts doppelt gespeichert. Die effektive Besatzung
         // (COALESCE-Regel) liefert api/mission.php als 'crew_effektiv'.
         //
-        // Hinweis: 'day_col' wirkt derzeit noch nicht — die Spalten der
-        // Tagestabelle sind in index.php und api/day.php hartkodiert. Der
-        // Eintrag steht hier, damit die Spalte automatisch erscheint, sobald
-        // 'day_col' generisch ausgewertet wird (Backlog).
+        // Die Spalte in der Tagestabelle erscheint seit Web 5.4.0 tatsaechlich
+        // (Backlog Nr. 10). Bis dahin war der Eintrag 'day_col' hier wirkungs-
+        // los, weil die Spalten in index.php und api/day.php hartkodiert waren.
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
         'day_col' => 'check', 'day_label' => 'abw. Crew',
         'children' => [

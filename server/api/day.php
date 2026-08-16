@@ -2,11 +2,16 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
+require_once __DIR__ . '/../mission_fields_lib.php';
 
 /**
  * GET  api/day.php            -> { days: ["2026-07-16", ...], latest: "..." }
  * GET  api/day.php?day=Y-m-d  -> Tagesdaten: Flugtag-Meta, Einsaetze (inkl.
  *                                Track, Phasenzeiten), Ruhe-Segmente
+ *                                Je Einsatz zusaetzlich die Spalten der
+ *                                Tagestabelle unter ihrem Spaltennamen —
+ *                                welche das sind, sagt 'day_col' in
+ *                                mission_fields.php (siehe mf_tagesspalten()).
  * POST api/day.php            -> Flugtag-Felder speichern (Upsert)
  *                                JSON-Body {day, aircraft, base, crew, notes},
  *                                Header X-CSRF muss zum Session-Token passen
@@ -165,8 +170,24 @@ try {
         return $nach;
     };
 
+    /* SPALTEN DER TAGESTABELLE AUS DEM FELDKATALOG (Backlog Nr. 10).
+     *
+     * Hier standen `winch, bergwacht, secondary` fest im SELECT und weiter
+     * unten noch einmal im Aufbau der Antwort. mission_fields.php kennt den
+     * Schluessel 'day_col' — er war damit reine Dokumentation, und die dort
+     * definierte Spalte „abw. Crew" erschien nie. Beides kommt jetzt aus
+     * mf_tagesspalten().
+     *
+     * Die Spaltennamen sind gegen [a-z][a-z0-9_]* geprueft (siehe
+     * mission_fields_lib.php) und stammen aus einer Projektdatei, nicht aus
+     * einer Anfrage — die Einsetzung in das SQL ist deshalb unbedenklich.
+     * Ein Platzhalter ist fuer Spaltennamen ohnehin nicht moeglich. */
+    $tagesSpalten = mf_tagesspalten();
+    $spaltenSql = '';
+    foreach ($tagesSpalten as $dc) { $spaltenSql .= ', ' . $dc['col']; }
+
     $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           winch, bergwacht, secondary, pat_blob,
+                           pat_blob' . $spaltenSql . ',
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
                          FROM missions WHERE user_id = ? AND day = ? AND deleted_at IS NULL
@@ -184,19 +205,29 @@ try {
         if ($m['p9_at'] !== null) {
             $dur = (new DateTime($m['p9_at']))->getTimestamp() - (new DateTime($m['started_at']))->getTimestamp();
         }
-        $missions[] = [
+        $zeile = [
             'id'         => (int)$m['id'],
             'start_hhmm' => fmt_local($m['started_at']),
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'final'      => (bool)$m['final'],
             'has_p9'     => $m['p9_at'] !== null,
-            'winch'      => (int)$m['winch'] === 1,
-            'bergwacht'  => (int)$m['bergwacht'] === 1,
-            'secondary'  => (int)$m['secondary'] === 1,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
             'track'      => $spurEinsatz[(int)$m['id']] ?? [],
         ];
+        /* Die Spalten aus 'day_col' stehen unter ihrem eigenen Namen in der
+         * Antwort — bisher hiessen sie dort schon 'winch', 'bergwacht' und
+         * 'secondary', der Vertrag bleibt fuer sie also unveraendert.
+         * Ein Feldname, der einen der festen Schluessel oben doppelt belegen
+         * wuerde, faellt sofort auf: Die Tagestabelle zeigte dann Unsinn.
+         * Deshalb hier keine stille Umbenennung. */
+        foreach ($tagesSpalten as $dc) {
+            $w = $m[$dc['col']] ?? null;
+            $zeile[$dc['col']] = $dc['art'] === 'check'
+                ? ((int)$w === 1)
+                : ($w !== null && $w !== '' ? (string)$w : null);
+        }
+        $missions[] = $zeile;
     }
 
     $st = db()->prepare('SELECT id FROM rest_segments WHERE user_id = ? AND day = ? AND deleted_at IS NULL ORDER BY started_at');
