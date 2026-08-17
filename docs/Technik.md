@@ -83,6 +83,7 @@ hems/
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
+│   │                      aktionsmenu.js (Verhalten des Aktionsmenüs oben rechts),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser)
@@ -484,6 +485,28 @@ Drei Punkte, die beim Lesen leicht untergehen:
   Kollisionsprüfung schließt ihn deshalb ein, sonst gäbe es statt einer
   lesbaren Meldung einen Fehler aus der Datenbank.
 
+**Auskunft zum Zieldatum (ab Web 5.10.0).** Beide Seiten sagten bis dahin erst
+**nach** dem Absenden, worauf das gewählte Datum hinausläuft — bei
+`flugtag_datum.php` sogar erst nach der Rückfrage „Alle Zeitstempel wandern
+mit. Fortfahren?". Jetzt steht es unter dem Feld:
+
+* `einsatz_verschieben.php` nennt den Flugtag am gewählten Datum (Maschine,
+  Standort, Zahl der Einsätze), oder dass dort keiner liegt und einer angelegt
+  wird, oder dass dort einer im Papierkorb liegt. Ausdrücklich benannt ist
+  auch, dass es je Kalendertag **genau einen** Flugtag gibt (`uq_user_day`) —
+  die Frage nach einer Auswahl zwischen mehreren Tagen desselben Datums
+  beantwortet damit die Seite selbst statt des Datenmodells im Nachhinein.
+* `flugtag_datum.php` nennt, ob das Datum frei oder belegt ist. Belegt heißt:
+  Zeile in `days` (Papierkorb eingeschlossen) **oder** Einsätze **oder**
+  Ruhesegmente — dieselben drei Größen, die `tz_tag_zustand()` prüft.
+
+Beides ist **rein anzeigend**, und das ist keine Nachlässigkeit: Die Listen
+sind auf 400 Einträge gedeckelt und veralten, sobald in einem zweiten Fenster
+etwas entsteht. Ein gesperrter Absendeknopf hätte daraus eine Schranke gemacht,
+die falsch liegen kann. Wo der Deckel gegriffen hat, sagt die Auskunft nichts —
+statt etwas Falsches zu sagen. Geprüft wird weiterhin dort, wo geschrieben
+wird.
+
 Warum ein Einsatz nicht zurückgezogen wird (Prüfschritt P5): `ingest.php:150`
 führt beim Upsert ein `ON DUPLICATE KEY UPDATE`, das die Spalte `day` **nicht**
 mitschreibt. Außer den beiden Funktionen hier schreiben nur `ingest.php` und
@@ -764,11 +787,43 @@ weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. `esc` und
 die Datei muss deshalb **vor** `missiontable.js` geladen werden. Eine neue
 Spalte ist ein Eintrag in `SPALTEN` und erscheint auf beiden Seiten.
 
-Zwei Rücksichten auf `zeitraum.php`, die sonst als Regression auffielen:
-`pfeilInitial: false` erhält das bisherige Verhalten (Sortierpfeil erst nach
-dem ersten Klick auf einen Spaltenkopf), und `onAfterDraw` wendet die
-Hervorhebung der Extremwert-Kacheln erneut an — die Zeilen sind nach jedem
-Zeichnen neu und hätten ihre Markierung sonst verloren.
+Eine Rücksicht auf `zeitraum.php`, die sonst als Regression auffiele:
+`onAfterDraw` wendet dort die Hervorhebung der Extremwert-Kacheln erneut an —
+die Zeilen sind nach jedem Zeichnen neu und hätten ihre Markierung sonst
+verloren. (Die frühere zweite Rücksicht, `pfeilInitial: false`, gibt es seit
+M6-10 nicht mehr: Der Sortierpfeil steht auf beiden Seiten von Anfang an.)
+
+**Seitengrösse (`opts.seite`, ab Web 5.10.0).** Ohne diese Option zeichnet die
+Tabelle jede Zeile — so verhält sich `zeitraum.php` weiterhin. `suche.php`
+setzt **200**: Dort steht beim Öffnen der gesamte Bestand zur Auswahl, und
+`anwenden()` zeichnet bei **jedem** Tastendruck im Suchfeld neu; bei einigen
+tausend Einsätzen ist der Aufbau der `<tr>` die teuerste Einzelheit der Seite.
+
+Begrenzt wird ausschliesslich die Anzeige — sortiert und gezählt wird über die
+volle Liste, geschnitten wird erst danach (`sortiert.slice(0, sichtbar)`).
+`onAfterDraw` bekommt deshalb **zwei** Zahlen, `(gesamt, gezeigt)`; ohne
+Seitengrösse sind sie gleich, und ein Aufrufer, der nur die erste liest, bleibt
+richtig. Die Nachladezeile (`.mehrzeile`) erzeugt der Baustein selbst und hängt
+sie hinter das `<table>` — sonst müsste jede Seite, die eine Seitengrösse
+setzt, auch noch ein Element dafür vorsehen, und die erste, die es vergisst,
+begrenzt still. `setData()` setzt auf die erste Seite zurück (neuer Filter =
+neue Liste), ein Sortierwechsel **nicht** (dieselbe Liste, andere Reihenfolge).
+Der Fokus wandert nach dem Nachladen nur dann in die erste neue Zeile, wenn die
+Schaltfläche dabei verschwindet; sonst bliebe die Tastaturbedienung an einem
+Element hängen, das es nicht mehr gibt.
+
+Weil `suche.php` die Ergebniszeile aus denselben zwei Zahlen baut, steht ihr
+Text in `onAfterDraw` und nicht in `anwenden()` — das Nachladen zeichnet neu,
+ohne dass sich ein Filter geändert hätte.
+
+**Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
+Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`
+und `bergwacht`). Geprüft wird der **gesamte** Bestand, nicht die aktuelle
+Trefferliste — sonst verschwände ein Block, sobald ein anderer Filter die
+betreffenden Einsätze gerade ausschliesst, und die Spalte spränge beim Tippen.
+Ein Block, in dem ein Filter gesetzt ist (geteilter Link), bleibt sichtbar;
+`gruppenSichtbarkeit()` läuft deshalb beim Start **nach** `fragmentLesen()` und
+erneut nach „Filter zurücksetzen".
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
@@ -1503,7 +1558,11 @@ Stelle ausgewertet — `mf_tagesspalten()` in `mission_fields_lib.php` —, und
 `api/day.php` liefert die Spalte daraufhin von selbst mit, `index.php` zeigt
 und sortiert sie (Backlog Nr. 10). Optional bleibt eine Spaltenbreite in
 `style.css` unter der Klasse `c-dc-<spalte>`; ohne sie greift die Vorgabe von
-`.c-dc`.
+`.c-dc`. Die Gegenprobe lief in Web 5.10.0: Die Spalte „abw. Crew" wurde durch
+das **Streichen zweier Schlüssel** wieder abbestellt, Kopf, Zeilen, Sortierung
+und `SELECT` zogen von selbst nach. Spaltenbreiten nach Position
+(`:nth-child`) gibt es im Stylesheet deshalb nicht mehr — sie zählen Spalten ab
+und rutschen beim Streichen einer Spalte still auf die falsche.
 
 **Backup:** regelmäßiger MySQL-Dump (alle Tabellen; `mysqldump` oder
 Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt

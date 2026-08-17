@@ -472,28 +472,82 @@ function gruppenOeffnen() {
   });
 }
 
+/* ====================================================================
+ * Blöcke, die es nur bei passendem Bestand gibt (Web 5.10.0).
+ *
+ * Winde und Bergwacht sind Sache eines Teils der Standorte. Wer nie windet,
+ * hatte trotzdem sechs Winden-Felder in der Spalte stehen — Filter, die
+ * garantiert null Treffer ergeben, und zwar dauerhaft. Sie kosteten Platz und
+ * Aufmerksamkeit und legten nahe, hier sei etwas einzustellen.
+ *
+ * Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird. Geprüft
+ * wird der GESAMTE Bestand, nicht die aktuelle Trefferliste — sonst
+ * verschwände der Block, sobald ein anderer Filter die Winden-Einsätze gerade
+ * ausschliesst, und die Spalte hüpfte beim Tippen.
+ *
+ * Ausnahme, die bleiben muss: Ein geteilter Link kann einen Filter aus einem
+ * dieser Blöcke setzen. Dann wird der Block gezeigt, auch wenn der eigene
+ * Bestand nichts dazu hat — ein gesetzter, aber unsichtbarer Filter, der die
+ * Liste leer hält und sich nicht finden lässt, wäre das schlechtere Ergebnis.
+ * ================================================================== */
+const GRUPPE_NUR_WENN = {
+  winde: m => m.winch || m.winch_airload
+              || m.winch_cycles != null || m.winch_cycles_pat != null,
+  bergwacht: m => m.bergwacht
+                  || (m.bw_unit != null && m.bw_unit !== '')
+                  || (m.bw_info != null && m.bw_info !== '')
+};
+
+function gruppenSichtbarkeit() {
+  Object.keys(GRUPPE_NUR_WENN).forEach(name => {
+    const block = document.querySelector(`.filtergruppe[data-gruppe="${name}"]`);
+    if (!block) { return; }
+    const gesetzt   = FILTER.some(f => f.gruppe === name && wertLesen(f) !== '');
+    const vorhanden = missions.some(GRUPPE_NUR_WENN[name]);
+    block.hidden = !vorhanden && !gesetzt;
+  });
+}
+
 /* ---- Anzeige -------------------------------------------------------- */
+
+/* ZEILEN JE SEITE (Web 5.10.0).
+ *
+ * Vorher gab es keine Grenze: Beim Öffnen der Suche stand der GESAMTE Bestand
+ * als Tabelle da, und jeder Tastendruck im Suchfeld baute ihn neu auf. 200
+ * Zeilen sind mehr, als man an einem Stück durchsieht, und wenig genug, dass
+ * der Aufbau nicht auffällt. Gefunden wird über die Filter — wer scrollen
+ * muss, hat noch nicht genug gefiltert.
+ *
+ * Was die Grenze NICHT antastet: Gefiltert, sortiert und gezählt wird über den
+ * vollständigen Bestand. Die Zeile über der Tabelle nennt weiterhin die wahre
+ * Trefferzahl, und die Sortierung entscheidet, welche 200 oben stehen. Unter
+ * der Tabelle steht das Nachladen — sichtbar nur, wenn wirklich etwas fehlt. */
+const ZEILEN_JE_SEITE = 200;
 
 const tabelle = EdMissionTable.erzeuge({
   table: $('suchtable'),
   sortKey: 'day', sortAsc: false,   // neueste zuerst
+  seite: ZEILEN_JE_SEITE,
   onSortChange: fragmentSchreiben,
-  onAfterDraw: n => {
-    $('leer').hidden = n > 0;
-    $('suchtable').hidden = n === 0;
+  /* Die Ergebniszeile entsteht HIER und nicht in anwenden(): Auch das
+     Nachladen zeichnet neu, ohne dass ein Filter sich geändert hätte. Stünde
+     der Text dort, bliebe nach dem ersten Klick auf „Weitere 200 anzeigen"
+     die alte Zahl stehen. */
+  onAfterDraw: (gesamt, gezeigt) => {
+    $('leer').hidden = gesamt > 0;
+    $('suchtable').hidden = gesamt === 0;
+
+    const n = aktiveFilter();
+    $('filtercount').textContent = n > 0 ? `(${n} aktiv)` : '';
+    const teile = [`${gesamt} von ${missions.length} Einsätzen`];
+    if (n > 0 || $('f-q').value.trim() !== '') { teile.push('gefiltert'); }
+    if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
+    $('ergebniszeile').textContent = teile.join(' · ');
   }
 });
 
 function anwenden() {
-  const treffer = missions.filter(trifft);
-  tabelle.setData(treffer);
-
-  const n = aktiveFilter();
-  $('filtercount').textContent = n > 0 ? `(${n} aktiv)` : '';
-  const teile = [`${treffer.length} von ${missions.length} Einsätzen`];
-  if (n > 0 || $('f-q').value.trim() !== '') { teile.push('gefiltert'); }
-  $('ergebniszeile').textContent = teile.join(' · ');
-
+  tabelle.setData(missions.filter(trifft));
   fragmentSchreiben();
 }
 
@@ -542,6 +596,9 @@ function verdrahten() {
     // wertSetzen() schreibt den Wert direkt. Ohne diese Zeile bliebe die rote
     // Markierung einer vorher ungueltigen Eingabe stehen.
     EdZeitfeld.pruefeAlle();
+    // Ein Block, der nur wegen eines Filters aus einem geteilten Link stand,
+    // hat mit dem Zuruecksetzen seinen Grund verloren.
+    gruppenSichtbarkeit();
     anwenden();
   });
   $('unlockbtn').addEventListener('click', () => entschluesselePat());
@@ -565,6 +622,7 @@ function verdrahten() {
   // Erst die Auswahllisten füllen, dann das Fragment anwenden — sonst hätten
   // die <select> die gespeicherten Werte noch gar nicht zur Auswahl.
   fragmentLesen();
+  gruppenSichtbarkeit();   // Blöcke ohne Bezug zum Bestand fallen weg
   gruppenOeffnen();   // Blöcke aus einem geteilten Link sichtbar machen
   missions.forEach(baueHeuhaufen);
   anwenden();

@@ -130,11 +130,16 @@ return [
         // wird also nichts doppelt gespeichert. Die effektive Besatzung
         // (COALESCE-Regel) liefert api/mission.php als 'crew_effektiv'.
         //
-        // Die Spalte in der Tagestabelle erscheint seit Web 5.4.0 tatsaechlich
-        // (Backlog Nr. 10). Bis dahin war der Eintrag 'day_col' hier wirkungs-
-        // los, weil die Spalten in index.php und api/day.php hartkodiert waren.
+        // KEINE Spalte in der Tagestabelle (Web 5.10.0). Sie war seit Web 5.4.0
+        // zu sehen — der Eintrag 'day_col' hier hatte davor keine Wirkung, weil
+        // die Spalten hartkodiert waren (Backlog Nr. 10). Im taeglichen Gebrauch
+        // trug sie nichts bei: Der Haken steht bei den allermeisten Taegen in
+        // keiner einzigen Zeile und kostete trotzdem Breite in einer Tabelle,
+        // die auf schmalen Geraeten ohnehin knapp ist. Wo die abweichende
+        // Besatzung wirklich interessiert, steht sie vollstaendig — in der
+        // Einsatzansicht unter „Besatzung", mit „(abw.)" an der betroffenen
+        // Rolle. Das Feld selbst bleibt unveraendert erhalten, ebenso im Export.
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
-        'day_col' => 'check', 'day_label' => 'abw. Crew',
         'children' => [
             // Textfelder mit Vorschlagsliste, nicht Auswahlfelder (Web 5.5.0,
             // Entscheidung E8): Wer aushilft, steht oft nicht in den

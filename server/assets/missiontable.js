@@ -121,7 +121,34 @@ const EdMissionTable = (() => {
    * opts.sortKey      Voreinstellung, Standard 'day'
    * opts.sortAsc      Voreinstellung, Standard true
    *                   (zeitraum.php tut das historisch nicht — dort false)
-   * opts.onAfterDraw  wird nach jedem Zeichnen mit der Zeilenzahl gerufen
+   * opts.seite        Zeilen je Seite; 0 oder fehlend = alle auf einmal.
+   *                   Siehe den Abschnitt „Seitengroesse" unten.
+   * opts.onAfterDraw  wird nach jedem Zeichnen gerufen: (gesamt, gezeigt)
+   *                   'gesamt'  Zeilen, die dem Filter entsprechen
+   *                   'gezeigt' davon tatsaechlich gezeichnete
+   *                   Ohne Seitengroesse sind beide Zahlen gleich — die
+   *                   bisherigen Aufrufer lesen nur die erste und bleiben
+   *                   damit richtig.
+   *
+   * SEITENGROESSE (Web 5.10.0).
+   *
+   * Bis dahin zeichnete diese Tabelle IMMER jeden Treffer. Auf der Suchseite
+   * heisst das beim Oeffnen den gesamten Bestand: Jede Zeile ist ein <tr> mit
+   * zehn Zellen, und der Aufbau geschieht bei jedem Tastendruck im Suchfeld
+   * erneut. Bei einigen tausend Einsaetzen wird daraus eine spuerbare Pause
+   * zwischen Anschlag und Anzeige — bezahlt fuer Zeilen, die niemand ansieht;
+   * gesucht wird ueber die Filter, nicht durch Scrollen.
+   *
+   * Begrenzt wird nur die ANZEIGE. Gefiltert, sortiert und gezaehlt wird
+   * weiterhin ueber den vollstaendigen Bestand — die Zeile ueber der Tabelle
+   * nennt deshalb unveraendert die wahre Trefferzahl, und die Sortierung
+   * bestimmt, welche Treffer oben stehen. Ein Nachladen auf Knopfdruck haengt
+   * unter der Tabelle; es entsteht nur, wenn tatsaechlich etwas fehlt.
+   *
+   * Beim Sortieren bleibt eine erweiterte Ansicht erweitert: Wer 600 Zeilen
+   * aufgeklappt hat und dann die Spalte wechselt, will sie nicht erneut
+   * aufklappen. Neue Daten (setData) fangen wieder bei der ersten Seite an —
+   * das ist ein anderer Filter und damit eine andere Liste.
    *
    * Rueckgabe: { setData, zeichne, sortKey, sortAsc, setSort }
    */
@@ -129,6 +156,8 @@ const EdMissionTable = (() => {
     const table = opts.table;
     let sortKey = opts.sortKey || 'day';
     let sortAsc = opts.sortAsc !== false;
+    const seite = Math.max(0, opts.seite || 0);   // 0 = ohne Begrenzung
+    let sichtbar = seite;
     /* Der Sortierpfeil wird IMMER gezeigt (M6-10).
      *
      * Vorher gab es dafuer einen Schalter: Die Suche zeigte ihn sofort, die
@@ -141,6 +170,28 @@ const EdMissionTable = (() => {
     if (!thead) { thead = table.createTHead(); }
     let tbody = table.tBodies[0];
     if (!tbody) { tbody = table.createTBody(); }
+
+    /* Die Nachladezeile gehoert zur Tabelle, nicht zur Seite: Sie entsteht
+     * hier und haengt unmittelbar hinter dem <table>. Sonst muesste jede
+     * Seite, die eine Seitengroesse setzt, auch noch ein Element dafuer
+     * vorsehen — und die erste, die es vergisst, begrenzt still. */
+    let mehrZeile = null, mehrKnopf = null, mehrAlleKnopf = null;
+    if (seite > 0) {
+      mehrZeile = document.createElement('p');
+      mehrZeile.className = 'mehrzeile';
+      mehrZeile.hidden = true;
+      mehrKnopf = document.createElement('button');
+      mehrKnopf.type = 'button';
+      mehrKnopf.className = 'btn-plain';
+      mehrKnopf.addEventListener('click', () => mehrZeigen(sichtbar + seite));
+      mehrAlleKnopf = document.createElement('button');
+      mehrAlleKnopf.type = 'button';
+      mehrAlleKnopf.className = 'btn-plain';
+      mehrAlleKnopf.addEventListener('click', () => mehrZeigen(Infinity));
+      mehrZeile.appendChild(mehrKnopf);
+      mehrZeile.appendChild(mehrAlleKnopf);
+      table.insertAdjacentElement('afterend', mehrZeile);
+    }
 
     function zeichneKopf() {
       const tr = document.createElement('tr');
@@ -174,8 +225,9 @@ const EdMissionTable = (() => {
         const r = (x > y) - (x < y);
         return sortAsc ? r : -r;
       });
+      const gezeigt = seite > 0 ? sortiert.slice(0, sichtbar) : sortiert;
       tbody.innerHTML = '';
-      sortiert.forEach(m => {
+      gezeigt.forEach(m => {
         const tr = document.createElement('tr');
         tr.className = 'clickable';
         tr.dataset.mid = m.id;
@@ -201,10 +253,45 @@ const EdMissionTable = (() => {
         });
         tbody.appendChild(tr);
       });
-      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length); }
+      zeichneMehr(sortiert.length, gezeigt.length);
+      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length); }
     }
 
-    function setData(liste) { daten = liste || []; zeichne(); }
+    /* Nachladen. Der Fokus wandert NUR DANN in die erste neue Zeile, wenn die
+     * Zeile mit den Schaltflaechen dabei verschwindet — sonst stuende er nach
+     * dem letzten Klick auf einem Element, das es nicht mehr gibt, und faellt
+     * an den Seitenanfang zurueck. Bleibt der Knopf stehen, bleibt auch der
+     * Fokus dort: Wer mit der Tastatur weiterladen will, muesste sich sonst
+     * durch zweihundert Zeilen zurueckarbeiten. */
+    function mehrZeigen(neu) {
+      const vorher = tbody.children.length;
+      sichtbar = neu;
+      zeichne();
+      const naechste = tbody.children[vorher];
+      if (mehrZeile.hidden && naechste) { naechste.focus(); }
+    }
+
+    /* Nachladezeile beschriften. Sie verschwindet, sobald nichts mehr fehlt —
+     * eine Schaltflaeche, die nichts mehr zu tun hat, ist eine Frage an die
+     * NutzerIn, die sie nicht beantworten kann. Der zweite Knopf („alle")
+     * erscheint nur, wenn er mehr bewirkt als der erste; bei 40 fehlenden
+     * Zeilen taeten beide dasselbe. */
+    function zeichneMehr(gesamt, gezeigt) {
+      if (!mehrZeile) { return; }
+      const fehlend = gesamt - gezeigt;
+      mehrZeile.hidden = fehlend <= 0;
+      if (fehlend <= 0) { return; }
+      mehrKnopf.textContent = 'Weitere ' + Math.min(seite, fehlend) + ' anzeigen';
+      mehrAlleKnopf.hidden = fehlend <= seite;
+      mehrAlleKnopf.textContent = 'Alle ' + gesamt + ' anzeigen';
+    }
+
+    function setData(liste) {
+      daten = liste || [];
+      // Neue Liste, neue erste Seite (siehe „Seitengroesse" oben).
+      sichtbar = seite;
+      zeichne();
+    }
 
     function setSort(key, asc) {
       if (!SPALTEN.some(s => s.key === key)) { return; }

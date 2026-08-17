@@ -176,7 +176,8 @@ try {
      * unten noch einmal im Aufbau der Antwort. mission_fields.php kennt den
      * Schluessel 'day_col' — er war damit reine Dokumentation, und die dort
      * definierte Spalte „abw. Crew" erschien nie. Beides kommt jetzt aus
-     * mf_tagesspalten().
+     * mf_tagesspalten(). (Seit Web 5.10.0 sind es wieder genau die drei
+     * genannten Spalten: „abw. Crew" ist aus dem Katalog abbestellt.)
      *
      * Die Spaltennamen sind gegen [a-z][a-z0-9_]* geprueft (siehe
      * mission_fields_lib.php) und stammen aus einer Projektdatei, nicht aus

@@ -551,19 +551,26 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 /* Admin: ganze Zeile als Hover-Ziel */
 .rowlink:hover td{background:var(--accent-light)}
 
-/* Einsatzort-Pin und Tagestabelle */
+/* Einsatzort-Pin */
 .locpin svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
-#missions th{text-align:center}
-#missions th:nth-child(2),#missions td:nth-child(2),
-#missions th:nth-child(6),#missions td:nth-child(6){width:3.4rem}
-#missions th:nth-child(3),#missions td:nth-child(3){width:4.6rem}
-#missions th:nth-child(8),#missions td:nth-child(8){width:4rem}
-#missions th:nth-child(9),#missions td:nth-child(9){width:5.4rem}
-#missions td:nth-child(2),#missions td:nth-child(6),
-#missions td:nth-child(8),#missions td:nth-child(9){text-align:center}
+
+/* HIER STANDEN SPALTENBREITEN NACH POSITION (:nth-child) für #missions.
+   Entfernt in Web 5.10.0. Sie stammten aus der Zeit vor den Spaltenklassen und
+   zählten Spalten ab: nth-child(8) war „Winde", solange die Reihenfolge stimmte.
+   Wirkung hatten sie zuletzt keine mehr — die Regeln mit .c-no/.c-mid/.c-dc
+   weiter unten haben dieselbe Spezifität und stehen später —, aber sie waren
+   die Sorte Regel, die beim Streichen einer Spalte still auf die falsche
+   rutscht. Genau das stand mit „abw. Crew" an. Breiten stehen jetzt
+   ausschliesslich bei den Klassen (Abschnitt „Tagesübersicht"). */
 
 /* Einsatzformular: Seitenrahmen wie überall, Eingaben in lesbarer Spalte */
 .formcol{max-width:760px}
+
+/* Auskunft unter einem Datumsfeld: was am gewählten Zieltag steht
+   (einsatz_verschieben.php, flugtag_datum.php — Web 5.10.0). Als .muted ein
+   ruhiger Nachsatz, als .alert-warn eine Ansage. Beides derselbe Absatz, damit
+   der Text an seinem Platz bleibt und nicht je nach Lage springt. */
+.zielinfo{margin:.1rem 0 1rem;font-size:.9rem}
 
 /* Papierkorb */
 .daydelete{margin:1.4rem 0 0}
@@ -659,6 +666,13 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 .suchfreitext input{width:100%;box-sizing:border-box;margin-top:.3rem}
 .suchhinweis{margin:.4rem 0 0;font-size:.85rem}
 .ergebniszeile{margin:0 0 .8rem}
+
+/* Nachladen unter der Trefferliste (assets/missiontable.js, Web 5.10.0).
+   Die Zeile wird vom Tabellen-Baustein selbst erzeugt und hinter das <table>
+   gehängt; sie erscheint nur, wenn tatsächlich Zeilen fehlen. Mittig, damit
+   sie als Abschluss der Tabelle gelesen wird und nicht als neue Spalte. */
+.mehrzeile{display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap;
+  margin:.9rem 0 .2rem}
 
 /* Unter 720 px klappt die Spalte wie die Einsatztage-Leiste ueber den Inhalt.
    Diese Regeln muessen NACH .layout-suche stehen: Die Grundregel im
@@ -769,7 +783,6 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
 #missions th.c-dc-winch,        #missions td.c-dc-winch        {width:4.4rem}
 #missions th.c-dc-bergwacht,    #missions td.c-dc-bergwacht    {width:6.2rem}
 #missions th.c-dc-secondary,    #missions td.c-dc-secondary    {width:6.4rem}
-#missions th.c-dc-crew_override,#missions td.c-dc-crew_override{width:5.4rem}
 
 /* Alle Spalten mittig — auch Einsatzort und Diagnose */
 #missions th,#missions td{text-align:center}
@@ -844,9 +857,11 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
 /* Flugtag von Hand anlegen — über dem Papierkorb */
 
 /* ===================== Aktionsleiste unter der Tagestabelle ===================== *
- * "+ Einsatz nachtragen" und "Tag löschen": exakt gleiche Höhe, Schriftgröße
- * und Grundlinie. Beide Klassen teilen sich hier bewusst einen Selektor,
- * damit künftige Änderungen nicht wieder auseinanderlaufen. */
+ * Seit Web 5.10.0 steht hier nur noch "+ Einsatz nachtragen"; "Datum ändern"
+ * und "Tag löschen" sind ins Aktionsmenü oben rechts gewandert (.aktionsmenu).
+ * Die Regel für .btn-red bleibt trotzdem stehen: Sie hält die beiden Klassen
+ * auf gleicher Höhe, Schriftgröße und Grundlinie — käme hier je wieder eine
+ * rote Schaltfläche dazu, liefe sie sonst wieder auseinander. */
 .dayactions{display:flex;justify-content:space-between;align-items:center;
   gap:1rem;margin:1.4rem 0 .2rem}
 .dayactions .btn-primary,.dayactions .btn-red{

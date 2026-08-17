@@ -271,17 +271,22 @@ vorausgewählt. Pro Tag:
   drei Kartenseiten der Anwendung zur Verfügung.
 - **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
   der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
-  Sekundärtransport, **abw. Crew**, Kilometer. Alle Spalten sind zentriert und
+  Sekundärtransport, Kilometer. Alle Spalten sind zentriert und
   in abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz,
   ein Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der
   Alarmierung bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
-  Die Spalte **abw. Crew** ist seit Web 5.4.0 zu sehen: Sie setzt einen Haken,
-  wenn für den Einsatz eine vom Flugtag abweichende Besatzung eingetragen ist
-  (Abschnitt 5). Wer nachträgt, sieht damit auf einen Blick, an welchen
-  Einsätzen des Tages jemand anderes an Bord war.
-- **„+ Einsatz nachtragen"** öffnet das Eingabeformular für diesen Tag,
-  **„Datum ändern"** korrigiert das Datum des ganzen Tages (Abschnitt 4.2a),
-  **„Tag löschen"** entfernt den gesamten Flugtag (Abschnitt 8).
+  Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
+  entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
+  Ob für einen Einsatz eine vom Flugtag abweichende Besatzung eingetragen ist,
+  steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
+  an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
+- **„+ Einsatz nachtragen"** unter der Tabelle öffnet das Eingabeformular für
+  diesen Tag. Oben rechts steht das Menü **Aktionen** (seit Web 5.10.0; vorher
+  standen die beiden Einträge als Schaltflächen unter der Tabelle) mit
+  **„Datum ändern"** — korrigiert das Datum des ganzen Tages (Abschnitt 4.2a) —
+  und **„Tag löschen"** — entfernt den gesamten Flugtag (Abschnitt 8). Das Menü
+  lässt sich wie das der Einsatzansicht vollständig mit der Tastatur bedienen;
+  Escape schliesst es wieder.
 
 ### 4.2 Einsatzansicht
 
@@ -349,6 +354,17 @@ Zieltag im Papierkorb, wird die Verschiebung abgelehnt; hol ihn erst zurück.
 Ein späterer Upload derselben Uhr zieht den Einsatz nicht wieder auf den alten
 Tag.
 
+**Welcher Flugtag ist gemeint?** Je Kalendertag gibt es **genau einen**
+Flugtag. Das Datum bestimmt den Zieltag damit eindeutig — eine Auswahl zwischen
+mehreren Tagen desselben Datums (etwa luft- und bodengebunden) kann es nicht
+geben; für zwei getrennte Dienste am selben Tag ist das Datenmodell nicht
+gebaut. Damit trotzdem nicht geraten werden muss, steht seit Web 5.10.0 unter
+dem Datumsfeld, **was am gewählten Datum liegt**: Maschine, Standort und Zahl
+der Einsätze des dortigen Flugtags — oder dass noch keiner angelegt ist und
+einer entsteht, oder dass dort einer im Papierkorb liegt und das Verschieben
+abgelehnt würde. Das Feld schlägt zusätzlich den Vor- und Folgetag sowie deine
+vorhandenen Flugtage vor.
+
 **Die Uhr war falsch gestellt.** Dann sind Datum *und* Uhrzeit falsch, und der
 ganze Tag steht am falschen Datum. In der Tagesübersicht: **„Datum ändern"**.
 Hier **wandern alle Zeitstempel mit** — Einsätze, Ruhesegmente, Phasenzeiten,
@@ -366,7 +382,10 @@ Steht am Zieldatum bereits ein Flugtag, wird die Änderung **abgelehnt**. Zwei
 Tage lassen sich nicht zusammenführen: Welcher Standort, welche Maschine,
 welche Besatzung dann gälte, kann niemand automatisch beantworten. Ein Tag im
 Papierkorb belegt sein Datum ebenfalls. Wähle in dem Fall ein freies Datum oder
-löse den vorhandenen Tag zuerst auf.
+löse den vorhandenen Tag zuerst auf. Seit Web 5.10.0 musst du das nicht mehr
+durch Ausprobieren herausfinden: Unter dem Datumsfeld steht, ob das gewählte
+Datum frei oder belegt ist — vor dem Absenden und vor der Rückfrage. Die
+endgültige Prüfung macht weiterhin der Server im Augenblick der Änderung.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
@@ -585,7 +604,19 @@ Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
 auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 (UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
 Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
-enthalten nur, was in deinem Bestand tatsächlich vorkommt. Eine Besonderheit:
+enthalten nur, was in deinem Bestand tatsächlich vorkommt.
+
+**Winde und Bergwacht nur, wenn es sie gibt.** Beide Blöcke erscheinen seit
+Web 5.10.0 nur dann, wenn wenigstens ein Einsatz deines Bestandes eine
+Windenangabe bzw. eine Bergwacht-Angabe trägt. Wer nie windet, hat die sechs
+Winden-Felder also gar nicht erst in der Spalte stehen — sie könnten dort nur
+Filter setzen, die garantiert null Treffer ergeben. Maßgeblich ist der
+**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Spalte verändert sich
+also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
+dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
+den du nicht finden und nicht zurücknehmen könntest.
+
+Eine Besonderheit:
 
 - **Alarmzeit** darf über Mitternacht gehen. „von 22:00 bis 06:00" findet die
   Nachteinsätze. Eingabe wie überall als `HH:MM`; Ziffern genügen.
@@ -599,6 +630,20 @@ der entfallene Teil wird dabei stillschweigend übergangen.
 Unten in der Filterspalte steht **Filter zurücksetzen** und darunter, wie viele
 Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze von
 wie vielen angezeigt werden.
+
+**Wie viele Zeilen auf einmal?** Die Liste zeigt **200 Treffer**; darunter
+liegen dann die Schaltflächen **„Weitere 200 anzeigen"** und **„Alle N
+anzeigen"**. Sie erscheinen nur, wenn tatsächlich etwas fehlt. Bis Web 5.9.0
+gab es keine Grenze — beim Öffnen stand der gesamte Bestand als Tabelle da, und
+jeder Tastendruck im Suchfeld baute ihn neu auf; bei einigen tausend Einsätzen
+war das eine spürbare Pause. Begrenzt ist allein die **Anzeige**: Gesucht,
+gefiltert, sortiert und gezählt wird weiterhin über deinen gesamten Bestand.
+Die Zeile über der Tabelle nennt deshalb unverändert die wahre Trefferzahl und
+dazu, wie viele davon gerade stehen. Welche 200 das sind, entscheidet die
+Sortierung — voreingestellt sind die neuesten zuerst. Sortierst du um, bleibt
+eine erweiterte Ansicht erweitert; änderst du einen Filter, fängt die Liste
+wieder bei den ersten 200 an. Die Zeitraum-Übersicht ist davon nicht betroffen,
+sie zeigt weiterhin jede Zeile.
 
 **Gesperrte Verschlüsselung.** Sind die geschützten Angaben gesperrt
 (Abschnitt 5), werden Einsatznummer, Name, Geburtsdatum, Diagnose, Einsatzort

@@ -23,6 +23,11 @@ declare(strict_types=1);
  * die Tagestabelle auswertet; ein neuer Eintrag mit 'day_col' erscheint ohne
  * weitere Codeaenderung (Backlog Nr. 10).
  *
+ * Die Probe aufs Exempel lief in Web 5.10.0 rueckwaerts: „abw. Crew" wurde
+ * wieder abbestellt, und dafuer genuegte es, zwei Schluessel im Katalog zu
+ * streichen — Tabellenkopf, Zeilenaufbau, Sortierung und der SELECT in
+ * api/day.php zogen von selbst nach.
+ *
  * Unterfelder werden mit durchsucht: Ein Haken unter einem Haken darf
  * ebenfalls eine Spalte bekommen. Die Reihenfolge folgt dem Katalog.
  *

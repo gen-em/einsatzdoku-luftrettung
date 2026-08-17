@@ -34,6 +34,32 @@ $umfang = tz_tag_umfang($userId, $tag);
 $fehler = null;
 $ziel   = (string)($_POST['ziel'] ?? '');
 
+/* BELEGTE DATEN, BEVOR ABGESCHICKT WIRD (Web 5.10.0).
+ *
+ * Die Kollisionsprüfung (E2) sass bisher allein in tz_tag_datum_aendern() —
+ * also HINTER dem Absenden und hinter der Rückfrage „Alle Zeitstempel wandern
+ * mit. Fortfahren?". Wer sie bejahte, bekam als Antwort, dass gar nichts
+ * geschehen ist. Die Auskunft ist beim Server vorhanden, sie kam nur zu spät.
+ *
+ * Die Liste nennt jedes belegte Datum, den Papierkorb eingeschlossen: `days`
+ * trägt `UNIQUE KEY uq_user_day (user_id, day)`, ein gelöschter Tag belegt sein
+ * Datum weiterhin. Ebenso Daten, an denen Einsätze oder Ruhesegmente ohne
+ * eigene `days`-Zeile liegen — tz_tag_zustand() zählt beides, und beides führt
+ * zur Ablehnung.
+ *
+ * Der Server bleibt maßgeblich. Diese Liste ist eine Auskunft, keine Schranke:
+ * Sie ist auf 400 Einträge gedeckelt und veraltet in dem Augenblick, in dem in
+ * einem zweiten Fenster etwas angelegt wird. Deshalb ändert sie am Ablauf
+ * nichts — geprüft wird weiterhin dort, wo geschrieben wird.
+ */
+$bq = db()->prepare('SELECT day FROM (
+                       SELECT day FROM days          WHERE user_id = ?
+                       UNION SELECT day FROM missions      WHERE user_id = ?
+                       UNION SELECT day FROM rest_segments WHERE user_id = ?
+                     ) t ORDER BY day DESC LIMIT 400');
+$bq->execute([$userId, $userId, $userId]);
+$belegt = $bq->fetchAll(PDO::FETCH_COLUMN);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja') {
     csrf_check();
     if (pruef_kalendertag($ziel, 'Zieldatum') === null) {
@@ -95,7 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
       </ul>
       <p class="muted">Alles davon wird <strong>gemeinsam</strong> geändert oder
          gar nicht. Liegt am Zieldatum bereits ein Einsatztag, wird die Änderung
-         abgelehnt — zusammengeführt wird nicht.</p>
+         abgelehnt — zusammengeführt wird nicht. Ob das gewählte Datum frei ist,
+         steht unter dem Feld.</p>
     </div>
 
     <form method="post" action="flugtag_datum.php" class="formcol"
@@ -106,9 +133,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
       <input type="hidden" name="day" value="<?= e($tag) ?>">
       <input type="hidden" name="confirm" value="ja">
       <label>Richtiges Datum
-        <input type="date" name="ziel" required
+        <input type="date" name="ziel" id="zielfeld" required
                value="<?= e($ziel !== '' ? $ziel : $tag) ?>">
       </label>
+      <p id="zielinfo" class="muted zielinfo" hidden></p>
       <button type="submit" class="btn-red">Datum ändern</button>
       <p class="login-aux"><a href="index.php?day=<?= e($tag) ?>"
          data-cancel-form="datumform"
@@ -119,5 +147,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
   </main>
 </div>
 <script src="<?= asset('assets/forms.js') ?>"></script>
+<script>
+/* Auskunft zum Zieldatum — siehe den Kommentar oben im PHP-Teil. Rein
+   anzeigend: Der Knopf bleibt bedienbar, weil diese Liste veralten kann und
+   die Entscheidung beim Server liegt. Sie nimmt der Ablehnung nur die
+   Überraschung. */
+(function () {
+  const BELEGT = new Set(<?= json_encode($belegt, JSON_UNESCAPED_UNICODE) ?>);
+  const VOLL   = <?= count($belegt) >= 400 ? 'true' : 'false' ?>;
+  const AELTER = <?= json_encode($belegt ? min($belegt) : null) ?>;
+  const ALTTAG = <?= json_encode($tag) ?>;
+  const feld = document.getElementById('zielfeld');
+  const box  = document.getElementById('zielinfo');
+  if (!feld || !box) { return; }
+
+  function de(iso) {
+    const t = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    return t ? `${t[3]}.${t[2]}.${t[1]}` : iso;
+  }
+
+  function zeige() {
+    const v = feld.value;
+    box.className = 'muted zielinfo';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { box.hidden = true; return; }
+    box.hidden = false;
+
+    if (v === ALTTAG) {
+      box.textContent = 'Das ist das bisherige Datum — es gäbe nichts zu ändern.';
+      return;
+    }
+    if (BELEGT.has(v)) {
+      box.className = 'zielinfo alert alert-warn';
+      box.textContent = 'Am ' + de(v) + ' liegt bereits ein Einsatztag (oder es liegen '
+                      + 'dort Einsätze bzw. Ruhesegmente — auch im Papierkorb belegt ein '
+                      + 'Tag sein Datum weiter). Zwei Einsatztage lassen sich nicht '
+                      + 'zusammenführen: Die Umdatierung würde abgelehnt, ohne etwas zu '
+                      + 'ändern. Bitte ein freies Datum wählen oder den vorhandenen Tag '
+                      + 'zuerst auflösen.';
+      return;
+    }
+    if (VOLL && AELTER !== null && v < AELTER) {
+      box.textContent = 'Für dieses Datum liegt hier keine Auskunft vor — die Prüfung '
+                      + 'reicht nur bis zum ' + de(AELTER) + ' zurück. Liegt dort doch '
+                      + 'ein Einsatztag, wird die Umdatierung abgelehnt, ohne etwas zu '
+                      + 'ändern.';
+      return;
+    }
+    box.textContent = 'Am ' + de(v) + ' ist nichts eingetragen — das Datum ist frei.';
+  }
+
+  feld.addEventListener('input', zeige);
+  feld.addEventListener('change', zeige);
+  zeige();
+})();
+</script>
 </body>
 </html>

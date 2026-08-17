@@ -96,7 +96,35 @@ $neueGeraete = geraete_neu(db(), $userId);
         </form>
       </div>
     <?php endif; ?>
-    <h1 id="daytitle">–</h1>
+    <?php /* AKTIONSMENÜ DES FLUGTAGS (Web 5.10.0).
+             „Datum ändern" und „Tag löschen" standen bis dahin als zwei
+             Schaltflächen unter der Tabelle, direkt neben „+ Einsatz
+             nachtragen" — also das Alltagsgeschäft und zwei Eingriffe in den
+             Bestand nebeneinander in einer Reihe. Auf der Einsatzseite ist
+             genau diese Trennung seit Web 5.6.0 gezogen: die eine Haupt-
+             handlung im Fluss der Seite, alles Weitere im Menü oben rechts.
+             Die Flugtagübersicht folgt jetzt derselben Ordnung, mit demselben
+             Bauteil (.aktionsmenu) und demselben Verhalten
+             (assets/aktionsmenu.js).
+
+             Das Menü bleibt verborgen, solange kein Tag gewählt ist — beide
+             Einträge brauchen ein Datum. loadDay() blendet es ein. */ ?>
+    <div class="pagehead">
+      <div class="pagehead-text">
+        <h1 id="daytitle">–</h1>
+      </div>
+      <div class="pagehead-actions">
+        <details class="aktionsmenu" id="dayaktionen" <?= $selDay ? '' : 'hidden' ?>>
+          <summary class="btn-edit">Aktionen</summary>
+          <div class="aktionsliste">
+            <a id="daydatelink"
+               href="flugtag_datum.php?day=<?= e((string)$selDay) ?>">Datum ändern</a>
+            <a class="gefahr" id="daydellink"
+               href="flugtag_loeschen.php?day=<?= e((string)$selDay) ?>">Tag löschen</a>
+          </div>
+        </details>
+      </div>
+    </div>
     <div id="loaderror" class="alert" hidden></div>
     <details class="daymeta" id="daymeta">
       <summary>Flugtag-Daten <span id="metahint" class="muted"></span>
@@ -174,18 +202,13 @@ $neueGeraete = geraete_neu(db(), $userId);
       <tbody></tbody>
     </table>
     <p id="empty" class="muted" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
+    <?php /* Nur noch die eine Handlung, die zum täglichen Erfassen gehört.
+             „Datum ändern" und „Tag löschen" stehen seit Web 5.10.0 im
+             Aktionsmenü oben rechts: Umdatieren ist keine Angabe zum Tag,
+             sondern ein Eingriff in seine Zuordnung — mit Wirkung auf jeden
+             Zeitstempel des Tages —, und Löschen erst recht. */ ?>
     <div class="dayactions">
       <a href="einsatz_form.php" id="addmission" class="btn-primary">+ Einsatz nachtragen</a>
-      <?php /* Umdatieren (A5.3): steht bewusst neben „Tag löschen" und nicht im
-               Flugtag-Formular. Es ist keine Angabe zum Tag, sondern ein
-               Eingriff in seine Zuordnung — mit Wirkung auf jeden Zeitstempel
-               des Tages. */ ?>
-      <a class="btn-plain" id="daydatelink"
-         href="flugtag_datum.php?day=<?= e((string)$selDay) ?>"
-         <?= $selDay ? '' : 'hidden' ?>>Datum ändern</a>
-      <a class="btn-red" id="daydellink"
-         href="flugtag_loeschen.php?day=<?= e((string)$selDay) ?>"
-         <?= $selDay ? '' : 'hidden' ?>>Tag löschen</a>
     </div>
 
     <?php ui_footer(); ?>
@@ -198,6 +221,7 @@ $neueGeraete = geraete_neu(db(), $userId);
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
+<script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
@@ -383,12 +407,13 @@ async function loadDay(day){
   }
   currentDay = d.day;
   document.getElementById('daytitle').textContent = 'Flugtag ' + fmtDay(d.day);
-  const ddl = document.getElementById('daydellink');
-  ddl.href = 'flugtag_loeschen.php?day=' + encodeURIComponent(d.day);
-  ddl.hidden = false;
-  const dat = document.getElementById('daydatelink');
-  dat.href = 'flugtag_datum.php?day=' + encodeURIComponent(d.day);
-  dat.hidden = false;
+  document.getElementById('daydellink').href =
+    'flugtag_loeschen.php?day=' + encodeURIComponent(d.day);
+  document.getElementById('daydatelink').href =
+    'flugtag_datum.php?day=' + encodeURIComponent(d.day);
+  // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
+  // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.
+  document.getElementById('dayaktionen').hidden = false;
 
   // Flugtag-Felder befuellen
   const f = document.getElementById('dayform');

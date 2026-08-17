@@ -41,12 +41,9 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
                Tabulator läuft weiter durch die Einträge), ohne dass sie hier
                nachgebaut und dabei halb vergessen würde.
 
-               Bewusst OHNE role="menu"/"menuitem": Diese Rollen versprechen
-               Bedienung mit den Pfeiltasten. Wer sie vergibt, ohne sie zu
-               liefern, macht die Sache für Vorleseprogramme schlechter als
-               ohne — angekündigt wird ein Menü, das sich dann nicht wie eines
-               bedienen lässt. Drei Verweise untereinander sind hier die
-               ehrlichere Beschreibung. */ ?>
+               Das Schliessen daneben und mit Escape steht seit Web 5.10.0 in
+               assets/aktionsmenu.js — die Flugtagübersicht hat dasselbe Menü,
+               und zwei Fassungen desselben Verhaltens laufen auseinander. */ ?>
       <details class="aktionsmenu" id="aktionsmenu">
         <summary class="btn-edit">Aktionen</summary>
         <div class="aktionsliste">
@@ -101,30 +98,11 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script>
-/* Aktionsmenü schließen, wenn daneben geklickt oder Escape gedrückt wird
-   (A5.1). <details> bringt Öffnen und Schließen selbst mit; was fehlt, ist
-   das Schließen ohne einen zweiten Klick auf den Kopf — ein offenes Menü, das
-   über der Seite stehen bleibt, verdeckt die Angaben darunter. Der Fokus
-   wandert dabei zurück auf den Kopf, sonst stünde er nach Escape in einem
-   Bereich, den es nicht mehr gibt. */
-(function () {
-  const menu = document.getElementById('aktionsmenu');
-  if (!menu) { return; }
-  document.addEventListener('click', ev => {
-    if (menu.open && !menu.contains(ev.target)) { menu.open = false; }
-  });
-  document.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape' && menu.open) {
-      menu.open = false;
-      menu.querySelector('summary').focus();
-    }
-  });
-})();
-
 const MID = <?= $mid ?>;
 // Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
 // kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.

@@ -11,6 +11,99 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.10.0] — 2026-08-17
+
+Feinschliff an der Oberfläche: **weniger Spalte, weniger Filter, weniger
+Zeilen — und zwei Auskünfte, die es vorher erst nach dem Absenden gab.** Keine
+Schemaänderung, keine Migration.
+
+### Die Spalte „abw. Crew" ist wieder weg
+
+Sie war seit Web 5.4.0 in der Tagesübersicht zu sehen. Im täglichen Gebrauch
+trug sie nichts bei: An den allermeisten Tagen steht der Haken in keiner
+einzigen Zeile, und Breite kostete sie trotzdem — in einer Tabelle, die auf
+schmalen Geräten ohnehin knapp ist. Wo die abweichende Besatzung wirklich
+interessiert, steht sie vollständig: in der Einsatzansicht unter „Besatzung",
+mit „(abw.)" an der betroffenen Rolle. **Das Feld selbst bleibt unverändert**,
+ebenso im Export und im Backup.
+
+Umgesetzt durch das Streichen zweier Schlüssel in `mission_fields.php`.
+Tabellenkopf, Zeilenaufbau, Sortierung und der `SELECT` in `api/day.php` zogen
+von selbst nach — die Gegenprobe zu Backlog Nr. 10, diesmal rückwärts.
+
+Bei der Gelegenheit entfernt: die Spaltenbreiten nach Position
+(`#missions th:nth-child(…)`) im Stylesheet. Sie waren wirkungslos, weil die
+Klassenregeln später stehen, aber sie zählten Spalten ab — genau die Sorte
+Regel, die beim Streichen einer Spalte still auf die falsche rutscht.
+
+### Flugtag-Aktionen stehen jetzt oben rechts
+
+„Datum ändern" und „Tag löschen" standen als zwei Schaltflächen unter der
+Tabelle, in einer Reihe mit „+ Einsatz nachtragen" — das Alltagsgeschäft neben
+zwei Eingriffen in den Bestand. Auf der Einsatzseite ist diese Trennung seit
+Web 5.6.0 gezogen; die Flugtagübersicht folgt ihr jetzt mit **demselben
+Bauteil**: ein Menü **Aktionen** oben rechts, vollständig mit der Tastatur
+bedienbar, Escape schliesst.
+
+Das Verhalten (Schliessen daneben und mit Escape) steht dafür neu in
+`assets/aktionsmenu.js` statt zweimal in je einem `<script>`. Es bindet jedes
+`details.aktionsmenu` der Seite von selbst.
+
+### Beim Verschieben steht jetzt da, wohin der Einsatz wandert
+
+Unter dem Datumsfeld in `einsatz_verschieben.php` steht ab sofort, **welcher
+Flugtag am gewählten Datum liegt** — Maschine, Standort und Zahl der Einsätze —
+oder dass dort noch keiner angelegt ist und einer entsteht. Liegt am Zieldatum
+ein Flugtag im **Papierkorb**, sagt die Seite das vorher: Er belegt sein Datum
+weiterhin, und das Verschieben würde abgelehnt.
+
+Ausdrücklich benannt ist dabei, was vorher offenblieb: Je Kalendertag gibt es
+**genau einen** Flugtag (`days` trägt `UNIQUE KEY uq_user_day`). Das Datum
+bestimmt den Zieltag also eindeutig; eine Auswahl zwischen mehreren Tagen
+desselben Datums kann es nicht geben.
+
+### Ein belegtes Zieldatum meldet sich vor der Rückfrage, nicht danach
+
+Die Kollisionsprüfung der Umdatierung (E2) sass allein in
+`tz_tag_datum_aendern()` — also hinter dem Absenden **und** hinter der
+Rückfrage „Alle Zeitstempel wandern mit. Fortfahren?". Wer sie bejahte, bekam
+als Antwort, dass gar nichts geschehen ist. `flugtag_datum.php` sagt jetzt
+unter dem Feld, ob das gewählte Datum frei ist.
+
+Beide Auskünfte sind **rein anzeigend**. Der Server bleibt massgeblich: Die
+Listen sind gedeckelt und veralten in dem Augenblick, in dem in einem zweiten
+Fenster etwas angelegt wird. Wo der Deckel gegriffen hat, sagt die Auskunft
+nichts, statt etwas Falsches zu sagen.
+
+### Winde und Bergwacht erscheinen nur, wenn es sie im Bestand gibt
+
+Beides ist Sache eines Teils der Standorte. Wer nie windet, hatte trotzdem
+sechs Winden-Felder in der Filterspalte stehen — Filter, die dauerhaft null
+Treffer ergeben. Die beiden Blöcke fallen jetzt weg, wenn kein einziger Einsatz
+des Bestandes sie trägt. Geprüft wird der **gesamte** Bestand, nicht die
+aktuelle Trefferliste, damit die Spalte beim Tippen nicht hüpft. Setzt ein
+geteilter Link einen Filter aus einem dieser Blöcke, bleibt er sichtbar — ein
+gesetzter, aber unauffindbarer Filter wäre das schlechtere Ergebnis.
+
+### Die Trefferliste der Suche zeigt 200 Zeilen auf einmal
+
+Vorher gab es keine Grenze: Beim Öffnen stand der gesamte Bestand als Tabelle
+da, und **jeder Tastendruck** im Suchfeld baute ihn neu auf. Bei einigen tausend
+Einsätzen wurde daraus eine spürbare Pause zwischen Anschlag und Anzeige —
+bezahlt für Zeilen, die niemand ansieht.
+
+Begrenzt ist nur die **Anzeige**. Gefiltert, sortiert und gezählt wird
+weiterhin über den vollständigen Bestand; die Zeile über der Tabelle nennt
+unverändert die wahre Trefferzahl und dazu, wie viele davon gerade stehen.
+Unter der Tabelle liegt das Nachladen („Weitere 200 anzeigen" / „Alle N
+anzeigen") — sichtbar nur, wenn wirklich etwas fehlt. Ein Sortierwechsel nimmt
+eine erweiterte Ansicht nicht zurück; ein neues Filterergebnis fängt wieder bei
+der ersten Seite an.
+
+Die Seitengrösse ist eine Option von `EdMissionTable.erzeuge()`
+(`assets/missiontable.js`). Ohne sie zeichnet die Tabelle wie bisher jede Zeile
+— die Zeitraum-Übersicht ist deshalb unverändert.
+
 ## [Web 5.9.0] — 2026-08-16
 
 Block A8 der Verbesserungsrunde Web: **Admin-Sicherungen als Rückfallebene**.
