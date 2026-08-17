@@ -366,7 +366,7 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
  * Fassung prueft Muster und Wertebereich der UHRZEIT bereits richtig, den
  * Kalendertag aber nicht.
  *
- * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Flugtag gehoeren.
+ * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Diensttag gehoeren.
  */
 function pruef_ortszeit_zu_utc($tag, $hhmm, int $addDays = 0,
                                string $feld = 'Uhrzeit', ?Pruefliste $p = null): ?string

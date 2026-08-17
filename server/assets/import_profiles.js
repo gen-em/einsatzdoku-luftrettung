@@ -34,8 +34,10 @@
  *   bergwacht, bw_unit, bw_info, other_ema
  *   phase:N | phaseLat:N | phaseLon:N   (N = 2..9)
  *   rea
- *   crew_override, crew.p1 | crew.p2 | crew.hems | crew.fr | crew.other
- *   dayCrew.p1 | dayCrew.p2 | dayCrew.hems | dayCrew.fr | dayCrew.other
+ *   crew_override, crew.<rolle> und dayCrew.<rolle>
+ *     <rolle> ist eine Kennung aus CREW_ROLES (server/db.php): p1, p2, hems,
+ *     fr, driver, trainee, other. Die zugehoerigen Spalten werden ERZEUGT und
+ *     stehen nicht ausgeschrieben in den Profilen — siehe crewSpalten() unten.
  *   pat.last+first, pat.last, pat.first, pat.dob, pat.age, pat.dx, pat.loc.addr,
  *   pat.loc.lat, pat.loc.lon, pat.mission_no, pat.site_desc
  *   null = Spalte wird bewusst nicht uebernommen
@@ -49,6 +51,41 @@
 
     // Reihenfolge und Beschriftung der Phasen — muss zu PHASE_LABELS in
     // db.php und zu den Spaltennamen in assets/export.js passen.
+    /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php als
+     * CREW_ROLLEN und CREW_LABELS gesetzt. Der Rueckfall ist der Stand vor
+     * Web 6.0.0 — die fuenf Flugrollen —, damit diese Datei auch ohne die
+     * Vorgabe laeuft. */
+    var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
+        ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
+    var LABELS = (typeof CREW_LABELS !== 'undefined' && CREW_LABELS)
+        ? CREW_LABELS
+        : { p1: 'Pilot 1', p2: 'Pilot 2', hems: 'HEMS-TC', fr: 'Flugretter',
+            other: 'Sonstige' };
+
+    /**
+     * Besatzungsspalten in ein Profil eintragen.
+     *
+     * Bis Web 5.10.0 standen sie ausgeschrieben da — zehn Zeilen im CSV-Profil,
+     * fuenf im Excel-Profil. Mit sieben Rollen waeren es vierzehn und sieben
+     * geworden, und eine achte Rolle haette man an einer der drei Stellen
+     * vergessen. $ziel ist 'dayCrew' oder 'crew', $namen bildet die Rolle auf
+     * die Spaltenueberschrift ab.
+     */
+    function crewSpalten(columns, prefixOderLabel, ziel, alsLabel) {
+        ROLLEN.forEach(function (r) {
+            var kopf = alsLabel
+                ? ((r === 'other') ? 'Sonstige Besatzung' : (LABELS[r] || r))
+                : (prefixOderLabel + r);
+            columns[kopf] = {
+                target: ziel + '.' + r,
+                parse: alsLabel
+                    ? ['dashLeer', 'trim', 'max:120']
+                    : ['trim', 'max:120']
+            };
+        });
+        return columns;
+    }
+
     var PHASE_SLUGS = {
         2: 'alarmierung', 3: 'abflug', 4: 'ankunft_einsatzort',
         5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'landung_krankenhaus',
@@ -140,13 +177,24 @@
     //     Import in ein anderes Konto vergibt neue)
     //   - GPX-Dateien werden nicht eingelesen (siehe Handbuch: Tracks stammen
     //     von der Uhr und gehoeren ins Backup, nicht in den Export-Rundweg)
-    //   - hubschrauber/standort sind Klartextnamen; Hubschrauber und Basis
-    //     werden wie bei allen Profilen oben auf der Seite ausgewaehlt
+    //   - rettungsmittel/standort/art sind Klartextnamen; Rettungsmittel und
+    //     Standort werden wie bei allen Profilen oben auf der Seite ausgewaehlt
     // ----------------------------------------------------------------------
     var csvColumns = {
         'einsatz_id': { target: null },
-        'flugtag': { target: 'day', parse: ['trim', 'dateIso'], required: true },
-        'datum': { target: null },                       // Dublette von flugtag
+        /* 'diensttag' ist das Datum des Dienstes und bleibt der Gruppierungs-
+           schluessel des Imports. 'datum' — das echte Einsatzdatum — wird NICHT
+           uebernommen: Beide zusammen waeren zwei Quellen fuer dieselbe
+           Zuordnung, und bei einem Dienst ueber Mitternacht widersprechen sie
+           sich planmaessig. Die Uhrzeit rechnet die Mitternachtslogik ohnehin
+           dem Folgetag zu. */
+        'diensttag': { target: 'day', parse: ['trim', 'dateIso'], required: true },
+        'diensttag_id': { target: null },                // kontospezifisch, s. einsatz_id
+        'datum': { target: null },
+        /* Kopfzeile bis Web 5.10.0. Zeigt auf dasselbe Ziel, damit frühere
+           Exportdateien lesbar bleiben — dieselbe Regel wie bei 'site_desc'
+           weiter unten. */
+        'flugtag': { target: 'day', parse: ['trim', 'dateIso'] },
         'uhrzeit_ortszeit': { target: 'alarm', parse: ['timeHHMM'], required: true },
         // Herkunft und Bearbeitungsstatus beschreiben, wie ein Datensatz IN
         // DIESER Installation entstanden ist. Beim Einlesen entsteht er neu —
@@ -158,23 +206,21 @@
         'manual': { target: null },
         'edited': { target: null },                      // wird beim Import neu gesetzt
 
+        /* Rettungsmittel, Art und Standort sind Klartextnamen aus den
+           eingefrorenen Spalten des Diensttags. Sie werden NICHT uebernommen:
+           Eine Aufloesung ueber Namensgleichheit waere bruechig (umbenannt,
+           gleichnamig an zwei Standorten), und der Standortbezug ist
+           verbindlich (E15). Beides wird oben auf der Seite ausgewaehlt.
+           'hubschrauber' ist die Kopfzeile bis Web 5.10.0. */
         'hubschrauber': { target: null },
+        'rettungsmittel': { target: null },
+        'art': { target: null },
         'standort': { target: null },
-        'tag_crew_p1': { target: 'dayCrew.p1', parse: ['trim', 'max:120'] },
-        'tag_crew_p2': { target: 'dayCrew.p2', parse: ['trim', 'max:120'] },
-        'tag_crew_hems': { target: 'dayCrew.hems', parse: ['trim', 'max:120'] },
-        'tag_crew_fr': { target: 'dayCrew.fr', parse: ['trim', 'max:120'] },
-        'tag_crew_other': { target: 'dayCrew.other', parse: ['trim', 'max:120'] },
 
         'crew_abweichend': { target: 'crew_override', parse: ['boolJN'] },
-        'crew_p1': { target: 'crew.p1', parse: ['trim', 'max:120'] },
-        'crew_p2': { target: 'crew.p2', parse: ['trim', 'max:120'] },
-        'crew_hems': { target: 'crew.hems', parse: ['trim', 'max:120'] },
-        'crew_fr': { target: 'crew.fr', parse: ['trim', 'max:120'] },
-        'crew_other': { target: 'crew.other', parse: ['trim', 'max:120'] },
 
         // 'beginn' wird nicht uebernommen: Der Startzeitpunkt ergibt sich aus
-        // flugtag + uhrzeit_ortszeit, und zwei Quellen fuer dieselbe Angabe
+        // diensttag + uhrzeit_ortszeit, und zwei Quellen fuer dieselbe Angabe
         // waeren eine Widerspruchsquelle. 'dauer_min' ist gerechnet.
         'beginn': { target: null },
         'ende': { target: 'ended', parse: ['isoTs'] },
@@ -257,14 +303,21 @@
         sheet: 0,
         headerRow: 'auto',
         minHeaderMatch: 10,
-        expectedHeaders: ['Hubschrauber', 'Standort', 'Einsatzdatum', 'Alarmzeit',
+        /* Die Kopfzeilen BEIDER Fassungen stehen hier: die bis Web 5.10.0
+           ('Hubschrauber', 'Flugkilometer') und die neutrale ab Web 6.0.0
+           ('Rettungsmittel', 'Kilometer'). minHeaderMatch entscheidet ueber
+           Treffer, nicht Vollstaendigkeit — damit erkennt das Profil beide
+           Fassungen, ohne dass es zwei Profile braeuchte. */
+        expectedHeaders: ['Hubschrauber', 'Rettungsmittel', 'Standort',
+            'Einsatzdatum', 'Alarmzeit',
             'Endzeit', 'Dauer', 'Einsatznummer', 'Nachname', 'Vorname',
-            'Geburtsdatum', 'Alter', 'Einsatzort', 'Diagnose', 'Pilot 1',
-            'Pilot 2', 'HEMS', 'Flugretter', 'Sonstige Besatzung',
+            'Geburtsdatum', 'Alter', 'Einsatzort', 'Diagnose',
             'Sekundärtransport', 'Transportziel', 'Schockraum', 'Windeneinsatz',
             'Windenzyklen gesamt', 'Bergwacht', 'Bergwacht-Einheit',
             'Weitere Rettungsmittel', 'Höhe Einsatzort (m)', 'Flugkilometer',
-            'Notizen'],
+            'Kilometer', 'Notizen'].concat(ROLLEN.map(function (r) {
+                return (r === 'other') ? 'Sonstige Besatzung' : (LABELS[r] || r);
+            })),
         params: [],
 
         // Wortlaut aus SPEC_Export.md 7.2. Bewusst in der Aussagerichtung
@@ -280,10 +333,14 @@
             + 'CSV-Export, für eine echte Wiederherstellung das Backup.',
 
         columns: {
-            // Hubschrauber und Basis sind Stammdaten und werden oben auf der
-            // Seite ausgewaehlt — ein Kennzeichen aus der Datei wuerde sonst
+            // Rettungsmittel und Standort sind Stammdaten und werden oben auf
+            // der Seite ausgewaehlt — eine Bezeichnung aus der Datei wuerde sonst
             // stillschweigend neue Stammdaten anlegen.
+            /* 'Hubschrauber' ist die Kopfzeile bis Web 5.10.0, 'Rettungsmittel'
+               die neutrale ab Web 6.0.0. Beide bleiben eingetragen, damit
+               frühere Exportdateien lesbar bleiben. */
             'Hubschrauber': { target: null },
+            'Rettungsmittel': { target: null },
             'Standort': { target: null },
             'Einsatzdatum': { target: 'day', parse: ['dateFull'], required: true },
             'Alarmzeit': { target: 'alarm', parse: ['dashLeer', 'timeHHMM'], required: true },
@@ -307,11 +364,8 @@
             'Einsatzort': { target: 'pat.loc.addr', parse: ['dashLeer', 'trim'], sensitive: true },
             'Diagnose': { target: 'pat.dx', parse: ['dashLeer', 'trim'], sensitive: true },
 
-            'Pilot 1': { target: 'dayCrew.p1', parse: ['dashLeer', 'trim', 'max:120'] },
-            'Pilot 2': { target: 'dayCrew.p2', parse: ['dashLeer', 'trim', 'max:120'] },
-            'HEMS': { target: 'dayCrew.hems', parse: ['dashLeer', 'trim', 'max:120'] },
-            'Flugretter': { target: 'dayCrew.fr', parse: ['dashLeer', 'trim', 'max:120'] },
-            'Sonstige Besatzung': { target: 'dayCrew.other', parse: ['dashLeer', 'trim', 'max:120'] },
+            // Besatzungsspalten: erzeugt aus dem Rollenkatalog, siehe unten
+            // (crewSpalten mit alsLabel = true).
 
             'Sekundärtransport': { target: 'secondary', parse: ['boolJN'] },
             'Transportziel': { target: 'transport_dest', parse: ['dashLeer', 'trim', 'max:190'] },
@@ -322,9 +376,12 @@
             'Bergwacht-Einheit': { target: 'bw_unit', parse: ['dashLeer', 'trim', 'max:120'] },
             'Weitere Rettungsmittel': { target: 'resources', parse: ['dashLeer', 'trim', 'splitList', 'maxEach:120'] },
             'Höhe Einsatzort (m)': { target: 'site_ele_m', parse: ['dashLeer', 'ganzzahl'] },
-            // Flugkilometer sind aus dem Track gerechnet. Ohne Track waere ein
-            // uebernommener Wert nicht nachvollziehbar — deshalb verworfen.
+            /* Kilometer sind aus dem Track gerechnet. Ohne Track waere ein
+               uebernommener Wert nicht nachvollziehbar — deshalb verworfen.
+               'Flugkilometer' ist die Kopfzeile bis Web 5.10.0 und bleibt
+               eingetragen, damit frühere Dateien erkannt werden. */
             'Flugkilometer': { target: null },
+            'Kilometer': { target: null },
             'Notizen': { target: 'notes', parse: ['dashLeer', 'trim', 'max:2000'] }
         },
 
@@ -334,11 +391,24 @@
             'Geburtsdatum', 'Einsatzort', 'Diagnose', 'Transportziel',
             'Windeneinsatz', 'HEMS', 'Pilot 1', 'Einsatznummer'],
 
-        // Profil A schreibt einen Flugtag ohne Einsatz als eine Zeile mit
+        // Profil A schreibt einen Diensttag ohne Einsatz als eine Zeile mit
         // Datum und lauter "-" (SPEC_Export.md 3.2). Die Pipeline muss das
-        // als Flugtag ohne Einsatz lesen, nicht als fehlerhaften Einsatz.
+        // als Diensttag ohne Einsatz lesen, nicht als fehlerhaften Einsatz.
         emptyDayRows: true
     };
+
+    /* ---- Besatzungsspalten nachtragen -----------------------------------
+     *
+     * Erst hier, nachdem die Profile stehen: Ein Objektliteral kann sich nicht
+     * selbst erweitern, und die Spalten sollen genau EINMAL erzeugt werden.
+     *
+     * Das CSV-Profil nennt Tages- UND Einsatzbesatzung getrennt
+     * (tag_crew_<rolle> und crew_<rolle>) — deshalb explicitCrew. Das
+     * Excel-Profil kennt nur eine Besatzungsangabe je Zeile; sie gilt als
+     * Tagesbesatzung, und gruppiere() rechnet Abweichungen selbst aus. */
+    crewSpalten(exportCsv.columns, 'tag_crew_', 'dayCrew', false);
+    crewSpalten(exportCsv.columns, 'crew_', 'crew', false);
+    crewSpalten(exportExcel.columns, null, 'dayCrew', true);
 
     global.ImportProfile = {
         // Reihenfolge = Reihenfolge im Auswahlfeld (liste() laeuft in

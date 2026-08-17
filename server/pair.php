@@ -206,9 +206,9 @@ try {
     $mail = $ust->fetchColumn();
     if ($mail !== false && $mail !== null && $mail !== '') {
         smtp_send((string)$mail,
-            'Neues Gerät gekoppelt — Gen-EM Einsatzdokumentation Luftrettung',
+            'Neues Gerät gekoppelt — Gen-EM Einsatzdokumentation Notarzt',
             "Hallo,\n\n"
-            . "mit deinem Konto der Gen-EM Einsatzdokumentation Luftrettung wurde soeben ein\n"
+            . "mit deinem Konto der Gen-EM Einsatzdokumentation Notarzt wurde soeben ein\n"
             . "neues Gerät gekoppelt:\n\n"
             . "  Geräte-ID: " . $devId . "\n"
             . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
@@ -217,7 +217,7 @@ try {
             . "Einstellungen → Geräte. Ab diesem Moment kann es keine Daten mehr hochladen.\n"
             . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
             . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-            . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n",
+            . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n",
             5);
     }
 } catch (Throwable $ex) {

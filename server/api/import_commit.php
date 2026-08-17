@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
+require_once __DIR__ . '/../diensttag_lib.php';
 
 /**
  * Import: Abgleich mit dem Bestand.
@@ -9,18 +10,19 @@ require_once __DIR__ . '/../validate_lib.php';
  * POST api/import_commit.php   JSON-Body, Header X-CSRF wie bei api/day.php
  *
  *   { action: 'check',
- *     days: ["2026-05-21", ...] }             // Flugtage der Datei
+ *     days: ["2026-05-21", ...] }             // Kalendertage der Datei
  *
  * Antwort:
- *   { days: { "2026-05-21": { crew: {p1,p2,hems,fr,other},
- *                             aircraft_id, base_id,
+ *   { days: { "2026-05-21": { day_id, crew: {<rolle>: name, ...},
+ *                             vehicle_id, base_id, kind,
+ *                             vehicle_name, base_name,
  *                             missions: [{id, hhmm, pat_blob}] } } }
  *
  *   { action: 'commit',
- *     days:     [{day, crew_p1..crew_other, aircraft_id, base_id,
+ *     days:     [{day, crew: {<rolle>: name, ...}, vehicle_id, base_id,
  *                 mode:'insert'|'keep'|'update'}],
  *     missions: [{day, started_local:'HH:MM', transport_dest, winch,
- *                 resources:[], crew_override, crew_p1..crew_other,
+ *                 resources:[], crew_override, crew: {<rolle>: name, ...},
  *                 pat_blob, dup:'insert'|'overwrite'|'skip', overwrite_id,
  *
  *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
@@ -51,7 +53,7 @@ require_once __DIR__ . '/../validate_lib.php';
  * liefert 'check' deshalb je vorhandenem Einsatz den pat_blob mit; der
  * Browser entschluesselt ihn lokal und vergleicht dort (siehe
  * assets/import_ui.js, bestandEinsatznummernIndex). Erkannt werden
- * Nummerndubletten dadurch nur noch innerhalb der Flugtage, die in der
+ * Nummerndubletten dadurch nur noch innerhalb der Diensttage, die in der
  * Importdatei vorkommen — das ist der Preis der Verschluesselung
  * (docs/Technik.md).
  *
@@ -94,53 +96,37 @@ function import_commit(array $b, int $userId): never
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        /* ---- Stammdaten-IDs pruefen (nur eigene oder zentrale) ------------ */
-        $checkId = function (?int $id, string $table) use ($userId, $pdo): ?int {
-            if ($id === null || $id <= 0) { return null; }
-            $q = $pdo->prepare("SELECT id FROM `$table`
-                                WHERE id = ? AND (user_id = ? OR user_id IS NULL)");
-            $q->execute([$id, $userId]);
-            return $q->fetchColumn() !== false ? $id : null;
-        };
+        /* Die Pruefung der Stammdaten-Kennungen steckt seit Web 6.0.0 in
+         * dt_zuordnen() (aufgerufen von dt_anlegen): Sie muss den STANDORT
+         * mitpruefen, weil ein zentrales Rettungsmittel erst zur Verfuegung
+         * steht, wenn die NutzerIn seinen Standort ausgewaehlt hat (E16). Eine
+         * zweite Fassung hier waere die Stelle, an der beide auseinanderlaufen.
+         */
 
-        /* ---- Flugtage ----------------------------------------------------- */
+        /* ---- Diensttage ----------------------------------------------------
+         *
+         * JE KALENDERTAG HOECHSTENS EINER (E9). Eine Tabelle sagt nichts
+         * darueber, ob zwei Einsaetze desselben Datums zu einem oder zu zwei
+         * Diensten gehoeren; der Import legt deshalb einen an und ordnet alle
+         * Einsaetze des Datums ihm zu. Aufteilen laesst sich das danach mit
+         * einsatz_verschieben.php — eine geratene Aufteilung waere schlechter
+         * als eine, die jemand bewusst vornimmt.
+         *
+         * Der Modus 'insert' legt nur dann an, wenn es zu diesem Datum noch
+         * KEINEN offenen Diensttag gibt. Das frueher noetige
+         * `ON DUPLICATE KEY UPDATE` ist mit dem Tagesschluessel entfallen — es
+         * gibt keinen Schluesselkonflikt mehr, auf den es reagieren koennte,
+         * und ein blindes INSERT wuerde bei einem Doppelklick zwei Dienste
+         * anlegen.
+         *
+         * EIN TAG IM PAPIERKORB WIRD NICHT ZURUECKGEHOLT (D1). Frueher stand
+         * hier deleted_at = NULL: Ein Import legte einen bewusst geloeschten
+         * Diensttag stillschweigend wieder an, samt seiner alten Angaben. Das
+         * Loeschen war eine bewusste Handlung; sie durch eine Nebenwirkung
+         * rueckgaengig zu machen, ist eine Ueberraschung — und eine, die
+         * niemand sieht. Solche Tage werden uebersprungen und in der Meldung
+         * genannt. */
         $tageNeu = 0; $tageGeaendert = 0;
-
-        // 'insert': Tag anlegen. Existiert er wider Erwarten doch (zwischen
-        // Pruefung und Uebernahme angelegt), werden nur LEERE Felder gefuellt —
-        // vorhandene Angaben werden nie ueberschrieben.
-        //
-        // EIN TAG IM PAPIERKORB WIRD NICHT MEHR ZURUECKGEHOLT (D1). Frueher
-        // stand hier deleted_at = NULL: Ein Import legte einen bewusst
-        // geloeschten Flugtag stillschweigend wieder an, samt seiner alten
-        // Angaben. Das Loeschen war eine bewusste Handlung; sie durch eine
-        // Nebenwirkung rueckgaengig zu machen, ist eine Ueberraschung — und
-        // eine, die niemand sieht. Solche Tage werden jetzt uebersprungen und
-        // in der Meldung genannt.
-        $insTag = $pdo->prepare(
-            'INSERT INTO days (user_id, day, aircraft_id, base_id,
-                               crew_p1, crew_p2, crew_hems, crew_fr, crew_other)
-             VALUES (?,?,?,?,?,?,?,?,?)
-             ON DUPLICATE KEY UPDATE
-               aircraft_id = COALESCE(aircraft_id, VALUES(aircraft_id)),
-               base_id     = COALESCE(base_id,     VALUES(base_id)),
-               crew_p1     = COALESCE(crew_p1,     VALUES(crew_p1)),
-               crew_p2     = COALESCE(crew_p2,     VALUES(crew_p2)),
-               crew_hems   = COALESCE(crew_hems,   VALUES(crew_hems)),
-               crew_fr     = COALESCE(crew_fr,     VALUES(crew_fr)),
-               crew_other  = COALESCE(crew_other,  VALUES(crew_other))');
-
-        // 'update': ausdruecklicher Wunsch, die Besatzung aus der Datei zu
-        // uebernehmen — hier wird ueberschrieben, aber nur wo die Datei etwas
-        // liefert (COALESCE andersherum).
-        $updTag = $pdo->prepare(
-            'UPDATE days SET
-               crew_p1    = COALESCE(?, crew_p1),
-               crew_p2    = COALESCE(?, crew_p2),
-               crew_hems  = COALESCE(?, crew_hems),
-               crew_fr    = COALESCE(?, crew_fr),
-               crew_other = COALESCE(?, crew_other)
-             WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
 
         // Tage im Papierkorb einmal vorab feststellen, statt je Zeile zu fragen.
         $imPapierkorb = [];
@@ -148,6 +134,14 @@ function import_commit(array $b, int $userId): never
         $q2->execute([$userId]);
         foreach ($q2->fetchAll(PDO::FETCH_COLUMN) as $d2) { $imPapierkorb[(string)$d2] = true; }
         $tageUebersprungen = 0;
+
+        /* Datum -> Kennung des Diensttags. Diese Zuordnung ist das Ergebnis
+         * dieses Abschnitts und die Grundlage des naechsten: Die Einsaetze
+         * kommen mit einem DATUM aus der Datei und brauchen eine KENNUNG. */
+        $dayIdByDate = [];
+        $vorhandenQ = $pdo->prepare('SELECT id FROM days
+                                      WHERE user_id = ? AND day = ? AND deleted_at IS NULL
+                                      ORDER BY started_at, id LIMIT 1');
 
         foreach ($tage as $t) {
             $tag = pruef_kalendertag($t['day'] ?? null, 'tag.day', $pruef);
@@ -159,23 +153,46 @@ function import_commit(array $b, int $userId): never
                 continue;
             }
             $modus = (string)($t['mode'] ?? 'keep');
-            $crew = [
-                $txt($t['crew_p1'] ?? null, 120), $txt($t['crew_p2'] ?? null, 120),
-                $txt($t['crew_hems'] ?? null, 120), $txt($t['crew_fr'] ?? null, 120),
-                $txt($t['crew_other'] ?? null, 120),
-            ];
-            if ($modus === 'insert') {
-                $insTag->execute(array_merge(
-                    [$userId, $tag,
-                     $checkId(isset($t['aircraft_id']) ? (int)$t['aircraft_id'] : null, 'aircraft'),
-                     $checkId(isset($t['base_id']) ? (int)$t['base_id'] : null, 'bases')],
-                    $crew));
+
+            // Besatzung als role_code => name (E7). Unbekannte Rollen fallen
+            // heraus: Der Katalog steht im Code, nicht in der Datei.
+            $crew = [];
+            foreach ((array)($t['crew'] ?? []) as $rolle => $name) {
+                if (!array_key_exists((string)$rolle, CREW_ROLES)) { continue; }
+                $w = $txt($name, 120);
+                if ($w !== null) { $crew[(string)$rolle] = $w; }
+            }
+
+            $vorhandenQ->execute([$userId, $tag]);
+            $vorhanden = $vorhandenQ->fetchColumn();
+            $dayId = $vorhanden === false ? 0 : (int)$vorhanden;
+
+            if ($modus === 'insert' && $dayId === 0) {
+                /* Anlegen samt Einfrieren von Art, Rollensatz, Faehigkeiten und
+                 * Bezeichnungen (E8) — dieselbe Funktion, die auch die Uhr und
+                 * das Formular benutzen. Ohne sie traege der Diensttag eine
+                 * Zuordnung ohne Art und ohne Rollen, und die Besatzung aus der
+                 * Datei faende keine Zeile, in die sie geschrieben werden
+                 * koennte. */
+                $dayId = dt_anlegen($pdo, $userId, $tag, null,
+                    isset($t['vehicle_id']) ? (int)$t['vehicle_id'] : null,
+                    isset($t['base_id'])    ? (int)$t['base_id']    : null);
                 $tageNeu++;
-            } elseif ($modus === 'update') {
-                $updTag->execute(array_merge($crew, [$userId, $tag]));
+                /* Rollen, die die Datei nennt, das Rettungsmittel aber nicht
+                 * vorsieht, bekommen trotzdem ihre Zeile: Ein Name aus der
+                 * Datei ist eine Angabe, und sie stillschweigend zu verwerfen
+                 * waere Datenverlust. Dieselbe Regel wie in der Migration. */
+                dt_crew_ergaenzen($pdo, $dayId, array_keys($crew));
+                dt_crew_speichern($pdo, $dayId, $crew);
+            } elseif ($modus === 'update' && $dayId > 0) {
+                // Ausdruecklicher Wunsch, die Besatzung aus der Datei zu
+                // uebernehmen. Nur belegte Rollen werden geschrieben.
+                dt_crew_ergaenzen($pdo, $dayId, array_keys($crew));
+                dt_crew_speichern($pdo, $dayId, $crew);
                 $tageGeaendert++;
             }
             // 'keep' = bewusst nichts tun
+            if ($dayId > 0) { $dayIdByDate[$tag] = $dayId; }
         }
 
         /* ---- Virtuelles Geraet "Manuelle Einträge" ------------------------- */
@@ -215,21 +232,20 @@ function import_commit(array $b, int $userId): never
         // die sie nicht liefern, schreiben dort NULL beziehungsweise 0 — das
         // entspricht dem Zustand vor dieser Version.
         $insE = $pdo->prepare(
-            'INSERT INTO missions (user_id, device_id, client_ref, day, started_at, ended_at,
+            'INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at,
                                    final, manual, origin, transport_dest, winch,
-                                   crew_override, crew_p1, crew_p2, crew_hems, crew_fr,
-                                   crew_other, pat_blob,
+                                   crew_override, pat_blob,
                                    site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
                                    winch_airload, bergwacht, bw_unit, bw_info,
                                    other_ema, notes)
-             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
-         * COALESCE(?, spalte) statt mit einer nackten Zuweisung — dasselbe
-         * Muster, das $updTag ein paar Zeilen weiter oben fuer die Besatzung
-         * des Flugtags schon benutzt.
+         * COALESCE(?, spalte) statt mit einer nackten Zuweisung. Fuer die
+         * Besatzung gilt dieselbe Haltung, dort jetzt in dt_crew_speichern():
+         * geschrieben wird nur, was die Datei nennt.
          *
          * Anlass ist Block A9: Ein Export OHNE personenbezogene Angaben laesst
          * Besatzung, bw_info, other_ema, Notizen und site_ele_m leer. Wer eine
@@ -248,13 +264,8 @@ function import_commit(array $b, int $userId): never
          * (transport_dest, bw_unit, distance_m, die Flags …): Sie stehen in
          * jedem Export, ein leerer Wert ist dort eine Aussage. */
         $updE = $pdo->prepare(
-            'UPDATE missions SET day = ?, started_at = ?, ended_at = ?,
+            'UPDATE missions SET day_id = ?, started_at = ?, ended_at = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
-                                 crew_p1     = COALESCE(?, crew_p1),
-                                 crew_p2     = COALESCE(?, crew_p2),
-                                 crew_hems   = COALESCE(?, crew_hems),
-                                 crew_fr     = COALESCE(?, crew_fr),
-                                 crew_other  = COALESCE(?, crew_other),
                                  pat_blob    = COALESCE(?, pat_blob),
                                  site_ele_m  = COALESCE(?, site_ele_m),
                                  distance_m = ?, ascent_m = ?,
@@ -293,7 +304,7 @@ function import_commit(array $b, int $userId): never
          * erkennen, ob das gut ist (alles schon da) oder schlecht (alles
          * kaputt) — und genau diese Unterscheidung braucht er. */
         $grund = ['datum' => 0, 'uhrzeit' => 0, 'auswahl' => 0,
-                  'fremd_oder_geloescht' => 0];
+                  'fremd_oder_geloescht' => 0, 'ohne_diensttag' => 0];
 
         // Zugehoerigkeit direkt feststellen (M3-03), statt sie aus der Zahl
         // geaenderter Zeilen zu erschliessen.
@@ -305,6 +316,17 @@ function import_commit(array $b, int $userId): never
             $hhmm = (string)($m['started_local'] ?? '');
             if ($tag === null || !preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
                 $grund['datum']++; $uebersprungen++; continue;
+            }
+            /* OHNE DIENSTTAG KEIN EINSATZ. `missions.day_id` ist ein
+             * Fremdschluessel; ein Einsatz ohne ihn waere verwaist (A11). Der
+             * Fall tritt ein, wenn der Tag im Papierkorb liegt oder der Modus
+             * 'keep' auf ein Datum traf, zu dem es keinen offenen Diensttag
+             * gibt — beides wird gezaehlt und in der Meldung genannt, nicht
+             * stillschweigend uebergangen. */
+            $dayId = $dayIdByDate[$tag] ?? 0;
+            if ($dayId === 0) {
+                $grund['ohne_diensttag'] = ($grund['ohne_diensttag'] ?? 0) + 1;
+                $uebersprungen++; continue;
             }
             if (($m['dup'] ?? 'insert') === 'skip') {
                 $grund['auswahl']++; $uebersprungen++; continue;
@@ -326,13 +348,20 @@ function import_commit(array $b, int $userId): never
             // fuer die Jahreslisten-Profile nichts aendert.
             $endedAt = $utc($m['ended_utc'] ?? null) ?? $startedAt;
 
+            /* Abweichende Besatzung des Einsatzes: role_code => name (E7).
+             * Sie wird NACH dem Schreiben der Zeile in `mission_crew` gefuehrt,
+             * nicht als Spalten hier — siehe unten. */
+            $mCrew = [];
+            foreach ((array)($m['crew'] ?? []) as $rolle => $name) {
+                if (!array_key_exists((string)$rolle, CREW_ROLES)) { continue; }
+                $w = $txt($name, 120);
+                if ($w !== null) { $mCrew[(string)$rolle] = $w; }
+            }
+
             $werte = [
                 $txt($m['transport_dest'] ?? null, 190),
                 $flag($m['winch'] ?? null),
                 $flag($m['crew_override'] ?? null),
-                $txt($m['crew_p1'] ?? null, 120), $txt($m['crew_p2'] ?? null, 120),
-                $txt($m['crew_hems'] ?? null, 120), $txt($m['crew_fr'] ?? null, 120),
-                $txt($m['crew_other'] ?? null, 120),
                 $blob,
                 $zahl($m['site_ele_m'] ?? null, -500, 9000),
                 $zahl($m['distance_m'] ?? null, 0, 100000000),
@@ -373,16 +402,35 @@ function import_commit(array $b, int $userId): never
                     $grund['fremd_oder_geloescht']++;
                     $uebersprungen++; continue;
                 }
-                $updE->execute(array_merge([$tag, $startedAt, $endedAt], $werte, [$id, $userId]));
+                $updE->execute(array_merge([$dayId, $startedAt, $endedAt], $werte, [$id, $userId]));
                 $ersetzt++;
             } else {
                 $insE->execute(array_merge(
                     [$userId, $devId, 'imp-' . bin2hex(random_bytes(12)),
-                     $tag, $startedAt, $endedAt],
+                     $dayId, $startedAt, $endedAt],
                     $werte));
                 $id = (int)$pdo->lastInsertId();
                 $neu++;
             }
+
+            /* ---- Abweichende Besatzung (mission_crew) ---------------------
+             *
+             * VOLLSTAENDIG ERSETZEN, aber nur wenn die Datei ueberhaupt etwas
+             * dazu sagt. Der Unterschied ist wesentlich und folgt derselben
+             * Ueberlegung wie COALESCE bei den Spalten oben (A9): Ein Export
+             * OHNE personenbezogene Angaben liefert keine Besatzung. Wer eine
+             * solche Datei zurueckspielt, darf die vorhandene Abweichung nicht
+             * verlieren — sie stand nie in der Datei, sie wurde nicht
+             * aufgehoben. Nennt die Datei dagegen eine Besatzung, gilt ihre. */
+            if ($mCrew) {
+                $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
+                $insMC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
+                                        VALUES (?,?,?)');
+                foreach ($mCrew as $rolle => $name) { $insMC->execute([$id, $rolle, $name]); }
+            }
+
+            // Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
+            dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
             /* ---- Phasen ---------------------------------------------------
              * Liefert die Datei Phasen (Rueckimport der eigenen Exporte), wird
@@ -563,47 +611,80 @@ try {
 
     $antwortTage = [];
 
-    /* ---- Flugtage samt vorhandener Einsaetze ------------------------------ */
+    /* ---- Diensttage samt vorhandener Einsaetze ---------------------------- */
     if ($tage) {
         $platz = implode(',', array_fill(0, count($tage), '?'));
 
-        // Datentrennung! Zusaetzlich nur nicht geloeschte Tage.
-        $st = db()->prepare("SELECT day, aircraft_id, base_id,
-                                    crew_p1, crew_p2, crew_hems, crew_fr, crew_other
+        /* Datentrennung! Zusaetzlich nur nicht geloeschte Tage.
+         *
+         * JE DATUM DER ERSTE offene Diensttag. Mehrere sind seit E9 zulaessig,
+         * aber der Import kann sie nicht unterscheiden — er gruppiert nach
+         * Kalendertag (siehe gruppiere() in assets/import.js). Genommen wird
+         * deshalb derselbe, dem auch der Uebernahmelauf die Einsaetze zuordnet:
+         * der frueheste. Die Auskunft „Diensttag vorhanden" waere sonst nicht
+         * dieselbe Zeile, die spaeter beschrieben wird. */
+        $st = db()->prepare("SELECT id, day, vehicle_id, base_id, kind,
+                                    vehicle_name, base_name, started_at
                              FROM days
                              WHERE user_id = ? AND deleted_at IS NULL
-                               AND day IN ($platz)");
+                               AND day IN ($platz)
+                             ORDER BY day, started_at, id");
         $st->execute(array_merge([$userId], $tage));
+        $tagIds = [];
         foreach ($st->fetchAll() as $t) {
-            $antwortTage[(string)$t['day']] = [
-                'crew' => [
-                    'p1'    => $t['crew_p1'],
-                    'p2'    => $t['crew_p2'],
-                    'hems'  => $t['crew_hems'],
-                    'fr'    => $t['crew_fr'],
-                    'other' => $t['crew_other'],
-                ],
-                'aircraft_id' => $t['aircraft_id'] !== null ? (int)$t['aircraft_id'] : null,
-                'base_id'     => $t['base_id'] !== null ? (int)$t['base_id'] : null,
-                'missions'    => [],
+            $d = (string)$t['day'];
+            if (isset($antwortTage[$d])) { continue; }   // nur der erste je Datum
+            $tagIds[$d] = (int)$t['id'];
+            $antwortTage[$d] = [
+                'day_id'       => (int)$t['id'],
+                'crew'         => [],
+                'vehicle_id'   => $t['vehicle_id'] !== null ? (int)$t['vehicle_id'] : null,
+                'base_id'      => $t['base_id'] !== null ? (int)$t['base_id'] : null,
+                'kind'         => $t['kind'] !== null ? (string)$t['kind'] : null,
+                'vehicle_name' => $t['vehicle_name'] !== null ? (string)$t['vehicle_name'] : null,
+                'base_name'    => $t['base_name'] !== null ? (string)$t['base_name'] : null,
+                'missions'     => [],
             ];
         }
+        // Besatzung der gefundenen Diensttage in EINER Abfrage.
+        if ($tagIds) {
+            $nachId = array_flip($tagIds);   // Kennung -> Datum
+            foreach (sql_in_bloecken(db(),
+                    'SELECT day_id, role_code, name FROM day_crew
+                     WHERE day_id IN ({IDS})', array_values($tagIds)) as $c) {
+                $d = $nachId[(int)$c['day_id']] ?? null;
+                if ($d !== null && $c['name'] !== null) {
+                    $antwortTage[$d]['crew'][(string)$c['role_code']] = (string)$c['name'];
+                }
+            }
+        }
 
-        // Einsaetze dieser Tage — auch wenn der Flugtag selbst fehlt (moeglich,
-        // wenn ein Einsatz ohne angelegten Tag existiert). pat_blob geht als
-        // Chiffretext mit, damit der Browser die Einsatznummer fuer den
-        // Dublettenabgleich lokal entschluesseln kann (siehe Kopfkommentar).
-        $st = db()->prepare("SELECT id, day, started_at, pat_blob
-                             FROM missions
-                             WHERE user_id = ? AND deleted_at IS NULL
-                               AND day IN ($platz)
-                             ORDER BY started_at");
+        /* Einsaetze dieser Tage. Der Join auf `days` ist seit Web 6.0.0 der
+         * vorgesehene Weg (Konzept 4.11); den frueheren Fall „Einsatz ohne
+         * angelegten Tag" gibt es nicht mehr — `day_id` ist ein Fremdschluessel.
+         * pat_blob geht als Chiffretext mit, damit der Browser die
+         * Einsatznummer fuer den Dublettenabgleich lokal entschluesseln kann
+         * (siehe Kopfkommentar). */
+        $st = db()->prepare("SELECT x.id, d.day, x.started_at, x.pat_blob
+                             FROM missions x
+                             JOIN days d ON d.id = x.day_id
+                             WHERE x.user_id = ? AND x.deleted_at IS NULL
+                               AND d.deleted_at IS NULL
+                               AND d.day IN ($platz)
+                             ORDER BY x.started_at");
         $st->execute(array_merge([$userId], $tage));
         foreach ($st->fetchAll() as $m) {
             $tag = (string)$m['day'];
+            /* Der Zweig kann nur greifen, wenn der Einsatz an einem Diensttag
+             * eines ANDEREN Datums haengt als die Datei annimmt — etwa nach
+             * einem Verschieben. Er bleibt als Absicherung stehen: Ohne ihn
+             * waere die Antwort unvollstaendig und die Dublettenpruefung
+             * uebersaehe einen vorhandenen Einsatz. */
             if (!isset($antwortTage[$tag])) {
-                $antwortTage[$tag] = ['crew' => null, 'aircraft_id' => null,
-                                      'base_id' => null, 'missions' => []];
+                $antwortTage[$tag] = ['day_id' => null, 'crew' => [],
+                                      'vehicle_id' => null, 'base_id' => null,
+                                      'kind' => null, 'vehicle_name' => null,
+                                      'base_name' => null, 'missions' => []];
             }
             $antwortTage[$tag]['missions'][] = [
                 'id'       => (int)$m['id'],

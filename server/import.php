@@ -22,21 +22,15 @@ require_once __DIR__ . '/auth_guard.php';
  * Die Feldlisten aller Formate stehen in docs/Export-Format.md.
  */
 
-// Stammdaten fuer die Vorbelegung neu angelegter Flugtage (wie index.php)
-$SD_BASES = db()->prepare('SELECT id, name FROM bases
-                           WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-$SD_BASES->execute([$userId]); $SD_BASES = $SD_BASES->fetchAll();
-$SD_AC = db()->prepare('SELECT id, registration FROM aircraft
-                        WHERE (user_id = ? OR user_id IS NULL) ORDER BY registration');
-$SD_AC->execute([$userId]); $SD_AC = $SD_AC->fetchAll();
-
-$DEF_AC = 0; $DEF_BASE = 0;
-$defs = db()->prepare('SELECT kind, item_id FROM user_defaults WHERE user_id = ?');
-$defs->execute([$userId]);
-foreach ($defs->fetchAll() as $d) {
-    if ($d['kind'] === 'base')     { $DEF_BASE = (int)$d['item_id']; }
-    if ($d['kind'] === 'aircraft') { $DEF_AC   = (int)$d['item_id']; }
-}
+/* Stammdaten fuer die Vorbelegung neu angelegter Diensttage (wie index.php).
+ * Dieselbe Menge, die dt_zuordnen() beim Speichern annimmt: eigene und
+ * ausgewaehlte zentrale Standorte samt ihren Rettungsmitteln (E16). */
+require_once __DIR__ . '/diensttag_lib.php';
+$SD_BASES    = dt_bases($userId);
+$SD_VEHICLES = dt_vehicles($userId);
+$SD_DEFAULTS = dt_standardwerte($userId);
+$DEF_VEHICLE = (int)($SD_DEFAULTS['vehicle_id'] ?? 0);
+$DEF_BASE    = (int)($SD_DEFAULTS['base_id'] ?? 0);
 ?><!doctype html>
 <html lang="de">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -78,25 +72,33 @@ foreach ($defs->fetchAll() as $d) {
 
       <div id="params"></div>
 
-      <label>Maschine für neu angelegte Flugtage
-        <select id="acsel">
+      <label>Rettungsmittel für neu angelegte Diensttage
+        <select id="vehsel">
           <option value="">–</option>
-          <?php foreach ($SD_AC as $a): ?>
-            <option value="<?= (int)$a['id'] ?>"
-              <?= (int)$a['id'] === $DEF_AC ? 'selected' : '' ?>><?= e($a['registration']) ?></option>
+          <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
+            <option value="<?= (int)$v['id'] ?>"
+              <?= (int)$v['id'] === $DEF_VEHICLE ? 'selected' : '' ?>>
+              <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
+                echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
           <?php endforeach; ?>
         </select></label>
 
-      <label>Basis für neu angelegte Flugtage
+      <label>Standort für neu angelegte Diensttage
         <select id="basesel">
           <option value="">–</option>
           <?php foreach ($SD_BASES as $b): ?>
             <option value="<?= (int)$b['id'] ?>"
-              <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?></option>
+              <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?><?php
+              echo !empty($b['zentral']) ? ' (zentral)' : ''; ?></option>
           <?php endforeach; ?>
         </select></label>
-      <p class="muted">Gilt nur für Flugtage, die es noch nicht gibt. Bestehende Tage
-         bleiben unangetastet, und beides lässt sich später je Tag in der Übersicht ändern.</p>
+      <p class="muted">Gilt nur für Diensttage, die der Import neu anlegt. Bestehende
+         bleiben unangetastet, und beides lässt sich später je Diensttag in der
+         Übersicht ändern.</p>
+      <p class="muted">Ein Import legt <strong>je Kalendertag höchstens einen</strong>
+         Diensttag neu an und ordnet alle Einsätze dieses Datums ihm zu. Mehrere
+         Dienste an einem Tag lassen sich aus einer Tabelle nicht ableiten — wer sie
+         braucht, teilt sie danach mit „Aktionen → Verschieben" auf.</p>
     </div>
 
     <!-- ---------------------------------------------------------------- 2 -->
@@ -226,6 +228,19 @@ foreach ($defs->fetchAll() as $d) {
     <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
     <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
+    <?php /* ROLLENKATALOG FUER DIE SKRIPTE (E4).
+             Er muss VOR import_profiles.js und import.js stehen: Beide leiten
+             ihre Spaltenlisten beim Laden daraus ab. export.js und import_ui.js
+             folgen weiter unten und sehen ihn dadurch ebenfalls.
+
+             Die Quelle ist CREW_ROLES in server/db.php — nicht eine zweite
+             Liste im Browser, die damit auseinanderlaufen könnte. */ ?>
+    <script>
+      const CREW_ROLLEN = <?= json_encode(array_keys(CREW_ROLES)) ?>;
+      const CREW_LABELS = <?= json_encode(array_map(
+              static fn(array $r): string => $r['label'], CREW_ROLES),
+              JSON_UNESCAPED_UNICODE) ?>;
+    </script>
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
     <script>

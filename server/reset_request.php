@@ -72,9 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([(int)$u['id'], hash('sha256', $token)]);
             $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
             $mailAuftrag = [$email,
-                'Neues Passwort — Gen-EM Einsatzdokumentation Luftrettung',
+                'Neues Passwort — Gen-EM Einsatzdokumentation Notarzt',
                 "Hallo,\n\n"
-                . "für deinen Zugang zur Gen-EM Einsatzdokumentation Luftrettung wurde ein neues\n"
+                . "für deinen Zugang zur Gen-EM Einsatzdokumentation Notarzt wurde ein neues\n"
                 . "Passwort angefordert. Über den folgenden Link kannst du es setzen — der Link ist\n"
                 . "eine Stunde gültig:\n\n"
                 . $link . "\n\n"
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . "Falls du das nicht angefordert hast, kannst du diese E-Mail einfach ignorieren —\n"
                 . "es wurde nichts geändert.\n\n"
                 . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n"];
+                . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n"];
         }
     }
     // Auch der gesperrte Fall bekommt dieselbe Antwort: Eine eigene Meldung

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/diensttag_lib.php';
 
 /**
  * Aufnahme der Uhr-Daten.
@@ -22,6 +23,25 @@ require_once __DIR__ . '/validate_lib.php';
  * NICHT umgesetzt und ausdruecklich so gewollt: eine Entdoppelung mehrfacher
  * Phasennummern. Eine erneut gesetzte Phase ist eine Korrektur und damit eine
  * Information (JSON-Vertrag, Abschnitt 3).
+ *
+ * ZUORDNUNG ZUM DIENSTTAG (seit Web 6.0.0, JSON-Vertrag 4.4). Einsaetze und
+ * Ruhe-Segmente haengen an `days.id`, nicht mehr am Datum. Zwei Wege fuehren
+ * dorthin, und BEIDE bleiben:
+ *
+ *   1. `day_ref` — die von der Uhr bei "Einsatztag starten" erzeugte
+ *      Dienstkennung. Sie wird in `day_refs` nachgeschlagen; ein Treffer
+ *      liefert den Diensttag, auch wenn dieser inzwischen in einen anderen
+ *      aufgenommen wurde (A8). Kein Treffer legt einen neuen Diensttag an.
+ *   2. `(user_id, day)` als RUECKFALLEBENE fuer Uhr-Fassungen ohne `day_ref`.
+ *      Sie ist nicht als Uebergang gedacht, sondern dauerhaft: Ein Update des
+ *      Webs darf eine Uhr nicht ausser Betrieb setzen, die niemand aktualisiert
+ *      hat. Der JSON-Vertrag steigt erst mit Etappe 4 auf 1.3; bis dahin
+ *      schickt keine Uhr eine Kennung, und dieser Weg ist der einzige.
+ *
+ * Der Diensttag ist dabei immer NEUTRAL (E26): Die Uhr kennt die Einsatzart
+ * nicht (E21) und traegt weder Standort noch Rettungsmittel bei. Beides wird im
+ * Web nachgetragen; bis dahin fehlen Rollen und artabhaengige Felder, waehrend
+ * Zeiten, Phasen, Track und Reanimation vollstaendig erfasst werden (A7a).
  */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_out(['error' => 'method'], 405);
@@ -65,6 +85,17 @@ $clientRef = pruef_text($b['client_ref'] ?? null, 64, 'client_ref', $pruef);
  * anschliessend stillschweigend auf den 2. Maerz verschoben (B2). */
 $day       = pruef_kalendertag($b['day'] ?? null, 'day', $pruef);
 $startedAt = pruef_utc($b['started_at'] ?? null, 'started_at', $pruef);
+
+/* Dienstkennung, falls die Uhr eine schickt (JSON-Vertrag 4.4). Sie ist
+ * OPTIONAL und bleibt es: Fehlt sie, greift die Rueckfallebene ueber
+ * (user_id, day). Geprueft wird sie wie `client_ref` — gleiches Muster, gleiche
+ * Laenge, gleiche Idempotenz-Eigenschaft. Ein unbrauchbarer Wert verwirft den
+ * WERT, nicht den Upload: Ohne Kennung landet der Einsatz auf dem Rueckfallweg
+ * an einem Diensttag, statt gar nicht anzukommen. */
+$dayRef = null;
+if (($b['day_ref'] ?? null) !== null && $b['day_ref'] !== '') {
+    $dayRef = pruef_text($b['day_ref'], 64, 'day_ref', $pruef);
+}
 
 /* Diese vier Angaben sind das Geruest des Datensatzes. Fehlt eines, ist die
  * Nachricht als Ganzes unbrauchbar — hier ist ein Abbruch richtig. */
@@ -127,7 +158,7 @@ try {
     // geloeschter Datensatz durch Nachlieferungen wieder wachsen. Erst das
     // endgueltige Loeschen traegt ihn in die Sperrliste ein.
     $tabelle = $kind === 'mission' ? 'missions' : 'rest_segments';
-    $chk = $pdo->prepare("SELECT id, deleted_at" . ($kind === 'mission' ? ', manual' : '')
+    $chk = $pdo->prepare("SELECT id, day_id, deleted_at" . ($kind === 'mission' ? ', manual' : '')
                        . " FROM `$tabelle` WHERE device_id = ? AND client_ref = ?");
     $chk->execute([$dev['id'], $clientRef]);
     $existing = $chk->fetch();
@@ -136,6 +167,27 @@ try {
         $pdo->commit();
         json_out(['ok' => true, 'id' => 0, 'stored_points' => 0,
                   'next_seq' => $seqFrom + count($points)]);
+    }
+
+    /* ---- Diensttag bestimmen (JSON-Vertrag 4.4) ---------------------------
+     *
+     * VOR der Fallunterscheidung, weil beide Arten ihn brauchen — und nach den
+     * Pruefungen oben, damit ein verworfener Upload keinen leeren Diensttag
+     * hinterlaesst.
+     *
+     * Ein Datensatz, der bereits an einem Diensttag haengt, BEHAELT ihn. Das ist
+     * dieselbe Zusicherung, auf die sich tz_einsatz_verschieben() stuetzt: Eine
+     * Nachlieferung darf einen im Web umgehaengten Einsatz nicht zurueckziehen
+     * (Akzeptanzkriterium 28). Beim Upsert unten steht `day_id` deshalb nur im
+     * INSERT, nicht im ON DUPLICATE KEY UPDATE. */
+    $vorhandenerDayId = ($existing && $existing['day_id'] !== null)
+        ? (int)$existing['day_id'] : null;
+    if ($dayRef !== null) {
+        $dayId = dt_zu_dayref($pdo, (int)$dev['user_id'], (int)$dev['id'], $dayRef,
+                              $day, $startedAt, $vorhandenerDayId);
+    } else {
+        $dayId = $vorhandenerDayId
+              ?? dt_rueckfall($pdo, (int)$dev['user_id'], $day, $startedAt);
     }
 
     if ($kind === 'mission') {
@@ -147,13 +199,13 @@ try {
             $ownerType = 'mission';
         } else {
         // Upsert des Einsatzes (idempotent ueber device_id+client_ref)
-        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day, started_at, ended_at, distance_m, ascent_m, final)
+        $pdo->prepare('INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at, distance_m, ascent_m, final)
                        VALUES (?,?,?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
                          ended_at = VALUES(ended_at), distance_m = VALUES(distance_m),
                          ascent_m = VALUES(ascent_m), final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
-            ->execute([$dev['user_id'], $dev['id'], $clientRef, $day, $startedAt, $endedAt,
+            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt,
                        $distanceM, $ascentM, $final]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'mission';
@@ -271,12 +323,12 @@ try {
         }
         }   // Ende: nicht-manueller Einsatz
     } else { // rest_segment
-        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day, started_at, ended_at, final)
+        $pdo->prepare('INSERT INTO rest_segments (user_id, device_id, client_ref, day_id, started_at, ended_at, final)
                        VALUES (?,?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE
                          ended_at = VALUES(ended_at), final = GREATEST(final, VALUES(final)),
                          id = LAST_INSERT_ID(id)')
-            ->execute([$dev['user_id'], $dev['id'], $clientRef, $day, $startedAt, $endedAt, $final]);
+            ->execute([$dev['user_id'], $dev['id'], $clientRef, $dayId, $startedAt, $endedAt, $final]);
         $ownerId = (int)$pdo->lastInsertId();
         $ownerType = 'rest';
     }
@@ -333,6 +385,19 @@ try {
             }
         }
     }
+
+    /* ---- Zeitraum des Diensttags fortschreiben (JSON-Vertrag 4.4) ---------
+     *
+     * Der Diensttag traegt echte Start- und Endzeiten. Die Uhr sendet sie nicht
+     * eigens — sie sendet Einsaetze und Ruhe-Segmente, und der Dienst ist das,
+     * was sie umschliesst. `started_at` wandert deshalb nur nach vorne,
+     * `ended_at` nur nach hinten (siehe dt_zeitraum_fortschreiben()).
+     *
+     * Das gilt AUCH fuer einen Diensttag, dessen Zeitraum die Migration
+     * gesetzt hat, und auch fuer einen von Hand angelegten: Ein Einsatz, der
+     * um 00:40 des Folgetags endet, verlaengert den Dienst bis dahin — genau
+     * der Fall, den der Testbestand als "Dienst ueber Mitternacht" fuehrt. */
+    dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
     $q = $pdo->prepare('SELECT COALESCE(MAX(seq)+1, 0) AS next FROM track_points WHERE owner_type = ? AND owner_id = ?');
     $q->execute([$ownerType, $ownerId]);

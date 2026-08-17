@@ -85,9 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($angelegt) {
                     $link = $CFG['app']['base_url'] . '/pw_handling.php?token=' . $token;
                     $ok = smtp_send($email,
-                        'Willkommen bei der Gen-EM Einsatzdokumentation Luftrettung',
+                        'Willkommen bei der Gen-EM Einsatzdokumentation Notarzt',
                         "Hallo,\n\n"
-                        . "für dich wurde ein Zugang zur Gen-EM Einsatzdokumentation Luftrettung angelegt.\n"
+                        . "für dich wurde ein Zugang zur Gen-EM Einsatzdokumentation Notarzt angelegt.\n"
                         . "Über den folgenden Link legst du dein persönliches Passwort fest — der Link ist\n"
                         . "24 Stunden gültig:\n\n"
                         . $link . "\n\n"
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         . "sicher — ohne ihn lassen sich die verschlüsselten Angaben nach einem späteren\n"
                         . "Passwort-Reset nicht wiederherstellen.\n\n"
                         . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
-                        . "Viele Grüße\nGen-EM Einsatzdokumentation Luftrettung\n");
+                        . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n");
                     if ($ok) {
                         $notice = 'Nutzer angelegt — Setz-Link per E-Mail verschickt.';
                     } else {

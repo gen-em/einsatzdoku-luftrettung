@@ -50,13 +50,25 @@ if ($monat !== '') {
 }
 
 try {
-    $st = db()->prepare('SELECT id, day, started_at, distance_m,
-                           winch, bergwacht, secondary, winch_cycles, site_ele_m, pat_blob,
+    /* DIE STATISTIK RECHNET NACH DIENSTTAG (E14). Der Zeitraum filtert deshalb
+     * `days.day`, nicht `missions.started_at`: Ein Einsatz um 01:30 eines
+     * Dienstes, der am Vortag begonnen hat, zaehlt zum Vortag — und faellt am
+     * Monatsersten damit noch in den Vormonat. Die Einsatzsuche macht es
+     * ausdruecklich anders (api/suchindex.php); der Unterschied ist gewollt und
+     * im Handbuch erklaert.
+     *
+     * Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept
+     * 4.11). Bis dahin trug jeder Einsatz sein Tagesdatum selbst. */
+    $st = db()->prepare('SELECT m.id, m.day_id, d.day, m.started_at, m.distance_m,
+                           m.winch, m.bergwacht, m.secondary, m.winch_cycles,
+                           m.site_ele_m, m.pat_blob,
                            (SELECT MAX(occurred_at) FROM mission_phases p
-                            WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
-                         FROM missions
-                         WHERE user_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL
-                         ORDER BY started_at');
+                            WHERE p.mission_id = m.id AND p.phase = 9) AS p9_at
+                         FROM missions m
+                         JOIN days d ON d.id = m.day_id
+                         WHERE m.user_id = ? AND d.day BETWEEN ? AND ?
+                           AND m.deleted_at IS NULL AND d.deleted_at IS NULL
+                         ORDER BY m.started_at');
     $st->execute([$userId, $von, $bis]);
 
     $missions = [];
@@ -68,6 +80,7 @@ try {
         }
         $missions[] = [
             'id'         => (int)$m['id'],
+            'day_id'     => (int)$m['day_id'],
             'day'        => (string)$m['day'],
             'start_hhmm' => fmt_local($m['started_at']),
             'duration_s' => $dur,
@@ -81,10 +94,14 @@ try {
         ];
     }
 
-    // Kennzahl 'tage': alle im Zeitraum ANGELEGTEN Flugtage, auch ohne Einsatz —
+    // Kennzahl 'tage': alle im Zeitraum ANGELEGTEN Diensttage, auch ohne Einsatz —
     // bewusste Semantikaenderung (vorher: COUNT(DISTINCT day) aus missions, zaehlte
     // also nur Tage mit dokumentiertem Einsatz). Divisor der Durchschnittswerte
     // in der Statistiktabelle der Zeitraum-Uebersicht.
+    //
+    // Gezaehlt werden ZEILEN, nicht Kalendertage: Zwei Dienste an einem Tag sind
+    // seit E9 zwei Diensttage, und ein Durchschnitt „Einsaetze je Diensttag"
+    // waere sonst um den Faktor der Doppeltage zu hoch.
     $tage = db()->prepare('SELECT COUNT(*) FROM days
                            WHERE user_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL');
     $tage->execute([$userId, $von, $bis]);

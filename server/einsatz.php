@@ -2,13 +2,14 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 
-// Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Tag fuer die
-// Einsatztage-Leiste). Ohne Treffer: sauberes 404.
+// Einsatz-ID einlesen und Eigentum pruefen (liefert auch den Diensttag fuer die
+// Seitenleiste). Ohne Treffer: sauberes 404.
 $mid = (int)($_GET['id'] ?? 0);
-$mq = db()->prepare('SELECT day FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+$mq = db()->prepare('SELECT day_id FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
 $mq->execute([$mid, $userId]);
-$missionDay = $mq->fetchColumn();
-if ($missionDay === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+$missionDayId = $mq->fetchColumn();
+if ($missionDayId === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+$missionDayId = $missionDayId === null ? null : (int)$missionDayId;
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 ?><!doctype html>
 <html lang="de">
@@ -23,7 +24,7 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <?php ui_topbar('uebersicht'); ?>
 
 <div class="layout">
-  <?php ui_days_sidebar($missionDay); ?>
+  <?php ui_days_sidebar($missionDayId); ?>
 
   <main class="page">
   <div class="pagehead">
@@ -42,7 +43,7 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
                nachgebaut und dabei halb vergessen würde.
 
                Das Schliessen daneben und mit Escape steht seit Web 5.10.0 in
-               assets/aktionsmenu.js — die Flugtagübersicht hat dasselbe Menü,
+               assets/aktionsmenu.js — die Diensttagübersicht hat dasselbe Menü,
                und zwei Fassungen desselben Verhaltens laufen auseinander. */ ?>
       <details class="aktionsmenu" id="aktionsmenu">
         <summary class="btn-edit">Aktionen</summary>
@@ -58,14 +59,17 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
   <div id="loaderror" class="alert" hidden></div>
 
   <?php if (($_GET['verschoben'] ?? '') === '1'): ?>
-    <p class="alert alert-ok">Der Einsatz gehört jetzt zum
-      <?= e(date('d.m.Y', strtotime((string)$missionDay))) ?>.
-      Die Uhrzeiten sind unverändert geblieben.</p>
+    <?php /* Welchem Diensttag der Einsatz jetzt gehört, steht ohnehin im Kopf
+             der Seite — die Bestätigung nennt deshalb nur, was NICHT geschehen
+             ist. Genau das ist der Punkt, den man beim Verschieben wissen
+             muss. */ ?>
+    <p class="alert alert-ok">Der Einsatz gehört jetzt zum unten genannten
+      Diensttag. Die Uhrzeiten sind unverändert geblieben.</p>
   <?php endif; ?>
 
   <?php if ($nachtrag): ?>
     <p class="alert alert-ok">Einsatz gespeichert.
-      <a class="btn-edit" href="einsatz_form.php?day=<?= e((string)$missionDay) ?>">Weiteren Einsatz nachtragen</a></p>
+      <a class="btn-edit" href="einsatz_form.php?d=<?= (int)$missionDayId ?>">Weiteren Einsatz nachtragen</a></p>
   <?php endif; ?>
 
   <dl class="fieldlist" id="fieldlist" hidden></dl>
@@ -283,8 +287,24 @@ async function init(){
     `<span class="badge ${ORIGIN_KLASSE[m.origin] || 'badge-uhr'}">${ORIGIN_LABEL[m.origin] || 'Uhr'}</span>`
     + (m.edited ? ' · <span class="badge badge-editiert">editiert</span>' : '');
 
+  /* Kopfzeile: das ECHTE Einsatzdatum, dazu der Diensttag, zu dem er gehört.
+     Beides ist nötig, seit sich der Diensttag vom Kalendertag gelöst hat (E9):
+     Ein Einsatz um 01:30 gehört zum Dienst des Vortags, und ohne die Angabe
+     sähe die Zuordnung wie ein Fehler aus. Bezeichnungen kommen aus den
+     eingefrorenen Spalten des Diensttags (E8), nie aus den Stammdaten.
+     Die Streckenangabe ist neutral beschriftet (Abschnitt 3.9). */
+  const dienstTeile = [];
+  if (m.day) { dienstTeile.push(fmtDay(m.day)); }
+  if (m.day_vehicle_name) { dienstTeile.push(m.day_vehicle_name); }
+  if (m.day_base_name) { dienstTeile.push(m.day_base_name); }
+  const dienst = dienstTeile.length
+    ? `Diensttag ${dienstTeile.join(' · ')}`
+    : 'kein Diensttag zugeordnet';
   document.getElementById('meta').innerHTML =
-    esc(`${fmtDay(m.day)} · ${zeitteil} · Flugkilometer ${fmtKm(m.distance_m)}`)
+    esc(`${zeitteil} · ${fmtKm(m.distance_m)} · ${dienst}`)
+    + ' <span class="artzeichen" title="' + esc(m.day_art_text || '')
+    + '" aria-label="' + esc(m.day_art_text || '') + '">'
+    + esc(m.day_art_zeichen || '') + '</span>'
     + ' · ' + kennzeichen;
 
   // Zusatzfelder (Server liefert nur befuellte)
@@ -292,8 +312,23 @@ async function init(){
   m.fields.forEach(f => {
     dl.insertAdjacentHTML('beforeend', `<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`);
   });
-  if (m.site_ele_m != null) {
+  /* HÖHENANGABEN NUR LUFTGEBUNDEN (A13, Konzept 4.6).
+   *
+   * Gerechnet werden sie unverändert für jeden Einsatz mit Track
+   * (site_elevation_lib.php bleibt unangetastet) — gezeigt werden sie nur, wo
+   * sie etwas aussagen. Bodengebunden ist die Höhe des Einsatzorts die Höhe der
+   * Straße, und die Steigung ist das Profil der Fahrstrecke; beides ist keine
+   * Auskunft über den Einsatz. Bei einem noch nicht zugeordneten Diensttag
+   * (day_kind === null, E26) bleiben sie ebenfalls verborgen: Ob sie etwas
+   * aussagen, ist dann noch nicht entschieden.
+   *
+   * Die Werte gehen weiterhin in Export und Backup — dort steht die Art
+   * daneben, und wer auswertet, kann selbst entscheiden. */
+  if (m.site_ele_m != null && m.day_kind === 'air') {
     dl.insertAdjacentHTML('beforeend', `<dt>Höhe Einsatzort</dt><dd>${m.site_ele_m} m</dd>`);
+  }
+  if (m.ascent_m != null && m.day_kind === 'air') {
+    dl.insertAdjacentHTML('beforeend', `<dt>Steigung</dt><dd>${m.ascent_m} m</dd>`);
   }
   dl.hidden = dl.children.length === 0;
 
@@ -406,7 +441,7 @@ async function zeigePat(m, dl, bounds){
         dl.insertAdjacentHTML('beforeend',
           `<dt>Geburtsdatum 🔒</dt><dd>${esc(EdPat.datumDe(o.dob))}</dd>`);
       }
-      const alter = EdPat.alterAnzeige(o, m.day);
+      const alter = EdPat.alterAnzeige(o, m.mission_day);
       if (alter != null) {
         dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}</dd>`);
       }

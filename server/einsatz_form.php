@@ -2,15 +2,68 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/mission_fields_lib.php';
+require_once __DIR__ . '/diensttag_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
 
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $editing = $id > 0;
 
-// Andere Rettungsmittel: Vorbelegungen und bereits zugeordnete Eintraege
-$rmVorlagen = db()->prepare('SELECT DISTINCT name FROM resources WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-$rmVorlagen->execute([$userId]);
-$rmVorlagen = $rmVorlagen->fetchAll(PDO::FETCH_COLUMN);
+/* ---- Diensttag bestimmen --------------------------------------------------
+ *
+ * Beim Bearbeiten kommt er aus dem Einsatz, beim Nachtragen aus `?d=<Kennung>`.
+ * ER IST PFLICHT: Seit E9 bestimmt ein Datum keinen Diensttag mehr, und ohne
+ * Diensttag gaebe es keinen Standort, aus dem sich Vorschlagslisten ableiten,
+ * und keinen Rollensatz, aus dem sich die Besatzungsfelder ergeben. Wer einen
+ * Einsatz nachtragen will, waehlt vorher den Dienst — in der Uebersicht oder
+ * ueber „+ Diensttag anlegen". */
+$dayId = 0;
+if ($editing) {
+    $dq = db()->prepare('SELECT day_id FROM missions
+                         WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+    $dq->execute([$id, $userId]);
+    $w = $dq->fetchColumn();
+    if ($w === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+    $dayId = $w === null ? 0 : (int)$w;
+} else {
+    $dayId = (int)($_GET['d'] ?? $_POST['day_id'] ?? 0);
+}
+$tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
+if ($tag === null) {
+    http_response_code(400);
+    exit('Kein Diensttag gewählt. Bitte den Einsatz aus der Diensttagübersicht '
+       . 'heraus nachtragen.');
+}
+$dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
+
+/* Rollen dieses Diensttags: der EINGEFRORENE Rollensatz aus `day_crew` (E8).
+ * Er steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ein
+ * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
+ * den bereits belegten. */
+$dayRoles = dt_crew($dayId);
+$CREW_FELDER = mf_crew_felder();
+
+/* Abweichende Besatzung dieses Einsatzes (mission_crew). Sie ist keine Spalte
+ * mehr, deshalb wird sie eigens geladen: role_code => name. */
+$missionCrew = [];
+if ($editing) {
+    $cq = db()->prepare('SELECT c.role_code, c.name FROM mission_crew c
+                          JOIN missions m ON m.id = c.mission_id
+                         WHERE c.mission_id = ? AND m.user_id = ?');
+    $cq->execute([$id, $userId]);
+    foreach ($cq->fetchAll() as $z) { $missionCrew[(string)$z['role_code']] = (string)$z['name']; }
+}
+
+/* Andere Rettungsmittel: Vorbelegungen DES STANDORTS (E15) und bereits
+ * zugeordnete Eintraege. Ohne Standort am Diensttag gibt es keine
+ * Vorschlagsliste — Freitext bleibt uneingeschraenkt moeglich. */
+$rmVorlagen = [];
+if ($dayBaseId !== null) {
+    $q = db()->prepare('SELECT DISTINCT name FROM resources
+                        WHERE base_id = ? AND (user_id = ? OR user_id IS NULL) ORDER BY name');
+    $q->execute([$dayBaseId, $userId]);
+    $rmVorlagen = $q->fetchAll(PDO::FETCH_COLUMN);
+}
 $rmGewaehlt = [];
 if ($editing) {
     $q = db()->prepare('SELECT r.name FROM mission_resources r
@@ -42,8 +95,13 @@ if ($editing) {
     $ph->execute([$id]);
     $phases = $ph->fetchAll();
 }
-$day = $editing ? $mission['day']
-     : (preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['day'] ?? '') ? $_GET['day'] : date('Y-m-d'));
+
+/* Bezugsdatum der Uhrzeiten. Es ist das ECHTE Einsatzdatum, nicht das des
+ * Diensttags: Beim Bearbeiten stammt es aus `started_at` in Ortszeit, beim
+ * Nachtragen ist der Diensttag der naheliegende Vorschlag. Zeiten nach
+ * Mitternacht rechnet die Logik unten ohnehin dem Folgetag zu — das ist der
+ * Weg, auf dem ein Nachteinsatz an einem Dienst des Vortags entsteht. */
+$day = $editing ? fmt_local((string)$mission['started_at'], 'Y-m-d') : (string)$tag['day'];
 
 /* ---- Speichern ------------------------------------------------------------ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -193,11 +251,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reaSitzungen[] = ['start' => $rStart, 'ereignisse' => $ereignisse];
         }
 
-        // Zusatzfelder generisch aus der zentralen Definition uebernehmen.
-        // Checkbox-Unterfelder werden nur gespeichert, wenn der Haken gesetzt
-        // ist — sonst geleert (kein Geister-Inhalt hinter "Nein").
-        $fieldCols = []; $fieldVals = [];
-        $readField = function (string $col, array $f, bool $parentOn = true) use (&$readField, &$fieldCols, &$fieldVals) {
+        /* Zusatzfelder generisch aus der zentralen Definition uebernehmen.
+         * Checkbox-Unterfelder werden nur gespeichert, wenn der Haken gesetzt
+         * ist — sonst geleert (kein Geister-Inhalt hinter "Nein").
+         *
+         * ZWEI ZIELE statt einem (Web 6.0.0): Felder mit 'store' => 'crew'
+         * liegen nicht in `missions`, sondern als Zeile in `mission_crew`
+         * (E7, siehe mission_fields.php). Sie landen deshalb in $crewVals und
+         * nicht in $fieldCols — ein Feldname, der in beiden Listen stuende,
+         * ergaebe ein UPDATE auf eine Spalte, die es nicht gibt. */
+        $fieldCols = []; $fieldVals = []; $crewVals = [];
+        $readField = function (string $col, array $f, bool $parentOn = true) use (&$readField, &$fieldCols, &$fieldVals, &$crewVals) {
             $type = $f['type'] ?? 'text';
             if ($type === 'resources') { return; }   // eigene Tabelle, siehe unten
             if ($type === 'checkbox') {
@@ -220,7 +284,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $v = mb_substr($raw, 0, (int)($f['max'] ?? 190));
                 if ($v === '') { $v = null; }
             }
-            $fieldCols[] = $col; $fieldVals[] = $v;
+            if (($f['store'] ?? null) === 'crew') {
+                $crewVals[(string)($f['role_code'] ?? substr($col, 5))] = $v;
+            } else {
+                $fieldCols[] = $col; $fieldVals[] = $v;
+            }
             foreach (($f['children'] ?? []) as $cc => $cf) { $readField($cc, $cf, $parentOn); }
         };
         foreach ($FIELDS as $col => $f) { $readField($col, $f); }
@@ -302,15 +370,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    'Manuelle Einträge']);
                     $devId = (int)$pdo->lastInsertId();
                 }
-                $cols = 'user_id, device_id, client_ref, day, started_at, ended_at, final, manual, origin';
+                $cols = 'user_id, device_id, client_ref, day_id, started_at, ended_at, final, manual, origin';
                 $qms  = "?,?,?,?,?,?,1,1,'manual'";
                 foreach ($fieldCols as $c) { $cols .= ", `$c`"; $qms .= ',?'; }
                 $pdo->prepare("INSERT INTO missions ($cols) VALUES ($qms)")
                     ->execute(array_merge(
-                        [$userId, (int)$devId, 'man-' . uniqid(), $day, $startedAt, $endedAt],
+                        [$userId, (int)$devId, 'man-' . uniqid(), $dayId, $startedAt, $endedAt],
                         $fieldVals));
                 $id = (int)$pdo->lastInsertId();
             }
+
+            /* ---- Abweichende Besatzung (mission_crew) ----------------------
+             *
+             * VOLLSTAENDIG ERSETZEN, wie Phasen und Reanimationen: Ein Rollenfeld,
+             * das geleert wurde, muss seine Zeile verlieren — sonst blieb der alte
+             * Name als Abweichung stehen, obwohl im Formular nichts mehr stand.
+             *
+             * Geschrieben werden nur BELEGTE Rollen. Eine Zeile mit name = NULL
+             * hat in `mission_crew` keine Bedeutung: Anders als bei `day_crew`,
+             * wo die Zeilenmenge den Rollensatz bildet (E8), ist hier jede Zeile
+             * eine Abweichung — und keine Abweichung ist keine Zeile. Ohne
+             * gesetzten Haken raeumt $readField die Werte ohnehin ab
+             * (Checkbox-Unterfelder), es bleibt dann nichts uebrig. */
+            $pdo->prepare('DELETE FROM mission_crew WHERE mission_id = ?')->execute([$id]);
+            $insC = $pdo->prepare('INSERT INTO mission_crew (mission_id, role_code, name)
+                                   VALUES (?,?,?)');
+            foreach ($crewVals as $role => $name) {
+                if ($name === null || trim((string)$name) === '') { continue; }
+                $insC->execute([$id, $role, mb_substr(trim((string)$name), 0, 120)]);
+            }
+
+            /* Der Diensttag muss den Einsatz umschliessen (JSON-Vertrag 4.4).
+             * Ein nachgetragener Einsatz um 00:40 verlaengert den Dienst bis
+             * dahin; ohne das laege er ausserhalb des Zeitraums seines eigenen
+             * Dienstes. */
+            dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
             // Phasen vollstaendig ersetzen
             $pdo->prepare('DELETE FROM mission_phases WHERE mission_id = ?')->execute([$id]);
@@ -419,10 +513,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    Liste, liesse sich eine Reanimation mit zwei Anfaengen eintragen. */
 $REA_ARTEN = RESUS_LABELS;
 unset($REA_ARTEN['beginn']);
+/**
+ * Anzeigewert eines Katalogfeldes.
+ *
+ * ZWEI QUELLEN, seit die Besatzung normalisiert ist (E7): Felder mit
+ * 'store' => 'crew' stehen in `mission_crew` und nicht in der Zeile aus
+ * `missions`. Ohne diese Unterscheidung waere jedes Besatzungsfeld beim
+ * Bearbeiten leer — und beim Speichern waere der Name dann weg.
+ */
 function fieldValue(string $col) {
-    global $mission;
+    global $mission, $missionCrew, $CREW_FELDER;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return isset($_POST['f_' . $col]) ? (string)$_POST['f_' . $col] : '';
+    }
+    if (isset($CREW_FELDER[$col])) {
+        return (string)($missionCrew[$CREW_FELDER[$col]] ?? '');
     }
     return $mission !== null ? (string)($mission[$col] ?? '') : '';
 }
@@ -436,7 +541,7 @@ function fieldValue(string $col) {
 <?php ui_topbar('uebersicht'); ?>
 
 <div class="layout">
-  <?php ui_days_sidebar($day); ?>
+  <?php ui_days_sidebar($dayId); ?>
 
 <main class="page">
   <h1><?= $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen' ?></h1>
@@ -451,7 +556,29 @@ function fieldValue(string $col) {
     <?= csrf_field() ?>
     <?php if ($editing): ?><input type="hidden" name="id" value="<?= $id ?>"><?php endif; ?>
 
-    <label>Flugtag
+    <?php /* Der Diensttag steht FEST und wandert als Kennung mit. Er ist keine
+             Eingabe: Welchem Dienst ein Einsatz gehört, ändert man über
+             „Aktionen → Verschieben" (einsatz_verschieben.php) — dort ist die
+             Nebenwirkung benannt, an einem frei beschreibbaren Feld wäre sie es
+             nicht (E4).
+
+             Das Datumsfeld daneben ist das ECHTE Einsatzdatum und Bezug der
+             eingetragenen Uhrzeiten. Beim Nachtragen ist es änderbar, weil ein
+             Dienst über Mitternacht Einsätze an zwei Kalendertagen hat. */ ?>
+    <input type="hidden" name="day_id" value="<?= (int)$dayId ?>">
+    <p class="muted">Diensttag:
+      <strong><?= e(dt_lesbar($tag, true)) ?></strong><?php
+        if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') {
+            echo ' · ' . e((string)$tag['vehicle_name']);
+        }
+        if ($tag['base_name'] !== null && $tag['base_name'] !== '') {
+            echo ' · ' . e((string)$tag['base_name']);
+        }
+        if ($tag['kind'] === null) {
+            echo ' — <em>ohne Zuordnung: keine Art, keine Besatzungsrollen, '
+               . 'keine artabhängigen Felder</em>';
+        } ?></p>
+    <label>Einsatzdatum
       <input type="date" name="day" value="<?= e($day) ?>" required <?= $editing ? 'readonly' : '' ?>>
     </label>
 
@@ -511,23 +638,31 @@ function fieldValue(string $col) {
 
     <h2>Weitere Angaben</h2>
     <?php
-      // Optionslisten aus Stammdaten aufloesen (options_src)
-      $optSrc = function (array $f) use ($userId): array {
+      /* Optionslisten aus Stammdaten aufloesen (options_src).
+       *
+       * STANDORTBEZOGEN (E15): Gezeigt werden die Eintraege des Standorts, der
+       * am Diensttag hinterlegt ist — persoenliche UND zentrale. Eine
+       * standortuebergreifende Ebene gibt es nicht; ohne Standort am Diensttag
+       * bleibt die Liste leer, und Freitext bleibt uneingeschraenkt moeglich. */
+      $optSrc = function (array $f) use ($userId, $dayBaseId): array {
           $src = (string)($f['options_src'] ?? '');
           if ($src === 'bw_units') {
-              $q = db()->prepare('SELECT DISTINCT name FROM bw_units WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-              $q->execute([$userId]);
+              if ($dayBaseId === null) { return []; }
+              $q = db()->prepare('SELECT DISTINCT name FROM bw_units
+                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  ORDER BY name');
+              $q->execute([$dayBaseId, $userId]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
           }
-          // 'crew:<rolle>' — Besatzungs-Vorbelegungen der Rolle. Wie ueberall
-          // seit den zentralen Stammdaten: persoenlich UND zentral
-          // (user_id IS NULL), sonst fehlten die Admin-Eintraege.
+          // 'crew:<rolle>' — Besatzungs-Vorbelegungen der Rolle. Rollenkennungen
+          // stammen aus CREW_ROLES (db.php), nicht aus einer zweiten Liste hier.
           if (str_starts_with($src, 'crew:')) {
               $role = substr($src, 5);
-              if (!in_array($role, ['p1', 'p2', 'hems', 'fr', 'other'], true)) { return []; }
+              if (!array_key_exists($role, CREW_ROLES) || $dayBaseId === null) { return []; }
               $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
-                                  WHERE (user_id = ? OR user_id IS NULL) AND role = ? ORDER BY name');
-              $q->execute([$userId, $role]);
+                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                    AND role_code = ? ORDER BY name');
+              $q->execute([$dayBaseId, $userId, $role]);
               return $q->fetchAll(PDO::FETCH_COLUMN);
           }
           return $f['options'] ?? [];
@@ -545,50 +680,50 @@ function fieldValue(string $col) {
       // verschiedene Rollen ab, ein Formular mit mehreren Feldern derselben
       // Quelle wuerde sie sonst mehrfach laden.
       $suggestCache = [];
-      $suggestSrc = function (array $f) use ($userId, &$suggestCache): array {
+      $suggestSrc = function (array $f) use ($userId, $dayBaseId, &$suggestCache): array {
           $src = (string)($f['suggest_src'] ?? '');
           if ($src === '') { return []; }
           if (array_key_exists($src, $suggestCache)) { return $suggestCache[$src]; }
 
           $liste = [];
-          if ($src === 'transport_dests') {
+          if ($src === 'transport_dests' && $dayBaseId !== null) {
               $q = db()->prepare('SELECT DISTINCT name FROM transport_dests
-                                  WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-              $q->execute([$userId]);
+                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                  ORDER BY name');
+              $q->execute([$dayBaseId, $userId]);
               $liste = $q->fetchAll(PDO::FETCH_COLUMN);
-          } elseif (str_starts_with($src, 'crew:')) {
+          } elseif (str_starts_with($src, 'crew:') && $dayBaseId !== null) {
               $role = substr($src, 5);
-              if (in_array($role, ['p1', 'p2', 'hems', 'fr', 'other'], true)) {
+              if (array_key_exists($role, CREW_ROLES)) {
                   $q = db()->prepare('SELECT DISTINCT name FROM crew_presets
-                                      WHERE (user_id = ? OR user_id IS NULL) AND role = ? ORDER BY name');
-                  $q->execute([$userId, $role]);
+                                      WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                        AND role_code = ? ORDER BY name');
+                  $q->execute([$dayBaseId, $userId, $role]);
                   $liste = $q->fetchAll(PDO::FETCH_COLUMN);
               }
           }
           return $suggestCache[$src] = $liste;
       };
-      // Rollen des Hubschraubers, der an diesem Flugtag eingetragen ist.
-      // Steuert, welche Besatzungsfelder sichtbar sind ('role_gate'). Ist kein
-      // Flugtag oder kein Hubschrauber hinterlegt, bleibt das Array leer und
-      // alle Rollen werden gezeigt — sonst waere der Haken funktionslos.
-      $crewRoles = [];
-      $rq = db()->prepare('SELECT a.p1, a.p2, a.hems, a.fr, a.other
-                           FROM days d JOIN aircraft a ON a.id = d.aircraft_id
-                           WHERE d.user_id = ? AND d.day = ? AND d.deleted_at IS NULL');
-      $rq->execute([$userId, $day]);                                  // Datentrennung!
-      if ($r = $rq->fetch(PDO::FETCH_ASSOC)) {
-          foreach ($r as $rk => $rv) { if ((int)$rv === 1) { $crewRoles[$rk] = true; } }
-      }
-      $rolesBekannt = $crewRoles !== [];
-
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $crewRoles, $rolesBekannt): void {
+      /* ROLLEN DES DIENSTTAGS — der eingefrorene Rollensatz aus `day_crew` (E8),
+       * oben als $dayRoles geladen. Er steuert, welche Besatzungsfelder sichtbar
+       * sind ('role_gate').
+       *
+       * WAS SICH GEAENDERT HAT: Bis Web 5.10.0 wurde hier der HUBSCHRAUBER des
+       * Flugtags befragt, und war keiner hinterlegt, wurden ALLE fuenf Rollen
+       * gezeigt — sonst waere der Haken funktionslos gewesen. Mit zwei
+       * Rettungsmittelarten waere das falsch: Ein neutraler Diensttag zeigte
+       * dann Flugretter UND Fahrer. Ein Diensttag ohne Zuordnung hat keine
+       * Rollen (E26), also wird auch keine gezeigt — ausser den bereits
+       * belegten, die immer sichtbar bleiben. */
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           // Rollenfilter: verstecken, aber immer rendern (siehe mission_fields.php).
           // Ein belegtes Feld bleibt sichtbar, sonst kaeme man an einen Wert
-          // nicht mehr heran, wenn der Flugtag spaeter die Maschine wechselt.
+          // nicht mehr heran, wenn der Diensttag spaeter das Rettungsmittel
+          // wechselt oder die Art des Tages die Rolle nicht vorsieht.
           $gate = (string)($f['role_gate'] ?? '');
-          $hide = $gate !== '' && $rolesBekannt && empty($crewRoles[$gate]) && $val === '';
+          $hide = $gate !== '' && !array_key_exists($gate, $dayRoles) && $val === '';
           $hideAttr = $hide ? ' hidden' : '';
           if ($type === 'resources') { ?>
             <label class="fld">
@@ -682,7 +817,7 @@ function fieldValue(string $col) {
              Die Rückfrage erscheint nur bei tatsaechlichen Eingaben — die
              Bedingung steckt in assets/forms.js. */ ?>
     <p class="login-aux"><a
-       href="<?= $editing ? 'einsatz.php?id=' . $id : 'index.php?day=' . e(urlencode($day)) ?>"
+       href="<?= $editing ? 'einsatz.php?id=' . $id : 'index.php?d=' . (int)$dayId ?>"
        data-cancel-form="missionform"
        data-cancel-confirm="<?= $editing
            ? 'Die Änderungen an diesem Einsatz gehen verloren. Trotzdem abbrechen?'
@@ -824,8 +959,10 @@ const KDF_SALT = <?= json_encode($kdfSalt) ?>;
 const KDF_ITER      = <?= json_encode($kdfIter) ?>;
 const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
-// Bezugstag fuer die Altersberechnung: der Einsatztag, nicht heute
-const MISSION_DAY = <?= json_encode($mission['day'] ?? date('Y-m-d')) ?>;
+/* Bezugstag fuer die Altersberechnung: das ECHTE Einsatzdatum, nicht heute und
+   nicht das Datum des Diensttags. Bei einem Dienst ueber Mitternacht sind das
+   zwei verschiedene Tage, und gefragt ist der, an dem der Einsatz lief. */
+const MISSION_DAY = <?= json_encode($day) ?>;
 let PAT_CK = null;
 
 /* Geschuetzte Angaben laden. Bei gesperrtem Schluessel bietet EdUnlock den

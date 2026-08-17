@@ -6,11 +6,11 @@ declare(strict_types=1);
  * Zwei Handlungen, die auf den ersten Blick dasselbe tun und es ausdruecklich
  * nicht tun:
  *
- *   tz_einsatz_verschieben()  Ein Einsatz gehoert zum falschen Tag. Seine
+ *   tz_einsatz_verschieben()  Ein Einsatz gehoert zum falschen Diensttag. Seine
  *                             UHRZEITEN STIMMEN — nur die Zuordnung nicht.
  *                             Beispiel: ein Dienst ueber Mitternacht, bei dem
- *                             ein Einsatz beim nachtraeglichen Erfassen auf dem
- *                             falschen Kalendertag gelandet ist.
+ *                             ein Einsatz beim nachtraeglichen Erfassen am
+ *                             falschen Tag gelandet ist.
  *   tz_tag_datum_aendern()    Der ganze Tag liegt falsch, weil die UHR FALSCH
  *                             GESTELLT war. Dann sind Datum UND Uhrzeit falsch,
  *                             und die Zeitstempel ziehen mit (E3).
@@ -23,46 +23,27 @@ declare(strict_types=1);
  * in einer Transaktion. In einer Seitendatei stuende die Logik zwischen
  * Markup — und die Pruefung, ob wirklich alles oder gar nichts geschieht,
  * liesse sich nur ueber die Seite fuehren.
+ *
+ * WAS SICH MIT WEB 6.0.0 GEAENDERT HAT. Beide Handlungen arbeiteten mit dem
+ * DATUM als Schluessel. Seit dem Umbau auf Diensttage ist der Schluessel die
+ * Kennung `days.id`, und das Datum ist nur noch Sortier- und Anzeigewert.
+ * Drei Dinge sind dadurch entfallen:
+ *
+ *   - Das Anlegen eines fehlenden Zieltags (tz_zieltag_sichern). Der Zieltag
+ *     wird jetzt aus einer Liste vorhandener Diensttage gewaehlt; ein Datum
+ *     ohne Tag gibt es als Ziel nicht mehr.
+ *   - Die Kollisionspruefung beim Umdatieren. Sie entstand allein aus
+ *     `UNIQUE KEY uq_user_day`; mehrere Diensttage an einem Kalendertag sind
+ *     jetzt ausdruecklich zulaessig (E9, A1).
+ *   - Das Mitwandern von Papierkorb-Eintraegen als eigene Regel. Sie haengen
+ *     ueber `day_id` am Tag und wandern zwangslaeufig mit.
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/diensttag_lib.php';
 
 /**
- * Zustand eines Kalendertages fuer diese NutzerIn.
- *
- * @return array{vorhanden:bool,im_papierkorb:bool,einsaetze:int,segmente:int}
- *   'vorhanden'      es gibt eine Zeile in `days`
- *   'im_papierkorb'  diese Zeile ist geloescht (deleted_at gesetzt)
- *   'einsaetze'      Einsaetze auf diesem Tag, Papierkorb eingeschlossen
- *   'segmente'       Ruhesegmente ebenso
- *
- * Der Papierkorb zaehlt mit, und zwar aus einem harten Grund: `days` traegt
- * `UNIQUE KEY uq_user_day (user_id, day)`. Ein Tag im Papierkorb belegt sein
- * Datum weiterhin. Wer ihn beim Pruefen uebergeht, laeuft in einen
- * Datenbankfehler statt in eine lesbare Meldung.
- */
-function tz_tag_zustand(int $userId, string $tag): array
-{
-    $q = db()->prepare('SELECT deleted_at FROM days WHERE user_id = ? AND day = ?');
-    $q->execute([$userId, $tag]);
-    $zeile = $q->fetch();
-
-    $zaehle = function (string $tabelle) use ($userId, $tag): int {
-        $s = db()->prepare("SELECT COUNT(*) FROM `$tabelle` WHERE user_id = ? AND day = ?");
-        $s->execute([$userId, $tag]);
-        return (int)$s->fetchColumn();
-    };
-
-    return [
-        'vorhanden'     => $zeile !== false,
-        'im_papierkorb' => $zeile !== false && $zeile['deleted_at'] !== null,
-        'einsaetze'     => $zaehle('missions'),
-        'segmente'      => $zaehle('rest_segments'),
-    ];
-}
-
-/**
- * Umfang eines Tages fuer die Rueckfrage (Akzeptanzkriterium 33).
+ * Umfang eines Diensttages fuer die Rueckfrage (Akzeptanzkriterium 33).
  *
  * Papierkorb-Eintraege werden GETRENNT gezaehlt, nicht weggelassen: Sie wandern
  * mit (siehe tz_tag_datum_aendern()), also muessen sie in der Rueckfrage
@@ -71,14 +52,14 @@ function tz_tag_zustand(int $userId, string $tag): array
  * @return array{einsaetze:int,segmente:int,einsaetze_papierkorb:int,
  *               segmente_papierkorb:int,punkte:int}
  */
-function tz_tag_umfang(int $userId, string $tag): array
+function tz_tag_umfang(int $userId, int $dayId): array
 {
     $one = function (string $sql, array $p): int {
         $s = db()->prepare($sql); $s->execute($p); return (int)$s->fetchColumn();
     };
-    $ids = function (string $tabelle) use ($userId, $tag): array {
-        $s = db()->prepare("SELECT id, deleted_at FROM `$tabelle` WHERE user_id = ? AND day = ?");
-        $s->execute([$userId, $tag]);
+    $ids = function (string $tabelle) use ($userId, $dayId): array {
+        $s = db()->prepare("SELECT id, deleted_at FROM `$tabelle` WHERE user_id = ? AND day_id = ?");
+        $s->execute([$userId, $dayId]);
         return $s->fetchAll();
     };
 
@@ -107,107 +88,81 @@ function tz_tag_umfang(int $userId, string $tag): array
 }
 
 /**
- * Sorgt dafuer, dass es den Zieltag gibt (E14).
- *
- * Fehlt er, wird er angelegt — mit der Standard-Vorbelegung fuer Standort und
- * Maschine aus `user_defaults`. Alles andere zwaenge dazu, vor dem Verschieben
- * einen Tag von Hand anzulegen: ein Umweg ohne Nutzen.
- *
- * Liegt der Zieltag im Papierkorb, wird NICHT angelegt und nicht still
- * wiederhergestellt, sondern eine Meldung zurueckgegeben — dieselbe Haltung wie
- * in api/day.php: Das Loeschen war eine bewusste Handlung, und sie durch eine
- * unsichtbare Nebenwirkung aufzuheben waere eine Ueberraschung.
- *
- * @return string|null Meldung im Fehlerfall, sonst null
- */
-function tz_zieltag_sichern(PDO $pdo, int $userId, string $tag): ?string
-{
-    $q = $pdo->prepare('SELECT deleted_at FROM days WHERE user_id = ? AND day = ?');
-    $q->execute([$userId, $tag]);
-    $zeile = $q->fetch();
-
-    if ($zeile !== false) {
-        if ($zeile['deleted_at'] !== null) {
-            return 'Der Zieltag ' . tz_datum_lesbar($tag) . ' liegt im Papierkorb. '
-                 . 'Bitte ihn zuerst wiederherstellen (Einstellungen → Papierkorb) '
-                 . 'oder ein anderes Datum wählen. Es wurde nichts geändert.';
-        }
-        return null;   // vorhanden und in Ordnung
-    }
-
-    // Standard-Vorbelegung wie beim manuellen Anlegen (E14)
-    $d = $pdo->prepare('SELECT kind, item_id FROM user_defaults WHERE user_id = ?');
-    $d->execute([$userId]);
-    $ac = null; $base = null;
-    foreach ($d->fetchAll() as $z) {
-        if ($z['kind'] === 'aircraft') { $ac   = (int)$z['item_id']; }
-        if ($z['kind'] === 'base')     { $base = (int)$z['item_id']; }
-    }
-    $pdo->prepare('INSERT INTO days (user_id, day, aircraft_id, base_id) VALUES (?,?,?,?)')
-        ->execute([$userId, $tag, $ac, $base]);
-    return null;
-}
-
-/** 'YYYY-MM-DD' -> 'TT.MM.JJJJ'; unveraendert, wenn das Muster nicht passt. */
-function tz_datum_lesbar(string $tag): string
-{
-    return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $tag, $t)
-        ? "$t[3].$t[2].$t[1]" : $tag;
-}
-
-/**
- * Einen einzelnen Einsatz einem anderen Tag zuordnen (A5.2).
+ * Einen einzelnen Einsatz einem anderen Diensttag zuordnen (A5.2).
  *
  * Die UHRZEITEN BLEIBEN UNVERAENDERT — das ist der Unterschied zu
  * tz_tag_datum_aendern(). Hier wird eine Fehlzuordnung korrigiert, dort eine
  * falsch gestellte Uhr.
  *
  * Datenseitig unkritisch: `ingest.php` fuehrt beim Upsert ein
- * `ON DUPLICATE KEY UPDATE`, das die Spalte `day` NICHT mitschreibt. Eine
+ * `ON DUPLICATE KEY UPDATE`, das die Spalte `day_id` NICHT mitschreibt. Eine
  * nachliefernde Uhr zieht einen verschobenen Einsatz also nicht zurueck
  * (Akzeptanzkriterium 28).
  *
- * @return array{ok:bool,meldung:string,tag:string}
+ * DER ZIELTAG WIRD NICHT ANGELEGT. Er wird aus den vorhandenen Diensttagen
+ * gewaehlt — ein Datum allein bestimmt seit E9 keinen Tag mehr, und einen
+ * neuen anzulegen waere beim Verschieben eine Ueberraschung.
+ *
+ * @return array{ok:bool,meldung:string,day_id:int}
  */
-function tz_einsatz_verschieben(int $userId, int $missionId, string $zielTag): array
+function tz_einsatz_verschieben(int $userId, int $missionId, int $zielDayId): array
 {
     $pdo = db();
-    $mq = $pdo->prepare('SELECT day FROM missions
+    $mq = $pdo->prepare('SELECT day_id FROM missions
                          WHERE id = ? AND user_id = ? AND deleted_at IS NULL');   // Datentrennung!
     $mq->execute([$missionId, $userId]);
-    $altTag = $mq->fetchColumn();
-    if ($altTag === false) {
-        return ['ok' => false, 'meldung' => 'Einsatz nicht gefunden.', 'tag' => ''];
+    $altId = $mq->fetchColumn();
+    if ($altId === false) {
+        return ['ok' => false, 'meldung' => 'Einsatz nicht gefunden.', 'day_id' => 0];
     }
-    if ($zielTag === (string)$altTag) {
-        return ['ok' => false, 'tag' => (string)$altTag,
-                'meldung' => 'Der Einsatz liegt bereits auf dem '
-                           . tz_datum_lesbar($zielTag) . '. Es wurde nichts geändert.'];
+    $altId = $altId === null ? 0 : (int)$altId;
+
+    $ziel = dt_laden($userId, $zielDayId, true);
+    if ($ziel === null) {
+        return ['ok' => false, 'day_id' => $altId,
+                'meldung' => 'Der gewählte Diensttag ist nicht vorhanden. '
+                           . 'Es wurde nichts geändert.'];
+    }
+    if ($ziel['deleted_at'] !== null) {
+        return ['ok' => false, 'day_id' => $altId,
+                'meldung' => 'Der Zieldiensttag liegt im Papierkorb. Bitte ihn zuerst '
+                           . 'wiederherstellen (Einstellungen → Papierkorb) oder einen '
+                           . 'anderen wählen. Es wurde nichts geändert.'];
+    }
+    if ($zielDayId === $altId) {
+        return ['ok' => false, 'day_id' => $altId,
+                'meldung' => 'Der Einsatz gehört bereits zum Diensttag '
+                           . dt_lesbar($ziel, true) . '. Es wurde nichts geändert.'];
     }
 
     $pdo->beginTransaction();
     try {
-        $fehler = tz_zieltag_sichern($pdo, $userId, $zielTag);
-        if ($fehler !== null) {
-            $pdo->rollBack();
-            return ['ok' => false, 'meldung' => $fehler, 'tag' => (string)$altTag];
-        }
-        $pdo->prepare('UPDATE missions SET day = ? WHERE id = ? AND user_id = ?')
-            ->execute([$zielTag, $missionId, $userId]);
+        $pdo->prepare('UPDATE missions SET day_id = ? WHERE id = ? AND user_id = ?')
+            ->execute([$zielDayId, $missionId, $userId]);
+        /* Der Zieltag muss den Einsatz umschliessen. Sonst stuende ein Einsatz
+         * ausserhalb des Zeitraums seines eigenen Dienstes — und die Statistik,
+         * die nach Diensttag rechnet, haette einen Tag, dessen Ende vor seinem
+         * letzten Einsatz liegt. */
+        $z = $pdo->prepare('SELECT started_at, ended_at FROM missions WHERE id = ?');
+        $z->execute([$missionId]);
+        $m = $z->fetch();
+        dt_zeitraum_fortschreiben($pdo, $zielDayId, $m['started_at'] ?? null,
+                                  $m['ended_at'] ?? null);
         $pdo->commit();
     } catch (Throwable $ex) {
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
-        return ['ok' => false, 'tag' => (string)$altTag,
+        return ['ok' => false, 'day_id' => $altId,
                 'meldung' => 'Verschieben fehlgeschlagen. Es wurde nichts geändert.'];
     }
 
-    return ['ok' => true, 'tag' => $zielTag,
-            'meldung' => 'Der Einsatz gehört jetzt zum ' . tz_datum_lesbar($zielTag)
+    return ['ok' => true, 'day_id' => $zielDayId,
+            'meldung' => 'Der Einsatz gehört jetzt zum Diensttag '
+                       . dt_lesbar($ziel, true)
                        . '. Die Uhrzeiten sind unverändert geblieben.'];
 }
 
 /**
- * Das Datum eines ganzen Einsatztages aendern (A5.3).
+ * Das Datum eines ganzen Diensttages aendern (A5.3).
  *
  * ALLES ODER NICHTS. Die Handlung fasst sechs Tabellen an; ein Abbruch in der
  * Mitte hinterliesse einen Bestand, in dem Einsaetze und ihre Phasen an
@@ -224,43 +179,25 @@ function tz_einsatz_verschieben(int $userId, int $missionId, string $zielTag): a
  * groesser oder kleiner und haelt die Ortszeit fest — und die Ortszeit ist das,
  * was jemand abgelesen und dokumentiert hat.
  *
- * PAPIERKORB-EINTRAEGE WANDERN MIT. Sie haengen ueber den natuerlichen
- * Schluessel (user_id, day) am Tag; blieben sie liegen, kaemen sie beim
- * Wiederherstellen an einem Datum zurueck, das es nicht mehr gibt.
+ * KEINE KOLLISIONSPRUEFUNG MEHR (Web 6.0.0). Sie war die Folge des
+ * Tagesschluessels `UNIQUE KEY uq_user_day`: Zwei Flugtage an einem Datum waren
+ * ein Datenbankfehler, also musste die Umdatierung ein belegtes Zieldatum
+ * ablehnen. Seit E9 sind mehrere Diensttage je Kalendertag der vorgesehene Fall
+ * (A1) — es gibt nichts mehr zu kollidieren.
  *
  * @return array{ok:bool,meldung:string}
  */
-function tz_tag_datum_aendern(int $userId, string $altTag, string $neuTag): array
+function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
 {
     global $CFG;
 
+    $tag = dt_laden($userId, $dayId);
+    if ($tag === null) {
+        return ['ok' => false, 'meldung' => 'Diensttag nicht gefunden. Es wurde nichts geändert.'];
+    }
+    $altTag = (string)$tag['day'];
     if ($altTag === $neuTag) {
         return ['ok' => false, 'meldung' => 'Das Datum ist unverändert. Es wurde nichts geändert.'];
-    }
-
-    // Kollision (E2): Ein belegtes Zieldatum wird abgelehnt, nicht
-    // zusammengefuehrt. Zusammenfuehren wuerfe Fragen zu widerspruechlichen
-    // Tages-Metadaten auf (Standort, Maschine, Besatzung), die sich nicht
-    // automatisch beantworten lassen.
-    $ziel = tz_tag_zustand($userId, $neuTag);
-    if ($ziel['vorhanden'] || $ziel['einsaetze'] > 0 || $ziel['segmente'] > 0) {
-        $anzahl = fn(int $n, string $eins, string $viele): string
-            => $n . ' ' . ($n === 1 ? $eins : $viele);
-        $was = [];
-        if ($ziel['im_papierkorb'])   { $was[] = 'ein Einsatztag im Papierkorb'; }
-        elseif ($ziel['vorhanden'])   { $was[] = 'ein Einsatztag'; }
-        if ($ziel['einsaetze'] > 0)   { $was[] = $anzahl($ziel['einsaetze'], 'Einsatz', 'Einsätze'); }
-        if ($ziel['segmente'] > 0)    { $was[] = $anzahl($ziel['segmente'], 'Ruhesegment', 'Ruhesegmente'); }
-        // Aufzählung mit Komma und einem abschließenden „und" — bei drei
-        // Bestandteilen las sich das dreifache „und" wie ein Fehler.
-        $letztes = array_pop($was);
-        $text = $was ? implode(', ', $was) . ' und ' . $letztes : $letztes;
-        return ['ok' => false,
-                'meldung' => 'Am ' . tz_datum_lesbar($neuTag) . ' liegt bereits '
-                           . $text . '. Zwei Einsatztage lassen sich '
-                           . 'nicht zusammenführen — bitte ein freies Datum wählen '
-                           . 'oder den vorhandenen Tag zuerst auflösen. '
-                           . 'Es wurde nichts geändert.'];
     }
 
     $tz  = new DateTimeZone($CFG['app']['timezone'] ?? 'Europe/Berlin');
@@ -270,11 +207,11 @@ function tz_tag_datum_aendern(int $userId, string $altTag, string $neuTag): arra
 
     $pdo = db();
 
-    // Die Kennungen VOR der Umstellung holen: Danach steht der alte Tag nicht
-    // mehr in den Zeilen, und track_points kennt ohnehin nur owner_id.
-    $holeIds = function (string $tabelle) use ($pdo, $userId, $altTag): array {
-        $s = $pdo->prepare("SELECT id FROM `$tabelle` WHERE user_id = ? AND day = ?");
-        $s->execute([$userId, $altTag]);
+    // Die Kennungen VOR der Umstellung holen: track_points kennt nur owner_id,
+    // und die Blockabfragen unten brauchen die Liste ohnehin zweimal.
+    $holeIds = function (string $tabelle) use ($pdo, $userId, $dayId): array {
+        $s = $pdo->prepare("SELECT id FROM `$tabelle` WHERE user_id = ? AND day_id = ?");
+        $s->execute([$userId, $dayId]);
         return array_map('intval', $s->fetchAll(PDO::FETCH_COLUMN));
     };
     $mIds = $holeIds('missions');
@@ -308,25 +245,30 @@ function tz_tag_datum_aendern(int $userId, string $altTag, string $neuTag): arra
 
     $pdo->beginTransaction();
     try {
-        // 1. Der Tag selbst. Auch ein Tag im Papierkorb wandert mit — sonst
-        //    kaeme er beim Wiederherstellen an einem Datum zurueck, an dem
-        //    seine Einsaetze nicht mehr liegen.
-        $pdo->prepare('UPDATE days SET day = ? WHERE user_id = ? AND day = ?')
-            ->execute([$neuTag, $userId, $altTag]);
+        /* 1. Der Diensttag selbst — Datum UND eigener Zeitraum. `started_at`
+         *    und `ended_at` sind echte Zeitstempel und gehoeren damit zu dem,
+         *    was bei falsch gestellter Uhr mitwandert. Blieben sie stehen,
+         *    laege der Dienst nach der Umdatierung an einem Datum, das seine
+         *    eigenen Zeiten nicht mehr enthaelt. */
+        $pdo->prepare('UPDATE days
+                       SET day = ?,
+                           started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                           ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
+                       WHERE id = ? AND user_id = ?')
+            ->execute([$neuTag, $delta, $delta, $dayId, $userId]);
 
-        // 2. Einsaetze und Ruhesegmente: Tag und eigene Zeitstempel
+        // 2. Einsaetze und Ruhesegmente. Sie haengen ueber day_id am Tag und
+        //    wandern deshalb zwangslaeufig mit — auch die im Papierkorb.
         $pdo->prepare('UPDATE missions
-                       SET day = ?,
-                           started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                       SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
                            ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
-                       WHERE user_id = ? AND day = ?')
-            ->execute([$neuTag, $delta, $delta, $userId, $altTag]);
+                       WHERE user_id = ? AND day_id = ?')
+            ->execute([$delta, $delta, $userId, $dayId]);
         $pdo->prepare('UPDATE rest_segments
-                       SET day = ?,
-                           started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
+                       SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND),
                            ended_at   = DATE_ADD(ended_at,   INTERVAL ? SECOND)
-                       WHERE user_id = ? AND day = ?')
-            ->execute([$neuTag, $delta, $delta, $userId, $altTag]);
+                       WHERE user_id = ? AND day_id = ?')
+            ->execute([$delta, $delta, $userId, $dayId]);
 
         // 3. Alles, was an einem Einsatz haengt. In Bloecken, damit die Zahl
         //    der Abfragen nicht mit der Zahl der Einsaetze waechst.
@@ -365,14 +307,14 @@ function tz_tag_datum_aendern(int $userId, string $altTag, string $neuTag): arra
         if ($pdo->inTransaction()) { $pdo->rollBack(); }
         return ['ok' => false,
                 'meldung' => 'Die Umdatierung ist fehlgeschlagen. Es wurde nichts '
-                           . 'geändert — der Tag steht unverändert am '
-                           . tz_datum_lesbar($altTag) . '.'];
+                           . 'geändert — der Diensttag steht unverändert am '
+                           . dt_datum_lesbar($altTag) . '.'];
     }
 
     $stunden = intdiv(abs($delta), 3600);
     $tage    = intdiv($stunden, 24);
     return ['ok' => true,
-            'meldung' => 'Der Einsatztag liegt jetzt am ' . tz_datum_lesbar($neuTag)
+            'meldung' => 'Der Diensttag liegt jetzt am ' . dt_datum_lesbar($neuTag)
                        . '. Alle Zeitstempel sind um ' . $tage . ' '
                        . ($tage === 1 ? 'Tag' : 'Tage')
                        . ($delta < 0 ? ' zurück' : ' vor') . 'verschoben worden; '

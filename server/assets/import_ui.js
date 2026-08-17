@@ -260,7 +260,7 @@
      * Dublettenpruefung greift dann nur noch ueber Tag und Alarmzeit.
      *
      * Bewusst in Kauf genommen: Erkannt werden Nummerndubletten nur noch
-     * innerhalb der Flugtage, die in der Importdatei vorkommen (siehe
+     * innerhalb der Diensttage, die in der Importdatei vorkommen (siehe
      * docs/Technik.md).
      */
     async function bestandEinsatznummernIndex(d) {
@@ -302,14 +302,25 @@
         return null;
     }
 
-    /** Weicht die Tagescrew aus der Datei von der gespeicherten ab? */
+    /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php gesetzt.
+     * Rueckfall: der Stand vor Web 6.0.0. */
+    var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
+        ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
+    var LABELS = (typeof CREW_LABELS !== 'undefined' && CREW_LABELS)
+        ? CREW_LABELS
+        : { p1: 'Pilot 1', p2: 'Pilot 2', hems: 'HEMS-TC', fr: 'Flugretter',
+            other: 'Sonstige' };
+
+    /** Weicht die Besatzung des Diensttags aus der Datei von der gespeicherten ab? */
     function tagKonflikt(t) {
         var b = (S.bestand && S.bestand.days[t.day]) || null;
         if (!b || !b.crew) { return null; }
         var abw = [];
-        ['p1', 'p2', 'hems', 'fr', 'other'].forEach(function (r) {
+        ROLLEN.forEach(function (r) {
             var neu = t.crew[r] || null, alt = b.crew[r] || null;
-            if (neu && alt && neu !== alt) { abw.push(r + ': ' + alt + ' → ' + neu); }
+            if (neu && alt && neu !== alt) {
+                abw.push((LABELS[r] || r) + ': ' + alt + ' → ' + neu);
+            }
         });
         return abw.length ? abw.join(', ') : null;
     }
@@ -382,12 +393,17 @@
         S.tage.forEach(function (t) {
             var b = (S.bestand && S.bestand.days[t.day]) || null;
             var konflikt = tagKonflikt(t);
-            var crewText = ['p1', 'hems'].map(function (r) {
-                return r.toUpperCase() + ' ' + (t.crew[r] || '–');
-            }).join(', ');
+            /* Kopfzeile der Tagesgruppe: die BELEGTEN Rollen, hoechstens drei.
+               Bis Web 5.10.0 standen hier fest „P1" und „HEMS" — mit sieben
+               Rollen waere das die falsche Auswahl, weil ein bodengebundener
+               Dienst beide gar nicht kennt. */
+            var belegt = ROLLEN.filter(function (r) { return t.crew[r]; }).slice(0, 3);
+            var crewText = belegt.length
+                ? belegt.map(function (r) { return (LABELS[r] || r) + ' ' + t.crew[r]; }).join(', ')
+                : 'keine Besatzung in der Datei';
             var kopfZelle = '<strong>' + esc(t.day) + '</strong> · ' + esc(crewText) +
                 ' · ' + t.missionen.length + ' Einsätze · ' +
-                (b ? 'Flugtag vorhanden' : 'Flugtag wird angelegt');
+                (b ? 'Diensttag vorhanden' : 'Diensttag wird angelegt');
             if (konflikt) {
                 var w = S.wahlTag[t.day] || 'keep';
                 kopfZelle += ' · <span class="imp-warn">abweichende Crew (' + esc(konflikt) + ')</span> ' +
@@ -411,7 +427,7 @@
 
         var b = ImportCore.bilanz(S.erg.zeilen, S.tage);
         var dubletten = zaehleDubletten();
-        $('bilanz').textContent = b.tage + ' Flugtage, ' + b.einsaetze + ' Einsätze, '
+        $('bilanz').textContent = b.tage + ' Diensttage, ' + b.einsaetze + ' Einsätze, '
             + b.warnungen + ' Hinweise, ' + b.fehler + ' Fehler, ' + dubletten + ' Dubletten'
             + (b.abwCrew ? ', ' + b.abwCrew + ' Einsätze mit abweichender Besatzung' : '');
         $('schritt2').hidden = false;
@@ -487,7 +503,7 @@
         var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         if (!ck) { return null; }
 
-        var acId = $('acsel').value ? parseInt($('acsel').value, 10) : null;
+        var vehId = $('vehsel').value ? parseInt($('vehsel').value, 10) : null;
         var baseId = $('basesel').value ? parseInt($('basesel').value, 10) : null;
 
         var tage = [], missionen = [], i, t, m, w, dup, vorhanden, pat, keys, blob;
@@ -495,17 +511,18 @@
         for (i = 0; i < S.tage.length; i++) {
             t = S.tage[i];
             vorhanden = (S.bestand && S.bestand.days[t.day]) || null;
+            // Besatzung als Objekt role_code => name (E7), nicht als
+            // Spaltensatz. Leere Rollen bleiben draussen: `day_crew` bekommt
+            // seine Zeilenmenge aus dem Rettungsmittel, nicht aus der Datei.
+            var crewObj = {};
+            ROLLEN.forEach(function (r) { if (t.crew[r]) { crewObj[r] = t.crew[r]; } });
             tage.push({
                 day: t.day,
-                crew_p1: t.crew.p1 || null,
-                crew_p2: t.crew.p2 || null,
-                crew_hems: t.crew.hems || null,
-                crew_fr: t.crew.fr || null,
-                crew_other: t.crew.other || null,
-                aircraft_id: vorhanden ? null : acId,
+                crew: crewObj,
+                vehicle_id: vorhanden ? null : vehId,
                 base_id: vorhanden ? null : baseId,
-                // 'insert' = Tag anlegen, 'keep' = vorhandenen Tag unangetastet
-                // lassen, 'update' = Crew aus der Datei uebernehmen.
+                // 'insert' = Diensttag anlegen, 'keep' = vorhandenen unangetastet
+                // lassen, 'update' = Besatzung aus der Datei uebernehmen.
                 mode: !vorhanden ? 'insert' : (S.wahlTag[t.day] === 'update' ? 'update' : 'keep')
             });
 
@@ -550,11 +567,16 @@
                     winch: m.winch ? 1 : 0,
                     resources: m.resources || [],
                     crew_override: m.crew_override ? 1 : 0,
-                    crew_p1: m.crew_p1 || null,
-                    crew_p2: m.crew_p2 || null,
-                    crew_hems: m.crew_hems || null,
-                    crew_fr: m.crew_fr || null,
-                    crew_other: m.crew_other || null,
+                    // Abweichende Besatzung als Objekt role_code => name.
+                    // `mission_crew` fuehrt nur Abweichungen, also nur belegte
+                    // Rollen — eine Leerzeile hat dort keine Bedeutung.
+                    crew: (function () {
+                        var o = {};
+                        ROLLEN.forEach(function (r) {
+                            if (m['crew_' + r]) { o[r] = m['crew_' + r]; }
+                        });
+                        return o;
+                    }()),
                     pat_blob: blob,
 
                     // Ab Web 2.10.0: Felder, die nur der Rueckimport der
@@ -606,7 +628,7 @@
         var mitBlob = S.nutzlast.missions.filter(function (m) { return m.pat_blob; }).length;
         var neueTage = S.nutzlast.days.filter(function (d) { return d.mode === 'insert'; }).length;
         $('bereit').textContent = S.nutzlast.missions.length + ' Einsätze bereit ('
-            + mitBlob + ' davon mit verschlüsselten Angaben), ' + neueTage + ' Flugtage werden '
+            + mitBlob + ' davon mit verschlüsselten Angaben), ' + neueTage + ' Diensttage werden '
             + 'neu angelegt.';
         knopf.disabled = S.nutzlast.missions.length === 0;
     }
@@ -650,7 +672,7 @@
             zustand.innerHTML = 'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
                 + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
                 + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
-                + d.days_inserted + ' Flugtage angelegt, ' + d.days_updated + ' aktualisiert.'
+                + d.days_inserted + ' Diensttage angelegt, ' + d.days_updated + ' aktualisiert.'
                 + (verworfen.length
                    ? '<br><span class="muted">Einzelne Werte verworfen: '
                      + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
@@ -691,7 +713,7 @@
 
         $('params').addEventListener('change', function () { neuRechnen(); });
         $('commit').addEventListener('click', uebernehmen);
-        $('acsel').addEventListener('change', function () { bereitschaft(); });
+        $('vehsel').addEventListener('change', function () { bereitschaft(); });
         $('basesel').addEventListener('change', function () { bereitschaft(); });
 
         Array.prototype.forEach.call(document.querySelectorAll('[data-filter]'), function (b) {

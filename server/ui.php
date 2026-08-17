@@ -16,7 +16,7 @@ function ui_topbar(string $active): void { ?>
 <header class="topbar">
   <a class="brand" href="index.php">
     <img src="<?= asset('assets/images/gen-em_logo_helicopter_weiss.svg') ?>" alt="">
-    <span>Einsatzdokumentation Luftrettung – <?= e(ui_user_label()) ?></span>
+    <span>Einsatzdokumentation Notarzt – <?= e(ui_user_label()) ?></span>
   </a>
   <nav class="mainnav">
     <a href="index.php" <?= $active === 'uebersicht' ? 'class="active"' : '' ?>>Übersicht</a>
@@ -76,42 +76,59 @@ function ui_settings_sidebar(string $active): void {
   </aside>
 <?php }
 
-/** Einsatztage-Leiste (serverseitig, auf allen Inhaltsseiten identisch) */
-function ui_days_sidebar(?string $currentDay): void {
+/**
+ * Diensttage-Leiste (serverseitig, auf allen Inhaltsseiten identisch).
+ *
+ * SIE LISTET JETZT DIENSTTAGE, NICHT KALENDERTAGE (E9, Web 6.0.0). Bis dahin
+ * entstand die Liste aus den vorkommenden DATEN in drei Tabellen — sie musste
+ * es, weil ein Flugtag ohne eigene Zeile Einsaetze haben konnte. Seit
+ * `missions.day_id` ein Fremdschluessel ist, gibt es das nicht mehr: Jeder
+ * Einsatz haengt an einer Zeile in `days`, und diese Zeile IST der Eintrag.
+ *
+ * Zwei Dienste an einem Kalendertag stehen deshalb als zwei Zeilen
+ * untereinander. Auseinandergehalten werden sie durch die Uhrzeit des
+ * Dienstbeginns — aber nur DANN: Im Regelfall, ein Dienst am Tag, kostet sie
+ * nur Breite in einer Leiste, die auf schmalen Geraeten ohnehin knapp ist.
+ *
+ * Das Symbol der Art (E27, A7c) steht am Anfang der Zeile mit einer
+ * Textalternative in `title` und `aria-label` — die Auskunft haengt nicht an
+ * der Grafik.
+ */
+function ui_days_sidebar(?int $currentDayId): void {
     global $userId;
-    $st = db()->prepare(
-        'SELECT day FROM (
-            SELECT day FROM missions WHERE user_id = ? AND deleted_at IS NULL
-            UNION SELECT day FROM rest_segments WHERE user_id = ? AND deleted_at IS NULL
-            UNION SELECT day FROM days WHERE user_id = ? AND deleted_at IS NULL
-         ) t ORDER BY day DESC LIMIT 500');
-    $st->execute([$userId, $userId, $userId]);
-    $days = $st->fetchAll(PDO::FETCH_COLUMN);
+    require_once __DIR__ . '/diensttag_lib.php';
+    $tage = dt_liste($userId, 500);
 
-    // Nach Jahr -> Monat gruppieren (je Y => M => [Tage]), Reihenfolge bleibt
-    // absteigend, da $days bereits absteigend sortiert aus der DB kommt.
+    // Nach Jahr -> Monat gruppieren (je Y => M => [Diensttage]), Reihenfolge
+    // bleibt absteigend, da $tage bereits absteigend sortiert aus der DB kommt.
     $monatsnamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     $baum = [];
-    foreach ($days as $d) {
-        $y = substr($d, 0, 4);
-        $m = substr($d, 5, 2);
-        $baum[$y][$m][] = $d;
+    foreach ($tage as $t) {
+        $d = (string)$t['day'];
+        $baum[substr($d, 0, 4)][substr($d, 5, 2)][] = $t;
     }
 
-    // Welches Jahr/Monat soll offen sein? Der aktuell gewaehlte Tag hat
-    // Vorrang, sonst der juengste vorhandene Tag (oberstes Jahr/oberster Monat).
+    // Welches Jahr/Monat soll offen sein? Der aktuell gewaehlte Diensttag hat
+    // Vorrang, sonst der juengste vorhandene (oberstes Jahr/oberster Monat).
+    $aktuellesDatum = null;
+    foreach ($tage as $t) {
+        if ($currentDayId !== null && (int)$t['id'] === $currentDayId) {
+            $aktuellesDatum = (string)$t['day'];
+            break;
+        }
+    }
     $offenesJahr = null; $offenerMonat = null;
-    if ($currentDay !== null && isset($baum[substr($currentDay, 0, 4)][substr($currentDay, 5, 2)])) {
-        $offenesJahr  = substr($currentDay, 0, 4);
-        $offenerMonat = substr($currentDay, 5, 2);
-    } elseif ($days) {
-        $offenesJahr  = substr($days[0], 0, 4);
-        $offenerMonat = substr($days[0], 5, 2);
+    if ($aktuellesDatum !== null) {
+        $offenesJahr  = substr($aktuellesDatum, 0, 4);
+        $offenerMonat = substr($aktuellesDatum, 5, 2);
+    } elseif ($tage) {
+        $offenesJahr  = substr((string)$tage[0]['day'], 0, 4);
+        $offenerMonat = substr((string)$tage[0]['day'], 5, 2);
     }
     ?>
 <aside class="daylist">
-  <h2>Einsatztage</h2>
+  <h2>Diensttage</h2>
   <div class="dayyears">
     <?php if (!$baum): ?><p class="muted daylist-empty">noch keine</p><?php endif; ?>
     <?php foreach ($baum as $jahr => $monate):
@@ -122,17 +139,24 @@ function ui_days_sidebar(?string $currentDay): void {
         $jahrS = (string)$jahr; ?>
       <details class="yearblock" <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
         <summary><a class="zeitlink" href="zeitraum.php?y=<?= e($jahrS) ?>"><?= e($jahrS) ?></a></summary>
-        <?php foreach ($monate as $monat => $tage):
+        <?php foreach ($monate as $monat => $monatsTage):
             $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
           <details class="monthblock"
                     <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
             <summary><a class="zeitlink"
                         href="zeitraum.php?y=<?= e($jahrS) ?>&amp;m=<?= e($monatS) ?>"><?= e($monatsnamen[(int)$monatS]) ?></a></summary>
             <ul>
-              <?php foreach ($tage as $d):
-                  $dt = DateTime::createFromFormat('Y-m-d', $d); ?>
-                <li><a href="index.php?day=<?= e($d) ?>"
-                       <?= $d === $currentDay ? 'class="active"' : '' ?>><?= $dt ? $dt->format('d.m.Y') : e($d) ?></a></li>
+              <?php foreach ($monatsTage as $t):
+                  $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']);
+                  $titel = $sym['text'];
+                  if ($t['vehicle_name'] !== null && $t['vehicle_name'] !== '') {
+                      $titel = (string)$t['vehicle_name'] . ' — ' . $sym['text'];
+                  } ?>
+                <li><a href="index.php?d=<?= (int)$t['id'] ?>"
+                       <?= (int)$t['id'] === $currentDayId ? 'class="active"' : '' ?>><span
+                       class="artzeichen" title="<?= e($titel) ?>"
+                       aria-label="<?= e($titel) ?>"><?= e($sym['zeichen']) ?></span>
+                       <?= e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></a></li>
               <?php endforeach; ?>
             </ul>
           </details>
@@ -143,9 +167,20 @@ function ui_days_sidebar(?string $currentDay): void {
     <?php
       require_once __DIR__ . '/trash_lib.php';
       $trashLeer = !trash_list_days($userId) && !trash_list_missions($userId);
+      require_once __DIR__ . '/nachbearbeitung_lib.php';
+      $nbOffen = nb_offen_gesamt($userId);
     ?>
-    <a class="dayadd" href="flugtag_neu.php" title="Flugtag von Hand anlegen">
-      + Flugtag anlegen
+    <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist (E24,
+             A12). Ein dauerhafter Eintrag fuer eine einmalige Aufgabe waere
+             genau der Hinweis, den man nicht loswird. */ ?>
+    <?php if ($nbOffen > 0): ?>
+      <a class="dayadd nachbearbeitung" href="nachbearbeitung.php"
+         title="Zuordnungen nachtragen">
+        Zuordnung offen (<?= (int)$nbOffen ?>)
+      </a>
+    <?php endif; ?>
+    <a class="dayadd" href="diensttag_neu.php" title="Diensttag von Hand anlegen">
+      + Diensttag anlegen
     </a>
     <a class="trashlink<?= $trashLeer ? ' leer' : '' ?>" href="papierkorb.php"
        title="<?= $trashLeer ? 'Papierkorb ist leer' : 'Papierkorb' ?>">

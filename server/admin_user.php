@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
                        . '„Sicherungen" nachsehen.';
             } else {
-                // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Flugtage
+                // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Diensttage
                 db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');
                 exit;
@@ -217,7 +217,7 @@ $devices = $dv->fetchAll();
            getroffene Wahl (E25). Vorher wäre sie unwahr geworden, sobald eine
            Admin-Sicherung existiert. */ ?>
   <p class="muted">Entfernt das Konto <strong><?= e($u['email']) ?></strong> mit
-     <strong>allen</strong> Daten: Einsätze, Flugtage, Tracks, Reanimationen und Geräte.
+     <strong>allen</strong> Daten: Einsätze, Diensttage, Tracks, Reanimationen und Geräte.
      Dieser Schritt lässt sich nicht rückgängig machen und geht nicht über den
      Papierkorb.</p>
   <p class="muted"><strong>Ob danach nichts mehr lesbar ist, hängt von der Wahl

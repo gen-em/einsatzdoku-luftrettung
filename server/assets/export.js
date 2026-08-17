@@ -77,6 +77,23 @@
         return out;
     }
 
+    /** ISO-8601-UTC -> 'YYYY-MM-DD' in der App-Zeitzone.
+     *
+     * Gebraucht fuer das ECHTE Einsatzdatum: Seit sich der Diensttag vom
+     * Kalendertag geloest hat (E9), traegt der Einsatz kein eigenes Datum mehr,
+     * und das seines Dienstes kann ein anderes sein. Die Umrechnung laeuft
+     * ueber dieselbe Intl-Formatierung wie hhmmLocal(), damit Datum und Uhrzeit
+     * einer Zeile nicht aus zwei verschiedenen Rechnungen stammen. */
+    function dateOnlyLocal(iso, tz) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        var fmt = new Intl.DateTimeFormat('en-CA', {
+            timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'
+        });
+        return fmt.format(d);   // en-CA liefert 'YYYY-MM-DD'
+    }
+
     function hhmmLocal(iso, tz) {
         var p = localParts(iso, tz);
         if (!p) return null;
@@ -106,15 +123,27 @@
     }
     function orEmpty(v) { return (v === null || v === undefined) ? '' : String(v); }
 
-    /** Effektive Besatzung nach 3.4: bei crew_override und belegtem Einsatzfeld
-     *  der Einsatzwert, sonst der Wert des Flugtags. */
+    /* Rollenkatalog. Die Liste kommt aus CREW_ROLES (server/db.php) und wird
+     * von der einbindenden Seite als CREW_ROLLEN gesetzt (import.php). Der
+     * Rueckfall steht da, damit diese Datei auch ohne sie laeuft — er ist die
+     * Rollenmenge vor Web 6.0.0, also der Stand, den ein Bestand ohne
+     * bodengebundene Rettungsmittel hat. */
+    var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
+        ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
+
+    /** Effektive Besatzung nach 3.4: bei crew_override und belegter Rolle am
+     *  Einsatz der Einsatzwert, sonst der des Diensttags.
+     *
+     *  Beides sind seit Web 6.0.0 Objekte role_code => name (`mission_crew` und
+     *  `day_crew`, E7) und keine Spaltensaetze mehr. Die Regel selbst ist
+     *  unveraendert. */
     function effectiveCrew(mission, dayRow) {
-        var roles = ['p1', 'p2', 'hems', 'fr', 'other'];
+        var mc = mission.crew || {};
+        var dc = (dayRow && dayRow.crew) ? dayRow.crew : {};
         var out = {};
-        roles.forEach(function (r) {
-            var col = 'crew_' + r;
-            var mVal = (mission[col] || '').toString().trim();
-            var dVal = dayRow ? (dayRow[col] || '') : '';
+        ROLLEN.forEach(function (r) {
+            var mVal = (mc[r] || '').toString().trim();
+            var dVal = (dc[r] || '').toString();
             out[r] = (mission.crew_override === 1 && mVal !== '') ? mVal : dVal;
         });
         return out;
@@ -170,15 +199,13 @@
      *  (Organisationskennungen) und der Reanimationsverlauf — je einzeln vom
      *  Auftraggeber entschieden, Begründungen in docs/Export-Format.md. */
     function entpersonalisieren(data) {
-        var CREW = ['crew_p1', 'crew_p2', 'crew_hems', 'crew_fr', 'crew_other'];
-
         (data.days || []).forEach(function (d) {
-            CREW.forEach(function (k) { d[k] = null; });
+            d.crew = {};
             d.notes = null;
         });
 
         (data.missions || []).forEach(function (m) {
-            CREW.forEach(function (k) { m[k] = null; });
+            m.crew = {};
             m.bw_info = null;
             m.other_ema = null;
             m.notes = null;
@@ -225,8 +252,24 @@
      * Ballast. Profil B behaelt sie leer (stabiles Schema, dort liest eine
      * Maschine) und Profil C muss sie behalten, weil seine Spaltenfolge von
      * der Jahresliste vorgegeben ist. */
+    /* Die Besatzungsspalten entstehen aus dem Rollenkatalog (CREW_ROLES,
+     * server/db.php): fünf Flugrollen bis Web 5.10.0, jetzt zusätzlich Fahrer
+     * und Praktikant. Sie tragen die Beschriftung des Katalogs, damit Formular
+     * und Tabelle dieselben Begriffe verwenden — und damit das Importprofil
+     * `export_excel_v1` sie über CREW_LABELS wiedererkennt, ohne eine zweite
+     * Liste zu führen.
+     *
+     * Nur „Sonstige" bekommt einen längeren Kopf: „Sonstige" allein wäre in
+     * einer Tabelle mit Transportziel und Bergwacht-Einheit nicht eindeutig. */
+    var CREW_SPALTEN_A = ROLLEN.map(function (r) {
+        var lab = CREW_LABELS[r] || r;
+        return { label: (r === 'other') ? 'Sonstige Besatzung' : lab, star: true, rolle: r };
+    });
+
     var SPALTEN_A = [
-        { label: 'Hubschrauber', star: false },
+        // Neutral benannt (Abschnitt 3.9) — der Wert kommt aus der
+        // eingefrorenen Bezeichnung des Diensttags (E8).
+        { label: 'Rettungsmittel', star: false },
         { label: 'Standort', star: false },
         { label: 'Einsatzdatum', star: false },
         { label: 'Alarmzeit', star: false },
@@ -238,12 +281,10 @@
         { label: 'Geburtsdatum', star: true },
         { label: 'Alter', star: true },
         { label: 'Einsatzort', star: true },
-        { label: 'Diagnose', star: true },
-        { label: 'Pilot 1', star: true },
-        { label: 'Pilot 2', star: true },
-        { label: 'HEMS', star: true },
-        { label: 'Flugretter', star: true },
-        { label: 'Sonstige Besatzung', star: true },
+        { label: 'Diagnose', star: true }
+    ]
+        .concat(CREW_SPALTEN_A)
+        .concat([
         // 'Sekundärtransport' ist der Wortlaut aus mission_fields.php — die
         // Tabelle soll dieselben Begriffe verwenden wie das Formular.
         { label: 'Sekundärtransport', star: false },
@@ -261,17 +302,18 @@
         { label: 'Weitere Rettungsmittel', star: false },
         // Aus dem Einsatzort gerechnet und damit grob ortsverratend.
         { label: 'Höhe Einsatzort (m)', star: true },
-        { label: 'Flugkilometer', star: false },
+        // Neutral: Die Tabelle führt beide Arten (Abschnitt 3.9).
+        { label: 'Kilometer', star: false },
         // Das Formular warnt "keine Patientendaten!" — was tatsaechlich dort
         // steht, weiss nur, wer es geschrieben hat.
         { label: 'Notizen', star: true }
-    ];
+    ]);
 
     var DATE_COL_A = 2;   // 0-basiert, immer Spalte C (Einsatznummer* aendert daran nichts)
 
     function rowValuesA(ctx, cols) {
         return cols.map(function (c) {
-            if (c.label === 'Hubschrauber') return txtOrDash(ctx.day && ctx.day.aircraft);
+            if (c.label === 'Rettungsmittel') return txtOrDash(ctx.day && ctx.day.vehicle);
             if (c.label === 'Standort') return txtOrDash(ctx.day && ctx.day.base);
             if (c.label === 'Einsatzdatum') return dateOnly(ctx.tag);
             if (ctx.row === 'empty') return '-';   // alle übrigen Zellen '-'
@@ -305,11 +347,6 @@
                 }
                 case 'Einsatzort': return pat && pat.loc ? txtOrDash(pat.loc.addr) : '-';
                 case 'Diagnose': return pat ? txtOrDash(pat.dx) : '-';
-                case 'Pilot 1': return txtOrDash(eff.p1);
-                case 'Pilot 2': return txtOrDash(eff.p2);
-                case 'HEMS': return txtOrDash(eff.hems);
-                case 'Flugretter': return txtOrDash(eff.fr);
-                case 'Sonstige Besatzung': return txtOrDash(eff.other);
                 case 'Sekundärtransport': return jaOrDash(m.secondary);
                 case 'Transportziel': return txtOrDash(m.transport_dest);
                 case 'Schockraum': return jaOrDash(m.schockraum);
@@ -320,25 +357,35 @@
                 case 'Weitere Rettungsmittel':
                     return (m.resources && m.resources.length) ? m.resources.join(', ') : '-';
                 case 'Höhe Einsatzort (m)': return numOrDash(m.site_ele_m);
-                case 'Flugkilometer':
+                case 'Kilometer':
                     return (m.distance_m === null || m.distance_m === undefined)
                         ? '-' : Number((m.distance_m / 1000).toFixed(1));
                 case 'Notizen': {
                     var n = (m.notes || '').replace(/\r\n|\r|\n/g, '; ').trim();
                     return n === '' ? '-' : n;
                 }
-                default: return '-';
+                /* Besatzung: die Spalte trägt ihre Rolle als 'rolle' bei sich
+                   (CREW_SPALTEN_A). Bis Web 5.10.0 stand hier ein Zweig je
+                   Flugrolle — mit sieben Rollen wären es sieben gewesen, und
+                   eine achte hätte man vergessen. */
+                default:
+                    if (c.rolle) { return txtOrDash(eff[c.rolle]); }
+                    return '-';
             }
         });
     }
 
     function buildProfilA(data, opts) {
         var cols = SPALTEN_A.filter(function (c) { return !c.star || opts.patient; });
-        var daysByDate = {};
-        (data.days || []).forEach(function (d) { daysByDate[d.day] = d; });
+        /* NACH KENNUNG, NICHT NACH DATUM (E9). Bis Web 5.10.0 war das Datum der
+         * Schlüssel eines Flugtags; zwei Dienste an einem Kalendertag hätten
+         * sich hier gegenseitig überschrieben, und der zweite hätte die
+         * Besatzung des ersten getragen. */
+        var daysById = {};
+        (data.days || []).forEach(function (d) { daysById[d.id] = d; });
 
         var missionDays = {};
-        (data.missions || []).forEach(function (m) { missionDays[m.day] = true; });
+        (data.missions || []).forEach(function (m) { missionDays[m.day_id] = true; });
 
         var rows = [];   // { tag, hhmm, row:'mission'|'empty', m, day, eff, pat }
         (data.missions || []).forEach(function (m) {
@@ -346,13 +393,13 @@
                 tag: m.day,
                 hhmm: hhmmLocal(phaseAt(m, 2), APP_TZ) || '',
                 row: 'mission', m: m,
-                day: daysByDate[m.day],
-                eff: effectiveCrew(m, daysByDate[m.day]),
+                day: daysById[m.day_id],
+                eff: effectiveCrew(m, daysById[m.day_id]),
                 pat: opts.patient ? m.pat : null
             });
         });
         (data.days || []).forEach(function (d) {
-            if (missionDays[d.day]) return;
+            if (missionDays[d.id]) return;
             rows.push({ tag: d.day, hhmm: '', row: 'empty', day: d });
         });
         rows.sort(function (a, b) {
@@ -391,8 +438,8 @@
     function buildProfilC(data, opts) {
         var profile = ImportProfile.profiles.ch17_jahresliste;
         var order = profile.exportOrder;
-        var daysByDate = {};
-        (data.days || []).forEach(function (d) { daysByDate[d.day] = d; });
+        var daysById = {};
+        (data.days || []).forEach(function (d) { daysById[d.id] = d; });
 
         var byYear = {};
         (data.missions || []).forEach(function (m) {
@@ -423,7 +470,7 @@
 
             missions.forEach(function (m) {
                 var pat = opts.patient ? m.pat : null;
-                var eff = effectiveCrew(m, daysByDate[m.day]);
+                var eff = effectiveCrew(m, daysById[m.day_id]);
                 var p = m.day.split('-');
                 var datum = String(parseInt(p[2], 10)) + '.' + String(parseInt(p[1], 10));
                 var zeit = hhmmLocal(phaseAt(m, 2), APP_TZ) || '';
@@ -455,7 +502,7 @@
     }
 
     /* ------------------------------------------------------- Profil B --- */
-    /* Vollständiges CSV (einsaetze.csv, flugtage.csv, ruhezeiten.csv,
+    /* Vollständiges CSV (einsaetze.csv, diensttage.csv, ruhezeiten.csv,
      * felder.csv, LIESMICH.txt, tracks/*.gpx), gepackt mit zip.js.
      * Erwartet zusätzlich: zip (vendor/zipjs.min.js). */
 
@@ -601,12 +648,52 @@
         }));
     }
 
+    /* ---- Besatzungsspalten aus dem Rollenkatalog -------------------------
+     *
+     * Bis Web 5.10.0 standen zehn Spalten ausgeschrieben da: fünf für die
+     * Besatzung des Diensttags, fünf für die tatsächliche des Einsatzes. Mit den
+     * bodengebundenen Rollen wären es vierzehn geworden, und jede neue Rolle
+     * hätte hier, im Blatt Diensttage und in den Importprofilen gleichzeitig
+     * nachgezogen werden müssen. Die Quelle ist CREW_ROLES (server/db.php).
+     *
+     * Der Spaltenname bleibt `<prefix><rolle>` — genau der bisherige. Die fünf
+     * Flugrollen behalten damit ihre Spaltennamen, und der verlustfreie
+     * Rückweg über das Importprofil `export_csv_v1` bleibt bestehen.
+     */
+    function crewSpalten(prefix, wozu, holen) {
+        return ROLLEN.map(function (r) {
+            return {
+                feld: prefix + r,
+                typ: 'text',
+                einheit: '',
+                beschreibung: wozu + ': ' + (CREW_LABELS[r] || r),
+                pers: true,
+                get: function (c) { return holen(c, r); }
+            };
+        });
+    }
+
+    /** Art des Diensttags als Exportwert. Leer = ohne Zuordnung (E26). */
+    function ART_TEXT(kind) {
+        if (kind === 'air') { return 'luft'; }
+        if (kind === 'ground') { return 'boden'; }
+        return '';
+    }
+
     // ---- Feldtabellen (Reihenfolge = Spaltenreihenfolge in der CSV) -------
 
     var FIELD_DEFS_EINSAETZE = [
         { feld: 'einsatz_id', typ: 'int', einheit: '', beschreibung: 'interne ID, Bezugsschlüssel für tracks/', get: function (c) { return c.m.id; } },
-        { feld: 'flugtag', typ: 'date', einheit: '', beschreibung: 'missions.day', get: function (c) { return c.m.day; } },
-        { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'identisch zu flugtag, für Tabellenprogramme', get: function (c) { return c.m.day; } },
+        /* 'diensttag' ist das Datum des DIENSTES, 'datum' das des EINSATZES.
+           Bis Web 5.10.0 waren beide identisch (missions.day) und die zweite
+           Spalte nur eine Bequemlichkeit für Tabellenprogramme. Seit sich der
+           Diensttag vom Kalendertag gelöst hat (E9), können sie
+           auseinanderfallen: Ein Einsatz um 01:30 gehört zum Dienst des
+           Vortags. Beide Spalten stehen deshalb weiter da, jetzt aber mit
+           unterschiedlicher Bedeutung — und die Beschreibung sagt sie. */
+        { feld: 'diensttag', typ: 'date', einheit: '', beschreibung: 'Datum des Diensttags (days.day)', get: function (c) { return c.m.day; } },
+        { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage', get: function (c) { return c.m.day_id; } },
+        { feld: 'datum', typ: 'date', einheit: '', beschreibung: 'Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag', get: function (c) { return dateOnlyLocal(c.m.started_at, APP_TZ); } },
         { feld: 'uhrzeit_ortszeit', typ: 'time', einheit: '', beschreibung: 'Alarmzeit HH:MM, für Tabellenprogramme', get: function (c) { return hhmmLocal(phaseAt(c.m, 2), APP_TZ) || ''; } },
         { feld: 'herkunft', typ: 'text', einheit: '', beschreibung: 'wie der Einsatz entstanden ist (missions.origin): uhr | manuell | import', get: function (c) { return c.m.source; } },
         { feld: 'final', typ: '0/1', einheit: '', beschreibung: 'abgeschlossen', get: function (c) { return c.m.final; } },
@@ -618,28 +705,34 @@
         // bleibt trotzdem herkunft = uhr.
         { feld: 'edited', typ: '0/1', einheit: '', beschreibung: 'nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual', get: function (c) { return c.m.edited; } },
 
-        { feld: 'hubschrauber', typ: 'text', einheit: '', beschreibung: 'Kennzeichen (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.aircraft) : ''; } },
-        { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Basis (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.base) : ''; } },
-        { feld: 'tag_crew_p1', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 1', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_p1) : ''; } },
-        { feld: 'tag_crew_p2', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 2', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_p2) : ''; } },
-        { feld: 'tag_crew_hems', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: HEMS', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_hems) : ''; } },
-        { feld: 'tag_crew_fr', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Flugretter', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_fr) : ''; } },
-        { feld: 'tag_crew_other', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Sonstige', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_other) : ''; } },
-
+        /* Neutral benannt (Abschnitt 3.9): 'hubschrauber' hiess die Spalte bis
+           Web 5.10.0 und passte nur zur Luftrettung. Der Wert kommt aus der
+           eingefrorenen Bezeichnung des Diensttags (E8), nicht aus den
+           Stammdaten — ein umbenanntes Rettungsmittel ändert an einem
+           ausgeleiteten Dienst nichts. */
+        { feld: 'rettungsmittel', typ: 'text', einheit: '', beschreibung: 'Bezeichnung des Rettungsmittels (Diensttag, eingefroren)', get: function (c) { return c.day ? orEmpty(c.day.vehicle) : ''; } },
+        { feld: 'art', typ: 'text', einheit: '', beschreibung: 'Art des Diensttags: luft | boden | (leer = ohne Zuordnung)', get: function (c) { return c.day ? ART_TEXT(c.day.kind) : ''; } },
+        { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Standort (Diensttag, eingefroren)', get: function (c) { return c.day ? orEmpty(c.day.base) : ''; } }
+    ]
+        // Besatzung des Diensttags, eine Spalte je Rolle des Katalogs.
+        .concat(crewSpalten('tag_crew_', 'Besatzung des Diensttags', function (c, r) {
+            return (c.day && c.day.crew) ? orEmpty(c.day.crew[r]) : '';
+        }))
+        .concat([
         // Der Haken selbst bleibt: Er sagt, DASS die Besatzung abwich, nicht
         // wer geflogen ist. Ohne ihn wäre nicht mehr zu erkennen, dass die
         // leeren Namensspalten leer gemacht wurden und nicht leer waren.
-        { feld: 'crew_abweichend', typ: '0/1', einheit: '', beschreibung: 'missions.crew_override', get: function (c) { return c.m.crew_override; } },
-        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3)', pers: true, get: function (c) { return orEmpty(c.eff.p1); } },
-        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 2', pers: true, get: function (c) { return orEmpty(c.eff.p2); } },
-        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: HEMS', pers: true, get: function (c) { return orEmpty(c.eff.hems); } },
-        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Flugretter', pers: true, get: function (c) { return orEmpty(c.eff.fr); } },
-        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Sonstige', pers: true, get: function (c) { return orEmpty(c.eff.other); } },
-
+        { feld: 'crew_abweichend', typ: '0/1', einheit: '', beschreibung: 'missions.crew_override', get: function (c) { return c.m.crew_override; } }
+    ])
+        // Tatsächliche (effektive) Besatzung, ebenfalls je Rolle.
+        .concat(crewSpalten('crew_', 'tatsächliche Besatzung (effektiv, siehe 3.3)', function (c, r) {
+            return orEmpty(c.eff[r]);
+        }))
+        .concat([
         { feld: 'beginn', typ: 'ts', einheit: '', beschreibung: 'started_at', get: function (c) { return isoOffset(c.m.started_at, APP_TZ); } },
         { feld: 'ende', typ: 'ts', einheit: '', beschreibung: 'ended_at', get: function (c) { return isoOffset(c.m.ended_at, APP_TZ); } },
-        { feld: 'dauer_min', typ: 'int', einheit: 'min', beschreibung: 'Phase 2 → Phase 9, leer wenn unvollständig', get: function (c) { return durationMinutes(phaseAt(c.m, 2), phaseAt(c.m, 9)); } },
-    ]
+        { feld: 'dauer_min', typ: 'int', einheit: 'min', beschreibung: 'Phase 2 → Phase 9, leer wenn unvollständig', get: function (c) { return durationMinutes(phaseAt(c.m, 2), phaseAt(c.m, 9)); } }
+    ])
         .concat([2, 3, 4, 5, 6, 7, 8, 9].map(function (n) {
             return {
                 feld: 'phase_0' + n + '_' + PHASE_SLUGS[n], typ: 'ts', einheit: '',
@@ -690,10 +783,10 @@
             // Rohwert aus dem pat_blob, kein gerechnetes Alter: Der Schluessel
             // 'age' ist nur belegt, wenn kein verwertbares Geburtsdatum
             // vorliegt (Regel aus einsatz_form.php). Steht ein Geburtsdatum in
-            // der Zeile, folgt das Alter aus 'pat_geburtsdatum' und 'flugtag' —
+            // der Zeile, folgt das Alter aus 'pat_geburtsdatum' und 'datum' —
             // eine zweite, gerechnete Quelle waere beim Rueckimport eine
             // Widerspruchsquelle.
-            { feld: 'pat_alter', typ: 'int', einheit: 'Jahre', beschreibung: 'pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und flugtag', pers: true, get: function (c) { return (c.pat && c.pat.age != null) ? c.pat.age : ''; } },
+            { feld: 'pat_alter', typ: 'int', einheit: 'Jahre', beschreibung: 'pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und datum', pers: true, get: function (c) { return (c.pat && c.pat.age != null) ? c.pat.age : ''; } },
             { feld: 'pat_diagnose', typ: 'text', einheit: '', beschreibung: 'pat_blob.dx', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.dx) : ''; } },
             { feld: 'pat_ort_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.loc.addr', pers: true, get: function (c) { return (c.pat && c.pat.loc) ? orEmpty(c.pat.loc.addr) : ''; } },
             { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', pers: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },
@@ -705,22 +798,31 @@
             { feld: 'track_punkte', typ: 'int', einheit: '', beschreibung: 'Anzahl Trackpunkte', get: function (c) { return c.m.track_points; } }
         ]);
 
-    var FIELD_DEFS_FLUGTAGE = [
-        { feld: 'flugtag', typ: 'date', einheit: '', beschreibung: 'days.day', get: function (c) { return c.d.day; } },
-        { feld: 'hubschrauber', typ: 'text', einheit: '', beschreibung: 'Kennzeichen', get: function (c) { return orEmpty(c.d.aircraft); } },
-        { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Basis', get: function (c) { return orEmpty(c.d.base); } },
-        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'Pilot 1', pers: true, get: function (c) { return orEmpty(c.d.crew_p1); } },
-        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'Pilot 2', pers: true, get: function (c) { return orEmpty(c.d.crew_p2); } },
-        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'HEMS', pers: true, get: function (c) { return orEmpty(c.d.crew_hems); } },
-        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'Flugretter', pers: true, get: function (c) { return orEmpty(c.d.crew_fr); } },
-        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'Sonstige', pers: true, get: function (c) { return orEmpty(c.d.crew_other); } },
+    var FIELD_DEFS_DIENSTTAGE = [
+        /* Die Kennung steht VORN und ist der Bezugsschlüssel: Seit E9 können
+           mehrere Diensttage auf einem Kalendertag liegen, das Datum benennt
+           also keine Zeile mehr. `diensttag_id` in einsaetze.csv zeigt hierher. */
+        { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags', get: function (c) { return c.d.id; } },
+        { feld: 'diensttag', typ: 'date', einheit: '', beschreibung: 'days.day — Datum des Dienstbeginns, Sortier- und Anzeigewert', get: function (c) { return c.d.day; } },
+        { feld: 'dienst_beginn', typ: 'ts', einheit: '', beschreibung: 'days.started_at — echter Dienstbeginn', get: function (c) { return isoOffset(c.d.started_at, APP_TZ); } },
+        { feld: 'dienst_ende', typ: 'ts', einheit: '', beschreibung: 'days.ended_at — echtes Dienstende', get: function (c) { return isoOffset(c.d.ended_at, APP_TZ); } },
+        { feld: 'rettungsmittel', typ: 'text', einheit: '', beschreibung: 'Bezeichnung, eingefroren beim Anlegen (E8)', get: function (c) { return orEmpty(c.d.vehicle); } },
+        { feld: 'art', typ: 'text', einheit: '', beschreibung: 'luft | boden | (leer = ohne Zuordnung)', get: function (c) { return ART_TEXT(c.d.kind); } },
+        { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Standort, eingefroren beim Anlegen (E8)', get: function (c) { return orEmpty(c.d.base); } },
+        { feld: 'faehigkeiten', typ: 'text', einheit: '', beschreibung: 'eingefrorene Fähigkeiten, mit Komma getrennt: winch, bergwacht', get: function (c) { return (c.d.capabilities || []).join(', '); } }
+    ]
+        .concat(crewSpalten('crew_', 'Besatzung', function (c, r) {
+            return (c.d.crew) ? orEmpty(c.d.crew[r]) : '';
+        }))
+        .concat([
         { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'days.notes', pers: true, get: function (c) { return orEmpty(c.d.notes); } },
-        { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Flugtag im Export', get: function (c) { return c.count; } }
-    ];
+        { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Diensttag im Export', get: function (c) { return c.count; } }
+    ]);
 
     var FIELD_DEFS_RUHEZEITEN = [
         { feld: 'ruhezeit_id', typ: 'int', einheit: '', beschreibung: 'interne ID, Bezugsschlüssel für tracks/', get: function (c) { return c.r.id; } },
-        { feld: 'flugtag', typ: 'date', einheit: '', beschreibung: 'rest_segments.day', get: function (c) { return c.r.day; } },
+        { feld: 'diensttag', typ: 'date', einheit: '', beschreibung: 'Datum des Diensttags, an dem das Ruhesegment hängt', get: function (c) { return c.r.day; } },
+        { feld: 'diensttag_id', typ: 'int', einheit: '', beschreibung: 'interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage', get: function (c) { return c.r.day_id; } },
         { feld: 'beginn', typ: 'ts', einheit: '', beschreibung: 'started_at', get: function (c) { return isoOffset(c.r.started_at, APP_TZ); } },
         { feld: 'ende', typ: 'ts', einheit: '', beschreibung: 'ended_at', get: function (c) { return isoOffset(c.r.ended_at, APP_TZ); } },
         { feld: 'dauer_min', typ: 'int', einheit: 'min', beschreibung: 'ende − beginn', get: function (c) { return durationMinutes(c.r.started_at, c.r.ended_at); } },
@@ -744,7 +846,7 @@
     function buildFelderCsv() {
         var tables = [
             ['einsaetze.csv', FIELD_DEFS_EINSAETZE],
-            ['flugtage.csv', FIELD_DEFS_FLUGTAGE],
+            ['diensttage.csv', FIELD_DEFS_DIENSTTAGE],
             ['ruhezeiten.csv', FIELD_DEFS_RUHEZEITEN]
         ];
         var out = '\uFEFF' + csvRow(['datei', 'feld', 'typ', 'einheit',
@@ -778,11 +880,11 @@
             'Diese Datei enthält alle nachstehenden Gruppen:',
             '  - Patientendaten (pat_-Spalten): Einsatznummer, Name, Geburtsdatum,',
             '    Alter, Diagnose, Einsatzort mit Adresse und Koordinaten',
-            '  - Besatzung: die des Flugtags (tag_crew_*) und die tatsächliche',
-            '    des Einsatzes (crew_*), ebenso im Blatt Flugtage',
+            '  - Besatzung: die des Diensttags (tag_crew_*) und die tatsächliche',
+            '    des Einsatzes (crew_*), ebenso im Blatt Diensttage',
             '  - weitere Namen: bw_info (Bergwacht: Namen / Infos), other_ema',
             '    (anderer Notarzt)',
-            '  - Freitext: notizen bei Einsatz und Flugtag',
+            '  - Freitext: notizen bei Einsatz und Diensttag',
             '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
             '    Einsatzort, Phase 5 = Ankunft PatientIn), hoehe_einsatzort_m',
             '    und, falls gewählt, die GPX-Spuren unter tracks/'
@@ -790,9 +892,9 @@
             'Diese Datei enthält KEINE der nachstehenden Gruppen — die Spalten sind',
             'vorhanden und leer:',
             '  - Patientendaten (pat_-Spalten)',
-            '  - Besatzung (tag_crew_*, crew_*, auch im Blatt Flugtage)',
+            '  - Besatzung (tag_crew_*, crew_*, auch im Blatt Diensttage)',
             '  - bw_info (Bergwacht: Namen / Infos) und other_ema (anderer Notarzt)',
-            '  - notizen bei Einsatz und Flugtag',
+            '  - notizen bei Einsatz und Diensttag',
             '  - Koordinaten der Phasen und hoehe_einsatzort_m',
             '  - GPX-Spuren (der Ordner tracks/ fehlt vollständig)',
             '',
@@ -813,7 +915,7 @@
             '  felder.csv       jedes Feld jeder Tabelle:',
             '                   datei;feld;typ;einheit;personenbezogen;beschreibung',
             '  einsaetze.csv    eine Zeile je Einsatz — vollständig',
-            '  flugtage.csv     eine Zeile je Flugtag, auch ohne Einsatz',
+            '  diensttage.csv   eine Zeile je Diensttag, auch ohne Einsatz',
             '  ruhezeiten.csv   eine Zeile je Ruhesegment',
             '  tracks/          GPX-Dateien, nur bei aktiviertem Haken; Namen enthalten',
             '                   keinen Patientenbezug (nur Datum, Uhrzeit, interne ID)',
@@ -835,9 +937,9 @@
             'Textspalten.',
             '',
             'hubschrauber, standort und die Tagesbesatzung stehen sowohl in',
-            'einsaetze.csv als auch in flugtage.csv — beabsichtigt, damit die',
+            'einsaetze.csv als auch in diensttage.csv — beabsichtigt, damit die',
             'Einsatztabelle allein ein vollständiges Bild ergibt. Bei Abweichungen',
-            'gilt einsaetze.csv; flugtage.csv wird nur für Tage ohne Einsatz und',
+            'gilt einsaetze.csv; diensttage.csv wird nur für Tage ohne Einsatz und',
             'für Tagesnotizen gebraucht.',
             ''
         ]).join('\r\n');
@@ -931,10 +1033,10 @@
 
     async function buildProfilB(data, opts) {
         var onProgress = opts.onProgress || function () {};
-        var daysByDate = {};
-        (data.days || []).forEach(function (d) { daysByDate[d.day] = d; });
+        var daysById = {};
+        (data.days || []).forEach(function (d) { daysById[d.id] = d; });
         var countByDay = {};
-        (data.missions || []).forEach(function (m) { countByDay[m.day] = (countByDay[m.day] || 0) + 1; });
+        (data.missions || []).forEach(function (m) { countByDay[m.day_id] = (countByDay[m.day_id] || 0) + 1; });
 
         var tracks = opts.gpx
             ? await buildTracks(data, onProgress)
@@ -943,16 +1045,16 @@
         onProgress('Einsätze werden aufbereitet…');
         var einsRows = (data.missions || []).map(function (m) {
             return {
-                m: m, day: daysByDate[m.day], eff: effectiveCrew(m, daysByDate[m.day]),
+                m: m, day: daysById[m.day_id], eff: effectiveCrew(m, daysById[m.day_id]),
                 pat: opts.patient ? m.pat : null, trackFile: tracks.fileByMission[m.id] || ''
             };
         });
         var einsaetzeCsv = buildCsvText(FIELD_DEFS_EINSAETZE, einsRows);
 
         var tageRows = (data.days || []).map(function (d) {
-            return { d: d, count: countByDay[d.day] || 0 };
+            return { d: d, count: countByDay[d.id] || 0 };
         });
-        var flugtageCsv = buildCsvText(FIELD_DEFS_FLUGTAGE, tageRows);
+        var diensttageCsv = buildCsvText(FIELD_DEFS_DIENSTTAGE, tageRows);
 
         var restRows = (data.rests || []).map(function (r) {
             return { r: r, trackFile: tracks.fileByRest[r.id] || '' };
@@ -963,7 +1065,7 @@
             { name: 'LIESMICH.txt', content: buildLiesmich(opts) },
             { name: 'felder.csv', content: buildFelderCsv() },
             { name: 'einsaetze.csv', content: einsaetzeCsv },
-            { name: 'flugtage.csv', content: flugtageCsv },
+            { name: 'diensttage.csv', content: diensttageCsv },
             { name: 'ruhezeiten.csv', content: ruhezeitenCsv }
         ].concat(tracks.files);
 

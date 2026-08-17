@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../mission_fields_lib.php';
+require_once __DIR__ . '/../diensttag_lib.php';
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
@@ -19,6 +21,11 @@ try {
     $fields = [];
     $collect = function (string $col, array $f) use (&$collect, &$fields, $m) {
         $type = $f['type'] ?? 'text';
+        /* Felder mit 'store' liegen nicht in `missions` (mission_fields.php).
+         * Erreichbar sind sie hier ohnehin nicht — die Besatzung bekommt unten
+         * ihren eigenen Block —, aber die Bedingung steht da, damit ein
+         * kuenftiges Feld mit eigener Ablage nicht als leerer Wert erscheint. */
+        if (!mf_ist_spalte($f) && $type !== 'resources') { return; }
         $v = $m[$col] ?? null;
         if ($type === 'resources') {
             // Eigene Tabelle: jedes Rettungsmittel ist eine eigene Zeile
@@ -54,26 +61,47 @@ try {
         $collect($col, $f);
     }
 
-    // Effektive Besatzung: Einsatzwert nur bei gesetztem Haken, sonst Tagescrew
-    // (COALESCE-Regel). Die days-Zeile wird bewusst separat geladen statt per
-    // JOIN — 'SELECT *' oben und days tragen dieselben Spaltennamen (crew_p1
-    // usw.), ein JOIN wuerde sie ueberschreiben.
-    $dq = db()->prepare('SELECT crew_p1, crew_p2, crew_hems, crew_fr, crew_other
-                         FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NULL');   // Datentrennung!
-    $dq->execute([$userId, $m['day']]);
-    $dayCrew = $dq->fetch() ?: [];
+    /* ---- Effektive Besatzung (COALESCE-Regel) -----------------------------
+     *
+     * Einsatzwert nur bei gesetztem Haken, sonst die Besatzung des Diensttags.
+     * Die Regel ist unveraendert; sie laeuft seit Web 6.0.0 ueber zwei TABELLEN
+     * statt ueber zwei Spaltensaetze (E7). Der frueher noetige Umweg — die
+     * days-Zeile separat laden, weil 'SELECT *' und `days` dieselben
+     * Spaltennamen crew_* trugen — ist damit entfallen: Die Namen stehen jetzt
+     * in `day_crew` und `mission_crew` und koennen sich nicht ueberschreiben.
+     *
+     * WELCHE ROLLEN VORKOMMEN, sagt der DIENSTTAG (`day_crew`, E8) — nicht der
+     * Katalog. Ein bodengebundener Dienst liefert Fahrer und Praktikant, ein
+     * luftgebundener die Flugrollen, ein neutraler keine (E26). Rollen, die nur
+     * am Einsatz belegt sind, kommen dazu: Sie stehen in der Datenbank, also
+     * gehoeren sie angezeigt.
+     */
+    $dayId = $m['day_id'] !== null ? (int)$m['day_id'] : 0;
+    $tagesCrew = $dayId > 0 ? dt_crew($dayId) : [];
+
+    $mq = db()->prepare('SELECT role_code, name FROM mission_crew WHERE mission_id = ?');
+    $mq->execute([$id]);
+    $einsatzCrew = [];
+    foreach ($mq->fetchAll() as $z) { $einsatzCrew[(string)$z['role_code']] = $z['name']; }
 
     $crewEff = [];
     $ovOn = (int)($m['crew_override'] ?? 0) === 1;
-    foreach (($FIELDS['crew_override']['children'] ?? []) as $col => $cf) {
-        $role  = substr($col, 5);                       // 'crew_p1' -> 'p1'
-        $mVal  = trim((string)($m[$col] ?? ''));
-        $dVal  = trim((string)($dayCrew[$col] ?? ''));
+    // Reihenfolge: Katalog zuerst, danach was sonst noch belegt ist.
+    $rollen = array_keys($tagesCrew + $einsatzCrew);
+    $rollen = array_merge(
+        array_values(array_filter(array_keys(CREW_ROLES),
+            static fn(string $c): bool => in_array($c, $rollen, true))),
+        array_values(array_filter($rollen,
+            static fn(string $c): bool => !array_key_exists($c, CREW_ROLES)))
+    );
+    foreach ($rollen as $role) {
+        $mVal  = trim((string)($einsatzCrew[$role] ?? ''));
+        $dVal  = trim((string)($tagesCrew[$role] ?? ''));
         $nutzt = $ovOn && $mVal !== '';                  // Abweichung greift
         $eff   = $nutzt ? $mVal : $dVal;
         if ($eff === '') { continue; }                   // nur belegte Rollen
         $crewEff[$role] = [
-            'label' => $cf['label'],
+            'label' => crew_role_label($role),
             'name'  => $eff,
             'abw'   => $nutzt && $mVal !== $dVal,
         ];
@@ -81,8 +109,8 @@ try {
 
     // Tagesnummer nach Alarmierungszeit (frueheste = 1)
     $no = db()->prepare('SELECT COUNT(*) + 1 FROM missions
-                         WHERE user_id = ? AND day = ? AND started_at < ? AND deleted_at IS NULL');
-    $no->execute([$userId, $m['day'], $m['started_at']]);
+                         WHERE user_id = ? AND day_id = ? AND started_at < ? AND deleted_at IS NULL');
+    $no->execute([$userId, $dayId, $m['started_at']]);
     $dayNo = (int)$no->fetchColumn();
 
     // Phase 9 vorhanden? (Basis fuer Ende/Dauer)
@@ -127,8 +155,29 @@ try {
         }
     }
 
+    /* Der Diensttag des Einsatzes — fuer die Anzeige mit seinen EINGEFRORENEN
+     * Angaben (E8). `day` bleibt als Datum in der Antwort, weil die
+     * Einsatzansicht es im Kopf zeigt; dazu kommen Kennung, Art und
+     * Bezeichnungen, damit die Seite den Dienst benennen kann, ohne die
+     * Stammdaten zu befragen. */
+    $tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
+    $sym = dt_art_symbol($tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null);
+
     json_out([
-        'id' => (int)$m['id'], 'day' => $m['day'],
+        'id' => (int)$m['id'],
+        'day_id' => $dayId,
+        'day' => $tag !== null ? (string)$tag['day'] : null,
+        /* Das ECHTE Einsatzdatum in Ortszeit. Bezugstag der Altersberechnung
+         * und der Anzeige — nicht das Datum des Diensttags: Ein Einsatz um
+         * 01:30 eines Dienstes vom Vortag hat sein eigenes Datum (E14). */
+        'mission_day' => fmt_local($m['started_at'], 'Y-m-d'),
+        'day_kind'         => $tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null,
+        'day_art_zeichen'  => $sym['zeichen'],
+        'day_art_text'     => $sym['text'],
+        'day_vehicle_name' => $tag !== null && $tag['vehicle_name'] !== null
+                              ? (string)$tag['vehicle_name'] : null,
+        'day_base_name'    => $tag !== null && $tag['base_name'] !== null
+                              ? (string)$tag['base_name'] : null,
         'start_hhmm' => fmt_local($m['started_at']),
         'end_hhmm'   => fmt_local($m['ended_at']),
         'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,

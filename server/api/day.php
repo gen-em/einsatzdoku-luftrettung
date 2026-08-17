@@ -3,18 +3,29 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
 require_once __DIR__ . '/../mission_fields_lib.php';
+require_once __DIR__ . '/../diensttag_lib.php';
 
 /**
- * GET  api/day.php            -> { days: ["2026-07-16", ...], latest: "..." }
- * GET  api/day.php?day=Y-m-d  -> Tagesdaten: Flugtag-Meta, Einsaetze (inkl.
- *                                Track, Phasenzeiten), Ruhe-Segmente
+ * GET  api/day.php            -> { days: [{id, day, …}, …], latest: <id> }
+ * GET  api/day.php?d=<id>     -> Tagesdaten: Diensttag-Meta, Besatzung,
+ *                                Einsaetze (inkl. Track, Phasenzeiten),
+ *                                Ruhe-Segmente
  *                                Je Einsatz zusaetzlich die Spalten der
  *                                Tagestabelle unter ihrem Spaltennamen —
  *                                welche das sind, sagt 'day_col' in
  *                                mission_fields.php (siehe mf_tagesspalten()).
- * POST api/day.php            -> Flugtag-Felder speichern (Upsert)
- *                                JSON-Body {day, aircraft, base, crew, notes},
+ * POST api/day.php            -> Diensttag-Felder speichern
+ *                                JSON-Body {day_id, vehicle_id, base_id,
+ *                                crew: {<rolle>: name, …}, notes},
  *                                Header X-CSRF muss zum Session-Token passen
+ *
+ * DER SCHLUESSEL IST DIE KENNUNG, NICHT DAS DATUM (Web 6.0.0). Bis dahin nahm
+ * dieser Endpunkt `?day=YYYY-MM-DD` und legte bei Bedarf eine Zeile an — das
+ * Datum war der Schluessel, ein Upsert also die richtige Form. Seit E9 kann es
+ * mehrere Diensttage je Kalendertag geben; ein Datum bestimmt keinen Tag mehr.
+ * Der POST ist deshalb ein reines UPDATE auf eine vorhandene Zeile: Angelegt
+ * wird ein Diensttag in diensttag_neu.php oder von der Uhr, nicht als
+ * Nebenwirkung des Speicherns.
  */
 
 // Dieser Endpunkt kennt zwei Methoden — jede andere ist ein Irrtum und wird
@@ -29,19 +40,19 @@ try {
             json_out(['error' => 'csrf'], 403);
         }
         $b = json_decode(file_get_contents('php://input'), true);
-        $day = pruef_kalendertag($b['day'] ?? null, 'day');
-        if (!is_array($b) || $day === null) {
+        $dayId = isset($b['day_id']) ? (int)$b['day_id'] : 0;
+        if (!is_array($b) || $dayId <= 0) {
             json_out(['error' => 'payload'], 400);
         }
 
-        /* FLUGTAG IM PAPIERKORB: ABLEHNEN UND MELDEN (D1).
+        /* DIENSTTAG IM PAPIERKORB: ABLEHNEN UND MELDEN (D1).
          *
          * Die Aktualisierung unten hat keine Bedingung auf deleted_at. Sie
          * traf deshalb auch einen Tag, der im Papierkorb liegt, ueberschrieb
          * seine Angaben und liess ihn geloescht — die Eingabe verschwand
          * spurlos, und die Antwort lautete "ok". Dieselbe Schnittstelle
-         * bedient das Formular; wer dort Besatzung oder Maschine eintraegt und
-         * speichert, bekam eine Bestaetigung fuer nichts.
+         * bedient das Formular; wer dort Besatzung oder Rettungsmittel eintraegt
+         * und speichert, bekam eine Bestaetigung fuer nichts.
          *
          * Warum ABLEHNEN und nicht STILL WIEDERHERSTELLEN (D1): Das Loeschen
          * war eine bewusste Handlung. Sie durch eine Nebenwirkung
@@ -49,12 +60,15 @@ try {
          * niemand sieht. Der Papierkorb hat eine eigene
          * Wiederherstellungsfunktion; wer den Tag zurueckholen will, soll sie
          * benutzen. */
-        $imPapierkorb = db()->prepare(
-            'SELECT deleted_at FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
-        $imPapierkorb->execute([$userId, $day]);
-        if ($imPapierkorb->fetchColumn() !== false) {
+        $tag = dt_laden($userId, $dayId, true);
+        if ($tag === null) {
+            json_out(['error' => 'not_found',
+                      'meldung' => 'Dieser Diensttag ist nicht vorhanden. '
+                                 . 'Es wurde nichts gespeichert.'], 404);
+        }
+        if ($tag['deleted_at'] !== null) {
             json_out(['error' => 'day_deleted',
-                      'meldung' => 'Dieser Flugtag liegt im Papierkorb. Es wurde nichts '
+                      'meldung' => 'Dieser Diensttag liegt im Papierkorb. Es wurde nichts '
                                  . 'gespeichert. Bitte den Tag zuerst wiederherstellen '
                                  . '(Einstellungen → Papierkorb).'], 409);
         }
@@ -66,7 +80,7 @@ try {
          * beim Speichern verschwunden, ohne Meldung.
          *
          * Betroffen war nicht nur ein Besatzungsname (den es geben mag oder
-         * nicht): $trim gilt fuer ALLE Felder des Flugtags, auch die Notiz.
+         * nicht): $trim gilt fuer ALLE Felder des Diensttags, auch die Notiz.
          * Eine Notiz "0" — etwa als Zaehlung — verschwand.
          *
          * Der Vergleich auf die leere Zeichenkette ist die Schreibweise, die
@@ -76,76 +90,129 @@ try {
             return $v !== '' ? $v : null;
         };
 
-        // Dropdown-IDs nur uebernehmen, wenn sie der NutzerIn gehoeren ODER
-        // zentral sind (user_id IS NULL). Muss zu der Liste passen, aus der
-        // index.php das Dropdown baut — sonst wird eine zentrale Maschine oder
-        // Basis beim Speichern stillschweigend auf NULL zurueckgesetzt.
-        $checkId = function (?int $id, string $table) use ($userId): ?int {
-            if ($id === null || $id <= 0) { return null; }
-            $q = db()->prepare("SELECT id FROM `$table`
-                                WHERE id = ? AND (user_id = ? OR user_id IS NULL)");
-            $q->execute([$id, $userId]);
-            return $q->fetchColumn() !== false ? $id : null;
-        };
-        $acId   = $checkId(isset($b['aircraft_id']) ? (int)$b['aircraft_id'] : null, 'aircraft');
-        $baseId = $checkId(isset($b['base_id']) ? (int)$b['base_id'] : null, 'bases');
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            /* Standort und Rettungsmittel schreiben und alles Abgeleitete
+             * einfrieren (E8) — Art, Bezeichnungen, Standortkoordinaten,
+             * Rollensatz und Faehigkeiten. Die Pruefung, ob die Kennungen der
+             * NutzerIn ueberhaupt zur Verfuegung stehen, steckt in
+             * dt_zuordnen(); sie muss zu der Liste passen, aus der index.php
+             * die Auswahlfelder baut, sonst wird ein zentraler Eintrag beim
+             * Speichern stillschweigend auf NULL zurueckgesetzt. */
+            dt_zuordnen($pdo, $userId, $dayId,
+                        isset($b['vehicle_id']) ? (int)$b['vehicle_id'] : null,
+                        isset($b['base_id'])    ? (int)$b['base_id']    : null);
 
-        db()->prepare('INSERT INTO days (user_id, day, aircraft_id, base_id,
-                         crew_p1, crew_p2, crew_hems, crew_fr, crew_other, notes)
-                       VALUES (?,?,?,?,?,?,?,?,?,?)
-                       ON DUPLICATE KEY UPDATE aircraft_id = VALUES(aircraft_id),
-                         base_id = VALUES(base_id), crew_p1 = VALUES(crew_p1),
-                         crew_p2 = VALUES(crew_p2), crew_hems = VALUES(crew_hems),
-                         crew_fr = VALUES(crew_fr), crew_other = VALUES(crew_other),
-                         notes = VALUES(notes)')
-            ->execute([$userId, $day, $acId, $baseId,
-                       $trim('crew_p1', 120), $trim('crew_p2', 120), $trim('crew_hems', 120),
-                       $trim('crew_fr', 120), $trim('crew_other', 120), $trim('notes', 2000)]);
+            // Besatzungsnamen. Nur Rollen, die der Diensttag anbietet — die
+            // Zeilenmenge in `day_crew` ist der eingefrorene Rollensatz (E8),
+            // und eine Rolle, die er nicht enthaelt, wird auch nicht angelegt.
+            $crew = (isset($b['crew']) && is_array($b['crew'])) ? $b['crew'] : [];
+            dt_crew_speichern($pdo, $dayId, $crew);
+
+            $pdo->prepare('UPDATE days SET notes = ? WHERE id = ? AND user_id = ?')
+                ->execute([$trim('notes', 2000), $dayId, $userId]);
+            $pdo->commit();
+        } catch (Throwable $ex) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            throw $ex;
+        }
         json_out(['ok' => true]);
     }
 
-    $day = (string)($_GET['day'] ?? '');
+    $dayId = (int)($_GET['d'] ?? 0);
 
-    if ($day === '') {
-        $st = db()->prepare('SELECT DISTINCT day FROM (
-                               SELECT day FROM missions      WHERE user_id = ? AND deleted_at IS NULL
-                               UNION SELECT day FROM rest_segments WHERE user_id = ? AND deleted_at IS NULL
-                             ) t ORDER BY day DESC LIMIT 120');
-        $st->execute([$userId, $userId]);
-        $days = array_column($st->fetchAll(), 'day');
-        json_out(['days' => $days, 'latest' => $days[0] ?? null]);
+    if ($dayId <= 0) {
+        /* Liste der Diensttage. Sie traegt jetzt Kennungen und nicht mehr
+         * Datumszeichenketten: Zwei Dienste am selben Kalendertag waeren sonst
+         * ein Eintrag. Was die Anzeige braucht, um sie auseinanderzuhalten —
+         * Uhrzeit, Art, Rettungsmittel —, kommt mit. */
+        $tage = dt_liste($userId, 120);
+        $liste = array_map(static function (array $t): array {
+            $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']);
+            return [
+                'id'           => (int)$t['id'],
+                'day'          => (string)$t['day'],
+                'start_hhmm'   => $t['started_at'] !== null ? fmt_local((string)$t['started_at']) : null,
+                'kind'         => $t['kind'] === null ? null : (string)$t['kind'],
+                'art_zeichen'  => $sym['zeichen'],
+                'art_text'     => $sym['text'],
+                'vehicle_name' => $t['vehicle_name'] !== null ? (string)$t['vehicle_name'] : null,
+                'base_name'    => $t['base_name'] !== null ? (string)$t['base_name'] : null,
+                'mehrfach'     => (bool)$t['mehrfach'],
+            ];
+        }, $tage);
+        json_out(['days' => $liste, 'latest' => $liste[0]['id'] ?? null]);
     }
-
-    if (pruef_kalendertag($day, 'day') === null) json_out(['error' => 'payload'], 400);
 
     /* AUCH BEIM LESEN MELDEN.
      *
-     * Die Abfrage unten filtert auf deleted_at IS NULL und liefert dann
-     * schlicht null — nicht unterscheidbar von "fuer diesen Tag wurde noch
-     * nichts eingetragen". Wer seine Angaben vermisst, sucht den Fehler bei
-     * sich. Der Zustand gehoert genannt, damit die Oberflaeche ihn zeigen
-     * kann. */
-    $geloescht = db()->prepare(
-        'SELECT deleted_at FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
-    $geloescht->execute([$userId, $day]);
-    $dayDeletedAt = $geloescht->fetchColumn();
+     * Ein Diensttag im Papierkorb wird von dt_laden() ausgelassen und liefert
+     * dann schlicht null — nicht unterscheidbar von "es gibt ihn nicht". Wer
+     * seine Angaben vermisst, sucht den Fehler bei sich. Der Zustand gehoert
+     * genannt, damit die Oberflaeche ihn zeigen kann. */
+    $tag = dt_laden($userId, $dayId, true);
+    if ($tag === null) { json_out(['error' => 'not_found'], 404); }
+    $dayDeletedAt = $tag['deleted_at'];
 
-    // Flugtag-Metadaten (null, wenn noch keine gespeichert)
-    $mt = db()->prepare('SELECT d.aircraft_id, d.base_id, d.crew_p1, d.crew_p2, d.crew_hems,
-                                d.crew_fr, d.crew_other, d.notes,
-                                d.aircraft, d.base, d.crew,
-                                a.registration AS aircraft_name, b.name AS base_name
-                         FROM days d
-                         LEFT JOIN aircraft a ON a.id = d.aircraft_id
-                         LEFT JOIN bases b ON b.id = d.base_id
-                         WHERE d.user_id = ? AND d.day = ? AND d.deleted_at IS NULL');
-    $mt->execute([$userId, $day]);
-    $meta = $mt->fetch() ?: null;
+    /* Metadaten des Diensttags. ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN (E8),
+     * nicht die Stammdaten: `vehicle_name` und `base_name` stehen in `days`
+     * und aendern sich nicht mehr, wenn das Rettungsmittel umbenannt oder
+     * geloescht wird (A4). Die Kennungen kommen daneben mit, weil das Formular
+     * seine Auswahlfelder darauf stellt — angezeigt werden sie nie. */
+    $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind']);
+    $meta = [
+        'vehicle_id'   => $tag['vehicle_id'] !== null ? (int)$tag['vehicle_id'] : null,
+        'base_id'      => $tag['base_id']    !== null ? (int)$tag['base_id']    : null,
+        'vehicle_name' => $tag['vehicle_name'] !== null ? (string)$tag['vehicle_name'] : null,
+        'base_name'    => $tag['base_name']    !== null ? (string)$tag['base_name']    : null,
+        'kind'         => $tag['kind'] === null ? null : (string)$tag['kind'],
+        'art_zeichen'  => $sym['zeichen'],
+        'art_text'     => $sym['text'],
+        'notes'        => $tag['notes'] !== null ? (string)$tag['notes'] : null,
+        'started_at'   => $tag['started_at'] !== null ? fmt_local((string)$tag['started_at']) : null,
+        'ended_at'     => $tag['ended_at']   !== null ? fmt_local((string)$tag['ended_at'])   : null,
+    ];
+
+    /* Besatzung des Tages: die Zeilenmenge aus `day_crew`, mit Beschriftung aus
+     * dem Rollenkatalog. Sie ist zugleich die Auskunft darueber, WELCHE Rollen
+     * dieser Diensttag anbietet — ein neutraler Tag liefert eine leere Liste
+     * (E26), und das Formular zeigt dann keine Besatzungsfelder (A7a). */
+    $crew = [];
+    foreach (dt_crew($dayId) as $code => $name) {
+        $crew[] = ['role'  => $code,
+                   'label' => crew_role_label($code),
+                   'name'  => $name !== null ? (string)$name : null];
+    }
+    $meta['crew'] = $crew;
+    $meta['capabilities'] = dt_faehigkeiten($dayId);
+
+    /* Besatzungs-Vorbelegungen als Vorschlagsliste je Rolle — DES STANDORTS,
+     * der am Diensttag hinterlegt ist (E15). Sie kommen mit der Tagesantwort,
+     * weil die Rollen selbst erst aus ihr hervorgehen: Welche Felder die
+     * Uebersicht zeigt, entscheidet `day_crew`, und ohne die Vorschlaege in
+     * derselben Antwort brauchte die Seite je Rollenwechsel eine zweite Abfrage.
+     *
+     * Ohne Standort keine Vorschlaege. Das ist die Folge von E15 und kein
+     * Mangel: Eine standortuebergreifende Ebene gibt es nicht, also gibt es auch
+     * keine Liste, aus der sich hier etwas anbieten liesse. Freitext bleibt
+     * uneingeschraenkt moeglich. */
+    $presets = [];
+    if ($tag['base_id'] !== null && $crew) {
+        $pq = db()->prepare('SELECT DISTINCT role_code, name FROM crew_presets
+                              WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                              ORDER BY name');
+        $pq->execute([(int)$tag['base_id'], $userId]);
+        foreach ($pq->fetchAll() as $z) {
+            $presets[(string)$z['role_code']][] = (string)$z['name'];
+        }
+    }
+    $meta['presets'] = (object)$presets;
 
     /* SPURPUNKTE GEBUENDELT HOLEN, NICHT JE EINSATZ EINZELN (M3-15).
      *
      * Hier stand eine vorbereitete Abfrage, die in zwei Schleifen je Einsatz
-     * und je Ruhesegment erneut ausgefuehrt wurde. Ein Flugtag mit acht
+     * und je Ruhesegment erneut ausgefuehrt wurde. Ein Diensttag mit acht
      * Einsaetzen und den zugehoerigen Ruhezeiten kam so auf ueber ein Dutzend
      * Abfragen fuer eine Ansicht, die beim Blaettern durch die Tage bei JEDEM
      * Tageswechsel neu laedt.
@@ -191,9 +258,9 @@ try {
                            pat_blob' . $spaltenSql . ',
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
-                         FROM missions WHERE user_id = ? AND day = ? AND deleted_at IS NULL
+                         FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                          ORDER BY started_at');
-    $st->execute([$userId, $day]);
+    $st->execute([$userId, $dayId]);
     $missionZeilen = $st->fetchAll();
     $spurEinsatz = $spurLaden('mission',
         array_map(static fn($m) => (int)$m['id'], $missionZeilen));
@@ -231,8 +298,8 @@ try {
         $missions[] = $zeile;
     }
 
-    $st = db()->prepare('SELECT id FROM rest_segments WHERE user_id = ? AND day = ? AND deleted_at IS NULL ORDER BY started_at');
-    $st->execute([$userId, $day]);
+    $st = db()->prepare('SELECT id FROM rest_segments WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL ORDER BY started_at');
+    $st->execute([$userId, $dayId]);
     $restZeilen = $st->fetchAll();
     $spurRuhe = $spurLaden('rest',
         array_map(static fn($r) => (int)$r['id'], $restZeilen));
@@ -242,10 +309,10 @@ try {
         if ($track) $rest[] = $track;
     }
 
-    $antwort = ['day' => $day, 'meta' => $meta,
+    $antwort = ['day_id' => $dayId, 'day' => (string)$tag['day'], 'meta' => $meta,
                 'missions' => $missions, 'rest_segments' => $rest];
     // Zustand nennen statt ihn als "nichts eingetragen" erscheinen zu lassen.
-    if ($dayDeletedAt !== false && $dayDeletedAt !== null) {
+    if ($dayDeletedAt !== null) {
         $antwort['day_deleted_at'] = $dayDeletedAt;
     }
     json_out($antwort);

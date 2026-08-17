@@ -1588,7 +1588,20 @@ if (!$ausfuehren) {
      * auf einen Seitenaufruf hin. */
     foreach ($MIGRATIONS as $m) {
         if (in_array($m['id'], $applied, true)) {
-            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.'];
+            /* SECHS ELEMENTE, wie jede andere Zeile hier. Diese eine trug nur
+             * vier — und die Auswertung unten zerlegt sie in sechs Variablen
+             * (`foreach ($results as [$id, $label, $status, $detail,
+             * $zerstoert, $blockId])`). Ergebnis: zwei PHP-Warnungen JE
+             * BEREITS ANGEWENDETER MIGRATION, bei jedem Aufruf dieser Seite.
+             * Auf einer Installation mit 30 verbuchten Migrationen sind das
+             * sechzig Zeilen Fehlerprotokoll für nichts — ausgerechnet auf der
+             * Seite, die den Zustand der Datenbank berichten soll. Angezeigt
+             * wurde trotzdem das Richtige, weil die fehlenden Werte als NULL
+             * ankamen; deshalb ist es nie aufgefallen.
+             *
+             * Gefunden beim Prüfen der Etappe 1b im Serverprotokoll; der Fehler
+             * ist älter als diese Etappe. */
+            $results[] = [$m['id'], $m['label'], 'ok', 'Bereits angewendet.', null, null];
             continue;
         }
         $nichtNoetig = false;

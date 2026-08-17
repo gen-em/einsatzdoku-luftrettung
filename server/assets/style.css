@@ -997,3 +997,28 @@ input[type=checkbox]{accent-color:var(--blau)}
 .imp-row.imp-dupe td:first-child{border-left:3px solid var(--accent)}
 .imp-skip{white-space:nowrap;font-size:.82rem}
 span.imp-warn{color:#8A6D00}
+
+/* ---- Web 6.0.0: Diensttage, Arten, Standortdaten ------------------------ */
+
+/* Symbol der Einsatzart (E27, A7c). Es steht neben dem Namen des
+   Rettungsmittels und traegt seine Textalternative in title/aria-label — die
+   Auskunft haengt nicht an der Grafik. Etwas groesser als der Text, damit es
+   auf kleinen Bildschirmen erkennbar bleibt, und mit fester Breite, damit die
+   Liste nicht ausfranst. */
+.artzeichen{display:inline-block;width:1.4em;text-align:center;
+  font-size:1.05em;line-height:1;cursor:help}
+
+/* Rollen- und Faehigkeitshaken am Rettungsmittel. Sie stehen in einer Reihe
+   und brechen um; die Haken duerfen nicht auf Feldbreite wachsen. */
+.acroles{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
+.acroles label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
+.acroles input{width:auto}
+.vehkind{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
+.vehkind label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
+.vehkind input{width:auto}
+
+/* Hinweis auf offene Zuordnungen in der Seitenleiste (E24). Er erscheint nur,
+   solange etwas offen ist, und soll dann auffallen — aber nicht wie eine
+   Fehlermeldung: Es ist eine Aufgabe, kein Fehler. */
+.dayadd.nachbearbeitung{color:var(--navy);background:var(--blau-light);
+  border-radius:6px;font-weight:600}

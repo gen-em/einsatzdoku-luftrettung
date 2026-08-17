@@ -38,7 +38,7 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  * ausschliesst, ist seit A9 groesser: nicht mehr nur der pat_blob, sondern
  * personenbezogene Angaben insgesamt. Ohne das Flag liefert dieser Endpunkt
  *
- *   - keine Besatzungsnamen (days.crew_*, missions.crew_*),
+ *   - keine Besatzungsnamen (day_crew, mission_crew),
  *   - kein bw_info ("Namen / Infos" der Bergwacht) und kein other_ema,
  *   - keine Notizen (missions.notes, days.notes),
  *   - keine Koordinaten der Phasen (lat/lon; die Zeitpunkte bleiben, sie
@@ -156,15 +156,28 @@ function export_meta(array $b, int $userId): never
      * ein Dutzend Spalten, von denen nur eine dem Patienten gehoert. */
     $pers = !empty($b['patient']);
 
-    $whereTag = ' AND deleted_at IS NULL';
+    /* Zeitraumfilter. Er greift ueber den DIENSTTAG (`days.day`), nicht ueber
+     * das Einsatzdatum: Ein Export soll ganze Dienste liefern, nicht Dienste
+     * halbieren, deren Nachteinsaetze in den Folgemonat fielen. Dieselbe Regel
+     * wie in der Statistik (E14). Der Join ist seit Web 6.0.0 der vorgesehene
+     * Weg (Konzept 4.11).
+     *
+     * $whereTag gilt fuer `days` (Alias d), $whereEins fuer die daran haengenden
+     * Tabellen. Bis Web 5.10.0 war beides dieselbe Bedingung, weil jede Tabelle
+     * ihr Datum selbst trug. */
+    $whereTag  = ' AND d.deleted_at IS NULL';
+    $whereEins = ' AND x.deleted_at IS NULL AND d.deleted_at IS NULL';
     $params = [$userId];
     if ($from !== null && $to !== null) {
-        $whereTag .= ' AND day BETWEEN ? AND ?';
+        $whereTag  .= ' AND d.day BETWEEN ? AND ?';
+        $whereEins .= ' AND d.day BETWEEN ? AND ?';
         $params[] = $from; $params[] = $to;
     }
 
     /* ---- Obergrenze pruefen (I: max. 5000 Einsaetze) ---------------------- */
-    $cnt = $pdo->prepare("SELECT COUNT(*) FROM missions WHERE user_id = ?$whereTag");
+    $cnt = $pdo->prepare("SELECT COUNT(*) FROM missions x
+                          JOIN days d ON d.id = x.day_id
+                          WHERE x.user_id = ?$whereEins");
     $cnt->execute($params);
     if ((int)$cnt->fetchColumn() > 5000) {
         json_out(['error' => 'zu_gross',
@@ -172,38 +185,62 @@ function export_meta(array $b, int $userId): never
                              . 'Bitte einen kleineren Zeitraum wählen.'], 413);
     }
 
-    /* ---- Flugtage ----------------------------------------------------------
-     * Aufloesung von aircraft_id/base_id zu Klartextnamen — ein Export mit
-     * IDs waere ausserhalb dieser Anwendung wertlos (SPEC_Export.md, 2.1).
+    /* ---- Diensttage --------------------------------------------------------
+     * BEZEICHNUNGEN KOMMEN AUS DEN SNAPSHOT-SPALTEN (E8), nicht aus den
+     * Stammdaten. Der frueher noetige Join auf `aircraft` und `bases` ist damit
+     * entfallen — und mit ihm die Luecke, dass ein geloeschtes Rettungsmittel
+     * einen Export ohne Bezeichnung hinterliess. Ein Export mit IDs waere
+     * ausserhalb dieser Anwendung ohnehin wertlos (SPEC_Export.md, 2.1).
      *
      * Die personenbezogenen Spalten werden ohne Flag durch NULL ersetzt, statt
      * sie aus der Spaltenliste zu nehmen: Der ANTWORTAUFBAU bleibt dadurch in
      * beiden Faellen gleich, und der Browser muss nicht zwei Formen kennen.
      * Aus der Datenbank kommen die Werte trotzdem nicht (SELECT NULL). */
-    $tagPersCols = $pers
-        ? 'd.crew_p1, d.crew_p2, d.crew_hems, d.crew_fr, d.crew_other, d.notes'
-        : 'NULL AS crew_p1, NULL AS crew_p2, NULL AS crew_hems,
-           NULL AS crew_fr, NULL AS crew_other, NULL AS notes';
     $st = $pdo->prepare(
-        "SELECT d.day, a.registration AS aircraft, b.name AS base,
-                $tagPersCols
+        "SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
+                d.vehicle_name, d.base_name" . ($pers ? ', d.notes' : ', NULL AS notes') . "
          FROM days d
-         LEFT JOIN aircraft a ON a.id = d.aircraft_id
-         LEFT JOIN bases b    ON b.id = d.base_id
          WHERE d.user_id = ?$whereTag
-         ORDER BY d.day");
+         ORDER BY d.day, d.started_at, d.id");
     $st->execute($params);
-    $days = array_map(static fn($r) => [
-        'day'         => (string)$r['day'],
-        'aircraft'    => $r['aircraft'] !== null ? (string)$r['aircraft'] : null,
-        'base'        => $r['base'] !== null ? (string)$r['base'] : null,
-        'crew_p1'     => $r['crew_p1'],
-        'crew_p2'     => $r['crew_p2'],
-        'crew_hems'   => $r['crew_hems'],
-        'crew_fr'     => $r['crew_fr'],
-        'crew_other'  => $r['crew_other'],
-        'notes'       => $r['notes'],
-    ], $st->fetchAll());
+    $dayRows = $st->fetchAll();
+    $dayIds  = array_map(static fn($r) => (int)$r['id'], $dayRows);
+
+    /* Besatzung der Diensttage: eine Zeile je Rolle (E7). Gebuendelt in EINER
+     * Abfrage, nicht je Tag — ein Jahresexport hat dreihundert Tage. Ohne das
+     * Flag bleibt sie leer; sie ist personenbezogen. */
+    $crewByDay = [];
+    if ($pers && $dayIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT day_id, role_code, name FROM day_crew
+                 WHERE day_id IN ({IDS})', $dayIds) as $r) {
+            $crewByDay[(int)$r['day_id']][(string)$r['role_code']] = $r['name'];
+        }
+    }
+    $capsByDay = [];
+    if ($dayIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT day_id, capability FROM day_capabilities
+                 WHERE day_id IN ({IDS})', $dayIds) as $r) {
+            $capsByDay[(int)$r['day_id']][] = (string)$r['capability'];
+        }
+    }
+
+    $days = array_map(static function ($r) use ($crewByDay, $capsByDay): array {
+        $id = (int)$r['id'];
+        return [
+            'id'           => $id,
+            'day'          => (string)$r['day'],
+            'started_at'   => export_iso_utc($r['started_at']),
+            'ended_at'     => export_iso_utc($r['ended_at']),
+            'kind'         => $r['kind'] !== null ? (string)$r['kind'] : null,
+            'vehicle'      => $r['vehicle_name'] !== null ? (string)$r['vehicle_name'] : null,
+            'base'         => $r['base_name'] !== null ? (string)$r['base_name'] : null,
+            'crew'         => (object)($crewByDay[$id] ?? []),
+            'capabilities' => $capsByDay[$id] ?? [],
+            'notes'        => $r['notes'],
+        ];
+    }, $dayRows);
 
     /* ---- Einsaetze ---------------------------------------------------------
      * Die personenbezogenen Spalten stehen nur in der Spaltenliste, wenn das
@@ -212,25 +249,25 @@ function export_meta(array $b, int $userId): never
      * allein fuer pat_blob (A9).
      *
      * crew_override bleibt in beiden Faellen erhalten: Der Haken sagt nur,
-     * DASS die Besatzung an diesem Einsatz von der des Flugtags abwich, nicht
+     * DASS die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht
      * wer geflogen ist. Ohne ihn liesse sich nicht mehr erkennen, dass die
      * leeren Namensspalten leer gemacht wurden und nicht leer waren. */
     $einsPersCols = $pers
-        ? 'site_ele_m, bw_info, other_ema,
-           crew_p1, crew_p2, crew_hems, crew_fr, crew_other, notes, pat_blob'
+        ? 'x.site_ele_m, x.bw_info, x.other_ema, x.notes, x.pat_blob'
         : 'NULL AS site_ele_m, NULL AS bw_info, NULL AS other_ema,
-           NULL AS crew_p1, NULL AS crew_p2, NULL AS crew_hems, NULL AS crew_fr,
-           NULL AS crew_other, NULL AS notes, NULL AS pat_blob';
+           NULL AS notes, NULL AS pat_blob';
     $st = $pdo->prepare(
-        "SELECT id, day, started_at, ended_at, distance_m, ascent_m,
-                final, manual, origin, edited, transport_dest, winch,
-                winch_cycles, winch_cycles_pat, winch_airload, bergwacht,
-                bw_unit, secondary, schockraum,
-                crew_override,
+        "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
+                x.distance_m, x.ascent_m,
+                x.final, x.manual, x.origin, x.edited, x.transport_dest, x.winch,
+                x.winch_cycles, x.winch_cycles_pat, x.winch_airload, x.bergwacht,
+                x.bw_unit, x.secondary, x.schockraum,
+                x.crew_override,
                 $einsPersCols
-         FROM missions
-         WHERE user_id = ?$whereTag
-         ORDER BY started_at");
+         FROM missions x
+         JOIN days d ON d.id = x.day_id
+         WHERE x.user_id = ?$whereEins
+         ORDER BY x.started_at");
     $st->execute($params);
     $missionRows = $st->fetchAll();
 
@@ -301,6 +338,17 @@ function export_meta(array $b, int $userId): never
         }
     }
 
+    /* Abweichende Besatzung je Einsatz: Zeilen aus `mission_crew` (E7),
+     * gebuendelt wie alles andere hier. Personenbezogen, also nur mit Flag. */
+    $crewByMission = [];
+    if ($pers && $ids) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT mission_id, role_code, name FROM mission_crew
+                 WHERE mission_id IN ({IDS})', $ids) as $r) {
+            $crewByMission[(int)$r['mission_id']][(string)$r['role_code']] = $r['name'];
+        }
+    }
+
     $missions = [];
     foreach ($missionRows as $r) {
         $id = (int)$r['id'];
@@ -308,6 +356,7 @@ function export_meta(array $b, int $userId): never
 
         $missions[] = [
             'id'               => $id,
+            'day_id'           => (int)$r['day_id'],
             'day'              => (string)$r['day'],
             'started_at'       => export_iso_utc($r['started_at']),
             'ended_at'         => export_iso_utc($r['ended_at']),
@@ -330,11 +379,10 @@ function export_meta(array $b, int $userId): never
             'schockraum'       => (int)$r['schockraum'],
             'other_ema'        => $r['other_ema'],
             'crew_override'    => (int)$r['crew_override'],
-            'crew_p1'          => $r['crew_p1'],
-            'crew_p2'          => $r['crew_p2'],
-            'crew_hems'        => $r['crew_hems'],
-            'crew_fr'          => $r['crew_fr'],
-            'crew_other'       => $r['crew_other'],
+            // Nur die Rollen, die tatsaechlich abweichen — `mission_crew` fuehrt
+            // keine Leerzeilen (anders als `day_crew`, wo die Zeilenmenge den
+            // Rollensatz bildet).
+            'crew'             => (object)($crewByMission[$id] ?? []),
             'pat_blob'         => $pers && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
             'notes'            => $r['notes'],
             'track_points'     => $trackCountByMission[$id] ?? 0,
@@ -346,10 +394,11 @@ function export_meta(array $b, int $userId): never
 
     /* ---- Ruhesegmente -------------------------------------------------- */
     $st = $pdo->prepare(
-        "SELECT id, day, started_at, ended_at, final
-         FROM rest_segments
-         WHERE user_id = ?$whereTag
-         ORDER BY started_at");
+        "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at, x.final
+         FROM rest_segments x
+         JOIN days d ON d.id = x.day_id
+         WHERE x.user_id = ?$whereEins
+         ORDER BY x.started_at");
     $st->execute($params);
     $restRows = $st->fetchAll();
     $restIds = array_map(static fn($r) => (int)$r['id'], $restRows);
@@ -366,6 +415,7 @@ function export_meta(array $b, int $userId): never
 
     $rests = array_map(static fn($r) => [
         'id'           => (int)$r['id'],
+        'day_id'       => (int)$r['day_id'],
         'day'          => (string)$r['day'],
         'started_at'   => export_iso_utc($r['started_at']),
         'ended_at'     => export_iso_utc($r['ended_at']),

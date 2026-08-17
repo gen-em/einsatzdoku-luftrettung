@@ -5,7 +5,8 @@ declare(strict_types=1);
  *
  * Formular (einsatz_form.php), API (api/mission.php, api/day.php) und Anzeige
  * lesen alle diese Liste. Neues Feld = 1 Migration (update.php) + 1 Eintrag
- * hier. Alle Felder sind echte DB-Spalten (spaeter durchsuchbar).
+ * hier. Alle Felder sind echte DB-Spalten (spaeter durchsuchbar) — mit EINER
+ * benannten Ausnahme, siehe 'store' weiter unten.
  *
  * Typen:
  *   'text' | 'textarea' | 'number'  einfache Eingaben ('max' = Zeichen)
@@ -16,13 +17,17 @@ declare(strict_types=1);
  *                                   ODER 'options_src':
  *                                     'bw_units'   Bergwacht-Bereitschaften
  *                                     'crew:<rolle>'  Besatzungs-Vorbelegungen
- *                                                  der Rolle (p1|p2|hems|fr|
- *                                                  other) aus crew_presets
+ *                                                  der Rolle aus crew_presets;
+ *                                                  Rollenkennungen: CREW_ROLES
+ *                                                  in db.php
  *                                   Beide liefern persoenliche UND zentrale
- *                                   Stammdaten; Freitext bleibt speicherbar
- *                                   (Stammdaten sind aenderbar), ein nicht
- *                                   mehr gelisteter Altwert wird beim Rendern
- *                                   ergaenzt statt stillschweigend verworfen
+ *                                   Stammdaten DES STANDORTS, der am Diensttag
+ *                                   hinterlegt ist (E15) — es gibt keine
+ *                                   standortuebergreifenden Stammdaten mehr.
+ *                                   Freitext bleibt speicherbar (Stammdaten
+ *                                   sind aenderbar), ein nicht mehr gelisteter
+ *                                   Altwert wird beim Rendern ergaenzt statt
+ *                                   stillschweigend verworfen
  *
  * Weitere Schluessel:
  *   'day_col'   => true|'check'     Spalte in der Tagestabelle (Text bzw. ✓).
@@ -37,14 +42,38 @@ declare(strict_types=1);
  *                                   style.css (Klasse `c-dc-<spalte>`).
  *                                   Gilt auch fuer Unterfelder.
  *
- *   'role_gate' => 'p1'|'p2'|'hems'|'fr'|'other'
- *                                   Feld nur zeigen, wenn der Hubschrauber des
- *                                   Flugtags diese Rolle vorsieht. Es wird
- *                                   trotzdem gerendert und nur versteckt —
- *                                   sonst sendet der Browser es nicht mit und
- *                                   die Speicherlogik wuerde einen vorhandenen
- *                                   Wert loeschen. Ein bereits belegtes Feld
- *                                   bleibt darum immer sichtbar.
+ *   'role_gate' => Rollenkennung aus CREW_ROLES (db.php)
+ *                                   Feld nur zeigen, wenn der DIENSTTAG diese
+ *                                   Rolle anbietet — also eine Zeile in
+ *                                   `day_crew` dafuer traegt (E8). Bis Web
+ *                                   5.10.0 wurde stattdessen der Hubschrauber
+ *                                   befragt; seit dem Einfrieren des
+ *                                   Rollensatzes ist der Diensttag die Quelle,
+ *                                   und eine spaetere Aenderung am
+ *                                   Rettungsmittel aendert an ihm nichts (A4).
+ *                                   Das Feld wird trotzdem gerendert und nur
+ *                                   versteckt — sonst sendet der Browser es
+ *                                   nicht mit und die Speicherlogik wuerde
+ *                                   einen vorhandenen Wert loeschen. Ein
+ *                                   bereits belegtes Feld bleibt darum immer
+ *                                   sichtbar. Ein neutraler Diensttag hat keine
+ *                                   Rollen (E26): Dann sind alle
+ *                                   rollengebundenen Felder verborgen, ausser
+ *                                   den belegten.
+ *
+ *   'store' => 'crew'               DIE EINE AUSNAHME von "alle Felder sind
+ *                                   Spalten". Der Wert liegt nicht in
+ *                                   `missions`, sondern als Zeile in
+ *                                   `mission_crew (mission_id, role_code,
+ *                                   name)`. Grund: Die Besatzung ist seit Web
+ *                                   6.0.0 normalisiert (E7) — feste
+ *                                   Rollenspalten tragen mit zwei
+ *                                   Rettungsmittelarten nicht mehr. Wer den
+ *                                   Katalog auswertet, MUSS diesen Schluessel
+ *                                   beachten: Ein Feldname mit 'store' darf
+ *                                   nicht in ein SELECT, INSERT oder UPDATE auf
+ *                                   `missions` geraten. 'role_code' nennt die
+ *                                   zugehoerige Rolle.
  *   'day_label' => 'Winde'          Spaltentitel (sonst 'label'). Wird
  *                                   unmaskiert ausgegeben und darf deshalb
  *                                   Auszeichnung enthalten (`&shy;`, `<br>`)
@@ -53,10 +82,9 @@ declare(strict_types=1);
  *                                   Vorschlaege; Freitext bleibt moeglich.
  *                                     'transport_dests'  Stammdaten-Tabelle
  *                                     'crew:<rolle>'     Besatzungs-Vorbelegungen
- *                                                        der Rolle (p1|p2|hems|
- *                                                        fr|other)
+ *                                                        der Rolle (CREW_ROLES)
  *                                   Beide liefern persoenliche UND zentrale
- *                                   Eintraege. Unterschied zu 'options_src':
+ *                                   Eintraege des Standorts. Unterschied zu 'options_src':
  *                                   Dort ist die Liste die Auswahl, hier nur
  *                                   ein Vorschlag — ein Wert ausserhalb der
  *                                   Liste bleibt erhalten, weil er gar nicht
@@ -69,6 +97,45 @@ declare(strict_types=1);
  * Ende-zu-Ende-verschlüsselt im pat_blob, weil sich über sie bei der
  * Leitstelle die betroffene Person ermitteln lässt.
  */
+
+/* ---- Besatzungsfelder aus dem Rollenkatalog erzeugen (E4) -----------------
+ *
+ * Bis Web 5.10.0 standen hier fuenf Eintraege ausgeschrieben — je einer fuer
+ * Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige. Mit den bodengebundenen
+ * Rollen waeren es sieben geworden, und jede neue Rolle haette diese Liste,
+ * das Formular, den Export und die Importprofile gleichzeitig anfassen muessen.
+ * Die Quelle ist jetzt CREW_ROLES in db.php; wer eine Rolle ergaenzt, ergaenzt
+ * sie DORT und nirgends sonst.
+ *
+ * Der Feldname bleibt `crew_<rolle>` — er ist der Name des Formularfeldes und
+ * die Spaltenbezeichnung in Export und Import. Gespeichert wird der Wert
+ * dagegen in `mission_crew` unter `role_code` (Schluessel 'store', siehe oben).
+ *
+ * Die Reihenfolge ist die des Katalogs, ueber alle Arten hinweg. Welche Felder
+ * SICHTBAR sind, entscheidet 'role_gate' anhand des Diensttags — ein
+ * bodengebundener Dienst zeigt Fahrer, Praktikant und Sonstige und sonst nichts
+ * (A3). Eine Aufteilung des Katalogs nach Art waere hier also nicht nur
+ * unnoetig, sondern falsch: Ein Einsatz kann eine belegte Rolle tragen, die die
+ * Art des Tages nicht vorsieht, und die muss sichtbar bleiben.
+ */
+$mf_crew_kinder = [];
+foreach (CREW_ROLES as $mf_code => $mf_rolle) {
+    $mf_crew_kinder['crew_' . $mf_code] = [
+        // Textfelder mit Vorschlagsliste, nicht Auswahlfelder (Web 5.5.0,
+        // Entscheidung E8): Wer aushilft, steht oft nicht in den Stammdaten —
+        // eine reine Auswahl liess genau diesen Fall nicht dokumentieren. Die
+        // Vorbelegungen der Rolle bleiben als Vorschlaege erhalten, Freitext
+        // ist zusaetzlich moeglich.
+        'label'       => $mf_rolle['label'],
+        'type'        => 'text',
+        'max'         => 120,
+        'suggest_src' => 'crew:' . $mf_code,
+        'role_gate'   => $mf_code,
+        'store'       => 'crew',
+        'role_code'   => $mf_code,
+    ];
+}
+
 return [
     'transport_dest' => [
         'label' => 'Transportziel', 'type' => 'text', 'max' => 190,
@@ -125,10 +192,11 @@ return [
     ],
     'crew_override' => [
         // Abweichende Besatzung fuer genau diesen Einsatz (fachlicher Anlass:
-        // Pilotenwechsel waehrend eines Flugtags). Ohne Haken gilt die
-        // Tagescrew aus days.crew_* — die Unterfelder bleiben dann NULL, es
-        // wird also nichts doppelt gespeichert. Die effektive Besatzung
-        // (COALESCE-Regel) liefert api/mission.php als 'crew_effektiv'.
+        // Pilotenwechsel waehrend eines Diensttags). Ohne Haken gilt die
+        // Tagesbesatzung aus `day_crew` — in `mission_crew` steht dann keine
+        // Zeile, es wird also nichts doppelt gespeichert. Die effektive
+        // Besatzung (COALESCE-Regel, jetzt ueber zwei TABELLEN statt zwei
+        // Spaltensaetze) liefert api/mission.php weiterhin als 'crew_effektiv'.
         //
         // KEINE Spalte in der Tagestabelle (Web 5.10.0). Sie war seit Web 5.4.0
         // zu sehen — der Eintrag 'day_col' hier hatte davor keine Wirkung, weil
@@ -140,18 +208,7 @@ return [
         // Einsatzansicht unter „Besatzung", mit „(abw.)" an der betroffenen
         // Rolle. Das Feld selbst bleibt unveraendert erhalten, ebenso im Export.
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
-        'children' => [
-            // Textfelder mit Vorschlagsliste, nicht Auswahlfelder (Web 5.5.0,
-            // Entscheidung E8): Wer aushilft, steht oft nicht in den
-            // Stammdaten — eine reine Auswahl liess genau diesen Fall nicht
-            // dokumentieren. Die Vorbelegungen der Rolle bleiben als
-            // Vorschlaege erhalten, Freitext ist zusaetzlich moeglich.
-            'crew_p1'    => ['label' => 'Pilot 1',    'type' => 'text', 'suggest_src' => 'crew:p1',    'max' => 120, 'role_gate' => 'p1'],
-            'crew_p2'    => ['label' => 'Pilot 2',    'type' => 'text', 'suggest_src' => 'crew:p2',    'max' => 120, 'role_gate' => 'p2'],
-            'crew_hems'  => ['label' => 'HEMS-TC',    'type' => 'text', 'suggest_src' => 'crew:hems',  'max' => 120, 'role_gate' => 'hems'],
-            'crew_fr'    => ['label' => 'Flugretter', 'type' => 'text', 'suggest_src' => 'crew:fr',    'max' => 120, 'role_gate' => 'fr'],
-            'crew_other' => ['label' => 'Sonstige',   'type' => 'text', 'suggest_src' => 'crew:other', 'max' => 120, 'role_gate' => 'other'],
-        ],
+        'children' => $mf_crew_kinder,
     ],
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,

@@ -1,4 +1,4 @@
-/* Einsatztage-Leiste: echtes Akkordeon auf beiden Ebenen.
+/* Diensttage-Leiste: echtes Akkordeon auf beiden Ebenen.
  * Jahre schliessen sich gegenseitig, und innerhalb eines offenen Jahres
  * schliessen sich auch die Monate gegenseitig — beim Aufklappen eines
  * Elements gehen alle Geschwister derselben Ebene automatisch zu. */

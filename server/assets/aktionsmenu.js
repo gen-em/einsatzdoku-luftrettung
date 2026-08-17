@@ -8,7 +8,7 @@
  * Angaben darunter) und das Schliessen mit Escape.
  *
  * WARUM EINE EIGENE DATEI. Diese knapp zwanzig Zeilen standen in einem <script>
- * in einsatz.php. Die Flugtaguebersicht hat seit Web 5.10.0 dasselbe Menue —
+ * in einsatz.php. Die Diensttaguebersicht hat seit Web 5.10.0 dasselbe Menue —
  * und damit gaebe es zwei Fassungen desselben Verhaltens, die beim naechsten
  * Mal auseinanderlaufen. Genau die Sorte Doppelung, die das Projekt an anderer
  * Stelle bereits eingesammelt hat (Bausteine B7, B8).

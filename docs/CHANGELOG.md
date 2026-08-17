@@ -11,6 +11,147 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 6.0.0] — 2026-08-17
+
+**Aus dem Flugtag wird der Diensttag.** Die Anwendung dokumentiert jetzt auch
+bodengebundene Notarzteinsätze (NEF, NAW) — beides in einer Installation, ein
+Konto kann beides mischen, auch am selben Kalendertag. Das Produkt heißt künftig
+**Einsatzdokumentation Notarzt**.
+
+Diese Auslieferung ist der **Umbau am Datenmodell samt Codeanpassung** (Etappen
+1a und 1b des Konzepts). Einsatzfelder, Auswertung nach Art und das
+Zusammenführen von Diensttagen folgen in den Etappen 2 bis 4; Grundlage und
+Fortschritt stehen in `docs/Konzept-Notarzt-Erweiterung.md`.
+
+### Vor dem Update lesen
+
+- **Die Migration ist zwingend** (`2026_08_17_notarzt_erweiterung`, läuft über
+  `server/update.php`). Vorher eine Sicherung ziehen.
+- **Danach ein frisches Backup erstellen.** Sicherungen älterer Formatversionen
+  werden nicht mehr eingelesen — die Nutzlast steigt von 5 auf 6, und einer
+  alten Datei fehlen Angaben, die sich nicht erraten lassen (Kennung des
+  Diensttags, Art, Rollensatz, Standortzuordnung, Uhr-Kennungen). Die Ablehnung
+  ist ausdrücklich und benannt.
+- **Drei Dateien sind umbenannt** und müssen auf dem Webspace verschwinden:
+  `flugtag_neu.php`, `flugtag_loeschen.php`, `flugtag_datum.php` heißen jetzt
+  `diensttag_*.php`.
+- **Die Uhr-App bleibt unverändert** und funktioniert weiter. Sie kennt die
+  Einsatzart nicht und braucht sie nicht zu kennen; ihre Uploads landen über die
+  dauerhaft bestehende Rückfallebene `(Konto, Datum)` an einem Diensttag.
+- **Blockiert die Migration**, steht in `days.crew` noch ein Freitext aus der
+  Zeit vor den Rollenspalten. Sie verweigert dann und meldet es, statt zu
+  entscheiden — der Inhalt gehört von Hand in die neue Struktur übertragen.
+
+### Der Diensttag löst sich vom Kalendertag
+
+Ein Diensttag hat jetzt eine eigene Kennung, echte Start- und Endzeiten und
+**jeder Start erzeugt einen eigenen**. Ein Hubschrauberdienst am Tag und ein
+NEF-Nachtdienst am Abend sind damit zwei Diensttage an einem Datum. Einsätze
+hängen an der Kennung, nicht mehr am Datum.
+
+Folgen im Alltag:
+
+- Die Leiste links listet Diensttage. Liegen mehrere auf einem Kalendertag,
+  steht die Uhrzeit des Dienstbeginns dabei; sonst nicht.
+- Die Art erscheint als Symbol am Rettungsmittelnamen — 🚁 luftgebunden,
+  🚑 bodengebunden, ◌ noch nicht zugeordnet. Jedes Symbol trägt eine
+  Textalternative.
+- Beim Umdatieren eines Diensttags gibt es **keine Kollisionsprüfung mehr**: Ein
+  belegtes Zieldatum war die Folge des alten Tagesschlüssels und ist jetzt der
+  vorgesehene Fall.
+- „Einsatz verschieben" wählt einen **vorhandenen Diensttag** aus einer Liste,
+  statt ein Datum entgegenzunehmen. Angelegt wird dort nichts mehr.
+- **Statistik und Suche gehen bewusst auseinander:** Die Zeitraumübersicht rechnet
+  nach Diensttag, die Einsatzsuche filtert nach dem echten Einsatzdatum. Ein
+  Einsatz um 01:30 eines Dienstes vom Vortag zählt zum Vortag, ist in der Suche
+  aber unter seinem eigenen Datum zu finden. Die Suche zeigt beide Daten.
+
+### Der Standort ist der Anker der Stammdaten
+
+Rettungsmittel, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel
+und Bergwacht-Bereitschaften gehören zu **genau einem Standort**. Eine
+standortübergreifende Ebene gibt es nicht: Dieselbe Zielklinik an zwei
+Standorten wird zweimal angelegt. Der Preis ist Doppelpflege, der Gewinn ein
+Modell mit einer Regel statt mit zwei.
+
+Die Standortdaten sind entsprechend gegliedert — erst die Standorte (eigene
+anlegen, zentrale auswählen), dann je Standort ein Block mit seinen fünf
+Datenarten. Zentrale Standorte erscheinen erst in den Auswahllisten, wenn man
+sie auswählt.
+
+Standorte und Zielkliniken haben jetzt optionale Koordinaten. Sie sind
+freiwillig; ohne sie entsteht lediglich kein Pin. Die Adresssuche wie beim
+Einsatzort folgt in einer späteren Etappe.
+
+### Das Rettungsmittel entscheidet über Rollen und Felder
+
+Aus dem Hubschrauber ist das **Rettungsmittel** geworden, mit einer Art
+(luft- oder bodengebunden), angehakten Rollen und — nur luftgebunden — den
+Fähigkeiten Winde und Bergwacht.
+
+- Luftrollen unverändert: Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige.
+- Bodenrollen: Fahrer, Praktikant, Sonstige. „Sonstige" ist dieselbe Rolle.
+- Die Notärztin ist keine Rolle — sie ist die Nutzerin.
+
+### Alles Abgeleitete wird beim Anlegen eingefroren
+
+Art, Rollensatz, Fähigkeiten, Bezeichnungen und Standortkoordinaten werden beim
+Zuordnen in den Diensttag **kopiert**. Wird ein Rettungsmittel später umbenannt,
+bearbeitet oder gelöscht, ändert sich an bereits dokumentierten Diensttagen
+**nichts** — auch nicht bei einem Tippfehler im Namen. Wer eine alte Bezeichnung
+korrigieren will, tut das am Diensttag selbst.
+
+Das gilt in beide Richtungen: Wird der Windenhaken Jahre später entfernt,
+verlieren alte Einsätze ihre Windendokumentation nicht.
+
+### Ein Diensttag ohne Zuordnung funktioniert
+
+Ein von der Uhr angelegter Diensttag ist zunächst **neutral**: keine Art, keine
+Rollen, keine artabhängigen Felder. Zeiten, Phasen, Track und
+Reanimationsdokumentation werden trotzdem vollständig erfasst. Wird die
+Zuordnung nachgetragen, erscheinen Rollen und Felder — ohne dass zuvor Erfasstes
+verloren geht.
+
+### Nachbearbeitung: die zwei Zuordnungen, die niemand erraten kann
+
+Eine neue Seite (`nachbearbeitung.php`) zeigt, was die Migration nicht ableiten
+konnte: Diensttage ohne Standort oder Rettungsmittel und Stammdatensätze ohne
+Standort. Sie erscheint in der Leiste links, **solange etwas offen ist**, und
+verschwindet danach von selbst. Erst wenn kein Stammdatensatz mehr offen ist —
+in keinem Konto —, macht eine Administratorin den Standortbezug dort verbindlich
+(`base_id` bekommt `NOT NULL`). Danach stimmen aktualisierte Installation und
+Neuinstallation vollständig überein.
+
+### Weiteres
+
+- **Phasenbeschriftungen neutral:** Phase 3 heißt „Ausrücken" (war „Abflug"),
+  Phase 7 „Ankunft Klinik" (war „Landung Krankenhaus"). Nummerierung und
+  Bedeutung unverändert; die Uhr folgt in einer späteren Auslieferung und zeigt
+  bis dahin die alten Wörter. Rein kosmetisch — übertragen werden Nummern.
+- **Einsatztabelle, Suche und Export sprechen neutral.** „Flug km" heißt „km",
+  „Hubschrauber" heißt „Rettungsmittel", „Flugtag" heißt „Diensttag". Die
+  Kacheln der Zeitraumübersicht behalten die Flugterminologie — sie werden in
+  Etappe 3 nach Art geteilt.
+- **Exportformat:** Das Blatt „Flugtage" heißt „Diensttage" und führt Kennung,
+  Dienstbeginn, Dienstende, Art und Fähigkeiten. Die Besatzungsspalten entstehen
+  aus dem Rollenkatalog; die fünf Flugrollen behalten ihre Spaltennamen, damit
+  der verlustfreie Rückweg über den CSV-Import bestehen bleibt. Alte Kopfzeilen
+  („flugtag", „hubschrauber", „Flugkilometer") werden beim Import weiterhin
+  erkannt.
+- **Import:** Je Kalendertag wird höchstens ein Diensttag neu angelegt. Aus einer
+  Tabelle lässt sich nicht ableiten, ob zwei Einsätze desselben Datums zu einem
+  oder zu zwei Diensten gehören; wer sie trennen will, tut das danach über
+  „Aktionen → Verschieben".
+- **Uhr-Kennungen:** Der Diensttag kann mehrere tragen (`day_refs`). Damit findet
+  ein späterer Upload auch einen Diensttag, der inzwischen in einen anderen
+  aufgenommen wurde — und ein Backup bringt die Kennungen mit zurück, sodass
+  nach einer Wiederherstellung kein Diensttag doppelt entsteht.
+- **Zwei kleine Berichtigungen am Rand**, beide älter als diese Auslieferung:
+  Die Adminsicherung zählte die Ruhesegmente unter dem falschen Schlüssel und
+  meldete deshalb immer 0. Und die Wartungsseite schrieb bei jedem Aufruf zwei
+  PHP-Warnungen je verbuchter Migration ins Fehlerprotokoll — angezeigt wurde
+  trotzdem das Richtige, deshalb war es nie aufgefallen.
+
 ## [Web 5.10.0] — 2026-08-17
 
 Feinschliff an der Oberfläche: **weniger Spalte, weniger Filter, weniger

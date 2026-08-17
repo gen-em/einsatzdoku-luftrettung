@@ -18,7 +18,7 @@ $m = $scope['mission'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja') {
     csrf_check();
     trash_delete_mission($userId, $id);
-    header('Location: index.php?day=' . urlencode((string)$m['day']));
+    header('Location: index.php' . ($m['day_id'] !== null ? '?d=' . (int)$m['day_id'] : ''));
     exit;
 }
 
@@ -37,7 +37,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 <body>
 <?php ui_topbar('uebersicht'); ?>
 <div class="layout">
-  <?php ui_days_sidebar((string)$m['day']); ?>
+  <?php ui_days_sidebar($m['day_id'] !== null ? (int)$m['day_id'] : null); ?>
   <main class="page">
     <h1>Einsatz löschen?</h1>
 

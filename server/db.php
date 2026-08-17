@@ -187,7 +187,7 @@ function fmt_local(?string $utc, string $format = 'H:i'): string {
  * einen zweiten Aufrufer; zwei Kopien derselben Zeitrechnung waeren die
  * sicherste Art, sich spaeter eine Stunde Versatz einzuhandeln.
  *
- * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Flugtag gehoeren.
+ * $addDays deckt Zeiten nach Mitternacht ab, die noch zum Diensttag gehoeren.
  */
 function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     global $CFG;

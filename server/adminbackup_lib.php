@@ -278,10 +278,19 @@ function edbak_sicherung_erzeugen(int $userId): array
     $daten = json_decode(edbak_build($userId), true);
     if (!is_array($daten)) { return [false, 'Das Datenpaket liess sich nicht erzeugen.', null]; }
 
+    /* 'diensttage' statt 'flugtage' (Abschnitt 3.9). Der alte Schluessel bleibt
+     * ausdruecklich NICHT stehen: Diese Zahlen werden je Sicherung neu
+     * geschrieben und nur zur Anzeige gelesen — admin_sicherungen.php faellt
+     * fuer aeltere Eintraege auf 0 zurueck, und eine Zahl, die dort fehlt, ist
+     * kein Datenverlust.
+     *
+     * 'rests' war schon vorher der falsche Schluessel: edbak_build() liefert die
+     * Ruhesegmente unter 'rest_segments'. Die Zahl stand deshalb immer auf 0.
+     * Hier berichtigt. */
     $umfang = [
         'einsaetze'  => count($daten['missions'] ?? []),
-        'flugtage'   => count($daten['days'] ?? []),
-        'ruhezeiten' => count($daten['rests'] ?? []),
+        'diensttage' => count($daten['days'] ?? []),
+        'ruhezeiten' => count($daten['rest_segments'] ?? []),
     ];
 
     $paket = [

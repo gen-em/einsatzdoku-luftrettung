@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
+require_once __DIR__ . '/../mission_fields_lib.php';
 
 /**
  * Suchindex — der gesamte aktive Einsatzbestand der angemeldeten Person.
@@ -19,7 +20,14 @@ require_once __DIR__ . '/../auth_guard.php';
  * an den Browser. Der Server sieht sie nicht und filtert nicht danach —
  * deshalb nimmt dieser Endpunkt auch keinerlei Suchparameter entgegen.
  *
- * Abfragen: fuenf Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
+ * DAS SUCHDATUM IST DAS ECHTE EINSATZDATUM (E14, Web 6.0.0). Es wird aus
+ * `started_at` in Ortszeit abgeleitet, nicht aus dem Datum des Diensttags. Ein
+ * Einsatz um 01:30 eines Dienstes, der am Vortag begann, ist damit unter SEINEM
+ * Datum zu finden — waehrend die Statistik ihn dem Diensttag zurechnet. Der
+ * Unterschied ist beabsichtigt; ohne ihn suchte man einen Nachteinsatz unter
+ * dem falschen Tag.
+ *
+ * Abfragen: sechs Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
  */
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
@@ -30,12 +38,11 @@ try {
     // ---- Einsaetze -------------------------------------------------------
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.
     $st = db()->prepare(
-        'SELECT m.id, m.day, m.started_at, m.distance_m, m.edited,
+        'SELECT m.id, m.day_id, m.started_at, m.distance_m, m.edited,
                 m.transport_dest, m.schockraum,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
                 m.bergwacht, m.bw_unit, m.bw_info,
-                m.secondary, m.other_ema, m.notes,
-                m.crew_override, m.crew_p1, m.crew_p2, m.crew_hems, m.crew_fr, m.crew_other,
+                m.secondary, m.other_ema, m.notes, m.crew_override,
                 m.pat_blob,
                 (SELECT MAX(occurred_at) FROM mission_phases p
                   WHERE p.mission_id = m.id AND p.phase = 9) AS p9_at
@@ -46,30 +53,53 @@ try {
     $st->execute([$userId]);
     $rows = $st->fetchAll();
 
-    // ---- Flugtage (Standort, Maschine, Tagescrew) ------------------------
-    // Verknuepfung ueber den natuerlichen Schluessel (user_id, day). Bewusst
-    // als eigene Abfrage und NICHT per JOIN: missions und days tragen beide
-    // Spalten crew_p1…crew_other, ein JOIN wuerde sie ueberschreiben. Dieselbe
-    // Falle ist in api/mission.php dokumentiert.
+    /* ---- Diensttage (Standort, Rettungsmittel, Art) ----------------------
+     *
+     * Verknuepfung ueber `day_id`. Bis Web 5.10.0 lief sie ueber den
+     * natuerlichen Schluessel (user_id, day) und musste eine eigene Abfrage
+     * bleiben, weil `missions` und `days` beide crew_*-Spalten trugen. Beides
+     * ist entfallen — die Regel "days und missions nie joinen" ist ausdruecklich
+     * aufgehoben (Konzept 4.11). Als eigene Abfrage bleibt es trotzdem: Sie
+     * laedt jeden Diensttag EINMAL statt einmal je Einsatz.
+     *
+     * ANGEZEIGT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name` und
+     * `base_name` stehen im Diensttag. Damit sind auch Dienste auffindbar,
+     * deren Rettungsmittel oder Standort inzwischen umbenannt oder geloescht
+     * wurde — und die Migration hat den Altfreitext `days.aircraft`/`days.base`
+     * genau dorthin gerettet (Berichtigung B6). Der Rueckfall auf die
+     * Altspalten, den diese Datei bis Web 5.10.0 brauchte, ist dadurch
+     * ersatzlos entfallen.
+     */
     $dq = db()->prepare(
-        'SELECT day, aircraft_id, base_id, aircraft, base,
-                crew_p1, crew_p2, crew_hems, crew_fr, crew_other
+        'SELECT id, day, kind, vehicle_name, base_name
            FROM days WHERE user_id = ? AND deleted_at IS NULL'
     );
     $dq->execute([$userId]);
     $tage = [];
-    foreach ($dq->fetchAll() as $d) { $tage[(string)$d['day']] = $d; }
+    foreach ($dq->fetchAll() as $d) { $tage[(int)$d['id']] = $d; }
 
-    // ---- Stammdaten: persoenliche UND zentrale Eintraege ------------------
-    $bq = db()->prepare('SELECT id, name FROM bases WHERE user_id = ? OR user_id IS NULL');
-    $bq->execute([$userId]);
-    $basen = [];
-    foreach ($bq->fetchAll() as $b) { $basen[(int)$b['id']] = (string)$b['name']; }
+    // ---- Besatzung: Diensttag und abweichende je Einsatz ------------------
+    $cq = db()->prepare(
+        'SELECT c.day_id, c.role_code, c.name
+           FROM day_crew c JOIN days d ON d.id = c.day_id
+          WHERE d.user_id = ? AND d.deleted_at IS NULL'
+    );
+    $cq->execute([$userId]);
+    $tagesCrew = [];
+    foreach ($cq->fetchAll() as $z) {
+        $tagesCrew[(int)$z['day_id']][(string)$z['role_code']] = $z['name'];
+    }
 
-    $aq = db()->prepare('SELECT id, registration FROM aircraft WHERE user_id = ? OR user_id IS NULL');
-    $aq->execute([$userId]);
-    $maschinen = [];
-    foreach ($aq->fetchAll() as $a) { $maschinen[(int)$a['id']] = (string)$a['registration']; }
+    $mcq = db()->prepare(
+        'SELECT c.mission_id, c.role_code, c.name
+           FROM mission_crew c JOIN missions m ON m.id = c.mission_id
+          WHERE m.user_id = ? AND m.deleted_at IS NULL'
+    );
+    $mcq->execute([$userId]);
+    $einsatzCrew = [];
+    foreach ($mcq->fetchAll() as $z) {
+        $einsatzCrew[(int)$z['mission_id']][(string)$z['role_code']] = $z['name'];
+    }
 
     // ---- Weitere Rettungsmittel je Einsatz -------------------------------
     $rq = db()->prepare(
@@ -84,22 +114,11 @@ try {
     foreach ($rq->fetchAll() as $r) { $mittel[(int)$r['mission_id']][] = (string)$r['name']; }
 
     // ---- Zusammenbauen ---------------------------------------------------
-    $ROLLEN = ['p1', 'p2', 'hems', 'fr', 'other'];
-
-    /** Stammdatenname zur ID, sonst der Alt-Freitext, sonst null. */
-    $textOderId = function (?array $d, string $idSpalte, string $altSpalte, array $namen): ?string {
-        if ($d === null) { return null; }
-        if ($d[$idSpalte] !== null && isset($namen[(int)$d[$idSpalte]])) {
-            return $namen[(int)$d[$idSpalte]];
-        }
-        $alt = trim((string)($d[$altSpalte] ?? ''));
-        return $alt !== '' ? $alt : null;
-    };
     $missions = [];
     foreach ($rows as $m) {
-        $id  = (int)$m['id'];
-        $tag = (string)$m['day'];
-        $d   = $tage[$tag] ?? null;
+        $id    = (int)$m['id'];
+        $dayId = $m['day_id'] !== null ? (int)$m['day_id'] : 0;
+        $d     = $tage[$dayId] ?? null;
 
         $dur = null;
         if ($m['p9_at'] !== null) {
@@ -118,20 +137,26 @@ try {
 
         // Effektive Besatzung (COALESCE-Regel wie in api/mission.php): der
         // Einsatzwert gilt nur, wenn der Haken gesetzt UND das Rollenfeld
-        // belegt ist; sonst zaehlt die Tagescrew.
+        // belegt ist; sonst zaehlt die Besatzung des Diensttags.
         $ovOn = (int)($m['crew_override'] ?? 0) === 1;
+        $tc   = $tagesCrew[$dayId] ?? [];
+        $mc   = $einsatzCrew[$id]  ?? [];
         $crew = [];
-        foreach ($ROLLEN as $r) {
-            $spalte = 'crew_' . $r;
-            $mVal = trim((string)($m[$spalte] ?? ''));
-            $dVal = trim((string)($d[$spalte] ?? ''));
+        foreach (array_keys(CREW_ROLES) as $r) {
+            $mVal = trim((string)($mc[$r] ?? ''));
+            $dVal = trim((string)($tc[$r] ?? ''));
             $eff  = ($ovOn && $mVal !== '') ? $mVal : $dVal;
             $crew[$r] = $eff !== '' ? $eff : null;
         }
 
         $missions[] = [
             'id'          => $id,
-            'day'         => $tag,
+            'day_id'      => $dayId,
+            // Das ECHTE Einsatzdatum in Ortszeit (E14), nicht das des Diensttags.
+            'day'         => fmt_local($m['started_at'], 'Y-m-d'),
+            // Das Datum des Dienstes daneben: Die Suche zeigt beides, damit ein
+            // Nachteinsatz nicht wie ein falsch zugeordneter aussieht.
+            'dienst_day'  => $d !== null ? (string)$d['day'] : null,
             'start_hhmm'  => $hhmm,
             'start_min'   => $startMin,
             'duration_s'  => $dur,
@@ -149,13 +174,11 @@ try {
             'secondary'   => (int)$m['secondary'] === 1,
             'other_ema'   => $m['other_ema'] !== null ? (string)$m['other_ema'] : null,
             'notes'       => $m['notes'] !== null ? (string)$m['notes'] : null,
-            // Standort und Maschine kommen aus den Stammdaten. Faellt die
-            // Verknuepfung aus (alte Flugtage vor der Umstellung auf
-            // aircraft_id/base_id), greifen die Alt-Freitextspalten — sonst
-            // waeren historische Einsaetze nach diesen beiden Kriterien
-            // schlicht nicht auffindbar.
-            'base'        => $textOderId($d, 'base_id', 'base', $basen),
-            'aircraft'    => $textOderId($d, 'aircraft_id', 'aircraft', $maschinen),
+            // Standort, Rettungsmittel und Art aus den Snapshot-Spalten des
+            // Diensttags (E8) — nie aus den Stammdaten.
+            'base'        => $d !== null && $d['base_name'] !== null ? (string)$d['base_name'] : null,
+            'vehicle'     => $d !== null && $d['vehicle_name'] !== null ? (string)$d['vehicle_name'] : null,
+            'kind'        => $d !== null && $d['kind'] !== null ? (string)$d['kind'] : null,
             'crew'        => (object)$crew,
             'resources'   => $mittel[$id] ?? [],
             'pat_blob'    => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,

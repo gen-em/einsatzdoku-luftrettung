@@ -25,8 +25,8 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 | Etappe | Inhalt | Version | Stand |
 |---|---|---|---|
 | 1a | Schema, Migration, Rollenkatalog | — | **erledigt** |
-| 1b | Codeanpassung an das neue Schema, Nachbearbeitungsseite, Umbenennung | Web 6.0.0 | **als Nächstes** |
-| 2 | Einsatzfelder, Ortsfeld-Komponente, Abfahrtort und Luftlinie | Web 6.1.0 | offen |
+| 1b | Codeanpassung an das neue Schema, Nachbearbeitungsseite, Umbenennung | Web 6.0.0 | **erledigt** |
+| 2 | Einsatzfelder, Ortsfeld-Komponente, Abfahrtort und Luftlinie | Web 6.1.0 | **als Nächstes** |
 | 3 | Auswertung, Suche, Export/Import/Backup | Web 6.2.0 | offen |
 | 4 | Zusammenführen, Uhr, Dokumentation | Web 6.3.0 / Uhr 1.8.0 | offen |
 
@@ -42,6 +42,9 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 > Code liest noch das alte. Das ist ein bewusster Zwischenstand, kein Fehler —
 > Etappe 1b stellt ihn her. Die Migration **nicht** auf der Produktivinstallation
 > ausführen, bevor 1b vorliegt.
+>
+> **Mit Etappe 1b ist dieser Zwischenstand aufgehoben.** Die Anwendung läuft auf
+> dem neuen Schema; Migration und Update gehören ab jetzt zusammen ausgeliefert.
 
 **Versionsnummern** (aus dem tatsächlichen Stand abgeleitet, nicht frei gewählt):
 
@@ -57,14 +60,34 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 
 | | Stand | | Stand | | Stand |
 |---|---|---|---|---|---|
-| A1 | offen | A7a | offen | A13d | offen |
-| A2 | offen | A7b | offen | A13e | offen |
-| A3 | offen | A7c | offen | A13f–A13q | offen |
-| A4 | offen | A8 | offen | A14 | offen |
-| A4a | offen | A9 | offen | A15 | teilweise |
-| A5 | offen | A10 | offen | A16 | offen |
-| A6 | offen | A11 | **erfüllt** | | |
-| A7 | offen | A12 | offen | | |
+| A1 | **erfüllt** | A7a | **erfüllt** | A13d | offen (Etappe 3) |
+| A2 | **erfüllt** | A7b | **erfüllt** | A13e | **erfüllt** |
+| A3 | teilweise | A7c | **erfüllt** | A13f | offen (Etappe 3) |
+| A4 | **erfüllt** | A8 | **erfüllt** | A13g–A13q | offen (Etappe 2) |
+| A4a | **erfüllt** | A9 | **erfüllt** | A14 | offen (Etappe 4) |
+| A5 | offen (Etappe 2) | A10 | **erfüllt** | A15 | **erfüllt** |
+| A6 | offen (Etappe 4) | A11 | **erfüllt** | A16 | teilweise |
+| A7 | offen (Etappe 4) | A12 | **erfüllt** | | |
+| A13 | **erfüllt** | A13a–A13c | offen (Etappe 3) | | |
+
+Wie jeder Punkt geprüft wurde, steht in `docs/Pruefprotokoll-Notarzt.md`.
+„offen (Etappe N)" heißt: Das Kriterium betrifft Funktionen, die diese Etappe
+noch nicht bringt — nicht, dass etwas fehlschlug.
+
+Die beiden „teilweise" sind es aus benennbaren Gründen:
+
+- **A3** verlangt zwei Dinge. Die eine Hälfte ist erfüllt: Ein bodengebundener
+  Diensttag zeigt Fahrer, Praktikant und Sonstige und sonst keine Rolle
+  (`role_gate` liest aus `day_crew`). Die andere Hälfte — „und keine
+  Windenfelder" — hängt an `cap_gate`, und das ist ausdrücklich Etappe 2
+  (Abschnitt 4.3). Bis dahin erscheinen Windenfelder auch an einem
+  bodengebundenen Dienst. Sie sind leer und lassen sich ignorieren; **kein
+  Datenverlust**, nur eine Zeile zu viel im Formular.
+- **A16**: Die Dokumentation ist auf dem Stand von 1b — Changelog, Technik,
+  Konzept und Prüfprotokoll sind durchgezogen. `Handbuch.md`, `JSON-Vertrag.md`,
+  `Backup-Format.md` und `Export-Format.md` folgen mit Etappe 4, so vorgesehen
+  (Abschnitt 4.12): Der JSON-Vertrag steigt erst dort auf 1.3, und das Handbuch
+  soll den fertigen Stand beschreiben, nicht einen von vier.
 
 ### 0.2 Berichtigungen am Konzept
 
@@ -93,20 +116,48 @@ die **keine** der Entscheidungen E1–E40 berühren:
 | P3 | `update.php`, Migration | Es gibt Einsätze und Ruhe-Segmente, zu deren Datum **keine** `days`-Zeile existiert — bisher folgenlos, weil die Verknüpfung gerechnet und nicht gespeichert wurde. Die Migration legt für sie einen neutralen Diensttag an, sonst wären sie nach A11 verwaist. |
 | P4 | `update.php`, Migration | Zweimal MySQL-Fehler 1553 („Cannot drop index … needed in a foreign key constraint") bei `days.uq_user_day` und `crew_presets.uq_user_role_name`: Beide führen `user_id` an und bedienen damit den Fremdschlüssel. Auflösung: Ersatzindex **vor** dem Entfernen anlegen. Dieselbe Falle ist in der Migration `2026_07_16_mehrere_reanimationen` dokumentiert. |
 | P5 | `update.php`, Migration | Die `skip`-Prüfung darf **nicht** auf den ersten Schritt (`vehicles` vorhanden) prüfen. Ein in der Mitte abgebrochener Lauf wurde dadurch als erledigt verbucht und der Rest nie nachgeholt. Sie prüft jetzt auf den **letzten** Schritt (`days.aircraft` entfernt). |
-| P6 | Migration vs. `schema.sql` | Nach der Migration sind `base_id` in `vehicles`, `crew_presets`, `bw_units`, `resources` und `transport_dests` **nullbar**, in einer Neuinstallation dagegen `NOT NULL`. Das ist die zweistufige Regel aus A12 und beabsichtigt: Die Nachbearbeitungsseite zieht die Bedingung an, sobald keine Zuordnung mehr offen ist. Bis dahin unterscheiden sich die beiden Wege in genau diesen fünf Spalten — sonst in nichts. |
+| P6 | Migration vs. `schema.sql` | Nach der Migration sind `base_id` in `vehicles`, `crew_presets`, `bw_units`, `resources` und `transport_dests` **nullbar**, in einer Neuinstallation dagegen `NOT NULL`. Das ist die zweistufige Regel aus A12 und beabsichtigt: Die Nachbearbeitungsseite zieht die Bedingung an, sobald keine Zuordnung mehr offen ist. Bis dahin unterscheiden sich die beiden Wege in genau diesen fünf Spalten — sonst in nichts. **Erledigt in Etappe 1b:** Nach dem Durchlauf der Nachbearbeitung stimmen Spalten, Typen, NULL-Zulässigkeit und alle Indizes vollständig überein (geprüft, siehe Prüfprotokoll). |
+| P7 | `einsatz_form.php`, Aufruf | Der Diensttag ist beim Nachtragen eines Einsatzes **Pflicht** (`?d=<Kennung>`), nicht mehr ein Datum. Ohne ihn gäbe es keinen Standort, aus dem sich die Vorschlagslisten ableiten, und keinen Rollensatz, aus dem sich die Besatzungsfelder ergeben. Die Seite weist einen Aufruf ohne Diensttag mit einer Meldung ab, statt einen zu erfinden. |
+| P8 | `mission_fields.php` | Die Besatzungsfelder sind die **einzige Ausnahme** von „alle Felder sind Spalten in `missions`". Sie liegen in `mission_crew` und tragen dafür den Schlüssel `'store' => 'crew'`. Wer den Katalog auswertet, muss ihn beachten — `mf_ist_spalte()` und ein Wächter in `mf_tagesspalten()` fangen den Fehler ab, statt ihn als SQL-Fehler ohne erkennbaren Bezug auftauchen zu lassen. |
+| P9 | `assets/*.js` | Der Rollenkatalog muss den Browser erreichen: `import.php` setzt `CREW_ROLLEN` und `CREW_LABELS` aus `CREW_ROLES`, **vor** `import_profiles.js` und `import.js` — beide leiten ihre Spaltenlisten beim Laden daraus ab. Jede der Dateien führt zusätzlich einen Rückfall auf die fünf Flugrollen, damit sie auch ohne die Vorgabe läuft. |
+| P10 | Export, Schlüssel je Diensttag | Der Export bündelte Diensttage nach DATUM (`daysByDate`). Mit mehreren Diensttagen je Kalendertag hätten sie sich gegenseitig überschrieben, und der zweite hätte die Besatzung des ersten getragen. Jetzt nach Kennung (`day_id`). Dieselbe Falle steckte im Import-Abgleich; dort ist sie benannt und bewusst anders gelöst (siehe P12). |
+| P11 | `backup_lib.php`, Wiedereinspielen | Die Wiedererkennung eines vorhandenen Diensttags über **Datum und Dienstbeginn** genügt nicht: Wird ein Einsatz zwischen zwei Diensttagen eines Kalendertags verschoben, zieht `dt_zeitraum_fortschreiben()` den Beginn nach vorne, und beide tragen denselben. Beim Prüfen verschmolzen dadurch zwei Diensttage zu einem. Erkannt wird jetzt zweistufig: zuerst über eine bereits vorhandene `client_ref` eines seiner Einsätze — die ist eindeutig —, ersatzweise über einen Fingerabdruck aus Datum, Beginn, Ende, Art und den eingefrorenen Bezeichnungen. |
+| P12 | `api/import_commit.php` | Ein Import legt **je Kalendertag höchstens einen** Diensttag an. Aus einer Tabelle lässt sich nicht ableiten, ob zwei Einsätze desselben Datums zu einem oder zu zwei Diensten gehören; eine geratene Aufteilung wäre schlechter als eine, die jemand bewusst vornimmt. Das `ON DUPLICATE KEY UPDATE` ist mit dem Tagesschlüssel entfallen — ein blindes INSERT hätte bei jedem Lauf neue Diensttage angelegt. |
+| P15 | `update.php`, Ergebnisliste | **Fehler, der älter ist als diese Etappe.** Die Zeile für eine bereits angewendete Migration trug vier Elemente, die Auswertung zerlegt sie in sechs — zwei PHP-Warnungen je verbuchter Migration, bei jedem Aufruf der Wartungsseite. Auf einer Installation mit 30 Migrationen sechzig Zeilen Fehlerprotokoll für nichts, ausgerechnet auf der Seite, die den Zustand der Datenbank berichten soll. Angezeigt wurde trotzdem das Richtige (die fehlenden Werte kamen als NULL an), deshalb war es nie aufgefallen. Berichtigt — die Ausnahme von der Regel „Etappe 1b fasst `update.php` nicht an" ist damit begründet. |
+| P14 | `diensttag_lib.php`, Rückfallebene | Welcher Diensttag ist gemeint, wenn ein Upload OHNE `day_ref` auf ein Datum mit **mehreren** Diensttagen trifft (Konzept 4.4 lässt das offen)? Entschieden über die **Zeit** des Datensatzes, nicht über die Reihenfolge: erst der Diensttag, dessen Zeitraum ihn umschließt, dann der letzte, der vor ihm begonnen hat, dann der früheste des Datums. Die erste Fassung nahm schlicht den jüngsten — ein Früheinsatz landete dadurch am Abenddienst und zog dessen Beginn um Stunden nach vorne. Die Uhr sagt nicht, welcher Dienst gemeint ist; ihre Zeitstempel sagen es sehr wohl. |
+| P13 | `nachbearbeitung.php` | Der letzte Schritt (`base_id` auf `NOT NULL`) ändert das **Schema** und gilt für alle Konten. Er ist deshalb auf Admins beschränkt — und zwar im Handler, nicht nur durch einen verborgenen Knopf. Zusätzlich prüft er über **alle Konten** hinweg auf offene Einträge: Die Bedingung gilt für die Tabelle, ein einziger offener Eintrag eines anderen Kontos ließe das `ALTER TABLE` mit einem Datenbankfehler scheitern statt mit einer lesbaren Meldung. |
 
-### 0.4 Nächste Etappe: 1b — Codeanpassung
+### 0.4 Was Etappe 1b umgesetzt hat
 
-**Für den Chat, der Etappe 1b übernimmt.** Voraussetzung: Das ZIP der Etappe 1a
-ist committet und gepusht; ein neuer Chat klont frisch.
+**Die Anwendung läuft auf dem neuen Schema.** Neue Dateien, umbenannte Dateien
+und die Umstellungsregeln stehen unten; geprüft wurde gegen dieselbe MariaDB, mit
+der Etappe 1a gearbeitet hat (Ablauf in `Pruefprotokoll-Notarzt.md`).
 
-**Das Schema ist fertig und geprüft. Etappe 1b braucht keine Migration** und
-soll `schema.sql` und `update.php` nur anfassen, wenn sich beim Umstellen ein
-echter Fehler zeigt — dann als Berichtigung hier vermerken.
+**Neu:**
 
-**Prüfumgebung wiederherstellen** (Anleitung in `Pruefprotokoll-Notarzt.md`):
-MariaDB installieren, `edoku_bestand` aus `git show <1a-Commit>~1:server/schema.sql`
-plus Testbestand aufbauen und migrieren, `edoku_neu` aus dem neuen `schema.sql`.
+| Datei | Wozu |
+|---|---|
+| `server/diensttag_lib.php` | Anlegen, Zuordnen, Einfrieren und Auflisten von Diensttagen. Die eine Stelle, an der E8 und E9 umgesetzt sind — Formular, Uhr, Import und Nachbearbeitung benutzen sie alle. |
+| `server/nachbearbeitung_lib.php` | Die beiden offenen Listen und die zweite Stufe aus A12 (`base_id` auf `NOT NULL`). Ohne eigene Buchführung: Ob die Bedingung steht, sagt das Schema selbst. |
+| `server/nachbearbeitung.php` | Die einmalige Seite aus E24. |
+
+**Umbenannt** (die alten Dateien müssen auf dem Webspace verschwinden):
+`flugtag_neu.php` → `diensttag_neu.php`, `flugtag_loeschen.php` →
+`diensttag_loeschen.php`, `flugtag_datum.php` → `diensttag_datum.php`.
+
+**Adressen:** `index.php?day=YYYY-MM-DD` ist zu `index.php?d=<Kennung>`
+geworden, ebenso bei `einsatz_form.php`, den drei `diensttag_*.php` und im
+Papierkorb. `api/day.php` nimmt `?d=<Kennung>` und im POST `day_id`.
+
+**Entfallen, weil der Tagesschlüssel weg ist:**
+
+- die Kollisionsprüfung beim Umdatieren (`tz_tag_datum_aendern`) samt der Liste
+  belegter Daten in `diensttag_datum.php`,
+- `tz_zieltag_sichern()` — der Zieltag wird gewählt, nicht angelegt,
+- `tz_tag_zustand()`,
+- das `INSERT IGNORE`/`ON DUPLICATE KEY UPDATE` auf `days` an vier Stellen,
+- der Rückfall von `api/suchindex.php` auf `days.aircraft`/`days.base`: Die
+  Migration hat den Altfreitext in die Snapshot-Spalten gerettet (B6).
 
 #### Was sich am Datenmodell geändert hat — die Umstellungsregeln
 
@@ -127,54 +178,56 @@ plus Testbestand aufbauen und migrieren, `edoku_neu` aus dem neuen `schema.sql`.
 
 Die Architekturregel „`days` und `missions` dürfen nie gejoint werden" ist
 **aufgehoben** (Konzept 4.11): Sie entstand allein aus den gleichnamigen
-`crew_*`-Spalten. `missions.day_id = days.id` ist ab jetzt der vorgesehene Weg.
-In `Technik.md` (Zeilen 596 und 709) ist sie als aufgehoben zu kennzeichnen.
+`crew_*`-Spalten. `missions.day_id = days.id` ist ab jetzt der vorgesehene Weg
+und wird in `api/range.php`, `api/export_data.php`, `api/import_commit.php` und
+`trash_lib.php` benutzt. In `Technik.md` ist sie als aufgehoben gekennzeichnet.
 
-#### Betroffene Dateien
+#### Bewusst noch nicht neutral: die Kacheln der Zeitraumübersicht
 
-**Zuerst — die Bibliotheken, an denen alles hängt:**
+`zeitraum.php` beschriftet weiterhin „Flugtage", „Ø Einsätze / Flugtag" und
+„Flugkilometer gesamt". Das ist **kein Übersehen**: Die Kacheln werden in
+Etappe 3 nach Art in Tabs geteilt, und der Luftrettungs-Tab behält genau diese
+Beschriftungen (E32, A13f). Sie jetzt zu neutralisieren und in Etappe 3
+zurückzudrehen wäre Arbeit für nichts. Einsatztabelle, Suche und Export sprechen
+dagegen schon jetzt neutral (Abschnitt 3.7.3) — dort bleiben sie es dauerhaft.
 
-| Datei | Was zu tun ist |
-|---|---|
-| `tageszuordnung_lib.php` (398 Z.) | Kern des Anlegens und Zuordnens von Diensttagen. Von `(user_id, day)` auf `day_id`. Jeder Start erzeugt einen **eigenen** Diensttag (E9), `INSERT IGNORE` auf den Tagesschlüssel entfällt ersatzlos. Snapshot-Spalten und `day_crew`/`day_capabilities` beim Anlegen füllen. |
-| `trash_lib.php` (261 Z.) | Signaturen `string $day` → `int $dayId` (Fundstellen Z. 42, 89, 117, 161, 222). `deleted_with_day` und Sperrliste bleiben inhaltlich unverändert. |
-| `ingest.php` (385 Z.) | Zuordnung über `day_refs`; **Rückfallebene über `(user_id, day)` bleibt dauerhaft** für ältere Uhr-Fassungen. `started_at`/`ended_at` des Diensttags fortschreiben. Der JSON-Vertrag steigt erst in Etappe 4 auf 1.3 — 1b nimmt `day_ref` nur entgegen, falls vorhanden. |
-| `mission_fields.php` | `role_gate` bezieht sich künftig auf `day_crew`. Die fünf `crew_*`-Kinder aus `CREW_ROLES` erzeugen statt fest zu verdrahten. |
+Bis Etappe 3 heißt das: Wer bodengebunden dokumentiert, liest in der
+Zeitraumübersicht „Flugtage", wo Diensttage gemeint sind. Hinzunehmen, weil die
+Zahl stimmt und der Umbau der Ansicht ohnehin ansteht.
 
-**Dann — Anzeige und Schnittstellen:**
-`api/day.php`, `api/mission.php` (effektive Besatzung jetzt über zwei Tabellen,
-weiterhin als `crew_effektiv`), `api/suchindex.php` (Join über `day_id`,
-Suchdatum aus `started_at`), `index.php`, `einsatz.php`, `einsatz_form.php`
-(Rollenquelle Z. 575, `INSERT INTO missions` mit `day_id` statt `day`),
-`einsatz_verschieben.php`, `suche.php`, `zeitraum.php`, `import.php`.
+### 0.5 Nächste Etappe: 2 — Einsatzfelder, Ortsfeld, Abfahrtort
 
-**Dann — Stammdaten und Austauschformate:**
-`einstellungen.php` (1699 Z.) und `admin_stammdaten.php` nach Standort gliedern
-(Konzept 3.8); `backup_lib.php`, `api/import_commit.php`, `api/export_data.php`
-sowie `assets/export.js`, `assets/import_profiles.js`, `assets/import_ui.js`.
+**Für den Chat, der Etappe 2 übernimmt.** Voraussetzung: Das ZIP der Etappe 1b
+ist committet und gepusht; ein neuer Chat klont frisch.
 
-**Zuletzt — Umbenennungen und die neue Seite:**
-`flugtag_neu.php` → `diensttag_neu.php`, `flugtag_loeschen.php` →
-`diensttag_loeschen.php`, `flugtag_datum.php` → `diensttag_datum.php`
-(**Achtung: gelöschte Dateien müssen auf dem Webspace verschwinden**);
-durchgängig Flugtag → Diensttag, Hubschrauber/Maschine → Rettungsmittel,
-Produktname → *Einsatzdokumentation Notarzt*; neue Seite
-`nachbearbeitung.php` (E24) mit den zwei Listen, die `base_id` erst auf
-`NOT NULL` setzt, wenn beide leer sind (A12, Problem P6).
+**Etappe 2 braucht keine Migration.** `transport_mode`, `na_escort`,
+`false_alarm`, `start_src`, `dest_lat`, `dest_lon` und die Koordinaten in
+`bases`/`transport_dests` **existieren bereits** (Berichtigung B5) und werden von
+Backup und Export schon mitgeführt.
 
-`server/version.php` am Ende von 1b auf `6.0.0`.
+**Prüfumgebung wiederherstellen** (Anleitung in `Pruefprotokoll-Notarzt.md`):
+MariaDB installieren, `edoku_bestand` aus
+`docs/pruefgrundlage/schema-vor-6.0.0.sql` plus Testbestand aufbauen und
+migrieren, `edoku_neu` aus dem neuen `schema.sql`. Zum Prüfen der Oberfläche
+genügt der eingebaute PHP-Server mit einem Testrouter, der eine Sitzung setzt;
+das Vorgehen steht im Prüfprotokoll.
 
-#### Danach: Etappe 2
+**Zu tun:**
 
 - Grundlage sind die Vorprüfungen **V4** und **V8** in Abschnitt 5a — bereits
   durchgeführt, nicht erneut erheben.
-- `transport_mode`, `na_escort`, `false_alarm`, `start_src`, `dest_lat`,
-  `dest_lon` und die Koordinaten in `bases`/`transport_dests` **existieren
-  bereits** (Berichtigung B5). Auch Etappe 2 braucht keine Migration.
-- Zu tun: Feldkatalog um `transport_mode` samt Kindern, `false_alarm`,
-  `kind_gate`, `cap_gate` und `show_if`; `show_if` im Lese- und Renderpfad von
-  `einsatz_form.php` (Vorgehen in V4); Ortsfeld-Komponente `assets/ortsfeld.js`
-  herauslösen (Vorgehen in V8); Abfahrtort und Luftlinie zeichnen.
+- Feldkatalog um `transport_mode` samt Kindern, `false_alarm`, `kind_gate`,
+  `cap_gate` und `show_if`. `role_gate` ist in 1b umgesetzt und liest aus
+  `day_crew`; `kind_gate` und `cap_gate` folgen demselben Muster und finden
+  `days.kind` sowie `dt_faehigkeiten()` vor.
+- `show_if` im Lese- und Renderpfad von `einsatz_form.php` (Vorgehen in V4). Der
+  Lesepfad hat sich in 1b geändert: `$readField` verteilt jetzt auf **zwei**
+  Ziele (Spalten und `mission_crew`, Befund P8). Die `show_if`-Auswertung gehört
+  weiterhin allein in den Durchfall-Zweig.
+- Ortsfeld-Komponente `assets/ortsfeld.js` herauslösen (Vorgehen in V8). Sie
+  ersetzt dann auch die einfachen Koordinatenfelder, die 1b in der Standort- und
+  Zielklinikpflege eingebaut hat — dort steht bereits ein Kommentar darauf.
+- Abfahrtort und Luftlinie zeichnen.
 
 ---
 

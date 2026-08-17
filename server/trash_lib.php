@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Papierkorb (Soft-Delete) fuer Einsaetze und Flugtage.
+ * Papierkorb (Soft-Delete) fuer Einsaetze und Diensttage.
  *
  * Geloeschtes wird zunaechst nur markiert (`deleted_at`) und bleibt
  * TRASH_DAYS Tage wiederherstellbar; der Aufraeumjob in db.php entfernt es
@@ -11,10 +11,17 @@ declare(strict_types=1);
  * hochlaedt — solange etwas im Papierkorb liegt, quittiert der Server
  * Uploads zwar, verwirft sie aber (siehe ingest.php).
  *
- * Beim Loeschen eines ganzen Flugtags werden dessen Einsaetze und
+ * Beim Loeschen eines ganzen Diensttags werden dessen Einsaetze und
  * Ruhesegmente mit `deleted_with_day = 1` markiert. Sie erscheinen dadurch
- * nicht einzeln im Papierkorb, sondern haengen am Flugtag und kehren mit ihm
+ * nicht einzeln im Papierkorb, sondern haengen am Diensttag und kehren mit ihm
  * gemeinsam zurueck.
+ *
+ * SCHLUESSEL IST SEIT WEB 6.0.0 DIE KENNUNG `days.id`, nicht mehr das Datum.
+ * Alle Funktionen dieser Datei nehmen deshalb `int $dayId`. Inhaltlich aendert
+ * sich nichts: `deleted_with_day` und die Sperrliste arbeiten unveraendert.
+ * Entfallen ist allein das Anlegen einer Traegerzeile beim Loeschen — den
+ * Diensttag, den es loescht, gibt es jetzt zwangslaeufig, weil die Einsaetze
+ * mit einem Fremdschluessel auf ihn verweisen.
  */
 
 const TRASH_DAYS = 90;
@@ -39,18 +46,18 @@ function trash_scope_mission(int $userId, int $id): ?array {
     ];
 }
 
-function trash_scope_day(int $userId, string $day): array {
+function trash_scope_day(int $userId, int $dayId): array {
     $one = function (string $sql, array $p): int {
         $s = db()->prepare($sql); $s->execute($p); return (int)$s->fetchColumn();
     };
     $missions = db()->prepare('SELECT id FROM missions
-                               WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
-    $missions->execute([$userId, $day]);
+                               WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL');
+    $missions->execute([$userId, $dayId]);
     $mids = $missions->fetchAll(PDO::FETCH_COLUMN);
 
     $segs = db()->prepare('SELECT id FROM rest_segments
-                           WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
-    $segs->execute([$userId, $day]);
+                           WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL');
+    $segs->execute([$userId, $dayId]);
     $sids = $segs->fetchAll(PDO::FETCH_COLUMN);
 
     $punkte = 0; $phasen = 0; $reas = 0;
@@ -64,11 +71,11 @@ function trash_scope_day(int $userId, string $day): array {
         $punkte += $one("SELECT COUNT(*) FROM track_points
                          WHERE owner_type = 'rest' AND owner_id = ?", [(int)$sid]);
     }
-    $meta = db()->prepare('SELECT * FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NULL');
-    $meta->execute([$userId, $day]);
+    $meta = db()->prepare('SELECT * FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NULL');
+    $meta->execute([$userId, $dayId]);
 
     return [
-        'day'       => $day,
+        'day_id'    => $dayId,
         'einsaetze' => count($mids),
         'segmente'  => count($sids),
         'punkte'    => $punkte,
@@ -86,22 +93,24 @@ function trash_delete_mission(int $userId, int $id): void {
     $st->execute([$id, $userId]);
 }
 
-function trash_delete_day(int $userId, string $day): void {
+function trash_delete_day(int $userId, int $dayId): void {
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        // Traegerzeile sicherstellen, damit der Tag im Papierkorb erscheint,
-        // auch wenn nie Metadaten (Maschine/Besatzung) erfasst wurden.
-        $pdo->prepare('INSERT IGNORE INTO days (user_id, day) VALUES (?, ?)')
-            ->execute([$userId, $day]);
+        /* Keine Traegerzeile mehr sicherstellen: Der Diensttag IST die Zeile,
+         * ohne die es die Einsaetze nicht gaebe (Fremdschluessel `day_id`).
+         * Bis Web 5.10.0 hing die Zuordnung am Datum und ein Tag konnte
+         * Einsaetze haben, ohne selbst zu existieren — dafuer war das
+         * INSERT IGNORE da. */
         $pdo->prepare('UPDATE days SET deleted_at = UTC_TIMESTAMP()
-                       WHERE user_id = ? AND day = ?')->execute([$userId, $day]);
+                       WHERE user_id = ? AND id = ? AND deleted_at IS NULL')
+            ->execute([$userId, $dayId]);
         $pdo->prepare('UPDATE missions SET deleted_at = UTC_TIMESTAMP(), deleted_with_day = 1
-                       WHERE user_id = ? AND day = ? AND deleted_at IS NULL')
-            ->execute([$userId, $day]);
+                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL')
+            ->execute([$userId, $dayId]);
         $pdo->prepare('UPDATE rest_segments SET deleted_at = UTC_TIMESTAMP(), deleted_with_day = 1
-                       WHERE user_id = ? AND day = ? AND deleted_at IS NULL')
-            ->execute([$userId, $day]);
+                       WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL')
+            ->execute([$userId, $dayId]);
         $pdo->commit();
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
 }
@@ -114,18 +123,18 @@ function trash_restore_mission(int $userId, int $id): void {
         ->execute([$id, $userId]);
 }
 
-function trash_restore_day(int $userId, string $day): void {
+function trash_restore_day(int $userId, int $dayId): void {
     $pdo = db();
     $pdo->beginTransaction();
     try {
-        $pdo->prepare('UPDATE days SET deleted_at = NULL WHERE user_id = ? AND day = ?')
-            ->execute([$userId, $day]);
+        $pdo->prepare('UPDATE days SET deleted_at = NULL WHERE user_id = ? AND id = ?')
+            ->execute([$userId, $dayId]);
         $pdo->prepare('UPDATE missions SET deleted_at = NULL, deleted_with_day = 0
-                       WHERE user_id = ? AND day = ? AND deleted_with_day = 1')
-            ->execute([$userId, $day]);
+                       WHERE user_id = ? AND day_id = ? AND deleted_with_day = 1')
+            ->execute([$userId, $dayId]);
         $pdo->prepare('UPDATE rest_segments SET deleted_at = NULL, deleted_with_day = 0
-                       WHERE user_id = ? AND day = ? AND deleted_with_day = 1')
-            ->execute([$userId, $day]);
+                       WHERE user_id = ? AND day_id = ? AND deleted_with_day = 1')
+            ->execute([$userId, $dayId]);
         $pdo->commit();
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
 }
@@ -175,13 +184,13 @@ function trash_purge_mission(int $userId, int $id): void {
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
 }
 
-function trash_purge_day(int $userId, string $day): void {
+function trash_purge_day(int $userId, int $dayId): void {
     $pdo = db();
     $pdo->beginTransaction();
     try {
         $ms = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
-                             WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
-        $ms->execute([$userId, $day]);
+                             WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
+        $ms->execute([$userId, $dayId]);
         foreach ($ms->fetchAll() as $m) {
             trash_block_ref($pdo, $m);
             $pdo->prepare("DELETE FROM track_points WHERE owner_type = 'mission' AND owner_id = ?")
@@ -189,8 +198,8 @@ function trash_purge_day(int $userId, string $day): void {
             $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([(int)$m['id']]);
         }
         $ss = $pdo->prepare('SELECT id, device_id, client_ref FROM rest_segments
-                             WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
-        $ss->execute([$userId, $day]);
+                             WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
+        $ss->execute([$userId, $dayId]);
         foreach ($ss->fetchAll() as $seg) {
             // Auch Ruhe-Segmente sperren — sonst legt die naechste
             // Nachlieferung derselben Uhr sie wieder an.
@@ -199,8 +208,8 @@ function trash_purge_day(int $userId, string $day): void {
                 ->execute([(int)$seg['id']]);
             $pdo->prepare('DELETE FROM rest_segments WHERE id = ?')->execute([(int)$seg['id']]);
         }
-        $pdo->prepare('DELETE FROM days WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL')
-            ->execute([$userId, $day]);
+        $pdo->prepare('DELETE FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NOT NULL')
+            ->execute([$userId, $dayId]);
         $pdo->commit();
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
 }
@@ -219,11 +228,11 @@ function trash_purge_expired(PDO $pdo): void {
                 ->modify('-' . TRASH_DAYS . ' days')->format('Y-m-d H:i:s');
 
     // Tage zuerst (nimmt die daran haengenden Einsaetze/Segmente mit)
-    $st = $pdo->prepare('SELECT user_id, day FROM days
+    $st = $pdo->prepare('SELECT id, user_id FROM days
                          WHERE deleted_at IS NOT NULL AND deleted_at < ?');
     $st->execute([$grenze]);
     foreach ($st->fetchAll() as $d) {
-        trash_purge_day((int)$d['user_id'], (string)$d['day']);
+        trash_purge_day((int)$d['user_id'], (int)$d['id']);
     }
     // Einzeln geloeschte Einsaetze
     $st = $pdo->prepare('SELECT id, user_id FROM missions
@@ -239,9 +248,9 @@ function trash_purge_expired(PDO $pdo): void {
 
 function trash_list_days(int $userId): array {
     $st = db()->prepare(
-        'SELECT d.day, d.deleted_at,
+        'SELECT d.id, d.day, d.started_at, d.kind, d.vehicle_name, d.base_name, d.deleted_at,
                 (SELECT COUNT(*) FROM missions m
-                  WHERE m.user_id = d.user_id AND m.day = d.day
+                  WHERE m.day_id = d.id
                     AND m.deleted_with_day = 1 AND m.deleted_at IS NOT NULL) AS einsaetze
            FROM days d
           WHERE d.user_id = ? AND d.deleted_at IS NOT NULL
@@ -250,12 +259,18 @@ function trash_list_days(int $userId): array {
     return $st->fetchAll();
 }
 
+/* Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept 4.11).
+ * Die alte Regel "days und missions duerfen nie gejoint werden" entstand allein
+ * aus den gleichnamigen crew_*-Spalten; mit deren Wegfall ist sie aufgehoben.
+ * Hier wird sie gebraucht, weil der Papierkorb das Datum ANZEIGT, der Einsatz
+ * es aber nicht mehr traegt. */
 function trash_list_missions(int $userId): array {
     $st = db()->prepare(
-        'SELECT id, day, started_at, deleted_at
-           FROM missions
-          WHERE user_id = ? AND deleted_at IS NOT NULL AND deleted_with_day = 0
-          ORDER BY deleted_at DESC');
+        'SELECT m.id, m.day_id, d.day, m.started_at, m.deleted_at
+           FROM missions m
+           LEFT JOIN days d ON d.id = m.day_id
+          WHERE m.user_id = ? AND m.deleted_at IS NOT NULL AND m.deleted_with_day = 0
+          ORDER BY m.deleted_at DESC');
     $st->execute([$userId]);
     return $st->fetchAll();
 }

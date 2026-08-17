@@ -16,7 +16,7 @@
  *   erkenneProfil(mappe, profile)    passendes Profil anhand der Kopfzeile
  *   paramVorschlaege(...)            z. B. Jahr aus der Titelzeile
  *   verarbeite(mappe, profil, param) Zeilen -> geprueftes Zwischenergebnis
- *   gruppiere(zeilen)                Zwischenergebnis -> Flugtage + Einsaetze
+ *   gruppiere(zeilen)                Zwischenergebnis -> Diensttage + Einsaetze
  *
  * ZAHLEN STATT DATUMSOBJEKTEN: Die Arbeitsmappe wird ohne automatische
  * Datumsumwandlung gelesen. Excel speichert Datum und Uhrzeit als Zahl (Tage
@@ -493,7 +493,7 @@
      * Jede Zeile:
      *   { srcRow, status:'ok'|'warn'|'error', issues:[{spalte,level,text}],
      *     mission:{day, alarm, transport_dest, winch, resources},
-     *     pat:{last, first, dob, age, dx, mission_no, loc:{addr}}, dayCrew:{p1, hems, ...} }
+     *     pat:{last, first, dob, age, dx, mission_no, loc:{addr}}, dayCrew:{<rolle>: name, ...} }
      */
     function verarbeite(mappe, profil, params, kopfzeile) {
         return verarbeiteMatrix(matrix(mappe, profil), profil, params, kopfzeile);
@@ -586,9 +586,9 @@
                 setzeZiel(z, def.target, erg.wert);
             }
 
-            // Ein Flugtag OHNE Einsatz steht in Profil A als eine einzige Zeile
-            // mit Hubschrauber, Standort und Datum — alle uebrigen Zellen
-            // tragen "-" (SPEC_Export.md 3.2). Solche Zeilen legen den Flugtag
+            // Ein Diensttag OHNE Einsatz steht in Profil A als eine einzige Zeile
+            // mit Rettungsmittel, Standort und Datum — alle uebrigen Zellen
+            // tragen "-" (SPEC_Export.md 3.2). Solche Zeilen legen den Diensttag
             // an, aber keinen Einsatz. Ohne diese Unterscheidung entstuende
             // beim Rueckimport ein Einsatz ohne Alarmzeit.
             z.dayOnly = !!(profil.emptyDayRows && z.mission.day && !z.mission.alarm);
@@ -626,10 +626,22 @@
 
     // ------------------------------------------------------ Tagesgruppierung
 
-    var ROLLEN = ['p1', 'p2', 'hems', 'fr', 'other'];
+    /* Rollenkatalog aus CREW_ROLES (server/db.php), von import.php als
+     * CREW_ROLLEN gesetzt. Der Rueckfall ist der Stand vor Web 6.0.0 — die
+     * fuenf Flugrollen —, damit diese Datei auch ohne die Vorgabe laeuft. */
+    var ROLLEN = (typeof CREW_ROLLEN !== 'undefined' && CREW_ROLLEN.length)
+        ? CREW_ROLLEN : ['p1', 'p2', 'hems', 'fr', 'other'];
 
     /**
-     * Zeilen nach Flugtag buendeln.
+     * Zeilen nach Diensttag buendeln.
+     *
+     * GEBUENDELT WIRD NACH KALENDERTAG, und das bleibt so. Eine Tabelle nennt
+     * kein Dienstende und keine zweite Schicht; aus ihr laesst sich nicht
+     * ableiten, ob zwei Einsaetze desselben Datums zu einem oder zu zwei
+     * Diensten gehoeren (E9). Der Import legt deshalb je Datum HOECHSTENS EINEN
+     * Diensttag an. Wer zwei braucht, teilt sie danach mit
+     * einsatz_verschieben.php auf — eine geratene Aufteilung waere schlechter
+     * als eine, die jemand bewusst vornimmt.
      *
      * Die Tagesbesatzung ist die der FRUEHESTEN Zeile des Tages. Weicht eine
      * spaetere Zeile in einer Rolle ab, wird daraus eine abweichende
@@ -664,7 +676,7 @@
             });
 
             // Die Tagesbesatzung kommt von der fruehesten Zeile MIT Einsatz.
-            // Eine reine Flugtagszeile (Profil A, Tag ohne Einsatz) traegt in
+            // Eine reine Diensttagszeile (Profil A, Tag ohne Einsatz) traegt in
             // Profil A ohnehin nur "-" und wuerde die Besatzung sonst leeren.
             var crewQuelle = gruppe.filter(function (z) { return !z.dayOnly; })[0] || gruppe[0];
             var crew = {};

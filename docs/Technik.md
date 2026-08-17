@@ -587,15 +587,27 @@ unverändert. Backup exportiert/importiert beide.
 einmal je Flugtag in `days.crew_*` gepflegt. Ein einzelner Einsatz kann davon
 abweichen (fachlicher Anlass: Pilotenwechsel im laufenden Dienst) — dafür trägt
 `missions` die Spalten `crew_override` (0/1) und `crew_p1`…`crew_other`.
-**Bewusst redundanzfrei:** Ohne Abweichung bleiben die `missions`-Spalten NULL;
-es gibt keine Kopie der Tagescrew am Einsatz. Die Regel lautet je Rolle
-`crew_override = 1 AND missions.crew_X IS NOT NULL ? missions.crew_X :
-days.crew_X`. Sie ist **einmal** implementiert, in `api/mission.php`, das das
-Ergebnis als `crew_effektiv` (`{rolle: {label, name, abw}}`, nur belegte
-Rollen) liefert; `einsatz.php` rendert es unverändert im Block „Besatzung".
-Die `days`-Zeile wird dort **separat** geladen statt per JOIN — `SELECT *` auf
-`missions` und `days` tragen dieselben Spaltennamen, ein JOIN würde sie
-überschreiben.
+**Bewusst redundanzfrei:** Ohne Abweichung gibt es in `mission_crew` keine
+Zeile; es gibt keine Kopie der Tagesbesatzung am Einsatz. Die Regel lautet je
+Rolle `crew_override = 1 AND mission_crew.name IS NOT NULL ?
+mission_crew.name : day_crew.name`. Sie ist **einmal** implementiert, in
+`api/mission.php`, das das Ergebnis als `crew_effektiv`
+(`{rolle: {label, name, abw}}`, nur belegte Rollen) liefert; `einsatz.php`
+rendert es unverändert im Block „Besatzung".
+
+> **Seit Web 6.0.0 (Notarzt-Erweiterung).** Die Besatzung ist normalisiert (E7):
+> Aus den Spalten `crew_p1 … crew_other` in `days` und `missions` sind Zeilen in
+> `day_crew (day_id, role_code, name)` und `mission_crew (mission_id, role_code,
+> name)` geworden. Die COALESCE-Regel ist unverändert, sie läuft jetzt über zwei
+> **Tabellen** statt über zwei Spaltensätze. Welche Rollen ein Diensttag
+> überhaupt anbietet, sagt die Zeilenmenge in `day_crew` — sie ist der beim
+> Anlegen eingefrorene Rollensatz (E8). Der Rollenkatalog selbst steht als
+> `CREW_ROLES` in `db.php`, nicht in der Datenbank (E4).
+>
+> **Damit ist auch die Falle verschwunden, die den separaten Ladeweg erzwang**:
+> `missions` und `days` tragen keine gleichnamigen Spalten mehr. Die days-Zeile
+> wird weiterhin separat geladen, aber aus einem anderen Grund — sie wird je
+> Einsatz nur einmal gebraucht.
 
 Das Leeren beim Entfernen des Hakens erledigt die generische
 Checkbox-Kindlogik in `einsatz_form.php` ohne Sonderfall (Kinder werden bei
@@ -706,11 +718,18 @@ Die Spalten selbst bleiben unverändert; Export, Einsatzansicht und Zeitraum-
 
 Eine Falle, die dort dokumentiert ist und bei Änderungen zu beachten bleibt:
 
-- **days wird nicht per JOIN angebunden.** `missions` und `days` tragen beide
-  `crew_p1`…`crew_other`; ein JOIN würde sie überschreiben. Dieselbe Falle ist
-  in `api/mission.php` beschrieben. Die effektive Besatzung folgt derselben
-  COALESCE-Regel: Einsatzwert nur, wenn `crew_override = 1` **und** das
-  Rollenfeld belegt ist, sonst die Tagescrew.
+- **~~days wird nicht per JOIN angebunden.~~** `missions` und `days` trugen
+  beide `crew_p1`…`crew_other`; ein JOIN hätte sie überschrieben.
+  **AUFGEHOBEN mit Web 6.0.0** (Konzept-Notarzt-Erweiterung, Abschnitt 4.11):
+  Mit der Normalisierung der Besatzung (E7) gibt es keine gleichnamigen Spalten
+  mehr, und damit entfällt der Grund. `missions.day_id = days.id` ist ab jetzt
+  der **vorgesehene** Weg — er wird in `api/range.php`, `api/export_data.php`,
+  `api/import_commit.php` und `trash_lib.php` benutzt. Die Regel steht hier nur
+  noch, damit sie nicht als Halbwissen zurückkehrt.
+
+  Die effektive Besatzung folgt unverändert der COALESCE-Regel: Einsatzwert nur,
+  wenn `crew_override = 1` **und** die Rolle in `mission_crew` belegt ist, sonst
+  die Besatzung des Diensttags aus `day_crew`.
 
 `start_min` (Minuten seit Mitternacht, Grundlage des Alarmzeitfilters) wird aus
 derselben `fmt_local()`-Umrechnung abgeleitet wie `start_hhmm`, damit Anzeige

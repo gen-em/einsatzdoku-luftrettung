@@ -23,6 +23,10 @@ declare(strict_types=1);
  * Zaehlung von den fruehen Spezifikations-Staenden 1.0-1.2 ab; 3.0.0 markiert
  * den Umbau am Lebenszyklus des Inhaltsschluessels (Entsperren in der Sitzung);
  * 4.0.0 den Beginn der Umsetzung des Code-Reviews (gemeinsame Bausteine und
- * Schemaaenderungen, siehe Changelog).
+ * Schemaaenderungen, siehe Changelog); 6.0.0 die Erweiterung auf bodengebundene
+ * Notarzteinsaetze — der Flugtag ist zum DIENSTTAG geworden, die Besatzung ist
+ * normalisiert, und der Standort ist der Anker der Stammdaten. Eine Migration
+ * ist zwingend (2026_08_17_notarzt_erweiterung), und Sicherungen aelterer
+ * Formatversionen werden nicht mehr eingelesen.
  */
-const WEB_VERSION = '5.10.0';
+const WEB_VERSION = '6.0.0';

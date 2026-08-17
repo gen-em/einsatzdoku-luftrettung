@@ -211,7 +211,7 @@ function umfang_text(array $p): string
     $teile = [];
     if (is_array($z)) {
         $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
-        $teile[] = (int)($z['flugtage'] ?? 0) . ' Flugtage';
+        $teile[] = (int)($z['diensttage'] ?? $z['flugtage'] ?? 0) . ' Diensttage';
         $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
     }
     $teile[] = number_format($p['groesse'] / 1024, 0, ',', '.') . ' KB';

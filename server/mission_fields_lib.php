@@ -64,6 +64,17 @@ function mf_tagesspalten(): array
                         "mission_fields.php: '$col' hat 'day_col', ist aber kein "
                         . 'zulaessiger Spaltenname ([a-z][a-z0-9_]*).');
                 }
+                /* Ein Feld mit 'store' ist KEINE Spalte in `missions` (siehe
+                 * mission_fields.php). Eine Tagesspalte daraus liefe in einen
+                 * SQL-Fehler ohne erkennbaren Bezug — dieselbe Ueberlegung wie
+                 * bei der Namenspruefung darueber, nur fuer den Fehler, der
+                 * seit der Normalisierung der Besatzung moeglich ist. */
+                if (isset($f['store'])) {
+                    throw new RuntimeException(
+                        "mission_fields.php: '$col' hat 'day_col' und 'store'. "
+                        . 'Ein Feld, das nicht in `missions` liegt, kann keine '
+                        . 'Spalte der Tagestabelle sein.');
+                }
                 $gefunden[] = [
                     'col'    => (string)$col,
                     'art'    => $dc === 'check' ? 'check' : 'text',
@@ -79,4 +90,52 @@ function mf_tagesspalten(): array
     $sammle(require __DIR__ . '/mission_fields.php');
 
     return $spalten = $gefunden;
+}
+
+/**
+ * Besatzungsfelder des Katalogs: Feldname => Rollenkennung.
+ *
+ * Also `['crew_p1' => 'p1', …]`, in Katalogreihenfolge. Abgeleitet aus dem
+ * Schluessel 'store' => 'crew' — nicht aus einer zweiten Liste, die mit
+ * CREW_ROLES auseinanderlaufen koennte.
+ *
+ * Gebraucht an vier Stellen, die alle dasselbe wissen muessen: Formular
+ * (Lesen und Schreiben von `mission_crew`), api/mission.php (effektive
+ * Besatzung), Export und Backup.
+ *
+ * @return array<string,string>
+ */
+function mf_crew_felder(): array
+{
+    static $felder = null;
+    if ($felder !== null) { return $felder; }
+
+    $gefunden = [];
+    $sammle = static function (array $felder) use (&$sammle, &$gefunden): void {
+        foreach ($felder as $col => $f) {
+            if (($f['store'] ?? null) === 'crew') {
+                $gefunden[(string)$col] = (string)($f['role_code'] ?? substr((string)$col, 5));
+            }
+            if (!empty($f['children']) && is_array($f['children'])) { $sammle($f['children']); }
+        }
+    };
+    $sammle(require __DIR__ . '/mission_fields.php');
+
+    return $felder = $gefunden;
+}
+
+/**
+ * Ist dieses Feld eine Spalte in `missions`?
+ *
+ * Zwei Feldarten sind es nicht: 'resources' (eigene Zeilen in
+ * `mission_resources`) und alles mit 'store' (seit Web 6.0.0 die Besatzung in
+ * `mission_crew`). Beide duerfen nicht in ein SELECT, INSERT oder UPDATE auf
+ * `missions` geraten.
+ *
+ * Die Pruefung steht hier und nicht in jedem Aufrufer, weil sie sonst beim
+ * naechsten Sonderfall an fuenf Stellen nachgezogen werden muesste.
+ */
+function mf_ist_spalte(array $f): bool
+{
+    return !isset($f['store']) && ($f['type'] ?? 'text') !== 'resources';
 }

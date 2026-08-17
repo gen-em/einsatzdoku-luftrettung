@@ -97,12 +97,13 @@ function edbak_build(int $userId): string {
      * Kommt kuenftig eine Spalte hinzu, die mitgesichert werden soll, ist sie
      * hier einzutragen — und genau das ist der Punkt: Es ist eine
      * Entscheidung, keine Nebenwirkung. */
-    $missionSpalten = 'client_ref, day, started_at, ended_at, distance_m, ascent_m,
+    $missionSpalten = 'client_ref, day_id, started_at, ended_at, distance_m, ascent_m,
                        site_ele_m, final, manual, origin, edited, transport_dest,
+                       transport_mode, na_escort, false_alarm, start_src,
+                       dest_lat, dest_lon,
                        winch, winch_cycles, winch_cycles_pat, winch_airload,
                        bergwacht, secondary, schockraum, bw_unit, bw_info,
                        other_ema, crew_override,
-                       crew_p1, crew_p2, crew_hems, crew_fr, crew_other,
                        pat_blob, notes, created_at, deleted_at, deleted_with_day';
     /* NICHT in der Liste, und zwar mit Absicht:
      *
@@ -132,6 +133,19 @@ function edbak_build(int $userId): string {
     $missionZeilen = $q("SELECT id, $missionSpalten FROM missions
                          WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at", [$userId]);
     $missionIds = array_map(static fn($m) => (int)$m['id'], $missionZeilen);
+
+    /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
+     * waren es fuenf Spalten in `missions`; sie stehen deshalb im Format jetzt
+     * als Objekt role_code => name. */
+    $einsatzCrewNach = [];
+    if ($missionIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT mission_id, role_code, name FROM mission_crew
+                 WHERE mission_id IN ({IDS}) ORDER BY mission_id, role_code',
+                $missionIds) as $c) {
+            $einsatzCrewNach[(int)$c['mission_id']][(string)$c['role_code']] = $c['name'];
+        }
+    }
 
     // Phasen, Rettungsmittel, Reanimation: je eine Abfrage statt je Einsatz
     // (M5-12). Die Zuordnung geschieht im Speicher.
@@ -182,11 +196,12 @@ function edbak_build(int $userId): string {
         $m['resources'] = $mittelNach[$mid]    ?? [];
         $m['resus']     = $sitzungenNach[$mid] ?? [];
         $m['track']     = $spurNachEinsatz[$mid] ?? [];
+        $m['crew']      = $einsatzCrewNach[$mid] ?? [];
         $missions[] = $m;
     }
 
     $rests = [];
-    $restZeilen = $q('SELECT id, client_ref, day, started_at, ended_at, final,
+    $restZeilen = $q('SELECT id, client_ref, day_id, started_at, ended_at, final,
                              deleted_at, deleted_with_day
                       FROM rest_segments
                       WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]);
@@ -198,15 +213,72 @@ function edbak_build(int $userId): string {
         $rests[] = $r;
     }
 
-    // Flugtage: Verweise fuer Portabilitaet in Namen aufloesen
+    /* ---- Diensttage -------------------------------------------------------
+     *
+     * DIE KENNUNG MUSS MIT (E9). Bis Web 5.10.0 war das Datum der Schluessel
+     * eines Flugtags und genuegte als Verweis; seit mehrere Diensttage auf einem
+     * Kalendertag liegen koennen, benennt es keine Zeile mehr. Einsaetze und
+     * Ruhe-Segmente verweisen mit `day_id` hierher, und beim Einspielen wird die
+     * Kennung auf die neu vergebene umgeschrieben.
+     *
+     * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name`
+     * und `base_name` stehen im Diensttag selbst. Der frueher noetige Join auf
+     * `aircraft` und `bases` ist damit entfallen — und mit ihm die Luecke, dass
+     * ein geloeschtes Rettungsmittel eine Sicherung ohne Bezeichnung hinterliess.
+     * Die Verweise auf die Stammdaten werden zusaetzlich als NAMEN mitgefuehrt
+     * (`vehicle_ref`, `base_ref`), damit das Einspielen sie wieder verknuepfen
+     * kann; sie zeigen auf denselben Namen, koennen aber leer sein, wenn der
+     * Stammdatensatz inzwischen fehlt.
+     *
+     * Rollensatz und Faehigkeiten sind Teil des Snapshots und muessen mit —
+     * ohne sie waere nach dem Einspielen nicht mehr erkennbar, welche Rollen ein
+     * Dienst anbot.
+     *
+     * `day_refs` MUSS ins Backup (Konzept 4.8): Sonst legt ein spaeter
+     * eintreffender Upload derselben Uhr den Diensttag nach einer
+     * Wiederherstellung erneut an (A9, A8). */
     $days = [];
-    foreach ($q('SELECT d.day, d.crew_p1, d.crew_p2, d.crew_hems, d.crew_fr,
-                        d.crew_other, d.aircraft, d.base, d.crew, d.notes, d.deleted_at,
-                        a.registration AS aircraft_reg, b.name AS base_name
-                 FROM days d
-                 LEFT JOIN aircraft a ON a.id = d.aircraft_id
-                 LEFT JOIN bases b ON b.id = d.base_id
-                 WHERE d.user_id = ? AND d.deleted_at IS NULL ORDER BY d.day', [$userId]) as $d) {
+    $dayZeilen = $q('SELECT d.id, d.day, d.started_at, d.ended_at, d.kind,
+                            d.base_name, d.base_lat, d.base_lon, d.vehicle_name,
+                            d.notes, d.deleted_at,
+                            v.name AS vehicle_ref, b.name AS base_ref
+                     FROM days d
+                     LEFT JOIN vehicles v ON v.id = d.vehicle_id
+                     LEFT JOIN bases b ON b.id = d.base_id
+                     WHERE d.user_id = ? AND d.deleted_at IS NULL
+                     ORDER BY d.day, d.started_at, d.id', [$userId]);
+    $dayIds = array_map(static fn($d) => (int)$d['id'], $dayZeilen);
+
+    $tagesCrewNach = $tagesCapsNach = $dayRefsNach = [];
+    if ($dayIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT day_id, role_code, name FROM day_crew
+                 WHERE day_id IN ({IDS}) ORDER BY day_id, role_code', $dayIds) as $c) {
+            $tagesCrewNach[(int)$c['day_id']][(string)$c['role_code']] = $c['name'];
+        }
+        foreach (sql_in_bloecken($pdo,
+                'SELECT day_id, capability FROM day_capabilities
+                 WHERE day_id IN ({IDS}) ORDER BY day_id, capability', $dayIds) as $c) {
+            $tagesCapsNach[(int)$c['day_id']][] = (string)$c['capability'];
+        }
+        /* Die Uhr-Kennungen samt oeffentlicher Geraetekennung. Die interne
+         * device_id gilt nur in dieser Datenbank; der Name des Geraets ist der
+         * portable Verweis — dieselbe Regel wie bei den Stammdaten. */
+        foreach (sql_in_bloecken($pdo,
+                'SELECT r.day_id, r.day_ref, dev.device_id
+                 FROM day_refs r LEFT JOIN devices dev ON dev.id = r.device_id
+                 WHERE r.day_id IN ({IDS}) ORDER BY r.day_id, r.id', $dayIds) as $r) {
+            $dayRefsNach[(int)$r['day_id']][] = [
+                'day_ref'   => (string)$r['day_ref'],
+                'device_id' => $r['device_id'] !== null ? (string)$r['device_id'] : null,
+            ];
+        }
+    }
+    foreach ($dayZeilen as $d) {
+        $did = (int)$d['id'];
+        $d['crew']         = $tagesCrewNach[$did] ?? [];
+        $d['capabilities'] = $tagesCapsNach[$did] ?? [];
+        $d['refs']         = $dayRefsNach[$did]   ?? [];
         $days[] = $d;
     }
 
@@ -214,21 +286,82 @@ function edbak_build(int $userId): string {
     // selbst, werden im Exportformat aber weiterhin als is_default-Flag je
     // Zeile abgebildet (Abwaertskompatibilitaet, s. docs/Backup-Format.md)
     $defBaseId = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "base"', [$userId])[0]['item_id'] ?? 0);
-    $defAcId   = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "aircraft"', [$userId])[0]['item_id'] ?? 0);
+    $defVehId  = (int)($q('SELECT item_id FROM user_defaults WHERE user_id = ? AND kind = "vehicle"', [$userId])[0]['item_id'] ?? 0);
 
-    $bases = $q('SELECT id, name FROM bases WHERE user_id = ? ORDER BY name', [$userId]);
-    foreach ($bases as &$b) { $b['is_default'] = (int)$b['id'] === $defBaseId ? 1 : 0; unset($b['id']); }
+    /* Standorte: mit Koordinaten (E37). Der Name bleibt der portable
+     * Schluessel, an dem die uebrigen Stammdaten haengen. */
+    $bases = $q('SELECT id, name, lat, lon FROM bases WHERE user_id = ? ORDER BY name', [$userId]);
+    $baseNameById = [];
+    foreach ($bases as &$b) {
+        $baseNameById[(int)$b['id']] = (string)$b['name'];
+        $b['is_default'] = (int)$b['id'] === $defBaseId ? 1 : 0;
+        unset($b['id']);
+    }
     unset($b);
-    $aircraft = $q('SELECT id, registration, p1, p2, hems, fr, other
-                    FROM aircraft WHERE user_id = ? ORDER BY registration', [$userId]);
-    foreach ($aircraft as &$a) { $a['is_default'] = (int)$a['id'] === $defAcId ? 1 : 0; unset($a['id']); }
-    unset($a);
+
+    /* Rettungsmittel (bis Web 5.10.0: `aircraft`). Art, Rollen und
+     * Faehigkeiten gehoeren dazu; der Standort als NAME, weil Kennungen nur in
+     * dieser Datenbank gelten (E15). */
+    $vehZeilen = $q('SELECT id, name, kind, base_id FROM vehicles
+                     WHERE user_id = ? ORDER BY name', [$userId]);
+    $vehIds = array_map(static fn($v) => (int)$v['id'], $vehZeilen);
+    $vehRollen = $vehCaps = [];
+    if ($vehIds) {
+        foreach (sql_in_bloecken($pdo,
+                'SELECT vehicle_id, role_code FROM vehicle_roles
+                 WHERE vehicle_id IN ({IDS}) ORDER BY vehicle_id, role_code', $vehIds) as $r) {
+            $vehRollen[(int)$r['vehicle_id']][] = (string)$r['role_code'];
+        }
+        foreach (sql_in_bloecken($pdo,
+                'SELECT vehicle_id, capability FROM vehicle_capabilities
+                 WHERE vehicle_id IN ({IDS}) ORDER BY vehicle_id, capability', $vehIds) as $c) {
+            $vehCaps[(int)$c['vehicle_id']][] = (string)$c['capability'];
+        }
+    }
+    $vehicles = [];
+    foreach ($vehZeilen as $v) {
+        $vid = (int)$v['id'];
+        $vehicles[] = [
+            'name'         => (string)$v['name'],
+            'kind'         => (string)$v['kind'],
+            'base_ref'     => $v['base_id'] !== null ? ($baseNameById[(int)$v['base_id']] ?? null) : null,
+            'roles'        => $vehRollen[$vid] ?? [],
+            'capabilities' => $vehCaps[$vid] ?? [],
+            'is_default'   => $vid === $defVehId ? 1 : 0,
+        ];
+    }
+
+    /* Auswahl zentraler Standorte (E16). Als NAME, nicht als Kennung: Ein
+     * zentraler Standort heisst in der Zieldatenbank gleich, hat dort aber eine
+     * andere Kennung. */
+    $userBases = $q('SELECT b.name FROM user_bases ub
+                     JOIN bases b ON b.id = ub.base_id
+                     WHERE ub.user_id = ? AND b.user_id IS NULL
+                     ORDER BY b.name', [$userId]);
+
+    /* Die uebrigen Stammdaten tragen jetzt ihren Standort (E15) — ebenfalls als
+     * Name. Ohne ihn liesse sich nach dem Einspielen nicht entscheiden, zu
+     * welchem Standort eine Zielklinik gehoert, und die Auswahllisten blieben
+     * leer. */
+    $mitBase = static function (array $zeilen, array $namen): array {
+        foreach ($zeilen as &$z) {
+            $z['base_ref'] = isset($z['base_id']) && $z['base_id'] !== null
+                ? ($namen[(int)$z['base_id']] ?? null) : null;
+            unset($z['base_id']);
+        }
+        unset($z);
+        return $zeilen;
+    };
 
     $data = [
         'format' => 'einsatzdoku-backup',
-        'version' => 5,
+        /* Nutzlastversion 6 (Konzept 4.8). Der Container bleibt 3 und die
+         * Signatur `EDBAK2` unveraendert — nur der INHALT hat sich geaendert.
+         * Aeltere Nutzlasten werden nach E23 nicht mehr eingelesen; die
+         * Ablehnung steht in backup_restore(). */
+        'version' => 6,
         'created_at' => gmdate('c'),
-        'app' => 'einsatzdoku-luftrettung',
+        'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
         /* Pruefsumme des Inhaltsschluessels dieses Kontos.
          *
@@ -244,11 +377,16 @@ function edbak_build(int $userId): string {
         'pat_key_check' => $u['pat_key_check'] ?? null,
         'stammdaten' => [
             'bases'           => $bases,
-            'aircraft'        => $aircraft,
-            'crew_presets'    => $q('SELECT role, name FROM crew_presets WHERE user_id = ? ORDER BY role, name', [$userId]),
-            'bw_units'        => $q('SELECT name FROM bw_units WHERE user_id = ? ORDER BY name', [$userId]),
-            'resources'       => $q('SELECT name FROM resources WHERE user_id = ? ORDER BY name', [$userId]),
-            'transport_dests' => $q('SELECT name FROM transport_dests WHERE user_id = ? ORDER BY name', [$userId]),
+            'vehicles'        => $vehicles,
+            'user_bases'      => array_map(static fn($r) => (string)$r['name'], $userBases),
+            'crew_presets'    => $mitBase($q('SELECT role_code, name, base_id FROM crew_presets
+                                              WHERE user_id = ? ORDER BY role_code, name', [$userId]), $baseNameById),
+            'bw_units'        => $mitBase($q('SELECT name, base_id FROM bw_units
+                                              WHERE user_id = ? ORDER BY name', [$userId]), $baseNameById),
+            'resources'       => $mitBase($q('SELECT name, base_id FROM resources
+                                              WHERE user_id = ? ORDER BY name', [$userId]), $baseNameById),
+            'transport_dests' => $mitBase($q('SELECT name, lat, lon, base_id FROM transport_dests
+                                              WHERE user_id = ? ORDER BY name', [$userId]), $baseNameById),
         ],
         'days' => $days,
         'missions' => $missions,
@@ -338,25 +476,83 @@ function edbak_restore(int $userId, array $data): array {
         foreach (($sd['bases'] ?? []) as $b) {
             $name = (string)$b['name'];
             if (stammdaten_dup_global('bases', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name) VALUES (?,?)');
-            $st->execute([$userId, $name]);
+            // Koordinaten kommen mit (E37); sie duerfen leer bleiben.
+            $st = $pdo->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)');
+            $st->execute([$userId, $name, $b['lat'] ?? null, $b['lon'] ?? null]);
             $stats['stammdaten'] += $st->rowCount();
             if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
-        $ha = $pdo->prepare("SELECT COUNT(*) FROM user_defaults WHERE user_id = ? AND kind = 'aircraft'");
-        $ha->execute([$userId]);
-        $hasDefAc = (bool)$ha->fetchColumn();
-        $newDefAcReg = null;
-        foreach (($sd['aircraft'] ?? []) as $a) {
-            $reg = (string)$a['registration'];
-            if (stammdaten_dup_global('aircraft', 'registration', $reg)) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO aircraft
-                (user_id, registration, p1, p2, hems, fr, other) VALUES (?,?,?,?,?,?,?)');
-            $st->execute([$userId, $reg,
-                (int)($a['p1'] ?? 0), (int)($a['p2'] ?? 0), (int)($a['hems'] ?? 0),
-                (int)($a['fr'] ?? 0), (int)($a['other'] ?? 0)]);
+        /* Standortkennung zum Namen. Der Name ist der portable Schluessel (E15):
+         * Die Kennung aus der Sicherungsdatei gilt nur in der Datenbank, aus der
+         * sie stammt. Gesucht wird unter den EIGENEN und den zentralen
+         * Standorten — ein zentraler heisst in beiden Installationen gleich. */
+        $baseIdByName = function (?string $name) use ($pdo, $userId): ?int {
+            if ($name === null || $name === '') { return null; }
+            $x = $pdo->prepare('SELECT id FROM bases
+                                WHERE name = ? AND (user_id = ? OR user_id IS NULL)
+                                ORDER BY user_id IS NULL LIMIT 1');
+            $x->execute([$name, $userId]);
+            $id = $x->fetchColumn();
+            return $id === false ? null : (int)$id;
+        };
+
+        /* Zentrale Standorte wieder auswaehlen (E16). Ohne das verschwaenden sie
+         * nach dem Einspielen aus den Auswahllisten, obwohl die Diensttage sie
+         * weiter benennen. */
+        foreach (($sd['user_bases'] ?? []) as $bn) {
+            $bid = $baseIdByName((string)$bn);
+            if ($bid === null) { continue; }
+            $pdo->prepare('INSERT IGNORE INTO user_bases (user_id, base_id) VALUES (?,?)')
+                ->execute([$userId, $bid]);
+        }
+
+        /* Rettungsmittel samt Art, Rollen und Faehigkeiten (E3, E29).
+         *
+         * OHNE STANDORT WIRD NICHT ANGELEGT: `vehicles.base_id` traegt nach der
+         * Nachbearbeitung NOT NULL (A12), und ein Rettungsmittel ohne Standort
+         * waere nach E15 kein gueltiger Zustand. Der Fall wird gezaehlt, nicht
+         * stillschweigend uebergangen. */
+        $hv = $pdo->prepare("SELECT COUNT(*) FROM user_defaults WHERE user_id = ? AND kind = 'vehicle'");
+        $hv->execute([$userId]);
+        $hasDefVeh = (bool)$hv->fetchColumn();
+        $newDefVehName = null;
+        foreach (($sd['vehicles'] ?? []) as $v) {
+            $name = (string)($v['name'] ?? '');
+            if ($name === '') { $stats['stammdaten_skipped']++; continue; }
+            $kind = ($v['kind'] ?? '') === 'ground' ? 'ground' : 'air';
+            $bid  = $baseIdByName(isset($v['base_ref']) ? (string)$v['base_ref'] : null);
+            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            if (stammdaten_dup_global('vehicles', 'name', $name)) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO vehicles (user_id, base_id, name, kind)
+                                 VALUES (?,?,?,?)');
+            $st->execute([$userId, $bid, $name, $kind]);
             $stats['stammdaten'] += $st->rowCount();
-            if (!$hasDefAc && (int)($a['is_default'] ?? 0)) { $newDefAcReg = $reg; }
+
+            $x = $pdo->prepare('SELECT id FROM vehicles WHERE user_id = ? AND name = ?');
+            $x->execute([$userId, $name]);
+            $vid = $x->fetchColumn();
+            if ($vid !== false) {
+                $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code)
+                                       VALUES (?,?)');
+                foreach ((array)($v['roles'] ?? []) as $rc) {
+                    if (array_key_exists((string)$rc, CREW_ROLES)) { $insR->execute([(int)$vid, (string)$rc]); }
+                }
+                /* Faehigkeiten kommen ausschliesslich an luftgebundenen
+                 * Rettungsmitteln vor (E29, schema.sql). Bei einem
+                 * bodengebundenen werden sie verworfen statt gespeichert — sonst
+                 * traege der Bestand einen Zustand, den die Oberflaeche nicht
+                 * herstellen kann. */
+                if ($kind === 'air') {
+                    $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities
+                                           (vehicle_id, capability) VALUES (?,?)');
+                    foreach ((array)($v['capabilities'] ?? []) as $cap) {
+                        if (array_key_exists((string)$cap, VEHICLE_CAPABILITIES)) {
+                            $insC->execute([(int)$vid, (string)$cap]);
+                        }
+                    }
+                }
+            }
+            if (!$hasDefVeh && (int)($v['is_default'] ?? 0)) { $newDefVehName = $name; }
         }
         // is_default-Flags aus dem Backup in user_defaults schreiben (nur wenn
         // noch kein Default des Typs existiert — bestehende Semantik $hasDefBase/$hasDefAc)
@@ -368,79 +564,225 @@ function edbak_restore(int $userId, array $data): array {
                                ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $bid]);
             }
         }
-        if ($newDefAcReg !== null) {
-            $x = $pdo->prepare('SELECT id FROM aircraft WHERE user_id = ? AND registration = ?');
-            $x->execute([$userId, $newDefAcReg]);
-            if ($aid = $x->fetchColumn()) {
-                $pdo->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"aircraft",?)
-                               ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $aid]);
+        if ($newDefVehName !== null) {
+            $x = $pdo->prepare('SELECT id FROM vehicles WHERE user_id = ? AND name = ?');
+            $x->execute([$userId, $newDefVehName]);
+            if ($vid = $x->fetchColumn()) {
+                $pdo->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"vehicle",?)
+                               ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')->execute([$userId, $vid]);
             }
         }
+        /* Die uebrigen Stammdaten haengen jetzt an einem Standort (E15). Ohne
+         * ihn wird nicht angelegt — die Spalte traegt nach der Nachbearbeitung
+         * NOT NULL, und ein Eintrag ohne Standort erschiene in keiner
+         * Auswahlliste. Der Fall wird gezaehlt. */
         foreach (($sd['crew_presets'] ?? []) as $c) {
-            if (!in_array($c['role'] ?? '', ['p1','p2','hems','fr','other'], true)) { continue; }
-            if (stammdaten_dup_global('crew_presets', 'name', (string)$c['name'], 'role', $c['role'])) {
-                $stats['stammdaten_skipped']++; continue;
-            }
-            $st = $pdo->prepare('INSERT IGNORE INTO crew_presets (user_id, role, name) VALUES (?,?,?)');
-            $st->execute([$userId, $c['role'], (string)$c['name']]);
+            $rc = (string)($c['role_code'] ?? $c['role'] ?? '');
+            if (!array_key_exists($rc, CREW_ROLES)) { continue; }
+            $bid = $baseIdByName(isset($c['base_ref']) ? (string)$c['base_ref'] : null);
+            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO crew_presets
+                                 (user_id, base_id, role_code, name) VALUES (?,?,?,?)');
+            $st->execute([$userId, $bid, $rc, (string)$c['name']]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['bw_units'] ?? []) as $w) {
-            if (stammdaten_dup_global('bw_units', 'name', (string)$w['name'])) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO bw_units (user_id, name) VALUES (?,?)');
-            $st->execute([$userId, (string)$w['name']]);
+            $bid = $baseIdByName(isset($w['base_ref']) ? (string)$w['base_ref'] : null);
+            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)');
+            $st->execute([$userId, $bid, (string)$w['name']]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['resources'] ?? []) as $r) {
-            if (stammdaten_dup_global('resources', 'name', (string)$r['name'])) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO resources (user_id, name) VALUES (?,?)');
-            $st->execute([$userId, (string)$r['name']]);
+            $bid = $baseIdByName(isset($r['base_ref']) ? (string)$r['base_ref'] : null);
+            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)');
+            $st->execute([$userId, $bid, (string)$r['name']]);
             $stats['stammdaten'] += $st->rowCount();
         }
         foreach (($sd['transport_dests'] ?? []) as $t) {
-            if (stammdaten_dup_global('transport_dests', 'name', (string)$t['name'])) { $stats['stammdaten_skipped']++; continue; }
-            $st = $pdo->prepare('INSERT IGNORE INTO transport_dests (user_id, name) VALUES (?,?)');
-            $st->execute([$userId, (string)$t['name']]);
+            $bid = $baseIdByName(isset($t['base_ref']) ? (string)$t['base_ref'] : null);
+            if ($bid === null) { $stats['stammdaten_skipped']++; continue; }
+            $st = $pdo->prepare('INSERT IGNORE INTO transport_dests
+                                 (user_id, base_id, name, lat, lon) VALUES (?,?,?,?,?)');
+            $st->execute([$userId, $bid, (string)$t['name'],
+                          $t['lat'] ?? null, $t['lon'] ?? null]);
             $stats['stammdaten'] += $st->rowCount();
         }
 
-        /* Flugtage (bestehende Tage bleiben unangetastet) */
+        /* ---- Diensttage -------------------------------------------------------
+         *
+         * DIE KENNUNG WIRD NEU VERGEBEN, und die Zuordnung von alter auf neue
+         * Kennung ist das Ergebnis dieses Abschnitts: Einsaetze und
+         * Ruhe-Segmente der Datei verweisen mit der ALTEN `day_id`, in der
+         * Datenbank gilt die neue.
+         *
+         * KEIN `INSERT IGNORE` MEHR, und die Wiedererkennung braucht mehr als
+         * das Datum. Bis Web 5.10.0 verhinderte der Tagesschluessel
+         * `uq_user_day`, dass ein bereits vorhandener Flugtag ein zweites Mal
+         * entstand; das Einspielen konnte deshalb blind einfuegen. Seit E9 gibt
+         * es diesen Schluessel nicht — ein blindes INSERT legte bei jedem
+         * Einspielen derselben Datei neue Diensttage an.
+         *
+         * ERKANNT WIRD IN ZWEI SCHRITTEN, und der erste ist der belastbare:
+         *
+         *   1. UEBER DIE EINSAETZE. `client_ref` ist geraeteweit eindeutig und
+         *      wandert unveraendert durch jede Sicherung. Existiert einer der
+         *      Einsaetze dieses Diensttags im Ziel schon, IST sein `day_id` der
+         *      gesuchte Tag — daran gibt es nichts zu raten.
+         *   2. UEBER EINEN FINGERABDRUCK aus Datum, Dienstbeginn, Dienstende,
+         *      Art und den eingefrorenen Bezeichnungen. Er greift fuer
+         *      Diensttage OHNE Einsatz, die Schritt 1 nicht sehen kann. Zwei
+         *      Tage, die in all dem uebereinstimmen, sind nicht
+         *      unterscheidbar — sie zu vereinen ist dann kein Verlust.
+         *
+         * Datum und Dienstbeginn allein genuegen NICHT: Zwei Dienste eines
+         * Kalendertags koennen denselben Beginn tragen, sobald ein Einsatz
+         * zwischen ihnen verschoben wurde (dt_zeitraum_fortschreiben zieht den
+         * Beginn nach vorne). Genau dieser Fall verschmolz beim Pruefen zwei
+         * Diensttage zu einem.
+         *
+         * ANGABEN WERDEN NICHT UEBERSCHRIEBEN. Ein vorhandener Diensttag bleibt
+         * unangetastet — auch das ist bestehendes Verhalten (INSERT IGNORE tat
+         * genau das). Nur die Zuordnung wird gemerkt, damit fehlende Einsaetze
+         * an ihm landen. */
+        $dayIdMap = [];   // alte Kennung aus der Datei -> Kennung in dieser DB
+
+        // Schritt 1 braucht die Einsatzkennungen JE QUELL-DIENSTTAG, also vor
+        // der Schleife: Die Einsaetze selbst werden erst danach verarbeitet.
+        $refsJeQuelltag = [];
+        foreach (($data['missions'] ?? []) as $mm) {
+            if (!is_array($mm)) { continue; }
+            $q = isset($mm['day_id']) ? (int)$mm['day_id'] : 0;
+            $ref = (string)($mm['client_ref'] ?? '');
+            if ($q > 0 && $ref !== '') { $refsJeQuelltag[$q][] = $ref; }
+        }
+        $findeUeberEinsatz = $pdo->prepare('SELECT day_id FROM missions
+                                            WHERE user_id = ? AND client_ref = ?
+                                              AND day_id IS NOT NULL LIMIT 1');
+        $findeTag = $pdo->prepare(
+            'SELECT id FROM days
+              WHERE user_id = ? AND day = ?
+                AND ((started_at IS NULL AND ? IS NULL) OR started_at = ?)
+                AND ((ended_at IS NULL AND ? IS NULL) OR ended_at = ?)
+                AND ((kind IS NULL AND ? IS NULL) OR kind = ?)
+                AND ((vehicle_name IS NULL AND ? IS NULL) OR vehicle_name = ?)
+                AND ((base_name IS NULL AND ? IS NULL) OR base_name = ?)
+              ORDER BY id LIMIT 1');
         foreach (($data['days'] ?? []) as $d) {
             $tagWert = pruef_kalendertag($d['day'] ?? null, 'days.day', $pruef);
             if ($tagWert === null) { $grund['tag_unbrauchbar']++; continue; }
+            $altId = isset($d['id']) ? (int)$d['id'] : 0;
 
-            $acId = null; $baseId = null;
-            if (!empty($d['aircraft_reg'])) {
-                $x = $pdo->prepare('SELECT id FROM aircraft WHERE user_id = ? AND registration = ?');
-                $x->execute([$userId, $d['aircraft_reg']]);
-                $acId = $x->fetchColumn() ?: null;
-            }
-            if (!empty($d['base_name'])) {
-                $x = $pdo->prepare('SELECT id FROM bases WHERE user_id = ? AND name = ?');
-                $x->execute([$userId, $d['base_name']]);
-                $baseId = $x->fetchColumn() ?: null;
-            }
-            /* FLUGTAG IM PAPIERKORB: ABLEHNEN UND ZAEHLEN (D1).
+            /* DIENSTTAG IM PAPIERKORB: ABLEHNEN UND ZAEHLEN (D1).
              *
              * Ohne diese Pruefung tat INSERT IGNORE hier zwar nichts — der
              * eindeutige Schluessel greift —, aber eben STILL: Der Tag wurde
              * weder eingespielt noch gezaehlt noch erwaehnt. Wer eine
-             * Sicherung zurueckspielt und seine Flugtage vermisst, hat
-             * keinen Anhaltspunkt. Jetzt wird der Fall benannt. */
+             * Sicherung zurueckspielt und seine Diensttage vermisst, hat
+             * keinen Anhaltspunkt. Jetzt wird der Fall benannt.
+             *
+             * Gepruefte wird das DATUM, nicht die Zeile: Ein Diensttag im
+             * Papierkorb, der demselben Datum angehoert, ist der wahrscheinliche
+             * Fall — und ihn ueber ein Einspielen zurueckzuholen waere dieselbe
+             * unsichtbare Nebenwirkung, die D1 ausschliesst. */
             if (isset($tageImPapierkorb[$tagWert])) {
                 $grund['tag_im_papierkorb']++;
                 continue;
             }
-            $st = $pdo->prepare('INSERT IGNORE INTO days
-                (user_id, day, aircraft_id, base_id, crew_p1, crew_p2, crew_hems, crew_fr,
-                 crew_other, aircraft, base, crew, notes)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
-            $st->execute([$userId, $tagWert, $acId, $baseId,
-                $d['crew_p1'] ?? null, $d['crew_p2'] ?? null, $d['crew_hems'] ?? null,
-                $d['crew_fr'] ?? null, $d['crew_other'] ?? null,
-                $d['aircraft'] ?? null, $d['base'] ?? null, $d['crew'] ?? null,
-                $d['notes'] ?? null]);
-            $stats['days'] += $st->rowCount();
+
+            $startedAt = $d['started_at'] ?? null;
+            $endedAt   = $d['ended_at'] ?? null;
+            $kindWert  = in_array($d['kind'] ?? null, ['air', 'ground'], true) ? $d['kind'] : null;
+            $vName     = $d['vehicle_name'] ?? null;
+            $bName     = $d['base_name'] ?? null;
+
+            // Schritt 1: ueber einen Einsatz, der im Ziel schon liegt.
+            $vorhanden = false;
+            foreach (($refsJeQuelltag[$altId] ?? []) as $ref) {
+                $findeUeberEinsatz->execute([$userId, $ref]);
+                $w = $findeUeberEinsatz->fetchColumn();
+                if ($w !== false) { $vorhanden = (int)$w; break; }
+            }
+            // Schritt 2: Fingerabdruck.
+            if ($vorhanden === false) {
+                $findeTag->execute([$userId, $tagWert, $startedAt, $startedAt,
+                                    $endedAt, $endedAt, $kindWert, $kindWert,
+                                    $vName, $vName, $bName, $bName]);
+                $w = $findeTag->fetchColumn();
+                if ($w !== false) { $vorhanden = (int)$w; }
+            }
+            if ($vorhanden !== false) {
+                if ($altId > 0) { $dayIdMap[$altId] = (int)$vorhanden; }
+                continue;
+            }
+
+            /* Angelegt wird mit den EINGEFRORENEN Angaben aus der Datei (E8) —
+             * nicht ueber dt_zuordnen(), das sie aus den heutigen Stammdaten
+             * frisch holen wuerde. Eine Sicherung soll den Bestand abbilden,
+             * nicht ihn neu ableiten: Ein inzwischen umbenanntes Rettungsmittel
+             * traegt in der Datei seinen damaligen Namen, und der gehoert
+             * zurueck (A4, A13p). Die Fremdschluessel werden daneben ueber den
+             * NAMEN wieder verknuepft, soweit der Stammdatensatz existiert. */
+            $vehId  = null;
+            if (!empty($d['vehicle_ref'])) {
+                $x = $pdo->prepare('SELECT id FROM vehicles
+                                    WHERE name = ? AND (user_id = ? OR user_id IS NULL)
+                                    ORDER BY user_id IS NULL LIMIT 1');
+                $x->execute([(string)$d['vehicle_ref'], $userId]);
+                $w = $x->fetchColumn();
+                $vehId = $w === false ? null : (int)$w;
+            }
+            $baseId = $baseIdByName(isset($d['base_ref']) ? (string)$d['base_ref'] : null);
+
+            $st = $pdo->prepare('INSERT INTO days
+                (user_id, day, started_at, ended_at, vehicle_id, base_id, kind,
+                 base_name, base_lat, base_lon, vehicle_name, notes)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
+            $st->execute([$userId, $tagWert, $startedAt, $endedAt,
+                $vehId, $baseId, $kindWert,
+                $bName, $d['base_lat'] ?? null, $d['base_lon'] ?? null,
+                $vName, $d['notes'] ?? null]);
+            $neuId = (int)$pdo->lastInsertId();
+            $stats['days']++;
+            if ($altId > 0) { $dayIdMap[$altId] = $neuId; }
+
+            // Rollensatz und Faehigkeiten sind Teil des Snapshots (E8).
+            $insDC = $pdo->prepare('INSERT IGNORE INTO day_crew (day_id, role_code, name)
+                                    VALUES (?,?,?)');
+            foreach ((array)($d['crew'] ?? []) as $rc => $nm) {
+                if (!array_key_exists((string)$rc, CREW_ROLES)) { continue; }
+                $insDC->execute([$neuId, (string)$rc,
+                                 ($nm === null || $nm === '') ? null : mb_substr((string)$nm, 0, 120)]);
+            }
+            $insDCap = $pdo->prepare('INSERT IGNORE INTO day_capabilities (day_id, capability)
+                                      VALUES (?,?)');
+            foreach ((array)($d['capabilities'] ?? []) as $cap) {
+                if (array_key_exists((string)$cap, VEHICLE_CAPABILITIES)) {
+                    $insDCap->execute([$neuId, (string)$cap]);
+                }
+            }
+
+            /* UHR-KENNUNGEN WIEDERHERSTELLEN (Konzept 4.8, A9).
+             *
+             * Ohne sie legt ein spaeter eintreffender Upload derselben Uhr den
+             * Diensttag erneut an — genau der Fall, den A8 ausschliesst. Die
+             * Geraetekennung ist der oeffentliche Name; ein Geraet, das es hier
+             * nicht (mehr) gibt, ergibt device_id = NULL, und die Kennung bleibt
+             * trotzdem gespeichert. */
+            $insRef = $pdo->prepare('INSERT IGNORE INTO day_refs (day_id, device_id, day_ref)
+                                     VALUES (?,?,?)');
+            $findeDev = $pdo->prepare('SELECT id FROM devices WHERE device_id = ? AND user_id = ?');
+            foreach ((array)($d['refs'] ?? []) as $ref) {
+                if (!is_array($ref) || empty($ref['day_ref'])) { continue; }
+                $devId = null;
+                if (!empty($ref['device_id'])) {
+                    $findeDev->execute([(string)$ref['device_id'], $userId]);
+                    $w = $findeDev->fetchColumn();
+                    $devId = $w === false ? null : (int)$w;
+                }
+                $insRef->execute([$neuId, $devId, mb_substr((string)$ref['day_ref'], 0, 64)]);
+            }
         }
 
         /* Einsaetze: Dublette = gleiche client_ref bei dieser NutzerIn */
@@ -489,21 +831,29 @@ function edbak_restore(int $userId, array $data): array {
              *    Bei einer Wiederherstellung ist das die falsche Richtung:
              *    Wer sie startet, hat meist keinen zweiten Versuch.
              */
-            $tag       = pruef_kalendertag($m['day'] ?? null, 'day', $pruef);
             $startedAt = pruef_utc_oder_sql($m['started_at'] ?? null, 'started_at', $pruef);
-            if ($tag === null || $startedAt === null) {
+            /* DER DIENSTTAG IST PFLICHT. `missions.day_id` ist ein
+             * Fremdschluessel; ohne ihn waere der Einsatz verwaist (A11). Die
+             * Kennung aus der Datei wird ueber $dayIdMap auf die hier vergebene
+             * umgeschrieben — fehlt sie dort, wurde der Diensttag uebersprungen
+             * (Papierkorb, unbrauchbares Datum), und der Einsatz gehoert
+             * ebenfalls uebersprungen und gezaehlt. Bis Web 5.10.0 trug der
+             * Einsatz sein Datum selbst und konnte ohne Tag existieren. */
+            $altDayId = isset($m['day_id']) ? (int)$m['day_id'] : 0;
+            $dayId    = $dayIdMap[$altDayId] ?? 0;
+            if ($startedAt === null || $dayId === 0) {
                 $stats['missions_skipped']++; $grund['datum_oder_zeit']++; continue;
             }
             $endedAt = pruef_utc_oder_sql($m['ended_at'] ?? null, 'ended_at', $pruef);
 
             $oe = edbak_origin_edited($m);
 
-            $cols = ['user_id', 'client_ref', 'day', 'started_at', 'ended_at',
+            $cols = ['user_id', 'client_ref', 'day_id', 'started_at', 'ended_at',
                      'manual', 'origin', 'edited', 'final', 'distance_m', 'ascent_m'];
             $vals = [$userId,
                      pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
                         ?? ('bak-' . bin2hex(random_bytes(6))),
-                     $tag, $startedAt, $endedAt,
+                     $dayId, $startedAt, $endedAt,
                      (int)($m['manual'] ?? 0), $oe['origin'], $oe['edited'], (int)($m['final'] ?? 1),
                      pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
                      pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef)];
@@ -520,6 +870,18 @@ function edbak_restore(int $userId, array $data): array {
                  . implode(',', array_fill(0, count($cols), '?')) . ')';
             $pdo->prepare($sql)->execute($vals);
             $mid = (int)$pdo->lastInsertId();
+
+            /* Abweichende Besatzung (`mission_crew`, E7). Bis Web 5.10.0 waren
+             * es fuenf Spalten und wanderten ueber $extraCols mit; jetzt sind es
+             * Zeilen. Nur belegte Rollen: `mission_crew` fuehrt Abweichungen,
+             * keine Leerzeilen. */
+            $insMC = $pdo->prepare('INSERT IGNORE INTO mission_crew
+                (mission_id, role_code, name) VALUES (?,?,?)');
+            foreach ((array)($m['crew'] ?? []) as $rc => $nm) {
+                if (!array_key_exists((string)$rc, CREW_ROLES)) { continue; }
+                if ($nm === null || trim((string)$nm) === '') { continue; }
+                $insMC->execute([$mid, (string)$rc, mb_substr(trim((string)$nm), 0, 120)]);
+            }
 
             $insPh = $pdo->prepare('INSERT INTO mission_phases
                 (mission_id, phase, occurred_at, lat, lon) VALUES (?,?,?,?,?)');
@@ -592,11 +954,15 @@ function edbak_restore(int $userId, array $data): array {
         foreach (($data['rest_segments'] ?? []) as $r) {
             $rexists->execute([$userId, (string)($r['client_ref'] ?? '')]);
             if ($rexists->fetchColumn()) { $stats['rests_skipped']++; continue; }
+            // Wie beim Einsatz: ohne Diensttag kein Ruhe-Segment (A11).
+            $altRDayId = isset($r['day_id']) ? (int)$r['day_id'] : 0;
+            $rDayId    = $dayIdMap[$altRDayId] ?? 0;
+            if ($rDayId === 0) { $stats['rests_skipped']++; $grund['datum_oder_zeit']++; continue; }
             $pdo->prepare('INSERT INTO rest_segments
-                (user_id, client_ref, day, started_at, ended_at, final)
+                (user_id, client_ref, day_id, started_at, ended_at, final)
                 VALUES (?,?,?,?,?,?)')
                 ->execute([$userId, $r['client_ref'] ?? ('imp-' . bin2hex(random_bytes(6))),
-                           $r['day'], $r['started_at'], $r['ended_at'] ?? null,
+                           $rDayId, $r['started_at'], $r['ended_at'] ?? null,
                            (int)($r['final'] ?? 1)]);
             $rid = (int)$pdo->lastInsertId();
             foreach (($r['track'] ?? []) as $p) {

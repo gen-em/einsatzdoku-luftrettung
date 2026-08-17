@@ -109,7 +109,12 @@ const EdMissionTable = (() => {
     { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'c-sek',
       wert: m => m.secondary ? 1 : 0,
       zelle: m => `<td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>` },
-    { key: 'km',    kopf: 'Flug&nbsp;km',          thClass: 'c-mid',
+    /* Neutral beschriftet, nicht „Flug km" (Abschnitt 3.9/3.7.3). Diese
+       Tabelle wird von zeitraum.php UND suche.php gemeinsam erzeugt; in der
+       Suche stehen luft- und bodengebundene Einsaetze NEBENEINANDER, ein
+       artabhaengiger Spaltenkopf ist dort gar nicht darstellbar. Die
+       Flugterminologie bleibt allein den Kacheln vorbehalten (E32). */
+    { key: 'km',    kopf: 'km',                    thClass: 'c-mid',
       wert: m => m.distance_m == null ? -1 : m.distance_m,
       zelle: m => `<td class="mono c-mid">${fmtKm(m.distance_m)}</td>` }
   ];

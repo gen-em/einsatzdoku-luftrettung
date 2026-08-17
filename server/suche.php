@@ -94,12 +94,22 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
         <summary>Beteiligte</summary>
         <div class="filterfelder">
           <label>Standort <select id="f-st"></select></label>
-          <label>Maschine <select id="f-ac"></select></label>
-          <label>Pilot 1 <select id="f-c1"></select></label>
-          <label>Pilot 2 <select id="f-c2"></select></label>
-          <label>HEMS-TC <select id="f-c3"></select></label>
-          <label>Flugretter <select id="f-c4"></select></label>
-          <label>Sonstige <select id="f-c5"></select></label>
+          <label>Rettungsmittel <select id="f-veh"></select></label>
+          <?php /* Die Besatzungsfilter entstehen aus dem Rollenkatalog CREW_ROLES
+                   (db.php, E4) — nicht als fünf feste Flugrollen. Mit den
+                   bodengebundenen Rollen wären es sieben geworden, und jede neue
+                   Rolle hätte hier, im Skript unten und in der Filterlogik
+                   gleichzeitig nachgezogen werden müssen.
+
+                   Alle Rollen stehen NEBENEINANDER, ohne Trennung nach Art: Die
+                   Suche zeigt beide Arten in einer Tabelle (Abschnitt 3.7.3),
+                   und wer nach einem Fahrer sucht, will nicht vorher die Art
+                   wählen. Ein Filter ohne Werte im Bestand bleibt leer — das ist
+                   dieselbe Regel wie bei allen übrigen Auswahlfeldern hier. */
+                foreach (CREW_ROLES as $rc => $rr): ?>
+            <label><?= e($rr['label']) ?>
+              <select id="f-crew-<?= e($rc) ?>" data-rolle="<?= e($rc) ?>"></select></label>
+          <?php endforeach; ?>
           <label>Weiteres Rettungsmittel <select id="f-rm"></select></label>
         </div>
       </details>
@@ -109,8 +119,12 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
         <div class="filterfelder">
           <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
           <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
-          <label>Flugstrecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
-          <label>Flugstrecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
+          <?php /* Neutral beschriftet (Abschnitt 3.9): Die Suche führt beide Arten
+                   in einer Ansicht, „Flugstrecke" wäre für die Hälfte der
+                   Einsätze falsch. Die Flugterminologie bleibt allein den
+                   Kacheln des Luftrettungs-Tabs vorbehalten (E32). */ ?>
+          <label>Strecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
+          <label>Strecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
           <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
           <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
           <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
@@ -178,6 +192,27 @@ const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
 
+/* Rollenkatalog und die Kurznamen ihrer Filter im URL-Fragment. Beides kommt
+   aus CREW_ROLES (db.php, E4); die Kurznamen der fuenf Flugrollen sind
+   historisch (c1…c5) und bleiben, weil sie in verschickten Links stehen. */
+const CREW_ROLLEN = <?= json_encode(array_keys(CREW_ROLES)) ?>;
+const CREW_FILTER = <?php
+    /* Bis Web 5.10.0 standen die fuenf Filter einzeln im Katalog. Die
+     * Zuordnung Rolle -> Kurzname steht jetzt hier, an EINER Stelle: Die
+     * historischen Namen muessen erhalten bleiben (verschickte Links), neue
+     * Rollen brauchen aber auch einen. 'crew_<rolle>' ist eindeutig und
+     * kollidiert mit keinem bestehenden Namen. */
+    $CREW_KURZ = ['p1' => 'c1', 'p2' => 'c2', 'hems' => 'c3', 'fr' => 'c4', 'other' => 'c5'];
+    $liste = [];
+    foreach (array_keys(CREW_ROLES) as $rc) {
+        $liste[] = ['kurz'   => $CREW_KURZ[$rc] ?? ('crew_' . $rc),
+                    'el'     => 'f-crew-' . $rc,
+                    'art'    => 'text',
+                    'gruppe' => 'wer'];
+    }
+    echo json_encode($liste);
+?>;
+
 const $ = id => document.getElementById(id);
 
 /* ====================================================================
@@ -213,12 +248,17 @@ const FILTER = [
   { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'transport' },
   { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'transport' },
   { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer' },
-  { kurz: 'ac', el: 'f-ac', art: 'text', gruppe: 'wer' },
-  { kurz: 'c1', el: 'f-c1', art: 'text', gruppe: 'wer' },
-  { kurz: 'c2', el: 'f-c2', art: 'text', gruppe: 'wer' },
-  { kurz: 'c3', el: 'f-c3', art: 'text', gruppe: 'wer' },
-  { kurz: 'c4', el: 'f-c4', art: 'text', gruppe: 'wer' },
-  { kurz: 'c5', el: 'f-c5', art: 'text', gruppe: 'wer' },
+  /* 'ac' hiess bis Web 5.10.0 „Maschine" und filterte nach aircraft. Der
+     Parametername BLEIBT, obwohl das Feld jetzt Rettungsmittel heisst: Die
+     Namen im Fragment sind Teil verschickter Links, und ein umbenannter
+     Parameter bricht sie stillschweigend. Was er filtert, ist unveraendert —
+     der Name des Rettungsmittels des Diensttags. */
+  { kurz: 'ac', el: 'f-veh', art: 'text', gruppe: 'wer' },
+  /* Besatzungsfilter je Rolle. Die Kurznamen c1…c5 der fuenf Flugrollen sind
+     ebenfalls in verschickten Links unterwegs und bleiben deshalb, was sie
+     sind; die bodengebundenen Rollen bekommen eigene. Die Zuordnung steht
+     serverseitig in CREW_KURZ und nicht als zweite Liste hier. */
+  ...CREW_FILTER,
   { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer' },
   { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'werte' },
   { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'werte' },
@@ -315,12 +355,12 @@ function baueAuswahllisten() {
 
   fuelleSelect('f-bu', optionen(missions.map(m => m.bw_unit)));
   fuelleSelect('f-st', optionen(missions.map(m => m.base)));
-  fuelleSelect('f-ac', optionen(missions.map(m => m.aircraft)));
-  fuelleSelect('f-c1', optionen(missions.map(m => m.crew.p1)));
-  fuelleSelect('f-c2', optionen(missions.map(m => m.crew.p2)));
-  fuelleSelect('f-c3', optionen(missions.map(m => m.crew.hems)));
-  fuelleSelect('f-c4', optionen(missions.map(m => m.crew.fr)));
-  fuelleSelect('f-c5', optionen(missions.map(m => m.crew.other)));
+  fuelleSelect('f-veh', optionen(missions.map(m => m.vehicle)));
+  // Ein Auswahlfeld je Rolle des Katalogs — die Liste steht in CREW_ROLES und
+  // wurde beim Aufbau der Seite in die Feldkennungen gegossen (f-crew-<rolle>).
+  CREW_ROLLEN.forEach(r => {
+    fuelleSelect('f-crew-' + r, optionen(missions.map(m => m.crew[r])));
+  });
   fuelleSelect('f-rm', optionen(missions.flatMap(m => m.resources)));
   fuelleSelect('f-tz', optionen(missions.map(m => m.transport_dest)));
 }
@@ -382,9 +422,8 @@ function inBereich(wert, von, bis) {
 function baueHeuhaufen(m) {
   const teile = [
     m.transport_dest, m.bw_unit, m.bw_info, m.other_ema, m.notes,
-    m.base, m.aircraft,
-    m.crew.p1, m.crew.p2, m.crew.hems, m.crew.fr, m.crew.other
-  ].concat(m.resources);
+    m.base, m.vehicle
+  ].concat(CREW_ROLLEN.map(r => m.crew[r])).concat(m.resources);
 
   if (m._pat) {
     teile.push(m._pat.mission_no, m._pat.last, m._pat.first, m._pat.dx);
@@ -439,12 +478,10 @@ function trifft(m) {
   if (!dreiwert('f-sr', m.schockraum)) { return false; }
 
   if (!gleich('f-st', m.base)) { return false; }
-  if (!gleich('f-ac', m.aircraft)) { return false; }
-  if (!gleich('f-c1', m.crew.p1)) { return false; }
-  if (!gleich('f-c2', m.crew.p2)) { return false; }
-  if (!gleich('f-c3', m.crew.hems)) { return false; }
-  if (!gleich('f-c4', m.crew.fr)) { return false; }
-  if (!gleich('f-c5', m.crew.other)) { return false; }
+  if (!gleich('f-veh', m.vehicle)) { return false; }
+  for (const r of CREW_ROLLEN) {
+    if (!gleich('f-crew-' + r, m.crew[r])) { return false; }
+  }
 
   const rm = $('f-rm').value;
   if (rm !== '' && !m.resources.some(r => r.trim().toLowerCase() === rm.toLowerCase())) { return false; }

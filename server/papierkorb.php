@@ -2,43 +2,49 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/trash_lib.php';
+require_once __DIR__ . '/diensttag_lib.php';
 
 /**
  * Aktionen des Papierkorbs. Wiederherstellen laeuft direkt (harmlos,
  * jederzeit umkehrbar); das endgueltige Loeschen zeigt vorher eine
  * Zwischenseite mit dem Umfang.
+ *
+ * SCHLUESSEL IST DIE KENNUNG DES DIENSTTAGS (Web 6.0.0), nicht mehr das Datum.
+ * Die frueheren Formatpruefungen auf 'YYYY-MM-DD' sind damit zu Pruefungen auf
+ * eine positive Kennung geworden — dieselbe Absicherung an derselben Stelle,
+ * nur fuer den neuen Schluessel (M5-08).
  */
 
 $action = (string)($_POST['action'] ?? $_GET['action'] ?? '');
-$day    = (string)($_POST['day'] ?? $_GET['day'] ?? '');
+$dayId  = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
 $id     = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 
 if ($isPost) { csrf_check(); }
 
-if ($isPost && $action === 'restore_day' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
-    trash_restore_day($userId, $day);
-    header('Location: index.php?day=' . urlencode($day)); exit;
+if ($isPost && $action === 'restore_day' && $dayId > 0) {
+    trash_restore_day($userId, $dayId);
+    header('Location: index.php?d=' . (int)$dayId); exit;
 }
 if ($isPost && $action === 'restore_mission' && $id > 0) {
     trash_restore_mission($userId, $id);
     header('Location: index.php'); exit;
 }
-/* Dieselbe Formatpruefung wie beim Wiederherstellen (M5-08).
+/* Dieselbe Pruefung wie beim Wiederherstellen (M5-08).
  *
  * Vorher stand hier nur die Rueckfrage. Das Wiederherstellen — die UMKEHRBARE
- * Handlung — pruefte das Datumsformat, das endgueltige Loeschen nicht. Die
+ * Handlung — pruefte den Schluessel, das endgueltige Loeschen nicht. Die
  * Zwischenseite weiter unten prueft zwar auch, aber erst NACH diesem Block:
  * Ein POST mit confirm=ja kam nie dort an.
  *
  * Praktisch ausgenutzt haette man das kaum — trash_purge_day() arbeitet mit
- * vorbereiteten Anweisungen, ein unsinniges Datum trifft schlicht nichts. Aber
+ * vorbereiteten Anweisungen, eine unsinnige Kennung trifft schlicht nichts. Aber
  * die schwaechere Pruefung ausgerechnet am unumkehrbaren Weg ist die falsche
  * Richtung, und beim naechsten Umbau von trash_purge_day() waere sie die
  * Stelle, an der es weh tut. */
 if ($isPost && $action === 'purge_day' && ($_POST['confirm'] ?? '') === 'ja'
-    && preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
-    trash_purge_day($userId, $day);
+    && $dayId > 0) {
+    trash_purge_day($userId, $dayId);
     header('Location: index.php'); exit;
 }
 if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja' && $id > 0) {
@@ -50,18 +56,20 @@ if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja'
 
 /* ---- Zwischenseite fuer das endgueltige Loeschen ----------------------- */
 $istTag = ($action === 'purge_day');
-if ($istTag && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $day)) {
-    http_response_code(400); exit('Ungültiges Datum.');
+if ($istTag && $dayId <= 0) {
+    http_response_code(400); exit('Ungültiger Diensttag.');
 }
 $zeigeListe = ($action !== 'purge_day' && $action !== 'purge_mission');
 
 if (!$zeigeListe && $istTag) {
-    $scope = trash_scope_day($userId, $day);
+    $tag = dt_laden($userId, $dayId, true);
+    if ($tag === null) { header('Location: papierkorb.php'); exit; }
+    $scope = trash_scope_day($userId, $dayId);
     // Der Umfang zaehlt nur nicht-geloeschte Zeilen; im Papierkorb sind alle
     // markiert, deshalb hier direkt zaehlen.
     $c = db()->prepare('SELECT COUNT(*) FROM missions
-                        WHERE user_id = ? AND day = ? AND deleted_at IS NOT NULL');
-    $c->execute([$userId, $day]);
+                        WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
+    $c->execute([$userId, $dayId]);
     $anzahl = (int)$c->fetchColumn();
 } elseif (!$zeigeListe) {
     $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
@@ -99,24 +107,34 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
     <?php endif; ?>
 
     <?php if ($trashDays): ?>
-      <h2>Flugtage</h2>
+      <h2>Diensttage</h2>
+      <?php /* Datum UND Dienstbeginn: Seit E9 können mehrere Diensttage auf
+               einem Kalendertag liegen, und im Papierkorb sind sie ohne die
+               Uhrzeit nicht auseinanderzuhalten. Rettungsmittel und Art stehen
+               daneben — aus den eingefrorenen Spalten (E8). */ ?>
       <table class="data trashtable">
-        <thead><tr><th>Tag</th><th>Einsätze</th><th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
+        <thead><tr><th>Diensttag</th><th>Rettungsmittel</th><th>Einsätze</th>
+                   <th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
         <tbody>
-        <?php foreach ($trashDays as $t): ?>
+        <?php foreach ($trashDays as $t):
+              $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']); ?>
           <tr>
-            <td><?= e(date('d.m.Y', strtotime((string)$t['day']))) ?></td>
+            <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
+                      aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                <?= e(dt_lesbar($t, true)) ?></td>
+            <td><?= $t['vehicle_name'] !== null && $t['vehicle_name'] !== ''
+                    ? e((string)$t['vehicle_name']) : '<span class="dash">–</span>' ?></td>
             <td><?= (int)$t['einsaetze'] ?></td>
             <td><?= e(fmt_local((string)$t['deleted_at'], 'd.m.Y H:i')) ?></td>
             <td><div class="rowactions">
               <form method="post" action="papierkorb.php">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="restore_day">
-                <input type="hidden" name="day" value="<?= e((string)$t['day']) ?>">
+                <input type="hidden" name="d" value="<?= (int)$t['id'] ?>">
                 <button class="btn-primary">Wiederherstellen</button>
               </form>
               <a class="btn-red"
-                 href="papierkorb.php?action=purge_day&amp;day=<?= e((string)$t['day']) ?>">Endgültig löschen</a>
+                 href="papierkorb.php?action=purge_day&amp;d=<?= (int)$t['id'] ?>">Endgültig löschen</a>
             </div></td>
           </tr>
         <?php endforeach; ?>
@@ -127,11 +145,14 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
     <?php if ($trashMissions): ?>
       <h2>Einsätze</h2>
       <table class="data trashtable">
-        <thead><tr><th>Tag</th><th>Beginn</th><th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
+        <thead><tr><th>Einsatzdatum</th><th>Beginn</th><th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
         <tbody>
         <?php foreach ($trashMissions as $t): ?>
           <tr>
-            <td><?= e(date('d.m.Y', strtotime((string)$t['day']))) ?></td>
+            <?php /* Das ECHTE Einsatzdatum aus `started_at` (E14) — der Einsatz
+                     trägt seit Web 6.0.0 kein eigenes Datum mehr, und das
+                     seines Dienstes kann ein anderes sein. */ ?>
+            <td><?= e(fmt_local((string)$t['started_at'], 'd.m.Y')) ?></td>
             <td><?= e(fmt_local((string)$t['started_at'])) ?></td>
             <td><?= e(fmt_local((string)$t['deleted_at'], 'd.m.Y H:i')) ?></td>
             <td><div class="rowactions">
@@ -154,7 +175,10 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
     <h1>Endgültig löschen?</h1>
     <div class="card">
       <?php if ($istTag): ?>
-        <p><strong>Flugtag <?= e(date('d.m.Y', strtotime($day))) ?></strong>
+        <p><strong>Diensttag <?= e(dt_lesbar($tag, true)) ?></strong><?php
+             if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') {
+                 echo ' · ' . e((string)$tag['vehicle_name']);
+             } ?>
            mit <?= $anzahl ?> Einsätzen, Ruhesegmenten und allen Tracks.</p>
       <?php else: ?>
         <p><strong>Einsatz vom <?= e(fmt_local((string)$m['started_at'], 'd.m.Y')) ?>,
@@ -168,7 +192,7 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
     <form method="post" action="papierkorb.php" class="inline-form">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="<?= $istTag ? 'purge_day' : 'purge_mission' ?>">
-      <input type="hidden" name="day" value="<?= e($day) ?>">
+      <input type="hidden" name="d" value="<?= (int)$dayId ?>">
       <input type="hidden" name="id" value="<?= (int)$id ?>">
       <input type="hidden" name="confirm" value="ja">
       <button class="btn-red">Ja, endgültig löschen</button>

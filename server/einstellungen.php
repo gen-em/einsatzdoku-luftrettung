@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
+require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
 
 $tab = $_GET['t'] ?? 'profil';
 if (!in_array($tab, ['profil', 'geraete', 'stammdaten', 'backup'], true)) { $tab = 'profil'; }
@@ -269,121 +270,221 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';
     }
 
-    /* ---- Stammdaten ----------------------------------------------------- */
+    /* ---- Standortdaten ----------------------------------------------------
+     *
+     * DER STANDORT IST DER ANKER (E15). Jedes Rettungsmittel, jede Zielklinik,
+     * jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und jede
+     * Bergwacht-Bereitschaft gehoert GENAU EINEM Standort. Eine zweite,
+     * standortuebergreifende Ebene gibt es bewusst nicht — der Preis ist
+     * Doppelpflege, der Gewinn ein Modell mit einer Regel statt mit zwei.
+     *
+     * Jede der Speicheraktionen unten prueft deshalb zuerst den Standort, und
+     * zwar mit dt_base_erlaubt(): Zulaessig sind die eigenen und die
+     * AUSGEWAEHLTEN zentralen (E16). Dieselbe Pruefung entscheidet in
+     * api/day.php, welche Zuordnung ein Diensttag annehmen darf — zwei
+     * verschiedene Fassungen davon waeren die Stelle, an der beide
+     * auseinanderlaufen.
+     */
+    $sdBase = static function (): ?int {
+        global $userId;
+        return dt_base_erlaubt(db(), $userId, isset($_POST['base_id']) ? (int)$_POST['base_id'] : null);
+    };
+    /* Optionale Koordinate (E37/E39). Sie ist ueberall freiwillig; ohne sie
+     * entstehen lediglich kein Pin und keine Linie. Ein Wert ausserhalb des
+     * Wertebereichs wird zu NULL statt zu einem stillen 0/0 — das laege im Golf
+     * von Guinea, mitten in der Auswertung. */
+    $sdKoord = static function (string $feld, float $min, float $max): ?string {
+        $roh = trim((string)($_POST[$feld] ?? ''));
+        if ($roh === '') { return null; }
+        $w = (float)str_replace(',', '.', $roh);
+        if (!is_finite($w) || $w < $min || $w > $max) { return null; }
+        return number_format($w, 6, '.', '');
+    };
+
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
+        $lat = $sdKoord('lat', -90, 90);
+        $lon = $sdKoord('lon', -180, 180);
+        // Koordinaten nur zusammen: eine Breite ohne Laenge ist kein Ort.
+        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
         if ($n !== '') {
             if (stammdaten_dup_global('bases', 'name', $n)) {
                 $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($bid > 0) {
-                db()->prepare('UPDATE bases SET name = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $bid, $userId]);
-                $notice = 'Standort gespeichert.';
+                db()->prepare('UPDATE bases SET name = ?, lat = ?, lon = ? WHERE id = ? AND user_id = ?')
+                    ->execute([$n, $lat, $lon, $bid, $userId]);
+                $notice = 'Standort gespeichert. Bereits dokumentierte Diensttage bleiben unverändert.';
             } else {
-                db()->prepare('INSERT IGNORE INTO bases (user_id, name) VALUES (?,?)')
-                    ->execute([$userId, $n]);
+                db()->prepare('INSERT IGNORE INTO bases (user_id, name, lat, lon) VALUES (?,?,?,?)')
+                    ->execute([$userId, $n, $lat, $lon]);
                 $notice = 'Standort gespeichert.';
             }
         }
     }
     if ($action === 'base_default') {
-        $bid = (int)($_POST['id'] ?? 0);
-        // item_id muss ein fuer den Nutzer sichtbarer Eintrag sein (persoenlich oder global)
-        $chk = db()->prepare('SELECT COUNT(*) FROM bases WHERE id = ? AND (user_id = ? OR user_id IS NULL)');
-        $chk->execute([$bid, $userId]);
-        if ($chk->fetchColumn()) {
+        $bid = dt_base_erlaubt(db(), $userId, (int)($_POST['id'] ?? 0));
+        if ($bid !== null) {
             db()->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"base",?)
                            ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')
                 ->execute([$userId, $bid]);
             $notice = 'Standard-Standort gesetzt.';
         }
     }
-    if ($action === 'ac_default') {
-        $aid = (int)($_POST['id'] ?? 0);
-        $chk = db()->prepare('SELECT COUNT(*) FROM aircraft WHERE id = ? AND (user_id = ? OR user_id IS NULL)');
-        $chk->execute([$aid, $userId]);
-        if ($chk->fetchColumn()) {
-            db()->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"aircraft",?)
+    if ($action === 'veh_default') {
+        $vid = dt_vehicle_erlaubt(db(), $userId, (int)($_POST['id'] ?? 0));
+        if ($vid !== null) {
+            db()->prepare('INSERT INTO user_defaults (user_id, kind, item_id) VALUES (?,"vehicle",?)
                            ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)')
-                ->execute([$userId, $aid]);
-            $notice = 'Standard-Maschine gesetzt.';
+                ->execute([$userId, $vid]);
+            $notice = 'Standard-Rettungsmittel gesetzt.';
         }
     }
-    if ($action === 'base_del') {
-        // Standortnamen in den Flugtagen sichern (siehe ac_del)
-        db()->prepare('UPDATE days d
-                       JOIN bases b ON b.id = d.base_id
-                          SET d.base = b.name
-                        WHERE d.user_id = ? AND d.base_id = ?')
-            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
-        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
-            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
-        db()->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
-            ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Standort gelöscht.';
-    }
-    if ($action === 'ac_save') {
-        $reg = mb_substr(trim($_POST['registration'] ?? ''), 0, 64);
-        $acId = (int)($_POST['id'] ?? 0);
-        if ($reg !== '') {
-            if (stammdaten_dup_global('aircraft', 'registration', $reg)) {
-                $error = '„' . $reg . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
+    /* Zentralen Standort aus- oder abwaehlen (E16). Nur ausgewaehlte erscheinen
+     * in den Auswahllisten; EIGENE Standorte brauchen keinen Eintrag und gelten
+     * immer als ausgewaehlt. */
+    if ($action === 'ub_toggle') {
+        $bid = (int)($_POST['id'] ?? 0);
+        $chk = db()->prepare('SELECT COUNT(*) FROM bases WHERE id = ? AND user_id IS NULL');
+        $chk->execute([$bid]);
+        if ($chk->fetchColumn()) {
+            if (($_POST['an'] ?? '') === '1') {
+                db()->prepare('INSERT IGNORE INTO user_bases (user_id, base_id) VALUES (?,?)')
+                    ->execute([$userId, $bid]);
+                $notice = 'Zentraler Standort ausgewählt.';
             } else {
-                $flags = [];
-                foreach (['p1','p2','hems','fr','other'] as $r) { $flags[] = isset($_POST[$r]) ? 1 : 0; }
-                if ($acId > 0) {
-                    db()->prepare('UPDATE aircraft SET registration=?, p1=?, p2=?, hems=?, fr=?, other=?
-                                   WHERE id = ? AND user_id = ?')
-                        ->execute(array_merge([$reg], $flags, [$acId, $userId]));
-                    $notice = 'Hubschrauber gespeichert.';
-                } else {
-                    try {
-                        db()->prepare('INSERT INTO aircraft (user_id, registration, p1, p2, hems, fr, other)
-                                       VALUES (?,?,?,?,?,?,?)')
-                            ->execute(array_merge([$userId, $reg], $flags));
-                        $notice = 'Hubschrauber angelegt.';
-                    } catch (PDOException $ex) { $error = 'Diese Kennung existiert bereits.'; }
-                }
+                db()->prepare('DELETE FROM user_bases WHERE user_id = ? AND base_id = ?')
+                    ->execute([$userId, $bid]);
+                $notice = 'Zentraler Standort abgewählt. Bereits dokumentierte '
+                        . 'Diensttage bleiben unverändert.';
             }
         }
     }
-    if ($action === 'ac_del') {
-        // Bevor die Maschine verschwindet: ihren Namen in den betroffenen
-        // Flugtagen als Text sichern, sonst stuende dort nach dem Loeschen
-        // nichts mehr (Fremdschluessel wird auf NULL gesetzt).
-        db()->prepare('UPDATE days d
-                       JOIN aircraft a ON a.id = d.aircraft_id
-                          SET d.aircraft = a.registration
-                        WHERE d.user_id = ? AND d.aircraft_id = ?')
-            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
-        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "aircraft" AND item_id = ?')
-            ->execute([$userId, (int)($_POST['id'] ?? 0)]);
-        db()->prepare('DELETE FROM aircraft WHERE id = ? AND user_id = ?')
-            ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Hubschrauber gelöscht.';
+    if ($action === 'base_del') {
+        /* DAS LOESCHEN NIMMT DIE STAMMDATEN DES STANDORTS MIT (E15,
+         * ON DELETE CASCADE). Diensttage bleiben davon unberuehrt, weil sie ihre
+         * Angaben eingefroren haben (E8) — der frueher noetige Umweg, den Namen
+         * vorher in `days.base` zu retten, ist damit entfallen.
+         *
+         * Vor dem Loeschen ist die Zahl der betroffenen Stammdatensaetze
+         * anzuzeigen und bestaetigen zu lassen (Konzept 4.2). Die Zahl steht in
+         * der Rueckfrage der Oberflaeche; hier wird nur noch geloescht. */
+        $bid = (int)($_POST['id'] ?? 0);
+        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "base" AND item_id = ?')
+            ->execute([$userId, $bid]);
+        db()->prepare('DELETE FROM bases WHERE id = ? AND user_id = ?')
+            ->execute([$bid, $userId]);
+        $notice = 'Standort samt seiner Stammdaten gelöscht. Bereits dokumentierte '
+                . 'Diensttage bleiben unverändert.';
+    }
+    if ($action === 'veh_save') {
+        $n     = mb_substr(trim($_POST['name'] ?? ''), 0, 64);
+        $vid   = (int)($_POST['id'] ?? 0);
+        $bid   = $sdBase();
+        $kind  = ($_POST['kind'] ?? '') === 'ground' ? 'ground' : 'air';
+        if ($n === '') {
+            $error = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+        } elseif ($bid === null) {
+            $error = 'Bitte einen Standort wählen. Jedes Rettungsmittel gehört zu '
+                   . 'genau einem Standort.';
+        } elseif (stammdaten_dup_global('vehicles', 'name', $n)) {
+            $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
+        } else {
+            /* Rollen aus dem Katalog, gefiltert auf die Art (E5/E6): Ein
+             * bodengebundenes Rettungsmittel kann keinen Flugretter fuehren.
+             * Die Filterung geschieht hier und nicht nur im Formular — ein
+             * Haken, den die Oberflaeche nicht anbietet, darf auch ueber eine
+             * gesendete Anfrage nicht hereinkommen. */
+            $erlaubteRollen = array_keys(crew_roles_fuer_art($kind));
+            $rollen = [];
+            foreach ((array)($_POST['roles'] ?? []) as $rc) {
+                if (in_array((string)$rc, $erlaubteRollen, true)) { $rollen[] = (string)$rc; }
+            }
+            /* Faehigkeiten kommen AUSSCHLIESSLICH an luftgebundenen
+             * Rettungsmitteln vor (E29). Bei einem bodengebundenen werden
+             * vorhandene Zeilen entfernt — so steht es im Schema, und ein
+             * Zustand, den die Oberflaeche nicht herstellen kann, soll auch
+             * nicht in der Datenbank stehen. */
+            $caps = [];
+            if ($kind === 'air') {
+                foreach ((array)($_POST['caps'] ?? []) as $c) {
+                    if (array_key_exists((string)$c, VEHICLE_CAPABILITIES)) { $caps[] = (string)$c; }
+                }
+            }
+
+            $pdo = db();
+            $pdo->beginTransaction();
+            try {
+                if ($vid > 0) {
+                    $pdo->prepare('UPDATE vehicles SET name = ?, kind = ?, base_id = ?
+                                   WHERE id = ? AND user_id = ?')
+                        ->execute([$n, $kind, $bid, $vid, $userId]);
+                } else {
+                    $pdo->prepare('INSERT INTO vehicles (user_id, base_id, name, kind)
+                                   VALUES (?,?,?,?)')
+                        ->execute([$userId, $bid, $n, $kind]);
+                    $vid = (int)$pdo->lastInsertId();
+                }
+                /* Rollen und Faehigkeiten vollstaendig ersetzen. Auf BEREITS
+                 * DOKUMENTIERTE Diensttage wirkt das nicht: Ihr Rollensatz steht
+                 * eingefroren in `day_crew`, ihr Faehigkeitssatz in
+                 * `day_capabilities` (E8). Das Abwaehlen der Winde kostet also
+                 * keine vorhandene Windendokumentation (A13e) — es aendert nur,
+                 * was NEUE Diensttage dieses Rettungsmittels anbieten. */
+                $pdo->prepare('DELETE FROM vehicle_roles WHERE vehicle_id = ?')->execute([$vid]);
+                $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code) VALUES (?,?)');
+                foreach ($rollen as $rc) { $insR->execute([$vid, $rc]); }
+                $pdo->prepare('DELETE FROM vehicle_capabilities WHERE vehicle_id = ?')->execute([$vid]);
+                $insC = $pdo->prepare('INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability) VALUES (?,?)');
+                foreach ($caps as $c) { $insC->execute([$vid, $c]); }
+                $pdo->commit();
+                $notice = 'Rettungsmittel gespeichert. Bereits dokumentierte Diensttage '
+                        . 'behalten Art, Rollen und Fähigkeiten unverändert.';
+            } catch (PDOException $ex) {
+                if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                $error = ist_dublettenfehler($ex)
+                    ? 'Diese Bezeichnung existiert bereits.'
+                    : 'Das Rettungsmittel konnte nicht gespeichert werden.';
+            }
+        }
+    }
+    if ($action === 'veh_del') {
+        /* Kein Retten von Bezeichnungen mehr: Der Diensttag hat sie eingefroren
+         * (E8), und der Fremdschluessel steht auf ON DELETE SET NULL. Ein
+         * geloeschtes Rettungsmittel beschaedigt damit keine Historie (A4). */
+        $vid = (int)($_POST['id'] ?? 0);
+        db()->prepare('DELETE FROM user_defaults WHERE user_id = ? AND kind = "vehicle" AND item_id = ?')
+            ->execute([$userId, $vid]);
+        db()->prepare('DELETE FROM vehicles WHERE id = ? AND user_id = ?')
+            ->execute([$vid, $userId]);
+        $notice = 'Rettungsmittel gelöscht. Bereits dokumentierte Diensttage bleiben '
+                . 'unverändert.';
     }
     if ($action === 'crew_save') {
-        $role = $_POST['role'] ?? '';
+        $role = (string)($_POST['role'] ?? '');
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $cid = (int)($_POST['id'] ?? 0);
-        if ($n !== '' && in_array($role, ['p1','p2','hems','fr','other'], true)) {
-            if (stammdaten_dup_global('crew_presets', 'name', $n, 'role', $role)) {
+        $bid = $sdBase();
+        if ($n !== '' && array_key_exists($role, CREW_ROLES)) {
+            if ($bid === null) {
+                $error = 'Bitte einen Standort wählen.';
+            } elseif (stammdaten_dup_global('crew_presets', 'name', $n, 'role_code', $role)) {
                 $error = '„' . $n . '“ ' . 'ist für diese Rolle bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($cid > 0) {
                 db()->prepare('UPDATE crew_presets SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $cid, $userId]);
                 $notice = 'Eintrag gespeichert.';
             } else {
-                db()->prepare('INSERT IGNORE INTO crew_presets (user_id, role, name) VALUES (?,?,?)')
-                    ->execute([$userId, $role, $n]);
+                db()->prepare('INSERT IGNORE INTO crew_presets (user_id, base_id, role_code, name)
+                               VALUES (?,?,?,?)')
+                    ->execute([$userId, $bid, $role, $n]);
                 $notice = 'Eintrag gespeichert.';
             }
         }
     }
     if ($action === 'crew_del') {
         $cid = (int)($_POST['id'] ?? 0);
-        $rq = db()->prepare('SELECT role FROM crew_presets WHERE id = ? AND user_id = ?');
+        $rq = db()->prepare('SELECT role_code FROM crew_presets WHERE id = ? AND user_id = ?');
         $rq->execute([$cid, $userId]);
         $role = (string)($rq->fetchColumn() ?: '');
         db()->prepare('DELETE FROM crew_presets WHERE id = ? AND user_id = ?')
@@ -393,16 +494,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'res_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
+        $bid = $sdBase();
         if ($n !== '') {
-            if (stammdaten_dup_global('resources', 'name', $n)) {
+            if ($bid === null) {
+                $error = 'Bitte einen Standort wählen.';
+            } elseif (stammdaten_dup_global('resources', 'name', $n)) {
                 $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($wid > 0) {
                 db()->prepare('UPDATE resources SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
                 $notice = 'Rettungsmittel gespeichert.';
             } else {
-                db()->prepare('INSERT IGNORE INTO resources (user_id, name) VALUES (?,?)')
-                    ->execute([$userId, $n]);
+                db()->prepare('INSERT IGNORE INTO resources (user_id, base_id, name) VALUES (?,?,?)')
+                    ->execute([$userId, $bid, $n]);
                 $notice = 'Rettungsmittel gespeichert.';
             }
         }
@@ -412,21 +516,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Zuordnung steht als eigener Datensatz und haengt nicht an dieser Liste.
         db()->prepare('DELETE FROM resources WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Rettungsmittel geloescht.';
+        $notice = 'Rettungsmittel gelöscht.';
     }
     if ($action === 'bw_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $wid = (int)($_POST['id'] ?? 0);
+        $bid = $sdBase();
         if ($n !== '') {
-            if (stammdaten_dup_global('bw_units', 'name', $n)) {
+            if ($bid === null) {
+                $error = 'Bitte einen Standort wählen.';
+            } elseif (stammdaten_dup_global('bw_units', 'name', $n)) {
                 $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($wid > 0) {
                 db()->prepare('UPDATE bw_units SET name = ? WHERE id = ? AND user_id = ?')
                     ->execute([$n, $wid, $userId]);
                 $notice = 'Bereitschaft gespeichert.';
             } else {
-                db()->prepare('INSERT IGNORE INTO bw_units (user_id, name) VALUES (?,?)')
-                    ->execute([$userId, $n]);
+                db()->prepare('INSERT IGNORE INTO bw_units (user_id, base_id, name) VALUES (?,?,?)')
+                    ->execute([$userId, $bid, $n]);
                 $notice = 'Bereitschaft gespeichert.';
             }
         }
@@ -440,43 +547,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'td_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 190);
         $tid = (int)($_POST['id'] ?? 0);
+        $bid = $sdBase();
+        $lat = $sdKoord('lat', -90, 90);
+        $lon = $sdKoord('lon', -180, 180);
+        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
         if ($n !== '') {
-            if (stammdaten_dup_global('transport_dests', 'name', $n)) {
+            if ($bid === null) {
+                $error = 'Bitte einen Standort wählen.';
+            } elseif (stammdaten_dup_global('transport_dests', 'name', $n)) {
                 $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
             } elseif ($tid > 0) {
-                db()->prepare('UPDATE transport_dests SET name = ? WHERE id = ? AND user_id = ?')
-                    ->execute([$n, $tid, $userId]);
-                $notice = 'Transportziel gespeichert.';
+                db()->prepare('UPDATE transport_dests SET name = ?, lat = ?, lon = ?
+                               WHERE id = ? AND user_id = ?')
+                    ->execute([$n, $lat, $lon, $tid, $userId]);
+                $notice = 'Zielklinik gespeichert. Bereits dokumentierte Einsätze bleiben '
+                        . 'unverändert.';
             } else {
-                db()->prepare('INSERT IGNORE INTO transport_dests (user_id, name) VALUES (?,?)')
-                    ->execute([$userId, $n]);
-                $notice = 'Transportziel gespeichert.';
+                db()->prepare('INSERT IGNORE INTO transport_dests (user_id, base_id, name, lat, lon)
+                               VALUES (?,?,?,?,?)')
+                    ->execute([$userId, $bid, $n, $lat, $lon]);
+                $notice = 'Zielklinik gespeichert.';
             }
         }
     }
     if ($action === 'td_del') {
         db()->prepare('DELETE FROM transport_dests WHERE id = ? AND user_id = ?')
             ->execute([(int)($_POST['id'] ?? 0), $userId]);
-        $notice = 'Transportziel gelöscht.';
+        $notice = 'Zielklinik gelöscht.';
     }
 
-    // Nach dem Speichern zurueck zum passenden Abschnitt umleiten. Das oeffnet
-    // ihn dank des Ankers automatisch wieder und verhindert nebenbei das
-    // erneute Absenden beim Neuladen der Seite.
+    /* Nach dem Speichern zurueck zum passenden Abschnitt umleiten. Das oeffnet
+     * ihn dank des Ankers automatisch wieder und verhindert nebenbei das
+     * erneute Absenden beim Neuladen der Seite.
+     *
+     * Die Anker sind seit der Gliederung nach Standort (Konzept 3.8)
+     * STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
+     * Standorts. Nur die Standortliste selbst und die Auswahl der zentralen
+     * Standorte haben feste Anker. */
     $abschnitt = [
-        'base_save' => 'standorte',   'base_del' => 'standorte',
-        'ac_save'   => 'hubschrauber','ac_del'   => 'hubschrauber',
-        'crew_save' => 'besatzung',   'crew_del' => 'besatzung',
-        'res_save'  => 'rettungsmittel', 'res_del' => 'rettungsmittel',
-        'bw_save'   => 'bergwacht',   'bw_del'   => 'bergwacht',
-        'td_save'   => 'transportziele', 'td_del' => 'transportziele',
+        'base_save'  => 'standorte', 'base_del' => 'standorte',
+        'base_default' => 'standorte', 'ub_toggle' => 'zentrale',
+        'veh_save'   => null, 'veh_del'  => null, 'veh_default' => null,
+        'crew_save'  => null, 'crew_del' => null,
+        'res_save'   => null, 'res_del'  => null,
+        'bw_save'    => null, 'bw_del'   => null,
+        'td_save'    => null, 'td_del'   => null,
     ][$action] ?? null;
-    // Besatzung: rollenspezifischen Anker anhaengen (besatzung-p1 usw.), damit
-    // sich beim Wiederaufklappen gezielt das Namensfeld der richtigen Rolle
-    // fokussieren laesst (siehe Hash-Skript unten).
-    if ($abschnitt === 'besatzung' && in_array($action, ['crew_save', 'crew_del'], true)
-        && in_array($role ?? '', ['p1','p2','hems','fr','other'], true)) {
-        $abschnitt .= '-' . $role;
+    /* Aktionen, die zu einem Standort gehoeren, springen in dessen Block
+     * zurueck. Der Standort steht im Formular; beim Loeschen liefert es ihn
+     * ausdruecklich mit, weil die Zeile danach nicht mehr da ist, um befragt zu
+     * werden. */
+    if ($abschnitt === null && in_array($action, ['veh_save', 'veh_del', 'veh_default',
+            'crew_save', 'crew_del', 'res_save', 'res_del',
+            'bw_save', 'bw_del', 'td_save', 'td_del'], true)) {
+        $zurueckBase = (int)($_POST['base_id'] ?? 0);
+        $abschnitt = $zurueckBase > 0 ? ('sd-' . $zurueckBase) : 'standorte';
     }
     if ($abschnitt !== null && ($notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
@@ -496,8 +621,10 @@ if (!empty($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
-$ROLE_LABELS = ['p1' => 'Pilot 1', 'p2' => 'Pilot 2', 'hems' => 'HEMS',
-                'fr' => 'Flugretter', 'other' => 'Sonstige'];
+/* Die Rollenbeschriftungen kommen aus CREW_ROLES (db.php, E4). Bis Web 5.10.0
+ * stand hier eine zweite Liste mit fuenf Flugrollen; sie waere mit dem Katalog
+ * auseinandergelaufen, sobald eine Rolle dazukommt. */
+$ROLE_LABELS = array_map(static fn(array $r): string => $r['label'], CREW_ROLES);
 
 $devices = []; $editDev = null; $devNeu = 0;
 if ($tab === 'geraete') {
@@ -668,340 +795,555 @@ if ($tab === 'geraete') {
 
   <?php elseif ($tab === 'stammdaten'): ?>
     <?php
-      // Leseregel (Konzept Abschnitt 4): persoenliche UND zentrale (globale,
-      // user_id IS NULL) Eintraege gemischt alphabetisch; user_id zusaetzlich
-      // selektieren, um in der UI zwischen beiden zu unterscheiden.
-      $bases = db()->prepare('SELECT id, name, user_id FROM bases WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-      $bases->execute([$userId]); $bases = $bases->fetchAll();
-      $acs = db()->prepare('SELECT * FROM aircraft WHERE (user_id = ? OR user_id IS NULL) ORDER BY registration');
-      $acs->execute([$userId]); $acs = $acs->fetchAll();
-      $crew = db()->prepare('SELECT id, role, name, user_id FROM crew_presets WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-      $crew->execute([$userId]); $crew = $crew->fetchAll();
-      $bw = db()->prepare('SELECT id, name, user_id FROM bw_units WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-      $bw->execute([$userId]); $bw = $bw->fetchAll();
-      $res = db()->prepare('SELECT id, name, user_id FROM resources WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-      $res->execute([$userId]); $res = $res->fetchAll();
-      $tds = db()->prepare('SELECT id, name, user_id FROM transport_dests WHERE (user_id = ? OR user_id IS NULL) ORDER BY name');
-      $tds->execute([$userId]); $tds = $tds->fetchAll();
+      /* ---- Standortdaten, gegliedert nach Standort (Konzept 3.8) ----------
+       *
+       * Bis Web 5.10.0 stand hier eine Liste je Datenart: alle Standorte, alle
+       * Hubschrauber, alle Besatzungen. Das ging, solange Stammdaten fuer sich
+       * standen. Seit E15 gehoert jeder Eintrag GENAU EINEM Standort — und eine
+       * flache Liste kann das nicht abbilden: Zwei Standorte duerfen dieselbe
+       * Zielklinik fuehren, und welche der beiden Zeilen zu welchem gehoert,
+       * waere nicht zu sehen.
+       *
+       * Die Gliederung ist deshalb: erst die Standorte selbst (eigene anlegen,
+       * zentrale auswaehlen), dann je ausgewaehltem Standort ein aufklappbarer
+       * Block mit seinen fuenf Datenarten.
+       *
+       * ZENTRALE EINTRAEGE bleiben sichtbar und unveraenderlich, wie bisher:
+       * Sie werden von einer Administratorin gepflegt (admin_stammdaten.php) und
+       * tragen hier das Kennzeichen „systemweit".
+       */
+      $sdBases = dt_bases($userId);           // eigene + ausgewaehlte zentrale
+      $sdBaseIds = array_map(static fn($b) => (int)$b['id'], $sdBases);
 
-      // Standard-Vorbelegung (user_defaults ersetzt is_default, Abschnitt 7)
-      $defs = db()->prepare("SELECT kind, item_id FROM user_defaults WHERE user_id = ?");
-      $defs->execute([$userId]);
-      $DEF_BASE_ID = 0; $DEF_AC_ID = 0;
-      foreach ($defs->fetchAll() as $d) {
-          if ($d['kind'] === 'base') { $DEF_BASE_ID = (int)$d['item_id']; }
-          if ($d['kind'] === 'aircraft') { $DEF_AC_ID = (int)$d['item_id']; }
+      // Zentrale Standorte zum Auswaehlen (E16) samt aktuellem Zustand.
+      $zentral = db()->prepare('SELECT b.id, b.name, b.lat, b.lon,
+                                       ub.base_id IS NOT NULL AS gewaehlt
+                                  FROM bases b
+                                  LEFT JOIN user_bases ub
+                                         ON ub.base_id = b.id AND ub.user_id = ?
+                                 WHERE b.user_id IS NULL ORDER BY b.name');
+      $zentral->execute([$userId]);
+      $zentral = $zentral->fetchAll();
+
+      // Eigene Standorte getrennt: nur sie sind hier bearbeitbar.
+      $eigene = db()->prepare('SELECT id, name, lat, lon FROM bases
+                               WHERE user_id = ? ORDER BY name');
+      $eigene->execute([$userId]);
+      $eigene = $eigene->fetchAll();
+
+      /* Die Stammdaten aller verfuegbaren Standorte in EINER Abfrage je Art,
+       * danach nach Standort gebuendelt. Je Standort einzeln zu fragen ergaebe
+       * bei zehn Standorten fuenfzig Abfragen fuer eine Seite. */
+      $sdLade = function (string $tabelle, string $spalten) use ($userId, $sdBaseIds): array {
+          if (!$sdBaseIds) { return []; }
+          $nach = [];
+          /* Die Nutzerbedingung steht VOR der IN-Liste: sql_in_bloecken()
+           * setzt die Kennungen fuer {IDS} ein und haengt sie hinter die
+           * uebergebenen Vorlaufparameter. Ein Platzhalter dahinter bekaeme den
+           * falschen Wert. */
+          foreach (sql_in_bloecken(db(),
+                  "SELECT $spalten, base_id, user_id FROM `$tabelle`
+                   WHERE (user_id = ? OR user_id IS NULL) AND base_id IN ({IDS})
+                   ORDER BY name", $sdBaseIds, [$userId]) as $z) {
+              $nach[(int)$z['base_id']][] = $z;
+          }
+          return $nach;
+      };
+      $sdVeh  = $sdLade('vehicles', 'id, name, kind');
+      $sdCrew = $sdLade('crew_presets', 'id, name, role_code');
+      $sdTd   = $sdLade('transport_dests', 'id, name, lat, lon');
+      $sdRes  = $sdLade('resources', 'id, name');
+      $sdBw   = $sdLade('bw_units', 'id, name');
+
+      // Rollen und Faehigkeiten je Rettungsmittel, ebenfalls gebuendelt.
+      $vehIds = [];
+      foreach ($sdVeh as $liste) { foreach ($liste as $v) { $vehIds[] = (int)$v['id']; } }
+      $vehRollen = $vehCaps = [];
+      if ($vehIds) {
+          foreach (sql_in_bloecken(db(),
+                  'SELECT vehicle_id, role_code FROM vehicle_roles
+                   WHERE vehicle_id IN ({IDS})', $vehIds) as $r) {
+              $vehRollen[(int)$r['vehicle_id']][] = (string)$r['role_code'];
+          }
+          foreach (sql_in_bloecken(db(),
+                  'SELECT vehicle_id, capability FROM vehicle_capabilities
+                   WHERE vehicle_id IN ({IDS})', $vehIds) as $c) {
+              $vehCaps[(int)$c['vehicle_id']][] = (string)$c['capability'];
+          }
       }
 
-      // Bearbeiten ist nur fuer eigene, persoenliche Eintraege moeglich —
-      // globale Zeilen haben in der Nutzer-Ansicht keine Bearbeiten-/Loeschen-Buttons.
-      $pick = function (array $rows, string $param) use ($userId) {
-          foreach ($rows as $r) {
-              if ((int)$r['id'] === (int)($_GET[$param] ?? 0) && (int)$r['user_id'] === $userId) { return $r; }
+      // Standard-Vorbelegung (user_defaults ersetzt is_default, Abschnitt 7)
+      $SD_DEF = dt_standardwerte($userId);
+      $DEF_BASE_ID = (int)($SD_DEF['base_id'] ?? 0);
+      $DEF_VEH_ID  = (int)($SD_DEF['vehicle_id'] ?? 0);
+
+      /* Bearbeiten ist nur fuer EIGENE Eintraege moeglich — zentrale Zeilen
+       * haben in der Nutzeransicht keine Bearbeiten-/Loeschen-Schaltflaechen. */
+      $pickIn = function (array $nachBase, string $param) use ($userId) {
+          $ges = (int)($_GET[$param] ?? 0);
+          if ($ges <= 0) { return null; }
+          foreach ($nachBase as $liste) {
+              foreach ($liste as $z) {
+                  if ((int)$z['id'] === $ges && (int)$z['user_id'] === $userId) { return $z; }
+              }
           }
           return null;
       };
-      $editAc = $pick($acs, 'ac');    $editBase = $pick($bases, 'eb');
-      $editBw = $pick($bw, 'ew');
-      $editRes = $pick($res, 'er');
-      $editTd = $pick($tds, 'et');
-      $editCrew = null;
-      foreach ($crew as $c) {
-          if ((int)$c['id'] === (int)($_GET['ec'] ?? 0) && (int)$c['user_id'] === $userId) { $editCrew = $c; }
-      }
+      $editVeh  = $pickIn($sdVeh, 'ev');
+      $editCrew = $pickIn($sdCrew, 'ec');
+      $editTd   = $pickIn($sdTd, 'et');
+      $editRes  = $pickIn($sdRes, 'er');
+      $editBw   = $pickIn($sdBw, 'ew');
+      $editBase = null;
+      foreach ($eigene as $b) { if ((int)$b['id'] === (int)($_GET['eb'] ?? 0)) { $editBase = $b; } }
+
+      /* Zahl der Stammdatensaetze eines Standorts — fuer die Rueckfrage vor dem
+       * Loeschen (Konzept 4.2): Das Loeschen nimmt sie mit. */
+      $sdAnzahl = function (int $bid) use ($sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw, $userId): int {
+          $n = 0;
+          foreach ([$sdVeh, $sdCrew, $sdTd, $sdRes, $sdBw] as $art) {
+              foreach (($art[$bid] ?? []) as $z) {
+                  if ((int)$z['user_id'] === $userId) { $n++; }
+              }
+          }
+          return $n;
+      };
+      // Kennzeichen einer Zeile: eigen oder systemweit?
+      $istZentral = static fn(array $z): bool => $z['user_id'] === null;
     ?>
     <h1>Standortdaten</h1>
-    <p class="muted">Vorbelegungen für die Flugtag- und Einsatzdokumentation, alphabetisch
-       sortiert. Löschen entfernt nur den Listeneintrag — gespeicherte Flugtage bleiben
-       unverändert. ★ markiert die Vorbelegung neuer Flugtage. Das Kennzeichen
-       „systemweit“ markiert vom Admin gepflegte Einträge — diese stehen automatisch zur
-       Verfügung und lassen sich hier nicht bearbeiten oder löschen.</p>
+    <p class="muted">Vorbelegungen für die Diensttag- und Einsatzdokumentation.
+       <strong>Der Standort ist der Anker</strong>: Jedes Rettungsmittel, jede
+       Zielklinik, jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und
+       jede Bergwacht-Bereitschaft gehört zu genau einem Standort. Eine
+       standortübergreifende Ebene gibt es nicht — dieselbe Zielklinik an zwei
+       Standorten wird zweimal angelegt.</p>
+    <p class="muted">Löschen entfernt nur den Listeneintrag — <strong>bereits
+       dokumentierte Diensttage bleiben unverändert</strong>. Sie haben Art,
+       Rollen, Fähigkeiten und Bezeichnungen beim Anlegen eingefroren; Änderungen
+       hier wirken ausschließlich auf neue Diensttage. ★ markiert die
+       Vorbelegung neuer Diensttage. „systemweit“ markiert vom Admin gepflegte
+       Einträge — diese stehen automatisch zur Verfügung und lassen sich hier
+       nicht bearbeiten oder löschen.</p>
 
-      <details class="stammblock" id="standorte">
-    <summary>Standorte</summary>
-
-    <table class="data data-centered">
-      <thead><tr><th>Name</th><th>Standard</th><th class="th-act"></th></tr></thead>
-      <tbody>
-      <?php if (!$bases): ?><tr><td colspan="3" class="muted">Noch keine Standorte.</td></tr><?php endif; ?>
-      <?php foreach ($bases as $b): $global = $b['user_id'] === null;
-            $dup = !$global && stammdaten_dup_global('bases', 'name', $b['name']); ?>
-        <tr>
-          <td><?= e($b['name']) ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-          </td>
-          <td class="checkcol"><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
-          <td><div class="rowactions">
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-            <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
-              <form method="post" action="einstellungen.php?t=stammdaten#standorte">
-                <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
-                <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-                <button class="btn-plain">Als Standard</button>
-              </form>
-            <?php endif; ?>
-            <?php if (!$global): ?>
+    <details class="stammblock" id="standorte" open>
+      <summary>Eigene Standorte</summary>
+      <table class="data">
+        <tbody>
+        <?php if (!$eigene): ?><tr><td colspan="3" class="muted">Noch keine eigenen Standorte.</td></tr><?php endif; ?>
+        <?php foreach ($eigene as $b):
+              $dup = stammdaten_dup_global('bases', 'name', $b['name']);
+              $anz = $sdAnzahl((int)$b['id']); ?>
+          <tr>
+            <td><?= e($b['name']) ?>
+              <?php if ($b['lat'] !== null && $b['lon'] !== null): ?>
+                <br><span class="muted small"><?= e((string)$b['lat']) ?>, <?= e((string)$b['lon']) ?></span>
+              <?php endif; ?>
+              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+            </td>
+            <td><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
+            <td class="th-act"><div class="rowactions">
+              <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
+                <form method="post" action="einstellungen.php?t=stammdaten#standorte">
+                  <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
+                  <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
+                  <button class="btn-plain">★ als Standard</button>
+                </form>
+              <?php endif; ?>
               <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
+              <?php /* Die Rückfrage BEZIFFERT, was mitgeht (Konzept 4.2). Ein
+                       „Standort löschen?" allein verschwieg, dass Rettungsmittel,
+                       Zielkliniken und Besatzungen daran hängen. */ ?>
               <form method="post" action="einstellungen.php?t=stammdaten#standorte"
-                    data-confirm="Standort löschen?">
+                    data-confirm="Standort „<?= e($b['name']) ?>“ löschen? <?= $anz > 0
+                        ? ($anz === 1 ? 'Ein eigener Stammdatensatz' : $anz . ' eigene Stammdatensätze')
+                          . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
+                        : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
                 <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
                 <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
                 <button class="btn-red">Löschen</button>
               </form>
-            <?php endif; ?>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="einstellungen.php?t=stammdaten#standorte" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
-      <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-      <input type="text" name="name" class="focus-target" maxlength="120" required
-             placeholder="z. B. Kempten" value="<?= e($editBase['name'] ?? '') ?>">
-      <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
-      <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-    </form>
-
-    <hr class="sep">
-      </details>
-
-  <details class="stammblock" id="hubschrauber">
-    <summary>Hubschrauber</summary>
-
-    <p class="muted">Die angehakten Rollen bestimmen, welche Besatzungsfelder am Flugtag erscheinen.</p>
-    <table class="data data-centered">
-      <thead><tr><th>Kennung</th><th>Rollen</th><th>Standard</th><th class="th-act"></th></tr></thead>
-      <tbody>
-      <?php if (!$acs): ?><tr><td colspan="4" class="muted">Noch keine Hubschrauber.</td></tr><?php endif; ?>
-      <?php foreach ($acs as $a): $global = $a['user_id'] === null;
-            $dup = !$global && stammdaten_dup_global('aircraft', 'registration', $a['registration']); ?>
-        <tr>
-          <td><?= e($a['registration']) ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-          </td>
-          <td class="centercol"><?php $r = [];
-            foreach ($ROLE_LABELS as $k => $lbl) { if ((int)$a[$k]) { $r[] = $lbl; } }
-            echo e($r ? implode(' · ', $r) : '–'); ?></td>
-          <td class="checkcol"><?= (int)$a['id'] === $DEF_AC_ID ? '★' : '' ?></td>
-          <td><div class="rowactions">
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-            <?php if ((int)$a['id'] !== $DEF_AC_ID): ?>
-              <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber">
-                <?= csrf_field() ?><input type="hidden" name="action" value="ac_default">
-                <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                <button class="btn-plain">Als Standard</button>
-              </form>
-            <?php endif; ?>
-            <?php if (!$global): ?>
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ac=<?= (int)$a['id'] ?>#hubschrauber">Bearbeiten</a>
-              <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber"
-                    data-confirm="Hubschrauber löschen?">
-                <?= csrf_field() ?><input type="hidden" name="action" value="ac_del">
-                <input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
-                <button class="btn-red">Löschen</button>
-              </form>
-            <?php endif; ?>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="einstellungen.php?t=stammdaten#hubschrauber" class="ac-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="ac_save">
-      <input type="hidden" name="id" value="<?= $editAc ? (int)$editAc['id'] : 0 ?>">
-      <div class="inline-form">
-        <input type="text" name="registration" class="focus-target" maxlength="64" required
-               placeholder="Kennung, z. B. Christoph 17"
-               value="<?= e($editAc['registration'] ?? '') ?>">
-        <button class="btn-primary"><?= $editAc ? 'Änderungen speichern' : 'Hubschrauber anlegen' ?></button>
-        <?php if ($editAc): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-      </div>
-      <div class="rolechecks">
-        <span class="rolechecks-hint">Rollen auf dem Hubschrauber:</span>
-        <?php foreach ($ROLE_LABELS as $k => $lbl): ?>
-          <label><input type="checkbox" name="<?= $k ?>"
-            <?= ($editAc && (int)$editAc[$k]) ? 'checked' : '' ?>> <?= e($lbl) ?></label>
-        <?php endforeach; ?>
-      </div>
-    </form>
-
-    <hr class="sep">
-      </details>
-
-  <details class="stammblock" id="besatzung">
-    <summary>Besatzung — Vorbelegungen</summary>
-
-    <p class="muted">Diese Namen erscheinen am Flugtag als Auswahl im jeweiligen Rollen-Dropdown.</p>
-    <?php foreach ($ROLE_LABELS as $rk => $lbl): ?>
-      <h3 class="rolehead"><?= e($lbl) ?></h3>
-      <table class="data">
-        <tbody>
-        <?php $any = false; foreach ($crew as $c): if ($c['role'] !== $rk) continue; $any = true;
-              $global = $c['user_id'] === null;
-              $dup = !$global && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role', $rk); ?>
-          <tr>
-            <td><?= e($c['name']) ?>
-              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-            </td>
-            <td class="th-act"><div class="rowactions">
-              <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-              <?php if (!$global): ?>
-                <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#besatzung-<?= $rk ?>">Bearbeiten</a>
-                <form method="post" action="einstellungen.php?t=stammdaten#besatzung"
-                      data-confirm="Eintrag löschen?">
-                  <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
-                  <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                  <button class="btn-red">Löschen</button>
-                </form>
-              <?php endif; ?>
             </div></td>
           </tr>
         <?php endforeach; ?>
-        <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
         </tbody>
       </table>
-      <form method="post" action="einstellungen.php?t=stammdaten#besatzung" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
-        <input type="hidden" name="role" value="<?= $rk ?>">
-        <input type="hidden" name="id"
-               value="<?= ($editCrew && $editCrew['role'] === $rk) ? (int)$editCrew['id'] : 0 ?>">
-        <input type="text" name="name" class="focus-target" data-role="<?= $rk ?>" placeholder="Name" maxlength="120" required
-               value="<?= ($editCrew && $editCrew['role'] === $rk) ? e($editCrew['name']) : '' ?>">
-        <button class="btn-primary"><?= ($editCrew && $editCrew['role'] === $rk) ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-        <?php if ($editCrew && $editCrew['role'] === $rk): ?>
-          <a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+      <form method="post" action="einstellungen.php?t=stammdaten#standorte" class="inline-form">
+        <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
+        <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
+        <input type="text" name="name" class="focus-target" maxlength="120" required
+               placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
+        <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
+                 Abfahrtorts „Standort" und werden beim Anlegen eines Diensttags
+                 eingefroren (E8). Eine Adresssuche wie beim Einsatzort folgt in
+                 einer späteren Etappe; bis dahin werden die Werte eingetippt
+                 oder aus einer Karte übernommen. */ ?>
+        <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
+               value="<?= e((string)($editBase['lat'] ?? '')) ?>">
+        <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
+               value="<?= e((string)($editBase['lon'] ?? '')) ?>">
+        <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
+        <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
       </form>
+    </details>
+
+    <details class="stammblock" id="zentrale">
+      <summary>Zentrale Standorte auswählen</summary>
+      <p class="muted">Zentrale Standorte legt eine Administratorin an. Sie stehen
+         allen zur Verfügung, erscheinen aber erst dann in den Auswahllisten, wenn
+         du sie hier auswählst (E16). Abwählen entfernt keine Daten — bereits
+         dokumentierte Diensttage bleiben unverändert.</p>
+      <table class="data">
+        <tbody>
+        <?php if (!$zentral): ?><tr><td colspan="2" class="muted">Keine zentralen Standorte hinterlegt.</td></tr><?php endif; ?>
+        <?php foreach ($zentral as $z): $an = !empty($z['gewaehlt']); ?>
+          <tr>
+            <td><?= e($z['name']) ?> <span class="badge-central">systemweit</span>
+              <?php if ($z['lat'] !== null && $z['lon'] !== null): ?>
+                <br><span class="muted small"><?= e((string)$z['lat']) ?>, <?= e((string)$z['lon']) ?></span>
+              <?php endif; ?>
+            </td>
+            <td class="th-act"><div class="rowactions">
+              <form method="post" action="einstellungen.php?t=stammdaten#zentrale">
+                <?= csrf_field() ?><input type="hidden" name="action" value="ub_toggle">
+                <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
+                <input type="hidden" name="an" value="<?= $an ? '0' : '1' ?>">
+                <button class="<?= $an ? 'btn-red' : 'btn-primary' ?>"><?= $an ? 'Abwählen' : 'Auswählen' ?></button>
+              </form>
+            </div></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+    </details>
+
+    <?php if (!$sdBases): ?>
+      <p class="alert alert-info">Noch kein Standort verfügbar. Lege oben einen
+         eigenen an oder wähle einen zentralen aus — ohne Standort gibt es keine
+         Rettungsmittel, keine Besatzungs-Vorbelegungen und keine Zielkliniken.</p>
+    <?php endif; ?>
+
+    <?php foreach ($sdBases as $b): $bid = (int)$b['id']; ?>
+      <?php /* Ein Block je Standort. Er enthält die fünf Datenarten aus
+               Konzept 3.8 — die Bergwacht darunter nur, wenn an diesem Standort
+               ein luftgebundenes Rettungsmittel steht: Die Fähigkeit kommt
+               ausschließlich dort vor (E29), und ein leerer Block für einen
+               reinen NEF-Standort wäre ein Angebot ohne Sinn. */ ?>
+      <?php
+        $vehListe = $sdVeh[$bid] ?? [];
+        $hatLuft = false;
+        foreach ($vehListe as $v) { if ($v['kind'] === 'air') { $hatLuft = true; break; } }
+        $anker = 'sd-' . $bid;
+      ?>
+      <details class="stammblock" id="<?= e($anker) ?>">
+        <summary><?= e($b['name']) ?><?= !empty($b['zentral']) ? ' <span class="badge-central">systemweit</span>' : '' ?></summary>
+
+        <h3>Rettungsmittel</h3>
+        <p class="muted">Die Art entscheidet über Besatzungsrollen und die im
+           Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht) gibt
+           es nur luftgebunden.</p>
+        <table class="data">
+          <tbody>
+          <?php if (!$vehListe): ?><tr><td colspan="3" class="muted">Noch keine Rettungsmittel an diesem Standort.</td></tr><?php endif; ?>
+          <?php foreach ($vehListe as $v):
+                $vz = $istZentral($v); $vid = (int)$v['id'];
+                $sym = dt_art_symbol((string)$v['kind']);
+                $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
+                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
+                                     $vehCaps[$vid] ?? []); ?>
+            <tr>
+              <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
+                        aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                <?= e($v['name']) ?>
+                <br><span class="muted small"><?= e($sym['text']) ?><?php
+                  echo $rollenTxt ? ' · ' . e(implode(', ', $rollenTxt)) : ' · keine Rollen';
+                  echo $capsTxt ? ' · ' . e(implode(', ', $capsTxt)) : ''; ?></span>
+              </td>
+              <td><?= $vid === $DEF_VEH_ID ? '★' : '' ?></td>
+              <td class="th-act"><div class="rowactions">
+                <?php if ($vz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                <?php if ($vid !== $DEF_VEH_ID): ?>
+                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>">
+                    <?= csrf_field() ?><input type="hidden" name="action" value="veh_default">
+                    <input type="hidden" name="id" value="<?= $vid ?>">
+                    <input type="hidden" name="base_id" value="<?= $bid ?>">
+                    <button class="btn-plain">★ als Standard</button>
+                  </form>
+                <?php endif; ?>
+                <?php if (!$vz): ?>
+                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ev=<?= $vid ?>#<?= e($anker) ?>">Bearbeiten</a>
+                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
+                        data-confirm="Rettungsmittel löschen? Bereits dokumentierte Diensttage bleiben unverändert.">
+                    <?= csrf_field() ?><input type="hidden" name="action" value="veh_del">
+                    <input type="hidden" name="id" value="<?= $vid ?>">
+                    <input type="hidden" name="base_id" value="<?= $bid ?>">
+                    <button class="btn-red">Löschen</button>
+                  </form>
+                <?php endif; ?>
+              </div></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
+              $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
+              $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
+        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="ac-form">
+          <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
+          <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
+          <input type="hidden" name="base_id" value="<?= $bid ?>">
+          <input type="text" name="name" maxlength="64" required placeholder="z. B. NEF Kempten 1"
+                 value="<?= e($evHier['name'] ?? '') ?>">
+          <?php /* Die Art steuert, welche Rollen und Fähigkeiten überhaupt
+                   angehakt werden können. Das Umschalten passiert im Browser
+                   (Skript unten); der Server filtert unabhängig davon noch
+                   einmal — ein Haken, den die Oberfläche nicht anbietet, darf
+                   auch über eine gesendete Anfrage nicht hereinkommen. */ ?>
+          <span class="vehkind">
+            <label><input type="radio" name="kind" value="air" class="vehkind-radio"
+                   <?= (!$evHier || $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
+            <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
+                   <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
+          </span>
+          <span class="acroles">
+            <?php foreach (CREW_ROLES as $rc => $rr): ?>
+              <label class="rollehaken" data-kind="<?= e($rr['kind']) ?>">
+                <input type="checkbox" name="roles[]" value="<?= e($rc) ?>"
+                       <?= in_array($rc, $evRollen, true) ? 'checked' : '' ?>>
+                <?= e($rr['label']) ?></label>
+            <?php endforeach; ?>
+          </span>
+          <span class="acroles vehcaps">
+            <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
+              <label><input type="checkbox" name="caps[]" value="<?= e($ck) ?>"
+                     <?= in_array($ck, $evCaps, true) ? 'checked' : '' ?>>
+                <?= e($cl) ?></label>
+            <?php endforeach; ?>
+          </span>
+          <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Rettungsmittel hinzufügen' ?></button>
+          <?php if ($evHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+        </form>
+
+        <hr class="sep">
+        <h3>Besatzung</h3>
+        <p class="muted">Vorschläge für die Besatzungsfelder, je Rolle. Freitext
+           bleibt überall möglich — wer aushilft, muss nicht erst hier eingetragen
+           werden.</p>
+        <?php foreach (CREW_ROLES as $rk => $rr): ?>
+          <h4><?= e($rr['label']) ?></h4>
+          <table class="data">
+            <tbody>
+            <?php $any = false;
+                  foreach (($sdCrew[$bid] ?? []) as $c):
+                      if ($c['role_code'] !== $rk) { continue; }
+                      $any = true; $cz = $istZentral($c);
+                      $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk); ?>
+              <tr>
+                <td><?= e($c['name']) ?>
+                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                </td>
+                <td class="th-act"><div class="rowactions">
+                  <?php if ($cz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                  <?php if (!$cz): ?>
+                    <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
+                    <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
+                          data-confirm="Eintrag löschen?">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
+                      <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                      <input type="hidden" name="base_id" value="<?= $bid ?>">
+                      <button class="btn-red">Löschen</button>
+                    </form>
+                  <?php endif; ?>
+                </div></td>
+              </tr>
+            <?php endforeach; ?>
+            <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
+            </tbody>
+          </table>
+          <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
+                           && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
+          <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
+            <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
+            <input type="hidden" name="role" value="<?= e($rk) ?>">
+            <input type="hidden" name="base_id" value="<?= $bid ?>">
+            <input type="hidden" name="id" value="<?= $ecHier ? (int)$ecHier['id'] : 0 ?>">
+            <input type="text" name="name" placeholder="Name" maxlength="120" required
+                   value="<?= e($ecHier['name'] ?? '') ?>">
+            <button class="btn-primary"><?= $ecHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+            <?php if ($ecHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+          </form>
+        <?php endforeach; ?>
+
+        <hr class="sep">
+        <h3>Zielkliniken</h3>
+        <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.
+           Koordinaten sind freiwillig; ohne sie entsteht lediglich kein Pin auf
+           der Karte.</p>
+        <table class="data">
+          <tbody>
+          <?php if (!($sdTd[$bid] ?? [])): ?><tr><td class="muted">Noch keine Zielkliniken.</td><td></td></tr><?php endif; ?>
+          <?php foreach (($sdTd[$bid] ?? []) as $t): $tz = $istZentral($t);
+                $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
+            <tr>
+              <td><?= e($t['name']) ?>
+                <?php if ($t['lat'] !== null && $t['lon'] !== null): ?>
+                  <br><span class="muted small"><?= e((string)$t['lat']) ?>, <?= e((string)$t['lon']) ?></span>
+                <?php endif; ?>
+                <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+              </td>
+              <td class="th-act"><div class="rowactions">
+                <?php if ($tz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                <?php if (!$tz): ?>
+                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;et=<?= (int)$t['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
+                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
+                        data-confirm="Zielklinik löschen?">
+                    <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
+                    <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
+                    <input type="hidden" name="base_id" value="<?= $bid ?>">
+                    <button class="btn-red">Löschen</button>
+                  </form>
+                <?php endif; ?>
+              </div></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
+        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
+          <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
+          <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
+          <input type="hidden" name="base_id" value="<?= $bid ?>">
+          <input type="text" name="name" maxlength="190" required
+                 placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
+          <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
+                 value="<?= e((string)($etHier['lat'] ?? '')) ?>">
+          <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
+                 value="<?= e((string)($etHier['lon'] ?? '')) ?>">
+          <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
+          <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+        </form>
+
+        <hr class="sep">
+        <h3>Weitere Rettungsmittel</h3>
+        <p class="muted">Vorschläge für das Feld „Weitere Rettungsmittel“ im
+           Einsatz (RTW, NEF, weitere Hubschrauber …).</p>
+        <table class="data">
+          <tbody>
+          <?php if (!($sdRes[$bid] ?? [])): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
+          <?php foreach (($sdRes[$bid] ?? []) as $r): $rz = $istZentral($r);
+                $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']); ?>
+            <tr>
+              <td><?= e($r['name']) ?>
+                <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+              </td>
+              <td class="th-act"><div class="rowactions">
+                <?php if ($rz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                <?php if (!$rz): ?>
+                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
+                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
+                        data-confirm="Eintrag löschen?">
+                    <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
+                    <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
+                    <input type="hidden" name="base_id" value="<?= $bid ?>">
+                    <button class="btn-red">Löschen</button>
+                  </form>
+                <?php endif; ?>
+              </div></td>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null; ?>
+        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
+          <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
+          <input type="hidden" name="id" value="<?= $erHier ? (int)$erHier['id'] : 0 ?>">
+          <input type="hidden" name="base_id" value="<?= $bid ?>">
+          <input type="text" name="name" maxlength="120" required
+                 placeholder="z. B. RTW Kempten" value="<?= e($erHier['name'] ?? '') ?>">
+          <button class="btn-primary"><?= $erHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+          <?php if ($erHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+        </form>
+
+        <?php if ($hatLuft): ?>
+          <hr class="sep">
+          <h3>Bergwacht</h3>
+          <p class="muted">Bereitschaften für das Feld „Bergwacht“ im Einsatz.
+             Der Block erscheint, weil an diesem Standort ein luftgebundenes
+             Rettungsmittel steht — die Fähigkeit kommt nur dort vor.</p>
+          <table class="data">
+            <tbody>
+            <?php if (!($sdBw[$bid] ?? [])): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
+            <?php foreach (($sdBw[$bid] ?? []) as $w): $wz = $istZentral($w);
+                  $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']); ?>
+              <tr>
+                <td><?= e($w['name']) ?>
+                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                </td>
+                <td class="th-act"><div class="rowactions">
+                  <?php if ($wz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                  <?php if (!$wz): ?>
+                    <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$w['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
+                    <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
+                          data-confirm="Bereitschaft löschen?">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
+                      <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+                      <input type="hidden" name="base_id" value="<?= $bid ?>">
+                      <button class="btn-red">Löschen</button>
+                    </form>
+                  <?php endif; ?>
+                </div></td>
+              </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+          <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null; ?>
+          <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
+            <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
+            <input type="hidden" name="id" value="<?= $ewHier ? (int)$ewHier['id'] : 0 ?>">
+            <input type="hidden" name="base_id" value="<?= $bid ?>">
+            <input type="text" name="name" maxlength="120" required
+                   placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($ewHier['name'] ?? '') ?>">
+            <button class="btn-primary"><?= $ewHier ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
+            <?php if ($ewHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+          </form>
+        <?php endif; ?>
+      </details>
     <?php endforeach; ?>
 
-    <hr class="sep">
-      </details>
-
-  <details class="stammblock" id="rettungsmittel">
-    <summary>Andere Rettungsmittel</summary>
-
-    <p class="muted">Vorbelegung f&uuml;r das Feld &bdquo;Weitere Rettungsmittel&ldquo; im Einsatz.
-       Dort gen&uuml;gen zwei Zeichen, dann erscheinen die passenden Eintr&auml;ge zum Anklicken.</p>
-    <table class="data">
-      <tbody>
-      <?php if (!$res): ?><tr><td class="muted">Noch keine Rettungsmittel.</td><td></td></tr><?php endif; ?>
-      <?php foreach ($res as $r): $global = $r['user_id'] === null;
-            $dup = !$global && stammdaten_dup_global('resources', 'name', $r['name']); ?>
-        <tr>
-          <td><?= e($r['name']) ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-          </td>
-          <td class="th-act"><div class="rowactions">
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-            <?php if (!$global): ?>
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#rettungsmittel">Bearbeiten</a>
-              <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel"
-                    data-confirm="Rettungsmittel aus der Vorbelegung l&ouml;schen? Bereits dokumentierte Eins&auml;tze behalten ihren Eintrag.">
-                <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
-                <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                <button class="btn-red">L&ouml;schen</button>
-              </form>
-            <?php endif; ?>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="einstellungen.php?t=stammdaten#rettungsmittel" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
-      <input type="hidden" name="id" value="<?= $editRes ? (int)$editRes['id'] : 0 ?>">
-      <input type="text" name="name" class="focus-target" maxlength="120" required
-             placeholder="z. B. RTW Kempten 21/83" value="<?= e($editRes['name'] ?? '') ?>">
-      <button class="btn-primary"><?= $editRes ? '&Auml;nderung speichern' : 'Rettungsmittel hinzuf&uuml;gen' ?></button>
-      <?php if ($editRes): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-    </form>
-
-      </details>
-
-  <details class="stammblock" id="bergwacht">
-    <summary>Bergwacht-Bereitschaften</summary>
-
-    <table class="data">
-      <tbody>
-      <?php if (!$bw): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
-      <?php foreach ($bw as $b): $global = $b['user_id'] === null;
-            $dup = !$global && stammdaten_dup_global('bw_units', 'name', $b['name']); ?>
-        <tr>
-          <td><?= e($b['name']) ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-          </td>
-          <td class="th-act"><div class="rowactions">
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-            <?php if (!$global): ?>
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$b['id'] ?>#bergwacht">Bearbeiten</a>
-              <form method="post" action="einstellungen.php?t=stammdaten#bergwacht"
-                    data-confirm="Bereitschaft löschen?">
-                <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
-                <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-                <button class="btn-red">Löschen</button>
-              </form>
-            <?php endif; ?>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="einstellungen.php?t=stammdaten#bergwacht" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
-      <input type="hidden" name="id" value="<?= $editBw ? (int)$editBw['id'] : 0 ?>">
-      <input type="text" name="name" class="focus-target" maxlength="120" required
-             placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($editBw['name'] ?? '') ?>">
-      <button class="btn-primary"><?= $editBw ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
-      <?php if ($editBw): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-    </form>
-
-    <hr class="sep">
-      </details>
-
-  <details class="stammblock" id="transportziele">
-    <summary>Transportziele</summary>
-
-    <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.</p>
-    <table class="data">
-      <tbody>
-      <?php if (!$tds): ?><tr><td class="muted">Noch keine Transportziele.</td><td></td></tr><?php endif; ?>
-      <?php foreach ($tds as $t): $global = $t['user_id'] === null;
-            $dup = !$global && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
-        <tr>
-          <td><?= e($t['name']) ?>
-            <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-          </td>
-          <td class="th-act"><div class="rowactions">
-            <?php if ($global): ?><span class="badge-central">systemweit</span><?php endif; ?>
-            <?php if (!$global): ?>
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;et=<?= (int)$t['id'] ?>#transportziele">Bearbeiten</a>
-              <form method="post" action="einstellungen.php?t=stammdaten#transportziele"
-                    data-confirm="Transportziel löschen?">
-                <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
-                <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
-                <button class="btn-red">Löschen</button>
-              </form>
-            <?php endif; ?>
-          </div></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-    <form method="post" action="einstellungen.php?t=stammdaten#transportziele" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
-      <input type="hidden" name="id" value="<?= $editTd ? (int)$editTd['id'] : 0 ?>">
-      <input type="text" name="name" class="focus-target" maxlength="190" required
-             placeholder="z. B. Klinikum Kempten" value="<?= e($editTd['name'] ?? '') ?>">
-      <button class="btn-primary"><?= $editTd ? 'Änderung speichern' : 'Transportziel hinzufügen' ?></button>
-      <?php if ($editTd): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-    </form>
-  </details>
-
-
+    <script>
+    /* Rollen- und Fähigkeitshaken zur Art passend ein- und ausblenden (E3).
+     *
+     * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'.
+     * Diese Zeilen nehmen der Ablehnung nur die Überraschung — und verhindern,
+     * dass jemand einen Flugretter an einem NEF anhakt und sich danach fragt,
+     * wo der Haken geblieben ist. */
+    document.querySelectorAll('form.ac-form').forEach(function (f) {
+      function anpassen() {
+        var kind = (f.querySelector('.vehkind-radio:checked') || {}).value || 'air';
+        f.querySelectorAll('.rollehaken').forEach(function (lab) {
+          var k = lab.dataset.kind;
+          var passt = (k === 'both' || k === kind);
+          lab.hidden = !passt;
+          if (!passt) { lab.querySelector('input').checked = false; }
+        });
+        var caps = f.querySelector('.vehcaps');
+        if (caps) {
+          caps.hidden = (kind !== 'air');
+          if (kind !== 'air') {
+            caps.querySelectorAll('input').forEach(function (i) { i.checked = false; });
+          }
+        }
+      }
+      f.querySelectorAll('.vehkind-radio').forEach(function (r) {
+        r.addEventListener('change', anpassen);
+      });
+      anpassen();
+    });
+    </script>
   <?php elseif ($tab === 'backup'): ?>
     <h1>Backup</h1>
     <p class="muted">Sichert <strong>alle</strong> deine Daten (Einsätze mit Phasen,
-       Reanimationen und Tracks, Ruhesegmente, Flugtage, Stammdaten und die
+       Reanimationen und Tracks, Ruhesegmente, Diensttage, Standortdaten und die
        geschützten Angaben) in eine einzelne Datei (<code>.edbak</code>), verschlüsselt
        mit einem Passwort deiner Wahl (AES-256-GCM). Ver- und Entschlüsselung passieren
        vollständig <strong>in deinem Browser</strong> — der Server sieht die Inhalte nie.
@@ -1276,7 +1618,7 @@ if ($tab === 'geraete') {
         expState.textContent = `Fertig: ${(data.missions || []).length} Einsätze `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(data.rest_segments || []).length} Ruhesegmente, `
-          + `${(data.days || []).length} Flugtage.`
+          + `${(data.days || []).length} Diensttage.`
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
                 + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '
@@ -1417,7 +1759,7 @@ if ($tab === 'geraete') {
                                          aufbau:'unbrauchbarer Aufbau'}[k] || k) + ' ' + v)
                       .join(', ')
                   : ''}), ${s.rests} Ruhesegmente, `
-          + `${s.days} Flugtage, ${s.stammdaten} Standortdaten-Einträge`
+          + `${s.days} Diensttage, ${s.stammdaten} Standortdaten-Einträge`
           + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz
           /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
            * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
@@ -1463,7 +1805,7 @@ if ($tab === 'geraete') {
           `Die Administration hat eine Sicherung vom `
           + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
           + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
-          + `${u.flugtage || 0} Flugtage, ${u.ruhezeiten || 0} Ruhezeiten.` + woher;
+          + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.` + woher;
         // Ohne geschützte Angaben gibt es nichts umzuschlüsseln — dann nach dem
         // Wiederherstellungsschlüssel zu fragen wäre eine Hürde ohne Zweck.
         document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;
@@ -1552,7 +1894,7 @@ if ($tab === 'geraete') {
         const s = out.stats;
         fgState.textContent = `Fertig: ${s.missions} Einsätze übernommen `
           + `(${s.missions_skipped} übersprungen, weil bereits vorhanden oder unbrauchbar), `
-          + `${s.rests} Ruhesegmente, ${s.days} Flugtage.`;
+          + `${s.rests} Ruhesegmente, ${s.days} Diensttage.`;
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         fgState.textContent = 'Einspielen fehlgeschlagen: ' + e.message;
