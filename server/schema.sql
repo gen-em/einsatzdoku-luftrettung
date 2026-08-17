@@ -13,6 +13,7 @@ CREATE TABLE users (
   pat_key_check CHAR(32) NULL,                       -- Pruefsumme des Inhaltsschluessels (im Browser gerechnet); NULL = Altbestand
   role          ENUM('user','admin') NOT NULL DEFAULT 'user',
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
+  account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -333,4 +334,13 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_07_29_einsatznummer_verschluesselt', 'skipped'),
   ('2026_07_30_herkunft_bearbeitungsstatus', 'skipped'),
   ('2026_08_05_site_desc_entfernt', 'skipped'),
-  ('2026_08_08_review_bausteine', 'skipped');
+  ('2026_08_08_review_bausteine', 'skipped'),
+  -- Nachgetragen (Web 5.9.0): Beide Migrationen fehlten hier, obwohl der Kopf
+  -- von update.php es ausdruecklich verlangt. Auf einer Neuinstallation haben
+  -- sie nichts zu tun -- die Zeitzonen-Umstellung findet keine Zeilen, die
+  -- Geraeteumbenennung keine Geraete --, sie liefen aber trotzdem an.
+  ('2026_08_13_zeitzonen_umstellung', 'skipped'),
+  ('2026_08_14_geraetename_ohne_datum', 'skipped'),
+  -- account_key steht oben schon in der Tabelle: Eine Neuinstallation legt
+  -- die Kennung bei der Kontoanlage an, der Nachtrag ist nur fuer Bestand da.
+  ('2026_08_16_kontokennung', 'skipped');

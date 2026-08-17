@@ -3,6 +3,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/smtp.php';
 require_admin();
+// Erinnerung an die Admin-Sicherungen (A8.4) — sie gehoert dorthin, wo
+// Administration ohnehin hinsieht, nicht nur auf die Sicherungsseite selbst.
+require_once __DIR__ . '/adminbackup_lib.php';
 
 $notice = null; $error = null; $setzLink = null;
 
@@ -55,8 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo = db();
                 $pdo->beginTransaction();
                 try {
-                    $pdo->prepare('INSERT INTO users (email, role) VALUES (?, ?)')
-                        ->execute([$email, $role]);
+                    /* Kontokennung bei der Anlage, nicht spaeter (E17).
+                     * Sie ist ab hier unveraenderlich und der Ordnername der
+                     * Admin-Sicherung; ein Konto ohne sie waere ein Konto, das
+                     * sich nicht sichern laesst. */
+                    $pdo->prepare('INSERT INTO users (email, role, account_key) VALUES (?, ?, ?)')
+                        ->execute([$email, $role, bin2hex(random_bytes(8))]);
                     $uid = (int)$pdo->lastInsertId();
                     $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)
                                    VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))')
@@ -129,6 +136,26 @@ $users   = db()->query('SELECT id, email, name, role, created_at FROM users ORDE
 <main class="page">
   <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
   <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+
+  <?php /* ---- Erinnerung an die Sicherungen (A8.4) ------------------------
+     * Muster wie die Wartungswarnung in update.php: erst sagen, was ist, dann
+     * was daraus folgt — und wohin man dafür geht. Ein Hinweis ohne den Weg
+     * zur Handlung erzeugt nur Unbehagen.
+     *
+     * Sie steht HIER und nicht nur auf der Sicherungsseite: Ein Hinweis auf
+     * einer Seite, die man erst öffnet, wenn man ohnehin sichern will, meldet
+     * niemandem etwas — derselbe Fehler, der bei der Wartungsauskunft schon
+     * einmal gemacht wurde (M3-05, Web 4.5.2). */
+  $eSich = edbak_erinnerung(); ?>
+  <?php if ($eSich['letzte'] === null): ?>
+    <p class="alert alert-warn">Es wurde noch <strong>nie</strong> eine Sicherung der
+       Konten erzeugt. <a href="admin_sicherungen.php">Zu den Sicherungen</a></p>
+  <?php elseif ($eSich['faellig']): ?>
+    <p class="alert alert-warn">Letzte Sicherung der Konten vor
+       <strong><?= (int)$eSich['tage'] ?> Tagen</strong> — das eingestellte Intervall
+       von <?= (int)$eSich['intervall'] ?> Tagen ist überschritten.
+       <a href="admin_sicherungen.php">Zu den Sicherungen</a></p>
+  <?php endif; ?>
   <?php if ($setzLink !== null): ?>
     <div class="keybox">
       <strong>Der Einladungslink konnte nicht per E-Mail zugestellt werden.</strong>

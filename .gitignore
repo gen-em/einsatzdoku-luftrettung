@@ -12,3 +12,7 @@ server/install-nachweis-*.txt
 # Betriebssystem-Kram
 .DS_Store
 Thumbs.db
+
+# Admin-Sicherungen entstehen nur auf dem Server (A8.2). Sie gehoeren nie ins
+# Repo -- und der Deploy nimmt den Ordner ohnehin von der Synchronisation aus.
+server/sicherungen/

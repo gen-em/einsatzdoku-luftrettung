@@ -29,9 +29,20 @@ jobs:
           server-dir: ./httpdocs/            # Zielpfad auf dem Webspace anpassen, z. B. ./public_html/
           # Diese Dateien nie anfassen: liegen nur auf dem Server, dürfen nicht
           # überschrieben oder gelöscht werden. Die Git-Defaults erneut mit angeben.
+          # ZWINGEND seit A8.2: sicherungen/ steht mit in der Liste. Die
+          # Admin-Sicherungen entstehen nur auf dem Server und liegen unter
+          # server/sicherungen/; ohne diesen Eintrag löscht der nächste Deploy
+          # sie alle, denn er synchronisiert server/ und entfernt, was hier
+          # nicht ausgenommen ist. Der Eintrag steht zweimal, weil die Aktion
+          # Datei- und Verzeichnismuster getrennt prüft.
+          # Die .htaccess im Ordner legt adminbackup_lib.php beim ersten
+          # Schreiben selbst an — sie darf hier nicht mit hochgeladen werden,
+          # sonst käme sie nie im ausgenommenen Ordner an.
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             config.php
             install.lock
+            sicherungen/**
+            sicherungen/

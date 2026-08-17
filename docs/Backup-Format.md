@@ -274,3 +274,69 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
 `backup_lib.php` einzutragen (Liste `$missionSpalten` beziehungsweise die
 Aufzählungen für `rest_segments` und `days`) und hier zu ergänzen. Das ist
 Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
+
+---
+
+## 5. Admin-Sicherung (seit Web 5.9.0)
+
+Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
+`adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/` als
+unverschlüsseltes JSON. **Warum unverschlüsselt:** Der Server hat keinen
+Schlüssel, mit dem er es versiegeln könnte, ohne ihn ebenfalls zu speichern —
+das wäre ein Schloss mit dem Schlüssel daneben. Geschützt ist die Datei durch
+den Ort (`Require all denied` und der nicht erratbare Ordnername), und die
+empfindlichen Angaben darin stecken ohnehin verschlüsselt.
+
+```json
+{
+  "format":      "einsatzdoku-adminsicherung",
+  "version":     1,
+  "erzeugt":     "2026-08-16T18:22:31Z",
+  "web_version": "5.9.0",
+  "konto":  { "account_key": "…16 Hexziffern…",
+              "email": "…", "name": "…" },
+  "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
+  "umfang": { "einsaetze": 42, "flugtage": 12, "ruhezeiten": 3 },
+  "daten":  { … das innere JSON aus Abschnitt 2, Formatversion 5 … }
+}
+```
+
+**`daten` ist unverändert das Backup-JSON** — mit einem Unterschied zur
+`.edbak`-Datei: Dort ersetzt der Browser `pat_blob` vor dem Versiegeln durch
+Klartext. Hier bleibt der **Chiffretext** stehen, genau wie in der Datenbank.
+Der Server sieht also nie etwas, was er nicht ohnehin sieht.
+
+**`schluessel` ist der Grund, warum das Format überhaupt existiert.**
+`pat_wrap_rc` enthält den Inhaltsschlüssel, verpackt mit dem
+Wiederherstellungsschlüssel — und bleibt bei Passwortwechseln unberührt, ist
+also über die Lebensdauer des Kontos stabil. Ohne diesen Wert liesse sich das
+Paket nur in dasselbe Konto zurückspielen; der Hauptanwendungsfall ist aber das
+neu aufgesetzte Konto, und dort ist er der einzige Weg vom
+Wiederherstellungsschlüssel zum alten Inhaltsschlüssel.
+
+`pat_key_check` ist die Prüfsumme des Inhaltsschlüssels und darf `null` sein
+(Konten aus der Zeit vor Web 4.0.0). `pat_wrap_rc` darf ebenfalls `null` sein —
+bei Konten, die zwischen Einladung und erster Passwortvergabe gesichert wurden.
+Sie haben dann auch keine geschützten Angaben.
+
+**`konto.json` im selben Ordner** ist Begleitdatei und Verzeichnis in einem:
+
+```json
+{
+  "account_key":      "…",
+  "email":            "…",
+  "name":             "…",
+  "letzte_sicherung": "2026-08-16T18:22:31Z",
+  "sicherungen":      [ { "datei": "…", "erzeugt": "…", "umfang": { … } } ],
+  "freigabe":         { "datei": "…", "ziel_user": 7,
+                        "erstellt": "…", "eingeloest": null }
+}
+```
+
+Sie hält Name und Adresse fest, **damit die Zuordnung eine Kontolöschung
+überlebt** — genau dafür gibt es den Abschnitt „verwaiste Sicherungen" in der
+Übersicht. Die Liste der Pakete entsteht bei der Anzeige trotzdem aus dem
+Verzeichnis und nicht aus dieser Datei: Ein Eintrag ohne Datei darf keine
+Sicherung vortäuschen, und eine vorhandene Datei darf nicht unsichtbar bleiben,
+weil sie hier fehlt. Ist `konto.json` unlesbar, wird der Ordner mit Hinweis
+aufgeführt statt übergangen.

@@ -4,6 +4,8 @@ require_once __DIR__ . '/auth_guard.php';
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
 require_admin();
+// Loeschen entscheidet seit Web 5.8.0 auch ueber die Admin-Sicherungen (E25).
+require_once __DIR__ . '/adminbackup_lib.php';
 
 $uid = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $notice = null; $error = null;
@@ -68,10 +70,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (strcasecmp($eingabe, (string)$u['email']) !== 0) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — nichts wurde gelöscht.';
         } else {
-            // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Flugtage
-            db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
-            header('Location: admin_users.php');
-            exit;
+            /* ÜBER DIE SICHERUNGEN WIRD AUSDRÜCKLICH ENTSCHIEDEN (E25).
+             *
+             * Bis Web 5.8.0 sagte der Warntext unbedingt zu, dass nach der
+             * Löschung nichts mehr lesbar ist. Sobald Admin-Sicherungen
+             * existieren, wäre das unwahr — die Sicherung überlebt die
+             * Löschung und würde zur verwaisten Sicherung. Genau diese Zusage
+             * ist aber der Grund, aus dem jemand eine Löschung verlangt.
+             *
+             * Umgekehrt ist das Überleben der Sicherung der Zweck der ganzen
+             * Funktion. Beides verträgt sich nur, wenn die Entscheidung
+             * sichtbar getroffen wird. Die Vorbelegung folgt der bisherigen
+             * Zusage; das Abweichen ist eine bewusste Handlung.
+             *
+             * Die Sicherungen werden VOR dem Löschen der Zeile entfernt: Danach
+             * wäre die Kontokennung fort, und der Ordner liesse sich nur noch
+             * über die Übersicht der verwaisten Sicherungen finden. */
+            $mitSicherungen = ($_POST['sicherungen_mit'] ?? '1') === '1';
+            $kennung = $u['account_key'] ?? null;
+            $sicherungenWeg = false;
+            if ($mitSicherungen) {
+                $sicherungenWeg = edbak_konto_ordner_loeschen(
+                    is_string($kennung) ? $kennung : null);
+            }
+            if ($mitSicherungen && !$sicherungenWeg) {
+                /* Nicht löschen, wenn die Zusage nicht gehalten werden kann.
+                 * Ein Konto zu entfernen und die Sicherung stehen zu lassen,
+                 * OBWOHL das Gegenteil gewählt wurde, wäre die schlechteste
+                 * der drei möglichen Ausgänge. */
+                $error = 'Die Sicherungen dieses Kontos liessen sich nicht entfernen — '
+                       . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
+                       . '„Sicherungen" nachsehen.';
+            } else {
+                // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Flugtage
+                db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
+                header('Location: admin_users.php');
+                exit;
+            }
         }
     }
     if ($action === 'device_toggle') {
@@ -177,14 +212,28 @@ $devices = $dv->fetchAll();
 
   <hr class="sep">
   <h2>Nutzer löschen</h2>
+  <?php /* Der Warntext sagt seit Web 5.8.0 nicht mehr unbedingt zu, dass danach
+           nichts mehr lesbar ist, sondern bindet diese Aussage an die
+           getroffene Wahl (E25). Vorher wäre sie unwahr geworden, sobald eine
+           Admin-Sicherung existiert. */ ?>
   <p class="muted">Entfernt das Konto <strong><?= e($u['email']) ?></strong> mit
      <strong>allen</strong> Daten: Einsätze, Flugtage, Tracks, Reanimationen und Geräte.
-     Verschlüsselte Angaben sind danach für niemanden mehr lesbar. Dieser Schritt lässt
-     sich nicht rückgängig machen und geht nicht über den Papierkorb.</p>
+     Dieser Schritt lässt sich nicht rückgängig machen und geht nicht über den
+     Papierkorb.</p>
+  <p class="muted"><strong>Ob danach nichts mehr lesbar ist, hängt von der Wahl
+     unten ab.</strong> Werden die Sicherungen mitgelöscht, bleibt nichts zurück.
+     Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
+     „Sicherungen" als verwaiste Sicherung — geschützte Angaben darin sind
+     weiterhin nur mit dem Wiederherstellungsschlüssel der Person zu öffnen.</p>
   <form method="post" class="settings-form"
         data-confirm="Nutzer endgültig löschen?" data-confirm-ok="Endgültig löschen">
     <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">
     <input type="hidden" name="id" value="<?= $uid ?>">
+    <label>Sicherungen dieses Kontos
+      <select name="sicherungen_mit">
+        <option value="1" selected>mitlöschen (Vorgabe)</option>
+        <option value="0">erhalten — erscheinen danach als verwaiste Sicherung</option>
+      </select></label>
     <label>Zur Bestätigung die E-Mail-Adresse abtippen
       <input type="text" name="confirm_email" autocomplete="off" required
              placeholder="<?= e($u['email']) ?>"></label>

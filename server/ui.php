@@ -62,6 +62,7 @@ function ui_settings_sidebar(string $active): void {
       <ul>
         <li><a href="admin_users.php" <?= $active === 'admin' ? 'class="active"' : '' ?>>NutzerInnenverwaltung</a></li>
         <li><a href="admin_stammdaten.php" <?= $active === 'admin_stammdaten' ? 'class="active"' : '' ?>>Zentrale Stammdaten</a></li>
+        <li><a href="admin_sicherungen.php" <?= $active === 'admin_sicherungen' ? 'class="active"' : '' ?>>Sicherungen</a></li>
         <?php /* Wartung war bis Web 4.5.2 nur ueber die direkte Adresse
            erreichbar. Das machte die Auskunft aus M3-05 wertlos: Sie meldet,
            dass der Aufraeumjob dauerhaft scheitert — auf einer Seite, die

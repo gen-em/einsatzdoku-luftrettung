@@ -854,6 +854,82 @@ $MIGRATIONS = [
             }
         },
     ],
+    [
+        'id'    => '2026_08_16_kontokennung',
+        'label' => 'Kontokennung für die Admin-Sicherungen (users.account_key)',
+        /* WARUM EINE EIGENE KENNUNG UND NICHT users.id ODER DIE ADRESSE (E17)
+         *
+         * Die Kennung ist der Ordnername der Admin-Sicherung. Sie muss
+         * unveraenderlich sein und darf NIE ein zweites Mal vergeben werden.
+         *
+         * Die E-Mail-Adresse scheidet aus: Sie aendert sich (der Ordner
+         * muesste mitwandern, ein Fehlschlag bliebe unbemerkt), sie ist eine
+         * personenbezogene Angabe im Klartext auf dem Dateisystem, sie bringt
+         * Zeichen- und Gross-/Kleinschreibungsprobleme mit — und bei Loeschung
+         * plus Neuanlage derselben Adresse traefen Sicherungen mit
+         * VERSCHIEDENEN Inhaltsschluesseln in einem Ordner aufeinander.
+         *
+         * users.id scheidet aus, weil der AUTO_INCREMENT-Zaehler in MariaDB
+         * und aelteren MySQL-Fassungen nach einem Serverneustart auf den
+         * hoechsten vorhandenen Wert zurueckfallen kann. Ein neu angelegtes
+         * Konto koennte dann den Ordner eines geloeschten erben — und dessen
+         * Sicherungen unter seinem Namen fuehren.
+         *
+         * Zwei Zugaben der Zufallskennung: Sie ist nicht erratbar und damit
+         * selbst die zweite Schranke, falls die .htaccess einmal nicht greift;
+         * und sie verraet weder die Person noch die Zahl der Konten.
+         */
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users' AND column_name = 'account_key'");
+            if ((int)$q->fetchColumn() === 0) { return false; }
+            // Spalte da, aber noch Zeilen ohne Kennung? Dann nicht ueberspringen —
+            // der Nachtrag unten laeuft und fuellt genau diese.
+            return (int)$pdo->query('SELECT COUNT(*) FROM users WHERE account_key IS NULL')
+                            ->fetchColumn() === 0;
+        },
+        /* EIN ZWEITER LAUF IST FOLGENLOS (P9).
+         *
+         * Die Spalte wird nur angelegt, wenn sie fehlt; gefuellt wird nur, wo
+         * NULL steht. Ein erneuter Lauf findet dann nichts mehr zu tun und
+         * vergibt insbesondere KEINE neuen Kennungen an Konten, die schon eine
+         * haben — das waere der eine Fehler, der die Zuordnung zu den bereits
+         * abgelegten Ordnern zerreisst.
+         */
+        'run'   => function (PDO $pdo): void {
+            $hat = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                                     WHERE table_schema = DATABASE()
+                                       AND table_name = 'users'
+                                       AND column_name = 'account_key'")->fetchColumn();
+            if ($hat === 0) {
+                $pdo->exec('ALTER TABLE users ADD COLUMN account_key CHAR(16) NULL');
+            }
+            $ids = $pdo->query('SELECT id FROM users WHERE account_key IS NULL')
+                       ->fetchAll(PDO::FETCH_COLUMN);
+            $up = $pdo->prepare('UPDATE users SET account_key = ? WHERE id = ? AND account_key IS NULL');
+            foreach ($ids as $id) {
+                /* Der eindeutige Index steht erst nach dem Nachtrag; bis dahin
+                 * schuetzt die Wiederholung. Bei 8 Zufallsbytes ist eine
+                 * Kollision nicht zu erwarten — aber "nicht zu erwarten" ist
+                 * bei einem Ordnernamen, an dem fremde Daten haengen, kein
+                 * Grund, es nicht zu pruefen. */
+                for ($v = 0; $v < 5; $v++) {
+                    $kennung = bin2hex(random_bytes(8));
+                    $frei = $pdo->prepare('SELECT 1 FROM users WHERE account_key = ?');
+                    $frei->execute([$kennung]);
+                    if ($frei->fetchColumn() === false) { break; }
+                }
+                $up->execute([$kennung, (int)$id]);
+            }
+            $idx = $pdo->query("SELECT COUNT(*) FROM information_schema.statistics
+                                WHERE table_schema = DATABASE() AND table_name = 'users'
+                                  AND index_name = 'uq_users_account_key'")->fetchColumn();
+            if ((int)$idx === 0) {
+                $pdo->exec('ALTER TABLE users ADD UNIQUE KEY uq_users_account_key (account_key)');
+            }
+        },
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

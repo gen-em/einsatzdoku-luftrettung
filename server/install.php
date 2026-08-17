@@ -227,8 +227,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Bewusst OHNE Passwort: Der Server darf das Passwort nie sehen.
             // Es wird ueber pw_handling.php im Browser gesetzt; dort entstehen
             // zugleich Inhalts- und Wiederherstellungsschluessel.
-            $pdo->prepare('INSERT INTO users (email, role) VALUES (?, "admin")')
-                ->execute([$adminEmail]);
+            $pdo->prepare('INSERT INTO users (email, role, account_key) VALUES (?, "admin", ?)')
+                ->execute([$adminEmail, bin2hex(random_bytes(8))]);
             $adminId = (int)$pdo->lastInsertId();
             $setupToken = bin2hex(random_bytes(32));
             $pdo->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at)

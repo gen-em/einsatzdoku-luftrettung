@@ -1063,6 +1063,35 @@ if ($tab === 'geraete') {
       <p class="muted" id="impstate" style="min-height:1.3em"></p>
     </div>
 
+    <?php /* ---- Von der Administration freigegebene Sicherung (A8.6) -------
+             Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
+             dauerhaft sichtbarer, meist leerer Block wäre eine Frage, die man
+             sich bei jedem Besuch neu stellt.
+
+             Der Fall dahinter: Das Konto wurde gelöscht und neu aufgesetzt.
+             Die geschützten Angaben der alten Sicherung hängen am ALTEN
+             Inhaltsschlüssel; nur der Wiederherstellungsschlüssel öffnet ihn,
+             und der liegt ausschliesslich hier. Deshalb kann Administration
+             ein solches Paket nicht einspielen — sie gibt es frei, und das
+             Umschlüsseln passiert in diesem Browser. */ ?>
+    <div id="freigabebox" hidden>
+      <hr class="sep">
+      <h2>Für dich freigegebene Sicherung</h2>
+      <p class="muted" id="freigabeinfo"></p>
+      <div class="settings-form">
+        <label id="freigabecodelabel">Wiederherstellungsschlüssel
+          <input type="text" id="freigabecode" autocomplete="off"
+                 placeholder="XXXX-XXXX-XXXX-XXXX"></label>
+        <p class="muted small">Das ist der Schlüssel, der bei der Ersteinrichtung
+           einmalig angezeigt wurde — nicht das Kontopasswort. Ohne ihn lassen sich
+           die geschützten Angaben dieser Sicherung von niemandem mehr öffnen.</p>
+        <button class="btn-primary" id="freigabebtn">Sicherung einspielen</button>
+        <p class="muted" id="freigabestate" style="min-height:1.3em"></p>
+      </div>
+      <p class="muted small">Das Einspielen <strong>ergänzt</strong>: Vorhandene
+         Einträge bleiben unverändert, es kommt nur hinzu, was fehlt.</p>
+    </div>
+
     <script src="<?= asset('assets/crypto.js') ?>"></script>
     <script src="<?= asset('assets/keyguard.js') ?>"></script>
     <script src="<?= asset('assets/unlock.js') ?>"></script>
@@ -1400,6 +1429,133 @@ if ($tab === 'geraete') {
               : '');
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
+      }
+    });
+
+    /* ---- Freigegebene Sicherung einspielen (A8.6) ----------------------
+     *
+     * Ablauf, vollständig im Browser:
+     *   1. Wiederherstellungsschlüssel -> Schlüssel-Hex (EdCrypto.recoveryKeyHex)
+     *   2. damit `pat_wrap_rc` aus dem Paket öffnen -> ALTER Inhaltsschlüssel
+     *   3. je Einsatz `pat_blob` mit dem alten öffnen und mit dem EIGENEN
+     *      neu verschlüsseln
+     *   4. das so umgeschlüsselte Paket über den vorhandenen Weg
+     *      api/backup_restore.php zurückspielen
+     *
+     * Schritt 4 benutzt bewusst denselben Endpunkt wie der Datei-Import: Das
+     * Feld `daten` IST ein Backup der Formatversion 5. Ein zweiter Rückspielpfad
+     * wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
+     */
+    const fgBox   = document.getElementById('freigabebox');
+    const fgState = document.getElementById('freigabestate');
+    let fgPaket = null;
+
+    async function freigabeLaden() {
+      try {
+        const res = await fetch('api/adminbackup_freigabe.php');
+        const d = await res.json();
+        if (!res.ok || !d.freigabe) { return; }
+        fgPaket = d;
+        const u = d.freigabe.umfang || {};
+        const woher = d.freigabe.herkunft_email
+          ? ` Sie stammt aus dem Konto ${d.freigabe.herkunft_email}.` : '';
+        document.getElementById('freigabeinfo').textContent =
+          `Die Administration hat eine Sicherung vom `
+          + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
+          + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
+          + `${u.flugtage || 0} Flugtage, ${u.ruhezeiten || 0} Ruhezeiten.` + woher;
+        // Ohne geschützte Angaben gibt es nichts umzuschlüsseln — dann nach dem
+        // Wiederherstellungsschlüssel zu fragen wäre eine Hürde ohne Zweck.
+        document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;
+        fgBox.hidden = false;
+      } catch (e) {
+        /* Still bleiben: Wer keine Freigabe hat, soll auf dieser Seite auch
+           keinen Fehler über eine Funktion lesen, die ihn nichts angeht. */
+      }
+    }
+    freigabeLaden();
+
+    document.getElementById('freigabebtn').addEventListener('click', async () => {
+      if (!fgPaket) { return; }
+      const daten = fgPaket.daten;
+      const braucht = fgPaket.freigabe.braucht_schluessel;
+      try {
+        if (braucht) {
+          const code = document.getElementById('freigabecode').value;
+          const pruef = EdCrypto.pruefeRecoveryCode(code);
+          if (!pruef.ok) {
+            fgState.textContent = EdCrypto.recoveryCodeMeldung(pruef);
+            return;
+          }
+          if (!fgPaket.pat_wrap_rc) {
+            fgState.textContent = 'Der Sicherung fehlt die Wiederherstellungs-Hülle — '
+              + 'die geschützten Angaben lassen sich nicht mehr öffnen.';
+            return;
+          }
+          fgState.textContent = 'Schlüssel wird geprüft…';
+          const rcKey = await EdCrypto.recoveryKeyHex(code);
+          let altCk = null;
+          try {
+            altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc);
+          } catch (e) { altCk = null; }
+          if (!altCk) {
+            fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu dieser '
+              + 'Sicherung. Es wurde nichts eingespielt.';
+            return;
+          }
+
+          const eigenerCk = await ck();
+          if (!eigenerCk) {
+            fgState.textContent = 'Die Verschlüsselung ist in dieser Sitzung gesperrt — '
+              + 'bitte oben entsperren.';
+            return;
+          }
+
+          fgState.textContent = 'Geschützte Angaben werden umgeschlüsselt…';
+          let um = 0, unlesbar = 0;
+          for (const m of (daten.missions || [])) {
+            if (!m.pat_blob) { continue; }
+            try {
+              const klar = await EdCrypto.decrypt(altCk, m.pat_blob);
+              m.pat_blob = await EdCrypto.encrypt(eigenerCk, klar);
+              um++;
+            } catch (e) {
+              /* NICHT stillschweigend weglassen: Ein Eintrag, dessen
+                 geschützte Angaben hier nicht lesbar werden, ist eine Auskunft
+                 — die Datei sähe sonst vollständig aus, wäre es aber nicht. */
+              unlesbar++;
+            }
+          }
+          if (unlesbar && !confirm(`${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
+              + `nicht öffnen. Ihre geschützten Angaben bleiben hier unlesbar. `
+              + `Trotzdem einspielen?`)) {
+            fgState.textContent = 'Abgebrochen — es wurde nichts eingespielt.';
+            return;
+          }
+          fgState.textContent = `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`;
+        } else {
+          fgState.textContent = 'Daten werden übertragen…';
+        }
+
+        const res = await fetch('api/backup_restore.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+          body: JSON.stringify(daten)
+        });
+        const out = await res.json();
+        if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
+        await fetch('api/adminbackup_freigabe.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+          body: JSON.stringify({ eingeloest: true })
+        });
+        const s = out.stats;
+        fgState.textContent = `Fertig: ${s.missions} Einsätze übernommen `
+          + `(${s.missions_skipped} übersprungen, weil bereits vorhanden oder unbrauchbar), `
+          + `${s.rests} Ruhesegmente, ${s.days} Flugtage.`;
+        document.getElementById('freigabebtn').disabled = true;
+      } catch (e) {
+        fgState.textContent = 'Einspielen fehlgeschlagen: ' + e.message;
       }
     });
     </script>
