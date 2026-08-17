@@ -698,7 +698,8 @@ Zwei Dinge sind dabei wichtig:
   nicht angetastet, solange gesperrt ist.** Du kannst also einen Einsatz auch
   im gesperrten Zustand bearbeiten, ohne Patientendaten zu verlieren.
 - **Import und Export der Patientendaten brauchen den Schlüssel.** Ohne ihn ist
-  der Import gesperrt und der Export nur ohne Patientendaten möglich.
+  der Import gesperrt und der Export nur ohne personenbezogene Angaben
+  möglich.
 
 **Alter aus Geburtsdatum:** Das Alter berechnet die Anwendung aus dem
 Geburtsdatum, bezogen auf den **Einsatztag**, nicht auf heute — ein Einsatz von
@@ -772,6 +773,47 @@ beschädigt" — was beides nicht stimmte.)
 Der Aufbau der Datei ist in `docs/Backup-Format.md` vollständig beschrieben —
 sie lässt sich damit auch ohne dieses Programm entschlüsseln.
 
+### 6.1 Sicherung durch die Administration
+
+Seit Web 5.9.0 kann die Administration zusätzlich **Sicherungen aller Konten**
+anlegen. Das ist eine Rückfallebene für den Fall, dass in einem Konto etwas
+schiefgeht — sie ersetzt dein eigenes Backup nicht.
+
+**Die Administration sieht dabei keine Inhalte.** In der Sicherung stecken die
+geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
+sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
+Administration zeigt Zeitpunkt, Anzahl der Einsätze und Dateigröße — mehr nicht.
+
+**Wenn dein Konto weiterbesteht**, spielt die Administration eine solche
+Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
+**ergänzend**: Was schon da ist, bleibt unverändert.
+
+**Wenn dein Konto neu aufgesetzt wurde**, geht das nicht — und zwar aus einem
+Grund, der sich nicht umgehen lässt: Die geschützten Angaben der alten Sicherung
+hängen am alten Inhaltsschlüssel, und den öffnet allein dein
+**Wiederherstellungsschlüssel**. Die Administration gibt die Sicherung dann für
+dein Konto frei. Unter **⚙ Einstellungen → „Backup"** erscheint danach ein
+Abschnitt *Für dich freigegebene Sicherung*: Dort gibst du deinen
+Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
+neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
+hast, kann die Administration sie zurücknehmen.
+
+**Grenzen des Verfahrens** — sie gehören genannt, bevor man sich darauf verlässt:
+
+- Es ist eine Rückfallebene gegen **selbstverschuldete Probleme im Konto**,
+  **kein Schutz gegen Kontoverlust**. Ohne Wiederherstellungsschlüssel ist ein
+  neu aufgesetztes Konto **nicht** wiederherstellbar — auch die Administration
+  kann daran nichts ändern, weil der Schlüssel nirgends sonst existiert.
+- Die einzige Voraussetzung ist deshalb nichttechnisch: **Verwahre deinen
+  Wiederherstellungsschlüssel.** Er wird bei der Ersteinrichtung einmalig
+  angezeigt und danach nie wieder (Abschnitt 5).
+- Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
+  entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
+- Je Konto liegen höchstens **drei** Sicherungen. Die vierte verdrängt die
+  älteste — nach Alter wird dagegen nie etwas entfernt.
+- Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
+  ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
+
 ---
 
 ## 7. Import und Export
@@ -816,6 +858,15 @@ Zwei Sonderfälle werden dabei erkannt:
   davon wirksam. Du wählst je Zeile: überspringen (Voreinstellung),
   überschreiben oder trotzdem anlegen. Gelöschte Einsätze im Papierkorb
   zählen bewusst nicht als vorhanden.
+
+  **„Überschreiben" löscht nichts, was die Datei nicht kennt** (seit Web
+  5.8.0). Liefert die Datei zu einem Feld nichts, bleibt der gespeicherte Wert
+  stehen. Das betrifft die Besatzung, Bergwacht-Infos, den anderen Notarzt, die
+  Notizen, die Höhe des Einsatzortes, die Patientendaten und die Koordinaten der
+  Phasen — also genau die Angaben, die ein Export **ohne** personenbezogene
+  Angaben leer lässt. Vorher hätte ein solcher Rückimport sie im Bestand
+  gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr gezielt
+  **leeren**; das geht im Einsatzformular.
 - **Abweichende Besatzung.** Als Besatzung des Flugtags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel im laufenden Dienst —, trägt dieser Einsatz
@@ -842,7 +893,8 @@ eine vollständige Sicherung gibt es Abschnitt 6.
 
 Wie beim Import passiert alles im Browser: Der Server liefert nur Rohdaten, die
 geschützten Angaben werden erst auf deinem Rechner entschlüsselt. Ohne den Haken
-„Patientendaten einschließen" schickt der Server sie gar nicht erst mit.
+„Personenbezogene Angaben einschließen" schickt der Server sie gar nicht erst
+mit.
 
 Zu wählen sind Zeitraum (Von–Bis oder Alles) und Format.
 
@@ -869,13 +921,53 @@ Die Namen sind dieselben wie im Auswahlfeld des Imports — was hier
 herausgeschrieben wird, lässt sich dort unter demselben Namen wieder
 einlesen.
 
-**Patientendaten einschließen** ist standardmäßig aus. Wird es gesetzt, kommt
-vorher ein Hinweis: Ab dem Speichern schützt die Verschlüsselung dieser
-Anwendung die Daten nicht mehr — Name, Geburtsdatum, Diagnose und Einsatzort
-stehen dann lesbar in der Datei. Ist die Verschlüsselung gerade gesperrt (nach
-einem Neustart des Browsers), lässt sich der Haken nicht setzen; ein Export ohne
-Patientendaten bleibt möglich. Über „Entsperren“ im Hinweis daneben lässt sich
-die Sperre aufheben (siehe Abschnitt 5).
+**Personenbezogene Angaben einschließen** ist standardmäßig aus. Der Haken
+hieß bis Web 5.7.0 „Patientendaten einschließen" und schaltete auch nur diese
+ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
+
+- die Patientendaten — Einsatznummer, Name, Geburtsdatum, Alter, Diagnose,
+  Einsatzort mit Adresse und Koordinaten,
+- die **Besatzung** — die des Flugtags und die tatsächliche des Einsatzes,
+  auch im Blatt *Flugtage*,
+- **Bergwacht: Namen / Infos** und den **anderen Notarzt**,
+- die **Notizen** von Einsatz und Flugtag,
+- die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
+  „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
+  Einsatzortes** und die **GPX-Tracks**.
+
+Der letzte Punkt war der Anlass für die Erweiterung: Bis Web 5.7.0 nannte ein
+Export „ohne Patientendaten" den Einsatzort trotzdem, nur in einer anderen
+Spalte. Wer eine solche Datei weitergab, gab mehr weiter, als der Name der
+Option versprach.
+
+**Was ausdrücklich drin bleibt** — damit es nicht als Versehen gelesen wird:
+
+- **Transportziel** und **Bergwacht-Einheit**. Beides sind Einrichtungen, keine
+  Personen. Das Transportziel ist zusammen mit Datum und Uhrzeit trotzdem ein
+  Hinweis auf eine bestimmte Aufnahme; die Entscheidung, es zu behalten, ist
+  bewusst getroffen und steht deshalb hier.
+- **Weitere Rettungsmittel** („RTW Kempten") — Organisationskennungen.
+- Der **Verlauf einer Reanimation** ohne Angabe, wen sie betraf. Ohne ihn
+  entfiele der Grund, Reanimationen überhaupt zu erfassen.
+- Die **Zeitpunkte** der Phasen. Sie tragen Alarmzeit, Endzeit und Dauer.
+- Der Haken **abweichende Besatzung**. Er sagt nur, *dass* sie abwich — sonst
+  wäre nicht mehr zu erkennen, dass die leeren Namensspalten leer *gemacht*
+  wurden.
+
+Wird der Haken gesetzt, kommt vorher ein Hinweis: Ab dem Speichern schützt die
+Verschlüsselung dieser Anwendung die Daten nicht mehr, sie stehen lesbar in der
+Datei. Ist die Verschlüsselung gerade gesperrt (nach einem Neustart des
+Browsers), lässt sich der Haken nicht setzen; ein Export ohne personenbezogene
+Angaben bleibt möglich. Über „Entsperren“ im Hinweis daneben lässt sich die
+Sperre aufheben (siehe Abschnitt 5).
+
+**Der Spaltensatz bleibt gleich.** Beim CSV bleiben die betroffenen Spalten
+stehen und leer — ein Programm, das die Datei einliest, muss deshalb nicht zwei
+Fälle unterscheiden; `felder.csv` sagt je Feld, ob es unter die Schranke fällt.
+Bei **Excel (Standard)** entfallen die Spalten dagegen ganz: Dort liest ein
+Mensch, und eine dauerhaft leere Spalte wäre nur Ballast. Bei **Excel
+(GuteSeele)** bleiben sie leer stehen, weil das Layout mit dem Empfänger
+vereinbart ist.
 
 **Wenn sich Angaben nicht entschlüsseln lassen, fragt der Export nach.** Passt
 der Schlüssel für einzelne Einsätze nicht, blieben ihre Patientenspalten in der
@@ -897,12 +989,13 @@ mindestens zehn Zeichen, dieselbe Prüfung wie beim Anmeldepasswort. Anders als
 beim Backup wird hier **nicht** angeboten, das Kontopasswort zu verwenden: Eine
 Exportdatei ist zum Weitergeben gedacht.
 
-Exportierst du **ohne** Patientendaten, erscheint unter dem Kästchen ein
-Hinweis: Die Datei enthält dann zwar keine Patientendaten, aber weiterhin
-personenbezogene Angaben — Besatzungsnamen, Bergwacht-Angaben, den anderen
-Notarzt, Notizen und über die Phasen die Koordinaten des Einsatzortes. Der
-Schutz schaltet sich deshalb **nicht** von selbst ab; die Entscheidung bleibt
-bei dir. Zum Öffnen wird
+Exportierst du **ohne** personenbezogene Angaben, erscheint unter dem Kästchen
+ein Hinweis. Bis Web 5.7.0 sagte er, die Datei sei trotzdem personenbezogen —
+das stimmte damals und stimmt seit Web 5.8.0 nicht mehr. Was bleibt, sind
+**Betriebsangaben**: Einsatzzeiten, Transportziele, weitere Rettungsmittel und
+der Verlauf einer Reanimation. Kein Personenbezug, aber auch nichts, was ohne
+Weiteres in fremde Hände gehört. Der Schutz schaltet sich deshalb **nicht** von
+selbst ab; die Entscheidung bleibt bei dir. Zum Öffnen wird
 ein Zusatzprogramm gebraucht: **7-Zip** unter Windows, **Keka** oder **The
 Unarchiver** unter macOS — der Windows-Explorer und das macOS-Archivprogramm
 können solche Archive nicht öffnen. Beide Programme sind kostenlos.
@@ -915,12 +1008,13 @@ dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
 **Der Dateiname sagt, was drin ist.** Er ist so aufgebaut:
 
 ```
-luftrettungsdokumentation_export_06-08-2026_standard_mit-pat_verschl_philipp-mueller.zip
+luftrettungsdokumentation_export_06-08-2026_standard_mit-pers_verschl_philipp-mueller.zip
 ```
 
 Der Reihe nach: der Tag der Erstellung, das gewählte Format (`standard`,
-`guteseele` oder `csv`), ob Patientendaten enthalten sind (`mit-pat` oder
-`ohne-pat`), ob die Datei verschlüsselt ist (`verschl` oder `unverschl`) und
+`guteseele` oder `csv`), ob personenbezogene Angaben enthalten sind
+(`mit-pers` oder `ohne-pers`), ob die Datei verschlüsselt ist (`verschl` oder
+`unverschl`) und
 zuletzt das Konto, aus dem der Export stammt — der Name aus den Einstellungen,
 und wenn dort keiner steht, die E-Mail-Adresse. So ist auch Wochen später und
 in einem Ordner voller Exporte zu sehen, welche Datei vorsichtig zu behandeln
@@ -932,6 +1026,11 @@ Zwei Feinheiten:
   passwortgeschütztes Excel steckt in einem Archiv `…_verschl.zip`, die
   Tabelle darin heißt `…_unverschl.xlsx` — denn sobald sie entpackt ist, liegt
   sie offen.
+- **Ältere Dateien tragen `mit-pat` bzw. `ohne-pat`.** Sie behalten ihren
+  Namen, und er ist für sie auch richtig: Sie stammen aus einer Zeit, in der
+  der Haken nur die Patientendaten abschaltete. Eine alte Datei `ohne-pat`
+  enthält also Besatzungsnamen und Einsatzkoordinaten, eine neue `ohne-pers`
+  nicht. Genau dafür wurde der Marker umbenannt.
 - Enthält der Name Umlaute oder Leerzeichen, werden sie umgeschrieben
   (`Philipp Müller` → `philipp-mueller`), weil nicht jedes Betriebssystem und
   nicht jedes Programm damit zurechtkommt. Bei einer E-Mail-Adresse entfallen

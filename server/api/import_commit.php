@@ -224,15 +224,46 @@ function import_commit(array $b, int $userId): never
                                    winch_airload, bergwacht, bw_unit, bw_info,
                                    other_ema, notes)
              VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
+         *
+         * Die Felder unter der Export-Schranke stehen hier mit
+         * COALESCE(?, spalte) statt mit einer nackten Zuweisung — dasselbe
+         * Muster, das $updTag ein paar Zeilen weiter oben fuer die Besatzung
+         * des Flugtags schon benutzt.
+         *
+         * Anlass ist Block A9: Ein Export OHNE personenbezogene Angaben laesst
+         * Besatzung, bw_info, other_ema, Notizen und site_ele_m leer. Wer eine
+         * solche Datei zurueckspielt und dabei "ueberschreiben" waehlt, schrieb
+         * bis Web 5.7.0 NULL ueber Angaben, die im Bestand noch vollstaendig
+         * waren — der Export haette die Daten damit nicht nur nicht enthalten,
+         * sondern beim Rueckweg vernichtet. Bei pat_blob galt dasselbe schon
+         * fuer den alten Patientendaten-Haken.
+         *
+         * PREIS, BEWUSST BEZAHLT: Ein Feld laesst sich per Import nicht mehr
+         * gezielt LEEREN. Wer eine Notiz loswerden will, tut das im Formular.
+         * Der umgekehrte Fehler waere teurer: Ein Formular vergisst einen Wert
+         * je Einsatz, ein Import vergisst ihn fuer den ganzen Jahrgang.
+         *
+         * NICHT betroffen sind die Felder ausserhalb der Schranke
+         * (transport_dest, bw_unit, distance_m, die Flags …): Sie stehen in
+         * jedem Export, ein leerer Wert ist dort eine Aussage. */
         $updE = $pdo->prepare(
             'UPDATE missions SET day = ?, started_at = ?, ended_at = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
-                                 crew_p1 = ?, crew_p2 = ?, crew_hems = ?, crew_fr = ?,
-                                 crew_other = ?, pat_blob = ?,
-                                 site_ele_m = ?, distance_m = ?, ascent_m = ?,
+                                 crew_p1     = COALESCE(?, crew_p1),
+                                 crew_p2     = COALESCE(?, crew_p2),
+                                 crew_hems   = COALESCE(?, crew_hems),
+                                 crew_fr     = COALESCE(?, crew_fr),
+                                 crew_other  = COALESCE(?, crew_other),
+                                 pat_blob    = COALESCE(?, pat_blob),
+                                 site_ele_m  = COALESCE(?, site_ele_m),
+                                 distance_m = ?, ascent_m = ?,
                                  schockraum = ?, secondary = ?, winch_cycles = ?,
                                  winch_cycles_pat = ?, winch_airload = ?, bergwacht = ?,
-                                 bw_unit = ?, bw_info = ?, other_ema = ?, notes = ?,
+                                 bw_unit = ?,
+                                 bw_info     = COALESCE(?, bw_info),
+                                 other_ema   = COALESCE(?, other_ema),
+                                 notes       = COALESCE(?, notes),
                                  manual = 1, edited = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $insPhase = $pdo->prepare(
@@ -382,6 +413,34 @@ function import_commit(array $b, int $userId): never
                  * entgleisten Nutzlast und darf nicht als Ersatz fuer die
                  * Entdoppelung dienen. */
                 $phasen = pruef_menge($phasen, LIMIT_PHASEN, 'phases', $pruef);
+
+                /* KOORDINATEN UEBERLEBEN DAS ERSETZEN (P10, A9).
+                 *
+                 * Der Satz wird ersetzt, nicht gemischt — das bleibt so. Aber
+                 * die Koordinaten fallen unter die Export-Schranke: Ein Export
+                 * ohne personenbezogene Angaben liefert die Phasenzeiten und
+                 * KEINE lat/lon. Ohne diesen Uebertrag loeschte ein solcher
+                 * Rueckimport den Einsatzort, obwohl er ihn nur nicht kannte.
+                 *
+                 * Uebertragen wird je Phasennummer der Reihe nach: die erste
+                 * neue Zeile der Phase 4 erbt die erste alte, die zweite die
+                 * zweite. Mehrfache Eintraege je Phase sind erlaubt (siehe
+                 * oben), und der Export schreibt je Phase genau eine Spalte —
+                 * die Reihenfolge ist damit die einzige Zuordnung, die es gibt.
+                 *
+                 * Nur wenn die Datei WEDER lat NOCH lon liefert. Gibt sie
+                 * Koordinaten an, gelten ihre — auch dann, wenn sie von den
+                 * bisherigen abweichen. */
+                $altOrt = [];
+                $selPhasen = $pdo->prepare(
+                    'SELECT phase, lat, lon FROM mission_phases
+                     WHERE mission_id = ? AND (lat IS NOT NULL OR lon IS NOT NULL)
+                     ORDER BY occurred_at, id');
+                $selPhasen->execute([$id]);
+                foreach ($selPhasen->fetchAll() as $a) {
+                    $altOrt[(int)$a['phase']][] = [$a['lat'], $a['lon']];
+                }
+
                 $delPhasen->execute([$id]);
                 foreach ($phasen as $p) {
                     if (!is_array($p)) { continue; }
@@ -394,9 +453,12 @@ function import_commit(array $b, int $userId): never
                                                       'phases.local', $pruef);
                     }
                     if ($wann === null) { continue; }
-                    $insPhase->execute([$id, $nr, $wann,
-                        pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef),
-                        pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef)]);
+                    $lat = pruef_breite($p['lat'] ?? null, 'phases.lat', $pruef);
+                    $lon = pruef_laenge($p['lon'] ?? null, 'phases.lon', $pruef);
+                    if ($lat === null && $lon === null && !empty($altOrt[$nr])) {
+                        [$lat, $lon] = array_shift($altOrt[$nr]);
+                    }
+                    $insPhase->execute([$id, $nr, $wann, $lat, $lon]);
                     $gesetzt[$nr] = true;
                 }
             }

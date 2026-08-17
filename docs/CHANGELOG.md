@@ -11,6 +11,177 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 5.9.0] — 2026-08-16
+
+Block A8 der Verbesserungsrunde Web: **Admin-Sicherungen als Rückfallebene**.
+Administration kann Konten sichern und wiederherstellen, ohne Einblick in die
+Daten zu erhalten. **Schemaänderung mit Migration** — bitte nach dem Aufspielen
+die Wartung aufrufen.
+
+### Jedes Konto bekommt eine Kontokennung
+
+Neue Spalte `users.account_key`, einmalig bei der Kontoanlage vergeben und
+danach unveränderlich. Sie ist der Ordnername der Sicherung. Weder die
+E-Mail-Adresse (sie ändert sich, sie ist personenbezogen, sie bringt
+Zeichenprobleme mit) noch `users.id` (der Zähler kann nach einem Serverneustart
+zurückfallen — ein neues Konto könnte den Ordner eines gelöschten erben) taugen
+dafür. Die Migration trägt die Kennung für alle Bestandskonten nach; ein
+zweiter Lauf ändert nichts.
+
+### Sicherungen liegen im Dateisystem, nicht in der Datenbank
+
+Unter `server/sicherungen/`, ein Ordner je Konto. Eine Sicherung, die im selben
+Behälter liegt wie das Gesicherte, ist keine Rückfallebene — und ein Paket liegt
+bei größeren Beständen im zweistelligen MB-Bereich, während `max_allowed_packet`
+auf geteiltem Webspace oft bei 16 MB festliegt.
+
+Zwei Schranken gegen den Abruf über den Browser: eine `.htaccess` mit
+`Require all denied`, die bei jedem Schreibzugriff nachgelegt wird, und der
+Ordnername selbst — die zufällige Kontokennung ist nicht zu erraten. **Der
+Ordner steht in der `exclude`-Liste des Deploys**; ohne diesen Eintrag hätte die
+nächste Auslieferung alle Sicherungen gelöscht.
+
+### Auslösung ausschliesslich von Hand
+
+Auf dieser Installation läuft kein Cron. Sichern lässt sich je Konto, für eine
+Auswahl oder für alle in einem Zug. Je Konto bleiben höchstens **drei**
+Sicherungen; die vierte verdrängt die älteste. **Keine Altersgrenze** — sie
+würde genau die letzte vorhandene Sicherung entfernen, wenn lange keine neue
+erzeugt wurde, also in der Lage, in der man sie braucht. Eine Erinnerung mit
+einstellbarem Intervall erscheint in der Administration.
+
+### Zurückspielen: der Vergleich der Kennungen entscheidet
+
+- **Kennungen stimmen überein** — dasselbe Konto besteht weiter. Administration
+  spielt unmittelbar ein, ohne Zutun der NutzerIn.
+- **Kennungen weichen ab** — das Konto wurde neu aufgesetzt. Unmittelbares
+  Einspielen ist **gesperrt**; die geschützten Angaben hängen an einem
+  Inhaltsschlüssel, den nur der Wiederherstellungsschlüssel öffnet. Administration
+  gibt die Sicherung stattdessen für ein Zielkonto frei, und die NutzerIn spielt
+  sie im eigenen Backup-Bereich ein — ihr Browser schlüsselt dabei um. Eine noch
+  nicht eingelöste Freigabe lässt sich widerrufen.
+
+Vor jeder Rückspielung ist die E-Mail-Adresse des **Zielkontos** abzutippen,
+serverseitig geprüft. Das Risiko ist nicht Datenverlust — eine Rückspielung
+ergänzt und ersetzt nicht —, sondern das Einspielen fremder Daten in ein
+falsches Konto. Die Rückmeldung nennt angelegte und übersprungene Einträge, die
+übersprungenen nach Gründen getrennt.
+
+### Verwaiste Sicherungen sind der eigentliche Anwendungsfall
+
+Die Übersicht führt zwei Quellen zusammen: bestehende Konten aus der Datenbank
+und **Ordner, zu deren Kennung kein Konto mehr existiert**. Genau diese wären in
+einer Liste aus der Datenbank unsichtbar — dabei sind sie der Grund, aus dem es
+die Funktion gibt. Name und Adresse stammen dort aus der Begleitdatei im Ordner.
+Ein Ordner ohne lesbare Begleitdatei wird mit Hinweis aufgeführt, nicht
+stillschweigend übergangen.
+
+### Löschen, mit abgestufter Härte
+
+Bleibt danach noch eine weitere Sicherung desselben Kontos, genügt die übliche
+Rückfrage — die Löschung ist folgenlos. Ist es die letzte oder gehört sie zu
+einem verwaisten Ordner, ist zusätzlich die E-Mail-Adresse abzutippen. Ist die
+Begleitdatei unlesbar, tritt eine ausdrückliche Bestätigung an ihre Stelle.
+Kein Papierkorb: Ein Papierkorb für Sicherungen wäre eine weitere Kopie
+derselben Daten, die genau dann noch existiert, wenn jemand sie loswerden wollte.
+
+### Die Kontolöschung entscheidet ausdrücklich über die Sicherungen
+
+Die Löschmaske hat ein Auswahlfeld „Sicherungen dieses Kontos" bekommen,
+vorbelegt mit **mitlöschen**. Der Warntext sagt nicht länger unbedingt zu, dass
+nach der Löschung nichts mehr lesbar ist, sondern bindet diese Aussage an die
+getroffene Wahl — sonst wäre sie unwahr geworden, sobald Sicherungen existieren.
+Lassen sich die Sicherungen nicht entfernen, wird das Konto **nicht** gelöscht.
+
+### Grenzen — ausdrücklich benannt
+
+Das Verfahren ist eine Rückfallebene gegen selbstverschuldete Probleme im Konto,
+**kein Schutz gegen Kontoverlust**. Ohne den Wiederherstellungsschlüssel ist ein
+neu aufgesetztes Konto nicht wiederherstellbar. Beides steht im Handbuch.
+
+### Kleinigkeiten
+
+- Administration sieht zu keinem Zeitpunkt Klartext: In der Sicherung stecken
+  die geschützten Angaben als Chiffretext, die Oberfläche zeigt nur Zeitpunkt,
+  Anzahl und Größe.
+- Die Kontokennung erscheint an keiner Stelle der Oberfläche — auch nicht in
+  verborgenen Formularfeldern. Dort steht ein Handgriff, aus dem sich die
+  Kennung nicht zurückrechnen lässt.
+- `schema.sql` führte zwei Migrationen nicht in seiner Liste
+  (`2026_08_13_zeitzonen_umstellung`, `2026_08_14_geraetename_ohne_datum`),
+  obwohl der Kopf von `update.php` es verlangt. Nachgetragen.
+
+## [Web 5.8.0] — 2026-08-16
+
+Block A9 der Verbesserungsrunde Web. Die Einschränkung des Exports wird von den
+Patientendaten auf **personenbezogene Angaben insgesamt** erweitert — und der
+Rückweg über den Import so abgesichert, dass eine solche Datei im Bestand nichts
+löscht. Keine Schemaänderung, keine Migration.
+
+### Der Haken heißt jetzt „Personenbezogene Angaben einschließen"
+
+Der Export kannte genau eine Schranke, und sie hieß „Patientendaten
+einschließen". Alles andere ging immer mit — auch Angaben, die nicht dem
+Patienten gehören, aber trotzdem einer Person. Ohne den Haken fehlen jetzt
+zusätzlich:
+
+- die **Besatzung**, die des Flugtags und die tatsächliche des Einsatzes,
+  auch im Blatt *Flugtage*,
+- **bw_info** („Bergwacht: Namen / Infos") und **other_ema** (anderer Notarzt),
+- die **Notizen** von Einsatz und Flugtag,
+- die **Koordinaten der Phasen**, die **Höhe des Einsatzortes** und die
+  **GPX-Tracks**.
+
+### Der Einsatzort stand bisher in einer anderen Spalte
+
+Das war der Anlass. Phase 4 ist „Ankunft Einsatzort", Phase 5 „Ankunft
+PatientIn" — diese Koordinaten *sind* der Einsatzort, und sie waren nicht
+eingeschränkt, während `pat_ort_lat/lon` es war. Ein Export „ohne
+Patientendaten" nannte den Ort also trotzdem. Dasselbe galt für die GPX-Spuren,
+die dort enden, und für die aus dem Ort gerechnete Höhe.
+
+### Drin bleiben, jeweils einzeln entschieden
+
+Transportziel und Bergwacht-Einheit (Einrichtungen, keine Personen), weitere
+Rettungsmittel (Organisationskennungen), der Verlauf einer Reanimation ohne
+Angabe, wen sie betraf, die Zeitpunkte der Phasen (sie tragen Alarmzeit, Endzeit
+und Dauer) und der Haken „abweichende Besatzung" — er sagt nur, *dass* sie
+abwich. Die Entscheidungen stehen im Handbuch, damit sie nicht als Versehen
+gelesen werden.
+
+### Der Dateiname sagt, was drin ist
+
+`mit-pers` bzw. `ohne-pers` statt `mit-pat`/`ohne-pat`. Der Dateiname ist die
+Angabe, die man noch sieht, wenn die Datei längst in einem fremden Ordner liegt
+— `ohne-pat` an einer Datei mit Besatzungsnamen wäre dort die falsche Auskunft.
+Ältere Dateien behalten ihren Namen; für sie war er richtig.
+
+### Ein Rückimport löscht keine Besatzung mehr
+
+Beim Überschreiben eines vorhandenen Einsatzes setzte der Import bisher jede
+Spalte unbedingt — ein leerer Wert aus der Datei kam als leeres Feld im Bestand
+an. Wer eine Datei ohne personenbezogene Angaben zurückspielte und dabei
+„überschreiben" wählte, hätte Besatzung, Notizen, Bergwacht-Infos und den
+anderen Notarzt verloren. Diese Felder werden jetzt nur noch gesetzt, wenn die
+Datei etwas liefert; die Phasenkoordinaten überleben das Ersetzen ebenfalls.
+Der Preis: Ein solches Feld lässt sich per Import nicht mehr gezielt leeren —
+das geht im Einsatzformular.
+
+### Kleinigkeiten
+
+- Die Schranke wirkt serverseitig: `api/export_data.php` liefert die
+  betroffenen Felder gar nicht erst aus und weist Trackanfragen ohne den Haken
+  ab. `assets/export.js` entfernt sie ein zweites Mal, bevor eines der Profile
+  den Bestand sieht.
+- `felder.csv` im CSV-Archiv hat eine Spalte `personenbezogen` bekommen. Damit
+  ist am Archiv selbst ablesbar, welche leeren Zellen leer *gemacht* wurden.
+- Die GPX-Wahl verschwindet ohne den Haken, mit Angabe des Grundes an ihrer
+  Stelle.
+- Der Hinweis unter dem Passwortkästchen (Web 5.7.0) sagte, die Datei sei ohne
+  Patientendaten „trotzdem personenbezogen". Das stimmt nicht mehr; er benennt
+  jetzt, was tatsächlich bleibt — Betriebsangaben wie Zeiten, Transportziele und
+  Rettungsmittel. Vorbelegt bleibt der Schutz.
+
 ## [Web 5.7.0] — 2026-08-16
 
 Sechster Block der Verbesserungsrunde Web (A6 „Einstellungen, Import, Export").

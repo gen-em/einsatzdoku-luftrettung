@@ -13,7 +13,8 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  * Antwort:
  *   { days: [...], missions: [...], rests: [...] }
  *
- *   { action:'track', owner_type:'mission'|'rest', ids:[42,43,...] }
+ *   { action:'track', owner_type:'mission'|'rest', ids:[42,43,...],
+ *     patient: bool }
  *
  * Antwort:
  *   { "42": [ [lat, lon, ele|null, ts], ... ] }
@@ -29,6 +30,36 @@ require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
  * erst im Browser weggelassen"). Das Flag 'patient' im Request ist daher die
  * naheliegende Ergaenzung dieser Luecke und wird hier so umgesetzt — bitte
  * bei der Abnahme von E1 gegenpruefen.
+ *
+ * DAS FLAG HEISST 'patient', MEINT ABER MEHR (Web 5.8.0, Block A9).
+ *
+ * Der Schluessel im Request bleibt unveraendert, damit der Vertrag zwischen
+ * assets/export.js und dieser Datei stabil bleibt. Was er ein- und
+ * ausschliesst, ist seit A9 groesser: nicht mehr nur der pat_blob, sondern
+ * personenbezogene Angaben insgesamt. Ohne das Flag liefert dieser Endpunkt
+ *
+ *   - keine Besatzungsnamen (days.crew_*, missions.crew_*),
+ *   - kein bw_info ("Namen / Infos" der Bergwacht) und kein other_ema,
+ *   - keine Notizen (missions.notes, days.notes),
+ *   - keine Koordinaten der Phasen (lat/lon; die Zeitpunkte bleiben, sie
+ *     tragen Alarm- und Endzeit) und kein site_ele_m,
+ *   - keinen pat_blob,
+ *   - und ueberhaupt keine Trackpunkte (action 'track' wird abgewiesen).
+ *
+ * WARUM DIE PHASENKOORDINATEN: Phase 4 ist "Ankunft Einsatzort", Phase 5
+ * "Ankunft PatientIn". Diese Punkte SIND der Einsatzort. Bis Web 5.7.0 nannte
+ * ein Export "ohne Patientendaten" ihn trotzdem, nur in einer anderen Spalte
+ * als pat_ort_lat/lon. Dasselbe gilt fuer die GPX-Spuren, die dort enden.
+ *
+ * DRAUSSEN BLEIBEN bewusst transport_dest (eine Einrichtung, keine Person),
+ * bw_unit (dito), weitere_rettungsmittel (Organisationskennungen) und der
+ * Reanimationsverlauf. Vom Auftraggeber je einzeln entschieden; die
+ * Begruendungen stehen in docs/Export-Format.md.
+ *
+ * Die Aufzaehlung ist nicht der einzige Ort, an dem die Schranke wirkt —
+ * assets/export.js blendet dieselben Felder noch einmal aus. Das ist Absicht:
+ * Wer hier eine Spalte ergaenzt und dort nicht, faellt auf; wer sich auf eine
+ * der beiden Seiten allein verlaesst, nicht.
  *
  * mission_no: Seit der Migration 2026_07_29_einsatznummer_verschluesselt hat
  * missions KEINE mission_no-Spalte mehr (SPEC_Export.md, Abschnitt 10). Das
@@ -120,7 +151,10 @@ function export_meta(array $b, int $userId): never
                              . 'lassen, um den gesamten Bestand auszuleiten.'], 400);
     }
 
-    $patient = !empty($b['patient']);
+    /* Kurzname aus dem Request, erweiterte Bedeutung — siehe Kopf der Datei.
+     * Die lokale Variable heisst deshalb NICHT $patient: Sie steuert seit A9
+     * ein Dutzend Spalten, von denen nur eine dem Patienten gehoert. */
+    $pers = !empty($b['patient']);
 
     $whereTag = ' AND deleted_at IS NULL';
     $params = [$userId];
@@ -140,10 +174,19 @@ function export_meta(array $b, int $userId): never
 
     /* ---- Flugtage ----------------------------------------------------------
      * Aufloesung von aircraft_id/base_id zu Klartextnamen — ein Export mit
-     * IDs waere ausserhalb dieser Anwendung wertlos (SPEC_Export.md, 2.1). */
+     * IDs waere ausserhalb dieser Anwendung wertlos (SPEC_Export.md, 2.1).
+     *
+     * Die personenbezogenen Spalten werden ohne Flag durch NULL ersetzt, statt
+     * sie aus der Spaltenliste zu nehmen: Der ANTWORTAUFBAU bleibt dadurch in
+     * beiden Faellen gleich, und der Browser muss nicht zwei Formen kennen.
+     * Aus der Datenbank kommen die Werte trotzdem nicht (SELECT NULL). */
+    $tagPersCols = $pers
+        ? 'd.crew_p1, d.crew_p2, d.crew_hems, d.crew_fr, d.crew_other, d.notes'
+        : 'NULL AS crew_p1, NULL AS crew_p2, NULL AS crew_hems,
+           NULL AS crew_fr, NULL AS crew_other, NULL AS notes';
     $st = $pdo->prepare(
         "SELECT d.day, a.registration AS aircraft, b.name AS base,
-                d.crew_p1, d.crew_p2, d.crew_hems, d.crew_fr, d.crew_other, d.notes
+                $tagPersCols
          FROM days d
          LEFT JOIN aircraft a ON a.id = d.aircraft_id
          LEFT JOIN bases b    ON b.id = d.base_id
@@ -163,17 +206,28 @@ function export_meta(array $b, int $userId): never
     ], $st->fetchAll());
 
     /* ---- Einsaetze ---------------------------------------------------------
-     * pat_blob nur in der Spaltenliste, wenn 'patient' gesetzt ist — das Feld
-     * wird sonst gar nicht erst aus der Datenbank geholt, nicht nur beim
-     * Zusammenbau weggelassen. */
-    $patCol = $patient ? ', pat_blob' : '';
+     * Die personenbezogenen Spalten stehen nur in der Spaltenliste, wenn das
+     * Flag gesetzt ist — sie werden sonst gar nicht erst aus der Datenbank
+     * geholt, nicht nur beim Zusammenbau weggelassen. Bis Web 5.7.0 galt das
+     * allein fuer pat_blob (A9).
+     *
+     * crew_override bleibt in beiden Faellen erhalten: Der Haken sagt nur,
+     * DASS die Besatzung an diesem Einsatz von der des Flugtags abwich, nicht
+     * wer geflogen ist. Ohne ihn liesse sich nicht mehr erkennen, dass die
+     * leeren Namensspalten leer gemacht wurden und nicht leer waren. */
+    $einsPersCols = $pers
+        ? 'site_ele_m, bw_info, other_ema,
+           crew_p1, crew_p2, crew_hems, crew_fr, crew_other, notes, pat_blob'
+        : 'NULL AS site_ele_m, NULL AS bw_info, NULL AS other_ema,
+           NULL AS crew_p1, NULL AS crew_p2, NULL AS crew_hems, NULL AS crew_fr,
+           NULL AS crew_other, NULL AS notes, NULL AS pat_blob';
     $st = $pdo->prepare(
-        "SELECT id, day, started_at, ended_at, distance_m, ascent_m, site_ele_m,
+        "SELECT id, day, started_at, ended_at, distance_m, ascent_m,
                 final, manual, origin, edited, transport_dest, winch,
                 winch_cycles, winch_cycles_pat, winch_airload, bergwacht,
-                bw_unit, bw_info, secondary, schockraum, other_ema,
-                crew_override, crew_p1, crew_p2, crew_hems, crew_fr, crew_other,
-                notes$patCol
+                bw_unit, secondary, schockraum,
+                crew_override,
+                $einsPersCols
          FROM missions
          WHERE user_id = ?$whereTag
          ORDER BY started_at");
@@ -190,9 +244,14 @@ function export_meta(array $b, int $userId): never
     $resusSessionsByMission = [];
 
     if ($ids) {
+        /* Zeitpunkt ja, Ort nein: Die Phasenzeiten tragen Alarmzeit, Endzeit
+         * und Dauer und muessen deshalb in jedem Export stehen (Kriterium 73).
+         * Die Koordinaten sind der Einsatzort (Phase 4/5) und fallen unter die
+         * Schranke. */
+        $phasenOrt = $pers ? 'lat, lon' : 'NULL AS lat, NULL AS lon';
         foreach (sql_in_bloecken($pdo,
-                'SELECT mission_id, phase, occurred_at, lat, lon
-                 FROM mission_phases WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
+                "SELECT mission_id, phase, occurred_at, $phasenOrt
+                 FROM mission_phases WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at",
                 $ids) as $r) {
             $phasesByMission[(int)$r['mission_id']][] = [
                 'phase' => (int)$r['phase'],
@@ -276,7 +335,7 @@ function export_meta(array $b, int $userId): never
             'crew_hems'        => $r['crew_hems'],
             'crew_fr'          => $r['crew_fr'],
             'crew_other'       => $r['crew_other'],
-            'pat_blob'         => $patient && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
+            'pat_blob'         => $pers && !empty($r['pat_blob']) ? (string)$r['pat_blob'] : null,
             'notes'            => $r['notes'],
             'track_points'     => $trackCountByMission[$id] ?? 0,
             'phases'           => $phasesByMission[$id] ?? [],
@@ -320,6 +379,22 @@ function export_meta(array $b, int $userId): never
 function export_track(array $b, int $userId): never
 {
     $pdo = db();
+
+    /* Trackpunkte sind personenbezogene Angaben (A9).
+     *
+     * Eine Flugspur endet am Einsatzort — sie nennt ihn genauer als jede
+     * Koordinatenspalte und traegt zusaetzlich den Zeitverlauf dorthin. Ein
+     * Export ohne personenbezogene Angaben darf sie deshalb nicht enthalten,
+     * und die Schranke steht HIER und nicht nur im Browser: Sonst genuegte
+     * eine Anfrage von Hand, um sie zu umgehen.
+     *
+     * assets/export.js bietet die GPX-Wahl in diesem Fall gar nicht erst an;
+     * diese Pruefung ist die zweite Schranke, nicht die erste. */
+    if (empty($b['patient'])) {
+        json_out(['error'   => 'personenbezogen',
+                  'meldung' => 'GPX-Spuren enden am Einsatzort und sind deshalb an '
+                             . 'die personenbezogenen Angaben gebunden.'], 403);
+    }
 
     $ownerType = (string)($b['owner_type'] ?? '');
     if (!in_array($ownerType, ['mission', 'rest'], true)) {

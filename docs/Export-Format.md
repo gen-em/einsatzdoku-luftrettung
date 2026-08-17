@@ -8,8 +8,57 @@ ausgelegt.
 
 Der gesamte Dateiaufbau passiert **im Browser**. Der Server (`api/export_data.php`)
 liefert ausschließlich Rohdaten und sieht zu keinem Zeitpunkt Klartext der
-geschützten Angaben. Ist „Patientendaten einschließen" nicht gesetzt, sendet der
-Server den `pat_blob` gar nicht erst mit.
+geschützten Angaben. Ist „Personenbezogene Angaben einschließen" nicht gesetzt,
+sendet der Server die betroffenen Felder gar nicht erst mit — siehe
+[Abschnitt 0](#0-die-schranke-personenbezogene-angaben).
+
+## 0. Die Schranke „Personenbezogene Angaben"
+
+Der Export kennt **eine** Schranke. Sie heißt seit Web 5.8.0
+„Personenbezogene Angaben einschließen"; bis dahin hieß sie „Patientendaten
+einschließen" und deckte nur die `pat_`-Felder ab. Alles andere ging immer mit
+— auch Angaben, die nicht dem Patienten gehören, aber trotzdem einer Person.
+
+Unter der Schranke stehen:
+
+| Gruppe | Felder |
+|---|---|
+| Patientendaten | `pat_mission_no`, `pat_nachname`, `pat_vorname`, `pat_geburtsdatum`, `pat_alter`, `pat_diagnose`, `pat_ort_adresse`, `pat_ort_lat`, `pat_ort_lon`, `pat_ort_beschreibung` |
+| Besatzung | `tag_crew_p1`…`tag_crew_other`, `crew_p1`…`crew_other` (Einsätze) und `crew_p1`…`crew_other` (Flugtage) |
+| Weitere Namen | `bw_info` („Bergwacht: Namen / Infos"), `other_ema` (anderer Notarzt) |
+| Freitext | `notizen` (Einsatz) und `notizen` (Flugtag) |
+| Ort des Geschehens | `phase_02_lat/lon` … `phase_09_lat/lon`, `hoehe_einsatzort_m`, GPX-Spuren unter `tracks/` |
+
+**Warum die Phasenkoordinaten.** Phase 4 ist „Ankunft Einsatzort", Phase 5
+„Ankunft PatientIn". Diese Punkte *sind* der Einsatzort. Bis Web 5.7.0 nannte
+ein Export „ohne Patientendaten" ihn trotzdem — nur in einer anderen Spalte als
+`pat_ort_lat/lon`. Dasselbe gilt für die GPX-Spuren, die dort enden, und für
+`hoehe_einsatzort_m`, das aus demselben Ort gerechnet ist.
+
+**Nicht** unter der Schranke stehen, jeweils einzeln entschieden:
+
+| Feld | Warum es bleibt |
+|---|---|
+| `transport_dest` | Eine Einrichtung, keine Person. Zusammen mit Datum und Uhrzeit ist es ein Hinweis auf eine bestimmte Aufnahme — das ist der Grund, aus dem es hier ausdrücklich benannt und nicht stillschweigend eingeordnet wird. |
+| `bw_unit` | Dieselbe Klasse: eine Einheit, kein Name. Die Namen der Bergwacht stehen in `bw_info`, und das fällt unter die Schranke. |
+| `weitere_rettungsmittel` | Organisationskennungen wie „RTW Kempten". Das Feld ist Freitext und trägt damit denselben Vorbehalt wie die Notizen; entschieden wurde trotzdem für „bleibt enthalten", weil es der Sache nach eine Betriebsangabe ist. |
+| `rea_json` | Der Verlauf einer Reanimation ohne Angabe, wen sie betraf. Ohne ihn wäre der Grund entfallen, Reanimationen überhaupt zu erfassen. |
+| `crew_abweichend` | Sagt nur, **dass** die Besatzung an diesem Einsatz von der des Flugtags abwich, nicht wer geflogen ist. Ohne ihn ließe sich nicht erkennen, dass die leeren Namensspalten leer *gemacht* wurden. |
+| Zeitpunkte der Phasen | Sie tragen Alarmzeit, Endzeit und Dauer — ohne sie bliebe von der Datei nichts Auswertbares übrig. |
+
+**Die Schranke wirkt an zwei Stellen.** `api/export_data.php` liefert die
+Felder nicht aus (erste und wirksame Schranke, `action: 'track'` wird ganz
+abgewiesen), `assets/export.js` entfernt sie ein zweites Mal aus dem geladenen
+Bestand, bevor eines der Profile ihn sieht (`entpersonalisieren()`). Das ist
+Absicht: Wer an einer Stelle ein Feld ergänzt und an der anderen nicht, fällt
+auf; wer sich auf eine der beiden allein verlässt, nicht.
+
+**Der Rückweg löscht nichts.** Ein Rückimport einer Datei ohne
+personenbezogene Angaben überschreibt vorhandene Besatzung, Notizen,
+`bw_info`, `other_ema`, `site_ele_m` und `pat_blob` im Bestand **nicht** — auch
+dann nicht, wenn in der Importmaske „überschreiben" gewählt wurde. Die
+Phasenkoordinaten überleben das Ersetzen ebenfalls. Einzelheiten in
+[Abschnitt 5.3](#53-rückimport-ohne-personenbezogene-angaben).
 
 Es gibt drei Profile:
 
@@ -31,22 +80,28 @@ luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<
 |---|---|---|
 | `TT-MM-JJJJ` | Datum | **Tag der Erstellung**, nicht der ausgewählte Zeitraum — der steht in der Datei selbst (Titelzeile bzw. `LIESMICH.txt`) |
 | `<profil>` | `standard`, `guteseele`, `csv` | gewähltes Format |
-| `<inhalt>` | `mit-pat`, `ohne-pat` | ob Patientendaten enthalten sind |
+| `<inhalt>` | `mit-pers`, `ohne-pers` | ob personenbezogene Angaben enthalten sind (bis Web 5.7.0: `mit-pat`, `ohne-pat`) |
 | `<schutz>` | `verschl`, `unverschl` | ob **diese** Datei verschlüsselt ist |
 | `<konto>` | bereinigter Anzeigename, sonst bereinigte E-Mail-Adresse | aus welchem Konto der Export stammt |
 
 Beispiele:
 
 ```
-luftrettungsdokumentation_export_06-08-2026_standard_ohne-pat_unverschl_philipp-mueller.xlsx
-luftrettungsdokumentation_export_06-08-2026_csv_mit-pat_verschl_philipp-mueller.zip
+luftrettungsdokumentation_export_06-08-2026_standard_ohne-pers_unverschl_philipp-mueller.xlsx
+luftrettungsdokumentation_export_06-08-2026_csv_mit-pers_verschl_philipp-mueller.zip
 ```
 
 Mit Passwortschutz entsteht in allen Fällen ein `.zip`.
 
 **Beide Marker stehen immer da, auch im Negativfall.** Ohne den Negativfall
-liesse sich eine Datei ohne Patientendaten nicht von einer Datei aus einem
-Stand vor dieser Regel unterscheiden.
+liesse sich eine Datei ohne personenbezogene Angaben nicht von einer Datei aus
+einem Stand vor dieser Regel unterscheiden.
+
+**Ältere Dateien tragen `mit-pat`/`ohne-pat`.** Sie behalten ihren Namen, und
+er ist für sie auch richtig: Sie stammen aus einer Zeit, in der die Schranke
+tatsächlich nur die Patientendaten umfasste. Eine Datei `ohne-pat` enthält
+also Besatzungsnamen und Einsatzkoordinaten, eine Datei `ohne-pers` nicht —
+der Unterschied ist am Namen ablesbar und genau dafür ist er da.
 
 **`<schutz>` beschreibt die Datei, an der er steht — nicht den Vorgang.** Bei
 den Excel-Profilen mit Passwort liegt in einem Archiv `…_verschl.zip` eine
@@ -80,8 +135,8 @@ Server gesendet. Es lässt sich nicht wiederherstellen.
 
 Dateinamen enthalten **nie** einen Bezug auf eine bestimmte Person — weder der
 Archivname noch die GPX-Dateinamen. Erlaubt sind Datum, Uhrzeit, die interne
-Einsatz-ID und die Kennung des exportierenden Kontos. Der Marker `mit-pat`
-sagt nur, **dass** Patientendaten enthalten sind, nicht **wessen**; er ist als
+Einsatz-ID und die Kennung des exportierenden Kontos. Der Marker `mit-pers`
+sagt nur, **dass** personenbezogene Angaben enthalten sind, nicht **wessen**; er ist als
 Warnetikett für den Umgang mit der Datei gedacht. Wer sie weitergibt, gibt
 damit allerdings auch die Kontokennung — im Zweifel die E-Mail-Adresse —
 mit heraus.
@@ -102,8 +157,10 @@ Alle Zeiten stehen in **Ortszeit** ohne Zonenangabe. Leere Werte stehen als `-`
 sichtbar von „übersehen". Ein **Flugtag ohne Einsatz** erscheint als eine Zeile,
 in der nur Hubschrauber, Standort und Einsatzdatum gefüllt sind.
 
-Die mit `*` markierten Spalten entfallen **ersatzlos**, wenn „Patientendaten
-einschließen" nicht gesetzt ist; die übrigen rücken auf.
+Die mit `*` markierten Spalten entfallen **ersatzlos**, wenn
+„Personenbezogene Angaben einschließen" nicht gesetzt ist; die übrigen rücken
+auf. Seit Web 5.8.0 gehören dazu auch die fünf Besatzungsspalten, „Höhe
+Einsatzort (m)" und „Notizen" — vorher blieben sie stehen (A9).
 
 | # | Beschriftung |
 |---|---|
@@ -171,11 +228,12 @@ Ein ZIP-Archiv:
 
 ```
 LIESMICH.txt         Aufbau, Formate, Erzeugungsdatum, App-Version, Zeitzone
-felder.csv           jedes Feld jeder Tabelle: datei;feld;typ;einheit;beschreibung
+felder.csv           jedes Feld jeder Tabelle:
+                     datei;feld;typ;einheit;personenbezogen;beschreibung
 einsaetze.csv        eine Zeile je Einsatz — vollständig
 flugtage.csv         eine Zeile je Flugtag, auch ohne Einsatz
 ruhezeiten.csv       eine Zeile je Ruhesegment
-tracks/              nur bei aktiviertem Haken
+tracks/              nur mit personenbezogenen Angaben und aktiviertem Haken
   mission_000042_2026-03-14_1150.gpx
   rest_000007_2026-03-14_1330.gpx
 ```
@@ -218,8 +276,15 @@ Gelten für alle drei Tabellen:
 
 ### 3.2 Stabiler Spaltensatz
 
-Der Spaltensatz hängt **nicht** am Haken „Patientendaten einschließen". Ohne
-Haken bleiben die `pat_`-Spalten vorhanden und leer.
+Der Spaltensatz hängt **nicht** am Haken „Personenbezogene Angaben
+einschließen". Ohne Haken bleiben alle Spalten der Schranke (Abschnitt 0)
+vorhanden und leer — seit Web 5.8.0 sind das nicht mehr nur die
+`pat_`-Spalten, sondern auch die Besatzung, `bw_info`, `other_ema`, die
+Notizen, die Phasenkoordinaten und `hoehe_einsatzort_m`.
+
+Nur der Ordner `tracks/` fehlt in diesem Fall ganz. Das ist kein Bruch mit der
+Regel: Er ist keine Spalte, sondern eine Menge von Dateien, und ein leerer
+Ordner wäre keine Information, sondern eine Frage.
 
 Mit Web 3.3.0 hat sich der Satz um eine Spalte verschoben — nicht in der Zahl,
 aber in der Zuordnung: `site_desc` ist aus dem ungeschützten Bereich
@@ -275,6 +340,11 @@ verworfen — maßgeblich ist `typ`.
   Kein Patientenbezug.
 - `<metadata><time>` = Erzeugungszeit des Exports.
 - Einsätze ohne Punkte bekommen **keine** Datei; `track_datei` bleibt leer.
+- **Nur mit personenbezogenen Angaben** (seit Web 5.8.0, A9). Eine Flugspur
+  endet am Einsatzort und nennt ihn genauer als jede Koordinatenspalte. Ohne
+  den Haken bietet die Oberfläche die GPX-Wahl gar nicht erst an, und
+  `api/export_data.php` weist die Anfrage `action: 'track'` mit
+  `error: 'personenbezogen'` ab — die zweite Schranke ist die wirksame.
 
 ### 3.6 `herkunft`, `edited` und `manual`
 
@@ -327,113 +397,113 @@ leeren Geburtsdatum wäre für ihn nur eine fehlende Angabe.
 
 ### `einsaetze.csv`
 
-| Feld | Typ | Einheit | Beschreibung |
-|---|---|---|---|
-| `einsatz_id` | int | — | interne ID, Bezugsschlüssel für tracks/ |
-| `flugtag` | date | — | missions.day |
-| `datum` | date | — | identisch zu flugtag, für Tabellenprogramme |
-| `uhrzeit_ortszeit` | time | — | Alarmzeit HH:MM, für Tabellenprogramme |
-| `herkunft` | text | — | wie der Einsatz entstanden ist (`missions.origin`): `uhr` \| `manuell` \| `import` |
-| `final` | 0/1 | — | abgeschlossen |
-| `manual` | 0/1 | — | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe `herkunft`) |
-| `edited` | 0/1 | — | nach dem Anlegen verändert (`missions.edited`) — unabhängig von der Herkunft, nicht zu verwechseln mit `manual` |
-| `hubschrauber` | text | — | Kennzeichen (Flugtag) |
-| `standort` | text | — | Basis (Flugtag) |
-| `tag_crew_p1` | text | — | Besatzung des Flugtags: Pilot 1 |
-| `tag_crew_p2` | text | — | Besatzung des Flugtags: Pilot 2 |
-| `tag_crew_hems` | text | — | Besatzung des Flugtags: HEMS |
-| `tag_crew_fr` | text | — | Besatzung des Flugtags: Flugretter |
-| `tag_crew_other` | text | — | Besatzung des Flugtags: Sonstige |
-| `crew_abweichend` | 0/1 | — | missions.crew_override |
-| `crew_p1` | text | — | tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3) |
-| `crew_p2` | text | — | tatsächliche Besatzung: Pilot 2 |
-| `crew_hems` | text | — | tatsächliche Besatzung: HEMS |
-| `crew_fr` | text | — | tatsächliche Besatzung: Flugretter |
-| `crew_other` | text | — | tatsächliche Besatzung: Sonstige |
-| `beginn` | ts | — | started_at |
-| `ende` | ts | — | ended_at |
-| `dauer_min` | int | min | Phase 2 → Phase 9, leer wenn unvollständig |
-| `phase_02_alarmierung` | ts | — | Zeitpunkt Phase 2 (alarmierung) |
-| `phase_03_abflug` | ts | — | Zeitpunkt Phase 3 (abflug) |
-| `phase_04_ankunft_einsatzort` | ts | — | Zeitpunkt Phase 4 (ankunft_einsatzort) |
-| `phase_05_ankunft_patientin` | ts | — | Zeitpunkt Phase 5 (ankunft_patientin) |
-| `phase_06_transportbeginn` | ts | — | Zeitpunkt Phase 6 (transportbeginn) |
-| `phase_07_landung_krankenhaus` | ts | — | Zeitpunkt Phase 7 (landung_krankenhaus) |
-| `phase_08_uebergabezeit` | ts | — | Zeitpunkt Phase 8 (uebergabezeit) |
-| `phase_09_endzeit` | ts | — | Zeitpunkt Phase 9 (endzeit) |
-| `phase_02_lat` | dec | — | Breitengrad Phase 2 |
-| `phase_02_lon` | dec | — | Längengrad Phase 2 |
-| `phase_03_lat` | dec | — | Breitengrad Phase 3 |
-| `phase_03_lon` | dec | — | Längengrad Phase 3 |
-| `phase_04_lat` | dec | — | Breitengrad Phase 4 |
-| `phase_04_lon` | dec | — | Längengrad Phase 4 |
-| `phase_05_lat` | dec | — | Breitengrad Phase 5 |
-| `phase_05_lon` | dec | — | Längengrad Phase 5 |
-| `phase_06_lat` | dec | — | Breitengrad Phase 6 |
-| `phase_06_lon` | dec | — | Längengrad Phase 6 |
-| `phase_07_lat` | dec | — | Breitengrad Phase 7 |
-| `phase_07_lon` | dec | — | Längengrad Phase 7 |
-| `phase_08_lat` | dec | — | Breitengrad Phase 8 |
-| `phase_08_lon` | dec | — | Längengrad Phase 8 |
-| `phase_09_lat` | dec | — | Breitengrad Phase 9 |
-| `phase_09_lon` | dec | — | Längengrad Phase 9 |
-| `strecke_m` | int | m | Flugstrecke (distance_m) |
-| `hoehenmeter_m` | int | m | Höhenmeter (ascent_m) |
-| `hoehe_einsatzort_m` | int | m | Höhe des Einsatzorts |
-| `transport_dest` | text | — | Transportziel |
-| `schockraum` | 0/1 | — | Schockraum alarmiert |
-| `secondary` | 0/1 | — | Sekundärtransport |
-| `winch` | 0/1 | — | Windeneinsatz |
-| `winch_cycles` | int | — | Windenzyklen gesamt (Formular: „Cycles") |
-| `winch_cycles_pat` | int | — | Windenzyklen mit PatientIn (Formular: „Cycles mit Patient") |
-| `winch_airload` | 0/1 | — | Luftverladung |
-| `bergwacht` | 0/1 | — | Bergwacht beteiligt |
-| `bw_unit` | text | — | Bergwacht-Einheit |
-| `bw_info` | text | — | Bergwacht: Namen / Infos |
-| `other_ema` | text | — | Anderer Notarzt |
-| `weitere_rettungsmittel` | text | — | mission_resources.name, mit `\|` verkettet |
-| `notizen` | text | — | missions.notes |
-| `pat_mission_no` | text | — | Einsatznummer (pat_blob.mission_no) |
-| `pat_nachname` | text | — | pat_blob.last |
-| `pat_vorname` | text | — | pat_blob.first |
-| `pat_geburtsdatum` | date | — | pat_blob.dob |
-| `pat_alter` | int | Jahre | pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus `pat_geburtsdatum` und `flugtag` (siehe 3.7) |
-| `pat_diagnose` | text | — | pat_blob.dx |
-| `pat_ort_adresse` | text | — | pat_blob.loc.addr |
-| `pat_ort_lat` | dec | — | pat_blob.loc.lat |
-| `pat_ort_lon` | dec | — | pat_blob.loc.lon |
-| `pat_ort_beschreibung` | text | — | pat_blob.site_desc (bis Web 3.2.0: ungeschützte Spalte `site_desc`) |
-| `rea_json` | json | — | Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation |
-| `track_datei` | text | — | relativer Pfad unter tracks/, oder leer |
-| `track_punkte` | int | — | Anzahl Trackpunkte |
+| Feld | Typ | Einheit | Pers. | Beschreibung |
+|---|---|---|---|---|
+| `einsatz_id` | int | — | nein | interne ID, Bezugsschlüssel für tracks/ |
+| `flugtag` | date | — | nein | missions.day |
+| `datum` | date | — | nein | identisch zu flugtag, für Tabellenprogramme |
+| `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme |
+| `herkunft` | text | — | nein | wie der Einsatz entstanden ist (`missions.origin`): `uhr` \| `manuell` \| `import` |
+| `final` | 0/1 | — | nein | abgeschlossen |
+| `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe `herkunft`) |
+| `edited` | 0/1 | — | nein | nach dem Anlegen verändert (`missions.edited`) — unabhängig von der Herkunft, nicht zu verwechseln mit `manual` |
+| `hubschrauber` | text | — | nein | Kennzeichen (Flugtag) |
+| `standort` | text | — | nein | Basis (Flugtag) |
+| `tag_crew_p1` | text | — | **ja** | Besatzung des Flugtags: Pilot 1 |
+| `tag_crew_p2` | text | — | **ja** | Besatzung des Flugtags: Pilot 2 |
+| `tag_crew_hems` | text | — | **ja** | Besatzung des Flugtags: HEMS |
+| `tag_crew_fr` | text | — | **ja** | Besatzung des Flugtags: Flugretter |
+| `tag_crew_other` | text | — | **ja** | Besatzung des Flugtags: Sonstige |
+| `crew_abweichend` | 0/1 | — | nein | missions.crew_override |
+| `crew_p1` | text | — | **ja** | tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3) |
+| `crew_p2` | text | — | **ja** | tatsächliche Besatzung: Pilot 2 |
+| `crew_hems` | text | — | **ja** | tatsächliche Besatzung: HEMS |
+| `crew_fr` | text | — | **ja** | tatsächliche Besatzung: Flugretter |
+| `crew_other` | text | — | **ja** | tatsächliche Besatzung: Sonstige |
+| `beginn` | ts | — | nein | started_at |
+| `ende` | ts | — | nein | ended_at |
+| `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig |
+| `phase_02_alarmierung` | ts | — | nein | Zeitpunkt Phase 2 (alarmierung) |
+| `phase_03_abflug` | ts | — | nein | Zeitpunkt Phase 3 (abflug) |
+| `phase_04_ankunft_einsatzort` | ts | — | nein | Zeitpunkt Phase 4 (ankunft_einsatzort) |
+| `phase_05_ankunft_patientin` | ts | — | nein | Zeitpunkt Phase 5 (ankunft_patientin) |
+| `phase_06_transportbeginn` | ts | — | nein | Zeitpunkt Phase 6 (transportbeginn) |
+| `phase_07_landung_krankenhaus` | ts | — | nein | Zeitpunkt Phase 7 (landung_krankenhaus) |
+| `phase_08_uebergabezeit` | ts | — | nein | Zeitpunkt Phase 8 (uebergabezeit) |
+| `phase_09_endzeit` | ts | — | nein | Zeitpunkt Phase 9 (endzeit) |
+| `phase_02_lat` | dec | — | **ja** | Breitengrad Phase 2 |
+| `phase_02_lon` | dec | — | **ja** | Längengrad Phase 2 |
+| `phase_03_lat` | dec | — | **ja** | Breitengrad Phase 3 |
+| `phase_03_lon` | dec | — | **ja** | Längengrad Phase 3 |
+| `phase_04_lat` | dec | — | **ja** | Breitengrad Phase 4 |
+| `phase_04_lon` | dec | — | **ja** | Längengrad Phase 4 |
+| `phase_05_lat` | dec | — | **ja** | Breitengrad Phase 5 |
+| `phase_05_lon` | dec | — | **ja** | Längengrad Phase 5 |
+| `phase_06_lat` | dec | — | **ja** | Breitengrad Phase 6 |
+| `phase_06_lon` | dec | — | **ja** | Längengrad Phase 6 |
+| `phase_07_lat` | dec | — | **ja** | Breitengrad Phase 7 |
+| `phase_07_lon` | dec | — | **ja** | Längengrad Phase 7 |
+| `phase_08_lat` | dec | — | **ja** | Breitengrad Phase 8 |
+| `phase_08_lon` | dec | — | **ja** | Längengrad Phase 8 |
+| `phase_09_lat` | dec | — | **ja** | Breitengrad Phase 9 |
+| `phase_09_lon` | dec | — | **ja** | Längengrad Phase 9 |
+| `strecke_m` | int | m | nein | Flugstrecke (distance_m) |
+| `hoehenmeter_m` | int | m | nein | Höhenmeter (ascent_m) |
+| `hoehe_einsatzort_m` | int | m | **ja** | Höhe des Einsatzorts |
+| `transport_dest` | text | — | nein | Transportziel |
+| `schockraum` | 0/1 | — | nein | Schockraum alarmiert |
+| `secondary` | 0/1 | — | nein | Sekundärtransport |
+| `winch` | 0/1 | — | nein | Windeneinsatz |
+| `winch_cycles` | int | — | nein | Windenzyklen gesamt (Formular: „Cycles") |
+| `winch_cycles_pat` | int | — | nein | Windenzyklen mit PatientIn (Formular: „Cycles mit Patient") |
+| `winch_airload` | 0/1 | — | nein | Luftverladung |
+| `bergwacht` | 0/1 | — | nein | Bergwacht beteiligt |
+| `bw_unit` | text | — | nein | Bergwacht-Einheit |
+| `bw_info` | text | — | **ja** | Bergwacht: Namen / Infos |
+| `other_ema` | text | — | **ja** | Anderer Notarzt |
+| `weitere_rettungsmittel` | text | — | nein | mission_resources.name, mit `\|` verkettet |
+| `notizen` | text | — | **ja** | missions.notes |
+| `pat_mission_no` | text | — | **ja** | Einsatznummer (pat_blob.mission_no) |
+| `pat_nachname` | text | — | **ja** | pat_blob.last |
+| `pat_vorname` | text | — | **ja** | pat_blob.first |
+| `pat_geburtsdatum` | date | — | **ja** | pat_blob.dob |
+| `pat_alter` | int | Jahre | **ja** | pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus `pat_geburtsdatum` und `flugtag` (siehe 3.7) |
+| `pat_diagnose` | text | — | **ja** | pat_blob.dx |
+| `pat_ort_adresse` | text | — | **ja** | pat_blob.loc.addr |
+| `pat_ort_lat` | dec | — | **ja** | pat_blob.loc.lat |
+| `pat_ort_lon` | dec | — | **ja** | pat_blob.loc.lon |
+| `pat_ort_beschreibung` | text | — | **ja** | pat_blob.site_desc (bis Web 3.2.0: ungeschützte Spalte `site_desc`) |
+| `rea_json` | json | — | nein | Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation |
+| `track_datei` | text | — | nein | relativer Pfad unter tracks/, oder leer |
+| `track_punkte` | int | — | nein | Anzahl Trackpunkte |
 
 ### `flugtage.csv`
 
-| Feld | Typ | Einheit | Beschreibung |
-|---|---|---|---|
-| `flugtag` | date | — | days.day |
-| `hubschrauber` | text | — | Kennzeichen |
-| `standort` | text | — | Basis |
-| `crew_p1` | text | — | Pilot 1 |
-| `crew_p2` | text | — | Pilot 2 |
-| `crew_hems` | text | — | HEMS |
-| `crew_fr` | text | — | Flugretter |
-| `crew_other` | text | — | Sonstige |
-| `notizen` | text | — | days.notes |
-| `anzahl_einsaetze` | int | — | Anzahl Einsätze an diesem Flugtag im Export |
+| Feld | Typ | Einheit | Pers. | Beschreibung |
+|---|---|---|---|---|
+| `flugtag` | date | — | nein | days.day |
+| `hubschrauber` | text | — | nein | Kennzeichen |
+| `standort` | text | — | nein | Basis |
+| `crew_p1` | text | — | **ja** | Pilot 1 |
+| `crew_p2` | text | — | **ja** | Pilot 2 |
+| `crew_hems` | text | — | **ja** | HEMS |
+| `crew_fr` | text | — | **ja** | Flugretter |
+| `crew_other` | text | — | **ja** | Sonstige |
+| `notizen` | text | — | **ja** | days.notes |
+| `anzahl_einsaetze` | int | — | nein | Anzahl Einsätze an diesem Flugtag im Export |
 
 ### `ruhezeiten.csv`
 
-| Feld | Typ | Einheit | Beschreibung |
-|---|---|---|---|
-| `ruhezeit_id` | int | — | interne ID, Bezugsschlüssel für tracks/ |
-| `flugtag` | date | — | rest_segments.day |
-| `beginn` | ts | — | started_at |
-| `ende` | ts | — | ended_at |
-| `dauer_min` | int | min | ende − beginn |
-| `final` | 0/1 | — | abgeschlossen |
-| `track_datei` | text | — | relativer Pfad unter tracks/, oder leer |
-| `track_punkte` | int | — | Anzahl Trackpunkte |
+| Feld | Typ | Einheit | Pers. | Beschreibung |
+|---|---|---|---|---|
+| `ruhezeit_id` | int | — | nein | interne ID, Bezugsschlüssel für tracks/ |
+| `flugtag` | date | — | nein | rest_segments.day |
+| `beginn` | ts | — | nein | started_at |
+| `ende` | ts | — | nein | ended_at |
+| `dauer_min` | int | min | nein | ende − beginn |
+| `final` | 0/1 | — | nein | abgeschlossen |
+| `track_datei` | text | — | nein | relativer Pfad unter tracks/, oder leer |
+| `track_punkte` | int | — | nein | Anzahl Trackpunkte |
 
 ---
 
@@ -456,9 +526,12 @@ beim Import bewusst verworfen. Es wird insbesondere *nicht* aus
 „Sekundärtransport" hergeleitet.
 
 Umfasst der Zeitraum mehrere Kalenderjahre, entsteht **je Jahr ein Blatt**,
-benannt nach dem Jahr. Ohne Patientendaten bleiben Name, Geb.dat, Diagnose und
-Einsatzort leer — die Datei behält ihr Layout, ist inhaltlich aber weitgehend
-leer.
+benannt nach dem Jahr. Ohne personenbezogene Angaben bleiben `Name`,
+`Geb.dat`, `Diagnose`, `Einsatzort` und seit Web 5.8.0 auch `HEMS` und `Pilot`
+leer — die Datei behält ihr Layout, ist inhaltlich aber weitgehend leer.
+
+Anders als Profil A entfallen die Spalten hier **nicht**: Die Spaltenfolge ist
+von der Jahresliste vorgegeben und Teil des Vertrags mit dem Empfänger.
 
 ---
 
@@ -536,6 +609,41 @@ verlustfreie Weg ist `pat_alter` im CSV.
 `Alarmzeit` setzt Phase 2, `Endzeit` setzt Phase 9. Eine Zeile für einen
 **Flugtag ohne Einsatz** (nur Hubschrauber, Standort und Datum gefüllt) legt den
 Flugtag an, aber keinen Einsatz.
+
+---
+
+### 5.3 Rückimport ohne personenbezogene Angaben
+
+Der Fall, der A9 überhaupt erst prüfbar gemacht hat (Prüfschritt P10): Jemand
+exportiert **ohne** personenbezogene Angaben, arbeitet mit der Datei und spielt
+sie später zurück — mit der Wahl **überschreiben** in der Importmaske.
+
+Bis Web 5.7.0 hätte das die Besatzung gelöscht. `api/import_commit.php` setzte
+beim Überschreiben jede Spalte unbedingt, und ein leerer Wert aus der Datei kam
+als `NULL` im Bestand an. Der Export hätte die Angaben damit nicht nur nicht
+enthalten, sondern auf dem Rückweg vernichtet.
+
+**Seit Web 5.8.0 gilt:** Die Felder unter der Schranke werden beim
+Überschreiben nur gesetzt, wenn die Datei tatsächlich etwas liefert
+(`COALESCE(?, spalte)`) — dasselbe Muster, das der Flugtag-Pfad seit jeher
+benutzt. Betroffen sind `crew_p1`…`crew_other`, `bw_info`, `other_ema`,
+`notes`, `site_ele_m` und `pat_blob`.
+
+**Die Phasenkoordinaten überleben das Ersetzen.** Der Phasensatz wird weiterhin
+komplett ersetzt und nicht gemischt. Liefert die Datei zu einer Phase aber
+weder `lat` noch `lon`, erbt die neue Zeile die Koordinate der bisherigen
+gleicher Phasennummer — der Reihe nach, weil mehrfache Einträge je Phase
+erlaubt sind und der Export je Phase genau eine Spalte schreibt. Gibt die Datei
+Koordinaten an, gelten ihre.
+
+**Der Preis, bewusst bezahlt:** Ein Feld unter der Schranke lässt sich per
+Import nicht mehr gezielt **leeren**. Wer eine Notiz loswerden will, tut das im
+Formular. Der umgekehrte Fehler wäre teurer — ein Formular vergisst einen Wert
+je Einsatz, ein Import vergisst ihn für einen ganzen Jahrgang.
+
+Felder **außerhalb** der Schranke (`transport_dest`, `bw_unit`, `distance_m`,
+die Flags …) sind davon nicht betroffen: Sie stehen in jedem Export, ein leerer
+Wert ist dort eine Aussage.
 
 ---
 

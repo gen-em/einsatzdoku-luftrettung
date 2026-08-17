@@ -61,6 +61,9 @@ hems/
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
+│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
+│   ├── admin_sicherungen.php  Adminseite dazu · sicherungen/ die Ablage selbst
+│   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
@@ -71,7 +74,8 @@ hems/
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
-│   │                      export_data.php (nur lesend, Rohdaten für den Export)
+│   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
+│   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
@@ -828,6 +832,16 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    die in der Importdatei vorkommen — der Preis der Verschlüsselung. Tag und
    Alarmzeit bleiben als zweites, uneingeschränktes Merkmal wirksam.
    `commit` schreibt in **einer** Transaktion.
+6. **`commit` mit `dup: 'overwrite'` löscht nichts, was die Datei nicht
+   kennt** (seit Web 5.8.0, Prüfschritt P10). Die Felder unter der
+   Export-Schranke — `crew_p1`…`crew_other`, `bw_info`, `other_ema`, `notes`,
+   `site_ele_m`, `pat_blob` — stehen im `UPDATE` als `COALESCE(?, spalte)`,
+   dasselbe Muster, das der Flugtag-Pfad seit jeher benutzt. Vorher schrieb ein
+   Rückimport ohne personenbezogene Angaben `NULL` über einen vollständigen
+   Bestand. Die Phasen werden weiterhin komplett ersetzt; liefert die Datei zu
+   einer Phase keine Koordinaten, erbt die neue Zeile die der bisherigen
+   gleicher Nummer (der Reihe nach). Der Preis: Felder unter der Schranke
+   lassen sich per Import nicht mehr gezielt **leeren**.
 
 Zwei Fallstricke, die dort bewusst gelöst sind:
 
@@ -876,8 +890,19 @@ der Formatversion 3 und älter die beiden Spalten nicht kennen. Diese Doppelung
 ist gewollt und darf nicht als Rest der alten Logik entfernt werden.
 
 Der gesamte Dateiaufbau läuft im Browser, weil der `pat_blob` nur dort
-entschlüsselt werden kann. Ohne den Haken „Patientendaten einschließen" wird das
-Feld schon serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
+entschlüsselt werden kann. Ohne den Haken werden die betroffenen Felder schon
+serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
+
+**Der Haken heißt seit Web 5.8.0 „Personenbezogene Angaben einschließen"**
+(Block A9). Der Schlüssel im Request bleibt `patient` — er ist der Vertrag
+zwischen `export.js` und `export_data.php` —, aber er schaltet jetzt Besatzung
+(Einsatz und Flugtag), `bw_info`, `other_ema`, die Notizen, `site_ele_m`, die
+Phasenkoordinaten und den `pat_blob` gemeinsam ab; `action=track` wird ganz
+abgewiesen. Die lokale Variable im Endpunkt heißt deshalb `$pers` und nicht
+`$patient`. Zusätzlich entfernt `entpersonalisieren()` in `export.js` dieselben
+Felder ein zweites Mal, bevor eines der drei Profile den Bestand sieht — eine
+Stelle für alle drei, damit ein viertes Profil die Schranke nicht vergessen
+kann. Was drin bleibt und warum, steht in `Export-Format.md`, Abschnitt 0.
 Verpackt wird mit zip.js (AES-256 nach WinZip, `encryptionStrength: 3`);
 ZipCrypto ist ausgeschlossen. Feldlisten und Konventionen: `Export-Format.md`.
 
@@ -890,9 +915,13 @@ Stolpersteine, die dabei aufgefallen sind:
   schreiben.** `!freeze` wird beim Schreiben ignoriert, `cell.s` landet nicht in
   der `styles.xml` — beides sind kostenpflichtige Pro-Funktionen. Excel
   (Standard) verzichtet darauf, statt eine Datei zu erzeugen, die es vorgibt.
-- **Der Spaltensatz des CSV hängt nicht am Patientendaten-Haken.** Ohne Haken
-  bleiben die `pat_`-Spalten vorhanden und leer. Ein wechselnder Spaltensatz
-  würde jeden einlesenden Importer zwingen, zwei Fälle zu unterscheiden.
+- **Der Spaltensatz des CSV hängt nicht am Haken.** Ohne Haken bleiben die
+  betroffenen Spalten vorhanden und leer. Ein wechselnder Spaltensatz würde
+  jeden einlesenden Importer zwingen, zwei Fälle zu unterscheiden. `felder.csv`
+  trägt seit Web 5.8.0 eine Spalte `personenbezogen`; sie kommt aus dem
+  Schlüssel `pers` am Feldkatalog, damit ein neues Feld die Kennzeichnung nicht
+  stillschweigend vergessen kann. Nur der Ordner `tracks/` fehlt ganz — er ist
+  keine Spalte, und ein leerer Ordner wäre keine Auskunft, sondern eine Frage.
 - **Die Formatauswahl `#exp_fmt` ist ein `<select>`, kein Optionsfeld.** In
   `export.js` wird sie ausschließlich über `gewaehltesFormat()` gelesen. Wird
   daraus wieder ein `input[name="exp_fmt"]:checked`, liefert `querySelector`
@@ -902,7 +931,8 @@ Stolpersteine, die dabei aufgefallen sind:
   Genau das ist in Web 3.1.1 passiert (behoben in 3.2.0). Beim Umbau von
   Bedienelementen auf dieser Seite gehören Markup und Skript zusammen.
 - **Die Marker im Dateinamen gehören nur nach aussen.** `dateiName()` hängt
-  seit Web 3.6.0 `mit-pat`/`ohne-pat`, `verschl`/`unverschl` und eine Kennung
+  seit Web 3.6.0 `mit-pers`/`ohne-pers` (bis Web 5.7.0: `mit-pat`/`ohne-pat`),
+  `verschl`/`unverschl` und eine Kennung
   des Kontos an. Die Namen **innerhalb** des CSV-Archivs (`einsaetze.csv`,
   `felder.csv`, `LIESMICH.txt`, `tracks/`) bleiben davon unberührt: Sie sind
   Teil des Formats, und `import_ui.js` sucht im Archiv nach dem
@@ -1581,3 +1611,74 @@ erfolgreichem Upload.
 Die offenen Punkte stehen in einer eigenen Datei: **`Backlog.md`**. Dort sind
 sie durchnummeriert; Verweise aus Code und Dokumentation nennen die Nummer
 (z. B. „Backlog Nr. 10").
+
+---
+
+## Admin-Sicherungen (A8, seit Web 5.9.0)
+
+**Zweck.** Administration soll Konten sichern und wiederherstellen können, ohne
+Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
+`edbak_build()` liefert das vollständige Datenpaket und behält `pat_blob` als
+Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
+
+**Ablage.** `server/sicherungen/<kontokennung>/`, je Ordner eine
+`konto.json` (Begleitdatei **und** Verzeichnis) und höchstens drei Pakete
+`<zeitstempel>_<zufall>.json`. Nicht in der Datenbank: Ein Paket liegt bei
+größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
+geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
+Behälter wie das Gesicherte ist keine Rückfallebene.
+
+**Zwei Schranken gegen den Abruf über den Browser**, dasselbe Muster wie bei der
+Nachweisdatei der Ersteinrichtung (M1-11): eine `.htaccess` mit
+`Require all denied`, die `edbak_ablage_bereit()` bei **jedem** Schreibzugriff
+nachlegt, und der nicht erratbare Ordnername.
+
+**`sicherungen/` steht in der `exclude`-Liste von `.github/workflows/deploy.yml`.**
+Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
+was nicht ausgenommen ist. Deshalb wird die `.htaccess` auch zur Laufzeit
+erzeugt und nicht mitgeliefert — eine mitgelieferte käme im ausgenommenen Ordner
+nie an.
+
+**`users.account_key`** (Migration `2026_08_16_kontokennung`) ist der
+Ordnername: `bin2hex(random_bytes(8))`, bei der Kontoanlage vergeben, danach
+unveränderlich, `UNIQUE`. Warum weder E-Mail-Adresse noch `users.id` in Frage
+kommen, steht ausführlich im Kopf der Migration — die Kurzfassung: Die Adresse
+ändert sich und ist personenbezogen, und der `AUTO_INCREMENT`-Zähler kann nach
+einem Serverneustart zurückfallen, sodass ein neues Konto den Ordner eines
+gelöschten erbt.
+
+**In der Oberfläche erscheint die Kennung nie** — auch nicht in verborgenen
+Formularfeldern. Dort steht `edbak_handgriff()`, die gekürzte Prüfsumme der
+Kennung: stabil über mehrere Tabs, ohne Zustand in der Sitzung, und nicht
+zurückzurechnen. Die Kennung ist die zweite Schranke; eine Schranke, die auf
+jeder Verwaltungsseite im Quelltext mitläuft, ist keine.
+
+**Der Weg beim Zurückspielen entscheidet sich am Vergleich der Kennungen**
+(`edbak_weg()`), nicht an einer Einschätzung im Einzelfall:
+
+| Fall | Weg |
+|---|---|
+| Kennung im Paket = Kennung des Zielkontos | direkt einspielen |
+| Kennungen weichen ab, Paket enthält geschützte Angaben | **gesperrt**, stattdessen Freigabe für die NutzerIn |
+| Kennungen weichen ab, Paket enthält **keine** geschützten Angaben | direkt einspielen — es gibt nichts umzuschlüsseln |
+| Geschützte Angaben vorhanden, aber `pat_wrap_rc` fehlt | ganz gesperrt: Der Inhaltsschlüssel ist von niemandem mehr zu öffnen |
+
+Die dritte Zeile ist der Befund aus Prüfschritt **P6**: Konten mit
+`pat_wrap_rc IS NULL` gibt es regulär — jedes eingeladene Konto zwischen Anlage
+und erster Passwortvergabe. Sie haben keinen Inhaltsschlüssel und damit auch
+keine geschützten Angaben; die Sperre aus E20 hätte dort keinen Zweck, weil ihre
+Begründung nicht zutrifft.
+
+**Der Nutzerweg** (`api/adminbackup_freigabe.php` + `einstellungen.php?t=backup`)
+läuft vollständig im Browser: Wiederherstellungsschlüssel →
+`EdCrypto.recoveryKeyHex()` → `pat_wrap_rc` öffnen → **alter** Inhaltsschlüssel
+→ je Einsatz `pat_blob` öffnen und mit dem **eigenen** Inhaltsschlüssel neu
+verschliessen → zurück über den vorhandenen Endpunkt `api/backup_restore.php`.
+Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup der
+Formatversion 5, und ein zweiter Rückspielpfad wäre eine zweite Stelle, an der
+dieselben Fehler zu machen sind.
+
+**Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
+Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht
+wiederherstellbar. Das ist kein Mangel der Umsetzung, sondern die Folge der
+Ende-zu-Ende-Verschlüsselung — der Schlüssel existiert nirgends sonst.

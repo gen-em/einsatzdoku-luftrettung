@@ -25,10 +25,12 @@
     var $ = function (id) { return document.getElementById(id); };
 
     var DIALOG_PATIENT =
-        'Die Datei enthält Patientendaten im Klartext. Ab dem Speichern schützt ' +
-        'die Verschlüsselung dieser Anwendung die Daten nicht mehr — Name, ' +
-        'Geburtsdatum, Diagnose und Einsatzort stehen lesbar in der Datei. ' +
-        'Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
+        'Die Datei enthält personenbezogene Angaben im Klartext. Ab dem ' +
+        'Speichern schützt die Verschlüsselung dieser Anwendung die Daten nicht ' +
+        'mehr — Name, Geburtsdatum, Diagnose und Einsatzort der PatientIn, ' +
+        'dazu die Namen der Besatzung, Bergwacht-Angaben, der andere Notarzt, ' +
+        'die Notizen und die Koordinaten des Einsatzortes stehen lesbar in der ' +
+        'Datei. Bewahre sie entsprechend auf und gib sie nicht unverschlüsselt weiter.';
 
     var DIALOG_PASSWORT =
         'Merke dir das Passwort. Es wird nirgends gespeichert und lässt sich ' +
@@ -151,6 +153,47 @@
         return data;
     }
 
+    /** Zweite Schranke (A9): entfernt alle personenbezogenen Angaben aus dem
+     *  geladenen Bestand, bevor irgendein Profil ihn zu sehen bekommt.
+     *
+     *  api/export_data.php liefert diese Felder bei fehlendem Haken schon gar
+     *  nicht — das ist die erste und die wirksame Schranke. Diese hier ist die
+     *  zweite, und sie steht aus einem Grund da: Sie wirkt an EINER Stelle für
+     *  alle drei Profile. Wer später ein viertes Profil ergänzt, muss nicht
+     *  wissen, welche Felder unter die Schranke fallen — sie sind dann schon
+     *  weg. Der umgekehrte Aufbau (jedes Profil prüft selbst) hat genau die
+     *  Lücke erzeugt, die zu A9 geführt hat: Die Phasenkoordinaten waren in
+     *  Profil B nicht abgedeckt, obwohl pat_ort_lat/lon es waren.
+     *
+     *  DRAUSSEN bleiben bewusst: transport_dest und bw_unit (Einrichtungen,
+     *  keine Personen; Kriterium 74), weitere_rettungsmittel
+     *  (Organisationskennungen) und der Reanimationsverlauf — je einzeln vom
+     *  Auftraggeber entschieden, Begründungen in docs/Export-Format.md. */
+    function entpersonalisieren(data) {
+        var CREW = ['crew_p1', 'crew_p2', 'crew_hems', 'crew_fr', 'crew_other'];
+
+        (data.days || []).forEach(function (d) {
+            CREW.forEach(function (k) { d[k] = null; });
+            d.notes = null;
+        });
+
+        (data.missions || []).forEach(function (m) {
+            CREW.forEach(function (k) { m[k] = null; });
+            m.bw_info = null;
+            m.other_ema = null;
+            m.notes = null;
+            m.site_ele_m = null;
+            m.pat_blob = null;
+            m.pat = null;
+            // Phase 4 ist "Ankunft Einsatzort", Phase 5 "Ankunft PatientIn" —
+            // diese Punkte SIND der Ort des Geschehens. Der Zeitpunkt bleibt:
+            // Er trägt Alarmzeit, Endzeit und Dauer (Kriterium 73).
+            (m.phases || []).forEach(function (p) { p.lat = null; p.lon = null; });
+        });
+
+        return data;
+    }
+
     /** Entschlüsselt pat_blob je Einsatz zu m.pat (null bei Fehler/Fehlen).
      *
      *  Die Schleife samt Fehlerbehandlung stand hier ausgeschrieben — eine von
@@ -172,6 +215,16 @@
 
     /* ------------------------------------------------------- Profil A --- */
 
+    /* 'star' heisst seit Web 5.8.0 (A9): faellt unter die Schranke
+     * "Personenbezogene Angaben einschliessen". Vorher stand es allein fuer
+     * die Patientendaten. Der Schluesselname bleibt — er beschreibt die
+     * Markierung in der Kopfzeile, nicht ihren Anlass.
+     *
+     * Profil A ENTFERNT diese Spalten, wenn der Haken aus ist, statt sie leer
+     * zu lassen: Hier liest ein Mensch, und eine leere Spalte waere nur
+     * Ballast. Profil B behaelt sie leer (stabiles Schema, dort liest eine
+     * Maschine) und Profil C muss sie behalten, weil seine Spaltenfolge von
+     * der Jahresliste vorgegeben ist. */
     var SPALTEN_A = [
         { label: 'Hubschrauber', star: false },
         { label: 'Standort', star: false },
@@ -186,11 +239,11 @@
         { label: 'Alter', star: true },
         { label: 'Einsatzort', star: true },
         { label: 'Diagnose', star: true },
-        { label: 'Pilot 1', star: false },
-        { label: 'Pilot 2', star: false },
-        { label: 'HEMS', star: false },
-        { label: 'Flugretter', star: false },
-        { label: 'Sonstige Besatzung', star: false },
+        { label: 'Pilot 1', star: true },
+        { label: 'Pilot 2', star: true },
+        { label: 'HEMS', star: true },
+        { label: 'Flugretter', star: true },
+        { label: 'Sonstige Besatzung', star: true },
         // 'Sekundärtransport' ist der Wortlaut aus mission_fields.php — die
         // Tabelle soll dieselben Begriffe verwenden wie das Formular.
         { label: 'Sekundärtransport', star: false },
@@ -199,11 +252,19 @@
         { label: 'Windeneinsatz', star: false },
         { label: 'Windenzyklen gesamt', star: false },
         { label: 'Bergwacht', star: false },
+        // Einheit, nicht Person — dieselbe Klasse wie Transportziel, das nach
+        // Kriterium 74 ausdruecklich enthalten bleibt. 'Bergwacht: Namen /
+        // Infos' (bw_info) gibt es in Profil A nicht.
         { label: 'Bergwacht-Einheit', star: false },
+        // Organisationskennungen ("RTW Kempten"). Vom Auftraggeber als
+        // Grenzfall entschieden: bleibt enthalten.
         { label: 'Weitere Rettungsmittel', star: false },
-        { label: 'Höhe Einsatzort (m)', star: false },
+        // Aus dem Einsatzort gerechnet und damit grob ortsverratend.
+        { label: 'Höhe Einsatzort (m)', star: true },
         { label: 'Flugkilometer', star: false },
-        { label: 'Notizen', star: false }
+        // Das Formular warnt "keine Patientendaten!" — was tatsaechlich dort
+        // steht, weiss nur, wer es geschrieben hat.
+        { label: 'Notizen', star: true }
     ];
 
     var DATE_COL_A = 2;   // 0-basiert, immer Spalte C (Einsatznummer* aendert daran nichts)
@@ -559,18 +620,21 @@
 
         { feld: 'hubschrauber', typ: 'text', einheit: '', beschreibung: 'Kennzeichen (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.aircraft) : ''; } },
         { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Basis (Flugtag)', get: function (c) { return c.day ? orEmpty(c.day.base) : ''; } },
-        { feld: 'tag_crew_p1', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 1', get: function (c) { return c.day ? orEmpty(c.day.crew_p1) : ''; } },
-        { feld: 'tag_crew_p2', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 2', get: function (c) { return c.day ? orEmpty(c.day.crew_p2) : ''; } },
-        { feld: 'tag_crew_hems', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: HEMS', get: function (c) { return c.day ? orEmpty(c.day.crew_hems) : ''; } },
-        { feld: 'tag_crew_fr', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Flugretter', get: function (c) { return c.day ? orEmpty(c.day.crew_fr) : ''; } },
-        { feld: 'tag_crew_other', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Sonstige', get: function (c) { return c.day ? orEmpty(c.day.crew_other) : ''; } },
+        { feld: 'tag_crew_p1', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 1', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_p1) : ''; } },
+        { feld: 'tag_crew_p2', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Pilot 2', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_p2) : ''; } },
+        { feld: 'tag_crew_hems', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: HEMS', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_hems) : ''; } },
+        { feld: 'tag_crew_fr', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Flugretter', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_fr) : ''; } },
+        { feld: 'tag_crew_other', typ: 'text', einheit: '', beschreibung: 'Besatzung des Flugtags: Sonstige', pers: true, get: function (c) { return c.day ? orEmpty(c.day.crew_other) : ''; } },
 
+        // Der Haken selbst bleibt: Er sagt, DASS die Besatzung abwich, nicht
+        // wer geflogen ist. Ohne ihn wäre nicht mehr zu erkennen, dass die
+        // leeren Namensspalten leer gemacht wurden und nicht leer waren.
         { feld: 'crew_abweichend', typ: '0/1', einheit: '', beschreibung: 'missions.crew_override', get: function (c) { return c.m.crew_override; } },
-        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3)', get: function (c) { return orEmpty(c.eff.p1); } },
-        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 2', get: function (c) { return orEmpty(c.eff.p2); } },
-        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: HEMS', get: function (c) { return orEmpty(c.eff.hems); } },
-        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Flugretter', get: function (c) { return orEmpty(c.eff.fr); } },
-        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Sonstige', get: function (c) { return orEmpty(c.eff.other); } },
+        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3)', pers: true, get: function (c) { return orEmpty(c.eff.p1); } },
+        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Pilot 2', pers: true, get: function (c) { return orEmpty(c.eff.p2); } },
+        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: HEMS', pers: true, get: function (c) { return orEmpty(c.eff.hems); } },
+        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Flugretter', pers: true, get: function (c) { return orEmpty(c.eff.fr); } },
+        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'tatsächliche Besatzung: Sonstige', pers: true, get: function (c) { return orEmpty(c.eff.other); } },
 
         { feld: 'beginn', typ: 'ts', einheit: '', beschreibung: 'started_at', get: function (c) { return isoOffset(c.m.started_at, APP_TZ); } },
         { feld: 'ende', typ: 'ts', einheit: '', beschreibung: 'ended_at', get: function (c) { return isoOffset(c.m.ended_at, APP_TZ); } },
@@ -584,14 +648,18 @@
             };
         }))
         .concat([2, 3, 4, 5, 6, 7, 8, 9].reduce(function (acc, n) {
+            // Phase 4 = Ankunft Einsatzort, Phase 5 = Ankunft PatientIn: Diese
+            // Punkte SIND der Ort des Geschehens und fallen deshalb unter die
+            // Schranke (A9). Die Zeitpunkte oben tun das nicht — sie tragen
+            // Alarmzeit, Endzeit und Dauer.
             acc.push({
                 feld: 'phase_0' + n + '_lat', typ: 'dec', einheit: '',
-                beschreibung: 'Breitengrad Phase ' + n,
+                beschreibung: 'Breitengrad Phase ' + n, pers: true,
                 get: function (c) { var p = (c.m.phases || []).find(function (x) { return x.phase === n; }); return p && p.lat !== null ? p.lat : ''; }
             });
             acc.push({
                 feld: 'phase_0' + n + '_lon', typ: 'dec', einheit: '',
-                beschreibung: 'Längengrad Phase ' + n,
+                beschreibung: 'Längengrad Phase ' + n, pers: true,
                 get: function (c) { var p = (c.m.phases || []).find(function (x) { return x.phase === n; }); return p && p.lon !== null ? p.lon : ''; }
             });
             return acc;
@@ -599,7 +667,7 @@
         .concat([
             { feld: 'strecke_m', typ: 'int', einheit: 'm', beschreibung: 'Flugstrecke (distance_m)', get: function (c) { return numOrEmpty(c.m.distance_m); } },
             { feld: 'hoehenmeter_m', typ: 'int', einheit: 'm', beschreibung: 'Höhenmeter (ascent_m)', get: function (c) { return numOrEmpty(c.m.ascent_m); } },
-            { feld: 'hoehe_einsatzort_m', typ: 'int', einheit: 'm', beschreibung: 'Höhe des Einsatzorts', get: function (c) { return numOrEmpty(c.m.site_ele_m); } },
+            { feld: 'hoehe_einsatzort_m', typ: 'int', einheit: 'm', beschreibung: 'Höhe des Einsatzorts', pers: true, get: function (c) { return numOrEmpty(c.m.site_ele_m); } },
 
             { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel', get: function (c) { return orEmpty(c.m.transport_dest); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
@@ -610,27 +678,27 @@
             { feld: 'winch_airload', typ: '0/1', einheit: '', beschreibung: 'Luftverladung', get: function (c) { return c.m.winch_airload; } },
             { feld: 'bergwacht', typ: '0/1', einheit: '', beschreibung: 'Bergwacht beteiligt', get: function (c) { return c.m.bergwacht; } },
             { feld: 'bw_unit', typ: 'text', einheit: '', beschreibung: 'Bergwacht-Einheit', get: function (c) { return orEmpty(c.m.bw_unit); } },
-            { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht: Namen / Infos', get: function (c) { return orEmpty(c.m.bw_info); } },
-            { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Anderer Notarzt', get: function (c) { return orEmpty(c.m.other_ema); } },
+            { feld: 'bw_info', typ: 'text', einheit: '', beschreibung: 'Bergwacht: Namen / Infos', pers: true, get: function (c) { return orEmpty(c.m.bw_info); } },
+            { feld: 'other_ema', typ: 'text', einheit: '', beschreibung: 'Anderer Notarzt', pers: true, get: function (c) { return orEmpty(c.m.other_ema); } },
             { feld: 'weitere_rettungsmittel', typ: 'text', einheit: '', beschreibung: 'mission_resources.name, mit | verkettet', get: function (c) { return pipeList(c.m.resources); } },
-            { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'missions.notes', get: function (c) { return orEmpty(c.m.notes); } },
+            { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'missions.notes', pers: true, get: function (c) { return orEmpty(c.m.notes); } },
 
-            { feld: 'pat_mission_no', typ: 'text', einheit: '', beschreibung: 'Einsatznummer (pat_blob.mission_no)', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.mission_no) : ''; } },
-            { feld: 'pat_nachname', typ: 'text', einheit: '', beschreibung: 'pat_blob.last', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.last) : ''; } },
-            { feld: 'pat_vorname', typ: 'text', einheit: '', beschreibung: 'pat_blob.first', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.first) : ''; } },
-            { feld: 'pat_geburtsdatum', typ: 'date', einheit: '', beschreibung: 'pat_blob.dob', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.dob) : ''; } },
+            { feld: 'pat_mission_no', typ: 'text', einheit: '', beschreibung: 'Einsatznummer (pat_blob.mission_no)', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.mission_no) : ''; } },
+            { feld: 'pat_nachname', typ: 'text', einheit: '', beschreibung: 'pat_blob.last', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.last) : ''; } },
+            { feld: 'pat_vorname', typ: 'text', einheit: '', beschreibung: 'pat_blob.first', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.first) : ''; } },
+            { feld: 'pat_geburtsdatum', typ: 'date', einheit: '', beschreibung: 'pat_blob.dob', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.dob) : ''; } },
             // Rohwert aus dem pat_blob, kein gerechnetes Alter: Der Schluessel
             // 'age' ist nur belegt, wenn kein verwertbares Geburtsdatum
             // vorliegt (Regel aus einsatz_form.php). Steht ein Geburtsdatum in
             // der Zeile, folgt das Alter aus 'pat_geburtsdatum' und 'flugtag' —
             // eine zweite, gerechnete Quelle waere beim Rueckimport eine
             // Widerspruchsquelle.
-            { feld: 'pat_alter', typ: 'int', einheit: 'Jahre', beschreibung: 'pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und flugtag', patient: true, get: function (c) { return (c.pat && c.pat.age != null) ? c.pat.age : ''; } },
-            { feld: 'pat_diagnose', typ: 'text', einheit: '', beschreibung: 'pat_blob.dx', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.dx) : ''; } },
-            { feld: 'pat_ort_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.loc.addr', patient: true, get: function (c) { return (c.pat && c.pat.loc) ? orEmpty(c.pat.loc.addr) : ''; } },
-            { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },
-            { feld: 'pat_ort_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lon', patient: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lon != null) ? c.pat.loc.lon : ''; } },
-            { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', patient: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
+            { feld: 'pat_alter', typ: 'int', einheit: 'Jahre', beschreibung: 'pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und flugtag', pers: true, get: function (c) { return (c.pat && c.pat.age != null) ? c.pat.age : ''; } },
+            { feld: 'pat_diagnose', typ: 'text', einheit: '', beschreibung: 'pat_blob.dx', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.dx) : ''; } },
+            { feld: 'pat_ort_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.loc.addr', pers: true, get: function (c) { return (c.pat && c.pat.loc) ? orEmpty(c.pat.loc.addr) : ''; } },
+            { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', pers: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },
+            { feld: 'pat_ort_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lon', pers: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lon != null) ? c.pat.loc.lon : ''; } },
+            { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
 
             { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
@@ -641,12 +709,12 @@
         { feld: 'flugtag', typ: 'date', einheit: '', beschreibung: 'days.day', get: function (c) { return c.d.day; } },
         { feld: 'hubschrauber', typ: 'text', einheit: '', beschreibung: 'Kennzeichen', get: function (c) { return orEmpty(c.d.aircraft); } },
         { feld: 'standort', typ: 'text', einheit: '', beschreibung: 'Basis', get: function (c) { return orEmpty(c.d.base); } },
-        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'Pilot 1', get: function (c) { return orEmpty(c.d.crew_p1); } },
-        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'Pilot 2', get: function (c) { return orEmpty(c.d.crew_p2); } },
-        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'HEMS', get: function (c) { return orEmpty(c.d.crew_hems); } },
-        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'Flugretter', get: function (c) { return orEmpty(c.d.crew_fr); } },
-        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'Sonstige', get: function (c) { return orEmpty(c.d.crew_other); } },
-        { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'days.notes', get: function (c) { return orEmpty(c.d.notes); } },
+        { feld: 'crew_p1', typ: 'text', einheit: '', beschreibung: 'Pilot 1', pers: true, get: function (c) { return orEmpty(c.d.crew_p1); } },
+        { feld: 'crew_p2', typ: 'text', einheit: '', beschreibung: 'Pilot 2', pers: true, get: function (c) { return orEmpty(c.d.crew_p2); } },
+        { feld: 'crew_hems', typ: 'text', einheit: '', beschreibung: 'HEMS', pers: true, get: function (c) { return orEmpty(c.d.crew_hems); } },
+        { feld: 'crew_fr', typ: 'text', einheit: '', beschreibung: 'Flugretter', pers: true, get: function (c) { return orEmpty(c.d.crew_fr); } },
+        { feld: 'crew_other', typ: 'text', einheit: '', beschreibung: 'Sonstige', pers: true, get: function (c) { return orEmpty(c.d.crew_other); } },
+        { feld: 'notizen', typ: 'text', einheit: '', beschreibung: 'days.notes', pers: true, get: function (c) { return orEmpty(c.d.notes); } },
         { feld: 'anzahl_einsaetze', typ: 'int', einheit: '', beschreibung: 'Anzahl Einsätze an diesem Flugtag im Export', get: function (c) { return c.count; } }
     ];
 
@@ -663,20 +731,29 @@
 
     function numOrEmpty(v) { return (v === null || v === undefined) ? '' : v; }
 
-    /** felder.csv beschreibt IMMER den vollen Formatumfang — auch die
-     *  pat_-Spalten, die ohne Haken leer bleiben. Die Datei ist die
-     *  Formatbeschreibung, nicht ein Inhaltsverzeichnis dieses einen Laufs. */
+    /** felder.csv beschreibt IMMER den vollen Formatumfang — auch die Spalten,
+     *  die ohne Haken leer bleiben. Die Datei ist die Formatbeschreibung, nicht
+     *  ein Inhaltsverzeichnis dieses einen Laufs.
+     *
+     *  Die Spalte 'personenbezogen' ist mit Web 5.8.0 dazugekommen (A9). Sie
+     *  macht die Schranke maschinenlesbar: Wer die Dateien einliest, kann
+     *  daraus ableiten, welche leeren Zellen leer GEMACHT wurden und welche nie
+     *  gefüllt waren — ohne diese Angabe sehen beide gleich aus. Die
+     *  Kennzeichnung sitzt am Feldkatalog selbst (Schlüssel 'pers'), damit ein
+     *  neu ergänztes Feld sie nicht stillschweigend vergessen kann. */
     function buildFelderCsv() {
         var tables = [
             ['einsaetze.csv', FIELD_DEFS_EINSAETZE],
             ['flugtage.csv', FIELD_DEFS_FLUGTAGE],
             ['ruhezeiten.csv', FIELD_DEFS_RUHEZEITEN]
         ];
-        var out = '\uFEFF' + csvRow(['datei', 'feld', 'typ', 'einheit', 'beschreibung']);
+        var out = '\uFEFF' + csvRow(['datei', 'feld', 'typ', 'einheit',
+                                     'personenbezogen', 'beschreibung']);
         tables.forEach(function (t) {
             var datei = t[0];
             t[1].forEach(function (f) {
-                out += csvRow([datei, f.feld, f.typ, f.einheit || '', f.beschreibung]);
+                out += csvRow([datei, f.feld, f.typ, f.einheit || '',
+                               f.pers ? 'ja' : 'nein', f.beschreibung]);
             });
         });
         return out;
@@ -695,15 +772,46 @@
             'Erzeugt am: ' + erzeugt,
             'App-Version: Web ' + WEB_VERSION,
             'Zeitraum: ' + zeitraum,
-            'Patientendaten enthalten: ' + (opts.patient ? 'ja' : 'nein'),
+            'Personenbezogene Angaben enthalten: ' + (opts.patient ? 'ja' : 'nein'),
+            ''
+        ].concat(opts.patient ? [
+            'Diese Datei enthält alle nachstehenden Gruppen:',
+            '  - Patientendaten (pat_-Spalten): Einsatznummer, Name, Geburtsdatum,',
+            '    Alter, Diagnose, Einsatzort mit Adresse und Koordinaten',
+            '  - Besatzung: die des Flugtags (tag_crew_*) und die tatsächliche',
+            '    des Einsatzes (crew_*), ebenso im Blatt Flugtage',
+            '  - weitere Namen: bw_info (Bergwacht: Namen / Infos), other_ema',
+            '    (anderer Notarzt)',
+            '  - Freitext: notizen bei Einsatz und Flugtag',
+            '  - Ortsangaben: die Koordinaten der Phasen (Phase 4 = Ankunft',
+            '    Einsatzort, Phase 5 = Ankunft PatientIn), hoehe_einsatzort_m',
+            '    und, falls gewählt, die GPX-Spuren unter tracks/'
+        ] : [
+            'Diese Datei enthält KEINE der nachstehenden Gruppen — die Spalten sind',
+            'vorhanden und leer:',
+            '  - Patientendaten (pat_-Spalten)',
+            '  - Besatzung (tag_crew_*, crew_*, auch im Blatt Flugtage)',
+            '  - bw_info (Bergwacht: Namen / Infos) und other_ema (anderer Notarzt)',
+            '  - notizen bei Einsatz und Flugtag',
+            '  - Koordinaten der Phasen und hoehe_einsatzort_m',
+            '  - GPX-Spuren (der Ordner tracks/ fehlt vollständig)',
             '',
-            'Der Spaltensatz ist in jedem Export gleich. Sind keine Patientendaten',
-            'enthalten, bleiben die pat_-Spalten vorhanden und leer — ein Programm,',
-            'das diese Dateien einliest, muss deshalb nicht zwei Fälle unterscheiden.',
-            'felder.csv beschreibt immer den vollen Formatumfang.',
+            'Enthalten bleiben dagegen: transport_dest (Zielklinik) und bw_unit',
+            '(Bergwacht-Einheit) — beides Einrichtungen, keine Personen —,',
+            'weitere_rettungsmittel (Organisationskennungen) sowie rea_json, der',
+            'Verlauf einer Reanimation ohne Angabe, wen sie betraf. Die Zeitpunkte',
+            'der Phasen bleiben ebenfalls: Sie tragen Alarmzeit, Endzeit und Dauer.',
+            'crew_abweichend bleibt gesetzt und sagt, DASS die Besatzung abwich.'
+        ]).concat([
+            '',
+            'Der Spaltensatz ist in jedem Export gleich — ein Programm, das diese',
+            'Dateien einliest, muss deshalb nicht zwei Fälle unterscheiden.',
+            'felder.csv beschreibt immer den vollen Formatumfang und sagt je Feld,',
+            'ob es unter die Schranke fällt (Spalte personenbezogen).',
             '',
             'Dateien in diesem Archiv:',
-            '  felder.csv       jedes Feld jeder Tabelle: datei;feld;typ;einheit;beschreibung',
+            '  felder.csv       jedes Feld jeder Tabelle:',
+            '                   datei;feld;typ;einheit;personenbezogen;beschreibung',
             '  einsaetze.csv    eine Zeile je Einsatz — vollständig',
             '  flugtage.csv     eine Zeile je Flugtag, auch ohne Einsatz',
             '  ruhezeiten.csv   eine Zeile je Ruhesegment',
@@ -732,7 +840,7 @@
             'gilt einsaetze.csv; flugtage.csv wird nur für Tage ohne Einsatz und',
             'für Tagesnotizen gebraucht.',
             ''
-        ].join('\r\n');
+        ]).join('\r\n');
     }
 
     function xmlEscape(s) {
@@ -759,7 +867,12 @@
         var res = await fetch('api/export_data.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-            body: JSON.stringify({ action: 'track', owner_type: ownerType, ids: ids })
+            // 'patient: true' ist hier keine Wahl, sondern eine Zusicherung:
+            // GPX-Spuren gibt es nur im Export MIT personenbezogenen Angaben
+            // (A9), und der Server weist die Anfrage sonst ab. Der Aufruf
+            // erfolgt ausschliesslich aus diesem Zweig.
+            body: JSON.stringify({ action: 'track', owner_type: ownerType,
+                                   ids: ids, patient: true })
         });
         if (!res.ok) { throw new Error('Serverfehler beim Laden der Tracks (' + res.status + ').'); }
         return res.json();
@@ -898,8 +1011,18 @@
 
     function gewaehltesFormat() { return $('exp_fmt').value; }
 
+    /* GPX-Spuren gibt es nur MIT personenbezogenen Angaben (A9).
+     *
+     * Eine Flugspur endet am Einsatzort — sie nennt ihn genauer als jede
+     * Koordinatenspalte. Die Wahl verschwindet deshalb, sobald die Schranke
+     * greift, statt dazustehen und stillschweigend wirkungslos zu sein. Der
+     * Grund steht an ihrer Stelle, sonst wäre das Verschwinden selbst die
+     * nächste offene Frage. */
     function syncFormat() {
-        $('exp_gpx_row').hidden = (gewaehltesFormat() !== 'b');
+        var csv = (gewaehltesFormat() === 'b');
+        var pers = $('exp_pat').checked;
+        $('exp_gpx_row').hidden = !(csv && pers);
+        $('exp_gpx_pers_hint').hidden = !(csv && !pers);
     }
 
     /** Dateiname nach dem Muster
@@ -935,8 +1058,17 @@
 
     /**
      * Beide Marker sind immer gesetzt, auch im Negativfall: Fehlt der Marker,
-     * liesse sich eine Datei ohne Patientendaten nicht von einer aelteren
-     * Datei ohne Markerlogik unterscheiden.
+     * liesse sich eine Datei ohne personenbezogene Angaben nicht von einer
+     * aelteren Datei ohne Markerlogik unterscheiden.
+     *
+     * SEIT WEB 5.8.0 'mit-pers'/'ohne-pers' statt 'mit-pat'/'ohne-pat' (A9).
+     * Die Umbenennung ist kein Feinschliff: Der Dateiname ist die Angabe, die
+     * man noch sieht, wenn die Datei laengst in einem fremden Ordner liegt.
+     * 'ohne-pat' an einer Datei mit Besatzungsnamen und Einsatzkoordinaten
+     * waere dort die falsche Auskunft — und zwar genau die, auf die sich
+     * jemand verlaesst, der entscheidet, ob er sie weitergibt. Aeltere Dateien
+     * behalten ihren Namen; sie stammen aus einer Zeit, in der die Schranke
+     * tatsaechlich nur die Patientendaten umfasste.
      *
      * `verschluesselt` beschreibt immer DIESE Datei, nicht den Vorgang. Die
      * Tabelle in einem passwortgeschuetzten Archiv traegt deshalb `unverschl`
@@ -948,7 +1080,7 @@
         var datum = pad2(j.getDate()) + '-' + pad2(j.getMonth() + 1) + '-' + j.getFullYear();
         return 'luftrettungsdokumentation_export_' + datum + '_'
             + (PROFIL_KUERZEL[fmt] || 'export') + '_'
-            + (patient ? 'mit-pat' : 'ohne-pat') + '_'
+            + (patient ? 'mit-pers' : 'ohne-pers') + '_'
             + (verschluesselt ? 'verschl' : 'unverschl') + '_'
             + kontoKuerzel() + '.' + endung;
     }
@@ -966,19 +1098,32 @@
         } else {
             cb.disabled = false; hint.hidden = true;
         }
-        syncSchutzhinweis();
+        syncPersonenbezug();
         return key;
     }
 
-    /* Hinweis unter dem Passwortkästchen (A6.4, Web 5.7.0).
+    /* Alles, was am Haken „Personenbezogene Angaben einschließen" hängt, an
+     * einer Stelle: der Hinweis unter dem Passwortkästchen und die GPX-Wahl.
+     * Beide werden auch aus syncPatientLock() heraus gebraucht, das den Haken
+     * bei gesperrter Entschlüsselung selbst abwählt. */
+    function syncPersonenbezug() {
+        syncSchutzhinweis();
+        syncFormat();
+    }
+
+    /* Hinweis unter dem Passwortkästchen (A6.4, Web 5.7.0; Text nach A9).
      *
-     * Er erscheint, sobald die Datei OHNE geschützte Angaben erzeugt würde.
-     * Was er ausdrücklich NICHT tut: den Passwortschutz selbst abschalten.
-     * Eine Datei ohne Patientendaten ist nicht harmlos — sie enthält
-     * Besatzungsnamen, Bergwacht-Angaben, den anderen Notarzt, Notizen und
-     * über die Phasen die Koordinaten des Einsatzortes. Wer den Schutz
-     * weglässt, soll das entscheiden, nicht als Nebenwirkung eines anderen
-     * Hakens erleben. */
+     * Er erscheint, sobald die Datei OHNE personenbezogene Angaben erzeugt
+     * würde. Was er ausdrücklich NICHT tut: den Passwortschutz selbst
+     * abschalten (E31). Ein Haken, der einen Schutz als Nebenwirkung
+     * ausschaltet, ist genau die unsichtbare Wirkung, die dieses Projekt an
+     * anderen Stellen vermeidet.
+     *
+     * Seine Begründung hat sich mit A9 gedreht: Bis Web 5.7.0 lautete sie
+     * "die Datei ist trotzdem personenbezogen" — seit die Schranke Besatzung,
+     * Notizen und Phasenkoordinaten mit abdeckt, stimmt das nicht mehr.
+     * Geblieben ist Betriebswissen (Zeiten, Transportziele, Rettungsmittel,
+     * Reanimationsverlauf), und das ist Grund genug für die Vorbelegung. */
     function syncSchutzhinweis() {
         var hint = $('exp_pw_hint');
         if (!hint) { return; }
@@ -1042,7 +1187,11 @@
             syncPasswordGate();
             return;
         }
-        var gpx = (fmt === 'b') ? $('exp_gpx').checked : false;
+        // Ohne personenbezogene Angaben gibt es keine Tracks (A9) — die Wahl
+        // ist dann gar nicht sichtbar, und der Server wiese die Anfrage ohnehin
+        // ab. Hier steht sie trotzdem, damit der Aufruf nicht davon abhängt,
+        // welchen Zustand ein verborgenes Kästchen zufällig behalten hat.
+        var gpx = (fmt === 'b' && patient) ? $('exp_gpx').checked : false;
 
         var goBtn = $('exp_go');
         goBtn.disabled = true;
@@ -1061,6 +1210,10 @@
 
             setState('Daten werden geladen…');
             var data = await fetchMeta(von, bis, patient);
+            // Zweite Schranke (A9): Der Server hat die Felder schon nicht
+            // geliefert; hier fallen sie ein zweites Mal weg, bevor irgendein
+            // Profil den Bestand zu sehen bekommt.
+            if (!patient) { entpersonalisieren(data); }
 
             if (patient) {
                 var key = await syncPatientLock();
@@ -1117,7 +1270,10 @@
             // "Tracks vergessen".
             var schluss = 'Fertig: ' + built.count + ' Einsätze exportiert.';
             if (fmt === 'b') {
-                if (!gpx) {
+                if (!patient) {
+                    schluss += ' Ohne personenbezogene Angaben enthält das Archiv '
+                             + 'keine GPX-Tracks.';
+                } else if (!gpx) {
                     schluss += ' GPX-Tracks waren abgewählt.';
                 } else if (built.tracks) {
                     schluss += ' ' + built.tracks + ' GPX-Tracks enthalten.';
@@ -1144,7 +1300,7 @@
         $('exp_pw').addEventListener('change', syncPasswordGate);
         $('exp_pw1').addEventListener('input', syncPasswordGate);
         $('exp_pw2').addEventListener('input', syncPasswordGate);
-        $('exp_pat').addEventListener('change', syncSchutzhinweis);
+        $('exp_pat').addEventListener('change', syncPersonenbezug);
 
         var unlockBtn = $('exp_pat_unlock');
         if (unlockBtn) { unlockBtn.addEventListener('click', function () { syncPatientLock(); }); }

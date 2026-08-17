@@ -151,12 +151,23 @@ foreach ($defs->fetchAll() as $d) {
       <div class="rolechecks" id="exp_gpx_row" hidden>
         <label><input type="checkbox" id="exp_gpx" checked> GPX-Tracks einschließen</label>
       </div>
+      <?php /* Tritt an die Stelle der GPX-Wahl, wenn die Schranke greift
+               (A9, Web 5.8.0). Eine Flugspur endet am Einsatzort — sie nennt
+               ihn genauer als jede Koordinatenspalte. */ ?>
+      <p class="muted" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
+         entfallen die GPX-Tracks — eine Flugspur endet am Einsatzort.</p>
 
+      <?php /* „Personenbezogene Angaben" statt „Patientendaten" (A9, Web
+               5.8.0). Der Haken schaltet seit dieser Fassung auch die Namen
+               der Besatzung, bw_info, den anderen Notarzt, die Notizen und
+               die Koordinaten des Einsatzortes ab. Die Kennung exp_pat bleibt:
+               Sie ist der Vertrag zu assets/export.js und
+               api/export_data.php. */ ?>
       <div class="rolechecks">
-        <label><input type="checkbox" id="exp_pat"> Patientendaten einschließen</label>
+        <label><input type="checkbox" id="exp_pat"> Personenbezogene Angaben einschließen</label>
       </div>
       <p class="muted" id="exp_pat_hint" hidden>Gesperrt — geschützte Angaben lassen sich
-         gerade nicht entschlüsseln. Export ohne Patientendaten bleibt möglich.
+         gerade nicht entschlüsseln. Export ohne personenbezogene Angaben bleibt möglich.
          <button type="button" class="btn-plain unlockbtn" id="exp_pat_unlock">Entsperren</button></p>
 
       <?php /* Vorbelegt auf AN (A6.4, Web 5.7.0). In dieser Datei stehen die
@@ -167,16 +178,28 @@ foreach ($defs->fetchAll() as $d) {
       <div class="rolechecks">
         <label><input type="checkbox" id="exp_pw" checked> Mit Passwort schützen (AES-256)</label>
       </div>
-      <?php /* Erscheint nur ohne geschützte Angaben. Kein selbsttätiges
-               Abschalten: Auch eine Datei ohne Patientendaten enthält
-               personenbezogene Angaben (Besatzung, Bergwacht-Infos, anderer
-               Notarzt, Notizen) und die Koordinaten der Phasen. Wer den Schutz
-               weglässt, soll das entscheiden und nicht bemerken. */ ?>
-      <p class="muted small" id="exp_pw_hint" hidden>Ohne geschützte Angaben enthält
-         die Datei keine Patientendaten. <strong>Personenbezogen ist sie
-         trotzdem:</strong> Besatzungsnamen, Bergwacht-Angaben, anderer Notarzt,
-         Notizen und die Koordinaten der Phasen bleiben enthalten. Der
-         Passwortschutz lässt sich abwählen — nötig ist das nicht.</p>
+      <?php /* Erscheint nur ohne personenbezogene Angaben. Kein selbsttätiges
+               Abschalten (E31) — die Entscheidung von A6.4 bleibt, ihre
+               Begründung hat sich mit A9 geändert.
+
+               BIS WEB 5.7.0 stand hier: "Personenbezogen ist sie trotzdem" —
+               denn die Schranke deckte nur die Patientendaten ab, Besatzung
+               und Phasenkoordinaten gingen mit. Seit A9 stimmt das nicht mehr,
+               und ein Hinweis, der etwas Falsches behauptet, ist schlimmer als
+               keiner: Wer ihm glaubt, hält eine harmlose Datei für brisant —
+               und beim nächsten Mal eine brisante für harmlos.
+
+               Der Schutz bleibt trotzdem vorbelegt. Was in der Datei bleibt,
+               ist Betriebswissen: wann geflogen wurde, wohin transportiert,
+               mit welchen Rettungsmitteln, mit welchem Reanimationsverlauf.
+               Kein Personenbezug, aber auch nichts, was ohne Weiteres in
+               fremde Hände gehört. */ ?>
+      <p class="muted small" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
+         enthält die Datei keine Namen, keine Notizen und keine Koordinaten des
+         Einsatzortes. <strong>Betriebsangaben bleiben enthalten:</strong>
+         Einsatzzeiten, Transportziele, weitere Rettungsmittel und der Verlauf
+         einer Reanimation. Der Passwortschutz lässt sich abwählen — eine
+         bewusste Entscheidung sollte es bleiben.</p>
       <div class="rolechecks" id="exp_pw_fields" hidden>
         <label>Passwort (mind. 10 Zeichen)
           <input type="password" id="exp_pw1" minlength="10" autocomplete="new-password"></label>
