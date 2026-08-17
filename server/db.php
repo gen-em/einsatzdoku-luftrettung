@@ -336,12 +336,79 @@ function json_fehler(Throwable $ex, string $bereich): never
  * Beschriftung stand danach noch hier und liess einen Altbestand als
  * GUELTIGEN Zustand erscheinen. Ohne sie erscheint er als unbekannte Phase —
  * und das ist er.
+ *
+ * NEUTRALE BESCHRIFTUNGEN seit Web 6.0.0 (Entscheidung E20): Phase 3 hiess
+ * "Abflug", Phase 7 "Landung Krankenhaus". Beide Woerter passen nur zur
+ * Luftrettung. Nummerierung und Bedeutung sind unveraendert — es sind
+ * ausschliesslich die Beschriftungen, damit die Uhr die Einsatzart nicht
+ * kennen muss (E21).
  */
 const PHASE_LABELS = [
-    1 => 'Frei', 2 => 'Alarmierung', 3 => 'Abflug', 4 => 'Ankunft Einsatzort',
-    5 => 'Ankunft PatientIn', 6 => 'Transportbeginn', 7 => 'Landung Krankenhaus',
+    1 => 'Frei', 2 => 'Alarmierung', 3 => 'Ausrücken', 4 => 'Ankunft Einsatzort',
+    5 => 'Ankunft PatientIn', 6 => 'Transportbeginn', 7 => 'Ankunft Klinik',
     8 => 'Übergabezeit', 9 => 'Endzeit des Einsatzes',
 ];
+
+/**
+ * Besatzungsrollen — fester Katalog im Code, NICHT in der Datenbank (E4).
+ *
+ * Welche Rollen ein Rettungsmittel besetzt, wird an ihm angehakt und liegt in
+ * `vehicle_roles`; welche Rollen ein DIENSTTAG anbietet, ergibt sich aus der
+ * Zeilenmenge in `day_crew` (eingefroren beim Anlegen, E8). Dieser Katalog
+ * liefert nur Beschriftung, Zugehoerigkeit und Reihenfolge.
+ *
+ * 'kind' = 'air' | 'ground' | 'both'. "Sonstige" ist ausdruecklich DIESELBE
+ * Rolle bei beiden Arten (E6) und nicht zwei gleichnamige.
+ *
+ * DIE NOTAERZTIN IST KEINE ROLLE — sie ist die Nutzerin.
+ *
+ * Die Reihenfolge im Array ist die Anzeigereihenfolge.
+ */
+const CREW_ROLES = [
+    'p1'      => ['label' => 'Pilot 1',    'kind' => 'air'],
+    'p2'      => ['label' => 'Pilot 2',    'kind' => 'air'],
+    'hems'    => ['label' => 'HEMS-TC',    'kind' => 'air'],
+    'fr'      => ['label' => 'Flugretter', 'kind' => 'air'],
+    'driver'  => ['label' => 'Fahrer',     'kind' => 'ground'],
+    'trainee' => ['label' => 'Praktikant', 'kind' => 'ground'],
+    'other'   => ['label' => 'Sonstige',   'kind' => 'both'],
+];
+
+/**
+ * Faehigkeiten eines Rettungsmittels (E29). Zwei getrennte Haken, weil ein
+ * Hubschrauber eine Winde fuehren kann, ohne in einer Bergwachtkooperation zu
+ * stehen — und umgekehrt. Sie kommen ausschliesslich an luftgebundenen
+ * Rettungsmitteln vor und steuern die zugehoerigen Einsatzfelder allein; eine
+ * zusaetzliche Pruefung auf die Art ist deshalb weder noetig noch vorgesehen.
+ */
+const VEHICLE_CAPABILITIES = [
+    'winch'     => 'Winde',
+    'bergwacht' => 'Bergwacht',
+];
+
+/**
+ * Rollen, die zu einer Einsatzart gehoeren, in Katalogreihenfolge.
+ *
+ * $kind === null (neutraler Diensttag) liefert bewusst eine LEERE Liste: Ein
+ * Diensttag ohne Rettungsmittel bietet keine Rollen an (E26). Wer alle Rollen
+ * braucht — etwa fuer den Export —, nimmt CREW_ROLES direkt.
+ *
+ * @return array<string,array{label:string,kind:string}>
+ */
+function crew_roles_fuer_art(?string $kind): array
+{
+    if ($kind !== 'air' && $kind !== 'ground') { return []; }
+    return array_filter(
+        CREW_ROLES,
+        static fn(array $r): bool => $r['kind'] === $kind || $r['kind'] === 'both'
+    );
+}
+
+/** Beschriftung einer Rollenkennung; unbekannte Kennung bleibt sichtbar. */
+function crew_role_label(string $code): string
+{
+    return CREW_ROLES[$code]['label'] ?? $code;
+}
 
 /* ---- Kopplungscodes: Alphabet, Laenge, Gueltigkeit -----------------------
  * An EINER Stelle, weil die Angaben an DREI Stellen gebraucht werden: beim

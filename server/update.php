@@ -37,6 +37,59 @@ function _geraete_mit_datumsname(PDO $pdo): array
     return $ids;
 }
 
+/* ---- Schema-Auskuenfte fuer die Notarzt-Migration -------------------------
+ *
+ * Die Migration 2026_08_17_notarzt_erweiterung baut in einem Zug um und muss
+ * dabei mehrfach fragen, ob ein Schritt schon geschehen ist — sie laeuft auf
+ * Installationen, die an unterschiedlichen Punkten stehen koennen. Die vier
+ * Auskuenfte stehen deshalb hier und nicht als wiederholtes SQL im Ablauf.
+ */
+function _hat_tabelle(PDO $pdo, string $tabelle): bool
+{
+    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables
+                        WHERE table_schema = DATABASE() AND table_name = ?");
+    $q->execute([$tabelle]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+function _hat_spalte(PDO $pdo, string $tabelle, string $spalte): bool
+{
+    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.columns
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND column_name = ?");
+    $q->execute([$tabelle, $spalte]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+function _hat_index(PDO $pdo, string $tabelle, string $index): bool
+{
+    $q = $pdo->prepare("SELECT COUNT(*) FROM information_schema.statistics
+                        WHERE table_schema = DATABASE()
+                          AND table_name = ? AND index_name = ?");
+    $q->execute([$tabelle, $index]);
+    return (int)$q->fetchColumn() > 0;
+}
+
+/**
+ * Name des Fremdschluessels auf einer Spalte, oder null.
+ *
+ * Die Namen sind nicht vergeben worden, sondern von MySQL erzeugt
+ * (`days_ibfk_2` und aehnlich). Sie lassen sich deshalb nicht fest
+ * hinschreiben — eine Installation, die eine Tabelle einmal neu aufgebaut
+ * hat, traegt andere. Vor dem Umbenennen einer Spalte mit Fremdschluessel
+ * muss dieser fallen und danach neu gesetzt werden.
+ */
+function _fk_name(PDO $pdo, string $tabelle, string $spalte): ?string
+{
+    $q = $pdo->prepare("SELECT constraint_name FROM information_schema.key_column_usage
+                        WHERE table_schema = DATABASE() AND table_name = ?
+                          AND column_name = ? AND referenced_table_name IS NOT NULL
+                        LIMIT 1");
+    $q->execute([$tabelle, $spalte]);
+    $n = $q->fetchColumn();
+    return $n === false ? null : (string)$n;
+}
+
 /* ---- Migrationsliste ------------------------------------------------------
  * 'id'    : eindeutiger, aufsteigender Name (Datum_stichwort)
  * 'label' : Beschreibung fuer die Anzeige
@@ -927,6 +980,502 @@ $MIGRATIONS = [
                                   AND index_name = 'uq_users_account_key'")->fetchColumn();
             if ((int)$idx === 0) {
                 $pdo->exec('ALTER TABLE users ADD UNIQUE KEY uq_users_account_key (account_key)');
+            }
+        },
+    ],
+    [
+        'id'    => '2026_08_17_notarzt_erweiterung',
+        'label' => 'Bodengebundene Notarzteinsätze: Diensttage, Standort als Anker, '
+                 . 'normalisierte Besatzung',
+        'zerstoert' => 'Die Besatzungsspalten crew_p1…crew_other in `days` und `missions` '
+                     . 'entfallen; ihr Inhalt wandert vorher nach `day_crew` bzw. '
+                     . '`mission_crew`. Ebenso entfallen die Altspalten days.aircraft, '
+                     . 'days.base und days.crew sowie bases.is_default.',
+        /* INHALTSPRUEFUNG NUR AUF days.crew — und warum genau dort.
+         *
+         * days.aircraft und days.base gehen NICHT verloren: Sie wandern unten
+         * in die eingefrorenen Snapshot-Spalten vehicle_name/base_name, wenn
+         * die Stammdaten-Verknuepfung fehlt. Das ist zugleich der Ersatz fuer
+         * den Rueckfall, den api/suchindex.php bisher auf diese Altspalten
+         * hatte — Diensttage von vor der Stammdaten-Umstellung bleiben nach
+         * Standort und Rettungsmittel auffindbar.
+         *
+         * days.crew hat dagegen kein Ziel. Es ist das Freitextfeld aus der
+         * Zeit VOR den Rollenspalten und enthaelt die ganze Besatzung in einer
+         * Zeile. Sie auf eine Rolle abzubilden waere geraten — "Sonstige"
+         * traege dann eine Aufzaehlung statt eines Namens. Steht dort noch
+         * etwas, meldet sich die Migration deshalb, statt zu entscheiden.
+         *
+         * missions.crew_* mit crew_override = 0 wird bewusst NICHT geprueft:
+         * Diese Werte sind schon heute unerreichbar. Die COALESCE-Regel liest
+         * sie ausschliesslich bei crew_override = 1 (siehe Technik.md und
+         * api/mission.php), ein Wert ohne Haken ist also bereits jetzt ohne
+         * Wirkung. Was nie gelesen wird, geht beim Entfernen nicht verloren.
+         */
+        'inhalt' => [
+            ['days', 'crew', 'Besatzung als Freitext (Altfeld vor den Rollenspalten)'],
+        ],
+        /* DIE PRUEFUNG FRAGT NACH DEM LETZTEN SCHRITT, NICHT NACH DEM ERSTEN.
+         *
+         * Naheliegend waere "gibt es `vehicles`?" — und genau das ist falsch.
+         * Diese Migration baut in vielen Schritten um; bricht ein Lauf in der
+         * Mitte ab, existiert `vehicles` bereits, waehrend Standortbezug,
+         * Rollenkennung und Aufraeumen noch fehlen. Eine Pruefung auf den
+         * ersten Schritt haette den halbfertigen Stand als erledigt verbucht
+         * und den Rest nie nachgeholt.
+         *
+         * `days.aircraft` faellt im allerletzten Schritt. Ist die Spalte weg
+         * und `vehicles` da, ist der ganze Weg gegangen — auf einer
+         * Neuinstallation aus schema.sql ebenso wie nach einer Migration.
+         */
+        'skip'  => function (PDO $pdo): bool {
+            return _hat_tabelle($pdo, 'vehicles')
+                && !_hat_spalte($pdo, 'days', 'aircraft')
+                && _hat_spalte($pdo, 'crew_presets', 'base_id');
+        },
+        /* ---- Ablauf in elf Schritten (Konzept 4.9) -------------------------
+         *
+         * REIHENFOLGE IST HIER KEIN GESCHMACK. `days` verweist auf `vehicles`,
+         * `missions` auf `days` — jeder Fremdschluessel braucht sein Ziel
+         * vorher. Deshalb erst die Stammdaten, dann die Diensttage, dann die
+         * Einsaetze.
+         *
+         * JEDER SCHRITT PRUEFT SICH SELBST. Bricht ein Lauf in der Mitte ab,
+         * setzt der naechste dort auf, statt an einer bereits angelegten
+         * Spalte zu scheitern.
+         */
+        'run'   => function (PDO $pdo): void {
+
+            /* -- 1. bases: Koordinaten fuer den Abfahrtort (Konzept 3.5.1) -- */
+            if (!_hat_spalte($pdo, 'bases', 'lat')) {
+                $pdo->exec('ALTER TABLE bases ADD COLUMN lat DECIMAL(9,6) NULL,
+                                              ADD COLUMN lon DECIMAL(9,6) NULL');
+            }
+
+            /* -- 2. aircraft -> vehicles ---------------------------------- */
+            if (!_hat_tabelle($pdo, 'vehicles')) {
+                $pdo->exec('RENAME TABLE aircraft TO vehicles');
+            }
+            if (_hat_spalte($pdo, 'vehicles', 'registration')) {
+                $pdo->exec('ALTER TABLE vehicles CHANGE registration name VARCHAR(64) NOT NULL');
+            }
+            if (!_hat_spalte($pdo, 'vehicles', 'kind')) {
+                // Alles Bestehende ist luftgebunden — die Anwendung konnte
+                // bisher nichts anderes abbilden.
+                $pdo->exec("ALTER TABLE vehicles
+                            ADD COLUMN kind ENUM('air','ground') NOT NULL DEFAULT 'air' AFTER name");
+                $pdo->exec("ALTER TABLE vehicles ALTER COLUMN kind DROP DEFAULT");
+            }
+            if (!_hat_spalte($pdo, 'vehicles', 'base_id')) {
+                /* NULLABLE, nicht NOT NULL. Bestandsdaten haben keinen
+                 * Standortbezug; die Nachbearbeitungsseite traegt ihn nach und
+                 * zieht die Bedingung erst danach an (E15, A12). */
+                $pdo->exec('ALTER TABLE vehicles ADD COLUMN base_id INT UNSIGNED NULL AFTER user_id');
+                $pdo->exec('ALTER TABLE vehicles ADD FOREIGN KEY (base_id)
+                            REFERENCES bases(id) ON DELETE CASCADE');
+            }
+
+            /* -- 3. Rollen und Faehigkeiten je Rettungsmittel -------------- */
+            $pdo->exec('CREATE TABLE IF NOT EXISTS vehicle_roles (
+                          vehicle_id INT UNSIGNED NOT NULL,
+                          role_code  VARCHAR(16) NOT NULL,
+                          PRIMARY KEY (vehicle_id, role_code),
+                          FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+            $pdo->exec('CREATE TABLE IF NOT EXISTS vehicle_capabilities (
+                          vehicle_id INT UNSIGNED NOT NULL,
+                          capability VARCHAR(16) NOT NULL,
+                          PRIMARY KEY (vehicle_id, capability),
+                          FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
+            if (_hat_spalte($pdo, 'vehicles', 'p1')) {
+                $insR = $pdo->prepare('INSERT IGNORE INTO vehicle_roles (vehicle_id, role_code)
+                                       VALUES (?, ?)');
+                $rows = $pdo->query('SELECT id, p1, p2, hems, fr, other FROM vehicles')->fetchAll();
+                foreach ($rows as $v) {
+                    foreach (['p1', 'p2', 'hems', 'fr', 'other'] as $rolle) {
+                        if ((int)$v[$rolle] === 1) { $insR->execute([(int)$v['id'], $rolle]); }
+                    }
+                }
+                $pdo->exec('ALTER TABLE vehicles DROP COLUMN p1, DROP COLUMN p2,
+                            DROP COLUMN hems, DROP COLUMN fr, DROP COLUMN other');
+            }
+            if (_hat_spalte($pdo, 'vehicles', 'is_default')) {
+                $pdo->exec('ALTER TABLE vehicles DROP COLUMN is_default');
+            }
+
+            /* Schritt 2a des Konzepts: BEIDE Faehigkeiten fuer den Bestand.
+             * Bisher standen Winden- und Bergwachtfelder an JEDEM Hubschrauber
+             * zur Verfuegung. Ohne diesen Schritt verschwaende vorhandene
+             * Dokumentation aus der Anzeige, sobald cap_gate greift. Das
+             * Ausduennen auf die tatsaechlich zutreffenden Faehigkeiten ist
+             * bewusste Nachpflege und betrifft dann nur neue Diensttage. */
+            $pdo->exec("INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability)
+                        SELECT id, 'winch' FROM vehicles WHERE kind = 'air'");
+            $pdo->exec("INSERT IGNORE INTO vehicle_capabilities (vehicle_id, capability)
+                        SELECT id, 'bergwacht' FROM vehicles WHERE kind = 'air'");
+
+            /* -- 4. Auswahl zentraler Standorte --------------------------- */
+            $pdo->exec('CREATE TABLE IF NOT EXISTS user_bases (
+                          user_id INT UNSIGNED NOT NULL,
+                          base_id INT UNSIGNED NOT NULL,
+                          PRIMARY KEY (user_id, base_id),
+                          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                          FOREIGN KEY (base_id) REFERENCES bases(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
+            /* -- 5. days: Spalten, Verweis auf vehicles, Schluessel -------- */
+            if (_hat_spalte($pdo, 'days', 'aircraft_id')) {
+                $fk = _fk_name($pdo, 'days', 'aircraft_id');
+                if ($fk !== null) { $pdo->exec("ALTER TABLE days DROP FOREIGN KEY `$fk`"); }
+                $pdo->exec('ALTER TABLE days CHANGE aircraft_id vehicle_id INT UNSIGNED NULL');
+                $pdo->exec('ALTER TABLE days ADD FOREIGN KEY (vehicle_id)
+                            REFERENCES vehicles(id) ON DELETE SET NULL');
+            }
+            foreach ([
+                'started_at'   => 'DATETIME NULL',
+                'ended_at'     => 'DATETIME NULL',
+                'kind'         => "ENUM('air','ground') NULL",
+                'base_name'    => 'VARCHAR(120) NULL',
+                'base_lat'     => 'DECIMAL(9,6) NULL',
+                'base_lon'     => 'DECIMAL(9,6) NULL',
+                'vehicle_name' => 'VARCHAR(64) NULL',
+            ] as $spalte => $typ) {
+                if (!_hat_spalte($pdo, 'days', $spalte)) {
+                    $pdo->exec("ALTER TABLE days ADD COLUMN `$spalte` $typ");
+                }
+            }
+
+            /* FEHLENDE DIENSTTAGE NACHZIEHEN (A11: kein verwaister Einsatz).
+             * Es gibt Einsaetze und Ruhe-Segmente, zu deren Datum keine
+             * `days`-Zeile existiert — bis hierher war das folgenlos, weil die
+             * Verknuepfung ueber (user_id, day) gerechnet und nicht
+             * gespeichert wurde. Ab jetzt traegt `day_id` sie, und ein Einsatz
+             * ohne Diensttag verloere seinen Platz in der Uebersicht. */
+            $pdo->exec('INSERT INTO days (user_id, day)
+                        SELECT DISTINCT m.user_id, m.day FROM missions m
+                        WHERE NOT EXISTS (SELECT 1 FROM days d
+                                          WHERE d.user_id = m.user_id AND d.day = m.day)');
+            $pdo->exec('INSERT INTO days (user_id, day)
+                        SELECT DISTINCT r.user_id, r.day FROM rest_segments r
+                        WHERE NOT EXISTS (SELECT 1 FROM days d
+                                          WHERE d.user_id = r.user_id AND d.day = r.day)');
+
+            /* Zeiten aus dem tatsaechlichen Bestand, ersatzweise 00:00 UTC. */
+            $pdo->exec('UPDATE days d SET d.started_at = COALESCE((
+                            SELECT LEAST(
+                              COALESCE(MIN(m.started_at), MIN(r.started_at)),
+                              COALESCE(MIN(r.started_at), MIN(m.started_at)))
+                            FROM (SELECT 1) x
+                            LEFT JOIN missions m
+                              ON m.user_id = d.user_id AND m.day = d.day
+                            LEFT JOIN rest_segments r
+                              ON r.user_id = d.user_id AND r.day = d.day
+                        ), TIMESTAMP(d.day, "00:00:00"))
+                        WHERE d.started_at IS NULL');
+            $pdo->exec('UPDATE days d SET d.ended_at = (
+                            SELECT GREATEST(
+                              COALESCE(MAX(m.ended_at), MAX(r.ended_at)),
+                              COALESCE(MAX(r.ended_at), MAX(m.ended_at)))
+                            FROM (SELECT 1) x
+                            LEFT JOIN missions m
+                              ON m.user_id = d.user_id AND m.day = d.day
+                            LEFT JOIN rest_segments r
+                              ON r.user_id = d.user_id AND r.day = d.day
+                        ) WHERE d.ended_at IS NULL');
+
+            /* Schritt 3a: Snapshot-Spalten (E8).
+             * COALESCE auf die Altspalten ist die Zugabe gegenueber dem
+             * Konzept: Wo die Stammdaten-Verknuepfung fehlt, rettet sie den
+             * frueheren Freitext in den Snapshot, statt ihn beim Aufraeumen in
+             * Schritt 11 zu verlieren. */
+            $pdo->exec('UPDATE days d LEFT JOIN bases b ON b.id = d.base_id
+                        SET d.base_name = COALESCE(b.name, d.base),
+                            d.base_lat  = b.lat,
+                            d.base_lon  = b.lon
+                        WHERE d.base_name IS NULL');
+            $pdo->exec('UPDATE days d LEFT JOIN vehicles v ON v.id = d.vehicle_id
+                        SET d.vehicle_name = COALESCE(v.name, d.aircraft)
+                        WHERE d.vehicle_name IS NULL');
+
+            /* REIHENFOLGE WICHTIG (MySQL-Fehler 1553), wie schon bei
+             * 2026_07_16_mehrere_reanimationen: `uq_user_day (user_id, day)`
+             * bedient zugleich den Fremdschluessel auf user_id. Erst den
+             * Ersatz anlegen, dann den eindeutigen Schluessel entfernen —
+             * sonst stuende der Fremdschluessel kurzzeitig ohne Index da und
+             * MySQL verweigert das Loeschen. */
+            if (!_hat_index($pdo, 'days', 'idx_user_day')) {
+                $pdo->exec('ALTER TABLE days ADD INDEX idx_user_day (user_id, day)');
+            }
+            if (_hat_index($pdo, 'days', 'uq_user_day')) {
+                $pdo->exec('ALTER TABLE days DROP INDEX uq_user_day');
+            }
+
+            /* -- 6. day_crew, day_capabilities, day_refs ------------------- */
+            $pdo->exec('CREATE TABLE IF NOT EXISTS day_crew (
+                          day_id    INT UNSIGNED NOT NULL,
+                          role_code VARCHAR(16) NOT NULL,
+                          name      VARCHAR(120) NULL,
+                          PRIMARY KEY (day_id, role_code),
+                          FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+            $pdo->exec('CREATE TABLE IF NOT EXISTS day_capabilities (
+                          day_id     INT UNSIGNED NOT NULL,
+                          capability VARCHAR(16) NOT NULL,
+                          PRIMARY KEY (day_id, capability),
+                          FOREIGN KEY (day_id) REFERENCES days(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+            $pdo->exec('CREATE TABLE IF NOT EXISTS day_refs (
+                          id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                          day_id    INT UNSIGNED NOT NULL,
+                          device_id INT UNSIGNED NULL,
+                          day_ref   VARCHAR(64) NOT NULL,
+                          UNIQUE KEY uq_dev_dayref (device_id, day_ref),
+                          FOREIGN KEY (day_id)    REFERENCES days(id)    ON DELETE CASCADE,
+                          FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE SET NULL
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
+            /* Schritt 4: kind und day_crew, DREISTUFIG.
+             *
+             * Der neutrale Zustand aus E26 gilt fuer NEUE Diensttage, nicht
+             * rueckwirkend — Bestandsdaten duerfen keine Besatzung verlieren.
+             *   a) Rettungsmittel vorhanden  -> 'air', Zeilen fuer ALLE Rollen
+             *      des Rettungsmittels, auch leere. Der Rollensatz ist damit
+             *      eingefroren.
+             *   b) kein Rettungsmittel, aber Besatzung -> 'air', Zeilen nur
+             *      fuer die belegten Rollen.
+             *   c) weder noch -> kind bleibt NULL, keine Zeilen. Der Diensttag
+             *      ist neutral und erscheint in der Nachbearbeitung.
+             */
+            if (_hat_spalte($pdo, 'days', 'crew_p1')) {
+                $alt   = ['p1', 'p2', 'hems', 'fr', 'other'];
+                $insC  = $pdo->prepare('INSERT IGNORE INTO day_crew (day_id, role_code, name)
+                                        VALUES (?, ?, ?)');
+                $setK  = $pdo->prepare('UPDATE days SET kind = ? WHERE id = ?');
+                $rollQ = $pdo->prepare('SELECT role_code FROM vehicle_roles WHERE vehicle_id = ?');
+
+                $tage = $pdo->query('SELECT id, vehicle_id, crew_p1, crew_p2, crew_hems,
+                                            crew_fr, crew_other FROM days')->fetchAll();
+                foreach ($tage as $t) {
+                    $tagId = (int)$t['id'];
+                    $belegt = [];
+                    foreach ($alt as $r) {
+                        $w = trim((string)($t['crew_' . $r] ?? ''));
+                        if ($w !== '') { $belegt[$r] = $w; }
+                    }
+
+                    if ($t['vehicle_id'] !== null) {
+                        $rollQ->execute([(int)$t['vehicle_id']]);
+                        $rollen = $rollQ->fetchAll(PDO::FETCH_COLUMN);
+                        foreach ($rollen as $r) {
+                            $insC->execute([$tagId, $r, $belegt[$r] ?? null]);
+                        }
+                        /* Eine belegte Rolle, die das Rettungsmittel gar nicht
+                         * vorsieht, bekommt trotzdem ihre Zeile — sonst waere
+                         * der Name weg. Genau dafuer ist der Rollensatz eine
+                         * Zeilenmenge und keine Ableitung. */
+                        foreach ($belegt as $r => $w) {
+                            if (!in_array($r, $rollen, true)) { $insC->execute([$tagId, $r, $w]); }
+                        }
+                        $setK->execute(['air', $tagId]);
+                    } elseif ($belegt) {
+                        foreach ($belegt as $r => $w) { $insC->execute([$tagId, $r, $w]); }
+                        $setK->execute(['air', $tagId]);
+                    }
+                    // sonst: neutral, kind bleibt NULL
+                }
+                $pdo->exec('ALTER TABLE days DROP COLUMN crew_p1, DROP COLUMN crew_p2,
+                            DROP COLUMN crew_hems, DROP COLUMN crew_fr, DROP COLUMN crew_other');
+            }
+
+            /* Schritt 2a, zweite Haelfte: BEIDE Faehigkeiten fuer jeden
+             * bestehenden Diensttag — aus demselben Grund wie oben. */
+            $pdo->exec("INSERT IGNORE INTO day_capabilities (day_id, capability)
+                        SELECT id, 'winch' FROM days");
+            $pdo->exec("INSERT IGNORE INTO day_capabilities (day_id, capability)
+                        SELECT id, 'bergwacht' FROM days");
+
+            /* -- 7. missions und rest_segments an den Diensttag haengen ---- */
+            foreach (['missions', 'rest_segments'] as $tab) {
+                if (!_hat_spalte($pdo, $tab, 'day_id')) {
+                    $pdo->exec("ALTER TABLE `$tab` ADD COLUMN day_id INT UNSIGNED NULL AFTER client_ref");
+                    $pdo->exec("ALTER TABLE `$tab` ADD INDEX idx_day (day_id)");
+                    $pdo->exec("ALTER TABLE `$tab` ADD FOREIGN KEY (day_id)
+                                REFERENCES days(id) ON DELETE SET NULL");
+                }
+                if (_hat_spalte($pdo, $tab, 'day')) {
+                    $pdo->exec("UPDATE `$tab` t JOIN days d
+                                  ON d.user_id = t.user_id AND d.day = t.day
+                                SET t.day_id = d.id WHERE t.day_id IS NULL");
+                    if (!_hat_index($pdo, $tab, 'idx_user_started')) {
+                        $pdo->exec("ALTER TABLE `$tab` ADD INDEX idx_user_started (user_id, started_at)");
+                    }
+                    if (_hat_index($pdo, $tab, 'user_id')) {
+                        $pdo->exec("ALTER TABLE `$tab` DROP INDEX user_id");
+                    }
+                    $pdo->exec("ALTER TABLE `$tab` DROP COLUMN day");
+                }
+            }
+
+            /* -- 8. mission_crew: NUR bei crew_override = 1 ---------------- */
+            $pdo->exec('CREATE TABLE IF NOT EXISTS mission_crew (
+                          mission_id INT UNSIGNED NOT NULL,
+                          role_code  VARCHAR(16) NOT NULL,
+                          name       VARCHAR(120) NULL,
+                          PRIMARY KEY (mission_id, role_code),
+                          FOREIGN KEY (mission_id) REFERENCES missions(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+            if (_hat_spalte($pdo, 'missions', 'crew_p1')) {
+                foreach (['p1', 'p2', 'hems', 'fr', 'other'] as $r) {
+                    $pdo->exec("INSERT IGNORE INTO mission_crew (mission_id, role_code, name)
+                                SELECT id, '$r', crew_$r FROM missions
+                                WHERE crew_override = 1 AND crew_$r IS NOT NULL AND crew_$r <> ''");
+                }
+                $pdo->exec('ALTER TABLE missions DROP COLUMN crew_p1, DROP COLUMN crew_p2,
+                            DROP COLUMN crew_hems, DROP COLUMN crew_fr, DROP COLUMN crew_other');
+            }
+
+            /* -- 9. Neue Einsatzspalten ----------------------------------- *
+             *
+             * Sie werden HIER angelegt, obwohl sie erst spaeter im
+             * Feldkatalog auftauchen. Eine Schemaaenderung in einem Zug ist
+             * einer in dreien vorzuziehen: Wer einmal migriert hat, muss es
+             * fuer die naechsten Ausbaustufen nicht erneut.
+             *
+             * transport_mode bleibt NULL — es wird BEWUSST NICHT aus
+             * transport_dest erraten. Ein Transportziel sagt nichts darueber,
+             * ob per Luft, per Boden oder gar nicht transportiert wurde.
+             * start_src, dest_lat und dest_lon bleiben ebenfalls NULL;
+             * Koordinaten lassen sich fuer Altdaten nicht ableiten und werden
+             * nicht ueber eine Adressanfrage nachgeschlagen.
+             */
+            foreach ([
+                'transport_mode' => "ENUM('air','ground','ambulant') NULL",
+                'na_escort'      => 'TINYINT(1) NOT NULL DEFAULT 0',
+                'false_alarm'    => 'TINYINT(1) NOT NULL DEFAULT 0',
+                'start_src'      => "ENUM('base','prev_site','prev_dest','manual') NULL",
+                'dest_lat'       => 'DECIMAL(9,6) NULL',
+                'dest_lon'       => 'DECIMAL(9,6) NULL',
+            ] as $spalte => $typ) {
+                if (!_hat_spalte($pdo, 'missions', $spalte)) {
+                    $pdo->exec("ALTER TABLE missions ADD COLUMN `$spalte` $typ");
+                }
+            }
+
+            /* -- 10. Standortbezug der Stammdaten (E15) -------------------- *
+             *
+             * ZWEISTUFIG, weil Bestandsdaten keinen Standortbezug haben:
+             *   - genau EIN Standort im Zustaendigkeitsbereich -> zuordnen,
+             *     ohne Nachfrage. Das ist der Regelfall.
+             *   - mehrere oder keiner -> Spalte bleibt leer, die
+             *     Nachbearbeitungsseite erledigt es. Erst danach NOT NULL.
+             *
+             * "Zustaendigkeitsbereich" heisst: fuer persoenliche Stammdaten
+             * die eigenen Standorte, fuer zentrale (user_id IS NULL) die
+             * zentralen. Gibt es keinen einzigen Standort, legt die Migration
+             * KEINEN an — ein erfundener Sammelstandort waere genau die zweite
+             * Ebene, die E15 vermeiden soll.
+             */
+            if (!_hat_spalte($pdo, 'transport_dests', 'lat')) {
+                $pdo->exec('ALTER TABLE transport_dests ADD COLUMN lat DECIMAL(9,6) NULL,
+                                                        ADD COLUMN lon DECIMAL(9,6) NULL');
+            }
+            if (_hat_spalte($pdo, 'crew_presets', 'role')) {
+                /* Wieder Fehler 1553: uq_user_role_name (user_id, role, name)
+                 * bedient den Fremdschluessel auf user_id. Der endgueltige
+                 * Ersatz uq_user_base_role_name kann hier noch nicht stehen —
+                 * base_id ist noch leer und role_code gibt es noch nicht.
+                 * Also ein Behelfsindex, der weiter unten wieder faellt. */
+                if (!_hat_index($pdo, 'crew_presets', 'idx_cp_user')) {
+                    $pdo->exec('ALTER TABLE crew_presets ADD INDEX idx_cp_user (user_id)');
+                }
+                $pdo->exec('ALTER TABLE crew_presets DROP INDEX uq_user_role_name');
+                $pdo->exec('ALTER TABLE crew_presets CHANGE role role_code VARCHAR(16) NOT NULL');
+            }
+            foreach (['crew_presets', 'bw_units', 'resources', 'transport_dests'] as $tab) {
+                if (!_hat_spalte($pdo, $tab, 'base_id')) {
+                    $pdo->exec("ALTER TABLE `$tab` ADD COLUMN base_id INT UNSIGNED NULL AFTER user_id");
+                    $pdo->exec("ALTER TABLE `$tab` ADD FOREIGN KEY (base_id)
+                                REFERENCES bases(id) ON DELETE CASCADE");
+                }
+            }
+
+            /* DER EINDEUTIGE SCHLUESSEL MUSS DEN STANDORT ENTHALTEN.
+             *
+             * Ohne diesen Schritt bliebe (user_id, name) eindeutig — und
+             * dieselbe Zielklinik liesse sich nicht an zwei Standorten
+             * anlegen. Genau diese Doppelpflege ist aber der bewusst
+             * hingenommene Preis von E15; sie zu verhindern kehrte die
+             * Entscheidung um.
+             *
+             * REIHENFOLGE: erst den neuen Schluessel ANLEGEN, dann den alten
+             * entfernen. Beide fuehren user_id an erster Stelle, der
+             * Fremdschluessel ist also durchgehend mit einem Index versorgt
+             * und Fehler 1553 tritt gar nicht erst auf.
+             */
+            foreach ([
+                ['bw_units',        'uq_user_name', 'uq_user_base_name', '(user_id, base_id, name)'],
+                ['resources',       'uq_user_res',  'uq_user_base_res',  '(user_id, base_id, name)'],
+                ['transport_dests', 'uq_user_name', 'uq_user_base_name', '(user_id, base_id, name)'],
+                ['vehicles',        'uq_user_reg',  'uq_user_name',      '(user_id, name)'],
+            ] as [$tab, $alt, $neu, $spalten]) {
+                if (!_hat_index($pdo, $tab, $neu)) {
+                    $pdo->exec("ALTER TABLE `$tab` ADD UNIQUE KEY `$neu` $spalten");
+                }
+                if (_hat_index($pdo, $tab, $alt)) {
+                    $pdo->exec("ALTER TABLE `$tab` DROP INDEX `$alt`");
+                }
+            }
+
+            /* Je Zustaendigkeitsbereich genau einen Standort? Dann zuordnen. */
+            $einzel = [];   // user_id (oder 0 fuer zentral) => base_id
+            $bq = $pdo->query('SELECT COALESCE(user_id, 0) AS uid, COUNT(*) AS n, MIN(id) AS bid
+                               FROM bases GROUP BY COALESCE(user_id, 0)');
+            foreach ($bq->fetchAll() as $z) {
+                if ((int)$z['n'] === 1) { $einzel[(int)$z['uid']] = (int)$z['bid']; }
+            }
+            foreach (['crew_presets', 'bw_units', 'resources', 'transport_dests', 'vehicles'] as $tab) {
+                $up = $pdo->prepare("UPDATE `$tab` SET base_id = ?
+                                     WHERE base_id IS NULL AND COALESCE(user_id, 0) = ?");
+                foreach ($einzel as $uid => $bid) { $up->execute([$bid, $uid]); }
+            }
+            /* Eindeutiger Schluessel erst jetzt, wenn base_id gefuellt ist.
+             * Danach bedient er den Fremdschluessel auf user_id selbst und der
+             * Behelfsindex von oben wird ueberfluessig. */
+            if (!_hat_index($pdo, 'crew_presets', 'uq_user_base_role_name')) {
+                $pdo->exec('ALTER TABLE crew_presets
+                            ADD UNIQUE KEY uq_user_base_role_name (user_id, base_id, role_code, name)');
+            }
+            if (_hat_index($pdo, 'crew_presets', 'idx_cp_user')) {
+                $pdo->exec('ALTER TABLE crew_presets DROP INDEX idx_cp_user');
+            }
+
+            /* -- 11. user_defaults und Aufraeumen ------------------------- */
+            $q = $pdo->query("SELECT COLUMN_TYPE FROM information_schema.columns
+                              WHERE table_schema = DATABASE() AND table_name = 'user_defaults'
+                                AND column_name = 'kind'");
+            $typ = (string)$q->fetchColumn();
+            if (str_contains($typ, 'aircraft')) {
+                $pdo->exec("ALTER TABLE user_defaults
+                            MODIFY kind ENUM('base','aircraft','vehicle') NOT NULL");
+                $pdo->exec("UPDATE user_defaults SET kind = 'vehicle' WHERE kind = 'aircraft'");
+                $pdo->exec("ALTER TABLE user_defaults MODIFY kind ENUM('base','vehicle') NOT NULL");
+            }
+
+            /* Zentrale Standorte, die in einem bestehenden Diensttag benutzt
+             * wurden, ausdruecklich auswaehlen — sonst verschwinden sie aus
+             * den Auswahllisten (E16). */
+            $pdo->exec('INSERT IGNORE INTO user_bases (user_id, base_id)
+                        SELECT DISTINCT d.user_id, d.base_id
+                        FROM days d JOIN bases b ON b.id = d.base_id
+                        WHERE d.base_id IS NOT NULL AND b.user_id IS NULL');
+
+            foreach ([['days', 'aircraft'], ['days', 'base'], ['days', 'crew'],
+                      ['bases', 'is_default']] as [$tab, $spalte]) {
+                if (_hat_spalte($pdo, $tab, $spalte)) {
+                    $pdo->exec("ALTER TABLE `$tab` DROP COLUMN `$spalte`");
+                }
             }
         },
     ],
