@@ -41,6 +41,13 @@ $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
  * neutraler Diensttag hat keine Rollen (E26) — dann sind alle verborgen ausser
  * den bereits belegten. */
 $dayRoles = dt_crew($dayId);
+/* Art und Faehigkeiten desselben Diensttags, beide EINGEFROREN (E8). Sie
+ * steuern 'kind_gate' und 'cap_gate' genauso, wie `day_crew` 'role_gate'
+ * steuert — gefragt wird immer der Dienst, nie das heutige Rettungsmittel.
+ * Damit verlieren dokumentierte Einsaetze nichts, wenn Jahre spaeter der
+ * Windenhaken am Hubschrauber fällt (A13e). */
+$dayKind = $tag['kind'] !== null ? (string)$tag['kind'] : null;
+$dayCaps = dt_faehigkeiten($dayId);
 $CREW_FELDER = mf_crew_felder();
 
 /* Abweichende Besatzung dieses Einsatzes (mission_crew). Sie ist keine Spalte
@@ -261,12 +268,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * nicht in $fieldCols — ein Feldname, der in beiden Listen stuende,
          * ergaebe ein UPDATE auf eine Spalte, die es nicht gibt. */
         $fieldCols = []; $fieldVals = []; $crewVals = [];
-        $readField = function (string $col, array $f, bool $parentOn = true) use (&$readField, &$fieldCols, &$fieldVals, &$crewVals) {
+        $readField = function (string $col, array $f, bool $parentOn = true) use (&$readField, &$fieldCols, &$fieldVals, &$crewVals, &$error) {
             $type = $f['type'] ?? 'text';
             if ($type === 'resources') { return; }   // eigene Tabelle, siehe unten
             if ($type === 'checkbox') {
                 $v = ($parentOn && isset($_POST['f_' . $col])) ? 1 : 0;
                 $fieldCols[] = $col; $fieldVals[] = $v;
+                /* Kinder einer Checkbox haengen am HAKEN, nicht an 'show_if'
+                 * (Vorpruefung V4). Dieser Zweig bleibt unveraendert — er ist
+                 * der, an dem der Windenblock haengt, und der darf sich nicht
+                 * nebenbei aendern. */
                 foreach (($f['children'] ?? []) as $cc => $cf) {
                     $readField($cc, $cf, $v === 1);
                 }
@@ -277,9 +288,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($type === 'number') {
                 $v = ($raw === '') ? null : (string)(float)str_replace(',', '.', $raw);
             } elseif ($type === 'select') {
-                $opts = $f['options'] ?? null;   // options_src: freie Werte zulassen (Stammdaten aenderbar)
+                /* Geprueft wird gegen die WERTE, nicht gegen die Beschriftungen
+                 * (mf_optionen, Web 6.1.0): Bei der Transportart sind das zwei
+                 * verschiedene Listen. 'options_src' bleibt ungeprueft — dort
+                 * sind Stammdaten die Quelle, und die sind aenderbar. */
+                $opts = $f['options'] ?? null;
                 $v = ($raw === '') ? null : mb_substr($raw, 0, (int)($f['max'] ?? 120));
-                if ($opts !== null && $v !== null && !in_array($v, $opts, true)) { $v = null; }
+                if ($opts !== null && $v !== null
+                    && !array_key_exists($v, mf_optionen($opts))) { $v = null; }
             } else {
                 $v = mb_substr($raw, 0, (int)($f['max'] ?? 190));
                 if ($v === '') { $v = null; }
@@ -289,9 +305,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $fieldCols[] = $col; $fieldVals[] = $v;
             }
-            foreach (($f['children'] ?? []) as $cc => $cf) { $readField($cc, $cf, $parentOn); }
+
+            /* ---- Ortsfeld: die beiden Koordinatenspalten daneben (E37) -----
+             *
+             * Sie sind FREIWILLIG und nur zusammen gueltig; pruef_ortspaar()
+             * setzt beide Regeln durch. KOORDINATEN OHNE BEZEICHNUNG werden
+             * abgewiesen — dieselbe Regel wie beim Einsatzort (A13j): Sonst
+             * stuende in den Listen ein Zahlenfragment, wo eine Klinik stehen
+             * sollte. Der Browser faengt den Fall bereits ab; hier wird er
+             * GEMELDET statt still bereinigt, damit ein Weg an der
+             * Formularpruefung vorbei nicht unbemerkt Daten verliert. */
+            if ($type === 'loc') {
+                $ort = mf_ort_spalten($f);
+                [$la, $lo] = pruef_ortspaar(
+                    $parentOn ? ($_POST['f_' . $col . '_lat'] ?? null) : null,
+                    $parentOn ? ($_POST['f_' . $col . '_lon'] ?? null) : null);
+                if ($v === null && ($la !== null || $lo !== null)) {
+                    $error = 'Zu den Koordinaten bei „' . (string)($f['label'] ?? $col)
+                           . '“ fehlt die Bezeichnung.';
+                    $la = null; $lo = null;
+                }
+                if (isset($ort['lat'])) { $fieldCols[] = $ort['lat']; $fieldVals[] = $la; }
+                if (isset($ort['lon'])) { $fieldCols[] = $ort['lon']; $fieldVals[] = $lo; }
+            }
+
+            /* WERTABHAENGIGE UNTERFELDER (V4, A5). Der Checkbox-Zweig oben ist
+             * vorher zurueckgekehrt; hier fallen alle uebrigen Typen durch, und
+             * hier — und nur hier — wird 'show_if' ausgewertet. Ein
+             * ausgeblendetes Unterfeld wird dadurch GELEERT statt einen
+             * Geisterinhalt zu behalten: „Ambulant" mit eingetragener Zielklinik
+             * waere ein Widerspruch in den Daten. */
+            foreach (($f['children'] ?? []) as $cc => $cf) {
+                $readField($cc, $cf, $parentOn && mf_show_if($cf, $v, $col));
+            }
         };
         foreach ($FIELDS as $col => $f) { $readField($col, $f); }
+
+        /* ---- Abfahrtort: die REGEL, nicht der Ort (E34, Konzept 4.6.1) -----
+         *
+         * Gespeichert wird in `missions.start_src` ausschliesslich, WOHER die
+         * Koordinate stammt. Der Klartextwert verraet damit keinen Ort: Ein
+         * Standort ist ohnehin kein Geheimnis, ein Einsatzort sehr wohl — und
+         * 'prev_site' wie 'manual' zeigen auf verschluesselte Quellen.
+         *
+         * Kein Katalogfeld, weil die Beschriftungen nicht die gespeicherten
+         * Werte sind (siehe mission_fields.php). */
+        $startSrc = trim((string)($_POST['start_src'] ?? ''));
+        if (!in_array($startSrc, ['base', 'prev_site', 'prev_dest', 'manual'], true)) {
+            $startSrc = null;
+        }
+        $fieldCols[] = 'start_src'; $fieldVals[] = $startSrc;
 
 
         // PatientInnendaten: der Browser liefert NUR Chiffretext (pat_blob).
@@ -531,6 +594,22 @@ function fieldValue(string $col) {
     }
     return $mission !== null ? (string)($mission[$col] ?? '') : '';
 }
+
+/**
+ * Anzeigewert einer KOORDINATENSPALTE eines Ortsfeldes.
+ *
+ * Eigene Funktion, weil Formularname und Spaltenname hier auseinandergehen: Das
+ * Feld heisst `f_transport_dest_lat`, die Spalte `dest_lat` (Katalogschluessel
+ * 'lat_col'). fieldValue() koennte nur eines von beiden.
+ */
+function ortWert(string $col, string $achse, string $spalte): string {
+    global $mission;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        return (string)($_POST['f_' . $col . '_' . $achse] ?? '');
+    }
+    return ($mission !== null && ($mission[$spalte] ?? null) !== null)
+        ? (string)$mission[$spalte] : '';
+}
 ?><!doctype html>
 <html lang="de">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -609,31 +688,71 @@ function fieldValue(string $col) {
         <input type="number" id="pat_age" min="0" max="120" step="1">
         <span class="muted small" id="agehint"></span></label>
       <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
-      <div class="loc-widget">
-        <label>Einsatzort
-          <span class="muted small">Adresse, Koordinaten oder Plus Code</span>
-          <input type="text" id="locaddr" maxlength="255" autocomplete="off"
-                 placeholder="tippen für Vorschläge — auch Koordinaten oder Plus Code">
-        </label>
-        <input type="hidden" id="loclat">
-        <input type="hidden" id="loclon">
-        <ul id="locsuggest" class="loc-suggest" hidden></ul>
-        <!-- Meldungszeile unmittelbar unter dem Feld (Auftragspunkt 5): Sie
-             sagt etwas ueber DIESES Eingabefeld aus ("Koordinaten gesetzt —
-             dieses Feld ist die Bezeichnung", "Bezeichnung fehlt"), nicht ueber
-             den Chip darunter. Stand sie hinter dem Chip, war der Bezug beim
-             Lesen nicht mehr eindeutig. Nicht mehr .muted, sondern .locstate:
-             kleiner gesetzt und blau, im Fehlerfall zusaetzlich
-             .locstate-fehler (rot). -->
-        <p class="locstate" id="locstate"></p>
-        <!-- Bestaetigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
-             darin (E2) — sonst vernichtet die erste getippte Bezeichnung sie. -->
-        <div class="rmchips" id="locchips"></div>
-      </div>
+      <?php /* EINSATZORT — erste Verwendung der Ortsfeld-Komponente (V8).
+               Hier stand bis Web 6.0.0 das Markup ausgeschrieben, und rund 25
+               getElementById-Aufrufe weiter unten hingen an seinen Kennungen.
+               Die Kennungen sind unverändert (locaddr, loclat, loclon,
+               locsuggest, locstate, locchips) — nur erzeugt sie jetzt
+               ui_ortsfeld() aus dem Präfix „loc", und die Bedienung steht in
+               assets/ortsfeld.js.
+
+               OHNE getrennte Suche: Beim Einsatzort IST die Adresse die
+               Bezeichnung. Das Verhalten bleibt damit exakt das bisherige. */
+            ui_ortsfeld([
+                'praefix'     => 'loc',
+                'label'       => 'Einsatzort',
+                'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
+                'max'         => 255,
+                'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
+            ]); ?>
       <label>Beschreibung Einsatzort
         <span class="muted small">Zufahrt, Besonderheiten, Lage vor Ort</span>
         <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
       </label>
+
+      <?php /* ---- ABFAHRTORT (E34, Konzept 3.5.1) --------------------------
+               Fällt die Uhr aus, fehlt der Track — die Karte bleibt leer,
+               obwohl der Einsatzort bekannt ist. Was fehlt, ist der Gegenpunkt.
+
+               Gespeichert wird die REGEL, nicht die Koordinate: In der Regel
+               genügt damit eine einzige Auswahl statt einer Adresseingabe je
+               Einsatz. Nur „Manueller Ort" braucht ein eigenes Feld — und das
+               steht hier im verschlüsselten Block, weil ein frei gewählter
+               Abfahrtort so schutzwürdig ist wie der Einsatzort (4.6.1). */ ?>
+      <label>Abfahrtort
+        <span class="muted small">nur nötig ohne GPS-Aufzeichnung; erzeugt die
+          gestrichelte Luftlinie auf der Karte</span>
+        <select name="start_src" id="start_src">
+          <option value="">– nicht angegeben (keine Linie)</option>
+          <?php
+            /* Die Beschriftungen sind NICHT die gespeicherten Werte (siehe
+               mission_fields.php) — deshalb ist das hier auch kein Katalogfeld.
+               Bezugspunkt der beiden Vorgänger-Auswahlen ist der zeitlich
+               unmittelbar vorangehende Einsatz DESSELBEN Diensttags. */
+            $startWert = $_SERVER['REQUEST_METHOD'] === 'POST'
+                ? (string)($_POST['start_src'] ?? '')
+                : (string)($mission['start_src'] ?? '');
+            $startArten = [
+                'base'      => 'Standort des Diensttags',
+                'prev_site' => 'Letzter Einsatzort (vorheriger Einsatz)',
+                'prev_dest' => 'Letzte Zielklinik (vorheriger Einsatz)',
+                'manual'    => 'Manueller Ort',
+            ];
+            foreach ($startArten as $wert => $text): ?>
+              <option value="<?= e($wert) ?>" <?= $startWert === $wert ? 'selected' : '' ?>><?= e($text) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <div id="startfields" <?= $startWert === 'manual' ? '' : 'hidden' ?>>
+        <?php ui_ortsfeld([
+                'praefix'     => 'start',
+                'klasse'      => 'fld-sub',
+                'label'       => 'Manueller Abfahrtort',
+                'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
+                'max'         => 255,
+                'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
+              ]); ?>
+      </div>
     </div>
 
     <h2>Weitere Angaben</h2>
@@ -679,6 +798,13 @@ function fieldValue(string $col) {
       // Ergebnis je Quelle gemerkt: Die fuenf Besatzungsfelder fragen fuenf
       // verschiedene Rollen ab, ein Formular mit mehreren Feldern derselben
       // Quelle wuerde sie sonst mehrfach laden.
+      //
+      // JEDE ZEILE TRAEGT NAME UND KOORDINATE (Web 6.1.0, E38). Bis dahin kam
+      // hier eine reine Namensliste; die Zielklinik hat seit Web 6.0.0
+      // optionale Koordinaten, und ohne sie in derselben Antwort muesste das
+      // Ortsfeld sie beim Uebernehmen eines Vorschlags nachladen. Rollen liefern
+      // keine — dort bleiben beide Werte null, statt zwei Formen derselben
+      // Liste zu haben.
       $suggestCache = [];
       $suggestSrc = function (array $f) use ($userId, $dayBaseId, &$suggestCache): array {
           $src = (string)($f['suggest_src'] ?? '');
@@ -687,11 +813,16 @@ function fieldValue(string $col) {
 
           $liste = [];
           if ($src === 'transport_dests' && $dayBaseId !== null) {
-              $q = db()->prepare('SELECT DISTINCT name FROM transport_dests
-                                  WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
-                                  ORDER BY name');
+              $q = db()->prepare('SELECT name, MAX(lat) AS lat, MAX(lon) AS lon
+                                    FROM transport_dests
+                                   WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
+                                   GROUP BY name ORDER BY name');
               $q->execute([$dayBaseId, $userId]);
-              $liste = $q->fetchAll(PDO::FETCH_COLUMN);
+              foreach ($q->fetchAll() as $z) {
+                  $liste[] = ['name' => (string)$z['name'],
+                              'lat'  => $z['lat'] !== null ? (float)$z['lat'] : null,
+                              'lon'  => $z['lon'] !== null ? (float)$z['lon'] : null];
+              }
           } elseif (str_starts_with($src, 'crew:') && $dayBaseId !== null) {
               $role = substr($src, 5);
               if (array_key_exists($role, CREW_ROLES)) {
@@ -699,7 +830,9 @@ function fieldValue(string $col) {
                                       WHERE base_id = ? AND (user_id = ? OR user_id IS NULL)
                                         AND role_code = ? ORDER BY name');
                   $q->execute([$dayBaseId, $userId, $role]);
-                  $liste = $q->fetchAll(PDO::FETCH_COLUMN);
+                  foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $n) {
+                      $liste[] = ['name' => (string)$n, 'lat' => null, 'lon' => null];
+                  }
               }
           }
           return $suggestCache[$src] = $liste;
@@ -715,15 +848,51 @@ function fieldValue(string $col) {
        * dann Flugretter UND Fahrer. Ein Diensttag ohne Zuordnung hat keine
        * Rollen (E26), also wird auch keine gezeigt — ausser den bereits
        * belegten, die immer sichtbar bleiben. */
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles): void {
+      /* ---- Unterfelder mit 'show_if' einfassen (V4, A5) ---------------------
+       *
+       * Die Regel steht am KIND, nicht am Kindercontainer: Zwei Geschwister
+       * duerfen verschiedene Bedingungen tragen, und ein gemeinsamer Container
+       * koennte nur eine davon abbilden. Der Rahmen traegt sie als
+       * Datenattribute; das Umschalten steht weiter unten in einer Schleife
+       * ueber `.showif` — dieselbe Bauart wie `.parentcheck` bei den
+       * Checkbox-Kindern.
+       *
+       * Anfangszustand kommt VOM SERVER, nicht vom Skript: Wer das Formular mit
+       * „Ambulant" oeffnet, soll die Zielklinik nicht erst aufblitzen sehen. */
+      $showIfAuf = function (string $elternCol, array $cf, $elternWert): void {
+          $regel = $cf['show_if'] ?? null;
+          if (!is_array($regel)) { return; }
+          $aus = array_map('strval', (array)($regel['not_in'] ?? []));
+          $an  = mf_show_if($cf, $elternWert, $elternCol);
+          echo '<div class="showif" data-if-field="' . e($elternCol) . '"'
+             . ' data-if-not="' . e(implode('|', $aus)) . '"'
+             . ($an ? '' : ' hidden') . '>';
+      };
+      $showIfZu = function (array $cf): void {
+          if (is_array($cf['show_if'] ?? null)) { echo '</div>'; }
+      };
+
+      /* Ortsfelder dieses Formulars, fuer die Belebung im Browser gesammelt:
+       * Praefix, Vorschlaege und Beschriftung. So steht die Liste an EINER
+       * Stelle statt als zweite, von Hand gepflegte Aufzaehlung im Skript. */
+      $LOC_FELDER = [];
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
-          // Rollenfilter: verstecken, aber immer rendern (siehe mission_fields.php).
-          // Ein belegtes Feld bleibt sichtbar, sonst kaeme man an einen Wert
-          // nicht mehr heran, wenn der Diensttag spaeter das Rettungsmittel
-          // wechselt oder die Art des Tages die Rolle nicht vorsieht.
-          $gate = (string)($f['role_gate'] ?? '');
-          $hide = $gate !== '' && !array_key_exists($gate, $dayRoles) && $val === '';
+          /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
+           * Ein belegtes Feld bleibt sichtbar, sonst kaeme man an einen Wert
+           * nicht mehr heran, wenn der Diensttag spaeter das Rettungsmittel
+           * wechselt, die Art die Rolle nicht vorsieht oder die Faehigkeit
+           * abgewaehlt wurde (A13e).
+           *
+           * WAS „BELEGT" HEISST, haengt am Typ: Ein Textfeld ist belegt, wenn
+           * etwas drinsteht; ein Haken erst, wenn er gesetzt ist. Ohne diese
+           * Unterscheidung waere JEDE Checkbox eines bearbeiteten Einsatzes
+           * belegt — ihr Wert ist dann „0" und nicht die leere Zeichenkette —
+           * und kein 'cap_gate' haette je gegriffen. */
+          $belegt = $type === 'checkbox' ? ($val === '1' || $val === 1) : ($val !== '');
+          $hide = !$belegt && !mf_gates_erfuellt($f, $dayRoles, $dayKind, $dayCaps);
           $hideAttr = $hide ? ' hidden' : '';
           if ($type === 'resources') { ?>
             <label class="fld">
@@ -750,29 +919,80 @@ function fieldValue(string $col) {
               <?php endif; ?>
             </div>
           <?php return; }
-          if ($type === 'select') { $opts = $optSrc($f);
+          if ($type === 'select') { $opts = mf_optionen($optSrc($f));
               // Stammdaten sind aenderbar: Ein gespeicherter Wert, der nicht
               // mehr in der Liste steht (Person ausgeschieden, Bereitschaft
               // umbenannt), wuerde sonst unmarkiert bleiben und beim naechsten
               // Speichern still verloren gehen. Deshalb voranstellen. Gilt nur
               // fuer options_src-Listen — feste 'options' bleiben streng.
-              if (isset($f['options_src']) && $val !== '' && !in_array($val, $opts, true)) {
-                  array_unshift($opts, $val);
+              if (isset($f['options_src']) && $val !== '' && !array_key_exists($val, $opts)) {
+                  $opts = [$val => $val] + $opts;
               } ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <select name="f_<?= e($col) ?>">
                 <option value="">–</option>
-                <?php foreach ($opts as $o): ?>
-                  <option value="<?= e($o) ?>" <?= $val === (string)$o ? 'selected' : '' ?>><?= e($o) ?></option>
+                <?php /* Wert und Beschriftung koennen auseinandergehen — bei der
+                         Transportart tun sie es (mf_optionen). */ ?>
+                <?php foreach ($opts as $wert => $text): ?>
+                  <option value="<?= e((string)$wert) ?>" <?= $val === (string)$wert ? 'selected' : '' ?>><?= e($text) ?></option>
                 <?php endforeach; ?>
               </select>
             </label>
             <?php if (!empty($f['children'])): ?>
               <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+                <?php foreach ($f['children'] as $cc => $cf) {
+                        $showIfAuf($col, $cf, $val);
+                        $renderField($cc, $cf, $depth + 1);
+                        $showIfZu($cf);
+                      } ?>
               </div>
             <?php endif; ?>
           <?php return; }
+          /* ---- ORTSFELD (E37) ------------------------------------------------
+           * Bezeichnung, versteckte Koordinaten, Chip und Zustandszeile kommen
+           * aus ui_ortsfeld(); belebt wird das Ganze von assets/ortsfeld.js. Die
+           * Vorschlagsliste traegt hier KOORDINATEN mit — wer einen Eintrag
+           * uebernimmt, bekommt sie vorbelegt und kann sie ueberschreiben
+           * (A13l). */
+          if ($type === 'loc') {
+              $sugg = $suggestSrc($f);
+              $ort  = mf_ort_spalten($f);
+              $praefix = 'f_' . $col . '_';
+              $LOC_FELDER[] = [
+                  'praefix'     => $praefix,
+                  'vorschlaege' => $sugg,
+                  'label'       => (string)($f['label'] ?? $col),
+              ];
+              ui_ortsfeld([
+                  'praefix'     => $praefix,
+                  'klasse'      => $depth ? 'fld-sub' : '',
+                  'label'       => (string)($f['label'] ?? $col),
+                  'hinweis'     => 'Freitext; Koordinaten sind freiwillig',
+                  'name'        => 'f_' . $col,
+                  'max'         => (int)($f['max'] ?? 190),
+                  'platzhalter' => (string)($f['placeholder'] ?? ''),
+                  'wert'        => $val,
+                  'such'        => true,
+                  'such_hinweis'     => 'Koordinaten (optional)',
+                  'such_platzhalter' => 'Adresse suchen — auch Koordinaten oder Plus Code',
+                  'lat_name'    => 'f_' . $col . '_lat',
+                  'lon_name'    => 'f_' . $col . '_lon',
+                  'versteckt'   => $hide,
+                  'lat'         => isset($ort['lat']) ? ortWert($col, 'lat', $ort['lat']) : '',
+                  'lon'         => isset($ort['lon']) ? ortWert($col, 'lon', $ort['lon']) : '',
+                  'datalist'    => array_map(static fn(array $s): string => $s['name'], $sugg),
+              ]);
+              if (!empty($f['children'])) { ?>
+                <div class="childfields">
+                  <?php foreach ($f['children'] as $cc => $cf) {
+                          $showIfAuf($col, $cf, $val);
+                          $renderField($cc, $cf, $depth + 1);
+                          $showIfZu($cf);
+                        } ?>
+                </div>
+              <?php }
+              return;
+          }
           if ($type === 'textarea') { ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <textarea name="f_<?= e($col) ?>" rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
@@ -787,13 +1007,17 @@ function fieldValue(string $col) {
                 placeholder="<?= e($f['placeholder'] ?? '') ?>" step="any">
               <?php if (isset($f['suggest_src'])): $sugg = $suggestSrc($f); ?>
                 <datalist id="dl_<?= e($col) ?>">
-                  <?php foreach ($sugg as $s): ?><option value="<?= e($s) ?>"><?php endforeach; ?>
+                  <?php foreach ($sugg as $s): ?><option value="<?= e($s['name']) ?>"><?php endforeach; ?>
                 </datalist>
               <?php endif; ?>
             </label>
             <?php if (!empty($f['children'])): ?>
               <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+                <?php foreach ($f['children'] as $cc => $cf) {
+                        $showIfAuf($col, $cf, $val);
+                        $renderField($cc, $cf, $depth + 1);
+                        $showIfZu($cf);
+                      } ?>
               </div>
             <?php endif; ?>
       <?php };
@@ -835,6 +1059,7 @@ function fieldValue(string $col) {
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
+<script src="<?= asset('assets/ortsfeld.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
@@ -965,19 +1190,95 @@ const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
 const MISSION_DAY = <?= json_encode($day) ?>;
 let PAT_CK = null;
 
+/* ---- ORTSFELDER (assets/ortsfeld.js) -------------------------------------
+ *
+ * Hier standen bis Web 6.0.0 rund 180 Zeilen: Photon-Abfrage,
+ * Plus-Code-Erkennung, Chip, Zustandszeile, Platzhalterwechsel — alles fest an
+ * die Kennungen `locaddr`, `loclat`, `loclon`, `locstate` gebunden
+ * (Vorpruefung V8). Mit dem Abfahrtort und der Zielklinik waeren daraus drei
+ * fast gleiche Faelle auf DIESER Seite geworden und drei weitere in der
+ * Stammdatenpflege. Sie sind jetzt eine Komponente; hier steht nur noch, WELCHE
+ * Verwendungen es gibt und wie sie sich unterscheiden.
+ */
+
+// Einsatzort: das Textfeld ist zugleich das Suchfeld — die Adresse IST hier die
+// Bezeichnung. Unveraendertes Verhalten seit Web 3.x.
+const ortEinsatz = EdOrtsfeld.init({
+  praefix: 'loc',
+  bezeichnungPlatzhalter: 'Bezeichnung des Einsatzortes'
+});
+
+// Manueller Abfahrtort: gleiche Bedienung, eigener Blob-Schluessel.
+const ortStart = EdOrtsfeld.init({
+  praefix: 'start',
+  bezeichnungPlatzhalter: 'Bezeichnung des Abfahrtortes'
+});
+
+/* Ortsfelder aus dem Feldkatalog (derzeit die Zielklinik). Sie tragen einen
+ * NAMEN und daneben eine Koordinate, deshalb getrennte Suche: „Klinikum
+ * Kempten" ist keine Adresse, und eine Adresssuche im selben Feld schriebe den
+ * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
+ * mit und bleiben ueberschreibbar (A13l). */
+const LOC_FELDER = <?= json_encode($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;
+const ORTSFELDER = LOC_FELDER.map(lf => EdOrtsfeld.init({
+  praefix: lf.praefix,
+  getrennteSuche: true,
+  vorschlaege: lf.vorschlaege,
+  bezeichnungPlatzhalter: 'Bezeichnung'
+})).filter(Boolean);
+
+/* ---- Abfahrtort: Regel waehlen, manuelles Feld ein-/ausblenden (E34) ------
+ *
+ * Der manuelle Ort bleibt beim Umschalten STEHEN und wird nur verborgen. Er
+ * wandert erst beim Speichern in den Blob, und auch das nur bei gewaehlter
+ * Regel „Manueller Ort" — wer versehentlich umschaltet, verliert seine Eingabe
+ * also nicht, und wer bewusst umschaltet, laesst keine Angabe zurueck, die
+ * nirgends mehr gilt. */
+const startSel = document.getElementById('start_src');
+const startBox = document.getElementById('startfields');
+startSel.addEventListener('change', () => {
+  startBox.hidden = startSel.value !== 'manual';
+});
+
+/* ---- Wertabhaengige Unterfelder (V4, A5) ---------------------------------
+ *
+ * Gegenstueck zu `show_if` im Feldkatalog. Der Anfangszustand kommt vom Server;
+ * hier wird nur nachgezogen, was sich waehrend des Ausfuellens aendert.
+ *
+ * Anders als bei den Filtern (`role_gate` und Geschwister) wird hier nicht nur
+ * versteckt: Der Server LEERT ein ausgeblendetes Unterfeld beim Speichern.
+ * Deshalb ist die Aenderung sichtbar, bevor sie wirkt — das Feld verschwindet
+ * vor dem Absenden und nicht danach (A5). */
+document.querySelectorAll('.showif').forEach(box => {
+  const eltern = document.querySelector('[name="f_' + box.dataset.ifField + '"]');
+  if (!eltern) { return; }
+  const aus = (box.dataset.ifNot || '').split('|').filter(Boolean);
+  const pruefe = () => { box.hidden = aus.includes(eltern.value); };
+  eltern.addEventListener('change', pruefe);
+  eltern.addEventListener('input', pruefe);
+  pruefe();
+});
+
 /* Geschuetzte Angaben laden. Bei gesperrtem Schluessel bietet EdUnlock den
  * Entsperrdialog an; wird er abgebrochen, bleibt es beim bisherigen Verhalten
  * (Hinweis sichtbar, Felder gesperrt) — und damit auch beim Schutz aus
  * speicherePat(): ohne PAT_CK wird der vorhandene Blob nicht angefasst. */
+/* Beide verschluesselten Ortsfelder werden mit dem Schluessel gesperrt und
+ * entsperrt: der Einsatzort und der MANUELLE Abfahrtort. Der Abfahrtort steht
+ * ausserhalb von #patfields — die Auswahl daneben ist Klartext und darf
+ * bedienbar bleiben —, sein Ortsfeld aber liegt im pat_blob und muss demselben
+ * Riegel folgen. */
+const PAT_INPUTS = '#patfields input, #startfields input';
+
 async function patLaden(){
   PAT_CK = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!PAT_CK) {
     document.getElementById('patlocked').hidden = false;
-    document.querySelectorAll('#patfields input').forEach(i => i.disabled = true);
+    document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = true);
     return;
   }
   document.getElementById('patlocked').hidden = true;
-  document.querySelectorAll('#patfields input').forEach(i => i.disabled = false);
+  document.querySelectorAll(PAT_INPUTS).forEach(i => i.disabled = false);
   if (PAT_PREV) {
     let o = {};
     try { o = JSON.parse(await EdCrypto.decrypt(PAT_CK, PAT_PREV)) || {}; } catch (e) { }
@@ -993,15 +1294,14 @@ async function patLaden(){
       // addr steht unveraendert im Textfeld — auch dann, wenn dort noch eine
       // Zahlendarstellung aus einem Altdatensatz liegt (E11, kein stilles
       // Umschreiben). Erst beim naechsten Speichern verlangt E4 eine Bezeichnung.
-      document.getElementById('locaddr').value = o.loc.addr || '';
-      if (o.loc.lat != null) {
-        document.getElementById('loclat').value = o.loc.lat;
-        document.getElementById('loclon').value = o.loc.lon;
-      }
+      ortEinsatz.setzen(o.loc);
     }
+    // Manueller Abfahrtort, analog zum Einsatzort (Konzept 4.6.1). Er bleibt
+    // gespeichert, auch wenn gerade eine andere Regel gewaehlt ist — das
+    // Umschalten auf „Manueller Ort" soll ihn nicht verlangen, nur weil
+    // zwischendurch der Standort galt.
+    if (o.start) { ortStart.setzen(o.start); }
   }
-  zeichneLocChip();
-  locSetState();
   zeigeAlter();   // sperrt das Altersfeld wieder, wenn ein Geburtsdatum steht
 }
 patLaden();
@@ -1043,24 +1343,30 @@ document.getElementById('pat_dob').addEventListener('input', () => { korrigiereZ
 document.getElementById('pat_dob').addEventListener('change', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
 zeigeAlter();
 
+const BEZ_FEHLT = 'Bezeichnung fehlt — bitte zu den Koordinaten einen Namen '
+  + 'eintragen (z. B. „Talstation Nebelhorn“).';
+
 document.getElementById('missionform').addEventListener('submit', async ev => {
   const f = ev.target;
-  if (f.dataset.patDone === '1' || !PAT_CK) return;   // gesperrt: Blob bleibt
+  if (f.dataset.patDone === '1') return;
+
+  /* KLARTEXT-ORTSFELDER ZUERST (A13j). Die Zielklinik ist ein gewoehnliches
+   * Formularfeld; ob ihre Koordinate eine Bezeichnung hat, darf nicht davon
+   * abhaengen, ob der Patientenschluessel gerade offen ist. Erst danach der
+   * Riegel unten, hinter dem der verschluesselte Teil liegt. */
+  for (const feld of ORTSFELDER) {
+    if (!feld.pruefe(BEZ_FEHLT)) { ev.preventDefault(); return; }
+  }
+
+  if (!PAT_CK) return;   // gesperrt: Blob bleibt unveraendert
   ev.preventDefault();
   // E4: Koordinaten ohne Bezeichnung ergaeben in den Listen wieder ein
   // Zahlenfragment. Die Pruefung steht VOR dem Verschluesseln, damit erst gar
   // kein Blob entsteht — und hinter dem PAT_CK-Riegel oben: bei gesperrter
   // Verschluesselung sind die Felder leer und gesperrt, dort waere die
   // Forderung nach einer Bezeichnung nicht erfuellbar (V5).
-  if (document.getElementById('locaddr').value.trim() === ''
-      && document.getElementById('loclat').value !== '') {
-    locState.textContent = 'Bezeichnung fehlt — bitte zu den Koordinaten einen '
-      + 'Namen eintragen (z. B. „Talstation Nebelhorn“).';
-    locState.classList.add('locstate-fehler');
-    document.getElementById('locaddr').focus();
-    return;
-  }
-  locState.classList.remove('locstate-fehler');
+  if (!ortEinsatz.pruefe(BEZ_FEHLT)) { return; }
+  if (startSel.value === 'manual' && !ortStart.pruefe(BEZ_FEHLT)) { return; }
   const o = {};
   const missionNo = document.getElementById('pat_mission_no').value.trim();
   const last  = document.getElementById('pat_last').value.trim();
@@ -1080,12 +1386,21 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   // Alter nur speichern, wenn es NICHT aus dem Geburtsdatum folgt — sonst
   // muesste es bei jeder Korrektur des Geburtsdatums nachgezogen werden.
   if (age !== '' && EdPat.alterAm(dob, MISSION_DAY) === null) o.age = parseInt(age, 10);
-  const addr = document.getElementById('locaddr').value.trim();
-  if (addr !== '') {
-    o.loc = { addr };
-    const la = document.getElementById('loclat').value;
-    const lo = document.getElementById('loclon').value;
-    if (la !== '' && lo !== '') { o.loc.lat = parseFloat(la); o.loc.lon = parseFloat(lo); }
+  const ort = ortEinsatz.werte();
+  if (ort.addr !== '') {
+    o.loc = { addr: ort.addr };
+    if (ort.lat !== null) { o.loc.lat = ort.lat; o.loc.lon = ort.lon; }
+  }
+  /* MANUELLER ABFAHRTORT — derselbe Aufbau wie `loc`, eigener Schluessel
+   * `start` (Konzept 4.6.1). Er wandert NUR bei gewaehlter Regel „Manueller
+   * Ort" in den Blob: Sonst bliebe eine Ortsangabe stehen, die nirgends mehr
+   * gilt, und der naechste Blick in die Daten fragte sich, wozu. */
+  if (startSel.value === 'manual') {
+    const st = ortStart.werte();
+    if (st.addr !== '') {
+      o.start = { addr: st.addr };
+      if (st.lat !== null) { o.start.lat = st.lat; o.start.lon = st.lon; }
+    }
   }
   document.getElementById('pat_blob').value =
     Object.keys(o).length === 0 ? '__CLEAR__' : await EdCrypto.encrypt(PAT_CK, JSON.stringify(o));
@@ -1101,183 +1416,6 @@ document.querySelectorAll('.parentcheck').forEach(cb => {
   });
 });
 
-// Einsatzort: Photon-Autocomplete (OSM-Daten, kostenlos, kein Schluessel)
-const locIn = document.getElementById('locaddr');
-const locList = document.getElementById('locsuggest');
-const locState = document.getElementById('locstate');
-const locChips = document.getElementById('locchips');
-let locTimer = null;
-
-/* Sind Koordinaten gesetzt, ist das Textfeld reines Bezeichnungsfeld: keine
- * Formaterkennung, keine Adresssuche, keine Vorschlagsliste. Sonst wuerde ein
- * Klick auf einen Adressvorschlag die bestaetigten Koordinaten stillschweigend
- * ueberschreiben. Nach dem Entfernen des Chips arbeitet die Suche wieder wie
- * gewohnt — ausgeloest vom naechsten Tastenanschlag. */
-function locHatKoordinaten() {
-  return document.getElementById('loclat').value !== '';
-}
-const LOC_PLATZHALTER = document.getElementById('locaddr').placeholder;
-function locPlatzhalter() {
-  locIn.placeholder = locHatKoordinaten()
-    ? 'Bezeichnung des Einsatzortes' : LOC_PLATZHALTER;
-}
-
-/* Koordinaten-Chip: eigene, sichtbare Darstellung ausserhalb des Textfeldes.
- * Gleiche Klassen wie die Rettungsmittel-Chips (.rmchip/.rmx) — kein zweites
- * Aussehen fuer dieselbe Sache. Der Chip ist reine ANZEIGE; Wertträger bleiben
- * die versteckten Felder #loclat und #loclon. */
-function zeichneLocChip() {
-  locChips.innerHTML = '';
-  locPlatzhalter();
-  const la = document.getElementById('loclat').value;
-  const lo = document.getElementById('loclon').value;
-  if (la === '' || lo === '') { return; }
-  const chip = document.createElement('span');
-  chip.className = 'rmchip';
-  chip.appendChild(document.createTextNode(
-    `${parseFloat(la).toFixed(5)}, ${parseFloat(lo).toFixed(5)}`));
-  const x = document.createElement('button');
-  x.type = 'button'; x.className = 'rmx'; x.textContent = '\u00d7';
-  x.title = 'Koordinaten entfernen';
-  x.addEventListener('click', () => {
-    document.getElementById('loclat').value = '';
-    document.getElementById('loclon').value = '';
-    zeichneLocChip();       // Textfeld bleibt unangetastet (E2)
-    locSetState();          // ab jetzt sucht das Feld wieder normal
-  });
-  chip.appendChild(x);
-  locChips.appendChild(chip);
-}
-function locLabel(p) {
-  const parts = [];
-  if (p.name) parts.push(p.name);
-  const street = [p.street, p.housenumber].filter(Boolean).join(' ');
-  if (street && street !== p.name) parts.push(street);
-  const city = [p.postcode, p.city].filter(Boolean).join(' ');
-  if (city) parts.push(city);
-  return parts.join(', ');
-}
-// Zuletzt erkanntes Format (Koordinaten/Plus Code) — beeinflusst nur die
-// Meldungen fuer nicht uebernehmbare Zwischenzustaende (Kurzform, ungueltig);
-// {typ: null} bedeutet "kein Spezialformat bzw. noch nicht bestaetigt".
-let locErkennung = { typ: null };
-const LOC_MELDUNGEN = {
-  'plus-kurz': 'Plus-Code-Kurzform erkannt — bitte Vollcode eingeben ' +
-    '(in der Karten-App ohne Ortsangabe kopieren).',
-  'ungueltig': 'Koordinaten unvollständig oder außerhalb des gültigen Bereichs.',
-};
-// Text des Vorschlags-Eintrags fuer ein erkanntes Koordinaten-/Plus-Code-Format.
-function locVorschlagText(erg) {
-  const bezeichnung = {
-    dezimal: 'Koordinaten übernehmen (Dezimalgrad)',
-    gdm: 'Koordinaten übernehmen (Grad/Dezimalminuten)',
-    dms: 'Koordinaten übernehmen (Grad/Minuten/Sekunden)',
-    plus: 'Plus Code übernehmen',
-  }[erg.typ];
-  return `${bezeichnung}: ${erg.anzeige}`;
-}
-function locSetState() {
-  if (locErkennung.typ && LOC_MELDUNGEN[locErkennung.typ]) {
-    locState.textContent = LOC_MELDUNGEN[locErkennung.typ];
-    return;
-  }
-  locState.classList.remove('locstate-fehler');
-  if (locHatKoordinaten()) {
-    // Die Koordinaten selbst zeigt der Chip. Der Hinweis erklaert, warum hier
-    // keine Vorschlaege mehr erscheinen — sonst wirkt das Feld defekt.
-    locState.textContent = 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung. '
-      + 'Für eine Adresssuche zuerst die Koordinaten entfernen (✕).';
-    return;
-  }
-  locState.textContent = locIn.value
-    ? 'Nur Text (kein Vorschlag gewählt) — kein Karten-Pin.' : '';
-}
-locSetState();
-locIn.addEventListener('input', () => {
-  // E3: KEIN Leeren von #loclat/#loclon mehr. Frueher stand hier eine
-  // Aufraeumzeile, weil die Zugehoerigkeit von Text und Koordinaten unsichtbar
-  // war; mit dem Chip ist sie sichtbar. Wer die Koordinaten loswerden will,
-  // nimmt das Kreuz am Chip oder waehlt einen anderen Adressvorschlag.
-  // Wiedereinbau dieser Zeilen = Bezeichnung tippen vernichtet die Koordinaten.
-  clearTimeout(locTimer);
-
-  // Stehen bereits Koordinaten, ist hier Schluss: Das Feld traegt nur noch die
-  // Bezeichnung. Weder Formaterkennung noch Adresssuche laufen weiter — beide
-  // wuerden beim Uebernehmen eines Vorschlags die bestaetigten Koordinaten
-  // ueberschreiben. Der Weg zurueck fuehrt ueber das Kreuz am Chip.
-  if (locHatKoordinaten()) {
-    locErkennung = { typ: null };     // keine Meldung aus einem alten Zustand
-    locList.innerHTML = '';           // kein alter Eintrag, der spaeter aufblitzt
-    locList.hidden = true;
-    locSetState();
-    return;
-  }
-
-  // F1/F5: Formaterkennung (Koordinaten, Plus Code) laeuft rein lokal und
-  // hat Vorrang vor der Photon-Anfrage — bei Treffer wird kein Netzwerk-
-  // Request ausgeloest (siehe assets/locparse.js fuer die Regeln). Ablauf ist
-  // dabei identisch zur Adresssuche: ein Eintrag in derselben Vorschlagsliste
-  // zur Bestaetigung, statt das Feld sofort umzuschreiben.
-  locErkennung = (typeof EdLoc !== 'undefined')
-    ? EdLoc.erkenneEinsatzort(locIn.value) : { typ: null };
-
-  if (['dezimal', 'gdm', 'dms', 'plus'].includes(locErkennung.typ)) {
-    const erg = locErkennung;
-    locList.innerHTML = '';
-    const li = document.createElement('li');
-    li.textContent = locVorschlagText(erg);
-    li.addEventListener('mousedown', ev => {           // mousedown: vor blur
-      ev.preventDefault();
-      // E2: Textfeld LEEREN statt mit der Zahlendarstellung ueberschreiben —
-      // es gehoert ab hier der Bezeichnung. Die Koordinaten stehen im Chip.
-      document.getElementById('loclat').value = erg.lat;
-      document.getElementById('loclon').value = erg.lon;
-      locIn.value = '';
-      locList.hidden = true;
-      locErkennung = { typ: null };
-      zeichneLocChip();
-      locSetState();
-      locIn.focus();
-    });
-    locList.appendChild(li);
-    locList.hidden = false;
-    locSetState();
-    return;
-  }
-  if (['plus-kurz', 'ungueltig'].includes(locErkennung.typ)) {
-    locList.hidden = true;
-    locSetState();
-    return;
-  }
-
-  // F2: kein Spezialformat erkannt -> unveraendertes Bestandsverhalten.
-  locSetState();
-  const q = locIn.value.trim();
-  if (q.length < 3) { locList.hidden = true; return; }
-  locTimer = setTimeout(async () => {
-    try {
-      const r = await fetch('https://photon.komoot.io/api/?lang=de&limit=6&q=' + encodeURIComponent(q));
-      const d = await r.json();
-      locList.innerHTML = '';
-      (d.features || []).forEach(ft => {
-        const li = document.createElement('li');
-        li.textContent = locLabel(ft.properties);
-        li.addEventListener('mousedown', ev => {           // mousedown: vor blur
-          ev.preventDefault();
-          locIn.value = li.textContent;
-          document.getElementById('loclat').value = ft.geometry.coordinates[1];
-          document.getElementById('loclon').value = ft.geometry.coordinates[0];
-          locList.hidden = true;
-          zeichneLocChip();     // gleiche Darstellung wie bei Koordinateneingabe
-          locSetState();
-        });
-        locList.appendChild(li);
-      });
-      locList.hidden = locList.children.length === 0;
-    } catch (e) { locList.hidden = true; }
-  }, 300);
-});
-locIn.addEventListener('blur', () => setTimeout(() => { locList.hidden = true; }, 150));
 
 START_ROWS.forEach(r => addRow(r[0], r[1] === '–' ? '' : r[1]));
 document.getElementById('addrow').addEventListener('click', ev => {

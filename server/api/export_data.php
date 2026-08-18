@@ -260,6 +260,8 @@ function export_meta(array $b, int $userId): never
         "SELECT x.id, x.day_id, d.day, x.started_at, x.ended_at,
                 x.distance_m, x.ascent_m,
                 x.final, x.manual, x.origin, x.edited, x.transport_dest, x.winch,
+                x.transport_mode, x.na_escort, x.false_alarm,
+                x.start_src, x.dest_lat, x.dest_lon,
                 x.winch_cycles, x.winch_cycles_pat, x.winch_airload, x.bergwacht,
                 x.bw_unit, x.secondary, x.schockraum,
                 x.crew_override,
@@ -368,6 +370,18 @@ function export_meta(array $b, int $userId): never
             'source'           => $source,
             'edited'           => (int)$r['edited'],
             'transport_dest'   => $r['transport_dest'],
+            /* Die Felder der Etappe 2 (Web 6.1.0). Sie liegen im KLARTEXT und
+             * brauchen deshalb keine Personenbezugs-Markierung: Transportart
+             * und Fehleinsatz sind Aussagen ueber den Einsatz, die
+             * Zielklinik-Koordinate steht wie ihr Name unverschluesselt (E40),
+             * und `start_src` ist eine REGEL, kein Ort (Konzept 4.6.1). Der
+             * manuelle Abfahrtort selbst liegt im pat_blob und geht mit ihm. */
+            'transport_mode'   => $r['transport_mode'],
+            'na_escort'        => (int)$r['na_escort'],
+            'false_alarm'      => (int)$r['false_alarm'],
+            'start_src'        => $r['start_src'],
+            'dest_lat'         => $r['dest_lat'] !== null ? (float)$r['dest_lat'] : null,
+            'dest_lon'         => $r['dest_lon'] !== null ? (float)$r['dest_lon'] : null,
             'winch'            => (int)$r['winch'],
             'winch_cycles'     => $r['winch_cycles'] !== null ? (int)$r['winch_cycles'] : null,
             'winch_cycles_pat' => $r['winch_cycles_pat'] !== null ? (int)$r['winch_cycles_pat'] : null,

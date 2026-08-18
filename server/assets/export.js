@@ -510,9 +510,19 @@
     // Kopie, weil der Server hierfuer keinen Endpunkt anbietet (I2: keine
     // zusaetzlichen Aufrufe) — bei Aenderung an den Server-Konstanten bitte
     // hier mitziehen.
+    /* PHASE 3 UND 7 SIND NEUTRAL BENANNT (E20, Web 6.2.0). Bis dahin hiessen
+     * die Spalten `phase_03_abflug` und `phase_07_landung_krankenhaus` — Worte
+     * aus der Luftrettung in einem Format, das beide Arten führt. Serverseitig
+     * heissen die Phasen schon seit Web 6.0.0 „Ausrücken" und „Ankunft Klinik"
+     * (PHASE_LABELS in db.php); der Export war die letzte Stelle, an der die
+     * alten Namen standen.
+     *
+     * Der RUECKWEG bleibt offen: `assets/import_profiles.js` führt die beiden
+     * alten Spaltennamen als Zweitnamen auf dasselbe Ziel. Eine Exportdatei von
+     * gestern lässt sich also unverändert wieder einlesen. */
     var PHASE_SLUGS = {
-        2: 'alarmierung', 3: 'abflug', 4: 'ankunft_einsatzort',
-        5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'landung_krankenhaus',
+        2: 'alarmierung', 3: 'ausruecken', 4: 'ankunft_einsatzort',
+        5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'ankunft_klinik',
         8: 'uebergabezeit', 9: 'endzeit'
     };
     var RESUS_LABELS = {
@@ -758,11 +768,22 @@
             return acc;
         }, []))
         .concat([
-            { feld: 'strecke_m', typ: 'int', einheit: 'm', beschreibung: 'Flugstrecke (distance_m)', get: function (c) { return numOrEmpty(c.m.distance_m); } },
+            // Neutral beschrieben (A13f): Der Spaltenname war es schon, die
+            // Erläuterung in felder.csv sagte weiterhin „Flugstrecke".
+            { feld: 'strecke_m', typ: 'int', einheit: 'm', beschreibung: 'Einsatzstrecke (distance_m)', get: function (c) { return numOrEmpty(c.m.distance_m); } },
             { feld: 'hoehenmeter_m', typ: 'int', einheit: 'm', beschreibung: 'Höhenmeter (ascent_m)', get: function (c) { return numOrEmpty(c.m.ascent_m); } },
             { feld: 'hoehe_einsatzort_m', typ: 'int', einheit: 'm', beschreibung: 'Höhe des Einsatzorts', pers: true, get: function (c) { return numOrEmpty(c.m.site_ele_m); } },
 
+            // Felder der Etappe 2 (Web 6.1.0). Alle im Klartext, deshalb ohne
+            // `pers` — Ausnahme sind die drei pat_start_*-Spalten weiter unten,
+            // die wie der Einsatzort im pat_blob liegen.
+            { feld: 'transport_art', typ: 'text', einheit: '', beschreibung: 'Transportart (missions.transport_mode): air | ground | ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben', get: function (c) { return orEmpty(c.m.transport_mode); } },
+            { feld: 'na_begleitung', typ: '0/1', einheit: '', beschreibung: 'NA-Begleitung beim Transport (entfällt bei „Ambulant")', get: function (c) { return c.m.na_escort; } },
+            { feld: 'fehleinsatz', typ: '0/1', einheit: '', beschreibung: 'Fehleinsatz / Storno / Abbruch', get: function (c) { return c.m.false_alarm; } },
             { feld: 'transport_dest', typ: 'text', einheit: '', beschreibung: 'Transportziel', get: function (c) { return orEmpty(c.m.transport_dest); } },
+            { feld: 'ziel_lat', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik, am Einsatz eingefroren (missions.dest_lat)', get: function (c) { return numOrEmpty(c.m.dest_lat); } },
+            { feld: 'ziel_lon', typ: 'dec', einheit: '', beschreibung: 'Koordinate der Zielklinik (missions.dest_lon)', get: function (c) { return numOrEmpty(c.m.dest_lon); } },
+            { feld: 'abfahrt_regel', typ: 'text', einheit: '', beschreibung: 'Herkunft des Abfahrtorts (missions.start_src): base | prev_site | prev_dest | manual; leer = keine Linie. Gespeichert ist die REGEL, nicht der Ort', get: function (c) { return orEmpty(c.m.start_src); } },
             { feld: 'schockraum', typ: '0/1', einheit: '', beschreibung: 'Schockraum alarmiert', get: function (c) { return c.m.schockraum; } },
             { feld: 'secondary', typ: '0/1', einheit: '', beschreibung: 'Sekundärtransport', get: function (c) { return c.m.secondary; } },
             { feld: 'winch', typ: '0/1', einheit: '', beschreibung: 'Windeneinsatz', get: function (c) { return c.m.winch; } },
@@ -792,6 +813,12 @@
             { feld: 'pat_ort_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lat', pers: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lat != null) ? c.pat.loc.lat : ''; } },
             { feld: 'pat_ort_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.loc.lon', pers: true, get: function (c) { return (c.pat && c.pat.loc && c.pat.loc.lon != null) ? c.pat.loc.lon : ''; } },
             { feld: 'pat_ort_beschreibung', typ: 'text', einheit: '', beschreibung: 'pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc)', pers: true, get: function (c) { return c.pat ? orEmpty(c.pat.site_desc) : ''; } },
+            // Manueller Abfahrtort: nur bei abfahrt_regel = manual belegt. Er
+            // liegt im pat_blob und ist deshalb `pers` — anders als die REGEL
+            // daneben, die keinen Ort verrät (Konzept 4.6.1).
+            { feld: 'pat_start_adresse', typ: 'text', einheit: '', beschreibung: 'pat_blob.start.addr — manueller Abfahrtort', pers: true, get: function (c) { return (c.pat && c.pat.start) ? orEmpty(c.pat.start.addr) : ''; } },
+            { feld: 'pat_start_lat', typ: 'dec', einheit: '', beschreibung: 'pat_blob.start.lat', pers: true, get: function (c) { return (c.pat && c.pat.start && c.pat.start.lat != null) ? c.pat.start.lat : ''; } },
+            { feld: 'pat_start_lon', typ: 'dec', einheit: '', beschreibung: 'pat_blob.start.lon', pers: true, get: function (c) { return (c.pat && c.pat.start && c.pat.start.lon != null) ? c.pat.start.lon : ''; } },
 
             { feld: 'rea_json', typ: 'json', einheit: '', beschreibung: 'Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation', get: function (c) { return buildReaJson(c.m, APP_TZ); } },
             { feld: 'track_datei', typ: 'text', einheit: '', beschreibung: 'relativer Pfad unter tracks/, oder leer', get: function (c) { return c.trackFile || ''; } },
@@ -1128,9 +1155,16 @@
     }
 
     /** Dateiname nach dem Muster
-     *  luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
+     *  einsatzdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
      *  Das Datum ist der Tag der Erstellung, nicht der Zeitraum — der steht in
-     *  der Datei selbst (Titelzeile bzw. LIESMICH.txt). */
+     *  der Datei selbst (Titelzeile bzw. LIESMICH.txt).
+     *
+     *  SEIT WEB 6.2.0 'einsatzdokumentation' statt 'luftrettungsdokumentation'
+     *  (Konzept 3.9). Ein Archiv mit bodengebundenen Notarzteinsaetzen hiess
+     *  sonst nach einer Rettungsart, die darin gar nicht vorkommt — und der
+     *  Dateiname ist die Angabe, die man noch sieht, wenn die Datei laengst in
+     *  einem fremden Ordner liegt. Aeltere Dateien behalten ihren Namen; der
+     *  Import erkennt Dateien an der Kopfzeile, nicht am Namen. */
     var PROFIL_KUERZEL = { a: 'standard', c: 'guteseele', b: 'csv' };
 
     /** Freitext -> dateisystemsicheres Segment. Umlaute werden nach deutscher
@@ -1180,7 +1214,7 @@
     function dateiName(fmt, endung, patient, verschluesselt) {
         var j = new Date();
         var datum = pad2(j.getDate()) + '-' + pad2(j.getMonth() + 1) + '-' + j.getFullYear();
-        return 'luftrettungsdokumentation_export_' + datum + '_'
+        return 'einsatzdokumentation_export_' + datum + '_'
             + (PROFIL_KUERZEL[fmt] || 'export') + '_'
             + (patient ? 'mit-pers' : 'ohne-pers') + '_'
             + (verschluesselt ? 'verschl' : 'unverschl') + '_'

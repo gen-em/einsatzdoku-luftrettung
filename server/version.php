@@ -28,5 +28,14 @@ declare(strict_types=1);
  * normalisiert, und der Standort ist der Anker der Stammdaten. Eine Migration
  * ist zwingend (2026_08_17_notarzt_erweiterung), und Sicherungen aelterer
  * Formatversionen werden nicht mehr eingelesen.
+ *
+ * 6.1.0 ist Etappe 2 derselben Erweiterung: Einsatzfelder (Transportart,
+ * NA-Begleitung, Fehleinsatz), das Ortsfeld als Komponente und der Abfahrtort
+ * samt Luftlinie. OHNE Migration — die Spalten dafuer hat die Migration der
+ * 6.0.0 bereits angelegt (Konzept, Berichtigung B5).
+ *
+ * 6.2.0 ist Etappe 3: Auswertung nach Art (Tabs in der Zeitraum-Uebersicht),
+ * die neuen Filter der Einsatzsuche und der Nachzug in Export und Import.
+ * Ebenfalls OHNE Migration.
  */
-const WEB_VERSION = '6.0.0';
+const WEB_VERSION = '6.2.0';

@@ -27,6 +27,7 @@ declare(strict_types=1);
  * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
  */
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
 
 function edbak_build(int $userId): string {
     $pdo = db();
@@ -791,17 +792,38 @@ function edbak_restore(int $userId, array $data): array {
             (owner_type, owner_id, seq, lat, lon, ele, ts) VALUES (?,?,?,?,?,?,?)');
         $FIELDS = require __DIR__ . '/mission_fields.php';
         require_once __DIR__ . '/site_elevation_lib.php';
+        /* WELCHE SPALTEN AUS DER DATEI UEBERNOMMEN WERDEN.
+         *
+         * Grundlage ist der Feldkatalog — er ist die eine Liste, gegen die auch
+         * das Formular arbeitet. Drei Ergaenzungen, die er nicht hergibt:
+         *
+         *  - mf_ist_spalte() statt einer Pruefung auf 'resources' allein: Seit
+         *    Web 6.0.0 liegt auch die BESATZUNG nicht mehr in `missions`
+         *    (`crew_p1` … als 'store' => 'crew'). Sie stand hier weiterhin in
+         *    der Liste; eine Datei mit einem Schluessel `crew_p1` — etwa eine
+         *    von Hand bearbeitete — haette ein INSERT auf eine Spalte erzeugt,
+         *    die es nicht mehr gibt, und damit nicht eine Zeile, sondern die
+         *    ganze Wiederherstellung zum Scheitern gebracht. Die Besatzung
+         *    kommt unten aus `crew`.
+         *  - Die KOORDINATENSPALTEN der Ortsfelder (Web 6.1.0): Sie heissen
+         *    nicht wie ihr Feld (`transport_dest` -> `dest_lat`/`dest_lon`) und
+         *    stehen deshalb in mf_ort_spalten().
+         *  - `start_src`, die Abfahrtortregel: kein Katalogfeld (siehe
+         *    mission_fields.php), aber eine gewoehnliche Spalte, die gesichert
+         *    wird und zurueckkommen muss.
+         *
+         * Wer eine Spalte hinzufuegt, die NICHT im Katalog steht, traegt sie
+         * hier ein — sonst wird sie gesichert und beim Einspielen verworfen. */
         $extraCols = [];
         $collectCols = function (array $fs) use (&$collectCols, &$extraCols) {
             foreach ($fs as $col => $f) {
-                // 'resources' hat keine eigene Spalte in missions
-                if (($f['type'] ?? '') === 'resources') { continue; }
-                $extraCols[] = $col;
+                if (mf_ist_spalte($f)) { $extraCols[] = $col; }
+                foreach (mf_ort_spalten($f) as $ortCol) { $extraCols[] = $ortCol; }
                 if (!empty($f['children'])) { $collectCols($f['children']); }
             }
         };
         $collectCols($FIELDS);
-        $extraCols = array_merge($extraCols, ['pat_blob']);   // Alt-Backups: loc_* wird ignoriert
+        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob']);   // Alt-Backups: loc_* wird ignoriert
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }

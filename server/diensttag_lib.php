@@ -104,11 +104,34 @@ function dt_datum_lesbar(string $tag): string
 }
 
 /**
+ * Alle Artsymbole samt Textalternative — die EINE Fassung im Projekt.
+ *
+ * Der Schluessel `''` steht fuer den neutralen Diensttag (kein Rettungsmittel,
+ * E26). Die Liste geht auch an den Browser: `zeitraum.php` und `suche.php`
+ * setzen sie vor `assets/missiontable.js` als `ART_SYMBOLE`, damit die
+ * Einsatztabelle dieselben Zeichen fuehrt wie die Tagesleiste. Eine zweite,
+ * fest verdrahtete Liste in JavaScript waere die Stelle, an der beide beim
+ * naechsten Symbolwechsel auseinanderlaufen (dieselbe Ueberlegung wie bei
+ * CREW_ROLES, Befund P9).
+ *
+ * @return array<string,array{zeichen:string,text:string}>
+ */
+function dt_art_symbole(): array
+{
+    return [
+        'air'    => ['zeichen' => '🚁', 'text' => 'luftgebunden'],
+        'ground' => ['zeichen' => '🚑', 'text' => 'bodengebunden'],
+        ''       => ['zeichen' => '◌',  'text' => 'ohne Zuordnung'],
+    ];
+}
+
+/**
  * Art eines Diensttags als Symbol mit Textalternative (E27, A7c).
  *
- * Die Art ist bewusst KEINE eigene Spalte: Die Uebersichten sind auf schmalen
- * Geraeten ohnehin eng, und der Name des Rettungsmittels verraet sie meist
- * schon. Neutrale Diensttage tragen ein eigenes, klar unterscheidbares Zeichen.
+ * In der Tagesleiste ist die Art bewusst KEINE eigene Spalte: Die Uebersichten
+ * sind auf schmalen Geraeten ohnehin eng, und der Name des Rettungsmittels
+ * verraet sie meist schon — das Symbol steht deshalb am Namen. Neutrale
+ * Diensttage tragen ein eigenes, klar unterscheidbares Zeichen.
  *
  * Die Textalternative ist Pflicht, nicht Zierde: Ohne sie haengt die Auskunft
  * allein an der Grafik.
@@ -117,9 +140,8 @@ function dt_datum_lesbar(string $tag): string
  */
 function dt_art_symbol(?string $kind): array
 {
-    if ($kind === 'air')    { return ['zeichen' => '🚁', 'text' => 'luftgebunden']; }
-    if ($kind === 'ground') { return ['zeichen' => '🚑', 'text' => 'bodengebunden']; }
-    return ['zeichen' => '◌', 'text' => 'ohne Zuordnung'];
+    $alle = dt_art_symbole();
+    return $alle[(string)$kind] ?? $alle[''];
 }
 
 /**

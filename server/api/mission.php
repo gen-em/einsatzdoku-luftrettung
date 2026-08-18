@@ -45,7 +45,16 @@ try {
             return;
         }
         if ($v !== null && $v !== '') {
-            $fields[] = ['label' => $f['label'], 'value' => (string)$v];
+            /* Bei einem Auswahlfeld die BESCHRIFTUNG zeigen, nicht den
+             * gespeicherten Wert: In der Einsatzansicht stuende sonst „ground"
+             * statt „Boden" (mf_optionen, Web 6.1.0). Ein Wert ohne Eintrag in
+             * der Liste bleibt sichtbar, wie er ist — er kann aus aelteren
+             * Daten oder aus geaenderten Stammdaten stammen. */
+            $anzeige = (string)$v;
+            if ($type === 'select' && isset($f['options'])) {
+                $anzeige = mf_optionen($f['options'])[$anzeige] ?? $anzeige;
+            }
+            $fields[] = ['label' => $f['label'], 'value' => $anzeige];
         }
         // Unterfelder von Nicht-Checkbox-Eltern (z. B. Schockraum unter
         // Transportziel) werden unabhaengig vom Elternwert verarbeitet — anders
@@ -163,6 +172,55 @@ try {
     $tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
     $sym = dt_art_symbol($tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null);
 
+    /* ---- Abfahrtort aufloesen (E34, Konzept 4.6.1) ------------------------
+     *
+     * Gespeichert ist nur die REGEL. Woher die Koordinate kommt, haengt an ihr —
+     * und damit auch, ob sie ueberhaupt hierher gehoert:
+     *
+     *   base       days.base_lat/base_lon, eingefroren beim Anlegen  Klartext
+     *   prev_dest  dest_lat/dest_lon des vorherigen Einsatzes        Klartext
+     *   prev_site  Einsatzort des vorherigen Einsatzes               verschlüsselt
+     *   manual     pat_blob.start DIESES Einsatzes                   verschlüsselt
+     *
+     * Die beiden Klartextfaelle loest der Server auf, die beiden anderen der
+     * Browser: 'manual' steht ohnehin im eigenen Blob, fuer 'prev_site' geht der
+     * Blob des Vorgaengers mit — anders ist er nicht lesbar, der Server kann es
+     * nicht.
+     *
+     * GELIEFERT WIRD NUR, WAS DIE GEWAEHLTE REGEL BRAUCHT. Den Blob eines
+     * anderen Einsatzes mitzuschicken, wo niemand ihn auswertet, waere eine
+     * Datenweitergabe ohne Zweck — auch innerhalb desselben Kontos.
+     *
+     * VORHERIGER EINSATZ ist der zeitlich unmittelbar vorangehende DESSELBEN
+     * Diensttags; Papierkorbeintraege zaehlen nicht mit (A13q). Gibt es keinen,
+     * bleibt die Quelle leer und es entsteht keine Linie — es wird NICHT auf
+     * eine andere ausgewichen (A13i). */
+    $startSrc = $m['start_src'] !== null ? (string)$m['start_src'] : null;
+    $startBase = null; $startPrevDest = null; $startPrevBlob = null;
+
+    if ($startSrc === 'base' && $tag !== null
+        && $tag['base_lat'] !== null && $tag['base_lon'] !== null) {
+        $startBase = ['lat' => (float)$tag['base_lat'], 'lon' => (float)$tag['base_lon']];
+    }
+    if (($startSrc === 'prev_dest' || $startSrc === 'prev_site') && $dayId > 0) {
+        $vq = db()->prepare('SELECT dest_lat, dest_lon, pat_blob FROM missions
+                              WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
+                                AND started_at < ?
+                              ORDER BY started_at DESC, id DESC LIMIT 1');
+        $vq->execute([$userId, $dayId, $m['started_at']]);
+        $vor = $vq->fetch();
+        if ($vor) {
+            if ($startSrc === 'prev_dest'
+                && $vor['dest_lat'] !== null && $vor['dest_lon'] !== null) {
+                $startPrevDest = ['lat' => (float)$vor['dest_lat'],
+                                  'lon' => (float)$vor['dest_lon']];
+            }
+            if ($startSrc === 'prev_site' && !empty($vor['pat_blob'])) {
+                $startPrevBlob = (string)$vor['pat_blob'];
+            }
+        }
+    }
+
     json_out([
         'id' => (int)$m['id'],
         'day_id' => $dayId,
@@ -187,6 +245,21 @@ try {
         'edited'     => (int)($m['edited'] ?? 0) === 1,
         'day_no'     => $dayNo,
         'has_p9'     => $p9at !== null,
+        /* Zielklinik-Koordinate: KLARTEXT wie ihr Name (E40). Ihr Pin ist damit
+         * ohne Freischalten sichtbar — anders als Einsatzort und Linie, deren
+         * mittlerer Stuetzpunkt verschluesselt ist (A13o). */
+        'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
+        'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
+        /* Der Name daneben, damit der Pin sich benennen kann. Er steht zwar
+         * auch in 'fields' — dort aber als Beschriftung/Wert-Paar fuer die
+         * Anzeigeliste, und ihn von dort ueber seine Beschriftung
+         * zurueckzusuchen waere eine Kopplung an einen Anzeigetext. */
+        'dest_name'  => ($m['transport_dest'] ?? null) !== null && $m['transport_dest'] !== ''
+                        ? (string)$m['transport_dest'] : null,
+        'start_src'        => $startSrc,
+        'start_base'       => $startBase,
+        'start_prev_dest'  => $startPrevDest,
+        'start_prev_blob'  => $startPrevBlob,
         'fields'     => $fields,
         'crew_effektiv' => (object)$crewEff,
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,

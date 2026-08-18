@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/diensttag_lib.php';   // Rollenkatalog, Artsymbole
+require_once __DIR__ . '/validate_lib.php';   // pruef_ortspaar()
 
 /**
  * Zentrale (globale) Stammdaten: vom Admin gepflegte Eintraege mit
@@ -36,16 +37,6 @@ function admin_base_id(?int $id): ?int {
     return $q->fetchColumn() !== false ? $id : null;
 }
 
-/* Optionale Koordinate (E37/E39). Ueberall freiwillig; ein Wert ausserhalb des
- * Wertebereichs wird zu NULL statt zu einem stillen 0/0. */
-function admin_koord(string $feld, float $min, float $max): ?string {
-    $roh = trim((string)($_POST[$feld] ?? ''));
-    if ($roh === '') { return null; }
-    $w = (float)str_replace(',', '.', $roh);
-    if (!is_finite($w) || $w < $min || $w > $max) { return null; }
-    return number_format($w, 6, '.', '');
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = $_POST['action'] ?? '';
@@ -54,10 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
-        $lat = admin_koord('lat', -90, 90);
-        $lon = admin_koord('lon', -180, 180);
-        // Koordinaten nur zusammen: eine Breite ohne Laenge ist kein Ort.
-        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
+        // Optionale Koordinate (E37/E39) — Regeln in pruef_ortspaar()
+        // (validate_lib.php): nur zusammen, ausserhalb des Bereichs ist leer.
+        [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
         if ($n === '') {
             $error = 'Bitte einen Namen eintragen.';
         } elseif (stammdaten_dup_global('bases', 'name', $n, null, null, $bid)) {
@@ -230,9 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'td_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 190);
         $tid = (int)($_POST['id'] ?? 0);
-        $lat = admin_koord('lat', -90, 90);
-        $lon = admin_koord('lon', -180, 180);
-        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
+        [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
         if ($n === '') {
             $error = 'Bitte einen Namen eintragen.';
         } elseif ($postBase === null) {
@@ -287,6 +275,11 @@ if (!empty($_SESSION['flash_error'])) {
 }
 
 /* ---- Bestand laden -------------------------------------------------------- */
+/* Praefixe der Ortsfelder dieser Seite. Sie entstehen beim Rendern — je
+ * Standort eines fuer die Zielklinik —, und die Belebung im Browser laeuft am
+ * Ende ueber genau diese Liste (siehe einstellungen.php, gleiches Muster). */
+$ORTSFELDER = [];
+
 $bases = db()->query('SELECT id, name, lat, lon FROM bases WHERE user_id IS NULL ORDER BY name')->fetchAll();
 $baseIds = array_map(static fn($b) => (int)$b['id'], $bases);
 
@@ -433,16 +426,21 @@ $anzahlJeBase = function (int $bid) use ($vehNach, $crewNach, $tdNach, $resNach,
       <form method="post" action="admin_stammdaten.php#standorte" class="inline-form">
         <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
         <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-        <input type="text" name="name" class="focus-target" maxlength="120" required
+        <input type="text" name="name" id="adbaseaddr" class="focus-target" maxlength="120" required
                placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
         <?php /* Koordinaten optional (E37/E39). Quelle des Abfahrtorts
-                 „Standort", beim Anlegen eines Diensttags eingefroren (E8). Eine
-                 Adresssuche wie beim Einsatzort folgt in einer späteren
-                 Etappe. */ ?>
-        <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
-               value="<?= e((string)($editBase['lat'] ?? '')) ?>">
-        <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
-               value="<?= e((string)($editBase['lon'] ?? '')) ?>">
+                 „Standort", beim Anlegen eines Diensttags eingefroren (E8). Seit
+                 Web 6.1.0 mit Adresssuche — dieselbe Komponente wie in der
+                 Kontoansicht und am Einsatz (assets/ortsfeld.js). */
+              $ORTSFELDER[] = 'adbase';
+              ui_ortsfeld([
+                  'praefix' => 'adbase', 'feld' => false, 'such' => true,
+                  'klasse' => 'loc-inline',
+                  'such_hinweis' => 'Koordinaten (optional)',
+                  'lat_name' => 'lat', 'lon_name' => 'lon',
+                  'lat' => (string)($editBase['lat'] ?? ''),
+                  'lon' => (string)($editBase['lon'] ?? ''),
+              ]); ?>
         <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
         <?php if ($editBase): ?><a class="btn-red" href="admin_stammdaten.php">Abbrechen</a><?php endif; ?>
       </form>
@@ -620,12 +618,19 @@ $anzahlJeBase = function (int $bid) use ($vehNach, $crewNach, $tdNach, $resNach,
           <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
           <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
           <input type="hidden" name="base_id" value="<?= $bid ?>">
-          <input type="text" name="name" maxlength="190" required
+          <?php /* Praefix mit Standortkennung: Dieses Formular steht einmal je
+                   Standort auf der Seite (siehe einstellungen.php). */
+                $tdPraefix = 'adtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
+          <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
                  placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-          <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
-                 value="<?= e((string)($etHier['lat'] ?? '')) ?>">
-          <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
-                 value="<?= e((string)($etHier['lon'] ?? '')) ?>">
+          <?php ui_ortsfeld([
+                  'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                  'klasse' => 'loc-inline',
+                  'such_hinweis' => 'Koordinaten (optional)',
+                  'lat_name' => 'lat', 'lon_name' => 'lon',
+                  'lat' => (string)($etHier['lat'] ?? ''),
+                  'lon' => (string)($etHier['lon'] ?? ''),
+              ]); ?>
           <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
           <?php if ($etHier): ?><a class="btn-red" href="admin_stammdaten.php">Abbrechen</a><?php endif; ?>
         </form>
@@ -719,6 +724,16 @@ $anzahlJeBase = function (int $bid) use ($vehNach, $crewNach, $tdNach, $resNach,
   </main>
 </div>
 <script src="<?= asset('assets/confirm.js') ?>"></script>
+<script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+<script src="<?= asset('assets/locparse.js') ?>"></script>
+<script src="<?= asset('assets/ortsfeld.js') ?>"></script>
+<script>
+/* Ortsfelder der zentralen Stammdatenpflege (E37/E38). Dieselbe Komponente wie
+ * in der Kontoansicht — zentral gepflegte Koordinaten gelten fuer alle, die den
+ * Eintrag sehen. */
+<?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
+ORTSFELDER.forEach(p => EdOrtsfeld.init({ praefix: p, getrennteSuche: true }));
+</script>
 <script>
 /* Den Abschnitt aus dem Anker wieder aufklappen — dieselbe Mechanik wie in
  * einstellungen.php. Ohne sie landet man nach dem Speichern auf einer Seite,

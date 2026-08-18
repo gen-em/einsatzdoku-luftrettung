@@ -424,6 +424,41 @@ function pruef_laenge($wert, string $feld = 'Laengengrad', ?Pruefliste $p = null
     return pruef_koordinate($wert, 180.0, $feld, $p);
 }
 
+/**
+ * Ein Koordinaten-PAAR aus einem Formular (Web 6.1.0, E37/E39).
+ *
+ * Optionale Koordinaten gibt es seit Web 6.0.0 an Standorten und Zielkliniken,
+ * seit 6.1.0 zusaetzlich am Einsatz (Zielklinik) — an fuenf Stellen, und an
+ * dreien stand dieselbe kleine Umrechnung ausgeschrieben. Sie liegt jetzt hier.
+ *
+ * DREI REGELN, die alle drei Fassungen gemeinsam hatten:
+ *
+ * 1. NUR ZUSAMMEN. Eine Breite ohne Laenge ist kein Ort; ein halbes Paar wird
+ *    ganz verworfen statt zu einem stillen 0/0 zu werden — das laege im Golf
+ *    von Guinea, mitten in der Auswertung.
+ * 2. AUSSERHALB DES BEREICHS IST LEER, nicht abgeschnitten. Eine gekappte
+ *    Koordinate zeigte auf einen anderen Ort, und zwar ohne Hinweis.
+ * 3. KOMMA IST ZULAESSIG. Wer eine Koordinate aus einer deutschsprachigen
+ *    Anwendung kopiert, bringt es mit.
+ *
+ * Rueckgabe als Zeichenkette mit sechs Nachkommastellen — dem Format der
+ * Spalten DECIMAL(9,6). Ohne gueltiges Paar zweimal null.
+ *
+ * @return array{0:?string,1:?string}
+ */
+function pruef_ortspaar($lat, $lon): array
+{
+    $zahl = static function ($w): ?string {
+        if ($w === null) { return null; }
+        $s = str_replace(',', '.', trim((string)$w));
+        return $s === '' ? null : $s;
+    };
+    $la = pruef_breite($zahl($lat));
+    $lo = pruef_laenge($zahl($lon));
+    if ($la === null || $lo === null) { return [null, null]; }
+    return [number_format($la, 6, '.', ''), number_format($lo, 6, '.', '')];
+}
+
 /** Phasennummer 2 bis 9. */
 function pruef_phase($wert, string $feld = 'Phase', ?Pruefliste $p = null): ?int
 {

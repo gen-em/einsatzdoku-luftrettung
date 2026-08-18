@@ -13,6 +13,18 @@ declare(strict_types=1);
  *   'checkbox'                      Haken (0/1); optional 'children':
  *                                   Unterfelder, nur sichtbar/gespeichert,
  *                                   wenn der Haken gesetzt ist
+ *   'loc'                           ORTSFELD (Web 6.1.0): Bezeichnung wie
+ *                                   'text' — samt 'max', 'placeholder' und
+ *                                   'suggest_src' —, dazu ZWEI optionale
+ *                                   Koordinatenspalten, benannt in 'lat_col'
+ *                                   und 'lon_col'. Die Bedienung uebernimmt
+ *                                   assets/ortsfeld.js (Chip, Adresssuche,
+ *                                   Plus Code); die Koordinaten sind ueberall
+ *                                   FREIWILLIG (E39) — ohne sie bleibt es ein
+ *                                   reines Textfeld ohne Pin und ohne Linie.
+ *                                   Umgekehrt gilt wie beim Einsatzort:
+ *                                   Koordinaten ohne Bezeichnung werden
+ *                                   abgewiesen.
  *   'select'                        Dropdown; 'options' = feste Werteliste
  *                                   ODER 'options_src':
  *                                     'bw_units'   Bergwacht-Bereitschaften
@@ -61,6 +73,64 @@ declare(strict_types=1);
  *                                   rollengebundenen Felder verborgen, ausser
  *                                   den belegten.
  *
+ *   'kind_gate' => 'air' | 'ground' Feld nur zeigen, wenn der DIENSTTAG diese
+ *                                   Art hat (`days.kind`, eingefroren beim
+ *                                   Zuordnen). Verhalten exakt wie 'role_gate':
+ *                                   rendern und verstecken, nie weglassen; ein
+ *                                   bereits belegtes Feld bleibt sichtbar. Ist
+ *                                   die Art NULL (neutraler Diensttag, E26),
+ *                                   greift KEIN artgebundenes Feld — beide
+ *                                   Artenbloecke bleiben verborgen.
+ *
+ *                                   DERZEIT NUTZT KEIN FELD DIESEN SCHLUESSEL,
+ *                                   und das ist kein Versehen: Die einzigen
+ *                                   artabhaengigen Einsatzfelder sind Winde und
+ *                                   Bergwacht, und die haengen an der
+ *                                   FAEHIGKEIT (siehe 'cap_gate'), nicht an der
+ *                                   Art. Der Schluessel steht bereit, damit ein
+ *                                   spaeteres artabhaengiges Feld nicht wieder
+ *                                   eine eigene Sonderbehandlung im Formular
+ *                                   braucht — die Auswertung liegt in
+ *                                   mf_gates_erfuellt() neben den beiden
+ *                                   anderen Filtern.
+ *
+ *   'cap_gate' => Faehigkeit        Feld nur zeigen, wenn der DIENSTTAG diese
+ *                                   Faehigkeit traegt (`day_capabilities`,
+ *                                   eingefroren beim Zuordnen, E29). Kennungen:
+ *                                   VEHICLE_CAPABILITIES in db.php.
+ *
+ *                                   ERSETZT DIE ARTPRUEFUNG VOLLSTAENDIG (E29):
+ *                                   Faehigkeiten kommen ausschliesslich an
+ *                                   luftgebundenen Rettungsmitteln vor, ein
+ *                                   zusaetzliches 'kind_gate' waere also nur
+ *                                   eine zweite Formulierung derselben Aussage
+ *                                   — und die erste, die beim naechsten Umbau
+ *                                   vergessen wird.
+ *
+ *                                   Der Schluessel ist zugleich der Grund,
+ *                                   warum ein bodengebundener Dienst keine
+ *                                   Windenfelder zeigt (A3) und warum ein
+ *                                   spaeter abgewaehlter Windenhaken alte
+ *                                   Einsaetze nicht beschaedigt (A13e): Gefragt
+ *                                   wird der Diensttag, nicht das heutige
+ *                                   Rettungsmittel.
+ *
+ *   'show_if' => [                  WERTABHAENGIGES UNTERFELD unter einem
+ *      'field'  => '<elternspalte>',  'select'. Nur zeigen und nur speichern,
+ *      'not_in' => ['<wert>', …],     wenn das uebergeordnete Auswahlfeld
+ *   ]                                KEINEN der genannten Werte hat.
+ *
+ *                                   Bis Web 6.0.0 gab es bedingte Unterfelder
+ *                                   ausschliesslich unter Checkboxen; unter
+ *                                   einem 'select' wurden Kinder immer
+ *                                   gerendert und immer gespeichert. Anders als
+ *                                   bei den Gates wird hier GELEERT statt nur
+ *                                   versteckt: Ein Transportziel hinter
+ *                                   „Ambulant" waere kein schuetzenswerter
+ *                                   Bestand, sondern ein Widerspruch in den
+ *                                   Daten (A5). Die Aenderung ist sichtbar —
+ *                                   das Feld verschwindet vor dem Speichern.
+ *
  *   'store' => 'crew'               DIE EINE AUSNAHME von "alle Felder sind
  *                                   Spalten". Der Wert liegt nicht in
  *                                   `missions`, sondern als Zeile in
@@ -92,6 +162,15 @@ declare(strict_types=1);
  *
  * Der Einsatzort (Adresse + Koordinaten, Photon-Autocomplete) ist bewusst
  * KEIN Eintrag hier — er liegt Ende-zu-Ende-verschlüsselt im pat_blob.
+ *
+ * Der ABFAHRTORT (Web 6.1.0, E34) ebenso wenig, aus zwei Gruenden: Seine
+ * Auswahl speichert eine REGEL (`missions.start_src` — 'base', 'prev_site',
+ * 'prev_dest', 'manual'), deren Beschriftungen nicht ihre Datenbankwerte sind,
+ * und der manuelle Ort liegt wie der Einsatzort verschluesselt im pat_blob
+ * (Schluessel `start`). Beides kann der Katalog nicht — er kennt nur Felder,
+ * deren Anzeigewert zugleich der gespeicherte Wert ist. Das Formular behandelt
+ * ihn deshalb ausdruecklich, unmittelbar unter dem Einsatzort
+ * (einsatz_form.php).
  *
  * Die Einsatznummer ist bewusst KEIN Eintrag hier — sie liegt seit Web 2.9.0
  * Ende-zu-Ende-verschlüsselt im pat_blob, weil sich über sie bei der
@@ -137,16 +216,63 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
 }
 
 return [
-    'transport_dest' => [
-        'label' => 'Transportziel', 'type' => 'text', 'max' => 190,
-        'placeholder' => 'z. B. Klinikum Kempten',
-        'suggest_src' => 'transport_dests',
+    /* TRANSPORTART (E17). Sie ist das ordnende Feld der Einsatzdokumentation
+     * geworden: Zielklinik, Schockraum und NA-Begleitung haengen daran und
+     * entfallen bei „Ambulant" — also dann, wenn die Patientin nicht
+     * transportiert wurde.
+     *
+     * KEIN 'kind_gate'. „Luft" ist auch an einem bodengebundenen Dienst ein
+     * gueltiger Wert: Das NEF uebergibt an den Hubschrauber, und wie
+     * transportiert wurde, ist eine Aussage ueber den EINSATZ, nicht ueber das
+     * eigene Rettungsmittel. */
+    'transport_mode' => [
+        'label' => 'Transport', 'type' => 'select',
+        /* WERT LINKS, BESCHRIFTUNG RECHTS. Die Spalte ist ein
+         * `ENUM('air','ground','ambulant')` — sie stammt aus der Migration der
+         * Web 6.0.0 und ist englisch benannt wie alle uebrigen Spalten. Eine
+         * Liste ['Luft','Boden','Ambulant'] haette die Beschriftung in die
+         * Spalte geschrieben und dort still abgeschnitten. Beide Schreibweisen
+         * loest mf_optionen() auf (mission_fields_lib.php). */
+        'options' => ['air' => 'Luft', 'ground' => 'Boden', 'ambulant' => 'Ambulant'],
         'children' => [
-            'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
+            'na_escort' => [
+                'label' => 'NA-Begleitung', 'type' => 'checkbox',
+                // 'not_in' nennt den GESPEICHERTEN Wert, nicht die Beschriftung.
+                'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
+            ],
+            /* ZIELKLINIK ALS ORTSFELD (E37/E38/E40). Freitext und
+             * Vorschlagsliste bleiben unveraendert; neu ist die optionale
+             * Koordinate. Sie liegt im KLARTEXT (`dest_lat`/`dest_lon`) wie der
+             * Name selbst — ihr Pin ist damit ohne Freischalten sichtbar,
+             * anders als der Einsatzort.
+             *
+             * EINGEFROREN AM EINSATZ, nicht ueber den Namen aufgeloest: Das
+             * Feld ist Freitext, und eine Aufloesung ueber Namensgleichheit
+             * verloere die Koordinate, sobald jemand den Stammdatensatz
+             * umbenennt (A13p). */
+            'transport_dest' => [
+                'label' => 'Transportziel', 'type' => 'loc', 'max' => 190,
+                'placeholder' => 'z. B. Klinikum Kempten',
+                'suggest_src' => 'transport_dests',
+                'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
+                'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
+                'children' => [
+                    'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
+                ],
+            ],
         ],
+    ],
+    /* FEHLEINSATZ (E17). EIN Haken ohne Unterauswahl — ausdruecklich so
+     * entschieden (Abschnitt 7): Ob storniert, abgebrochen oder von vornherein
+     * gegenstandslos, ist eine Unterscheidung, die im Nachhinein selten
+     * verlaesslich zu treffen ist. */
+    'false_alarm' => [
+        'label' => 'Fehleinsatz / Storno / Abbruch', 'type' => 'checkbox',
+        'day_col' => 'check', 'day_label' => 'Fehl&shy;einsatz',
     ],
     'winch' => [
         'label' => 'Windeneinsatz', 'type' => 'checkbox',
+        'cap_gate' => 'winch',
         'day_col' => 'check', 'day_label' => 'Winde',
         'children' => [
             'winch_cycles' => [
@@ -162,6 +288,7 @@ return [
     ],
     'bergwacht' => [
         'label' => 'Bergwacht', 'type' => 'checkbox',
+        'cap_gate' => 'bergwacht',
         'day_col' => 'check', 'day_label' => 'Bergwacht',
         'children' => [
             'bw_unit' => [

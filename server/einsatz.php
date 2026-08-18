@@ -106,6 +106,7 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
 // Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
@@ -353,6 +354,19 @@ async function init(){
       .addTo(map).bindPopup('Ende');
     m.track.forEach(p => bounds.push(p));
   }
+  /* ZIELKLINIK-PIN — ohne Freischalten sichtbar (E40, A13o).
+   *
+   * Er steht hier und nicht in zeigePat(): Name und Koordinate der Zielklinik
+   * liegen im Klartext, ihre Einstufung ist dieselbe. Was der Pin verrät, ist
+   * wohin transportiert wurde — und das sagt der Name daneben ohnehin schon.
+   * Linie und Einsatzort-Pin bleiben dagegen hinter dem Schlüssel: Sie verraten,
+   * WO die Patientin war. */
+  if (m.dest_lat != null && m.dest_lon != null) {
+    L.marker([m.dest_lat, m.dest_lon], { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
+      .addTo(map).bindPopup('Zielklinik' + (m.dest_name ? '<br>' + esc(m.dest_name) : ''));
+    bounds.push([m.dest_lat, m.dest_lon]);
+  }
+
   if (bounds.length) {
     // Rand proportional zur Kartengröße, wie auf der Tagesübersicht — und
     // eine Zoom-Obergrenze, damit ein sehr kurzer Track (oder ein einzelner
@@ -456,6 +470,7 @@ async function zeigePat(m, dl, bounds){
           if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
         }
       }
+      await zeichneLuftlinie(m, o, ck, bounds);
       // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
       // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
       if (o.site_desc != null) {
@@ -474,6 +489,60 @@ async function zeigePat(m, dl, bounds){
       .addEventListener('click', () => zeigePat(m, dl, bounds));
   }
 }
+/* ---- Luftlinie ohne GPS-Aufzeichnung (E34/E35, A13g–A13i, A13n) ----------
+ *
+ * Sie steht hier, im entschlüsselten Teil: Ihr mittlerer Stützpunkt ist der
+ * Einsatzort, und der liegt im pat_blob. Ohne Freischalten gibt es deshalb
+ * keine Linie — auch dann nicht, wenn Abfahrtort und Zielklinik im Klartext
+ * bekannt wären (A13o).
+ *
+ * Die Regeln stehen in assets/luftlinie.js und nicht hier, weil die
+ * Tagesübersicht dieselben braucht. Diese Funktion beschafft nur die vier
+ * möglichen Quellen des Abfahrtorts — zwei hat der Server bereits aufgelöst,
+ * zwei sind verschlüsselt und lassen sich nur hier lesen. */
+async function zeichneLuftlinie(m, o, ck, bounds){
+  /* „Letzter Einsatzort" ist der Einsatzort des VORGÄNGERS und damit
+   * verschlüsselt. Der Server liefert dessen Blob nur bei genau dieser Regel
+   * mit — auszuwerten ist er allein hier. */
+  let prevSite = null;
+  if (m.start_src === 'prev_site' && m.start_prev_blob) {
+    const r = await EdPat.entschluessle(ck, m.start_prev_blob);
+    if (r.zustand === 'ok' && r.daten && r.daten.loc) { prevSite = r.daten.loc; }
+  }
+  const abfahrt = EdLuftlinie.abfahrt(m.start_src, {
+    base: m.start_base,
+    prevDest: m.start_prev_dest,
+    prevSite: prevSite,
+    manual: o.start
+  });
+  const punkte = EdLuftlinie.punkte({
+    hatTrack: m.track.length > 1,
+    abfahrt: abfahrt,
+    ort: o.loc,
+    ziel: (m.dest_lat != null && m.dest_lon != null)
+      ? { lat: m.dest_lat, lon: m.dest_lon, name: m.dest_name } : null
+  });
+  if (!punkte.length) { return; }
+
+  EdLuftlinie.zeichne(map, punkte);
+  // Pin an jedem Ende. Der Einsatzort hat seinen eigenen (oben), die Zielklinik
+  // ebenso — bleibt der Abfahrtort.
+  if (abfahrt) {
+    L.marker([abfahrt.lat, abfahrt.lon], { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
+      .addTo(map).bindPopup('Abfahrtort' + (abfahrt.text ? '<br>' + esc(abfahrt.text) : ''));
+  }
+  // Die Länge ausdrücklich BENANNT — eine Luftlinie ist keine gefahrene
+  // Strecke, und die Zahl daneben würde sonst als eine gelesen (E36).
+  document.getElementById('fieldlist').insertAdjacentHTML('beforeend',
+    `<dt>Luftlinie 🔒</dt><dd>${esc(EdLuftlinie.text(punkte))}
+     <span class="muted">(gerade Verbindung, kein aufgezeichneter Weg)</span></dd>`);
+  document.getElementById('fieldlist').hidden = false;
+
+  const px = map.getSize();
+  map.fitBounds(bounds.concat(punkte.map(p => [p.lat, p.lon])),
+    { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
+}
+
 init();
 </script>
 </body>

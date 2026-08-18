@@ -26,9 +26,9 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 |---|---|---|---|
 | 1a | Schema, Migration, Rollenkatalog | — | **erledigt** |
 | 1b | Codeanpassung an das neue Schema, Nachbearbeitungsseite, Umbenennung | Web 6.0.0 | **erledigt** |
-| 2 | Einsatzfelder, Ortsfeld-Komponente, Abfahrtort und Luftlinie | Web 6.1.0 | **als Nächstes** |
-| 3 | Auswertung, Suche, Export/Import/Backup | Web 6.2.0 | offen |
-| 4 | Zusammenführen, Uhr, Dokumentation | Web 6.3.0 / Uhr 1.8.0 | offen |
+| 2 | Einsatzfelder, Ortsfeld-Komponente, Abfahrtort und Luftlinie | Web 6.1.0 | **erledigt** |
+| 3 | Auswertung, Suche, Export/Import/Backup | Web 6.2.0 | **erledigt** |
+| 4 | Zusammenführen, Uhr, Dokumentation | Web 6.3.0 / Uhr 1.8.0 | **als Nächstes** |
 
 > **Warum Etappe 1 geteilt wurde.** Der Umbau am Datenmodell und die Anpassung
 > des Codes daran sind zwei sehr verschiedene Arbeiten: Die erste ist konzeptionell
@@ -45,6 +45,10 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 >
 > **Mit Etappe 1b ist dieser Zwischenstand aufgehoben.** Die Anwendung läuft auf
 > dem neuen Schema; Migration und Update gehören ab jetzt zusammen ausgeliefert.
+>
+> **Etappe 2 braucht keine eigene Migration** (Berichtigung B5): Die Spalten der
+> neuen Einsatzfelder hat die Migration der 6.0.0 bereits angelegt. Wer auf
+> 6.0.0 ist, spielt für 6.1.0 nur die Dateien ein.
 
 **Versionsnummern** (aus dem tatsächlichen Stand abgeleitet, nicht frei gewählt):
 
@@ -60,34 +64,44 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 
 | | Stand | | Stand | | Stand |
 |---|---|---|---|---|---|
-| A1 | **erfüllt** | A7a | **erfüllt** | A13d | offen (Etappe 3) |
+| A1 | **erfüllt** | A7a | **erfüllt** | A13d | **erfüllt** |
 | A2 | **erfüllt** | A7b | **erfüllt** | A13e | **erfüllt** |
-| A3 | teilweise | A7c | **erfüllt** | A13f | offen (Etappe 3) |
-| A4 | **erfüllt** | A8 | **erfüllt** | A13g–A13q | offen (Etappe 2) |
-| A4a | **erfüllt** | A9 | **erfüllt** | A14 | offen (Etappe 4) |
-| A5 | offen (Etappe 2) | A10 | **erfüllt** | A15 | **erfüllt** |
-| A6 | offen (Etappe 4) | A11 | **erfüllt** | A16 | teilweise |
-| A7 | offen (Etappe 4) | A12 | **erfüllt** | | |
-| A13 | **erfüllt** | A13a–A13c | offen (Etappe 3) | | |
+| A3 | **erfüllt** | A7c | **erfüllt** | A13f | **erfüllt** |
+| A4 | **erfüllt** | A8 | **erfüllt** | A13g–A13k | **erfüllt** |
+| A4a | **erfüllt** | A9 | **erfüllt** | A13l–A13q | **erfüllt** |
+| A5 | **erfüllt** | A10 | **erfüllt** | A14 | offen (Etappe 4) |
+| A6 | offen (Etappe 4) | A11 | **erfüllt** | A15 | **erfüllt** |
+| A7 | offen (Etappe 4) | A12 | **erfüllt** | A16 | teilweise |
+| A13 | **erfüllt** | A13a–A13c | **erfüllt** | | |
 
 Wie jeder Punkt geprüft wurde, steht in `docs/Pruefprotokoll-Notarzt.md`.
 „offen (Etappe N)" heißt: Das Kriterium betrifft Funktionen, die diese Etappe
 noch nicht bringt — nicht, dass etwas fehlschlug.
 
-Die beiden „teilweise" sind es aus benennbaren Gründen:
+Das eine „teilweise" ist es aus benennbarem Grund:
 
-- **A3** verlangt zwei Dinge. Die eine Hälfte ist erfüllt: Ein bodengebundener
-  Diensttag zeigt Fahrer, Praktikant und Sonstige und sonst keine Rolle
-  (`role_gate` liest aus `day_crew`). Die andere Hälfte — „und keine
-  Windenfelder" — hängt an `cap_gate`, und das ist ausdrücklich Etappe 2
-  (Abschnitt 4.3). Bis dahin erscheinen Windenfelder auch an einem
-  bodengebundenen Dienst. Sie sind leer und lassen sich ignorieren; **kein
-  Datenverlust**, nur eine Zeile zu viel im Formular.
-- **A16**: Die Dokumentation ist auf dem Stand von 1b — Changelog, Technik,
-  Konzept und Prüfprotokoll sind durchgezogen. `Handbuch.md`, `JSON-Vertrag.md`,
-  `Backup-Format.md` und `Export-Format.md` folgen mit Etappe 4, so vorgesehen
-  (Abschnitt 4.12): Der JSON-Vertrag steigt erst dort auf 1.3, und das Handbuch
-  soll den fertigen Stand beschreiben, nicht einen von vier.
+- **A16**: Die Dokumentation ist auf dem Stand von Etappe 3 — Changelog,
+  Technik, Konzept und Prüfprotokoll sind durchgezogen. `Handbuch.md`,
+  `JSON-Vertrag.md`, `Backup-Format.md` und `Export-Format.md` folgen mit
+  Etappe 4, so vorgesehen (Abschnitt 4.12): Der JSON-Vertrag steigt erst dort
+  auf 1.3, und das Handbuch soll den fertigen Stand beschreiben, nicht einen
+  von vier. **Neu hinzugekommen ist dabei ein Muss:** Etappe 3 hat zwei
+  Exportspalten umbenannt (Befund P20) — `Export-Format.md` beschreibt sie
+  jetzt falsch und nicht nur unvollständig.
+
+**A3 ist mit Etappe 2 vollständig erfüllt.** Die zweite Hälfte — „und keine
+Windenfelder" — hing an `cap_gate` und ist jetzt umgesetzt; geprüft an drei
+Diensttagen desselben Bestands (luftgebunden mit Winde, bodengebunden,
+neutral).
+
+**A13f mit einer benannten Abweichung.** Der Luftrettungs-Tab zeigt genau die
+zehn Kacheln mit den heutigen Beschriftungen — aber in der **Reihenfolge aus
+Abschnitt 3.7.2** und nicht in der des bisherigen HTML. Die beiden
+Windenkacheln stehen dadurch am Ende statt an vierter und fünfter Stelle. Das
+ist keine Freiheit, sondern eine Notwendigkeit: Sie sind die einzigen, die
+verschwinden können (A13d), und eine Lücke mitten im Raster wäre schwerer zu
+lesen als eine kürzere letzte Reihe. Die Kachelmenge und jede Beschriftung sind
+unverändert.
 
 ### 0.2 Berichtigungen am Konzept
 
@@ -105,6 +119,7 @@ die **keine** der Entscheidungen E1–E40 berühren:
 | B5 | 4.9 | Die **gesamte** Schemaänderung läuft in **einer** Migration `2026_08_17_notarzt_erweiterung`, einschließlich der Einsatzspalten aus Abschnitt 4.3, die erst in Etappe 2 benutzt werden. Eine Schemaänderung in einem Zug ist dreien vorzuziehen: Wer einmal migriert hat, muss es für die späteren Etappen nicht erneut. Spalten ohne Katalogeintrag stören nicht. |
 | B6 | 4.9 Schritt 11 | `days.aircraft` und `days.base` werden **nicht** ersatzlos entfernt, sondern vorher nach `vehicle_name` / `base_name` gerettet (`COALESCE`). Das ist zugleich der Ersatz für den Rückfall, den `api/suchindex.php` bisher auf diese Altspalten hatte — Diensttage von vor der Stammdaten-Umstellung bleiben nach Standort und Rettungsmittel auffindbar. |
 | B7 | 4.2 | Der eindeutige Schlüssel von `bw_units`, `resources` und `transport_dests` muss den Standort enthalten (`user_id, base_id, name`). Das Konzept nennt das nur für `crew_presets`. Ohne die Erweiterung ließe sich dieselbe Zielklinik nicht an zwei Standorten anlegen — also genau die Doppelpflege nicht, die E15 ausdrücklich in Kauf nimmt. |
+| B9 | 4.3 | Der Feldkatalog kannte nur Auswahlfelder, deren Wert zugleich die Beschriftung ist. Die Transportart ist keines — die Spalte ist ein `ENUM('air','ground','ambulant')`. Umgesetzt als Zuordnung `Wert => Beschriftung`; `show_if` nennt entsprechend den gespeicherten Wert. Siehe Befund P17. |
 | B8 | 3.6 | Die neutralen Phasenbeschriftungen (E20) sind **serverseitig** bereits in Etappe 1 gesetzt (`PHASE_LABELS` in `db.php`), die Uhr folgt in Etappe 4. Bis dahin zeigt die Uhr „Abflug", das Web „Ausrücken". Rein kosmetisch: Der JSON-Vertrag überträgt Nummern, keine Beschriftungen. |
 
 ### 0.3 Probleme und Abweichungen aus der Umsetzung
@@ -125,6 +140,13 @@ die **keine** der Entscheidungen E1–E40 berühren:
 | P12 | `api/import_commit.php` | Ein Import legt **je Kalendertag höchstens einen** Diensttag an. Aus einer Tabelle lässt sich nicht ableiten, ob zwei Einsätze desselben Datums zu einem oder zu zwei Diensten gehören; eine geratene Aufteilung wäre schlechter als eine, die jemand bewusst vornimmt. Das `ON DUPLICATE KEY UPDATE` ist mit dem Tagesschlüssel entfallen — ein blindes INSERT hätte bei jedem Lauf neue Diensttage angelegt. |
 | P15 | `update.php`, Ergebnisliste | **Fehler, der älter ist als diese Etappe.** Die Zeile für eine bereits angewendete Migration trug vier Elemente, die Auswertung zerlegt sie in sechs — zwei PHP-Warnungen je verbuchter Migration, bei jedem Aufruf der Wartungsseite. Auf einer Installation mit 30 Migrationen sechzig Zeilen Fehlerprotokoll für nichts, ausgerechnet auf der Seite, die den Zustand der Datenbank berichten soll. Angezeigt wurde trotzdem das Richtige (die fehlenden Werte kamen als NULL an), deshalb war es nie aufgefallen. Berichtigt — die Ausnahme von der Regel „Etappe 1b fasst `update.php` nicht an" ist damit begründet. |
 | P14 | `diensttag_lib.php`, Rückfallebene | Welcher Diensttag ist gemeint, wenn ein Upload OHNE `day_ref` auf ein Datum mit **mehreren** Diensttagen trifft (Konzept 4.4 lässt das offen)? Entschieden über die **Zeit** des Datensatzes, nicht über die Reihenfolge: erst der Diensttag, dessen Zeitraum ihn umschließt, dann der letzte, der vor ihm begonnen hat, dann der früheste des Datums. Die erste Fassung nahm schlicht den jüngsten — ein Früheinsatz landete dadurch am Abenddienst und zog dessen Beginn um Stunden nach vorne. Die Uhr sagt nicht, welcher Dienst gemeint ist; ihre Zeitstempel sagen es sehr wohl. |
+| P16 | `backup_lib.php`, Wiedereinspielen | **Fehler, der älter ist als diese Etappe.** Die Spaltenliste beim Einspielen entstand aus dem Feldkatalog — und übernahm damit ausschließlich Spalten, die **so heißen wie ihr Feld**. Für 6.0.0 war das folgenlos, weil es keine anderen gab; ab 6.1.0 wären `dest_lat`, `dest_lon` (Koordinatenspalten des Ortsfelds `transport_dest`) und `start_src` (kein Katalogfeld) beim Rückweg still verschwunden — gesichert, aber nicht zurückgeschrieben. Gefunden beim Sicherungs-Rundlauf, nicht beim Lesen. Zusätzlich stand die normalisierte Besatzung noch in dieser Liste: Die Prüfung schloss nur `'resources'` aus, nicht `'store' => 'crew'`. Eine Datei mit einem Schlüssel `crew_p1` hätte ein INSERT auf eine Spalte erzeugt, die es seit 6.0.0 nicht mehr gibt — und damit nicht eine Zeile, sondern die **ganze** Wiederherstellung scheitern lassen. Behoben über `mf_ist_spalte()` und `mf_ort_spalten()`. |
+| P17 | `mission_fields.php`, Katalog | Der Feldkatalog konnte **nur Auswahlfelder, deren Wert zugleich die Beschriftung ist**. Die Transportart ist keines: Die Spalte ist ein `ENUM('air','ground','ambulant')`, angezeigt gehört „Luft", „Boden", „Ambulant". Die Fassung nach dem Konzepttext (Abschnitt 4.3, `'options' => ['Luft','Boden','Ambulant']`) schrieb die Beschriftung in die Spalte; MariaDB meldete Fehler 1265 „Data truncated", das Formular meldete „Speichern fehlgeschlagen", und der Einsatz war weg. Gefunden beim ersten Speichern über die Oberfläche. Aufgelöst mit `mf_optionen()`: Beide Schreibweisen sind zulässig, eine Liste bleibt Wert = Beschriftung, eine Zuordnung trennt sie. |
+| P18 | `api/import_commit.php` | Die Zielklinik-Koordinate wurde beim Import je Achse einzeln geprüft — ein halbes Paar (Breite ungültig, Länge gültig) kam damit durch und stand als einzelne Länge in der Zeile. Die Regel „nur zusammen" galt im Formular und in der Stammdatenpflege, nicht hier. Jetzt überall über `pruef_ortspaar()`. Gefunden durch einen Importlauf mit absichtlich ungültigen Werten. |
+| P19 | `docs/pruefgrundlage/` | **Fehlt im Repository.** Das Prüfprotokoll verweist auf `schema-vor-6.0.0.sql` und `testbestand.sql` und begründet ausdrücklich, warum sie als Dateien und nicht als Commit-Hash vorliegen sollen — committet wurden sie nie. Der Migrationslauf der Etappe 1a lässt sich damit nicht wiederholen. Für Etappe 2 ohne Folge (sie braucht keine Migration), für Etappe 3 und 4 zu ergänzen. |
+| P20 | `assets/export.js`, `assets/import_profiles.js` | **Zwei Exportspalten hießen noch nach der Luftrettung.** Serverseitig heißen die Phasen 3 und 7 seit Web 6.0.0 „Ausrücken" und „Ankunft Klinik" (E20, B8); der Export schrieb weiterhin `phase_03_abflug` und `phase_07_landung_krankenhaus`. Abschnitt 4.8 verlangt ausdrücklich, die Spaltenköpfe zu neutralisieren — die drei übrigen Punkte dort waren erledigt, dieser nicht. Umbenannt in `phase_03_ausruecken` und `phase_07_ankunft_klinik`; die alten Namen bleiben im Importprofil als **Zweitnamen auf dasselbe Ziel** stehen, sonst verlöre der Rückweg einer alten Exportdatei still die Alarm- und die Klinikzeit. Ebenfalls neutralisiert: die Erläuterung zu `strecke_m` in `felder.csv` („Flugstrecke") und der Präfix des Exportdateinamens (`luftrettungsdokumentation_` → `einsatzdokumentation_`, Abschnitt 3.9). **Folge:** `docs/Export-Format.md` beschreibt die beiden Spalten jetzt falsch — die Aktualisierung in Etappe 4 ist damit keine Vollständigkeitsfrage mehr, sondern eine Berichtigung. |
+| P22 | `server/flugtag_neu.php`, `flugtag_loeschen.php`, `flugtag_datum.php` | **Die drei umbenannten Dateien lagen noch im Repository.** Etappe 1b hat sie als „umbenannt" verbucht und die Nachfolger angelegt, die Vorgänger aber nie entfernt — sie wurden mit dem ZIP der Etappen 1b und 2 weiter ausgeliefert. Kein toter Code, sondern **aktiv falscher**: Sie arbeiten auf dem alten Datenmodell. `flugtag_loeschen.php` ruft `trash_scope_day($userId, $day)` mit einem Datumstext auf, obwohl die Signatur seit 6.0.0 `int $dayId` lautet; `flugtag_datum.php` ruft `tz_tag_zustand()` und `tz_tag_datum_aendern()`, die es nicht mehr gibt. Verlinkt ist keine der drei — erreichbar über die Adresszeile trotzdem, und zwar für jedes angemeldete Konto. Gelöscht in Etappe 3. **Für die Betreiberin:** Die Dateien müssen auch auf dem Webspace verschwinden; der FTP-Abgleich entfernt nicht zwingend, was im Paket fehlt. |
+| P21 | Abschnitt 3.7 vs. 4.6 | **Widerspruch im Konzept, zugunsten von 4.6 aufgelöst.** Abschnitt 3.7 sagt, die Art erscheine „als Symbol am Rettungsmittelnamen, nicht als eigene Spalte" (E27); Abschnitt 4.6 verlangt für `missiontable.js` ausdrücklich „neue Spalten Art und Fehleinsatz". Beides zugleich geht nicht: Die Einsatztabelle führt **keinen** Rettungsmittelnamen, an den sich ein Symbol hängen ließe. Umgesetzt als Symbolspalte von der Breite ihres Zeichens, mit Textalternative — die Begründung von E27 („die Übersichten sind ohnehin eng") bleibt damit gewahrt, und in der Tagesleiste steht das Symbol unverändert am Namen. Zusätzlich datengetrieben: Bei nur einer Art im Bestand entfällt die Spalte ganz. |
 | P13 | `nachbearbeitung.php` | Der letzte Schritt (`base_id` auf `NOT NULL`) ändert das **Schema** und gilt für alle Konten. Er ist deshalb auf Admins beschränkt — und zwar im Handler, nicht nur durch einen verborgenen Knopf. Zusätzlich prüft er über **alle Konten** hinweg auf offene Einträge: Die Bedingung gilt für die Tabelle, ein einziger offener Eintrag eines anderen Kontos ließe das `ALTER TABLE` mit einem Datenbankfehler scheitern statt mit einer lesbaren Meldung. |
 
 ### 0.4 Was Etappe 1b umgesetzt hat
@@ -195,39 +217,217 @@ Bis Etappe 3 heißt das: Wer bodengebunden dokumentiert, liest in der
 Zeitraumübersicht „Flugtage", wo Diensttage gemeint sind. Hinzunehmen, weil die
 Zahl stimmt und der Umbau der Ansicht ohnehin ansteht.
 
-### 0.5 Nächste Etappe: 2 — Einsatzfelder, Ortsfeld, Abfahrtort
+> **Erledigt mit Etappe 3** (Abschnitt 0.6). Die Rechnung ist aufgegangen: Die
+> Beschriftungen mussten nicht zurückgedreht werden, sie sind unverändert in den
+> Luftrettungs-Tab gewandert.
 
-**Für den Chat, der Etappe 2 übernimmt.** Voraussetzung: Das ZIP der Etappe 1b
+### 0.5 Was Etappe 2 umgesetzt hat
+
+**Die Einsatzfelder stehen, und die Karte funktioniert auch ohne Uhr.** Geprüft
+wurde gegen eine laufende Installation (MariaDB 10.11, PHP 8.4, eingebauter
+Server mit Testrouter); der Ablauf steht in `Pruefprotokoll-Notarzt.md`.
+
+**Neu:**
+
+| Datei | Wozu |
+|---|---|
+| `server/assets/ortsfeld.js` | Die Ortsfeld-Komponente aus V8. Sechs Verwendungen, ein Code — Chip, Adresssuche, Plus-Code-Erkennung, Zustandszeile und die Prüfung „Koordinaten ohne Bezeichnung". |
+| `server/assets/luftlinie.js` | Auflösung der Abfahrtortregel, Großkreisdistanz und das Zeichnen. Zwei Seiten benutzen sie (`einsatz.php`, `index.php`); sie unterscheiden sich darin, WOHER die Punkte kommen, nicht darin, was mit ihnen geschieht. |
+| `ui_ortsfeld()` in `server/ui.php` | Das Markup dazu. Eine Verwendung ist ein PHP-Aufruf und ein `EdOrtsfeld.init()`. |
+
+**Neu im Feldkatalog** (`mission_fields.php`): `transport_mode` mit den Kindern
+`na_escort` und `transport_dest` (samt `schockraum`), dazu `false_alarm` mit
+eigener Spalte in der Tagestabelle. `winch` und `bergwacht` tragen jetzt
+`cap_gate`.
+
+**Neu als Mechanismus** (`mission_fields_lib.php`):
+
+| Schlüssel / Funktion | Wozu |
+|---|---|
+| `kind_gate`, `cap_gate` | wie `role_gate`, aber auf Art und Fähigkeit des Diensttags. Beide über `mf_gates_erfuellt()`. |
+| `show_if` | wertabhängige Unterfelder unter einem `select` — die Lücke aus V4. Über `mf_show_if()`. |
+| `'type' => 'loc'` | Ortsfeld: Bezeichnung plus zwei Koordinatenspalten, benannt in `lat_col`/`lon_col` (`mf_ort_spalten()`). |
+| `mf_optionen()` | Auswahlfelder, deren gespeicherter Wert nicht die Beschriftung ist (Befund P17). |
+| `pruef_ortspaar()` in `validate_lib.php` | Die Regeln für ein optionales Koordinatenpaar an einer Stelle statt an vieren. |
+
+#### Was `kind_gate` soll, wenn es niemand benutzt
+
+Kein Feld trägt den Schlüssel, und das ist kein Versehen: Die einzigen
+artabhängigen Einsatzfelder sind Winde und Bergwacht, und die hängen an der
+**Fähigkeit**, nicht an der Art (E29). Ein zusätzliches `kind_gate` wäre eine
+zweite Formulierung derselben Aussage — und die erste, die beim nächsten Umbau
+vergessen wird. Umgesetzt ist er trotzdem, weil das Konzept ihn nennt
+(Abschnitt 4.3) und weil er in derselben Funktion liegt wie die beiden anderen
+Filter: Ein späteres artabhängiges Feld braucht dann keine Sonderbehandlung im
+Formular.
+
+#### Der Unterschied zwischen Verstecken und Leeren
+
+Er ist die wichtigste Entscheidung dieser Etappe und steht ausführlich in
+`Technik.md` 4.98b. Kurz: Ein **gefiltertes** Feld (`role_gate`, `kind_gate`,
+`cap_gate`) behält seinen Inhalt und wird nur versteckt — ein belegtes bleibt
+sogar sichtbar. Ein **ausgeschlossenes** Unterfeld (`show_if`) wird geleert:
+Transport „Ambulant" mit eingetragener Zielklinik wäre kein schützenswerter
+Bestand, sondern ein Widerspruch in den Daten (A5).
+
+#### Bewusst nicht im Katalog: der Abfahrtort
+
+Er ist kein Katalogfeld, aus zwei Gründen. Seine Auswahl speichert eine
+**Regel** (`base`, `prev_site`, `prev_dest`, `manual`), deren Beschriftungen
+nicht ihre Datenbankwerte sind — das ließe sich seit `mf_optionen()` zwar
+abbilden —, und der manuelle Ort liegt wie der Einsatzort **verschlüsselt** im
+`pat_blob`. Das zweite kann der Katalog nicht: Er kennt nur Felder, deren Wert
+in einer Spalte von `missions` steht. Das Formular behandelt ihn deshalb
+ausdrücklich, unmittelbar unter dem Einsatzort.
+
+#### Was am Datenmodell unverändert blieb
+
+**Keine Migration** (B5). `transport_mode`, `na_escort`, `false_alarm`,
+`start_src`, `dest_lat`, `dest_lon` und die Koordinaten in `bases` und
+`transport_dests` waren bereits da; Backup und Export führten sie schon mit.
+Diese Etappe hat sie benutzt, nicht angelegt.
+
+#### Was noch nicht neutral ist
+
+Unverändert gegenüber Etappe 1b: `zeitraum.php` beschriftet weiterhin
+„Flugtage", „Ø Einsätze / Flugtag" und „Flugkilometer gesamt". Die Kacheln
+werden in Etappe 3 nach Art in Tabs geteilt, und der Luftrettungs-Tab behält
+genau diese Beschriftungen (E32, A13f).
+
+> **Erledigt mit Etappe 3** (Abschnitt 0.6). Diese Beschriftungen stehen jetzt
+> ausschließlich im Luftrettungs-Tab; die übrigen sprechen neutral.
+
+### 0.6 Was Etappe 3 umgesetzt hat
+
+**Die Auswertung trennt nach Art, und die Suche kann danach filtern.** Geprüft
+wurde gegen eine laufende Installation (MariaDB 10.11.14, PHP 8.4, eingebauter
+Server mit Testrouter) und im Chromium der Arbeitsumgebung; der Ablauf steht in
+`Pruefprotokoll-Notarzt.md`.
+
+**Keine neue Datei.** Diese Etappe hat vorhandene erweitert — das ist der
+Unterschied zu Etappe 2, die eine Komponente herauszulösen hatte.
+
+**Geändert:**
+
+| Datei | Was |
+|---|---|
+| `server/api/range.php` | `kind` des Diensttags und `false_alarm` je Einsatz; `tage_art` mit den Diensttagen nach Art (`air` / `ground` / `neutral`). Die Vorprüfung V7 hatte genau diese drei Punkte benannt. |
+| `server/zeitraum.php` | Tableiste, Kachelsätze je Tab, datengetriebene Windenkacheln, Hinweis auf neutrale Diensttage, Tab im URL-Fragment. Die Kacheln entstehen jetzt im Browser statt im HTML. |
+| `server/assets/missiontable.js` | Spalten `art` und `fehl`; `nurWenn` als datengetriebene Spaltensichtbarkeit samt `setSpaltenBestand()`. |
+| `server/api/suchindex.php` | `transport_mode`, `na_escort`, `false_alarm`. |
+| `server/suche.php` | Filter Art, Transportart, NA-Begleitung, Fehleinsatz; neuer Block „Einsatz"; `setSpaltenBestand()` auf den Gesamtbestand. |
+| `server/diensttag_lib.php` | `dt_art_symbole()` — die Artsymbole an einer Stelle, auch für den Browser. |
+| `server/assets/export.js`, `server/assets/import_profiles.js` | Phasen 3 und 7 neutral benannt, alte Namen als Zweitnamen im Import; Erläuterung zu `strecke_m`; Präfix des Dateinamens (Befund P20). |
+| `server/assets/style.css` | Tableiste, die beiden neuen Spaltenbreiten, der Hinweis. |
+
+#### Wonach sich die Tableiste richtet — und wonach nicht
+
+Nach den **Diensttagen** des Zeitraums, nicht nach den Einsätzen. Ein
+bodengebundener Dienst ohne einen einzigen Einsatz ist trotzdem ein
+bodengebundener Dienst, und die Kachel „Diensttage" zählt ihn; würde die Leiste
+aus der Einsatzliste abgeleitet, verschwände sie an genau diesem Tag. Deshalb
+rechnet `api/range.php` die Aufteilung in SQL über `days` und nicht im Browser
+über `missions`.
+
+#### Der Fall, den Abschnitt 3.7.1 nicht nennt
+
+Die Tabelle dort kennt „nur luftgebunden", „nur bodengebunden", „nur neutral"
+und „beide Arten". Nicht genannt ist die Mischung aus **einer** Art und
+neutralen Diensttagen — sie ist im Bestand aber der Regelfall, solange die
+Uhr Diensttage anlegt, die noch niemand zugeordnet hat.
+
+Aufgelöst wie folgt: Die Tableiste erscheint nur bei **beiden** Arten (E28,
+wörtlich). Liegt nur eine Art vor, bestimmt sie allein die **Beschriftung** der
+Kacheln; gezeigt und gerechnet wird über **alle** Diensttage des Zeitraums,
+einschließlich der neutralen. Der Hinweis aus E31 steht dann ebenfalls da — er
+gehört überall dorthin, wo neutrale Diensttage mitzählen, und erklärt, warum
+„Flugtage" einen Tag mehr ausweist, als luftgebunden dokumentiert wurde. Die
+Alternative — neutrale Diensttage in der einzigen vorhandenen Ansicht
+wegzulassen — hätte sie unsichtbar gemacht, ohne dass es einen Tab gäbe, in dem
+sie auftauchen.
+
+#### Warum die Spalten der Einsatztabelle dieselbe Regel bekommen haben
+
+A13d verlangt sie ausdrücklich für die Bergwachtspalte („folgt derselben
+datengetriebenen Regel wie die Windenspalte") — die Windenspalte folgte ihr
+allerdings noch gar nicht. Beide sind jetzt datengetrieben, und der neue
+Fehleinsatz ebenso: Der Haken steht beiden Arten offen und ist selten gesetzt;
+eine Spalte voller leerer Zellen liest sich als Mangel. Maßgeblich ist der
+**Bestand**, nicht die Trefferliste — sonst käme und ginge die Spalte beim
+Tippen im Suchfeld. Welche Liste der Bestand ist, sagt die Seite; die Suche
+setzt ihn einmal beim Laden, die Zeitraumübersicht bei jedem Tabwechsel.
+
+#### Was der Suchindex bewusst nicht führt
+
+`dest_lat`, `dest_lon` und `start_src`. Abschnitt 0.6 der Vorfassung verlangte
+die neuen Felder „soweit sie im Klartext liegen"; der Index selbst führt seit
+jeher nur, was die Suche **auswertet** (Kopf von `api/suchindex.php`). Nach
+einer Koordinate oder nach der Herkunft eines Abfahrtorts wird nicht gefiltert —
+mitgeschickt wären sie Ballast in einer Antwort, die den gesamten Bestand
+überträgt.
+
+#### Was neutral ist — und was bleibt
+
+Mit dieser Etappe ist die Flugterminologie dort verschwunden, wo sie nicht
+hingehört: `zeitraum.php` beschriftet neutral, sobald der Tab es verlangt, die
+Einsatztabelle war es schon, und der Export hat seine letzten zwei
+Spaltennamen abgelegt (P20).
+
+Sie **bleibt** an genau einer Stelle, und zwar absichtlich: im Luftrettungs-Tab.
+Dort heißen die Kacheln „Flugtage", „Ø Einsätze / Flugtag", „Flugkilometer
+gesamt" und „Längste Flugstrecke" (E32). Für eine rein luftgebundene Nutzung
+sieht die Auswertung damit aus wie vor der ganzen Erweiterung.
+
+---
+
+### 0.7 Nächste Etappe: 4 — Zusammenführen, Uhr, Dokumentation
+
+**Für den Chat, der Etappe 4 übernimmt.** Voraussetzung: Das ZIP der Etappe 3
 ist committet und gepusht; ein neuer Chat klont frisch.
 
-**Etappe 2 braucht keine Migration.** `transport_mode`, `na_escort`,
-`false_alarm`, `start_src`, `dest_lat`, `dest_lon` und die Koordinaten in
-`bases`/`transport_dests` **existieren bereits** (Berichtigung B5) und werden von
-Backup und Export schon mitgeführt.
+**Etappe 4 braucht keine Migration.** Wie 2 und 3 arbeitet sie auf dem Schema
+der 6.0.0 — auch das Zusammenführen: `day_refs`, `mission_crew` und die
+Fremdschlüssel auf `days` sind seit 6.0.0 da.
 
-**Prüfumgebung wiederherstellen** (Anleitung in `Pruefprotokoll-Notarzt.md`):
-MariaDB installieren, `edoku_bestand` aus
-`docs/pruefgrundlage/schema-vor-6.0.0.sql` plus Testbestand aufbauen und
-migrieren, `edoku_neu` aus dem neuen `schema.sql`. Zum Prüfen der Oberfläche
-genügt der eingebaute PHP-Server mit einem Testrouter, der eine Sitzung setzt;
-das Vorgehen steht im Prüfprotokoll.
+**Prüfumgebung.** Der Ablauf steht in `Pruefprotokoll-Notarzt.md` und hat sich
+in den Etappen 2 und 3 bewährt: MariaDB installieren, `edoku_neu` aus
+`server/schema.sql` aufbauen, Testbestand über `diensttag_lib.php` anlegen,
+eingebauten PHP-Server mit Testrouter starten. Etappe 3 hat den Ablauf um einen
+**Browsertest mit Playwright** ergänzt (Chromium liegt im Bild bereit); damit
+lassen sich Tabs, Filter und Karte tatsächlich bedienen statt nur gegenlesen.
+**Achtung, Befund P19:** `docs/pruefgrundlage/` fehlt weiterhin im Repository —
+der Weg über den *migrierten Altbestand* ist nicht wiederholbar.
 
 **Zu tun:**
 
-- Grundlage sind die Vorprüfungen **V4** und **V8** in Abschnitt 5a — bereits
-  durchgeführt, nicht erneut erheben.
-- Feldkatalog um `transport_mode` samt Kindern, `false_alarm`, `kind_gate`,
-  `cap_gate` und `show_if`. `role_gate` ist in 1b umgesetzt und liest aus
-  `day_crew`; `kind_gate` und `cap_gate` folgen demselben Muster und finden
-  `days.kind` sowie `dt_faehigkeiten()` vor.
-- `show_if` im Lese- und Renderpfad von `einsatz_form.php` (Vorgehen in V4). Der
-  Lesepfad hat sich in 1b geändert: `$readField` verteilt jetzt auf **zwei**
-  Ziele (Spalten und `mission_crew`, Befund P8). Die `show_if`-Auswertung gehört
-  weiterhin allein in den Durchfall-Zweig.
-- Ortsfeld-Komponente `assets/ortsfeld.js` herauslösen (Vorgehen in V8). Sie
-  ersetzt dann auch die einfachen Koordinatenfelder, die 1b in der Standort- und
-  Zielklinikpflege eingebaut hat — dort steht bereits ein Kommentar darauf.
-- Abfahrtort und Luftlinie zeichnen.
+- **Zusammenführen von Diensttagen** (E10–E13, E25, Abschnitte 3.4 und 4.5,
+  A6/A7/A8). Der Einstieg liegt im Zieldiensttag, nicht in der Tagesliste. Ein
+  Codepfad für Uhr- und Handtage. Nicht umkehrbar, nicht über den Papierkorb.
+  Die Kandidatenliste ist „zeitlich benachbart" — bewusst nicht in Tagen
+  festgelegt (Abschnitt 8).
+- **Uhr** (A14, E20, E21, B8): `day_ref` senden, neutrale Phasenbeschriftungen
+  („Ausrücken" statt „Abflug"), Uhr-Version auf 1.8.0. Die Connect-IQ-App-ID
+  bleibt unverändert (E22). **Das Connect-IQ-SDK fehlt in der Arbeitsumgebung** —
+  Uhr-Code lässt sich nicht kompilieren; das ist im Prüfprotokoll als Grenze
+  benannt und muss dort auch für Etappe 4 stehen bleiben.
+- **Dokumentation** (A16). Vier Dateien sind noch auf dem Stand vor 6.0.0:
+  - `Export-Format.md` — **Berichtigung, nicht nur Ergänzung** (Befund P20):
+    `phase_03_abflug` → `phase_03_ausruecken`, `phase_07_landung_krankenhaus` →
+    `phase_07_ankunft_klinik`, dazu die Spalten `art`, `transport_art`,
+    `na_begleitung`, `fehleinsatz`, `ziel_lat`, `ziel_lon`, `abfahrt_regel`,
+    `pat_start_*`, die Besatzungsspalten aus dem Rollenkatalog (sieben statt
+    fünf), `diensttag`/`diensttag_id`/`rettungsmittel` statt
+    `flugtag`/`hubschrauber` und der neue Dateinamenspräfix.
+  - `JSON-Vertrag.md` — steigt auf **1.3** (Berichtigung B1), `day_ref`.
+  - `Backup-Format.md` — Nutzlastversion 6, `day_refs`, `day_crew`,
+    `mission_crew`, `day_capabilities`, `vehicles` samt Rollen und
+    Fähigkeiten, `user_bases`, `base_id` der Stammdatentabellen.
+  - `Handbuch.md` — der fertige Stand, einschließlich des Unterschieds
+    zwischen Statistik (nach Diensttag) und Suche (nach echtem Einsatzdatum).
+- **Verwaiste Querverweise** (A16, letzter Satz): Es darf danach kein „Flugtag",
+  kein „Hubschrauber" und keine Phase 10 mehr in der Dokumentation stehen — mit
+  der einen Ausnahme der Luftrettungs-Kacheln (E32) und der GitHub-Adresse, weil
+  das Repository nicht umbenannt wird (Abschnitt 7).
 
 ---
 
@@ -1036,6 +1236,12 @@ Renderpfad Zeilen 381–401. Die Umsetzung von `show_if` erfordert daher:
    er wird dann samt Kindern verborgen, sofern nicht bereits belegt.
 
 Neue Einträge im Katalog:
+
+**[überholt]** — die Optionsliste unten schreibt die BESCHRIFTUNG in eine Spalte,
+die nur `air`, `ground` und `ambulant` kennt (Befund P17). Umgesetzt ist
+`'options' => ['air' => 'Luft', 'ground' => 'Boden', 'ambulant' => 'Ambulant']`,
+und `show_if` nennt entsprechend `'not_in' => ['ambulant']`. Alles Übrige des
+Blocks gilt unverändert.
 
 ```
 'transport_mode' => [

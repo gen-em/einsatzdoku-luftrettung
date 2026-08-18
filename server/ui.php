@@ -196,6 +196,99 @@ function ui_days_sidebar(?int $currentDayId): void {
 </aside>
 <?php }
 
+/**
+ * Markup eines ORTSFELDES — Bezeichnung plus optionale Koordinaten (E37/E39).
+ *
+ * Gegenstueck zu assets/ortsfeld.js: Diese Funktion erzeugt die Elemente, das
+ * Skript belebt sie. Beide bilden die Kennungen aus demselben PRAEFIX; wer eine
+ * siebte Verwendung braucht, schreibt einen Aufruf hier und ein
+ * EdOrtsfeld.init() dort — und nicht wieder 250 Zeilen (Vorpruefung V8).
+ *
+ * ZWEI FORMEN, gesteuert ueber 'feld':
+ *
+ *   feld = true   Vollstaendiges Widget mit eigener Beschriftung und
+ *                 Textfeld. So steht es im Einsatzformular.
+ *   feld = false  NUR das Zubehoer — Suchfeld, Vorschlagsliste, Zustandszeile,
+ *                 Chip und die versteckten Koordinatenfelder. Das
+ *                 Bezeichnungsfeld existiert dann bereits und traegt lediglich
+ *                 die Kennung `<praefix>addr`. Gebraucht in den
+ *                 Stammdatenformularen: Dort ist der Name ein gewachsenes
+ *                 Eingabefeld einer Flex-Zeile, und es einzufassen haette das
+ *                 Layout gebrochen, ohne etwas zu gewinnen.
+ *
+ * Schluessel:
+ *   praefix     Pflicht. Bildet `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`,
+ *               `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl`.
+ *   such        eigenes Suchfeld erzeugen (getrennte Suche, siehe ortsfeld.js)
+ *   such_hinweis / such_platzhalter
+ *   label, hinweis, platzhalter, max, wert           (nur bei feld = true)
+ *   name        POST-Name des Bezeichnungsfeldes; null = keiner (der Wert
+ *               wandert dann verschluesselt in den pat_blob)
+ *   lat_name / lon_name, lat / lon                   Koordinatenfelder
+ *   datalist    Liste von Namen fuer eine <datalist> (Stammdaten-Vorschlaege)
+ *   klasse      zusaetzliche Klasse am Rahmen (z. B. 'loc-inline')
+ */
+function ui_ortsfeld(array $o): void
+{
+    $p = (string)$o['praefix'];
+    $mitFeld = ($o['feld'] ?? true) !== false;
+    $mitSuche = !empty($o['such']);
+    $dl = $o['datalist'] ?? null;
+
+    $versteckt = !empty($o['versteckt']) ? ' hidden' : '';
+
+    if ($mitFeld): ?>
+      <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
+        <label><?= e((string)($o['label'] ?? '')) ?>
+          <?php if (!empty($o['hinweis'])): ?>
+            <span class="muted small"><?= e((string)$o['hinweis']) ?></span>
+          <?php endif; ?>
+          <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
+                 <?= isset($o['name']) && $o['name'] !== null ? 'name="' . e((string)$o['name']) . '"' : '' ?>
+                 <?= isset($o['max']) ? 'maxlength="' . (int)$o['max'] . '"' : '' ?>
+                 <?= $dl !== null ? 'list="' . e($p) . 'dl"' : '' ?>
+                 placeholder="<?= e((string)($o['platzhalter'] ?? '')) ?>"
+                 value="<?= e((string)($o['wert'] ?? '')) ?>">
+        </label>
+    <?php else: ?>
+      <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
+    <?php endif; ?>
+
+    <?php if ($mitSuche): ?>
+      <?php /* Getrennte Suche: Das Namensfeld darüber bleibt der Name
+               („Standort Kempten" ist keine Adresse). Hier wird gesucht oder
+               eine Koordinate eingefügt; übernommen werden nur die
+               Koordinaten. */ ?>
+      <label class="fld-sub"><?= e((string)($o['such_hinweis'] ?? 'Koordinaten (optional)')) ?>
+        <input type="text" id="<?= e($p) ?>such" autocomplete="off"
+               placeholder="<?= e((string)($o['such_platzhalter']
+                   ?? 'Adresse suchen — auch Koordinaten oder Plus Code')) ?>">
+      </label>
+    <?php endif; ?>
+
+      <ul id="<?= e($p) ?>suggest" class="loc-suggest" hidden></ul>
+      <?php /* Meldungszeile unmittelbar unter dem Feld: Sie sagt etwas über
+               DIESES Eingabefeld aus („Koordinaten gesetzt — dieses Feld ist
+               die Bezeichnung", „Bezeichnung fehlt"), nicht über den Chip
+               darunter. */ ?>
+      <p class="locstate" id="<?= e($p) ?>state"></p>
+      <?php /* Bestätigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
+               darin — sonst vernichtet die erste getippte Bezeichnung sie. */ ?>
+      <div class="rmchips" id="<?= e($p) ?>chips"></div>
+      <input type="hidden" id="<?= e($p) ?>lat"
+             <?= isset($o['lat_name']) ? 'name="' . e((string)$o['lat_name']) . '"' : '' ?>
+             value="<?= e((string)($o['lat'] ?? '')) ?>">
+      <input type="hidden" id="<?= e($p) ?>lon"
+             <?= isset($o['lon_name']) ? 'name="' . e((string)$o['lon_name']) . '"' : '' ?>
+             value="<?= e((string)($o['lon'] ?? '')) ?>">
+      <?php if ($dl !== null): ?>
+        <datalist id="<?= e($p) ?>dl">
+          <?php foreach ((array)$dl as $s): ?><option value="<?= e((string)$s) ?>"><?php endforeach; ?>
+        </datalist>
+      <?php endif; ?>
+      </div>
+<?php }
+
 /** Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt */
 function ui_footer(): void { ?>
   <script src="<?= asset('assets/confirm.js') ?>"></script>

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
+require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabelle
 
 /**
  * Alle Einsaetze eines Jahres oder Monats: Karte, Statistiktabelle und eine
@@ -49,38 +50,42 @@ $titel = $monat !== ''
       <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
     </p>
 
-    <div id="rangemap" class="map" hidden></div>
-
-    <div class="stats-grid" id="statsgrid" hidden>
-      <div class="stat-tile"><span class="stat-value" id="st-missioncount">–</span>
-        <span class="stat-label">Einsätze</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-flightdays">–</span>
-        <span class="stat-label">Flugtage</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-avgmissions">–</span>
-        <span class="stat-label">Ø Einsätze / Flugtag</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-winchcycles">–</span>
-        <span class="stat-label">Anzahl Winden-Cycles</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-avgwinch">–</span>
-        <span class="stat-label">Ø Winden-Cycles / Flugtag</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-secondary">–</span>
-        <span class="stat-label">Sekundärtransporte</span></div>
-      <div class="stat-tile"><span class="stat-value" id="st-totalkm">–</span>
-        <span class="stat-label">Flugkilometer gesamt</span></div>
-      <div class="stat-tile" id="tile-maxkm"><span class="stat-value" id="st-maxkm">–</span>
-        <span class="stat-label">Längste Flugstrecke</span></div>
-      <div class="stat-tile" id="tile-maxdauer"><span class="stat-value" id="st-maxdauer">–</span>
-        <span class="stat-label">Längste Einsatzdauer</span></div>
-      <div class="stat-tile" id="tile-maxhoehe"><span class="stat-value" id="st-maxhoehe">–</span>
-        <span class="stat-label">Höchster Einsatzort</span></div>
+    <?php /* TABLEISTE NACH ART (E28, A13a). Sie entsteht erst im Browser und
+             bleibt verborgen, solange im Zeitraum nur EINE Art vorliegt — dann
+             gäbe es nichts zu wählen. Die Beschriftungen stehen hier und nicht
+             im Skript, damit sie ohne JavaScript im Quelltext auffindbar
+             sind. */ ?>
+    <div class="arttabs" id="arttabs" role="tablist"
+         aria-label="Ansicht nach Art des Diensttags" hidden>
+      <button type="button" class="arttab" data-tab="mix" role="tab"
+              id="tab-mix" aria-selected="true">Gemischt</button>
+      <button type="button" class="arttab" data-tab="air" role="tab"
+              id="tab-air" aria-selected="false">Luftrettung</button>
+      <button type="button" class="arttab" data-tab="ground" role="tab"
+              id="tab-ground" aria-selected="false">Bodengebundener Rettungsdienst</button>
     </div>
 
-    <!-- Spalten, Sortierung und Zeilenaufbau kommen aus assets/missiontable.js,
-         gemeinsam mit suche.php. Kopf und Rumpf bleiben hier leer. -->
-    <table class="data" id="rangetable">
-      <thead></thead>
-      <tbody id="rangebody"></tbody>
-    </table>
-    <p id="leer" class="muted" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
+    <div id="tabpanel" role="tabpanel" aria-labelledby="tab-mix">
+      <?php /* Der Hinweis auf neutrale Diensttage (E31). Ohne ihn wäre nicht
+               erklärbar, warum die Summe der beiden Artentabs kleiner ist als
+               „Gemischt". */ ?>
+      <p id="neutralhinweis" class="muted neutralhinweis" hidden></p>
+
+      <div id="rangemap" class="map" hidden></div>
+
+      <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
+               heissen, hängt vom Tab ab (E32, E33) und bei den Windenkacheln
+               zusätzlich vom Bestand (E30, A13d). */ ?>
+      <div class="stats-grid" id="statsgrid" hidden></div>
+
+      <!-- Spalten, Sortierung und Zeilenaufbau kommen aus assets/missiontable.js,
+           gemeinsam mit suche.php. Kopf und Rumpf bleiben hier leer. -->
+      <table class="data" id="rangetable">
+        <thead></thead>
+        <tbody id="rangebody"></tbody>
+      </table>
+      <p id="leer" class="muted" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
+    </div>
     <?php ui_footer(); ?>
   </main>
 </div>
@@ -90,6 +95,12 @@ $titel = $monat !== ''
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<?php /* Die Artsymbole VOR der Tabelle setzen — sie stammen aus
+         dt_art_symbole() (diensttag_lib.php) und sind damit dieselben wie in
+         der Tagesleiste. Gleiches Muster wie CREW_ROLLEN in import.php
+         (Befund P9); assets/missiontable.js führt einen Rückfall, falls die
+         Vorgabe fehlt. */ ?>
+<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
@@ -128,8 +139,27 @@ attachFullscreenControl(map);
 let missions = [];
 let fixierteMid = null;   // per Klick festgesetzte Einsatz-ID oder null
 
+/* Diensttage des Zeitraums, gesamt und nach Art (api/range.php). Sie zaehlen
+   auch Diensttage OHNE Einsatz mit und sind der Divisor der Durchschnitte —
+   deshalb kommen sie aus der Datenbank und nicht aus der Einsatzliste. */
+let tageGesamt = 0;
+let tageArt = { air: 0, ground: 0, neutral: 0 };
+
+/* Tableiste und gewaehlte Ansicht (E28).
+ *
+ * `tabsAn` sagt, ob es ueberhaupt etwas zu waehlen gibt: nur wenn im Zeitraum
+ * BEIDE Arten vorliegen. `ansicht` ist dann der gewaehlte Tab; ohne Tableiste
+ * ist es die eine vorhandene Art und bestimmt allein die BESCHRIFTUNG — die
+ * Ansicht zeigt in diesem Fall alles, auch die neutralen Diensttage. */
+let tabsAn = false;
+let ansicht = 'mix';
+
 const FARBE_HERVOR = '#D63338';  // Newroz Rot
 const FARBE_NORMAL  = '#4280E5'; // Max Blau
+
+/* Alle Pins in EINER Ebene. Der Tab filtert die Karte mit (A13b), und eine
+   Ebene laesst sich leeren, ohne die Karte selbst anzufassen. */
+const pinLayer = L.layerGroup().addTo(map);
 
 // Formatierung und Ortsauswertung teilen sich beide Uebersichten; die
 // Definitionen stehen in assets/missiontable.js.
@@ -139,65 +169,160 @@ const fmtDur     = EdMissionTable.fmtDur;
 const extractOrt = EdMissionTable.extractOrt;
 function fmtDe1(n){ return n.toFixed(1).replace('.', ','); }
 
-// Statistiktabelle: alle Kennzahlen kommen unverschluesselt aus api/range.php,
-// sind also sofort verfuegbar — unabhaengig von der lokalen Entschluesselung
-// der geschuetzten Felder (Ort/Alter/Diagnose).
-function zeichneStatistik(liste, tage){
-  const n = liste.length;
-  const windenSumme = liste.reduce((s, m) => s + (m.winch_cycles || 0), 0);
-  const kmSumme     = liste.reduce((s, m) => s + (m.distance_m || 0), 0);
+function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' km'; }
 
-  document.getElementById('st-missioncount').textContent = n;
-  document.getElementById('st-flightdays').textContent   = tage;
-  document.getElementById('st-avgmissions').textContent  = tage > 0 ? fmtDe1(n / tage) : '–';
-  document.getElementById('st-winchcycles').textContent  = windenSumme;
-  document.getElementById('st-avgwinch').textContent     = tage > 0 ? fmtDe1(windenSumme / tage) : '–';
-  document.getElementById('st-secondary').textContent    = liste.filter(m => m.secondary).length;
-  document.getElementById('st-totalkm').textContent      =
-    (kmSumme / 1000).toFixed(1).replace('.', ',') + ' km';
+/* ====================================================================
+ * KACHELN JE TAB (Abschnitt 3.7.2, E32/E33).
+ *
+ * Die Beschriftungen sind tababhaengig: Der Luftrettungs-Tab behaelt die
+ * gewohnte Flugterminologie, die uebrigen sprechen neutral. Fuer eine rein
+ * luftgebundene Nutzung aendert sich an der Auswertung damit nichts — genau
+ * das ist der Zweck (A13f).
+ *
+ * Ein Eintrag je Kachel:
+ *   id       Kennung, nur fuer die Hervorhebung und zum Wiederfinden
+ *   label    Beschriftung (tababhaengig — deshalb steht sie HIER und nicht
+ *            einmal im HTML)
+ *   text     (k) => Anzeigewert; `k` sind die einmal gerechneten Kennzahlen
+ *   extrem   Name des Extremwerts in `k`; macht die Kachel anklickbar und
+ *            verknuepft sie mit ihrem Traeger-Einsatz
+ *   nurWenn  (liste) => bool, datengetriebene Sichtbarkeit (E30, A13d)
+ * ================================================================== */
 
-  // Extremwert-Kacheln: EIN Durchlauf ermittelt Wert UND Traeger-Einsatz.
-  // Gleichstand: es gewinnt der zuerst gefundene Einsatz — api/range.php
-  // liefert ORDER BY started_at, also der zeitlich frueheste. Deshalb strikt
-  // "grösser als" statt "grösser gleich" vergleichen.
-  let maxKmMid = null, maxKmWert = null;
-  let maxDauerMid = null, maxDauerWert = null;
-  let maxHoeheMid = null, maxHoeheWert = null;
+/* Die acht neutralen Kacheln. Sie gelten fuer den bodengebundenen Tab UND
+   fuer „Gemischt" — dieselbe Menge, dieselben Worte (E33). Zwei Saetze mit
+   identischem Inhalt waeren zwei Stellen, an denen die naechste Aenderung
+   nur zur Haelfte ankaeme. Hoechster Einsatzort und Windenzahlen fehlen hier,
+   weil sie sich ueber beide Arten nicht sinnvoll addieren lassen. */
+const KACHELN_NEUTRAL = [
+  { id: 'missioncount', label: 'Einsätze',                 text: k => String(k.n) },
+  { id: 'tage',         label: 'Diensttage',               text: k => String(k.tage) },
+  { id: 'avgmissions',  label: 'Ø Einsätze / Diensttag',   text: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
+  { id: 'secondary',    label: 'Sekundärtransporte',       text: k => String(k.sek) },
+  /* Die einzige Kachel, die es im Luftrettungs-Tab NICHT gibt (E32/A13f),
+     obwohl der Haken auch luftgebunden zur Verfuegung steht. In „Gemischt"
+     zaehlt sie luftgebundene Fehleinsaetze mit — die Zahl bleibt dadurch
+     vollstaendig. */
+  { id: 'fehl',         label: 'Fehleinsätze',             text: k => String(k.fehl) },
+  { id: 'totalkm',      label: 'Einsatzkilometer gesamt',  text: k => fmtKmDe(k.km) },
+  { id: 'maxkm',        label: 'Längste Einsatzstrecke',   extrem: 'maxKm',
+    text: k => k.maxKm.wert != null ? fmtKmDe(k.maxKm.wert) : '–' },
+  { id: 'maxdauer',     label: 'Längste Einsatzdauer',     extrem: 'maxDauer',
+    text: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' }
+];
+
+/* Die zehn Kacheln der Luftrettung — der heutige Bestand, unveraendert in
+   Beschriftung und Umfang (A13f). Die beiden Windenkacheln stehen am ENDE,
+   weil sie als einzige verschwinden koennen: eine Luecke mitten im Raster
+   waere schwerer zu lesen als eine kuerzere letzte Reihe. */
+const KACHELN_LUFT = [
+  { id: 'missioncount', label: 'Einsätze',                 text: k => String(k.n) },
+  { id: 'tage',         label: 'Flugtage',                 text: k => String(k.tage) },
+  { id: 'avgmissions',  label: 'Ø Einsätze / Flugtag',     text: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
+  { id: 'secondary',    label: 'Sekundärtransporte',       text: k => String(k.sek) },
+  { id: 'totalkm',      label: 'Flugkilometer gesamt',     text: k => fmtKmDe(k.km) },
+  { id: 'maxkm',        label: 'Längste Flugstrecke',      extrem: 'maxKm',
+    text: k => k.maxKm.wert != null ? fmtKmDe(k.maxKm.wert) : '–' },
+  { id: 'maxdauer',     label: 'Längste Einsatzdauer',     extrem: 'maxDauer',
+    text: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' },
+  { id: 'maxhoehe',     label: 'Höchster Einsatzort',      extrem: 'maxHoehe',
+    text: k => k.maxHoehe.wert != null ? k.maxHoehe.wert + ' m' : '–' },
+  /* NUR BEI TATSAECHLICHEN WINDENEINSAETZEN (E30, A13d) — nicht schon, wenn
+     das Rettungsmittel es koennte. Damit laesst sich „null Windeneinsaetze"
+     nicht mehr von „Winde nicht eingerichtet" unterscheiden; das ist gewollt,
+     weil eine Dauerkachel mit dem Wert null nur Platz kostet. */
+  { id: 'winchcycles',  label: 'Anzahl Winden-Cycles',     text: k => String(k.winden),
+    nurWenn: liste => liste.some(m => m.winch) },
+  { id: 'avgwinch',     label: 'Ø Winden-Cycles / Flugtag',
+    text: k => k.tage > 0 ? fmtDe1(k.winden / k.tage) : '–',
+    nurWenn: liste => liste.some(m => m.winch) }
+];
+
+const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_NEUTRAL, mix: KACHELN_NEUTRAL };
+
+/* Alle Kennzahlen in EINEM Durchlauf. Sie kommen unverschluesselt aus
+ * api/range.php, sind also sofort verfuegbar — unabhaengig von der lokalen
+ * Entschluesselung der geschuetzten Felder (Ort/Alter/Diagnose).
+ *
+ * Gleichstand bei den Extremwerten: Es gewinnt der zuerst gefundene Einsatz —
+ * api/range.php liefert ORDER BY started_at, also der zeitlich frueheste.
+ * Deshalb strikt "grösser als" statt "grösser gleich" vergleichen. */
+function rechne(liste, tage){
+  const k = { n: liste.length, tage: tage, winden: 0, km: 0, sek: 0, fehl: 0,
+              maxKm:    { mid: null, wert: null },
+              maxDauer: { mid: null, wert: null },
+              maxHoehe: { mid: null, wert: null } };
   liste.forEach(m => {
-    if (m.distance_m != null && (maxKmWert == null || m.distance_m > maxKmWert)) {
-      maxKmWert = m.distance_m; maxKmMid = m.id;
+    k.winden += m.winch_cycles || 0;
+    k.km     += m.distance_m || 0;
+    if (m.secondary)   { k.sek++; }
+    if (m.false_alarm) { k.fehl++; }
+    if (m.distance_m != null && (k.maxKm.wert == null || m.distance_m > k.maxKm.wert)) {
+      k.maxKm = { mid: m.id, wert: m.distance_m };
     }
-    if (m.duration_s != null && (maxDauerWert == null || m.duration_s > maxDauerWert)) {
-      maxDauerWert = m.duration_s; maxDauerMid = m.id;
+    if (m.duration_s != null && (k.maxDauer.wert == null || m.duration_s > k.maxDauer.wert)) {
+      k.maxDauer = { mid: m.id, wert: m.duration_s };
     }
-    if (m.site_ele_m != null && (maxHoeheWert == null || m.site_ele_m > maxHoeheWert)) {
-      maxHoeheWert = m.site_ele_m; maxHoeheMid = m.id;
+    if (m.site_ele_m != null && (k.maxHoehe.wert == null || m.site_ele_m > k.maxHoehe.wert)) {
+      k.maxHoehe = { mid: m.id, wert: m.site_ele_m };
     }
   });
-
-  setzeExtremKachel('tile-maxkm', 'st-maxkm', maxKmMid,
-    maxKmWert != null ? (maxKmWert / 1000).toFixed(1).replace('.', ',') + ' km' : '–');
-  setzeExtremKachel('tile-maxdauer', 'st-maxdauer', maxDauerMid,
-    maxDauerWert != null ? fmtDur(maxDauerWert) : '–');
-  setzeExtremKachel('tile-maxhoehe', 'st-maxhoehe', maxHoeheMid,
-    maxHoeheWert != null ? maxHoeheWert + ' m' : '–');
-
-  document.getElementById('statsgrid').hidden = false;
+  return k;
 }
 
-// Beschriftet eine Extremwert-Kachel und macht sie interaktiv, sofern es
-// einen Traeger-Einsatz gibt. Ohne Kandidat (Anzeige "–") bleibt die Kachel
-// ohne data-mid und ohne Interaktions-Klasse.
-function setzeExtremKachel(tileId, valueId, mid, text){
-  document.getElementById(valueId).textContent = text;
-  const tile = document.getElementById(tileId);
-  if (mid != null) {
-    tile.dataset.mid = mid;
-    tile.classList.add('stat-tile-link');
-  } else {
-    delete tile.dataset.mid;
-    tile.classList.remove('stat-tile-link', 'aktiv');
-  }
+/* Baut das Kachelraster neu auf. NEU AUFBAUEN statt beschriften: Welche
+ * Kacheln es gibt, haengt am Tab und am Bestand — ein fester Satz im HTML
+ * muesste dieselbe Entscheidung ein zweites Mal treffen, und die Ereignisse
+ * der Extremwert-Kacheln haengen an Elementen, die es je nach Tab gar nicht
+ * gibt. Die Ereignisse werden deshalb hier vergeben, beim Erzeugen. */
+function zeichneStatistik(liste, tage){
+  const k    = rechne(liste, tage);
+  const grid = document.getElementById('statsgrid');
+  grid.innerHTML = '';
+  KACHELSATZ[ansicht].forEach(def => {
+    if (def.nurWenn && !def.nurWenn(liste)) { return; }
+    const tile = document.createElement('div');
+    tile.className = 'stat-tile';
+    tile.dataset.kachel = def.id;
+    const wert = document.createElement('span');
+    wert.className = 'stat-value';
+    wert.textContent = def.text(k);
+    const lab = document.createElement('span');
+    lab.className = 'stat-label';
+    lab.textContent = def.label;
+    tile.appendChild(wert);
+    tile.appendChild(lab);
+    /* Extremwert-Kacheln behalten ihr bisheriges Verhalten: OHNE Kandidat
+       bleiben sie stumm statt zu verschwinden (Konzept 4.6) — sie zeigen
+       einen Gedankenstrich und sind nicht anklickbar. */
+    if (def.extrem && k[def.extrem].mid != null) {
+      tile.dataset.mid = k[def.extrem].mid;
+      tile.classList.add('stat-tile-link');
+      verdrahteExtremKachel(tile);
+    }
+    grid.appendChild(tile);
+  });
+  grid.hidden = false;
+}
+
+/* Hervorhebung des Traeger-Einsatzes: ueberfahren zeigt, klicken setzt fest.
+ * Die Kacheln entstehen bei jedem Zeichnen neu, die Ereignisse also auch —
+ * eine Delegation am Raster koennte `mouseenter` nicht nutzen (es steigt
+ * nicht auf), und `mouseover` feuert zusaetzlich bei jedem Wechsel zwischen
+ * Wert und Beschriftung innerhalb derselben Kachel. */
+function verdrahteExtremKachel(tile){
+  const mid = Number(tile.dataset.mid);
+  tile.addEventListener('mouseenter', () => wendeHervorhebungAn(mid));
+  tile.addEventListener('mouseleave', () => wendeHervorhebungAn(fixierteMid));
+  tile.addEventListener('click', () => {
+    if (fixierteMid === mid) { loeseFixierung(); return; }
+    document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
+    fixierteMid = mid;
+    tile.classList.add('aktiv');
+    wendeHervorhebungAn(mid);
+    const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
+    if (zeile) { zeile.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  });
 }
 
 // Wendet den zur angegebenen Einsatz-ID gehoerenden Hervorhebungszustand auf
@@ -227,28 +352,6 @@ function loeseFixierung(){
   wendeHervorhebungAn(null);
 }
 
-['tile-maxkm', 'tile-maxdauer', 'tile-maxhoehe'].forEach(id => {
-  const tile = document.getElementById(id);
-  tile.addEventListener('mouseenter', () => {
-    if (tile.dataset.mid == null) return;
-    wendeHervorhebungAn(Number(tile.dataset.mid));
-  });
-  tile.addEventListener('mouseleave', () => {
-    wendeHervorhebungAn(fixierteMid);
-  });
-  tile.addEventListener('click', () => {
-    if (tile.dataset.mid == null) return;
-    const mid = Number(tile.dataset.mid);
-    if (fixierteMid === mid) { loeseFixierung(); return; }
-    document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
-    fixierteMid = mid;
-    tile.classList.add('aktiv');
-    wendeHervorhebungAn(mid);
-    const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
-    if (zeile) { zeile.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-  });
-});
-
 document.addEventListener('click', ev => {
   if (ev.target.closest('.stat-tile')) { return; }   // Kacheln haben eigene Logik
   if (ev.target.closest('.leaflet-marker-icon, .leaflet-interactive')) { return; }
@@ -265,14 +368,171 @@ document.addEventListener('click', ev => {
 const tabelle = EdMissionTable.erzeuge({
   table: document.getElementById('rangetable'),
   sortKey: 'day', sortAsc: true,
-  onAfterDraw: () => {
-    document.getElementById('leer').hidden = missions.length > 0;
-    document.getElementById('rangetable').hidden = missions.length === 0;
+  onAfterDraw: (gesamt) => {
+    document.getElementById('leer').hidden = gesamt > 0;
+    document.getElementById('rangetable').hidden = gesamt === 0;
     wendeHervorhebungAn(fixierteMid);
   }
 });
 
-function zeichne(){ tabelle.setData(missions); }
+/* ====================================================================
+ * Tabs nach Art (Abschnitt 3.7.1).
+ *
+ * Die Tableiste erscheint NUR, wenn im Zeitraum beide Arten vorliegen (E28) —
+ * ein einzelner Tab waere eine Wahl ohne Alternative. Liegt nur eine Art vor,
+ * bestimmt sie allein die Beschriftung der Kacheln; gezeigt wird trotzdem
+ * ALLES, einschliesslich der Einsaetze neutraler Diensttage. Sonst fehlten sie
+ * in der einzigen Ansicht, die es dann gibt.
+ * ================================================================== */
+
+/** Die Einsaetze der gewaehlten Ansicht (A13b: Kacheln, Tabelle und Karte). */
+function gefiltert(){
+  if (!tabsAn) { return missions; }
+  if (ansicht === 'air')    { return missions.filter(m => m.kind === 'air'); }
+  if (ansicht === 'ground') { return missions.filter(m => m.kind === 'ground'); }
+  return missions;   // „Gemischt" enthaelt auch die neutralen Diensttage (E31)
+}
+
+/** Divisor der Durchschnitte: die Diensttage der gewaehlten Ansicht. */
+function tageDerAnsicht(){
+  if (!tabsAn) { return tageGesamt; }
+  if (ansicht === 'air')    { return tageArt.air; }
+  if (ansicht === 'ground') { return tageArt.ground; }
+  return tageGesamt;
+}
+
+/* Der Hinweis auf neutrale Diensttage (E31). Er steht ueberall dort, wo
+ * neutrale Diensttage MITGEZAEHLT werden — in „Gemischt" und in einer Ansicht
+ * ohne Tableiste. In den beiden Artentabs nicht: Dort sind sie nicht dabei,
+ * und ein Hinweis auf etwas Nichtgezaehltes verwirrt mehr, als er erklaert. */
+function zeigeNeutralHinweis(){
+  const p = document.getElementById('neutralhinweis');
+  const dabei = !tabsAn || ansicht === 'mix';
+  if (!dabei || tageArt.neutral === 0) { p.hidden = true; return; }
+  const n = tageArt.neutral;
+  p.innerHTML = (n === 1
+      ? 'Ein Diensttag dieses Zeitraums ist mitgezählt, aber noch keiner Art zugeordnet'
+      : `${n} Diensttage dieses Zeitraums sind mitgezählt, aber noch keiner Art zugeordnet`)
+    + ' — ihnen fehlt Standort oder Rettungsmittel. '
+    + '<a href="nachbearbeitung.php">Zuordnung nachtragen</a>';
+  p.hidden = false;
+}
+
+/** Tableiste beschriften und den aktiven Tab markieren. */
+function zeichneTabs(){
+  const leiste = document.getElementById('arttabs');
+  leiste.hidden = !tabsAn;
+  if (!tabsAn) { return; }
+  leiste.querySelectorAll('.arttab').forEach(b => {
+    const an = b.dataset.tab === ansicht;
+    b.classList.toggle('aktiv', an);
+    b.setAttribute('aria-selected', an ? 'true' : 'false');
+    // Nur der aktive Tab ist mit der Tabulatortaste erreichbar; zwischen den
+    // Tabs wird mit den Pfeiltasten gewechselt (uebliche Bedienung einer
+    // Tableiste).
+    b.tabIndex = an ? 0 : -1;
+  });
+  document.getElementById('tabpanel').setAttribute('aria-labelledby', 'tab-' + ansicht);
+}
+
+/** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis. */
+function zeichne(){
+  const liste = gefiltert();
+  zeichneTabs();
+  zeigeNeutralHinweis();
+  /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste: Im
+     bodengebundenen Tab gibt es keine Windeneinsaetze, also auch keine
+     Windenspalte (A13d). */
+  tabelle.setSpaltenBestand(liste);
+  tabelle.setData(liste);
+  zeichneStatistik(liste, tageDerAnsicht());
+  zeichneKarte(liste);
+}
+
+/* Karte neu bestuecken. Die Pins entstehen erst nach dem Entschluesseln —
+ * vorher hat kein Einsatz Koordinaten, und die Karte bleibt ausgeblendet.
+ * Beim Tabwechsel werden sie verworfen und neu gesetzt, statt sie zu
+ * verstecken: Ein Pin, der nicht auf der Karte liegt, hat keine
+ * Bildschirmposition, und ein spaeteres setStyle() aus der Hervorhebung
+ * scheiterte daran ("this._point is undefined"). */
+function zeichneKarte(liste){
+  pinLayer.clearLayers();
+  missions.forEach(m => { m._marker = null; });
+  const bounds = [];
+  liste.forEach(m => {
+    if (m._lat == null) { return; }
+    m._marker = L.circleMarker([m._lat, m._lon], {
+      radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
+    }).addTo(pinLayer).bindPopup(`${fmtTag(m.day)}<br>${esc(m._addr || '')}`);
+    bounds.push([m._lat, m._lon]);
+  });
+  const karte = document.getElementById('rangemap');
+  karte.hidden = bounds.length === 0;
+  if (bounds.length) {
+    // Die Karte war bis hierhin ausgeblendet (display:none) -> ihre Groesse
+    // war beim Initialisieren unbekannt; invalidateSize() vor fitBounds ist
+    // Pflicht, sonst bleiben die Kacheln grau oder falsch zugeschnitten.
+    map.invalidateSize();
+    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+  }
+}
+
+/* Tabwechsel. Die Festsetzung aus einer Extremwert-Kachel wird dabei gelöst —
+ * sie zeigte auf einen Einsatz, den der neue Tab womoeglich gar nicht
+ * enthaelt. */
+function setzeAnsicht(neu){
+  if (!tabsAn || neu === ansicht) { return; }
+  ansicht = neu;
+  fixierteMid = null;
+  zeichne();
+  fragmentSchreiben();
+}
+
+/* DER TAB STEHT IM URL-FRAGMENT, nicht als Abfrageparameter (A13b) — wie der
+ * gesamte Filterzustand der Suche. Fragmente werden nicht an den Server
+ * gesendet und landen damit nicht im Zugriffsprotokoll; ausserdem ist der Tab
+ * eine Frage der Ansicht, nicht der Daten, die api/range.php liefert.
+ * replaceState statt location.hash: sonst waechst die Chronik mit jedem
+ * Tabwechsel. */
+function fragmentSchreiben(){
+  if (!tabsAn) { return; }
+  history.replaceState(null, '', location.pathname + location.search + '#t=' + ansicht);
+}
+
+function fragmentLesen(){
+  const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const t = p.get('t');
+  // Ein Tab, den es in diesem Zeitraum nicht gibt, wird still verworfen —
+  // ein geteilter Link kann aus einem Zeitraum mit beiden Arten stammen.
+  if (tabsAn && (t === 'mix' || t === 'air' || t === 'ground')) { ansicht = t; }
+}
+
+/* Ein von Hand geaendertes oder eingefuegtes Fragment gilt auch dann, wenn die
+ * Seite schon offen ist: Ein Wechsel von `#t=ground` auf `#t=air` ist fuer den
+ * Browser KEINE neue Seite, es wird also nicht neu geladen. Ohne diese Zeile
+ * stuende in der Adresszeile ein anderer Tab als auf dem Bildschirm. */
+window.addEventListener('hashchange', () => {
+  const vorher = ansicht;
+  fragmentLesen();
+  if (ansicht !== vorher) { fixierteMid = null; zeichne(); }
+});
+
+document.querySelectorAll('.arttab').forEach(b => {
+  b.addEventListener('click', () => setzeAnsicht(b.dataset.tab));
+});
+/* Pfeiltasten in der Tableiste. Ohne sie waere die Leiste zwar erreichbar,
+   aber nur der aktive Tab — die uebrigen sind bewusst aus der
+   Tabulatorreihenfolge genommen. */
+document.getElementById('arttabs').addEventListener('keydown', ev => {
+  if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') { return; }
+  const tabs = [...document.querySelectorAll('.arttab')];
+  const i = tabs.findIndex(b => b.dataset.tab === ansicht);
+  if (i < 0) { return; }
+  ev.preventDefault();
+  const j = (i + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+  setzeAnsicht(tabs[j].dataset.tab);
+  tabs[j].focus();
+});
 
 function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
@@ -296,8 +556,23 @@ function zeigeFehler(msg){
   } catch (e) { zeigeFehler(e.message); return; }
 
   missions = d.missions;
+  tageGesamt = d.tage || 0;
+  tageArt = d.tage_art || { air: 0, ground: 0, neutral: 0 };
+
+  /* Welche Ansicht es gibt, entscheiden die DIENSTTAGE des Zeitraums, nicht
+     die Einsaetze (E28): Ein bodengebundener Dienst ohne einen einzigen
+     Einsatz ist trotzdem ein bodengebundener Dienst, und die Kachel
+     „Diensttage" zaehlt ihn. */
+  if (tageArt.air > 0 && tageArt.ground > 0) { tabsAn = true; ansicht = 'mix'; }
+  else if (tageArt.air > 0)    { ansicht = 'air'; }
+  else if (tageArt.ground > 0) { ansicht = 'ground'; }
+  else { ansicht = 'mix'; }   // nur neutrale Diensttage oder gar keine
+  fragmentLesen();
+
   zeichne();
-  zeichneStatistik(missions, d.tage);
+  // Den Tab von Anfang an ins Fragment schreiben, nicht erst beim ersten
+  // Wechsel: Sonst zeigte ein sofort kopierter Link auf keinen bestimmten Tab.
+  fragmentSchreiben();
 
   if (PAT_WRAP) { await entschluesselePat(); }
 })();
@@ -311,36 +586,28 @@ async function entschluesselePat(){
   const banner = document.getElementById('lockbanner');
   if (!ck) { banner.hidden = !missions.some(m => m.pat_blob); return; }
   banner.hidden = true;
-  let geaendert = false;
-  const pinBounds = [];
   // Entschluesseln und zaehlen an einer Stelle (M6-06, Baustein B8).
   const zahl = await EdPat.entschluessleListe(missions, ck);
   for (const m of missions) {
-    if (m._patState === 'unlesbar') { geaendert = true; continue; }
     if (m._patState !== 'ok') { continue; }
     const o = m._pat;
-    if (o.dx != null) { m._dx = o.dx; geaendert = true; }
+    if (o.dx != null) { m._dx = o.dx; }
     const alter = EdPat.alterAnzeige(o, m.day);   // Alter zum jeweiligen Einsatztag
-    if (alter != null) { m._age = alter; geaendert = true; }
-    if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); geaendert = true; }
-    // Einheitlicher Pin (Max Blau) je Einsatzort; kein Clustering in v1.
+    if (alter != null) { m._age = alter; }
+    if (o.loc && o.loc.addr) { m._ort = extractOrt(o.loc.addr); }
+    /* Die Koordinate wird am Einsatz VERMERKT, der Pin aber erst in
+       zeichneKarte() gesetzt: Welche Pins auf der Karte liegen, entscheidet
+       der Tab, und der kann nach dem Entschluesseln noch wechseln. */
     if (o.loc && o.loc.lat != null) {
-      m._marker = L.circleMarker([o.loc.lat, o.loc.lon], {
-        radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
-      }).addTo(map).bindPopup(`${fmtTag(m.day)}<br>${esc(o.loc.addr)}`);
-      pinBounds.push([o.loc.lat, o.loc.lon]);
+      m._lat = o.loc.lat; m._lon = o.loc.lon; m._addr = o.loc.addr;
     }
   }
   EdPat.zeigeUnlesbar(zahl);
-  if (geaendert) { zeichne(); }
-  if (pinBounds.length) {
-    // Karte war bis hierhin ausgeblendet (display:none) -> Groesse war beim
-    // Initialisieren unbekannt; invalidateSize() vor fitBounds ist Pflicht,
-    // sonst bleiben die Kacheln grau/falsch zugeschnitten.
-    document.getElementById('rangemap').hidden = false;
-    map.invalidateSize();
-    map.fitBounds(pinBounds, { padding: [30, 30], maxZoom: 15 });
-  }
+  /* Immer neu zeichnen: Die Tabelle hat jetzt Ort, Alter und Diagnose, und
+     die Karte ihre Pins. Ein „nur wenn sich etwas geaendert hat" waere hier
+     eine zweite Buchfuehrung ueber dieselbe Schleife — die Ersparnis ist ein
+     Neuaufbau der Tabelle, den niemand bemerkt. */
+  zeichne();
 }
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());

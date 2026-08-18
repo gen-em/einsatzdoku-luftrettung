@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
+require_once __DIR__ . '/diensttag_lib.php';        // dt_art_symbole()
+require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
 
 /**
  * Suche ueber den gesamten Einsatzbestand.
@@ -84,9 +86,22 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
       <details class="filtergruppe" data-gruppe="transport">
         <summary>Transport</summary>
         <div class="filterfelder">
+          <?php /* Die Transportart speichert einen Code ('air'/'ground'/'ambulant')
+                   und zeigt eine Beschriftung — die Liste kommt deshalb aus dem
+                   Feldkatalog (mf_optionen(), Befund P17) und nicht aus einer
+                   zweiten, hier abgeschriebenen Aufzählung. */ ?>
+          <label>Transportart <select id="f-ta"></select></label>
+          <label>NA-Begleitung <select id="f-nb" class="dreiwert"></select></label>
           <label>Transportziel <select id="f-tz"></select></label>
           <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
           <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
+        </div>
+      </details>
+
+      <details class="filtergruppe" data-gruppe="einsatz">
+        <summary>Einsatz</summary>
+        <div class="filterfelder">
+          <label>Fehleinsatz <select id="f-fe" class="dreiwert"></select></label>
         </div>
       </details>
 
@@ -95,6 +110,11 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
         <div class="filterfelder">
           <label>Standort <select id="f-st"></select></label>
           <label>Rettungsmittel <select id="f-veh"></select></label>
+          <?php /* Die Art steht beim Rettungsmittel, weil sie von ihm kommt
+                   (E3): Sie ist keine eigene Angabe am Einsatz, sondern die
+                   Eigenschaft des Rettungsmittels, mit dem der Diensttag
+                   gefahren wurde. */ ?>
+          <label>Art <select id="f-art"></select></label>
           <?php /* Die Besatzungsfilter entstehen aus dem Rollenkatalog CREW_ROLES
                    (db.php, E4) — nicht als fünf feste Flugrollen. Mit den
                    bodengebundenen Rollen wären es sieben geworden, und jede neue
@@ -178,6 +198,9 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
+         der Tagesleiste, aus dt_art_symbole() (Befund P9). */ ?>
+<script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
@@ -191,6 +214,37 @@ const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
+
+/* ZWEI AUSWAHLLISTEN MIT FESTEM WERTEVORRAT (Web 6.2.0).
+ *
+ * Sie unterscheiden sich von allen uebrigen Auswahlfeldern dieser Seite: Die
+ * anderen entstehen aus dem BESTAND (jeder vorkommende Standort, jede
+ * vorkommende Zielklinik). Art und Transportart haben dagegen einen festen,
+ * im Code definierten Vorrat, und ihr gespeicherter Wert ist NICHT ihre
+ * Beschriftung — 'air' heisst „luftgebunden" beziehungsweise „Luft". Beide
+ * Listen stammen deshalb aus derselben Quelle wie die Anzeige:
+ * dt_art_symbole() und der Feldkatalog (Befund P17). Eine hier abgeschriebene
+ * Aufzaehlung waere die Stelle, an der die Suche eine Option kennt, die es
+ * nicht mehr gibt. */
+const ART_OPTIONEN = <?php
+    $artOpt = [];
+    foreach (dt_art_symbole() as $code => $sym) {
+        // Der neutrale Diensttag hat im Katalog den leeren Schluessel — der ist
+        // im Auswahlfeld schon fuer „(egal)" vergeben und bekommt hier einen
+        // eigenen Wert. Er steht auch im URL-Fragment.
+        $artOpt[] = ['wert' => $code === '' ? 'neutral' : $code,
+                     'text' => $sym['zeichen'] . ' ' . $sym['text']];
+    }
+    echo json_encode($artOpt, JSON_UNESCAPED_UNICODE);
+?>;
+const TRANSPORT_OPTIONEN = <?php
+    $FELDER = require __DIR__ . '/mission_fields.php';
+    $taOpt = [];
+    foreach (mf_optionen($FELDER['transport_mode']['options']) as $wert => $text) {
+        $taOpt[] = ['wert' => (string)$wert, 'text' => (string)$text];
+    }
+    echo json_encode($taOpt, JSON_UNESCAPED_UNICODE);
+?>;
 
 /* Rollenkatalog und die Kurznamen ihrer Filter im URL-Fragment. Beides kommt
    aus CREW_ROLES (db.php, E4); die Kurznamen der fuenf Flugrollen sind
@@ -244,9 +298,12 @@ const FILTER = [
   { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'winde' },
   { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'bergwacht' },
   { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergwacht' },
+  { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport' },
+  { kurz: 'nb', el: 'f-nb', art: 'text', gruppe: 'transport' },
   { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport' },
   { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'transport' },
   { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'transport' },
+  { kurz: 'fe', el: 'f-fe', art: 'text', gruppe: 'einsatz' },
   { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer' },
   /* 'ac' hiess bis Web 5.10.0 „Maschine" und filterte nach aircraft. Der
      Parametername BLEIBT, obwohl das Feld jetzt Rettungsmittel heisst: Die
@@ -254,6 +311,7 @@ const FILTER = [
      Parameter bricht sie stillschweigend. Was er filtert, ist unveraendert —
      der Name des Rettungsmittels des Diensttags. */
   { kurz: 'ac', el: 'f-veh', art: 'text', gruppe: 'wer' },
+  { kurz: 'art', el: 'f-art', art: 'text', gruppe: 'wer' },
   /* Besatzungsfilter je Rolle. Die Kurznamen c1…c5 der fuenf Flugrollen sind
      ebenfalls in verschickten Links unterwegs und bleiben deshalb, was sie
      sind; die bodengebundenen Rollen bekommen eigene. Die Zuordnung steht
@@ -347,12 +405,27 @@ function fuelleSelect(id, werte, egal) {
   });
 }
 
+/* Auswahlfeld mit festem Wertevorrat: Wert und Beschriftung sind zwei Dinge
+ * (siehe ART_OPTIONEN oben). fuelleSelect() taugt dafuer nicht — es setzt
+ * value und Text gleich und liest seine Werte aus dem Bestand. */
+function fuelleCodeSelect(id, liste) {
+  const el = $(id);
+  el.innerHTML = '<option value="">(egal)</option>';
+  liste.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.wert; opt.textContent = o.text;
+    el.appendChild(opt);
+  });
+}
+
 function baueAuswahllisten() {
   document.querySelectorAll('select.dreiwert').forEach(el => {
     el.innerHTML = '<option value="">(egal)</option>' +
                    '<option value="j">ja</option><option value="n">nein</option>';
   });
 
+  fuelleCodeSelect('f-art', ART_OPTIONEN);
+  fuelleCodeSelect('f-ta', TRANSPORT_OPTIONEN);
   fuelleSelect('f-bu', optionen(missions.map(m => m.bw_unit)));
   fuelleSelect('f-st', optionen(missions.map(m => m.base)));
   fuelleSelect('f-veh', optionen(missions.map(m => m.vehicle)));
@@ -476,9 +549,16 @@ function trifft(m) {
   if (!gleich('f-bu', m.bw_unit)) { return false; }
   if (!dreiwert('f-se', m.secondary)) { return false; }
   if (!dreiwert('f-sr', m.schockraum)) { return false; }
+  if (!gleich('f-ta', m.transport_mode)) { return false; }
+  if (!dreiwert('f-nb', m.na_escort)) { return false; }
+  if (!dreiwert('f-fe', m.false_alarm)) { return false; }
 
   if (!gleich('f-st', m.base)) { return false; }
   if (!gleich('f-veh', m.vehicle)) { return false; }
+  /* Die Art kommt vom DIENSTTAG, nicht vom Einsatz. Ein Einsatz an einem noch
+     nicht zugeordneten Diensttag hat keine — er ist unter „ohne Zuordnung" zu
+     finden und nicht etwa unter beiden Arten. */
+  if (!gleich('f-art', m.kind == null ? 'neutral' : m.kind)) { return false; }
   for (const r of CREW_ROLLEN) {
     if (!gleich('f-crew-' + r, m.crew[r])) { return false; }
   }
@@ -533,6 +613,12 @@ const GRUPPE_NUR_WENN = {
   bergwacht: m => m.bergwacht
                   || (m.bw_unit != null && m.bw_unit !== '')
                   || (m.bw_info != null && m.bw_info !== '')
+  ,
+  /* Der Fehleinsatz steht beiden Arten offen (E17) und ist trotzdem selten.
+     Wer keinen dokumentiert hat, hat an diesem Block nichts zu wählen: „ja"
+     ergäbe dauerhaft null Treffer, „nein" den ganzen Bestand. Dieselbe Regel
+     wie bei Winde und Bergwacht, aus demselben Grund. */
+  einsatz: m => m.false_alarm
 };
 
 function gruppenSichtbarkeit() {
@@ -656,6 +742,11 @@ function verdrahten() {
 
   baueAuswahllisten();
   verdrahten();
+  /* Welche Spalten die Tabelle zeigt, entscheidet der GESAMTE Bestand und
+     nicht die Trefferliste (A13d) — sonst käme und ginge die Windenspalte
+     beim Tippen im Suchfeld. Der Aufruf steht deshalb hier, einmal, und nicht
+     in anwenden(). */
+  tabelle.setSpaltenBestand(missions);
   // Erst die Auswahllisten füllen, dann das Fragment anwenden — sonst hätten
   // die <select> die gespeicherten Werte noch gar nicht zur Auswahl.
   fragmentLesen();

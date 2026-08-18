@@ -92,6 +92,15 @@ function import_commit(array $b, int $userId): never
     $zahl = fn ($v, int $min, int $max) => pruef_zahl($v, $min, $max, 'Zahl', $pruef);
     $flag = static fn ($v): int => pruef_flag($v);
     $utc  = fn ($v) => pruef_utc($v, 'Zeitpunkt', $pruef);
+    /* Wert aus einer festen Liste (Web 6.1.0): Was nicht darin steht, wird zu
+     * NULL. Gebraucht fuer die beiden ENUM-Spalten `transport_mode` und
+     * `start_src` — ein unbekannter Wert liefe sonst als Datenbankfehler auf,
+     * und der brächte den ganzen Import zu Fall statt nur eine Zelle. */
+    $auswahl = static function ($v, array $erlaubt): ?string {
+        $w = trim((string)($v ?? ''));
+        return in_array($w, $erlaubt, true) ? $w : null;
+    };
+
 
     $pdo = db();
     $pdo->beginTransaction();
@@ -238,8 +247,10 @@ function import_commit(array $b, int $userId): never
                                    site_ele_m, distance_m, ascent_m,
                                    schockraum, secondary, winch_cycles, winch_cycles_pat,
                                    winch_airload, bergwacht, bw_unit, bw_info,
-                                   other_ema, notes)
-             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                                   other_ema, notes,
+                                   transport_mode, na_escort, false_alarm,
+                                   dest_lat, dest_lon, start_src)
+             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
@@ -275,6 +286,8 @@ function import_commit(array $b, int $userId): never
                                  bw_info     = COALESCE(?, bw_info),
                                  other_ema   = COALESCE(?, other_ema),
                                  notes       = COALESCE(?, notes),
+                                 transport_mode = ?, na_escort = ?, false_alarm = ?,
+                                 dest_lat = ?, dest_lon = ?, start_src = ?,
                                  manual = 1, edited = 1
              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
         $insPhase = $pdo->prepare(
@@ -358,6 +371,14 @@ function import_commit(array $b, int $userId): never
                 if ($w !== null) { $mCrew[(string)$rolle] = $w; }
             }
 
+            /* Zielklinik-Koordinate. pruef_ortspaar() setzt beide Regeln
+             * durch, die auch das Formular und die Stammdatenpflege anwenden:
+             * nur zusammen gueltig, ausserhalb des Bereichs leer statt gekappt,
+             * Komma als Dezimaltrennzeichen zulaessig (validate_lib.php). Eine
+             * eigene Fassung hier waere die vierte gewesen — und die erste, die
+             * beim naechsten Umbau vergessen wird. */
+            [$zielLat, $zielLon] = pruef_ortspaar($m['dest_lat'] ?? null, $m['dest_lon'] ?? null);
+
             $werte = [
                 $txt($m['transport_dest'] ?? null, 190),
                 $flag($m['winch'] ?? null),
@@ -376,6 +397,22 @@ function import_commit(array $b, int $userId): never
                 $txt($m['bw_info'] ?? null, 190),
                 $txt($m['other_ema'] ?? null, 190),
                 $txt($m['notes'] ?? null, 2000),
+                /* Etappe 2 (Web 6.1.0). Beide ENUM-Spalten werden gegen ihre
+                 * Werteliste geprueft: Ein unbekannter Wert wird zu NULL statt
+                 * die Zeile mit einem Datenbankfehler scheitern zu lassen — die
+                 * Datei kommt von aussen, und eine Tabelle mit einer
+                 * Zusatzspalte „Transport: Rettungswagen" soll die anderen
+                 * dreihundert Zeilen nicht mitnehmen.
+                 *
+                 * Sie stehen AUSSERHALB der COALESCE-Schranke: Wie
+                 * transport_dest und die Flags stehen sie in jedem Export, ein
+                 * leerer Wert ist dort eine Aussage (siehe Kommentar oben). */
+                $auswahl($m['transport_mode'] ?? null, ['air', 'ground', 'ambulant']),
+                $flag($m['na_escort'] ?? null),
+                $flag($m['false_alarm'] ?? null),
+                $zielLat, $zielLon,
+                $auswahl($m['start_src'] ?? null,
+                         ['base', 'prev_site', 'prev_dest', 'manual']),
             ];
 
             $id = null;

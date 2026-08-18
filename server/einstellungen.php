@@ -289,25 +289,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         global $userId;
         return dt_base_erlaubt(db(), $userId, isset($_POST['base_id']) ? (int)$_POST['base_id'] : null);
     };
-    /* Optionale Koordinate (E37/E39). Sie ist ueberall freiwillig; ohne sie
-     * entstehen lediglich kein Pin und keine Linie. Ein Wert ausserhalb des
-     * Wertebereichs wird zu NULL statt zu einem stillen 0/0 — das laege im Golf
-     * von Guinea, mitten in der Auswertung. */
-    $sdKoord = static function (string $feld, float $min, float $max): ?string {
-        $roh = trim((string)($_POST[$feld] ?? ''));
-        if ($roh === '') { return null; }
-        $w = (float)str_replace(',', '.', $roh);
-        if (!is_finite($w) || $w < $min || $w > $max) { return null; }
-        return number_format($w, 6, '.', '');
-    };
-
     if ($action === 'base_save') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $bid = (int)($_POST['id'] ?? 0);
-        $lat = $sdKoord('lat', -90, 90);
-        $lon = $sdKoord('lon', -180, 180);
-        // Koordinaten nur zusammen: eine Breite ohne Laenge ist kein Ort.
-        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
+        /* Optionale Koordinate (E37/E39). Die Regeln — nur zusammen, ausserhalb
+         * des Bereichs leer, Komma zulaessig — stehen seit Web 6.1.0 an EINER
+         * Stelle (pruef_ortspaar in validate_lib.php). Vorher gab es dieselbe
+         * kleine Umrechnung dreimal: hier, in admin_stammdaten.php und, mit dem
+         * Ortsfeld am Einsatz, waere sie ein viertes Mal entstanden. */
+        [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
         if ($n !== '') {
             if (stammdaten_dup_global('bases', 'name', $n)) {
                 $error = '„' . $n . '“ ' . 'ist bereits systemweit hinterlegt und steht dir automatisch zur Verfügung.';
@@ -548,9 +538,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n = mb_substr(trim($_POST['name'] ?? ''), 0, 190);
         $tid = (int)($_POST['id'] ?? 0);
         $bid = $sdBase();
-        $lat = $sdKoord('lat', -90, 90);
-        $lon = $sdKoord('lon', -180, 180);
-        if ($lat === null || $lon === null) { $lat = null; $lon = null; }
+        [$lat, $lon] = pruef_ortspaar($_POST['lat'] ?? null, $_POST['lon'] ?? null);
         if ($n !== '') {
             if ($bid === null) {
                 $error = 'Bitte einen Standort wählen.';
@@ -812,6 +800,12 @@ if ($tab === 'geraete') {
        * Sie werden von einer Administratorin gepflegt (admin_stammdaten.php) und
        * tragen hier das Kennzeichen „systemweit".
        */
+      /* Praefixe der Ortsfelder dieses Tabs. Sie entstehen beim Rendern — je
+       * Standort eines fuer die Zielklinik —, und die Belebung im Browser
+       * laeuft am Ende ueber genau diese Liste. Eine zweite, von Hand gepflegte
+       * Aufzaehlung im Skript liefe beim naechsten Standort auseinander. */
+      $ORTSFELDER = [];
+
       $sdBases = dt_bases($userId);           // eigene + ausgewaehlte zentrale
       $sdBaseIds = array_map(static fn($b) => (int)$b['id'], $sdBases);
 
@@ -971,17 +965,23 @@ if ($tab === 'geraete') {
       <form method="post" action="einstellungen.php?t=stammdaten#standorte" class="inline-form">
         <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
         <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-        <input type="text" name="name" class="focus-target" maxlength="120" required
+        <input type="text" name="name" id="sdbaseaddr" class="focus-target" maxlength="120" required
                placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
         <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
                  Abfahrtorts „Standort" und werden beim Anlegen eines Diensttags
-                 eingefroren (E8). Eine Adresssuche wie beim Einsatzort folgt in
-                 einer späteren Etappe; bis dahin werden die Werte eingetippt
-                 oder aus einer Karte übernommen. */ ?>
-        <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
-               value="<?= e((string)($editBase['lat'] ?? '')) ?>">
-        <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
-               value="<?= e((string)($editBase['lon'] ?? '')) ?>">
+                 eingefroren (E8). Seit Web 6.1.0 mit Adresssuche — dieselbe
+                 Komponente wie am Einsatzort (assets/ortsfeld.js), hier aber mit
+                 GETRENNTEM Suchfeld: „Standort Kempten" ist keine Adresse, und
+                 eine Suche im Namensfeld schriebe den Namen weg. */
+              $ORTSFELDER[] = 'sdbase';
+              ui_ortsfeld([
+                  'praefix' => 'sdbase', 'feld' => false, 'such' => true,
+                  'klasse' => 'loc-inline',
+                  'such_hinweis' => 'Koordinaten (optional)',
+                  'lat_name' => 'lat', 'lon_name' => 'lon',
+                  'lat' => (string)($editBase['lat'] ?? ''),
+                  'lon' => (string)($editBase['lon'] ?? ''),
+              ]); ?>
         <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
         <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
       </form>
@@ -1213,12 +1213,20 @@ if ($tab === 'geraete') {
           <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
           <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
           <input type="hidden" name="base_id" value="<?= $bid ?>">
-          <input type="text" name="name" maxlength="190" required
+          <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
+                   EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
+                   denselben Element-Kennungen fänden beide dasselbe Feld. */
+                $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
+          <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
                  placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-          <input type="text" name="lat" maxlength="12" placeholder="Breite (optional)"
-                 value="<?= e((string)($etHier['lat'] ?? '')) ?>">
-          <input type="text" name="lon" maxlength="12" placeholder="Länge (optional)"
-                 value="<?= e((string)($etHier['lon'] ?? '')) ?>">
+          <?php ui_ortsfeld([
+                  'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                  'klasse' => 'loc-inline',
+                  'such_hinweis' => 'Koordinaten (optional)',
+                  'lat_name' => 'lat', 'lon_name' => 'lon',
+                  'lat' => (string)($etHier['lat'] ?? ''),
+                  'lon' => (string)($etHier['lon'] ?? ''),
+              ]); ?>
           <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
           <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
         </form>
@@ -1309,6 +1317,18 @@ if ($tab === 'geraete') {
         <?php endif; ?>
       </details>
     <?php endforeach; ?>
+
+    <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
+    <script src="<?= asset('assets/locparse.js') ?>"></script>
+    <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
+    <script>
+    /* Ortsfelder der Stammdatenpflege beleben (E37). Dieselbe Komponente wie
+     * am Einsatz — mit getrennter Suche, weil das Namensfeld hier den NAMEN
+     * trägt und nicht die Adresse. Ohne Vorschlagsliste: Was hier entsteht,
+     * IST die Vorschlagsliste. */
+    <?= 'const ORTSFELDER = ' . json_encode($ORTSFELDER) . ';' ?>
+    ORTSFELDER.forEach(p => EdOrtsfeld.init({ praefix: p, getrennteSuche: true }));
+    </script>
 
     <script>
     /* Rollen- und Fähigkeitshaken zur Art passend ein- und ausblenden (E3).

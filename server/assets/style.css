@@ -460,6 +460,17 @@ tr.clickable:focus-visible{background:var(--accent-light);
   color:var(--blau-dark)}
 .locstate:empty{display:none}
 .locstate-fehler{color:var(--rot)}
+/* Ortsfeld in einer Flex-Zeile (Stammdatenpflege, Web 6.1.0).
+   Dort traegt das Namensfeld daneben den Namen; hier stehen nur Suchfeld, Chip
+   und Zustandszeile. Als eigenes Flex-Kind, damit die Zeile nicht umbricht,
+   sobald ein Chip erscheint. */
+.loc-inline{flex:1 1 240px;min-width:200px}
+.loc-inline input{width:100%}
+.loc-inline .fld-sub{font-size:.82rem;color:var(--muted)}
+/* Wertabhaengige Unterfelder (`show_if`): reiner Rahmen ohne eigene Optik —
+   er traegt nur die Bedingung und das hidden-Attribut. */
+.showif{display:contents}
+.showif[hidden]{display:none}
 
 /* Bedingte Unterfelder im Einsatzformular */
 .fld-check{margin:.7rem 0 .2rem}
@@ -783,6 +794,9 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
 #missions th.c-dc-winch,        #missions td.c-dc-winch        {width:4.4rem}
 #missions th.c-dc-bergwacht,    #missions td.c-dc-bergwacht    {width:6.2rem}
 #missions th.c-dc-secondary,    #missions td.c-dc-secondary    {width:6.4rem}
+/* „Fehleinsatz" (Web 6.1.0). Der Titel traegt im Katalog ein `&shy;`, bricht
+   also selbst um — die Breite muss nur das laengere Teilwort tragen. */
+#missions th.c-dc-false_alarm,  #missions td.c-dc-false_alarm  {width:5.6rem}
 
 /* Alle Spalten mittig — auch Einsatzort und Diagnose */
 #missions th,#missions td{text-align:center}
@@ -925,6 +939,26 @@ input[type=checkbox]{accent-color:var(--blau)}
 /* Aktiver Tag: eigene Ebene und etwas Abstand, damit die Markierung frei steht */
 .monthblock li{margin:.05rem 0}
 
+/* Tableiste der Zeitraum-Übersicht (Web 6.2.0, E28). Sie erscheint nur, wenn
+   im Zeitraum beide Arten vorliegen — deshalb steht sie über der Karte und
+   nicht in der Kopfzeile: Sie gehört zur Ansicht, nicht zur Navigation.
+   Umbruch statt Scrollen, weil der dritte Tab („Bodengebundener
+   Rettungsdienst") auf schmalen Geräten allein eine Zeile füllt. */
+.arttabs{display:flex;flex-wrap:wrap;gap:.3rem;margin:0 0 1rem;
+  border-bottom:1px solid var(--line)}
+/* ACHTUNG: Die globale `button`-Regel setzt border:0 und font-weight:600.
+   Beides wird hier bewusst überschrieben — der Rahmen macht die Lasche, und
+   fett ist allein der aktive Tab. */
+.arttab{background:none;border:1px solid transparent;border-bottom:none;
+  border-radius:6px 6px 0 0;padding:.45rem .9rem;margin-bottom:-1px;
+  width:auto;font-size:.86rem;font-weight:500;color:var(--muted)}
+.arttab:hover{color:var(--navy)}
+.arttab.aktiv{background:var(--schnee);border-color:var(--line);
+  border-bottom:1px solid var(--schnee);color:var(--navy);font-weight:600}
+
+/* Hinweis auf mitgezählte, noch nicht zugeordnete Diensttage (E31). */
+.neutralhinweis{margin:0 0 1rem}
+
 /* Zeitraum-Übersicht (Jahr/Monat): Datumsspalte, sonst wie die Tagestabelle */
 #rangetable{table-layout:fixed;width:100%}
 #rangetable th{white-space:nowrap;hyphens:none;font-size:.74rem;line-height:1.15;
@@ -935,6 +969,11 @@ input[type=checkbox]{accent-color:var(--blau)}
 #rangetable th.c-winde,#rangetable td.c-winde{width:4.4rem}
 #rangetable th.c-bw,#rangetable td.c-bw{width:6.2rem}
 #rangetable th.c-sek,#rangetable td.c-sek{width:6.4rem;white-space:normal}
+/* Artsymbol und Fehleinsatz (Web 6.2.0). Beide Spalten erscheinen nur bei
+   passendem Bestand (A13d); die Breiten gelten also nicht immer. Die
+   Artspalte ist so schmal wie ihr Zeichen — sie soll nichts kosten. */
+#rangetable th.c-art,#rangetable td.c-art{width:2.4rem}
+#rangetable th.c-fehl,#rangetable td.c-fehl{width:4.6rem;white-space:normal}
 #rangetable tbody tr{cursor:pointer}
 #rangetable tbody tr:nth-child(odd){background:var(--schnee)}
 #rangetable tbody tr:nth-child(even){background:var(--rauch)}

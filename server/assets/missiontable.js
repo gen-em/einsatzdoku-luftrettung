@@ -76,12 +76,53 @@ const EdMissionTable = (() => {
     return last.replace(/^\d{4,5}\s+/, '');
   }
 
+  /* Artsymbol eines Einsatzes (E27, A7c). Die Liste kommt aus
+   * dt_art_symbole() (diensttag_lib.php) und wird von der einbindenden Seite
+   * als ART_SYMBOLE gesetzt — dieselbe Loesung wie bei CREW_ROLLEN (Befund
+   * P9). Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
+   * Notloesung, nicht die Quelle. */
+  const ART_FALLBACK = {
+    air:    { zeichen: '🚁', text: 'luftgebunden' },
+    ground: { zeichen: '🚑', text: 'bodengebunden' },
+    '':     { zeichen: '◌',  text: 'ohne Zuordnung' }
+  };
+  function artSymbol(kind) {
+    const alle = (typeof ART_SYMBOLE !== 'undefined' && ART_SYMBOLE) ? ART_SYMBOLE : ART_FALLBACK;
+    return alle[kind || ''] || alle[''] || ART_FALLBACK[''];
+  }
+
   /* ---- Spaltendefinition ----------------------------------------------
    * Eine Zeile je Spalte: Sortierschluessel, Kopftext, Klassen und die
    * beiden Funktionen fuer Sortierwert und Zellinhalt. Neue Spalte = ein
    * Eintrag hier, und sie erscheint auf beiden Seiten.
+   *
+   * SPALTEN NACH BESTAND (ab Web 6.2.0, A13d). `nurWenn` bekommt den Bestand
+   * und entscheidet, ob die Spalte ueberhaupt erscheint. Der Gedanke ist
+   * derselbe wie bei den Filterbloecken der Suche (GRUPPE_NUR_WENN) und bei
+   * den Kacheln der Zeitraum-Uebersicht (E30): Eine Spalte, die im ganzen
+   * Bestand leer bleibt, kostet auf schmalen Geraeten Platz und sagt nichts.
+   *
+   * MASSGEBLICH IST DER BESTAND, NICHT DIE TREFFERLISTE. Sonst verschwaende
+   * eine Spalte, sobald ein Filter die betreffenden Einsaetze gerade
+   * ausschliesst, und die Tabelle spraenge beim Tippen. Welche Liste der
+   * Bestand ist, sagt die Seite mit setSpaltenBestand(); ohne diesen Aufruf
+   * sind Bestand und Trefferliste dasselbe.
    */
   const SPALTEN = [
+    /* Die Art als Symbolspalte. In der Tagesleiste steht sie am Namen des
+       Rettungsmittels (E27) — den fuehrt diese Tabelle nicht, und ein
+       Textkuerzel „luftgebunden" waere die breiteste Spalte fuer die
+       schmalste Auskunft. Sie erscheint nur, wenn im Bestand ueberhaupt mehr
+       als eine Art vorkommt; bei reiner Luftrettung bliebe in jeder Zeile
+       dasselbe Zeichen stehen. */
+    { key: 'art',   kopf: 'Art',                   thClass: 'c-art',
+      nurWenn: liste => new Set(liste.map(m => m.kind || '')).size > 1,
+      wert: m => m.kind || '',
+      zelle: m => {
+        const s = artSymbol(m.kind);
+        return `<td class="c-art"><span class="artzeichen" title="${esc(s.text)}"`
+             + ` aria-label="${esc(s.text)}">${esc(s.zeichen)}</span></td>`;
+      } },
     { key: 'day',   kopf: 'Datum',                 thClass: 'c-date',
       wert: m => m.day,
       zelle: m => `<td class="mono c-date">${fmtTag(m.day)}</td>` },
@@ -100,15 +141,27 @@ const EdMissionTable = (() => {
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
       zelle: m => zelleGeschuetzt(m, m._dx, v => esc(v)) },
+    /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
+       Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
+       Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
     { key: 'winch', kopf: 'Winde',                 thClass: 'c-winde',
+      nurWenn: liste => liste.some(m => m.winch),
       wert: m => m.winch ? 1 : 0,
       zelle: m => `<td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>` },
     { key: 'bw',    kopf: 'Bergwacht',             thClass: 'c-bw',
+      nurWenn: liste => liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
       zelle: m => `<td class="checkcol c-bw">${m.bergwacht ? '✓' : ''}</td>` },
     { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'c-sek',
       wert: m => m.secondary ? 1 : 0,
       zelle: m => `<td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>` },
+    /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
+       datengetrieben: Der Haken steht beiden Arten offen, gesetzt ist er
+       selten, und eine Spalte voller leerer Zellen liest sich als Mangel. */
+    { key: 'fehl',  kopf: 'Fehl<br>einsatz',       thClass: 'c-fehl',
+      nurWenn: liste => liste.some(m => m.false_alarm),
+      wert: m => m.false_alarm ? 1 : 0,
+      zelle: m => `<td class="checkcol c-fehl">${m.false_alarm ? '✓' : ''}</td>` },
     /* Neutral beschriftet, nicht „Flug km" (Abschnitt 3.9/3.7.3). Diese
        Tabelle wird von zeitraum.php UND suche.php gemeinsam erzeugt; in der
        Suche stehen luft- und bodengebundene Einsaetze NEBENEINANDER, ein
@@ -170,6 +223,12 @@ const EdMissionTable = (() => {
      * beim Oeffnen sortiert — die eine sagte es, die andere liess es raten.
      * Der Unterschied war historisch gewachsen, nicht gewollt. */
     let daten = [];
+    /* Bestand fuer die Spaltensichtbarkeit (siehe SPALTEN oben). null heisst
+     * „noch nicht gesetzt" — dann gilt die Trefferliste selbst. Das ist fuer
+     * zeitraum.php richtig (dort ist die Liste der Zeitraum) und fuer
+     * suche.php nicht (dort ist sie das Suchergebnis); die Suche setzt ihn
+     * deshalb einmal beim Laden auf den Gesamtbestand. */
+    let bestand = null;
 
     let thead = table.tHead;
     if (!thead) { thead = table.createTHead(); }
@@ -198,9 +257,15 @@ const EdMissionTable = (() => {
       table.insertAdjacentElement('afterend', mehrZeile);
     }
 
-    function zeichneKopf() {
+    /** Die Spalten, die dieser Bestand rechtfertigt (A13d). */
+    function sichtbareSpalten() {
+      const basis = bestand !== null ? bestand : daten;
+      return SPALTEN.filter(sp => !sp.nurWenn || sp.nurWenn(basis));
+    }
+
+    function zeichneKopf(spalten) {
       const tr = document.createElement('tr');
-      SPALTEN.forEach(sp => {
+      spalten.forEach(sp => {
         const th = document.createElement('th');
         th.className = 'sortable' + (sp.thClass ? ' ' + sp.thClass : '');
         th.dataset.key = sp.key;
@@ -223,7 +288,12 @@ const EdMissionTable = (() => {
     }
 
     function zeichne() {
-      zeichneKopf();
+      const spalten = sichtbareSpalten();
+      zeichneKopf(spalten);
+      /* Sortiert wird ueber ALLE Spalten, nicht nur die sichtbaren: Ein
+       * geteilter Link kann nach einer Spalte sortieren, die der eigene
+       * Bestand nicht zeigt. Die Reihenfolge stimmt dann trotzdem, nur der
+       * Pfeil hat keinen Kopf, an dem er stehen koennte. */
       const sp = SPALTEN.find(s => s.key === sortKey) || SPALTEN[0];
       const sortiert = daten.slice().sort((a, b) => {
         const x = sp.wert(a), y = sp.wert(b);
@@ -236,7 +306,7 @@ const EdMissionTable = (() => {
         const tr = document.createElement('tr');
         tr.className = 'clickable';
         tr.dataset.mid = m.id;
-        tr.innerHTML = SPALTEN.map(s => s.zelle(m)).join('');
+        tr.innerHTML = spalten.map(s => s.zelle(m)).join('');
         /* Die Zeile ist die Schaltflaeche. Ohne tabindex und Tastenbehandlung
          * waere das Oeffnen eines Einsatzes eine reine Mausfunktion — die
          * Hervorhebung beim Ueberfahren gaebe es dann fuer die Tastatur zwar
@@ -303,12 +373,17 @@ const EdMissionTable = (() => {
       sortKey = key; sortAsc = !!asc;
     }
 
+    /* Bestand fuer die Spaltensichtbarkeit setzen. Zeichnet NICHT selbst: Die
+     * Aufrufer setzen ihn unmittelbar vor oder nach setData(), und zweimal
+     * zeichnen waere zweimal dieselbe Tabelle. */
+    function setSpaltenBestand(liste) { bestand = liste || []; }
+
     return {
-      setData, zeichne, setSort,
+      setData, zeichne, setSort, setSpaltenBestand,
       get sortKey() { return sortKey; },
       get sortAsc() { return sortAsc; }
     };
   }
 
-  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt };
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt, artSymbol };
 })();

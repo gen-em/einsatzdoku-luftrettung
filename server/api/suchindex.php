@@ -27,7 +27,10 @@ require_once __DIR__ . '/../mission_fields_lib.php';
  * Unterschied ist beabsichtigt; ohne ihn suchte man einen Nachteinsatz unter
  * dem falschen Tag.
  *
- * Abfragen: sechs Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1.
+ * Abfragen: fuenf Stueck, unabhaengig von der Zahl der Einsaetze. Kein N+1 —
+ * Einsaetze, Diensttage, Tagesbesatzung, abweichende Besatzung, weitere
+ * Rettungsmittel. (Bis Web 5.10.0 waren es sechs; die Abfrage ueber die
+ * Stammdatentabellen ist mit den Snapshot-Spalten des Diensttags entfallen.)
  */
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
@@ -39,7 +42,8 @@ try {
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.
     $st = db()->prepare(
         'SELECT m.id, m.day_id, m.started_at, m.distance_m, m.edited,
-                m.transport_dest, m.schockraum,
+                m.transport_mode, m.na_escort, m.transport_dest, m.schockraum,
+                m.false_alarm,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
                 m.bergwacht, m.bw_unit, m.bw_info,
                 m.secondary, m.other_ema, m.notes, m.crew_override,
@@ -162,8 +166,16 @@ try {
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'edited'      => (int)($m['edited'] ?? 0) === 1,
+            /* Die Klartextfelder der Etappe 2 (Web 6.1.0), soweit die Suche
+             * sie auswertet. `dest_lat`/`dest_lon` und `start_src` bleiben
+             * bewusst DRAUSSEN: Nach einer Koordinate oder nach der Herkunft
+             * eines Abfahrtorts wird nicht gefiltert, und dieser Index fuehrt
+             * grundsaetzlich nur, was die Suche auch benutzt (siehe Kopf). */
+            'transport_mode' => $m['transport_mode'] !== null ? (string)$m['transport_mode'] : null,
+            'na_escort'   => (int)$m['na_escort'] === 1,
             'transport_dest' => $m['transport_dest'] !== null ? (string)$m['transport_dest'] : null,
             'schockraum'  => (int)$m['schockraum'] === 1,
+            'false_alarm' => (int)$m['false_alarm'] === 1,
             'winch'       => (int)$m['winch'] === 1,
             'winch_cycles'     => $m['winch_cycles']     !== null ? (int)$m['winch_cycles']     : null,
             'winch_cycles_pat' => $m['winch_cycles_pat'] !== null ? (int)$m['winch_cycles_pat'] : null,

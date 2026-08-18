@@ -222,6 +222,7 @@ $neueGeraete = geraete_neu(db(), $userId);
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const CSRF = '<?= e($_SESSION['csrf']) ?>';
 const SEL_DAY_ID = <?= json_encode($selDay) ?>;
@@ -244,6 +245,10 @@ const DAY_COLS = <?= json_encode(array_map(
 const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
 let currentDayId = null;
 let currentDay = null;      // Datum des Diensttags, fuer die Altersberechnung
+/* Standortkoordinate DIESES Diensttags, eingefroren (E8). Quelle des
+   Abfahrtorts „Standort"; null, solange kein Standort zugeordnet oder keine
+   Koordinate hinterlegt ist — dann entsteht für diese Regel keine Linie (A13i). */
+let currentBase = null;
 
 const map = L.map('map');
 attachBaseLayers(map);
@@ -479,12 +484,23 @@ async function loadDay(dayId){
     m._col = COLORS[i % COLORS.length];
     return m;
   });
+  currentBase = (d.meta && d.meta.base_lat != null && d.meta.base_lon != null)
+    ? { lat: d.meta.base_lat, lon: d.meta.base_lon } : null;
   d.missions.forEach(m => {
     if (m.track.length > 1) {
       const line = L.polyline(m.track, { color: m._col, weight: trackWeight(), smoothFactor: 0 });
       layerGroup.addLayer(line);
       trackLines.push(line);
       m.track.forEach(p => bounds.push(p));
+    }
+    /* Zielklinik-Pin: Klartext, also ohne Freischalten (E40, A13o). Er steht
+       hier und nicht in entschluesselePat() — dort landet nur, was den
+       Schlüssel braucht. */
+    if (m.dest_lat != null && m.dest_lon != null) {
+      layerGroup.addLayer(L.marker([m.dest_lat, m.dest_lon],
+        { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
+        .bindPopup(`Einsatz ${m._no}<br>Zielklinik`));
+      bounds.push([m.dest_lat, m.dest_lon]);
     }
   });
   renderMissionTable();
@@ -522,7 +538,8 @@ async function entschluesselePat(){
    * die beim naechsten Mal auseinanderlaufen. Was ANZUZEIGEN ist, bleibt
    * Sache der Seite; was ein Fehlschlag BEDEUTET, entscheidet EdPat. */
   const zahl = await EdPat.entschluessleListe(dayMissions, ck);
-  for (const m of dayMissions) {
+  for (let i = 0; i < dayMissions.length; i++) {
+    const m = dayMissions[i];
     if (m._patState === 'unlesbar') { changed = true; continue; }
     if (m._patState !== 'ok') { continue; }
     const o = m._pat;
@@ -539,6 +556,47 @@ async function entschluesselePat(){
           { icon: locPin(m._col), keyboard: false })
           .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
         pinBounds.push([o.loc.lat, o.loc.lon]);
+      }
+    }
+
+    /* ---- Luftlinie je Einsatz ohne Track (E34/E35) ---------------------
+     *
+     * Hier — anders als in der Einsatzansicht — sind die beiden
+     * Vorgänger-Quellen ohne Zusatzabfrage zu haben: Die Einsätze des Tages
+     * liegen gemeinsam vor, aufsteigend nach Alarmierungszeit, und sind an
+     * dieser Stelle bereits entschlüsselt (Konzept 4.6.1). Der VORHERIGE
+     * Einsatz ist schlicht der davor in der Liste; Papierkorbeinträge sind gar
+     * nicht erst dabei (A13q).
+     *
+     * Die Linie trägt die Farbe IHRES Einsatzes, nicht die einheitliche
+     * Luftlinienfarbe: Bei acht Einsätzen an einem Tag wäre sonst nicht mehr
+     * zu erkennen, welche zu welchem gehört. Gestrichelt bleibt sie überall —
+     * das ist die Unterscheidung zum aufgezeichneten Track. */
+    const vor = i > 0 ? dayMissions[i - 1] : null;
+    const abfahrt = EdLuftlinie.abfahrt(m.start_src, {
+      base: currentBase,
+      prevDest: (vor && vor.dest_lat != null && vor.dest_lon != null)
+        ? { lat: vor.dest_lat, lon: vor.dest_lon } : null,
+      prevSite: (vor && vor._patState === 'ok' && vor._pat && vor._pat.loc)
+        ? vor._pat.loc : null,
+      manual: o.start
+    });
+    const punkte = EdLuftlinie.punkte({
+      hatTrack: m.track.length > 1,
+      abfahrt: abfahrt,
+      ort: o.loc,
+      ziel: (m.dest_lat != null && m.dest_lon != null)
+        ? { lat: m.dest_lat, lon: m.dest_lon } : null
+    });
+    if (punkte.length) {
+      EdLuftlinie.zeichne(map, punkte,
+        { ziel: layerGroup, farbe: m._col, titel: `Einsatz ${m._no}` });
+      punkte.forEach(p => pinBounds.push([p.lat, p.lon]));
+      if (abfahrt) {
+        layerGroup.addLayer(L.marker([abfahrt.lat, abfahrt.lon],
+          { icon: locPin(m._col), keyboard: false })
+          .bindPopup(`Einsatz ${m._no}<br>Abfahrtort`
+            + (abfahrt.text ? '<br>' + esc(abfahrt.text) : '')));
       }
     }
   }

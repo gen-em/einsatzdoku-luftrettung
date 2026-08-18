@@ -59,9 +59,9 @@ try {
      *
      * Der Join auf `days` ist seit Web 6.0.0 der vorgesehene Weg (Konzept
      * 4.11). Bis dahin trug jeder Einsatz sein Tagesdatum selbst. */
-    $st = db()->prepare('SELECT m.id, m.day_id, d.day, m.started_at, m.distance_m,
+    $st = db()->prepare('SELECT m.id, m.day_id, d.day, d.kind, m.started_at, m.distance_m,
                            m.winch, m.bergwacht, m.secondary, m.winch_cycles,
-                           m.site_ele_m, m.pat_blob,
+                           m.false_alarm, m.site_ele_m, m.pat_blob,
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = m.id AND p.phase = 9) AS p9_at
                          FROM missions m
@@ -82,12 +82,18 @@ try {
             'id'         => (int)$m['id'],
             'day_id'     => (int)$m['day_id'],
             'day'        => (string)$m['day'],
+            /* Die ART DES DIENSTTAGS, an dem der Einsatz haengt (Etappe 3).
+             * 'air' | 'ground' | null (neutraler Diensttag, E26). Sie steuert
+             * im Browser den Tab, die Kacheln und die Karte — ohne sie muesste
+             * die Uebersicht je Tab nachladen. */
+            'kind'       => $m['kind'] !== null ? (string)$m['kind'] : null,
             'start_hhmm' => fmt_local($m['started_at']),
             'duration_s' => $dur,
             'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
             'winch'      => (int)$m['winch'] === 1,
             'bergwacht'  => (int)$m['bergwacht'] === 1,
             'secondary'  => (int)$m['secondary'] === 1,
+            'false_alarm' => (int)$m['false_alarm'] === 1,
             'winch_cycles' => $m['winch_cycles'] !== null ? (int)$m['winch_cycles'] : null,
             'site_ele_m'   => $m['site_ele_m']   !== null ? (int)$m['site_ele_m']   : null,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
@@ -102,16 +108,37 @@ try {
     // Gezaehlt werden ZEILEN, nicht Kalendertage: Zwei Dienste an einem Tag sind
     // seit E9 zwei Diensttage, und ein Durchschnitt „Einsaetze je Diensttag"
     // waere sonst um den Faktor der Doppeltage zu hoch.
-    $tage = db()->prepare('SELECT COUNT(*) FROM days
-                           WHERE user_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL');
+    //
+    // AUFGETEILT NACH ART (Etappe 3, E28/E31). Die Tabs rechnen mit
+    // unterschiedlichen Divisoren: „Ø Einsaetze / Flugtag" im Luftrettungs-Tab
+    // darf nur durch die luftgebundenen Diensttage teilen. Neutrale Diensttage
+    // (ohne Rettungsmittel, E26) tragen keine Art und stehen deshalb in einer
+    // eigenen Zahl — der Tab „Gemischt" zaehlt sie mit und weist sie aus, die
+    // beiden Artentabs nicht. Ohne diese Zahl waere die Abweichung zwischen
+    // „Gemischt" und der Summe der Artentabs nicht erklaerbar.
+    //
+    // GERECHNET WIRD IN SQL, nicht aus der Einsatzliste: Ein Diensttag OHNE
+    // Einsatz zaehlt mit (siehe oben), taucht in `missions` aber nicht auf.
+    $tage = db()->prepare("SELECT COALESCE(kind, '') AS art, COUNT(*) AS n FROM days
+                            WHERE user_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL
+                            GROUP BY COALESCE(kind, '')");
     $tage->execute([$userId, $von, $bis]);
+    $jeArt = ['air' => 0, 'ground' => 0, 'neutral' => 0];
+    $gesamt = 0;
+    foreach ($tage->fetchAll() as $z) {
+        $art = (string)$z['art'];
+        $n   = (int)$z['n'];
+        $gesamt += $n;
+        $jeArt[$art === 'air' || $art === 'ground' ? $art : 'neutral'] += $n;
+    }
 
     echo json_encode([
         'jahr'     => $jahr,
         'monat'    => $monat !== '' ? $monat : null,
         'von'      => $von,
         'bis'      => $bis,
-        'tage'     => (int)$tage->fetchColumn(),
+        'tage'     => $gesamt,
+        'tage_art' => $jeArt,
         'missions' => $missions,
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $ex) {

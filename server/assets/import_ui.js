@@ -557,6 +557,16 @@
                     if (typeof m.pat.loc.lon === 'number') { pat.loc.lon = m.pat.loc.lon; }
                     if (!Object.keys(pat.loc).length) { delete pat.loc; }
                 }
+                // Manueller Abfahrtort (Web 6.1.0) — gleicher Aufbau wie `loc`,
+                // eigener Schluessel `start`. Nur er liegt im Blob; die REGEL
+                // daneben (start_src) ist Klartext.
+                if (m.pat.start && (m.pat.start.addr || m.pat.start.lat !== undefined)) {
+                    pat.start = {};
+                    if (m.pat.start.addr) { pat.start.addr = m.pat.start.addr; }
+                    if (typeof m.pat.start.lat === 'number') { pat.start.lat = m.pat.start.lat; }
+                    if (typeof m.pat.start.lon === 'number') { pat.start.lon = m.pat.start.lon; }
+                    if (!Object.keys(pat.start).length) { delete pat.start; }
+                }
                 keys = Object.keys(pat);
                 blob = keys.length ? await EdCrypto.encrypt(ck, JSON.stringify(pat)) : null;
 
@@ -597,6 +607,16 @@
                     bw_info: m.bw_info || null,
                     other_ema: m.other_ema || null,
                     notes: m.notes || null,
+
+                    // Ab Web 6.1.0: Transportart, Fehleinsatz,
+                    // Zielklinik-Koordinate und Abfahrtortregel (E17/E34/E37).
+                    transport_mode: m.transport_mode || null,
+                    na_escort: m.na_escort ? 1 : 0,
+                    false_alarm: m.false_alarm ? 1 : 0,
+                    dest_lat: nummerOderNull(m.dest_lat),
+                    dest_lon: nummerOderNull(m.dest_lon),
+                    start_src: m.start_src || null,
+
                     phases: phasenListe(m),
                     rea: m.rea || null,
 

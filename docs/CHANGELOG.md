@@ -11,6 +11,240 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 6.2.0] — 2026-08-18
+
+**Die Auswertung trennt jetzt nach Art — und die Suche kann danach filtern.**
+Dritte von vier Etappen der Notarzt-Erweiterung (Konzept:
+`docs/Konzept-Notarzt-Erweiterung.md`). Das Zusammenführen von Diensttagen, die
+Uhr und die restliche Dokumentation folgen in Etappe 4.
+
+**Keine Migration.** Wie Etappe 2 arbeitet diese auf dem Schema der 6.0.0. Wer
+auf 6.0.0 oder 6.1.0 ist, spielt nur die Dateien ein.
+
+### Zeitraum-Übersicht: drei Tabs, sobald beide Arten vorliegen
+
+Monats- und Jahresübersicht teilen sich nach Art auf — aber nur, wenn es etwas
+zu teilen gibt:
+
+| Im Zeitraum | Anzeige |
+|---|---|
+| nur eine Art | keine Tableiste, Ansicht wie bisher |
+| beide Arten | **Gemischt** (aktiv), Luftrettung, Bodengebundener Rettungsdienst |
+
+Der Tab filtert die **ganze** Ansicht: Kacheln, Einsatztabelle und Karte. Er
+steht im URL-Fragment hinter dem `#` und lässt sich damit verschicken; ein
+Fragment wird nicht an den Server gesendet.
+
+**Der Luftrettungs-Tab ist der heutige Bestand, unverändert** — dieselben zehn
+Kacheln, dieselben Beschriftungen, dieselbe Flugterminologie. Für eine rein
+luftgebundene Nutzung ändert sich an der Auswertung nichts. Die übrigen Tabs
+sprechen neutral und führen acht Kacheln, darunter eine neue: **Fehleinsätze**.
+Sie fehlt im Luftrettungs-Tab bewusst, obwohl der Haken auch luftgebunden zur
+Verfügung steht; in „Gemischt" zählt sie luftgebundene Fehleinsätze mit, damit
+die Zahl vollständig bleibt.
+
+**„Gemischt" enthält auch die Diensttage ohne Zuordnung** und sagt das. Die
+Summe der beiden Artentabs ist deshalb kleiner — ohne den Hinweis wäre die
+Abweichung nicht erklärbar. Er verlinkt auf die Nachbearbeitung.
+
+### Kacheln und Spalten nur bei passendem Bestand
+
+Die **Windenkacheln** erscheinen ausschließlich, wenn im Zeitraum tatsächlich
+Windeneinsätze dokumentiert sind — nicht schon, wenn das Rettungsmittel es
+könnte. Damit lässt sich „null Windeneinsätze" nicht mehr von „Winde nicht
+eingerichtet" unterscheiden; das ist beabsichtigt, weil eine Dauerkachel mit dem
+Wert null nur Platz kostet.
+
+Dieselbe Regel gilt jetzt für **Spalten der Einsatztabelle**: Winde, Bergwacht
+und der neue Fehleinsatz erscheinen nur, wenn es sie im Bestand gibt. Für
+Bergwacht gibt es weiterhin **keine** Kachel.
+
+### Die Art als Symbol in der Einsatztabelle
+
+🚁 luftgebunden, 🚑 bodengebunden, ◌ ohne Zuordnung — dieselben Zeichen wie in
+der Tagesleiste, mit Textalternative. Die Spalte erscheint nur, wenn im Bestand
+überhaupt mehr als eine Art vorkommt: Bei reiner Luftrettung stünde in jeder
+Zeile dasselbe Zeichen.
+
+### Suche: vier neue Filter
+
+**Art** (bei Standort und Rettungsmittel), **Transportart** und
+**NA-Begleitung** (bei Transport) sowie **Fehleinsatz** in einem neuen Block
+„Einsatz". Der Block erscheint wie die Blöcke Winde und Bergwacht nur, wenn der
+Bestand dazu etwas hergibt.
+
+Die Fragment-Kurznamen der neuen Filter sind `art`, `ta`, `nb` und `fe`. Die
+bestehenden sind unverändert — verschickte Links bleiben gültig.
+
+### Export: die letzten zwei Spaltennamen aus der Luftrettung
+
+Die Phasen 3 und 7 heißen serverseitig seit Web 6.0.0 „Ausrücken" und „Ankunft
+Klinik". Im Export standen weiterhin `phase_03_abflug` und
+`phase_07_landung_krankenhaus`; sie heißen jetzt `phase_03_ausruecken` und
+`phase_07_ankunft_klinik`. **Der Rückweg bleibt offen:** Der Import erkennt
+beide Schreibweisen, eine Exportdatei von gestern lässt sich unverändert wieder
+einlesen.
+
+Ebenfalls neutral: die Erläuterung zu `strecke_m` in `felder.csv` (war
+„Flugstrecke") und der **Dateiname** des Exports — er beginnt mit
+`einsatzdokumentation_export_` statt `luftrettungsdokumentation_export_`. Ein
+Archiv mit bodengebundenen Einsätzen hieß sonst nach einer Rettungsart, die
+darin nicht vorkommt.
+
+### Entfernt: drei Seiten, die es seit Web 6.0.0 nicht mehr geben sollte
+
+`flugtag_neu.php`, `flugtag_loeschen.php` und `flugtag_datum.php` wurden mit
+Web 6.0.0 durch ihre `diensttag_*`-Nachfolger ersetzt — im Repository lagen sie
+aber weiter und wurden mitgeliefert. Sie arbeiten auf dem **alten** Datenmodell
+und wären beim Aufruf über die Adresszeile in einen Fehler gelaufen. Verlinkt
+war keine von ihnen.
+
+**Für die Betreiberin:** Sie müssen auch auf dem Webspace verschwinden. Ein
+FTP-Abgleich entfernt nicht zwingend, was im neuen Paket fehlt.
+
+### Unter der Haube
+
+- `api/range.php` liefert je Einsatz die **Art des Diensttags** und den
+  Fehleinsatz-Haken sowie die Diensttage **nach Art aufgeteilt**. Die Tabs
+  rechnen damit ohne eine zweite Abfrage; der Divisor „Ø Einsätze / Flugtag"
+  teilt im Luftrettungs-Tab nur durch luftgebundene Diensttage.
+- Die **Artsymbole stehen an einer Stelle** (`dt_art_symbole()`) und gehen von
+  dort an den Browser — wie der Rollenkatalog. Eine zweite Liste in JavaScript
+  wäre die Stelle, an der beide beim nächsten Symbolwechsel auseinanderlaufen.
+- Die **Kacheln entstehen im Browser** statt fest im HTML zu stehen: Welche es
+  gibt und wie sie heißen, hängt am Tab und am Bestand.
+- Der Suchindex führt die Klartextfelder der Etappe 2, soweit die Suche sie
+  auswertet. Zielklinik-Koordinate und Abfahrtortregel bleiben draußen — nach
+  ihnen wird nicht gefiltert.
+
+---
+
+## [Web 6.1.0] — 2026-08-18
+
+**Die Einsatzfelder für beide Arten, und eine Karte auch ohne Uhr.** Zweite von
+vier Etappen der Notarzt-Erweiterung (Konzept: `docs/Konzept-Notarzt-Erweiterung.md`).
+Auswertung nach Art, Suche und das Zusammenführen von Diensttagen folgen in den
+Etappen 3 und 4.
+
+**Keine Migration.** Die Spalten dafür hat die Migration der Web 6.0.0 bereits
+angelegt — bewusst in einem Zug, damit die späteren Etappen keine zweite
+verlangen. Wer auf 6.0.0 ist, spielt nur die Dateien ein.
+
+### Neue Felder am Einsatz
+
+- **Transport** — Auswahl aus Luft, Boden, Ambulant. „Ambulant" heißt: nicht
+  transportiert.
+- **NA-Begleitung** — Haken unter der Transportart.
+- **Fehleinsatz / Storno / Abbruch** — ein Haken, keine Unterauswahl. Er
+  erscheint als eigene Spalte in der Tagestabelle.
+
+**Zielklinik und Schockraum hängen jetzt an der Transportart** und entfallen bei
+„Ambulant". Wer dort umschaltet, sieht die Felder verschwinden, **bevor**
+gespeichert wird — und der Inhalt wird tatsächlich geleert, nicht nur verborgen.
+Das ist der Unterschied zu den Feldern, die eine Art oder Fähigkeit ausblendet:
+Die behalten ihren Inhalt, weil er gültig bleibt. Eine Zielklinik hinter
+„Ambulant" wäre dagegen ein Widerspruch in den Daten.
+
+### Windenfelder erscheinen nur, wo es eine Winde gibt
+
+Ein bodengebundener Dienst zeigt keine Windenfelder mehr, ein Hubschrauber ohne
+Bergwachtkooperation keine Bergwachtfelder. Maßgeblich sind die **eingefrorenen
+Fähigkeiten des Diensttags**, nicht die heutigen Stammdaten: Wird der
+Windenhaken Jahre später am Rettungsmittel entfernt, verlieren dokumentierte
+Einsätze weder Daten noch Anzeige. Ein bereits belegtes Feld bleibt immer
+sichtbar.
+
+### Abfahrtort und Luftlinie — eine Karte auch ohne GPS-Aufzeichnung
+
+Fällt die Uhr aus oder wird ohne sie gearbeitet, blieb die Karte bisher leer,
+obwohl der Einsatzort bekannt war. Es fehlte der Gegenpunkt.
+
+Zu jedem Einsatz lässt sich jetzt ein **Abfahrtort** bestimmen — als Auswahl,
+nicht als Adresseingabe:
+
+| Auswahl | Woher die Koordinate kommt |
+|---|---|
+| Standort des Diensttags | eingefrorene Standortkoordinate |
+| Letzter Einsatzort | Einsatzort des vorherigen Einsatzes desselben Dienstes |
+| Letzte Zielklinik | Zielklinik des vorherigen Einsatzes |
+| Manueller Ort | eigene Adresssuche, wie beim Einsatzort |
+
+Sind Abfahrtort und Einsatzort bekannt, zeichnet die Karte eine **gestrichelte
+Luftlinie** mit Pin an jedem Ende und benannter Länge. Hat die Zielklinik
+Koordinaten, verlängert sie sich um diesen dritten Punkt.
+
+Drei Dinge, die sie bewusst **nicht** tut:
+
+- **Ein aufgezeichneter Track hat immer Vorrang.** Trifft er später ein, bleibt
+  die Abfahrtortangabe gespeichert und wird nur nicht mehr gezeichnet. Fällt er
+  weg, erscheint die Linie wieder.
+- **Ohne Einsatzort keine Linie** — auch dann nicht, wenn Abfahrtort und
+  Zielklinik beide Koordinaten haben. Diese Verbindung hat nie stattgefunden.
+- **Kein Ausweichen.** Fehlt die Koordinate der gewählten Quelle, entsteht keine
+  Linie. Es wird nicht stillschweigend eine andere genommen.
+
+**Die Luftlinienlänge fließt in keine Kachel und in keinen Filter.** Eine
+Luftlinie und eine gefahrene Strecke sind nicht dieselbe Größe; beides in einer
+Summe machte „Einsatzkilometer gesamt" unbrauchbar. Wer ohne Uhr dokumentiert,
+hat damit weiterhin keine Kilometerzahlen in der Statistik.
+
+**Sichtbarkeit:** Linie und Einsatzort-Pin erscheinen erst nach Freischalten des
+Patientendatenschlüssels — ihr mittlerer Stützpunkt ist der Einsatzort. Der
+**Zielklinik-Pin** ist davon ausgenommen: Der Klinikname steht ohnehin
+unverschlüsselt am Einsatz, seine Koordinate folgt derselben Einstufung.
+
+### Zielkliniken bekommen Koordinaten — auf drei Ebenen
+
+Zentral durch die Administration, im eigenen Konto, und einmalig am Einsatz.
+Wird ein Vorschlag übernommen, dessen Stammdatensatz Koordinaten führt, sind sie
+vorbelegt und bleiben überschreibbar. Sie werden **am Einsatz eingefroren** und
+nicht über den Namen aufgelöst: Ein umbenannter Stammdatensatz verlöre sie
+sonst.
+
+Koordinaten sind überall **freiwillig** (Einsatzort, Abfahrtort, Zielklinik).
+Ohne sie entstehen lediglich kein Pin und keine Linie — kein Feld wird dadurch
+unbrauchbar. Umgekehrt gilt überall dieselbe Regel: Koordinaten **ohne**
+Bezeichnung werden abgewiesen, sonst stünde in den Listen ein Zahlenfragment.
+
+### Adresssuche in der Standortpflege
+
+Die Koordinatenfelder bei Standorten und Zielkliniken waren seit Web 6.0.0
+zwei Zahlenfelder zum Eintippen. Jetzt steht dort dasselbe Ortsfeld wie am
+Einsatz — mit Adresssuche, Plus-Code-Erkennung und Chip. Das Namensfeld bleibt
+davon unberührt: Gesucht wird in einem eigenen Feld daneben, weil „Standort
+Kempten" keine Adresse ist und die Suche den Namen sonst überschriebe.
+
+### Export, Import und Sicherung
+
+Die neuen Angaben gehen überall mit: `transport_art`, `na_begleitung`,
+`fehleinsatz`, `ziel_lat`, `ziel_lon`, `abfahrt_regel` als Klartextspalten,
+`pat_start_adresse`/`_lat`/`_lon` im verschlüsselten Teil. Der eigene
+CSV-Export bleibt damit der verlustfreie Rückweg.
+
+**Behoben (älter als diese Etappe):** Das Wiedereinspielen einer Sicherung
+übernahm die Spalten aus dem Feldkatalog — Koordinatenspalten, die nicht so
+heißen wie ihr Feld, und Spalten außerhalb des Katalogs fielen dabei heraus. In
+6.0.0 betraf das nichts, weil es solche Spalten noch nicht gab; ab 6.1.0 wären
+Zielklinik-Koordinate und Abfahrtortregel beim Rückweg verloren gegangen.
+Zusätzlich stand die normalisierte Besatzung noch in dieser Liste: Eine Datei
+mit einem Schlüssel `crew_p1` hätte nicht eine Zeile, sondern die **ganze**
+Wiederherstellung scheitern lassen.
+
+### Unter der Haube
+
+- **Das Ortsfeld ist eine Komponente** (`assets/ortsfeld.js` + `ui_ortsfeld()`).
+  Es war bis dahin über feste Element-Kennungen verdrahtet — rund 180 Zeilen in
+  einer Datei. Sechs Verwendungen wären sechs Fassungen geworden.
+- **Der Feldkatalog kann drei Dinge mehr:** ein Ortsfeld (`loc`) mit zwei
+  Koordinatenspalten, wertabhängige Unterfelder unter einem Auswahlfeld
+  (`show_if` — vorher gab es das nur unter Checkboxen), und Auswahlfelder, deren
+  gespeicherter Wert nicht die Beschriftung ist.
+- **Die Prüfung optionaler Koordinaten steht an einer Stelle**
+  (`pruef_ortspaar`). Sie stand vorher zweimal ausgeschrieben und wäre mit
+  dieser Etappe ein drittes und viertes Mal entstanden.
+
+---
+
 ## [Web 6.0.0] — 2026-08-17
 
 **Aus dem Flugtag wird der Diensttag.** Die Anwendung dokumentiert jetzt auch

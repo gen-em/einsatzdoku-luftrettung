@@ -48,16 +48,21 @@ hems/
 │   ├── suche.php          Suche über den gesamten Bestand (filtert im Browser, s. u.)
 │   ├── mission_fields.php Zentraler Feldkatalog der Zusatzfelder
 │   ├── mission_fields_lib.php  Abgeleitete Sichten auf den Feldkatalog
-│   │                       (mf_tagesspalten() = Spalten der Tagestabelle)
+│   │                       (mf_tagesspalten() = Spalten der Tagestabelle,
+│   │                        mf_optionen() = Wert/Beschriftung eines Auswahlfelds,
+│   │                        mf_ort_spalten() = Koordinatenspalten eines Ortsfelds,
+│   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
-│   ├── einsatz_verschieben.php · flugtag_datum.php  die zugehörigen Seiten
+│   ├── einsatz_verschieben.php  die zugehörige Seite
 │   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail) · geraete.php (Weiterleitung)
 │   ├── admin_stammdaten.php  Zentrale (globale) Stammdaten aller sechs Typen
-│   ├── flugtag_neu.php    Flugtag von Hand anlegen
-│   ├── einsatz_loeschen.php · flugtag_loeschen.php · papierkorb.php  Löschen mit Vorschau
+│   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
+│   ├── diensttag_lib.php  Diensttage anlegen, zuordnen, einfrieren, auflisten
+│   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
+│   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
@@ -86,7 +91,10 @@ hems/
 │   │                      aktionsmenu.js (Verhalten des Aktionsmenüs oben rechts),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
-│   │                      export.js (alle drei Exportprofile, Aufbau im Browser)
+│   │                      export.js (alle drei Exportprofile, Aufbau im Browser),
+│   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
+│   │                       Koordinaten, sechs Verwendungen, s. u.),
+│   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
@@ -454,11 +462,11 @@ das Dirty-Flag zurück, bevor `beforeunload` greifen kann — auch bei
 Formularen, die selbst per `fetch()` speichern (`preventDefault()` in deren
 eigenem Handler ändert daran nichts, das Submit-Ereignis feuert davor).
 Eingebunden auf `einsatz_form.php`, `index.php` (`#dayform`) und
-`flugtag_neu.php`.
+`diensttag_neu.php`.
 
 **Tages- und Einsatzzuordnung korrigieren (ab Web 5.6.0, Block A5).**
 `tageszuordnung_lib.php` trägt beide Handlungen; die Seiten
-`einsatz_verschieben.php` und `flugtag_datum.php` bringen nur Markup und
+`einsatz_verschieben.php` und `diensttag_datum.php` bringen nur Markup und
 Rückfrage mit. Sie sehen sich ähnlich und sind ausdrücklich verschieden:
 
 | | `tz_einsatz_verschieben()` | `tz_tag_datum_aendern()` |
@@ -478,27 +486,27 @@ Drei Punkte, die beim Lesen leicht untergehen:
   Spalte ist `UNSIGNED`. Eine Rückwärtsverschiebung unter null wäre ein
   Datenbankfehler mitten in der Transaktion; sie wird vorher geprüft und
   benannt.
-* **Papierkorb-Einträge wandern mit.** Sie hängen über den natürlichen
-  Schlüssel `(user_id, day)` am Tag; blieben sie liegen, kämen sie beim
-  Wiederherstellen an einem Datum zurück, das es nicht mehr gibt. Umgekehrt
-  belegt ein Tag im Papierkorb sein Datum weiterhin (`uq_user_day`) — die
-  Kollisionsprüfung schließt ihn deshalb ein, sonst gäbe es statt einer
-  lesbaren Meldung einen Fehler aus der Datenbank.
+* **Papierkorb-Einträge wandern mit.** Sie hängen seit Web 6.0.0 über
+  `day_id` am Diensttag; blieben sie liegen, kämen sie beim Wiederherstellen
+  an einem Tag zurück, den es so nicht mehr gibt.
 
-**Auskunft zum Zieldatum (ab Web 5.10.0).** Beide Seiten sagten bis dahin erst
-**nach** dem Absenden, worauf das gewählte Datum hinausläuft — bei
-`flugtag_datum.php` sogar erst nach der Rückfrage „Alle Zeitstempel wandern
-mit. Fortfahren?". Jetzt steht es unter dem Feld:
+**Was mit dem Tagesschlüssel entfallen ist (Web 6.0.0).** Bis dahin galt
+`uq_user_day`: je Kalendertag genau ein Flugtag. Daran hingen eine
+Kollisionsprüfung beim Umdatieren, eine Liste belegter Daten und
+`tz_tag_zustand()`. Seit E9 ist ein belegtes Zieldatum der **vorgesehene** Fall
+— mehrere Diensttage je Kalendertag sind zulässig —, und alle drei sind
+ersatzlos entfallen.
 
-* `einsatz_verschieben.php` nennt den Flugtag am gewählten Datum (Maschine,
-  Standort, Zahl der Einsätze), oder dass dort keiner liegt und einer angelegt
-  wird, oder dass dort einer im Papierkorb liegt. Ausdrücklich benannt ist
-  auch, dass es je Kalendertag **genau einen** Flugtag gibt (`uq_user_day`) —
-  die Frage nach einer Auswahl zwischen mehreren Tagen desselben Datums
-  beantwortet damit die Seite selbst statt des Datenmodells im Nachhinein.
-* `flugtag_datum.php` nennt, ob das Datum frei oder belegt ist. Belegt heißt:
-  Zeile in `days` (Papierkorb eingeschlossen) **oder** Einsätze **oder**
-  Ruhesegmente — dieselben drei Größen, die `tz_tag_zustand()` prüft.
+**Auskunft zum Ziel (ab Web 5.10.0).** Beide Seiten sagten bis dahin erst
+**nach** dem Absenden, worauf die Wahl hinausläuft. Jetzt steht es unter dem
+Feld:
+
+* `einsatz_verschieben.php` wählt einen **vorhandenen** Diensttag aus einer
+  Liste — mit Datum, Dienstbeginn, Rettungsmittel, Standort und Zahl der
+  Einsätze. Angelegt wird dort nichts mehr: Welchem Dienst ein Einsatz gehört,
+  ist eine Auswahl, keine Nebenwirkung.
+* `diensttag_datum.php` nennt, was am gewählten Datum bereits liegt. Es ist
+  reine Auskunft — belegt oder frei ändert nichts an der Zulässigkeit.
 
 Beides ist **rein anzeigend**, und das ist keine Nachlässigkeit: Die Listen
 sind auf 400 Einträge gedeckelt und veralten, sobald in einem zweiten Fenster
@@ -679,8 +687,17 @@ Tabellenspalten ohnehin entschlüsselt — keine zweite Entschlüsselung, keine
 Serveränderung nötig. Zusätzlich liefert die API `winch_cycles` und
 `site_ele_m` je Einsatz (Grundlage der Statistiktabelle) sowie `tage` neu aus
 der `days`-Tabelle statt `COUNT(DISTINCT day)` aus `missions` — zählt also
-auch einsatzfreie Flugtage mit (Divisor der Durchschnittswerte). Die
-geschützten Angaben entschlüsselt der Browser wie überall selbst.
+auch einsatzfreie Diensttage mit (Divisor der Durchschnittswerte). Gezählt
+werden **Zeilen, nicht Kalendertage**: Zwei Dienste an einem Tag sind seit
+Web 6.0.0 zwei Diensttage. Die geschützten Angaben entschlüsselt der Browser
+wie überall selbst.
+
+Seit Web 6.2.0 kommen dazu: die **Art des Diensttags** (`kind`) und
+`false_alarm` je Einsatz sowie `tage_art` mit den Diensttagen nach Art
+(`air` / `ground` / `neutral`). Damit entscheidet der Browser über Tableiste,
+Kachelsatz und Divisor, ohne je Tab nachzuladen — `tage_art` wird in SQL
+gerechnet und nicht aus der Einsatzliste, weil ein Diensttag ohne Einsatz dort
+nicht auftaucht, aber mitzählt.
 
 **Fehlerbehandlung der Lese-/Schreib-APIs:** `api/range.php`, `api/day.php`,
 `api/mission.php`, `api/suchindex.php` und `api/backup_data.php` kapseln ihre Datenbankzugriffe in
@@ -706,8 +723,8 @@ also unter etwa 1 600 Datensätze — für einen einmaligen Abruf je Sitzung
 unproblematisch. Trackpunkte und Phasenlisten sind bewusst **nicht** enthalten;
 sie wären um Größenordnungen größer als alles andere und werden zum Filtern
 nicht gebraucht. Der Endpunkt kommt mit fünf Abfragen aus, unabhängig von der
-Zahl der Einsätze (kein N+1): Einsätze, Flugtage, Standorte, Maschinen,
-Rettungsmittel.
+Zahl der Einsätze (kein N+1): Einsätze, Diensttage, Tagesbesatzung, abweichende
+Besatzung, weitere Rettungsmittel.
 
 Der Index liefert nur, was die Suche auch auswertet. Mit den Filtern Herkunft,
 Reanimation, Reanimations-Ereignis und Höhe Einsatzort (Web 5.3.0) sind die
@@ -733,10 +750,19 @@ Eine Falle, die dort dokumentiert ist und bei Änderungen zu beachten bleibt:
 
 `start_min` (Minuten seit Mitternacht, Grundlage des Alarmzeitfilters) wird aus
 derselben `fmt_local()`-Umrechnung abgeleitet wie `start_hhmm`, damit Anzeige
-und Filter nicht auseinanderlaufen können. Standort und Maschine fallen auf die
-Alt-Freitextspalten `days.base` / `days.aircraft` zurück, wenn die
-Stammdaten-Verknüpfung fehlt — sonst wären Flugtage von vor der Umstellung
-nach diesen Kriterien nicht auffindbar.
+und Filter nicht auseinanderlaufen können. Standort, Rettungsmittel und Art
+stammen seit Web 6.0.0 aus den **Snapshot-Spalten des Diensttags**
+(`base_name`, `vehicle_name`, `kind`) — nie aus den Stammdaten. Damit sind auch
+Dienste auffindbar, deren Rettungsmittel inzwischen umbenannt oder gelöscht
+wurde; der frühere Rückfall auf die Alt-Freitextspalten `days.base` /
+`days.aircraft` ist entfallen, weil die Migration deren Inhalt genau dorthin
+gerettet hat (Konzept, Berichtigung B6).
+
+Seit Web 6.2.0 führt der Index zusätzlich `transport_mode`, `na_escort` und
+`false_alarm` — die Klartextfelder der Etappe 2, **soweit die Suche sie
+auswertet**. `dest_lat`/`dest_lon` und `start_src` bleiben draußen: Nach einer
+Koordinate oder nach der Herkunft eines Abfahrtorts wird nicht gefiltert, und
+der Index führt grundsätzlich nur, was die Suche auch benutzt.
 
 **Filterzustand im URL-Fragment.** Der gesamte Zustand steht hinter dem `#`,
 nie im Query-String: Fragmente werden nicht an den Server gesendet und landen
@@ -748,18 +774,34 @@ Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
 | Kurz | Filter | Kurz | Filter |
 |------|--------|------|--------|
 | `q`  | Freitext | `st` | Standort |
-| `dv` / `db` | Datum von / bis | `ac` | Maschine |
-| `zv` / `zb` | Alarmzeit von / bis | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
-| `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `rm` | Weiteres Rettungsmittel |
-| `wi` | Windeneinsatz (`j`/`n`) | `av` / `ab` | Alter von / bis |
-| `cv` / `cb` | Cycles von / bis | `kv` / `kb` | Flugstrecke von / bis (km) |
-| `pv` / `pb` | Cycles mit Patient von / bis | `ev` / `eb` | Einsatzdauer von / bis (min) |
-| `lv` | Luftverladung (`j`/`n`) | `s` | Sortierspalte |
-| `bw` | Bergwacht (`j`/`n`) | `sd` | Sortierrichtung (`a`/`d`) |
-| `bu` | Bergwacht-Bereitschaft | | |
+| `dv` / `db` | Datum von / bis | `ac` | Rettungsmittel (hieß bis Web 5.10.0 „Maschine") |
+| `zv` / `zb` | Alarmzeit von / bis | `art` | Art des Diensttags (`air` / `ground` / `neutral`) |
+| `wd` | Wochentage (`1`=Mo … `7`=So, kommagetrennt) | `c1`…`c5` | Besatzung P1, P2, HEMS, FR, Sonstige |
+| `wi` | Windeneinsatz (`j`/`n`) | `crew_driver`, `crew_trainee` | Besatzung Fahrer, Praktikant |
+| `cv` / `cb` | Cycles von / bis | `rm` | Weiteres Rettungsmittel |
+| `pv` / `pb` | Cycles mit Patient von / bis | `av` / `ab` | Alter von / bis |
+| `lv` | Luftverladung (`j`/`n`) | `kv` / `kb` | Strecke von / bis (km) |
+| `bw` | Bergwacht (`j`/`n`) | `ev` / `eb` | Einsatzdauer von / bis (min) |
+| `bu` | Bergwacht-Bereitschaft | `s` | Sortierspalte |
+| `ta` | Transportart (`air` / `ground` / `ambulant`) | `sd` | Sortierrichtung (`a`/`d`) |
+| `nb` | NA-Begleitung (`j`/`n`) | | |
 | `tz` | Transportziel | | |
 | `se` | Sekundärtransport (`j`/`n`) | | |
 | `sr` | Schockraum (`j`/`n`) | | |
+| `fe` | Fehleinsatz (`j`/`n`) | | |
+
+`art`, `ta`, `nb` und `fe` sind mit Web 6.2.0 dazugekommen. `art` und `ta`
+tragen **gespeicherte Werte, nicht Beschriftungen** — sie stammen aus
+`dt_art_symbole()` beziehungsweise aus dem Feldkatalog und nicht aus einer
+zweiten Aufzählung in `suche.php`. Der neutrale Diensttag heißt im Fragment
+`neutral`, weil sein Schlüssel im Katalog leer ist und der leere Wert im
+Auswahlfeld schon für „(egal)" vergeben ist.
+
+Die Zeitraum-Übersicht nutzt dasselbe Fragment für **einen** Wert: `t` ist der
+gewählte Tab (`mix` / `air` / `ground`, siehe unten). Ein Fragment, das von Hand
+geändert wird, wirkt auch auf der offenen Seite — `zeitraum.php` horcht auf
+`hashchange`, weil ein Wechsel von `#t=ground` auf `#t=air` für den Browser
+keine neue Seite ist und sonst Adresszeile und Bildschirm auseinanderliefen.
 
 **Zurückgezogene Kurznamen (bis Web 5.2.0).** `hk` (Herkunft), `re`
 (Reanimation), `rt` (Reanimations-Ereignisse), `hv` / `hb` (Höhe Einsatzort).
@@ -773,8 +815,8 @@ Ein neuer Filter braucht drei Dinge: einen Eintrag in der Liste `FILTER` in
 der Filterspalte und seine Zeile in `trifft()`. Auslesen, Schreiben ins
 Fragment, Wiederherstellen, das Zählen aktiver Filter und das Aufklappen der
 Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab. Die Gruppen
-sind `zeit`, `winde`, `bergwacht`, `transport`, `wer` und `werte`; der Freitext
-steht in der Hauptspalte und hat keine Gruppe.
+sind `zeit`, `winde`, `bergwacht`, `transport`, `einsatz`, `wer` und `werte`;
+der Freitext steht in der Hauptspalte und hat keine Gruppe.
 
 **Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
 ruft `ui_days_sidebar()` **nicht** auf — einzelne Flugtage sind bei einer Suche
@@ -836,13 +878,53 @@ Text in `onAfterDraw` und nicht in `anwenden()` — das Nachladen zeichnet neu,
 ohne dass sich ein Filter geändert hätte.
 
 **Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
-Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`
-und `bergwacht`). Geprüft wird der **gesamte** Bestand, nicht die aktuelle
-Trefferliste — sonst verschwände ein Block, sobald ein anderer Filter die
-betreffenden Einsätze gerade ausschliesst, und die Spalte spränge beim Tippen.
-Ein Block, in dem ein Filter gesetzt ist (geteilter Link), bleibt sichtbar;
-`gruppenSichtbarkeit()` läuft deshalb beim Start **nach** `fragmentLesen()` und
-erneut nach „Filter zurücksetzen".
+Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`,
+`bergwacht` und seit Web 6.2.0 `einsatz`). Geprüft wird der **gesamte** Bestand,
+nicht die aktuelle Trefferliste — sonst verschwände ein Block, sobald ein
+anderer Filter die betreffenden Einsätze gerade ausschliesst, und die Spalte
+spränge beim Tippen. Ein Block, in dem ein Filter gesetzt ist (geteilter Link),
+bleibt sichtbar; `gruppenSichtbarkeit()` läuft deshalb beim Start **nach**
+`fragmentLesen()` und erneut nach „Filter zurücksetzen".
+
+**Spalten nach Bestand (`nurWenn` in `assets/missiontable.js`, ab Web 6.2.0).**
+Dieselbe Überlegung eine Ebene tiefer: Eine Spalte, die im ganzen Bestand leer
+bleibt, kostet auf schmalen Geräten Platz und sagt nichts. `nurWenn` bekommt den
+Bestand und entscheidet, ob die Spalte überhaupt erscheint — heute `art` (mehr
+als eine Art vorhanden), `winch`, `bw` und `fehl`. Welche Liste der Bestand ist,
+sagt die Seite mit `setSpaltenBestand()`: `suche.php` setzt ihn **einmal** auf
+den Gesamtbestand (sonst käme und ginge die Windenspalte beim Tippen),
+`zeitraum.php` bei jedem Tabwechsel auf die Einsätze des Tabs. Ohne den Aufruf
+gilt die Trefferliste selbst. **Sortiert** wird weiterhin über alle Spalten,
+auch über verborgene: Ein geteilter Link kann nach einer Spalte sortieren, die
+der eigene Bestand nicht zeigt — die Reihenfolge stimmt dann trotzdem, nur der
+Pfeil hat keinen Kopf.
+
+**Artsymbole an einer Stelle.** `dt_art_symbole()` (`diensttag_lib.php`) liefert
+🚁 / 🚑 / ◌ samt Textalternative. `dt_art_symbol()` greift darauf zu, und
+`zeitraum.php` wie `suche.php` setzen die Liste **vor** `missiontable.js` als
+`ART_SYMBOLE` — dasselbe Muster wie `CREW_ROLLEN` in `import.php`.
+`missiontable.js` führt einen Rückfall, damit die Datei für sich lauffähig
+bleibt; er ist die Notlösung, nicht die Quelle.
+
+**Tabs der Zeitraum-Übersicht (ab Web 6.2.0, Konzept 3.7.1).** Die Tableiste
+erscheint nur, wenn im Zeitraum **beide** Arten vorliegen; maßgeblich sind die
+Diensttage (`tage_art` aus `api/range.php`), nicht die Einsätze — ein
+bodengebundener Dienst ohne einen einzigen Einsatz ist trotzdem einer. Liegt nur
+eine Art vor, bestimmt sie allein die **Beschriftung** der Kacheln; gezeigt wird
+in diesem Fall alles, auch die Einsätze neutraler Diensttage, denn sonst fehlten
+sie in der einzigen Ansicht, die es dann gibt. Der Hinweis auf mitgezählte
+neutrale Diensttage steht überall dort, wo sie tatsächlich mitzählen — in
+„Gemischt" und in einer Ansicht ohne Tableiste.
+
+Die Kacheln entstehen im Browser (`KACHELSATZ` in `zeitraum.php`) statt fest im
+HTML zu stehen: Welche es gibt und wie sie heißen, hängt am Tab und bei den
+Windenkacheln zusätzlich am Bestand. Die Ereignisse der Extremwert-Kacheln
+werden deshalb beim Erzeugen vergeben, nicht am Raster delegiert — `mouseenter`
+steigt nicht auf, und `mouseover` feuerte zusätzlich bei jedem Wechsel zwischen
+Wert und Beschriftung innerhalb derselben Kachel. Die Karten-Pins werden beim
+Tabwechsel **verworfen und neu gesetzt** (`pinLayer`), nicht versteckt: Ein Pin
+ohne Bildschirmposition lässt kein `setStyle()` zu — derselbe Stolperstein wie
+beim Ausgangsausschnitt der Karte.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
@@ -1264,6 +1346,116 @@ behandeln.
 
 Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
+
+### 4.98a Ortsfeld und Luftlinie (ab Web 6.1.0)
+
+**Das Ortsfeld war keine Komponente.** Bis Web 6.0.0 stand das Einsatzort-Widget
+ausgeschrieben in `einsatz_form.php`: rund 180 Zeilen, verdrahtet über die
+festen Kennungen `locaddr`, `loclat`, `loclon`, `locstate` — Photon-Abfrage,
+Plus-Code-Erkennung, Chip, Zustandszeile und die Prüfung „Koordinaten ohne
+Bezeichnung" hingen alle daran. Mit Etappe 2 sind **sechs** Verwendungen
+gefordert; sechs Kopien wären sechs Fassungen, die auseinanderlaufen.
+
+Die Komponente besteht aus zwei Hälften, die dasselbe Präfix teilen:
+
+| Hälfte | Datei | Aufgabe |
+|---|---|---|
+| Markup | `ui_ortsfeld()` in `ui.php` | erzeugt `<p>addr`, `<p>such`, `<p>lat`, `<p>lon`, `<p>suggest`, `<p>state`, `<p>chips`, `<p>dl` |
+| Verhalten | `assets/ortsfeld.js` | `EdOrtsfeld.init({praefix, …})` |
+
+Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
+
+| Verwendung | Präfix | Besonderheit |
+|---|---|---|
+| Einsatzort | `loc` | Textfeld = Suchfeld (die Adresse **ist** die Bezeichnung) |
+| Manueller Abfahrtort | `start` | wie Einsatzort, eigener Blob-Schlüssel `start` |
+| Zielklinik am Einsatz | `f_transport_dest_` | getrennte Suche, `<datalist>` aus den Stammdaten **mit Koordinaten** |
+| Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
+| Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
+
+**Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` ist das Textfeld
+zugleich das Suchfeld; ein Adresstreffer wird zur Bezeichnung. Bei `true` gibt
+es ein eigenes Suchfeld daneben, und der Treffer setzt **nur** die Koordinaten —
+„Standort Kempten" ist keine Adresse, und eine Suche im Namensfeld schriebe den
+Namen weg. Alles übrige ist in beiden Formen dasselbe: Chip statt Zahlen im
+Textfeld, lokale Formaterkennung vor jeder Netzanfrage, Bestätigung statt
+sofortiger Übernahme, ruhende Suche bei gesetzten Koordinaten, und die Prüfung
+„Koordinaten ohne Bezeichnung" beim Absenden.
+
+**Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
+über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, gestrichelt
+und in Max Blau, damit sie nicht mit dem Track-Orange verwechselt wird. Drei
+Regeln, die sie nie verletzt:
+
+* **Ein Track hat Vorrang.** Liegt er vor, unterbleibt die Linie; die
+  Abfahrtortangabe bleibt gespeichert und wird lediglich nicht gezeichnet.
+* **Ohne Einsatzort keine Linie** — auch dann nicht, wenn Abfahrtort und
+  Zielklinik beide Koordinaten haben. Eine direkte Verbindung zwischen beiden
+  hat nie stattgefunden.
+* **Kein Ausweichen.** Fehlt die Koordinate der *gewählten* Quelle, entsteht
+  keine Linie. Eine falsche ist schlechter als keine.
+
+**Gespeichert wird die Regel, nicht der Ort.** `missions.start_src` trägt
+`base`, `prev_site`, `prev_dest` oder `manual`; wo die Koordinate herkommt,
+hängt daran — und mit ihr, ob sie im Klartext steht:
+
+| Regel | Quelle | Sichtbarkeit | Wer löst auf |
+|---|---|---|---|
+| `base` | `days.base_lat/base_lon` (eingefroren) | Klartext | Server |
+| `prev_dest` | `dest_lat/dest_lon` des Vorgängers | Klartext | Server |
+| `prev_site` | Einsatzort des Vorgängers | verschlüsselt | Browser |
+| `manual` | `pat_blob.start` | verschlüsselt | Browser |
+
+Der Klartextwert verrät damit nur die **Regel**, keinen Ort. `api/mission.php`
+liefert ausschließlich, was die gewählte Regel braucht — den Blob eines anderen
+Einsatzes mitzuschicken, wo niemand ihn auswertet, wäre eine Datenweitergabe
+ohne Zweck, auch innerhalb desselben Kontos. Auf der Tagesübersicht entfällt der
+Umweg: Dort liegen die Einsätze des Tages ohnehin gemeinsam vor und sind bereits
+entschlüsselt, der Vorgänger ist schlicht der davor in der Liste.
+
+**Die Luftlinienlänge fließt in keine Kachel und in keinen Filter.** Zwei
+Gründe, beide fachlich: Die Kacheln werden serverseitig aggregiert, und der
+Einsatzort liegt verschlüsselt im `pat_blob` — dieselbe Grenze, an der auch die
+serverseitige Suche endet. Und eine Luftlinie ist keine gefahrene Strecke;
+beides in einer Summe machte „Einsatzkilometer gesamt" unbrauchbar.
+
+### 4.98b Sichtbarkeit von Einsatzfeldern
+
+Vier Schlüssel des Feldkatalogs entscheiden, ob ein Feld erscheint. Drei davon
+**verstecken nur** — der vierte **leert**:
+
+| Schlüssel | Frage | Verhalten |
+|---|---|---|
+| `role_gate` | Bietet der Diensttag diese Rolle an (`day_crew`)? | verstecken |
+| `kind_gate` | Hat der Diensttag diese Art (`days.kind`)? | verstecken |
+| `cap_gate` | Trägt der Diensttag diese Fähigkeit (`day_capabilities`)? | verstecken |
+| `show_if` | Hat das übergeordnete Auswahlfeld einen ausgeschlossenen Wert? | **leeren** |
+
+Der Unterschied ist kein Zufall. Ein *gefiltertes* Feld ist ein Feld, das an
+diesem Dienst nicht vorkommt — sein Inhalt bleibt trotzdem gültig und wird
+weiterhin gerendert, nur versteckt; ein bereits belegtes Feld bleibt sogar
+sichtbar. Sonst käme man an einen Wert nicht mehr heran, wenn der Diensttag
+später das Rettungsmittel wechselt. Ein *ausgeschlossenes Unterfeld* dagegen
+wäre ein Widerspruch in den Daten: Transport „Ambulant" mit eingetragener
+Zielklinik heißt, dass beides nicht stimmen kann. Es wird deshalb geleert, und
+zwar sichtbar — das Feld verschwindet vor dem Speichern, nicht danach.
+
+**Alle drei Filter fragen den DIENSTTAG, nie die heutigen Stammdaten.** Wird der
+Windenhaken Jahre später am Hubschrauber entfernt, ändert das an dokumentierten
+Einsätzen nichts: Gefragt ist `day_capabilities`, und das ist beim Zuordnen
+eingefroren worden (E8).
+
+**Was „belegt" heißt, hängt am Typ.** Ein Textfeld ist belegt, wenn etwas
+drinsteht; ein Haken erst, wenn er gesetzt ist. Ohne diese Unterscheidung wäre
+jede Checkbox eines bearbeiteten Einsatzes belegt — ihr Wert ist dann „0" und
+nicht die leere Zeichenkette — und kein `cap_gate` hätte je gegriffen.
+
+**Wert ≠ Beschriftung (ab Web 6.1.0).** `'options'` durfte bis dahin nur eine
+Liste sein, und was dort stand, ging genau so in die Spalte. Mit der
+Transportart geht das nicht mehr auf: Die Spalte ist ein
+`ENUM('air','ground','ambulant')`, angezeigt gehört „Luft", „Boden",
+„Ambulant". `mf_optionen()` ist die eine Stelle, die beide Schreibweisen
+auflöst — eine Liste bleibt Wert = Beschriftung, eine Zuordnung trennt sie.
 
 ### 4.99 Gemeinsame Bausteine
 

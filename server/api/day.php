@@ -172,6 +172,12 @@ try {
         'notes'        => $tag['notes'] !== null ? (string)$tag['notes'] : null,
         'started_at'   => $tag['started_at'] !== null ? fmt_local((string)$tag['started_at']) : null,
         'ended_at'     => $tag['ended_at']   !== null ? fmt_local((string)$tag['ended_at'])   : null,
+        /* Standortkoordinate — ebenfalls eingefroren (E8) und deshalb aus
+         * `days`, nicht aus den Stammdaten. Sie ist die Quelle des Abfahrtorts
+         * „Standort"; eine spaetere Korrektur am Standort aendert an bereits
+         * erfassten Diensttagen nichts (A13p). */
+        'base_lat'     => $tag['base_lat'] !== null ? (float)$tag['base_lat'] : null,
+        'base_lon'     => $tag['base_lon'] !== null ? (float)$tag['base_lon'] : null,
     ];
 
     /* Besatzung des Tages: die Zeilenmenge aus `day_crew`, mit Beschriftung aus
@@ -254,8 +260,14 @@ try {
     $spaltenSql = '';
     foreach ($tagesSpalten as $dc) { $spaltenSql .= ', ' . $dc['col']; }
 
+    /* `start_src`, `dest_lat` und `dest_lon` stehen FEST im SELECT und nicht im
+     * Katalog: Sie sind keine Spalten der Tagestabelle, sondern die Zutaten der
+     * Luftlinie auf der Tageskarte (E34/E35). Die Aufloesung der beiden
+     * Vorgaenger-Regeln geschieht im Browser — er hat die Einsaetze des Tages
+     * ohnehin gemeinsam vorliegen und entschluesselt sie dort, wo der Server es
+     * gar nicht koennte (Konzept 4.6.1). */
     $st = db()->prepare('SELECT id, started_at, ended_at, distance_m, final,
-                           pat_blob' . $spaltenSql . ',
+                           pat_blob, start_src, dest_lat, dest_lon' . $spaltenSql . ',
                            (SELECT MAX(occurred_at) FROM mission_phases p
                             WHERE p.mission_id = missions.id AND p.phase = 9) AS p9_at
                          FROM missions WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
@@ -282,6 +294,9 @@ try {
             'has_p9'     => $m['p9_at'] !== null,
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
             'track'      => $spurEinsatz[(int)$m['id']] ?? [],
+            'start_src'  => $m['start_src'] !== null ? (string)$m['start_src'] : null,
+            'dest_lat'   => $m['dest_lat'] !== null ? (float)$m['dest_lat'] : null,
+            'dest_lon'   => $m['dest_lon'] !== null ? (float)$m['dest_lon'] : null,
         ];
         /* Die Spalten aus 'day_col' stehen unter ihrem eigenen Namen in der
          * Antwort — bisher hiessen sie dort schon 'winch', 'bergwacht' und

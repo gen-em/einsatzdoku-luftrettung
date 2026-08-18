@@ -433,7 +433,11 @@
         'notes', 'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
-        'crew_override', 'rea'];
+        'crew_override', 'rea',
+        // Etappe 2 (Web 6.1.0): gewoehnliche Spalten in `missions`, deshalb
+        // hier und nicht im Sonderfall-Zweig darunter.
+        'transport_mode', 'na_escort', 'false_alarm',
+        'dest_lat', 'dest_lon', 'start_src'];
 
     function phasenFach(zeile, n) {
         if (!zeile.mission.phases[n]) { zeile.mission.phases[n] = { at: null, lat: null, lon: null }; }
@@ -468,6 +472,17 @@
             break;
         case 'pat.loc.lon':
             if (wert !== null) { zeile.pat.loc = zeile.pat.loc || {}; zeile.pat.loc.lon = wert; }
+            break;
+        // Manueller Abfahrtort — gleiche Zusammenfuehrung wie beim Einsatzort:
+        // Die drei Spalten koennen in beliebiger Reihenfolge kommen.
+        case 'pat.start.addr':
+            if (wert) { zeile.pat.start = zeile.pat.start || {}; zeile.pat.start.addr = wert; }
+            break;
+        case 'pat.start.lat':
+            if (wert !== null) { zeile.pat.start = zeile.pat.start || {}; zeile.pat.start.lat = wert; }
+            break;
+        case 'pat.start.lon':
+            if (wert !== null) { zeile.pat.start = zeile.pat.start || {}; zeile.pat.start.lon = wert; }
             break;
         default:
             if (target.indexOf('dayCrew.') === 0) {

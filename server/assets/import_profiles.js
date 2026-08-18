@@ -86,11 +86,16 @@
         return columns;
     }
 
+    /* Muss mit assets/export.js uebereinstimmen — dort steht die Begruendung
+       fuer die neutralen Namen der Phasen 3 und 7 (E20). */
     var PHASE_SLUGS = {
-        2: 'alarmierung', 3: 'abflug', 4: 'ankunft_einsatzort',
-        5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'landung_krankenhaus',
+        2: 'alarmierung', 3: 'ausruecken', 4: 'ankunft_einsatzort',
+        5: 'ankunft_patientin', 6: 'transportbeginn', 7: 'ankunft_klinik',
         8: 'uebergabezeit', 9: 'endzeit'
     };
+    /* Die Namen bis Web 6.1.0. Nur diese beiden Phasen sind betroffen; die
+       uebrigen sechs hiessen immer schon neutral. */
+    var ALT_PHASE_SLUGS = { 3: 'abflug', 7: 'landung_krankenhaus' };
 
     // ----------------------------------------------------------------------
     // Jahresliste "Einsatzdokumentation Christoph 17"
@@ -230,6 +235,20 @@
         'hoehenmeter_m': { target: 'ascent_m', parse: ['ganzzahl'] },
         'hoehe_einsatzort_m': { target: 'site_ele_m', parse: ['ganzzahl'] },
 
+        /* Felder der Etappe 2 (Web 6.1.0). `export_csv_v1` ist der verlustfreie
+           Rückweg des eigenen Exports und muss mit assets/export.js synchron
+           bleiben — jede dort ergänzte Spalte gehört hier ebenfalls hin, sonst
+           verliert ein Export-Import-Umlauf sie stillschweigend. */
+        'transport_art': { target: 'transport_mode', parse: ['trim', 'max:12'] },
+        'na_begleitung': { target: 'na_escort', parse: ['boolJN'] },
+        'fehleinsatz': { target: 'false_alarm', parse: ['boolJN'] },
+        'ziel_lat': { target: 'dest_lat', parse: ['dezimal'] },
+        'ziel_lon': { target: 'dest_lon', parse: ['dezimal'] },
+        'abfahrt_regel': { target: 'start_src', parse: ['trim', 'max:12'] },
+        'pat_start_adresse': { target: 'pat.start.addr', parse: ['trim'], sensitive: true },
+        'pat_start_lat': { target: 'pat.start.lat', parse: ['dezimal'], sensitive: true },
+        'pat_start_lon': { target: 'pat.start.lon', parse: ['dezimal'], sensitive: true },
+
         'transport_dest': { target: 'transport_dest', parse: ['trim', 'max:190'] },
         // Alte Kopfzeile aus Exporten bis Web 3.2.0. Zeigt auf dasselbe Ziel wie
         // 'pat_ort_beschreibung' (E10), damit frühere Dateien lesbar bleiben.
@@ -271,6 +290,16 @@
             { target: 'phase:' + n, parse: ['isoTs'] };
         csvColumns['phase_0' + n + '_lat'] = { target: 'phaseLat:' + n, parse: ['dezimal'] };
         csvColumns['phase_0' + n + '_lon'] = { target: 'phaseLon:' + n, parse: ['dezimal'] };
+    });
+    /* Die Spaltennamen der Phasen 3 und 7 aus Exporten BIS Web 6.1.0. Sie
+       zeigen auf dasselbe Ziel wie ihre neutralen Nachfolger — dieselbe
+       Loesung wie bei 'site_desc' weiter oben. Ohne sie verlöre der Rückweg
+       einer alten Exportdatei stillschweigend zwei Zeitstempel, und zwar die
+       Alarm- und die Klinikzeit. */
+    Object.keys(ALT_PHASE_SLUGS).forEach(function (nStr) {
+        var n = parseInt(nStr, 10);
+        csvColumns['phase_0' + n + '_' + ALT_PHASE_SLUGS[n]] =
+            { target: 'phase:' + n, parse: ['isoTs'] };
     });
 
     var exportCsv = {
