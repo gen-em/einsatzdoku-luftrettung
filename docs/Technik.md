@@ -125,18 +125,23 @@ hems/
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
-| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; `day` = Flugtag; **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override` + `crew_p1`…`crew_other`** = abweichende Besatzung je Einsatz (NULL, solange keine Abweichung — die Tagescrew in `days` bleibt die einzige Wahrheit, siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
+| `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
 | `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen |
-| `bases` / `aircraft` / `crew_presets` | Stammdaten: Standorte, Maschinen (mit Rollen-Häkchen), Besatzungsnamen je Rolle; `user_id` NULL = **zentral** (vom Admin gepflegt, für alle NutzerInnen), sonst persönlich |
+| `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel (`kind` = `air`/`ground`, dazu `vehicle_roles` und `vehicle_capabilities`) und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0. **Jeder Eintrag gehört genau einem Standort** (`base_id`, E15) — es gibt keine standortübergreifenden Stammdaten. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
+| `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
+| `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
 | `resources` | Vorbelegung „Andere Rettungsmittel" ; `user_id` NULL = zentral, sonst persönlich |
 | `mission_resources` | Rettungsmittel-Zuordnung je Einsatz (eigene Zeilen, einzeln entfernbar) |
 | `bw_units` | Bergwacht-Bereitschaften; `user_id` NULL = zentral, sonst persönlich |
-| `transport_dests` | Vorbelegung „Transportziel" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK); `user_id` NULL = zentral, sonst persönlich |
-| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Flugtage (`kind` in `base`/`aircraft`, `item_id` verweist auf `bases.id` bzw. `aircraft.id`, persönlich oder zentral); ersetzt die Alt-Spalten `bases.is_default`/`aircraft.is_default` (bleiben nur wegen Alt-Backup-Import im Schema) |
-| `days` | Flugtag-Metadaten; **Verknüpfung über natürlichen Schlüssel `(user_id, day)`**, entsteht lazy beim ersten Speichern |
+| `transport_dests` | Vorbelegung „Zielklinik" (Datalist-Vorschläge, `missions.transport_dest` bleibt Freitext ohne FK), seit Web 6.1.0 mit optionalen Koordinaten; `base_id` = Standort; `user_id` NULL = zentral, sonst persönlich |
+| `user_defaults` | Nutzerbezogene Standard-Vorbelegung für Diensttage (`kind` in `base`/`vehicle`, `item_id` verweist auf `bases.id` bzw. `vehicles.id`, persönlich oder zentral); ersetzt die entfallenen Alt-Spalten `bases.is_default`/`aircraft.is_default` |
+| `days` | Diensttag. Seit Web 6.0.0 eine **eigene Zeile mit eigener Kennung** statt eines Kalendertags: Jeder Druck auf „Einsatztag starten" erzeugt einen; mehrere je Kalendertag sind zulässig (E9). Trägt echte `started_at`/`ended_at` und den beim Zuordnen **eingefrorenen** Snapshot aus Standort und Rettungsmittel (`kind`, `base_name`, `base_lat`, `base_lon`, `vehicle_name`) — Stammdatenänderungen wirken nur in die Zukunft (E8). `kind IS NULL` = neutral, noch nicht zugeordnet (E26) |
+| `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
+| `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
+| `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
@@ -491,7 +496,7 @@ Drei Punkte, die beim Lesen leicht untergehen:
   an einem Tag zurück, den es so nicht mehr gibt.
 
 **Was mit dem Tagesschlüssel entfallen ist (Web 6.0.0).** Bis dahin galt
-`uq_user_day`: je Kalendertag genau ein Flugtag. Daran hingen eine
+`uq_user_day`: je Kalendertag genau ein Diensttag. Daran hingen eine
 Kollisionsprüfung beim Umdatieren, eine Liste belegter Daten und
 `tz_tag_zustand()`. Seit E9 ist ein belegtes Zieldatum der **vorgesehene** Fall
 — mehrere Diensttage je Kalendertag sind zulässig —, und alle drei sind
@@ -592,9 +597,10 @@ einzeln entfernbar). Das Löschen einer Vorbelegung lässt dokumentierte Einsät
 unverändert. Backup exportiert/importiert beide.
 
 **Effektive Besatzung (Crew-Override, ab Web 2.6.0):** Die Besatzung wird
-einmal je Flugtag in `days.crew_*` gepflegt. Ein einzelner Einsatz kann davon
-abweichen (fachlicher Anlass: Pilotenwechsel im laufenden Dienst) — dafür trägt
-`missions` die Spalten `crew_override` (0/1) und `crew_p1`…`crew_other`.
+einmal je Diensttag in `day_crew` gepflegt (bis Web 5.10.0: fünf Spalten
+`days.crew_*`). Ein einzelner Einsatz kann davon abweichen (fachlicher Anlass:
+Pilotenwechsel im laufenden Dienst) — dafür trägt `missions` die Spalte
+`crew_override` (0/1), die Namen liegen in `mission_crew`.
 **Bewusst redundanzfrei:** Ohne Abweichung gibt es in `mission_crew` keine
 Zeile; es gibt keine Kopie der Tagesbesatzung am Einsatz. Die Regel lautet je
 Rolle `crew_override = 1 AND mission_crew.name IS NOT NULL ?
@@ -642,22 +648,36 @@ des Textfeldes zieht die Grenze jetzt auch sichtbar.
 
 Die Uhr kennt keine Besatzung; `ingest.php` ist davon unberührt.
 
-**Rollenfilter der Besatzungsfelder (ab Web 2.7.1):** Welche der fünf Rollen im
-Einsatzformular erscheinen, bestimmen die Häkchen `aircraft.p1`…`aircraft.other`
-des am Flugtag eingetragenen Hubschraubers. Deklariert wird das je Feld über
-`role_gate` in `mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal
-per `days JOIN aircraft` und setzt beim Rendern nur das `hidden`-Attribut.
+**Rollenfilter der Besatzungsfelder (ab Web 2.7.1):** Welche Rollen im
+Einsatzformular erscheinen, bestimmt der **eingefrorene Rollensatz des
+Diensttags** — die Zeilenmenge in `day_crew`, nicht der heutige Stand des
+Rettungsmittels (E8). Der Satz stammt von den Häkchen in `vehicle_roles`, wie
+sie beim Zuordnen galten. Deklariert wird das je Feld über `role_gate` in
+`mission_fields.php`; `einsatz_form.php` lädt die Rollen einmal über
+`dt_crew()` und setzt beim Rendern nur das `hidden`-Attribut.
+
+Dieselbe Mechanik tragen zwei weitere Filter: **`cap_gate`** prüft die
+eingefrorenen Fähigkeiten (`day_capabilities`) und steuert damit Winde und
+Bergwacht, **`kind_gate`** die Art des Diensttags. Alle drei laufen über
+`mf_gates_erfuellt()`.
 **Nicht gerenderte Felder wären ein Datenverlust-Pfad** — der Browser sendet
 sie dann nicht mit, und `readField()` liest fehlend als leer und überschreibt
 den Bestand mit NULL. Deshalb wird immer gerendert und nur versteckt (`hidden`
 verhindert das Absenden nicht). Zwei Rückfallregeln: Ein Feld mit Wert bleibt
-sichtbar (sonst unerreichbar nach Maschinenwechsel am Flugtag), und ohne
-bekannte Rollen (kein Flugtag oder kein Hubschrauber) werden alle gezeigt,
-sonst wäre der Haken funktionslos.
+sichtbar (sonst unerreichbar nach einem Wechsel des Rettungsmittels am
+Diensttag). Ein Diensttag **ohne** Rettungsmittel zeigt keine Rollen (E26) —
+anders als bis Web 5.10.0, wo dann alle fünf Flugrollen erschienen: Mit zwei
+Arten gibt es keine sinnvolle Vorgabe mehr, und geraten wird nicht.
 
-Das Flugtag-Formular filtert nach denselben Häkchen, dort aber clientseitig
-(`index.php`, `updateCrewFields()`), weil der Hubschrauber im Formular selbst
-gewechselt werden kann. Im Einsatzformular steht er fest, daher serverseitig.
+Der **Unterschied zwischen Verstecken und Leeren** ist die wichtigste Regel
+dieses Bereichs und steht ausführlich in Abschnitt 4.98b: Ein durch `role_gate`,
+`kind_gate` oder `cap_gate` **gefiltertes** Feld behält seinen Inhalt und wird
+nur versteckt; ein durch `show_if` **ausgeschlossenes** Unterfeld wird geleert.
+
+Das Diensttag-Formular filtert nach demselben Rollensatz, dort aber
+clientseitig (`index.php`, `updateCrewFields()` aus der Antwort von
+`api/day.php`), weil das Rettungsmittel im Formular selbst gewechselt werden
+kann. Im Einsatzformular steht es fest, daher serverseitig.
 
 **Einsatzort-Höhe:** `site_elevation_lib.php` (`compute_site_elevation()`) ist
 die **einzige Implementierung** — Referenzzeitpunkt Phase 5 „Ankunft
@@ -819,7 +839,7 @@ sind `zeit`, `winde`, `bergwacht`, `transport`, `einsatz`, `wer` und `werte`;
 der Freitext steht in der Hauptspalte und hat keine Gruppe.
 
 **Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
-ruft `ui_days_sidebar()` **nicht** auf — einzelne Flugtage sind bei einer Suche
+ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Suche
 über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
 `.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
 `overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
@@ -926,12 +946,12 @@ Tabwechsel **verworfen und neu gesetzt** (`pinLayer`), nicht versteckt: Ein Pin
 ohne Bildschirmposition lässt kein `setStyle()` zu — derselbe Stolperstein wie
 beim Ausgangsausschnitt der Karte.
 
-**Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Flugtage tragen
+**Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
 Tagesliste, Backup) filtern darauf. `trash_lib.php` bündelt Umfangsermittlung,
 weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
 `db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
-Flugtags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
+Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
 sie hängen am Tag und kehren mit ihm zurück. `ingest.php` quittiert Uploads für
 Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schreibt
 die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
@@ -972,7 +992,7 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    heißt: einen Eintrag ergänzen — an der Pipeline ändert sich nichts.
 3. `assets/import.js` ist reine Rechenlogik ohne Oberfläche und ohne
    Netzverkehr: Parser-Registry, Profilerkennung über Kopfzeilen-Treffer,
-   zeilenweise Prüfung (`ok`/`warn`/`error`), Gruppierung nach Flugtag.
+   zeilenweise Prüfung (`ok`/`warn`/`error`), Gruppierung nach Diensttag.
    Die Tagesbesatzung ist die der frühesten Zeile; abweichende spätere Zeilen
    werden zu `crew_override` am einzelnen Einsatz.
 4. `assets/import_ui.js` zeigt die Review-Tabelle, nimmt Korrekturen entgegen
@@ -984,7 +1004,7 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    Server nicht mehr im Klartext übergeben. Für den Nummernabgleich liefert
    `check` deshalb je vorhandenem Einsatz den `pat_blob` mit; `import_ui.js`
    entschlüsselt ihn lokal (`bestandEinsatznummernIndex`) und vergleicht dort.
-   Dadurch werden Nummerndubletten nur noch innerhalb der Flugtage erkannt,
+   Dadurch werden Nummerndubletten nur noch innerhalb der Diensttage erkannt,
    die in der Importdatei vorkommen — der Preis der Verschlüsselung. Tag und
    Alarmzeit bleiben als zweites, uneingeschränktes Merkmal wirksam.
    `commit` schreibt in **einer** Transaktion.
@@ -992,7 +1012,7 @@ Datei-Upload ist damit ausgeschlossen. Kette:
    kennt** (seit Web 5.8.0, Prüfschritt P10). Die Felder unter der
    Export-Schranke — `crew_p1`…`crew_other`, `bw_info`, `other_ema`, `notes`,
    `site_ele_m`, `pat_blob` — stehen im `UPDATE` als `COALESCE(?, spalte)`,
-   dasselbe Muster, das der Flugtag-Pfad seit jeher benutzt. Vorher schrieb ein
+   dasselbe Muster, das der Diensttag-Pfad seit jeher benutzt. Vorher schrieb ein
    Rückimport ohne personenbezogene Angaben `NULL` über einen vollständigen
    Bestand. Die Phasen werden weiterhin komplett ersetzt; liefert die Datei zu
    einer Phase keine Koordinaten, erbt die neue Zeile die der bisherigen
@@ -1022,7 +1042,7 @@ Stunde Versatz einzuhandeln.
 **Export** (`api/export_data.php` + `assets/export.js`, seit Web 2.10.0): Der
 Endpunkt ist **ausschließlich lesend** und bewusst von `api/range.php` getrennt
 — jenes bedient `zeitraum.php` und wurde schlank gehalten; eine Erweiterung
-hätte diese Seite mitverändert. `action=meta` liefert Flugtage, Einsätze
+hätte diese Seite mitverändert. `action=meta` liefert Diensttage, Einsätze
 (inklusive Phasen, weiterer Rettungsmittel, Reanimation und der *Anzahl*
 Trackpunkte) und Ruhesegmente; `action=track` liefert die Punkte blockweise für
 höchstens 25 IDs. Zeitstempel gehen als UTC nach ISO 8601 hinaus, die Umrechnung
@@ -1052,7 +1072,7 @@ serverseitig **nicht selektiert**, nicht erst im Browser weggelassen.
 **Der Haken heißt seit Web 5.8.0 „Personenbezogene Angaben einschließen"**
 (Block A9). Der Schlüssel im Request bleibt `patient` — er ist der Vertrag
 zwischen `export.js` und `export_data.php` —, aber er schaltet jetzt Besatzung
-(Einsatz und Flugtag), `bw_info`, `other_ema`, die Notizen, `site_ele_m`, die
+(Einsatz und Diensttag), `bw_info`, `other_ema`, die Notizen, `site_ele_m`, die
 Phasenkoordinaten und den `pat_blob` gemeinsam ab; `action=track` wird ganz
 abgewiesen. Die lokale Variable im Endpunkt heißt deshalb `$pers` und nicht
 `$patient`. Zusätzlich entfernt `entpersonalisieren()` in `export.js` dieselben
@@ -1119,10 +1139,10 @@ Parser (`isoTs`, `pipeList`, `jsonRea`, `dateIso`, `ganzzahl`, `dezimal`,
   einmal aus. Ohne das Flag bliebe die alte Heuristik (früheste Zeile = Tagescrew)
   und ein Einsatz, dessen abweichende Besatzung zufällig der Tagesbesatzung
   gleicht, verlöre sein `crew_override`.
-- `emptyDayRows` am Profil: Im Excel (Standard) steht ein Flugtag ohne Einsatz
+- `emptyDayRows` am Profil: Im Excel (Standard) steht ein Diensttag ohne Einsatz
   als eine
   Zeile mit Datum und lauter `-`. Ohne diese Unterscheidung entstünde daraus
-  beim Rückimport ein Einsatz ohne Alarmzeit. Solche Zeilen legen den Flugtag an
+  beim Rückimport ein Einsatz ohne Alarmzeit. Solche Zeilen legen den Diensttag an
   und keinen Einsatz.
 
 Pflichtangaben werden beim Rückimport **nach** der Parserkette geprüft: Das
@@ -1337,7 +1357,7 @@ Fehlende Schlüssel bedeuten „keine Angabe"; ein leerer Block wird als
 
 **Im Klartext in der Datenbank** stehen dagegen: Zeiten und Phasen, Track,
 Distanz und Steigung, Reanimationsereignisse, Besatzung, Einsatzmittel,
-Flugtag- und Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben
+Diensttag- und Standortdaten. Das ist eine bewusste Entscheidung — diese Angaben
 sind für Auswertung, Sortierung und Statistik nötig, die der Server leisten
 muss. Sie sind für sich genommen nicht personenbeziehbar; **in Verbindung mit
 Ort und Zeitpunkt eines Einsatzes können sie es aber werden.** Wer eine

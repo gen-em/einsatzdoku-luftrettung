@@ -5,10 +5,11 @@
 
 ## 1. Was ist die Einsatzdoku?
 
-Die Einsatzdoku dokumentiert Hubschraubereinsätze direkt vom Handgelenk: Eine
+Die Einsatzdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
+gebunden wie bodengebunden (RTH, NEF, NAW): Eine
 Garmin-Uhr-App erfasst Einsatzphasen mit Zeitstempeln, GPS-Tracks und
 Reanimations-Ereignisse und lädt alles automatisch auf einen eigenen Server.
-Die Web-Oberfläche (luftrettung.net) zeigt Flugtage mit Karte, Einsatz-Details
+Die Web-Oberfläche (luftrettung.net) zeigt Diensttage mit Karte, Einsatz-Details
 und Reanimations-Protokollen — und erlaubt Nachtragen und Bearbeiten von Hand.
 
 **Patientendaten sind geschützt.** Nachname, Vorname, Geburtsdatum, Alter,
@@ -55,10 +56,24 @@ weil sie ohne Touch unbedienbar wäre.
 
 Beim Öffnen der App erscheint **„Dienst beginnen?"**. Erst ein Druck auf
 **START** aktiviert die App und die GPS-Aufzeichnung — vorher passiert nichts.
-Der Flugtag läuft, bis du ihn über das Schnellmenü mit **„Einsatztag beenden"**
+Der Diensttag läuft, bis du ihn über das Schnellmenü mit **„Einsatztag beenden"**
 (Sicherheitsabfrage) schließt; dabei werden Restdaten hochgeladen. Das Datum
-des Flugtags ist das Datum des Dienstbeginns — auch bei Diensten über
+des Diensttags ist das Datum des Dienstbeginns — auch bei Diensten über
 Mitternacht.
+
+**Jeder Druck auf START erzeugt einen eigenen Diensttag.** Zwei Dienste an einem
+Kalendertag sind damit möglich und vorgesehen — etwa ein Hubschrauberdienst am
+Tag und ein NEF-Nachtdienst am Abend. Beide erscheinen im Web als getrennte
+Zeilen, unterschieden durch die Uhrzeit des Dienstbeginns.
+
+Wurde die App während **eines** Dienstes versehentlich mehrfach gestartet, sind
+daraus mehrere Diensttage geworden. Im Web lassen sie sich wieder
+zusammenführen (Abschnitt 4.5a).
+
+**Die Uhr kennt die Einsatzart nicht.** Sie fragt weder nach Standort noch nach
+Rettungsmittel; beides trägst du im Web nach. Bis dahin ist der Diensttag
+*neutral* — Zeiten, Phasen, Track und Reanimation werden trotzdem vollständig
+erfasst.
 
 Ein Neustart der Uhr oder der App mitten im Dienst ist unkritisch: Phase,
 Track und eine laufende Reanimation werden nahtlos fortgesetzt.
@@ -73,9 +88,13 @@ die aktuelle Phase (Zahl + Name). Läuft eine Reanimation, umschließt ein roter
 Ring die Anzeige — auf einen Blick erkennbar.
 
 - **kurz START** schaltet zur nächsten Phase (mit Zeitstempel und Position):
-  1 Frei → 2 Alarmierung (= Einsatzbeginn) → 3 Abflug → 4 Ankunft Einsatzort →
-  5 Ankunft PatientIn → 6 Transportbeginn → 7 Landung Krankenhaus →
+  1 Frei → 2 Alarmierung (= Einsatzbeginn) → 3 Ausrücken → 4 Ankunft Einsatzort →
+  5 Ankunft PatientIn → 6 Transportbeginn → 7 Ankunft Klinik →
   8 Übergabezeit → 9 Endzeit → 10 Beendigung (= Einsatzende, zurück zu 1).
+
+  Phase 3 hieß bis Uhr 1.7.0 „Abflug", Phase 7 „Landung Krankenhaus". Seit
+  1.8.0 sind beide neutral benannt, weil dieselbe Uhr auch am NEF läuft.
+  Nummerierung, Bedeutung und Reihenfolge sind unverändert.
 - **lang START** öffnet das **Schnellmenü**: eine Phase direkt anspringen
   (erneutes Setzen erzeugt einen *zusätzlichen* Zeitstempel — nichts wird
   überschrieben), „Einsatzübersicht Zeiten" (Liste aller Zeitstempel) und
@@ -254,12 +273,23 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 
 ### 4.1 Tagesübersicht
 
-Startseite nach der Anmeldung. Links die Liste der Flugtage; der neueste ist
-vorausgewählt. Pro Tag:
+Startseite nach der Anmeldung. Links die Liste der Diensttage; der neueste ist
+vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
+zusätzlich die Uhrzeit des Dienstbeginns — sonst ließen sie sich nicht
+unterscheiden. Vor dem Namen des Rettungsmittels steht ein Zeichen für die Art:
+🚁 luftgebunden, 🚑 bodengebunden, ◌ noch ohne Zuordnung.
 
-- **Flugtag-Daten** (aufklappbar): Maschine, Basis/Standort, Besatzung,
+Pro Tag:
+
+- **Diensttag-Daten** (aufklappbar): Standort, Rettungsmittel, Besatzung,
   Notizen — direkt editier- und speicherbar. Die Kopfzeile zeigt eine
   Kurzfassung.
+
+  Welche **Besatzungsrollen** hier stehen, ergibt sich aus dem gewählten
+  Rettungsmittel: luftgebunden Pilot 1, Pilot 2, HEMS-TC, Flugretter und
+  Sonstige, bodengebunden Fahrer, Praktikant und Sonstige. Ein Diensttag ohne
+  Rettungsmittel zeigt keine Rollen — trag Standort und Rettungsmittel nach,
+  dann erscheinen sie.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in Schwarz. Die Einsatzort-Pins
   tragen die Farbe des jeweiligen Einsatzes. Die Karte zoomt automatisch so,
@@ -271,22 +301,26 @@ vorausgewählt. Pro Tag:
   drei Kartenseiten der Anwendung zur Verfügung.
 - **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
   der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
-  Sekundärtransport, Kilometer. Alle Spalten sind zentriert und
+  Sekundärtransport, Kilometer. Winde und Bergwacht stehen nur an einem
+  Diensttag, dessen Rettungsmittel sie führt. Den **Fehleinsatz** führt diese
+  Tabelle bewusst nicht — er steht im Einsatz selbst; auswerten lässt er sich
+  in der Zeitraum-Übersicht und der Suche. Alle Spalten sind zentriert und
   in abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz,
   ein Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der
   Alarmierung bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
   Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
   entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
-  Ob für einen Einsatz eine vom Flugtag abweichende Besatzung eingetragen ist,
+  Ob für einen Einsatz eine vom Diensttag abweichende Besatzung eingetragen ist,
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
 - **„+ Einsatz nachtragen"** unter der Tabelle öffnet das Eingabeformular für
   diesen Tag. Oben rechts steht das Menü **Aktionen** (seit Web 5.10.0; vorher
-  standen die beiden Einträge als Schaltflächen unter der Tabelle) mit
-  **„Datum ändern"** — korrigiert das Datum des ganzen Tages (Abschnitt 4.2a) —
-  und **„Tag löschen"** — entfernt den gesamten Flugtag (Abschnitt 8). Das Menü
-  lässt sich wie das der Einsatzansicht vollständig mit der Tastatur bedienen;
-  Escape schliesst es wieder.
+  standen die Einträge als Schaltflächen unter der Tabelle) mit
+  **„Datum ändern"** — korrigiert das Datum des ganzen Tages (Abschnitt 4.2a) —,
+  **„Anderen Diensttag aufnehmen"** — führt zwei Diensttage zusammen
+  (Abschnitt 4.5a) — und **„Tag löschen"** — entfernt den gesamten Diensttag
+  (Abschnitt 8). Das Menü lässt sich wie das der Einsatzansicht vollständig mit
+  der Tastatur bedienen; Escape schliesst es wieder.
 
 ### 4.2 Einsatzansicht
 
@@ -327,7 +361,7 @@ in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
 ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
 
 Darunter folgt der Block **Besatzung**. Er zeigt die für **diesen Einsatz**
-gültige Besatzung: normalerweise die Besatzung des Flugtags, bei einer
+gültige Besatzung: normalerweise die Besatzung des Diensttags, bei einer
 abweichenden Besatzung (Abschnitt 4.3) die abweichende Person. Geänderte
 Rollen sind blau mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne
 Zusatz daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
@@ -337,36 +371,30 @@ Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
 
 ### 4.2a Falsche Tageszuordnung korrigieren
 
-Seit Web 5.6.0 lässt sich beides korrigieren: ein Einsatz, der beim falschen
-Tag gelandet ist, und ein ganzer Flugtag, der am falschen Datum steht. Das sind
+Es lassen sich zwei Dinge korrigieren: ein Einsatz, der beim falschen
+Tag gelandet ist, und ein ganzer Diensttag, der am falschen Datum steht. Das sind
 **zwei verschiedene Fälle**, und die Wahl entscheidet darüber, was mit den
 Uhrzeiten passiert.
 
 **Ein einzelner Einsatz gehört zum falschen Tag.** Seine Uhrzeiten stimmen —
 nur die Zuordnung nicht. Der klassische Fall ist der Dienst über Mitternacht:
 Beim Nachtragen landet ein Einsatz auf dem Kalendertag, an dem er begann,
-obwohl er zum Flugtag davor gehört. Auf der Einsatzseite: **Aktionen →
-Verschieben**, Zieldatum wählen, fertig. Die **Uhrzeiten bleiben unverändert**.
+obwohl er zum Diensttag davor gehört. Auf der Einsatzseite: **Aktionen →
+Verschieben**, Zieltag wählen, fertig. Die **Uhrzeiten bleiben unverändert**.
 
-Gibt es am Zieldatum noch keinen Flugtag, wird einer angelegt — mit deiner
-Standard-Vorbelegung für Standort und Maschine (Abschnitt 9.1). Liegt der
-Zieltag im Papierkorb, wird die Verschiebung abgelehnt; hol ihn erst zurück.
-Ein späterer Upload derselben Uhr zieht den Einsatz nicht wieder auf den alten
-Tag.
+Liegt der Zieltag im Papierkorb, wird die Verschiebung abgelehnt; hol ihn erst
+zurück. Ein späterer Upload derselben Uhr zieht den Einsatz nicht wieder auf den
+alten Tag.
 
-**Welcher Flugtag ist gemeint?** Je Kalendertag gibt es **genau einen**
-Flugtag. Das Datum bestimmt den Zieltag damit eindeutig — eine Auswahl zwischen
-mehreren Tagen desselben Datums (etwa luft- und bodengebunden) kann es nicht
-geben; für zwei getrennte Dienste am selben Tag ist das Datenmodell nicht
-gebaut. Damit trotzdem nicht geraten werden muss, steht seit Web 5.10.0 unter
-dem Datumsfeld, **was am gewählten Datum liegt**: Maschine, Standort und Zahl
-der Einsätze des dortigen Flugtags — oder dass noch keiner angelegt ist und
-einer entsteht, oder dass dort einer im Papierkorb liegt und das Verschieben
-abgelehnt würde. Das Feld schlägt zusätzlich den Vor- und Folgetag sowie deine
-vorhandenen Flugtage vor.
+**Gewählt wird ein Diensttag, nicht mehr ein Datum.** Seit Web 6.0.0 können auf
+einem Kalendertag mehrere Diensttage liegen — das Datum benennt den Zieltag
+also nicht mehr eindeutig. Die Auswahl nennt deshalb je Tag Datum und
+Dienstbeginn, Rettungsmittel, Standort und die Zahl der dort liegenden
+Einsätze.
 
 **Die Uhr war falsch gestellt.** Dann sind Datum *und* Uhrzeit falsch, und der
-ganze Tag steht am falschen Datum. In der Tagesübersicht: **„Datum ändern"**.
+ganze Tag steht am falschen Datum. In der Tagesübersicht: **Aktionen → „Datum
+ändern"**.
 Hier **wandern alle Zeitstempel mit** — Einsätze, Ruhesegmente, Phasenzeiten,
 Reanimationsprotokolle und die GPS-Spur. Die abgelesenen Uhrzeiten bleiben
 dabei stehen; verschoben wird nur das Datum, auch über eine Zeitumstellung
@@ -378,14 +406,12 @@ Ruhesegmente und Trackpunkte, und ob Einträge aus dem Papierkorb dabei sind
 **gemeinsam oder gar nicht** — bricht etwas ab, steht der Tag unverändert am
 alten Datum.
 
-Steht am Zieldatum bereits ein Flugtag, wird die Änderung **abgelehnt**. Zwei
-Tage lassen sich nicht zusammenführen: Welcher Standort, welche Maschine,
-welche Besatzung dann gälte, kann niemand automatisch beantworten. Ein Tag im
-Papierkorb belegt sein Datum ebenfalls. Wähle in dem Fall ein freies Datum oder
-löse den vorhandenen Tag zuerst auf. Seit Web 5.10.0 musst du das nicht mehr
-durch Ausprobieren herausfinden: Unter dem Datumsfeld steht, ob das gewählte
-Datum frei oder belegt ist — vor dem Absenden und vor der Rückfrage. Die
-endgültige Prüfung macht weiterhin der Server im Augenblick der Änderung.
+**Ein belegtes Zieldatum ist kein Hindernis mehr.** Bis Web 5.10.0 wurde die
+Änderung abgelehnt, wenn dort schon ein Tag stand — der Kalendertag war der
+Schlüssel. Seit Web 6.0.0 sind mehrere Diensttage an einem Datum der vorgesehene
+Fall; sie stehen danach in der Leiste links untereinander, unterschieden durch
+die Uhrzeit des Dienstbeginns. Sollen die beiden **ein** Dienst werden, ist das
+ein eigener Vorgang: Abschnitt 4.5a.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
@@ -406,7 +432,7 @@ selbst richtig ein.
 **Strg-Enter** (bzw. Cmd-Enter auf macOS) sendet das Formular ab, ohne die
 Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
-nach; das gilt auch für die Flugtag-Formulare.
+nach; das gilt auch für die Diensttag-Formulare.
 
 **Geschützte Angaben** (Abschnitt 5) stehen gebündelt unter „PatientInnendaten
 & Einsatzort". Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
@@ -460,38 +486,76 @@ Ausfüllen ist freiwillig.
 
 
 
-Dazu die weiteren Zusatzfelder: Transportziel,
-**Windeneinsatz** (Haken öffnet Cycles,
+**Abfahrtort.** Unmittelbar unter dem Einsatzort steht, von wo aus ausgerückt
+wurde. Gespeichert wird dabei nicht die Koordinate, sondern die **Regel**:
+
+| Auswahl | Woher die Koordinate kommt |
+|---|---|
+| Standort | Koordinaten des Standorts dieses Diensttags |
+| Letzter Einsatzort | Einsatzort des vorherigen Einsatzes desselben Diensttags |
+| Letzte Zielklinik | Zielklinik des vorherigen Einsatzes desselben Diensttags |
+| Manueller Ort | eigene Adresssuche, wie beim Einsatzort |
+| *(nichts gewählt)* | keine Linie |
+
+Die beiden Vorgänger-Auswahlen bilden zwei verschiedene Abläufe ab: Nach einem
+Transport steht das Rettungsmittel an der **Zielklinik** des Vorgängers, ohne
+Transport noch an dessen **Einsatzort**. Fehlt die jeweilige Koordinate, entsteht
+schlicht keine Linie — es wird **nicht** stillschweigend auf eine andere Quelle
+ausgewichen, weil eine falsche Linie schlechter wäre als keine.
+
+Liegt **kein** aufgezeichneter Track vor und sind Abfahrtort und Einsatzort
+bekannt, zeichnet die Karte eine **gestrichelte Luftlinie** zwischen beiden, bei
+belegter Zielklinik mit Koordinaten über drei Punkte. Ihre Länge steht an der
+Linie und ist ausdrücklich als Luftlinie benannt. Ein echter Track hat immer
+Vorrang; trifft er später ein, bleibt die Abfahrtortangabe gespeichert und wird
+nur nicht mehr gezeichnet. In **keine** Kachel und **keinen** Filter fließt die
+Luftlinienlänge ein — eine Luftlinie und eine gefahrene Strecke sind nicht
+dieselbe Größe.
+
+**Transport.** Die **Transportart** (Luft, Boden, Ambulant) steuert, was darunter
+erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
+Koordinaten und den **Schockraum**; bei „Ambulant" — die Patientin wurde nicht
+transportiert — entfallen alle drei. Ein zuvor eingetragenes Transportziel wird
+dabei geleert, und die Änderung ist sichtbar: Ein Transportziel an einem Einsatz
+ohne Transport wäre ein Widerspruch in den Daten.
+
+Dazu die weiteren Zusatzfelder: **Fehleinsatz / Storno / Abbruch** (ein Haken,
+ohne Unterauswahl), **Windeneinsatz** (Haken öffnet Cycles,
 Cycles mit Patient, Luftverladung), **Bergwacht** (Haken öffnet Bereitschaft
-aus den Stammdaten plus Namen/Infos), Sekundärtransport, Schockraum, Anderer
+aus den Stammdaten plus Namen/Infos), Sekundärtransport, Anderer
 Notarzt, **Weitere Rettungsmittel** (Abschnitt 9.2) und Notizen.
 
+**Winde und Bergwacht erscheinen nur**, wenn das Rettungsmittel des Diensttags
+sie führt (Abschnitt 9.1). Wird ein Haken dort später abgewählt, verlieren
+bereits dokumentierte Einsätze nichts: Ihr Diensttag hat die Fähigkeit beim
+Anlegen eingefroren.
+
 **Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
-des Flugtags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
+des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
 Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
-**„Abweichende Besatzung"**. Darunter erscheinen fünf Textfelder mit
-Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
+**„Abweichende Besatzung"**. Darunter erscheint je Rolle des Diensttags ein
+Textfeld mit Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
 Feld deine Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen
 Rolle vor (Abschnitt 9.1 bzw. 8.4).
 
 **Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
 Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
-ist oft niemand, der regelmäßig auf dieser Maschine fliegt. Die Vorschläge
-bleiben die bequeme Abkürzung, sie sind nur keine Schranke mehr.
+ist oft niemand, der regelmäßig auf diesem Rettungsmittel arbeitet. Die
+Vorschläge bleiben die bequeme Abkürzung, sie sind nur keine Schranke mehr.
 
-Gezeigt werden **nur die Rollen, die der Hubschrauber des Flugtags vorsieht** —
-dieselben Häkchen, nach denen sich auch das Flugtag-Formular richtet. Fliegt
-die Maschine mit Pilot 1 und HEMS-TC, erscheinen auch nur diese beiden. Ist am
-Flugtag noch kein Hubschrauber eingetragen, werden alle fünf gezeigt. Steht in
-einer eigentlich nicht vorgesehenen Rolle bereits ein Eintrag — etwa weil der
-Flugtag nachträglich auf eine andere Maschine umgestellt wurde —, bleibt sie
-sichtbar, damit du sie weiterhin ändern kannst.
+Gezeigt werden **nur die Rollen, die der Diensttag führt** — dieselben, die auch
+oben in den Diensttag-Daten stehen. Ein NEF zeigt Fahrer, Praktikant und
+Sonstige, ein Hubschrauber mit Pilot 1 und HEMS-TC nur diese beiden. Ein
+Diensttag ohne Rettungsmittel zeigt keine. Steht in einer eigentlich nicht
+vorgesehenen Rolle bereits ein Eintrag — etwa weil der Diensttag nachträglich auf
+ein anderes Rettungsmittel umgestellt wurde —, bleibt sie sichtbar, damit du sie
+weiterhin ändern kannst.
 
 Es müssen **nur die tatsächlich abweichenden Rollen** ausgefüllt werden. Alle
-übrigen bleiben leer und werden weiterhin vom Flugtag übernommen — so steht
+übrigen bleiben leer und werden weiterhin vom Diensttag übernommen — so steht
 dieselbe Person nie doppelt in der Datenbank. Entfernst du den Haken wieder,
-werden die fünf Felder geleert und der Einsatz erbt vollständig die Tagescrew.
+werden die Felder geleert und der Einsatz erbt vollständig die Tagescrew.
 In der Einsatzansicht (Abschnitt 4.2) zeigt der Block „Besatzung" immer das
 Ergebnis beider Ebenen.
 
@@ -518,7 +582,7 @@ vorhanden.
 **Abbrechen.** Unter dem Speichern-Knopf steht **Abbrechen** — beim Bearbeiten
 führt es zurück zum Einsatz, beim Nachtragen zur Tagesansicht. Hast du im
 Formular etwas eingetragen, fragt es vorher nach; ein unverändertes Formular
-verlässt du ohne Rückfrage. Dasselbe gilt beim Anlegen eines Flugtags.
+verlässt du ohne Rückfrage. Dasselbe gilt beim Anlegen eines Diensttags.
 
 Beim Bearbeiten eines **Uhr-Einsatzes** gilt: Nach dem Speichern überschreibt
 die Uhr ihn nicht mehr (nur der GPS-Track wird weiter ergänzt), und die
@@ -530,7 +594,7 @@ nachliefernde Uhr ersetzt sie nicht mehr.
 
 Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
-Flugtag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
+Diensttag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
 
 ### 4.4 Einsatztage-Leiste, Jahres- und Monatsübersicht
 
@@ -541,16 +605,37 @@ in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf.
 
 Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Übersicht
 dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
-vorhanden und die geschützten Angaben entsperrt sind), darunter zehn
-Statistik-Kacheln — Einsätze, Flugtage, Ø Einsätze/Flugtag, Anzahl
-Winden-Cycles, Ø Winden-Cycles/Flugtag, Sekundärtransporte, Flugkilometer
-gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — und
-schließlich die Tabelle aller Einsätze mit Datum statt Tagesnummer,
-sortierbar. Die Durchschnittswerte der Statistik rechnen mit **allen
-angelegten Flugtagen** des Zeitraums, auch mit einsatzfreien.
+vorhanden und die geschützten Angaben entsperrt sind), darunter die
+Statistik-Kacheln und schließlich die Tabelle aller Einsätze mit Datum statt
+Tagesnummer, sortierbar. Die Durchschnittswerte rechnen mit **allen angelegten
+Diensttagen** des Zeitraums, auch mit einsatzfreien.
 
-Die drei Kacheln **„Längste Flugstrecke"**, **„Längste Einsatzdauer"** und
-**„Höchster Einsatzort"** sind interaktiv: Zeigt man darauf, leuchten der
+**Getrennt nach Art.** Liegen im Zeitraum luft- *und* bodengebundene Diensttage,
+steht über der Ansicht eine Leiste mit drei Reitern: **Gemischt** (aktiv),
+**Luftrettung** und **Bodengebundener Rettungsdienst**. Der Reiter filtert
+alles gemeinsam — Kacheln, Einsatztabelle und Karte. Liegt nur eine Art vor,
+gibt es keine Leiste; dann bestimmt sie allein die Beschriftung.
+
+| Reiter | Kacheln |
+|---|---|
+| **Luftrettung** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
+| **Bodengebunden** und **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
+
+Der Luftrettungs-Reiter behält also die gewohnte Flugterminologie; für eine rein
+luftgebundene Nutzung sieht die Auswertung aus wie immer. Höchster Einsatzort und
+Windenzahlen fehlen in „Gemischt", weil sie sich über beide Arten nicht sinnvoll
+addieren lassen.
+
+**Diensttage ohne Zuordnung** zählen in „Gemischt" mit — die Summe der beiden
+Artenreiter ist dann kleiner. Genau deshalb weist „Gemischt" ihre Anzahl aus und
+verlinkt auf das Nachtragen; ohne den Hinweis wäre die Abweichung nicht
+erklärbar.
+
+Der gewählte Reiter steht im Adressteil hinter dem `#` und bleibt beim Teilen
+eines Links erhalten.
+
+Die Kacheln **„Längste Flugstrecke"** (bzw. „Längste Einsatzstrecke"),
+**„Längste Einsatzdauer"** und **„Höchster Einsatzort"** sind interaktiv: Zeigt man darauf, leuchten der
 zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
 Klick fixiert diese Hervorhebung und springt zur Tabellenzeile — praktisch,
 um den Extremwert-Einsatz auf einen Blick zu finden. Ein zweiter Klick auf
@@ -559,6 +644,21 @@ Fixierung wieder.
 
 Jede Zeile der Einsatztabelle führt zum Einsatz; ein Klick auf das
 **Dreieck** davor klappt dagegen nur die Unterpunkte auf oder zu.
+
+#### Statistik rechnet nach Diensttag, die Suche nach Einsatzdatum
+
+Das ist der wichtigste Unterschied zwischen den beiden Seiten, und er fällt nur
+bei **Diensten über Mitternacht** auf.
+
+Ein Einsatz um 01:30 Uhr, der zu einem am Vortag begonnenen Dienst gehört, zählt
+in der **Statistik zum Vortag** — dorthin, wo der Dienst begann. Die
+**Einsatzsuche** findet denselben Einsatz unter seinem **echten Datum**, also
+dem des Folgetags.
+
+Beides ist beabsichtigt. Eine Dienststatistik, die einen Nachtdienst auf zwei
+Kalendertage aufteilt, wäre unbrauchbar; eine Suche, die einen Einsatz nicht
+unter dem Tag findet, an dem er stattfand, ebenso. Wer beide Zahlen
+nebeneinanderlegt und einen Unterschied sieht, hat also keinen Fehler gefunden.
 
 **Zeitraum-Übersicht oder Suche?** Die beiden Seiten zeigen dieselbe
 Einsatztabelle, beantworten aber verschiedene Fragen. Die Zeitraum-Übersicht
@@ -570,11 +670,62 @@ beantwortet „wo war nochmal der eine Einsatz mit …?". Ein Zeitraum lässt si
 in der Suche über „Datum von / bis" nachbilden; Kennzahlen dazu gibt es aber
 nur in der Zeitraum-Übersicht.
 
-### 4.5 Flugtag von Hand anlegen
+### 4.5 Diensttag von Hand anlegen
 
-Lief die Uhr an einem Tag nicht, legst du den Flugtag über **+ Flugtag
-anlegen** unten in der Einsatztage-Leiste an. Danach lassen sich Maschine,
-Besatzung und nachgetragene Einsätze wie gewohnt erfassen.
+Lief die Uhr an einem Tag nicht, legst du den Diensttag über **+ Diensttag
+anlegen** unten in der Einsatztage-Leiste an. Neben dem Datum gehören dort
+**Standort** und **Rettungsmittel** hin; daraus ergeben sich Art, Rollen und die
+sichtbaren Einsatzfelder. Beides ist freiwillig — ohne sie bleibt der Diensttag
+neutral und funktioniert trotzdem —, aber mit ihnen entsteht alles sofort statt
+später beim Nachtragen.
+
+Weil mehrere Dienste an einem Kalendertag möglich sind, gehört zu jedem eine
+**Uhrzeit des Dienstbeginns**; ohne Angabe gilt 00:00. Nur an ihr lassen sich
+zwei Diensttage desselben Datums in der Leiste auseinanderhalten.
+
+### 4.5a Zwei Diensttage zusammenführen
+
+Wurde die App während eines Dienstes versehentlich mehrfach gestartet, sind aus
+einem tatsächlichen Dienst mehrere Diensttage geworden. Sie lassen sich wieder
+zu einem machen.
+
+Der Einstieg liegt **im Zieltag**: Öffne den Diensttag, der bleiben soll, und
+wähle **Aktionen → „Anderen Diensttag aufnehmen"**. Damit ist die Richtung
+eindeutig — wichtig, weil der Vorgang **nicht umkehrbar** ist.
+
+Danach in zwei Schritten:
+
+1. **Aus der Liste** der zeitlich benachbarten Diensttage (drei Tage vor und
+   nach diesem) den auszuwählen, der aufgenommen werden soll. Zu jedem stehen
+   Rettungsmittel, Standort und die Zahl der Einsätze, Ruhesegmente und
+   Uhr-Kennungen — daran lassen sich zwei Bruchstücke desselben Dienstes
+   auseinanderhalten. Liegt der gesuchte Tag weiter entfernt, korrigiere zuerst
+   sein Datum (Abschnitt 4.2a).
+2. **Vorschau bestätigen.** Sie zeigt den entstehenden Zeitraum, die Art und
+   was alles wandert. Widersprechen sich die beiden Tage bei Rettungsmittel,
+   Standort oder Besatzung, wählst du hier, was gelten soll; vorbelegt ist
+   immer der Tag, der bleibt.
+
+Danach hängen Einsätze, Ruhesegmente und Uhr-Kennungen am Zieltag, sein Zeitraum
+umschließt beide, und Notizen sind aneinandergehängt — nichts wird
+überschrieben. Ein späterer Upload der Uhr mit einer Kennung des aufgenommenen
+Tages landet von selbst richtig.
+
+**Was nicht geht, und warum:**
+
+- **Luftgebunden und bodengebunden lassen sich nicht zusammenführen.** Ein
+  Einsatz mit Windendokumentation verlöre an einem bodengebundenen Diensttag
+  seine Felder. Ein Diensttag *ohne* Zuordnung passt dagegen zu beidem und
+  übernimmt die Art des anderen.
+- **Es gibt keinen Weg zurück und keinen Papierkorb.** Dort läge ein leerer
+  Tag, dessen Wiederherstellung die Einsätze nicht zurückholen könnte — sie
+  hängen dann am aufnehmenden Tag.
+- **Aufteilen gibt es nicht.** Ein versehentlich zusammengeführter Tag lässt
+  sich nur von Hand wieder trennen, indem einzelne Einsätze verschoben werden
+  (Abschnitt 4.2a).
+
+Eine Rolle, die der gewählte Besatzungssatz nicht besetzt, der andere aber
+schon, wird von dort übernommen: Ein eingetragener Name geht nicht verloren.
 
 ### 4.6 Suche
 
@@ -588,7 +739,7 @@ springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz.
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
 Bergwacht-Bereitschaft und -Infos, anderen Notarzt, weitere Rettungsmittel,
-Standort, Maschine, Besatzung und Notizen. Groß- und Kleinschreibung spielt
+Standort, Rettungsmittel, Besatzung und Notizen. Groß- und Kleinschreibung spielt
 keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
 vorkommen — aber nicht im selben Feld. „müller kempten" findet also auch einen
 Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
@@ -603,7 +754,7 @@ klappt einzeln auf und zu; beim Öffnen der Seite sind alle zugeklappt, damit di
 Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
 auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 (UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
-Maschine, Besatzung, Bergwacht-Bereitschaft, Rettungsmittel und Transportziel
+Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
 enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 
 **Winde und Bergwacht nur, wenn es sie gibt.** Beide Blöcke erscheinen seit
@@ -779,7 +930,7 @@ Schlüssel des Zielkontos neu verschlüsselt.
 Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
-Einsätze, Ruhesegmente und Flugtage.
+Einsätze, Ruhesegmente und Diensttage.
 
 **Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
 der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
@@ -880,12 +1031,12 @@ hilft der Knopf „Entsperren“ im Hinweis über dem Importbereich
 selbst erkannt. Angaben, die in der Datei fehlen, werden darüber abgefragt —
 bei der Christoph-17-Jahresliste ist das die Jahreszahl, weil die Datumsspalte
 nur „14.3." enthält. Vorgeschlagen wird das Jahr aus der Titelzeile; du kannst
-es überschreiben. Außerdem wählst du Hubschrauber und Basis für Flugtage, die
+es überschreiben. Außerdem wählst du Rettungsmittel und Standort für Diensttage, die
 neu angelegt werden — bestehende Tage bleiben davon unberührt, und beides
 lässt sich später je Tag in der Tagesübersicht ändern.
 
 **2. Prüfen und korrigieren.** Die Tabelle zeigt jede Zeile der Datei, nach
-Flugtagen gruppiert. **Gelb** ist ein Hinweis (die Zeile geht durch, sieh sie
+Diensttagen gruppiert. **Gelb** ist ein Hinweis (die Zeile geht durch, sieh sie
 dir aber an), **Rot** ein Fehler. Jede Zelle ist direkt änderbar; nach jeder
 Änderung wird sofort neu geprüft. Fehlerhafte Zeilen blockieren nur sich
 selbst: Entweder du korrigierst sie oder du hakst „überspringen" an. Solange
@@ -897,7 +1048,7 @@ Zwei Sonderfälle werden dabei erkannt:
 - **Dubletten.** Ein Einsatz, dessen Einsatznummer schon vergeben ist oder für
   den es an diesem Tag bereits einen Einsatz zur selben Alarmzeit gibt. Der
   Abgleich über die Einsatznummer erkennt seit Web 2.9.0 nur noch Dubletten
-  **innerhalb der Flugtage, die in der Importdatei vorkommen** — die Nummer
+  **innerhalb der Diensttage, die in der Importdatei vorkommen** — die Nummer
   liegt verschlüsselt vor und wird dafür lokal in deinem Browser mit den
   vorhandenen Einsätzen abgeglichen. Tag und Alarmzeit bleiben unabhängig
   davon wirksam. Du wählst je Zeile: überspringen (Voreinstellung),
@@ -912,10 +1063,10 @@ Zwei Sonderfälle werden dabei erkannt:
   Angaben leer lässt. Vorher hätte ein solcher Rückimport sie im Bestand
   gelöscht. Die Kehrseite: Ein Feld lässt sich per Import nicht mehr gezielt
   **leeren**; das geht im Einsatzformular.
-- **Abweichende Besatzung.** Als Besatzung des Flugtags gilt die des ersten
+- **Abweichende Besatzung.** Als Besatzung des Diensttags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
   klassische Pilotenwechsel im laufenden Dienst —, trägt dieser Einsatz
-  automatisch eine abweichende Besatzung (Abschnitt 4.3). Gibt es den Flugtag
+  automatisch eine abweichende Besatzung (Abschnitt 4.3). Gibt es den Diensttag
   schon mit einer anderen Besatzung, entscheidest du je Tag, ob die
   gespeicherte gilt oder die aus der Datei.
 
@@ -951,13 +1102,13 @@ weiterhin „alles"; das ist eine bewusste Angabe.
 
 
 - **CSV (Standard)**: ein Archiv mit allen Feldern, die das System kennt, dazu
-  Flugtage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
+  Diensttage, Ruhezeiten, eine Feldbeschreibung und auf Wunsch die GPX-Tracks. Das
   ist das Format für Auswertungen und für den Rückweg. Es führt je Einsatz auch
   die **Herkunft** (Uhr, manuell, importiert) und den **Bearbeitungsstatus** mit
   — dieselben beiden Angaben, die in der Einsatzansicht als Kennzeichen stehen
   (Abschnitt 4.2). Die beiden Exceltabellen führen sie nicht.
 - **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
-  alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Flugtag ohne
+  alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Diensttag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
 - **Excel (GuteSeele)**: das gewohnte Listenlayout zur Weitergabe an Dritte. Bei
   mehreren Jahren entsteht je Jahr ein Blatt.
@@ -972,10 +1123,10 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
 
 - die Patientendaten — Einsatznummer, Name, Geburtsdatum, Alter, Diagnose,
   Einsatzort mit Adresse und Koordinaten,
-- die **Besatzung** — die des Flugtags und die tatsächliche des Einsatzes,
-  auch im Blatt *Flugtage*,
+- die **Besatzung** — die des Diensttags und die tatsächliche des Einsatzes,
+  auch im Blatt *Diensttage*,
 - **Bergwacht: Namen / Infos** und den **anderen Notarzt**,
-- die **Notizen** von Einsatz und Flugtag,
+- die **Notizen** von Einsatz und Diensttag,
 - die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
   Einsatzortes** und die **GPX-Tracks**.
@@ -1114,18 +1265,18 @@ Die genaue Feldliste jedes Formats steht in `docs/Export-Format.md`.
 
 ## 8. Löschen und Papierkorb
 
-Einsätze und ganze Flugtage landen beim Löschen zunächst im **Papierkorb** und
+Einsätze und ganze Diensttage landen beim Löschen zunächst im **Papierkorb** und
 bleiben dort **90 Tage** wiederherstellbar; danach räumt das System sie
 automatisch endgültig weg.
 
 - **Einsatz löschen:** in der Einsatzansicht über „Löschen". Es erscheint eine
   Seite, die vorher zeigt, was mitgeht (Phasen, Reanimationen, Trackpunkte).
-- **Flugtag löschen:** unten auf der Tagesübersicht. Achtung — das entfernt
+- **Diensttag löschen:** unten auf der Tagesübersicht. Achtung — das entfernt
   **den kompletten Tag**: alle Einsätze, Ruhesegmente, Tracks, Reanimationen
-  und die Flugtag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
+  und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
   der Einsatztage-Leiste (ausgegraut, solange nichts darin liegt) — je eine
-  Tabelle für gelöschte Flugtage und einzeln gelöschte Einsätze, mit
+  Tabelle für gelöschte Diensttage und einzeln gelöschte Einsätze, mit
   „Wiederherstellen" und „Endgültig löschen". Endgültiges Löschen fragt noch
   einmal nach und ist unwiderruflich.
 
@@ -1134,7 +1285,7 @@ für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
 wachsen also nicht wieder an. Beim endgültigen Löschen kommt die Referenz auf
 eine Sperrliste, sodass die Uhr sie nicht neu anlegt.
 
-**Ein Flugtag im Papierkorb nimmt keine Änderungen an.** Trägst du Maschine,
+**Ein Diensttag im Papierkorb nimmt keine Änderungen an.** Trägst du Rettungsmittel,
 Basis oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
 bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt
 für Import und das Einspielen einer Sicherung: Beide überspringen solche Tage
@@ -1154,13 +1305,13 @@ weiteren Dialoge dieser Seite anzeigen" ankreuzen — danach würden Löschungen
 kommentarlos durchlaufen. Seiteneigene Fenster kann der Browser nicht
 abschalten.
 
-Stammdaten (Standorte, Maschinen, Besatzung, Rettungsmittel, Bergwacht,
+Stammdaten (Standorte, Rettungsmittel, Besatzung, weitere Rettungsmittel, Bergwacht,
 Transportziele) und
 Geräte werden direkt nach einer kurzen Rückfrage gelöscht — sie sind schnell
-wieder angelegt. **Bereits dokumentierte Flugtage bleiben davon unberührt:**
-Besatzungsnamen und Bergwacht-Angaben stehen ohnehin als Text im Flugtag, und
-beim Löschen einer Maschine oder eines Standorts wird deren Name vorher in die
-betroffenen Flugtage übernommen. Ein **Nutzerkonto** zu löschen verlangt
+wieder angelegt. **Bereits dokumentierte Diensttage bleiben davon unberührt:**
+Besatzungsnamen und Bergwacht-Angaben stehen ohnehin als Text im Diensttag, und
+beim Löschen eines Rettungsmittels oder eines Standorts wird dessen Name vorher in die
+betroffenen Diensttage übernommen. Ein **Nutzerkonto** zu löschen verlangt
 zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 
 ---
@@ -1170,14 +1321,44 @@ zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 Unter **⚙ Einstellungen → „Standortdaten"** pflegst du deine Vorbelegungen. Die
 sechs Bereiche sind aufklappbare Abschnitte und starten zugeklappt.
 
-### 9.1 Standorte, Hubschrauber, Besatzung, Bergwacht
+### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
-Standorte, Hubschrauber (Kennung plus Häkchen, welche Rollen an Bord sind),
-Namenslisten je Rolle und Bergwacht-Bereitschaften. Am Flugtag wählst du
-Maschine und Standort dann per Dropdown; die beim Hubschrauber angehakten
-Rollen erscheinen als Besatzungs-Dropdowns mit deinen Vorbelegungen. Mit
-„Als Standard" (★) markierte Maschine und Standort werden bei neuen Flugtagen
-vorbelegt — das gilt auch für vom Admin systemweit hinterlegte Einträge (s. 8.4).
+**Der Standort ist der Anker.** An ihm hängen Rettungsmittel, Zielkliniken,
+weitere Rettungsmittel, Bergwacht-Bereitschaften und Besatzungs-Vorbelegungen —
+jeder Eintrag gehört genau **einem** Standort. Eine Zielklinik, die von zwei
+Standorten angefahren wird, ist deshalb zweimal anzulegen. Das ist der Preis
+dafür, dass in den Auswahllisten genau die Einträge des Standorts stehen, der
+am Diensttag hinterlegt ist, und sonst nichts.
+
+Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind
+die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie wie
+der Einsatzort: Adresse suchen, Koordinatenpaar oder Plus Code eintippen, der
+Vorschlag darunter übernimmt sie.
+
+Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
+Diese Wahl entscheidet über alles Weitere:
+
+| Art | Wählbare Rollen | Fähigkeiten |
+|---|---|---|
+| Luftgebunden | Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige | Winde, Bergwacht — zwei getrennte Häkchen |
+| Bodengebunden | Fahrer, Praktikant, Sonstige | keine |
+
+Angehakt werden die Rollen, die tatsächlich besetzt werden. Die Notärztin selbst
+ist keine Rolle — sie ist die Nutzerin. Winde und Bergwacht sind zwei getrennte
+Häkchen, weil ein Hubschrauber eine Winde führen kann, ohne in einer
+Bergwachtkooperation zu stehen, und umgekehrt.
+
+**Änderungen an den Stammdaten wirken nur in die Zukunft.** Beim Anlegen eines
+Diensttags werden Art, Rollensatz, Fähigkeiten, Bezeichnungen und
+Standortkoordinaten **eingefroren**. Wird ein Rettungsmittel später umbenannt,
+umgebaut oder gelöscht, ändert sich an bereits dokumentierten Diensttagen
+nichts — auch nicht bei einem Tippfehler im Namen. Ein Diensttag ist ein
+abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
+wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
+
+Mit „Als Standard" (★) markiertes Rettungsmittel und Standort werden bei neuen
+Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
+Einträge (s. 9.4).
 
 ### 9.2 Andere Rettungsmittel
 
@@ -1193,18 +1374,34 @@ Löschst du später ein Rettungsmittel aus der Vorbelegung, behalten bereits
 dokumentierte Einsätze ihren Eintrag: Die Zuordnung wird je Einsatz gespeichert
 und hängt nicht an der Liste.
 
-### 9.3 Transportziele
+### 9.3 Transportziele (Zielkliniken)
 
-Vorbelegung für das Feld **Transportziel** im Einsatz. Anders als bei den
+Vorbelegung für das Feld **Zielklinik** im Einsatz. Anders als bei den
 Rettungsmitteln bleibt das Feld dort ein einfaches Textfeld mit Vorschlagsliste
 (Tastatur-Pfeiltasten bzw. Antippen) — Freitext ist weiterhin uneingeschränkt
 möglich.
 
+Zu jeder Zielklinik lassen sich **Koordinaten** hinterlegen, auf denselben drei
+Wegen wie beim Einsatzort (Adresssuche, Koordinatenpaar, Plus Code) und auf drei
+Ebenen: zentral durch die Administration, hier im eigenen Konto und einmalig am
+einzelnen Einsatz. Wird ein Vorschlag mit hinterlegten Koordinaten übernommen,
+sind sie vorbelegt und lassen sich am Einsatz überschreiben.
+
+Koordinaten sind **freiwillig**. Ohne sie bleibt die Zielklinik ein gültiger
+Eintrag; es entstehen lediglich kein Pin und keine Luftlinie. Eine spätere
+Korrektur wirkt nur auf neue Einsätze — am Einsatz ist die Koordinate
+eingefroren.
+
 ### 9.4 Zentrale Stammdaten (vom Admin gepflegt)
 
-Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen (siehe
-Abschnitt 11). Solche Einträge erscheinen bei allen NutzerInnen mit dem
-Kennzeichen **„systemweit"**, stehen automatisch in allen Vorbelegungen zur
+Der Admin kann alle sechs Bereiche zusätzlich **zentral** hinterlegen (siehe
+Abschnitt 11). **Zentrale Standorte erscheinen erst in deinen Auswahllisten,
+wenn du sie unter „Zentrale Standorte auswählen" angehakt hast** — sonst stünden
+in einem gemeinsam genutzten System alle Standorte aller Häuser in jeder Liste.
+Abwählen entfernt keine Daten; bereits dokumentierte Diensttage bleiben
+unverändert.
+
+Solche Einträge erscheinen mit dem Kennzeichen **„zentral"**, stehen automatisch in allen Vorbelegungen zur
 Verfügung und lassen sich hier nicht bearbeiten oder löschen. Versuchst du,
 einen persönlichen Eintrag mit demselben Namen anzulegen, wird das mit einem
 Hinweis abgelehnt — der systemweite Eintrag steht dir ja bereits zur Verfügung.

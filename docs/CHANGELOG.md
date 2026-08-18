@@ -11,6 +11,121 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 6.3.0 / Uhr 1.8.0] — 2026-08-18
+
+**Die Notarzt-Erweiterung ist abgeschlossen.** Vierte und letzte Etappe
+(Konzept: `docs/Konzept-Notarzt-Erweiterung.md`): Diensttage lassen sich
+zusammenführen, die Uhr schickt eine Dienstkennung, und die Dokumentation ist
+auf dem Stand des fertigen Umbaus.
+
+**Keine Migration.** Wie die Etappen 2 und 3 arbeitet auch diese auf dem Schema
+der 6.0.0 — `day_refs`, `mission_crew` und die Fremdschlüssel auf `days` liegen
+seit damals. Wer auf 6.0.0, 6.1.0 oder 6.2.0 ist, spielt nur die Dateien ein.
+
+### Zwei Diensttage zusammenführen
+
+Wurde die App während **eines** Dienstes versehentlich mehrfach gestartet,
+entstehen mehrere Diensttage für einen tatsächlichen Dienst. Sie lassen sich
+wieder zu einem machen: **Aktionen → „Anderen Diensttag aufnehmen"** im
+Diensttag, der bleiben soll.
+
+Der Einstieg liegt bewusst **im Zieltag** und nicht in der Tagesliste. Damit ist
+die Richtung eine Tatsache statt einer Lesart — wichtig, weil der Vorgang
+**nicht umkehrbar** ist. Danach zwei Schritte: aus den zeitlich benachbarten
+Diensttagen (drei Tage vor und nach diesem) den auszuwählen, der aufgenommen
+wird, dann die Vorschau bestätigen. Zu jedem Kandidaten stehen Rettungsmittel,
+Standort und die Zahl der Einsätze, Ruhesegmente und Uhr-Kennungen — daran
+lassen sich zwei Bruchstücke desselben Dienstes auseinanderhalten.
+
+Danach hängen Einsätze, Ruhesegmente und Uhr-Kennungen am Zieltag, sein Zeitraum
+umschließt beide, und die Notizen sind aneinandergehängt. Widersprechen sich die
+beiden Tage bei Rettungsmittel, Standort oder Besatzung, wird in der Vorschau
+gewählt, was gilt; vorbelegt ist der Tag, der bleibt.
+
+**Was nicht geht, und warum:**
+
+- **Luftgebunden und bodengebunden schließen sich aus.** Ein Einsatz mit
+  Windendokumentation verlöre an einem bodengebundenen Diensttag seine Felder.
+  Unvereinbare Kandidaten stehen trotzdem in der Liste — gesperrt und mit
+  Begründung. Eine fehlende Zeile sähe aus wie ein Fehler der Anwendung.
+- **Ein noch nicht zugeordneter Diensttag passt zu beidem** und übernimmt die
+  Art des anderen.
+- **Kein Weg zurück, kein Papierkorb.** Dort läge ein leerer Tag, dessen
+  Wiederherstellung die Einsätze nicht zurückholen könnte — sie hängen dann am
+  aufnehmenden Tag.
+- **Aufteilen gibt es nicht.**
+
+**Uhr-Kennungen wandern mit.** Ein späterer Upload mit einer Kennung des
+aufgenommenen Tages landet dadurch von selbst im Zieltag — ohne Umleitung und
+ohne Sonderfall. Genau dafür liegen die Kennungen seit Web 6.0.0 in einer
+eigenen Tabelle.
+
+**Papierkorbeinträge wandern ebenfalls mit.** `missions.day_id` steht auf
+`ON DELETE SET NULL`; ein zurückgelassener Einsatz verlöre beim Entfernen des
+aufgenommenen Tags still seinen Diensttag und wäre verwaist.
+
+### Uhr 1.8.0: Dienstkennung und neutrale Phasen
+
+Die Uhr erzeugt bei „Einsatztag starten" eine **Dienstkennung** (`day_ref`) und
+schickt sie an jedem Einsatz und Ruhesegment mit — gleiches Muster wie
+`client_ref`, gleiche Idempotenz. Damit sagt sie, **welcher** Dienst gemeint
+ist; aus dem Datum allein ließe sich das seit Web 6.0.0 nicht mehr ableiten, weil
+mehrere Diensttage auf einem Kalendertag liegen können.
+
+Die Uhr erfährt dabei weiterhin **nichts über die Einsatzart** — die Einordnung
+geschieht ausschließlich im Web. Ein von ihr angelegter Diensttag ist neutral,
+bis Standort und Rettungsmittel nachgetragen sind.
+
+**Zwei Phasen heißen jetzt neutral:** Phase 3 „Ausrücken" statt „Abflug",
+Phase 7 „Ankunft Klinik" statt „Landung KKH". Dieselbe Uhr läuft auch am NEF, wo
+weder das eine noch das andere stattfindet. Der Server sagt das seit Web 6.0.0;
+die Uhr zieht damit nach. Für die Übertragung ist es folgenlos — der Vertrag
+kennt Nummern, keine Beschriftungen.
+
+**Die Rückfallebene bleibt dauerhaft.** Eine Uhr ohne Kennung (1.7.0 und älter)
+funktioniert unverändert weiter; ihre Uploads werden über `(Konto, Datum)`
+zugeordnet. Ein Update des Webs darf keine Uhr außer Betrieb setzen, die niemand
+aktualisiert hat. Auch der Umstieg **mitten im Dienst** ist abgefangen: Eine
+unbekannte Kennung wird an den Diensttag gebunden, an dem der Datensatz schon
+hängt, statt einen zweiten anzulegen.
+
+Die Connect-IQ-App-ID ist unverändert — die Uhr aktualisiert sich, sie wird
+nicht neu installiert.
+
+### Fehleinsatz nicht mehr in der Tagestabelle
+
+Die Spalte **Fehleinsatz** ist aus der Einsatztabelle der Tagesübersicht
+entfallen. Der Haken steht im Einsatz selbst; auswerten lässt er sich
+unverändert in der Zeitraum-Übersicht (Kachel „Fehleinsätze") und in der Suche.
+Er ist selten gesetzt, und eine Spalte voller leerer Zellen kostet auf der
+schmalsten Ansicht Breite, ohne etwas zu sagen.
+
+### Dokumentation
+
+Vier Dateien waren noch auf dem Stand vor 6.0.0 und sind es nicht mehr:
+
+| Datei | Was |
+|---|---|
+| `JSON-Vertrag.md` | steigt auf **1.3**: `day_ref` samt Zuordnungsregeln und Rückfallebene, neutrale Phasenbeschriftungen, Präfix `d-` |
+| `Backup-Format.md` | Nutzlastversion **6**: `day_refs`, `day_crew`, `mission_crew`, `day_capabilities`, `vehicles` samt Rollen und Fähigkeiten, `user_bases`, `base_id` der Stammdaten — und die benannte Ablehnung älterer Nutzlasten |
+| `Export-Format.md` | **Berichtigung, nicht nur Ergänzung**: `phase_03_abflug` → `phase_03_ausruecken`, `phase_07_landung_krankenhaus` → `phase_07_ankunft_klinik`, dazu die neuen Spalten und die sieben Besatzungsspalten aus dem Rollenkatalog. Die Feldlisten sind jetzt aus `assets/export.js` erzeugt, damit sie nicht wieder abweichen |
+| `Handbuch.md` | der fertige Stand: Diensttag statt Flugtag, Rettungsmittel statt Hubschrauber, Transport und Abfahrtort, die Tabs der Auswertung, das Zusammenführen — und der Unterschied zwischen Statistik (nach Diensttag) und Suche (nach echtem Einsatzdatum) |
+
+Auch `Technik.md` ist nachgezogen: Die Schematabelle beschrieb noch `aircraft`,
+`missions.day` und den Tagesschlüssel. **Verwaiste Verweise auf „Flugtag",
+„Hubschrauber" und eine Phase 10 gibt es in der Dokumentation nicht mehr** —
+mit zwei benannten Ausnahmen: den Kacheln des Luftrettungs-Tabs, die ihre
+Flugterminologie behalten, und den Stellen, die ausdrücklich sagen, wie etwas
+**früher** hieß.
+
+### Betreiberhinweis
+
+Die drei Dateien `flugtag_neu.php`, `flugtag_loeschen.php` und
+`flugtag_datum.php` müssen auf dem Webspace **verschwinden**. Sie sind seit
+6.0.0 durch die `diensttag_*.php` ersetzt, arbeiten auf dem alten Datenmodell
+und waren über die Adresszeile erreichbar; ein FTP-Abgleich entfernt nicht
+zwingend, was im Paket fehlt.
+
 ## [Web 6.2.0] — 2026-08-18
 
 **Die Auswertung trennt jetzt nach Art — und die Suche kann danach filtern.**

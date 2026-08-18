@@ -106,6 +106,17 @@ module Uploader {
             "track" => { "seq_from" => seqFrom, "points" => points }
         };
 
+        // Dienstkennung (JSON-Vertrag 1.3). Sie stammt aus DEM PAKET, nicht aus
+        // Model.dayRef: Ein Einsatz aus einem laengst beendeten Dienst kann noch
+        // in der Warteschlange liegen, waehrend bereits der naechste laeuft —
+        // mit der aktuellen Kennung landete er an dessen Diensttag.
+        //
+        // NUR MITSCHICKEN, WENN SIE DA IST. Pakete aus der Zeit vor 1.8.0
+        // fuehren keine; fuer sie greift die Rueckfallebene ueber (Konto,
+        // Datum), die der Server dauerhaft behaelt. Ein leeres Feld waere
+        // dasselbe in umstaendlich.
+        if (d["dref"] != null) { body["day_ref"] = d["dref"]; }
+
         if ("mission".equals(job["kind"])) {
             body["distance_m"] = (d["dist"] != null) ? d["dist"] : Track.distanceM.toNumber();
             body["ascent_m"]   = (d["asc"]  != null) ? d["asc"]  : Track.ascentM.toNumber();

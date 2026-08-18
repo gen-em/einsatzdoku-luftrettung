@@ -1061,3 +1061,26 @@ span.imp-warn{color:#8A6D00}
    Fehlermeldung: Es ist eine Aufgabe, kein Fehler. */
 .dayadd.nachbearbeitung{color:var(--navy);background:var(--blau-light);
   border-radius:6px;font-weight:600}
+
+/* ---- Web 6.3.0: Diensttage zusammenfuehren ------------------------------ */
+
+/* Ein Kandidat, der sich NICHT aufnehmen laesst (E11), bleibt in der Liste
+   stehen — er wird nur als nicht waehlbar gezeigt. Warum er dasteht und nicht
+   weggelassen wird, begruendet dt_merge_kandidaten(): Eine fehlende Zeile
+   sieht aus wie ein Fehler der Anwendung, A7 verlangt aber eine verstaendliche
+   Meldung, und die braucht eine Zeile, an der sie haengen kann.
+
+   Gedaempft, nicht durchgestrichen: Der Diensttag ist gueltig, er passt nur
+   hier nicht. Durchgestrichen liest sich wie geloescht. */
+.data tr.zeile-aus{opacity:.55}
+.data tr.zeile-aus label{cursor:default}
+
+/* Die Entscheidung bei widerspruechlichen Angaben. Ein <fieldset> ist hier die
+   richtige Auszeichnung und keine Zierde: Die <legend> sagt Vorleseprogrammen,
+   WORUEBER die beiden Auswahlknoepfe entscheiden — ohne sie stuende zweimal
+   ein Name ohne Bezug im Raum. */
+.feldgruppe{border:1px solid var(--line);border-radius:6px;
+  padding:.6rem .8rem;margin:0 0 .8rem}
+.feldgruppe legend{padding:0 .35rem;font-weight:600;color:var(--navy)}
+.feldgruppe label{display:flex;align-items:baseline;gap:.45rem;margin:.25rem 0}
+.feldgruppe input[type=radio]{width:auto;flex:none}

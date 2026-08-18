@@ -3,13 +3,24 @@ using Toybox.Lang;
 
 module Const {
 
-    const APP_VERSION = "1.7.0";      // bei jedem Release erhoehen
+    const APP_VERSION = "1.8.0";      // bei jedem Release erhoehen
 
     // Phasen 1..9 (Index 0 unbenutzt). Der Einsatz-Abschluss ist KEIN
     // Zeitstempel mehr, sondern eine bestaetigte Aktion (Phase 10 entfaellt).
+    //
+    // NEUTRALE BESCHRIFTUNGEN seit 1.8.0 (E20): Phase 3 hiess "Abflug", Phase 7
+    // "Landung KKH". Die Uhr laeuft seit Web 6.0.0 auch an bodengebundenen
+    // Diensten, und sie ERFAEHRT DIE ART NICHT (E21) — die Einordnung geschieht
+    // ausschliesslich im Web. Eine Beschriftung, die eine der beiden Arten
+    // benennt, waere an der anderen schlicht falsch, und die Uhr koennte sie
+    // nicht einmal umschalten.
+    //
+    // Uebertragen werden ohnehin NUMMERN, keine Beschriftungen (JSON-Vertrag
+    // Abschnitt 7). Diese Aenderung beruehrt den Vertrag also nicht; sie holt
+    // die Uhr nur dorthin, wo der Server seit Web 6.0.0 steht (Berichtigung B8).
     const PHASE_LABELS = [
-        "", "Frei", "Alarmierung", "Abflug", "Ankunft Einsatzort",
-        "Ankunft PatientIn", "Transportbeginn", "Landung KKH",
+        "", "Frei", "Alarmierung", "Ausrücken", "Ankunft Einsatzort",
+        "Ankunft PatientIn", "Transportbeginn", "Ankunft Klinik",
         "Übergabe", "Einsatzende"
     ];
 
@@ -50,6 +61,6 @@ module Const {
     const END_SYNC_WAIT_S = 3;       // Dienstende: so lange senden, dann fragen
 
     // Storage-Schluessel
-    const K_STATE = "state";         // Dienst-/Einsatz-/Rea-Zustand
+    const K_STATE = "state";         // Dienst-/Einsatz-/Rea-Zustand samt Dienstkennung
     const K_TRACK_META = "trk_meta"; // Zaehler & Upload-Marken
 }

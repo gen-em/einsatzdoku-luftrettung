@@ -266,9 +266,15 @@ return [
      * entschieden (Abschnitt 7): Ob storniert, abgebrochen oder von vornherein
      * gegenstandslos, ist eine Unterscheidung, die im Nachhinein selten
      * verlaesslich zu treffen ist. */
+    /* KEINE Spalte in der Tagestabelle. Der Haken steht im Einsatz selbst und
+     * sonst nirgends: Er ist selten gesetzt, und eine Spalte voller leerer
+     * Zellen kostet auf der Tagesuebersicht Breite, ohne etwas zu sagen.
+     * Auswerten laesst er sich weiterhin — die Zeitraumuebersicht zaehlt ihn in
+     * der Kachel "Fehleinsaetze", und die Suche filtert danach. Beide fuehren
+     * ihre Spalte datengetrieben (missiontable.js, `nurWenn`), zeigen sie also
+     * nur, wenn im Bestand tatsaechlich Fehleinsaetze liegen. */
     'false_alarm' => [
         'label' => 'Fehleinsatz / Storno / Abbruch', 'type' => 'checkbox',
-        'day_col' => 'check', 'day_label' => 'Fehl&shy;einsatz',
     ],
     'winch' => [
         'label' => 'Windeneinsatz', 'type' => 'checkbox',

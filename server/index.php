@@ -107,6 +107,17 @@ $neueGeraete = geraete_neu(db(), $userId);
           <div class="aktionsliste">
             <a id="daydatelink"
                href="diensttag_datum.php?d=<?= (int)$selDay ?>">Datum ändern</a>
+            <?php /* „Anderen Diensttag aufnehmen" (E25): Der Einstieg liegt im
+                     ZIELTAG und nicht in der Tagesliste, damit die Richtung
+                     eindeutig ist — der geöffnete Tag bleibt, der gewählte
+                     verschwindet. Bei einer Auswahl von zwei Zeilen in einer
+                     Liste wäre sie eine Frage der Lesart, und der Vorgang ist
+                     nicht umkehrbar (E13).
+
+                     Der Eintrag steht über „Tag löschen": beides sind Eingriffe
+                     in den Bestand, aber nur einer davon ist endgültig. */ ?>
+            <a id="daymergelink"
+               href="diensttag_zusammenfuehren.php?d=<?= (int)$selDay ?>">Anderen Diensttag aufnehmen</a>
             <a class="gefahr" id="daydellink"
                href="diensttag_loeschen.php?d=<?= (int)$selDay ?>">Tag löschen</a>
           </div>
@@ -163,6 +174,14 @@ $neueGeraete = geraete_neu(db(), $userId);
         <span id="savestate" class="muted"></span>
       </form>
     </details>
+    <?php /* Rückmeldung nach dem Zusammenführen. Sie gehört hierher und nicht
+             auf die Zwischenseite: Die ist nach dem Vorgang verschwunden, und
+             die Bestätigung soll an dem Tag stehen, der jetzt alles trägt. */ ?>
+    <?php if (($_GET['aufgenommen'] ?? '') === '1' && $selDay): ?>
+      <p class="alert alert-ok">Die beiden Diensttage sind zusammengeführt.
+        Einsätze, Ruhesegmente und Uhr-Kennungen hängen jetzt an diesem Tag;
+        der aufgenommene ist verschwunden.</p>
+    <?php endif; ?>
     <?php if (($_GET['umdatiert'] ?? '') === '1' && $selDay): ?>
       <p class="alert alert-ok">Der Diensttag ist umdatiert. Alle Zeitstempel
         sind mitgewandert; die Uhrzeiten stehen unverändert da.</p>
@@ -430,6 +449,7 @@ async function loadDay(dayId){
   }
   document.getElementById('daydellink').href = 'diensttag_loeschen.php?d=' + d.day_id;
   document.getElementById('daydatelink').href = 'diensttag_datum.php?d=' + d.day_id;
+  document.getElementById('daymergelink').href = 'diensttag_zusammenfuehren.php?d=' + d.day_id;
   // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
   // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.
   document.getElementById('dayaktionen').hidden = false;

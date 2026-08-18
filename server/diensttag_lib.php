@@ -562,3 +562,417 @@ function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
         ->execute([$dayId, $deviceId, $dayRef]);
     return $dayId;
 }
+
+/* ---- Zusammenfuehren (Konzept 3.4 und 4.5, E10-E13, E25) ----------------- */
+
+/**
+ * Wie weit reicht "zeitlich benachbart" in der Kandidatenliste?
+ *
+ * Abschnitt 8 laesst die Zahl ausdruecklich offen. Drei Tage sind die Antwort
+ * auf den Anwendungsfall: Die App wurde WAEHREND EINES DIENSTES mehrfach
+ * gestartet — die Bruchstuecke liegen dann am selben Kalendertag oder ueber
+ * Mitternacht am folgenden. Der dritte Tag ist Luft fuer den Fall, dass ein
+ * Bruchstueck erst spaeter von Hand nachgetragen wurde.
+ *
+ * Eine laengere Liste waere nicht hilfreicher, sondern gefaehrlicher: Der
+ * Vorgang ist nicht umkehrbar (E13), und je mehr Zeilen zur Wahl stehen, desto
+ * eher greift jemand daneben. Wer zwei weit auseinanderliegende Diensttage
+ * zusammenfuehren will, datiert erst einen davon um (diensttag_datum.php).
+ */
+const DT_NACHBARSCHAFT_TAGE = 3;
+
+/**
+ * Vertragen sich die Arten zweier Diensttage? (E11)
+ *
+ * Gleiche Art ja, ein neutraler passt zu beidem, `air` gegen `ground` nicht.
+ * Der Grund fuer das Verbot steht in Abschnitt 3.4: Sonst landete ein Einsatz
+ * mit Windendokumentation an einem bodengebundenen Tag und verloere seine
+ * Felder — das `cap_gate` blendete sie aus, und die Werte staenden in Spalten,
+ * die niemand mehr sieht.
+ */
+function dt_art_vereinbar(?string $a, ?string $b): bool
+{
+    return $a === null || $b === null || $a === $b;
+}
+
+/** Art des Ergebnisses: der nicht-NULL-Wert, sonst NULL (Konzept 4.5 Nr. 1). */
+function dt_art_ergebnis(?string $a, ?string $b): ?string
+{
+    return $a ?? $b;
+}
+
+/**
+ * Kandidaten zum Aufnehmen in einen Zieldiensttag.
+ *
+ * Zeitlich benachbarte Diensttage derselben NutzerIn, ohne Papierkorbeintraege
+ * und ohne den Zieltag selbst (Konzept 4.5).
+ *
+ * UNVEREINBARE TAGE WERDEN MITGELIEFERT, nicht weggelassen — mit `vereinbar`
+ * auf `false`. Ein Kandidat, der schlicht fehlt, sieht aus wie ein Fehler der
+ * Anwendung; A7 verlangt ausdruecklich eine VERSTAENDLICHE MELDUNG, und die
+ * laesst sich nur an einer Zeile anbringen, die auch dasteht. Die Oberflaeche
+ * zeigt sie als nicht waehlbar samt Grund.
+ *
+ * Die Zahlen je Kandidat (Einsaetze, Ruhesegmente, Uhr-Kennungen) sind keine
+ * Zierde: Sie sind das Einzige, woran sich zwei Bruchstuecke desselben Dienstes
+ * vor dem Zusammenfuehren auseinanderhalten lassen.
+ */
+function dt_merge_kandidaten(int $userId, int $zielId,
+                             int $tage = DT_NACHBARSCHAFT_TAGE): array
+{
+    $ziel = dt_laden($userId, $zielId);
+    if ($ziel === null) { return []; }
+
+    $q = db()->prepare(
+        'SELECT d.*,
+                (SELECT COUNT(*) FROM missions m
+                  WHERE m.day_id = d.id AND m.deleted_at IS NULL)      AS einsaetze,
+                (SELECT COUNT(*) FROM rest_segments r
+                  WHERE r.day_id = d.id AND r.deleted_at IS NULL)      AS segmente,
+                (SELECT COUNT(*) FROM day_refs f WHERE f.day_id = d.id) AS kennungen
+           FROM days d
+          WHERE d.user_id = ? AND d.id <> ? AND d.deleted_at IS NULL
+            AND d.day BETWEEN DATE_SUB(?, INTERVAL ' . (int)$tage . ' DAY)
+                          AND DATE_ADD(?, INTERVAL ' . (int)$tage . ' DAY)
+          ORDER BY d.day DESC, d.started_at DESC, d.id DESC');
+    $q->execute([$userId, $zielId, $ziel['day'], $ziel['day']]);
+
+    $zielKind = $ziel['kind'] === null ? null : (string)$ziel['kind'];
+    $liste = [];
+    foreach ($q->fetchAll() as $z) {
+        $kind = $z['kind'] === null ? null : (string)$z['kind'];
+        $z['vereinbar'] = dt_art_vereinbar($zielKind, $kind);
+        $liste[] = $z;
+    }
+    return $liste;
+}
+
+/**
+ * Beide Diensttage laden und pruefen, ob sie sich zusammenfuehren lassen.
+ *
+ * Die Pruefung liegt hier und nicht in der Seite, weil sie ZWEIMAL laufen muss:
+ * einmal fuer die Vorschau und einmal unmittelbar vor dem Schreiben. Zwischen
+ * beiden liegt eine Bestaetigung durch einen Menschen — in dieser Zeit kann der
+ * aufzunehmende Tag im Papierkorb gelandet sein oder eine Zuordnung bekommen
+ * haben, die die Arten unvereinbar macht.
+ *
+ * @return array{ok:bool,meldung:?string,ziel:?array,quelle:?array}
+ */
+function dt_merge_pruefen(int $userId, int $zielId, int $quellId): array
+{
+    $nein = static fn(string $m): array
+        => ['ok' => false, 'meldung' => $m, 'ziel' => null, 'quelle' => null];
+
+    if ($zielId === $quellId) {
+        return $nein('Ein Diensttag lässt sich nicht mit sich selbst zusammenführen.');
+    }
+    /* Mit Papierkorb laden, um ihn BENENNEN zu koennen: "nicht gefunden" waere
+     * auf einen gerade geloeschten Tag eine irrefuehrende Auskunft. */
+    $ziel   = dt_laden($userId, $zielId, true);
+    $quelle = dt_laden($userId, $quellId, true);
+    if ($ziel === null || $quelle === null) {
+        return $nein('Diensttag nicht gefunden.');
+    }
+    if ($ziel['deleted_at'] !== null) {
+        return $nein('Dieser Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
+    }
+    if ($quelle['deleted_at'] !== null) {
+        return $nein('Der aufzunehmende Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
+    }
+
+    $zk = $ziel['kind']   === null ? null : (string)$ziel['kind'];
+    $qk = $quelle['kind'] === null ? null : (string)$quelle['kind'];
+    if (!dt_art_vereinbar($zk, $qk)) {
+        $sz = dt_art_symbol($zk); $sq = dt_art_symbol($qk);
+        return $nein('Diese beiden Diensttage lassen sich nicht zusammenführen: '
+            . 'Der eine ist ' . $sz['text'] . ', der andere ' . $sq['text'] . '. '
+            . 'Ein Einsatz mit Windendokumentation würde an einem bodengebundenen '
+            . 'Diensttag seine Felder verlieren. Ein noch nicht zugeordneter '
+            . 'Diensttag lässt sich dagegen mit beiden Arten zusammenführen.');
+    }
+    return ['ok' => true, 'meldung' => null, 'ziel' => $ziel, 'quelle' => $quelle];
+}
+
+/**
+ * Vorschau auf das Ergebnis: Zeitraum, Umfang und die Stellen, an denen die
+ * beiden Tage sich widersprechen (Konzept 4.5 Nr. 2).
+ *
+ * ZUM ZEITRAUM. `started_at` wandert nach vorne, `ended_at` nach hinten — die
+ * Regel von dt_zeitraum_fortschreiben(), hier auf zwei Diensttage angewandt:
+ * Ein Dienst umschliesst alles, was in ihm dokumentiert ist (A6).
+ *
+ * Ein NULL in `ended_at` heisst "noch nicht bekannt", nicht "endet nie". Das
+ * Ergebnis nimmt deshalb das SPAETESTE BEKANNTE Ende und bleibt nur dann ohne,
+ * wenn beide keines haben. Anders herum — ein einziges NULL macht das Ergebnis
+ * offen — traefe genau den Regelfall dieser Funktion am haertesten: Das
+ * aufzunehmende Bruchstueck ist typischerweise das, auf dem "Einsatztag
+ * beenden" nie gedrueckt wurde. Ein sauber beendeter Zieltag verloere sein Ende
+ * an ein Bruchstueck von zwanzig Minuten. Bleibt der Dienst tatsaechlich noch
+ * offen, schreibt der naechste Upload das Ende ohnehin fort.
+ *
+ * ZUM DATUM. `day` wird NICHT aus `started_at` zurueckgerechnet, sondern vom
+ * frueher beginnenden Tag uebernommen. Genau dieses Feld ist bereits das
+ * ORTSDATUM seines Dienstbeginns; eine Umrechnung koennte daran nur scheitern.
+ *
+ * @return array Vorschau samt `wahlen`: die Widersprueche, ueber die beim
+ *               Zusammenfuehren zu entscheiden ist.
+ */
+function dt_merge_vorschau(int $userId, array $ziel, array $quelle): array
+{
+    $zahl = static function (string $sql, array $p): int {
+        $q = db()->prepare($sql); $q->execute($p); return (int)$q->fetchColumn();
+    };
+    $zid = (int)$ziel['id']; $qid = (int)$quelle['id'];
+
+    /* Der frueher beginnende Tag bestimmt Datum und Beginn. Ein fehlender
+     * `started_at` (Bestandsdaten) verliert gegen einen vorhandenen, sonst
+     * entscheidet das Datum. */
+    $zs = $ziel['started_at']   !== null ? (string)$ziel['started_at']   : null;
+    $qs = $quelle['started_at'] !== null ? (string)$quelle['started_at'] : null;
+    if ($zs !== null && $qs !== null) { $frueher = $qs < $zs ? $quelle : $ziel; }
+    elseif ($zs !== null)             { $frueher = $ziel; }
+    elseif ($qs !== null)             { $frueher = $quelle; }
+    else { $frueher = (string)$quelle['day'] < (string)$ziel['day'] ? $quelle : $ziel; }
+
+    $enden = array_filter([$ziel['ended_at'], $quelle['ended_at']],
+                          static fn($v): bool => $v !== null && $v !== '');
+
+    $zk = $ziel['kind']   === null ? null : (string)$ziel['kind'];
+    $qk = $quelle['kind'] === null ? null : (string)$quelle['kind'];
+
+    /* ---- Widersprueche, ueber die zu entscheiden ist --------------------- */
+    $wahlen = [];
+    $txt = static fn($v): string => $v === null ? '' : trim((string)$v);
+
+    /* Rettungsmittel: nur eine Wahl, wenn BEIDE eines fuehren und es ein
+     * anderes ist. Fuehrt nur einer eines, gewinnt er kampflos — dieselbe
+     * Regel wie bei der Art (E11), nur eine Ebene tiefer. */
+    if ($ziel['vehicle_id'] !== null && $quelle['vehicle_id'] !== null
+        && ((int)$ziel['vehicle_id'] !== (int)$quelle['vehicle_id']
+            || $txt($ziel['vehicle_name']) !== $txt($quelle['vehicle_name']))) {
+        $wahlen['vehicle'] = [
+            'titel'  => 'Rettungsmittel',
+            'ziel'   => $txt($ziel['vehicle_name'])   ?: '—',
+            'quelle' => $txt($quelle['vehicle_name']) ?: '—',
+        ];
+    }
+    if ($ziel['base_id'] !== null && $quelle['base_id'] !== null
+        && ((int)$ziel['base_id'] !== (int)$quelle['base_id']
+            || $txt($ziel['base_name']) !== $txt($quelle['base_name']))) {
+        $wahlen['base'] = [
+            'titel'  => 'Standort',
+            'ziel'   => $txt($ziel['base_name'])   ?: '—',
+            'quelle' => $txt($quelle['base_name']) ?: '—',
+        ];
+    }
+
+    /* Besatzung: nur vergleichen, was BELEGT ist. Zwei Tage mit demselben
+     * Rollensatz und lauter leeren Zeilen widersprechen sich nicht. */
+    $belegt = static function (array $crew): array {
+        $b = [];
+        foreach ($crew as $code => $name) {
+            if ($name !== null && trim((string)$name) !== '') { $b[$code] = trim((string)$name); }
+        }
+        return $b;
+    };
+    $cz = $belegt(dt_crew($zid));
+    $cq = $belegt(dt_crew($qid));
+    if ($cz && $cq && $cz != $cq) {
+        $satz = static function (array $c): string {
+            $t = [];
+            foreach ($c as $code => $name) { $t[] = crew_role_label((string)$code) . ': ' . $name; }
+            return implode(', ', $t);
+        };
+        $wahlen['crew'] = [
+            'titel'  => 'Besatzung',
+            'ziel'   => $satz($cz),
+            'quelle' => $satz($cq),
+        ];
+    }
+
+    return [
+        'ziel_id'    => $zid,
+        'quell_id'   => $qid,
+        'day'        => (string)$frueher['day'],
+        'started_at' => $frueher['started_at'] !== null ? (string)$frueher['started_at'] : null,
+        'ended_at'   => $enden ? max($enden) : null,
+        /* Das Ergebnis hat gar kein Ende — beide Tage sind offen. */
+        'ende_offen' => !$enden,
+        /* Genau einer hatte ein Ende: Die Vorschau sagt dazu, woher es kommt,
+           sonst sieht der ausgewiesene Zeitraum genauer aus, als er ist. */
+        'ende_geerbt' => count($enden) === 1,
+        'kind'       => dt_art_ergebnis($zk, $qk),
+        'einsaetze'  => $zahl('SELECT COUNT(*) FROM missions
+                                WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL',
+                              [$userId, $qid]),
+        'einsaetze_papierkorb' => $zahl('SELECT COUNT(*) FROM missions
+                                          WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL',
+                                        [$userId, $qid]),
+        'segmente'   => $zahl('SELECT COUNT(*) FROM rest_segments
+                                WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL',
+                              [$userId, $qid]),
+        'segmente_papierkorb' => $zahl('SELECT COUNT(*) FROM rest_segments
+                                         WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL',
+                                       [$userId, $qid]),
+        'kennungen'  => $zahl('SELECT COUNT(*) FROM day_refs WHERE day_id = ?', [$qid]),
+        'wahlen'     => $wahlen,
+    ];
+}
+
+/**
+ * Zwei Diensttage zusammenfuehren (Konzept 4.5 Nr. 3, E10-E13).
+ *
+ * Der Zieltag bleibt, der aufgenommene verschwindet ENDGUELTIG — nicht ueber
+ * den Papierkorb (E13): Dort laege ein leerer Tag, dessen Wiederherstellung die
+ * Einsaetze nicht zurueckholen koennte, weil sie inzwischen am Zieltag haengen.
+ * Ein Papierkorbeintrag, der beim Wiederherstellen etwas anderes ergibt als das
+ * Geloeschte, ist schlimmer als gar keiner.
+ *
+ * EIN CODEPFAD FUER UHR- UND HANDTAGE (E10). Der Unterschied zwischen beiden
+ * sind allein die Zeilen in `day_refs`; sie wandern mit, und ein Handtag hat
+ * eben keine. Eine zweite Fassung "fuer Uhrtage" haette denselben Code mit
+ * einer Zeile mehr.
+ *
+ * DIE SPERRLISTE `deleted_refs` WIRD NICHT BEDIENT (Konzept 4.5 Nr. 4). Die
+ * Uhr-Kennungen sind nicht verschwunden, sie zeigen jetzt auf den Zieltag —
+ * genau deshalb liegen sie in einer eigenen Tabelle. Ein spaeterer Upload mit
+ * einer Kennung des aufgenommenen Tags landet damit von selbst richtig (A8),
+ * ohne jede Umleitungslogik.
+ *
+ * $wahl entscheidet die Widersprueche aus dt_merge_vorschau(): je Schluessel
+ * 'ziel' oder 'quelle'. Fehlt einer, gilt der Zieltag — der geoeffnete Tag ist
+ * der, den die Nutzerin vor Augen hat (E25).
+ *
+ * Laeuft in der Transaktion des Aufrufers.
+ *
+ * @return array{ok:bool,meldung:?string,einsaetze:int,segmente:int,kennungen:int}
+ */
+function dt_zusammenfuehren(PDO $pdo, int $userId, int $zielId, int $quellId,
+                            array $wahl = []): array
+{
+    $p = dt_merge_pruefen($userId, $zielId, $quellId);
+    if (!$p['ok']) {
+        return ['ok' => false, 'meldung' => $p['meldung'],
+                'einsaetze' => 0, 'segmente' => 0, 'kennungen' => 0];
+    }
+    $ziel = $p['ziel']; $quelle = $p['quelle'];
+    $vor  = dt_merge_vorschau($userId, $ziel, $quelle);
+
+    $nimm = static fn(string $feld): array
+        => (($wahl[$feld] ?? 'ziel') === 'quelle') ? [$quelle, $ziel] : [$ziel, $quelle];
+
+    /* ---- Einsaetze und Ruhesegmente umhaengen --------------------------- */
+    /* AUCH DIE PAPIERKORBEINTRAEGE. `missions.day_id` steht auf
+     * ON DELETE SET NULL; ein zurueckgelassener Einsatz verloere beim Entfernen
+     * des Quelltags still seinen Diensttag und waere verwaist (A11). Der
+     * Papierkorb selbst arbeitet mit `deleted_at`, nicht mit dem Diensttag —
+     * das Wiederherstellen findet ihn am Zieltag genauso. */
+    $u = $pdo->prepare('UPDATE missions SET day_id = ? WHERE user_id = ? AND day_id = ?');
+    $u->execute([$zielId, $userId, $quellId]);
+    $mCount = $u->rowCount();
+
+    $u = $pdo->prepare('UPDATE rest_segments SET day_id = ? WHERE user_id = ? AND day_id = ?');
+    $u->execute([$zielId, $userId, $quellId]);
+    $sCount = $u->rowCount();
+
+    $u = $pdo->prepare('UPDATE day_refs SET day_id = ? WHERE day_id = ?');
+    $u->execute([$zielId, $quellId]);
+    $rCount = $u->rowCount();
+
+    /* ---- Zeitraum, Art und die gewaehlten Angaben ----------------------- */
+    [$vGewinner] = $nimm('vehicle');
+    [$bGewinner] = $nimm('base');
+
+    /* Fuehrt nur EINER ein Rettungsmittel, gewinnt er — unabhaengig von der
+     * Wahl, die es dann gar nicht zu treffen gab. Dasselbe beim Standort. */
+    if ($ziel['vehicle_id'] === null || $quelle['vehicle_id'] === null) {
+        $vGewinner = $ziel['vehicle_id'] !== null ? $ziel : $quelle;
+    }
+    if ($ziel['base_id'] === null || $quelle['base_id'] === null) {
+        $bGewinner = $ziel['base_id'] !== null ? $ziel : $quelle;
+    }
+
+    /* Die Art folgt dem Rettungsmittel — sie ist aus ihm eingefroren (E8).
+     * Ist der Gewinner neutral, bleibt die Art des anderen: Sie kommt dann aus
+     * Bestandsdaten ohne Rettungsmittelbezug und darf nicht verschwinden. */
+    $kind = $vGewinner['kind'] !== null
+        ? (string)$vGewinner['kind']
+        : $vor['kind'];
+
+    /* Notizen aneinanderhaengen (Abschnitt 3.4) — nichts wird ueberschrieben,
+     * auch nicht das, was niemand zur Wahl gestellt bekommen hat. */
+    $nz = trim((string)($ziel['notes']   ?? ''));
+    $nq = trim((string)($quelle['notes'] ?? ''));
+    $notes = null;
+    if ($nz !== '' && $nq !== '') { $notes = $nz . "\n\n" . $nq; }
+    elseif ($nz !== '')           { $notes = $nz; }
+    elseif ($nq !== '')           { $notes = $nq; }
+    if ($notes !== null) { $notes = mb_substr($notes, 0, 2000); }
+
+    $pdo->prepare('UPDATE days
+                      SET day = ?, started_at = ?, ended_at = ?, kind = ?,
+                          vehicle_id = ?, vehicle_name = ?,
+                          base_id = ?, base_name = ?, base_lat = ?, base_lon = ?,
+                          notes = ?
+                    WHERE id = ? AND user_id = ?')
+        ->execute([$vor['day'], $vor['started_at'], $vor['ended_at'], $kind,
+                   $vGewinner['vehicle_id'], $vGewinner['vehicle_name'],
+                   $bGewinner['base_id'], $bGewinner['base_name'],
+                   $bGewinner['base_lat'], $bGewinner['base_lon'],
+                   $notes, $zielId, $userId]);
+
+    /* ---- Faehigkeiten: der eingefrorene Satz des gewinnenden Tages ------ */
+    /* NICHT aus `vehicle_capabilities` neu abgeleitet: Das waere ein Blick in
+     * die heutigen Stammdaten und damit genau der Durchgriff, den E8
+     * ausschliesst. Wurde der Windenhaken seit dem Dienst entfernt, verloere
+     * der Tag hier seine Windenfelder (A13e). */
+    $capQuelle = (int)$vGewinner['id'];
+    $caps = $pdo->prepare('SELECT capability FROM day_capabilities WHERE day_id = ?');
+    $caps->execute([$capQuelle]);
+    $capListe = $caps->fetchAll(PDO::FETCH_COLUMN);
+
+    $pdo->prepare('DELETE FROM day_capabilities WHERE day_id = ?')->execute([$zielId]);
+    $insC = $pdo->prepare('INSERT IGNORE INTO day_capabilities (day_id, capability) VALUES (?,?)');
+    foreach ($capListe as $cap) { $insC->execute([$zielId, (string)$cap]); }
+
+    /* ---- Besatzung ------------------------------------------------------ */
+    /* Der gewaehlte Satz gilt. Eine Rolle, die er NICHT BELEGT, der andere aber
+     * schon, wird von dort uebernommen: Ein Name ist eine Angabe, und sie
+     * stillschweigend zu verwerfen waere Datenverlust — dieselbe Regel, die
+     * dt_zuordnen() und die Migration anwenden ("belegte Rollen gehen nie
+     * verloren"). Widersprechen sich zwei Namen derselben Rolle, gewinnt die
+     * Wahl; nur dort geht ueberhaupt etwas verloren, und genau darueber wurde
+     * entschieden. */
+    [$cGewinner, $cVerlierer] = $nimm('crew');
+    $crewG = dt_crew((int)$cGewinner['id']);
+    $crewV = dt_crew((int)$cVerlierer['id']);
+
+    $ergebnis = [];
+    foreach ($crewG as $code => $name) { $ergebnis[(string)$code] = $name; }
+    foreach ($crewV as $code => $name) {
+        $code = (string)$code;
+        $hat  = isset($ergebnis[$code]) && trim((string)$ergebnis[$code]) !== '';
+        $gibt = $name !== null && trim((string)$name) !== '';
+        /* Nur BELEGTE Rollen des Verlierers wandern mit. Eine leere Zeile, die
+           es nur dort gibt, waere eine Rolle, die das gewaehlte Rettungsmittel
+           gar nicht anbietet — der Rollensatz folgt dem Rettungsmittel (E8). */
+        if (!$hat && $gibt) { $ergebnis[$code] = $name; }
+    }
+
+    $pdo->prepare('DELETE FROM day_crew WHERE day_id = ?')->execute([$zielId]);
+    $insR = $pdo->prepare('INSERT IGNORE INTO day_crew (day_id, role_code, name) VALUES (?,?,?)');
+    foreach ($ergebnis as $code => $name) {
+        $n = ($name === null || trim((string)$name) === '') ? null : mb_substr(trim((string)$name), 0, 120);
+        $insR->execute([$zielId, (string)$code, $n]);
+    }
+
+    /* ---- Aufgenommenen Diensttag endgueltig entfernen -------------------- */
+    /* `day_refs`, `day_crew` und `day_capabilities` des Quelltags haengen an
+     * einem ON DELETE CASCADE. Die Kennungen sind zu diesem Zeitpunkt bereits
+     * umgehaengt und damit nicht mehr betroffen. */
+    $pdo->prepare('DELETE FROM days WHERE id = ? AND user_id = ?')
+        ->execute([$quellId, $userId]);
+
+    return ['ok' => true, 'meldung' => null,
+            'einsaetze' => $mCount, 'segmente' => $sCount, 'kennungen' => $rCount];
+}

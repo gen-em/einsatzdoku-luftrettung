@@ -24,9 +24,9 @@ Unter der Schranke stehen:
 | Gruppe | Felder |
 |---|---|
 | Patientendaten | `pat_mission_no`, `pat_nachname`, `pat_vorname`, `pat_geburtsdatum`, `pat_alter`, `pat_diagnose`, `pat_ort_adresse`, `pat_ort_lat`, `pat_ort_lon`, `pat_ort_beschreibung` |
-| Besatzung | `tag_crew_p1`…`tag_crew_other`, `crew_p1`…`crew_other` (Einsätze) und `crew_p1`…`crew_other` (Flugtage) |
+| Besatzung | `tag_crew_*` und `crew_*` (Einsätze) sowie `crew_*` (Diensttage) — je Rolle des Katalogs eine Spalte, siehe 3.8 |
 | Weitere Namen | `bw_info` („Bergwacht: Namen / Infos"), `other_ema` (anderer Notarzt) |
-| Freitext | `notizen` (Einsatz) und `notizen` (Flugtag) |
+| Freitext | `notizen` (Einsatz) und `notizen` (Diensttag) |
 | Ort des Geschehens | `phase_02_lat/lon` … `phase_09_lat/lon`, `hoehe_einsatzort_m`, GPX-Spuren unter `tracks/` |
 
 **Warum die Phasenkoordinaten.** Phase 4 ist „Ankunft Einsatzort", Phase 5
@@ -43,7 +43,7 @@ ein Export „ohne Patientendaten" ihn trotzdem — nur in einer anderen Spalte 
 | `bw_unit` | Dieselbe Klasse: eine Einheit, kein Name. Die Namen der Bergwacht stehen in `bw_info`, und das fällt unter die Schranke. |
 | `weitere_rettungsmittel` | Organisationskennungen wie „RTW Kempten". Das Feld ist Freitext und trägt damit denselben Vorbehalt wie die Notizen; entschieden wurde trotzdem für „bleibt enthalten", weil es der Sache nach eine Betriebsangabe ist. |
 | `rea_json` | Der Verlauf einer Reanimation ohne Angabe, wen sie betraf. Ohne ihn wäre der Grund entfallen, Reanimationen überhaupt zu erfassen. |
-| `crew_abweichend` | Sagt nur, **dass** die Besatzung an diesem Einsatz von der des Flugtags abwich, nicht wer geflogen ist. Ohne ihn ließe sich nicht erkennen, dass die leeren Namensspalten leer *gemacht* wurden. |
+| `crew_abweichend` | Sagt nur, **dass** die Besatzung an diesem Einsatz von der des Diensttags abwich, nicht wer geflogen ist. Ohne ihn ließe sich nicht erkennen, dass die leeren Namensspalten leer *gemacht* wurden. |
 | Zeitpunkte der Phasen | Sie tragen Alarmzeit, Endzeit und Dauer — ohne sie bliebe von der Datei nichts Auswertbares übrig. |
 
 **Die Schranke wirkt an zwei Stellen.** `api/export_data.php` liefert die
@@ -73,7 +73,7 @@ Benennung und Reihenfolge sind dieselben wie im Auswahlfeld des Imports.
 Dateiname durchgängig:
 
 ```
-luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
+einsatzdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>
 ```
 
 | Segment | Werte | Bedeutung |
@@ -87,8 +87,8 @@ luftrettungsdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<
 Beispiele:
 
 ```
-luftrettungsdokumentation_export_06-08-2026_standard_ohne-pers_unverschl_philipp-mueller.xlsx
-luftrettungsdokumentation_export_06-08-2026_csv_mit-pers_verschl_philipp-mueller.zip
+einsatzdokumentation_export_06-08-2026_standard_ohne-pers_unverschl_philipp-mueller.xlsx
+einsatzdokumentation_export_06-08-2026_csv_mit-pers_verschl_philipp-mueller.zip
 ```
 
 Mit Passwortschutz entsteht in allen Fällen ein `.zip`.
@@ -154,8 +154,8 @@ Ein Blatt namens `Einsätze`.
 
 Alle Zeiten stehen in **Ortszeit** ohne Zonenangabe. Leere Werte stehen als `-`
 (Bindestrich), nicht als leere Zelle — das unterscheidet „nicht erhoben"
-sichtbar von „übersehen". Ein **Flugtag ohne Einsatz** erscheint als eine Zeile,
-in der nur Hubschrauber, Standort und Einsatzdatum gefüllt sind.
+sichtbar von „übersehen". Ein **Diensttag ohne Einsatz** erscheint als eine Zeile,
+in der nur Rettungsmittel, Standort und Datum gefüllt sind.
 
 Die mit `*` markierten Spalten entfallen **ersatzlos**, wenn
 „Personenbezogene Angaben einschließen" nicht gesetzt ist; die übrigen rücken
@@ -164,7 +164,7 @@ Einsatzort (m)" und „Notizen" — vorher blieben sie stehen (A9).
 
 | # | Beschriftung |
 |---|---|
-| 1 | Hubschrauber |
+| 1 | Rettungsmittel |
 | 2 | Standort |
 | 3 | Einsatzdatum |
 | 4 | Alarmzeit |
@@ -211,7 +211,7 @@ entbehrlich: Windenzyklen mit PatientIn, Luftverladung und die
 Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
-belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Flugtag. Woher der
+belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Diensttag. Woher der
 Wert stammt, wird nicht ausgewiesen; in dieser Tabelle zählt nur, wer geflogen
 ist.
 
@@ -231,7 +231,7 @@ LIESMICH.txt         Aufbau, Formate, Erzeugungsdatum, App-Version, Zeitzone
 felder.csv           jedes Feld jeder Tabelle:
                      datei;feld;typ;einheit;personenbezogen;beschreibung
 einsaetze.csv        eine Zeile je Einsatz — vollständig
-flugtage.csv         eine Zeile je Flugtag, auch ohne Einsatz
+diensttage.csv       eine Zeile je Diensttag, auch ohne Einsatz
 ruhezeiten.csv       eine Zeile je Ruhesegment
 tracks/              nur mit personenbezogenen Angaben und aktiviertem Haken
   mission_000042_2026-03-14_1150.gpx
@@ -302,18 +302,18 @@ ist.)
 
 ### 3.3 Gewollte Redundanz
 
-`hubschrauber`, `standort` und die Tagesbesatzung stehen in `einsaetze.csv`
-**und** in `flugtage.csv`. Das ist Absicht: Wer nur die Einsatztabelle einliest,
+`rettungsmittel`, `standort` und die Tagesbesatzung stehen in `einsaetze.csv`
+**und** in `diensttage.csv`. Das ist Absicht: Wer nur die Einsatztabelle einliest,
 soll ein vollständiges Bild haben, ohne nachschlagen zu müssen.
 
-**Bei Abweichungen gilt `einsaetze.csv`.** `flugtage.csv` wird nur für Tage ohne
+**Bei Abweichungen gilt `einsaetze.csv`.** `diensttage.csv` wird nur für Tage ohne
 Einsatz und für Tagesnotizen gebraucht.
 
 **Effektive Besatzung:** `crew_p1` bis `crew_other` in `einsaetze.csv` sind die
 Namen, die für diesen Einsatz tatsächlich gelten — bei gesetztem
 `crew_abweichend` und belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert
-vom Flugtag. Die `tag_crew_`-Spalten daneben führen den unveränderten Wert des
-Flugtags, sodass sich beides gegeneinander halten lässt.
+vom Diensttag. Die `tag_crew_`-Spalten daneben führen den unveränderten Wert des
+Diensttags, sodass sich beides gegeneinander halten lässt.
 
 ### 3.4 Struktur von `rea_json`
 
@@ -385,7 +385,7 @@ eintragen und liegt dann als `age` im `pat_blob`.
 Einsatz mit Geburtsdatum leer. Das ist Absicht: Ein zusätzlich hineingerechnetes
 Alter wäre eine zweite Quelle für dieselbe Angabe und liefe auseinander, sobald
 jemand das Geburtsdatum korrigiert. Wer das Alter für eine Auswertung braucht,
-rechnet es aus `pat_geburtsdatum` und `flugtag` und greift auf `pat_alter`
+rechnet es aus `pat_geburtsdatum` und `datum` und greift auf `pat_alter`
 zurück, wenn das Geburtsdatum fehlt — dieselbe Reihenfolge, die die Anwendung
 selbst anwendet.
 
@@ -395,62 +395,67 @@ leeren Geburtsdatum wäre für ihn nur eine fehlende Angabe.
 
 ### 3.8 Feldlisten
 
-### `einsaetze.csv`
+> **Diese Listen stehen auch in der Exportdatei selbst.** `felder.csv` wird beim
+> Erzeugen aus derselben Quelle gebaut wie die Spalten — wer eine Datei in der
+> Hand hat, braucht dieses Dokument nicht. Es beschreibt den Stand von Web
+> 6.3.0.
 
-| Feld | Typ | Einheit | Pers. | Beschreibung |
+#### Die Besatzungsspalten entstehen aus dem Rollenkatalog
+
+Sie stehen nicht fest, sondern folgen `CREW_ROLES` in `server/db.php` (E4). Zu
+**jeder** Rolle des Katalogs gibt es eine Spalte, unabhängig davon, ob der
+Diensttag sie anbietet — sonst hinge der Spaltensatz am Bestand, und zwei
+Exporte desselben Kontos hätten verschiedene Köpfe (Abschnitt 3.2).
+
+| Rolle | Kennung | Spalte im Diensttag | Spalte im Einsatz |
+|---|---|---|---|
+| Pilot 1 | `p1` | `tag_crew_p1` | `crew_p1` |
+| Pilot 2 | `p2` | `tag_crew_p2` | `crew_p2` |
+| HEMS-TC | `hems` | `tag_crew_hems` | `crew_hems` |
+| Flugretter | `fr` | `tag_crew_fr` | `crew_fr` |
+| Fahrer | `driver` | `tag_crew_driver` | `crew_driver` |
+| Praktikant | `trainee` | `tag_crew_trainee` | `crew_trainee` |
+| Sonstige | `other` | `tag_crew_other` | `crew_other` |
+
+**Sieben statt fünf.** Bis Web 5.10.0 gab es nur die fünf Flugrollen als feste
+Spalten `crew_p1 … crew_other`. Mit den bodengebundenen Rettungsmitteln sind
+Fahrer und Praktikant dazugekommen; „Sonstige" ist dieselbe Rolle für beide
+Arten (E6).
+
+`tag_crew_*` ist die Besatzung des **Diensttags**, `crew_*` die **tatsächliche**
+des Einsatzes — bei `crew_abweichend = 0` sind sie gleich (Abschnitt 3.3). Alle
+Besatzungsspalten sind personenbezogen.
+
+#### `einsaetze.csv`
+
+| Spalte | Typ | Einheit | Pers. | Bedeutung |
 |---|---|---|---|---|
 | `einsatz_id` | int | — | nein | interne ID, Bezugsschlüssel für tracks/ |
-| `flugtag` | date | — | nein | missions.day |
-| `datum` | date | — | nein | identisch zu flugtag, für Tabellenprogramme |
+| `diensttag` | date | — | nein | Datum des Diensttags (days.day) |
+| `diensttag_id` | int | — | nein | interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage |
+| `datum` | date | — | nein | Datum des Einsatzes in Ortszeit — bei einem Dienst über Mitternacht NICHT identisch zu diensttag |
 | `uhrzeit_ortszeit` | time | — | nein | Alarmzeit HH:MM, für Tabellenprogramme |
-| `herkunft` | text | — | nein | wie der Einsatz entstanden ist (`missions.origin`): `uhr` \| `manuell` \| `import` |
+| `herkunft` | text | — | nein | wie der Einsatz entstanden ist (missions.origin): uhr \| manuell \| import |
 | `final` | 0/1 | — | nein | abgeschlossen |
-| `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe `herkunft`) |
-| `edited` | 0/1 | — | nein | nach dem Anlegen verändert (`missions.edited`) — unabhängig von der Herkunft, nicht zu verwechseln mit `manual` |
-| `hubschrauber` | text | — | nein | Kennzeichen (Flugtag) |
-| `standort` | text | — | nein | Basis (Flugtag) |
-| `tag_crew_p1` | text | — | **ja** | Besatzung des Flugtags: Pilot 1 |
-| `tag_crew_p2` | text | — | **ja** | Besatzung des Flugtags: Pilot 2 |
-| `tag_crew_hems` | text | — | **ja** | Besatzung des Flugtags: HEMS |
-| `tag_crew_fr` | text | — | **ja** | Besatzung des Flugtags: Flugretter |
-| `tag_crew_other` | text | — | **ja** | Besatzung des Flugtags: Sonstige |
+| `manual` | 0/1 | — | nein | Schutz: Uhr überschreibt Metadaten/Phasen/Rea nicht mehr (Herkunft siehe Spalte herkunft) |
+| `edited` | 0/1 | — | nein | nach dem Anlegen verändert (missions.edited) — unabhängig von der Herkunft, nicht zu verwechseln mit manual |
+| `rettungsmittel` | text | — | nein | Bezeichnung des Rettungsmittels (Diensttag, eingefroren) |
+| `art` | text | — | nein | Art des Diensttags: luft \| boden \| (leer = ohne Zuordnung) |
+| `standort` | text | — | nein | Standort (Diensttag, eingefroren) |
 | `crew_abweichend` | 0/1 | — | nein | missions.crew_override |
-| `crew_p1` | text | — | **ja** | tatsächliche Besatzung: Pilot 1 (effektiv, siehe 3.3) |
-| `crew_p2` | text | — | **ja** | tatsächliche Besatzung: Pilot 2 |
-| `crew_hems` | text | — | **ja** | tatsächliche Besatzung: HEMS |
-| `crew_fr` | text | — | **ja** | tatsächliche Besatzung: Flugretter |
-| `crew_other` | text | — | **ja** | tatsächliche Besatzung: Sonstige |
 | `beginn` | ts | — | nein | started_at |
 | `ende` | ts | — | nein | ended_at |
 | `dauer_min` | int | min | nein | Phase 2 → Phase 9, leer wenn unvollständig |
-| `phase_02_alarmierung` | ts | — | nein | Zeitpunkt Phase 2 (alarmierung) |
-| `phase_03_abflug` | ts | — | nein | Zeitpunkt Phase 3 (abflug) |
-| `phase_04_ankunft_einsatzort` | ts | — | nein | Zeitpunkt Phase 4 (ankunft_einsatzort) |
-| `phase_05_ankunft_patientin` | ts | — | nein | Zeitpunkt Phase 5 (ankunft_patientin) |
-| `phase_06_transportbeginn` | ts | — | nein | Zeitpunkt Phase 6 (transportbeginn) |
-| `phase_07_landung_krankenhaus` | ts | — | nein | Zeitpunkt Phase 7 (landung_krankenhaus) |
-| `phase_08_uebergabezeit` | ts | — | nein | Zeitpunkt Phase 8 (uebergabezeit) |
-| `phase_09_endzeit` | ts | — | nein | Zeitpunkt Phase 9 (endzeit) |
-| `phase_02_lat` | dec | — | **ja** | Breitengrad Phase 2 |
-| `phase_02_lon` | dec | — | **ja** | Längengrad Phase 2 |
-| `phase_03_lat` | dec | — | **ja** | Breitengrad Phase 3 |
-| `phase_03_lon` | dec | — | **ja** | Längengrad Phase 3 |
-| `phase_04_lat` | dec | — | **ja** | Breitengrad Phase 4 |
-| `phase_04_lon` | dec | — | **ja** | Längengrad Phase 4 |
-| `phase_05_lat` | dec | — | **ja** | Breitengrad Phase 5 |
-| `phase_05_lon` | dec | — | **ja** | Längengrad Phase 5 |
-| `phase_06_lat` | dec | — | **ja** | Breitengrad Phase 6 |
-| `phase_06_lon` | dec | — | **ja** | Längengrad Phase 6 |
-| `phase_07_lat` | dec | — | **ja** | Breitengrad Phase 7 |
-| `phase_07_lon` | dec | — | **ja** | Längengrad Phase 7 |
-| `phase_08_lat` | dec | — | **ja** | Breitengrad Phase 8 |
-| `phase_08_lon` | dec | — | **ja** | Längengrad Phase 8 |
-| `phase_09_lat` | dec | — | **ja** | Breitengrad Phase 9 |
-| `phase_09_lon` | dec | — | **ja** | Längengrad Phase 9 |
-| `strecke_m` | int | m | nein | Flugstrecke (distance_m) |
+| `strecke_m` | int | m | nein | Einsatzstrecke (distance_m) |
 | `hoehenmeter_m` | int | m | nein | Höhenmeter (ascent_m) |
 | `hoehe_einsatzort_m` | int | m | **ja** | Höhe des Einsatzorts |
+| `transport_art` | text | — | nein | Transportart (missions.transport_mode): air \| ground \| ambulant — im Formular „Luft", „Boden", „Ambulant"; leer = nicht angegeben |
+| `na_begleitung` | 0/1 | — | nein | NA-Begleitung beim Transport (entfällt bei „Ambulant") |
+| `fehleinsatz` | 0/1 | — | nein | Fehleinsatz / Storno / Abbruch |
 | `transport_dest` | text | — | nein | Transportziel |
+| `ziel_lat` | dec | — | nein | Koordinate der Zielklinik, am Einsatz eingefroren (missions.dest_lat) |
+| `ziel_lon` | dec | — | nein | Koordinate der Zielklinik (missions.dest_lon) |
+| `abfahrt_regel` | text | — | nein | Herkunft des Abfahrtorts (missions.start_src): base \| prev_site \| prev_dest \| manual; leer = keine Linie. Gespeichert ist die REGEL, nicht der Ort |
 | `schockraum` | 0/1 | — | nein | Schockraum alarmiert |
 | `secondary` | 0/1 | — | nein | Sekundärtransport |
 | `winch` | 0/1 | — | nein | Windeneinsatz |
@@ -461,43 +466,77 @@ leeren Geburtsdatum wäre für ihn nur eine fehlende Angabe.
 | `bw_unit` | text | — | nein | Bergwacht-Einheit |
 | `bw_info` | text | — | **ja** | Bergwacht: Namen / Infos |
 | `other_ema` | text | — | **ja** | Anderer Notarzt |
-| `weitere_rettungsmittel` | text | — | nein | mission_resources.name, mit `\|` verkettet |
+| `weitere_rettungsmittel` | text | — | nein | mission_resources.name, mit \| verkettet |
 | `notizen` | text | — | **ja** | missions.notes |
 | `pat_mission_no` | text | — | **ja** | Einsatznummer (pat_blob.mission_no) |
 | `pat_nachname` | text | — | **ja** | pat_blob.last |
 | `pat_vorname` | text | — | **ja** | pat_blob.first |
 | `pat_geburtsdatum` | date | — | **ja** | pat_blob.dob |
-| `pat_alter` | int | Jahre | **ja** | pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus `pat_geburtsdatum` und `flugtag` (siehe 3.7) |
+| `pat_alter` | int | Jahre | **ja** | pat_blob.age — nur belegt, wenn kein Geburtsdatum vorliegt; sonst folgt das Alter aus pat_geburtsdatum und datum |
 | `pat_diagnose` | text | — | **ja** | pat_blob.dx |
 | `pat_ort_adresse` | text | — | **ja** | pat_blob.loc.addr |
 | `pat_ort_lat` | dec | — | **ja** | pat_blob.loc.lat |
 | `pat_ort_lon` | dec | — | **ja** | pat_blob.loc.lon |
-| `pat_ort_beschreibung` | text | — | **ja** | pat_blob.site_desc (bis Web 3.2.0: ungeschützte Spalte `site_desc`) |
+| `pat_ort_beschreibung` | text | — | **ja** | pat_blob.site_desc (bis Web 3.2.0: Spalte site_desc) |
+| `pat_start_adresse` | text | — | **ja** | pat_blob.start.addr — manueller Abfahrtort |
+| `pat_start_lat` | dec | — | **ja** | pat_blob.start.lat |
+| `pat_start_lon` | dec | — | **ja** | pat_blob.start.lon |
 | `rea_json` | json | — | nein | Reanimationssitzungen mit Ereignissen, siehe 3.4; leer wenn keine Reanimation |
 | `track_datei` | text | — | nein | relativer Pfad unter tracks/, oder leer |
 | `track_punkte` | int | — | nein | Anzahl Trackpunkte |
 
-### `flugtage.csv`
+**Was seit Web 6.0.0 neu oder anders heißt:**
 
-| Feld | Typ | Einheit | Pers. | Beschreibung |
+| Spalte | Änderung |
+|---|---|
+| `diensttag`, `diensttag_id` | ersetzen `flugtag`. Der Diensttag ist keine Kalenderdatumsangabe mehr, sondern eine eigene Zeile mit eigener Kennung — mehrere pro Kalendertag sind zulässig. |
+| `datum` | war bis Web 5.10.0 mit `flugtag` identisch. Jetzt das Datum des **Einsatzes**: Bei einem Dienst über Mitternacht sind die beiden verschieden. |
+| `rettungsmittel` | ersetzt `hubschrauber`. |
+| `art` | **neu** — `luft`, `boden` oder leer für einen Diensttag ohne Zuordnung. |
+| `phase_03_ausruecken` | hieß `phase_03_abflug`. |
+| `phase_07_ankunft_klinik` | hieß `phase_07_landung_krankenhaus`. |
+| `transport_art`, `na_begleitung`, `fehleinsatz` | **neu** (Web 6.1.0). |
+| `ziel_lat`, `ziel_lon` | **neu** — Koordinaten der Zielklinik, am Einsatz eingefroren. |
+| `abfahrt_regel` | **neu** — gespeichert ist die **Regel**, nicht der Ort. |
+| `pat_start_adresse`, `pat_start_lat`, `pat_start_lon` | **neu**, personenbezogen — nur bei `abfahrt_regel = manual` belegt. |
+| `crew_driver`, `crew_trainee`, `tag_crew_driver`, `tag_crew_trainee` | **neu** aus dem Rollenkatalog. |
+
+**Die beiden Phasenspalten sind eine Umbenennung, keine Ergänzung.** Wer eine
+Auswertung auf `phase_03_abflug` gebaut hat, findet die Spalte nicht mehr. Der
+**Rückimport** kennt die alten Namen weiterhin als Zweitnamen auf dasselbe Ziel
+(Abschnitt 5.1) — eine alte Exportdatei verliert ihre Alarm- und Klinikzeit
+also nicht.
+
+**Auch der Dateiname hat sich geändert:** `einsatzdokumentation_…` statt
+`luftrettungsdokumentation_…`.
+
+#### `diensttage.csv`
+
+| Spalte | Typ | Einheit | Pers. | Bedeutung |
 |---|---|---|---|---|
-| `flugtag` | date | — | nein | days.day |
-| `hubschrauber` | text | — | nein | Kennzeichen |
-| `standort` | text | — | nein | Basis |
-| `crew_p1` | text | — | **ja** | Pilot 1 |
-| `crew_p2` | text | — | **ja** | Pilot 2 |
-| `crew_hems` | text | — | **ja** | HEMS |
-| `crew_fr` | text | — | **ja** | Flugretter |
-| `crew_other` | text | — | **ja** | Sonstige |
+| `diensttag_id` | int | — | nein | interne ID des Diensttags |
+| `diensttag` | date | — | nein | days.day — Datum des Dienstbeginns, Sortier- und Anzeigewert |
+| `dienst_beginn` | ts | — | nein | days.started_at — echter Dienstbeginn |
+| `dienst_ende` | ts | — | nein | days.ended_at — echtes Dienstende |
+| `rettungsmittel` | text | — | nein | Bezeichnung, eingefroren beim Anlegen (E8) |
+| `art` | text | — | nein | luft \| boden \| (leer = ohne Zuordnung) |
+| `standort` | text | — | nein | Standort, eingefroren beim Anlegen (E8) |
+| `faehigkeiten` | text | — | nein | eingefrorene Fähigkeiten, mit Komma getrennt: winch, bergwacht |
 | `notizen` | text | — | **ja** | days.notes |
-| `anzahl_einsaetze` | int | — | nein | Anzahl Einsätze an diesem Flugtag im Export |
+| `anzahl_einsaetze` | int | — | nein | Anzahl Einsätze an diesem Diensttag im Export |
 
-### `ruhezeiten.csv`
+`diensttage.csv` hieß bis Web 5.10.0 `flugtage.csv`. Es führt jetzt eine
+**eigene Kennung** (`diensttag_id`), auf die `einsaetze.csv` und
+`ruhezeiten.csv` verweisen — das Datum allein benennt keine Zeile mehr, seit
+mehrere Diensttage auf einem Kalendertag liegen können.
 
-| Feld | Typ | Einheit | Pers. | Beschreibung |
+#### `ruhezeiten.csv`
+
+| Spalte | Typ | Einheit | Pers. | Bedeutung |
 |---|---|---|---|---|
 | `ruhezeit_id` | int | — | nein | interne ID, Bezugsschlüssel für tracks/ |
-| `flugtag` | date | — | nein | rest_segments.day |
+| `diensttag` | date | — | nein | Datum des Diensttags, an dem das Ruhesegment hängt |
+| `diensttag_id` | int | — | nein | interne ID des Diensttags — Bezugsschlüssel zum Blatt Diensttage |
 | `beginn` | ts | — | nein | started_at |
 | `ende` | ts | — | nein | ended_at |
 | `dauer_min` | int | min | nein | ende − beginn |
@@ -553,7 +592,7 @@ Drei bewusste Ausnahmen:
 - **GPX-Dateien werden nicht eingelesen.** Tracks stammen von der Uhr und sind
   der Rohbestand; ein Rückspielen über den Export wäre ein zweiter, schlechterer
   Weg neben dem Backup. Wer Tracks braucht, nutzt das Backup.
-- **Hubschrauber und Standort** werden wie bei jedem Import oben auf der Seite
+- **Rettungsmittel und Standort** werden wie bei jedem Import oben auf der Seite
   ausgewählt. Ein Kennzeichen aus der Datei würde sonst stillschweigend neue
   Stammdaten anlegen.
 
@@ -572,7 +611,7 @@ Dubletten werden zuerst über die Einsatznummer erkannt (clientseitig gegen die
 entschlüsselten Bestandsdaten), hilfsweise über Tag und Alarmzeit.
 
 **Eigenheit beim Rundlauf:** Der Export schreibt die *effektive* Besatzung. Ein
-Einsatz, bei dem nur eine Rolle abwich und die übrigen vom Flugtag geerbt waren,
+Einsatz, bei dem nur eine Rolle abwich und die übrigen vom Diensttag geerbt waren,
 hat nach dem Rückimport alle Rollen ausdrücklich gespeichert. Die effektive
 Besatzung und damit auch eine erneut exportierte Datei sind identisch — nur die
 Speicherung ist expliziter.
@@ -607,8 +646,8 @@ landet, liefe bei der nächsten Korrektur des Geburtsdatums auseinander. Der
 verlustfreie Weg ist `pat_alter` im CSV.
 
 `Alarmzeit` setzt Phase 2, `Endzeit` setzt Phase 9. Eine Zeile für einen
-**Flugtag ohne Einsatz** (nur Hubschrauber, Standort und Datum gefüllt) legt den
-Flugtag an, aber keinen Einsatz.
+**Diensttag ohne Einsatz** (nur Rettungsmittel, Standort und Datum gefüllt) legt den
+Diensttag an, aber keinen Einsatz.
 
 ---
 
@@ -625,7 +664,7 @@ enthalten, sondern auf dem Rückweg vernichtet.
 
 **Seit Web 5.8.0 gilt:** Die Felder unter der Schranke werden beim
 Überschreiben nur gesetzt, wenn die Datei tatsächlich etwas liefert
-(`COALESCE(?, spalte)`) — dasselbe Muster, das der Flugtag-Pfad seit jeher
+(`COALESCE(?, spalte)`) — dasselbe Muster, das der Diensttag-Pfad seit jeher
 benutzt. Betroffen sind `crew_p1`…`crew_other`, `bw_info`, `other_ema`,
 `notes`, `site_ele_m` und `pat_blob`.
 
@@ -651,7 +690,7 @@ Wert ist dort eine Aussage.
 
 - Höchstens **5000 Einsätze** je Export. Darüber meldet der Server einen Fehler
   und rät zu kleineren Zeiträumen.
-- Gelöschte Einsätze und Flugtage (Papierkorb) tauchen in keinem Profil auf.
+- Gelöschte Einsätze und Diensttage (Papierkorb) tauchen in keinem Profil auf.
 - Tracks werden blockweise geladen (höchstens 25 auf einmal); bei vielen
   Einsätzen mit Track dauert der Aufbau entsprechend, der Fortschritt wird
   angezeigt.

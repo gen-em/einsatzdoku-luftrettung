@@ -108,6 +108,25 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
+**Nutzlastversion 6 seit Web 6.0.0.** Der Container bleibt Version 3, die
+Signatur `EDBAK2` unverändert — geändert hat sich allein der **Inhalt**: Der
+Flugtag ist zum Diensttag mit eigener Kennung geworden, die Besatzung ist
+normalisiert, und der Standort ist der Anker der Stammdaten.
+
+**Nutzlasten der Version 5 und älter werden nicht mehr eingelesen.** Das ist
+eine bewusste Entscheidung und kein Versäumnis: Einer alten Datei fehlen die
+Kennung des Diensttags (der Kalendertag *war* sie), die Art des
+Rettungsmittels, der Rollensatz, die Standortzuordnung der Stammdaten und die
+Uhr-Kennungen. Jede dieser Lücken ließe sich nur mit einer Annahme füllen — und
+eine Wiederherstellung ist der falsche Ort für Annahmen, weil wer sie startet
+meist keinen zweiten Versuch hat.
+
+Die Ablehnung ist deshalb **ausdrücklich und benannt** (`error: version_alt`,
+HTTP 409) und nicht ein Fehler beim Einlesen. Sie kommt vom Server und nicht
+schon im Browser: Der Container ist unverändert, die Datei ließ sich also
+entsiegeln. Wer eine alte Datei hat, spielt sie in einer Installation vor Web
+6.0.0 ein und sichert dort neu.
+
 Im Kopf der Datei steht neben `format`, `version`, `created_at` und `user`
 seit Web 4.1.2 auch:
 
@@ -121,51 +140,116 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 5,
+  "version": 6,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
-  "app": "einsatzdoku-luftrettung",
+  "app": "einsatzdoku-notarzt",
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
                                                // Einspielen angezeigt
 
   "stammdaten": {
-    "bases":        [ { "name": "Kempten", "is_default": 1 } ],
-    "aircraft":     [ { "registration": "Christoph 17", "p1": 1, "p2": 0,
-                        "hems": 1, "fr": 0, "other": 0, "is_default": 1 } ],
-    "crew_presets": [ { "role": "p1|p2|hems|fr|other", "name": "…" } ],
-    "bw_units":     [ { "name": "Bereitschaft Oberstdorf" } ],
-    "resources":    [ { "name": "RTW Kempten 21/83" } ],
-    "transport_dests": [ { "name": "Klinikum Kempten" } ]   // seit Version 3
+    // Standorte tragen seit Version 6 optionale Koordinaten (Quelle des
+    // Abfahrtorts "Standort"). Der NAME bleibt der portable Schlüssel, an dem
+    // alle übrigen Stammdaten hängen.
+    "bases":        [ { "name": "Kempten", "lat": 47.72, "lon": 10.31,
+                        "is_default": 1 } ],
+
+    // Rettungsmittel (bis Version 5: "aircraft" mit der Spalte "registration"
+    // und fünf Rollen-Flags). Art, Rollensatz und Fähigkeiten gehören dazu;
+    // der Standort steht als NAME, weil Kennungen nur in der Datenbank gelten,
+    // aus der die Sicherung stammt.
+    "vehicles":     [ { "name": "Christoph 17", "kind": "air|ground",
+                        "base_ref": "Kempten",
+                        "roles": ["p1", "p2", "tc", "other"],
+                        "capabilities": ["winch", "bergwacht"],
+                        "is_default": 1 } ],
+
+    // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
+    // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
+    // die Auswahl schon, sonst stünden nach dem Einspielen leere Listen da.
+    "user_bases":   [ "Zentrale Wache Süd" ],
+
+    // Alle übrigen Stammdaten tragen ihren Standort (base_ref). Ohne ihn ließe
+    // sich nach dem Einspielen nicht entscheiden, zu welchem Standort eine
+    // Zielklinik gehört.
+    "crew_presets": [ { "role_code": "p1", "name": "…", "base_ref": "Kempten" } ],
+    "bw_units":     [ { "name": "Bereitschaft Oberstdorf", "base_ref": "Kempten" } ],
+    "resources":    [ { "name": "RTW Kempten 21/83", "base_ref": "Kempten" } ],
+    "transport_dests": [ { "name": "Klinikum Kempten", "lat": 47.72, "lon": 10.31,
+                           "base_ref": "Kempten" } ]
   },
 
-  // Flugtage; Maschinen-/Standort-Verweise sind als NAMEN aufgelöst
-  // (aircraft_reg / base_name), damit das Backup portabel ist.
+  // Diensttage (bis Version 5: Flugtage, mit dem Datum als Schlüssel).
+  //
+  // ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN: vehicle_name und
+  // base_name stehen im Diensttag selbst und sind beim Anlegen eingefroren.
+  // Die Verweise auf die Stammdaten laufen zusätzlich als NAMEN mit
+  // (vehicle_ref, base_ref), damit das Einspielen sie wieder verknüpfen kann;
+  // sie können leer sein, wenn der Stammdatensatz inzwischen fehlt.
   "days": [ {
-    "day": "2026-07-19",
-    "aircraft_reg": "Christoph 17", "base_name": "Kempten",
-    "crew_p1": "…", "crew_p2": null, "crew_hems": "…",
-    "crew_fr": null, "crew_other": null, "notes": "…"
+    "day": "2026-07-19",                  // Datum des DIENSTBEGINNS, nur
+                                          // Sortierung und Anzeige
+    "started_at": "2026-07-19 05:00:00",  // DATETIME, UTC
+    "ended_at":   "2026-07-19 17:30:00",
+    "kind": "air",                        // null = neutral, noch nicht zugeordnet
+    "vehicle_name": "Christoph 17",       // eingefroren
+    "base_name": "Kempten",               // eingefroren
+    "base_lat": 47.72, "base_lon": 10.31, // eingefroren
+    "vehicle_ref": "Christoph 17", "base_ref": "Kempten",   // Stammdaten-Verweis
+    "notes": "…",
+
+    // Besatzung des Diensttags, je Rolle ein Eintrag. Die SCHLÜSSELMENGE ist
+    // der eingefrorene Rollensatz — auch leere Rollen stehen darin, denn sie
+    // sagen aus, welche Rollen dieser Dienst überhaupt anbot.
+    "crew": { "p1": "…", "p2": null, "tc": "…", "other": null },
+
+    // Eingefrorene Fähigkeiten des Rettungsmittels. Sie steuern, welche
+    // Einsatzfelder der Diensttag zeigt; wird der Windenhaken Jahre später
+    // entfernt, verlieren alte Einsätze ihre Windendokumentation nicht.
+    "capabilities": ["winch"],
+
+    // Uhr-Kennungen dieses Diensttags. MEHRERE sind zulässig — nach dem
+    // Zusammenführen zweier Diensttage trägt der Zieltag die Kennungen beider.
+    // Sie MÜSSEN in die Sicherung: Ohne sie legte ein später eintreffender
+    // Upload derselben Uhr den Diensttag nach einer Wiederherstellung erneut
+    // an. device_id ist die ÖFFENTLICHE Gerätekennung; null = Gerät gelöscht.
+    "refs": [ { "day_ref": "d-41-0938175520", "device_id": "watch-001" } ]
   } ],
 
   "missions": [ {
-    "client_ref": "m-1721383200",       // eindeutige Referenz (Dubletten-Schutz)
-    "day": "2026-07-19",                // lokales Datum des Einsatzbeginns
+    "client_ref": "m-42-1837704912",    // eindeutige Referenz (Dubletten-Schutz)
+    "day_id": 17,                       // Verweis auf den Diensttag DIESER
+                                        // Datei; beim Einspielen auf die neu
+                                        // vergebene Kennung umgeschrieben
     "started_at": "2026-07-19 08:15:00",  // DATETIME, UTC
     "ended_at":   "2026-07-19 09:02:00",  // null = kein Abschluss
     "manual": 0, "final": 1,
     "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
     "distance_m": 38400, "ascent_m": 550,
     "site_ele_m": 712,                    // NICHT uebernommen (s. Hinweis unten)
-    "transport_dest": "…",
+
+    // Transport und Zielklinik (seit Version 6). transport_mode ist ein
+    // ENUM('air','ground','ambulant'); bei "ambulant" entfallen Zielklinik,
+    // Schockraum und NA-Begleitung.
+    "transport_mode": "ground", "na_escort": 1, "false_alarm": 0,
+    "transport_dest": "…", "dest_lat": 47.72, "dest_lon": 10.31,
+    "schockraum": 0, "secondary": 0,
+
+    // Regel, aus der der Abfahrtort abgeleitet wird — nicht die Koordinate:
+    // "base" | "prev_site" | "prev_dest" | "manual" | null. Ein MANUELLER
+    // Abfahrtort liegt verschlüsselt im pat-Block (siehe pat.start unten).
+    "start_src": "base",
+
     "winch": 0, "winch_cycles": null, "winch_cycles_pat": null,
     "winch_airload": 0, "bergwacht": 0, "bw_unit": null, "bw_info": null,
     "other_ema": null, "notes": null,
 
-    // Abweichende Besatzung (seit Web 2.6.0). crew_override = 0 -> die fünf
-    // Felder sind null und der Einsatz erbt die Besatzung seines Flugtags
-    // (siehe "days" oben). Nur belegte Rollen weichen ab.
+    // Abweichende Besatzung (seit Version 6 als Objekt role_code => name; bis
+    // Version 5 waren es fünf feste Spalten). crew_override = 0 -> das Objekt
+    // ist leer und der Einsatz erbt die Besatzung seines Diensttags. Die
+    // Rollenkennungen stammen aus dem festen Katalog im Code:
+    // p1, p2, tc, fr, other (luftgebunden) und driver, trainee, other (boden).
     "crew_override": 0,
-    "crew_p1": null, "crew_p2": null, "crew_hems": null,
-    "crew_fr": null, "crew_other": null,
+    "crew": { },
 
     // Geschützte Angaben — im Container KLARTEXT (der Container selbst ist
     // ja verschlüsselt). Beim Import werden sie mit dem Inhaltsschlüssel des
@@ -173,8 +257,12 @@ seit Web 4.1.2 auch:
     "pat": { "dx": "Polytrauma", "age": 41, "mission_no": "2026-0042",
              "loc": { "addr": "Ringstr. 18, 87439 Kempten",
                       "lat": 47.72, "lon": 10.31 },
-             "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß" },
-                                            // site_desc seit Version 5
+             "site_desc": "Zufahrt über Forstweg, letzte 300 m zu Fuß",
+             "start": { "addr": "Wache Kempten", "lat": 47.72, "lon": 10.31 } },
+                                            // site_desc seit Version 5,
+                                            // start seit Version 6 (manueller
+                                            // Abfahrtort, nur bei
+                                            // start_src = "manual")
     // Ließ sich ein Einsatz beim Export NICHT entschlüsseln, steht statt
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:
@@ -197,7 +285,7 @@ seit Web 4.1.2 auch:
   } ],
 
   "rest_segments": [ {
-    "client_ref": "r-…", "day": "2026-07-19",
+    "client_ref": "r-…", "day_id": 17,
     "started_at": "…", "ended_at": "…", "final": 1,
     "track": [ [0, 47.72, 10.31, 712.5, 1721383200] ]
   } ]
@@ -230,8 +318,10 @@ seit Web 4.1.2 auch:
 
 - Import immer in das **eigene, angemeldete** Konto; bestehende Daten werden
   nie überschrieben.
-- Dubletten-Erkennung: Einsätze und Ruhesegmente über `client_ref`, Flugtage
-  über das Datum, Stammdaten über ihre Namen — Vorhandenes wird übersprungen,
+- Dubletten-Erkennung: Einsätze und Ruhesegmente über `client_ref`, Diensttage
+  über eine bereits vorhandene `client_ref` eines ihrer Einsätze und ersatzweise
+  über einen Fingerabdruck aus Datum, Beginn, Ende, Art und den eingefrorenen
+  Bezeichnungen, Stammdaten über ihre Namen — Vorhandenes wird übersprungen,
   nur Fehlendes ergänzt. Der Import ist damit gefahrlos wiederholbar.
 - Die geschützten Angaben werden vor dem Senden im Browser mit dem
   Inhaltsschlüssel des Zielkontos verschlüsselt; der Server speichert nur
@@ -296,7 +386,7 @@ empfindlichen Angaben darin stecken ohnehin verschlüsselt.
   "konto":  { "account_key": "…16 Hexziffern…",
               "email": "…", "name": "…" },
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
-  "umfang": { "einsaetze": 42, "flugtage": 12, "ruhezeiten": 3 },
+  "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3 },
   "daten":  { … das innere JSON aus Abschnitt 2, Formatversion 5 … }
 }
 ```

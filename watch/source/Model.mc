@@ -10,6 +10,21 @@ module Model {
     var day as Lang.String or Null = null;        // Betriebstag "YYYY-MM-DD"
     var phase as Lang.Number = 1;
 
+    // Dienstkennung (JSON-Vertrag 1.3, Web-Konzept 4.4). Sie entsteht bei
+    // "Einsatztag starten" und bleibt fuer ALLE Uploads dieses Dienstes
+    // unveraendert — gleiches Muster wie client_ref, gleiche Idempotenz.
+    //
+    // WOZU. Bis Web 5.10.0 war ein Flugtag ein KALENDERTAG, und der Server
+    // ordnete ueber (Konto, Datum) zu. Seit Web 6.0.0 ist ein Diensttag eine
+    // eigene Zeile: Zwei Dienste an einem Kalendertag sind der vorgesehene Fall
+    // — ein Hubschrauberdienst am Tag, ein NEF-Nachtdienst am Abend. Aus dem
+    // Datum allein laesst sich dann nicht mehr ableiten, welcher gemeint ist.
+    // Die Kennung sagt es.
+    //
+    // Die Uhr erfaehrt dabei NICHTS ueber die Einsatzart (E21). Sie sagt nur,
+    // WELCHER Dienst — nicht, was fuer einer.
+    var dayRef as Lang.String or Null = null;
+
     // Aktiver Einsatz: null oder Dictionary
     // { "ref", "startedAt", "endedAt", "phases" => [[p, iso, lat, lon, hhmm], ...],
     //   "resus" => [ { "start", "startLocal", "events" => [[type, iso, hhmm]] }, ... ],
@@ -65,6 +80,7 @@ module Model {
             pendingMissions = s["pm"] != null ? s["pm"] : [];
             pendingRest     = s["pr"] != null ? s["pr"] : [];
             dayMissions = s["dm"] != null ? s["dm"] : 0;
+            dayRef          = s["dref"];
         }
     }
 
@@ -73,17 +89,41 @@ module Model {
             "svc" => serviceActive, "day" => day, "ph" => phase,
             "mis" => mission, "rest" => restSegment,
             "pm" => pendingMissions, "pr" => pendingRest,
-            "dm" => dayMissions
+            "dm" => dayMissions, "dref" => dayRef
         });
     }
 
     // ---- Dienst-Klammer (Anforderungen 1.1) --------------------------------
+
+    // Die Kennung des LAUFENDEN Dienstes; fehlt sie, wird sie nachgezogen.
+    //
+    // DER FALL, DEN DAS ABFAENGT: Ein Dienst laeuft bereits, waehrend die Uhr
+    // von 1.7.0 auf 1.8.0 aktualisiert wird. Der gespeicherte Zustand hat dann
+    // kein "dref", der Dienst laeuft aber weiter — ohne diese Zeile truege
+    // jeder Einsatz bis Dienstende keine Kennung.
+    //
+    // Der Server kommt damit zurecht: dt_zu_dayref() bindet eine UNBEKANNTE
+    // Kennung an den Diensttag, an dem der Datensatz schon haengt, statt einen
+    // zweiten anzulegen. Der laufende Dienst liegt dort bereits als Diensttag —
+    // angelegt ueber die Rueckfallebene ueber (Konto, Datum).
+    //
+    // OHNE laufenden Dienst gibt sie null zurueck und erfindet nichts. Ein
+    // Einsatz ausserhalb der Dienstklammer gehoert zu keinem bekannten Dienst;
+    // fuer ihn ist die Rueckfallebene ueber das Datum die richtige Auskunft.
+    function ensureDayRef() as Lang.String or Null {
+        if (dayRef == null && serviceActive) {
+            dayRef = Util.newRef("d");
+            save();
+        }
+        return serviceActive ? dayRef : null;
+    }
 
     function beginService() as Void {
         serviceActive = true;
         day = Util.localDay();
         phase = 1;
         dayMissions = 0;
+        dayRef = Util.newRef("d");     // eine Kennung je Dienst (E9)
         _startRestSegment();
         save();
         Track.startPositioning();
@@ -103,6 +143,12 @@ module Model {
         mission       = null;
         restSegment   = null;
         dayMissions   = 0;
+        // Die Kennung verfaellt mit dem Dienst. Sie stehenzulassen waere
+        // gefaehrlich: Ein danach begonnener Einsatz truege die Kennung eines
+        // BEENDETEN Dienstes und landete auf dem Server an dessen Diensttag.
+        // Noch nicht gesendete Einsaetze verlieren dadurch nichts — sie fuehren
+        // ihre eigene Kopie im Paket (siehe _startMission).
+        dayRef        = null;
         save();
         Track.stopPositioning();
         Uploader.syncAll();
@@ -146,6 +192,7 @@ module Model {
         mission = {
             "ref" => Util.newRef("m"),      // Zaehler + Zufall, kein Zeitstempel (M7-03)
             "day" => Util.localDay(),      // Tag des EINSATZbeginns (0:00-Wechsel)
+            "dref" => ensureDayRef(),      // Dienst, zu dem dieser Einsatz gehoert
             "startedAt" => Util.isoNow(), "endedAt" => null,
             "phases" => [], "resus" => [],
             "final" => false
@@ -184,6 +231,7 @@ module Model {
         restSegment = {
             "ref" => Util.newRef("r"),      // wie beim Einsatz (M7-03)
             "day" => Util.localDay(),      // Tag des Segmentbeginns
+            "dref" => ensureDayRef(),      // Dienst, zu dem dieses Segment gehoert
             "startedAt" => Util.isoNow(), "endedAt" => null, "final" => false
         };
         Track.beginRestTrack(restSegment["ref"] as Lang.String);

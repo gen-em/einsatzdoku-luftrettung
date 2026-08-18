@@ -1,6 +1,6 @@
 # Konzept: Erweiterung auf bodengebundene Notarzteinsätze
 
-**Status:** in Umsetzung
+**Status:** umgesetzt
 **Art:** Umbau am Datenmodell — Haupt-Versionssprung Web, Neben-Versionssprung Uhr
 **Repo:** `gen-em/einsatzdoku-luftrettung`
 
@@ -28,7 +28,7 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 | 1b | Codeanpassung an das neue Schema, Nachbearbeitungsseite, Umbenennung | Web 6.0.0 | **erledigt** |
 | 2 | Einsatzfelder, Ortsfeld-Komponente, Abfahrtort und Luftlinie | Web 6.1.0 | **erledigt** |
 | 3 | Auswertung, Suche, Export/Import/Backup | Web 6.2.0 | **erledigt** |
-| 4 | Zusammenführen, Uhr, Dokumentation | Web 6.3.0 / Uhr 1.8.0 | **als Nächstes** |
+| 4 | Zusammenführen, Uhr, Dokumentation | Web 6.3.0 / Uhr 1.8.0 | **erledigt** |
 
 > **Warum Etappe 1 geteilt wurde.** Der Umbau am Datenmodell und die Anpassung
 > des Codes daran sind zwei sehr verschiedene Arbeiten: Die erste ist konzeptionell
@@ -69,25 +69,21 @@ liest **dieses Dokument** als Einstieg. Was hier nicht steht, ist verloren.
 | A3 | **erfüllt** | A7c | **erfüllt** | A13f | **erfüllt** |
 | A4 | **erfüllt** | A8 | **erfüllt** | A13g–A13k | **erfüllt** |
 | A4a | **erfüllt** | A9 | **erfüllt** | A13l–A13q | **erfüllt** |
-| A5 | **erfüllt** | A10 | **erfüllt** | A14 | offen (Etappe 4) |
-| A6 | offen (Etappe 4) | A11 | **erfüllt** | A15 | **erfüllt** |
-| A7 | offen (Etappe 4) | A12 | **erfüllt** | A16 | teilweise |
+| A5 | **erfüllt** | A10 | **erfüllt** | A14 | **erfüllt** (mit Grenze) |
+| A6 | **erfüllt** | A11 | **erfüllt** | A15 | **erfüllt** |
+| A7 | **erfüllt** | A12 | **erfüllt** | A16 | **erfüllt** |
 | A13 | **erfüllt** | A13a–A13c | **erfüllt** | | |
 
 Wie jeder Punkt geprüft wurde, steht in `docs/Pruefprotokoll-Notarzt.md`.
-„offen (Etappe N)" heißt: Das Kriterium betrifft Funktionen, die diese Etappe
-noch nicht bringt — nicht, dass etwas fehlschlug.
+**Alle Abnahmekriterien sind erfüllt.**
 
-Das eine „teilweise" ist es aus benennbarem Grund:
-
-- **A16**: Die Dokumentation ist auf dem Stand von Etappe 3 — Changelog,
-  Technik, Konzept und Prüfprotokoll sind durchgezogen. `Handbuch.md`,
-  `JSON-Vertrag.md`, `Backup-Format.md` und `Export-Format.md` folgen mit
-  Etappe 4, so vorgesehen (Abschnitt 4.12): Der JSON-Vertrag steigt erst dort
-  auf 1.3, und das Handbuch soll den fertigen Stand beschreiben, nicht einen
-  von vier. **Neu hinzugekommen ist dabei ein Muss:** Etappe 3 hat zwei
-  Exportspalten umbenannt (Befund P20) — `Export-Format.md` beschreibt sie
-  jetzt falsch und nicht nur unvollständig.
+**A14 mit einer benannten Grenze.** Der Uhr-Code ist geschrieben und
+gegengelesen, aber **nicht kompiliert**: Das Connect-IQ-SDK fehlt in der
+Arbeitsumgebung. Was sich prüfen ließ, wurde geprüft — die Serverseite des
+Vertrags ist mit echten Uploads gegen `ingest.php` durchgespielt, mit und ohne
+Kennung, einschließlich des Umstiegs mitten im Dienst und des Falls nach einem
+Zusammenführen. Die Grenze steht im Prüfprotokoll und muss dort stehen bleiben,
+bis jemand die App tatsächlich gebaut hat.
 
 **A3 ist mit Etappe 2 vollständig erfüllt.** Die zweite Hälfte — „und keine
 Windenfelder" — hing an `cap_gate` und ist jetzt umgesetzt; geprüft an drei
@@ -380,54 +376,124 @@ sieht die Auswertung damit aus wie vor der ganzen Erweiterung.
 
 ---
 
-### 0.7 Nächste Etappe: 4 — Zusammenführen, Uhr, Dokumentation
+### 0.7 Was Etappe 4 umgesetzt hat
 
-**Für den Chat, der Etappe 4 übernimmt.** Voraussetzung: Das ZIP der Etappe 3
-ist committet und gepusht; ein neuer Chat klont frisch.
+**Die Erweiterung ist abgeschlossen.** Diensttage lassen sich zusammenführen,
+die Uhr schickt eine Dienstkennung, und die Dokumentation beschreibt den
+fertigen Stand. Geprüft wurde gegen eine laufende Installation (MariaDB
+10.11.14, PHP 8.4, eingebauter Server mit Testrouter) und im Chromium der
+Arbeitsumgebung; der Ablauf steht in `Pruefprotokoll-Notarzt.md`.
 
-**Etappe 4 braucht keine Migration.** Wie 2 und 3 arbeitet sie auf dem Schema
-der 6.0.0 — auch das Zusammenführen: `day_refs`, `mission_crew` und die
-Fremdschlüssel auf `days` sind seit 6.0.0 da.
+**Keine Migration** — wie 2 und 3 arbeitet die Etappe auf dem Schema der 6.0.0.
 
-**Prüfumgebung.** Der Ablauf steht in `Pruefprotokoll-Notarzt.md` und hat sich
-in den Etappen 2 und 3 bewährt: MariaDB installieren, `edoku_neu` aus
-`server/schema.sql` aufbauen, Testbestand über `diensttag_lib.php` anlegen,
-eingebauten PHP-Server mit Testrouter starten. Etappe 3 hat den Ablauf um einen
-**Browsertest mit Playwright** ergänzt (Chromium liegt im Bild bereit); damit
-lassen sich Tabs, Filter und Karte tatsächlich bedienen statt nur gegenlesen.
-**Achtung, Befund P19:** `docs/pruefgrundlage/` fehlt weiterhin im Repository —
-der Weg über den *migrierten Altbestand* ist nicht wiederholbar.
+**Neu:**
 
-**Zu tun:**
+| Datei | Wozu |
+|---|---|
+| `server/diensttag_zusammenfuehren.php` | Die Zwischenseite aus E25: Kandidatenliste, Vorschau, Entscheidung über widersprüchliche Angaben. |
 
-- **Zusammenführen von Diensttagen** (E10–E13, E25, Abschnitte 3.4 und 4.5,
-  A6/A7/A8). Der Einstieg liegt im Zieldiensttag, nicht in der Tagesliste. Ein
-  Codepfad für Uhr- und Handtage. Nicht umkehrbar, nicht über den Papierkorb.
-  Die Kandidatenliste ist „zeitlich benachbart" — bewusst nicht in Tagen
-  festgelegt (Abschnitt 8).
-- **Uhr** (A14, E20, E21, B8): `day_ref` senden, neutrale Phasenbeschriftungen
-  („Ausrücken" statt „Abflug"), Uhr-Version auf 1.8.0. Die Connect-IQ-App-ID
-  bleibt unverändert (E22). **Das Connect-IQ-SDK fehlt in der Arbeitsumgebung** —
-  Uhr-Code lässt sich nicht kompilieren; das ist im Prüfprotokoll als Grenze
-  benannt und muss dort auch für Etappe 4 stehen bleiben.
-- **Dokumentation** (A16). Vier Dateien sind noch auf dem Stand vor 6.0.0:
-  - `Export-Format.md` — **Berichtigung, nicht nur Ergänzung** (Befund P20):
-    `phase_03_abflug` → `phase_03_ausruecken`, `phase_07_landung_krankenhaus` →
-    `phase_07_ankunft_klinik`, dazu die Spalten `art`, `transport_art`,
-    `na_begleitung`, `fehleinsatz`, `ziel_lat`, `ziel_lon`, `abfahrt_regel`,
-    `pat_start_*`, die Besatzungsspalten aus dem Rollenkatalog (sieben statt
-    fünf), `diensttag`/`diensttag_id`/`rettungsmittel` statt
-    `flugtag`/`hubschrauber` und der neue Dateinamenspräfix.
-  - `JSON-Vertrag.md` — steigt auf **1.3** (Berichtigung B1), `day_ref`.
-  - `Backup-Format.md` — Nutzlastversion 6, `day_refs`, `day_crew`,
-    `mission_crew`, `day_capabilities`, `vehicles` samt Rollen und
-    Fähigkeiten, `user_bases`, `base_id` der Stammdatentabellen.
-  - `Handbuch.md` — der fertige Stand, einschließlich des Unterschieds
-    zwischen Statistik (nach Diensttag) und Suche (nach echtem Einsatzdatum).
-- **Verwaiste Querverweise** (A16, letzter Satz): Es darf danach kein „Flugtag",
-  kein „Hubschrauber" und keine Phase 10 mehr in der Dokumentation stehen — mit
-  der einen Ausnahme der Luftrettungs-Kacheln (E32) und der GitHub-Adresse, weil
-  das Repository nicht umbenannt wird (Abschnitt 7).
+**Neu in `diensttag_lib.php`:** `dt_art_vereinbar()`, `dt_art_ergebnis()`,
+`dt_merge_kandidaten()`, `dt_merge_pruefen()`, `dt_merge_vorschau()` und
+`dt_zusammenfuehren()`, dazu die Konstante `DT_NACHBARSCHAFT_TAGE`.
+
+**Geändert:**
+
+| Datei | Was |
+|---|---|
+| `server/index.php` | Eintrag „Anderen Diensttag aufnehmen" im Aktionsmenü samt Rückmeldung nach dem Vorgang. |
+| `server/mission_fields.php` | `false_alarm` verliert `day_col` — der Fehleinsatz steht nur noch im Einsatz selbst. |
+| `server/assets/style.css` | Gesperrte Kandidatenzeile, Entscheidungsgruppen. |
+| `watch/source/Const.mc` | Version 1.8.0, Phasen 3 und 7 neutral beschriftet. |
+| `watch/source/Model.mc` | Dienstkennung: erzeugt bei `beginService()`, an Einsatz und Ruhesegment mitgeführt, `ensureDayRef()` für den Umstieg mitten im Dienst. |
+| `watch/source/Uploader.mc` | schickt `day_ref` — aus dem Paket, nicht aus dem laufenden Zustand. |
+| `docs/JSON-Vertrag.md`, `Backup-Format.md`, `Export-Format.md`, `Handbuch.md`, `Technik.md` | A16. |
+
+#### Wie weit „zeitlich benachbart" reicht
+
+Abschnitt 8 lässt die Zahl ausdrücklich offen; umgesetzt sind **drei Tage** vor
+und nach dem Zieltag. Sie folgen aus dem Anwendungsfall: Die App wurde *während
+eines Dienstes* mehrfach gestartet — die Bruchstücke liegen am selben
+Kalendertag oder über Mitternacht am folgenden. Der dritte Tag ist Luft für ein
+später von Hand nachgetragenes Bruchstück.
+
+Eine längere Liste wäre nicht hilfreicher, sondern gefährlicher: Der Vorgang ist
+nicht umkehrbar, und je mehr Zeilen zur Wahl stehen, desto eher greift jemand
+daneben. Wer zwei weit auseinanderliegende Diensttage zusammenführen will,
+datiert erst einen davon um.
+
+#### Warum unvereinbare Kandidaten trotzdem in der Liste stehen
+
+Sie ließen sich leicht weglassen — genau das wäre der Fehler. A7 verlangt eine
+**verständliche Meldung**, und eine fehlende Zeile ist keine Meldung, sondern
+sieht aus wie ein Fehler der Anwendung. Der luftgebundene Diensttag steht
+deshalb in der Liste des bodengebundenen, gesperrt und mit dem Grund daneben.
+
+#### Die Endzeit beim Zusammenführen
+
+`started_at` wandert nach vorne, `ended_at` nach hinten — die Regel von
+`dt_zeitraum_fortschreiben()`, auf zwei Diensttage angewandt. Ein NULL in
+`ended_at` heißt dabei „noch nicht bekannt", nicht „endet nie": Das Ergebnis
+nimmt das **späteste bekannte** Ende und bleibt nur ohne, wenn beide keines
+haben.
+
+Die Gegenregel — ein einziges NULL macht das Ergebnis offen — träfe genau den
+Regelfall am härtesten: Das aufzunehmende Bruchstück ist typischerweise das, auf
+dem „Einsatztag beenden" nie gedrückt wurde. Ein sauber beendeter Zieltag
+verlöre sein Ende an ein Bruchstück von zwanzig Minuten.
+
+#### Was beim Zusammenführen mit der Besatzung geschieht
+
+Der gewählte Satz gilt. Eine Rolle, die er **nicht belegt**, der andere aber
+schon, wird von dort übernommen — dieselbe Regel, die `dt_zuordnen()` und die
+Migration anwenden: Belegte Rollen gehen nie verloren. Widersprechen sich zwei
+Namen derselben Rolle, gewinnt die Wahl; nur dort geht überhaupt etwas verloren,
+und genau darüber wurde entschieden.
+
+Leere Zeilen des Verlierers wandern **nicht** mit: Der Rollensatz folgt dem
+Rettungsmittel (E8), und eine leere Rolle, die es nur beim anderen gab, wäre
+eine, die das gewählte Rettungsmittel gar nicht anbietet.
+
+#### Die Fähigkeiten kommen aus dem Diensttag, nicht aus den Stammdaten
+
+Beim Zusammenführen wird `day_capabilities` vom gewinnenden Diensttag
+übernommen und **nicht** aus `vehicle_capabilities` neu abgeleitet. Das wäre ein
+Blick in die heutigen Stammdaten und damit genau der Durchgriff, den E8
+ausschließt: Wurde der Windenhaken seit dem Dienst entfernt, verlöre der Tag
+hier seine Windenfelder (A13e).
+
+#### Die Dienstkennung verfällt mit dem Dienst
+
+`Model.dayRef` wird bei „Einsatztag beenden" auf `null` gesetzt. Sie
+stehenzulassen wäre gefährlich: Ein danach begonnener Einsatz trüge die Kennung
+eines **beendeten** Dienstes und landete an dessen Diensttag. Noch nicht
+gesendete Pakete verlieren dadurch nichts — sie führen ihre eigene Kopie.
+
+#### Was sich gegenüber dem Konzept geändert hat
+
+**Der Fehleinsatz hat keine Spalte in der Tagestabelle mehr.** Abschnitt 4.6
+und der Feldkatalog sahen sie vor, und Etappe 3 hat sie gebaut. Sie ist auf
+Wunsch der Betreiberin wieder entfallen: Der Haken steht im Einsatz selbst,
+ausgewertet wird er unverändert in der Zeitraum-Übersicht (Kachel
+„Fehleinsätze") und in der Suche. Beide führen ihre Spalte ohnehin
+datengetrieben und zeigen sie nur, wenn im Bestand Fehleinsätze liegen.
+
+#### Was nicht geprüft werden konnte
+
+**Der Uhr-Code ist nicht kompiliert.** Das Connect-IQ-SDK fehlt in der
+Arbeitsumgebung; die Änderungen an `Const.mc`, `Model.mc` und `Uploader.mc` sind
+gegengelesen, nicht gebaut. Geprüft wurde stattdessen die **Serverseite des
+Vertrags**, und zwar mit echten Uploads gegen `ingest.php`: mit Kennung, ohne
+Kennung, zweimal dieselbe Kennung, zwei Dienste an einem Kalendertag, der
+Umstieg mitten im Dienst und der Upload nach einem Zusammenführen.
+
+Was das nicht abdeckt: ob die Uhr die Kennung tatsächlich erzeugt, speichert und
+über einen Neustart hinweg behält. Das muss beim ersten Bau der App nachgeholt
+werden.
+
+**Befund P19 besteht fort:** `docs/pruefgrundlage/` fehlt weiterhin im
+Repository. Der Migrationslauf der Etappe 1a bleibt damit unwiederholbar. Für
+diese Etappe ohne Folge — sie braucht keine Migration —, für eine künftige
+Schemaänderung nachzuholen.
 
 ---
 

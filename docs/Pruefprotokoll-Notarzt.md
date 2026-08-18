@@ -545,6 +545,121 @@ CSS-Regeln, nicht ihr Ergebnis auf einem echten Telefon.
 
 ---
 
+## Etappe 4 — Zusammenführen, Uhr, Dokumentation
+
+Geprüft gegen `edoku_neu` (MariaDB 10.11.14, PHP 8.4.19) mit einem Testbestand,
+der genau die Fälle enthält, die A6, A7 und A8 unterscheiden müssen: zwei
+Bruchstücke desselben NEF-Dienstes an einem Kalendertag (eines davon nie
+beendet, mit abweichendem Rettungsmittel, Standort und Besatzung, mit einem
+Einsatz im Papierkorb und je einer Uhr-Kennung), ein luft- und ein
+bodengebundener Diensttag am selben Tag, ein neutraler Diensttag von der Uhr,
+ein weit entfernter Tag und ein Tag im Papierkorb.
+
+### Zusammenführen — 51 Prüfungen gegen die Datenbank
+
+| Was | Wie geprüft | Ergebnis | Kriterium |
+|---|---|---|---|
+| Kandidatenliste: Bruchstück steht drin, Papierkorbtag und weit entfernter Tag nicht, Zieltag nicht | Datenbank | erfüllt | A6 |
+| Zahlen je Kandidat (Einsätze ohne Papierkorb, Ruhesegmente, Uhr-Kennungen) | Datenbank | erfüllt | — |
+| Luftgebunden gegen bodengebunden wird abgewiesen, Meldung nennt **beide** Arten | Datenbank | erfüllt | A7 |
+| Der unvereinbare Tag steht trotzdem in der Liste, als nicht wählbar markiert | Datenbank + Browser | erfüllt | A7 |
+| Neutraler Diensttag lässt sich mit **beiden** Arten zusammenführen und übernimmt deren Art | Datenbank | erfüllt | A7 |
+| Zwei neutrale bleiben neutral | Datenbank | erfüllt | A7 |
+| Fremdes Konto findet den Tag nicht; ein Tag mit sich selbst wird abgewiesen | Datenbank | erfüllt | — |
+| Vorschau: früherer Beginn, spätestes **bekanntes** Ende, Datum, Umfang | Datenbank | erfüllt | A6 |
+| Vorschau erkennt die Widersprüche bei Rettungsmittel, Standort und Besatzung | Datenbank | erfüllt | — |
+| Nach dem Zusammenführen hängen **alle** Einsätze am Zieltag — auch der im Papierkorb | Datenbank | erfüllt | A6, A11 |
+| Kein Einsatz ist verwaist (`day_id IS NULL`) | Datenbank | erfüllt | A11 |
+| Ruhesegmente und Uhr-Kennungen am Zieltag | Datenbank | erfüllt | A6 |
+| Der aufgenommene Tag ist **weg**, nicht im Papierkorb | Datenbank | erfüllt | A6, E13 |
+| Notizen aneinandergehängt | Datenbank | erfüllt | — |
+| Gewähltes Rettungsmittel, gewählter Standort und gewählte Besatzung gelten — in **beide** Richtungen geprüft | Datenbank | erfüllt | — |
+| Eine belegte Rolle des Verlierers geht **nicht** verloren | Datenbank | erfüllt | — |
+| Die Fähigkeiten folgen dem gewählten Rettungsmittel, aus dem **eingefrorenen** Satz | Datenbank | erfüllt | A13e |
+
+### Uhr und Vertrag — 21 Prüfungen mit echten Uploads gegen `ingest.php`
+
+Gesendet wurde jeweils der Rumpf, den `Uploader.mc` baut.
+
+| Was | Wie geprüft | Ergebnis | Kriterium |
+|---|---|---|---|
+| Upload **mit** `day_ref` legt einen Diensttag an und trägt die Kennung in `day_refs` ein | Datenbank | erfüllt | A14 |
+| Der so angelegte Diensttag ist **neutral** | Datenbank | erfüllt | A7a, E26 |
+| Zweiter Upload derselben Kennung landet im **selben** Diensttag | Datenbank | erfüllt | A14 |
+| Zweite Kennung am selben Kalendertag bekommt einen **eigenen** Diensttag | Datenbank | erfüllt | A1, E9 |
+| Nach dem Zusammenführen landet ein Upload mit der Kennung des **aufgenommenen** Tags im Zieltag — und legt keinen neuen an | Datenbank | erfüllt | **A8** |
+| Upload **ohne** Kennung (Uhr vor 1.8.0) landet über die Rückfallebene an einem Diensttag, ohne Zeile in `day_refs` | Datenbank | erfüllt | A14 |
+| Umstieg mitten im Dienst: dieselbe `client_ref` jetzt **mit** Kennung bleibt am selben Diensttag, die Kennung wird an ihn gebunden | Datenbank | erfüllt | A14 |
+| Der Vertrag überträgt Phasen als **Nummern**; die neutralen Beschriftungen sind serverseitig gesetzt | Datenbank | erfüllt | E20, B8 |
+
+### Oberfläche — 16 Prüfungen im Chromium (Playwright)
+
+| Was | Ergebnis | Kriterium |
+|---|---|---|
+| Eintrag „Anderen Diensttag aufnehmen" im Aktionsmenü, verweist auf den geöffneten Diensttag | erfüllt | E25 |
+| Titel nennt den Tag, der **bleibt** | erfüllt | E25 |
+| Der unvereinbare Kandidat ist gesperrt und trägt seine Begründung sichtbar | erfüllt | A7 |
+| Vorschau nennt Zeitraum, aufzunehmenden Tag und die Widersprüche | erfüllt | A6 |
+| Der bleibende Tag ist vorbelegt | erfüllt | — |
+| Rückfrage nennt die Unumkehrbarkeit; nach Bestätigung stehen die Einsätze beider Tage in der Tabelle | erfüllt | A6, E13 |
+| Keine JavaScript-Fehler in der Konsole | erfüllt | A15 |
+
+### Koordinaten in den Standortdaten — 17 Prüfungen im Chromium
+
+Auf Nachfrage der Betreiberin geprüft, ob die Koordinatenerfassung in den
+Standortdaten dieselbe ist wie am Einsatzort. Sie ist es — für **eigene**
+(`einstellungen.php`) und **zentrale** Standorte (`admin_stammdaten.php`), und
+ebenso für die Zielkliniken:
+
+| Was | Ergebnis | Kriterium |
+|---|---|---|
+| Suchfeld vorhanden, Platzhalter nennt Adresse, Koordinaten und Plus Code | erfüllt | A13l |
+| Ein Koordinatenpaar wird erkannt, als Vorschlag angeboten und per Klick übernommen | erfüllt | A13l |
+| Ein Plus Code wird erkannt und in Koordinaten aufgelöst | erfüllt | A13l |
+| Die übernommenen Koordinaten stehen als Chip und in den Feldern | erfüllt | A13l |
+
+Die **Adresssuche** selbst (photon.komoot.io) bleibt ungeprüft — das Netz der
+Arbeitsumgebung lässt sie nicht durch. Geprüft ist alles, was ohne Netz
+entschieden wird.
+
+### Fehleinsatz-Spalte
+
+| Was | Wie geprüft | Ergebnis |
+|---|---|---|
+| Die Spalte erscheint **nicht** mehr in der Tagestabelle | Browser | erfüllt |
+| Der Haken steht unverändert im Einsatzformular | Browser | erfüllt |
+| Zeitraum-Übersicht und Suche führen ihn weiterhin | gegengelesen | erfüllt |
+
+### Syntax (A15)
+
+| Was | Ergebnis |
+|---|---|
+| 59 PHP-Dateien durch `php -l` (PHP 8.4.19) | fehlerfrei |
+| 22 JavaScript-Dateien durch `node --check` (ohne `vendor/`) | fehlerfrei |
+| 16 eingebettete Skriptblöcke aus 15 **ausgelieferten** Seiten, einzeln geprüft | fehlerfrei |
+
+### Was in dieser Etappe nicht prüfbar war
+
+**Der Uhr-Code ist nicht kompiliert.** Das Connect-IQ-SDK fehlt weiterhin in der
+Arbeitsumgebung; `Const.mc`, `Model.mc` und `Uploader.mc` sind **gegengelesen**,
+nicht gebaut. Geprüft ist stattdessen die Serverseite des Vertrags mit echten
+Uploads (oben). Was das **nicht** abdeckt: ob die Uhr die Kennung tatsächlich
+erzeugt, in `K_STATE` speichert und über einen Neustart hinweg behält, und ob
+die neuen Phasenbeschriftungen auf dem Display passen. Beides ist beim ersten
+Bau der App nachzuholen.
+
+**Der Migrationslauf bleibt unwiederholbar** (Befund P19): `docs/pruefgrundlage/`
+fehlt weiterhin im Repository. Für diese Etappe ohne Folge — sie braucht keine
+Migration.
+
+**Das Zusammenführen auf einem Bestand mit Trackpunkten** ist nur mittelbar
+geprüft: Der Testbestand führt Einsätze und Ruhesegmente, aber keine
+GPS-Punkte. Die Punkte hängen am Einsatz (`track_points.owner_id`), nicht am
+Diensttag, und wandern deshalb nicht — betroffen ist allein die Anzeige der
+Karte, die alle Einsätze des Zieltags zeichnet.
+
+---
+
 ## Was insgesamt für dich zu prüfen bleibt
 
 Diese Punkte sind in der Arbeitsumgebung **grundsätzlich** nicht prüfbar. Sie

@@ -37,5 +37,10 @@ declare(strict_types=1);
  * 6.2.0 ist Etappe 3: Auswertung nach Art (Tabs in der Zeitraum-Uebersicht),
  * die neuen Filter der Einsatzsuche und der Nachzug in Export und Import.
  * Ebenfalls OHNE Migration.
+ *
+ * 6.3.0 schliesst die Erweiterung ab (Etappe 4): das Zusammenfuehren von
+ * Diensttagen, die Uhr-Fassung 1.8.0 mit Dienstkennung (`day_ref`,
+ * JSON-Vertrag 1.3) und der Nachzug der Dokumentation. Ebenfalls OHNE
+ * Migration — `day_refs` und die Fremdschluessel auf `days` liegen seit 6.0.0.
  */
-const WEB_VERSION = '6.2.0';
+const WEB_VERSION = '6.3.0';

@@ -1,6 +1,6 @@
 # JSON-Vertrag Uhr → Server
 
-**Version:** 1.2 — Phase 10 berichtigt, führende Listen und Grenzen festgelegt
+**Version:** 1.3 — Dienstkennung `day_ref`, neutrale Phasenbeschriftungen
 **Endpunkt:** `POST https://<host>/ingest.php`
 **Content-Type:** `application/json`
 
@@ -35,14 +35,17 @@ schon durchsetzt und welche noch nicht.
 | Leere oder zu kurze Liste löscht nichts (3.1) | durchgesetzt |
 | Antwortfeld `rejected` (5) | durchgesetzt |
 | Antwortfelder `kept_*` (5) | durchgesetzt |
-| Zufallsanteil in der Client-Kennung (8) | **noch nicht** in der Uhr-App |
+| Dienstkennung `day_ref` (2.1) | durchgesetzt seit Web 6.0.0, gesendet ab Uhr 1.8.0 |
+| Rückfallebene über `(Konto, day)` (2.1) | durchgesetzt, **dauerhaft** |
 
-Die als „noch nicht" gekennzeichneten Punkte beschreiben den **Zielzustand**
-und werden in den folgenden Auslieferungen eingelöst. Bis dahin gilt für einen
-Client: Er darf sich auf die Regeln verlassen, wenn er sie **einhält**, aber
-nicht darauf, dass ein Verstoß gemeldet wird.
+Alle Zeilen lauten „durchgesetzt" — die Tabelle beschreibt damit keinen
+Zielzustand mehr, sondern den Stand. Sie bleibt trotzdem stehen, solange der
+Vertrag Regeln enthält, deren Durchsetzung nicht selbstverständlich ist: Ein
+Client darf sich darauf verlassen, dass ein Verstoß gemeldet wird — und genau
+das sagt diese Tabelle zu.
 
-Diese Tabelle verschwindet, sobald alle Zeilen „durchgesetzt" lauten.
+Eine Ausnahme steht ausdrücklich darin: Die **Präfixe** der Client-Kennung
+(Abschnitt 8) prüft der Server bewusst nicht.
 
 ## 1. Authentifizierung (jede Anfrage)
 
@@ -58,8 +61,51 @@ Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).
 - **Idempotenz:** Jeder Einsatz und jedes Ruhe-Segment trägt eine von der Uhr erzeugte `client_ref` (eindeutig pro Gerät). Wiederholtes Senden derselben Daten ist unschädlich.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
-- **Flugtag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Dienst beginnen" und verwendet es für alle Uploads des Tages.
+- **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
+
+### 2.1 Dienstkennung `day_ref`
+
+Optionales Feld in `mission` **und** `rest_segment`, seit Vertrag 1.3. Die Uhr
+erzeugt es bei „Einsatztag starten" und schickt es für **alle** Uploads dieses
+Dienstes unverändert mit — gleiches Muster wie `client_ref`, gleiche
+Idempotenz-Eigenschaft, dieselben Formatregeln (Abschnitt 8, Präfix `d-`).
+
+**Wozu es da ist.** Bis Web 5.10.0 war ein Diensttag ein Kalendertag, und
+`(Konto, day)` benannte ihn eindeutig. Seit Web 6.0.0 ist er eine eigene Zeile:
+Zwei Dienste an einem Kalendertag sind der vorgesehene Fall — ein
+Hubschrauberdienst am Tag, ein NEF-Nachtdienst am Abend. Aus dem Datum allein
+lässt sich dann nicht mehr ableiten, welcher gemeint ist.
+
+**Was der Server damit tut:**
+
+| Fall | Verhalten |
+|---|---|
+| `day_ref` bekannt | Der zugehörige Diensttag wird verwendet |
+| `day_ref` unbekannt, Datensatz hängt schon an einem Diensttag | Die Kennung wird an **diesen** gebunden |
+| `day_ref` unbekannt, Datensatz ist neu | Neuer Diensttag, Kennung wird eingetragen |
+| `day_ref` fehlt | Rückfallebene über `(Konto, day)` |
+
+Der zweite Fall ist der Umstieg auf eine Uhr-Fassung **mit** Kennung mitten im
+Dienst: Der laufende Dienst liegt bereits als Diensttag vor, angelegt über die
+Rückfallebene. Ohne diese Bindung entstünden aus einem Dienst zwei.
+
+**Mehrere Kennungen je Diensttag sind zulässig.** Werden zwei Diensttage in der
+Weboberfläche zusammengeführt, wandern die Kennungen des aufgenommenen Tages
+zum Zieltag. Ein späterer Upload mit einer von ihnen landet dadurch von selbst
+richtig — es gibt keine Umleitung und keinen Sonderfall.
+
+**Die Rückfallebene bleibt dauerhaft.** Sie ist kein Übergang: Ein Update des
+Servers darf eine Uhr nicht außer Betrieb setzen, die niemand aktualisiert hat.
+Liegen auf dem Datum mehrere Diensttage, entscheidet die **Zeit** des
+Datensatzes — erst der Diensttag, dessen Zeitraum ihn umschließt, dann der
+letzte, der vor ihm begonnen hat, dann der früheste des Datums.
+
+**Die Uhr erfährt nichts über die Einsatzart.** Ein von ihr angelegter
+Diensttag ist immer neutral: ohne Art, ohne Besatzungsrollen, ohne
+artabhängige Felder. Standort und Rettungsmittel werden in der Weboberfläche
+nachgetragen; Zeiten, Phasen, Track und Reanimation sind davon unberührt und
+werden vollständig erfasst.
 
 ## 3. Nachricht `mission` (Einsatz)
 
@@ -74,8 +120,9 @@ dieses Dokuments beschrieben dafür eine „Phase 10"; die gibt es nicht mehr
 ```json
 {
   "kind": "mission",
-  "client_ref": "m-20260716-0831-a3",
+  "client_ref": "m-42-1837704912",
   "day": "2026-07-16",
+  "day_ref": "d-41-0938175520",
   "started_at": "2026-07-16T08:31:05Z",
   "ended_at": "2026-07-16T09:12:40Z",
   "distance_m": 148230,
@@ -168,6 +215,7 @@ gesamte Upload scheitert daran nicht.
 | `resus_sessions[].events[]` | höchstens 200 je Sitzung |
 | `track.points[]` | höchstens 2000 je Anfrage (Richtwert 500, siehe Abschnitt 6) |
 | `client_ref` | höchstens 64 Zeichen |
+| `day_ref` | höchstens 64 Zeichen; ein unbrauchbarer Wert verwirft die **Kennung**, nicht den Upload — ohne sie greift die Rückfallebene |
 | `day` | `YYYY-MM-DD`, muss ein **existierender Kalendertag** sein |
 | Zeitstempel | `YYYY-MM-DDThh:mm[:ss]Z`, Kalendertag muss existieren |
 
@@ -199,8 +247,9 @@ Periodisch (z. B. stündlich bzw. bei Verbindung) und beim Beenden des Segments 
 ```json
 {
   "kind": "rest_segment",
-  "client_ref": "r-20260716-0700-01",
+  "client_ref": "r-43-2094771830",
   "day": "2026-07-16",
+  "day_ref": "d-41-0938175520",
   "started_at": "2026-07-16T05:02:11Z",
   "ended_at": null,
   "final": false,
@@ -256,11 +305,20 @@ Fehler:
 
 ## 7. Phasen-Nummern (Referenz)
 
-`1` Frei · `2` Alarmierung · `3` Abflug · `4` Ankunft Einsatzort ·
-`5` Ankunft PatientIn · `6` Transportbeginn · `7` Landung Krankenhaus ·
+`1` Frei · `2` Alarmierung · `3` Ausrücken · `4` Ankunft Einsatzort ·
+`5` Ankunft PatientIn · `6` Transportbeginn · `7` Ankunft Klinik ·
 `8` Übergabezeit · `9` Endzeit des Einsatzes.
 
 **Übertragen werden ausschließlich die Nummern 2 bis 9.**
+
+**Zwei Beschriftungen sind mit Vertrag 1.3 neutral geworden:** Phase 3 hieß
+„Abflug", Phase 7 „Landung Krankenhaus". Die Anwendung dokumentiert seit Web
+6.0.0 auch bodengebundene Notarzteinsätze, an denen weder das eine noch das
+andere stattfindet.
+
+Für einen Client ist das **folgenlos**: Übertragen werden Nummern, keine
+Beschriftungen. Die Umbenennung betrifft allein, was Uhr und Weboberfläche
+anzeigen — Nummerierung, Bedeutung und Reihenfolge der Phasen sind unverändert.
 
 - **Phase 1 („Frei")** ist ein Anzeigezustand der Uhr und erzeugt keinen
   Eintrag.
@@ -282,6 +340,7 @@ deshalb gehört sie in den Vertrag und nicht nur in den Code.
 |---|---|---|
 | `m-` | Uhr-App | Einsatz |
 | `r-` | Uhr-App | Ruhe-Segment |
+| `d-` | Uhr-App | **Dienst** (`day_ref`, Abschnitt 2.1) |
 | `man-` | Weboberfläche, Einsatzformular | von Hand angelegt |
 | `imp-` | Import | aus einer Datei übernommen |
 | `bak-` | Wiedereinspielen | aus einer Sicherung, ohne eigene Kennung |
