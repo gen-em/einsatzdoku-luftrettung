@@ -201,10 +201,12 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
 Luftrettung – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
 **Übersicht**, **Suche** (Abschnitt 4.6) und **⚙ Einstellungen**. Hinter dem
-Zahnrad liegen Profil, Standortdaten, Backup, Import / Export, Geräte und
-Abmelden (fragt sicherheitshalber nach); Admins finden dort zusätzlich die
-Rubrik **Administration** mit NutzerInnenverwaltung und Zentralen Stammdaten
-(Abschnitt 11). Nach 30 Minuten ohne Aktivität meldet das System automatisch
+Zahnrad liegen Profil, **Standorte**, **Rettungsmittel**, Backup,
+Import / Export, Geräte und Abmelden (fragt sicherheitshalber nach); Admins
+finden dort zusätzlich die Rubrik **Administration** mit NutzerInnenverwaltung,
+**Standorte systemweit** und **Rettungsmittel systemweit** (Abschnitt 11).
+Bis Web 6.3.0 hieß der Punkt für beides zusammen „Standortdaten"; der alte Link
+führt weiterhin zu „Standorte". Nach 30 Minuten ohne Aktivität meldet das System automatisch
 ab. Die Kopfleiste bleibt beim Scrollen oben stehen.
 
 Die **Einsatztage-Leiste** links begleitet alle Inhaltsseiten — auch
@@ -296,9 +298,12 @@ Pro Tag:
   dass alle Tracks sichtbar sind; Tracklinien werden beim Rauszoomen etwas
   dicker. Oben links lässt sich die Karte per Klick auf **Vollbild**
   stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
-  rechts zwischen **Standard-**, **Wander-** (mit Höhenlinien) und
-  **Topo-Kartenlayer** umschalten — diese beiden Controls stehen auf allen
-  drei Kartenseiten der Anwendung zur Verfügung.
+  rechts zwischen vier Kartenebenen umschalten: **Standard**, **Wanderkarte**
+  (mit Höhenlinien), **Topographisch** und — seit Web 7.0.0 —
+  **Satellitenbild**. Das Luftbild zeigt, was Höhenlinien nicht leisten: ob
+  der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
+  bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
+  Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
 - **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
   der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
   Sekundärtransport, Kilometer. Winde und Bergwacht stehen nur an einem
@@ -415,10 +420,45 @@ ein eigener Vorgang: Abschnitt 4.5a.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
-Das Formular dient beidem. Phasen werden als Zeilen erfasst (Phase wählen,
-Uhrzeit eintragen, Zeilen hinzufügen/entfernen — auch dieselbe Phase mehrfach).
+Das Formular dient beidem. Es ist seit Web 7.0.0 in **benannte Gruppen**
+gegliedert, jede mit eigenem Rahmen und Überschrift, in dieser Reihenfolge:
+
+1. **PatientInnendaten** — Einsatznummer, Nachname, Vorname, Geburtsdatum,
+   Alter, Diagnose
+2. **Einsatz** — Sekundärtransport und Fehleinsatz nebeneinander, Einsatzort,
+   Beschreibung des Einsatzorts, Abfahrtort
+3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
+4. **Bergrettung** — Bergwacht, Windeneinsatz
+5. **Weitere Rettungsmittel** — Fahrzeuge, weiterer Notarzt
+6. **Abweichende Besatzung**
+7. **Notizen**
+8. **Einsatzphasen**
+9. **Reanimation**
+
+Die Gruppe **Bergrettung** fehlt ganz, wenn der Diensttag weder Winde noch
+Bergwacht mitbringt und im Einsatz nichts dazu eingetragen ist.
+
+**Kein Feld „Einsatzdatum" mehr.** Es stand früher direkt unter dem Diensttag
+und zeigte in aller Regel dasselbe Datum ein zweites Mal. Der Fall, für den es
+gedacht war — der Einsatz **nach Mitternacht** an einem Dienst, der am Vortag
+begann —, wird jetzt erkannt: Liegt die erste Phase vor dem Beginn des Dienstes,
+gehört der Einsatz dem Folgetag. Weicht das Einsatzdatum vom Datum des Dienstes
+ab, steht es oben ausdrücklich daneben. Beim **Bearbeiten** bleibt das
+gespeicherte Datum unangetastet; verschoben wird ein Einsatz über
+**Aktionen → Verschieben**.
+
+Phasen werden als Zeilen erfasst (Phase wählen, Uhrzeit eintragen, Zeilen
+hinzufügen/entfernen — auch dieselbe Phase mehrfach).
 **In chronologischer Reihenfolge eintragen**; Zeiten nach Mitternacht werden
-automatisch dem Folgetag zugerechnet.
+automatisch dem Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**,
+direkt über der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die
+Phasen meist schon vollständig da und schoben alles andere nach unten.
+
+**NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne Notarzt an
+Bord ist die Ausnahme. Der Haken setzt sich, sobald du „Luft" wählst — und nur,
+solange du ihn nicht selbst angefasst hast: Deine ausdrückliche Entscheidung
+gilt danach dauerhaft. Beim Bearbeiten eines bestehenden Einsatzes greift die
+Vorbelegung gar nicht.
 
 Uhrzeiten stehen immer im **24-Stunden-Format `HH:MM`**, unabhängig davon, wie
 dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
@@ -434,8 +474,11 @@ Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
 nach; das gilt auch für die Diensttag-Formulare.
 
-**Geschützte Angaben** (Abschnitt 5) stehen gebündelt unter „PatientInnendaten
-& Einsatzort". Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
+**Geschützte Angaben** (Abschnitt 5) verteilen sich auf die Gruppen
+„PatientInnendaten" (Person und Diagnose) und „Einsatz" (Einsatzort,
+Beschreibung, manueller Abfahrtort). Ist der Schlüssel in dieser Sitzung
+gesperrt, sind alle diese Felder gesperrt — die übrigen bleiben bedienbar.
+Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
 (z. B. „23.04.33") — die Anwendung ergänzt automatisch das plausible
 Jahrhundert. Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
 Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
@@ -487,7 +530,12 @@ Ausfüllen ist freiwillig.
 
 
 **Abfahrtort.** Unmittelbar unter dem Einsatzort steht, von wo aus ausgerückt
-wurde. Gespeichert wird dabei nicht die Koordinate, sondern die **Regel**:
+wurde — **aber nur, wenn dieser Einsatz keine GPS-Aufzeichnung hat** (seit
+Web 7.0.0). Liegt ein Track vor, zeichnet die Karte den tatsächlich
+zurückgelegten Weg; die Auswahl bliebe dann folgenlos und steht deshalb gar
+nicht erst da. Eine früher gespeicherte Regel bleibt in den Daten erhalten.
+
+Gespeichert wird dabei nicht die Koordinate, sondern die **Regel**:
 
 | Auswahl | Woher die Koordinate kommt |
 |---|---|
@@ -512,8 +560,8 @@ nur nicht mehr gezeichnet. In **keine** Kachel und **keinen** Filter fließt die
 Luftlinienlänge ein — eine Luftlinie und eine gefahrene Strecke sind nicht
 dieselbe Größe.
 
-**Transport.** Die **Transportart** (Luft, Boden, Ambulant) steuert, was darunter
-erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
+**Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
+schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
 Koordinaten und den **Schockraum**; bei „Ambulant" — die Patientin wurde nicht
 transportiert — entfallen alle drei. Ein zuvor eingetragenes Transportziel wird
 dabei geleert, und die Änderung ist sichtbar: Ein Transportziel an einem Einsatz
@@ -738,7 +786,7 @@ springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz.
 
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
-Bergwacht-Bereitschaft und -Infos, anderen Notarzt, weitere Rettungsmittel,
+Bergwacht-Bereitschaft und -Infos, weiteren Notarzt, weitere Rettungsmittel,
 Standort, Rettungsmittel, Besatzung und Notizen. Groß- und Kleinschreibung spielt
 keine Rolle, Wortteile genügen. Gibst du mehrere Wörter ein, müssen **alle**
 vorkommen — aber nicht im selben Feld. „müller kempten" findet also auch einen
@@ -746,22 +794,59 @@ Einsatz, bei dem Müller die Besatzung und Kempten das Transportziel ist. Das
 Geburtsdatum findest du in beiden Schreibweisen, „12.03.1985" ebenso wie
 „1985-03-12".
 
+**Und / Oder / Nicht.** Seit Web 7.0.0 lassen sich Begriffe verknüpfen. Wer das
+nicht braucht, merkt nichts davon — ohne Operator verhält sich die Suche exakt
+wie bisher.
+
+| Eingabe | Bedeutung |
+|---|---|
+| `sturz fraktur` | beide Begriffe — das Leerzeichen heißt UND |
+| `sturz ODER fraktur` | mindestens einer (`OR` und <code>&#124;</code> ebenso) |
+| `bergwacht -winde` | der erste ja, der zweite nicht (`NICHT`, `NOT`, `!` ebenso) |
+| `"zwei wörter"` | genau diese Folge, Leerzeichen eingeschlossen |
+| `(sturz ODER fraktur) oberstdorf` | Klammern binden zusammen |
+
+Ohne Klammern bindet **UND stärker als ODER**: `a b ODER c` heißt
+`(a UND b) ODER c` — die Lesart, die man aus Suchmasken kennt. Ein Minus zählt
+nur dann als Ausschluss, wenn es frei vor einem Begriff steht; „St.-Anna" bleibt
+ein Wort. Eine halbfertige Eingabe wird **nicht bemängelt** — die Trefferliste
+rechnet bei jedem Tastendruck neu, und `(sturz` ist auf dem Weg zu
+`(sturz ODER fraktur)` unvermeidlich; sie wird gedeutet, so gut es geht. Die
+Kurzhilfe steht aufklappbar direkt unter dem Suchfeld.
+
 **Weitere Filter.** In der linken Spalte — dort, wo auf den anderen Seiten die
 Einsatztage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
-den Gesamtbestand geht. Die Filter liegen in sechs Blöcken: **Zeit**,
-**Winde**, **Bergwacht**, **Transport**, **Beteiligte**, **Werte**. Jeder Block
-klappt einzeln auf und zu; beim Öffnen der Seite sind alle zugeklappt, damit die
-Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
+den Gesamtbestand geht. Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die
+danach schneiden, **worüber** gefiltert wird:
+
+| Block | Enthält |
+|---|---|
+| **Einsatz** | Datum, Alarmzeit, Wochentag, Strecke, Einsatzdauer, Fehleinsatz |
+| **Patient** | Alter von / bis |
+| **Transport** | Transportart, NA-Begleitung, Transportziel, Sekundärtransport, Schockraum |
+| **Beteiligte** | Standort, Rettungsmittel, Art, Besatzung je Rolle, weiteres Rettungsmittel |
+| **Bergrettung** | Bergwacht, Bereitschaft, Winde samt Cycles und Luftverladung |
+
+Vorher waren es sechs, darunter ein Block „Werte" mit Alter, Strecke und Dauer —
+das war nie ein Gegenstand, sondern eine Datenart. Alter gehört zur Patientin,
+Strecke und Dauer zum Einsatz. Die Kurznamen in geteilten Links sind unverändert
+geblieben, alte Links funktionieren also weiter.
+
+Jeder Block klappt einzeln auf und zu; beim Öffnen der Seite sind alle
+zugeklappt, damit die Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
 auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 (UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
 Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
 enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 
-**Winde und Bergwacht nur, wenn es sie gibt.** Beide Blöcke erscheinen seit
-Web 5.10.0 nur dann, wenn wenigstens ein Einsatz deines Bestandes eine
-Windenangabe bzw. eine Bergwacht-Angabe trägt. Wer nie windet, hat die sechs
-Winden-Felder also gar nicht erst in der Spalte stehen — sie könnten dort nur
-Filter setzen, die garantiert null Treffer ergeben. Maßgeblich ist der
+**Bergrettung nur, wenn es sie gibt.** Der Block erscheint nur dann, wenn
+wenigstens ein Einsatz deines Bestandes eine Winden- oder eine
+Bergwacht-Angabe trägt. Wer nie windet und nie mit der Bergwacht arbeitet, hat
+diese acht Felder also gar nicht erst in der Spalte stehen — sie könnten dort
+nur Filter setzen, die garantiert null Treffer ergeben. Dasselbe gilt seit
+Web 7.0.0 für das einzelne Feld **Fehleinsatz**: Es steht in einem Block, der
+bleiben muss, und erscheint deshalb feldweise nur, wenn im Bestand einer
+dokumentiert ist. Maßgeblich ist der
 **gesamte** Bestand, nicht die aktuelle Trefferliste: Die Spalte verändert sich
 also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
 dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
@@ -1057,7 +1142,7 @@ Zwei Sonderfälle werden dabei erkannt:
 
   **„Überschreiben" löscht nichts, was die Datei nicht kennt** (seit Web
   5.8.0). Liefert die Datei zu einem Feld nichts, bleibt der gespeicherte Wert
-  stehen. Das betrifft die Besatzung, Bergwacht-Infos, den anderen Notarzt, die
+  stehen. Das betrifft die Besatzung, Bergwacht-Infos, den weiteren Notarzt, die
   Notizen, die Höhe des Einsatzortes, die Patientendaten und die Koordinaten der
   Phasen — also genau die Angaben, die ein Export **ohne** personenbezogene
   Angaben leer lässt. Vorher hätte ein solcher Rückimport sie im Bestand
@@ -1125,7 +1210,7 @@ ab. Seit Web 5.8.0 deckt er **alles** ab, was auf einen Menschen zeigt:
   Einsatzort mit Adresse und Koordinaten,
 - die **Besatzung** — die des Diensttags und die tatsächliche des Einsatzes,
   auch im Blatt *Diensttage*,
-- **Bergwacht: Namen / Infos** und den **anderen Notarzt**,
+- **Bergwacht: Namen / Infos** und den **weiteren Notarzt**,
 - die **Notizen** von Einsatz und Diensttag,
 - die **Koordinaten der Phasen** (Phase 4 ist „Ankunft Einsatzort", Phase 5
   „Ankunft PatientIn" — das *ist* der Einsatzort), die **Höhe des
@@ -1316,10 +1401,24 @@ zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 
 ---
 
-## 9. Stammdaten (Standortdaten)
+## 9. Stammdaten (Standorte und Rettungsmittel)
 
-Unter **⚙ Einstellungen → „Standortdaten"** pflegst du deine Vorbelegungen. Die
-sechs Bereiche sind aufklappbare Abschnitte und starten zugeklappt.
+Deine Vorbelegungen liegen seit Web 7.0.0 hinter **zwei** Menüpunkten. Der
+Schnitt folgt der Tätigkeit:
+
+| Menüpunkt | Inhalt |
+|---|---|
+| **⚙ Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
+| **⚙ Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
+
+Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
+der beiden Teile. Ein alter Link (`?t=stammdaten`) führt weiterhin zu
+„Standorte".
+
+Unter „Rettungsmittel" steht **je Standort ein Block**, darin je Datenart ein
+eigener aufklappbarer Abschnitt mit der Zahl der Einträge im Kopf. Alles startet
+zugeklappt. Nach dem Speichern öffnet sich der Weg bis zu der Stelle wieder, an
+der du getippt hast, und die Seite springt dorthin.
 
 ### 9.1 Standorte, Rettungsmittel, Besatzung, Bergwacht
 
@@ -1343,10 +1442,24 @@ Diese Wahl entscheidet über alles Weitere:
 | Luftgebunden | Pilot 1, Pilot 2, HEMS-TC, Flugretter, Sonstige | Winde, Bergwacht — zwei getrennte Häkchen |
 | Bodengebunden | Fahrer, Praktikant, Sonstige | keine |
 
+**Die Art ist Pflicht und nicht vorbelegt** (seit Web 7.0.0). Vorher stand
+„luftgebunden" von selbst da — an einem Standort mit NEF war das die falsche
+Vorgabe, die niemand bemerkt, und sie fiel erst auf, wenn im Einsatzformular
+Windenfelder erschienen. Ohne Auswahl wird die Eingabe abgewiesen. Die Rollen
+darunter erscheinen erst, wenn die Art feststeht, und bleiben freiwillig: Ein
+Rettungsmittel ohne angehakte Rolle lässt sich anlegen.
+
 Angehakt werden die Rollen, die tatsächlich besetzt werden. Die Notärztin selbst
 ist keine Rolle — sie ist die Nutzerin. Winde und Bergwacht sind zwei getrennte
 Häkchen, weil ein Hubschrauber eine Winde führen kann, ohne in einer
 Bergwachtkooperation zu stehen, und umgekehrt.
+
+**Die Besatzungspflege zeigt nur die Rollen, die es am Standort gibt.** Eine
+Rolle erscheint dort, sobald mindestens ein Rettungsmittel dieses Standorts sie
+führt. Vorher standen an einem reinen NEF-Standort vier leere Flugrollen mit
+vier Eingabezeilen. Hast du zu einer Rolle bereits Einträge und löschst später
+das zugehörige Rettungsmittel, bleibt sie sichtbar — sonst kämst du an deine
+eigenen Einträge nicht mehr heran.
 
 **Änderungen an den Stammdaten wirken nur in die Zukunft.** Beim Anlegen eines
 Diensttags werden Art, Rollensatz, Fähigkeiten, Bezeichnungen und
@@ -1356,9 +1469,15 @@ nichts — auch nicht bei einem Tippfehler im Namen. Ein Diensttag ist ein
 abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
 wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
 
-Mit „Als Standard" (★) markiertes Rettungsmittel und Standort werden bei neuen
+Mit **„★ Standard"** markiertes Rettungsmittel und Standort werden bei neuen
 Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
-Einträge (s. 9.4).
+Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
+Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
+Server es längst erlaubte. Ein Konto, das ausschliesslich mit vordefinierten
+Standorten arbeitet — der Regelfall an einer Station —, konnte damit gar keine
+Vorbelegung setzen. Jetzt steht sie bei jedem **ausgewählten** vordefinierten
+Standort. (Nicht ausgewählte bleiben aussen vor: Was nicht in den Auswahllisten
+steht, kann auch keine Vorbelegung sein.)
 
 ### 9.2 Andere Rettungsmittel
 
@@ -1392,12 +1511,14 @@ Eintrag; es entstehen lediglich kein Pin und keine Luftlinie. Eine spätere
 Korrektur wirkt nur auf neue Einsätze — am Einsatz ist die Koordinate
 eingefroren.
 
-### 9.4 Zentrale Stammdaten (vom Admin gepflegt)
+### 9.4 Vordefinierte (systemweite) Stammdaten
 
-Der Admin kann alle sechs Bereiche zusätzlich **zentral** hinterlegen (siehe
-Abschnitt 11). **Zentrale Standorte erscheinen erst in deinen Auswahllisten,
-wenn du sie unter „Zentrale Standorte auswählen" angehakt hast** — sonst stünden
-in einem gemeinsam genutzten System alle Standorte aller Häuser in jeder Liste.
+Der Admin kann alle sechs Bereiche zusätzlich **systemweit** hinterlegen (siehe
+Abschnitt 11). **Vordefinierte Standorte erscheinen erst in deinen
+Auswahllisten, wenn du sie unter „Standorte → Vordefinierte Standorte" angehakt
+hast** — sonst stünden in einem gemeinsam genutzten System alle Standorte aller
+Häuser in jeder Liste. Der Block hieß bis Web 6.3.0 „Zentrale Standorte
+auswählen"; „zentral" beschrieb die Verwaltung, nicht den Nutzen.
 Abwählen entfernt keine Daten; bereits dokumentierte Diensttage bleiben
 unverändert.
 
@@ -1473,17 +1594,35 @@ dem Aufspielen einer neuen Fassung dort nachsehen) und ob der tägliche
 Aufräumjob durchläuft. Das bloße Öffnen der Seite ändert nichts — sie zeigt
 erst an, was anstünde, und wartet auf eine Bestätigung.
 
-Unter **„Zentrale Stammdaten"** pflegt der Admin dieselben sechs Bereiche wie
-unter Standortdaten (9.1–9.3), jedoch für **alle** NutzerInnen gemeinsam
-(siehe 9.4). Namensgleiche Einträge werden auch hier abgelehnt; existieren
-bereits persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen,
-weist ein Hinweis darauf hin (keine Blockade).
+Unter **„Standorte systemweit"** und **„Rettungsmittel systemweit"** pflegt der
+Admin dieselben sechs Bereiche wie eine NutzerIn unter Standorte und
+Rettungsmittel (9.1–9.3), jedoch für **alle** Konten gemeinsam (siehe 9.4). Die
+Zweiteilung ist seit Web 7.0.0 dieselbe wie in der Kontoansicht; vorher hieß
+beides zusammen „Zentrale Stammdaten". Namensgleiche Einträge werden auch hier
+abgelehnt; existieren bereits persönliche Einträge mit demselben Namen bei
+einzelnen NutzerInnen, weist ein Hinweis darauf hin (keine Blockade).
+
+Unter **„Sicherungen"** stehen alle vorhandenen Sicherungen **als Tabelle** —
+eine Zeile je Sicherung mit Zeitpunkt, Herkunft, Umfang und Zustand. Die
+Formulare zum Einspielen, Freigeben und Löschen klappen hinter der jeweiligen
+Zeile auf. Bis Web 6.3.0 stand je Sicherung ein eigener Kasten mit vollständigem
+Formular; bei mehreren Konten waren das schnell mehrere Bildschirmseiten. An den
+Rückfragen ändert das nichts: Vor dem Einspielen ist weiterhin die E-Mail-Adresse
+des Zielkontos abzutippen.
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt
 nur an, was anstünde, und ändert nichts; erst der Knopf **„Updates jetzt
 anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen können
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
+
+Seit Web 7.0.0 steht der **Zustand zuerst** (Schlüsselableitung, Umgebung,
+Aufräumjob) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
+die Seite im Betrieb öffnet. Die Tabelle steht **auf dem Kopf**: neueste Einträge
+oben, mit einer Spalte **„Web"**, die die Fassung nennt, mit der das Update
+ausgeliefert wurde. Der Startknopf steht **über** der Tabelle. Ausgeführt werden
+die Updates weiterhin in ihrer ursprünglichen Reihenfolge — sie bauen
+aufeinander auf; gedreht ist allein die Anzeige.
 
 Die Seite zeigt außerdem unter **„Schlüsselableitung"**, ob alle Konten mit
 Einstellungen rechnen, die diese Programmfassung anbietet. Steht dort eine

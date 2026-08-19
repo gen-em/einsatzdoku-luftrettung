@@ -35,17 +35,32 @@ function ui_topbar(string $active): void { ?>
  * Untermenue der Einstellungen — identisch auf einstellungen.php, admin_users.php,
  * admin_user.php und admin_stammdaten.php. Die Administration (eigener,
  * abgesetzter Block) erscheint nur fuer Admins.
- * $active: profil | stammdaten | backup | geraete | admin | admin_stammdaten
+ *
+ * $active: profil | standorte | rettungsmittel | backup | import | geraete
+ *          | admin | admin_standorte | admin_rettungsmittel | admin_sicherungen
+ *          | wartung
+ *
+ * ZWEI EINTRAEGE STATT EINEM (Web 7.0.0). „Standortdaten" hiess der Punkt, an
+ * dem sich alles sammelte: Standorte, Rettungsmittel, Besatzungen, Zielkliniken,
+ * Bergwacht. Der Name war irrefuehrend — Standortdaten sind die Daten EINES
+ * Standorts, hier standen aber die Standorte selbst und ihr gesamter Inhalt.
+ *
+ * Jetzt trennt der Schnitt danach, was man tut:
+ *   Standorte       Standorte anlegen und auswaehlen — und sonst nichts.
+ *   Rettungsmittel  was an den ausgewaehlten Standorten haengt.
+ * Dieselbe Zweiteilung gilt in der Administration fuer die systemweiten
+ * Eintraege.
  */
 function ui_settings_sidebar(string $active): void {
     $items = [
-        'profil'     => ['einstellungen.php?t=profil', 'Profil'],
-        'stammdaten' => ['einstellungen.php?t=stammdaten', 'Standortdaten'],
-        'backup'     => ['einstellungen.php?t=backup', 'Backup'],
+        'profil'         => ['einstellungen.php?t=profil', 'Profil'],
+        'standorte'      => ['einstellungen.php?t=standorte', 'Standorte'],
+        'rettungsmittel' => ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel'],
+        'backup'         => ['einstellungen.php?t=backup', 'Backup'],
         // Eigene Seite (import.php), erscheint aber als Eintrag der
         // Einstellungen — wie admin_stammdaten.php.
-        'import'     => ['import.php', 'Import / Export'],
-        'geraete'    => ['einstellungen.php?t=geraete', 'Geräte'],
+        'import'         => ['import.php', 'Import / Export'],
+        'geraete'        => ['einstellungen.php?t=geraete', 'Geräte'],
     ];
     ?>
   <aside class="daylist">
@@ -61,7 +76,11 @@ function ui_settings_sidebar(string $active): void {
       <h2 class="sidebar-subhead">Administration</h2>
       <ul>
         <li><a href="admin_users.php" <?= $active === 'admin' ? 'class="active"' : '' ?>>NutzerInnenverwaltung</a></li>
-        <li><a href="admin_stammdaten.php" <?= $active === 'admin_stammdaten' ? 'class="active"' : '' ?>>Zentrale Stammdaten</a></li>
+        <?php /* Aufgeteilt wie in der Kontoansicht (Web 7.0.0): erst die
+                 Standorte, dann was an ihnen haengt. „Zentrale Stammdaten" war
+                 EIN Eintrag fuer sechs Datenarten. */ ?>
+        <li><a href="admin_stammdaten.php?t=standorte" <?= $active === 'admin_standorte' ? 'class="active"' : '' ?>>Standorte systemweit</a></li>
+        <li><a href="admin_stammdaten.php?t=rettungsmittel" <?= $active === 'admin_rettungsmittel' ? 'class="active"' : '' ?>>Rettungsmittel systemweit</a></li>
         <li><a href="admin_sicherungen.php" <?= $active === 'admin_sicherungen' ? 'class="active"' : '' ?>>Sicherungen</a></li>
         <?php /* Wartung war bis Web 4.5.2 nur ueber die direkte Adresse
            erreichbar. Das machte die Auskunft aus M3-05 wertlos: Sie meldet,

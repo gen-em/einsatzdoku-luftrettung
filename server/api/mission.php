@@ -16,7 +16,14 @@ try {
     $m = $st->fetch();
     if (!$m) json_out(['error' => 'not_found'], 404);
 
-    // Zusatzfelder generisch aus der zentralen Definition (mission_fields.php)
+    /* Zusatzfelder generisch aus der zentralen Definition (mission_fields.php).
+     *
+     * JEDER EINTRAG NENNT SEINE SPALTE ('col', Web 7.0.0). Die Einsatzansicht
+     * ordnet die Liste seither selbst — Name, Geburtsdatum, Einsatzort,
+     * Diagnose, Notizen und der Transportblock stehen dort in einer fachlich
+     * gewaehlten Reihenfolge, die nicht die des Katalogs ist. Ohne die Spalte
+     * muesste sie die Felder ueber ihre BESCHRIFTUNG zurueckerkennen; eine
+     * Umbenennung im Katalog haette die Sortierung dann still zerlegt. */
     $FIELDS = require __DIR__ . '/../mission_fields.php';
     $fields = [];
     $collect = function (string $col, array $f) use (&$collect, &$fields, $m) {
@@ -33,13 +40,14 @@ try {
             $q->execute([(int)$m['id']]);
             $namen = $q->fetchAll(PDO::FETCH_COLUMN);
             if ($namen) {
-                $fields[] = ['label' => $f['label'], 'value' => implode(', ', $namen)];
+                $fields[] = ['col' => $col, 'label' => $f['label'],
+                             'value' => implode(', ', $namen)];
             }
             return;
         }
         if ($type === 'checkbox') {
             if ((int)$v === 1) {
-                $fields[] = ['label' => $f['label'], 'value' => 'Ja'];
+                $fields[] = ['col' => $col, 'label' => $f['label'], 'value' => 'Ja'];
                 foreach (($f['children'] ?? []) as $cc => $cf) { $collect($cc, $cf); }
             }
             return;
@@ -54,7 +62,7 @@ try {
             if ($type === 'select' && isset($f['options'])) {
                 $anzeige = mf_optionen($f['options'])[$anzeige] ?? $anzeige;
             }
-            $fields[] = ['label' => $f['label'], 'value' => $anzeige];
+            $fields[] = ['col' => $col, 'label' => $f['label'], 'value' => $anzeige];
         }
         // Unterfelder von Nicht-Checkbox-Eltern (z. B. Schockraum unter
         // Transportziel) werden unabhaengig vom Elternwert verarbeitet — anders
@@ -239,7 +247,11 @@ try {
         'start_hhmm' => fmt_local($m['started_at']),
         'end_hhmm'   => fmt_local($m['ended_at']),
         'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-        'ascent_m'   => $m['ascent_m']   !== null ? (int)$m['ascent_m']   : null,
+        /* `ascent_m` steht hier NICHT mehr (Web 7.0.0). Die Einsatzansicht war
+         * der einzige Abnehmer, und sie zeigt die Steigung nicht mehr an: Sie
+         * ist das Profil der geflogenen Strecke, keine Aussage ueber den
+         * Einsatz. Erhalten bleibt sie ueberall sonst — in der Spalte, im
+         * Export (`hoehenmeter_m`), im Import und in der Sicherung. */
         'site_ele_m' => $m['site_ele_m'] !== null ? (int)$m['site_ele_m'] : null,
         'origin'     => (string)($m['origin'] ?? 'watch'),
         'edited'     => (int)($m['edited'] ?? 0) === 1,

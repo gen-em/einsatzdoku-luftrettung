@@ -82,7 +82,12 @@ $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
   <div id="map" class="map map-tall"></div>
 
   <section>
-    <h2>Phasen</h2>
+    <?php /* „Einsatzphasen" statt „Phasen" (Web 7.0.0). Der kurze Titel stand
+             fuer sich allein auf der Seite und war dort eindeutig; im Gespraech
+             und in der Uhr-App heisst es aber durchgaengig Einsatzphase, und
+             eine Ueberschrift, die anders heisst als die Sache, kostet bei
+             jedem Hinsehen einen Gedanken. */ ?>
+    <h2>Einsatzphasen</h2>
     <table class="data" id="phases">
       <thead><tr><th>Nr.</th><th>Phase</th><th>Uhrzeit</th></tr></thead>
       <tbody id="phasebody"></tbody>
@@ -122,7 +127,6 @@ const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
 const esc = EdHtml.escape;
 function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
-function fmtKm(m){ return m == null ? '–' : (m / 1000).toFixed(1).replace('.', ',') + ' km'; }
 function zeigeLadeFehler(msg){
   document.getElementById('title').textContent = 'Einsatz nicht geladen';
   const box = document.getElementById('loaderror');
@@ -233,7 +237,8 @@ function attachPhaseToggleControl(){
 
 function aktualisierePhaseToggleBtn(){
   if (!phaseToggleBtn) { return; }
-  phaseToggleBtn.textContent = phasesVisible ? 'Phasen ausblenden' : 'Phasen anzeigen';
+  phaseToggleBtn.textContent = phasesVisible
+    ? 'Einsatzphasen ausblenden' : 'Einsatzphasen anzeigen';
   phaseToggleBtn.title = phaseToggleBtn.textContent;
   phaseToggleBtn.classList.toggle('active', phasesVisible);
 }
@@ -258,6 +263,78 @@ function hlPhase(idx, on){
     const pm = phaseMarkers.find(e2 => e2.idx === idx);
     if (pm) pm.marker.setZIndexOffset(on ? 1000 : 0);
   }
+}
+
+/* ---- Reihenfolge des Inhaltskästchens (Web 7.0.0) ------------------------
+ *
+ * Bis Web 6.3.0 stand hier die Reihenfolge des FELDKATALOGS, und die
+ * verschlüsselten Angaben hingen als Block hinten dran — sie kommen erst nach
+ * dem Entsperren an und wurden deshalb einfach angehängt. Das Ergebnis las sich
+ * rückwärts: erst Transport und Winde, dann ganz unten, wer eigentlich
+ * behandelt wurde.
+ *
+ * Jetzt hat jede Zeile einen RANG, und eingefügt wird an der Stelle, an die sie
+ * gehört — unabhängig davon, wann ihr Wert eintrifft. Die Ordnung folgt dem
+ * Gang der Dokumentation: erst die Person, dann der Ort, dann was gefunden
+ * wurde, dann was daraus folgte (Transport zuletzt, weil er das Ende des
+ * Einsatzes beschreibt).
+ *
+ * Ein Feld ohne Eintrag hier bekommt RANG_SONST und steht damit am Ende statt
+ * zu verschwinden: Ein neues Katalogfeld erscheint auch ohne Änderung an dieser
+ * Liste. */
+const RANG_SONST = 900;
+/* Ob die Höhe des Einsatzorts gezeigt wird und wie hoch sie liegt. Beides
+ * entscheidet init(), gebraucht wird es in zeigePat(): Dort entsteht die Zeile
+ * „Einsatzort", und die Höhe gehört hinein. */
+let hoeheZeigen = false;
+let hoeheWert = null;
+const RANG = {
+  patlock:          5,     // Sperrhinweis bzw. Fehlermeldung: immer zuoberst
+  mission_no:      10,
+  pat_name:        20,
+  pat_dob:         30,
+  pat_loc:         40,
+  pat_site_desc:   50,
+  luftlinie:       60,
+  pat_dx:          70,
+  notes:           80,
+  other_resources: 90,
+  other_ema:      100,
+  secondary:      110,
+  false_alarm:    120,
+  winch:          130, winch_cycles: 131, winch_cycles_pat: 132, winch_airload: 133,
+  bergwacht:      140, bw_unit: 141, bw_info: 142,
+  transport_mode: 150, na_escort: 151,
+  transport_dest: 160,
+  schockraum:     170
+};
+
+/**
+ * Eine Zeile ins Inhaltskästchen einsortieren.
+ *
+ * dt und dd tragen denselben Rang als Datenattribut; eingefügt wird vor dem
+ * ersten Element mit HÖHEREM Rang. Gleiche Ränge behalten damit ihre
+ * Einfügereihenfolge — was bei den Unterfeldern der Winde die richtige ist.
+ *
+ * @param {number} rang
+ * @param {string} dt  fertiges HTML der Beschriftung
+ * @param {string} dd  fertiges HTML des Wertes
+ */
+function dlZeile(rang, dt, dd){
+  const dl = document.getElementById('fieldlist');
+  const vor = [...dl.children].find(el => Number(el.dataset.rang) > rang) || null;
+  const dtEl = document.createElement('dt');
+  const ddEl = document.createElement('dd');
+  dtEl.dataset.rang = rang; ddEl.dataset.rang = rang;
+  dtEl.innerHTML = dt; ddEl.innerHTML = dd;
+  dl.insertBefore(dtEl, vor);
+  dl.insertBefore(ddEl, vor);
+  dl.hidden = false;
+}
+
+/** Zeile mit dieser Kennung wieder entfernen (Sperrhinweis beim zweiten Anlauf). */
+function dlEntferne(id){
+  document.querySelectorAll(`[data-zeile="${id}"]`).forEach(el => el.remove());
 }
 
 async function init(){
@@ -288,48 +365,63 @@ async function init(){
     `<span class="badge ${ORIGIN_KLASSE[m.origin] || 'badge-uhr'}">${ORIGIN_LABEL[m.origin] || 'Uhr'}</span>`
     + (m.edited ? ' · <span class="badge badge-editiert">editiert</span>' : '');
 
-  /* Kopfzeile: das ECHTE Einsatzdatum, dazu der Diensttag, zu dem er gehört.
-     Beides ist nötig, seit sich der Diensttag vom Kalendertag gelöst hat (E9):
-     Ein Einsatz um 01:30 gehört zum Dienst des Vortags, und ohne die Angabe
-     sähe die Zuordnung wie ein Fehler aus. Bezeichnungen kommen aus den
-     eingefrorenen Spalten des Diensttags (E8), nie aus den Stammdaten.
-     Die Streckenangabe ist neutral beschriftet (Abschnitt 3.9). */
-  const dienstTeile = [];
-  if (m.day) { dienstTeile.push(fmtDay(m.day)); }
-  if (m.day_vehicle_name) { dienstTeile.push(m.day_vehicle_name); }
-  if (m.day_base_name) { dienstTeile.push(m.day_base_name); }
-  const dienst = dienstTeile.length
-    ? `Diensttag ${dienstTeile.join(' · ')}`
-    : 'kein Diensttag zugeordnet';
+  /* Kopfzeile (Web 7.0.0 gestrafft).
+     ENTFALLEN sind zwei Angaben. Die STRECKE stand hier als dritte Zahl neben
+     zwei Uhrzeiten, ohne dass jemand sie an dieser Stelle sucht — sie gehört
+     zur Auswertung und steht dort (Zeitraum-Übersicht, Suche, Export). Und das
+     Wort „Diensttag" vor dem Datum sagte nichts, was das Datum nicht selbst
+     sagt: Darunter folgen Rettungsmittel und Standort, damit ist klar, wovon
+     die Rede ist.
+     GEBLIEBEN ist die Unterscheidung, für die es das Wort einmal gab: Fällt
+     das Datum des Dienstes vom echten Einsatzdatum ab — ein Einsatz um 01:30
+     gehört zum Dienst des Vortags (E9) —, wird der Dienst ausdrücklich
+     genannt. Ohne das sähe die Zuordnung wie ein Fehler aus.
+     Bezeichnungen kommen aus den eingefrorenen Spalten des Diensttags (E8),
+     nie aus den Stammdaten. */
+  const teile = [];
+  if (m.mission_day) { teile.push(fmtDay(m.mission_day)); }
+  teile.push(zeitteil);
+  if (m.day_vehicle_name) { teile.push(m.day_vehicle_name); }
+  if (m.day_base_name) { teile.push(m.day_base_name); }
+  if (!m.day) { teile.push('kein Diensttag zugeordnet'); }
+  else if (m.day !== m.mission_day) { teile.push(`Dienst vom ${fmtDay(m.day)}`); }
   document.getElementById('meta').innerHTML =
-    esc(`${zeitteil} · ${fmtKm(m.distance_m)} · ${dienst}`)
+    esc(teile.join(' · '))
     + ' <span class="artzeichen" title="' + esc(m.day_art_text || '')
     + '" aria-label="' + esc(m.day_art_text || '') + '">'
     + esc(m.day_art_zeichen || '') + '</span>'
     + ' · ' + kennzeichen;
 
-  // Zusatzfelder (Server liefert nur befuellte)
+  // Zusatzfelder (Server liefert nur befuellte), einsortiert nach RANG.
   const dl = document.getElementById('fieldlist');
   m.fields.forEach(f => {
-    dl.insertAdjacentHTML('beforeend', `<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`);
+    dlZeile(RANG[f.col] ?? RANG_SONST, esc(f.label), esc(f.value));
   });
-  /* HÖHENANGABEN NUR LUFTGEBUNDEN (A13, Konzept 4.6).
+  /* HÖHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6), und seit
+   * Web 7.0.0 in der Zeile des Einsatzortes statt in einer eigenen (siehe
+   * zeigePat). Steht KEIN Einsatzort da — er ist verschlüsselt, die Sitzung
+   * kann gesperrt sein —, bekommt sie doch eine eigene Zeile: Die Höhe selbst
+   * liegt im Klartext, sie zu verschweigen wäre kein Gewinn.
    *
-   * Gerechnet werden sie unverändert für jeden Einsatz mit Track
-   * (site_elevation_lib.php bleibt unangetastet) — gezeigt werden sie nur, wo
-   * sie etwas aussagen. Bodengebunden ist die Höhe des Einsatzorts die Höhe der
-   * Straße, und die Steigung ist das Profil der Fahrstrecke; beides ist keine
-   * Auskunft über den Einsatz. Bei einem noch nicht zugeordneten Diensttag
-   * (day_kind === null, E26) bleiben sie ebenfalls verborgen: Ob sie etwas
-   * aussagen, ist dann noch nicht entschieden.
+   * Gerechnet wird sie unverändert für jeden Einsatz mit Track
+   * (site_elevation_lib.php bleibt unangetastet); gezeigt wird sie nur, wo sie
+   * etwas aussagt. Bodengebunden ist sie die Höhe der Straße. Bei einem noch
+   * nicht zugeordneten Diensttag (day_kind === null, E26) bleibt sie verborgen:
+   * Ob sie etwas aussagt, ist dann noch nicht entschieden.
+   *
+   * DIE STEIGUNG IST GANZ ENTFALLEN (Web 7.0.0). Sie war das Profil der
+   * geflogenen Strecke und nicht das des Einsatzes — eine Zahl, aus der sich
+   * nichts ableiten liess, was nicht Track und Höhe schon sagen. In Export,
+   * Sicherung und Datenbank bleibt sie unverändert erhalten; nur diese Ansicht
+   * zeigt sie nicht mehr.
    *
    * Die Werte gehen weiterhin in Export und Backup — dort steht die Art
    * daneben, und wer auswertet, kann selbst entscheiden. */
-  if (m.site_ele_m != null && m.day_kind === 'air') {
-    dl.insertAdjacentHTML('beforeend', `<dt>Höhe Einsatzort</dt><dd>${m.site_ele_m} m</dd>`);
-  }
-  if (m.ascent_m != null && m.day_kind === 'air') {
-    dl.insertAdjacentHTML('beforeend', `<dt>Steigung</dt><dd>${m.ascent_m} m</dd>`);
+  hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
+  hoeheWert = m.site_ele_m;
+  if (hoeheZeigen) {
+    dlZeile(RANG.pat_loc, 'Höhe Einsatzort', `${m.site_ele_m} m`);
+    markiere(RANG.pat_loc, 'hoehe');
   }
   dl.hidden = dl.children.length === 0;
 
@@ -420,74 +512,89 @@ async function init(){
  * dessen Knopf diese Funktion erneut aufruft. Der Hinweis wird zu Beginn
  * entfernt, damit er beim zweiten Durchlauf nicht doppelt erscheint. */
 async function zeigePat(m, dl, bounds){
-  ['patlockdt', 'patlockdd'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.remove(); }
-  });
+  dlEntferne('patlock');
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
-  if (ck) {
-    const r = await EdPat.entschluessle(ck, m.pat_blob);
-    if (r.zustand === 'unlesbar') {
-      // Hier ist der Fall besonders deutlich zu benennen: Auf der Einzelansicht
-      // sieht die NutzerIn genau einen Einsatz. Ein stiller Fehlschlag sieht
-      // hier aus wie "keine geschuetzten Angaben erfasst" — also wie ein
-      // normaler, unauffaelliger Zustand.
-      dl.insertAdjacentHTML('beforeend',
-        '<dt id="patlockdt">Verschlüsselt ⚠</dt>' +
-        '<dd id="patlockdd" class="patfehler">Für diesen Einsatz sind geschützte ' +
-        'Angaben gespeichert, sie lassen sich mit dem aktuellen Schlüssel aber ' +
-        '<strong>nicht lesen</strong>. Die Daten sind vorhanden und nicht verloren. ' +
-        'Bitte den Wiederherstellungsschlüssel bereithalten und vor weiteren ' +
-        'Schritten klären, warum der Schlüssel nicht passt.</dd>');
-      dl.hidden = false;
-      return;
-    }
-    {
-      const o = r.daten || {};
-      if (o.mission_no != null && String(o.mission_no) !== '') {
-        dl.insertAdjacentHTML('beforeend', `<dt>Einsatznummer 🔒</dt><dd>${esc(String(o.mission_no))}</dd>`);
-      }
-      const pname = EdPat.name(o);
-      if (pname !== '') {
-        dl.insertAdjacentHTML('beforeend', `<dt>Name 🔒</dt><dd>${esc(pname)}</dd>`);
-      }
-      if (o.dob != null) {
-        dl.insertAdjacentHTML('beforeend',
-          `<dt>Geburtsdatum 🔒</dt><dd>${esc(EdPat.datumDe(o.dob))}</dd>`);
-      }
-      const alter = EdPat.alterAnzeige(o, m.mission_day);
-      if (alter != null) {
-        dl.insertAdjacentHTML('beforeend', `<dt>Alter 🔒</dt><dd>${esc(String(alter))}</dd>`);
-      }
-      if (o.dx != null) {
-        dl.insertAdjacentHTML('beforeend', `<dt>Diagnose 🔒</dt><dd>${esc(String(o.dx))}</dd>`);
-      }
-      if (o.loc && o.loc.addr) {
-        dl.insertAdjacentHTML('beforeend', `<dt>Einsatzort 🔒</dt><dd>${esc(o.loc.addr)}</dd>`);
-        if (o.loc.lat != null) {
-          L.marker([o.loc.lat, o.loc.lon], { icon: locPin('#FF8F1F'), keyboard: false })
-            .addTo(map).bindPopup('Einsatzort<br>' + esc(o.loc.addr));
-          if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
-        }
-      }
-      await zeichneLuftlinie(m, o, ck, bounds);
-      // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
-      // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
-      if (o.site_desc != null) {
-        dl.insertAdjacentHTML('beforeend',
-          `<dt>Beschreibung Einsatzort 🔒</dt><dd>${esc(String(o.site_desc))}</dd>`);
-      }
-      dl.hidden = dl.children.length === 0;
-    }
-  } else {
-    dl.insertAdjacentHTML('beforeend',
-      '<dt id="patlockdt">Verschlüsselt 🔒</dt>' +
-      '<dd id="patlockdd" class="muted">gesperrt — ' +
-      '<button type="button" class="btn-plain unlockbtn">Entsperren</button></dd>');
-    dl.hidden = false;
-    document.querySelector('#patlockdd .unlockbtn')
+  if (!ck) {
+    dlZeile(RANG.patlock, 'Verschlüsselt 🔒',
+      '<span class="muted">gesperrt — ' +
+      '<button type="button" class="btn-plain unlockbtn">Entsperren</button></span>');
+    markiere(RANG.patlock, 'patlock');
+    document.querySelector('.unlockbtn')
       .addEventListener('click', () => zeigePat(m, dl, bounds));
+    return;
   }
+
+  const r = await EdPat.entschluessle(ck, m.pat_blob);
+  if (r.zustand === 'unlesbar') {
+    // Hier ist der Fall besonders deutlich zu benennen: Auf der Einzelansicht
+    // sieht die NutzerIn genau einen Einsatz. Ein stiller Fehlschlag sieht
+    // hier aus wie "keine geschuetzten Angaben erfasst" — also wie ein
+    // normaler, unauffaelliger Zustand.
+    dlZeile(RANG.patlock, 'Verschlüsselt ⚠',
+      '<span class="patfehler">Für diesen Einsatz sind geschützte ' +
+      'Angaben gespeichert, sie lassen sich mit dem aktuellen Schlüssel aber ' +
+      '<strong>nicht lesen</strong>. Die Daten sind vorhanden und nicht verloren. ' +
+      'Bitte den Wiederherstellungsschlüssel bereithalten und vor weiteren ' +
+      'Schritten klären, warum der Schlüssel nicht passt.</span>');
+    markiere(RANG.patlock, 'patlock');
+    return;
+  }
+
+  const o = r.daten || {};
+  if (o.mission_no != null && String(o.mission_no) !== '') {
+    dlZeile(RANG.mission_no, 'Einsatznummer 🔒', esc(String(o.mission_no)));
+  }
+  const pname = EdPat.name(o);
+  if (pname !== '') {
+    dlZeile(RANG.pat_name, 'Name 🔒', esc(pname));
+  }
+  /* GEBURTSDATUM UND ALTER IN EINER ZEILE (Web 7.0.0). Sie standen als zwei
+     Zeilen untereinander und sagten dasselbe zweimal — das Alter FOLGT aus dem
+     Geburtsdatum, es ist keine zweite Angabe.
+     Die Einheit wechselt mit dem Alter (EdPat.alterText): Bei einem Säugling
+     ist „0" keine Auskunft, „3 Monate" oder „12 Tage" schon. Ohne Geburtsdatum
+     bleibt es bei der Zeile „Alter" — dort steht dann der von Hand
+     eingetragene, meist geschätzte Wert. */
+  const alterTxt = EdPat.alterText(o, m.mission_day);
+  if (o.dob != null) {
+    dlZeile(RANG.pat_dob, 'Geburtsdatum 🔒',
+      esc(EdPat.datumDe(o.dob))
+      + (alterTxt ? ` <span class="muted">(${esc(alterTxt)})</span>` : ''));
+  } else if (alterTxt) {
+    dlZeile(RANG.pat_dob, 'Alter 🔒', esc(alterTxt));
+  }
+  /* EINSATZORT MIT HÖHE (Web 7.0.0). Die Höhe stand als eigene Zeile weit
+     unten; sie ist aber eine Eigenschaft DIESES Ortes und sonst nichts. Steht
+     hier ein Ort, wandert sie in seine Zeile — und die Ersatzzeile aus init(),
+     die sie für den gesperrten Fall trägt, verschwindet dafür. */
+  if (o.loc && o.loc.addr) {
+    if (hoeheZeigen) { dlEntferne('hoehe'); }
+    dlZeile(RANG.pat_loc, 'Einsatzort 🔒',
+      esc(o.loc.addr)
+      + (hoeheZeigen ? ` <span class="muted">(${esc(String(hoeheWert))} m)</span>` : ''));
+    if (o.loc.lat != null) {
+      L.marker([o.loc.lat, o.loc.lon], { icon: locPin('#FF8F1F'), keyboard: false })
+        .addTo(map).bindPopup('Einsatzort<br>' + esc(o.loc.addr));
+      if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
+    }
+  }
+  // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
+  // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
+  if (o.site_desc != null) {
+    dlZeile(RANG.pat_site_desc, 'Beschreibung Einsatzort 🔒', esc(String(o.site_desc)));
+  }
+  if (o.dx != null) {
+    dlZeile(RANG.pat_dx, 'Diagnose 🔒', esc(String(o.dx)));
+  }
+  await zeichneLuftlinie(m, o, ck, bounds);
+  dl.hidden = dl.children.length === 0;
+}
+
+/** Die zuletzt eingefuegte Zeile eines Rangs kennzeichnen, damit dlEntferne()
+ *  sie wiederfindet. */
+function markiere(rang, id){
+  document.querySelectorAll(`[data-rang="${rang}"]`)
+    .forEach(el => { el.dataset.zeile = id; });
 }
 /* ---- Luftlinie ohne GPS-Aufzeichnung (E34/E35, A13g–A13i, A13n) ----------
  *
@@ -533,10 +640,9 @@ async function zeichneLuftlinie(m, o, ck, bounds){
   }
   // Die Länge ausdrücklich BENANNT — eine Luftlinie ist keine gefahrene
   // Strecke, und die Zahl daneben würde sonst als eine gelesen (E36).
-  document.getElementById('fieldlist').insertAdjacentHTML('beforeend',
-    `<dt>Luftlinie 🔒</dt><dd>${esc(EdLuftlinie.text(punkte))}
-     <span class="muted">(gerade Verbindung, kein aufgezeichneter Weg)</span></dd>`);
-  document.getElementById('fieldlist').hidden = false;
+  dlZeile(RANG.luftlinie, 'Luftlinie 🔒',
+    `${esc(EdLuftlinie.text(punkte))}
+     <span class="muted">(gerade Verbindung, kein aufgezeichneter Weg)</span>`);
 
   const px = map.getSize();
   map.fitBounds(bounds.concat(punkte.map(p => [p.lat, p.lon])),

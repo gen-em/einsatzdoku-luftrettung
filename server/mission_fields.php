@@ -131,6 +131,41 @@ declare(strict_types=1);
  *                                   Daten (A5). Die Aenderung ist sichtbar —
  *                                   das Feld verschwindet vor dem Speichern.
  *
+ *   'gruppe' => Kennung             FORMULARGRUPPE (Web 7.0.0). Nur an Feldern
+ *                                   der obersten Ebene; Unterfelder folgen
+ *                                   ihrem Elternfeld. Die Gruppen, ihre
+ *                                   Ueberschriften und ihre Reihenfolge stehen
+ *                                   in einsatz_form.php ($GRUPPEN) — hier steht
+ *                                   nur, WOHIN das Feld gehoert. Ohne Angabe
+ *                                   landet es in der letzten Gruppe, statt
+ *                                   unsichtbar zu werden.
+ *
+ *   'nebeneinander' => true         Das Feld teilt sich eine Zeile mit seinen
+ *                                   unmittelbaren Nachbarn derselben Gruppe,
+ *                                   die dasselbe verlangen (Web 7.0.0). Gedacht
+ *                                   fuer kurze Haken wie Sekundaertransport und
+ *                                   Fehleinsatz — zwei Woerter, die
+ *                                   untereinander zwei Zeilen kosten und
+ *                                   nebeneinander eine.
+ *
+ *   'vorbelegt_bei' => [            VORBELEGUNG EINER CHECKBOX, abhaengig vom
+ *      '<spalte>' => '<wert>',      Wert eines ANDEREN Feldes (Web 7.0.0). Der
+ *   ]                               Haken wird gesetzt, sobald das genannte
+ *                                   Feld den genannten Wert annimmt — aber NUR,
+ *                                   solange niemand ihn von Hand angefasst hat.
+ *                                   Eine ausdrueckliche Entscheidung schlaegt
+ *                                   die Vorbelegung immer, und zwar dauerhaft:
+ *                                   Sonst haette das Formular eine Meinung, die
+ *                                   sich nicht abstellen laesst.
+ *                                   Wirkt ausschliesslich im Browser und
+ *                                   ausschliesslich beim NACHTRAGEN — ein
+ *                                   bestehender Einsatz behaelt, was
+ *                                   gespeichert ist.
+ *
+ *   'such_label'                    nur bei 'loc': Beschriftung des
+ *                                   Suchfeldes neben der Bezeichnung. Ohne
+ *                                   Angabe „Koordinaten (optional)".
+ *
  *   'store' => 'crew'               DIE EINE AUSNAHME von "alle Felder sind
  *                                   Spalten". Der Wert liegt nicht in
  *                                   `missions`, sondern als Zeile in
@@ -215,18 +250,79 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
     ];
 }
 
+/* ---- Reihenfolge = FORMULARREIHENFOLGE (Web 7.0.0) ------------------------
+ *
+ * Die Liste stand bis Web 6.3.0 in der Reihenfolge, in der die Felder
+ * entstanden sind: Transport zuerst, weil er als letztes Grossfeld dazukam,
+ * Notizen zuletzt, weil sie schon immer unten standen. Im Formular las sich
+ * das quer zur Arbeit — die Transportart stand ueber dem Einsatzort, und
+ * „Weitere Rettungsmittel" hing zwischen Bergwacht und Besatzung.
+ *
+ * Jetzt folgt die Liste dem Ablauf des Einsatzes, und JEDES FELD NENNT SEINE
+ * GRUPPE ('gruppe'). Das Formular rendert Gruppe fuer Gruppe mit eigener
+ * Ueberschrift; welche Felder in welche gehoert, entscheidet allein dieser
+ * Schluessel — nicht eine zweite Liste im Formular, die beim naechsten Feld
+ * vergessen wuerde.
+ *
+ * Die Gruppen und ihre Reihenfolge stehen in einsatz_form.php ($GRUPPEN). Ein
+ * Feld ohne 'gruppe' landet in der letzten Gruppe („Weitere Angaben") — es
+ * verschwindet also nicht, wenn jemand den Schluessel vergisst.
+ *
+ * WAS DIE REIHENFOLGE SONST NOCH STEUERT: die Spalten der Tagesuebersicht
+ * (mf_tagesspalten) und die Spaltenfolge im Export. Beide ziehen von selbst
+ * nach; die Tagesuebersicht zeigt seither Sekundaertransport, Bergwacht,
+ * Winde in dieser Folge. Der Import ordnet ueber SPALTENNAMEN zu und ist
+ * davon unberuehrt.
+ */
 return [
-    /* TRANSPORTART (E17). Sie ist das ordnende Feld der Einsatzdokumentation
+    /* ---- Gruppe „Einsatz" -------------------------------------------------
+     * Zwei Haken, die den Einsatz als Ganzes kennzeichnen. Sie stehen im
+     * Formular NEBENEINANDER ueber dem Einsatzort: Beides sind Aussagen ueber
+     * die Art des Auftrags, und beide sind mit einem Blick zu erfassen. */
+    'secondary' => [
+        'label' => 'Sekundärtransport', 'type' => 'checkbox',
+        'gruppe' => 'einsatz', 'nebeneinander' => true,
+        // Harter Umbruch statt weichem Trennstrich: Die Zeitraum- und die
+        // Suchtabelle (assets/missiontable.js) beschriften diese Spalte
+        // ebenso. Solange 'day_col' wirkungslos war, fiel der Unterschied
+        // nicht auf (Web 5.4.0).
+        'day_col' => 'check', 'day_label' => 'Sekundär<br>Transport',
+    ],
+    /* FEHLEINSATZ (E17). EIN Haken ohne Unterauswahl — ausdruecklich so
+     * entschieden (Abschnitt 7): Ob storniert, abgebrochen oder von vornherein
+     * gegenstandslos, ist eine Unterscheidung, die im Nachhinein selten
+     * verlaesslich zu treffen ist. */
+    /* KEINE Spalte in der Tagestabelle. Der Haken steht im Einsatz selbst und
+     * sonst nirgends: Er ist selten gesetzt, und eine Spalte voller leerer
+     * Zellen kostet auf der Tagesuebersicht Breite, ohne etwas zu sagen.
+     * Auswerten laesst er sich weiterhin — die Zeitraumuebersicht zaehlt ihn in
+     * der Kachel "Fehleinsaetze", und die Suche filtert danach. Beide fuehren
+     * ihre Spalte datengetrieben (missiontable.js, `nurWenn`), zeigen sie also
+     * nur, wenn im Bestand tatsaechlich Fehleinsaetze liegen. */
+    'false_alarm' => [
+        'label' => 'Fehleinsatz / Storno / Abbruch', 'type' => 'checkbox',
+        'gruppe' => 'einsatz', 'nebeneinander' => true,
+    ],
+
+    /* ---- Gruppe „Transport" -----------------------------------------------
+     *
+     * TRANSPORTART (E17). Sie ist das ordnende Feld der Einsatzdokumentation
      * geworden: Zielklinik, Schockraum und NA-Begleitung haengen daran und
      * entfallen bei „Ambulant" — also dann, wenn die Patientin nicht
      * transportiert wurde.
+     *
+     * SIE HEISST SEIT WEB 7.0.0 „TRANSPORTART" und nicht mehr „Transport".
+     * „Transport" war zugleich der Name der Gruppe, in der sie steht, und der
+     * Name eines Feldes darin — und im Altbestand ausserdem der Spaltentitel
+     * fuer die ZIELKLINIK (siehe assets/import_profiles.js). Drei Bedeutungen
+     * fuer ein Wort sind zwei zu viel.
      *
      * KEIN 'kind_gate'. „Luft" ist auch an einem bodengebundenen Dienst ein
      * gueltiger Wert: Das NEF uebergibt an den Hubschrauber, und wie
      * transportiert wurde, ist eine Aussage ueber den EINSATZ, nicht ueber das
      * eigene Rettungsmittel. */
     'transport_mode' => [
-        'label' => 'Transport', 'type' => 'select',
+        'label' => 'Transportart', 'type' => 'select', 'gruppe' => 'transport',
         /* WERT LINKS, BESCHRIFTUNG RECHTS. Die Spalte ist ein
          * `ENUM('air','ground','ambulant')` — sie stammt aus der Migration der
          * Web 6.0.0 und ist englisch benannt wie alle uebrigen Spalten. Eine
@@ -239,6 +335,14 @@ return [
                 'label' => 'NA-Begleitung', 'type' => 'checkbox',
                 // 'not_in' nennt den GESPEICHERTEN Wert, nicht die Beschriftung.
                 'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
+                /* VORBELEGT BEI LUFT (Web 7.0.0). Ein luftgebundener Transport
+                 * ohne Notarzt an Bord ist die Ausnahme, nicht die Regel — der
+                 * Haken war damit der am haeufigsten vergessene des Formulars.
+                 * Gesetzt wird er NUR, solange niemand ihn von Hand angefasst
+                 * hat (assets/forms.js kennt die Regel nicht; sie steht im
+                 * Skript des Formulars). Eine ausdrueckliche Entscheidung
+                 * schlaegt die Vorbelegung immer. */
+                'vorbelegt_bei' => ['transport_mode' => 'air'],
             ],
             /* ZIELKLINIK ALS ORTSFELD (E37/E38/E40). Freitext und
              * Vorschlagsliste bleiben unveraendert; neu ist die optionale
@@ -255,6 +359,12 @@ return [
                 'placeholder' => 'z. B. Klinikum Kempten',
                 'suggest_src' => 'transport_dests',
                 'lat_col' => 'dest_lat', 'lon_col' => 'dest_lon',
+                /* Beschriftung des Suchfeldes daneben. Es hiess „Koordinaten
+                 * (optional)" — was es einsammelt, sind aber laengst keine
+                 * Zahlen mehr, sondern eine Adresse, ein Plus Code oder ein
+                 * Stammdatentreffer. Die Koordinate ist das ERGEBNIS und steht
+                 * danach als Merkfeld darunter (Web 7.0.0). */
+                'such_label' => 'Lokalisation Transportziel (optional)',
                 'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
                 'children' => [
                     'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
@@ -262,22 +372,28 @@ return [
             ],
         ],
     ],
-    /* FEHLEINSATZ (E17). EIN Haken ohne Unterauswahl — ausdruecklich so
-     * entschieden (Abschnitt 7): Ob storniert, abgebrochen oder von vornherein
-     * gegenstandslos, ist eine Unterscheidung, die im Nachhinein selten
-     * verlaesslich zu treffen ist. */
-    /* KEINE Spalte in der Tagestabelle. Der Haken steht im Einsatz selbst und
-     * sonst nirgends: Er ist selten gesetzt, und eine Spalte voller leerer
-     * Zellen kostet auf der Tagesuebersicht Breite, ohne etwas zu sagen.
-     * Auswerten laesst er sich weiterhin — die Zeitraumuebersicht zaehlt ihn in
-     * der Kachel "Fehleinsaetze", und die Suche filtert danach. Beide fuehren
-     * ihre Spalte datengetrieben (missiontable.js, `nurWenn`), zeigen sie also
-     * nur, wenn im Bestand tatsaechlich Fehleinsaetze liegen. */
-    'false_alarm' => [
-        'label' => 'Fehleinsatz / Storno / Abbruch', 'type' => 'checkbox',
+
+    /* ---- Gruppe „Bergrettung" ---------------------------------------------
+     * Bergwacht steht vor der Winde: Erst wer beteiligt war, dann womit. Beide
+     * haengen an einer FAEHIGKEIT des Diensttags ('cap_gate') und sind an einem
+     * bodengebundenen Dienst gar nicht zu sehen — die ganze Gruppe faellt dann
+     * weg (einsatz_form.php). */
+    'bergwacht' => [
+        'label' => 'Bergwacht', 'type' => 'checkbox', 'gruppe' => 'bergrettung',
+        'cap_gate' => 'bergwacht',
+        'day_col' => 'check', 'day_label' => 'Bergwacht',
+        'children' => [
+            'bw_unit' => [
+                'label' => 'Bereitschaft', 'type' => 'select',
+                'options_src' => 'bw_units',
+            ],
+            'bw_info' => [
+                'label' => 'Namen / Infos', 'type' => 'text', 'max' => 190,
+            ],
+        ],
     ],
     'winch' => [
-        'label' => 'Windeneinsatz', 'type' => 'checkbox',
+        'label' => 'Windeneinsatz', 'type' => 'checkbox', 'gruppe' => 'bergrettung',
         'cap_gate' => 'winch',
         'day_col' => 'check', 'day_label' => 'Winde',
         'children' => [
@@ -292,37 +408,26 @@ return [
             'winch_airload' => [ 'label' => 'Luftverladung', 'type' => 'checkbox' ],
         ],
     ],
-    'bergwacht' => [
-        'label' => 'Bergwacht', 'type' => 'checkbox',
-        'cap_gate' => 'bergwacht',
-        'day_col' => 'check', 'day_label' => 'Bergwacht',
-        'children' => [
-            'bw_unit' => [
-                'label' => 'Bereitschaft', 'type' => 'select',
-                'options_src' => 'bw_units',
-            ],
-            'bw_info' => [
-                'label' => 'Namen / Infos', 'type' => 'text', 'max' => 190,
-            ],
-        ],
-    ],
 
-    'secondary' => [
-        'label' => 'Sekundärtransport', 'type' => 'checkbox',
-        // Harter Umbruch statt weichem Trennstrich: Die Zeitraum- und die
-        // Suchtabelle (assets/missiontable.js) beschriften diese Spalte
-        // ebenso. Solange 'day_col' wirkungslos war, fiel der Unterschied
-        // nicht auf (Web 5.4.0).
-        'day_col' => 'check', 'day_label' => 'Sekundär<br>Transport',
-    ],
-    'other_ema' => [
-        'label' => 'Anderer Notarzt', 'type' => 'text', 'max' => 190,
-    ],
+    /* ---- Gruppe „Weitere Rettungsmittel" ----------------------------------
+     * Wer sonst noch am Einsatz war — Fahrzeuge und Personen. Beides gehoert
+     * zusammen und stand bisher an zwei Stellen des Formulars. */
     'other_resources' => [
         // Sonderfall: nicht als Spalte in missions, sondern als eigene Zeilen
         // in mission_resources (einzeln entfernbar). Siehe einsatz_form.php.
         'label' => 'Weitere Rettungsmittel', 'type' => 'resources',
+        'gruppe' => 'mittel',
     ],
+    'other_ema' => [
+        /* „Weiterer Notarzt" statt „Anderer Notarzt" (Web 7.0.0). „Anderer"
+         * las sich, als sei der eigene ersetzt worden; gemeint ist ein
+         * zusaetzlicher, der ebenfalls am Einsatz war — dieselbe Logik wie bei
+         * „Weitere Rettungsmittel" direkt darueber. */
+        'label' => 'Weiterer Notarzt', 'type' => 'text', 'max' => 190,
+        'gruppe' => 'mittel',
+    ],
+
+    /* ---- Gruppe „Abweichende Besatzung" ----------------------------------- */
     'crew_override' => [
         // Abweichende Besatzung fuer genau diesen Einsatz (fachlicher Anlass:
         // Pilotenwechsel waehrend eines Diensttags). Ohne Haken gilt die
@@ -341,10 +446,14 @@ return [
         // Einsatzansicht unter „Besatzung", mit „(abw.)" an der betroffenen
         // Rolle. Das Feld selbst bleibt unveraendert erhalten, ebenso im Export.
         'label' => 'Abweichende Besatzung', 'type' => 'checkbox',
+        'gruppe' => 'besatzung',
         'children' => $mf_crew_kinder,
     ],
+
+    /* ---- Gruppe „Notizen" ------------------------------------------------- */
     'notes' => [
         'label' => 'Notizen', 'type' => 'textarea', 'max' => 2000,
+        'gruppe' => 'notizen',
         'placeholder' => 'Freitext (keine Patientendaten!)',
     ],
 ];

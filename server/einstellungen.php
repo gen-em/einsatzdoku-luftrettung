@@ -5,7 +5,15 @@ require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
 
 $tab = $_GET['t'] ?? 'profil';
-if (!in_array($tab, ['profil', 'geraete', 'stammdaten', 'backup'], true)) { $tab = 'profil'; }
+/* „stammdaten" war bis Web 6.3.0 der Reiter, der alles trug. Er ist in zwei
+ * zerlegt (siehe ui_settings_sidebar) — der alte Name bleibt als WEICHE
+ * stehen: Er steht in Lesezeichen, in verschickten Links und in älteren
+ * Fassungen der Dokumentation. Ein „Seite nicht gefunden" dafür wäre der
+ * schlechteste Umgang mit einer Umbenennung. */
+if ($tab === 'stammdaten') { $tab = 'standorte'; }
+if (!in_array($tab, ['profil', 'geraete', 'standorte', 'rettungsmittel', 'backup'], true)) {
+    $tab = 'profil';
+}
 $notice = null; $error = null; $pwGewechselt = false; $newKey = null; $pairCode = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -270,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $notice = 'Gerät gelöscht. Bereits hochgeladene Daten bleiben erhalten.';
     }
 
-    /* ---- Standortdaten ----------------------------------------------------
+    /* ---- Standorte und ihre Stammdaten ------------------------------------
      *
      * DER STANDORT IST DER ANKER (E15). Jedes Rettungsmittel, jede Zielklinik,
      * jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und jede
@@ -371,9 +379,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $n     = mb_substr(trim($_POST['name'] ?? ''), 0, 64);
         $vid   = (int)($_POST['id'] ?? 0);
         $bid   = $sdBase();
-        $kind  = ($_POST['kind'] ?? '') === 'ground' ? 'ground' : 'air';
+        /* DIE ART IST PFLICHT (Web 7.0.0). Bis Web 6.3.0 stand hier ein
+         * stillschweigendes „im Zweifel luftgebunden", und das Formular hatte
+         * den Knopf entsprechend vorbelegt. An einem Standort mit NEF war das
+         * die falsche Vorgabe — und weil sie nie eine Entscheidung verlangte,
+         * fiel sie erst auf, wenn im Einsatzformular Windenfelder erschienen.
+         * Ohne Angabe wird jetzt nicht gespeichert. */
+        $kindRoh = (string)($_POST['kind'] ?? '');
+        $kind = in_array($kindRoh, ['air', 'ground'], true) ? $kindRoh : null;
         if ($n === '') {
             $error = 'Bitte eine Bezeichnung für das Rettungsmittel eintragen.';
+        } elseif ($kind === null) {
+            $error = 'Bitte die Art wählen: luftgebunden oder bodengebunden. '
+                   . 'Sie entscheidet über Besatzungsrollen und die im '
+                   . 'Einsatzformular sichtbaren Felder.';
         } elseif ($bid === null) {
             $error = 'Bitte einen Standort wählen. Jedes Rettungsmittel gehört zu '
                    . 'genau einem Standort.';
@@ -572,6 +591,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * STANDORTBEZOGEN: `sd-<Standortkennung>` oeffnet den Block dieses
      * Standorts. Nur die Standortliste selbst und die Auswahl der zentralen
      * Standorte haben feste Anker. */
+    /* ZWEI REITER, ZWEI ZIELE (Web 7.0.0). Die Standortaktionen fuehren in den
+     * Reiter „Standorte" zurueck, alles Uebrige in „Rettungsmittel". */
+    $zurueckTab = in_array($action, ['base_save', 'base_del', 'base_default', 'ub_toggle'], true)
+        ? 'standorte' : 'rettungsmittel';
     $abschnitt = [
         'base_save'  => 'standorte', 'base_del' => 'standorte',
         'base_default' => 'standorte', 'ub_toggle' => 'zentrale',
@@ -582,19 +605,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'td_save'    => null, 'td_del'   => null,
     ][$action] ?? null;
     /* Aktionen, die zu einem Standort gehoeren, springen in dessen Block
-     * zurueck. Der Standort steht im Formular; beim Loeschen liefert es ihn
+     * zurueck — und zwar in den UNTERBLOCK der jeweiligen Datenart
+     * (`sd-<Standort>-<Art>`, Web 7.0.0). Vorher genuegte `sd-<Standort>`, weil
+     * der Block alles auf einmal zeigte; jetzt liegt jede Datenart in einem
+     * eigenen aufklappbaren Abschnitt, und ohne die Art landete man wieder ganz
+     * oben. Das Skript am Seitenende oeffnet alle Ebenen bis dorthin.
+     *
+     * Der Standort steht im Formular; beim Loeschen liefert es ihn
      * ausdruecklich mit, weil die Zeile danach nicht mehr da ist, um befragt zu
      * werden. */
-    if ($abschnitt === null && in_array($action, ['veh_save', 'veh_del', 'veh_default',
-            'crew_save', 'crew_del', 'res_save', 'res_del',
-            'bw_save', 'bw_del', 'td_save', 'td_del'], true)) {
+    $unterblock = [
+        'veh_save' => 'veh', 'veh_del' => 'veh', 'veh_default' => 'veh',
+        'crew_save' => 'crew', 'crew_del' => 'crew',
+        'td_save'  => 'td',  'td_del'  => 'td',
+        'res_save' => 'res', 'res_del' => 'res',
+        'bw_save'  => 'bw',  'bw_del'  => 'bw',
+    ][$action] ?? null;
+    if ($abschnitt === null && $unterblock !== null) {
         $zurueckBase = (int)($_POST['base_id'] ?? 0);
-        $abschnitt = $zurueckBase > 0 ? ('sd-' . $zurueckBase) : 'standorte';
+        $abschnitt = $zurueckBase > 0
+            ? ('sd-' . $zurueckBase . '-' . $unterblock)
+            : 'standorte';
     }
     if ($abschnitt !== null && ($notice !== null || $error !== null)) {
         if ($notice !== null) { $_SESSION['flash_notice'] = $notice; }
         if ($error !== null) { $_SESSION['flash_error'] = $error; }
-        header('Location: einstellungen.php?t=stammdaten#' . $abschnitt);
+        header('Location: einstellungen.php?t=' . $zurueckTab . '#' . $abschnitt);
         exit;
     }
 }
@@ -781,29 +817,33 @@ if ($tab === 'geraete') {
     });
     </script>
 
-  <?php elseif ($tab === 'stammdaten'): ?>
+  <?php elseif ($tab === 'standorte' || $tab === 'rettungsmittel'): ?>
     <?php
-      /* ---- Standortdaten, gegliedert nach Standort (Konzept 3.8) ----------
+      /* ---- Standorte und ihre Stammdaten — ZWEI REITER (Web 7.0.0) --------
        *
-       * Bis Web 5.10.0 stand hier eine Liste je Datenart: alle Standorte, alle
-       * Hubschrauber, alle Besatzungen. Das ging, solange Stammdaten fuer sich
-       * standen. Seit E15 gehoert jeder Eintrag GENAU EINEM Standort — und eine
-       * flache Liste kann das nicht abbilden: Zwei Standorte duerfen dieselbe
-       * Zielklinik fuehren, und welche der beiden Zeilen zu welchem gehoert,
-       * waere nicht zu sehen.
+       * Bis Web 6.3.0 stand alles unter einem Punkt „Standortdaten": die Liste
+       * der Standorte, die Auswahl der zentralen, und darunter je Standort ein
+       * Block mit fünf Datenarten. Das war eine Seite, auf der man scrollte, um
+       * einen Standort anzulegen, und nochmal scrollte, um ein Rettungsmittel
+       * einzutragen — und der Name passte auf keines von beidem.
        *
-       * Die Gliederung ist deshalb: erst die Standorte selbst (eigene anlegen,
-       * zentrale auswaehlen), dann je ausgewaehltem Standort ein aufklappbarer
-       * Block mit seinen fuenf Datenarten.
+       * Jetzt trennt der Schnitt nach der Tätigkeit:
+       *   „Standorte"       Standorte anlegen, bearbeiten, auswählen. Sonst nichts.
+       *   „Rettungsmittel"  alles, was an einem ausgewählten Standort hängt.
        *
-       * ZENTRALE EINTRAEGE bleiben sichtbar und unveraenderlich, wie bisher:
-       * Sie werden von einer Administratorin gepflegt (admin_stammdaten.php) und
-       * tragen hier das Kennzeichen „systemweit".
+       * DIE DATENHALTUNG IST UNVERÄNDERT: Der Standort bleibt der Anker (E15),
+       * jeder Eintrag gehört genau einem. Beide Reiter laden deshalb denselben
+       * Bestand — der Block hier läuft für beide, gerendert wird danach je
+       * Reiter.
+       *
+       * ZENTRALE EINTRÄGE bleiben sichtbar und unveränderlich: Sie werden von
+       * einer Administratorin gepflegt (admin_stammdaten.php) und tragen hier
+       * das Kennzeichen „systemweit".
        */
-      /* Praefixe der Ortsfelder dieses Tabs. Sie entstehen beim Rendern — je
-       * Standort eines fuer die Zielklinik —, und die Belebung im Browser
-       * laeuft am Ende ueber genau diese Liste. Eine zweite, von Hand gepflegte
-       * Aufzaehlung im Skript liefe beim naechsten Standort auseinander. */
+      /* Präfixe der Ortsfelder dieses Reiters. Sie entstehen beim Rendern — je
+       * Standort eines für die Zielklinik —, und die Belebung im Browser
+       * läuft am Ende über genau diese Liste. Eine zweite, von Hand gepflegte
+       * Aufzählung im Skript liefe beim nächsten Standort auseinander. */
       $ORTSFELDER = [];
 
       $sdBases = dt_bases($userId);           // eigene + ausgewaehlte zentrale
@@ -904,21 +944,46 @@ if ($tab === 'geraete') {
       };
       // Kennzeichen einer Zeile: eigen oder systemweit?
       $istZentral = static fn(array $z): bool => $z['user_id'] === null;
+
+      /* ---- WELCHE ROLLEN GIBT ES AN DIESEM STANDORT? (Web 7.0.0) ----------
+       *
+       * Die Besatzungspflege zeigte bis Web 6.3.0 IMMER alle Rollen des
+       * Katalogs — an einem reinen NEF-Standort also auch Pilot 1, Pilot 2,
+       * HEMS-TC und Flugretter. Vier Überschriften mit vier leeren Tabellen und
+       * vier Eingabezeilen, für die es nie einen Eintrag geben wird.
+       *
+       * Gefragt wird jetzt der Bestand: Eine Rolle erscheint, wenn mindestens
+       * EIN Rettungsmittel dieses Standorts sie führt. Damit richtet sich die
+       * Pflege nach dem, was am Standort tatsächlich fliegt und fährt.
+       *
+       * EINE BEREITS BELEGTE ROLLE BLEIBT — dieselbe Regel wie im
+       * Einsatzformular (A13e): Wer Vorbelegungen für eine Rolle hinterlegt hat
+       * und später das zugehörige Rettungsmittel löscht, käme sonst an seine
+       * eigenen Einträge nicht mehr heran, auch nicht zum Löschen. */
+      $rollenAmStandort = function (int $bid) use ($sdVeh, $vehRollen, $sdCrew): array {
+          $rollen = [];
+          foreach (($sdVeh[$bid] ?? []) as $v) {
+              foreach (($vehRollen[(int)$v['id']] ?? []) as $rc) { $rollen[$rc] = true; }
+          }
+          foreach (($sdCrew[$bid] ?? []) as $c) { $rollen[(string)$c['role_code']] = true; }
+          // Reihenfolge des Katalogs, nicht die des Zufalls.
+          return array_values(array_filter(array_keys(CREW_ROLES),
+              static fn(string $rc): bool => isset($rollen[$rc])));
+      };
     ?>
-    <h1>Standortdaten</h1>
-    <p class="muted">Vorbelegungen für die Diensttag- und Einsatzdokumentation.
-       <strong>Der Standort ist der Anker</strong>: Jedes Rettungsmittel, jede
-       Zielklinik, jede Besatzungs-Vorbelegung, jedes weitere Rettungsmittel und
-       jede Bergwacht-Bereitschaft gehört zu genau einem Standort. Eine
-       standortübergreifende Ebene gibt es nicht — dieselbe Zielklinik an zwei
-       Standorten wird zweimal angelegt.</p>
-    <p class="muted">Löschen entfernt nur den Listeneintrag — <strong>bereits
-       dokumentierte Diensttage bleiben unverändert</strong>. Sie haben Art,
-       Rollen, Fähigkeiten und Bezeichnungen beim Anlegen eingefroren; Änderungen
-       hier wirken ausschließlich auf neue Diensttage. ★ markiert die
-       Vorbelegung neuer Diensttage. „systemweit“ markiert vom Admin gepflegte
-       Einträge — diese stehen automatisch zur Verfügung und lassen sich hier
-       nicht bearbeiten oder löschen.</p>
+
+  <?php if ($tab === 'standorte'): ?>
+    <h1>Standorte</h1>
+    <p class="muted">Der Standort ist der <strong>Anker</strong> aller
+       Vorbelegungen: Jedes Rettungsmittel, jede Zielklinik, jede
+       Besatzungs-Vorbelegung und jede Bergwacht-Bereitschaft gehört zu genau
+       einem Standort. Angelegt und ausgewählt werden sie hier — gepflegt wird
+       ihr Inhalt unter
+       <a href="einstellungen.php?t=rettungsmittel">Rettungsmittel</a>.</p>
+    <p class="muted">★ markiert die Vorbelegung neuer Diensttage. Löschen
+       entfernt nur den Listeneintrag — <strong>bereits dokumentierte Diensttage
+       bleiben unverändert</strong>: Sie haben Art, Rollen, Fähigkeiten und
+       Bezeichnungen beim Anlegen eingefroren.</p>
 
     <details class="stammblock" id="standorte" open>
       <summary>Eigene Standorte</summary>
@@ -938,17 +1003,17 @@ if ($tab === 'geraete') {
             <td><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
             <td class="th-act"><div class="rowactions">
               <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
-                <form method="post" action="einstellungen.php?t=stammdaten#standorte">
+                <form method="post" action="einstellungen.php?t=standorte#standorte">
                   <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
                   <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-                  <button class="btn-plain">★ als Standard</button>
+                  <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
                 </form>
               <?php endif; ?>
-              <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
+              <a class="btn-yellow" href="einstellungen.php?t=standorte&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
               <?php /* Die Rückfrage BEZIFFERT, was mitgeht (Konzept 4.2). Ein
                        „Standort löschen?" allein verschwieg, dass Rettungsmittel,
                        Zielkliniken und Besatzungen daran hängen. */ ?>
-              <form method="post" action="einstellungen.php?t=stammdaten#standorte"
+              <form method="post" action="einstellungen.php?t=standorte#standorte"
                     data-confirm="Standort „<?= e($b['name']) ?>“ löschen? <?= $anz > 0
                         ? ($anz === 1 ? 'Ein eigener Stammdatensatz' : $anz . ' eigene Stammdatensätze')
                           . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
@@ -962,7 +1027,14 @@ if ($tab === 'geraete') {
         <?php endforeach; ?>
         </tbody>
       </table>
-      <form method="post" action="einstellungen.php?t=stammdaten#standorte" class="inline-form">
+      <?php /* EINGABEZEILE (Web 7.0.0 entzerrt). Sie war zu hoch: `.inline-form`
+               ist ein Flex-Container, und das Ortsfeld daneben ist mehrere
+               Zeilen hoch (Suchfeld, Zustandszeile, Merkfeld). Ohne
+               `align-items` streckte der Browser Namensfeld und Schaltfläche auf
+               dieselbe Höhe — beide sahen aus wie aufgeblasen. Die Regel steht
+               jetzt in style.css (`.inline-form{align-items:flex-start}`), das
+               Markup ist unverändert. */ ?>
+      <form method="post" action="einstellungen.php?t=standorte#standorte" class="inline-form">
         <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
         <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
         <input type="text" name="name" id="sdbaseaddr" class="focus-target" maxlength="120" required
@@ -977,25 +1049,29 @@ if ($tab === 'geraete') {
               ui_ortsfeld([
                   'praefix' => 'sdbase', 'feld' => false, 'such' => true,
                   'klasse' => 'loc-inline',
-                  'such_hinweis' => 'Koordinaten (optional)',
+                  'such_hinweis' => 'Lage des Standorts (optional)',
                   'lat_name' => 'lat', 'lon_name' => 'lon',
                   'lat' => (string)($editBase['lat'] ?? ''),
                   'lon' => (string)($editBase['lon'] ?? ''),
               ]); ?>
         <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
-        <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+        <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=standorte">Abbrechen</a><?php endif; ?>
       </form>
     </details>
 
+    <?php /* „Vordefinierte Standorte" statt „Zentrale Standorte auswählen"
+             (Web 7.0.0). „Zentral" beschrieb die Verwaltung, nicht den Nutzen;
+             was man hier vor sich hat, sind fertige Standorte, die man
+             übernehmen kann. */ ?>
     <details class="stammblock" id="zentrale">
-      <summary>Zentrale Standorte auswählen</summary>
-      <p class="muted">Zentrale Standorte legt eine Administratorin an. Sie stehen
-         allen zur Verfügung, erscheinen aber erst dann in den Auswahllisten, wenn
-         du sie hier auswählst (E16). Abwählen entfernt keine Daten — bereits
-         dokumentierte Diensttage bleiben unverändert.</p>
+      <summary>Vordefinierte Standorte</summary>
+      <p class="muted">Vordefinierte Standorte legt eine Administratorin an. Sie
+         stehen allen zur Verfügung, erscheinen aber erst dann in den
+         Auswahllisten, wenn du sie hier auswählst (E16). Abwählen entfernt keine
+         Daten — bereits dokumentierte Diensttage bleiben unverändert.</p>
       <table class="data">
         <tbody>
-        <?php if (!$zentral): ?><tr><td colspan="2" class="muted">Keine zentralen Standorte hinterlegt.</td></tr><?php endif; ?>
+        <?php if (!$zentral): ?><tr><td colspan="3" class="muted">Keine vordefinierten Standorte hinterlegt.</td></tr><?php endif; ?>
         <?php foreach ($zentral as $z): $an = !empty($z['gewaehlt']); ?>
           <tr>
             <td><?= e($z['name']) ?> <span class="badge-central">systemweit</span>
@@ -1003,8 +1079,26 @@ if ($tab === 'geraete') {
                 <br><span class="muted small"><?= e((string)$z['lat']) ?>, <?= e((string)$z['lon']) ?></span>
               <?php endif; ?>
             </td>
+            <td><?= (int)$z['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
             <td class="th-act"><div class="rowactions">
-              <form method="post" action="einstellungen.php?t=stammdaten#zentrale">
+              <?php /* ★ AUCH FÜR SYSTEMWEITE STANDORTE (Web 7.0.0). Die
+                       Schaltfläche stand nur bei den eigenen — ein Konto, das
+                       ausschließlich mit vordefinierten Standorten arbeitet
+                       (der Regelfall an einer Station), konnte damit gar keine
+                       Vorbelegung setzen. Die Serverseite ließ es längst zu:
+                       `base_default` prüft mit dt_base_erlaubt(), und das
+                       erlaubt eigene UND ausgewählte zentrale. Es fehlte allein
+                       der Knopf.
+                       Voraussetzung bleibt die Auswahl: Was nicht in den
+                       Auswahllisten steht, kann auch keine Vorbelegung sein. */ ?>
+              <?php if ($an && (int)$z['id'] !== $DEF_BASE_ID): ?>
+                <form method="post" action="einstellungen.php?t=standorte#zentrale">
+                  <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
+                  <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
+                  <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
+                </form>
+              <?php endif; ?>
+              <form method="post" action="einstellungen.php?t=standorte#zentrale">
                 <?= csrf_field() ?><input type="hidden" name="action" value="ub_toggle">
                 <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
                 <input type="hidden" name="an" value="<?= $an ? '0' : '1' ?>">
@@ -1019,14 +1113,43 @@ if ($tab === 'geraete') {
 
     <?php if (!$sdBases): ?>
       <p class="alert alert-info">Noch kein Standort verfügbar. Lege oben einen
-         eigenen an oder wähle einen zentralen aus — ohne Standort gibt es keine
-         Rettungsmittel, keine Besatzungs-Vorbelegungen und keine Zielkliniken.</p>
+         eigenen an oder wähle einen vordefinierten aus — ohne Standort gibt es
+         keine Rettungsmittel, keine Besatzungs-Vorbelegungen und keine
+         Zielkliniken.</p>
+    <?php endif; ?>
+
+  <?php else: ?>
+    <?php /* ---- Reiter „Rettungsmittel" ------------------------------------
+             Alles, was an einem ausgewählten Standort hängt. Ein Block je
+             Standort, darin je Datenart ein eigener. */ ?>
+    <h1>Rettungsmittel</h1>
+    <p class="muted">Was an den ausgewählten Standorten hängt: Rettungsmittel und
+       ihre Besatzungsrollen, Besatzungs-Vorbelegungen, Zielkliniken, weitere
+       Rettungsmittel und Bergwacht-Bereitschaften. Die Standorte selbst stehen
+       unter <a href="einstellungen.php?t=standorte">Standorte</a>.</p>
+    <p class="muted">Löschen entfernt nur den Listeneintrag — <strong>bereits
+       dokumentierte Diensttage bleiben unverändert</strong>. Sie haben Art,
+       Rollen, Fähigkeiten und Bezeichnungen beim Anlegen eingefroren; Änderungen
+       hier wirken ausschließlich auf neue Diensttage. ★ markiert die
+       Vorbelegung neuer Diensttage. „systemweit“ markiert vom Admin gepflegte
+       Einträge — diese stehen automatisch zur Verfügung und lassen sich hier
+       nicht bearbeiten oder löschen.</p>
+
+    <?php if (!$sdBases): ?>
+      <p class="alert alert-info">Noch kein Standort verfügbar. Bitte zuerst unter
+         <a href="einstellungen.php?t=standorte">Standorte</a> einen eigenen
+         anlegen oder einen vordefinierten auswählen — ohne Standort gibt es
+         keine Rettungsmittel, keine Besatzungs-Vorbelegungen und keine
+         Zielkliniken.</p>
     <?php endif; ?>
 
     <?php foreach ($sdBases as $b): $bid = (int)$b['id']; ?>
-      <?php /* Ein Block je Standort. Er enthält die fünf Datenarten aus
-               Konzept 3.8 — die Bergwacht darunter nur, wenn an diesem Standort
-               ein luftgebundenes Rettungsmittel steht: Die Fähigkeit kommt
+      <?php /* Ein Block je Standort, darin je Datenart ein eigener. Die zweite
+               Ebene ist neu (Web 7.0.0): Ein Standort mit vier Rettungsmitteln,
+               sieben Rollen und einem Dutzend Zielkliniken war aufgeklappt eine
+               Bildschirmseite, durch die man zum Suchen scrollte.
+               Die Bergwacht erscheint nur, wenn an diesem Standort ein
+               luftgebundenes Rettungsmittel steht: Die Fähigkeit kommt
                ausschließlich dort vor (E29), und ein leerer Block für einen
                reinen NEF-Standort wäre ein Angebot ohne Sinn. */ ?>
       <?php
@@ -1034,122 +1157,56 @@ if ($tab === 'geraete') {
         $hatLuft = false;
         foreach ($vehListe as $v) { if ($v['kind'] === 'air') { $hatLuft = true; break; } }
         $anker = 'sd-' . $bid;
+        $rollenHier = $rollenAmStandort($bid);
       ?>
       <details class="stammblock" id="<?= e($anker) ?>">
         <summary><?= e($b['name']) ?><?= !empty($b['zentral']) ? ' <span class="badge-central">systemweit</span>' : '' ?></summary>
 
-        <h3>Rettungsmittel</h3>
-        <p class="muted">Die Art entscheidet über Besatzungsrollen und die im
-           Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht) gibt
-           es nur luftgebunden.</p>
-        <table class="data">
-          <tbody>
-          <?php if (!$vehListe): ?><tr><td colspan="3" class="muted">Noch keine Rettungsmittel an diesem Standort.</td></tr><?php endif; ?>
-          <?php foreach ($vehListe as $v):
-                $vz = $istZentral($v); $vid = (int)$v['id'];
-                $sym = dt_art_symbol((string)$v['kind']);
-                $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
-                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
-                                     $vehCaps[$vid] ?? []); ?>
-            <tr>
-              <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                        aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
-                <?= e($v['name']) ?>
-                <br><span class="muted small"><?= e($sym['text']) ?><?php
-                  echo $rollenTxt ? ' · ' . e(implode(', ', $rollenTxt)) : ' · keine Rollen';
-                  echo $capsTxt ? ' · ' . e(implode(', ', $capsTxt)) : ''; ?></span>
-              </td>
-              <td><?= $vid === $DEF_VEH_ID ? '★' : '' ?></td>
-              <td class="th-act"><div class="rowactions">
-                <?php if ($vz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                <?php if ($vid !== $DEF_VEH_ID): ?>
-                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>">
-                    <?= csrf_field() ?><input type="hidden" name="action" value="veh_default">
-                    <input type="hidden" name="id" value="<?= $vid ?>">
-                    <input type="hidden" name="base_id" value="<?= $bid ?>">
-                    <button class="btn-plain">★ als Standard</button>
-                  </form>
-                <?php endif; ?>
-                <?php if (!$vz): ?>
-                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ev=<?= $vid ?>#<?= e($anker) ?>">Bearbeiten</a>
-                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
-                        data-confirm="Rettungsmittel löschen? Bereits dokumentierte Diensttage bleiben unverändert.">
-                    <?= csrf_field() ?><input type="hidden" name="action" value="veh_del">
-                    <input type="hidden" name="id" value="<?= $vid ?>">
-                    <input type="hidden" name="base_id" value="<?= $bid ?>">
-                    <button class="btn-red">Löschen</button>
-                  </form>
-                <?php endif; ?>
-              </div></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-        <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
-              $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
-              $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
-        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="ac-form">
-          <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
-          <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
-          <input type="hidden" name="base_id" value="<?= $bid ?>">
-          <input type="text" name="name" maxlength="64" required placeholder="z. B. NEF Kempten 1"
-                 value="<?= e($evHier['name'] ?? '') ?>">
-          <?php /* Die Art steuert, welche Rollen und Fähigkeiten überhaupt
-                   angehakt werden können. Das Umschalten passiert im Browser
-                   (Skript unten); der Server filtert unabhängig davon noch
-                   einmal — ein Haken, den die Oberfläche nicht anbietet, darf
-                   auch über eine gesendete Anfrage nicht hereinkommen. */ ?>
-          <span class="vehkind">
-            <label><input type="radio" name="kind" value="air" class="vehkind-radio"
-                   <?= (!$evHier || $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
-            <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
-                   <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
-          </span>
-          <span class="acroles">
-            <?php foreach (CREW_ROLES as $rc => $rr): ?>
-              <label class="rollehaken" data-kind="<?= e($rr['kind']) ?>">
-                <input type="checkbox" name="roles[]" value="<?= e($rc) ?>"
-                       <?= in_array($rc, $evRollen, true) ? 'checked' : '' ?>>
-                <?= e($rr['label']) ?></label>
-            <?php endforeach; ?>
-          </span>
-          <span class="acroles vehcaps">
-            <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
-              <label><input type="checkbox" name="caps[]" value="<?= e($ck) ?>"
-                     <?= in_array($ck, $evCaps, true) ? 'checked' : '' ?>>
-                <?= e($cl) ?></label>
-            <?php endforeach; ?>
-          </span>
-          <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Rettungsmittel hinzufügen' ?></button>
-          <?php if ($evHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-        </form>
-
-        <hr class="sep">
-        <h3>Besatzung</h3>
-        <p class="muted">Vorschläge für die Besatzungsfelder, je Rolle. Freitext
-           bleibt überall möglich — wer aushilft, muss nicht erst hier eingetragen
-           werden.</p>
-        <?php foreach (CREW_ROLES as $rk => $rr): ?>
-          <h4><?= e($rr['label']) ?></h4>
+        <details class="stammunter" id="<?= e($anker) ?>-veh">
+          <summary>Rettungsmittel<span class="stammzahl"><?= count($vehListe) ?></span></summary>
+          <p class="muted">Die Art entscheidet über Besatzungsrollen und die im
+             Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht) gibt
+             es nur luftgebunden.</p>
           <table class="data">
             <tbody>
-            <?php $any = false;
-                  foreach (($sdCrew[$bid] ?? []) as $c):
-                      if ($c['role_code'] !== $rk) { continue; }
-                      $any = true; $cz = $istZentral($c);
-                      $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk); ?>
+            <?php if (!$vehListe): ?><tr><td colspan="3" class="muted">Noch keine Rettungsmittel an diesem Standort.</td></tr><?php endif; ?>
+            <?php foreach ($vehListe as $v):
+                  $vz = $istZentral($v); $vid = (int)$v['id'];
+                  $sym = dt_art_symbol((string)$v['kind']);
+                  $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
+                  $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
+                                       $vehCaps[$vid] ?? []); ?>
               <tr>
-                <td><?= e($c['name']) ?>
-                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
+                          aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                  <?= e($v['name']) ?>
+                  <?php /* DIE ART STEHT NICHT MEHR AUSGESCHRIEBEN DARUNTER
+                           (Web 7.0.0). Das Symbol davor sagt sie bereits, und es
+                           trägt seine Textalternative in title/aria-label — die
+                           Auskunft hängt also nicht an der Grafik. Übrig bleibt,
+                           was man dem Symbol nicht ansieht: die Rollen und die
+                           Fähigkeiten. */ ?>
+                  <br><span class="muted small"><?php
+                    echo $rollenTxt ? e(implode(', ', $rollenTxt)) : 'keine Rollen';
+                    echo $capsTxt ? ' · ' . e(implode(', ', $capsTxt)) : ''; ?></span>
                 </td>
+                <td><?= $vid === $DEF_VEH_ID ? '★' : '' ?></td>
                 <td class="th-act"><div class="rowactions">
-                  <?php if ($cz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                  <?php if (!$cz): ?>
-                    <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ec=<?= (int)$c['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
-                    <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
-                          data-confirm="Eintrag löschen?">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
-                      <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                  <?php if ($vz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                  <?php if ($vid !== $DEF_VEH_ID): ?>
+                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="veh_default">
+                      <input type="hidden" name="id" value="<?= $vid ?>">
+                      <input type="hidden" name="base_id" value="<?= $bid ?>">
+                      <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
+                    </form>
+                  <?php endif; ?>
+                  <?php if (!$vz): ?>
+                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ev=<?= $vid ?>#<?= e($anker) ?>-veh">Bearbeiten</a>
+                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh"
+                          data-confirm="Rettungsmittel löschen? Bereits dokumentierte Diensttage bleiben unverändert.">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="veh_del">
+                      <input type="hidden" name="id" value="<?= $vid ?>">
                       <input type="hidden" name="base_id" value="<?= $bid ?>">
                       <button class="btn-red">Löschen</button>
                     </form>
@@ -1157,144 +1214,212 @@ if ($tab === 'geraete') {
                 </div></td>
               </tr>
             <?php endforeach; ?>
-            <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
             </tbody>
           </table>
-          <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
-                           && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
-          <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
-            <input type="hidden" name="role" value="<?= e($rk) ?>">
+          <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
+                $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
+                $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
+          <?php /* ---- EINGABE (Web 7.0.0 neu gefasst) -----------------------
+                   Vorher klebte alles am oberen Rand: Bezeichnung, Art,
+                   Rollenhaken und Fähigkeiten standen ohne Abstand unter der
+                   Tabelle, und es war nicht zu sehen, dass die Haken zur
+                   Eingabezeile darüber gehören und nicht zum letzten
+                   Tabelleneintrag.
+                   Jetzt umschliesst ein eigener Rahmen (`.neu-form`) die ganze
+                   Eingabe, mit Überschrift. Die Schaltfläche steht in der
+                   Eingabezeile — die Haken darunter sind Zubehör, nicht der
+                   Abschluss.
+                   UND DIE ART IST NICHT MEHR VORBELEGT: „luftgebunden" stand
+                   von selbst da, und an einem NEF-Standort war das die falsche
+                   Vorgabe, die niemand bemerkt. Ohne Auswahl weist der Server
+                   die Eingabe jetzt ab und sagt, was fehlt. */ ?>
+          <div class="neu-form">
+            <h4><?= $evHier ? 'Rettungsmittel bearbeiten' : 'Rettungsmittel hinzufügen' ?></h4>
+            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh" class="ac-form">
+              <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
+              <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
+              <input type="hidden" name="base_id" value="<?= $bid ?>">
+              <div class="neu-zeile">
+                <input type="text" name="name" maxlength="64" required placeholder="z. B. NEF Kempten 1"
+                       value="<?= e($evHier['name'] ?? '') ?>">
+                <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+                <?php if ($evHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+              </div>
+              <?php /* Die Art steuert, welche Rollen und Fähigkeiten überhaupt
+                       angehakt werden können. Das Umschalten passiert im Browser
+                       (Skript unten); der Server filtert unabhängig davon noch
+                       einmal — ein Haken, den die Oberfläche nicht anbietet, darf
+                       auch über eine gesendete Anfrage nicht hereinkommen. */ ?>
+              <div class="neu-feld">
+                <span class="neu-titel">Art</span>
+                <span class="vehkind">
+                  <label><input type="radio" name="kind" value="air" class="vehkind-radio"
+                         <?= ($evHier && $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
+                  <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
+                         <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
+                </span>
+              </div>
+              <div class="neu-feld rollen-zeile">
+                <span class="neu-titel">Besatzungsrollen <span class="muted small">(optional)</span></span>
+                <span class="acroles">
+                  <?php foreach (CREW_ROLES as $rc => $rr): ?>
+                    <label class="rollehaken" data-kind="<?= e($rr['kind']) ?>">
+                      <input type="checkbox" name="roles[]" value="<?= e($rc) ?>"
+                             <?= in_array($rc, $evRollen, true) ? 'checked' : '' ?>>
+                      <?= e($rr['label']) ?></label>
+                  <?php endforeach; ?>
+                </span>
+              </div>
+              <div class="neu-feld vehcaps-zeile">
+                <span class="neu-titel">Fähigkeiten <span class="muted small">(nur luftgebunden)</span></span>
+                <span class="acroles vehcaps">
+                  <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
+                    <label><input type="checkbox" name="caps[]" value="<?= e($ck) ?>"
+                           <?= in_array($ck, $evCaps, true) ? 'checked' : '' ?>>
+                      <?= e($cl) ?></label>
+                  <?php endforeach; ?>
+                </span>
+              </div>
+            </form>
+          </div>
+        </details>
+
+        <?php /* BESATZUNG — nur die Rollen, die es an diesem Standort gibt. */ ?>
+        <details class="stammunter" id="<?= e($anker) ?>-crew">
+          <summary>Besatzung<span class="stammzahl"><?= count($sdCrew[$bid] ?? []) ?></span></summary>
+          <p class="muted">Vorschläge für die Besatzungsfelder, je Rolle. Freitext
+             bleibt überall möglich — wer aushilft, muss nicht erst hier eingetragen
+             werden.</p>
+          <?php if (!$rollenHier): ?>
+            <p class="muted">Noch keine Rolle an diesem Standort. Rollen entstehen
+               am Rettungsmittel: Trage oben eines ein und hake an, welche Rollen
+               es führt.</p>
+          <?php endif; ?>
+          <?php foreach ($rollenHier as $rk): $rr = CREW_ROLES[$rk]; ?>
+            <h4><?= e($rr['label']) ?></h4>
+            <table class="data">
+              <tbody>
+              <?php $any = false;
+                    foreach (($sdCrew[$bid] ?? []) as $c):
+                        if ($c['role_code'] !== $rk) { continue; }
+                        $any = true; $cz = $istZentral($c);
+                        $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk); ?>
+                <tr>
+                  <td><?= e($c['name']) ?>
+                    <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                  </td>
+                  <td class="th-act"><div class="rowactions">
+                    <?php if ($cz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                    <?php if (!$cz): ?>
+                      <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ec=<?= (int)$c['id'] ?>#<?= e($anker) ?>-crew">Bearbeiten</a>
+                      <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-crew"
+                            data-confirm="Eintrag löschen?">
+                        <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
+                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                        <input type="hidden" name="base_id" value="<?= $bid ?>">
+                        <button class="btn-red">Löschen</button>
+                      </form>
+                    <?php endif; ?>
+                  </div></td>
+                </tr>
+              <?php endforeach; ?>
+              <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
+              </tbody>
+            </table>
+            <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
+                             && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
+            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-crew" class="inline-form">
+              <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
+              <input type="hidden" name="role" value="<?= e($rk) ?>">
+              <input type="hidden" name="base_id" value="<?= $bid ?>">
+              <input type="hidden" name="id" value="<?= $ecHier ? (int)$ecHier['id'] : 0 ?>">
+              <input type="text" name="name" placeholder="Name" maxlength="120" required
+                     value="<?= e($ecHier['name'] ?? '') ?>">
+              <button class="btn-primary"><?= $ecHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+              <?php if ($ecHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+            </form>
+          <?php endforeach; ?>
+        </details>
+
+        <details class="stammunter" id="<?= e($anker) ?>-td">
+          <summary>Zielkliniken<span class="stammzahl"><?= count($sdTd[$bid] ?? []) ?></span></summary>
+          <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.
+             Koordinaten sind freiwillig; ohne sie entsteht lediglich kein Pin auf
+             der Karte.</p>
+          <table class="data">
+            <tbody>
+            <?php if (!($sdTd[$bid] ?? [])): ?><tr><td class="muted">Noch keine Zielkliniken.</td><td></td></tr><?php endif; ?>
+            <?php foreach (($sdTd[$bid] ?? []) as $t): $tz = $istZentral($t);
+                  $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
+              <tr>
+                <td><?= e($t['name']) ?>
+                  <?php if ($t['lat'] !== null && $t['lon'] !== null): ?>
+                    <br><span class="muted small"><?= e((string)$t['lat']) ?>, <?= e((string)$t['lon']) ?></span>
+                  <?php endif; ?>
+                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                </td>
+                <td class="th-act"><div class="rowactions">
+                  <?php if ($tz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                  <?php if (!$tz): ?>
+                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;et=<?= (int)$t['id'] ?>#<?= e($anker) ?>-td">Bearbeiten</a>
+                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td"
+                          data-confirm="Zielklinik löschen?">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
+                      <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
+                      <input type="hidden" name="base_id" value="<?= $bid ?>">
+                      <button class="btn-red">Löschen</button>
+                    </form>
+                  <?php endif; ?>
+                </div></td>
+              </tr>
+            <?php endforeach; ?>
+            </tbody>
+          </table>
+          <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
+          <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td" class="inline-form">
+            <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
+            <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
             <input type="hidden" name="base_id" value="<?= $bid ?>">
-            <input type="hidden" name="id" value="<?= $ecHier ? (int)$ecHier['id'] : 0 ?>">
-            <input type="text" name="name" placeholder="Name" maxlength="120" required
-                   value="<?= e($ecHier['name'] ?? '') ?>">
-            <button class="btn-primary"><?= $ecHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-            <?php if ($ecHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+            <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
+                     EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
+                     denselben Element-Kennungen fänden beide dasselbe Feld. */
+                  $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
+            <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
+                   placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
+            <?php ui_ortsfeld([
+                    'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                    'klasse' => 'loc-inline',
+                    'such_hinweis' => 'Lage der Zielklinik (optional)',
+                    'lat_name' => 'lat', 'lon_name' => 'lon',
+                    'lat' => (string)($etHier['lat'] ?? ''),
+                    'lon' => (string)($etHier['lon'] ?? ''),
+                ]); ?>
+            <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
+            <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
           </form>
-        <?php endforeach; ?>
+        </details>
 
-        <hr class="sep">
-        <h3>Zielkliniken</h3>
-        <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.
-           Koordinaten sind freiwillig; ohne sie entsteht lediglich kein Pin auf
-           der Karte.</p>
-        <table class="data">
-          <tbody>
-          <?php if (!($sdTd[$bid] ?? [])): ?><tr><td class="muted">Noch keine Zielkliniken.</td><td></td></tr><?php endif; ?>
-          <?php foreach (($sdTd[$bid] ?? []) as $t): $tz = $istZentral($t);
-                $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
-            <tr>
-              <td><?= e($t['name']) ?>
-                <?php if ($t['lat'] !== null && $t['lon'] !== null): ?>
-                  <br><span class="muted small"><?= e((string)$t['lat']) ?>, <?= e((string)$t['lon']) ?></span>
-                <?php endif; ?>
-                <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-              </td>
-              <td class="th-act"><div class="rowactions">
-                <?php if ($tz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                <?php if (!$tz): ?>
-                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;et=<?= (int)$t['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
-                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
-                        data-confirm="Zielklinik löschen?">
-                    <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
-                    <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
-                    <input type="hidden" name="base_id" value="<?= $bid ?>">
-                    <button class="btn-red">Löschen</button>
-                  </form>
-                <?php endif; ?>
-              </div></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-        <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
-        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
-          <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
-          <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
-          <input type="hidden" name="base_id" value="<?= $bid ?>">
-          <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
-                   EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
-                   denselben Element-Kennungen fänden beide dasselbe Feld. */
-                $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
-          <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
-                 placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-          <?php ui_ortsfeld([
-                  'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
-                  'klasse' => 'loc-inline',
-                  'such_hinweis' => 'Koordinaten (optional)',
-                  'lat_name' => 'lat', 'lon_name' => 'lon',
-                  'lat' => (string)($etHier['lat'] ?? ''),
-                  'lon' => (string)($etHier['lon'] ?? ''),
-              ]); ?>
-          <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
-          <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-        </form>
-
-        <hr class="sep">
-        <h3>Weitere Rettungsmittel</h3>
-        <p class="muted">Vorschläge für das Feld „Weitere Rettungsmittel“ im
-           Einsatz (RTW, NEF, weitere Hubschrauber …).</p>
-        <table class="data">
-          <tbody>
-          <?php if (!($sdRes[$bid] ?? [])): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
-          <?php foreach (($sdRes[$bid] ?? []) as $r): $rz = $istZentral($r);
-                $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']); ?>
-            <tr>
-              <td><?= e($r['name']) ?>
-                <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-              </td>
-              <td class="th-act"><div class="rowactions">
-                <?php if ($rz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                <?php if (!$rz): ?>
-                  <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;er=<?= (int)$r['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
-                  <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
-                        data-confirm="Eintrag löschen?">
-                    <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
-                    <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                    <input type="hidden" name="base_id" value="<?= $bid ?>">
-                    <button class="btn-red">Löschen</button>
-                  </form>
-                <?php endif; ?>
-              </div></td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-        <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null; ?>
-        <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
-          <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
-          <input type="hidden" name="id" value="<?= $erHier ? (int)$erHier['id'] : 0 ?>">
-          <input type="hidden" name="base_id" value="<?= $bid ?>">
-          <input type="text" name="name" maxlength="120" required
-                 placeholder="z. B. RTW Kempten" value="<?= e($erHier['name'] ?? '') ?>">
-          <button class="btn-primary"><?= $erHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-          <?php if ($erHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
-        </form>
-
-        <?php if ($hatLuft): ?>
-          <hr class="sep">
-          <h3>Bergwacht</h3>
-          <p class="muted">Bereitschaften für das Feld „Bergwacht“ im Einsatz.
-             Der Block erscheint, weil an diesem Standort ein luftgebundenes
-             Rettungsmittel steht — die Fähigkeit kommt nur dort vor.</p>
+        <details class="stammunter" id="<?= e($anker) ?>-res">
+          <summary>Weitere Rettungsmittel<span class="stammzahl"><?= count($sdRes[$bid] ?? []) ?></span></summary>
+          <p class="muted">Vorschläge für das Feld „Weitere Rettungsmittel“ im
+             Einsatz (RTW, NEF, weitere Hubschrauber …).</p>
           <table class="data">
             <tbody>
-            <?php if (!($sdBw[$bid] ?? [])): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
-            <?php foreach (($sdBw[$bid] ?? []) as $w): $wz = $istZentral($w);
-                  $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']); ?>
+            <?php if (!($sdRes[$bid] ?? [])): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
+            <?php foreach (($sdRes[$bid] ?? []) as $r): $rz = $istZentral($r);
+                  $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']); ?>
               <tr>
-                <td><?= e($w['name']) ?>
+                <td><?= e($r['name']) ?>
                   <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
                 </td>
                 <td class="th-act"><div class="rowactions">
-                  <?php if ($wz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                  <?php if (!$wz): ?>
-                    <a class="btn-yellow" href="einstellungen.php?t=stammdaten&amp;ew=<?= (int)$w['id'] ?>#<?= e($anker) ?>">Bearbeiten</a>
-                    <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>"
-                          data-confirm="Bereitschaft löschen?">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
-                      <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+                  <?php if ($rz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                  <?php if (!$rz): ?>
+                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;er=<?= (int)$r['id'] ?>#<?= e($anker) ?>-res">Bearbeiten</a>
+                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-res"
+                          data-confirm="Eintrag löschen?">
+                      <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
+                      <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
                       <input type="hidden" name="base_id" value="<?= $bid ?>">
                       <button class="btn-red">Löschen</button>
                     </form>
@@ -1304,19 +1429,65 @@ if ($tab === 'geraete') {
             <?php endforeach; ?>
             </tbody>
           </table>
-          <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null; ?>
-          <form method="post" action="einstellungen.php?t=stammdaten#<?= e($anker) ?>" class="inline-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
-            <input type="hidden" name="id" value="<?= $ewHier ? (int)$ewHier['id'] : 0 ?>">
+          <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null; ?>
+          <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-res" class="inline-form">
+            <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
+            <input type="hidden" name="id" value="<?= $erHier ? (int)$erHier['id'] : 0 ?>">
             <input type="hidden" name="base_id" value="<?= $bid ?>">
             <input type="text" name="name" maxlength="120" required
-                   placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($ewHier['name'] ?? '') ?>">
-            <button class="btn-primary"><?= $ewHier ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
-            <?php if ($ewHier): ?><a class="btn-red" href="einstellungen.php?t=stammdaten">Abbrechen</a><?php endif; ?>
+                   placeholder="z. B. RTW Kempten" value="<?= e($erHier['name'] ?? '') ?>">
+            <button class="btn-primary"><?= $erHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+            <?php if ($erHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
           </form>
+        </details>
+
+        <?php if ($hatLuft): ?>
+          <details class="stammunter" id="<?= e($anker) ?>-bw">
+            <summary>Bergwacht<span class="stammzahl"><?= count($sdBw[$bid] ?? []) ?></span></summary>
+            <p class="muted">Bereitschaften für das Feld „Bergwacht“ im Einsatz.
+               Der Block erscheint, weil an diesem Standort ein luftgebundenes
+               Rettungsmittel steht — die Fähigkeit kommt nur dort vor.</p>
+            <table class="data">
+              <tbody>
+              <?php if (!($sdBw[$bid] ?? [])): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
+              <?php foreach (($sdBw[$bid] ?? []) as $w): $wz = $istZentral($w);
+                    $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']); ?>
+                <tr>
+                  <td><?= e($w['name']) ?>
+                    <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
+                  </td>
+                  <td class="th-act"><div class="rowactions">
+                    <?php if ($wz): ?><span class="badge-central">systemweit</span><?php endif; ?>
+                    <?php if (!$wz): ?>
+                      <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ew=<?= (int)$w['id'] ?>#<?= e($anker) ?>-bw">Bearbeiten</a>
+                      <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-bw"
+                            data-confirm="Bereitschaft löschen?">
+                        <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
+                        <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+                        <input type="hidden" name="base_id" value="<?= $bid ?>">
+                        <button class="btn-red">Löschen</button>
+                      </form>
+                    <?php endif; ?>
+                  </div></td>
+                </tr>
+              <?php endforeach; ?>
+              </tbody>
+            </table>
+            <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null; ?>
+            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-bw" class="inline-form">
+              <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
+              <input type="hidden" name="id" value="<?= $ewHier ? (int)$ewHier['id'] : 0 ?>">
+              <input type="hidden" name="base_id" value="<?= $bid ?>">
+              <input type="text" name="name" maxlength="120" required
+                     placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($ewHier['name'] ?? '') ?>">
+              <button class="btn-primary"><?= $ewHier ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
+              <?php if ($ewHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+            </form>
+          </details>
         <?php endif; ?>
       </details>
     <?php endforeach; ?>
+  <?php endif; ?>
 
     <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
     <script src="<?= asset('assets/locparse.js') ?>"></script>
@@ -1336,23 +1507,31 @@ if ($tab === 'geraete') {
      * Rein anzeigend: Was zulässig ist, entscheidet der Server in 'veh_save'.
      * Diese Zeilen nehmen der Ablehnung nur die Überraschung — und verhindern,
      * dass jemand einen Flugretter an einem NEF anhakt und sich danach fragt,
-     * wo der Haken geblieben ist. */
+     * wo der Haken geblieben ist.
+     *
+     * OHNE GEWÄHLTE ART sind BEIDE Bereiche verborgen (Web 7.0.0). Die Art ist
+     * nicht mehr vorbelegt; Rollenhaken zu zeigen, bevor feststeht, welche
+     * überhaupt in Frage kommen, hiesse Auswahl anzubieten und sie gleich
+     * wieder wegzunehmen. */
     document.querySelectorAll('form.ac-form').forEach(function (f) {
       function anpassen() {
-        var kind = (f.querySelector('.vehkind-radio:checked') || {}).value || 'air';
+        var gewaehlt = f.querySelector('.vehkind-radio:checked');
+        var kind = gewaehlt ? gewaehlt.value : null;
         f.querySelectorAll('.rollehaken').forEach(function (lab) {
           var k = lab.dataset.kind;
-          var passt = (k === 'both' || k === kind);
+          var passt = kind !== null && (k === 'both' || k === kind);
           lab.hidden = !passt;
           if (!passt) { lab.querySelector('input').checked = false; }
         });
-        var caps = f.querySelector('.vehcaps');
+        var caps = f.querySelector('.vehcaps-zeile');
         if (caps) {
           caps.hidden = (kind !== 'air');
           if (kind !== 'air') {
             caps.querySelectorAll('input').forEach(function (i) { i.checked = false; });
           }
         }
+        var rollen = f.querySelector('.rollen-zeile');
+        if (rollen) { rollen.hidden = (kind === null); }
       }
       f.querySelectorAll('.vehkind-radio').forEach(function (r) {
         r.addEventListener('change', anpassen);
@@ -2027,25 +2206,51 @@ if ($tab === 'geraete') {
   <?php endif; ?>
 
   <script>
-  /* Standortdaten (und ggf. andere Tabs): Abschnitt oeffnen, wenn er per
-   * Anker angesprungen oder nach dem Speichern/Loeschen dorthin umgeleitet
-   * wurde. Unabhaengig vom aktiven Tab eingebunden (nicht nur im jeweiligen
-   * Tab-Zweig), da der Redirect-Anker tab-uebergreifend funktionieren muss. */
+  /* ---- Abschnitt aus dem Anker wieder aufklappen -------------------------
+   *
+   * Nach jedem Speichern und Löschen leitet der Server auf einen Anker um; wer
+   * dort ankommt, soll genau an der Stelle stehen, an der er getippt hat.
+   *
+   * ALLE EBENEN, NICHT NUR EINE (Web 7.0.0). Die Stammdatenpflege ist seit dem
+   * Aufteilen in zwei Reiter zweistufig verschachtelt: ein <details> je
+   * Standort, darin eines je Datenart. Bis Web 6.3.0 öffnete dieses Skript
+   * genau ein Element — der äussere Block blieb zu, und der innere lag darin
+   * unsichtbar. Man landete auf einer Seite, auf der alles geschlossen war,
+   * und musste sich zurückklicken.
+   *
+   * Deshalb läuft es jetzt von innen nach aussen über die Vorfahren: Jedes
+   * <details> auf dem Weg wird geöffnet, danach wird gescrollt (erst dann steht
+   * die endgültige Position fest) und in das erste Eingabefeld gesprungen.
+   *
+   * Der frühere Sonderfall „besatzung-p1" (ID plus Rolle) bleibt erhalten: Er
+   * greift nur, wenn es zur vollen Kennung KEIN Element gibt — sonst hätte
+   * `sd-12-veh` als „Element sd mit Rolle 12-veh" gelesen werden können. */
   (function(){
-    function oeffne(hashId){
-      // hashId kann z. B. "besatzung-p1" sein (rollenspezifischer Fokus);
-      // das eigentliche <details>-Element traegt aber nur die Basis-ID.
-      const teil = hashId.split('-');
-      const baseId = teil[0];
-      const rolle = teil.slice(1).join('-');
-      const d = document.getElementById(baseId);
-      if (d && d.tagName === 'DETAILS') {
-        d.open = true;
-        d.scrollIntoView({ block: 'start' });
-        let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
-        if (!f) { f = d.querySelector('.focus-target'); }
-        if (f) { f.focus(); }
+    function oeffneVorfahren(el){
+      for (let p = el; p; p = p.parentElement) {
+        if (p.tagName === 'DETAILS') { p.open = true; }
       }
+    }
+    function fokus(d, rolle){
+      let f = rolle ? d.querySelector('.focus-target[data-role="' + rolle + '"]') : null;
+      if (!f) { f = d.querySelector('.focus-target'); }
+      if (!f) { f = d.querySelector('input[type=text], input[type=number], select, textarea'); }
+      if (f) { f.focus({ preventScroll: true }); }
+    }
+    function oeffne(hashId){
+      let d = document.getElementById(hashId);
+      let rolle = '';
+      if (!d) {
+        // Rückfall: „<id>-<rolle>" — nur wenn die volle Kennung nichts trifft.
+        const teil = hashId.split('-');
+        d = document.getElementById(teil[0]);
+        rolle = teil.slice(1).join('-');
+      }
+      if (!d) { return; }
+      oeffneVorfahren(d);
+      if (d.tagName === 'DETAILS') { d.open = true; }
+      d.scrollIntoView({ block: 'start' });
+      fokus(d, rolle);
     }
     if (location.hash.length > 1) { oeffne(location.hash.slice(1)); }
     window.addEventListener('hashchange', () => {

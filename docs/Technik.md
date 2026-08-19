@@ -54,11 +54,14 @@ hems/
 │   │                        mf_show_if() + mf_gates_erfuellt() = Sichtbarkeit)
 │   ├── tageszuordnung_lib.php  Einsatz verschieben · Datum eines Tages ändern
 │   ├── einsatz_verschieben.php  die zugehörige Seite
-│   ├── einstellungen.php  Profil/Standortdaten/Backup/Geräte
+│   ├── einstellungen.php  Profil/Standorte/Rettungsmittel/Backup/Geräte
+│   │                       (Reiter `?t=`; `t=stammdaten` ist die Weiche auf
+│   │                        den alten, geteilten Punkt „Standortdaten")
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail) · geraete.php (Weiterleitung)
-│   ├── admin_stammdaten.php  Zentrale (globale) Stammdaten aller sechs Typen
+│   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
+│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`)
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
 │   ├── diensttag_lib.php  Diensttage anlegen, zuordnen, einfrieren, auflisten
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
@@ -351,15 +354,24 @@ Kacheldarstellung nach dem Umschalten unvollständig.
 
 `attachBaseLayers` ergänzt den bisherigen OSM-Standardlayer um zwei
 topographische Varianten mit Höhenlinien (OpenHikingMap über
-`tile.openmaps.fr`, OpenTopoMap über `tile.opentopomap.org`) und hängt
-Leaflets eingebautes `L.control.layers()` an — kein zusätzliches Plugin.
+`tile.openmaps.fr`, OpenTopoMap über `tile.opentopomap.org`) sowie seit
+Web 7.0.0 ein **Satellitenbild** (Esri „World Imagery" über
+`server.arcgisonline.com`) und hängt Leaflets eingebautes
+`L.control.layers()` an — kein zusätzliches Plugin.
 Wie beim bisherigen OSM-Layer werden dabei ausschließlich Kartenkacheln
 anhand des sichtbaren Ausschnitts angefragt, keine Standort- oder
 Patientendaten (gleiches Datenschutzprinzip wie beim Verzicht auf
-What3Words in der Ortssuche). Beide zusätzlichen Anbieter sind
+What3Words in der Ortssuche). Die beiden topographischen Anbieter sind
 spendenfinanzierte Community-Server ohne Verfügbarkeitsgarantie; die
 Attribution enthält deshalb die jeweils geforderten Hinweise (inkl.
-Spenden-Link bei OpenHikingMap, CC-BY-SA-Hinweis bei OpenTopoMap).
+Spenden-Link bei OpenHikingMap, CC-BY-SA-Hinweis bei OpenTopoMap). Esri
+verlangt die Nennung der Bildquellen, die ebenfalls in der Attribution
+steht.
+
+**Achtung Platzhalterfolge:** Der Esri-Dienst erwartet `{z}/{y}/{x}`, nicht
+`{z}/{x}/{y}` wie die drei anderen. Vertauscht liefert er kommentarlos falsche
+oder leere Kacheln. Der Layer ist **nicht** Standard: Er lädt deutlich größere
+Kacheln, und die Karte soll beim Öffnen einer Einsatzansicht schnell dastehen.
 
 Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
 (Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
@@ -810,6 +822,14 @@ Suchfeld. Die Parameternamen sind Teil bereits verschickter Links und dürfen
 | `sr` | Schockraum (`j`/`n`) | | |
 | `fe` | Fehleinsatz (`j`/`n`) | | |
 
+**Die Blöcke sind mit Web 7.0.0 neu geschnitten** — `einsatz` (Datum,
+Alarmzeit, Wochentag, Strecke, Dauer, Fehleinsatz), `patient` (Alter),
+`transport`, `wer`, `bergrettung` (Bergwacht **und** Winde). Die Gruppen `zeit`,
+`winde`, `bergwacht` und `werte` gibt es nicht mehr. **Die Kurznamen sind
+unverändert geblieben**: Sie stehen in verschickten Links, und nur die Zuordnung
+`kurz → gruppe` hat gewechselt. Das wirkt allein darauf, welcher Block bei einem
+geteilten Link aufgeht.
+
 `art`, `ta`, `nb` und `fe` sind mit Web 6.2.0 dazugekommen. `art` und `ta`
 tragen **gespeicherte Werte, nicht Beschriftungen** — sie stammen aus
 `dt_art_symbole()` beziehungsweise aus dem Feldkatalog und nicht aus einer
@@ -835,8 +855,16 @@ Ein neuer Filter braucht drei Dinge: einen Eintrag in der Liste `FILTER` in
 der Filterspalte und seine Zeile in `trifft()`. Auslesen, Schreiben ins
 Fragment, Wiederherstellen, das Zählen aktiver Filter und das Aufklappen der
 Blöcke bei einem geteilten Link leiten sich alle aus `FILTER` ab. Die Gruppen
-sind `zeit`, `winde`, `bergwacht`, `transport`, `einsatz`, `wer` und `werte`;
-der Freitext steht in der Hauptspalte und hat keine Gruppe.
+sind `einsatz`, `patient`, `transport`, `wer` und `bergrettung`; der Freitext
+steht in der Hauptspalte und hat keine Gruppe.
+
+Zwei Sichtbarkeitsregeln, beide gegen den **gesamten** Bestand geprüft (nicht
+gegen die Trefferliste — sonst hüpfte die Spalte beim Tippen):
+`GRUPPE_NUR_WENN` blendet einen ganzen Block aus (derzeit `bergrettung`),
+`FELD_NUR_WENN` ein einzelnes Feld (derzeit `fe` = Fehleinsatz). Letzteres kam
+mit Web 7.0.0 dazu: Der Fehleinsatz steht jetzt in einem Block, der bleiben
+muss. Beide Regeln haben dieselbe Ausnahme — ein Filter aus einem geteilten
+Link bleibt sichtbar, auch wenn der eigene Bestand nichts dazu hat.
 
 **Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
 ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Suche
@@ -852,6 +880,24 @@ Formularregel. `daylist.js` steigt ohne `.dayyears` von selbst aus, die
 Filter-`<details>` liegen ausserhalb und werden deshalb nicht wie das
 Tages-Akkordeon gegenseitig verkoppelt — die Blöcke lassen sich einzeln
 öffnen.
+
+**Boolesche Freitextsuche (`assets/suchtext.js`, Baustein B10, ab Web 7.0.0).**
+`EdSuchtext.pruefer(q)` liefert ein Prädikat über den (bereits
+kleingeschriebenen) Heuhaufen eines Einsatzes, oder `null` bei leerer Eingabe.
+Grammatik: rekursiver Abstieg über `oder → und → nicht → primär`, also ODER
+schwächer als UND; Terme sind Wörter, Phrasen in Anführungszeichen und geklammerte
+Ausdrücke. Schreibweisen: `UND`/`AND`/`&` (oder schlicht ein Leerzeichen),
+`ODER`/`OR`/`|`, `NICHT`/`NOT`/`!` sowie ein freistehendes `-` vor einem Begriff.
+Ein `-` mitten im Wort bleibt Teil des Wortes („St.-Anna"); maßgeblich ist das
+Zeichen **davor**, nicht das vorherige Token.
+
+Der Parser bemängelt **nichts**: Die Trefferliste rechnet bei jedem Tastendruck
+neu, und `(sturz` ist auf dem Weg zu `(sturz ODER fraktur)` unvermeidlich.
+Fehlende schließende Klammern gelten als gesetzt, ein Operator ohne rechte Seite
+wird übergangen, und ein gar nicht deutbarer Ausdruck fällt auf die alte
+UND-Regel zurück (`einfach()`). Das Prädikat entsteht **einmal je Eingabe** in
+`anwenden()`, nicht je Einsatz — bei 1 600 Datensätzen wäre das sonst 1 600 Mal
+dieselbe Arbeit.
 
 Bei gesperrtem Inhaltsschlüssel bleiben die geschützten Felder aus dem
 Heuhaufen der Freitextsuche und der Altersfilter ist abgeschaltet — sonst wäre
@@ -1477,6 +1523,46 @@ Transportart geht das nicht mehr auf: Die Spalte ist ein
 „Ambulant". `mf_optionen()` ist die eine Stelle, die beide Schreibweisen
 auflöst — eine Liste bleibt Wert = Beschriftung, eine Zuordnung trennt sie.
 
+### 4.98c Gruppen des Einsatzformulars (ab Web 7.0.0)
+
+Das Formular rendert nicht mehr den ganzen Katalog am Stück, sondern **Gruppe
+für Gruppe**. Welche Gruppe ein Feld trägt, steht am Feld (`gruppe`), nicht in
+einer zweiten Liste im Formular — sonst müsste ein neues Feld an zwei Stellen
+nachgezogen werden.
+
+| Schlüssel | Wirkung |
+|---|---|
+| `gruppe` | Formulargruppe (`einsatz`, `transport`, `bergrettung`, `mittel`, `besatzung`, `notizen`). Nur an Feldern der obersten Ebene; Unterfelder folgen ihrem Elternfeld. Ohne Angabe landet das Feld in der Auffanggruppe „Weitere Angaben" — es verschwindet also nicht. |
+| `nebeneinander` | Unmittelbar aufeinanderfolgende Felder mit diesem Schlüssel teilen sich eine Zeile (`.fld-reihe`). Bewusst nur unmittelbare Nachbarn: Sonst hinge die Anordnung davon ab, was dazwischen steht. |
+| `vorbelegt_bei` | Checkbox setzt sich, sobald ein anderes Feld einen genannten Wert annimmt — **nur solange niemand sie von Hand angefasst hat** und **nur beim Nachtragen**. Wirkt ausschliesslich im Browser. |
+| `such_label` | Beschriftung des Suchfeldes eines Ortsfelds (`loc`). |
+
+Drei Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
+Felder einer Gruppe, `$gruppeRendern()` gibt sie samt `.fld-reihe`-Klammerung
+aus, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
+hat. Letzteres fragt nach **sichtbaren** Feldern (Gates plus „belegt", siehe
+4.98b): Die Gruppe „Bergrettung" besteht aus zwei Feldern, die beide an einer
+Fähigkeit hängen — an einem NEF-Dienst wäre sie ein Rahmen mit Überschrift und
+nichts darin und fällt deshalb ganz weg.
+
+Die Reihenfolge des Katalogs ist zugleich die des Formulars. Sie steuert
+ausserdem die Spaltenfolge der Tagesübersicht (`mf_tagesspalten()`) und des
+Exports; der **Import ist unberührt**, er ordnet über Spaltennamen zu.
+
+**Das Bezugsdatum ist kein Formularfeld mehr.** Beim Bearbeiten kommt es aus
+`started_at` in Ortszeit, beim Nachtragen aus dem Diensttag — und liegt die
+erste eingetragene Phase **vor** dem Beginn des Dienstes
+(`days.started_at` in Ortszeit), gilt der Folgetag. Verglichen werden Minuten,
+nicht Zeichenketten: „1:30" ist eine gültige Eingabe (die Maske füllt die
+führende Null erst beim Verlassen des Feldes) und stünde als Text hinter
+„07:00" — der Tageswechsel griffe dann ausgerechnet im gedachten Fall nicht.
+
+**Der Abfahrtort wird nur ohne Track gerendert.** Schwelle sind **zwei**
+Trackpunkte, weil erst zwei eine Linie ergeben — dieselbe Bedingung, die die
+Einsatzansicht für ihre Luftlinie anlegt. Das Skript des Formulars fragt
+`start_src` deshalb überall auf Existenz ab, statt sie vorauszusetzen. Die
+gespeicherte Regel bleibt in der Datenbank unangetastet.
+
 ### 4.99 Gemeinsame Bausteine
 
 Die Anwendung hat vier unabhängige Schreibwege in dieselben Tabellen. Die
@@ -1554,6 +1640,8 @@ Die Bausteine im Einzelnen:
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
+| Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. |
+| Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 
 **Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`
 in `validate_lib.php`): 40 bis 60000 Zeichen, für alle vier Schreibwege

@@ -11,6 +11,280 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.0.0] — 2026-08-18
+
+Eine Runde an der **Oberfläche**. Am Datenmodell ändert sich nichts, und eine
+Migration gibt es **nicht** — die Hauptnummer steigt, weil sich die Wege durch
+die Anwendung verschoben haben: Das Einsatzformular ist neu gegliedert,
+„Standortdaten" ist in zwei Menüpunkte zerfallen, die Filterspalte der Suche ist
+neu geschnitten, und ein Formularfeld ist ersatzlos entfallen. Wer die Anwendung
+kennt, findet Dinge an neuer Stelle.
+
+### Das Einsatzformular ist in benannte Gruppen zerlegt
+
+Vorher: vier Überschriften und darunter eine lange Kette gleich aussehender
+Felder. Dass Transportart, NA-Begleitung und Transportziel zusammengehören, war
+nur zu erraten; „Weitere Rettungsmittel" hing zwischen Bergwacht und Besatzung.
+
+Jetzt trägt jede Gruppe einen eigenen Rahmen mit Überschrift, in dieser Folge:
+
+* **PatientInnendaten** — Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter,
+  Diagnose. Geburtsdatum und Alter stehen nebeneinander.
+* **Einsatz** — Sekundärtransport und Fehleinsatz nebeneinander, darunter
+  Einsatzort, Beschreibung und Abfahrtort.
+* **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum.
+* **Bergrettung** — Bergwacht und Winde. Fällt ganz weg, wenn der Diensttag
+  keine der beiden Fähigkeiten mitbringt und nichts belegt ist.
+* **Weitere Rettungsmittel** — Fahrzeuge und weiterer Notarzt.
+* **Abweichende Besatzung**
+* **Notizen**
+* **Einsatzphasen** — nach unten gewandert, unmittelbar über die Reanimation.
+  Beim Bearbeiten, dem häufigeren Fall, stehen sie meist schon vollständig da
+  und schoben alles andere nach unten.
+* **Reanimation**
+
+Welches Feld in welche Gruppe gehört, steht im Feldkatalog
+(`mission_fields.php`, neuer Schlüssel `gruppe`) — nicht als zweite Liste im
+Formular. Ausgezeichnet ist es als `<fieldset>`/`<legend>`: Screenreader nennen
+die Gruppe beim Betreten eines Feldes von selbst.
+
+### Das Feld „Einsatzdatum" ist entfallen
+
+Es stand direkt unter dem Diensttag und zeigte in aller Regel dasselbe Datum
+noch einmal. Der eine Fall, für den es da war — der Einsatz **nach Mitternacht**
+an einem Dienst, der am Vortag begann —, wird jetzt **erkannt statt eingetippt**:
+Liegt die erste Phase vor dem Beginn des Dienstes, gehört der Einsatz dem
+Folgetag. Der Dienst weiß, wann er angefangen hat; ein von Hand gesetztes Datum
+war eine Fehlerquelle mehr.
+
+Weicht das Einsatzdatum vom Datum des Dienstes ab, steht es ausdrücklich in der
+Kopfzeile des Formulars. Beim **Bearbeiten** bleibt das gespeicherte Datum
+unangetastet — verschoben wird ein Einsatz über „Aktionen → Verschieben".
+
+### Der Abfahrtort erscheint nur ohne GPS-Aufzeichnung
+
+Er ist ausschliesslich dazu da, ohne Track eine Linie auf die Karte zu bekommen.
+Liegt ein Track vor, zeichnet die Karte den tatsächlich zurückgelegten Weg — die
+Auswahl daneben war dann eine Frage ohne Wirkung. Die gespeicherte Regel bleibt
+in der Datenbank unangetastet.
+
+Die Auswahl „Standort des Diensttags" heißt jetzt schlicht **„Standort"**: Ein
+anderer steht gar nicht zur Wahl, und für die Bodenrettung klang „Diensttag"
+nach Flugbetrieb.
+
+### Weitere Rettungsmittel: Merkfelder im Eingabefeld
+
+Die bereits gewählten Rettungsmittel standen als eigene Zeile **über** dem
+Eingabefeld — man tippte unten und sah oben, was schon da war. Jetzt sitzen sie
+im Feld selbst, und die Eingabe läuft rechts daneben weiter, wie bei den
+Empfängern eines Mailprogramms. Die Rücktaste im leeren Feld nimmt den letzten
+Eintrag zurück.
+
+### NA-Begleitung ist bei Lufttransport vorbelegt
+
+Ein luftgebundener Transport ohne Notarzt an Bord ist die Ausnahme — der Haken
+war damit der am häufigsten vergessene des Formulars. Er wird gesetzt, sobald
+„Luft" gewählt ist, und **nur solange niemand ihn von Hand angefasst hat**: Eine
+ausdrückliche Entscheidung schlägt die Vorbelegung, und zwar dauerhaft. Wirkt
+ausschliesslich beim Nachtragen; ein bestehender Einsatz behält, was gespeichert
+ist.
+
+### Zwei Beschriftungen umbenannt
+
+* „Transport" heißt **Transportart**. Das Wort stand zugleich für die Gruppe, in
+  der das Feld sitzt, und im Altbestand für die Spalte der Zielklinik.
+* „Anderer Notarzt" heißt **Weiterer Notarzt**. „Anderer" las sich, als sei der
+  eigene ersetzt worden; gemeint ist ein zusätzlicher.
+* Das Suchfeld an der Zielklinik heißt **Lokalisation Transportziel** statt
+  „Koordinaten" — was es einsammelt, ist eine Adresse oder ein Plus Code; die
+  Koordinate ist das Ergebnis. Sobald sie steht, verschwindet das Suchfeld und
+  macht dem Merkfeld Platz (gilt für alle Ortsfelder mit getrennter Suche).
+
+### Einsatzansicht: neue Reihenfolge im Inhaltskästchen
+
+Das Kästchen las sich rückwärts: erst Transport und Winde, dann ganz unten, wer
+behandelt wurde — die verschlüsselten Angaben kommen erst nach dem Entsperren an
+und wurden einfach angehängt. Jetzt hat jede Zeile einen Rang und wird an ihrer
+Stelle eingefügt, unabhängig davon, wann ihr Wert eintrifft: Einsatznummer,
+Name, Geburtsdatum, Einsatzort, Beschreibung, Luftlinie, Diagnose, Notizen,
+weitere Rettungsmittel, weiterer Notarzt, Sekundär/Fehleinsatz, Winde,
+Bergwacht, Transportart, Transportziel, Schockraum.
+
+Dabei zusammengelegt und aufgeräumt:
+
+* **Geburtsdatum und Alter stehen in einer Zeile.** Das Alter folgt aus dem
+  Geburtsdatum, es ist keine zweite Angabe. Die Einheit wechselt mit dem Alter:
+  unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre — bei einem
+  Säugling ist „0" keine Auskunft, „3 Monate" schon.
+* **Die Höhe steht in der Zeile des Einsatzortes.** Sie ist eine Eigenschaft
+  dieses Ortes und sonst nichts (weiterhin nur luftgebunden).
+* **Die Steigung ist entfallen.** Sie war das Profil der geflogenen Strecke,
+  nicht das des Einsatzes. In Spalte, Export, Import und Sicherung bleibt sie
+  unverändert erhalten.
+* **Die Kopfzeile ist gestrafft:** ohne Streckenangabe (sie gehört zur
+  Auswertung und steht dort) und ohne das Wort „Diensttag" vor dem Datum.
+  Weicht das Datum des Dienstes vom echten Einsatzdatum ab, wird er weiterhin
+  ausdrücklich genannt.
+* „Phasen" heißt **Einsatzphasen** — Überschrift wie Kartenschalter.
+
+### Suche: Filterspalte neu geschnitten
+
+Drei der sechs Blöcke liessen sich nicht erklären: „Zeit" enthielt Datum und
+Uhrzeit, „Werte" Alter, Strecke und Dauer, „Einsatz" einen einzigen Haken. Wer
+nach Einsätzen über 50 km suchte, musste raten, wo das steht.
+
+* **Einsatz** — Datum, Alarmzeit, Wochentag, **Strecke**, **Einsatzdauer**,
+  Fehleinsatz.
+* **Patient** — Alter von/bis.
+* **Transport** — unverändert.
+* **Beteiligte** — unverändert.
+* **Bergrettung** — Bergwacht **und** Winde in einem Block, sichtbar nur, wenn
+  im Bestand etwas davon vorkommt (vorher zwei Blöcke mit derselben Regel).
+* **Werte** — entfallen. Das war nie ein Gegenstand, sondern eine Datenart.
+
+Der Fehleinsatz-Filter erscheint jetzt feldweise nur, wenn im Bestand einer
+dokumentiert ist — sein Block muss ja bleiben.
+
+**Die Kurznamen im URL-Fragment sind unverändert** (`kv`, `ab`, `lv` …):
+Verschickte Links funktionieren weiter, nur die Gruppe, die bei einem geteilten
+Link aufgeht, hat gewechselt.
+
+### Freitextsuche mit Und / Oder / Nicht
+
+Bisher: jedes Wort muss irgendwo vorkommen. Das trägt für den Regelfall und
+scheitert an zwei Fragen, die im Betrieb immer wieder auftauchen — „alle
+Reanimationen **oder** Polytraumata" und „Bergwacht, aber **keine** Winde".
+
+    sturz fraktur                  beide Begriffe (Leerzeichen heißt UND)
+    sturz ODER fraktur             mindestens einer (OR, | ebenso)
+    bergwacht -winde               der erste ja, der zweite nicht
+                                   (NICHT, NOT, ! ebenso)
+    "zwei wörter"                  genau diese Folge
+    (sturz ODER fraktur) oberstdorf   Klammern; sonst bindet UND stärker
+
+Groß- und Kleinschreibung spielt keine Rolle. **Wer keine Operatoren benutzt,
+merkt nichts:** Ohne sie verhält sich die Suche exakt wie bisher. Eine
+halbfertige Eingabe wird nicht bemängelt — sie wird gedeutet, so gut es geht,
+und im Zweifel auf die alte Regel zurückgeführt. Eine Fehlermeldung beim Tippen
+wäre lauter als das Ergebnis. Die Kurzhilfe steht aufklappbar unter dem Suchfeld
+(neuer Baustein `assets/suchtext.js`).
+
+### Einstellungen: aus „Standortdaten" werden „Standorte" und „Rettungsmittel"
+
+Ein Menüpunkt trug bisher alles: die Standorte selbst, Rettungsmittel,
+Besatzungen, Zielkliniken, Bergwacht. Der Name passte auf keines davon.
+
+* **Standorte** — eigene anlegen und bearbeiten, **vordefinierte** auswählen
+  (vorher „zentrale Standorte auswählen"). Und sonst nichts.
+* **Rettungsmittel** — was an den ausgewählten Standorten hängt, je Standort ein
+  Block, darin je Datenart ein eigener aufklappbarer Abschnitt mit der Zahl der
+  Einträge im Kopf.
+
+Der alte Link `?t=stammdaten` führt weiterhin zum Reiter „Standorte" —
+Lesezeichen und verschickte Links brechen nicht.
+
+Dazu im selben Zug:
+
+* **„Als Standard" geht jetzt auch für systemweite Standorte.** Die Serverseite
+  liess es längst zu; es fehlte allein der Knopf. Ein Konto, das ausschliesslich
+  mit vordefinierten Standorten arbeitet — der Regelfall an einer Station —
+  konnte damit gar keine Vorbelegung setzen. Die Schaltfläche ist ausserdem so
+  groß wie „Bearbeiten" und „Löschen" daneben (sie war es nicht).
+* **Namensfeld und Schaltfläche sind nicht mehr überhoch.** Ursache war das
+  Ortsfeld daneben: Ohne `align-items` streckt Flexbox alle Kinder auf die Höhe
+  des größten. Betraf Standort und Zielklinik gleichermassen.
+* **Die Art des Rettungsmittels ist nicht mehr vorbelegt.** „Luftgebunden" stand
+  von selbst da, und an einem NEF-Standort war das die falsche Vorgabe, die
+  niemand bemerkt — sie fiel erst auf, wenn im Einsatzformular Windenfelder
+  erschienen. Ohne Auswahl wird jetzt abgewiesen und gesagt, was fehlt. Die
+  Besatzung bleibt freiwillig.
+* **Die Eingabe hat einen eigenen Rahmen**, die Schaltfläche steht in der
+  Eingabezeile, Rollen und Fähigkeiten darunter mit Abstand und Beschriftung.
+  Vorher klebte alles unter der Tabelle, und die Haken sahen aus wie Zubehör der
+  letzten Tabellenzeile.
+* **Die Art steht nicht mehr ausgeschrieben unter dem Rettungsmittel** — das
+  Symbol davor sagt sie, mit Textalternative in `title`/`aria-label`. Übrig
+  bleibt, was man dem Symbol nicht ansieht: Rollen und Fähigkeiten.
+* **Besatzungsrollen erscheinen nur, wenn es sie am Standort gibt.** Vorher
+  standen an einem reinen NEF-Standort vier leere Flugrollen mit vier
+  Eingabezeilen. Eine bereits belegte Rolle bleibt sichtbar — sonst käme man an
+  eigene Einträge nicht mehr heran.
+* **Nach dem Speichern öffnen sich alle Ebenen bis zur Eingabestelle** und die
+  Seite springt dorthin. Vorher wurde genau ein Aufklapp-Element geöffnet; mit
+  der zweiten Ebene lag es unsichtbar in einem geschlossenen Block.
+
+### Administration
+
+* **„Zentrale Stammdaten" ist ebenso geteilt**: „Standorte systemweit" und
+  „Rettungsmittel systemweit", gleicher Aufbau wie in der Kontoansicht.
+* **Sicherungen einspielen ist eine Tabelle geworden.** Vorher stand je
+  Sicherung ein Kasten mit vollständigem Formular; bei fünf Konten mit je drei
+  Sicherungen waren das fünfzehn Kästen über mehrere Bildschirmseiten. Jetzt
+  eine Zeile je Sicherung (Zeitpunkt, Herkunft, Umfang, Zustand), die Formulare
+  aufklappbar dahinter — für die eine Sicherung, mit der man gerade etwas tun
+  will. **An den Sicherheitsabfragen ändert sich nichts:** dieselbe Abtippregel
+  für die Zielkonto-Adresse, dieselben Rückfragen vor dem Löschen.
+* **Wartungsseite umgestellt.** Zustand zuerst (Schlüsselableitung, Umgebung,
+  Aufräumjob), Updatetabelle danach — genau umgekehrt zu vorher. Das ist die
+  Auskunft, wegen der man die Seite im Betrieb öffnet; die Tabelle liest man
+  einmal vor einem Update.
+  * Die **Updatetabelle steht auf dem Kopf**: neueste zuerst. Was ansteht, steht
+    am Ende der Datei und war vorher hinter dreissig Zeilen „Bereits
+    angewendet" versteckt. Die *Ausführung* bleibt in Katalogreihenfolge — sie
+    muss es, weil Migrationen aufeinander aufbauen.
+  * **Neue Spalte „Web"**: die Fassung, mit der die Migration ausgeliefert
+    wurde. Die Kennung allein sagte das nicht — sie trägt ein Datum, und an
+    drei Tagen sind mehrere Fassungen erschienen.
+  * **Der Startknopf steht über der Tabelle**, nicht darunter.
+
+### Karte: Satellitenbild als vierte Auswahl
+
+Neben Standard, Wanderkarte und Topographisch jetzt ein Luftbild (Esri World
+Imagery, mit der geforderten Quellenangabe in der Attribution). Es zeigt, was
+Höhenlinien nicht leisten: ob der Einsatzort auf einer Wiese, im Wald oder auf
+einem Parkplatz lag. **Nicht** der Standardlayer — er lädt deutlich größere
+Kacheln, und die Karte soll beim Öffnen schnell dastehen. Wie bei den übrigen
+Layern werden dabei nur Kartenkacheln zum sichtbaren Ausschnitt geladen, keine
+Einsatz- oder Patientendaten.
+
+### Die Null in den Tabellen hat keinen Schrägstrich mehr
+
+Die Zahlenspalten liefen in einer Monospace-Familie. Die tat, was sie sollte —
+gleich breite Ziffern —, brachte aber die durchgestrichene Null mit: Consolas,
+Cascadia Mono und DejaVu Sans Mono zeichnen sie so, und abschalten lässt sie
+sich dort nicht. In einer Uhrzeit sah das aus wie ein Sonderzeichen.
+
+Ersatz ist die Schrift, die die Anwendung ohnehin ausliefert: **Open Sans mit
+`tnum`**. Glatte Null, feste Ziffernbreiten — die Spaltenbündigkeit bleibt, sie
+kam nie vom Monospace-Zeichen, sondern von der Ziffernbreite. Wo eine
+Schreibmaschinenschrift die Aussage *ist* — Kopplungscode,
+Wiederherstellungsschlüssel, Phasenkachel —, bleibt sie.
+
+### Backlog Nr. 15 und Nr. 16 erledigt
+
+* **Nr. 15:** `api/suchindex.php` liefert das Feld `edited` nicht mehr. Es war
+  totes Nutzdatum — `suche.php` ist der einzige Abnehmer und hat es nie
+  ausgewertet. Aus demselben Grund ist `ascent_m` aus `api/mission.php`
+  entfallen, seit die Einsatzansicht die Steigung nicht mehr zeigt.
+* **Nr. 16:** Die Zeilen der Tagesübersicht sind mit der Tastatur erreichbar
+  (`tabIndex`, `role="link"`, Enter und Leertaste) — dieselben drei Zeilen, die
+  Suche und Zeitraum-Übersicht seit Web 5.2.0 über `assets/missiontable.js`
+  mitbringen. Damit sind alle drei Einsatztabellen ohne Maus bedienbar.
+
+### Unter der Haube
+
+* **Feldkatalog** (`mission_fields.php`): neue Schlüssel `gruppe`,
+  `nebeneinander`, `vorbelegt_bei`, `such_label`; neue Reihenfolge entlang des
+  Einsatzablaufs. `api/mission.php` liefert je Feld seine Spalte (`col`), damit
+  die Anzeige selbst ordnen kann, ohne Felder über ihre Beschriftung
+  zurückzuerkennen.
+* Die **Tagesübersicht** zeigt ihre Katalogspalten dadurch in neuer Folge:
+  Sekundärtransport, Bergwacht, Winde. Ebenso ändert sich die Spaltenfolge im
+  Export. **Der Import ist unberührt** — er ordnet über Spaltennamen zu.
+* Neuer Baustein `assets/suchtext.js` (boolesche Freitextsuche), neue Funktion
+  `EdPat.alterText()` (Alter mit passender Einheit).
+* **Keine Migration.** Schema und Daten sind unverändert.
+
 ## [Web 6.3.0 / Uhr 1.8.0] — 2026-08-18
 
 **Die Notarzt-Erweiterung ist abgeschlossen.** Vierte und letzte Etappe

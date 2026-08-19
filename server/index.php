@@ -167,8 +167,8 @@ $neueGeraete = geraete_neu(db(), $userId);
         <div id="crewfields"></div>
         <p class="muted" id="crewhint" hidden></p>
         <p class="muted" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
-          Noch keine Standortdaten hinterlegt — unter
-          <a href="einstellungen.php?t=stammdaten">Einstellungen → Standortdaten</a> anlegen.</p>
+          Noch keine Standorte hinterlegt — unter
+          <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
         <label>Notizen <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
         <button type="submit" class="btn-primary">Speichern</button>
         <span id="savestate" class="muted"></span>
@@ -353,7 +353,25 @@ function renderMissionTable(){
       <td${m._dx ? '' : ' class="dash"'}>${m._dx ? esc(m._dx) : '–'}</td>
       ${dcZellen}
       <td class="mono c-km">${fmtKm(m.distance_m)}</td>`;
-    tr.addEventListener('click', () => location.href = 'einsatz.php?id=' + m.id);
+    /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).
+     * Bis Web 6.3.0 hatte sie hier nur einen Klick-Handler und `cursor:pointer`:
+     * Die Tagesuebersicht war damit die einzige der drei Einsatztabellen, die
+     * sich ausschliesslich mit der Maus oeffnen liess. Suche und
+     * Zeitraum-Uebersicht bringen dieselben drei Zeilen seit Web 5.2.0 ueber
+     * assets/missiontable.js mit; hier stehen sie jetzt woertlich genauso.
+     * role="link" statt "button", weil die Handlung ein Seitenwechsel ist. */
+    tr.tabIndex = 0;
+    tr.setAttribute('role', 'link');
+    const oeffne = () => { location.href = 'einsatz.php?id=' + m.id; };
+    tr.addEventListener('click', oeffne);
+    tr.addEventListener('keydown', ev => {
+      // Leertaste bewusst mit: uebliche Ausloesung fuer fokussierte
+      // Bedienelemente — ohne preventDefault scrollt die Seite stattdessen weg.
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        oeffne();
+      }
+    });
     tbody.appendChild(tr);
   });
   document.querySelectorAll('#missions th.sortable').forEach(th => {
@@ -652,7 +670,7 @@ function renderCrewFields(meta){
     hint.hidden = false;
     hint.textContent = (meta && meta.vehicle_id)
       ? 'Für dieses Rettungsmittel sind keine Besatzungsrollen angehakt — '
-        + 'nachzutragen unter Einstellungen → Standortdaten.'
+        + 'nachzutragen unter Einstellungen → Rettungsmittel.'
       : 'Noch kein Rettungsmittel zugeordnet: Dieser Diensttag ist neutral und '
         + 'zeigt keine Besatzungsrollen. Zeiten, Phasen, Track und Reanimation '
         + 'werden trotzdem vollständig erfasst.';

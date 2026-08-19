@@ -40,8 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405)
 try {
     // ---- Einsaetze -------------------------------------------------------
     // Datentrennung nach user_id in JEDER Abfrage dieser Datei.
+    /* `edited` steht hier NICHT mehr (Backlog Nr. 15). Es war totes Nutzdatum:
+     * suche.php ist der einzige Abnehmer dieses Endpunkts und hat den Wert
+     * nirgends ausgewertet — die Spalte reiste bei jedem Aufruf durch die
+     * Antwort, ohne je gelesen zu werden. Der Bearbeitungsstand steht
+     * unveraendert in der Einsatzansicht (api/mission.php). */
     $st = db()->prepare(
-        'SELECT m.id, m.day_id, m.started_at, m.distance_m, m.edited,
+        'SELECT m.id, m.day_id, m.started_at, m.distance_m,
                 m.transport_mode, m.na_escort, m.transport_dest, m.schockraum,
                 m.false_alarm,
                 m.winch, m.winch_cycles, m.winch_cycles_pat, m.winch_airload,
@@ -165,7 +170,6 @@ try {
             'start_min'   => $startMin,
             'duration_s'  => $dur,
             'distance_m'  => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,
-            'edited'      => (int)($m['edited'] ?? 0) === 1,
             /* Die Klartextfelder der Etappe 2 (Web 6.1.0), soweit die Suche
              * sie auswertet. `dest_lat`/`dest_lon` und `start_src` bleiben
              * bewusst DRAUSSEN: Nach einer Koordinate oder nach der Herkunft

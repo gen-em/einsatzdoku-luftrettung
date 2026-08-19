@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Unbekannte Stammdatenart. Es wurde nichts geändert.';
         } elseif ($zentral && !ist_admin()) {
             // Zentrale Eintraege gehoeren den Admins (nachbearbeitung_lib.php).
-            $error = 'Zentrale Stammdaten lassen sich nur von einer Administratorin '
+            $error = 'Systemweite Standorte lassen sich nur von einer Administratorin '
                    . 'zuordnen. Es wurde nichts geändert.';
         } else {
             /* Der Zielstandort muss zur Zeile passen: Ein ZENTRALER Eintrag
@@ -191,13 +191,13 @@ $nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
       <p class="muted">Datum, Zeitraum und Einsatzzahl stehen dabei, weil sich
          ohne sie nicht entscheiden lässt, welcher Dienst gemeint war. Mit dem
          Speichern werden Art, Rollensatz, Fähigkeiten und Bezeichnungen
-         <strong>eingefroren</strong> — spätere Änderungen an den Standortdaten
+         <strong>eingefroren</strong> — spätere Änderungen an den Standorten
          wirken darauf nicht mehr.</p>
       <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
         <p class="alert alert-warn">Es stehen keine Standorte und Rettungsmittel
            zur Verfügung. Bitte zuerst unter
-           <a href="einstellungen.php?t=stammdaten">Einstellungen →
-           Standortdaten</a> welche anlegen oder einen zentralen Standort
+           <a href="einstellungen.php?t=standorte">Einstellungen →
+           Standorte</a> welche anlegen oder einen vordefinierten Standort
            auswählen.</p>
       <?php endif; ?>
       <table class="data">
@@ -271,7 +271,7 @@ $nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
       <h3><?= $istZentral ? 'Zentrale Einträge' : 'Eigene Einträge' ?></h3>
       <?php if (!$basen): ?>
         <p class="alert alert-warn">Es steht kein passender Standort zur
-           Verfügung<?= $istZentral ? ' — bitte zuerst unter Zentrale Stammdaten einen anlegen.'
+           Verfügung<?= $istZentral ? ' — bitte zuerst unter „Standorte systemweit" einen anlegen.'
                                     : '.' ?></p>
       <?php endif; ?>
       <?php foreach ($liste as $tabelle => $zeilen): ?>

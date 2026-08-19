@@ -162,6 +162,23 @@
          * die versteckten Felder. */
         function zeichne() {
             feld.placeholder = hatKoordinaten() ? platzhalterBez : platzhalterFrei;
+            /* SUCHFELD WEG, SOBALD DIE KOORDINATE STEHT (Web 7.0.0).
+             *
+             * Bei getrennter Suche standen bisher drei Zeilen untereinander:
+             * die Bezeichnung, ein Suchfeld, das nichts mehr zu suchen hatte,
+             * und darunter der Chip mit dem Ergebnis. Das Suchfeld war ab
+             * diesem Moment funktionslos — die Zustandszeile sagte das auch,
+             * musste es aber sagen, weil es dastand.
+             *
+             * Es kommt zurueck, sobald der Chip ueber sein ✕ entfernt wird:
+             * Genau dann gibt es wieder etwas zu suchen. Ohne getrennte Suche
+             * (Einsatzort) aendert sich nichts — dort IST das Bezeichnungsfeld
+             * das Suchfeld, und es zu verstecken hiesse, den Ort zu
+             * verstecken. */
+            if (opt.getrennteSuche && suchF && suchF !== feld) {
+                var huelle = suchF.closest('label') || suchF;
+                huelle.hidden = hatKoordinaten();
+            }
             if (!chips) { return; }
             chips.innerHTML = '';
             if (!hatKoordinaten()) { return; }

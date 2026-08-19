@@ -130,9 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endforeach; ?>
           </select></label>
         <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
-          <p class="muted">Noch keine Standortdaten hinterlegt — unter
-             <a href="einstellungen.php?t=stammdaten">Einstellungen →
-             Standortdaten</a> anlegen. Ohne Zuordnung bleibt der Diensttag
+          <p class="muted">Noch keine Standorte hinterlegt — unter
+             <a href="einstellungen.php?t=standorte">Einstellungen →
+             Standorte</a> anlegen. Ohne Zuordnung bleibt der Diensttag
              neutral: Zeiten, Phasen, Track und Reanimation werden trotzdem
              vollständig erfasst.</p>
         <?php endif; ?>

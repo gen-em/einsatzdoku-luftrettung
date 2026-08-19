@@ -98,6 +98,26 @@
   --line:#E3DAC6;                      /* aufgehelltes Sand */
   --muted:#6E6459;
   --mono:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Consolas,monospace;
+  /* ZIFFERN IN TABELLEN (Web 7.0.0) — eigene Familie, nicht --mono.
+   *
+   * Die Zahlenspalten liefen bis Web 6.3.0 in der Monospace-Familie darueber.
+   * Die tat, was sie sollte (gleich breite Ziffern, buendige Spalten), brachte
+   * aber die DURCHGESTRICHENE NULL mit: Consolas, Cascadia Mono und DejaVu Sans
+   * Mono zeichnen sie so, und abschalten laesst sie sich dort nicht — der
+   * Schraegstrich ist bei diesen Schriften die Normalform und keine
+   * zuschaltbare Variante ('zero' greift nur, wo es eine Wahl gibt). In einer
+   * Uhrzeit oder einer Streckenangabe sieht das aus wie ein Sonderzeichen.
+   *
+   * Ersatz ist die Schrift, die die Anwendung ohnehin ausliefert: Open Sans mit
+   * 'tnum'. Sie hat eine glatte Null und feste Ziffernbreiten — die
+   * Spaltenbuendigkeit bleibt also erhalten, sie kam nie vom Monospace-Zeichen,
+   * sondern von der Ziffernbreite. Zugleich faellt der Bruch zum uebrigen Text
+   * weg.
+   *
+   * --mono bleibt, wo eine Schreibmaschinenschrift die Aussage IST: der
+   * Kopplungscode (.codebig), der Wiederherstellungsschluessel (.keybox code)
+   * und die Phasenkachel (.chip). */
+  --zahl:'Open Sans',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
   /* Ersatzliste fuer Ueberschriften und Knoepfe.
    *
    * HIER STAND 'Arial Narrow' AN ZWEITER STELLE. Das war der Fehler: Bricolage
@@ -252,7 +272,10 @@ table.data tbody tr:last-child td{border-bottom:0}
 table.data.data-centered th{text-align:center}
 #missions tbody tr{cursor:pointer}
 #missions tbody tr:hover{background:var(--accent-light)}
-.mono{font-family:var(--mono);font-size:.92rem;font-variant-numeric:tabular-nums}
+/* 'zero' 0 steht zusaetzlich da: Sollte die Ersatzschrift einmal greifen und
+   eine zuschaltbare Schraegstrich-Null mitbringen, bleibt sie damit aus. */
+.mono{font-family:var(--zahl);font-size:.94rem;
+  font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'zero' 0}
 .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px}
 .chip{display:inline-block;min-width:1.7em;text-align:center;
   font-family:var(--mono);font-size:.85rem;font-weight:600;
@@ -281,9 +304,17 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
 .btn-danger{background:var(--schnee);color:var(--rot);border:1px solid #EBC3C4;
   padding:.25rem .6rem;font-size:.85rem}
 .btn-danger:hover{background:var(--rot-light)}
-.inline-form{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap}
+/* ZEILENFORMULARE (Stammdaten). `align-items:flex-start` ist die eigentliche
+   Aenderung von Web 7.0.0: Ohne sie streckt Flexbox alle Kinder auf die Hoehe
+   des groessten — und das ist seit Web 6.1.0 das Ortsfeld daneben, das aus
+   Suchfeld, Zustandszeile und Merkfeld besteht. Namensfeld und Schaltflaeche
+   wurden dadurch drei Zeilen hoch und sahen aus wie ein Gestaltungsfehler. Sie
+   behalten jetzt ihre eigene Hoehe und stehen oben buendig mit dem Ortsfeld. */
+.inline-form{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;
+  align-items:flex-start}
 .inline-form input,.inline-form select{width:auto;flex:1;min-width:160px}
 .inline-form .btn-primary{width:auto;margin-top:0}
+.inline-form .btn-red{align-self:center}
 
 .alert{background:var(--rot-light);border:1px solid #E5A9AB;color:#9E2226;
   padding:.55rem .8rem;border-radius:5px}
@@ -313,7 +344,11 @@ tr.warnzeile>td{background:var(--rot-light)}
    Unterschied zwischen 'nichts erfasst' und 'nicht lesbar' ist der
    ganze Zweck. */
 td.patfehler{color:var(--rot);text-align:center;font-weight:600}
-dd.patfehler{color:#8A4A00}
+/* Seit Web 7.0.0 steht der Hinweis als <span> IN der Wertzelle, nicht als
+   Klasse am <dd> selbst: Die Zeilen des Inhaltskaestchens entstehen jetzt ueber
+   einen gemeinsamen Einfuegehelfer (dlZeile), und der setzt keine Klassen an dt
+   und dd. Der Selektor deckt beides ab. */
+dd.patfehler,dd .patfehler{color:#8A4A00}
 .keybox{background:var(--accent-light);border:1px solid #EFC9A0;border-radius:6px;
   padding:.8rem 1rem;margin-bottom:1.2rem}
 .keybox code{font-family:var(--mono);background:var(--schnee);
@@ -377,7 +412,7 @@ section{margin-bottom:1.8rem}
    erzwingen. Deshalb ein Textfeld, dessen Format assets/zeitfeld.js sichert.
    Ziffernbreite fest (tabular-nums), damit die Maske beim Tippen nicht
    springt. */
-input.zeitfeld{font-variant-numeric:tabular-nums}
+input.zeitfeld{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'zero' 0}
 input.zeitfeld[aria-invalid=true]{border-color:var(--rot);
   background:var(--rot-light)}
 
@@ -855,6 +890,24 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
 /* --- Weitere Rettungsmittel: Eingabe mit Merkfeldern --- */
 .rmbox{position:relative}
 .rmchips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem}
+/* CHIPS IM FELD (Web 7.0.0). Der Rahmen liegt um .rmfeld, nicht mehr um das
+   <input> darin: Gewaehlte Eintraege und die weiterlaufende Eingabe stehen
+   dadurch in EINEM Feld nebeneinander, wie im Empfaengerfeld eines
+   Mailprogramms. `display:contents` an .rmchips loest den Zwischencontainer
+   auf, sodass die Chips unmittelbare Flex-Kinder werden und mit dem Eingabefeld
+   zusammen umbrechen — mit einem eigenen Kasten saessen sie als Block darueber,
+   also genau da, wo sie vorher standen.
+   Die Regel ist auf .rmfeld beschraenkt: .rmchips traegt auch die
+   Koordinaten-Chips der Ortsfelder (ui_ortsfeld), und die stehen weiterhin als
+   eigene Zeile unter ihrem Feld. */
+.rmfeld{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;
+  border:1px solid var(--line);border-radius:5px;padding:.3rem .4rem;
+  background:var(--schnee);min-height:2.4rem}
+.rmfeld .rmchips{display:contents}
+.rmfeld:focus-within{outline:2px solid var(--blau);outline-offset:1px}
+.rmeingabe{flex:1 1 10rem;min-width:8rem;width:auto;border:0;background:transparent;
+  padding:.15rem .2rem}
+.rmeingabe:focus-visible{outline:none}
 .rmchip{display:inline-flex;align-items:center;gap:.35rem;background:var(--accent-light);
   border:1px solid #F0C89A;border-radius:999px;padding:.2rem .3rem .2rem .7rem;font-size:.85rem}
 .rmx{border:0;background:none;cursor:pointer;font-size:1.05rem;line-height:1;
@@ -1084,3 +1137,117 @@ span.imp-warn{color:#8A6D00}
 .feldgruppe legend{padding:0 .35rem;font-weight:600;color:var(--navy)}
 .feldgruppe label{display:flex;align-items:baseline;gap:.45rem;margin:.25rem 0}
 .feldgruppe input[type=radio]{width:auto;flex:none}
+
+/* ===================== Web 7.0.0: Feldgruppen im Einsatzformular ==========
+ *
+ * Das Formular hatte bis Web 6.3.0 vier Ueberschriften und darunter eine lange
+ * Kette gleich aussehender Felder — die Zusammengehoerigkeit von Transportart,
+ * NA-Begleitung und Transportziel war nur zu erraten. Jetzt traegt jede Gruppe
+ * einen eigenen, leicht abgesetzten Rahmen; welches Feld in welche gehoert,
+ * steht im Feldkatalog ('gruppe', mission_fields.php).
+ *
+ * <fieldset> und <legend> statt <div>/<h2>: Das ist die Auszeichnung, die es
+ * fuer genau diesen Zweck gibt, und Screenreader nennen die Gruppe beim
+ * Betreten eines Feldes von selbst. Der Preis sind ein paar Zeilen, die die
+ * Voreinstellungen der Browser zuruecksetzen. */
+.fgruppe{border:1px solid var(--line);border-radius:8px;background:var(--schnee);
+  margin:0 0 1.1rem;padding:.2rem 1rem 1rem;min-width:0}
+.fgruppe>legend{font-family:var(--head);font-weight:600;font-size:.8rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--navy);
+  padding:0 .45rem;margin-left:-.45rem}
+.fgruppe-hinweis{font-family:'Open Sans',sans-serif;font-weight:400;
+  text-transform:none;letter-spacing:0;color:var(--muted);font-size:.8rem}
+/* Erste Beschriftung einer Gruppe ohne den ueblichen Abstand nach oben — die
+   Legende steht bereits darueber. */
+.fgruppe>label:first-of-type,.fgruppe>.fld-reihe:first-child>label{margin-top:.2rem}
+/* Kurze Felder nebeneinander ('nebeneinander' im Katalog, ausserdem von Hand
+   fuer Geburtsdatum/Alter). Sie brechen auf schmalen Bildschirmen um. */
+.fld-reihe{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;align-items:flex-start}
+.fld-reihe>label,.fld-reihe>.fld-check{flex:1 1 14rem;min-width:12rem;margin-top:.7rem}
+
+/* Kurzhilfe zu den Suchoperatoren (Web 7.0.0). Aufklappbar und dezent — sie
+   soll auffindbar sein, nicht dauernd sichtbar. */
+.suchsyntax{margin:.2rem 0 .4rem}
+.suchsyntax>summary{cursor:pointer;font-size:.85rem;color:var(--blau-dark);
+  list-style:none;width:fit-content}
+.suchsyntax>summary::-webkit-details-marker{display:none}
+.suchsyntax>summary::before{content:'▸';display:inline-block;width:1em;
+  color:var(--accent);transition:transform .12s}
+.suchsyntax[open]>summary::before{transform:rotate(90deg)}
+.suchsyntax ul{margin:.4rem 0 .3rem;padding-left:1.3rem}
+.suchsyntax li{margin:.15rem 0}
+.suchsyntax code{font-family:var(--mono);background:var(--rauch);
+  border:1px solid var(--line);border-radius:4px;padding:0 .25em}
+
+/* ===================== Web 7.0.0: Stammdatenpflege ======================= */
+
+/* ZWEITE EBENE der aufklappbaren Bloecke: je Standort einer, darin je Datenart
+   einer. Optisch flacher als .stammblock — sonst saehe die Verschachtelung wie
+   zwei gleichrangige Listen aus. */
+.stammunter{border-top:1px solid var(--line);margin:0;padding:0 0 .3rem}
+.stammunter>summary{cursor:pointer;list-style:none;padding:.55rem .2rem;
+  font-family:var(--head);font-size:.85rem;font-weight:600;color:var(--navy);
+  display:flex;align-items:center;gap:.4rem}
+.stammunter>summary::-webkit-details-marker{display:none}
+.stammunter>summary::before{content:'▸';display:inline-block;width:1em;
+  color:var(--accent);transition:transform .12s}
+.stammunter[open]>summary::before{transform:rotate(90deg)}
+.stammunter>summary:hover{color:var(--accent)}
+/* Zahl der Eintraege im Kopf: Sie beantwortet die Frage, wegen der man
+   aufklappt („ist da ueberhaupt was drin?"), ohne dass man aufklappen muss. */
+.stammzahl{margin-left:auto;font-family:'Open Sans',sans-serif;font-weight:400;
+  font-size:.78rem;color:var(--muted);background:var(--rauch);
+  border:1px solid var(--line);border-radius:999px;padding:0 .5em;min-width:1.9em;
+  text-align:center}
+.stammunter h4{font-family:var(--head);font-size:.85rem;margin:.9rem 0 .3rem;
+  color:var(--navy)}
+
+/* ★-Schaltflaeche in den Zeilenaktionen. Sie war breiter und hoeher als
+   „Bearbeiten" und „Löschen" daneben, weil .btn-plain eine andere Polsterung
+   traegt als .btn-yellow/.btn-red und die Beschriftung „★ als Standard" zwei
+   Woerter laenger war. Beides ist angeglichen — gleiche Polsterung, gleiche
+   Schriftgroesse, kuerzerer Text (der title sagt den Rest). */
+.btn-stern{padding:.25rem .7rem;font-size:.85rem;white-space:nowrap}
+
+/* EINGABEBEREICH mit eigenem Rahmen (Rettungsmittel). Vorher klebten
+   Eingabezeile, Artauswahl und Rollenhaken ohne Abstand unter der Tabelle, und
+   es war nicht zu sehen, dass sie zusammengehoeren — die Haken sahen aus wie
+   Zubehoer der letzten Tabellenzeile. */
+.neu-form{border:1px solid var(--line);border-radius:8px;background:var(--rauch);
+  padding:.7rem .9rem 1rem;margin:1.1rem 0 .3rem}
+.neu-form h4{margin:0 0 .5rem;font-family:var(--head);font-size:.85rem;
+  color:var(--navy)}
+/* Die Schaltflaeche steht IN der Eingabezeile: Was darunter folgt, sind
+   Zusatzangaben, nicht der naechste Schritt. */
+.neu-zeile{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.neu-zeile input{flex:1 1 14rem;min-width:12rem;width:auto}
+.neu-zeile .btn-primary{width:auto;margin-top:0}
+.neu-feld{margin-top:.8rem}
+.neu-titel{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.25rem}
+
+/* Wartungsseite: Startknopf über der Updatetabelle (Web 7.0.0). Er steht in
+   einer Zeile mit seiner Erläuterung — untereinander wirkte der Text wie ein
+   eigener Absatz und der Knopf wie ein Abschluss der Seite. */
+.migstart{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;
+  margin:1rem 0 .8rem}
+.migstart .btn-primary{width:auto;margin-top:0;flex:0 0 auto}
+.migstart .muted{flex:1 1 20rem;font-size:.85rem}
+/* Fassungsspalte: schmal und ohne Umbruch — sie trägt „6.3.0", nicht mehr. */
+.c-web{width:5.5rem;white-space:nowrap;color:var(--muted)}
+
+/* Aktionen einer Tabellenzeile, aufklappbar (Sicherungen, Web 7.0.0). Der Kopf
+   sieht aus wie eine Schaltfläche, der Inhalt öffnet sich darunter in der
+   Zeile. <details> statt eines eigenen Menü-Widgets: Tastaturbedienung von
+   Haus aus, kein nachgebautes Verhalten. */
+.zeilenmenu{display:inline-block;text-align:left}
+.zeilenmenu>summary{cursor:pointer;list-style:none;display:inline-block;
+  font-family:var(--head);font-weight:600;font-size:.85rem;
+  padding:.25rem .7rem;border-radius:5px;white-space:nowrap}
+.zeilenmenu>summary::-webkit-details-marker{display:none}
+.zeilenmenu-inhalt{margin-top:.7rem;padding:.7rem .9rem;background:var(--rauch);
+  border:1px solid var(--line);border-radius:8px;min-width:min(30rem,72vw)}
+.zeilenmenu-inhalt .settings-form{max-width:none;margin-bottom:.9rem}
+.zeilenmenu-inhalt .settings-form:last-child{margin-bottom:0}
+/* Die Tabelle darf für den aufgeklappten Inhalt in die Breite gehen; auf
+   schmalen Geräten scrollt sie waagerecht statt die Seite zu sprengen. */
+.sictab td{vertical-align:top}

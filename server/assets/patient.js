@@ -48,6 +48,52 @@
     return (pat.age != null) ? pat.age : null;
   }
 
+  /**
+   * Alter als TEXT mit Einheit — „41 Jahre", „7 Monate", „12 Tage".
+   *
+   * Bei Kindern ist die Zahl allein keine Auskunft: Ein Saeugling ist „0", und
+   * zwischen zwei Tagen und elf Monaten liegt fachlich alles. Die Einheit
+   * wechselt deshalb mit dem Alter — unter einem Monat Tage, unter zwei Jahren
+   * Monate, darueber Jahre. Die Grenzen sind die der Notfallmedizin
+   * (Neugeborenes / Saeugling / Kleinkind) und nicht frei gewaehlt.
+   *
+   * Grundlage ist das GEBURTSDATUM. Wo nur ein von Hand eingetragenes Alter
+   * vorliegt (unbekannte Person, Schaetzung), ist die Einheit „Jahre" — etwas
+   * anderes laesst sich aus einer blossen Zahl nicht ableiten.
+   *
+   * @param {object} pat  entschluesselter Patientenblock
+   * @param {string} tag  Einsatztag "JJJJ-MM-TT"
+   * @returns {string|null}
+   */
+  function alterText(pat, tag) {
+    if (!pat) { return null; }
+    const dob = pat.dob;
+    if (dob && /^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+      const g = new Date(dob + 'T00:00:00');
+      const b = (tag && /^\d{4}-\d{2}-\d{2}$/.test(tag))
+        ? new Date(tag + 'T00:00:00') : new Date();
+      if (!isNaN(g.getTime()) && !isNaN(b.getTime()) && g <= b) {
+        const tage = Math.floor((b - g) / 86400000);
+        if (tage < 31) { return tage === 1 ? '1 Tag' : tage + ' Tage'; }
+        const jahre = alterAm(dob, tag);
+        if (jahre !== null && jahre >= 2) {
+          return jahre === 1 ? '1 Jahr' : jahre + ' Jahre';
+        }
+        // Volle Monate zwischen Geburts- und Einsatztag.
+        let monate = (b.getFullYear() - g.getFullYear()) * 12
+                   + (b.getMonth() - g.getMonth());
+        if (b.getDate() < g.getDate()) { monate--; }
+        if (monate < 0) { monate = 0; }
+        return monate === 1 ? '1 Monat' : monate + ' Monate';
+      }
+    }
+    if (pat.age != null && pat.age !== '') {
+      const n = parseInt(pat.age, 10);
+      if (!isNaN(n)) { return n === 1 ? '1 Jahr' : n + ' Jahre'; }
+    }
+    return null;
+  }
+
   /** "Nachname, Vorname" — je nachdem, was vorhanden ist. */
   function name(pat) {
     if (!pat) { return ''; }
@@ -174,7 +220,7 @@
         + ZEICHEN_UNLESBAR + ' gekennzeichnet.';
   }
 
-  window.EdPat = { alterAm, alterAnzeige, name, datumDe,
+  window.EdPat = { alterAm, alterAnzeige, alterText, name, datumDe,
                    entschluessle, entschluessleListe, hinweisUnlesbar,
                    zeigeUnlesbar, ZEICHEN_UNLESBAR };
 })();

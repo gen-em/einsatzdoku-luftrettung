@@ -43,8 +43,26 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
     <h2>Filter</h2>
 
     <div class="filtergruppen">
-      <details class="filtergruppe" data-gruppe="zeit">
-        <summary>Zeit</summary>
+      <?php /* ---- FILTERGRUPPEN (neu geschnitten, Web 7.0.0) ----------------
+               Die Spalte hatte sechs Blöcke, und drei davon liessen sich nicht
+               erklären: „Zeit" enthielt Datum und Uhrzeit, „Werte" Alter,
+               Strecke und Dauer, „Einsatz" einen einzigen Haken. Wer nach
+               Einsätzen über 50 km suchte, musste raten, ob das eine Zeit-, eine
+               Wert- oder eine Einsatzfrage ist.
+
+               Jetzt schneidet die Gliederung nach dem, WORÜBER gefiltert wird:
+               der Einsatz selbst (wann, wie weit, wie lange, überhaupt einer),
+               die Patientin, der Transport, die Beteiligten, die Bergrettung.
+               „Werte" ist damit ersatzlos entfallen — es war nie ein Gegenstand,
+               sondern eine Datenart.
+
+               DIE KURZNAMEN IM FRAGMENT BLEIBEN, WAS SIE SIND (kv, ab, lv …):
+               Sie stehen in verschickten Links, und ein umbenannter Parameter
+               bricht sie stillschweigend. Nur ihre GRUPPE hat sich geändert,
+               und die entscheidet allein, welcher Block bei einem geteilten
+               Link aufgeht. */ ?>
+      <details class="filtergruppe" data-gruppe="einsatz">
+        <summary>Einsatz</summary>
         <div class="filterfelder">
           <label>Datum von <input type="date" id="f-dv"></label>
           <label>Datum bis <input type="date" id="f-db"></label>
@@ -60,26 +78,39 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
             <label><input type="checkbox" value="6"> Sa</label>
             <label><input type="checkbox" value="7"> So</label>
           </div>
+          <?php /* Strecke und Dauer standen unter „Werte" — beides sind
+                   Eigenschaften DIESES Einsatzes und gehören zu ihm.
+                   Neutral beschriftet (Abschnitt 3.9): Die Suche führt beide
+                   Arten in einer Ansicht, „Flugstrecke" wäre für die Hälfte der
+                   Einsätze falsch. Die Flugterminologie bleibt allein den
+                   Kacheln des Luftrettungs-Tabs vorbehalten (E32). */ ?>
+          <label>Strecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
+          <label>Strecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
+          <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
+          <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
+          <?php /* Der Fehleinsatz ist selten. Er erscheint nur, wenn im Bestand
+                   überhaupt einer dokumentiert ist — sonst ergäbe „ja" dauerhaft
+                   null Treffer und „nein" den ganzen Bestand. Bis Web 6.3.0 fiel
+                   dafür der ganze Block weg; jetzt trägt der Block auch die
+                   Datums- und Zeitfilter und muss bleiben, also entscheidet die
+                   Regel über das einzelne FELD (FELD_NUR_WENN). */ ?>
+          <label id="lab-fe">Fehleinsatz <select id="f-fe" class="dreiwert"></select></label>
         </div>
       </details>
 
-      <details class="filtergruppe" data-gruppe="winde">
-        <summary>Winde</summary>
+      <?php /* Alles, was die Person betrifft. Derzeit ist das der Altersfilter
+               — und er wird es bleiben, solange die übrigen Angaben
+               verschlüsselt sind: Nach einem Namen zu filtern hiesse, eine
+               Auswahlliste aller Namen aufzubauen, und die wäre selbst ein
+               Patientendatum. Gesucht wird nach ihnen über das Freitextfeld,
+               das nach dem Entsperren auch die geschützten Felder durchsucht. */ ?>
+      <details class="filtergruppe" data-gruppe="patient">
+        <summary>Patient</summary>
         <div class="filterfelder">
-          <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
-          <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
-          <label>Cycles bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
-          <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
-          <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
-          <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
-        </div>
-      </details>
-
-      <details class="filtergruppe" data-gruppe="bergwacht">
-        <summary>Bergwacht</summary>
-        <div class="filterfelder">
-          <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
-          <label>Bereitschaft <select id="f-bu"></select></label>
+          <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
+          <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
+          <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
+            entschlüsselten Angaben und ist deshalb gesperrt.</p>
         </div>
       </details>
 
@@ -95,13 +126,6 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
           <label>Transportziel <select id="f-tz"></select></label>
           <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
           <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
-        </div>
-      </details>
-
-      <details class="filtergruppe" data-gruppe="einsatz">
-        <summary>Einsatz</summary>
-        <div class="filterfelder">
-          <label>Fehleinsatz <select id="f-fe" class="dreiwert"></select></label>
         </div>
       </details>
 
@@ -134,21 +158,24 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
         </div>
       </details>
 
-      <details class="filtergruppe" data-gruppe="werte">
-        <summary>Werte</summary>
+      <?php /* BERGRETTUNG — Bergwacht und Winde in EINEM Block (Web 7.0.0).
+               Sie standen als zwei getrennte Blöcke da und gehören fachlich
+               zusammen: Beides ist Bergrettung, beides hängt an einer Fähigkeit
+               des Rettungsmittels, und beides betrifft dieselben Standorte. Wer
+               keines von beidem dokumentiert, sieht den Block gar nicht
+               (GRUPPE_NUR_WENN) — vorher waren es zwei Blöcke, die dauerhaft
+               null Treffer versprachen. */ ?>
+      <details class="filtergruppe" data-gruppe="bergrettung">
+        <summary>Bergrettung</summary>
         <div class="filterfelder">
-          <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
-          <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
-          <?php /* Neutral beschriftet (Abschnitt 3.9): Die Suche führt beide Arten
-                   in einer Ansicht, „Flugstrecke" wäre für die Hälfte der
-                   Einsätze falsch. Die Flugterminologie bleibt allein den
-                   Kacheln des Luftrettungs-Tabs vorbehalten (E32). */ ?>
-          <label>Strecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
-          <label>Strecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
-          <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
-          <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
-          <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
-            entschlüsselten Angaben und ist deshalb gesperrt.</p>
+          <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
+          <label>Bereitschaft <select id="f-bu"></select></label>
+          <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
+          <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
+          <label>Cycles bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
+          <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
+          <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
+          <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
         </div>
       </details>
     </div>
@@ -177,8 +204,29 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
       </label>
       <p class="muted suchhinweis">Durchsucht Einsatznummer, Name, Geburtsdatum,
         Diagnose, Einsatzort, Transportziel, Beschreibung, Bergwacht-Angaben,
-        anderen Notarzt, weitere Rettungsmittel, Besatzung und Notizen.
+        weiteren Notarzt, weitere Rettungsmittel, Besatzung und Notizen.
         Weitere Filter in der Spalte links.</p>
+      <?php /* Die Operatoren stehen aufklappbar da, nicht als Dauertext: Wer
+               sie nicht braucht, tippt weiterhin einfach Wörter — genau so
+               verhält sich die Suche ohne Operator auch (assets/suchtext.js).
+               Ein Hinweis, den man bei jedem Suchvorgang überliest, wäre
+               schlechter als einer, den man einmal aufklappt. */ ?>
+      <details class="suchsyntax">
+        <summary>Und / Oder / Nicht — Suchbegriffe verknüpfen</summary>
+        <ul class="muted small">
+          <li><code>sturz fraktur</code> — beide Begriffe (Leerzeichen heißt UND)</li>
+          <li><code>sturz ODER fraktur</code> — mindestens einer
+            (<code>OR</code> und <code>|</code> gehen auch)</li>
+          <li><code>bergwacht -winde</code> — der erste ja, der zweite nicht
+            (<code>NICHT</code>, <code>NOT</code> und <code>!</code> gehen auch)</li>
+          <li><code>"zwei wörter"</code> — genau diese Folge</li>
+          <li><code>(sturz ODER fraktur) oberstdorf</code> — Klammern binden
+            zusammen; ohne sie bindet UND stärker als ODER</li>
+        </ul>
+        <p class="muted small">Groß- und Kleinschreibung spielt nirgends eine
+          Rolle. Eine unfertige Eingabe wird nicht bemängelt — sie sucht
+          weiter, so gut es geht.</p>
+      </details>
     </div>
 
     <p class="muted ergebniszeile" id="ergebniszeile">Bestand wird geladen …</p>
@@ -203,6 +251,9 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
 <script>const ART_SYMBOLE = <?= json_encode(dt_art_symbole(), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
+<?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
+         sie ohne die Seite prüfbar ist und keine Kenntnis von ihr braucht. */ ?>
+<script src="<?= asset('assets/suchtext.js') ?>"></script>
 <script>
 const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
 const KDF_SALT = <?= json_encode($kdfSalt) ?>;
@@ -285,19 +336,21 @@ const $ = id => document.getElementById(id);
  * ================================================================== */
 const FILTER = [
   { kurz: 'q', el: 'f-q', art: 'text', gruppe: null },
-  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'zeit' },
-  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'zeit' },
-  { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'zeit' },
-  { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'zeit' },
-  { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'zeit' },
-  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'winde' },
-  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'winde' },
-  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'winde' },
-  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'winde' },
-  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'winde' },
-  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'winde' },
-  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'bergwacht' },
-  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergwacht' },
+  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'einsatz' },
+  /* Winde und Bergwacht liegen seit Web 7.0.0 in EINEM Block „Bergrettung".
+     Die Kurznamen bleiben unveraendert — sie stehen in verschickten Links. */
+  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergrettung' },
   { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport' },
   { kurz: 'nb', el: 'f-nb', art: 'text', gruppe: 'transport' },
   { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport' },
@@ -318,12 +371,14 @@ const FILTER = [
      serverseitig in CREW_KURZ und nicht als zweite Liste hier. */
   ...CREW_FILTER,
   { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer' },
-  { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'werte' },
-  { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'werte' },
-  { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'werte' },
-  { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'werte' },
-  { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'werte' },
-  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'werte' }
+  /* Die Gruppe „werte" ist entfallen: Alter gehoert zur Patientin, Strecke und
+     Dauer zum Einsatz. Die Kurznamen sind dieselben geblieben. */
+  { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'patient' },
+  { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'patient' },
+  { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'einsatz' },
+  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'einsatz' }
 ];
 
 /* ---- Werte lesen und setzen ---------------------------------------- */
@@ -513,14 +568,16 @@ function baueHeuhaufen(m) {
                 .join('\n').toLowerCase();
 }
 
+/* Der Freitext-Prüfer wird EINMAL JE EINGABE gebaut, nicht je Einsatz: Bei
+   1 600 Datensätzen wäre das Zerlegen des Ausdrucks sonst 1 600 Mal dieselbe
+   Arbeit. anwenden() setzt ihn, trifft() benutzt ihn nur. */
+let freitext = null;
+
 function trifft(m) {
-  // Freitext: jedes Wort muss irgendwo vorkommen, nicht zwingend im
-  // selben Feld (UND über die Wörter, ODER über die Felder).
-  const q = $('f-q').value.trim().toLowerCase();
-  if (q !== '') {
-    const woerter = q.split(/\s+/).filter(Boolean);
-    if (!woerter.every(w => m._hay.includes(w))) { return false; }
-  }
+  /* Freitext: der Ausdruck muss auf den Heuhaufen dieses Einsatzes passen
+     (assets/suchtext.js). Ohne Operatoren ist das wie bisher „jedes Wort muss
+     irgendwo vorkommen" — UND über die Wörter, ODER über die Felder. */
+  if (freitext !== null && !freitext(m._hay)) { return false; }
 
   const dv = $('f-dv').value, db = $('f-db').value;
   if (dv !== '' && m.day < dv) { return false; }
@@ -608,17 +665,29 @@ function gruppenOeffnen() {
  * Liste leer hält und sich nicht finden lässt, wäre das schlechtere Ergebnis.
  * ================================================================== */
 const GRUPPE_NUR_WENN = {
-  winde: m => m.winch || m.winch_airload
-              || m.winch_cycles != null || m.winch_cycles_pat != null,
-  bergwacht: m => m.bergwacht
-                  || (m.bw_unit != null && m.bw_unit !== '')
-                  || (m.bw_info != null && m.bw_info !== '')
-  ,
-  /* Der Fehleinsatz steht beiden Arten offen (E17) und ist trotzdem selten.
-     Wer keinen dokumentiert hat, hat an diesem Block nichts zu wählen: „ja"
-     ergäbe dauerhaft null Treffer, „nein" den ganzen Bestand. Dieselbe Regel
-     wie bei Winde und Bergwacht, aus demselben Grund. */
-  einsatz: m => m.false_alarm
+  /* Ein Block statt zweier (Web 7.0.0): Winde und Bergwacht sind zusammen die
+     Bergrettung, und wer keines von beidem dokumentiert, braucht keines von
+     beiden Feldern. Die Bedingung ist die ODER-Verknüpfung der beiden
+     bisherigen — der Block erscheint also auch dort, wo nur eines vorkommt. */
+  bergrettung: m => m.winch || m.winch_airload
+                    || m.winch_cycles != null || m.winch_cycles_pat != null
+                    || m.bergwacht
+                    || (m.bw_unit != null && m.bw_unit !== '')
+                    || (m.bw_info != null && m.bw_info !== '')
+};
+
+/* ---- EINZELNE FELDER, die es nur bei passendem Bestand gibt --------------
+ *
+ * Dasselbe Prinzip eine Ebene tiefer. Nötig geworden, weil der Fehleinsatz
+ * jetzt in einem Block steht, der bleiben muss: „Einsatz" trägt auch Datum,
+ * Uhrzeit, Strecke und Dauer. Der Haken selbst ist aber unverändert selten —
+ * wer keinen dokumentiert hat, hat an ihm nichts zu wählen („ja" ergäbe
+ * dauerhaft null Treffer, „nein" den ganzen Bestand).
+ *
+ * `el` ist die Kennung des LABELS, nicht des Feldes: Versteckt gehört die
+ * Beschriftung mit, sonst bliebe ein Wort ohne Bedienelement stehen. */
+const FELD_NUR_WENN = {
+  fe: { el: 'lab-fe', wenn: m => m.false_alarm }
 };
 
 function gruppenSichtbarkeit() {
@@ -628,6 +697,15 @@ function gruppenSichtbarkeit() {
     const gesetzt   = FILTER.some(f => f.gruppe === name && wertLesen(f) !== '');
     const vorhanden = missions.some(GRUPPE_NUR_WENN[name]);
     block.hidden = !vorhanden && !gesetzt;
+  });
+  Object.keys(FELD_NUR_WENN).forEach(kurz => {
+    const regel = FELD_NUR_WENN[kurz];
+    const lab = $(regel.el);
+    if (!lab) { return; }
+    // Ausnahme wie bei den Blöcken: Ein Filter aus einem geteilten Link bleibt
+    // sichtbar, auch wenn der eigene Bestand nichts dazu hat.
+    const gesetzt = FILTER.some(f => f.kurz === kurz && wertLesen(f) !== '');
+    lab.hidden = !missions.some(regel.wenn) && !gesetzt;
   });
 }
 
@@ -670,6 +748,7 @@ const tabelle = EdMissionTable.erzeuge({
 });
 
 function anwenden() {
+  freitext = EdSuchtext.pruefer($('f-q').value);
   tabelle.setData(missions.filter(trifft));
   fragmentSchreiben();
 }

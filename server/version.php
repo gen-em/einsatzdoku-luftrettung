@@ -42,5 +42,21 @@ declare(strict_types=1);
  * Diensttagen, die Uhr-Fassung 1.8.0 mit Dienstkennung (`day_ref`,
  * JSON-Vertrag 1.3) und der Nachzug der Dokumentation. Ebenfalls OHNE
  * Migration — `day_refs` und die Fremdschluessel auf `days` liegen seit 6.0.0.
+ *
+ * 7.0.0 ist eine Runde an der OBERFLAECHE, und die Hauptnummer steigt trotzdem:
+ * Nicht wegen des Datenmodells — es bleibt unangetastet, und eine Migration
+ * gibt es NICHT —, sondern weil sich die Wege durch die Anwendung geaendert
+ * haben. Das Einsatzformular ist in benannte Gruppen zerlegt, „Standortdaten"
+ * ist in zwei Menuepunkte („Standorte" und „Rettungsmittel") zerfallen, die
+ * Filterspalte der Suche ist neu geschnitten, und das Feld „Einsatzdatum" ist
+ * ersatzlos entfallen (der Tageswechsel wird jetzt aus dem Dienstbeginn
+ * erkannt). Wer die Anwendung kennt, findet Dinge an neuer Stelle — das ist die
+ * Aussage, fuer die die Hauptnummer da ist.
+ *
+ * Der Feldkatalog (mission_fields.php) hat dafuer drei neue Schluessel
+ * ('gruppe', 'nebeneinander', 'vorbelegt_bei') und eine neue Reihenfolge; zwei
+ * Beschriftungen sind umbenannt („Transportart", „Weiterer Notarzt"). Spalten
+ * und Werte sind dieselben geblieben — Export, Import und Sicherungen ordnen
+ * ueber Spaltennamen zu und sind unberuehrt.
  */
-const WEB_VERSION = '6.3.0';
+const WEB_VERSION = '7.0.0';

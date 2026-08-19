@@ -54,18 +54,29 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
     weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
     abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
     `server/pair.php`.
-15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.** Totes
-    Nutzdatum: `suche.php` ist der einzige Abnehmer des Endpunkts und wertet
-    `edited` nirgends aus. Aufgefallen bei A2 der Verbesserungsrunde Web;
-    dort bewusst stehen gelassen, weil außerhalb des Auftrags. Zwei Zeilen —
-    ein Kandidat für die nächste Runde, die diese Datei ohnehin öffnet.
+
+---
+
+## Erledigt
+
+Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
+zutreffen.
+
+15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
+    *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.
+    Der Befund war zutreffend und unverändert: `suche.php` ist der einzige
+    Abnehmer des Endpunkts und hat den Wert nirgends ausgewertet. Der
+    Bearbeitungsstand steht weiterhin in der Einsatzansicht
+    (`api/mission.php`), wo er auch angezeigt wird.
+
 16. **Zeilen der Tagesübersicht sind nicht mit der Tastatur erreichbar.**
-    `index.php` setzt `cursor: pointer` und einen Klick-Handler auf `tr`, aber
-    kein `tabindex` und keine Tastaturbedienung — anders als die Trefferliste
-    von Suche und Zeitraum-Übersicht, die das seit Web 5.2.0 (A1.4) über
-    `assets/missiontable.js` mitbringt (`tabIndex = 0`, `role="link"`,
-    Enter/Leertaste). Die Tagesübersicht ist damit die einzige der drei
-    Tabellen, die sich nur mit der Maus öffnen lässt. Aufgefallen beim
-    Prüfstand zu A4. Auflösung: dieselben drei Zeilen wie in
-    `missiontable.js`; die Frage nach der Zusammenführung beider Tabellen
-    (siehe Nr. 10) beantwortet sie nicht, aber sie wartet auch nicht darauf.
+    *Erledigt mit Web 7.0.0.* `index.php` setzt jetzt dieselben drei Zeilen
+    wie `assets/missiontable.js`: `tabIndex = 0`, `role="link"` und einen
+    `keydown`-Handler für Enter und Leertaste (mit `preventDefault`, sonst
+    scrollt die Leertaste die Seite weg). Damit sind alle drei
+    Einsatztabellen — Tagesübersicht, Suche und Zeitraum-Übersicht — ohne
+    Maus bedienbar.
+
+    Die Frage nach der Zusammenführung beider Tabellen (Nr. 10) ist damit
+    nicht beantwortet und bleibt offen; die drei Zeilen haben nicht darauf
+    gewartet.

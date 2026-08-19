@@ -386,82 +386,116 @@ function zeitpunkt_text(?string $iso): string
   }
   ?>
 
+  <?php /* ---- EINE TABELLE STATT EINER KACHEL JE SICHERUNG (Web 7.0.0) -----
+     *
+     * Vorher stand hier je Sicherung ein Kasten mit Herkunftszeile, einem
+     * vollständigen Einspiel-Formular (Zielkonto, Bestätigungsfeld, zwei
+     * Schaltflächen, Erläuterung) und einem Lösch-Formular. Bei fünf Konten mit
+     * je drei Sicherungen waren das fünfzehn solcher Kästen — mehrere
+     * Bildschirmseiten, auf denen fünfzehnmal dasselbe stand und die eine
+     * gesuchte Zeile nicht zu finden war.
+     *
+     * Jetzt: eine Zeile je Sicherung mit dem, was man zum Suchen braucht
+     * (Zeitpunkt, Herkunft, Umfang, Zustand). Die Formulare stecken in einem
+     * aufklappbaren Feld dahinter — sie erscheinen für die EINE Sicherung, mit
+     * der man gerade etwas tun will.
+     *
+     * NICHTS AN DEN SICHERUNGEN SELBST ÄNDERT SICH: Dieselben Formulare,
+     * dieselben Bestätigungen, dieselbe Abtippregel für die Zielkonto-Adresse.
+     * Die Rückfragen sind der Schutz vor dem Einspielen in ein falsches Konto,
+     * und der wird durch eine Umgestaltung nicht weicher. */ ?>
   <?php if (!$alle): ?>
     <p class="muted">Es liegt noch keine Sicherung vor.</p>
   <?php else: ?>
-    <?php foreach ($alle as $i => $e): ?>
-      <div class="keybox">
-        <strong><?= e(zeitpunkt_text($e['paket']['erzeugt'])) ?></strong>
-        — <?= e(umfang_text($e['paket'])) ?>
-        <p class="muted small">
-          Herkunft:
-          <?php if ($e['lesbar'] && $e['herkunft']): ?>
-            <?= e((string)$e['herkunft']) ?>
-          <?php else: ?>
-            <em>unbekannt — die Begleitdatei dieses Ordners ist nicht lesbar.</em>
-          <?php endif; ?>
-          <?php if ($e['verwaist']): ?>
-            · <strong>verwaist</strong> (zu dieser Sicherung existiert kein Konto mehr)
-          <?php endif; ?>
-        </p>
-        <form method="post" class="settings-form">
-          <?= csrf_field() ?>
-          <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
-          <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
-          <label>Zielkonto
-            <select name="ziel_user" required>
-              <option value="">— bitte wählen —</option>
-              <?php foreach ($konten as $z): ?>
-                <option value="<?= (int)$z['id'] ?>"><?= e($z['email']) ?></option>
-              <?php endforeach; ?>
-            </select></label>
-          <label>Zur Bestätigung die E-Mail-Adresse des Zielkontos abtippen
-            <input type="text" name="confirm_email" autocomplete="off" required></label>
-          <p>
-            <button class="btn-primary" name="action" value="einspielen"
-                    data-confirm="Sicherung in das gewählte Konto einspielen? Vorhandene Einträge bleiben unverändert."
-                    data-confirm-ok="Einspielen" data-confirm-tone="normal">Einspielen</button>
-            <button class="btn-plain" name="action" value="freigeben"
-                    data-confirm="Sicherung für das gewählte Konto freigeben? Die NutzerIn spielt sie dann selbst mit ihrem Wiederherstellungsschlüssel ein."
-                    data-confirm-ok="Freigeben" data-confirm-tone="normal">Für NutzerIn freigeben</button>
-          </p>
-          <p class="muted small">Stimmt die Kennung im Paket mit der des Zielkontos
-             überein, lässt sich unmittelbar einspielen. Weicht sie ab, ist das
-             gesperrt — dann ist die Freigabe der Weg: Die geschützten Angaben sind
-             mit einem Inhaltsschlüssel verschlüsselt, den nur der
-             Wiederherstellungsschlüssel öffnet, und der liegt ausschliesslich bei
-             der NutzerIn.</p>
-        </form>
+    <table class="data sictab">
+      <thead><tr>
+        <th>Zeitpunkt</th><th>Herkunft</th><th>Umfang</th><th>Zustand</th><th class="th-act">Aktionen</th>
+      </tr></thead>
+      <tbody>
+      <?php foreach ($alle as $e):
+            /* Härte der Löschbestätigung nach E24: Bleibt danach noch eine
+               weitere Sicherung desselben Kontos, ist die Löschung folgenlos. */
+            $weitere = count(array_filter($alle, static fn($x) => $x['kennung'] === $e['kennung'])) > 1;
+            $hart = !$weitere || $e['verwaist'];
+            $unlesbar = $hart && !$e['lesbar']; ?>
+        <tr>
+          <td class="mono"><?= e(zeitpunkt_text($e['paket']['erzeugt'])) ?></td>
+          <td><?php if ($e['lesbar'] && $e['herkunft']): ?>
+                <?= e((string)$e['herkunft']) ?>
+              <?php else: ?>
+                <em class="muted">unbekannt — Begleitdatei nicht lesbar</em>
+              <?php endif; ?></td>
+          <td class="muted small"><?= e(umfang_text($e['paket'])) ?></td>
+          <td class="small"><?php
+                $zustand = [];
+                if ($e['verwaist']) { $zustand[] = '<strong>verwaist</strong>'; }
+                if ($e['freigabe']) { $zustand[] = 'freigegeben'; }
+                if ($hart)          { $zustand[] = 'letzte dieses Kontos'; }
+                echo $zustand ? implode(' · ', $zustand) : '<span class="muted">—</span>'; ?></td>
+          <td class="th-act">
+            <details class="zeilenmenu">
+              <summary class="btn-plain">Einspielen / Löschen</summary>
+              <div class="zeilenmenu-inhalt">
+                <?php if ($e['verwaist']): ?>
+                  <p class="muted small">Zu dieser Sicherung existiert kein Konto
+                     mehr (Fall „Konto gelöscht und neu aufgesetzt").</p>
+                <?php endif; ?>
+                <form method="post" class="settings-form">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
+                  <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
+                  <label>Zielkonto
+                    <select name="ziel_user" required>
+                      <option value="">— bitte wählen —</option>
+                      <?php foreach ($konten as $z): ?>
+                        <option value="<?= (int)$z['id'] ?>"><?= e($z['email']) ?></option>
+                      <?php endforeach; ?>
+                    </select></label>
+                  <label>Zur Bestätigung die E-Mail-Adresse des Zielkontos abtippen
+                    <input type="text" name="confirm_email" autocomplete="off" required></label>
+                  <p>
+                    <button class="btn-primary" name="action" value="einspielen"
+                            data-confirm="Sicherung in das gewählte Konto einspielen? Vorhandene Einträge bleiben unverändert."
+                            data-confirm-ok="Einspielen" data-confirm-tone="normal">Einspielen</button>
+                    <button class="btn-plain" name="action" value="freigeben"
+                            data-confirm="Sicherung für das gewählte Konto freigeben? Die NutzerIn spielt sie dann selbst mit ihrem Wiederherstellungsschlüssel ein."
+                            data-confirm-ok="Freigeben" data-confirm-tone="normal">Für NutzerIn freigeben</button>
+                  </p>
+                  <p class="muted small">Stimmt die Kennung im Paket mit der des Zielkontos
+                     überein, lässt sich unmittelbar einspielen. Weicht sie ab, ist das
+                     gesperrt — dann ist die Freigabe der Weg: Die geschützten Angaben sind
+                     mit einem Inhaltsschlüssel verschlüsselt, den nur der
+                     Wiederherstellungsschlüssel öffnet, und der liegt ausschliesslich bei
+                     der NutzerIn.</p>
+                </form>
 
-        <?php
-        /* Härte der Löschbestätigung nach E24: Bleibt danach noch eine weitere
-           Sicherung desselben Kontos, ist die Löschung folgenlos. */
-        $weitere = count(array_filter($alle, static fn($x) => $x['kennung'] === $e['kennung'])) > 1;
-        $hart = !$weitere || $e['verwaist'];
-        $unlesbar = $hart && !$e['lesbar'];
-        ?>
-        <form method="post" class="settings-form"
-              data-confirm="Diese Sicherung endgültig löschen? Es gibt keinen Papierkorb."
-              data-confirm-ok="Löschen">
-          <?= csrf_field() ?><input type="hidden" name="action" value="paket_loeschen">
-          <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
-          <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
-          <input type="hidden" name="hart" value="<?= $hart ? '1' : '0' ?>">
-          <input type="hidden" name="unlesbar" value="<?= $unlesbar ? '1' : '0' ?>">
-          <input type="hidden" name="soll_email" value="<?= e((string)($e['herkunft'] ?? '')) ?>">
-          <?php if ($hart && !$unlesbar): ?>
-            <label>Letzte Sicherung dieses Kontos — zur Bestätigung die
-                   E-Mail-Adresse <strong><?= e((string)$e['herkunft']) ?></strong> abtippen
-              <input type="text" name="confirm_email" autocomplete="off" required></label>
-          <?php elseif ($unlesbar): ?>
-            <label class="check"><input type="checkbox" name="confirm_unlesbar" value="ja" required>
-              Ich bestätige, dass eine <strong>nicht mehr zuordenbare</strong> Sicherung
-              endgültig entfernt wird.</label>
-          <?php endif; ?>
-          <button class="btn-red">Sicherung löschen</button>
-        </form>
-      </div>
-    <?php endforeach; ?>
+                <form method="post" class="settings-form"
+                      data-confirm="Diese Sicherung endgültig löschen? Es gibt keinen Papierkorb."
+                      data-confirm-ok="Löschen">
+                  <?= csrf_field() ?><input type="hidden" name="action" value="paket_loeschen">
+                  <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
+                  <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
+                  <input type="hidden" name="hart" value="<?= $hart ? '1' : '0' ?>">
+                  <input type="hidden" name="unlesbar" value="<?= $unlesbar ? '1' : '0' ?>">
+                  <input type="hidden" name="soll_email" value="<?= e((string)($e['herkunft'] ?? '')) ?>">
+                  <?php if ($hart && !$unlesbar): ?>
+                    <label>Letzte Sicherung dieses Kontos — zur Bestätigung die
+                           E-Mail-Adresse <strong><?= e((string)$e['herkunft']) ?></strong> abtippen
+                      <input type="text" name="confirm_email" autocomplete="off" required></label>
+                  <?php elseif ($unlesbar): ?>
+                    <label class="check"><input type="checkbox" name="confirm_unlesbar" value="ja" required>
+                      Ich bestätige, dass eine <strong>nicht mehr zuordenbare</strong> Sicherung
+                      endgültig entfernt wird.</label>
+                  <?php endif; ?>
+                  <button class="btn-red">Sicherung löschen</button>
+                </form>
+              </div>
+            </details>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
   <?php endif; ?>
 
   <hr class="sep">
