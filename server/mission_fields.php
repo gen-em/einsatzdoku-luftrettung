@@ -158,9 +158,11 @@ declare(strict_types=1);
  *                                   Sonst haette das Formular eine Meinung, die
  *                                   sich nicht abstellen laesst.
  *                                   Wirkt ausschliesslich im Browser und
- *                                   ausschliesslich beim NACHTRAGEN — ein
- *                                   bestehender Einsatz behaelt, was
- *                                   gespeichert ist.
+ *                                   ausschliesslich auf ein `change`-Ereignis
+ *                                   des genannten Feldes hin. Beim blossen
+ *                                   Laden der Seite passiert nichts — ein
+ *                                   gespeicherter Wert bleibt also unangetastet,
+ *                                   auch beim Bearbeiten.
  *
  *   'such_label'                    nur bei 'loc': Beschriftung des
  *                                   Suchfeldes neben der Bezeichnung. Ohne
@@ -341,7 +343,10 @@ return [
                  * Gesetzt wird er NUR, solange niemand ihn von Hand angefasst
                  * hat (assets/forms.js kennt die Regel nicht; sie steht im
                  * Skript des Formulars). Eine ausdrueckliche Entscheidung
-                 * schlaegt die Vorbelegung immer. */
+                 * schlaegt die Vorbelegung immer.
+                 * Sie greift nur, wenn die Transportart GERADE UMGESTELLT wird
+                 * — nicht beim Laden. Deshalb gilt sie auch beim Bearbeiten,
+                 * ohne dort je einen gespeicherten Wert zu ueberschreiben. */
                 'vorbelegt_bei' => ['transport_mode' => 'air'],
             ],
             /* ZIELKLINIK ALS ORTSFELD (E37/E38/E40). Freitext und

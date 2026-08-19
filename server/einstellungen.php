@@ -1000,7 +1000,9 @@ if ($tab === 'geraete') {
               <?php endif; ?>
               <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
             </td>
-            <td><?= (int)$b['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
+            <td class="c-stern"><?= (int)$b['id'] === $DEF_BASE_ID
+                ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
+                  . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
             <td class="th-act"><div class="rowactions">
               <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
                 <form method="post" action="einstellungen.php?t=standorte#standorte">
@@ -1027,36 +1029,49 @@ if ($tab === 'geraete') {
         <?php endforeach; ?>
         </tbody>
       </table>
-      <?php /* EINGABEZEILE (Web 7.0.0 entzerrt). Sie war zu hoch: `.inline-form`
-               ist ein Flex-Container, und das Ortsfeld daneben ist mehrere
-               Zeilen hoch (Suchfeld, Zustandszeile, Merkfeld). Ohne
-               `align-items` streckte der Browser Namensfeld und Schaltfläche auf
-               dieselbe Höhe — beide sahen aus wie aufgeblasen. Die Regel steht
-               jetzt in style.css (`.inline-form{align-items:flex-start}`), das
-               Markup ist unverändert. */ ?>
-      <form method="post" action="einstellungen.php?t=standorte#standorte" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
-        <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-        <input type="text" name="name" id="sdbaseaddr" class="focus-target" maxlength="120" required
-               placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
-        <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
-                 Abfahrtorts „Standort" und werden beim Anlegen eines Diensttags
-                 eingefroren (E8). Seit Web 6.1.0 mit Adresssuche — dieselbe
-                 Komponente wie am Einsatzort (assets/ortsfeld.js), hier aber mit
-                 GETRENNTEM Suchfeld: „Standort Kempten" ist keine Adresse, und
-                 eine Suche im Namensfeld schriebe den Namen weg. */
-              $ORTSFELDER[] = 'sdbase';
-              ui_ortsfeld([
-                  'praefix' => 'sdbase', 'feld' => false, 'such' => true,
-                  'klasse' => 'loc-inline',
-                  'such_hinweis' => 'Lage des Standorts (optional)',
-                  'lat_name' => 'lat', 'lon_name' => 'lon',
-                  'lat' => (string)($editBase['lat'] ?? ''),
-                  'lon' => (string)($editBase['lon'] ?? ''),
-              ]); ?>
-        <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
-        <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=standorte">Abbrechen</a><?php endif; ?>
-      </form>
+      <?php /* EINGABE IM EIGENEN RAHMEN (Web 7.0.0, zweiter Anlauf).
+               Erster Anlauf war `.inline-form` mit `align-items:flex-start`.
+               Damit war die Überhöhe weg — die Ausrichtung aber immer noch
+               falsch: Das Namensfeld stand ohne Beschriftung ganz oben, das
+               Suchfeld daneben trägt eine („Lage des Standorts") und rutschte
+               dadurch eine Zeile tiefer. Zwei Eingabefelder derselben Zeile auf
+               zwei Höhen — das sah nach Fehler aus, weil es einer war.
+
+               Jetzt dieselbe Form wie beim Rettungsmittel: Name und
+               Schaltfläche in EINER Zeile, die freiwillige Ortsangabe als
+               eigener Block darunter. Damit stellt sich die Frage nach der
+               Ausrichtung gar nicht mehr, und die Zusammengehörigkeit ist zu
+               sehen. */ ?>
+      <div class="neu-form">
+        <h4><?= $editBase ? 'Standort bearbeiten' : 'Standort hinzufügen' ?></h4>
+        <form method="post" action="einstellungen.php?t=standorte#standorte">
+          <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
+          <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
+          <div class="neu-zeile">
+            <input type="text" name="name" id="sdbaseaddr" class="focus-target" maxlength="120" required
+                   placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
+            <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+            <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=standorte">Abbrechen</a><?php endif; ?>
+          </div>
+          <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
+                   Abfahrtorts „Standort" und werden beim Anlegen eines Diensttags
+                   eingefroren (E8). Seit Web 6.1.0 mit Adresssuche — dieselbe
+                   Komponente wie am Einsatzort (assets/ortsfeld.js), hier aber mit
+                   GETRENNTEM Suchfeld: „Standort Kempten" ist keine Adresse, und
+                   eine Suche im Namensfeld schriebe den Namen weg. */
+                $ORTSFELDER[] = 'sdbase'; ?>
+          <div class="neu-feld">
+            <?php ui_ortsfeld([
+                    'praefix' => 'sdbase', 'feld' => false, 'such' => true,
+                    'klasse' => 'loc-inline',
+                    'such_hinweis' => 'Lage des Standorts (optional)',
+                    'lat_name' => 'lat', 'lon_name' => 'lon',
+                    'lat' => (string)($editBase['lat'] ?? ''),
+                    'lon' => (string)($editBase['lon'] ?? ''),
+                ]); ?>
+          </div>
+        </form>
+      </div>
     </details>
 
     <?php /* „Vordefinierte Standorte" statt „Zentrale Standorte auswählen"
@@ -1079,7 +1094,9 @@ if ($tab === 'geraete') {
                 <br><span class="muted small"><?= e((string)$z['lat']) ?>, <?= e((string)$z['lon']) ?></span>
               <?php endif; ?>
             </td>
-            <td><?= (int)$z['id'] === $DEF_BASE_ID ? '★' : '' ?></td>
+            <td class="c-stern"><?= (int)$z['id'] === $DEF_BASE_ID
+                ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
+                  . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
             <td class="th-act"><div class="rowactions">
               <?php /* ★ AUCH FÜR SYSTEMWEITE STANDORTE (Web 7.0.0). Die
                        Schaltfläche stand nur bei den eigenen — ein Konto, das
@@ -1190,7 +1207,9 @@ if ($tab === 'geraete') {
                     echo $rollenTxt ? e(implode(', ', $rollenTxt)) : 'keine Rollen';
                     echo $capsTxt ? ' · ' . e(implode(', ', $capsTxt)) : ''; ?></span>
                 </td>
-                <td><?= $vid === $DEF_VEH_ID ? '★' : '' ?></td>
+                <td class="c-stern"><?= $vid === $DEF_VEH_ID
+                    ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
+                      . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
                 <td class="th-act"><div class="rowactions">
                   <?php if ($vz): ?><span class="badge-central">systemweit</span><?php endif; ?>
                   <?php if ($vid !== $DEF_VEH_ID): ?>
@@ -1376,27 +1395,36 @@ if ($tab === 'geraete') {
             </tbody>
           </table>
           <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
-          <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td" class="inline-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
-            <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
-            <input type="hidden" name="base_id" value="<?= $bid ?>">
-            <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
-                     EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
-                     denselben Element-Kennungen fänden beide dasselbe Feld. */
-                  $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
-            <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
-                   placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-            <?php ui_ortsfeld([
-                    'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
-                    'klasse' => 'loc-inline',
-                    'such_hinweis' => 'Lage der Zielklinik (optional)',
-                    'lat_name' => 'lat', 'lon_name' => 'lon',
-                    'lat' => (string)($etHier['lat'] ?? ''),
-                    'lon' => (string)($etHier['lon'] ?? ''),
-                ]); ?>
-            <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
-            <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-          </form>
+          <?php /* Gleiche Form wie beim Standort: Name und Schaltfläche in einer
+                   Zeile, die freiwillige Ortsangabe darunter. */ ?>
+          <div class="neu-form">
+            <h4><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h4>
+            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td">
+              <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
+              <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
+              <input type="hidden" name="base_id" value="<?= $bid ?>">
+              <?php /* Das Präfix trägt die Standortkennung: Dieses Formular steht
+                       EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
+                       denselben Element-Kennungen fänden beide dasselbe Feld. */
+                    $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
+              <div class="neu-zeile">
+                <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
+                       placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
+                <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+                <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+              </div>
+              <div class="neu-feld">
+                <?php ui_ortsfeld([
+                        'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                        'klasse' => 'loc-inline',
+                        'such_hinweis' => 'Lage der Zielklinik (optional)',
+                        'lat_name' => 'lat', 'lon_name' => 'lon',
+                        'lat' => (string)($etHier['lat'] ?? ''),
+                        'lon' => (string)($etHier['lon'] ?? ''),
+                    ]); ?>
+              </div>
+            </form>
+          </div>
         </details>
 
         <details class="stammunter" id="<?= e($anker) ?>-res">

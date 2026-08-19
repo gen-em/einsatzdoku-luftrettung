@@ -473,27 +473,37 @@ $rollenAmStandort = function (int $bid) use ($vehNach, $vehRollen, $crewNach): a
         <?php endforeach; ?>
         </tbody>
       </table>
-      <form method="post" action="admin_stammdaten.php?t=standorte#standorte" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
-        <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-        <input type="text" name="name" id="adbaseaddr" class="focus-target" maxlength="120" required
-               placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
-        <?php /* Koordinaten optional (E37/E39). Quelle des Abfahrtorts
-                 „Standort", beim Anlegen eines Diensttags eingefroren (E8). Seit
-                 Web 6.1.0 mit Adresssuche — dieselbe Komponente wie in der
-                 Kontoansicht und am Einsatz (assets/ortsfeld.js). */
-              $ORTSFELDER[] = 'adbase';
-              ui_ortsfeld([
-                  'praefix' => 'adbase', 'feld' => false, 'such' => true,
-                  'klasse' => 'loc-inline',
-                  'such_hinweis' => 'Lage des Standorts (optional)',
-                  'lat_name' => 'lat', 'lon_name' => 'lon',
-                  'lat' => (string)($editBase['lat'] ?? ''),
-                  'lon' => (string)($editBase['lon'] ?? ''),
-              ]); ?>
-        <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Standort hinzufügen' ?></button>
-        <?php if ($editBase): ?><a class="btn-red" href="admin_stammdaten.php?t=standorte">Abbrechen</a><?php endif; ?>
-      </form>
+      <?php /* Eingabe im eigenen Rahmen, Name und Schaltfläche in einer Zeile,
+               die freiwillige Ortsangabe darunter — gleiche Form wie in der
+               Kontoansicht und beim Rettungsmittel (Web 7.0.0). */ ?>
+      <div class="neu-form">
+        <h4><?= $editBase ? 'Standort bearbeiten' : 'Standort hinzufügen' ?></h4>
+        <form method="post" action="admin_stammdaten.php?t=standorte#standorte">
+          <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
+          <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
+          <div class="neu-zeile">
+            <input type="text" name="name" id="adbaseaddr" class="focus-target" maxlength="120" required
+                   placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
+            <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+            <?php if ($editBase): ?><a class="btn-red" href="admin_stammdaten.php?t=standorte">Abbrechen</a><?php endif; ?>
+          </div>
+          <?php /* Koordinaten optional (E37/E39). Quelle des Abfahrtorts
+                   „Standort", beim Anlegen eines Diensttags eingefroren (E8). Seit
+                   Web 6.1.0 mit Adresssuche — dieselbe Komponente wie in der
+                   Kontoansicht und am Einsatz (assets/ortsfeld.js). */
+                $ORTSFELDER[] = 'adbase'; ?>
+          <div class="neu-feld">
+            <?php ui_ortsfeld([
+                    'praefix' => 'adbase', 'feld' => false, 'such' => true,
+                    'klasse' => 'loc-inline',
+                    'such_hinweis' => 'Lage des Standorts (optional)',
+                    'lat_name' => 'lat', 'lon_name' => 'lon',
+                    'lat' => (string)($editBase['lat'] ?? ''),
+                    'lon' => (string)($editBase['lon'] ?? ''),
+                ]); ?>
+          </div>
+        </form>
+      </div>
     </details>
 
   <?php else: ?>
@@ -694,26 +704,33 @@ $rollenAmStandort = function (int $bid) use ($vehNach, $vehRollen, $crewNach): a
             </tbody>
           </table>
           <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
-          <form method="post" action="admin_stammdaten.php?t=rettungsmittel#<?= e($anker) ?>-td" class="inline-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
-            <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
-            <input type="hidden" name="base_id" value="<?= $bid ?>">
-            <?php /* Praefix mit Standortkennung: Dieses Formular steht einmal je
-                     Standort auf der Seite (siehe einstellungen.php). */
-                  $tdPraefix = 'adtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
-            <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
-                   placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-            <?php ui_ortsfeld([
-                    'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
-                    'klasse' => 'loc-inline',
-                    'such_hinweis' => 'Lage der Zielklinik (optional)',
-                    'lat_name' => 'lat', 'lon_name' => 'lon',
-                    'lat' => (string)($etHier['lat'] ?? ''),
-                    'lon' => (string)($etHier['lon'] ?? ''),
-                ]); ?>
-            <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Zielklinik hinzufügen' ?></button>
-            <?php if ($etHier): ?><a class="btn-red" href="admin_stammdaten.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-          </form>
+          <div class="neu-form">
+            <h4><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h4>
+            <form method="post" action="admin_stammdaten.php?t=rettungsmittel#<?= e($anker) ?>-td">
+              <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
+              <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
+              <input type="hidden" name="base_id" value="<?= $bid ?>">
+              <?php /* Praefix mit Standortkennung: Dieses Formular steht einmal je
+                       Standort auf der Seite (siehe einstellungen.php). */
+                    $tdPraefix = 'adtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
+              <div class="neu-zeile">
+                <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
+                       placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
+                <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
+                <?php if ($etHier): ?><a class="btn-red" href="admin_stammdaten.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+              </div>
+              <div class="neu-feld">
+                <?php ui_ortsfeld([
+                        'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
+                        'klasse' => 'loc-inline',
+                        'such_hinweis' => 'Lage der Zielklinik (optional)',
+                        'lat_name' => 'lat', 'lon_name' => 'lon',
+                        'lat' => (string)($etHier['lat'] ?? ''),
+                        'lon' => (string)($etHier['lon'] ?? ''),
+                    ]); ?>
+              </div>
+            </form>
+          </div>
         </details>
 
         <details class="stammunter" id="<?= e($anker) ?>-res">

@@ -11,6 +11,62 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.0.1] — 2026-08-19
+
+Nachträge zur Runde davor: drei Stellen, an denen die neue Gestaltung nicht
+aufging, und eine Bedingung, die zu eng gefasst war. Keine Änderung an Daten
+oder Ablauf.
+
+### Die Überschriften der Formulargruppen lagen halb auf dem Rahmen
+
+Eine `<legend>` sitzt in der Voreinstellung der Browser **mittig auf der oberen
+Rahmenlinie** und schneidet dort eine Lücke hinein. Mit der kleinen, gesperrten
+Versalschrift und dem abgerundeten Rahmen ging das nicht auf: Die Schrift stand
+halb über der Linie, halb darauf, und die Lücke saß auf der falschen Höhe.
+
+Die Überschrift steht jetzt **im Kasten** statt auf seinem Rand, der Rahmen
+läuft durchgehend — dieselbe Form wie die Überschrift der Eingabekästen in den
+Einstellungen. Technisch: `float:left; width:100%` nimmt der `<legend>` die
+Sonderbehandlung. Bewusst **kein** `overflow:hidden` zum Aufräumen des Floats —
+die Vorschlagsliste des Ortsfelds ist absolut positioniert und würde am
+Kastenrand abgeschnitten.
+
+### Standort und Zielklinik anlegen: eigener Rahmen statt Zeilenformular
+
+In Web 7.0.0 war die Überhöhe der Felder behoben, die **Ausrichtung** aber
+nicht: Das Namensfeld trug keine Beschriftung, das Suchfeld daneben eine
+(„Lage des Standorts") — und rutschte dadurch eine Zeile tiefer. Zwei
+Eingabefelder derselben Zeile auf zwei Höhen.
+
+Jetzt dieselbe Form wie beim Rettungsmittel: **Name und Schaltfläche in einer
+Zeile**, die freiwillige Ortsangabe als eigener Block darunter, das Ganze in
+einem Rahmen mit Überschrift. Damit stellt sich die Frage nach der Ausrichtung
+nicht mehr. Gilt in der Kontoansicht **und** in der Administration, für
+Standorte **und** Zielkliniken.
+
+### Das ★ steht neben den Schaltflächen und ist größer
+
+Seine Spalte teilte sich den freien Platz mit der Namensspalte und landete
+dadurch mitten in der Zeile — weit weg von den Schaltflächen, auf die sie sich
+bezieht. Sie schrumpft jetzt auf ihren Inhalt und rückt damit unmittelbar vor
+die Aktionen; das Zeichen ist so groß, dass es als Zeichen gelesen wird, mit
+Textalternative in `title`/`aria-label`.
+
+### NA-Begleitung wurde beim Bearbeiten nicht vorbelegt
+
+Die Vorbelegung griff nur beim **Nachtragen** — beim Bearbeiten eines
+vorhandenen Einsatzes tat sich beim Umschalten auf „Luft" nichts. Das war eine
+Bedingung im Formular (`!$editing`), gesetzt aus der Sorge, eine Vorbelegung
+könnte einen gespeicherten Wert still überschreiben.
+
+Die Sorge war unbegründet: Der Haken setzt sich **nur auf ein `change`-Ereignis
+der Transportart hin**, also nur, wenn jemand sie gerade umstellt. Beim Laden
+der Seite passiert nichts, ein gespeicherter Wert bleibt unangetastet. Und wer
+die Transportart bewusst ändert, trifft ohnehin eine Entscheidung — ein
+Vorschlag dazu ist Hilfe, keine Änderung hinter dem Rücken. Die Bedingung ist
+weg; unverändert bleibt, dass ein eigener Handgriff am Haken die Vorbelegung
+für dieses Formular dauerhaft abschaltet.
+
 ## [Web 7.0.0] — 2026-08-18
 
 Eine Runde an der **Oberfläche**. Am Datenmodell ändert sich nichts, und eine
@@ -192,7 +248,8 @@ Dazu im selben Zug:
   groß wie „Bearbeiten" und „Löschen" daneben (sie war es nicht).
 * **Namensfeld und Schaltfläche sind nicht mehr überhoch.** Ursache war das
   Ortsfeld daneben: Ohne `align-items` streckt Flexbox alle Kinder auf die Höhe
-  des größten. Betraf Standort und Zielklinik gleichermassen.
+  des größten. Betraf Standort und Zielklinik gleichermassen. (Die Ausrichtung
+  dieser beiden Formulare ist damit noch nicht fertig — siehe Web 7.0.1.)
 * **Die Art des Rettungsmittels ist nicht mehr vorbelegt.** „Luftgebunden" stand
   von selbst da, und an einem NEF-Standort war das die falsche Vorgabe, die
   niemand bemerkt — sie fiel erst auf, wenn im Einsatzformular Windenfelder

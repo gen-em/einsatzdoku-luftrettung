@@ -457,8 +457,12 @@ Phasen meist schon vollständig da und schoben alles andere nach unten.
 **NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne Notarzt an
 Bord ist die Ausnahme. Der Haken setzt sich, sobald du „Luft" wählst — und nur,
 solange du ihn nicht selbst angefasst hast: Deine ausdrückliche Entscheidung
-gilt danach dauerhaft. Beim Bearbeiten eines bestehenden Einsatzes greift die
-Vorbelegung gar nicht.
+gilt danach dauerhaft.
+
+Das gilt beim Nachtragen **und** beim Bearbeiten. Ein gespeicherter Wert wird
+dabei nie überschrieben: Der Haken setzt sich ausschliesslich, wenn du die
+Transportart gerade umstellst — beim blossen Öffnen eines Einsatzes passiert
+nichts.
 
 Uhrzeiten stehen immer im **24-Stunden-Format `HH:MM`**, unabhängig davon, wie
 dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus

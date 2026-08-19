@@ -304,12 +304,15 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
 .btn-danger{background:var(--schnee);color:var(--rot);border:1px solid #EBC3C4;
   padding:.25rem .6rem;font-size:.85rem}
 .btn-danger:hover{background:var(--rot-light)}
-/* ZEILENFORMULARE (Stammdaten). `align-items:flex-start` ist die eigentliche
-   Aenderung von Web 7.0.0: Ohne sie streckt Flexbox alle Kinder auf die Hoehe
-   des groessten — und das ist seit Web 6.1.0 das Ortsfeld daneben, das aus
-   Suchfeld, Zustandszeile und Merkfeld besteht. Namensfeld und Schaltflaeche
-   wurden dadurch drei Zeilen hoch und sahen aus wie ein Gestaltungsfehler. Sie
-   behalten jetzt ihre eigene Hoehe und stehen oben buendig mit dem Ortsfeld. */
+/* ZEILENFORMULARE (Stammdaten): ein Feld, eine Schaltflaeche, eine Zeile —
+   Besatzung, weitere Rettungsmittel, Bergwacht.
+   `align-items:flex-start` haelt die Kinder auf ihrer eigenen Hoehe, statt sie
+   auf die des groessten zu strecken. Gebraucht wurde die Regel urspruenglich
+   gegen das Ortsfeld, das aus Suchfeld, Zustandszeile und Merkfeld besteht und
+   Namensfeld wie Schaltflaeche drei Zeilen hoch zog. Die Formulare MIT Ortsfeld
+   (Standort, Zielklinik) sind seit Web 7.0.0 auf `.neu-form` umgestellt — die
+   Regel bleibt trotzdem: Sie ist auch fuer die uebrigen richtig, und ohne sie
+   kaeme der Fehler zurueck, sobald hier wieder ein hoeheres Feld steht. */
 .inline-form{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;
   align-items:flex-start}
 .inline-form input,.inline-form select{width:auto;flex:1;min-width:160px}
@@ -1151,15 +1154,33 @@ span.imp-warn{color:#8A6D00}
  * Betreten eines Feldes von selbst. Der Preis sind ein paar Zeilen, die die
  * Voreinstellungen der Browser zuruecksetzen. */
 .fgruppe{border:1px solid var(--line);border-radius:8px;background:var(--schnee);
-  margin:0 0 1.1rem;padding:.2rem 1rem 1rem;min-width:0}
-.fgruppe>legend{font-family:var(--head);font-weight:600;font-size:.8rem;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--navy);
-  padding:0 .45rem;margin-left:-.45rem}
+  margin:0 0 1.1rem;padding:.85rem 1rem 1rem;min-width:0}
+/* DIE UEBERSCHRIFT STEHT IM KASTEN, NICHT AUF SEINEM RAND.
+ *
+ * In der Voreinstellung der Browser sitzt eine <legend> MITTIG AUF der oberen
+ * Rahmenlinie und schneidet dort eine Luecke hinein. Mit einer kleinen,
+ * gesperrten Versalschrift und einem abgerundeten Rahmen ging das nicht auf:
+ * Die Schrift stand halb ueber der Linie, halb darauf, und die Luecke sass auf
+ * der falschen Hoehe. Es sah nach einem Fehler aus, weil es einer war.
+ *
+ * `float:left; width:100%` nimmt der <legend> genau diese Sonderbehandlung —
+ * sie wird zu einem gewoehnlichen Block im Kasten, der Rahmen laeuft
+ * durchgehend. Das ist zugleich dieselbe Form wie die Ueberschrift der
+ * Eingabekaesten in den Einstellungen (.neu-form h4).
+ *
+ * KEIN `overflow:hidden` zum Aufraeumen des Floats: Die Vorschlagsliste des
+ * Ortsfeldes (.loc-suggest) ist absolut positioniert und wuerde am Rand des
+ * Kastens abgeschnitten. Stattdessen raeumt das erste Element danach auf. */
+.fgruppe>legend{float:left;width:100%;padding:0;margin:0 0 .1rem;
+  font-family:var(--head);font-weight:600;font-size:.8rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
+.fgruppe>legend+*{clear:both}
 .fgruppe-hinweis{font-family:'Open Sans',sans-serif;font-weight:400;
   text-transform:none;letter-spacing:0;color:var(--muted);font-size:.8rem}
-/* Erste Beschriftung einer Gruppe ohne den ueblichen Abstand nach oben — die
-   Legende steht bereits darueber. */
-.fgruppe>label:first-of-type,.fgruppe>.fld-reihe:first-child>label{margin-top:.2rem}
+/* Erstes Feld einer Gruppe ohne den ueblichen Abstand nach oben — die
+   Ueberschrift steht bereits darueber. */
+.fgruppe>legend+label,.fgruppe>legend+div>label:first-child,
+.fgruppe>legend+.fld-reihe>label{margin-top:.2rem}
 /* Kurze Felder nebeneinander ('nebeneinander' im Katalog, ausserdem von Hand
    fuer Geburtsdatum/Alter). Sie brechen auf schmalen Bildschirmen um. */
 .fld-reihe{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;align-items:flex-start}
@@ -1224,6 +1245,24 @@ span.imp-warn{color:#8A6D00}
 .neu-zeile .btn-primary{width:auto;margin-top:0}
 .neu-feld{margin-top:.8rem}
 .neu-titel{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.25rem}
+/* Ortsfeld im Rahmen: Es ist hier ein Block und kein Flex-Kind mehr, also
+   greift `flex:1 1 240px` aus .loc-inline nicht. Ohne Obergrenze liefe das
+   Suchfeld ueber die volle Breite und waere doppelt so breit wie das Namensfeld
+   darueber — bei einer FREIWILLIGEN Angabe die falsche Gewichtung. */
+.neu-feld>.loc-inline{max-width:30rem}
+.neu-feld>.loc-inline>label:first-child{margin-top:0}
+
+/* KENNZEICHEN DER VORBELEGUNG (Web 7.0.0, zweiter Anlauf).
+   Der Stern stand in einer Spalte, die sich den freien Platz mit der
+   Namensspalte teilte — er landete dadurch mitten in der Zeile, weit weg von
+   den Schaltflaechen, auf die er sich bezieht. `width:1px` plus `nowrap` laesst
+   die Spalte in einer Tabelle mit automatischer Breite auf ihren Inhalt
+   schrumpfen: Der Stern rueckt damit unmittelbar vor die Aktionen.
+   Groesser als der Text ist er, weil er als Zeichen gelesen wird und nicht als
+   Buchstabe — dieselbe Ueberlegung wie beim Artsymbol (.artzeichen). */
+table.data td.c-stern,table.data th.c-stern{width:1px;white-space:nowrap;
+  text-align:right;padding-left:0;padding-right:.3rem}
+.sternmarke{font-size:1.4rem;line-height:1;color:var(--accent);cursor:help}
 
 /* Wartungsseite: Startknopf über der Updatetabelle (Web 7.0.0). Er steht in
    einer Zeile mit seiner Erläuterung — untereinander wirkte der Text wie ein

@@ -836,7 +836,7 @@ function ortWert(string $col, string $achse, string $spalte): string {
        * Stelle statt als zweite, von Hand gepflegte Aufzaehlung im Skript. */
       $LOC_FELDER = [];
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, $editing): void {
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -878,10 +878,21 @@ function ortWert(string $col, string $achse, string $spalte): string {
               $on = ($val === '1' || $val === 1); ?>
             <?php /* VORBELEGUNG (Web 7.0.0). Regel und Zielwert wandern als
                      Datenattribute mit; ausgewertet werden sie im Skript unten.
-                     NUR BEIM NACHTRAGEN — ein bestehender Einsatz behaelt, was
-                     gespeichert ist, und eine Vorbelegung, die beim Bearbeiten
-                     zuschlaegt, waere eine stille Datenaenderung. */
-                  $vorbelegt = (!$editing && !empty($f['vorbelegt_bei']))
+
+                     AUCH BEIM BEARBEITEN (berichtigt in Web 7.0.1). Zuerst
+                     stand hier `!$editing` — aus der Sorge, eine Vorbelegung
+                     koenne einen gespeicherten Wert still ueberschreiben. Die
+                     Sorge war unbegruendet, und die Bedingung hat das Feld
+                     genau dort abgeschaltet, wo man es am ehesten ausprobiert:
+                     beim Oeffnen eines vorhandenen Einsatzes.
+                     Der Haken setzt sich NUR auf ein `change`-Ereignis der
+                     Transportart hin — also nur, wenn jemand sie gerade
+                     umstellt. Beim blossen Laden der Seite passiert nichts, ein
+                     gespeicherter Wert bleibt also unangetastet. Und wer die
+                     Transportart bewusst aendert, trifft ohnehin eine
+                     Entscheidung; ein Vorschlag dazu ist Hilfe, keine
+                     Datenaenderung hinter dem Ruecken. */
+                  $vorbelegt = !empty($f['vorbelegt_bei'])
                       ? (array)$f['vorbelegt_bei'] : []; ?>
             <div class="fld-check<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
               <label class="checklabel">
@@ -1702,8 +1713,10 @@ document.querySelectorAll('.parentcheck').forEach(cb => {
  * traut dem Formular danach nicht mehr. Umgekehrt greift sie beim ERSTEN
  * Umschalten auch dann, wenn vorher eine andere Transportart gewählt war.
  *
- * Das Formular gibt die Attribute nur beim NACHTRAGEN aus — ein bestehender
- * Einsatz behält, was gespeichert ist. */
+ * SIE HÄNGT AM `change`-EREIGNIS DER TRANSPORTART, nicht am Laden der Seite.
+ * Deshalb gilt sie beim Bearbeiten genauso wie beim Nachtragen (Web 7.0.1):
+ * Ein gespeicherter Wert wird nie beim Öffnen überschrieben — es passiert nur
+ * etwas, wenn jemand die Transportart gerade umstellt. */
 document.querySelectorAll('input[data-vor-feld]').forEach(cb => {
   const quelle = document.querySelector('[name="f_' + cb.dataset.vorFeld + '"]');
   if (!quelle) { return; }

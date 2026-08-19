@@ -58,5 +58,15 @@ declare(strict_types=1);
  * Beschriftungen sind umbenannt („Transportart", „Weiterer Notarzt"). Spalten
  * und Werte sind dieselben geblieben — Export, Import und Sicherungen ordnen
  * ueber Spaltennamen zu und sind unberuehrt.
+ *
+ * 7.0.1 berichtigt drei Dinge aus der Runde davor, alle in der Anzeige:
+ * die Ueberschriften der Formulargruppen (eine <legend> sitzt in der
+ * Voreinstellung MITTIG AUF der Rahmenlinie — mit gesperrter Versalschrift und
+ * abgerundetem Rahmen sah das nach Fehler aus), die Eingabe fuer Standort und
+ * Zielklinik (Namensfeld und Ortssuche standen auf zwei Hoehen, weil nur eines
+ * von beiden eine Beschriftung trug) und das Kennzeichen der Vorbelegung (★).
+ * Dazu eine Fehlbedingung: Die NA-Begleitung wurde nur beim NACHTRAGEN
+ * vorbelegt, nicht beim Bearbeiten — die Einschraenkung war unbegruendet, weil
+ * die Vorbelegung ohnehin nur auf eine Aenderung der Transportart hin greift.
  */
-const WEB_VERSION = '7.0.0';
+const WEB_VERSION = '7.0.1';
