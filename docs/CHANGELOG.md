@@ -11,6 +11,51 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.0.2] — 2026-08-19
+
+### Die Gruppenüberschriften im Einsatzformular setzen sich ab
+
+Mit 7.0.1 saßen sie an der richtigen Stelle — auffällig genug waren sie damit
+noch nicht: `.8rem` ist **kleiner** als die Feldbeschriftungen darunter
+(`.92rem`), und ein Abstand fehlte ganz. „PATIENTINNENDATEN" las sich dadurch
+wie eine Vorbemerkung zum Feld „Einsatznummer" und nicht wie der Titel der
+Gruppe.
+
+Jetzt ist die Überschrift **größer als der Feldtext** (`.95rem`, Versalien,
+gesperrt, in Dunkelblau) und eine **Linie trennt sie vom Inhalt** — dieselbe
+Ordnung wie im Tabellenkopf, nur leiser, weil auf einer Seite bis zu neun
+Gruppen untereinander stehen. Der Zusatz „Ende-zu-Ende-verschlüsselt" daneben
+bleibt Beiwerk: kleiner, ungesperrt, gedämpft.
+
+### Die Schaltflächen einer Tabellenzeile sind wieder gleich groß
+
+„Auswählen" war sichtbar größer als „Abwählen" eine Zeile darüber — und das war
+kein Einzelfall, sondern das Ergebnis zweier unabhängiger Ursachen:
+
+1. **`.btn-plain` ist in `style.css` zweimal definiert** — einmal mit
+   `.25rem/.6rem` bei `.85rem`, weiter unten noch einmal mit `.45rem/1rem` bei
+   voller Schriftgröße. Die spätere gewinnt. Jeder „einheitliche Aktions-Button"
+   war damit in Wahrheit größer als die gelbe und die rote daneben.
+2. **`.btn-primary` trägt die Formularmaße** (`button{padding:.5rem .9rem}`,
+   volle Schriftgröße, `width:100%`). Neben einer roten Zeilenschaltfläche fiel
+   das sofort auf.
+
+Statt beides einzeln nachzubessern, gilt die Größe jetzt für den **Ort**: Was in
+`.rowactions` steht, ist eine Zeilenaktion und wird so groß wie die übrigen —
+gleich, welche Klasse es trägt. Damit kann auch die nächste Schaltflächenklasse
+dort nicht mehr aus der Reihe fallen.
+
+**Zwei Größen mit einer klaren Regel**, nicht fünf ohne: Zeilenaktionen sind
+klein, die Absendeknöpfe der Eingabekästen behalten die Maße, die
+Formularschaltflächen in der ganzen Anwendung haben. Der Papierkorb bleibt
+unberührt — seine Tabelle bringt seit jeher eine eigene, engere Regel mit
+(zwei gleich breite Schaltflächen).
+
+Die Doppeldefinition von `.btn-plain` bleibt stehen: Sie versorgt ein Dutzend
+eigenständiger Schaltflächen (Entsperren, Abbrechen, Filter zurücksetzen), für
+die die größere Masse richtig ist. Sie zu entfernen hätte diese alle verkleinert
+— eine Änderung, die weit über den Befund hinausginge.
+
 ## [Web 7.0.1] — 2026-08-19
 
 Nachträge zur Runde davor: drei Stellen, an denen die neue Gestaltung nicht

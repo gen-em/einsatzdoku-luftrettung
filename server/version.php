@@ -68,5 +68,16 @@ declare(strict_types=1);
  * Dazu eine Fehlbedingung: Die NA-Begleitung wurde nur beim NACHTRAGEN
  * vorbelegt, nicht beim Bearbeiten — die Einschraenkung war unbegruendet, weil
  * die Vorbelegung ohnehin nur auf eine Aenderung der Transportart hin greift.
+ *
+ * 7.0.2 setzt die Gruppenueberschriften des Einsatzformulars ab (sie waren
+ * KLEINER als die Feldbeschriftungen darunter und lasen sich als Vorbemerkung
+ * des ersten Feldes; jetzt groesser, in Dunkelblau, mit Trennlinie) und
+ * vereinheitlicht die Groesse der Zeilenaktionen. Sie liefen aus zwei
+ * unabhaengigen Gruenden auseinander: `.btn-plain` ist in style.css ZWEIMAL
+ * definiert (die spaetere, groessere Fassung gewann), und `.btn-primary` traegt
+ * die Formularmasse — „Auswaehlen" war damit sichtbar groesser als „Abwaehlen"
+ * eine Zeile darueber. Die Groesse gilt jetzt fuer den ORT: Was in
+ * `.rowactions` steht, ist eine Zeilenaktion. Damit faellt auch die naechste
+ * Schaltflaechenklasse dort nicht mehr aus der Reihe.
  */
-const WEB_VERSION = '7.0.1';
+const WEB_VERSION = '7.0.2';

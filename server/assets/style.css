@@ -1171,16 +1171,26 @@ span.imp-warn{color:#8A6D00}
  * KEIN `overflow:hidden` zum Aufraeumen des Floats: Die Vorschlagsliste des
  * Ortsfeldes (.loc-suggest) ist absolut positioniert und wuerde am Rand des
  * Kastens abgeschnitten. Stattdessen raeumt das erste Element danach auf. */
-.fgruppe>legend{float:left;width:100%;padding:0;margin:0 0 .1rem;
-  font-family:var(--head);font-weight:600;font-size:.8rem;
+/* GROESSE UND TRENNLINIE (Web 7.0.2). Die Ueberschrift stand mit .8rem UNTER
+ * der Groesse der Feldbeschriftungen darunter (label = .92rem) und ohne
+ * Abstand dazu — sie las sich damit als Vorbemerkung des ersten Feldes und
+ * nicht als Titel der Gruppe. Jetzt ist sie groesser als der Feldtext, und
+ * eine Linie trennt sie ab; das ist dieselbe Ordnung wie im Tabellenkopf
+ * (`table.data th`), nur leiser, weil auf einer Seite bis zu neun Gruppen
+ * untereinander stehen. */
+.fgruppe>legend{float:left;width:100%;
+  padding:0 0 .45rem;margin:0 0 .8rem;border-bottom:1px solid var(--line);
+  font-family:var(--head);font-weight:600;font-size:.95rem;
   letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
 .fgruppe>legend+*{clear:both}
+/* Der Zusatz neben dem Titel bleibt Beiwerk: kleiner, nicht gesperrt, gedaempft
+   — er ergaenzt die Ueberschrift, er ist nicht Teil von ihr. */
 .fgruppe-hinweis{font-family:'Open Sans',sans-serif;font-weight:400;
   text-transform:none;letter-spacing:0;color:var(--muted);font-size:.8rem}
 /* Erstes Feld einer Gruppe ohne den ueblichen Abstand nach oben — die
-   Ueberschrift steht bereits darueber. */
+   Trennlinie der Ueberschrift setzt ihn bereits. */
 .fgruppe>legend+label,.fgruppe>legend+div>label:first-child,
-.fgruppe>legend+.fld-reihe>label{margin-top:.2rem}
+.fgruppe>legend+.fld-reihe>label,.fgruppe>legend+.fld-check{margin-top:0}
 /* Kurze Felder nebeneinander ('nebeneinander' im Katalog, ausserdem von Hand
    fuer Geburtsdatum/Alter). Sie brechen auf schmalen Bildschirmen um. */
 .fld-reihe{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;align-items:flex-start}
@@ -1223,12 +1233,38 @@ span.imp-warn{color:#8A6D00}
 .stammunter h4{font-family:var(--head);font-size:.85rem;margin:.9rem 0 .3rem;
   color:var(--navy)}
 
-/* ★-Schaltflaeche in den Zeilenaktionen. Sie war breiter und hoeher als
-   „Bearbeiten" und „Löschen" daneben, weil .btn-plain eine andere Polsterung
-   traegt als .btn-yellow/.btn-red und die Beschriftung „★ als Standard" zwei
-   Woerter laenger war. Beides ist angeglichen — gleiche Polsterung, gleiche
-   Schriftgroesse, kuerzerer Text (der title sagt den Rest). */
-.btn-stern{padding:.25rem .7rem;font-size:.85rem;white-space:nowrap}
+/* ---- EINE GROESSE FUER ALLE ZEILENAKTIONEN (Web 7.0.1) -------------------
+ *
+ * Die Schaltflaechen einer Tabellenzeile sind EIN Satz und muessen gleich
+ * aussehen. Sie taten es nicht, und zwar aus zwei unabhaengigen Gruenden:
+ *
+ *  1. `.btn-plain` ist in dieser Datei ZWEIMAL definiert — einmal mit
+ *     `.25rem/.6rem` bei .85rem, weiter unten noch einmal mit `.45rem/1rem`
+ *     bei `font:inherit`. Die spaetere gewinnt, also war jeder „einheitliche
+ *     Aktions-Button" in Wahrheit groesser als die gelbe und die rote daneben.
+ *  2. `.btn-primary` traegt die Formularmasse (`button{padding:.5rem .9rem}`,
+ *     volle Schriftgroesse, `width:100%`). In einer Zeile neben `.btn-red`
+ *     fiel das sofort auf — „Auswaehlen" war sichtbar groesser als
+ *     „Abwaehlen" eine Zeile darueber.
+ *
+ * Statt beides einzeln nachzubessern, gilt die Groesse jetzt fuer den ORT:
+ * Was in `.rowactions` steht, ist eine Zeilenaktion und wird so gross wie die
+ * uebrigen. Damit kann auch die naechste Schaltflaechenklasse dort nicht mehr
+ * aus der Reihe fallen. Die Doppeldefinition von `.btn-plain` bleibt
+ * unangetastet — sie versorgt ein Dutzend eigenstaendiger Schaltflaechen
+ * (Entsperren, Abbrechen, Filter zuruecksetzen), fuer die die groessere Masse
+ * richtig ist.
+ *
+ * NICHT betroffen sind die Absendeknoepfe der Eingabekaesten (.neu-zeile,
+ * .inline-form): Sie sind die Hauptaktion eines Formulars und duerfen groesser
+ * sein als eine Zeilenaktion. Zwei Groessen mit einer klaren Regel — nicht
+ * fuenf ohne. */
+.rowactions .btn-primary,.rowactions .btn-plain,.rowactions .btn-yellow,
+.rowactions .btn-red,.rowactions .btn-edit{
+  width:auto;margin:0;font-size:.85rem;padding:.25rem .7rem;
+  border-radius:5px;line-height:1.5}
+/* Der Stern und seine Beschriftung bleiben auf einer Zeile. */
+.btn-stern{white-space:nowrap}
 
 /* EINGABEBEREICH mit eigenem Rahmen (Rettungsmittel). Vorher klebten
    Eingabezeile, Artauswahl und Rollenhaken ohne Abstand unter der Tabelle, und
