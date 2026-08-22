@@ -616,9 +616,12 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 .formcol{max-width:760px}
 
 /* Auskunft unter einem Datumsfeld: was am gewählten Zieltag steht
-   (einsatz_verschieben.php, flugtag_datum.php — Web 5.10.0). Als .muted ein
-   ruhiger Nachsatz, als .alert-warn eine Ansage. Beides derselbe Absatz, damit
-   der Text an seinem Platz bleibt und nicht je nach Lage springt. */
+   (Web 5.10.0). Als .muted ein ruhiger Nachsatz, als .alert-warn eine Ansage.
+   Beides derselbe Absatz, damit der Text an seinem Platz bleibt und nicht je
+   nach Lage springt.
+   OHNE VERWENDUNG seit A1: Die einzige Seite, die diese Klasse trug, war die
+   entfallene flugtag-Datumsseite. Die Klasse steht auf der Befundliste von A4
+   und wird dort — nicht hier — zum Loeschen vorgelegt. */
 .zielinfo{margin:.1rem 0 1rem;font-size:.9rem}
 
 /* Papierkorb */

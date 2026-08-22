@@ -59,10 +59,12 @@ hems/
 │   │                        den alten, geteilten Punkt „Standortdaten")
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
-│   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail) · geraete.php (Weiterleitung)
+│   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail)
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
 │   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`)
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
+│   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
+│   │                         wieder zu einem Diensttag vereinen
 │   ├── diensttag_lib.php  Diensttage anlegen, zuordnen, einfrieren, auflisten
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
@@ -106,6 +108,8 @@ hems/
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
 │   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
+│   ├── config.example.php Vorlage der config.php (die selbst nur auf dem Server
+│   │                      liegt und vom Deploy ausgenommen ist)
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
 │   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
