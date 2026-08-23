@@ -43,14 +43,35 @@ const EdMissionTable = (() => {
    *
    * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
    */
-  function zelleGeschuetzt(m, wert, formatiere, klassen) {
+  /* DIE MASKIERUNG STEHT HIER, NICHT AN DER AUFRUFSTELLE.
+   *
+   * Bis Web 7.2.1 nahm diese Funktion eine Formatierfunktion entgegen, und
+   * die Aufrufstelle entschied damit auch ueber die Maskierung: Einsatzort
+   * und Diagnose gaben `v => esc(v)`, das Alter gab `v => v`. Das war kein
+   * Versehen im Wortsinn, sondern eine Annahme — ein Alter ist eine Zahl,
+   * und Zahlen kann man nicht maskieren muessen.
+   *
+   * Die Annahme haelt fuer die regulaeren Schreibwege (das Formular hat
+   * type=number, der CSV-Import verwirft alles, was `alterJahre` nicht
+   * aufloest), aber sie haelt nicht fuer das FELD: `age` liegt im
+   * pat_blob, und der ist freies JSON, das der Server nie sieht. Eine
+   * wiederhergestellte Sicherung traegt dort, was in ihr steht. Ein
+   * `<img src=x onerror=…>` im Altersfeld wurde damit in der Einsatzsuche
+   * und in der Tagesuebersicht ausgefuehrt — im Browser derjenigen Person,
+   * die die Sicherung einspielt, und das ist im Adminbereich eine andere
+   * als die, von der die Datei stammt.
+   *
+   * Deshalb gibt es die Formatierfunktion nicht mehr. Alle drei Spalten
+   * zeigen ohnehin den Wert unveraendert an; wer hier je etwas formatieren
+   * will, formatiert TEXT, und die Maskierung passiert danach und immer. */
+  function zelleGeschuetzt(m, wert, klassen) {
     const kl = klassen ? klassen + ' ' : '';
     if (m._patFehler) {
       return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
            + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
     }
     const leer = wert == null || wert === '';
-    return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : formatiere(wert)}</td>`;
+    return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : escape(wert)}</td>`;
   }
   function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
   function fmtDur(s) {
@@ -134,13 +155,13 @@ const EdMissionTable = (() => {
       zelle: m => `<td class="c-mid">${fmtDur(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._ort, v => esc(v)) },
+      zelle: m => zelleGeschuetzt(m, m._ort) },
     { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => zelleGeschuetzt(m, m._age, v => v, 'mono c-mid') },
+      zelle: m => zelleGeschuetzt(m, m._age, 'mono c-mid') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._dx, v => esc(v)) },
+      zelle: m => zelleGeschuetzt(m, m._dx) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
        Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
        Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */

@@ -115,5 +115,12 @@ declare(strict_types=1);
  * NA-Begleitung, Fehleinsatz, Zielkoordinate, Abfahrtortregel) waren dort nie
  * nachgetragen worden. Sie wurden gelesen, in der Prueftabelle angezeigt und
  * danach fallengelassen. Die Liste wird jetzt aus EINFACHE_ZIELE abgeleitet.
+ *
+ * 7.2.2 schliesst eine Cross-Site-Scripting-Luecke in den drei
+ * Einsatztabellen: Die Spalte „Alter" gab ihren Wert unmaskiert aus, weil die
+ * Aufrufstelle ihn fuer eine Zahl hielt. Er kommt aber aus dem pat_blob —
+ * freiem JSON, das der Server nie sieht und deshalb auch nicht pruefen kann.
+ * Die Maskierung liegt jetzt in zelleGeschuetzt() selbst; die
+ * Formatierfunktion, ueber die sie umgangen werden konnte, gibt es nicht mehr.
  */
-const WEB_VERSION = '7.2.1';
+const WEB_VERSION = '7.2.2';

@@ -334,9 +334,9 @@ function renderMissionTable(){
       <td class="mono c-no">${m._no}</td>
       <td class="mono c-mid">${m.start_hhmm}</td>
       <td class="c-mid">${fmtDur(m.duration_s)}</td>
-      ${zelleGeschuetzt(m, m._ort, v => esc(v))}
-      ${zelleGeschuetzt(m, m._age, v => v, 'mono c-mid')}
-      ${zelleGeschuetzt(m, m._dx, v => esc(v))}
+      ${zelleGeschuetzt(m, m._ort)}
+      ${zelleGeschuetzt(m, m._age, 'mono c-mid')}
+      ${zelleGeschuetzt(m, m._dx)}
       ${dcZellen}
       <td class="mono c-km">${fmtKm(m.distance_m)}</td>`;
     /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).

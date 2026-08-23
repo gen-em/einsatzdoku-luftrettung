@@ -11,6 +11,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.2] — 2026-08-23
+
+**Cross-Site-Scripting in den Einsatztabellen.** Die Spalte „Alter" gab ihren
+Wert unmaskiert in die Seite. Betroffen waren alle drei Tabellen, die Einsätze
+zeigen: Tagesübersicht, Einsatzsuche und Zeitraum-Übersicht. Keine Migration.
+
+### Was passiert ist
+
+`zelleGeschuetzt()` in `assets/missiontable.js` baut die Zellen für die drei
+entschlüsselten Spalten — Einsatzort, Alter, Diagnose. Sie nahm bis hierher
+eine Formatierfunktion entgegen, und damit lag die Entscheidung über die
+Maskierung an der **Aufrufstelle**. Einsatzort und Diagnose gaben `v => esc(v)`,
+das Alter gab `v => v`.
+
+Das war keine Nachlässigkeit, sondern eine Annahme: Ein Alter ist eine Zahl,
+und eine Zahl muss man nicht maskieren. Die Annahme hält für die regulären
+Schreibwege — das Formular hat `type="number"`, und der CSV-Import verwirft
+über `PARSERS.alterJahre` alles, was keine ganze Zahl ist. Sie hält aber nicht
+für das **Feld**: `age` liegt im `pat_blob`, und der ist freies JSON. Der
+Server sieht ihn nie im Klartext und kann ihn deshalb grundsätzlich nicht
+prüfen — das ist der Kern der Ende-zu-Ende-Verschlüsselung, nicht ihr Mangel.
+
+Der praktische Weg hinein ist die **Wiederherstellung einer Sicherung**
+(`api/backup_restore.php`): Der innere Chiffretext wird unverändert
+übernommen, wie es sein muss. Wer eine Sicherung mit
+`<img src=x onerror="…">` im Altersfeld einspielt, führt das Skript beim
+nächsten Blick in die Einsatzliste aus. Im Adminbereich ist das besonders
+unangenehm: „Einspielen" schreibt eine **fremde** Sicherung in ein Konto — die
+Person, die das Skript ausführt, ist dann nicht die, von der die Datei stammt.
+
+Die Einsatzseite war nicht betroffen: `EdPat.alterText()` gibt für einen nicht
+in eine Zahl auflösbaren Wert `null` zurück, und was sie ausgibt, maskiert sie.
+
+### Was geändert wurde
+
+Die Formatierfunktion ist ersatzlos entfallen. `zelleGeschuetzt(m, wert,
+klassen)` maskiert den Wert jetzt selbst, ausnahmslos. Alle drei Spalten
+zeigten den Wert ohnehin unverändert an — es gab nichts zu formatieren, nur
+etwas zu vergessen.
+
+Damit ist die unsichere Fassung nicht mehr *schreibbar*: Es gibt keinen
+Parameter mehr, über den sich die Maskierung umgehen ließe. Eine einzelne
+korrigierte Zeile hätte die Lücke ebenso geschlossen und die Bauart behalten,
+die sie hervorgebracht hat.
+
+`index.php` baut seine Tagestabelle mit derselben Funktion und ist
+mitgeändert; suche.php und zeitraum.php ziehen ihre Spalten aus
+`missiontable.js` und brauchten keine Änderung.
+
+### Wer nachbessern muss
+
+Niemand — der Fehler lag in der Anzeige, nicht im Bestand. Wer zwischen Web
+4.0.0 und 7.2.1 eine Sicherung **fremder Herkunft** eingespielt hat, sollte
+den Bestand einmal ansehen; ein manipulierter Wert steht danach weiterhin im
+Altersfeld, ist aber inert.
+
+### Geprüft
+
+Im Browser mit dem Referenzdatensatz, der im Altersfeld eines Einsatzes
+absichtlich `<img src=x onerror="alert('R20-alter')">` trägt (P1, R20).
+`window.alert`, `confirm` und `prompt` werden vor dem ersten Seitenskript
+ersetzt und protokolliert; zusätzlich wird gezählt, ob Elemente aus der
+Nutzlast im Dokument stehen.
+
+Gegen den alten Stand gehalten: drei Seiten, je ein ausgelöster Dialog und ein
+eingefügtes `<img>` — sechs Befunde. Gegen den neuen Stand: 42 Einzelprüfungen
+über sechs Seiten, kein Dialog, kein eingefügtes Element, keine
+Konsolenmeldung. Die Gegenprobe läuft mit: Der Wert muss auf mindestens einer
+Seite **sichtbar** sein, sonst hieße „kein Dialog" nur „nichts gerendert".
+Das Prüfmittel steht als `tools/referenzdatensatz/browser/angriffswerte.mjs`
+im Repositorium und ist wiederholbar.
+
 ## [Web 7.2.1] — 2026-08-23
 
 **Ein stiller Datenverlust im CSV-Rückimport.** Aufgefallen beim Aufbau des
