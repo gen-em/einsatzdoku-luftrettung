@@ -167,6 +167,53 @@ in `auth_guard.php` selbst (`require_admin()` und `csrf_check()`); der
 API-Zweig von `require_admin()` antwortet weiterhin mit JSON und ist von der
 Änderung nicht berührt.
 
+### Der Baustein unter zwei Namen — zwölf Regelpaare zusammengeführt
+
+`style.css` enthielt zwölf Gruppen, in denen **zeichengleiche Regelkörper unter
+verschiedenen Selektoren** standen: die Überschrift der Einsatztage-Leiste und
+die der Suchfilterspalte, Phasen- und Reanimationszeile im Einsatzformular, die
+beiden Reihen umbrechender Kontrollkästchen, das Aufklappdreieck an zwei
+Stellen, der Fokusring, die Knopfleiste des Bestätigungs- und die des
+Entsperrdialogs. Zusammengehalten wurden sie bislang nur durch einen Kommentar
+(„bewusst dasselbe Muster wie …") — und ein Kommentar hält nichts, er sagt nur
+etwas.
+
+Jetzt steht jede Gruppe an **einer** Stelle, an der ursprünglichen Position der
+ersten; am zweiten Ort steht ein Verweis darauf. Bei den beiden Dialogkästen
+war der Fall etwas anders: Sie unterscheiden sich in genau **einer** Angabe —
+der Entsperrdialog darf 2 rem breiter werden, weil in ihm ein Passwortfeld
+samt Erklärung steht. Diese eine Angabe steht weiterhin für sich, alles übrige
+gemeinsam.
+
+Der Gegenwert ist nicht die eingesparte Zeile, sondern dass die Paare nicht
+mehr auseinanderlaufen **können**.
+
+### Die Schaltflächen sind eine Familie geworden
+
+Sechs Varianten — `.btn-primary`, `.btn-danger`, `.btn-yellow`, `.btn-red`,
+`.btn-plain`, `.btn-edit` — standen in vier über 110 Zeilen verteilten Blöcken
+und wiederholten einander: dreimal dieselben fünf Angaben zur kompakten
+Aktionsgröße, sechsmal dieselbe abgeschaltete Unterstreichung. Diese Streuung
+hat bereits zweimal etwas gekostet (Web 7.0.1 und 7.0.2).
+
+Sie stehen jetzt beieinander, mit einer Sammelregel darüber. **Was in der
+Sammelregel steht, ist bewusst wenig:** Die sechs teilen keine einzige Farb-
+oder Maßangabe, und `font-family:var(--head)` gehört ausdrücklich **nicht**
+hinein — bei `.btn-primary` und `.btn-danger` kommt die Schriftfamilie heute
+aus `button{}` und damit nur am `<button>` an; `a.btn-primary` trägt Open Sans.
+In die Sammelregel gezogen hätte die Schrift dort gewechselt, und das wäre
+eine Gestaltungsentscheidung gewesen, keine Zusammenführung. Geblieben sind
+`cursor` und `text-decoration` — beides an jeder der sechs Stellen ohne
+Unterschied — dazu eine gemeinsame Regel für die kompakte Größe der drei
+Zeilenaktionen.
+
+Damit verschwinden **beide handgepflegten Aufzählungen**: Die Liste
+`a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow` gegen die
+Unterstreichung entfällt ganz, und die Größenregel der Zeilenaktionen nennt
+die Familie jetzt über `:is(…)` statt fünf Varianten einzeln. Die Spezifität
+bleibt dieselbe; `.btn-danger` kommt dabei neu hinzu und steht heute in keinem
+`.rowactions`, die Regel trifft also kein Element anders als zuvor.
+
 ### Kleinere Berichtigungen
 
 * **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre

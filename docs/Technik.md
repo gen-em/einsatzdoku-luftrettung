@@ -879,7 +879,9 @@ ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Su
 über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
 `.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
 `overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
-`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Zwei Stolpersteine
+`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Die **Überschrift**
+der Spalte ist dagegen dieselbe wie in der Einsatztage-Leiste und steht seit
+Web 7.2.0 nur noch dort (`.daylist h2,.filterspalte>h2`). Zwei Stolpersteine
 sind dort im CSS vermerkt: Die 720-px-Regel für `.layout-suche` muss **nach**
 der Grundregel stehen, weil der allgemeine 720-px-Block nur `.layout` greift
 und sonst von der gleich spezifischen, später notierten Regel ausgehebelt
@@ -1652,6 +1654,7 @@ Die Bausteine im Einzelnen:
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
+| Schaltflächenfamilie | `assets/style.css` (`.btn-primary/-danger/-yellow/-red/-plain/-edit`) | Ab Web 7.2.0 ein Block statt vier. Eine Sammelregel über alle sechs (`cursor`, `text-decoration`) und eine gemeinsame Regel für die kompakte Größe der drei Zeilenaktionen; in den Varianten steht nur noch, was sie unterscheidet. **`font-family` gehört nicht in die Sammelregel** — bei `.btn-primary`/`.btn-danger` kommt sie aus `button{}` und damit nur am `<button>` an. Die Größenregel der Zeilenaktionen nennt die Familie über `:is(…)` statt fünf Varianten einzeln; **eine Klasse je Element** ist dabei Bedingung, weil `.btn-plain` mit `font:inherit` arbeitet. |
 | Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. |
 | Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 
