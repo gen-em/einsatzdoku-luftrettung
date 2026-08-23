@@ -222,3 +222,104 @@ Seitenfehler: keine.
 (`session_lib.php` liefert eine kurze Seite aus, die `crypto.js` lädt und
 `EdCrypto.clearSession()` aufruft), aber nicht am laufenden System gemessen;
 das bleibt der Betreiberin (Prüfliste, Punkt P-2).
+
+---
+
+## 4. Backlog und Version (S22-4)
+
+- **Nr. 17 berichtigt.** Die Zuordnung „an P1/P2 übergeben" ist ersetzt durch
+  **P5** (Rahmenplan R19), mit dem Zusatz, dass P1 nur das Aufrufverhalten
+  misst und keine Grenze festlegt.
+- **Nr. 22 unter *Erledigt*** eingetragen, mit Fundstellen
+  (`server/assets/missiontable.js`, `server/assets/import.js`,
+  `server/index.php`, `server/assets/crypto.js`) und Version (Web 7.2.1).
+- **Version** `server/version.php` auf `7.2.1`, mit fortgeschriebener
+  Erzählung im Kopfkommentar. **Changelog** ergänzt, mit dem Hinweis, dass die
+  Lücke seit Web 5.2.0 bestand und P0 sie weder verursacht noch verschärft,
+  sondern gefunden hat.
+- **`docs/Technik.md`**: die beiden neuen Proben in der Verzeichnisübersicht
+  nachgetragen.
+
+**Nicht erledigt — und warum:** `Konzept-P0-Aufraeumen.md` (F-16- und
+F-20-Zeile nachziehen) liegt **nicht in diesem Repositorium**. Die
+Konzeptdokumente entstehen nach `CLAUDE.md`, Abschnitt 7, in einer getrennten
+Sitzung und werden hier nicht geführt; eine Suche über den gesamten Baum
+findet keine Datei dieses Namens. Der Nachzug bleibt offen und muss dort
+erfolgen, wo das Dokument liegt. Zu übernehmen ist:
+
+- **F-20-Zeile:** behoben mit Web 7.2.1 (Sofortpaket Nr. 22), Maskierung in
+  `zelleGeschuetzt()`; Durchsicht des Importpfads ohne weiteren Fund.
+- **F-16-Zeile:** Zuständigkeit **P5** statt P1/P2 (Rahmenplan R19).
+
+---
+
+## 5. Was der Betreiberin bleibt — abhakbare Prüfliste
+
+Zwei Punkte. Beide brauchen ein laufendes System mit Anmeldung, Datenbank und
+entsperrtem Inhaltsschlüssel; keiner davon lässt sich hier nachstellen.
+
+### ☐ P-1 — Import mit Angriffswert im Altersfeld
+
+**Bedienweg.** Eine Importdatei nach einem der vorhandenen Profile anlegen und
+in die Alterspalte einer Zeile statt einer Zahl diesen Text setzen:
+
+    47<img src=x onerror="alert('offen')">
+
+Datei über *Import* einlesen, bis zur Abgleichsansicht gehen, übernehmen. Dann
+den betroffenen Tag in der **Tagesübersicht** öffnen, danach dieselbe Zeile in
+der **Suche** und in der **Zeitraum-Übersicht** ansehen, zuletzt den Einsatz
+selbst.
+
+**Erwartet.** In allen drei Tabellen steht in der Spalte *Alter* der Text
+`47<img src=x onerror="alert('offen')">` — sichtbar, unverändert, als Text. In
+der Abgleichsansicht steht er im Eingabefeld der Alterspalte. In der
+Einzelansicht steht er in der Zeile *Alter 🔒*.
+
+**Woran ein Scheitern zu erkennen ist.** Es erscheint ein Meldungsfenster
+(„offen") — dann greift die Maskierung nicht. Ebenfalls Scheitern: In der
+Spalte steht **nur** `47` und der Rest fehlt; dann ist das Markup in die Seite
+gewandert und nur unsichtbar geblieben. Ein leeres Feld oder ein
+Gedankenstrich ist auch ein Fehler — der Wert soll erhalten bleiben, nicht
+verschwinden.
+
+**Danach aufräumen:** Den Probeeinsatz löschen. Er ist ein echter Datensatz.
+
+### ☐ P-2 — Abmelden räumt den sessionStorage
+
+**Bedienweg.** Anmelden, geschützte Angaben entsperren (einen Einsatz mit
+Diagnose öffnen). Dann in den Entwicklerwerkzeugen des Browsers unter
+*Application → Session Storage* nachsehen, danach **Abmelden** und dieselbe
+Stelle erneut ansehen. Der Tab muss dabei offen bleiben — beim Schließen wird
+der Speicher ohnehin geleert, das beweist nichts.
+
+**Erwartet.** Vor dem Abmelden liegen dort `edk`, `pck`, `pckb`, `pckt`. Nach
+dem Abmelden sind `edk` und `pck` **fort**; `pckb` und `pckt` bleiben stehen —
+das ist beabsichtigt (Abschnitt 3).
+
+**Woran ein Scheitern zu erkennen ist.** `edk` oder `pck` stehen nach dem
+Abmelden noch da. Häufigste Ursache wäre eine blockierte Skriptausführung auf
+der Abmeldeseite: Sie räumt per JavaScript, weil eine Weiterleitung per
+Kopfzeile nie Skript ausführt.
+
+**Zusatz, nur wenn gerade ohnehin ein Passwortwechsel ansteht:** Nach
+*Einstellungen → Passwort ändern* darf **kein** Fach `edk_neu` übrig bleiben —
+weder nach dem Wechsel noch nach einem abgebrochenen Versuch, und erst recht
+nicht nach dem Abmelden. Genau dieser Rest ist mit 7.2.1 behoben.
+
+---
+
+## 6. Grenzen der benutzten Prüfmittel
+
+- **`node --check` und `php -l`** prüfen die Rechtschreibung des Codes, nicht
+  seinen Sinn. Sie hätten die Lücke nie gefunden.
+- **Die Browserproben** laufen gegen nachgebautes Markup und selbst gefüllten
+  Speicher. Sie belegen das Verhalten der geänderten Bausteine, nicht den Weg
+  dorthin: kein Import, keine Anmeldung, keine Datenbank.
+- **Die Durchsicht in Abschnitt 1 ist eine Lesung.** Sie ist vollständig über
+  die genannten Muster — aber vollständig heißt „alle Stellen gefunden, die
+  diese Muster treffen". Ein Ausgabeweg, der keines davon benutzt, wäre nicht
+  darunter. Gesucht wurde deshalb zusätzlich nach den bekannten Alternativen
+  (`srcdoc`, `.html()`, `eval`, `new Function`, `createContextualFragment`,
+  `setHTML`, `javascript:`); sie kommen im Projekt nicht vor.
+- **Es gibt keine automatisierten Tests** (`CLAUDE.md`, Abschnitt 6). Was hier
+  nicht gemessen oder gelesen wurde, ist nicht geprüft.
