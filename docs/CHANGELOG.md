@@ -100,6 +100,27 @@ sitzen auf der Kopplungsseite am selben Element und setzen beide den Rahmen —
 in der neuen Reihenfolge hätte der Kopplungscode seine orange Umrandung
 verloren.
 
+### Die Rückfragen auf der Sicherungsseite erscheinen wieder
+
+Drei Schaltflächen in `admin_sicherungen.php` trugen eine Rückfrage —
+„Alle sichern", „Einspielen" und „Für NutzerIn freigeben". Sie erschien
+**nie**. `confirm.js` band nur an `<form>` und an `<a>`; an einen `<button>`
+band es nichts. Die Attribute standen da und sahen nach Absicherung aus.
+
+Das ist nicht nebensächlich: „Einspielen" schreibt eine fremde Sicherung in
+ein Konto, „Freigeben" gibt sie einer anderen Person heraus. Beide standen
+als gewöhnliche Schaltfläche neben einem Auswahlfeld — ein Fehlklick hatte
+nichts vor sich.
+
+`confirm.js` hört jetzt auch auf `button[data-confirm]`. Der Knopf wird nach
+dem Ja **erneut geklickt** statt das Formular per `submit()` abzuschicken:
+Nur der tatsächlich betätigte Absendeknopf schickt sein `name`/`value` mit,
+und genau darin unterscheiden sich die drei (`action=einspielen` gegen
+`action=freigeben`).
+
+Am Markup ändert sich nichts. Die 22 Rückfragen am `<form>` und die eine am
+`<a>` laufen unverändert.
+
 ### Betreiberhinweis
 
 Die vier entfernten Dateien müssen auch **auf dem Webspace verschwinden**. Ein
