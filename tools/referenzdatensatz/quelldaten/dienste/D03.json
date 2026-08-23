@@ -1,18 +1,422 @@
 {
   "kennung": "D03",
-  "abdeckung": ["dienst-luft", "zeit-mez", "rettungsmittel-ohne-faehigkeiten", "papierkorb-diensttag"],
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mez",
+    "rettungsmittel-ohne-faehigkeiten",
+    "papierkorb-diensttag"
+  ],
   "dienst": {
     "day": "2026-02-21",
     "art": "air",
     "standort": "Luftrettungsstation Hochkreuth",
     "rettungsmittel": "Alpenfalke 2",
-    "beginn": "2026-02-21 08:00",
-    "ende": "2026-02-21 16:30",
+    "beginn": "2026-02-21 07:30",
+    "ende": "2026-02-21 17:30",
     "day_ref": "d-11-7136924085",
-    "besatzung": { "p1": "Servatius Kroll", "hems": "Ruth Amrein", "fr": "Vitus Halbritter" },
+    "besatzung": {
+      "p1": "Servatius Kroll",
+      "hems": "Ruth Amrein",
+      "fr": "Vitus Halbritter"
+    },
     "notizen": "Ersatzmaschine ohne Winde und ohne Bergwachtkooperation."
   },
   "papierkorb": "diensttag",
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-7119152793",
+      "beginn": "2026-02-21 07:30",
+      "ende": "2026-02-21 07:38",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5520020495",
+      "beginn": "2026-02-21 09:00",
+      "ende": "2026-02-21 10:11",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4093158823",
+      "beginn": "2026-02-21 11:24",
+      "ende": "2026-02-21 11:43",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-2784493671",
+      "beginn": "2026-02-21 12:42",
+      "ende": "2026-02-21 13:47",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4921972299",
+      "beginn": "2026-02-21 14:52",
+      "ende": "2026-02-21 17:30",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-9013159356",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-02-21 07:38",
+      "ende": "2026-02-21 09:00",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-21 07:38"
+        ],
+        [
+          3,
+          "2026-02-21 07:43"
+        ],
+        [
+          4,
+          "2026-02-21 07:55"
+        ],
+        [
+          5,
+          "2026-02-21 07:59"
+        ],
+        [
+          6,
+          "2026-02-21 08:22"
+        ],
+        [
+          7,
+          "2026-02-21 08:41"
+        ],
+        [
+          8,
+          "2026-02-21 08:49"
+        ],
+        [
+          9,
+          "2026-02-21 09:00"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr abgesichert."
+      },
+      "geschuetzt": {
+        "dx": "Beckenfraktur nach Absturz",
+        "dob": null,
+        "age": 50,
+        "mission_no": "2026-1006",
+        "loc": {
+          "addr": "Enzianweg 12, 87452 Marbach im Moos",
+          "lat": 47.77608,
+          "lon": 10.6168
+        },
+        "site_desc": "Steilgelände unterhalb des Steigs",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-4462903718",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-21 10:11",
+      "ende": "2026-02-21 11:24",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-21 10:11"
+        ],
+        [
+          3,
+          "2026-02-21 10:16"
+        ],
+        [
+          4,
+          "2026-02-21 10:29"
+        ],
+        [
+          5,
+          "2026-02-21 10:34"
+        ],
+        [
+          6,
+          "2026-02-21 10:55"
+        ],
+        [
+          7,
+          "2026-02-21 11:08"
+        ],
+        [
+          8,
+          "2026-02-21 11:16"
+        ],
+        [
+          9,
+          "2026-02-21 11:24"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Ersatzmaschine im Dienst; Windenrettung war an diesem Tag nicht möglich."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma nach Sturz vom Dach",
+        "dob": "1971-08-19",
+        "age": null,
+        "mission_no": "2026-0083",
+        "loc": {
+          "addr": "Schmiedgasse 41, 87452 Wangried",
+          "lat": 47.753,
+          "lon": 10.228
+        },
+        "site_desc": "Wohnhaus, Vordach über der Hofeinfahrt",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "papierkorb-einsatz-mit-tag"
+      ]
+    },
+    {
+      "client_ref": "m-11-1451009129",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-02-21 11:43",
+      "ende": "2026-02-21 12:42",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-21 11:43"
+        ],
+        [
+          3,
+          "2026-02-21 11:47"
+        ],
+        [
+          4,
+          "2026-02-21 11:55"
+        ],
+        [
+          5,
+          "2026-02-21 11:58"
+        ],
+        [
+          6,
+          "2026-02-21 12:15"
+        ],
+        [
+          7,
+          "2026-02-21 12:28"
+        ],
+        [
+          8,
+          "2026-02-21 12:34"
+        ],
+        [
+          9,
+          "2026-02-21 12:42"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Wasserwacht Auwiesen"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patientin war bei Eintreffen bereits durch den RTW versorgt."
+      },
+      "geschuetzt": {
+        "dx": "Thoraxtrauma nach Sturz aus Höhe",
+        "dob": null,
+        "age": 49,
+        "mission_no": "2026-1007",
+        "loc": {
+          "addr": "Schmiedgasse 25, 87572 Wangried",
+          "lat": 47.75221,
+          "lon": 10.22959
+        },
+        "site_desc": "Baustelle, Gerüst im 2. OG",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-2275860419",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-21 13:47",
+      "ende": "2026-02-21 14:52",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-21 13:47"
+        ],
+        [
+          3,
+          "2026-02-21 13:52"
+        ],
+        [
+          4,
+          "2026-02-21 14:05"
+        ],
+        [
+          5,
+          "2026-02-21 14:09"
+        ],
+        [
+          6,
+          "2026-02-21 14:28"
+        ],
+        [
+          7,
+          "2026-02-21 14:39"
+        ],
+        [
+          8,
+          "2026-02-21 14:45"
+        ],
+        [
+          9,
+          "2026-02-21 14:52"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Verlegung aus der Grundversorgung in die Bergklinik."
+      },
+      "geschuetzt": {
+        "dx": "Sepsis bei Pyelonephritis, Verlegung zur Intensivtherapie",
+        "dob": null,
+        "age": 79,
+        "mission_no": "2026-0084",
+        "loc": {
+          "addr": "Klinik Talwang, Talstraße 2, 87509 Talwang",
+          "lat": 47.559,
+          "lon": 10.217
+        },
+        "site_desc": "Innerklinische Übernahme, Intensivstation",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "sekundaertransport",
+        "papierkorb-einsatz-mit-tag"
+      ]
+    }
+  ],
   "$warum_papierkorb": [
     "DAUERZUSTAND nach E-P1-21: Dieser Diensttag liegt im Referenzzustand im",
     "Papierkorb, seine beiden Einsätze mit ihm (deleted_with_day=1). Damit ist",
@@ -26,61 +430,5 @@
     "Papierkorb zurückholt, sieht an seinen Einsätzen weder Winden- noch",
     "Bergwachtfelder — das prüft den eingefrorenen Fähigkeitssatz mit."
   ],
-  "ruhesegmente": [
-    { "client_ref": "r-11-5504218763", "beginn": "2026-02-21 08:00", "ende": "2026-02-21 10:11", "final": true },
-    { "client_ref": "r-11-3390761542", "beginn": "2026-02-21 11:24", "ende": "2026-02-21 13:47", "final": true },
-    { "client_ref": "r-11-8817450296", "beginn": "2026-02-21 14:52", "ende": "2026-02-21 16:30", "final": true }
-  ],
-  "einsaetze": [
-    {
-      "client_ref": "m-11-4462903718",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-02-21 10:11", "ende": "2026-02-21 11:24", "final": true,
-      "phasen": [[2,"2026-02-21 10:11"],[3,"2026-02-21 10:16"],[4,"2026-02-21 10:29"],[5,"2026-02-21 10:34"],[6,"2026-02-21 10:55"],[7,"2026-02-21 11:08"],[8,"2026-02-21 11:16"],[9,"2026-02-21 11:24"]],
-      "route": ["basis", "ort", "ziel", "basis"],
-      "rea": [],
-      "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen", "dest_lat": 47.7180, "dest_lon": 10.3220,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
-        "crew_override": 0, "crew": {},
-        "notes": "Ersatzmaschine im Dienst; Windenrettung war an diesem Tag nicht möglich."
-      },
-      "geschuetzt": {
-        "dx": "Schädel-Hirn-Trauma nach Sturz vom Dach",
-        "dob": "1971-08-19", "age": null, "mission_no": "2026-0083",
-        "loc": { "addr": "Schmiedgasse 41, 87452 Wangried", "lat": 47.7530, "lon": 10.2280 },
-        "site_desc": "Wohnhaus, Vordach über der Hofeinfahrt", "start": null
-      },
-      "abdeckung": ["herkunft-watch", "papierkorb-einsatz-mit-tag"]
-    },
-    {
-      "client_ref": "m-11-2275860419",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-02-21 13:47", "ende": "2026-02-21 14:52", "final": true,
-      "phasen": [[2,"2026-02-21 13:47"],[3,"2026-02-21 13:52"],[4,"2026-02-21 14:05"],[5,"2026-02-21 14:09"],[6,"2026-02-21 14:28"],[7,"2026-02-21 14:39"],[8,"2026-02-21 14:45"],[9,"2026-02-21 14:52"]],
-      "route": ["basis", "ort", "ziel", "basis"],
-      "rea": [],
-      "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
-        "schockraum": 0, "false_alarm": 0, "secondary": 1, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": [],
-        "crew_override": 0, "crew": {},
-        "notes": "Verlegung aus der Grundversorgung in die Bergklinik."
-      },
-      "geschuetzt": {
-        "dx": "Sepsis bei Pyelonephritis, Verlegung zur Intensivtherapie",
-        "dob": null, "age": 79, "mission_no": "2026-0084",
-        "loc": { "addr": "Klinik Talwang, Talstraße 2, 87509 Talwang", "lat": 47.5590, "lon": 10.2170 },
-        "site_desc": "Innerklinische Übernahme, Intensivstation", "start": null
-      },
-      "abdeckung": ["herkunft-watch", "sekundaertransport", "papierkorb-einsatz-mit-tag"]
-    }
-  ]
+  "ziel_einsaetze": 4
 }

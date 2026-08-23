@@ -479,9 +479,17 @@ def main() -> int:
             if e["papierkorb"] == "einsatz":
                 merke(["papierkorb-einsatz"], f"{n}/{e['client_ref']}")
 
-    # Sperrlisten-Prüfschritt
+    # Sperrlisten-Prüfschritt: Kennung eindeutig, Zeiten im genannten Dienst
     merke(sperrliste["einsatz"]["abdeckung"], sperrliste["kennung"])
-    ref_pruefen(sperrliste["einsatz"]["client_ref"], sperrliste["kennung"])
+    se = sperrliste["einsatz"]
+    ref_pruefen(se["client_ref"], sperrliste["kennung"])
+    ziel = next((x for x in dienste if x["kennung"] == se["dienst"]), None)
+    lauf.pruefe(ziel is not None,
+                f"{sperrliste['kennung']}: Diensttag {se['dienst']!r} gibt es nicht")
+    if ziel:
+        lauf.pruefe(lokal(ziel["dienst"]["beginn"]) <= lokal(se["beginn"])
+                    and lokal(se["ende"]) <= lokal(ziel["dienst"]["ende"]),
+                    f"{sperrliste['kennung']}: Zeiten liegen außerhalb von {se['dienst']}")
 
     # ---- Zeitzonen: keine nicht existierende oder mehrdeutige Ortszeit ----
     zeitpunkte: list[str] = []
@@ -562,8 +570,11 @@ def main() -> int:
                 offen.append((dimension, anforderung, hinweis))
 
     # ---- Umfang -----------------------------------------------------------
-    lauf.pruefe(30 <= einsatzzahl <= 40,
-                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 30–40")
+    # Umfang: 16 Diensttage, im Schnitt rund 6 Einsätze je Dienst (Nachtrag B1
+    # zur Abdeckungsmatrix — die ursprünglichen 30–40 stammten aus einem
+    # Entwurf mit deutlich weniger Bodendiensten).
+    lauf.pruefe(80 <= einsatzzahl <= 100,
+                f"Umfang {einsatzzahl} Einsätze liegt außerhalb von 80–100")
 
     # ---- Bericht ----------------------------------------------------------
     print(f"Dokumente:        {len(dienstdateien)} Dienste + Stammdaten + 1 Prüfschritt")

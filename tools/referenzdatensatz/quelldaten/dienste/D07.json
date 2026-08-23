@@ -1,117 +1,698 @@
 {
   "kennung": "D07",
-  "abdeckung": ["dienst-luft", "zeit-mesz"],
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mesz",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
   "dienst": {
-    "day": "2026-06-14",
+    "day": "2026-05-10",
     "art": "air",
     "standort": "Luftrettungsstation Hochkreuth",
     "rettungsmittel": "Alpenfalke 1",
-    "beginn": "2026-06-14 07:00",
-    "ende": "2026-06-14 20:30",
-    "day_ref": "d-11-5384720691",
-    "besatzung": { "p1": "Servatius Kroll", "p2": null, "hems": "Jonas Steinlechner", "fr": "Nele Brugger", "other": null },
-    "notizen": "Zwei Einsätze wurden erst nach Dienstende aus dem Papierprotokoll nachgetragen."
+    "beginn": "2026-05-10 07:00",
+    "ende": "2026-05-10 20:30",
+    "day_ref": "d-11-2740681935",
+    "besatzung": {
+      "p1": "Tilman Roithner",
+      "p2": null,
+      "hems": "Kerstin Obermeier",
+      "fr": "Vitus Halbritter",
+      "other": null
+    },
+    "notizen": "Erster Bergwandertag der Saison; mehrere Einsätze im alpinen Gelände."
   },
   "papierkorb": null,
-  "$warum_datum": "EINZIGER Dienst an diesem Kalendertag. Das ist die Voraussetzung dafür, dass hier per CSV nachgetragen werden darf: Der Import löst den Diensttag NUR über das Datum auf und bildet auf den ERSTEN Diensttag des Tages ab (B-04). An einem Datum mit zwei Diensten würde er den Einsatz stillschweigend an den falschen hängen.",
   "ruhesegmente": [
-    { "client_ref": "r-11-7791045328", "beginn": "2026-06-14 07:00", "ende": "2026-06-14 09:14", "final": true },
-    { "client_ref": "r-11-1128593760", "beginn": "2026-06-14 10:36", "ende": "2026-06-14 20:30", "final": true }
+    {
+      "client_ref": "r-11-4895747993",
+      "beginn": "2026-05-10 07:00",
+      "ende": "2026-05-10 07:09",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4441946509",
+      "beginn": "2026-05-10 08:12",
+      "ende": "2026-05-10 08:47",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5823030416",
+      "beginn": "2026-05-10 09:52",
+      "ende": "2026-05-10 09:58",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-9382825356",
+      "beginn": "2026-05-10 11:20",
+      "ende": "2026-05-10 11:39",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5011984291",
+      "beginn": "2026-05-10 12:43",
+      "ende": "2026-05-10 13:05",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4608453044",
+      "beginn": "2026-05-10 14:38",
+      "ende": "2026-05-10 14:59",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5866643759",
+      "beginn": "2026-05-10 15:41",
+      "ende": "2026-05-10 17:22",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-7433314463",
+      "beginn": "2026-05-10 18:55",
+      "ende": "2026-05-10 20:30",
+      "final": true
+    }
   ],
   "einsaetze": [
     {
-      "client_ref": "m-11-9925471083",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-06-14 09:14", "ende": "2026-06-14 10:36", "final": true,
-      "phasen": [[2,"2026-06-14 09:14"],[3,"2026-06-14 09:19"],[4,"2026-06-14 09:33"],[5,"2026-06-14 09:38"],[6,"2026-06-14 10:01"],[7,"2026-06-14 10:16"],[8,"2026-06-14 10:26"],[9,"2026-06-14 10:36"]],
-      "route": ["basis", "ort", "ziel", "basis"],
+      "client_ref": "m-11-3639672828",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-05-10 07:09",
+      "ende": "2026-05-10 08:12",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 07:09"
+        ],
+        [
+          3,
+          "2026-05-10 07:13"
+        ],
+        [
+          4,
+          "2026-05-10 07:22"
+        ],
+        [
+          5,
+          "2026-05-10 07:25"
+        ],
+        [
+          6,
+          "2026-05-10 07:43"
+        ],
+        [
+          7,
+          "2026-05-10 07:57"
+        ],
+        [
+          8,
+          "2026-05-10 08:04"
+        ],
+        [
+          9,
+          "2026-05-10 08:12"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen", "dest_lat": 47.7180, "dest_lon": 10.3220,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83", "Wasserwacht Auwiesen"],
-        "crew_override": 0, "crew": {},
-        "notes": "-15 min Verzögerung durch Vollsperrung der Zufahrt; Wasserwacht hatte die Person bereits an Land gebracht."
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Sichtflug am Grat grenzwertig, Rückflug über das Haupttal."
       },
       "geschuetzt": {
-        "dx": "Beinahe-Ertrinken mit Aspiration",
-        "dob": "2011-07-03", "age": null, "mission_no": "2026-0333",
-        "loc": { "addr": "Seepromenade 2, 87441 Birkenau am See", "lat": 47.6660, "lon": 10.3120 },
-        "site_desc": "Badesee, Steg am Ostufer", "start": null
+        "dx": "Schädel-Hirn-Trauma nach Sturz",
+        "dob": null,
+        "age": 63,
+        "mission_no": "2026-1019",
+        "loc": {
+          "addr": "Kirchsteig 17, 87427 Oberkarwang",
+          "lat": 47.43731,
+          "lon": 10.22106
+        },
+        "site_desc": "Wohnhaus, Treppenaufgang",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "sonderzeichen-formel-minus", "weitere-rettungsmittel"]
+      "abdeckung": []
     },
     {
-      "client_ref": null, "quell_kennung": "IMP-01",
-      "kanal": "import", "nachtrag": false, "papierkorb": null,
-      "beginn": "2026-06-14 12:40", "ende": "2026-06-14 13:55", "final": true,
-      "phasen": [[2,"2026-06-14 12:40"],[3,"2026-06-14 12:46"],[4,"2026-06-14 13:01"],[5,"2026-06-14 13:06"],[6,"2026-06-14 13:24"],[7,"2026-06-14 13:39"],[8,"2026-06-14 13:48"],[9,"2026-06-14 13:55"]],
-      "route": null,
+      "client_ref": "m-11-7148036592",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 08:47",
+      "ende": "2026-05-10 09:52",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 08:47"
+        ],
+        [
+          3,
+          "2026-05-10 08:51"
+        ],
+        [
+          4,
+          "2026-05-10 09:06"
+        ],
+        [
+          5,
+          "2026-05-10 09:11"
+        ],
+        [
+          9,
+          "2026-05-10 09:52"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
-        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
-        "crew_override": 0, "crew": {},
-        "notes": "=SUMME(B2:B9) — Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Übergabe an die Bereitschaft, Abstieg zu Fuß",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Maschine blieb am Einsatzort, weil während der Versorgung bereits der nächste Einsatz gemeldet wurde."
       },
       "geschuetzt": {
-        "dx": "<img src=x onerror=\"alert('R20-dx')\">Thoraxtrauma nach Sturz vom Gerüst",
-        "dob": null, "age": 47, "mission_no": "2026-0334",
-        "loc": { "addr": "Lärchenweg 31, 87466 Kaltbrunn am Hang", "lat": 47.7300, "lon": 10.3980 },
-        "site_desc": "\"><script>alert('R20-ort')</script>Baustelle, Gerüst im 2. OG", "start": null
+        "dx": "Distorsion des oberen Sprunggelenks",
+        "dob": "1968-04-27",
+        "age": null,
+        "mission_no": "2026-0261",
+        "loc": {
+          "addr": "Steig zur Hochalpe, 87538 Moosachtal",
+          "lat": 47.508,
+          "lon": 10.023
+        },
+        "site_desc": "Wanderweg oberhalb der Alpe, Wiesenhang mit Landemöglichkeit",
+        "start": null
       },
-      "abdeckung": ["herkunft-import", "erfassung-nachtraeglich-ohne-track", "r20-diagnose", "r20-ortsbeschreibung", "sonderzeichen-formel-gleich", "sonderzeichen-semikolon"],
-      "$warum_r20": [
-        "R20-DAUERFALL. Diagnose und Ortsbeschreibung tragen HTML- und",
-        "Skriptmarker. Sie kommen über den CSV-Import herein — dort führt die",
-        "Spalte 'pat_diagnose' den Parser 'trim' und 'pat_ort_beschreibung' den",
-        "Parser 'trim' plus Längenbegrenzung; beide nehmen den Wert UNVERÄNDERT",
-        "an. Damit prüft der Datensatz die Maskierung der Einsatztabellen",
-        "dauerhaft mit: Erscheint irgendwo ein Bild-Platzhalter statt des",
-        "Textes, ist die Maskierung gebrochen.",
-        "",
-        "NICHT im Altersfeld — anders als E-P1-15 es vorsah. 'pat_alter' läuft",
-        "im Import über PARSERS.alterJahre (assets/import.js), der alles",
-        "verwirft, was keine ganze Zahl 0..120 ist; das Formularfeld ist",
-        "type=number. Über den CSV-Weg ist das Altersfeld nicht erreichbar.",
-        "Der Marker im Altersfeld steht deshalb an m-11-6127408395 (D13) und",
-        "kommt dort über den Nachtrag per einsatz_form.php herein — siehe",
-        "Fehlerfund F-P1-A im Konzeptdokument."
+      "abdeckung": [
+        "herkunft-watch",
+        "transport-ambulant",
+        "phasen-unvollstaendig"
       ]
     },
     {
-      "client_ref": null, "quell_kennung": "IMP-02",
-      "kanal": "import", "nachtrag": false, "papierkorb": null,
-      "beginn": "2026-06-14 16:05", "ende": "2026-06-14 17:12", "final": true,
-      "phasen": [[2,"2026-06-14 16:05"],[3,"2026-06-14 16:11"],[4,"2026-06-14 16:24"],[5,"2026-06-14 16:29"],[9,"2026-06-14 17:12"]],
-      "route": null,
+      "client_ref": "m-11-5573920184",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 09:58",
+      "ende": "2026-05-10 11:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 09:58"
+        ],
+        [
+          3,
+          "2026-05-10 10:03"
+        ],
+        [
+          4,
+          "2026-05-10 10:19"
+        ],
+        [
+          5,
+          "2026-05-10 10:24"
+        ],
+        [
+          6,
+          "2026-05-10 10:47"
+        ],
+        [
+          7,
+          "2026-05-10 11:01"
+        ],
+        [
+          8,
+          "2026-05-10 11:09"
+        ],
+        [
+          9,
+          "2026-05-10 11:20"
+        ]
+      ],
+      "route": [
+        "ort_vorher",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "ambulant", "na_escort": 0,
-        "transport_dest": null, "dest_lat": null, "dest_lon": null,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 1, "bw_unit": "Bergwacht Moosachtal",
-        "bw_info": "@Leitstelle: Nachforderung der Bereitschaft dokumentiert",
-        "other_ema": "+49 160 0000000 (Rückruf Hausärztin)", "other_resources": [],
-        "crew_override": 0, "crew": {},
-        "notes": "Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "prev_site",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Moosachtal"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Direktstart vom vorigen Einsatzort ohne Rückkehr zur Station."
       },
       "geschuetzt": {
-        "dx": "Hypoglykämie, nach Glukosegabe beschwerdefrei",
-        "dob": null, "age": 57,
-        "mission_no": "<svg/onload=alert('R20-nr')>2026-0335",
-        "loc": { "addr": "<b onmouseover=\"alert('R20-adr')\">Talstraße 7</b>, 87509 Ödwang", "lat": 47.5960, "lon": 10.4110 },
-        "site_desc": "Feldweg am Ortsrand", "start": null
+        "dx": "Synkope mit Sturz aus dem Stand, Platzwunde okzipital",
+        "dob": null,
+        "age": 74,
+        "mission_no": "2026-0262",
+        "loc": {
+          "addr": "Kirchsteig 9, 87477 Lohberg",
+          "lat": 47.457,
+          "lon": 10.281
+        },
+        "site_desc": "Vorplatz der Kapelle",
+        "start": null
       },
-      "abdeckung": ["herkunft-import", "erfassung-nachtraeglich-ohne-track", "r20-einsatznummer", "r20-adresse", "sonderzeichen-formel-at", "sonderzeichen-formel-plus", "phasen-unvollstaendig"]
+      "abdeckung": [
+        "herkunft-watch",
+        "start-prevsite"
+      ],
+      "$warum_start": "ABFAHRTORT-REGEL 'prev_site': Der Hubschrauber startet am EINSATZORT DES VORIGEN Einsatzes (m-11-7148036592), nicht an der Station. Gespeichert wird die Regel, nicht die Koordinate — der Klartextwert 'prev_site' verrät damit keinen Ort."
+    },
+    {
+      "client_ref": "m-11-5729863671",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-05-10 11:39",
+      "ende": "2026-05-10 12:43",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 11:39"
+        ],
+        [
+          3,
+          "2026-05-10 11:43"
+        ],
+        [
+          4,
+          "2026-05-10 11:52"
+        ],
+        [
+          5,
+          "2026-05-10 11:55"
+        ],
+        [
+          6,
+          "2026-05-10 12:13"
+        ],
+        [
+          7,
+          "2026-05-10 12:28"
+        ],
+        [
+          8,
+          "2026-05-10 12:35"
+        ],
+        [
+          9,
+          "2026-05-10 12:43"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Moosachtal",
+          "First Responder Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Milzruptur nach Skikollision",
+        "dob": null,
+        "age": 67,
+        "mission_no": "2026-1020",
+        "loc": {
+          "addr": "Enzianweg 90, 87477 Auwiesen",
+          "lat": 47.5472,
+          "lon": 10.25254
+        },
+        "site_desc": "Skipiste, Einmündung der Talabfahrt",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-8804157236",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 13:05",
+      "ende": "2026-05-10 14:38",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 13:05"
+        ],
+        [
+          3,
+          "2026-05-10 13:09"
+        ],
+        [
+          4,
+          "2026-05-10 13:27"
+        ],
+        [
+          5,
+          "2026-05-10 13:48"
+        ],
+        [
+          6,
+          "2026-05-10 14:09"
+        ],
+        [
+          7,
+          "2026-05-10 14:23"
+        ],
+        [
+          8,
+          "2026-05-10 14:31"
+        ],
+        [
+          9,
+          "2026-05-10 14:38"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 4,
+        "winch_cycles_pat": 2,
+        "winch_airload": 1,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Zwei Windenzyklen mit Bergretter, zwei mit Patientin; Luftverladung im Bergesack",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau",
+          "Bergwacht Felsgrat"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Absturz im Blockwerk; Bergung nur mit der Winde möglich, Sichtflug am Grat grenzwertig."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma und Thoraxtrauma nach Absturz im Blockwerk",
+        "dob": "1979-09-11",
+        "age": null,
+        "mission_no": "2026-0263",
+        "loc": {
+          "addr": "Nordflanke des Felsgrats, 87538 Felsgrat",
+          "lat": 47.508,
+          "lon": 10.023
+        },
+        "site_desc": "Blockwerk unterhalb der Gratschneide, kein Landeplatz",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "winde",
+        "winde-cycles",
+        "winde-cycles-patient",
+        "winde-luftverladung",
+        "bergwacht",
+        "bergwacht-info",
+        "sonderzeichen-semikolon"
+      ]
+    },
+    {
+      "client_ref": "m-11-7941353816",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-05-10 14:59",
+      "ende": "2026-05-10 15:41",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 14:59"
+        ],
+        [
+          3,
+          "2026-05-10 15:03"
+        ],
+        [
+          4,
+          "2026-05-10 15:12"
+        ],
+        [
+          5,
+          "2026-05-10 15:16"
+        ],
+        [
+          9,
+          "2026-05-10 15:41"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 1,
+        "winch_cycles_pat": 0,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Felsgrat"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patientin war bei Eintreffen bereits durch den RTW versorgt."
+      },
+      "geschuetzt": {
+        "dx": "Schulterluxation, geschlossen reponiert",
+        "dob": null,
+        "age": 22,
+        "mission_no": "2026-1021",
+        "loc": {
+          "addr": "Schmiedgasse 40, 87427 Birkenau am See",
+          "lat": 47.66552,
+          "lon": 10.31248
+        },
+        "site_desc": "Rodelbahn, Auslauf",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-2236709481",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 17:22",
+      "ende": "2026-05-10 18:55",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 17:22"
+        ],
+        [
+          3,
+          "2026-05-10 17:29"
+        ],
+        [
+          4,
+          "2026-05-10 17:44"
+        ],
+        [
+          5,
+          "2026-05-10 17:52"
+        ],
+        [
+          6,
+          "2026-05-10 18:10"
+        ],
+        [
+          7,
+          "2026-05-10 18:38"
+        ],
+        [
+          8,
+          "2026-05-10 18:47"
+        ],
+        [
+          9,
+          "2026-05-10 18:55"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": "Dr. Weißgerber (abgebende Klinik)",
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Verlegung zur Neurochirurgie; Übernahme auf der Intensivstation, Beatmung fortgeführt."
+      },
+      "geschuetzt": {
+        "dx": "Intrazerebrale Blutung, Verlegung zur neurochirurgischen Versorgung",
+        "dob": null,
+        "age": 61,
+        "mission_no": "2026-0264",
+        "loc": {
+          "addr": "Bergklinik Sonnenau, Talstraße 40, 87534 Sonnenau",
+          "lat": 47.559,
+          "lon": 10.217
+        },
+        "site_desc": "Innerklinische Übernahme, Intensivstation",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "sekundaertransport",
+        "weiterer-notarzt"
+      ]
     }
-  ]
+  ],
+  "ziel_einsaetze": 7
 }

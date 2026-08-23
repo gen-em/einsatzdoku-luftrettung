@@ -26,28 +26,136 @@
     "notizen": "Doppelbesetzung Cockpit wegen Streckeneinweisung; Hospitant im Rahmen der Flugretterausbildung an Bord."
   },
   "papierkorb": null,
-  "$warum_besatzung": "EINZIGER Diensttag mit allen fünf Luftrollen belegt (p1, p2, hems, fr, other). Die Matrixzeile Besatzung verlangt das; p2 und other sind im Alltag selten besetzt und wären sonst im ganzen Datensatz leer geblieben.",
   "ruhesegmente": [
     {
-      "client_ref": "r-11-4471962803",
-      "beginn": "2026-02-08 07:30",
+      "client_ref": "r-11-6187722914",
+      "beginn": "2026-02-08 08:34",
       "ende": "2026-02-08 09:04",
       "final": true
     },
     {
-      "client_ref": "r-11-8825037416",
+      "client_ref": "r-11-5402478256",
       "beginn": "2026-02-08 09:47",
+      "ende": "2026-02-08 10:10",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8665826411",
+      "beginn": "2026-02-08 11:27",
       "ende": "2026-02-08 12:15",
       "final": true
     },
     {
-      "client_ref": "r-11-2093746158",
+      "client_ref": "r-11-7850606509",
       "beginn": "2026-02-08 13:26",
+      "ende": "2026-02-08 13:46",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5131793144",
+      "beginn": "2026-02-08 14:39",
+      "ende": "2026-02-08 15:02",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8559806448",
+      "beginn": "2026-02-08 15:58",
       "ende": "2026-02-08 17:00",
       "final": true
     }
   ],
   "einsaetze": [
+    {
+      "client_ref": "m-11-3845141782",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-02-08 07:34",
+      "ende": "2026-02-08 08:34",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 07:34"
+        ],
+        [
+          3,
+          "2026-02-08 07:38"
+        ],
+        [
+          4,
+          "2026-02-08 07:46"
+        ],
+        [
+          5,
+          "2026-02-08 07:49"
+        ],
+        [
+          6,
+          "2026-02-08 08:06"
+        ],
+        [
+          7,
+          "2026-02-08 08:20"
+        ],
+        [
+          8,
+          "2026-02-08 08:26"
+        ],
+        [
+          9,
+          "2026-02-08 08:34"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 2,
+        "winch_cycles_pat": 2,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau",
+          "Wasserwacht Auwiesen"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Anflug wegen tiefer Bewölkung über das Tal geführt."
+      },
+      "geschuetzt": {
+        "dx": "Akzidentelle Hypothermie",
+        "dob": "1978-07-23",
+        "age": null,
+        "mission_no": "2026-1003",
+        "loc": {
+          "addr": "Zur Sennalpe 76, 87411 Sonnenau",
+          "lat": 47.425,
+          "lon": 10.3421
+        },
+        "site_desc": "Feldweg, Person im Straßengraben",
+        "start": null
+      },
+      "abdeckung": []
+    },
     {
       "client_ref": "m-11-6640281937",
       "kanal": "ingest",
@@ -123,6 +231,96 @@
         "phasen-unvollstaendig",
         "sonderzeichen-zeilenumbruch"
       ]
+    },
+    {
+      "client_ref": "m-11-8336537404",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-02-08 10:10",
+      "ende": "2026-02-08 11:27",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 10:10"
+        ],
+        [
+          3,
+          "2026-02-08 10:15"
+        ],
+        [
+          4,
+          "2026-02-08 10:26"
+        ],
+        [
+          5,
+          "2026-02-08 10:30"
+        ],
+        [
+          6,
+          "2026-02-08 10:51"
+        ],
+        [
+          7,
+          "2026-02-08 11:09"
+        ],
+        [
+          8,
+          "2026-02-08 11:17"
+        ],
+        [
+          9,
+          "2026-02-08 11:27"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "FF Hochkreuth 40/1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+      },
+      "geschuetzt": {
+        "dx": "Intrazerebrale Blutung",
+        "dob": null,
+        "age": 63,
+        "mission_no": "2026-1004",
+        "loc": {
+          "addr": "Buchenallee 12, 87534 Sonnenau",
+          "lat": 47.41937,
+          "lon": 10.34427
+        },
+        "site_desc": "Innerklinische Übernahme, Intensiv",
+        "start": null
+      },
+      "abdeckung": []
     },
     {
       "client_ref": "m-11-1287405639",
@@ -205,6 +403,96 @@
       ]
     },
     {
+      "client_ref": "m-11-4546535431",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-02-08 13:46",
+      "ende": "2026-02-08 14:39",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 13:46"
+        ],
+        [
+          3,
+          "2026-02-08 13:49"
+        ],
+        [
+          4,
+          "2026-02-08 13:57"
+        ],
+        [
+          5,
+          "2026-02-08 14:00"
+        ],
+        [
+          6,
+          "2026-02-08 14:15"
+        ],
+        [
+          7,
+          "2026-02-08 14:27"
+        ],
+        [
+          8,
+          "2026-02-08 14:32"
+        ],
+        [
+          9,
+          "2026-02-08 14:39"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+      },
+      "geschuetzt": {
+        "dx": "Amputationsverletzung der Hand",
+        "dob": null,
+        "age": 44,
+        "mission_no": "2026-1005",
+        "loc": {
+          "addr": "Hirtenweg 73, 87466 Ellrain",
+          "lat": 47.72649,
+          "lon": 10.19875
+        },
+        "site_desc": "Sägewerk, Halle 2",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
       "client_ref": "m-11-9518376204",
       "kanal": "ingest",
       "nachtrag": false,
@@ -273,5 +561,7 @@
       },
       "$warum_spur": "SPUR OHNE GESCHÜTZTE ANGABEN. Dieser Einsatz hat bewusst keinen pat_blob — geflogen ist die Uhr trotzdem. Das ist keine Notlösung, sondern das Modell der Anwendung: Trackpunkte und Phasenkoordinaten liegen im KLARTEXT (track_points, mission_phases), verschlüsselt ist die ADRESSE. Ein Einsatz ohne geschützte Angaben hat deshalb sehr wohl eine Spur."
     }
-  ]
+  ],
+  "$warum_besatzung": "EINZIGER Diensttag mit allen fünf Luftrollen belegt (p1, p2, hems, fr, other). Die Matrixzeile Besatzung verlangt das; p2 und other sind im Alltag selten besetzt und wären sonst im ganzen Datensatz leer geblieben.",
+  "ziel_einsaetze": 6
 }

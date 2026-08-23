@@ -3,23 +3,27 @@
 
 EINMALIGER ABRUF, ERGEBNIS INS REPO. Der Generator laeuft danach OFFLINE:
 Er liest die hier abgelegten GeoJSON-Dateien und braucht kein Netz. Das ist
-der Kern von E-P1-03 — ein Referenzdatensatz, dessen Erzeugung von einem
-fremden Dienst abhaengt, ist zu dem Zeitpunkt nicht mehr reproduzierbar, an
-dem dieser Dienst sich aendert oder verschwindet.
+der Kern von E-P1-03 -- ein Referenzdatensatz, dessen Erzeugung von einem
+fremden Dienst abhaengt, ist genau dann nicht mehr reproduzierbar, wenn
+dieser Dienst sich aendert oder verschwindet.
 
 Geroutet werden AUSSCHLIESSLICH die Bodeneinsaetze. Lufttracks entstehen
-geometrisch (Grosskreis mit Kurven, Geschwindigkeits- und Hoehenprofil) --
-ein Hubschrauber folgt keiner Strasse.
+geometrisch -- ein Hubschrauber folgt keiner Strasse.
 
-Aufruf:  python3 routen_holen.py           (schreibt fehlende Routen)
-         python3 routen_holen.py --neu     (holt alle erneut)
+ENTDOPPELT UEBER DAS KOORDINATENPAAR. Viele Teilstuecke wiederholen sich
+(Wache -> Klinik faehrt derselbe Wagen zwanzigmal). Der Dateiname ist
+deshalb der Hash des gerundeten Paares, nicht die Einsatzkennung: Gleiche
+Strecke, gleiche Datei, ein Abruf. `routen_soll.json` haelt fest, welches
+Teilstueck zu welcher Datei gehoert.
+
+Aufruf:  python3 routen_holen.py           (holt, was fehlt)
+         python3 routen_holen.py --neu     (holt alles erneut)
 
 Quelle: OSRM-Demoserver (https://router.project-osrm.org), Profil 'driving'.
-Der Dienst bittet um schonende Nutzung; das Skript wartet zwischen den
-Anfragen und laeuft ohnehin nur, wenn eine Datei fehlt.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import sys
@@ -32,11 +36,15 @@ sys.path.insert(0, str(QUELLE))
 import wegpunkte  # noqa: E402
 
 OSRM = "https://router.project-osrm.org/route/v1/driving/{}?overview=full&geometries=geojson"
-PAUSE = 1.2
+PAUSE = 1.1
+
+
+def schluessel(von, nach) -> str:
+    roh = f"{von[0]:.5f},{von[1]:.5f}->{nach[0]:.5f},{nach[1]:.5f}"
+    return hashlib.sha256(roh.encode()).hexdigest()[:16]
 
 
 def teilstuecke() -> list[dict]:
-    """Alle zu routenden Teilstuecke aus den Quelldaten ableiten."""
     stamm = json.loads((QUELLE / "stammdaten.json").read_text("utf-8"))
     standorte = {s["name"]: s for s in stamm["standorte"]}
     auftraege: list[dict] = []
@@ -50,20 +58,18 @@ def teilstuecke() -> list[dict]:
             vorheriger = e
             koords = [k for _, k in punkte if k]
             for i in range(len(koords) - 1):
+                von, nach = koords[i], koords[i + 1]
                 auftraege.append({
-                    "datei": f"{d['kennung']}_{e['client_ref']}_{i}.geojson",
-                    "dienst": d["kennung"],
-                    "client_ref": e["client_ref"],
-                    "abschnitt": i,
-                    "von": list(koords[i]),
-                    "nach": list(koords[i + 1]),
+                    "dienst": d["kennung"], "client_ref": e["client_ref"], "abschnitt": i,
+                    "von": list(von), "nach": list(nach),
+                    "datei": f"strecke_{schluessel(von, nach)}.geojson",
                 })
     return auftraege
 
 
 def hole(von, nach) -> dict:
     paar = f"{von[1]},{von[0]};{nach[1]},{nach[0]}"
-    with urllib.request.urlopen(OSRM.format(paar), timeout=60) as r:
+    with urllib.request.urlopen(OSRM.format(paar), timeout=90) as r:
         antwort = json.loads(r.read().decode("utf-8"))
     if antwort.get("code") != "Ok" or not antwort.get("routes"):
         raise RuntimeError(f"OSRM antwortet {antwort.get('code')!r} für {paar}")
@@ -73,6 +79,7 @@ def hole(von, nach) -> dict:
         "geometry": route["geometry"],
         "properties": {
             "quelle": "OSRM router.project-osrm.org, Profil driving",
+            "von": list(von), "nach": list(nach),
             "distanz_m": round(route["distance"], 1),
             "dauer_s": round(route["duration"], 1),
             "punkte": len(route["geometry"]["coordinates"]),
@@ -85,20 +92,28 @@ def main() -> int:
     auftraege = teilstuecke()
     (HIER / "routen_soll.json").write_text(
         json.dumps(auftraege, ensure_ascii=False, indent=2) + "\n", "utf-8")
-    geholt = uebersprungen = 0
+
+    eindeutig: dict[str, dict] = {}
     for a in auftraege:
-        ziel = HIER / a["datei"]
+        eindeutig.setdefault(a["datei"], a)
+
+    geholt = vorhanden = 0
+    for datei, a in sorted(eindeutig.items()):
+        ziel = HIER / datei
         if ziel.exists() and not neu:
-            uebersprungen += 1
+            vorhanden += 1
             continue
         merkmal = hole(a["von"], a["nach"])
-        merkmal["properties"].update({k: a[k] for k in ("dienst", "client_ref", "abschnitt")})
         ziel.write_text(json.dumps(merkmal, ensure_ascii=False, indent=1) + "\n", "utf-8")
         geholt += 1
-        print(f"  {a['datei']}: {merkmal['properties']['punkte']} Punkte, "
-              f"{merkmal['properties']['distanz_m'] / 1000:.1f} km")
+        e = merkmal["properties"]
+        print(f"  {datei}  {e['punkte']:4d} Punkte  {e['distanz_m']/1000:6.1f} km  "
+              f"{e['dauer_s']/60:5.1f} min")
         time.sleep(PAUSE)
-    print(f"\n{len(auftraege)} Teilstücke, {geholt} geholt, {uebersprungen} bereits vorhanden.")
+
+    print(f"\n{len(auftraege)} Teilstücke, davon {len(eindeutig)} verschieden "
+          f"({len(auftraege) - len(eindeutig)} Wiederholungen gespart).")
+    print(f"{geholt} geholt, {vorhanden} bereits vorhanden.")
     return 0
 
 

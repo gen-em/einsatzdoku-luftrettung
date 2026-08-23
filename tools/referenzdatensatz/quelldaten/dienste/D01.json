@@ -12,8 +12,8 @@
     "art": "air",
     "standort": "Luftrettungsstation Hochkreuth",
     "rettungsmittel": "Alpenfalke 1",
-    "beginn": "2026-01-17 07:30",
-    "ende": "2026-01-17 17:00",
+    "beginn": "2026-01-17 07:00",
+    "ende": "2026-01-17 19:00",
     "day_ref": "d-11-4820371956",
     "besatzung": {
       "p1": "Marion Aschenbrenner",
@@ -27,31 +27,140 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-11-9042817356",
-      "beginn": "2026-01-17 07:30",
+      "client_ref": "r-11-7531905166",
+      "beginn": "2026-01-17 07:00",
+      "ende": "2026-01-17 07:05",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-2271817109",
+      "beginn": "2026-01-17 08:00",
       "ende": "2026-01-17 08:12",
       "final": true
     },
     {
-      "client_ref": "r-11-3318604927",
+      "client_ref": "r-11-5236914614",
       "beginn": "2026-01-17 09:41",
       "ende": "2026-01-17 10:20",
       "final": true
     },
     {
-      "client_ref": "r-11-7725190384",
+      "client_ref": "r-11-7042380725",
+      "beginn": "2026-01-17 11:52",
+      "ende": "2026-01-17 11:58",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5446626831",
       "beginn": "2026-01-17 13:10",
       "ende": "2026-01-17 14:22",
       "final": true
     },
     {
-      "client_ref": "r-11-1560473892",
+      "client_ref": "r-11-7318690772",
       "beginn": "2026-01-17 15:48",
-      "ende": "2026-01-17 17:00",
+      "ende": "2026-01-17 16:14",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-6849670723",
+      "beginn": "2026-01-17 17:21",
+      "ende": "2026-01-17 19:00",
       "final": true
     }
   ],
   "einsaetze": [
+    {
+      "client_ref": "m-11-1456345856",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-01-17 07:05",
+      "ende": "2026-01-17 08:00",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-01-17 07:05"
+        ],
+        [
+          3,
+          "2026-01-17 07:09"
+        ],
+        [
+          4,
+          "2026-01-17 07:16"
+        ],
+        [
+          5,
+          "2026-01-17 07:19"
+        ],
+        [
+          6,
+          "2026-01-17 07:35"
+        ],
+        [
+          7,
+          "2026-01-17 07:47"
+        ],
+        [
+          8,
+          "2026-01-17 07:53"
+        ],
+        [
+          9,
+          "2026-01-17 08:00"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83",
+          "First Responder Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall mit Halbseitensymptomatik",
+        "dob": null,
+        "age": 94,
+        "mission_no": "2026-1001",
+        "loc": {
+          "addr": "Rossgasse 88, 87519 Ahornau",
+          "lat": 47.58397,
+          "lon": 10.5533
+        },
+        "site_desc": "Seniorenwohnanlage, Erdgeschoss",
+        "start": null
+      },
+      "abdeckung": []
+    },
     {
       "client_ref": "m-11-3067419528",
       "kanal": "ingest",
@@ -504,6 +613,98 @@
         "winde-luftverladung",
         "bergwacht-info"
       ]
+    },
+    {
+      "client_ref": "m-11-8624759753",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-01-17 16:14",
+      "ende": "2026-01-17 17:21",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-01-17 16:14"
+        ],
+        [
+          3,
+          "2026-01-17 16:18"
+        ],
+        [
+          4,
+          "2026-01-17 16:28"
+        ],
+        [
+          5,
+          "2026-01-17 16:31"
+        ],
+        [
+          6,
+          "2026-01-17 16:50"
+        ],
+        [
+          7,
+          "2026-01-17 17:06"
+        ],
+        [
+          8,
+          "2026-01-17 17:12"
+        ],
+        [
+          9,
+          "2026-01-17 17:21"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "First Responder Sonnenau",
+          "Wasserwacht Auwiesen"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Rückflug mit Zwischenlandung zur Betankung."
+      },
+      "geschuetzt": {
+        "dx": "Akutes Koronarsyndrom mit ST-Hebung",
+        "dob": null,
+        "age": 56,
+        "mission_no": "2026-1002",
+        "loc": {
+          "addr": "Hochstraße 39, 87534 Rossbrunn",
+          "lat": 47.8061,
+          "lon": 10.2886
+        },
+        "site_desc": "Einfamilienhaus, Wohnzimmer",
+        "start": null
+      },
+      "abdeckung": []
     }
-  ]
+  ],
+  "ziel_einsaetze": 6
 }

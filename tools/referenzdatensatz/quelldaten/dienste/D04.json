@@ -1,104 +1,626 @@
 {
   "kennung": "D04",
-  "abdeckung": ["dienst-luft", "zeit-mez", "zwei-dienste-ein-tag"],
+  "abdeckung": [
+    "dienst-boden",
+    "zeit-mez",
+    "besatzung-driver",
+    "besatzung-trainee",
+    "besatzung-other-boden",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
   "dienst": {
-    "day": "2026-03-28",
-    "art": "air",
-    "standort": "Luftrettungsstation Hochkreuth",
-    "rettungsmittel": "Alpenfalke 1",
-    "beginn": "2026-03-28 07:00",
-    "ende": "2026-03-28 19:00",
-    "day_ref": "d-11-8259140736",
-    "besatzung": { "p1": "Marion Aschenbrenner", "p2": null, "hems": "Ruth Amrein", "fr": "Nele Brugger", "other": null },
-    "notizen": null
+    "day": "2026-03-07",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-03-07 07:00",
+    "ende": "2026-03-07 19:00",
+    "day_ref": "d-12-5290481736",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": "Ronja Pfeil",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Regulärer Tagdienst; Straßenverhältnisse ganztägig winterlich."
   },
   "papierkorb": null,
-  "$warum_datum": "ERSTER von ZWEI Diensten am 28.03.2026 (der zweite ist D05, ein NEF-Nachtdienst). Das ist der von E9 vorgesehene Regelfall und der Grund, warum der Diensttag seit Web 6.0.0 eine eigene Kennung trägt: Aus dem Datum allein wäre nicht mehr zu entscheiden, welcher Dienst gemeint ist. FOLGE FÜR DEN IMPORT: An diesem Datum darf KEIN Einsatz per CSV nachgetragen werden — der Import löst den Diensttag nur über das Datum auf und träfe immer diesen hier (B-04).",
   "ruhesegmente": [
-    { "client_ref": "r-11-6628013947", "beginn": "2026-03-28 07:00", "ende": "2026-03-28 08:22", "final": true },
-    { "client_ref": "r-11-1194570328", "beginn": "2026-03-28 09:40", "ende": "2026-03-28 11:05", "final": true },
-    { "client_ref": "r-11-7783402615", "beginn": "2026-03-28 12:30", "ende": "2026-03-28 15:12", "final": true },
-    { "client_ref": "r-11-4405918263", "beginn": "2026-03-28 16:44", "ende": "2026-03-28 19:00", "final": true }
+    {
+      "client_ref": "r-12-6003505375",
+      "beginn": "2026-03-07 07:00",
+      "ende": "2026-03-07 07:09",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-3984489030",
+      "beginn": "2026-03-07 08:32",
+      "ende": "2026-03-07 08:58",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-2561311047",
+      "beginn": "2026-03-07 10:27",
+      "ende": "2026-03-07 10:47",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1378533568",
+      "beginn": "2026-03-07 11:52",
+      "ende": "2026-03-07 12:18",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-7652424732",
+      "beginn": "2026-03-07 13:37",
+      "ende": "2026-03-07 13:55",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-8102285944",
+      "beginn": "2026-03-07 14:58",
+      "ende": "2026-03-07 15:21",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-3942794813",
+      "beginn": "2026-03-07 16:03",
+      "ende": "2026-03-07 19:00",
+      "final": true
+    }
   ],
   "einsaetze": [
     {
-      "client_ref": "m-11-8836271059",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-03-28 08:22", "ende": "2026-03-28 09:40", "final": true,
-      "phasen": [[2,"2026-03-28 08:22"],[3,"2026-03-28 08:26"],[4,"2026-03-28 08:38"],[5,"2026-03-28 08:42"],[6,"2026-03-28 09:00"],[7,"2026-03-28 09:19"],[8,"2026-03-28 09:29"],[9,"2026-03-28 09:40"]],
-      "route": ["basis", "ort", "ziel", "basis"],
+      "client_ref": "m-12-2458452183",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 07:09",
+      "ende": "2026-03-07 08:32",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 07:09"
+        ],
+        [
+          3,
+          "2026-03-07 07:14"
+        ],
+        [
+          4,
+          "2026-03-07 07:26"
+        ],
+        [
+          5,
+          "2026-03-07 07:30"
+        ],
+        [
+          6,
+          "2026-03-07 07:54"
+        ],
+        [
+          7,
+          "2026-03-07 08:13"
+        ],
+        [
+          8,
+          "2026-03-07 08:21"
+        ],
+        [
+          9,
+          "2026-03-07 08:32"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Universitätsklinikum Nordstadt", "dest_lat": 48.4011, "dest_lon": 9.9876,
-        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
         "other_ema": null,
-        "other_resources": ["RTW Hochkreuth 71/83", "NEF Hochkreuth 71/82", "FF Hochkreuth 40/1"],
-        "crew_override": 0, "crew": {},
-        "notes": "Technische Rettung durch die Feuerwehr; Transport in das überregionale Traumazentrum wegen instabilem Becken."
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "geschuetzt": {
-        "dx": "Polytrauma nach Verkehrsunfall, instabile Beckenfraktur",
-        "dob": "2002-01-09", "age": null, "mission_no": "2026-0141",
-        "loc": { "addr": "Kreisstraße nach Kaltbrunn am Hang, 87466 Kaltbrunn am Hang", "lat": 47.7300, "lon": 10.3980 },
-        "site_desc": "Fahrzeug im Straßengraben, Person eingeklemmt", "start": null
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": "1967-08-27",
+        "age": null,
+        "mission_no": "2026-1008",
+        "loc": {
+          "addr": "Buchenallee 14, 87572 Schattwald am Berg",
+          "lat": 47.5071,
+          "lon": 10.37126
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "start-base", "transport-air", "schockraum", "weitere-rettungsmittel-mehrere"]
+      "abdeckung": []
     },
     {
-      "client_ref": "m-11-5027369184",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-03-28 11:05", "ende": "2026-03-28 12:30", "final": true,
-      "phasen": [[2,"2026-03-28 11:05"],[3,"2026-03-28 11:10"],[4,"2026-03-28 11:23"],[4,"2026-03-28 11:31"],[5,"2026-03-28 11:36"],[6,"2026-03-28 11:58"],[7,"2026-03-28 12:11"],[8,"2026-03-28 12:20"],[9,"2026-03-28 12:30"]],
-      "route": ["basis", "ort", "ziel", "basis"],
+      "client_ref": "m-12-7793367508",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 08:58",
+      "ende": "2026-03-07 10:27",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 08:58"
+        ],
+        [
+          3,
+          "2026-03-07 09:04"
+        ],
+        [
+          4,
+          "2026-03-07 09:16"
+        ],
+        [
+          5,
+          "2026-03-07 09:21"
+        ],
+        [
+          6,
+          "2026-03-07 09:46"
+        ],
+        [
+          7,
+          "2026-03-07 10:06"
+        ],
+        [
+          8,
+          "2026-03-07 10:16"
+        ],
+        [
+          9,
+          "2026-03-07 10:27"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
-        "crew_override": 0, "crew": {},
-        "notes": "Erste Landung an falscher Koordinate der Leitstelle; Phase \"Ankunft Einsatzort\" deshalb ein zweites Mal gesetzt."
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
       },
       "geschuetzt": {
-        "dx": "Intoxikation mit Mischkonsum, GCS 8",
-        "dob": null, "age": 23, "mission_no": "2026-0142",
-        "loc": { "addr": "Enzianweg 5, 87441 Birkenau am See", "lat": 47.6660, "lon": 10.3120 },
-        "site_desc": "Badesee, Uferbereich hinter dem Kiosk", "start": null
+        "dx": "Pneumonie mit respiratorischer Insuffizienz",
+        "dob": "1969-09-15",
+        "age": null,
+        "mission_no": "2026-1009",
+        "loc": {
+          "addr": "Lärchenweg 85, 87572 Steinach im Tal",
+          "lat": 47.51658,
+          "lon": 10.27853
+        },
+        "site_desc": "Pflegeheim, Zimmer 14",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "phasen-mehrfach"],
-      "$warum_phasen": "Die Phase 4 steht ZWEIMAL. Das ist kein Fehler in den Quelldaten, sondern der Prüffall aus JSON-Vertrag Abschnitt 3: Eine erneut gesetzte Phase ist eine KORREKTUR und damit eine Information. Kein Client und kein Schreibweg darf sie entdoppeln — genau das prüft dieser Einsatz dauerhaft mit."
+      "abdeckung": []
     },
     {
-      "client_ref": "m-11-3391648207",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-03-28 15:12", "ende": "2026-03-28 16:44", "final": true,
-      "phasen": [[2,"2026-03-28 15:12"],[3,"2026-03-28 15:16"],[4,"2026-03-28 15:33"],[5,"2026-03-28 15:51"],[6,"2026-03-28 16:14"],[7,"2026-03-28 16:28"],[8,"2026-03-28 16:36"],[9,"2026-03-28 16:44"]],
-      "route": ["basis", "ort", "ziel", "basis"],
-      "rea": [],
+      "client_ref": "m-12-7691667355",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 10:47",
+      "ende": "2026-03-07 11:52",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 10:47"
+        ],
+        [
+          3,
+          "2026-03-07 10:51"
+        ],
+        [
+          4,
+          "2026-03-07 11:00"
+        ],
+        [
+          5,
+          "2026-03-07 11:04"
+        ],
+        [
+          6,
+          "2026-03-07 11:22"
+        ],
+        [
+          7,
+          "2026-03-07 11:37"
+        ],
+        [
+          8,
+          "2026-03-07 11:44"
+        ],
+        [
+          9,
+          "2026-03-07 11:52"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [
+        {
+          "beginn": "2026-03-07 11:06",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-03-07 11:07"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-03-07 11:08"
+            ],
+            [
+              "adrenalin",
+              "2026-03-07 11:10"
+            ],
+            [
+              "intubation",
+              "2026-03-07 11:14"
+            ],
+            [
+              "amiodaron",
+              "2026-03-07 11:18"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-03-07 11:21"
+            ],
+            [
+              "rosc",
+              "2026-03-07 11:27"
+            ]
+          ]
+        }
+      ],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Unfallklinik Felsberg", "dest_lat": 47.6810, "dest_lon": 11.2020,
-        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 1, "winch_cycles": 2, "winch_cycles_pat": 1, "winch_airload": 0,
-        "bergwacht": 1, "bw_unit": "Bergwacht Felsgrat",
-        "bw_info": "Bereitschaft über den Klettersteig aufgestiegen; Bergung aus der Wandstufe",
-        "other_ema": null, "other_resources": ["Bergwacht Felsgrat"],
-        "crew_override": 1,
-        "crew": { "p1": "Servatius Kroll" },
-        "notes": "Pilotenwechsel zur Mittagsablösung; ab diesem Einsatz fliegt Servatius Kroll."
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patient wurde nach Aufklärung ambulant belassen."
       },
       "geschuetzt": {
-        "dx": "Offene Unterschenkelfraktur nach Absturz im Klettersteig",
-        "dob": "1990-05-16", "age": null, "mission_no": "2026-0143",
-        "loc": { "addr": "Klettersteig Felsgrat, Wandstufe 3, 87545 Felsgrat", "lat": 47.5080, "lon": 10.3710 },
-        "site_desc": "Exponierte Lage, kein Landeplatz, Bergung mit der Winde", "start": null
+        "dx": "Kreislaufstillstand bei Vorderwandinfarkt",
+        "dob": "2008-07-24",
+        "age": null,
+        "mission_no": "2026-1010",
+        "loc": {
+          "addr": "Hochstraße 92, 87477 Auwiesen",
+          "lat": 47.54856,
+          "lon": 10.25183
+        },
+        "site_desc": "Werkstatt eines Landmaschinenbetriebs",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "winde", "besatzung-abweichend", "bergwacht-info"]
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-1194337097",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 12:18",
+      "ende": "2026-03-07 13:37",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 12:18"
+        ],
+        [
+          3,
+          "2026-03-07 12:23"
+        ],
+        [
+          4,
+          "2026-03-07 12:34"
+        ],
+        [
+          5,
+          "2026-03-07 12:38"
+        ],
+        [
+          6,
+          "2026-03-07 13:01"
+        ],
+        [
+          7,
+          "2026-03-07 13:19"
+        ],
+        [
+          8,
+          "2026-03-07 13:27"
+        ],
+        [
+          9,
+          "2026-03-07 13:37"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1",
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
+      },
+      "geschuetzt": {
+        "dx": "Exazerbierte COPD",
+        "dob": "2021-05-18",
+        "age": null,
+        "mission_no": "2026-1011",
+        "loc": {
+          "addr": "Buchenallee 123, 87538 Moosachtal",
+          "lat": 47.59997,
+          "lon": 10.13144
+        },
+        "site_desc": "Reihenhaus, Wohnküche",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-3360383339",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 13:55",
+      "ende": "2026-03-07 14:58",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 13:55"
+        ],
+        [
+          3,
+          "2026-03-07 14:01"
+        ],
+        [
+          4,
+          "2026-03-07 14:15"
+        ],
+        [
+          5,
+          "2026-03-07 14:20"
+        ],
+        [
+          9,
+          "2026-03-07 14:58"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+      },
+      "geschuetzt": {
+        "dx": "Rippenprellung nach Sturz",
+        "dob": "1971-01-10",
+        "age": null,
+        "mission_no": "2026-1012",
+        "loc": {
+          "addr": "Lindenplatz 27, 87452 Auwiesen",
+          "lat": 47.54785,
+          "lon": 10.25316
+        },
+        "site_desc": "Rodelbahn, Kurve 4",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-7024419717",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 15:21",
+      "ende": "2026-03-07 16:03",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 15:21"
+        ],
+        [
+          3,
+          "2026-03-07 15:25"
+        ],
+        [
+          4,
+          "2026-03-07 15:34"
+        ],
+        [
+          5,
+          "2026-03-07 15:38"
+        ],
+        [
+          9,
+          "2026-03-07 16:03"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Hypoglykämie",
+        "dob": "2011-12-24",
+        "age": null,
+        "mission_no": "2026-1013",
+        "loc": {
+          "addr": "Hirtenweg 8, 87477 Ödwang",
+          "lat": 47.5973,
+          "lon": 10.40934
+        },
+        "site_desc": "Werkstatt, hinter der Hebebühne",
+        "start": null
+      },
+      "abdeckung": []
     }
-  ]
+  ],
+  "ziel_einsaetze": 6
 }

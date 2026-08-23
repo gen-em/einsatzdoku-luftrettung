@@ -1,103 +1,535 @@
 {
   "kennung": "D14",
-  "abdeckung": ["dienst-luft", "zeit-mez", "ruhe-nicht-abgeschlossen", "ruhe-mehrere"],
+  "abdeckung": [
+    "dienst-boden",
+    "dienst-ueber-mitternacht",
+    "zeitumstellung-herbst",
+    "zeit-mesz",
+    "zeit-mez",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
   "dienst": {
-    "day": "2026-12-27",
-    "art": "air",
-    "standort": "Luftrettungsstation Hochkreuth",
-    "rettungsmittel": "Alpenfalke 1",
-    "beginn": "2026-12-27 07:30",
-    "ende": "2026-12-27 16:30",
-    "day_ref": "d-11-7743019628",
-    "besatzung": { "p1": "Servatius Kroll", "p2": null, "hems": "Ruth Amrein", "fr": "Vitus Halbritter", "other": null },
-    "notizen": "Letzter Dienst des Jahres; das Gerät wurde am Ende nicht abgemeldet — das letzte Ruhesegment blieb offen."
+    "day": "2026-10-24",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-10-24 19:00",
+    "ende": "2026-10-25 07:00",
+    "day_ref": "d-12-1573864029",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": null,
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Nachtdienst über die Rückstellung der Uhren; um 03:00 MESZ wurde auf 02:00 MEZ zurückgestellt."
   },
   "papierkorb": null,
   "ruhesegmente": [
-    { "client_ref": "r-11-5580274193", "beginn": "2026-12-27 07:30", "ende": "2026-12-27 08:58", "final": true },
-    { "client_ref": "r-11-1108463572", "beginn": "2026-12-27 10:24", "ende": "2026-12-27 12:41", "final": true },
-    { "client_ref": "r-11-9936710845", "beginn": "2026-12-27 14:02", "ende": null, "final": false }
+    {
+      "client_ref": "r-12-6432339343",
+      "beginn": "2026-10-24 20:10",
+      "ende": "2026-10-24 20:30",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-8410822338",
+      "beginn": "2026-10-24 22:03",
+      "ende": "2026-10-24 23:15",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-9752942642",
+      "beginn": "2026-10-25 00:28",
+      "ende": "2026-10-25 01:32",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1897105954",
+      "beginn": "2026-10-25 03:40",
+      "ende": "2026-10-25 04:04",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-9471809985",
+      "beginn": "2026-10-25 05:17",
+      "ende": "2026-10-25 07:00",
+      "final": true
+    }
   ],
-  "$warum_ruhesegment": "DAS LETZTE RUHESEGMENT IST NICHT ABGESCHLOSSEN (final=0, ended_at leer). Es entsteht, wenn niemand „Einsatztag beenden\" drückt — auf der Uhr der häufigste unvollständige Zustand überhaupt. Die Matrixzeile Ruhezeiten verlangt ihn, und er prüft mit, dass Anzeige, Export und Sicherung ein Segment ohne Ende aushalten.",
   "einsaetze": [
     {
-      "client_ref": "m-11-2846135709",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-12-27 08:58", "ende": "2026-12-27 10:24", "final": true,
-      "phasen": [[2,"2026-12-27 08:58"],[3,"2026-12-27 09:03"],[4,"2026-12-27 09:18"],[5,"2026-12-27 09:24"],[6,"2026-12-27 09:47"],[7,"2026-12-27 10:04"],[8,"2026-12-27 10:15"],[9,"2026-12-27 10:24"]],
-      "route": ["basis", "ort", "ziel", "basis"],
+      "client_ref": "m-12-3937208380",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-10-24 19:04",
+      "ende": "2026-10-24 20:10",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-24 19:04"
+        ],
+        [
+          3,
+          "2026-10-24 19:11"
+        ],
+        [
+          4,
+          "2026-10-24 19:25"
+        ],
+        [
+          5,
+          "2026-10-24 19:30"
+        ],
+        [
+          9,
+          "2026-10-24 20:10"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
-        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 1, "bw_unit": "Bergwacht Sonnenau",
-        "bw_info": "Bereitschaft hatte die Piste gesperrt und den Landeplatz gesichert",
-        "other_ema": null, "other_resources": ["Bergwacht Sonnenau", "RTW Hochkreuth 71/83"],
-        "crew_override": 0, "crew": {},
-        "notes": "Kollision zweier Skifahrer; Straßenglätte auf der Zufahrt, deshalb Luftrettung nachgefordert."
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85",
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
       },
       "geschuetzt": {
-        "dx": "Milzruptur nach Skikollision",
-        "dob": "2008-12-05", "age": null, "mission_no": "2026-0794",
-        "loc": { "addr": "Bergbahnstraße 8, 87561 Sonnenau", "lat": 47.4210, "lon": 10.3430 },
-        "site_desc": "Skipiste, Einmündung der Talabfahrt", "start": null
+        "dx": "Sturz aus dem Stand mit Platzwunde",
+        "dob": "2023-01-13",
+        "age": null,
+        "mission_no": "2026-1044",
+        "loc": {
+          "addr": "Talstraße 17, 87427 Rauhenbach",
+          "lat": 47.63328,
+          "lon": 10.43144
+        },
+        "site_desc": "Vorplatz der Kapelle",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "bergwacht", "sonderzeichen-umlaute"]
+      "abdeckung": []
     },
     {
-      "client_ref": "m-11-6693481027",
-      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
-      "beginn": "2026-12-27 12:41", "ende": "2026-12-27 14:02", "final": true,
-      "phasen": [[2,"2026-12-27 12:41"],[3,"2026-12-27 12:46"],[4,"2026-12-27 13:02"],[5,"2026-12-27 13:07"],[6,"2026-12-27 13:29"],[7,"2026-12-27 13:44"],[8,"2026-12-27 13:54"],[9,"2026-12-27 14:02"]],
-      "route": ["basis", "ort", "ziel", "basis"],
+      "client_ref": "m-12-3885972806",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-10-24 20:30",
+      "ende": "2026-10-24 22:03",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-24 20:30"
+        ],
+        [
+          3,
+          "2026-10-24 20:36"
+        ],
+        [
+          4,
+          "2026-10-24 20:49"
+        ],
+        [
+          5,
+          "2026-10-24 20:54"
+        ],
+        [
+          6,
+          "2026-10-24 21:20"
+        ],
+        [
+          7,
+          "2026-10-24 21:42"
+        ],
+        [
+          8,
+          "2026-10-24 21:51"
+        ],
+        [
+          9,
+          "2026-10-24 22:03"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "air", "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen", "dest_lat": 47.7180, "dest_lon": 10.3220,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 0, "bw_unit": null, "bw_info": null,
-        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
-        "crew_override": 0, "crew": {},
-        "notes": "Unterkühlung nach längerer Suche; die Fußgängerin war bei -18 °C im Freien aufgefunden worden."
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Nachforderung des Rettungshubschraubers geprüft, wegen Sichtflug verworfen."
       },
       "geschuetzt": {
-        "dx": "Akzidentelle Hypothermie, Kerntemperatur 29,4 °C",
-        "dob": null, "age": 83, "mission_no": "2026-0795",
-        "loc": { "addr": "Feldweg am Ödwanger Moos, 87509 Ödwang", "lat": 47.5960, "lon": 10.4110 },
-        "site_desc": "Feldweg am Ortsrand, Fußgängerin im Straßengraben", "start": null
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": "1994-06-15",
+        "age": null,
+        "mission_no": "2026-1045",
+        "loc": {
+          "addr": "Schmiedgasse 11, 87441 Ödwang",
+          "lat": 47.59953,
+          "lon": 10.41253
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
       },
-      "abdeckung": ["herkunft-watch", "sonderzeichen-umlaute", "sonderzeichen-formel-minus"]
+      "abdeckung": []
     },
     {
-      "client_ref": null, "quell_kennung": "MAN-02",
-      "kanal": "formular", "nachtrag": false, "papierkorb": null,
-      "beginn": "2026-12-27 15:11", "ende": "2026-12-27 16:06", "final": true,
-      "phasen": [[2,"2026-12-27 15:11"],[3,"2026-12-27 15:16"],[4,"2026-12-27 15:29"],[5,"2026-12-27 15:33"],[9,"2026-12-27 16:06"]],
-      "route": null,
+      "client_ref": "m-12-8845270913",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-10-24 23:15",
+      "ende": "2026-10-25 00:28",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-24 23:15"
+        ],
+        [
+          3,
+          "2026-10-24 23:19"
+        ],
+        [
+          4,
+          "2026-10-24 23:34"
+        ],
+        [
+          5,
+          "2026-10-24 23:38"
+        ],
+        [
+          6,
+          "2026-10-24 23:59"
+        ],
+        [
+          7,
+          "2026-10-25 00:14"
+        ],
+        [
+          8,
+          "2026-10-25 00:22"
+        ],
+        [
+          9,
+          "2026-10-25 00:28"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
       "rea": [],
       "felder": {
-        "transport_mode": "ambulant", "na_escort": 0,
-        "transport_dest": null, "dest_lat": null, "dest_lon": null,
-        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "manual",
-        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
-        "bergwacht": 1, "bw_unit": "Bergwacht Felsgrat",
-        "bw_info": "=VERKETTEN(\"Bergwacht\";\" \";\"Felsgrat\") — Eintrag aus der Bereitschaftsliste kopiert",
-        "other_ema": null, "other_resources": ["Bergwacht Felsgrat"],
-        "crew_override": 1,
-        "crew": { "p1": "Marion Aschenbrenner", "fr": "Nele Brugger" },
-        "notes": "Von Hand angelegt; Ablösung war bereits im Dienst, deshalb abweichende Besatzung."
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Klinik Talwang",
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Transportbeginn um 23:59, Ankunft Klinik um 00:14 — der Einsatz läuft über Mitternacht."
       },
       "geschuetzt": {
-        "dx": "Rippenprellung nach Sturz, ambulant belassen",
-        "dob": null, "age": 29, "mission_no": "2026-0796",
-        "loc": { "addr": "Rodelbahn Felsgrat, 87545 Felsgrat", "lat": 47.5170, "lon": 10.4090 },
-        "site_desc": "Rodelbahn, Kurve 4",
-        "start": { "addr": "Zwischenlandung Parkplatz Talstation", "lat": 47.5080, "lon": 10.3710 }
+        "dx": "Obere gastrointestinale Blutung",
+        "dob": "1962-09-07",
+        "age": null,
+        "mission_no": "2026-0688",
+        "loc": {
+          "addr": "Kirchsteig 21, 87509 Talwang",
+          "lat": 47.515,
+          "lon": 10.281
+        },
+        "site_desc": "Gasthof, Gästezimmer im 1. OG",
+        "start": null
       },
-      "abdeckung": ["herkunft-manuell", "erfassung-nachtraeglich-ohne-track", "start-manual", "besatzung-abweichend", "transport-ambulant", "sonderzeichen-formel-gleich", "sonderzeichen-semikolon"]
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "einsatzdatum-abweichend",
+        "zielklinik-ohne-koordinate"
+      ],
+      "spur": {
+        "ziel": {
+          "lat": 47.515,
+          "lon": 10.281
+        }
+      },
+      "$warum_spur": "SPUR-ZIEL: 'Klinik Talwang' führt keine Koordinate; gefahren wurde trotzdem dorthin."
+    },
+    {
+      "client_ref": "m-12-5106938274",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-10-25 01:32",
+      "ende": "2026-10-25 03:40",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-25 01:32"
+        ],
+        [
+          3,
+          "2026-10-25 01:37"
+        ],
+        [
+          4,
+          "2026-10-25 01:51"
+        ],
+        [
+          5,
+          "2026-10-25 01:56"
+        ],
+        [
+          6,
+          "2026-10-25 03:05"
+        ],
+        [
+          7,
+          "2026-10-25 03:22"
+        ],
+        [
+          8,
+          "2026-10-25 03:31"
+        ],
+        [
+          9,
+          "2026-10-25 03:40"
+        ]
+      ],
+      "route": [
+        "ziel_vorher",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "prev_dest",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Lange Versorgungszeit am Einsatzort wegen eingeklemmter Person; \"Uhren zurückgestellt\" im Protokoll vermerkt, damit die Zeiten nachvollziehbar bleiben."
+      },
+      "geschuetzt": {
+        "dx": "Thoraxtrauma und Femurfraktur nach Verkehrsunfall",
+        "dob": null,
+        "age": 44,
+        "mission_no": "2026-0689",
+        "loc": {
+          "addr": "Kreisstraße nach Wangried, 87452 Wangried",
+          "lat": 47.648,
+          "lon": 10.125
+        },
+        "site_desc": "Fahrzeug gegen Baum, Person eingeklemmt, technische Rettung",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "zeitumstellung-herbst",
+        "start-prevdest",
+        "sonderzeichen-anfuehrung"
+      ]
+    },
+    {
+      "client_ref": "m-12-7414636965",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-10-25 04:04",
+      "ende": "2026-10-25 05:17",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-25 04:04"
+        ],
+        [
+          3,
+          "2026-10-25 04:09"
+        ],
+        [
+          4,
+          "2026-10-25 04:19"
+        ],
+        [
+          5,
+          "2026-10-25 04:23"
+        ],
+        [
+          6,
+          "2026-10-25 04:43"
+        ],
+        [
+          7,
+          "2026-10-25 05:00"
+        ],
+        [
+          8,
+          "2026-10-25 05:08"
+        ],
+        [
+          9,
+          "2026-10-25 05:17"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1",
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
+      },
+      "geschuetzt": {
+        "dx": "Pneumonie mit respiratorischer Insuffizienz",
+        "dob": "2011-04-13",
+        "age": null,
+        "mission_no": "2026-1046",
+        "loc": {
+          "addr": "Salzstraße 84, 87545 Oberkarwang",
+          "lat": 47.44151,
+          "lon": 10.22058
+        },
+        "site_desc": "Pflegeheim, Zimmer 14",
+        "start": null
+      },
+      "abdeckung": []
     }
-  ]
+  ],
+  "$warum_zeiten": [
+    "GEGENSTÜCK ZU D05. Dort ging eine Stunde verloren, hier kommt eine",
+    "hinzu: In der Nacht auf den 25.10.2026 springt die Uhr um 03:00 MESZ",
+    "zurück auf 02:00 MEZ. Die Ortszeiten 02:00 bis 02:59 gibt es an diesem",
+    "Tag ZWEIMAL — einmal in MESZ, einmal in MEZ.",
+    "",
+    "KEIN Zeitstempel dieser Datei liegt in dieser Stunde. Das ist keine",
+    "Bequemlichkeit, sondern Voraussetzung für einen Referenzdatensatz: Eine",
+    "mehrdeutige Ortszeit ließe sich nicht eindeutig nach UTC umrechnen, und",
+    "der Datensatz wäre nicht mehr reproduzierbar — je nach Auslegung käme",
+    "ein anderer Zeitpunkt heraus. Geprüft wird stattdessen die SPANNE über",
+    "die Umstellung: E2 läuft von 01:32 MESZ bis 03:40 MEZ, lokal gelesen",
+    "2 h 08 min, tatsächlich 3 h 08 min."
+  ],
+  "ziel_einsaetze": 5
 }

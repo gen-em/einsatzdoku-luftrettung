@@ -61,6 +61,12 @@
     },
     "$warum_spur_ausgangspunkt": {
       "$ref": "#/$defs/erlaeuterung"
+    },
+    "ziel_einsaetze": {
+      "$kommentar": "Zielzahl der Einsaetze dieses Dienstes. aufbauen.py fuellt bis dahin mit erzeugten Einsaetzen auf; handgeschriebene Prueffaelle zaehlen mit.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12
     }
   },
   "$defs": {
@@ -447,6 +453,10 @@
         },
         "$warum_spur": {
           "$ref": "#/$defs/erlaeuterung"
+        },
+        "erzeugt": {
+          "$kommentar": "true = von aufbauen.py erzeugter Betriebsalltag; wird bei einem erneuten Lauf ersetzt. Handgeschriebene Prueffaelle tragen den Schluessel NICHT und bleiben.",
+          "type": "boolean"
         }
       }
     },

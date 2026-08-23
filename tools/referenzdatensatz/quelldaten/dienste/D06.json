@@ -1,92 +1,424 @@
 {
   "kennung": "D06",
   "abdeckung": [
-    "dienst-luft",
-    "zeit-mesz",
+    "dienst-boden",
+    "zwei-dienste-ein-tag",
+    "dienst-ueber-mitternacht",
+    "zeitumstellung-fruehjahr",
+    "besatzung-driver",
+    "besatzung-trainee",
+    "besatzung-other-boden",
     "ruhe-mehrere"
   ],
   "dienst": {
-    "day": "2026-05-10",
-    "art": "air",
-    "standort": "Luftrettungsstation Hochkreuth",
-    "rettungsmittel": "Alpenfalke 1",
-    "beginn": "2026-05-10 07:00",
-    "ende": "2026-05-10 20:30",
-    "day_ref": "d-11-2740681935",
-    "besatzung": {
-      "p1": "Tilman Roithner",
-      "p2": null,
-      "hems": "Kerstin Obermeier",
-      "fr": "Vitus Halbritter",
-      "other": null
+    "day": "2026-03-28",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-03-28 20:00",
+    "ende": "2026-03-29 06:00",
+    "day_ref": "d-12-3947261805",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
     },
-    "notizen": "Erster Bergwandertag der Saison; vier Einsätze, davon drei im alpinen Gelände."
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": "Ronja Pfeil",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Nachtdienst über die Zeitumstellung; die Uhren wurden um 02:00 auf 03:00 vorgestellt."
   },
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-11-9963528471",
-      "beginn": "2026-05-10 07:00",
-      "ende": "2026-05-10 08:47",
+      "client_ref": "r-12-6476695008",
+      "beginn": "2026-03-28 20:00",
+      "ende": "2026-03-28 20:05",
       "final": true
     },
     {
-      "client_ref": "r-11-3086472195",
-      "beginn": "2026-05-10 11:20",
-      "ende": "2026-05-10 13:05",
+      "client_ref": "r-12-9589588924",
+      "beginn": "2026-03-28 21:03",
+      "ende": "2026-03-28 21:20",
       "final": true
     },
     {
-      "client_ref": "r-11-6619238740",
-      "beginn": "2026-05-10 14:38",
-      "ende": "2026-05-10 17:22",
+      "client_ref": "r-12-2765008136",
+      "beginn": "2026-03-28 22:22",
+      "ende": "2026-03-28 23:40",
       "final": true
     },
     {
-      "client_ref": "r-11-4457901362",
-      "beginn": "2026-05-10 18:55",
-      "ende": "2026-05-10 20:30",
+      "client_ref": "r-12-7876246729",
+      "beginn": "2026-03-29 00:55",
+      "ende": "2026-03-29 01:38",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-5586790323",
+      "beginn": "2026-03-29 03:48",
+      "ende": "2026-03-29 06:00",
       "final": true
     }
   ],
   "einsaetze": [
     {
-      "client_ref": "m-11-7148036592",
+      "client_ref": "m-12-1268161889",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
-      "beginn": "2026-05-10 08:47",
-      "ende": "2026-05-10 09:52",
+      "erzeugt": true,
+      "beginn": "2026-03-28 20:05",
+      "ende": "2026-03-28 21:03",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-05-10 08:47"
+          "2026-03-28 20:05"
         ],
         [
           3,
-          "2026-05-10 08:51"
+          "2026-03-28 20:09"
         ],
         [
           4,
-          "2026-05-10 09:06"
+          "2026-03-28 20:17"
         ],
         [
           5,
-          "2026-05-10 09:11"
+          "2026-03-28 20:20"
+        ],
+        [
+          6,
+          "2026-03-28 20:36"
+        ],
+        [
+          7,
+          "2026-03-28 20:50"
+        ],
+        [
+          8,
+          "2026-03-28 20:56"
         ],
         [
           9,
-          "2026-05-10 09:52"
+          "2026-03-28 21:03"
         ]
       ],
       "route": [
         "basis",
-        "ort"
+        "ort",
+        "ziel",
+        "basis"
       ],
       "rea": [],
       "felder": {
-        "transport_mode": "ambulant",
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Fieberkrampf beim Kleinkind",
+        "dob": null,
+        "age": 76,
+        "mission_no": "2026-1017",
+        "loc": {
+          "addr": "Salzstraße 100, 87572 Sonnenau",
+          "lat": 47.42142,
+          "lon": 10.34605
+        },
+        "site_desc": "Ferienwohnung, Kinderzimmer",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-8382636104",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-28 21:20",
+      "ende": "2026-03-28 22:22",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 21:20"
+        ],
+        [
+          3,
+          "2026-03-28 21:24"
+        ],
+        [
+          4,
+          "2026-03-28 21:33"
+        ],
+        [
+          5,
+          "2026-03-28 21:36"
+        ],
+        [
+          6,
+          "2026-03-28 21:53"
+        ],
+        [
+          7,
+          "2026-03-28 22:08"
+        ],
+        [
+          8,
+          "2026-03-28 22:14"
+        ],
+        [
+          9,
+          "2026-03-28 22:22"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Exazerbierte COPD",
+        "dob": "1954-12-05",
+        "age": null,
+        "mission_no": "2026-1018",
+        "loc": {
+          "addr": "Almweg 106, 87452 Lohberg",
+          "lat": 47.64551,
+          "lon": 10.12609
+        },
+        "site_desc": "Reihenhaus, Wohnküche",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-7092451863",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-28 23:40",
+      "ende": "2026-03-29 00:55",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 23:40"
+        ],
+        [
+          3,
+          "2026-03-28 23:44"
+        ],
+        [
+          4,
+          "2026-03-28 23:58"
+        ],
+        [
+          5,
+          "2026-03-29 00:02"
+        ],
+        [
+          6,
+          "2026-03-29 00:21"
+        ],
+        [
+          7,
+          "2026-03-29 00:39"
+        ],
+        [
+          8,
+          "2026-03-29 00:47"
+        ],
+        [
+          9,
+          "2026-03-29 00:55"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Einsatz über Mitternacht; das Einsatzdatum liegt einen Tag nach dem Beginn des Dienstes."
+      },
+      "geschuetzt": {
+        "dx": "Akutes Koronarsyndrom mit ST-Hebung",
+        "dob": "1955-12-02",
+        "age": null,
+        "mission_no": "2026-0144",
+        "loc": {
+          "addr": "Mühlbachweg 18, 87509 Talwang",
+          "lat": 47.545,
+          "lon": 10.25
+        },
+        "site_desc": "Mehrfamilienhaus, 3. OG ohne Aufzug",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "einsatzdatum-abweichend",
+        "start-leer",
+        "transport-ground"
+      ]
+    },
+    {
+      "client_ref": "m-12-4386015927",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-29 01:38",
+      "ende": "2026-03-29 03:48",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-29 01:38"
+        ],
+        [
+          3,
+          "2026-03-29 01:43"
+        ],
+        [
+          4,
+          "2026-03-29 01:55"
+        ],
+        [
+          5,
+          "2026-03-29 01:58"
+        ],
+        [
+          6,
+          "2026-03-29 03:12"
+        ],
+        [
+          7,
+          "2026-03-29 03:24"
+        ],
+        [
+          8,
+          "2026-03-29 03:33"
+        ],
+        [
+          9,
+          "2026-03-29 03:48"
+        ]
+      ],
+      "route": [
+        "start",
+        "ort",
+        "basis"
+      ],
+      "rea": [
+        {
+          "beginn": "2026-03-29 01:58",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-03-29 01:59"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-03-29 01:59"
+            ],
+            [
+              "adrenalin",
+              "2026-03-29 03:01"
+            ],
+            [
+              "defibrillation",
+              "2026-03-29 03:03"
+            ],
+            [
+              "sonographie",
+              "2026-03-29 03:06"
+            ],
+            [
+              "tod",
+              "2026-03-29 03:10"
+            ]
+          ]
+        }
+      ],
+      "felder": {
+        "transport_mode": null,
         "na_escort": 0,
         "transport_dest": null,
         "dest_lat": null,
@@ -94,100 +426,7 @@
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
-        "start_src": "base",
-        "winch": 0,
-        "winch_cycles": null,
-        "winch_cycles_pat": null,
-        "winch_airload": 0,
-        "bergwacht": 1,
-        "bw_unit": "Bergwacht Sonnenau",
-        "bw_info": "Übergabe an die Bereitschaft, Abstieg zu Fuß",
-        "other_ema": null,
-        "other_resources": [
-          "Bergwacht Sonnenau"
-        ],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Maschine blieb am Einsatzort, weil während der Versorgung bereits der nächste Einsatz gemeldet wurde."
-      },
-      "geschuetzt": {
-        "dx": "Distorsion des oberen Sprunggelenks",
-        "dob": "1968-04-27",
-        "age": null,
-        "mission_no": "2026-0261",
-        "loc": {
-          "addr": "Steig zur Hochalpe, 87538 Moosachtal",
-          "lat": 47.508,
-          "lon": 10.023
-        },
-        "site_desc": "Wanderweg oberhalb der Alpe, Wiesenhang mit Landemöglichkeit",
-        "start": null
-      },
-      "abdeckung": [
-        "herkunft-watch",
-        "transport-ambulant",
-        "phasen-unvollstaendig"
-      ]
-    },
-    {
-      "client_ref": "m-11-5573920184",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "beginn": "2026-05-10 09:58",
-      "ende": "2026-05-10 11:20",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-05-10 09:58"
-        ],
-        [
-          3,
-          "2026-05-10 10:03"
-        ],
-        [
-          4,
-          "2026-05-10 10:19"
-        ],
-        [
-          5,
-          "2026-05-10 10:24"
-        ],
-        [
-          6,
-          "2026-05-10 10:47"
-        ],
-        [
-          7,
-          "2026-05-10 11:01"
-        ],
-        [
-          8,
-          "2026-05-10 11:09"
-        ],
-        [
-          9,
-          "2026-05-10 11:20"
-        ]
-      ],
-      "route": [
-        "ort_vorher",
-        "ort",
-        "ziel",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "air",
-        "na_escort": 1,
-        "transport_dest": "Bergklinik Sonnenau",
-        "dest_lat": 47.559,
-        "dest_lon": 10.217,
-        "schockraum": 0,
-        "false_alarm": 0,
-        "secondary": 0,
-        "start_src": "prev_site",
+        "start_src": "manual",
         "winch": 0,
         "winch_cycles": null,
         "winch_cycles_pat": null,
@@ -197,220 +436,66 @@
         "bw_info": null,
         "other_ema": null,
         "other_resources": [
-          "Bergwacht Moosachtal"
+          "RTW Talwang 76/83",
+          "KTW Talwang 76/85"
         ],
         "crew_override": 0,
         "crew": {},
-        "notes": "Direktstart vom vorigen Einsatzort ohne Rückkehr zur Station."
+        "notes": "Reanimation erfolglos abgebrochen, Todesfeststellung am Einsatzort; kein Transport.\nAbfahrt vom Kreisklinikum Auwiesen, wo das NEF nach dem vorigen Einsatz noch stand — als manueller Abfahrtort erfasst, weil der Standort Talwang keine Koordinaten führt."
       },
       "geschuetzt": {
-        "dx": "Synkope mit Sturz aus dem Stand, Platzwunde okzipital",
+        "dx": "Kreislaufstillstand unklarer Genese, Todesfeststellung am Einsatzort",
         "dob": null,
-        "age": 74,
-        "mission_no": "2026-0262",
+        "age": 81,
+        "mission_no": "2026-0145",
         "loc": {
-          "addr": "Kirchsteig 9, 87477 Lohberg",
-          "lat": 47.457,
-          "lon": 10.281
+          "addr": "Am Anger 4, 87534 Auwiesen",
+          "lat": 47.582,
+          "lon": 10.33
         },
-        "site_desc": "Vorplatz der Kapelle",
-        "start": null
+        "site_desc": "Landwirtschaftlicher Betrieb, Stallgebäude",
+        "start": {
+          "addr": "Kreisklinikum Auwiesen, Zufahrt Notaufnahme",
+          "lat": 47.718,
+          "lon": 10.322
+        }
       },
       "abdeckung": [
         "herkunft-watch",
-        "start-prevsite"
-      ],
-      "$warum_start": "ABFAHRTORT-REGEL 'prev_site': Der Hubschrauber startet am EINSATZORT DES VORIGEN Einsatzes (m-11-7148036592), nicht an der Station. Gespeichert wird die Regel, nicht die Koordinate — der Klartextwert 'prev_site' verrät damit keinen Ort."
-    },
-    {
-      "client_ref": "m-11-8804157236",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "beginn": "2026-05-10 13:05",
-      "ende": "2026-05-10 14:38",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-05-10 13:05"
-        ],
-        [
-          3,
-          "2026-05-10 13:09"
-        ],
-        [
-          4,
-          "2026-05-10 13:27"
-        ],
-        [
-          5,
-          "2026-05-10 13:48"
-        ],
-        [
-          6,
-          "2026-05-10 14:09"
-        ],
-        [
-          7,
-          "2026-05-10 14:23"
-        ],
-        [
-          8,
-          "2026-05-10 14:31"
-        ],
-        [
-          9,
-          "2026-05-10 14:38"
-        ]
-      ],
-      "route": [
-        "basis",
-        "ort",
-        "ziel",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "air",
-        "na_escort": 1,
-        "transport_dest": "Unfallklinik Felsberg",
-        "dest_lat": 47.681,
-        "dest_lon": 11.202,
-        "schockraum": 1,
-        "false_alarm": 0,
-        "secondary": 0,
-        "start_src": "base",
-        "winch": 1,
-        "winch_cycles": 4,
-        "winch_cycles_pat": 2,
-        "winch_airload": 1,
-        "bergwacht": 1,
-        "bw_unit": "Bergwacht Sonnenau",
-        "bw_info": "Zwei Windenzyklen mit Bergretter, zwei mit Patientin; Luftverladung im Bergesack",
-        "other_ema": null,
-        "other_resources": [
-          "Bergwacht Sonnenau",
-          "Bergwacht Felsgrat"
-        ],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Absturz im Blockwerk; Bergung nur mit der Winde möglich, Sichtflug am Grat grenzwertig."
-      },
-      "geschuetzt": {
-        "dx": "Schädel-Hirn-Trauma und Thoraxtrauma nach Absturz im Blockwerk",
-        "dob": "1979-09-11",
-        "age": null,
-        "mission_no": "2026-0263",
-        "loc": {
-          "addr": "Nordflanke des Felsgrats, 87538 Felsgrat",
-          "lat": 47.508,
-          "lon": 10.023
-        },
-        "site_desc": "Blockwerk unterhalb der Gratschneide, kein Landeplatz",
-        "start": null
-      },
-      "abdeckung": [
-        "herkunft-watch",
-        "winde",
-        "winde-cycles",
-        "winde-cycles-patient",
-        "winde-luftverladung",
-        "bergwacht",
-        "bergwacht-info",
-        "sonderzeichen-semikolon"
-      ]
-    },
-    {
-      "client_ref": "m-11-2236709481",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "beginn": "2026-05-10 17:22",
-      "ende": "2026-05-10 18:55",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-05-10 17:22"
-        ],
-        [
-          3,
-          "2026-05-10 17:29"
-        ],
-        [
-          4,
-          "2026-05-10 17:44"
-        ],
-        [
-          5,
-          "2026-05-10 17:52"
-        ],
-        [
-          6,
-          "2026-05-10 18:10"
-        ],
-        [
-          7,
-          "2026-05-10 18:38"
-        ],
-        [
-          8,
-          "2026-05-10 18:47"
-        ],
-        [
-          9,
-          "2026-05-10 18:55"
-        ]
-      ],
-      "route": [
-        "basis",
-        "ort",
-        "ziel",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "air",
-        "na_escort": 1,
-        "transport_dest": "Universitätsklinikum Nordstadt",
-        "dest_lat": 48.4011,
-        "dest_lon": 9.9876,
-        "schockraum": 0,
-        "false_alarm": 0,
-        "secondary": 1,
-        "start_src": "base",
-        "winch": 0,
-        "winch_cycles": null,
-        "winch_cycles_pat": null,
-        "winch_airload": 0,
-        "bergwacht": 0,
-        "bw_unit": null,
-        "bw_info": null,
-        "other_ema": "Dr. Weißgerber (abgebende Klinik)",
-        "other_resources": [],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Verlegung zur Neurochirurgie; Übernahme auf der Intensivstation, Beatmung fortgeführt."
-      },
-      "geschuetzt": {
-        "dx": "Intrazerebrale Blutung, Verlegung zur neurochirurgischen Versorgung",
-        "dob": null,
-        "age": 61,
-        "mission_no": "2026-0264",
-        "loc": {
-          "addr": "Bergklinik Sonnenau, Talstraße 40, 87534 Sonnenau",
-          "lat": 47.559,
-          "lon": 10.217
-        },
-        "site_desc": "Innerklinische Übernahme, Intensivstation",
-        "start": null
-      },
-      "abdeckung": [
-        "herkunft-watch",
-        "sekundaertransport",
-        "weiterer-notarzt"
+        "erfassung-boden-track",
+        "zeitumstellung-fruehjahr",
+        "start-manual",
+        "transport-leer",
+        "rea-typ-sonographie",
+        "rea-typ-tod",
+        "sonderzeichen-zeilenumbruch"
       ]
     }
-  ]
+  ],
+  "$warum_zeiten": [
+    "ZWEI PRÜFFÄLLE IN EINEM DIENST.",
+    "",
+    "1. ÜBER MITTERNACHT: Einsatz E1 beginnt am 28.03. um 23:40 und endet am",
+    "   29.03. um 00:55. Sein Einsatzdatum ist damit ein anderes als das Datum",
+    "   des Diensttags — genau die Trennung, wegen der 'day' seit Web 6.0.0 nur",
+    "   noch Sortier- und Anzeigedatum ist.",
+    "",
+    "2. ZEITUMSTELLUNG: In der Nacht auf den 29.03.2026 springt die Uhr um",
+    "   02:00 MEZ auf 03:00 MESZ. Die Ortszeiten 02:00 bis 02:59 GIBT ES AN",
+    "   DIESEM TAG NICHT — kein Zeitstempel dieser Datei liegt darin. Einsatz E2",
+    "   läuft von 01:38 MEZ bis 03:48 MESZ: lokal gelesen sind das 2 h 10 min,",
+    "   tatsächlich vergangen sind 1 h 10 min. Wer Dauern aus der Ortszeit statt",
+    "   aus UTC rechnet, liegt hier um genau eine Stunde daneben — und das ist",
+    "   der Zweck des Falls."
+  ],
+  "$warum_spur_ausgangspunkt": [
+    "Der Standort Talwang trägt ABSICHTLICH keine Koordinaten (Matrixzeile",
+    "Stammdaten) — deshalb steht dort der Abfahrtort 'Standort' nicht zur",
+    "Auswahl, und start_src='base' kommt an diesem Dienst nicht vor.",
+    "",
+    "Das NEF fährt trotzdem von einem realen Ort los. 'spur_ausgangspunkt' ist",
+    "AUSSCHLIESSLICH für die Spurerzeugung da und wird NICHT als Stammdatum",
+    "gespeichert; in der Anwendung bleibt der Standort ohne Koordinaten."
+  ],
+  "ziel_einsaetze": 4
 }

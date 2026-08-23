@@ -14,42 +14,42 @@
     "Vergleich als Abweichung erscheinen."
   ],
   "ablauf": [
-    "1. Payload über ingest.php senden — der Einsatz entsteht am Diensttag D14.",
+    "1. Payload über ingest.php senden — der Einsatz entsteht am Diensttag D12 (2026-09-12).",
     "2. Über die Weboberfläche in den Papierkorb legen.",
     "3. Im Papierkorb endgültig löschen. Dabei wandert die client_ref auf die Sperrliste (deleted_refs), weil das Präfix nicht 'man-' ist.",
     "4. Denselben Payload unverändert erneut senden.",
-    "5. ERWARTET: Der Einsatz wird NICHT wieder angelegt. Ein erneuter Blick in die Tagesübersicht von D14 zeigt weiterhin drei Einsätze."
+    "5. ERWARTET: Der Einsatz wird NICHT wieder angelegt. Die Tagesübersicht des 12.09.2026 zeigt danach wieder KEINEN Einsatz."
   ],
-  "woran_scheitern_erkennbar_ist": "Erscheint nach Schritt 4 ein vierter Einsatz am 27.12.2026, greift die Sperrliste nicht — dann könnte eine Uhr mit gepufferten Daten jeden gelöschten Einsatz wieder auferstehen lassen.",
+  "woran_scheitern_erkennbar_ist": "Erscheint nach Schritt 4 ein Einsatz am 12.09.2026, greift die Sperrliste nicht — dann könnte eine Uhr mit gepufferten Daten jeden gelöschten Einsatz wieder auferstehen lassen.",
   "einsatz": {
     "client_ref": "m-11-9081726354",
     "kanal": "ingest",
     "nachtrag": false,
     "papierkorb": null,
-    "dienst": "D14",
-    "beginn": "2026-12-27 11:05",
-    "ende": "2026-12-27 11:52",
+    "dienst": "D12",
+    "beginn": "2026-09-12 11:05",
+    "ende": "2026-09-12 11:52",
     "final": true,
     "phasen": [
       [
         2,
-        "2026-12-27 11:05"
+        "2026-09-12 11:05"
       ],
       [
         3,
-        "2026-12-27 11:10"
+        "2026-09-12 11:10"
       ],
       [
         4,
-        "2026-12-27 11:24"
+        "2026-09-12 11:24"
       ],
       [
         5,
-        "2026-12-27 11:29"
+        "2026-09-12 11:29"
       ],
       [
         9,
-        "2026-12-27 11:52"
+        "2026-09-12 11:52"
       ]
     ],
     "route": [
@@ -69,5 +69,12 @@
         "lon": 10.25
       }
     }
-  }
+  },
+  "$warum_dieser_tag": [
+    "D12 ist der Diensttag OHNE EINSATZ. Das ist der richtige Ort für diesen Ablauf und",
+    "kein Zufall: Der Prüfeinsatz kollidiert dort mit keinem anderen, und nach dem",
+    "endgültigen Löschen ist der Tag wieder genau das, was der Referenzzustand verlangt —",
+    "leer. Auf einem vollen Diensttag müsste man dagegen erst nachzählen, ob wirklich",
+    "nichts zurückgeblieben ist."
+  ]
 }
