@@ -118,6 +118,17 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ändern — ein Import, der Zeichen entfernt, schafft den nächsten stillen
     Verlust (ein echtes `'` am Textanfang verschwände). Gefunden in P1/B4
     (dort F-P1-G).
+24. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
+    zurück.** Die Spalte steht in der Sicherung (`backup_lib.php`,
+    Spaltenliste der Einsätze); die Einspielroutine schreibt die Felder aus
+    `mission_fields.php` plus `pat_blob` und `start_src` — `created_at` steht
+    dort nicht. Nach einer Wiederherstellung tragen alle Einsätze den
+    Zeitpunkt des Einspielens. Gemessen am Referenzdatensatz: 79 verschiedene
+    Werte vorher, 5 danach. Folgenlos für die Dokumentation (`started_at` ist
+    die fachliche Zeit), aber eine Asymmetrie, die bis Web 7.2.3 nirgends
+    stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
+    oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
+    nachgezogen. Gefunden in P1/B5.
 
 ---
 

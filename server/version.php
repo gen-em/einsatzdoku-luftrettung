@@ -122,5 +122,11 @@ declare(strict_types=1);
  * freiem JSON, das der Server nie sieht und deshalb auch nicht pruefen kann.
  * Die Maskierung liegt jetzt in zelleGeschuetzt() selbst; die
  * Formatierfunktion, ueber die sie umgangen werden konnte, gibt es nicht mehr.
+ *
+ * 7.2.3 berichtigt zwei Formatbeschreibungen, die etwas anderes sagten als
+ * der Code tut: Die ausgelieferte LIESMICH.txt des CSV-Exports nannte die
+ * Spalte weiterhin `hubschrauber` (sie heisst seit 5.10.0 `rettungsmittel`),
+ * und docs/Backup-Format.md fuehrte `days[].id` unter „nicht in der Datei",
+ * obwohl sie darin steht und stehen MUSS — die Einsaetze verweisen darauf.
  */
-const WEB_VERSION = '7.2.2';
+const WEB_VERSION = '7.2.3';

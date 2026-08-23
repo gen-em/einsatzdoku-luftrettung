@@ -957,7 +957,13 @@
             'Dateien maschinell liest, entfernt einen führenden Apostroph aus',
             'Textspalten.',
             '',
-            'hubschrauber, standort und die Tagesbesatzung stehen sowohl in',
+            /* 'rettungsmittel', nicht 'hubschrauber': Die Spalte heisst seit
+               Web 5.10.0 so (FIELD_DEFS_EINSAETZE weiter oben), und
+               'hubschrauber' gibt es in keiner erzeugten Datei mehr. Der
+               Text stand ausgerechnet in der Datei, deren Zweck die
+               Formatbeschreibung ist — wer sich danach richtet, sucht eine
+               Spalte, die nicht da ist. */
+            'rettungsmittel, standort und die Tagesbesatzung stehen sowohl in',
             'einsaetze.csv als auch in diensttage.csv — beabsichtigt, damit die',
             'Einsatztabelle allein ein vollständiges Bild ergibt. Bei Abweichungen',
             'gilt einsaetze.csv; diensttage.csv wird nur für Tage ohne Einsatz und',

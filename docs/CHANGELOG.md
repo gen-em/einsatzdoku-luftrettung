@@ -11,6 +11,89 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.3] — 2026-08-23
+
+**Zwei Formatbeschreibungen sagten etwas anderes, als der Code tut.** Beides
+beim Aufbau des Referenzdatensatzes aufgefallen (Phase P1, Paket B5), beides
+gefunden, weil ein Werkzeug die Dateien gegen ihre Beschreibung gehalten hat.
+Keine Migration, kein Datenmodell.
+
+### `LIESMICH.txt` nannte eine Spalte, die es nicht gibt
+
+Der CSV-Export legt seinem Archiv eine `LIESMICH.txt` bei, die das Format
+erklärt. Darin stand weiterhin:
+
+> hubschrauber, standort und die Tagesbesatzung stehen sowohl in
+> einsaetze.csv als auch in diensttage.csv …
+
+Die Spalte heißt seit Web 5.10.0 `rettungsmittel` — `hubschrauber` kommt in
+keiner erzeugten Datei mehr vor. `docs/Export-Format.md` war bei der
+Umbenennung mitgezogen worden, die ausgelieferte Datei nicht. Ausgerechnet die
+Datei, deren einziger Zweck die Formatbeschreibung ist, beschrieb das Format
+falsch: Wer sich danach richtet, sucht eine Spalte, die nicht da ist.
+
+Der Anlass, es jetzt zu ändern, ist nicht die Größe des Fehlers, sondern der
+Zeitpunkt. Die Referenz-Exporte der Phase P1 werden eingecheckt und sind ab
+dann die Vergleichsgrundlage jedes Regressionslaufs. Ein falscher Satz darin
+wäre nicht nur falsch, sondern **festgeschrieben**.
+
+### `days[].id` stand unter „nicht in der Datei" — und steht doch darin
+
+`docs/Backup-Format.md` 4 führte `id` neben `user_id` und `device_id` unter
+den internen Verweisen, die eine Sicherung nicht enthält. Für `missions` und
+`rest_segments` stimmt das. Für `days` nicht: Die Kennung steht in jeder
+Sicherung, und sie **muss** darin stehen — `missions[].day_id` und
+`rest_segments[].day_id` verweisen darauf. Ohne sie ließe sich nach dem
+Einspielen nicht mehr sagen, welcher Einsatz zu welchem Dienst gehörte.
+
+Das Beispiel im selben Dokument zeigte den Schlüssel ebenfalls nicht. Beides
+ist ergänzt, mit der Klarstellung, worum es sich handelt: eine Kennung
+*innerhalb dieser Datei*, keine Aussage über die Datenbank — beim Einspielen
+wird sie auf die neu vergebene umgeschrieben.
+
+### Vier Bereiche fehlten in „Was NICHT in der Datei steht"
+
+Abschnitt 4 von `docs/Backup-Format.md` beansprucht seit Web 4.5.2
+ausdrücklich, **aufzählend** zu sein: Das Format ist eine Entscheidung, keine
+Nebenwirkung des Datenbankschemas. Der Abschnitt zählte Spalten auf und ließ
+vier ganze Bereiche aus, die eine Wiederherstellung nicht zurückbringt.
+Gemessen am Referenzdatensatz der Phase P1 (82 Einsätze):
+
+| Was | vorher | nach dem Umlauf |
+|---|---:|---:|
+| Papierkorb — Einsätze / Ruhesegmente / Diensttage | 5 / 5 / 1 | 0 / 0 / 0 |
+| Geräte | 3 | 0 |
+| `created_at` der Einsätze (verschiedene Werte) | 79 | 5 |
+| Kopplungscodes, Sperrliste (`deleted_refs`) | — | leer |
+
+Der Papierkorb wiegt am schwersten: Eine Wiederherstellung in ein frisches
+Konto leert ihn **endgültig**, und wer die Sicherung für vollständig hält,
+verliert die Daten im Vertrauen auf eine Zusage, die niemand gegeben hat.
+Beim Gerät ist das Fehlen dagegen richtig — es trägt einen API-Schlüssel, und
+ein mitgesichertes Gerät wäre ein mitgesicherter Zugang. Nur stand nirgends,
+dass danach jede Uhr neu zu koppeln ist.
+
+`created_at` ist der unangenehmste Fall: Es **wird** gesichert und beim
+Einspielen nicht geschrieben. Der Abschnitt führte `site_ele_m` als die
+einzige Asymmetrie dieser Art. Ob das Feld künftig mitgeschrieben oder aus
+der Sicherung gestrichen wird, ist offen — Backlog Nr. 24. Geändert wurde
+hier nur die Beschreibung, nicht das Verhalten.
+
+### Geprüft
+
+Der Referenz-Export wurde nach der Änderung neu erzeugt und mit dem
+Vergleichswerkzeug (`tools/referenzdatensatz/vergleich/`) gegen den Stand
+davor gehalten: **9 589 Einzelvergleiche, genau eine Abweichung** — die Zeile
+mit dem Spaltennamen in `LIESMICH.txt`.
+
+Die Angaben zu Abschnitt 4 stammen aus einem tatsächlich gefahrenen Umlauf
+(Sicherung → frisches Konto → Sicherung): 269 439 Einzelvergleiche, 15
+erwartete Abweichungen (`days[].refs[].device_id` wird `null`), keine
+unerklärte. Die vier fehlenden Bereiche zeigt dieser Vergleich **nicht** — sie
+fehlen in beiden Dateien — und wurden deshalb getrennt in der Datenbank
+gezählt. `days[].id` wurde gegen eine erzeugte Sicherung geprüft: vorhanden,
+ganze Zahl.
+
 ## [Web 7.2.2] — 2026-08-23
 
 **Cross-Site-Scripting in den Einsatztabellen.** Die Spalte „Alter" gab ihren
