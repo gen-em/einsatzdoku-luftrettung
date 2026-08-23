@@ -345,9 +345,28 @@ const EdCrypto = (() => {
   }
   const vergissAbleitungen = () => sessionStorage.removeItem(S_VOR);
 
+  /* DAS VORMERKFACH DES PASSWORTWECHSELS GEHOERT MIT GERAEUMT (Nr. 22, V-10).
+   *
+   * einstellungen.php legt beim Passwortwechsel den NEUEN Datenschluessel
+   * unter 'edk_neu' ab und loest das Fach beim naechsten Aufruf desselben
+   * Reiters wieder auf (M2-07). Auf diesem Weg ist es einen Seitenwechsel
+   * lang belegt und danach leer.
+   *
+   * Kommt der Aufruf aber nie — die Uebertragung bricht ab, die Nutzerin geht
+   * zurueck oder meldet sich ab —, blieb ein vollwertiger Datenschluessel im
+   * sessionStorage des Tabs liegen, und zwar ueber das Abmelden hinaus:
+   * clearSession() kannte nur 'edk', 'pck' und 'edkvor'. Pruefdokument P0,
+   * Punkt V-10, erwartet nach dem Abmelden weder Daten- noch
+   * Inhaltsschluessel — fuer dieses eine Fach traf das nicht zu.
+   *
+   * Auf dem aufloesenden Weg aendert die Zeile nichts: Dort wird 'edk_neu'
+   * ausgelesen und entfernt, BEVOR clearSession() laeuft. */
+  const S_NEU = 'edk_neu';
+
   const clearSession = () => {
     sessionStorage.removeItem(S_DK);
     sessionStorage.removeItem(S_CK);
+    sessionStorage.removeItem(S_NEU);
     vergissAbleitungen();
   };
 

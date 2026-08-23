@@ -66,9 +66,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
     `rate_misserfolg()`. Die drei übrigen offenen Endpunkte (`login`, `salt`,
     `reset`, `pair`) haben ihn. Gefunden in P0/A6 (dort F-16); die
-    Konzeptarbeit dazu ist an die Phasen P1/P2 (Sicherheit) übergeben, weil
+    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
     die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
-    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden.
+    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
+    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
+    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
 18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
     ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
     gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).
@@ -178,3 +180,39 @@ zutreffen.
     Die Frage nach der Zusammenführung beider Tabellen (Nr. 10) ist damit
     nicht beantwortet und bleibt offen; die drei Zeilen haben nicht darauf
     gewartet.
+
+22. **Das Alter ging unmaskiert in die Einsatztabellen.**
+    *Erledigt mit Web 7.2.1.* `zelleGeschuetzt()` in
+    `server/assets/missiontable.js` maskierte Einsatzort und Diagnose über
+    `esc()`, das Alter aber nicht (`v => v`) — und die Zelle wird per
+    `innerHTML` gesetzt. Über das Formular war der Weg zu (`parseInt()` in
+    `einsatz_form.php`), über den Import nicht: `server/assets/import.js`
+    übernimmt `pat.age` als rohen Zellenwert. Eine Importdatei mit Markup in
+    der Alterspalte führte Skript in genau dem Fenster aus, in dem der
+    Inhaltsschlüssel liegt; der Server konnte nichts prüfen, er sieht nur
+    Chiffretext. Die Lücke bestand seit Web 5.2.0. Gefunden in P0 (dort F-20,
+    Konzept Abschnitt 8 und 9.3; Prüfdokument P0, Abschnitt 4.4).
+
+    Maskiert wird jetzt in `zelleGeschuetzt()` **selbst** statt an der
+    Aufrufstelle: Die Entscheidung war an zwei von sechs Aufrufstellen falsch
+    getroffen, und die nächste neue Spalte hätte sie erneut treffen müssen.
+    Damit sind alle drei Einsatztabellen an einer Stelle abgesichert.
+
+    Die Durchsicht des gesamten Importpfads (32 Ausgabestellen mit
+    `innerHTML` o. ä. in 23 eigenen Skriptdateien und allen Seiten unter
+    `server/`) ergab **keinen weiteren Fund**; die Liste steht in
+    `docs/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
+    das Vormerkfach des Passwortwechsels trug den neuen Datenschlüssel über
+    das Abmelden hinaus, was Punkt V-10 des Prüfdokuments P0 verbietet. Auch
+    das ist mit dieser Version behoben (eine Zeile in
+    `EdCrypto.clearSession()`).
+
+    Die Keyguard-Einträge `pckb`/`pckt` bleiben beim Abmelden **bewusst**
+    liegen: Sie tragen kein Schlüsselmaterial — `pckb` ist ein gekürzter
+    SHA-256 über die ohnehin öffentlich ausgelieferte Schlüsselhülle, `pckt`
+    ein Zeitstempel. Die toten Exporte `EdKeyGuard.beenden()`/`raeumen()`
+    bleiben unberührt (Nr. 21).
+
+    Vorher/Nachher-Proben unter `tools/maskierungs-probe/` und
+    `tools/abmelde-probe/`; die erste darf als Vorlage für den ständigen
+    Regressionsfall in P1 liegen bleiben (R20).

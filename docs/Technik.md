@@ -120,8 +120,12 @@ hems/
 │   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
+│   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
+│   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
+│   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │                          Erscheinungsbild nicht verändert: Kaskadenvergleich
 │                          plus berechnete Stile im Browser (s. LIESMICH.md)

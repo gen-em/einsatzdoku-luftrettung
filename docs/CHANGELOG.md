@@ -11,6 +11,91 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.1] — 2026-08-23
+
+**Eine Sicherheitskorrektur, sonst nichts.** Sofortpaket zu Backlog Nr. 22,
+vorgezogen vor Phase P1. Kein neues Feld, kein Datenmodell, **keine
+Migration**, keine Handlung der Betreiberin außer dem Deploy.
+
+Die Lücke bestand **seit Web 5.2.0** — seit die gemeinsame Einsatztabelle
+(`assets/missiontable.js`) eingeführt wurde. Die Aufräumrunde P0 hat sie weder
+verursacht noch verschärft; sie hat sie **gefunden** (Befund F-20).
+
+### Das Alter ging unmaskiert in die Einsatztabellen
+
+`zelleGeschuetzt()` maskierte Einsatzort und Diagnose über `esc()`, das Alter
+aber nicht — dort stand `v => v`, weil ein Alter eine Zahl ist. Über das
+Einsatzformular ist es das auch: `einsatz_form.php` schickt es durch
+`parseInt()`. Über den **Import** nicht: `assets/import.js` übernimmt `pat.age`
+als rohen Zellenwert und verschlüsselt ihn unverändert.
+
+Und die Zelle wird per `innerHTML` gesetzt. Eine Importdatei mit Markup in der
+Alterspalte führte damit Skript aus — in genau dem Fenster, in dem der
+entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
+bekommt nur Chiffretext, prüfen kann er ihn nicht. Das ist der Preis der
+Ende-zu-Ende-Verschlüsselung, und er verlangt, dass der Browser seine Seite
+hält.
+
+**Maskiert wird jetzt in `zelleGeschuetzt()` selbst**, nicht mehr an der
+Aufrufstelle. Der Grund für diese Wahl steckt im Fehler: Die Entscheidung, ob
+eine Angabe maskiert wird, war an zwei von sechs Aufrufstellen falsch
+getroffen — und die nächste neue Spalte hätte sie ein siebtes Mal treffen
+müssen. `formatiere` bekommt den Wert jetzt bereits maskiert und darf ihn nur
+noch umschichten. Damit sind alle drei Einsatztabellen — Tagesübersicht, Suche,
+Zeitraum-Übersicht — an **einer** Stelle abgesichert.
+
+**Für gültige Eingaben ändert sich nichts.** Das ist nicht behauptet, sondern
+gemessen: Das Zellen-HTML ist für `47`, für den leeren Wert (Gedankenstrich),
+für `0` und für den nicht lesbaren Fall (Warnzeichen) zeichengleich zum Stand
+7.2.0. Der Angriffswert wurde vorher als Markup ausgeführt und erscheint jetzt
+als Text (`tools/maskierungs-probe/`, Chromium).
+
+### Der ganze Importpfad ist durchgesehen — ein Fund, sonst keiner
+
+32 Ausgabestellen mit `innerHTML` und Verwandtem, in 23 eigenen Skriptdateien
+und allen Seiten unter `server/`. Weitere Senken (`srcdoc`, `eval`,
+`new Function`, `createContextualFragment`) kommen im Projekt nicht vor.
+
+Die Abgleichs-/Vorschauansicht des Imports hält: Der rohe Zellenwert der Datei
+steht dort in einer **Attributposition** (`<input value="…">`) und geht durch
+`esc()`. Dass das trägt, ist keine Selbstverständlichkeit, sondern das Verdienst
+der Zusammenführung aus Web 4.6.0 — `EdHtml.escape` maskiert fünf Zeichen, also
+auch beide Anführungszeichen. Die früheren verstreuten Fassungen mit drei
+Zeichen hätten hier nicht gereicht. Die vollständige Liste der geprüften
+Stellen steht in `docs/Pruefung-Sofortpaket-22.md`, damit die Aussage „keine
+weiteren Funde" nachprüfbar bleibt und nicht geglaubt werden muss.
+
+### Der neue Datenschlüssel blieb nach dem Abmelden liegen
+
+Nachgegangen wurde der Frage, ob die Keyguard-Einträge `pckb`/`pckt` beim
+Abmelden geräumt werden müssen. **Sie müssen nicht:** `pckb` ist ein gekürzter
+SHA-256 über die Schlüssel*hülle* — und die ist kein Geheimnis, der Server
+schreibt sie jeder Seite mit; `pckt` ist ein Zeitstempel. Kein
+Schlüsselmaterial, nichts davon Ableitbares. Sie bleiben deshalb bewusst
+liegen, und die toten Exporte `EdKeyGuard.beenden()`/`raeumen()` bleiben
+unangetastet (Backlog Nr. 21).
+
+Die Frage hat aber etwas anderes ans Licht gebracht. `einstellungen.php` legt
+beim Passwortwechsel den **neuen Datenschlüssel** unter `edk_neu` im
+`sessionStorage` ab und löst das Fach beim nächsten Aufruf desselben Reiters
+wieder auf. Kommt dieser Aufruf nie — die Übertragung bricht ab, die Nutzerin
+geht zurück oder meldet sich ab —, blieb ein vollwertiger Datenschlüssel liegen,
+und zwar über das Abmelden hinaus: `EdCrypto.clearSession()` kannte nur `edk`,
+`pck` und `edkvor`. Das ist ein echter Schlüsselrest, und er widerspricht der
+Zusage, dass nach dem Abmelden keiner bleibt.
+
+Behoben mit **einer Zeile** in `clearSession()`. Auf dem auflösenden Weg ändert
+sie nichts: Dort wird `edk_neu` ausgelesen und entfernt, bevor `clearSession()`
+läuft. Belegt in Chromium: Alle sechs Fächer belegt, dann der Abmeldeweg
+darüber — vorher blieb `edk_neu` übrig, jetzt nur noch `pckb` und `pckt`
+(`tools/abmelde-probe/`).
+
+### Berichtigt
+
+Backlog Nr. 17 (Mengenbremse für `ingest.php`) war an „P1/P2" übergeben. Das
+war überholt: Zuständig ist **P5** (Rahmenplan R19); P1 misst nur das
+Aufrufverhalten und legt keine Grenze fest.
+
 ## [Web 7.2.0] — 2026-08-23
 
 **Die Nacharbeit zu P0.** Die Befundpakete A4 (toter Code) und A6

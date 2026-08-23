@@ -108,5 +108,17 @@ declare(strict_types=1);
  * wie Suche und Zeitraum, und ein veralteter Link fuehrt nicht mehr auf eine
  * weisse Seite mit sechs Woertern, sondern auf eine Seite mit Kopfleiste und
  * Rueckweg.
+ *
+ * 7.2.1 ist eine SICHERHEITSKORREKTUR mit eng begrenztem Umfang
+ * (Sofortpaket Backlog Nr. 22, vor Phase P1). Das Alter ging als einzige der
+ * drei geschuetzten Spalten unmaskiert in die Einsatztabellen — ueber das
+ * Formular unerreichbar (parseInt), ueber den Import sehr wohl. Maskiert wird
+ * jetzt in zelleGeschuetzt() selbst statt an der Aufrufstelle. Dabei mit
+ * geraeumt: das Vormerkfach des Passwortwechsels (edk_neu), das den neuen
+ * Datenschluessel bis dahin ueber das Abmelden hinaus tragen konnte.
+ *
+ * Fuer gueltige Eingaben aendert sich NICHTS — das ist nicht behauptet,
+ * sondern gemessen (tools/maskierungs-probe/). Kein Schema, keine Migration,
+ * keine Handlung der Betreiberin ausser dem Deploy.
  */
-const WEB_VERSION = '7.2.0';
+const WEB_VERSION = '7.2.1';
