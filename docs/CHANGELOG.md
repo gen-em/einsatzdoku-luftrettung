@@ -116,6 +116,57 @@ Die Spaltenmechanik von `missiontable.js` übernimmt die Seite bewusst
 **nicht**: Sie führt die Katalogspalten aus `DAY_COLS`, die die anderen beiden
 Tabellen nicht haben.
 
+### Drei wiederkehrende Blöcke sind jetzt Bausteine
+
+Das Strukturreview A6 hat gezählt, was in dieser Anwendung mehrfach von Hand
+geschrieben steht. Drei Befunde waren so gleichförmig, dass eine gemeinsame
+Fassung sie vollständig aufnimmt — alle drei liegen jetzt in `ui.php`, bei der
+Seitenhülle aus Web 7.1.0.
+
+**`ui_krypto_bootstrap()` — das Rüstzeug der Verschlüsselung.** Acht Stellen in
+sieben Dateien schrieben denselben Block: die Verweise auf `crypto.js`,
+`keyguard.js` und `unlock.js`, dazu vier Konstanten mit Hülle, Salz und
+Rundenzahl — und jedes Mal derselbe achtzeilige Kommentar. Zwei Folgen hatte
+das bereits:
+
+1. **Namensdrift.** Der Profilreiter der Einstellungen nannte die Hülle
+   `WRAP_PW`, überall sonst heißt sie `PAT_WRAP`. Ein Baustein, der aus diesem
+   Reiter etwas übernimmt, hätte ins Leere gegriffen. Jetzt heißt sie überall
+   gleich.
+2. **Doppelte Einbindung.** `einstellungen.php` band `crypto.js` zweimal ein
+   und `pwquality.js` ebenfalls — einmal je Reiter. Beide Dateien deklarieren
+   auf oberster Ebene ein `const`; eine zweite Deklaration im selben Dokument
+   ist ein `SyntaxError`, der das **ganze** zweite Skript verwirft. Dass
+   nichts geschah, hing allein daran, dass die beiden Reiter einander
+   ausschließen — eine nirgends aufgeschriebene Bedingung in einer Datei mit
+   über 2000 Zeilen.
+
+Gegen den zweiten Punkt führt der Baustein einen Merkzettel: Ein zweiter
+Aufruf im selben Seitenaufbau gibt **nichts** aus und schreibt eine Zeile ins
+Fehlerlog. Aus der stillen Bedingung ist eine geworden, die sich meldet.
+
+**`ui_meldung()` — Hinweis- und Fehlerzeile.** Dieselben zwei Zeilen standen in
+13 Dateien, 21-mal derselbe Dreisatz aus Abfrage, Klasse und Maskierung.
+Uneinheitlich war daran nur die Klasse der Hinweiszeile: elf Stellen schrieben
+`alert-info`, zwei `alert-ok` — Stammdaten und Nachbearbeitung, die dort einen
+Vollzug melden. Deshalb hat der Baustein einen Ton-Parameter; nicht als Vorrat
+für künftige Töne, sondern weil der Bestand zwei kennt. Am Erscheinungsbild
+ändert sich nichts.
+
+**`ui_abbruch()` — die Sackgasse bekommt eine Tür.** An 16 Stellen stand für
+den nicht gefundenen Datensatz `exit('Einsatz nicht gefunden.')`: nackter Text
+ohne Zeichensatzangabe, ohne Kopfleiste, ohne Weg zurück. Wer einen veralteten
+Link öffnete — ein Lesezeichen auf einen gelöschten Einsatz, eine Zeile aus
+einer alten E-Mail —, landete auf einer weißen Seite mit sechs Wörtern und
+musste die Zurück-Taste suchen. Der HTTP-Code stimmte, die Seite war trotzdem
+eine Sackgasse.
+
+Wortlaut und Statuscode bleiben unverändert; die Meldung steht jetzt in einer
+richtigen Seite mit Kopfleiste und einem Rückweg. Zwei der 16 Stellen liegen
+in `auth_guard.php` selbst (`require_admin()` und `csrf_check()`); der
+API-Zweig von `require_admin()` antwortet weiterhin mit JSON und ist von der
+Änderung nicht berührt.
+
 ### Kleinere Berichtigungen
 
 * **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre

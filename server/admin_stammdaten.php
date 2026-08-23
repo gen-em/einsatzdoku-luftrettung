@@ -409,8 +409,7 @@ ui_topbar('einstellungen');
 
   <main class="page">
     <h1><?= $tab === 'standorte' ? 'Standorte systemweit' : 'Rettungsmittel systemweit' ?></h1>
-    <?php if ($notice): ?><p class="alert alert-ok"><?= e($notice) ?></p><?php endif; ?>
-    <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+    <?php ui_meldung($notice, $error, 'ok', '    '); ?>
 
     <p class="muted">Diese Einträge gelten für <strong>alle Konten</strong>. Sie
        erscheinen in den Auswahllisten einer NutzerIn erst, wenn sie den

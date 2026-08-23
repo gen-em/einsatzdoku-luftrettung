@@ -24,11 +24,10 @@ require_once __DIR__ . '/diensttag_lib.php';
 $dayId = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
 $tag   = $dayId > 0 ? dt_laden($userId, $dayId, true) : null;
 if ($tag === null) {
-    http_response_code(404); exit('Diensttag nicht gefunden.');
+    ui_abbruch(404, 'Diensttag nicht gefunden.');
 }
 if ($tag['deleted_at'] !== null) {
-    http_response_code(409);
-    exit('Dieser Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
+    ui_abbruch(409, 'Dieser Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
 }
 
 $umfang = tz_tag_umfang($userId, $dayId);
@@ -55,7 +54,7 @@ ui_topbar('uebersicht');
   <?php ui_days_sidebar($dayId); ?>
   <main class="page">
     <h1>Datum des Diensttags <?= e(dt_lesbar($tag, true)) ?> ändern</h1>
-    <?php if ($fehler): ?><p class="alert"><?= e($fehler) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $fehler); ?>
 
     <div class="card">
       <p>Diese Handlung ist für den Fall gedacht, dass <strong>die Uhr falsch

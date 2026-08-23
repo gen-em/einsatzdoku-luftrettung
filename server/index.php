@@ -223,9 +223,7 @@ ui_topbar('uebersicht');
   </main>
 </div>
 
-<script src="<?= asset('assets/crypto.js') ?>"></script>
-<script src="<?= asset('assets/keyguard.js') ?>"></script>
-<script src="<?= asset('assets/unlock.js') ?>"></script>
+<?php ui_krypto_bootstrap(['csrf' => true]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
@@ -239,16 +237,8 @@ ui_topbar('uebersicht');
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
-const CSRF = '<?= e($_SESSION['csrf']) ?>';
 const SEL_DAY_ID = <?= json_encode($selDay) ?>;
 const DEF_VEHICLE = <?= (int)($SD_DEFAULTS['vehicle_id'] ?? 0) ?>;
-const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-   bekommt einen anderen Schluessel. */
-const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const DEF_BASE = <?= (int)($SD_DEFAULTS['base_id'] ?? 0) ?>;
 /* Spalten der Tagestabelle — dieselbe Liste, aus der oben der Tabellenkopf
    entstanden ist. Der Titel fehlt hier bewusst: Er steht bereits im <thead>,

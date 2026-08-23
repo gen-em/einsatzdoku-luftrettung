@@ -80,9 +80,7 @@ ui_topbar('uebersicht');
   </main>
 </div>
 
-<script src="<?= asset('assets/crypto.js') ?>"></script>
-<script src="<?= asset('assets/keyguard.js') ?>"></script>
-<script src="<?= asset('assets/unlock.js') ?>"></script>
+<?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Die Artsymbole VOR der Tabelle setzen — sie stammen aus
@@ -98,13 +96,6 @@ ui_topbar('uebersicht');
 <script>
 const JAHR  = <?= json_encode($jahr) ?>;
 const MONAT = <?= json_encode($monat) ?>;
-const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-   bekommt einen anderen Schluessel. */
-const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 
 // Karte bleibt ausgeblendet (CSS [hidden]), bis feststeht, dass mindestens
 // ein Pin gezeichnet wird — preferCanvas fuer performantes Rendering bei

@@ -216,9 +216,7 @@ ui_topbar('einstellungen');
 
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
-    <script src="<?= asset('assets/crypto.js') ?>"></script>
-    <script src="<?= asset('assets/keyguard.js') ?>"></script>
-    <script src="<?= asset('assets/unlock.js') ?>"></script>
+    <?php ui_krypto_bootstrap(['csrf' => true, 'einzug' => '    ']); ?>
     <script src="<?= asset('assets/html.js') ?>"></script>
     <?php /* Passwortguete fuer das Archivpasswort des Exports (B9, M2-03). */ ?>
     <script src="<?= asset('assets/pwquality.js') ?>"></script>
@@ -239,14 +237,6 @@ ui_topbar('einstellungen');
     <script src="<?= asset('assets/import_profiles.js') ?>"></script>
     <script src="<?= asset('assets/import.js') ?>"></script>
     <script>
-      const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-      const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-      /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-         gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-         bekommt einen anderen Schluessel. */
-      const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-      const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
-      const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
       const APP_TZ = <?= json_encode($CFG['app']['timezone']) ?>;
       const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
       // Kennung des Kontos fuer den Exportdateinamen (export.js). Beide Werte

@@ -151,8 +151,7 @@ ui_topbar('uebersicht');
   <?php ui_days_sidebar(null); ?>
   <main class="page">
     <h1>Zuordnung nachtragen</h1>
-    <?php if ($notice): ?><p class="alert alert-ok"><?= e($notice) ?></p><?php endif; ?>
-    <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+    <?php ui_meldung($notice, $error, 'ok', '    '); ?>
 
     <?php if (!$moeglich): ?>
       <div class="card">

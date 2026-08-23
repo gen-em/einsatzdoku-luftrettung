@@ -57,7 +57,8 @@ if ($isPost && $action === 'purge_mission' && ($_POST['confirm'] ?? '') === 'ja'
 /* ---- Zwischenseite fuer das endgueltige Loeschen ----------------------- */
 $istTag = ($action === 'purge_day');
 if ($istTag && $dayId <= 0) {
-    http_response_code(400); exit('Ungültiger Diensttag.');
+    ui_abbruch(400, 'Ungültiger Diensttag.',
+               ['zurueck' => 'papierkorb.php', 'zurueck_text' => 'Zum Papierkorb']);
 }
 $zeigeListe = ($action !== 'purge_day' && $action !== 'purge_mission');
 

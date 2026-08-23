@@ -16,7 +16,7 @@ $notice = null; $error = null;
 $st = db()->prepare('SELECT * FROM users WHERE id = ?');
 $st->execute([$uid]);
 $u = $st->fetch();
-if (!$u) { http_response_code(404); exit('NutzerIn nicht gefunden.'); }
+if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zur Nutzerverwaltung']); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Auffrischen: zeigt Rolle, Name und E-Mail nach einer Aenderung aktuell an.
 $st->execute([$uid]);
 $u = $st->fetch();
-if (!$u) { http_response_code(404); exit('NutzerIn nicht gefunden.'); }
+if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zur Nutzerverwaltung']); }
 
 $dv = db()->prepare('SELECT id, device_id, label, active, last_seen FROM devices
                      WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
@@ -141,8 +141,7 @@ ui_topbar('einstellungen');
   <main class="page">
   <p><a href="admin_users.php" class="add-link">← zurück zur Nutzerverwaltung</a></p>
   <h1><?= e($u['name'] ?: $u['email']) ?></h1>
-  <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <h2>Rolle</h2>
   <form method="post" class="inline-form">

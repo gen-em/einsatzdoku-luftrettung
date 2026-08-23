@@ -12,7 +12,7 @@ require_once __DIR__ . '/trash_lib.php';
 
 $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
 $scope = trash_scope_mission($userId, $id);
-if (!$scope) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+if (!$scope) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $m = $scope['mission'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja') {

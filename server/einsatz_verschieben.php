@@ -33,7 +33,7 @@ $mq = db()->prepare('SELECT id, day_id, started_at, ended_at
                      FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
 $mq->execute([$mid, $userId]);                                       // Datentrennung!
 $mission = $mq->fetch();
-if (!$mission) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 
 $altDayId = $mission['day_id'] !== null ? (int)$mission['day_id'] : 0;
 $altTag   = $altDayId > 0 ? dt_laden($userId, $altDayId) : null;
@@ -97,7 +97,7 @@ ui_topbar('uebersicht');
   <?php ui_days_sidebar($altDayId > 0 ? $altDayId : null); ?>
   <main class="page">
     <h1>Einsatz verschieben</h1>
-    <?php if ($fehler): ?><p class="alert"><?= e($fehler) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $fehler); ?>
 
     <div class="card">
       <p>Der Einsatz vom

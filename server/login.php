@@ -149,8 +149,10 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
   <img src="<?= e(logo_src()) ?>"
        alt="GenEM" class="login-logo">
   <h1>Einsatzdoku</h1>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
-  <?php if ($hinweis && !$error): ?><p class="alert alert-info"><?= e($hinweis) ?></p><?php endif; ?>
+  <?php /* Beide schliessen einander aus: Steht ein Fehler an, tritt der
+           Hinweis zurueck. Die Reihenfolge in ui_meldung() ist deshalb
+           ohne Wirkung. */ ?>
+  <?php ui_meldung($error ? null : $hinweis, $error); ?>
   <form method="post" autocomplete="on" id="loginform">
     <?php /* Ein Token je Rundenzahl (M2-01). Das alte Feld 'token' entfaellt —
              der Server nimmt es weiterhin an, aber diese Seite fuellt es nicht

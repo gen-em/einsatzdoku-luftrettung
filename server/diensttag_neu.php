@@ -81,7 +81,7 @@ ui_topbar('uebersicht');
   <?php ui_days_sidebar(null); ?>
   <main class="page">
     <h1>Diensttag anlegen</h1>
-    <?php if ($fehler): ?><p class="alert"><?= e($fehler) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $fehler); ?>
 
     <div class="card">
       <p class="muted">Für Dienste, an denen die Uhr nicht mitgelaufen ist. Der

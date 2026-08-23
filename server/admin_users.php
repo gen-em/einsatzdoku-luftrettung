@@ -129,8 +129,7 @@ ui_topbar('einstellungen');
   <?php ui_settings_sidebar('admin'); ?>
 
 <main class="page">
-  <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php /* ---- Erinnerung an die Sicherungen (A8.4) ------------------------
      * Muster wie die Wartungswarnung in update.php: erst sagen, was ist, dann
