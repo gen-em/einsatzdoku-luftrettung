@@ -1094,3 +1094,142 @@ Nach jedem Paket: Abnahmekriterien abhaken, Prüfprotokoll
 fortschreiben, Abweichungen als P-Einträge begründen. Am Phasenende:
 Rahmenplan Abschnitt 6 aktualisieren, Push nach Bestätigung (K7).
 
+---
+
+## 10. Vorschlag für den Gesamtplan — Papierkorb in die Sicherung
+
+**Herkunft: Anweisung, nicht Vorschlag.** Beim Abschluss von P1 kam die Frage
+auf, ob der Papierkorb inzwischen mitgesichert und mit wiederhergestellt wird.
+Die Antwort war nein (siehe unten, *Ausgangslage*). Die Entscheidung dazu ist
+gefallen: **Er soll es — in der NutzerInnen-Sicherung und in der
+Admin-Sicherung.** Dieser Abschnitt beschreibt, was dafür zu tun ist, damit
+die konzipierende Instanz es als eigenes Paket in den Gesamtplan aufnehmen
+kann. Er ist in P1 **nicht** umgesetzt: Er ändert den Rückspielweg, und das
+ist keine Nebenarbeit am Ende einer Phase.
+
+### 10.1 Ausgangslage (gemessen in P1)
+
+Der Papierkorb steht in **keiner** Sicherung. `edbak_build()` filtert an drei
+Stellen `deleted_at IS NULL`; eine Wiederherstellung in ein frisches Konto
+leert ihn damit endgültig. Gemessen am Referenzdatensatz: **5 Einsätze,
+5 Ruhesegmente und 1 Diensttag** vor dem Umlauf, danach nichts davon. Das
+steht seit Web 7.2.3 in `docs/Backup-Format.md` 4 — vorher stand es nirgends.
+
+Zwei Dinge sind seit Web 7.3.0 bereits da und tragen:
+
+- `edbak_build(int $userId, bool $mitPapierkorb = false)` — der Filter lässt
+  sich abschalten. Gebraucht wird das bisher an genau einer Stelle, der
+  Demo-Fixture.
+- Die Spalten `deleted_at` und `deleted_with_day` stehen ohnehin in den
+  Spaltenlisten und wandern in jede Datei mit. Sie sind dort bis heute immer
+  `null` — der Filter sorgt dafür.
+
+**Was fehlt, ist der Rückweg.** `edbak_restore()` schreibt die Felder aus
+`mission_fields.php` plus `pat_blob` und `start_src`; `deleted_at` steht dort
+nicht. Würde man heute nur den Filter abschalten, kämen die Einträge als
+**aktive** zurück — schlimmer als gar nicht, weil aus einem Papierkorb
+stillschweigend Bestand würde. Genau deshalb hat der Demo-Reset ein
+Nachlauf-Drehbuch (E-P1-21), das die Einträge nach dem Einspielen über die
+regulären Löschwege wieder in den Papierkorb legt.
+
+### 10.2 Was zu tun ist
+
+1. **Sichern ohne Flag.** `edbak_build()` nimmt den Papierkorb künftig
+   grundsätzlich mit; `api/backup_data.php` und `adminbackup_lib.php` erben
+   das ohne eigene Änderung (letzteres ruft `edbak_build()` auf und ergänzt
+   nur `pat_wrap_rc`). Der Parameter `$mitPapierkorb` wird damit gegenstandslos
+   und entfällt. **Zu entscheiden:** ob es stattdessen eine Wahlmöglichkeit
+   auf der Sicherungsseite gibt. *Empfehlung: nein.* Eine Sicherung ist ein
+   Abbild; eine Option, die den Bestand beschneidet, schafft zwei Sorten
+   Sicherung, die von außen gleich aussehen — und die Frage „war der
+   Papierkorb dabei?" ist genau die, die man Monate später nicht mehr
+   beantworten kann. Die Frist von 30 Tagen begrenzt die Menge ohnehin.
+
+2. **Rückweg: `deleted_at` und `deleted_with_day` schreiben.** Das ist die
+   eigentliche Arbeit. Beide Spalten stehen **nicht** im Feldkatalog
+   (`mission_fields.php`) und gehören auch nicht dorthin — sie beschreiben
+   keinen fachlichen Inhalt, sondern einen Zustand. Sie werden also wie
+   `pat_blob` und `start_src` als benannte Ausnahme geführt, mit Begründung an
+   Ort und Stelle.
+
+3. **Die D1-Regel muss zwei Fälle unterscheiden.** `edbak_restore()` stellt
+   heute vorab fest, welche Diensttage im **Zielkonto** im Papierkorb liegen,
+   und überspringt Einsätze, die dorthin gehörten (Zählgrund
+   `tag_im_papierkorb`). Das bleibt richtig. Neu hinzu kommt der Fall „der Tag
+   liegt **in der Datei** im Papierkorb" — dort ist das Überspringen falsch:
+   Tag und Einsätze sollen gemeinsam als Papierkorbeinträge entstehen. Die
+   beiden Fälle sehen im Code heute gleich aus und müssen getrennt werden.
+   **Das ist die Stelle, an der ein Fehler am teuersten wäre** — sie verdient
+   den ausführlichsten Prüfschritt.
+
+4. **Die Frist entscheiden.** `deleted_at` ist der Beginn der 30-Tage-Uhr
+   (`trash_purge_expired()`, täglich über `run_cleanup_if_due()`). Wird der
+   ursprüngliche Zeitstempel eingespielt, kann der nächste Aufräumlauf
+   Einträge sofort endgültig löschen — bei einer Sicherung, die älter als
+   30 Tage ist, sogar alle. Wird stattdessen der Einspielzeitpunkt gesetzt,
+   bekommt der Papierkorb neue 30 Tage, und die Datei sagt etwas anderes als
+   der Bestand. *Empfehlung: den ursprünglichen Zeitstempel einspielen* — er
+   ist die Wahrheit der Datei — **und die Rückmeldung der Wiederherstellung
+   sagen lassen, wie viele Einträge in den Papierkorb gingen und wie viele
+   davon die Frist bereits überschritten haben.** Ein stilles Wiederaufleben
+   mit sofortigem stillen Verschwinden ist der Fall, den niemand versteht.
+
+5. **Nutzlastversion.** Die Datei führt heute `version: 6`. Der Inhalt ändert
+   sich nicht im Aufbau, wohl aber in der Bedeutung: Eine Datei mit gefülltem
+   Papierkorb, in einen älteren Stand eingespielt, brächte die Einträge als
+   aktiven Bestand zurück. Das spricht für **Version 7** und die übliche
+   Abweisung älterer Stände. Zu klären ist der umgekehrte Weg — eine
+   Version-6-Datei enthält keinen Papierkorb und bleibt problemlos lesbar.
+
+6. **Der Demo-Reset wird einfacher.** Fällt die Asymmetrie weg, braucht das
+   Nachlauf-Drehbuch (E-P1-21, `demo_nachlauf()` in `server/demo_lib.php`)
+   seinen Papierkorb-Teil nicht mehr: Die Fixture bringt ihn dann selbst mit.
+   Der Nachlauf läuft heute bewusst **nach** dem Commit, weil `trash_lib.php`
+   eigene Transaktionen öffnet — mit dem Wegfall verschwindet auch dieser
+   Umweg samt seines dokumentierten Fehlerfalls. **Das Paket sollte diesen
+   Rückbau ausdrücklich enthalten**, sonst bleibt ein zweiter Weg stehen, der
+   dasselbe tut.
+
+7. **`deleted_refs` bleibt draußen.** Die Sperrliste ist kein Papierkorb: Sie
+   hängt an einer Gerätekennung, und Geräte stehen aus gutem Grund in keiner
+   Sicherung (ein mitgesichertes Gerät wäre ein mitgesicherter Zugang). Das
+   sollte im Paket ausdrücklich stehen, damit die beiden Bereiche nicht
+   zusammengezogen werden.
+
+8. **Dokumentation nachziehen.** `docs/Backup-Format.md` 4 führt den
+   Papierkorb heute unter „was in der Sicherung gar nicht vorkommt" — der
+   Eintrag wandert und wird zur Beschreibung; `docs/Handbuch.md` (Sichern und
+   Wiederherstellen); der Kopfkommentar von `edbak_build()`, der die heutige
+   Entscheidung ausführlich begründet und dann das Gegenteil beschreibt.
+
+### 10.3 Wie es zu prüfen ist
+
+Der Prüfstand aus P1 trägt das Paket, mit **einer** Vorarbeit: Die
+Referenz-`edbak` unter `tools/referenzdatensatz/referenz/` enthält heute
+keinen Papierkorb (sie ist ohne Flag erzeugt) und muss neu gezogen werden.
+Danach:
+
+- **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak`) misst den
+  Papierkorb dann von selbst mit — 5 Einsätze, 5 Ruhesegmente, 1 Diensttag
+  gehen in den Vergleich ein, der sie heute gar nicht sieht. Der Nebensatz in
+  P-09 („getrennt gezählt, weil der Vergleich sie nicht zeigen kann:
+  Papierkorb 5/5/1 → 0/0/0") wird damit zu einer regulären Zeile des
+  Berichts. **Das ist der eigentliche Abnahmewert des Pakets.**
+- **Zwei Fälle im Browser**, die kein Vergleich abdeckt: (a) ein Diensttag im
+  Papierkorb wird wiederhergestellt und bringt genau die Einsätze mit, die
+  mit ihm gelöscht wurden (`deleted_with_day`), nicht die, die vorher schon
+  einzeln darin lagen; (b) eine Sicherung, die älter ist als die Frist, wird
+  eingespielt — die Rückmeldung muss sagen, was gleich wieder verschwindet.
+- **Gegenprobe zur D1-Regel:** dieselbe Datei in ein Konto einspielen, in dem
+  ein gleichnamiger Diensttag bereits im Papierkorb liegt. Erwartet wird das
+  heutige Verhalten (überspringen, mit Grund), nicht das neue.
+
+### 10.4 Umfang
+
+Ein kleines Paket, aber kein triviales: vier Dateien unter `server/`
+(`backup_lib.php`, `demo_lib.php`, `api/backup_data.php` nur mittelbar,
+`version.php`), zwei Dokumente, eine neu zu ziehende Referenzdatei. Der Aufwand
+steckt nicht im Schreiben, sondern in Punkt 3 und Punkt 4 — beides
+Entscheidungen über Verhalten, nicht über Code. **Hauptversion**, weil sich
+das Format der Sicherung in seiner Bedeutung ändert und die Nutzlastversion
+steigt.

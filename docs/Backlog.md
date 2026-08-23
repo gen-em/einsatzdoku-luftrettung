@@ -167,6 +167,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Datei mit `diensttag_id` den unterscheidenden Schlüssel mitführt.
     Dazu der Formelschutz-Apostroph (Nr. 23). **Vorschlag:** Abschnitt 5.1
     ergänzen. Gefunden in P1/B5 (dort F-P1-N).
+29. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
+    Admin-Sicherung.** Heute steht er in keiner: `edbak_build()` filtert
+    `deleted_at IS NULL`, eine Wiederherstellung leert ihn endgültig (gemessen
+    am Referenzdatensatz: 5 Einsätze, 5 Ruhesegmente, 1 Diensttag → nichts).
+    **Entschieden ist, dass er mitsoll**; offen ist die Umsetzung, und sie ist
+    nicht klein: Der Rückspielweg wertet `deleted_at` und `deleted_with_day`
+    nicht aus (ein Abschalten des Filters allein brächte den Papierkorb als
+    aktiven Bestand zurück), die D1-Regel muss „Tag im Zielkonto im
+    Papierkorb" von „Tag in der Datei im Papierkorb" unterscheiden, und die
+    30-Tage-Frist braucht eine Entscheidung. Ausgearbeitet als Paketvorschlag
+    in `tools/referenzdatensatz/Konzept-P1.md`, Abschnitt 10 — von dort in
+    den Gesamtplan. Als Nebenwirkung entfällt der Papierkorb-Teil des
+    Demo-Nachlaufs (E-P1-21).
 
 ---
 

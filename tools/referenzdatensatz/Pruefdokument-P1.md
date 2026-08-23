@@ -248,6 +248,10 @@ Weiter offen, ohne Wirkung auf die Kreisläufe:
 - **Nr. 24** — `missions.created_at` wird gesichert, kommt nicht zurück
 - **F-P1-N** — `Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr
   (Nr. 28)
+- **Nr. 29** — der Papierkorb steht in keiner Sicherung. Entschieden ist, dass
+  er mitsoll; ausgearbeitet als Paketvorschlag in `Konzept-P1.md`,
+  Abschnitt 10. Bis dahin gilt: Eine Wiederherstellung leert den Papierkorb
+  endgültig.
 
 ---
 
