@@ -111,8 +111,7 @@ declare(strict_types=1);
  *
  * 7.2.1 ist eine SICHERHEITSKORREKTUR mit eng begrenztem Umfang
  * (Sofortpaket Backlog Nr. 22, vor Phase P1). Das Alter ging als einzige der
- * drei geschuetzten Spalten unmaskiert in die Einsatztabellen — ueber das
- * Formular unerreichbar (parseInt), ueber den Import sehr wohl. Maskiert wird
+ * drei geschuetzten Spalten unmaskiert in die Einsatztabellen. Maskiert wird
  * jetzt in zelleGeschuetzt() selbst statt an der Aufrufstelle. Dabei mit
  * geraeumt: das Vormerkfach des Passwortwechsels (edk_neu), das den neuen
  * Datenschluessel bis dahin ueber das Abmelden hinaus tragen konnte.
@@ -124,8 +123,9 @@ declare(strict_types=1);
  * NACHTRAG: Dieselbe Luecke ist in Phase P1 unabhaengig ein zweites Mal
  * gefunden worden (Fund F-P1-I, mit dem Referenzdatensatz im Browser
  * gemessen: gegen den Stand 7.2.0 sechs Befunde ueber drei Seiten, gegen
- * diesen keiner bei 42 Einzelpruefungen). Zwei Wege, ein Befund — die
- * Messung aus P1 belegt diese Fassung, sie hat sie nicht ausgeloest.
+ * diesen keiner bei 42 Einzelpruefungen, nach dem Zusammenfuehren beider
+ * Arbeitslinien noch einmal gefahren). Zwei Wege, ein Befund — die Messung
+ * aus P1 belegt diese Fassung, sie hat sie nicht ausgeloest.
  *
  * 7.2.2 behebt einen stillen Datenverlust im CSV-Rueckimport: gruppiere() in
  * assets/import.js fuehrte eine zweite, von Hand gepflegte Feldliste neben

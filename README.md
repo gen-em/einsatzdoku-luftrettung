@@ -26,8 +26,9 @@ liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 | [`docs/Backup-Format.md`](docs/Backup-Format.md) | Aufbau der `.edbak` und was **nicht** darin steht |
 | [`docs/Export-Format.md`](docs/Export-Format.md) | CSV- und Excel-Export, Rückimport |
 | [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, Nummern sind dauerhaft |
+| [`docs/Branding.md`](docs/Branding.md) | Farben, Schriften, Logo-Einsatz — verbindlich für jede Oberflächenänderung |
+| [`docs/Pruefung-Sofortpaket-22.md`](docs/Pruefung-Sofortpaket-22.md) | Prüfdokument des Sofortpakets zu Backlog Nr. 22 (Web 7.2.1) |
 | [`tools/referenzdatensatz/LIESMICH.md`](tools/referenzdatensatz/LIESMICH.md) | erfundener Beispielbestand: Demo-Konto **und** Regressionsreferenz |
-| `docs/archiv/` | eingefrorene Bau-Spezifikation (nicht mehr gepflegt) |
 
 ## Schnellstart
 

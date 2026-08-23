@@ -28,10 +28,11 @@ Daten erst nach Server-Bestätigung.
 ```
 hems/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
-│                          Review-Umsetzung (Stand der Review-Behebung),
+│                          Branding (Farben, Schriften, Logo),
 │                          Backup-Format, Export-Format,
 │                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
-│                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen)
+│                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen),
+│                          Pruefung-Sofortpaket-22 (Prüfdokument zu Nr. 22)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob

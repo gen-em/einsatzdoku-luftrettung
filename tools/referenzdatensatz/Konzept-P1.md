@@ -604,7 +604,9 @@ Bedienweg/Erwartung/Bedeutung); Doku in sich konsistent.
 | Verzeichnisstruktur | `docs/Technik.md` 2 — `tools/referenzdatensatz/` und `server/demo/` eingetragen |
 | Runbook | `docs/Technik.md` 7 — einrichten, zurücksetzen, nach einem Datensatz-Update auffrischen |
 | Bedienung | `docs/Handbuch.md` 3.2 |
-| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.2, 7.2.3, 7.3.0, 7.3.1. **Nicht** 7.2.1: Diese Nummer trägt die Maskierung des Altersfelds, die parallel als Sofortpaket über `main` ausgeliefert wurde (s. F-P1-I) |
+| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.2, 7.2.3, 7.3.0, 7.3.1. **Nicht** 7.2.1: Diese Nummer trägt die Maskierung des Altersfelds, die parallel als Sofortpaket über `main` ausgeliefert wurde (s. F-P1-I). Deren Eintrag trägt seit dem Zusammenführen aber einen
+**Nachtrag aus dieser Phase**: zweiter Einfallsweg, Unbetroffenheit der
+Einsatzseite, „niemand muss nachbessern", zweite Messung |
 | Backlog | Nr. 23–30 neu; Nr. 17 um die Messgrundlage aus P1 ergänzt. **Nicht** Nr. 22 — die trägt das parallele Sofortpaket von `main`; die Nummern dieser Phase sind beim Zusammenführen um eins gerückt |
 
 **Konsistenz-Gegenlesen.** Ein Widerspruch ist dabei aufgefallen und behoben:
@@ -630,7 +632,7 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt, zweifach** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch. In B5 ein zweites Mal, ungeplant: Nach dem versehentlichen Löschen des Referenzkontos (F-P1-J) stand der vollständige Bestand in rund vier Minuten wieder — wieder 526 Anfragen, 0 Fehler |
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
-| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I; ausgeliefert als Web 7.2.1, s. dort). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
+| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I; ausgeliefert als Web 7.2.1, s. dort). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten. **Nach dem Zusammenführen mit `main` erneut gefahren** — dieselben 42 Einzelprüfungen, 0 Befunde, diesmal gegen die tatsächlich ausgelieferte Fassung |
 | P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — zuletzt 8 797 Einzelvergleiche, 858 erwartete, **6 unerklärte** Abweichungen (bei Abschluss B5: 8 617 / 844 / **9**). Die sechs sind zwei Befunde: F-P1-L (4 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Der dritte, F-P1-K, ist mit **Web 7.3.1** behoben; seine vier Meldungen sind weg, und der vierte Fall von F-P1-L wurde dadurch überhaupt erst sichtbar. Nicht als Ausnahme geführt — sie sind behebbar |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
 | P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | **erfüllt** — Anlegen aus der Fixture in 6,0 s (87/100/16, 0 übersprungen); Export gegen die Referenz: CSV 9 589 und edbak 269 439 Vergleiche, **je 0 Abweichungen** |
@@ -814,8 +816,11 @@ genau die sechs Felder.
 
 ### F-P1-I — Cross-Site-Scripting über das Altersfeld in allen drei Einsatztabellen
 
-**Fundort:** `server/assets/missiontable.js:140` und
-`server/index.php:338`. **Behoben — ausgeliefert als Web 7.2.1.**
+**Fundort:** `server/assets/missiontable.js` (Funktion `zelleGeschuetzt()`
+und die Spalte `age`) sowie `server/index.php` (Tagestabelle). Zeilenanker
+stehen hier bewusst nicht: Die Behebung hat sie verschoben, und ein
+Zeilenanker, der ins Leere zeigt, ist schlechter als keiner.
+**Behoben — ausgeliefert als Web 7.2.1.**
 
 **Sache:** `zelleGeschuetzt()` nahm eine Formatierfunktion entgegen; damit
 lag die Entscheidung über die HTML-Maskierung an der Aufrufstelle.
@@ -874,9 +879,12 @@ Heute benutzt ihn keine Aufrufstelle. Wer ihn eines Tages benutzt, bekommt
 maskierten Text — die Lücke lässt sich damit nicht wieder aufreißen, wohl
 aber ein `<b>` um einen Wert legen.
 
-`browser/angriffswerte.mjs` prüft die ausgelieferte Fassung wiederholbar
-und meldet gegen den Stand davor sechs Befunde über drei Seiten. Die
-Messung gilt unverändert: Sie misst das Ergebnis, nicht die Signatur.
+`browser/angriffswerte.mjs` prüft die ausgelieferte Fassung wiederholbar.
+Die Messung ist nach dem Zusammenführen **neu gefahren** worden, damit sie
+die ausgelieferte Fassung belegt und nicht die verworfene: 42
+Einzelprüfungen über sechs Seiten, 0 Dialoge, 0 eingehängte Elemente, 0
+Konsolenfehler, keine Befunde. Gegen den Stand davor meldet dasselbe
+Prüfmittel sechs Befunde über drei Seiten.
 
 **Bemerkenswert an der Sache:** Der Fund ist der Zweck von R20 — die
 Entscheidung E-P1-15 hat genau das geleistet, wofür sie da war. Zugleich

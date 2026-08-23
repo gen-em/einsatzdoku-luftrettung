@@ -108,7 +108,7 @@ erkennen ist**.
   liegt am falschen Ort.
 
 - [ ] **Version stimmt.**
-  Fußzeile einer beliebigen Seite. Erwartet: **7.3.0**.
+  Fußzeile einer beliebigen Seite. Erwartet: **7.3.1**.
   *Scheitern:* eine ältere Nummer — der Browser sieht alte Dateien, hart neu
   laden; steht sie auch dann nicht da, ist der Deploy nicht durch.
 
@@ -166,6 +166,18 @@ erkennen ist**.
   Erwartet: Diagnose weiterhin lesbar.
   *Scheitern:* ⚠ → der Reset hat das Schlüsselmaterial nicht mit
   zurückgeschrieben.
+
+**Nebenwirkung, die man einmal gesehen haben sollte — sie ist kein Fehler.**
+Fällt der Reset **in einen laufenden Besuch**, sieht die Besucherin für einen
+Moment nichts: Die Diensttage bekommen beim Einspielen **neue Kennungen**, ein
+offener Link `index.php?d=<alte Kennung>` zeigt danach ins Leere, und eine
+gerade laufende API-Anfrage kann mit **401** abgewiesen werden. Beobachtet
+beim Nachmessen zu Web 7.3.1: Ein Lauf von `browser/angriffswerte.mjs` lief
+genau in einen Reset und meldete **0 Kandidaten und 3 Konsolenfehler**; der
+unmittelbar folgende Lauf meldete **42 Einzelprüfungen, 0 Befunde**.
+Wer prüft, wiederholt in diesem Fall — und wer eine Zahl aus einem Lauf
+übernimmt, sieht vorher nach, ob `kandidaten` darin größer als 0 ist. Genau
+dafür hat das Prüfmittel seine Gegenprobe.
 
 ### 4.4 Die Sperren
 

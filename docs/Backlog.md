@@ -269,9 +269,11 @@ zutreffen.
     `server/assets/missiontable.js` maskierte Einsatzort und Diagnose über
     `esc()`, das Alter aber nicht (`v => v`) — und die Zelle wird per
     `innerHTML` gesetzt. Über das Formular war der Weg zu (`parseInt()` in
-    `einsatz_form.php`), über den Import nicht: `server/assets/import.js`
-    übernimmt `pat.age` als rohen Zellenwert. Eine Importdatei mit Markup in
-    der Alterspalte führte Skript in genau dem Fenster aus, in dem der
+    `einsatz_form.php`); das **Feld** ist trotzdem keine Zahl, denn `age` liegt
+    im `pat_blob` und der ist freies JSON. Der Weg hinein ist die
+    **Wiederherstellung einer Sicherung** (`api/backup_restore.php` übernimmt
+    den inneren Chiffretext unverändert), im Adminbereich sogar die einer
+    *fremden*. Markup dort führte Skript in genau dem Fenster aus, in dem der
     Inhaltsschlüssel liegt; der Server konnte nichts prüfen, er sieht nur
     Chiffretext. Die Lücke bestand seit Web 5.2.0. Gefunden in P0 (dort F-20,
     Konzept Abschnitt 8 und 9.3; Prüfdokument P0, Abschnitt 4.4).

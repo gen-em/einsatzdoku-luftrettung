@@ -113,6 +113,48 @@ einfach: Alle sieben Zeilen mit belegtem `crew_p2` gehören zum Diensttag
 gewählte; die Besatzung kommt unverändert zurück. Die drei Regeln sind
 entfernt, der Kreislauf meldet jetzt keine ungenutzte Regel mehr.
 
+### Ebenfalls in dieser Version: eine berichtigte Wegangabe
+
+Beim Zusammenführen der beiden Arbeitslinien ist ein **Sachfehler in der
+Beschreibung des Sofortpakets 7.2.1** aufgefallen. Er betrifft nicht die
+Korrektur selbst — die ist richtig und wirkt —, sondern die Angabe, **wie** der
+Angriffswert in das Altersfeld gelangt.
+
+Dort stand: über den **Import**; `assets/import.js` übernehme `pat.age` als
+rohen Zellenwert. Das trifft nicht zu. `import_profiles.js` bildet die Spalte
+`pat_alter` mit `parse: ['alterJahre']` ab, und `PARSERS.ganzzahl` verlangt
+`/^-?\d+$/`. Nachgemessen an neun Fällen: `47`, `0`, leer und `  12 ` kommen
+durch; `<img src=x onerror=…>`, `47<img …>` und `<b>47</b>` werden **verworfen**
+(„Alter: ganze Zahl erwartet"). Die Angabe stammt vermutlich aus dem Kommentar
+bei der Excel-Spalte `Alter`, der die CSV-Spalte `pat_alter` als die nennt, die
+„den Rohwert führt" — gemeint ist dort der *gespeicherte* Wert im Gegensatz zum
+gerechneten, nicht ein ungeprüfter.
+
+Der Weg hinein ist ein anderer, und er ist der unangenehmere: Das Feld `age`
+liegt im `pat_blob`, freiem JSON, das der Server nie im Klartext sieht. Hinein
+kommt es über die **Wiederherstellung einer Sicherung** — im Adminbereich sogar
+die einer *fremden* — oder über jeden Zugang, der den Inhaltsschlüssel besitzt
+und die Oberfläche umgeht. Genau deshalb lässt sich die Lücke serverseitig
+grundsätzlich nicht wegprüfen, und genau deshalb war die Korrektur richtig.
+
+Berichtigt an fünf Stellen: `docs/CHANGELOG.md` (Eintrag 7.2.1),
+`server/version.php`, `server/assets/missiontable.js` (Kommentar),
+`docs/Backlog.md` (Nr. 22) und `docs/Pruefung-Sofortpaket-22.md`.
+
+**Am schwersten wog die letzte.** Der Prüflistenpunkt P-1 dort führte über den
+CSV-Import und erwartete, dass der Angriffswert danach als Text in der Zelle
+steht. Das kann er nicht — der Import verwirft ihn, das Feld bleibt leer, und
+das Scheiternsmerkmal „ein leeres Feld ist auch ein Fehler" hätte bei
+**korrektem** Verhalten angeschlagen. Wer die Liste abgehakt hätte, hätte einen
+Fehler gemeldet, wo keiner ist. P-1 führt jetzt über das Demo-Konto, das einen
+solchen Wert im Altersfeld mitbringt (21.11.2026, 09:21).
+
+Dazu Kleinigkeiten aus demselben Durchgang: `README.md` führte ein
+`docs/archiv/` auf, das es nicht gibt, und weder `Branding.md` noch
+`Pruefung-Sofortpaket-22.md`; `Technik.md` nannte im Verzeichnisbaum eine
+„Review-Umsetzung", die es ebenfalls nicht mehr gibt. Eingetragen und
+ausgetragen.
+
 ## [Web 7.3.0] — 2026-08-23
 
 **Ein Demo-Konto.** Adresse `demo@gen-em.org`, Passwort `nadokudemo0815`,
@@ -381,7 +423,7 @@ Das entspricht dem Grundsatz „Feldkatalog statt Sonderfall" (CLAUDE.md 4).
 
 ### Wer nachbessern muss
 
-Wer zwischen Web 6.1.0 und 7.2.0 eine CSV-Datei zurückgespielt hat, hat die
+Wer zwischen Web 6.1.0 und 7.2.1 eine CSV-Datei zurückgespielt hat, hat die
 sechs Felder für die betroffenen Einsätze leer im Bestand. Ein erneuter Import
 derselben Datei mit „überschreiben" trägt sie nach; die Felder stehen
 außerhalb der COALESCE-Schranke von `api/import_commit.php`, werden also
@@ -413,12 +455,11 @@ verursacht noch verschärft; sie hat sie **gefunden** (Befund F-20).
 `zelleGeschuetzt()` maskierte Einsatzort und Diagnose über `esc()`, das Alter
 aber nicht — dort stand `v => v`, weil ein Alter eine Zahl ist. Über das
 Einsatzformular ist es das auch: `einsatz_form.php` schickt es durch
-`parseInt()`. Über den **Import** nicht: `assets/import.js` übernimmt `pat.age`
-als rohen Zellenwert und verschlüsselt ihn unverändert.
+`parseInt()`. Das **Feld** ist es nicht: `age` liegt im `pat_blob`, und der ist
+freies JSON.
 
-Und die Zelle wird per `innerHTML` gesetzt. Eine Importdatei mit Markup in der
-Alterspalte führte damit Skript aus — in genau dem Fenster, in dem der
-entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
+Und die Zelle wird per `innerHTML` gesetzt. Markup darin führte Skript aus — in
+genau dem Fenster, in dem der entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
 bekommt nur Chiffretext, prüfen kann er ihn nicht. Das ist der Preis der
 Ende-zu-Ende-Verschlüsselung, und er verlangt, dass der Browser seine Seite
 hält.
@@ -518,13 +559,14 @@ Aufrufe und zählt zusätzlich, ob Elemente aus der Nutzlast im Dokument stehen.
 Gegen den Stand 7.2.0 gehalten: drei Seiten, je ein ausgelöster Dialog und ein
 eingefügtes `<img>` — **sechs Befunde**. Gegen diese Fassung: **42
 Einzelprüfungen über sechs Seiten**, kein Dialog, kein eingefügtes Element,
-keine Konsolenmeldung. Die Gegenprobe läuft mit: Der Wert muss auf mindestens
+keine Konsolenmeldung. Diese zweite Zahl ist nach dem Zusammenführen der
+beiden Arbeitslinien **noch einmal gefahren** worden, damit sie den
+ausgelieferten Code belegt und nicht den verworfenen Entwurf. Die Gegenprobe läuft mit: Der Wert muss auf mindestens
 einer Seite **sichtbar** sein, sonst hieße „kein Dialog" nur „nichts
 gerendert".
 
 Zwei Prüfmittel, zwei Wege, ein Ergebnis. Das ist mehr wert als eine Messung,
 die man zweimal liest.
-
 
 ## [Web 7.2.0] — 2026-08-23
 
