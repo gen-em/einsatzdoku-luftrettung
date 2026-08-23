@@ -1,0 +1,416 @@
+{
+  "kennung": "D06",
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mesz",
+    "ruhe-mehrere"
+  ],
+  "dienst": {
+    "day": "2026-05-10",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-05-10 07:00",
+    "ende": "2026-05-10 20:30",
+    "day_ref": "d-11-2740681935",
+    "besatzung": {
+      "p1": "Tilman Roithner",
+      "p2": null,
+      "hems": "Kerstin Obermeier",
+      "fr": "Vitus Halbritter",
+      "other": null
+    },
+    "notizen": "Erster Bergwandertag der Saison; vier Einsätze, davon drei im alpinen Gelände."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-9963528471",
+      "beginn": "2026-05-10 07:00",
+      "ende": "2026-05-10 08:47",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-3086472195",
+      "beginn": "2026-05-10 11:20",
+      "ende": "2026-05-10 13:05",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-6619238740",
+      "beginn": "2026-05-10 14:38",
+      "ende": "2026-05-10 17:22",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4457901362",
+      "beginn": "2026-05-10 18:55",
+      "ende": "2026-05-10 20:30",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-7148036592",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 08:47",
+      "ende": "2026-05-10 09:52",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 08:47"
+        ],
+        [
+          3,
+          "2026-05-10 08:51"
+        ],
+        [
+          4,
+          "2026-05-10 09:06"
+        ],
+        [
+          5,
+          "2026-05-10 09:11"
+        ],
+        [
+          9,
+          "2026-05-10 09:52"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Übergabe an die Bereitschaft, Abstieg zu Fuß",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Maschine blieb am Einsatzort, weil während der Versorgung bereits der nächste Einsatz gemeldet wurde."
+      },
+      "geschuetzt": {
+        "dx": "Distorsion des oberen Sprunggelenks",
+        "dob": "1968-04-27",
+        "age": null,
+        "mission_no": "2026-0261",
+        "loc": {
+          "addr": "Steig zur Hochalpe, 87538 Moosachtal",
+          "lat": 47.508,
+          "lon": 10.023
+        },
+        "site_desc": "Wanderweg oberhalb der Alpe, Wiesenhang mit Landemöglichkeit",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "transport-ambulant",
+        "phasen-unvollstaendig"
+      ]
+    },
+    {
+      "client_ref": "m-11-5573920184",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 09:58",
+      "ende": "2026-05-10 11:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 09:58"
+        ],
+        [
+          3,
+          "2026-05-10 10:03"
+        ],
+        [
+          4,
+          "2026-05-10 10:19"
+        ],
+        [
+          5,
+          "2026-05-10 10:24"
+        ],
+        [
+          6,
+          "2026-05-10 10:47"
+        ],
+        [
+          7,
+          "2026-05-10 11:01"
+        ],
+        [
+          8,
+          "2026-05-10 11:09"
+        ],
+        [
+          9,
+          "2026-05-10 11:20"
+        ]
+      ],
+      "route": [
+        "ort_vorher",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "prev_site",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Moosachtal"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Direktstart vom vorigen Einsatzort ohne Rückkehr zur Station."
+      },
+      "geschuetzt": {
+        "dx": "Synkope mit Sturz aus dem Stand, Platzwunde okzipital",
+        "dob": null,
+        "age": 74,
+        "mission_no": "2026-0262",
+        "loc": {
+          "addr": "Kirchsteig 9, 87477 Lohberg",
+          "lat": 47.457,
+          "lon": 10.281
+        },
+        "site_desc": "Vorplatz der Kapelle",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "start-prevsite"
+      ],
+      "$warum_start": "ABFAHRTORT-REGEL 'prev_site': Der Hubschrauber startet am EINSATZORT DES VORIGEN Einsatzes (m-11-7148036592), nicht an der Station. Gespeichert wird die Regel, nicht die Koordinate — der Klartextwert 'prev_site' verrät damit keinen Ort."
+    },
+    {
+      "client_ref": "m-11-8804157236",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 13:05",
+      "ende": "2026-05-10 14:38",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 13:05"
+        ],
+        [
+          3,
+          "2026-05-10 13:09"
+        ],
+        [
+          4,
+          "2026-05-10 13:27"
+        ],
+        [
+          5,
+          "2026-05-10 13:48"
+        ],
+        [
+          6,
+          "2026-05-10 14:09"
+        ],
+        [
+          7,
+          "2026-05-10 14:23"
+        ],
+        [
+          8,
+          "2026-05-10 14:31"
+        ],
+        [
+          9,
+          "2026-05-10 14:38"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 4,
+        "winch_cycles_pat": 2,
+        "winch_airload": 1,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Zwei Windenzyklen mit Bergretter, zwei mit Patientin; Luftverladung im Bergesack",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Sonnenau",
+          "Bergwacht Felsgrat"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Absturz im Blockwerk; Bergung nur mit der Winde möglich, Sichtflug am Grat grenzwertig."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma und Thoraxtrauma nach Absturz im Blockwerk",
+        "dob": "1979-09-11",
+        "age": null,
+        "mission_no": "2026-0263",
+        "loc": {
+          "addr": "Nordflanke des Felsgrats, 87538 Felsgrat",
+          "lat": 47.508,
+          "lon": 10.023
+        },
+        "site_desc": "Blockwerk unterhalb der Gratschneide, kein Landeplatz",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "winde",
+        "winde-cycles",
+        "winde-cycles-patient",
+        "winde-luftverladung",
+        "bergwacht",
+        "bergwacht-info",
+        "sonderzeichen-semikolon"
+      ]
+    },
+    {
+      "client_ref": "m-11-2236709481",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-05-10 17:22",
+      "ende": "2026-05-10 18:55",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-05-10 17:22"
+        ],
+        [
+          3,
+          "2026-05-10 17:29"
+        ],
+        [
+          4,
+          "2026-05-10 17:44"
+        ],
+        [
+          5,
+          "2026-05-10 17:52"
+        ],
+        [
+          6,
+          "2026-05-10 18:10"
+        ],
+        [
+          7,
+          "2026-05-10 18:38"
+        ],
+        [
+          8,
+          "2026-05-10 18:47"
+        ],
+        [
+          9,
+          "2026-05-10 18:55"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 1,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": "Dr. Weißgerber (abgebende Klinik)",
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Verlegung zur Neurochirurgie; Übernahme auf der Intensivstation, Beatmung fortgeführt."
+      },
+      "geschuetzt": {
+        "dx": "Intrazerebrale Blutung, Verlegung zur neurochirurgischen Versorgung",
+        "dob": null,
+        "age": 61,
+        "mission_no": "2026-0264",
+        "loc": {
+          "addr": "Bergklinik Sonnenau, Talstraße 40, 87534 Sonnenau",
+          "lat": 47.559,
+          "lon": 10.217
+        },
+        "site_desc": "Innerklinische Übernahme, Intensivstation",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "sekundaertransport",
+        "weiterer-notarzt"
+      ]
+    }
+  ]
+}

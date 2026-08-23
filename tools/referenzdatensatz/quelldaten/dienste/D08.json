@@ -1,0 +1,545 @@
+{
+  "kennung": "D08",
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mesz",
+    "haeufung",
+    "ruhe-mehrere"
+  ],
+  "dienst": {
+    "day": "2026-07-05",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-07-05 07:00",
+    "ende": "2026-07-05 21:00",
+    "day_ref": "d-11-6015493827",
+    "besatzung": {
+      "p1": "Marion Aschenbrenner",
+      "p2": null,
+      "hems": "Ruth Amrein",
+      "fr": "Vitus Halbritter",
+      "other": null
+    },
+    "notizen": "Stärkster Tag des Jahres: fünf Einsätze, der letzte bei Einbruch der Dunkelheit nicht mehr abgeschlossen."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-3348609172",
+      "beginn": "2026-07-05 07:00",
+      "ende": "2026-07-05 07:52",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8871234065",
+      "beginn": "2026-07-05 09:05",
+      "ende": "2026-07-05 10:11",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-5502987431",
+      "beginn": "2026-07-05 11:58",
+      "ende": "2026-07-05 13:20",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-1194762580",
+      "beginn": "2026-07-05 14:35",
+      "ende": "2026-07-05 16:02",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-7726035914",
+      "beginn": "2026-07-05 17:29",
+      "ende": "2026-07-05 19:40",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-4083572619",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-07-05 07:52",
+      "ende": "2026-07-05 09:05",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-05 07:52"
+        ],
+        [
+          3,
+          "2026-07-05 07:56"
+        ],
+        [
+          4,
+          "2026-07-05 08:11"
+        ],
+        [
+          5,
+          "2026-07-05 08:16"
+        ],
+        [
+          6,
+          "2026-07-05 08:34"
+        ],
+        [
+          7,
+          "2026-07-05 08:48"
+        ],
+        [
+          8,
+          "2026-07-05 08:56"
+        ],
+        [
+          9,
+          "2026-07-05 09:05"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Klinikum Westried",
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landung auf dem Sportplatz, Übergabe am Klinikdach war wegen Bauarbeiten nicht möglich."
+      },
+      "geschuetzt": {
+        "dx": "Verbrennung Grad IIb, ca. 18 % Körperoberfläche",
+        "dob": "1996-02-14",
+        "age": null,
+        "mission_no": "2026-0402",
+        "loc": {
+          "addr": "Wiesenweg 62, 87452 Wangried",
+          "lat": 47.802,
+          "lon": 10.22
+        },
+        "site_desc": "Hofstelle, Grillunfall im Innenhof",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "zielklinik-ohne-koordinate"
+      ],
+      "spur": {
+        "ziel": {
+          "lat": 47.983,
+          "lon": 10.181
+        }
+      },
+      "$warum_spur": "SPUR-ZIEL wie bei D01/m-11-7734018625: Zielklinik ohne Koordinate am Einsatz."
+    },
+    {
+      "client_ref": "m-11-7761204385",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-07-05 10:11",
+      "ende": "2026-07-05 11:58",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-05 10:11"
+        ],
+        [
+          3,
+          "2026-07-05 10:15"
+        ],
+        [
+          4,
+          "2026-07-05 10:29"
+        ],
+        [
+          5,
+          "2026-07-05 10:33"
+        ],
+        [
+          6,
+          "2026-07-05 11:22"
+        ],
+        [
+          7,
+          "2026-07-05 11:38"
+        ],
+        [
+          8,
+          "2026-07-05 11:48"
+        ],
+        [
+          9,
+          "2026-07-05 11:58"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [
+        {
+          "beginn": "2026-07-05 10:34",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-07-05 10:35"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-07-05 10:36"
+            ],
+            [
+              "adrenalin",
+              "2026-07-05 10:38"
+            ],
+            [
+              "defibrillation",
+              "2026-07-05 10:40"
+            ],
+            [
+              "intubation",
+              "2026-07-05 10:44"
+            ],
+            [
+              "rosc",
+              "2026-07-05 10:52"
+            ]
+          ]
+        },
+        {
+          "beginn": "2026-07-05 11:07",
+          "ereignisse": [
+            [
+              "rhythmuskontrolle",
+              "2026-07-05 11:08"
+            ],
+            [
+              "adrenalin",
+              "2026-07-05 11:10"
+            ],
+            [
+              "defibrillation",
+              "2026-07-05 11:12"
+            ],
+            [
+              "amiodaron",
+              "2026-07-05 11:15"
+            ],
+            [
+              "sonographie",
+              "2026-07-05 11:17"
+            ],
+            [
+              "rosc",
+              "2026-07-05 11:19"
+            ]
+          ]
+        }
+      ],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83",
+          "NEF Hochkreuth 71/82"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Zwei getrennte Reanimationen: Nach dem ersten ROSC kam es während der Umlagerung zum erneuten Kreislaufstillstand."
+      },
+      "geschuetzt": {
+        "dx": "Rezidivierender Kreislaufstillstand bei Vorderwandinfarkt",
+        "dob": null,
+        "age": 59,
+        "mission_no": "2026-0403",
+        "loc": {
+          "addr": "Am Anger 15, 87477 Lohberg",
+          "lat": 47.808,
+          "lon": 10.29
+        },
+        "site_desc": "Werkstatt, hinter der Hebebühne",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "rea-mehrere-sitzungen"
+      ],
+      "$warum_rea": "ZWEI SITZUNGEN an einem Einsatz. Der JSON-Vertrag (3) sieht 'resus_sessions' ausdrücklich als LISTE vor — auf der Uhr schließt „Aufzeichnung beenden\" eine Sitzung, ein erneuter Start eröffnet die nächste. Fachlich ist es der Rezidiv-Kreislaufstillstand während der Umlagerung."
+    },
+    {
+      "client_ref": "m-11-2914638507",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": "einsatz",
+      "beginn": "2026-07-05 13:20",
+      "ende": "2026-07-05 14:35",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-05 13:20"
+        ],
+        [
+          3,
+          "2026-07-05 13:25"
+        ],
+        [
+          4,
+          "2026-07-05 13:39"
+        ],
+        [
+          5,
+          "2026-07-05 13:44"
+        ],
+        [
+          6,
+          "2026-07-05 14:05"
+        ],
+        [
+          7,
+          "2026-07-05 14:19"
+        ],
+        [
+          8,
+          "2026-07-05 14:28"
+        ],
+        [
+          9,
+          "2026-07-05 14:35"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Doppelt dokumentiert und deshalb in den Papierkorb gelegt."
+      },
+      "geschuetzt": {
+        "dx": "Anaphylaxie nach Wespenstich",
+        "dob": null,
+        "age": 38,
+        "mission_no": "2026-0404",
+        "loc": {
+          "addr": "Enzianweg 12, 87441 Birkenau am See",
+          "lat": 47.666,
+          "lon": 10.312
+        },
+        "site_desc": "Gartengrundstück am Hang",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "papierkorb-einsatz"
+      ],
+      "$warum_papierkorb": "DAUERZUSTAND nach E-P1-21: Dieser Einsatz liegt im Referenzzustand EINZELN im Papierkorb — im Unterschied zu den Einsätzen von D03, die mit ihrem Diensttag dorthin gewandert sind (deleted_with_day=1). Beide Fälle sehen in der Datenbank verschieden aus und werden in der Oberfläche verschieden behandelt; der Datensatz führt deshalb beide."
+    },
+    {
+      "client_ref": "m-11-5648017293",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-07-05 16:02",
+      "ende": "2026-07-05 17:29",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-05 16:02"
+        ],
+        [
+          3,
+          "2026-07-05 16:07"
+        ],
+        [
+          4,
+          "2026-07-05 16:26"
+        ],
+        [
+          5,
+          "2026-07-05 16:47"
+        ],
+        [
+          6,
+          "2026-07-05 17:03"
+        ],
+        [
+          7,
+          "2026-07-05 17:16"
+        ],
+        [
+          8,
+          "2026-07-05 17:23"
+        ],
+        [
+          9,
+          "2026-07-05 17:29"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 2,
+        "winch_cycles_pat": 0,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": "Bergretter mit der Winde abgesetzt; Patient anschließend über den Steig getragen",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Felsgrat",
+          "Bergwacht Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Windeneinsatz ohne Patiententransport an der Winde: Nur Personal wurde abgesetzt."
+      },
+      "geschuetzt": {
+        "dx": "Oberschenkelfraktur nach Sturz am Klettersteig",
+        "dob": "1985-10-08",
+        "age": null,
+        "mission_no": "2026-0405",
+        "loc": {
+          "addr": "Klettersteig Felsgrat, Einstieg Süd, 87545 Felsgrat",
+          "lat": 47.421,
+          "lon": 10.343
+        },
+        "site_desc": "Steilgelände, Absetzen des Bergretters aus dem Schwebeflug",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "winde",
+        "winde-cycles-null-patient"
+      ]
+    },
+    {
+      "client_ref": "m-11-8207364159",
+      "kanal": "ingest",
+      "nachtrag": false,
+      "papierkorb": null,
+      "beginn": "2026-07-05 19:40",
+      "ende": null,
+      "final": false,
+      "phasen": [
+        [
+          2,
+          "2026-07-05 19:40"
+        ],
+        [
+          3,
+          "2026-07-05 19:45"
+        ],
+        [
+          4,
+          "2026-07-05 20:01"
+        ],
+        [
+          5,
+          "2026-07-05 20:06"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort"
+      ],
+      "rea": [],
+      "felder": null,
+      "geschuetzt": null,
+      "abdeckung": [
+        "herkunft-watch",
+        "einsatz-nicht-abgeschlossen",
+        "phasen-unvollstaendig"
+      ],
+      "$warum": "NICHT ABGESCHLOSSEN: final=0 und ended_at leer. So sieht ein Einsatz aus, den die Uhr begonnen, aber nie mit 'final: true' abgeschlossen hat — etwa weil das Gerät bei Dienstende in der Ladeschale lag. Der Einsatz bekommt bewusst KEINEN Nachtrag: Ein Speichern im Formular würde ihn abschließen und den Prüffall damit auflösen.",
+      "spur": {
+        "ort": {
+          "lat": 47.628,
+          "lon": 10.331
+        }
+      },
+      "$warum_spur": "SPUR OHNE GESCHÜTZTE ANGABEN und OHNE RÜCKWEG: Der Einsatz ist nicht abgeschlossen, die Spur endet am Einsatzort."
+    }
+  ]
+}

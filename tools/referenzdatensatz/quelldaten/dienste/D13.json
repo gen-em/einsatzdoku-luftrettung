@@ -1,0 +1,122 @@
+{
+  "kennung": "D13",
+  "abdeckung": ["dienst-luft", "zeit-mez"],
+  "dienst": {
+    "day": "2026-11-21",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-11-21 07:30",
+    "ende": "2026-11-21 17:00",
+    "day_ref": "d-11-3095827416",
+    "besatzung": { "p1": "Marion Aschenbrenner", "p2": null, "hems": "Kerstin Obermeier", "fr": "Nele Brugger", "other": null },
+    "notizen": null
+  },
+  "papierkorb": null,
+  "$warum_datum": "EINZIGER Dienst an diesem Kalendertag — Voraussetzung für den CSV-Nachtrag von IMP-04 (B-04).",
+  "ruhesegmente": [
+    { "client_ref": "r-11-6621480935", "beginn": "2026-11-21 07:30", "ende": "2026-11-21 09:21", "final": true },
+    { "client_ref": "r-11-2258017649", "beginn": "2026-11-21 10:44", "ende": "2026-11-21 14:08", "final": true },
+    { "client_ref": "r-11-8873526104", "beginn": "2026-11-21 15:35", "ende": "2026-11-21 17:00", "final": true }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-6127408395",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-11-21 09:21", "ende": "2026-11-21 10:44", "final": true,
+      "phasen": [[2,"2026-11-21 09:21"],[3,"2026-11-21 09:26"],[4,"2026-11-21 09:41"],[5,"2026-11-21 09:46"],[6,"2026-11-21 10:09"],[7,"2026-11-21 10:24"],[8,"2026-11-21 10:36"],[9,"2026-11-21 10:44"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
+        "crew_override": 0, "crew": {},
+        "notes": "Alter unbekannt und im Feld frei erfasst; der Wert ist absichtlich kein Alter (R20-Prüffall)."
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall mit Halbseitensymptomatik",
+        "dob": null,
+        "age": "<img src=x onerror=\"alert('R20-alter')\">",
+        "mission_no": "2026-0711",
+        "loc": { "addr": "Bergbahnstraße 55, 87561 Sonnenau", "lat": 47.4570, "lon": 10.2810 },
+        "site_desc": "Talstation, Kassenhäuschen", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "r20-alter", "geschuetzt-alter"],
+      "$warum_r20_alter": [
+        "R20 IM ALTERSFELD — der Fall, den E-P1-15 über den CSV-Import wollte.",
+        "Über diesen Weg ist er NICHT zu haben: PARSERS.alterJahre",
+        "(assets/import.js) verwirft jeden Wert, der keine ganze Zahl 0..120",
+        "ist, und das Formularfeld pat_age ist type=number. Siehe Fehlerfund",
+        "F-P1-A im Konzeptdokument.",
+        "",
+        "ER KOMMT DESHALB ÜBER DEN NACHTRAG per einsatz_form.php herein — den",
+        "Kanal, den E-P1-01(b) für alle Nachbearbeitungs- und Patientenfelder",
+        "ohnehin vorsieht. Das ist kein Umweg an der Prüfschicht vorbei: Der",
+        "Server nimmt 'pat_blob' bauartbedingt nur als CHIFFRETEXT entgegen",
+        "(pruef_pat_blob) und kann seinen Inhalt gar nicht prüfen — die",
+        "Zahlenprüfung des Alters ist eine Eingabehilfe des Browsers, keine",
+        "Zusicherung des Servers. Genau darum ist die Maskierung beim ANZEIGEN",
+        "die Verteidigungslinie, und genau die prüft dieser Einsatz dauerhaft.",
+        "",
+        "FOLGE FÜR DEN KREISLAUFTEST: Die Exportspalte 'pat_alter' trägt diesen",
+        "Wert; beim CSV-Rückimport verwirft ihn alterJahre mit Hinweis. Das ist",
+        "erwartet und steht als benannte Ausnahme in der Ausnahmeliste des",
+        "Vergleichswerkzeugs (B5)."
+      ]
+    },
+    {
+      "client_ref": "m-11-4470962381",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-11-21 14:08", "ende": "2026-11-21 15:35", "final": true,
+      "phasen": [[2,"2026-11-21 14:08"],[3,"2026-11-21 14:13"],[4,"2026-11-21 14:31"],[5,"2026-11-21 14:47"],[6,"2026-11-21 15:06"],[7,"2026-11-21 15:20"],[8,"2026-11-21 15:29"],[9,"2026-11-21 15:35"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg", "dest_lat": 47.6810, "dest_lon": 11.2020,
+        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 1, "winch_cycles": 1, "winch_cycles_pat": 1, "winch_airload": 0,
+        "bergwacht": 1, "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": "Ein Windenzyklus mit Patient; Bereitschaft sicherte den Windenpunkt",
+        "other_ema": null, "other_resources": ["Bergwacht Moosachtal"],
+        "crew_override": 0, "crew": {},
+        "notes": "Absturz beim Abstieg; früh einsetzende Dunkelheit, Bergung noch bei Restlicht."
+      },
+      "geschuetzt": {
+        "dx": "Beckenfraktur nach Absturz im Steilgelände",
+        "dob": "1976-01-31", "age": null, "mission_no": "2026-0712",
+        "loc": { "addr": "Abstieg vom Moosachkopf, 87538 Moosachtal", "lat": 47.5960, "lon": 10.1330 },
+        "site_desc": "Steilgelände unterhalb des Steigs, Winde aus 20 m", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "winde", "winde-cycles-patient", "bergwacht-info", "geschuetzt-dob"]
+    },
+    {
+      "client_ref": null, "quell_kennung": "IMP-04",
+      "kanal": "import", "nachtrag": false, "papierkorb": null,
+      "beginn": "2026-11-21 16:12", "ende": "2026-11-21 16:58", "final": true,
+      "phasen": [[2,"2026-11-21 16:12"],[3,"2026-11-21 16:17"],[4,"2026-11-21 16:30"],[9,"2026-11-21 16:58"]],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": null, "na_escort": 0,
+        "transport_dest": null, "dest_lat": null, "dest_lon": null,
+        "schockraum": 0, "false_alarm": 1, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": [],
+        "crew_override": 0, "crew": {},
+        "notes": "+Nachtrag aus dem Papierprotokoll: Einsatz auf dem Anflug storniert, Person war bereits im RTW."
+      },
+      "geschuetzt": {
+        "dx": null, "dob": null, "age": null, "mission_no": "2026-0713",
+        "loc": { "addr": "Sennereiweg 77, 87466 Kaltbrunn am Hang", "lat": 47.7300, "lon": 10.3980 },
+        "site_desc": null, "start": null
+      },
+      "abdeckung": ["herkunft-import", "erfassung-nachtraeglich-ohne-track", "fehleinsatz", "transport-leer", "phasen-unvollstaendig", "sonderzeichen-formel-plus"]
+    }
+  ]
+}

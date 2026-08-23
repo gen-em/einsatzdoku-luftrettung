@@ -1,0 +1,277 @@
+{
+  "kennung": "D02",
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mez",
+    "besatzung-p2",
+    "besatzung-other-luft",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
+  "dienst": {
+    "day": "2026-02-08",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-02-08 07:30",
+    "ende": "2026-02-08 17:00",
+    "day_ref": "d-11-6603518274",
+    "besatzung": {
+      "p1": "Tilman Roithner",
+      "p2": "Ingrid Voss-Hartmann",
+      "hems": "Jonas Steinlechner",
+      "fr": "Nele Brugger",
+      "other": "Elias Sturm (Hospitant)"
+    },
+    "notizen": "Doppelbesetzung Cockpit wegen Streckeneinweisung; Hospitant im Rahmen der Flugretterausbildung an Bord."
+  },
+  "papierkorb": null,
+  "$warum_besatzung": "EINZIGER Diensttag mit allen fünf Luftrollen belegt (p1, p2, hems, fr, other). Die Matrixzeile Besatzung verlangt das; p2 und other sind im Alltag selten besetzt und wären sonst im ganzen Datensatz leer geblieben.",
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-4471962803",
+      "beginn": "2026-02-08 07:30",
+      "ende": "2026-02-08 09:04",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8825037416",
+      "beginn": "2026-02-08 09:47",
+      "ende": "2026-02-08 12:15",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-2093746158",
+      "beginn": "2026-02-08 13:26",
+      "ende": "2026-02-08 17:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-6640281937",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-08 09:04",
+      "ende": "2026-02-08 09:47",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 09:04"
+        ],
+        [
+          3,
+          "2026-02-08 09:09"
+        ],
+        [
+          4,
+          "2026-02-08 09:22"
+        ],
+        [
+          9,
+          "2026-02-08 09:47"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": null,
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 1,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Storno auf dem Anflug: Die gemeldete Person war beim Eintreffen des Rettungsdienstes ansprechbar und lehnte eine Behandlung ab.\nRückflug ohne Landung am Einsatzort."
+      },
+      "geschuetzt": {
+        "dx": null,
+        "dob": null,
+        "age": null,
+        "mission_no": "2026-0058",
+        "loc": {
+          "addr": "Föhrenring 22, 87477 Lohberg",
+          "lat": 47.648,
+          "lon": 10.125
+        },
+        "site_desc": null,
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "fehleinsatz",
+        "transport-leer",
+        "phasen-unvollstaendig",
+        "sonderzeichen-zeilenumbruch"
+      ]
+    },
+    {
+      "client_ref": "m-11-1287405639",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-02-08 12:15",
+      "ende": "2026-02-08 13:26",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 12:15"
+        ],
+        [
+          3,
+          "2026-02-08 12:20"
+        ],
+        [
+          4,
+          "2026-02-08 12:36"
+        ],
+        [
+          5,
+          "2026-02-08 12:41"
+        ],
+        [
+          9,
+          "2026-02-08 13:26"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": "Abtransport zu Fuß mit der Bereitschaft bis zur Forststraße",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Moosachtal"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Ambulant belassen: Nach Reposition der Schulter war die Patientin gehfähig; \"kein Transport gewünscht\" ausdrücklich dokumentiert."
+      },
+      "geschuetzt": {
+        "dx": "Schulterluxation, geschlossen reponiert",
+        "dob": null,
+        "age": 34,
+        "mission_no": "2026-0059",
+        "loc": {
+          "addr": "Wanderweg zur Moosalpe, 87538 Moosachtal",
+          "lat": 47.596,
+          "lon": 10.133
+        },
+        "site_desc": "Wanderweg oberhalb der Alpe, Waldgrenze",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "transport-ambulant",
+        "sonderzeichen-anfuehrung"
+      ]
+    },
+    {
+      "client_ref": "m-11-9518376204",
+      "kanal": "ingest",
+      "nachtrag": false,
+      "papierkorb": null,
+      "beginn": "2026-02-08 15:02",
+      "ende": "2026-02-08 15:58",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-02-08 15:02"
+        ],
+        [
+          3,
+          "2026-02-08 15:07"
+        ],
+        [
+          4,
+          "2026-02-08 15:21"
+        ],
+        [
+          5,
+          "2026-02-08 15:26"
+        ],
+        [
+          6,
+          "2026-02-08 15:33"
+        ],
+        [
+          7,
+          "2026-02-08 15:44"
+        ],
+        [
+          8,
+          "2026-02-08 15:50"
+        ],
+        [
+          9,
+          "2026-02-08 15:58"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": null,
+      "geschuetzt": null,
+      "$warum": "OHNE Nachtrag und ohne jede geschützte Angabe. Der Einsatz bleibt damit ein reiner Uhr-Einsatz: origin=watch, edited=0, manual=0. Er ist die Gegenprobe zu allen anderen — wäre auch er bearbeitet, gäbe es im Datensatz keinen einzigen unberührten Uhr-Einsatz mehr und die Herkunftsspalten wären nicht mehr unterscheidbar. Der Zielort im Track ergibt sich aus den Phasen 7/8; eine Zielklinik ist NICHT gesetzt, weil sie ohne Nachtrag nicht erfasst würde.",
+      "abdeckung": [
+        "herkunft-watch",
+        "uhr-unbearbeitet",
+        "geschuetzt-keine"
+      ],
+      "spur": {
+        "ort": {
+          "lat": 47.701,
+          "lon": 10.339
+        },
+        "ziel": {
+          "lat": 47.718,
+          "lon": 10.322
+        }
+      },
+      "$warum_spur": "SPUR OHNE GESCHÜTZTE ANGABEN. Dieser Einsatz hat bewusst keinen pat_blob — geflogen ist die Uhr trotzdem. Das ist keine Notlösung, sondern das Modell der Anwendung: Trackpunkte und Phasenkoordinaten liegen im KLARTEXT (track_points, mission_phases), verschlüsselt ist die ADRESSE. Ein Einsatz ohne geschützte Angaben hat deshalb sehr wohl eine Spur."
+    }
+  ]
+}

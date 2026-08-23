@@ -1,0 +1,103 @@
+{
+  "kennung": "D14",
+  "abdeckung": ["dienst-luft", "zeit-mez", "ruhe-nicht-abgeschlossen", "ruhe-mehrere"],
+  "dienst": {
+    "day": "2026-12-27",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-12-27 07:30",
+    "ende": "2026-12-27 16:30",
+    "day_ref": "d-11-7743019628",
+    "besatzung": { "p1": "Servatius Kroll", "p2": null, "hems": "Ruth Amrein", "fr": "Vitus Halbritter", "other": null },
+    "notizen": "Letzter Dienst des Jahres; das Gerät wurde am Ende nicht abgemeldet — das letzte Ruhesegment blieb offen."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    { "client_ref": "r-11-5580274193", "beginn": "2026-12-27 07:30", "ende": "2026-12-27 08:58", "final": true },
+    { "client_ref": "r-11-1108463572", "beginn": "2026-12-27 10:24", "ende": "2026-12-27 12:41", "final": true },
+    { "client_ref": "r-11-9936710845", "beginn": "2026-12-27 14:02", "ende": null, "final": false }
+  ],
+  "$warum_ruhesegment": "DAS LETZTE RUHESEGMENT IST NICHT ABGESCHLOSSEN (final=0, ended_at leer). Es entsteht, wenn niemand „Einsatztag beenden\" drückt — auf der Uhr der häufigste unvollständige Zustand überhaupt. Die Matrixzeile Ruhezeiten verlangt ihn, und er prüft mit, dass Anzeige, Export und Sicherung ein Segment ohne Ende aushalten.",
+  "einsaetze": [
+    {
+      "client_ref": "m-11-2846135709",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-12-27 08:58", "ende": "2026-12-27 10:24", "final": true,
+      "phasen": [[2,"2026-12-27 08:58"],[3,"2026-12-27 09:03"],[4,"2026-12-27 09:18"],[5,"2026-12-27 09:24"],[6,"2026-12-27 09:47"],[7,"2026-12-27 10:04"],[8,"2026-12-27 10:15"],[9,"2026-12-27 10:24"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
+        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 1, "bw_unit": "Bergwacht Sonnenau",
+        "bw_info": "Bereitschaft hatte die Piste gesperrt und den Landeplatz gesichert",
+        "other_ema": null, "other_resources": ["Bergwacht Sonnenau", "RTW Hochkreuth 71/83"],
+        "crew_override": 0, "crew": {},
+        "notes": "Kollision zweier Skifahrer; Straßenglätte auf der Zufahrt, deshalb Luftrettung nachgefordert."
+      },
+      "geschuetzt": {
+        "dx": "Milzruptur nach Skikollision",
+        "dob": "2008-12-05", "age": null, "mission_no": "2026-0794",
+        "loc": { "addr": "Bergbahnstraße 8, 87561 Sonnenau", "lat": 47.4210, "lon": 10.3430 },
+        "site_desc": "Skipiste, Einmündung der Talabfahrt", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "bergwacht", "sonderzeichen-umlaute"]
+    },
+    {
+      "client_ref": "m-11-6693481027",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-12-27 12:41", "ende": "2026-12-27 14:02", "final": true,
+      "phasen": [[2,"2026-12-27 12:41"],[3,"2026-12-27 12:46"],[4,"2026-12-27 13:02"],[5,"2026-12-27 13:07"],[6,"2026-12-27 13:29"],[7,"2026-12-27 13:44"],[8,"2026-12-27 13:54"],[9,"2026-12-27 14:02"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen", "dest_lat": 47.7180, "dest_lon": 10.3220,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
+        "crew_override": 0, "crew": {},
+        "notes": "Unterkühlung nach längerer Suche; die Fußgängerin war bei -18 °C im Freien aufgefunden worden."
+      },
+      "geschuetzt": {
+        "dx": "Akzidentelle Hypothermie, Kerntemperatur 29,4 °C",
+        "dob": null, "age": 83, "mission_no": "2026-0795",
+        "loc": { "addr": "Feldweg am Ödwanger Moos, 87509 Ödwang", "lat": 47.5960, "lon": 10.4110 },
+        "site_desc": "Feldweg am Ortsrand, Fußgängerin im Straßengraben", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "sonderzeichen-umlaute", "sonderzeichen-formel-minus"]
+    },
+    {
+      "client_ref": null, "quell_kennung": "MAN-02",
+      "kanal": "formular", "nachtrag": false, "papierkorb": null,
+      "beginn": "2026-12-27 15:11", "ende": "2026-12-27 16:06", "final": true,
+      "phasen": [[2,"2026-12-27 15:11"],[3,"2026-12-27 15:16"],[4,"2026-12-27 15:29"],[5,"2026-12-27 15:33"],[9,"2026-12-27 16:06"]],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant", "na_escort": 0,
+        "transport_dest": null, "dest_lat": null, "dest_lon": null,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "manual",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 1, "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": "=VERKETTEN(\"Bergwacht\";\" \";\"Felsgrat\") — Eintrag aus der Bereitschaftsliste kopiert",
+        "other_ema": null, "other_resources": ["Bergwacht Felsgrat"],
+        "crew_override": 1,
+        "crew": { "p1": "Marion Aschenbrenner", "fr": "Nele Brugger" },
+        "notes": "Von Hand angelegt; Ablösung war bereits im Dienst, deshalb abweichende Besatzung."
+      },
+      "geschuetzt": {
+        "dx": "Rippenprellung nach Sturz, ambulant belassen",
+        "dob": null, "age": 29, "mission_no": "2026-0796",
+        "loc": { "addr": "Rodelbahn Felsgrat, 87545 Felsgrat", "lat": 47.5170, "lon": 10.4090 },
+        "site_desc": "Rodelbahn, Kurve 4",
+        "start": { "addr": "Zwischenlandung Parkplatz Talstation", "lat": 47.5080, "lon": 10.3710 }
+      },
+      "abdeckung": ["herkunft-manuell", "erfassung-nachtraeglich-ohne-track", "start-manual", "besatzung-abweichend", "transport-ambulant", "sonderzeichen-formel-gleich", "sonderzeichen-semikolon"]
+    }
+  ]
+}

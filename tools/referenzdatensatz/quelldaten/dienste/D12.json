@@ -1,0 +1,264 @@
+{
+  "kennung": "D12",
+  "abdeckung": [
+    "dienst-boden",
+    "dienst-ueber-mitternacht",
+    "zeitumstellung-herbst",
+    "zeit-mesz",
+    "zeit-mez",
+    "ruhe-mehrere"
+  ],
+  "dienst": {
+    "day": "2026-10-24",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-10-24 19:00",
+    "ende": "2026-10-25 07:00",
+    "day_ref": "d-12-1573864029",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": null,
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Nachtdienst über die Rückstellung der Uhren; um 03:00 MESZ wurde auf 02:00 MEZ zurückgestellt."
+  },
+  "papierkorb": null,
+  "$warum_zeiten": [
+    "GEGENSTÜCK ZU D05. Dort ging eine Stunde verloren, hier kommt eine",
+    "hinzu: In der Nacht auf den 25.10.2026 springt die Uhr um 03:00 MESZ",
+    "zurück auf 02:00 MEZ. Die Ortszeiten 02:00 bis 02:59 gibt es an diesem",
+    "Tag ZWEIMAL — einmal in MESZ, einmal in MEZ.",
+    "",
+    "KEIN Zeitstempel dieser Datei liegt in dieser Stunde. Das ist keine",
+    "Bequemlichkeit, sondern Voraussetzung für einen Referenzdatensatz: Eine",
+    "mehrdeutige Ortszeit ließe sich nicht eindeutig nach UTC umrechnen, und",
+    "der Datensatz wäre nicht mehr reproduzierbar — je nach Auslegung käme",
+    "ein anderer Zeitpunkt heraus. Geprüft wird stattdessen die SPANNE über",
+    "die Umstellung: E2 läuft von 01:32 MESZ bis 03:40 MEZ, lokal gelesen",
+    "2 h 08 min, tatsächlich 3 h 08 min."
+  ],
+  "ruhesegmente": [
+    {
+      "client_ref": "r-12-9928470163",
+      "beginn": "2026-10-24 19:00",
+      "ende": "2026-10-24 23:15",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-3364719508",
+      "beginn": "2026-10-25 00:28",
+      "ende": "2026-10-25 01:32",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-6690125874",
+      "beginn": "2026-10-25 03:40",
+      "ende": "2026-10-25 07:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-12-8845270913",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-10-24 23:15",
+      "ende": "2026-10-25 00:28",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-24 23:15"
+        ],
+        [
+          3,
+          "2026-10-24 23:19"
+        ],
+        [
+          4,
+          "2026-10-24 23:34"
+        ],
+        [
+          5,
+          "2026-10-24 23:38"
+        ],
+        [
+          6,
+          "2026-10-24 23:59"
+        ],
+        [
+          7,
+          "2026-10-25 00:14"
+        ],
+        [
+          8,
+          "2026-10-25 00:22"
+        ],
+        [
+          9,
+          "2026-10-25 00:28"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Klinik Talwang",
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Transportbeginn um 23:59, Ankunft Klinik um 00:14 — der Einsatz läuft über Mitternacht."
+      },
+      "geschuetzt": {
+        "dx": "Obere gastrointestinale Blutung",
+        "dob": "1962-09-07",
+        "age": null,
+        "mission_no": "2026-0688",
+        "loc": {
+          "addr": "Kirchsteig 21, 87509 Talwang",
+          "lat": 47.515,
+          "lon": 10.281
+        },
+        "site_desc": "Gasthof, Gästezimmer im 1. OG",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "einsatzdatum-abweichend",
+        "zielklinik-ohne-koordinate"
+      ],
+      "spur": {
+        "ziel": {
+          "lat": 47.515,
+          "lon": 10.281
+        }
+      },
+      "$warum_spur": "SPUR-ZIEL: 'Klinik Talwang' führt keine Koordinate; gefahren wurde trotzdem dorthin."
+    },
+    {
+      "client_ref": "m-12-5106938274",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-10-25 01:32",
+      "ende": "2026-10-25 03:40",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-25 01:32"
+        ],
+        [
+          3,
+          "2026-10-25 01:37"
+        ],
+        [
+          4,
+          "2026-10-25 01:51"
+        ],
+        [
+          5,
+          "2026-10-25 01:56"
+        ],
+        [
+          6,
+          "2026-10-25 03:05"
+        ],
+        [
+          7,
+          "2026-10-25 03:22"
+        ],
+        [
+          8,
+          "2026-10-25 03:31"
+        ],
+        [
+          9,
+          "2026-10-25 03:40"
+        ]
+      ],
+      "route": [
+        "ziel_vorher",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "prev_dest",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Lange Versorgungszeit am Einsatzort wegen eingeklemmter Person; \"Uhren zurückgestellt\" im Protokoll vermerkt, damit die Zeiten nachvollziehbar bleiben."
+      },
+      "geschuetzt": {
+        "dx": "Thoraxtrauma und Femurfraktur nach Verkehrsunfall",
+        "dob": null,
+        "age": 44,
+        "mission_no": "2026-0689",
+        "loc": {
+          "addr": "Kreisstraße nach Wangried, 87452 Wangried",
+          "lat": 47.648,
+          "lon": 10.125
+        },
+        "site_desc": "Fahrzeug gegen Baum, Person eingeklemmt, technische Rettung",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "zeitumstellung-herbst",
+        "start-prevdest",
+        "sonderzeichen-anfuehrung"
+      ]
+    }
+  ]
+}

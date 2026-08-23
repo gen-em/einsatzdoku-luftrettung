@@ -1,0 +1,104 @@
+{
+  "kennung": "D04",
+  "abdeckung": ["dienst-luft", "zeit-mez", "zwei-dienste-ein-tag"],
+  "dienst": {
+    "day": "2026-03-28",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-03-28 07:00",
+    "ende": "2026-03-28 19:00",
+    "day_ref": "d-11-8259140736",
+    "besatzung": { "p1": "Marion Aschenbrenner", "p2": null, "hems": "Ruth Amrein", "fr": "Nele Brugger", "other": null },
+    "notizen": null
+  },
+  "papierkorb": null,
+  "$warum_datum": "ERSTER von ZWEI Diensten am 28.03.2026 (der zweite ist D05, ein NEF-Nachtdienst). Das ist der von E9 vorgesehene Regelfall und der Grund, warum der Diensttag seit Web 6.0.0 eine eigene Kennung trägt: Aus dem Datum allein wäre nicht mehr zu entscheiden, welcher Dienst gemeint ist. FOLGE FÜR DEN IMPORT: An diesem Datum darf KEIN Einsatz per CSV nachgetragen werden — der Import löst den Diensttag nur über das Datum auf und träfe immer diesen hier (B-04).",
+  "ruhesegmente": [
+    { "client_ref": "r-11-6628013947", "beginn": "2026-03-28 07:00", "ende": "2026-03-28 08:22", "final": true },
+    { "client_ref": "r-11-1194570328", "beginn": "2026-03-28 09:40", "ende": "2026-03-28 11:05", "final": true },
+    { "client_ref": "r-11-7783402615", "beginn": "2026-03-28 12:30", "ende": "2026-03-28 15:12", "final": true },
+    { "client_ref": "r-11-4405918263", "beginn": "2026-03-28 16:44", "ende": "2026-03-28 19:00", "final": true }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-8836271059",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-03-28 08:22", "ende": "2026-03-28 09:40", "final": true,
+      "phasen": [[2,"2026-03-28 08:22"],[3,"2026-03-28 08:26"],[4,"2026-03-28 08:38"],[5,"2026-03-28 08:42"],[6,"2026-03-28 09:00"],[7,"2026-03-28 09:19"],[8,"2026-03-28 09:29"],[9,"2026-03-28 09:40"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt", "dest_lat": 48.4011, "dest_lon": 9.9876,
+        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null,
+        "other_resources": ["RTW Hochkreuth 71/83", "NEF Hochkreuth 71/82", "FF Hochkreuth 40/1"],
+        "crew_override": 0, "crew": {},
+        "notes": "Technische Rettung durch die Feuerwehr; Transport in das überregionale Traumazentrum wegen instabilem Becken."
+      },
+      "geschuetzt": {
+        "dx": "Polytrauma nach Verkehrsunfall, instabile Beckenfraktur",
+        "dob": "2002-01-09", "age": null, "mission_no": "2026-0141",
+        "loc": { "addr": "Kreisstraße nach Kaltbrunn am Hang, 87466 Kaltbrunn am Hang", "lat": 47.7300, "lon": 10.3980 },
+        "site_desc": "Fahrzeug im Straßengraben, Person eingeklemmt", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "start-base", "transport-air", "schockraum", "weitere-rettungsmittel-mehrere"]
+    },
+    {
+      "client_ref": "m-11-5027369184",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-03-28 11:05", "ende": "2026-03-28 12:30", "final": true,
+      "phasen": [[2,"2026-03-28 11:05"],[3,"2026-03-28 11:10"],[4,"2026-03-28 11:23"],[4,"2026-03-28 11:31"],[5,"2026-03-28 11:36"],[6,"2026-03-28 11:58"],[7,"2026-03-28 12:11"],[8,"2026-03-28 12:20"],[9,"2026-03-28 12:30"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
+        "crew_override": 0, "crew": {},
+        "notes": "Erste Landung an falscher Koordinate der Leitstelle; Phase \"Ankunft Einsatzort\" deshalb ein zweites Mal gesetzt."
+      },
+      "geschuetzt": {
+        "dx": "Intoxikation mit Mischkonsum, GCS 8",
+        "dob": null, "age": 23, "mission_no": "2026-0142",
+        "loc": { "addr": "Enzianweg 5, 87441 Birkenau am See", "lat": 47.6660, "lon": 10.3120 },
+        "site_desc": "Badesee, Uferbereich hinter dem Kiosk", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "phasen-mehrfach"],
+      "$warum_phasen": "Die Phase 4 steht ZWEIMAL. Das ist kein Fehler in den Quelldaten, sondern der Prüffall aus JSON-Vertrag Abschnitt 3: Eine erneut gesetzte Phase ist eine KORREKTUR und damit eine Information. Kein Client und kein Schreibweg darf sie entdoppeln — genau das prüft dieser Einsatz dauerhaft mit."
+    },
+    {
+      "client_ref": "m-11-3391648207",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-03-28 15:12", "ende": "2026-03-28 16:44", "final": true,
+      "phasen": [[2,"2026-03-28 15:12"],[3,"2026-03-28 15:16"],[4,"2026-03-28 15:33"],[5,"2026-03-28 15:51"],[6,"2026-03-28 16:14"],[7,"2026-03-28 16:28"],[8,"2026-03-28 16:36"],[9,"2026-03-28 16:44"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg", "dest_lat": 47.6810, "dest_lon": 11.2020,
+        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 1, "winch_cycles": 2, "winch_cycles_pat": 1, "winch_airload": 0,
+        "bergwacht": 1, "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": "Bereitschaft über den Klettersteig aufgestiegen; Bergung aus der Wandstufe",
+        "other_ema": null, "other_resources": ["Bergwacht Felsgrat"],
+        "crew_override": 1,
+        "crew": { "p1": "Servatius Kroll" },
+        "notes": "Pilotenwechsel zur Mittagsablösung; ab diesem Einsatz fliegt Servatius Kroll."
+      },
+      "geschuetzt": {
+        "dx": "Offene Unterschenkelfraktur nach Absturz im Klettersteig",
+        "dob": "1990-05-16", "age": null, "mission_no": "2026-0143",
+        "loc": { "addr": "Klettersteig Felsgrat, Wandstufe 3, 87545 Felsgrat", "lat": 47.5080, "lon": 10.3710 },
+        "site_desc": "Exponierte Lage, kein Landeplatz, Bergung mit der Winde", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "winde", "besatzung-abweichend", "bergwacht-info"]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "kennung": "D07",
+  "abdeckung": ["dienst-luft", "zeit-mesz"],
+  "dienst": {
+    "day": "2026-06-14",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-06-14 07:00",
+    "ende": "2026-06-14 20:30",
+    "day_ref": "d-11-5384720691",
+    "besatzung": { "p1": "Servatius Kroll", "p2": null, "hems": "Jonas Steinlechner", "fr": "Nele Brugger", "other": null },
+    "notizen": "Zwei Einsätze wurden erst nach Dienstende aus dem Papierprotokoll nachgetragen."
+  },
+  "papierkorb": null,
+  "$warum_datum": "EINZIGER Dienst an diesem Kalendertag. Das ist die Voraussetzung dafür, dass hier per CSV nachgetragen werden darf: Der Import löst den Diensttag NUR über das Datum auf und bildet auf den ERSTEN Diensttag des Tages ab (B-04). An einem Datum mit zwei Diensten würde er den Einsatz stillschweigend an den falschen hängen.",
+  "ruhesegmente": [
+    { "client_ref": "r-11-7791045328", "beginn": "2026-06-14 07:00", "ende": "2026-06-14 09:14", "final": true },
+    { "client_ref": "r-11-1128593760", "beginn": "2026-06-14 10:36", "ende": "2026-06-14 20:30", "final": true }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-9925471083",
+      "kanal": "ingest", "nachtrag": true, "papierkorb": null,
+      "beginn": "2026-06-14 09:14", "ende": "2026-06-14 10:36", "final": true,
+      "phasen": [[2,"2026-06-14 09:14"],[3,"2026-06-14 09:19"],[4,"2026-06-14 09:33"],[5,"2026-06-14 09:38"],[6,"2026-06-14 10:01"],[7,"2026-06-14 10:16"],[8,"2026-06-14 10:26"],[9,"2026-06-14 10:36"]],
+      "route": ["basis", "ort", "ziel", "basis"],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen", "dest_lat": 47.7180, "dest_lon": 10.3220,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83", "Wasserwacht Auwiesen"],
+        "crew_override": 0, "crew": {},
+        "notes": "-15 min Verzögerung durch Vollsperrung der Zufahrt; Wasserwacht hatte die Person bereits an Land gebracht."
+      },
+      "geschuetzt": {
+        "dx": "Beinahe-Ertrinken mit Aspiration",
+        "dob": "2011-07-03", "age": null, "mission_no": "2026-0333",
+        "loc": { "addr": "Seepromenade 2, 87441 Birkenau am See", "lat": 47.6660, "lon": 10.3120 },
+        "site_desc": "Badesee, Steg am Ostufer", "start": null
+      },
+      "abdeckung": ["herkunft-watch", "sonderzeichen-formel-minus", "weitere-rettungsmittel"]
+    },
+    {
+      "client_ref": null, "quell_kennung": "IMP-01",
+      "kanal": "import", "nachtrag": false, "papierkorb": null,
+      "beginn": "2026-06-14 12:40", "ende": "2026-06-14 13:55", "final": true,
+      "phasen": [[2,"2026-06-14 12:40"],[3,"2026-06-14 12:46"],[4,"2026-06-14 13:01"],[5,"2026-06-14 13:06"],[6,"2026-06-14 13:24"],[7,"2026-06-14 13:39"],[8,"2026-06-14 13:48"],[9,"2026-06-14 13:55"]],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": "air", "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau", "dest_lat": 47.5590, "dest_lon": 10.2170,
+        "schockraum": 1, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 0, "bw_unit": null, "bw_info": null,
+        "other_ema": null, "other_resources": ["RTW Hochkreuth 71/83"],
+        "crew_override": 0, "crew": {},
+        "notes": "=SUMME(B2:B9) — Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
+      },
+      "geschuetzt": {
+        "dx": "<img src=x onerror=\"alert('R20-dx')\">Thoraxtrauma nach Sturz vom Gerüst",
+        "dob": null, "age": 47, "mission_no": "2026-0334",
+        "loc": { "addr": "Lärchenweg 31, 87466 Kaltbrunn am Hang", "lat": 47.7300, "lon": 10.3980 },
+        "site_desc": "\"><script>alert('R20-ort')</script>Baustelle, Gerüst im 2. OG", "start": null
+      },
+      "abdeckung": ["herkunft-import", "erfassung-nachtraeglich-ohne-track", "r20-diagnose", "r20-ortsbeschreibung", "sonderzeichen-formel-gleich", "sonderzeichen-semikolon"],
+      "$warum_r20": [
+        "R20-DAUERFALL. Diagnose und Ortsbeschreibung tragen HTML- und",
+        "Skriptmarker. Sie kommen über den CSV-Import herein — dort führt die",
+        "Spalte 'pat_diagnose' den Parser 'trim' und 'pat_ort_beschreibung' den",
+        "Parser 'trim' plus Längenbegrenzung; beide nehmen den Wert UNVERÄNDERT",
+        "an. Damit prüft der Datensatz die Maskierung der Einsatztabellen",
+        "dauerhaft mit: Erscheint irgendwo ein Bild-Platzhalter statt des",
+        "Textes, ist die Maskierung gebrochen.",
+        "",
+        "NICHT im Altersfeld — anders als E-P1-15 es vorsah. 'pat_alter' läuft",
+        "im Import über PARSERS.alterJahre (assets/import.js), der alles",
+        "verwirft, was keine ganze Zahl 0..120 ist; das Formularfeld ist",
+        "type=number. Über den CSV-Weg ist das Altersfeld nicht erreichbar.",
+        "Der Marker im Altersfeld steht deshalb an m-11-6127408395 (D13) und",
+        "kommt dort über den Nachtrag per einsatz_form.php herein — siehe",
+        "Fehlerfund F-P1-A im Konzeptdokument."
+      ]
+    },
+    {
+      "client_ref": null, "quell_kennung": "IMP-02",
+      "kanal": "import", "nachtrag": false, "papierkorb": null,
+      "beginn": "2026-06-14 16:05", "ende": "2026-06-14 17:12", "final": true,
+      "phasen": [[2,"2026-06-14 16:05"],[3,"2026-06-14 16:11"],[4,"2026-06-14 16:24"],[5,"2026-06-14 16:29"],[9,"2026-06-14 17:12"]],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant", "na_escort": 0,
+        "transport_dest": null, "dest_lat": null, "dest_lon": null,
+        "schockraum": 0, "false_alarm": 0, "secondary": 0, "start_src": "base",
+        "winch": 0, "winch_cycles": null, "winch_cycles_pat": null, "winch_airload": 0,
+        "bergwacht": 1, "bw_unit": "Bergwacht Moosachtal",
+        "bw_info": "@Leitstelle: Nachforderung der Bereitschaft dokumentiert",
+        "other_ema": "+49 160 0000000 (Rückruf Hausärztin)", "other_resources": [],
+        "crew_override": 0, "crew": {},
+        "notes": "Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
+      },
+      "geschuetzt": {
+        "dx": "Hypoglykämie, nach Glukosegabe beschwerdefrei",
+        "dob": null, "age": 57,
+        "mission_no": "<svg/onload=alert('R20-nr')>2026-0335",
+        "loc": { "addr": "<b onmouseover=\"alert('R20-adr')\">Talstraße 7</b>, 87509 Ödwang", "lat": 47.5960, "lon": 10.4110 },
+        "site_desc": "Feldweg am Ortsrand", "start": null
+      },
+      "abdeckung": ["herkunft-import", "erfassung-nachtraeglich-ohne-track", "r20-einsatznummer", "r20-adresse", "sonderzeichen-formel-at", "sonderzeichen-formel-plus", "phasen-unvollstaendig"]
+    }
+  ]
+}

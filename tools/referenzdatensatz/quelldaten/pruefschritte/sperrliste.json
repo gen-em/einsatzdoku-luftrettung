@@ -1,0 +1,73 @@
+{
+  "kennung": "PS-01",
+  "art": "ablaufschritt",
+  "titel": "Sperrliste verhindert die Wiederanlage eines endgültig gelöschten Einsatzes",
+  "grundlage": "E-P1-16, schema.sql (Tabelle deleted_refs), JSON-Vertrag Abschnitt 8",
+  "$warum_kein_dauerzustand": [
+    "Dieser Einsatz ist KEIN Bestandteil des Referenzzustands. Er wird",
+    "eingespielt, in den Papierkorb gelegt, endgültig gelöscht und danach",
+    "ERNEUT gesendet — erwartet wird, dass er nicht wieder entsteht.",
+    "",
+    "Am Ende des Ablaufs existiert er nirgends mehr; im Bestand bleibt nur",
+    "sein Eintrag in 'deleted_refs'. Deshalb steht er hier und nicht in einem",
+    "Diensttag: Er würde die Zählung der Einsätze verfälschen und bei jedem",
+    "Vergleich als Abweichung erscheinen."
+  ],
+  "ablauf": [
+    "1. Payload über ingest.php senden — der Einsatz entsteht am Diensttag D14.",
+    "2. Über die Weboberfläche in den Papierkorb legen.",
+    "3. Im Papierkorb endgültig löschen. Dabei wandert die client_ref auf die Sperrliste (deleted_refs), weil das Präfix nicht 'man-' ist.",
+    "4. Denselben Payload unverändert erneut senden.",
+    "5. ERWARTET: Der Einsatz wird NICHT wieder angelegt. Ein erneuter Blick in die Tagesübersicht von D14 zeigt weiterhin drei Einsätze."
+  ],
+  "woran_scheitern_erkennbar_ist": "Erscheint nach Schritt 4 ein vierter Einsatz am 27.12.2026, greift die Sperrliste nicht — dann könnte eine Uhr mit gepufferten Daten jeden gelöschten Einsatz wieder auferstehen lassen.",
+  "einsatz": {
+    "client_ref": "m-11-9081726354",
+    "kanal": "ingest",
+    "nachtrag": false,
+    "papierkorb": null,
+    "dienst": "D14",
+    "beginn": "2026-12-27 11:05",
+    "ende": "2026-12-27 11:52",
+    "final": true,
+    "phasen": [
+      [
+        2,
+        "2026-12-27 11:05"
+      ],
+      [
+        3,
+        "2026-12-27 11:10"
+      ],
+      [
+        4,
+        "2026-12-27 11:24"
+      ],
+      [
+        5,
+        "2026-12-27 11:29"
+      ],
+      [
+        9,
+        "2026-12-27 11:52"
+      ]
+    ],
+    "route": [
+      "basis",
+      "ort",
+      "basis"
+    ],
+    "rea": [],
+    "felder": null,
+    "geschuetzt": null,
+    "abdeckung": [
+      "sperrliste-ablaufschritt"
+    ],
+    "spur": {
+      "ort": {
+        "lat": 47.545,
+        "lon": 10.25
+      }
+    }
+  }
+}

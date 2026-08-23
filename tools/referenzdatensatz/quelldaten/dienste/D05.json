@@ -1,0 +1,307 @@
+{
+  "kennung": "D05",
+  "abdeckung": [
+    "dienst-boden",
+    "zwei-dienste-ein-tag",
+    "dienst-ueber-mitternacht",
+    "zeitumstellung-fruehjahr",
+    "besatzung-driver",
+    "besatzung-trainee",
+    "besatzung-other-boden",
+    "ruhe-mehrere"
+  ],
+  "dienst": {
+    "day": "2026-03-28",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-03-28 20:00",
+    "ende": "2026-03-29 06:00",
+    "day_ref": "d-12-3947261805",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": "Ronja Pfeil",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Nachtdienst über die Zeitumstellung; die Uhren wurden um 02:00 auf 03:00 vorgestellt."
+  },
+  "papierkorb": null,
+  "$warum_spur_ausgangspunkt": [
+    "Der Standort Talwang trägt ABSICHTLICH keine Koordinaten (Matrixzeile",
+    "Stammdaten) — deshalb steht dort der Abfahrtort 'Standort' nicht zur",
+    "Auswahl, und start_src='base' kommt an diesem Dienst nicht vor.",
+    "",
+    "Das NEF fährt trotzdem von einem realen Ort los. 'spur_ausgangspunkt' ist",
+    "AUSSCHLIESSLICH für die Spurerzeugung da und wird NICHT als Stammdatum",
+    "gespeichert; in der Anwendung bleibt der Standort ohne Koordinaten."
+  ],
+  "$warum_zeiten": [
+    "ZWEI PRÜFFÄLLE IN EINEM DIENST.",
+    "",
+    "1. ÜBER MITTERNACHT: Einsatz E1 beginnt am 28.03. um 23:40 und endet am",
+    "   29.03. um 00:55. Sein Einsatzdatum ist damit ein anderes als das Datum",
+    "   des Diensttags — genau die Trennung, wegen der 'day' seit Web 6.0.0 nur",
+    "   noch Sortier- und Anzeigedatum ist.",
+    "",
+    "2. ZEITUMSTELLUNG: In der Nacht auf den 29.03.2026 springt die Uhr um",
+    "   02:00 MEZ auf 03:00 MESZ. Die Ortszeiten 02:00 bis 02:59 GIBT ES AN",
+    "   DIESEM TAG NICHT — kein Zeitstempel dieser Datei liegt darin. Einsatz E2",
+    "   läuft von 01:38 MEZ bis 03:48 MESZ: lokal gelesen sind das 2 h 10 min,",
+    "   tatsächlich vergangen sind 1 h 10 min. Wer Dauern aus der Ortszeit statt",
+    "   aus UTC rechnet, liegt hier um genau eine Stunde daneben — und das ist",
+    "   der Zweck des Falls."
+  ],
+  "ruhesegmente": [
+    {
+      "client_ref": "r-12-8140276395",
+      "beginn": "2026-03-28 20:00",
+      "ende": "2026-03-28 23:40",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-2967384051",
+      "beginn": "2026-03-29 00:55",
+      "ende": "2026-03-29 01:38",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-5518903724",
+      "beginn": "2026-03-29 03:48",
+      "ende": "2026-03-29 06:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-12-7092451863",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-28 23:40",
+      "ende": "2026-03-29 00:55",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 23:40"
+        ],
+        [
+          3,
+          "2026-03-28 23:44"
+        ],
+        [
+          4,
+          "2026-03-28 23:58"
+        ],
+        [
+          5,
+          "2026-03-29 00:02"
+        ],
+        [
+          6,
+          "2026-03-29 00:21"
+        ],
+        [
+          7,
+          "2026-03-29 00:39"
+        ],
+        [
+          8,
+          "2026-03-29 00:47"
+        ],
+        [
+          9,
+          "2026-03-29 00:55"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Einsatz über Mitternacht; das Einsatzdatum liegt einen Tag nach dem Beginn des Dienstes."
+      },
+      "geschuetzt": {
+        "dx": "Akutes Koronarsyndrom mit ST-Hebung",
+        "dob": "1955-12-02",
+        "age": null,
+        "mission_no": "2026-0144",
+        "loc": {
+          "addr": "Mühlbachweg 18, 87509 Talwang",
+          "lat": 47.545,
+          "lon": 10.25
+        },
+        "site_desc": "Mehrfamilienhaus, 3. OG ohne Aufzug",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "einsatzdatum-abweichend",
+        "start-leer",
+        "transport-ground"
+      ]
+    },
+    {
+      "client_ref": "m-12-4386015927",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-29 01:38",
+      "ende": "2026-03-29 03:48",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-29 01:38"
+        ],
+        [
+          3,
+          "2026-03-29 01:43"
+        ],
+        [
+          4,
+          "2026-03-29 01:55"
+        ],
+        [
+          5,
+          "2026-03-29 01:58"
+        ],
+        [
+          6,
+          "2026-03-29 03:12"
+        ],
+        [
+          7,
+          "2026-03-29 03:24"
+        ],
+        [
+          8,
+          "2026-03-29 03:33"
+        ],
+        [
+          9,
+          "2026-03-29 03:48"
+        ]
+      ],
+      "route": [
+        "start",
+        "ort",
+        "basis"
+      ],
+      "rea": [
+        {
+          "beginn": "2026-03-29 01:58",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-03-29 01:59"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-03-29 01:59"
+            ],
+            [
+              "adrenalin",
+              "2026-03-29 03:01"
+            ],
+            [
+              "defibrillation",
+              "2026-03-29 03:03"
+            ],
+            [
+              "sonographie",
+              "2026-03-29 03:06"
+            ],
+            [
+              "tod",
+              "2026-03-29 03:10"
+            ]
+          ]
+        }
+      ],
+      "felder": {
+        "transport_mode": null,
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "manual",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Reanimation erfolglos abgebrochen, Todesfeststellung am Einsatzort; kein Transport.\nAbfahrt vom Kreisklinikum Auwiesen, wo das NEF nach dem vorigen Einsatz noch stand — als manueller Abfahrtort erfasst, weil der Standort Talwang keine Koordinaten führt."
+      },
+      "geschuetzt": {
+        "dx": "Kreislaufstillstand unklarer Genese, Todesfeststellung am Einsatzort",
+        "dob": null,
+        "age": 81,
+        "mission_no": "2026-0145",
+        "loc": {
+          "addr": "Am Anger 4, 87534 Auwiesen",
+          "lat": 47.582,
+          "lon": 10.33
+        },
+        "site_desc": "Landwirtschaftlicher Betrieb, Stallgebäude",
+        "start": {
+          "addr": "Kreisklinikum Auwiesen, Zufahrt Notaufnahme",
+          "lat": 47.718,
+          "lon": 10.322
+        }
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "zeitumstellung-fruehjahr",
+        "start-manual",
+        "transport-leer",
+        "rea-typ-sonographie",
+        "rea-typ-tod",
+        "sonderzeichen-zeilenumbruch"
+      ]
+    }
+  ]
+}
