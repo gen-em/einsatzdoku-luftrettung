@@ -154,3 +154,71 @@ maskiert — nicht, dass ein Import ankommt.
 `<script>` ist bewusst nicht die Nutzlast: `innerHTML` führt eingefügte
 `<script>`-Elemente nicht aus. Das verharmlost die Lücke nicht; `onerror` und
 verwandte Attribute laufen sehr wohl, und genau das zeigt die Probe.
+
+---
+
+## 3. Keyguard-Einträge beim Abmelden (S22-3)
+
+**Frage 1: Was steht in `pckb`/`pckt`, wo liegen sie, tragen sie
+Schlüsselmaterial oder davon Ableitbares?**
+
+Beide liegen im `sessionStorage` des Tabs — also je Tab getrennt und nur bis zu
+dessen Ende.
+
+- **`pckb`** ist das Ergebnis von `EdCrypto.wrapFingerprint(wrap)`: die ersten
+  16 Hexzeichen (64 Bit) eines SHA-256 über `'edk-wrap:' + wrap`. `wrap` ist
+  die **Hülle** des Inhaltsschlüssels — nicht der Schlüssel. Und die Hülle ist
+  kein Geheimnis: Der Server schreibt sie jeder Seite als `PAT_WRAP` bzw.
+  `pat_wrap` mit. `pckb` ist damit ein gekürzter Einwegwert über eine ohnehin
+  offen ausgelieferte Angabe. Selbst wer ihn umkehren könnte, hätte die Hülle —
+  und die ist ohne den Datenschlüssel wertlos.
+- **`pckt`** ist ein Zeitstempel in Millisekunden (`Date.now()`), gesetzt beim
+  Entpacken. Er steuert die Frist von 30 Minuten.
+
+**Antwort: nein.** Kein Schlüsselmaterial, nichts davon Ableitbares. Was sie
+verraten, ist Nutzungsspur — dass in diesem Tab gearbeitet wurde und wann.
+
+Auch die Ausnutzbarkeit ist geprüft: `contentKey()` sieht `pckb` erst an,
+**nachdem** `sessionStorage.getItem('pck')` etwas geliefert hat. Nach dem
+Abmelden ist `pck` fort, der Zweig wird also gar nicht erreicht; beim nächsten
+Entpacken werden beide Fächer überschrieben. Ein stehengebliebener `pckb` kann
+keinen fremden Schlüssel durchreichen.
+
+**Nach Ziffer 3 des Auftrags wird deshalb nichts geändert.** Die toten Exporte
+`EdKeyGuard.beenden()`/`raeumen()` bleiben unberührt liegen (Nr. 21).
+
+**Frage 2: Ist die Erwartung aus V-10 heute überhaupt erfüllt?**
+
+Sie war es **nicht** — aber aus einem anderen Grund als vermutet. Die
+vollständige Erhebung der Fächer (`assets/crypto.js`, `assets/keyguard.js`,
+`einstellungen.php` — sechs Fächer, mehr führt das Projekt nicht) förderte
+`edk_neu` zutage:
+
+`einstellungen.php` legt beim Passwortwechsel den **neuen Datenschlüssel** unter
+`edk_neu` ab und löst das Fach beim nächsten Aufruf desselben Reiters wieder auf
+(M2-07). Kommt dieser Aufruf nie — die Übertragung bricht ab, die Nutzerin geht
+zurück oder meldet sich ab —, blieb ein vollwertiger Datenschlüssel liegen, und
+zwar über das Abmelden hinaus: `EdCrypto.clearSession()` kannte nur `edk`, `pck`
+und `edkvor`. Genau das verbietet V-10.
+
+**Behoben** mit einer Zeile in `clearSession()`. Auf dem auflösenden Weg ändert
+sie nichts: Dort wird `edk_neu` ausgelesen und entfernt, **bevor**
+`clearSession()` läuft. Der tote Code in `keyguard.js` wurde dafür nicht
+angefasst.
+
+**Beleg im Browser** (`tools/abmelde-probe/pruefe.mjs`, Chromium, echte
+`crypto.js`): Alle 6 Fächer belegt, dann der Abmeldeweg darüber.
+
+| Stand | übrig | davon Schlüsselmaterial |
+|---|---|---|
+| Web 7.2.0 | `edk_neu`, `pckb`, `pckt` | **`edk_neu`** — V-10 verletzt |
+| Web 7.2.1 | `pckb`, `pckt` | **keines** — V-10 erfüllt |
+
+Seitenfehler: keine.
+
+**Grenze des Prüfmittels:** Die Probe füllt die Fächer selbst und ruft
+`clearSession()` direkt auf. Sie beweist, dass der Baustein räumt — nicht, dass
+`logout.php` ihn erreicht. Dass er erreicht wird, ist gelesen
+(`session_lib.php` liefert eine kurze Seite aus, die `crypto.js` lädt und
+`EdCrypto.clearSession()` aufruft), aber nicht am laufenden System gemessen;
+das bleibt der Betreiberin (Prüfliste, Punkt P-2).
