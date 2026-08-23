@@ -53,6 +53,24 @@ const RATE_GRENZEN = [
     'salt'  => ['max' => 30, 'fenster' =>  900, 'sperre' =>  900],
     'reset' => ['max' =>  5, 'fenster' => 3600, 'sperre' => 3600],
     'pair'  => ['max' => 10, 'fenster' =>  600, 'sperre' =>  600],
+
+    /* DEMO ZAEHLT ANDERS ALS DIE VIER DARUEBER: nicht Fehlversuche, sondern
+     * GELUNGENE Anmeldungen am Demo-Konto (E-P1-20).
+     *
+     * Warum ueberhaupt: Die Zugangsdaten dieses Kontos sind oeffentlich. Ein
+     * Fehlversuchszaehler laeuft dort nie an — es gibt nichts zu erraten.
+     * Begrenzt werden soll deshalb die MENGE der Nutzung: Das Konto ist zum
+     * Ausprobieren da, nicht als Rechenzeit fuer Fremde.
+     *
+     * Die Werte sind so gewaehlt, dass sie im Alltag nicht auffallen. 20
+     * Anmeldungen je Stunde und Adresse deckt jedes Ausprobieren ab,
+     * einschliesslich mehrfachem Abmelden; wer sie ueberschreitet, laesst ein
+     * Skript laufen. Die globale Grenze von 300 je Stunde greift erst, wenn
+     * viele Adressen gleichzeitig kommen — dann ist der Server gemeint, nicht
+     * eine Person. Beide Sperren dauern eine Stunde, so lang wie das Fenster:
+     * laenger waere Strafe, kuerzer waere wirkungslos. */
+    'demo'  => ['max' => 20, 'fenster' => 3600, 'sperre' => 3600],
+    'demog' => ['max' => 300, 'fenster' => 3600, 'sperre' => 3600],
 ];
 
 /**
@@ -94,7 +112,8 @@ function rate_merkmale(?string $konto = null): array
  * Misserfolg (rate_misserfolg), damit gelungene Anmeldungen nicht auf das
  * Kontingent gehen.
  */
-function rate_erlaubt(string $topf, ?string $konto = null): bool
+function rate_erlaubt(string $topf, ?string $konto = null,
+                      ?array $merkmale = null): bool
 {
     $grenze = RATE_GRENZEN[$topf] ?? null;
     if ($grenze === null) { return true; }
@@ -105,7 +124,7 @@ function rate_erlaubt(string $topf, ?string $konto = null): bool
             'SELECT 1 FROM rate_limits
              WHERE topf = ? AND merkmal = ? AND gesperrt_bis IS NOT NULL
                AND gesperrt_bis > NOW() LIMIT 1');
-        foreach (rate_merkmale($konto) as $merkmal) {
+        foreach ($merkmale ?? rate_merkmale($konto) as $merkmal) {
             $st->execute([$topf, $merkmal]);
             if ($st->fetchColumn() !== false) { return false; }
         }
@@ -125,7 +144,8 @@ function rate_erlaubt(string $topf, ?string $konto = null): bool
  * erlaubt im schlechtesten Fall die doppelte Zahl an Versuchen ueber eine
  * Fenstergrenze hinweg, was gegenueber "unbegrenzt" keine Rolle spielt.
  */
-function rate_misserfolg(string $topf, ?string $konto = null): void
+function rate_misserfolg(string $topf, ?string $konto = null,
+                         ?array $merkmale = null): void
 {
     $grenze = RATE_GRENZEN[$topf] ?? null;
     if ($grenze === null) { return; }
@@ -151,7 +171,7 @@ function rate_misserfolg(string $topf, ?string $konto = null): void
             'UPDATE rate_limits SET gesperrt_bis = DATE_ADD(NOW(), INTERVAL ? SECOND)
              WHERE topf = ? AND merkmal = ? AND versuche >= ?');
 
-        foreach (rate_merkmale($konto) as $merkmal) {
+        foreach ($merkmale ?? rate_merkmale($konto) as $merkmal) {
             $st->execute([$topf, $merkmal,
                           $grenze['fenster'], $grenze['fenster'], $grenze['fenster']]);
             $sperren->execute([$grenze['sperre'], $topf, $merkmal, $grenze['max']]);
@@ -173,9 +193,10 @@ function rate_misserfolg(string $topf, ?string $konto = null): void
  * Technisch dasselbe wie rate_misserfolg(); der eigene Name steht hier, damit
  * an der Aufrufstelle nicht "Misserfolg" steht, wo es keinen gibt.
  */
-function rate_zaehlen(string $topf, ?string $konto = null): void
+function rate_zaehlen(string $topf, ?string $konto = null,
+                      ?array $merkmale = null): void
 {
-    rate_misserfolg($topf, $konto);
+    rate_misserfolg($topf, $konto, $merkmale);
 }
 
 /**
@@ -221,14 +242,15 @@ function rate_gleiche_dauer(float $beginn, float $mindestSekunden = 0.35): void
  * Wann laeuft die Sperre ab? Fuer eine Meldung, die nicht raten laesst.
  * Liefert null, wenn nichts gesperrt ist.
  */
-function rate_gesperrt_bis(string $topf, ?string $konto = null): ?string
+function rate_gesperrt_bis(string $topf, ?string $konto = null,
+                           ?array $merkmale = null): ?string
 {
     try {
         $st = db()->prepare(
             'SELECT MAX(gesperrt_bis) FROM rate_limits
              WHERE topf = ? AND merkmal = ? AND gesperrt_bis > NOW()');
         $spaetestens = null;
-        foreach (rate_merkmale($konto) as $merkmal) {
+        foreach ($merkmale ?? rate_merkmale($konto) as $merkmal) {
             $st->execute([$topf, $merkmal]);
             $v = $st->fetchColumn();
             if ($v !== false && $v !== null && ($spaetestens === null || $v > $spaetestens)) {
@@ -239,4 +261,51 @@ function rate_gesperrt_bis(string $topf, ?string $konto = null): ?string
     } catch (Throwable $ex) {
         return null;
     }
+}
+
+/* ------------------------------------------------- Demo-Konto (E-P1-20) --
+ *
+ * Zwei Toepfe, weil zwei verschiedene Fragen dahinterstehen:
+ *
+ *   demo   je IP-Adresse  — "nutzt EINE Stelle das Konto uebermaessig?"
+ *   demog  global         — "wird das Konto insgesamt ueberrannt?"
+ *
+ * Ein einziger Topf mit beiden Merkmalen ginge nicht: Die Grenzen sind
+ * verschieden (20 gegen 300), und RATE_GRENZEN haengt am Topf, nicht am
+ * Merkmal.
+ *
+ * Das globale Merkmal ist eine feste Zeichenkette. Sie kann mit keinem
+ * IP-Merkmal kollidieren, weil jene mit 'ip:' beginnen.
+ */
+
+/* Das globale Merkmal wird AUSDRUECKLICH uebergeben, nicht ueber
+ * rate_merkmale() gebildet: Jene Funktion haengt die IP-Adresse immer an. Fuer
+ * den globalen Topf hiesse das eine zweite, nutzlose Zeile je Adresse — ein
+ * Zaehler, der bei 300 je IP sperren wuerde und damit nie vor dem Topf `demo`
+ * greift, der schon bei 20 sperrt. Er stuende nur in der Tabelle herum. */
+const RATE_DEMO_GLOBAL = ['alle'];
+
+/** Darf sich jetzt jemand am Demo-Konto anmelden? */
+function rate_demo_erlaubt(): bool
+{
+    return rate_erlaubt('demo') && rate_erlaubt('demog', null, RATE_DEMO_GLOBAL);
+}
+
+/**
+ * Eine GELUNGENE Anmeldung am Demo-Konto verbuchen.
+ *
+ * Aufruf NACH der erfolgreichen Pruefung — anders als bei den uebrigen
+ * Toepfen, wo gezaehlt wird, was scheitert. Deshalb steht hier auch kein
+ * rate_erfolg(): Ein Erfolg leert den Zaehler nicht, er fuellt ihn.
+ */
+function rate_demo_zaehlen(): void
+{
+    rate_zaehlen('demo');
+    rate_zaehlen('demog', null, RATE_DEMO_GLOBAL);
+}
+
+/** Bis wann ist gesperrt? Fuer die Meldung an der Anmeldeseite. */
+function rate_demo_gesperrt_bis(): ?string
+{
+    return rate_gesperrt_bis('demo') ?? rate_gesperrt_bis('demog', null, RATE_DEMO_GLOBAL);
 }

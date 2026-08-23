@@ -1686,6 +1686,166 @@ Schutz gegen einen Angreifer mit Zugriff auf die Ablaufumgebung (Hoster,
 Datenbank, Protokolle) hängt damit allein an der Passwortwahl der Person. Das
 ist eine bewusste Entscheidung und gehört genau so dokumentiert.
 
+### 4.99a Demo-Konto (ab Web 7.3.0)
+
+Ein Konto zum Ausprobieren: erfundene Daten, öffentliche Zugangsdaten,
+Änderungen erwünscht — und alle 30 Minuten zurück auf den Ausgangsstand.
+
+**Die Ausnahme, die dafür gemacht wird.** Das Projekt verspricht
+Ende-zu-Ende-Verschlüsselung: Der Server sieht die geschützten Angaben nie im
+Klartext, und das Schlüsselmaterial hängt am Passwort. Für dieses **eine**
+Konto gilt das nicht — sein Schlüsselmaterial liegt in der Fixture auf dem
+Server, damit ein Reset die Chiffretexte wieder lesbar macht.
+
+Vertretbar ist das nur unter vier Bedingungen, und alle vier werden erzwungen,
+nicht bloß zugesichert:
+
+1. Das Konto trägt ausschließlich erfundene Daten.
+2. Es hat die Rolle `user`; `demo_lib.php` schreibt sie bei jedem Anlegen und
+   jedem Reset fest hin.
+3. Jede Funktion arbeitet auf der Kennung aus `app_state.demo_user_id` und
+   nimmt **keine** von außen entgegen — sie kann kein anderes Konto treffen.
+4. Zugangsdaten und Geräteschlüssel sind ohnehin öffentlich. Es gibt nichts zu
+   schützen, was nicht schon offenläge.
+
+#### Die Fixture
+
+`server/demo/fixture.json.gz`, erzeugt von
+`tools/referenzdatensatz/fixture/erzeugen.php`. Vier Teile:
+
+| Teil | Inhalt |
+|---|---|
+| `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
+| `geraete` | `device_id`, `api_key_hash`, `label` |
+| `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
+| `nachlauf` | welche Einsätze und Diensttage nach dem Einspielen in den Papierkorb gehören |
+
+**Warum sie nicht aus einer `.edbak` kommen kann.** Die Sicherungsdatei trägt
+die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
+Versiegeln, damit sich eine Sicherung in jedes Konto einspielen lässt. Für die
+Fixture wäre das genau falsch: Sie soll den Chiffretext unverändert mitführen
+und daneben das Schlüsselmaterial, mit dem er lesbar ist. Erst dadurch kann
+der Server das Konto **ohne jede Entschlüsselung** zurücksetzen — und erst
+dadurch ist der Reset schnell genug, um bei jeder Anfrage zu laufen.
+
+Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch die
+Sicherung aufbaut, aber serverseitig — dort steht `pat_blob` noch als
+Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
+Der Erzeuger bricht ab, wenn er Klartext findet.
+
+Gepackt abgelegt: roh rund 2,3 MB, im Wesentlichen 52 484 Spurpunkte als
+JSON-Zahlen. Gepackt sind es knapp 700 KB, und die Datei geht bei jedem Deploy
+über FTPS mit.
+
+#### Kein zweiter Einspielweg
+
+Der Bestand wird über `edbak_restore()` eingespielt — dieselbe Routine wie bei
+der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
+hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
+der ungeprüftere.
+
+Zwei kleine Erweiterungen waren dafür nötig, beide in `backup_lib.php`:
+
+- **`edbak_build($userId, $mitPapierkorb = false)`.** Die Fixture soll den
+  Referenzzustand vollständig abbilden, und dazu gehört ein gefüllter
+  Papierkorb. Für eine Nutzer-Sicherung bleibt der Filter — wer sichert,
+  sichert seinen Bestand, nicht seinen Abfall.
+- **`edbak_restore()` ist verschachtelungsfähig.** Sie öffnet ihre Transaktion
+  nur, wenn noch keine läuft. Der Demo-Reset muss mehr in dieselbe Klammer
+  nehmen: Kontomaterial, Geräte, Bestand und Nachlauf. Zerfiele das in
+  mehrere Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem
+  Bestand hinterlassen — und der Reset läuft unbeaufsichtigt.
+
+#### Der Papierkorb-Nachlauf
+
+Das Einspielen wertet `deleted_at` **nicht** aus (die Spalte steht nicht im
+Feldkatalog); alle Einträge kommen als aktive zurück. Danach legt ein kleines
+Drehbuch die benannten Einsätze und Diensttage über die **regulären**
+Löschwege (`trash_lib.php`) in den Papierkorb — so, wie eine Nutzerin es täte.
+
+Die Diensttage werden über ihre **Dienstkennung** (`day_ref`) angesprochen,
+nicht über das Datum: Seit E9 können zwei Dienste auf einem Kalendertag
+liegen, das Datum benennt also keinen Tag mehr eindeutig.
+
+#### Der Reset
+
+Anfragegetrieben nach dem Muster der Tageswartung (`run_cleanup_if_due()`),
+mit einem Unterschied in der Reihenfolge: Hier wird zurückgesetzt, **bevor**
+die Seite ihre Daten liest. Wer nach längerer Ruhe kommt, sieht den
+Ausgangsstand und nicht die Hinterlassenschaft der letzten Besucherin.
+
+Zwei Auslösepunkte:
+
+| Stelle | wann |
+|---|---|
+| `auth_guard.php` | jede Web-Anfrage des Demo-Kontos |
+| `ingest.php` | jeder Upload eines Demo-Geräts, **nach** der Geräteprüfung |
+
+Die Prüfung in `ingest.php` steht bewusst hinter der Authentifizierung: Sonst
+wäre die Rücksetzung ein Hebel für jeden, der die Adresse kennt.
+
+Die Marke (`app_state.demo_letzter_reset`) wird **vor** der Arbeit gesetzt —
+dasselbe Vorgehen wie bei der Tageswartung: Zwei gleichzeitige Anfragen sollen
+nicht beide zurücksetzen. Höchstdrift 30 Minuten relativ zu jeder Aktivität;
+ein Zeitdienst wird nicht vorausgesetzt.
+
+Der Reset überschreibt auch **Konto- und Schlüsselmaterial** und zählt
+`session_epoch` hoch. Damit bliebe selbst eine unerwartet gelungene Änderung
+der Konto-Identität folgenlos — die zweite Linie hinter den Sperren unten.
+
+#### Gesperrt ist ausschließlich die Identität
+
+| Endpunkt | Verhalten |
+|---|---|
+| `einstellungen.php` (`profile`, `password`) | freundlicher Hinweis, keine Änderung |
+| `api/kdf_upgrade.php` | stiller Erfolg (`uebersprungen: demo`) |
+| `reset_request.php` | still abgewiesen — kein Link, keine E-Mail |
+
+Das KDF-Upgrade antwortet mit Erfolg statt mit Fehler, weil der Browser es von
+sich aus nach der Anmeldung aufruft: Ein Fehler stünde dort als Störung, wo es
+keine gibt.
+
+`reset_request.php` weist **still** ab. Die Antwort dieser Seite ist für jede
+Adresse dieselbe; eine Sondermeldung für das Demo-Konto wäre die einzige
+Stelle, an der die Seite verriete, welche Adressen es gibt.
+
+Alles Übrige bleibt offen — ausdrücklich auch Geräteverwaltung, Kopplung und
+Uploads. Die Anwendung soll ausprobierbar sein, das ist der Zweck.
+
+**Warum überhaupt sperren, wenn der Reset ohnehin alles zurückholt?** Weil
+zwischen zwei Rücksetzungen bis zu dreißig Minuten liegen. Wer in dieser Zeit
+E-Mail oder Passwort ändert, sperrt die nächste Besucherin aus — und die
+findet ein Konto vor, dessen öffentliche Zugangsdaten nicht mehr stimmen, ohne
+zu erfahren warum.
+
+#### Mengenbremse
+
+Zwei neue Töpfe in `ratelimit_lib.php`, die **anders zählen** als die vier
+bestehenden: nicht Fehlversuche, sondern **gelungene** Anmeldungen.
+
+| Topf | Merkmal | Grenze | Fenster |
+|---|---|---|---|
+| `demo` | IP-Adresse | 20 | 1 Stunde |
+| `demog` | global | 300 | 1 Stunde |
+
+Ein Fehlversuchszähler liefe hier nie an — die Zugangsdaten sind öffentlich,
+es gibt nichts zu erraten. Begrenzt werden soll die **Menge der Nutzung**: Das
+Konto ist zum Ausprobieren da, nicht als Rechenzeit für Fremde.
+
+Zwei Töpfe, weil die Grenzen verschieden sind und `RATE_GRENZEN` am Topf
+hängt, nicht am Merkmal. Die Prüfung sitzt in `login.php` **vor** der teuren
+Ableitung, wie jede Bremse dort.
+
+#### Banner
+
+`ui_demo_banner()` in `ui.php`, unmittelbar unter der Kopfleiste, auf jeder
+Seite, nicht wegklickbar. Es nennt vier Dinge, und alle vier sind nötig: dass
+die Daten erfunden sind, dass Ausprobieren erwünscht ist, dass alles
+regelmäßig verworfen wird, und dass hier keine echten Daten hineingehören.
+
+Ein Hinweis, den man einmal schließt, ist beim zweiten Besuch nicht mehr da —
+und genau dann wäre er nötig.
+
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 
 | Datei | Verantwortung |

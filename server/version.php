@@ -128,5 +128,19 @@ declare(strict_types=1);
  * Spalte weiterhin `hubschrauber` (sie heisst seit 5.10.0 `rettungsmittel`),
  * und docs/Backup-Format.md fuehrte `days[].id` unter „nicht in der Datei",
  * obwohl sie darin steht und stehen MUSS — die Einsaetze verweisen darauf.
+ *
+ * 7.3.0 bringt das DEMO-KONTO: ein Konto zum Ausprobieren mit erfundenen
+ * Daten, oeffentlichen Zugangsdaten und einer selbsttaetigen Ruecksetzung
+ * alle 30 Minuten. Neue Funktion, KEINE Migration — `app_state` liegt seit
+ * jeher, und der Bestand wird ueber die vorhandene Einspielroutine
+ * (`edbak_restore()`) hergestellt.
+ *
+ * Es ist zugleich die einzige Stelle der Anwendung, an der die
+ * Ende-zu-Ende-Verschluesselung bewusst ausgesetzt ist: Das
+ * Schluesselmaterial dieses einen Kontos liegt in einer Fixture auf dem
+ * Server. Vertretbar nur unter vier erzwungenen Bedingungen — erfundene
+ * Daten, Rolle `user`, jede Funktion arbeitet ausschliesslich auf der
+ * Kennung aus `app_state.demo_user_id`, und die Zugangsdaten sind ohnehin
+ * oeffentlich.
  */
-const WEB_VERSION = '7.2.3';
+const WEB_VERSION = '7.3.0';

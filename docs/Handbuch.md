@@ -278,6 +278,45 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 
 ---
 
+### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
+
+Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
+
+| | |
+|---|---|
+| Adresse | `demo@gen-em.org` |
+| Passwort | `nadokudemo0815` |
+
+**Alle Daten darin sind frei erfunden.** Die Orte, Kliniken, Rettungsmittel
+und Besatzungsnamen gibt es nicht; die Diagnosen gehören zu niemandem. Der
+Datensatz ist so gebaut, dass jede Funktion der Anwendung darin vorkommt —
+Luft- und Bodeneinsätze, Windeneinsätze, Bergwacht, Reanimationen, ein Dienst
+über Mitternacht, ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
+
+**Ausprobieren ist ausdrücklich erwünscht.** Ändere Einsätze, lege neue an,
+lösche welche, pflege Stammdaten, koppele eine Uhr. Es geht nichts verloren,
+was jemandem fehlen würde.
+
+**Alle 30 Minuten setzt sich das Konto selbst zurück.** Danach ist der
+Ausgangsstand wieder da und deine Änderungen sind fort — auch die, die du
+gerade noch gebraucht hättest. Ein Banner am oberen Rand erinnert daran und
+nennt, wann es das nächste Mal so weit ist.
+
+**Was im Demo-Konto nicht geht:** E-Mail-Adresse und Passwort lassen sich
+nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
+Beides ist Absicht — die Zugangsdaten sind öffentlich und müssen es bleiben,
+damit die nächste Person hereinkommt. Alles andere ist offen.
+
+> **Niemals echte Patienten- oder Einsatzdaten in diesem Konto erfassen.**
+> Es ist die einzige Stelle der Anwendung, an der die Verschlüsselung bewusst
+> ausgesetzt ist: Das Schlüsselmaterial liegt dort auf dem Server, damit die
+> Rücksetzung funktioniert. Für erfundene Daten ist das unproblematisch — für
+> echte wäre es das nicht.
+
+Wird das Konto gerade von sehr vielen gleichzeitig genutzt, ist die Anmeldung
+vorübergehend gesperrt. Die Meldung sagt, ab wann es wieder geht; ein eigenes
+Konto ist davon nicht betroffen.
+
 ## 4. Einsätze ansehen und bearbeiten
 
 ### 4.1 Tagesübersicht

@@ -11,6 +11,140 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.3.0] — 2026-08-23
+
+**Ein Demo-Konto.** Adresse `demo@gen-em.org`, Passwort `nadokudemo0815`,
+Daten frei erfunden, Änderungen erwünscht — und alle 30 Minuten wieder auf den
+Ausgangsstand. Neue Funktion, **keine Migration**: `app_state` liegt seit
+jeher, und der Bestand entsteht über die vorhandene Einspielroutine.
+
+### Wozu
+
+Wer die Anwendung ansehen will, brauchte bisher ein Konto, eine Einladung und
+eigene Daten. Das ist eine hohe Schwelle für die Frage „wie sieht das
+eigentlich aus?". Das Demo-Konto beantwortet sie ohne Vorbereitung — und
+zwar mit einem Bestand, in dem **jede** Funktion vorkommt: Luft- und
+Bodeneinsätze, Winde, Bergwacht, Reanimationen, ein Dienst über Mitternacht,
+ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
+
+Der Datensatz stammt aus Phase P1 und ist derselbe, gegen den die
+Regressionsläufe vergleichen. Das ist kein Zufall, sondern der Grund, warum
+es ihn gibt: Ein Beispielbestand, den niemand prüft, veraltet.
+
+### Die Ausnahme, die dafür gemacht wird — und ihre Grenze
+
+Das Projekt verspricht Ende-zu-Ende-Verschlüsselung: Der Server sieht die
+geschützten Angaben nie im Klartext, und das Schlüsselmaterial hängt am
+Passwort. **Für dieses eine Konto gilt das nicht.** Sein Schlüsselmaterial
+liegt in einer Fixture auf dem Server, denn sonst könnte eine Rücksetzung die
+Chiffretexte nicht wieder lesbar machen.
+
+Das ist eine bewusste, eng gezogene Ausnahme und nur unter vier Bedingungen
+vertretbar — alle vier werden **erzwungen**, nicht bloß zugesichert:
+
+1. Das Konto trägt ausschließlich erfundene Daten.
+2. Es hat die Rolle `user`. `demo_lib.php` schreibt sie bei jedem Anlegen und
+   jedem Reset fest hin, statt sie zu übernehmen.
+3. Jede Funktion arbeitet auf der Kennung aus `app_state.demo_user_id` und
+   nimmt **keine** von außen entgegen. Sie kann kein anderes Konto treffen,
+   auch nicht bei falschem Aufruf.
+4. Zugangsdaten und Geräteschlüssel sind ohnehin öffentlich — es gibt nichts
+   zu schützen, was nicht schon offenläge.
+
+Ein Banner im Konto, ein Warnhinweis auf der Adminseite und ein Abschnitt im
+Handbuch sagen dasselbe: **niemals echte Daten darin erfassen.**
+
+### Kein zweiter Einspielweg
+
+Der Bestand wird über `edbak_restore()` hergestellt — dieselbe Routine wie bei
+der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
+hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
+der ungeprüftere.
+
+Zwei kleine Erweiterungen waren dafür nötig, beide in `backup_lib.php`:
+
+- **`edbak_build()` kann den Papierkorb mitnehmen** (`$mitPapierkorb`). Die
+  Fixture soll den Referenzzustand vollständig abbilden. Für eine
+  Nutzer-Sicherung bleibt der Filter — wer sichert, sichert seinen Bestand,
+  nicht seinen Abfall.
+- **`edbak_restore()` ist verschachtelungsfähig.** Sie öffnet ihre Transaktion
+  nur, wenn noch keine läuft. Der Demo-Reset muss mehr in dieselbe Klammer
+  nehmen: Kontomaterial, Geräte, Bestand und Papierkorb-Nachlauf. Zerfiele das
+  in mehrere Transaktionen, könnte ein Fehler in der Mitte ein Konto mit
+  halbem Bestand hinterlassen — und der Reset läuft unbeaufsichtigt.
+
+Beide Punkte kamen nicht aus dem Konzept, sondern aus dem ersten Anlauf: Der
+warf „There is already an active transaction" und ließ danach einen leeren
+Papierkorb zurück.
+
+### Die Fixture
+
+`server/demo/fixture.json.gz` — Konto- und Schlüsselmaterial, Geräte, der
+Bestand als inneres Backup-JSON und ein Nachlauf-Drehbuch. Erzeugt von
+`tools/referenzdatensatz/fixture/erzeugen.php`.
+
+**Sie kann nicht aus einer `.edbak` kommen.** Die Sicherungsdatei trägt die
+geschützten Angaben im *Klartext* — der Browser entschlüsselt vor dem
+Versiegeln, damit sich eine Sicherung in jedes Konto einspielen lässt. Die
+Fixture braucht das Gegenteil: den Chiffretext unverändert, daneben das
+Schlüsselmaterial. Erst dadurch kann der Server das Konto **ohne jede
+Entschlüsselung** zurücksetzen, und erst dadurch ist der Reset schnell genug,
+um bei jeder Anfrage zu laufen. Der Erzeuger bricht ab, wenn er Klartext
+findet.
+
+Gepackt abgelegt: roh 2,3 MB, im Wesentlichen 52 484 Spurpunkte als
+JSON-Zahlen; gepackt knapp 700 KB. Die Datei liegt unter `server/` und geht
+bei jedem Deploy mit.
+
+### Der Reset
+
+Anfragegetrieben nach dem Muster der Tageswartung, mit einem Unterschied in
+der Reihenfolge: **zuerst zurücksetzen, dann antworten.** Wer nach längerer
+Ruhe kommt, sieht den Ausgangsstand und nicht die Hinterlassenschaft der
+letzten Besucherin. Zwei Auslösepunkte — `auth_guard.php` für Web-Anfragen
+und `ingest.php` für Uploads, dort **nach** der Geräteprüfung, damit die
+Rücksetzung kein Hebel für jeden ist, der die Adresse kennt.
+
+Der Reset überschreibt auch Konto- und Schlüsselmaterial und zählt
+`session_epoch` hoch. Damit bliebe selbst eine unerwartet gelungene Änderung
+der Konto-Identität folgenlos.
+
+Zum Schluss legt das Nachlauf-Drehbuch benannte Einsätze und Diensttage über
+die **regulären** Löschwege in den Papierkorb — sonst wäre er nach jedem Reset
+leer, denn das Einspielen wertet `deleted_at` nicht aus. Die Diensttage werden
+über ihre Dienstkennung angesprochen, nicht über das Datum: Seit E9 können
+zwei Dienste auf einem Kalendertag liegen.
+
+### Gesperrt ist ausschließlich die Identität
+
+E-Mail-Änderung und Passwortänderung (`einstellungen.php`) werden mit einem
+freundlichen Hinweis abgewiesen; `api/kdf_upgrade.php` antwortet mit stillem
+Erfolg, weil der Browser es von sich aus aufruft und ein Fehler dort als
+Störung stünde, wo es keine gibt; `reset_request.php` weist die Demo-Adresse
+**still** ab — die Antwort dieser Seite ist für jede Adresse dieselbe, und
+eine Sondermeldung wäre die einzige Stelle, an der sie verriete, welche
+Adressen es gibt.
+
+Alles Übrige bleibt offen, ausdrücklich auch Geräteverwaltung, Kopplung und
+Uploads.
+
+**Warum überhaupt sperren, wenn der Reset ohnehin alles zurückholt?** Weil
+zwischen zwei Rücksetzungen bis zu dreißig Minuten liegen. Wer in dieser Zeit
+das Passwort ändert, sperrt die nächste Besucherin aus — und die findet ein
+Konto vor, dessen öffentliche Zugangsdaten nicht mehr stimmen, ohne zu
+erfahren warum.
+
+### Mengenbremse
+
+Zwei neue Töpfe in `ratelimit_lib.php`, die **anders zählen** als die vier
+bestehenden: nicht Fehlversuche, sondern gelungene Anmeldungen. `demo` fasst
+20 je Stunde und IP-Adresse, `demog` 300 je Stunde insgesamt.
+
+Ein Fehlversuchszähler liefe hier nie an — die Zugangsdaten sind öffentlich,
+es gibt nichts zu erraten. Begrenzt werden soll die Menge der Nutzung: Das
+Konto ist zum Ausprobieren da, nicht als Rechenzeit für Fremde. Die Prüfung
+sitzt vor der teuren Ableitung, wie jede Bremse dort.
+
 ## [Web 7.2.3] — 2026-08-23
 
 **Zwei Formatbeschreibungen sagten etwas anderes, als der Code tut.** Beides

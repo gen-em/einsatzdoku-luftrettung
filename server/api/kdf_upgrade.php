@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';      // liefert $userId, $kdfIter
 require_once __DIR__ . '/../validate_lib.php';   // WRAP_RE, Formatkennung
+require_once __DIR__ . '/../demo_lib.php';
 
 /**
  * POST api/kdf_upgrade.php — stille Anhebung der Rundenzahl (M2-01, Schritt 4)
@@ -50,6 +51,19 @@ require_once __DIR__ . '/../validate_lib.php';   // WRAP_RE, Formatkennung
  */
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { json_out(['error' => 'method'], 405); }
+
+/* Demo-Konto: Die Rundenzahl bleibt, wie sie ist (E-P1-19).
+ *
+ * Das KDF-Upgrade tauscht Token-Hash, Rundenzahl und Schluesselhuelle — also
+ * genau das Material, das die Fixture mitbringt. Liefe es durch, passte das
+ * Konto bis zum naechsten Reset nicht mehr zu seinen oeffentlichen
+ * Zugangsdaten. Die Fixture wird stattdessen mit der Zielrundenzahl erzeugt;
+ * ein Upgrade hat hier also auch nichts zu tun.
+ *
+ * Stiller Erfolg statt Fehler: Der Browser ruft diesen Endpunkt von sich aus
+ * nach der Anmeldung auf, ohne dass jemand etwas angefordert haette. Ein
+ * Fehler stuende dort als Stoerung, wo es keine gibt. */
+if (demo_ist_demo($userId)) { json_out(['ok' => true, 'uebersprungen' => 'demo']); }
 if (!hash_equals($_SESSION['csrf'] ?? '', $_SERVER['HTTP_X_CSRF'] ?? '')) {
     json_out(['error' => 'csrf'], 403);
 }

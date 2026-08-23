@@ -493,7 +493,7 @@ Verluste der Sicherung mit Zahl (Papierkorb 5/5/1 → 0/0/0, `created_at`
 Fixture aus einer edbak kann ihn nicht wiederherstellen — die dortige
 Abnahme „Papierkorb gefüllt" braucht einen eigenen Schritt im Reset.
 
-### B6 — Demo-Account-Funktion im Adminbereich
+### B6 — Demo-Account-Funktion im Adminbereich — **ERLEDIGT**
 Fixture aus dem Referenzzustand erzeugen (E-P1-08, unter
 `server/demo/`), serverseitige Einspielroutine als geteilte Logik mit
 `api/backup_restore.php` herausziehen, Admin-Oberfläche „Demo-Konto
@@ -517,6 +517,49 @@ werden mit Hinweis abgewiesen; Kopplung und Ingest-Upload
 funktionieren. Die Mengenbremse greift bei Überschreiten der
 Grenzwerte. Beide Admin-Funktionen verweigern die Arbeit auf jedem
 anderen Konto.
+
+**Ergebnis.** `server/demo_lib.php`, `server/admin_demo.php`, Fixture unter
+`server/demo/fixture.json.gz` (744 KB gepackt, 2,5 MB roh), Erzeuger unter
+`tools/referenzdatensatz/fixture/`. Version **7.3.0**, keine Migration.
+
+| Prüfung | Zahl |
+|---|---|
+| Anlegen aus der Fixture | 87 Einsätze, 100 Ruhesegmente, 16 Diensttage, 39 Stammdaten, 3 Geräte — **0 übersprungen, 0 verworfen**, in 6,0 s |
+| Bestand danach | 82 aktiv / 5 im Papierkorb, 15 Diensttage / 1 im Papierkorb — der Referenzstand |
+| **P-10** Demo gegen Referenz | CSV 9 589 Vergleiche · edbak 269 439 — **je 0 Abweichungen** |
+| **P-13** nach Änderung + Reset | dieselben **279 028** Vergleiche, **0 Abweichungen** |
+| **P-13** Reset über die Zeit | Zeitstempel zurückgestellt → **eine** gewöhnliche Anfrage stellt 81 → 82 her |
+| **P-11** anderes Konto | `demo_ist_demo(Admin)` false; ohne Kennzeichnung abgewiesen; Riegel in `demo_bestand_loeschen()` greift |
+| **P-14** Identität | E-Mail/Passwort abgewiesen, `kdf_upgrade` → `uebersprungen: demo`, **0 Reset-Tokens** in der Datenbank |
+| **P-15** Mengenbremse | erste Abweisung bei Anmeldung **21** (Grenze 20); Adminkonto unberührt |
+| Stilvergleich | 6 neue Deklarationen, 0 entfallen, 0 Reihenfolgewechsel; 28 881 Elementmessungen, 144 Abweichungen — alle auf das Banner zurückführbar |
+| Banner | auf drei Seiten vorhanden, Markenfarben bestätigt; bei einem anderen Konto **0 Elemente** |
+
+**Drei Konstruktionsfehler, alle aus dem Ausführen, keiner aus dem Konzept:**
+
+1. **Verschachtelte Transaktion.** `demo_anlegen()` öffnet eine,
+   `edbak_restore()` darin eine zweite — PDO kennt das nicht. `edbak_restore()`
+   ist jetzt verschachtelungsfähig; die Alternative (den Reset in mehrere
+   Transaktionen zerlegen) wurde verworfen, weil ein Fehler in der Mitte ein
+   Konto mit halbem Bestand hinterließe und der Reset unbeaufsichtigt läuft.
+2. **Der Nachlauf griff ins Leere.** `edbak_build()` filtert
+   `deleted_at IS NULL` — die Papierkorb-Einträge standen gar nicht in der
+   Fixture. Neuer Parameter `$mitPapierkorb`, gesetzt an genau einer Stelle.
+3. **`trash_lib.php` öffnet ebenfalls Transaktionen**, an vier Stellen. Statt
+   einen geteilten Baustein für einen Aufrufer umzubauen, läuft der Nachlauf
+   jetzt **hinter** dem Commit. Der Preis ist benannt: Scheitert er, steht der
+   Bestand vollständig da und der Papierkorb ist leer — sichtbar im Bericht,
+   harmlos, beim nächsten Reset behoben.
+
+**Zwei Annahmen des Konzepts haben sich erledigt:** Die „geteilte
+Einspielroutine" musste nicht herausgezogen werden (`edbak_restore()` liegt
+längst in `backup_lib.php`), und der Weg, `pat_blob` ohne Entschlüsselung
+einzuspielen, existierte bereits.
+
+**Ein Schönheitsfehler mit Substanz:** Der globale Topf der Mengenbremse
+zählte auch je IP-Adresse, weil `rate_merkmale()` die IP immer anhängt — eine
+nutzlose Zeile je Adresse. Die vier Ratenschutz-Funktionen nehmen jetzt
+wahlweise eine ausdrückliche Merkmalsliste entgegen.
 
 ### B7 — Dokumentation und Abschluss
 `tools/referenzdatensatz/LIESMICH.md` (Aufbau, Läufe, Regression),
@@ -545,12 +588,12 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I, Web 7.2.2). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
 | P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — 8 617 Einzelvergleiche, 844 erwartete, **9 unerklärte** Abweichungen. Die neun sind drei Befunde: F-P1-K (2 Einsätze 24 h zurück), F-P1-L (3 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Nicht als Ausnahme geführt — sie sind behebbar |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
-| P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | offen |
-| P-11 | Demo-Funktionen wirken nur auf das Demo-Konto | B6 | offen |
+| P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | **erfüllt** — Anlegen aus der Fixture in 6,0 s (87/100/16, 0 übersprungen); Export gegen die Referenz: CSV 9 589 und edbak 269 439 Vergleiche, **je 0 Abweichungen** |
+| P-11 | Demo-Funktionen wirken nur auf das Demo-Konto | B6 | **erfüllt** — die drei nach außen gedachten Funktionen nehmen **keine** Kennung entgegen; ohne `app_state`-Eintrag abgewiesen; `demo_bestand_loeschen()` trägt einen eigenen Riegel, geprüft gegen das Adminkonto |
 | P-12 | Produktivlauf abgeschlossen, Stichprobe Oberfläche | B3/B4 | offen |
-| P-13 | Automatischer 30-Minuten-Reset: Auslösung, Vollständigkeit inkl. Schlüsselmaterial und Papierkorb-Nachlauf, Aufräumen besucherangelegter Geräte/Codes | B6 | offen |
-| P-14 | Sperren der Konto-Identität und Abweisung des Passwort-Resets | B6 | offen |
-| P-15 | Anmelde-Mengenbremse Topf `demo` (je IP und global) | B6 | offen |
+| P-13 | Automatischer 30-Minuten-Reset: Auslösung, Vollständigkeit inkl. Schlüsselmaterial und Papierkorb-Nachlauf, Aufräumen besucherangelegter Geräte/Codes | B6 | **erfüllt** — Zeitstempel zurückgestellt, **eine** gewöhnliche Web-Anfrage stellt 81 → 82 her; nach Löschen und zusätzlichem Standort **279 028** Vergleiche ohne Abweichung; geschützte Angaben danach weiter lesbar |
+| P-14 | Sperren der Konto-Identität und Abweisung des Passwort-Resets | B6 | **erfüllt** — E-Mail und Passwort mit Hinweis abgewiesen, `api/kdf_upgrade.php` antwortet `uebersprungen: demo`, `reset_request.php` legt **0 Tokens** an (in der Datenbank nachgezählt) |
+| P-15 | Anmelde-Mengenbremse Topf `demo` (je IP und global) | B6 | **erfüllt** — erste Abweisung bei Anmeldung **21** (Grenze 20), Meldung nennt die Menge als Grund; Gegenprobe: das Adminkonto kommt weiter herein |
 
 ## 8. Fehlerfunde (gesammelt, K4)
 

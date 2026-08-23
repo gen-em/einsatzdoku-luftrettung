@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
 
@@ -19,6 +20,29 @@ $notice = null; $error = null; $pwGewechselt = false; $newKey = null; $pairCode 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action = $_POST['action'] ?? '';
+
+    /* ---- Demo-Konto: die Identitaet ist gesperrt (E-P1-19) -------------
+     *
+     * GESPERRT IST AUSSCHLIESSLICH DIE IDENTITAET. Alles andere bleibt
+     * offen — Stammdaten, Geraete, Kopplung, Einsaetze: Die Anwendung soll
+     * ausprobierbar sein, das ist der Zweck des Kontos.
+     *
+     * Warum ueberhaupt sperren, wenn der Reset ohnehin alles zurueckholt?
+     * Weil zwischen zwei Ruecksetzungen bis zu dreissig Minuten liegen. Wer
+     * in dieser Zeit E-Mail oder Passwort aendert, sperrt die naechste
+     * Besucherin aus — und die findet ein Konto vor, dessen oeffentliche
+     * Zugangsdaten nicht mehr stimmen, ohne zu erfahren warum.
+     *
+     * Der Hinweis nennt den Grund und ist freundlich: Es ist kein
+     * Fehlverhalten, das auszuprobieren. */
+    if (in_array($action, ['profile', 'password'], true) && demo_ist_demo($userId)) {
+        $error = 'Im Demo-Konto lassen sich E-Mail-Adresse und Passwort nicht '
+               . 'ändern — sie sind öffentlich und müssen es bleiben, damit '
+               . 'die nächste Besucherin hereinkommt. Alles andere darfst du '
+               . 'gern ausprobieren; spätestens nach 30 Minuten ist ohnehin '
+               . 'wieder der Ausgangszustand hergestellt.';
+        $action = '';
+    }
 
     /* ---- Profil: Name & E-Mail ---------------------------------------- */
     if ($action === 'profile') {
