@@ -132,6 +132,18 @@ Konzeptdokument. Innerhalb von Claude Code gilt:
   sind dabei gefallen. Dazu ein Prüfstand: was wurde geprüft und wie, was steht
   noch aus und auf welchem Weg.
 - Erst dann zum nächsten Paket.
+- **Am Ende der Phase ein Prüfdokument** — eine eigene Datei neben dem
+  Konzept, nicht ein Abschnitt darin. Das Prüfprotokoll im Konzept beantwortet
+  „ist es belegt?“; das Prüfdokument beantwortet „was muss **ich** noch tun?“.
+  Es enthält: was maschinell geprüft wurde (mit Mittel **und** Zahl), was im
+  Browser geprüft wurde, **was nicht geprüft werden konnte und warum**, und
+  als Kernstück eine abhakbare Prüfliste — je Punkt der konkrete Bedienweg,
+  das erwartete Ergebnis und **woran ein Scheitern zu erkennen ist**. Dazu die
+  Grenzen der benutzten Prüfmittel.
+  Zwei Regeln dabei: **Eine Prüfung ohne Zahl ist keine Prüfung**
+  („39 447 Elementmessungen, keine Abweichung“ statt „unverändert“), und
+  **was nicht geprüft werden konnte, wird gesagt, nicht weggelassen** — an den
+  Anfang, nicht in eine Fußnote.
 
 **Modellwahl:** Standard für die Umsetzung ist **Opus**, ohne Nachfrage.
 Sieht das Konzept für einen Schritt ausdrücklich **Fable** vor, vor Beginn
