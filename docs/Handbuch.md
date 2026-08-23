@@ -965,6 +965,12 @@ speichert nur Chiffretext. Es
 gibt kein zweites Passwort und keinen Schalter — die Verschlüsselung ist
 Pflicht.
 
+> **Eine Ausnahme, und nur diese eine:** Im **Demo-Konto** (Abschnitt 3.2)
+> liegt das Schlüsselmaterial auf dem Server. Anders ließe sich das Konto
+> nicht alle 30 Minuten zurücksetzen, ohne dass die verschlüsselten Angaben
+> danach unlesbar wären. Dort stehen ausschließlich erfundene Daten — und
+> deshalb gehören dort auch keine echten hinein.
+
 **Ersteinrichtung:** Sie passiert direkt beim Festlegen des Passworts. Wenn du
 über den Einladungslink dein Passwort vergibst, erzeugt der Browser im selben
 Schritt deinen **Wiederherstellungsschlüssel** und zeigt ihn **nur dieses eine

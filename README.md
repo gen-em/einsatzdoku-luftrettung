@@ -8,6 +8,13 @@ Alter und Einsatzort sind **Ende-zu-Ende-verschlüsselt** (Schlüssel aus dem
 Login-Passwort, Wiederherstellungsschlüssel als Rettungsanker); ein
 verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
 
+Zum Ausprobieren gibt es ein **Demo-Konto** mit erfundenen Daten
+(`demo@gen-em.org` / `nadokudemo0815`), das sich alle 30 Minuten selbst
+zurücksetzt. Es ist die **einzige** Stelle, an der die
+Ende-zu-Ende-Verschlüsselung bewusst ausgesetzt ist — sein Schlüsselmaterial
+liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
+(Abschnitt 3.2) und in `docs/Technik.md` 4.99a.
+
 ## Dokumentation
 
 | Dokument | Inhalt |
@@ -16,6 +23,10 @@ verschlüsseltes **Backup** (.edbak) sichert alle Daten in eine Datei.
 | [`docs/Technik.md`](docs/Technik.md) | Architektur, Datenmodell, Abläufe, Build, Deployment, **Betrieb/Runbook** |
 | [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Änderungshistorie |
 | [`docs/JSON-Vertrag.md`](docs/JSON-Vertrag.md) | Schnittstelle Uhr/Fremdquellen → Server |
+| [`docs/Backup-Format.md`](docs/Backup-Format.md) | Aufbau der `.edbak` und was **nicht** darin steht |
+| [`docs/Export-Format.md`](docs/Export-Format.md) | CSV- und Excel-Export, Rückimport |
+| [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, Nummern sind dauerhaft |
+| [`tools/referenzdatensatz/LIESMICH.md`](tools/referenzdatensatz/LIESMICH.md) | erfundener Beispielbestand: Demo-Konto **und** Regressionsreferenz |
 | `docs/archiv/` | eingefrorene Bau-Spezifikation (nicht mehr gepflegt) |
 
 ## Schnellstart

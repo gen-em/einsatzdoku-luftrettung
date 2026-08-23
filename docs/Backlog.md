@@ -69,6 +69,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Konzeptarbeit dazu ist an die Phasen P1/P2 (Sicherheit) übergeben, weil
     die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
     einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden.
+    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
+    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
+    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
+    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
+    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
+    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
+    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
+    Restrisiko).
 18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
     ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
     gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).

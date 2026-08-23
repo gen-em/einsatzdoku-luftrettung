@@ -111,6 +111,12 @@ hems/
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── config.example.php Vorlage der config.php (die selbst nur auf dem Server
 │   │                      liegt und vom Deploy ausgenommen ist)
+│   ├── demo/              Fixture des Demo-Kontos (fixture.json.gz) — das
+│   │                      EINZIGE Erzeugnis der Phase P1, das ausgeliefert
+│   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
+│   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
+│   │                      Reset-Fälligkeit, Papierkorb-Nachlauf (Abschnitt 4.99a)
+│   ├── admin_demo.php     die zugehörige Adminseite
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
 │   └── .htaccess          HTTPS-Zwang, Dateisperren, Sicherheits-Kopfzeilen
@@ -122,9 +128,21 @@ hems/
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
-│   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
-│                          Erscheinungsbild nicht verändert: Kaskadenvergleich
-│                          plus berechnete Stile im Browser (s. LIESMICH.md)
+│   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
+│   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
+│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
+│   └── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
+│       │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
+│       ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
+│       │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
+│       ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
+│       │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
+│       ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
+│       ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
+│       │                  werte (P-07), Exporte, Abnahme der Demo-Funktion
+│       ├── referenz/      die eingecheckten Referenz-Exporte
+│       ├── vergleich/     Vergleichswerkzeug und Kreislauftests
+│       └── fixture/       erzeugt server/demo/fixture.json.gz
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -2030,6 +2048,26 @@ existieren. Secrets: `FTP_SERVER` (nackter Hostname!), `FTP_USERNAME`,
 Repo.
 
 ## 7. Betrieb (Runbook)
+
+**Demo-Konto einrichten (einmalig):** Fixture erzeugen —
+`php tools/referenzdatensatz/fixture/erzeugen.php` auf der Maschine, auf der
+der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
+und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
+die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
+5 im Papierkorb und 3 Geräte nennen. Mechanik: Abschnitt 4.99a.
+
+**Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
+Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
+Sekunden. Er läuft ohnehin alle 30 Minuten von selbst — ausgelöst von der
+nächsten Anfrage, nicht von einem Zeitdienst. Bleibt die Seite leer, fehlt
+die Fixture; das sagt sie dann auch.
+
+**Demo-Konto nach einem Datensatz-Update auffrischen:** Erst den
+Referenzbestand neu einspielen
+(`tools/referenzdatensatz/LIESMICH.md`, „Die drei Läufe"), dann die Fixture
+neu erzeugen, dann ausrollen, dann im Adminbereich zurücksetzen. Die
+Reihenfolge ist wesentlich: Eine Fixture aus einem halb eingespielten Bestand
+sieht vollständig aus und ist es nicht.
 
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue

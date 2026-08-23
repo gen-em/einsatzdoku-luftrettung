@@ -561,7 +561,7 @@ zählte auch je IP-Adresse, weil `rate_merkmale()` die IP immer anhängt — ein
 nutzlose Zeile je Adresse. Die vier Ratenschutz-Funktionen nehmen jetzt
 wahlweise eine ausdrückliche Merkmalsliste entgegen.
 
-### B7 — Dokumentation und Abschluss
+### B7 — Dokumentation und Abschluss — **ERLEDIGT**
 `tools/referenzdatensatz/LIESMICH.md` (Aufbau, Läufe, Regression),
 Handbuch-Abschnitt Demo-Konto (inkl. Zugangsdaten nach F-P1-01 und
 Hinweis auf Reset und fiktive Daten), `docs/Technik.md`-Ergänzung
@@ -571,6 +571,29 @@ fortschreiben, Backlog-Durchsicht auf neue Funde (K4).
 **Abnahme:** Prüfdokument-P1 liegt vor (Kurzfassung, maschinelle
 Prüfungen mit Zahlen, Nichtprüfbares, abhakbare Prüfliste mit
 Bedienweg/Erwartung/Bedeutung); Doku in sich konsistent.
+
+**Ergebnis B7.**
+
+| Was | Wo |
+|---|---|
+| Anleitung des Datensatzes | `tools/referenzdatensatz/LIESMICH.md` (neu) |
+| **Prüfdokument P1** | `tools/referenzdatensatz/Pruefdokument-P1.md` (neu, eigene Datei) |
+| Demo-Mechanik | `docs/Technik.md` 4.99a |
+| Verzeichnisstruktur | `docs/Technik.md` 2 — `tools/referenzdatensatz/` und `server/demo/` eingetragen |
+| Runbook | `docs/Technik.md` 7 — einrichten, zurücksetzen, nach einem Datensatz-Update auffrischen |
+| Bedienung | `docs/Handbuch.md` 3.2 |
+| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.1, 7.2.2, 7.2.3, 7.3.0 |
+| Backlog | Nr. 22–28 neu; Nr. 17 um die Messgrundlage aus P1 ergänzt |
+
+**Konsistenz-Gegenlesen.** Ein Widerspruch ist dabei aufgefallen und behoben:
+README und `Handbuch.md` 5 sagten die Ende-zu-Ende-Verschlüsselung
+**absolut** zu. Das Demo-Konto ist die Ausnahme davon — beide Stellen nennen
+sie jetzt ausdrücklich und verweisen aufeinander. Ohne das hätten sich zwei
+Dokumente desselben Projekts widersprochen, und zwar an der Stelle, an der
+das Projekt sein wichtigstes Versprechen gibt.
+
+Ergänzt wurde außerdem das Dokumentenverzeichnis im README: `Backup-Format`,
+`Export-Format` und `Backlog` fehlten dort, obwohl alle drei gepflegt werden.
 
 ## 7. Prüfprotokoll
 
