@@ -108,5 +108,12 @@ declare(strict_types=1);
  * wie Suche und Zeitraum, und ein veralteter Link fuehrt nicht mehr auf eine
  * weisse Seite mit sechs Woertern, sondern auf eine Seite mit Kopfleiste und
  * Rueckweg.
+ *
+ * 7.2.1 behebt einen stillen Datenverlust im CSV-Rueckimport: gruppiere() in
+ * assets/import.js fuehrte eine zweite, von Hand gepflegte Feldliste neben
+ * EINFACHE_ZIELE — und die sechs Felder der Etappe 2 (Transportart,
+ * NA-Begleitung, Fehleinsatz, Zielkoordinate, Abfahrtortregel) waren dort nie
+ * nachgetragen worden. Sie wurden gelesen, in der Prueftabelle angezeigt und
+ * danach fallengelassen. Die Liste wird jetzt aus EINFACHE_ZIELE abgeleitet.
  */
-const WEB_VERSION = '7.2.0';
+const WEB_VERSION = '7.2.1';

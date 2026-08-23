@@ -11,6 +11,75 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.1] — 2026-08-23
+
+**Ein stiller Datenverlust im CSV-Rückimport.** Aufgefallen beim Aufbau des
+Referenzdatensatzes (Phase P1): Ein Einsatz, der über `import.php` aus einer
+`einsaetze.csv` eingelesen wurde, kam ohne Transportart, ohne NA-Begleitung,
+ohne Fehleinsatz-Kennzeichen, ohne Zielklinik-Koordinate und ohne
+Abfahrtortregel im Bestand an. Keine Migration.
+
+### Was passiert ist
+
+`assets/import.js` führt zwei Feldlisten. `EINFACHE_ZIELE` sagt, welche Werte
+beim Lesen der Datei unverändert nach `zeile.mission` wandern; `UEBERNAHME`
+sagt, welche davon `gruppiere()` in das Objekt kopiert, aus dem
+`import_ui.js` die Nutzlast für `api/import_commit.php` baut. Die zweite
+Liste war eine von Hand geführte Abschrift der ersten — und bei der Etappe 2
+(Web 6.1.0) war nur die erste ergänzt worden.
+
+Die Folge ist der unangenehmste Zuschnitt, den ein solcher Fehler haben kann:
+Die Werte werden korrekt gelesen, in der Prüftabelle korrekt **angezeigt**, die
+Bilanz meldet „0 Fehler" — und danach fallen sechs Felder zwischen Anzeige und
+Absenden heraus. Weder die Datei noch die Seite noch die Rückmeldung des
+Servers deuten darauf hin. Betroffen war ausschließlich das Profil
+`export_csv_v1`; das Excel-Profil kennt diese Spalten gar nicht.
+
+Das trifft eine ausdrückliche Zusage: `docs/Export-Format.md` 5.1 nennt
+`export_csv_v1` „verlustfrei" und zählt genau drei bewusste Ausnahmen auf
+(`einsatz_id`, GPX-Dateien, Rettungsmittel/Standort) plus `herkunft` und
+`edited`. Diese sechs Felder standen dort nicht — sie waren keine Entscheidung,
+sondern ein Versehen.
+
+### Was geändert wurde
+
+`UEBERNAHME` wird nicht mehr abgeschrieben, sondern **abgeleitet**:
+
+    var UEBERNAHME = EINFACHE_ZIELE
+        .filter(function (f) { return f !== 'day' && f !== 'crew_override'; })
+        .concat(['resources', 'phases', 'phasesLocal']);
+
+Die vier Abweichungen sind an Ort und Stelle begründet: `day` ist der
+Gruppenschlüssel und steht am Diensttag, `crew_override` wird bei
+`explicitCrew` ausdrücklich gesetzt, und `resources`, `phases`, `phasesLocal`
+sind Sonderfälle in `setzeZiel()` beziehungsweise `phasenFach()`. Ein neues
+Feld gehört damit nur noch an eine Stelle.
+
+Die einzelne Zeile hätte es auch getan. Sie wäre aber die dritte Abschrift
+gewesen, die irgendwann wieder zurückbleibt — und der Fehler ist gerade
+deshalb zwei Nebenversionen lang unbemerkt geblieben, weil nichts ihn zeigt.
+Das entspricht dem Grundsatz „Feldkatalog statt Sonderfall" (CLAUDE.md 4).
+
+### Wer nachbessern muss
+
+Wer zwischen Web 6.1.0 und 7.2.0 eine CSV-Datei zurückgespielt hat, hat die
+sechs Felder für die betroffenen Einsätze leer im Bestand. Ein erneuter Import
+derselben Datei mit „überschreiben" trägt sie nach; die Felder stehen
+außerhalb der COALESCE-Schranke von `api/import_commit.php`, werden also
+tatsächlich gesetzt. Betroffen sind nur importierte Einsätze — der Weg über
+die Uhr und das Formular schreibt diese Spalten seit jeher.
+
+### Geprüft
+
+Im Browser über `import.php` mit der Referenzdatei (vier Einsätze, 92 Spalten):
+vorher fehlten in allen vier Zeilen `transport_mode` und `start_src`, in je
+einer `na_escort` und `false_alarm`; nachher stimmen alle sechs Felder mit der
+Datei überein. Zusätzlich prüft der Referenzdatensatz die Listendrift jetzt
+dauerhaft maschinell (`tools/referenzdatensatz/generator/pruefen.py`, Prüfung 5):
+Sie liest beide Listen aus `assets/import.js` und meldet jedes Feld, das
+gelesen, aber nicht weitergereicht wird. Gegen den alten Stand gehalten meldet
+sie genau die sechs Felder, gegen den neuen keines.
+
 ## [Web 7.2.0] — 2026-08-23
 
 **Die Nacharbeit zu P0.** Die Befundpakete A4 (toter Code) und A6

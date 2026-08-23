@@ -667,12 +667,34 @@
      * Fehlerzeilen bleiben aussen vor: Sie haben kein verwertbares Datum und
      * duerfen die Tagescrew nicht verfaelschen.
      */
-    // Einsatzfelder, die unveraendert von der Zeile in den Einsatz wandern.
-    var UEBERNAHME = ['alarm', 'ended', 'transport_dest', 'winch', 'resources',
-        'notes', 'site_ele_m', 'distance_m', 'ascent_m',
-        'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
-        'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
-        'phases', 'phasesLocal', 'rea'];
+    /* Einsatzfelder, die unveraendert von der Zeile in den Einsatz wandern.
+     *
+     * ABGELEITET, NICHT ABGESCHRIEBEN. setzeZiel() schreibt einen gelesenen
+     * Wert nach `zeile.mission`; gruppiere() baut daraus das Objekt, aus dem
+     * import_ui.js die Nutzlast formt — und kopiert dabei nur, was in dieser
+     * Liste steht. Solange sie eine zweite, von Hand gefuehrte Abschrift von
+     * EINFACHE_ZIELE war, konnte sie zurueckbleiben: Ein Feld, das oben
+     * ankam und hier fehlte, wurde in der Prueftabelle richtig angezeigt und
+     * danach stillschweigend fallengelassen.
+     *
+     * Genau das war bis Web 7.2.0 bei den sechs Feldern der Etappe 2 der
+     * Fall (transport_mode, na_escort, false_alarm, dest_lat, dest_lon,
+     * start_src): EINFACHE_ZIELE wurde erweitert, diese Liste nicht. Der
+     * CSV-Rueckweg, den Export-Format.md 5.1 ausdruecklich verlustfrei
+     * nennt, verlor Transportart, NA-Begleitung, Fehleinsatz,
+     * Zielkoordinate und Abfahrtortregel — ohne Hinweis, weil die Werte auf
+     * dem ganzen Weg bis zur Anzeige vollstaendig sind.
+     *
+     * Was abweicht, und warum:
+     *   ohne  'day'           ist der Gruppenschluessel, steht am Diensttag
+     *   ohne  'crew_override' wird unten ausdruecklich gesetzt (explicitCrew)
+     *   dazu  'resources'     Sonderfall in setzeZiel() (Liste statt Wert)
+     *   dazu  'phases', 'phasesLocal'  werden ueber phasenFach() gefuellt
+     *
+     * Ein neues Feld gehoert damit nur noch an EINE Stelle: EINFACHE_ZIELE. */
+    var UEBERNAHME = EINFACHE_ZIELE
+        .filter(function (f) { return f !== 'day' && f !== 'crew_override'; })
+        .concat(['resources', 'phases', 'phasesLocal']);
 
     function gruppiere(zeilen, profil) {
         var explizit = !!(profil && profil.explicitCrew);
