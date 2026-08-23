@@ -344,7 +344,8 @@ ui_topbar('uebersicht');
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/confirm.js') ?>"></script>
+<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+         haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines
    Rettungsmittels zieht seinen Standort nach. Ohne Standort am Rettungsmittel

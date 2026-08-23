@@ -458,7 +458,7 @@ async function init(){
     const px = map.getSize();
     map.fitBounds(bounds, { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
   }
-  else { map.setView([47.7, 10.3], 9); document.getElementById('map').classList.add('map-empty'); }
+  else { map.setView([47.7, 10.3], 9); }
 
   // Phasen-Tabelle mit Hover-/Tipp-Kopplung zur Karte
   const pb = document.getElementById('phasebody');

@@ -819,7 +819,8 @@ ui_topbar('einstellungen');
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/confirm.js') ?>"></script>
+<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+         haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>

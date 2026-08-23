@@ -18,15 +18,9 @@ require_once __DIR__ . '/../auth_guard.php';
  * niemand aussprechen wollte. */
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') { json_out(['error' => 'method'], 405); }
 
-header('Content-Type: application/json; charset=utf-8');
-
 $jahr  = (string)($_GET['y'] ?? '');
 $monat = (string)($_GET['m'] ?? '');
-if (!preg_match('/^\d{4}$/', $jahr)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Ungültiges Jahr']);
-    exit;
-}
+if (!preg_match('/^\d{4}$/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'], 400); }
 /* Der Wertebereich zaehlt, nicht nur die Ziffernzahl (M3-06).
  *
  * Vorher genuegten zwei Ziffern. "00" und "13" kamen damit durch, und dann
@@ -36,9 +30,7 @@ if (!preg_match('/^\d{4}$/', $jahr)) {
  * Vorjahres. Eine Uebersicht, die stillschweigend einen anderen Monat zeigt
  * als den angefragten, ist schlimmer als eine, die sich weigert. */
 if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Ungültiger Monat']);
-    exit;
+    json_out(['error' => 'Ungültiger Monat'], 400);
 }
 
 if ($monat !== '') {
@@ -132,7 +124,16 @@ try {
         $jeArt[$art === 'air' || $art === 'ground' ? $art : 'neutral'] += $n;
     }
 
-    echo json_encode([
+    /* Ueber json_out() wie die uebrigen neun Endpunkte. Diese Datei schrieb
+       ihre Antworten selbst und ging damit auch am `Cache-Control: no-store`
+       vorbei, das json_out() setzt — obwohl der Kommentar dort „Zeitraum"
+       ausdruecklich als einen der Endpunkte nennt, die es brauchen. Der
+       Unterschied ist nicht theoretisch: Die Antwort traegt Datum, Uhrzeit,
+       Einsatznummer und Koordinaten im Klartext.
+       Mit der Umstellung entfaellt JSON_UNESCAPED_UNICODE — Umlaute stehen
+       jetzt als \uXXXX in der Antwort. Fuer den Abnehmer ist das dasselbe:
+       zeitraum.php liest mit res.json(). */
+    json_out([
         'jahr'     => $jahr,
         'monat'    => $monat !== '' ? $monat : null,
         'von'      => $von,
@@ -140,7 +141,7 @@ try {
         'tage'     => $gesamt,
         'tage_art' => $jeArt,
         'missions' => $missions,
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 } catch (Throwable $ex) {
     // Statt eines leeren HTTP 500 (z. B. fehlende Spalte nach vergessener
     // Migration) eine lesbare Fehlermeldung — das Frontend zeigt sie an.

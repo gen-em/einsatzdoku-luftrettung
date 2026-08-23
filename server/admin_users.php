@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($uid !== $userId) { // sich selbst nicht loeschen
             db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
             $notice = 'Nutzer gelöscht (inkl. Geräte und Daten).';
-        } else { $notice = 'Du kannst dich nicht selbst löschen.'; }
+        } else { $error = 'Du kannst dich nicht selbst löschen.'; }
     }
 
 }

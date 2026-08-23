@@ -549,5 +549,7 @@ ui_topbar('einstellungen');
   <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/confirm.js') ?>" defer></script>
+<?php /* confirm.js liefert ui_footer() (ui.php) auf jeder Seite. Hier stand es
+         ein zweites Mal — und zwei Kopien hoeren beide zu, jede oeffnet ihren
+         eigenen Dialog. Jede Rueckfrage dieser Seite erschien doppelt. */ ?>
 <?php ui_seite_ende(); ?>

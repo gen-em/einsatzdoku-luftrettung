@@ -249,6 +249,7 @@ function ui_settings_sidebar(string $active): void {
  */
 function ui_days_sidebar(?int $currentDayId): void {
     global $userId;
+    ui_hat_tagesleiste(true);   // fuer ui_footer(), s. dort
     require_once __DIR__ . '/diensttag_lib.php';
     $tage = dt_liste($userId, 500);
 
@@ -442,10 +443,31 @@ function ui_ortsfeld(array $o): void
       </div>
 <?php }
 
+/**
+ * Merkzettel: Steht auf dieser Seite die Einsatztage-Leiste?
+ *
+ * ui_days_sidebar() traegt sich ein, ui_footer() liest es. Die Reihenfolge
+ * stimmt auf allen Seiten, die beides benutzen: Die Leiste steht oben im
+ * Layout, die Fusszeile unten.
+ */
+function ui_hat_tagesleiste(bool $setzen = false): bool
+{
+    static $ja = false;
+    if ($setzen) { $ja = true; }
+    return $ja;
+}
+
 /** Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt */
 function ui_footer(): void { ?>
   <script src="<?= asset('assets/confirm.js') ?>"></script>
+  <?php /* daylist.js belebt das Jahr/Monat-Akkordeon der Einsatztage-Leiste.
+           Bis Web 7.1.0 kam es auf JEDER Seite mit — auch auf Einstellungen,
+           Import, Administration und Wartung, die keine Leiste haben. Dort
+           sucht das Skript .dayyears, findet nichts und kehrt zurueck: eine
+           Anfrage und ein Parse-Durchgang fuer nichts. */ ?>
+  <?php if (ui_hat_tagesleiste()): ?>
   <script src="<?= asset('assets/daylist.js') ?>"></script>
+  <?php endif; ?>
 <footer class="sitefooter">© Gen-EM – OpenSource Software –
   <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE"
      target="_blank" rel="noopener">AGPL-3.0</a>

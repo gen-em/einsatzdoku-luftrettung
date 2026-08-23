@@ -20,6 +20,18 @@
 (function () {
   'use strict';
 
+  /* NUR EINMAL WIRKSAM, auch wenn die Datei zweimal eingebunden wird.
+   *
+   * Diese Datei ist eine IIFE ohne eigenen Namensraum: Eine zweite Einbindung
+   * ist kein Fehler, sie meldet nur ein zweites Mal dieselben Zuhoerer an —
+   * und dann oeffnen zwei Dialoge uebereinander. Bis Web 7.1.0 war das auf
+   * drei Seiten der Fall (admin_sicherungen, admin_stammdaten,
+   * nachbearbeitung), weil sie confirm.js zusaetzlich zu ui_footer() selbst
+   * einbanden. Die Zeilen sind entfernt; diese Schranke sorgt dafuer, dass es
+   * beim naechsten Mal nicht wieder auffaellt, sondern gar nicht erst
+   * passiert. */
+  if (window.edConfirm) { return; }
+
   /* Je Aufruf ein EIGENES <dialog>. Vorher gab es ein einziges,
    * wiederverwendetes Element — das ist bei zwei aufeinanderfolgenden
    * Rückfragen stillschweigend schiefgegangen:

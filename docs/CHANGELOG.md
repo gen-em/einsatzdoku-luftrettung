@@ -11,6 +11,66 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.0] — 2026-08-23
+
+**Die Nacharbeit zu P0.** Die Befundpakete A4 (toter Code) und A6
+(Strukturreview) haben Listen geliefert statt Änderungen — hier stehen die
+Punkte, die daraufhin einzeln freigegeben wurden, dazu die Fehler, die beim
+Suchen aufgefallen sind. Kein neues Feld, keine Migration.
+
+### Die Rückfragen auf der Sicherungsseite erscheinen wieder
+
+Drei Schaltflächen in `admin_sicherungen.php` trugen eine Rückfrage —
+„Alle sichern", „Einspielen" und „Für NutzerIn freigeben". Sie erschien
+**nie**. `confirm.js` band nur an `<form>` und an `<a>`; an einen `<button>`
+band es nichts. Die Attribute standen da und sahen nach Absicherung aus.
+
+Das ist nicht nebensächlich: „Einspielen" schreibt eine fremde Sicherung in
+ein Konto, „Freigeben" gibt sie einer anderen Person heraus. Beide standen
+als gewöhnliche Schaltfläche neben einem Auswahlfeld — ein Fehlklick hatte
+nichts vor sich.
+
+`confirm.js` hört jetzt auch auf `button[data-confirm]`. Der Knopf wird nach
+dem Ja **erneut geklickt** statt das Formular per `submit()` abzuschicken:
+Nur der tatsächlich betätigte Absendeknopf schickt sein `name`/`value` mit,
+und genau darin unterscheiden sich die drei (`action=einspielen` gegen
+`action=freigeben`).
+
+Am Markup ändert sich nichts. Die 22 Rückfragen am `<form>` und die eine am
+`<a>` laufen unverändert.
+
+### Rückfragen erschienen auf drei Seiten doppelt
+
+`assets/confirm.js` ist eine IIFE ohne eigenen Namensraum: Eine zweite
+Einbindung ist kein Fehler, sie meldet nur ein zweites Mal dieselben Zuhörer
+an — und dann öffnen **zwei Dialoge übereinander**. Genau das war auf
+`admin_sicherungen.php`, `admin_stammdaten.php` und `nachbearbeitung.php` der
+Fall: Sie banden die Datei zusätzlich zu `ui_footer()` selbst ein.
+
+Die drei Zeilen sind weg. Zusätzlich hat `confirm.js` jetzt eine Schranke am
+Anfang — eine zweite Einbindung ist damit wirkungslos statt doppelt.
+
+### Kleinere Berichtigungen
+
+* **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre
+  Antworten selbst und ging damit an `json_out()` vorbei — obwohl der
+  Kommentar dort „Zeitraum" ausdrücklich als einen der Endpunkte nennt, die
+  den Kopf brauchen. Die Antwort trägt Datum, Uhrzeit, Einsatznummer und
+  Koordinaten im Klartext; an einem gemeinsamen Rechner reicht die
+  Zurück-Taste. Jetzt läuft der Endpunkt wie die übrigen neun über
+  `json_out()`.
+* **„Du kannst dich nicht selbst löschen."** stand in der
+  Nutzerverwaltung als blauer Hinweis — dieselbe Farbe wie „Nutzer angelegt".
+  Es ist eine abgelehnte Handlung und erscheint jetzt als Fehler.
+* **`daylist.js` wird nur noch geladen, wo es etwas tut.** Das Skript belebt
+  das Jahr/Monat-Akkordeon der Einsatztage-Leiste; `ui_footer()` gab es bis
+  hierher auf **jeder** Seite aus. Auf acht Seiten ohne Leiste — Einstellungen,
+  Import, Suche, Administration, Wartung — suchte es `.dayyears`, fand nichts
+  und kehrte zurück.
+* **Zwei Klassen ohne Wirkung entfernt:** `sorted` an den Tabellenköpfen der
+  Tagesübersicht und `map-empty` am Kartencontainer wurden per JavaScript
+  gesetzt, hatten aber keine einzige Regel im Stylesheet.
+
 ## [Web 7.1.0] — 2026-08-23
 
 **Eine Aufräumrunde, bevor die Oberfläche umgebaut wird.** Das ist Paket P0 des
@@ -99,27 +159,6 @@ kam dabei ans Licht und wurde vorher berichtigt: `.keybox` und `.paircode`
 sitzen auf der Kopplungsseite am selben Element und setzen beide den Rahmen —
 in der neuen Reihenfolge hätte der Kopplungscode seine orange Umrandung
 verloren.
-
-### Die Rückfragen auf der Sicherungsseite erscheinen wieder
-
-Drei Schaltflächen in `admin_sicherungen.php` trugen eine Rückfrage —
-„Alle sichern", „Einspielen" und „Für NutzerIn freigeben". Sie erschien
-**nie**. `confirm.js` band nur an `<form>` und an `<a>`; an einen `<button>`
-band es nichts. Die Attribute standen da und sahen nach Absicherung aus.
-
-Das ist nicht nebensächlich: „Einspielen" schreibt eine fremde Sicherung in
-ein Konto, „Freigeben" gibt sie einer anderen Person heraus. Beide standen
-als gewöhnliche Schaltfläche neben einem Auswahlfeld — ein Fehlklick hatte
-nichts vor sich.
-
-`confirm.js` hört jetzt auch auf `button[data-confirm]`. Der Knopf wird nach
-dem Ja **erneut geklickt** statt das Formular per `submit()` abzuschicken:
-Nur der tatsächlich betätigte Absendeknopf schickt sein `name`/`value` mit,
-und genau darin unterscheiden sich die drei (`action=einspielen` gegen
-`action=freigeben`).
-
-Am Markup ändert sich nichts. Die 22 Rückfragen am `<form>` und die eine am
-`<a>` laufen unverändert.
 
 ### Betreiberhinweis
 

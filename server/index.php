@@ -367,7 +367,6 @@ function renderMissionTable(){
     tbody.appendChild(tr);
   });
   document.querySelectorAll('#missions th.sortable').forEach(th => {
-    th.classList.toggle('sorted', th.dataset.key === sortKey);
     th.querySelector('.arrow')?.remove();
     if (th.dataset.key === sortKey) {
       const a = document.createElement('span');

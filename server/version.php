@@ -94,5 +94,11 @@ declare(strict_types=1);
  * und angefasst ist jede einzelne Seite. Eine Korrekturfassung kuendigt beides
  * nicht an. Die Zaehlweise oben bleibt der Regelfall; dies ist die benannte
  * Ausnahme.
+ *
+ * 7.2.0 ist die NACHARBEIT zu P0: was in den Befundpaketen A4 und A6 gefunden
+ * und danach einzeln freigegeben wurde, plus die Fehler, die dabei aufgefallen
+ * sind. Kein neues Feld, keine Migration. Sichtbar wird davon genau eines: Die
+ * Rueckfragen auf der Sicherungsseite erscheinen jetzt ueberhaupt, und die auf
+ * drei Seiten erschienen doppelt.
  */
-const WEB_VERSION = '7.1.0';
+const WEB_VERSION = '7.2.0';
