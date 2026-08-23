@@ -5,15 +5,32 @@
  * Rückfragen stillschweigend und Löschungen liefen ohne Nachfrage durch.
  * Ein Dialog im Seiteninhalt lässt sich nicht abschalten.
  *
- * Verwendung:
+ * Verwendung — drei Träger, je nach dem, was gefragt werden soll:
  *   <form data-confirm="Wirklich löschen?">…</form>
  *   <a href="…" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden">…</a>
+ *   <button name="action" value="…" data-confirm="…">…</button>
  * Optional:
  *   data-confirm-ok    Beschriftung des Bestätigungsknopfes (Standard: „Löschen")
  *   data-confirm-tone  "danger" (Standard) oder "normal"
+ *
+ * WANN AN DEN KNOPF UND NICHT AN DAS FORMULAR: Wenn EIN Formular mehrere
+ * Absendeknöpfe hat, die verschiedene Dinge tun. Am Formular hinge dann eine
+ * Frage für alle — also für jeden einzelnen die falsche.
  */
 (function () {
   'use strict';
+
+  /* NUR EINMAL WIRKSAM, auch wenn die Datei zweimal eingebunden wird.
+   *
+   * Diese Datei ist eine IIFE ohne eigenen Namensraum: Eine zweite Einbindung
+   * ist kein Fehler, sie meldet nur ein zweites Mal dieselben Zuhoerer an —
+   * und dann oeffnen zwei Dialoge uebereinander. Bis Web 7.1.0 war das auf
+   * drei Seiten der Fall (admin_sicherungen, admin_stammdaten,
+   * nachbearbeitung), weil sie confirm.js zusaetzlich zu ui_footer() selbst
+   * einbanden. Die Zeilen sind entfernt; diese Schranke sorgt dafuer, dass es
+   * beim naechsten Mal nicht wieder auffaellt, sondern gar nicht erst
+   * passiert. */
+  if (window.edConfirm) { return; }
 
   /* Je Aufruf ein EIGENES <dialog>. Vorher gab es ein einziges,
    * wiederverwendetes Element — das ist bei zwei aufeinanderfolgenden
@@ -100,6 +117,37 @@
     ask(a.getAttribute('data-confirm'), a.getAttribute('data-confirm-ok'),
         a.getAttribute('data-confirm-tone'))
       .then(ja => { if (ja) location.href = a.href; });
+  }, true);
+
+  /* Absendeknöpfe abfangen.
+   *
+   * DIESER ZWEIG HAT BIS WEB 7.1.0 GEFEHLT, und das war nicht folgenlos:
+   * admin_sicherungen.php trug die Rückfrage an drei <button> — „Alle
+   * sichern", „Einspielen" und „Für NutzerIn freigeben". Gebunden wurde nur
+   * an <form> und an <a>; die drei Dialoge erschienen also NIE. Dass die
+   * Attribute dastanden, sah nach Absicherung aus und war keine — ausgerechnet
+   * vor dem Einspielen einer fremden Sicherung in ein Konto.
+   *
+   * WARUM DER KNOPF ERNEUT GEKLICKT WIRD und nicht f.submit() gerufen: Nur der
+   * tatsächlich betätigte Absendeknopf schickt sein name/value mit. Die drei
+   * Knöpfe unterscheiden sich genau darin (name="action" value="einspielen"
+   * bzw. "freigeben") — ein f.submit() ließe die Angabe weg, und der Server
+   * bekäme eine Anfrage ohne Auftrag. Der zweite Klick läuft durch, weil
+   * dataset.confirmed dann gesetzt ist, und nimmt den üblichen Weg samt
+   * Formularprüfung.
+   */
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('button[data-confirm]');
+    if (!b || b.dataset.confirmed === '1') return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    ask(b.getAttribute('data-confirm'), b.getAttribute('data-confirm-ok'),
+        b.getAttribute('data-confirm-tone'))
+      .then(ja => {
+        if (!ja) return;
+        b.dataset.confirmed = '1';
+        b.click();
+      });
   }, true);
 
   window.edConfirm = ask;      // für eigene Aufrufe

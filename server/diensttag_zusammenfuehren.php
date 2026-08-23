@@ -25,10 +25,9 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 
 $zielId = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
 $ziel   = $zielId > 0 ? dt_laden($userId, $zielId, true) : null;
-if ($ziel === null) { http_response_code(404); exit('Diensttag nicht gefunden.'); }
+if ($ziel === null) { ui_abbruch(404, 'Diensttag nicht gefunden.'); }
 if ($ziel['deleted_at'] !== null) {
-    http_response_code(409);
-    exit('Dieser Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
+    ui_abbruch(409, 'Dieser Diensttag liegt im Papierkorb. Bitte ihn zuerst wiederherstellen.');
 }
 
 $quellId = (int)($_POST['q'] ?? $_GET['q'] ?? 0);
@@ -102,7 +101,7 @@ ui_topbar('uebersicht');
          aria-label="<?= e($zielSym['text']) ?>"><?= e($zielSym['zeichen']) ?></span>
        <?= e($wer($ziel)) ?> — dieser Diensttag <strong>bleibt</strong>.</p>
 
-    <?php if ($fehler): ?><p class="alert"><?= e($fehler) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $fehler); ?>
 
 <?php if ($vorschau === null): ?>
     <?php /* ---- Schritt 1: Welcher Tag wird aufgenommen? ----------------- */ ?>

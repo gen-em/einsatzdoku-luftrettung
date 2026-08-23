@@ -23,16 +23,15 @@ if ($editing) {
                          WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
     $dq->execute([$id, $userId]);
     $w = $dq->fetchColumn();
-    if ($w === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+    if ($w === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
     $dayId = $w === null ? 0 : (int)$w;
 } else {
     $dayId = (int)($_GET['d'] ?? $_POST['day_id'] ?? 0);
 }
 $tag = $dayId > 0 ? dt_laden($userId, $dayId) : null;
 if ($tag === null) {
-    http_response_code(400);
-    exit('Kein Diensttag gewählt. Bitte den Einsatz aus der Diensttagübersicht '
-       . 'heraus nachtragen.');
+    ui_abbruch(400, 'Kein Diensttag gewählt. Bitte den Einsatz aus der Diensttagübersicht '
+                  . 'heraus nachtragen.');
 }
 $dayBaseId = $tag['base_id'] !== null ? (int)$tag['base_id'] : null;
 
@@ -96,7 +95,7 @@ if ($editing) {
     $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
     $st->execute([$id, $userId]);
     $mission = $st->fetch();
-    if (!$mission) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+    if (!$mission) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
     $ph = db()->prepare('SELECT phase, occurred_at FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
     $ph->execute([$id]);
@@ -697,7 +696,7 @@ ui_topbar('uebersicht');
        manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht mehr
        (GPS-Track wird weiterhin ergänzt).</p>
   <?php endif; ?>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php ui_meldung(null, $error); ?>
 
   <form method="post" id="missionform" class="formcol" data-dirty-track data-submit-on-ctrl-enter>
     <?= csrf_field() ?>
@@ -1322,9 +1321,7 @@ ui_topbar('uebersicht');
 </main>
 </div>
 
-<script src="<?= asset('assets/crypto.js') ?>"></script>
-<script src="<?= asset('assets/keyguard.js') ?>"></script>
-<script src="<?= asset('assets/unlock.js') ?>"></script>
+<?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
@@ -1446,13 +1443,6 @@ function reaSitzung(daten) {
 }
 
 // ---- PatientInnendaten & Einsatzort: lokale Ver-/Entschluesselung ------
-const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-   bekommt einen anderen Schluessel. */
-const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 const PAT_PREV = <?= json_encode($mission['pat_blob'] ?? null) ?>;
 /* Bezugstag fuer die Altersberechnung: das ECHTE Einsatzdatum, nicht heute und
    nicht das Datum des Diensttags. Bei einem Dienst ueber Mitternacht sind das

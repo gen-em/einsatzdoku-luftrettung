@@ -675,8 +675,7 @@ ui_topbar('einstellungen');
   <?php ui_settings_sidebar($tab); ?>
 
   <main class="page">
-  <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if ($tab === 'profil'): ?>
     <h1>Profil</h1>
@@ -709,10 +708,13 @@ ui_topbar('einstellungen');
       <button class="btn-primary">Passwort ändern</button>
       <span class="muted" id="pwstate"></span>
     </form>
-    <script src="<?= asset('assets/crypto.js') ?>"></script>
-    <?php /* Passwortguete (Baustein B9) — dieselbe Regel wie bei Erstvergabe
-             und Zuruecksetzen (M2-02). */ ?>
-    <script src="<?= asset('assets/pwquality.js') ?>"></script>
+    <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
+             dazu pwquality.js: Passwortguete nach derselben Regel wie bei
+             Erstvergabe und Zuruecksetzen (B9, M2-02).
+             OHNE keyguard.js/unlock.js — dieser Reiter entsperrt nichts, er
+             wechselt das Passwort. */ ?>
+    <?php ui_krypto_bootstrap(['skripte' => ['assets/crypto.js'],
+                               'guete' => true, 'einzug' => '    ']); ?>
     <script>
     /* Zweiter Teil des Passwortwechsels (M2-07): Das Vormerkfach aus dem
      * vorigen Seitenaufruf aufloesen, bevor irgendetwas anderes geschieht. */
@@ -728,13 +730,6 @@ ui_topbar('einstellungen');
       // Schluessel im Tab passt weiterhin zur gespeicherten Huelle.
     })();
 
-    const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-       gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-       bekommt einen anderen Schluessel. */
-    const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-    const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
-    const WRAP_PW = <?= json_encode($patWrapPw) ?>;
     EdPwQuality.beobachte(document.getElementById('pw_new1'),
                           document.getElementById('pw_guete'));
     document.getElementById('pwform').addEventListener('submit', async ev => {
@@ -766,10 +761,10 @@ ui_topbar('einstellungen');
         // Inhaltsschluessel des Moduls in die neue Passwort-Huelle umpacken.
         // Klappt das nicht, wird NICHT abgeschickt: ein geaendertes Passwort
         // ohne passende Huelle machte die geschuetzten Angaben unlesbar.
-        if (WRAP_PW) {
+        if (PAT_WRAP) {
           let ck;
           try {
-            ck = await EdCrypto.decrypt(oldDataKey, WRAP_PW);
+            ck = await EdCrypto.decrypt(oldDataKey, PAT_WRAP);
           } catch (e) {
             st.textContent = 'Die geschützten Angaben lassen sich mit dem aktuellen '
                            + 'Passwort nicht entschlüsseln. Es wurde nichts geändert.';
@@ -1656,27 +1651,18 @@ ui_topbar('einstellungen');
          Einträge bleiben unverändert, es kommt nur hinzu, was fehlt.</p>
     </div>
 
-    <script src="<?= asset('assets/crypto.js') ?>"></script>
-    <script src="<?= asset('assets/keyguard.js') ?>"></script>
-    <script src="<?= asset('assets/unlock.js') ?>"></script>
+    <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
+             dazu pwquality.js fuer die Guetepruefung des Backup-Passworts
+             (B9, M2-03). */ ?>
+    <?php ui_krypto_bootstrap(['keycheck' => true, 'csrf' => true,
+                               'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
-             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt;
-             pwquality.js die Guetepruefung des Backup-Passworts (B9, M2-03). */ ?>
+             (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt. */ ?>
     <script src="<?= asset('assets/patient.js') ?>"></script>
-    <script src="<?= asset('assets/pwquality.js') ?>"></script>
     <script>
-    const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-    const PAT_KEY_CHECK = <?= json_encode($patKeyCheck) ?>;
-    const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-       gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-       bekommt einen anderen Schluessel. */
-    const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-    const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_encode($userEmail) ?>;
     const KONTO_NAME = <?= json_encode($userName) ?>;
-    const CSRF = <?= json_encode($_SESSION['csrf'] ?? '') ?>;
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
 

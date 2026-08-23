@@ -232,9 +232,7 @@ ui_topbar('suche');
   </main>
 </div>
 
-<script src="<?= asset('assets/crypto.js') ?>"></script>
-<script src="<?= asset('assets/keyguard.js') ?>"></script>
-<script src="<?= asset('assets/unlock.js') ?>"></script>
+<?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <?php /* Artsymbole für die Spalte „Art" der Einsatztabelle — dieselben wie in
@@ -246,14 +244,6 @@ ui_topbar('suche');
          sie ohne die Seite prüfbar ist und keine Kenntnis von ihr braucht. */ ?>
 <script src="<?= asset('assets/suchtext.js') ?>"></script>
 <script>
-const PAT_WRAP = <?= json_encode($patWrapPw) ?>;
-const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-   bekommt einen anderen Schluessel. */
-const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
-
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
 

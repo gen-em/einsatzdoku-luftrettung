@@ -534,12 +534,6 @@
 
     function padId(id) { return String(id).padStart(6, '0'); }
 
-    function chunkArr(arr, size) {
-        var out = [];
-        for (var i = 0; i < arr.length; i += size) { out.push(arr.slice(i, i + size)); }
-        return out;
-    }
-
     /** IANA-Zonenversatz einer konkreten UTC-Instanz plus lokale Kalenderteile
      *  ('en-US'-Trick: als UTC formatieren und die Differenz zum echten UTC-
      *  Zeitpunkt bilden — damit stimmt der Versatz auch bei Sommerzeit). */

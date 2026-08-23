@@ -35,7 +35,8 @@ hems/
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
 │   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
-│   ├── ui.php             Kopf-/Seitenleisten, Fußzeile
+│   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
+│   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
 │   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
 │   │                       Sitzungszähler, ist_admin())
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
@@ -878,7 +879,9 @@ ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Su
 über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
 `.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
 `overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
-`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Zwei Stolpersteine
+`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Die **Überschrift**
+der Spalte ist dagegen dieselbe wie in der Einsatztage-Leiste und steht seit
+Web 7.2.0 nur noch dort (`.daylist h2,.filterspalte>h2`). Zwei Stolpersteine
 sind dort im CSS vermerkt: Die 720-px-Regel für `.layout-suche` muss **nach**
 der Grundregel stehen, weil der allgemeine 720-px-Block nur `.layout` greift
 und sonst von der gleich spezifischen, später notierten Regel ausgehebelt
@@ -1647,6 +1650,11 @@ Die Bausteine im Einzelnen:
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
+| Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. |
+| Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
+| Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
+| Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
+| Schaltflächenfamilie | `assets/style.css` (`.btn-primary/-danger/-yellow/-red/-plain/-edit`) | Ab Web 7.2.0 ein Block statt vier. Eine Sammelregel über alle sechs (`cursor`, `text-decoration`) und eine gemeinsame Regel für die kompakte Größe der drei Zeilenaktionen; in den Varianten steht nur noch, was sie unterscheidet. **`font-family` gehört nicht in die Sammelregel** — bei `.btn-primary`/`.btn-danger` kommt sie aus `button{}` und damit nur am `<button>` an. Die Größenregel der Zeilenaktionen nennt die Familie über `:is(…)` statt fünf Varianten einzeln; **eine Klasse je Element** ist dabei Bedingung, weil `.btn-plain` mit `font:inherit` arbeitet. |
 | Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. |
 | Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 

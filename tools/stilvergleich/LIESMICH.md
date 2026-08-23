@@ -82,6 +82,15 @@ waren so 44 von 253 Paaren auffällig und alle 44 unerreichbar.
   vorkommt, gilt als **unbenutzt** und damit als kollisionsfrei; eine Klasse,
   die ein Skript vollständig zur Laufzeit zusammensetzt, kann so falsch
   eingeordnet werden.
+- Die Seitenprobe schneidet das Markup aus den **Seiten**. Was aus einem
+  Baustein in `ui.php` kommt — seit Web 7.2.0 die Meldungszeile und die
+  Abbruchseite —, steht dort nicht mehr und fehlt in der Probe. Solange die
+  betroffenen Klassen anderswo im Markup vorkommen (`.alert` tut das), faellt
+  das nicht ins Gewicht; mit jedem weiteren Baustein waechst der blinde Fleck.
+  Die Abhilfe waere, `ui.php` als zusaetzliche Markup-Quelle aufzunehmen.
+- Die beiden Dialogkaesten (`.confirmbox`, `.unlockbox`) entstehen als
+  `<dialog>` im Skript und stehen in **keiner** Markup-Probe; fuer sie traegt
+  der Selektorkatalog den Nachweis.
 
 ## Dateien
 

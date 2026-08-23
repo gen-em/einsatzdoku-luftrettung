@@ -227,12 +227,14 @@ section{margin-bottom:1.8rem}
 .topbar nav a{color:#C6CEDB;text-decoration:none;margin-left:1.1rem;
   font-family:var(--head);font-weight:500;
   padding-bottom:2px;border-bottom:2px solid transparent}
-.topbar nav a.active,.topbar nav a:hover{color:#fff;border-bottom-color:var(--accent)}
 .topbar nav{display:flex;align-items:center}
 .gearlink{color:#C6CEDB;text-decoration:none;margin-left:1.1rem;
   display:inline-flex;align-items:center;
   padding-bottom:2px;border-bottom:2px solid transparent}
 .gearlink svg{width:21px;height:21px;display:block}
+
+/* Aktiv oder ueberfahren — Menuepunkt und Zahnrad tun dasselbe (C4). */
+.topbar nav a.active,.topbar nav a:hover,
 .gearlink:hover,.gearlink.active{color:#fff;border-bottom-color:var(--accent)}
 
 /* Layout Tagesuebersicht */
@@ -246,7 +248,9 @@ section{margin-bottom:1.8rem}
   position:sticky;top:50px;align-self:start;
   height:calc(100vh - 50px);display:flex;flex-direction:column;
   box-sizing:border-box;overflow:hidden}
-.daylist h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
+/* Ueberschrift der Seitenleiste — Einsatztage UND Suchfilter. Zwei Leisten,
+   dieselbe Ueberschrift; bis Web 7.1.0 zweimal geschrieben (C4). */
+.daylist h2,.filterspalte>h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--muted);margin:.2rem 0 .7rem;flex:0 0 auto}
 .daylist h2.sidebar-subhead{margin-top:1.6rem}
 
@@ -254,9 +258,6 @@ section{margin-bottom:1.8rem}
    (Beim Umbau der Tagesleiste auf das Akkordeon war diese Regel entfallen,
    wodurch im Einstellungsmenue Punkte auftauchten.) */
 .daylist ul{list-style:none;margin:0;padding:0}
-
-/* Einsatzansicht mittig */
-.page-center{margin-inline:auto}   /* gleiche Breite wie .page, nur zentriert */
 
 /* Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt (auch mobil) */
 .sitefooter{text-align:right;margin-top:2.2rem;padding-bottom:.4rem;
@@ -358,7 +359,10 @@ input,select{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
  * sonst stehen — bei <summary> umschliesst er zudem den gesamten aufgeklappten
  * Bereich statt nur der Kopfzeile und lief damit ueber den Inhalt. */
 input:focus-visible,select:focus-visible,textarea:focus-visible,
-button:focus-visible,a:focus-visible{
+button:focus-visible,a:focus-visible,
+/* Das Merkfeld der Rettungsmittel ist ein Kasten aus mehreren Bedienteilen —
+   der Ring gehoert um den ganzen Kasten, ist aber derselbe Ring (C4). */
+.rmfeld:focus-within{
   outline:2px solid var(--blau);outline-offset:1px}
 
 /* Aufklapp-Ueberschriften: kein Rahmen. Der Rahmen passte nicht zur Form und
@@ -369,11 +373,67 @@ summary:focus{outline:none}
 summary:focus-visible{outline:none;box-shadow:none;background:var(--accent-light)}
 button{font:inherit;font-family:var(--head);font-weight:600;border:0;
   border-radius:5px;padding:.5rem .9rem;cursor:pointer}
+
+/* ---- DIE SCHALTFLAECHENFAMILIE (Web 7.2.0, Befund C5) --------------------
+ *
+ * Sechs Varianten: .btn-primary (Hauptaktion eines Formulars), .btn-danger
+ * (Loeschen in einer Zeile), .btn-yellow und .btn-red (Zeilenaktionen),
+ * .btn-plain (die ruhige, eigenstaendige Schaltflaeche) und .btn-edit
+ * ("Aktionen"/"Bearbeiten"). Sie standen in vier ueber 110 Zeilen verteilten
+ * Bloecken und wiederholten einander: DREIMAL dieselben fuenf Angaben zur
+ * kompakten Groesse, SECHSMAL dieselbe abgeschaltete Unterstreichung.
+ * Zweimal hat diese Streuung bereits gekostet (Web 7.0.1 und 7.0.2).
+ *
+ * WAS HIER NICHT STEHT UND WARUM. Eine Sammelregel mit dem vollen Aussehen
+ * ist nicht moeglich: Die sechs teilen keine einzige Farb- oder Massangabe.
+ * `font-family:var(--head)` gehoert ausdruecklich NICHT in die Sammelregel —
+ * bei .btn-primary und .btn-danger kommt sie heute von `button{}` und damit
+ * NUR am <button> an. `a.btn-primary` traegt heute Open Sans; in die
+ * Sammelregel gezogen wuerde die Schrift dort wechseln, und das waere eine
+ * Gestaltungsaenderung, keine Zusammenfuehrung.
+ *
+ * Die Sammelregel traegt deshalb genau das, was jede der sechs schon hatte
+ * oder ohne jeden Unterschied bekommen kann:
+ *   text-decoration  ersetzt die handgepflegte Liste `a.btn-red,a.btn-edit,…`
+ *   cursor           <button> hat ihn aus `button{}`, <a href> vom Browser,
+ *                    die drei <summary> aus .aktionsmenu/.zeilenmenu
+ *
+ * EINE KLASSE JE ELEMENT. Die sechs schliessen einander aus und werden nie
+ * gemeinsam an ein Element geschrieben (nachgezaehlt: kein einziger Fall).
+ * Das ist keine Kleinigkeit, sondern die Bedingung, unter der die Reihenfolge
+ * hier gleichgueltig ist: `.btn-plain` setzt `font:inherit` und nimmt damit
+ * als Kurzform auch Groesse und Schnitt zurueck. Traegt ein Element eines
+ * Tages `btn-plain` UND `btn-edit`, entscheidet nicht mehr die Absicht,
+ * sondern wer weiter unten steht.
+ */
+.btn-primary,.btn-danger,.btn-yellow,.btn-red,.btn-plain,.btn-edit{
+  cursor:pointer;text-decoration:none}
+
+/* Die kompakte Aktionsgroesse — dreimal zeichengleich gewesen. */
+.btn-yellow,.btn-red,.btn-edit{font-family:var(--head);font-weight:600;
+  font-size:.85rem;padding:.25rem .7rem;border-radius:5px}
+
+/* Und nun je Variante nur noch, was sie von den uebrigen unterscheidet. */
 .btn-primary{background:var(--accent);color:#fff;width:100%;margin-top:.9rem}
-.btn-primary:hover{background:var(--accent-dark)}
 .btn-danger{background:var(--schnee);color:var(--rot);border:1px solid #EBC3C4;
   padding:.25rem .6rem;font-size:.85rem}
+.btn-yellow{display:inline-block;background:#F5C518;color:#3A2E00;border:0}
+.btn-red{background:var(--rot);color:#fff;border:0}
+/* .btn-plain war bis Web 7.0.2 ZWEIMAL definiert: hier vollstaendig und
+   250 Zeilen weiter oben kompakt, wovon keine einzige Eigenschaft ankam
+   (`font:inherit` nimmt als Kurzform auch die Schriftgroesse zurueck). Die
+   kompakte Groesse einer ZEILENAKTION kommt nicht aus der Klasse, sondern aus
+   dem Ort — siehe .rowactions weiter unten (Web 7.0.1). */
+.btn-plain{display:inline-block;padding:.45rem 1rem;border-radius:6px;
+  border:1px solid #D8D3C8;background:#FFFCFA;color:#1A0500;font:inherit}
+.btn-edit{display:inline-block;background:var(--accent);color:#fff !important;
+  vertical-align:1px}
+
+.btn-primary:hover,.btn-edit:hover{background:var(--accent-dark)}
 .btn-danger:hover{background:var(--rot-light)}
+.btn-yellow:hover{background:#E0B310}
+.btn-red:hover{background:#B92A2E}
+.btn-plain:hover{background:#F3EFE7}
 
 /* ZEILENFORMULARE (Stammdaten): ein Feld, eine Schaltflaeche, eine Zeile —
    Besatzung, weitere Rettungsmittel, Bergwacht.
@@ -417,8 +477,9 @@ button{font:inherit;font-family:var(--head);font-weight:600;border:0;
  * verwaessern. */
 input[type=checkbox]{accent-color:var(--blau)}
 
-/* Textareas ueberall im Eingabefeld-Stil (z. B. Notizen im Einsatzformular) */
-textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
+/* Textareas ueberall im Eingabefeld-Stil (z. B. Notizen im Einsatzformular).
+   `.meta-form textarea` sagte bis Web 7.1.0 dasselbe noch einmal (C4). */
+textarea,.meta-form textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
   border-radius:5px;font:inherit;background:var(--schnee);resize:vertical}
 
 /* Zeiteingabe als Textfeld mit Maske (Auftragspunkt 4, E1). Native
@@ -454,37 +515,10 @@ input.zeitfeld[aria-invalid=true]{border-color:var(--rot);
 .showif{display:contents}
 .showif[hidden]{display:none}
 
-/* Einheitliche Aktions-Buttons (Stammdaten & Co.) */
-.btn-yellow{display:inline-block;background:#F5C518;color:#3A2E00;
-  font-family:var(--head);font-weight:600;font-size:.85rem;
-  padding:.25rem .7rem;border-radius:5px;text-decoration:none;border:0;cursor:pointer}
-.btn-yellow:hover{background:#E0B310}
-.btn-red{background:var(--rot);color:#fff;font-family:var(--head);font-weight:600;
-  font-size:.85rem;padding:.25rem .7rem;border-radius:5px;border:0;cursor:pointer}
-.btn-red:hover{background:#B92A2E}
 .rowactions{display:flex;gap:.4rem;align-items:center;justify-content:flex-end;
   flex-wrap:wrap}
 .rowactions form{display:inline;margin:0}
 .th-act{text-align:right}
-
-/* .btn-plain — die eigenstaendige, ruhige Schaltflaeche (Entsperren,
-   Abbrechen, Filter zuruecksetzen). Sie war bis Web 7.0.2 ZWEIMAL
-   definiert: hier vollstaendig und 250 Zeilen weiter oben in einer
-   kompakten Fassung, von der keine einzige Eigenschaft ankam. Die
-   kompakte Groesse einer ZEILENAKTION kommt nicht aus der Klasse,
-   sondern aus dem Ort — siehe .rowactions weiter unten (Web 7.0.1). */
-.btn-plain{display:inline-block;text-decoration:none;padding:.45rem 1rem;border-radius:6px;
-  border:1px solid #D8D3C8;background:#FFFCFA;color:#1A0500;cursor:pointer;font:inherit}
-.btn-plain:hover{background:#F3EFE7}
-
-/* "Bearbeiten" als Button */
-.btn-edit{display:inline-block;background:var(--accent);color:#fff !important;
-  font-family:var(--head);font-weight:600;font-size:.85rem;
-  padding:.25rem .7rem;border-radius:5px;text-decoration:none;vertical-align:1px}
-.btn-edit:hover{background:var(--accent-dark)}
-
-/* Schaltflächen, die Links sind, nie unterstreichen */
-a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none}
 
 /* ---- EINE GROESSE FUER ALLE ZEILENAKTIONEN (Web 7.0.1) -------------------
  *
@@ -503,17 +537,22 @@ a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow{text-decoration:none
  * Statt beides einzeln nachzubessern, gilt die Groesse jetzt fuer den ORT:
  * Was in `.rowactions` steht, ist eine Zeilenaktion und wird so gross wie die
  * uebrigen. Damit kann auch die naechste Schaltflaechenklasse dort nicht mehr
- * aus der Reihe fallen. Die Doppeldefinition von `.btn-plain` bleibt
- * unangetastet — sie versorgt ein Dutzend eigenstaendiger Schaltflaechen
- * (Entsperren, Abbrechen, Filter zuruecksetzen), fuer die die groessere Masse
- * richtig ist.
+ * aus der Reihe fallen. (Punkt 1 hat sich mit Web 7.1.0 erledigt: `.btn-plain`
+ * steht seither nur noch einmal da. Punkt 2 gilt weiter.)
  *
  * NICHT betroffen sind die Absendeknoepfe der Eingabekaesten (.neu-zeile,
  * .inline-form): Sie sind die Hauptaktion eines Formulars und duerfen groesser
  * sein als eine Zeilenaktion. Zwei Groessen mit einer klaren Regel — nicht
- * fuenf ohne. */
-.rowactions .btn-primary,.rowactions .btn-plain,.rowactions .btn-yellow,
-.rowactions .btn-red,.rowactions .btn-edit{
+ * fuenf ohne.
+ *
+ * ZWEITE HANDGEPFLEGTE LISTE, JETZT KEINE MEHR (Web 7.2.0). Hier standen
+ * fuenf der sechs Varianten einzeln aufgezaehlt — wer eine siebte ergaenzt,
+ * haette sie hier nachtragen muessen und es nicht gemerkt. `:is(…)` nennt
+ * dieselbe Familie wie die Sammelregel oben; die Spezifitaet bleibt dieselbe
+ * (`:is()` zaehlt sein staerkstes Argument, also (0,2,0) wie zuvor).
+ * `.btn-danger` kommt dadurch neu hinzu und steht heute in keinem
+ * `.rowactions` — die Regel wirkt also auf kein Element anders als bisher. */
+.rowactions :is(.btn-primary,.btn-danger,.btn-yellow,.btn-red,.btn-plain,.btn-edit){
   width:auto;margin:0;font-size:.85rem;padding:.25rem .7rem;
   border-radius:5px;line-height:1.5}
 
@@ -536,10 +575,6 @@ table.data th{font-family:var(--head);font-weight:600;font-size:.8rem;
 table.data td{padding:.5rem .8rem;border-bottom:1px solid var(--line)}
 table.data tbody tr:last-child td{border-bottom:0}
 
-/* ACHTUNG Spezifitaet: table.data th{text-align:left} oben (0-1-2) ist
-   staerker als eine einfache .data-centered-Regel; table.data.data-centered
-   (0-2-2) muss daher explizit beide Klassen tragen, um zu greifen. */
-table.data.data-centered th{text-align:center}
 #missions tbody tr{cursor:pointer}
 
 /* Sortierbare Tabellenspalten */
@@ -547,7 +582,6 @@ th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 th.sortable:hover{color:var(--navy)}
 th.sortable .arrow{color:var(--blau)}
 .checkcol{text-align:center;color:var(--navy);font-weight:700}
-.centercol{text-align:center}
 
 /* Anklickbare Tabellenzeilen (Suche, Zeitraum). Die Klasse setzt
    assets/missiontable.js seit jeher — eine Regel dazu gab es bis Web 5.2.0
@@ -665,8 +699,6 @@ body.map-fs-lock{overflow:hidden}
 .daymeta summary .muted{text-transform:none;letter-spacing:0;
   font-family:'Open Sans',sans-serif;font-weight:400;font-size:.85rem}
 .meta-form{padding:.2rem 0 .8rem}
-.meta-form textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
-  border-radius:5px;font:inherit;background:var(--schnee);resize:vertical}
 .meta-form .btn-primary{width:auto;margin-top:.6rem;margin-right:.6rem}
 
 /* Karte, Diensttag-Kasten und Tabelle laufen gleich breit */
@@ -707,7 +739,14 @@ body.map-fs-lock{overflow:hidden}
 #missions th.c-dc-secondary,    #missions td.c-dc-secondary    {width:6.4rem}
 
 /* „Fehleinsatz" (Web 6.1.0). Der Titel traegt im Katalog ein `&shy;`, bricht
-   also selbst um — die Breite muss nur das laengere Teilwort tragen. */
+   also selbst um — die Breite muss nur das laengere Teilwort tragen.
+
+   GREIFT DERZEIT NICHT, und das ist Absicht (A4, T-17): Das Feld
+   'false_alarm' traegt in mission_fields.php kein 'day_col' und bekommt
+   deshalb keine Spalte in der Tagestabelle — anders als seine Schwestern
+   winch, bergwacht und secondary. Die Regel bleibt trotzdem stehen: Wer
+   'day_col' => 'check' ergaenzt, braucht sie im selben Augenblick wieder,
+   und ohne sie faellt die Spalte auf die Vorgabebreite von .c-dc zurueck. */
 #missions th.c-dc-false_alarm,  #missions td.c-dc-false_alarm  {width:5.6rem}
 
 /* Alle Spalten mittig — auch Einsatzort und Diagnose */
@@ -781,9 +820,6 @@ body.map-fs-lock{overflow:hidden}
 .aktionsliste a:hover,.aktionsliste a:focus-visible{background:var(--line)}
 .aktionsliste a.gefahr{color:var(--rot)}
 
-/* Aktionsleiste der Einsatzansicht */
-.actionbar{display:flex;gap:.6rem;align-items:center}
-
 /* Manuelle Einsaetze */
 .add-link{color:var(--accent-dark);font-weight:600;text-decoration:none}
 .add-link:hover{text-decoration:underline}
@@ -801,8 +837,8 @@ body.map-fs-lock{overflow:hidden}
 .fieldlist dt{font-family:var(--head);font-weight:600;font-size:.85rem;
   color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .fieldlist dd{margin:0;white-space:pre-line}
-.page-narrow{max-width:560px;margin-inline:auto}
-.phase-row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}
+/* Phasen- und Reanimationszeile sind dieselbe Zeile (C4) — s. .rea-row. */
+.phase-row,.rea-row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}
 .phase-row select{flex:1;width:auto}
 .phase-row input.zeitfeld{width:110px}
 .phase-row .btn-danger{padding:.35rem .6rem}
@@ -815,7 +851,6 @@ body.map-fs-lock{overflow:hidden}
    Je Reanimation ein abgesetzter Block, damit sichtbar ist, welche Ereignisse
    zu welchem Beginn gehoeren — bei mehreren Reanimationen je Einsatz ist das
    die einzige Auskunft darueber. */
-.rea-row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}
 .rea-row select{flex:1;width:auto}
 .rea-row input.zeitfeld{width:110px}
 .rea-row .btn-danger{padding:.35rem .6rem}
@@ -891,8 +926,9 @@ body.map-fs-lock{overflow:hidden}
 .fld-reihe>label,.fld-reihe>.fld-check{flex:1 1 14rem;min-width:12rem;margin-top:.7rem}
 
 /* PatientInnendaten-Modul */
-.patfields{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin:.5rem 0 1rem}
-.patfields label{display:inline-flex;align-items:center;gap:.35rem;margin:0}
+/* Dieselbe Reihe umbrechender Kontrollkaestchen wie .rolechecks (C4). */
+.patfields,.rolechecks{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin:.5rem 0 1rem}
+.patfields label,.rolechecks label{display:inline-flex;align-items:center;gap:.35rem;margin:0}
 .patfields input{width:auto}
 #patfields label{max-width:460px}
 
@@ -1002,8 +1038,8 @@ dd.patfehler,dd .patfehler{color:#8A4A00}
   padding:1rem;position:sticky;top:50px;align-self:start;
   height:calc(100vh - 50px);display:flex;flex-direction:column;
   box-sizing:border-box;overflow:hidden}
-.filterspalte>h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--muted);margin:.2rem 0 .7rem;flex:0 0 auto}
+/* Die Ueberschrift der Filterspalte ist dieselbe wie die der Einsatztage-
+   Leiste; die Regel steht dort (.daylist h2, Abschnitt 5). */
 
 /* Nur die Gruppen scrollen — Ueberschrift und Fuss bleiben stehen. */
 .filtergruppen{flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin}
@@ -1056,7 +1092,8 @@ dd.patfehler,dd .patfehler{color:#8A4A00}
 .suchsyntax>summary{cursor:pointer;font-size:.85rem;color:var(--blau-dark);
   list-style:none;width:fit-content}
 .suchsyntax>summary::-webkit-details-marker{display:none}
-.suchsyntax>summary::before{content:'▸';display:inline-block;width:1em;
+/* Das Aufklappdreieck — dieselbe Marke wie bei .stammunter (C4). */
+.suchsyntax>summary::before,.stammunter>summary::before{content:'▸';display:inline-block;width:1em;
   color:var(--accent);transition:transform .12s}
 .suchsyntax[open]>summary::before{transform:rotate(90deg)}
 .suchsyntax ul{margin:.4rem 0 .3rem;padding-left:1.3rem}
@@ -1076,26 +1113,18 @@ dd.patfehler,dd .patfehler{color:#8A4A00}
 .chips li{display:flex;align-items:center;gap:.35rem;background:var(--schnee);
   border:1px solid var(--line);border-radius:99px;padding:.2rem .35rem .2rem .7rem}
 .chips form{display:inline}
-.chip-x{background:none;border:0;color:var(--muted);cursor:pointer;
-  font-size:.8rem;padding:.1rem .3rem;border-radius:99px}
-.chip-x:hover{background:var(--rot-light);color:var(--rot)}
-.rolechecks{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin:.5rem 0 1rem}
-.rolechecks label{display:inline-flex;align-items:center;gap:.35rem;margin:0}
+/* Reihe und Beschriftung stehen bei .patfields (Abschnitt 10). */
 .rolechecks input{width:auto}
-.rolehead{font-family:var(--head);font-size:.85rem;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--muted);margin:.9rem 0 .2rem}
 .ac-form{margin-bottom:1.6rem}
 td.actions{display:flex;gap:.4rem;align-items:center}
 td.actions form{display:inline}
-a.btn-danger{text-decoration:none;display:inline-block}
+a.btn-danger{display:inline-block}   /* text-decoration: s. Sammelregel */
 .rowlink{cursor:pointer}
 .rowlink a{color:var(--ink);text-decoration:none}
 .rowlink:hover a{color:var(--accent-dark)}
 
-/* Stammdaten: Abschnitts-Trennung und Luft zwischen den Besatzungs-Blöcken */
+/* Stammdaten: Abschnitts-Trennung */
 hr.sep{border:0;border-top:1px solid var(--line);margin:2rem 0 1.4rem}
-h3.rolehead{margin-top:1.6rem;padding-top:1.1rem;border-top:1px dashed var(--line)}
-h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 
 /* Rollen-Hinweis in den Standortdaten */
 .rolechecks-hint{color:var(--muted);font-size:.9rem;margin-right:.3rem}
@@ -1123,8 +1152,7 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
   font-family:var(--head);font-size:.85rem;font-weight:600;color:var(--navy);
   display:flex;align-items:center;gap:.4rem}
 .stammunter>summary::-webkit-details-marker{display:none}
-.stammunter>summary::before{content:'▸';display:inline-block;width:1em;
-  color:var(--accent);transition:transform .12s}
+/* Das Aufklappdreieck steht bei .suchsyntax (Abschnitt 12) — dieselbe Marke. */
 .stammunter[open]>summary::before{transform:rotate(90deg)}
 .stammunter>summary:hover{color:var(--accent)}
 
@@ -1155,7 +1183,8 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
   border:1px solid var(--line);border-radius:5px;padding:.3rem .4rem;
   background:var(--schnee);min-height:2.4rem}
 .rmfeld .rmchips{display:contents}
-.rmfeld:focus-within{outline:2px solid var(--blau);outline-offset:1px}
+/* .rmfeld:focus-within traegt denselben Fokusring wie die Bedienelemente —
+   die Regel steht bei ihnen (Abschnitt 6). */
 .rmeingabe{flex:1 1 10rem;min-width:8rem;width:auto;border:0;background:transparent;
   padding:.15rem .2rem}
 .rmeingabe:focus-visible{outline:none}
@@ -1226,12 +1255,9 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 
 /* Rollen- und Faehigkeitshaken am Rettungsmittel. Sie stehen in einer Reihe
    und brechen um; die Haken duerfen nicht auf Feldbreite wachsen. */
-.acroles{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
-.acroles label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
-.acroles input{width:auto}
-.vehkind{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
-.vehkind label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
-.vehkind input{width:auto}
+.acroles,.vehkind{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
+.acroles label,.vehkind label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
+.acroles input,.vehkind input{width:auto}
 
 /* Ein Kandidat, der sich NICHT aufnehmen laesst (E11), bleibt in der Liste
    stehen — er wird nur als nicht waehlbar gezeigt. Warum er dasteht und nicht
@@ -1257,18 +1283,15 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
 
 /* == 14. PAPIERKORB ======================================================== */
 
-/* Papierkorb */
-.daydelete{margin:1.4rem 0 0}
+/* Papierkorb.
+   Sieben Regeln dieses Abschnitts sind mit A4 entfallen, weil keine Seite die
+   Klassen traegt: .daydelete, .trash (+ h2, h3) und .trashactions (+ form,
+   .btn-link). Nicht zu verwechseln mit .trashtable und .trashlink weiter
+   unten — die werden benutzt. */
 .btn-link.danger{color:#D63338}
-.trash{margin-top:2.2rem;border-top:1px solid #E4E0D8;padding-top:1rem}
-.trash h2{font-size:1.05rem;margin:0 0 .2rem}
-.trash h3{font-size:.92rem;margin:1rem 0 .3rem;color:#5B5F66}
 .trashtable{width:100%;border-collapse:collapse;font-size:.88rem}
 .trashtable th{text-align:left;font-weight:600;color:#5B5F66;padding:.25rem .5rem}
 .trashtable td{padding:.25rem .5rem;border-top:1px solid #EFECE6}
-.trashactions{display:flex;gap:.9rem;justify-content:flex-end}
-.trashactions form{display:inline}
-.trashactions .btn-link{background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:underline}
 
 /* Papierkorb-Aktionen: gleich groß, gleiche Grundlinie */
 .trashtable .rowactions{display:flex;gap:.6rem;justify-content:flex-end;align-items:stretch}
@@ -1279,14 +1302,6 @@ h3.rolehead:first-of-type{margin-top:.6rem;padding-top:0;border-top:0}
   min-width:10.5rem;padding:.42rem .9rem;font-size:.85rem;line-height:1.2;
   border-radius:5px;text-decoration:none;box-sizing:border-box}
 
-/* Auskunft unter einem Datumsfeld: was am gewählten Zieltag steht
-   (Web 5.10.0). Als .muted ein ruhiger Nachsatz, als .alert-warn eine Ansage.
-   Beides derselbe Absatz, damit der Text an seinem Platz bleibt und nicht je
-   nach Lage springt.
-   OHNE VERWENDUNG seit A1: Die einzige Seite, die diese Klasse trug, war die
-   entfallene flugtag-Datumsseite. Die Klasse steht auf der Befundliste von A4
-   und wird dort — nicht hier — zum Loeschen vorgelegt. */
-.zielinfo{margin:.1rem 0 1rem;font-size:.9rem}
 
 
 /* == 15. IMPORT ============================================================ */
@@ -1379,39 +1394,36 @@ tr.warnzeile>td{background:var(--rot-light)}
 
 /* == 18. DIALOGE =========================================================== */
 
-/* Bestätigungsdialog im Seiteninhalt (ersetzt window.confirm) */
-.confirmbox{border:0;border-radius:10px;padding:1.3rem 1.4rem;max-width:26rem;
+/* ZWEI DIALOGE, EIN KASTEN (C4). Der Bestaetigungsdialog (ersetzt
+   window.confirm) und der Entsperrdialog fuer die geschuetzten Angaben
+   (unlock.js) waren bis Web 7.1.0 zweimal derselbe Kasten — bis auf EINE
+   Angabe: Der Entsperrdialog darf 2 rem breiter werden. Genau diese eine
+   Angabe steht weiter unten noch einmal, alles uebrige nur hier. */
+.confirmbox,.unlockbox{border:0;border-radius:10px;padding:1.3rem 1.4rem;max-width:26rem;
   box-shadow:0 12px 40px rgba(0,0,0,.28);background:#FFFCFA;color:#1A0500}
-.confirmbox::backdrop{background:rgba(26,46,77,.45)}
+.confirmbox::backdrop,.unlockbox::backdrop{background:rgba(26,46,77,.45)}
 .confirmtext{margin:0 0 1.1rem;font-size:1rem;line-height:1.45}
-.confirmbtns{display:flex;gap:.7rem;justify-content:flex-end}
 
 /* Beide Knoepfe exakt gleich gross. Wichtig: .btn-primary traegt global
    width:100% und margin-top (fuer Formulare) — im Dialog beides ausdruecklich
    zuruecknehmen, sonst wird "Abmelden" breiter und sitzt tiefer als
    "Abbrechen". Gleiche Falle wie bei der Aktionsleiste des Flugtags. */
-.confirmbtns button{display:inline-flex;align-items:center;justify-content:center;
+.confirmbtns,.unlockbtns{display:flex;gap:.7rem;justify-content:flex-end}
+.confirmbtns button,.unlockbtns button{display:inline-flex;align-items:center;justify-content:center;
   width:auto;margin:0;min-height:2.3rem;padding:.42rem 1.2rem;
   border-radius:6px;cursor:pointer;font:inherit;line-height:1.2;
   box-sizing:border-box}
 
-/* Entsperrdialog fuer die geschuetzten Angaben (unlock.js).
-   Bewusst dasselbe Muster wie .confirmbox — inklusive der Gegenmassnahme
-   gegen das globale width:100% von .btn-primary. */
-.unlockbox{border:0;border-radius:10px;padding:1.3rem 1.4rem;max-width:28rem;
-  box-shadow:0 12px 40px rgba(0,0,0,.28);background:#FFFCFA;color:#1A0500}
-.unlockbox::backdrop{background:rgba(26,46,77,.45)}
+/* Die eine Abweichung des Entsperrdialogs: 2 rem mehr Breite, weil in ihm ein
+   Passwortfeld samt Erklaerung steht. Alles uebrige steht oben. */
+.unlockbox{max-width:28rem}
 .unlocktitle{margin:0 0 .6rem;font-size:1.05rem}
 .unlocktext{margin:0 0 1rem;font-size:.92rem;line-height:1.45;color:#5B5F66}
 .unlocklabel{display:block;margin:0 0 .8rem;font-size:.92rem}
 .unlocklabel input{width:100%;box-sizing:border-box;margin-top:.25rem}
 .unlockmsg{margin:0 0 .9rem;font-size:.88rem;color:#5B5F66;min-height:1.2em}
 .unlockmsg.err{color:#9E2226}
-.unlockbtns{display:flex;gap:.7rem;justify-content:flex-end}
-.unlockbtns button{display:inline-flex;align-items:center;justify-content:center;
-  width:auto;margin:0;min-height:2.3rem;padding:.42rem 1.2rem;
-  border-radius:6px;cursor:pointer;font:inherit;line-height:1.2;
-  box-sizing:border-box}
+/* Knopfleiste und Knopfmasse stehen oben beim Bestaetigungsdialog. */
 .unlockbtns button[disabled]{opacity:.6;cursor:default}
 
 

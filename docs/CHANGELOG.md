@@ -11,6 +11,272 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.2.0] — 2026-08-23
+
+**Die Nacharbeit zu P0.** Die Befundpakete A4 (toter Code) und A6
+(Strukturreview) haben Listen geliefert statt Änderungen — hier stehen die
+Punkte, die daraufhin einzeln freigegeben wurden, dazu die Fehler, die beim
+Suchen aufgefallen sind. Kein neues Feld, kein Datenmodell, **keine
+Migration**.
+
+**Sichtbar wird dreierlei**, alles drei beabsichtigt: Die Rückfragen auf der
+Sicherungsseite erscheinen jetzt überhaupt (und die auf drei anderen Seiten
+nicht mehr doppelt), die Tagesübersicht zeigt für verschlüsselte, aber nicht
+lesbare Angaben dasselbe Warnzeichen wie Suche und Zeitraum-Übersicht, und ein
+veralteter Link führt nicht mehr auf eine weiße Seite mit sechs Wörtern,
+sondern auf eine Seite mit Kopfleiste und Rückweg. Alles Übrige ist
+Innenarbeit — dass sie das Erscheinungsbild nicht anfasst, wurde nicht
+behauptet, sondern gemessen (39 447 Elementmessungen über das echte
+Seitenmarkup, keine Abweichung).
+
+### Die Rückfragen auf der Sicherungsseite erscheinen wieder
+
+Drei Schaltflächen in `admin_sicherungen.php` trugen eine Rückfrage —
+„Alle sichern", „Einspielen" und „Für NutzerIn freigeben". Sie erschien
+**nie**. `confirm.js` band nur an `<form>` und an `<a>`; an einen `<button>`
+band es nichts. Die Attribute standen da und sahen nach Absicherung aus.
+
+Das ist nicht nebensächlich: „Einspielen" schreibt eine fremde Sicherung in
+ein Konto, „Freigeben" gibt sie einer anderen Person heraus. Beide standen
+als gewöhnliche Schaltfläche neben einem Auswahlfeld — ein Fehlklick hatte
+nichts vor sich.
+
+`confirm.js` hört jetzt auch auf `button[data-confirm]`. Der Knopf wird nach
+dem Ja **erneut geklickt** statt das Formular per `submit()` abzuschicken:
+Nur der tatsächlich betätigte Absendeknopf schickt sein `name`/`value` mit,
+und genau darin unterscheiden sich die drei (`action=einspielen` gegen
+`action=freigeben`).
+
+Am Markup ändert sich nichts. Die 22 Rückfragen am `<form>` und die eine am
+`<a>` laufen unverändert.
+
+### Rückfragen erschienen auf drei Seiten doppelt
+
+`assets/confirm.js` ist eine IIFE ohne eigenen Namensraum: Eine zweite
+Einbindung ist kein Fehler, sie meldet nur ein zweites Mal dieselben Zuhörer
+an — und dann öffnen **zwei Dialoge übereinander**. Genau das war auf
+`admin_sicherungen.php`, `admin_stammdaten.php` und `nachbearbeitung.php` der
+Fall: Sie banden die Datei zusätzlich zu `ui_footer()` selbst ein.
+
+Die drei Zeilen sind weg. Zusätzlich hat `confirm.js` jetzt eine Schranke am
+Anfang — eine zweite Einbindung ist damit wirkungslos statt doppelt.
+
+### Toter Code entfernt — nach Einzelfreigabe
+
+Paket A4 hatte eine Befundliste vorgelegt statt zu löschen; jeder Punkt wurde
+einzeln freigegeben. Entfernt sind jetzt:
+
+**Sechs Funktionen und Methoden.** `iso_to_sql()` (`db.php`) — ihre einzigen
+Aufrufer lagen in `ingest.php` und wurden mit Web 4.2.0 durch `pruef_utc()`
+ersetzt. `Pruefliste::anzahl()`, `::eintraege()` und `::setBezug()`
+(`validate_lib.php`) — die vier Nutzer der Klasse benutzen ausschließlich
+`melde()`, `sauber()`, `nachUrsache()` und `text()`; die drei anderen hatte in
+der gesamten Historie nie jemand aufgerufen. `chunkArr()` (`export.js`),
+dateiprivat und ohne Aufruf. `EdSuchtext.mitOperatoren()` (`suchtext.js`),
+exportiert und nie benutzt — der Hinweis auf die Suchoperatoren, für den die
+Funktion laut Kommentar da war, ist statisches Markup.
+
+Mit `setBezug()` fällt das **Merkmal `bezug`** der Klasse `Pruefliste` ganz
+weg. Das ist kein Beifang: Ohne Aufrufer blieb `$bezug` immer leer, jeder
+Prüfeintrag trug also ein leeres Feld, und gelesen hat es ohnehin niemand.
+
+**Elf CSS-Klassen in 18 Regeln:** `.actionbar`, `.centercol`, `.chip-x`,
+`.data-centered`, `.daydelete`, `.page-center`, `.page-narrow`, `.rolehead`,
+`.trash`, `.trashactions`, `.zielinfo`. Keine kommt im Markup vor — weder
+geschrieben noch zur Laufzeit zusammengesetzt. Nicht zu verwechseln mit
+`.trashtable` und `.trashlink`, die benutzt werden und bleiben.
+
+**Stehen geblieben ist `.c-dc-false_alarm`**, obwohl die Regel heute nicht
+greift: Das Feld `false_alarm` trägt im Feldkatalog kein `day_col` und bekommt
+deshalb keine Spalte in der Tagestabelle. Wer das ergänzt, braucht die Breite
+im selben Augenblick wieder. Ein Kommentar sagt das jetzt an Ort und Stelle.
+
+Nachgewiesen wurde die Wirkungslosigkeit nicht durch Zusehen: Der
+Stilvergleich hat 29.376 Elementmessungen über drei Proben und neun
+Fensterbreiten verglichen — **keine Abweichung** —, und eine Gegenprobe hat
+bestätigt, dass keine der elf Klassen an einem Element des tatsächlichen
+Markups steht, auch nicht in dem, das erst im Browser entsteht.
+
+### Die Tagesübersicht zeigt wieder dasselbe wie Suche und Zeitraum
+
+Die drei Einsatztabellen der Anwendung sollen dieselbe Liste zeigen. Zwei von
+ihnen — Suche und Zeitraum-Übersicht — teilen sich dafür seit Web 5.2.0
+`assets/missiontable.js`. Die Tagesübersicht baute ihre Zeile selbst und hatte
+eigene Fassungen derselben Hilfsfunktionen. Die waren **auseinandergelaufen**,
+und zwar in zwei Punkten, die beide etwas Falsches zeigten:
+
+1. **Ortsangabe.** `extractOrt()` schneidet den Ortsteil aus einer Adresse.
+   Der gemeinsamen Fassung wurde mit E11 eine Prüfung hinzugefügt: Enthält der
+   letzte Teil nach dem Komma keine Buchstaben, wird der Text unverändert
+   durchgereicht. Der Kopie in `index.php` fehlte sie. Ein Altdatensatz mit
+   Koordinatentext im Ortsfeld — `47.72800, 10.31600` — zeigte auf der
+   **Startseite** deshalb das Bruchstück `10.31600`, in Suche und
+   Zeitraum-Übersicht die ganze Koordinate.
+2. **Nicht lesbare Angaben.** Wo Suche und Zeitraum-Übersicht ein Warnzeichen
+   zeigen, stand auf der Startseite ein Gedankenstrich — dasselbe Zeichen wie
+   für „keine Angaben". Genau diese Verwechslung sollte das Warnzeichen
+   verhindern: Wer den Unterschied nicht sieht, merkt nicht, dass sein
+   Inhaltsschlüssel nicht mehr passt.
+
+`index.php` holt die vier Bausteine jetzt aus `missiontable.js` — so, wie
+`zeitraum.php` es seit jeher tut. **Sichtbar ändert sich dadurch etwas:** Auf
+der Tagesübersicht erscheint für verschlüsselte, aber nicht lesbare Angaben
+ein ⚠ statt eines Gedankenstrichs. Das ist der Zweck der Änderung.
+
+Die Spaltenmechanik von `missiontable.js` übernimmt die Seite bewusst
+**nicht**: Sie führt die Katalogspalten aus `DAY_COLS`, die die anderen beiden
+Tabellen nicht haben.
+
+### Drei wiederkehrende Blöcke sind jetzt Bausteine
+
+Das Strukturreview A6 hat gezählt, was in dieser Anwendung mehrfach von Hand
+geschrieben steht. Drei Befunde waren so gleichförmig, dass eine gemeinsame
+Fassung sie vollständig aufnimmt — alle drei liegen jetzt in `ui.php`, bei der
+Seitenhülle aus Web 7.1.0.
+
+**`ui_krypto_bootstrap()` — das Rüstzeug der Verschlüsselung.** Acht Stellen in
+sieben Dateien schrieben denselben Block: die Verweise auf `crypto.js`,
+`keyguard.js` und `unlock.js`, dazu vier Konstanten mit Hülle, Salz und
+Rundenzahl — und jedes Mal derselbe achtzeilige Kommentar. Zwei Folgen hatte
+das bereits:
+
+1. **Namensdrift.** Der Profilreiter der Einstellungen nannte die Hülle
+   `WRAP_PW`, überall sonst heißt sie `PAT_WRAP`. Ein Baustein, der aus diesem
+   Reiter etwas übernimmt, hätte ins Leere gegriffen. Jetzt heißt sie überall
+   gleich.
+2. **Doppelte Einbindung.** `einstellungen.php` band `crypto.js` zweimal ein
+   und `pwquality.js` ebenfalls — einmal je Reiter. Beide Dateien deklarieren
+   auf oberster Ebene ein `const`; eine zweite Deklaration im selben Dokument
+   ist ein `SyntaxError`, der das **ganze** zweite Skript verwirft. Dass
+   nichts geschah, hing allein daran, dass die beiden Reiter einander
+   ausschließen — eine nirgends aufgeschriebene Bedingung in einer Datei mit
+   über 2000 Zeilen.
+
+Gegen den zweiten Punkt führt der Baustein einen Merkzettel: Ein zweiter
+Aufruf im selben Seitenaufbau gibt **nichts** aus und schreibt eine Zeile ins
+Fehlerlog. Aus der stillen Bedingung ist eine geworden, die sich meldet.
+
+**`ui_meldung()` — Hinweis- und Fehlerzeile.** Dieselben zwei Zeilen standen in
+13 Dateien, 21-mal derselbe Dreisatz aus Abfrage, Klasse und Maskierung.
+Uneinheitlich war daran nur die Klasse der Hinweiszeile: elf Stellen schrieben
+`alert-info`, zwei `alert-ok` — Stammdaten und Nachbearbeitung, die dort einen
+Vollzug melden. Deshalb hat der Baustein einen Ton-Parameter; nicht als Vorrat
+für künftige Töne, sondern weil der Bestand zwei kennt. Am Erscheinungsbild
+ändert sich nichts.
+
+**`ui_abbruch()` — die Sackgasse bekommt eine Tür.** An 16 Stellen stand für
+den nicht gefundenen Datensatz `exit('Einsatz nicht gefunden.')`: nackter Text
+ohne Zeichensatzangabe, ohne Kopfleiste, ohne Weg zurück. Wer einen veralteten
+Link öffnete — ein Lesezeichen auf einen gelöschten Einsatz, eine Zeile aus
+einer alten E-Mail —, landete auf einer weißen Seite mit sechs Wörtern und
+musste die Zurück-Taste suchen. Der HTTP-Code stimmte, die Seite war trotzdem
+eine Sackgasse.
+
+Wortlaut und Statuscode bleiben unverändert; die Meldung steht jetzt in einer
+richtigen Seite mit Kopfleiste und einem Rückweg. Zwei der 16 Stellen liegen
+in `auth_guard.php` selbst (`require_admin()` und `csrf_check()`); der
+API-Zweig von `require_admin()` antwortet weiterhin mit JSON und ist von der
+Änderung nicht berührt.
+
+### Der Baustein unter zwei Namen — zwölf Regelpaare zusammengeführt
+
+`style.css` enthielt zwölf Gruppen, in denen **zeichengleiche Regelkörper unter
+verschiedenen Selektoren** standen: die Überschrift der Einsatztage-Leiste und
+die der Suchfilterspalte, Phasen- und Reanimationszeile im Einsatzformular, die
+beiden Reihen umbrechender Kontrollkästchen, das Aufklappdreieck an zwei
+Stellen, der Fokusring, die Knopfleiste des Bestätigungs- und die des
+Entsperrdialogs. Zusammengehalten wurden sie bislang nur durch einen Kommentar
+(„bewusst dasselbe Muster wie …") — und ein Kommentar hält nichts, er sagt nur
+etwas.
+
+Jetzt steht jede Gruppe an **einer** Stelle, an der ursprünglichen Position der
+ersten; am zweiten Ort steht ein Verweis darauf. Bei den beiden Dialogkästen
+war der Fall etwas anders: Sie unterscheiden sich in genau **einer** Angabe —
+der Entsperrdialog darf 2 rem breiter werden, weil in ihm ein Passwortfeld
+samt Erklärung steht. Diese eine Angabe steht weiterhin für sich, alles übrige
+gemeinsam.
+
+Der Gegenwert ist nicht die eingesparte Zeile, sondern dass die Paare nicht
+mehr auseinanderlaufen **können**.
+
+### Die Schaltflächen sind eine Familie geworden
+
+Sechs Varianten — `.btn-primary`, `.btn-danger`, `.btn-yellow`, `.btn-red`,
+`.btn-plain`, `.btn-edit` — standen in vier über 110 Zeilen verteilten Blöcken
+und wiederholten einander: dreimal dieselben fünf Angaben zur kompakten
+Aktionsgröße, sechsmal dieselbe abgeschaltete Unterstreichung. Diese Streuung
+hat bereits zweimal etwas gekostet (Web 7.0.1 und 7.0.2).
+
+Sie stehen jetzt beieinander, mit einer Sammelregel darüber. **Was in der
+Sammelregel steht, ist bewusst wenig:** Die sechs teilen keine einzige Farb-
+oder Maßangabe, und `font-family:var(--head)` gehört ausdrücklich **nicht**
+hinein — bei `.btn-primary` und `.btn-danger` kommt die Schriftfamilie heute
+aus `button{}` und damit nur am `<button>` an; `a.btn-primary` trägt Open Sans.
+In die Sammelregel gezogen hätte die Schrift dort gewechselt, und das wäre
+eine Gestaltungsentscheidung gewesen, keine Zusammenführung. Geblieben sind
+`cursor` und `text-decoration` — beides an jeder der sechs Stellen ohne
+Unterschied — dazu eine gemeinsame Regel für die kompakte Größe der drei
+Zeilenaktionen.
+
+Damit verschwinden **beide handgepflegten Aufzählungen**: Die Liste
+`a.btn-red,a.btn-edit,a.btn-primary,a.btn-plain,a.btn-yellow` gegen die
+Unterstreichung entfällt ganz, und die Größenregel der Zeilenaktionen nennt
+die Familie jetzt über `:is(…)` statt fünf Varianten einzeln. Die Spezifität
+bleibt dieselbe; `.btn-danger` kommt dabei neu hinzu und steht heute in keinem
+`.rowactions`, die Regel trifft also kein Element anders als zuvor.
+
+### Vier verschwundene Backlog-Nummern sind wieder da
+
+`docs/Backlog.md` erklärte im Kopf, dass die Nummern 4, 6 und 7 ohne Eintrag
+verschwunden und nicht mehr rekonstruierbar sind — und schwieg zu **1, 9, 10
+und 12**, die ebenfalls fehlten. Wer die Liste durchsah, konnte nicht wissen,
+ob dort etwas Offenes verlorengegangen war.
+
+Diese vier sind belegbar: Code, Changelog und Technikdokumentation nennen sie
+an neun Stellen namentlich („Backlog Nr. 10"), und daraus geht hervor, worum es
+ging und womit es erledigt wurde — Reanimationen im Einsatzformular (Web
+5.5.0), `asset()` mit Dateizeitstempel (5.4.0), Tagesspalten aus dem
+Feldkatalog (5.4.0), Schriften und Leaflet lokal (5.2.0). Alle vier stehen
+jetzt unter *Erledigt*, jeder mit dem Vermerk, dass er aus seinen Fundstellen
+rekonstruiert wurde, und mit deren Aufzählung — damit die Rekonstruktion
+nachprüfbar bleibt und nicht als Originaltext gelesen wird. Die Kopfnotiz
+unterscheidet die beiden Fälle jetzt ausdrücklich.
+
+**Fünf neue Punkte (17 bis 21)** halten fest, was P0 gefunden, aber bewusst
+nicht angefasst hat: die fehlende Mengenbremse in `ingest.php`, die Regel
+`.btn-link.danger`, die nie greifen kann, ein ungelesenes `$title`, die
+Hexwerte in `style.css` und die 43 weiteren Kandidaten aus der Nachlese zum
+toten Code. Ohne diese Einträge wären sie mit dem Konzeptdokument
+verschwunden.
+
+`docs/Branding.md` bekommt dazu einen offenen Punkt (B3), der einen bislang
+unausgesprochenen Widerspruch benennt: Die Brand Guideline verlangt „kein
+Hexwert direkt in einer Regel", der Bestand hält das an 78 von 93 Stellen
+nicht ein. Für 13 davon gibt es bereits ein Token mit exakt demselben Wert;
+sie sind dort einzeln aufgeführt. Die Regel gilt weiter — sie beschreibt das
+Ziel, nicht den heutigen Stand.
+
+### Kleinere Berichtigungen
+
+* **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre
+  Antworten selbst und ging damit an `json_out()` vorbei — obwohl der
+  Kommentar dort „Zeitraum" ausdrücklich als einen der Endpunkte nennt, die
+  den Kopf brauchen. Die Antwort trägt Datum, Uhrzeit, Einsatznummer und
+  Koordinaten im Klartext; an einem gemeinsamen Rechner reicht die
+  Zurück-Taste. Jetzt läuft der Endpunkt wie die übrigen neun über
+  `json_out()`.
+* **„Du kannst dich nicht selbst löschen."** stand in der
+  Nutzerverwaltung als blauer Hinweis — dieselbe Farbe wie „Nutzer angelegt".
+  Es ist eine abgelehnte Handlung und erscheint jetzt als Fehler.
+* **`daylist.js` wird nur noch geladen, wo es etwas tut.** Das Skript belebt
+  das Jahr/Monat-Akkordeon der Einsatztage-Leiste; `ui_footer()` gab es bis
+  hierher auf **jeder** Seite aus. Auf acht Seiten ohne Leiste — Einstellungen,
+  Import, Suche, Administration, Wartung — suchte es `.dayyears`, fand nichts
+  und kehrte zurück.
+* **Zwei Klassen ohne Wirkung entfernt:** `sorted` an den Tabellenköpfen der
+  Tagesübersicht und `map-empty` am Kartencontainer wurden per JavaScript
+  gesetzt, hatten aber keine einzige Regel im Stylesheet.
+
 ## [Web 7.1.0] — 2026-08-23
 
 **Eine Aufräumrunde, bevor die Oberfläche umgebaut wird.** Das ist Paket P0 des

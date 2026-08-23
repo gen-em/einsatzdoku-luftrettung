@@ -235,8 +235,7 @@ ui_topbar('einstellungen');
 <main class="page">
   <h1>Sicherungen</h1>
 
-  <?php if ($notice): ?><p class="alert alert-info"><?= e($notice) ?></p><?php endif; ?>
-  <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+  <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$ablageBereit): ?>
     <p class="alert"><?= e((string)$ablageGrund) ?></p>
@@ -549,5 +548,7 @@ ui_topbar('einstellungen');
   <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/confirm.js') ?>" defer></script>
+<?php /* confirm.js liefert ui_footer() (ui.php) auf jeder Seite. Hier stand es
+         ein zweites Mal — und zwei Kopien hoeren beide zu, jede oeffnet ihren
+         eigenen Dialog. Jede Rueckfrage dieser Seite erschien doppelt. */ ?>
 <?php ui_seite_ende(); ?>

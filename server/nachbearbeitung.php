@@ -151,8 +151,7 @@ ui_topbar('uebersicht');
   <?php ui_days_sidebar(null); ?>
   <main class="page">
     <h1>Zuordnung nachtragen</h1>
-    <?php if ($notice): ?><p class="alert alert-ok"><?= e($notice) ?></p><?php endif; ?>
-    <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+    <?php ui_meldung($notice, $error, 'ok', '    '); ?>
 
     <?php if (!$moeglich): ?>
       <div class="card">
@@ -344,7 +343,8 @@ ui_topbar('uebersicht');
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/confirm.js') ?>"></script>
+<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+         haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines
    Rettungsmittels zieht seinen Standort nach. Ohne Standort am Rettungsmittel

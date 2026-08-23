@@ -8,7 +8,7 @@ require_once __DIR__ . '/diensttag_lib.php';
 
 $dayId = (int)($_POST['d'] ?? $_GET['d'] ?? 0);
 $tag   = $dayId > 0 ? dt_laden($userId, $dayId) : null;
-if ($tag === null) { http_response_code(404); exit('Diensttag nicht gefunden.'); }
+if ($tag === null) { ui_abbruch(404, 'Diensttag nicht gefunden.'); }
 $scope = trash_scope_day($userId, $dayId);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja') {

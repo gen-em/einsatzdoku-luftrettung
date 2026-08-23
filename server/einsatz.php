@@ -8,7 +8,7 @@ $mid = (int)($_GET['id'] ?? 0);
 $mq = db()->prepare('SELECT day_id FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
 $mq->execute([$mid, $userId]);
 $missionDayId = $mq->fetchColumn();
-if ($missionDayId === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
+if ($missionDayId === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $missionDayId = $missionDayId === null ? null : (int)$missionDayId;
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
@@ -94,9 +94,10 @@ ui_topbar('uebersicht');
   </main>
 </div>
 
-<script src="<?= asset('assets/crypto.js') ?>"></script>
-<script src="<?= asset('assets/keyguard.js') ?>"></script>
-<script src="<?= asset('assets/unlock.js') ?>"></script>
+<?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()).
+         OHNE PAT_WRAP: Diese Seite bekommt die Huelle aus der API-Antwort
+         (m.pat_wrap), nicht aus PHP. */ ?>
+<?php ui_krypto_bootstrap(['wrap' => false]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
@@ -106,14 +107,6 @@ ui_topbar('uebersicht');
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
-// Salt fuer die Schluesselableitung im Entsperrdialog. Der Wrap selbst
-// kommt hier aus der API-Antwort (m.pat_wrap), nicht aus PHP.
-const KDF_SALT = <?= json_encode($kdfSalt) ?>;
-/* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
-   gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
-   bekommt einen anderen Schluessel. */
-const KDF_ITER      = <?= json_encode($kdfIter) ?>;
-const KDF_ITER_ZIEL = <?= json_encode(KDF_ITER_ZIEL) ?>;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
@@ -458,7 +451,7 @@ async function init(){
     const px = map.getSize();
     map.fitBounds(bounds, { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
   }
-  else { map.setView([47.7, 10.3], 9); document.getElementById('map').classList.add('map-empty'); }
+  else { map.setView([47.7, 10.3], 9); }
 
   // Phasen-Tabelle mit Hover-/Tipp-Kopplung zur Karte
   const pb = document.getElementById('phasebody');

@@ -243,7 +243,7 @@ ui_seite_start([
 
   <?php elseif ($erstvergabe): ?>
     <h1>Passwort festlegen</h1>
-    <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $error); ?>
     <p>Diagnose, Alter und Einsatzort werden <strong>Ende-zu-Ende-verschlüsselt</strong>
        gespeichert. Der Schlüssel entsteht aus deinem Passwort und verlässt deinen
        Browser nie — der Server kann die Angaben nicht lesen.</p>
@@ -286,7 +286,7 @@ ui_seite_start([
 
   <?php else: ?>
     <h1>Neues Passwort</h1>
-    <?php if ($error): ?><p class="alert"><?= e($error) ?></p><?php endif; ?>
+    <?php ui_meldung(null, $error); ?>
     <p class="muted">Deine Einsatzdaten sind mit deinem Passwort verschlüsselt.
        Damit sie lesbar bleiben, brauchst du hier den
        <strong>Wiederherstellungsschlüssel</strong> aus der Einrichtung.</p>

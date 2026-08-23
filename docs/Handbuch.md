@@ -213,6 +213,13 @@ Die **Einsatztage-Leiste** links begleitet alle Inhaltsseiten — auch
 Einsatzansicht und Formular. Sie ist nach Jahr und Monat gruppiert
 (Abschnitt 4.4).
 
+**Wenn ein Link ins Leere führt.** Ein Lesezeichen auf einen gelöschten
+Einsatz, eine Adresse aus einer alten E-Mail, ein Diensttag im Papierkorb:
+Dann erscheint eine Seite mit der Kopfleiste, einem kurzen Satz („Einsatz nicht
+gefunden.") und einem Rückweg zur Übersicht. Seit Web 7.2.0 sieht das überall
+gleich aus; vorher stand dort nur der Satz auf weißem Grund, ohne Menü und ohne
+Weg zurück.
+
 ### 3.1 Anmelden und Passwort
 
 Anmeldung mit E-Mail-Adresse und Passwort. Über **„Passwort vergessen oder

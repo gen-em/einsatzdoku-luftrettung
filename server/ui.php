@@ -140,6 +140,38 @@ function ui_favicon(): string
          . '<link rel="apple-touch-icon" href="assets/images/favicon.png">';
 }
 
+/**
+ * Hinweis- und Fehlerzeile ueber dem Seiteninhalt.
+ *
+ * WARUM ES SIE GIBT (P0/A6, Befund C2). Dieselben zwei Zeilen standen in 13
+ * Dateien — 21-mal derselbe Dreisatz aus Abfrage, Klasse und Maskierung.
+ * Uneinheitlich war dabei nur eines: die Klasse der Hinweiszeile. Elf Stellen
+ * schrieben "alert-info", zwei "alert-ok" (Stammdaten und Nachbearbeitung,
+ * beide melden dort einen Vollzug). Deshalb der dritte Parameter — nicht als
+ * Vorrat fuer kuenftige Toene, sondern weil der Bestand zwei kennt.
+ *
+ * Reihenfolge: erst der Hinweis, dann der Fehler. Genau so stand es an allen
+ * Stellen ausser login.php, wo beide einander ausschliessen ($hinweis wird nur
+ * ohne $error gezeigt) — dort ist die Reihenfolge ohne Wirkung.
+ *
+ * $einzug ruecken die ZWEITE Zeile ein: Die erste erbt die Einrueckung des
+ * <?php-Tags im Aufrufer, die zweite nicht. Nur noetig, wo beide Zeilen
+ * zugleich erscheinen koennen.
+ */
+function ui_meldung(?string $hinweis, ?string $fehler = null,
+                    string $ton = 'info', string $einzug = ''): void
+{
+    $zeilen = [];
+    if ($hinweis !== null && $hinweis !== '') {
+        $zeilen[] = '<p class="alert alert-' . ui_e($ton) . '">' . ui_e($hinweis) . '</p>';
+    }
+    if ($fehler !== null && $fehler !== '') {
+        $zeilen[] = '<p class="alert">' . ui_e($fehler) . '</p>';
+    }
+    if ($zeilen === []) { return; }
+    echo implode("\n" . $einzug, $zeilen), "\n";
+}
+
 function ui_user_label(): string {
     global $userName, $userEmail;
     return ($userName !== null && $userName !== '') ? $userName : (string)$userEmail;
@@ -164,6 +196,47 @@ function ui_topbar(string $active): void { ?>
   </nav>
 </header>
 <?php }
+
+/**
+ * Abbruchseite: Der aufgerufene Datensatz existiert nicht, gehoert einem
+ * anderen Konto oder liegt im Papierkorb — hier ist Schluss.
+ *
+ * WARUM ES SIE GIBT (P0/A6, Befund C3). An 16 Stellen stand dafuer
+ * `exit('Einsatz nicht gefunden.')`: nackter Text ohne Zeichensatzangabe, ohne
+ * Kopfleiste, ohne Weg zurueck. Wer einen veralteten Link oeffnet, landete in
+ * einer weissen Seite mit sechs Woertern und musste die Zurueck-Taste finden.
+ * Der HTTP-Code stimmte, die Seite war trotzdem eine Sackgasse.
+ *
+ * Wortlaut und Code bleiben unveraendert — nur die Verpackung kommt hinzu.
+ *
+ * VORAUSSETZUNG: auth_guard.php ist geladen (ui_topbar() braucht $userEmail).
+ * Alle 16 Aufrufstellen liegen hinter der Anmeldung; zwei davon stehen in
+ * auth_guard.php selbst, in Funktionen, die erst nach dessen Durchlauf gerufen
+ * werden.
+ *
+ * $o: titel        Titel der Seite; fehlt er, ergibt ihn der HTTP-Code
+ *     zurueck      Ziel des Rueckwegs (Vorgabe: index.php)
+ *     zurueck_text Beschriftung des Rueckwegs
+ */
+function ui_abbruch(int $code, string $text, array $o = []): never
+{
+    http_response_code($code);
+    $titel = (string)($o['titel'] ?? match ($code) {
+        404     => 'Nicht gefunden',
+        403     => 'Kein Zugriff',
+        default => 'Nicht möglich',
+    });
+    ui_seite_start(['titel' => $titel]);
+    ui_topbar('');
+    $ziel = (string)($o['zurueck'] ?? 'index.php');
+    $wort = (string)($o['zurueck_text'] ?? 'Zur Übersicht');
+    echo '<main class="page">' . "\n";
+    echo '  <p class="alert">' . ui_e($text) . '</p>' . "\n";
+    echo '  <p><a class="add-link" href="' . ui_e($ziel) . '">← ' . ui_e($wort) . '</a></p>' . "\n";
+    echo '</main>' . "\n";
+    ui_seite_ende();
+    exit;
+}
 
 /**
  * Untermenue der Einstellungen — identisch auf einstellungen.php, admin_users.php,
@@ -249,6 +322,7 @@ function ui_settings_sidebar(string $active): void {
  */
 function ui_days_sidebar(?int $currentDayId): void {
     global $userId;
+    ui_hat_tagesleiste(true);   // fuer ui_footer(), s. dort
     require_once __DIR__ . '/diensttag_lib.php';
     $tage = dt_liste($userId, 500);
 
@@ -442,10 +516,118 @@ function ui_ortsfeld(array $o): void
       </div>
 <?php }
 
+/**
+ * Ruestzeug der Ende-zu-Ende-Verschluesselung: die Skripte und die Werte,
+ * die sie aus der Nutzerzeile brauchen.
+ *
+ * WARUM ES SIE GIBT (P0/A6, Befund C1 und F-12). Acht Stellen in sieben
+ * Dateien schrieben denselben Block: drei <script>-Verweise und vier
+ * Konstanten, dazu jedes Mal derselbe achtzeilige Kommentar. Zwei Folgen
+ * hatte das schon:
+ *
+ *   1. NAMENSDRIFT. einstellungen.php nannte die Huelle im Profilreiter
+ *      WRAP_PW, ueberall sonst heisst sie PAT_WRAP. Ein Baustein, der aus
+ *      diesem Reiter etwas uebernimmt, greift ins Leere.
+ *   2. DOPPELTE EINBINDUNG (F-12). Dieselbe Datei band crypto.js zweimal ein
+ *      und pwquality.js ebenfalls — einmal je Reiter. Beide Dateien
+ *      deklarieren auf oberster Ebene ein `const`; eine zweite Deklaration im
+ *      selben Dokument ist ein SyntaxError, der das GANZE zweite Skript
+ *      verwirft. Dass nichts geschah, hing allein daran, dass die Reiter
+ *      einander ausschliessen — eine nirgends aufgeschriebene Bedingung in
+ *      einer Datei mit ueber 2000 Zeilen.
+ *
+ * Gegen (2) haelt diese Funktion einen Merkzettel: Ein zweiter Aufruf im
+ * selben Seitenaufbau gibt NICHTS aus und schreibt eine Zeile ins Fehlerlog.
+ * Aus der stillen Bedingung wird damit eine, die sich meldet.
+ *
+ * REIHENFOLGE. Die Konstanten stehen in einem EIGENEN <script>-Block, direkt
+ * hinter den Verweisen und damit vor dem Seitenskript. Das ist unbedenklich:
+ * Klassische Skripte teilen sich eine gemeinsame oberste Bindungsebene, und
+ * gelesen werden die Werte erst in Funktionen, die spaeter laufen — keine
+ * Datei greift beim Laden darauf zu (nachgesehen in crypto.js, keyguard.js,
+ * unlock.js, patient.js, export.js, import_ui.js).
+ *
+ * VORAUSSETZUNG: auth_guard.php ist geladen. Von dort kommen $patWrapPw,
+ * $patKeyCheck, $kdfSalt und $kdfIter; KDF_ITER_ZIEL kommt aus db.php.
+ *
+ * $o: skripte  Liste der Verweise. Vorgabe: crypto.js, keyguard.js, unlock.js.
+ *              Ein leeres Feld gibt keinen Verweis aus (fuer Seiten, die ihre
+ *              Verweise aus anderem Grund selbst setzen muessen).
+ *     guete    true  -> zusaetzlich pwquality.js (Passwortguete, Baustein B9)
+ *     wrap     false -> KEIN PAT_WRAP. Genau ein Aufrufer: einsatz.php, das
+ *              die Huelle aus der API-Antwort bezieht (m.pat_wrap).
+ *     keycheck true  -> zusaetzlich PAT_KEY_CHECK (Herkunftsabgleich beim
+ *              Einspielen einer Sicherung)
+ *     csrf     true  -> zusaetzlich CSRF
+ *     einzug   Einrueckung der ausgegebenen Zeilen
+ */
+function ui_krypto_bootstrap(array $o = []): void
+{
+    global $patWrapPw, $patKeyCheck, $kdfSalt, $kdfIter;
+
+    static $schon = false;
+    if ($schon) {
+        error_log('ui_krypto_bootstrap() zweimal aufgerufen — der zweite Aufruf '
+                . 'wurde uebergangen. Beide Zweige einer Seite duerfen das '
+                . 'Ruestzeug nur EINMAL anfordern.');
+        return;
+    }
+    $schon = true;
+
+    $ein = (string)($o['einzug'] ?? '');
+    $skripte = $o['skripte'] ?? ['assets/crypto.js', 'assets/keyguard.js', 'assets/unlock.js'];
+    if (!empty($o['guete'])) { $skripte[] = 'assets/pwquality.js'; }
+
+    $zeilen = [];
+    foreach ($skripte as $s) {
+        $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
+    }
+    $zeilen[] = '<script>';
+    if (($o['wrap'] ?? true) !== false) {
+        $zeilen[] = 'const PAT_WRAP = ' . json_encode($patWrapPw) . ';';
+    }
+    if (!empty($o['keycheck'])) {
+        $zeilen[] = 'const PAT_KEY_CHECK = ' . json_encode($patKeyCheck) . ';';
+    }
+    $zeilen[] = 'const KDF_SALT = ' . json_encode($kdfSalt) . ';';
+    /* Rundenzahl dieses Kontos und Zielwert (M2-01). Salz und Rundenzahl
+       gehoeren zusammen — wer mit dem einen rechnet und das andere raet,
+       bekommt einen anderen Schluessel. */
+    $zeilen[] = 'const KDF_ITER      = ' . json_encode($kdfIter) . ';';
+    $zeilen[] = 'const KDF_ITER_ZIEL = ' . json_encode(KDF_ITER_ZIEL) . ';';
+    if (!empty($o['csrf'])) {
+        $zeilen[] = 'const CSRF = ' . json_encode($_SESSION['csrf'] ?? '') . ';';
+    }
+    $zeilen[] = '</script>';
+
+    echo $ein, implode("\n" . $ein, $zeilen), "\n";
+}
+
+/**
+ * Merkzettel: Steht auf dieser Seite die Einsatztage-Leiste?
+ *
+ * ui_days_sidebar() traegt sich ein, ui_footer() liest es. Die Reihenfolge
+ * stimmt auf allen Seiten, die beides benutzen: Die Leiste steht oben im
+ * Layout, die Fusszeile unten.
+ */
+function ui_hat_tagesleiste(bool $setzen = false): bool
+{
+    static $ja = false;
+    if ($setzen) { $ja = true; }
+    return $ja;
+}
+
 /** Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt */
 function ui_footer(): void { ?>
   <script src="<?= asset('assets/confirm.js') ?>"></script>
+  <?php /* daylist.js belebt das Jahr/Monat-Akkordeon der Einsatztage-Leiste.
+           Bis Web 7.1.0 kam es auf JEDER Seite mit — auch auf Einstellungen,
+           Import, Administration und Wartung, die keine Leiste haben. Dort
+           sucht das Skript .dayyears, findet nichts und kehrt zurueck: eine
+           Anfrage und ein Parse-Durchgang fuer nichts. */ ?>
+  <?php if (ui_hat_tagesleiste()): ?>
   <script src="<?= asset('assets/daylist.js') ?>"></script>
+  <?php endif; ?>
 <footer class="sitefooter">© Gen-EM – OpenSource Software –
   <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE"
      target="_blank" rel="noopener">AGPL-3.0</a>

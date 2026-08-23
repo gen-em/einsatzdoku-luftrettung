@@ -12,6 +12,13 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
+**Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
+rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
+sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
+worum es ging und womit es erledigt wurde. Die vier Einträge unten sind aus
+genau diesen Fundstellen wiederhergestellt (Web 7.2.0, Paket P0/N6) und als
+solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
+
 ---
 
 ## Offen
@@ -54,6 +61,42 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
     weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
     abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
     `server/pair.php`.
+17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
+    Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
+    `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
+    `rate_misserfolg()`. Die drei übrigen offenen Endpunkte (`login`, `salt`,
+    `reset`, `pair`) haben ihn. Gefunden in P0/A6 (dort F-16); die
+    Konzeptarbeit dazu ist an die Phasen P1/P2 (Sicherheit) übergeben, weil
+    die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
+    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden.
+18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
+    ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
+    gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).
+    Gefunden in P0/N2 (dort F-19) als Nachlese zu einem Blindfleck der
+    A4-Erhebung, die eine Klasse schon dann als benutzt zählte, wenn ihr Name
+    irgendwo auftauchte. **Nicht entfernt**, weil nicht auf der Freigabeliste
+    von A4. Zu entscheiden: streichen, oder die Regel in den Kopf von
+    `install.php` ziehen, wo sie wirken würde.
+19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
+    gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
+    Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
+    Freigabeliste.
+20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.** Von 93
+    Hex-Farben stehen 78 außerhalb von `:root` (nachgezählt Web 7.2.0); für 13
+    davon gibt es bereits ein Token mit **exakt demselben** Wert — sie ließen
+    sich ohne jede Gestaltungsfrage ersetzen. Die übrigen 65 zu benennen ist
+    dagegen eine Gestaltungsentscheidung. Gefunden in P0/A6 (dort C6).
+    Ausdrücklich dem Oberflächen-Redesign (P3) zugeordnet, weil die Palette
+    dort ohnehin angefasst wird; die Einzelwerte stehen in `docs/Branding.md`,
+    Abschnitt 5 (B3).
+21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
+    Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
+    Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
+    freigegeben und **nicht** angefasst: Ein großer Teil berührt
+    Antwortverträge (`api/`, Export, Backup), und dort ist „niemand liest es"
+    keine hinreichende Begründung — ein Feld kann für eine ältere Sicherung
+    oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
+    Freigabe.
 
 ---
 
@@ -61,6 +104,61 @@ Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+1. **Reanimationen im Einsatzformular erfassen.**
+    *Erledigt mit Web 5.5.0.* Bis dahin konnten Reanimationen nur von der Uhr
+    kommen; ein nachgetragener oder von Hand bearbeiteter Einsatz hatte keine.
+    Das Formular führt sie jetzt in derselben Struktur wie die Uhr — je
+    Reanimation ein Beginn und beliebig viele Ereignisse — und schreibt in
+    dieselben Tabellen über denselben Weg. In der Einsatzansicht sind die so
+    eingetragenen Zeiten von denen der Uhr nicht zu unterscheiden. Ein über das
+    Formular gespeicherter Einsatz trägt `manual = 1`; eine nachliefernde Uhr
+    überschreibt die Eingaben also nicht.
+    *(Eintrag rekonstruiert in Web 7.2.0 — s. Kopfnotiz. Fundstellen:
+    `server/einsatz_form.php:249`, Changelog Web 5.5.0.)*
+
+9. **`asset()` hängt die globale Versionsnummer an jede Datei-Adresse.**
+    *Erledigt mit Web 5.4.0.* Folge war, dass jede Versionserhöhung den
+    Zwischenspeicher **aller** Dateien entwertete — auch derer, die sich nicht
+    geändert hatten. Bei einer Korrekturfassung, die eine einzige Zeile im
+    Stylesheet anfasst, luden Besucher trotzdem sämtliche Skripte erneut.
+    Jetzt steht dort der Zeitstempel der jeweiligen Datei; `WEB_VERSION` ist
+    nur noch der Rückfall, wenn eine Datei nicht gefunden wird.
+    *(Eintrag rekonstruiert in Web 7.2.0 — s. Kopfnotiz. Fundstellen:
+    `server/db.php:100`, `server/version.php:12`, `docs/Technik.md`,
+    Changelog Web 5.4.0.)*
+
+10. **Die Spalten der Tagestabelle stehen fest im Code statt im Feldkatalog.**
+    *Erledigt mit Web 5.4.0.* `winch`, `bergwacht` und `secondary` standen im
+    SELECT von `api/day.php`, noch einmal im Aufbau der Antwort und ein drittes
+    Mal im Zeilenaufbau von `index.php`. Der Katalogschlüssel `day_col` war
+    damit reine Dokumentation: Die Spalte „abw. Crew" stand seit Web 2.6.0 im
+    Katalog und erschien trotzdem nie. Seither wertet `mf_tagesspalten()` als
+    einzige Stelle den Katalog für die Tagestabelle aus; ein neuer Eintrag mit
+    `day_col` erscheint ohne weitere Codeänderung. Die Gegenprobe lief in
+    Web 5.10.0 rückwärts: „abw. Crew" wurde wieder abbestellt, und dafür
+    genügte es, zwei Schlüssel im Katalog zu streichen.
+    **Offen bleibt die getrennte Frage**, ob die Tagesübersicht auch die
+    Spaltenmechanik aus `missiontable.js` übernimmt — dagegen spricht, dass
+    sie die Katalogspalten führt, die die anderen beiden Tabellen nicht haben
+    (zuletzt geprüft und verneint in P0/A6, Web 7.2.0).
+    *(Eintrag rekonstruiert in Web 7.2.0 — s. Kopfnotiz. Fundstellen:
+    `server/api/day.php:246`, `server/mission_fields.php:446`,
+    `server/mission_fields_lib.php:24`, `docs/Technik.md`,
+    Changelog Web 5.4.0 und 5.10.0.)*
+
+12. **Schriften und Leaflet werden zur Laufzeit von fremden Servern geladen.**
+    *Erledigt mit Web 5.2.0.* Jeder Seitenaufruf meldete die IP-Adresse an
+    Google (Schriften) beziehungsweise unpkg (Leaflet) — in einer Anwendung,
+    deren ganzer Zweck darin besteht, dass Patientendaten den Browser nicht
+    unverschlüsselt verlassen, der letzte verbliebene Bruch in der Linie. Und
+    bei blockiertem Abruf fiel die Karte vollständig aus. Beides liegt jetzt
+    unter `server/assets/fonts/` bzw. `server/assets/vendor/`, mit Herkunft und
+    Prüfsumme im Dateikopf. Seitdem lädt die Anwendung **keine fremde Quelle
+    mehr** — die Voraussetzung dafür, dass sich Nr. 8
+    (Content-Security-Policy) eng formulieren lässt.
+    *(Eintrag rekonstruiert in Web 7.2.0 — s. Kopfnotiz. Fundstellen:
+    Backlog Nr. 8, `docs/Technik.md`, Changelog Web 5.2.0.)*
 
 15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
     *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.

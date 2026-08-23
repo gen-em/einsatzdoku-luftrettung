@@ -159,8 +159,7 @@ function ist_admin(): bool {
 function require_admin(): void {
     if (!ist_admin()) {
         if (ist_api_aufruf()) { json_out(['error' => 'forbidden'], 403); }
-        http_response_code(403);
-        exit('Kein Zugriff.');
+        ui_abbruch(403, 'Kein Zugriff.');
     }
 }
 
@@ -170,7 +169,7 @@ function csrf_field(): string {
 
 function csrf_check(): void {
     if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
-        http_response_code(403); exit('Ungültiges Formular-Token.');
+        ui_abbruch(403, 'Ungültiges Formular-Token.');
     }
 }
 
