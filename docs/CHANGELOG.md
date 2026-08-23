@@ -11,6 +11,108 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.3.1] — 2026-08-23
+
+**Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**
+Gefunden im Kreislauftest der Phase P1 (Fund F-P1-K). Keine Migration.
+
+### Was passiert ist
+
+Ein Dienst läuft über Mitternacht; ein Einsatz um 01:38 gehört zum Folgetag.
+Die Exportdatei sagt das auch — sie führt `diensttag` (2026-03-28) **und**
+`datum` (2026-03-29) getrennt, und `Export-Format.md` beschreibt den
+Unterschied ausdrücklich. Der Import las nur die erste Spalte:
+
+    pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef)
+
+`$tag` ist der Diensttag, `addDays` ist `0`. Damit wurde 01:38 auf den
+28. gerechnet — der Einsatz lag danach **vor** dem Beginn des Dienstes, zu dem
+er gehört. Das Formular macht es seit Web 7.0.0 richtig (`einsatz_form.php`,
+Abschnitt „TAGESWECHSEL"): Liegt die erste Phase vor dem Dienstbeginn, kann
+der Einsatz nur zum Folgetag gehören.
+
+Die Angabe, die den Fehler behebt, lag die ganze Zeit in der Datei. Die Spalte
+`datum` war in `assets/import_profiles.js` auf `target: null` gesetzt, mit
+einem Kommentar, der es begründete: zwei Quellen für dieselbe Zuordnung wären
+eine zu viel, „die Uhrzeit rechnet die Mitternachtslogik ohnehin dem Folgetag
+zu". Der zweite Halbsatz war schlicht falsch — und er stand an genau der
+Stelle, an der die Entscheidung fiel. Ein irreführender Kommentar ist an einer
+solchen Stelle schlimmer als gar keiner: Er beantwortet die Frage, die man
+sonst am Code geprüft hätte.
+
+Das trifft eine ausdrückliche Zusage: `Export-Format.md` 5.1 nennt
+`export_csv_v1` verlustfrei. Hier ging nichts verloren, es wurde etwas
+**verändert** — der Einsatz ist nach dem Rückimport am falschen Tag
+dokumentiert, ohne Hinweis in Datei, Prüftabelle oder Bilanz. Betroffen war
+ausschließlich das Profil `export_csv_v1`; die Jahreslisten-Profile führen
+keine getrennten Datumsspalten.
+
+### Was geändert wurde
+
+Die Spalte `datum` wird ausgewertet und als `date_local` mitgesendet;
+`api/import_commit.php` nimmt sie als **Bezugstag der Alarmzeit**. Für die
+Gruppierung bleibt es beim Diensttag: `day_id` hängt an ihm, nicht am
+Einsatzdatum. Zwei Quellen für zwei verschiedene Aufgaben — der alte Kommentar
+hatte recht darin, dass zwei Quellen für *dieselbe* Aufgabe ein Fehler wären.
+
+Dazu eine Plausibilitätsschranke: Übernommen wird das Datum nur, wenn es der
+Diensttag selbst ist oder der Tag darauf. Mehr kann es nicht sein — die
+Anwendung kennt für den Tageswechsel genau einen Schritt (`local_to_utc` mit
+`addDays` 0 oder 1, so auch im Formular). Eine Datei fremder Herkunft mit
+unsinnigem `datum` verstreut damit keine Einsätze über den Kalender, sondern
+fällt auf das bisherige Verhalten zurück. Eine Datei **ohne** die Spalte
+ebenso.
+
+Bewusst **nicht** übernommen wurde der zweite denkbare Weg, die Formularregel
+(Uhrzeit vor Dienstbeginn heißt Folgetag). Sie braucht den Dienstbeginn — und
+beim Import in ein leeres Konto entsteht der Diensttag erst aus den Einsätzen;
+zum Zeitpunkt der Entscheidung steht er noch nicht fest. Die Datei weiß es
+besser als jede Vermutung.
+
+### Wer nachbessern muss
+
+Wer eine CSV-Datei mit einem Dienst über Mitternacht zurückgespielt hat, hat
+die betroffenen Einsätze 24 Stunden zu früh im Bestand — sie stehen dann unter
+dem Vortag und liegen zeitlich vor dem Dienstbeginn. Ein erneuter Import
+derselben Datei legt sie **neu** an, statt sie zu berichtigen: Die
+Dublettenerkennung greift über die Einsatznummer beziehungsweise über Tag und
+Alarmzeit, und beide sehen jetzt einen anderen Tag. Der saubere Weg ist, die
+falsch liegenden Einsätze zu löschen und danach neu einzulesen. Betroffen sind
+nur Einsätze, deren Alarmzeit nach Mitternacht liegt.
+
+### Geprüft
+
+Kreislauf CSV-Archiv → frisches Konto → CSV-Archiv, gegen den kanonischen
+Referenzdatensatz (82 Einsätze, 15 Diensttage, 95 Ruhesegmente, 171 GPX):
+
+| | bis 7.3.0 | mit 7.3.1 |
+|---|---|---|
+| Einzelvergleiche | 8 617 | 8 797 |
+| erwartete Abweichungen | 844 | 858 |
+| **unerklärte Abweichungen** | **9** | **6** |
+
+Die vier Meldungen zu F-P1-K (je zweimal *fehlt* und *zusätzlich* für die
+beiden Einsätze um 01:38 und 01:32) sind verschwunden; beide Einsätze werden
+jetzt überhaupt erst verglichen — daher die um 180 gestiegene Zahl der
+Einzelvergleiche. Der Einsatz vom 25.10. stimmt danach in **allen** Feldern
+überein.
+
+Nebenbefund: Von den sechs verbliebenen Abweichungen ist eine vorher gar nicht
+sichtbar gewesen. F-P1-L (mehrzeilige Notizen verlieren ihre Zeilenumbrüche,
+Backlog Nr. 26) war mit 3 Fällen gemessen; es sind **4**. Der vierte hing an
+einem Einsatz, den F-P1-K aus dem Vergleich gehoben hatte — ein Fehler hatte
+die Messung eines zweiten verdeckt. Alle vier verlieren genau einen Umbruch
+bei unveränderter Zeichenzahl (164/253/119/150).
+
+Ebenfalls beim Nachmessen aufgefallen: Drei Regeln der Ausnahmeliste
+(`crew_p2` in Einsätzen, Tagesbesatzung und Diensttagen) haben nie gegriffen.
+Sie waren in P1/B5 aus der Analogie zu `crew_p1` geschrieben, nicht gemessen —
+die einzigen Regeln der Liste ohne Zahl in der Begründung. Der Grund ist
+einfach: Alle sieben Zeilen mit belegtem `crew_p2` gehören zum Diensttag
+2026-02-08, dessen Rettungsmittel dasselbe ist wie das auf der Importseite
+gewählte; die Besatzung kommt unverändert zurück. Die drei Regeln sind
+entfernt, der Kreislauf meldet jetzt keine ungenutzte Regel mehr.
+
 ## [Web 7.3.0] — 2026-08-23
 
 **Ein Demo-Konto.** Adresse `demo@gen-em.org`, Passwort `nadokudemo0815`,

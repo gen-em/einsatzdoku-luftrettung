@@ -137,26 +137,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
     oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
     nachgezogen. Gefunden in P1/B5.
-25. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
-    zurück.** `api/import_commit.php` rechnet die Alarmzeit mit `addDays = 0`
-    auf den **Diensttag**; ein Einsatz um 01:38 eines Dienstes, der am Vortag
-    begann, landet damit vor dem Beginn dieses Dienstes. Das Formular macht es
-    richtig (`einsatz_form.php`, Abschnitt „TAGESWECHSEL"). Die Angabe, die
-    den Fehler behebt, steht in der Datei: Die Spalte `datum` führt das echte
-    Einsatzdatum und ist im Profil auf `target: null` gesetzt. Gemessen im
-    Kreislauf: 2 Einsätze, beide exakt 24 Stunden.
-    **Keine Formatfrage, sondern eine stille Datenverfälschung** auf einem
-    Weg, den `Export-Format.md` 5.1 verlustfrei nennt. **Vorschlag:** `datum`
-    auswerten, mit der Formularregel als Rückfall für Dateien ohne diese
-    Spalte. Ändert einen Schreibweg — gehört entschieden. Gefunden in P1/B5
-    (dort F-P1-K).
 26. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
     Parser `trim` (`assets/import.js`) ersetzt jede Folge von Leerraum durch
     ein Leerzeichen, Umbrüche eingeschlossen, und wird auf alle Textspalten
     angewandt. `notes` ist das einzige mehrzeilige Feld. Der Export quotet die
-    Umbrüche korrekt; der Verlust entsteht beim Lesen. Gemessen: 3 Notizen,
-    je genau ein Umbruch, Zeichenzahl unverändert. **Vorschlag:** ein Parser
-    `trimMehrzeilig` für die Notizspalten. Gefunden in P1/B5 (dort F-P1-L).
+    Umbrüche korrekt; der Verlust entsteht beim Lesen. Gemessen: **4** Notizen,
+    je genau ein Umbruch, Zeichenzahl unverändert (164/253/119/150).
+    **Vorschlag:** ein Parser `trimMehrzeilig` für die Notizspalten. Gefunden
+    in P1/B5 (dort F-P1-L).
+    *Zur Zahl:* Bis Web 7.3.0 waren es 3. Der vierte Fall hing an einem
+    Einsatz, den Nr. 25 aus dem Vergleich gehoben hatte — ein Fehler hatte die
+    Messung eines zweiten verdeckt. Sichtbar wurde er erst, als Nr. 25 behoben
+    war.
 27. **`final = 0` und ein leeres `ende` werden beim CSV-Import
     überschrieben.** `final` steht als Literal `1` im INSERT von
     `api/import_commit.php`; ein leeres `ende` wird auf `started_at` gesetzt.
@@ -256,3 +248,22 @@ zutreffen.
     Die Frage nach der Zusammenführung beider Tabellen (Nr. 10) ist damit
     nicht beantwortet und bleibt offen; die drei Zeilen haben nicht darauf
     gewartet.
+
+25. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
+    zurück.**
+    *Erledigt mit Web 7.3.1.* Die Spalte `datum` wird ausgewertet und als
+    `date_local` mitgesendet; `api/import_commit.php` nimmt sie als Bezugstag
+    der Alarmzeit statt des Diensttags. Für die Gruppierung bleibt es beim
+    Diensttag — `day_id` hängt an ihm, nicht am Einsatzdatum. Zwei Quellen für
+    zwei verschiedene Aufgaben; die Sorge des alten Kommentars, es wären zwei
+    Quellen für dieselbe, war der Grund, warum die Spalte auf `target: null`
+    stand.
+    Dazu eine Plausibilitätsschranke: Übernommen wird das Datum nur, wenn es
+    der Diensttag ist oder der Tag darauf — mehr kann es nicht sein, die
+    Anwendung kennt für den Tageswechsel genau einen Schritt. Dateien ohne die
+    Spalte und Dateien mit unsinnigem Wert fallen auf das bisherige Verhalten
+    zurück. Der zweite denkbare Weg (Formularregel: Uhrzeit vor Dienstbeginn
+    heißt Folgetag) wurde verworfen, weil beim Import in ein leeres Konto der
+    Dienstbeginn zum Zeitpunkt der Entscheidung noch nicht feststeht.
+    *Gemessen:* Kreislauf CSV, unerklärte Abweichungen 9 → 6, Einzelvergleiche
+    8 617 → 8 797 (die beiden Einsätze werden jetzt überhaupt erst verglichen).

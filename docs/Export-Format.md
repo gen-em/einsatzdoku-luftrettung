@@ -607,6 +607,16 @@ ohne `pat_alter` (bis Web 3.4.0) lässt sich unverändert einlesen — die
 Formaterkennung zählt Treffer gegen die erwarteten Spaltennamen bei einem
 Schwellwert von 20, und ein oder zwei fehlende von 78 ändern daran nichts.
 
+**`diensttag` und `datum` werden beide gelesen** (seit Web 7.3.1), und sie tun
+Verschiedenes: `diensttag` sagt, zu welchem Dienst ein Einsatz gehört
+(Gruppierung, `day_id`); `datum` ist der Bezugstag der Alarmzeit. Bei einem
+Dienst über Mitternacht weichen sie planmäßig voneinander ab — ein Einsatz um
+01:38 des Dienstes vom 28. liegt am 29. Bis Web 7.3.0 wurde `datum` verworfen
+und die Uhrzeit auf den Diensttag gerechnet; solche Einsätze landeten
+24 Stunden zu früh. Übernommen wird das Datum nur, wenn es der Diensttag selbst
+ist oder der Tag darauf — eine Datei ohne die Spalte oder mit einem unsinnigen
+Wert verhält sich wie bisher.
+
 Dubletten werden zuerst über die Einsatznummer erkannt (clientseitig gegen die
 entschlüsselten Bestandsdaten), hilfsweise über Tag und Alarmzeit.
 

@@ -572,6 +572,11 @@
 
                 missionen.push({
                     day: m.day,
+                    /* Das ECHTE Einsatzdatum, wenn die Datei es fuehrt. Der
+                       Server nimmt es als Bezugstag der Alarmzeit; ohne es
+                       rechnet er auf `day` — und ein Einsatz nach Mitternacht
+                       laege dann 24 Stunden zu frueh (F-P1-K). */
+                    date_local: m.einsatzdatum || null,
                     started_local: m.alarm,
                     transport_dest: m.transport_dest,
                     winch: m.winch ? 1 : 0,

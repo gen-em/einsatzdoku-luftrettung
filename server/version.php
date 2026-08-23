@@ -142,5 +142,12 @@ declare(strict_types=1);
  * Daten, Rolle `user`, jede Funktion arbeitet ausschliesslich auf der
  * Kennung aus `app_state.demo_user_id`, und die Zugangsdaten sind ohnehin
  * oeffentlich.
+ *
+ * 7.3.1 behebt eine stille Datenverfaelschung im CSV-Rueckimport: Einsaetze
+ * eines Dienstes ueber Mitternacht landeten 24 Stunden zu frueh, weil die
+ * Alarmzeit auf den DIENSTTAG gerechnet wurde statt auf das Einsatzdatum.
+ * Die Angabe, die das behebt, stand die ganze Zeit in der Datei — die Spalte
+ * `datum` war im Importprofil auf target:null gesetzt, mit einem Kommentar,
+ * der das Gegenteil dessen behauptete, was der Code tat.
  */
-const WEB_VERSION = '7.3.0';
+const WEB_VERSION = '7.3.1';

@@ -429,7 +429,7 @@
     // ----------------------------------------------------- Zeilen aufbereiten
 
     // Felder, die unveraendert nach zeile.mission durchgereicht werden.
-    var EINFACHE_ZIELE = ['day', 'alarm', 'ended', 'transport_dest', 'winch',
+    var EINFACHE_ZIELE = ['day', 'einsatzdatum', 'alarm', 'ended', 'transport_dest', 'winch',
         'notes', 'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
@@ -559,7 +559,7 @@
                 srcRow: r + 1,                 // 1-basiert wie in Excel angezeigt
                 status: 'ok', issues: [],
                 mission: {
-                    day: null, alarm: null, ended: null,
+                    day: null, einsatzdatum: null, alarm: null, ended: null,
                     transport_dest: null, winch: 0, resources: [],
                     notes: null, site_ele_m: null,
                     distance_m: null, ascent_m: null,

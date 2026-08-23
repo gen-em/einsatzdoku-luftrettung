@@ -469,19 +469,41 @@ Werkzeug unter `vergleich/` — `lesen.py`, `normalisieren.py`,
 | Selbstvergleich Sicherung | 269 439 Einzelvergleiche, 0 Abweichungen |
 | Probe aufs Exempel | 10 / 10 je Format, Gegenproben eingeschlossen |
 | **Kreislauf Sicherung (P-09)** | 269 439 Vergleiche, **0 unerklärt**, 15 erwartet |
-| **Kreislauf CSV (P-08)** | 8 617 Vergleiche, **9 unerklärt**, 844 erwartet |
+| **Kreislauf CSV (P-08)** | bei Abschluss B5: 8 617 Vergleiche, **9 unerklärt**, 844 erwartet; nach Web 7.3.1: 8 797 Vergleiche, **6 unerklärt**, 858 erwartet |
 
-**Die neun sind drei Befunde, keine Streuung** — F-P1-K (Einsätze über
+**Die neun waren drei Befunde, keine Streuung** — F-P1-K (Einsätze über
 Mitternacht 24 Stunden zurück, 4 Meldungen für 2 Einsätze), F-P1-L
 (mehrzeilige Notizen verlieren ihre Umbrüche, 3) und F-P1-M (`final` und
 `ende` überschrieben, 2). Alle drei sind Fehler der Anwendung und **nicht**
 in die Ausnahmeliste aufgenommen worden: Eine Ausnahme, die sich beheben
 ließe, schreibt einen Fehler auf Dauer fest.
 
-**P-08 gilt damit als NICHT erfüllt.** Der Bericht ist nicht leer, und das
-ist die richtige Auskunft — er soll nicht leer aussehen, sondern stimmen.
-Erfüllt sind: das Werkzeug, seine Proben, der Umlauf selbst und die
-Ausnahmeliste. Offen ist die Entscheidung zu Backlog Nr. 25–27.
+**Nachtrag nach B7: F-P1-K ist behoben** (Web 7.3.1, auf ausdrückliche
+Anweisung statt über den Backlog). Der Kreislauf meldet jetzt **6**
+unerklärte Abweichungen; die Zahl der Einzelvergleiche steigt um 180, weil
+die beiden Einsätze nach Mitternacht überhaupt erst verglichen werden statt
+als *fehlt* und *zusätzlich* zu zählen. Dabei zeigte sich ein Nebenbefund,
+der die Rangfolge der beiden Zahlen erklärt: F-P1-L war mit 3 Fällen
+gemessen — es sind **4**. Der vierte hing an einem Einsatz, den F-P1-K aus
+dem Vergleich gehoben hatte. **Ein Fehler hatte die Messung eines zweiten
+verdeckt**; erst seine Behebung machte die vollständige Zahl sichtbar. Wer
+Befunde zählt, zählt immer nur, was die anderen Befunde durchlassen.
+
+**P-08 gilt weiterhin als NICHT erfüllt**, jetzt aus zwei statt drei
+Gründen. Der Bericht ist nicht leer, und das ist die richtige Auskunft — er
+soll nicht leer aussehen, sondern stimmen. Erfüllt sind: das Werkzeug, seine
+Proben, der Umlauf selbst und die Ausnahmeliste. Offen ist die Entscheidung
+zu Backlog Nr. 26 und 27.
+
+**Ebenfalls beim Nachmessen aufgefallen.** Drei Regeln der CSV-Ausnahmeliste
+(`crew_p2` in Einsätzen, Tagesbesatzung und Diensttagen) haben nie
+gegriffen — die einzigen drei der Liste, deren Begründung keine Zahl trug.
+Sie waren aus der Analogie zu `crew_p1` geschrieben statt gemessen. Der
+Grund ist banal: Alle sieben Zeilen mit belegtem `crew_p2` gehören zum
+Diensttag 2026-02-08, dessen Rettungsmittel dasselbe ist wie das auf der
+Importseite gewählte; die Besatzung kommt unverändert zurück. Die drei
+Regeln sind entfernt. Dass das Werkzeug ungenutzte Regeln überhaupt meldet,
+war eine Entscheidung aus B5 — hier hat sie sich zum ersten Mal ausgezahlt.
 
 **Was das Paket sonst hervorgebracht hat.** Drei Formatbeschreibungen, die
 etwas anderes sagten als der Code tut (Web 7.2.3: LIESMICH-Spaltenname,
@@ -609,7 +631,7 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
 | P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I, Web 7.2.2). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
-| P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — 8 617 Einzelvergleiche, 844 erwartete, **9 unerklärte** Abweichungen. Die neun sind drei Befunde: F-P1-K (2 Einsätze 24 h zurück), F-P1-L (3 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Nicht als Ausnahme geführt — sie sind behebbar |
+| P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — zuletzt 8 797 Einzelvergleiche, 858 erwartete, **6 unerklärte** Abweichungen (bei Abschluss B5: 8 617 / 844 / **9**). Die sechs sind zwei Befunde: F-P1-L (4 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Der dritte, F-P1-K, ist mit **Web 7.3.1** behoben; seine vier Meldungen sind weg, und der vierte Fall von F-P1-L wurde dadurch überhaupt erst sichtbar. Nicht als Ausnahme geführt — sie sind behebbar |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
 | P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | **erfüllt** — Anlegen aus der Fixture in 6,0 s (87/100/16, 0 übersprungen); Export gegen die Referenz: CSV 9 589 und edbak 269 439 Vergleiche, **je 0 Abweichungen** |
 | P-11 | Demo-Funktionen wirken nur auf das Demo-Konto | B6 | **erfüllt** — die drei nach außen gedachten Funktionen nehmen **keine** Kennung entgegen; ohne `app_state`-Eintrag abgewiesen; `demo_bestand_loeschen()` trägt einen eigenen Riegel, geprüft gegen das Adminkonto |
@@ -888,7 +910,7 @@ eine Quelldatei ändert, fährt die betroffene Einspielstufe erneut, bevor er
 exportiert. Der Datensatz ist deterministisch — aber nur, wenn man ihn auch
 erzeugt.
 
-### F-P1-K — Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden zurück
+### F-P1-K — Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden zurück — **BEHOBEN, Web 7.3.1**
 
 **Fundort:** `server/api/import_commit.php:349` gegen
 `server/einsatz_form.php:180–213`.
@@ -927,7 +949,7 @@ Abweichungen (je einmal *fehlt* und einmal *zusätzlich*).
 **stille Datenverfälschung** auf einem Weg, den `Export-Format.md` 5.1
 verlustfrei nennt: Der Einsatz ist danach am falschen Tag dokumentiert.
 
-**Nicht behoben — Entscheidung offen.** Zwei Wege:
+**Zwei Wege standen zur Wahl:**
 
 1. **`datum` auswerten.** Die Angabe steht in der Datei, ist eindeutig und
    braucht keine Vermutung. Nachteil: Fremddateien ohne diese Spalte fallen
@@ -937,9 +959,44 @@ verlustfrei nennt: Der Einsatz ist danach am falschen Tag dokumentiert.
    erst aus den Einsätzen; der Dienstbeginn steht zu diesem Zeitpunkt noch
    nicht fest.
 
-**Vorschlag: Weg 1**, mit Weg 2 als Rückfall für Dateien ohne `datum`. Das
-ändert einen Schreibweg und gehört deshalb entschieden, nicht nebenbei
-gemacht. Backlog Nr. 25.
+**Behoben mit Web 7.3.1 auf Weg 1** — nach ausdrücklicher Anweisung
+(„behebt, kein Backlog"). Weg 2 wurde **nicht** als Rückfall gebaut, und das
+ist eine Änderung gegenüber dem ursprünglichen Vorschlag: Sein Nachteil ist
+kein Randfall, sondern der Normalfall des Imports in ein leeres Konto — dort
+steht der Dienstbeginn zum Zeitpunkt der Entscheidung noch nicht fest. Eine
+Regel, die im häufigsten Fall nicht greift, hätte nur die Zahl der Wege
+erhöht.
+
+**Was umgesetzt wurde:**
+
+- `assets/import_profiles.js`: `'datum'` zeigt auf ein neues Feld
+  `einsatzdatum` statt auf `null`; der irreführende Kommentar ist durch die
+  Begründung ersetzt, die tatsächlich trägt (zwei Daten, zwei Aufgaben).
+- `assets/import.js`: `einsatzdatum` steht in `EINFACHE_ZIELE` und im
+  Zeilengerüst. Über die abgeleitete Liste `UEBERNAHME` (F-P1-H, Web 7.2.1)
+  reicht es sich von selbst weiter — das neue Feld musste an **einer**
+  Stelle eingetragen werden, nicht an zweien. Die Behebung von F-P1-H hat
+  sich hier zum ersten Mal ausgezahlt.
+- `assets/import_ui.js`: sendet es als `date_local`.
+- `api/import_commit.php`: nimmt `date_local` als **Bezugstag der
+  Alarmzeit**. Für die Gruppierung bleibt es beim Diensttag — `day_id` hängt
+  an ihm. Plausibilitätsschranke: übernommen wird nur der Diensttag selbst
+  oder der Tag darauf; mehr kann es nicht sein, weil die Anwendung für den
+  Tageswechsel genau einen Schritt kennt (`local_to_utc` mit `addDays` 0
+  oder 1). Fremddateien mit unsinnigem `datum` verstreuen damit keine
+  Einsätze über den Kalender.
+
+**Gemessen nach der Behebung:** Kreislauf CSV 8 797 Einzelvergleiche,
+858 erwartete, **6 unerklärte** (vorher 8 617 / 844 / 9). Die vier Meldungen
+dieses Funds sind weg; der Einsatz vom 25.10. stimmt in **allen** Feldern
+überein, beim Einsatz vom 29.03. bleibt allein der Zeilenumbruch der Notiz
+(F-P1-L). Backlog Nr. 25 steht unter *Erledigt*.
+
+**Nachwirkung auf die Messung anderer Funde:** F-P1-L war mit 3 Fällen
+gemessen; es sind 4. Der vierte hing an dem Einsatz, den dieser Fund aus dem
+Vergleich gehoben hatte. Ein Fehler hatte die Messung eines zweiten
+verdeckt — beim Zählen von Befunden ist das der Regelfall, nicht die
+Ausnahme.
 
 ---
 
@@ -953,8 +1010,14 @@ Zeilenumbrüche eingeschlossen — und wird auf alle Textspalten angewandt.
 (`mission_fields.php`). Der Export quotet die Umbrüche korrekt nach RFC 4180;
 der Verlust entsteht allein beim Lesen.
 
-**Gemessen:** 3 Notizen, jede verliert **genau einen** Zeilenumbruch bei
-**unveränderter Zeichenzahl** (164/119/150) — der Umbruch wird zum Leerzeichen.
+**Gemessen:** **4** Notizen, jede verliert **genau einen** Zeilenumbruch bei
+**unveränderter Zeichenzahl** (164/253/119/150) — der Umbruch wird zum
+Leerzeichen.
+
+*Zur Zahl:* Bis Web 7.3.0 waren es 3. Die vierte Notiz gehört zu dem Einsatz
+um 01:38, den F-P1-K um 24 Stunden verschoben hatte; er wurde deshalb gar
+nicht verglichen, sondern als *fehlt* und *zusätzlich* gezählt. Sichtbar
+wurde sie erst, als F-P1-K behoben war.
 
 **Blockierend:** ja für P-08, aber leichter als F-P1-K: Der Text bleibt
 lesbar, nur seine Gliederung geht verloren.
@@ -1030,3 +1093,4 @@ blockierend ja/nein, Verbleib → Backlog/Phase).*
 Nach jedem Paket: Abnahmekriterien abhaken, Prüfprotokoll
 fortschreiben, Abweichungen als P-Einträge begründen. Am Phasenende:
 Rahmenplan Abschnitt 6 aktualisieren, Push nach Bestätigung (K7).
+

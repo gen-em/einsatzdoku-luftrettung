@@ -71,7 +71,7 @@ hergeben.
 | Einspiellauf | `einspielen/einspielen.py` | **526** Anfragen, **0** Fehlversuche |
 | Importierter Bestand gegen die Quelldatei | eigener Abgleich | **184** Einzelprüfungen, 0 Befunde |
 | Kreislauf Sicherung (P-09) | `vergleich/kreislauf.py` | **269 439** Vergleiche, **0 unerklärt**, 15 erwartet |
-| Kreislauf CSV (P-08) | dieselbe | **8 617** Vergleiche, **9 unerklärt**, 844 erwartet |
+| Kreislauf CSV (P-08) | dieselbe | **8 797** Vergleiche, **6 unerklärt**, 858 erwartet (vor Web 7.3.1: 8 617 / 9 / 844) |
 | Probe aufs Exempel des Vergleichswerkzeugs | `--testabweichung` | **10/10** je Format |
 | Demo-Konto gegen die Referenz (P-10) | Vergleichswerkzeug | **279 028** Vergleiche, **0** Abweichungen |
 | Reset nach Änderung (P-13) | dieselbe | **279 028** Vergleiche, **0** Abweichungen |
@@ -202,8 +202,10 @@ erkennen ist**.
 
 - [ ] **Beide Kreisläufe.**
   `python3 vergleich/kreislauf.py --art edbak --frisch` und `--art csv`.
-  Erwartet: edbak **0 unerklärte** Abweichungen; CSV **9** — und zwar genau
-  die drei bekannten Befunde (siehe 5).
+  Erwartet: edbak **0 unerklärte** Abweichungen; CSV **6** — und zwar genau
+  die zwei bekannten Befunde (siehe 5). Keine ungenutzte Regel: Meldet der
+  Lauf „ungenutzte Regeln", beschreibt eine Ausnahme etwas, das es nicht mehr
+  gibt — das ist ebenso ein Befund wie eine Abweichung zu viel.
   *Scheitern:* mehr oder andere → der Bericht nennt Bereich, Schlüssel und
   Feld. Alles, was nicht in Abschnitt 5 steht, ist neu.
 
@@ -217,19 +219,26 @@ erkennen ist**.
 
 ## 5. Bekannte offene Befunde — kein Grund zur Beunruhigung, aber zu wissen
 
-Diese neun Abweisungen im CSV-Kreislauf sind **erwartet**, solange die
+Diese sechs Abweisungen im CSV-Kreislauf sind **erwartet**, solange die
 zugehörigen Backlog-Punkte offen sind. Alles darüber hinaus ist neu.
 
 | Befund | Wirkung | gemessen | Backlog |
 |---|---|---|---|
-| **F-P1-K** | Einsätze über Mitternacht wandern beim CSV-Import **24 Stunden zurück** | 2 Einsätze, 4 Meldungen | Nr. 25 |
-| **F-P1-L** | mehrzeilige Notizen verlieren ihre Zeilenumbrüche | 3 Notizen, je 1 Umbruch | Nr. 26 |
+| **F-P1-L** | mehrzeilige Notizen verlieren ihre Zeilenumbrüche | 4 Notizen, je 1 Umbruch | Nr. 26 |
 | **F-P1-M** | `final = 0` wird zu 1, leeres `ende` zur Startzeit | je 1 | Nr. 27 |
 
-**F-P1-K ist der einzige mit Substanz:** Es ist kein Formatverlust, sondern
-eine stille Datenverfälschung — der Einsatz ist danach am falschen Tag
-dokumentiert. Die Angabe, die den Fehler behebt, steht in der Datei (Spalte
-`datum`) und wird verworfen.
+**Der dritte Befund ist weg.** F-P1-K (Einsätze über Mitternacht wandern beim
+CSV-Import 24 Stunden zurück, 2 Einsätze, 4 Meldungen) ist mit **Web 7.3.1**
+behoben — er war kein Formatverlust, sondern eine stille Datenverfälschung,
+und die Angabe, die ihn behebt, stand die ganze Zeit in der Datei (Spalte
+`datum`). Wer eine ältere Fassung prüft, erwartet dort weiterhin 9
+Abweisungen.
+
+**Eine Zahl hat sich dadurch geändert, nicht nur die Summe:** F-P1-L war mit
+3 Notizen gemessen, es sind **4**. Die vierte hing an einem Einsatz, den
+F-P1-K aus dem Vergleich gehoben hatte. Wer Befunde zählt, zählt immer nur,
+was die anderen Befunde durchlassen — beim Nachprüfen einer Behebung lohnt
+deshalb der Blick auf die *anderen* Zahlen, nicht nur auf die behobene.
 
 Weiter offen, ohne Wirkung auf die Kreisläufe:
 

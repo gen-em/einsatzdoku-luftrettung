@@ -345,8 +345,40 @@ function import_commit(array $b, int $userId): never
                 $grund['auswahl']++; $uebersprungen++; continue;
             }
 
-            // Ortszeit mit Kalendertagspruefung (B2)
-            $startedAt = pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef);
+            /* Ortszeit mit Kalendertagspruefung (B2) — auf dem ECHTEN
+             * Einsatzdatum, nicht auf dem Diensttag.
+             *
+             * DER UNTERSCHIED ZAEHLT NUR UEBER MITTERNACHT, und dort zaehlt er
+             * ganz: Ein Einsatz um 01:38 eines Dienstes, der am Vortag begann,
+             * gehoert zum Folgetag. Bis Web 7.3.1 rechnete diese Stelle mit
+             * $tag (dem Diensttag) und legte ihn 24 Stunden zu frueh ab — vor
+             * dem Beginn des Dienstes, zu dem er gehoert. Gemessen im
+             * Kreislauf der Phase P1: zwei Einsaetze, beide exakt einen Tag
+             * daneben (Fund F-P1-K).
+             *
+             * DIE ANGABE LAG DIE GANZE ZEIT IN DER DATEI. `export_csv_v1`
+             * fuehrt `diensttag` UND `datum` getrennt; die zweite Spalte war
+             * im Profil auf target:null gesetzt.
+             *
+             * PLAUSIBILITAETSSCHRANKE: Uebernommen wird das Datum nur, wenn es
+             * der Diensttag selbst ist oder der Tag darauf. Mehr kann es nicht
+             * sein — die Anwendung kennt fuer den Tageswechsel genau einen
+             * Schritt (local_to_utc mit addDays 0 oder 1, so auch im
+             * Formular). Eine Datei fremder Herkunft mit unsinnigem `datum`
+             * verstreut damit keine Einsaetze ueber den Kalender, sondern
+             * faellt auf das bisherige Verhalten zurueck.
+             *
+             * Fuer die Gruppierung bleibt es beim Diensttag: `day_id` haengt
+             * an ihm, nicht am Einsatzdatum. Zwei Quellen fuer ZWEI
+             * verschiedene Aufgaben, nicht fuer dieselbe. */
+            $bezugstag = $tag;
+            $datumRoh = pruef_kalendertag($m['date_local'] ?? null, 'date_local');
+            if ($datumRoh !== null && $datumRoh !== $tag) {
+                $folgetag = (new DateTimeImmutable($tag))
+                    ->add(new DateInterval('P1D'))->format('Y-m-d');
+                if ($datumRoh === $folgetag) { $bezugstag = $datumRoh; }
+            }
+            $startedAt = pruef_ortszeit_zu_utc($bezugstag, $hhmm, 0, 'started_local', $pruef);
             if ($startedAt === null) { $grund['uhrzeit']++; $uebersprungen++; continue; }
 
             // Chiffretext nur formal pruefen — der Inhalt geht den Server
