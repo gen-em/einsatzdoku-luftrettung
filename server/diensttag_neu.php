@@ -74,18 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+ui_seite_start(['titel' => 'Diensttag anlegen']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diensttag anlegen · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar(null); ?>
   <main class="page">
@@ -167,5 +158,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   });
 })();
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

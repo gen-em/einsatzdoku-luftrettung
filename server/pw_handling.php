@@ -200,13 +200,12 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?= $erstvergabe ? 'Passwort festlegen' : 'Neues Passwort' ?> — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body class="login-body">
+require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
+ui_seite_start([
+    'titel'  => $erstvergabe ? 'Passwort festlegen' : 'Neues Passwort',
+    'klasse' => 'login-body',
+]);
+?>
 <div class="login-wrap">
 <main class="login-card setup-card">
   <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="login-logo">
@@ -501,5 +500,4 @@ if (ERSTVERGABE) {
 }
 </script>
 <?php endif; ?>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

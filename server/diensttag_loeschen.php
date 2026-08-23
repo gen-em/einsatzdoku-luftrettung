@@ -20,18 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind']);
+ui_seite_start(['titel' => 'Diensttag löschen']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diensttag löschen · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar($dayId); ?>
   <main class="page">
@@ -75,5 +66,4 @@ $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind']);
     <?php ui_footer(); ?>
   </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

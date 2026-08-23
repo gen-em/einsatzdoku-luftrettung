@@ -90,18 +90,9 @@ foreach ($tage as $t) {
     ];
 }
 $gedeckelt = count($tage) >= $LIMIT;
+ui_seite_start(['titel' => 'Einsatz verschieben']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Einsatz verschieben · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar($altDayId > 0 ? $altDayId : null); ?>
   <main class="page">
@@ -175,6 +166,4 @@ $gedeckelt = count($tage) >= $LIMIT;
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/forms.js') ?>"></script>
-</body>
-</html>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

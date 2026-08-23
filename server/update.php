@@ -1799,14 +1799,9 @@ if ($istCli) {
     exit($ranSomething ? 0 : 0);
 }
 
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Datenbank-Update — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'Datenbank-Update']);
+ui_topbar('einstellungen');
+?>
 
 <?php /* Seitenleiste wie auf den uebrigen Verwaltungsseiten.
    Bis Web 4.5.2 stand diese Seite ohne sie da — sie war ja nur ueber die
@@ -2044,5 +2039,4 @@ if ($istCli) {
 <?php ui_footer(); ?>
 </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

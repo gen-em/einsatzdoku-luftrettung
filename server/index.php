@@ -43,17 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
     exit;
 }
 $neueGeraete = geraete_neu(db(), $userId);
-?><!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tagesübersicht — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
+ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
+ui_topbar('uebersicht');
+?>
 
 <div class="layout">
   <?php ui_days_sidebar($selDay); ?>
@@ -771,5 +763,4 @@ async function init(){
 }
 init();
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

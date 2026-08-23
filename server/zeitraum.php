@@ -24,19 +24,9 @@ $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
 $titel = $monat !== ''
     ? $MONATSNAMEN[(int)$monat] . ' ' . $jahr
     : 'Jahr ' . $jahr;
+ui_seite_start(['titel' => $titel, 'karte' => true]);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= e($titel) ?> · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar(null); ?>
 
@@ -612,5 +602,4 @@ async function entschluesselePat(){
 
 document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

@@ -48,18 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
         $fehler = $e['meldung'];
     }
 }
+ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Datum des Diensttags ändern · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar($dayId); ?>
   <main class="page">
@@ -123,6 +114,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/forms.js') ?>"></script>
-</body>
-</html>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

@@ -91,18 +91,9 @@ $wer = static function (array $t): string {
     return $s ? implode(' · ', $s) : 'ohne Zuordnung';
 };
 $zielSym = dt_art_symbol($ziel['kind'] === null ? null : (string)$ziel['kind']);
+ui_seite_start(['titel' => 'Diensttag aufnehmen']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Diensttag aufnehmen · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar($zielId); ?>
   <main class="page">
@@ -273,6 +264,4 @@ $zielSym = dt_art_symbol($ziel['kind'] === null ? null : (string)$ziel['kind']);
     <?php ui_footer(); ?>
   </main>
 </div>
-<script src="<?= asset('assets/forms.js') ?>"></script>
-</body>
-</html>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

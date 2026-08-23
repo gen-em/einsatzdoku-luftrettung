@@ -142,15 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         rate_gleiche_dauer($t0);
     }
 }
-?><!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Anmelden — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?>
-</head>
-<body class="login-body">
+require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
+ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
+?>
 <main class="login-card">
   <img src="<?= e(logo_src()) ?>"
        alt="GenEM" class="login-logo">
@@ -259,6 +253,4 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
 </script>
 <?php /* Footer im Fluss unter der Karte */ ?>
 <footer class="sitefooter">© Gen-EM – OpenSource Software – <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a></footer>
-</div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

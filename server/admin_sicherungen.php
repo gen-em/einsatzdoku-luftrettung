@@ -225,14 +225,9 @@ function zeitpunkt_text(?string $iso): string
     catch (Throwable) { return $iso; }
 }
 
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sicherungen — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'Sicherungen']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar('admin_sicherungen'); ?>
@@ -555,5 +550,4 @@ function zeitpunkt_text(?string $iso): string
   </main>
 </div>
 <script src="<?= asset('assets/confirm.js') ?>" defer></script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

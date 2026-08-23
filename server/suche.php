@@ -21,18 +21,9 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
  * daher nicht im Zugriffsprotokoll. Die Parameternamen sind in Technik.md
  * dokumentiert.
  */
+ui_seite_start(['titel' => 'Suche']);
+ui_topbar('suche');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Suche · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('suche'); ?>
 <div class="layout layout-suche">
   <!-- Statt der Einsatztage-Leiste: die Filter. Auf der Suchseite waeren
        einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
@@ -839,5 +830,4 @@ function verdrahten() {
   entschluesselePat();
 })();
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

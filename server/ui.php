@@ -1,10 +1,144 @@
 <?php
 declare(strict_types=1);
 /**
- * Gemeinsame Layout-Bausteine (Topbar, Einsatztage-Leiste, Fusszeile).
- * Voraussetzung: auth_guard.php ist geladen ($userId, $userEmail, $userName)
- * samt ist_admin() — die eine Rollenpruefung (M1-15).
+ * Gemeinsame Layout-Bausteine: SEITENHUELLE, Topbar, Einsatztage-Leiste,
+ * Fusszeile.
+ *
+ * Voraussetzung fuer alles ausser der Huelle: auth_guard.php ist geladen
+ * ($userId, $userEmail, $userName) samt ist_admin() — die eine Rollenpruefung
+ * (M1-15).
+ *
+ * DIESE DATEI HAT AUF OBERSTER EBENE KEINE ABHAENGIGKEIT, und das muss so
+ * bleiben: install.php laedt sie VOR der Ersteinrichtung, zu einem Zeitpunkt,
+ * an dem es weder config.php noch db.php gibt. Was eine Datenbank oder die
+ * Konfiguration braucht, wird deshalb erst INNERHALB der jeweiligen Funktion
+ * geladen (so wie ui_days_sidebar() es mit diensttag_lib.php haelt).
  */
+
+/* ---------------------------------------------------------------------------
+ * SEITENHUELLE
+ *
+ * WARUM ES SIE GIBT (P0/A2). Bis Web 7.0.2 baute JEDE Seite ihren Kopf selbst:
+ * 28 Bloecke aus Doctype, <html>, <head> und der Eroeffnung des <body>, nahezu
+ * gleich und doch uneinheitlich — zwei Schreibweisen des Viewports, zwei
+ * Titeltrenner, drei Einrueckungen. Eine Aenderung am Viewport, an den
+ * Stylesheets oder ein kuenftiges Mobile-Menue war damit eine 28-fache
+ * Aenderung. Jetzt ist sie eine einzige.
+ *
+ * ENTSCHIEDENE SCHREIBWEISEN (A2 Punkt 3, am Bestand ausgezaehlt):
+ *   Viewport      "width=device-width,initial-scale=1" ohne Leerzeichen
+ *                 (15 Seiten so, 10 mit Leerzeichen)
+ *   Titeltrenner  Gedankenstrich "—" (15 Seiten so, 10 mit "·"). Das Konzept
+ *                 hatte "·" vorgeschlagen und die Bestaetigung in der
+ *                 Umsetzung verlangt — die Auszaehlung sagt das Gegenteil,
+ *                 also gilt der Gedankenstrich.
+ *
+ * REIHENFOLGE IM KOPF (unveraendert gegenueber dem Bestand):
+ *   charset · viewport · Titel · 'kopf' · Leaflet-CSS · style.css · Favicon
+ * Leaflet-CSS steht VOR style.css, damit eigene Regeln die des Kartenwerks
+ * ueberschreiben, und nur auf Kartenseiten (AK-A2-3).
+ *
+ * Schluessel von $o:
+ *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Einsatzdoku" haengt
+ *            diese Funktion an. Der Text wird hier maskiert — Aufrufer
+ *            uebergeben Klartext, kein Markup.
+ *   klasse   Klasse am <body> (z. B. 'login-body'); fehlt sie, hat das
+ *            <body>-Element kein Attribut.
+ *   karte    true  -> Leaflet-CSS zusaetzlich einbinden (nur Kartenseiten)
+ *   stil     false -> style.css NICHT einbinden. Genau ein Aufrufer: der
+ *            Einrichter, der seine Gestaltung im Kopf mitbringt (s. u.).
+ *   kopf     Fertiges Markup, das unmittelbar nach dem Titel in den Kopf
+ *            gehoert — <noscript>-Weiterleitung, eigenes <style>. Wird NICHT
+ *            maskiert; der Aufrufer verantwortet den Inhalt.
+ * ------------------------------------------------------------------------- */
+function ui_seite_start(array $o): void
+{
+    /* Zeilenweise zusammengesetzt statt als Vorlage mit eingestreutem PHP:
+       Bedingte Zeilen in einer Vorlage bringen ein Durcheinander aus
+       geschluckten Zeilenumbruechen mit sich (PHP frisst den Umbruch direkt
+       nach jedem "?>"). So steht hier, was ausgegeben wird, und zwar genau
+       einmal je Zeile. */
+    $zeilen = [
+        '<!doctype html>',
+        '<html lang="de">',
+        '<head>',
+        '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+        '<title>' . ui_e((string)$o['titel']) . ' — Einsatzdoku</title>',
+    ];
+    if (!empty($o['kopf'])) {
+        $zeilen[] = rtrim((string)$o['kopf'], "\n");
+    }
+    if (!empty($o['karte'])) {
+        $zeilen[] = '<link rel="stylesheet" href="' . ui_asset('assets/vendor/leaflet/leaflet.css') . '">';
+    }
+    if (($o['stil'] ?? true) !== false) {
+        $zeilen[] = '<link rel="stylesheet" href="' . ui_asset('assets/style.css') . '">';
+    }
+    $zeilen[] = ui_favicon();
+    $zeilen[] = '</head>';
+
+    $klasse = (string)($o['klasse'] ?? '');
+    $zeilen[] = '<body' . ($klasse !== '' ? ' class="' . ui_e($klasse) . '"' : '') . '>';
+
+    echo implode("\n", $zeilen), "\n";
+}
+
+/**
+ * Gegenstueck zu ui_seite_start(): Seitenabschluss.
+ *
+ * Es ist bewusst wenig: Die Fusszeile hat mit ui_footer() ihren eigenen
+ * Baustein, und der steht auf den meisten Seiten INNERHALB des Inhalts — er
+ * laesst sich hier nicht mit erledigen, ohne die Seiten umzubauen. Was bleibt,
+ * ist der Abschluss selbst und eine Ablage fuer Skripte, die ganz zuletzt
+ * kommen.
+ *
+ * Schluessel von $o:
+ *   skripte  Liste von Asset-Pfaden, die als <script src> vor </body> stehen.
+ *            Fuer alles Weitere (defer, Modul, Inline-Code) schreibt die Seite
+ *            ihr Markup weiterhin selbst — vor dem Aufruf.
+ */
+function ui_seite_ende(array $o = []): void
+{
+    $zeilen = [];
+    foreach ((array)($o['skripte'] ?? []) as $s) {
+        $zeilen[] = '<script src="' . ui_asset((string)$s) . '"></script>';
+    }
+    $zeilen[] = '</body>';
+    $zeilen[] = '</html>';
+    echo implode("\n", $zeilen), "\n";
+}
+
+/**
+ * Adresse einer statischen Datei — mit Erkennungswert, wenn es einen gibt.
+ *
+ * asset() und favicon_tags() stehen in db.php, und db.php laedt die
+ * config.php. Der Einrichter laeuft aber VOR der Ersteinrichtung: Dort gibt es
+ * beides noch nicht. Die Huelle darf an dieser Stelle also nichts voraussetzen
+ * (benanntes Risiko zu A2). Ohne asset() fehlt nur der Erkennungswert an der
+ * Adresse — der Verweis stimmt trotzdem, und der Einrichter laeuft genau
+ * einmal, hat also nichts zwischenzuspeichern.
+ */
+function ui_asset(string $pfad): string
+{
+    return function_exists('asset') ? asset($pfad) : $pfad;
+}
+
+/** Maskierung — e() aus db.php, wo es sie gibt (s. ui_asset()). */
+function ui_e(string $s): string
+{
+    return function_exists('e') ? e($s) : htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+
+/** Favicon-Verweise — favicon_tags() aus db.php, wo es sie gibt (s. ui_asset()). */
+function ui_favicon(): string
+{
+    if (function_exists('favicon_tags')) { return favicon_tags(); }
+    // Rueckfall ohne config.php: seitenrelativ. Der Einrichter liegt im selben
+    // Verzeichnis wie die Anwendung, damit zeigen die Pfade richtig.
+    return '<link rel="icon" type="image/png" href="assets/images/favicon.png">' . "\n"
+         . '<link rel="icon" href="favicon.ico">'
+         . '<link rel="apple-touch-icon" href="assets/images/favicon.png">';
+}
 
 function ui_user_label(): string {
     global $userName, $userEmail;
