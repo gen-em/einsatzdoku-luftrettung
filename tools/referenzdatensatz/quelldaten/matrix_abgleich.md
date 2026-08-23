@@ -18,8 +18,8 @@ Grundlage ist die Abdeckungsmatrix aus Abschnitt 5 des Konzepts
 | Dienste | 16 |
 | Einsätze | 87 |
 | Matrixzeilen | 78 |
-| Zeitstempel auf Existenz und Eindeutigkeit geprüft | 1125 |
-| Einzelprüfungen im Lauf | 5684 |
+| Zeitstempel auf Existenz und Eindeutigkeit geprüft | 1124 |
+| Einzelprüfungen im Lauf | 5680 |
 
 ## Zuordnung
 
@@ -50,7 +50,7 @@ Reanimationsarten vorkommen.
 |  | nicht abgeschlossener Einsatz | `D09/m-11-8207364159` |
 | Reanimation | Einsatz mit einer Sitzung | `D01/m-11-5192834077`, `D04/m-12-6604485875`, `D04/m-12-7265860386`, `D06/m-12-4386015927` … (+2) |
 |  | Einsatz mit mehreren Sitzungen | `D09/m-11-7761204385` |
-|  | alle zehn Ereignisarten | *strukturell geprüft* |
+|  | alle speicherbaren Ereignisarten (neun) | *strukturell geprüft* |
 | Transport | Transportart air | `D01/m-11-1653279357`, `D01/m-11-3067419528`, `D01/m-11-5192834077`, `D01/m-11-2418095733` … (+29) |
 |  | Transportart ground | `D01/m-11-7734018625`, `D01/m-11-8624759753`, `D04/m-12-2458452183`, `D04/m-12-6467858312` … (+35) |
 |  | Transportart ambulant | `D02/m-11-1287405639`, `D07/m-11-7148036592`, `D08/m-12-1301135081`, `D08/m-12-6487608678` … (+6) |

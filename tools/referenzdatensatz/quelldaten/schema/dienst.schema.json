@@ -368,7 +368,6 @@
                     {
                       "enum": [
                         "zugang",
-                        "beginn",
                         "adrenalin",
                         "rhythmuskontrolle",
                         "defibrillation",
@@ -377,7 +376,8 @@
                         "sonographie",
                         "rosc",
                         "tod"
-                      ]
+                      ],
+                      "$kommentar": "NEUN Arten. 'beginn' fehlt mit Absicht: Kein Schreibweg nimmt es als Ereignis an (ingest.php verwirft still, einsatz_form.php weist ab) -- der Beginn steckt in `beginn` der Sitzung. Siehe Fehlerfund F-P1-F."
                     },
                     {
                       "$ref": "#/$defs/zeitpunkt"

@@ -27,3 +27,10 @@ tools/stilvergleich/__pycache__/
 # geometrie unter generator/routen/ und die Quelldaten selbst.
 tools/referenzdatensatz/generator/ausgabe/
 tools/referenzdatensatz/**/__pycache__/
+
+# Zustand EINES Einspiellaufs: Einrichtungslink, Geraeteschluessel, vergebene
+# Kennungen, Fortschritt. Fuer eine andere Installation ist davon nichts
+# gueltig -- und der Einrichtungslink ist bis zu seiner Einloesung ein
+# Zugang zum Konto.
+tools/referenzdatensatz/einspielen/lauf.json
+tools/referenzdatensatz/einspielen/*_rc.json

@@ -209,7 +209,7 @@ statt wie einen Dienst.
 | Diensttage | Luft- und Bodendienste; ≥ 1 Kalendertag mit **zwei** Diensten (`day_ref`-Zuordnung); ≥ 1 Dienst über Mitternacht (Einsatzdatum ≠ Diensttag); Diensttag **ohne** Einsatz; Tagesnotizen |
 | Besatzung | alle Rollen des Katalogs belegt (Luft: p1, p2, hems, fr, other · Boden: driver, trainee, other); ≥ 1 Einsatz mit abweichender Besatzung (`crew_override`) |
 | Phasen | alle Phasen 2–9 im Datensatz; ≥ 1 Einsatz mit Mehrfacheintrag derselben Phase (Korrektur); ≥ 1 Einsatz mit unvollständigen Phasen (Dauer leer); ≥ 1 nicht abgeschlossener Einsatz (`final=0`, `ended_at` leer) |
-| Reanimation | ≥ 1 Einsatz mit einer Sitzung; ≥ 1 mit **mehreren** Sitzungen; alle zehn Ereignisarten kommen im Datensatz vor (inkl. `rosc` und `tod`) |
+| Reanimation | ≥ 1 Einsatz mit einer Sitzung; ≥ 1 mit **mehreren** Sitzungen; alle **speicherbaren** Ereignisarten kommen im Datensatz vor (inkl. `rosc` und `tod`). Das sind **neun**, nicht zehn: `beginn` nimmt kein Schreibweg als Ereignis an — siehe Fehlerfund F-P1-F |
 | Transport | `air` · `ground` · `ambulant` · leer; NA-Begleitung; Fehleinsatz/Storno; Sekundärtransport; Schockraum; Zielklinik mit und ohne Koordinate |
 | Abfahrtort | alle vier Regeln `base` · `prev_site` · `prev_dest` · `manual` (letztere mit verschlüsseltem `pat.start`) |
 | Luftspezifik | Winde (mit Cycles, Cycles mit Patient, Luftverladung) nur an windenfähigem Rettungsmittel; Bergwacht mit Einheit und `bw_info` |
@@ -366,6 +366,45 @@ Stichprobe in der Oberfläche: Diensttage zugeordnet, Tracks sichtbar,
 geschützte Angaben nach Freischalten lesbar; neutraler Zustand vor
 Zuordnung wurde beobachtet (E-P1-11); keine Zeile entstand per SQL.
 
+**Stand: ERLEDIGT (lokal).** Unter `tools/referenzdatensatz/einspielen/`:
+`lokal_starten.sh` (MariaDB, PHP-Server, TLS davor), `sitzung.py`
+(Anmeldung über den regulären Weg), `passwort_setzen.mjs` (Browser),
+`einspielen.py` (neun Stufen), `messprotokoll.py`, `sichtpruefung.mjs`
+und `LIESMICH.md`.
+
+**Gemessen.** 526 Ingest-Anfragen, **0 Fehlversuche**, 0 verworfene
+Einzelwerte, 0 übergangene Listen. Bestand danach: 16 Diensttage
+(1 im Papierkorb), 78 sichtbare Einsätze (76 `watch`, 2 `manual`),
+5 im Papierkorb (4 davon mit ihrem Diensttag), 95 Ruhesegmente,
+55 861 Spurpunkte, 1 Sperrlisteneintrag. Die vier CSV-Importe folgen
+in B4.
+
+**Neutraler Zustand belegt (E-P1-11):** Vor der Zuordnung waren
+**16 von 16** Diensttagen ohne Art — gezählt, nicht behauptet, und im
+Lauf-Zustand festgehalten.
+
+**Sperrliste (E-P1-16) bestanden:** senden → 1 Einsatz, Papierkorb → 0,
+endgültig löschen → 0, **erneut senden → 0**. Der Einsatz kam nicht
+wieder; `deleted_refs` trägt die Kennung.
+
+**Sichtprüfung im Browser:** Diensttag mit Zuordnung im Titel, 6
+Einsatzzeilen, 28 Spurpfade auf der Tageskarte und 9 auf der
+Einsatzkarte, 8 Phasenzeilen, geschützte Angaben ohne weiteres Zutun
+lesbar (gelesen: „Schädel-Hirn-Trauma bei Motorradunfall"),
+**Konsole ohne Fehler**.
+
+**Was dabei NICHT geprüft werden konnte** — und das gehört an diese
+Stelle und nicht in eine Fußnote:
+
+- **Kartenkacheln.** Sie kommen von `tile.openstreetmap.org` und
+  Nachbarn (`assets/map_layers.js`); der Egress-Proxy dieser Umgebung
+  lässt sie nicht durch. Geprüft ist, dass die **Spur** gezeichnet
+  wird — nicht, dass der Kartenhintergrund erscheint.
+- **Mailversand.** Kein SMTP lokal; der Einrichtungslink wurde von der
+  Adminseite abgelesen statt aus einer Mail.
+- **Der Produktivlauf** (P-12) steht weiterhin aus — dafür fehlt der
+  Zugang.
+
 ### B4 — Browser-Schritte
 Dokumentierte Klickstrecke für die Anteile, die bewusst im Browser
 laufen: CSV-Import der nachträglichen Einsätze (inkl. R20-Fall,
@@ -441,9 +480,9 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-01 | Matrix-Abgleich vollständig | B1 | **erfüllt** — 78 Zeilen, 0 offen; 5 528 Einzelprüfungen ohne Befund (`pruefen.py`) |
 | P-02 | Payloads gegen Vertragsgrenzen | B2 | **erfüllt** — statt Stichprobe ALLE 526 Anfragen; 283 738 Einzelprüfungen ohne Befund |
 | P-03 | Determinismus des Generators (zwei Läufe, gleiches Ergebnis) | B2 | **erfüllt** — Quelldaten 16 Dateien, Generator 692 Dateien, je zwei Läufe byteweise gleich |
-| P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | offen |
-| P-05 | Messprotokoll vorhanden und plausibel | B3 | offen |
-| P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | offen |
+| P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch |
+| P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
+| P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
 | P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | offen |
 | P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | offen |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | offen |
@@ -498,6 +537,53 @@ Rückweg am falschen Datensatz, Einsatzort ohne Rücksicht auf die
 Anfahrtszeit, überhöhtes Geschwindigkeitsprofil, Sprung zwischen Halt
 und Route. **Blockierend: nein**, alle behoben. Kein Verbleib im
 Backlog — sie betreffen ausschließlich das Werkzeug dieser Phase.
+
+### F-P1-F — Der JSON-Vertrag führt eine Reanimationsart, die kein Schreibweg annimmt
+
+**Fundort:** `docs/JSON-Vertrag.md` Abschnitt 3.3 gegen
+`server/ingest.php:299` und `server/einsatz_form.php:317`.
+
+**Sache:** Der Vertrag nennt `beginn` unter den gültigen Werten von
+`events[].type` und merkt dazu nur an, die **Uhr** führe bewusst eine
+Teilmenge und kenne `beginn` nicht. Das liest sich als Zusage, der Server
+nehme die Art an. Er nimmt sie auf **keinem** Weg an:
+
+- `ingest.php:299` speichert das Ereignis **still nicht**
+  (`$ty !== 'beginn'`) — ohne Eintrag in `rejected`.
+- `einsatz_form.php:317` weist es mit der Meldung „Unbekannte Art eines
+  Reanimationsereignisses" ab.
+
+Beide begründen es gleich und **richtig**: Der Reanimationsbeginn steckt in
+`started_at` der Sitzung; ein zweites Mal als Ereignis wäre er doppelt.
+`RESUS_LABELS` (db.php) führt `beginn` weiterhin — dort als Beschriftung
+für die Startzeile, nicht als Ereignisart. `pruef_reanimationsart` in
+`validate_lib.php` lässt ihn durch; die Ausnahme steht an beiden
+Schreibwegen **zusätzlich**.
+
+**Wirkung:** Ein Client, der gegen den Vertrag implementiert, sendet ein
+`beginn`-Ereignis und bekommt einen Eintrag weniger — auf dem Ingest-Weg
+**ohne jede Meldung**. Genau der Fall, vor dem Abschnitt 0 desselben
+Dokuments warnt: „Ein Vertrag, der etwas zusichert, was der Code nicht
+einhält, ist schlimmer als gar keiner." Die Tabelle dort führt
+„Reanimationsarten gegen die Liste (3.3)" als *durchgesetzt*.
+
+**Gefunden** beim Einspielen von D11/MAN-01: Der Datensatz sollte alle
+Ereignisarten belegen und trug `beginn` als Ereignis; das Formular wies
+den Einsatz ab, und er entstand nicht.
+
+**Blockierend:** nein. Der Datensatz führt den Beginn jetzt dort, wo er
+hingehört — im Feld `beginn` der Sitzung. Speicherbare Ereignisarten sind
+**neun**, nicht zehn; die Abdeckungsmatrix ist entsprechend
+fortgeschrieben, und `quelldaten/pruefen.py` weist ein `beginn`-Ereignis
+seither ab.
+
+**Verbleib — zu entscheiden:** Entweder der Vertrag wird berichtigt (3.3
+nennt neun Ereignisarten, `beginn` steht als Sitzungsbeginn daneben), oder
+der Code nimmt die Art an. Der Vertrag nennt sich selbst die führende
+Quelle und sagt, eine Abweichung sei „ein Fehler in der Umsetzung, nicht im
+Vertrag" — hier spricht die Sache aber für den Code: Der Beginn ist eine
+Eigenschaft der Sitzung, kein Ereignis in ihr. **Vorschlag: Vertrag
+berichtigen**, dazu ein Backlog-Eintrag. Nicht in dieser Phase entschieden.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*

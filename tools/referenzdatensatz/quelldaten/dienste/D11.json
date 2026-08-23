@@ -565,10 +565,6 @@
           "beginn": "2026-08-16 17:04",
           "ereignisse": [
             [
-              "beginn",
-              "2026-08-16 17:04"
-            ],
-            [
               "zugang",
               "2026-08-16 17:06"
             ],
@@ -638,22 +634,26 @@
       "abdeckung": [
         "herkunft-manuell",
         "erfassung-nachtraeglich-ohne-track",
-        "rea-typ-beginn",
         "weiterer-notarzt",
         "weitere-rettungsmittel-mehrere",
         "sonderzeichen-zeilenumbruch",
         "stammdaten-freitext"
       ],
       "$warum_rea_beginn": [
-        "EINZIGER Einsatz mit dem Ereignis 'beginn' (Reanimationsbeginn). Das",
-        "ist Absicht und folgt dem JSON-Vertrag 3.3: Die Uhr-App führt bewusst",
-        "eine TEILMENGE der Ereignisarten und kennt 'beginn' NICHT, weil der",
-        "Beginn dort über 'resus_sessions[].started_at' übertragen wird.",
+        "HIER STAND EINMAL EIN EREIGNIS 'beginn' — es ist entfernt, und das",
+        "ist ein Befund (F-P1-F im Konzept).",
         "",
-        "Die Art kommt deshalb nur über einen Weg herein, den ein Mensch",
-        "bedient — hier das Einsatzformular. Stünde sie in einem",
-        "Ingest-Payload, wäre der Datensatz vertragskonform, aber unrealistisch:",
-        "Keine Uhr sendet das."
+        "docs/JSON-Vertrag.md 3.3 fuehrt 'beginn' unter den gueltigen Werten",
+        "von events[].type und merkt nur an, dass die UHR es nicht sendet.",
+        "Der Server nimmt es aber auf KEINEM Weg an: ingest.php verwirft es",
+        "still (Zeile 299, `$ty !== 'beginn'`), einsatz_form.php weist es mit",
+        "Meldung ab (Zeile 317). Beide begruenden es gleich und richtig — der",
+        "Reanimationsbeginn steckt in `started_at` der Sitzung, ein zweites",
+        "Mal als Ereignis waere er doppelt.",
+        "",
+        "Der Datensatz fuehrt den Beginn deshalb dort, wo er hingehoert: im",
+        "Feld `beginn` dieser Sitzung. Speicherbare Ereignisarten sind NEUN,",
+        "nicht zehn."
       ],
       "$warum_freitext": [
         "WEITERE RETTUNGSMITTEL AUS EINEM ANDEREN STANDORT. 'NEF Hochkreuth",

@@ -1,0 +1,61 @@
+{
+  "grundlage": "Soll-Sendeplan des Generators; Auslöser wie watch/source/Uploader.mc",
+  "anfragen_gesamt": 526,
+  "dienste": 16,
+  "pakete": 182,
+  "anfragen_je_dienst": {
+    "min": 16,
+    "max": 45,
+    "median": 34.0
+  },
+  "teilstuecke_je_paket": {
+    "min": 1,
+    "max": 14,
+    "median": 3.0,
+    "mehr_als_eins": 166
+  },
+  "soll_abstand_s": {
+    "min": 0,
+    "max": 6600,
+    "median": 1020.0,
+    "unter_60s": 174,
+    "null": 174
+  },
+  "spitze_je_dienst": [
+    {
+      "dienst": "D02",
+      "anfragen": 3,
+      "zeitpunkt": "2026-02-08T13:26:00+01:00"
+    },
+    {
+      "dienst": "D07",
+      "anfragen": 3,
+      "zeitpunkt": "2026-05-10T14:54:00+02:00"
+    },
+    {
+      "dienst": "D09",
+      "anfragen": 3,
+      "zeitpunkt": "2026-07-05T17:40:00+02:00"
+    },
+    {
+      "dienst": "D11",
+      "anfragen": 3,
+      "zeitpunkt": "2026-08-16T14:20:00+02:00"
+    },
+    {
+      "dienst": "D12",
+      "anfragen": 3,
+      "zeitpunkt": "2026-09-12T11:52:00+02:00"
+    }
+  ],
+  "body_bytes": {
+    "min": 255,
+    "max": 22785,
+    "median": 2343.0,
+    "summe": 2668739
+  },
+  "punkte_gesamt": 56587,
+  "fehlversuche": 0,
+  "mit_verworfenen_werten": 0,
+  "mit_uebergangener_liste": 0
+}

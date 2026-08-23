@@ -39,7 +39,12 @@ TZ = ZoneInfo("Europe/Berlin")
 CREW_ROLES = {"p1", "p2", "hems", "fr", "driver", "trainee", "other"}
 ROLLEN_ART = {"p1": "air", "p2": "air", "hems": "air", "fr": "air",
               "driver": "ground", "trainee": "ground", "other": "both"}
-REA_TYPEN = {"zugang", "beginn", "adrenalin", "rhythmuskontrolle", "defibrillation",
+# SPEICHERBARE Ereignisarten: NEUN, nicht zehn. 'beginn' steht zwar in
+# RESUS_LABELS (db.php) und in docs/JSON-Vertrag.md 3.3, wird aber von KEINEM
+# Schreibweg als Ereignis angenommen -- ingest.php verwirft es still,
+# einsatz_form.php weist es ab. Der Reanimationsbeginn steckt in `started_at`
+# der Sitzung. Siehe Fehlerfund F-P1-F.
+REA_TYPEN = {"zugang", "adrenalin", "rhythmuskontrolle", "defibrillation",
              "intubation", "amiodaron", "sonographie", "rosc", "tod"}
 PHASEN = set(range(2, 10))
 
@@ -84,7 +89,7 @@ MATRIX = [
     ("Phasen", "nicht abgeschlossener Einsatz", ["einsatz-nicht-abgeschlossen"]),
     ("Reanimation", "Einsatz mit einer Sitzung", ["rea-einzeln"]),
     ("Reanimation", "Einsatz mit mehreren Sitzungen", ["rea-mehrere-sitzungen"]),
-    ("Reanimation", "alle zehn Ereignisarten", []),
+    ("Reanimation", "alle speicherbaren Ereignisarten (neun)", []),
     ("Transport", "Transportart air", ["transport-air"]),
     ("Transport", "Transportart ground", ["transport-ground"]),
     ("Transport", "Transportart ambulant", ["transport-ambulant"]),
@@ -371,7 +376,9 @@ def main() -> int:
                 for typ, zeit in s["ereignisse"]:
                     alle_rea_typen.add(typ)
                     merke([f"rea-typ-{typ}"], wo)
-                    lauf.pruefe(typ in REA_TYPEN, f"{wo}: unbekannte Reanimationsart {typ!r}")
+                    lauf.pruefe(typ in REA_TYPEN,
+                                f"{wo}: Reanimationsart {typ!r} ist als Ereignis nicht "
+                                f"speicherbar (F-P1-F)")
                     lauf.pruefe(eb <= lokal(zeit) <= ee, f"{wo}: Ereignis {typ!r} außerhalb des Einsatzes")
 
             # Route: jeder Wegpunkt muss auf eine Koordinate aufloesen
@@ -607,7 +614,7 @@ def main() -> int:
                                             f"belegt: {sorted(rollen_belegt)}"),
         "alle Phasen 2–9 im Datensatz": (alle_phasen == PHASEN,
                                          f"vorhanden: {sorted(alle_phasen)}"),
-        "alle zehn Ereignisarten": (alle_rea_typen == REA_TYPEN,
+        "alle speicherbaren Ereignisarten (neun)": (alle_rea_typen == REA_TYPEN,
                                     f"fehlen: {sorted(REA_TYPEN - alle_rea_typen)}"),
         "≥ 2 Standorte, einer ohne Koordinaten": (
             len(stammdaten["standorte"]) >= 2
