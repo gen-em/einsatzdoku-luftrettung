@@ -228,6 +228,10 @@ ui_topbar('uebersicht');
 <script src="<?= asset('assets/unlock.js') ?>"></script>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
+<?php /* missiontable.js liefert die gemeinsamen Bausteine der drei
+         Einsatztabellen. Muss NACH html.js stehen: Die Datei liest EdHtml
+         schon beim Laden. */ ?>
+<script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
@@ -340,9 +344,9 @@ function renderMissionTable(){
       <td class="mono c-no">${m._no}</td>
       <td class="mono c-mid">${m.start_hhmm}</td>
       <td class="c-mid">${fmtDur(m.duration_s)}</td>
-      <td${m._ort ? '' : ' class="dash"'}>${m._ort ? esc(m._ort) : '–'}</td>
-      <td class="mono c-mid${m._age != null ? '' : ' dash'}">${m._age != null ? m._age : '–'}</td>
-      <td${m._dx ? '' : ' class="dash"'}>${m._dx ? esc(m._dx) : '–'}</td>
+      ${zelleGeschuetzt(m, m._ort, v => esc(v))}
+      ${zelleGeschuetzt(m, m._age, v => v, 'mono c-mid')}
+      ${zelleGeschuetzt(m, m._dx, v => esc(v))}
       ${dcZellen}
       <td class="mono c-km">${fmtKm(m.distance_m)}</td>`;
     /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).
@@ -377,21 +381,23 @@ function renderMissionTable(){
   });
 }
 
-function extractOrt(addr){
-  const parts = addr.split(',');
-  let last = parts[parts.length - 1].trim();
-  last = last.replace(/^\d{4,5}\s+/, '');
-  return last;
-}
+/* GEMEINSAME BAUSTEINE STATT EIGENER FASSUNGEN (A6, E-A6-07).
+ *
+ * Hier standen eigene Umsetzungen von extractOrt(), fmtDur() und fmtKm() —
+ * und die erste war bereits auseinandergelaufen: Ihr fehlte die Pruefung auf
+ * Buchstaben, die assets/missiontable.js seit E11 hat. Ein Altdatensatz mit
+ * Koordinatentext im Ortsfeld zeigte deshalb AUF DER STARTSEITE das
+ * Bruchstueck „10.31600", in Suche und Zeitraum-Uebersicht dagegen die ganze
+ * Koordinate „47.72800, 10.31600".
+ *
+ * zeitraum.php holt dieselben Bausteine seit jeher so. Die SPALTEN-Mechanik
+ * von missiontable.js uebernimmt diese Seite bewusst NICHT: Sie fuehrt die
+ * Katalogspalten aus DAY_COLS, die die anderen beiden Tabellen nicht haben. */
+const { extractOrt, fmtDur, fmtKm, zelleGeschuetzt } = EdMissionTable;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
 const esc = EdHtml.escape;
-
-function fmtDur(s){ if(s==null) return 'kein Ende'; const h=Math.floor(s/3600),m=Math.round(s%3600/60);
-  // kompakt ohne Leerzeichen vor der Einheit, damit die Spalte einzeilig bleibt
-  return h? `${h}h ${String(m).padStart(2,'0')}min` : `${m}min`; }
-function fmtKm(m){ return m==null ? '<span class="dash">–</span>' : (m/1000).toFixed(1).replace('.',',')+' km'; }
 
 function showLoadError(msg){
   const box = document.getElementById('loaderror');

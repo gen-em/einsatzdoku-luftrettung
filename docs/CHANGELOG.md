@@ -86,6 +86,36 @@ Fensterbreiten verglichen — **keine Abweichung** —, und eine Gegenprobe hat
 bestätigt, dass keine der elf Klassen an einem Element des tatsächlichen
 Markups steht, auch nicht in dem, das erst im Browser entsteht.
 
+### Die Tagesübersicht zeigt wieder dasselbe wie Suche und Zeitraum
+
+Die drei Einsatztabellen der Anwendung sollen dieselbe Liste zeigen. Zwei von
+ihnen — Suche und Zeitraum-Übersicht — teilen sich dafür seit Web 5.2.0
+`assets/missiontable.js`. Die Tagesübersicht baute ihre Zeile selbst und hatte
+eigene Fassungen derselben Hilfsfunktionen. Die waren **auseinandergelaufen**,
+und zwar in zwei Punkten, die beide etwas Falsches zeigten:
+
+1. **Ortsangabe.** `extractOrt()` schneidet den Ortsteil aus einer Adresse.
+   Der gemeinsamen Fassung wurde mit E11 eine Prüfung hinzugefügt: Enthält der
+   letzte Teil nach dem Komma keine Buchstaben, wird der Text unverändert
+   durchgereicht. Der Kopie in `index.php` fehlte sie. Ein Altdatensatz mit
+   Koordinatentext im Ortsfeld — `47.72800, 10.31600` — zeigte auf der
+   **Startseite** deshalb das Bruchstück `10.31600`, in Suche und
+   Zeitraum-Übersicht die ganze Koordinate.
+2. **Nicht lesbare Angaben.** Wo Suche und Zeitraum-Übersicht ein Warnzeichen
+   zeigen, stand auf der Startseite ein Gedankenstrich — dasselbe Zeichen wie
+   für „keine Angaben". Genau diese Verwechslung sollte das Warnzeichen
+   verhindern: Wer den Unterschied nicht sieht, merkt nicht, dass sein
+   Inhaltsschlüssel nicht mehr passt.
+
+`index.php` holt die vier Bausteine jetzt aus `missiontable.js` — so, wie
+`zeitraum.php` es seit jeher tut. **Sichtbar ändert sich dadurch etwas:** Auf
+der Tagesübersicht erscheint für verschlüsselte, aber nicht lesbare Angaben
+ein ⚠ statt eines Gedankenstrichs. Das ist der Zweck der Änderung.
+
+Die Spaltenmechanik von `missiontable.js` übernimmt die Seite bewusst
+**nicht**: Sie führt die Katalogspalten aus `DAY_COLS`, die die anderen beiden
+Tabellen nicht haben.
+
 ### Kleinere Berichtigungen
 
 * **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre

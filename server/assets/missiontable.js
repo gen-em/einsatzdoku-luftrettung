@@ -385,5 +385,11 @@ const EdMissionTable = (() => {
     };
   }
 
-  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt, artSymbol };
+  /* zelleGeschuetzt ist seit Web 7.2.0 mit dabei: index.php baut seine Zeile
+     selbst (sie fuehrt die Katalogspalten aus DAY_COLS, die diese Tabelle
+     nicht kennt), soll die drei geschuetzten Spalten aber genauso zeigen wie
+     Suche und Zeitraum-Uebersicht — Warnzeichen statt Gedankenstrich, wenn
+     die Angaben da, aber nicht lesbar sind. */
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt,
+           artSymbol, zelleGeschuetzt };
 })();
