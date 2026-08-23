@@ -42,6 +42,23 @@ const EdMissionTable = (() => {
    * Sicherung.
    *
    * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
+   *
+   * MASKIERT WIRD HIER, NICHT IN DER FORMATIERUNG (Backlog Nr. 22, F-20).
+   * Bis Web 7.2.0 war das Maskieren Sache der aufrufenden Seite: Einsatzort
+   * und Diagnose kamen mit `v => esc(v)`, das Alter mit `v => v` — weil es
+   * eine Zahl ist. Aus dem Formular ist es das auch (parseInt), aus einer
+   * IMPORTDATEI nicht: assets/import.js übernimmt `pat.age` als rohen
+   * Zellenwert, und die Zelle wird per innerHTML gesetzt. Markup in der
+   * Alterspalte einer Importdatei lief damit in dem Fenster los, in dem der
+   * Inhaltsschlüssel liegt. Der Server kann davon nichts sehen — er kennt
+   * nur Chiffretext.
+   *
+   * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
+   * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,
+   * und die nächste neue Spalte hätte dieselbe Wahl noch einmal gehabt.
+   * `formatiere` bekommt den Wert jetzt BEREITS MASKIERT und darf ihn nur
+   * noch umschichten — wer rohes Markup braucht, kann diese Funktion nicht
+   * benutzen (heute braucht das niemand).
    */
   function zelleGeschuetzt(m, wert, formatiere, klassen) {
     const kl = klassen ? klassen + ' ' : '';
@@ -50,7 +67,8 @@ const EdMissionTable = (() => {
            + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
     }
     const leer = wert == null || wert === '';
-    return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : formatiere(wert)}</td>`;
+    const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
+    return `<td class="${kl}${leer ? 'dash' : ''}">${text}</td>`;
   }
   function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
   function fmtDur(s) {
@@ -134,13 +152,13 @@ const EdMissionTable = (() => {
       zelle: m => `<td class="c-mid">${fmtDur(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._ort, v => esc(v)) },
+      zelle: m => zelleGeschuetzt(m, m._ort) },
     { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => zelleGeschuetzt(m, m._age, v => v, 'mono c-mid') },
+      zelle: m => zelleGeschuetzt(m, m._age, null, 'mono c-mid') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._dx, v => esc(v)) },
+      zelle: m => zelleGeschuetzt(m, m._dx) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
        Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
        Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
@@ -389,7 +407,9 @@ const EdMissionTable = (() => {
      selbst (sie fuehrt die Katalogspalten aus DAY_COLS, die diese Tabelle
      nicht kennt), soll die drei geschuetzten Spalten aber genauso zeigen wie
      Suche und Zeitraum-Uebersicht — Warnzeichen statt Gedankenstrich, wenn
-     die Angaben da, aber nicht lesbar sind. */
+     die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
+     die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
+     gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
   return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt,
            artSymbol, zelleGeschuetzt };
 })();

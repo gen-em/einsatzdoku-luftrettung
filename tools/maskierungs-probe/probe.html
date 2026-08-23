@@ -1,0 +1,103 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Maskierungsprobe Altersfeld (Backlog Nr. 22 / F-20)</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 2rem; }
+  table { border-collapse: collapse; margin-bottom: 1.5rem; }
+  td, th { border: 1px solid #bbb; padding: .25rem .5rem; }
+  h2 { margin-top: 2rem; }
+  .dash { color: #888; }
+</style>
+
+<h1>Maskierungsprobe Altersfeld</h1>
+<p>Nachgebautes Markup der Einsatztabelle. Links der Stand <b>Web 7.2.0</b>
+   (<code>v =&gt; v</code> beim Alter), rechts der Stand <b>Web 7.2.1</b>
+   (Maskierung in <code>zelleGeschuetzt()</code>).</p>
+
+<h2>Vorher (Web 7.2.0)</h2>
+<table id="vorher"><tbody></tbody></table>
+
+<h2>Nachher (Web 7.2.1)</h2>
+<table id="nachher"><tbody></tbody></table>
+
+<script src="../../server/assets/html.js"></script>
+<script src="../../server/assets/missiontable.js"></script>
+<script>
+'use strict';
+
+/* Zaehler fuer ausgeloestes Markup. Die Nutzlast erhoeht ihn, sobald der
+   Browser sie als Markup verarbeitet — nicht, wenn sie als Text erscheint. */
+window.__treffer = { vorher: 0, nachher: 0 };
+
+/* ---------------- Stand Web 7.2.0, woertlich nachgebaut ----------------- */
+const escAlt = EdHtml.escape;
+function zelleGeschuetztAlt(m, wert, formatiere, klassen) {
+  const kl = klassen ? klassen + ' ' : '';
+  if (m._patFehler) {
+    return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
+         + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
+  }
+  const leer = wert == null || wert === '';
+  return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : formatiere(wert)}</td>`;
+}
+function zeileAlt(m) {
+  return zelleGeschuetztAlt(m, m._ort, v => escAlt(v))
+       + zelleGeschuetztAlt(m, m._age, v => v, 'mono c-mid')
+       + zelleGeschuetztAlt(m, m._dx,  v => escAlt(v));
+}
+
+/* ---------------- Stand Web 7.2.1, echte Datei -------------------------- */
+const { zelleGeschuetzt } = EdMissionTable;
+function zeileNeu(m) {
+  return zelleGeschuetzt(m, m._ort)
+       + zelleGeschuetzt(m, m._age, null, 'mono c-mid')
+       + zelleGeschuetzt(m, m._dx);
+}
+
+/* ---------------- Faelle ------------------------------------------------ */
+/* Die Nutzlast traegt den Lauf, zu dem sie gehoert, FEST eingebaut.
+   Eine Zaehlung ueber eine globale "aktueller Lauf"-Variable waere falsch:
+   onerror laeuft erst, wenn beide Tabellen schon stehen — der Treffer aus der
+   Vorher-Tabelle wuerde dann dem Nachher-Lauf zugeschlagen. */
+function nutzlast(lauf) {
+  return '<img src=x onerror="window.__treffer.' + lauf + '++">';
+}
+
+function faelle(lauf) {
+  const P = nutzlast(lauf);
+  return [
+    { name: 'Angriffswert im Alter',
+      m: { _ort: 'Kempten', _age: '47' + P, _dx: 'Thoraxschmerz' } },
+    { name: 'Normalfall 47',
+      m: { _ort: 'Kempten', _age: 47, _dx: 'Thoraxschmerz' } },
+    { name: 'Alter leer (Gedankenstrich)',
+      m: { _ort: 'Kempten', _age: null, _dx: 'Thoraxschmerz' } },
+    { name: 'Alter 0 (Saeugling)',
+      m: { _ort: 'Kempten', _age: 0, _dx: 'Neugeborenes' } },
+    { name: 'nicht lesbar (Warnzeichen)',
+      m: { _patFehler: true, _ort: null, _age: null, _dx: null } },
+    { name: 'Angriffswert in Ort und Diagnose',
+      m: { _ort: P + 'Kempten', _age: 47, _dx: P + 'Sepsis' } }
+  ];
+}
+
+/* HTML je Fall festhalten, damit der Normalfall zeichenweise verglichen
+   werden kann (Nachweis 3). */
+window.__html = { vorher: [], nachher: [] };
+
+function zeichne(tabelleId, lauf, bauer) {
+  const tb = document.querySelector('#' + tabelleId + ' tbody');
+  faelle(lauf).forEach(f => {
+    const zellen = bauer(f.m);
+    window.__html[lauf].push(zellen);
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + EdHtml.escape(f.name) + '</td>' + zellen;
+    tb.appendChild(tr);
+  });
+}
+
+zeichne('vorher',  'vorher',  zeileAlt);
+zeichne('nachher', 'nachher', zeileNeu);
+
+window.__fertig = true;
+</script>
