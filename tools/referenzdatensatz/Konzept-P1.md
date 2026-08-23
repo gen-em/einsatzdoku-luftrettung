@@ -434,9 +434,9 @@ Seiten, kein Dialog, kein eingefügtes Element, keine Konsolenmeldung.
 **Was das Paket an Fehlern hervorgebracht hat.** Drei, davon zwei in der
 Anwendung: F-P1-G (CSV-Umlauf nicht verlustfrei bei führendem `=`,
 offen, Vorschlag steht), F-P1-H (sechs Felder gingen zwischen
-Prüftabelle und Nutzlast verloren — **behoben in Web 7.2.1**) und
+Prüftabelle und Nutzlast verloren — **behoben in Web 7.2.2**) und
 F-P1-I (**Cross-Site-Scripting** über das Altersfeld in allen drei
-Einsatztabellen — **behoben in Web 7.2.2**). Beide Korrekturen sind
+Einsatztabellen — **ausgeliefert als Web 7.2.1**). Beide Korrekturen sind
 maschinell gegen den alten Stand gegengeprüft: Die Prüfmittel melden
 dort genau die Fehler, hier keinen.
 
@@ -493,7 +493,7 @@ Befunde zählt, zählt immer nur, was die anderen Befunde durchlassen.
 Gründen. Der Bericht ist nicht leer, und das ist die richtige Auskunft — er
 soll nicht leer aussehen, sondern stimmen. Erfüllt sind: das Werkzeug, seine
 Proben, der Umlauf selbst und die Ausnahmeliste. Offen ist die Entscheidung
-zu Backlog Nr. 26 und 27.
+zu Backlog Nr. 27 und 28.
 
 **Ebenfalls beim Nachmessen aufgefallen.** Drei Regeln der CSV-Ausnahmeliste
 (`crew_p2` in Einsätzen, Tagesbesatzung und Diensttagen) haben nie
@@ -604,8 +604,8 @@ Bedienweg/Erwartung/Bedeutung); Doku in sich konsistent.
 | Verzeichnisstruktur | `docs/Technik.md` 2 — `tools/referenzdatensatz/` und `server/demo/` eingetragen |
 | Runbook | `docs/Technik.md` 7 — einrichten, zurücksetzen, nach einem Datensatz-Update auffrischen |
 | Bedienung | `docs/Handbuch.md` 3.2 |
-| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.1, 7.2.2, 7.2.3, 7.3.0 |
-| Backlog | Nr. 22–28 neu; Nr. 17 um die Messgrundlage aus P1 ergänzt |
+| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.2, 7.2.3, 7.3.0, 7.3.1. **Nicht** 7.2.1: Diese Nummer trägt die Maskierung des Altersfelds, die parallel als Sofortpaket über `main` ausgeliefert wurde (s. F-P1-I) |
+| Backlog | Nr. 23–30 neu; Nr. 17 um die Messgrundlage aus P1 ergänzt. **Nicht** Nr. 22 — die trägt das parallele Sofortpaket von `main`; die Nummern dieser Phase sind beim Zusammenführen um eins gerückt |
 
 **Konsistenz-Gegenlesen.** Ein Widerspruch ist dabei aufgefallen und behoben:
 README und `Handbuch.md` 5 sagten die Ende-zu-Ende-Verschlüsselung
@@ -630,7 +630,7 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt, zweifach** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch. In B5 ein zweites Mal, ungeplant: Nach dem versehentlichen Löschen des Referenzkontos (F-P1-J) stand der vollständige Bestand in rund vier Minuten wieder — wieder 526 Anfragen, 0 Fehler |
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
-| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I, Web 7.2.2). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
+| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I; ausgeliefert als Web 7.2.1, s. dort). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
 | P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — zuletzt 8 797 Einzelvergleiche, 858 erwartete, **6 unerklärte** Abweichungen (bei Abschluss B5: 8 617 / 844 / **9**). Die sechs sind zwei Befunde: F-P1-L (4 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Der dritte, F-P1-K, ist mit **Web 7.3.1** behoben; seine vier Meldungen sind weg, und der vierte Fall von F-P1-L wurde dadurch überhaupt erst sichtbar. Nicht als Ausnahme geführt — sie sind behebbar |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
 | P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | **erfüllt** — Anlegen aus der Fixture in 6,0 s (87/100/16, 0 übersprungen); Export gegen die Referenz: CSV 9 589 und edbak 269 439 Vergleiche, **je 0 Abweichungen** |
@@ -777,7 +777,7 @@ Phase entschieden.
 ### F-P1-H — Der CSV-Rückimport verlor sechs Felder zwischen Anzeige und Absenden
 
 **Fundort:** `server/assets/import.js:671` (`UEBERNAHME`) gegen
-`:439` (`EINFACHE_ZIELE`). **Behoben in Web 7.2.1.**
+`:439` (`EINFACHE_ZIELE`). **Behoben in Web 7.2.2.**
 
 **Sache:** `import.js` führte zwei Feldlisten. `EINFACHE_ZIELE` sagt, welche
 Werte beim Lesen der Datei nach `zeile.mission` wandern; `UEBERNAHME` sagt,
@@ -815,7 +815,7 @@ genau die sechs Felder.
 ### F-P1-I — Cross-Site-Scripting über das Altersfeld in allen drei Einsatztabellen
 
 **Fundort:** `server/assets/missiontable.js:140` und
-`server/index.php:338`. **Behoben in Web 7.2.2.**
+`server/index.php:338`. **Behoben — ausgeliefert als Web 7.2.1.**
 
 **Sache:** `zelleGeschuetzt()` nahm eine Formatierfunktion entgegen; damit
 lag die Entscheidung über die HTML-Maskierung an der Aufrufstelle.
@@ -849,11 +849,34 @@ Angriffswert dauerhaft mitführt, darf nicht auf einer Installation liegen,
 in der er ausgeführt wird. Der Demo-Account (B6) läuft auf dem
 Produktivserver.
 
-**Behoben:** Die Formatierfunktion ist ersatzlos entfallen;
-`zelleGeschuetzt()` maskiert selbst und ausnahmslos. Alle drei Spalten
-zeigten den Wert ohnehin unverändert an. Die unsichere Fassung ist damit
-nicht mehr schreibbar. `browser/angriffswerte.mjs` prüft es wiederholbar
-und meldet gegen den alten Stand sechs Befunde über drei Seiten.
+**Behoben — aber nicht von dieser Arbeitslinie.** Dieselbe Lücke ist
+zeitgleich in einem Sofortpaket auf `main` gefunden und als **Web 7.2.1**
+ausgeliefert worden (dort Befund F-20, Backlog Nr. 22). Beim
+Zusammenführen des P1-Zweigs hat diese Fassung den Vorrang bekommen: Sie
+war zuerst auf dem Produktivserver, und die Lücke ein zweites Mal anders
+zu schließen wäre eine Änderung ohne Gewinn gewesen.
+
+**Die beiden Fassungen unterscheiden sich in einem Punkt**, und der ist
+festzuhalten, weil dieses Dokument sonst etwas anderes beschriebe als der
+Code tut:
+
+| | P1-Zweig (verworfen) | `main`, Web 7.2.1 (gilt) |
+|---|---|---|
+| Signatur | `zelleGeschuetzt(m, wert, klassen)` | `zelleGeschuetzt(m, wert, formatiere, klassen)` |
+| Maskierung | in der Funktion, Parameter entfernt | in der Funktion, `formatiere` bekommt den Wert **bereits maskiert** |
+| Aufrufstelle Alter | `zelleGeschuetzt(m, m._age, 'mono c-mid')` | `zelleGeschuetzt(m, m._age, null, 'mono c-mid')` |
+
+Beide schließen die Lücke an derselben Stelle — in der Funktion, nicht an
+der Aufrufstelle. Der P1-Zweig ging einen Schritt weiter und nahm den
+Parameter ganz weg, damit die unsichere Fassung nicht mehr *schreibbar*
+ist; `main` behält ihn für künftige Formatierungen und maskiert davor.
+Heute benutzt ihn keine Aufrufstelle. Wer ihn eines Tages benutzt, bekommt
+maskierten Text — die Lücke lässt sich damit nicht wieder aufreißen, wohl
+aber ein `<b>` um einen Wert legen.
+
+`browser/angriffswerte.mjs` prüft die ausgelieferte Fassung wiederholbar
+und meldet gegen den Stand davor sechs Befunde über drei Seiten. Die
+Messung gilt unverändert: Sie misst das Ergebnis, nicht die Signatur.
 
 **Bemerkenswert an der Sache:** Der Fund ist der Zweck von R20 — die
 Entscheidung E-P1-15 hat genau das geleistet, wofür sie da war. Zugleich
@@ -973,7 +996,7 @@ erhöht.
   `einsatzdatum` statt auf `null`; der irreführende Kommentar ist durch die
   Begründung ersetzt, die tatsächlich trägt (zwei Daten, zwei Aufgaben).
 - `assets/import.js`: `einsatzdatum` steht in `EINFACHE_ZIELE` und im
-  Zeilengerüst. Über die abgeleitete Liste `UEBERNAHME` (F-P1-H, Web 7.2.1)
+  Zeilengerüst. Über die abgeleitete Liste `UEBERNAHME` (F-P1-H, Web 7.2.2)
   reicht es sich von selbst weiter — das neue Feld musste an **einer**
   Stelle eingetragen werden, nicht an zweien. Die Behebung von F-P1-H hat
   sich hier zum ersten Mal ausgezahlt.
@@ -990,7 +1013,7 @@ erhöht.
 858 erwartete, **6 unerklärte** (vorher 8 617 / 844 / 9). Die vier Meldungen
 dieses Funds sind weg; der Einsatz vom 25.10. stimmt in **allen** Feldern
 überein, beim Einsatz vom 29.03. bleibt allein der Zeilenumbruch der Notiz
-(F-P1-L). Backlog Nr. 25 steht unter *Erledigt*.
+(F-P1-L). Backlog Nr. 26 steht unter *Erledigt*.
 
 **Nachwirkung auf die Messung anderer Funde:** F-P1-L war mit 3 Fällen
 gemessen; es sind 4. Der vierte hing an dem Einsatz, den dieser Fund aus dem
@@ -1024,7 +1047,7 @@ lesbar, nur seine Gliederung geht verloren.
 
 **Vorschlag:** ein eigener Parser `trimMehrzeilig`, der Leerraum innerhalb
 einer Zeile zusammenzieht und Umbrüche stehen lässt, für die Spalte `notizen`
-(Einsatz und Diensttag). Backlog Nr. 26.
+(Einsatz und Diensttag). Backlog Nr. 27.
 
 ---
 
@@ -1054,7 +1077,7 @@ die Abdeckungsmatrix mit „nicht abgeschlossener Einsatz" absichtlich enthält.
 
 **Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die Spalte
 führt; „Spalte fehlt" und „Zelle leer" beim `ende` unterscheiden. Backlog
-Nr. 27.
+Nr. 28.
 
 ---
 
@@ -1077,13 +1100,13 @@ Bauart sind und trotzdem nirgends stehen:
   gar nicht entstehen kann).
 
 Dazu die beiden Fälle aus B4, die dasselbe Muster haben: der
-Formelschutz-Apostroph (F-P1-G) und — bis Web 7.2.1 — sechs stillschweigend
+Formelschutz-Apostroph (F-P1-G) und — bis Web 7.2.2 — sechs stillschweigend
 fallengelassene Felder (F-P1-H).
 
 **Blockierend:** nein. Es sind Ausnahmen der Ausnahmeliste, nicht des
 Verhaltens.
 
-**Vorschlag:** Abschnitt 5.1 um beide ergänzen. Backlog Nr. 28.
+**Vorschlag:** Abschnitt 5.1 um beide ergänzen. Backlog Nr. 29.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*

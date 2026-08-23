@@ -99,7 +99,7 @@ Einzelvergleiche. Der Einsatz vom 25.10. stimmt danach in **allen** Feldern
 
 Nebenbefund: Von den sechs verbliebenen Abweichungen ist eine vorher gar nicht
 sichtbar gewesen. F-P1-L (mehrzeilige Notizen verlieren ihre Zeilenumbrüche,
-Backlog Nr. 26) war mit 3 Fällen gemessen; es sind **4**. Der vierte hing an
+Backlog Nr. 27) war mit 3 Fällen gemessen; es sind **4**. Der vierte hing an
 einem Einsatz, den F-P1-K aus dem Vergleich gehoben hatte — ein Fehler hatte
 die Messung eines zweiten verdeckt. Alle vier verlieren genau einen Umbruch
 bei unveränderter Zeichenzahl (164/253/119/150).
@@ -312,7 +312,7 @@ dass danach jede Uhr neu zu koppeln ist.
 `created_at` ist der unangenehmste Fall: Es **wird** gesichert und beim
 Einspielen nicht geschrieben. Der Abschnitt führte `site_ele_m` als die
 einzige Asymmetrie dieser Art. Ob das Feld künftig mitgeschrieben oder aus
-der Sicherung gestrichen wird, ist offen — Backlog Nr. 24. Geändert wurde
+der Sicherung gestrichen wird, ist offen — Backlog Nr. 25. Geändert wurde
 hier nur die Beschreibung, nicht das Verhalten.
 
 ### Geprüft
@@ -331,78 +331,6 @@ gezählt. `days[].id` wurde gegen eine erzeugte Sicherung geprüft: vorhanden,
 ganze Zahl.
 
 ## [Web 7.2.2] — 2026-08-23
-
-**Cross-Site-Scripting in den Einsatztabellen.** Die Spalte „Alter" gab ihren
-Wert unmaskiert in die Seite. Betroffen waren alle drei Tabellen, die Einsätze
-zeigen: Tagesübersicht, Einsatzsuche und Zeitraum-Übersicht. Keine Migration.
-
-### Was passiert ist
-
-`zelleGeschuetzt()` in `assets/missiontable.js` baut die Zellen für die drei
-entschlüsselten Spalten — Einsatzort, Alter, Diagnose. Sie nahm bis hierher
-eine Formatierfunktion entgegen, und damit lag die Entscheidung über die
-Maskierung an der **Aufrufstelle**. Einsatzort und Diagnose gaben `v => esc(v)`,
-das Alter gab `v => v`.
-
-Das war keine Nachlässigkeit, sondern eine Annahme: Ein Alter ist eine Zahl,
-und eine Zahl muss man nicht maskieren. Die Annahme hält für die regulären
-Schreibwege — das Formular hat `type="number"`, und der CSV-Import verwirft
-über `PARSERS.alterJahre` alles, was keine ganze Zahl ist. Sie hält aber nicht
-für das **Feld**: `age` liegt im `pat_blob`, und der ist freies JSON. Der
-Server sieht ihn nie im Klartext und kann ihn deshalb grundsätzlich nicht
-prüfen — das ist der Kern der Ende-zu-Ende-Verschlüsselung, nicht ihr Mangel.
-
-Der praktische Weg hinein ist die **Wiederherstellung einer Sicherung**
-(`api/backup_restore.php`): Der innere Chiffretext wird unverändert
-übernommen, wie es sein muss. Wer eine Sicherung mit
-`<img src=x onerror="…">` im Altersfeld einspielt, führt das Skript beim
-nächsten Blick in die Einsatzliste aus. Im Adminbereich ist das besonders
-unangenehm: „Einspielen" schreibt eine **fremde** Sicherung in ein Konto — die
-Person, die das Skript ausführt, ist dann nicht die, von der die Datei stammt.
-
-Die Einsatzseite war nicht betroffen: `EdPat.alterText()` gibt für einen nicht
-in eine Zahl auflösbaren Wert `null` zurück, und was sie ausgibt, maskiert sie.
-
-### Was geändert wurde
-
-Die Formatierfunktion ist ersatzlos entfallen. `zelleGeschuetzt(m, wert,
-klassen)` maskiert den Wert jetzt selbst, ausnahmslos. Alle drei Spalten
-zeigten den Wert ohnehin unverändert an — es gab nichts zu formatieren, nur
-etwas zu vergessen.
-
-Damit ist die unsichere Fassung nicht mehr *schreibbar*: Es gibt keinen
-Parameter mehr, über den sich die Maskierung umgehen ließe. Eine einzelne
-korrigierte Zeile hätte die Lücke ebenso geschlossen und die Bauart behalten,
-die sie hervorgebracht hat.
-
-`index.php` baut seine Tagestabelle mit derselben Funktion und ist
-mitgeändert; suche.php und zeitraum.php ziehen ihre Spalten aus
-`missiontable.js` und brauchten keine Änderung.
-
-### Wer nachbessern muss
-
-Niemand — der Fehler lag in der Anzeige, nicht im Bestand. Wer zwischen Web
-4.0.0 und 7.2.1 eine Sicherung **fremder Herkunft** eingespielt hat, sollte
-den Bestand einmal ansehen; ein manipulierter Wert steht danach weiterhin im
-Altersfeld, ist aber inert.
-
-### Geprüft
-
-Im Browser mit dem Referenzdatensatz, der im Altersfeld eines Einsatzes
-absichtlich `<img src=x onerror="alert('R20-alter')">` trägt (P1, R20).
-`window.alert`, `confirm` und `prompt` werden vor dem ersten Seitenskript
-ersetzt und protokolliert; zusätzlich wird gezählt, ob Elemente aus der
-Nutzlast im Dokument stehen.
-
-Gegen den alten Stand gehalten: drei Seiten, je ein ausgelöster Dialog und ein
-eingefügtes `<img>` — sechs Befunde. Gegen den neuen Stand: 42 Einzelprüfungen
-über sechs Seiten, kein Dialog, kein eingefügtes Element, keine
-Konsolenmeldung. Die Gegenprobe läuft mit: Der Wert muss auf mindestens einer
-Seite **sichtbar** sein, sonst hieße „kein Dialog" nur „nichts gerendert".
-Das Prüfmittel steht als `tools/referenzdatensatz/browser/angriffswerte.mjs`
-im Repositorium und ist wiederholbar.
-
-## [Web 7.2.1] — 2026-08-23
 
 **Ein stiller Datenverlust im CSV-Rückimport.** Aufgefallen beim Aufbau des
 Referenzdatensatzes (Phase P1): Ein Einsatz, der über `import.php` aus einer
@@ -470,6 +398,133 @@ dauerhaft maschinell (`tools/referenzdatensatz/generator/pruefen.py`, Prüfung 5
 Sie liest beide Listen aus `assets/import.js` und meldet jedes Feld, das
 gelesen, aber nicht weitergereicht wird. Gegen den alten Stand gehalten meldet
 sie genau die sechs Felder, gegen den neuen keines.
+## [Web 7.2.1] — 2026-08-23
+
+**Eine Sicherheitskorrektur, sonst nichts.** Sofortpaket zu Backlog Nr. 22,
+vorgezogen vor Phase P1. Kein neues Feld, kein Datenmodell, **keine
+Migration**, keine Handlung der Betreiberin außer dem Deploy.
+
+Die Lücke bestand **seit Web 5.2.0** — seit die gemeinsame Einsatztabelle
+(`assets/missiontable.js`) eingeführt wurde. Die Aufräumrunde P0 hat sie weder
+verursacht noch verschärft; sie hat sie **gefunden** (Befund F-20).
+
+### Das Alter ging unmaskiert in die Einsatztabellen
+
+`zelleGeschuetzt()` maskierte Einsatzort und Diagnose über `esc()`, das Alter
+aber nicht — dort stand `v => v`, weil ein Alter eine Zahl ist. Über das
+Einsatzformular ist es das auch: `einsatz_form.php` schickt es durch
+`parseInt()`. Über den **Import** nicht: `assets/import.js` übernimmt `pat.age`
+als rohen Zellenwert und verschlüsselt ihn unverändert.
+
+Und die Zelle wird per `innerHTML` gesetzt. Eine Importdatei mit Markup in der
+Alterspalte führte damit Skript aus — in genau dem Fenster, in dem der
+entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
+bekommt nur Chiffretext, prüfen kann er ihn nicht. Das ist der Preis der
+Ende-zu-Ende-Verschlüsselung, und er verlangt, dass der Browser seine Seite
+hält.
+
+**Maskiert wird jetzt in `zelleGeschuetzt()` selbst**, nicht mehr an der
+Aufrufstelle. Der Grund für diese Wahl steckt im Fehler: Die Entscheidung, ob
+eine Angabe maskiert wird, war an zwei von sechs Aufrufstellen falsch
+getroffen — und die nächste neue Spalte hätte sie ein siebtes Mal treffen
+müssen. `formatiere` bekommt den Wert jetzt bereits maskiert und darf ihn nur
+noch umschichten. Damit sind alle drei Einsatztabellen — Tagesübersicht, Suche,
+Zeitraum-Übersicht — an **einer** Stelle abgesichert.
+
+**Für gültige Eingaben ändert sich nichts.** Das ist nicht behauptet, sondern
+gemessen: Das Zellen-HTML ist für `47`, für den leeren Wert (Gedankenstrich),
+für `0` und für den nicht lesbaren Fall (Warnzeichen) zeichengleich zum Stand
+7.2.0. Der Angriffswert wurde vorher als Markup ausgeführt und erscheint jetzt
+als Text (`tools/maskierungs-probe/`, Chromium).
+
+### Der ganze Importpfad ist durchgesehen — ein Fund, sonst keiner
+
+32 Ausgabestellen mit `innerHTML` und Verwandtem, in 23 eigenen Skriptdateien
+und allen Seiten unter `server/`. Weitere Senken (`srcdoc`, `eval`,
+`new Function`, `createContextualFragment`) kommen im Projekt nicht vor.
+
+Die Abgleichs-/Vorschauansicht des Imports hält: Der rohe Zellenwert der Datei
+steht dort in einer **Attributposition** (`<input value="…">`) und geht durch
+`esc()`. Dass das trägt, ist keine Selbstverständlichkeit, sondern das Verdienst
+der Zusammenführung aus Web 4.6.0 — `EdHtml.escape` maskiert fünf Zeichen, also
+auch beide Anführungszeichen. Die früheren verstreuten Fassungen mit drei
+Zeichen hätten hier nicht gereicht. Die vollständige Liste der geprüften
+Stellen steht in `docs/Pruefung-Sofortpaket-22.md`, damit die Aussage „keine
+weiteren Funde" nachprüfbar bleibt und nicht geglaubt werden muss.
+
+### Der neue Datenschlüssel blieb nach dem Abmelden liegen
+
+Nachgegangen wurde der Frage, ob die Keyguard-Einträge `pckb`/`pckt` beim
+Abmelden geräumt werden müssen. **Sie müssen nicht:** `pckb` ist ein gekürzter
+SHA-256 über die Schlüssel*hülle* — und die ist kein Geheimnis, der Server
+schreibt sie jeder Seite mit; `pckt` ist ein Zeitstempel. Kein
+Schlüsselmaterial, nichts davon Ableitbares. Sie bleiben deshalb bewusst
+liegen, und die toten Exporte `EdKeyGuard.beenden()`/`raeumen()` bleiben
+unangetastet (Backlog Nr. 21).
+
+Die Frage hat aber etwas anderes ans Licht gebracht. `einstellungen.php` legt
+beim Passwortwechsel den **neuen Datenschlüssel** unter `edk_neu` im
+`sessionStorage` ab und löst das Fach beim nächsten Aufruf desselben Reiters
+wieder auf. Kommt dieser Aufruf nie — die Übertragung bricht ab, die Nutzerin
+geht zurück oder meldet sich ab —, blieb ein vollwertiger Datenschlüssel liegen,
+und zwar über das Abmelden hinaus: `EdCrypto.clearSession()` kannte nur `edk`,
+`pck` und `edkvor`. Das ist ein echter Schlüsselrest, und er widerspricht der
+Zusage, dass nach dem Abmelden keiner bleibt.
+
+Behoben mit **einer Zeile** in `clearSession()`. Auf dem auflösenden Weg ändert
+sie nichts: Dort wird `edk_neu` ausgelesen und entfernt, bevor `clearSession()`
+läuft. Belegt in Chromium: Alle sechs Fächer belegt, dann der Abmeldeweg
+darüber — vorher blieb `edk_neu` übrig, jetzt nur noch `pckb` und `pckt`
+(`tools/abmelde-probe/`).
+
+### Berichtigt
+
+Backlog Nr. 17 (Mengenbremse für `ingest.php`) war an „P1/P2" übergeben. Das
+war überholt: Zuständig ist **P5** (Rahmenplan R19); P1 misst nur das
+Aufrufverhalten und legt keine Grenze fest.
+
+### Nachtrag: derselbe Befund ein zweites Mal, auf einem anderen Weg
+
+Diese Lücke ist in **Phase P1** unabhängig noch einmal gefunden worden (dort
+Fund F-P1-I), bevor beide Arbeitslinien voneinander wussten. Der Eintrag ist
+nachträglich um das ergänzt, was die zweite Fassung mitbrachte und diese hier
+nicht hatte.
+
+**Ein zweiter Weg hinein: die Wiederherstellung einer Sicherung.** Oben steht
+der Import als Vektor. Er ist nicht der einzige — `api/backup_restore.php`
+übernimmt den inneren Chiffretext unverändert, wie es sein muss. Wer eine
+Sicherung mit `<img src=x onerror="…">` im Altersfeld einspielt, führt das
+Skript beim nächsten Blick in die Einsatzliste aus. Im **Adminbereich** wiegt
+das schwerer als beim Import: Dort schreibt „Einspielen" eine *fremde*
+Sicherung in ein Konto — die Person, die das Skript ausführt, ist dann nicht
+die, von der die Datei stammt.
+
+**Die Einsatzseite war nicht betroffen.** `EdPat.alterText()` gibt für einen
+nicht in eine Zahl auflösbaren Wert `null` zurück, und was sie ausgibt,
+maskiert sie. Betroffen waren genau die drei Tabellen.
+
+**Wer nachbessern muss: niemand.** Der Fehler lag in der Anzeige, nicht im
+Bestand. Wer eine Sicherung fremder Herkunft eingespielt hat, sollte den
+Bestand einmal ansehen; ein manipulierter Wert steht danach weiterhin im
+Altersfeld, ist aber inert.
+
+**Zweite Messung, unabhängig von `tools/maskierungs-probe/`.** Der
+Referenzdatensatz der Phase P1 trägt im Altersfeld eines Einsatzes absichtlich
+`<img src=x onerror="alert('R20-alter')">`.
+`tools/referenzdatensatz/browser/angriffswerte.mjs` ersetzt `window.alert`,
+`confirm` und `prompt` **vor** dem ersten Seitenskript, protokolliert die
+Aufrufe und zählt zusätzlich, ob Elemente aus der Nutzlast im Dokument stehen.
+
+Gegen den Stand 7.2.0 gehalten: drei Seiten, je ein ausgelöster Dialog und ein
+eingefügtes `<img>` — **sechs Befunde**. Gegen diese Fassung: **42
+Einzelprüfungen über sechs Seiten**, kein Dialog, kein eingefügtes Element,
+keine Konsolenmeldung. Die Gegenprobe läuft mit: Der Wert muss auf mindestens
+einer Seite **sichtbar** sein, sonst hieße „kein Dialog" nur „nichts
+gerendert".
+
+Zwei Prüfmittel, zwei Wege, ein Ergebnis. Das ist mehr wert als eine Messung,
+die man zweimal liest.
+
 
 ## [Web 7.2.0] — 2026-08-23
 

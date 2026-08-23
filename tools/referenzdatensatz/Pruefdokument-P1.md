@@ -224,8 +224,8 @@ zugehörigen Backlog-Punkte offen sind. Alles darüber hinaus ist neu.
 
 | Befund | Wirkung | gemessen | Backlog |
 |---|---|---|---|
-| **F-P1-L** | mehrzeilige Notizen verlieren ihre Zeilenumbrüche | 4 Notizen, je 1 Umbruch | Nr. 26 |
-| **F-P1-M** | `final = 0` wird zu 1, leeres `ende` zur Startzeit | je 1 | Nr. 27 |
+| **F-P1-L** | mehrzeilige Notizen verlieren ihre Zeilenumbrüche | 4 Notizen, je 1 Umbruch | Nr. 27 |
+| **F-P1-M** | `final = 0` wird zu 1, leeres `ende` zur Startzeit | je 1 | Nr. 28 |
 
 **Der dritte Befund ist weg.** F-P1-K (Einsätze über Mitternacht wandern beim
 CSV-Import 24 Stunden zurück, 2 Einsätze, 4 Meldungen) ist mit **Web 7.3.1**
@@ -243,12 +243,12 @@ deshalb der Blick auf die *anderen* Zahlen, nicht nur auf die behobene.
 Weiter offen, ohne Wirkung auf die Kreisläufe:
 
 - **F-P1-F** — `docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
-  Schreibweg annimmt (Backlog Nr. 22)
-- **F-P1-G** — Formelschutz-Apostroph beim Rückimport (Nr. 23)
-- **Nr. 24** — `missions.created_at` wird gesichert, kommt nicht zurück
+  Schreibweg annimmt (Backlog Nr. 23)
+- **F-P1-G** — Formelschutz-Apostroph beim Rückimport (Nr. 24)
+- **Nr. 25** — `missions.created_at` wird gesichert, kommt nicht zurück
 - **F-P1-N** — `Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr
-  (Nr. 28)
-- **Nr. 29** — der Papierkorb steht in keiner Sicherung. Entschieden ist, dass
+  (Nr. 29)
+- **Nr. 30** — der Papierkorb steht in keiner Sicherung. Entschieden ist, dass
   er mitsoll; ausgearbeitet als Paketvorschlag in `Konzept-P1.md`,
   Abschnitt 10. Bis dahin gilt: Eine Wiederherstellung leert den Papierkorb
   endgültig.

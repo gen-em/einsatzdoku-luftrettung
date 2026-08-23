@@ -387,7 +387,7 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
   bis Web 7.2.3 nirgends benannt, und dieser Abschnitt führte `site_ele_m`
   als die einzige Asymmetrie dieser Art. Ob `created_at` künftig
   mitgeschrieben oder aus der Sicherung gestrichen wird, ist offen
-  (Backlog Nr. 24).
+  (Backlog Nr. 25).
 
 **Was in der Sicherung gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**

@@ -172,4 +172,4 @@ zugewiesen. Darunter:
   Freitextfeldern (R20)
 
 Die Angriffswerte sind kein Scherz: Sie haben in dieser Phase ein echtes
-Cross-Site-Scripting gefunden (F-P1-I, behoben in Web 7.2.2).
+Cross-Site-Scripting gefunden (F-P1-I, ausgeliefert als Web 7.2.1).

@@ -109,19 +109,30 @@ declare(strict_types=1);
  * weisse Seite mit sechs Woertern, sondern auf eine Seite mit Kopfleiste und
  * Rueckweg.
  *
- * 7.2.1 behebt einen stillen Datenverlust im CSV-Rueckimport: gruppiere() in
+ * 7.2.1 ist eine SICHERHEITSKORREKTUR mit eng begrenztem Umfang
+ * (Sofortpaket Backlog Nr. 22, vor Phase P1). Das Alter ging als einzige der
+ * drei geschuetzten Spalten unmaskiert in die Einsatztabellen — ueber das
+ * Formular unerreichbar (parseInt), ueber den Import sehr wohl. Maskiert wird
+ * jetzt in zelleGeschuetzt() selbst statt an der Aufrufstelle. Dabei mit
+ * geraeumt: das Vormerkfach des Passwortwechsels (edk_neu), das den neuen
+ * Datenschluessel bis dahin ueber das Abmelden hinaus tragen konnte.
+ *
+ * Fuer gueltige Eingaben aendert sich NICHTS — das ist nicht behauptet,
+ * sondern gemessen (tools/maskierungs-probe/). Kein Schema, keine Migration,
+ * keine Handlung der Betreiberin ausser dem Deploy.
+ *
+ * NACHTRAG: Dieselbe Luecke ist in Phase P1 unabhaengig ein zweites Mal
+ * gefunden worden (Fund F-P1-I, mit dem Referenzdatensatz im Browser
+ * gemessen: gegen den Stand 7.2.0 sechs Befunde ueber drei Seiten, gegen
+ * diesen keiner bei 42 Einzelpruefungen). Zwei Wege, ein Befund — die
+ * Messung aus P1 belegt diese Fassung, sie hat sie nicht ausgeloest.
+ *
+ * 7.2.2 behebt einen stillen Datenverlust im CSV-Rueckimport: gruppiere() in
  * assets/import.js fuehrte eine zweite, von Hand gepflegte Feldliste neben
  * EINFACHE_ZIELE — und die sechs Felder der Etappe 2 (Transportart,
  * NA-Begleitung, Fehleinsatz, Zielkoordinate, Abfahrtortregel) waren dort nie
  * nachgetragen worden. Sie wurden gelesen, in der Prueftabelle angezeigt und
  * danach fallengelassen. Die Liste wird jetzt aus EINFACHE_ZIELE abgeleitet.
- *
- * 7.2.2 schliesst eine Cross-Site-Scripting-Luecke in den drei
- * Einsatztabellen: Die Spalte „Alter" gab ihren Wert unmaskiert aus, weil die
- * Aufrufstelle ihn fuer eine Zahl hielt. Er kommt aber aus dem pat_blob —
- * freiem JSON, das der Server nie sieht und deshalb auch nicht pruefen kann.
- * Die Maskierung liegt jetzt in zelleGeschuetzt() selbst; die
- * Formatierfunktion, ueber die sie umgangen werden konnte, gibt es nicht mehr.
  *
  * 7.2.3 berichtigt zwei Formatbeschreibungen, die etwas anderes sagten als
  * der Code tut: Die ausgelieferte LIESMICH.txt des CSV-Exports nannte die

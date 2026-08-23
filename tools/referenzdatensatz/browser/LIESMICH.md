@@ -123,6 +123,6 @@ Das Skript prüft genau das und ersetzt dafür `window.alert`, `confirm` und
 bliebe unbemerkt. Die Gegenprobe läuft mit: Mindestens eine Seite muss den
 Wert tatsächlich anzeigen, sonst wäre die Prüfung gegenstandslos.
 
-**Hier wurde ein echter Fehler gefunden** (F-P1-I, behoben in Web 7.2.2):
+**Hier wurde ein echter Fehler gefunden** (F-P1-I, ausgeliefert als Web 7.2.1):
 Die Spalte *Alter* gab ihren Wert unmaskiert aus. Gegen den Stand vor der
 Korrektur meldet das Skript sechs Befunde über drei Seiten.

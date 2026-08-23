@@ -66,9 +66,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
     `rate_misserfolg()`. Die drei übrigen offenen Endpunkte (`login`, `salt`,
     `reset`, `pair`) haben ihn. Gefunden in P0/A6 (dort F-16); die
-    Konzeptarbeit dazu ist an die Phasen P1/P2 (Sicherheit) übergeben, weil
+    Konzeptarbeit dazu ist an **Phase P5** übergeben (Rahmenplan R19), weil
     die richtige Grenze von der Uhr-Seite her zu bestimmen ist — eine Uhr, die
-    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden.
+    einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
+    nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
+    „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
     **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
     das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
     (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
@@ -105,7 +107,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine hinreichende Begründung — ein Feld kann für eine ältere Sicherung
     oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
     Freigabe.
-22. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
+23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
     Schreibweg annimmt.** Der Vertrag führt `beginn` unter den gültigen Werten
     von `events[].type`; `ingest.php:299` speichert das Ereignis **still
     nicht**, `einsatz_form.php:317` weist es ab. Beide begründen es gleich und
@@ -116,7 +118,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
-23. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
+24. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
     `Export-Format.md` 5.1 sagt, es sei es.** Der Export neutralisiert
     Formel-Anfangszeichen (`=`, `+`, `-`, `@`) mit einem vorangestellten `'`;
     der Rückweg entfernt es nicht wieder. Eine Zelle, die ohne diesen Schutz
@@ -126,7 +128,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ändern — ein Import, der Zeichen entfernt, schafft den nächsten stillen
     Verlust (ein echtes `'` am Textanfang verschwände). Gefunden in P1/B4
     (dort F-P1-G).
-24. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
+25. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
     zurück.** Die Spalte steht in der Sicherung (`backup_lib.php`,
     Spaltenliste der Einsätze); die Einspielroutine schreibt die Felder aus
     `mission_fields.php` plus `pat_blob` und `start_src` — `created_at` steht
@@ -137,7 +139,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
     oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
     nachgezogen. Gefunden in P1/B5.
-26. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
+27. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
     Parser `trim` (`assets/import.js`) ersetzt jede Folge von Leerraum durch
     ein Leerzeichen, Umbrüche eingeschlossen, und wird auf alle Textspalten
     angewandt. `notes` ist das einzige mehrzeilige Feld. Der Export quotet die
@@ -146,10 +148,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Vorschlag:** ein Parser `trimMehrzeilig` für die Notizspalten. Gefunden
     in P1/B5 (dort F-P1-L).
     *Zur Zahl:* Bis Web 7.3.0 waren es 3. Der vierte Fall hing an einem
-    Einsatz, den Nr. 25 aus dem Vergleich gehoben hatte — ein Fehler hatte die
-    Messung eines zweiten verdeckt. Sichtbar wurde er erst, als Nr. 25 behoben
+    Einsatz, den Nr. 26 aus dem Vergleich gehoben hatte — ein Fehler hatte die
+    Messung eines zweiten verdeckt. Sichtbar wurde er erst, als Nr. 26 behoben
     war.
-27. **`final = 0` und ein leeres `ende` werden beim CSV-Import
+28. **`final = 0` und ein leeres `ende` werden beim CSV-Import
     überschrieben.** `final` steht als Literal `1` im INSERT von
     `api/import_commit.php`; ein leeres `ende` wird auf `started_at` gesetzt.
     Anders als bei `manual` und `herkunft` sind das keine Aussagen über die
@@ -159,15 +161,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     **Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die
     Spalte führt; beim `ende` „Spalte fehlt" von „Zelle leer" unterscheiden.
     Gefunden in P1/B5 (dort F-P1-M).
-28. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
+29. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
     Nicht genannt sind: Ruhesegmente kommen nicht zurück (gemessen 95 → 0, es
     gibt keinen Importweg für sie), und der zweite Dienst eines Kalendertags
     geht verloren (gemessen 15 → 13 Diensttage) — `gruppiere()` bündelt nach
     Kalendertag, obwohl seit E9 zwei Dienste an einem Datum zulässig sind und
     die Datei mit `diensttag_id` den unterscheidenden Schlüssel mitführt.
-    Dazu der Formelschutz-Apostroph (Nr. 23). **Vorschlag:** Abschnitt 5.1
+    Dazu der Formelschutz-Apostroph (Nr. 24). **Vorschlag:** Abschnitt 5.1
     ergänzen. Gefunden in P1/B5 (dort F-P1-N).
-29. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
+30. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
     Admin-Sicherung.** Heute steht er in keiner: `edbak_build()` filtert
     `deleted_at IS NULL`, eine Wiederherstellung leert ihn endgültig (gemessen
     am Referenzdatensatz: 5 Einsätze, 5 Ruhesegmente, 1 Diensttag → nichts).
@@ -262,7 +264,43 @@ zutreffen.
     nicht beantwortet und bleibt offen; die drei Zeilen haben nicht darauf
     gewartet.
 
-25. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
+22. **Das Alter ging unmaskiert in die Einsatztabellen.**
+    *Erledigt mit Web 7.2.1.* `zelleGeschuetzt()` in
+    `server/assets/missiontable.js` maskierte Einsatzort und Diagnose über
+    `esc()`, das Alter aber nicht (`v => v`) — und die Zelle wird per
+    `innerHTML` gesetzt. Über das Formular war der Weg zu (`parseInt()` in
+    `einsatz_form.php`), über den Import nicht: `server/assets/import.js`
+    übernimmt `pat.age` als rohen Zellenwert. Eine Importdatei mit Markup in
+    der Alterspalte führte Skript in genau dem Fenster aus, in dem der
+    Inhaltsschlüssel liegt; der Server konnte nichts prüfen, er sieht nur
+    Chiffretext. Die Lücke bestand seit Web 5.2.0. Gefunden in P0 (dort F-20,
+    Konzept Abschnitt 8 und 9.3; Prüfdokument P0, Abschnitt 4.4).
+
+    Maskiert wird jetzt in `zelleGeschuetzt()` **selbst** statt an der
+    Aufrufstelle: Die Entscheidung war an zwei von sechs Aufrufstellen falsch
+    getroffen, und die nächste neue Spalte hätte sie erneut treffen müssen.
+    Damit sind alle drei Einsatztabellen an einer Stelle abgesichert.
+
+    Die Durchsicht des gesamten Importpfads (32 Ausgabestellen mit
+    `innerHTML` o. ä. in 23 eigenen Skriptdateien und allen Seiten unter
+    `server/`) ergab **keinen weiteren Fund**; die Liste steht in
+    `docs/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
+    das Vormerkfach des Passwortwechsels trug den neuen Datenschlüssel über
+    das Abmelden hinaus, was Punkt V-10 des Prüfdokuments P0 verbietet. Auch
+    das ist mit dieser Version behoben (eine Zeile in
+    `EdCrypto.clearSession()`).
+
+    Die Keyguard-Einträge `pckb`/`pckt` bleiben beim Abmelden **bewusst**
+    liegen: Sie tragen kein Schlüsselmaterial — `pckb` ist ein gekürzter
+    SHA-256 über die ohnehin öffentlich ausgelieferte Schlüsselhülle, `pckt`
+    ein Zeitstempel. Die toten Exporte `EdKeyGuard.beenden()`/`raeumen()`
+    bleiben unberührt (Nr. 21).
+
+    Vorher/Nachher-Proben unter `tools/maskierungs-probe/` und
+    `tools/abmelde-probe/`; die erste darf als Vorlage für den ständigen
+    Regressionsfall in P1 liegen bleiben (R20).
+
+26. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
     zurück.**
     *Erledigt mit Web 7.3.1.* Die Spalte `datum` wird ausgewertet und als
     `date_local` mitgesendet; `api/import_commit.php` nimmt sie als Bezugstag

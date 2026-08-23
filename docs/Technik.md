@@ -126,23 +126,27 @@ hems/
 │   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
+│   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
+│   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
-│   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
-│   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
-│   └── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
-│       │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
-│       ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
-│       │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
-│       ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
-│       │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
-│       ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
-│       ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
-│       │                  werte (P-07), Exporte, Abnahme der Demo-Funktion
-│       ├── referenz/      die eingecheckten Referenz-Exporte
-│       ├── vergleich/     Vergleichswerkzeug und Kreislauftests
-│       └── fixture/       erzeugt server/demo/fixture.json.gz
+│   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
+│   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
+│   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
+│   │   │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
+│   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
+│   │   │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
+│   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
+│   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
+│   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
+│   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
+│   │   │                  werte (P-07), Exporte, Abnahme der Demo-Funktion
+│   │   ├── referenz/      die eingecheckten Referenz-Exporte
+│   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
+│   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
+│                          Erscheinungsbild nicht verändert: Kaskadenvergleich
+│                          plus berechnete Stile im Browser (s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 

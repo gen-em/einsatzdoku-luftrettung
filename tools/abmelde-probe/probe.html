@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Abmeldeprobe — was bleibt im sessionStorage? (Backlog Nr. 22, S22-3)</title>
+<h1>Abmeldeprobe</h1>
+<pre id="ausgabe">läuft …</pre>
+<script src="/server/assets/crypto.js"></script>
+<script src="/server/assets/keyguard.js"></script>
+<script>
+'use strict';
+
+/* Alle Schluessel, die das Projekt im sessionStorage fuehrt. Vollstaendig
+   erhoben aus assets/crypto.js, assets/keyguard.js und einstellungen.php. */
+const FAECHER = {
+  'edk':     { wert: 'aa'.repeat(32), was: 'Datenschlüssel (hex)' },
+  'pck':     { wert: 'bb'.repeat(32), was: 'Inhaltsschlüssel (hex)' },
+  'edkvor':  { wert: JSON.stringify({ dk: 'cc'.repeat(32), tk: { t: 'x' } }),
+               was: 'Vormerkfach der stillen Anhebung — enthält den Datenschlüssel' },
+  'edk_neu': { wert: 'dd'.repeat(32),
+               was: 'Vormerkfach des Passwortwechsels — enthält den NEUEN Datenschlüssel' },
+  'pckb':    { wert: '0123456789abcdef', was: 'Keyguard: Kennung der Hülle (Hash)' },
+  'pckt':    { wert: '1750000000000',    was: 'Keyguard: Zeitpunkt des Entpackens' }
+};
+
+/* Schluesselmaterial im engeren Sinn: Was hiervon nach dem Abmelden liegen
+   bleibt, verletzt V-10 (Prüfdokument P0). */
+const MATERIAL = ['edk', 'pck', 'edkvor', 'edk_neu'];
+
+function fuellen() {
+  sessionStorage.clear();
+  Object.keys(FAECHER).forEach(k => sessionStorage.setItem(k, FAECHER[k].wert));
+}
+function uebrig() {
+  return Object.keys(FAECHER).filter(k => sessionStorage.getItem(k) !== null);
+}
+
+/* Stand vor der Aenderung: clearSession() kannte drei Faecher. */
+function clearSessionAlt() {
+  sessionStorage.removeItem('edk');
+  sessionStorage.removeItem('pck');
+  sessionStorage.removeItem('edkvor');
+}
+
+const ergebnis = {};
+
+fuellen();
+ergebnis.gefuellt = uebrig();
+clearSessionAlt();
+ergebnis.nachAlt = uebrig();
+
+fuellen();
+EdCrypto.clearSession();          // echte Datei, Stand 7.2.1
+ergebnis.nachNeu = uebrig();
+
+ergebnis.materialAlt = ergebnis.nachAlt.filter(k => MATERIAL.includes(k));
+ergebnis.materialNeu = ergebnis.nachNeu.filter(k => MATERIAL.includes(k));
+ergebnis.faecher = FAECHER;
+
+window.__ergebnis = ergebnis;
+document.getElementById('ausgabe').textContent = JSON.stringify(ergebnis, null, 2);
+window.__fertig = true;
+</script>

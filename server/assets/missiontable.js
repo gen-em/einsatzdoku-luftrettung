@@ -42,36 +42,33 @@ const EdMissionTable = (() => {
    * Sicherung.
    *
    * Jetzt:  –  keine Angaben      ⚠  vorhanden, aber nicht lesbar
+   *
+   * MASKIERT WIRD HIER, NICHT IN DER FORMATIERUNG (Backlog Nr. 22, F-20).
+   * Bis Web 7.2.0 war das Maskieren Sache der aufrufenden Seite: Einsatzort
+   * und Diagnose kamen mit `v => esc(v)`, das Alter mit `v => v` — weil es
+   * eine Zahl ist. Aus dem Formular ist es das auch (parseInt), aus einer
+   * IMPORTDATEI nicht: assets/import.js übernimmt `pat.age` als rohen
+   * Zellenwert, und die Zelle wird per innerHTML gesetzt. Markup in der
+   * Alterspalte einer Importdatei lief damit in dem Fenster los, in dem der
+   * Inhaltsschlüssel liegt. Der Server kann davon nichts sehen — er kennt
+   * nur Chiffretext.
+   *
+   * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
+   * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,
+   * und die nächste neue Spalte hätte dieselbe Wahl noch einmal gehabt.
+   * `formatiere` bekommt den Wert jetzt BEREITS MASKIERT und darf ihn nur
+   * noch umschichten — wer rohes Markup braucht, kann diese Funktion nicht
+   * benutzen (heute braucht das niemand).
    */
-  /* DIE MASKIERUNG STEHT HIER, NICHT AN DER AUFRUFSTELLE.
-   *
-   * Bis Web 7.2.1 nahm diese Funktion eine Formatierfunktion entgegen, und
-   * die Aufrufstelle entschied damit auch ueber die Maskierung: Einsatzort
-   * und Diagnose gaben `v => esc(v)`, das Alter gab `v => v`. Das war kein
-   * Versehen im Wortsinn, sondern eine Annahme — ein Alter ist eine Zahl,
-   * und Zahlen kann man nicht maskieren muessen.
-   *
-   * Die Annahme haelt fuer die regulaeren Schreibwege (das Formular hat
-   * type=number, der CSV-Import verwirft alles, was `alterJahre` nicht
-   * aufloest), aber sie haelt nicht fuer das FELD: `age` liegt im
-   * pat_blob, und der ist freies JSON, das der Server nie sieht. Eine
-   * wiederhergestellte Sicherung traegt dort, was in ihr steht. Ein
-   * `<img src=x onerror=…>` im Altersfeld wurde damit in der Einsatzsuche
-   * und in der Tagesuebersicht ausgefuehrt — im Browser derjenigen Person,
-   * die die Sicherung einspielt, und das ist im Adminbereich eine andere
-   * als die, von der die Datei stammt.
-   *
-   * Deshalb gibt es die Formatierfunktion nicht mehr. Alle drei Spalten
-   * zeigen ohnehin den Wert unveraendert an; wer hier je etwas formatieren
-   * will, formatiert TEXT, und die Maskierung passiert danach und immer. */
-  function zelleGeschuetzt(m, wert, klassen) {
+  function zelleGeschuetzt(m, wert, formatiere, klassen) {
     const kl = klassen ? klassen + ' ' : '';
     if (m._patFehler) {
       return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
            + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
     }
     const leer = wert == null || wert === '';
-    return `<td class="${kl}${leer ? 'dash' : ''}">${leer ? '–' : escape(wert)}</td>`;
+    const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
+    return `<td class="${kl}${leer ? 'dash' : ''}">${text}</td>`;
   }
   function fmtTag(iso) { const [y, m, d] = iso.split('-'); return `${d}.${m}.${y}`; }
   function fmtDur(s) {
@@ -158,7 +155,7 @@ const EdMissionTable = (() => {
       zelle: m => zelleGeschuetzt(m, m._ort) },
     { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => zelleGeschuetzt(m, m._age, 'mono c-mid') },
+      zelle: m => zelleGeschuetzt(m, m._age, null, 'mono c-mid') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
       zelle: m => zelleGeschuetzt(m, m._dx) },
@@ -410,7 +407,9 @@ const EdMissionTable = (() => {
      selbst (sie fuehrt die Katalogspalten aus DAY_COLS, die diese Tabelle
      nicht kennt), soll die drei geschuetzten Spalten aber genauso zeigen wie
      Suche und Zeitraum-Uebersicht — Warnzeichen statt Gedankenstrich, wenn
-     die Angaben da, aber nicht lesbar sind. */
+     die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
+     die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
+     gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
   return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt,
            artSymbol, zelleGeschuetzt };
 })();
