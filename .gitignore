@@ -34,3 +34,7 @@ tools/referenzdatensatz/**/__pycache__/
 # Zugang zum Konto.
 tools/referenzdatensatz/einspielen/lauf.json
 tools/referenzdatensatz/einspielen/*_rc.json
+# Laufprotokoll des Referenz-Exports (Zeitpunkt und Dateinamen des letzten
+# Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
+# das Protokoll ihres Entstehens nicht.
+tools/referenzdatensatz/referenz/.export_lauf.json

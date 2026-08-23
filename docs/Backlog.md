@@ -129,6 +129,44 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
     oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
     nachgezogen. Gefunden in P1/B5.
+25. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
+    zurück.** `api/import_commit.php` rechnet die Alarmzeit mit `addDays = 0`
+    auf den **Diensttag**; ein Einsatz um 01:38 eines Dienstes, der am Vortag
+    begann, landet damit vor dem Beginn dieses Dienstes. Das Formular macht es
+    richtig (`einsatz_form.php`, Abschnitt „TAGESWECHSEL"). Die Angabe, die
+    den Fehler behebt, steht in der Datei: Die Spalte `datum` führt das echte
+    Einsatzdatum und ist im Profil auf `target: null` gesetzt. Gemessen im
+    Kreislauf: 2 Einsätze, beide exakt 24 Stunden.
+    **Keine Formatfrage, sondern eine stille Datenverfälschung** auf einem
+    Weg, den `Export-Format.md` 5.1 verlustfrei nennt. **Vorschlag:** `datum`
+    auswerten, mit der Formularregel als Rückfall für Dateien ohne diese
+    Spalte. Ändert einen Schreibweg — gehört entschieden. Gefunden in P1/B5
+    (dort F-P1-K).
+26. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
+    Parser `trim` (`assets/import.js`) ersetzt jede Folge von Leerraum durch
+    ein Leerzeichen, Umbrüche eingeschlossen, und wird auf alle Textspalten
+    angewandt. `notes` ist das einzige mehrzeilige Feld. Der Export quotet die
+    Umbrüche korrekt; der Verlust entsteht beim Lesen. Gemessen: 3 Notizen,
+    je genau ein Umbruch, Zeichenzahl unverändert. **Vorschlag:** ein Parser
+    `trimMehrzeilig` für die Notizspalten. Gefunden in P1/B5 (dort F-P1-L).
+27. **`final = 0` und ein leeres `ende` werden beim CSV-Import
+    überschrieben.** `final` steht als Literal `1` im INSERT von
+    `api/import_commit.php`; ein leeres `ende` wird auf `started_at` gesetzt.
+    Anders als bei `manual` und `herkunft` sind das keine Aussagen über die
+    Entstehung, sondern über den Zustand — und die Datei widerspricht ihnen
+    ausdrücklich. Ein nicht abgeschlossener Einsatz gilt nach dem Umlauf als
+    abgeschlossen und bekommt eine erfundene Endzeit. Gemessen: je 1x.
+    **Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die
+    Spalte führt; beim `ende` „Spalte fehlt" von „Zelle leer" unterscheiden.
+    Gefunden in P1/B5 (dort F-P1-M).
+28. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
+    Nicht genannt sind: Ruhesegmente kommen nicht zurück (gemessen 95 → 0, es
+    gibt keinen Importweg für sie), und der zweite Dienst eines Kalendertags
+    geht verloren (gemessen 15 → 13 Diensttage) — `gruppiere()` bündelt nach
+    Kalendertag, obwohl seit E9 zwei Dienste an einem Datum zulässig sind und
+    die Datei mit `diensttag_id` den unterscheidenden Schlüssel mitführt.
+    Dazu der Formelschutz-Apostroph (Nr. 23). **Vorschlag:** Abschnitt 5.1
+    ergänzen. Gefunden in P1/B5 (dort F-P1-N).
 
 ---
 

@@ -1,0 +1,13 @@
+{
+  "name": "edbak-umlauf",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf Sicherung -> frisches Konto -> Sicherung. GEMESSEN am Referenzdatensatz (82 Einsaetze, 95 Ruhesegmente, 15 Diensttage, 52 484 Spurpunkte): 269 439 Einzelvergleiche, 15 Abweichungen, alle derselben Ursache. Jede Regel unten traegt die Zahl, mit der sie belegt ist.",
+  "regeln": [
+    {
+      "bereich": "days",
+      "feld": "device_id",
+      "art": "wert",
+      "nach": "None",
+      "begruendung": "GEMESSEN 15x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keiner Sicherung — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Das ist gewollt: Nach einer Wiederherstellung muss jede Uhr neu gekoppelt werden, und die day_refs verhindern trotzdem, dass ein spaeter eintreffender Upload den Diensttag erneut anlegt."
+    }
+  ]
+}

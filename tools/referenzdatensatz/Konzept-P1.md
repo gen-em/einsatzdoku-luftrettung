@@ -440,7 +440,7 @@ Einsatztabellen — **behoben in Web 7.2.2**). Beide Korrekturen sind
 maschinell gegen den alten Stand gegengeprüft: Die Prüfmittel melden
 dort genau die Fehler, hier keinen.
 
-### B5 — Referenz-Exporte, Vergleichswerkzeug, Kreislauftest
+### B5 — Referenz-Exporte, Vergleichswerkzeug, Kreislauftest — **ERLEDIGT, mit benannten Befunden**
 Referenz-Exporte erzeugen und einchecken (E-P1-12);
 Vergleichswerkzeug bauen (E-P1-13); Kreislauftest ausführen:
 Referenz-CSV in ein **frisches** Konto importieren → erneut
@@ -457,6 +457,41 @@ im LIESMICH.
 (nach Ausnahmeliste) durch; das Werkzeug meldet eine absichtlich
 eingebaute Testabweichung zuverlässig; Bedienung im LIESMICH
 beschrieben.
+
+**Ergebnis.** Referenz unter `referenz/` (CSV-Archiv mit personenbezogenen
+Angaben, ohne Archivpasswort, 171 GPX; edbak mit `nadokudemo0815`).
+Werkzeug unter `vergleich/` — `lesen.py`, `normalisieren.py`,
+`vergleichen.py`, `kreislauf.py`, Ausnahmelisten unter `ausnahmen/`.
+
+| Prüfung | Zahl |
+|---|---|
+| Selbstvergleich Archiv | 9 589 Einzelvergleiche, 0 Abweichungen |
+| Selbstvergleich Sicherung | 269 439 Einzelvergleiche, 0 Abweichungen |
+| Probe aufs Exempel | 10 / 10 je Format, Gegenproben eingeschlossen |
+| **Kreislauf Sicherung (P-09)** | 269 439 Vergleiche, **0 unerklärt**, 15 erwartet |
+| **Kreislauf CSV (P-08)** | 8 617 Vergleiche, **9 unerklärt**, 844 erwartet |
+
+**Die neun sind drei Befunde, keine Streuung** — F-P1-K (Einsätze über
+Mitternacht 24 Stunden zurück, 4 Meldungen für 2 Einsätze), F-P1-L
+(mehrzeilige Notizen verlieren ihre Umbrüche, 3) und F-P1-M (`final` und
+`ende` überschrieben, 2). Alle drei sind Fehler der Anwendung und **nicht**
+in die Ausnahmeliste aufgenommen worden: Eine Ausnahme, die sich beheben
+ließe, schreibt einen Fehler auf Dauer fest.
+
+**P-08 gilt damit als NICHT erfüllt.** Der Bericht ist nicht leer, und das
+ist die richtige Auskunft — er soll nicht leer aussehen, sondern stimmen.
+Erfüllt sind: das Werkzeug, seine Proben, der Umlauf selbst und die
+Ausnahmeliste. Offen ist die Entscheidung zu Backlog Nr. 25–27.
+
+**Was das Paket sonst hervorgebracht hat.** Drei Formatbeschreibungen, die
+etwas anderes sagten als der Code tut (Web 7.2.3: LIESMICH-Spaltenname,
+`days[].id`, vier fehlende Bereiche in `Backup-Format.md` 4), zwei stille
+Verluste der Sicherung mit Zahl (Papierkorb 5/5/1 → 0/0/0, `created_at`
+79 → 5 verschiedene Werte) und zwei eigene Fehler (F-P1-J).
+
+**Für B6 wichtig:** Der Papierkorb steht in **keiner** Sicherung. Eine
+Fixture aus einer edbak kann ihn nicht wiederherstellen — die dortige
+Abnahme „Papierkorb gefüllt" braucht einen eigenen Schritt im Reset.
 
 ### B6 — Demo-Account-Funktion im Adminbereich
 Fixture aus dem Referenzzustand erzeugen (E-P1-08, unter
@@ -504,12 +539,12 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-01 | Matrix-Abgleich vollständig | B1 | **erfüllt** — 78 Zeilen, 0 offen; 5 528 Einzelprüfungen ohne Befund (`pruefen.py`) |
 | P-02 | Payloads gegen Vertragsgrenzen | B2 | **erfüllt** — statt Stichprobe ALLE 526 Anfragen; 283 738 Einzelprüfungen ohne Befund |
 | P-03 | Determinismus des Generators (zwei Läufe, gleiches Ergebnis) | B2 | **erfüllt** — Quelldaten 16 Dateien, Generator 692 Dateien, je zwei Läufe byteweise gleich |
-| P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch |
+| P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt, zweifach** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch. In B5 ein zweites Mal, ungeplant: Nach dem versehentlichen Löschen des Referenzkontos (F-P1-J) stand der vollständige Bestand in rund vier Minuten wieder — wieder 526 Anfragen, 0 Fehler |
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
 | P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I, Web 7.2.2). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
-| P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | offen |
-| P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | offen |
+| P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — 8 617 Einzelvergleiche, 844 erwartete, **9 unerklärte** Abweichungen. Die neun sind drei Befunde: F-P1-K (2 Einsätze 24 h zurück), F-P1-L (3 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Nicht als Ausnahme geführt — sie sind behebbar |
+| P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
 | P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | offen |
 | P-11 | Demo-Funktionen wirken nur auf das Demo-Konto | B6 | offen |
 | P-12 | Produktivlauf abgeschlossen, Stichprobe Oberfläche | B3/B4 | offen |
@@ -739,6 +774,187 @@ der sechs Seiten mit „nichts sichtbar" und hätte die Lücke auf zweien davon
 übersehen, weil die Trefferlisten nur ihre erste Seite rendern. Die
 Gegenprobe — mindestens eine Seite muss den Wert tatsächlich anzeigen —
 steht seither fest im Prüfmittel.
+
+### F-P1-J — Der Referenzbestand war gegenüber den Quelldaten veraltet (eigener Fehler)
+
+**Fundort:** kein Codefehler — ein Fehler im Vorgehen dieser Phase.
+
+**Sache:** In B4 wurden die Formel-Anfangszeichen vom CSV-Weg auf den
+Formularweg verlegt (F-P1-G): `D15.json` bekam bei zwei Einsätzen ein
+`@Leitstelle: ` beziehungsweise `+Nachtrag der Bergungsdaten: ` vorangestellt.
+Die Quelldaten waren damit richtig — **der eingespielte Bestand nicht**. Die
+Stufe `nachtragen` wurde nach der Änderung nie erneut gefahren, und die
+Referenz-Exporte entstanden aus dem alten Bestand.
+
+**Wirkung:** Die eingecheckte Referenz hätte zwei Notizen getragen, die in
+keiner Quelldatei stehen. Jeder Regressionslauf hätte gegen einen Stand
+verglichen, der den Quelldaten widerspricht — und der Widerspruch wäre erst
+aufgefallen, wenn jemand den Datensatz aus den Quellen neu gebaut hätte.
+
+**Gefunden** durch das Vergleichswerkzeug selbst: Nach einem vollständigen
+Wiederaufbau meldete es gegen den vorherigen Stand **3 Abweichungen bei
+9 589 Einzelvergleichen** — die beiden Notizen und die berichtigte
+LIESMICH-Zeile (Web 7.2.3). Nichts sonst.
+
+**Anlass des Wiederaufbaus** war ein zweiter eigener Fehler: `kreislauf.py`
+las die Kontokennung mit einem Ausdruck, der vor der E-Mail-Adresse nach
+`name="id"` suchte. Im Markup steht die Adresse in der ersten Zelle der Zeile
+und das Löschformular in der letzten — gefunden wurde damit die Kennung der
+VORHERGEHENDEN Zeile, und der Lauf löschte das Referenzkonto statt des
+Umlaufkontos.
+
+**Blockierend:** nein, aber teuer. Verloren war nur der lokale
+Datenbankstand; beide Referenzdateien und alle Quelldaten lagen im
+Repositorium. Der Wiederaufbau lief in rund vier Minuten durch
+(526 Ingest-Anfragen, 0 Fehler) — womit **P-04 ein zweites Mal belegt ist**,
+diesmal ungeplant.
+
+**Behoben, zweifach:**
+
+1. Die Kennung wird eindeutig aus dem Verweis derselben Zeile gelesen
+   (`admin_user.php?id=N`), nicht mehr geraten.
+2. Ein **Riegel**, der nicht davon abhängt, dass der Parser stimmt:
+   `kreislauf.py` löscht nur Konten mit dem Präfix `umlauf-`. Geprüft — der
+   Versuch, `demo@gen-em.org` zu löschen, wird abgewiesen.
+
+**Die Lehre für das Vorgehen** steht im LIESMICH des Vergleichswerkzeugs: Wer
+eine Quelldatei ändert, fährt die betroffene Einspielstufe erneut, bevor er
+exportiert. Der Datensatz ist deterministisch — aber nur, wenn man ihn auch
+erzeugt.
+
+### F-P1-K — Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden zurück
+
+**Fundort:** `server/api/import_commit.php:349` gegen
+`server/einsatz_form.php:180–213`.
+
+**Sache:** Ein Dienst läuft über Mitternacht; ein Einsatz um 01:38 gehört zum
+Folgetag. Die Exportdatei sagt das auch — sie führt `diensttag` (2026-03-28)
+**und** `datum` (2026-03-29) getrennt. Der Import ruft
+
+    pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef)
+
+mit `addDays = 0` und rechnet 01:38 auf den **Diensttag**. Der Einsatz landet
+damit 24 Stunden früher — vor dem Beginn des Dienstes, zu dem er gehört.
+
+Das Formular macht es richtig: Liegt die erste Phase vor dem Dienstbeginn,
+kann der Einsatz nur zum Folgetag gehören (`einsatz_form.php`, Abschnitt
+„TAGESWECHSEL", Web 7.0.0). Die Spalte `datum` steht in der Datei und ist im
+Profil auf `target: null` gesetzt — die Angabe, die den Fehler beheben würde,
+liegt also vor und wird verworfen.
+
+**Verschärfend:** Der Kommentar bei `import_profiles.js` (Spalte `diensttag`)
+behauptet, die Uhrzeit rechne Mitternachtsüberschreitungen ohnehin dem
+Folgetag zu. Für diesen Weg trifft das nicht zu — ein irreführender Kommentar
+an genau der Stelle, an der die Entscheidung fällt.
+
+**Gemessen** im Kreislauf CSV → frisches Konto → CSV, 8 617 Einzelvergleiche:
+
+| Referenz | nach dem Umlauf |
+|---|---|
+| `2026-03-29T01:38:00+01:00` | `2026-03-28T01:38:00+01:00` |
+| `2026-10-25T01:32:00+02:00` | `2026-10-24T01:32:00+02:00` |
+
+Zwei Einsätze, beide exakt 24 Stunden. Im Bericht erscheinen sie als vier
+Abweichungen (je einmal *fehlt* und einmal *zusätzlich*).
+
+**Blockierend:** ja für P-08. Es ist kein Formatverlust, sondern eine
+**stille Datenverfälschung** auf einem Weg, den `Export-Format.md` 5.1
+verlustfrei nennt: Der Einsatz ist danach am falschen Tag dokumentiert.
+
+**Nicht behoben — Entscheidung offen.** Zwei Wege:
+
+1. **`datum` auswerten.** Die Angabe steht in der Datei, ist eindeutig und
+   braucht keine Vermutung. Nachteil: Fremddateien ohne diese Spalte fallen
+   auf das heutige Verhalten zurück.
+2. **Die Regel des Formulars übernehmen** — Uhrzeit vor Dienstbeginn heißt
+   Folgetag. Nachteil: Beim Import in ein leeres Konto entsteht der Diensttag
+   erst aus den Einsätzen; der Dienstbeginn steht zu diesem Zeitpunkt noch
+   nicht fest.
+
+**Vorschlag: Weg 1**, mit Weg 2 als Rückfall für Dateien ohne `datum`. Das
+ändert einen Schreibweg und gehört deshalb entschieden, nicht nebenbei
+gemacht. Backlog Nr. 25.
+
+---
+
+### F-P1-L — Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche
+
+**Fundort:** `server/assets/import.js`, Parser `trim`.
+
+**Sache:** `trim` ersetzt jede Folge von Leerraum durch **ein Leerzeichen** —
+Zeilenumbrüche eingeschlossen — und wird auf alle Textspalten angewandt.
+`notes` ist das einzige mehrzeilige Feld des Katalogs
+(`mission_fields.php`). Der Export quotet die Umbrüche korrekt nach RFC 4180;
+der Verlust entsteht allein beim Lesen.
+
+**Gemessen:** 3 Notizen, jede verliert **genau einen** Zeilenumbruch bei
+**unveränderter Zeichenzahl** (164/119/150) — der Umbruch wird zum Leerzeichen.
+
+**Blockierend:** ja für P-08, aber leichter als F-P1-K: Der Text bleibt
+lesbar, nur seine Gliederung geht verloren.
+
+**Vorschlag:** ein eigener Parser `trimMehrzeilig`, der Leerraum innerhalb
+einer Zeile zusammenzieht und Umbrüche stehen lässt, für die Spalte `notizen`
+(Einsatz und Diensttag). Backlog Nr. 26.
+
+---
+
+### F-P1-M — `final = 0` und ein leeres `ende` werden beim Import überschrieben
+
+**Fundort:** `server/api/import_commit.php` — `final` steht als Literal `1`
+im INSERT; `ended_at` fällt auf `started_at` zurück.
+
+**Sache:** Zwei Werte, die die Datei ausdrücklich führt, werden beim
+Einfügen durch andere ersetzt:
+
+- **`final`** ist im INSERT hart auf `1` gesetzt. Anders als bei `manual` und
+  `herkunft` ist das keine Aussage über die Entstehung, sondern über den
+  **Zustand** des Einsatzes — und die Datei widerspricht ihr ausdrücklich.
+  Ein nicht abgeschlossener Einsatz gilt nach dem Umlauf als abgeschlossen.
+- **`ende`** wird, wenn leer, auf `started_at` gesetzt. Der Kommentar
+  begründet das mit den Jahreslisten-Profilen, die keine Endzeit führen —
+  dort ist es richtig. Im CSV-Profil ist eine leere Zelle dagegen eine
+  Aussage („kein Abschluss"), und der Import erfindet eine Endzeit, die gleich
+  der Startzeit ist.
+
+**Gemessen:** je 1x, beide am selben Einsatz — dem einzigen absichtlich nicht
+abgeschlossenen des Referenzdatensatzes (2026-07-05, 19:40).
+
+**Blockierend:** ja für P-08. Der Fall ist selten, aber er ist genau der, den
+die Abdeckungsmatrix mit „nicht abgeschlossener Einsatz" absichtlich enthält.
+
+**Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die Spalte
+führt; „Spalte fehlt" und „Zelle leer" beim `ende` unterscheiden. Backlog
+Nr. 27.
+
+---
+
+### F-P1-N — `Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr
+
+**Fundort:** `docs/Export-Format.md`, Abschnitt 5.1.
+
+**Sache:** Der Abschnitt nennt `export_csv_v1` „verlustfrei" und zählt drei
+bewusste Ausnahmen auf (`einsatz_id`, GPX-Dateien, Rettungsmittel/Standort)
+plus `herkunft` und `edited`. Der gemessene Umlauf zeigt zwei weitere, die
+Bauart sind und trotzdem nirgends stehen:
+
+- **Ruhesegmente kommen nicht zurück.** Für sie gibt es keinen Importweg;
+  `ruhezeiten.csv` ist nach einem Umlauf leer. **Gemessen: 95 → 0.**
+- **Der zweite Dienst eines Kalendertags geht verloren.** `gruppiere()`
+  bündelt nach Kalendertag; seit E9 sind zwei Dienste an einem Datum
+  zulässig. Die Datei führt mit `diensttag_id` den Schlüssel mit, der sie
+  unterscheiden könnte, gibt ihn aber nicht weiter. **Gemessen: 15 → 13
+  Diensttage** (einer davon ein Tag ohne Einsatz, der aus `einsaetze.csv`
+  gar nicht entstehen kann).
+
+Dazu die beiden Fälle aus B4, die dasselbe Muster haben: der
+Formelschutz-Apostroph (F-P1-G) und — bis Web 7.2.1 — sechs stillschweigend
+fallengelassene Felder (F-P1-H).
+
+**Blockierend:** nein. Es sind Ausnahmen der Ausnahmeliste, nicht des
+Verhaltens.
+
+**Vorschlag:** Abschnitt 5.1 um beide ergänzen. Backlog Nr. 28.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*

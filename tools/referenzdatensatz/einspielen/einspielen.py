@@ -44,6 +44,11 @@ QUELLE = WURZEL / "quelldaten"
 AUSGABE = WURZEL / "generator" / "ausgabe"
 TZ = ZoneInfo("Europe/Berlin")
 
+# Zugangsdaten des Referenzkontos (F-P1-01). Beide sind ueber die Befehlszeile
+# umstellbar: Die KREISLAUFPRUEFUNG (B5) legt ein zweites, frisches Konto an und
+# fuellt dort nur die Stammdaten, damit der CSV-Import ueberhaupt ein
+# Rettungsmittel zur Auswahl hat. Ohne diesen Schalter muesste sie das Konto
+# nachbauen -- und damit einen zweiten Weg pflegen.
 DEMO_EMAIL = "demo@gen-em.org"
 DEMO_PASSWORT = "nadokudemo0815"
 
@@ -591,7 +596,15 @@ def main() -> int:
     p.add_argument("--admin-email", default="admin@gen-em.org")
     p.add_argument("--admin-passwort", default="adminlokal2026")
     p.add_argument("--zustand", default=str(HIER / "lauf.json"))
+    p.add_argument("--konto", default=None,
+                   help="abweichendes Zielkonto (Kreislaufpruefung B5)")
+    p.add_argument("--konto-passwort", default=None)
     a = p.parse_args()
+
+    if a.konto:
+        globals()["DEMO_EMAIL"] = a.konto
+    if a.konto_passwort:
+        globals()["DEMO_PASSWORT"] = a.konto_passwort
 
     lauf = Lauf(a.basis, pathlib.Path(a.zustand))
     stufen = [x.strip() for x in a.stufen.split(",") if x.strip()]

@@ -1,0 +1,159 @@
+{
+  "name": "csv-umlauf",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf CSV-Archiv -> frisches Konto -> CSV-Archiv. GEMESSEN am Referenzdatensatz (82 Einsaetze, 15 Diensttage, 95 Ruhesegmente, 171 GPX): 8617 Einzelvergleiche. Jede Regel traegt die Zahl, mit der sie belegt ist. Was hier NICHT steht, bleibt als Befund stehen — vier Abweichungen sind Fehler der Anwendung und keine Bauart (F-P1-K bis F-P1-M).",
+  "regeln": [
+    {
+      "bereich": "tracks",
+      "feld": "*",
+      "art": "fehlt",
+      "begruendung": "GEMESSEN 171x. GPX-Dateien werden nicht eingelesen — eine der drei ausdruecklich benannten Ausnahmen in Export-Format.md 5.1. Tracks stammen von der Uhr und sind der Rohbestand; ein Rueckspielen ueber den Export waere ein zweiter, schlechterer Weg neben dem Backup."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "track_datei",
+      "art": "wert",
+      "nach": "",
+      "begruendung": "GEMESSEN 74x. Folgt unmittelbar daraus, dass die GPX-Dateien nicht eingelesen werden: ohne Spur kein Dateiname."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "track_punkte",
+      "art": "wert",
+      "nach": "0",
+      "begruendung": "GEMESSEN 74x. Dieselbe Ursache wie track_datei."
+    },
+    {
+      "bereich": "ruhezeiten",
+      "feld": "*",
+      "art": "fehlt",
+      "begruendung": "GEMESSEN 95x. Fuer Ruhesegmente gibt es keinen Importweg — das Profil export_csv_v1 kennt nur Einsaetze und Diensttage. Nach einem Umlauf ist ruhezeiten.csv leer. Das ist Bauart, steht aber bis Web 7.2.3 in KEINER Fassung von Export-Format.md 5.1; siehe Konzept P1, Fund F-P1-N."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "herkunft",
+      "art": "wert",
+      "nach": "import",
+      "begruendung": "GEMESSEN 76x. api/import_commit.php vergibt origin='import'. Die Herkunft beschreibt, wie ein Datensatz IN DIESER Installation entstanden ist; beim Einlesen entsteht er neu. Ein Wert aus der Datei waere eine Aussage ueber ein fremdes Konto. Ausdruecklich so dokumentiert (Export-Format.md 5.1)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "edited",
+      "art": "wert",
+      "nach": "0",
+      "begruendung": "GEMESSEN 72x. Wie herkunft: Der Bearbeitungsstatus beschreibt das Quellkonto. Beim Einfuegen bleibt er auf dem Vorgabewert 0, beim Ueberschreiben setzt ihn der Server selbst auf 1."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "manual",
+      "art": "wert",
+      "von": "0",
+      "nach": "1",
+      "begruendung": "GEMESSEN 2x. api/import_commit.php setzt manual=1 — ein importierter Einsatz ist keiner, den eine Uhr aufgezeichnet hat. Nur zwei Einsaetze weichen ab, weil die uebrigen beim Nachtragen ohnehin schon manual=1 tragen."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "rettungsmittel",
+      "art": "wert",
+      "begruendung": "GEMESSEN 49x (Einsaetze). Rettungsmittel und Standort werden oben auf der Importseite GEWAEHLT, nicht aus der Datei gelesen (E15). Eine Aufloesung ueber Namensgleichheit waere bruechig und legte stillschweigend neue Stammdaten an. Folge fuer den Umlauf: Eine Datei mit drei Rettungsmitteln faellt auf EINES zusammen."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "art",
+      "art": "wert",
+      "begruendung": "GEMESSEN 43x. Folgt aus der Wahl des Rettungsmittels: Die Art (luft/boden) haengt am gewaehlten Rettungsmittel, nicht an der Datei."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "standort",
+      "art": "wert",
+      "begruendung": "GEMESSEN 43x. Folgt aus derselben Wahl wie rettungsmittel."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "rettungsmittel",
+      "art": "wert",
+      "begruendung": "GEMESSEN 8x. Dieselbe Ursache wie bei den Einsaetzen: gewaehlt, nicht gelesen."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "art",
+      "art": "wert",
+      "begruendung": "GEMESSEN 7x. Folgt aus der Wahl des Rettungsmittels."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "standort",
+      "art": "wert",
+      "begruendung": "GEMESSEN 7x. Folgt aus der Wahl des Rettungsmittels."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "faehigkeiten",
+      "art": "wert",
+      "begruendung": "GEMESSEN 8x. Die Faehigkeiten werden beim Anlegen eines Diensttags vom Rettungsmittel EINGEFROREN. Ein neu angelegter Tag friert den heutigen Stand des GEWAEHLTEN Rettungsmittels ein, nicht den Stand aus der Datei."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_p1",
+      "art": "wert",
+      "begruendung": "GEMESSEN 5x. Der Rollensatz haengt am Rettungsmittel: Ein bodengebundener Dienst fuehrt driver/trainee/other, ein luftgebundener p1/p2/hems/fr/other. Faellt der Umlauf auf EIN Rettungsmittel zusammen (E15), passen die Rollen der anderen Art nicht mehr. Folgefehler der Rettungsmittelwahl, kein eigener."
+    },
+    { "bereich": "einsaetze", "feld": "crew_p2", "art": "wert", "begruendung": "Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "crew_hems", "art": "wert", "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "crew_fr", "art": "wert", "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "crew_driver", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "crew_trainee", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "crew_other", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_p1", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_p2", "art": "wert", "begruendung": "Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_hems", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_fr", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_driver", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_trainee", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "einsaetze", "feld": "tag_crew_other", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_p1", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_p2", "art": "wert", "begruendung": "Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_hems", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_fr", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_driver", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_trainee", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    { "bereich": "diensttage", "feld": "crew_other", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    {
+      "bereich": "diensttage",
+      "feld": "dienst_beginn",
+      "art": "wert",
+      "begruendung": "GEMESSEN 13x. Ein neu angelegter Diensttag hat keinen echten Dienstbeginn — er entsteht aus den Einsaetzen (dt_zeitraum_fortschreiben in diensttag_lib.php zieht ihn auf den fruehesten Einsatzbeginn). Der echte Dienstbeginn kommt von der Uhr und steht nur in diensttage.csv, die der Import nicht liest."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "dienst_ende",
+      "art": "wert",
+      "begruendung": "GEMESSEN 11x. Dieselbe Ursache wie dienst_beginn, in die andere Richtung: bis zum spaetesten Einsatzende."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "notizen",
+      "art": "wert",
+      "begruendung": "GEMESSEN 12x. Die Tagesnotiz steht nur in diensttage.csv; der Import liest ausschliesslich einsaetze.csv. Sie kann deshalb nicht zurueckkommen."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "anzahl_einsaetze",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Gerechnet, nicht gespeichert: Die Spalte nennt die Zahl der TATSAECHLICH uebernommenen Einsaetze des Tages."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "*",
+      "art": "fehlt",
+      "begruendung": "GEMESSEN 2x, zwei verschiedene Ursachen — beide Bauart. (1) 2026-09-12 ist ein Diensttag OHNE Einsatz; er steht nur in diensttage.csv, und der Import liest einsaetze.csv. (2) 2026-03-28#1 ist der ZWEITE Dienst desselben Kalendertags: gruppiere() buendelt nach Kalendertag, und die Datei fuehrt mit diensttag_id zwar den Schluessel mit, der sie unterscheiden koennte, gibt ihn aber nicht weiter (target null). Seit E9 sind zwei Dienste an einem Datum zulaessig — der zweite geht auf diesem Weg verloren. Als Ausnahme gefuehrt, weil der Importweg Diensttage grundsaetzlich aus Einsaetzen ableitet; siehe Konzept P1, Fund F-P1-N."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "pat_alter",
+      "art": "wert",
+      "nach": "",
+      "begruendung": "GEMESSEN 1x. PARSERS.alterJahre verwirft alles, was keine ganze Zahl ist — hier den R20-Angriffswert im Altersfeld. Das ist richtig so und der Grund, warum E-P1-15 diesen Fall auf den Formularweg verlegt hat (Fund F-P1-A)."
+    }
+  ]
+}
