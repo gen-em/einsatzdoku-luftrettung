@@ -205,15 +205,11 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     return $dt->format('Y-m-d H:i:s');
 }
 
-/** ISO-8601-UTC (Uhr) -> 'Y-m-d H:i:s' fuer DATETIME-Spalten; null bei Murks */
-function iso_to_sql(?string $iso): ?string {
-    if ($iso === null) return null;
-    $dt = DateTime::createFromFormat(DateTime::ATOM, $iso)
-       ?: DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $iso, new DateTimeZone('UTC'));
-    if ($dt === false) return null;
-    $dt->setTimezone(new DateTimeZone('UTC'));
-    return $dt->format('Y-m-d H:i:s');
-}
+/* Hier stand iso_to_sql() — ISO-8601 der Uhr nach DATETIME. Ihre einzigen
+   Aufrufer lagen in ingest.php und wurden mit Web 4.2.0 durch pruef_utc()
+   aus validate_lib.php ersetzt; die Funktion blieb als Rest stehen und war
+   seither ohne Verwendung (A4, T-01). Wer das Format wieder braucht, findet
+   die Umwandlung in pruef_utc(). */
 
 function json_out(array $data, int $code = 200): never {
     http_response_code($code);

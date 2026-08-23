@@ -145,25 +145,28 @@ const PHASE_MAX = 9;
  */
 final class Pruefliste
 {
-    /** @var array<int, array{feld: string, grund: string, bezug: string}> */
+    /** @var array<int, array{feld: string, grund: string}> */
     private array $eintraege = [];
 
-    /** Bezug des gerade geprueften Datensatzes (z. B. "Einsatz 2026-05-21 08:14"). */
-    private string $bezug = '';
-
-    public function setBezug(string $bezug): void { $this->bezug = $bezug; }
+    /* ENTFALLEN MIT A4 (T-02 bis T-04): anzahl(), eintraege() und setBezug().
+     *
+     * Die vier Nutzer der Klasse — ingest.php, api/import_commit.php,
+     * backup_lib.php und einsatz_form.php — benutzen ausschliesslich melde(),
+     * sauber(), nachUrsache() und text(); die drei anderen Methoden hatte in
+     * der gesamten Historie nie jemand aufgerufen.
+     *
+     * Mit setBezug() faellt das MERKMAL 'bezug' ganz weg, und zwar nicht als
+     * Beifang, sondern weil es transitiv tot war: Ohne Aufrufer blieb $bezug
+     * immer der Leerstring, jeder Eintrag trug also ein leeres Feld, und
+     * gelesen hat es ohnehin niemand — nachUrsache() wertet 'feld' und
+     * 'grund' aus, text() ebenso. */
 
     public function melde(string $feld, string $grund): void
     {
-        $this->eintraege[] = ['feld' => $feld, 'grund' => $grund, 'bezug' => $this->bezug];
+        $this->eintraege[] = ['feld' => $feld, 'grund' => $grund];
     }
 
     public function sauber(): bool { return $this->eintraege === []; }
-
-    public function anzahl(): int { return count($this->eintraege); }
-
-    /** @return array<int, array{feld: string, grund: string, bezug: string}> */
-    public function eintraege(): array { return $this->eintraege; }
 
     /**
      * Zaehlung nach Ursache: ['Datum unmoeglicher Kalendertag' => 12, ...].

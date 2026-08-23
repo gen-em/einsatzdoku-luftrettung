@@ -50,6 +50,42 @@ Fall: Sie banden die Datei zusätzlich zu `ui_footer()` selbst ein.
 Die drei Zeilen sind weg. Zusätzlich hat `confirm.js` jetzt eine Schranke am
 Anfang — eine zweite Einbindung ist damit wirkungslos statt doppelt.
 
+### Toter Code entfernt — nach Einzelfreigabe
+
+Paket A4 hatte eine Befundliste vorgelegt statt zu löschen; jeder Punkt wurde
+einzeln freigegeben. Entfernt sind jetzt:
+
+**Sechs Funktionen und Methoden.** `iso_to_sql()` (`db.php`) — ihre einzigen
+Aufrufer lagen in `ingest.php` und wurden mit Web 4.2.0 durch `pruef_utc()`
+ersetzt. `Pruefliste::anzahl()`, `::eintraege()` und `::setBezug()`
+(`validate_lib.php`) — die vier Nutzer der Klasse benutzen ausschließlich
+`melde()`, `sauber()`, `nachUrsache()` und `text()`; die drei anderen hatte in
+der gesamten Historie nie jemand aufgerufen. `chunkArr()` (`export.js`),
+dateiprivat und ohne Aufruf. `EdSuchtext.mitOperatoren()` (`suchtext.js`),
+exportiert und nie benutzt — der Hinweis auf die Suchoperatoren, für den die
+Funktion laut Kommentar da war, ist statisches Markup.
+
+Mit `setBezug()` fällt das **Merkmal `bezug`** der Klasse `Pruefliste` ganz
+weg. Das ist kein Beifang: Ohne Aufrufer blieb `$bezug` immer leer, jeder
+Prüfeintrag trug also ein leeres Feld, und gelesen hat es ohnehin niemand.
+
+**Elf CSS-Klassen in 18 Regeln:** `.actionbar`, `.centercol`, `.chip-x`,
+`.data-centered`, `.daydelete`, `.page-center`, `.page-narrow`, `.rolehead`,
+`.trash`, `.trashactions`, `.zielinfo`. Keine kommt im Markup vor — weder
+geschrieben noch zur Laufzeit zusammengesetzt. Nicht zu verwechseln mit
+`.trashtable` und `.trashlink`, die benutzt werden und bleiben.
+
+**Stehen geblieben ist `.c-dc-false_alarm`**, obwohl die Regel heute nicht
+greift: Das Feld `false_alarm` trägt im Feldkatalog kein `day_col` und bekommt
+deshalb keine Spalte in der Tagestabelle. Wer das ergänzt, braucht die Breite
+im selben Augenblick wieder. Ein Kommentar sagt das jetzt an Ort und Stelle.
+
+Nachgewiesen wurde die Wirkungslosigkeit nicht durch Zusehen: Der
+Stilvergleich hat 29.376 Elementmessungen über drei Proben und neun
+Fensterbreiten verglichen — **keine Abweichung** —, und eine Gegenprobe hat
+bestätigt, dass keine der elf Klassen an einem Element des tatsächlichen
+Markups steht, auch nicht in dem, das erst im Browser entsteht.
+
 ### Kleinere Berichtigungen
 
 * **`api/range.php` sendet `Cache-Control: no-store`.** Die Datei schrieb ihre

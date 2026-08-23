@@ -225,10 +225,10 @@
         }
     }
 
-    /** Enthaelt die Eingabe ueberhaupt einen Operator? (nur fuer den Hinweis) */
-    function mitOperatoren(q) {
-        return /(^|\s)(und|and|oder|or|nicht|not)(\s|$)|[()&|!"]|(^|\s)-\S/i.test(q || '');
-    }
-
-    global.EdSuchtext = { pruefer: pruefer, mitOperatoren: mitOperatoren };
+    /* mitOperatoren() ist mit A4 entfallen (T-06). Sie sollte laut Kommentar
+       "nur fuer den Hinweis" dienen — der Hinweis auf die Suchoperatoren ist
+       aber statisches Markup (<details class="suchsyntax"> in suche.php) und
+       wird von keinem Skript ein- oder ausgeblendet. Die Funktion war
+       exportiert und hatte nie einen Aufrufer. */
+    global.EdSuchtext = { pruefer: pruefer };
 })(window);
