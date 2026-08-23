@@ -231,8 +231,11 @@ das bleibt der Betreiberin (Prüfliste, Punkt P-2).
   **P5** (Rahmenplan R19), mit dem Zusatz, dass P1 nur das Aufrufverhalten
   misst und keine Grenze festlegt.
 - **Nr. 22 unter *Erledigt*** eingetragen, mit Fundstellen
-  (`server/assets/missiontable.js`, `server/assets/import.js`,
-  `server/index.php`, `server/assets/crypto.js`) und Version (Web 7.2.1).
+  (`server/assets/missiontable.js`, `server/index.php`,
+  `server/assets/crypto.js`) und Version (Web 7.2.1).
+  *Berichtigt mit Web 7.3.1:* `server/assets/import.js` stand hier als
+  vierte Fundstelle. Das war falsch — der CSV-Import ist **kein** Weg
+  hinein, siehe die berichtigte Fassung von P-1 unten.
 - **Version** `server/version.php` auf `7.2.1`, mit fortgeschriebener
   Erzählung im Kopfkommentar. **Changelog** ergänzt, mit dem Hinweis, dass die
   Lücke seit Web 5.2.0 bestand und P0 sie weder verursacht noch verschärft,
@@ -260,29 +263,54 @@ entsperrtem Inhaltsschlüssel; keiner davon lässt sich hier nachstellen.
 
 ### ☐ P-1 — Import mit Angriffswert im Altersfeld
 
-**Bedienweg.** Eine Importdatei nach einem der vorhandenen Profile anlegen und
-in die Alterspalte einer Zeile statt einer Zahl diesen Text setzen:
+> **Berichtigt mit Web 7.3.1.** Diese Prüfung führte bis dahin über den
+> **CSV-Import**, und in dieser Fassung war sie unbrauchbar: Der Import nimmt
+> den Wert gar nicht an. `import_profiles.js` bildet `pat_alter` mit
+> `parse: ['alterJahre']` ab, und `PARSERS.ganzzahl` verlangt `/^-?\d+$/`.
+> Nachgemessen an neun Fällen: `47`, `0`, leer und `  12 ` kommen durch,
+> `<img src=x onerror=…>`, `47<img …>` und `<b>47</b>` werden **verworfen**
+> („Alter: ganze Zahl erwartet"). Das Feld bliebe also leer — und das alte
+> Scheiternsmerkmal „ein leeres Feld ist auch ein Fehler" hätte bei
+> **korrektem** Verhalten angeschlagen. Wer die Liste abhakte, hätte einen
+> Fehler gemeldet, wo keiner ist.
+>
+> Der Weg hinein ist ein anderer: Das Feld `age` liegt im `pat_blob`, und der
+> ist freies JSON, das der Server nie im Klartext sieht. Hinein kommt es über
+> die **Wiederherstellung einer Sicherung** (`api/backup_restore.php`
+> übernimmt den inneren Wert unverändert, wie es sein muss) — im Adminbereich
+> sogar die einer *fremden* — oder über jeden Zugang, der den Inhaltsschlüssel
+> hat und die Oberfläche nicht benutzt. Genau deshalb ist die Lücke echt: Sie
+> lässt sich serverseitig grundsätzlich nicht wegprüfen.
 
-    47<img src=x onerror="alert('offen')">
+**Bedienweg.** Am einfachsten über das **Demo-Konto** (Web 7.3.0): Es trägt in
+einem Einsatz absichtlich einen solchen Wert im Altersfeld
+(`<img src=x onerror="alert('R20-alter')">`, Referenzdatensatz R20).
 
-Datei über *Import* einlesen, bis zur Abgleichsansicht gehen, übernehmen. Dann
-den betroffenen Tag in der **Tagesübersicht** öffnen, danach dieselbe Zeile in
-der **Suche** und in der **Zeitraum-Übersicht** ansehen, zuletzt den Einsatz
-selbst.
+1. Am Demo-Konto anmelden (`demo@gen-em.org`), geschützte Angaben entsperren.
+2. Den Diensttag **21.11.2026** in der **Tagesübersicht** öffnen (Einsatz
+   um 09:21).
+3. Dieselbe Zeile in der **Einsatzsuche** und in der **Zeitraum-Übersicht**
+   ansehen, zuletzt den Einsatz selbst.
+
+Ohne Demo-Konto: eine Sicherung mit einem solchen Wert im `age` einspielen.
+Wiederholbar und ohne Handarbeit macht dasselbe
+`tools/referenzdatensatz/browser/angriffswerte.mjs`.
 
 **Erwartet.** In allen drei Tabellen steht in der Spalte *Alter* der Text
-`47<img src=x onerror="alert('offen')">` — sichtbar, unverändert, als Text. In
-der Abgleichsansicht steht er im Eingabefeld der Alterspalte. In der
-Einzelansicht steht er in der Zeile *Alter 🔒*.
+`<img src=x onerror="alert('R20-alter')">` — sichtbar, unverändert, als Text.
+In der Einzelansicht steht er in der Zeile *Alter 🔒*.
 
 **Woran ein Scheitern zu erkennen ist.** Es erscheint ein Meldungsfenster
-(„offen") — dann greift die Maskierung nicht. Ebenfalls Scheitern: In der
-Spalte steht **nur** `47` und der Rest fehlt; dann ist das Markup in die Seite
-gewandert und nur unsichtbar geblieben. Ein leeres Feld oder ein
-Gedankenstrich ist auch ein Fehler — der Wert soll erhalten bleiben, nicht
-verschwinden.
+(„R20-alter") — dann greift die Maskierung nicht. Ebenfalls Scheitern: Die
+Zelle ist leer oder zeigt einen Gedankenstrich, **obwohl** die Einzelansicht
+den Wert führt; dann ist das Markup in die Seite gewandert und nur unsichtbar
+geblieben. Ein Blick in die Entwicklerkonsole gehört dazu: Eine Meldung über
+ein nicht ladbares Bild (`x`) heißt, dass das `<img>` als Element entstanden
+ist.
 
-**Danach aufräumen:** Den Probeeinsatz löschen. Er ist ein echter Datensatz.
+**Danach aufräumen:** nichts — der Demo-Bestand setzt sich alle 30 Minuten
+selbst zurück. Wer stattdessen von Hand einen Probeeinsatz angelegt hat,
+löscht ihn: Er ist ein echter Datensatz.
 
 ### ☐ P-2 — Abmelden räumt den sessionStorage
 

@@ -11,6 +11,435 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.3.1] — 2026-08-23
+
+**Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**
+Gefunden im Kreislauftest der Phase P1 (Fund F-P1-K). Keine Migration.
+
+### Was passiert ist
+
+Ein Dienst läuft über Mitternacht; ein Einsatz um 01:38 gehört zum Folgetag.
+Die Exportdatei sagt das auch — sie führt `diensttag` (2026-03-28) **und**
+`datum` (2026-03-29) getrennt, und `Export-Format.md` beschreibt den
+Unterschied ausdrücklich. Der Import las nur die erste Spalte:
+
+    pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef)
+
+`$tag` ist der Diensttag, `addDays` ist `0`. Damit wurde 01:38 auf den
+28. gerechnet — der Einsatz lag danach **vor** dem Beginn des Dienstes, zu dem
+er gehört. Das Formular macht es seit Web 7.0.0 richtig (`einsatz_form.php`,
+Abschnitt „TAGESWECHSEL"): Liegt die erste Phase vor dem Dienstbeginn, kann
+der Einsatz nur zum Folgetag gehören.
+
+Die Angabe, die den Fehler behebt, lag die ganze Zeit in der Datei. Die Spalte
+`datum` war in `assets/import_profiles.js` auf `target: null` gesetzt, mit
+einem Kommentar, der es begründete: zwei Quellen für dieselbe Zuordnung wären
+eine zu viel, „die Uhrzeit rechnet die Mitternachtslogik ohnehin dem Folgetag
+zu". Der zweite Halbsatz war schlicht falsch — und er stand an genau der
+Stelle, an der die Entscheidung fiel. Ein irreführender Kommentar ist an einer
+solchen Stelle schlimmer als gar keiner: Er beantwortet die Frage, die man
+sonst am Code geprüft hätte.
+
+Das trifft eine ausdrückliche Zusage: `Export-Format.md` 5.1 nennt
+`export_csv_v1` verlustfrei. Hier ging nichts verloren, es wurde etwas
+**verändert** — der Einsatz ist nach dem Rückimport am falschen Tag
+dokumentiert, ohne Hinweis in Datei, Prüftabelle oder Bilanz. Betroffen war
+ausschließlich das Profil `export_csv_v1`; die Jahreslisten-Profile führen
+keine getrennten Datumsspalten.
+
+### Was geändert wurde
+
+Die Spalte `datum` wird ausgewertet und als `date_local` mitgesendet;
+`api/import_commit.php` nimmt sie als **Bezugstag der Alarmzeit**. Für die
+Gruppierung bleibt es beim Diensttag: `day_id` hängt an ihm, nicht am
+Einsatzdatum. Zwei Quellen für zwei verschiedene Aufgaben — der alte Kommentar
+hatte recht darin, dass zwei Quellen für *dieselbe* Aufgabe ein Fehler wären.
+
+Dazu eine Plausibilitätsschranke: Übernommen wird das Datum nur, wenn es der
+Diensttag selbst ist oder der Tag darauf. Mehr kann es nicht sein — die
+Anwendung kennt für den Tageswechsel genau einen Schritt (`local_to_utc` mit
+`addDays` 0 oder 1, so auch im Formular). Eine Datei fremder Herkunft mit
+unsinnigem `datum` verstreut damit keine Einsätze über den Kalender, sondern
+fällt auf das bisherige Verhalten zurück. Eine Datei **ohne** die Spalte
+ebenso.
+
+Bewusst **nicht** übernommen wurde der zweite denkbare Weg, die Formularregel
+(Uhrzeit vor Dienstbeginn heißt Folgetag). Sie braucht den Dienstbeginn — und
+beim Import in ein leeres Konto entsteht der Diensttag erst aus den Einsätzen;
+zum Zeitpunkt der Entscheidung steht er noch nicht fest. Die Datei weiß es
+besser als jede Vermutung.
+
+### Wer nachbessern muss
+
+Wer eine CSV-Datei mit einem Dienst über Mitternacht zurückgespielt hat, hat
+die betroffenen Einsätze 24 Stunden zu früh im Bestand — sie stehen dann unter
+dem Vortag und liegen zeitlich vor dem Dienstbeginn. Ein erneuter Import
+derselben Datei legt sie **neu** an, statt sie zu berichtigen: Die
+Dublettenerkennung greift über die Einsatznummer beziehungsweise über Tag und
+Alarmzeit, und beide sehen jetzt einen anderen Tag. Der saubere Weg ist, die
+falsch liegenden Einsätze zu löschen und danach neu einzulesen. Betroffen sind
+nur Einsätze, deren Alarmzeit nach Mitternacht liegt.
+
+### Geprüft
+
+Kreislauf CSV-Archiv → frisches Konto → CSV-Archiv, gegen den kanonischen
+Referenzdatensatz (82 Einsätze, 15 Diensttage, 95 Ruhesegmente, 171 GPX):
+
+| | bis 7.3.0 | mit 7.3.1 |
+|---|---|---|
+| Einzelvergleiche | 8 617 | 8 797 |
+| erwartete Abweichungen | 844 | 858 |
+| **unerklärte Abweichungen** | **9** | **6** |
+
+Die vier Meldungen zu F-P1-K (je zweimal *fehlt* und *zusätzlich* für die
+beiden Einsätze um 01:38 und 01:32) sind verschwunden; beide Einsätze werden
+jetzt überhaupt erst verglichen — daher die um 180 gestiegene Zahl der
+Einzelvergleiche. Der Einsatz vom 25.10. stimmt danach in **allen** Feldern
+überein.
+
+Nebenbefund: Von den sechs verbliebenen Abweichungen ist eine vorher gar nicht
+sichtbar gewesen. F-P1-L (mehrzeilige Notizen verlieren ihre Zeilenumbrüche,
+Backlog Nr. 27) war mit 3 Fällen gemessen; es sind **4**. Der vierte hing an
+einem Einsatz, den F-P1-K aus dem Vergleich gehoben hatte — ein Fehler hatte
+die Messung eines zweiten verdeckt. Alle vier verlieren genau einen Umbruch
+bei unveränderter Zeichenzahl (164/253/119/150).
+
+Ebenfalls beim Nachmessen aufgefallen: Drei Regeln der Ausnahmeliste
+(`crew_p2` in Einsätzen, Tagesbesatzung und Diensttagen) haben nie gegriffen.
+Sie waren in P1/B5 aus der Analogie zu `crew_p1` geschrieben, nicht gemessen —
+die einzigen Regeln der Liste ohne Zahl in der Begründung. Der Grund ist
+einfach: Alle sieben Zeilen mit belegtem `crew_p2` gehören zum Diensttag
+2026-02-08, dessen Rettungsmittel dasselbe ist wie das auf der Importseite
+gewählte; die Besatzung kommt unverändert zurück. Die drei Regeln sind
+entfernt, der Kreislauf meldet jetzt keine ungenutzte Regel mehr.
+
+### Ebenfalls in dieser Version: eine berichtigte Wegangabe
+
+Beim Zusammenführen der beiden Arbeitslinien ist ein **Sachfehler in der
+Beschreibung des Sofortpakets 7.2.1** aufgefallen. Er betrifft nicht die
+Korrektur selbst — die ist richtig und wirkt —, sondern die Angabe, **wie** der
+Angriffswert in das Altersfeld gelangt.
+
+Dort stand: über den **Import**; `assets/import.js` übernehme `pat.age` als
+rohen Zellenwert. Das trifft nicht zu. `import_profiles.js` bildet die Spalte
+`pat_alter` mit `parse: ['alterJahre']` ab, und `PARSERS.ganzzahl` verlangt
+`/^-?\d+$/`. Nachgemessen an neun Fällen: `47`, `0`, leer und `  12 ` kommen
+durch; `<img src=x onerror=…>`, `47<img …>` und `<b>47</b>` werden **verworfen**
+(„Alter: ganze Zahl erwartet"). Die Angabe stammt vermutlich aus dem Kommentar
+bei der Excel-Spalte `Alter`, der die CSV-Spalte `pat_alter` als die nennt, die
+„den Rohwert führt" — gemeint ist dort der *gespeicherte* Wert im Gegensatz zum
+gerechneten, nicht ein ungeprüfter.
+
+Der Weg hinein ist ein anderer, und er ist der unangenehmere: Das Feld `age`
+liegt im `pat_blob`, freiem JSON, das der Server nie im Klartext sieht. Hinein
+kommt es über die **Wiederherstellung einer Sicherung** — im Adminbereich sogar
+die einer *fremden* — oder über jeden Zugang, der den Inhaltsschlüssel besitzt
+und die Oberfläche umgeht. Genau deshalb lässt sich die Lücke serverseitig
+grundsätzlich nicht wegprüfen, und genau deshalb war die Korrektur richtig.
+
+Berichtigt an fünf Stellen: `docs/CHANGELOG.md` (Eintrag 7.2.1),
+`server/version.php`, `server/assets/missiontable.js` (Kommentar),
+`docs/Backlog.md` (Nr. 22) und `docs/Pruefung-Sofortpaket-22.md`.
+
+**Am schwersten wog die letzte.** Der Prüflistenpunkt P-1 dort führte über den
+CSV-Import und erwartete, dass der Angriffswert danach als Text in der Zelle
+steht. Das kann er nicht — der Import verwirft ihn, das Feld bleibt leer, und
+das Scheiternsmerkmal „ein leeres Feld ist auch ein Fehler" hätte bei
+**korrektem** Verhalten angeschlagen. Wer die Liste abgehakt hätte, hätte einen
+Fehler gemeldet, wo keiner ist. P-1 führt jetzt über das Demo-Konto, das einen
+solchen Wert im Altersfeld mitbringt (21.11.2026, 09:21).
+
+Dazu Kleinigkeiten aus demselben Durchgang: `README.md` führte ein
+`docs/archiv/` auf, das es nicht gibt, und weder `Branding.md` noch
+`Pruefung-Sofortpaket-22.md`; `Technik.md` nannte im Verzeichnisbaum eine
+„Review-Umsetzung", die es ebenfalls nicht mehr gibt. Eingetragen und
+ausgetragen.
+
+## [Web 7.3.0] — 2026-08-23
+
+**Ein Demo-Konto.** Adresse `demo@gen-em.org`, Passwort `nadokudemo0815`,
+Daten frei erfunden, Änderungen erwünscht — und alle 30 Minuten wieder auf den
+Ausgangsstand. Neue Funktion, **keine Migration**: `app_state` liegt seit
+jeher, und der Bestand entsteht über die vorhandene Einspielroutine.
+
+### Wozu
+
+Wer die Anwendung ansehen will, brauchte bisher ein Konto, eine Einladung und
+eigene Daten. Das ist eine hohe Schwelle für die Frage „wie sieht das
+eigentlich aus?". Das Demo-Konto beantwortet sie ohne Vorbereitung — und
+zwar mit einem Bestand, in dem **jede** Funktion vorkommt: Luft- und
+Bodeneinsätze, Winde, Bergwacht, Reanimationen, ein Dienst über Mitternacht,
+ein Diensttag ohne Einsatz, ein gefüllter Papierkorb.
+
+Der Datensatz stammt aus Phase P1 und ist derselbe, gegen den die
+Regressionsläufe vergleichen. Das ist kein Zufall, sondern der Grund, warum
+es ihn gibt: Ein Beispielbestand, den niemand prüft, veraltet.
+
+### Die Ausnahme, die dafür gemacht wird — und ihre Grenze
+
+Das Projekt verspricht Ende-zu-Ende-Verschlüsselung: Der Server sieht die
+geschützten Angaben nie im Klartext, und das Schlüsselmaterial hängt am
+Passwort. **Für dieses eine Konto gilt das nicht.** Sein Schlüsselmaterial
+liegt in einer Fixture auf dem Server, denn sonst könnte eine Rücksetzung die
+Chiffretexte nicht wieder lesbar machen.
+
+Das ist eine bewusste, eng gezogene Ausnahme und nur unter vier Bedingungen
+vertretbar — alle vier werden **erzwungen**, nicht bloß zugesichert:
+
+1. Das Konto trägt ausschließlich erfundene Daten.
+2. Es hat die Rolle `user`. `demo_lib.php` schreibt sie bei jedem Anlegen und
+   jedem Reset fest hin, statt sie zu übernehmen.
+3. Jede Funktion arbeitet auf der Kennung aus `app_state.demo_user_id` und
+   nimmt **keine** von außen entgegen. Sie kann kein anderes Konto treffen,
+   auch nicht bei falschem Aufruf.
+4. Zugangsdaten und Geräteschlüssel sind ohnehin öffentlich — es gibt nichts
+   zu schützen, was nicht schon offenläge.
+
+Ein Banner im Konto, ein Warnhinweis auf der Adminseite und ein Abschnitt im
+Handbuch sagen dasselbe: **niemals echte Daten darin erfassen.**
+
+### Kein zweiter Einspielweg
+
+Der Bestand wird über `edbak_restore()` hergestellt — dieselbe Routine wie bei
+der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
+hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
+der ungeprüftere.
+
+Zwei kleine Erweiterungen waren dafür nötig, beide in `backup_lib.php`:
+
+- **`edbak_build()` kann den Papierkorb mitnehmen** (`$mitPapierkorb`). Die
+  Fixture soll den Referenzzustand vollständig abbilden. Für eine
+  Nutzer-Sicherung bleibt der Filter — wer sichert, sichert seinen Bestand,
+  nicht seinen Abfall.
+- **`edbak_restore()` ist verschachtelungsfähig.** Sie öffnet ihre Transaktion
+  nur, wenn noch keine läuft. Der Demo-Reset muss mehr in dieselbe Klammer
+  nehmen: Kontomaterial, Geräte, Bestand und Papierkorb-Nachlauf. Zerfiele das
+  in mehrere Transaktionen, könnte ein Fehler in der Mitte ein Konto mit
+  halbem Bestand hinterlassen — und der Reset läuft unbeaufsichtigt.
+
+Beide Punkte kamen nicht aus dem Konzept, sondern aus dem ersten Anlauf: Der
+warf „There is already an active transaction" und ließ danach einen leeren
+Papierkorb zurück.
+
+### Die Fixture
+
+`server/demo/fixture.json.gz` — Konto- und Schlüsselmaterial, Geräte, der
+Bestand als inneres Backup-JSON und ein Nachlauf-Drehbuch. Erzeugt von
+`tools/referenzdatensatz/fixture/erzeugen.php`.
+
+**Sie kann nicht aus einer `.edbak` kommen.** Die Sicherungsdatei trägt die
+geschützten Angaben im *Klartext* — der Browser entschlüsselt vor dem
+Versiegeln, damit sich eine Sicherung in jedes Konto einspielen lässt. Die
+Fixture braucht das Gegenteil: den Chiffretext unverändert, daneben das
+Schlüsselmaterial. Erst dadurch kann der Server das Konto **ohne jede
+Entschlüsselung** zurücksetzen, und erst dadurch ist der Reset schnell genug,
+um bei jeder Anfrage zu laufen. Der Erzeuger bricht ab, wenn er Klartext
+findet.
+
+Gepackt abgelegt: roh 2,3 MB, im Wesentlichen 52 484 Spurpunkte als
+JSON-Zahlen; gepackt knapp 700 KB. Die Datei liegt unter `server/` und geht
+bei jedem Deploy mit.
+
+### Der Reset
+
+Anfragegetrieben nach dem Muster der Tageswartung, mit einem Unterschied in
+der Reihenfolge: **zuerst zurücksetzen, dann antworten.** Wer nach längerer
+Ruhe kommt, sieht den Ausgangsstand und nicht die Hinterlassenschaft der
+letzten Besucherin. Zwei Auslösepunkte — `auth_guard.php` für Web-Anfragen
+und `ingest.php` für Uploads, dort **nach** der Geräteprüfung, damit die
+Rücksetzung kein Hebel für jeden ist, der die Adresse kennt.
+
+Der Reset überschreibt auch Konto- und Schlüsselmaterial und zählt
+`session_epoch` hoch. Damit bliebe selbst eine unerwartet gelungene Änderung
+der Konto-Identität folgenlos.
+
+Zum Schluss legt das Nachlauf-Drehbuch benannte Einsätze und Diensttage über
+die **regulären** Löschwege in den Papierkorb — sonst wäre er nach jedem Reset
+leer, denn das Einspielen wertet `deleted_at` nicht aus. Die Diensttage werden
+über ihre Dienstkennung angesprochen, nicht über das Datum: Seit E9 können
+zwei Dienste auf einem Kalendertag liegen.
+
+### Gesperrt ist ausschließlich die Identität
+
+E-Mail-Änderung und Passwortänderung (`einstellungen.php`) werden mit einem
+freundlichen Hinweis abgewiesen; `api/kdf_upgrade.php` antwortet mit stillem
+Erfolg, weil der Browser es von sich aus aufruft und ein Fehler dort als
+Störung stünde, wo es keine gibt; `reset_request.php` weist die Demo-Adresse
+**still** ab — die Antwort dieser Seite ist für jede Adresse dieselbe, und
+eine Sondermeldung wäre die einzige Stelle, an der sie verriete, welche
+Adressen es gibt.
+
+Alles Übrige bleibt offen, ausdrücklich auch Geräteverwaltung, Kopplung und
+Uploads.
+
+**Warum überhaupt sperren, wenn der Reset ohnehin alles zurückholt?** Weil
+zwischen zwei Rücksetzungen bis zu dreißig Minuten liegen. Wer in dieser Zeit
+das Passwort ändert, sperrt die nächste Besucherin aus — und die findet ein
+Konto vor, dessen öffentliche Zugangsdaten nicht mehr stimmen, ohne zu
+erfahren warum.
+
+### Mengenbremse
+
+Zwei neue Töpfe in `ratelimit_lib.php`, die **anders zählen** als die vier
+bestehenden: nicht Fehlversuche, sondern gelungene Anmeldungen. `demo` fasst
+20 je Stunde und IP-Adresse, `demog` 300 je Stunde insgesamt.
+
+Ein Fehlversuchszähler liefe hier nie an — die Zugangsdaten sind öffentlich,
+es gibt nichts zu erraten. Begrenzt werden soll die Menge der Nutzung: Das
+Konto ist zum Ausprobieren da, nicht als Rechenzeit für Fremde. Die Prüfung
+sitzt vor der teuren Ableitung, wie jede Bremse dort.
+
+## [Web 7.2.3] — 2026-08-23
+
+**Zwei Formatbeschreibungen sagten etwas anderes, als der Code tut.** Beides
+beim Aufbau des Referenzdatensatzes aufgefallen (Phase P1, Paket B5), beides
+gefunden, weil ein Werkzeug die Dateien gegen ihre Beschreibung gehalten hat.
+Keine Migration, kein Datenmodell.
+
+### `LIESMICH.txt` nannte eine Spalte, die es nicht gibt
+
+Der CSV-Export legt seinem Archiv eine `LIESMICH.txt` bei, die das Format
+erklärt. Darin stand weiterhin:
+
+> hubschrauber, standort und die Tagesbesatzung stehen sowohl in
+> einsaetze.csv als auch in diensttage.csv …
+
+Die Spalte heißt seit Web 5.10.0 `rettungsmittel` — `hubschrauber` kommt in
+keiner erzeugten Datei mehr vor. `docs/Export-Format.md` war bei der
+Umbenennung mitgezogen worden, die ausgelieferte Datei nicht. Ausgerechnet die
+Datei, deren einziger Zweck die Formatbeschreibung ist, beschrieb das Format
+falsch: Wer sich danach richtet, sucht eine Spalte, die nicht da ist.
+
+Der Anlass, es jetzt zu ändern, ist nicht die Größe des Fehlers, sondern der
+Zeitpunkt. Die Referenz-Exporte der Phase P1 werden eingecheckt und sind ab
+dann die Vergleichsgrundlage jedes Regressionslaufs. Ein falscher Satz darin
+wäre nicht nur falsch, sondern **festgeschrieben**.
+
+### `days[].id` stand unter „nicht in der Datei" — und steht doch darin
+
+`docs/Backup-Format.md` 4 führte `id` neben `user_id` und `device_id` unter
+den internen Verweisen, die eine Sicherung nicht enthält. Für `missions` und
+`rest_segments` stimmt das. Für `days` nicht: Die Kennung steht in jeder
+Sicherung, und sie **muss** darin stehen — `missions[].day_id` und
+`rest_segments[].day_id` verweisen darauf. Ohne sie ließe sich nach dem
+Einspielen nicht mehr sagen, welcher Einsatz zu welchem Dienst gehörte.
+
+Das Beispiel im selben Dokument zeigte den Schlüssel ebenfalls nicht. Beides
+ist ergänzt, mit der Klarstellung, worum es sich handelt: eine Kennung
+*innerhalb dieser Datei*, keine Aussage über die Datenbank — beim Einspielen
+wird sie auf die neu vergebene umgeschrieben.
+
+### Vier Bereiche fehlten in „Was NICHT in der Datei steht"
+
+Abschnitt 4 von `docs/Backup-Format.md` beansprucht seit Web 4.5.2
+ausdrücklich, **aufzählend** zu sein: Das Format ist eine Entscheidung, keine
+Nebenwirkung des Datenbankschemas. Der Abschnitt zählte Spalten auf und ließ
+vier ganze Bereiche aus, die eine Wiederherstellung nicht zurückbringt.
+Gemessen am Referenzdatensatz der Phase P1 (82 Einsätze):
+
+| Was | vorher | nach dem Umlauf |
+|---|---:|---:|
+| Papierkorb — Einsätze / Ruhesegmente / Diensttage | 5 / 5 / 1 | 0 / 0 / 0 |
+| Geräte | 3 | 0 |
+| `created_at` der Einsätze (verschiedene Werte) | 79 | 5 |
+| Kopplungscodes, Sperrliste (`deleted_refs`) | — | leer |
+
+Der Papierkorb wiegt am schwersten: Eine Wiederherstellung in ein frisches
+Konto leert ihn **endgültig**, und wer die Sicherung für vollständig hält,
+verliert die Daten im Vertrauen auf eine Zusage, die niemand gegeben hat.
+Beim Gerät ist das Fehlen dagegen richtig — es trägt einen API-Schlüssel, und
+ein mitgesichertes Gerät wäre ein mitgesicherter Zugang. Nur stand nirgends,
+dass danach jede Uhr neu zu koppeln ist.
+
+`created_at` ist der unangenehmste Fall: Es **wird** gesichert und beim
+Einspielen nicht geschrieben. Der Abschnitt führte `site_ele_m` als die
+einzige Asymmetrie dieser Art. Ob das Feld künftig mitgeschrieben oder aus
+der Sicherung gestrichen wird, ist offen — Backlog Nr. 25. Geändert wurde
+hier nur die Beschreibung, nicht das Verhalten.
+
+### Geprüft
+
+Der Referenz-Export wurde nach der Änderung neu erzeugt und mit dem
+Vergleichswerkzeug (`tools/referenzdatensatz/vergleich/`) gegen den Stand
+davor gehalten: **9 589 Einzelvergleiche, genau eine Abweichung** — die Zeile
+mit dem Spaltennamen in `LIESMICH.txt`.
+
+Die Angaben zu Abschnitt 4 stammen aus einem tatsächlich gefahrenen Umlauf
+(Sicherung → frisches Konto → Sicherung): 269 439 Einzelvergleiche, 15
+erwartete Abweichungen (`days[].refs[].device_id` wird `null`), keine
+unerklärte. Die vier fehlenden Bereiche zeigt dieser Vergleich **nicht** — sie
+fehlen in beiden Dateien — und wurden deshalb getrennt in der Datenbank
+gezählt. `days[].id` wurde gegen eine erzeugte Sicherung geprüft: vorhanden,
+ganze Zahl.
+
+## [Web 7.2.2] — 2026-08-23
+
+**Ein stiller Datenverlust im CSV-Rückimport.** Aufgefallen beim Aufbau des
+Referenzdatensatzes (Phase P1): Ein Einsatz, der über `import.php` aus einer
+`einsaetze.csv` eingelesen wurde, kam ohne Transportart, ohne NA-Begleitung,
+ohne Fehleinsatz-Kennzeichen, ohne Zielklinik-Koordinate und ohne
+Abfahrtortregel im Bestand an. Keine Migration.
+
+### Was passiert ist
+
+`assets/import.js` führt zwei Feldlisten. `EINFACHE_ZIELE` sagt, welche Werte
+beim Lesen der Datei unverändert nach `zeile.mission` wandern; `UEBERNAHME`
+sagt, welche davon `gruppiere()` in das Objekt kopiert, aus dem
+`import_ui.js` die Nutzlast für `api/import_commit.php` baut. Die zweite
+Liste war eine von Hand geführte Abschrift der ersten — und bei der Etappe 2
+(Web 6.1.0) war nur die erste ergänzt worden.
+
+Die Folge ist der unangenehmste Zuschnitt, den ein solcher Fehler haben kann:
+Die Werte werden korrekt gelesen, in der Prüftabelle korrekt **angezeigt**, die
+Bilanz meldet „0 Fehler" — und danach fallen sechs Felder zwischen Anzeige und
+Absenden heraus. Weder die Datei noch die Seite noch die Rückmeldung des
+Servers deuten darauf hin. Betroffen war ausschließlich das Profil
+`export_csv_v1`; das Excel-Profil kennt diese Spalten gar nicht.
+
+Das trifft eine ausdrückliche Zusage: `docs/Export-Format.md` 5.1 nennt
+`export_csv_v1` „verlustfrei" und zählt genau drei bewusste Ausnahmen auf
+(`einsatz_id`, GPX-Dateien, Rettungsmittel/Standort) plus `herkunft` und
+`edited`. Diese sechs Felder standen dort nicht — sie waren keine Entscheidung,
+sondern ein Versehen.
+
+### Was geändert wurde
+
+`UEBERNAHME` wird nicht mehr abgeschrieben, sondern **abgeleitet**:
+
+    var UEBERNAHME = EINFACHE_ZIELE
+        .filter(function (f) { return f !== 'day' && f !== 'crew_override'; })
+        .concat(['resources', 'phases', 'phasesLocal']);
+
+Die vier Abweichungen sind an Ort und Stelle begründet: `day` ist der
+Gruppenschlüssel und steht am Diensttag, `crew_override` wird bei
+`explicitCrew` ausdrücklich gesetzt, und `resources`, `phases`, `phasesLocal`
+sind Sonderfälle in `setzeZiel()` beziehungsweise `phasenFach()`. Ein neues
+Feld gehört damit nur noch an eine Stelle.
+
+Die einzelne Zeile hätte es auch getan. Sie wäre aber die dritte Abschrift
+gewesen, die irgendwann wieder zurückbleibt — und der Fehler ist gerade
+deshalb zwei Nebenversionen lang unbemerkt geblieben, weil nichts ihn zeigt.
+Das entspricht dem Grundsatz „Feldkatalog statt Sonderfall" (CLAUDE.md 4).
+
+### Wer nachbessern muss
+
+Wer zwischen Web 6.1.0 und 7.2.1 eine CSV-Datei zurückgespielt hat, hat die
+sechs Felder für die betroffenen Einsätze leer im Bestand. Ein erneuter Import
+derselben Datei mit „überschreiben" trägt sie nach; die Felder stehen
+außerhalb der COALESCE-Schranke von `api/import_commit.php`, werden also
+tatsächlich gesetzt. Betroffen sind nur importierte Einsätze — der Weg über
+die Uhr und das Formular schreibt diese Spalten seit jeher.
+
+### Geprüft
+
+Im Browser über `import.php` mit der Referenzdatei (vier Einsätze, 92 Spalten):
+vorher fehlten in allen vier Zeilen `transport_mode` und `start_src`, in je
+einer `na_escort` und `false_alarm`; nachher stimmen alle sechs Felder mit der
+Datei überein. Zusätzlich prüft der Referenzdatensatz die Listendrift jetzt
+dauerhaft maschinell (`tools/referenzdatensatz/generator/pruefen.py`, Prüfung 5):
+Sie liest beide Listen aus `assets/import.js` und meldet jedes Feld, das
+gelesen, aber nicht weitergereicht wird. Gegen den alten Stand gehalten meldet
+sie genau die sechs Felder, gegen den neuen keines.
 ## [Web 7.2.1] — 2026-08-23
 
 **Eine Sicherheitskorrektur, sonst nichts.** Sofortpaket zu Backlog Nr. 22,
@@ -26,12 +455,11 @@ verursacht noch verschärft; sie hat sie **gefunden** (Befund F-20).
 `zelleGeschuetzt()` maskierte Einsatzort und Diagnose über `esc()`, das Alter
 aber nicht — dort stand `v => v`, weil ein Alter eine Zahl ist. Über das
 Einsatzformular ist es das auch: `einsatz_form.php` schickt es durch
-`parseInt()`. Über den **Import** nicht: `assets/import.js` übernimmt `pat.age`
-als rohen Zellenwert und verschlüsselt ihn unverändert.
+`parseInt()`. Das **Feld** ist es nicht: `age` liegt im `pat_blob`, und der ist
+freies JSON.
 
-Und die Zelle wird per `innerHTML` gesetzt. Eine Importdatei mit Markup in der
-Alterspalte führte damit Skript aus — in genau dem Fenster, in dem der
-entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
+Und die Zelle wird per `innerHTML` gesetzt. Markup darin führte Skript aus — in
+genau dem Fenster, in dem der entschlüsselte Inhaltsschlüssel liegt. Der Server konnte davon nichts sehen: Er
 bekommt nur Chiffretext, prüfen kann er ihn nicht. Das ist der Preis der
 Ende-zu-Ende-Verschlüsselung, und er verlangt, dass der Browser seine Seite
 hält.
@@ -95,6 +523,50 @@ darüber — vorher blieb `edk_neu` übrig, jetzt nur noch `pckb` und `pckt`
 Backlog Nr. 17 (Mengenbremse für `ingest.php`) war an „P1/P2" übergeben. Das
 war überholt: Zuständig ist **P5** (Rahmenplan R19); P1 misst nur das
 Aufrufverhalten und legt keine Grenze fest.
+
+### Nachtrag: derselbe Befund ein zweites Mal, auf einem anderen Weg
+
+Diese Lücke ist in **Phase P1** unabhängig noch einmal gefunden worden (dort
+Fund F-P1-I), bevor beide Arbeitslinien voneinander wussten. Der Eintrag ist
+nachträglich um das ergänzt, was die zweite Fassung mitbrachte und diese hier
+nicht hatte.
+
+**Ein zweiter Weg hinein: die Wiederherstellung einer Sicherung.** Oben steht
+der Import als Vektor. Er ist nicht der einzige — `api/backup_restore.php`
+übernimmt den inneren Chiffretext unverändert, wie es sein muss. Wer eine
+Sicherung mit `<img src=x onerror="…">` im Altersfeld einspielt, führt das
+Skript beim nächsten Blick in die Einsatzliste aus. Im **Adminbereich** wiegt
+das schwerer als beim Import: Dort schreibt „Einspielen" eine *fremde*
+Sicherung in ein Konto — die Person, die das Skript ausführt, ist dann nicht
+die, von der die Datei stammt.
+
+**Die Einsatzseite war nicht betroffen.** `EdPat.alterText()` gibt für einen
+nicht in eine Zahl auflösbaren Wert `null` zurück, und was sie ausgibt,
+maskiert sie. Betroffen waren genau die drei Tabellen.
+
+**Wer nachbessern muss: niemand.** Der Fehler lag in der Anzeige, nicht im
+Bestand. Wer eine Sicherung fremder Herkunft eingespielt hat, sollte den
+Bestand einmal ansehen; ein manipulierter Wert steht danach weiterhin im
+Altersfeld, ist aber inert.
+
+**Zweite Messung, unabhängig von `tools/maskierungs-probe/`.** Der
+Referenzdatensatz der Phase P1 trägt im Altersfeld eines Einsatzes absichtlich
+`<img src=x onerror="alert('R20-alter')">`.
+`tools/referenzdatensatz/browser/angriffswerte.mjs` ersetzt `window.alert`,
+`confirm` und `prompt` **vor** dem ersten Seitenskript, protokolliert die
+Aufrufe und zählt zusätzlich, ob Elemente aus der Nutzlast im Dokument stehen.
+
+Gegen den Stand 7.2.0 gehalten: drei Seiten, je ein ausgelöster Dialog und ein
+eingefügtes `<img>` — **sechs Befunde**. Gegen diese Fassung: **42
+Einzelprüfungen über sechs Seiten**, kein Dialog, kein eingefügtes Element,
+keine Konsolenmeldung. Diese zweite Zahl ist nach dem Zusammenführen der
+beiden Arbeitslinien **noch einmal gefahren** worden, damit sie den
+ausgelieferten Code belegt und nicht den verworfenen Entwurf. Die Gegenprobe läuft mit: Der Wert muss auf mindestens
+einer Seite **sichtbar** sein, sonst hieße „kein Dialog" nur „nichts
+gerendert".
+
+Zwei Prüfmittel, zwei Wege, ein Ergebnis. Das ist mehr wert als eine Messung,
+die man zweimal liest.
 
 ## [Web 7.2.0] — 2026-08-23
 

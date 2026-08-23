@@ -1,0 +1,673 @@
+{
+  "kennung": "D11",
+  "abdeckung": [
+    "dienst-boden",
+    "zeit-mesz",
+    "besatzung-driver",
+    "besatzung-trainee",
+    "besatzung-other-boden",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
+  "dienst": {
+    "day": "2026-08-16",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-08-16 06:30",
+    "ende": "2026-08-16 20:00",
+    "day_ref": "d-12-6802457391",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Selma Ibrahimović",
+      "trainee": "Ronja Pfeil",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Tagdienst NEF; ein Einsatz erst nach Dienstende von Hand nachgetragen."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-12-1186189900",
+      "beginn": "2026-08-16 06:30",
+      "ende": "2026-08-16 06:42",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-9019705263",
+      "beginn": "2026-08-16 08:10",
+      "ende": "2026-08-16 08:35",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-7577608960",
+      "beginn": "2026-08-16 09:48",
+      "ende": "2026-08-16 10:32",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-8685489586",
+      "beginn": "2026-08-16 11:32",
+      "ende": "2026-08-16 11:51",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1186474292",
+      "beginn": "2026-08-16 12:49",
+      "ende": "2026-08-16 13:02",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-6817440805",
+      "beginn": "2026-08-16 14:20",
+      "ende": "2026-08-16 16:40",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-3336414390",
+      "beginn": "2026-08-16 18:05",
+      "ende": "2026-08-16 20:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-12-9247296857",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-08-16 06:42",
+      "ende": "2026-08-16 08:10",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 06:42"
+        ],
+        [
+          3,
+          "2026-08-16 06:48"
+        ],
+        [
+          4,
+          "2026-08-16 07:00"
+        ],
+        [
+          5,
+          "2026-08-16 07:05"
+        ],
+        [
+          6,
+          "2026-08-16 07:29"
+        ],
+        [
+          7,
+          "2026-08-16 07:50"
+        ],
+        [
+          8,
+          "2026-08-16 07:59"
+        ],
+        [
+          9,
+          "2026-08-16 08:10"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1",
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Anaphylaxie nach Wespenstich",
+        "dob": "1978-08-24",
+        "age": null,
+        "mission_no": "2026-1036",
+        "loc": {
+          "addr": "Zur Sennalpe 30, 87441 Auwiesen",
+          "lat": 47.54143,
+          "lon": 10.24911
+        },
+        "site_desc": "Gartengrundstück",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-9053871426",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-08-16 08:35",
+      "ende": "2026-08-16 09:48",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 08:35"
+        ],
+        [
+          3,
+          "2026-08-16 08:39"
+        ],
+        [
+          4,
+          "2026-08-16 08:54"
+        ],
+        [
+          5,
+          "2026-08-16 08:58"
+        ],
+        [
+          6,
+          "2026-08-16 09:19"
+        ],
+        [
+          7,
+          "2026-08-16 09:35"
+        ],
+        [
+          8,
+          "2026-08-16 09:42"
+        ],
+        [
+          9,
+          "2026-08-16 09:48"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Verkehrsunfall auf der Umgehung; Schockraum wegen Sturzhöhe und Aufprallgeschwindigkeit voranmeldet."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": "1993-06-18",
+        "age": null,
+        "mission_no": "2026-0522",
+        "loc": {
+          "addr": "Umgehungsstraße bei Ödwang, 87509 Ödwang",
+          "lat": 47.545,
+          "lon": 10.25
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "start-leer",
+        "transport-ground",
+        "schockraum"
+      ]
+    },
+    {
+      "client_ref": "m-12-2880451977",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-08-16 10:32",
+      "ende": "2026-08-16 11:32",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 10:32"
+        ],
+        [
+          3,
+          "2026-08-16 10:36"
+        ],
+        [
+          4,
+          "2026-08-16 10:44"
+        ],
+        [
+          5,
+          "2026-08-16 10:47"
+        ],
+        [
+          6,
+          "2026-08-16 11:04"
+        ],
+        [
+          7,
+          "2026-08-16 11:18"
+        ],
+        [
+          8,
+          "2026-08-16 11:24"
+        ],
+        [
+          9,
+          "2026-08-16 11:32"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1",
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall, Lyse-Fenster offen",
+        "dob": null,
+        "age": 67,
+        "mission_no": "2026-1037",
+        "loc": {
+          "addr": "Am Anger 43, 87534 Auwiesen",
+          "lat": 47.5473,
+          "lon": 10.24885
+        },
+        "site_desc": "Wohnhaus, Bad",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-4488873017",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-08-16 11:51",
+      "ende": "2026-08-16 12:49",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 11:51"
+        ],
+        [
+          3,
+          "2026-08-16 11:55"
+        ],
+        [
+          4,
+          "2026-08-16 12:03"
+        ],
+        [
+          5,
+          "2026-08-16 12:06"
+        ],
+        [
+          6,
+          "2026-08-16 12:22"
+        ],
+        [
+          7,
+          "2026-08-16 12:36"
+        ],
+        [
+          8,
+          "2026-08-16 12:42"
+        ],
+        [
+          9,
+          "2026-08-16 12:49"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patient wurde nach Aufklärung ambulant belassen."
+      },
+      "geschuetzt": {
+        "dx": "Femurfraktur nach häuslichem Sturz",
+        "dob": "1957-03-11",
+        "age": null,
+        "mission_no": "2026-1038",
+        "loc": {
+          "addr": "Ahornstraße 44, 87561 Auwiesen",
+          "lat": 47.54503,
+          "lon": 10.24923
+        },
+        "site_desc": "Wohnhaus, Flur",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-1687240539",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-08-16 13:02",
+      "ende": "2026-08-16 14:20",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 13:02"
+        ],
+        [
+          3,
+          "2026-08-16 13:07"
+        ],
+        [
+          4,
+          "2026-08-16 13:21"
+        ],
+        [
+          5,
+          "2026-08-16 13:26"
+        ],
+        [
+          9,
+          "2026-08-16 14:20"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patientin lehnte den Transport nach Aufklärung ab; Hausärztin verständigt."
+      },
+      "geschuetzt": {
+        "dx": "Hypertensive Entgleisung",
+        "dob": null,
+        "age": 66,
+        "mission_no": "2026-0523",
+        "loc": {
+          "addr": "Föhrenring 9, 87509 Talwang",
+          "lat": 47.532,
+          "lon": 10.287
+        },
+        "site_desc": "Seniorenwohnanlage, Erdgeschoss",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "erfassung-boden-track",
+        "transport-ambulant"
+      ]
+    },
+    {
+      "client_ref": null,
+      "quell_kennung": "MAN-01",
+      "kanal": "formular",
+      "nachtrag": false,
+      "papierkorb": null,
+      "beginn": "2026-08-16 16:40",
+      "ende": "2026-08-16 18:05",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-08-16 16:40"
+        ],
+        [
+          3,
+          "2026-08-16 16:44"
+        ],
+        [
+          4,
+          "2026-08-16 16:59"
+        ],
+        [
+          5,
+          "2026-08-16 17:03"
+        ],
+        [
+          6,
+          "2026-08-16 17:38"
+        ],
+        [
+          7,
+          "2026-08-16 17:52"
+        ],
+        [
+          8,
+          "2026-08-16 17:59"
+        ],
+        [
+          9,
+          "2026-08-16 18:05"
+        ]
+      ],
+      "route": null,
+      "rea": [
+        {
+          "beginn": "2026-08-16 17:04",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-08-16 17:06"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-08-16 17:07"
+            ],
+            [
+              "adrenalin",
+              "2026-08-16 17:09"
+            ],
+            [
+              "intubation",
+              "2026-08-16 17:14"
+            ],
+            [
+              "sonographie",
+              "2026-08-16 17:19"
+            ],
+            [
+              "rosc",
+              "2026-08-16 17:26"
+            ]
+          ]
+        }
+      ],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": "NEF Hochkreuth 71/82 (Nachforderung)",
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "NEF Hochkreuth 71/82",
+          "First Responder Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Von Hand angelegt: Das Gerät war während des Einsatzes ohne Ladung.\nZeiten aus dem Einsatzprotokoll des RTW übernommen."
+      },
+      "geschuetzt": {
+        "dx": "Kreislaufstillstand bei Lungenembolie, ROSC nach 22 Minuten",
+        "dob": null,
+        "age": 71,
+        "mission_no": "2026-0524",
+        "loc": {
+          "addr": "Am Anger 27, 87509 Talwang",
+          "lat": 47.582,
+          "lon": 10.33
+        },
+        "site_desc": "Werkstatt eines Landmaschinenbetriebs",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-manuell",
+        "erfassung-nachtraeglich-ohne-track",
+        "weiterer-notarzt",
+        "weitere-rettungsmittel-mehrere",
+        "sonderzeichen-zeilenumbruch",
+        "stammdaten-freitext"
+      ],
+      "$warum_rea_beginn": [
+        "HIER STAND EINMAL EIN EREIGNIS 'beginn' — es ist entfernt, und das",
+        "ist ein Befund (F-P1-F im Konzept).",
+        "",
+        "docs/JSON-Vertrag.md 3.3 fuehrt 'beginn' unter den gueltigen Werten",
+        "von events[].type und merkt nur an, dass die UHR es nicht sendet.",
+        "Der Server nimmt es aber auf KEINEM Weg an: ingest.php verwirft es",
+        "still (Zeile 299, `$ty !== 'beginn'`), einsatz_form.php weist es mit",
+        "Meldung ab (Zeile 317). Beide begruenden es gleich und richtig — der",
+        "Reanimationsbeginn steckt in `started_at` der Sitzung, ein zweites",
+        "Mal als Ereignis waere er doppelt.",
+        "",
+        "Der Datensatz fuehrt den Beginn deshalb dort, wo er hingehoert: im",
+        "Feld `beginn` dieser Sitzung. Speicherbare Ereignisarten sind NEUN,",
+        "nicht zehn."
+      ],
+      "$warum_freitext": [
+        "WEITERE RETTUNGSMITTEL AUS EINEM ANDEREN STANDORT. 'NEF Hochkreuth",
+        "71/82' und 'First Responder Sonnenau' sind Vorbelegungen des Standorts",
+        "Hochkreuth, dieser Dienst laeuft aber in Talwang. Das ist kein Fehler,",
+        "sondern der Regelfall bei einer Nachforderung ueber die Standortgrenze",
+        "hinweg -- und der Pruefwert fuer eine Zusage des Feldkatalogs:",
+        "'other_resources' ist FREITEXT mit Vorschlagsliste, ein Wert ausserhalb",
+        "der Liste bleibt speicherbar und wird beim Rendern ergaenzt statt",
+        "stillschweigend verworfen (mission_fields.php).",
+        "",
+        "Ohne diesen Fall pruefte der Datensatz nur den bequemen Teil des Feldes."
+      ]
+    }
+  ],
+  "ziel_einsaetze": 6
+}

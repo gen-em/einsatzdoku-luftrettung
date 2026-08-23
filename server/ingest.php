@@ -73,6 +73,23 @@ if (!$dev) {
 if (!password_verify($apiKey, $dev['api_key_hash'])) json_out(['error' => 'auth'], 401);
 if (!(int)$dev['active']) json_out(['error' => 'device_disabled'], 403);
 
+/* Demo-Konto: faelliger Reset VOR der Verarbeitung (E-P1-18).
+ *
+ * Der zweite von zwei Ausloesepunkten — der andere steht in auth_guard.php
+ * fuer Web-Anfragen. Ohne diesen hier bliebe ein Demo-Konto, mit dem nur
+ * gekoppelte Uhren sprechen, beliebig lange im zuletzt hinterlassenen
+ * Zustand stehen.
+ *
+ * ZUERST ZURUECKSETZEN, DANN AUFNEHMEN. Die Reihenfolge ist gewollt: Der
+ * gerade eintreffende Upload gehoert zum NEUEN Fenster und soll nicht vom
+ * Reset gleich wieder mitgenommen werden.
+ *
+ * Erst NACH der Geraetepruefung, damit eine unauthentifizierte Anfrage keinen
+ * Reset ausloesen kann — sonst waere die Ruecksetzung ein Hebel fuer jeden,
+ * der die Adresse kennt. */
+require_once __DIR__ . '/demo_lib.php';
+if (demo_ist_demo((int)$dev['user_id'])) { demo_reset_wenn_faellig(); }
+
 // --- Nutzlast pruefen ---------------------------------------------------------
 $b = json_decode($raw, true);
 $pruef = new Pruefliste();

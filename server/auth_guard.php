@@ -200,3 +200,21 @@ $kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
 require_once __DIR__ . '/ui.php';
 
 run_cleanup_if_due();   // taegliche Wartung, huckepack auf Web-Anfragen
+
+/* Demo-Konto: faelliger Reset VOR der Antwort (E-P1-18).
+ *
+ * Dasselbe Muster wie die Tageswartung darueber — anfragegetrieben, kein
+ * Zeitdienst noetig. Der Unterschied ist die Reihenfolge: Hier wird
+ * zurueckgesetzt, BEVOR die Seite ihre Daten liest. Wer nach laengerer Ruhe
+ * kommt, soll den Standardzustand sehen und nicht die Hinterlassenschaft der
+ * letzten Besucherin.
+ *
+ * Nur fuer das Demo-Konto selbst: `demo_reset_wenn_faellig()` prueft die
+ * Kennung aus `app_state` und tut fuer jedes andere Konto nichts. Der Aufruf
+ * steht trotzdem hinter einer eigenen Abfrage, damit eine Installation ohne
+ * Demo-Konto die Datei gar nicht erst laedt.
+ *
+ * Scheitert der Reset, laeuft die Anfrage weiter — eine Wartung darf keine
+ * Seite kaputtmachen. Der Grund landet im Fehlerprotokoll. */
+require_once __DIR__ . '/demo_lib.php';
+if (demo_ist_demo($userId)) { demo_reset_wenn_faellig(); }

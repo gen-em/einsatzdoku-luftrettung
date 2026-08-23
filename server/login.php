@@ -4,6 +4,7 @@ if (!file_exists(__DIR__ . '/config.php')) { header('Location: install.php'); ex
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ratelimit_lib.php';
+require_once __DIR__ . '/demo_lib.php';
 
 // Zeitpunkt fuer die konstante Antwortdauer im Fehlerzweig — muss VOR jeder
 // Arbeit stehen, sonst misst er nicht die ganze Anfrage.
@@ -55,7 +56,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * leerte seinen Salz-Zaehler nie. */
     $email = email_normalisieren($_POST['email'] ?? '');
 
-    if (!rate_erlaubt('login', $email)) {
+    /* Mengenbremse des Demo-Kontos (E-P1-20).
+     *
+     * VOR der teuren Pruefung, wie jede Bremse hier — sonst bliebe der
+     * Rechenaufwand als Angriffsflaeche offen.
+     *
+     * Sie haengt an der ADRESSE, nicht am Konto: Zu diesem Zeitpunkt ist noch
+     * nicht nachgeschlagen, wer sich anmeldet, und das soll auch so bleiben
+     * (der Zweig „Adresse unbekannt" darf nicht schneller sein als der
+     * andere). Die Adresse des Demo-Kontos ist ohnehin oeffentlich — hier
+     * verraet der Vergleich also nichts, was nicht im Handbuch steht.
+     *
+     * Die Meldung nennt den Grund: „zu viele Anmeldeversuche" waere hier
+     * schlicht falsch — es hat niemand etwas falsch gemacht. */
+    $istDemoAdresse = demo_ist_demo_adresse($email);
+    if ($istDemoAdresse && !rate_demo_erlaubt()) {
+        $bis = rate_demo_gesperrt_bis();
+        $error = 'Das Demo-Konto wird gerade sehr häufig genutzt und ist '
+               . 'vorübergehend gesperrt'
+               . ($bis !== null ? ' — wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.')
+               . ' Ein eigenes Konto ist davon nicht betroffen.';
+        rate_gleiche_dauer($t0);
+    } elseif (!rate_erlaubt('login', $email)) {
         $bis = rate_gesperrt_bis('login', $email);
         $error = 'Zu viele Anmeldeversuche. Bitte später erneut versuchen'
                . ($bis !== null ? ' — frühestens ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.');
@@ -135,6 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // verbraucht dort einen Versuch, und wer sich erfolgreich
             // anmeldet, soll sich nicht selbst aussperren.
             rate_erfolg('salt', $email);
+            /* Die Demo-Bremse zaehlt GELUNGENE Anmeldungen — deshalb hier,
+             * zwischen den beiden rate_erfolg()-Aufrufen, die Zaehler leeren.
+             * Kein Widerspruch: Jene betreffen den Fehlversuchsschutz des
+             * Kontos, dieser die Nutzungsmenge des Demo-Kontos. */
+            if ($istDemoAdresse) { rate_demo_zaehlen(); }
             header('Location: index.php'); exit;
         }
         rate_misserfolg('login', $email);

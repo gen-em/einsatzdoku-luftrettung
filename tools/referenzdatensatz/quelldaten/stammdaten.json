@@ -1,0 +1,254 @@
+{
+  "$kommentar": [
+    "Stammdaten des Referenzdatensatzes (E-P1-05). Das Einspielskript legt sie",
+    "ueber die regulaeren Einstellungs-Endpunkte an, damit der gesamte Bestand",
+    "aus einem LEEREN Konto reproduzierbar ist.",
+    "",
+    "NAMEN SIND ERFUNDEN, GEOGRAPHIE IST ECHT (E-P1-02). Die Koordinaten liegen",
+    "im Allgaeu und am Alpenrand -- ohne sie waeren Tracks, Hoehenprofile und",
+    "Kartendarstellung nicht pruefbar. Standorte, Rettungsmittel, Kliniken,",
+    "Bergwacht-Einheiten und Besatzung tragen dagegen frei erfundene Namen; ein",
+    "realer Rufname (Christoph ...) kommt nirgends vor.",
+    "",
+    "DER STANDORT IST DER ANKER (schema.sql, E15): Jedes Rettungsmittel, jede",
+    "Zielklinik, jede Vorbelegung und jede Bereitschaft gehoert GENAU EINEM",
+    "Standort. Deshalb steht an jedem Eintrag ein 'standort'."
+  ],
+  "standorte": [
+    {
+      "name": "Luftrettungsstation Hochkreuth",
+      "lat": 47.7255,
+      "lon": 10.314,
+      "standard": true,
+      "$warum": "MIT Koordinaten -- nur dann steht der Abfahrtort 'Standort' zur Auswahl (start_src=base)."
+    },
+    {
+      "name": "Notarztstandort Talwang",
+      "lat": null,
+      "lon": null,
+      "standard": false,
+      "$warum": "OHNE Koordinaten (Matrixzeile Stammdaten). Folge, die der Datensatz mitprueft: Die Bodeneinsaetze von hier koennen start_src='base' NICHT verwenden."
+    }
+  ],
+  "rettungsmittel": [
+    {
+      "name": "Alpenfalke 1",
+      "art": "air",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "rollen": [
+        "p1",
+        "p2",
+        "hems",
+        "fr",
+        "other"
+      ],
+      "faehigkeiten": [
+        "winch",
+        "bergwacht"
+      ],
+      "standard": true
+    },
+    {
+      "name": "Alpenfalke 2",
+      "art": "air",
+      "standort": "Luftrettungsstation Hochkreuth",
+      "rollen": [
+        "p1",
+        "hems",
+        "fr"
+      ],
+      "faehigkeiten": [],
+      "standard": false,
+      "$warum": "OHNE Faehigkeiten und mit kleinerem Rollensatz. Prueft zweierlei: dass Winden- und Bergwachtfelder an seinen Diensttagen gar nicht erscheinen (cap_gate), und dass der eingefrorene Rollensatz eines Diensttags wirklich vom Rettungsmittel kommt."
+    },
+    {
+      "name": "NEF Talwang 76/1",
+      "art": "ground",
+      "standort": "Notarztstandort Talwang",
+      "rollen": [
+        "driver",
+        "trainee",
+        "other"
+      ],
+      "faehigkeiten": [],
+      "standard": false
+    }
+  ],
+  "besatzung": [
+    {
+      "rolle": "p1",
+      "name": "Marion Aschenbrenner",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "p1",
+      "name": "Tilman Roithner",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "p1",
+      "name": "Servatius Kroll",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "p2",
+      "name": "Ingrid Voss-Hartmann",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "p2",
+      "name": "Béla Sárközy",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "hems",
+      "name": "Kerstin Obermeier",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "hems",
+      "name": "Jonas Steinlechner",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "hems",
+      "name": "Ruth Amrein",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "fr",
+      "name": "Vitus Halbritter",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "fr",
+      "name": "Nele Brugger",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "other",
+      "name": "Elias Sturm (Hospitant)",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "rolle": "driver",
+      "name": "Gerd Wallner",
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "rolle": "driver",
+      "name": "Selma Ibrahimović",
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "rolle": "trainee",
+      "name": "Ronja Pfeil",
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "rolle": "other",
+      "name": "Dr. Hanna Kestner",
+      "standort": "Notarztstandort Talwang"
+    }
+  ],
+  "zielkliniken": [
+    {
+      "name": "Bergklinik Sonnenau",
+      "lat": 47.559,
+      "lon": 10.217,
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Kreisklinikum Auwiesen",
+      "lat": 47.718,
+      "lon": 10.322,
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Universitätsklinikum Nordstadt",
+      "lat": 48.4011,
+      "lon": 9.9876,
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Unfallklinik Felsberg",
+      "lat": 47.681,
+      "lon": 11.202,
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Klinikum Westried",
+      "lat": null,
+      "lon": null,
+      "standort": "Luftrettungsstation Hochkreuth",
+      "$warum": "OHNE Koordinate (Matrixzeile Transport). Ein Einsatz mit diesem Ziel traegt keinen dest_lat/dest_lon und zeigt auf der Karte keinen Zielpin."
+    },
+    {
+      "name": "Kreisklinik Steinach",
+      "lat": 47.515,
+      "lon": 10.281,
+      "standort": "Notarztstandort Talwang",
+      "$warum": "Haus der Grundversorgung rund 5 km vom Standort. Ohne eine nahe Klinik musste jeder Bodentransport 20 km weit fahren, und die Fahrzeit der Phasen 6 bis 7 reichte dafuer nicht."
+    },
+    {
+      "name": "Kreisklinikum Auwiesen",
+      "lat": 47.718,
+      "lon": 10.322,
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "name": "Klinik Talwang",
+      "lat": null,
+      "lon": null,
+      "standort": "Notarztstandort Talwang"
+    }
+  ],
+  "bereitschaften": [
+    {
+      "name": "Bergwacht Sonnenau",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Bergwacht Felsgrat",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Bergwacht Moosachtal",
+      "standort": "Luftrettungsstation Hochkreuth"
+    }
+  ],
+  "weitere_rettungsmittel": [
+    {
+      "name": "RTW Hochkreuth 71/83",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "NEF Hochkreuth 71/82",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "First Responder Sonnenau",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "FF Hochkreuth 40/1",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "Wasserwacht Auwiesen",
+      "standort": "Luftrettungsstation Hochkreuth"
+    },
+    {
+      "name": "RTW Talwang 76/83",
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "name": "KTW Talwang 76/85",
+      "standort": "Notarztstandort Talwang"
+    },
+    {
+      "name": "ELW Talwang 1",
+      "standort": "Notarztstandort Talwang"
+    }
+  ]
+}

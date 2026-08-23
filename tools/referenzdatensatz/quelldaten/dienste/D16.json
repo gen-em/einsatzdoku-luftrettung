@@ -1,0 +1,599 @@
+{
+  "kennung": "D16",
+  "abdeckung": [
+    "dienst-boden",
+    "zeit-mez",
+    "ruhe-nicht-abgeschlossen",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
+  "dienst": {
+    "day": "2026-12-27",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-12-27 07:00",
+    "ende": "2026-12-27 19:00",
+    "day_ref": "d-12-7743019628",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Selma Ibrahimović",
+      "trainee": "Ronja Pfeil",
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Letzter Dienst des Jahres; das Gerät wurde am Ende nicht abgemeldet — das letzte Ruhesegment blieb offen."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-12-8198171391",
+      "beginn": "2026-12-27 07:00",
+      "ende": "2026-12-27 07:13",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-7560769284",
+      "beginn": "2026-12-27 08:10",
+      "ende": "2026-12-27 08:36",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-8094351368",
+      "beginn": "2026-12-27 09:51",
+      "ende": "2026-12-27 10:15",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-3823750980",
+      "beginn": "2026-12-27 11:47",
+      "ende": "2026-12-27 12:12",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-6796655553",
+      "beginn": "2026-12-27 13:06",
+      "ende": "2026-12-27 13:31",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-2434474629",
+      "beginn": "2026-12-27 14:56",
+      "ende": "2026-12-27 15:11",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1327100288",
+      "beginn": "2026-12-27 16:06",
+      "ende": null,
+      "final": false
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-12-2442188284",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-12-27 07:13",
+      "ende": "2026-12-27 08:10",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 07:13"
+        ],
+        [
+          3,
+          "2026-12-27 07:17"
+        ],
+        [
+          4,
+          "2026-12-27 07:25"
+        ],
+        [
+          5,
+          "2026-12-27 07:28"
+        ],
+        [
+          6,
+          "2026-12-27 07:44"
+        ],
+        [
+          7,
+          "2026-12-27 07:57"
+        ],
+        [
+          8,
+          "2026-12-27 08:03"
+        ],
+        [
+          9,
+          "2026-12-27 08:10"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Patient wurde nach Aufklärung ambulant belassen."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": "1965-04-27",
+        "age": null,
+        "mission_no": "2026-1048",
+        "loc": {
+          "addr": "Brunnengasse 66, 87411 Auwiesen",
+          "lat": 47.54338,
+          "lon": 10.25278
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-6509273311",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-12-27 08:36",
+      "ende": "2026-12-27 09:51",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 08:36"
+        ],
+        [
+          3,
+          "2026-12-27 08:41"
+        ],
+        [
+          4,
+          "2026-12-27 08:51"
+        ],
+        [
+          5,
+          "2026-12-27 08:55"
+        ],
+        [
+          6,
+          "2026-12-27 09:16"
+        ],
+        [
+          7,
+          "2026-12-27 09:34"
+        ],
+        [
+          8,
+          "2026-12-27 09:41"
+        ],
+        [
+          9,
+          "2026-12-27 09:51"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": null,
+        "age": 30,
+        "mission_no": "2026-1049",
+        "loc": {
+          "addr": "Am Anger 39, 87411 Auwiesen",
+          "lat": 47.54244,
+          "lon": 10.25266
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-8930335974",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-12-27 10:15",
+      "ende": "2026-12-27 11:47",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 10:15"
+        ],
+        [
+          3,
+          "2026-12-27 10:21"
+        ],
+        [
+          4,
+          "2026-12-27 10:34"
+        ],
+        [
+          5,
+          "2026-12-27 10:39"
+        ],
+        [
+          6,
+          "2026-12-27 11:05"
+        ],
+        [
+          7,
+          "2026-12-27 11:26"
+        ],
+        [
+          8,
+          "2026-12-27 11:35"
+        ],
+        [
+          9,
+          "2026-12-27 11:47"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
+      },
+      "geschuetzt": {
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
+        "dob": "1981-11-10",
+        "age": null,
+        "mission_no": "2026-1050",
+        "loc": {
+          "addr": "Hirtenweg 71, 87519 Steinach im Tal",
+          "lat": 47.51534,
+          "lon": 10.2835
+        },
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-5766060351",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-12-27 12:12",
+      "ende": "2026-12-27 13:06",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 12:12"
+        ],
+        [
+          3,
+          "2026-12-27 12:17"
+        ],
+        [
+          4,
+          "2026-12-27 12:29"
+        ],
+        [
+          5,
+          "2026-12-27 12:34"
+        ],
+        [
+          9,
+          "2026-12-27 13:06"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "basis"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Hypertensive Entgleisung",
+        "dob": "1934-05-25",
+        "age": null,
+        "mission_no": "2026-1051",
+        "loc": {
+          "addr": "Lindenplatz 39, 87561 Steinach im Tal",
+          "lat": 47.51337,
+          "lon": 10.27813
+        },
+        "site_desc": "Seniorenwohnanlage, Erdgeschoss",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-7012456665",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-12-27 13:31",
+      "ende": "2026-12-27 14:56",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 13:31"
+        ],
+        [
+          3,
+          "2026-12-27 13:36"
+        ],
+        [
+          4,
+          "2026-12-27 13:48"
+        ],
+        [
+          5,
+          "2026-12-27 13:53"
+        ],
+        [
+          6,
+          "2026-12-27 14:17"
+        ],
+        [
+          7,
+          "2026-12-27 14:36"
+        ],
+        [
+          8,
+          "2026-12-27 14:45"
+        ],
+        [
+          9,
+          "2026-12-27 14:56"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
+      },
+      "geschuetzt": {
+        "dx": "Akutes Abdomen",
+        "dob": null,
+        "age": 89,
+        "mission_no": "2026-1052",
+        "loc": {
+          "addr": "Lärchenweg 74, 87545 Steinach im Tal",
+          "lat": 47.51885,
+          "lon": 10.2812
+        },
+        "site_desc": "Wohnhaus, Küche",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": null,
+      "quell_kennung": "MAN-02",
+      "kanal": "formular",
+      "nachtrag": false,
+      "papierkorb": null,
+      "beginn": "2026-12-27 15:11",
+      "ende": "2026-12-27 16:06",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-12-27 15:11"
+        ],
+        [
+          3,
+          "2026-12-27 15:16"
+        ],
+        [
+          4,
+          "2026-12-27 15:29"
+        ],
+        [
+          5,
+          "2026-12-27 15:33"
+        ],
+        [
+          9,
+          "2026-12-27 16:06"
+        ]
+      ],
+      "route": null,
+      "rea": [],
+      "felder": {
+        "transport_mode": "ambulant",
+        "na_escort": 0,
+        "transport_dest": null,
+        "dest_lat": null,
+        "dest_lon": null,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "manual",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": "=VERKETTEN(\"Dr.\";\" \";\"Kestner\") — Eintrag aus der Dienstliste kopiert",
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 1,
+        "crew": {
+          "driver": "Gerd Wallner"
+        },
+        "notes": "Von Hand angelegt; die Ablösung des Fahrers war bereits im Dienst, deshalb abweichende Besatzung.\n-20 min Verzögerung durch Schneeräumung der Zufahrt."
+      },
+      "geschuetzt": {
+        "dx": "Rippenprellung nach Sturz, ambulant belassen",
+        "dob": null,
+        "age": 29,
+        "mission_no": "2026-0796",
+        "loc": {
+          "addr": "Rodelbahn Felsgrat, 87545 Felsgrat",
+          "lat": 47.517,
+          "lon": 10.409
+        },
+        "site_desc": "Rodelbahn, Kurve 4",
+        "start": {
+          "addr": "Zwischenhalt Parkplatz Talstation",
+          "lat": 47.508,
+          "lon": 10.371
+        }
+      },
+      "abdeckung": [
+        "herkunft-manuell",
+        "erfassung-nachtraeglich-ohne-track",
+        "start-manual",
+        "besatzung-abweichend",
+        "transport-ambulant",
+        "sonderzeichen-formel-gleich",
+        "sonderzeichen-formel-minus",
+        "sonderzeichen-semikolon",
+        "sonderzeichen-zeilenumbruch"
+      ]
+    }
+  ],
+  "$warum_ruhesegment": "DAS LETZTE RUHESEGMENT IST NICHT ABGESCHLOSSEN (final=0, ended_at leer). Es entsteht, wenn niemand „Einsatztag beenden\" drückt — auf der Uhr der häufigste unvollständige Zustand überhaupt. Die Matrixzeile Ruhezeiten verlangt ihn, und er prüft mit, dass Anzeige, Export und Sicherung ein Segment ohne Ende aushalten.",
+  "ziel_einsaetze": 6
+}

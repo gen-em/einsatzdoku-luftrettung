@@ -1,0 +1,630 @@
+{
+  "kennung": "D05",
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mez",
+    "zwei-dienste-ein-tag"
+  ],
+  "dienst": {
+    "day": "2026-03-28",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 1",
+    "beginn": "2026-03-28 06:30",
+    "ende": "2026-03-28 20:00",
+    "day_ref": "d-11-8259140736",
+    "besatzung": {
+      "p1": "Marion Aschenbrenner",
+      "p2": null,
+      "hems": "Ruth Amrein",
+      "fr": "Nele Brugger",
+      "other": null
+    },
+    "notizen": null
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-1084364177",
+      "beginn": "2026-03-28 06:30",
+      "ende": "2026-03-28 06:43",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-4146337070",
+      "beginn": "2026-03-28 08:00",
+      "ende": "2026-03-28 08:22",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-9273660892",
+      "beginn": "2026-03-28 09:48",
+      "ende": "2026-03-28 11:05",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-9860342050",
+      "beginn": "2026-03-28 12:30",
+      "ende": "2026-03-28 12:53",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-6650765215",
+      "beginn": "2026-03-28 14:00",
+      "ende": "2026-03-28 15:12",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-8902770950",
+      "beginn": "2026-03-28 16:52",
+      "ende": "2026-03-28 17:36",
+      "final": true
+    },
+    {
+      "client_ref": "r-11-9809421713",
+      "beginn": "2026-03-28 18:42",
+      "ende": "2026-03-28 20:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-11-9670228276",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-28 06:43",
+      "ende": "2026-03-28 08:00",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 06:43"
+        ],
+        [
+          3,
+          "2026-03-28 06:48"
+        ],
+        [
+          4,
+          "2026-03-28 06:59"
+        ],
+        [
+          5,
+          "2026-03-28 07:03"
+        ],
+        [
+          6,
+          "2026-03-28 07:24"
+        ],
+        [
+          7,
+          "2026-03-28 07:42"
+        ],
+        [
+          8,
+          "2026-03-28 07:50"
+        ],
+        [
+          9,
+          "2026-03-28 08:00"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "NEF Hochkreuth 71/82",
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Amputationsverletzung der Hand",
+        "dob": "1989-12-01",
+        "age": null,
+        "mission_no": "2026-1014",
+        "loc": {
+          "addr": "Hirtenweg 60, 87411 Oberkarwang",
+          "lat": 47.43963,
+          "lon": 10.22128
+        },
+        "site_desc": "Sägewerk, Halle 2",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-8836271059",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-28 08:22",
+      "ende": "2026-03-28 09:48",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 08:22"
+        ],
+        [
+          3,
+          "2026-03-28 08:26"
+        ],
+        [
+          4,
+          "2026-03-28 08:38"
+        ],
+        [
+          5,
+          "2026-03-28 08:42"
+        ],
+        [
+          6,
+          "2026-03-28 09:00"
+        ],
+        [
+          7,
+          "2026-03-28 09:27"
+        ],
+        [
+          8,
+          "2026-03-28 09:37"
+        ],
+        [
+          9,
+          "2026-03-28 09:48"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Universitätsklinikum Nordstadt",
+        "dest_lat": 48.4011,
+        "dest_lon": 9.9876,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83",
+          "NEF Hochkreuth 71/82",
+          "FF Hochkreuth 40/1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Technische Rettung durch die Feuerwehr; Transport in das überregionale Traumazentrum wegen instabilem Becken."
+      },
+      "geschuetzt": {
+        "dx": "Polytrauma nach Verkehrsunfall, instabile Beckenfraktur",
+        "dob": "2002-01-09",
+        "age": null,
+        "mission_no": "2026-0141",
+        "loc": {
+          "addr": "Kreisstraße nach Kaltbrunn am Hang, 87466 Kaltbrunn am Hang",
+          "lat": 47.73,
+          "lon": 10.398
+        },
+        "site_desc": "Fahrzeug im Straßengraben, Person eingeklemmt",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "start-base",
+        "transport-air",
+        "schockraum",
+        "weitere-rettungsmittel-mehrere"
+      ]
+    },
+    {
+      "client_ref": "m-11-5027369184",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-28 11:05",
+      "ende": "2026-03-28 12:30",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 11:05"
+        ],
+        [
+          3,
+          "2026-03-28 11:10"
+        ],
+        [
+          4,
+          "2026-03-28 11:23"
+        ],
+        [
+          4,
+          "2026-03-28 11:31"
+        ],
+        [
+          5,
+          "2026-03-28 11:36"
+        ],
+        [
+          6,
+          "2026-03-28 11:58"
+        ],
+        [
+          7,
+          "2026-03-28 12:11"
+        ],
+        [
+          8,
+          "2026-03-28 12:20"
+        ],
+        [
+          9,
+          "2026-03-28 12:30"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Erste Landung an falscher Koordinate der Leitstelle; Phase \"Ankunft Einsatzort\" deshalb ein zweites Mal gesetzt."
+      },
+      "geschuetzt": {
+        "dx": "Intoxikation mit Mischkonsum, GCS 8",
+        "dob": null,
+        "age": 23,
+        "mission_no": "2026-0142",
+        "loc": {
+          "addr": "Enzianweg 5, 87441 Birkenau am See",
+          "lat": 47.666,
+          "lon": 10.312
+        },
+        "site_desc": "Badesee, Uferbereich hinter dem Kiosk",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "phasen-mehrfach"
+      ],
+      "$warum_phasen": "Die Phase 4 steht ZWEIMAL. Das ist kein Fehler in den Quelldaten, sondern der Prüffall aus JSON-Vertrag Abschnitt 3: Eine erneut gesetzte Phase ist eine KORREKTUR und damit eine Information. Kein Client und kein Schreibweg darf sie entdoppeln — genau das prüft dieser Einsatz dauerhaft mit."
+    },
+    {
+      "client_ref": "m-11-6416611188",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-28 12:53",
+      "ende": "2026-03-28 14:00",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 12:53"
+        ],
+        [
+          3,
+          "2026-03-28 12:57"
+        ],
+        [
+          4,
+          "2026-03-28 13:07"
+        ],
+        [
+          5,
+          "2026-03-28 13:10"
+        ],
+        [
+          6,
+          "2026-03-28 13:29"
+        ],
+        [
+          7,
+          "2026-03-28 13:45"
+        ],
+        [
+          8,
+          "2026-03-28 13:51"
+        ],
+        [
+          9,
+          "2026-03-28 14:00"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "First Responder Sonnenau"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
+      },
+      "geschuetzt": {
+        "dx": "Verbrennung Grad IIb",
+        "dob": null,
+        "age": 19,
+        "mission_no": "2026-1015",
+        "loc": {
+          "addr": "Ahornstraße 127, 87519 Jochwang",
+          "lat": 47.51378,
+          "lon": 10.40794
+        },
+        "site_desc": "Hofstelle, Grillunfall im Innenhof",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-11-3391648207",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "beginn": "2026-03-28 15:12",
+      "ende": "2026-03-28 16:52",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 15:12"
+        ],
+        [
+          3,
+          "2026-03-28 15:16"
+        ],
+        [
+          4,
+          "2026-03-28 15:33"
+        ],
+        [
+          5,
+          "2026-03-28 15:51"
+        ],
+        [
+          6,
+          "2026-03-28 16:14"
+        ],
+        [
+          7,
+          "2026-03-28 16:36"
+        ],
+        [
+          8,
+          "2026-03-28 16:44"
+        ],
+        [
+          9,
+          "2026-03-28 16:52"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Unfallklinik Felsberg",
+        "dest_lat": 47.681,
+        "dest_lon": 11.202,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 1,
+        "winch_cycles": 2,
+        "winch_cycles_pat": 1,
+        "winch_airload": 0,
+        "bergwacht": 1,
+        "bw_unit": "Bergwacht Felsgrat",
+        "bw_info": "Bereitschaft über den Klettersteig aufgestiegen; Bergung aus der Wandstufe",
+        "other_ema": null,
+        "other_resources": [
+          "Bergwacht Felsgrat"
+        ],
+        "crew_override": 1,
+        "crew": {
+          "p1": "Servatius Kroll"
+        },
+        "notes": "Pilotenwechsel zur Mittagsablösung; ab diesem Einsatz fliegt Servatius Kroll."
+      },
+      "geschuetzt": {
+        "dx": "Offene Unterschenkelfraktur nach Absturz im Klettersteig",
+        "dob": "1990-05-16",
+        "age": null,
+        "mission_no": "2026-0143",
+        "loc": {
+          "addr": "Klettersteig Felsgrat, Wandstufe 3, 87545 Felsgrat",
+          "lat": 47.508,
+          "lon": 10.371
+        },
+        "site_desc": "Exponierte Lage, kein Landeplatz, Bergung mit der Winde",
+        "start": null
+      },
+      "abdeckung": [
+        "herkunft-watch",
+        "winde",
+        "besatzung-abweichend",
+        "bergwacht-info"
+      ]
+    },
+    {
+      "client_ref": "m-11-7101819165",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-28 17:36",
+      "ende": "2026-03-28 18:42",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-28 17:36"
+        ],
+        [
+          3,
+          "2026-03-28 17:40"
+        ],
+        [
+          4,
+          "2026-03-28 17:50"
+        ],
+        [
+          5,
+          "2026-03-28 17:53"
+        ],
+        [
+          6,
+          "2026-03-28 18:12"
+        ],
+        [
+          7,
+          "2026-03-28 18:27"
+        ],
+        [
+          8,
+          "2026-03-28 18:34"
+        ],
+        [
+          9,
+          "2026-03-28 18:42"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "air",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 1,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": "base",
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "FF Hochkreuth 40/1",
+          "Wasserwacht Auwiesen"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr abgesichert."
+      },
+      "geschuetzt": {
+        "dx": "Amputationsverletzung der Hand",
+        "dob": "2018-11-14",
+        "age": null,
+        "mission_no": "2026-1016",
+        "loc": {
+          "addr": "Brunnengasse 121, 87561 Traunwang",
+          "lat": 47.68845,
+          "lon": 10.04327
+        },
+        "site_desc": "Sägewerk, Halle 2",
+        "start": null
+      },
+      "abdeckung": []
+    }
+  ],
+  "$warum_datum": "ERSTER von ZWEI Diensten am 28.03.2026 (der zweite ist D05, ein NEF-Nachtdienst). Das ist der von E9 vorgesehene Regelfall und der Grund, warum der Diensttag seit Web 6.0.0 eine eigene Kennung trägt: Aus dem Datum allein wäre nicht mehr zu entscheiden, welcher Dienst gemeint ist. FOLGE FÜR DEN IMPORT: An diesem Datum darf KEIN Einsatz per CSV nachgetragen werden — der Import löst den Diensttag nur über das Datum auf und träfe immer diesen hier (B-04).",
+  "ziel_einsaetze": 6
+}

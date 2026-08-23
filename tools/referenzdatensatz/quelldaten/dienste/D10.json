@@ -1,0 +1,639 @@
+{
+  "kennung": "D10",
+  "abdeckung": [
+    "dienst-boden",
+    "zeit-mesz",
+    "besatzung-driver",
+    "besatzung-other-boden",
+    "ruhe-mehrere",
+    "notizen-diensttag"
+  ],
+  "dienst": {
+    "day": "2026-07-06",
+    "art": "ground",
+    "standort": "Notarztstandort Talwang",
+    "rettungsmittel": "NEF Talwang 76/1",
+    "beginn": "2026-07-06 07:00",
+    "ende": "2026-07-06 19:00",
+    "day_ref": "d-12-1608572394",
+    "spur_ausgangspunkt": {
+      "lat": 47.559,
+      "lon": 10.217
+    },
+    "besatzung": {
+      "driver": "Gerd Wallner",
+      "trainee": null,
+      "other": "Dr. Hanna Kestner"
+    },
+    "notizen": "Praktikantenplatz an diesem Tag nicht besetzt."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-12-8556899939",
+      "beginn": "2026-07-06 07:00",
+      "ende": "2026-07-06 07:06",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-6192579972",
+      "beginn": "2026-07-06 08:21",
+      "ende": "2026-07-06 08:42",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-2374781710",
+      "beginn": "2026-07-06 10:15",
+      "ende": "2026-07-06 10:38",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1640318025",
+      "beginn": "2026-07-06 11:56",
+      "ende": "2026-07-06 12:20",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-1693180715",
+      "beginn": "2026-07-06 13:49",
+      "ende": "2026-07-06 14:09",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-9222881829",
+      "beginn": "2026-07-06 15:32",
+      "ende": "2026-07-06 15:52",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-8748168307",
+      "beginn": "2026-07-06 17:24",
+      "ende": "2026-07-06 19:00",
+      "final": true
+    }
+  ],
+  "einsaetze": [
+    {
+      "client_ref": "m-12-4975746880",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 07:06",
+      "ende": "2026-07-06 08:21",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 07:06"
+        ],
+        [
+          3,
+          "2026-07-06 07:11"
+        ],
+        [
+          4,
+          "2026-07-06 07:21"
+        ],
+        [
+          5,
+          "2026-07-06 07:25"
+        ],
+        [
+          6,
+          "2026-07-06 07:46"
+        ],
+        [
+          7,
+          "2026-07-06 08:04"
+        ],
+        [
+          8,
+          "2026-07-06 08:11"
+        ],
+        [
+          9,
+          "2026-07-06 08:21"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Obere gastrointestinale Blutung",
+        "dob": "1988-12-27",
+        "age": null,
+        "mission_no": "2026-1030",
+        "loc": {
+          "addr": "Weiherweg 66, 87509 Auwiesen",
+          "lat": 47.54891,
+          "lon": 10.24611
+        },
+        "site_desc": "Gasthof, Gästezimmer",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-1366783641",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 08:42",
+      "ende": "2026-07-06 10:15",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 08:42"
+        ],
+        [
+          3,
+          "2026-07-06 08:48"
+        ],
+        [
+          4,
+          "2026-07-06 09:01"
+        ],
+        [
+          5,
+          "2026-07-06 09:06"
+        ],
+        [
+          6,
+          "2026-07-06 09:32"
+        ],
+        [
+          7,
+          "2026-07-06 09:54"
+        ],
+        [
+          8,
+          "2026-07-06 10:03"
+        ],
+        [
+          9,
+          "2026-07-06 10:15"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85",
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
+      },
+      "geschuetzt": {
+        "dx": "Pneumonie mit respiratorischer Insuffizienz",
+        "dob": "1990-08-02",
+        "age": null,
+        "mission_no": "2026-1031",
+        "loc": {
+          "addr": "Zur Sennalpe 43, 87477 Burgstall",
+          "lat": 47.53169,
+          "lon": 10.28915
+        },
+        "site_desc": "Pflegeheim, Zimmer 14",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-3242714083",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 10:38",
+      "ende": "2026-07-06 11:56",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 10:38"
+        ],
+        [
+          3,
+          "2026-07-06 10:43"
+        ],
+        [
+          4,
+          "2026-07-06 10:54"
+        ],
+        [
+          5,
+          "2026-07-06 10:58"
+        ],
+        [
+          6,
+          "2026-07-06 11:20"
+        ],
+        [
+          7,
+          "2026-07-06 11:38"
+        ],
+        [
+          8,
+          "2026-07-06 11:46"
+        ],
+        [
+          9,
+          "2026-07-06 11:56"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "ELW Talwang 1"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Akzidentelle Hypothermie",
+        "dob": "1985-04-11",
+        "age": null,
+        "mission_no": "2026-1032",
+        "loc": {
+          "addr": "Weiherweg 88, 87490 Auwiesen",
+          "lat": 47.54651,
+          "lon": 10.25055
+        },
+        "site_desc": "Bushaltestelle am Ortsrand",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-3905769705",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 12:20",
+      "ende": "2026-07-06 13:49",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 12:20"
+        ],
+        [
+          3,
+          "2026-07-06 12:26"
+        ],
+        [
+          4,
+          "2026-07-06 12:38"
+        ],
+        [
+          5,
+          "2026-07-06 12:43"
+        ],
+        [
+          6,
+          "2026-07-06 13:08"
+        ],
+        [
+          7,
+          "2026-07-06 13:28"
+        ],
+        [
+          8,
+          "2026-07-06 13:38"
+        ],
+        [
+          9,
+          "2026-07-06 13:49"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall, Lyse-Fenster offen",
+        "dob": null,
+        "age": 70,
+        "mission_no": "2026-1033",
+        "loc": {
+          "addr": "Hochstraße 37, 87490 Steinach im Tal",
+          "lat": 47.51161,
+          "lon": 10.27781
+        },
+        "site_desc": "Wohnhaus, Bad",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-3741955221",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 14:09",
+      "ende": "2026-07-06 15:32",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 14:09"
+        ],
+        [
+          3,
+          "2026-07-06 14:14"
+        ],
+        [
+          4,
+          "2026-07-06 14:26"
+        ],
+        [
+          5,
+          "2026-07-06 14:30"
+        ],
+        [
+          6,
+          "2026-07-06 14:54"
+        ],
+        [
+          7,
+          "2026-07-06 15:13"
+        ],
+        [
+          8,
+          "2026-07-06 15:21"
+        ],
+        [
+          9,
+          "2026-07-06 15:32"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [
+        {
+          "beginn": "2026-07-06 14:32",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-07-06 14:33"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-07-06 14:34"
+            ],
+            [
+              "adrenalin",
+              "2026-07-06 14:36"
+            ],
+            [
+              "defibrillation",
+              "2026-07-06 14:38"
+            ],
+            [
+              "intubation",
+              "2026-07-06 14:42"
+            ],
+            [
+              "rosc",
+              "2026-07-06 14:50"
+            ]
+          ]
+        }
+      ],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
+      },
+      "geschuetzt": {
+        "dx": "Nierenkolik",
+        "dob": "1967-07-06",
+        "age": null,
+        "mission_no": "2026-1034",
+        "loc": {
+          "addr": "Wiesenweg 80, 87572 Auwiesen",
+          "lat": 47.54534,
+          "lon": 10.24944
+        },
+        "site_desc": "Wohnhaus, Schlafzimmer",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-4515001849",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-07-06 15:52",
+      "ende": "2026-07-06 17:24",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-07-06 15:52"
+        ],
+        [
+          3,
+          "2026-07-06 15:58"
+        ],
+        [
+          4,
+          "2026-07-06 16:11"
+        ],
+        [
+          5,
+          "2026-07-06 16:16"
+        ],
+        [
+          6,
+          "2026-07-06 16:42"
+        ],
+        [
+          7,
+          "2026-07-06 17:03"
+        ],
+        [
+          8,
+          "2026-07-06 17:12"
+        ],
+        [
+          9,
+          "2026-07-06 17:24"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
+      },
+      "geschuetzt": {
+        "dx": "Akutes Abdomen",
+        "dob": "1944-11-27",
+        "age": null,
+        "mission_no": "2026-1035",
+        "loc": {
+          "addr": "Am Kreuzbichl 68, 87441 Auwiesen",
+          "lat": 47.543,
+          "lon": 10.25361
+        },
+        "site_desc": "Wohnhaus, Küche",
+        "start": null
+      },
+      "abdeckung": []
+    }
+  ],
+  "ziel_einsaetze": 6
+}

@@ -71,6 +71,14 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     einen Tag Rückstand nachliefert, darf nicht ausgesperrt werden. **P1 misst
     nur das Aufrufverhalten** und legt keine Grenze fest; die frühere Zuordnung
     „an P1/P2 übergeben" war überholt und ist mit Web 7.2.1 berichtigt.
+    **Stand nach P1:** Die Messgrundlage liegt jetzt vor. Der Referenzlauf hat
+    das Sendeverhalten der Uhr über 16 Diensttage nachgestellt und protokolliert
+    (`tools/referenzdatensatz/einspielen/messprotokoll.md`): Spitze **14
+    Anfragen an einem Auslöser**, **174 Abstände von 0 Sekunden**, Median
+    1 020 s. Eine Grenze muss also den Stoß zulassen und über die Zeit deckeln —
+    ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
+    abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
+    Restrisiko).
 18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
     ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
     gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).
@@ -99,6 +107,81 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine hinreichende Begründung — ein Feld kann für eine ältere Sicherung
     oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
     Freigabe.
+23. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
+    Schreibweg annimmt.** Der Vertrag führt `beginn` unter den gültigen Werten
+    von `events[].type`; `ingest.php:299` speichert das Ereignis **still
+    nicht**, `einsatz_form.php:317` weist es ab. Beide begründen es gleich und
+    richtig: Der Reanimationsbeginn steckt in `started_at` der Sitzung. Der
+    Vertrag sagt von sich, eine Abweichung sei „ein Fehler in der Umsetzung,
+    nicht im Vertrag" — hier spricht die Sache für den Code. **Vorschlag:
+    Vertrag berichtigen** (3.3 nennt neun Ereignisarten, `beginn` steht als
+    Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
+    nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
+    Änderung an ihm eine Entscheidung wäre, keine Korrektur.
+24. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
+    `Export-Format.md` 5.1 sagt, es sei es.** Der Export neutralisiert
+    Formel-Anfangszeichen (`=`, `+`, `-`, `@`) mit einem vorangestellten `'`;
+    der Rückweg entfernt es nicht wieder. Eine Zelle, die ohne diesen Schutz
+    mit `=` beginnt, liest SheetJS als Formel — der Wert kommt **leer** an.
+    5.1 zählt drei bewusste Ausnahmen auf; dies ist eine vierte,
+    undokumentierte. **Vorschlag: Ausnahme dokumentieren**, nicht den Import
+    ändern — ein Import, der Zeichen entfernt, schafft den nächsten stillen
+    Verlust (ein echtes `'` am Textanfang verschwände). Gefunden in P1/B4
+    (dort F-P1-G).
+25. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
+    zurück.** Die Spalte steht in der Sicherung (`backup_lib.php`,
+    Spaltenliste der Einsätze); die Einspielroutine schreibt die Felder aus
+    `mission_fields.php` plus `pat_blob` und `start_src` — `created_at` steht
+    dort nicht. Nach einer Wiederherstellung tragen alle Einsätze den
+    Zeitpunkt des Einspielens. Gemessen am Referenzdatensatz: 79 verschiedene
+    Werte vorher, 5 danach. Folgenlos für die Dokumentation (`started_at` ist
+    die fachliche Zeit), aber eine Asymmetrie, die bis Web 7.2.3 nirgends
+    stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
+    oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
+    nachgezogen. Gefunden in P1/B5.
+27. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
+    Parser `trim` (`assets/import.js`) ersetzt jede Folge von Leerraum durch
+    ein Leerzeichen, Umbrüche eingeschlossen, und wird auf alle Textspalten
+    angewandt. `notes` ist das einzige mehrzeilige Feld. Der Export quotet die
+    Umbrüche korrekt; der Verlust entsteht beim Lesen. Gemessen: **4** Notizen,
+    je genau ein Umbruch, Zeichenzahl unverändert (164/253/119/150).
+    **Vorschlag:** ein Parser `trimMehrzeilig` für die Notizspalten. Gefunden
+    in P1/B5 (dort F-P1-L).
+    *Zur Zahl:* Bis Web 7.3.0 waren es 3. Der vierte Fall hing an einem
+    Einsatz, den Nr. 26 aus dem Vergleich gehoben hatte — ein Fehler hatte die
+    Messung eines zweiten verdeckt. Sichtbar wurde er erst, als Nr. 26 behoben
+    war.
+28. **`final = 0` und ein leeres `ende` werden beim CSV-Import
+    überschrieben.** `final` steht als Literal `1` im INSERT von
+    `api/import_commit.php`; ein leeres `ende` wird auf `started_at` gesetzt.
+    Anders als bei `manual` und `herkunft` sind das keine Aussagen über die
+    Entstehung, sondern über den Zustand — und die Datei widerspricht ihnen
+    ausdrücklich. Ein nicht abgeschlossener Einsatz gilt nach dem Umlauf als
+    abgeschlossen und bekommt eine erfundene Endzeit. Gemessen: je 1x.
+    **Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die
+    Spalte führt; beim `ende` „Spalte fehlt" von „Zelle leer" unterscheiden.
+    Gefunden in P1/B5 (dort F-P1-M).
+29. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
+    Nicht genannt sind: Ruhesegmente kommen nicht zurück (gemessen 95 → 0, es
+    gibt keinen Importweg für sie), und der zweite Dienst eines Kalendertags
+    geht verloren (gemessen 15 → 13 Diensttage) — `gruppiere()` bündelt nach
+    Kalendertag, obwohl seit E9 zwei Dienste an einem Datum zulässig sind und
+    die Datei mit `diensttag_id` den unterscheidenden Schlüssel mitführt.
+    Dazu der Formelschutz-Apostroph (Nr. 24). **Vorschlag:** Abschnitt 5.1
+    ergänzen. Gefunden in P1/B5 (dort F-P1-N).
+30. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
+    Admin-Sicherung.** Heute steht er in keiner: `edbak_build()` filtert
+    `deleted_at IS NULL`, eine Wiederherstellung leert ihn endgültig (gemessen
+    am Referenzdatensatz: 5 Einsätze, 5 Ruhesegmente, 1 Diensttag → nichts).
+    **Entschieden ist, dass er mitsoll**; offen ist die Umsetzung, und sie ist
+    nicht klein: Der Rückspielweg wertet `deleted_at` und `deleted_with_day`
+    nicht aus (ein Abschalten des Filters allein brächte den Papierkorb als
+    aktiven Bestand zurück), die D1-Regel muss „Tag im Zielkonto im
+    Papierkorb" von „Tag in der Datei im Papierkorb" unterscheiden, und die
+    30-Tage-Frist braucht eine Entscheidung. Ausgearbeitet als Paketvorschlag
+    in `tools/referenzdatensatz/Konzept-P1.md`, Abschnitt 10 — von dort in
+    den Gesamtplan. Als Nebenwirkung entfällt der Papierkorb-Teil des
+    Demo-Nachlaufs (E-P1-21).
 
 ---
 
@@ -186,9 +269,11 @@ zutreffen.
     `server/assets/missiontable.js` maskierte Einsatzort und Diagnose über
     `esc()`, das Alter aber nicht (`v => v`) — und die Zelle wird per
     `innerHTML` gesetzt. Über das Formular war der Weg zu (`parseInt()` in
-    `einsatz_form.php`), über den Import nicht: `server/assets/import.js`
-    übernimmt `pat.age` als rohen Zellenwert. Eine Importdatei mit Markup in
-    der Alterspalte führte Skript in genau dem Fenster aus, in dem der
+    `einsatz_form.php`); das **Feld** ist trotzdem keine Zahl, denn `age` liegt
+    im `pat_blob` und der ist freies JSON. Der Weg hinein ist die
+    **Wiederherstellung einer Sicherung** (`api/backup_restore.php` übernimmt
+    den inneren Chiffretext unverändert), im Adminbereich sogar die einer
+    *fremden*. Markup dort führte Skript in genau dem Fenster aus, in dem der
     Inhaltsschlüssel liegt; der Server konnte nichts prüfen, er sieht nur
     Chiffretext. Die Lücke bestand seit Web 5.2.0. Gefunden in P0 (dort F-20,
     Konzept Abschnitt 8 und 9.3; Prüfdokument P0, Abschnitt 4.4).
@@ -216,3 +301,22 @@ zutreffen.
     Vorher/Nachher-Proben unter `tools/maskierungs-probe/` und
     `tools/abmelde-probe/`; die erste darf als Vorlage für den ständigen
     Regressionsfall in P1 liegen bleiben (R20).
+
+26. **Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden
+    zurück.**
+    *Erledigt mit Web 7.3.1.* Die Spalte `datum` wird ausgewertet und als
+    `date_local` mitgesendet; `api/import_commit.php` nimmt sie als Bezugstag
+    der Alarmzeit statt des Diensttags. Für die Gruppierung bleibt es beim
+    Diensttag — `day_id` hängt an ihm, nicht am Einsatzdatum. Zwei Quellen für
+    zwei verschiedene Aufgaben; die Sorge des alten Kommentars, es wären zwei
+    Quellen für dieselbe, war der Grund, warum die Spalte auf `target: null`
+    stand.
+    Dazu eine Plausibilitätsschranke: Übernommen wird das Datum nur, wenn es
+    der Diensttag ist oder der Tag darauf — mehr kann es nicht sein, die
+    Anwendung kennt für den Tageswechsel genau einen Schritt. Dateien ohne die
+    Spalte und Dateien mit unsinnigem Wert fallen auf das bisherige Verhalten
+    zurück. Der zweite denkbare Weg (Formularregel: Uhrzeit vor Dienstbeginn
+    heißt Folgetag) wurde verworfen, weil beim Import in ein leeres Konto der
+    Dienstbeginn zum Zeitpunkt der Entscheidung noch nicht feststeht.
+    *Gemessen:* Kreislauf CSV, unerklärte Abweichungen 9 → 6, Einzelvergleiche
+    8 617 → 8 797 (die beiden Einsätze werden jetzt überhaupt erst verglichen).

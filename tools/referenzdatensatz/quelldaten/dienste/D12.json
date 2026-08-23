@@ -1,0 +1,47 @@
+{
+  "kennung": "D12",
+  "abdeckung": [
+    "dienst-luft",
+    "zeit-mesz",
+    "dienst-ohne-einsatz",
+    "notizen-diensttag",
+    "ruhe-track",
+    "rettungsmittel-ohne-faehigkeiten"
+  ],
+  "dienst": {
+    "day": "2026-09-12",
+    "art": "air",
+    "standort": "Luftrettungsstation Hochkreuth",
+    "rettungsmittel": "Alpenfalke 2",
+    "beginn": "2026-09-12 07:00",
+    "ende": "2026-09-12 19:30",
+    "day_ref": "d-11-4726158093",
+    "besatzung": {
+      "p1": "Tilman Roithner",
+      "hems": "Jonas Steinlechner",
+      "fr": "Vitus Halbritter"
+    },
+    "notizen": "Ganztägig Hochnebel bis Talniveau, kein Einsatz geflogen. Zwei Trainingsflüge nach Aufklaren am Nachmittag."
+  },
+  "papierkorb": null,
+  "ruhesegmente": [
+    {
+      "client_ref": "r-11-1116412383",
+      "beginn": "2026-09-12 07:00",
+      "ende": "2026-09-12 19:30",
+      "final": true
+    }
+  ],
+  "einsaetze": [],
+  "$warum": [
+    "DIENSTTAG OHNE EINSATZ (Matrixzeile Diensttage). Er trägt Zeiten,",
+    "Besatzung, Notizen und Ruhesegmente mit Spur — nur keinen Einsatz.",
+    "",
+    "Der Fall ist keine Spitzfindigkeit: Ein wetterbedingt einsatzfreier Tag",
+    "ist im Betrieb normal, und jede Auswertung, die stillschweigend über",
+    "einen Einsatz je Diensttag rechnet, geht an ihm kaputt. Die",
+    "Tagesübersicht muss ihn zeigen, die Zeitraumauswertung muss ihn zählen,",
+    "und Export wie Sicherung müssen ihn führen."
+  ],
+  "ziel_einsaetze": 0
+}

@@ -29,8 +29,29 @@ declare(strict_types=1);
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
 
-function edbak_build(int $userId): string {
+/**
+ * Inneres Backup-JSON aufbauen.
+ *
+ * $mitPapierkorb schaltet den Filter `deleted_at IS NULL` ab (Web 7.3.0).
+ * GEBRAUCHT WIRD DAS AN GENAU EINER STELLE: der Demo-Fixture. Sie soll den
+ * Referenzzustand VOLLSTAENDIG abbilden, und dazu gehoert ein gefuellter
+ * Papierkorb — die Abdeckungsmatrix der Phase P1 fuehrt ihn ausdruecklich.
+ *
+ * Fuer eine NutzerInnen-Sicherung bleibt es beim Filter, und das ist eine
+ * Entscheidung, keine Bequemlichkeit: Wer eine Sicherung erstellt, sichert
+ * seinen Bestand, nicht seinen Abfall. Was daraus folgt, steht seit Web 7.2.3
+ * in docs/Backup-Format.md 4 — vorher stand es nirgends.
+ *
+ * Die Spalten `deleted_at` und `deleted_with_day` wandern ohnehin mit; der
+ * Einspielweg wertet sie NICHT aus (sie stehen nicht im Feldkatalog). Ein
+ * Wiederherstellen bringt die Eintraege also als AKTIVE zurueck. Fuer die
+ * Fixture ist genau das richtig: Das Nachlauf-Drehbuch legt sie danach ueber
+ * die regulaeren Loeschwege wieder in den Papierkorb (E-P1-21).
+ */
+function edbak_build(int $userId, bool $mitPapierkorb = false): string {
     $pdo = db();
+    $nurAktive = $mitPapierkorb ? '' : ' AND deleted_at IS NULL';
+    $nurAktiveD = $mitPapierkorb ? '' : ' AND d.deleted_at IS NULL';
     $q = function (string $sql, array $p) use ($pdo): array {
         $st = $pdo->prepare($sql); $st->execute($p); return $st->fetchAll(PDO::FETCH_ASSOC);
     };
@@ -132,7 +153,7 @@ function edbak_build(int $userId): string {
      * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
      * aendern, und das ist ein eigener Vorgang. */
     $missionZeilen = $q("SELECT id, $missionSpalten FROM missions
-                         WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at", [$userId]);
+                         WHERE user_id = ?" . $nurAktive . " ORDER BY started_at", [$userId]);
     $missionIds = array_map(static fn($m) => (int)$m['id'], $missionZeilen);
 
     /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
@@ -205,7 +226,7 @@ function edbak_build(int $userId): string {
     $restZeilen = $q('SELECT id, client_ref, day_id, started_at, ended_at, final,
                              deleted_at, deleted_with_day
                       FROM rest_segments
-                      WHERE user_id = ? AND deleted_at IS NULL ORDER BY started_at', [$userId]);
+                      WHERE user_id = ?' . $nurAktive . ' ORDER BY started_at', [$userId]);
     $spurNachRuhe = $spuren('rest', array_map(static fn($r) => (int)$r['id'], $restZeilen));
     foreach ($restZeilen as $r) {
         $rid = (int)$r['id'];
@@ -246,7 +267,7 @@ function edbak_build(int $userId): string {
                      FROM days d
                      LEFT JOIN vehicles v ON v.id = d.vehicle_id
                      LEFT JOIN bases b ON b.id = d.base_id
-                     WHERE d.user_id = ? AND d.deleted_at IS NULL
+                     WHERE d.user_id = ?' . $nurAktiveD . '
                      ORDER BY d.day, d.started_at, d.id', [$userId]);
     $dayIds = array_map(static fn($d) => (int)$d['id'], $dayZeilen);
 
@@ -457,7 +478,23 @@ function edbak_restore(int $userId, array $data): array {
     $pruef = new Pruefliste();
     $hoeheOffen = [];   // Einsatz-IDs fuer die Hoehenberechnung nach dem Commit (M5-05)
 
-    $pdo->beginTransaction();
+    /* VERSCHACHTELUNGSFAEHIG (Web 7.3.0).
+     *
+     * Diese Funktion hat ihre Transaktion bisher bedingungslos geoeffnet. Das
+     * ging gut, solange sie genau einen Aufrufer hatte — api/backup_restore.php,
+     * das nichts weiter tut. Der Demo-Reset (demo_lib.php) muss aber MEHR in
+     * dieselbe Klammer nehmen: Kontomaterial, Geraete, Bestand und den
+     * Papierkorb-Nachlauf. Zerfiele das in mehrere Transaktionen, koennte ein
+     * Fehler in der Mitte ein Konto mit halbem Bestand hinterlassen — und
+     * ausgerechnet der Reset laeuft unbeaufsichtigt, alle 30 Minuten.
+     *
+     * PDO kennt keine echten verschachtelten Transaktionen; ein zweites
+     * beginTransaction() wirft. Deshalb wird geprueft, ob schon eine laeuft,
+     * und Commit wie Rollback bleiben dem ueberlassen, der sie geoeffnet hat.
+     * Ein Fehler kommt als Ausnahme weiterhin heraus — der aeussere Aufrufer
+     * setzt zurueck. */
+    $eigeneTransaktion = !$pdo->inTransaction();
+    if ($eigeneTransaktion) { $pdo->beginTransaction(); }
     try {
         /* Stammdaten (INSERT IGNORE ueber die Unique-Schluessel; zentral
          * vorhandene Eintraege werden uebersprungen und gezaehlt, s. 6.3/8) */
@@ -1005,9 +1042,9 @@ function edbak_restore(int $userId, array $data): array {
         $stats['skipped_reasons'] = array_filter($grund);
         $stats['rejected'] = $pruef->nachUrsache();
 
-        $pdo->commit();
+        if ($eigeneTransaktion) { $pdo->commit(); }
     } catch (Throwable $ex) {
-        $pdo->rollBack();
+        if ($eigeneTransaktion) { $pdo->rollBack(); }
         throw $ex;
     }
 

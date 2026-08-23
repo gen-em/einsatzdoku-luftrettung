@@ -46,12 +46,20 @@ const EdMissionTable = (() => {
    * MASKIERT WIRD HIER, NICHT IN DER FORMATIERUNG (Backlog Nr. 22, F-20).
    * Bis Web 7.2.0 war das Maskieren Sache der aufrufenden Seite: Einsatzort
    * und Diagnose kamen mit `v => esc(v)`, das Alter mit `v => v` — weil es
-   * eine Zahl ist. Aus dem Formular ist es das auch (parseInt), aus einer
-   * IMPORTDATEI nicht: assets/import.js übernimmt `pat.age` als rohen
-   * Zellenwert, und die Zelle wird per innerHTML gesetzt. Markup in der
-   * Alterspalte einer Importdatei lief damit in dem Fenster los, in dem der
-   * Inhaltsschlüssel liegt. Der Server kann davon nichts sehen — er kennt
-   * nur Chiffretext.
+   * eine Zahl ist. Aus dem Formular ist es das auch (parseInt) — aber das
+   * FELD ist keine Zahl: `age` liegt im pat_blob, und der ist freies JSON,
+   * das der Server nie im Klartext sieht und deshalb nicht prüfen kann. Die
+   * Zelle wird per innerHTML gesetzt; Markup darin lief in dem Fenster los,
+   * in dem der Inhaltsschlüssel liegt.
+   *
+   * DER WEG HINEIN IST DIE WIEDERHERSTELLUNG EINER SICHERUNG, nicht der
+   * Import. Bis Web 7.3.1 stand hier das Gegenteil („import.js übernimmt
+   * pat.age als rohen Zellenwert"); das ist nachgemessen falsch —
+   * import_profiles.js bildet `pat_alter` mit parse:['alterJahre'] ab, und
+   * PARSERS.ganzzahl verlangt /^-?\d+$/. `47<img …>` wird verworfen, nicht
+   * übernommen. api/backup_restore.php dagegen übernimmt den inneren
+   * Chiffretext unverändert, wie es sein muss — und im Adminbereich
+   * schreibt „Einspielen" eine FREMDE Sicherung in ein Konto.
    *
    * Die Entscheidung, eine Angabe zu maskieren, darf deshalb nicht an der
    * Aufrufstelle liegen: Sie war an zwei von sechs Stellen falsch getroffen,

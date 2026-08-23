@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gen-em.org/nadoku/referenzdatensatz/stammdaten.schema.json",
+  "title": "Stammdaten des Referenzdatensatzes",
+  "type": "object",
+  "required": ["standorte", "rettungsmittel", "besatzung", "zielkliniken", "bereitschaften", "weitere_rettungsmittel"],
+  "properties": {
+    "$kommentar": { "type": ["string", "array"] },
+    "standorte": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "required": ["name", "lat", "lon", "standard"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 120 },
+          "lat": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+          "lon": { "type": ["number", "null"], "minimum": -180, "maximum": 180 },
+          "standard": { "type": "boolean" },
+          "$warum": { "type": ["string", "array"] }
+        }
+      }
+    },
+    "rettungsmittel": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "required": ["name", "art", "standort", "rollen", "faehigkeiten", "standard"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 64 },
+          "art": { "enum": ["air", "ground"] },
+          "standort": { "type": "string" },
+          "rollen": { "type": "array", "items": { "enum": ["p1","p2","hems","fr","driver","trainee","other"] } },
+          "faehigkeiten": { "type": "array", "items": { "enum": ["winch", "bergwacht"] } },
+          "standard": { "type": "boolean" },
+          "$warum": { "type": ["string", "array"] }
+        }
+      }
+    },
+    "besatzung": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["rolle", "name", "standort"],
+        "properties": {
+          "rolle": { "enum": ["p1","p2","hems","fr","driver","trainee","other"] },
+          "name": { "type": "string", "maxLength": 120 },
+          "standort": { "type": "string" }
+        }
+      }
+    },
+    "zielkliniken": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["name", "lat", "lon", "standort"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 190 },
+          "lat": { "type": ["number", "null"] }, "lon": { "type": ["number", "null"] },
+          "standort": { "type": "string" },
+          "$warum": { "type": ["string", "array"] }
+        }
+      }
+    },
+    "bereitschaften": {
+      "type": "array",
+      "items": { "type": "object", "required": ["name", "standort"],
+        "properties": { "name": { "type": "string", "maxLength": 120 }, "standort": { "type": "string" } } }
+    },
+    "weitere_rettungsmittel": {
+      "type": "array",
+      "items": { "type": "object", "required": ["name", "standort"],
+        "properties": { "name": { "type": "string", "maxLength": 120 }, "standort": { "type": "string" } } }
+    }
+  }
+}

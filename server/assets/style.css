@@ -220,6 +220,14 @@ section{margin-bottom:1.8rem}
 .topbar{display:flex;justify-content:space-between;align-items:center;
   background:var(--navy);color:#fff;padding:.7rem 1.3rem;
   position:sticky;top:0;z-index:900}
+/* Demo-Banner. Steht unmittelbar unter der Kopfleiste, auf jeder Seite, und
+   laesst sich nicht wegklicken (ui_demo_banner() in ui.php).
+
+   Farben aus dem Warnton der Marke: Hellorange als Flaeche, Orange als Kante,
+   Asphalt als Schrift — 15,7:1 auf Hellorange und damit weit ueber AA. Nicht
+   rot: Es ist keine Stoerung, sondern eine Auskunft. */
+.demobanner{background:var(--accent-light);border-bottom:2px solid var(--accent);
+  color:var(--ink);padding:.55rem 1.3rem;font-size:.9rem;line-height:1.45}
 .brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;color:#fff;
   font-family:var(--head);font-size:1rem;font-weight:600;letter-spacing:.02em;min-width:0}
 .brand img{height:34px;width:auto;display:block;flex:none}

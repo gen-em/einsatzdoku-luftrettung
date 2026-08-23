@@ -111,8 +111,7 @@ declare(strict_types=1);
  *
  * 7.2.1 ist eine SICHERHEITSKORREKTUR mit eng begrenztem Umfang
  * (Sofortpaket Backlog Nr. 22, vor Phase P1). Das Alter ging als einzige der
- * drei geschuetzten Spalten unmaskiert in die Einsatztabellen — ueber das
- * Formular unerreichbar (parseInt), ueber den Import sehr wohl. Maskiert wird
+ * drei geschuetzten Spalten unmaskiert in die Einsatztabellen. Maskiert wird
  * jetzt in zelleGeschuetzt() selbst statt an der Aufrufstelle. Dabei mit
  * geraeumt: das Vormerkfach des Passwortwechsels (edk_neu), das den neuen
  * Datenschluessel bis dahin ueber das Abmelden hinaus tragen konnte.
@@ -120,5 +119,46 @@ declare(strict_types=1);
  * Fuer gueltige Eingaben aendert sich NICHTS — das ist nicht behauptet,
  * sondern gemessen (tools/maskierungs-probe/). Kein Schema, keine Migration,
  * keine Handlung der Betreiberin ausser dem Deploy.
+ *
+ * NACHTRAG: Dieselbe Luecke ist in Phase P1 unabhaengig ein zweites Mal
+ * gefunden worden (Fund F-P1-I, mit dem Referenzdatensatz im Browser
+ * gemessen: gegen den Stand 7.2.0 sechs Befunde ueber drei Seiten, gegen
+ * diesen keiner bei 42 Einzelpruefungen, nach dem Zusammenfuehren beider
+ * Arbeitslinien noch einmal gefahren). Zwei Wege, ein Befund — die Messung
+ * aus P1 belegt diese Fassung, sie hat sie nicht ausgeloest.
+ *
+ * 7.2.2 behebt einen stillen Datenverlust im CSV-Rueckimport: gruppiere() in
+ * assets/import.js fuehrte eine zweite, von Hand gepflegte Feldliste neben
+ * EINFACHE_ZIELE — und die sechs Felder der Etappe 2 (Transportart,
+ * NA-Begleitung, Fehleinsatz, Zielkoordinate, Abfahrtortregel) waren dort nie
+ * nachgetragen worden. Sie wurden gelesen, in der Prueftabelle angezeigt und
+ * danach fallengelassen. Die Liste wird jetzt aus EINFACHE_ZIELE abgeleitet.
+ *
+ * 7.2.3 berichtigt zwei Formatbeschreibungen, die etwas anderes sagten als
+ * der Code tut: Die ausgelieferte LIESMICH.txt des CSV-Exports nannte die
+ * Spalte weiterhin `hubschrauber` (sie heisst seit 5.10.0 `rettungsmittel`),
+ * und docs/Backup-Format.md fuehrte `days[].id` unter „nicht in der Datei",
+ * obwohl sie darin steht und stehen MUSS — die Einsaetze verweisen darauf.
+ *
+ * 7.3.0 bringt das DEMO-KONTO: ein Konto zum Ausprobieren mit erfundenen
+ * Daten, oeffentlichen Zugangsdaten und einer selbsttaetigen Ruecksetzung
+ * alle 30 Minuten. Neue Funktion, KEINE Migration — `app_state` liegt seit
+ * jeher, und der Bestand wird ueber die vorhandene Einspielroutine
+ * (`edbak_restore()`) hergestellt.
+ *
+ * Es ist zugleich die einzige Stelle der Anwendung, an der die
+ * Ende-zu-Ende-Verschluesselung bewusst ausgesetzt ist: Das
+ * Schluesselmaterial dieses einen Kontos liegt in einer Fixture auf dem
+ * Server. Vertretbar nur unter vier erzwungenen Bedingungen — erfundene
+ * Daten, Rolle `user`, jede Funktion arbeitet ausschliesslich auf der
+ * Kennung aus `app_state.demo_user_id`, und die Zugangsdaten sind ohnehin
+ * oeffentlich.
+ *
+ * 7.3.1 behebt eine stille Datenverfaelschung im CSV-Rueckimport: Einsaetze
+ * eines Dienstes ueber Mitternacht landeten 24 Stunden zu frueh, weil die
+ * Alarmzeit auf den DIENSTTAG gerechnet wurde statt auf das Einsatzdatum.
+ * Die Angabe, die das behebt, stand die ganze Zeit in der Datei — die Spalte
+ * `datum` war im Importprofil auf target:null gesetzt, mit einem Kommentar,
+ * der das Gegenteil dessen behauptete, was der Code tat.
  */
-const WEB_VERSION = '7.2.1';
+const WEB_VERSION = '7.3.1';

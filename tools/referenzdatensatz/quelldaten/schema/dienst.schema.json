@@ -1,0 +1,803 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gen-em.org/nadoku/referenzdatensatz/dienst.schema.json",
+  "title": "Quelldokument eines Dienstes im Referenzdatensatz",
+  "type": "object",
+  "required": [
+    "kennung",
+    "abdeckung",
+    "dienst",
+    "papierkorb",
+    "ruhesegmente",
+    "einsaetze"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kennung": {
+      "type": "string",
+      "pattern": "^D[0-9]{2}$"
+    },
+    "abdeckung": {
+      "$ref": "#/$defs/marken"
+    },
+    "papierkorb": {
+      "enum": [
+        null,
+        "diensttag"
+      ]
+    },
+    "dienst": {
+      "$ref": "#/$defs/dienst"
+    },
+    "ruhesegmente": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ruhesegment"
+      }
+    },
+    "einsaetze": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/einsatz"
+      }
+    },
+    "$warum": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_datum": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_zeiten": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_besatzung": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_papierkorb": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_ruhesegment": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "$warum_spur_ausgangspunkt": {
+      "$ref": "#/$defs/erlaeuterung"
+    },
+    "ziel_einsaetze": {
+      "$kommentar": "Zielzahl der Einsaetze dieses Dienstes. aufbauen.py fuellt bis dahin mit erzeugten Einsaetzen auf; handgeschriebene Prueffaelle zaehlen mit.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12
+    },
+    "$warum_formelzeichen": {
+      "$ref": "#/$defs/erlaeuterung"
+    }
+  },
+  "$defs": {
+    "erlaeuterung": {
+      "$kommentar": "Erlaeuterungen stehen als String ODER als Liste von Zeilen. Beide Formen sind zugelassen, weil ein laengerer Text in JSON sonst als eine unlesbare Zeile endet.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "marken": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "zeitpunkt": {
+      "$kommentar": "Ortszeit Europa/Berlin, YYYY-MM-DD HH:MM. Siehe FORMAT.md.",
+      "type": "string",
+      "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]$"
+    },
+    "koordinate": {
+      "type": "object",
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lat": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -180,
+          "maximum": 180
+        }
+      }
+    },
+    "dienst": {
+      "type": "object",
+      "required": [
+        "day",
+        "art",
+        "standort",
+        "rettungsmittel",
+        "beginn",
+        "ende",
+        "day_ref",
+        "besatzung",
+        "notizen"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "string",
+          "pattern": "^20[0-9]{2}-[01][0-9]-[0-3][0-9]$"
+        },
+        "art": {
+          "enum": [
+            "air",
+            "ground"
+          ]
+        },
+        "standort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rettungsmittel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "beginn": {
+          "$ref": "#/$defs/zeitpunkt"
+        },
+        "ende": {
+          "$ref": "#/$defs/zeitpunkt"
+        },
+        "day_ref": {
+          "$kommentar": "JSON-Vertrag 2.1 und 8: Praefix d-, hoechstens 64 Zeichen, keine Leerzeichen.",
+          "type": "string",
+          "pattern": "^d-[0-9]+-[0-9]+$",
+          "maxLength": 64
+        },
+        "spur_ausgangspunkt": {
+          "$ref": "#/$defs/koordinate"
+        },
+        "besatzung": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "p1",
+              "p2",
+              "hems",
+              "fr",
+              "driver",
+              "trainee",
+              "other"
+            ]
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 120
+          }
+        },
+        "notizen": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "ruhesegment": {
+      "type": "object",
+      "required": [
+        "client_ref",
+        "beginn",
+        "ende",
+        "final"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "client_ref": {
+          "type": "string",
+          "pattern": "^r-[0-9]+-[0-9]+$",
+          "maxLength": 64
+        },
+        "beginn": {
+          "$ref": "#/$defs/zeitpunkt"
+        },
+        "ende": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/zeitpunkt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "final": {
+          "type": "boolean"
+        }
+      }
+    },
+    "einsatz": {
+      "type": "object",
+      "required": [
+        "client_ref",
+        "kanal",
+        "nachtrag",
+        "papierkorb",
+        "beginn",
+        "ende",
+        "final",
+        "phasen",
+        "route",
+        "rea",
+        "felder",
+        "geschuetzt",
+        "abdeckung"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "client_ref": {
+          "$kommentar": "NULL bei kanal=import und kanal=formular: Diese Wege vergeben die Kennung SELBST und nicht vorhersagbar (import_commit.php: 'imp-'.random_bytes(12); einsatz_form.php: 'man-'.uniqid()). Zur Nachverfolgung dient dann quell_kennung.",
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^m-[0-9]+-[0-9]+$",
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quell_kennung": {
+          "type": "string",
+          "pattern": "^(IMP|MAN)-[0-9]{2}$"
+        },
+        "kanal": {
+          "enum": [
+            "ingest",
+            "formular",
+            "import"
+          ]
+        },
+        "nachtrag": {
+          "type": "boolean"
+        },
+        "papierkorb": {
+          "enum": [
+            null,
+            "einsatz"
+          ]
+        },
+        "beginn": {
+          "$ref": "#/$defs/zeitpunkt"
+        },
+        "ende": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/zeitpunkt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "final": {
+          "type": "boolean"
+        },
+        "phasen": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 9,
+                "$kommentar": "JSON-Vertrag 3.2 und 7: nur 2..9. Eine Phase 1 oder 10 gibt es nicht."
+              },
+              {
+                "$ref": "#/$defs/zeitpunkt"
+              }
+            ]
+          },
+          "maxItems": 500
+        },
+        "route": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "basis",
+                  "start",
+                  "ort",
+                  "ziel",
+                  "ort_vorher",
+                  "ziel_vorher",
+                  null
+                ]
+              }
+            }
+          ]
+        },
+        "rea": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "required": [
+              "beginn",
+              "ereignisse"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "beginn": {
+                "$ref": "#/$defs/zeitpunkt"
+              },
+              "ereignisse": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "prefixItems": [
+                    {
+                      "enum": [
+                        "zugang",
+                        "adrenalin",
+                        "rhythmuskontrolle",
+                        "defibrillation",
+                        "intubation",
+                        "amiodaron",
+                        "sonographie",
+                        "rosc",
+                        "tod"
+                      ],
+                      "$kommentar": "NEUN Arten. 'beginn' fehlt mit Absicht: Kein Schreibweg nimmt es als Ereignis an (ingest.php verwirft still, einsatz_form.php weist ab) -- der Beginn steckt in `beginn` der Sitzung. Siehe Fehlerfund F-P1-F."
+                    },
+                    {
+                      "$ref": "#/$defs/zeitpunkt"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "felder": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/felder"
+            }
+          ]
+        },
+        "geschuetzt": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/geschuetzt"
+            }
+          ]
+        },
+        "abdeckung": {
+          "$ref": "#/$defs/marken"
+        },
+        "$warum": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_phasen": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_rea": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_rea_beginn": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_start": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_papierkorb": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_r20": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_r20_alter": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_freitext": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "spur": {
+          "$kommentar": "Koordinaten NUR fuer die Spurerzeugung. Noetig, wo ein Wegpunkt nicht aus den gespeicherten Feldern folgt: bei einer Zielklinik ohne Koordinate am Einsatz und bei einem Einsatz ohne geschuetzte Angaben. Wird NICHT am Einsatz gespeichert.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ort": {
+              "$ref": "#/$defs/koordinate"
+            },
+            "ziel": {
+              "$ref": "#/$defs/koordinate"
+            }
+          }
+        },
+        "$warum_spur": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "erzeugt": {
+          "$kommentar": "true = von aufbauen.py erzeugter Betriebsalltag; wird bei einem erneuten Lauf ersetzt. Handgeschriebene Prueffaelle tragen den Schluessel NICHT und bleiben.",
+          "type": "boolean"
+        },
+        "$warum_ort": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_zeit": {
+          "$ref": "#/$defs/erlaeuterung"
+        }
+      }
+    },
+    "felder": {
+      "$kommentar": "Spalten aus server/mission_fields.php plus start_src. Alles KLARTEXT — der Server sieht diese Werte.",
+      "type": "object",
+      "required": [
+        "transport_mode",
+        "na_escort",
+        "transport_dest",
+        "dest_lat",
+        "dest_lon",
+        "schockraum",
+        "false_alarm",
+        "secondary",
+        "start_src",
+        "winch",
+        "winch_cycles",
+        "winch_cycles_pat",
+        "winch_airload",
+        "bergwacht",
+        "bw_unit",
+        "bw_info",
+        "other_ema",
+        "other_resources",
+        "crew_override",
+        "crew",
+        "notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "transport_mode": {
+          "enum": [
+            "air",
+            "ground",
+            "ambulant",
+            null
+          ]
+        },
+        "na_escort": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "transport_dest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "dest_lat": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -90,
+          "maximum": 90
+        },
+        "dest_lon": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -180,
+          "maximum": 180
+        },
+        "schockraum": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "false_alarm": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "secondary": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "start_src": {
+          "enum": [
+            "base",
+            "prev_site",
+            "prev_dest",
+            "manual",
+            null
+          ]
+        },
+        "winch": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "winch_cycles": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 8
+        },
+        "winch_cycles_pat": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 8
+        },
+        "winch_airload": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "bergwacht": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "bw_unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "bw_info": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "other_ema": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "other_resources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "crew_override": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "crew": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "p1",
+              "p2",
+              "hems",
+              "fr",
+              "driver",
+              "trainee",
+              "other"
+            ]
+          },
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 120
+          }
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2000
+        }
+      }
+    },
+    "geschuetzt": {
+      "$kommentar": "Inhalt des pat_blob. Wird im Browser bzw. im Einspielskript mit dem Inhaltsschluessel verschluesselt; der Server sieht davon NIE Klartext.",
+      "type": "object",
+      "required": [
+        "dx",
+        "dob",
+        "age",
+        "mission_no",
+        "loc",
+        "site_desc",
+        "start"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dx": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "dob": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^(19|20)[0-9]{2}-[01][0-9]-[0-3][0-9]$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "age": {
+          "$kommentar": "INTEGER ist der Regelfall. STRING ist ausdruecklich zugelassen und kommt genau EINMAL vor (R20-Pruefwert, D13): Der Server nimmt pat_blob nur als Chiffretext entgegen und kann seinen Inhalt bauartbedingt nicht pruefen — die Zahlenpruefung ist eine Eingabehilfe des Browsers. Wer das Schema hier auf integer verengt, verliert genau den Pruefwert, der die Maskierung der Einsatztabellen dauerhaft absichert.",
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "mission_no": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "loc": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "addr",
+                "lat",
+                "lon"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "addr": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 190
+                },
+                "lat": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "lon": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              }
+            }
+          ]
+        },
+        "site_desc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 190
+        },
+        "start": {
+          "$kommentar": "Manueller Abfahrtort, nur bei start_src='manual'. Liegt VERSCHLUESSELT im pat_blob — der Klartextwert 'manual' in der Spalte start_src verraet damit keinen Ort.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "addr",
+                "lat",
+                "lon"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "addr": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 190
+                },
+                "lat": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -90,
+                  "maximum": 90
+                },
+                "lon": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": -180,
+                  "maximum": 180
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

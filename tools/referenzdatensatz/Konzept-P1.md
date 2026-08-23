@@ -1,0 +1,1266 @@
+# Konzept P1 — Referenzdatensatz und Demo-Account
+
+Programm: Gen-EM NAdoku (Rahmenplan, Phase P1)
+Dieses Dokument: Phasenkonzept nach K1 — Befund, Entscheidungen (E),
+offene Fragen (F), Arbeitspakete mit Abnahmekriterien, Prüfprotokoll,
+Fehlerfunde. Es ist die Übergabeeinheit an die umsetzende
+Claude-Code-Instanz und wird von ihr fortgeschrieben.
+
+Dieses Dokument liegt seit B1 im Repositorium unter
+`tools/referenzdatensatz/Konzept-P1.md` und wird dort fortgeschrieben —
+Fortschreibungen sind damit versioniert und neben dem Erzeugnis lesbar.
+
+Keine Versionsnummern in diesem Dokument (K3). Standardmodell der
+Umsetzung ist Opus; **P1 enthält keinen Fable-Schritt** (K2/K8).
+Fehlerfunde werden gesammelt, nicht sofort behoben (K4).
+Je Arbeitspaket ein Commit, gepusht wird einmal am Phasenende nach
+ausdrücklicher Bestätigung — ein Push auf `main` deployt sofort (K7).
+
+---
+
+## 1. Ziel
+
+Ein **generierter**, vollständiger Beispieldatensatz (30–40 fiktive
+Einsätze über 2026, R4) mit zwei Rollen:
+
+1. **Demo-Account** auf der Produktivinstallation — vorzeigbar und
+   **ausprobierbar** (beschreibbar), vom Admin anlegbar und
+   automatisch wie manuell auf den Standardzustand zurücksetzbar.
+2. **Regressionsreferenz** — das Projekt hat bisher keinerlei Tests.
+   Kanonische Referenz-Exporte (Nutzer-Export CSV und edbak) dienen als
+   Vergleichsdateien für den Kreislauftest importieren → exportieren →
+   vergleichen und als Sicherheitsnetz für alle Folgephasen (P2–P6).
+
+Dazu zwei programmweite Nebenaufträge:
+
+- **Vorarbeit R19:** Beim Erzeugen und Einspielen der Ingest-Payloads
+  wird das reale Aufrufverhalten festgehalten (Teilstücke je Dienst,
+  zeitlicher Abstand, Spitzen) — Bemessungsgrundlage für den
+  P5-Entwurf der Mengenbremse. Erhebung, keine Schutzmaßnahme.
+- **Dauer-Regressionsfall R20:** Mindestens ein Einsatz trägt im
+  Altersfeld einen Angriffswert (HTML-/Skriptmarker), damit die
+  Maskierung der Einsatztabellen dauerhaft mitgeprüft wird.
+
+## 2. Befund (statische Analyse des Bestands)
+
+Grundlage: `docs/JSON-Vertrag.md`, `docs/Export-Format.md`,
+`docs/Backup-Format.md`, `server/schema.sql`, `server/ingest.php`,
+`server/api/day.php`, `server/api/import_commit.php`,
+`server/einsatz_form.php`, `server/assets/crypto.js`,
+`server/adminbackup_lib.php`, `server/admin_users.php`,
+`server/trash_lib.php`, `server/api/suchindex.php`,
+`.github/workflows/deploy.yml`.
+
+- **B-01 — Vier legitime Schreibwege existieren:**
+  1. `ingest.php` (Geräteschnittstelle, Header `X-Device-Id`/`X-Api-Key`,
+     Vertrag `docs/JSON-Vertrag.md` 1.3): legt Einsätze, Ruhe-Segmente
+     und **neutrale** Diensttage an, nimmt Phasen, Reanimationen und
+     Trackpunkte inkrementell entgegen. Grenzen: 512 KB Body, ≤ 2000
+     Punkte je Anfrage (Richtwert 500), Phasen 2–9, Koordinaten- und
+     Mengenprüfungen je Feld. Deaktivierte Geräte (`active=0`) sind vom
+     Upload gesperrt.
+  2. `einsatz_form.php` (Session-POST mit CSRF): schreibt alle
+     Einsatzfelder aus `mission_fields.php`, Phasen, Reanimationen und
+     nimmt `pat_blob` ausschließlich als Chiffretext entgegen
+     (`pruef_pat_blob`).
+  3. CSV-Rückimport `export_csv_v1` (`import.php` → Browser →
+     `api/import_commit.php`): liest `einsaetze.csv` (auch aus dem
+     ZIP), verschlüsselt geschützte Felder im Browser, legt Einsätze
+     mit `origin=import` und Präfix `imp-` an; GPX-Tracks werden
+     bewusst **nicht** eingelesen.
+  4. Backup-Wiederherstellung (`api/backup_restore.php`, browserseitig):
+     Dubletten (`client_ref`) werden vollständig **übersprungen**, nie
+     zusammengeführt.
+- **B-02 — Kryptographie ist skriptseitig nachbildbar:** Anmeldetoken
+  und Schlüsselableitung sind PBKDF2-SHA256 (Salt via `auth_salt.php`,
+  Rundenzahl je Konto), Inhaltsschlüssel liegt passwortverpackt in
+  `users.pat_wrap_pw`, Chiffretexte sind `edk1:` + Base64(IV‖AES-256-GCM).
+  Alles ist in `crypto.js` und `docs/Backup-Format.md` (inkl.
+  Python-Beispiel) dokumentiert. Ein Werkzeug kann sich damit regulär
+  anmelden und über die echten Endpunkte einspielen — **ohne** an
+  Validierung oder Verschlüsselung vorbeizugehen (R4).
+- **B-03 — Zuordnung neutraler Diensttage:** `POST api/day.php`
+  (JSON `{day_id, vehicle_id, base_id, crew, notes}`, Header `X-CSRF`)
+  ruft `dt_zuordnen()` — derselbe Weg wie Formular und Nachbearbeitung.
+- **B-04 — Einschränkungen des CSV-Imports:**
+  - Diensttage werden **nur über das Datum** aufgelöst und dabei auf den
+    **ersten** Diensttag des Datums abgebildet
+    (`ORDER BY started_at, id LIMIT 1`). Beim Überschreiben setzt der
+    Einsatz-Update `day_id` auf diesen Tag — der Import taugt daher
+    **nicht** zum Nachtragen an Einsätzen eines zweiten Dienstes am
+    selben Kalendertag (er würde den Einsatz umhängen).
+  - Bestehende Diensttage erhalten über den Import **keine**
+    Standort-/Rettungsmittel-Zuordnung (nur Besatzung im Modus
+    `update`).
+  - Ein Datum, dessen Diensttag im Papierkorb liegt, wird abgelehnt
+    („Ablehnen statt zurückholen").
+- **B-05 — Papierkorb:** `TRASH_DAYS = 90`, danach endgültig; beim
+  endgültigen Entfernen wandert die `client_ref` auf die Sperrliste
+  (`deleted_refs`), `man-` ausgenommen. Papierkorb-Inhalte erscheinen
+  **weder** im Export **noch** im Backup — sie sind nur am laufenden
+  System prüfbar.
+- **B-06 — Kontoanlage heute nur per Einladung:** `admin_users.php`
+  legt Konto ohne Passwort an und erzeugt einen Reset-Link; Passwort
+  und Schlüsselmaterial entstehen erst im Browser der NutzerIn
+  (`pw_handling.php`). Einen Demo-Mechanismus gibt es nicht.
+- **B-07 — Admin-Sicherung:** serverseitiges JSON je Konto unter
+  `server/sicherungen/<kontokennung>/` mit dem inneren Backup-JSON,
+  `pat_blob` bleibt Chiffretext, `schluessel` enthält `pat_wrap_rc` und
+  `pat_key_check`. Eine **serverseitige** Wiederherstellung existiert
+  nicht; der vorhandene Weg läuft über Freigabe + Browser
+  (`api/adminbackup_freigabe.php` → `api/backup_restore.php`).
+  Geräte (`devices`) sind im Backup-Format **nicht** enthalten.
+- **B-08 — Deploy:** synchronisiert ausschließlich `server/`
+  (FTP, Ausnahmeliste u. a. `config.php`, `sicherungen/`). Inhalte, die
+  der Produktivserver braucht, müssen unter `server/` liegen; `tools/`
+  wird nie ausgeliefert.
+- **B-09 — Neutrale Diensttage und A12:** Die Nachbearbeitungsseite
+  (`nachbearbeitung.php`) verschwindet erst, wenn **keine** Diensttage
+  ohne Zuordnung mehr existieren; erst dann wird `base_id` in den
+  Stammdatentabellen auf NOT NULL gezogen. Ein dauerhaft neutraler
+  Diensttag im Demo-Konto würde das für die gesamte Installation
+  blockieren.
+- **B-10 — Dienstzeitraum:** `days.started_at/ended_at` werden von den
+  Schreibwegen fortgeschrieben (`dt_zeitraum_fortschreiben`); die Uhr
+  liefert sie über ihre Uploads, von Hand angelegte Tage über
+  `diensttag_neu.php`.
+- **B-11 — Ratenschutz zählt nur Fehlversuche:** `ratelimit_lib.php`
+  führt Töpfe `login`, `salt`, `reset`, `pair` über Fehlversuche je IP
+  und Kennung. Ein **veröffentlichtes** Passwort läuft daran vorbei —
+  erfolgreiche Anmeldungen werden nirgends begrenzt.
+- **B-12 — Suche ist rein lesend:** `api/suchindex.php` ist GET-only
+  und liefert den Bestand je Sitzung an den Browser; es gibt keinen
+  serverseitig gespeicherten Suchindex. Ebenso sind Export
+  (`api/export_data.php`) und Backup-Erstellung (`api/backup_data.php`)
+  lesend.
+- **B-13 — Anfragegetriebene Aufräumjobs:** Wiederkehrende Arbeiten
+  (Papierkorb-Verfall, `rate_limits`-Bereinigung, Sperrlisten-Verfall)
+  laufen ohne Cron, angestoßen im Zuge normaler Anfragen — dieses
+  Muster steht für den automatischen Demo-Reset zur Verfügung.
+
+## 3. Entscheidungen
+
+Phaseninterne Entscheidungen; programmweite stehen im Rahmenplan
+(hier maßgeblich: R4, R11, R12, R19, R20).
+
+| Nr. | Entscheidung |
+|---|---|
+| E-P1-01 | **Kanalarchitektur nach Erfassungsart.** (a) Luft- und Bodeneinsätze **mit aufgezeichnetem Track** entstehen als Payloads über `ingest.php` mit einem echten, regulär angelegten Gerät des Demo-Kontos — das testet zugleich den Einspeiseweg (R4). Die neutralen Diensttage werden anschließend per `POST api/day.php` zugeordnet (B-03). (b) Das Nachtragen der Nachbearbeitungs- und Patientenfelder an diesen Einsätzen erfolgt per Skript über `einsatz_form.php` (Session, CSRF, `pat_blob` als `edk1:`-Chiffretext) — adressiert je Einsatz-ID und damit frei von der Import-Einschränkung B-04. (c) **Nachträglich erfasste** Einsätze (nur Start-/Zielkoordinaten, kein Track) kommen mehrheitlich über den **CSV-Import** im Browser herein (`origin=import`); mindestens einer wird von Hand über das Einsatzformular angelegt (`origin=manual`), damit alle drei Herkünfte vertreten sind. Kein roher SQL-Weg (R4). |
+| E-P1-02 | **Region:** reale Geographie am Alpenrand (Allgäu-artig) — nötig für plausible Tracks, Höhen und Kartendarstellung —, aber **fiktive Namen** für Standorte, Rettungsmittel, Kliniken, Besatzung und Bergwacht-Einheiten. Keine realen Rufnamen (z. B. kein „Christoph …"). Personen- und Adressangaben sind frei erfunden. |
+| E-P1-03 | **Bodentracks:** einmalige Erzeugung über einen Routing-Dienst (z. B. OSRM) **zur Generierungszeit**; die Ergebnis-Geometrie wird ins Repo eingecheckt. Keine Laufzeitabhängigkeit — Einspielen und Regression funktionieren offline. Lufttracks werden geometrisch erzeugt (Großkreis/Kurven mit plausiblen Geschwindigkeits- und Höhenprofilen). |
+| E-P1-04 | **Quellformat:** JSON ist die führende Quelle des Generators (ein Dokument je Einsatz/Dienst, bildet Vertrag und Felder direkt ab). GPX ist **abgeleitetes Sichtprüfformat**, keine Quelle — es kann Phasen, Reanimation und Felder nicht tragen. |
+| E-P1-05 | **Stammdaten** (Standorte, Rettungsmittel samt Rollen/Fähigkeiten, Zielkliniken, Besatzungs-Vorbelegungen, weitere Rettungsmittel, Bergwacht-Einheiten) legt das Einspielskript über die regulären Einstellungs-Endpunkte an. Der gesamte Datensatz ist damit aus einem leeren Konto reproduzierbar. Zentrale (Admin-)Stammdaten bleiben außen vor — das Demo-Konto ist ein normales Nutzerkonto. |
+| E-P1-06 | **Zielumgebung:** Der Referenzzustand entsteht auf der **Produktivinstallation** (eigenes Demo-Konto). Ein vollständiger Probelauf gegen eine lokale Installation vorab ist zulässig und empfohlen; maßgeblich ist der Produktivlauf. |
+| E-P1-07 | **Ablage:** Generator, JSON-Quelldaten, erzeugte Payloads, Importdateien, Messprotokoll, Referenz-Exporte und Vergleichswerkzeug unter `tools/referenzdatensatz/` (vom Deploy nicht berührt, B-08). Nur was der Produktivserver für die Demo-Funktion braucht, liegt unter `server/demo/` (E-P1-08). |
+| E-P1-08 | **Demo-Account-Funktion im Adminbereich** (aus F5-Klärung): Der Adminbereich erhält „Demo-Konto anlegen" und „Demo-Konto auf Standard zurücksetzen" (manuell; zusätzlich automatisch nach E-P1-18). Mechanik: Das Werkzeug erzeugt nach dem Einspiellauf eine **Fixture** (`server/demo/`) aus (1) dem Schlüssel- und Anmeldematerial des Demo-Kontos (E-Mail, `password_hash` des abgeleiteten Anmeldetokens, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key`), (2) dem Datenbestand im inneren Backup-JSON (Chiffretexte unverändert, B-07), (3) den Geräten (`device_id`, `api_key_hash`, `label`, `active=1`) samt `day_refs` und (4) dem Nachlauf-Drehbuch nach E-P1-21. „Anlegen" installiert Kontozeile + Fixture. „Zurücksetzen" löscht **alle** Bestände des Demo-Kontos — Diensttage, Einsätze, Ruhezeiten, Stammdaten, Geräte einschließlich besucherangelegter, Kopplungscodes, offene Passwort-Reset-Einträge, Papierkorb und Sperrlisten-Einträge (`deleted_refs`) der Demo-Geräte — und spielt die Fixture erneut ein, **einschließlich Konto- und Schlüsselmaterial**, sodass selbst eine unerwartet gelungene Kontoänderung folgenlos bliebe. Die Chiffretexte bleiben dabei gültig, weil der Inhaltsschlüssel unverändert aus der Fixture kommt — der Server spielt `pat_blob` **ohne jede Entschlüsselung** unverändert ein; ein Browser ist nicht beteiligt. Die Wiederherstellung läuft serverseitig über eine mit `api/backup_restore.php` **geteilte** Einspielroutine (Refactoring in `backup_lib.php`) — dieselbe Validierung, kein zweiter Rückspielpfad mit eigenen Fehlern, kein roher SQL-Weg. Kennzeichnung des Demo-Kontos über `app_state` (`demo_user_id`); Anlegen und Zurücksetzen sind transaktional und wirken ausschließlich auf dieses Konto. |
+| E-P1-09 | **Sicherheitsrahmen der Demo-Funktion:** Zugangsdaten **und** Geräteschlüssel des Demo-Kontos sind planmäßig öffentlich, und sein Schlüsselmaterial liegt planmäßig auf dem Server — eine bewusste, eng begrenzte Ausnahme vom E2E-Prinzip, zulässig **nur** für dieses eine synthetische Konto mit rein fiktiven Daten (Rolle `user`). Schutzschichten: gesperrte Konto-Identität (E-P1-19), Anmelde-Mengenbremse (E-P1-20), automatischer Reset (E-P1-18) einschließlich Wiederherstellung des Schlüsselmaterials (E-P1-08) sowie die vorhandenen Größen- und Mengengrenzen von `ingest.php`. **Benannte, hingenommene Restrisiken:** Besucherinhalte (auch unerwünschte) und Massendaten sind innerhalb eines Reset-Fensters sichtbar bzw. vorhanden — begrenzt durch das 30-Minuten-Fenster, die Bodygrenzen und das Banner; die Grundsatzentscheidung zur Ingest-Mengenbremse fällt nach R19 in P5 und deckt dann auch das Demo-Konto mit ab. Handbuch, Demo-Banner und Adminseite weisen darauf hin, dass im Demo-Konto niemals echte Daten erfasst werden dürfen und Änderungen regelmäßig verworfen werden. Diese Konstruktion ist ausdrücklich Prüfgegenstand des R17-Reviews in P6. |
+| E-P1-10 | **Reihenfolge Konto und Schlüssel:** Das Demo-Konto wird zuerst einmalig über den regulären Weg angelegt (Einladung, Passwortvergabe im Browser mit dem festgelegten Demo-Passwort). Das Werkzeug leitet alle Schlüssel aus Passwort + `auth_salt.php` ab bzw. entpackt `pat_wrap_pw` — die Fixture (E-P1-08) übernimmt anschließend genau dieses Material. So passen Chiffretexte und Konto auf jeder Installation zusammen. |
+| E-P1-11 | **Kein dauerhaft neutraler Diensttag** im Referenzzustand (B-09): Jeder Diensttag ist am Ende Standort und Rettungsmittel zugeordnet. Der neutrale Zwischenzustand wird trotzdem geprüft — als Prüfschritt während des Einspielens, nicht als Dauerzustand. |
+| E-P1-12 | **Referenz-Exporte:** Nutzer-Export als CSV-Archiv (mit personenbezogenen Angaben, unverschlüsselt, inkl. `tracks/`) und eine edbak-Datei mit festem, dokumentiertem Backup-Passwort. Beide entstehen im Browser aus dem fertigen Referenzzustand und werden unter `tools/referenzdatensatz/referenz/` eingecheckt. Die edbak-Datei ist zugleich die vorgesehene Abnahmedatei für R11 in P6 („v1.0 liest 7.x-edbak"). |
+| E-P1-13 | **Vergleichswerkzeug:** Ein Skript (Python, `tools/referenzdatensatz/vergleich/`) normalisiert flüchtige Anteile (interne IDs, `created_at`, Erzeugungszeitpunkte, Dateinamensdatum, ID-abhängige Trackdateinamen, App-Version in `LIESMICH.txt`) und vergleicht einen aktuellen Export feldgenau gegen die Referenz. Chiffretexte werden nicht verglichen (IV-Zufall); verglichen wird der Klartext der Exporte. Ergebnis: maschinenlesbarer Abweichungsbericht. |
+| E-P1-14 | **Messprotokoll (R19-Vorarbeit):** Das Einspielskript bildet das Sendeverhalten der Uhr nach (`watch/source/Uploader.mc` ist Referenz: Chunking ≤ 500 Punkte, Teil-Uploads bei Phasenwechseln, Ruhe-Segmente periodisch). Da das Einspielen schneller läuft als Echtzeit, werden die **Soll-Zeitpunkte** aus dem simulierten Dienstverlauf analytisch protokolliert (nicht die Wanduhr des Replays): Anfragen je Dienst, Teilstücke je Einsatz, Abstände, Spitzenwerte, dazu die Zahl der Fehlversuche 0. Ablage als `messprotokoll.json` + kurze Auswertung in Markdown. |
+| E-P1-15 | **R20-Angriffswert**, fortgeschrieben in B1. Ursprünglich sollte der HTML-/Skriptmarker über den **CSV-Import** ins Altersfeld (`pat_alter`). Das ist über diesen Weg nicht möglich (Fehlerfund F-P1-A). Geltende Fassung: (a) Marker in den geschützten **Freitextfeldern** — Diagnose, Ortsbeschreibung, Einsatznummer, Einsatzort-Adresse — über den CSV-Import, wo der `trim`-Parser sie unverändert annimmt (D15/IMP-01 und IMP-02); (b) Marker **im Altersfeld** über den Nachtrag per `einsatz_form.php` (D15/`m-11-6127408395`), also über den Kanal, den E-P1-01(b) für alle Nachbearbeitungs- und Patientenfelder ohnehin vorsieht. Beide bleiben dauerhaft im Referenzzustand und in den Referenz-Exporten; die Fixture trägt sie über jeden Reset weiter. Zusätzlich enthalten Freitextfelder CSV-kritische Werte (Semikolon, Anführungszeichen, Zeilenumbruch, Formel-Anfangszeichen `=`,`+`,`-`,`@`) als Dauerfälle für Quoting und Formelschutz. |
+| E-P1-16 | **Sperrlisten-Prüfung als Ablaufschritt:** Ein Einsatz wird eingespielt, in den Papierkorb gelegt, endgültig gelöscht und sein Payload erneut gesendet — erwartet: keine Wiederanlage (`deleted_refs`). Dieser Fall ist Prüfschritt des Einspiellaufs, kein Dauerzustand. |
+| E-P1-17 | **Kein Fable-Schritt in P1.** Alle Pakete laufen mit dem Standardmodell (K2). |
+| E-P1-18 | **Das Demo-Konto ist beschreibbar** (Klärung aus dem Konzeptgespräch): Besucher können Einsätze und Diensttage anlegen, ändern und löschen, Stammdaten pflegen und Geräte koppeln — die Funktionen sollen ausprobierbar sein. Dafür wird das Konto **automatisch alle 30 Minuten auf den Standardzustand zurückgesetzt** (Mechanik E-P1-08). Auslösung anfragegetrieben nach dem Muster der vorhandenen Aufräumjobs (B-13): Bei Web-Anfragen des Demo-Kontos und bei `ingest.php`-Anfragen von Demo-Geräten wird `app_state` (`demo_letzter_reset`) geprüft und bei Überschreitung **zuerst** zurückgesetzt — wer nach längerer Ruhe kommt, sieht immer den Standardzustand. Höchstdrift 30 Minuten relativ zu jeder Aktivität; ein Zeitdienst (Cron) wird nicht vorausgesetzt. Nebenläufige Anfragen während eines Resets dürfen scheitern, aber nichts beschädigen (Transaktion). Die Oberfläche zeigt im Demo-Konto dauerhaft ein Banner: fiktive Daten, Ausprobieren erwünscht, automatische Rücksetzung alle 30 Minuten, keine echten Daten erfassen. |
+| E-P1-19 | **Gesperrt ist ausschließlich die Konto-Identität:** E-Mail-Änderung, Passwortänderung, KDF-Upgrade (`api/kdf_upgrade.php`) und — falls vorhanden — eine Kontolöschung durch das Demo-Konto selbst werden an den betroffenen Endpunkten mit freundlichem Hinweis abgewiesen; zusätzlich weist `reset_request.php` die Demo-Adresse ab (kein Passwort-Reset-Weg, kein E-Mail-Versand). Alles Übrige bleibt offen — ausdrücklich auch Geräteverwaltung und Kopplung (`pair.php`) samt Uploads über `ingest.php`. |
+| E-P1-20 | **Anmelde-Mengenbremse:** Neuer Topf `demo` in `ratelimit_lib.php`, der — anders als die bestehenden Töpfe (B-11) — **erfolgreiche** Anmeldungen am Demo-Konto zählt: je IP **und** zusätzlich global je Zeitfenster. Die bewährte Tabelle `rate_limits` wird mitgenutzt; Grenzwerte werden in der Umsetzung festgelegt und hier als Fortschreibung nachgetragen. |
+| E-P1-22 | **Umfang und Ausgewogenheit** (Festlegung in B1, ersetzt „30–40 Einsätze" in Abschnitt 5): **16 Diensttage, 8 luftgebunden und 8 bodengebunden, mit 87 Einsätzen** — im Schnitt knapp sechs je Dienst. Zwei Gründe. Erstens die Abdeckung: Ein Verhältnis von 11 Luft- zu 3 Bodendiensten prüft die bodengebundene Hälfte der Anwendung (Rollensatz `driver`/`trainee`, Standort ohne Koordinaten, fehlende Fähigkeiten, Straßentracks) an einem Bruchteil der Fälle. Zweitens die Glaubwürdigkeit als Demo: Ein Diensttag mit zwei Einsätzen sieht aus wie ein Datensatz, einer mit sechs wie ein Dienst. Preis, bewusst bezahlt: größere Fixture, längerer Einspiellauf, längere Kreislauftests. |
+| E-P1-23 | **Prüffälle von Hand, Betriebsalltag erzeugt** (Festlegung in B1): Jeder Einsatz, der eine Zeile der Abdeckungsmatrix belegt, ist von Hand geschrieben und trägt eine Begründung im Dokument. Der Rest entsteht aus `quelldaten/aufbauen.py` und `katalog.py`, deterministisch bei festem Samen, und ist mit `"erzeugt": true` gekennzeichnet. Die erzeugten Einsätze werden bei einem erneuten Lauf ersetzt, die handgeschriebenen nie. **Die Quelle bleiben die eingecheckten JSON-Dokumente** (E-P1-04); `aufbauen.py` ist ein Schreibgehilfe, kein zweiter Datenweg. |
+| E-P1-21 | **Papierkorb-Dauerzustand über Reset-Nachlauf:** Das Backup-Format kennt keine gelöschten Einträge (B-05). Statt eines Fixture-Sonderformats führt der Reset nach dem Einspielen ein kleines Drehbuch aus: benannte Einsätze und Diensttage werden über die regulären Löschwege (`trash_lib.php`) in den Papierkorb gelegt. So bleibt die geteilte Einspielroutine formattreu, und die Papierkorb-Abdeckung (Abschnitt 5) übersteht jeden Reset. |
+
+## 4. Offene Fragen
+
+| Nr. | Frage | Vorschlag | Zu entscheiden vor |
+|---|---|---|---|
+| F-P1-01 | ~~Zugangsdaten des Demo-Kontos~~ | **GEKLÄRT vor B1:** `demo@gen-em.org`, Passwort `nadokudemo0815`, Backup-Passwort der Referenz-edbak ebenfalls `nadokudemo0815`. Nennung im Handbuch und auf der Adminseite. | erledigt |
+| F-P1-02 | ~~Übergabe der Luftrettungs-Beispieldatei~~ | **GEKLÄRT vor B1:** Datei übergeben und entschlüsselt (Container v2, Nutzlastversion 5; 10 Diensttage, 50 Einsätze). Sie dient wie vorgesehen als **inhaltliche Vorlage** für Tonfall und Feldbelegung, nicht als Importquelle — Nutzlastversion 5 wird von der Anwendung nicht mehr eingelesen (`error: version_alt`), was für diesen Zweck folgenlos ist. | erledigt |
+
+**Zwei weitere Klärungen vor B1**, beide vom Auftraggeber entschieden:
+Der Umfang steigt auf 16 ausgewogene Diensttage (E-P1-22), und der
+R20-Wert im Altersfeld kommt über den Nachtrag statt über den CSV-Import
+(E-P1-15, Fehlerfund F-P1-A).
+
+Geklärt im Konzeptgespräch (bereits als E überführt): Kanalwahl
+(E-P1-01), Region (E-P1-02), Routing (E-P1-03), Quellformat (E-P1-04),
+Stammdaten-Anlage (E-P1-05), Zielumgebung (E-P1-06), Ablage (E-P1-07),
+Demo-Funktion mit Anlegen/Zurücksetzen (E-P1-08), beschreibbares
+Demo-Konto mit 30-Minuten-Reset statt Schreibschutz (E-P1-18),
+Sperrumfang nur Konto-Identität inkl. Reset-Request-Abweisung
+(E-P1-19), Anmelde-Mengenbremse (E-P1-20).
+
+## 5. Abdeckungsmatrix (Soll)
+
+Verbindliche Mindestabdeckung; die konkrete Einsatzliste entsteht in B1
+und weist jede Zeile dieser Matrix mindestens einem Einsatz/Dienst zu.
+
+**Gesamtumfang (fortgeschrieben in B1, E-P1-22): 16 Diensttage — 8
+luftgebunden, 8 bodengebunden — mit 87 Einsätzen**, verteilt über das Jahr
+2026 mit plausiblen Häufungen (nicht gleichverteilt). Der ursprüngliche
+Ansatz von 30–40 Einsätzen stammte aus einem Entwurf mit deutlich weniger
+Bodendiensten; er prüfte die bodengebundene Hälfte der Anwendung an einem
+Bruchteil der Fälle und ließ einen Diensttag wie einen Datensatz aussehen
+statt wie einen Dienst.
+
+| Dimension | Mindestens abzudecken |
+|---|---|
+| Erfassungsart (R4) | luftgebunden mit Track (Ingest) · bodengebunden mit Track (Ingest) · nachträglich ohne Track, nur Start-/Zielkoordinaten (Import bzw. Formular) |
+| Herkunft | `watch` · `manual` · `import` — je ≥ 1 |
+| Diensttage | Luft- und Bodendienste; ≥ 1 Kalendertag mit **zwei** Diensten (`day_ref`-Zuordnung); ≥ 1 Dienst über Mitternacht (Einsatzdatum ≠ Diensttag); Diensttag **ohne** Einsatz; Tagesnotizen |
+| Besatzung | alle Rollen des Katalogs belegt (Luft: p1, p2, hems, fr, other · Boden: driver, trainee, other); ≥ 1 Einsatz mit abweichender Besatzung (`crew_override`) |
+| Phasen | alle Phasen 2–9 im Datensatz; ≥ 1 Einsatz mit Mehrfacheintrag derselben Phase (Korrektur); ≥ 1 Einsatz mit unvollständigen Phasen (Dauer leer); ≥ 1 nicht abgeschlossener Einsatz (`final=0`, `ended_at` leer) |
+| Reanimation | ≥ 1 Einsatz mit einer Sitzung; ≥ 1 mit **mehreren** Sitzungen; alle **speicherbaren** Ereignisarten kommen im Datensatz vor (inkl. `rosc` und `tod`). Das sind **neun**, nicht zehn: `beginn` nimmt kein Schreibweg als Ereignis an — siehe Fehlerfund F-P1-F |
+| Transport | `air` · `ground` · `ambulant` · leer; NA-Begleitung; Fehleinsatz/Storno; Sekundärtransport; Schockraum; Zielklinik mit und ohne Koordinate |
+| Abfahrtort | alle vier Regeln `base` · `prev_site` · `prev_dest` · `manual` (letztere mit verschlüsseltem `pat.start`) |
+| Luftspezifik | Winde (mit Cycles, Cycles mit Patient, Luftverladung) nur an windenfähigem Rettungsmittel; Bergwacht mit Einheit und `bw_info` |
+| Geschützte Angaben | Einsatz mit Geburtsdatum (Alter gerechnet) · Einsatz mit Handalter (`pat_alter`, darunter der R20-Angriffswert) · Diagnose · Einsatzort mit Adresse+Koordinate · Ortsbeschreibung · Einsatznummer · Einsatz **ohne** jede geschützte Angabe |
+| Sonderzeichen | Freitexte mit Semikolon, Anführungszeichen, Zeilenumbruch, Formel-Anfangszeichen, Umlauten/ß (E-P1-15) |
+| Ruhezeiten | Segmente mit Track; mehrere Segmente je Dienst; nicht abgeschlossenes Segment |
+| Papierkorb | ≥ 1 gelöschter Einsatz und ≥ 1 gelöschter Diensttag (mit `deleted_with_day`-Einsätzen) als Dauerzustand — nach jedem Reset über den Nachlauf wiederhergestellt (E-P1-21); Sperrlisten-Fall als Ablaufschritt (E-P1-16) |
+| Stammdaten | ≥ 2 Standorte (einer mit, einer ohne Koordinaten); ≥ 2 Luft-Rettungsmittel (mit/ohne Fähigkeiten) und ≥ 1 Boden-Rettungsmittel; Zielkliniken mit/ohne Koordinate; Vorbelegungen aller Arten; Standard-Markierungen |
+| Zeit | Einsätze in MEZ **und** MESZ; ≥ 1 Dienst im Umfeld einer Zeitumstellung 2026 |
+| Weitere Felder | weitere Rettungsmittel (mehrere je Einsatz); weiterer Notarzt; Notizen an Einsatz und Diensttag; bearbeiteter Uhr-Einsatz (`edited=1`, `manual=1` als Nebenwirkung) |
+
+## 6. Arbeitspakete
+
+Reihenfolge B1 → B7; B4 folgt zwingend auf B3 (die zu aktualisierenden
+Einsätze müssen existieren), B6 auf B5 (die Fixture entsteht aus dem
+abgenommenen Referenzzustand).
+
+### B1 — Einsatzliste und Quelldaten — **ERLEDIGT**
+Abdeckungsmatrix (Abschnitt 5) in eine konkrete Liste von Diensttagen
+und Einsätzen übersetzen; je Einheit ein JSON-Quelldokument
+(E-P1-04) mit allen Feldern, Phasenzeiten, Reanimationen,
+Track-Eckdaten und Kanalzuordnung (E-P1-01). Inhaltliche Vorlage ist
+die Luftrettungs-Beispieldatei (F-P1-02); Namen und Orte nach E-P1-02.
+Ein Matrix-Abgleichsdokument weist jede Matrixzeile den Einsätzen zu.
+**Abnahme:** Jede Zeile der Matrix ist mindestens einmal zugewiesen;
+Umfang nach E-P1-22; JSON-Schema der Quelldokumente liegt bei und
+alle Dokumente validieren dagegen; keine realen Namen.
+
+**Stand.** Abgenommen. Erzeugt unter `tools/referenzdatensatz/quelldaten/`:
+16 Dienstdokumente (`dienste/D01…D16.json`), `stammdaten.json`, der
+Sperrlisten-Prüfschritt unter `pruefschritte/`, zwei JSON-Schemata,
+`FORMAT.md` als Formatbeschreibung, `katalog.py` und `aufbauen.py`
+(Betriebsalltag, E-P1-23), `wegpunkte.py` (Wegpunktauflösung, geteilt mit
+dem Generator) und `pruefen.py`. Der Matrix-Abgleich (`matrix_abgleich.md`)
+wird aus `pruefen.py --matrix` **erzeugt** statt gepflegt — ein von Hand
+geführtes Abgleichsdokument ist nach der zweiten Änderung falsch und
+behauptet trotzdem weiter eine Abdeckung, die es nicht mehr gibt.
+
+**Gemessen** (`pruefen.py`): 87 Einsätze, 99 Ruhesegmente, 1 122
+Zeitstempel auf Existenz und Eindeutigkeit geprüft, **5 528
+Einzelprüfungen, keine Befunde**; 78 Matrixzeilen, davon **0 offen**.
+Determinismus von `aufbauen.py`: zwei Läufe, 16 Dateien byteweise gleich.
+
+**Vorgezogen aus B2:** Da der Netzzugang zu `router.project-osrm.org`
+freigegeben wurde, ist die Straßengeometrie der Bodeneinsätze bereits
+abgerufen und eingecheckt (E-P1-03): 117 Teilstücke, 84 verschiedene
+Strecken, unter `generator/routen/`. Der Generator läuft damit offline.
+
+**Drei Befunde, die B1 selbst hervorgebracht hat** und die als Prüfungen
+stehen geblieben sind, statt nur behoben zu werden:
+1. Ein Zeitstempel lag in der **übersprungenen Stunde** der
+   Frühjahrsumstellung (29.03.2026, 02:00 MEZ). `pruefen.py` prüft
+   seither jeden Zeitstempel auf Existenz **und** Eindeutigkeit.
+2. Sechs Einsätze führten **standortfremde Vorbelegungen**. Fünf wurden
+   auf den eigenen Standort gezogen; einer bleibt bewusst stehen und ist
+   als Freitextfall gekennzeichnet — `other_resources` ist Freitext mit
+   Vorschlagsliste, und ein Wert außerhalb der Liste muss vorkommen,
+   sonst prüft der Datensatz nur den bequemen Teil des Feldes.
+3. Mehrere **Routen-Wegpunkte lösten auf keine Koordinate auf**. Daraus
+   entstand die Trennung von `spur` und `geschuetzt` (FORMAT.md): Spur
+   und Phasenkoordinaten liegen in der Anwendung im Klartext,
+   verschlüsselt ist die *Adresse*. Ein Einsatz ohne geschützte Angaben
+   hat deshalb sehr wohl eine Spur.
+
+### B2 — Generator
+Werkzeug (Python, `tools/referenzdatensatz/generator/`), das aus den
+Quelldokumenten erzeugt: (a) Lufttracks geometrisch, Bodentracks über
+Routing mit eingecheckter Geometrie (E-P1-03), inkl. Höhenprofil;
+(b) Ingest-Payloads in vertragskonformen Teilstücken samt
+Soll-Sendeplan (Grundlage für E-P1-14); (c) Formulardaten für das
+Nachtragen inkl. `edk1:`-Chiffretexte (B-02); (d) Importdateien im
+`export_csv_v1`-Format für die nachträglichen Einsätze inkl.
+R20-Angriffswert; (e) GPX-Ableitungen zur Sichtprüfung.
+**Abnahme:** Generator läuft deterministisch (fester Zufallssamen)
+offline durch; Payloads halten alle Vertragsgrenzen ein (Stichprobe
+gegen `docs/JSON-Vertrag.md` 3.2); Bodentracks folgen Straßen
+(Sichtprüfung GPX); Chiffretexte entschlüsseln mit dem Kontoschlüssel
+zum Quell-Klartext.
+
+**Stand: ERLEDIGT.** Unter `tools/referenzdatensatz/generator/`:
+`erzeugen.py` (Hauptlauf), `spur.py` (Spuren), `gelaende.py`
+(Höhenmodell aus rund fünfzig Stützpunkten), `krypto.py` (PBKDF2 und
+AES-256-GCM nach `assets/crypto.js`), `pruefen.py`, `LIESMICH.md` und
+`routen/` mit der eingecheckten Straßengeometrie.
+
+**Gemessen** (`pruefen.py`): 526 Ingest-Anfragen, 56 587 Trackpunkte,
+**283 738 Einzelprüfungen, keine Befunde**. Determinismus: zwei Läufe,
+692 Dateien byteweise gleich. Größter Body 20,2 KB gegen die Grenze von
+512 KB. Die Teilstückbildung ist wirklich beansprucht — 166 Pakete gehen
+in mehreren Anfragen hinaus, 18 davon mit genau 500 Punkten.
+
+**Statt Stichprobe: alles.** Die Abnahme sah eine Stichprobe gegen die
+Vertragsgrenzen vor. Geprüft wird stattdessen **jede** Anfrage gegen
+**jede** Grenze. Eine Stichprobe beantwortet nicht die Frage, ob der
+Datensatz vertragskonform ist, sondern nur, ob die gezogenen Stücke es
+sind — und der Datensatz soll gerade die Grundlage sein, auf die sich
+spätere Phasen verlassen.
+
+**Straßentreue: erfüllt statt ausgewiesen.** Der Netzzugang zu
+`router.project-osrm.org` wurde während B1 freigegeben. Die
+Bodentracks folgen damit echten Straßen (117 Teilstücke, 84
+verschiedene Strecken); dazu liegt eine **Fahrzeiten-Tafel** von 86
+Paaren vor, mit der die Quelldaten den Einsatzort nach der echten
+Fahrzeit wählen statt nach der Luftlinie.
+
+### Was B2 an Fehlern hervorgebracht hat
+
+Diese vier standen nicht im Konzept; sie sind beim Bauen aufgefallen
+und jeder ist als **dauerhafte Prüfung** stehen geblieben.
+
+1. **Der Rückweg gehörte nicht zum Einsatz.** Der Generator zählte den
+   Weg von der Klinik zurück zum Einsatz und musste ihn in die Spanne
+   zwischen Übergabe und Endzeit pressen — dabei entstanden Rückflüge
+   mit 666 km/h. Richtig ist, was die Uhr tut: `_endMission` beendet den
+   Einsatz und startet sofort ein Ruhe-Segment (`Model.mc`), der Rückweg
+   wird **dort** aufgezeichnet. Die Ableitung steht jetzt einmal in
+   `quelldaten/wegpunkte.py` (`tagesablauf`) und wird von Generator und
+   Routenabruf gemeinsam benutzt.
+2. **Der Einsatzort richtete sich nicht nach der verfügbaren Zeit.**
+   Erzeugte Einsätze wählten den Ort frei aus dem Katalog, während die
+   Phasen die Anfahrtszeit vorgaben — 45 km in sieben Minuten. Für die
+   Straße genügte die Luftlinie dafür nicht: Im Voralpenland liegt ein
+   Ort 15 km Luftlinie und 40 km Fahrstrecke entfernt. Deshalb die
+   Fahrzeiten-Tafel.
+3. **Das Geschwindigkeitsprofil überhöhte die Mitte um 57 Prozent.**
+   Eine Kosinus-Glättung ist an den Enden richtig und in der Mitte
+   falsch. Jetzt ein Trapez — beschleunigen, halten, bremsen —, das die
+   Reisegeschwindigkeit nur rund 18 Prozent über den Mittelwert hebt.
+4. **Die Spur sprang zwischen Halt und Fahrt.** OSRM rastet Anfang und
+   Ende einer Route auf die nächste Straße; der Halt davor stand exakt
+   auf dem Wegpunkt. Aus dem Versatz wurden 175 km/h. Die Halte sitzen
+   jetzt am tatsächlichen Ende des Fahrabschnitts.
+
+Dazu zwei Funde in den Quelldaten, die B2 sichtbar gemacht hat: Ein
+NEF-Einsatzort lag auf 2 100 m (der Ortskatalog führte denselben Namen
+mit zwei Koordinaten), und der Standort Talwang hatte nur eine
+Zielklinik mit Koordinaten — 20 km entfernt, sodass jeder Bodentransport
+zu schnell war. Beides ist in den Quelldaten behoben und wird von
+`quelldaten/pruefen.py` mitgeprüft (Erreichbarkeit je Abschnitt und je
+Ruhe-Segment).
+
+### B3 — Einspiellauf (skriptgestützt)
+Einspielskripte für den kompletten Lauf gegen eine Installation:
+Demo-Konto regulär anlegen (E-P1-10, Zugangsdaten nach F-P1-01),
+Stammdaten über die Einstellungs-Endpunkte (E-P1-05), Gerät anlegen,
+Ingest-Replay nach Soll-Sendeplan mit Messprotokoll (E-P1-14),
+Diensttag-Zuordnung per `api/day.php` (B-03), Nachtragen per
+`einsatz_form.php` (E-P1-01b), manuelle Einsätze, Papierkorb-Fälle
+und Sperrlisten-Prüfschritt (E-P1-16). Erst vollständiger Probelauf
+lokal, dann Produktivlauf (E-P1-06).
+**Abnahme:** Lauf ist aus leerem Konto wiederholbar; Messprotokoll
+liegt vor (Anfragen je Dienst, Teilstücke, Abstände, Spitzen);
+Stichprobe in der Oberfläche: Diensttage zugeordnet, Tracks sichtbar,
+geschützte Angaben nach Freischalten lesbar; neutraler Zustand vor
+Zuordnung wurde beobachtet (E-P1-11); keine Zeile entstand per SQL.
+
+**Stand: ERLEDIGT (lokal).** Unter `tools/referenzdatensatz/einspielen/`:
+`lokal_starten.sh` (MariaDB, PHP-Server, TLS davor), `sitzung.py`
+(Anmeldung über den regulären Weg), `passwort_setzen.mjs` (Browser),
+`einspielen.py` (neun Stufen), `messprotokoll.py`, `sichtpruefung.mjs`
+und `LIESMICH.md`.
+
+**Gemessen.** 526 Ingest-Anfragen, **0 Fehlversuche**, 0 verworfene
+Einzelwerte, 0 übergangene Listen. Bestand danach: 16 Diensttage
+(1 im Papierkorb), 78 sichtbare Einsätze (76 `watch`, 2 `manual`),
+5 im Papierkorb (4 davon mit ihrem Diensttag), 95 Ruhesegmente,
+55 861 Spurpunkte, 1 Sperrlisteneintrag. Die vier CSV-Importe folgen
+in B4.
+
+**Neutraler Zustand belegt (E-P1-11):** Vor der Zuordnung waren
+**16 von 16** Diensttagen ohne Art — gezählt, nicht behauptet, und im
+Lauf-Zustand festgehalten.
+
+**Sperrliste (E-P1-16) bestanden:** senden → 1 Einsatz, Papierkorb → 0,
+endgültig löschen → 0, **erneut senden → 0**. Der Einsatz kam nicht
+wieder; `deleted_refs` trägt die Kennung.
+
+**Sichtprüfung im Browser:** Diensttag mit Zuordnung im Titel, 6
+Einsatzzeilen, 28 Spurpfade auf der Tageskarte und 9 auf der
+Einsatzkarte, 8 Phasenzeilen, geschützte Angaben ohne weiteres Zutun
+lesbar (gelesen: „Schädel-Hirn-Trauma bei Motorradunfall"),
+**Konsole ohne Fehler**.
+
+**Was dabei NICHT geprüft werden konnte** — und das gehört an diese
+Stelle und nicht in eine Fußnote:
+
+- **Kartenkacheln.** Sie kommen von `tile.openstreetmap.org` und
+  Nachbarn (`assets/map_layers.js`); der Egress-Proxy dieser Umgebung
+  lässt sie nicht durch. Geprüft ist, dass die **Spur** gezeichnet
+  wird — nicht, dass der Kartenhintergrund erscheint.
+- **Mailversand.** Kein SMTP lokal; der Einrichtungslink wurde von der
+  Adminseite abgelesen statt aus einer Mail.
+- **Der Produktivlauf** (P-12) steht weiterhin aus — dafür fehlt der
+  Zugang.
+
+### B4 — Browser-Schritte — **ERLEDIGT**
+Dokumentierte Klickstrecke für die Anteile, die bewusst im Browser
+laufen: CSV-Import der nachträglichen Einsätze (inkl. R20-Fall,
+Dublettenverhalten beachten, B-04), Sichtkontrolle der maskierten
+Tabellen und der Suche (der Suchindex wird je Sitzung gelesen, nicht
+gespeichert, B-12).
+**Abnahme:** Importierte Einsätze tragen `origin=import`; der
+Angriffswert steht inert (maskiert) in den Tabellen; Klickstrecke ist
+als nummerierte Anleitung in `tools/referenzdatensatz/LIESMICH.md`
+festgehalten.
+
+**Ergebnis.** Zwei Skripte unter `browser/`, beide wiederholbar:
+`csv_import.mjs` (Import) und `angriffswerte.mjs` (P-07). Die
+Klickstrecken stehen in `browser/LIESMICH.md` — **nicht** in der
+Datei auf oberster Ebene, wie die Abnahme sie nennt: Jedes Paket führt
+seine eigene LIESMICH (`generator/`, `einspielen/`), und die Datei auf
+oberster Ebene entsteht in B7 und verweist dorthin. Bewusste Abweichung,
+keine Auslassung.
+
+Zahlen: Der Import legt **4 Einsätze** an (`0 überschrieben,
+0 übersprungen`), Prüftabelle `0 Hinweise, 0 Fehler`. Der Bestand wurde
+danach **feldweise gegen die Quelldatei** gehalten — 184 Einzelprüfungen
+über Kopfdaten, Flags, Zielkoordinate, weitere Rettungsmittel und
+25 Phasen —, ohne Befund. P-07: **42 Einzelprüfungen** über sechs
+Seiten, kein Dialog, kein eingefügtes Element, keine Konsolenmeldung.
+
+**Was das Paket an Fehlern hervorgebracht hat.** Drei, davon zwei in der
+Anwendung: F-P1-G (CSV-Umlauf nicht verlustfrei bei führendem `=`,
+offen, Vorschlag steht), F-P1-H (sechs Felder gingen zwischen
+Prüftabelle und Nutzlast verloren — **behoben in Web 7.2.2**) und
+F-P1-I (**Cross-Site-Scripting** über das Altersfeld in allen drei
+Einsatztabellen — **ausgeliefert als Web 7.2.1**). Beide Korrekturen sind
+maschinell gegen den alten Stand gegengeprüft: Die Prüfmittel melden
+dort genau die Fehler, hier keinen.
+
+### B5 — Referenz-Exporte, Vergleichswerkzeug, Kreislauftest — **ERLEDIGT, mit benannten Befunden**
+Referenz-Exporte erzeugen und einchecken (E-P1-12);
+Vergleichswerkzeug bauen (E-P1-13); Kreislauftest ausführen:
+Referenz-CSV in ein **frisches** Konto importieren → erneut
+exportieren → vergleichen; erwartete, dokumentierte Abweichungen
+(z. B. Tracks nicht im Importweg, explizit gespeicherte effektive
+Besatzung, Herkunft `import`) landen als Ausnahmeliste im Werkzeug.
+Ebenso: edbak in ein frisches Konto einspielen → exportieren →
+vergleichen (hier ohne Track-Ausnahme). Für spätere Regressionsläufe
+gilt: unmittelbar vor dem Vergleichs-Export das Demo-Konto
+zurücksetzen (manuell oder automatischen Reset abwarten), damit
+Besucheränderungen den Vergleich nicht verfälschen — so steht es auch
+im LIESMICH.
+**Abnahme:** Beide Kreisläufe laufen mit leerem Abweichungsbericht
+(nach Ausnahmeliste) durch; das Werkzeug meldet eine absichtlich
+eingebaute Testabweichung zuverlässig; Bedienung im LIESMICH
+beschrieben.
+
+**Ergebnis.** Referenz unter `referenz/` (CSV-Archiv mit personenbezogenen
+Angaben, ohne Archivpasswort, 171 GPX; edbak mit `nadokudemo0815`).
+Werkzeug unter `vergleich/` — `lesen.py`, `normalisieren.py`,
+`vergleichen.py`, `kreislauf.py`, Ausnahmelisten unter `ausnahmen/`.
+
+| Prüfung | Zahl |
+|---|---|
+| Selbstvergleich Archiv | 9 589 Einzelvergleiche, 0 Abweichungen |
+| Selbstvergleich Sicherung | 269 439 Einzelvergleiche, 0 Abweichungen |
+| Probe aufs Exempel | 10 / 10 je Format, Gegenproben eingeschlossen |
+| **Kreislauf Sicherung (P-09)** | 269 439 Vergleiche, **0 unerklärt**, 15 erwartet |
+| **Kreislauf CSV (P-08)** | bei Abschluss B5: 8 617 Vergleiche, **9 unerklärt**, 844 erwartet; nach Web 7.3.1: 8 797 Vergleiche, **6 unerklärt**, 858 erwartet |
+
+**Die neun waren drei Befunde, keine Streuung** — F-P1-K (Einsätze über
+Mitternacht 24 Stunden zurück, 4 Meldungen für 2 Einsätze), F-P1-L
+(mehrzeilige Notizen verlieren ihre Umbrüche, 3) und F-P1-M (`final` und
+`ende` überschrieben, 2). Alle drei sind Fehler der Anwendung und **nicht**
+in die Ausnahmeliste aufgenommen worden: Eine Ausnahme, die sich beheben
+ließe, schreibt einen Fehler auf Dauer fest.
+
+**Nachtrag nach B7: F-P1-K ist behoben** (Web 7.3.1, auf ausdrückliche
+Anweisung statt über den Backlog). Der Kreislauf meldet jetzt **6**
+unerklärte Abweichungen; die Zahl der Einzelvergleiche steigt um 180, weil
+die beiden Einsätze nach Mitternacht überhaupt erst verglichen werden statt
+als *fehlt* und *zusätzlich* zu zählen. Dabei zeigte sich ein Nebenbefund,
+der die Rangfolge der beiden Zahlen erklärt: F-P1-L war mit 3 Fällen
+gemessen — es sind **4**. Der vierte hing an einem Einsatz, den F-P1-K aus
+dem Vergleich gehoben hatte. **Ein Fehler hatte die Messung eines zweiten
+verdeckt**; erst seine Behebung machte die vollständige Zahl sichtbar. Wer
+Befunde zählt, zählt immer nur, was die anderen Befunde durchlassen.
+
+**P-08 gilt weiterhin als NICHT erfüllt**, jetzt aus zwei statt drei
+Gründen. Der Bericht ist nicht leer, und das ist die richtige Auskunft — er
+soll nicht leer aussehen, sondern stimmen. Erfüllt sind: das Werkzeug, seine
+Proben, der Umlauf selbst und die Ausnahmeliste. Offen ist die Entscheidung
+zu Backlog Nr. 27 und 28.
+
+**Ebenfalls beim Nachmessen aufgefallen.** Drei Regeln der CSV-Ausnahmeliste
+(`crew_p2` in Einsätzen, Tagesbesatzung und Diensttagen) haben nie
+gegriffen — die einzigen drei der Liste, deren Begründung keine Zahl trug.
+Sie waren aus der Analogie zu `crew_p1` geschrieben statt gemessen. Der
+Grund ist banal: Alle sieben Zeilen mit belegtem `crew_p2` gehören zum
+Diensttag 2026-02-08, dessen Rettungsmittel dasselbe ist wie das auf der
+Importseite gewählte; die Besatzung kommt unverändert zurück. Die drei
+Regeln sind entfernt. Dass das Werkzeug ungenutzte Regeln überhaupt meldet,
+war eine Entscheidung aus B5 — hier hat sie sich zum ersten Mal ausgezahlt.
+
+**Was das Paket sonst hervorgebracht hat.** Drei Formatbeschreibungen, die
+etwas anderes sagten als der Code tut (Web 7.2.3: LIESMICH-Spaltenname,
+`days[].id`, vier fehlende Bereiche in `Backup-Format.md` 4), zwei stille
+Verluste der Sicherung mit Zahl (Papierkorb 5/5/1 → 0/0/0, `created_at`
+79 → 5 verschiedene Werte) und zwei eigene Fehler (F-P1-J).
+
+**Für B6 wichtig:** Der Papierkorb steht in **keiner** Sicherung. Eine
+Fixture aus einer edbak kann ihn nicht wiederherstellen — die dortige
+Abnahme „Papierkorb gefüllt" braucht einen eigenen Schritt im Reset.
+
+### B6 — Demo-Account-Funktion im Adminbereich — **ERLEDIGT**
+Fixture aus dem Referenzzustand erzeugen (E-P1-08, unter
+`server/demo/`), serverseitige Einspielroutine als geteilte Logik mit
+`api/backup_restore.php` herausziehen, Admin-Oberfläche „Demo-Konto
+anlegen / auf Standard zurücksetzen", automatischer 30-Minuten-Reset
+samt Auslösepunkten (E-P1-18), Reset-Nachlauf für den Papierkorb
+(E-P1-21), Sperren der Konto-Identität und Reset-Request-Abweisung
+(E-P1-19), Anmelde-Mengenbremse (E-P1-20), Demo-Banner, Absicherung
+nach E-P1-09, Handbuchhinweis. Deploy-Auswirkung beachten (K7, B-08).
+**Abnahme:** Auf einer frischen Testinstallation: Anlegen erzeugt das
+Konto, Anmeldung mit den Demo-Zugangsdaten gelingt, geschützte Angaben
+sind lesbar, Bestandszahlen und Export entsprechen der Referenz
+(Vergleichswerkzeug), der Papierkorb enthält die vorgesehenen Fälle.
+Nach absichtlichen Veränderungen (Einsatz gelöscht, neuer angelegt,
+Gerät gekoppelt, Stammdatum geändert) stellt der nächste automatische
+Reset — geprüft durch Verstellen des `app_state`-Zeitstempels bzw.
+Wartezeit — den Standardzustand einschließlich Konto- und
+Schlüsselmaterial wieder her; besucherangelegte Geräte und
+Kopplungscodes sind entfernt, geschützte Angaben danach weiterhin
+lesbar. E-Mail-/Passwortänderung, KDF-Upgrade und Passwort-Reset
+werden mit Hinweis abgewiesen; Kopplung und Ingest-Upload
+funktionieren. Die Mengenbremse greift bei Überschreiten der
+Grenzwerte. Beide Admin-Funktionen verweigern die Arbeit auf jedem
+anderen Konto.
+
+**Ergebnis.** `server/demo_lib.php`, `server/admin_demo.php`, Fixture unter
+`server/demo/fixture.json.gz` (744 KB gepackt, 2,5 MB roh), Erzeuger unter
+`tools/referenzdatensatz/fixture/`. Version **7.3.0**, keine Migration.
+
+| Prüfung | Zahl |
+|---|---|
+| Anlegen aus der Fixture | 87 Einsätze, 100 Ruhesegmente, 16 Diensttage, 39 Stammdaten, 3 Geräte — **0 übersprungen, 0 verworfen**, in 6,0 s |
+| Bestand danach | 82 aktiv / 5 im Papierkorb, 15 Diensttage / 1 im Papierkorb — der Referenzstand |
+| **P-10** Demo gegen Referenz | CSV 9 589 Vergleiche · edbak 269 439 — **je 0 Abweichungen** |
+| **P-13** nach Änderung + Reset | dieselben **279 028** Vergleiche, **0 Abweichungen** |
+| **P-13** Reset über die Zeit | Zeitstempel zurückgestellt → **eine** gewöhnliche Anfrage stellt 81 → 82 her |
+| **P-11** anderes Konto | `demo_ist_demo(Admin)` false; ohne Kennzeichnung abgewiesen; Riegel in `demo_bestand_loeschen()` greift |
+| **P-14** Identität | E-Mail/Passwort abgewiesen, `kdf_upgrade` → `uebersprungen: demo`, **0 Reset-Tokens** in der Datenbank |
+| **P-15** Mengenbremse | erste Abweisung bei Anmeldung **21** (Grenze 20); Adminkonto unberührt |
+| Stilvergleich | 6 neue Deklarationen, 0 entfallen, 0 Reihenfolgewechsel; 28 881 Elementmessungen, 144 Abweichungen — alle auf das Banner zurückführbar |
+| Banner | auf drei Seiten vorhanden, Markenfarben bestätigt; bei einem anderen Konto **0 Elemente** |
+
+**Drei Konstruktionsfehler, alle aus dem Ausführen, keiner aus dem Konzept:**
+
+1. **Verschachtelte Transaktion.** `demo_anlegen()` öffnet eine,
+   `edbak_restore()` darin eine zweite — PDO kennt das nicht. `edbak_restore()`
+   ist jetzt verschachtelungsfähig; die Alternative (den Reset in mehrere
+   Transaktionen zerlegen) wurde verworfen, weil ein Fehler in der Mitte ein
+   Konto mit halbem Bestand hinterließe und der Reset unbeaufsichtigt läuft.
+2. **Der Nachlauf griff ins Leere.** `edbak_build()` filtert
+   `deleted_at IS NULL` — die Papierkorb-Einträge standen gar nicht in der
+   Fixture. Neuer Parameter `$mitPapierkorb`, gesetzt an genau einer Stelle.
+3. **`trash_lib.php` öffnet ebenfalls Transaktionen**, an vier Stellen. Statt
+   einen geteilten Baustein für einen Aufrufer umzubauen, läuft der Nachlauf
+   jetzt **hinter** dem Commit. Der Preis ist benannt: Scheitert er, steht der
+   Bestand vollständig da und der Papierkorb ist leer — sichtbar im Bericht,
+   harmlos, beim nächsten Reset behoben.
+
+**Zwei Annahmen des Konzepts haben sich erledigt:** Die „geteilte
+Einspielroutine" musste nicht herausgezogen werden (`edbak_restore()` liegt
+längst in `backup_lib.php`), und der Weg, `pat_blob` ohne Entschlüsselung
+einzuspielen, existierte bereits.
+
+**Ein Schönheitsfehler mit Substanz:** Der globale Topf der Mengenbremse
+zählte auch je IP-Adresse, weil `rate_merkmale()` die IP immer anhängt — eine
+nutzlose Zeile je Adresse. Die vier Ratenschutz-Funktionen nehmen jetzt
+wahlweise eine ausdrückliche Merkmalsliste entgegen.
+
+### B7 — Dokumentation und Abschluss — **ERLEDIGT**
+`tools/referenzdatensatz/LIESMICH.md` (Aufbau, Läufe, Regression),
+Handbuch-Abschnitt Demo-Konto (inkl. Zugangsdaten nach F-P1-01 und
+Hinweis auf Reset und fiktive Daten), `docs/Technik.md`-Ergänzung
+(Demo-Mechanik, Fixture, Reset), Changelog- und Doku-Konsistenz,
+Prüfdokument P1 nach K9 erstellen, Statuszeile im Rahmenplan
+fortschreiben, Backlog-Durchsicht auf neue Funde (K4).
+**Abnahme:** Prüfdokument-P1 liegt vor (Kurzfassung, maschinelle
+Prüfungen mit Zahlen, Nichtprüfbares, abhakbare Prüfliste mit
+Bedienweg/Erwartung/Bedeutung); Doku in sich konsistent.
+
+**Ergebnis B7.**
+
+| Was | Wo |
+|---|---|
+| Anleitung des Datensatzes | `tools/referenzdatensatz/LIESMICH.md` (neu) |
+| **Prüfdokument P1** | `tools/referenzdatensatz/Pruefdokument-P1.md` (neu, eigene Datei) |
+| Demo-Mechanik | `docs/Technik.md` 4.99a |
+| Verzeichnisstruktur | `docs/Technik.md` 2 — `tools/referenzdatensatz/` und `server/demo/` eingetragen |
+| Runbook | `docs/Technik.md` 7 — einrichten, zurücksetzen, nach einem Datensatz-Update auffrischen |
+| Bedienung | `docs/Handbuch.md` 3.2 |
+| Änderungshistorie | `docs/CHANGELOG.md` — 7.2.2, 7.2.3, 7.3.0, 7.3.1. **Nicht** 7.2.1: Diese Nummer trägt die Maskierung des Altersfelds, die parallel als Sofortpaket über `main` ausgeliefert wurde (s. F-P1-I). Deren Eintrag trägt seit dem Zusammenführen aber einen
+**Nachtrag aus dieser Phase**: zweiter Einfallsweg, Unbetroffenheit der
+Einsatzseite, „niemand muss nachbessern", zweite Messung |
+| Backlog | Nr. 23–30 neu; Nr. 17 um die Messgrundlage aus P1 ergänzt. **Nicht** Nr. 22 — die trägt das parallele Sofortpaket von `main`; die Nummern dieser Phase sind beim Zusammenführen um eins gerückt |
+
+**Konsistenz-Gegenlesen.** Ein Widerspruch ist dabei aufgefallen und behoben:
+README und `Handbuch.md` 5 sagten die Ende-zu-Ende-Verschlüsselung
+**absolut** zu. Das Demo-Konto ist die Ausnahme davon — beide Stellen nennen
+sie jetzt ausdrücklich und verweisen aufeinander. Ohne das hätten sich zwei
+Dokumente desselben Projekts widersprochen, und zwar an der Stelle, an der
+das Projekt sein wichtigstes Versprechen gibt.
+
+Ergänzt wurde außerdem das Dokumentenverzeichnis im README: `Backup-Format`,
+`Export-Format` und `Backlog` fehlten dort, obwohl alle drei gepflegt werden.
+
+## 7. Prüfprotokoll
+
+Wird von der umsetzenden Instanz geführt (K5); Bedienprüfungen
+zusätzlich im Prüfdokument-P1 (K9).
+
+| Nr. | Prüfung | Paket | Stand |
+|---|---|---|---|
+| P-01 | Matrix-Abgleich vollständig | B1 | **erfüllt** — 78 Zeilen, 0 offen; 5 528 Einzelprüfungen ohne Befund (`pruefen.py`) |
+| P-02 | Payloads gegen Vertragsgrenzen | B2 | **erfüllt** — statt Stichprobe ALLE 526 Anfragen; 283 738 Einzelprüfungen ohne Befund |
+| P-03 | Determinismus des Generators (zwei Läufe, gleiches Ergebnis) | B2 | **erfüllt** — Quelldaten 16 Dateien, Generator 692 Dateien, je zwei Läufe byteweise gleich |
+| P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt, zweifach** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch. In B5 ein zweites Mal, ungeplant: Nach dem versehentlichen Löschen des Referenzkontos (F-P1-J) stand der vollständige Bestand in rund vier Minuten wieder — wieder 526 Anfragen, 0 Fehler |
+| P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
+| P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
+| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I; ausgeliefert als Web 7.2.1, s. dort). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten. **Nach dem Zusammenführen mit `main` erneut gefahren** — dieselben 42 Einzelprüfungen, 0 Befunde, diesmal gegen die tatsächlich ausgelieferte Fassung |
+| P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | **NICHT erfüllt, Grund benannt** — zuletzt 8 797 Einzelvergleiche, 858 erwartete, **6 unerklärte** Abweichungen (bei Abschluss B5: 8 617 / 844 / **9**). Die sechs sind zwei Befunde: F-P1-L (4 Notizen ohne Umbruch), F-P1-M (`final`/`ende` überschrieben). Der dritte, F-P1-K, ist mit **Web 7.3.1** behoben; seine vier Meldungen sind weg, und der vierte Fall von F-P1-L wurde dadurch überhaupt erst sichtbar. Nicht als Ausnahme geführt — sie sind behebbar |
+| P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | **erfüllt** — 269 439 Einzelvergleiche, **0 unerklärte** Abweichungen, 15 erwartete (`days[].refs[].device_id` wird `null`, Geräte stehen in keiner Sicherung). Getrennt gezählt, weil der Vergleich sie nicht zeigen kann: Papierkorb 5/5/1 → 0/0/0, Geräte 3 → 0, `created_at` 79 → 5 verschiedene Werte |
+| P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | **erfüllt** — Anlegen aus der Fixture in 6,0 s (87/100/16, 0 übersprungen); Export gegen die Referenz: CSV 9 589 und edbak 269 439 Vergleiche, **je 0 Abweichungen** |
+| P-11 | Demo-Funktionen wirken nur auf das Demo-Konto | B6 | **erfüllt** — die drei nach außen gedachten Funktionen nehmen **keine** Kennung entgegen; ohne `app_state`-Eintrag abgewiesen; `demo_bestand_loeschen()` trägt einen eigenen Riegel, geprüft gegen das Adminkonto |
+| P-12 | Produktivlauf abgeschlossen, Stichprobe Oberfläche | B3/B4 | offen |
+| P-13 | Automatischer 30-Minuten-Reset: Auslösung, Vollständigkeit inkl. Schlüsselmaterial und Papierkorb-Nachlauf, Aufräumen besucherangelegter Geräte/Codes | B6 | **erfüllt** — Zeitstempel zurückgestellt, **eine** gewöhnliche Web-Anfrage stellt 81 → 82 her; nach Löschen und zusätzlichem Standort **279 028** Vergleiche ohne Abweichung; geschützte Angaben danach weiter lesbar |
+| P-14 | Sperren der Konto-Identität und Abweisung des Passwort-Resets | B6 | **erfüllt** — E-Mail und Passwort mit Hinweis abgewiesen, `api/kdf_upgrade.php` antwortet `uebersprungen: demo`, `reset_request.php` legt **0 Tokens** an (in der Datenbank nachgezählt) |
+| P-15 | Anmelde-Mengenbremse Topf `demo` (je IP und global) | B6 | **erfüllt** — erste Abweisung bei Anmeldung **21** (Grenze 20), Meldung nennt die Menge als Grund; Gegenprobe: das Adminkonto kommt weiter herein |
+
+## 8. Fehlerfunde (gesammelt, K4)
+
+### F-P1-A — Das Altersfeld ist über den CSV-Import nicht erreichbar
+
+**Fundort:** `server/assets/import.js:165` (`PARSERS.alterJahre`),
+`server/einsatz_form.php:1129` und `:1658`.
+
+**Sache:** E-P1-15 benennt den CSV-Import als Vektor für einen
+HTML-/Skriptmarker im Altersfeld (`pat_alter`). Über diesen Weg geht das
+nicht: `alterJahre` gibt für jeden Wert, den `ganzzahl` nicht auflöst,
+`{error: 'Alter: ganze Zahl erwartet'}` zurück, und das Feld wird
+verworfen. Das Formularfeld `pat_age` ist `type=number min=0 max=120` und
+wird mit `parseInt` übernommen.
+
+**Wirkung:** Kein Fehler im Code — beide Prüfungen sind richtig. Falsch
+war die Annahme im Konzept. Der Dauer-Regressionsfall wäre stillschweigend
+entfallen: Der Import hätte den Wert verworfen und den Einsatz trotzdem
+angelegt, und niemand hätte gemerkt, dass die Prüfung nicht mehr prüft.
+
+**Blockierend:** nein.
+
+**Verbleib:** E-P1-15 ist fortgeschrieben. Die Marker stehen jetzt in den
+geschützten Freitextfeldern (CSV-Import, unverändert übernommen) **und**
+im Altersfeld über den Nachtrag per `einsatz_form.php`. Letzteres ist kein
+Umweg an der Prüfschicht vorbei: Der Server nimmt `pat_blob` bauartbedingt
+nur als Chiffretext entgegen (`pruef_pat_blob`) und kann seinen Inhalt
+nicht prüfen — die Zahlenprüfung ist eine Eingabehilfe des Browsers, keine
+Zusicherung des Servers. **Genau deshalb ist die Maskierung beim Anzeigen
+die Verteidigungslinie**, und genau die soll R20 dauerhaft absichern.
+
+**Folge für B5:** Die Exportspalte `pat_alter` trägt diesen Wert; beim
+CSV-Rückimport verwirft ihn `alterJahre` mit Hinweis. Das gehört als
+benannte Ausnahme in die Ausnahmeliste des Vergleichswerkzeugs — und ist
+zugleich der Beleg, dass der Parser tut, was er soll.
+
+### F-P1-B bis F-P1-E — Funde des Generators
+
+Vier Modellfehler im **Generator selbst** (nicht in der Anwendung),
+gefunden beim Bauen von B2 und dort behoben; jeder ist als dauerhafte
+Prüfung stehen geblieben. Beschreibung im Arbeitspaket B2 oben:
+Rückweg am falschen Datensatz, Einsatzort ohne Rücksicht auf die
+Anfahrtszeit, überhöhtes Geschwindigkeitsprofil, Sprung zwischen Halt
+und Route. **Blockierend: nein**, alle behoben. Kein Verbleib im
+Backlog — sie betreffen ausschließlich das Werkzeug dieser Phase.
+
+### F-P1-F — Der JSON-Vertrag führt eine Reanimationsart, die kein Schreibweg annimmt
+
+**Fundort:** `docs/JSON-Vertrag.md` Abschnitt 3.3 gegen
+`server/ingest.php:299` und `server/einsatz_form.php:317`.
+
+**Sache:** Der Vertrag nennt `beginn` unter den gültigen Werten von
+`events[].type` und merkt dazu nur an, die **Uhr** führe bewusst eine
+Teilmenge und kenne `beginn` nicht. Das liest sich als Zusage, der Server
+nehme die Art an. Er nimmt sie auf **keinem** Weg an:
+
+- `ingest.php:299` speichert das Ereignis **still nicht**
+  (`$ty !== 'beginn'`) — ohne Eintrag in `rejected`.
+- `einsatz_form.php:317` weist es mit der Meldung „Unbekannte Art eines
+  Reanimationsereignisses" ab.
+
+Beide begründen es gleich und **richtig**: Der Reanimationsbeginn steckt in
+`started_at` der Sitzung; ein zweites Mal als Ereignis wäre er doppelt.
+`RESUS_LABELS` (db.php) führt `beginn` weiterhin — dort als Beschriftung
+für die Startzeile, nicht als Ereignisart. `pruef_reanimationsart` in
+`validate_lib.php` lässt ihn durch; die Ausnahme steht an beiden
+Schreibwegen **zusätzlich**.
+
+**Wirkung:** Ein Client, der gegen den Vertrag implementiert, sendet ein
+`beginn`-Ereignis und bekommt einen Eintrag weniger — auf dem Ingest-Weg
+**ohne jede Meldung**. Genau der Fall, vor dem Abschnitt 0 desselben
+Dokuments warnt: „Ein Vertrag, der etwas zusichert, was der Code nicht
+einhält, ist schlimmer als gar keiner." Die Tabelle dort führt
+„Reanimationsarten gegen die Liste (3.3)" als *durchgesetzt*.
+
+**Gefunden** beim Einspielen von D11/MAN-01: Der Datensatz sollte alle
+Ereignisarten belegen und trug `beginn` als Ereignis; das Formular wies
+den Einsatz ab, und er entstand nicht.
+
+**Blockierend:** nein. Der Datensatz führt den Beginn jetzt dort, wo er
+hingehört — im Feld `beginn` der Sitzung. Speicherbare Ereignisarten sind
+**neun**, nicht zehn; die Abdeckungsmatrix ist entsprechend
+fortgeschrieben, und `quelldaten/pruefen.py` weist ein `beginn`-Ereignis
+seither ab.
+
+**Verbleib — zu entscheiden:** Entweder der Vertrag wird berichtigt (3.3
+nennt neun Ereignisarten, `beginn` steht als Sitzungsbeginn daneben), oder
+der Code nimmt die Art an. Der Vertrag nennt sich selbst die führende
+Quelle und sagt, eine Abweichung sei „ein Fehler in der Umsetzung, nicht im
+Vertrag" — hier spricht die Sache aber für den Code: Der Beginn ist eine
+Eigenschaft der Sitzung, kein Ereignis in ihr. **Vorschlag: Vertrag
+berichtigen**, dazu ein Backlog-Eintrag. Nicht in dieser Phase entschieden.
+
+### F-P1-G — Der CSV-Umlauf ist nicht verlustfrei, wenn eine Zelle mit `=` beginnt
+
+**Fundort:** `server/assets/export.js:578–623` (`CSV_FORMELSTART`,
+`csvEscape`) gegen `server/assets/import.js` (SheetJS-Weg) und
+`docs/Export-Format.md` 5.1.
+
+**Sache:** Der Export neutralisiert Zellen, die ein Tabellenprogramm als
+Formel lesen würde (`=`, `+`, `-`, `@`, Tabulator, Wagenrücklauf), indem er
+ein `'` voranstellt. Der Rückweg entfernt es **nicht** wieder. Und eine
+Zelle, die trotzdem mit `=` beginnt — etwa aus einer fremden Datei —, liest
+SheetJS als Formel; der Wert kommt als **leer** an.
+
+Gemessen mit dem vendorierten `xlsx.full.min.js`:
+
+    ["", "'=SUMME(B1:B2)", "@Leitstelle", "'@Leitstelle"]
+
+Die erste Zelle stand als `=SUMME(B1:B2)` in der Datei.
+
+**Wirkung:** `docs/Export-Format.md` 5.1 nennt `export_csv_v1`
+„verlustfrei" und zählt drei bewusste Ausnahmen auf. Dies ist eine vierte,
+undokumentierte: Wer eine Notiz mit `=` am Anfang exportiert und wieder
+einliest, bekommt sie mit einem vorangestellten `'` zurück; wer sie in einer
+Fremddatei so schreibt, verliert sie ganz.
+
+**Gefunden** beim ersten CSV-Import des Referenzdatensatzes: Die Notiz von
+IMP-01 kam als `NULL` im Bestand an.
+
+**Blockierend:** nein — für den Datensatz. Die Formel-Anfangszeichen stehen
+jetzt auf dem **Formularweg** statt auf dem CSV-Weg (D15); der CSV-Schreiber
+des Generators bringt den Formelschutz des Exports mit (`csv_wert`), damit
+die erzeugte Datei sich wie eine echte Exportdatei verhält.
+
+**Verbleib — zu entscheiden:** Entweder der Import entfernt ein führendes
+`'` wieder (dann wird der Umlauf verlustfrei, aber ein echtes `'` am Anfang
+eines Textes verschwindet), oder `Export-Format.md` nennt die Ausnahme.
+**Vorschlag: Ausnahme dokumentieren**, dazu ein Backlog-Eintrag — die
+Neutralisierung ist gegenüber Tabellenprogrammen richtig, und ein Import,
+der Zeichen entfernt, schafft den nächsten stillen Verlust. Nicht in dieser
+Phase entschieden.
+
+---
+
+### F-P1-H — Der CSV-Rückimport verlor sechs Felder zwischen Anzeige und Absenden
+
+**Fundort:** `server/assets/import.js:671` (`UEBERNAHME`) gegen
+`:439` (`EINFACHE_ZIELE`). **Behoben in Web 7.2.2.**
+
+**Sache:** `import.js` führte zwei Feldlisten. `EINFACHE_ZIELE` sagt, welche
+Werte beim Lesen der Datei nach `zeile.mission` wandern; `UEBERNAHME` sagt,
+welche davon `gruppiere()` in das Objekt kopiert, aus dem `import_ui.js` die
+Nutzlast baut. Die zweite war eine von Hand geführte Abschrift der ersten —
+und bei der Etappe 2 (Web 6.1.0) war nur die erste ergänzt worden. Es
+fehlten `transport_mode`, `na_escort`, `false_alarm`, `dest_lat`,
+`dest_lon`, `start_src`.
+
+**Wirkung:** Die Werte wurden gelesen, in der Prüftabelle **richtig
+angezeigt**, die Bilanz meldete „0 Fehler" — und danach fielen sie heraus.
+Kein Hinweis an irgendeiner Stelle. Betroffen war ausschließlich
+`export_csv_v1`, also genau der Weg, den `docs/Export-Format.md` 5.1
+verlustfrei nennt.
+
+**Gefunden** beim Abgleich des importierten Bestands gegen die Quelldatei
+(B4): Alle vier importierten Einsätze hatten `transport_mode = NULL` und
+`start_src = NULL`, je einer `na_escort = 0` statt 1 und `false_alarm = 0`
+statt 1.
+
+**Blockierend:** ja — B5 verlangt einen Kreislauf mit leerem
+Abweichungsbericht; mit diesem Fehler hätte die Ausnahmeliste sechs Felder
+tragen müssen, die keine Ausnahme sind.
+
+**Behoben:** `UEBERNAHME` wird abgeleitet statt abgeschrieben. Die einzelne
+korrigierte Zeile hätte die Lücke ebenso geschlossen und die Bauart
+behalten, die sie hervorgebracht hat — das widerspräche „Feldkatalog statt
+Sonderfall" (CLAUDE.md 4). `generator/pruefen.py` liest beide Listen aus
+`import.js` und meldet dauerhaft jedes Feld, das gelesen, aber nicht
+weitergereicht wird; gegen den alten Stand gehalten meldet die Prüfung
+genau die sechs Felder.
+
+---
+
+### F-P1-I — Cross-Site-Scripting über das Altersfeld in allen drei Einsatztabellen
+
+**Fundort:** `server/assets/missiontable.js` (Funktion `zelleGeschuetzt()`
+und die Spalte `age`) sowie `server/index.php` (Tagestabelle). Zeilenanker
+stehen hier bewusst nicht: Die Behebung hat sie verschoben, und ein
+Zeilenanker, der ins Leere zeigt, ist schlechter als keiner.
+**Behoben — ausgeliefert als Web 7.2.1.**
+
+**Sache:** `zelleGeschuetzt()` nahm eine Formatierfunktion entgegen; damit
+lag die Entscheidung über die HTML-Maskierung an der Aufrufstelle.
+Einsatzort und Diagnose gaben `v => esc(v)`, das Alter gab `v => v`.
+
+Die Annahme dahinter — ein Alter ist eine Zahl — hält für die regulären
+Schreibwege (`type="number"` im Formular, `PARSERS.alterJahre` im Import).
+Sie hält nicht für das Feld: `age` liegt im `pat_blob`, und der ist freies
+JSON, das der Server nie im Klartext sieht und deshalb grundsätzlich nicht
+prüfen kann.
+
+**Wirkung:** Ein `<img src=x onerror="…">` im Altersfeld wurde in der
+Tagesübersicht, der Einsatzsuche und der Zeitraum-Übersicht ausgeführt. Der
+praktische Weg hinein ist die Wiederherstellung einer Sicherung
+(`api/backup_restore.php` übernimmt den inneren Chiffretext unverändert, wie
+es sein muss). Im Adminbereich wiegt das schwerer: „Einspielen" schreibt
+eine **fremde** Sicherung in ein Konto — die Person, die das Skript
+ausführt, ist dann nicht die, von der die Datei stammt.
+
+Die Einsatzseite war nicht betroffen: `EdPat.alterText()` gibt für einen
+nicht auflösbaren Wert `null` zurück und maskiert, was sie ausgibt.
+
+**Gefunden** durch P-07 mit dem Referenzdatensatz, der im Altersfeld eines
+Einsatzes absichtlich `<img src=x onerror="alert('R20-alter')">` trägt
+(E-P1-15/R20). Der Wert stammt aus dem Nachtragweg (D15,
+`m-11-6127408395`) — genau der Fall, den E-P1-15 nach Fund F-P1-A dorthin
+verlegt hatte.
+
+**Blockierend:** ja. Ein Referenzdatensatz, der einen ausführbaren
+Angriffswert dauerhaft mitführt, darf nicht auf einer Installation liegen,
+in der er ausgeführt wird. Der Demo-Account (B6) läuft auf dem
+Produktivserver.
+
+**Behoben — aber nicht von dieser Arbeitslinie.** Dieselbe Lücke ist
+zeitgleich in einem Sofortpaket auf `main` gefunden und als **Web 7.2.1**
+ausgeliefert worden (dort Befund F-20, Backlog Nr. 22). Beim
+Zusammenführen des P1-Zweigs hat diese Fassung den Vorrang bekommen: Sie
+war zuerst auf dem Produktivserver, und die Lücke ein zweites Mal anders
+zu schließen wäre eine Änderung ohne Gewinn gewesen.
+
+**Die beiden Fassungen unterscheiden sich in einem Punkt**, und der ist
+festzuhalten, weil dieses Dokument sonst etwas anderes beschriebe als der
+Code tut:
+
+| | P1-Zweig (verworfen) | `main`, Web 7.2.1 (gilt) |
+|---|---|---|
+| Signatur | `zelleGeschuetzt(m, wert, klassen)` | `zelleGeschuetzt(m, wert, formatiere, klassen)` |
+| Maskierung | in der Funktion, Parameter entfernt | in der Funktion, `formatiere` bekommt den Wert **bereits maskiert** |
+| Aufrufstelle Alter | `zelleGeschuetzt(m, m._age, 'mono c-mid')` | `zelleGeschuetzt(m, m._age, null, 'mono c-mid')` |
+
+Beide schließen die Lücke an derselben Stelle — in der Funktion, nicht an
+der Aufrufstelle. Der P1-Zweig ging einen Schritt weiter und nahm den
+Parameter ganz weg, damit die unsichere Fassung nicht mehr *schreibbar*
+ist; `main` behält ihn für künftige Formatierungen und maskiert davor.
+Heute benutzt ihn keine Aufrufstelle. Wer ihn eines Tages benutzt, bekommt
+maskierten Text — die Lücke lässt sich damit nicht wieder aufreißen, wohl
+aber ein `<b>` um einen Wert legen.
+
+`browser/angriffswerte.mjs` prüft die ausgelieferte Fassung wiederholbar.
+Die Messung ist nach dem Zusammenführen **neu gefahren** worden, damit sie
+die ausgelieferte Fassung belegt und nicht die verworfene: 42
+Einzelprüfungen über sechs Seiten, 0 Dialoge, 0 eingehängte Elemente, 0
+Konsolenfehler, keine Befunde. Gegen den Stand davor meldet dasselbe
+Prüfmittel sechs Befunde über drei Seiten.
+
+**Bemerkenswert an der Sache:** Der Fund ist der Zweck von R20 — die
+Entscheidung E-P1-15 hat genau das geleistet, wofür sie da war. Zugleich
+zeigt der Weg dorthin, wie knapp es war: Der erste Lauf von P-07 sah drei
+der sechs Seiten mit „nichts sichtbar" und hätte die Lücke auf zweien davon
+übersehen, weil die Trefferlisten nur ihre erste Seite rendern. Die
+Gegenprobe — mindestens eine Seite muss den Wert tatsächlich anzeigen —
+steht seither fest im Prüfmittel.
+
+### F-P1-J — Der Referenzbestand war gegenüber den Quelldaten veraltet (eigener Fehler)
+
+**Fundort:** kein Codefehler — ein Fehler im Vorgehen dieser Phase.
+
+**Sache:** In B4 wurden die Formel-Anfangszeichen vom CSV-Weg auf den
+Formularweg verlegt (F-P1-G): `D15.json` bekam bei zwei Einsätzen ein
+`@Leitstelle: ` beziehungsweise `+Nachtrag der Bergungsdaten: ` vorangestellt.
+Die Quelldaten waren damit richtig — **der eingespielte Bestand nicht**. Die
+Stufe `nachtragen` wurde nach der Änderung nie erneut gefahren, und die
+Referenz-Exporte entstanden aus dem alten Bestand.
+
+**Wirkung:** Die eingecheckte Referenz hätte zwei Notizen getragen, die in
+keiner Quelldatei stehen. Jeder Regressionslauf hätte gegen einen Stand
+verglichen, der den Quelldaten widerspricht — und der Widerspruch wäre erst
+aufgefallen, wenn jemand den Datensatz aus den Quellen neu gebaut hätte.
+
+**Gefunden** durch das Vergleichswerkzeug selbst: Nach einem vollständigen
+Wiederaufbau meldete es gegen den vorherigen Stand **3 Abweichungen bei
+9 589 Einzelvergleichen** — die beiden Notizen und die berichtigte
+LIESMICH-Zeile (Web 7.2.3). Nichts sonst.
+
+**Anlass des Wiederaufbaus** war ein zweiter eigener Fehler: `kreislauf.py`
+las die Kontokennung mit einem Ausdruck, der vor der E-Mail-Adresse nach
+`name="id"` suchte. Im Markup steht die Adresse in der ersten Zelle der Zeile
+und das Löschformular in der letzten — gefunden wurde damit die Kennung der
+VORHERGEHENDEN Zeile, und der Lauf löschte das Referenzkonto statt des
+Umlaufkontos.
+
+**Blockierend:** nein, aber teuer. Verloren war nur der lokale
+Datenbankstand; beide Referenzdateien und alle Quelldaten lagen im
+Repositorium. Der Wiederaufbau lief in rund vier Minuten durch
+(526 Ingest-Anfragen, 0 Fehler) — womit **P-04 ein zweites Mal belegt ist**,
+diesmal ungeplant.
+
+**Behoben, zweifach:**
+
+1. Die Kennung wird eindeutig aus dem Verweis derselben Zeile gelesen
+   (`admin_user.php?id=N`), nicht mehr geraten.
+2. Ein **Riegel**, der nicht davon abhängt, dass der Parser stimmt:
+   `kreislauf.py` löscht nur Konten mit dem Präfix `umlauf-`. Geprüft — der
+   Versuch, `demo@gen-em.org` zu löschen, wird abgewiesen.
+
+**Die Lehre für das Vorgehen** steht im LIESMICH des Vergleichswerkzeugs: Wer
+eine Quelldatei ändert, fährt die betroffene Einspielstufe erneut, bevor er
+exportiert. Der Datensatz ist deterministisch — aber nur, wenn man ihn auch
+erzeugt.
+
+### F-P1-K — Der CSV-Import verschiebt Einsätze über Mitternacht um 24 Stunden zurück — **BEHOBEN, Web 7.3.1**
+
+**Fundort:** `server/api/import_commit.php:349` gegen
+`server/einsatz_form.php:180–213`.
+
+**Sache:** Ein Dienst läuft über Mitternacht; ein Einsatz um 01:38 gehört zum
+Folgetag. Die Exportdatei sagt das auch — sie führt `diensttag` (2026-03-28)
+**und** `datum` (2026-03-29) getrennt. Der Import ruft
+
+    pruef_ortszeit_zu_utc($tag, $hhmm, 0, 'started_local', $pruef)
+
+mit `addDays = 0` und rechnet 01:38 auf den **Diensttag**. Der Einsatz landet
+damit 24 Stunden früher — vor dem Beginn des Dienstes, zu dem er gehört.
+
+Das Formular macht es richtig: Liegt die erste Phase vor dem Dienstbeginn,
+kann der Einsatz nur zum Folgetag gehören (`einsatz_form.php`, Abschnitt
+„TAGESWECHSEL", Web 7.0.0). Die Spalte `datum` steht in der Datei und ist im
+Profil auf `target: null` gesetzt — die Angabe, die den Fehler beheben würde,
+liegt also vor und wird verworfen.
+
+**Verschärfend:** Der Kommentar bei `import_profiles.js` (Spalte `diensttag`)
+behauptet, die Uhrzeit rechne Mitternachtsüberschreitungen ohnehin dem
+Folgetag zu. Für diesen Weg trifft das nicht zu — ein irreführender Kommentar
+an genau der Stelle, an der die Entscheidung fällt.
+
+**Gemessen** im Kreislauf CSV → frisches Konto → CSV, 8 617 Einzelvergleiche:
+
+| Referenz | nach dem Umlauf |
+|---|---|
+| `2026-03-29T01:38:00+01:00` | `2026-03-28T01:38:00+01:00` |
+| `2026-10-25T01:32:00+02:00` | `2026-10-24T01:32:00+02:00` |
+
+Zwei Einsätze, beide exakt 24 Stunden. Im Bericht erscheinen sie als vier
+Abweichungen (je einmal *fehlt* und einmal *zusätzlich*).
+
+**Blockierend:** ja für P-08. Es ist kein Formatverlust, sondern eine
+**stille Datenverfälschung** auf einem Weg, den `Export-Format.md` 5.1
+verlustfrei nennt: Der Einsatz ist danach am falschen Tag dokumentiert.
+
+**Zwei Wege standen zur Wahl:**
+
+1. **`datum` auswerten.** Die Angabe steht in der Datei, ist eindeutig und
+   braucht keine Vermutung. Nachteil: Fremddateien ohne diese Spalte fallen
+   auf das heutige Verhalten zurück.
+2. **Die Regel des Formulars übernehmen** — Uhrzeit vor Dienstbeginn heißt
+   Folgetag. Nachteil: Beim Import in ein leeres Konto entsteht der Diensttag
+   erst aus den Einsätzen; der Dienstbeginn steht zu diesem Zeitpunkt noch
+   nicht fest.
+
+**Behoben mit Web 7.3.1 auf Weg 1** — nach ausdrücklicher Anweisung
+(„behebt, kein Backlog"). Weg 2 wurde **nicht** als Rückfall gebaut, und das
+ist eine Änderung gegenüber dem ursprünglichen Vorschlag: Sein Nachteil ist
+kein Randfall, sondern der Normalfall des Imports in ein leeres Konto — dort
+steht der Dienstbeginn zum Zeitpunkt der Entscheidung noch nicht fest. Eine
+Regel, die im häufigsten Fall nicht greift, hätte nur die Zahl der Wege
+erhöht.
+
+**Was umgesetzt wurde:**
+
+- `assets/import_profiles.js`: `'datum'` zeigt auf ein neues Feld
+  `einsatzdatum` statt auf `null`; der irreführende Kommentar ist durch die
+  Begründung ersetzt, die tatsächlich trägt (zwei Daten, zwei Aufgaben).
+- `assets/import.js`: `einsatzdatum` steht in `EINFACHE_ZIELE` und im
+  Zeilengerüst. Über die abgeleitete Liste `UEBERNAHME` (F-P1-H, Web 7.2.2)
+  reicht es sich von selbst weiter — das neue Feld musste an **einer**
+  Stelle eingetragen werden, nicht an zweien. Die Behebung von F-P1-H hat
+  sich hier zum ersten Mal ausgezahlt.
+- `assets/import_ui.js`: sendet es als `date_local`.
+- `api/import_commit.php`: nimmt `date_local` als **Bezugstag der
+  Alarmzeit**. Für die Gruppierung bleibt es beim Diensttag — `day_id` hängt
+  an ihm. Plausibilitätsschranke: übernommen wird nur der Diensttag selbst
+  oder der Tag darauf; mehr kann es nicht sein, weil die Anwendung für den
+  Tageswechsel genau einen Schritt kennt (`local_to_utc` mit `addDays` 0
+  oder 1). Fremddateien mit unsinnigem `datum` verstreuen damit keine
+  Einsätze über den Kalender.
+
+**Gemessen nach der Behebung:** Kreislauf CSV 8 797 Einzelvergleiche,
+858 erwartete, **6 unerklärte** (vorher 8 617 / 844 / 9). Die vier Meldungen
+dieses Funds sind weg; der Einsatz vom 25.10. stimmt in **allen** Feldern
+überein, beim Einsatz vom 29.03. bleibt allein der Zeilenumbruch der Notiz
+(F-P1-L). Backlog Nr. 26 steht unter *Erledigt*.
+
+**Nachwirkung auf die Messung anderer Funde:** F-P1-L war mit 3 Fällen
+gemessen; es sind 4. Der vierte hing an dem Einsatz, den dieser Fund aus dem
+Vergleich gehoben hatte. Ein Fehler hatte die Messung eines zweiten
+verdeckt — beim Zählen von Befunden ist das der Regelfall, nicht die
+Ausnahme.
+
+---
+
+### F-P1-L — Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche
+
+**Fundort:** `server/assets/import.js`, Parser `trim`.
+
+**Sache:** `trim` ersetzt jede Folge von Leerraum durch **ein Leerzeichen** —
+Zeilenumbrüche eingeschlossen — und wird auf alle Textspalten angewandt.
+`notes` ist das einzige mehrzeilige Feld des Katalogs
+(`mission_fields.php`). Der Export quotet die Umbrüche korrekt nach RFC 4180;
+der Verlust entsteht allein beim Lesen.
+
+**Gemessen:** **4** Notizen, jede verliert **genau einen** Zeilenumbruch bei
+**unveränderter Zeichenzahl** (164/253/119/150) — der Umbruch wird zum
+Leerzeichen.
+
+*Zur Zahl:* Bis Web 7.3.0 waren es 3. Die vierte Notiz gehört zu dem Einsatz
+um 01:38, den F-P1-K um 24 Stunden verschoben hatte; er wurde deshalb gar
+nicht verglichen, sondern als *fehlt* und *zusätzlich* gezählt. Sichtbar
+wurde sie erst, als F-P1-K behoben war.
+
+**Blockierend:** ja für P-08, aber leichter als F-P1-K: Der Text bleibt
+lesbar, nur seine Gliederung geht verloren.
+
+**Vorschlag:** ein eigener Parser `trimMehrzeilig`, der Leerraum innerhalb
+einer Zeile zusammenzieht und Umbrüche stehen lässt, für die Spalte `notizen`
+(Einsatz und Diensttag). Backlog Nr. 27.
+
+---
+
+### F-P1-M — `final = 0` und ein leeres `ende` werden beim Import überschrieben
+
+**Fundort:** `server/api/import_commit.php` — `final` steht als Literal `1`
+im INSERT; `ended_at` fällt auf `started_at` zurück.
+
+**Sache:** Zwei Werte, die die Datei ausdrücklich führt, werden beim
+Einfügen durch andere ersetzt:
+
+- **`final`** ist im INSERT hart auf `1` gesetzt. Anders als bei `manual` und
+  `herkunft` ist das keine Aussage über die Entstehung, sondern über den
+  **Zustand** des Einsatzes — und die Datei widerspricht ihr ausdrücklich.
+  Ein nicht abgeschlossener Einsatz gilt nach dem Umlauf als abgeschlossen.
+- **`ende`** wird, wenn leer, auf `started_at` gesetzt. Der Kommentar
+  begründet das mit den Jahreslisten-Profilen, die keine Endzeit führen —
+  dort ist es richtig. Im CSV-Profil ist eine leere Zelle dagegen eine
+  Aussage („kein Abschluss"), und der Import erfindet eine Endzeit, die gleich
+  der Startzeit ist.
+
+**Gemessen:** je 1x, beide am selben Einsatz — dem einzigen absichtlich nicht
+abgeschlossenen des Referenzdatensatzes (2026-07-05, 19:40).
+
+**Blockierend:** ja für P-08. Der Fall ist selten, aber er ist genau der, den
+die Abdeckungsmatrix mit „nicht abgeschlossener Einsatz" absichtlich enthält.
+
+**Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die Spalte
+führt; „Spalte fehlt" und „Zelle leer" beim `ende` unterscheiden. Backlog
+Nr. 28.
+
+---
+
+### F-P1-N — `Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr
+
+**Fundort:** `docs/Export-Format.md`, Abschnitt 5.1.
+
+**Sache:** Der Abschnitt nennt `export_csv_v1` „verlustfrei" und zählt drei
+bewusste Ausnahmen auf (`einsatz_id`, GPX-Dateien, Rettungsmittel/Standort)
+plus `herkunft` und `edited`. Der gemessene Umlauf zeigt zwei weitere, die
+Bauart sind und trotzdem nirgends stehen:
+
+- **Ruhesegmente kommen nicht zurück.** Für sie gibt es keinen Importweg;
+  `ruhezeiten.csv` ist nach einem Umlauf leer. **Gemessen: 95 → 0.**
+- **Der zweite Dienst eines Kalendertags geht verloren.** `gruppiere()`
+  bündelt nach Kalendertag; seit E9 sind zwei Dienste an einem Datum
+  zulässig. Die Datei führt mit `diensttag_id` den Schlüssel mit, der sie
+  unterscheiden könnte, gibt ihn aber nicht weiter. **Gemessen: 15 → 13
+  Diensttage** (einer davon ein Tag ohne Einsatz, der aus `einsaetze.csv`
+  gar nicht entstehen kann).
+
+Dazu die beiden Fälle aus B4, die dasselbe Muster haben: der
+Formelschutz-Apostroph (F-P1-G) und — bis Web 7.2.2 — sechs stillschweigend
+fallengelassene Felder (F-P1-H).
+
+**Blockierend:** nein. Es sind Ausnahmen der Ausnahmeliste, nicht des
+Verhaltens.
+
+**Vorschlag:** Abschnitt 5.1 um beide ergänzen. Backlog Nr. 29.
+
+*Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
+blockierend ja/nein, Verbleib → Backlog/Phase).*
+
+## 9. Statuspflege
+
+Nach jedem Paket: Abnahmekriterien abhaken, Prüfprotokoll
+fortschreiben, Abweichungen als P-Einträge begründen. Am Phasenende:
+Rahmenplan Abschnitt 6 aktualisieren, Push nach Bestätigung (K7).
+
+---
+
+## 10. Vorschlag für den Gesamtplan — Papierkorb in die Sicherung
+
+**Herkunft: Anweisung, nicht Vorschlag.** Beim Abschluss von P1 kam die Frage
+auf, ob der Papierkorb inzwischen mitgesichert und mit wiederhergestellt wird.
+Die Antwort war nein (siehe unten, *Ausgangslage*). Die Entscheidung dazu ist
+gefallen: **Er soll es — in der NutzerInnen-Sicherung und in der
+Admin-Sicherung.** Dieser Abschnitt beschreibt, was dafür zu tun ist, damit
+die konzipierende Instanz es als eigenes Paket in den Gesamtplan aufnehmen
+kann. Er ist in P1 **nicht** umgesetzt: Er ändert den Rückspielweg, und das
+ist keine Nebenarbeit am Ende einer Phase.
+
+### 10.1 Ausgangslage (gemessen in P1)
+
+Der Papierkorb steht in **keiner** Sicherung. `edbak_build()` filtert an drei
+Stellen `deleted_at IS NULL`; eine Wiederherstellung in ein frisches Konto
+leert ihn damit endgültig. Gemessen am Referenzdatensatz: **5 Einsätze,
+5 Ruhesegmente und 1 Diensttag** vor dem Umlauf, danach nichts davon. Das
+steht seit Web 7.2.3 in `docs/Backup-Format.md` 4 — vorher stand es nirgends.
+
+Zwei Dinge sind seit Web 7.3.0 bereits da und tragen:
+
+- `edbak_build(int $userId, bool $mitPapierkorb = false)` — der Filter lässt
+  sich abschalten. Gebraucht wird das bisher an genau einer Stelle, der
+  Demo-Fixture.
+- Die Spalten `deleted_at` und `deleted_with_day` stehen ohnehin in den
+  Spaltenlisten und wandern in jede Datei mit. Sie sind dort bis heute immer
+  `null` — der Filter sorgt dafür.
+
+**Was fehlt, ist der Rückweg.** `edbak_restore()` schreibt die Felder aus
+`mission_fields.php` plus `pat_blob` und `start_src`; `deleted_at` steht dort
+nicht. Würde man heute nur den Filter abschalten, kämen die Einträge als
+**aktive** zurück — schlimmer als gar nicht, weil aus einem Papierkorb
+stillschweigend Bestand würde. Genau deshalb hat der Demo-Reset ein
+Nachlauf-Drehbuch (E-P1-21), das die Einträge nach dem Einspielen über die
+regulären Löschwege wieder in den Papierkorb legt.
+
+### 10.2 Was zu tun ist
+
+1. **Sichern ohne Flag.** `edbak_build()` nimmt den Papierkorb künftig
+   grundsätzlich mit; `api/backup_data.php` und `adminbackup_lib.php` erben
+   das ohne eigene Änderung (letzteres ruft `edbak_build()` auf und ergänzt
+   nur `pat_wrap_rc`). Der Parameter `$mitPapierkorb` wird damit gegenstandslos
+   und entfällt. **Zu entscheiden:** ob es stattdessen eine Wahlmöglichkeit
+   auf der Sicherungsseite gibt. *Empfehlung: nein.* Eine Sicherung ist ein
+   Abbild; eine Option, die den Bestand beschneidet, schafft zwei Sorten
+   Sicherung, die von außen gleich aussehen — und die Frage „war der
+   Papierkorb dabei?" ist genau die, die man Monate später nicht mehr
+   beantworten kann. Die Frist von 30 Tagen begrenzt die Menge ohnehin.
+
+2. **Rückweg: `deleted_at` und `deleted_with_day` schreiben.** Das ist die
+   eigentliche Arbeit. Beide Spalten stehen **nicht** im Feldkatalog
+   (`mission_fields.php`) und gehören auch nicht dorthin — sie beschreiben
+   keinen fachlichen Inhalt, sondern einen Zustand. Sie werden also wie
+   `pat_blob` und `start_src` als benannte Ausnahme geführt, mit Begründung an
+   Ort und Stelle.
+
+3. **Die D1-Regel muss zwei Fälle unterscheiden.** `edbak_restore()` stellt
+   heute vorab fest, welche Diensttage im **Zielkonto** im Papierkorb liegen,
+   und überspringt Einsätze, die dorthin gehörten (Zählgrund
+   `tag_im_papierkorb`). Das bleibt richtig. Neu hinzu kommt der Fall „der Tag
+   liegt **in der Datei** im Papierkorb" — dort ist das Überspringen falsch:
+   Tag und Einsätze sollen gemeinsam als Papierkorbeinträge entstehen. Die
+   beiden Fälle sehen im Code heute gleich aus und müssen getrennt werden.
+   **Das ist die Stelle, an der ein Fehler am teuersten wäre** — sie verdient
+   den ausführlichsten Prüfschritt.
+
+4. **Die Frist entscheiden.** `deleted_at` ist der Beginn der 30-Tage-Uhr
+   (`trash_purge_expired()`, täglich über `run_cleanup_if_due()`). Wird der
+   ursprüngliche Zeitstempel eingespielt, kann der nächste Aufräumlauf
+   Einträge sofort endgültig löschen — bei einer Sicherung, die älter als
+   30 Tage ist, sogar alle. Wird stattdessen der Einspielzeitpunkt gesetzt,
+   bekommt der Papierkorb neue 30 Tage, und die Datei sagt etwas anderes als
+   der Bestand. *Empfehlung: den ursprünglichen Zeitstempel einspielen* — er
+   ist die Wahrheit der Datei — **und die Rückmeldung der Wiederherstellung
+   sagen lassen, wie viele Einträge in den Papierkorb gingen und wie viele
+   davon die Frist bereits überschritten haben.** Ein stilles Wiederaufleben
+   mit sofortigem stillen Verschwinden ist der Fall, den niemand versteht.
+
+5. **Nutzlastversion.** Die Datei führt heute `version: 6`. Der Inhalt ändert
+   sich nicht im Aufbau, wohl aber in der Bedeutung: Eine Datei mit gefülltem
+   Papierkorb, in einen älteren Stand eingespielt, brächte die Einträge als
+   aktiven Bestand zurück. Das spricht für **Version 7** und die übliche
+   Abweisung älterer Stände. Zu klären ist der umgekehrte Weg — eine
+   Version-6-Datei enthält keinen Papierkorb und bleibt problemlos lesbar.
+
+6. **Der Demo-Reset wird einfacher.** Fällt die Asymmetrie weg, braucht das
+   Nachlauf-Drehbuch (E-P1-21, `demo_nachlauf()` in `server/demo_lib.php`)
+   seinen Papierkorb-Teil nicht mehr: Die Fixture bringt ihn dann selbst mit.
+   Der Nachlauf läuft heute bewusst **nach** dem Commit, weil `trash_lib.php`
+   eigene Transaktionen öffnet — mit dem Wegfall verschwindet auch dieser
+   Umweg samt seines dokumentierten Fehlerfalls. **Das Paket sollte diesen
+   Rückbau ausdrücklich enthalten**, sonst bleibt ein zweiter Weg stehen, der
+   dasselbe tut.
+
+7. **`deleted_refs` bleibt draußen.** Die Sperrliste ist kein Papierkorb: Sie
+   hängt an einer Gerätekennung, und Geräte stehen aus gutem Grund in keiner
+   Sicherung (ein mitgesichertes Gerät wäre ein mitgesicherter Zugang). Das
+   sollte im Paket ausdrücklich stehen, damit die beiden Bereiche nicht
+   zusammengezogen werden.
+
+8. **Dokumentation nachziehen.** `docs/Backup-Format.md` 4 führt den
+   Papierkorb heute unter „was in der Sicherung gar nicht vorkommt" — der
+   Eintrag wandert und wird zur Beschreibung; `docs/Handbuch.md` (Sichern und
+   Wiederherstellen); der Kopfkommentar von `edbak_build()`, der die heutige
+   Entscheidung ausführlich begründet und dann das Gegenteil beschreibt.
+
+### 10.3 Wie es zu prüfen ist
+
+Der Prüfstand aus P1 trägt das Paket, mit **einer** Vorarbeit: Die
+Referenz-`edbak` unter `tools/referenzdatensatz/referenz/` enthält heute
+keinen Papierkorb (sie ist ohne Flag erzeugt) und muss neu gezogen werden.
+Danach:
+
+- **Kreislauf edbak** (`vergleich/kreislauf.py --art edbak`) misst den
+  Papierkorb dann von selbst mit — 5 Einsätze, 5 Ruhesegmente, 1 Diensttag
+  gehen in den Vergleich ein, der sie heute gar nicht sieht. Der Nebensatz in
+  P-09 („getrennt gezählt, weil der Vergleich sie nicht zeigen kann:
+  Papierkorb 5/5/1 → 0/0/0") wird damit zu einer regulären Zeile des
+  Berichts. **Das ist der eigentliche Abnahmewert des Pakets.**
+- **Zwei Fälle im Browser**, die kein Vergleich abdeckt: (a) ein Diensttag im
+  Papierkorb wird wiederhergestellt und bringt genau die Einsätze mit, die
+  mit ihm gelöscht wurden (`deleted_with_day`), nicht die, die vorher schon
+  einzeln darin lagen; (b) eine Sicherung, die älter ist als die Frist, wird
+  eingespielt — die Rückmeldung muss sagen, was gleich wieder verschwindet.
+- **Gegenprobe zur D1-Regel:** dieselbe Datei in ein Konto einspielen, in dem
+  ein gleichnamiger Diensttag bereits im Papierkorb liegt. Erwartet wird das
+  heutige Verhalten (überspringen, mit Grund), nicht das neue.
+
+### 10.4 Umfang
+
+Ein kleines Paket, aber kein triviales: vier Dateien unter `server/`
+(`backup_lib.php`, `demo_lib.php`, `api/backup_data.php` nur mittelbar,
+`version.php`), zwei Dokumente, eine neu zu ziehende Referenzdatei. Der Aufwand
+steckt nicht im Schreiben, sondern in Punkt 3 und Punkt 4 — beides
+Entscheidungen über Verhalten, nicht über Code. **Hauptversion**, weil sich
+das Format der Sicherung in seiner Bedeutung ändert und die Nutzlastversion
+steigt.

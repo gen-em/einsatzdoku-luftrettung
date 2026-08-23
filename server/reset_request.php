@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/smtp.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 
@@ -58,6 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = db()->prepare('SELECT id FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
+
+        /* Das Demo-Konto bekommt keinen Reset-Link (E-P1-19).
+         *
+         * Sein Passwort ist oeffentlich und steht im Handbuch; ein
+         * Zuruecksetzen kann es nur unbrauchbar machen. Die Adresse ist
+         * ebenfalls oeffentlich — ohne diese Abweisung koennte jeder eine
+         * E-Mail an sie ausloesen, so oft die Mengenbremse es zulaesst.
+         *
+         * STILL abgewiesen, nicht mit eigener Meldung: Die Antwort dieser
+         * Seite ist fuer jede Adresse dieselbe („falls es ein Konto gibt,
+         * ist eine Mail unterwegs"). Eine Sondermeldung fuer das Demo-Konto
+         * waere die einzige Stelle, an der die Seite verraet, welche
+         * Adressen es gibt. */
+        if ($u && demo_ist_demo((int)$u['id'])) { $u = false; }
+
         if ($u) {
             // Hoechstens EIN gueltiger Token je Konto: Der neue entwertet
             // alle offenen. Sonst sammelten sich mit jeder Anfrage weitere

@@ -187,15 +187,28 @@
     // ----------------------------------------------------------------------
     var csvColumns = {
         'einsatz_id': { target: null },
-        /* 'diensttag' ist das Datum des Dienstes und bleibt der Gruppierungs-
-           schluessel des Imports. 'datum' — das echte Einsatzdatum — wird NICHT
-           uebernommen: Beide zusammen waeren zwei Quellen fuer dieselbe
-           Zuordnung, und bei einem Dienst ueber Mitternacht widersprechen sie
-           sich planmaessig. Die Uhrzeit rechnet die Mitternachtslogik ohnehin
-           dem Folgetag zu. */
+        /* ZWEI DATEN, ZWEI AUFGABEN — und beide werden gebraucht.
+         *
+         * 'diensttag' ist das Datum des DIENSTES und bleibt der
+         * Gruppierungsschluessel: Er sagt, zu welchem Dienst ein Einsatz
+         * gehoert. 'datum' ist das Datum des EINSATZES. Bei einem Dienst ueber
+         * Mitternacht weichen sie planmaessig voneinander ab — ein Einsatz um
+         * 01:38 des Dienstes vom 28. liegt am 29.
+         *
+         * Bis Web 7.3.1 stand 'datum' auf target:null, mit der Begruendung,
+         * die Uhrzeit rechne die Mitternachtslogik ohnehin dem Folgetag zu.
+         * DAS WAR FALSCH: api/import_commit.php rief
+         * pruef_ortszeit_zu_utc($tag, $hhmm, 0, …) und rechnete die Uhrzeit
+         * auf den DIENSTTAG. Ein Einsatz um 01:38 landete damit 24 Stunden
+         * frueher — vor dem Beginn des Dienstes, zu dem er gehoert. Der
+         * Kommentar stand an genau der Stelle, an der die Entscheidung fiel.
+         *
+         * Gemessen im Kreislauf der Phase P1: zwei Einsaetze, beide exakt
+         * 24 Stunden zurueck (Fund F-P1-K). Die Angabe, die den Fehler
+         * behebt, lag die ganze Zeit in der Datei. */
         'diensttag': { target: 'day', parse: ['trim', 'dateIso'], required: true },
         'diensttag_id': { target: null },                // kontospezifisch, s. einsatz_id
-        'datum': { target: null },
+        'datum': { target: 'einsatzdatum', parse: ['trim', 'dateIso'] },
         /* Kopfzeile bis Web 5.10.0. Zeigt auf dasselbe Ziel, damit frühere
            Exportdateien lesbar bleiben — dieselbe Regel wie bei 'site_desc'
            weiter unten. */

@@ -20,3 +20,21 @@ server/sicherungen/
 # Erzeugnisse des Stilvergleichs (tools/stilvergleich/proben.py)
 tools/stilvergleich/pruefstand/
 tools/stilvergleich/__pycache__/
+
+# Erzeugnisse des Referenzdatensatz-Generators. Rund 25 MB, vollstaendig aus
+# den Quelldaten ableitbar (ein Lauf dauert zwei Sekunden) und deterministisch
+# -- eingecheckt ist stattdessen, was NICHT ableitbar ist: die Strassen-
+# geometrie unter generator/routen/ und die Quelldaten selbst.
+tools/referenzdatensatz/generator/ausgabe/
+tools/referenzdatensatz/**/__pycache__/
+
+# Zustand EINES Einspiellaufs: Einrichtungslink, Geraeteschluessel, vergebene
+# Kennungen, Fortschritt. Fuer eine andere Installation ist davon nichts
+# gueltig -- und der Einrichtungslink ist bis zu seiner Einloesung ein
+# Zugang zum Konto.
+tools/referenzdatensatz/einspielen/lauf.json
+tools/referenzdatensatz/einspielen/*_rc.json
+# Laufprotokoll des Referenz-Exports (Zeitpunkt und Dateinamen des letzten
+# Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
+# das Protokoll ihres Entstehens nicht.
+tools/referenzdatensatz/referenz/.export_lauf.json

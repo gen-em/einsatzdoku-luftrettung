@@ -195,6 +195,42 @@ function ui_topbar(string $active): void { ?>
       </svg></a>
   </nav>
 </header>
+<?php ui_demo_banner(); }
+
+/**
+ * Banner im Demo-Konto (E-P1-18).
+ *
+ * DAUERHAFT, nicht wegklickbar. Ein Hinweis, den man einmal schliesst, ist
+ * beim zweiten Besuch nicht mehr da — und genau dann waere er noetig: Wer
+ * nach einer Pause wiederkommt, findet seine Eingaben nicht mehr vor und
+ * soll wissen, warum.
+ *
+ * Er nennt VIER Dinge, und alle vier sind noetig: dass die Daten erfunden
+ * sind (sonst liest jemand sie als echte Faelle), dass Ausprobieren
+ * erwuenscht ist (sonst traut sich niemand), dass alles regelmaessig
+ * verworfen wird (sonst ist die Ueberraschung gross) und dass hier keine
+ * echten Daten hineingehoeren (das ist der Punkt, an dem es ernst wird —
+ * das Schluesselmaterial dieses Kontos liegt auf dem Server).
+ *
+ * Steht in der Huelle, nicht auf einzelnen Seiten: Sonst fehlte er auf der
+ * einen Seite, die jemand zu ergaenzen vergisst.
+ */
+function ui_demo_banner(): void
+{
+    require_once __DIR__ . '/demo_lib.php';
+    $uid = $_SESSION['user_id'] ?? null;
+    if (!demo_ist_demo($uid === null ? null : (int)$uid)) { return; }
+    $rest = demo_reset_in();
+    ?>
+<div class="demobanner" role="status">
+  <strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
+  erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
+  anlegen, löschen, Uhr koppeln. Der Bestand wird
+  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
+  zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
+      . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
+  <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong>
+</div>
 <?php }
 
 /**
@@ -289,6 +325,11 @@ function ui_settings_sidebar(string $active): void {
         <li><a href="admin_stammdaten.php?t=standorte" <?= $active === 'admin_standorte' ? 'class="active"' : '' ?>>Standorte systemweit</a></li>
         <li><a href="admin_stammdaten.php?t=rettungsmittel" <?= $active === 'admin_rettungsmittel' ? 'class="active"' : '' ?>>Rettungsmittel systemweit</a></li>
         <li><a href="admin_sicherungen.php" <?= $active === 'admin_sicherungen' ? 'class="active"' : '' ?>>Sicherungen</a></li>
+        <?php /* Eigener Eintrag statt eines Abschnitts in der
+                 NutzerInnenverwaltung: Dort stehen Konten in einer Liste,
+                 hier geht es um EIN Konto mit eigenen Regeln, dessen Zustand
+                 man sehen will, bevor man etwas tut. */ ?>
+        <li><a href="admin_demo.php" <?= $active === 'admin_demo' ? 'class="active"' : '' ?>>Demo-Konto</a></li>
         <?php /* Wartung war bis Web 4.5.2 nur ueber die direkte Adresse
            erreichbar. Das machte die Auskunft aus M3-05 wertlos: Sie meldet,
            dass der Aufraeumjob dauerhaft scheitert — auf einer Seite, die

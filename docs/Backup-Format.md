@@ -212,7 +212,12 @@ seit Web 4.1.2 auch:
     // Sie MÜSSEN in die Sicherung: Ohne sie legte ein später eintreffender
     // Upload derselben Uhr den Diensttag nach einer Wiederherstellung erneut
     // an. device_id ist die ÖFFENTLICHE Gerätekennung; null = Gerät gelöscht.
-    "refs": [ { "day_ref": "d-41-0938175520", "device_id": "watch-001" } ]
+    "refs": [ { "day_ref": "d-41-0938175520", "device_id": "watch-001" } ],
+
+    // Kennung INNERHALB DIESER DATEI. missions[].day_id und
+    // rest_segments[].day_id verweisen darauf; beim Einspielen wird sie auf
+    // die neu vergebene Kennung umgeschrieben. Siehe Abschnitt 4.
+    "id": 17
   } ],
 
   "missions": [ {
@@ -337,9 +342,19 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
 
 **Nicht in der Datei:**
 
-- `id`, `user_id`, `device_id` — interne Verweise. Sie gelten nur in der
-  Datenbank, aus der die Sicherung stammt; eine Sicherung soll sich auch in
-  ein anderes Konto und eine andere Installation einspielen lassen.
+- `user_id`, `device_id` sowie die `id` von `missions` und `rest_segments` —
+  interne Verweise. Sie gelten nur in der Datenbank, aus der die Sicherung
+  stammt; eine Sicherung soll sich auch in ein anderes Konto und eine andere
+  Installation einspielen lassen.
+
+  **Ausnahme: `days[].id` steht sehr wohl in der Datei** (`backup_lib.php`,
+  Abfrage der Diensttage). Sie muss darin stehen, denn `missions[].day_id`
+  und `rest_segments[].day_id` verweisen darauf — ohne sie ließe sich nach
+  dem Einspielen nicht sagen, welcher Einsatz zu welchem Dienst gehörte. Es
+  ist eine Kennung **innerhalb dieser Datei**, keine Aussage über die
+  Datenbank: Beim Einspielen wird sie auf die neu vergebene Kennung
+  umgeschrieben. Bis Web 7.2.3 behauptete dieser Abschnitt das Gegenteil,
+  und das Beispiel weiter oben zeigte den Schlüssel nicht.
 - `other_resources` (in `missions`) — tote Altspalte. Die weiteren
   Rettungsmittel liegen seit der Migration `2026_07` als einzelne Zeilen in
   `mission_resources` und stehen in der Datei unter `resources`. Die Spalte
@@ -359,6 +374,47 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
   und je Einsatz eingefasst: Ein Fehler darin darf die Wiederherstellung nicht
   kosten. Scheitert sie, bleibt das Feld leer und die Antwort nennt die Zahl
   der betroffenen Einsätze als `hoehe_fehler`.
+
+- `created_at` (Anlegezeitpunkt eines Einsatzes). Wird gesichert
+  (`backup_lib.php`, Spaltenliste der Einsätze), beim Einspielen aber nicht
+  geschrieben — die Einspielroutine setzt die Felder aus `mission_fields.php`
+  plus `pat_blob` und `start_src`, und `created_at` steht dort nicht. Nach
+  einer Wiederherstellung tragen alle Einsätze den Zeitpunkt des Einspielens.
+
+  Gemessen am Referenzdatensatz der Phase P1: **79 verschiedene Werte vor dem
+  Umlauf, 5 danach** (82 Einsätze). Der Verlust ist folgenlos für die
+  Dokumentation selbst — `started_at` ist die fachliche Zeit —, aber er war
+  bis Web 7.2.3 nirgends benannt, und dieser Abschnitt führte `site_ele_m`
+  als die einzige Asymmetrie dieser Art. Ob `created_at` künftig
+  mitgeschrieben oder aus der Sicherung gestrichen wird, ist offen
+  (Backlog Nr. 25).
+
+**Was in der Sicherung gar nicht vorkommt — und deshalb nach einer
+Wiederherstellung fehlt:**
+
+Der Abschnitt oben zählt Spalten auf. Diese vier sind ganze Bereiche, und ihr
+Fehlen fällt erst auf, wenn man danach sucht:
+
+- **Der Papierkorb.** Gelöschte Einsätze, Ruhesegmente und Diensttage stehen in
+  keiner Sicherung (`WHERE deleted_at IS NULL` an allen drei Stellen in
+  `backup_lib.php`). Eine Wiederherstellung in ein frisches Konto leert ihn
+  damit **endgültig**. Gemessen am Referenzdatensatz: 5 Einsätze,
+  5 Ruhesegmente und 1 Diensttag vor dem Umlauf, danach nichts davon.
+  Wer den Papierkorb noch braucht, stellt vor dem Sichern wieder her.
+- **Geräte.** Eine Uhr trägt einen API-Schlüssel; ein mitgesichertes Gerät
+  wäre ein mitgesicherter Zugang. Nach einer Wiederherstellung muss deshalb
+  **jede Uhr neu gekoppelt werden**. Die Dienstkennungen (`day_refs`) bleiben
+  dagegen erhalten — sie verhindern, dass ein später eintreffender Upload
+  einen Diensttag ein zweites Mal anlegt; ihr Feld `device_id` steht danach
+  auf `null`.
+- **Kopplungscodes** (`pair_codes`). Sie sind kurzlebig und haben außerhalb
+  ihres Zeitfensters keine Bedeutung.
+- **Die Sperrliste** (`deleted_refs`). Sie merkt sich, welche Uhr-Referenzen
+  endgültig gelöscht wurden, damit ein Nachzügler-Upload sie nicht wieder
+  anlegt. Nach einer Wiederherstellung ist sie leer — ein Upload einer noch
+  gekoppelten Uhr könnte einen endgültig gelöschten Einsatz also erneut
+  anlegen. In der Praxis entschärft sich das dadurch, dass die Kopplung
+  ebenfalls weg ist.
 
 **Kommt eine Spalte hinzu, die mitgesichert werden soll**, ist sie in
 `backup_lib.php` einzutragen (Liste `$missionSpalten` beziehungsweise die
