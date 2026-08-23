@@ -11,6 +11,101 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 7.1.0] — 2026-08-23
+
+**Eine Aufräumrunde, bevor die Oberfläche umgebaut wird.** Das ist Paket P0 des
+Programms Gen-EM NAdoku: toter Code weg, die Seitenhülle an eine Stelle, das
+Stylesheet entdoppelt und gegliedert. Am Funktionsumfang ändert sich **nichts** —
+keine neue Funktion, kein Feld, kein Datenmodell, **keine Migration**. Auch das
+Erscheinungsbild ist unverändert; das wurde nicht behauptet, sondern gemessen
+(siehe unten).
+
+Warum die Nebenversion steigt, obwohl es keine neue Funktion gibt: Vier Dateien
+müssen vom Webspace **verschwinden**, und jede Seite der Anwendung ist angefasst.
+Das ist mehr, als eine Korrekturfassung ankündigen sollte.
+
+### Vier Seiten, die niemand erreichen konnte, sind entfernt
+
+`flugtag_neu.php`, `flugtag_datum.php`, `flugtag_loeschen.php` und
+`geraete.php`. Auf keine von ihnen zeigte ein Verweis — nicht aus der
+Navigation, nicht aus einer anderen PHP- oder JS-Datei, und auch kein Rewrite
+in der `.htaccess`.
+
+Die drei `flugtag_*`-Seiten legen Tage nach dem Modell **vor** der
+Diensttag-Umstellung an (`INSERT IGNORE INTO days (user_id, day)`). Über ein
+altes Lesezeichen aufgerufen, hätten sie die Schicht-Logik umgangen. Der
+Changelog zu Web 6.2.0 meldet ihre Entfernung bereits — im Repository lagen sie
+trotzdem weiter. Jetzt nicht mehr.
+
+`geraete.php` war eine Weiterleitung aus Web 3.x auf `einstellungen.php?t=geraete`.
+Ihr eigener Kopfkommentar nannte das Ablaufdatum: „ENTFERNEN AB: Web 5.0.0" —
+zwei Hauptversionen überfällig. Sie ist **ersatzlos** entfallen; ein altes
+Lesezeichen auf diese Adresse läuft jetzt in einen 404.
+
+### Der Seitenkopf steht an einer Stelle statt an 25
+
+Doctype, `<html>`, `<head>` und die Eröffnung des `<body>` baute jede Seite
+selbst — 25-mal fast dasselbe, und doch nicht gleich: zwei Schreibweisen des
+Viewports, zwei Titeltrenner, drei Einrückungen. Eine Änderung am Viewport, an
+den Stylesheets oder ein künftiges Mobile-Menü war damit eine 25-fache Änderung.
+
+`ui.php` hat dafür jetzt **`ui_seite_start()`** und **`ui_seite_ende()`**.
+Vereinheitlicht wurde nach Auszählung, nicht nach Gefühl: Viewport ohne
+Leerzeichen (15 Seiten gegen 10), Titeltrenner Gedankenstrich (ebenfalls 15
+gegen 10).
+
+Zwei Stellen brauchten Rücksicht. **`install.php`** läuft vor der
+Ersteinrichtung — es gibt dort weder `config.php` noch `db.php` und damit weder
+`asset()` noch `favicon_tags()`. `ui.php` hat auf oberster Ebene keine
+Abhängigkeit und läuft deshalb auch dort; die Hülle fängt die fehlenden Helfer
+ab. Der Einrichter behält seine eigene Gestaltung im Kopf und bekommt
+nebenbei **erstmals ein Favicon**. **`session_lib.php`** wird von `login.php`
+und `logout.php` eingebunden, die `ui.php` nicht kennen — es lädt die Hülle
+jetzt selbst nach.
+
+### `style.css` hat Abschnitte — und jeder Selektor steht nur noch einmal da
+
+Die Datei war ohne Gliederung gewachsen: Was neu dazukam, landete unten. So
+standen **siebzehn Regeln ein zweites Mal** in der Datei, bis zu 700 Zeilen von
+der ersten entfernt. Wer eine änderte, konnte nicht wissen, ob es noch eine
+zweite gibt.
+
+Jetzt: **19 benannte Abschnitte** vom Allgemeinen zum Speziellen, mit
+Inhaltsangabe im Dateikopf, und die **Media Queries gesammelt am Schluss**.
+Wortgleiche Wiederholungen sind entfallen, Verfeinerungen mit ihrer Grundregel
+zusammengeführt — jeweils so, dass der wirksame Wert derselbe bleibt.
+
+Auch die **Doppeldefinition von `.btn-plain`** ist weg, und anders als in 7.0.2
+angenommen kostet das nichts: Von der kompakten Fassung kam **keine einzige
+Eigenschaft** an. Die spätere setzt `font:inherit`, und diese Kurzform nimmt
+auch die Schriftgröße mit. Die kompakte Größe einer Zeilenaktion kommt seit
+7.0.1 ohnehin nicht aus der Klasse, sondern aus dem Ort (`.rowactions .btn-*`)
+— und der ist unberührt.
+
+### Das Erscheinungsbild ist nachgerechnet, nicht in Augenschein genommen
+
+Ein umsortiertes Stylesheet kann an jeder Stelle anders aussehen, an der zwei
+gleich starke Regeln ihre Reihenfolge tauschen. Statt sich durch die Seiten zu
+klicken, wurde gemessen: Dieselbe Seitenstruktur einmal mit dem alten und
+einmal mit dem neuen Stylesheet in einen Browser geladen und für **jedes
+Element 129 Eigenschaften** verglichen — bei neun Fensterbreiten von 1400 bis
+500 Pixeln, damit auch die verschobenen Media Queries mitgeprüft sind.
+Zusätzlich dieselbe Messung für die Hover- und Fokuszustände und ein
+Härtetest, der jedes Selektorpaar mit getauschter Reihenfolge auf **ein**
+Element zwingt.
+
+Rund 41.000 Elementmessungen, **keine Abweichung**. Ein einziger echter Fall
+kam dabei ans Licht und wurde vorher berichtigt: `.keybox` und `.paircode`
+sitzen auf der Kopplungsseite am selben Element und setzen beide den Rahmen —
+in der neuen Reihenfolge hätte der Kopplungscode seine orange Umrandung
+verloren.
+
+### Betreiberhinweis
+
+Die vier entfernten Dateien müssen auch **auf dem Webspace verschwinden**. Ein
+FTP-Abgleich entfernt nicht zwingend, was im neuen Paket fehlt:
+`flugtag_neu.php`, `flugtag_datum.php`, `flugtag_loeschen.php`, `geraete.php`.
+
 ## [Web 7.0.2] — 2026-08-19
 
 ### Die Gruppenüberschriften im Einsatzformular setzen sich ab

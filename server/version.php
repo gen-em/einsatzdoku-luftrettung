@@ -79,5 +79,20 @@ declare(strict_types=1);
  * eine Zeile darueber. Die Groesse gilt jetzt fuer den ORT: Was in
  * `.rowactions` steht, ist eine Zeilenaktion. Damit faellt auch die naechste
  * Schaltflaechenklasse dort nicht mehr aus der Reihe.
+ *
+ * 7.1.0 ist eine AUFRAEUMRUNDE (Paket P0 des Programms Gen-EM NAdoku) und
+ * bringt bewusst nichts Neues: keine Funktion, kein Feld, kein Datenmodell,
+ * KEINE Migration, kein sichtbarer Unterschied. Entfernt sind vier Seiten, die
+ * aus der Anwendung heraus nicht erreichbar waren (drei flugtag_*-Reste und
+ * die Weiterleitung geraete.php); die Seitenhuelle steht statt 25-mal von Hand
+ * jetzt einmal in ui.php (ui_seite_start/ui_seite_ende); style.css ist
+ * entdoppelt und in 19 benannte Abschnitte gegliedert.
+ *
+ * WARUM DIE NEBENNUMMER STEIGT, obwohl die Zaehlweise dort "neue Funktionen
+ * und Felder" vorsieht: Die Auslieferung verlangt eine Handlung der
+ * Betreiberin — die vier Dateien muessen auch auf dem Webspace verschwinden —,
+ * und angefasst ist jede einzelne Seite. Eine Korrekturfassung kuendigt beides
+ * nicht an. Die Zaehlweise oben bleibt der Regelfall; dies ist die benannte
+ * Ausnahme.
  */
-const WEB_VERSION = '7.0.2';
+const WEB_VERSION = '7.1.0';
