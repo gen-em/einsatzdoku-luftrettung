@@ -289,6 +289,68 @@ gegen `docs/JSON-Vertrag.md` 3.2); Bodentracks folgen Straßen
 (Sichtprüfung GPX); Chiffretexte entschlüsseln mit dem Kontoschlüssel
 zum Quell-Klartext.
 
+**Stand: ERLEDIGT.** Unter `tools/referenzdatensatz/generator/`:
+`erzeugen.py` (Hauptlauf), `spur.py` (Spuren), `gelaende.py`
+(Höhenmodell aus rund fünfzig Stützpunkten), `krypto.py` (PBKDF2 und
+AES-256-GCM nach `assets/crypto.js`), `pruefen.py`, `LIESMICH.md` und
+`routen/` mit der eingecheckten Straßengeometrie.
+
+**Gemessen** (`pruefen.py`): 526 Ingest-Anfragen, 56 587 Trackpunkte,
+**283 738 Einzelprüfungen, keine Befunde**. Determinismus: zwei Läufe,
+692 Dateien byteweise gleich. Größter Body 20,2 KB gegen die Grenze von
+512 KB. Die Teilstückbildung ist wirklich beansprucht — 166 Pakete gehen
+in mehreren Anfragen hinaus, 18 davon mit genau 500 Punkten.
+
+**Statt Stichprobe: alles.** Die Abnahme sah eine Stichprobe gegen die
+Vertragsgrenzen vor. Geprüft wird stattdessen **jede** Anfrage gegen
+**jede** Grenze. Eine Stichprobe beantwortet nicht die Frage, ob der
+Datensatz vertragskonform ist, sondern nur, ob die gezogenen Stücke es
+sind — und der Datensatz soll gerade die Grundlage sein, auf die sich
+spätere Phasen verlassen.
+
+**Straßentreue: erfüllt statt ausgewiesen.** Der Netzzugang zu
+`router.project-osrm.org` wurde während B1 freigegeben. Die
+Bodentracks folgen damit echten Straßen (117 Teilstücke, 84
+verschiedene Strecken); dazu liegt eine **Fahrzeiten-Tafel** von 86
+Paaren vor, mit der die Quelldaten den Einsatzort nach der echten
+Fahrzeit wählen statt nach der Luftlinie.
+
+### Was B2 an Fehlern hervorgebracht hat
+
+Diese vier standen nicht im Konzept; sie sind beim Bauen aufgefallen
+und jeder ist als **dauerhafte Prüfung** stehen geblieben.
+
+1. **Der Rückweg gehörte nicht zum Einsatz.** Der Generator zählte den
+   Weg von der Klinik zurück zum Einsatz und musste ihn in die Spanne
+   zwischen Übergabe und Endzeit pressen — dabei entstanden Rückflüge
+   mit 666 km/h. Richtig ist, was die Uhr tut: `_endMission` beendet den
+   Einsatz und startet sofort ein Ruhe-Segment (`Model.mc`), der Rückweg
+   wird **dort** aufgezeichnet. Die Ableitung steht jetzt einmal in
+   `quelldaten/wegpunkte.py` (`tagesablauf`) und wird von Generator und
+   Routenabruf gemeinsam benutzt.
+2. **Der Einsatzort richtete sich nicht nach der verfügbaren Zeit.**
+   Erzeugte Einsätze wählten den Ort frei aus dem Katalog, während die
+   Phasen die Anfahrtszeit vorgaben — 45 km in sieben Minuten. Für die
+   Straße genügte die Luftlinie dafür nicht: Im Voralpenland liegt ein
+   Ort 15 km Luftlinie und 40 km Fahrstrecke entfernt. Deshalb die
+   Fahrzeiten-Tafel.
+3. **Das Geschwindigkeitsprofil überhöhte die Mitte um 57 Prozent.**
+   Eine Kosinus-Glättung ist an den Enden richtig und in der Mitte
+   falsch. Jetzt ein Trapez — beschleunigen, halten, bremsen —, das die
+   Reisegeschwindigkeit nur rund 18 Prozent über den Mittelwert hebt.
+4. **Die Spur sprang zwischen Halt und Fahrt.** OSRM rastet Anfang und
+   Ende einer Route auf die nächste Straße; der Halt davor stand exakt
+   auf dem Wegpunkt. Aus dem Versatz wurden 175 km/h. Die Halte sitzen
+   jetzt am tatsächlichen Ende des Fahrabschnitts.
+
+Dazu zwei Funde in den Quelldaten, die B2 sichtbar gemacht hat: Ein
+NEF-Einsatzort lag auf 2 100 m (der Ortskatalog führte denselben Namen
+mit zwei Koordinaten), und der Standort Talwang hatte nur eine
+Zielklinik mit Koordinaten — 20 km entfernt, sodass jeder Bodentransport
+zu schnell war. Beides ist in den Quelldaten behoben und wird von
+`quelldaten/pruefen.py` mitgeprüft (Erreichbarkeit je Abschnitt und je
+Ruhe-Segment).
+
 ### B3 — Einspiellauf (skriptgestützt)
 Einspielskripte für den kompletten Lauf gegen eine Installation:
 Demo-Konto regulär anlegen (E-P1-10, Zugangsdaten nach F-P1-01),
@@ -377,8 +439,8 @@ zusätzlich im Prüfdokument-P1 (K9).
 | Nr. | Prüfung | Paket | Stand |
 |---|---|---|---|
 | P-01 | Matrix-Abgleich vollständig | B1 | **erfüllt** — 78 Zeilen, 0 offen; 5 528 Einzelprüfungen ohne Befund (`pruefen.py`) |
-| P-02 | Payload-Stichprobe gegen Vertragsgrenzen | B2 | offen |
-| P-03 | Determinismus des Generators (zwei Läufe, gleiches Ergebnis) | B2 | **teilweise** — `aufbauen.py` (Quelldaten): zwei Läufe, 16 Dateien byteweise gleich. Der Generator selbst steht noch aus |
+| P-02 | Payloads gegen Vertragsgrenzen | B2 | **erfüllt** — statt Stichprobe ALLE 526 Anfragen; 283 738 Einzelprüfungen ohne Befund |
+| P-03 | Determinismus des Generators (zwei Läufe, gleiches Ergebnis) | B2 | **erfüllt** — Quelldaten 16 Dateien, Generator 692 Dateien, je zwei Läufe byteweise gleich |
 | P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | offen |
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | offen |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | offen |
@@ -426,6 +488,16 @@ die Verteidigungslinie**, und genau die soll R20 dauerhaft absichern.
 CSV-Rückimport verwirft ihn `alterJahre` mit Hinweis. Das gehört als
 benannte Ausnahme in die Ausnahmeliste des Vergleichswerkzeugs — und ist
 zugleich der Beleg, dass der Parser tut, was er soll.
+
+### F-P1-B bis F-P1-E — Funde des Generators
+
+Vier Modellfehler im **Generator selbst** (nicht in der Anwendung),
+gefunden beim Bauen von B2 und dort behoben; jeder ist als dauerhafte
+Prüfung stehen geblieben. Beschreibung im Arbeitspaket B2 oben:
+Rückweg am falschen Datensatz, Einsatzort ohne Rücksicht auf die
+Anfahrtszeit, überhöhtes Geschwindigkeitsprofil, Sprung zwischen Halt
+und Route. **Blockierend: nein**, alle behoben. Kein Verbleib im
+Backlog — sie betreffen ausschließlich das Werkzeug dieser Phase.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*

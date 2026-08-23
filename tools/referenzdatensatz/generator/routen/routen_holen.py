@@ -45,6 +45,12 @@ def schluessel(von, nach) -> str:
 
 
 def teilstuecke() -> list[dict]:
+    """Alle Fahrstrecken, die der Datensatz braucht — Einsatz UND Rueckweg.
+
+    Der Rueckweg gehoert in das Ruhe-Segment nach dem Einsatz (siehe
+    wegpunkte.tagesablauf); ohne ihn faehrt das NEF von der Klinik nach Hause,
+    ohne dass dafuer eine Strasse vorliegt.
+    """
     stamm = json.loads((QUELLE / "stammdaten.json").read_text("utf-8"))
     standorte = {s["name"]: s for s in stamm["standorte"]}
     auftraege: list[dict] = []
@@ -52,16 +58,14 @@ def teilstuecke() -> list[dict]:
         d = json.loads(pfad.read_text("utf-8"))
         if d["dienst"]["art"] != "ground":
             continue
-        vorheriger = None
-        for e in d["einsaetze"]:
-            punkte = wegpunkte.aufloesen(d["dienst"], e, vorheriger, standorte)
-            vorheriger = e
-            koords = [k for _, k in punkte if k]
+        for s in wegpunkte.tagesablauf(d["dienst"], d["einsaetze"],
+                                       d["ruhesegmente"], standorte):
+            koords = s["wegpunkte"]
             for i in range(len(koords) - 1):
                 von, nach = koords[i], koords[i + 1]
                 auftraege.append({
-                    "dienst": d["kennung"], "client_ref": e["client_ref"], "abschnitt": i,
-                    "von": list(von), "nach": list(nach),
+                    "dienst": d["kennung"], "art": s["art"], "client_ref": s["ref"],
+                    "abschnitt": i, "von": list(von), "nach": list(nach),
                     "datei": f"strecke_{schluessel(von, nach)}.geojson",
                 })
     return auftraege

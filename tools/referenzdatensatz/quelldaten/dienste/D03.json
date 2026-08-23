@@ -24,31 +24,31 @@
   "papierkorb": "diensttag",
   "ruhesegmente": [
     {
-      "client_ref": "r-11-7119152793",
+      "client_ref": "r-11-3607503134",
       "beginn": "2026-02-21 07:30",
       "ende": "2026-02-21 07:38",
       "final": true
     },
     {
-      "client_ref": "r-11-5520020495",
+      "client_ref": "r-11-4626169490",
       "beginn": "2026-02-21 09:00",
       "ende": "2026-02-21 10:11",
       "final": true
     },
     {
-      "client_ref": "r-11-4093158823",
+      "client_ref": "r-11-1646977544",
       "beginn": "2026-02-21 11:24",
       "ende": "2026-02-21 11:43",
       "final": true
     },
     {
-      "client_ref": "r-11-2784493671",
-      "beginn": "2026-02-21 12:42",
+      "client_ref": "r-11-7119152793",
+      "beginn": "2026-02-21 12:46",
       "ende": "2026-02-21 13:47",
       "final": true
     },
     {
-      "client_ref": "r-11-4921972299",
+      "client_ref": "r-11-5520020495",
       "beginn": "2026-02-21 14:52",
       "ende": "2026-02-21 17:30",
       "final": true
@@ -101,16 +101,15 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "air",
         "na_escort": 1,
-        "transport_dest": "Unfallklinik Felsberg",
-        "dest_lat": 47.681,
-        "dest_lon": 11.202,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -123,7 +122,9 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [],
+        "other_resources": [
+          "RTW Hochkreuth 71/83"
+        ],
         "crew_override": 0,
         "crew": {},
         "notes": "Landeplatz durch die Feuerwehr abgesichert."
@@ -134,9 +135,9 @@
         "age": 50,
         "mission_no": "2026-1006",
         "loc": {
-          "addr": "Enzianweg 12, 87452 Marbach im Moos",
-          "lat": 47.77608,
-          "lon": 10.6168
+          "addr": "Am Kreuzbichl 99, 87509 Kirchbichl",
+          "lat": 47.62001,
+          "lon": 10.50575
         },
         "site_desc": "Steilgelände unterhalb des Steigs",
         "start": null
@@ -188,8 +189,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -236,13 +236,13 @@
       ]
     },
     {
-      "client_ref": "m-11-1451009129",
+      "client_ref": "m-11-3532475348",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-02-21 11:43",
-      "ende": "2026-02-21 12:42",
+      "ende": "2026-02-21 12:46",
       "final": true,
       "phasen": [
         [
@@ -255,42 +255,41 @@
         ],
         [
           4,
-          "2026-02-21 11:55"
+          "2026-02-21 11:56"
         ],
         [
           5,
-          "2026-02-21 11:58"
+          "2026-02-21 11:59"
         ],
         [
           6,
-          "2026-02-21 12:15"
+          "2026-02-21 12:17"
         ],
         [
           7,
-          "2026-02-21 12:28"
+          "2026-02-21 12:31"
         ],
         [
           8,
-          "2026-02-21 12:34"
+          "2026-02-21 12:38"
         ],
         [
           9,
-          "2026-02-21 12:42"
+          "2026-02-21 12:46"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "air",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Bergklinik Sonnenau",
+        "dest_lat": 47.559,
+        "dest_lon": 10.217,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -303,22 +302,20 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [
-          "Wasserwacht Auwiesen"
-        ],
+        "other_resources": [],
         "crew_override": 0,
         "crew": {},
-        "notes": "Patientin war bei Eintreffen bereits durch den RTW versorgt."
+        "notes": "Landung auf dem Sportplatz, Zufahrt für den RTW frei gehalten."
       },
       "geschuetzt": {
         "dx": "Thoraxtrauma nach Sturz aus Höhe",
-        "dob": null,
-        "age": 49,
+        "dob": "1957-11-28",
+        "age": null,
         "mission_no": "2026-1007",
         "loc": {
-          "addr": "Schmiedgasse 25, 87572 Wangried",
-          "lat": 47.75221,
-          "lon": 10.22959
+          "addr": "Weiherweg 25, 87572 Schattwald am Berg",
+          "lat": 47.50721,
+          "lon": 10.37259
         },
         "site_desc": "Baustelle, Gerüst im 2. OG",
         "start": null
@@ -370,8 +367,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {

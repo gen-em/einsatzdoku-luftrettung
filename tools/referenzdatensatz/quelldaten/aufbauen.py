@@ -33,11 +33,34 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import katalog
+import wegpunkte
+
 
 HIER = pathlib.Path(__file__).resolve().parent
 TZ = ZoneInfo("Europe/Berlin")
+
+# Fahrzeiten-Tafel: echte Strassenzeiten fuer die Bodeneinsaetze. Sie wird
+# einmalig geholt (../generator/routen/fahrzeiten_holen.py) und eingecheckt.
+# OHNE SIE waehlt der Generator den Einsatzort nach der Luftlinie -- und im
+# Voralpenland liegt ein Ort 15 km Luftlinie und 40 km Fahrstrecke entfernt,
+# weil das Tal in die andere Richtung geht. Dabei entstanden Fahrten mit
+# 205 km/h.
+_TAFEL_PFAD = HIER.parent / "generator" / "routen" / "fahrzeiten.json"
 UTC = ZoneInfo("UTC")
 SAMEN = 20260101          # fester Zufallssamen (B2-Abnahme: Determinismus)
+
+# Reisegeschwindigkeit, aus der sich der ERREICHBARE Radius ergibt.
+# Ohne diese Bindung waehlte der Generator den Einsatzort frei aus dem
+# Katalog, und die Phasen gaben ihm dafuer sieben Minuten -- der Hubschrauber
+# floege dann 385 km/h. Ein Referenzdatensatz mit unmoeglichen
+# Geschwindigkeiten ist als Anschauung wertlos und als Regressionsgrundlage
+# irrefuehrend.
+# LUFTLINIE, nicht Strassenkilometer. Ein NEF faehrt 65 km/h auf der Strasse,
+# aber die Strasse ist im Voralpenland rund anderthalbmal so lang wie die
+# Luftlinie -- gemessen an der Luftlinie kommt es also deutlich langsamer
+# voran. Wer hier die Strassengeschwindigkeit einsetzt, waehlt Einsatzorte,
+# die in der vorgesehenen Zeit nicht zu erreichen sind.
+TEMPO_KMH = {"air": 190.0, "ground": 42.0}
 
 PUFFER_MIN = 12           # Mindestabstand zwischen zwei Einsaetzen
 MIN_LUECKE = 46           # kuerzeste Luecke, in die noch ein Einsatz passt
@@ -66,12 +89,17 @@ class Werk:
     """Erzeugt einen Einsatz aus dem Katalog — plausibel, nicht kunstvoll."""
 
     def __init__(self, zufall: random.Random, art: str, stammdaten: dict,
-                 standort: str, faehigkeiten: list[str], monat: int) -> None:
+                 standort: str, faehigkeiten: list[str], monat: int,
+                 basis: tuple[float, float]) -> None:
         self.z = zufall
         self.art = art
         self.standort = standort
         self.faehigkeiten = faehigkeiten
         self.monat = monat
+        self.basis = basis
+        self.tafel = (json.loads(_TAFEL_PFAD.read_text("utf-8"))
+                      if art == "ground" and _TAFEL_PFAD.exists() else {})
+        self.tempo = TEMPO_KMH[art]
         self.orte = katalog.ORTE_LUFT if art == "air" else katalog.ORTE_BODEN
         self.bilder = katalog.BILDER_LUFT if art == "air" else katalog.BILDER_BODEN
         self.notizen = list(katalog.NOTIZEN_LUFT if art == "air" else katalog.NOTIZEN_BODEN)
@@ -92,19 +120,53 @@ class Werk:
         self.hat_koordinaten = any(
             s["lat"] is not None for s in stammdaten["standorte"] if s["name"] == standort)
 
-    def _adresse(self) -> tuple[str, float, float]:
-        ort, lat, lon = self.z.choice(self.orte)
+    def _ort_in_reichweite(self, von: tuple[float, float], minuten: float,
+                           kandidaten=None):
+        """Ort, der in der verfuegbaren Zeit ueberhaupt zu erreichen ist.
+
+        Ohne diese Auswahl entstanden Einsaetze, bei denen der Hubschrauber
+        45 km in sieben Minuten zuruecklegte. Die Phasen sind die Wahrheit
+        ueber den Ablauf (FORMAT.md) — also muss sich der ORT nach ihnen
+        richten und nicht umgekehrt.
+        """
+        liste = kandidaten if kandidaten is not None else self.orte
+
+        if self.tafel:
+            # BODEN: echte Fahrzeit aus der Tafel. 0,85 als Reserve -- die
+            # Phasen geben die Zeit vor, und ein Einsatz, der sie exakt
+            # ausschoepft, hat keinen Spielraum fuer Ampeln und Ortsdurchfahrt.
+            mit_zeit = []
+            for n, a, b in liste:
+                s = f"{von[0]:.4f},{von[1]:.4f}>{a:.4f},{b:.4f}"
+                eintrag = self.tafel.get(s)
+                if eintrag:
+                    mit_zeit.append((eintrag["dauer_s"], (n, a, b)))
+            if mit_zeit:
+                passend = [x for d, x in mit_zeit if 120.0 <= d <= minuten * 60.0 * 0.85]
+                return self.z.choice(passend) if passend else min(mit_zeit)[1]
+
+        radius = max(self.tempo * minuten / 60.0, 3.0) * 1000.0
+        mit_abstand = [(wegpunkte.abstand_m(von[0], von[1], a, b), (n, a, b))
+                       for n, a, b in liste]
+        passend = [x for d, x in mit_abstand if 1500.0 <= d <= radius]
+        if passend:
+            return self.z.choice(passend)
+        # Nichts in Reichweite: den naechstgelegenen nehmen. Er ist dann
+        # naeher als noetig, aber nie weiter als moeglich.
+        return min(mit_abstand)[1]
+
+    def _adresse(self, ort) -> tuple[str, float, float]:
+        name, lat, lon = ort
         strasse = self.z.choice(katalog.STRASSEN)
         nr = self.z.randint(1, 128)
         plz = self.z.choice(katalog.PLZ)
         # Leichte Streuung, damit nicht zwanzig Einsaetze auf demselben Punkt liegen.
-        return (f"{strasse} {nr}, {plz} {ort}",
+        return (f"{strasse} {nr}, {plz} {name}",
                 round(lat + self.z.uniform(-0.004, 0.004), 5),
                 round(lon + self.z.uniform(-0.004, 0.004), 5))
 
     def bauen(self, beginn: datetime, geraet: int, max_dauer: int) -> dict:
         dx, site, transport, schockraum, bergtauglich = self.z.choice(self.bilder)
-        addr, lat, lon = self._adresse()
 
         # --- Phasen ------------------------------------------------------
         #
@@ -129,13 +191,24 @@ class Werk:
             letzte = wert
             p.append((nr, wert))
         ende = p[-1][1]
+        nach_minute = dict(p)
+
+        # --- Einsatzort: so weit, wie die Anfahrtszeit hergibt --------------
+        anfahrt = nach_minute[4] - nach_minute[3]
+        ort = self._ort_in_reichweite(self.basis, anfahrt)
+        addr, lat, lon = self._adresse(ort)
         phasen = [[nr, nach_lokal(beginn + timedelta(minutes=m))] for nr, m in p]
 
         # --- Zielklinik ------------------------------------------------------
         dest = dest_lat = dest_lon = None
-        if transport in ("air", "ground"):
-            k = self.z.choice(self.kliniken)
-            dest, dest_lat, dest_lon = k["name"], k["lat"], k["lon"]
+        if transport in ("air", "ground") and self.kliniken:
+            fahrt = nach_minute[7] - nach_minute[6]
+            # Nachgeschlagen wird von der KATALOGKOORDINATE aus, nicht von der
+            # gestreuten Adresse: Die Tafel kennt nur die Katalogpunkte.
+            gewaehlt = self._ort_in_reichweite(
+                (ort[1], ort[2]), fahrt,
+                kandidaten=[(k["name"], k["lat"], k["lon"]) for k in self.kliniken])
+            dest, dest_lat, dest_lon = gewaehlt
 
         # --- Winde und Bergwacht: nur, wo das Rettungsmittel es kann ---------
         winch = bergwacht = 0
@@ -181,7 +254,12 @@ class Werk:
                         "ereignisse": [[typ, nach_lokal(beginn + timedelta(minutes=start + dt))]
                                        for typ, dt in verlauf]}]
 
-        route = ["basis", "ort", "ziel", "basis"] if dest_lat is not None else ["basis", "ort", "basis"]
+        # ENDET AN DER ZIELKLINIK, nicht an der Basis: Der Rueckweg gehoert
+        # in das Ruhe-Segment danach (Model.mc, _endMission ->
+        # _startRestSegment). Solange er zum Einsatz gezaehlt wurde, musste
+        # er in die Spanne zwischen Uebergabe und Endzeit passen -- und
+        # dabei entstanden Rueckfluege mit 666 km/h.
+        route = ["basis", "ort", "ziel"] if dest_lat is not None else ["basis", "ort", "basis"]
 
         return {
             "client_ref": f"m-{geraet}-{self.z.randrange(10**9, 10**10)}",
@@ -240,11 +318,35 @@ def main() -> int:
         geraet = 11 if dn["art"] == "air" else 12
 
         fest = [e for e in d["einsaetze"] if not e.get("erzeugt")]
-        belegt = [(nach_utc(e["beginn"]), nach_utc(e["ende"] or dn["ende"])) for e in fest]
+        standorte_map = {s["name"]: s for s in stammdaten["standorte"]}
+        basis_k = wegpunkte.basis_von(dn, standorte_map)
+
+        def rueckweg_min(einsatz: dict, vorheriger: dict | None) -> float:
+            """Zeit, die das Fahrzeug braucht, um von seinem Einsatzende
+            zurueck an den Standort zu kommen.
+
+            Sie gehoert VOR den naechsten Einsatz und nicht in den davor:
+            Nach einem Transport 80 km weit steht der Hubschrauber an der
+            Klinik, und der naechste Einsatz kann nicht siebzehn Minuten
+            spaeter am Standort beginnen."""
+            k = [x for _, x in wegpunkte.aufloesen(dn, einsatz, vorheriger, standorte_map) if x]
+            if not k or not basis_k:
+                return 0.0
+            weg = wegpunkte.abstand_m(*k[-1], *basis_k) / 1000.0
+            return weg / TEMPO_KMH[dn["art"]] * 60.0
+
+        belegt = []
+        vorher = None
+        for e in sorted(fest, key=lambda x: x["beginn"]):
+            ende = nach_utc(e["ende"] or dn["ende"])
+            belegt.append((nach_utc(e["beginn"]),
+                           ende + timedelta(minutes=rueckweg_min(e, vorher))))
+            vorher = e
         von, bis = nach_utc(dn["beginn"]), nach_utc(dn["ende"])
 
+        basis = wegpunkte.basis_von(dn, {s["name"]: s for s in stammdaten["standorte"]})
         werk = Werk(z, dn["art"], stammdaten, dn["standort"],
-                    rm["faehigkeiten"], int(dn["day"][5:7]))
+                    rm["faehigkeiten"], int(dn["day"][5:7]), basis)
         neue: list[dict] = []
         fehlend = ziel - len(fest)
         for a, b in freie_luecken(von, bis, belegt):

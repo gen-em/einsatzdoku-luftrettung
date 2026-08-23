@@ -23,6 +23,24 @@ Wegpunkte:
 """
 from __future__ import annotations
 
+import math
+
+R_ERDE = 6371000.0
+
+
+def abstand_m(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
+    """Haversine — dieselbe Formel, mit der die Uhr `distance_m` bildet.
+
+    Sie steht HIER und nicht in gelaende.py, weil auch die Quelldaten sie
+    brauchen (Einsatzort in erreichbarer Entfernung). Zwei Formeln fuer
+    denselben Abstand liefen frueher oder spaeter auseinander.
+    """
+    p1, p2 = math.radians(a_lat), math.radians(b_lat)
+    dp = p2 - p1
+    dl = math.radians(b_lon - a_lon)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R_ERDE * math.asin(math.sqrt(h))
+
 
 def _koord(x):
     if not x:
@@ -69,3 +87,68 @@ def aufloesen(dienst: dict, einsatz: dict, vorheriger: dict | None,
             k = None
         ergebnis.append((w, k))
     return ergebnis
+
+
+def tagesablauf(dienst: dict, einsaetze: list, ruhesegmente: list,
+                standorte: dict) -> list[dict]:
+    """Der Dienst als zeitliche Folge — mit der Position, an der jedes Stueck
+    beginnt und endet.
+
+    WOFUER. Nach einem Einsatz beginnt die Uhr sofort ein Ruhe-Segment
+    (Model.mc, `_endMission` -> `_startRestSegment`). Steht das Fahrzeug dann
+    nicht an seinem Standort, sondern an der Zielklinik, gehoert der RUECKWEG
+    in dieses Ruhe-Segment und nicht mehr zum Einsatz. Wer das anders
+    modelliert, muss den Rueckweg in die Spanne zwischen Uebergabe und Endzeit
+    pressen -- und erhaelt Rueckfluege mit 666 km/h.
+
+    Diese Ableitung brauchen zwei: der Generator (Spuren) und der Routenabruf
+    (welche Fahrstrecke ueberhaupt gebraucht wird). Deshalb steht sie hier und
+    nicht zweimal.
+
+    Rueckgabe je Stueck: {art, ref, beginn, ende, von, nach} -- `von` und
+    `nach` sind Koordinaten oder None.
+    """
+    basis = basis_von(dienst, standorte)
+    stuecke = []
+    for e in einsaetze:
+        stuecke.append({"art": "einsatz", "obj": e, "beginn": e["beginn"],
+                        "ende": e["ende"] or dienst["ende"]})
+    for r in ruhesegmente:
+        stuecke.append({"art": "ruhe", "obj": r, "beginn": r["beginn"],
+                        "ende": r["ende"] or dienst["ende"]})
+    stuecke.sort(key=lambda s: s["beginn"])
+
+    # --- 1. Einsaetze aufloesen: wo faengt jeder an, wo hoert er auf ------
+    vorheriger_einsatz = None
+    for s in stuecke:
+        if s["art"] != "einsatz":
+            continue
+        e = s["obj"]
+        koords = [k for _, k in aufloesen(dienst, e, vorheriger_einsatz, standorte) if k]
+        s["wegpunkte"] = koords
+        s["von"] = koords[0] if koords else basis
+        s["nach"] = koords[-1] if koords else basis
+        vorheriger_einsatz = e
+
+    # --- 2. Ruhe-Segmente sind die Brücken dazwischen --------------------
+    #
+    # Ein Ruhe-Segment fuehrt von dort, wo das Fahrzeug steht, dorthin, wo der
+    # NAECHSTE Einsatz beginnt. Meistens ist das der Standort -- aber nicht
+    # immer: Bei `start_src = prev_dest` wird die Besatzung alarmiert, waehrend
+    # sie noch an der Klinik steht, und faehrt gar nicht erst heim. Wer das
+    # Ruhe-Segment blind zum Standort fuehren laesst, schickt sie in sechs
+    # Minuten zwanzig Kilometer weit und wieder zurueck.
+    position = basis
+    for i, s in enumerate(stuecke):
+        if s["art"] == "einsatz":
+            position = s["nach"]
+            continue
+        naechster = next((x for x in stuecke[i + 1:] if x["art"] == "einsatz"), None)
+        s["von"] = position
+        s["nach"] = naechster["von"] if naechster else basis
+        s["wegpunkte"] = ([s["von"], s["nach"]] if s["von"] != s["nach"] else [s["von"]])
+        position = s["nach"]
+
+    for s in stuecke:
+        s["ref"] = s["obj"]["client_ref"] or s["obj"].get("quell_kennung")
+    return stuecke

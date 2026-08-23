@@ -30,44 +30,44 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-4983470712",
+      "client_ref": "r-12-8556899939",
       "beginn": "2026-07-06 07:00",
       "ende": "2026-07-06 07:06",
       "final": true
     },
     {
-      "client_ref": "r-12-9855573713",
-      "beginn": "2026-07-06 08:14",
-      "ende": "2026-07-06 08:35",
+      "client_ref": "r-12-6192579972",
+      "beginn": "2026-07-06 08:21",
+      "ende": "2026-07-06 08:42",
       "final": true
     },
     {
-      "client_ref": "r-12-2880036266",
-      "beginn": "2026-07-06 10:08",
-      "ende": "2026-07-06 10:31",
+      "client_ref": "r-12-2374781710",
+      "beginn": "2026-07-06 10:15",
+      "ende": "2026-07-06 10:38",
       "final": true
     },
     {
-      "client_ref": "r-12-6629588867",
-      "beginn": "2026-07-06 12:04",
-      "ende": "2026-07-06 12:28",
+      "client_ref": "r-12-1640318025",
+      "beginn": "2026-07-06 11:56",
+      "ende": "2026-07-06 12:20",
       "final": true
     },
     {
-      "client_ref": "r-12-7839327517",
-      "beginn": "2026-07-06 13:48",
-      "ende": "2026-07-06 14:14",
+      "client_ref": "r-12-1693180715",
+      "beginn": "2026-07-06 13:49",
+      "ende": "2026-07-06 14:09",
       "final": true
     },
     {
-      "client_ref": "r-12-1452737156",
-      "beginn": "2026-07-06 14:59",
-      "ende": "2026-07-06 15:19",
+      "client_ref": "r-12-9222881829",
+      "beginn": "2026-07-06 15:32",
+      "ende": "2026-07-06 15:52",
       "final": true
     },
     {
-      "client_ref": "r-12-1253696455",
-      "beginn": "2026-07-06 16:33",
+      "client_ref": "r-12-8748168307",
+      "beginn": "2026-07-06 17:24",
       "ende": "2026-07-06 19:00",
       "final": true
     }
@@ -80,7 +80,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-07-06 07:06",
-      "ende": "2026-07-06 08:14",
+      "ende": "2026-07-06 08:21",
       "final": true,
       "phasen": [
         [
@@ -89,46 +89,45 @@
         ],
         [
           3,
-          "2026-07-06 07:10"
+          "2026-07-06 07:11"
         ],
         [
           4,
-          "2026-07-06 07:20"
+          "2026-07-06 07:21"
         ],
         [
           5,
-          "2026-07-06 07:23"
+          "2026-07-06 07:25"
         ],
         [
           6,
-          "2026-07-06 07:43"
+          "2026-07-06 07:46"
         ],
         [
           7,
-          "2026-07-06 07:58"
+          "2026-07-06 08:04"
         ],
         [
           8,
-          "2026-07-06 08:05"
+          "2026-07-06 08:11"
         ],
         [
           9,
-          "2026-07-06 08:14"
+          "2026-07-06 08:21"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -141,7 +140,9 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [],
+        "other_resources": [
+          "RTW Talwang 76/83"
+        ],
         "crew_override": 0,
         "crew": {},
         "notes": null
@@ -152,9 +153,9 @@
         "age": null,
         "mission_no": "2026-1030",
         "loc": {
-          "addr": "Am Kreuzbichl 66, 87509 Ödwang",
-          "lat": 47.59991,
-          "lon": 10.40711
+          "addr": "Weiherweg 66, 87509 Auwiesen",
+          "lat": 47.54891,
+          "lon": 10.24611
         },
         "site_desc": "Gasthof, Gästezimmer",
         "start": null
@@ -167,56 +168,55 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-06 08:35",
-      "ende": "2026-07-06 10:08",
+      "beginn": "2026-07-06 08:42",
+      "ende": "2026-07-06 10:15",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-06 08:35"
+          "2026-07-06 08:42"
         ],
         [
           3,
-          "2026-07-06 08:41"
+          "2026-07-06 08:48"
         ],
         [
           4,
-          "2026-07-06 08:54"
+          "2026-07-06 09:01"
         ],
         [
           5,
-          "2026-07-06 08:59"
+          "2026-07-06 09:06"
         ],
         [
           6,
-          "2026-07-06 09:25"
+          "2026-07-06 09:32"
         ],
         [
           7,
-          "2026-07-06 09:47"
+          "2026-07-06 09:54"
         ],
         [
           8,
-          "2026-07-06 09:56"
+          "2026-07-06 10:03"
         ],
         [
           9,
-          "2026-07-06 10:08"
+          "2026-07-06 10:15"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -243,9 +243,9 @@
         "age": null,
         "mission_no": "2026-1031",
         "loc": {
-          "addr": "Zur Sennalpe 43, 87477 Ödwang",
-          "lat": 47.59569,
-          "lon": 10.41315
+          "addr": "Zur Sennalpe 43, 87477 Burgstall",
+          "lat": 47.53169,
+          "lon": 10.28915
         },
         "site_desc": "Pflegeheim, Zimmer 14",
         "start": null
@@ -258,56 +258,55 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-06 10:31",
-      "ende": "2026-07-06 12:04",
+      "beginn": "2026-07-06 10:38",
+      "ende": "2026-07-06 11:56",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-06 10:31"
+          "2026-07-06 10:38"
         ],
         [
           3,
-          "2026-07-06 10:37"
+          "2026-07-06 10:43"
         ],
         [
           4,
-          "2026-07-06 10:50"
+          "2026-07-06 10:54"
         ],
         [
           5,
-          "2026-07-06 10:55"
+          "2026-07-06 10:58"
         ],
         [
           6,
-          "2026-07-06 11:21"
+          "2026-07-06 11:20"
         ],
         [
           7,
-          "2026-07-06 11:43"
+          "2026-07-06 11:38"
         ],
         [
           8,
-          "2026-07-06 11:52"
+          "2026-07-06 11:46"
         ],
         [
           9,
-          "2026-07-06 12:04"
+          "2026-07-06 11:56"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -333,9 +332,9 @@
         "age": null,
         "mission_no": "2026-1032",
         "loc": {
-          "addr": "Kirchsteig 88, 87490 Schattwald am Berg",
-          "lat": 47.50951,
-          "lon": 10.37155
+          "addr": "Weiherweg 88, 87490 Auwiesen",
+          "lat": 47.54651,
+          "lon": 10.25055
         },
         "site_desc": "Bushaltestelle am Ortsrand",
         "start": null
@@ -343,38 +342,38 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-9503841840",
+      "client_ref": "m-12-3905769705",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-06 12:28",
-      "ende": "2026-07-06 13:48",
+      "beginn": "2026-07-06 12:20",
+      "ende": "2026-07-06 13:49",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-06 12:28"
+          "2026-07-06 12:20"
         ],
         [
           3,
-          "2026-07-06 12:33"
+          "2026-07-06 12:26"
         ],
         [
           4,
-          "2026-07-06 12:44"
+          "2026-07-06 12:38"
         ],
         [
           5,
-          "2026-07-06 12:49"
+          "2026-07-06 12:43"
         ],
         [
           6,
-          "2026-07-06 13:11"
+          "2026-07-06 13:08"
         ],
         [
           7,
-          "2026-07-06 13:30"
+          "2026-07-06 13:28"
         ],
         [
           8,
@@ -382,22 +381,21 @@
         ],
         [
           9,
-          "2026-07-06 13:48"
+          "2026-07-06 13:49"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -411,22 +409,21 @@
         "bw_info": null,
         "other_ema": null,
         "other_resources": [
-          "RTW Talwang 76/83",
-          "ELW Talwang 1"
+          "RTW Talwang 76/83"
         ],
         "crew_override": 0,
         "crew": {},
-        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
+        "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "geschuetzt": {
         "dx": "Schlaganfall, Lyse-Fenster offen",
         "dob": null,
-        "age": 72,
+        "age": 70,
         "mission_no": "2026-1033",
         "loc": {
-          "addr": "Hochstraße 37, 87490 Waltenau",
-          "lat": 47.66261,
-          "lon": 10.30881
+          "addr": "Hochstraße 37, 87490 Steinach im Tal",
+          "lat": 47.51161,
+          "lon": 10.27781
         },
         "site_desc": "Wohnhaus, Bad",
         "start": null
@@ -439,73 +436,85 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-06 14:14",
-      "ende": "2026-07-06 14:59",
+      "beginn": "2026-07-06 14:09",
+      "ende": "2026-07-06 15:32",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-06 14:14"
+          "2026-07-06 14:09"
         ],
         [
           3,
-          "2026-07-06 14:18"
+          "2026-07-06 14:14"
         ],
         [
           4,
-          "2026-07-06 14:28"
+          "2026-07-06 14:26"
         ],
         [
           5,
-          "2026-07-06 14:32"
+          "2026-07-06 14:30"
+        ],
+        [
+          6,
+          "2026-07-06 14:54"
+        ],
+        [
+          7,
+          "2026-07-06 15:13"
+        ],
+        [
+          8,
+          "2026-07-06 15:21"
         ],
         [
           9,
-          "2026-07-06 14:59"
+          "2026-07-06 15:32"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "basis"
+        "ziel"
       ],
       "rea": [
         {
-          "beginn": "2026-07-06 14:34",
+          "beginn": "2026-07-06 14:32",
           "ereignisse": [
             [
               "zugang",
-              "2026-07-06 14:35"
+              "2026-07-06 14:33"
             ],
             [
               "rhythmuskontrolle",
-              "2026-07-06 14:36"
+              "2026-07-06 14:34"
             ],
             [
               "adrenalin",
-              "2026-07-06 14:38"
+              "2026-07-06 14:36"
             ],
             [
               "defibrillation",
-              "2026-07-06 14:40"
+              "2026-07-06 14:38"
             ],
             [
               "intubation",
-              "2026-07-06 14:44"
+              "2026-07-06 14:42"
             ],
             [
               "rosc",
-              "2026-07-06 14:52"
+              "2026-07-06 14:50"
             ]
           ]
         }
       ],
       "felder": {
-        "transport_mode": "ambulant",
-        "na_escort": 0,
-        "transport_dest": null,
-        "dest_lat": null,
-        "dest_lon": null,
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -524,76 +533,75 @@
         "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
       },
       "geschuetzt": {
-        "dx": "Hypertensive Entgleisung",
+        "dx": "Nierenkolik",
         "dob": "1967-07-06",
         "age": null,
         "mission_no": "2026-1034",
         "loc": {
-          "addr": "Kreuzwiese 80, 87572 Oberkarwang",
-          "lat": 47.43834,
-          "lon": 10.22044
+          "addr": "Wiesenweg 80, 87572 Auwiesen",
+          "lat": 47.54534,
+          "lon": 10.24944
         },
-        "site_desc": "Seniorenwohnanlage, Erdgeschoss",
+        "site_desc": "Wohnhaus, Schlafzimmer",
         "start": null
       },
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-1057452893",
+      "client_ref": "m-12-4515001849",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-06 15:19",
-      "ende": "2026-07-06 16:33",
+      "beginn": "2026-07-06 15:52",
+      "ende": "2026-07-06 17:24",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-06 15:19"
+          "2026-07-06 15:52"
         ],
         [
           3,
-          "2026-07-06 15:24"
+          "2026-07-06 15:58"
         ],
         [
           4,
-          "2026-07-06 15:34"
+          "2026-07-06 16:11"
         ],
         [
           5,
-          "2026-07-06 15:38"
-        ],
-        [
-          6,
-          "2026-07-06 15:59"
-        ],
-        [
-          7,
           "2026-07-06 16:16"
         ],
         [
+          6,
+          "2026-07-06 16:42"
+        ],
+        [
+          7,
+          "2026-07-06 17:03"
+        ],
+        [
           8,
-          "2026-07-06 16:24"
+          "2026-07-06 17:12"
         ],
         [
           9,
-          "2026-07-06 16:33"
+          "2026-07-06 17:24"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -613,13 +621,13 @@
       },
       "geschuetzt": {
         "dx": "Akutes Abdomen",
-        "dob": null,
-        "age": 82,
+        "dob": "1944-11-27",
+        "age": null,
         "mission_no": "2026-1035",
         "loc": {
-          "addr": "Am Kreuzbichl 68, 87441 Grünegg",
-          "lat": 47.626,
-          "lon": 10.33461
+          "addr": "Am Kreuzbichl 68, 87441 Auwiesen",
+          "lat": 47.543,
+          "lon": 10.25361
         },
         "site_desc": "Wohnhaus, Küche",
         "start": null

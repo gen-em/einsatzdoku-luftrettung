@@ -31,44 +31,44 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-6003505375",
+      "client_ref": "r-12-3875220347",
       "beginn": "2026-03-07 07:00",
       "ende": "2026-03-07 07:09",
       "final": true
     },
     {
+      "client_ref": "r-12-7609971413",
+      "beginn": "2026-03-07 08:27",
+      "ende": "2026-03-07 08:53",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-7141511018",
+      "beginn": "2026-03-07 10:25",
+      "ende": "2026-03-07 10:48",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-6003505375",
+      "beginn": "2026-03-07 12:17",
+      "ende": "2026-03-07 12:34",
+      "final": true
+    },
+    {
       "client_ref": "r-12-3984489030",
-      "beginn": "2026-03-07 08:32",
-      "ende": "2026-03-07 08:58",
+      "beginn": "2026-03-07 13:53",
+      "ende": "2026-03-07 14:17",
       "final": true
     },
     {
       "client_ref": "r-12-2561311047",
-      "beginn": "2026-03-07 10:27",
-      "ende": "2026-03-07 10:47",
+      "beginn": "2026-03-07 15:25",
+      "ende": "2026-03-07 15:41",
       "final": true
     },
     {
       "client_ref": "r-12-1378533568",
-      "beginn": "2026-03-07 11:52",
-      "ende": "2026-03-07 12:18",
-      "final": true
-    },
-    {
-      "client_ref": "r-12-7652424732",
-      "beginn": "2026-03-07 13:37",
-      "ende": "2026-03-07 13:55",
-      "final": true
-    },
-    {
-      "client_ref": "r-12-8102285944",
-      "beginn": "2026-03-07 14:58",
-      "ende": "2026-03-07 15:21",
-      "final": true
-    },
-    {
-      "client_ref": "r-12-3942794813",
-      "beginn": "2026-03-07 16:03",
+      "beginn": "2026-03-07 16:36",
       "ende": "2026-03-07 19:00",
       "final": true
     }
@@ -81,7 +81,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-03-07 07:09",
-      "ende": "2026-03-07 08:32",
+      "ende": "2026-03-07 08:27",
       "final": true,
       "phasen": [
         [
@@ -94,42 +94,41 @@
         ],
         [
           4,
-          "2026-03-07 07:26"
+          "2026-03-07 07:25"
         ],
         [
           5,
-          "2026-03-07 07:30"
+          "2026-03-07 07:29"
         ],
         [
           6,
-          "2026-03-07 07:54"
+          "2026-03-07 07:51"
         ],
         [
           7,
-          "2026-03-07 08:13"
+          "2026-03-07 08:09"
         ],
         [
           8,
-          "2026-03-07 08:21"
+          "2026-03-07 08:17"
         ],
         [
           9,
-          "2026-03-07 08:32"
+          "2026-03-07 08:27"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -142,22 +141,20 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [
-          "KTW Talwang 76/85"
-        ],
+        "other_resources": [],
         "crew_override": 0,
         "crew": {},
         "notes": "First Responder war vor Ort und hatte bereits Sauerstoff gegeben."
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
-        "dob": "1967-08-27",
+        "dob": "2004-05-15",
         "age": null,
         "mission_no": "2026-1008",
         "loc": {
-          "addr": "Buchenallee 14, 87572 Schattwald am Berg",
-          "lat": 47.5071,
-          "lon": 10.37126
+          "addr": "Rossgasse 14, 87572 Auwiesen",
+          "lat": 47.5441,
+          "lon": 10.25026
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
         "start": null
@@ -165,61 +162,60 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-7793367508",
+      "client_ref": "m-12-6467858312",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-03-07 08:58",
-      "ende": "2026-03-07 10:27",
+      "beginn": "2026-03-07 08:53",
+      "ende": "2026-03-07 10:25",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-03-07 08:58"
+          "2026-03-07 08:53"
         ],
         [
           3,
-          "2026-03-07 09:04"
+          "2026-03-07 08:59"
         ],
         [
           4,
-          "2026-03-07 09:16"
+          "2026-03-07 09:12"
         ],
         [
           5,
-          "2026-03-07 09:21"
+          "2026-03-07 09:17"
         ],
         [
           6,
-          "2026-03-07 09:46"
+          "2026-03-07 09:43"
         ],
         [
           7,
-          "2026-03-07 10:06"
+          "2026-03-07 10:04"
         ],
         [
           8,
-          "2026-03-07 10:16"
+          "2026-03-07 10:13"
         ],
         [
           9,
-          "2026-03-07 10:27"
+          "2026-03-07 10:25"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -235,17 +231,17 @@
         "other_resources": [],
         "crew_override": 0,
         "crew": {},
-        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
+        "notes": "Straßenglätte auf der Anfahrt, verlängerte Ausrückzeit."
       },
       "geschuetzt": {
         "dx": "Pneumonie mit respiratorischer Insuffizienz",
-        "dob": "1969-09-15",
+        "dob": "1951-12-14",
         "age": null,
         "mission_no": "2026-1009",
         "loc": {
-          "addr": "Lärchenweg 85, 87572 Steinach im Tal",
-          "lat": 47.51658,
-          "lon": 10.27853
+          "addr": "Lärchenweg 26, 87427 Steinach im Tal",
+          "lat": 47.51365,
+          "lon": 10.28258
         },
         "site_desc": "Pflegeheim, Zimmer 14",
         "start": null
@@ -253,85 +249,258 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-7691667355",
+      "client_ref": "m-12-1466537302",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-03-07 10:47",
-      "ende": "2026-03-07 11:52",
+      "beginn": "2026-03-07 10:48",
+      "ende": "2026-03-07 12:17",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-03-07 10:47"
+          "2026-03-07 10:48"
         ],
         [
           3,
-          "2026-03-07 10:51"
+          "2026-03-07 10:54"
         ],
         [
           4,
-          "2026-03-07 11:00"
+          "2026-03-07 11:06"
         ],
         [
           5,
-          "2026-03-07 11:04"
+          "2026-03-07 11:11"
         ],
         [
           6,
-          "2026-03-07 11:22"
+          "2026-03-07 11:36"
         ],
         [
           7,
-          "2026-03-07 11:37"
+          "2026-03-07 11:56"
         ],
         [
           8,
-          "2026-03-07 11:44"
+          "2026-03-07 12:06"
         ],
         [
           9,
-          "2026-03-07 11:52"
+          "2026-03-07 12:17"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
+      },
+      "geschuetzt": {
+        "dx": "Anaphylaxie nach Wespenstich",
+        "dob": null,
+        "age": 29,
+        "mission_no": "2026-1010",
+        "loc": {
+          "addr": "Buchenallee 80, 87441 Steinach im Tal",
+          "lat": 47.51684,
+          "lon": 10.28163
+        },
+        "site_desc": "Gartengrundstück",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-7129806272",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 12:34",
+      "ende": "2026-03-07 13:53",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 12:34"
+        ],
+        [
+          3,
+          "2026-03-07 12:39"
+        ],
+        [
+          4,
+          "2026-03-07 12:50"
+        ],
+        [
+          5,
+          "2026-03-07 12:54"
+        ],
+        [
+          6,
+          "2026-03-07 13:17"
+        ],
+        [
+          7,
+          "2026-03-07 13:35"
+        ],
+        [
+          8,
+          "2026-03-07 13:43"
+        ],
+        [
+          9,
+          "2026-03-07 13:53"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [
+          "KTW Talwang 76/85"
+        ],
+        "crew_override": 0,
+        "crew": {},
+        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
+      },
+      "geschuetzt": {
+        "dx": "Schlaganfall, Lyse-Fenster offen",
+        "dob": null,
+        "age": 83,
+        "mission_no": "2026-1011",
+        "loc": {
+          "addr": "Kreuzwiese 36, 87572 Auwiesen",
+          "lat": 47.54546,
+          "lon": 10.25365
+        },
+        "site_desc": "Wohnhaus, Bad",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-6604485875",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-03-07 14:17",
+      "ende": "2026-03-07 15:25",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-03-07 14:17"
+        ],
+        [
+          3,
+          "2026-03-07 14:21"
+        ],
+        [
+          4,
+          "2026-03-07 14:31"
+        ],
+        [
+          5,
+          "2026-03-07 14:34"
+        ],
+        [
+          6,
+          "2026-03-07 14:54"
+        ],
+        [
+          7,
+          "2026-03-07 15:09"
+        ],
+        [
+          8,
+          "2026-03-07 15:16"
+        ],
+        [
+          9,
+          "2026-03-07 15:25"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
       ],
       "rea": [
         {
-          "beginn": "2026-03-07 11:06",
+          "beginn": "2026-03-07 14:35",
           "ereignisse": [
             [
               "zugang",
-              "2026-03-07 11:07"
+              "2026-03-07 14:36"
             ],
             [
               "rhythmuskontrolle",
-              "2026-03-07 11:08"
+              "2026-03-07 14:37"
             ],
             [
               "adrenalin",
-              "2026-03-07 11:10"
+              "2026-03-07 14:39"
+            ],
+            [
+              "defibrillation",
+              "2026-03-07 14:41"
             ],
             [
               "intubation",
-              "2026-03-07 11:14"
-            ],
-            [
-              "amiodaron",
-              "2026-03-07 11:18"
-            ],
-            [
-              "rhythmuskontrolle",
-              "2026-03-07 11:21"
+              "2026-03-07 14:45"
             ],
             [
               "rosc",
-              "2026-03-07 11:27"
+              "2026-03-07 14:53"
             ]
           ]
         }
@@ -339,9 +508,9 @@
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -357,17 +526,17 @@
         "other_resources": [],
         "crew_override": 0,
         "crew": {},
-        "notes": "Patient wurde nach Aufklärung ambulant belassen."
+        "notes": "Zufahrt eng, RTW musste am Ortsrand halten."
       },
       "geschuetzt": {
         "dx": "Kreislaufstillstand bei Vorderwandinfarkt",
-        "dob": "2008-07-24",
+        "dob": "2004-11-24",
         "age": null,
-        "mission_no": "2026-1010",
+        "mission_no": "2026-1012",
         "loc": {
-          "addr": "Hochstraße 92, 87477 Auwiesen",
-          "lat": 47.54856,
-          "lon": 10.25183
+          "addr": "Mühlbachweg 90, 87477 Auwiesen",
+          "lat": 47.54729,
+          "lon": 10.25234
         },
         "site_desc": "Werkstatt eines Landmaschinenbetriebs",
         "start": null
@@ -375,61 +544,90 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-1194337097",
+      "client_ref": "m-12-7265860386",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-03-07 12:18",
-      "ende": "2026-03-07 13:37",
+      "beginn": "2026-03-07 15:41",
+      "ende": "2026-03-07 16:36",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-03-07 12:18"
+          "2026-03-07 15:41"
         ],
         [
           3,
-          "2026-03-07 12:23"
+          "2026-03-07 15:45"
         ],
         [
           4,
-          "2026-03-07 12:34"
+          "2026-03-07 15:52"
         ],
         [
           5,
-          "2026-03-07 12:38"
+          "2026-03-07 15:55"
         ],
         [
           6,
-          "2026-03-07 13:01"
+          "2026-03-07 16:11"
         ],
         [
           7,
-          "2026-03-07 13:19"
+          "2026-03-07 16:23"
         ],
         [
           8,
-          "2026-03-07 13:27"
+          "2026-03-07 16:29"
         ],
         [
           9,
-          "2026-03-07 13:37"
+          "2026-03-07 16:36"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
-      "rea": [],
+      "rea": [
+        {
+          "beginn": "2026-03-07 15:56",
+          "ereignisse": [
+            [
+              "zugang",
+              "2026-03-07 15:58"
+            ],
+            [
+              "rhythmuskontrolle",
+              "2026-03-07 15:59"
+            ],
+            [
+              "adrenalin",
+              "2026-03-07 16:01"
+            ],
+            [
+              "defibrillation",
+              "2026-03-07 16:03"
+            ],
+            [
+              "sonographie",
+              "2026-03-07 16:07"
+            ],
+            [
+              "tod",
+              "2026-03-07 16:20"
+            ]
+          ]
+        }
+      ],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -443,180 +641,23 @@
         "bw_info": null,
         "other_ema": null,
         "other_resources": [
-          "ELW Talwang 1",
           "KTW Talwang 76/85"
-        ],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Angehörige vor Ort, Betreuung durch die Besatzung."
-      },
-      "geschuetzt": {
-        "dx": "Exazerbierte COPD",
-        "dob": "2021-05-18",
-        "age": null,
-        "mission_no": "2026-1011",
-        "loc": {
-          "addr": "Buchenallee 123, 87538 Moosachtal",
-          "lat": 47.59997,
-          "lon": 10.13144
-        },
-        "site_desc": "Reihenhaus, Wohnküche",
-        "start": null
-      },
-      "abdeckung": []
-    },
-    {
-      "client_ref": "m-12-3360383339",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "erzeugt": true,
-      "beginn": "2026-03-07 13:55",
-      "ende": "2026-03-07 14:58",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-03-07 13:55"
-        ],
-        [
-          3,
-          "2026-03-07 14:01"
-        ],
-        [
-          4,
-          "2026-03-07 14:15"
-        ],
-        [
-          5,
-          "2026-03-07 14:20"
-        ],
-        [
-          9,
-          "2026-03-07 14:58"
-        ]
-      ],
-      "route": [
-        "basis",
-        "ort",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "ambulant",
-        "na_escort": 0,
-        "transport_dest": null,
-        "dest_lat": null,
-        "dest_lon": null,
-        "schockraum": 0,
-        "false_alarm": 0,
-        "secondary": 0,
-        "start_src": null,
-        "winch": 0,
-        "winch_cycles": null,
-        "winch_cycles_pat": null,
-        "winch_airload": 0,
-        "bergwacht": 0,
-        "bw_unit": null,
-        "bw_info": null,
-        "other_ema": null,
-        "other_resources": [
-          "KTW Talwang 76/85",
-          "ELW Talwang 1"
-        ],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
-      },
-      "geschuetzt": {
-        "dx": "Rippenprellung nach Sturz",
-        "dob": "1971-01-10",
-        "age": null,
-        "mission_no": "2026-1012",
-        "loc": {
-          "addr": "Lindenplatz 27, 87452 Auwiesen",
-          "lat": 47.54785,
-          "lon": 10.25316
-        },
-        "site_desc": "Rodelbahn, Kurve 4",
-        "start": null
-      },
-      "abdeckung": []
-    },
-    {
-      "client_ref": "m-12-7024419717",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "erzeugt": true,
-      "beginn": "2026-03-07 15:21",
-      "ende": "2026-03-07 16:03",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-03-07 15:21"
-        ],
-        [
-          3,
-          "2026-03-07 15:25"
-        ],
-        [
-          4,
-          "2026-03-07 15:34"
-        ],
-        [
-          5,
-          "2026-03-07 15:38"
-        ],
-        [
-          9,
-          "2026-03-07 16:03"
-        ]
-      ],
-      "route": [
-        "basis",
-        "ort",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "ambulant",
-        "na_escort": 0,
-        "transport_dest": null,
-        "dest_lat": null,
-        "dest_lon": null,
-        "schockraum": 0,
-        "false_alarm": 0,
-        "secondary": 0,
-        "start_src": null,
-        "winch": 0,
-        "winch_cycles": null,
-        "winch_cycles_pat": null,
-        "winch_airload": 0,
-        "bergwacht": 0,
-        "bw_unit": null,
-        "bw_info": null,
-        "other_ema": null,
-        "other_resources": [
-          "KTW Talwang 76/85",
-          "ELW Talwang 1"
         ],
         "crew_override": 0,
         "crew": {},
         "notes": null
       },
       "geschuetzt": {
-        "dx": "Hypoglykämie",
-        "dob": "2011-12-24",
-        "age": null,
+        "dx": "Anaphylaxie nach Wespenstich",
+        "dob": null,
+        "age": 51,
         "mission_no": "2026-1013",
         "loc": {
-          "addr": "Hirtenweg 8, 87477 Ödwang",
-          "lat": 47.5973,
-          "lon": 10.40934
+          "addr": "Lindenplatz 98, 87545 Auwiesen",
+          "lat": 47.54705,
+          "lon": 10.24733
         },
-        "site_desc": "Werkstatt, hinter der Hebebühne",
+        "site_desc": "Gartengrundstück",
         "start": null
       },
       "abdeckung": []

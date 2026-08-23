@@ -20,3 +20,10 @@ server/sicherungen/
 # Erzeugnisse des Stilvergleichs (tools/stilvergleich/proben.py)
 tools/stilvergleich/pruefstand/
 tools/stilvergleich/__pycache__/
+
+# Erzeugnisse des Referenzdatensatz-Generators. Rund 25 MB, vollstaendig aus
+# den Quelldaten ableitbar (ein Lauf dauert zwei Sekunden) und deterministisch
+# -- eingecheckt ist stattdessen, was NICHT ableitbar ist: die Strassen-
+# geometrie unter generator/routen/ und die Quelldaten selbst.
+tools/referenzdatensatz/generator/ausgabe/
+tools/referenzdatensatz/**/__pycache__/

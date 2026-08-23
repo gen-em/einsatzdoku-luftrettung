@@ -457,6 +457,12 @@
         "erzeugt": {
           "$kommentar": "true = von aufbauen.py erzeugter Betriebsalltag; wird bei einem erneuten Lauf ersetzt. Handgeschriebene Prueffaelle tragen den Schluessel NICHT und bleiben.",
           "type": "boolean"
+        },
+        "$warum_ort": {
+          "$ref": "#/$defs/erlaeuterung"
+        },
+        "$warum_zeit": {
+          "$ref": "#/$defs/erlaeuterung"
         }
       }
     },

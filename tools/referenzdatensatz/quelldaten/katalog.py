@@ -12,55 +12,56 @@ und am Alpenrand; ohne sie waeren Tracks, Hoehenprofile und Kartendarstellung
 nicht pruefbar. Ortsnamen, Strassen, Kliniken und Personen sind frei erfunden.
 """
 
-# --- Einsatzorte: (fiktiver Ort, lat, lon) --------------------------------
-# Der Luftstandort deckt den weiten Radius ab, der Bodenstandort den engen.
-ORTE_LUFT = [
-    ("Sonnenau",            47.4210, 10.3430),
-    ("Felsgrat",            47.5170, 10.4090),
-    ("Moosachtal",          47.5080, 10.0230),
-    ("Kaltbrunn am Hang",   47.7300, 10.3980),
-    ("Steinach im Tal",     47.5820, 10.3300),
-    ("Wangried",            47.7530, 10.2280),
-    ("Birkenau am See",     47.6660, 10.3120),
-    ("Lohberg",             47.6480, 10.1250),
-    ("Ödwang",              47.5960, 10.4110),
-    ("Grünegg",             47.6280, 10.3310),
-    ("Rauhenbach",          47.6350, 10.4300),
-    ("Schattwald am Berg",  47.5080, 10.3710),
-    ("Kirchbichl",          47.6220, 10.5050),
-    ("Ahornau",             47.5820, 10.5560),
-    ("Lindfeld",            47.5710, 10.7000),
-    ("Marbach im Moos",     47.7790, 10.6170),
-    ("Weißenstein",         47.8800, 10.6220),
-    ("Traunwang",           47.6920, 10.0400),
-    ("Hinterried",          47.4430, 10.1090),
-    ("Oberkarwang",         47.4380, 10.2210),
-    ("Neusiedl am Steig",   47.4290, 10.2610),
-    ("Gschwend",            47.4100, 10.2790),
-    ("Bärenmoos",           47.8020, 10.2200),
-    ("Rossbrunn",           47.8080, 10.2900),
-    ("Ellrain",             47.7240, 10.2010),
-    ("Auwiesen",            47.5450, 10.2500),
+# --- Einsatzorte ----------------------------------------------------------
+#
+# EINE Liste, kein Paar. Zwei getrennte Listen fuehrten denselben Ortsnamen mit
+# zwei verschiedenen Koordinaten -- "Moosachtal" lag fuer die Luft auf 1750 m
+# und fuer den Boden auf 900 m. Ein Ort hat eine Lage.
+#
+# `boden` sagt, ob der Ort mit einem Fahrzeug erreichbar ist. Die drei Orte
+# ohne diesen Haken liegen im Steilgelaende oberhalb der Strassen; ein NEF
+# faehrt dort nicht hin, und ein Einsatzort auf 2100 m im Bodendienst war
+# genau der Fehler, den diese Spalte verhindert.
+#
+# (Name, lat, lon, mit dem Fahrzeug erreichbar)
+ORTE = [
+    ("Sonnenau",            47.4100, 10.2790, True),
+    ("Auwiesen",            47.5450, 10.2500, True),
+    ("Talwang",             47.5590, 10.2170, True),
+    ("Burgstall",           47.5320, 10.2870, True),
+    ("Steinach im Tal",     47.5150, 10.2810, True),
+    ("Neusiedl am Steig",   47.4570, 10.2810, True),
+    ("Oberkarwang",         47.4380, 10.2210, True),
+    ("Gschwend",            47.4290, 10.2610, True),
+    ("Grünegg",             47.5820, 10.3300, True),
+    ("Moosachtal",          47.5960, 10.1330, True),
+    ("Lohberg",             47.6480, 10.1250, True),
+    ("Waltenau",            47.6660, 10.3120, True),
+    ("Ödwang",              47.5960, 10.4110, True),
+    ("Rauhenbach",          47.6350, 10.4300, True),
+    ("Schattwald am Berg",  47.5080, 10.3710, True),
+    ("Hinterried",          47.4430, 10.1090, True),
+    ("Jochwang",            47.5170, 10.4090, True),
+    ("Kaltbrunn am Hang",   47.7300, 10.3980, True),
+    ("Wangried",            47.7530, 10.2280, True),
+    ("Ellrain",             47.7240, 10.2010, True),
+    ("Bärenmoos",           47.8020, 10.2200, True),
+    ("Rossbrunn",           47.8080, 10.2900, True),
+    ("Birkenau am See",     47.7010, 10.3390, True),
+    ("Kirchbichl",          47.6220, 10.5050, True),
+    ("Ahornau",             47.5820, 10.5560, True),
+    ("Lindfeld",            47.5710, 10.7000, True),
+    ("Marbach im Moos",     47.7790, 10.6170, True),
+    ("Weißenstein",         47.8800, 10.6220, True),
+    ("Traunwang",           47.6920, 10.0400, True),
+    # Steilgelaende -- nur aus der Luft erreichbar
+    ("Nebelkopf",           47.4210, 10.3430, False),
+    ("Rauhenberg",          47.6280, 10.3310, False),
+    ("Silberkar",           47.5080, 10.0230, False),
 ]
 
-ORTE_BODEN = [
-    ("Talwang",             47.5590, 10.2170),
-    ("Auwiesen",            47.5450, 10.2500),
-    ("Burgstall",           47.5320, 10.2870),
-    ("Steinach im Tal",     47.5150, 10.2810),
-    ("Neusiedl am Steig",   47.4570, 10.2810),
-    ("Oberkarwang",         47.4380, 10.2210),
-    ("Gschwend",            47.4290, 10.2610),
-    ("Grünegg",             47.6280, 10.3310),
-    ("Moosachtal",          47.5960, 10.1330),
-    ("Lohberg",             47.6480, 10.1250),
-    ("Waltenau",            47.6660, 10.3120),
-    ("Ödwang",              47.5960, 10.4110),
-    ("Rauhenbach",          47.6350, 10.4300),
-    ("Schattwald am Berg",  47.5080, 10.3710),
-    ("Hinterried",          47.4430, 10.1090),
-    ("Sonnenau",            47.4210, 10.3430),
-]
+ORTE_LUFT = [(n, a, b) for n, a, b, _ in ORTE]
+ORTE_BODEN = [(n, a, b) for n, a, b, boden in ORTE if boden]
 
 STRASSEN = [
     "Sennereiweg", "Am Kreuzbichl", "Talstraße", "Lärchenweg", "Bergbahnstraße",

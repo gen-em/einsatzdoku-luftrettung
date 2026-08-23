@@ -29,43 +29,43 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-2314998843",
+      "client_ref": "r-12-8198171391",
       "beginn": "2026-12-27 07:00",
       "ende": "2026-12-27 07:13",
       "final": true
     },
     {
-      "client_ref": "r-12-5123738324",
-      "beginn": "2026-12-27 08:23",
-      "ende": "2026-12-27 08:49",
+      "client_ref": "r-12-7560769284",
+      "beginn": "2026-12-27 08:10",
+      "ende": "2026-12-27 08:36",
       "final": true
     },
     {
-      "client_ref": "r-12-5984074421",
-      "beginn": "2026-12-27 09:52",
-      "ende": "2026-12-27 10:12",
+      "client_ref": "r-12-8094351368",
+      "beginn": "2026-12-27 09:51",
+      "ende": "2026-12-27 10:15",
       "final": true
     },
     {
-      "client_ref": "r-12-7505333755",
+      "client_ref": "r-12-3823750980",
       "beginn": "2026-12-27 11:47",
       "ende": "2026-12-27 12:12",
       "final": true
     },
     {
-      "client_ref": "r-12-7393768634",
-      "beginn": "2026-12-27 13:11",
-      "ende": "2026-12-27 13:36",
+      "client_ref": "r-12-6796655553",
+      "beginn": "2026-12-27 13:06",
+      "ende": "2026-12-27 13:31",
       "final": true
     },
     {
-      "client_ref": "r-12-1147587628",
-      "beginn": "2026-12-27 14:49",
+      "client_ref": "r-12-2434474629",
+      "beginn": "2026-12-27 14:56",
       "ende": "2026-12-27 15:11",
       "final": true
     },
     {
-      "client_ref": "r-12-3660216376",
+      "client_ref": "r-12-1327100288",
       "beginn": "2026-12-27 16:06",
       "ende": null,
       "final": false
@@ -79,7 +79,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-12-27 07:13",
-      "ende": "2026-12-27 08:23",
+      "ende": "2026-12-27 08:10",
       "final": true,
       "phasen": [
         [
@@ -92,42 +92,41 @@
         ],
         [
           4,
-          "2026-12-27 07:27"
+          "2026-12-27 07:25"
         ],
         [
           5,
-          "2026-12-27 07:31"
+          "2026-12-27 07:28"
         ],
         [
           6,
-          "2026-12-27 07:51"
+          "2026-12-27 07:44"
         ],
         [
           7,
-          "2026-12-27 08:07"
+          "2026-12-27 07:57"
         ],
         [
           8,
-          "2026-12-27 08:14"
+          "2026-12-27 08:03"
         ],
         [
           9,
-          "2026-12-27 08:23"
+          "2026-12-27 08:10"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -153,9 +152,9 @@
         "age": null,
         "mission_no": "2026-1048",
         "loc": {
-          "addr": "Bergbahnstraße 112, 87538 Burgstall",
-          "lat": 47.53266,
-          "lon": 10.28528
+          "addr": "Brunnengasse 66, 87411 Auwiesen",
+          "lat": 47.54338,
+          "lon": 10.25278
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
         "start": null
@@ -163,61 +162,60 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-8908356243",
+      "client_ref": "m-12-6509273311",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-12-27 08:49",
-      "ende": "2026-12-27 09:52",
+      "beginn": "2026-12-27 08:36",
+      "ende": "2026-12-27 09:51",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-12-27 08:49"
+          "2026-12-27 08:36"
         ],
         [
           3,
-          "2026-12-27 08:53"
+          "2026-12-27 08:41"
         ],
         [
           4,
-          "2026-12-27 09:02"
+          "2026-12-27 08:51"
         ],
         [
           5,
-          "2026-12-27 09:05"
+          "2026-12-27 08:55"
         ],
         [
           6,
-          "2026-12-27 09:23"
+          "2026-12-27 09:16"
         ],
         [
           7,
-          "2026-12-27 09:37"
+          "2026-12-27 09:34"
         ],
         [
           8,
-          "2026-12-27 09:44"
+          "2026-12-27 09:41"
         ],
         [
           9,
-          "2026-12-27 09:52"
+          "2026-12-27 09:51"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -230,20 +228,22 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [],
+        "other_resources": [
+          "ELW Talwang 1"
+        ],
         "crew_override": 0,
         "crew": {},
         "notes": null
       },
       "geschuetzt": {
         "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
-        "dob": "1934-12-26",
-        "age": null,
+        "dob": null,
+        "age": 30,
         "mission_no": "2026-1049",
         "loc": {
-          "addr": "Salzstraße 35, 87545 Ödwang",
-          "lat": 47.59823,
-          "lon": 10.41456
+          "addr": "Am Anger 39, 87411 Auwiesen",
+          "lat": 47.54244,
+          "lon": 10.25266
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
         "start": null
@@ -256,33 +256,33 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-12-27 10:12",
+      "beginn": "2026-12-27 10:15",
       "ende": "2026-12-27 11:47",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-12-27 10:12"
+          "2026-12-27 10:15"
         ],
         [
           3,
-          "2026-12-27 10:18"
+          "2026-12-27 10:21"
         ],
         [
           4,
-          "2026-12-27 10:31"
+          "2026-12-27 10:34"
         ],
         [
           5,
-          "2026-12-27 10:36"
+          "2026-12-27 10:39"
         ],
         [
           6,
-          "2026-12-27 11:03"
+          "2026-12-27 11:05"
         ],
         [
           7,
-          "2026-12-27 11:25"
+          "2026-12-27 11:26"
         ],
         [
           8,
@@ -296,17 +296,16 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
-        "schockraum": 0,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
         "start_src": null,
@@ -324,16 +323,16 @@
         "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
       },
       "geschuetzt": {
-        "dx": "Femurfraktur nach häuslichem Sturz",
+        "dx": "Schädel-Hirn-Trauma bei Motorradunfall",
         "dob": "1981-11-10",
         "age": null,
         "mission_no": "2026-1050",
         "loc": {
-          "addr": "Ahornstraße 99, 87427 Gschwend",
-          "lat": 47.43192,
-          "lon": 10.26337
+          "addr": "Hirtenweg 71, 87519 Steinach im Tal",
+          "lat": 47.51534,
+          "lon": 10.2835
         },
-        "site_desc": "Wohnhaus, Flur",
+        "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
         "start": null
       },
       "abdeckung": []
@@ -345,7 +344,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-12-27 12:12",
-      "ende": "2026-12-27 13:11",
+      "ende": "2026-12-27 13:06",
       "final": true,
       "phasen": [
         [
@@ -354,19 +353,19 @@
         ],
         [
           3,
-          "2026-12-27 12:18"
+          "2026-12-27 12:17"
         ],
         [
           4,
-          "2026-12-27 12:31"
+          "2026-12-27 12:29"
         ],
         [
           5,
-          "2026-12-27 12:36"
+          "2026-12-27 12:34"
         ],
         [
           9,
-          "2026-12-27 13:11"
+          "2026-12-27 13:06"
         ]
       ],
       "route": [
@@ -393,7 +392,10 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [],
+        "other_resources": [
+          "RTW Talwang 76/83",
+          "ELW Talwang 1"
+        ],
         "crew_override": 0,
         "crew": {},
         "notes": null
@@ -404,9 +406,9 @@
         "age": null,
         "mission_no": "2026-1051",
         "loc": {
-          "addr": "Lindenplatz 39, 87561 Ödwang",
-          "lat": 47.59437,
-          "lon": 10.40813
+          "addr": "Lindenplatz 39, 87561 Steinach im Tal",
+          "lat": 47.51337,
+          "lon": 10.27813
         },
         "site_desc": "Seniorenwohnanlage, Erdgeschoss",
         "start": null
@@ -414,61 +416,60 @@
       "abdeckung": []
     },
     {
-      "client_ref": "m-12-8198171391",
+      "client_ref": "m-12-7012456665",
       "kanal": "ingest",
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-12-27 13:36",
-      "ende": "2026-12-27 14:49",
+      "beginn": "2026-12-27 13:31",
+      "ende": "2026-12-27 14:56",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-12-27 13:36"
+          "2026-12-27 13:31"
         ],
         [
           3,
-          "2026-12-27 13:41"
+          "2026-12-27 13:36"
         ],
         [
           4,
-          "2026-12-27 13:51"
+          "2026-12-27 13:48"
         ],
         [
           5,
-          "2026-12-27 13:55"
+          "2026-12-27 13:53"
         ],
         [
           6,
-          "2026-12-27 14:15"
+          "2026-12-27 14:17"
         ],
         [
           7,
-          "2026-12-27 14:32"
+          "2026-12-27 14:36"
         ],
         [
           8,
-          "2026-12-27 14:40"
+          "2026-12-27 14:45"
         ],
         [
           9,
-          "2026-12-27 14:49"
+          "2026-12-27 14:56"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -482,7 +483,7 @@
         "bw_info": null,
         "other_ema": null,
         "other_resources": [
-          "ELW Talwang 1"
+          "KTW Talwang 76/85"
         ],
         "crew_override": 0,
         "crew": {},
@@ -491,12 +492,12 @@
       "geschuetzt": {
         "dx": "Akutes Abdomen",
         "dob": null,
-        "age": 53,
+        "age": 89,
         "mission_no": "2026-1052",
         "loc": {
-          "addr": "Lärchenweg 74, 87545 Rauhenbach",
-          "lat": 47.63885,
-          "lon": 10.4302
+          "addr": "Lärchenweg 74, 87545 Steinach im Tal",
+          "lat": 47.51885,
+          "lon": 10.2812
         },
         "site_desc": "Wohnhaus, Küche",
         "start": null

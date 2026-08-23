@@ -31,32 +31,32 @@
   "papierkorb": null,
   "ruhesegmente": [
     {
-      "client_ref": "r-12-6432339343",
-      "beginn": "2026-10-24 20:10",
-      "ende": "2026-10-24 20:30",
+      "client_ref": "r-12-3773568715",
+      "beginn": "2026-10-24 20:11",
+      "ende": "2026-10-24 20:31",
       "final": true
     },
     {
-      "client_ref": "r-12-8410822338",
-      "beginn": "2026-10-24 22:03",
+      "client_ref": "r-12-7414636965",
+      "beginn": "2026-10-24 21:46",
+      "ende": "2026-10-24 22:04",
+      "final": true
+    },
+    {
+      "client_ref": "r-12-4684746884",
+      "beginn": "2026-10-24 23:03",
       "ende": "2026-10-24 23:15",
       "final": true
     },
     {
-      "client_ref": "r-12-9752942642",
+      "client_ref": "r-12-6432339343",
       "beginn": "2026-10-25 00:28",
       "ende": "2026-10-25 01:32",
       "final": true
     },
     {
-      "client_ref": "r-12-1897105954",
+      "client_ref": "r-12-8410822338",
       "beginn": "2026-10-25 03:40",
-      "ende": "2026-10-25 04:04",
-      "final": true
-    },
-    {
-      "client_ref": "r-12-9471809985",
-      "beginn": "2026-10-25 05:17",
       "ende": "2026-10-25 07:00",
       "final": true
     }
@@ -69,7 +69,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-10-24 19:04",
-      "ende": "2026-10-24 20:10",
+      "ende": "2026-10-24 20:11",
       "final": true,
       "phasen": [
         [
@@ -86,11 +86,11 @@
         ],
         [
           5,
-          "2026-10-24 19:30"
+          "2026-10-24 19:31"
         ],
         [
           9,
-          "2026-10-24 20:10"
+          "2026-10-24 20:11"
         ]
       ],
       "route": [
@@ -131,9 +131,9 @@
         "age": null,
         "mission_no": "2026-1044",
         "loc": {
-          "addr": "Talstraße 17, 87427 Rauhenbach",
-          "lat": 47.63328,
-          "lon": 10.43144
+          "addr": "Talstraße 17, 87427 Grünegg",
+          "lat": 47.58028,
+          "lon": 10.33144
         },
         "site_desc": "Vorplatz der Kapelle",
         "start": null
@@ -146,13 +146,13 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-10-24 20:30",
-      "ende": "2026-10-24 22:03",
+      "beginn": "2026-10-24 20:31",
+      "ende": "2026-10-24 21:46",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-10-24 20:30"
+          "2026-10-24 20:31"
         ],
         [
           3,
@@ -160,42 +160,41 @@
         ],
         [
           4,
-          "2026-10-24 20:49"
+          "2026-10-24 20:46"
         ],
         [
           5,
-          "2026-10-24 20:54"
+          "2026-10-24 20:50"
         ],
         [
           6,
-          "2026-10-24 21:20"
+          "2026-10-24 21:11"
         ],
         [
           7,
-          "2026-10-24 21:42"
+          "2026-10-24 21:29"
         ],
         [
           8,
-          "2026-10-24 21:51"
+          "2026-10-24 21:36"
         ],
         [
           9,
-          "2026-10-24 22:03"
+          "2026-10-24 21:46"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "ground",
         "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
         "schockraum": 1,
         "false_alarm": 0,
         "secondary": 0,
@@ -219,11 +218,98 @@
         "age": null,
         "mission_no": "2026-1045",
         "loc": {
-          "addr": "Schmiedgasse 11, 87441 Ödwang",
-          "lat": 47.59953,
-          "lon": 10.41253
+          "addr": "Am Bühl 11, 87441 Auwiesen",
+          "lat": 47.54853,
+          "lon": 10.25153
         },
         "site_desc": "Fahrbahnrand, Fahrzeug im Graben",
+        "start": null
+      },
+      "abdeckung": []
+    },
+    {
+      "client_ref": "m-12-1457939898",
+      "kanal": "ingest",
+      "nachtrag": true,
+      "papierkorb": null,
+      "erzeugt": true,
+      "beginn": "2026-10-24 22:04",
+      "ende": "2026-10-24 23:03",
+      "final": true,
+      "phasen": [
+        [
+          2,
+          "2026-10-24 22:04"
+        ],
+        [
+          3,
+          "2026-10-24 22:08"
+        ],
+        [
+          4,
+          "2026-10-24 22:16"
+        ],
+        [
+          5,
+          "2026-10-24 22:19"
+        ],
+        [
+          6,
+          "2026-10-24 22:36"
+        ],
+        [
+          7,
+          "2026-10-24 22:49"
+        ],
+        [
+          8,
+          "2026-10-24 22:55"
+        ],
+        [
+          9,
+          "2026-10-24 23:03"
+        ]
+      ],
+      "route": [
+        "basis",
+        "ort",
+        "ziel"
+      ],
+      "rea": [],
+      "felder": {
+        "transport_mode": "ground",
+        "na_escort": 1,
+        "transport_dest": "Kreisklinik Steinach",
+        "dest_lat": 47.515,
+        "dest_lon": 10.281,
+        "schockraum": 0,
+        "false_alarm": 0,
+        "secondary": 0,
+        "start_src": null,
+        "winch": 0,
+        "winch_cycles": null,
+        "winch_cycles_pat": null,
+        "winch_airload": 0,
+        "bergwacht": 0,
+        "bw_unit": null,
+        "bw_info": null,
+        "other_ema": null,
+        "other_resources": [],
+        "crew_override": 0,
+        "crew": {},
+        "notes": null
+      },
+      "geschuetzt": {
+        "dx": "Femurfraktur nach häuslichem Sturz",
+        "dob": null,
+        "age": 44,
+        "mission_no": "2026-1046",
+        "loc": {
+          "addr": "Salzstraße 84, 87545 Auwiesen",
+          "lat": 47.54851,
+          "lon": 10.24958
+        },
+        "site_desc": "Wohnhaus, Flur",
         "start": null
       },
       "abdeckung": []
@@ -273,8 +359,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -374,8 +459,7 @@
       "route": [
         "ziel_vorher",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -410,9 +494,9 @@
         "age": 44,
         "mission_no": "2026-0689",
         "loc": {
-          "addr": "Kreisstraße nach Wangried, 87452 Wangried",
-          "lat": 47.648,
-          "lon": 10.125
+          "addr": "Kreisstraße nach Moosachtal, 87538 Moosachtal",
+          "lat": 47.596,
+          "lon": 10.133
         },
         "site_desc": "Fahrzeug gegen Baum, Person eingeklemmt, technische Rettung",
         "start": null
@@ -423,98 +507,8 @@
         "zeitumstellung-herbst",
         "start-prevdest",
         "sonderzeichen-anfuehrung"
-      ]
-    },
-    {
-      "client_ref": "m-12-7414636965",
-      "kanal": "ingest",
-      "nachtrag": true,
-      "papierkorb": null,
-      "erzeugt": true,
-      "beginn": "2026-10-25 04:04",
-      "ende": "2026-10-25 05:17",
-      "final": true,
-      "phasen": [
-        [
-          2,
-          "2026-10-25 04:04"
-        ],
-        [
-          3,
-          "2026-10-25 04:09"
-        ],
-        [
-          4,
-          "2026-10-25 04:19"
-        ],
-        [
-          5,
-          "2026-10-25 04:23"
-        ],
-        [
-          6,
-          "2026-10-25 04:43"
-        ],
-        [
-          7,
-          "2026-10-25 05:00"
-        ],
-        [
-          8,
-          "2026-10-25 05:08"
-        ],
-        [
-          9,
-          "2026-10-25 05:17"
-        ]
       ],
-      "route": [
-        "basis",
-        "ort",
-        "ziel",
-        "basis"
-      ],
-      "rea": [],
-      "felder": {
-        "transport_mode": "ground",
-        "na_escort": 1,
-        "transport_dest": "Kreisklinikum Auwiesen",
-        "dest_lat": 47.718,
-        "dest_lon": 10.322,
-        "schockraum": 0,
-        "false_alarm": 0,
-        "secondary": 0,
-        "start_src": null,
-        "winch": 0,
-        "winch_cycles": null,
-        "winch_cycles_pat": null,
-        "winch_airload": 0,
-        "bergwacht": 0,
-        "bw_unit": null,
-        "bw_info": null,
-        "other_ema": null,
-        "other_resources": [
-          "ELW Talwang 1",
-          "KTW Talwang 76/85"
-        ],
-        "crew_override": 0,
-        "crew": {},
-        "notes": "Übergabe an der Notaufnahme ohne Voranmeldung."
-      },
-      "geschuetzt": {
-        "dx": "Pneumonie mit respiratorischer Insuffizienz",
-        "dob": "2011-04-13",
-        "age": null,
-        "mission_no": "2026-1046",
-        "loc": {
-          "addr": "Salzstraße 84, 87545 Oberkarwang",
-          "lat": 47.44151,
-          "lon": 10.22058
-        },
-        "site_desc": "Pflegeheim, Zimmer 14",
-        "start": null
-      },
-      "abdeckung": []
+      "$warum_ort": "Der Einsatzort liegt bewusst nah am Standort. Die ZEITEN dieses Einsatzes sind der Prüffall (sie müssen die doppelte Stunde der Herbstumstellung meiden) und dürfen sich nicht verschieben — also muss sich der Ort nach ihnen richten und nicht umgekehrt."
     }
   ],
   "$warum_zeiten": [

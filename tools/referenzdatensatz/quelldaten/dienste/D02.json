@@ -29,7 +29,7 @@
   "ruhesegmente": [
     {
       "client_ref": "r-11-6187722914",
-      "beginn": "2026-02-08 08:34",
+      "beginn": "2026-02-08 08:26",
       "ende": "2026-02-08 09:04",
       "final": true
     },
@@ -41,19 +41,19 @@
     },
     {
       "client_ref": "r-11-8665826411",
-      "beginn": "2026-02-08 11:27",
+      "beginn": "2026-02-08 11:02",
       "ende": "2026-02-08 12:15",
       "final": true
     },
     {
       "client_ref": "r-11-7850606509",
       "beginn": "2026-02-08 13:26",
-      "ende": "2026-02-08 13:46",
+      "ende": "2026-02-08 13:48",
       "final": true
     },
     {
       "client_ref": "r-11-5131793144",
-      "beginn": "2026-02-08 14:39",
+      "beginn": "2026-02-08 14:50",
       "ende": "2026-02-08 15:02",
       "final": true
     },
@@ -72,7 +72,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-02-08 07:34",
-      "ende": "2026-02-08 08:34",
+      "ende": "2026-02-08 08:26",
       "final": true,
       "phasen": [
         [
@@ -81,46 +81,45 @@
         ],
         [
           3,
-          "2026-02-08 07:38"
+          "2026-02-08 07:37"
         ],
         [
           4,
-          "2026-02-08 07:46"
+          "2026-02-08 07:45"
         ],
         [
           5,
-          "2026-02-08 07:49"
+          "2026-02-08 07:47"
         ],
         [
           6,
-          "2026-02-08 08:06"
+          "2026-02-08 08:02"
         ],
         [
           7,
-          "2026-02-08 08:20"
+          "2026-02-08 08:14"
         ],
         [
           8,
-          "2026-02-08 08:26"
+          "2026-02-08 08:19"
         ],
         [
           9,
-          "2026-02-08 08:34"
+          "2026-02-08 08:26"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "air",
         "na_escort": 1,
-        "transport_dest": "Universitätsklinikum Nordstadt",
-        "dest_lat": 48.4011,
-        "dest_lon": 9.9876,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -147,9 +146,9 @@
         "age": null,
         "mission_no": "2026-1003",
         "loc": {
-          "addr": "Zur Sennalpe 76, 87411 Sonnenau",
-          "lat": 47.425,
-          "lon": 10.3421
+          "addr": "Föhrenring 117, 87452 Birkenau am See",
+          "lat": 47.70366,
+          "lon": 10.33936
         },
         "site_desc": "Feldweg, Person im Straßengraben",
         "start": null
@@ -239,7 +238,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-02-08 10:10",
-      "ende": "2026-02-08 11:27",
+      "ende": "2026-02-08 11:02",
       "final": true,
       "phasen": [
         [
@@ -248,38 +247,37 @@
         ],
         [
           3,
-          "2026-02-08 10:15"
+          "2026-02-08 10:13"
         ],
         [
           4,
-          "2026-02-08 10:26"
+          "2026-02-08 10:21"
         ],
         [
           5,
-          "2026-02-08 10:30"
+          "2026-02-08 10:23"
         ],
         [
           6,
-          "2026-02-08 10:51"
+          "2026-02-08 10:38"
         ],
         [
           7,
-          "2026-02-08 11:09"
+          "2026-02-08 10:50"
         ],
         [
           8,
-          "2026-02-08 11:17"
+          "2026-02-08 10:55"
         ],
         [
           9,
-          "2026-02-08 11:27"
+          "2026-02-08 11:02"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -313,9 +311,9 @@
         "age": 63,
         "mission_no": "2026-1004",
         "loc": {
-          "addr": "Buchenallee 12, 87534 Sonnenau",
-          "lat": 47.41937,
-          "lon": 10.34427
+          "addr": "Am Kreuzbichl 21, 87538 Ellrain",
+          "lat": 47.72354,
+          "lon": 10.19873
         },
         "site_desc": "Innerklinische Übernahme, Intensiv",
         "start": null
@@ -408,57 +406,56 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-02-08 13:46",
-      "ende": "2026-02-08 14:39",
+      "beginn": "2026-02-08 13:48",
+      "ende": "2026-02-08 14:50",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-02-08 13:46"
+          "2026-02-08 13:48"
         ],
         [
           3,
-          "2026-02-08 13:49"
+          "2026-02-08 13:52"
         ],
         [
           4,
-          "2026-02-08 13:57"
+          "2026-02-08 14:01"
         ],
         [
           5,
-          "2026-02-08 14:00"
+          "2026-02-08 14:04"
         ],
         [
           6,
-          "2026-02-08 14:15"
+          "2026-02-08 14:21"
         ],
         [
           7,
-          "2026-02-08 14:27"
+          "2026-02-08 14:36"
         ],
         [
           8,
-          "2026-02-08 14:32"
+          "2026-02-08 14:42"
         ],
         [
           9,
-          "2026-02-08 14:39"
+          "2026-02-08 14:50"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "air",
         "na_escort": 1,
-        "transport_dest": "Unfallklinik Felsberg",
-        "dest_lat": 47.681,
-        "dest_lon": 11.202,
-        "schockraum": 1,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
+        "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
         "start_src": "base",
@@ -470,24 +467,22 @@
         "bw_unit": null,
         "bw_info": null,
         "other_ema": null,
-        "other_resources": [
-          "RTW Hochkreuth 71/83"
-        ],
+        "other_resources": [],
         "crew_override": 0,
         "crew": {},
         "notes": "Landeplatz durch die Feuerwehr von Schnee freigeräumt."
       },
       "geschuetzt": {
-        "dx": "Amputationsverletzung der Hand",
+        "dx": "Anaphylaxie nach Insektenstich",
         "dob": null,
         "age": 44,
         "mission_no": "2026-1005",
         "loc": {
-          "addr": "Hirtenweg 73, 87466 Ellrain",
-          "lat": 47.72649,
-          "lon": 10.19875
+          "addr": "Am Anger 5, 87466 Burgstall",
+          "lat": 47.53213,
+          "lon": 10.28759
         },
-        "site_desc": "Sägewerk, Halle 2",
+        "site_desc": "Gartengrundstück am Hang",
         "start": null
       },
       "abdeckung": []
@@ -537,8 +532,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": null,

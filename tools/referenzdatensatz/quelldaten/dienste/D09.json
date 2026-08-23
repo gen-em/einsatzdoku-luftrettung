@@ -46,25 +46,25 @@
     },
     {
       "client_ref": "r-11-1367794252",
-      "beginn": "2026-07-05 13:08",
+      "beginn": "2026-07-05 13:07",
       "ende": "2026-07-05 13:20",
       "final": true
     },
     {
       "client_ref": "r-11-3269449658",
       "beginn": "2026-07-05 14:35",
-      "ende": "2026-07-05 14:52",
+      "ende": "2026-07-05 14:58",
       "final": true
     },
     {
       "client_ref": "r-11-2004376055",
-      "beginn": "2026-07-05 15:50",
+      "beginn": "2026-07-05 15:49",
       "ende": "2026-07-05 16:02",
       "final": true
     },
     {
       "client_ref": "r-11-4780326802",
-      "beginn": "2026-07-05 17:29",
+      "beginn": "2026-07-05 17:40",
       "ende": "2026-07-05 19:40",
       "final": true
     }
@@ -115,8 +115,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -214,8 +213,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [
         {
@@ -329,7 +327,7 @@
       "papierkorb": null,
       "erzeugt": true,
       "beginn": "2026-07-05 12:16",
-      "ende": "2026-07-05 13:08",
+      "ende": "2026-07-05 13:07",
       "final": true,
       "phasen": [
         [
@@ -342,7 +340,7 @@
         ],
         [
           4,
-          "2026-07-05 12:27"
+          "2026-07-05 12:26"
         ],
         [
           5,
@@ -350,26 +348,25 @@
         ],
         [
           6,
-          "2026-07-05 12:44"
+          "2026-07-05 12:43"
         ],
         [
           7,
-          "2026-07-05 12:56"
+          "2026-07-05 12:55"
         ],
         [
           8,
-          "2026-07-05 13:01"
+          "2026-07-05 13:00"
         ],
         [
           9,
-          "2026-07-05 13:08"
+          "2026-07-05 13:07"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -401,9 +398,9 @@
         "age": null,
         "mission_no": "2026-1028",
         "loc": {
-          "addr": "Schmiedgasse 18, 87572 Lohberg",
-          "lat": 47.64638,
-          "lon": 10.1267
+          "addr": "Talstraße 77, 87561 Wangried",
+          "lat": 47.7547,
+          "lon": 10.22464
         },
         "site_desc": "Sägewerk, Halle 2",
         "start": null
@@ -455,8 +452,7 @@
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
@@ -507,29 +503,29 @@
       "nachtrag": true,
       "papierkorb": null,
       "erzeugt": true,
-      "beginn": "2026-07-05 14:52",
-      "ende": "2026-07-05 15:50",
+      "beginn": "2026-07-05 14:58",
+      "ende": "2026-07-05 15:49",
       "final": true,
       "phasen": [
         [
           2,
-          "2026-07-05 14:52"
+          "2026-07-05 14:58"
         ],
         [
           3,
-          "2026-07-05 14:56"
+          "2026-07-05 15:01"
         ],
         [
           4,
-          "2026-07-05 15:04"
+          "2026-07-05 15:08"
         ],
         [
           5,
-          "2026-07-05 15:07"
+          "2026-07-05 15:11"
         ],
         [
           6,
-          "2026-07-05 15:23"
+          "2026-07-05 15:25"
         ],
         [
           7,
@@ -537,26 +533,25 @@
         ],
         [
           8,
-          "2026-07-05 15:43"
+          "2026-07-05 15:42"
         ],
         [
           9,
-          "2026-07-05 15:50"
+          "2026-07-05 15:49"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {
         "transport_mode": "air",
         "na_escort": 1,
-        "transport_dest": "Unfallklinik Felsberg",
-        "dest_lat": 47.681,
-        "dest_lon": 11.202,
+        "transport_dest": "Kreisklinikum Auwiesen",
+        "dest_lat": 47.718,
+        "dest_lon": 10.322,
         "schockraum": 0,
         "false_alarm": 0,
         "secondary": 0,
@@ -582,9 +577,9 @@
         "age": 26,
         "mission_no": "2026-1029",
         "loc": {
-          "addr": "Schmiedgasse 10, 87477 Lohberg",
-          "lat": 47.64453,
-          "lon": 10.12387
+          "addr": "Rossgasse 10, 87477 Wangried",
+          "lat": 47.74953,
+          "lon": 10.22687
         },
         "site_desc": "Wanderweg oberhalb der Alpe",
         "start": null
@@ -597,7 +592,7 @@
       "nachtrag": true,
       "papierkorb": null,
       "beginn": "2026-07-05 16:02",
-      "ende": "2026-07-05 17:29",
+      "ende": "2026-07-05 17:40",
       "final": true,
       "phasen": [
         [
@@ -622,22 +617,21 @@
         ],
         [
           7,
-          "2026-07-05 17:16"
+          "2026-07-05 17:27"
         ],
         [
           8,
-          "2026-07-05 17:23"
+          "2026-07-05 17:34"
         ],
         [
           9,
-          "2026-07-05 17:29"
+          "2026-07-05 17:40"
         ]
       ],
       "route": [
         "basis",
         "ort",
-        "ziel",
-        "basis"
+        "ziel"
       ],
       "rea": [],
       "felder": {

@@ -177,6 +177,31 @@ def zeitpunkt_existiert(s: str) -> tuple[bool, bool]:
     return existiert, eindeutig
 
 
+def ph_zeiten(einsatz: dict) -> dict[int, datetime]:
+    """Erste Zeit je Phasennummer (Mehrfacheintraege sind Korrekturen)."""
+    p: dict[int, datetime] = {}
+    for nr, zeit in einsatz["phasen"]:
+        p.setdefault(nr, lokal(zeit))
+    return p
+
+
+def bewegungsfenster(einsatz: dict, p: dict[int, datetime]) -> list[tuple]:
+    """Zeitfenster der Bewegungsabschnitte — dieselbe Ableitung wie im
+    Generator (`erzeugen._fenster`). Sie steht zweimal, weil Quelldaten und
+    Generator sonst voneinander abhingen; die Regel selbst ist kurz und in
+    FORMAT.md beschrieben."""
+    f = []
+    if 3 in p and 4 in p:
+        f.append((p[3], p[4]))
+    if 6 in p and 7 in p:
+        f.append((p[6], p[7]))
+    if 9 in p:
+        ab = p.get(8) or p.get(7) or p.get(5) or p.get(4)
+        if ab and p[9] > ab:
+            f.append((ab, p[9]))
+    return f
+
+
 def alle_zeitpunkte(knoten, treffer: list[str]) -> None:
     if isinstance(knoten, str):
         if re.fullmatch(r"20\d\d-\d\d-\d\d \d\d:\d\d", knoten):
@@ -350,9 +375,34 @@ def main() -> int:
                     lauf.pruefe(eb <= lokal(zeit) <= ee, f"{wo}: Ereignis {typ!r} außerhalb des Einsatzes")
 
             # Route: jeder Wegpunkt muss auf eine Koordinate aufloesen
-            for name, koord in wegpunkte.aufloesen(dn, e, vorheriger, standort):
+            aufgeloest = wegpunkte.aufloesen(dn, e, vorheriger, standort)
+            for name, koord in aufgeloest:
                 lauf.pruefe(koord is not None,
                             f"{wo}: Wegpunkt {name!r} löst auf keine Koordinate auf")
+
+            # ERREICHBARKEIT. Jeder Abschnitt muss in der Zeit zu schaffen
+            # sein, die die Phasen dafuer vorsehen. Das ist keine Feinheit:
+            # Ohne diese Pruefung entstanden Fluege mit 666 km/h und ein NEF
+            # mit 340 km/h -- und zwar unauffaellig, weil jeder einzelne Wert
+            # fuer sich im gueltigen Bereich lag. Sichtbar wird es erst, wenn
+            # jemand die Strecke durch die Zeit teilt.
+            #
+            # Gemessen wird die LUFTLINIE. Fuer den Boden ist die Grenze
+            # deshalb deutlich niedriger als jede Strassengeschwindigkeit:
+            # Die Strasse ist im Voralpenland rund anderthalbmal so lang.
+            grenze = 250.0 if dn["art"] == "air" else 80.0
+            koords = [k for _, k in aufgeloest if k]
+            fenster = bewegungsfenster(e, ph_zeiten(e))
+            for i in range(min(len(koords) - 1, len(fenster))):
+                strecke = wegpunkte.abstand_m(*koords[i], *koords[i + 1]) / 1000.0
+                minuten = (fenster[i][1] - fenster[i][0]).total_seconds() / 60.0
+                if minuten <= 0:
+                    lauf.pruefe(False, f"{wo}: Abschnitt {i} hat keine Dauer")
+                    continue
+                tempo = strecke / (minuten / 60.0)
+                lauf.pruefe(tempo <= grenze,
+                            f"{wo}: Abschnitt {i} verlangt {tempo:.0f} km/h "
+                            f"({strecke:.1f} km in {minuten:.0f} min), Grenze {grenze:.0f}")
             vorheriger = e
 
             f = e["felder"]
@@ -478,6 +528,29 @@ def main() -> int:
         for e in d["einsaetze"]:
             if e["papierkorb"] == "einsatz":
                 merke(["papierkorb-einsatz"], f"{n}/{e['client_ref']}")
+
+    # ---- Ruhe-Segmente: der Rueckweg muss in die Zeit passen -------------
+    #
+    # Das Ruhe-Segment traegt seit dem Umbau den Rueckweg (siehe
+    # wegpunkte.tagesablauf). Damit gilt fuer es dieselbe Frage wie fuer einen
+    # Einsatzabschnitt: Ist die Strecke in der Zeit ueberhaupt zu schaffen?
+    for pfad, d in zip(dienstdateien, dienste):
+        dn = d["dienst"]
+        # Fuer den Rueckweg strenger als fuer den Einsatz: Er hat keinen
+        # Sonderstatus -- niemand fliegt schneller zurueck als hin.
+        grenze = 220.0 if dn["art"] == "air" else 70.0
+        for s in wegpunkte.tagesablauf(dn, d["einsaetze"], d["ruhesegmente"], standort):
+            if s["art"] != "ruhe" or s["von"] == s["nach"] or s["von"] is None:
+                continue
+            minuten = (lokal(s["ende"]) - lokal(s["beginn"])).total_seconds() / 60.0
+            strecke = wegpunkte.abstand_m(*s["von"], *s["nach"]) / 1000.0
+            if minuten <= 0:
+                lauf.pruefe(False, f"{d['kennung']}/{s['ref']}: Ruhe-Segment ohne Dauer")
+                continue
+            tempo = strecke / (minuten / 60.0)
+            lauf.pruefe(tempo <= grenze,
+                        f"{d['kennung']}/{s['ref']}: Rückweg verlangt {tempo:.0f} km/h "
+                        f"({strecke:.1f} km in {minuten:.0f} min), Grenze {grenze:.0f}")
 
     # Sperrlisten-Prüfschritt: Kennung eindeutig, Zeiten im genannten Dienst
     merke(sperrliste["einsatz"]["abdeckung"], sperrliste["kennung"])
