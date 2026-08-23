@@ -119,8 +119,11 @@ hems/
 │   ├── resources-<gerät>/ geräteabhängige Überschreibungen (Launcher-Icon)
 │   └── source/            s. Abschnitt 5
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
-│   └── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
-│                          verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
+│   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
+│                          Erscheinungsbild nicht verändert: Kaskadenvergleich
+│                          plus berechnete Stile im Browser (s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
