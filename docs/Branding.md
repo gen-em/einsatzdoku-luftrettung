@@ -198,3 +198,21 @@ PNG-Fassungen auf die Markenwerte ziehen — dann in einem Zug alle Dateien aus
 
 **B2 — Keine geschlossene Größenskala.** Siehe Abschnitt 2. Gehört ins
 Oberflächen-Redesign (Phase P3), nicht hierher.
+
+**B3 — Die Regel „kein Hexwert in einer Regel" trifft den Bestand noch nicht.**
+Nachgezählt in `server/assets/style.css`, Stand Web 7.2.0: **93 Hex-Farben,
+davon 78 außerhalb von `:root`**. Für **13** davon gibt es bereits ein Token
+mit exakt demselben Wert — `#D63338` (4×, `--rot`), `#FFFCFA` (2×, `--schnee`),
+`#1A0500` (2×, `--ink`), `#FCE2D6` (2×, `--rot-light`), dazu je einmal
+`#D9ECFD`, `#1A2E4D` und `#F7F5ED`. Diese 13 ließen sich ohne jede
+Gestaltungsfrage ersetzen. (Die Erhebung in P0/A6 zählte 103 bzw. 88; die
+Differenz sind die 18 Regeln, die A4 als tot ausgewiesen hat, und die
+Zusammenführungen aus N5.)
+
+Die übrigen 65 zu benennen ist dagegen keine Aufräumarbeit, sondern eine
+Gestaltungsentscheidung: Ein Wert, der heute nur an einer Stelle steht, braucht
+erst einen Namen, wenn feststeht, wofür er steht.
+
+Beides gehört zum Oberflächen-Redesign (Phase P3) und steht als **Backlog
+Nr. 20**. Bis dahin gilt die Regel aus Abschnitt 4 unverändert für alles
+**Neue** — sie beschreibt das Ziel, nicht den heutigen Stand.

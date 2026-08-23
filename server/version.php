@@ -97,8 +97,16 @@ declare(strict_types=1);
  *
  * 7.2.0 ist die NACHARBEIT zu P0: was in den Befundpaketen A4 und A6 gefunden
  * und danach einzeln freigegeben wurde, plus die Fehler, die dabei aufgefallen
- * sind. Kein neues Feld, keine Migration. Sichtbar wird davon genau eines: Die
- * Rueckfragen auf der Sicherungsseite erscheinen jetzt ueberhaupt, und die auf
- * drei Seiten erschienen doppelt.
+ * sind. Kein neues Feld, keine Migration. Drei weitere Bausteine sind aus dem
+ * Markup nach ui.php gewandert (das Ruestzeug der Verschluesselung, die
+ * Meldungszeile, die Abbruchseite), und style.css hat zwoelf Regelpaare und
+ * die Schaltflaechenfamilie zusammengefuehrt.
+ *
+ * SICHTBAR wird davon dreierlei: Die Rueckfragen auf der Sicherungsseite
+ * erscheinen jetzt ueberhaupt (und die auf drei Seiten nicht mehr doppelt),
+ * die Tagesuebersicht zeigt fuer nicht lesbare Angaben dasselbe Warnzeichen
+ * wie Suche und Zeitraum, und ein veralteter Link fuehrt nicht mehr auf eine
+ * weisse Seite mit sechs Woertern, sondern auf eine Seite mit Kopfleiste und
+ * Rueckweg.
  */
 const WEB_VERSION = '7.2.0';

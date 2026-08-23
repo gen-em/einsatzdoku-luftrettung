@@ -16,7 +16,18 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 **Die Nacharbeit zu P0.** Die Befundpakete A4 (toter Code) und A6
 (Strukturreview) haben Listen geliefert statt Änderungen — hier stehen die
 Punkte, die daraufhin einzeln freigegeben wurden, dazu die Fehler, die beim
-Suchen aufgefallen sind. Kein neues Feld, keine Migration.
+Suchen aufgefallen sind. Kein neues Feld, kein Datenmodell, **keine
+Migration**.
+
+**Sichtbar wird dreierlei**, alles drei beabsichtigt: Die Rückfragen auf der
+Sicherungsseite erscheinen jetzt überhaupt (und die auf drei anderen Seiten
+nicht mehr doppelt), die Tagesübersicht zeigt für verschlüsselte, aber nicht
+lesbare Angaben dasselbe Warnzeichen wie Suche und Zeitraum-Übersicht, und ein
+veralteter Link führt nicht mehr auf eine weiße Seite mit sechs Wörtern,
+sondern auf eine Seite mit Kopfleiste und Rückweg. Alles Übrige ist
+Innenarbeit — dass sie das Erscheinungsbild nicht anfasst, wurde nicht
+behauptet, sondern gemessen (39 447 Elementmessungen über das echte
+Seitenmarkup, keine Abweichung).
 
 ### Die Rückfragen auf der Sicherungsseite erscheinen wieder
 
@@ -213,6 +224,37 @@ Unterstreichung entfällt ganz, und die Größenregel der Zeilenaktionen nennt
 die Familie jetzt über `:is(…)` statt fünf Varianten einzeln. Die Spezifität
 bleibt dieselbe; `.btn-danger` kommt dabei neu hinzu und steht heute in keinem
 `.rowactions`, die Regel trifft also kein Element anders als zuvor.
+
+### Vier verschwundene Backlog-Nummern sind wieder da
+
+`docs/Backlog.md` erklärte im Kopf, dass die Nummern 4, 6 und 7 ohne Eintrag
+verschwunden und nicht mehr rekonstruierbar sind — und schwieg zu **1, 9, 10
+und 12**, die ebenfalls fehlten. Wer die Liste durchsah, konnte nicht wissen,
+ob dort etwas Offenes verlorengegangen war.
+
+Diese vier sind belegbar: Code, Changelog und Technikdokumentation nennen sie
+an neun Stellen namentlich („Backlog Nr. 10"), und daraus geht hervor, worum es
+ging und womit es erledigt wurde — Reanimationen im Einsatzformular (Web
+5.5.0), `asset()` mit Dateizeitstempel (5.4.0), Tagesspalten aus dem
+Feldkatalog (5.4.0), Schriften und Leaflet lokal (5.2.0). Alle vier stehen
+jetzt unter *Erledigt*, jeder mit dem Vermerk, dass er aus seinen Fundstellen
+rekonstruiert wurde, und mit deren Aufzählung — damit die Rekonstruktion
+nachprüfbar bleibt und nicht als Originaltext gelesen wird. Die Kopfnotiz
+unterscheidet die beiden Fälle jetzt ausdrücklich.
+
+**Fünf neue Punkte (17 bis 21)** halten fest, was P0 gefunden, aber bewusst
+nicht angefasst hat: die fehlende Mengenbremse in `ingest.php`, die Regel
+`.btn-link.danger`, die nie greifen kann, ein ungelesenes `$title`, die
+Hexwerte in `style.css` und die 43 weiteren Kandidaten aus der Nachlese zum
+toten Code. Ohne diese Einträge wären sie mit dem Konzeptdokument
+verschwunden.
+
+`docs/Branding.md` bekommt dazu einen offenen Punkt (B3), der einen bislang
+unausgesprochenen Widerspruch benennt: Die Brand Guideline verlangt „kein
+Hexwert direkt in einer Regel", der Bestand hält das an 78 von 93 Stellen
+nicht ein. Für 13 davon gibt es bereits ein Token mit exakt demselben Wert;
+sie sind dort einzeln aufgeführt. Die Regel gilt weiter — sie beschreibt das
+Ziel, nicht den heutigen Stand.
 
 ### Kleinere Berichtigungen
 
