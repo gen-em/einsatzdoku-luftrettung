@@ -144,17 +144,9 @@ if (ist_admin()) {
                                   ORDER BY name')->fetchAll();
 }
 $nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
-?><!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zuordnung nachtragen · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
+ui_seite_start(['titel' => 'Zuordnung nachtragen']);
+ui_topbar('uebersicht');
+?>
 <div class="layout">
   <?php ui_days_sidebar(null); ?>
   <main class="page">
@@ -368,5 +360,4 @@ document.querySelectorAll('select.nb-veh').forEach(function (veh) {
   });
 });
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

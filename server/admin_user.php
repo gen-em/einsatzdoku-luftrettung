@@ -131,14 +131,9 @@ $dv = db()->prepare('SELECT id, device_id, label, active, last_seen FROM devices
                      WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
 $dv->execute([$uid]);
 $devices = $dv->fetchAll();
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NutzerIn bearbeiten — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'NutzerIn bearbeiten']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar('admin'); ?>
@@ -243,5 +238,4 @@ $devices = $dv->fetchAll();
   <?php ui_footer(); ?>
   </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

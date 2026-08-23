@@ -683,14 +683,9 @@ function ortWert(string $col, string $achse, string $spalte): string {
     return ($mission !== null && ($mission[$spalte] ?? null) !== null)
         ? (string)$mission[$spalte] : '';
 }
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?= $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen' ?> — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
+ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen']);
+ui_topbar('uebersicht');
+?>
 
 <div class="layout">
   <?php ui_days_sidebar($dayId); ?>
@@ -1847,5 +1842,4 @@ document.getElementById('addrea').addEventListener('click', ev => {
   zeichneChips();
 })();
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

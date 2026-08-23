@@ -96,16 +96,18 @@ function session_beenden(string $grund = 'abgemeldet'): never
 
     http_response_code(200);
     header('Content-Type: text/html; charset=utf-8');
-    ?><!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Abmelden — Einsatzdoku</title>
-<noscript><meta http-equiv="refresh" content="0;url=<?= e($ziel) ?>"></noscript>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?>
-</head>
-<body class="login-body">
+    /* Die Huelle wird hier geladen, nicht am Dateikopf: login.php und
+       logout.php binden session_lib.php ein, ohne ui.php zu kennen — nur
+       auth_guard.php tut das. ui.php hat auf oberster Ebene keine
+       Abhaengigkeit, das Nachladen kostet also nichts. */
+    require_once __DIR__ . '/ui.php';
+    ui_seite_start([
+        'titel'  => 'Abmelden',
+        'klasse' => 'login-body',
+        'kopf'   => '<noscript><meta http-equiv="refresh" content="0;url='
+                    . e($ziel) . '"></noscript>',
+    ]);
+    ?>
 <main class="login-card">
   <p class="muted"><?= e($text) ?></p>
   <p class="login-aux"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>
@@ -117,8 +119,8 @@ function session_beenden(string $grund = 'abgemeldet'): never
 try { EdCrypto.clearSession(); } catch (e) { /* Skript blockiert */ }
 location.replace(<?= json_encode($ziel) ?>);
 </script>
-</body>
-</html><?php
+<?php
+    ui_seite_ende();
     exit;
 }
 

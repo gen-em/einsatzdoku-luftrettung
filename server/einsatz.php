@@ -11,17 +11,9 @@ $missionDayId = $mq->fetchColumn();
 if ($missionDayId === false) { http_response_code(404); exit('Einsatz nicht gefunden.'); }
 $missionDayId = $missionDayId === null ? null : (int)$missionDayId;
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
-?><!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Einsatz — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/vendor/leaflet/leaflet.css') ?>">
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
+ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
+ui_topbar('uebersicht');
+?>
 
 <div class="layout">
   <?php ui_days_sidebar($missionDayId); ?>
@@ -651,5 +643,4 @@ async function zeichneLuftlinie(m, o, ck, bounds){
 
 init();
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

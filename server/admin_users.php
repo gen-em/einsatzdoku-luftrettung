@@ -121,14 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $users   = db()->query('SELECT id, email, name, role, created_at FROM users ORDER BY email')->fetchAll();
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Administration — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'Administration']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar('admin'); ?>
@@ -202,5 +197,4 @@ $users   = db()->query('SELECT id, email, name, role, created_at FROM users ORDE
 <?php ui_footer(); ?>
 </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

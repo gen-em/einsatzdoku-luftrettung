@@ -667,14 +667,9 @@ if ($tab === 'geraete') {
         if ((int)$d['ist_neu']) { $devNeu++; }
     }
 }
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Einstellungen — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'Einstellungen']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar($tab); ?>
@@ -2290,5 +2285,4 @@ if ($tab === 'geraete') {
   <?php ui_footer(); ?>
   </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

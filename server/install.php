@@ -395,10 +395,23 @@ function render_form(array $v, array $errors, string $nachweis,
 }
 
 function render_page(string $title, string $body): void {
-    ?><!doctype html>
-<html lang="de"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?= h($title) ?> — Einsatzdoku</title>
+    /* Die Seitenhuelle kommt aus ui.php — wie ueberall sonst (P0/A2).
+       ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb
+       auch hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder
+       config.php noch db.php, also weder asset() noch favicon_tags(). Die
+       Huelle faengt das ab (ui_asset(), ui_favicon()).
+
+       ZWEI ABWEICHUNGEN VOM REST DER ANWENDUNG, beide gewollt:
+       'stil' => false  — der Einrichter bindet style.css NICHT ein. Er soll
+                          auch dann bedienbar aussehen, wenn am Stylesheet
+                          etwas fehlt; seine Gestaltung bringt er im Kopf mit.
+       Das Favicon bekommt er seit A2 trotzdem (AK-A2-5) — es haengt an
+       zwei Dateien, die neben ihm liegen, und kostet nichts. */
+    require_once __DIR__ . '/ui.php';
+    ui_seite_start([
+        'titel' => $title,
+        'stil'  => false,
+        'kopf'  => <<<'HTML'
 <style>
   :root{--navy:#1A2E4D;--paper:#F7F8F9;--accent:#FF8F1F;--line:#D5DAE0;--ink:#1B2733;--muted:#66707B}
   *{box-sizing:border-box}
@@ -422,7 +435,9 @@ function render_page(string $title, string $body): void {
   .alert-ok{background:#EBFBEE;border-color:#A3E5B5;color:#1B7A34}
   .muted{color:var(--muted)} .small{font-size:.85rem}
   code{background:#F1F3F5;padding:.1em .35em;border-radius:3px;font-family:ui-monospace,Consolas,monospace}
-</style></head>
-<body><main><?= $body ?></main></body></html>
-<?php
+</style>
+HTML,
+    ]);
+    echo '<main>', $body, '</main>', "\n";
+    ui_seite_ende();
 }

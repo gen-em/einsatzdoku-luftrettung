@@ -82,18 +82,9 @@ $trashDays     = $zeigeListe ? trash_list_days($userId) : [];
 $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
+ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
+ui_topbar('uebersicht');
 ?>
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= $zeigeListe ? 'Papierkorb' : 'Endgültig löschen' ?> · Einsatzdoku</title>
-  <link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-  <?= favicon_tags() ?>
-</head>
-<body>
-<?php ui_topbar('uebersicht'); ?>
 <div class="layout">
   <?php ui_days_sidebar(null); ?>
   <main class="page">
@@ -202,5 +193,4 @@ require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
     <?php ui_footer(); ?>
   </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

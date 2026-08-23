@@ -31,14 +31,9 @@ $SD_VEHICLES = dt_vehicles($userId);
 $SD_DEFAULTS = dt_standardwerte($userId);
 $DEF_VEHICLE = (int)($SD_DEFAULTS['vehicle_id'] ?? 0);
 $DEF_BASE    = (int)($SD_DEFAULTS['base_id'] ?? 0);
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Import / Export — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => 'Import / Export']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar('import'); ?>
@@ -266,5 +261,4 @@ $DEF_BASE    = (int)($SD_DEFAULTS['base_id'] ?? 0);
   <?php ui_footer(); ?>
   </main>
 </div>
-</body>
-</html>
+<?php ui_seite_ende(); ?>

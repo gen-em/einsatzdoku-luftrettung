@@ -93,13 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // wo jemand oft genug dieselbe Adresse angefragt hat.
     rate_gleiche_dauer($t0, RESET_MINDESTDAUER);
 }
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Passwort zurücksetzen — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body class="login-body">
+require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
+ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'login-body']);
+?>
 <main class="login-card">
   <h1>Passwort setzen</h1>
   <?php if ($done): ?>
@@ -116,9 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="login-aux"><a href="login.php">Zurück zur Anmeldung</a></p>
   <?php endif; ?>
 </main>
-</body>
-</html>
 <?php
+ui_seite_ende();
+
 /* ---- Erst antworten, dann versenden ---------------------------------------
  * Ab hier laeuft nichts mehr, was die aufrufende Seite noch zu sehen bekommt.
  * Das Mailgespraech dauert je nach Mailserver Sekunden — es darf nicht in der

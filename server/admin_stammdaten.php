@@ -400,14 +400,9 @@ $rollenAmStandort = function (int $bid) use ($vehNach, $vehRollen, $crewNach): a
     return array_values(array_filter(array_keys(CREW_ROLES),
         static fn(string $rc): bool => isset($rollen[$rc])));
 };
-?><!doctype html>
-<html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title><?= $tab === 'standorte' ? 'Standorte systemweit' : 'Rettungsmittel systemweit' ?> — Einsatzdoku</title>
-<link rel="stylesheet" href="<?= asset('assets/style.css') ?>">
-<?= favicon_tags() ?></head>
-<body>
-<?php ui_topbar('einstellungen'); ?>
+ui_seite_start(['titel' => $tab === 'standorte' ? 'Standorte systemweit' : 'Rettungsmittel systemweit']);
+ui_topbar('einstellungen');
+?>
 
 <div class="layout">
   <?php ui_settings_sidebar($tab === 'standorte' ? 'admin_standorte' : 'admin_rettungsmittel'); ?>
@@ -884,5 +879,4 @@ document.querySelectorAll('form.ac-form').forEach(function (f) {
   anpassen();
 });
 </script>
-</body>
-</html>
+<?php ui_seite_ende(); ?>
