@@ -97,6 +97,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     keine hinreichende Begründung — ein Feld kann für eine ältere Sicherung
     oder eine künftige Uhr-Fassung gebraucht werden. Eigenes Paket mit eigener
     Freigabe.
+22. **`docs/JSON-Vertrag.md` 3.3 nennt eine Reanimationsart, die kein
+    Schreibweg annimmt.** Der Vertrag führt `beginn` unter den gültigen Werten
+    von `events[].type`; `ingest.php:299` speichert das Ereignis **still
+    nicht**, `einsatz_form.php:317` weist es ab. Beide begründen es gleich und
+    richtig: Der Reanimationsbeginn steckt in `started_at` der Sitzung. Der
+    Vertrag sagt von sich, eine Abweichung sei „ein Fehler in der Umsetzung,
+    nicht im Vertrag" — hier spricht die Sache für den Code. **Vorschlag:
+    Vertrag berichtigen** (3.3 nennt neun Ereignisarten, `beginn` steht als
+    Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
+    nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
+    Änderung an ihm eine Entscheidung wäre, keine Korrektur.
+23. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
+    `Export-Format.md` 5.1 sagt, es sei es.** Der Export neutralisiert
+    Formel-Anfangszeichen (`=`, `+`, `-`, `@`) mit einem vorangestellten `'`;
+    der Rückweg entfernt es nicht wieder. Eine Zelle, die ohne diesen Schutz
+    mit `=` beginnt, liest SheetJS als Formel — der Wert kommt **leer** an.
+    5.1 zählt drei bewusste Ausnahmen auf; dies ist eine vierte,
+    undokumentierte. **Vorschlag: Ausnahme dokumentieren**, nicht den Import
+    ändern — ein Import, der Zeichen entfernt, schafft den nächsten stillen
+    Verlust (ein echtes `'` am Textanfang verschwände). Gefunden in P1/B4
+    (dort F-P1-G).
 
 ---
 

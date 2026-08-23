@@ -225,7 +225,7 @@
         ],
         "crew_override": 0,
         "crew": {},
-        "notes": "Alter unbekannt und im Feld frei erfasst; der Wert ist absichtlich kein Alter (R20-Prüffall)."
+        "notes": "@Leitstelle: Alter unbekannt und im Feld frei erfasst; der Wert ist absichtlich kein Alter (R20-Prüffall)."
       },
       "geschuetzt": {
         "dx": "Schlaganfall mit Halbseitensymptomatik",
@@ -241,9 +241,10 @@
         "start": null
       },
       "abdeckung": [
+        "geschuetzt-alter",
         "herkunft-watch",
         "r20-alter",
-        "geschuetzt-alter"
+        "sonderzeichen-formel-at"
       ],
       "$warum_r20_alter": [
         "R20 IM ALTERSFELD — der Fall, den E-P1-15 über den CSV-Import wollte.",
@@ -335,7 +336,7 @@
         ],
         "crew_override": 0,
         "crew": {},
-        "notes": "=SUMME(B2:B9) — Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
+        "notes": "Übergabezeit aus der Tabelle der Leitstelle übernommen; nachträglich erfasst, kein Track vorhanden."
       },
       "geschuetzt": {
         "dx": "<img src=x onerror=\"alert('R20-dx')\">Thoraxtrauma nach Sturz vom Gerüst",
@@ -355,7 +356,6 @@
         "erfassung-nachtraeglich-ohne-track",
         "r20-diagnose",
         "r20-ortsbeschreibung",
-        "sonderzeichen-formel-gleich",
         "sonderzeichen-semikolon"
       ],
       "$warum_r20": [
@@ -447,7 +447,7 @@
         ],
         "crew_override": 0,
         "crew": {},
-        "notes": "Absturz beim Abstieg; früh einsetzende Dunkelheit. Die Ersatzmaschine führt keine Winde — die Bergung erfolgte zu Fuß bis zum Landeplatz im Talgrund."
+        "notes": "+Nachtrag der Bergungsdaten: Absturz beim Abstieg, früh einsetzende Dunkelheit. Die Ersatzmaschine führt keine Winde — die Bergung erfolgte zu Fuß bis zum Landeplatz im Talgrund."
       },
       "geschuetzt": {
         "dx": "Beckenfraktur nach Absturz im Steilgelände",
@@ -463,8 +463,9 @@
         "start": null
       },
       "abdeckung": [
+        "geschuetzt-dob",
         "herkunft-watch",
-        "geschuetzt-dob"
+        "sonderzeichen-formel-plus"
       ]
     },
     {
@@ -517,11 +518,11 @@
         "bergwacht": 0,
         "bw_unit": null,
         "bw_info": null,
-        "other_ema": "+49 160 0000000 (Rückruf Hausärztin)",
+        "other_ema": "Rückruf der Hausärztin dokumentiert",
         "other_resources": [],
         "crew_override": 0,
         "crew": {},
-        "notes": "@Leitstelle: Nachforderung der Bereitschaft dokumentiert. Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
+        "notes": "Nachforderung der Bereitschaft dokumentiert. Nachträglich aus dem Papierprotokoll erfasst; Landung auf der Wiese, Patient blieb vor Ort."
       },
       "geschuetzt": {
         "dx": "Hypoglykämie, nach Glukosegabe beschwerdefrei",
@@ -541,9 +542,7 @@
         "erfassung-nachtraeglich-ohne-track",
         "r20-einsatznummer",
         "r20-adresse",
-        "sonderzeichen-formel-plus",
-        "phasen-unvollstaendig",
-        "sonderzeichen-formel-at"
+        "phasen-unvollstaendig"
       ]
     },
     {
@@ -596,7 +595,7 @@
         "other_resources": [],
         "crew_override": 0,
         "crew": {},
-        "notes": "+Nachtrag aus dem Papierprotokoll: Einsatz auf dem Anflug storniert, Person war bereits im RTW."
+        "notes": "Nachtrag aus dem Papierprotokoll: Einsatz auf dem Anflug storniert, Person war bereits im RTW."
       },
       "geschuetzt": {
         "dx": null,
@@ -616,12 +615,28 @@
         "erfassung-nachtraeglich-ohne-track",
         "fehleinsatz",
         "transport-leer",
-        "phasen-unvollstaendig",
-        "sonderzeichen-formel-plus"
+        "phasen-unvollstaendig"
       ],
       "$warum_zeit": "Später als der Einsatz davor endet plus Rückflug. Der Hubschrauber steht nach m-11-4470962381 an der Unfallklinik Felsberg, 67 km entfernt; ein Einsatz, der siebzehn Minuten später am Standort beginnt, verlangte einen Rückflug mit 235 km/h."
     }
   ],
   "$warum_datum": "EINZIGER Dienst an diesem Kalendertag — Voraussetzung für den CSV-Nachtrag von IMP-01, IMP-02 und IMP-04 (B-04).",
-  "ziel_einsaetze": 6
+  "ziel_einsaetze": 6,
+  "$warum_formelzeichen": [
+    "FORMELZEICHEN STEHEN HIER AN DEN NACHTRAG-EINSÄTZEN, nicht an den",
+    "CSV-importierten — und das ist ein Befund, kein Geschmack (F-P1-G).",
+    "",
+    "Gemessen an der vendorierten SheetJS-Fassung, die die Anwendung selbst",
+    "benutzt: Eine CSV-Zelle, die mit '=' beginnt, wird als FORMEL gelesen;",
+    "ihr Wert ist danach LEER. Der Export schützt davor mit einem",
+    "vorangestellten Apostroph (export.js, csvEscape) — der Import entfernt",
+    "ihn NICHT wieder. Jeder Wert, der mit = + - @ oder Tabulator beginnt,",
+    "kommt aus dem Rundweg Export→Import mit einem zusätzlichen Apostroph",
+    "zurück.",
+    "",
+    "Der Referenzzustand soll den Formelschutz prüfen, aber nicht an ihm",
+    "erkranken: Die Werte liegen deshalb auf dem Formularweg, wo sie",
+    "unverändert ankommen. Geprüft wird der Schutz damit auf der",
+    "EXPORT-Seite — dort, wo er wirkt."
+  ]
 }

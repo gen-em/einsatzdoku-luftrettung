@@ -405,7 +405,7 @@ Stelle und nicht in eine Fußnote:
 - **Der Produktivlauf** (P-12) steht weiterhin aus — dafür fehlt der
   Zugang.
 
-### B4 — Browser-Schritte
+### B4 — Browser-Schritte — **ERLEDIGT**
 Dokumentierte Klickstrecke für die Anteile, die bewusst im Browser
 laufen: CSV-Import der nachträglichen Einsätze (inkl. R20-Fall,
 Dublettenverhalten beachten, B-04), Sichtkontrolle der maskierten
@@ -415,6 +415,30 @@ gespeichert, B-12).
 Angriffswert steht inert (maskiert) in den Tabellen; Klickstrecke ist
 als nummerierte Anleitung in `tools/referenzdatensatz/LIESMICH.md`
 festgehalten.
+
+**Ergebnis.** Zwei Skripte unter `browser/`, beide wiederholbar:
+`csv_import.mjs` (Import) und `angriffswerte.mjs` (P-07). Die
+Klickstrecken stehen in `browser/LIESMICH.md` — **nicht** in der
+Datei auf oberster Ebene, wie die Abnahme sie nennt: Jedes Paket führt
+seine eigene LIESMICH (`generator/`, `einspielen/`), und die Datei auf
+oberster Ebene entsteht in B7 und verweist dorthin. Bewusste Abweichung,
+keine Auslassung.
+
+Zahlen: Der Import legt **4 Einsätze** an (`0 überschrieben,
+0 übersprungen`), Prüftabelle `0 Hinweise, 0 Fehler`. Der Bestand wurde
+danach **feldweise gegen die Quelldatei** gehalten — 184 Einzelprüfungen
+über Kopfdaten, Flags, Zielkoordinate, weitere Rettungsmittel und
+25 Phasen —, ohne Befund. P-07: **42 Einzelprüfungen** über sechs
+Seiten, kein Dialog, kein eingefügtes Element, keine Konsolenmeldung.
+
+**Was das Paket an Fehlern hervorgebracht hat.** Drei, davon zwei in der
+Anwendung: F-P1-G (CSV-Umlauf nicht verlustfrei bei führendem `=`,
+offen, Vorschlag steht), F-P1-H (sechs Felder gingen zwischen
+Prüftabelle und Nutzlast verloren — **behoben in Web 7.2.1**) und
+F-P1-I (**Cross-Site-Scripting** über das Altersfeld in allen drei
+Einsatztabellen — **behoben in Web 7.2.2**). Beide Korrekturen sind
+maschinell gegen den alten Stand gegengeprüft: Die Prüfmittel melden
+dort genau die Fehler, hier keinen.
 
 ### B5 — Referenz-Exporte, Vergleichswerkzeug, Kreislauftest
 Referenz-Exporte erzeugen und einchecken (E-P1-12);
@@ -483,7 +507,7 @@ zusätzlich im Prüfdokument-P1 (K9).
 | P-04 | Lokaler Gesamtlauf aus leerem Konto | B3 | **erfüllt** — neun Stufen durchgelaufen, 526 Ingest-Anfragen ohne Fehlversuch |
 | P-05 | Messprotokoll vorhanden und plausibel | B3 | **erfüllt** — `messprotokoll.md`: Spitze 14 Anfragen an einem Auslöser, 174 Abstände von 0 s, Median 1020 s |
 | P-06 | Sperrlisten-Fall verhält sich wie erwartet | B3 | **erfüllt** — nach erneutem Senden 0 Einsätze, Eintrag in `deleted_refs` |
-| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | offen |
+| P-07 | R20-Wert maskiert in allen Einsatztabellen | B4 | **erfüllt — nach einer Korrektur** (F-P1-I, Web 7.2.2). 42 Einzelprüfungen über sechs Seiten: kein Dialog, kein eingefügtes Element, keine Konsolenmeldung. Gegenprobe gegen den Stand davor: 6 Befunde über 3 Seiten |
 | P-08 | Kreislauf CSV mit leerem Abweichungsbericht | B5 | offen |
 | P-09 | Kreislauf edbak mit leerem Abweichungsbericht | B5 | offen |
 | P-10 | Demo anlegen/zurücksetzen auf frischer Installation | B6 | offen |
@@ -584,6 +608,137 @@ Quelle und sagt, eine Abweichung sei „ein Fehler in der Umsetzung, nicht im
 Vertrag" — hier spricht die Sache aber für den Code: Der Beginn ist eine
 Eigenschaft der Sitzung, kein Ereignis in ihr. **Vorschlag: Vertrag
 berichtigen**, dazu ein Backlog-Eintrag. Nicht in dieser Phase entschieden.
+
+### F-P1-G — Der CSV-Umlauf ist nicht verlustfrei, wenn eine Zelle mit `=` beginnt
+
+**Fundort:** `server/assets/export.js:578–623` (`CSV_FORMELSTART`,
+`csvEscape`) gegen `server/assets/import.js` (SheetJS-Weg) und
+`docs/Export-Format.md` 5.1.
+
+**Sache:** Der Export neutralisiert Zellen, die ein Tabellenprogramm als
+Formel lesen würde (`=`, `+`, `-`, `@`, Tabulator, Wagenrücklauf), indem er
+ein `'` voranstellt. Der Rückweg entfernt es **nicht** wieder. Und eine
+Zelle, die trotzdem mit `=` beginnt — etwa aus einer fremden Datei —, liest
+SheetJS als Formel; der Wert kommt als **leer** an.
+
+Gemessen mit dem vendorierten `xlsx.full.min.js`:
+
+    ["", "'=SUMME(B1:B2)", "@Leitstelle", "'@Leitstelle"]
+
+Die erste Zelle stand als `=SUMME(B1:B2)` in der Datei.
+
+**Wirkung:** `docs/Export-Format.md` 5.1 nennt `export_csv_v1`
+„verlustfrei" und zählt drei bewusste Ausnahmen auf. Dies ist eine vierte,
+undokumentierte: Wer eine Notiz mit `=` am Anfang exportiert und wieder
+einliest, bekommt sie mit einem vorangestellten `'` zurück; wer sie in einer
+Fremddatei so schreibt, verliert sie ganz.
+
+**Gefunden** beim ersten CSV-Import des Referenzdatensatzes: Die Notiz von
+IMP-01 kam als `NULL` im Bestand an.
+
+**Blockierend:** nein — für den Datensatz. Die Formel-Anfangszeichen stehen
+jetzt auf dem **Formularweg** statt auf dem CSV-Weg (D15); der CSV-Schreiber
+des Generators bringt den Formelschutz des Exports mit (`csv_wert`), damit
+die erzeugte Datei sich wie eine echte Exportdatei verhält.
+
+**Verbleib — zu entscheiden:** Entweder der Import entfernt ein führendes
+`'` wieder (dann wird der Umlauf verlustfrei, aber ein echtes `'` am Anfang
+eines Textes verschwindet), oder `Export-Format.md` nennt die Ausnahme.
+**Vorschlag: Ausnahme dokumentieren**, dazu ein Backlog-Eintrag — die
+Neutralisierung ist gegenüber Tabellenprogrammen richtig, und ein Import,
+der Zeichen entfernt, schafft den nächsten stillen Verlust. Nicht in dieser
+Phase entschieden.
+
+---
+
+### F-P1-H — Der CSV-Rückimport verlor sechs Felder zwischen Anzeige und Absenden
+
+**Fundort:** `server/assets/import.js:671` (`UEBERNAHME`) gegen
+`:439` (`EINFACHE_ZIELE`). **Behoben in Web 7.2.1.**
+
+**Sache:** `import.js` führte zwei Feldlisten. `EINFACHE_ZIELE` sagt, welche
+Werte beim Lesen der Datei nach `zeile.mission` wandern; `UEBERNAHME` sagt,
+welche davon `gruppiere()` in das Objekt kopiert, aus dem `import_ui.js` die
+Nutzlast baut. Die zweite war eine von Hand geführte Abschrift der ersten —
+und bei der Etappe 2 (Web 6.1.0) war nur die erste ergänzt worden. Es
+fehlten `transport_mode`, `na_escort`, `false_alarm`, `dest_lat`,
+`dest_lon`, `start_src`.
+
+**Wirkung:** Die Werte wurden gelesen, in der Prüftabelle **richtig
+angezeigt**, die Bilanz meldete „0 Fehler" — und danach fielen sie heraus.
+Kein Hinweis an irgendeiner Stelle. Betroffen war ausschließlich
+`export_csv_v1`, also genau der Weg, den `docs/Export-Format.md` 5.1
+verlustfrei nennt.
+
+**Gefunden** beim Abgleich des importierten Bestands gegen die Quelldatei
+(B4): Alle vier importierten Einsätze hatten `transport_mode = NULL` und
+`start_src = NULL`, je einer `na_escort = 0` statt 1 und `false_alarm = 0`
+statt 1.
+
+**Blockierend:** ja — B5 verlangt einen Kreislauf mit leerem
+Abweichungsbericht; mit diesem Fehler hätte die Ausnahmeliste sechs Felder
+tragen müssen, die keine Ausnahme sind.
+
+**Behoben:** `UEBERNAHME` wird abgeleitet statt abgeschrieben. Die einzelne
+korrigierte Zeile hätte die Lücke ebenso geschlossen und die Bauart
+behalten, die sie hervorgebracht hat — das widerspräche „Feldkatalog statt
+Sonderfall" (CLAUDE.md 4). `generator/pruefen.py` liest beide Listen aus
+`import.js` und meldet dauerhaft jedes Feld, das gelesen, aber nicht
+weitergereicht wird; gegen den alten Stand gehalten meldet die Prüfung
+genau die sechs Felder.
+
+---
+
+### F-P1-I — Cross-Site-Scripting über das Altersfeld in allen drei Einsatztabellen
+
+**Fundort:** `server/assets/missiontable.js:140` und
+`server/index.php:338`. **Behoben in Web 7.2.2.**
+
+**Sache:** `zelleGeschuetzt()` nahm eine Formatierfunktion entgegen; damit
+lag die Entscheidung über die HTML-Maskierung an der Aufrufstelle.
+Einsatzort und Diagnose gaben `v => esc(v)`, das Alter gab `v => v`.
+
+Die Annahme dahinter — ein Alter ist eine Zahl — hält für die regulären
+Schreibwege (`type="number"` im Formular, `PARSERS.alterJahre` im Import).
+Sie hält nicht für das Feld: `age` liegt im `pat_blob`, und der ist freies
+JSON, das der Server nie im Klartext sieht und deshalb grundsätzlich nicht
+prüfen kann.
+
+**Wirkung:** Ein `<img src=x onerror="…">` im Altersfeld wurde in der
+Tagesübersicht, der Einsatzsuche und der Zeitraum-Übersicht ausgeführt. Der
+praktische Weg hinein ist die Wiederherstellung einer Sicherung
+(`api/backup_restore.php` übernimmt den inneren Chiffretext unverändert, wie
+es sein muss). Im Adminbereich wiegt das schwerer: „Einspielen" schreibt
+eine **fremde** Sicherung in ein Konto — die Person, die das Skript
+ausführt, ist dann nicht die, von der die Datei stammt.
+
+Die Einsatzseite war nicht betroffen: `EdPat.alterText()` gibt für einen
+nicht auflösbaren Wert `null` zurück und maskiert, was sie ausgibt.
+
+**Gefunden** durch P-07 mit dem Referenzdatensatz, der im Altersfeld eines
+Einsatzes absichtlich `<img src=x onerror="alert('R20-alter')">` trägt
+(E-P1-15/R20). Der Wert stammt aus dem Nachtragweg (D15,
+`m-11-6127408395`) — genau der Fall, den E-P1-15 nach Fund F-P1-A dorthin
+verlegt hatte.
+
+**Blockierend:** ja. Ein Referenzdatensatz, der einen ausführbaren
+Angriffswert dauerhaft mitführt, darf nicht auf einer Installation liegen,
+in der er ausgeführt wird. Der Demo-Account (B6) läuft auf dem
+Produktivserver.
+
+**Behoben:** Die Formatierfunktion ist ersatzlos entfallen;
+`zelleGeschuetzt()` maskiert selbst und ausnahmslos. Alle drei Spalten
+zeigten den Wert ohnehin unverändert an. Die unsichere Fassung ist damit
+nicht mehr schreibbar. `browser/angriffswerte.mjs` prüft es wiederholbar
+und meldet gegen den alten Stand sechs Befunde über drei Seiten.
+
+**Bemerkenswert an der Sache:** Der Fund ist der Zweck von R20 — die
+Entscheidung E-P1-15 hat genau das geleistet, wofür sie da war. Zugleich
+zeigt der Weg dorthin, wie knapp es war: Der erste Lauf von P-07 sah drei
+der sechs Seiten mit „nichts sichtbar" und hätte die Lücke auf zweien davon
+übersehen, weil die Trefferlisten nur ihre erste Seite rendern. Die
+Gegenprobe — mindestens eine Seite muss den Wert tatsächlich anzeigen —
+steht seither fest im Prüfmittel.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*

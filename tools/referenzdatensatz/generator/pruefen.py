@@ -12,12 +12,23 @@ Vier Pruefungen:
   3. KRYPTO     -- Chiffretext entschluesselt zum Quell-Klartext zurueck
   4. SPUR       -- Spuren liegen im Zeitfenster ihres Einsatzes, Hoehen und
                    Geschwindigkeiten sind plausibel
+  5. CSV        -- die Importdatei gegen die Parser der Anwendung: jede
+                   Kopfzeile ist eine dem Profil `export_csv_v1` bekannte
+                   Spalte, und jeder Wert genuegt der Regel des Parsers, der
+                   fuer seine Spalte hinterlegt ist. Die Regeln werden aus
+                   server/assets/import*.js GELESEN, nicht abgeschrieben --
+                   sonst prueft diese Datei ihre eigene Annahme statt die
+                   Anwendung. Anlass: Der Generator schrieb den Zonenversatz
+                   als "+0200"; `PARSERS.isoTs` verlangt "+02:00" und verwarf
+                   die Endzeit und alle acht Phasenzeiten stillschweigend --
+                   der Import meldete trotzdem "0 Fehler".
 
 Aufruf:  python3 pruefen.py
 Rueckgabe: 0 = in Ordnung, 1 = Befunde
 """
 from __future__ import annotations
 
+import csv
 import json
 import os
 import pathlib
@@ -254,6 +265,134 @@ def main() -> int:
                     f"{ref} ({art}): {hoechste:.0f} m über der Grenze "
                     f"{GRENZE_HOEHE[art]:.0f} m")
         geprueft += 1
+
+    # ---- 5. CSV gegen die Parser der Anwendung ------------------------------
+    #
+    # Gelesen wird aus server/assets/ — die Regeln werden NICHT abgeschrieben.
+    # Eine abgeschriebene Regel prueft nur, ob der Generator mit sich selbst
+    # einig ist; das war er auch, als er "+0200" schrieb.
+    server = HIER.parent.parent.parent / "server" / "assets"
+    profile_js = (server / "import_profiles.js").read_text(encoding="utf-8")
+    import_js = (server / "import.js").read_text(encoding="utf-8")
+
+    # Spalte -> Parserkette aus dem Profil `export_csv_v1`
+    spalten_regel: dict[str, list[str]] = {}
+    ohne_kommentar = re.sub(r"//[^\n]*", "", profile_js)
+    for name, rest in re.findall(r"'([a-z0-9_]+)':\s*\{([^{}]*)\}", ohne_kommentar):
+        kette = re.search(r"parse:\s*\[(.*?)\]", rest, re.S)
+        spalten_regel[name] = ([x.strip().strip("'") for x in kette.group(1).split(",")]
+                               if kette else [])
+    # Zwei Spaltengruppen setzt import_profiles.js erst zur Laufzeit zusammen:
+    # die Phasen (aus PHASE_SLUGS) und die Besatzung (aus CREW_ROLLEN, das die
+    # Seite aus PHP mitbringt). Beide werden hier aus ihrer jeweiligen Quelle
+    # nachgebildet, nicht abgeschrieben.
+    from erzeugen import PHASE_SLUG      # eine Quelle für die Phasennamen
+    for nr, slug in PHASE_SLUG.items():
+        spalten_regel[f"phase_0{nr}_{slug}"] = ["isoTs"]
+        spalten_regel[f"phase_0{nr}_lat"] = ["dezimal"]
+        spalten_regel[f"phase_0{nr}_lon"] = ["dezimal"]
+    db_php = (HIER.parent.parent.parent / "server" / "db.php").read_text(encoding="utf-8")
+    rollen_block = re.search(r"const CREW_ROLES = \[(.*?)\];", db_php, re.S).group(1)
+    rollen = re.findall(r"'([a-z0-9_]+)'\s*=>\s*\[", rollen_block)
+    lauf.pruefe(len(rollen) >= 5, "CREW_ROLES nicht aus db.php lesbar")
+    for r in rollen:
+        spalten_regel[f"tag_crew_{r}"] = ["trim", "max:120"]
+        spalten_regel[f"crew_{r}"] = ["trim", "max:120"]
+
+    def js_regex(quelle: str, parser: str) -> re.Pattern | None:
+        """Die erste Literal-Regex im Rumpf eines Parsers, nach Python uebersetzt."""
+        m = re.search(r"\b%s: function \(v\) \{(.*?)\n        \}," % parser,
+                      quelle, re.S)
+        if not m:
+            return None
+        t = re.search(r"/\^(.+?)\$/\.test", m.group(1))
+        return re.compile("^" + t.group(1).replace("\\/", "/") + "$") if t else None
+
+    RE_ISO_TS = js_regex(import_js, "isoTs")
+    RE_DEZIMAL = js_regex(import_js, "dezimal")
+    RE_GANZZAHL = js_regex(import_js, "ganzzahl")
+    RE_HHMM = re.compile(r"^(\d{1,2})\s*[:.]\s*(\d{2})(?:\s*[:.]\s*\d{2})?\s*$")
+    BOOL_JN = {"j", "ja", "x", "1", "y", "yes", "n", "nein", "0", "-", "no"}
+    # Zeichen, mit denen ein Tabellenprogramm eine Zelle als Formel liest
+    # (assets/export.js, CSV_FORMELSTART) — inert nur mit vorangestelltem '.
+    RE_FORMEL = re.compile(r"^[=+\-@\t\r]")
+    RE_ZAHL = re.compile(r"^-?\d+(\.\d+)?$")
+
+    lauf.pruefe(RE_ISO_TS is not None, "isoTs-Regex nicht aus import.js lesbar")
+    lauf.pruefe(RE_DEZIMAL is not None, "dezimal-Regex nicht aus import.js lesbar")
+    lauf.pruefe(RE_GANZZAHL is not None, "ganzzahl-Regex nicht aus import.js lesbar")
+
+    csv_datei = AUS / "import" / "einsaetze.csv"
+    zellen = 0
+    with csv_datei.open(encoding="utf-8-sig", newline="") as fh:
+        zeilen_csv = list(csv.DictReader(fh, delimiter=";"))
+    kopf = list(zeilen_csv[0].keys()) if zeilen_csv else []
+
+    for name in kopf:
+        lauf.pruefe(name in spalten_regel,
+                    f"CSV-Spalte '{name}' kennt das Profil export_csv_v1 nicht")
+
+    for i, z in enumerate(zeilen_csv, start=2):
+        for name, wert in z.items():
+            regeln = spalten_regel.get(name, [])
+            roh = (wert or "")
+            if roh != "":
+                zellen += 1
+                if RE_FORMEL.match(roh) and not RE_ZAHL.match(roh):
+                    lauf.pruefe(False,
+                                f"CSV Zeile {i}, '{name}': beginnt mit einem "
+                                f"Formelzeichen und ist nicht geschützt: {roh[:40]!r}")
+            w = roh.strip()
+            if w == "":
+                continue
+            if "isoTs" in regeln:
+                lauf.pruefe(bool(RE_ISO_TS.match(w)),
+                            f"CSV Zeile {i}, '{name}': isoTs verwirft {w!r} "
+                            f"(erwartet ISO 8601 mit Zone, Versatz MIT Doppelpunkt)")
+            elif "timeHHMM" in regeln:
+                lauf.pruefe(bool(RE_HHMM.match(w)),
+                            f"CSV Zeile {i}, '{name}': timeHHMM verwirft {w!r}")
+            elif "dezimal" in regeln:
+                lauf.pruefe(bool(RE_DEZIMAL.match(w.replace(" ", "").replace(",", "."))),
+                            f"CSV Zeile {i}, '{name}': dezimal verwirft {w!r}")
+            elif "ganzzahl" in regeln:
+                lauf.pruefe(bool(RE_GANZZAHL.match(w.replace(" ", ""))),
+                            f"CSV Zeile {i}, '{name}': ganzzahl verwirft {w!r}")
+            elif "boolJN" in regeln:
+                lauf.pruefe(w.lower() in BOOL_JN,
+                            f"CSV Zeile {i}, '{name}': boolJN erkennt {w!r} nicht")
+
+    # Kommt jedes Feld, das die Datei traegt, beim Server auch an? gruppiere()
+    # kopiert nur, was in UEBERNAHME steht — eine Liste, die schon einmal
+    # hinter EINFACHE_ZIELE zurueckgeblieben ist (Fund F-P1-H).
+    def js_liste(name: str) -> list[str]:
+        m = re.search(r"var %s = \[(.*?)\];" % name, import_js, re.S)
+        if not m:
+            return []
+        roh = re.sub(r"//.*?$", "", m.group(1), flags=re.M)
+        return [x.strip().strip("'") for x in roh.split(",") if x.strip()]
+
+    einfache = js_liste("EINFACHE_ZIELE")
+    lauf.pruefe(bool(einfache), "EINFACHE_ZIELE nicht aus import.js lesbar")
+    abgeleitet = bool(re.search(r"var UEBERNAHME = EINFACHE_ZIELE", import_js))
+    if abgeleitet:
+        uebernahme = ([f for f in einfache if f not in ("day", "crew_override")]
+                      + ["resources", "phases", "phasesLocal"])
+    else:
+        uebernahme = js_liste("UEBERNAHME")
+    for f in einfache:
+        if f in ("day", "crew_override"):
+            continue
+        lauf.pruefe(f in uebernahme,
+                    f"import.js: '{f}' wird gelesen, aber von gruppiere() nicht "
+                    f"weitergereicht — der Wert geht zwischen Prüftabelle und "
+                    f"Nutzlast verloren")
+
+    print(f"CSV-Zeilen:           {len(zeilen_csv)}")
+    print(f"CSV-Spalten:          {len(kopf)}")
+    print(f"CSV-Zellen belegt:    {zellen}")
+    print(f"UEBERNAHME:           {'abgeleitet' if abgeleitet else 'von Hand geführt'}"
+          f" ({len(uebernahme)} Felder)")
 
     print(f"Anfragen geprüft:     {len(dateien)}")
     print(f"Spuren auf Tempo/Höhe:{geprueft}")

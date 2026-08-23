@@ -28,6 +28,7 @@ import csv
 import io
 import json
 import pathlib
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -62,7 +63,16 @@ def iso_z(ts: int | None) -> str | None:
 
 
 def iso_offset(ts: int) -> str:
-    return datetime.fromtimestamp(ts, TZ).strftime("%Y-%m-%dT%H:%M:%S%z")
+    """Ortszeit mit Zonenversatz, Schreibweise wie im Export der Anwendung.
+
+    MIT DOPPELPUNKT im Versatz ("+02:00", nicht "+0200"). `assets/export.js`
+    baut ihn in `isoOffset()` von Hand genau so zusammen, und der Rueckweg
+    (`PARSERS.isoTs` in `assets/import.js`) prueft gegen
+    `[+-]\d{2}:\d{2}` — die Kurzform faellt dort als "Zeitstempel nicht
+    lesbar" durch. Pythons %z liefert die Kurzform, deshalb der Nachbau.
+    """
+    s = datetime.fromtimestamp(ts, TZ).strftime("%Y-%m-%dT%H:%M:%S%z")
+    return s[:-2] + ":" + s[-2:]
 
 
 # --------------------------------------------------------------- Spuren bauen
@@ -434,6 +444,33 @@ def csv_zeile(dienst: dict, einsatz: dict, phasen: list[dict]) -> dict:
     return z
 
 
+# Zeichen, mit denen ein Tabellenprogramm eine Zelle als FORMEL liest, und die
+# Zahlenform, die davon ausgenommen ist — beides wie in assets/export.js.
+CSV_FORMELSTART = re.compile(r"^[=+\-@\t\r]")
+CSV_ZAHL = re.compile(r"^-?\d+(\.\d+)?$")
+
+
+def csv_wert(v) -> str:
+    """Formelschutz wie im Export (`csvEscape`).
+
+    NOTWENDIG, DAMIT DIE DATEI EINE ECHTE export_csv_v1-DATEI IST. Ohne den
+    Apostroph liest SheetJS — die vendorierte Fassung, die die Anwendung
+    selbst benutzt — eine Zelle mit fuehrendem '=' als FORMEL, und ihr Wert
+    ist danach leer. Gemessen: '=SUMME(B1:B2)' kommt als '' zurueck.
+
+    Der Import entfernt den Apostroph NICHT wieder (F-P1-G). Der
+    Referenzdatensatz fuehrt deshalb keine Formelzeichen ueber den CSV-Weg;
+    diese Funktion ist trotzdem richtig — die Datei soll sein, was sie
+    vorgibt zu sein.
+    """
+    if v is None:
+        return ""
+    s = str(v)
+    if CSV_FORMELSTART.match(s) and not CSV_ZAHL.match(s):
+        s = "'" + s
+    return s
+
+
 def csv_schreiben(zeilen: list[dict], ziel: pathlib.Path) -> None:
     """UTF-8 MIT BOM, Semikolon, CRLF — die Konventionen des Exports."""
     puffer = io.StringIO()
@@ -442,7 +479,7 @@ def csv_schreiben(zeilen: list[dict], ziel: pathlib.Path) -> None:
                                quoting=csv.QUOTE_MINIMAL)
     schreiber.writeheader()
     for z in zeilen:
-        schreiber.writerow(z)
+        schreiber.writerow({k: csv_wert(v) for k, v in z.items()})
     ziel.write_text("﻿" + puffer.getvalue(), "utf-8")
 
 

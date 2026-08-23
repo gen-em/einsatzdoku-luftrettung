@@ -77,13 +77,13 @@ Reanimationsarten vorkommen.
 |  | Ortsbeschreibung | `D01/m-11-1653279357`, `D01/m-11-3067419528`, `D01/m-11-5192834077`, `D01/m-11-7734018625` … (+79) |
 |  | Einsatznummer | `D01/m-11-1653279357`, `D01/m-11-3067419528`, `D01/m-11-5192834077`, `D01/m-11-7734018625` … (+81) |
 |  | Einsatz ohne jede geschützte Angabe | `D02/m-11-9518376204`, `D09/m-11-8207364159` |
-| Sonderzeichen | Semikolon | `D01/m-11-3067419528`, `D01/m-11-7734018625`, `D01/m-11-2418095733`, `D02/m-11-1287405639` … (+18) |
+| Sonderzeichen | Semikolon | `D01/m-11-3067419528`, `D01/m-11-7734018625`, `D01/m-11-2418095733`, `D02/m-11-1287405639` … (+17) |
 |  | Anführungszeichen | `D02/m-11-1287405639`, `D05/m-11-5027369184`, `D14/m-12-5106938274`, `D15/m-11-6127408395` … (+3) |
 |  | Zeilenumbruch | `D02/m-11-6640281937`, `D06/m-12-4386015927`, `D11/MAN-01`, `D16/MAN-02` |
-|  | Formel-Anfangszeichen = | `D15/IMP-01`, `D16/MAN-02` |
-|  | Formel-Anfangszeichen + | `D15/IMP-02`, `D15/IMP-04` |
+|  | Formel-Anfangszeichen = | `D16/MAN-02` |
+|  | Formel-Anfangszeichen + | `D15/m-11-4470962381` |
 |  | Formel-Anfangszeichen - | `D16/MAN-02` |
-|  | Formel-Anfangszeichen @ | `D15/IMP-02` |
+|  | Formel-Anfangszeichen @ | `D15/m-11-6127408395` |
 |  | Umlaute und ß | `D01/m-11-1653279357`, `D01/m-11-3067419528`, `D01/m-11-7734018625`, `D01/m-11-2418095733` … (+71) |
 | Ruhezeiten | Segmente mit Track | `D01`, `D02`, `D03`, `D04` … (+12) |
 |  | mehrere Segmente je Dienst | `D01`, `D02`, `D03`, `D04` … (+11) |
