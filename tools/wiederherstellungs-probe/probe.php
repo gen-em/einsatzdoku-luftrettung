@@ -2,10 +2,11 @@
 declare(strict_types=1);
 
 /**
- * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/35.
+ * Wiederherstellungsprobe — Beleg zu E-S1-04, E-S1-19 und Backlog Nr. 31/33/34/35.
  *
- * WOFUER. `edbak_restore()` hat zwei Sorten von Grenzfaellen, die sich im
- * Browser nur muehsam herstellen lassen und die man dem Ergebnis nicht ansieht:
+ * WOFUER. Der Papierkorb und der Rueckweg einer Sicherung haben Grenzfaelle,
+ * die sich im Browser nur muehsam herstellen lassen und die man dem Ergebnis
+ * nicht ansieht. Vier Teile:
  *
  *   TEIL 1 — PAPIERKORB. Seit Nutzlast 7 traegt die Sicherungsdatei den
  *   Papierkorb mit (E-S1-01), und der Rueckweg muss zwei Regeln einhalten:
@@ -26,6 +27,16 @@ declare(strict_types=1);
  *   Spurnummer (Nr. 35) taten das bis Web 8.0.0. Beide muessen die eine Zeile
  *   beziehungsweise den einen Punkt kosten, nicht den Lauf.
  *
+ *   TEIL 3 — KEIN WEG MEHR ZUM HALB SICHTBAREN EINSATZ (Nr. 33). Aktiv an
+ *   einem GELOESCHTEN Diensttag ist derselbe Zustand, den Teil 1 beim
+ *   Einspielen ablehnt — und die Anwendung selbst konnte ihn herstellen: ueber
+ *   das Zurueckholen im Papierkorb, ueber eine Uhr-Kennung in `day_refs` und
+ *   ueber das endgueltige Loeschen, das ein Waisenkind zuruecklies.
+ *
+ *   TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR (Nr. 34). Der
+ *   erste gefundene Einsatz bestimmte den Zieltag fuer den ganzen Datei-Tag.
+ *   Jetzt zaehlen alle Kennungen; nur ein eindeutiges Ergebnis gilt.
+ *
  * Geprueft wird `edbak_restore()` unmittelbar — derselbe Weg, den
  * `api/backup_restore.php` und der Demo-Reset nehmen. NICHT geprueft ist der
  * Weg davor (Entschluesseln im Browser, Hochladen) und die Anzeige danach;
@@ -35,17 +46,18 @@ declare(strict_types=1);
  *
  *     php tools/wiederherstellungs-probe/probe.php [pfad-zu-server]
  *
- * Ohne Argument wird `server/` dieses Arbeitsstands genommen. Das Argument
- * ist der Vorher-Vergleich: eine Kopie von `server/` mit einem aelteren
- * `backup_lib.php` darin, etwa
+ * Ohne Argument wird `server/` dieses Arbeitsstands genommen. Das Argument ist
+ * der Vorher-Vergleich: eine GANZE Kopie von `server/` aus dem
+ * Vergleichsstand — die Aenderungen liegen in mehreren Dateien.
  *
- *     cp -r server /tmp/vorher
- *     git show <stand>:server/backup_lib.php > /tmp/vorher/backup_lib.php
+ *     mkdir /tmp/vorher
+ *     git archive <stand> server | tar -x -C /tmp/vorher --strip-components=1
+ *     cp server/config.php /tmp/vorher/
  *     php tools/wiederherstellungs-probe/probe.php /tmp/vorher
  *
- * Erwartet: **15 von 15** mit dem heutigen Stand, Rueckgabe 0.
+ * Erwartet: **30 von 30** mit dem heutigen Stand, Rueckgabe 0.
  *
- * WAS SIE ANFASST. Die Probe legt in der Datenbank aus `config.php` zwei
+ * WAS SIE ANFASST. Die Probe legt in der Datenbank aus `config.php` fuenf
  * Wegwerfkonten unterhalb von `@example.invalid` an und loescht sie am Ende
  * wieder — samt allem, was daran haengt (Fremdschluessel mit ON DELETE
  * CASCADE). Sie ruehrt kein anderes Konto an. Trotzdem gilt: gegen eine
@@ -255,6 +267,226 @@ $sag('Die doppelten Nummern stehen in der Ablehnungsliste, nicht nur im Nichts',
      'rejected=' . json_encode(array_intersect_key((array)($stats['rejected'] ?? []),
         ['mission.track.seq: Nummer doppelt' => 1, 'rest.track.seq: Nummer doppelt' => 1]),
         JSON_UNESCAPED_SLASHES));
+$weg($uid);
+
+/* ==========================================================================
+ * TEIL 3 — DER HALB SICHTBARE EINSATZ HAT KEINEN WEG MEHR (Backlog Nr. 33)
+ *
+ * Aktiv an einem GELOESCHTEN Diensttag — denselben Zustand, den E-S1-19 beim
+ * Einspielen ablehnt, konnte die Anwendung selbst herstellen. Drei Wege
+ * fuehrten hin, alle drei werden hier abgeklopft:
+ *
+ *   a) Papierkorb -> „Wiederherstellen" beim einzeln geloeschten Einsatz,
+ *      dessen Tag ebenfalls im Papierkorb liegt.
+ *   b) Die Uhr liefert ueber eine Kennung in `day_refs` nach, die auf einen
+ *      geloeschten Tag zeigt.
+ *   c) Und wenn der Zustand doch besteht (Altbestand): Das endgueltige
+ *      Loeschen des Tages darf kein Waisenkind zuruecklassen.
+ * ====================================================================== */
+echo "\n  Teil 3 — kein Weg mehr zum halb sichtbaren Einsatz (Nr. 33)\n";
+$uid = $konto('probe-papierkorb-wege@example.invalid');
+
+require_once $server . '/diensttag_lib.php';
+
+edbak_restore($uid, [
+  'version' => 7,
+  'days' => [['id' => 920, 'day' => '2026-07-03',
+              'started_at' => '2026-07-03 05:00:00', 'ended_at' => '2026-07-03 17:00:00',
+              'kind' => 'air', 'vehicle_name' => 'Probe 1', 'base_name' => 'Probenstation']],
+  'missions' => [
+    ['client_ref' => 'w-a', 'day_id' => 920, 'started_at' => '2026-07-03 06:00:00',
+     'ended_at' => '2026-07-03 07:00:00'],
+    ['client_ref' => 'w-b', 'day_id' => 920, 'started_at' => '2026-07-03 08:00:00',
+     'ended_at' => '2026-07-03 09:00:00'],
+  ],
+]);
+$tagId = (int)$pdo->query("SELECT id FROM days WHERE user_id = $uid")->fetchColumn();
+$mA = (int)$pdo->query("SELECT id FROM missions
+                         WHERE user_id = $uid AND client_ref = 'w-a'")->fetchColumn();
+
+// (a) Einzeln loeschen, dann den ganzen Tag — und dann zurueckholen wollen.
+trash_delete_mission($uid, $mA);
+trash_delete_day($uid, $tagId);
+$antwort = trash_restore_mission($uid, $mA);
+$nochWeg = $pdo->query("SELECT deleted_at IS NOT NULL FROM missions WHERE id = $mA")
+               ->fetchColumn();
+$sag('(a) Zurueckholen wird abgelehnt, solange der Tag im Papierkorb liegt',
+     $antwort === 'tag_im_papierkorb', "Antwort='$antwort'");
+$sag('(a) und der Einsatz bleibt dabei im Papierkorb liegen',
+     (int)$nochWeg === 1, 'noch geloescht=' . (int)$nochWeg);
+
+// Tag zurueckholen -> jetzt muss es gehen. Der einzeln geloeschte bleibt
+// dabei liegen (E-S1-04), lässt sich aber einzeln zurueckholen.
+trash_restore_day($uid, $tagId);
+$antwort2 = trash_restore_mission($uid, $mA);
+$aktiv = $pdo->query("SELECT deleted_at IS NULL FROM missions WHERE id = $mA")->fetchColumn();
+$sag('(a) nach dem Zurueckholen des Tages geht es',
+     $antwort2 === 'ok' && (int)$aktiv === 1,
+     "Antwort='$antwort2', aktiv=" . (int)$aktiv);
+
+// (b) Uhr-Kennung auf einen geloeschten Tag.
+$pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label)
+               VALUES (?,?,?,?)')->execute([$uid, 'probe-dev', str_repeat('a', 64), 'Probe']);
+$devId = (int)$pdo->lastInsertId();
+$pdo->prepare('INSERT INTO day_refs (day_id, device_id, day_ref) VALUES (?,?,?)')
+    ->execute([$tagId, $devId, 'ref-1']);
+trash_delete_day($uid, $tagId);
+$neuerTag = dt_zu_dayref($pdo, $uid, $devId, 'ref-1', '2026-07-03', '2026-07-03 06:00:00');
+$refZiel = (int)$pdo->query("SELECT day_id FROM day_refs
+                              WHERE device_id = $devId AND day_ref = 'ref-1'")->fetchColumn();
+$neuAktiv = $pdo->query("SELECT deleted_at IS NULL FROM days WHERE id = $neuerTag")->fetchColumn();
+$sag('(b) Uhr-Kennung auf geloeschtem Tag loest einen NEUEN Tag aus',
+     $neuerTag !== $tagId && (int)$neuAktiv === 1,
+     "alt=$tagId neu=$neuerTag aktiv=" . (int)$neuAktiv);
+$sag('(b) die Kennung zeigt danach auf den neuen Tag',
+     $refZiel === $neuerTag && $refZiel !== $tagId,
+     "day_refs.day_id=$refZiel (alt=$tagId)");
+
+/* (c) ALTBESTAND: einen aktiven Einsatz an den geloeschten Tag haengen, wie
+ *     ihn ein aelterer Stand hinterlassen haben kann. Von Hand gesetzt — die
+ *     regulaeren Wege koennen es seit Web 8.0.0 nicht mehr. */
+$pdo->exec("UPDATE missions SET deleted_at = NULL, deleted_with_day = 0,
+                                day_id = $tagId, device_id = $devId WHERE id = $mA");
+/* GEGEN EINEN AELTEREN STAND gibt es trash_aktiv_am_tag() noch nicht. Die
+ * Probe darf daran nicht STERBEN — ein Vorher-Vergleich, der abbricht, sagt
+ * nichts ueber die Erwartungen dahinter. Sie faellt stattdessen durch. */
+$hang = function_exists('trash_aktiv_am_tag')
+      ? trash_aktiv_am_tag($uid, $tagId) : ['einsaetze' => [], 'segmente' => 0];
+$sag('(c) die Rueckfrage findet den aktiven Einsatz am geloeschten Tag',
+     count($hang['einsaetze']) === 1 && (int)$hang['einsaetze'][0]['id'] === $mA,
+     function_exists('trash_aktiv_am_tag')
+       ? 'gefunden=' . count($hang['einsaetze'])
+       : 'trash_aktiv_am_tag() gibt es in diesem Stand nicht');
+trash_purge_day($uid, $tagId);
+$waise = (int)$pdo->query("SELECT COUNT(*) FROM missions
+                            WHERE user_id = $uid AND day_id IS NULL")->fetchColumn();
+$nochDa = (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE id = $mA")->fetchColumn();
+$sag('(c) endgueltiges Loeschen laesst KEIN Waisenkind zurueck',
+     $waise === 0 && $nochDa === 0, "ohne Diensttag=$waise, Einsatz noch da=$nochDa");
+/* Die Sperrliste greift nur fuer Datensaetze MIT Geraet — deshalb traegt der
+ * Einsatz oben eines. Ohne das waere die Erwartung unerfuellbar und die Probe
+ * ein Fehlalarm: `trash_block_ref()` ueberspringt `device_id IS NULL`
+ * absichtlich (von Hand angelegte Eintraege liefert keine Uhr nach). */
+$sag('(c) und der aktive Einsatz ist fuer die Uhr gesperrt',
+     (int)$pdo->query("SELECT COUNT(*) FROM deleted_refs
+                        WHERE device_id = $devId AND client_ref = 'w-a'")->fetchColumn() === 1,
+     'Sperrlisteneintraege=' . $pdo->query("SELECT COUNT(*) FROM deleted_refs
+                                             WHERE device_id = $devId")->fetchColumn());
+$weg($uid);
+
+/* ==========================================================================
+ * TEIL 4 — SCHRITT 1 DER WIEDERERKENNUNG RAET NICHT MEHR (Backlog Nr. 34)
+ *
+ * Im Ziel liegen zwei Einsaetze desselben Datei-Diensttags an VERSCHIEDENEN
+ * Tagen (jemand hat einen verschoben). Schritt 1 nahm bisher den ersten
+ * Treffer und verhaengte dessen Tag ueber den ganzen Datei-Tag. Jetzt gilt er
+ * als ergebnislos, der Fingerabdruck entscheidet, und der Widerspruch wird
+ * gezaehlt.
+ * ====================================================================== */
+echo "\n  Teil 4 — Schritt 1 der Wiedererkennung (Nr. 34)\n";
+$uid = $konto('probe-wiedererkennung@example.invalid');
+
+// Ausgangslage im Ziel: zwei Tage, je ein Einsatz.
+edbak_restore($uid, [
+  'version' => 7,
+  'days' => [
+    ['id' => 930, 'day' => '2026-07-04', 'started_at' => '2026-07-04 05:00:00',
+     'ended_at' => '2026-07-04 17:00:00', 'kind' => 'air',
+     'vehicle_name' => 'Probe 1', 'base_name' => 'Probenstation'],
+    ['id' => 931, 'day' => '2026-07-05', 'started_at' => '2026-07-05 05:00:00',
+     'ended_at' => '2026-07-05 17:00:00', 'kind' => 'air',
+     'vehicle_name' => 'Probe 2', 'base_name' => 'Probenstation'],
+  ],
+  'missions' => [
+    ['client_ref' => 'v-1', 'day_id' => 930, 'started_at' => '2026-07-04 06:00:00',
+     'ended_at' => '2026-07-04 07:00:00'],
+    ['client_ref' => 'v-2', 'day_id' => 931, 'started_at' => '2026-07-04 08:00:00',
+     'ended_at' => '2026-07-04 09:00:00'],
+  ],
+]);
+$tagA = (int)$pdo->query("SELECT day_id FROM missions
+                           WHERE user_id = $uid AND client_ref = 'v-1'")->fetchColumn();
+$tagB = (int)$pdo->query("SELECT day_id FROM missions
+                           WHERE user_id = $uid AND client_ref = 'v-2'")->fetchColumn();
+$tageVorher = (int)$pdo->query("SELECT COUNT(*) FROM days WHERE user_id = $uid")->fetchColumn();
+
+/* Die Datei fuehrt EINEN Tag mit v-1, v-2 und einem neuen v-3. Der
+ * Fingerabdruck passt auf keinen der beiden Zieltage (anderes Rettungsmittel),
+ * es MUSS also ein dritter entstehen — und v-3 gehoert dorthin, nicht an
+ * Tag A oder B. */
+$stats = edbak_restore($uid, [
+  'version' => 7,
+  'days' => [['id' => 940, 'day' => '2026-07-04',
+              'started_at' => '2026-07-04 04:00:00', 'ended_at' => '2026-07-04 18:00:00',
+              'kind' => 'air', 'vehicle_name' => 'Probe 9', 'base_name' => 'Probenstation']],
+  'missions' => [
+    ['client_ref' => 'v-1', 'day_id' => 940, 'started_at' => '2026-07-04 06:00:00',
+     'ended_at' => '2026-07-04 07:00:00'],
+    ['client_ref' => 'v-2', 'day_id' => 940, 'started_at' => '2026-07-04 08:00:00',
+     'ended_at' => '2026-07-04 09:00:00'],
+    ['client_ref' => 'v-3', 'day_id' => 940, 'started_at' => '2026-07-04 10:00:00',
+     'ended_at' => '2026-07-04 11:00:00'],
+  ],
+]);
+$tagV3 = $pdo->query("SELECT day_id FROM missions
+                       WHERE user_id = $uid AND client_ref = 'v-3'")->fetchColumn();
+$tageNachher = (int)$pdo->query("SELECT COUNT(*) FROM days WHERE user_id = $uid")->fetchColumn();
+
+$sag('Der Widerspruch wird als tag_mehrdeutig gemeldet',
+     (int)($stats['skipped_reasons']['tag_mehrdeutig'] ?? 0) === 1,
+     'tag_mehrdeutig=' . ($stats['skipped_reasons']['tag_mehrdeutig'] ?? '—'));
+$sag('Der Datei-Tag wird NICHT auf Tag A oder B verhaengt',
+     $tagV3 !== false && (int)$tagV3 !== $tagA && (int)$tagV3 !== $tagB,
+     "v-3 an Tag " . var_export($tagV3, true) . " (A=$tagA, B=$tagB)");
+$sag('Stattdessen entsteht ein eigener Diensttag',
+     $tageNachher === $tageVorher + 1,
+     "Diensttage $tageVorher -> $tageNachher");
+$sag('Die schon vorhandenen Einsaetze bleiben, wo sie sind',
+     (int)$pdo->query("SELECT day_id FROM missions
+                        WHERE user_id = $uid AND client_ref = 'v-1'")->fetchColumn() === $tagA
+  && (int)$pdo->query("SELECT day_id FROM missions
+                        WHERE user_id = $uid AND client_ref = 'v-2'")->fetchColumn() === $tagB,
+     'v-1 und v-2 unveraendert');
+$weg($uid);
+
+/* Gegenprobe: EIN eindeutiger Kandidat -> Schritt 1 greift wie bisher. Ohne
+ * sie belegte Teil 4 nur, dass die Wiedererkennung nichts mehr findet. */
+$uid = $konto('probe-wiedererkennung2@example.invalid');
+edbak_restore($uid, [
+  'version' => 7,
+  'days' => [['id' => 950, 'day' => '2026-07-06', 'started_at' => '2026-07-06 05:00:00',
+              'ended_at' => '2026-07-06 17:00:00', 'kind' => 'air',
+              'vehicle_name' => 'Probe 1', 'base_name' => 'Probenstation']],
+  'missions' => [['client_ref' => 'e-1', 'day_id' => 950,
+                  'started_at' => '2026-07-06 06:00:00', 'ended_at' => '2026-07-06 07:00:00']],
+]);
+$tagE = (int)$pdo->query("SELECT day_id FROM missions
+                           WHERE user_id = $uid AND client_ref = 'e-1'")->fetchColumn();
+// Dieselbe Datei, aber mit verändertem Fingerabdruck UND einem zweiten Einsatz:
+// Nur Schritt 1 kann den Tag jetzt noch wiedererkennen.
+$stats = edbak_restore($uid, [
+  'version' => 7,
+  'days' => [['id' => 951, 'day' => '2026-07-06', 'started_at' => '2026-07-06 04:30:00',
+              'ended_at' => '2026-07-06 17:30:00', 'kind' => 'air',
+              'vehicle_name' => 'Probe 1 (umbenannt)', 'base_name' => 'Probenstation']],
+  'missions' => [
+    ['client_ref' => 'e-1', 'day_id' => 951, 'started_at' => '2026-07-06 06:00:00',
+     'ended_at' => '2026-07-06 07:00:00'],
+    ['client_ref' => 'e-2', 'day_id' => 951, 'started_at' => '2026-07-06 08:00:00',
+     'ended_at' => '2026-07-06 09:00:00'],
+  ],
+]);
+$sag('GEGENPROBE: ein eindeutiger Kandidat -> Schritt 1 greift weiter',
+     (int)$pdo->query("SELECT day_id FROM missions
+                        WHERE user_id = $uid AND client_ref = 'e-2'")->fetchColumn() === $tagE
+  && (int)$pdo->query("SELECT COUNT(*) FROM days WHERE user_id = $uid")->fetchColumn() === 1,
+     'e-2 an Tag ' . $pdo->query("SELECT day_id FROM missions
+                        WHERE user_id = $uid AND client_ref = 'e-2'")->fetchColumn()
+     . " (erwartet $tagE), Diensttage "
+     . $pdo->query("SELECT COUNT(*) FROM days WHERE user_id = $uid")->fetchColumn());
+$sag('GEGENPROBE: dabei wird nichts als mehrdeutig gemeldet',
+     !isset($stats['skipped_reasons']['tag_mehrdeutig']),
+     'tag_mehrdeutig=' . ($stats['skipped_reasons']['tag_mehrdeutig'] ?? '—'));
 $weg($uid);
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);

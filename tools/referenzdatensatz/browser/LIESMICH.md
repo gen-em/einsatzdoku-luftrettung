@@ -11,7 +11,7 @@ ist die wiederholbare Fassung, die Klickstrecke die prüfbare.
 | `referenz_export.mjs` | zieht die eingecheckten Referenzdateien aus dem Referenzkonto |
 | `kreislauf_edbak.mjs` | Umlauf der Sicherung: einspielen, erneut sichern (von `kreislauf.py` gerufen) |
 | `kreislauf_csv.mjs` | dasselbe für den CSV-Weg |
-| `papierkorb_misch.mjs` | E-S1-04: ein Diensttag mit **einzeln** und **mit dem Tag** gelöschten Einsätzen übersteht den Umlauf, und die Papierkorbseite zeigt den Unterschied |
+| `papierkorb_misch.mjs` | E-S1-04 und Backlog Nr. 33: ein Diensttag mit **einzeln** und **mit dem Tag** gelöschten Einsätzen übersteht den Umlauf, die Papierkorbseite zeigt den Unterschied, und das Zurückholen wird abgelehnt, solange der Diensttag selbst im Papierkorb liegt |
 | `demo_pruefen.mjs` | Abnahme der Demo-Funktion (E-P1-08) — **verändert das Konto, gegen das es läuft** |
 | `demo_bremse.mjs` | die Mengenbremse greift auch für das Demo-Konto |
 

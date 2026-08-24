@@ -191,6 +191,24 @@ declare(strict_types=1);
  * Herkunft — aber eine Wiederherstellung ist der Moment, in dem jemand
  * ohnehin schon etwas verloren hat.
  *
+ * DAZU DIE BEIDEN ENTSCHEIDUNGEN, die nach der Nachlese offen waren
+ * (Backlog Nr. 33 und 34) — beide betreffen den halb sichtbaren Einsatz:
+ * einen aktiven Eintrag an einem GELOESCHTEN Diensttag.
+ *
+ * Nr. 33 hatte drei Tueren dorthin. Sie sind zu: Der Papierkorb lehnt das
+ * Zurueckholen ab, solange der Diensttag selbst darin liegt; die Uhr loest
+ * ueber eine Kennung auf einem geloeschten Tag jetzt einen NEUEN Tag aus
+ * (zusammenfuehren laesst er sich, verwerfen waere Datenverlust); und das
+ * endgueltige Loeschen eines Tages nimmt alles mit, statt ein Waisenkind
+ * ohne Diensttag zurueckzulassen — die Rueckfrage nennt es vorher.
+ * Altbestand meldet die Wartungsseite, ohne ihn anzufassen.
+ *
+ * Nr. 34: Schritt 1 der Diensttag-Wiedererkennung beim Einspielen nahm den
+ * ERSTEN gefundenen Einsatz und verhaengte dessen Tag ueber den ganzen
+ * Datei-Tag. Jetzt zaehlen alle Kennungen; nur ein eindeutiges Ergebnis
+ * gilt, ein Widerspruch wird als `tag_mehrdeutig` gemeldet und der
+ * Fingerabdruck entscheidet.
+ *
  * KEINE eigene Nummer fuer die Nachlese (Paket C8). Sie hat zwei Fehler
  * behoben, die in DIESER Fassung entstanden sind und nie auf einem Server
  * standen — 8.0.0 ist zu keinem Zeitpunkt ausgeliefert gewesen. Eine 8.0.1,

@@ -1447,6 +1447,28 @@ für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
 wachsen also nicht wieder an. Beim endgültigen Löschen kommt die Referenz auf
 eine Sperrliste, sodass die Uhr sie nicht neu anlegt.
 
+**Einen einzeln gelöschten Einsatz holst du erst zurück, wenn sein Diensttag
+wieder da ist.** Hast du zuerst einen Einsatz gelöscht und danach seinen ganzen
+Diensttag, steht der Einsatz weiterhin als eigene Zeile im Papierkorb — sein
+„Wiederherstellen" wird aber abgelehnt, mit einem Hinweis. Stelle zuerst den
+**Diensttag** wieder her; danach geht es. Der Grund: Ein Einsatz ohne
+Diensttag wäre halb sichtbar — in der Suche zu finden, in der Tagesübersicht
+und im Zeitraum nicht, und öffnen ließe er sich auch nicht mehr.
+
+**„Endgültig löschen" bei einem Diensttag nimmt wirklich alles mit.** Falls am
+gelöschten Tag noch etwas Aktives hängt — das kann aus einer älteren Fassung
+stammen —, nennt die Rückfrage es einzeln mit Datum und Uhrzeit und bietet
+einen Link zum Verschieben an. Wer einen davon behalten will, verschiebt ihn
+vorher an einen anderen Diensttag; sonst geht er mit.
+
+**Die Uhr legt einen neuen Diensttag an, wenn der alte im Papierkorb liegt.**
+Liefert die Uhr für einen Dienst nach, den du im Web inzwischen gelöscht hast,
+landet die Nachlieferung **nicht** im Papierkorb-Tag, sondern in einem neuen.
+Das ist Absicht: Die Uhr sendet ein Paket nur, bis der Server es bestätigt —
+verwerfen hieße, den Flug zu verlieren. Ein zusätzlicher Tag lässt sich
+dagegen jederzeit über **Diensttage zusammenführen** wieder mit einem anderen
+vereinen.
+
 **Ein Diensttag im Papierkorb nimmt keine Änderungen an.** Trägst du Rettungsmittel,
 Basis oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
 bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt

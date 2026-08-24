@@ -250,6 +250,42 @@ if (tagTreffer === 1) {
     + `(der einzeln gelöschte darf NICHT mitgezählt werden)`);
 }
 
+// ---- 4b. Zurückholen des einzelnen wird abgelehnt (Backlog Nr. 33) ------
+/* Solange sein Diensttag im Papierkorb liegt, darf „Wiederherstellen" beim
+ * einzeln gelöschten Einsatz NICHTS tun: Sonst stünde er aktiv an einem
+ * gelöschten Tag — in der Suche sichtbar, in der Tagesübersicht nicht. Bis
+ * Web 8.0.0 ging genau das mit einem Klick.
+ *
+ * Die Zeile wird über das DATUM gesucht, nicht über nth(0): Der
+ * Referenzbestand bringt einen zweiten einzeln gelöschten Einsatz mit, und
+ * DER hängt an einem aktiven Tag — bei ihm ist das Zurückholen richtig. */
+const deTag = tagDatum ? tagDatum.split('-').reverse().join('.') : null;
+const meineZeile = deTag
+  ? seite.locator('h2:text("Einsätze") + table tbody tr').filter({ hasText: deTag })
+  : null;
+const meineTreffer = meineZeile ? await meineZeile.count() : 0;
+pruefe(meineTreffer === 1,
+  `Der einzeln gelöschte Einsatz vom ${deTag} ist ${meineTreffer}× im Papierkorb, erwartet 1×`);
+if (meineTreffer === 1) {
+  await meineZeile.locator('button.btn-primary').first().click();
+  await rueckfragen();
+  await seite.waitForTimeout(800);
+  const text = await seite.locator('main').innerText();
+  pruefe(/Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb/.test(text),
+    'Das Zurückholen wurde ohne Begründung abgetan — erwartet wird die Meldung '
+    + '„Der Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb."');
+  const nachVersuch = await papierkorbZaehlen();
+  const bliebLiegen = nachVersuch.einsaetze === zielStand.einsaetze;
+  pruefe(bliebLiegen,
+    `Nach dem abgelehnten Zurückholen stehen ${nachVersuch.einsaetze} statt `
+    + `${zielStand.einsaetze} einzeln gelöschte Einsätze im Papierkorb. Ein Rückgang `
+    + `hiesse: Er wurde doch aktiv — an einem gelöschten Diensttag.`);
+  schritt(bliebLiegen
+    ? 'Zurückholen bei gelöschtem Diensttag wurde abgelehnt und begründet'
+    : 'Zurückholen bei gelöschtem Diensttag ging durch — der Einsatz ist jetzt '
+      + 'aktiv an einem gelöschten Tag');
+}
+
 // ---- 5. Diensttag wiederherstellen — der einzelne bleibt liegen ----------
 if (tagTreffer === 1) {
   await tagZeile.locator('button.btn-primary').first().click();
@@ -268,6 +304,23 @@ pruefe(nachRestore.einsaetze === zielStand.einsaetze,
   + `(${zielStand.einsaetze} → ${nachRestore.einsaetze}, erwartet unverändert). `
   + `Ein Rückgang hiesse: er ist mit dem Tag wieder aktiv geworden, obwohl ihn `
   + `jemand ausdrücklich gelöscht hatte.`);
+/* Und die Gegenprobe zu 4b: Jetzt, wo der Tag wieder aktiv ist, MUSS das
+ * Zurückholen gehen. Ohne sie belegte 4b nur, dass der Knopf nichts tut. */
+if (meineTreffer === 1) {
+  const zeile = seite.locator('h2:text("Einsätze") + table tbody tr').filter({ hasText: deTag });
+  if (await zeile.count() === 1) {
+    await zeile.locator('button.btn-primary').first().click();
+    await rueckfragen();
+    await seite.waitForTimeout(800);
+  }
+  const endstand = await papierkorbZaehlen();
+  pruefe(endstand.einsaetze === nachRestore.einsaetze - 1,
+    `GEGENPROBE: Nach dem Wiederherstellen des Tages muss sich der Einsatz `
+    + `zurückholen lassen (${nachRestore.einsaetze} → ${endstand.einsaetze}, erwartet −1)`);
+  schritt(`Nach dem Wiederherstellen des Tages ließ er sich zurückholen: `
+          + `${endstand.einsaetze} Einsatz/Einsätze übrig`);
+}
+
 const tageZeilen = zielStand.tage, einsatzZeilen = zielStand.einsaetze;
 const tageNach = nachRestore.tage, einsatzNach = nachRestore.einsaetze;
 

@@ -1893,6 +1893,7 @@ ui_topbar('einstellungen');
       tag_im_papierkorb: 'Diensttag liegt hier im Papierkorb',
       tag_unbrauchbar:   'unbrauchbares Datum des Diensttags',
       tag_uebersprungen: 'Diensttag wurde übersprungen',
+      tag_mehrdeutig:    'Diensttag nicht eindeutig zuzuordnen',
     };
 
     /* „1 Diensttage" ist ein kleiner Fehler mit großer Wirkung: Er lässt den

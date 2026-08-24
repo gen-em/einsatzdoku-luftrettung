@@ -498,7 +498,14 @@ function edbak_restore(int $userId, array $data): array {
                * `datum_oder_zeit` — irrefuehrend, denn an ihrem Datum ist
                * nichts auszusetzen; es fehlt ihnen der Tag. Wer die Meldung
                * liest, suchte den Fehler an der falschen Stelle. */
-              'tag_uebersprungen' => 0];
+              'tag_uebersprungen' => 0,
+              /* NEU (Backlog Nr. 34): Die Einsaetze eines Datei-Diensttags
+               * liegen im Ziel an MEHREREN verschiedenen Tagen. Schritt 1 der
+               * Wiedererkennung liefert dann kein Ergebnis, der Fingerabdruck
+               * entscheidet — und dass geraten werden musste, gehoert in die
+               * Rueckmeldung statt in die Stille. Zaehlt Diensttage, nicht
+               * Einsaetze. */
+              'tag_mehrdeutig' => 0];
 
     /* EIN Loeschzeitpunkt fuer den ganzen Lauf (E-S1-03).
      *
@@ -758,9 +765,43 @@ function edbak_restore(int $userId, array $data): array {
             $ref = (string)($mm['client_ref'] ?? '');
             if ($q > 0 && $ref !== '') { $refsJeQuelltag[$q][] = $ref; }
         }
-        $findeUeberEinsatz = $pdo->prepare('SELECT day_id FROM missions
-                                            WHERE user_id = ? AND client_ref = ?
-                                              AND day_id IS NOT NULL LIMIT 1');
+        /* SCHRITT 1 BELEGT, ER RAET NICHT MEHR (Backlog Nr. 34).
+         *
+         * Hier stand `… AND client_ref = ? AND day_id IS NOT NULL LIMIT 1`,
+         * abgefragt fuer eine Kennung nach der anderen, und der ERSTE Treffer
+         * bestimmte den Zieltag fuer ALLE Einsaetze und Ruhesegmente des
+         * Datei-Tags. Drei Dinge waren daran falsch:
+         *
+         *  - Hat jemand im Ziel EINEN dieser Einsaetze auf einen anderen Tag
+         *    verschoben, wanderte der ganze Datei-Tag mit — auch wenn er im
+         *    Ziel unveraendert daneben lag.
+         *  - Fuehrte der Treffer auf einen Tag im PAPIERKORB, wurden seither
+         *    (E-S1-19) alle aktiven Eintraege des Datei-Tags abgelehnt. Richtig
+         *    gezaehlt, aber angekommen ist nichts.
+         *  - `LIMIT 1` ohne `ORDER BY`, und `client_ref` ist nur je
+         *    `device_id` eindeutig: Bei zwei Uhren kann derselbe Wert zweimal
+         *    vorkommen, und welcher gewinnt, sagte niemand.
+         *
+         * Jetzt werden ALLE Kennungen des Datei-Tags nachgeschlagen, und zwar
+         * nur auf AKTIVE Zieltage:
+         *
+         *   genau ein Zieltag  -> benutzen (das bisherige Verhalten, belegt)
+         *   mehrere Zieltage   -> Schritt 1 gilt als ergebnislos, der
+         *                         Fingerabdruck entscheidet; der Widerspruch
+         *                         wird als `tag_mehrdeutig` gezaehlt
+         *   keiner              -> Fingerabdruck wie bisher
+         *
+         * Die richtige Antwort auf „raten" ist nicht, anders zu raten, sondern
+         * zu merken, dass man es nicht weiss. Der Fingerabdruck bleibt Schritt
+         * 2 und nicht Schritt 1: Er ist der SPROEDERE Anker — er bricht,
+         * sobald jemand am Zieltag Beginn, Ende, Art, Rettungsmittel oder
+         * Station berichtigt hat, und das ist der haeufige Fall. `client_ref`
+         * ist stabil. */
+        $findeUeberEinsatz = $pdo->prepare('SELECT DISTINCT m.day_id
+                                              FROM missions m
+                                              JOIN days d ON d.id = m.day_id
+                                             WHERE m.user_id = ? AND m.client_ref = ?
+                                               AND d.deleted_at IS NULL');
         $findeTag = $pdo->prepare(
             'SELECT id FROM days
               WHERE user_id = ? AND day = ?
@@ -819,10 +860,22 @@ function edbak_restore(int $userId, array $data): array {
 
             // Schritt 1: ueber einen Einsatz, der im Ziel schon liegt.
             $vorhanden = false;
+            $kandidaten = [];
             foreach (($refsJeQuelltag[$altId] ?? []) as $ref) {
                 $findeUeberEinsatz->execute([$userId, $ref]);
-                $w = $findeUeberEinsatz->fetchColumn();
-                if ($w !== false) { $vorhanden = (int)$w; break; }
+                foreach ($findeUeberEinsatz->fetchAll(PDO::FETCH_COLUMN) as $w) {
+                    $kandidaten[(int)$w] = true;
+                }
+            }
+            if (count($kandidaten) === 1) {
+                $vorhanden = (int)array_key_first($kandidaten);
+            } elseif (count($kandidaten) > 1) {
+                /* WIDERSPRUCH — und der wird gemeldet, nicht aufgeloest. Die
+                 * Einsaetze dieses Datei-Tags liegen im Ziel an verschiedenen
+                 * Diensttagen; welcher davon „der" Zieltag ist, sagt die Datei
+                 * nicht. Schritt 2 entscheidet, und die Zahl steht in der
+                 * Rueckmeldung, damit jemand nachsehen kann. */
+                $grund['tag_mehrdeutig']++;
             }
             // Schritt 2: Fingerabdruck.
             if ($vorhanden === false) {

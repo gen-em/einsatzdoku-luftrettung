@@ -389,6 +389,14 @@ in Abschnitt 3.
   über einen Fingerabdruck aus Datum, Beginn, Ende, Art und den eingefrorenen
   Bezeichnungen, Stammdaten über ihre Namen — Vorhandenes wird übersprungen,
   nur Fehlendes ergänzt. Der Import ist damit gefahrlos wiederholbar.
+- **Die Wiedererkennung eines Diensttags über die Einsatzkennungen verlangt
+  Eindeutigkeit** (seit Web 8.0.0). Nachgeschlagen werden **alle**
+  `client_ref` des Datei-Tags, und nur auf **aktive** Zieltage. Genau ein
+  Ergebnis wird benutzt; führen sie auf **mehrere verschiedene** Diensttage —
+  weil jemand einen der Einsätze verschoben hat —, gilt dieser Schritt als
+  ergebnislos, der Fingerabdruck entscheidet, und der Widerspruch wird als
+  `tag_mehrdeutig` gezählt. Vorher gewann der erste Treffer und verhängte
+  seinen Diensttag über den ganzen Datei-Tag.
 - Die geschützten Angaben werden vor dem Senden im Browser mit dem
   Inhaltsschlüssel des Zielkontos verschlüsselt; der Server speichert nur
   Chiffretext.
@@ -463,8 +471,11 @@ als aktiver Bestand. Fünf Regeln entscheiden das im Einzelnen:
 
 **Überspringgründe in der Rückmeldung:** `bereits_vorhanden`,
 `datum_oder_zeit`, `aufbau`, `tag_im_papierkorb`, `tag_unbrauchbar`,
-`tag_uebersprungen`. Alle sechs haben eine Beschriftung; ein roher Schlüssel
-erscheint nicht mehr. Ruhesegmente zählen ihre Gründe seit S1 mit — vorher
+`tag_uebersprungen`, `tag_mehrdeutig`. Alle sieben haben eine Beschriftung; ein
+roher Schlüssel erscheint nicht mehr. `tag_mehrdeutig` zählt **Diensttage**,
+nicht Einsätze, und es ist kein Übersprungvorgang, sondern ein Hinweis: Der
+Tag wurde eingespielt, nur eben über den Fingerabdruck statt über die
+Einsatzkennungen. Ruhesegmente zählen ihre Gründe seit S1 mit — vorher
 fielen sie unter den Tisch, obwohl „bereits vorhanden" bei ihnen die häufigste
 Ursache überhaupt ist.
 

@@ -15,8 +15,9 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
 **Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
 als Papierkorb zurück.** Dazu die beiden Importfehler, die der CSV-Kreislauf
-der Phase P1 gemessen hatte, und drei Stellen, an denen eine kaputte Datei
-bisher nicht ihre Zeile, sondern den ganzen Einspielvorgang kostete.
+der Phase P1 gemessen hatte, drei Stellen, an denen eine kaputte Datei bisher
+nicht ihre Zeile, sondern den ganzen Einspielvorgang kostete, und die drei
+Wege, auf denen ein Einsatz an einem gelöschten Diensttag landen konnte.
 Nutzlastversion der Sicherung 6 → 7. **Keine Migration** — die Spalten liegen
 seit jeher, sie standen nur leer in der Datei.
 
@@ -156,6 +157,78 @@ Betroffen sind nur Dateien fremder oder von Hand bearbeiteter Herkunft; ein
 eigener Export erzeugt weder unbrauchbare Zeiten noch Wiedergänger. Das ist
 kein Grund, es stehen zu lassen: Eine Wiederherstellung ist der Moment, in dem
 jemand ohnehin schon etwas verloren hat.
+
+### Web — Der halb sichtbare Einsatz hat keinen Weg mehr (Backlog Nr. 33)
+
+Ein **aktiver** Einsatz an einem **gelöschten** Diensttag ist der Zustand, den
+das Einspielen einer Sicherung seit dieser Fassung ablehnt (E-S1-19). Die
+Anwendung selbst konnte ihn herstellen — mit einem Klick.
+
+**Der Papierkorb lehnt jetzt ab.** Ein einzeln gelöschter Einsatz steht in der
+Liste des Papierkorbs, auch wenn sein Diensttag danach ebenfalls gelöscht
+wurde. „Wiederherstellen" machte ihn aktiv — an einem Tag, den die
+Tagesübersicht nicht zeigt. Jetzt sagt die Seite, was zu tun ist: erst den
+Diensttag zurückholen. Ihn stillschweigend mitzurückzuholen wäre die falsche
+Großzügigkeit — ein Klick auf **einen** Einsatz würde einen ganzen Dienst samt
+aller übrigen Einsätze wiederbeleben.
+
+**Die Uhr löst einen neuen Diensttag aus.** Zeigt eine Dienstkennung in
+`day_refs` auf einen gelöschten Tag, entsteht ein neuer, und die Kennung wird
+auf ihn umgebogen. Den Upload stattdessen zu verwerfen wäre die schlechtere
+Wahl: Die Uhr hat den Dienst geflogen, und sie sendet ein Paket nur, bis der
+Server es quittiert — verworfen ist fort. Ein zusätzlicher Diensttag dagegen
+ist umkehrbar; stellt sich heraus, dass er doch zum alten gehört, führt
+`diensttag_zusammenfuehren.php` beide zusammen. Der gelöschte Tag verliert
+dabei seine Kennung, und das ist richtig so: Wird er später zurückgeholt,
+gehört die weiterlaufende Uhr-Sitzung zum neuen Tag.
+
+**Das endgültige Löschen lässt kein Waisenkind zurück.** `trash_purge_day()`
+entfernte nur die **gelöschten** Einsätze des Tages und danach den Tag; ein
+aktiver Einsatz daran überlebte den ersten Schritt und verlor im zweiten
+seinen Diensttag (`ON DELETE SET NULL`). Danach war er in der Suche und auf
+der Einsatzseite sichtbar, in Tagesübersicht, Zeitraum, Export und
+Nachbearbeitung nicht, im Formular nicht mehr zu öffnen — und in der Sicherung
+zwar enthalten, beim Einspielen aber übersprungen, weil ihm der Diensttag
+fehlt. Ein Datensatz, der gerettet aussah und beim nächsten Umlauf still
+verschwand.
+
+Jetzt geht alles mit, und die Rückfrage **nennt es vorher einzeln** mit Datum,
+Uhrzeit und einem Link zum Verschieben. *Ablehnen* wäre die scheinbar
+vorsichtigere Wahl gewesen und ist eine Sackgasse: Diese Einsätze stehen in
+keiner Liste, man kann sie also nicht wegräumen — der Diensttag wäre nie
+loszuwerden.
+
+**Was vorher entstanden ist, meldet die Wartungsseite.** `update.php` zählt
+aktive Einsätze ohne Diensttag und listet sie mit Konto, Beginn und Kennung.
+Sie ändert nichts: Welcher Diensttag der richtige ist, weiß eine
+Wartungsseite nicht. Als Bericht und nicht als Migration, damit die Meldung
+so lange stehen bleibt, wie es den Zustand gibt.
+
+### Web — Die Diensttag-Wiedererkennung rät nicht mehr (Backlog Nr. 34)
+
+Beim Einspielen erkennt `edbak_restore()` einen Diensttag zuerst über die
+Einsatzkennungen (`client_ref`), ersatzweise über einen Fingerabdruck aus
+Datum, Beginn, Ende, Art und Bezeichnungen. Schritt 1 nahm den **ersten**
+gefundenen Einsatz und verhängte dessen Diensttag über **alle** Einsätze und
+Ruhesegmente des Datei-Tags. Drei Dinge waren daran falsch: Hatte jemand im
+Zielkonto einen dieser Einsätze auf einen anderen Tag verschoben, wanderte der
+ganze Datei-Tag mit; führte der Treffer auf einen Tag im Papierkorb, wurden
+seither alle aktiven Einträge des Datei-Tags abgelehnt (richtig gezählt — aber
+angekommen war nichts); und `LIMIT 1` ohne `ORDER BY` bei einer Kennung, die
+nur je Gerät eindeutig ist, ließ offen, welcher Treffer gewinnt.
+
+Jetzt werden **alle** Kennungen des Datei-Tags nachgeschlagen, und nur auf
+aktive Zieltage. Genau ein Ergebnis wird benutzt — das bisherige Verhalten,
+jetzt belegt. Mehrere verschiedene heißen: Schritt 1 weiß es nicht. Dann
+entscheidet der Fingerabdruck, und der Widerspruch erscheint als
+`tag_mehrdeutig` in der Rückmeldung. Die richtige Antwort auf „raten" ist
+nicht, anders zu raten, sondern zu merken, dass man es nicht weiß.
+
+**Der Fingerabdruck bleibt Schritt 2**, obwohl er hier zuverlässiger gewesen
+wäre. Er ist der sprödere Anker: Er bricht, sobald jemand am Zieltag Beginn,
+Ende, Art, Rettungsmittel oder Station berichtigt hat — und das ist der
+häufige Fall. `client_ref` ist stabil. Ihn zurückzustufen verschlechterte den
+häufigen Fall zugunsten des seltenen.
 
 ### Web — `created_at` kommt zurück (Backlog Nr. 25)
 
@@ -342,15 +415,18 @@ kann — sein Referenzbestand hat keinen Diensttag mit beiden Löscharten
 nebeneinander:
 
 - `tools/wiederherstellungs-probe/` misst sie in der Datenbank:
-  **16 Erwartungen, 0 nicht erfüllt**; gegen den Stand vor der Korrektur
-  **12 von 16 nicht erfüllt**.
-- `browser/papierkorb_misch.mjs` misst denselben Fall durch den Browser —
+  **30 Erwartungen, 0 nicht erfüllt** über vier Teile (Papierkorb aus der
+  Datei, kaputte Datei, die drei Wege zum halb sichtbaren Einsatz, die
+  Wiedererkennung). Gegen den Stand vor der Korrektur fallen **11 von 30**
+  durch, gegen den Stand vor der Nachlese **12 von 16** der damaligen
+  Erwartungen.
+- `browser/papierkorb_misch.mjs` misst dieselben Fälle durch den Browser —
   löschen, sichern, in ein leeres Konto einspielen, Papierkorbseite lesen,
-  Diensttag wiederherstellen: **10 Einzelprüfungen, 0 Befunde, 0
-  Konsolenfehler**. Gegen den Stand vor der Korrektur **2 Befunde**: Das
-  Zielkonto zeigte 1 statt 3 einzeln gelöschte Einsätze, und der gelöschte
-  Diensttag nannte 6 Einsätze statt 5 — der einzeln gelöschte war in ihm
-  verschwunden.
+  Zurückholen versuchen, Diensttag wiederherstellen: **14 Einzelprüfungen, 0
+  Befunde, 0 Konsolenfehler**. Gegen den Stand vor der Korrektur **4 Befunde**;
+  gegen den davor **2**, darunter: Das Zielkonto zeigte 1 statt 3 einzeln
+  gelöschte Einsätze, und der gelöschte Diensttag nannte 6 Einsätze statt 5 —
+  der einzeln gelöschte war in ihm verschwunden.
 
 Was **nicht** geprüft werden konnte, steht in
 `docs/Pruefdokument-S1-Sicherung-Import.md`, Abschnitt 1 — allen voran der

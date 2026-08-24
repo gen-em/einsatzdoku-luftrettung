@@ -55,12 +55,24 @@ endgültig entfernt werden, folgt aus dem gesetzten `deleted_at` und ist
 Alle Einträge eines Einspielvorgangs tragen denselben, und zwar den des
 Vorgangs.
 
-### 1.4 Kein echtes Gerät, kein SMTP
+### 1.4 Der Uhr-Weg zum gelöschten Diensttag ist nicht am Gerät geprüft
+
+Seit dieser Fassung löst eine Nachlieferung, deren Dienstkennung auf einen
+**gelöschten** Diensttag zeigt, einen **neuen** Tag aus statt am
+Papierkorb-Eintrag zu landen (Backlog Nr. 33). Geprüft ist das an
+`dt_zu_dayref()` unmittelbar — neuer Tag, Dienstkennung umgebogen, beides
+gemessen — und die entsprechende Bedingung in `ingest.php` durch Lesen.
+
+**Nicht geprüft ist eine echte Nachlieferung einer Garmin-Uhr auf einen
+gelöschten Diensttag.** Es gibt in dieser Umgebung kein Gerät. Wer eines hat:
+Punkt 4.12 der Prüfliste.
+
+### 1.5 Kein echtes Gerät, kein SMTP
 
 Unverändert gegenüber P1: Der Bestand ist über `ingest.php` eingespielt, aber
 nicht von einer echten Uhr; E-Mail-Versand ist lokal nicht eingerichtet.
 
-### 1.5 Die Referenzinstallation wurde mitten in der Phase neu aufgebaut
+### 1.6 Die Referenzinstallation wurde mitten in der Phase neu aufgebaut
 
 Ein Prüfmittel (`browser/demo_pruefen.mjs`) lief versehentlich gegen die
 Referenzinstallation und hat dort das Referenzkonto verändert — Einzelheiten in
@@ -85,8 +97,9 @@ Das Prüfmittel hat einen Riegel bekommen; er ist in beide Richtungen geprüft.
 | **Kreislauf CSV** (P-S1-02) | `vergleich/kreislauf.py --art csv` | **8 797** Einzelvergleiche, **0 unerklärt**, 859 erwartet, 0 ungenutzte Regeln |
 | Probe aufs Exempel, Sicherung (P-S1-12) | `vergleichen.py --testabweichung`, gleiche Datei beidseitig, ohne `--ausnahmen` | **12/12** bestanden (vier davon neu) |
 | Probe aufs Exempel, CSV (P-S1-12) | dieselbe | **10/10** bestanden |
-| **Wiederherstellungsprobe**, heutiger Stand | `tools/wiederherstellungs-probe/probe.php` | **16 Erwartungen, 0 nicht erfüllt** |
-| **Wiederherstellungsprobe**, Stand vor der Korrektur (`d078494`) | dieselbe gegen eine Kopie mit altem `backup_lib.php` | **12 von 16 nicht erfüllt** — Teil 2 endet mit `SQLSTATE[23000] … Duplicate entry` |
+| **Wiederherstellungsprobe**, heutiger Stand | `tools/wiederherstellungs-probe/probe.php` | **30 Erwartungen, 0 nicht erfüllt** (vier Teile) |
+| **Wiederherstellungsprobe**, Stand vor C9 (`5e68024`) | dieselbe gegen eine Kopie von `server/` aus diesem Stand | **11 von 30 nicht erfüllt** — genau in Teil 3 und 4 |
+| **Wiederherstellungsprobe**, Stand vor C8 (`d078494`) | dieselbe, mit den damaligen 16 Erwartungen | **12 von 16 nicht erfüllt** — Teil 2 endet mit `SQLSTATE[23000] … Duplicate entry` |
 | Invariante `deleted_with_day` (P-S1-05) | SQL über **alle** Konten der Prüfinstallation | `1` an aktivem Tag: **0**; `1` ohne `deleted_at`: **0** |
 | `created_at` wörtlich (P-S1-07) | SQL, paarweise über `client_ref` | **87 von 87 gleich**, 0 abweichend |
 | Angriffswerte-Regression (P-S1-13) | `browser/angriffswerte.mjs` | **42** Einzelprüfungen, 0 Befunde, 0 Konsolenfehler |
@@ -121,8 +134,10 @@ Alles über Playwright/Chromium gegen die lokale Installation, jeder Schritt
 | Wächter in `demo_pruefen.mjs` | falsches Adminkennwort → **Abbruch, Rückgabe 2**; Lauf gegen die Referenzinstallation → **Abbruch, Rückgabe 2**, Referenzkonto unangetastet |
 | Mengenbremse Demo | `demo_bremse.mjs`: erste Abweisung bei Anmeldung 21 (Grenze 20), Gegenprobe kommt herein |
 | CSV-Import der vier Referenzzeilen | `browser/csv_import.mjs`: 4 Einsätze, 0 Hinweise, 0 Fehler |
-| **Mischfall im Papierkorb** (F-S1-E) | `browser/papierkorb_misch.mjs`: **10 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**. Ein Diensttag mit fünf mitgelöschten und einem einzeln gelöschten Einsatz übersteht den vollen Umlauf; nach dem Wiederherstellen des Tages bleibt der einzelne im Papierkorb liegen |
-| dieselbe Prüfung gegen den Stand vor der Korrektur | **2 Befunde**: Ziel zeigt 1 statt 3 einzeln gelöschte Einsätze, und der Diensttag nennt 6 statt 5 — der einzeln gelöschte war im Tag verschwunden |
+| **Mischfall im Papierkorb** (F-S1-E, F-S1-G) | `browser/papierkorb_misch.mjs`: **14 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**. Ein Diensttag mit fünf mitgelöschten und einem einzeln gelöschten Einsatz übersteht den vollen Umlauf; „Wiederherstellen" beim einzelnen wird mit Begründung abgelehnt, solange der Tag im Papierkorb liegt; nach dem Wiederherstellen des Tages geht es |
+| dieselbe Prüfung gegen den Stand vor C9 | **4 Befunde**: Das Zurückholen ging ohne Meldung durch, der Einsatz wurde mit dem Tag aktiv, und die Gegenprobe konnte deshalb nicht greifen |
+| dieselbe gegen den Stand vor C8 | **2 Befunde**: Ziel zeigt 1 statt 3 einzeln gelöschte Einsätze, und der Diensttag nennt 6 statt 5 — der einzeln gelöschte war im Tag verschwunden |
+| **Bericht „Einsätze ohne Diensttag"** (`update.php`) | ohne Waisen: „Keine. Jeder aktive Einsatz hängt an einem Diensttag"; mit zwei künstlich erzeugten: **2**, je mit Konto, Datum/Uhrzeit und Kennung; 0 Konsolenfehler |
 
 ---
 
@@ -259,7 +274,37 @@ Wochen später, wenn jemand etwas im Papierkorb sucht.
       `deleted_with_day = 1`), oder er wird beim Wiederherstellen des Tages
       **mit** aktiv, obwohl er vorher schon gelöscht war.
 
-### 4.11 Der Regressionslauf (R24)
+### 4.11 Der Papierkorb lässt keinen halb sichtbaren Einsatz mehr zu
+
+- [ ] **Weg:** Einen Diensttag mit mindestens zwei Einsätzen wählen. Einen
+      davon einzeln löschen, dann den ganzen Tag. Im Papierkorb beim **einzeln
+      gelöschten Einsatz** auf „Wiederherstellen" klicken.
+- [ ] **Erwartung:** Es passiert nichts außer einer Meldung — „Der Diensttag
+      dieses Einsatzes liegt ebenfalls im Papierkorb. Stelle zuerst den
+      Diensttag wieder her." Der Einsatz steht danach unverändert im
+      Papierkorb. Holst du erst den Diensttag zurück, geht es.
+- [ ] **Scheitern erkennbar an:** Der Einsatz verschwindet aus dem Papierkorb
+      und taucht in keiner Tagesübersicht auf — dann ist er aktiv an einem
+      gelöschten Tag, und genau das soll nicht mehr gehen. Oder: Es passiert
+      nichts und **es steht auch keine Meldung da** — dann ist die Ablehnung
+      zwar wirksam, aber stumm.
+
+### 4.12 Die Uhr legt einen neuen Diensttag an — braucht ein Gerät
+
+Der einzige Punkt dieser Liste, den ich mangels Gerät gar nicht prüfen konnte
+(Abschnitt 1.4).
+
+- [ ] **Weg:** Einen Dienst mit der Uhr dokumentieren und hochladen. Im Web den
+      entstandenen **Diensttag löschen**. Danach mit der Uhr weiter
+      dokumentieren, sodass sie für denselben Dienst nachliefert.
+- [ ] **Erwartung:** Es entsteht ein **neuer** Diensttag mit den
+      nachgelieferten Einsätzen. Der gelöschte bleibt im Papierkorb, unberührt.
+      Beide lassen sich über **Diensttage zusammenführen** wieder vereinen.
+- [ ] **Scheitern erkennbar an:** Die Uhr-Daten sind nirgends zu finden (dann
+      wurden sie doch am gelöschten Tag abgelegt und sind unsichtbar), oder der
+      gelöschte Diensttag steht plötzlich wieder aktiv da.
+
+### 4.13 Der Regressionslauf (R24)
 
 - [ ] **Weg:** `python3 tools/referenzdatensatz/vergleich/kreislauf.py --art
       edbak --frisch` und dasselbe mit `--art csv`.
@@ -275,14 +320,9 @@ Wochen später, wenn jemand etwas im Papierkorb sucht.
 
 ## 5. Bekannte offene Punkte — kein Grund zur Beunruhigung, aber zu wissen
 
-**Offen geblieben — zwei Entscheidungen, keine Korrekturen.** Beide ändern
-Verhalten, das NutzerInnen sehen, und sind deshalb nicht nebenbei getroffen
-worden:
-
-| Fund | Wirkung | Backlog |
-|---|---|---|
-| **F-S1-G** | `trash_purge_day()` löscht nur die *gelöschten* Einsätze des Tages und danach den Tag. Ein **aktiver** Einsatz am gelöschten Tag verliert dabei seinen Diensttag (`ON DELETE SET NULL`) und steht danach ohne Tag in der Datenbank: in der Suche sichtbar, in der Tagesübersicht nicht, im Formular nicht mehr zu öffnen. Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit — ihre Zahl ist zu klein. Betrifft das **endgültige Löschen**, nicht das Einspielen. Zu entscheiden: mitlöschen (dann muss die Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag hängen | Nr. 33, **offen** |
-| **F-S1-H** | Ein Diensttag gilt beim Einspielen als wiedererkannt, sobald **ein einziger** seiner Einsätze im Ziel liegt — und dessen Tag wird für **alle** Einträge des Datei-Tags übernommen. Liegt dieser eine Einsatz im Ziel an einem anderen Tag, wandert der ganze Datei-Tag dorthin. Zu entscheiden: Fingerabdruck vor `client_ref` prüfen, oder den Widerspruch melden statt zu raten | Nr. 34, **offen** |
+**Nichts aus S1 ist offen geblieben.** Die beiden Entscheidungen, die nach der
+Nachlese noch anstanden, sind getroffen und umgesetzt (Konzept, C9). Sie
+stehen unten mit in der Liste.
 
 **Behoben, hier zur Nachverfolgung:**
 
@@ -292,6 +332,8 @@ worden:
 | **F-S1-C** | Ein in der Datei **aktiver** Einsatz konnte auf einem **gelöschten** Zieltag landen und stand dann an einem Tag, den die Tagesliste nicht zeigt. Nicht neu — in derselben Form schon vor Web 8.0.0 erreichbar. In C8 entschieden (**E-S1-19**: ablehnen und zählen) und umgesetzt | Nr. 32, erledigt |
 | **F-S1-E** | `deleted_with_day` aus der Datei wurde nie gelesen; ein **einzeln** gelöschter Einsatz an einem gelöschten Tag kam als mitgelöschter zurück und wäre beim Wiederherstellen des Tages ungewollt wieder aktiv geworden. **Von dieser Phase eingebaut** und in C8 behoben | kein Eintrag |
 | **F-S1-F** | Ein doppeltes `seq` in einer Spur kippte über den Schlüsselkonflikt den ganzen Lauf. In C8 behoben (überspringen und melden) | Nr. 35, erledigt |
+| **F-S1-G** | Ein **aktiver** Einsatz konnte an einem **gelöschten** Diensttag stehen und beim endgültigen Löschen des Tages ohne Diensttag zurückbleiben. Vier Klicks in der Oberfläche reichten dafür. In C9 an allen drei Ursachen abgestellt (Zurückholen wird abgelehnt, die Uhr löst einen neuen Tag aus, das endgültige Löschen nimmt alles mit und nennt es vorher); Altbestand meldet `update.php` | Nr. 33, erledigt |
+| **F-S1-H** | Schritt 1 der Diensttag-Wiedererkennung nahm den ersten gefundenen Einsatz und verhängte dessen Tag über den ganzen Datei-Tag. In C9 auf „alle Kennungen zählen, nur ein eindeutiges Ergebnis benutzen, den Widerspruch als `tag_mehrdeutig` melden" umgestellt | Nr. 34, erledigt |
 | **Nr. 24** | Der Formelschutz-Apostroph bleibt beim CSV-Rückimport im Wert stehen (3 Zellen). Bewusst so gelassen und jetzt dokumentiert | erledigt, dokumentiert |
 
 ---

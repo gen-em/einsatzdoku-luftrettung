@@ -545,6 +545,32 @@ function dt_rueckfall(PDO $pdo, int $userId, string $day, ?string $startedAt = n
  * auf: Der laufende Dienst liegt bereits als Diensttag vor, angelegt ueber die
  * Rueckfallebene. Ohne diese Bindung entstuenden aus einem Dienst zwei — der
  * erste mit den bisherigen Einsaetzen, der zweite mit allen weiteren.
+ *
+ * EIN GELOESCHTER DIENSTTAG ZAEHLT NICHT (Backlog Nr. 33, seit Web 8.0.0).
+ *
+ * Weder der Nachschlag ueber `day_refs` noch $vorhandenerDayId darf auf einen
+ * Tag im Papierkorb fuehren. Sonst legte die naechste Nachlieferung einen
+ * AKTIVEN Einsatz an einem GELOESCHTEN Tag an — den halb sichtbaren Zustand,
+ * den E-S1-19 beim Einspielen einer Sicherung ablehnt und den die
+ * Papierkorbseite seit Web 8.0.0 nicht mehr herstellen kann. Die Uhr weiss
+ * nichts vom Papierkorb und liefert weiter; ohne diese Bedingung waere sie
+ * die letzte offene Tuer.
+ *
+ * STATTDESSEN ENTSTEHT EIN NEUER TAG, und die Kennung wird auf ihn UMGEBOGEN
+ * (`ON DUPLICATE KEY UPDATE` — `day_refs` ist auf (device_id, day_ref)
+ * eindeutig). Zwei Gruende gegen das Verwerfen des Uploads:
+ *
+ *  - Die Uhr hat den Dienst tatsaechlich geflogen. Ihn wegzuwerfen, weil im
+ *    Web jemand den Vortag geloescht hat, waere Datenverlust aus einem
+ *    Zusammenhang, den die NutzerIn nicht sieht.
+ *  - Ein neuer Tag ist umkehrbar: Stellt sich heraus, dass er doch zum alten
+ *    gehoert, fuehrt diensttag_zusammenfuehren.php beide zusammen. Ein
+ *    verworfener Upload dagegen ist fort — die Uhr sendet ein Paket nur,
+ *    bis der Server es quittiert.
+ *
+ * Der geloeschte Tag verliert dabei seine Kennung. Das ist richtig so: Wird
+ * er spaeter aus dem Papierkorb zurueckgeholt, gehoert die weiterlaufende
+ * Uhr-Sitzung zum NEUEN Tag, nicht zu ihm.
  */
 function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
                       string $day, ?string $startedAt = null,
@@ -552,13 +578,24 @@ function dt_zu_dayref(PDO $pdo, int $userId, int $deviceId, string $dayRef,
 {
     $q = $pdo->prepare('SELECT r.day_id FROM day_refs r
                           JOIN days d ON d.id = r.day_id
-                         WHERE r.device_id = ? AND r.day_ref = ? AND d.user_id = ?');
+                         WHERE r.device_id = ? AND r.day_ref = ? AND d.user_id = ?
+                           AND d.deleted_at IS NULL');
     $q->execute([$deviceId, $dayRef, $userId]);
     $id = $q->fetchColumn();
     if ($id !== false) { return (int)$id; }
 
+    // Auch der schon zugeordnete Tag muss aktiv sein, sonst bindet die
+    // Kennung an einen Papierkorbeintrag.
+    if ($vorhandenerDayId !== null) {
+        $v = $pdo->prepare('SELECT id FROM days
+                             WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+        $v->execute([$vorhandenerDayId, $userId]);
+        if ($v->fetchColumn() === false) { $vorhandenerDayId = null; }
+    }
+
     $dayId = $vorhandenerDayId ?? dt_anlegen($pdo, $userId, $day, $startedAt);
-    $pdo->prepare('INSERT INTO day_refs (day_id, device_id, day_ref) VALUES (?,?,?)')
+    $pdo->prepare('INSERT INTO day_refs (day_id, device_id, day_ref) VALUES (?,?,?)
+                   ON DUPLICATE KEY UPDATE day_id = VALUES(day_id)')
         ->execute([$dayId, $deviceId, $dayRef]);
     return $dayId;
 }

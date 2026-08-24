@@ -27,7 +27,18 @@ if ($isPost && $action === 'restore_day' && $dayId > 0) {
     header('Location: index.php?d=' . (int)$dayId); exit;
 }
 if ($isPost && $action === 'restore_mission' && $id > 0) {
-    trash_restore_mission($userId, $id);
+    /* NICHT MEHR BEDINGUNGSLOS (Backlog Nr. 33). Liegt der Diensttag selbst im
+     * Papierkorb, lehnt trash_restore_mission() ab — sonst entstuende ein
+     * aktiver Einsatz an einem geloeschten Tag, also genau der halb sichtbare
+     * Zustand, den das Einspielen einer Sicherung seit E-S1-19 verweigert.
+     * Die Meldung geht ueber die Sitzung, weil danach umgeleitet wird. */
+    $ergebnis = trash_restore_mission($userId, $id);
+    if ($ergebnis === 'tag_im_papierkorb') {
+        $_SESSION['flash_error'] =
+            'Der Diensttag dieses Einsatzes liegt ebenfalls im Papierkorb. '
+          . 'Stelle zuerst den Diensttag wieder her — der Einsatz bleibt so lange hier.';
+        header('Location: papierkorb.php'); exit;
+    }
     header('Location: index.php'); exit;
 }
 /* Dieselbe Pruefung wie beim Wiederherstellen (M5-08).
@@ -72,6 +83,10 @@ if (!$zeigeListe && $istTag) {
                         WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
     $c->execute([$userId, $dayId]);
     $anzahl = (int)$c->fetchColumn();
+    /* WAS NOCH AKTIV AM TAG HAENGT (Backlog Nr. 33). In aller Regel nichts —
+     * aber wenn doch, geht es mit, und dann muss es hier stehen. Die Zahl
+     * oben zaehlt nur die geloeschten; sie war damit zu klein. */
+    $aktiv = trash_aktiv_am_tag($userId, $dayId);
 } elseif (!$zeigeListe) {
     $st = db()->prepare('SELECT * FROM missions WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
     $st->execute([$id, $userId]);
@@ -82,6 +97,17 @@ if (!$zeigeListe && $istTag) {
 $trashDays     = $zeigeListe ? trash_list_days($userId) : [];
 $trashMissions = $zeigeListe ? trash_list_missions($userId) : [];
 
+/* Meldung aus der Sitzung abholen — dieselbe Mechanik wie in
+ * admin_stammdaten.php und einstellungen.php. Sie wird gebraucht, seit das
+ * Zurueckholen eines Einsatzes abgelehnt werden kann (Backlog Nr. 33): Nach
+ * einer Umleitung ist eine Variable weg, und eine Handlung, die nichts tut
+ * und nichts sagt, ist die schlechteste von beidem. */
+$fehler = null;
+if (!empty($_SESSION['flash_error'])) {
+    $fehler = (string)$_SESSION['flash_error'];
+    unset($_SESSION['flash_error']);
+}
+
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
 ui_topbar('uebersicht');
@@ -91,6 +117,7 @@ ui_topbar('uebersicht');
   <main class="page">
   <?php if ($zeigeListe): ?>
     <h1>Papierkorb</h1>
+    <?php ui_meldung(null, $fehler, 'info', '    '); ?>
     <p class="muted">Gelöschtes bleibt <?= TRASH_DAYS ?> Tage hier und wird danach
        automatisch endgültig entfernt.</p>
 
@@ -172,6 +199,28 @@ ui_topbar('uebersicht');
                  echo ' · ' . e((string)$tag['vehicle_name']);
              } ?>
            mit <?= $anzahl ?> Einsätzen, Ruhesegmenten und allen Tracks.</p>
+        <?php /* AKTIVE EINTRÄGE AM GELÖSCHTEN TAG (Backlog Nr. 33). Sie gehen
+                 seit Web 8.0.0 mit — vorher blieben sie ohne Diensttag zurück
+                 und waren danach halb sichtbar. Deshalb werden sie hier
+                 EINZELN genannt, nicht bloß gezählt: Wer sie behalten will,
+                 muss sie erkennen können. */ ?>
+        <?php if ($aktiv['einsaetze'] || $aktiv['segmente']): ?>
+          <p class="alert alert-warn">An diesem Diensttag hängt außerdem noch
+             <strong>Aktives</strong>, das <strong>mitgelöscht</strong> wird:</p>
+          <ul>
+            <?php foreach ($aktiv['einsaetze'] as $a): ?>
+              <li>Einsatz vom <?= e(fmt_local((string)$a['started_at'], 'd.m.Y')) ?>,
+                  <?= e(fmt_local((string)$a['started_at'])) ?> Uhr —
+                  <a href="einsatz.php?id=<?= (int)$a['id'] ?>">ansehen</a>,
+                  <a href="einsatz_verschieben.php?id=<?= (int)$a['id'] ?>">verschieben</a></li>
+            <?php endforeach; ?>
+            <?php if ($aktiv['segmente'] > 0): ?>
+              <li><?= (int)$aktiv['segmente'] ?> Ruhesegment(e)</li>
+            <?php endif; ?>
+          </ul>
+          <p class="muted">Wer einen davon behalten will, verschiebt ihn
+             vorher an einen anderen Diensttag.</p>
+        <?php endif; ?>
       <?php else: ?>
         <p><strong>Einsatz vom <?= e(fmt_local((string)$m['started_at'], 'd.m.Y')) ?>,
            <?= e(fmt_local((string)$m['started_at'])) ?> Uhr</strong></p>

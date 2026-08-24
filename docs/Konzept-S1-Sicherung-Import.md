@@ -174,12 +174,14 @@ Keine. Alle F-Fragen sind entschieden und als E-S1-01 bis E-S1-18 überführt
 während der Umsetzung hier eintragen und vor Umsetzung des betroffenen Pakets
 entscheiden lassen.
 
-**Zwei Fragen bleiben nach S1 offen** und sind ausdrücklich **nicht**
-entschieden worden, weil beide Verhalten ändern, das NutzerInnen sehen:
-Backlog **Nr. 33** (`trash_purge_day()` lässt aktive Einsätze verwaist
-zurück — mitlöschen oder ablehnen?) und **Nr. 34** (Schritt 1 der
-Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag — Fingerabdruck
-vorziehen oder Widerspruch melden?). Siehe Abschnitt 8, F-S1-G und F-S1-H.
+**Zwei Fragen blieben nach C8 offen**, weil beide Verhalten ändern, das
+NutzerInnen sehen: Backlog **Nr. 33** (`trash_purge_day()` lässt aktive
+Einsätze verwaist zurück — mitlöschen oder ablehnen?) und **Nr. 34** (Schritt 1
+der Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag — Fingerabdruck
+vorziehen oder Widerspruch melden?). Beide sind auf ausdrückliche Anweisung in
+**C9** entschieden und umgesetzt worden: mitlöschen samt Abstellen der Ursache
+an drei Stellen, und Schritt 1 belegen statt raten. Siehe Abschnitt 8
+(F-S1-G, F-S1-H) und Abschnitt 10, C9.
 
 ## 5. Arbeitspakete
 
@@ -487,8 +489,11 @@ nicht mit; ihre Zahl ist zu klein.
 **Blockierend:** nein, und außerhalb des Umfangs von S1 (es geht um das
 endgültige Löschen, nicht um das Einspielen).
 
-**Verbleib:** Backlog **Nr. 33**, offen — mitlöschen oder ablehnen ist eine
-Entscheidung.
+**Verbleib:** Backlog **Nr. 33**. In C9 entschieden (mitlöschen) und umgesetzt,
+zusammen mit dem Abstellen der Ursache an drei Stellen; der Eintrag steht
+seither unter *Erledigt*. Die Nachmessung dort hat gezeigt, dass dieser Befund
+untertrieb: Der Zustand war über vier Klicks in der Oberfläche herzustellen,
+ohne Uhr.
 
 ### F-S1-H — Schritt 1 der Wiedererkennung verhängt den ganzen Datei-Tag
 
@@ -502,9 +507,10 @@ F-S1-C ist nur der Sonderfall „anderer Tag liegt im Papierkorb".
 
 **Blockierend:** nein.
 
-**Verbleib:** Backlog **Nr. 34**, offen — Fingerabdruck vorziehen oder den
-Widerspruch melden ist eine Entscheidung, und die falsche Wahl macht das
-Einspielen schlechter, nicht besser.
+**Verbleib:** Backlog **Nr. 34**. In C9 entschieden und umgesetzt — weder
+Fingerabdruck vorziehen noch beim Raten bleiben, sondern Schritt 1 belegen:
+alle Kennungen zählen, nur ein eindeutiges Ergebnis benutzen, den Widerspruch
+als `tag_mehrdeutig` melden. Der Eintrag steht seither unter *Erledigt*.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*
@@ -1012,6 +1018,96 @@ Hochladen) und die Anzeige danach bleiben Sache des Kreislaufs.
 **Zur Zahl 24 statt 25 bei der Demo-Abnahme:** Der umgebaute Wächter zählt
 nicht mehr als Einzelprüfung mit — er hält an, statt zu melden. Eine Prüfung
 weniger in der Liste, ein Schutz mehr.
+
+### C9 — Die beiden offenen Entscheidungen (erledigt)
+
+Nach C8 standen Backlog **Nr. 33** und **Nr. 34** offen, weil beide Verhalten
+ändern, das NutzerInnen sehen. Beide sind entschieden und umgesetzt worden.
+Der Umfang von S1 wächst damit über das Konzept hinaus — das ist bewusst und
+auf ausdrückliche Anweisung geschehen, nicht nebenbei.
+
+**Nr. 33 — der halb sichtbare Einsatz.** Die Nachmessung am laufenden Code hat
+gezeigt, dass der Backlog-Eintrag untertrieb: Der Zustand war über **vier
+Klicks in der normalen Oberfläche** herzustellen, ohne Uhr.
+
+    1. Einsatz einzeln geloescht
+    2. Diensttag geloescht
+    3. Papierkorb -> „Wiederherstellen" beim einzeln geloeschten Einsatz
+       -> Einsatz aktiv=1, sein Diensttag aktiv=0
+    4. „Endgueltig loeschen" des Tages
+       -> uebrig: Einsatz, day_id=NULL, deleted_at=NULL
+
+Was so ein Einsatz danach ist, ebenfalls nachgesehen: in Suche und
+`einsatz.php` **sichtbar**; in Tagesübersicht, Zeitraum und Export **weg**
+(alle drei über `JOIN days`); im Formular **nicht zu öffnen** (400); im
+Papierkorb **nicht** (er ist aktiv); in der Sicherung **enthalten**
+(`edbak_build()` joint nicht) — aber beim Einspielen **übersprungen**, weil
+ihm der Diensttag fehlt. Also ein Datensatz, der gerettet aussieht und beim
+nächsten Umlauf still verschwindet.
+
+Entschieden wurde **mitlöschen** statt ablehnen (ablehnen wäre eine Sackgasse:
+Diese Einsätze stehen in keiner Liste), und dazu die Ursache an allen drei
+Stellen abgestellt — einschließlich des Uhr-Wegs, der ursprünglich für ein
+eigenes Paket vorgesehen war:
+
+| Stelle | Vorher | Jetzt |
+|---|---|---|
+| `trash_restore_mission()` | holt bedingungslos zurück | lehnt ab, solange der Diensttag im Papierkorb liegt; liefert einen Grund statt `void` |
+| `dt_zu_dayref()`, `ingest.php` | Kennung/Zuordnung darf auf einen gelöschten Tag zeigen | gelöschte Tage zählen nicht; es entsteht ein **neuer** Tag, die Dienstkennung wird auf ihn umgebogen |
+| `trash_purge_day()` | löscht nur `deleted_at IS NOT NULL` | löscht **alles** am Tag; die Rückfrage nennt das Aktive vorher einzeln |
+| `update.php` | — | Bericht „Einsätze ohne Diensttag" für den Altbestand |
+
+**Zum Uhr-Weg im Einzelnen.** Der Upload wird **nicht** verworfen, sondern
+löst einen neuen Diensttag aus. Zwei Gründe: Die Uhr hat den Dienst geflogen,
+und sie sendet ein Paket nur, bis der Server es quittiert — verworfen ist
+fort. Ein zusätzlicher Tag dagegen ist umkehrbar
+(`diensttag_zusammenfuehren.php`). Der gelöschte Tag verliert dabei seine
+Kennung; wird er später zurückgeholt, gehört die weiterlaufende Uhr-Sitzung
+zum neuen Tag. `day_refs` ist auf `(device_id, day_ref)` eindeutig, das
+Umbiegen läuft deshalb über `ON DUPLICATE KEY UPDATE`.
+
+**Der Altbestand wird gemeldet, nicht angefasst** — als Bericht auf der
+Wartungsseite, nicht als Migration. Eine Migration gilt nach einem Durchlauf
+als erledigt und schweigt danach; dieser Zustand soll so lange sichtbar
+bleiben, wie es ihn gibt. Und welcher Diensttag der richtige ist, weiß eine
+Wartungsseite nicht.
+
+**Nr. 34 — Schritt 1 der Wiedererkennung.** Umgesetzt wurde **nicht** „den
+Fingerabdruck vorziehen", sondern „Schritt 1 belegen". Alle `client_ref` des
+Datei-Tags werden nachgeschlagen, und nur auf aktive Zieltage; genau ein
+Ergebnis gilt, mehrere heißen „Schritt 1 weiß es nicht" — dann entscheidet der
+Fingerabdruck, und der Widerspruch erscheint als neuer Überspringgrund
+`tag_mehrdeutig`.
+
+Der Fingerabdruck bleibt Schritt 2, weil er der **sprödere** Anker ist: Er
+bricht, sobald jemand am Zieltag Beginn, Ende, Art, Rettungsmittel oder
+Station berichtigt hat — der häufige Fall. `client_ref` ist stabil. Ihn
+zurückzustufen verschlechterte den häufigen Fall zugunsten des seltenen.
+
+Nebenwirkung, die gut passt: Weil Schritt 1 nur noch **aktive** Zieltage
+zählt, führt ein Treffer auf einem Papierkorb-Tag nicht mehr dazu, dass
+E-S1-19 anschließend alle aktiven Einträge des Datei-Tags ablehnt. Der
+Fingerabdruck greift, und der Tag entsteht neu.
+
+**Prüfstand C9**
+
+| Nr. | Prüfung | Soll | Ist |
+|---|---|---|---|
+| — | Wiederherstellungsprobe, heutiger Stand | alle | **30 Erwartungen, 0 nicht erfüllt** (vier Teile) |
+| — | dieselbe gegen den Stand vor C9 (`5e68024`) | muss durchfallen | **11 von 30 nicht erfüllt**, genau in Teil 3 und 4 |
+| — | `papierkorb_misch.mjs`, heutiger Stand | grün | **14 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+| — | dieselbe gegen den Stand vor C9 | muss durchfallen | **4 Befunde** (Zurückholen ging durch, ohne Meldung; der Einsatz wurde mit dem Tag aktiv; die Gegenprobe konnte nicht greifen) |
+| P-S1-01 | Kreislauf Sicherung | unverändert | **286 739 / 0 unerklärt / 16 erwartet** |
+| P-S1-02 | Kreislauf CSV | unverändert | **8 797 / 0 unerklärt / 859 erwartet** |
+| P-S1-11 | Demo-Abnahme | grün | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+| P-S1-13 | Angriffswerte | 42 / 0 | **42 / 0**, 0 Konsolenfehler |
+| — | Bericht `update.php` | zeigt Waisen und nichts, wenn keine da sind | leer: „Keine. Jeder aktive Einsatz hängt an einem Diensttag"; mit zwei künstlich erzeugten: **2**, mit Konto, Datum/Uhrzeit und Kennung |
+
+**Was in C9 NICHT geprüft werden konnte:** der Uhr-Weg mit einem echten Gerät.
+Geprüft ist `dt_zu_dayref()` unmittelbar (neuer Tag, Kennung umgebogen) und
+die Bedingung in `ingest.php` durch Lesen — nicht eine Nachlieferung einer
+Garmin-Uhr auf einen gelöschten Diensttag. Es gibt in dieser Umgebung kein
+Gerät.
 
 **Zwei Korrekturen an eigenen Angaben**
 

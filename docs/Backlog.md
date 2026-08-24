@@ -118,29 +118,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
-33. **`trash_purge_day()` lässt aktive Einsätze verwaist zurück.** Die
-    Funktion entfernt zuerst die Einsätze des Tages `WHERE deleted_at IS NOT
-    NULL` und danach den Diensttag. Ein **aktiver** Einsatz an einem gelöschten
-    Tag überlebt den ersten Schritt und verliert im zweiten seinen Diensttag:
-    `missions.day_id` trägt `ON DELETE SET NULL`. Er steht danach ohne Tag in
-    der Datenbank — in der Suche sichtbar, in der Tagesübersicht nicht, im
-    Formular nicht mehr zu öffnen (`einsatz_form.php` bricht ohne Diensttag
-    ab). Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit, ihre
-    Zahl ist also zu klein. **Zu entscheiden:** mitlöschen (dann muss die
-    Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag
-    hängen. Der Zustand entsteht seit Web 8.0.0 nicht mehr über das
-    Einspielen (Nr. 32), über `dt_zu_dayref()` beim Uhr-Upload aber weiterhin:
-    die Zuordnung dort filtert nicht auf `days.deleted_at`. Gefunden in S1.
-34. **Schritt 1 der Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag.**
-    `edbak_restore()` erkennt einen Diensttag wieder, sobald **ein einziger**
-    seiner Einsätze im Ziel schon liegt — und übernimmt dann dessen `day_id`
-    für **alle** Einsätze und Ruhesegmente des Datei-Tags. Liegt dieser eine
-    Einsatz im Ziel an einem anderen Tag (weil ihn jemand verschoben hat),
-    wandert der ganze Datei-Tag dorthin, auch wenn er im Ziel unverändert
-    aktiv daneben steht. Der Papierkorb-Fall aus Nr. 32 ist nur der Sonderfall
-    davon. **Zu entscheiden:** Fingerabdruck vor `client_ref` prüfen, beide
-    Ergebnisse vergleichen und bei Widerspruch den Fingerabdruck vorziehen —
-    oder den Widerspruch melden statt zu raten. Gefunden in S1.
 
 ---
 
@@ -462,3 +439,77 @@ zutreffen.
     `SQLSTATE[23000] … Duplicate entry 'mission-<id>-1' for key 'PRIMARY'`,
     ohne dass irgendetwas angekommen wäre. Beide Kreisläufe unverändert
     (286 739 / 0 / 16 und 8 797 / 0 / 859).
+
+33. **`trash_purge_day()` lässt aktive Einsätze verwaist zurück.**
+    *Erledigt mit Web 8.0.0.* Die
+    Funktion entfernt zuerst die Einsätze des Tages `WHERE deleted_at IS NOT
+    NULL` und danach den Diensttag. Ein **aktiver** Einsatz an einem gelöschten
+    Tag überlebt den ersten Schritt und verliert im zweiten seinen Diensttag:
+    `missions.day_id` trägt `ON DELETE SET NULL`. Er steht danach ohne Tag in
+    der Datenbank — in der Suche sichtbar, in der Tagesübersicht nicht, im
+    Formular nicht mehr zu öffnen (`einsatz_form.php` bricht ohne Diensttag
+    ab). Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit, ihre
+    Zahl ist also zu klein. **Zu entscheiden:** mitlöschen (dann muss die
+    Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag
+    hängen. Der Zustand entsteht seit Web 8.0.0 nicht mehr über das
+    Einspielen (Nr. 32), über `dt_zu_dayref()` beim Uhr-Upload aber weiterhin:
+    die Zuordnung dort filtert nicht auf `days.deleted_at`. Gefunden in S1.
+
+    Entschieden wurde **mitlöschen** — und dazu die Ursache abgestellt, an
+    allen drei Stellen, an denen ein aktiver Einsatz überhaupt an einen
+    gelöschten Diensttag geraten konnte:
+
+    - `trash_restore_mission()` **lehnt ab**, solange der Diensttag im
+      Papierkorb liegt, und sagt warum. Den Tag stillschweigend mitzurückzuholen
+      wäre die falsche Großzügigkeit: Ein Klick auf einen Einsatz belebte einen
+      ganzen Dienst.
+    - `dt_zu_dayref()` gibt keinen gelöschten Tag mehr zurück, sondern legt
+      einen **neuen** an und biegt die Dienstkennung auf ihn um; dasselbe gilt
+      für den schon zugeordneten Tag in `ingest.php`. Verwerfen schied aus: Die
+      Uhr sendet nur, bis der Server quittiert — verworfen ist fort, ein
+      zusätzlicher Tag dagegen lässt sich zusammenführen.
+    - `trash_purge_day()` nimmt **alles** am Tag mit, nicht nur das Gelöschte,
+      und die Rückfrage nennt das Aktive vorher einzeln mit Datum, Uhrzeit und
+      einem Link zum Verschieben. *Ablehnen* wäre eine Sackgasse gewesen: Die
+      betroffenen Einsätze stehen in keiner Liste, man kann sie also nicht
+      wegräumen.
+
+    Altbestand wird **gemeldet, nicht angefasst**: `update.php` zählt aktive
+    Einsätze ohne Diensttag und listet sie. Als Bericht und nicht als
+    Migration, damit die Meldung so lange steht, wie es den Zustand gibt.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 3 — acht Erwartungen,
+    davon am Stand davor fünf nicht erfüllt (Zurückholen ging durch, die Uhr
+    landete auf dem gelöschten Tag, das endgültige Löschen ließ ein Waisenkind
+    zurück). Im Browser `papierkorb_misch.mjs`: 14 Einzelprüfungen, 0 Befunde;
+    am Stand davor 4 Befunde.
+
+34. **Schritt 1 der Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag.**
+    *Erledigt mit Web 8.0.0.*
+    `edbak_restore()` erkennt einen Diensttag wieder, sobald **ein einziger**
+    seiner Einsätze im Ziel schon liegt — und übernimmt dann dessen `day_id`
+    für **alle** Einsätze und Ruhesegmente des Datei-Tags. Liegt dieser eine
+    Einsatz im Ziel an einem anderen Tag (weil ihn jemand verschoben hat),
+    wandert der ganze Datei-Tag dorthin, auch wenn er im Ziel unverändert
+    aktiv daneben steht. Der Papierkorb-Fall aus Nr. 32 ist nur der Sonderfall
+    davon. **Zu entscheiden:** Fingerabdruck vor `client_ref` prüfen, beide
+    Ergebnisse vergleichen und bei Widerspruch den Fingerabdruck vorziehen —
+    oder den Widerspruch melden statt zu raten. Gefunden in S1.
+
+    Umgesetzt wurde die erste der beiden Möglichkeiten in abgewandelter Form:
+    **nicht** den Fingerabdruck vorziehen, sondern Schritt 1 belegen. Alle
+    Kennungen des Datei-Tags werden nachgeschlagen, und nur auf aktive
+    Zieltage. Genau ein Ergebnis gilt; mehrere heißen „Schritt 1 weiß es
+    nicht" — dann entscheidet der Fingerabdruck, und der Widerspruch erscheint
+    als neuer Überspringgrund `tag_mehrdeutig` in der Rückmeldung.
+
+    Der Fingerabdruck bleibt Schritt 2, weil er der **sprödere** Anker ist: Er
+    bricht, sobald jemand am Zieltag Beginn, Ende, Art, Rettungsmittel oder
+    Station berichtigt hat, und das ist der häufige Fall. `client_ref` ist
+    stabil.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 4 — sechs Erwartungen,
+    darunter zwei Gegenproben (ein eindeutiger Kandidat greift weiter und wird
+    nicht als mehrdeutig gemeldet). Am Stand davor fallen drei durch: Der
+    Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
+    eigener Diensttag, und gemeldet wurde nichts.

@@ -199,6 +199,25 @@ try {
      * INSERT, nicht im ON DUPLICATE KEY UPDATE. */
     $vorhandenerDayId = ($existing && $existing['day_id'] !== null)
         ? (int)$existing['day_id'] : null;
+
+    /* … ES SEI DENN, DIESER TAG LIEGT IM PAPIERKORB (Backlog Nr. 33).
+     *
+     * Dann greift die normale Zuordnung, und die uebergeht Papierkorbeintraege
+     * (dt_rueckfall, dt_zu_dayref) — es entsteht also ein anderer oder ein
+     * neuer Diensttag. Ohne diese Zeile schriebe die Nachlieferung einen
+     * AKTIVEN Einsatz an einen GELOESCHTEN Tag, und der ist danach halb
+     * sichtbar: in der Suche ja, in der Tagesuebersicht nein.
+     *
+     * Der Fall ist selten, weil trash_delete_day() alles mitmarkiert — er
+     * braucht einen Datensatz, der NACH dem Loeschen des Tages aktiv wurde.
+     * Genau solche Datensaetze gibt es aus aelteren Staenden noch. */
+    if ($vorhandenerDayId !== null) {
+        $vq = $pdo->prepare('SELECT id FROM days
+                              WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
+        $vq->execute([$vorhandenerDayId, (int)$dev['user_id']]);
+        if ($vq->fetchColumn() === false) { $vorhandenerDayId = null; }
+    }
+
     if ($dayRef !== null) {
         $dayId = dt_zu_dayref($pdo, (int)$dev['user_id'], (int)$dev['id'], $dayRef,
                               $day, $startedAt, $vorhandenerDayId);

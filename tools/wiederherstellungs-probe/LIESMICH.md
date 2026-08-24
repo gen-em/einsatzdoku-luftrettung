@@ -1,8 +1,9 @@
 # Wiederherstellungsprobe
 
-Vorher/Nachher-Beleg zu **E-S1-04**, **E-S1-19** und **Backlog Nr. 31/35**
-(Web 8.0.0). `edbak_restore()` hat zwei Sorten von Grenzfällen, die sich im
-Browser nur mühsam herstellen lassen und die man dem Ergebnis nicht ansieht.
+Vorher/Nachher-Beleg zu **E-S1-04**, **E-S1-19** und **Backlog Nr. 31/33/34/35**
+(Web 8.0.0). Der Papierkorb und der Rückweg einer Sicherung haben Grenzfälle,
+die sich im Browser nur mühsam herstellen lassen und die man dem Ergebnis nicht
+ansieht. Vier Teile.
 
 ## Teil 1 — Papierkorb aus der Datei
 
@@ -43,6 +44,41 @@ bis Web 8.0.0:
 Beides muss die eine Zeile beziehungsweise den einen Punkt kosten, nicht den
 Lauf — und in der Ablehnungsliste stehen, nicht im Nichts.
 
+## Teil 3 — der halb sichtbare Einsatz hat keinen Weg mehr
+
+Ein **aktiver** Einsatz an einem **gelöschten** Diensttag ist derselbe Zustand,
+den Teil 1 beim Einspielen ablehnt (E-S1-19) — und die Anwendung selbst konnte
+ihn herstellen. Drei Wege führten hin; alle drei werden hier abgeklopft
+(Backlog Nr. 33):
+
+- **Papierkorb → „Wiederherstellen"** beim einzeln gelöschten Einsatz, dessen
+  Diensttag ebenfalls im Papierkorb liegt. Wird jetzt abgelehnt; nach dem
+  Zurückholen des Tages geht es.
+- **Die Uhr** über eine Dienstkennung in `day_refs`, die auf einen gelöschten
+  Tag zeigt. Löst jetzt einen **neuen** Tag aus, und die Kennung wird auf ihn
+  umgebogen.
+- **Das endgültige Löschen** eines Diensttags, an dem noch etwas Aktives hängt
+  (aus älteren Ständen). Nimmt jetzt alles mit statt ein Waisenkind ohne
+  `day_id` zurückzulassen — und sperrt es für die Uhr.
+
+Der dritte Fall wird von Hand hergestellt: Über die regulären Wege lässt er
+sich seit Web 8.0.0 nicht mehr erzeugen.
+
+## Teil 4 — Schritt 1 der Wiedererkennung rät nicht mehr
+
+Ein Diensttag wird beim Einspielen zuerst über die Einsatzkennungen
+wiedererkannt. Bisher gewann der **erste** Treffer und verhängte seinen
+Diensttag über den ganzen Datei-Tag (Backlog Nr. 34). Die Probe stellt den
+Widerspruch her — zwei Einsätze desselben Datei-Tags liegen im Ziel an
+verschiedenen Tagen — und erwartet: `tag_mehrdeutig` wird gemeldet, keiner der
+beiden Tage wird verhängt, ein eigener entsteht, und die vorhandenen Einsätze
+bleiben, wo sie sind.
+
+Dazu zwei **Gegenproben**: Ein eindeutiger Kandidat muss weiterhin greifen
+(auch wenn der Fingerabdruck nicht mehr passt), und dabei darf nichts als
+mehrdeutig gemeldet werden. Ohne sie bewiese Teil 4 nur, dass die
+Wiedererkennung nichts mehr findet.
+
 ## Warum eine eigene Probe und nicht der Kreislauf
 
 Der Kreislauf (`tools/referenzdatensatz/`) fährt eine **echte** Sicherung
@@ -62,25 +98,30 @@ im Browser, Hochladen) und die Anzeige danach; dafür ist der Kreislauf da.
 
     php tools/wiederherstellungs-probe/probe.php
 
-Erwartet: **16 von 16**, Rückgabe `0`.
+Erwartet: **30 von 30**, Rückgabe `0`.
 
-Der Vorher-Vergleich braucht eine Kopie von `server/` mit einem älteren
-`backup_lib.php` darin:
+Der Vorher-Vergleich braucht eine **ganze** Kopie von `server/` aus dem
+Vergleichsstand — die Änderungen liegen in mehreren Dateien:
 
-    cp -r server /tmp/vorher
-    git show <stand>:server/backup_lib.php > /tmp/vorher/backup_lib.php
+    mkdir /tmp/vorher
+    git archive <stand> server | tar -x -C /tmp/vorher --strip-components=1
+    cp server/config.php /tmp/vorher/
     php tools/wiederherstellungs-probe/probe.php /tmp/vorher
 
-Gegen den Stand vor der Korrektur (`d078494`) fallen **12 von 16** durch:
-in Teil 1 beide `deleted_with_day = 0`-Erwartungen, beide Ablehnungen, der
-Zähler und die Papierkorbliste (sie ist dort leer); in Teil 2 alle sechs — der
-Lauf endet dort mit
-`SQLSTATE[23000] … Duplicate entry 'mission-<id>-1' for key 'PRIMARY'`, und
-damit ist nichts angekommen.
+Gegen **`5e68024`** (vor Nr. 33/34) fallen **11 von 30** durch, genau in Teil 3
+und 4. Gegen **`d078494`** (vor Nr. 31/35 und der `deleted_with_day`-Korrektur)
+fielen von den damaligen 16 Erwartungen **12** durch; Teil 2 endete dort mit
+`SQLSTATE[23000] … Duplicate entry 'mission-<id>-1' for key 'PRIMARY'`, es kam
+also gar nichts an.
+
+Fehlt in einem älteren Stand eine Funktion, die die Probe aufruft, **stirbt sie
+nicht**, sondern lässt die betroffene Erwartung durchfallen und sagt warum. Ein
+Vorher-Vergleich, der mit einem Fatal endet, sagt nichts über die Erwartungen
+dahinter.
 
 ## Was die Probe anfasst
 
-Sie legt in der Datenbank aus `config.php` zwei Wegwerfkonten unterhalb von
+Sie legt in der Datenbank aus `config.php` fünf Wegwerfkonten unterhalb von
 `@example.invalid` an und löscht sie am Ende wieder — samt allem, was daran
 hängt. Sie rührt kein anderes Konto an. Trotzdem: **gegen eine
 Testinstallation fahren, nicht gegen den Produktivserver.**
@@ -90,10 +131,14 @@ Testinstallation fahren, nicht gegen den Produktivserver.**
 - Sie misst den Zustand in der Datenbank, nicht die Anzeige. Dass der
   Papierkorb `p-m2` auch *zeigt*, folgt aus `trash_list_missions()` — der
   Funktion, die die Seite benutzt —, ist aber nicht im Browser nachgesehen.
-- Sie prüft zwei Diensttage mit einer Handvoll Einträgen, nicht den Bestand.
+- Sie prüft eine Handvoll Diensttage mit wenigen Einträgen, nicht den Bestand.
   Mengen- und Reihenfolgefragen beantwortet der Kreislauf.
 - Sie sagt nichts über die Frist: Dass der Löschzeitpunkt aus dem Lauf stammt,
   ist geprüft; dass der Aufräumjob ihn nach `TRASH_DAYS` einsammelt, nicht.
 - Teil 2 prüft zwei Sorten kaputter Angaben. Er ist **kein** vollständiger
   Beleg dafür, dass keine dritte übrig ist — dafür wäre die Prüfschicht Feld
   für Feld gegen das Schema zu halten.
+- Teil 3 prüft den Uhr-Weg an `dt_zu_dayref()`, nicht an einer echten
+  Nachlieferung: Es gibt hier kein Gerät. Die Bedingung in `ingest.php`, die
+  denselben Fall für den schon zugeordneten Diensttag abfängt, ist gelesen und
+  nicht gemessen.

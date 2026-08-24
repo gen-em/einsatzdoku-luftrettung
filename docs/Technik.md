@@ -1039,7 +1039,22 @@ Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit We
 weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
 `db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
 Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
-sie hängen am Tag und kehren mit ihm zurück. `ingest.php` quittiert Uploads für
+sie hängen am Tag und kehren mit ihm zurück.
+
+**Ein aktiver Eintrag an einem gelöschten Diensttag ist ausgeschlossen** (seit
+Web 8.0.0, Backlog Nr. 33). Er wäre halb sichtbar: in Suche und Einsatzseite
+ja, in Tagesübersicht, Zeitraum, Export und Nachbearbeitung nicht (alle joinen
+`days`), im Formular nicht zu öffnen — und beim endgültigen Löschen des Tages
+bliebe er ohne `day_id` zurück. Vier Stellen halten das:
+`trash_restore_mission()` lehnt ab, solange der Diensttag im Papierkorb liegt
+(und liefert dafür einen Grund statt `void`); `dt_zu_dayref()` und der
+`$vorhandenerDayId`-Zweig in `ingest.php` übergehen gelöschte Tage, sodass die
+Uhr einen **neuen** Tag auslöst (die Dienstkennung in `day_refs` wird auf ihn
+umgebogen); `trash_purge_day()` nimmt **alles** am Tag mit statt nur das
+Gelöschte, und die Rückfrage nennt das Aktive vorher einzeln
+(`trash_aktiv_am_tag()`); und beim Einspielen einer Sicherung gilt E-S1-19.
+Altbestand meldet `update.php` unter „Einsätze ohne Diensttag" — als Bericht,
+nicht als Migration. `ingest.php` quittiert Uploads für
 Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schreibt
 die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
 Zwischenseiten mit Umfangsanzeige statt über Browser-Dialoge.
