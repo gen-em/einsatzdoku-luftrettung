@@ -160,5 +160,27 @@ declare(strict_types=1);
  * Die Angabe, die das behebt, stand die ganze Zeit in der Datei — die Spalte
  * `datum` war im Importprofil auf target:null gesetzt, mit einem Kommentar,
  * der das Gegenteil dessen behauptete, was der Code tat.
+ *
+ * 8.0.0 macht die SICHERUNG VOLLSTAENDIG, und die Hauptnummer steigt dafuer
+ * aus einem einzigen Grund: Die NUTZLAST einer Sicherung ist eine andere
+ * geworden (Formatversion 6 -> 7). Sie fuehrt jetzt den Papierkorb, und der
+ * Einspielweg bringt ihn als Papierkorb zurueck — nicht als aktiven Bestand.
+ * Was vorher galt, war ein stiller Verlust: Wer am Tag nach einem
+ * versehentlichen Loeschen sicherte und die Datei spaeter zurueckspielte,
+ * verlor genau das, was er retten wollte.
+ *
+ * Eine Migration gibt es NICHT — die Spalten `deleted_at` und
+ * `deleted_with_day` liegen seit jeher, sie standen nur bisher immer leer in
+ * der Datei. Zu beachten ist etwas anderes: Der Sprung auf Nutzlast 7
+ * kennzeichnet, er SPERRT NICHT. Bereits ausgelieferte Staende nehmen eine
+ * v7-Datei an und braechten ihren Papierkorb aktiv zurueck; das steht als
+ * Warnung in docs/Backup-Format.md 4 und liess sich nachtraeglich nicht mehr
+ * verhindern.
+ *
+ * Dazu zwei Fehler des CSV-Kreislaufs, die die Phase P1 gemessen hatte:
+ * mehrzeilige Notizen verloren beim Rueckimport ihre Zeilenumbrueche, und
+ * `final = 0` samt leerem Ende wurde ueberschrieben — ein nicht
+ * abgeschlossener Einsatz kam als abgeschlossen zurueck. Beide Kreislaeufe
+ * (Sicherung und CSV) stehen danach auf null unerklaerten Abweichungen.
  */
-const WEB_VERSION = '7.3.1';
+const WEB_VERSION = '8.0.0';

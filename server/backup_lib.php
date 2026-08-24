@@ -32,26 +32,36 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_s
 /**
  * Inneres Backup-JSON aufbauen.
  *
- * $mitPapierkorb schaltet den Filter `deleted_at IS NULL` ab (Web 7.3.0).
- * GEBRAUCHT WIRD DAS AN GENAU EINER STELLE: der Demo-Fixture. Sie soll den
- * Referenzzustand VOLLSTAENDIG abbilden, und dazu gehoert ein gefuellter
- * Papierkorb — die Abdeckungsmatrix der Phase P1 fuehrt ihn ausdruecklich.
+ * DER PAPIERKORB IST TEIL JEDER SICHERUNG (E-S1-01). Bis Web 7.3.1 filterten
+ * drei Abfragen hier auf `deleted_at IS NULL`, und ein Parameter
+ * `$mitPapierkorb` schaltete den Filter fuer die Demo-Fixture ab. Beides ist
+ * entfallen.
  *
- * Fuer eine NutzerInnen-Sicherung bleibt es beim Filter, und das ist eine
- * Entscheidung, keine Bequemlichkeit: Wer eine Sicherung erstellt, sichert
- * seinen Bestand, nicht seinen Abfall. Was daraus folgt, steht seit Web 7.2.3
- * in docs/Backup-Format.md 4 — vorher stand es nirgends.
+ * WARUM DIE ENTSCHEIDUNG UMGEDREHT WURDE. Die alte Begruendung lautete: „Wer
+ * eine Sicherung erstellt, sichert seinen Bestand, nicht seinen Abfall." Das
+ * klingt einleuchtend und ist trotzdem falsch, denn der Papierkorb ist kein
+ * Abfall — er ist ein WIEDERHERSTELLBARER Zustand mit einer laufenden Frist
+ * (TRASH_DAYS = 90). Wer am Tag nach einem versehentlichen Loeschen sichert
+ * und die Sicherung spaeter zurueckspielt, verliert genau das, was er
+ * zurueckholen wollte, und zwar endgueltig und ohne Hinweis. Eine Sicherung
+ * ist ein ABBILD; ein Abbild, das einen Teil des Bestands weglaesst, ist
+ * keines.
  *
- * Die Spalten `deleted_at` und `deleted_with_day` wandern ohnehin mit; der
- * Einspielweg wertet sie NICHT aus (sie stehen nicht im Feldkatalog). Ein
- * Wiederherstellen bringt die Eintraege also als AKTIVE zurueck. Fuer die
- * Fixture ist genau das richtig: Das Nachlauf-Drehbuch legt sie danach ueber
- * die regulaeren Loeschwege wieder in den Papierkorb (E-P1-21).
+ * KEINE WAHLMOEGLICHKEIT AUF DER SICHERUNGSSEITE (E-S1-02). Ein Haken
+ * „Papierkorb mitsichern" verschoebe die Entscheidung auf den Zeitpunkt, an
+ * dem am wenigsten ueberlegt wird. Stattdessen nennen die Umfangsangaben
+ * (Admin-Tabelle, Freigabe-Hinweis, `umfang.papierkorb` der Admin-Sicherung),
+ * wie viel davon im Papierkorb liegt.
+ *
+ * Die Spalten `deleted_at` und `deleted_with_day` standen schon vorher in der
+ * Datei — bisher stets `null` beziehungsweise `0`. Seit Nutzlast 7 tragen sie
+ * einen Zustand, und `edbak_restore()` wertet ihn aus: Was hier geloescht ist,
+ * kommt als Papierkorbeintrag zurueck. Der ZEITPUNKT wandert dabei nicht mit
+ * — der Eintrag entsteht in der Zielinstallation neu und bekommt volle
+ * 90 Tage (E-S1-03, docs/Backup-Format.md 2 und 3).
  */
-function edbak_build(int $userId, bool $mitPapierkorb = false): string {
+function edbak_build(int $userId): string {
     $pdo = db();
-    $nurAktive = $mitPapierkorb ? '' : ' AND deleted_at IS NULL';
-    $nurAktiveD = $mitPapierkorb ? '' : ' AND d.deleted_at IS NULL';
     $q = function (string $sql, array $p) use ($pdo): array {
         $st = $pdo->prepare($sql); $st->execute($p); return $st->fetchAll(PDO::FETCH_ASSOC);
     };
@@ -153,7 +163,7 @@ function edbak_build(int $userId, bool $mitPapierkorb = false): string {
      * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
      * aendern, und das ist ein eigener Vorgang. */
     $missionZeilen = $q("SELECT id, $missionSpalten FROM missions
-                         WHERE user_id = ?" . $nurAktive . " ORDER BY started_at", [$userId]);
+                         WHERE user_id = ? ORDER BY started_at", [$userId]);
     $missionIds = array_map(static fn($m) => (int)$m['id'], $missionZeilen);
 
     /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
@@ -226,7 +236,7 @@ function edbak_build(int $userId, bool $mitPapierkorb = false): string {
     $restZeilen = $q('SELECT id, client_ref, day_id, started_at, ended_at, final,
                              deleted_at, deleted_with_day
                       FROM rest_segments
-                      WHERE user_id = ?' . $nurAktive . ' ORDER BY started_at', [$userId]);
+                      WHERE user_id = ? ORDER BY started_at', [$userId]);
     $spurNachRuhe = $spuren('rest', array_map(static fn($r) => (int)$r['id'], $restZeilen));
     foreach ($restZeilen as $r) {
         $rid = (int)$r['id'];
@@ -267,7 +277,7 @@ function edbak_build(int $userId, bool $mitPapierkorb = false): string {
                      FROM days d
                      LEFT JOIN vehicles v ON v.id = d.vehicle_id
                      LEFT JOIN bases b ON b.id = d.base_id
-                     WHERE d.user_id = ?' . $nurAktiveD . '
+                     WHERE d.user_id = ?
                      ORDER BY d.day, d.started_at, d.id', [$userId]);
     $dayIds = array_map(static fn($d) => (int)$d['id'], $dayZeilen);
 
@@ -377,11 +387,23 @@ function edbak_build(int $userId, bool $mitPapierkorb = false): string {
 
     $data = [
         'format' => 'einsatzdoku-backup',
-        /* Nutzlastversion 6 (Konzept 4.8). Der Container bleibt 3 und die
-         * Signatur `EDBAK2` unveraendert — nur der INHALT hat sich geaendert.
-         * Aeltere Nutzlasten werden nach E23 nicht mehr eingelesen; die
-         * Ablehnung steht in backup_restore(). */
-        'version' => 6,
+        /* Nutzlastversion 7 (E-S1-07): Die Datei fuehrt jetzt den Papierkorb.
+         * Der Container bleibt 3 und die Signatur `EDBAK2` unveraendert — nur
+         * der INHALT hat sich geaendert.
+         *
+         * DER SPRUNG IST KENNZEICHNUNG, KEINE SPERRE, und das gehoert deutlich
+         * gesagt: api/backup_restore.php nimmt weiterhin alles ab Version 6 an,
+         * und ein bereits AUSGELIEFERTER Stand (Web 7.3.1 und aelter) tut das
+         * auch. Der wertet `deleted_at` aber nicht aus und braechte den
+         * Papierkorb einer Version-7-Datei als AKTIVEN Bestand zurueck. Das
+         * laesst sich nachtraeglich nicht verhindern — eine Sperre haette in
+         * jenen Staenden stehen muessen. Es steht deshalb als Warnung in
+         * docs/Backup-Format.md 4.
+         *
+         * Umgekehrt bleiben Version-6-Dateien vollstaendig einspielbar: Sie
+         * enthalten keinen Papierkorb, `deleted_at` fehlt oder ist null, und
+         * der Rueckweg legt sie als aktiven Bestand an — genau wie bisher. */
+        'version' => 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],

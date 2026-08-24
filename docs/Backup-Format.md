@@ -108,10 +108,27 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 6 seit Web 6.0.0.** Der Container bleibt Version 3, die
-Signatur `EDBAK2` unverändert — geändert hat sich allein der **Inhalt**: Der
-Flugtag ist zum Diensttag mit eigener Kennung geworden, die Besatzung ist
-normalisiert, und der Standort ist der Anker der Stammdaten.
+**Nutzlastversion 7.** Der Container bleibt Version 3, die Signatur `EDBAK2`
+unverändert — geändert hat sich allein der **Inhalt**: Die Datei führt jetzt
+den **Papierkorb**. Gelöschte Einsätze, Ruhesegmente und Diensttage stehen
+darin und kommen beim Einspielen als Papierkorbeinträge zurück. Bis Version 6
+fehlten sie ganz; eine Wiederherstellung leerte den Papierkorb endgültig.
+
+**Version 6 (seit Web 6.0.0)** war der Umbau auf Diensttage: Der Flugtag ist
+zum Diensttag mit eigener Kennung geworden, die Besatzung ist normalisiert,
+und der Standort ist der Anker der Stammdaten. Version-6-Dateien werden
+**weiterhin gelesen** und vollständig eingespielt — ihnen fehlt nichts, was
+sich erraten müsste, sie beschreiben schlicht einen Bestand ohne gelöschte
+Einträge.
+
+> **Der Sprung auf 7 kennzeichnet, er sperrt nicht.** Die Annahmeschranke in
+> `api/backup_restore.php` steht unverändert bei „ab Version 6". Ein bereits
+> **ausgelieferter** Stand (Web 7.3.1 und älter) hat dieselbe Schranke,
+> wertet `deleted_at` aber nicht aus — er nimmt eine Version-7-Datei an und
+> bringt deren Papierkorb als **aktiven Bestand** zurück. Das lässt sich
+> nachträglich nicht verhindern: Eine Sperre hätte in jenen Ständen stehen
+> müssen. Wer eine Version-7-Sicherung in eine ältere Installation einspielt,
+> muss damit rechnen und den Papierkorb dort anschließend von Hand leeren.
 
 **Nutzlasten der Version 5 und älter werden nicht mehr eingelesen.** Das ist
 eine bewusste Entscheidung und kein Versäumnis: Einer alten Datei fehlen die
@@ -140,7 +157,7 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 6,
+  "version": 7,
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
   "app": "einsatzdoku-notarzt",
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
@@ -197,6 +214,11 @@ seit Web 4.1.2 auch:
     "vehicle_ref": "Christoph 17", "base_ref": "Kempten",   // Stammdaten-Verweis
     "notes": "…",
 
+    // PAPIERKORB (seit Version 7). null = aktiv; ein Zeitstempel = der Tag
+    // liegt im Papierkorb. Der ZEITPUNKT wird beim Einspielen NICHT
+    // übernommen — siehe „Der Papierkorb in der Datei" unten.
+    "deleted_at": null,                   // DATETIME (UTC) oder null
+
     // Besatzung des Diensttags, je Rolle ein Eintrag. Die SCHLÜSSELMENGE ist
     // der eingefrorene Rollensatz — auch leere Rollen stehen darin, denn sie
     // sagen aus, welche Rollen dieser Dienst überhaupt anbot.
@@ -229,8 +251,15 @@ seit Web 4.1.2 auch:
     "ended_at":   "2026-07-19 09:02:00",  // null = kein Abschluss
     "manual": 0, "final": 1,
     "origin": "watch", "edited": 0,        // seit Version 4 (Herkunft/Bearbeitungsstatus)
+    "created_at": "2026-07-19 08:16:12",   // Anlegezeitpunkt der ZEILE (UTC)
     "distance_m": 38400, "ascent_m": 550,
     "site_ele_m": 712,                    // NICHT uebernommen (s. Hinweis unten)
+
+    // PAPIERKORB (seit Version 7). deleted_with_day = 1 heisst: mit dem
+    // ganzen Diensttag gelöscht, erscheint nicht einzeln im Papierkorb und
+    // kehrt mit ihm gemeinsam zurück. Beide Felder standen schon vorher in
+    // der Datei, waren aber immer null/0.
+    "deleted_at": null, "deleted_with_day": 0,
 
     // Transport und Zielklinik (seit Version 6). transport_mode ist ein
     // ENUM('air','ground','ambulant'); bei "ambulant" entfallen Zielklinik,
@@ -292,10 +321,40 @@ seit Web 4.1.2 auch:
   "rest_segments": [ {
     "client_ref": "r-…", "day_id": 17,
     "started_at": "…", "ended_at": "…", "final": 1,
+    "deleted_at": null, "deleted_with_day": 0,   // Papierkorb, seit Version 7
     "track": [ [0, 47.72, 10.31, 712.5, 1721383200] ]
   } ]
 }
 ```
+
+### Der Papierkorb in der Datei (seit Version 7)
+
+Drei Felder tragen ihn: `days[].deleted_at`, `missions[].deleted_at` /
+`missions[].deleted_with_day` und dieselben zwei an den Ruhesegmenten. Sie
+standen schon in Version 6 in jeder Datei, waren dort aber ausnahmslos `null`
+beziehungsweise `0` — die Abfragen filterten Gelöschtes vorher weg.
+
+**Übernommen wird der Zustand, nicht der Zeitpunkt.** Beim Einspielen
+entscheidet allein, *ob* `deleted_at` gesetzt ist; der Wert selbst wird
+verworfen und durch den **Einspielzeitpunkt** ersetzt. Die 90-Tage-Frist
+beginnt damit neu.
+
+Das ist eine Entscheidung, keine Nachlässigkeit, und sie folgt derselben Linie
+wie `origin`: Der Eintrag **entsteht in dieser Installation neu**. Die
+Gegenrechnung wäre, den alten Zeitpunkt zu übernehmen — dann könnte eine
+Sicherung Einträge mitbringen, deren Frist längst abgelaufen ist, und der
+nächste Aufräumjob löschte sie endgültig, ohne dass jemand sie je gesehen
+hätte. Eine Wiederherstellung, die Daten einspielt und wenige Stunden später
+selbst wieder entfernt, wäre die schlechtere Bauart.
+
+**`deleted_with_day` folgt dem Zieltag, nicht der Datei.** Geschrieben wird
+`1` nur, wenn der Diensttag, dem der Eintrag nach der Zuordnung zufällt,
+selbst im Papierkorb liegt; sonst `0` (einzeln gelöscht). Damit kann kein
+Eintrag mit `deleted_with_day = 1` an einem aktiven Tag entstehen — der wäre
+im Papierkorb unsichtbar (`trash_list_missions()` zeigt nur
+`deleted_with_day = 0`) und über den Tag nicht wiederherstellbar
+(`trash_restore_day()` holt nur zurück, was am gelöschten Tag hängt). Details
+in Abschnitt 3.
 
 ### Feldkonventionen
 
@@ -392,15 +451,9 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
 **Was in der Sicherung gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
 
-Der Abschnitt oben zählt Spalten auf. Diese vier sind ganze Bereiche, und ihr
+Der Abschnitt oben zählt Spalten auf. Diese drei sind ganze Bereiche, und ihr
 Fehlen fällt erst auf, wenn man danach sucht:
 
-- **Der Papierkorb.** Gelöschte Einsätze, Ruhesegmente und Diensttage stehen in
-  keiner Sicherung (`WHERE deleted_at IS NULL` an allen drei Stellen in
-  `backup_lib.php`). Eine Wiederherstellung in ein frisches Konto leert ihn
-  damit **endgültig**. Gemessen am Referenzdatensatz: 5 Einsätze,
-  5 Ruhesegmente und 1 Diensttag vor dem Umlauf, danach nichts davon.
-  Wer den Papierkorb noch braucht, stellt vor dem Sichern wieder her.
 - **Geräte.** Eine Uhr trägt einen API-Schlüssel; ein mitgesichertes Gerät
   wäre ein mitgesicherter Zugang. Nach einer Wiederherstellung muss deshalb
   **jede Uhr neu gekoppelt werden**. Die Dienstkennungen (`day_refs`) bleiben
@@ -415,6 +468,22 @@ Fehlen fällt erst auf, wenn man danach sucht:
   gekoppelten Uhr könnte einen endgültig gelöschten Einsatz also erneut
   anlegen. In der Praxis entschärft sich das dadurch, dass die Kopplung
   ebenfalls weg ist.
+
+  **Die Sperrliste ist nicht der Papierkorb**, auch wenn beide mit Löschen zu
+  tun haben. Der Papierkorb gehört dem Konto und steht seit Version 7 in jeder
+  Sicherung; die Sperrliste hängt an einer **Gerätekennung**, und Geräte
+  stehen aus dem Grund darüber in keiner Sicherung. Sie bleibt deshalb
+  ausdrücklich draußen. Eine Folge davon gehört dazu: Wiederhergestellte
+  Einträge tragen `device_id = NULL`, und wer sie später endgültig löscht,
+  füllt damit die Sperrliste nicht (`trash_block_ref()` verlangt eine
+  Gerätekennung). Das ist dasselbe „Geräte weg → Sperrliste leer" wie oben,
+  keine zusätzliche Lücke.
+
+**Der Papierkorb steht seit Version 7 in der Datei** und stand bis Version 6
+in keiner. Der Absatz, der ihn hier als fehlend führte, ist damit gegenstandslos;
+was stattdessen gilt, steht in Abschnitt 2 („Der Papierkorb in der Datei") und
+Abschnitt 3. Für **Version-6-Dateien** gilt die alte Aussage weiter: Sie
+enthalten keinen Papierkorb, und eine Wiederherstellung aus ihnen leert ihn.
 
 **Kommt eine Spalte hinzu, die mitgesichert werden soll**, ist sie in
 `backup_lib.php` einzutragen (Liste `$missionSpalten` beziehungsweise die
@@ -442,10 +511,19 @@ empfindlichen Angaben darin stecken ohnehin verschlüsselt.
   "konto":  { "account_key": "…16 Hexziffern…",
               "email": "…", "name": "…" },
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
-  "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3 },
-  "daten":  { … das innere JSON aus Abschnitt 2, Formatversion 5 … }
+  "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
+              "papierkorb": { "einsaetze": 5, "diensttage": 1,
+                              "ruhezeiten": 5 } },
+  "daten":  { … das innere JSON aus Abschnitt 2 … }
 }
 ```
+
+**`umfang.papierkorb` seit S1**, additiv — die Paketversion bleibt deshalb 1.
+Die drei Zahlen darüber zählen den Papierkorb **mit**; ohne den Unterblock
+wäre aus „42 Einsätze" nicht zu erkennen, dass fünf davon gelöscht sind. Bei
+Sicherungen aus der Zeit davor fehlt der Block, und die Anzeige lässt ihn dann
+**weg** statt eine Null zu zeigen: „nicht erhoben" ist etwas anderes als
+„nichts drin".
 
 **`daten` ist unverändert das Backup-JSON** — mit einem Unterschied zur
 `.edbak`-Datei: Dort ersetzt der Browser `pat_blob` vor dem Versiegeln durch

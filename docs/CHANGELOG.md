@@ -11,6 +11,59 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 8.0.0] — unveröffentlicht
+
+**Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
+als Papierkorb zurück.** Dazu die beiden Importfehler, die der CSV-Kreislauf
+der Phase P1 gemessen hatte. Nutzlastversion der Sicherung 6 → 7.
+**Keine Migration** — die Spalten liegen seit jeher, sie standen nur leer in
+der Datei.
+
+### Web — Der Papierkorb in der Sicherung (Backlog Nr. 30)
+
+Bis hierher filterte `edbak_build()` an drei Stellen auf
+`deleted_at IS NULL`. Die Begründung dafür stand im Kopfkommentar und klang
+einleuchtend: „Wer eine Sicherung erstellt, sichert seinen Bestand, nicht
+seinen Abfall."
+
+Sie war falsch, und zwar an der Stelle, an der es teuer wird. Der Papierkorb
+ist kein Abfall — er ist ein **wiederherstellbarer Zustand mit laufender
+Frist** (90 Tage, `TRASH_DAYS`). Der praktische Fall: Jemand löscht
+versehentlich einen Diensttag, sichert am selben Abend, merkt den Fehler erst
+Wochen später und spielt die Sicherung zurück. Er verliert genau das, was er
+zurückholen wollte — endgültig und ohne einen Hinweis, dass etwas fehlt.
+
+**Was geändert wurde.** Der Filter ist weg, ebenso der Parameter
+`$mitPapierkorb`, mit dem bis Web 7.3.0 nur die Demo-Fixture den Papierkorb
+mitnahm. Jede Sicherung enthält ihn jetzt: die eigene, die der Administration
+und die Fixture. Die Nutzlastversion steigt auf **7**.
+
+**Keine Wahlmöglichkeit auf der Sicherungsseite**, und das ist Absicht: Ein
+Haken „Papierkorb mitsichern" verschöbe die Entscheidung auf den Zeitpunkt, an
+dem am wenigsten überlegt wird. Eine Sicherung ist ein Abbild. Sichtbar wird
+der Anteil stattdessen dort, wo Zahlen ohnehin stehen — in der
+Sicherungsübersicht der Administration („davon im Papierkorb: 5 Einsätze,
+1 Diensttag, 5 Ruhezeiten"), im Hinweis auf eine freigegebene Sicherung und im
+neuen Unterblock `umfang.papierkorb` der Admin-Sicherung. Der Unterblock ist
+additiv; die Paketversion der Admin-Sicherung bleibt 1, und wo er fehlt
+(Sicherungen von vorher), zeigt die Anzeige **nichts** statt einer Null —
+„nicht erhoben" ist etwas anderes als „nichts drin".
+
+**Der Sprung auf Nutzlast 7 kennzeichnet, er sperrt nicht.** Die
+Annahmeschranke in `api/backup_restore.php` bleibt bei „ab Version 6": Eine
+Version-6-Datei enthält keinen Papierkorb, ihr fehlt aber nichts, was sich
+erraten müsste — sie bleibt vollständig einspielbar. Umgekehrt gilt: Ein
+bereits **ausgelieferter** Stand hat dieselbe Schranke, wertet `deleted_at`
+aber nicht aus und brächte den Papierkorb einer v7-Datei als aktiven Bestand
+zurück. Das ließ sich nachträglich nicht verhindern — eine Sperre hätte in
+jenen Ständen stehen müssen. Es steht deshalb als Warnung in
+`docs/Backup-Format.md` 4, statt als Zusage behauptet zu werden, die niemand
+prüfen kann.
+
+**Nebenbei berichtigt:** `docs/Technik.md` nannte an einer Stelle eine
+„30-Tage-Frist" für den Papierkorb. Es sind 90 (`TRASH_DAYS`), und alle
+übrigen Stellen sagten das auch.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**

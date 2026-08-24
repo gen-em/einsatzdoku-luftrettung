@@ -213,6 +213,25 @@ function umfang_text(array $p): string
         $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
         $teile[] = (int)($z['diensttage'] ?? $z['flugtage'] ?? 0) . ' Diensttage';
         $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
+        /* „davon im Papierkorb" (E-S1-02). Seit Nutzlast 7 steht der
+         * Papierkorb in jeder Sicherung und zaehlt in den drei Zahlen oben
+         * MIT. Ohne diesen Zusatz waere aus „87 Einsätze" nicht zu erkennen,
+         * dass fünf davon geloescht sind.
+         *
+         * Fehlt der Block (Sicherungen vor S1), wird NICHTS angezeigt statt
+         * einer Null: Eine Null behauptete „nichts im Papierkorb", richtig ist
+         * „nicht erhoben". */
+        $pk = $z['papierkorb'] ?? null;
+        if (is_array($pk)) {
+            $summe = (int)($pk['einsaetze'] ?? 0) + (int)($pk['diensttage'] ?? 0)
+                   + (int)($pk['ruhezeiten'] ?? 0);
+            $tag = (int)($pk['diensttage'] ?? 0);
+            $teile[] = $summe === 0
+                ? 'nichts im Papierkorb'
+                : 'davon im Papierkorb: ' . (int)($pk['einsaetze'] ?? 0) . ' Einsätze, '
+                  . $tag . ($tag === 1 ? ' Diensttag, ' : ' Diensttage, ')
+                  . (int)($pk['ruhezeiten'] ?? 0) . ' Ruhezeiten';
+        }
     }
     $teile[] = number_format($p['groesse'] / 1024, 0, ',', '.') . ' KB';
     return implode(', ', $teile);

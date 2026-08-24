@@ -2033,11 +2033,23 @@ ui_topbar('einstellungen');
         const u = d.freigabe.umfang || {};
         const woher = d.freigabe.herkunft_email
           ? ` Sie stammt aus dem Konto ${d.freigabe.herkunft_email}.` : '';
+        /* „davon im Papierkorb" (E-S1-02). Die drei Zahlen davor zählen den
+           Papierkorb MIT — seit Nutzlast 7 steht er in jeder Sicherung. Fehlt
+           der Block (Sicherung von vor S1), bleibt der Zusatz weg: „nicht
+           erhoben" ist etwas anderes als „nichts drin". */
+        const pk = u.papierkorb;
+        const pkText = pk
+          ? ` Davon im Papierkorb: ${pk.einsaetze || 0} Einsätze, `
+            + `${pk.diensttage || 0} Diensttage, ${pk.ruhezeiten || 0} Ruhezeiten — `
+            + `sie kommen als Papierkorbeinträge zurück, und die 90-Tage-Frist `
+            + `beginnt dabei neu.`
+          : '';
         document.getElementById('freigabeinfo').textContent =
           `Die Administration hat eine Sicherung vom `
           + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
           + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
-          + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.` + woher;
+          + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.`
+          + pkText + woher;
         // Ohne geschützte Angaben gibt es nichts umzuschlüsseln — dann nach dem
         // Wiederherstellungsschlüssel zu fragen wäre eine Hürde ohne Zweck.
         document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;

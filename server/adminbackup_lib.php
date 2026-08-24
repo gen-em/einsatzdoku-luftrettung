@@ -287,10 +287,28 @@ function edbak_sicherung_erzeugen(int $userId): array
      * 'rests' war schon vorher der falsche Schluessel: edbak_build() liefert die
      * Ruhesegmente unter 'rest_segments'. Die Zahl stand deshalb immer auf 0.
      * Hier berichtigt. */
+    /* 'papierkorb' als Unterblock (E-S1-02). Seit Nutzlast 7 enthaelt jede
+     * Sicherung den Papierkorb; die Zahl daneben ist die einzige Stelle, an
+     * der das SICHTBAR wird, ohne die Datei zu oeffnen. Additiv — die
+     * Paketversion der Admin-Sicherung bleibt deshalb 1, und
+     * admin_sicherungen.php faellt fuer aeltere Eintraege auf null zurueck
+     * (kein Papierkorb-Zusatz statt einer erfundenen Null). */
+    $imPapierkorb = static function (array $zeilen): int {
+        $n = 0;
+        foreach ($zeilen as $z) {
+            if (is_array($z) && ($z['deleted_at'] ?? null) !== null) { $n++; }
+        }
+        return $n;
+    };
     $umfang = [
         'einsaetze'  => count($daten['missions'] ?? []),
         'diensttage' => count($daten['days'] ?? []),
         'ruhezeiten' => count($daten['rest_segments'] ?? []),
+        'papierkorb' => [
+            'einsaetze'  => $imPapierkorb($daten['missions'] ?? []),
+            'diensttage' => $imPapierkorb($daten['days'] ?? []),
+            'ruhezeiten' => $imPapierkorb($daten['rest_segments'] ?? []),
+        ],
     ];
 
     $paket = [

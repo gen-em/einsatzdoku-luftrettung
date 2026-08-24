@@ -1073,6 +1073,26 @@ mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Diensttage.
 
+**Der Papierkorb ist Teil der Sicherung.** Was du gelöscht hast und was noch in
+der 90-Tage-Frist liegt, steht in der Datei und kommt beim Einspielen wieder
+**als Papierkorb** zurück — nicht als aktiver Bestand. Es gibt dafür keinen
+Haken zum Abwählen: Eine Sicherung ist ein Abbild, und der Papierkorb ist kein
+Abfall, sondern ein Zustand, aus dem sich zurückholen lässt. Vorher war das
+anders, und das war der schlechtere Weg: Wer am Tag nach einem versehentlichen
+Löschen sicherte und die Datei später zurückspielte, verlor genau das, was er
+retten wollte.
+
+Eines ändert sich beim Einspielen: **Die 90 Tage beginnen neu.** Übernommen
+wird, *dass* etwas gelöscht war, nicht *wann*. Sonst könnte eine ältere
+Sicherung Einträge mitbringen, deren Frist längst abgelaufen ist — der nächste
+Aufräumlauf entfernte sie endgültig, ohne dass du sie je zu sehen bekommen
+hättest.
+
+Wer die Sicherung in eine Installation **vor** dieser Fassung einspielt, sollte
+wissen: Die nimmt die Datei zwar an, kennt den Papierkorb darin aber nicht und
+legt seine Einträge als aktive Einsätze und Diensttage an. Dort also
+anschließend nachsehen.
+
 **Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
 der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
@@ -1119,7 +1139,8 @@ schiefgeht — sie ersetzt dein eigenes Backup nicht.
 **Die Administration sieht dabei keine Inhalte.** In der Sicherung stecken die
 geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
 sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
-Administration zeigt Zeitpunkt, Anzahl der Einsätze und Dateigröße — mehr nicht.
+Administration zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
+Ruhezeiten, davon die Anzahl im Papierkorb, und die Dateigröße — mehr nicht.
 
 **Wenn dein Konto weiterbesteht**, spielt die Administration eine solche
 Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer

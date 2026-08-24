@@ -45,7 +45,20 @@ if (!is_array($data) || ($data['format'] ?? '') !== 'einsatzdoku-backup') {
  *
  * Der Container (Signatur `EDBAK2`, Verschluesselung) ist unveraendert; die
  * Datei liess sich also entsiegeln. Genau darum kommt die Meldung hier an und
- * nicht schon im Browser. */
+ * nicht schon im Browser.
+ *
+ * WARUM DIE SCHRANKE BEI 6 BLEIBT, OBWOHL DIE NUTZLAST AUF 7 GESTIEGEN IST
+ * (E-S1-07). Nutzlast 7 fuehrt den Papierkorb (`deleted_at`,
+ * `deleted_with_day` mit Inhalt). Eine Version-6-Datei fuehrt ihn nicht — ihr
+ * fehlt nichts, was sich erraten muesste, sie beschreibt schlicht einen
+ * Bestand ohne geloeschte Eintraege. Sie ist damit vollstaendig einspielbar,
+ * und sie abzulehnen waere Schikane.
+ *
+ * Umgekehrt kennzeichnet der Sprung nur, er SPERRT NICHT: Ein bereits
+ * ausgelieferter Stand mit derselben Schranke nimmt eine Version-7-Datei an
+ * und braechte deren Papierkorb als aktiven Bestand zurueck, weil er
+ * `deleted_at` nicht auswertet. Das ist nachtraeglich nicht zu reparieren und
+ * steht als Warnung in docs/Backup-Format.md 4. */
 $nutzlast = isset($data['version']) ? (int)$data['version'] : 0;
 if ($nutzlast < 6) {
     json_out(['error' => 'version_alt',

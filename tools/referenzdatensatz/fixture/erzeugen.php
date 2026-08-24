@@ -56,16 +56,12 @@ $st->execute([$id]);
 $geraete = $st->fetchAll(PDO::FETCH_ASSOC);
 
 /* ---- Bestand, serverseitig (Chiffretext bleibt Chiffretext) -------------- */
-/* MIT PAPIERKORB. Die Fixture soll den Referenzzustand VOLLSTAENDIG
- * abbilden, und dazu gehoert ein gefuellter Papierkorb — die
- * Abdeckungsmatrix fuehrt ihn ausdruecklich. `edbak_build()` filtert ihn
- * fuer eine NutzerInnen-Sicherung heraus; hier nicht.
- *
- * Die Eintraege kommen beim Einspielen als AKTIVE zurueck (der Einspielweg
- * wertet `deleted_at` nicht aus). Das Nachlauf-Drehbuch legt sie danach
- * ueber die regulaeren Loeschwege wieder in den Papierkorb — so, wie eine
- * Nutzerin es taete (E-P1-21). */
-$daten = json_decode(edbak_build($id, true), true);
+/* MIT PAPIERKORB — und dafuer ist seit S1 nichts mehr zu tun. `edbak_build()`
+ * nimmt ihn von sich aus mit (E-S1-01), und `edbak_restore()` bringt ihn als
+ * Papierkorb zurueck (E-S1-03/04). Bis Web 7.3.1 brauchte es hier ein Flag
+ * und danach ein Nachlauf-Drehbuch, das die Eintraege ueber die regulaeren
+ * Loeschwege wieder in den Papierkorb legte; beides ist entfallen. */
+$daten = json_decode(edbak_build($id), true);
 if (!is_array($daten)) { fwrite(STDERR, "edbak_build lieferte kein JSON\n"); exit(2); }
 
 /* Gegenprobe: Die Fixture MUSS Chiffretext fuehren. Steht dort ein `pat`-
