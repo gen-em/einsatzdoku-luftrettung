@@ -11,7 +11,7 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
-## [Web 8.0.0] — unveröffentlicht
+## [Web 8.0.0] — 2026-08-24
 
 **Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
 als Papierkorb zurück.** Dazu die beiden Importfehler, die der CSV-Kreislauf
@@ -246,6 +246,51 @@ geändert → darf nicht. **12/12 für die Sicherung, 10/10 für CSV.**
 Die Ausnahmelisten tragen neu gemessene Zahlen. Für die behobenen Fehler Nr. 27
 und Nr. 28 sind **keine** Regeln hinzugekommen — behebbare Abweichungen gehören
 nicht in eine Ausnahmeliste, sondern behoben.
+
+### Wer nachbessern muss
+
+**Niemand — aber zwei Dinge sind zu wissen.**
+
+Eine Sicherung, die vor dieser Fassung erstellt wurde, enthält den Papierkorb
+nicht und kann ihn deshalb auch nicht zurückbringen. Wer gelöschte Einträge in
+einer alten Sicherung vermisst: Sie waren nie darin. Erst nach diesem Update
+erstellte Sicherungen führen sie.
+
+Umgekehrt: Wer eine Sicherung **aus** dieser Fassung in eine **ältere**
+Installation einspielt, bekommt ihren Papierkorb dort als **aktiven Bestand**
+zurück. Die Annahmeschranke sitzt seit Web 6.0.0 bei Nutzlast 6 und lässt eine
+Version-7-Datei durch; nachträglich lässt sich daran nichts ändern. Wer das
+tut, sieht anschließend in der Tagesübersicht nach.
+
+### Geprüft
+
+Beide Kreisläufe gegen den kanonischen Referenzdatensatz, der dafür neu
+gezogen wurde (87 Einsätze / 5 im Papierkorb, 100 Ruhesegmente / 5,
+16 Diensttage / 1, 55 861 Spurpunkte):
+
+| | vor S1 | mit 8.0.0 |
+|---|---|---|
+| Sicherung: Einzelvergleiche | 269 439 | **286 739** |
+| Sicherung: erwartete Abweichungen | 15 | 16 |
+| Sicherung: **unerklärte** | 0 | **0** |
+| CSV: Einzelvergleiche | 8 797 | 8 797 |
+| CSV: erwartete Abweichungen | 858 | 859 |
+| CSV: **unerklärte** | **6** | **0** |
+
+Der Sicherungs-Kreislauf stand vorher schon auf null — aber er verglich
+weniger: Der Papierkorb war gar nicht in der Datei. Die 17 300 zusätzlichen
+Einzelvergleiche sind der Zuwachs.
+
+Dazu: Probe aufs Exempel **12/12** (Sicherung, vier Proben neu) und **10/10**
+(CSV); die Invariante `deleted_with_day` über alle Konten der Prüfinstallation
+**0 Verstöße**; `created_at` nach dem Umlauf **87 von 87 wörtlich gleich**;
+Demo-Abnahme **25 Einzelprüfungen, 0 Befunde**, Reset 5,8 s (vorher rund 6 s);
+Angriffswerte-Regression **42 Einzelprüfungen, 0 Befunde**.
+
+Was **nicht** geprüft werden konnte, steht in
+`docs/Pruefdokument-S1-Sicherung-Import.md`, Abschnitt 1 — allen voran der
+Absatz „Wer nachbessern muss" oben: Dass ein älterer Stand eine v7-Datei
+annimmt, ist weder geprüft noch prüfbar.
 
 ## [Web 7.3.1] — 2026-08-23
 
