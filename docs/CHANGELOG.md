@@ -64,6 +64,63 @@ prüfen kann.
 „30-Tage-Frist" für den Papierkorb. Es sind 90 (`TRASH_DAYS`), und alle
 übrigen Stellen sagten das auch.
 
+### Web — Der Rückweg: Papierkorb kommt als Papierkorb zurück
+
+Die Datei zu füllen ist die halbe Arbeit. `edbak_restore()` schrieb keine der
+drei Spalten (`days.deleted_at`, `missions.deleted_at`/`deleted_with_day`, und
+dieselben zwei an den Ruhesegmenten) — ein bloßes Abschalten des Filters hätte
+den Papierkorb als **aktiven** Bestand zurückgebracht, und das wäre schlimmer
+als ihn zu verlieren: Was jemand gelöscht hat, stünde nach der
+Wiederherstellung wieder in der Tagesliste.
+
+**Der Zustand kommt aus der Datei, der Zeitpunkt aus dem Einspielvorgang.**
+Alle Einträge eines Laufs tragen denselben `deleted_at`, und die 90 Tage
+beginnen neu. Dieselbe Linie wie bei `origin`: Der Eintrag entsteht in dieser
+Installation neu. Die Gegenrechnung wäre teuer — eine ältere Sicherung brächte
+Einträge mit abgelaufener Frist mit, und der nächste Aufräumjob entfernte sie
+endgültig, ohne dass jemand sie je gesehen hätte.
+
+**Die Invariante, ohne die es einen Zombie gäbe.** `deleted_with_day = 1` wird
+nur geschrieben, wenn der **Zieltag** selbst im Papierkorb liegt — sonst `0`.
+Der Grund steht in zwei Zeilen an anderer Stelle: `trash_list_missions()`
+zeigt nur `deleted_with_day = 0`, `trash_restore_day()` holt nur zurück, was
+am gelöschten Tag hängt. Ein Eintrag mit `deleted_with_day = 1` an einem
+aktiven Tag wäre damit unsichtbar **und** unwiederbringlich. Ein in der Datei
+mitgelöschter Einsatz, dessen Zieltag hier aktiv ist, kommt deshalb einzeln
+gelöscht an.
+
+**D1 hat jetzt zwei Hälften.** Die Datumsprüfung gegen den Papierkorb des
+Zielkontos gilt weiter — aber nur für **aktive** Datei-Tage. Ein in der Datei
+gelöschter Tag will gar nicht aktiv werden; ihn am Ziel-Papierkorb zu messen
+ergäbe keinen Sinn. Er durchläuft die normale Wiedererkennung und entsteht,
+wenn er fehlt, als Papierkorbeintrag. Wird er gefunden, bleibt der Zieltag
+unangetastet — „Angaben werden nicht überschrieben" gilt für den Löschzustand
+wie für alles andere.
+
+**Die Rückmeldung war unvollständig und ist es nicht mehr.** Sie kannte drei
+Überspringgründe von fünf; `tag_im_papierkorb` und `tag_unbrauchbar`
+erschienen als roher Schlüssel. Einsätze und Ruhesegmente eines übersprungenen
+Tages liefen unter „unbrauchbares Datum oder Zeit" — irreführend, denn an
+ihrem Datum ist nichts auszusetzen; sie haben einen neuen, eigenen Grund
+(`tag_uebersprungen`). Ruhesegmente zählten ihre Gründe **gar nicht** mit,
+obwohl „bereits vorhanden" bei ihnen der häufigste Fall ist. Und die beiden
+Einspielwege — eigene Datei und freigegebene Sicherung — hatten zwei getrennte
+Textbausteine, die auseinandergelaufen waren; jetzt gibt es einen.
+
+### Web — `created_at` kommt zurück (Backlog Nr. 25)
+
+Der Anlegezeitpunkt eines Einsatzes wurde immer gesichert und nie eingespielt.
+Nach einer Wiederherstellung trugen alle Einsätze den Zeitpunkt des
+Einspielens — am Referenzdatensatz gemessen 79 verschiedene Werte davor, 5
+danach. Fachlich folgenlos (`started_at` ist die Zeit, die zählt), aber es war
+ein stiller Verlust, und das Vergleichswerkzeug sah ihn nicht, weil es
+`created_at` wegnormalisierte.
+
+Er steht jetzt als benannte Ausnahmespalte neben `start_src` und `pat_blob`.
+Ein unbrauchbarer Wert lässt die Spalte **weg** statt `NULL` zu schreiben —
+dann greift die Vorgabe der Datenbank und die Zeile bleibt. Gemessen: 87 von
+87 Einsätzen tragen nach dem Umlauf denselben Wert wie vorher.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**

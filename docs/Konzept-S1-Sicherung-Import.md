@@ -376,6 +376,46 @@ Prüfschicht ist **nicht** Umfang von S1.
 
 **Verbleib:** neuer Backlog-Eintrag in C7 (freie Nummer).
 
+### F-S1-B — „30-Tage-Frist" in der Technik-Dokumentation
+
+**Fundort:** `docs/Technik.md`, Tabelle „Zeitrechnung".
+
+**Sache:** Der Eintrag zu `UTC_TIMESTAMP()` nannte für den Papierkorb eine
+30-Tage-Frist. Es sind 90 (`TRASH_DAYS`); alle übrigen Stellen der
+Dokumentation sagten das auch. Dieselbe falsche Zahl steht im Rahmenplan
+(R22) und in Konzept P1 §10 — dort ist sie in Abschnitt 9 als Berichtigung
+vorgemerkt.
+
+**Blockierend:** nein. In C1 als Wortkorrektur behoben, kein Backlog-Eintrag.
+
+### F-S1-C — Aktiver Datei-Eintrag auf einem gelöschten Zieltag
+
+**Fundort:** `backup_lib.php`, `edbak_restore()`, Zuordnung Einsatz → Zieltag.
+
+**Sache:** Die Invariante E-S1-04 schließt den Zombie in einer Richtung aus
+(kein `deleted_with_day = 1` an einem aktiven Tag). Die Gegenrichtung ist
+offen: Ein in der Datei **aktiver** Einsatz kann auf einem **gelöschten**
+Zieltag landen und wird dort als aktiver Eintrag angelegt — er steht dann an
+einem Tag, den die Tagesliste nicht zeigt.
+
+Erreichbar ist das nur über Schritt 1 der Wiedererkennung (ein Einsatz
+derselben `client_ref` liegt im Ziel bereits an einem gelöschten Tag
+**anderen Datums**); die Datumsprüfung aus E-S1-05.1 greift dann nicht, weil
+sie das Datum vergleicht. Der Fall entsteht etwa, wenn jemand nach einer
+Wiederherstellung einen Einsatz auf einen anderen Tag verschiebt, diesen Tag
+löscht und dieselbe Datei erneut einspielt.
+
+**Warum hier nichts geändert wurde:** E-S1-04 sagt ausdrücklich „ohne
+`deleted_at` kein `deleted_with_day`" — einen aktiven Datei-Eintrag beim
+Einspielen zu löschen, weil sein Zieltag gelöscht ist, wäre genau die stille
+Nebenwirkung, die D1 ausschließt. Der Fall ist außerdem **nicht neu**: Er ist
+in derselben Form schon vor S1 erreichbar. Er gehört entschieden, nicht
+nebenbei behoben.
+
+**Blockierend:** nein.
+
+**Verbleib:** neuer Backlog-Eintrag in C7 (freie Nummer), zusammen mit F-S1-A.
+
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*
 
@@ -473,3 +513,62 @@ Wortkorrektur, kein Backlog-Eintrag.
 und P-S1-10) lässt sich erst prüfen, wenn der Rückweg aus C2 steht — sonst
 misst der Lauf den alten Rückweg. Der Prüfschritt liegt deshalb **nach C2 und
 vor C7**, solange die eingecheckte Referenz-`.edbak` noch Version 6 ist.
+
+### C2 — Rückweg: Papierkorb und `created_at` (erledigt)
+
+**Geändert:** `server/backup_lib.php` (`edbak_restore()`: ein `$loeschZeit` je
+Lauf, `$zieltagGeloescht`-Zuordnung, D1 in zwei Hälften, Löschzustand an
+Diensttagen, Einsätzen und Ruhesegmenten, `created_at` als Ausnahmespalte,
+neuer Grund `tag_uebersprungen`, Gründe der Ruhesegmente, Zähler
+`stats.papierkorb`), `server/einstellungen.php` (ein gemeinsamer
+Rückmeldungs-Baustein für beide Einspielwege, `require_once trash_lib.php` für
+`TRASH_DAYS`), `docs/Backup-Format.md` 3 und 4, `docs/Handbuch.md` 8,
+`docs/CHANGELOG.md`.
+
+**Entscheidungen, die dabei fielen:**
+
+1. **Ein Löschzeitpunkt für den ganzen Lauf, in PHP gerechnet.** Die
+   naheliegende Fassung wäre `UTC_TIMESTAMP()` im SQL gewesen — so macht es
+   `trash_lib.php`. Sie hätte je Zeile einen eigenen Zeitpunkt ergeben. Ein
+   Einspielvorgang ist aber **ein** Vorgang; ein gemeinsamer Stempel ist die
+   ehrlichere Angabe und macht die Prüfung „alle Einträge tragen den
+   Einspielzeitpunkt" überhaupt erst scharf. Die Verbindung steht auf UTC
+   (`db.php`), `gmdate()` liefert denselben Wert.
+2. **Zwei Gründe statt einem, wo bisher `datum_oder_zeit` stand.** Nennt die
+   Datei einen Diensttag, den es nach der Zuordnung nicht gibt, heißt der
+   Grund jetzt `tag_uebersprungen`; nennt sie gar keinen, bleibt es beim
+   Datumsproblem. Die Unterscheidung kostet eine Zeile und beantwortet die
+   Frage, die man beim Lesen der Meldung tatsächlich hat.
+3. **Ein Rückmeldungs-Baustein statt zweier.** Die freigegebene Sicherung
+   hatte einen eigenen, kürzeren Text („übersprungen, weil bereits vorhanden
+   oder unbrauchbar") — er nannte weder Standortdaten noch Höhenfehler noch
+   einzelne Gründe. Zwei Texte für dieselbe Auskunft laufen auseinander; jetzt
+   gibt es `restoreBericht()`.
+4. **Zahlwörter.** „1 Diensttage" stand nach dem ersten Durchlauf im Browser
+   und ließ den ganzen Satz nach Maschine aussehen. Die Meldung nennt Zahlen,
+   die oft auf 1 stehen — eine kleine Hilfsfunktion behebt das an allen sieben
+   Stellen.
+
+**Fund:** F-S1-C (Abschnitt 8) — die Gegenrichtung der Invariante ist offen
+und wird nicht in diesem Paket entschieden.
+
+**Prüfstand C2**
+
+| Nr. | Was | Wie | Ergebnis |
+|---|---|---|---|
+| P-S1-10 | Version-6-Datei wird angenommen | `kreislauf.py --art edbak --frisch` mit der eingecheckten Referenz (v6) in ein frisches Konto | 82 Einsätze, 95 Ruhesegmente, 15 Diensttage eingespielt; **269 439 Einzelvergleiche**, 15 erwartete Abweichungen, **1 unerklärte**: `kopf/version 6 → 7` — die Nutzlaststufung selbst, nach C7 gegenstandslos. 0 Konsolenfehler |
+| — | Umlauf einer Version-7-Datei | dieselbe Mechanik mit der in C1 im Browser erzeugten v7-Sicherung, Zielkonto `umlauf-v7@gen-em.org` | 87/100/16 eingespielt, davon **5/5/1 in den Papierkorb**; **286 739 Einzelvergleiche**, 16 erwartete, **11 unerklärte** — ausnahmslos `deleted_at`-Zeitwerte (5 Einsätze, 5 Ruhesegmente, 1 Diensttag). Genau das, was E-S1-03 will und C6 normalisiert; alle elf tragen **denselben** Zeitwert, der gemeinsame Stempel greift |
+| — | `deleted_with_day` nach dem Umlauf | SQL-Nachzählung im Zielkonto | 4 Einsätze mit `1`, 1 mit `0`; 5 Ruhesegmente mit `1` — identisch zum Referenzkonto |
+| P-S1-05 | Invariante, SQL-Nachzählung | über **alle sieben** Konten der Prüfinstallation: `deleted_with_day = 1` an aktivem Tag; `deleted_with_day = 1` ohne `deleted_at` | **0 / 0 / 0** |
+| P-S1-07 | `created_at` wörtlich | SQL, 87 Einsätze paarweise über `client_ref` zwischen Referenz- und Zielkonto verglichen | **87 gleich, 0 abweichend** (83 verschiedene Werte auf beiden Seiten) |
+| P-S1-03 | D1, Fall Zielkonto | Browser: einspielen → beide Dienste des 28.03.2026 (Referenz führt zwei) in den Papierkorb, den zweiten endgültig löschen → dieselbe Datei erneut einspielen | „Übersprungen: 87 Einsätze, 100 Ruhesegmente — bereits vorhanden 174, **Diensttag liegt hier im Papierkorb 2**, **Diensttag wurde übersprungen 13**"; kein roher Schlüssel; 7 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler |
+| P-S1-04 | D1, Fall Datei | Browser: einspielen → Papierkorb ansehen → Diensttag wiederherstellen | Papierkorb zeigt **1 Diensttag mit 4 mitgelöschten Einsätzen** und **1 einzeln gelöschten Einsatz**; nach dem Wiederherstellen ist der Tag weg und der einzeln gelöschte Einsatz liegt **weiterhin** dort; 9 Einzelprüfungen, 0 Befunde |
+| P-S1-05 | Zombie-Gegenprobe | Browser: einspielen → Papierkorb-Tag wiederherstellen (Tag ist aktiv) → einen seiner Einsätze endgültig löschen → dieselbe Datei erneut einspielen | der fehlende Einsatz kommt zurück und liegt **einzeln** im Papierkorb (2 Zeilen dort, 0 Tage), der Zieltag bleibt aktiv; 8 Einzelprüfungen, 0 Befunde |
+| P-S1-06 | Frist beginnt neu | Rückmeldung im Browser | „In den Papierkorb übernommen: 5 Einsätze, 5 Ruhesegmente, 1 Diensttag — die 90-Tage-Frist beginnt für sie neu." Die Zahl 90 kommt aus `TRASH_DAYS`, nicht aus dem Text |
+
+**Prüfmittel:** Die Browserschritte laufen über Playwright/Chromium gegen die
+lokale Installation; die drei Prüfkonten entstehen über den regulären
+Einladungsweg (`kreislauf.konto_anlegen`), das Passwort wird im Browser
+gesetzt. Die Skripte liegen **nicht** im Repositorium — sie prüfen einen
+einmaligen Übergang, und ein Prüfmittel ohne Pflege ist schlechter als keins.
+Der Bedienweg steht im Prüfdokument, damit er von Hand nachvollziehbar ist.

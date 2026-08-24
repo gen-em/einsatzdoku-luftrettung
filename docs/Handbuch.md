@@ -1455,6 +1455,19 @@ und sagen es. Der Grund: Das Löschen war eine bewusste Handlung, und sie
 nebenbei rückgängig zu machen wäre eine Überraschung. Stelle den Tag zuerst
 wieder her.
 
+Genau zu lesen ist dabei, **wessen** Papierkorb gemeint ist: Übersprungen wird
+ein Tag, der **hier** im Papierkorb liegt. Was **in der Sicherungsdatei**
+gelöscht ist, wird nicht übersprungen — es kommt zurück, und zwar wieder als
+Papierkorbeintrag (Abschnitt 6). Die Rückmeldung nach dem Einspielen nennt
+beides getrennt: wie viel in den Papierkorb übernommen wurde und wie viel aus
+welchem Grund übersprungen.
+
+**Ein Einsatz, der in der Datei mit seinem Tag gelöscht war, dessen Tag es hier
+aber noch aktiv gibt, kommt einzeln gelöscht zurück** — er steht dann als
+eigene Zeile im Papierkorb. Das ist gewollt: Ein Eintrag, der an einem Tag
+hängt, den es im Papierkorb gar nicht gibt, wäre dort unsichtbar und ließe
+sich nicht mehr zurückholen.
+
 **Die Sperrliste hält 90 Tage**, danach räumt das System sie ebenfalls weg. Das
 ist in der Praxis reichlich — eine Uhr, die 90 Tage lang keine Verbindung
 hatte, gibt es im Betrieb nicht. Wer eine lange abgeschaltete Uhr wieder in

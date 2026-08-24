@@ -393,6 +393,50 @@ in Abschnitt 3.
 - Standard-Markierungen (★) werden nur importiert, wenn noch kein Standard
   gesetzt ist (es bleibt bei genau einem).
 
+### Der Papierkorb beim Einspielen (seit Version 7)
+
+Was in der Datei gelöscht ist, kommt **als Papierkorbeintrag** zurück — nicht
+als aktiver Bestand. Vier Regeln entscheiden das im Einzelnen:
+
+1. **Der Zustand kommt aus der Datei, der Zeitpunkt aus diesem Lauf.** Alle
+   Einträge eines Einspielvorgangs tragen denselben `deleted_at` — den des
+   Vorgangs. Die Frist beginnt neu (Abschnitt 2, „Der Papierkorb in der
+   Datei"). Die Rückmeldung nennt die Zahlen und sagt den Fristbeginn
+   ausdrücklich.
+
+2. **`deleted_with_day` richtet sich nach dem Zieltag**, nicht nach der Datei:
+   `1` nur, wenn der Diensttag, dem der Eintrag zufällt, selbst im Papierkorb
+   liegt; sonst `0`. Ein in der Datei mitgelöschter Einsatz, dessen Zieltag
+   hier aktiv ist, kommt also **einzeln gelöscht** an — sichtbar im Papierkorb
+   und von dort wiederherstellbar. Die Gegenrechnung wäre ein Eintrag, den
+   niemand mehr sieht und niemand mehr zurückholt.
+
+3. **Ein Diensttag im Papierkorb DES ZIELKONTOS blockiert weiterhin** — aber
+   nur gegen **aktive** Datei-Tage desselben Datums. Sie werden übersprungen
+   und gezählt (Grund `tag_im_papierkorb`); ihre Einsätze und Ruhesegmente
+   ebenfalls (Grund `tag_uebersprungen`). Grund: Das Löschen war eine bewusste
+   Handlung, und ein Einspielen soll sie nicht nebenbei rückgängig machen.
+
+4. **Ein in der Datei gelöschter Tag** wird nicht am Ziel-Papierkorb gemessen —
+   er will ja gar nicht aktiv werden. Er durchläuft die normale
+   Wiedererkennung; wird er nicht gefunden, entsteht er als Papierkorbeintrag
+   samt seinen mitgelöschten Einsätzen und Ruhesegmenten. Wird er gefunden,
+   bleibt der Zieltag **unangetastet** — auch wenn er dort aktiv ist. „Angaben
+   werden nicht überschrieben" gilt für den Löschzustand genauso wie für
+   Rettungsmittel und Besatzung.
+
+   Zwei gelöschte Tage desselben Datums (einer aus der Datei, einer im Ziel,
+   verschiedener Fingerabdruck) dürfen nebeneinander bestehen. Der Papierkorb
+   kennt keine Eindeutigkeit je Datum, und seit Web 6.0.0 gibt es sie auch bei
+   den aktiven Tagen nicht mehr.
+
+**Überspringgründe in der Rückmeldung:** `bereits_vorhanden`,
+`datum_oder_zeit`, `aufbau`, `tag_im_papierkorb`, `tag_unbrauchbar`,
+`tag_uebersprungen`. Alle sechs haben eine Beschriftung; ein roher Schlüssel
+erscheint nicht mehr. Ruhesegmente zählen ihre Gründe seit S1 mit — vorher
+fielen sie unter den Tisch, obwohl „bereits vorhanden" bei ihnen die häufigste
+Ursache überhaupt ist.
+
 ## 4. Was NICHT in der Datei steht — und was nicht zurückkommt
 
 Seit Web 4.5.2 ist das Format **aufgezählt** statt „alles, was in der Tabelle
@@ -434,19 +478,20 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
   kosten. Scheitert sie, bleibt das Feld leer und die Antwort nennt die Zahl
   der betroffenen Einsätze als `hoehe_fehler`.
 
-- `created_at` (Anlegezeitpunkt eines Einsatzes). Wird gesichert
-  (`backup_lib.php`, Spaltenliste der Einsätze), beim Einspielen aber nicht
-  geschrieben — die Einspielroutine setzt die Felder aus `mission_fields.php`
-  plus `pat_blob` und `start_src`, und `created_at` steht dort nicht. Nach
-  einer Wiederherstellung tragen alle Einsätze den Zeitpunkt des Einspielens.
+**`created_at` kommt seit Version 7 zurück** und steht deshalb nicht mehr in
+dieser Liste. Bis dahin galt: gesichert ja, eingespielt nein — nach einer
+Wiederherstellung trugen alle Einsätze den Zeitpunkt des Einspielens (am
+Referenzdatensatz der Phase P1 gemessen: 79 verschiedene Werte davor, 5
+danach). Der Verlust war folgenlos für die Dokumentation selbst —
+`started_at` ist die fachliche Zeit —, aber er war ein Verlust, und eine
+Sicherung, die eine Angabe stillschweigend fallenlässt, ist keine
+(Backlog Nr. 25).
 
-  Gemessen am Referenzdatensatz der Phase P1: **79 verschiedene Werte vor dem
-  Umlauf, 5 danach** (82 Einsätze). Der Verlust ist folgenlos für die
-  Dokumentation selbst — `started_at` ist die fachliche Zeit —, aber er war
-  bis Web 7.2.3 nirgends benannt, und dieser Abschnitt führte `site_ele_m`
-  als die einzige Asymmetrie dieser Art. Ob `created_at` künftig
-  mitgeschrieben oder aus der Sicherung gestrichen wird, ist offen
-  (Backlog Nr. 25).
+Jetzt steht `created_at` als benannte Ausnahmespalte neben `start_src` und
+`pat_blob` in der Einspielroutine. Der Wert läuft durch `pruef_utc_oder_sql`;
+ist er unbrauchbar, wird die Spalte **weggelassen** statt auf `NULL` gesetzt —
+dann greift die Vorgabe der Datenbank, und die Zeile bleibt. Ein Komfortwert
+darf eine Wiederherstellung nicht kosten.
 
 **Was in der Sicherung gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
