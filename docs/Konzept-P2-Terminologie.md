@@ -765,7 +765,70 @@ keine Unschärfe der Ausnahmeliste:
 ungenutzte Einträge; jeder Eintrag nennt Klasse und Grund.
 
 
-### D2 — Weboberfläche (offen)
+### D2 — Weboberfläche (erledigt)
+
+**Ergebnis.** Sieben Stellen geändert, alle in Klasse A:
+
+| Nr. | Datei | Was |
+|---|---|---|
+| W1 | `einstellungen.php` (Uhr koppeln) | Ablauf gerätefrei: „Sync-Seite → Gerät koppeln → Code eintippen". Der Tastenweg steht darunter als eigener Absatz mit genannter Plattform („Auf Garmin-Uhren: … DOWN … START …") und verweist für die einzelnen Uhren auf Handbuch 2.0 (E-P2-02). |
+| W2 | `einstellungen.php` (Manuell anlegen) | „Beide Werte in den Einstellungen der Uhr-App eintragen (… z. B. `nadoku.beispieldomain.de`). Bei Garmin stehen diese Einstellungen in Garmin Connect." |
+| W3 | `import.php` | „Ohne personenbezogene Angaben entfallen die GPX-Tracks — **ein Track** endet am Einsatzort." Der PHP-Kommentar darüber führte denselben Satz und ist mitgezogen. |
+| W4 | `assets/import_profiles.js` | Warntext des Excel-Rückimports: Ausrücken statt Abflug, Ankunft Klinik statt Landung Krankenhaus, Kilometer statt Flugkilometer (F-P2-A). Der Kommentar darüber verwies auf „SPEC_Export.md 7.2" — ein Dokument, das es nicht gibt; jetzt `docs/Export-Format.md` 5.2 (F-P2-F). `expectedHeaders` und Spaltenschlüssel unangetastet. |
+| W5 | `einstellungen.php` (Weitere Rettungsmittel) | „(RTW, NEF, RTH …)". Die Administrationsseite führt diesen Hinweistext nicht — dort war nichts gleichzuziehen. |
+| W6 | `einstellungen.php`, `admin_stammdaten.php` | Beide Platzhalter jetzt „z. B. Christoph 17 oder NEF Kempten 1" (E-P2-14, F-P2-E). |
+| W7 | `assets/pwquality.js` | Sechs bodengebundene Gegenstücke ergänzt (E-P2-18). |
+| F-P2-K | `einstellungen.php` (Gerätebezeichnung) | Platzhalter „z. B. Fenix 6 Pro" → „z. B. Dienstuhr". |
+
+**Probleme und ihre Lösung.**
+
+1. **Der Garmin-Zusatz muss auffindbar bleiben.** Das Prüfwerkzeug arbeitet
+   zeilenweise; ein Zusatz in Klammern mitten im Fließtext verteilt „DOWN"
+   und „START" über Zeilen, in denen das Wort „Garmin" gar nicht steht. Die
+   Ausnahme wäre dann nicht formulierbar gewesen, ohne halbe Absätze
+   freizugeben. Gelöst, indem der Zusatz ein **eigener Absatz** ist
+   (`von`/`bis`-Regel `garmin-zusatz-kopplung`) und der kurze Zusatz bei W2
+   ein **eigener Satz in einer Zeile** (`garmin-zusatz`). Das ist keine
+   Anpassung an das Werkzeug um seiner selbst willen: Ein Zusatz, der als
+   eigener Absatz steht, lässt sich auch streichen, wenn die Uhr einmal
+   keine Garmin mehr ist.
+2. **E-P2-18 und der tatsächliche Vergleich in `pwquality.js`.** Die
+   Entscheidung ließ offen, ob Kurzformen (`nef`, `rth`, `naw`) aufgenommen
+   werden, und verwies auf die Vergleichsweise. Sie lautet
+   `k === h || (h.length >= 6 && k.includes(h))`: Wörter unter sechs Zeichen
+   treffen **nur** als ganzes Passwort — und ein dreibuchstabiges Passwort
+   scheitert schon an `MIN_LAENGE`. Kurzformen bleiben deshalb draußen; die
+   Begründung steht als Kommentar in der Liste. Dabei fiel auf, dass vier
+   der sechs beschlossenen Ergänzungen durch den Teilstring-Vergleich
+   ohnehin abgedeckt sind (`rettungswagen` durch `rettung`, `einsatzdoku`
+   durch `einsatz`, `notfallsanitaeter` durch `sanitaeter`,
+   `rettungsdienst` durch `rettung`). Sie stehen trotzdem in der Liste,
+   weil die Liste auch die Stelle ist, an der man nachsieht, welche Wörter
+   gemeint sind — im Kommentar ausdrücklich vermerkt.
+
+**Prüfstand.**
+
+| Prüfung | Mittel | Ergebnis |
+|---|---|---|
+| Wortliste, Bereiche (a) und (b) | `python3 tools/wortliste/wortliste.py --bereich a --bereich b` | **0 Treffer außerhalb der Ausnahmen** (vorher 12 in 11 Zeilen); 0 durchgerutschte Fallen |
+| Syntax | `php -l` (3 Dateien), `new Function(...)` über beide JS-Dateien | fehlerfrei |
+| P-P2-09, Sichtprüfung im Browser (Chromium/Playwright, lokale Installation) | eigenes Skript, 6 Seitenaufrufe | **21 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**; 6 Bildschirmfotos |
+| — Einstellungen → Geräte, ohne Code | — | gerätefreier Ablauf sichtbar, Garmin-Zusatz als eigener Absatz, Verweis auf Handbuch 2.0, `luftrettung.net` verschwunden, Platzhalter „Bezeichnung, z. B. Dienstuhr" |
+| — Einstellungen → Geräte, mit erzeugtem Code | — | Code und Gültigkeit angezeigt, Ablauftext unverändert sichtbar |
+| — Einstellungen → Geräte, manuell angelegtes Gerät | — | neuer Wortlaut, `nadoku.beispieldomain.de`, Garmin-Zusatz, „Connect-IQ-Einstellungen" verschwunden |
+| — Einstellungen → Rettungsmittel | — | Platzhalter „z. B. Christoph 17 oder NEF Kempten 1"; „(RTW, NEF, RTH …)"; „weitere Hubschrauber" verschwunden |
+| — Administration → Rettungsmittel (systemweit) | — | derselbe Platzhalter wie auf der NutzerInnenseite |
+| — Import/Export, Haken „Personenbezogene Angaben" aus | — | GPX-Hinweis erscheint (CSV-Profil) und lautet „… — ein Track endet am Einsatzort"; „Flugspur" verschwunden |
+| P-P2-07, Excel-Rückimport vor und nach D2, **dieselbe Datei** | Export „Excel (Standard), gesamter Zeitraum, mit personenbezogenen Angaben" aus dem Referenzkonto (82 Einsätze), danach wieder eingelesen bis Schritt 2 | **Bilanz identisch:** 14 Diensttage, 78 Einsätze, 20 Hinweise, **0 Fehler**, 78 Dubletten, 7 Einsätze mit abweichender Besatzung; „0 Einsätze bereit, 0 Diensttage werden neu angelegt". Erkanntes Profil beide Male `export_excel_v1`. Warntext vorher mit „Abflug/Landung Krankenhaus/Flugkilometer", nachher mit „Ausrücken/Ankunft Klinik/Kilometer". Konsole beide Male still. |
+
+Der Rückimport wurde bewusst **nicht** übernommen: Die Bilanz steht vor dem
+Commit fest, und ein Commit hätte den Referenzbestand verändert, gegen den
+in D6 die Kreisläufe laufen.
+
+**Offen nach D2:** nichts. Angelegte Prüfobjekte (ein Gerät, ein
+systemweiter Standort) sind über die Oberfläche wieder entfernt; der
+Referenzbestand ist unverändert.
+
 
 ### D3 — README (offen)
 

@@ -1277,7 +1277,7 @@ ui_topbar('einstellungen');
               <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
               <input type="hidden" name="base_id" value="<?= $bid ?>">
               <div class="neu-zeile">
-                <input type="text" name="name" maxlength="64" required placeholder="z. B. NEF Kempten 1"
+                <input type="text" name="name" maxlength="64" required placeholder="z. B. Christoph 17 oder NEF Kempten 1"
                        value="<?= e($evHier['name'] ?? '') ?>">
                 <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
                 <?php if ($evHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
@@ -1448,7 +1448,7 @@ ui_topbar('einstellungen');
         <details class="stammunter" id="<?= e($anker) ?>-res">
           <summary>Weitere Rettungsmittel<span class="stammzahl"><?= count($sdRes[$bid] ?? []) ?></span></summary>
           <p class="muted">Vorschläge für das Feld „Weitere Rettungsmittel“ im
-             Einsatz (RTW, NEF, weitere Hubschrauber …).</p>
+             Einsatz (RTW, NEF, RTH …).</p>
           <table class="data">
             <tbody>
             <?php if (!($sdRes[$bid] ?? [])): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
@@ -2218,13 +2218,21 @@ ui_topbar('einstellungen');
     <?php endif; ?>
 
     <h2>Uhr koppeln (empfohlen)</h2>
-    <p class="muted">Erzeuge einen Code und gib ihn auf der Uhr ein
-       (Sync-Seite der Uhr → <strong>START gedrückt halten</strong> → Code eintippen;
-       die Sync-Seite erreichst du vom Startbildschirm mit DOWN).
+    <p class="muted">Erzeuge einen Code und gib ihn auf der Uhr ein:
+       <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>.
        Die Uhr holt sich ihre Zugangsdaten dann selbst — kein Abtippen langer
        Schlüssel. Der Code ist <strong><?= PAIR_TTL_MIN ?> Minuten</strong> gültig und
        <strong>genau einmal</strong> verwendbar. Ein neuer Code macht einen
        vorher erzeugten ungültig.</p>
+    <?php /* Der Tastenweg steht bewusst NICHT im Fließtext oben, sondern als
+             Zusatz mit genannter Plattform: Er gilt nur für Fenix und
+             Forerunner. Auf der Venu 3s gibt es weder START noch DOWN — der
+             frühere Satz war für sie schon falsch, als sie dazukam. Die
+             Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
+    <p class="muted small">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
+       Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
+       START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
+       Abschnitt 2.0.</p>
     <?php if ($pairCode): ?>
       <div class="keybox paircode">
         <strong>Kopplungscode</strong>
@@ -2256,8 +2264,9 @@ ui_topbar('einstellungen');
         <strong>Neues Gerät</strong>
         <p>Geräte-ID: <code><?= e($newKey['device_id']) ?></code><br>
            API-Schlüssel: <code><?= e($newKey['api_key']) ?></code></p>
-        <p>Beide Werte in den Connect-IQ-Einstellungen der Uhr-App eintragen
-           (als Server genügt die Domain, z. B. <code>luftrettung.net</code>).</p>
+        <p>Beide Werte in den Einstellungen der Uhr-App eintragen (als Server
+           genügt die Domain, z. B. <code>nadoku.beispieldomain.de</code>).
+           Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
       </div>
     <?php endif; ?>
 
@@ -2298,7 +2307,7 @@ ui_topbar('einstellungen');
 
     <form method="post" action="einstellungen.php?t=geraete" class="inline-form">
       <?= csrf_field() ?><input type="hidden" name="action" value="add">
-      <input type="text" name="label" placeholder="Bezeichnung, z. B. Fenix 6 Pro">
+      <input type="text" name="label" placeholder="Bezeichnung, z. B. Dienstuhr">
       <button class="btn-primary">Gerät anlegen</button>
     </form>
   <?php endif; ?>

@@ -54,6 +54,11 @@ BEREICHE: dict[str, dict] = {
         "titel": "server/*.php, server/api/*.php (sichtbare Texte, ohne Kommentare)",
         "art": "php",
         "glob": ["server/*.php", "server/api/*.php"],
+        # config.php gehoert nicht zum Repositorium (sie steht in .gitignore
+        # und liegt nur auf dem Server). Waere sie dabei, haenge die
+        # Dateizahl davon ab, ob gerade eine lokale Installation eingerichtet
+        # ist — und die Zahlen zweier Laeufe waeren nicht vergleichbar.
+        "ausser": ["server/config.php"],
     },
     "b": {
         "titel": "server/assets/*.js ohne vendor/ (Zeichenketten, ohne Kommentare)",
@@ -138,7 +143,9 @@ def dateien_des_bereichs(kennung: str) -> list[pathlib.Path]:
             raise SystemExit(f"Datei fehlt: {name}")
         pfade.append(p)
     # vendor/ ist fremder Quelltext und wird nie angefasst.
-    return [p for p in pfade if "vendor" not in p.parts]
+    ausser = set(b.get("ausser", []))
+    return [p for p in pfade
+            if "vendor" not in p.parts and str(p.relative_to(WURZEL)) not in ausser]
 
 
 def _bloecke(zeilen: list[str], regel: dict) -> list[tuple[int, int]]:
@@ -255,7 +262,8 @@ def suche(kennung: str, muster: list[dict], fallen: list[dict],
 
 # ------------------------------------------------------------------ Bericht
 
-def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool) -> tuple[str, int]:
+def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool,
+            geprueft: list[str] | None = None) -> tuple[str, int]:
     aus: list[str] = []
     offen_gesamt = 0
     for e in ergebnisse:
@@ -290,12 +298,26 @@ def bericht(ergebnisse: list[dict], regeln: list[dict], alle: bool) -> tuple[str
     for d in durchgerutscht:
         aus.append(f"    {d}")
 
-    ungenutzt = [r for r in regeln if r["_treffer"] == 0]
+    # Bei einem Teillauf koennen Regeln nicht greifen, deren Dateien gar nicht
+    # angesehen wurden. Sie als „ungenutzt" zu melden waere eine falsche
+    # Auskunft — die Zahl gilt nur fuer den vollstaendigen Lauf.
+    unbeteiligt = []
+    if geprueft is not None:
+        for r in regeln:
+            if r["_treffer"] == 0 and r.get("datei") \
+               and not any(fnmatch.fnmatch(f, r["datei"]) for f in geprueft):
+                unbeteiligt.append(r)
+    ungenutzt = [r for r in regeln if r["_treffer"] == 0 and r not in unbeteiligt]
     aus.append("")
-    aus.append(f"Ausnahmen: {len(regeln)} Regeln, {len(regeln) - len(ungenutzt)} gegriffen, "
-               f"{len(ungenutzt)} ungenutzt")
+    aus.append(f"Ausnahmen: {len(regeln)} Regeln, {len(regeln) - len(ungenutzt) - len(unbeteiligt)} "
+               f"gegriffen, {len(ungenutzt)} ungenutzt")
     for r in ungenutzt:
         aus.append(f"    ungenutzt: {r['id']}  (Klasse {r['klasse']})")
+    if unbeteiligt:
+        aus.append(f"  {len(unbeteiligt)} Regeln betreffen Dateien, die dieser Teillauf "
+                   f"nicht angesehen hat — sie zählen nicht mit:")
+        for r in unbeteiligt:
+            aus.append(f"    nicht geprüft: {r['id']}  ({r['datei']})")
 
     schlecht = offen_gesamt + len(ungenutzt) + len(durchgerutscht)
     stellen_gesamt = len({(rel, nr) for e in ergebnisse for rel, nr, _, _ in e["offen"]})
@@ -334,7 +356,9 @@ def main() -> int:
     melde(f"Sperrliste: {len(muster)} Muster, {len(fallen)} Fallen. "
           f"Ausnahmen: {len(regeln)} Regeln.")
     ergebnisse = [suche(k, muster, fallen, regeln) for k in kennungen]
-    text, rc = bericht(ergebnisse, regeln, a.alle)
+    geprueft = [str(p.relative_to(WURZEL)) for k in kennungen
+                for p in dateien_des_bereichs(k)]
+    text, rc = bericht(ergebnisse, regeln, a.alle, geprueft)
     melde(text)
     if a.bericht:
         pathlib.Path(a.bericht).write_text(text + "\n", encoding="utf-8")

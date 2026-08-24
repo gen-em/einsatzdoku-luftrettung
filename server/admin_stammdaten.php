@@ -571,7 +571,7 @@ ui_topbar('einstellungen');
               <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
               <input type="hidden" name="base_id" value="<?= $bid ?>">
               <div class="neu-zeile">
-                <input type="text" name="name" maxlength="64" required placeholder="z. B. Christoph 17"
+                <input type="text" name="name" maxlength="64" required placeholder="z. B. Christoph 17 oder NEF Kempten 1"
                        value="<?= e($evHier['name'] ?? '') ?>">
                 <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
                 <?php if ($evHier): ?><a class="btn-red" href="admin_stammdaten.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>

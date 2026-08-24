@@ -114,6 +114,26 @@
       "begruendung": "`watch/` und `tools/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
     },
     {
+      "id": "garmin-zusatz-kopplung",
+      "datei": "server/einstellungen.php",
+      "von": "Auf Garmin-Uhren:",
+      "bis": "</p>",
+      "klasse": "G",
+      "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
+    },
+    {
+      "id": "garmin-zusatz",
+      "zeile": "bei Garmin\\b",
+      "klasse": "G",
+      "begruendung": "Der Garmin-Zusatz in Klammern: In plattformuebergreifenden Texten heisst es „Einstellungen der Uhr-App\", und dahinter steht, wo das auf der derzeitigen Plattform zu finden ist (E-P2-15). Ohne den Zusatz waere die Anweisung nicht ausfuehrbar."
+    },
+    {
+      "id": "beispiel-rettungsmittelname",
+      "zeile": "Christoph 17 oder NEF Kempten 1",
+      "klasse": "F",
+      "begruendung": "Der Platzhalter des Rettungsmittelnamens nennt beide Arten nebeneinander (E-P2-14) — auf der NutzerInnen- wie auf der Administrationsseite derselbe Wortlaut. Vorher zeigte jede Seite nur eine Art, und zwar eine andere."
+    },
+    {
       "id": "fahrzeugtypen",
       "zeile": "RTH, NEF, NAW|RTW, NEF, RTH|RTH, NEF oder",
       "klasse": "F",

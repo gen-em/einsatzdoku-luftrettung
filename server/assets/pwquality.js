@@ -49,6 +49,21 @@ const EdPwQuality = (() => {
     'deutschland', 'bayern', 'muenchen', 'berlin', 'hamburg',
     'hubschrauber', 'rettung', 'notarzt', 'einsatz', 'christoph', 'luftrettung',
     'klinik', 'krankenhaus', 'medizin', 'sanitaeter',
+    /* Bodengebundene Gegenstuecke. Die Liste nannte bis Web 8.0.1 nur die
+       luftgebundenen Woerter — an einem NEF-Standort fehlte damit genau das,
+       was dort naheliegt.
+       KEINE Kuerzel wie "nef", "rth", "naw": Der Vergleich unten ist
+       `k === h || (h.length >= 6 && k.includes(h))`. Woerter unter sechs
+       Zeichen treffen also nur, wenn das GANZE normalisierte Passwort genau
+       so lautet — und ein dreibuchstabiges Passwort scheitert schon an der
+       Mindestlaenge. Ein Kuerzel in der Liste braeuchte einen Teilstring-
+       Vergleich, und der traefe massenhaft brauchbare Passwoerter.
+       Mehrere Eintraege sind durch den Teilstring-Vergleich bereits von
+       kuerzeren abgedeckt ("rettungswagen" von "rettung", "einsatzdoku" von
+       "einsatz"). Sie stehen trotzdem hier: Die Liste ist auch die Stelle,
+       an der man nachsieht, WELCHE Woerter gemeint sind. */
+    'notarztwagen', 'rettungswagen', 'notfallsanitaeter', 'rettungsdienst',
+    'einsatzdoku', 'nadoku',
   ];
 
   /** Kleinschreibung, Umlaute aufgelöst, Satzzeichen entfernt. */
