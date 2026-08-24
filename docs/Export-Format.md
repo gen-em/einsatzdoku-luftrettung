@@ -578,23 +578,67 @@ von der Jahresliste vorgegeben und Teil des Vertrags mit dem Empfänger.
 
 Zwei Formate auf derselben Seite unter „Import".
 
-### 5.1 `export_csv_v1` — verlustfrei
+### 5.1 `export_csv_v1` — verlustfrei für Einsätze
 
 Liest `einsaetze.csv`, wahlweise als einzelne Datei oder direkt aus dem `.zip`
 (bei einem passwortgeschützten Archiv wird nach dem Passwort gefragt).
 Übernommen werden alle Einsatzfelder, die Phasen 2–9 samt Koordinaten, die
 weiteren Rettungsmittel und die Reanimationsdokumentation.
 
-Drei bewusste Ausnahmen:
+„Verlustfrei" heißt: für **Einsätze**, und mit den Ausnahmen unten. Bis Web
+7.3.1 zählte dieser Abschnitt drei auf; gemessen sind es **sechs**. Jede trägt
+die Zahl, mit der sie am Referenzdatensatz belegt ist (82 Einsätze, 95
+Ruhesegmente, 15 Diensttage im Export).
 
-- **`einsatz_id` wird nicht übernommen.** IDs sind kontospezifisch; ein Import
-  in ein anderes Konto vergibt neue.
-- **GPX-Dateien werden nicht eingelesen.** Tracks stammen von der Uhr und sind
-  der Rohbestand; ein Rückspielen über den Export wäre ein zweiter, schlechterer
-  Weg neben dem Backup. Wer Tracks braucht, nutzt das Backup.
-- **Rettungsmittel und Standort** werden wie bei jedem Import oben auf der Seite
-  ausgewählt. Ein Kennzeichen aus der Datei würde sonst stillschweigend neue
-  Stammdaten anlegen.
+**1. `einsatz_id` wird nicht übernommen.** IDs sind kontospezifisch; ein Import
+in ein anderes Konto vergibt neue.
+
+**2. GPX-Dateien werden nicht eingelesen** (gemessen 171×). Tracks stammen von
+der Uhr und sind der Rohbestand; ein Rückspielen über den Export wäre ein
+zweiter, schlechterer Weg neben dem Backup. Wer Tracks braucht, nutzt das
+Backup. Folge in der Datei: `track_datei` bleibt leer, `track_punkte` steht auf
+0 (je 76×).
+
+**3. Rettungsmittel und Standort** werden wie bei jedem Import oben auf der
+Seite ausgewählt (gemessen 51× an Einsätzen, 8× an Diensttagen). Ein
+Kennzeichen aus der Datei würde sonst stillschweigend neue Stammdaten anlegen.
+Daran hängen die Art (luft/boden), der Standort und die eingefrorenen
+Fähigkeiten des Diensttags — und, weil der Rollensatz am Rettungsmittel hängt,
+auch Besatzungsnamen einer Rolle, die die andere Art nicht kennt. Eine Datei
+mit drei Rettungsmitteln fällt beim Rückimport auf **eines** zusammen.
+
+**4. Ruhesegmente kommen nicht zurück** (gemessen 95 → 0). Für sie gibt es
+keinen Importweg: Das Profil liest `einsaetze.csv`, und `ruhezeiten.csv` kennt
+es nicht. Nach einem Umlauf ist die Tabelle leer. Das ist Bauart, keine Panne —
+aber es stand bis Web 7.3.1 in keiner Fassung dieses Abschnitts.
+
+**5. Der zweite Dienst eines Kalendertags geht verloren** (gemessen 15 → 13
+Diensttage; die zweite fehlende Zeile ist ein Diensttag **ohne** Einsatz, der
+nur in `diensttage.csv` steht). `gruppiere()` bündelt nach Kalendertag und legt
+je Datum höchstens einen Diensttag an — obwohl seit Web 6.0.0 zwei Dienste an
+einem Datum zulässig sind und die Datei mit `diensttag_id` den unterscheidenden
+Schlüssel mitführt. Er wird bewusst nicht ausgewertet (`target: null`): Er ist
+kontospezifisch wie `einsatz_id`. Eine Tabelle sagt sonst nichts darüber, ob
+zwei Einsätze desselben Datums zu einem oder zu zwei Diensten gehören; eine
+geratene Aufteilung wäre schlechter als eine, die jemand bewusst vornimmt
+(`einsatz_verschieben.php`).
+
+**6. Der Formelschutz-Apostroph bleibt im Wert stehen** (gemessen 3 Zellen,
+Backlog Nr. 24). Der Export stellt Textwerten, die mit `=`, `+`, `-`, `@`,
+Tabulator oder Wagenrücklauf beginnen, einen Apostroph voran (3.1); der
+Rückimport entfernt ihn **nicht**. Nach einem Umlauf steht er im Bestand:
+`@Leitstelle …` wird zu `'@Leitstelle …`.
+
+Das ist die unauffälligste der sechs Ausnahmen, denn ein Kreislauftest sieht
+sie nicht: Der nächste Export fügt keinen zweiten Apostroph hinzu (`'` ist kein
+Formel-Anfangszeichen), die Datei sieht also unverändert aus, während der
+gespeicherte Wert ein Zeichen länger geworden ist.
+
+**Und sie wird bewusst nicht behoben.** Ein Import, der einen führenden
+Apostroph entfernt, schafft den nächsten stillen Verlust — ein echtes `'` am
+Textanfang verschwände. Wer die Dateien maschinell weiterverarbeitet, entfernt
+den Apostroph selbst (3.1 sagt das auch); wer die Datei zurückspielt und den
+Wert unverändert braucht, korrigiert die drei betroffenen Zellen im Formular.
 
 Ebenfalls nicht übernommen werden **`herkunft` und `edited`**. Beide beschreiben,
 wie ein Datensatz *in der Installation entstanden ist, aus der die Datei stammt*.
@@ -737,7 +781,16 @@ Wert ist dort eine Aussage.
 
 - Höchstens **5000 Einsätze** je Export. Darüber meldet der Server einen Fehler
   und rät zu kleineren Zeiträumen.
-- Gelöschte Einsätze und Diensttage (Papierkorb) tauchen in keinem Profil auf.
+- **Der Papierkorb ist in keinem Exportprofil enthalten** — gelöschte
+  Einsätze, Ruhesegmente und Diensttage tauchen nirgends auf
+  (`api/export_data.php` filtert `deleted_at IS NULL`). Ein Export ist eine
+  Auswertung des aktiven Bestands, keine Sicherung.
+
+  **Die Sicherung (`.edbak`) verhält sich seit Web 8.0.0 anders**: Sie führt
+  den Papierkorb und spielt ihn als Papierkorb zurück
+  (`docs/Backup-Format.md` 2). Wer gelöschte Einträge erhalten will, nimmt
+  also das Backup, nicht den Export — und diese Zeile steht hier, damit man
+  das nicht ausprobieren muss.
 - Tracks werden blockweise geladen (höchstens 25 auf einmal); bei vielen
   Einsätzen mit Track dauert der Aufbau entsprechend, der Fortschritt wird
   angezeigt.

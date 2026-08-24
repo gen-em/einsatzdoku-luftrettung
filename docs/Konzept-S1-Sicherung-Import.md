@@ -680,3 +680,32 @@ leer), `docs/Export-Format.md` 5.1 und 5.2, `docs/CHANGELOG.md`.
 | P-S1-09 | Nr. 28, Überschreiben | Browser: dieselbe CSV erneut ins gefüllte Umlaufkonto, **alle 82 Zeilen auf „überschreiben"** | 82 überschrieben; danach `final = 0` und `ended_at IS NULL` — die Fassung davor hätte beides gesetzt |
 | — | Excel ohne `ende`/`final`, Anlegen | Browser: Excel (Standard) aus dem Referenzkonto exportiert, in ein frisches Konto importiert | 82 Einsätze, **82× `final = 1`, 82× `ended_at = started_at`** — genau das bisherige Verhalten, auch für den offenen Einsatz |
 | — | Excel ohne `ende`/`final`, Überschreiben | dieselbe Datei ins gefüllte CSV-Umlaufkonto, alle 82 Zeilen überschreiben | `final` bleibt **0** (die Datei sagt nichts dazu), `ende` wird auf den Beginn gesetzt — unverändertes Verhalten, in `Export-Format.md` 5.2 jetzt ausdrücklich benannt |
+
+### C5 — Doku-Ausnahmen: Nr. 24 und Nr. 29 (erledigt)
+
+**Geändert:** `docs/Export-Format.md` 5.1 (Ausnahmeliste von drei auf sechs,
+jede mit Messzahl; Überschrift „verlustfrei" → „verlustfrei **für Einsätze**")
+und 6 (Papierkorb, mit dem Unterschied zur Sicherung), `docs/CHANGELOG.md`.
+
+**Entscheidung, die dabei fiel:** Die Überschrift wurde eingegrenzt. Sechs
+Ausnahmen sind kein Grund, „verlustfrei" zu streichen — der CSV-Weg ist
+weiterhin der einzige, der Phasen, Reanimation und alle Einsatzfelder
+zurückbringt —, aber einer, das Wort auf **Einsätze** zu beziehen. Backlog
+Nr. 24 formuliert den Anstoß genau so: „`Export-Format.md` 5.1 sagt, es sei
+verlustfrei."
+
+**Der Apostroph wurde gemessen, nicht abgeschrieben.** Backlog Nr. 24 nennt
+keine Zahl. Gezählt im Umlauf: **3 Zellen** (zwei `notizen`, ein `other_ema`)
+tragen im Referenzexport einen führenden Apostroph; im Zielkonto steht er nach
+dem Umlauf **im Wert** (SQL: 3 Treffer, im Referenzkonto 0). Der erneute Export
+fügt keinen zweiten hinzu — deshalb sieht der Kreislauf die Abweichung nicht,
+und deshalb gehört sie in die Dokumentation statt in die Ausnahmeliste des
+Werkzeugs.
+
+**Prüfstand C5**
+
+| Was | Wie | Ergebnis |
+|---|---|---|
+| Zahlen der Ausnahmen | Bericht des CSV-Kreislaufs, nach Feld gruppiert | GPX 171, Ruhezeiten 95, `track_datei`/`track_punkte` je 76, Rettungsmittel 51 (Einsätze) und 8 (Diensttage), fehlende Diensttage 2 — alle sechs Ausnahmen mit Zahl belegt |
+| Formelschutz-Apostroph | Referenz- und Umlaufarchiv ausgezählt, dazu SQL im Zielkonto | 3 Zellen in beiden Archiven mit führendem Apostroph; im **Bestand** des Umlaufkontos 3 Werte mit Apostroph, im Referenzkonto 0 — der Wert ist ein Zeichen länger geworden, die Datei sieht gleich aus |
+| Widerspruchsfreiheit | 5.1 gegen `vergleich/ausnahmen/csv_umlauf.json` gelesen | keine Aussage in 5.1 ohne Entsprechung in der Ausnahmeliste; die Zahlen der Liste werden in C6 auf denselben Stand gebracht |

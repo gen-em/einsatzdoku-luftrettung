@@ -189,6 +189,35 @@ ist null". Das Profil `export_csv_v1` übernimmt `final` (stand bis hierher auf
 Damit steht der CSV-Kreislauf auf **0 unerklärten Abweichungen** (vorher 6:
 vier Notizen, `final`, `ende`).
 
+### Dokumentation — Die Ausnahmeliste des CSV-Rückwegs war unvollständig (Backlog Nr. 24 und 29)
+
+`Export-Format.md` 5.1 nannte `export_csv_v1` verlustfrei und zählte **drei**
+bewusste Ausnahmen auf. Gemessen sind es **sechs**. Die drei fehlenden:
+
+- **Ruhesegmente kommen nicht zurück** (95 → 0). Es gibt keinen Importweg für
+  sie; das Profil liest `einsaetze.csv`.
+- **Der zweite Dienst eines Kalendertags geht verloren** (15 → 13 Diensttage;
+  die zweite fehlende Zeile ist ein Diensttag ohne Einsatz). `gruppiere()`
+  bündelt nach Kalendertag, obwohl seit Web 6.0.0 zwei Dienste an einem Datum
+  zulässig sind.
+- **Der Formelschutz-Apostroph bleibt im Wert stehen** (3 Zellen). Der Export
+  stellt ihn Textwerten voran, die mit `=`, `+`, `-`, `@` beginnen; der Import
+  entfernt ihn nicht. Nach einem Umlauf steht er im Bestand.
+
+Die dritte ist die unauffälligste, denn ein Kreislauftest **sieht sie nicht**:
+Der nächste Export fügt keinen zweiten Apostroph hinzu (`'` ist kein
+Formel-Anfangszeichen), die Datei sieht unverändert aus — während der
+gespeicherte Wert ein Zeichen länger geworden ist. Sie wird bewusst **nicht
+behoben**: Ein Import, der einen führenden Apostroph entfernt, schafft den
+nächsten stillen Verlust, denn ein echtes `'` am Textanfang verschwände.
+
+Die Überschrift heißt jetzt „verlustfrei **für Einsätze**". Sechs Ausnahmen
+sind kein Grund, das Wort zu streichen — aber einer, es einzugrenzen.
+
+Dazu in Abschnitt 6: **Der Papierkorb ist in keinem Exportprofil enthalten**,
+und seit dieser Fassung ist das ein Unterschied zur Sicherung, die ihn führt.
+Wer gelöschte Einträge erhalten will, nimmt das Backup.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**
