@@ -1,0 +1,224 @@
+{
+  "name": "wortliste-ausnahmen",
+  "beschreibung": "Erwartete Treffer der Sperrliste: Stellen, an denen ein luftgebundener Begriff bleiben soll. Je Eintrag die Fundort-Klasse aus dem Konzept P2, Abschnitt 5.1, und der Grund. Die Regeln werden der Reihe nach geprueft; die erste passende erklaert den Treffer. Deshalb steht das Besondere oben und das Allgemeine unten. Klasse `Homonym` ist keine Fundort-Klasse: Sie steht fuer Stellen, an denen das Wort etwas anderes bedeutet (die „Maschine\" ist ein Rechner, der „Flugmodus\" eine Einstellung des Geraets).",
+  "regeln": [
+    {
+      "id": "schwachwortliste",
+      "datei": "server/assets/pwquality.js",
+      "klasse": "F",
+      "begruendung": "Die Liste haeufiger Passwoerter nennt `hubschrauber`, `christoph` und `luftrettung`, weil genau diese Woerter in der Luftrettung als Passwort naheliegen. Ein Streichen schwaechte die Pruefung. P2 ergaenzt die bodengebundenen Gegenstuecke (E-P2-18), streicht aber nichts."
+    },
+    {
+      "id": "luftrettungs-kacheln",
+      "datei": "server/zeitraum.php",
+      "von": "KACHELN_LUFT = \\[",
+      "bis": "^\\];",
+      "klasse": "F",
+      "begruendung": "Die zehn Kacheln des Luftrettungs-Reiters behalten ihre Flugterminologie (E32, bestaetigt in E-P2-04). Der Reiter ist per Definition luftgebunden; „Flugtage\" ist dort die richtige Beschriftung, nicht die bequeme."
+    },
+    {
+      "id": "luftrettungs-reiter",
+      "datei": "server/zeitraum.php",
+      "zeile": "tab-air|>Luftrettung<",
+      "klasse": "F",
+      "begruendung": "Name des Reiters in der Zeitraumuebersicht. Er bezeichnet die Einsatzart, nicht das Produkt."
+    },
+    {
+      "id": "rollenkatalog-db",
+      "datei": "server/db.php",
+      "zeile": "'label'\\s*=>\\s*'(Pilot|HEMS-TC|Flugretter)",
+      "klasse": "F",
+      "begruendung": "CREW_ROLES: Pilot 1, Pilot 2, HEMS-TC und Flugretter sind Fachrollen der Luftrettung und heissen so. Der Katalog trennt sauber nach `kind`; an einem bodengebundenen Rettungsmittel erscheinen sie gar nicht."
+    },
+    {
+      "id": "update-migrationen",
+      "datei": "server/update.php",
+      "klasse": "E",
+      "begruendung": "Migrationsbeschriftungen und SQL frueherer Schemafassungen. Sie beschreiben, was eine Migration DAMALS getan hat — eine Umbenennung machte die Beschreibung falsch. Entfallen mit R11 (Uebergabeliste an P6, Konzept 10.3)."
+    },
+    {
+      "id": "config-beispiel",
+      "datei": "server/config.example.php",
+      "klasse": "E",
+      "begruendung": "`dbname=hems`, `user=hems` im Installationsbeispiel. Aendert sich mit der Umbenennung in P6 (Uebergabeliste 10.3); eine Aenderung jetzt wuerde bestehende Installationsanleitungen brechen, ohne etwas sichtbar zu machen."
+    },
+    {
+      "id": "repo-link",
+      "zeile": "github\\.com/gen-em/einsatzdoku-luftrettung",
+      "klasse": "E",
+      "begruendung": "Fusszeilen-Link auf das Repositorium (login.php, pw_handling.php, ui.php). Der Reponame wandert mit R11 in P6; ein falscher Link jetzt waere schlechter als ein alter Name."
+    },
+    {
+      "id": "flugtage-altfeld",
+      "zeile": "\\['flugtage'\\]|\\.flugtage\\b",
+      "klasse": "D",
+      "begruendung": "`flugtage` als Feldname in Sicherungen und Umfangsangaben aelterer Fassungen. Der Code liest ihn als Zweitnamen (`diensttage ?? flugtage`), damit alte Dateien lesbar bleiben."
+    },
+    {
+      "id": "rollencode-hems",
+      "zeile": "(['\"`])hems\\1|crew_hems|dayCrew\\.hems|hems\\s+TINYINT",
+      "klasse": "D",
+      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Sicherung. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar."
+    },
+    {
+      "id": "rollenbeschriftung-vorgabe",
+      "zeile": "p1: 'Pilot 1', p2: 'Pilot 2'",
+      "klasse": "F",
+      "begruendung": "Notvorgabe der Rollenbeschriftungen in den JS-Bausteinen, falls CREW_LABELS nicht mitgeliefert wurde. Dieselben Fachrollen wie im Katalog."
+    },
+    {
+      "id": "alt-phasen-schluessel",
+      "datei": "server/assets/import_profiles.js",
+      "zeile": "ALT_PHASE_SLUGS",
+      "klasse": "D",
+      "begruendung": "`abflug` und `landung_krankenhaus` sind die Spaltenschluessel bis Web 5.10.0. Der Rueckimport muss sie erkennen, sonst verliert eine alte Exportdatei ihre Alarm- und Klinikzeit."
+    },
+    {
+      "id": "profil-felder",
+      "datei": "server/assets/*.js",
+      "zeile": "^\\s*'[^']*'\\s*[,:\\]]|expectedHeaders|reviewColumns|exportTitle",
+      "klasse": "D",
+      "begruendung": "Kopfzeilen und Spaltenschluessel der Import-Profile sowie die Spaltenbeschriftungen des Fremdformats. Sie muessen alte und fremde Dateien WIEDERERKENNEN — die Beschriftung einer Excel-Spalte ist ein Formatfeld (E-P2-11)."
+    },
+    {
+      "id": "beispielpaar-luft-boden",
+      "zeile": "Hubschrauberdienst am Tag",
+      "klasse": "F",
+      "begruendung": "„ein Hubschrauberdienst am Tag und ein NEF-Nachtdienst am Abend\" nennt beide Arten nebeneinander — genau das, was E-P2-14 verlangt. Hier bezeichnet „Hubschrauber\" tatsaechlich Luftfahrt."
+    },
+    {
+      "id": "handbuch-uhrkapitel",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^## 2\\. Die Uhr-App",
+      "klasse": "G",
+      "begruendung": "Kapitel 2 beschreibt die Garmin-App als Gegenstand: unterstuetzte Modelle, Tastenwege je Uhr, Oberflaechen. Dort ist Garmin nicht eine von mehreren Plattformen, sondern die beschriebene Sache (E-P2-15). Abschnitt 2.0 ist zugleich die Tabelle, auf die die geraetefreien Texte verweisen (E-P2-02)."
+    },
+    {
+      "id": "handbuch-luftreiter",
+      "datei": "docs/Handbuch.md",
+      "abschnitt": "^### 4\\.4",
+      "klasse": "F",
+      "begruendung": "Beschreibt den Luftrettungs-Reiter und begruendet dessen Wortwahl. Bleibt unveraendert (E-P2-04); ohne diesen Abschnitt waere nicht erklaert, warum eine Kachel „Flugtage\" heisst und die daneben „Diensttage\"."
+    },
+    {
+      "id": "technik-uhrkapitel",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^## 5\\. Uhr-App",
+      "klasse": "G",
+      "begruendung": "Kapitel 5 samt Build-Absaetzen beschreibt das Connect-IQ-Projekt, seine Tastenprofile und die Bauziele `fenix6pro`, `fr945`, `venu3s`. Plattformspezifisch, also bleibt Garmin (E-P2-15)."
+    },
+    {
+      "id": "connect-iq-projekt",
+      "zeile": "Connect-IQ-Projekt|Connect-IQ-Probe",
+      "klasse": "G",
+      "begruendung": "`watch/` und `tools/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
+    },
+    {
+      "id": "fahrzeugtypen",
+      "zeile": "RTH, NEF, NAW|RTW, NEF, RTH|RTH, NEF oder",
+      "klasse": "F",
+      "begruendung": "RTH neben NEF, NAW und RTW: Fahrzeugtypen, nebeneinander genannt (E-P2-14). RTH bezeichnet Luftfahrt und bleibt."
+    },
+    {
+      "id": "rollenaufzaehlung",
+      "zeile": "Pilot 1, Pilot 2, HEMS-TC, Flugretter",
+      "klasse": "F",
+      "begruendung": "Aufzaehlung der vier Luftrollen im Handbuch. Fachrollen; sie erscheinen nur an luftgebundenen Rettungsmitteln."
+    },
+    {
+      "id": "rolle-am-rettungsmittel",
+      "zeile": "ein Hubschrauber mit Pilot 1 und HEMS-TC|weil ein Hubschrauber eine Winde|Windenhaken Jahre später am Hubschrauber",
+      "klasse": "F",
+      "begruendung": "Saetze, in denen „Hubschrauber\" tatsaechlich das luftgebundene Rettungsmittel meint und dem NEF gegenuebergestellt wird. Winde und Windenhaken sind Faehigkeiten luftgebundener Rettungsmittel."
+    },
+    {
+      "id": "rollenkatalog-tabelle",
+      "datei": "docs/Export-Format.md",
+      "zeile": "^\\| (Pilot 1|Pilot 2|HEMS-TC|Flugretter) \\|",
+      "klasse": "F",
+      "begruendung": "Der Rollenkatalog in Abschnitt 3.8: Beschriftung (Fachrolle, F) neben Rollencode und Spaltennamen (D). Beides bleibt."
+    },
+    {
+      "id": "excel-spaltentabelle",
+      "datei": "docs/Export-Format.md",
+      "abschnitt": "^## 2\\. Excel",
+      "zeile": "^\\|\\s*\\d+\\s*\\|",
+      "klasse": "D",
+      "begruendung": "Die Spaltentabelle des Excel-Standardformats nennt Formatfelder. Ihre Beschriftungen werden beim Rueckimport wiedererkannt und aendern sich nicht (E-P2-11) — was sich in P2 aendert, ist nur, dass die Tabelle wieder stimmt (F-P2-B)."
+    },
+    {
+      "id": "guteseele-format",
+      "datei": "docs/Export-Format.md",
+      "abschnitt": "^## 4\\. Excel \\(GuteSeele\\)",
+      "klasse": "D",
+      "begruendung": "Beschreibung eines FREMDEN Formats. Titelzeile, Spaltennamen und Besatzungsspalten stammen nicht aus dieser Anwendung; sie zu neutralisieren hiesse, die Datei nicht mehr zu beschreiben."
+    },
+    {
+      "id": "guteseele-jahresliste",
+      "zeile": "Christoph-17-Jahresliste",
+      "klasse": "D",
+      "begruendung": "Der Name, unter dem das Fremdformat im Handbuch eingefuehrt ist. Er benennt die Datei, nicht ein Rettungsmittel dieser Installation."
+    },
+    {
+      "id": "umbenennungstabelle",
+      "datei": "docs/Export-Format.md",
+      "von": "Was seit Web 6\\.0\\.0 neu oder anders heißt",
+      "bis": "^\\*\\*Die beiden Phasenspalten",
+      "klasse": "C",
+      "begruendung": "Die Tabelle sagt Zeile fuer Zeile, welcher alte Name durch welchen neuen ersetzt wurde. Ohne die alten Namen erklaert sie nichts mehr (E-P2-10)."
+    },
+    {
+      "id": "dateiname-umbenannt",
+      "datei": "docs/Export-Format.md",
+      "von": "Auch der Dateiname hat sich geändert",
+      "bis": "luftrettungsdokumentation_",
+      "klasse": "C",
+      "begruendung": "Nennt den alten Dateipraefix ausdruecklich als den alten. Wer eine Datei von 2025 vor sich hat, findet hier, warum sie anders heisst."
+    },
+    {
+      "id": "historische-nennung",
+      "zeile": "(bis|seit) (Web|Uhr|Vertrag|Version)\\b|hieß\\b|hiess\\b",
+      "klasse": "C",
+      "begruendung": "Historische Nennung mit Versionsangabe (E-P2-10). Der alte Begriff steht nur in einem Satz, der ausdruecklich sagt, dass er alt ist — solche Saetze erklaeren alte Exporte und Sicherungen und bleiben. Die Versionsangabe darf in der Zeile davor stehen (JSON-Vertrag 314/315): das Werkzeug prueft je Zeile, deshalb erkennt das Muster auch „seit Web\" ohne die Nummer dahinter."
+    },
+    {
+      "id": "besatzung-kurznamen",
+      "datei": "docs/Technik.md",
+      "zeile": "Besatzung P1, P2, HEMS, FR",
+      "klasse": "D",
+      "begruendung": "Erlaeuterung der Suchparameter `c1`…`c5`. Die Kurznamen sind Vertragsbestandteil verschickter Links (R5)."
+    },
+    {
+      "id": "maschine-als-rechner",
+      "zeile": "auf der Maschine|\\| Maschinen \\|",
+      "klasse": "Homonym",
+      "begruendung": "„Maschine\" meint hier den Rechner (Runbook) bzw. die maschinelle Zielgruppe eines Formats — nicht das Rettungsmittel. Ausdruecklich so in der Wortliste, Abschnitt 5.2."
+    },
+    {
+      "id": "flugmodus",
+      "zeile": "Flugmodus",
+      "klasse": "Homonym",
+      "begruendung": "Der Flugmodus ist eine Einstellung des Geraets. Mit der Einsatzart hat er nichts zu tun."
+    },
+    {
+      "id": "backup-beispielwerte",
+      "datei": "docs/Backup-Format.md",
+      "zeile": "Christoph 17",
+      "klasse": "D",
+      "begruendung": "Beispielwerte im JSON-Schema der Sicherung. Das Feld `kind` daneben zeigt beide Arten (`air|ground`); der Name ist Fuellwert, nicht Aussage. D5 erwartet in dieser Datei ausdruecklich keine Aenderung."
+    },
+    {
+      "id": "vertrag-payload-limit",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "Connect-IQ-Payload-Limit",
+      "klasse": "E",
+      "begruendung": "Die Grenze ist plattformbedingt begruendet. Der Vertrag soll sie plattformneutral begruenden — das ist Vertragsreview (R12) und gehoert nach P6 (Uebergabeliste 10.3), nicht in eine Wortersetzung."
+    },
+    {
+      "id": "branding-bildmarke",
+      "datei": "docs/Branding.md",
+      "klasse": "E",
+      "begruendung": "Die Bildmarke ist ein Hubschrauber; Branding.md beschreibt sie. Das Logo und seine Beschreibung aendert P3 (NEF-Bildmarke, Nutzerwahl) — eine Beschreibung zu neutralisieren, waehrend das Bild ein Hubschrauber ist, waere eine Unwahrheit."
+    }
+  ]
+}

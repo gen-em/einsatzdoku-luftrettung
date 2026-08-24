@@ -20,6 +20,7 @@ server/sicherungen/
 # Erzeugnisse des Stilvergleichs (tools/stilvergleich/proben.py)
 tools/stilvergleich/pruefstand/
 tools/stilvergleich/__pycache__/
+tools/wortliste/__pycache__/
 
 # Erzeugnisse des Referenzdatensatz-Generators. Rund 25 MB, vollstaendig aus
 # den Quelldaten ableitbar (ein Lauf dauert zwei Sekunden) und deterministisch

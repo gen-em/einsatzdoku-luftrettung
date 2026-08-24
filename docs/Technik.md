@@ -149,11 +149,15 @@ hems/
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
-│   └── wiederherstellungs-probe/
-│                          Grenzfälle von edbak_restore(), die der Kreislauf
-│                          nicht herstellen kann: Papierkorb-Mischfall und
-│                          kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
-│                          s. LIESMICH.md)
+│   ├── wiederherstellungs-probe/
+│   │                      Grenzfälle von edbak_restore(), die der Kreislauf
+│   │                      nicht herstellen kann: Papierkorb-Mischfall und
+│   │                      kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
+│   │                      s. LIESMICH.md)
+│   └── wortliste/         zählt nach, ob sichtbare Texte und normative
+│                          Dokumentation neutral von Land und Luft sprechen:
+│                          Sperrliste, Ausnahmeliste mit Begründungen, drei
+│                          Zahlen je Bereich (s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
