@@ -533,10 +533,10 @@ function edbak_restore(int $userId, array $data): array {
      * Diese Funktion hat ihre Transaktion bisher bedingungslos geoeffnet. Das
      * ging gut, solange sie genau einen Aufrufer hatte — api/backup_restore.php,
      * das nichts weiter tut. Der Demo-Reset (demo_lib.php) muss aber MEHR in
-     * dieselbe Klammer nehmen: Kontomaterial, Geraete, Bestand und den
-     * Papierkorb-Nachlauf. Zerfiele das in mehrere Transaktionen, koennte ein
-     * Fehler in der Mitte ein Konto mit halbem Bestand hinterlassen — und
-     * ausgerechnet der Reset laeuft unbeaufsichtigt, alle 30 Minuten.
+     * dieselbe Klammer nehmen: Kontomaterial, Geraete und Bestand. Zerfiele das
+     * in mehrere Transaktionen, koennte ein Fehler in der Mitte ein Konto mit
+     * halbem Bestand hinterlassen — und ausgerechnet der Reset laeuft
+     * unbeaufsichtigt, alle 30 Minuten.
      *
      * PDO kennt keine echten verschachtelten Transaktionen; ein zweites
      * beginTransaction() wirft. Deshalb wird geprueft, ob schon eine laeuft,

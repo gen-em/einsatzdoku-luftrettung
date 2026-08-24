@@ -76,27 +76,36 @@ if ($mitKlartext > 0) {
     exit(2);
 }
 
-/* ---- Nachlauf-Drehbuch: was liegt jetzt im Papierkorb? ------------------- */
-$st = $pdo->prepare('SELECT client_ref FROM missions
-                     WHERE user_id = ? AND deleted_at IS NOT NULL
-                       AND (deleted_with_day = 0 OR deleted_with_day IS NULL)
-                     ORDER BY started_at');
-$st->execute([$id]);
-$papierEinsaetze = $st->fetchAll(PDO::FETCH_COLUMN);
-
-/* Diensttage ueber ihre Dienstkennung, nicht ueber das Datum: Seit E9 koennen
- * zwei Dienste auf einem Kalendertag liegen. */
-$st = $pdo->prepare('SELECT r.day_ref FROM days d
-                     JOIN day_refs r ON r.day_id = d.id
-                     WHERE d.user_id = ? AND d.deleted_at IS NOT NULL
-                     ORDER BY d.started_at');
-$st->execute([$id]);
-$papierTage = $st->fetchAll(PDO::FETCH_COLUMN);
+/* ---- Papierkorb: nur noch ZAEHLEN, nicht mehr nachstellen ----------------
+ *
+ * Bis Web 7.3.1 stand hier ein Nachlauf-Drehbuch: eine Liste der Kennungen,
+ * die der Demo-Reset nach dem Einspielen ueber die regulaeren Loeschwege
+ * wieder in den Papierkorb legen sollte. Das war noetig, solange das
+ * Sicherungsformat keine geloeschten Eintraege kannte (E-P1-21).
+ *
+ * Seit Nutzlast 7 traegt `daten` den Papierkorb selbst, und `edbak_restore()`
+ * bringt ihn als Papierkorb zurueck. Das Drehbuch ist entfallen (E-S1-10);
+ * die Zahlen werden nur noch fuer die Ausgabe unten ermittelt, damit der
+ * Erzeuger sagen kann, was in der Fixture steckt. */
+$papierkorb = ['einsaetze' => 0, 'diensttage' => 0, 'ruhezeiten' => 0];
+foreach (($daten['missions'] ?? []) as $m) {
+    if (($m['deleted_at'] ?? null) !== null) { $papierkorb['einsaetze']++; }
+}
+foreach (($daten['days'] ?? []) as $d) {
+    if (($d['deleted_at'] ?? null) !== null) { $papierkorb['diensttage']++; }
+}
+foreach (($daten['rest_segments'] ?? []) as $r) {
+    if (($r['deleted_at'] ?? null) !== null) { $papierkorb['ruhezeiten']++; }
+}
 
 /* ---- Zusammensetzen ------------------------------------------------------ */
 $fx = [
     'format'      => 'einsatzdoku-demo-fixture',
-    'version'     => 1,
+    /* FORMAT 2 (E-S1-10): ohne den Block `nachlauf`. Die Pflichtfelder sind
+     * dieselben (`konto`, `daten`), und `demo_fixture_laden()` bleibt
+     * tolerant — eine Fixture der Version 1 laesst sich weiterhin einspielen.
+     * Die Nummer kennzeichnet, dass der Block weg ist, sie sperrt nichts. */
+    'version'     => 2,
     'erzeugt_am'  => gmdate('c'),
     'web_version' => WEB_VERSION,
     'quelle'      => 'tools/referenzdatensatz — Phase P1',
@@ -113,17 +122,14 @@ $fx = [
     ],
     'geraete'  => $geraete,
     'daten'    => $daten,
-    'nachlauf' => [
-        'einsaetze'  => array_values($papierEinsaetze),
-        'diensttage' => array_values($papierTage),
-    ],
 ];
 
-/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 11 MB — im Wesentlichen
- * 52 484 Spurpunkte als JSON-Zahlen. Diese Datei liegt unter server/ und
- * geht damit bei jedem Deploy ueber FTPS mit; gepackt sind es weniger als
- * ein Zehntel. Gelesen wird sie ohnehin nur beim Anlegen und beim Reset,
- * und `gzdecode()` darauf kostet Bruchteile einer Sekunde.
+/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 12 MB — im Wesentlichen
+ * 55 861 Spurpunkte als JSON-Zahlen (seit S1 mit denen des Papierkorbs).
+ * Diese Datei liegt unter server/ und geht damit bei jedem Deploy ueber FTPS
+ * mit; gepackt sind es weniger als ein Zehntel. Gelesen wird sie ohnehin nur
+ * beim Anlegen und beim Reset, und `gzdecode()` darauf kostet Bruchteile
+ * einer Sekunde.
  *
  * Die ungepackte Fassung wird NICHT zusaetzlich abgelegt: Zwei Dateien
  * desselben Inhalts laufen auseinander, sobald jemand eine davon anfasst. */
@@ -144,5 +150,5 @@ $punkte = 0;
 foreach (($daten['missions'] ?? []) as $m) { $punkte += count($m['track'] ?? []); }
 foreach (($daten['rest_segments'] ?? []) as $r) { $punkte += count($r['track'] ?? []); }
 printf("  Spurpunkte   %d\n", $punkte);
-printf("  Nachlauf     %d Einsaetze, %d Diensttage in den Papierkorb\n",
-       count($papierEinsaetze), count($papierTage));
+printf("  Papierkorb   %d Einsaetze, %d Diensttage, %d Ruhesegmente (in `daten` enthalten)\n",
+       $papierkorb['einsaetze'], $papierkorb['diensttage'], $papierkorb['ruhezeiten']);

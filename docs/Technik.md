@@ -116,7 +116,7 @@ hems/
 │   │                      EINZIGE Erzeugnis der Phase P1, das ausgeliefert
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
-│   │                      Reset-Fälligkeit, Papierkorb-Nachlauf (Abschnitt 4.99a)
+│   │                      Reset-Fälligkeit (Abschnitt 4.99a)
 │   ├── admin_demo.php     die zugehörige Adminseite
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
@@ -1741,7 +1741,11 @@ nicht bloß zugesichert:
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
 | `geraete` | `device_id`, `api_key_hash`, `label` |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
-| `nachlauf` | welche Einsätze und Diensttage nach dem Einspielen in den Papierkorb gehören |
+
+**Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen
+(unten). Pflicht sind weiterhin nur `konto` und `daten`; `demo_fixture_laden()`
+bleibt tolerant, eine Fixture der Version 1 lässt sich also weiterhin
+einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 
 **Warum sie nicht aus einer `.edbak` kommen kann.** Die Sicherungsdatei trägt
 die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
@@ -1756,9 +1760,9 @@ Sicherung aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,3 MB, im Wesentlichen 52 484 Spurpunkte als
-JSON-Zahlen. Gepackt sind es knapp 700 KB, und die Datei geht bei jedem Deploy
-über FTPS mit.
+Gepackt abgelegt: roh rund 12 MB, im Wesentlichen 55 861 Spurpunkte als
+JSON-Zahlen. Gepackt sind es unter einem Zehntel davon, und die Datei geht bei
+jedem Deploy über FTPS mit.
 
 #### Kein zweiter Einspielweg
 
@@ -1767,28 +1771,38 @@ der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
 hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
 der ungeprüftere.
 
-Zwei kleine Erweiterungen waren dafür nötig, beide in `backup_lib.php`:
+Eine Erweiterung war dafür nötig, in `backup_lib.php`:
 
-- **`edbak_build($userId, $mitPapierkorb = false)`.** Die Fixture soll den
-  Referenzzustand vollständig abbilden, und dazu gehört ein gefüllter
-  Papierkorb. Für eine Nutzer-Sicherung bleibt der Filter — wer sichert,
-  sichert seinen Bestand, nicht seinen Abfall.
 - **`edbak_restore()` ist verschachtelungsfähig.** Sie öffnet ihre Transaktion
   nur, wenn noch keine läuft. Der Demo-Reset muss mehr in dieselbe Klammer
-  nehmen: Kontomaterial, Geräte, Bestand und Nachlauf. Zerfiele das in
-  mehrere Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem
-  Bestand hinterlassen — und der Reset läuft unbeaufsichtigt.
+  nehmen: Kontomaterial, Geräte und Bestand. Zerfiele das in mehrere
+  Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem Bestand
+  hinterlassen — und der Reset läuft unbeaufsichtigt.
 
-#### Der Papierkorb-Nachlauf
+Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
+ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jeder Sicherung
+steht (`docs/Backup-Format.md` 2).
 
-Das Einspielen wertet `deleted_at` **nicht** aus (die Spalte steht nicht im
-Feldkatalog); alle Einträge kommen als aktive zurück. Danach legt ein kleines
-Drehbuch die benannten Einsätze und Diensttage über die **regulären**
-Löschwege (`trash_lib.php`) in den Papierkorb — so, wie eine Nutzerin es täte.
+#### Der Papierkorb-Nachlauf ist entfallen (Web 8.0.0)
 
-Die Diensttage werden über ihre **Dienstkennung** (`day_ref`) angesprochen,
-nicht über das Datum: Seit E9 können zwei Dienste auf einem Kalendertag
-liegen, das Datum benennt also keinen Tag mehr eindeutig.
+**Was es war.** Das Einspielen wertete `deleted_at` nicht aus; alle Einträge
+kamen als aktive zurück. Danach legte ein Drehbuch (`demo_nachlauf()`,
+Fixture-Block `nachlauf`) benannte Einsätze und Diensttage über die regulären
+Löschwege wieder in den Papierkorb. Es musste **nach** dem Commit laufen, weil
+`trash_delete_*()` je eine eigene Transaktion öffnen — der Reset zerfiel damit
+in zwei Schritte, von denen der zweite fehlschlagen konnte.
+
+**Warum es weg ist.** Seit Nutzlast 7 führt die Sicherung den Papierkorb, und
+`edbak_restore()` bringt ihn als Papierkorb zurück. Der Reset ist wieder
+**ein** Vorgang in **einer** Transaktion; die Zahlen für den Bericht kommen aus
+`stats.papierkorb` der Einspielroutine. Die 90-Tage-Frist stempelt jeder Reset
+frisch, weil beim Einspielen ohnehin der Einspielzeitpunkt gesetzt wird — das
+Demo-Konto hält seinen Papierkorb also von selbst am Leben.
+
+**Was das für eine alte Fixture bedeutet.** Sie bleibt lauffähig: Ihre `daten`
+tragen `deleted_at` bereits (sie wurde mit dem damaligen Flag erzeugt), der
+neue Rückweg macht daraus Papierkorbeinträge, und ihr `nachlauf`-Block wird
+nicht mehr gelesen.
 
 #### Der Reset
 

@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/demo_lib.php';
+require_once __DIR__ . '/trash_lib.php';   // TRASH_DAYS fuer den Erklaertext
 
 /**
  * Demo-Konto verwalten (Phase P1, E-P1-08).
@@ -167,10 +168,12 @@ ui_topbar('einstellungen');
         Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
         unerwartet gelungene Änderung der Konto-Identität bliebe damit
         folgenlos.</li>
-    <li>Zum Schluss legt ein kleines Drehbuch benannte Einsätze und Diensttage
-        über die regulären Löschwege in den Papierkorb — sonst wäre er nach
-        jedem Reset leer, denn eine Sicherung führt keine gelöschten
-        Einträge.</li>
+    <li>Der Papierkorb kommt <strong>aus der Fixture</strong> zurück — als
+        Papierkorb, mit frischer <?= TRASH_DAYS ?>-Tage-Frist. Bis Web 7.3.1
+        brauchte es dafür ein Drehbuch, das die Einträge nach dem Einspielen
+        über die regulären Löschwege wieder löschte; seit die Sicherung
+        gelöschte Einträge führt, ist das entfallen und der Reset ist wieder
+        <em>ein</em> Vorgang.</li>
   </ul>
 </main>
   <?php ui_footer(); ?>

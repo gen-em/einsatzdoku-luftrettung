@@ -121,6 +121,29 @@ Ein unbrauchbarer Wert lässt die Spalte **weg** statt `NULL` zu schreiben —
 dann greift die Vorgabe der Datenbank und die Zeile bleibt. Gemessen: 87 von
 87 Einsätzen tragen nach dem Umlauf denselben Wert wie vorher.
 
+### Web — Der Demo-Reset kommt ohne Nachlauf aus
+
+Weil das Sicherungsformat keine gelöschten Einträge kannte, stellte der
+Demo-Reset den Papierkorb bisher **nach** dem Einspielen nach: Ein Drehbuch in
+der Fixture nannte Einsätze und Diensttage, die `demo_nachlauf()` anschließend
+über die regulären Löschwege wieder löschte. Das musste nach dem Commit
+laufen, weil `trash_delete_*()` je eine eigene Transaktion öffnen — der Reset
+zerfiel damit in zwei Schritte, von denen der zweite fehlschlagen konnte
+(sichtbar, harmlos, aber eben ein zweiter Schritt).
+
+Der Grund ist weg, also ist das Drehbuch weg: `demo_nachlauf()`, der
+Fixture-Block `nachlauf` und dessen Erzeugung sind entfallen. Der Reset ist
+wieder **ein** Vorgang in **einer** Transaktion; die Papierkorbzahlen im
+Bericht kommen aus den Zählern der Einspielroutine. Die Fixture zählt
+deshalb auf **Format 2** hoch — die Nummer kennzeichnet den entfallenen Block,
+sie sperrt nichts: `demo_fixture_laden()` bleibt tolerant, und eine Fixture
+der Version 1 lässt sich weiterhin einspielen (ihr `daten`-Block trägt
+`deleted_at` bereits, ihr `nachlauf` wird nur nicht mehr gelesen).
+
+Nebenwirkung, die gut passt: Weil beim Einspielen ohnehin der
+Einspielzeitpunkt gesetzt wird, stempelt **jeder** Reset die 90-Tage-Frist
+frisch. Das Demo-Konto hält seinen Papierkorb damit von selbst am Leben.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**

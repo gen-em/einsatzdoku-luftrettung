@@ -133,8 +133,10 @@ php fixture/erzeugen.php [email] [ziel.json.gz]
 ```
 
 Erzeugt `server/demo/fixture.json.gz` aus dem Referenzkonto: Konto- und
-Schlüsselmaterial, Geräte, den Bestand **mit** Papierkorb und das
-Nachlauf-Drehbuch. Die Mechanik steht in `docs/Technik.md` 4.99a.
+Schlüsselmaterial, Geräte und den Bestand **mit** Papierkorb (Format 2). Das
+Nachlauf-Drehbuch ist mit Web 8.0.0 entfallen — die Sicherung führt gelöschte
+Einträge jetzt selbst, und das Einspielen bringt sie als Papierkorb zurück.
+Die Mechanik steht in `docs/Technik.md` 4.99a.
 
 Danach im Adminbereich unter **Demo-Konto** anlegen oder zurücksetzen.
 
