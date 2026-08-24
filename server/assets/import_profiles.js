@@ -28,7 +28,7 @@
  *                    liest
  *
  * target-Werte, die die Pipeline kennt:
- *   day, alarm, ended, transport_dest, winch, resources, notes
+ *   day, einsatzdatum, alarm, ended, final, transport_dest, winch, resources, notes
  *   site_ele_m, distance_m, ascent_m
  *   schockraum, secondary, winch_cycles, winch_cycles_pat, winch_airload
  *   bergwacht, bw_unit, bw_info, other_ema
@@ -220,7 +220,15 @@
         // Aktualisieren selbst. Ein Wert aus der Datei waere dort eine Aussage
         // ueber ein fremdes Konto.
         'herkunft': { target: null },                    // wird beim Import neu gesetzt
-        'final': { target: null },
+        /* `final` IST ZUSTAND, nicht Entstehung (Backlog Nr. 28).
+         *
+         * Bis Web 7.3.1 stand hier target:null, und api/import_commit.php
+         * schrieb im INSERT das Literal 1. Der einzige nicht abgeschlossene
+         * Einsatz des Referenzdatensatzes kam damit als abgeschlossen zurueck
+         * — im Ueberschreiben-Modus sogar an einem Einsatz, der es vorher
+         * richtig hatte. Anders als `herkunft` und `edited` sagt `final`
+         * nichts ueber das Quellkonto aus, sondern ueber den Einsatz. */
+        'final': { target: 'final', parse: ['boolJN'] },
         'manual': { target: null },
         'edited': { target: null },                      // wird beim Import neu gesetzt
 
@@ -277,7 +285,9 @@
         'bw_info': { target: 'bw_info', parse: ['trim', 'max:190'] },
         'other_ema': { target: 'other_ema', parse: ['trim', 'max:190'] },
         'weitere_rettungsmittel': { target: 'resources', parse: ['pipeList', 'maxEach:120'] },
-        'notizen': { target: 'notes', parse: ['trim', 'max:2000'] },
+        // `trimMehrzeilig` statt `trim`: Die Notiz ist das einzige Feld, das
+        // Zeilenumbrueche traegt, und `trim` zog sie weg (Backlog Nr. 27).
+        'notizen': { target: 'notes', parse: ['trimMehrzeilig', 'max:2000'] },
 
         'pat_mission_no': { target: 'pat.mission_no', parse: ['trim', 'max:64'], sensitive: true },
         'pat_nachname': { target: 'pat.last', parse: ['trim'], sensitive: true },
@@ -424,7 +434,7 @@
                eingetragen, damit frühere Dateien erkannt werden. */
             'Flugkilometer': { target: null },
             'Kilometer': { target: null },
-            'Notizen': { target: 'notes', parse: ['dashLeer', 'trim', 'max:2000'] }
+            'Notizen': { target: 'notes', parse: ['dashLeer', 'trimMehrzeilig', 'max:2000'] }
         },
 
         dedupeKey: ['mission_no', 'day+alarm'],

@@ -602,3 +602,81 @@ Rückweg lauffähig.
 | Papierkorb kommt aus dem Einspielen | SQL in der zweiten Datenbank | **5 Einsätze, 5 Ruhesegmente, 1 Diensttag**, alle mit **einem** `deleted_at` (dem Einspielzeitpunkt); `deleted_with_day = 1` an aktivem Tag: **0** |
 | Bericht ohne Nachlauf-Zähler | Adminbereich → Demo-Konto → „Auf Standard zurücksetzen", Bericht des Laufs gelesen | `papierkorb: {einsaetze: 5, diensttage: 1, ruhezeiten: 5}`; kein `nicht_gefunden`, kein Drehbuch-Zähler |
 | Reset-Dauer (P-S1-11) | dieselbe Handlung, Zeit genommen | **6,4 s** — der Ausgangswert lag bei rund 6 s, also nicht schlechter |
+
+### Zwischenfall: die Referenzinstallation musste neu aufgebaut werden
+
+Gehört hierher, weil er Zahlen erklärt und weil die Ursache behoben ist.
+
+**Was passiert ist.** `browser/demo_pruefen.mjs` wurde versehentlich gegen die
+**Referenzinstallation** gefahren statt gegen die zweite. Das Skript arbeitet
+auf dem Konto `demo@gen-em.org` — und auf der Referenzinstallation ist das
+nicht das Demo-Konto, sondern das **Referenzkonto**. Es hat dort einen Einsatz
+gelöscht, einen Standort angelegt und die E-Mail-Adresse in
+`gekapert@example.org` geändert. Der Befund „E-Mail-Änderung wurde NICHT
+abgewiesen" stand danach im Bericht — richtig gemeldet, aber zu spät.
+
+**Folge.** Der Referenzstand wurde vollständig neu aufgebaut (Datenbank neu,
+`install.php`, alle Einspielstufen, CSV-Import im Browser). Danach wieder exakt
+87 Einsätze / 5 im Papierkorb, 100 Ruhesegmente / 5, 16 Diensttage / 1,
+55 861 Spurpunkte — der Datensatz ist reproduzierbar, das ist die gute
+Nachricht daran. Betroffen waren keine Messungen: C1 und C2 lagen davor, der
+CSV-Kreislauf arbeitet mit den eingecheckten Referenz**dateien** und einem
+frischen Konto.
+
+**Fund F-S1-D — und hier wurde von K4 abgewichen.** Ein Prüfmittel, das seinen
+Prüfling zerstören kann, braucht eine Grenze, die nicht davon abhängt, dass die
+Bedienerin aufpasst. `demo_pruefen.mjs` hat deshalb einen **Riegel** bekommen:
+Vor allem anderen prüft es, ob unter der Demo-Adresse ein Konto liegt, das
+**nicht** als Demo-Konto gekennzeichnet ist — und bricht dann ab, ohne etwas zu
+berühren.
+
+Das ist eine bewusste Abweichung von K4 („Funde sammeln, nicht sofort
+beheben"). Begründung: K4 schützt den Umfang des **Produkts**; hier geht es um
+ein Werkzeug unter `tools/`, das nicht ausgeliefert wird, und der Fund ist
+kein Fehlverhalten der Anwendung, sondern eine Falle im Prüfmittel, die
+unmittelbar Daten kostet. Der Riegel ist geprüft: gegen die
+Referenzinstallation bricht der Lauf ab und fasst nichts an, gegen die zweite
+Installation läuft er durch (**25 Einzelprüfungen, 0 Befunde,
+0 Konsolenfehler** — eine Prüfung mehr als vorher, das ist der Riegel selbst).
+
+### C4 — CSV-Import: Nr. 27 und Nr. 28 (erledigt)
+
+**Geändert:** `server/assets/import.js` (neuer Parser `trimMehrzeilig`, `final`
+in `EINFACHE_ZIELE` und in der Zeilenvorgabe, neues Ergebnisfeld
+`zielspalten`), `server/assets/import_profiles.js` (drei Notizspalten auf
+`trimMehrzeilig`, `final` mit Ziel statt `target: null`),
+`server/assets/import_ui.js` (`ended_utc` und `final` nur bei vorhandener
+Spalte), `server/api/import_commit.php` (Vertragskommentar, `final` als
+Platzhalter im INSERT und neu im UPDATE, `ended_utc` unterscheidet fehlend von
+leer), `docs/Export-Format.md` 5.1 und 5.2, `docs/CHANGELOG.md`.
+
+**Entscheidungen, die dabei fielen:**
+
+1. **Die Unterscheidung „Spalte fehlt / Zelle leer" gehört in `import.js`,
+   nicht in `import_ui.js`.** Nur `verarbeiteMatrix()` kennt die Kopfzeile der
+   Datei. Es liefert deshalb ein neues Feld `zielspalten` (Menge der Zielfelder,
+   für die die Datei eine Spalte führt); die Oberfläche fragt es nur ab. Eine
+   zweite, von Hand geführte Liste wäre genau die Bauart gewesen, die Web 7.2.2
+   schon einmal einen stillen Datenverlust gekostet hat.
+2. **Vorgabe `final: 1` in der Zeilenvorlage.** Eine leere Zelle in einer
+   Datei, die die Spalte führt, ist damit dasselbe wie „kein Wert genannt" —
+   und nicht „nicht abgeschlossen". Das entspricht der Datenbank-Vorgabe und
+   dem bisherigen Verhalten; die Gegenrichtung hätte einen ganzen Jahrgang
+   stillschweigend auf „offen" gesetzt.
+3. **`$gehoert` liefert jetzt `final` statt `1`.** Beim Überschreiben ohne
+   `final`-Spalte muss das UPDATE den **bestehenden** Wert zurückschreiben. Der
+   Test auf „keine Zeile" bleibt `=== false` — ein `final` von 0 ist ein
+   gültiger Wert, kein Fehlschlag.
+4. **Leerzeilen mitten in einer Notiz bleiben stehen.** Sie sind Gliederung;
+   nur am Anfang und Ende fallen sie weg.
+
+**Prüfstand C4**
+
+| Nr. | Was | Wie | Ergebnis |
+|---|---|---|---|
+| P-S1-02 | Kreislauf CSV | `kreislauf.py --art csv --frisch` | **8797 Einzelvergleiche, 0 unerklärte Abweichungen** (vorher 6), 859 erwartete, 0 ungenutzte Regeln, 0 Konsolenfehler |
+| P-S1-08 | Nr. 27 | Referenz-CSV und Umlauf-CSV Zeile für Zeile verglichen | 4 mehrzeilige Notizen auf beiden Seiten, **164/253/119/150 Zeichen, je 1 Umbruch, wörtlich gleich** |
+| P-S1-09 | Nr. 28, Anlegen | dieselbe Messung, Spalten `final` und `ende` | Referenz `('2026-07-05','19:40','0','')` → Umlauf **identisch** |
+| P-S1-09 | Nr. 28, Überschreiben | Browser: dieselbe CSV erneut ins gefüllte Umlaufkonto, **alle 82 Zeilen auf „überschreiben"** | 82 überschrieben; danach `final = 0` und `ended_at IS NULL` — die Fassung davor hätte beides gesetzt |
+| — | Excel ohne `ende`/`final`, Anlegen | Browser: Excel (Standard) aus dem Referenzkonto exportiert, in ein frisches Konto importiert | 82 Einsätze, **82× `final = 1`, 82× `ended_at = started_at`** — genau das bisherige Verhalten, auch für den offenen Einsatz |
+| — | Excel ohne `ende`/`final`, Überschreiben | dieselbe Datei ins gefüllte CSV-Umlaufkonto, alle 82 Zeilen überschreiben | `final` bleibt **0** (die Datei sagt nichts dazu), `ende` wird auf den Beginn gesetzt — unverändertes Verhalten, in `Export-Format.md` 5.2 jetzt ausdrücklich benannt |

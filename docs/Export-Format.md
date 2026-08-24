@@ -617,6 +617,35 @@ und die Uhrzeit auf den Diensttag gerechnet; solche Einsätze landeten
 ist oder der Tag darauf — eine Datei ohne die Spalte oder mit einem unsinnigen
 Wert verhält sich wie bisher.
 
+**`final` und `ende` werden übernommen** (seit Web 8.0.0), und zwar in beide
+Richtungen: beim Anlegen **und** beim Überschreiben. Beides ist **Zustand des
+Einsatzes**, nicht Aussage über das Quellkonto — anders als `herkunft` und
+`edited` darüber.
+
+Dabei gilt eine Unterscheidung, die es vorher nicht gab: **eine fehlende Spalte
+ist etwas anderes als eine leere Zelle.**
+
+| | Wirkung |
+|---|---|
+| Spalte fehlt (Jahresliste, Excel) | wie bisher: `ende = Beginn`, beim Anlegen `final = 1`, beim Überschreiben bleibt `final` unangetastet |
+| Zelle leer | Aussage: Ende offen (`NULL`), `final` wie in der Datei |
+
+Bis Web 7.3.1 war beides ununterscheidbar, weil der Browser `ended_utc` immer
+sendete und `api/import_commit.php` `final` als Literal `1` schrieb. Der einzige
+nicht abgeschlossene Einsatz des Referenzdatensatzes kam damit als
+abgeschlossen zurück — im Überschreiben-Modus auch dann, wenn er im Bestand
+richtig stand. Jetzt sendet der Browser die beiden Felder nur, wenn das Profil
+die Spalte führt.
+
+**Mehrzeilige Notizen behalten ihre Zeilenumbrüche** (seit Web 8.0.0). Der
+Parser `trim` zog jede Leerraumfolge auf ein Leerzeichen zusammen, und ein
+Zeilenumbruch ist Leerraum: Der Text kam vollständig zurück, seine Gliederung
+nicht. Für die Notizspalten gilt jetzt `trimMehrzeilig` — zusammengezogen wird
+nur **innerhalb** einer Zeile. Bei einzeiligen Werten ist das Ergebnis
+identisch; die Längengrenze bleibt 2000 Zeichen. Gemessen am Referenzdatensatz:
+vier Notizen mit je einem Umbruch, 164/253/119/150 Zeichen, nach dem Umlauf
+unverändert.
+
 Dubletten werden zuerst über die Einsatznummer erkannt (clientseitig gegen die
 entschlüsselten Bestandsdaten), hilfsweise über Tag und Alarmzeit.
 
@@ -658,6 +687,14 @@ verlustfreie Weg ist `pat_alter` im CSV.
 `Alarmzeit` setzt Phase 2, `Endzeit` setzt Phase 9. Eine Zeile für einen
 **Diensttag ohne Einsatz** (nur Rettungsmittel, Standort und Datum gefüllt) legt den
 Diensttag an, aber keinen Einsatz.
+
+**Dieses Format führt weder `ende` noch `final`.** Für den Rückimport heißt das
+(5.1, Tabelle): Beim Anlegen wird `ende = Beginn` gesetzt und der Einsatz gilt
+als abgeschlossen; beim Überschreiben bleibt `final` unangetastet, `ende` wird
+auf den Beginn gesetzt. Ein Einsatz, der im Bestand offen war, verliert dabei
+sein leeres Ende — nicht durch einen Fehler, sondern weil die Datei zum Ende
+nichts sagt und das Feld außerhalb der COALESCE-Schranke liegt (5.3). Wer den
+offenen Zustand erhalten will, nimmt den CSV-Weg.
 
 ---
 

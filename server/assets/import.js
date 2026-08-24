@@ -87,6 +87,37 @@
             return s === '' ? null : s;
         },
 
+        /**
+         * Wie trim, ABER MIT ZEILENUMBRUECHEN (Backlog Nr. 27).
+         *
+         * `trim` zieht jede Leerraumfolge auf ein Leerzeichen zusammen — und
+         * \n ist Leerraum. Eine mehrzeilige Notiz kam damit einzeilig zurueck:
+         * Der Text war vollstaendig, seine GLIEDERUNG war weg, und niemand
+         * bekam davon etwas zu sehen. Gemessen im Kreislauf der Phase P1 an
+         * vier Notizen (Fund F-P1-L).
+         *
+         * Hier wird deshalb nur INNERHALB einer Zeile zusammengezogen
+         * (`[^\S\n]` ist Leerraum ausser dem Zeilenumbruch). Zeilenenden
+         * werden vorher vereinheitlicht — eine CSV-Datei aus Excel bringt
+         * \r\n mit, und ein stehengebliebenes \r waere ein unsichtbares
+         * Zeichen im Bestand.
+         *
+         * Bei EINZEILIGEN Werten ist das Ergebnis identisch zu `trim`; die
+         * Laengengrenze bleibt `max:2000` in der Parserkette dahinter.
+         */
+        trimMehrzeilig: function (v) {
+            if (v === null || v === undefined) { return null; }
+            if (typeof v !== 'string') { return v; }
+            var zeilen = v.replace(/\r\n?/g, '\n').split('\n')
+                .map(function (z) { return z.replace(/[^\S\n]+/g, ' ').trim(); });
+            // Leerzeilen am Anfang und Ende weg, die in der Mitte bleiben:
+            // Sie sind Gliederung, kein Rest.
+            while (zeilen.length && zeilen[0] === '') { zeilen.shift(); }
+            while (zeilen.length && zeilen[zeilen.length - 1] === '') { zeilen.pop(); }
+            var s = zeilen.join('\n');
+            return s === '' ? null : s;
+        },
+
         /** "21.5." / "21.05." / "21.5.2026" / Excel-Datumszelle -> JJJJ-MM-TT */
         dateNoYear: function (v, ctx) {
             var z = zelleZuZeit(v);
@@ -429,7 +460,8 @@
     // ----------------------------------------------------- Zeilen aufbereiten
 
     // Felder, die unveraendert nach zeile.mission durchgereicht werden.
-    var EINFACHE_ZIELE = ['day', 'einsatzdatum', 'alarm', 'ended', 'transport_dest', 'winch',
+    var EINFACHE_ZIELE = ['day', 'einsatzdatum', 'alarm', 'ended', 'final',
+        'transport_dest', 'winch',
         'notes', 'site_ele_m', 'distance_m', 'ascent_m',
         'schockraum', 'secondary', 'winch_cycles', 'winch_cycles_pat',
         'winch_airload', 'bergwacht', 'bw_unit', 'bw_info', 'other_ema',
@@ -560,6 +592,11 @@
                 status: 'ok', issues: [],
                 mission: {
                     day: null, einsatzdatum: null, alarm: null, ended: null,
+                    /* VORGABE 1, wie in der Datenbank und wie bisher im
+                       INSERT. Eine LEERE Zelle in einer Datei, die die Spalte
+                       fuehrt, ist damit dasselbe wie „kein Wert genannt" —
+                       und nicht „nicht abgeschlossen". */
+                    final: 1,
                     transport_dest: null, winch: 0, resources: [],
                     notes: null, site_ele_m: null,
                     distance_m: null, ascent_m: null,
@@ -630,9 +667,28 @@
             zeilen.push(z);
         }
 
+        /* WELCHE ZIELFELDER DIE DATEI UEBERHAUPT FUEHRT (Backlog Nr. 28).
+         *
+         * „Spalte fehlt" und „Zelle leer" sind zwei verschiedene Aussagen, und
+         * bis Web 7.3.1 waren sie ununterscheidbar: Beide endeten als `null`
+         * in `zeile.mission`. Fuer `ended` hatte das Folgen — der Server konnte
+         * ein leeres Ende nicht von einem fehlenden unterscheiden und setzte
+         * in beiden Faellen Ende = Beginn.
+         *
+         * Die Unterscheidung gehoert HIERHER, weil hier bekannt ist, welche
+         * Ueberschriften die Datei traegt. `import_ui.js` sendet danach nur,
+         * was die Datei ueberhaupt sagen kann. */
+        var zielspalten = {};
+        for (name in profil.columns) {
+            if (!Object.prototype.hasOwnProperty.call(profil.columns, name)) { continue; }
+            var zd = profil.columns[name];
+            if (zd && zd.target && spalten[name] !== undefined) { zielspalten[zd.target] = true; }
+        }
+
         return {
             kopfzeile: kopfzeile + 1,
             spalten: spalten,
+            zielspalten: zielspalten,
             zeilen: zeilen,
             unbekannteSpalten: unbekannte,
             fehlendeSpalten: fehlende

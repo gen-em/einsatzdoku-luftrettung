@@ -27,12 +27,28 @@ require_once __DIR__ . '/../diensttag_lib.php';
  *
  *                 // ab Web 2.10.0, alle optional (Rueckimport der eigenen
  *                 // Exportformate; die Jahreslisten-Profile senden sie nicht)
- *                 ended_utc, site_ele_m, distance_m, ascent_m,
+ *                 ended_utc, final, site_ele_m, distance_m, ascent_m,
  *                 schockraum, secondary, winch_cycles, winch_cycles_pat,
  *                 winch_airload, bergwacht, bw_unit, bw_info, other_ema, notes,
  *                 phases: [{phase:2..9, at:'...Z'|null, local:'HH:MM'|null,
  *                           lat, lon}],
  *                 rea:    [{started_at:'...Z', events:[{type, at:'...Z'}]}] }] }
+ *
+ * WEGGELASSEN IST NICHT LEER (Backlog Nr. 28). Fuer 'ended_utc' und 'final'
+ * gilt eine Unterscheidung, die der Rest der Nutzlast nicht kennt:
+ *
+ *   Feld FEHLT      Die Datei fuehrt die Spalte nicht (Jahresliste, Excel).
+ *                   Es bleibt beim bisherigen Verhalten: ended_at = Beginn,
+ *                   final = 1 beim Anlegen; beim Ueberschreiben bleibt
+ *                   stehen, was dasteht.
+ *   Feld ist null   Die Spalte ist da, die Zelle leer. Das IST eine Aussage:
+ *                   ended_at = NULL, der Einsatz ist nicht abgeschlossen.
+ *
+ * Der Browser sendet die beiden Felder deshalb nur, wenn das Profil die
+ * Spalte fuehrt (assets/import_ui.js). Bis Web 7.3.1 ging 'ended_utc' immer
+ * hinaus, und ein nicht abgeschlossener Einsatz kam mit Ende = Beginn und
+ * final = 1 zurueck — im Ueberschreiben-Modus auch dann, wenn er im Bestand
+ * richtig stand (Fund F-P1-M).
  *
  * ZEITEN IN DER NUTZLAST: 'started_local' ist Ortszeit (HH:MM) und bleibt es —
  * der Browser vergleicht damit unmittelbar die Zeiten aus der Datei. Die
@@ -240,6 +256,9 @@ function import_commit(array $b, int $userId): never
         // Die zusaetzlichen Felder ab Web 2.10.0 haengen hinten an. Profile,
         // die sie nicht liefern, schreiben dort NULL beziehungsweise 0 — das
         // entspricht dem Zustand vor dieser Version.
+        /* `final` ist jetzt ein Platzhalter, kein Literal (Backlog Nr. 28).
+         * Es stand hier als `1` — ein nicht abgeschlossener Einsatz kam damit
+         * abgeschlossen zurueck, obwohl die Exportdatei die Spalte fuehrt. */
         $insE = $pdo->prepare(
             'INSERT INTO missions (user_id, device_id, client_ref, day_id, started_at, ended_at,
                                    final, manual, origin, transport_dest, winch,
@@ -250,7 +269,7 @@ function import_commit(array $b, int $userId): never
                                    other_ema, notes,
                                    transport_mode, na_escort, false_alarm,
                                    dest_lat, dest_lon, start_src)
-             VALUES (?,?,?,?,?,?,1,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+             VALUES (?,?,?,?,?,?,?,1,\'import\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         /* UEBERSCHREIBEN LOESCHT NICHTS, WAS DIE DATEI NICHT KENNT (P10, A9).
          *
          * Die Felder unter der Export-Schranke stehen hier mit
@@ -274,8 +293,15 @@ function import_commit(array $b, int $userId): never
          * NICHT betroffen sind die Felder ausserhalb der Schranke
          * (transport_dest, bw_unit, distance_m, die Flags …): Sie stehen in
          * jedem Export, ein leerer Wert ist dort eine Aussage. */
+        /* `final` steht AUSSERHALB der COALESCE-Schranke und wird beim
+         * Ueberschreiben mitgeschrieben — aber nur, wenn die Datei die Spalte
+         * fuehrt. Sonst kommt hier der Wert an, der schon dasteht (unten
+         * gelesen), und das UPDATE aendert nichts. Beides zusammen ist der
+         * Punkt von Backlog Nr. 28: Ein Rueckimport des eigenen Exports darf
+         * einen nicht abgeschlossenen Einsatz nicht abschliessen, und ein
+         * Import einer Jahresliste darf ihn nicht anfassen. */
         $updE = $pdo->prepare(
-            'UPDATE missions SET day_id = ?, started_at = ?, ended_at = ?,
+            'UPDATE missions SET day_id = ?, started_at = ?, ended_at = ?, final = ?,
                                  transport_dest = ?, winch = ?, crew_override = ?,
                                  pat_blob    = COALESCE(?, pat_blob),
                                  site_ele_m  = COALESCE(?, site_ele_m),
@@ -321,7 +347,7 @@ function import_commit(array $b, int $userId): never
 
         // Zugehoerigkeit direkt feststellen (M3-03), statt sie aus der Zahl
         // geaenderter Zeilen zu erschliessen.
-        $gehoert = $pdo->prepare('SELECT 1 FROM missions
+        $gehoert = $pdo->prepare('SELECT final FROM missions
                                   WHERE id = ? AND user_id = ? AND deleted_at IS NULL');
 
         foreach ($einsaetze as $m) {
@@ -388,10 +414,21 @@ function import_commit(array $b, int $userId): never
             // ein AES-GCM-Chiffretext ueberhaupt sein kann.
             $blob = pruef_pat_blob($m['pat_blob'] ?? null, 'pat_blob', $pruef);
 
-            // Endzeit: Liefert die Datei eine, wird sie uebernommen; sonst
-            // bleibt es beim bisherigen Verhalten (Ende = Beginn), damit sich
-            // fuer die Jahreslisten-Profile nichts aendert.
-            $endedAt = $utc($m['ended_utc'] ?? null) ?? $startedAt;
+            /* ENDZEIT UND ABSCHLUSS: WEGGELASSEN IST NICHT LEER (Nr. 28).
+             *
+             * Fehlt das Feld, fuehrt die Datei die Spalte nicht (Jahresliste,
+             * Excel) — dann bleibt es beim bisherigen Verhalten: Ende = Beginn,
+             * abgeschlossen. Steht es auf null, ist die ZELLE leer, und das ist
+             * eine Aussage: Der Einsatz ist nicht abgeschlossen, sein Ende ist
+             * offen. `dt_zeitraum_fortschreiben()` vertraegt das (es zieht das
+             * Dienstende nur bei einem vorhandenen Wert nach).
+             *
+             * Bis Web 7.3.1 stand hier `?? $startedAt` hinter der Umwandlung,
+             * und der leere Fall war vom fehlenden nicht zu unterscheiden. */
+            $endedAt = array_key_exists('ended_utc', $m)
+                ? $utc($m['ended_utc'])
+                : $startedAt;
+            $dateiFinal = array_key_exists('final', $m) ? $flag($m['final']) : null;
 
             /* Abweichende Besatzung des Einsatzes: role_code => name (E7).
              * Sie wird NACH dem Schreiben der Zeile in `mission_crew` gefuehrt,
@@ -466,17 +503,25 @@ function import_commit(array $b, int $userId): never
                  * unveraendert — genau dann greift der Fehlschluss, und genau
                  * die Korrektur, um die es ging, wird verworfen. Gemeldet wird
                  * "uebersprungen", was nach "war schon da" klingt. */
+                /* Die Abfrage liefert jetzt `final` mit, nicht nur eine 1:
+                 * Fuehrt die Datei die Spalte nicht, muss das UPDATE den
+                 * BESTEHENDEN Wert zurueckschreiben statt ihn zu setzen.
+                 * `fetchColumn() === false` bleibt der Test auf „keine Zeile" —
+                 * ein `final` von 0 ist ein gueltiger Wert, kein Fehlschlag. */
                 $gehoert->execute([$id, $userId]);
-                if ($gehoert->fetchColumn() === false) {
+                $bestandFinal = $gehoert->fetchColumn();
+                if ($bestandFinal === false) {
                     $grund['fremd_oder_geloescht']++;
                     $uebersprungen++; continue;
                 }
-                $updE->execute(array_merge([$dayId, $startedAt, $endedAt], $werte, [$id, $userId]));
+                $updE->execute(array_merge(
+                    [$dayId, $startedAt, $endedAt, $dateiFinal ?? (int)$bestandFinal],
+                    $werte, [$id, $userId]));
                 $ersetzt++;
             } else {
                 $insE->execute(array_merge(
                     [$userId, $devId, 'imp-' . bin2hex(random_bytes(12)),
-                     $dayId, $startedAt, $endedAt],
+                     $dayId, $startedAt, $endedAt, $dateiFinal ?? 1],
                     $werte));
                 $id = (int)$pdo->lastInsertId();
                 $neu++;

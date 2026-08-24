@@ -90,6 +90,45 @@ async function zustand() {
   return aus;
 }
 
+/* ---- RIEGEL: LAEUFT DAS HIER GEGEN DAS RICHTIGE KONTO? ------------------
+ *
+ * DIESES SKRIPT IST GEFAEHRLICH, und zwar an einer Stelle, die man ihm nicht
+ * ansieht. Schritt 3 loescht einen Einsatz, Schritt 5 versucht die
+ * E-Mail-Adresse zu aendern — beides in dem Konto, das unter `demo` erreichbar
+ * ist. Beim Demo-Konto ist das folgenlos (der Reset holt alles zurueck, und
+ * die Aenderung wird abgewiesen). Bei JEDEM ANDEREN Konto derselben Adresse
+ * ist es keins von beidem.
+ *
+ * Genau das ist auf der Referenzinstallation passiert: Dort traegt das
+ * REFERENZKONTO die Adresse demo@gen-em.org, und das Skript hat sie in
+ * `gekapert@example.org` geaendert und einen Einsatz geloescht. Der Befund
+ * „E-Mail-Aenderung wurde NICHT abgewiesen" stand danach im Bericht — richtig
+ * gemeldet, aber zu spaet: Der Schaden war schon angerichtet, und der
+ * Referenzstand musste neu aufgebaut werden.
+ *
+ * Der Riegel prueft VOR allem anderen: Gibt es ein Konto mit dieser Adresse,
+ * das NICHT das Demo-Konto ist? Dann bricht der Lauf ab, ohne etwas zu
+ * beruehren. Eine Pruefung, die ihren Pruefling zerstoeren kann, braucht eine
+ * Grenze, die nicht davon abhaengt, dass die Bedienerin aufpasst. */
+{
+  pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
+  /* zustand() statt eigener Textsuche: Es kennt die Falle mit den Versalien
+     (die Beschriftungen stehen per CSS in Grossbuchstaben). */
+  const alsDemo = ((await zustand())['konto'] || '') === demo;
+  await seite.goto(`${basis}/admin_users.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(500);
+  const kontoDa = (await seite.locator('body').innerText()).includes(demo);
+  if (kontoDa && !alsDemo) {
+    console.error(`\nABBRUCH. Auf ${basis} gibt es ein Konto ${demo}, das NICHT als\n`
+      + `Demo-Konto gekennzeichnet ist — vermutlich das Referenzkonto.\n`
+      + `Dieses Skript würde darin einen Einsatz löschen und die Adresse ändern.\n`
+      + `Es wurde nichts angefasst. Für die Demo-Abnahme eine eigene Installation\n`
+      + `verwenden (oder das Konto vorher im Adminbereich entfernen).`);
+    await browser.close();
+    process.exit(2);
+  }
+}
+
 // ---- 1. Anlegen ---------------------------------------------------------
 if (schritte.includes('anlegen')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');

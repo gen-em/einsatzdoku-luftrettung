@@ -144,6 +144,51 @@ Nebenwirkung, die gut passt: Weil beim Einspielen ohnehin der
 Einspielzeitpunkt gesetzt wird, stempelt **jeder** Reset die 90-Tage-Frist
 frisch. Das Demo-Konto hält seinen Papierkorb damit von selbst am Leben.
 
+### Web — Mehrzeilige Notizen verloren beim CSV-Rückimport ihre Umbrüche (Backlog Nr. 27)
+
+Der Parser `trim` in `assets/import.js` zieht jede Leerraumfolge auf ein
+Leerzeichen zusammen — und ein Zeilenumbruch ist Leerraum. Eine dreizeilige
+Notiz kam damit einzeilig zurück: Der Text war vollständig, seine **Gliederung**
+war weg, und niemand bekam davon etwas zu sehen. Gemessen im Kreislauf der
+Phase P1 an vier Notizen (Fund F-P1-L).
+
+Für die Notizspalten gilt jetzt `trimMehrzeilig`: zusammengezogen wird nur
+**innerhalb** einer Zeile, Zeilenenden werden vorher vereinheitlicht (eine
+CSV-Datei aus Excel bringt `\r\n` mit, und ein stehengebliebenes `\r` wäre ein
+unsichtbares Zeichen im Bestand). Leerzeilen am Anfang und Ende fallen weg, die
+in der Mitte bleiben — sie sind Gliederung, kein Rest. Bei einzeiligen Werten
+ist das Ergebnis identisch zu `trim`, die Längengrenze bleibt 2000 Zeichen.
+
+Betroffen sind alle drei Profile, die eine Notizspalte lesen: `export_csv_v1`
+(`notizen`), `export_excel_v1` und das GuteSeele-Layout (je `Notizen`).
+Diensttag-Notizen kommen über keinen Import zurück und waren nie betroffen.
+
+### Web — „Nicht abgeschlossen" überstand den CSV-Rückimport nicht (Backlog Nr. 28)
+
+`api/import_commit.php` schrieb `final` im INSERT als **Literal 1**, und das
+UPDATE fasste die Spalte gar nicht an. Ein leeres Ende fiel auf den Beginn
+zurück. Der einzige nicht abgeschlossene Einsatz des Referenzdatensatzes kam
+deshalb als abgeschlossen zurück — im Überschreiben-Modus auch dann, wenn er im
+Bestand richtig stand (Fund F-P1-M). Das trifft dieselbe Zusage wie Nr. 27:
+`Export-Format.md` nennt `export_csv_v1` **verlustfrei**.
+
+**Beides ist Zustand, nicht Entstehung**, und kommt jetzt aus der Datei — in
+INSERT und UPDATE. Anders als `herkunft` und `edited` sagen `final` und `ende`
+nichts über das Quellkonto aus, sondern über den Einsatz.
+
+Der Punkt dabei ist eine Unterscheidung, die es vorher nicht gab: **eine
+fehlende Spalte ist etwas anderes als eine leere Zelle.** Fehlt die Spalte im
+Profil (Jahresliste, Excel), bleibt es beim bisherigen Verhalten — Ende =
+Beginn, beim Anlegen `final = 1`, beim Überschreiben `final` unangetastet. Ist
+die Zelle leer, ist das eine Aussage: Ende offen. Der Browser sendet
+`ended_utc` und `final` deshalb nur noch, wenn das Profil die Spalte führt
+(`import_ui.js`); `api/import_commit.php` unterscheidet „Feld fehlt" von „Feld
+ist null". Das Profil `export_csv_v1` übernimmt `final` (stand bis hierher auf
+`target: null`).
+
+Damit steht der CSV-Kreislauf auf **0 unerklärten Abweichungen** (vorher 6:
+vier Notizen, `final`, `ende`).
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**
