@@ -124,12 +124,12 @@ $fx = [
     'daten'    => $daten,
 ];
 
-/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 12 MB — im Wesentlichen
+/* GEPACKT ABLEGEN. Unkomprimiert sind es rund 2,4 MB — im Wesentlichen
  * 55 861 Spurpunkte als JSON-Zahlen (seit S1 mit denen des Papierkorbs).
  * Diese Datei liegt unter server/ und geht damit bei jedem Deploy ueber FTPS
- * mit; gepackt sind es weniger als ein Zehntel. Gelesen wird sie ohnehin nur
- * beim Anlegen und beim Reset, und `gzdecode()` darauf kostet Bruchteile
- * einer Sekunde.
+ * mit; gepackt sind es rund 745 KB. Gelesen wird sie ohnehin nur beim
+ * Anlegen und beim Reset, und `gzdecode()` darauf kostet Bruchteile einer
+ * Sekunde.
  *
  * Die ungepackte Fassung wird NICHT zusaetzlich abgelegt: Zwei Dateien
  * desselben Inhalts laufen auseinander, sobald jemand eine davon anfasst. */
@@ -150,5 +150,5 @@ $punkte = 0;
 foreach (($daten['missions'] ?? []) as $m) { $punkte += count($m['track'] ?? []); }
 foreach (($daten['rest_segments'] ?? []) as $r) { $punkte += count($r['track'] ?? []); }
 printf("  Spurpunkte   %d\n", $punkte);
-printf("  Papierkorb   %d Einsaetze, %d Diensttage, %d Ruhesegmente (in `daten` enthalten)\n",
+printf("  Papierkorb   %d/%d/%d (Einsaetze/Diensttage/Ruhesegmente, in `daten` enthalten)\n",
        $papierkorb['einsaetze'], $papierkorb['diensttage'], $papierkorb['ruhezeiten']);

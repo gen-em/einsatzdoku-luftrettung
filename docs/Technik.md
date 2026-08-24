@@ -1027,7 +1027,9 @@ beim Ausgangsausschnitt der Karte.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
-Tagesliste, Backup) filtern darauf. `trash_lib.php` bündelt Umfangsermittlung,
+Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit Web
+8.0.0 führt sie den Papierkorb und spielt ihn als Papierkorb zurück
+(`docs/Backup-Format.md` 2 und 3). `trash_lib.php` bündelt Umfangsermittlung,
 weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
 `db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
 Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
@@ -1760,9 +1762,9 @@ Sicherung aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 12 MB, im Wesentlichen 55 861 Spurpunkte als
-JSON-Zahlen. Gepackt sind es unter einem Zehntel davon, und die Datei geht bei
-jedem Deploy über FTPS mit.
+Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
+JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
+über FTPS mit.
 
 #### Kein zweiter Einspielweg
 
@@ -2284,9 +2286,9 @@ läuft vollständig im Browser: Wiederherstellungsschlüssel →
 `EdCrypto.recoveryKeyHex()` → `pat_wrap_rc` öffnen → **alter** Inhaltsschlüssel
 → je Einsatz `pat_blob` öffnen und mit dem **eigenen** Inhaltsschlüssel neu
 verschliessen → zurück über den vorhandenen Endpunkt `api/backup_restore.php`.
-Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup der
-Formatversion 5, und ein zweiter Rückspielpfad wäre eine zweite Stelle, an der
-dieselben Fehler zu machen sind.
+Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup — dieselbe
+Nutzlast wie in einer `.edbak` (seit Web 8.0.0 Version 7) —, und ein zweiter
+Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
 
 **Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht

@@ -751,3 +751,63 @@ Zahlen, Beschreibungen fortgeschrieben), `vergleich/LIESMICH.md`,
 | — | Wirkung der Normalisierung | Umlauf einer v7-Sicherung, vorher/nachher | vor C6 **11 unerklärte** Abweichungen (nur `deleted_at`-Zeitwerte), nach C6 **0** — bei 286 739 Einzelvergleichen und 16 erwarteten |
 | — | Gegenprobe zur Normalisierung | Probe „Papierkorb-Zustand eines Einsatzes geändert" | wird gemeldet — die Normalisierung nimmt den Zeitpunkt, nicht den Zustand |
 | — | CSV-Liste gegen die Messung | Kreislauf mit der neuen Liste | 8797 Einzelvergleiche, **0 unerklärt**, 859 erwartet, **0 ungenutzte Regeln** |
+
+### C7 — Referenz neu, Kreisläufe auf null, Abschluss (erledigt)
+
+**Geändert:** `tools/referenzdatensatz/referenz/` (beide Dateien neu),
+`server/demo/fixture.json.gz` (neu, Format 2),
+`tools/referenzdatensatz/browser/kreislauf_edbak.mjs` (der fest verdrahtete
+Referenzdateiname ist weg), `tools/referenzdatensatz/fixture/erzeugen.php`
+(Größenangabe berichtigt), `docs/Backlog.md`, `docs/Technik.md`
+(Konsistenzdurchsicht), `docs/Pruefdokument-S1-Sicherung-Import.md` (neu).
+
+**Referenzstand:** aus einem **frischen Einspiellauf** — der zweite Weg aus
+Abschnitt 1, und der ohnehin nötige nach dem Zwischenfall oben. Die
+Terminbindung zum 20.11.2026 ist damit gegenstandslos.
+
+Beide Referenzdateien sind neu (E-S1-16): Die `.edbak` **muss** es sein (sie
+trägt jetzt Nutzlast 7 samt Papierkorb), die CSV, weil sie aus derselben
+Installation stammen muss — interne Kennungen, `created_at` und die
+Gerätekennungen entstehen beim Aufbau neu.
+
+**Die neue `.edbak` ist zugleich die Abnahmedatei zu R11.**
+
+**Prüfstand C7 — die Sollzahlen der Phase**
+
+| Nr. | Prüfung | Soll | Ist |
+|---|---|---|---|
+| P-S1-01 | Kreislauf Sicherung | 0 unerklärt, Umfang wächst auf 87/100/16 | **286 739 Einzelvergleiche, 0 unerklärt, 16 erwartet** (vor S1: 269 439 / 0 / 15 — es wurde weniger verglichen, weil der Papierkorb gar nicht in der Datei war) |
+| P-S1-02 | Kreislauf CSV | 0 unerklärt (vorher 6) | **8797 Einzelvergleiche, 0 unerklärt, 859 erwartet, 0 ungenutzte Regeln** |
+| P-S1-11 | Demo | Papierkorb 5/5/1, `demo_pruefen.mjs` grün, Reset nicht schlechter | **25 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**; Papierkorb 5/5/1; Reset **5,8 s** und **5,9 s** (Ausgangswert rund 6 s) |
+| — | Mengenbremse Demo | greift bei 21 | erste Abweisung bei **21** (Grenze 20), Gegenprobe kommt herein |
+| P-S1-13 | Angriffswerte (R20) | 42 Einzelprüfungen, 0 Befunde | **42 / 0**, 0 Konsolenfehler |
+| — | Fixture | Format 2, mit Papierkorb | 87 Einsätze (85 mit Chiffretext), 100 Ruhesegmente, 16 Diensttage, 55 861 Spurpunkte, Papierkorb 5/1/5; 744 KB gepackt aus 2484 KB roh |
+
+**Nebenbefund, gleich behoben:** `browser/kreislauf_edbak.mjs` hatte die
+Referenzdatei mit **Namen** als Vorgabe eingetragen. Der Name trägt das
+Erzeugungsdatum, und `kreislauf.py` übergibt den Pfad ohnehin selbst — die
+Vorgabe zeigte deshalb ins Leere, ohne dass es auffiel. Sie sucht jetzt die
+eine `.edbak` im Referenzordner und bricht ab, wenn es mehrere sind (dieselbe
+Regel wie in `kreislauf.py`).
+
+**Berichtigt bei der Konsistenzdurchsicht:**
+
+- `docs/Technik.md` 4.99a nannte für die Fixture „roh rund 12 MB" (mein
+  eigener Fehler aus C3; gemessen sind es **2,4 MB**, gepackt 745 KB) — der
+  ursprüngliche Kommentar in `fixture/erzeugen.php` sprach von 11 MB und war
+  ebenfalls falsch.
+- `docs/Technik.md`, Abschnitt Papierkorb: „alle Lesepfade … Backup filtern
+  darauf" — richtig ist jetzt: der **Export** filtert, die Sicherung nicht mehr.
+- `docs/Technik.md`, Admin-Sicherung: „das Feld `daten` **ist** ein Backup der
+  Formatversion 5" — es ist die jeweils aktuelle Nutzlast, seit Web 8.0.0
+  Version 7.
+
+**Backlog:** Nr. 24, 25, 27, 28, 29 und 30 nach *Erledigt* verschoben, jeweils
+mit der Entscheidung und der Messzahl; die Nummern bleiben. Neu unter *Offen*:
+**Nr. 31** (F-S1-A, Rückweg der Ruhesegmente ohne Prüfschicht) und **Nr. 32**
+(F-S1-C, aktiver Datei-Eintrag auf gelöschtem Zieltag).
+
+**Prüfdokument:** `docs/Pruefdokument-S1-Sicherung-Import.md`, mit dem, was
+**nicht** geprüft werden konnte, ganz vorn — allen voran: Dass ein bereits
+ausgelieferter Stand eine v7-Datei annimmt und ihren Papierkorb aktiv
+zurückbrächte, ist weder geprüft noch prüfbar noch behebbar.

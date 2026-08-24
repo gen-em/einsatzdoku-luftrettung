@@ -21,14 +21,32 @@
  * Aufruf:
  *   node kreislauf_edbak.mjs [basis] [referenz.edbak] [backup-pw] [zielordner]
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+
+/* Die Referenzdatei NICHT mit Namen fest verdrahten.
+ *
+ * Hier stand `einsatzdoku-backup-2026-08-23.edbak`. Der Name trägt das
+ * Erzeugungsdatum, und der Referenzordner wird bei jedem Neuaufbau des
+ * Referenzstands neu befüllt — die Vorgabe zeigte danach ins Leere, ohne dass
+ * es jemandem auffiel (kreislauf.py übergibt den Pfad selbst und deckte das
+ * zu). Gesucht wird deshalb die eine `.edbak` im Ordner; sind es mehrere,
+ * bricht der Lauf ab statt zu raten — dieselbe Regel wie in kreislauf.py. */
+function referenzDatei(ordner) {
+  const treffer = readdirSync(ordner).filter(n => n.endsWith('.edbak')).sort();
+  if (treffer.length !== 1) {
+    throw new Error(`In ${ordner} liegen ${treffer.length} .edbak-Dateien — `
+      + 'erwartet wird genau eine. Pfad ausdrücklich angeben.');
+  }
+  return `${ordner}/${treffer[0]}`;
+}
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
 
 const basis   = process.argv[2] || 'https://127.0.0.1:8443';
-const quelle  = process.argv[3] || new URL('../referenz/einsatzdoku-backup-2026-08-23.edbak', import.meta.url).pathname;
+const quelle  = process.argv[3]
+  || referenzDatei(new URL('../referenz', import.meta.url).pathname);
 const bpw     = process.argv[4] || 'nadokudemo0815';
 const ordner  = process.argv[5] || '/tmp/kreislauf-edbak';
 const konto   = process.env.UMLAUF_KONTO || 'umlauf-edbak@gen-em.org';
