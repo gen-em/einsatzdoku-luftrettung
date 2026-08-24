@@ -165,12 +165,21 @@ Alle F-Fragen wurden **vor** Konzepterstellung entschieden
 | E-S1-16 | **Referenz neu:** Referenz-edbak (`tools/referenzdatensatz/referenz/`, Passwort `nadokudemo0815`) und Fixture (`server/demo/fixture.json.gz`) werden nach C1–C6 neu erzeugt — **vor dem 20.11.2026** aus der bestehenden Referenzinstallation oder über einen frischen Einspiellauf. Die neue Referenz-edbak ist zugleich die R11-Abnahmedatei. Die Referenz-CSV bleibt unverändert, sofern die Referenz nicht per frischem Einspiellauf neu entsteht (dann beide neu). |
 | E-S1-17 | **Kein Fable-Schritt in S1.** D1 ist Prüfaufwand, keine Modellfrage; alle Pakete Standardmodell (K2). |
 | E-S1-18 | **Ablage:** Konzept und Prüfdokument unter `docs/`, neben `docs/Pruefung-Sofortpaket-22.md`. |
+| E-S1-19 | **Nachgetragen in C8** (Folgeentscheidung zu E-S1-04, aus F-S1-C/Backlog Nr. 32): Ein in der Datei **aktiver** Einsatz oder Ruhesegment, dessen Zieltag im Zielkonto im Papierkorb liegt, wird **abgelehnt und gezählt** (Grund `tag_im_papierkorb`) — dieselbe Regel wie D1, eine Ebene tiefer. Begründung und verworfene Alternativen in Abschnitt 10, C8. |
 
 ## 4. Offene Fragen
 
 Keine. Alle F-Fragen sind entschieden und als E-S1-01 bis E-S1-18 überführt
-(K6). Neue Fragen während der Umsetzung hier eintragen und vor Umsetzung des
-betroffenen Pakets entscheiden lassen.
+(K6); **E-S1-19** ist während der Umsetzung dazugekommen (C8). Neue Fragen
+während der Umsetzung hier eintragen und vor Umsetzung des betroffenen Pakets
+entscheiden lassen.
+
+**Zwei Fragen bleiben nach S1 offen** und sind ausdrücklich **nicht**
+entschieden worden, weil beide Verhalten ändern, das NutzerInnen sehen:
+Backlog **Nr. 33** (`trash_purge_day()` lässt aktive Einsätze verwaist
+zurück — mitlöschen oder ablehnen?) und **Nr. 34** (Schritt 1 der
+Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag — Fingerabdruck
+vorziehen oder Widerspruch melden?). Siehe Abschnitt 8, F-S1-G und F-S1-H.
 
 ## 5. Arbeitspakete
 
@@ -374,7 +383,8 @@ Prüfschicht ist **nicht** Umfang von S1.
 
 **Blockierend:** nein.
 
-**Verbleib:** neuer Backlog-Eintrag in C7 (freie Nummer).
+**Verbleib:** Backlog **Nr. 31**. In C8 doch noch behoben — siehe dort;
+der Eintrag steht seither unter *Erledigt*.
 
 ### F-S1-B — „30-Tage-Frist" in der Technik-Dokumentation
 
@@ -414,7 +424,87 @@ nebenbei behoben.
 
 **Blockierend:** nein.
 
-**Verbleib:** neuer Backlog-Eintrag in C7 (freie Nummer), zusammen mit F-S1-A.
+**Verbleib:** Backlog **Nr. 32**. In C8 entschieden (**E-S1-19**: ablehnen und
+zählen) und umgesetzt; der Eintrag steht seither unter *Erledigt*.
+
+### F-S1-D — Der Wächter in `demo_pruefen.mjs` versagte nach oben
+
+**Fundort:** `tools/referenzdatensatz/browser/demo_pruefen.mjs`.
+
+**Sache:** Der nach dem Zwischenfall in C3 eingebaute Schutz benutzte
+`pruefe()` — das meldet, hält aber nicht an. Und er schloss aus „die
+Demo-Adresse steht nicht auf der Seite" auf „kein fremdes Konto da". Beides
+zusammen heißt: Scheiterte die Anmeldung als Administration, war die
+Kontoliste nicht lesbar, die Adresse folglich nicht zu sehen — und der
+zerstörende Lauf ging durch. Ein Schutz, der bei Nichtwissen die gefährliche
+Antwort gibt, ist keiner.
+
+**Blockierend:** ja, für die Demo-Abnahme. In C8 behoben: harter Abbruch
+(Rückgabe 2) und ein **positiver** Lesebeleg der Kontoliste. Kein
+Backlog-Eintrag.
+
+### F-S1-E — `deleted_with_day` aus der Datei wurde nie gelesen
+
+**Fundort:** `backup_lib.php`, `edbak_restore()`, Einsätze und Ruhesegmente.
+**Von dieser Phase eingebaut** (C2).
+
+**Sache:** E-S1-04 sagt „nur wenn der Zieltag im Papierkorb liegt" — eine
+notwendige Bedingung. Die Umsetzung las sie als hinreichende und setzte
+`deleted_with_day = 1`, sobald Eintrag und Zieltag beide gelöscht waren. Ein
+**einzeln** gelöschter Einsatz an einem später gelöschten Tag kam damit als
+mitgelöschter zurück: verschwunden aus der Papierkorbliste und beim
+Wiederherstellen des Tages ungewollt wieder aktiv.
+
+Der Kreislauf konnte es nicht sehen — der Referenzbestand hat keinen
+Diensttag mit beiden Löscharten nebeneinander.
+
+**Blockierend:** ja. In C8 behoben (UND-Verknüpfung) und durch
+`tools/wiederherstellungs-probe/` belegt. Kein Backlog-Eintrag.
+
+### F-S1-F — Ein doppeltes `seq` kippt die ganze Wiederherstellung
+
+**Fundort:** `backup_lib.php`, Schreiben der Spurpunkte.
+
+**Sache:** `track_points` hat den Primärschlüssel `(owner_type, owner_id,
+seq)`. Die in C8 ergänzte Prüfschicht sicherte den Wertebereich von `seq`,
+nicht seine Eindeutigkeit; zwei Punkte mit derselben Nummer lösen einen
+Schlüsselkonflikt aus, und der reißt über die eine Transaktion den gesamten
+Lauf mit. Nur bei Dateien fremder oder von Hand bearbeiteter Herkunft.
+
+**Blockierend:** nein. In C8 behoben (Wiedergänger überspringen und melden);
+Backlog **Nr. 35**, sogleich nach *Erledigt*.
+
+### F-S1-G — `trash_purge_day()` lässt aktive Einsätze verwaist zurück
+
+**Fundort:** `server/trash_lib.php`.
+
+**Sache:** Die Funktion entfernt die Einsätze des Tages `WHERE deleted_at IS
+NOT NULL` und danach den Diensttag. Ein **aktiver** Einsatz am gelöschten Tag
+überlebt den ersten Schritt und verliert im zweiten seinen Diensttag
+(`ON DELETE SET NULL`). Die Rückfrage vor dem endgültigen Löschen nennt ihn
+nicht mit; ihre Zahl ist zu klein.
+
+**Blockierend:** nein, und außerhalb des Umfangs von S1 (es geht um das
+endgültige Löschen, nicht um das Einspielen).
+
+**Verbleib:** Backlog **Nr. 33**, offen — mitlöschen oder ablehnen ist eine
+Entscheidung.
+
+### F-S1-H — Schritt 1 der Wiedererkennung verhängt den ganzen Datei-Tag
+
+**Fundort:** `backup_lib.php`, `edbak_restore()`, Diensttag-Wiedererkennung.
+
+**Sache:** Ein Diensttag gilt als wiedererkannt, sobald **ein einziger**
+seiner Einsätze im Ziel liegt — und dessen `day_id` wird für **alle**
+Einsätze und Ruhesegmente des Datei-Tags übernommen. Liegt dieser eine
+Einsatz im Ziel an einem anderen Tag, wandert der ganze Datei-Tag dorthin.
+F-S1-C ist nur der Sonderfall „anderer Tag liegt im Papierkorb".
+
+**Blockierend:** nein.
+
+**Verbleib:** Backlog **Nr. 34**, offen — Fingerabdruck vorziehen oder den
+Widerspruch melden ist eine Entscheidung, und die falsche Wahl macht das
+Einspielen schlechter, nicht besser.
 
 *Weitere Funde während der Umsetzung hier eintragen (Fundort, Wirkung,
 blockierend ja/nein, Verbleib → Backlog/Phase).*
@@ -811,3 +901,130 @@ mit der Entscheidung und der Messzahl; die Nummern bleiben. Neu unter *Offen*:
 **nicht** geprüft werden konnte, ganz vorn — allen voran: Dass ein bereits
 ausgelieferter Stand eine v7-Datei annimmt und ihren Papierkorb aktiv
 zurückbrächte, ist weder geprüft noch prüfbar noch behebbar.
+
+### C8 — Nachlese: gegnerische Durchsicht des eigenen Stands (erledigt)
+
+Kein geplantes Paket. Nach C7 stand die Phase auf null, und genau das ist der
+Moment, in dem man aufhört hinzusehen. Der Stand wurde deshalb noch einmal
+gegen sich selbst gelesen — mit der Frage „was ist hier falsch?", nicht „ist
+es fertig?". Zwei der Funde sind **von mir in dieser Phase eingebaut worden**;
+sie stehen hier vorn, weil ein Konzept, das eigene Fehler unter „Sonstiges"
+führt, seinen Zweck verfehlt.
+
+**Fund 1 (schwer): `deleted_with_day` aus der Datei wurde nie gelesen.**
+E-S1-04 sagt „nur wenn der Zieltag im Papierkorb liegt" — eine **notwendige**
+Bedingung. Die Umsetzung in C2 hat sie als **hinreichende** gelesen und
+`$mitTag = 1` gesetzt, sobald Eintrag und Zieltag beide gelöscht waren. Folge:
+Ein **einzeln** gelöschter Einsatz an einem später gelöschten Tag kam als
+mitgelöschter zurück. Er verschwand damit aus der Papierkorbliste
+(`trash_list_missions()` zeigt nur `deleted_with_day = 0`) und wäre beim
+Wiederherstellen des Tages ungewollt wieder aktiv geworden — obwohl ihn jemand
+ausdrücklich gelöscht hatte. Zwei Fehler in einem, und der zweite fällt
+womöglich nie auf.
+
+Richtig ist die UND-Verknüpfung: Der Wert aus der Datei sagt, ob der Eintrag
+am Tag hing; der Zieltag sagt, ob das hier gelten kann.
+
+Warum es durch alle Prüfungen kam: Der Referenzbestand hat keinen Diensttag,
+an dem gleichzeitig ein mitgelöschter und ein einzeln gelöschter Eintrag
+hängen. Der Kreislauf konnte den Unterschied gar nicht sehen. Das ist keine
+Entschuldigung, sondern der Befund — und die Antwort darauf ist die neue Probe
+unten.
+
+**Fund 2 (schwer): der Schutz in `demo_pruefen.mjs` versagte nach oben.** Der
+Wächter, der nach dem Zwischenfall in C3 eingebaut wurde (er soll verhindern,
+dass die Abnahme gegen die Referenzinstallation läuft), benutzte `pruefe()` —
+und das **meldet** nur, es hält nicht an. Schlimmer: Scheiterte die Anmeldung
+als Administration, war die Kontoliste nicht lesbar, die Demo-Adresse stand
+folglich nicht auf der Seite, und der Wächter schloss daraus „kein fremdes
+Konto da" und ließ den zerstörenden Lauf durch. Ein Schutz, der bei
+Nichtwissen die gefährliche Antwort gibt, ist keiner.
+
+Jetzt bricht das Skript hart ab (Rückgabe 2) und verlangt einen **positiven**
+Lesebeleg: Steht die Adresse der Administration nicht in der Liste, wurde die
+Liste nicht gelesen — Abbruch. Geprüft in beiden Fehlerbildern (falsches
+Kennwort, Lauf gegen die Referenzinstallation) und im Normalfall.
+
+**Weitere behobene Funde**
+
+- **Nr. 31** (F-S1-A, war für später vorgesehen): Der Rückweg der Ruhesegmente
+  hat die Prüfschicht bekommen — und weiter gefasst als vorgeschlagen. Das
+  Schreiben der Spurpunkte ist dabei **eine** Stelle für beide Arten geworden;
+  es waren zwei, und die zweite prüfte nichts.
+- **Nr. 32** (F-S1-C): entschieden als **E-S1-19** (unten) und umgesetzt.
+- **Nr. 35** (neu): Ein doppeltes `seq` in einer Spur kippte über den
+  Schlüsselkonflikt den ganzen Lauf. Der Wiedergänger wird jetzt übersprungen
+  und gemeldet.
+
+**Neu offen geblieben — beides sind Entscheidungen, keine Korrekturen**
+
+- **Nr. 33:** `trash_purge_day()` lässt aktive Einsätze verwaist zurück
+  (`missions.day_id` trägt `ON DELETE SET NULL`). Betrifft nicht das
+  Einspielen, sondern das endgültige Löschen, und die Rückfrage davor nennt
+  eine zu kleine Zahl. Zu entscheiden: mitlöschen oder ablehnen.
+- **Nr. 34:** Schritt 1 der Diensttag-Wiedererkennung verhängt den ganzen
+  Datei-Tag, sobald **ein** Einsatz im Ziel gefunden wird. Der Papierkorb-Fall
+  aus Nr. 32 ist nur ein Sonderfall davon. Zu entscheiden: Fingerabdruck
+  vorziehen oder den Widerspruch melden.
+
+Beide sind bewusst nicht nebenbei entschieden worden (K4): Sie ändern
+Verhalten, das NutzerInnen sehen, und die Wahl ist in beiden Fällen echt.
+
+**Nachgetragene Entscheidung**
+
+| Nr. | Entscheidung |
+|---|---|
+| E-S1-19 | **Ein in der Datei AKTIVER Einsatz oder Ruhesegment, dessen Zieltag im Zielkonto im Papierkorb liegt, wird abgelehnt und gezählt** (Grund `tag_im_papierkorb`). Gegenrichtung zu E-S1-04 und dieselbe Regel wie D1, eine Ebene tiefer: Was hier im Papierkorb liegt, nimmt nichts Neues auf. Die Alternativen schieden aus — „mitlöschen" widerspricht E-S1-04 (ohne `deleted_at` kein `deleted_with_day`), „hinnehmen" hinterlässt einen halb sichtbaren Eintrag: in Suche und auf der Einsatzseite sichtbar, in Tagesliste, Zeitraum, Export, Nachbearbeitung und Papierkorb nicht. Folgeentscheidung zu E-S1-04, getroffen in C8. |
+
+**Neues Prüfmittel: `tools/wiederherstellungs-probe/`**
+
+Die beiden schweren Funde haben dieselbe Ursache — der Kreislauf kann die
+Fälle nicht herstellen, in denen sich die Regeln unterscheiden. Ein Konzept,
+das darauf nur mit „genauer hinsehen" antwortet, hat nichts gelernt. Die Probe
+baut die Nutzlast von Hand und ruft `edbak_restore()` unmittelbar auf:
+
+- **Teil 1** — ein gelöschter Diensttag, an dem gleichzeitig ein
+  mitgelöschter, ein einzeln gelöschter und ein aktiver Eintrag hängen, je
+  einmal als Einsatz und als Ruhesegment (E-S1-04, E-S1-19, E-S1-03).
+- **Teil 2** — eine Datei mit unbrauchbarem Zeitwert und doppelter Spurnummer
+  (Nr. 31, Nr. 35). Erwartet wird, dass sie ihre Zeile kostet und nicht den
+  Lauf.
+
+Sie ist ausdrücklich **keine** Browserprüfung: Der Weg davor (Entschlüsseln,
+Hochladen) und die Anzeige danach bleiben Sache des Kreislaufs.
+
+**Prüfstand C8**
+
+| Nr. | Prüfung | Soll | Ist |
+|---|---|---|---|
+| P-S1-01 | Kreislauf Sicherung, neu gefahren | unverändert | **286 739 / 0 unerklärt / 16 erwartet** |
+| P-S1-02 | Kreislauf CSV, neu gefahren | unverändert | **8 797 / 0 unerklärt / 859 erwartet** |
+| P-S1-12 | Proben Sicherung | 12/12 | **12/12** (gleiche Datei beidseitig, ohne `--ausnahmen`) |
+| P-S1-12 | Proben CSV | 10/10 | **10/10** (ebenso) |
+| — | Wiederherstellungsprobe, heutiger Stand | 16/16 | **16 Erwartungen, 0 nicht erfüllt** |
+| — | Wiederherstellungsprobe, Stand `d078494` | muss durchfallen | **12 von 16 nicht erfüllt**; Teil 2 endet mit `SQLSTATE[23000] … Duplicate entry` |
+| — | **Mischfall im Papierkorb, Browser** (neu) | Unterscheidung übersteht den Umlauf | `papierkorb_misch.mjs`: **10 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+| — | derselbe Lauf gegen den Stand vor der Korrektur | muss durchfallen | **2 Befunde**: Ziel zeigt 1 statt 3 einzeln gelöschte Einsätze; der Diensttag nennt 6 statt 5 |
+| P-S1-11 | Demo-Abnahme | grün | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**; Papierkorb 5/1/5 vor und nach dem Reset |
+| — | Wächter `demo_pruefen.mjs` | bricht ab | falsches Kennwort → **Rückgabe 2**; Lauf gegen die Referenzinstallation → **Rückgabe 2**, Referenzkonto unangetastet |
+| P-S1-13 | Angriffswerte | 42 / 0 | **42 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+
+**Zur Zahl 24 statt 25 bei der Demo-Abnahme:** Der umgebaute Wächter zählt
+nicht mehr als Einzelprüfung mit — er hält an, statt zu melden. Eine Prüfung
+weniger in der Liste, ein Schutz mehr.
+
+**Zwei Korrekturen an eigenen Angaben**
+
+- Der `--testabweichung`-Lauf war in C6/C7 mit dem Umlaufpaar **und** der
+  Ausnahmeliste gefahren worden. Das ist der falsche Aufruf, und die eigene
+  Anleitung (`vergleich/LIESMICH.md`) sagt es ausdrücklich: dieselbe Datei auf
+  beiden Seiten, ohne `--ausnahmen`. Mit Ausnahmeliste schlägt die Hinprobe
+  „Zeile in `diensttage.csv` entfernt" scheinbar fehl — sie trifft die Regel
+  `diensttage/* fehlt` und wird als *erwartet* gezählt statt als Meldung; drei
+  weitere Proben sind auf dem Umlaufergebnis gar nicht anwendbar, weil es
+  keine GPX-Dateien und nur eine Kopfzeile in `ruhezeiten.csv` enthält. Falsch
+  gefahren ergibt das 6/10, richtig gefahren 10/10. Die gemeldete Zahl stimmte,
+  der Weg dahin war es nicht.
+- Die Demo-Abnahme steht in C7 mit 25 Einzelprüfungen; gemessen sind es seit
+  dem Umbau des Wächters 24 (siehe oben). Der ältere Wert bleibt dort stehen,
+  weil er zum damaligen Stand gehört.

@@ -141,13 +141,19 @@ hems/
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
-│   │   │                  werte (P-07), Exporte, Abnahme der Demo-Funktion
+│   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
+│   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz
-│   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
-│                          Erscheinungsbild nicht verändert: Kaskadenvergleich
-│                          plus berechnete Stile im Browser (s. LIESMICH.md)
+│   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
+│   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
+│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
+│   └── wiederherstellungs-probe/
+│                          Grenzfälle von edbak_restore(), die der Kreislauf
+│                          nicht herstellen kann: Papierkorb-Mischfall und
+│                          kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
+│                          s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -1736,7 +1742,7 @@ nicht bloß zugesichert:
 #### Die Fixture
 
 `server/demo/fixture.json.gz`, erzeugt von
-`tools/referenzdatensatz/fixture/erzeugen.php`. Vier Teile:
+`tools/referenzdatensatz/fixture/erzeugen.php`. Drei Teile:
 
 | Teil | Inhalt |
 |---|---|

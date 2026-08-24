@@ -118,31 +118,30 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
-31. **Der Rückweg der Ruhesegmente läuft ohne Prüfschicht.** In
-    `edbak_restore()` gehen `started_at` und `ended_at` der Ruhesegmente
-    **ungeprüft** ins INSERT — anders als bei den Einsätzen, die seit dem
-    Code-Review die `pruef_*`-Funktionen durchlaufen. Die Datei kann aus
-    beliebiger Herkunft stammen; ein unbrauchbarer Zeitwert bringt hier nicht
-    eine Zeile, sondern die ganze Wiederherstellung zu Fall — genau die
-    Richtung, die bei den Einsätzen ausdrücklich umgedreht wurde. **Vorschlag:**
-    `pruef_utc_oder_sql()` wie beim Einsatz, Zeile überspringen und zählen.
-    Der Zählteil ist mit Web 8.0.0 erledigt (die Ruhesegmente melden ihre
-    Überspringgründe jetzt), die Prüfschicht nicht. Gefunden in S1 (dort
-    F-S1-A); bewusst nicht nebenbei behoben, weil es ein Schreibweg ist und
-    eine Änderung daran eine eigene Abnahme braucht.
-32. **Ein aktiver Datei-Eintrag kann auf einem gelöschten Zieltag landen.**
-    Die Invariante aus S1 schließt den Zombie in einer Richtung aus: kein
-    `deleted_with_day = 1` an einem aktiven Tag. Die Gegenrichtung ist offen —
-    ein in der Datei **aktiver** Einsatz kann beim Einspielen auf einem
-    **gelöschten** Zieltag landen und wird dort als aktiver Eintrag angelegt.
-    Er steht dann an einem Tag, den die Tagesliste nicht zeigt. Erreichbar über
-    Schritt 1 der Wiedererkennung (ein Einsatz derselben `client_ref` liegt im
-    Ziel bereits an einem gelöschten Tag **anderen Datums**); die Datumsprüfung
-    greift dann nicht, weil sie Daten vergleicht. Der Fall ist **nicht neu** —
-    er ist in derselben Form schon vor Web 8.0.0 erreichbar. **Zu entscheiden:**
-    mitlöschen (widerspricht E-S1-04, „ohne `deleted_at` kein
-    `deleted_with_day`"), überspringen und zählen, oder als hinnehmbar
-    festhalten. Gefunden in S1 (dort F-S1-C).
+33. **`trash_purge_day()` lässt aktive Einsätze verwaist zurück.** Die
+    Funktion entfernt zuerst die Einsätze des Tages `WHERE deleted_at IS NOT
+    NULL` und danach den Diensttag. Ein **aktiver** Einsatz an einem gelöschten
+    Tag überlebt den ersten Schritt und verliert im zweiten seinen Diensttag:
+    `missions.day_id` trägt `ON DELETE SET NULL`. Er steht danach ohne Tag in
+    der Datenbank — in der Suche sichtbar, in der Tagesübersicht nicht, im
+    Formular nicht mehr zu öffnen (`einsatz_form.php` bricht ohne Diensttag
+    ab). Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit, ihre
+    Zahl ist also zu klein. **Zu entscheiden:** mitlöschen (dann muss die
+    Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag
+    hängen. Der Zustand entsteht seit Web 8.0.0 nicht mehr über das
+    Einspielen (Nr. 32), über `dt_zu_dayref()` beim Uhr-Upload aber weiterhin:
+    die Zuordnung dort filtert nicht auf `days.deleted_at`. Gefunden in S1.
+34. **Schritt 1 der Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag.**
+    `edbak_restore()` erkennt einen Diensttag wieder, sobald **ein einziger**
+    seiner Einsätze im Ziel schon liegt — und übernimmt dann dessen `day_id`
+    für **alle** Einsätze und Ruhesegmente des Datei-Tags. Liegt dieser eine
+    Einsatz im Ziel an einem anderen Tag (weil ihn jemand verschoben hat),
+    wandert der ganze Datei-Tag dorthin, auch wenn er im Ziel unverändert
+    aktiv daneben steht. Der Papierkorb-Fall aus Nr. 32 ist nur der Sonderfall
+    davon. **Zu entscheiden:** Fingerabdruck vor `client_ref` prüfen, beide
+    Ergebnisse vergleichen und bei Widerspruch den Fingerabdruck vorziehen —
+    oder den Widerspruch melden statt zu raten. Gefunden in S1.
+
 ---
 
 ## Erledigt
@@ -363,12 +362,103 @@ zutreffen.
       noch für **aktive** Datei-Tage. Ein in der Datei gelöschter Tag
       durchläuft die normale Wiedererkennung und entsteht, wenn er fehlt, als
       Papierkorbeintrag.
-    - **Invariante:** `deleted_with_day = 1` nur, wenn der **Zieltag** selbst
-      im Papierkorb liegt — sonst wäre der Eintrag im Papierkorb unsichtbar
-      und über den Tag nicht wiederherstellbar.
+    - **Invariante:** `deleted_with_day = 1` nur, wenn der Eintrag in der
+      **Datei** am Tag hing **und** der **Zieltag** selbst im Papierkorb liegt
+      — sonst wäre der Eintrag im Papierkorb unsichtbar und über den Tag nicht
+      wiederherstellbar. Der Zieltag ist eine notwendige, keine hinreichende
+      Bedingung; die erste Fassung prüfte nur ihn und machte damit aus jedem
+      einzeln gelöschten Eintrag einen mitgelöschten.
     Als Nebenwirkung ist der Papierkorb-Teil des Demo-Nachlaufs entfallen
     (E-P1-21): Der Reset ist wieder ein Vorgang in einer Transaktion, die
     Fixture steht auf Format 2.
     *Gemessen:* Umlauf 87/100/16, davon 5/5/1 im Papierkorb; 286 739
     Einzelvergleiche, 0 unerklärte Abweichungen; Invariante über alle Konten
     der Prüfinstallation 0 Verstöße.
+
+31. **Der Rückweg der Ruhesegmente läuft ohne Prüfschicht.**
+    *Erledigt mit Web 8.0.0.* In
+    `edbak_restore()` gehen `started_at` und `ended_at` der Ruhesegmente
+    **ungeprüft** ins INSERT — anders als bei den Einsätzen, die seit dem
+    Code-Review die `pruef_*`-Funktionen durchlaufen. Die Datei kann aus
+    beliebiger Herkunft stammen; ein unbrauchbarer Zeitwert bringt hier nicht
+    eine Zeile, sondern die ganze Wiederherstellung zu Fall — genau die
+    Richtung, die bei den Einsätzen ausdrücklich umgedreht wurde. **Vorschlag:**
+    `pruef_utc_oder_sql()` wie beim Einsatz, Zeile überspringen und zählen.
+    Der Zählteil ist mit Web 8.0.0 erledigt (die Ruhesegmente melden ihre
+    Überspringgründe jetzt), die Prüfschicht nicht. Gefunden in S1 (dort
+    F-S1-A); bewusst nicht nebenbei behoben, weil es ein Schreibweg ist und
+    eine Änderung daran eine eigene Abnahme braucht.
+
+    Behoben und dabei weiter gefasst als vorgeschlagen. `client_ref` läuft
+    jetzt durch `pruef_text(..., 64, ...)`, `started_at` und `ended_at` durch
+    `pruef_utc_oder_sql()` — eine Zeile ohne brauchbaren Beginn wird
+    übersprungen und unter `datum_oder_zeit` gezählt statt die Transaktion zu
+    kosten. Die Flags gehen auf beiden Wegen über `pruef_flag()` statt über
+    `(int)`.
+
+    Die **Spurpunkte** haben dabei EINE gemeinsame Schreibstelle bekommen
+    (`$spurSchreiben`). Es waren zwei, und sie waren verschieden: Der Einsatz
+    begrenzte die Menge, prüfte den Aufbau und ließ `pruef_breite`/
+    `pruef_laenge` laufen; das Ruhesegment schrieb roh, was in der Datei
+    stand — `(float)"Unfug"` ist `0.0`, aus einem unbrauchbaren Punkt wurde
+    also still eine gültige Koordinate. Zwei Kopien einer Prüfung sind eine zu
+    viel; die zweite bleibt zurück. Zusätzlich geprüft werden seither `seq`
+    und `ts` gegen den Wertebereich ihrer Spalten und `ele` auf Numerik — auch
+    das war auf **beiden** Wegen offen.
+
+    *Gemessen:* Beide Kreisläufe unverändert auf 0 unerklärten Abweichungen;
+    die Zahl der geschriebenen Spurpunkte ist dieselbe.
+
+32. **Ein aktiver Datei-Eintrag kann auf einem gelöschten Zieltag landen.**
+    *Erledigt mit Web 8.0.0 — abgelehnt und gezählt (E-S1-19).*
+    Die Invariante aus S1 schließt den Zombie in einer Richtung aus: kein
+    `deleted_with_day = 1` an einem aktiven Tag. Die Gegenrichtung ist offen —
+    ein in der Datei **aktiver** Einsatz kann beim Einspielen auf einem
+    **gelöschten** Zieltag landen und wird dort als aktiver Eintrag angelegt.
+    Er steht dann an einem Tag, den die Tagesliste nicht zeigt. Erreichbar über
+    Schritt 1 der Wiedererkennung (ein Einsatz derselben `client_ref` liegt im
+    Ziel bereits an einem gelöschten Tag **anderen Datums**); die Datumsprüfung
+    greift dann nicht, weil sie Daten vergleicht. Der Fall ist **nicht neu** —
+    er ist in derselben Form schon vor Web 8.0.0 erreichbar. **Zu entscheiden:**
+    mitlöschen (widerspricht E-S1-04, „ohne `deleted_at` kein
+    `deleted_with_day`"), überspringen und zählen, oder als hinnehmbar
+    festhalten. Gefunden in S1 (dort F-S1-C).
+
+    Entschieden wurde die zweite der drei vorgeschlagenen Möglichkeiten:
+    **ablehnen und zählen**, unter dem Grund `tag_im_papierkorb`. Das ist
+    dieselbe Regel wie D1, nur eine Ebene tiefer — was hier im Papierkorb
+    liegt, nimmt nichts Neues auf. „Mitlöschen" schied aus, weil es E-S1-04
+    widerspricht („ohne `deleted_at` kein `deleted_with_day`"); „hinnehmen"
+    schied aus, weil der Eintrag danach halb sichtbar ist: In der Suche steht
+    er, in der Tagesübersicht nicht, im Papierkorb auch nicht — und beim
+    endgültigen Löschen des Tages bliebe er ohne Diensttag zurück (Nr. 33).
+
+    Der Fall war **nicht neu** (am Stand vor S1 identisch erreichbar), aber
+    S1 hat eine zweite Quelle dafür geschaffen: Seit die Wiederherstellung
+    selbst Papierkorb-Tage anlegt, kann ein aktiver Datei-Einsatz auch ohne
+    Zutun der NutzerIn auf einem gelöschten Zieltag landen.
+
+35. **Ein doppeltes `seq` in der Spur kippt die ganze Wiederherstellung.**
+    *Erledigt mit Web 8.0.0.*
+    `track_points` hat den Primärschlüssel `(owner_type, owner_id, seq)`. Die
+    Prüfschicht sichert seit Web 8.0.0 den Wertebereich von `seq`, nicht seine
+    Eindeutigkeit; zwei Punkte mit derselben Nummer lösen deshalb einen
+    Schlüsselkonflikt aus, und der reißt über die Transaktion den gesamten
+    Lauf mit. Betrifft **beide** Wege (Einsatz und Ruhesegment) und nur Dateien
+    fremder oder von Hand bearbeiteter Herkunft — ein eigener Export erzeugt
+    keine doppelten Nummern. **Vorschlag:** die schon geschriebenen Nummern je
+    Eigentümer mitführen und einen Wiedergänger überspringen statt ihn zu
+    schreiben; `INSERT IGNORE` wäre der kürzere, aber stille Weg. Gefunden in
+    S1.
+
+    Behoben wie vorgeschlagen: `$spurSchreiben` führt die schon geschriebenen
+    Nummern je Eigentümer mit und überspringt einen Wiedergänger. Er wird als
+    `…track.seq: Nummer doppelt` gemeldet — `INSERT IGNORE` schied aus, weil
+    die Datei sonst einen Fehler behielte, den niemand zu sehen bekommt.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 2 — aus einer Spur
+    `1, 2, 1, 3` kommen drei Punkte an, aus `5, 5, 6` zwei, und der Lauf
+    überlebt; am Stand davor endet er mit
+    `SQLSTATE[23000] … Duplicate entry 'mission-<id>-1' for key 'PRIMARY'`,
+    ohne dass irgendetwas angekommen wäre. Beide Kreisläufe unverändert
+    (286 739 / 0 / 16 und 8 797 / 0 / 859).

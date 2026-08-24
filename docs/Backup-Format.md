@@ -347,13 +347,15 @@ nächste Aufräumjob löschte sie endgültig, ohne dass jemand sie je gesehen
 hätte. Eine Wiederherstellung, die Daten einspielt und wenige Stunden später
 selbst wieder entfernt, wäre die schlechtere Bauart.
 
-**`deleted_with_day` folgt dem Zieltag, nicht der Datei.** Geschrieben wird
-`1` nur, wenn der Diensttag, dem der Eintrag nach der Zuordnung zufällt,
-selbst im Papierkorb liegt; sonst `0` (einzeln gelöscht). Damit kann kein
-Eintrag mit `deleted_with_day = 1` an einem aktiven Tag entstehen — der wäre
-im Papierkorb unsichtbar (`trash_list_missions()` zeigt nur
-`deleted_with_day = 0`) und über den Tag nicht wiederherstellbar
-(`trash_restore_day()` holt nur zurück, was am gelöschten Tag hängt). Details
+**`deleted_with_day` ist eine UND-Verknüpfung aus Datei und Zieltag.**
+Geschrieben wird `1` nur, wenn der Eintrag in der **Datei** am Tag hing **und**
+der Diensttag, dem er nach der Zuordnung zufällt, selbst im Papierkorb liegt;
+sonst `0` (einzeln gelöscht). Damit kann kein Eintrag mit
+`deleted_with_day = 1` an einem aktiven Tag entstehen — der wäre im Papierkorb
+unsichtbar (`trash_list_missions()` zeigt nur `deleted_with_day = 0`) und über
+den Tag nicht wiederherstellbar (`trash_restore_day()` holt nur zurück, was am
+gelöschten Tag hängt). Und ein einzeln gelöschter Eintrag wird nicht zum
+mitgelöschten, nur weil sein Zieltag ebenfalls im Papierkorb liegt. Details
 in Abschnitt 3.
 
 ### Feldkonventionen
@@ -396,7 +398,7 @@ in Abschnitt 3.
 ### Der Papierkorb beim Einspielen (seit Version 7)
 
 Was in der Datei gelöscht ist, kommt **als Papierkorbeintrag** zurück — nicht
-als aktiver Bestand. Vier Regeln entscheiden das im Einzelnen:
+als aktiver Bestand. Fünf Regeln entscheiden das im Einzelnen:
 
 1. **Der Zustand kommt aus der Datei, der Zeitpunkt aus diesem Lauf.** Alle
    Einträge eines Einspielvorgangs tragen denselben `deleted_at` — den des
@@ -404,12 +406,25 @@ als aktiver Bestand. Vier Regeln entscheiden das im Einzelnen:
    Datei"). Die Rückmeldung nennt die Zahlen und sagt den Fristbeginn
    ausdrücklich.
 
-2. **`deleted_with_day` richtet sich nach dem Zieltag**, nicht nach der Datei:
-   `1` nur, wenn der Diensttag, dem der Eintrag zufällt, selbst im Papierkorb
-   liegt; sonst `0`. Ein in der Datei mitgelöschter Einsatz, dessen Zieltag
-   hier aktiv ist, kommt also **einzeln gelöscht** an — sichtbar im Papierkorb
-   und von dort wiederherstellbar. Die Gegenrechnung wäre ein Eintrag, den
-   niemand mehr sieht und niemand mehr zurückholt.
+2. **`deleted_with_day` ist eine UND-Verknüpfung** aus dem Wert der Datei und
+   dem Zustand des Zieltags: `1` nur, wenn der Eintrag **in der Datei** am Tag
+   hing **und** der Diensttag, dem er hier zufällt, selbst im Papierkorb liegt;
+   sonst `0`. Beide Hälften sind nötig, und keine reicht allein:
+
+   - Ein in der Datei **mitgelöschter** Einsatz, dessen Zieltag hier **aktiv**
+     ist, kommt **einzeln gelöscht** an — sichtbar im Papierkorb und von dort
+     wiederherstellbar. Die Gegenrechnung wäre ein Eintrag, den niemand mehr
+     sieht und niemand mehr zurückholt.
+   - Ein in der Datei **einzeln** gelöschter Einsatz an einem hier **ebenfalls
+     gelöschten** Tag bleibt **einzeln gelöscht**. Er wird nicht zum
+     Mitgelöschten, nur weil sein Tag zufällig auch im Papierkorb liegt: Er
+     stünde sonst nicht mehr in der Papierkorbliste (die zeigt nur
+     `deleted_with_day = 0`) und würde beim Wiederherstellen des Tages
+     ungewollt wieder aktiv — er war ja vorher schon gelöscht.
+
+   Kurz: Der Wert aus der Datei sagt, ob der Eintrag am Tag hing; der Zieltag
+   sagt, ob das hier gelten kann. `deleted_with_day = 1` **setzt** einen
+   gelöschten Zieltag voraus, folgt aber nicht aus ihm.
 
 3. **Ein Diensttag im Papierkorb DES ZIELKONTOS blockiert weiterhin** — aber
    nur gegen **aktive** Datei-Tage desselben Datums. Sie werden übersprungen
@@ -430,12 +445,49 @@ als aktiver Bestand. Vier Regeln entscheiden das im Einzelnen:
    kennt keine Eindeutigkeit je Datum, und seit Web 6.0.0 gibt es sie auch bei
    den aktiven Tagen nicht mehr.
 
+5. **Ein in der Datei AKTIVER Einsatz oder Ruhesegment, dessen Zieltag hier im
+   Papierkorb liegt, wird abgelehnt** — übersprungen und gezählt (Grund
+   `tag_im_papierkorb`). Das ist die Gegenrichtung zu Regel 2 und dieselbe
+   Regel wie Nummer 3, eine Ebene tiefer: Was hier im Papierkorb liegt, nimmt
+   nichts Neues auf.
+
+   Ohne sie stünde der Eintrag an einem Tag, den die Tagesübersicht nicht
+   zeigt — in der Suche und auf der Einsatzseite sichtbar, in Tagesliste,
+   Zeitraum, Export, Nachbearbeitung und Papierkorb nicht; beim endgültigen
+   Löschen des Tages bliebe er ohne Diensttag zurück. Halb sichtbar ist
+   schlechter als unsichtbar.
+
+   Die Datumsprüfung aus Regel 3 fängt den Fall **nicht** ab: Sie vergleicht
+   Kalenderdaten, und die Wiedererkennung über `client_ref` kann auf einen
+   Zieltag anderen Datums führen.
+
 **Überspringgründe in der Rückmeldung:** `bereits_vorhanden`,
 `datum_oder_zeit`, `aufbau`, `tag_im_papierkorb`, `tag_unbrauchbar`,
 `tag_uebersprungen`. Alle sechs haben eine Beschriftung; ein roher Schlüssel
 erscheint nicht mehr. Ruhesegmente zählen ihre Gründe seit S1 mit — vorher
 fielen sie unter den Tisch, obwohl „bereits vorhanden" bei ihnen die häufigste
 Ursache überhaupt ist.
+
+### Eine unbrauchbare Angabe kostet ihre Zeile, nicht den Lauf (seit Web 8.0.0)
+
+Das Einspielen hängt an **einer** Transaktion: Was eine Datenbankausnahme
+auslöst, reißt alles mit — auch die neunzig heilen Einsätze daneben, und der
+Aufrufer sieht statt einer Bilanz nur eine Fehlermeldung. Jede Angabe aus der
+Datei läuft deshalb durch die Prüfschicht, und was sie nicht passiert, kostet
+seine Zeile beziehungsweise seinen Punkt und erscheint gezählt unter
+`rejected`. Drei Stellen taten das bis Web 7.3.1 nicht:
+
+- **Ruhesegmente hatten gar keine Prüfschicht.** `started_at` und `ended_at`
+  gingen roh gegen `DATETIME NOT NULL`, `client_ref` ohne Längengrenze gegen
+  `VARCHAR(64)`.
+- **Die Spur eines Ruhesegments** wurde ungeprüft und unbegrenzt geschrieben;
+  `(float)"Unfug"` ist `0.0`, aus einem unbrauchbaren Punkt wurde also still
+  eine Koordinate im Golf von Guinea.
+- **Doppelte Spurnummern.** `track_points` hat den Primärschlüssel
+  `(owner_type, owner_id, seq)`. Zwei Punkte mit derselben Nummer lösen einen
+  Schlüsselkonflikt aus; der zweite wird jetzt übersprungen und als
+  `…track.seq: Nummer doppelt` gemeldet. Ein eigener Export erzeugt keine
+  Wiedergänger — eine von Hand bearbeitete oder fremde Datei kann es.
 
 ## 4. Was NICHT in der Datei steht — und was nicht zurückkommt
 

@@ -111,21 +111,49 @@ async function zustand() {
  * beruehren. Eine Pruefung, die ihren Pruefling zerstoeren kann, braucht eine
  * Grenze, die nicht davon abhaengt, dass die Bedienerin aufpasst. */
 {
-  pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
+  /* ER MUSS NACH INNEN SCHLIESSEN, NICHT NACH AUSSEN.
+   *
+   * Die erste Fassung dieses Riegels versagte OFFEN: Sie meldete eine
+   * gescheiterte Admin-Anmeldung ueber pruefe() — das notiert nur und laeuft
+   * weiter — und las danach eine Anmeldeseite statt der Kontoliste. Darin
+   * steht die Demo-Adresse nicht, also war `kontoDa` falsch, also griff der
+   * Riegel nicht, also lief genau der Lauf durch, gegen den er geschrieben
+   * wurde. Ein Riegel, der bei Unklarheit durchlaesst, ist keiner.
+   *
+   * Jetzt gilt: Wer nicht POSITIV feststellen kann, dass hier nichts
+   * kaputtgeht, bricht ab. */
+  const abbruch = (grund) => {
+    console.error(`\nABBRUCH. ${grund}\n`
+      + `Dieses Skript würde im Konto ${demo} einen Einsatz löschen und die\n`
+      + `E-Mail-Adresse ändern. Es wurde nichts angefasst. Für die\n`
+      + `Demo-Abnahme eine eigene Installation verwenden (oder das Konto\n`
+      + `vorher im Adminbereich entfernen).`);
+    return browser.close().then(() => process.exit(2));
+  };
+
+  if (!await anmelden(admin, adminPw)) {
+    await abbruch(`Die Anmeldung als Administration (${admin}) auf ${basis} ist\n`
+      + `gescheitert. Ohne sie lässt sich nicht feststellen, wem die Adresse\n`
+      + `${demo} auf dieser Installation gehört.`);
+  }
   /* zustand() statt eigener Textsuche: Es kennt die Falle mit den Versalien
      (die Beschriftungen stehen per CSS in Grossbuchstaben). */
   const alsDemo = ((await zustand())['konto'] || '') === demo;
+
   await seite.goto(`${basis}/admin_users.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(500);
-  const kontoDa = (await seite.locator('body').innerText()).includes(demo);
-  if (kontoDa && !alsDemo) {
-    console.error(`\nABBRUCH. Auf ${basis} gibt es ein Konto ${demo}, das NICHT als\n`
-      + `Demo-Konto gekennzeichnet ist — vermutlich das Referenzkonto.\n`
-      + `Dieses Skript würde darin einen Einsatz löschen und die Adresse ändern.\n`
-      + `Es wurde nichts angefasst. Für die Demo-Abnahme eine eigene Installation\n`
-      + `verwenden (oder das Konto vorher im Adminbereich entfernen).`);
-    await browser.close();
-    process.exit(2);
+  const liste = await seite.locator('body').innerText();
+  /* NACHWEIS, DASS DIE LISTE WIRKLICH GELESEN WURDE: Die eigene Adresse der
+     Administration steht immer darin. Fehlt sie, ist das keine Kontoliste —
+     dann ist die Abwesenheit der Demo-Adresse nichts wert. */
+  if (!liste.includes(admin)) {
+    await abbruch(`Die Kontoliste auf ${basis} liess sich nicht lesen (die eigene\n`
+      + `Adresse der Administration steht nicht darin). Ohne sie ist nicht\n`
+      + `feststellbar, wem ${demo} gehört.`);
+  }
+  if (liste.includes(demo) && !alsDemo) {
+    await abbruch(`Auf ${basis} gibt es ein Konto ${demo}, das NICHT als\n`
+      + `Demo-Konto gekennzeichnet ist — vermutlich das Referenzkonto.`);
   }
 }
 

@@ -929,6 +929,56 @@ function edbak_restore(int $userId, array $data): array {
         $exists = $pdo->prepare('SELECT id FROM missions WHERE user_id = ? AND client_ref = ?');
         $insPoint = $pdo->prepare('INSERT INTO track_points
             (owner_type, owner_id, seq, lat, lon, ele, ts) VALUES (?,?,?,?,?,?,?)');
+
+        /* SPUR SCHREIBEN — EINE STELLE FUER BEIDE ARTEN (Backlog Nr. 31).
+         *
+         * Es waren zwei, und sie waren verschieden: Der Einsatz begrenzte die
+         * Menge, pruefte den Aufbau und liess pruef_breite/pruef_laenge ueber
+         * die Koordinaten laufen; das Ruhesegment schrieb roh, was in der
+         * Datei stand. `(float)"Unfug"` ist 0.0 — aus einem unbrauchbaren
+         * Punkt wurde damit still eine gueltige Koordinate im Golf von Guinea,
+         * und die Punktzahl war unbegrenzt.
+         *
+         * Zwei Kopien einer Pruefung sind eine Kopie zu viel: Die zweite
+         * bleibt zurueck. Jetzt gibt es eine.
+         *
+         * ZUSAETZLICH GEPRUEFT werden `seq` und `ts` gegen den Wertebereich
+         * ihrer Spalten (beide INT UNSIGNED NOT NULL) und `ele` auf
+         * Numerik. Auch das war auf BEIDEN Wegen offen: Ein negatives `seq`
+         * oder ein Text in `ele` bringt nicht einen Punkt zu Fall, sondern
+         * ueber die Ausnahme die ganze Wiederherstellung.
+         *
+         * UND DIE EINDEUTIGKEIT VON `seq` (Backlog Nr. 35). Der Wertebereich
+         * allein reicht nicht: `track_points` hat den Primaerschluessel
+         * (owner_type, owner_id, seq), zwei Punkte mit derselben Nummer loesen
+         * also einen Schluesselkonflikt aus — und der reisst wieder den
+         * gesamten Lauf mit. Ein eigener Export erzeugt keine Wiedergaenger;
+         * eine von Hand bearbeitete oder fremde Datei kann es. Der zweite
+         * Punkt wird deshalb uebersprungen und gemeldet.
+         *
+         * Der kuerzere Weg waere INSERT IGNORE gewesen. Er ist der stille:
+         * Die Datei behielte einen Fehler, den niemand zu sehen bekommt.
+         * $gesehen wird je Eigentuemer neu angelegt — der Schluessel gilt nur
+         * innerhalb einer Spur. */
+        $spurSchreiben = function (string $typ, int $ownerId, $liste) use ($insPoint, $pruef): void {
+            $gesehen = [];
+            foreach (pruef_menge($liste ?? [], LIMIT_TRACKPUNKTE, $typ . '.track', $pruef) as $p) {
+                if (!is_array($p) || count($p) < 5) { continue; }
+                $la = pruef_breite($p[1], $typ . '.track.lat', $pruef);
+                $lo = pruef_laenge($p[2], $typ . '.track.lon', $pruef);
+                $seq = pruef_zahl($p[0], 0, 4294967295, $typ . '.track.seq', $pruef);
+                $ts  = pruef_zahl($p[4], 0, 4294967295, $typ . '.track.ts', $pruef);
+                if ($la === null || $lo === null || $seq === null || $ts === null) { continue; }
+                if (isset($gesehen[$seq])) {
+                    $pruef->melde($typ . '.track.seq', 'Nummer doppelt');
+                    continue;
+                }
+                $gesehen[$seq] = true;
+                // Hoehe darf fehlen (Spalte ist NULL-faehig), aber nicht Text sein.
+                $ele = is_numeric($p[3]) ? (float)$p[3] : null;
+                $insPoint->execute([$typ, $ownerId, $seq, $la, $lo, $ele, $ts]);
+            }
+        };
         $FIELDS = require __DIR__ . '/mission_fields.php';
         require_once __DIR__ . '/site_elevation_lib.php';
         /* WELCHE SPALTEN AUS DER DATEI UEBERNOMMEN WERDEN.
@@ -1039,12 +1089,47 @@ function edbak_restore(int $userId, array $data): array {
             }
             $endedAt = pruef_utc_oder_sql($m['ended_at'] ?? null, 'ended_at', $pruef);
 
-            /* LOESCHZUSTAND (E-S1-03/04). Aus der Datei kommt das OB, aus
-             * diesem Lauf der Zeitpunkt; die Bindung an den Tag entscheidet
-             * der ZIELTAG, nicht die Datei. Damit kann kein Eintrag mit
-             * `deleted_with_day = 1` an einem aktiven Tag entstehen. */
+            /* LOESCHZUSTAND (E-S1-03/04/19). Aus der Datei kommt das OB, aus
+             * diesem Lauf der Zeitpunkt.
+             *
+             * `deleted_with_day` braucht BEIDE Seiten, und die erste Fassung
+             * las nur eine: Sie setzte 1, sobald Einsatz und Zieltag geloescht
+             * sind. Das ist zu grob, denn die Kombination „Einsatz EINZELN
+             * geloescht, Tag danach geloescht" ist ein regulaerer Zustand —
+             * `trash_delete_day()` fasst bereits geloeschte Einsaetze nicht an
+             * (`WHERE deleted_at IS NULL`), sie behalten also
+             * `deleted_with_day = 0` an einem geloeschten Tag. Wer so einen
+             * Einsatz einspielte, bekam ihn als „mit dem Tag geloescht"
+             * zurueck: aus der Einzelliste des Papierkorbs verschwunden und
+             * beim Wiederherstellen des Tages wieder aktiv, obwohl er es
+             * vorher nicht wurde.
+             *
+             * Richtig ist die UND-Verknuepfung: Der Wert aus der Datei sagt,
+             * ob der Eintrag am Tag hing; der Zieltag sagt, ob das hier
+             * ueberhaupt gelten kann. E-S1-04 formuliert das als „nur wenn" —
+             * eine notwendige, keine hinreichende Bedingung. */
             $mGeloescht = ($m['deleted_at'] ?? null) !== null;
-            $mitTag     = ($mGeloescht && !empty($zieltagGeloescht[$dayId])) ? 1 : 0;
+            $zielTagWeg = !empty($zieltagGeloescht[$dayId]);
+            $mitTag     = ($mGeloescht && $zielTagWeg
+                           && (int)($m['deleted_with_day'] ?? 0) === 1) ? 1 : 0;
+
+            /* AKTIVER EINTRAG AN EINEM GELOESCHTEN ZIELTAG: ABLEHNEN (E-S1-19).
+             *
+             * Die Gegenrichtung der Invariante. Landet ein in der Datei
+             * AKTIVER Einsatz auf einem Zieltag, der hier im Papierkorb liegt,
+             * dann stuende er an einem Tag, den die Tagesliste nicht zeigt —
+             * in der Suche sichtbar, in der Uebersicht nicht, im Papierkorb
+             * auch nicht, und beim endgueltigen Loeschen des Tages bliebe er
+             * ohne Diensttag zurueck.
+             *
+             * Das ist dieselbe Regel wie D1, nur eine Ebene tiefer: Was hier
+             * im Papierkorb liegt, nimmt nichts Neues auf. Die Datumspruefung
+             * oben kann den Fall nicht abfangen — sie vergleicht Kalenderdaten,
+             * und die Zuordnung ueber `client_ref` (Schritt 1) kann auf einen
+             * Tag ANDEREN Datums fuehren. */
+            if (!$mGeloescht && $zielTagWeg) {
+                $stats['missions_skipped']++; $grund['tag_im_papierkorb']++; continue;
+            }
 
             $oe = edbak_origin_edited($m);
 
@@ -1055,7 +1140,12 @@ function edbak_restore(int $userId, array $data): array {
                      pruef_text($m['client_ref'] ?? null, 64, 'client_ref', $pruef)
                         ?? ('bak-' . bin2hex(random_bytes(6))),
                      $dayId, $startedAt, $endedAt,
-                     (int)($m['manual'] ?? 0), $oe['origin'], $oe['edited'], (int)($m['final'] ?? 1),
+                     /* pruef_flag statt (int): Beide Spalten sind TINYINT(1),
+                      * und (int) einer Zahl jenseits von 127 laeuft dort ueber
+                      * — ein Fehler, der die ganze Transaktion kostet. Fuer
+                      * gueltige Werte ist das Ergebnis dasselbe. */
+                     pruef_flag($m['manual'] ?? 0), $oe['origin'], $oe['edited'],
+                     pruef_flag($m['final'] ?? 1),
                      pruef_zahl($m['distance_m'] ?? null, 0, 100000000, 'distance_m', $pruef),
                      pruef_zahl($m['ascent_m'] ?? null, 0, 100000, 'ascent_m', $pruef),
                      $mGeloescht ? $loeschZeit : null, $mitTag];
@@ -1134,13 +1224,7 @@ function edbak_restore(int $userId, array $data): array {
                     $insEv->execute([$sid, $typ, $wann]);
                 }
             }
-            foreach (pruef_menge($m['track'] ?? [], LIMIT_TRACKPUNKTE, 'track', $pruef) as $p) {
-                if (!is_array($p) || count($p) < 5) { continue; }
-                $la = pruef_breite($p[1], 'track.lat', $pruef);
-                $lo = pruef_laenge($p[2], 'track.lon', $pruef);
-                if ($la === null || $lo === null) { continue; }
-                $insPoint->execute(['mission', $mid, (int)$p[0], $la, $lo, $p[3], (int)$p[4]]);
-            }
+            $spurSchreiben('mission', $mid, $m['track'] ?? []);
 
             /* Einsatzort-Hoehe: NACH dem Abschluss, nicht hier (M5-05).
              *
@@ -1187,22 +1271,48 @@ function edbak_restore(int $userId, array $data): array {
                 $grund[$altRDayId > 0 ? 'tag_uebersprungen' : 'datum_oder_zeit']++;
                 continue;
             }
-            // Loeschzustand nach denselben Regeln wie beim Einsatz (E-S1-03/04).
+            /* PRUEFSCHICHT — SIE FEHLTE HIER VOLLSTAENDIG (Backlog Nr. 31).
+             *
+             * `started_at` und `ended_at` gingen roh ins INSERT, `client_ref`
+             * ohne Laengengrenze. `rest_segments.started_at` ist
+             * DATETIME NOT NULL und `client_ref` VARCHAR(64) NOT NULL: Ein
+             * unbrauchbarer Zeitwert oder eine zu lange Kennung kostete damit
+             * nicht die eine Zeile, sondern ueber die Ausnahme die GANZE
+             * Wiederherstellung — der Aufrufer sah nur noch eine
+             * Fehlermeldung. Beim Einsatz war genau diese Richtung im Review
+             * ausdruecklich umgedreht worden (siehe Kommentar oben); die
+             * Ruhesegmente sind damals uebersehen worden.
+             *
+             * Jetzt gilt hier dasselbe Muster: pruefen, im Zweifel die Zeile
+             * ueberspringen und den Grund zaehlen. */
+            $rRef = pruef_text($r['client_ref'] ?? null, 64, 'rest.client_ref', $pruef)
+                    ?? ('bak-' . bin2hex(random_bytes(6)));
+            $rStart = pruef_utc_oder_sql($r['started_at'] ?? null, 'rest.started_at', $pruef);
+            if ($rStart === null) {
+                $stats['rests_skipped']++; $grund['datum_oder_zeit']++; continue;
+            }
+            $rEnde = pruef_utc_oder_sql($r['ended_at'] ?? null, 'rest.ended_at', $pruef);
+
+            // Loeschzustand nach denselben Regeln wie beim Einsatz
+            // (E-S1-03/04/19), einschliesslich der UND-Verknuepfung mit dem
+            // Wert aus der Datei und der Ablehnung aktiver Eintraege an einem
+            // geloeschten Zieltag.
             $rGeloescht = ($r['deleted_at'] ?? null) !== null;
-            $rMitTag    = ($rGeloescht && !empty($zieltagGeloescht[$rDayId])) ? 1 : 0;
+            $rZielTagWeg = !empty($zieltagGeloescht[$rDayId]);
+            $rMitTag    = ($rGeloescht && $rZielTagWeg
+                           && (int)($r['deleted_with_day'] ?? 0) === 1) ? 1 : 0;
+            if (!$rGeloescht && $rZielTagWeg) {
+                $stats['rests_skipped']++; $grund['tag_im_papierkorb']++; continue;
+            }
             $pdo->prepare('INSERT INTO rest_segments
                 (user_id, client_ref, day_id, started_at, ended_at, final,
                  deleted_at, deleted_with_day)
                 VALUES (?,?,?,?,?,?,?,?)')
-                ->execute([$userId, $r['client_ref'] ?? ('imp-' . bin2hex(random_bytes(6))),
-                           $rDayId, $r['started_at'], $r['ended_at'] ?? null,
-                           (int)($r['final'] ?? 1),
+                ->execute([$userId, $rRef, $rDayId, $rStart, $rEnde,
+                           pruef_flag($r['final'] ?? 1),
                            $rGeloescht ? $loeschZeit : null, $rMitTag]);
             $rid = (int)$pdo->lastInsertId();
-            foreach (($r['track'] ?? []) as $p) {
-                $insPoint->execute(['rest', $rid, (int)$p[0], (float)$p[1],
-                                    (float)$p[2], $p[3], (int)$p[4]]);
-            }
+            $spurSchreiben('rest', $rid, $r['track'] ?? []);
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }
         }

@@ -1,13 +1,25 @@
 # Browserschritte des Referenzdatensatzes (Arbeitspaket B4)
 
-Zwei Schritte, die es **nur** im Browser gibt. Beide sind als Skript
-hinterlegt und zugleich als nummerierte Klickstrecke beschrieben — das
-Skript ist die wiederholbare Fassung, die Klickstrecke die prüfbare.
+Was es **nur** im Browser gibt. Die beiden Schritte des Aufbaus (oben in der
+Tabelle) sind zusätzlich als nummerierte Klickstrecke beschrieben — das Skript
+ist die wiederholbare Fassung, die Klickstrecke die prüfbare.
 
 | Skript | Wofür |
 |---|---|
-| `csv_import.mjs` | CSV-Import der vier nachträglich erfassten Einsätze |
+| `csv_import.mjs` | CSV-Import der vier nachträglich erfassten Einsätze (Aufbau) |
 | `angriffswerte.mjs` | P-07 — die Angriffswerte stehen inert in allen Einsatztabellen |
+| `referenz_export.mjs` | zieht die eingecheckten Referenzdateien aus dem Referenzkonto |
+| `kreislauf_edbak.mjs` | Umlauf der Sicherung: einspielen, erneut sichern (von `kreislauf.py` gerufen) |
+| `kreislauf_csv.mjs` | dasselbe für den CSV-Weg |
+| `papierkorb_misch.mjs` | E-S1-04: ein Diensttag mit **einzeln** und **mit dem Tag** gelöschten Einsätzen übersteht den Umlauf, und die Papierkorbseite zeigt den Unterschied |
+| `demo_pruefen.mjs` | Abnahme der Demo-Funktion (E-P1-08) — **verändert das Konto, gegen das es läuft** |
+| `demo_bremse.mjs` | die Mengenbremse greift auch für das Demo-Konto |
+
+Zwei davon fassen Daten an und haben deshalb einen Riegel:
+`demo_pruefen.mjs` bricht ab, wenn unter der Demo-Adresse ein Konto liegt, das
+nicht als Demo-Konto gekennzeichnet ist; `papierkorb_misch.mjs` arbeitet
+ausschließlich auf Konten, deren Adresse mit `umlauf-` beginnt. Beide Riegel
+brechen **hart** ab (Rückgabe 2) — sie melden nicht bloß.
 
 Aufruf jeweils:
 

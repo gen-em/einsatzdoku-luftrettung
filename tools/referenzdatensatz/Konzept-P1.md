@@ -1212,7 +1212,9 @@ regulären Löschwege wieder in den Papierkorb legt.
    Abweisung älterer Stände. Zu klären ist der umgekehrte Weg — eine
    Version-6-Datei enthält keinen Papierkorb und bleibt problemlos lesbar.
 
-6. **Der Demo-Reset wird einfacher.** Fällt die Asymmetrie weg, braucht das
+6. **Der Demo-Reset wird einfacher.** *(Umgesetzt in Phase S1, Web 8.0.0:
+   `demo_nachlauf()`, der Fixture-Block `nachlauf` und dessen Erzeugung sind
+   entfallen; E-P1-21 ist damit gegenstandslos.)* Fällt die Asymmetrie weg, braucht das
    Nachlauf-Drehbuch (E-P1-21, `demo_nachlauf()` in `server/demo_lib.php`)
    seinen Papierkorb-Teil nicht mehr: Die Fixture bringt ihn dann selbst mit.
    Der Nachlauf läuft heute bewusst **nach** dem Commit, weil `trash_lib.php`

@@ -83,8 +83,10 @@ Das Prüfmittel hat einen Riegel bekommen; er ist in beide Richtungen geprüft.
 | Einspiellauf über die regulären Wege | `einspielen/einspielen.py` | **526** Ingest-Anfragen, 0 Fehler; Sperrlisten-Prüfschritt bestanden |
 | **Kreislauf Sicherung** (P-S1-01) | `vergleich/kreislauf.py --art edbak` | **286 739** Einzelvergleiche, **0 unerklärt**, 16 erwartet |
 | **Kreislauf CSV** (P-S1-02) | `vergleich/kreislauf.py --art csv` | **8 797** Einzelvergleiche, **0 unerklärt**, 859 erwartet, 0 ungenutzte Regeln |
-| Probe aufs Exempel, Sicherung (P-S1-12) | `vergleichen.py --testabweichung` | **12/12** bestanden (vier davon neu) |
+| Probe aufs Exempel, Sicherung (P-S1-12) | `vergleichen.py --testabweichung`, gleiche Datei beidseitig, ohne `--ausnahmen` | **12/12** bestanden (vier davon neu) |
 | Probe aufs Exempel, CSV (P-S1-12) | dieselbe | **10/10** bestanden |
+| **Wiederherstellungsprobe**, heutiger Stand | `tools/wiederherstellungs-probe/probe.php` | **16 Erwartungen, 0 nicht erfüllt** |
+| **Wiederherstellungsprobe**, Stand vor der Korrektur (`d078494`) | dieselbe gegen eine Kopie mit altem `backup_lib.php` | **12 von 16 nicht erfüllt** — Teil 2 endet mit `SQLSTATE[23000] … Duplicate entry` |
 | Invariante `deleted_with_day` (P-S1-05) | SQL über **alle** Konten der Prüfinstallation | `1` an aktivem Tag: **0**; `1` ohne `deleted_at`: **0** |
 | `created_at` wörtlich (P-S1-07) | SQL, paarweise über `client_ref` | **87 von 87 gleich**, 0 abweichend |
 | Angriffswerte-Regression (P-S1-13) | `browser/angriffswerte.mjs` | **42** Einzelprüfungen, 0 Befunde, 0 Konsolenfehler |
@@ -115,9 +117,12 @@ Alles über Playwright/Chromium gegen die lokale Installation, jeder Schritt
 | Nr. 27 (P-S1-08) | 4 mehrzeilige Notizen, **164/253/119/150** Zeichen, je 1 Umbruch, nach dem Umlauf wörtlich gleich |
 | Nr. 28 (P-S1-09) | Referenzfall bleibt `final = 0` und Ende leer — auch nach dem Überschreiben aller 82 Zeilen |
 | Excel-Rückweg (ohne `ende`/`final`) | 82× `final = 1`, 82× `ende = Beginn` — unverändertes Verhalten |
-| Demo-Abnahme (P-S1-11) | `demo_pruefen.mjs`: **25** Einzelprüfungen, 0 Befunde, 0 Konsolenfehler; Papierkorb 5; Reset **5,8 s** |
+| Demo-Abnahme (P-S1-11) | `demo_pruefen.mjs`: **24** Einzelprüfungen, 0 Befunde, 0 Konsolenfehler; Papierkorb **5/1/5** vor und nach dem Reset |
+| Wächter in `demo_pruefen.mjs` | falsches Adminkennwort → **Abbruch, Rückgabe 2**; Lauf gegen die Referenzinstallation → **Abbruch, Rückgabe 2**, Referenzkonto unangetastet |
 | Mengenbremse Demo | `demo_bremse.mjs`: erste Abweisung bei Anmeldung 21 (Grenze 20), Gegenprobe kommt herein |
 | CSV-Import der vier Referenzzeilen | `browser/csv_import.mjs`: 4 Einsätze, 0 Hinweise, 0 Fehler |
+| **Mischfall im Papierkorb** (F-S1-E) | `browser/papierkorb_misch.mjs`: **10 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**. Ein Diensttag mit fünf mitgelöschten und einem einzeln gelöschten Einsatz übersteht den vollen Umlauf; nach dem Wiederherstellen des Tages bleibt der einzelne im Papierkorb liegen |
+| dieselbe Prüfung gegen den Stand vor der Korrektur | **2 Befunde**: Ziel zeigt 1 statt 3 einzeln gelöschte Einsätze, und der Diensttag nennt 6 statt 5 — der einzeln gelöschte war im Tag verschwunden |
 
 ---
 
@@ -231,7 +236,30 @@ abgeschlossenen** Einsatz. Beide gibt es im Demo-Konto.
       Sicherung. Bei **alten** Sicherungen fehlt er absichtlich — dort wurde
       die Zahl nie erhoben, und eine Null wäre eine Behauptung.
 
-### 4.10 Der Regressionslauf (R24)
+### 4.10 Der Mischfall im Papierkorb — der Fehler, der beinahe durchgegangen wäre
+
+Der einzige Punkt dieser Liste, der aus einem **eigenen** Fehler entstanden
+ist (F-S1-E). Er braucht einen Diensttag, an dem ein Einsatz **einzeln** und
+ein anderer **mit dem Tag** gelöscht wurde.
+
+Lokal ist er belegt (`browser/papierkorb_misch.mjs`, 10 Einzelprüfungen, 0
+Befunde). Er steht trotzdem hier, weil er die Stelle ist, an der ein Fehler im
+Rückweg **still** bliebe: Man sieht ihn nicht beim Einspielen, sondern erst
+Wochen später, wenn jemand etwas im Papierkorb sucht.
+
+- [ ] **Weg:** Einen Diensttag mit mindestens zwei Einsätzen wählen. Einen
+      davon einzeln löschen. Dann den **ganzen Tag** löschen. Sichern, in ein
+      **leeres** Konto einspielen, dort in den Papierkorb sehen.
+- [ ] **Erwartung:** Der Papierkorb zeigt den Diensttag **und daneben** den
+      einzeln gelöschten Einsatz als eigenen Eintrag. Stellt man den Tag
+      wieder her, kommen nur die mit ihm gelöschten Einsätze zurück; der
+      einzeln gelöschte bleibt im Papierkorb liegen.
+- [ ] **Scheitern erkennbar an:** Der einzeln gelöschte Einsatz taucht im
+      Papierkorb **gar nicht** auf (dann trägt er fälschlich
+      `deleted_with_day = 1`), oder er wird beim Wiederherstellen des Tages
+      **mit** aktiv, obwohl er vorher schon gelöscht war.
+
+### 4.11 Der Regressionslauf (R24)
 
 - [ ] **Weg:** `python3 tools/referenzdatensatz/vergleich/kreislauf.py --art
       edbak --frisch` und dasselbe mit `--art csv`.
@@ -247,10 +275,23 @@ abgeschlossenen** Einsatz. Beide gibt es im Demo-Konto.
 
 ## 5. Bekannte offene Punkte — kein Grund zur Beunruhigung, aber zu wissen
 
+**Offen geblieben — zwei Entscheidungen, keine Korrekturen.** Beide ändern
+Verhalten, das NutzerInnen sehen, und sind deshalb nicht nebenbei getroffen
+worden:
+
 | Fund | Wirkung | Backlog |
 |---|---|---|
-| **F-S1-A** | Der Rückweg der Ruhesegmente prüft `started_at`/`ended_at` nicht; ein unbrauchbarer Wert bringt die ganze Wiederherstellung zu Fall statt eine Zeile | Nr. 31 |
-| **F-S1-C** | Ein in der Datei **aktiver** Einsatz kann auf einem **gelöschten** Zieltag landen und steht dann an einem Tag, den die Tagesliste nicht zeigt. Nicht neu — in derselben Form schon vor Web 8.0.0 erreichbar | Nr. 32 |
+| **F-S1-G** | `trash_purge_day()` löscht nur die *gelöschten* Einsätze des Tages und danach den Tag. Ein **aktiver** Einsatz am gelöschten Tag verliert dabei seinen Diensttag (`ON DELETE SET NULL`) und steht danach ohne Tag in der Datenbank: in der Suche sichtbar, in der Tagesübersicht nicht, im Formular nicht mehr zu öffnen. Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit — ihre Zahl ist zu klein. Betrifft das **endgültige Löschen**, nicht das Einspielen. Zu entscheiden: mitlöschen (dann muss die Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag hängen | Nr. 33, **offen** |
+| **F-S1-H** | Ein Diensttag gilt beim Einspielen als wiedererkannt, sobald **ein einziger** seiner Einsätze im Ziel liegt — und dessen Tag wird für **alle** Einträge des Datei-Tags übernommen. Liegt dieser eine Einsatz im Ziel an einem anderen Tag, wandert der ganze Datei-Tag dorthin. Zu entscheiden: Fingerabdruck vor `client_ref` prüfen, oder den Widerspruch melden statt zu raten | Nr. 34, **offen** |
+
+**Behoben, hier zur Nachverfolgung:**
+
+| Fund | Wirkung | Backlog |
+|---|---|---|
+| **F-S1-A** | Der Rückweg der Ruhesegmente prüfte `started_at`/`ended_at` nicht; ein unbrauchbarer Wert brachte die ganze Wiederherstellung zu Fall statt eine Zeile. In C8 behoben, dabei auch das Schreiben der Spurpunkte auf **eine** Stelle für beide Arten gezogen | Nr. 31, erledigt |
+| **F-S1-C** | Ein in der Datei **aktiver** Einsatz konnte auf einem **gelöschten** Zieltag landen und stand dann an einem Tag, den die Tagesliste nicht zeigt. Nicht neu — in derselben Form schon vor Web 8.0.0 erreichbar. In C8 entschieden (**E-S1-19**: ablehnen und zählen) und umgesetzt | Nr. 32, erledigt |
+| **F-S1-E** | `deleted_with_day` aus der Datei wurde nie gelesen; ein **einzeln** gelöschter Einsatz an einem gelöschten Tag kam als mitgelöschter zurück und wäre beim Wiederherstellen des Tages ungewollt wieder aktiv geworden. **Von dieser Phase eingebaut** und in C8 behoben | kein Eintrag |
+| **F-S1-F** | Ein doppeltes `seq` in einer Spur kippte über den Schlüsselkonflikt den ganzen Lauf. In C8 behoben (überspringen und melden) | Nr. 35, erledigt |
 | **Nr. 24** | Der Formelschutz-Apostroph bleibt beim CSV-Rückimport im Wert stehen (3 Zellen). Bewusst so gelassen und jetzt dokumentiert | erledigt, dokumentiert |
 
 ---
@@ -280,6 +321,20 @@ steht und was die Konsole meldet — nicht, ob etwas gut aussieht.
 seit S1 einen Riegel und bricht ab, wenn unter der Demo-Adresse ein Konto
 liegt, das nicht als Demo-Konto gekennzeichnet ist. Der Riegel ist geprüft —
 aber er ersetzt nicht, dass man weiß, gegen welche Installation man arbeitet.
+
+**Die Wiederherstellungsprobe ist keine Browserprüfung.**
+`tools/wiederherstellungs-probe/` ruft `edbak_restore()` unmittelbar auf und
+misst den Zustand in der Datenbank. Damit prüft sie genau das, was der
+Kreislauf nicht herstellen kann — aber weder den Weg davor (Entschlüsseln im
+Browser, Hochladen) noch die Anzeige danach. Dass der Papierkorb den einzeln
+gelöschten Einsatz auch *zeigt*, folgt aus `trash_list_missions()`, der
+Funktion, die die Seite benutzt; nachgesehen ist es nicht. Deshalb steht
+Punkt 4.10 in der Prüfliste.
+
+Ihr zweiter Teil prüft **zwei** Sorten unbrauchbarer Angaben (Zeitwert,
+doppelte Spurnummer). Er ist **kein** Beleg dafür, dass keine dritte übrig
+ist — dafür wäre die Prüfschicht Feld für Feld gegen das Datenbankschema zu
+halten.
 
 **Nicht gefahren:** der Stilvergleich (`tools/stilvergleich/`). In S1 wurde
 `server/assets/style.css` nicht angefasst — keine Regel verschoben,

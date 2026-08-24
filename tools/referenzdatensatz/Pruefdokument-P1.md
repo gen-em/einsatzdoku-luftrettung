@@ -148,9 +148,15 @@ erkennen ist**.
   Als Demo-Konto einen Einsatz löschen und einen Standort anlegen. Dann
   Adminbereich → **„Auf Standard zurücksetzen"**.
   Erwartet: wieder 82 Einsätze, 5 im Papierkorb, der zusätzliche Standort fort.
-  *Scheitern:* Zahlen bleiben verändert → Bericht lesen; bleibt der Papierkorb
-  leer, ist der Nachlauf gescheitert (er läuft hinter dem Commit, der Bestand
-  ist dann trotzdem vollständig).
+  *Scheitern:* Zahlen bleiben verändert → Bericht lesen.
+  **Berichtigt in S1 (Web 8.0.0):** Hier stand „bleibt der Papierkorb leer,
+  ist der Nachlauf gescheitert (er läuft hinter dem Commit, der Bestand ist
+  dann trotzdem vollständig)". Diese Entwarnung gilt nicht mehr. Es gibt
+  keinen Nachlauf hinter dem Commit; der Reset ist **ein** Vorgang in **einer**
+  Transaktion, und der Papierkorb kommt aus der Fixture. Ein danach leerer
+  Papierkorb heißt heute: Der Löschzustand ist beim Einspielen nicht
+  geschrieben worden — ein Fehler mitten im Vorgang, nicht ein harmloser
+  Anhang danach.
 
 - [ ] **Von selbst.**
   Nach dem Reset **30 Minuten warten**, dann eine beliebige Seite des

@@ -182,5 +182,20 @@ declare(strict_types=1);
  * `final = 0` samt leerem Ende wurde ueberschrieben — ein nicht
  * abgeschlossener Einsatz kam als abgeschlossen zurueck. Beide Kreislaeufe
  * (Sicherung und CSV) stehen danach auf null unerklaerten Abweichungen.
+ *
+ * Und drei Stellen im Einspielweg, an denen eine kaputte Datei bisher nicht
+ * ihre Zeile kostete, sondern den ganzen Lauf: die fehlende Pruefschicht der
+ * Ruhesegmente, ihre ungeprueft geschriebene Spur und ein doppeltes `seq`,
+ * das ueber den Primaerschluessel von `track_points` einen Konflikt ausloest.
+ * Alle drei betreffen nur Dateien fremder oder von Hand bearbeiteter
+ * Herkunft — aber eine Wiederherstellung ist der Moment, in dem jemand
+ * ohnehin schon etwas verloren hat.
+ *
+ * KEINE eigene Nummer fuer die Nachlese (Paket C8). Sie hat zwei Fehler
+ * behoben, die in DIESER Fassung entstanden sind und nie auf einem Server
+ * standen — 8.0.0 ist zu keinem Zeitpunkt ausgeliefert gewesen. Eine 8.0.1,
+ * die eine 8.0.0 berichtigt, die es nirgends gab, waere eine Zahl ohne
+ * Gegenstueck in der Welt. Was die Nachlese geaendert hat, steht im
+ * CHANGELOG unter 8.0.0.
  */
 const WEB_VERSION = '8.0.0';

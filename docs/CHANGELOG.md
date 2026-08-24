@@ -15,9 +15,10 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
 **Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
 als Papierkorb zurück.** Dazu die beiden Importfehler, die der CSV-Kreislauf
-der Phase P1 gemessen hatte. Nutzlastversion der Sicherung 6 → 7.
-**Keine Migration** — die Spalten liegen seit jeher, sie standen nur leer in
-der Datei.
+der Phase P1 gemessen hatte, und drei Stellen, an denen eine kaputte Datei
+bisher nicht ihre Zeile, sondern den ganzen Einspielvorgang kostete.
+Nutzlastversion der Sicherung 6 → 7. **Keine Migration** — die Spalten liegen
+seit jeher, sie standen nur leer in der Datei.
 
 ### Web — Der Papierkorb in der Sicherung (Backlog Nr. 30)
 
@@ -81,13 +82,22 @@ Einträge mit abgelaufener Frist mit, und der nächste Aufräumjob entfernte sie
 endgültig, ohne dass jemand sie je gesehen hätte.
 
 **Die Invariante, ohne die es einen Zombie gäbe.** `deleted_with_day = 1` wird
-nur geschrieben, wenn der **Zieltag** selbst im Papierkorb liegt — sonst `0`.
-Der Grund steht in zwei Zeilen an anderer Stelle: `trash_list_missions()`
-zeigt nur `deleted_with_day = 0`, `trash_restore_day()` holt nur zurück, was
-am gelöschten Tag hängt. Ein Eintrag mit `deleted_with_day = 1` an einem
-aktiven Tag wäre damit unsichtbar **und** unwiederbringlich. Ein in der Datei
-mitgelöschter Einsatz, dessen Zieltag hier aktiv ist, kommt deshalb einzeln
-gelöscht an.
+nur geschrieben, wenn der Eintrag **in der Datei** am Tag hing **und** der
+**Zieltag** selbst im Papierkorb liegt — sonst `0`. Der Grund steht in zwei
+Zeilen an anderer Stelle: `trash_list_missions()` zeigt nur
+`deleted_with_day = 0`, `trash_restore_day()` holt nur zurück, was am
+gelöschten Tag hängt. Beide Hälften sind nötig:
+
+- Ein Eintrag mit `deleted_with_day = 1` an einem **aktiven** Tag wäre
+  unsichtbar **und** unwiederbringlich. Ein in der Datei mitgelöschter
+  Einsatz, dessen Zieltag hier aktiv ist, kommt deshalb einzeln gelöscht an.
+- Ein in der Datei **einzeln** gelöschter Einsatz an einem hier ebenfalls
+  gelöschten Tag bliebe umgekehrt nur dann auffindbar, wenn der Wert der Datei
+  mitzählt. Er darf nicht zum Mitgelöschten werden: Er verschwände aus der
+  Papierkorbliste und würde beim Wiederherstellen des Tages wieder aktiv,
+  obwohl ihn jemand ausdrücklich gelöscht hatte.
+
+Der Zieltag ist damit eine **notwendige, keine hinreichende** Bedingung.
 
 **D1 hat jetzt zwei Hälften.** Die Datumsprüfung gegen den Papierkorb des
 Zielkontos gilt weiter — aber nur für **aktive** Datei-Tage. Ein in der Datei
@@ -96,6 +106,17 @@ ergäbe keinen Sinn. Er durchläuft die normale Wiedererkennung und entsteht,
 wenn er fehlt, als Papierkorbeintrag. Wird er gefunden, bleibt der Zieltag
 unangetastet — „Angaben werden nicht überschrieben" gilt für den Löschzustand
 wie für alles andere.
+
+**Und die Gegenrichtung: Ein aktiver Eintrag an einem gelöschten Zieltag wird
+abgelehnt.** Landet ein in der Datei aktiver Einsatz oder ein Ruhesegment auf
+einem Zieltag, der hier im Papierkorb liegt, stünde er an einem Tag, den die
+Tagesübersicht nicht zeigt: in der Suche und auf der Einsatzseite sichtbar, in
+Tagesliste, Zeitraum, Export, Nachbearbeitung und Papierkorb nicht — und beim
+endgültigen Löschen des Tages bliebe er ohne Diensttag zurück. Halb sichtbar
+ist schlechter als unsichtbar. Er wird deshalb übersprungen und unter
+`tag_im_papierkorb` gezählt: dieselbe Regel wie D1, eine Ebene tiefer. Die
+Datumsprüfung von D1 fängt den Fall nicht ab, denn die Wiedererkennung über
+`client_ref` kann auf einen Zieltag anderen Datums führen.
 
 **Die Rückmeldung war unvollständig und ist es nicht mehr.** Sie kannte drei
 Überspringgründe von fünf; `tag_im_papierkorb` und `tag_unbrauchbar`
@@ -106,6 +127,35 @@ ihrem Datum ist nichts auszusetzen; sie haben einen neuen, eigenen Grund
 obwohl „bereits vorhanden" bei ihnen der häufigste Fall ist. Und die beiden
 Einspielwege — eigene Datei und freigegebene Sicherung — hatten zwei getrennte
 Textbausteine, die auseinandergelaufen waren; jetzt gibt es einen.
+
+### Web — Eine kaputte Sicherungsdatei kostete den ganzen Lauf (Backlog Nr. 31 und 35)
+
+Das Einspielen hängt an **einer** Transaktion. Das ist richtig so — ein halb
+eingespielter Bestand wäre schlimmer als keiner —, hat aber eine Kehrseite:
+Jede Datenbankausnahme reißt alles mit, auch die neunzig heilen Einsätze
+daneben, und der Aufrufer sieht statt einer Bilanz nur eine Fehlermeldung.
+Genau dafür gibt es die Prüfschicht: prüfen, im Zweifel die Zeile
+überspringen, den Grund zählen. An drei Stellen fehlte sie.
+
+**Die Ruhesegmente hatten gar keine.** `started_at` und `ended_at` gingen roh
+gegen `DATETIME NOT NULL`, `client_ref` ohne Längengrenze gegen `VARCHAR(64)`,
+und die Spur wurde ungeprüft und unbegrenzt geschrieben — `(float)"Unfug"` ist
+`0.0`, aus einem unbrauchbaren Punkt wurde also still eine gültige Koordinate
+im Golf von Guinea. Beim Einsatz war dieselbe Richtung längst eingebaut; die
+Ruhesegmente sind damals übersehen worden. Das Schreiben der Spur ist jetzt
+**eine** Funktion für beide Arten statt zweier auseinandergelaufener Kopien.
+
+**Doppelte Spurnummern kippten den Lauf.** `track_points` hat den
+Primärschlüssel `(owner_type, owner_id, seq)`. Der Wertebereich von `seq` war
+geprüft, seine Eindeutigkeit nicht. Der zweite Punkt mit derselben Nummer wird
+jetzt übersprungen und als `…track.seq: Nummer doppelt` gemeldet. Der kürzere
+Weg wäre `INSERT IGNORE` gewesen — der stille: Die Datei behielte einen
+Fehler, den niemand zu sehen bekommt.
+
+Betroffen sind nur Dateien fremder oder von Hand bearbeiteter Herkunft; ein
+eigener Export erzeugt weder unbrauchbare Zeiten noch Wiedergänger. Das ist
+kein Grund, es stehen zu lassen: Eine Wiederherstellung ist der Moment, in dem
+jemand ohnehin schon etwas verloren hat.
 
 ### Web — `created_at` kommt zurück (Backlog Nr. 25)
 
@@ -284,8 +334,23 @@ Einzelvergleiche sind der Zuwachs.
 Dazu: Probe aufs Exempel **12/12** (Sicherung, vier Proben neu) und **10/10**
 (CSV); die Invariante `deleted_with_day` über alle Konten der Prüfinstallation
 **0 Verstöße**; `created_at` nach dem Umlauf **87 von 87 wörtlich gleich**;
-Demo-Abnahme **25 Einzelprüfungen, 0 Befunde**, Reset 5,8 s (vorher rund 6 s);
+Demo-Abnahme **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**;
 Angriffswerte-Regression **42 Einzelprüfungen, 0 Befunde**.
+
+Dazu zwei neue Prüfmittel für die Fälle, die der Kreislauf nicht herstellen
+kann — sein Referenzbestand hat keinen Diensttag mit beiden Löscharten
+nebeneinander:
+
+- `tools/wiederherstellungs-probe/` misst sie in der Datenbank:
+  **16 Erwartungen, 0 nicht erfüllt**; gegen den Stand vor der Korrektur
+  **12 von 16 nicht erfüllt**.
+- `browser/papierkorb_misch.mjs` misst denselben Fall durch den Browser —
+  löschen, sichern, in ein leeres Konto einspielen, Papierkorbseite lesen,
+  Diensttag wiederherstellen: **10 Einzelprüfungen, 0 Befunde, 0
+  Konsolenfehler**. Gegen den Stand vor der Korrektur **2 Befunde**: Das
+  Zielkonto zeigte 1 statt 3 einzeln gelöschte Einsätze, und der gelöschte
+  Diensttag nannte 6 Einsätze statt 5 — der einzeln gelöschte war in ihm
+  verschwunden.
 
 Was **nicht** geprüft werden konnte, steht in
 `docs/Pruefdokument-S1-Sicherung-Import.md`, Abschnitt 1 — allen voran der
