@@ -830,7 +830,42 @@ systemweiter Standort) sind über die Oberfläche wieder entfernt; der
 Referenzbestand ist unverändert.
 
 
-### D3 — README (offen)
+### D3 — README (erledigt)
+
+**Ergebnis.** `README.md` neu gefasst, 46 → 56 Zeilen, Gliederung unverändert
+(Kopf, Demo-Absatz, Dokumentation, Schnellstart).
+
+- **Titel** „Einsatzdoku" statt „HEMS Einsatzdoku" (E-P2-13).
+- **Erster Absatz** nennt beide Einsatzarten: „Dokumentation von
+  Notarzteinsätzen — luftgebunden wie bodengebunden (RTH, NEF, NAW)". Die
+  Uhr-App steht als das, was sie ist: „derzeit für Garmin-Uhren: Fenix 6 Pro,
+  Forerunner 945, Venu 3s" — vorher stand dort die Fenix 6 Pro als „die" Uhr,
+  obwohl das Handbuch seit Uhr 1.x drei Modelle kennt. „Flugtage" → „Diensttage".
+- **Demo-Absatz** wörtlich unverändert (R25).
+- **Dokumentationstabelle** von 10 auf 17 Zeilen: ergänzt sind
+  `Geraete-Eingabe.md`, `Uhr-Layout_Regeln.md`, die beiden S1-Dokumente, die
+  beiden P2-Dokumente und `tools/wortliste/LIESMICH.md`. Die ersten beiden
+  fehlten schon vorher — das README nannte zwei Dokumente nicht, die es gibt.
+- **Schnellstart** (F-P2-H): Der Bauabschnitt heißt jetzt „Uhr (Garmin,
+  Connect IQ)" und nennt alle drei Bauziele; die Kopplung ist gerätefrei
+  beschrieben. Der Verweis „Details: Handbuch, Abschnitt 4" war falsch —
+  Abschnitt 4 ist „Einsätze ansehen und bearbeiten"; die Kopplung steht in 10
+  und 12, die Tastenwege in 2.0. Jetzt so verwiesen.
+
+**Prüfstand.**
+
+| Prüfung | Mittel | Ergebnis |
+|---|---|---|
+| Wortliste für `README.md` | `python3 tools/wortliste/wortliste.py --bereich c` | **0 Treffer außerhalb der Ausnahmen** im README (vorher 11 in 9 Zeilen). Zwei neue Ausnahmen, beide Klasse G: der Bauabschnitt des Schnellstarts und die Ersteinführung der Plattform. |
+| Verweise | `ls` über alle 17 in der Tabelle genannten Dateien | 16 vorhanden; `docs/Pruefdokument-P2-Terminologie.md` entsteht erst in D6 — dort erneut geprüft (P-P2-10) |
+| Abschnittsverweise | Nachgeschlagen in `docs/Handbuch.md` | „## 10. Geräte", „## 12. Eine neue Uhr einrichten (Kurzanleitung)", „### 2.0 Unterstützte Uhren und ihre Bedienung" — alle drei vorhanden |
+
+**Nicht geprüft:** wie GitHub das README darstellt. Das geht erst nach dem
+Push und steht im Prüfdokument als Punkt für den Auftraggeber.
+
+**Offen nach D3:** die Zeile zum Prüfdokument der Phase, bis D6 die Datei
+angelegt hat.
+
 
 ### D4 — Handbuch (offen)
 

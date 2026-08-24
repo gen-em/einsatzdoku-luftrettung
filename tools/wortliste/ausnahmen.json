@@ -128,6 +128,20 @@
       "begruendung": "Der Garmin-Zusatz in Klammern: In plattformuebergreifenden Texten heisst es „Einstellungen der Uhr-App\", und dahinter steht, wo das auf der derzeitigen Plattform zu finden ist (E-P2-15). Ohne den Zusatz waere die Anweisung nicht ausfuehrbar."
     },
     {
+      "id": "readme-schnellstart-uhr",
+      "datei": "README.md",
+      "von": "\\*\\*Uhr \\(Garmin, Connect IQ\\):",
+      "bis": "Tastenwege je Uhr in 2\\.0",
+      "klasse": "G",
+      "begruendung": "Der Bauabschnitt des Schnellstarts beschreibt das Connect-IQ-Projekt: SDK, Bauziele fenix6pro/fr945/venu3s, der Pfad GARMIN/Apps/ auf dem Geraet. Das ist plattformspezifisch und wird ausdruecklich als solches eingeleitet (E-P2-15). Der Kopplungsteil darin ist geraetefrei formuliert."
+    },
+    {
+      "id": "plattform-ersteinfuehrung",
+      "zeile": "derzeit für Garmin-Uhren|Forerunner 945, Venu 3s",
+      "klasse": "G",
+      "begruendung": "Ersteinfuehrung der Plattform: „eine Uhr-App (derzeit für Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s)\". Genau diese Form sieht E-P2-15 vor — sie nennt die Plattform als die derzeitige, nicht als die einzig moegliche. Der Wortlaut ist in README, Handbuch 1 und Technik 1 derselbe."
+    },
+    {
       "id": "beispiel-rettungsmittelname",
       "zeile": "Christoph 17 oder NEF Kempten 1",
       "klasse": "F",
