@@ -503,6 +503,12 @@
         var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
         if (!ck) { return null; }
 
+        /* Fuehrt die eingelesene Datei ueberhaupt eine Spalte fuer dieses
+         * Zielfeld? Kommt aus verarbeiteMatrix(), das die Kopfzeile kennt. */
+        var fuehrt = function (ziel) {
+            return !!(S.erg && S.erg.zielspalten && S.erg.zielspalten[ziel]);
+        };
+
         var vehId = $('vehsel').value ? parseInt($('vehsel').value, 10) : null;
         var baseId = $('basesel').value ? parseInt($('basesel').value, 10) : null;
 
@@ -598,7 +604,6 @@
                     // eigenen Exportformate liefert. Profile, die sie nicht
                     // kennen, senden hier ueberall null/0 — der Server setzt
                     // dann dieselben Werte wie vor dieser Version.
-                    ended_utc: m.ended || null,
                     site_ele_m: nummerOderNull(m.site_ele_m),
                     distance_m: nummerOderNull(m.distance_m),
                     ascent_m: nummerOderNull(m.ascent_m),
@@ -628,6 +633,25 @@
                     dup: dup ? (w.dup || 'skip') : 'insert',
                     overwrite_id: (dup && w.dup === 'overwrite') ? dup.id : null
                 });
+
+                /* `ended_utc` und `final`: NUR, WENN DIE DATEI DIE SPALTE
+                 * FUEHRT (Backlog Nr. 28).
+                 *
+                 * Der Unterschied ist der ganze Punkt. Ein WEGGELASSENES Feld
+                 * heisst „die Datei sagt dazu nichts" — der Server bleibt beim
+                 * bisherigen Verhalten (Ende = Beginn, final = 1) und laesst
+                 * beim Ueberschreiben stehen, was dasteht. Ein Feld mit `null`
+                 * heisst „die Zelle ist leer" — und ein leeres Ende ist eine
+                 * Aussage: Der Einsatz ist nicht abgeschlossen.
+                 *
+                 * Bis Web 7.3.1 ging `ended_utc: m.ended || null` immer
+                 * hinaus, und beide Faelle sahen serverseitig gleich aus. Ein
+                 * nicht abgeschlossener Einsatz kam deshalb mit Ende = Beginn
+                 * und final = 1 zurueck — im Ueberschreiben-Modus auch dann,
+                 * wenn er im Bestand richtig stand (Fund F-P1-M). */
+                var letzte = missionen[missionen.length - 1];
+                if (fuehrt('ended')) { letzte.ended_utc = m.ended || null; }
+                if (fuehrt('final')) { letzte.final = m.final ? 1 : 0; }
             }
         }
         return { action: 'commit', days: tage, missions: missionen };

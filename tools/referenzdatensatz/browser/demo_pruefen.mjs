@@ -90,6 +90,73 @@ async function zustand() {
   return aus;
 }
 
+/* ---- RIEGEL: LAEUFT DAS HIER GEGEN DAS RICHTIGE KONTO? ------------------
+ *
+ * DIESES SKRIPT IST GEFAEHRLICH, und zwar an einer Stelle, die man ihm nicht
+ * ansieht. Schritt 3 loescht einen Einsatz, Schritt 5 versucht die
+ * E-Mail-Adresse zu aendern — beides in dem Konto, das unter `demo` erreichbar
+ * ist. Beim Demo-Konto ist das folgenlos (der Reset holt alles zurueck, und
+ * die Aenderung wird abgewiesen). Bei JEDEM ANDEREN Konto derselben Adresse
+ * ist es keins von beidem.
+ *
+ * Genau das ist auf der Referenzinstallation passiert: Dort traegt das
+ * REFERENZKONTO die Adresse demo@gen-em.org, und das Skript hat sie in
+ * `gekapert@example.org` geaendert und einen Einsatz geloescht. Der Befund
+ * „E-Mail-Aenderung wurde NICHT abgewiesen" stand danach im Bericht — richtig
+ * gemeldet, aber zu spaet: Der Schaden war schon angerichtet, und der
+ * Referenzstand musste neu aufgebaut werden.
+ *
+ * Der Riegel prueft VOR allem anderen: Gibt es ein Konto mit dieser Adresse,
+ * das NICHT das Demo-Konto ist? Dann bricht der Lauf ab, ohne etwas zu
+ * beruehren. Eine Pruefung, die ihren Pruefling zerstoeren kann, braucht eine
+ * Grenze, die nicht davon abhaengt, dass die Bedienerin aufpasst. */
+{
+  /* ER MUSS NACH INNEN SCHLIESSEN, NICHT NACH AUSSEN.
+   *
+   * Die erste Fassung dieses Riegels versagte OFFEN: Sie meldete eine
+   * gescheiterte Admin-Anmeldung ueber pruefe() — das notiert nur und laeuft
+   * weiter — und las danach eine Anmeldeseite statt der Kontoliste. Darin
+   * steht die Demo-Adresse nicht, also war `kontoDa` falsch, also griff der
+   * Riegel nicht, also lief genau der Lauf durch, gegen den er geschrieben
+   * wurde. Ein Riegel, der bei Unklarheit durchlaesst, ist keiner.
+   *
+   * Jetzt gilt: Wer nicht POSITIV feststellen kann, dass hier nichts
+   * kaputtgeht, bricht ab. */
+  const abbruch = (grund) => {
+    console.error(`\nABBRUCH. ${grund}\n`
+      + `Dieses Skript würde im Konto ${demo} einen Einsatz löschen und die\n`
+      + `E-Mail-Adresse ändern. Es wurde nichts angefasst. Für die\n`
+      + `Demo-Abnahme eine eigene Installation verwenden (oder das Konto\n`
+      + `vorher im Adminbereich entfernen).`);
+    return browser.close().then(() => process.exit(2));
+  };
+
+  if (!await anmelden(admin, adminPw)) {
+    await abbruch(`Die Anmeldung als Administration (${admin}) auf ${basis} ist\n`
+      + `gescheitert. Ohne sie lässt sich nicht feststellen, wem die Adresse\n`
+      + `${demo} auf dieser Installation gehört.`);
+  }
+  /* zustand() statt eigener Textsuche: Es kennt die Falle mit den Versalien
+     (die Beschriftungen stehen per CSS in Grossbuchstaben). */
+  const alsDemo = ((await zustand())['konto'] || '') === demo;
+
+  await seite.goto(`${basis}/admin_users.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(500);
+  const liste = await seite.locator('body').innerText();
+  /* NACHWEIS, DASS DIE LISTE WIRKLICH GELESEN WURDE: Die eigene Adresse der
+     Administration steht immer darin. Fehlt sie, ist das keine Kontoliste —
+     dann ist die Abwesenheit der Demo-Adresse nichts wert. */
+  if (!liste.includes(admin)) {
+    await abbruch(`Die Kontoliste auf ${basis} liess sich nicht lesen (die eigene\n`
+      + `Adresse der Administration steht nicht darin). Ohne sie ist nicht\n`
+      + `feststellbar, wem ${demo} gehört.`);
+  }
+  if (liste.includes(demo) && !alsDemo) {
+    await abbruch(`Auf ${basis} gibt es ein Konto ${demo}, das NICHT als\n`
+      + `Demo-Konto gekennzeichnet ist — vermutlich das Referenzkonto.`);
+  }
+}
+
 // ---- 1. Anlegen ---------------------------------------------------------
 if (schritte.includes('anlegen')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');

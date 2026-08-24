@@ -4,6 +4,10 @@ require_once __DIR__ . '/auth_guard.php';
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
+/* TRASH_DAYS fuer die Rueckmeldung der Wiederherstellung (E-S1-08). Kommt
+ * ueber demo_lib.php ohnehin mit — aber eine Frist, die auf der Seite steht,
+ * darf nicht an einem zufaelligen Umweg haengen. */
+require_once __DIR__ . '/trash_lib.php';
 
 $tab = $_GET['t'] ?? 'profil';
 /* „stammdaten" war bis Web 6.3.0 der Reiter, der alles trug. Er ist in zwei
@@ -1863,6 +1867,75 @@ ui_topbar('einstellungen');
       }
     });
 
+    /* ---- Rückmeldung einer Wiederherstellung, an EINER Stelle (E-S1-08) --
+     *
+     * Zwei Wege spielen ein — die eigene Datei und die freigegebene Sicherung
+     * der Administration —, und beide melden dasselbe. Bis Web 7.3.1 hatten
+     * sie zwei getrennte Textbausteine, und die liefen auseinander: Der zweite
+     * fasste alle Überspringgründe zu „bereits vorhanden oder unbrauchbar"
+     * zusammen und nannte weder Standortdaten noch die Höhenfehler. Jetzt gibt
+     * es einen Baustein.
+     *
+     * WAS ER SAGEN MUSS, und warum jedes Stück davon:
+     *  - Was angekommen ist (die vier Zahlen).
+     *  - Was NICHT angekommen ist, mit GRUND. „40 übersprungen" ist nicht
+     *    deutbar: Es kann „war alles schon da" heißen oder „war alles kaputt".
+     *  - Was in den PAPIERKORB gegangen ist. Diese Einträge stecken in den
+     *    Zahlen oben mit drin; ohne den Satz wären sie unauffindbar — sie
+     *    stehen ja gerade nicht in der Tagesliste.
+     *  - Dass die Frist NEU beginnt (E-S1-03). Wer eine alte Sicherung
+     *    einspielt, würde sonst annehmen, seine Einträge verfielen morgen.
+     */
+    const GRUND_TEXT = {
+      bereits_vorhanden: 'bereits vorhanden',
+      datum_oder_zeit:   'unbrauchbares Datum oder Zeit',
+      aufbau:            'unbrauchbarer Aufbau',
+      tag_im_papierkorb: 'Diensttag liegt hier im Papierkorb',
+      tag_unbrauchbar:   'unbrauchbares Datum des Diensttags',
+      tag_uebersprungen: 'Diensttag wurde übersprungen',
+      tag_mehrdeutig:    'Diensttag nicht eindeutig zuzuordnen',
+    };
+
+    /* „1 Diensttage" ist ein kleiner Fehler mit großer Wirkung: Er lässt den
+       ganzen Satz nach Maschine aussehen — und diese Sätze nennen Zahlen, die
+       oft genug auf 1 stehen. */
+    const zahlwort = (n, ein, viele) => (n === 1 ? '1 ' + ein : (n || 0) + ' ' + viele);
+
+    function restoreBericht(s, zusatz) {
+      const gruende = s.skipped_reasons && Object.keys(s.skipped_reasons).length
+        ? ' — ' + Object.entries(s.skipped_reasons)
+            .map(([k, v]) => (GRUND_TEXT[k] || k) + ' ' + v).join(', ')
+        : '';
+      const uebersprungen = (s.missions_skipped || s.rests_skipped || gruende)
+        ? ` Übersprungen: ${zahlwort(s.missions_skipped, 'Einsatz', 'Einsätze')}, `
+          + `${zahlwort(s.rests_skipped, 'Ruhesegment', 'Ruhesegmente')}${gruende}.`
+        : '';
+      const pk = s.papierkorb || {};
+      const pkSumme = (pk.einsaetze || 0) + (pk.diensttage || 0) + (pk.ruhezeiten || 0);
+      const papierkorb = pkSumme
+        ? ` In den Papierkorb übernommen: `
+          + `${zahlwort(pk.einsaetze, 'Einsatz', 'Einsätze')}, `
+          + `${zahlwort(pk.ruhezeiten, 'Ruhesegment', 'Ruhesegmente')}, `
+          + `${zahlwort(pk.diensttage, 'Diensttag', 'Diensttage')} — `
+          + `die <?= TRASH_DAYS ?>-Tage-Frist beginnt für sie neu.`
+        : '';
+      return `${zahlwort(s.missions, 'Einsatz', 'Einsätze')} übernommen, `
+        + `${zahlwort(s.rests, 'Ruhesegment', 'Ruhesegmente')}, `
+        + `${zahlwort(s.days, 'Diensttag', 'Diensttage')}, `
+        + `${zahlwort(s.stammdaten, 'Standortdaten-Eintrag', 'Standortdaten-Einträge')}`
+        + (s.stammdaten_skipped
+            ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '')
+        + '.' + uebersprungen + papierkorb + (zusatz || '')
+        /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
+         * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
+         * (M5-05). Wenn das passiert, gehört es gesagt — sonst fehlt später
+         * eine Höhenangabe ohne erkennbaren Grund. */
+        + (s.hoehe_fehler
+            ? ` Bei ${s.hoehe_fehler} Einsätzen ließ sich die Einsatzort-Höhe nicht `
+              + `berechnen; die Einsätze selbst sind vollständig übernommen.`
+            : '');
+    }
+
     // ---- Import: läuft vollständig im Browser ----
     document.getElementById('impbtn').addEventListener('click', async () => {
       const f = document.getElementById('bfile').files[0];
@@ -1982,25 +2055,7 @@ ui_topbar('einstellungen');
               ? ` ${uebernommenFremd} Einsätze brachten verschlüsselte Angaben mit, die `
                 + `in diesem Konto nicht lesbar sind.`
               : '');
-        impState.textContent = `Import fertig: ${s.missions} Einsätze übernommen `
-          + `(${s.missions_skipped} übersprungen${
-                s.skipped_reasons && Object.keys(s.skipped_reasons).length
-                  ? ': ' + Object.entries(s.skipped_reasons)
-                      .map(([k, v]) => ({bereits_vorhanden:'bereits vorhanden',
-                                         datum_oder_zeit:'unbrauchbares Datum oder Zeit',
-                                         aufbau:'unbrauchbarer Aufbau'}[k] || k) + ' ' + v)
-                      .join(', ')
-                  : ''}), ${s.rests} Ruhesegmente, `
-          + `${s.days} Diensttage, ${s.stammdaten} Standortdaten-Einträge`
-          + (s.stammdaten_skipped ? ` (${s.stammdaten_skipped} übersprungen, bereits systemweit vorhanden)` : '') + `.` + zusatz
-          /* Die Höhenberechnung läuft seit Web 4.6.0 NACH dem Einspielen und
-           * kann einzeln scheitern, ohne die Wiederherstellung zu gefährden
-           * (M5-05). Wenn das passiert, gehört es gesagt — sonst fehlt später
-           * eine Höhenangabe ohne erkennbaren Grund. */
-          + (s.hoehe_fehler
-              ? ` Bei ${s.hoehe_fehler} Einsätzen ließ sich die Einsatzort-Höhe nicht `
-                + `berechnen; die Einsätze selbst sind vollständig übernommen.`
-              : '');
+        impState.textContent = 'Import fertig: ' + restoreBericht(s, zusatz);
       } catch (e) {
         impState.textContent = 'Import fehlgeschlagen: ' + e.message;
       }
@@ -2033,11 +2088,23 @@ ui_topbar('einstellungen');
         const u = d.freigabe.umfang || {};
         const woher = d.freigabe.herkunft_email
           ? ` Sie stammt aus dem Konto ${d.freigabe.herkunft_email}.` : '';
+        /* „davon im Papierkorb" (E-S1-02). Die drei Zahlen davor zählen den
+           Papierkorb MIT — seit Nutzlast 7 steht er in jeder Sicherung. Fehlt
+           der Block (Sicherung von vor S1), bleibt der Zusatz weg: „nicht
+           erhoben" ist etwas anderes als „nichts drin". */
+        const pk = u.papierkorb;
+        const pkText = pk
+          ? ` Davon im Papierkorb: ${pk.einsaetze || 0} Einsätze, `
+            + `${pk.diensttage || 0} Diensttage, ${pk.ruhezeiten || 0} Ruhezeiten — `
+            + `sie kommen als Papierkorbeinträge zurück, und die 90-Tage-Frist `
+            + `beginnt dabei neu.`
+          : '';
         document.getElementById('freigabeinfo').textContent =
           `Die Administration hat eine Sicherung vom `
           + `${(d.freigabe.erzeugt || '').replace('T', ' ').replace('Z', ' UTC')} `
           + `für dich freigegeben: ${u.einsaetze || 0} Einsätze, `
-          + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.` + woher;
+          + `${u.diensttage || u.flugtage || 0} Diensttage, ${u.ruhezeiten || 0} Ruhezeiten.`
+          + pkText + woher;
         // Ohne geschützte Angaben gibt es nichts umzuschlüsseln — dann nach dem
         // Wiederherstellungsschlüssel zu fragen wäre eine Hürde ohne Zweck.
         document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;
@@ -2124,9 +2191,7 @@ ui_topbar('einstellungen');
           body: JSON.stringify({ eingeloest: true })
         });
         const s = out.stats;
-        fgState.textContent = `Fertig: ${s.missions} Einsätze übernommen `
-          + `(${s.missions_skipped} übersprungen, weil bereits vorhanden oder unbrauchbar), `
-          + `${s.rests} Ruhesegmente, ${s.days} Diensttage.`;
+        fgState.textContent = 'Fertig: ' + restoreBericht(s, '');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         fgState.textContent = 'Einspielen fehlgeschlagen: ' + e.message;

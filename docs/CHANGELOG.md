@@ -11,6 +11,428 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 8.0.0] — 2026-08-24
+
+**Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
+als Papierkorb zurück.** Dazu die beiden Importfehler, die der CSV-Kreislauf
+der Phase P1 gemessen hatte, drei Stellen, an denen eine kaputte Datei bisher
+nicht ihre Zeile, sondern den ganzen Einspielvorgang kostete, und die drei
+Wege, auf denen ein Einsatz an einem gelöschten Diensttag landen konnte.
+Nutzlastversion der Sicherung 6 → 7. **Keine Migration** — die Spalten liegen
+seit jeher, sie standen nur leer in der Datei.
+
+### Web — Der Papierkorb in der Sicherung (Backlog Nr. 30)
+
+Bis hierher filterte `edbak_build()` an drei Stellen auf
+`deleted_at IS NULL`. Die Begründung dafür stand im Kopfkommentar und klang
+einleuchtend: „Wer eine Sicherung erstellt, sichert seinen Bestand, nicht
+seinen Abfall."
+
+Sie war falsch, und zwar an der Stelle, an der es teuer wird. Der Papierkorb
+ist kein Abfall — er ist ein **wiederherstellbarer Zustand mit laufender
+Frist** (90 Tage, `TRASH_DAYS`). Der praktische Fall: Jemand löscht
+versehentlich einen Diensttag, sichert am selben Abend, merkt den Fehler erst
+Wochen später und spielt die Sicherung zurück. Er verliert genau das, was er
+zurückholen wollte — endgültig und ohne einen Hinweis, dass etwas fehlt.
+
+**Was geändert wurde.** Der Filter ist weg, ebenso der Parameter
+`$mitPapierkorb`, mit dem bis Web 7.3.0 nur die Demo-Fixture den Papierkorb
+mitnahm. Jede Sicherung enthält ihn jetzt: die eigene, die der Administration
+und die Fixture. Die Nutzlastversion steigt auf **7**.
+
+**Keine Wahlmöglichkeit auf der Sicherungsseite**, und das ist Absicht: Ein
+Haken „Papierkorb mitsichern" verschöbe die Entscheidung auf den Zeitpunkt, an
+dem am wenigsten überlegt wird. Eine Sicherung ist ein Abbild. Sichtbar wird
+der Anteil stattdessen dort, wo Zahlen ohnehin stehen — in der
+Sicherungsübersicht der Administration („davon im Papierkorb: 5 Einsätze,
+1 Diensttag, 5 Ruhezeiten"), im Hinweis auf eine freigegebene Sicherung und im
+neuen Unterblock `umfang.papierkorb` der Admin-Sicherung. Der Unterblock ist
+additiv; die Paketversion der Admin-Sicherung bleibt 1, und wo er fehlt
+(Sicherungen von vorher), zeigt die Anzeige **nichts** statt einer Null —
+„nicht erhoben" ist etwas anderes als „nichts drin".
+
+**Der Sprung auf Nutzlast 7 kennzeichnet, er sperrt nicht.** Die
+Annahmeschranke in `api/backup_restore.php` bleibt bei „ab Version 6": Eine
+Version-6-Datei enthält keinen Papierkorb, ihr fehlt aber nichts, was sich
+erraten müsste — sie bleibt vollständig einspielbar. Umgekehrt gilt: Ein
+bereits **ausgelieferter** Stand hat dieselbe Schranke, wertet `deleted_at`
+aber nicht aus und brächte den Papierkorb einer v7-Datei als aktiven Bestand
+zurück. Das ließ sich nachträglich nicht verhindern — eine Sperre hätte in
+jenen Ständen stehen müssen. Es steht deshalb als Warnung in
+`docs/Backup-Format.md` 4, statt als Zusage behauptet zu werden, die niemand
+prüfen kann.
+
+**Nebenbei berichtigt:** `docs/Technik.md` nannte an einer Stelle eine
+„30-Tage-Frist" für den Papierkorb. Es sind 90 (`TRASH_DAYS`), und alle
+übrigen Stellen sagten das auch.
+
+### Web — Der Rückweg: Papierkorb kommt als Papierkorb zurück
+
+Die Datei zu füllen ist die halbe Arbeit. `edbak_restore()` schrieb keine der
+drei Spalten (`days.deleted_at`, `missions.deleted_at`/`deleted_with_day`, und
+dieselben zwei an den Ruhesegmenten) — ein bloßes Abschalten des Filters hätte
+den Papierkorb als **aktiven** Bestand zurückgebracht, und das wäre schlimmer
+als ihn zu verlieren: Was jemand gelöscht hat, stünde nach der
+Wiederherstellung wieder in der Tagesliste.
+
+**Der Zustand kommt aus der Datei, der Zeitpunkt aus dem Einspielvorgang.**
+Alle Einträge eines Laufs tragen denselben `deleted_at`, und die 90 Tage
+beginnen neu. Dieselbe Linie wie bei `origin`: Der Eintrag entsteht in dieser
+Installation neu. Die Gegenrechnung wäre teuer — eine ältere Sicherung brächte
+Einträge mit abgelaufener Frist mit, und der nächste Aufräumjob entfernte sie
+endgültig, ohne dass jemand sie je gesehen hätte.
+
+**Die Invariante, ohne die es einen Zombie gäbe.** `deleted_with_day = 1` wird
+nur geschrieben, wenn der Eintrag **in der Datei** am Tag hing **und** der
+**Zieltag** selbst im Papierkorb liegt — sonst `0`. Der Grund steht in zwei
+Zeilen an anderer Stelle: `trash_list_missions()` zeigt nur
+`deleted_with_day = 0`, `trash_restore_day()` holt nur zurück, was am
+gelöschten Tag hängt. Beide Hälften sind nötig:
+
+- Ein Eintrag mit `deleted_with_day = 1` an einem **aktiven** Tag wäre
+  unsichtbar **und** unwiederbringlich. Ein in der Datei mitgelöschter
+  Einsatz, dessen Zieltag hier aktiv ist, kommt deshalb einzeln gelöscht an.
+- Ein in der Datei **einzeln** gelöschter Einsatz an einem hier ebenfalls
+  gelöschten Tag bliebe umgekehrt nur dann auffindbar, wenn der Wert der Datei
+  mitzählt. Er darf nicht zum Mitgelöschten werden: Er verschwände aus der
+  Papierkorbliste und würde beim Wiederherstellen des Tages wieder aktiv,
+  obwohl ihn jemand ausdrücklich gelöscht hatte.
+
+Der Zieltag ist damit eine **notwendige, keine hinreichende** Bedingung.
+
+**D1 hat jetzt zwei Hälften.** Die Datumsprüfung gegen den Papierkorb des
+Zielkontos gilt weiter — aber nur für **aktive** Datei-Tage. Ein in der Datei
+gelöschter Tag will gar nicht aktiv werden; ihn am Ziel-Papierkorb zu messen
+ergäbe keinen Sinn. Er durchläuft die normale Wiedererkennung und entsteht,
+wenn er fehlt, als Papierkorbeintrag. Wird er gefunden, bleibt der Zieltag
+unangetastet — „Angaben werden nicht überschrieben" gilt für den Löschzustand
+wie für alles andere.
+
+**Und die Gegenrichtung: Ein aktiver Eintrag an einem gelöschten Zieltag wird
+abgelehnt.** Landet ein in der Datei aktiver Einsatz oder ein Ruhesegment auf
+einem Zieltag, der hier im Papierkorb liegt, stünde er an einem Tag, den die
+Tagesübersicht nicht zeigt: in der Suche und auf der Einsatzseite sichtbar, in
+Tagesliste, Zeitraum, Export, Nachbearbeitung und Papierkorb nicht — und beim
+endgültigen Löschen des Tages bliebe er ohne Diensttag zurück. Halb sichtbar
+ist schlechter als unsichtbar. Er wird deshalb übersprungen und unter
+`tag_im_papierkorb` gezählt: dieselbe Regel wie D1, eine Ebene tiefer. Die
+Datumsprüfung von D1 fängt den Fall nicht ab, denn die Wiedererkennung über
+`client_ref` kann auf einen Zieltag anderen Datums führen.
+
+**Die Rückmeldung war unvollständig und ist es nicht mehr.** Sie kannte drei
+Überspringgründe von fünf; `tag_im_papierkorb` und `tag_unbrauchbar`
+erschienen als roher Schlüssel. Einsätze und Ruhesegmente eines übersprungenen
+Tages liefen unter „unbrauchbares Datum oder Zeit" — irreführend, denn an
+ihrem Datum ist nichts auszusetzen; sie haben einen neuen, eigenen Grund
+(`tag_uebersprungen`). Ruhesegmente zählten ihre Gründe **gar nicht** mit,
+obwohl „bereits vorhanden" bei ihnen der häufigste Fall ist. Und die beiden
+Einspielwege — eigene Datei und freigegebene Sicherung — hatten zwei getrennte
+Textbausteine, die auseinandergelaufen waren; jetzt gibt es einen.
+
+### Web — Eine kaputte Sicherungsdatei kostete den ganzen Lauf (Backlog Nr. 31 und 35)
+
+Das Einspielen hängt an **einer** Transaktion. Das ist richtig so — ein halb
+eingespielter Bestand wäre schlimmer als keiner —, hat aber eine Kehrseite:
+Jede Datenbankausnahme reißt alles mit, auch die neunzig heilen Einsätze
+daneben, und der Aufrufer sieht statt einer Bilanz nur eine Fehlermeldung.
+Genau dafür gibt es die Prüfschicht: prüfen, im Zweifel die Zeile
+überspringen, den Grund zählen. An drei Stellen fehlte sie.
+
+**Die Ruhesegmente hatten gar keine.** `started_at` und `ended_at` gingen roh
+gegen `DATETIME NOT NULL`, `client_ref` ohne Längengrenze gegen `VARCHAR(64)`,
+und die Spur wurde ungeprüft und unbegrenzt geschrieben — `(float)"Unfug"` ist
+`0.0`, aus einem unbrauchbaren Punkt wurde also still eine gültige Koordinate
+im Golf von Guinea. Beim Einsatz war dieselbe Richtung längst eingebaut; die
+Ruhesegmente sind damals übersehen worden. Das Schreiben der Spur ist jetzt
+**eine** Funktion für beide Arten statt zweier auseinandergelaufener Kopien.
+
+**Doppelte Spurnummern kippten den Lauf.** `track_points` hat den
+Primärschlüssel `(owner_type, owner_id, seq)`. Der Wertebereich von `seq` war
+geprüft, seine Eindeutigkeit nicht. Der zweite Punkt mit derselben Nummer wird
+jetzt übersprungen und als `…track.seq: Nummer doppelt` gemeldet. Der kürzere
+Weg wäre `INSERT IGNORE` gewesen — der stille: Die Datei behielte einen
+Fehler, den niemand zu sehen bekommt.
+
+Betroffen sind nur Dateien fremder oder von Hand bearbeiteter Herkunft; ein
+eigener Export erzeugt weder unbrauchbare Zeiten noch Wiedergänger. Das ist
+kein Grund, es stehen zu lassen: Eine Wiederherstellung ist der Moment, in dem
+jemand ohnehin schon etwas verloren hat.
+
+### Web — Der halb sichtbare Einsatz hat keinen Weg mehr (Backlog Nr. 33)
+
+Ein **aktiver** Einsatz an einem **gelöschten** Diensttag ist der Zustand, den
+das Einspielen einer Sicherung seit dieser Fassung ablehnt (E-S1-19). Die
+Anwendung selbst konnte ihn herstellen — mit einem Klick.
+
+**Der Papierkorb lehnt jetzt ab.** Ein einzeln gelöschter Einsatz steht in der
+Liste des Papierkorbs, auch wenn sein Diensttag danach ebenfalls gelöscht
+wurde. „Wiederherstellen" machte ihn aktiv — an einem Tag, den die
+Tagesübersicht nicht zeigt. Jetzt sagt die Seite, was zu tun ist: erst den
+Diensttag zurückholen. Ihn stillschweigend mitzurückzuholen wäre die falsche
+Großzügigkeit — ein Klick auf **einen** Einsatz würde einen ganzen Dienst samt
+aller übrigen Einsätze wiederbeleben.
+
+**Die Uhr löst einen neuen Diensttag aus.** Zeigt eine Dienstkennung in
+`day_refs` auf einen gelöschten Tag, entsteht ein neuer, und die Kennung wird
+auf ihn umgebogen. Den Upload stattdessen zu verwerfen wäre die schlechtere
+Wahl: Die Uhr hat den Dienst geflogen, und sie sendet ein Paket nur, bis der
+Server es quittiert — verworfen ist fort. Ein zusätzlicher Diensttag dagegen
+ist umkehrbar; stellt sich heraus, dass er doch zum alten gehört, führt
+`diensttag_zusammenfuehren.php` beide zusammen. Der gelöschte Tag verliert
+dabei seine Kennung, und das ist richtig so: Wird er später zurückgeholt,
+gehört die weiterlaufende Uhr-Sitzung zum neuen Tag.
+
+**Das endgültige Löschen lässt kein Waisenkind zurück.** `trash_purge_day()`
+entfernte nur die **gelöschten** Einsätze des Tages und danach den Tag; ein
+aktiver Einsatz daran überlebte den ersten Schritt und verlor im zweiten
+seinen Diensttag (`ON DELETE SET NULL`). Danach war er in der Suche und auf
+der Einsatzseite sichtbar, in Tagesübersicht, Zeitraum, Export und
+Nachbearbeitung nicht, im Formular nicht mehr zu öffnen — und in der Sicherung
+zwar enthalten, beim Einspielen aber übersprungen, weil ihm der Diensttag
+fehlt. Ein Datensatz, der gerettet aussah und beim nächsten Umlauf still
+verschwand.
+
+Jetzt geht alles mit, und die Rückfrage **nennt es vorher einzeln** mit Datum,
+Uhrzeit und einem Link zum Verschieben. *Ablehnen* wäre die scheinbar
+vorsichtigere Wahl gewesen und ist eine Sackgasse: Diese Einsätze stehen in
+keiner Liste, man kann sie also nicht wegräumen — der Diensttag wäre nie
+loszuwerden.
+
+**Was vorher entstanden ist, meldet die Wartungsseite.** `update.php` zählt
+aktive Einsätze ohne Diensttag und listet sie mit Konto, Beginn und Kennung.
+Sie ändert nichts: Welcher Diensttag der richtige ist, weiß eine
+Wartungsseite nicht. Als Bericht und nicht als Migration, damit die Meldung
+so lange stehen bleibt, wie es den Zustand gibt.
+
+### Web — Die Diensttag-Wiedererkennung rät nicht mehr (Backlog Nr. 34)
+
+Beim Einspielen erkennt `edbak_restore()` einen Diensttag zuerst über die
+Einsatzkennungen (`client_ref`), ersatzweise über einen Fingerabdruck aus
+Datum, Beginn, Ende, Art und Bezeichnungen. Schritt 1 nahm den **ersten**
+gefundenen Einsatz und verhängte dessen Diensttag über **alle** Einsätze und
+Ruhesegmente des Datei-Tags. Drei Dinge waren daran falsch: Hatte jemand im
+Zielkonto einen dieser Einsätze auf einen anderen Tag verschoben, wanderte der
+ganze Datei-Tag mit; führte der Treffer auf einen Tag im Papierkorb, wurden
+seither alle aktiven Einträge des Datei-Tags abgelehnt (richtig gezählt — aber
+angekommen war nichts); und `LIMIT 1` ohne `ORDER BY` bei einer Kennung, die
+nur je Gerät eindeutig ist, ließ offen, welcher Treffer gewinnt.
+
+Jetzt werden **alle** Kennungen des Datei-Tags nachgeschlagen, und nur auf
+aktive Zieltage. Genau ein Ergebnis wird benutzt — das bisherige Verhalten,
+jetzt belegt. Mehrere verschiedene heißen: Schritt 1 weiß es nicht. Dann
+entscheidet der Fingerabdruck, und der Widerspruch erscheint als
+`tag_mehrdeutig` in der Rückmeldung. Die richtige Antwort auf „raten" ist
+nicht, anders zu raten, sondern zu merken, dass man es nicht weiß.
+
+**Der Fingerabdruck bleibt Schritt 2**, obwohl er hier zuverlässiger gewesen
+wäre. Er ist der sprödere Anker: Er bricht, sobald jemand am Zieltag Beginn,
+Ende, Art, Rettungsmittel oder Station berichtigt hat — und das ist der
+häufige Fall. `client_ref` ist stabil. Ihn zurückzustufen verschlechterte den
+häufigen Fall zugunsten des seltenen.
+
+### Web — `created_at` kommt zurück (Backlog Nr. 25)
+
+Der Anlegezeitpunkt eines Einsatzes wurde immer gesichert und nie eingespielt.
+Nach einer Wiederherstellung trugen alle Einsätze den Zeitpunkt des
+Einspielens — am Referenzdatensatz gemessen 79 verschiedene Werte davor, 5
+danach. Fachlich folgenlos (`started_at` ist die Zeit, die zählt), aber es war
+ein stiller Verlust, und das Vergleichswerkzeug sah ihn nicht, weil es
+`created_at` wegnormalisierte.
+
+Er steht jetzt als benannte Ausnahmespalte neben `start_src` und `pat_blob`.
+Ein unbrauchbarer Wert lässt die Spalte **weg** statt `NULL` zu schreiben —
+dann greift die Vorgabe der Datenbank und die Zeile bleibt. Gemessen: 87 von
+87 Einsätzen tragen nach dem Umlauf denselben Wert wie vorher.
+
+### Web — Der Demo-Reset kommt ohne Nachlauf aus
+
+Weil das Sicherungsformat keine gelöschten Einträge kannte, stellte der
+Demo-Reset den Papierkorb bisher **nach** dem Einspielen nach: Ein Drehbuch in
+der Fixture nannte Einsätze und Diensttage, die `demo_nachlauf()` anschließend
+über die regulären Löschwege wieder löschte. Das musste nach dem Commit
+laufen, weil `trash_delete_*()` je eine eigene Transaktion öffnen — der Reset
+zerfiel damit in zwei Schritte, von denen der zweite fehlschlagen konnte
+(sichtbar, harmlos, aber eben ein zweiter Schritt).
+
+Der Grund ist weg, also ist das Drehbuch weg: `demo_nachlauf()`, der
+Fixture-Block `nachlauf` und dessen Erzeugung sind entfallen. Der Reset ist
+wieder **ein** Vorgang in **einer** Transaktion; die Papierkorbzahlen im
+Bericht kommen aus den Zählern der Einspielroutine. Die Fixture zählt
+deshalb auf **Format 2** hoch — die Nummer kennzeichnet den entfallenen Block,
+sie sperrt nichts: `demo_fixture_laden()` bleibt tolerant, und eine Fixture
+der Version 1 lässt sich weiterhin einspielen (ihr `daten`-Block trägt
+`deleted_at` bereits, ihr `nachlauf` wird nur nicht mehr gelesen).
+
+Nebenwirkung, die gut passt: Weil beim Einspielen ohnehin der
+Einspielzeitpunkt gesetzt wird, stempelt **jeder** Reset die 90-Tage-Frist
+frisch. Das Demo-Konto hält seinen Papierkorb damit von selbst am Leben.
+
+### Web — Mehrzeilige Notizen verloren beim CSV-Rückimport ihre Umbrüche (Backlog Nr. 27)
+
+Der Parser `trim` in `assets/import.js` zieht jede Leerraumfolge auf ein
+Leerzeichen zusammen — und ein Zeilenumbruch ist Leerraum. Eine dreizeilige
+Notiz kam damit einzeilig zurück: Der Text war vollständig, seine **Gliederung**
+war weg, und niemand bekam davon etwas zu sehen. Gemessen im Kreislauf der
+Phase P1 an vier Notizen (Fund F-P1-L).
+
+Für die Notizspalten gilt jetzt `trimMehrzeilig`: zusammengezogen wird nur
+**innerhalb** einer Zeile, Zeilenenden werden vorher vereinheitlicht (eine
+CSV-Datei aus Excel bringt `\r\n` mit, und ein stehengebliebenes `\r` wäre ein
+unsichtbares Zeichen im Bestand). Leerzeilen am Anfang und Ende fallen weg, die
+in der Mitte bleiben — sie sind Gliederung, kein Rest. Bei einzeiligen Werten
+ist das Ergebnis identisch zu `trim`, die Längengrenze bleibt 2000 Zeichen.
+
+Betroffen sind alle drei Profile, die eine Notizspalte lesen: `export_csv_v1`
+(`notizen`), `export_excel_v1` und das GuteSeele-Layout (je `Notizen`).
+Diensttag-Notizen kommen über keinen Import zurück und waren nie betroffen.
+
+### Web — „Nicht abgeschlossen" überstand den CSV-Rückimport nicht (Backlog Nr. 28)
+
+`api/import_commit.php` schrieb `final` im INSERT als **Literal 1**, und das
+UPDATE fasste die Spalte gar nicht an. Ein leeres Ende fiel auf den Beginn
+zurück. Der einzige nicht abgeschlossene Einsatz des Referenzdatensatzes kam
+deshalb als abgeschlossen zurück — im Überschreiben-Modus auch dann, wenn er im
+Bestand richtig stand (Fund F-P1-M). Das trifft dieselbe Zusage wie Nr. 27:
+`Export-Format.md` nennt `export_csv_v1` **verlustfrei**.
+
+**Beides ist Zustand, nicht Entstehung**, und kommt jetzt aus der Datei — in
+INSERT und UPDATE. Anders als `herkunft` und `edited` sagen `final` und `ende`
+nichts über das Quellkonto aus, sondern über den Einsatz.
+
+Der Punkt dabei ist eine Unterscheidung, die es vorher nicht gab: **eine
+fehlende Spalte ist etwas anderes als eine leere Zelle.** Fehlt die Spalte im
+Profil (Jahresliste, Excel), bleibt es beim bisherigen Verhalten — Ende =
+Beginn, beim Anlegen `final = 1`, beim Überschreiben `final` unangetastet. Ist
+die Zelle leer, ist das eine Aussage: Ende offen. Der Browser sendet
+`ended_utc` und `final` deshalb nur noch, wenn das Profil die Spalte führt
+(`import_ui.js`); `api/import_commit.php` unterscheidet „Feld fehlt" von „Feld
+ist null". Das Profil `export_csv_v1` übernimmt `final` (stand bis hierher auf
+`target: null`).
+
+Damit steht der CSV-Kreislauf auf **0 unerklärten Abweichungen** (vorher 6:
+vier Notizen, `final`, `ende`).
+
+### Dokumentation — Die Ausnahmeliste des CSV-Rückwegs war unvollständig (Backlog Nr. 24 und 29)
+
+`Export-Format.md` 5.1 nannte `export_csv_v1` verlustfrei und zählte **drei**
+bewusste Ausnahmen auf. Gemessen sind es **sechs**. Die drei fehlenden:
+
+- **Ruhesegmente kommen nicht zurück** (95 → 0). Es gibt keinen Importweg für
+  sie; das Profil liest `einsaetze.csv`.
+- **Der zweite Dienst eines Kalendertags geht verloren** (15 → 13 Diensttage;
+  die zweite fehlende Zeile ist ein Diensttag ohne Einsatz). `gruppiere()`
+  bündelt nach Kalendertag, obwohl seit Web 6.0.0 zwei Dienste an einem Datum
+  zulässig sind.
+- **Der Formelschutz-Apostroph bleibt im Wert stehen** (3 Zellen). Der Export
+  stellt ihn Textwerten voran, die mit `=`, `+`, `-`, `@` beginnen; der Import
+  entfernt ihn nicht. Nach einem Umlauf steht er im Bestand.
+
+Die dritte ist die unauffälligste, denn ein Kreislauftest **sieht sie nicht**:
+Der nächste Export fügt keinen zweiten Apostroph hinzu (`'` ist kein
+Formel-Anfangszeichen), die Datei sieht unverändert aus — während der
+gespeicherte Wert ein Zeichen länger geworden ist. Sie wird bewusst **nicht
+behoben**: Ein Import, der einen führenden Apostroph entfernt, schafft den
+nächsten stillen Verlust, denn ein echtes `'` am Textanfang verschwände.
+
+Die Überschrift heißt jetzt „verlustfrei **für Einsätze**". Sechs Ausnahmen
+sind kein Grund, das Wort zu streichen — aber einer, es einzugrenzen.
+
+Dazu in Abschnitt 6: **Der Papierkorb ist in keinem Exportprofil enthalten**,
+und seit dieser Fassung ist das ein Unterschied zur Sicherung, die ihn führt.
+Wer gelöschte Einträge erhalten will, nimmt das Backup.
+
+### Werkzeug — Das Vergleichswerkzeug sah an zwei Stellen weg
+
+Nicht ausgeliefert (`tools/referenzdatensatz/`), aber Teil derselben Änderung:
+Ein Kreislauftest ist nur so viel wert wie das, was er anschaut.
+
+**`missions[].created_at` wird nicht mehr wegnormalisiert.** Es war als
+flüchtiger Anteil eingetragen — und genau das hatte den Verlust jahrelang
+verdeckt: Der Kreislauf sah ihn nicht, weil das Werkzeug wegsah. Jetzt wird der
+Wert verglichen. Die Kopfangabe `created_at` der Datei (Zeitpunkt des Exports)
+bleibt normalisiert; sie ist tatsächlich flüchtig.
+
+**`deleted_at` wird normalisiert, aber nicht weggenommen.** Der Zeitpunkt
+entsteht beim Einspielen neu und kann nicht überleben; die Unterscheidung
+leer/gesetzt **muss** überleben, denn „Papierkorbeintrag kommt als
+Papierkorbeintrag zurück" ist die Aussage, die der Kreislauf belegen soll. Ein
+gesetzter Wert wird durch die Zeitmarke ersetzt, ein leerer bleibt leer. Eine
+*Ausnahmeregel* dafür wäre ein Filter gewesen — sie hätte die Aussage
+mitweggenommen.
+
+Die Probe aufs Exempel (`--testabweichung`) hat für die Sicherung zwei neue
+Paare: Papierkorb-Zustand geändert → muss gemeldet werden, Löschzeitpunkte
+verschoben → darf nicht; `created_at` eines Einsatzes geändert → muss gemeldet
+werden (bis hierher eine Gegenprobe mit umgekehrter Erwartung), Kopfangabe
+geändert → darf nicht. **12/12 für die Sicherung, 10/10 für CSV.**
+
+Die Ausnahmelisten tragen neu gemessene Zahlen. Für die behobenen Fehler Nr. 27
+und Nr. 28 sind **keine** Regeln hinzugekommen — behebbare Abweichungen gehören
+nicht in eine Ausnahmeliste, sondern behoben.
+
+### Wer nachbessern muss
+
+**Niemand — aber zwei Dinge sind zu wissen.**
+
+Eine Sicherung, die vor dieser Fassung erstellt wurde, enthält den Papierkorb
+nicht und kann ihn deshalb auch nicht zurückbringen. Wer gelöschte Einträge in
+einer alten Sicherung vermisst: Sie waren nie darin. Erst nach diesem Update
+erstellte Sicherungen führen sie.
+
+Umgekehrt: Wer eine Sicherung **aus** dieser Fassung in eine **ältere**
+Installation einspielt, bekommt ihren Papierkorb dort als **aktiven Bestand**
+zurück. Die Annahmeschranke sitzt seit Web 6.0.0 bei Nutzlast 6 und lässt eine
+Version-7-Datei durch; nachträglich lässt sich daran nichts ändern. Wer das
+tut, sieht anschließend in der Tagesübersicht nach.
+
+### Geprüft
+
+Beide Kreisläufe gegen den kanonischen Referenzdatensatz, der dafür neu
+gezogen wurde (87 Einsätze / 5 im Papierkorb, 100 Ruhesegmente / 5,
+16 Diensttage / 1, 55 861 Spurpunkte):
+
+| | vor S1 | mit 8.0.0 |
+|---|---|---|
+| Sicherung: Einzelvergleiche | 269 439 | **286 739** |
+| Sicherung: erwartete Abweichungen | 15 | 16 |
+| Sicherung: **unerklärte** | 0 | **0** |
+| CSV: Einzelvergleiche | 8 797 | 8 797 |
+| CSV: erwartete Abweichungen | 858 | 859 |
+| CSV: **unerklärte** | **6** | **0** |
+
+Der Sicherungs-Kreislauf stand vorher schon auf null — aber er verglich
+weniger: Der Papierkorb war gar nicht in der Datei. Die 17 300 zusätzlichen
+Einzelvergleiche sind der Zuwachs.
+
+Dazu: Probe aufs Exempel **12/12** (Sicherung, vier Proben neu) und **10/10**
+(CSV); die Invariante `deleted_with_day` über alle Konten der Prüfinstallation
+**0 Verstöße**; `created_at` nach dem Umlauf **87 von 87 wörtlich gleich**;
+Demo-Abnahme **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**;
+Angriffswerte-Regression **42 Einzelprüfungen, 0 Befunde**.
+
+Dazu zwei neue Prüfmittel für die Fälle, die der Kreislauf nicht herstellen
+kann — sein Referenzbestand hat keinen Diensttag mit beiden Löscharten
+nebeneinander:
+
+- `tools/wiederherstellungs-probe/` misst sie in der Datenbank:
+  **30 Erwartungen, 0 nicht erfüllt** über vier Teile (Papierkorb aus der
+  Datei, kaputte Datei, die drei Wege zum halb sichtbaren Einsatz, die
+  Wiedererkennung). Gegen den Stand vor der Korrektur fallen **11 von 30**
+  durch, gegen den Stand vor der Nachlese **12 von 16** der damaligen
+  Erwartungen.
+- `browser/papierkorb_misch.mjs` misst dieselben Fälle durch den Browser —
+  löschen, sichern, in ein leeres Konto einspielen, Papierkorbseite lesen,
+  Zurückholen versuchen, Diensttag wiederherstellen: **14 Einzelprüfungen, 0
+  Befunde, 0 Konsolenfehler**. Gegen den Stand vor der Korrektur **4 Befunde**;
+  gegen den davor **2**, darunter: Das Zielkonto zeigte 1 statt 3 einzeln
+  gelöschte Einsätze, und der gelöschte Diensttag nannte 6 Einsätze statt 5 —
+  der einzeln gelöschte war in ihm verschwunden.
+
+Was **nicht** geprüft werden konnte, steht in
+`docs/Pruefdokument-S1-Sicherung-Import.md`, Abschnitt 1 — allen voran der
+Absatz „Wer nachbessern muss" oben: Dass ein älterer Stand eine v7-Datei
+annimmt, ist weder geprüft noch prüfbar.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**

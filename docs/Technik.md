@@ -116,7 +116,7 @@ hems/
 │   │                      EINZIGE Erzeugnis der Phase P1, das ausgeliefert
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
-│   │                      Reset-Fälligkeit, Papierkorb-Nachlauf (Abschnitt 4.99a)
+│   │                      Reset-Fälligkeit (Abschnitt 4.99a)
 │   ├── admin_demo.php     die zugehörige Adminseite
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt wird über update.php)
@@ -141,13 +141,19 @@ hems/
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
 │   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
-│   │   │                  werte (P-07), Exporte, Abnahme der Demo-Funktion
+│   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
+│   │   │                  Abnahme der Demo-Funktion
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz
-│   └── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
-│                          Erscheinungsbild nicht verändert: Kaskadenvergleich
-│                          plus berechnete Stile im Browser (s. LIESMICH.md)
+│   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
+│   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
+│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
+│   └── wiederherstellungs-probe/
+│                          Grenzfälle von edbak_restore(), die der Kreislauf
+│                          nicht herstellen kann: Papierkorb-Mischfall und
+│                          kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
+│                          s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -1027,11 +1033,28 @@ beim Ausgangsausschnitt der Karte.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
-Tagesliste, Backup) filtern darauf. `trash_lib.php` bündelt Umfangsermittlung,
+Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit Web
+8.0.0 führt sie den Papierkorb und spielt ihn als Papierkorb zurück
+(`docs/Backup-Format.md` 2 und 3). `trash_lib.php` bündelt Umfangsermittlung,
 weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
 `db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
 Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
-sie hängen am Tag und kehren mit ihm zurück. `ingest.php` quittiert Uploads für
+sie hängen am Tag und kehren mit ihm zurück.
+
+**Ein aktiver Eintrag an einem gelöschten Diensttag ist ausgeschlossen** (seit
+Web 8.0.0, Backlog Nr. 33). Er wäre halb sichtbar: in Suche und Einsatzseite
+ja, in Tagesübersicht, Zeitraum, Export und Nachbearbeitung nicht (alle joinen
+`days`), im Formular nicht zu öffnen — und beim endgültigen Löschen des Tages
+bliebe er ohne `day_id` zurück. Vier Stellen halten das:
+`trash_restore_mission()` lehnt ab, solange der Diensttag im Papierkorb liegt
+(und liefert dafür einen Grund statt `void`); `dt_zu_dayref()` und der
+`$vorhandenerDayId`-Zweig in `ingest.php` übergehen gelöschte Tage, sodass die
+Uhr einen **neuen** Tag auslöst (die Dienstkennung in `day_refs` wird auf ihn
+umgebogen); `trash_purge_day()` nimmt **alles** am Tag mit statt nur das
+Gelöschte, und die Rückfrage nennt das Aktive vorher einzeln
+(`trash_aktiv_am_tag()`); und beim Einspielen einer Sicherung gilt E-S1-19.
+Altbestand meldet `update.php` unter „Einsätze ohne Diensttag" — als Bericht,
+nicht als Migration. `ingest.php` quittiert Uploads für
 Einträge im Papierkorb, verwirft sie aber; erst das endgültige Löschen schreibt
 die Referenz nach `deleted_refs`. Schwere Löschungen laufen über serverseitige
 Zwischenseiten mit Umfangsanzeige statt über Browser-Dialoge.
@@ -1661,7 +1684,7 @@ Die Bausteine im Einzelnen:
 | Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_codes`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
-| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (30-Tage-Frist), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungscodes). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
+| Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungscodes). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
 | Sitzungsende | `session_lib.php` | Eine Fassung für Abmelden, Ablauf, gelöschtes Konto **und** Passwortwechsel; räumt die Schlüssel im Browser und nennt den Grund. `session_verwerfen()` für Abrufe, die JSON erwarten. |
 | E-Mail-Adressen | `server/email_lib.php` | Eine Fassung für Normalisierung (`email_normalisieren()`), Prüfung (`email_pruefen()`) und Dublettenerkennung (`ist_dublettenfehler()`). **Ohne Abhängigkeiten**, damit `install.php` sie vor der Ersteinrichtung laden kann. |
 | Rollenprüfung | `auth_guard.php` | `ist_admin()` ist die einzige Stelle, an der die Frage gestellt wird; `require_admin()` und `ui.php` setzen darauf auf. |
@@ -1734,14 +1757,18 @@ nicht bloß zugesichert:
 #### Die Fixture
 
 `server/demo/fixture.json.gz`, erzeugt von
-`tools/referenzdatensatz/fixture/erzeugen.php`. Vier Teile:
+`tools/referenzdatensatz/fixture/erzeugen.php`. Drei Teile:
 
 | Teil | Inhalt |
 |---|---|
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
 | `geraete` | `device_id`, `api_key_hash`, `label` |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
-| `nachlauf` | welche Einsätze und Diensttage nach dem Einspielen in den Papierkorb gehören |
+
+**Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen
+(unten). Pflicht sind weiterhin nur `konto` und `daten`; `demo_fixture_laden()`
+bleibt tolerant, eine Fixture der Version 1 lässt sich also weiterhin
+einspielen — ihr `nachlauf`-Block wird schlicht nicht mehr gelesen.
 
 **Warum sie nicht aus einer `.edbak` kommen kann.** Die Sicherungsdatei trägt
 die geschützten Angaben im **Klartext** — der Browser entschlüsselt vor dem
@@ -1756,8 +1783,8 @@ Sicherung aufbaut, aber serverseitig — dort steht `pat_blob` noch als
 Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder annimmt.
 Der Erzeuger bricht ab, wenn er Klartext findet.
 
-Gepackt abgelegt: roh rund 2,3 MB, im Wesentlichen 52 484 Spurpunkte als
-JSON-Zahlen. Gepackt sind es knapp 700 KB, und die Datei geht bei jedem Deploy
+Gepackt abgelegt: roh rund 2,4 MB, im Wesentlichen 55 861 Spurpunkte als
+JSON-Zahlen. Gepackt sind es rund 745 KB, und die Datei geht bei jedem Deploy
 über FTPS mit.
 
 #### Kein zweiter Einspielweg
@@ -1767,28 +1794,38 @@ der Wiederherstellung einer Sicherung, mit derselben Prüfung. Ein eigener Weg
 hätte eigene Fehler, und ausgerechnet der Weg, der am häufigsten läuft, wäre
 der ungeprüftere.
 
-Zwei kleine Erweiterungen waren dafür nötig, beide in `backup_lib.php`:
+Eine Erweiterung war dafür nötig, in `backup_lib.php`:
 
-- **`edbak_build($userId, $mitPapierkorb = false)`.** Die Fixture soll den
-  Referenzzustand vollständig abbilden, und dazu gehört ein gefüllter
-  Papierkorb. Für eine Nutzer-Sicherung bleibt der Filter — wer sichert,
-  sichert seinen Bestand, nicht seinen Abfall.
 - **`edbak_restore()` ist verschachtelungsfähig.** Sie öffnet ihre Transaktion
   nur, wenn noch keine läuft. Der Demo-Reset muss mehr in dieselbe Klammer
-  nehmen: Kontomaterial, Geräte, Bestand und Nachlauf. Zerfiele das in
-  mehrere Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem
-  Bestand hinterlassen — und der Reset läuft unbeaufsichtigt.
+  nehmen: Kontomaterial, Geräte und Bestand. Zerfiele das in mehrere
+  Transaktionen, könnte ein Fehler in der Mitte ein Konto mit halbem Bestand
+  hinterlassen — und der Reset läuft unbeaufsichtigt.
 
-#### Der Papierkorb-Nachlauf
+Eine zweite gab es bis Web 7.3.1: `edbak_build($userId, $mitPapierkorb)`. Sie
+ist entfallen, weil der Papierkorb seit Web 8.0.0 ohnehin in jeder Sicherung
+steht (`docs/Backup-Format.md` 2).
 
-Das Einspielen wertet `deleted_at` **nicht** aus (die Spalte steht nicht im
-Feldkatalog); alle Einträge kommen als aktive zurück. Danach legt ein kleines
-Drehbuch die benannten Einsätze und Diensttage über die **regulären**
-Löschwege (`trash_lib.php`) in den Papierkorb — so, wie eine Nutzerin es täte.
+#### Der Papierkorb-Nachlauf ist entfallen (Web 8.0.0)
 
-Die Diensttage werden über ihre **Dienstkennung** (`day_ref`) angesprochen,
-nicht über das Datum: Seit E9 können zwei Dienste auf einem Kalendertag
-liegen, das Datum benennt also keinen Tag mehr eindeutig.
+**Was es war.** Das Einspielen wertete `deleted_at` nicht aus; alle Einträge
+kamen als aktive zurück. Danach legte ein Drehbuch (`demo_nachlauf()`,
+Fixture-Block `nachlauf`) benannte Einsätze und Diensttage über die regulären
+Löschwege wieder in den Papierkorb. Es musste **nach** dem Commit laufen, weil
+`trash_delete_*()` je eine eigene Transaktion öffnen — der Reset zerfiel damit
+in zwei Schritte, von denen der zweite fehlschlagen konnte.
+
+**Warum es weg ist.** Seit Nutzlast 7 führt die Sicherung den Papierkorb, und
+`edbak_restore()` bringt ihn als Papierkorb zurück. Der Reset ist wieder
+**ein** Vorgang in **einer** Transaktion; die Zahlen für den Bericht kommen aus
+`stats.papierkorb` der Einspielroutine. Die 90-Tage-Frist stempelt jeder Reset
+frisch, weil beim Einspielen ohnehin der Einspielzeitpunkt gesetzt wird — das
+Demo-Konto hält seinen Papierkorb also von selbst am Leben.
+
+**Was das für eine alte Fixture bedeutet.** Sie bleibt lauffähig: Ihre `daten`
+tragen `deleted_at` bereits (sie wurde mit dem damaligen Flag erzeugt), der
+neue Rückweg macht daraus Papierkorbeinträge, und ihr `nachlauf`-Block wird
+nicht mehr gelesen.
 
 #### Der Reset
 
@@ -2270,9 +2307,9 @@ läuft vollständig im Browser: Wiederherstellungsschlüssel →
 `EdCrypto.recoveryKeyHex()` → `pat_wrap_rc` öffnen → **alter** Inhaltsschlüssel
 → je Einsatz `pat_blob` öffnen und mit dem **eigenen** Inhaltsschlüssel neu
 verschliessen → zurück über den vorhandenen Endpunkt `api/backup_restore.php`.
-Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup der
-Formatversion 5, und ein zweiter Rückspielpfad wäre eine zweite Stelle, an der
-dieselben Fehler zu machen sind.
+Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup — dieselbe
+Nutzlast wie in einer `.edbak` (seit Web 8.0.0 Version 7) —, und ein zweiter
+Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
 
 **Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht

@@ -114,10 +114,11 @@ ist keine Notfallanleitung, sondern der reguläre Weg; er wurde in dieser Phase
 dreimal gefahren, zweimal davon ungeplant.
 
 **Was dabei nicht identisch wiederkommt:** interne Kennungen, `created_at` und
-die **Gerätekennungen** (`dev-…`). Die ersten beiden nimmt die Normalisierung
-weg; die Gerätekennungen stehen in der Sicherung unter
-`days[].refs[].device_id` und weichen ab. Wer den Referenzstand neu aufbaut,
-erzeugt deshalb auch die Referenz-Exporte und die Fixture neu.
+die **Gerätekennungen** (`dev-…`). Nur die internen Kennungen nimmt die
+Normalisierung weg; `created_at` wird seit Web 8.0.0 verglichen (es kommt beim
+Einspielen wieder zurück), und die Gerätekennungen stehen in der Sicherung
+unter `days[].refs[].device_id`. Wer den Referenzstand neu aufbaut, erzeugt
+deshalb auch die Referenz-Exporte und die Fixture neu.
 
 **Und die Reihenfolge zählt:** Wer eine Quelldatei ändert, fährt die betroffene
 Einspielstufe erneut, **bevor** er exportiert. Der Datensatz ist
@@ -133,8 +134,10 @@ php fixture/erzeugen.php [email] [ziel.json.gz]
 ```
 
 Erzeugt `server/demo/fixture.json.gz` aus dem Referenzkonto: Konto- und
-Schlüsselmaterial, Geräte, den Bestand **mit** Papierkorb und das
-Nachlauf-Drehbuch. Die Mechanik steht in `docs/Technik.md` 4.99a.
+Schlüsselmaterial, Geräte und den Bestand **mit** Papierkorb (Format 2). Das
+Nachlauf-Drehbuch ist mit Web 8.0.0 entfallen — die Sicherung führt gelöschte
+Einträge jetzt selbst, und das Einspielen bringt sie als Papierkorb zurück.
+Die Mechanik steht in `docs/Technik.md` 4.99a.
 
 Danach im Adminbereich unter **Demo-Konto** anlegen oder zurücksetzen.
 

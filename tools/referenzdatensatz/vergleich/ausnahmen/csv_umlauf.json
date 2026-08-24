@@ -1,6 +1,6 @@
 {
   "name": "csv-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim Umlauf CSV-Archiv -> frisches Konto -> CSV-Archiv. GEMESSEN am Referenzdatensatz (82 Einsaetze, 15 Diensttage, 95 Ruhesegmente, 171 GPX): 8797 Einzelvergleiche, 858 erwartete Abweichungen. Jede Regel traegt die Zahl, mit der sie belegt ist. Was hier NICHT steht, bleibt als Befund stehen — sechs Abweichungen sind Fehler der Anwendung und keine Bauart (F-P1-L: vier Notizen ohne Zeilenumbruch, F-P1-M: final und ende ueberschrieben). Der dritte Fund, F-P1-K (Einsaetze ueber Mitternacht 24 Stunden zurueck), ist mit Web 7.3.1 behoben; die Zahlen oben sind die danach gemessenen. STAND DAVOR: bis Web 7.3.0 waren es 8617 Einzelvergleiche und 844 erwartete — die beiden Einsaetze nach Mitternacht wurden damals gar nicht verglichen, sondern als 'fehlt' und 'zusaetzlich' gezaehlt. ENTFERNT mit Web 7.3.1: drei Regeln zu crew_p2 (Einsatz, Tagesbesatzung, Diensttag). Sie haben nie gegriffen — als einzige trugen ihre Begruendungen keine Zahl, sie waren aus der Analogie zu crew_p1 geschrieben statt gemessen. Alle sieben Zeilen mit belegtem crew_p2 gehoeren zum Diensttag 2026-02-08, dessen Rettungsmittel dasselbe ist wie das auf der Importseite gewaehlte; die Besatzung kommt unveraendert zurueck.",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf CSV-Archiv -> frisches Konto -> CSV-Archiv. GEMESSEN am Referenzdatensatz (82 Einsaetze, 15 Diensttage, 95 Ruhesegmente, 171 GPX im Export): 8797 Einzelvergleiche, 859 erwartete Abweichungen, 0 unerklaerte. Jede Regel traegt die Zahl, mit der sie belegt ist; was hier NICHT steht, bleibt als Befund stehen. STAND DAVOR: Bis Web 7.3.1 waren sechs Abweichungen unerklaert, und sie standen bewusst NICHT in dieser Liste, weil sie Fehler der Anwendung waren und keine Bauart — F-P1-L (vier Notizen ohne Zeilenumbruch, Backlog Nr. 27) und F-P1-M (final und ende ueberschrieben, Nr. 28). Beide sind mit Web 8.0.0 behoben; die Liste hat dafuer KEINE neuen Regeln bekommen, sondern der Kreislauf steht auf null. Genau das ist der Unterschied zwischen einer Ausnahme und einem Filter. Eine Zahl hat sich dabei geaendert: diensttage/dienst_ende 11 -> 12, weil der nicht abgeschlossene Einsatz sein Dienstende jetzt nicht mehr nach hinten zieht. Die uebrigen Zahlen sind mit Web 8.0.0 neu gemessen; die zuvor eingetragenen stammten teils noch aus dem Stand vor Web 7.3.1, als die beiden Einsaetze nach Mitternacht gar nicht verglichen wurden (daher durchgehend +2). ENTFERNT mit Web 7.3.1: drei Regeln zu crew_p2. Sie haben nie gegriffen — als einzige trugen ihre Begruendungen keine Zahl, sie waren aus der Analogie zu crew_p1 geschrieben statt gemessen. NICHT IN DIESER LISTE, obwohl gemessen: der Formelschutz-Apostroph (Backlog Nr. 24, 3 Zellen). Er faellt hier nicht auf, weil der erneute Export keinen zweiten Apostroph hinzufuegt — die Datei sieht gleich aus, waehrend der gespeicherte Wert ein Zeichen laenger geworden ist. Beschrieben in docs/Export-Format.md 5.1, Ausnahme 6.",
   "regeln": [
     {
       "bereich": "tracks",
@@ -13,14 +13,14 @@
       "feld": "track_datei",
       "art": "wert",
       "nach": "",
-      "begruendung": "GEMESSEN 74x. Folgt unmittelbar daraus, dass die GPX-Dateien nicht eingelesen werden: ohne Spur kein Dateiname."
+      "begruendung": "GEMESSEN 76x. Folgt unmittelbar daraus, dass die GPX-Dateien nicht eingelesen werden: ohne Spur kein Dateiname."
     },
     {
       "bereich": "einsaetze",
       "feld": "track_punkte",
       "art": "wert",
       "nach": "0",
-      "begruendung": "GEMESSEN 74x. Dieselbe Ursache wie track_datei."
+      "begruendung": "GEMESSEN 76x. Dieselbe Ursache wie track_datei."
     },
     {
       "bereich": "ruhezeiten",
@@ -33,14 +33,14 @@
       "feld": "herkunft",
       "art": "wert",
       "nach": "import",
-      "begruendung": "GEMESSEN 76x. api/import_commit.php vergibt origin='import'. Die Herkunft beschreibt, wie ein Datensatz IN DIESER Installation entstanden ist; beim Einlesen entsteht er neu. Ein Wert aus der Datei waere eine Aussage ueber ein fremdes Konto. Ausdruecklich so dokumentiert (Export-Format.md 5.1)."
+      "begruendung": "GEMESSEN 78x. api/import_commit.php vergibt origin='import'. Die Herkunft beschreibt, wie ein Datensatz IN DIESER Installation entstanden ist; beim Einlesen entsteht er neu. Ein Wert aus der Datei waere eine Aussage ueber ein fremdes Konto. Ausdruecklich so dokumentiert (Export-Format.md 5.1)."
     },
     {
       "bereich": "einsaetze",
       "feld": "edited",
       "art": "wert",
       "nach": "0",
-      "begruendung": "GEMESSEN 72x. Wie herkunft: Der Bearbeitungsstatus beschreibt das Quellkonto. Beim Einfuegen bleibt er auf dem Vorgabewert 0, beim Ueberschreiben setzt ihn der Server selbst auf 1."
+      "begruendung": "GEMESSEN 74x. Wie herkunft: Der Bearbeitungsstatus beschreibt das Quellkonto. Beim Einfuegen bleibt er auf dem Vorgabewert 0, beim Ueberschreiben setzt ihn der Server selbst auf 1."
     },
     {
       "bereich": "einsaetze",
@@ -54,19 +54,19 @@
       "bereich": "einsaetze",
       "feld": "rettungsmittel",
       "art": "wert",
-      "begruendung": "GEMESSEN 49x (Einsaetze). Rettungsmittel und Standort werden oben auf der Importseite GEWAEHLT, nicht aus der Datei gelesen (E15). Eine Aufloesung ueber Namensgleichheit waere bruechig und legte stillschweigend neue Stammdaten an. Folge fuer den Umlauf: Eine Datei mit drei Rettungsmitteln faellt auf EINES zusammen."
+      "begruendung": "GEMESSEN 51x (Einsaetze). Rettungsmittel und Standort werden oben auf der Importseite GEWAEHLT, nicht aus der Datei gelesen (E15). Eine Aufloesung ueber Namensgleichheit waere bruechig und legte stillschweigend neue Stammdaten an. Folge fuer den Umlauf: Eine Datei mit drei Rettungsmitteln faellt auf EINES zusammen."
     },
     {
       "bereich": "einsaetze",
       "feld": "art",
       "art": "wert",
-      "begruendung": "GEMESSEN 43x. Folgt aus der Wahl des Rettungsmittels: Die Art (luft/boden) haengt am gewaehlten Rettungsmittel, nicht an der Datei."
+      "begruendung": "GEMESSEN 45x. Folgt aus der Wahl des Rettungsmittels: Die Art (luft/boden) haengt am gewaehlten Rettungsmittel, nicht an der Datei."
     },
     {
       "bereich": "einsaetze",
       "feld": "standort",
       "art": "wert",
-      "begruendung": "GEMESSEN 43x. Folgt aus derselben Wahl wie rettungsmittel."
+      "begruendung": "GEMESSEN 45x. Folgt aus derselben Wahl wie rettungsmittel."
     },
     {
       "bereich": "diensttage",
@@ -98,23 +98,108 @@
       "art": "wert",
       "begruendung": "GEMESSEN 5x. Der Rollensatz haengt am Rettungsmittel: Ein bodengebundener Dienst fuehrt driver/trainee/other, ein luftgebundener p1/p2/hems/fr/other. Faellt der Umlauf auf EIN Rettungsmittel zusammen (E15), passen die Rollen der anderen Art nicht mehr. Folgefehler der Rettungsmittelwahl, kein eigener."
     },
-    { "bereich": "einsaetze", "feld": "crew_hems", "art": "wert", "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "crew_fr", "art": "wert", "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "crew_driver", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "crew_trainee", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "crew_other", "art": "wert", "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_p1", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_hems", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_fr", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_driver", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_trainee", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "einsaetze", "feld": "tag_crew_other", "art": "wert", "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_p1", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_hems", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_fr", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_driver", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_trainee", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
-    { "bereich": "diensttage", "feld": "crew_other", "art": "wert", "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)." },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_hems",
+      "art": "wert",
+      "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_fr",
+      "art": "wert",
+      "begruendung": "GEMESSEN 5x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_driver",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_trainee",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "crew_other",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_p1",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_hems",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_fr",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_driver",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_trainee",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "einsaetze",
+      "feld": "tag_crew_other",
+      "art": "wert",
+      "begruendung": "GEMESSEN 6x. Tagesbesatzung, wie crew_p1 — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_p1",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_hems",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_fr",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_driver",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_trainee",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
+    {
+      "bereich": "diensttage",
+      "feld": "crew_other",
+      "art": "wert",
+      "begruendung": "GEMESSEN 1x. Wie bei den Einsaetzen — Folge der Rettungsmittelwahl (E15)."
+    },
     {
       "bereich": "diensttage",
       "feld": "dienst_beginn",
@@ -125,7 +210,7 @@
       "bereich": "diensttage",
       "feld": "dienst_ende",
       "art": "wert",
-      "begruendung": "GEMESSEN 11x. Dieselbe Ursache wie dienst_beginn, in die andere Richtung: bis zum spaetesten Einsatzende."
+      "begruendung": "GEMESSEN 12x. Dieselbe Ursache wie dienst_beginn, in die andere Richtung: bis zum spaetesten Einsatzende."
     },
     {
       "bereich": "diensttage",

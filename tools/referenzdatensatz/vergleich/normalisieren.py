@@ -7,7 +7,24 @@ byteweise gleich, und das ist kein Fehler:
   Erzeugungszeit     steht im LIESMICH, im Dateinamen und in jeder GPX-Datei
   App-Version        steht im LIESMICH
   Trackdateinamen    tragen die interne Einsatz-ID
-  created_at         Anlegezeitpunkt der Zeile, nicht des Einsatzes
+  deleted_at         Zeitpunkt des Loeschens — der Zustand bleibt vergleichbar
+
+`created_at` STAND HIER BIS WEB 7.3.1 und steht nicht mehr hier: Seit Web
+8.0.0 wird der Anlegezeitpunkt eines Einsatzes wieder eingespielt (E-S1-06),
+also ist er kein fluechtiger Anteil mehr, sondern eine Angabe wie jede andere.
+Genau diese Normalisierung hatte den Verlust jahrelang verdeckt — der
+Kreislauf sah ihn nicht, weil das Werkzeug wegsah. Die Kopfangabe `created_at`
+der DATEI (Zeitpunkt des Exports) bleibt normalisiert; sie ist tatsaechlich
+fluechtig.
+
+`deleted_at` DAGEGEN WIRD NORMALISIERT, ABER NICHT WEGGENOMMEN. Beim
+Einspielen entsteht der Papierkorbeintrag neu und bekommt den
+Einspielzeitpunkt (E-S1-03) — der Zeitwert kann also gar nicht ueberleben. Was
+ueberleben MUSS, ist die Unterscheidung leer/gesetzt: „Papierkorbeintrag kommt
+als Papierkorbeintrag zurueck" ist die Aussage, die der Kreislauf belegen soll.
+Ein gesetzter Wert wird deshalb durch die Zeitmarke ersetzt, ein leerer bleibt
+leer. `deleted_with_day` wird gar nicht angefasst — es ist ein Zustand ohne
+Zeitbezug.
 
 Alles davon wird durch eine Marke ersetzt, nicht geloescht: Ein Feld, das
 verschwindet, faellt beim Vergleich nicht auf; eine Marke, die an der falschen
@@ -83,6 +100,16 @@ def archiv(a: dict) -> dict:
     return aus
 
 
+def _papierkorb(n: dict) -> None:
+    """`deleted_at` auf die Zeitmarke setzen — leer bleibt leer.
+
+    Die Unterscheidung ist der Punkt: Der Zeitpunkt entsteht beim Einspielen
+    neu, der ZUSTAND muss den Umlauf ueberstehen.
+    """
+    if "deleted_at" in n:
+        n["deleted_at"] = MARKE_ZEIT if n["deleted_at"] else None
+
+
 def edbak(b: dict) -> dict:
     """Normalisiert ein mit lesen.lesen_edbak() geoeffnetes inneres JSON.
 
@@ -101,6 +128,7 @@ def edbak(b: dict) -> dict:
         if "id" in n:
             stelle[n["id"]] = f"tag#{i}"
             n["id"] = f"tag#{i}"
+        _papierkorb(n)
         tage.append(n)
     aus["days"] = tage
 
@@ -110,8 +138,7 @@ def edbak(b: dict) -> dict:
             n = dict(z)
             if "day_id" in n:
                 n["day_id"] = stelle.get(n["day_id"], f"unbekannt:{n['day_id']}")
-            if "created_at" in n:
-                n["created_at"] = MARKE_ZEIT
+            _papierkorb(n)
             out.append(n)
         return out
 

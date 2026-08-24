@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/backup_lib.php';
-require_once __DIR__ . '/trash_lib.php';
 
 /**
  * Demo-Konto (Baustein B14, Phase P1).
@@ -261,7 +260,6 @@ function demo_anlegen(): array
         $pdo->rollBack();
         throw $ex;
     }
-    $stats['papierkorb'] = demo_nachlauf($id, (array)($fx['nachlauf'] ?? []));
     demo_reset_marke_setzen();
     return ['user_id' => $id] + $stats;
 }
@@ -316,7 +314,6 @@ function demo_zuruecksetzen(): array
         $pdo->rollBack();
         throw $ex;
     }
-    $stats['papierkorb'] = demo_nachlauf($id, (array)($fx['nachlauf'] ?? []));
     demo_reset_marke_setzen();
     return $stats;
 }
@@ -379,7 +376,7 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
 }
 
 /**
- * Geraete, Bestand und Nachlauf einspielen. Erwartet eine offene Transaktion.
+ * Geraete und Bestand einspielen. Erwartet eine offene Transaktion.
  */
 function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
 {
@@ -404,63 +401,25 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
     return $stats;
 }
 
-/**
- * Nachlauf-Drehbuch: benannte Einsaetze und Diensttage in den Papierkorb.
+/* DER PAPIERKORB-NACHLAUF IST ENTFALLEN (E-S1-10).
  *
- * LAEUFT NACH DEM COMMIT, nicht in der Transaktion des Einspielens. Der Grund
- * ist praktisch: `trash_delete_mission()` und `trash_delete_day()` oeffnen je
- * eine eigene Transaktion, und PDO kennt keine verschachtelten. Sie alle
- * verschachtelungsfaehig zu machen hiesse, vier Stellen eines geteilten
- * Bausteins fuer EINEN Aufrufer umzubauen.
+ * Bis Web 7.3.1 stand hier `demo_nachlauf()`: Nach dem Einspielen legte ein
+ * Drehbuch benannte Einsaetze und Diensttage ueber die regulaeren Loeschwege
+ * (`trash_lib.php`) wieder in den Papierkorb. Es musste NACH dem Commit
+ * laufen, weil `trash_delete_*()` je eine eigene Transaktion oeffnen und PDO
+ * keine verschachtelten kennt — der Reset zerfiel damit in zwei Schritte, von
+ * denen der zweite fehlschlagen konnte.
  *
- * Der Preis ist klein und benannt: Scheitert das Drehbuch, steht der Bestand
- * vollstaendig da und der Papierkorb ist leer. Das ist sichtbar (die Zahlen
- * stehen im Bericht), harmlos und beim naechsten Reset behoben. Waere es
- * andersherum — Bestand halb, Papierkorb gefuellt —, waere es keins von
- * beidem.
+ * Der Grund dafuer war das Sicherungsformat: Es kannte keine geloeschten
+ * Eintraege, und ein Papierkorb-Dauerzustand liess sich nur nachstellen. Seit
+ * Nutzlast 7 fuehrt die Datei den Papierkorb, und `edbak_restore()` bringt ihn
+ * als Papierkorb zurueck (E-S1-01/03/04). Damit ist das Drehbuch gegenstandslos
+ * — der Reset ist wieder EIN Vorgang in EINER Transaktion, und die Zahlen fuer
+ * den Bericht kommen aus den Zaehlern der Einspielroutine (`stats.papierkorb`).
  *
- * WARUM ES DAS BRAUCHT. Das Sicherungsformat kennt keine geloeschten
- * Eintraege — `backup_lib.php` filtert an drei Stellen auf
- * `deleted_at IS NULL`. Ein Papierkorb-Dauerzustand liesse sich also nur mit
- * einem Sonderformat abbilden, und das waere ein zweiter Rueckspielpfad mit
- * eigenen Fehlern.
- *
- * Stattdessen legt der Reset nach dem Einspielen ein paar benannte Eintraege
- * ueber die REGULAEREN Loeschwege (`trash_lib.php`) in den Papierkorb — so,
- * wie eine Nutzerin es taete. Die Abdeckung „Papierkorb" uebersteht damit
- * jeden Reset, und die Einspielroutine bleibt formattreu (E-P1-21).
+ * Die 90-Tage-Frist stempelt dabei jeder Reset frisch (E-S1-03): Das
+ * Demo-Konto haelt seinen Papierkorb also von selbst am Leben, ohne Sonderweg.
  */
-function demo_nachlauf(int $id, array $drehbuch): array
-{
-    $pdo = db();
-    $erg = ['einsaetze' => 0, 'diensttage' => 0, 'nicht_gefunden' => []];
-
-    foreach ((array)($drehbuch['einsaetze'] ?? []) as $ref) {
-        $st = $pdo->prepare('SELECT id FROM missions
-                             WHERE user_id = ? AND client_ref = ? AND deleted_at IS NULL');
-        $st->execute([$id, (string)$ref]);
-        $mid = $st->fetchColumn();
-        if ($mid === false) { $erg['nicht_gefunden'][] = 'Einsatz ' . $ref; continue; }
-        trash_delete_mission($id, (int)$mid);
-        $erg['einsaetze']++;
-    }
-
-    /* Diensttage ueber ihre Dienstkennung, nicht ueber das Datum: Seit E9
-     * koennen zwei Dienste auf einem Kalendertag liegen, das Datum benennt
-     * also keinen Tag mehr eindeutig. */
-    foreach ((array)($drehbuch['diensttage'] ?? []) as $ref) {
-        $st = $pdo->prepare('SELECT d.id FROM days d
-                             JOIN day_refs r ON r.day_id = d.id
-                             WHERE d.user_id = ? AND r.day_ref = ? AND d.deleted_at IS NULL
-                             LIMIT 1');
-        $st->execute([$id, (string)$ref]);
-        $did = $st->fetchColumn();
-        if ($did === false) { $erg['nicht_gefunden'][] = 'Diensttag ' . $ref; continue; }
-        trash_delete_day($id, (int)$did);
-        $erg['diensttage']++;
-    }
-    return $erg;
-}
 
 /* ------------------------------------------------------------------ Loeschen */
 

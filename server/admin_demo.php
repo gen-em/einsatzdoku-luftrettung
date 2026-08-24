@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/demo_lib.php';
+require_once __DIR__ . '/trash_lib.php';   // TRASH_DAYS fuer den Erklaertext
 
 /**
  * Demo-Konto verwalten (Phase P1, E-P1-08).
@@ -60,11 +61,23 @@ if ($demoId !== null) {
         $st->execute([$demoId]);
         return (int)$st->fetchColumn();
     };
+    /* DREI PAPIERKORBZAHLEN, NICHT EINE. Bis Web 8.0.0 stand hier nur die
+     * der Einsaetze — solange der Papierkorb aus einem Nachlauf-Drehbuch kam,
+     * war das die einzige, die etwas aussagte. Seit er aus der Fixture kommt,
+     * meldet der Reset drei (`stats.papierkorb`), und eine Ansicht, die nur
+     * eine davon zeigt, laesst zwei Fehlerbilder unsichtbar.
+     *
+     * Der Schluessel „im Papierkorb" bleibt unveraendert bei den Einsaetzen:
+     * `browser/demo_pruefen.mjs` liest ihn. */
     $zahlen = [
         'Diensttage'   => $eine('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NULL'),
         'Einsätze'     => $eine('SELECT COUNT(*) FROM missions WHERE user_id = ? AND deleted_at IS NULL'),
         'Ruhesegmente' => $eine('SELECT COUNT(*) FROM rest_segments WHERE user_id = ? AND deleted_at IS NULL'),
         'im Papierkorb' => $eine('SELECT COUNT(*) FROM missions WHERE user_id = ? AND deleted_at IS NOT NULL'),
+        'im Papierkorb, Diensttage'
+                       => $eine('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NOT NULL'),
+        'im Papierkorb, Ruhesegmente'
+                       => $eine('SELECT COUNT(*) FROM rest_segments WHERE user_id = ? AND deleted_at IS NOT NULL'),
         'Geräte'       => $eine('SELECT COUNT(*) FROM devices WHERE user_id = ?'),
     ];
 }
@@ -108,8 +121,8 @@ ui_topbar('einstellungen');
     <p>Es gibt derzeit <strong>kein</strong> Demo-Konto.</p>
   <?php else: ?>
     <?php /* table.data statt einer eigenen Klasse: Der Adminbereich zeigt
-             Auskuenfte ueberall so, und eine neue Klasse fuer fuenf Zeilen
-             waere ein Sonderfall, den spaeter niemand pflegt. */ ?>
+             Auskuenfte ueberall so, und eine neue Klasse fuer eine Handvoll
+             Zeilen waere ein Sonderfall, den spaeter niemand pflegt. */ ?>
     <table class="data">
       <tbody>
         <tr><th>Konto</th><td><?= e((string)$email) ?></td></tr>
@@ -167,10 +180,10 @@ ui_topbar('einstellungen');
         Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
         unerwartet gelungene Änderung der Konto-Identität bliebe damit
         folgenlos.</li>
-    <li>Zum Schluss legt ein kleines Drehbuch benannte Einsätze und Diensttage
-        über die regulären Löschwege in den Papierkorb — sonst wäre er nach
-        jedem Reset leer, denn eine Sicherung führt keine gelöschten
-        Einträge.</li>
+    <li>Der Papierkorb kommt <strong>aus der Fixture</strong> zurück — als
+        Papierkorb, mit frischer <?= TRASH_DAYS ?>-Tage-Frist. Der Reset ist
+        damit <em>ein</em> Vorgang in <em>einer</em> Transaktion: Entweder er
+        gelingt ganz, oder er ändert nichts.</li>
   </ul>
 </main>
   <?php ui_footer(); ?>

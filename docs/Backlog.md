@@ -118,70 +118,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Sitzungsbeginn daneben). Gefunden in P1/B3 (dort F-P1-F); bewusst nicht
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
-24. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
-    `Export-Format.md` 5.1 sagt, es sei es.** Der Export neutralisiert
-    Formel-Anfangszeichen (`=`, `+`, `-`, `@`) mit einem vorangestellten `'`;
-    der Rückweg entfernt es nicht wieder. Eine Zelle, die ohne diesen Schutz
-    mit `=` beginnt, liest SheetJS als Formel — der Wert kommt **leer** an.
-    5.1 zählt drei bewusste Ausnahmen auf; dies ist eine vierte,
-    undokumentierte. **Vorschlag: Ausnahme dokumentieren**, nicht den Import
-    ändern — ein Import, der Zeichen entfernt, schafft den nächsten stillen
-    Verlust (ein echtes `'` am Textanfang verschwände). Gefunden in P1/B4
-    (dort F-P1-G).
-25. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
-    zurück.** Die Spalte steht in der Sicherung (`backup_lib.php`,
-    Spaltenliste der Einsätze); die Einspielroutine schreibt die Felder aus
-    `mission_fields.php` plus `pat_blob` und `start_src` — `created_at` steht
-    dort nicht. Nach einer Wiederherstellung tragen alle Einsätze den
-    Zeitpunkt des Einspielens. Gemessen am Referenzdatensatz: 79 verschiedene
-    Werte vorher, 5 danach. Folgenlos für die Dokumentation (`started_at` ist
-    die fachliche Zeit), aber eine Asymmetrie, die bis Web 7.2.3 nirgends
-    stand. **Zu entscheiden:** mitschreiben (dann ist es keine Ausnahme mehr)
-    oder aus der Sicherung streichen. In Web 7.2.3 wurde nur die Beschreibung
-    nachgezogen. Gefunden in P1/B5.
-27. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.** Der
-    Parser `trim` (`assets/import.js`) ersetzt jede Folge von Leerraum durch
-    ein Leerzeichen, Umbrüche eingeschlossen, und wird auf alle Textspalten
-    angewandt. `notes` ist das einzige mehrzeilige Feld. Der Export quotet die
-    Umbrüche korrekt; der Verlust entsteht beim Lesen. Gemessen: **4** Notizen,
-    je genau ein Umbruch, Zeichenzahl unverändert (164/253/119/150).
-    **Vorschlag:** ein Parser `trimMehrzeilig` für die Notizspalten. Gefunden
-    in P1/B5 (dort F-P1-L).
-    *Zur Zahl:* Bis Web 7.3.0 waren es 3. Der vierte Fall hing an einem
-    Einsatz, den Nr. 26 aus dem Vergleich gehoben hatte — ein Fehler hatte die
-    Messung eines zweiten verdeckt. Sichtbar wurde er erst, als Nr. 26 behoben
-    war.
-28. **`final = 0` und ein leeres `ende` werden beim CSV-Import
-    überschrieben.** `final` steht als Literal `1` im INSERT von
-    `api/import_commit.php`; ein leeres `ende` wird auf `started_at` gesetzt.
-    Anders als bei `manual` und `herkunft` sind das keine Aussagen über die
-    Entstehung, sondern über den Zustand — und die Datei widerspricht ihnen
-    ausdrücklich. Ein nicht abgeschlossener Einsatz gilt nach dem Umlauf als
-    abgeschlossen und bekommt eine erfundene Endzeit. Gemessen: je 1x.
-    **Vorschlag:** `final` aus der Datei übernehmen, wenn das Profil die
-    Spalte führt; beim `ende` „Spalte fehlt" von „Zelle leer" unterscheiden.
-    Gefunden in P1/B5 (dort F-P1-M).
-29. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
-    Nicht genannt sind: Ruhesegmente kommen nicht zurück (gemessen 95 → 0, es
-    gibt keinen Importweg für sie), und der zweite Dienst eines Kalendertags
-    geht verloren (gemessen 15 → 13 Diensttage) — `gruppiere()` bündelt nach
-    Kalendertag, obwohl seit E9 zwei Dienste an einem Datum zulässig sind und
-    die Datei mit `diensttag_id` den unterscheidenden Schlüssel mitführt.
-    Dazu der Formelschutz-Apostroph (Nr. 24). **Vorschlag:** Abschnitt 5.1
-    ergänzen. Gefunden in P1/B5 (dort F-P1-N).
-30. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
-    Admin-Sicherung.** Heute steht er in keiner: `edbak_build()` filtert
-    `deleted_at IS NULL`, eine Wiederherstellung leert ihn endgültig (gemessen
-    am Referenzdatensatz: 5 Einsätze, 5 Ruhesegmente, 1 Diensttag → nichts).
-    **Entschieden ist, dass er mitsoll**; offen ist die Umsetzung, und sie ist
-    nicht klein: Der Rückspielweg wertet `deleted_at` und `deleted_with_day`
-    nicht aus (ein Abschalten des Filters allein brächte den Papierkorb als
-    aktiven Bestand zurück), die D1-Regel muss „Tag im Zielkonto im
-    Papierkorb" von „Tag in der Datei im Papierkorb" unterscheiden, und die
-    30-Tage-Frist braucht eine Entscheidung. Ausgearbeitet als Paketvorschlag
-    in `tools/referenzdatensatz/Konzept-P1.md`, Abschnitt 10 — von dort in
-    den Gesamtplan. Als Nebenwirkung entfällt der Papierkorb-Teil des
-    Demo-Nachlaufs (E-P1-21).
 
 ---
 
@@ -320,3 +256,260 @@ zutreffen.
     Dienstbeginn zum Zeitpunkt der Entscheidung noch nicht feststeht.
     *Gemessen:* Kreislauf CSV, unerklärte Abweichungen 9 → 6, Einzelvergleiche
     8 617 → 8 797 (die beiden Einsätze werden jetzt überhaupt erst verglichen).
+
+24. **`export_csv_v1` ist bei führendem `=` nicht verlustfrei — und
+    `Export-Format.md` 5.1 sagt, es sei es.**
+    *Erledigt mit Web 8.0.0 — dokumentiert, nicht geändert.* Der Vorschlag des
+    Eintrags war genau das, und er bleibt richtig: Ein Import, der einen
+    führenden Apostroph entfernt, schafft den nächsten stillen Verlust — ein
+    echtes `'` am Textanfang verschwände. `Export-Format.md` 5.1 führt den
+    Apostroph jetzt als **Ausnahme 6** von sechs, mit Messzahl.
+    *Gemessen:* 3 Zellen (zwei `notizen`, ein `other_ema`). Im Bestand des
+    Umlaufkontos tragen danach 3 Werte den Apostroph, im Referenzkonto 0.
+    Der Kreislauf **sieht** die Abweichung nicht: Der nächste Export fügt
+    keinen zweiten Apostroph hinzu, die Datei sieht unverändert aus, während
+    der gespeicherte Wert ein Zeichen länger geworden ist. Genau deshalb
+    gehört sie in die Dokumentation und nicht in die Ausnahmeliste des
+    Vergleichswerkzeugs.
+
+25. **`missions.created_at` wird gesichert, kommt beim Einspielen aber nicht
+    zurück.**
+    *Erledigt mit Web 8.0.0 — mitschreiben, nicht streichen.* Die Spalte steht
+    jetzt als benannte Ausnahme neben `start_src` und `pat_blob` in
+    `edbak_restore()`. Ein unbrauchbarer Wert lässt die Spalte **weg** statt
+    `NULL` zu schreiben: Dann greift die Vorgabe der Datenbank und die Zeile
+    bleibt — ein Komfortwert darf eine Wiederherstellung nicht kosten.
+    Die Entscheidung fiel gegen „aus der Sicherung streichen", weil eine
+    Sicherung ein Abbild sein soll und `created_at` eine Angabe ist wie jede
+    andere, wenn auch keine fachliche.
+    *Gemessen:* 87 von 87 Einsätzen tragen nach dem Umlauf denselben Wert wie
+    vorher (83 verschiedene Werte auf beiden Seiten). Dazu die Ursache, warum
+    es so lange unbemerkt blieb: Das Vergleichswerkzeug normalisierte
+    `missions[].created_at` weg — diese Normalisierung ist aufgehoben, und die
+    zugehörige Probe aufs Exempel ist von einer **Gegen**probe zu einer
+    Hinprobe geworden.
+
+27. **Mehrzeilige Notizen verlieren beim CSV-Import ihre Zeilenumbrüche.**
+    *Erledigt mit Web 8.0.0.* Neuer Parser `trimMehrzeilig` für alle drei
+    Notizspalten (`notizen` im CSV-Profil, `Notizen` in beiden Excel-Profilen):
+    zusammengezogen wird nur **innerhalb** einer Zeile, Zeilenenden werden
+    vorher vereinheitlicht. Leerzeilen am Anfang und Ende fallen weg, die in
+    der Mitte bleiben — sie sind Gliederung, kein Rest. Bei einzeiligen Werten
+    ist das Ergebnis identisch zu `trim`, die Grenze bleibt `max:2000`.
+    *Gemessen:* 4 Notizen mit je einem Umbruch, 164/253/119/150 Zeichen, nach
+    dem Umlauf wörtlich gleich.
+
+28. **`final = 0` und ein leeres `ende` werden beim CSV-Import
+    überschrieben.**
+    *Erledigt mit Web 8.0.0.* Beides kommt jetzt aus der Datei — in INSERT und
+    UPDATE. Der Kern ist eine Unterscheidung, die es vorher nicht gab: **eine
+    fehlende Spalte ist etwas anderes als eine leere Zelle.** Fehlt die Spalte
+    im Profil (Jahresliste, Excel), bleibt es beim bisherigen Verhalten
+    (`ende = Beginn`, beim Anlegen `final = 1`, beim Überschreiben `final`
+    unangetastet); ist die Zelle leer, ist das eine Aussage. Der Browser sendet
+    `ended_utc` und `final` deshalb nur, wenn das Profil die Spalte führt —
+    welche Zielfelder eine Datei führt, sagt seither `verarbeiteMatrix()`.
+    *Gemessen:* Der Referenzfall (2026-07-05, 19:40) übersteht den Umlauf mit
+    `final = 0` und leerem Ende, auch im Überschreiben-Modus über alle 82
+    Zeilen. Gegenprobe Excel: 82× `final = 1`, 82× `ende = Beginn` — das
+    bisherige Verhalten, unverändert.
+
+29. **`docs/Export-Format.md` 5.1 zählt drei Ausnahmen auf; es sind mehr.**
+    *Erledigt mit Web 8.0.0.* Der Abschnitt zählt jetzt **sechs**, jede mit
+    Messzahl: die drei alten (Kennungen, GPX, Rettungsmittel/Standort) plus
+    Ruhesegmente (95 → 0), zweiter Dienst eines Kalendertags (15 → 13
+    Diensttage) und der Formelschutz-Apostroph (Nr. 24). Die Überschrift heißt
+    jetzt „verlustfrei **für Einsätze**" — sechs Ausnahmen sind kein Grund, das
+    Wort zu streichen, aber einer, es einzugrenzen. Dazu in Abschnitt 6: Der
+    Papierkorb ist in keinem Exportprofil enthalten, und seit dieser Fassung
+    ist das ein Unterschied zur Sicherung.
+
+30. **Den Papierkorb in die Sicherung aufnehmen — NutzerInnen- und
+    Admin-Sicherung.**
+    *Erledigt mit Web 8.0.0, Phase S1.* Die drei Filter in `edbak_build()` und
+    der Parameter `$mitPapierkorb` sind entfallen; die Nutzlast steht auf 7.
+    Der Rückweg wertet `deleted_at` und `deleted_with_day` aus und bringt den
+    Papierkorb **als Papierkorb** zurück. Die drei offenen Punkte des Eintrags
+    sind so entschieden worden:
+    - **Frist:** Übernommen wird der Zustand, nicht der Zeitpunkt. Alle
+      Einträge eines Einspielvorgangs tragen denselben `deleted_at`, die
+      90 Tage beginnen neu. Sonst brächte eine ältere Sicherung Einträge mit
+      abgelaufener Frist mit, die der nächste Aufräumjob endgültig entfernt.
+    - **D1:** Die Datumsprüfung gegen den Papierkorb des Zielkontos gilt nur
+      noch für **aktive** Datei-Tage. Ein in der Datei gelöschter Tag
+      durchläuft die normale Wiedererkennung und entsteht, wenn er fehlt, als
+      Papierkorbeintrag.
+    - **Invariante:** `deleted_with_day = 1` nur, wenn der Eintrag in der
+      **Datei** am Tag hing **und** der **Zieltag** selbst im Papierkorb liegt
+      — sonst wäre der Eintrag im Papierkorb unsichtbar und über den Tag nicht
+      wiederherstellbar. Der Zieltag ist eine notwendige, keine hinreichende
+      Bedingung; die erste Fassung prüfte nur ihn und machte damit aus jedem
+      einzeln gelöschten Eintrag einen mitgelöschten.
+    Als Nebenwirkung ist der Papierkorb-Teil des Demo-Nachlaufs entfallen
+    (E-P1-21): Der Reset ist wieder ein Vorgang in einer Transaktion, die
+    Fixture steht auf Format 2.
+    *Gemessen:* Umlauf 87/100/16, davon 5/5/1 im Papierkorb; 286 739
+    Einzelvergleiche, 0 unerklärte Abweichungen; Invariante über alle Konten
+    der Prüfinstallation 0 Verstöße.
+
+31. **Der Rückweg der Ruhesegmente läuft ohne Prüfschicht.**
+    *Erledigt mit Web 8.0.0.* In
+    `edbak_restore()` gehen `started_at` und `ended_at` der Ruhesegmente
+    **ungeprüft** ins INSERT — anders als bei den Einsätzen, die seit dem
+    Code-Review die `pruef_*`-Funktionen durchlaufen. Die Datei kann aus
+    beliebiger Herkunft stammen; ein unbrauchbarer Zeitwert bringt hier nicht
+    eine Zeile, sondern die ganze Wiederherstellung zu Fall — genau die
+    Richtung, die bei den Einsätzen ausdrücklich umgedreht wurde. **Vorschlag:**
+    `pruef_utc_oder_sql()` wie beim Einsatz, Zeile überspringen und zählen.
+    Der Zählteil ist mit Web 8.0.0 erledigt (die Ruhesegmente melden ihre
+    Überspringgründe jetzt), die Prüfschicht nicht. Gefunden in S1 (dort
+    F-S1-A); bewusst nicht nebenbei behoben, weil es ein Schreibweg ist und
+    eine Änderung daran eine eigene Abnahme braucht.
+
+    Behoben und dabei weiter gefasst als vorgeschlagen. `client_ref` läuft
+    jetzt durch `pruef_text(..., 64, ...)`, `started_at` und `ended_at` durch
+    `pruef_utc_oder_sql()` — eine Zeile ohne brauchbaren Beginn wird
+    übersprungen und unter `datum_oder_zeit` gezählt statt die Transaktion zu
+    kosten. Die Flags gehen auf beiden Wegen über `pruef_flag()` statt über
+    `(int)`.
+
+    Die **Spurpunkte** haben dabei EINE gemeinsame Schreibstelle bekommen
+    (`$spurSchreiben`). Es waren zwei, und sie waren verschieden: Der Einsatz
+    begrenzte die Menge, prüfte den Aufbau und ließ `pruef_breite`/
+    `pruef_laenge` laufen; das Ruhesegment schrieb roh, was in der Datei
+    stand — `(float)"Unfug"` ist `0.0`, aus einem unbrauchbaren Punkt wurde
+    also still eine gültige Koordinate. Zwei Kopien einer Prüfung sind eine zu
+    viel; die zweite bleibt zurück. Zusätzlich geprüft werden seither `seq`
+    und `ts` gegen den Wertebereich ihrer Spalten und `ele` auf Numerik — auch
+    das war auf **beiden** Wegen offen.
+
+    *Gemessen:* Beide Kreisläufe unverändert auf 0 unerklärten Abweichungen;
+    die Zahl der geschriebenen Spurpunkte ist dieselbe.
+
+32. **Ein aktiver Datei-Eintrag kann auf einem gelöschten Zieltag landen.**
+    *Erledigt mit Web 8.0.0 — abgelehnt und gezählt (E-S1-19).*
+    Die Invariante aus S1 schließt den Zombie in einer Richtung aus: kein
+    `deleted_with_day = 1` an einem aktiven Tag. Die Gegenrichtung ist offen —
+    ein in der Datei **aktiver** Einsatz kann beim Einspielen auf einem
+    **gelöschten** Zieltag landen und wird dort als aktiver Eintrag angelegt.
+    Er steht dann an einem Tag, den die Tagesliste nicht zeigt. Erreichbar über
+    Schritt 1 der Wiedererkennung (ein Einsatz derselben `client_ref` liegt im
+    Ziel bereits an einem gelöschten Tag **anderen Datums**); die Datumsprüfung
+    greift dann nicht, weil sie Daten vergleicht. Der Fall ist **nicht neu** —
+    er ist in derselben Form schon vor Web 8.0.0 erreichbar. **Zu entscheiden:**
+    mitlöschen (widerspricht E-S1-04, „ohne `deleted_at` kein
+    `deleted_with_day`"), überspringen und zählen, oder als hinnehmbar
+    festhalten. Gefunden in S1 (dort F-S1-C).
+
+    Entschieden wurde die zweite der drei vorgeschlagenen Möglichkeiten:
+    **ablehnen und zählen**, unter dem Grund `tag_im_papierkorb`. Das ist
+    dieselbe Regel wie D1, nur eine Ebene tiefer — was hier im Papierkorb
+    liegt, nimmt nichts Neues auf. „Mitlöschen" schied aus, weil es E-S1-04
+    widerspricht („ohne `deleted_at` kein `deleted_with_day`"); „hinnehmen"
+    schied aus, weil der Eintrag danach halb sichtbar ist: In der Suche steht
+    er, in der Tagesübersicht nicht, im Papierkorb auch nicht — und beim
+    endgültigen Löschen des Tages bliebe er ohne Diensttag zurück (Nr. 33).
+
+    Der Fall war **nicht neu** (am Stand vor S1 identisch erreichbar), aber
+    S1 hat eine zweite Quelle dafür geschaffen: Seit die Wiederherstellung
+    selbst Papierkorb-Tage anlegt, kann ein aktiver Datei-Einsatz auch ohne
+    Zutun der NutzerIn auf einem gelöschten Zieltag landen.
+
+35. **Ein doppeltes `seq` in der Spur kippt die ganze Wiederherstellung.**
+    *Erledigt mit Web 8.0.0.*
+    `track_points` hat den Primärschlüssel `(owner_type, owner_id, seq)`. Die
+    Prüfschicht sichert seit Web 8.0.0 den Wertebereich von `seq`, nicht seine
+    Eindeutigkeit; zwei Punkte mit derselben Nummer lösen deshalb einen
+    Schlüsselkonflikt aus, und der reißt über die Transaktion den gesamten
+    Lauf mit. Betrifft **beide** Wege (Einsatz und Ruhesegment) und nur Dateien
+    fremder oder von Hand bearbeiteter Herkunft — ein eigener Export erzeugt
+    keine doppelten Nummern. **Vorschlag:** die schon geschriebenen Nummern je
+    Eigentümer mitführen und einen Wiedergänger überspringen statt ihn zu
+    schreiben; `INSERT IGNORE` wäre der kürzere, aber stille Weg. Gefunden in
+    S1.
+
+    Behoben wie vorgeschlagen: `$spurSchreiben` führt die schon geschriebenen
+    Nummern je Eigentümer mit und überspringt einen Wiedergänger. Er wird als
+    `…track.seq: Nummer doppelt` gemeldet — `INSERT IGNORE` schied aus, weil
+    die Datei sonst einen Fehler behielte, den niemand zu sehen bekommt.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 2 — aus einer Spur
+    `1, 2, 1, 3` kommen drei Punkte an, aus `5, 5, 6` zwei, und der Lauf
+    überlebt; am Stand davor endet er mit
+    `SQLSTATE[23000] … Duplicate entry 'mission-<id>-1' for key 'PRIMARY'`,
+    ohne dass irgendetwas angekommen wäre. Beide Kreisläufe unverändert
+    (286 739 / 0 / 16 und 8 797 / 0 / 859).
+
+33. **`trash_purge_day()` lässt aktive Einsätze verwaist zurück.**
+    *Erledigt mit Web 8.0.0.* Die
+    Funktion entfernt zuerst die Einsätze des Tages `WHERE deleted_at IS NOT
+    NULL` und danach den Diensttag. Ein **aktiver** Einsatz an einem gelöschten
+    Tag überlebt den ersten Schritt und verliert im zweiten seinen Diensttag:
+    `missions.day_id` trägt `ON DELETE SET NULL`. Er steht danach ohne Tag in
+    der Datenbank — in der Suche sichtbar, in der Tagesübersicht nicht, im
+    Formular nicht mehr zu öffnen (`einsatz_form.php` bricht ohne Diensttag
+    ab). Die Rückfrage vor dem endgültigen Löschen nennt ihn nicht mit, ihre
+    Zahl ist also zu klein. **Zu entscheiden:** mitlöschen (dann muss die
+    Rückfrage ihn nennen) oder ablehnen, solange aktive Einsätze am Tag
+    hängen. Der Zustand entsteht seit Web 8.0.0 nicht mehr über das
+    Einspielen (Nr. 32), über `dt_zu_dayref()` beim Uhr-Upload aber weiterhin:
+    die Zuordnung dort filtert nicht auf `days.deleted_at`. Gefunden in S1.
+
+    Entschieden wurde **mitlöschen** — und dazu die Ursache abgestellt, an
+    allen drei Stellen, an denen ein aktiver Einsatz überhaupt an einen
+    gelöschten Diensttag geraten konnte:
+
+    - `trash_restore_mission()` **lehnt ab**, solange der Diensttag im
+      Papierkorb liegt, und sagt warum. Den Tag stillschweigend mitzurückzuholen
+      wäre die falsche Großzügigkeit: Ein Klick auf einen Einsatz belebte einen
+      ganzen Dienst.
+    - `dt_zu_dayref()` gibt keinen gelöschten Tag mehr zurück, sondern legt
+      einen **neuen** an und biegt die Dienstkennung auf ihn um; dasselbe gilt
+      für den schon zugeordneten Tag in `ingest.php`. Verwerfen schied aus: Die
+      Uhr sendet nur, bis der Server quittiert — verworfen ist fort, ein
+      zusätzlicher Tag dagegen lässt sich zusammenführen.
+    - `trash_purge_day()` nimmt **alles** am Tag mit, nicht nur das Gelöschte,
+      und die Rückfrage nennt das Aktive vorher einzeln mit Datum, Uhrzeit und
+      einem Link zum Verschieben. *Ablehnen* wäre eine Sackgasse gewesen: Die
+      betroffenen Einsätze stehen in keiner Liste, man kann sie also nicht
+      wegräumen.
+
+    Altbestand wird **gemeldet, nicht angefasst**: `update.php` zählt aktive
+    Einsätze ohne Diensttag und listet sie. Als Bericht und nicht als
+    Migration, damit die Meldung so lange steht, wie es den Zustand gibt.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 3 — acht Erwartungen,
+    davon am Stand davor fünf nicht erfüllt (Zurückholen ging durch, die Uhr
+    landete auf dem gelöschten Tag, das endgültige Löschen ließ ein Waisenkind
+    zurück). Im Browser `papierkorb_misch.mjs`: 14 Einzelprüfungen, 0 Befunde;
+    am Stand davor 4 Befunde.
+
+34. **Schritt 1 der Diensttag-Wiedererkennung verhängt den ganzen Datei-Tag.**
+    *Erledigt mit Web 8.0.0.*
+    `edbak_restore()` erkennt einen Diensttag wieder, sobald **ein einziger**
+    seiner Einsätze im Ziel schon liegt — und übernimmt dann dessen `day_id`
+    für **alle** Einsätze und Ruhesegmente des Datei-Tags. Liegt dieser eine
+    Einsatz im Ziel an einem anderen Tag (weil ihn jemand verschoben hat),
+    wandert der ganze Datei-Tag dorthin, auch wenn er im Ziel unverändert
+    aktiv daneben steht. Der Papierkorb-Fall aus Nr. 32 ist nur der Sonderfall
+    davon. **Zu entscheiden:** Fingerabdruck vor `client_ref` prüfen, beide
+    Ergebnisse vergleichen und bei Widerspruch den Fingerabdruck vorziehen —
+    oder den Widerspruch melden statt zu raten. Gefunden in S1.
+
+    Umgesetzt wurde die erste der beiden Möglichkeiten in abgewandelter Form:
+    **nicht** den Fingerabdruck vorziehen, sondern Schritt 1 belegen. Alle
+    Kennungen des Datei-Tags werden nachgeschlagen, und nur auf aktive
+    Zieltage. Genau ein Ergebnis gilt; mehrere heißen „Schritt 1 weiß es
+    nicht" — dann entscheidet der Fingerabdruck, und der Widerspruch erscheint
+    als neuer Überspringgrund `tag_mehrdeutig` in der Rückmeldung.
+
+    Der Fingerabdruck bleibt Schritt 2, weil er der **sprödere** Anker ist: Er
+    bricht, sobald jemand am Zieltag Beginn, Ende, Art, Rettungsmittel oder
+    Station berichtigt hat, und das ist der häufige Fall. `client_ref` ist
+    stabil.
+
+    *Gemessen:* `tools/wiederherstellungs-probe/` Teil 4 — sechs Erwartungen,
+    darunter zwei Gegenproben (ein eindeutiger Kandidat greift weiter und wird
+    nicht als mehrdeutig gemeldet). Am Stand davor fallen drei durch: Der
+    Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
+    eigener Diensttag, und gemeldet wurde nichts.

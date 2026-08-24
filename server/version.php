@@ -160,5 +160,60 @@ declare(strict_types=1);
  * Die Angabe, die das behebt, stand die ganze Zeit in der Datei — die Spalte
  * `datum` war im Importprofil auf target:null gesetzt, mit einem Kommentar,
  * der das Gegenteil dessen behauptete, was der Code tat.
+ *
+ * 8.0.0 macht die SICHERUNG VOLLSTAENDIG, und die Hauptnummer steigt dafuer
+ * aus einem einzigen Grund: Die NUTZLAST einer Sicherung ist eine andere
+ * geworden (Formatversion 6 -> 7). Sie fuehrt jetzt den Papierkorb, und der
+ * Einspielweg bringt ihn als Papierkorb zurueck — nicht als aktiven Bestand.
+ * Was vorher galt, war ein stiller Verlust: Wer am Tag nach einem
+ * versehentlichen Loeschen sicherte und die Datei spaeter zurueckspielte,
+ * verlor genau das, was er retten wollte.
+ *
+ * Eine Migration gibt es NICHT — die Spalten `deleted_at` und
+ * `deleted_with_day` liegen seit jeher, sie standen nur bisher immer leer in
+ * der Datei. Zu beachten ist etwas anderes: Der Sprung auf Nutzlast 7
+ * kennzeichnet, er SPERRT NICHT. Bereits ausgelieferte Staende nehmen eine
+ * v7-Datei an und braechten ihren Papierkorb aktiv zurueck; das steht als
+ * Warnung in docs/Backup-Format.md 4 und liess sich nachtraeglich nicht mehr
+ * verhindern.
+ *
+ * Dazu zwei Fehler des CSV-Kreislaufs, die die Phase P1 gemessen hatte:
+ * mehrzeilige Notizen verloren beim Rueckimport ihre Zeilenumbrueche, und
+ * `final = 0` samt leerem Ende wurde ueberschrieben — ein nicht
+ * abgeschlossener Einsatz kam als abgeschlossen zurueck. Beide Kreislaeufe
+ * (Sicherung und CSV) stehen danach auf null unerklaerten Abweichungen.
+ *
+ * Und drei Stellen im Einspielweg, an denen eine kaputte Datei bisher nicht
+ * ihre Zeile kostete, sondern den ganzen Lauf: die fehlende Pruefschicht der
+ * Ruhesegmente, ihre ungeprueft geschriebene Spur und ein doppeltes `seq`,
+ * das ueber den Primaerschluessel von `track_points` einen Konflikt ausloest.
+ * Alle drei betreffen nur Dateien fremder oder von Hand bearbeiteter
+ * Herkunft — aber eine Wiederherstellung ist der Moment, in dem jemand
+ * ohnehin schon etwas verloren hat.
+ *
+ * DAZU DIE BEIDEN ENTSCHEIDUNGEN, die nach der Nachlese offen waren
+ * (Backlog Nr. 33 und 34) — beide betreffen den halb sichtbaren Einsatz:
+ * einen aktiven Eintrag an einem GELOESCHTEN Diensttag.
+ *
+ * Nr. 33 hatte drei Tueren dorthin. Sie sind zu: Der Papierkorb lehnt das
+ * Zurueckholen ab, solange der Diensttag selbst darin liegt; die Uhr loest
+ * ueber eine Kennung auf einem geloeschten Tag jetzt einen NEUEN Tag aus
+ * (zusammenfuehren laesst er sich, verwerfen waere Datenverlust); und das
+ * endgueltige Loeschen eines Tages nimmt alles mit, statt ein Waisenkind
+ * ohne Diensttag zurueckzulassen — die Rueckfrage nennt es vorher.
+ * Altbestand meldet die Wartungsseite, ohne ihn anzufassen.
+ *
+ * Nr. 34: Schritt 1 der Diensttag-Wiedererkennung beim Einspielen nahm den
+ * ERSTEN gefundenen Einsatz und verhaengte dessen Tag ueber den ganzen
+ * Datei-Tag. Jetzt zaehlen alle Kennungen; nur ein eindeutiges Ergebnis
+ * gilt, ein Widerspruch wird als `tag_mehrdeutig` gemeldet und der
+ * Fingerabdruck entscheidet.
+ *
+ * KEINE eigene Nummer fuer die Nachlese (Paket C8). Sie hat zwei Fehler
+ * behoben, die in DIESER Fassung entstanden sind und nie auf einem Server
+ * standen — 8.0.0 ist zu keinem Zeitpunkt ausgeliefert gewesen. Eine 8.0.1,
+ * die eine 8.0.0 berichtigt, die es nirgends gab, waere eine Zahl ohne
+ * Gegenstueck in der Welt. Was die Nachlese geaendert hat, steht im
+ * CHANGELOG unter 8.0.0.
  */
-const WEB_VERSION = '7.3.1';
+const WEB_VERSION = '8.0.0';

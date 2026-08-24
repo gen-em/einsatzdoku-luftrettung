@@ -117,10 +117,54 @@ function trash_delete_day(int $userId, int $dayId): void {
 
 /* ---- Wiederherstellen -------------------------------------------------- */
 
-function trash_restore_mission(int $userId, int $id): void {
-    db()->prepare('UPDATE missions SET deleted_at = NULL
+/**
+ * Einzeln geloeschten Einsatz zurueckholen.
+ *
+ * LIEFERT EINEN GRUND ZURUECK statt nichts (Backlog Nr. 33). Der Aufrufer
+ * muss unterscheiden koennen, warum nichts passiert ist:
+ *
+ *   'ok'                zurueckgeholt
+ *   'tag_im_papierkorb' der Diensttag liegt selbst im Papierkorb — abgelehnt
+ *   'nicht_gefunden'    kein solcher Eintrag (oder mit dem Tag geloescht,
+ *                       dann gehoert er ueber trash_restore_day() zurueck)
+ *
+ * WARUM DIE ABLEHNUNG. Bis Web 8.0.0 fragte die Anweisung nur nach
+ * `deleted_with_day = 0`. Ein einzeln geloeschter Einsatz, dessen Diensttag
+ * danach ebenfalls geloescht wurde, steht aber weiterhin in der Liste des
+ * Papierkorbs — ein Klick auf „Wiederherstellen" machte ihn AKTIV AN EINEM
+ * GELOESCHTEN TAG. Und das ist der halb sichtbare Zustand, den E-S1-19 beim
+ * Einspielen ausdruecklich ablehnt: in der Suche und auf der Einsatzseite
+ * sichtbar, in Tagesuebersicht, Zeitraum, Export, Nachbearbeitung und
+ * Papierkorb nicht; das Formular bricht ohne Diensttag ab. Was der Rueckweg
+ * einer Sicherung nicht anlegen darf, darf die Oberflaeche erst recht nicht
+ * auf Knopfdruck herstellen.
+ *
+ * DEN TAG STILL MITZURUECKHOLEN waere die falsche Grosszuegigkeit: Ein Klick
+ * auf EINEN Einsatz wuerde einen ganzen Dienst samt aller uebrigen Einsaetze
+ * wiederbeleben. Die NutzerIn holt erst den Tag zurueck, dann sieht sie, was
+ * daran haengt, und entscheidet.
+ *
+ * OHNE DIENSTTAG (`day_id IS NULL`) wird NICHT abgelehnt. Der Fall stammt aus
+ * aelteren Staenden (verwaiste Einsaetze, siehe update.php); der Einsatz
+ * laesst sich nach dem Zurueckholen ueber „Verschieben" an einen Diensttag
+ * haengen — einsatz_verschieben.php kommt mit einem fehlenden Ausgangstag
+ * zurecht. Ihn im Papierkorb festzuhalten waere eine Sackgasse.
+ */
+function trash_restore_mission(int $userId, int $id): string {
+    $pdo = db();
+    $st = $pdo->prepare('SELECT m.deleted_with_day, d.deleted_at AS tag_geloescht
+                           FROM missions m
+                           LEFT JOIN days d ON d.id = m.day_id
+                          WHERE m.id = ? AND m.user_id = ? AND m.deleted_at IS NOT NULL');
+    $st->execute([$id, $userId]);
+    $z = $st->fetch();
+    if (!$z || (int)$z['deleted_with_day'] !== 0) { return 'nicht_gefunden'; }
+    if ($z['tag_geloescht'] !== null) { return 'tag_im_papierkorb'; }
+
+    $pdo->prepare('UPDATE missions SET deleted_at = NULL
                    WHERE id = ? AND user_id = ? AND deleted_with_day = 0')
         ->execute([$id, $userId]);
+    return 'ok';
 }
 
 function trash_restore_day(int $userId, int $dayId): void {
@@ -184,12 +228,77 @@ function trash_purge_mission(int $userId, int $id): void {
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
 }
 
+/**
+ * Was haengt AKTIV an einem Diensttag, der im Papierkorb liegt?
+ *
+ * Normalerweise nichts: trash_delete_day() markiert alles mit. Es gibt aber
+ * Wege, auf denen danach etwas Aktives dazukommt — bis Web 8.0.0 das
+ * Zurueckholen eines einzeln geloeschten Einsatzes (jetzt abgelehnt, siehe
+ * trash_restore_mission()) und die Uhr ueber eine Kennung in `day_refs`
+ * (jetzt loest sie einen neuen Tag aus, siehe dt_zu_dayref()). Aus aelteren
+ * Staenden koennen solche Eintraege noch liegen.
+ *
+ * Die Rueckfrage vor dem endgueltigen Loeschen MUSS sie nennen: Sie gehen
+ * seit Web 8.0.0 mit (siehe trash_purge_day()), und bis dahin nannte die
+ * Zwischenseite eine zu kleine Zahl.
+ */
+function trash_aktiv_am_tag(int $userId, int $dayId): array {
+    $q = db()->prepare('SELECT m.id, m.started_at
+                          FROM missions m
+                         WHERE m.user_id = ? AND m.day_id = ? AND m.deleted_at IS NULL
+                         ORDER BY m.started_at');
+    $q->execute([$userId, $dayId]);
+    $einsaetze = $q->fetchAll();
+
+    $s = db()->prepare('SELECT COUNT(*) FROM rest_segments
+                         WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL');
+    $s->execute([$userId, $dayId]);
+    return ['einsaetze' => $einsaetze, 'segmente' => (int)$s->fetchColumn()];
+}
+
+/**
+ * Diensttag endgueltig entfernen — MIT ALLEM, was daran haengt.
+ *
+ * BIS WEB 8.0.0 STAND HIER `deleted_at IS NOT NULL`, und das liess ein
+ * Waisenkind zurueck (Backlog Nr. 33): Ein aktiver Einsatz am geloeschten Tag
+ * ueberlebte den ersten Schritt und verlor im zweiten seinen Diensttag —
+ * `missions.day_id` traegt ON DELETE SET NULL. Danach stand er ohne Tag in der
+ * Datenbank: in der Suche und auf der Einsatzseite sichtbar, in
+ * Tagesuebersicht, Zeitraum, Export und Nachbearbeitung nicht, im Formular
+ * nicht mehr zu oeffnen — und in der Sicherung zwar enthalten, beim
+ * Einspielen aber uebersprungen, weil ihm der Diensttag fehlt. Ein Datensatz
+ * also, der gerettet aussah und beim naechsten Umlauf still verschwand.
+ *
+ * WARUM MITLOESCHEN UND NICHT ABLEHNEN. Ablehnen klingt vorsichtiger, ist aber
+ * eine Sackgasse: Die NutzerIn sieht diese Einsaetze in keiner Liste und kann
+ * sie deshalb nicht wegraeumen — sie wuerde den Tag nie los. Der gangbare Weg
+ * ist, sie zu NENNEN, bevor gefragt wird (papierkorb.php zeigt sie einzeln mit
+ * Datum und Uhrzeit und weist auf „Verschieben" hin), und sie dann mitzunehmen.
+ *
+ * Gesperrt werden sie wie alle anderen: Sonst legte die naechste
+ * Nachlieferung derselben Uhr sie wieder an.
+ */
 function trash_purge_day(int $userId, int $dayId): void {
     $pdo = db();
+
+    /* ZUERST PRUEFEN, OB DER TAG UEBERHAUPT IM PAPIERKORB LIEGT.
+     *
+     * Bis Web 8.0.0 ergab sich das von selbst: Jede Anweisung trug
+     * `deleted_at IS NOT NULL`, ein aktiver Tag wurde also von keiner
+     * getroffen. Seit die Einsaetze OHNE diese Bedingung geloescht werden,
+     * traegt allein das abschliessende DELETE sie noch — ein Aufruf auf einen
+     * AKTIVEN Tag loeschte damit seine Einsaetze und liesse den Tag stehen.
+     * Kein heutiger Aufrufer tut das; die Bedingung gehoert trotzdem an den
+     * Anfang und nicht ans Ende. */
+    $chk = $pdo->prepare('SELECT id FROM days
+                           WHERE user_id = ? AND id = ? AND deleted_at IS NOT NULL');
+    $chk->execute([$userId, $dayId]);
+    if ($chk->fetchColumn() === false) { return; }
+
     $pdo->beginTransaction();
     try {
         $ms = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
-                             WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
+                             WHERE user_id = ? AND day_id = ?');
         $ms->execute([$userId, $dayId]);
         foreach ($ms->fetchAll() as $m) {
             trash_block_ref($pdo, $m);
@@ -198,7 +307,7 @@ function trash_purge_day(int $userId, int $dayId): void {
             $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([(int)$m['id']]);
         }
         $ss = $pdo->prepare('SELECT id, device_id, client_ref FROM rest_segments
-                             WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
+                             WHERE user_id = ? AND day_id = ?');
         $ss->execute([$userId, $dayId]);
         foreach ($ss->fetchAll() as $seg) {
             // Auch Ruhe-Segmente sperren — sonst legt die naechste

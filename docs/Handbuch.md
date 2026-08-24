@@ -1073,6 +1073,26 @@ mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
 zeigt eine Statuszeile den Fortschritt und am Ende die Zahl der übernommenen
 Einsätze, Ruhesegmente und Diensttage.
 
+**Der Papierkorb ist Teil der Sicherung.** Was du gelöscht hast und was noch in
+der 90-Tage-Frist liegt, steht in der Datei und kommt beim Einspielen wieder
+**als Papierkorb** zurück — nicht als aktiver Bestand. Es gibt dafür keinen
+Haken zum Abwählen: Eine Sicherung ist ein Abbild, und der Papierkorb ist kein
+Abfall, sondern ein Zustand, aus dem sich zurückholen lässt. Vorher war das
+anders, und das war der schlechtere Weg: Wer am Tag nach einem versehentlichen
+Löschen sicherte und die Datei später zurückspielte, verlor genau das, was er
+retten wollte.
+
+Eines ändert sich beim Einspielen: **Die 90 Tage beginnen neu.** Übernommen
+wird, *dass* etwas gelöscht war, nicht *wann*. Sonst könnte eine ältere
+Sicherung Einträge mitbringen, deren Frist längst abgelaufen ist — der nächste
+Aufräumlauf entfernte sie endgültig, ohne dass du sie je zu sehen bekommen
+hättest.
+
+Wer die Sicherung in eine Installation **vor** dieser Fassung einspielt, sollte
+wissen: Die nimmt die Datei zwar an, kennt den Papierkorb darin aber nicht und
+legt seine Einträge als aktive Einsätze und Diensttage an. Dort also
+anschließend nachsehen.
+
 **Das Backup-Passwort.** Mindestens zehn Zeichen, und die Seite sagt während
 der Eingabe, wie stark das Gewählte ist. Wer mag, setzt stattdessen das Häkchen
 **„Mein Kontopasswort verwenden“** und tippt sein Anmeldepasswort ein — dann
@@ -1119,7 +1139,8 @@ schiefgeht — sie ersetzt dein eigenes Backup nicht.
 **Die Administration sieht dabei keine Inhalte.** In der Sicherung stecken die
 geschützten Angaben genau so verschlüsselt wie in der Datenbank; lesbar werden
 sie erst in einem Browser, der den Schlüssel hat. Die Übersicht in der
-Administration zeigt Zeitpunkt, Anzahl der Einsätze und Dateigröße — mehr nicht.
+Administration zeigt Zeitpunkt, Anzahl der Einsätze, Diensttage und
+Ruhezeiten, davon die Anzahl im Papierkorb, und die Dateigröße — mehr nicht.
 
 **Wenn dein Konto weiterbesteht**, spielt die Administration eine solche
 Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
@@ -1426,6 +1447,28 @@ für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
 wachsen also nicht wieder an. Beim endgültigen Löschen kommt die Referenz auf
 eine Sperrliste, sodass die Uhr sie nicht neu anlegt.
 
+**Einen einzeln gelöschten Einsatz holst du erst zurück, wenn sein Diensttag
+wieder da ist.** Hast du zuerst einen Einsatz gelöscht und danach seinen ganzen
+Diensttag, steht der Einsatz weiterhin als eigene Zeile im Papierkorb — sein
+„Wiederherstellen" wird aber abgelehnt, mit einem Hinweis. Stelle zuerst den
+**Diensttag** wieder her; danach geht es. Der Grund: Ein Einsatz ohne
+Diensttag wäre halb sichtbar — in der Suche zu finden, in der Tagesübersicht
+und im Zeitraum nicht, und öffnen ließe er sich auch nicht mehr.
+
+**„Endgültig löschen" bei einem Diensttag nimmt wirklich alles mit.** Falls am
+gelöschten Tag noch etwas Aktives hängt — das kann aus einer älteren Fassung
+stammen —, nennt die Rückfrage es einzeln mit Datum und Uhrzeit und bietet
+einen Link zum Verschieben an. Wer einen davon behalten will, verschiebt ihn
+vorher an einen anderen Diensttag; sonst geht er mit.
+
+**Die Uhr legt einen neuen Diensttag an, wenn der alte im Papierkorb liegt.**
+Liefert die Uhr für einen Dienst nach, den du im Web inzwischen gelöscht hast,
+landet die Nachlieferung **nicht** im Papierkorb-Tag, sondern in einem neuen.
+Das ist Absicht: Die Uhr sendet ein Paket nur, bis der Server es bestätigt —
+verwerfen hieße, den Flug zu verlieren. Ein zusätzlicher Tag lässt sich
+dagegen jederzeit über **Diensttage zusammenführen** wieder mit einem anderen
+vereinen.
+
 **Ein Diensttag im Papierkorb nimmt keine Änderungen an.** Trägst du Rettungsmittel,
 Basis oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
 bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt
@@ -1433,6 +1476,19 @@ für Import und das Einspielen einer Sicherung: Beide überspringen solche Tage
 und sagen es. Der Grund: Das Löschen war eine bewusste Handlung, und sie
 nebenbei rückgängig zu machen wäre eine Überraschung. Stelle den Tag zuerst
 wieder her.
+
+Genau zu lesen ist dabei, **wessen** Papierkorb gemeint ist: Übersprungen wird
+ein Tag, der **hier** im Papierkorb liegt. Was **in der Sicherungsdatei**
+gelöscht ist, wird nicht übersprungen — es kommt zurück, und zwar wieder als
+Papierkorbeintrag (Abschnitt 6). Die Rückmeldung nach dem Einspielen nennt
+beides getrennt: wie viel in den Papierkorb übernommen wurde und wie viel aus
+welchem Grund übersprungen.
+
+**Ein Einsatz, der in der Datei mit seinem Tag gelöscht war, dessen Tag es hier
+aber noch aktiv gibt, kommt einzeln gelöscht zurück** — er steht dann als
+eigene Zeile im Papierkorb. Das ist gewollt: Ein Eintrag, der an einem Tag
+hängt, den es im Papierkorb gar nicht gibt, wäre dort unsichtbar und ließe
+sich nicht mehr zurückholen.
 
 **Die Sperrliste hält 90 Tage**, danach räumt das System sie ebenfalls weg. Das
 ist in der Praxis reichlich — eine Uhr, die 90 Tage lang keine Verbindung

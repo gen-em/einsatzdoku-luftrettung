@@ -1929,6 +1929,65 @@ ui_topbar('einstellungen');
   <?php endif; ?>
 
   <hr class="sep">
+  <?php
+  /* ---- Bestandsaufnahme: Einsätze ohne Diensttag (Backlog Nr. 33) --------
+   *
+   * KEINE MIGRATION, SONDERN EIN BERICHT — und zwar mit Absicht. Eine
+   * Migration gilt nach einem Durchlauf als erledigt und meldet sich nie
+   * wieder; dieser Zustand soll aber so lange sichtbar bleiben, wie es ihn
+   * gibt. Er wird auch nicht selbsttätig behoben: Welchem Diensttag ein
+   * verwaister Einsatz zugeschlagen wird, ist eine fachliche Entscheidung,
+   * und die trifft keine Wartungsseite.
+   *
+   * WIE DER ZUSTAND ENTSTAND. Bis Web 8.0.0 entfernte trash_purge_day() nur
+   * die GELÖSCHTEN Einsätze eines Diensttags und danach den Tag selbst; ein
+   * aktiver Einsatz daran überlebte den ersten Schritt und verlor im zweiten
+   * seinen Diensttag (`ON DELETE SET NULL`). Aktiv an einem gelöschten Tag
+   * konnte er über zwei Wege werden — das Zurückholen eines einzeln
+   * gelöschten Einsatzes im Papierkorb und eine Nachlieferung der Uhr über
+   * eine Kennung in `day_refs`. Beide Wege sind seit Web 8.0.0 zu, und
+   * trash_purge_day() nimmt jetzt alles mit. Was VORHER entstanden ist,
+   * liegt aber noch da, und sichtbar ist es fast nirgends: in der Suche und
+   * auf der Einsatzseite ja — in Tagesübersicht, Zeitraum, Export und
+   * Nachbearbeitung nicht, und in einer Sicherung ist es zwar enthalten,
+   * kommt beim Einspielen aber nicht zurück.
+   */
+  $waisen = $pdo->query(
+      'SELECT m.id, m.user_id, u.email, m.started_at
+         FROM missions m JOIN users u ON u.id = m.user_id
+        WHERE m.day_id IS NULL AND m.deleted_at IS NULL
+        ORDER BY u.email, m.started_at')->fetchAll(PDO::FETCH_ASSOC);
+  ?>
+  <h2>Einsätze ohne Diensttag</h2>
+  <?php if (!$waisen): ?>
+    <p class="muted">Keine. Jeder aktive Einsatz hängt an einem Diensttag —
+       so soll es sein.</p>
+  <?php else: ?>
+    <p class="alert alert-warn"><strong><?= count($waisen) ?></strong> aktive
+       Einsätze haben <strong>keinen Diensttag</strong>. Sie stammen aus einem
+       Stand vor Web 8.0.0 (siehe Changelog, Backlog Nr. 33). Sie sind in der
+       Suche zu finden, fehlen aber in Tagesübersicht, Zeitraum, Export und
+       Nachbearbeitung — und eine Sicherung führt sie zwar mit, spielt sie
+       aber nicht zurück.</p>
+    <p class="muted">Zu tun: Jeden Einsatz öffnen und über
+       <strong>Verschieben</strong> an einen Diensttag hängen (oder löschen,
+       wenn er nicht gebraucht wird). Diese Seite ändert von sich aus nichts —
+       welcher Diensttag der richtige ist, steht hier nicht.</p>
+    <table class="data">
+      <thead><tr><th>Konto</th><th>Einsatzbeginn</th><th>Kennung</th></tr></thead>
+      <tbody>
+      <?php foreach ($waisen as $w): ?>
+        <tr>
+          <td><?= e((string)$w['email']) ?></td>
+          <td><?= e(fmt_local((string)$w['started_at'], 'd.m.Y H:i')) ?></td>
+          <td class="mono"><?= (int)$w['id'] ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php endif; ?>
+
+  <hr class="sep">
   <h2>Datenbank-Update</h2>
   <p class="muted">Diese Weboberfläche läuft als <strong>Web <?= e(WEB_VERSION) ?></strong>.
      Die Tabelle nennt zu jedem Eintrag die Fassung, mit der er ausgeliefert
