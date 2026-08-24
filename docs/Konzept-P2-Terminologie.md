@@ -937,6 +937,60 @@ Sachfehler (F-P2-P, unten).
 **Offen nach D4:** nichts.
 
 
-### D5 — Format- und Technik-Dokumentation (offen)
+### D5 — Format- und Technik-Dokumentation (erledigt)
+
+**`docs/Export-Format.md`.**
+
+- **Abschnitt 2** neu (F-P2-B). Die Tabelle listete **29** Spalten mit „Pilot 1
+  / Pilot 2 / HEMS / Flugretter" und „Flugkilometer"; darunter stand „29
+  Spalten, davon 7 geschützte". Der Code schreibt **31**: 13 feste, dann die
+  **sieben** Rollenspalten in Katalogreihenfolge (Pilot 1, Pilot 2, HEMS-TC,
+  Flugretter, Fahrer, Praktikant, Sonstige Besatzung), dann 21–29
+  Sekundärtransport bis Höhe Einsatzort (m), 30 **Kilometer**, 31 Notizen —
+  und **16** davon sind geschützt (sieben Grunddaten, sieben Rollen, Höhe,
+  Notizen). Die `*`-Markierungen der Tabelle waren ebenfalls unvollständig:
+  Sie standen nur an den sieben Grunddaten, obwohl der Absatz darüber seit
+  Web 5.8.0 mehr behauptete. Beides berichtigt. Ergänzt: ein Absatz, dass die
+  Spalten 14–20 aus `CREW_ROLES` entstehen und an einem bodengebundenen
+  Diensttag die vier Luftrollen leer bleiben — die Datei führt trotzdem alle
+  sieben, damit Dateien beider Arten dieselbe Form haben.
+- **Abschnitt 2, Effektive Besatzung:** „in dieser Tabelle zählt nur, wer
+  **geflogen** ist" → „wer den Einsatz **gefahren oder geflogen** ist". Ein
+  Satz ohne Sperrwort, gefunden beim Lesen.
+- **Abschnitt 3.5:** „Eine Flugspur endet am Einsatzort" → „Ein Track endet am
+  Einsatzort … — der bodengebundene so gut wie der luftgebundene."
+- **Abschnitt 5.2:** Warntext wörtlich wie W4; „Die Spalte `Kilometer` (bis
+  Web 5.10.0 `Flugkilometer`) wird ebenfalls verworfen …" (E-P2-10).
+- **Abschnitte 3.8, 4, 5.1:** Feldnamen unverändert (Klasse D). Der Satz
+  „Bis Web 5.10.0 gab es nur die fünf Flugrollen" bleibt (Klasse C).
+
+**`docs/Technik.md`.** Architekturbild „Uhr-App (derzeit Garmin, Monkey C)"
+statt „Garmin Fenix 6 / Connect-IQ-App"; Verzeichniswurzel `<repo>/` statt
+`hems/`; „Pilotenwechsel oder Fahrerwechsel"; Runbook „Einstellungen der
+Uhr-App (Server-Domain, ID, Schlüssel) gesetzt? … *Bei Garmin liegen diese
+Einstellungen in Garmin Connect.*"; Stand-Datum 24.08.2026. Kapitel 5 und die
+Build-Absätze unverändert (Klasse G), ebenso „Connect-IQ-Projekt" für
+`watch/` und `tools/eingabe-probe/` — beide **sind** eines.
+
+**Durchsicht ohne Änderung**, wie erwartet: `Backup-Format.md` (117/198
+historische Nennung, 177/211/214 Beispielwerte), `JSON-Vertrag.md` (77 nennt
+beide Arten, 303 geht nach P6, 315 historische Nennung, 363 „Flugmodus" ist
+ein Homonym), `Branding.md` (Bildmarke, P3), `CLAUDE.md` (Kopf ist Klasse G;
+„Einsatzdokumentation Notarzt" steht dort bereits richtig). **Ein Fund dabei,
+nicht behoben:** F-P2-J, der Rollencode `tc` in `Backup-Format.md`.
+
+**Prüfstand.**
+
+| Prüfung | Mittel | Ergebnis |
+|---|---|---|
+| P-P2-02, Wortliste über **alle** Bereiche | `python3 tools/wortliste/wortliste.py` | **0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen**, Rückgabewert 0. 23 Muster, 9 Fallen, **44 Ausnahmeregeln**, alle 44 gegriffen |
+| P-P2-08, Excel-Export gegen die Tabelle in Abschnitt 2 | Referenz-Export aus dem Demo-Konto, Profil „Excel (Standard)", gesamter Zeitraum; Kopfzeile aus der erzeugten `.xlsx` ausgelesen | **mit** personenbezogenen Angaben: **31 Spalten**, Reihenfolge und Beschriftungen identisch zur Tabelle. **Ohne**: **15 Spalten** (31 − 16) — Rettungsmittel, Standort, Einsatzdatum, Alarmzeit, Endzeit, Dauer, Sekundärtransport, Transportziel, Schockraum, Windeneinsatz, Windenzyklen gesamt, Bergwacht, Bergwacht-Einheit, Weitere Rettungsmittel, Kilometer |
+| Konsistenz W4 ↔ Export-Format 5.2 | Zeichenweiser Vergleich: Zeichenkette aus `import_profiles.js` gegen den Blockzitat-Absatz | **identisch, 453 Zeichen** |
+| Konsistenz Handbuch 7.2 ↔ W4 | gelesen | Paraphrase mit denselben Phasennamen („die Phasen Ausrücken bis Übergabezeit … der Track samt Kilometern") |
+| Konsistenz Handbuch 7.1 ↔ Export-Format 1 | gelesen | Beispieldateiname folgt dem dokumentierten Aufbau `einsatzdokumentation_export_TT-MM-JJJJ_<profil>_<inhalt>_<schutz>_<konto>.<endung>`; die Endung `.zip` bei `verschl` stimmt (`export.js` 1214–1222) |
+| README-Tabelle ↔ tatsächliche Dateien | `ls` | 17 Einträge, 17 Dateien vorhanden (nach D6) |
+
+**Offen nach D5:** nichts.
+
 
 ### D6 — Abschluss (offen)

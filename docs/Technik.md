@@ -1,15 +1,15 @@
 # Einsatzdoku — Technische Dokumentation
 
-*Stand: 26.07.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 24.08.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
 
 ```
 ┌─────────────────┐  HTTPS POST /ingest.php   ┌──────────────────────────┐
-│ Garmin Fenix 6  │  JSON (JSON-Vertrag)      │  Webspace                │
-│ Connect-IQ-App  │ ────────────────────────► │  PHP ≥ 8.1  + MySQL      │
-│ (Monkey C)      │  X-Device-Id / X-Api-Key  │                          │
+│ Uhr-App         │  JSON (JSON-Vertrag)      │  Webspace                │
+│ (derzeit Garmin,│ ────────────────────────► │  PHP ≥ 8.1  + MySQL      │
+│  Monkey C)      │  X-Device-Id / X-Api-Key  │                          │
 └─────────────────┘                           │  ingest.php   (Uhr-API)  │
                                               │  api/…        (Lese-API) │
 ┌─────────────────┐  HTTPS (Session-Login)    │  *.php        (Seiten)   │
@@ -26,7 +26,7 @@ Daten erst nach Server-Bestätigung.
 ## 2. Verzeichnisstruktur
 
 ```
-hems/
+<repo>/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
 │                          Branding (Farben, Schriften, Logo),
 │                          Backup-Format, Export-Format,
@@ -652,7 +652,7 @@ unverändert. Backup exportiert/importiert beide.
 **Effektive Besatzung (Crew-Override, ab Web 2.6.0):** Die Besatzung wird
 einmal je Diensttag in `day_crew` gepflegt (bis Web 5.10.0: fünf Spalten
 `days.crew_*`). Ein einzelner Einsatz kann davon abweichen (fachlicher Anlass:
-Pilotenwechsel im laufenden Dienst) — dafür trägt `missions` die Spalte
+Pilotenwechsel oder Fahrerwechsel im laufenden Dienst) — dafür trägt `missions` die Spalte
 `crew_override` (0/1), die Namen liegen in `mission_crew`.
 **Bewusst redundanzfrei:** Ohne Abweichung gibt es in `mission_crew` keine
 Zeile; es gibt keine Kopie der Tagesbesatzung am Einsatz. Die Regel lautet je
@@ -2239,9 +2239,9 @@ veralteten Dateien, nicht am Code.
 (muss `strict-origin-when-cross-origin` sein), Hard-Reload.
 
 **Diagnose Uhr lädt nicht hoch:** Web „Geräte" → „Zuletzt gesehen"; Gerät
-aktiv? Connect-IQ-Einstellungen (Server-Domain, ID, Schlüssel)? Uhr online
-(Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
-erfolgreichem Upload.
+aktiv? Einstellungen der Uhr-App (Server-Domain, ID, Schlüssel) gesetzt?
+Uhr online (Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
+erfolgreichem Upload. *Bei Garmin liegen diese Einstellungen in Garmin Connect.*
 
 ## 8. Backlog
 
