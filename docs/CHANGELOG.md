@@ -218,6 +218,35 @@ Dazu in Abschnitt 6: **Der Papierkorb ist in keinem Exportprofil enthalten**,
 und seit dieser Fassung ist das ein Unterschied zur Sicherung, die ihn führt.
 Wer gelöschte Einträge erhalten will, nimmt das Backup.
 
+### Werkzeug — Das Vergleichswerkzeug sah an zwei Stellen weg
+
+Nicht ausgeliefert (`tools/referenzdatensatz/`), aber Teil derselben Änderung:
+Ein Kreislauftest ist nur so viel wert wie das, was er anschaut.
+
+**`missions[].created_at` wird nicht mehr wegnormalisiert.** Es war als
+flüchtiger Anteil eingetragen — und genau das hatte den Verlust jahrelang
+verdeckt: Der Kreislauf sah ihn nicht, weil das Werkzeug wegsah. Jetzt wird der
+Wert verglichen. Die Kopfangabe `created_at` der Datei (Zeitpunkt des Exports)
+bleibt normalisiert; sie ist tatsächlich flüchtig.
+
+**`deleted_at` wird normalisiert, aber nicht weggenommen.** Der Zeitpunkt
+entsteht beim Einspielen neu und kann nicht überleben; die Unterscheidung
+leer/gesetzt **muss** überleben, denn „Papierkorbeintrag kommt als
+Papierkorbeintrag zurück" ist die Aussage, die der Kreislauf belegen soll. Ein
+gesetzter Wert wird durch die Zeitmarke ersetzt, ein leerer bleibt leer. Eine
+*Ausnahmeregel* dafür wäre ein Filter gewesen — sie hätte die Aussage
+mitweggenommen.
+
+Die Probe aufs Exempel (`--testabweichung`) hat für die Sicherung zwei neue
+Paare: Papierkorb-Zustand geändert → muss gemeldet werden, Löschzeitpunkte
+verschoben → darf nicht; `created_at` eines Einsatzes geändert → muss gemeldet
+werden (bis hierher eine Gegenprobe mit umgekehrter Erwartung), Kopfangabe
+geändert → darf nicht. **12/12 für die Sicherung, 10/10 für CSV.**
+
+Die Ausnahmelisten tragen neu gemessene Zahlen. Für die behobenen Fehler Nr. 27
+und Nr. 28 sind **keine** Regeln hinzugekommen — behebbare Abweichungen gehören
+nicht in eine Ausnahmeliste, sondern behoben.
+
 ## [Web 7.3.1] — 2026-08-23
 
 **Einsätze nach Mitternacht landeten beim CSV-Rückimport 24 Stunden zu früh.**

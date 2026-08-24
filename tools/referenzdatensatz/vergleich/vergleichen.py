@@ -344,6 +344,37 @@ def _kennungen_verschieben(d: dict) -> None:
                 z["day_id"] = neu[z["day_id"]]
 
 
+def _papierkorb_zustand_aendern(d: dict) -> None:
+    """Einen AKTIVEN Einsatz in den Papierkorb setzen (E-S1-15, Hinprobe).
+
+    Die Normalisierung ersetzt den Zeitwert durch eine Marke, den ZUSTAND aber
+    nicht. Ein Eintrag, der in der einen Datei aktiv und in der anderen
+    geloescht ist, MUSS gemeldet werden — sonst belegt der Kreislauf nicht,
+    dass ein Papierkorbeintrag als Papierkorbeintrag zurueckkommt.
+    """
+    for m in d.get("missions", []):
+        if not m.get("deleted_at"):
+            m["deleted_at"] = "2099-01-01 00:00:00"
+            return
+    raise RuntimeError("kein aktiver Einsatz in der Datei")
+
+
+def _papierkorb_zeit_verschieben(d: dict) -> None:
+    """Nur den ZEITPUNKT aller Papierkorbeintraege aendern (Gegenprobe).
+
+    Genau das passiert bei jedem Einspielen (E-S1-03): Die Frist beginnt neu.
+    Es darf NICHT gemeldet werden.
+    """
+    n = 0
+    for name in ("missions", "rest_segments", "days"):
+        for z in d.get(name, []):
+            if z.get("deleted_at"):
+                z["deleted_at"] = "2099-01-01 00:00:00"
+                n += 1
+    if not n:
+        raise RuntimeError("kein Papierkorbeintrag in der Datei")
+
+
 PROBEN_EDBAK = [
     ("Wert in missions",
      lambda d: d["missions"][2].__setitem__("distance_m", 424242), True),
@@ -356,12 +387,14 @@ PROBEN_EDBAK = [
     ("Diensttag entfernt", lambda d: d["days"].pop(), True),
     ("Zuordnung Einsatz → Diensttag vertauscht",
      lambda d: d["missions"][0].__setitem__("day_id", d["days"][-1]["id"]), True),
+    ("Papierkorb-Zustand eines Einsatzes geändert", _papierkorb_zustand_aendern, True),
+    ("created_at eines Einsatzes geändert",
+     lambda d: d["missions"][0].__setitem__("created_at", "2099-01-01 00:00:00"), True),
     ("GEGENPROBE: created_at der Datei geändert",
      lambda d: d.__setitem__("created_at", "2099-01-01T00:00:00+00:00"), False),
     ("GEGENPROBE: Herkunftskonto geändert",
      lambda d: d.__setitem__("user", {"email": "wer@anders.example", "name": None}), False),
-    ("GEGENPROBE: created_at eines Einsatzes geändert",
-     lambda d: d["missions"][0].__setitem__("created_at", "2099-01-01 00:00:00"), False),
+    ("GEGENPROBE: Loeschzeitpunkte verschoben", _papierkorb_zeit_verschieben, False),
     ("GEGENPROBE: alle Diensttag-Kennungen verschoben",
      _kennungen_verschieben, False),
 ]

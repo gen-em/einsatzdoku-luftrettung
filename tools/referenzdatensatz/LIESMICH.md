@@ -114,10 +114,11 @@ ist keine Notfallanleitung, sondern der reguläre Weg; er wurde in dieser Phase
 dreimal gefahren, zweimal davon ungeplant.
 
 **Was dabei nicht identisch wiederkommt:** interne Kennungen, `created_at` und
-die **Gerätekennungen** (`dev-…`). Die ersten beiden nimmt die Normalisierung
-weg; die Gerätekennungen stehen in der Sicherung unter
-`days[].refs[].device_id` und weichen ab. Wer den Referenzstand neu aufbaut,
-erzeugt deshalb auch die Referenz-Exporte und die Fixture neu.
+die **Gerätekennungen** (`dev-…`). Nur die internen Kennungen nimmt die
+Normalisierung weg; `created_at` wird seit Web 8.0.0 verglichen (es kommt beim
+Einspielen wieder zurück), und die Gerätekennungen stehen in der Sicherung
+unter `days[].refs[].device_id`. Wer den Referenzstand neu aufbaut, erzeugt
+deshalb auch die Referenz-Exporte und die Fixture neu.
 
 **Und die Reihenfolge zählt:** Wer eine Quelldatei ändert, fährt die betroffene
 Einspielstufe erneut, **bevor** er exportiert. Der Datensatz ist

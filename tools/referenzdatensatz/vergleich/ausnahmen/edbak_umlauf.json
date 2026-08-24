@@ -1,13 +1,13 @@
 {
   "name": "edbak-umlauf",
-  "beschreibung": "Erwartete Abweichungen beim Umlauf Sicherung -> frisches Konto -> Sicherung. GEMESSEN am Referenzdatensatz (82 Einsaetze, 95 Ruhesegmente, 15 Diensttage, 52 484 Spurpunkte): 269 439 Einzelvergleiche, 15 Abweichungen, alle derselben Ursache. Jede Regel unten traegt die Zahl, mit der sie belegt ist.",
+  "beschreibung": "Erwartete Abweichungen beim Umlauf Sicherung -> frisches Konto -> Sicherung. GEMESSEN am Referenzdatensatz mit Nutzlast 7, also EINSCHLIESSLICH Papierkorb (87 Einsaetze / 5 im Papierkorb, 100 Ruhesegmente / 5, 16 Diensttage / 1, 55 861 Spurpunkte): 286 739 Einzelvergleiche, 16 Abweichungen, alle derselben Ursache. Jede Regel unten traegt die Zahl, mit der sie belegt ist. STAND DAVOR (Nutzlast 6, ohne Papierkorb): 269 439 Einzelvergleiche und 15 Abweichungen — dieselbe Regel, ein Diensttag weniger. NICHT MEHR NOETIG seit Web 8.0.0: eine Regel fuer `deleted_at`. Der Loeschzeitpunkt entsteht beim Einspielen neu (E-S1-03), aber die Normalisierung ersetzt ihn durch eine Zeitmarke und erhaelt dabei die Unterscheidung leer/gesetzt — der ZUSTAND wird also verglichen, nicht der Zeitpunkt. Eine Ausnahmeregel dafuer waere ein Filter gewesen.",
   "regeln": [
     {
       "bereich": "days",
       "feld": "device_id",
       "art": "wert",
       "nach": "None",
-      "begruendung": "GEMESSEN 15x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keiner Sicherung — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Das ist gewollt: Nach einer Wiederherstellung muss jede Uhr neu gekoppelt werden, und die day_refs verhindern trotzdem, dass ein spaeter eintreffender Upload den Diensttag erneut anlegt."
+      "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keiner Sicherung — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Das ist gewollt: Nach einer Wiederherstellung muss jede Uhr neu gekoppelt werden, und die day_refs verhindern trotzdem, dass ein spaeter eintreffender Upload den Diensttag erneut anlegt."
     }
   ]
 }

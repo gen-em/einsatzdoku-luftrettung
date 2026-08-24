@@ -709,3 +709,45 @@ Werkzeugs.
 | Zahlen der Ausnahmen | Bericht des CSV-Kreislaufs, nach Feld gruppiert | GPX 171, Ruhezeiten 95, `track_datei`/`track_punkte` je 76, Rettungsmittel 51 (Einsätze) und 8 (Diensttage), fehlende Diensttage 2 — alle sechs Ausnahmen mit Zahl belegt |
 | Formelschutz-Apostroph | Referenz- und Umlaufarchiv ausgezählt, dazu SQL im Zielkonto | 3 Zellen in beiden Archiven mit führendem Apostroph; im **Bestand** des Umlaufkontos 3 Werte mit Apostroph, im Referenzkonto 0 — der Wert ist ein Zeichen länger geworden, die Datei sieht gleich aus |
 | Widerspruchsfreiheit | 5.1 gegen `vergleich/ausnahmen/csv_umlauf.json` gelesen | keine Aussage in 5.1 ohne Entsprechung in der Ausnahmeliste; die Zahlen der Liste werden in C6 auf denselben Stand gebracht |
+
+### C6 — Vergleichswerkzeug nachziehen (erledigt)
+
+**Geändert:** `tools/referenzdatensatz/vergleich/normalisieren.py` (Hilfe
+`_papierkorb()`, `created_at` der Zeilen nicht mehr normalisiert, Kopftext neu),
+`vergleich/vergleichen.py` (zwei neue Probenpaare für die Sicherung),
+`vergleich/ausnahmen/edbak_umlauf.json` und `csv_umlauf.json` (neu gemessene
+Zahlen, Beschreibungen fortgeschrieben), `vergleich/LIESMICH.md`,
+`tools/referenzdatensatz/LIESMICH.md`, `docs/CHANGELOG.md`.
+
+**Entscheidungen, die dabei fielen:**
+
+1. **Für `deleted_at` gibt es KEINE Ausnahmeregel, sondern eine
+   Normalisierung.** Der Unterschied ist nicht formal: Eine Ausnahmeregel hätte
+   die ganze Abweichung als „erwartet" abgelegt — auch den Fall, dass ein
+   Papierkorbeintrag **aktiv** zurückkommt. Genau den soll der Kreislauf aber
+   finden. Die Normalisierung nimmt nur den Zeitwert und lässt den Zustand
+   stehen.
+2. **Die Zahlen der CSV-Ausnahmeliste waren teilweise veraltet** — durchgehend
+   um 2 zu niedrig. Ursache: Sie stammten aus dem Stand vor Web 7.3.1, als die
+   beiden Einsätze nach Mitternacht gar nicht verglichen wurden. Alle 38 Regeln
+   tragen jetzt frisch gemessene Zahlen (Summe 859).
+3. **Eine Zahl hat sich durch C4 tatsächlich geändert:**
+   `diensttage/dienst_ende` von 11 auf 12 — der nicht abgeschlossene Einsatz
+   zieht das Dienstende nicht mehr nach hinten. Das gehört zur Sache und steht
+   in der Beschreibung der Liste.
+4. **Der `--testabweichung`-Lauf gehört OHNE `--ausnahmen` gefahren**, und das
+   stand nirgends. Mit geladener Liste schlägt eine Hinprobe scheinbar fehl:
+   „Zeile in `diensttage.csv` entfernt" trifft die Regel `diensttage/* fehlt`
+   und wird als *erwartet* gezählt statt als Meldung. Das ist kein Fehler des
+   Werkzeugs, aber eine Falle beim Nachvollziehen — jetzt in
+   `vergleich/LIESMICH.md` benannt.
+
+**Prüfstand C6**
+
+| Nr. | Was | Wie | Ergebnis |
+|---|---|---|---|
+| P-S1-12 | Proben Sicherung | `vergleichen.py --art edbak <v7-Datei> <dieselbe> --testabweichung` | **12/12 bestanden**, darunter alle vier neuen |
+| P-S1-12 | Proben CSV | dasselbe mit dem Referenzarchiv | **10/10 bestanden** |
+| — | Wirkung der Normalisierung | Umlauf einer v7-Sicherung, vorher/nachher | vor C6 **11 unerklärte** Abweichungen (nur `deleted_at`-Zeitwerte), nach C6 **0** — bei 286 739 Einzelvergleichen und 16 erwarteten |
+| — | Gegenprobe zur Normalisierung | Probe „Papierkorb-Zustand eines Einsatzes geändert" | wird gemeldet — die Normalisierung nimmt den Zeitpunkt, nicht den Zustand |
+| — | CSV-Liste gegen die Messung | Kreislauf mit der neuen Liste | 8797 Einzelvergleiche, **0 unerklärt**, 859 erwartet, **0 ungenutzte Regeln** |
