@@ -194,6 +194,8 @@ sind hier als E überführt.
 | E-P2-18 | **Schwachwortliste** (`pwquality.js`): um bodengebundene Gegenstücke ergänzen (`notarztwagen`, `rettungswagen`, `notfallsanitaeter`, `rettungsdienst`) sowie `einsatzdoku` und `nadoku`. Kurzformen (`nef`, `rth`, `naw`) nur, wenn die Prüfung ganze Wörter vergleicht — in D2 am Code zu klären (`normal()`/Vergleichsweise in `pwquality.js`); vergleicht sie Teilstrings, bleiben Dreibuchstabler draußen, weil sie zu viele gute Passwörter träfen. |
 | E-P2-19 | **Die Ausnahmeliste kennt eine Klasse, die in 5.1 nicht steht: `Homonym`.** Sie steht für Stellen, an denen ein Sperrwort schlicht etwas anderes bedeutet — die „Maschine" im Runbook ist ein Rechner, „Maschinen" als Zielgruppe eines Formats meint maschinelle Verarbeitung, der „Flugmodus" ist eine Einstellung des Geräts. Eine Fundort-Klasse wäre dafür die falsche Auskunft: Es geht nicht darum, *wo* der Treffer steht, sondern dass er keiner ist. Entschieden in D1, weil die Alternative — solche Stellen unter C oder D zu führen — die Klassen entwertet hätte. |
 | E-P2-20 | **In der Ausnahmeliste erklärt die erste passende Regel den Treffer.** Notwendig, weil sich Regeln überschneiden: Die allgemeine Regel „Feldnamen und Kopfzeilen der Import-Profile" (Klasse D) passt auch auf die Zeile der Schwachwortliste in `pwquality.js`, deren Grund ein ganz anderer ist (Klasse F). Ohne feste Reihenfolge wäre nicht vorhersagbar, welche Begründung im Bericht steht. Folge für die Pflege: das Besondere steht oben, das Allgemeine unten. |
+| E-P2-21 | **„Basis" und „Station" gehören in die Sperrliste.** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort — die Erhebung in Abschnitt 2 hat sie deshalb nicht gefunden, und die Wortliste führte „Basis" sogar als „bereits ersetzt". Aufgenommen in D4 (F-P2-O), mit Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner) und für „Luftrettungsstation", das die Wortgrenze ohnehin heraushält. |
+| E-P2-22 | **`nadoku` kommt NICHT in die Schwachwortliste** — Abweichung von E-P2-18, begründet in F-P2-R. Der Vergleich in `pwquality.js` ist ein Teilstring-Vergleich; mit `nadoku` in der Liste ist `nadokudemo0815` — das Demo-Passwort aus README, Handbuch 3.2 und sämtlichen Prüfmitteln — weder setzbar noch als Backup- oder Exportpasswort verwendbar. Der Produktname existiert vor P6 ohnehin nicht (E-P2-13). Er gehört in die Liste, wenn er kommt: zusammen mit einem neuen Demo-Passwort. |
 
 ## 4. Offene Fragen
 
@@ -549,27 +551,36 @@ E-P2-05), Konzept- und Prüfdokument, Kreisläufe.
 **Abnahme:** P-P2-01 bis P-P2-10 mit Ist-Zahlen belegt; Doku konsistent;
 Commit je Paket; **kein Push** ohne Freigabe (K7).
 
-## 7. Prüfprotokoll (Soll)
+## 7. Prüfprotokoll (Soll und Ist)
 
-Wird von der umsetzenden Instanz mit Ist-Zahlen fortgeschrieben; Bedienwege
-und Fehlschlag-Erkennung gehören ins Prüfdokument (K9).
+Bedienwege und Fehlschlag-Erkennung stehen im Prüfdokument
+(`docs/Pruefdokument-P2-Terminologie.md`, K9).
 
-| Nr. | Prüfung | Soll |
-|---|---|---|
-| P-P2-01 | Wortlisten-Werkzeug gegen den **Vorher-Stand** (e29d593) | Treffer außerhalb der Ausnahmen **> 0**, Zahl protokolliert (Erwartung 25–40); belegt, dass das Werkzeug scheitern kann |
-| P-P2-02 | Wortlisten-Werkzeug gegen den **Endstand** | alle Bereiche **0** außerhalb der Ausnahmen; **0** ungenutzte Ausnahmen; Zahl der Ausnahmen protokolliert |
-| P-P2-03 | Kreislauf edbak (`kreislauf.py --art edbak`) | 0 unerklärte Abweichungen; Vergleichsumfang wie S1 (286 739 Einzelvergleiche, 16 erwartet) |
-| P-P2-04 | Kreislauf CSV (`--art csv`) | 0 unerklärte Abweichungen (8 797 Einzelvergleiche, 859 erwartet, 0 ungenutzte Regeln — wie S1) |
-| P-P2-05 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde |
-| P-P2-06 | Demo (`browser/demo_pruefen.mjs`) | 16/16 unverändert |
-| P-P2-07 | Excel-Rückimport (Browser) | Warntext neu; Import-Rückmeldung (angelegt/aktualisiert/übersprungen) identisch zum Lauf vor D2 mit derselben Datei — Zahlen beider Läufe protokolliert |
-| P-P2-08 | Excel-Export gegen `Export-Format.md` 2 | erzeugte Datei: 31 Spalten mit Angaben, 15 ohne; Reihenfolge und Beschriftungen identisch zur Tabelle |
-| P-P2-09 | Sichtprüfung der fünf Bedienwege (D2 Schritt 8) | neuer Wortlaut sichtbar; Konsole 0 Fehler; Anzahl geprüfter Seiten protokolliert |
-| P-P2-10 | Querverweise | jede berührte Abschnittsnummer (README → Handbuch; Web → Handbuch 2.0; Handbuch 10 ↔ 12; Handbuch 7.2 ↔ Export-Format 5.2) läuft; Zahl der geprüften Verweise |
+| Nr. | Prüfung | Soll | **Ist** |
+|---|---|---|---|
+| P-P2-01 | Wortlisten-Werkzeug gegen den **Vorher-Stand** (e29d593) | Treffer außerhalb der Ausnahmen **> 0** (Erwartung 25–40) | **53 Treffer in 44 Zeilen, das sind 30 zusammenhängende Stellen**; 286 Treffer gesamt, 233 erklärt; 0 ungenutzte Ausnahmen; Rückgabewert **1** — das Werkzeug kann scheitern |
+| P-P2-02 | Wortlisten-Werkzeug gegen den **Endstand** | alle Bereiche **0**, **0** ungenutzte Ausnahmen | **0 / 0 / 0**, Rückgabewert **0**. 23 Muster, 9 Teilstring-Fallen, **44 Ausnahmeregeln, alle 44 gegriffen** |
+| P-P2-03 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärte Abweichungen, 286 739 Einzelvergleiche, 16 erwartet | **286 739 Einzelvergleiche, 0 unerklärt, 16 erwartet** — Sollstand nach S1 gehalten |
+| P-P2-04 | Kreislauf CSV (`--art csv --frisch`) | 0 unerklärt, 8 797 Einzelvergleiche, 859 erwartet | **8 797 Einzelvergleiche, 0 unerklärt, 859 erwartet** |
+| — | Probe aufs Exempel, beide Arten, dieselbe Datei beidseitig, **ohne** `--ausnahmen` | alle Proben bestanden | **edbak 12/12, CSV 10/10** |
+| P-P2-05 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | **42 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+| P-P2-06 | Demo (`browser/demo_pruefen.mjs`) | unverändert | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** (das Soll „16/16" im Konzept war überholt; S1 nennt 24). Papierkorb 5/1/5 vor und nach dem Reset |
+| P-P2-07 | Excel-Rückimport (Browser) vor und nach D2, dieselbe Datei | Warntext neu, Bilanz identisch | **Bilanz beide Male: 14 Diensttage, 78 Einsätze, 20 Hinweise, 0 Fehler, 78 Dubletten, 7 mit abweichender Besatzung**; Profil beide Male `export_excel_v1`; Warntext neu; Konsole still |
+| P-P2-08 | Excel-Export gegen `Export-Format.md` 2 | 31 Spalten mit, 15 ohne | **31 / 15**, Reihenfolge und Beschriftungen identisch zur berichtigten Tabelle |
+| P-P2-09 | Sichtprüfung der fünf Bedienwege | neuer Wortlaut, Konsole 0 Fehler | **21 Einzelprüfungen über 6 Seitenaufrufe, 0 Befunde, 0 Konsolenfehler**, 6 Bildschirmfotos |
+| P-P2-10 | Querverweise | jede berührte Abschnittsnummer läuft | **85 Abschnittsverweise über 6 Dokumente geprüft, 83 aufgelöst**; 2 Artefakte des Prüfskripts; **1 echter Fehler gefunden und behoben** (Handbuch 8.4 → 9.4) |
 
-Stilvergleich (`tools/stilvergleich/`) ist **nicht** erforderlich — P2
-ändert `style.css` nicht. Ändert ein Paket wider Erwarten doch eine
-CSS-Regel, gilt `CLAUDE.md` 6.
+Zusätzlich gemessen, nicht im Soll vorgesehen:
+
+| Prüfung | Ist |
+|---|---|
+| Selbstprobe des Zerlegers (`wortliste.py --probe`) | **16/16** bestanden, jede Probe zusätzlich auf Zeilentreue |
+| Warntext in `import_profiles.js` gegen `Export-Format.md` 5.2 | zeichenweise **identisch, 453 Zeichen** |
+| Schwachwortliste vorher/nachher | **768 Passwortproben durch beide Fassungen, 0 Abweichungen** (siehe F-P2-R) |
+| Syntax | `php -l` über vier geänderte PHP-Dateien, `new Function()` über zwei JS-Dateien — fehlerfrei |
+
+Stilvergleich (`tools/stilvergleich/`) war **nicht** erforderlich — P2 hat
+`style.css` nicht angefasst (`git diff` über den Phasenumfang: 0 Zeilen).
 
 ## 8. Regressionspflicht (R24)
 
@@ -615,6 +626,8 @@ Mit Fundort, Wirkung, und ob blockierend (dann sofort, sonst gesammelt, K4).
 | F-P2-O | **Zwei Wörter fehlten in der Sperrliste: „Basis" und „Station".** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort. Die Wortliste (5.2) führte „Basis" sogar als „bereits ersetzt (Web 6.x)" — im Handbuch stand er noch („Trägst du Rettungsmittel, **Basis** oder Besatzung …", „der Regelfall an einer **Station**"). | `Handbuch.md` 1480 und 1596; Wortliste 5.2 | Ohne die beiden Muster hätte das Werkzeug null gemeldet und zwei echte Stellen übersehen — die Art von Lücke, die eine Prüfung wertlos macht. | **In P2 behoben**, D4: beide Stellen geändert, beide Muster in die Sperrliste (23 statt 21), drei Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner). Wortliste 5.2 berichtigt. |
 | F-P2-P | **Drei Stellen waren nur von der Luft her gedacht, ohne ein Sperrwort zu enthalten** — gefunden in der Gesamtdurchsicht (D4, Schritt 11): (a) die Feldgruppe „Weitere Rettungsmittel" mit „Fahrzeuge" erklärt — für ein NEF ist das weitere Mittel oft gerade der RTH; (b) „Die Kacheln Längste Flugstrecke, Längste Einsatzdauer und **Höchster Einsatzort** sind interaktiv" — „Höchster Einsatzort" gibt es nur im Kachelsatz der Luftrettung (`zeitraum.php`, `KACHELN_LUFT`), in „Gemischt" und „Bodengebunden" sind es zwei; (c) „das **gewohnte** Listenlayout" für das Fremdformat GuteSeele — gewohnt ist es an einer Luftrettungsstation. | `Handbuch.md` 485, 742–744, 1282 | (b) ist ein Sachfehler und widerspricht der eigenen Tabelle zwei Absätze höher. | **In P2 behoben**, D4. |
 | F-P2-Q | **Zwei `.pyc`-Dateien liegen im Repositorium**, obwohl `.gitignore` 29 `tools/referenzdatensatz/**/__pycache__/` führt: `quelldaten/__pycache__/katalog.cpython-311.pyc` und `wegpunkte.cpython-311.pyc`. `.gitignore` wirkt nicht auf bereits verfolgte Dateien. | `git ls-files` | Sie ändern sich bei jedem Lauf und tauchen als Änderung im Arbeitsbaum auf, ohne dass jemand etwas getan hat — genau so ist es in dieser Umsetzung passiert. | **Gesammelt, nicht behoben** (K4). Empfehlung: `git rm --cached` für beide. |
+| F-P2-R | **E-P2-18 machte das Demo-Passwort unbrauchbar.** `nadoku` in der Schwachwortliste trifft über den Teilstring-Vergleich (`h.length >= 6 && k.includes(h)`) das Passwort `nadokudemo0815`. Es steht im README, im Handbuch 3.2 und in jedem Prüfmittel. Wo `guete.erlaubt` geprüft wird — `pw_handling.php` (Passwort setzen), `einstellungen.php` (Backup-Passwort), `import.php` (Exportpasswort) —, wird es abgewiesen. | `assets/pwquality.js` 50 ff. | **Gemessen, nicht vermutet:** Der Kreislauftest `--art edbak` lief nach D2 in einen Zeitüberlauf von 900 s beim Warten auf den Download. Die Ursache war nicht der Umlauf, sondern das Passwortfeld: Die erneute Sicherung wurde gar nicht erst erzeugt. Damit hätte P2 den Regressionsapparat der eigenen Phase stillgelegt. | **In P2 behoben**, D6: `nadoku` wieder heraus, Begründung im Kommentar der Liste (E-P2-22). **Nebenbefund:** Die fünf verbleibenden Ergänzungen ändern am Verhalten **nichts** — sie sind durch kürzere Einträge der bestehenden Liste bereits abgedeckt. 768 Passwortproben durch beide Fassungen: **0 Abweichungen**. E-P2-18 hat damit als Sicherheitsmaßnahme keine Wirkung; als Dokumentation dessen, was gemeint ist, bleibt sie stehen. |
+| F-P2-S | **Das Anlegen des Demo-Kontos scheitert an einer Gerätekennung.** `devices.device_id` ist **global** eindeutig (`schema.sql` 39); die Demo-Fixture bringt die Kennungen des Referenzbestands mit (`manual-2`). Auf einer Installation, die den Referenzbestand ohnehin führt, kollidieren sie, und `admin_demo.php` zeigt der Administration den rohen Datenbankfehler: `SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'manual-2' for key 'device_id'`. | `server/demo_lib.php` 388–394, `server/schema.sql` 39 | Auf einer Entwicklungsmaschine mit Referenzbestand lässt sich das Demo-Konto nicht anlegen. Auf dem Produktivserver nur, wenn dort zufällig dieselbe Kennung existiert — die Kennungen `manual-<n>` stammen aber aus dem Prüfwerkzeug, nicht aus dem Betrieb. Unabhängig davon: Ein roher SQLSTATE-Text ist keine Meldung. | **Gesammelt, nicht behoben** (K4) — kein Terminologiefund. Für den Lauf der Demo-Abnahme wurde die kollidierende Zeile einmalig per SQL entfernt; das ist im Prüfdokument 1.4 vermerkt. Empfehlung: beim Anlegen `INSERT IGNORE` oder eine eindeutige Kennung je Konto, und in jedem Fall eine lesbare Meldung. |
 
 ## 10. Statuspflege und Rahmenplan-Berichtigungen
 
@@ -678,7 +691,20 @@ dort mitnehmen, dann ohne die Umbenennung.
 Vorlage: „P2 | fertig, im Repo fortgeschrieben (`docs/Konzept-P2-Terminologie.md`)
 | umgesetzt (Web x.y.z, Push offen/erfolgt) | Sechs Pakete D1–D6; neues
 Prüfmittel `tools/wortliste/` (läuft in P3 und P6 mit); keine Migration; Uhr
-unverändert (Plan 10.4). Offen: Prüfliste aus dem Prüfdokument."
+unverändert (Plan 10.4). Offen: Prüfliste aus dem Prüfdokument.
+
+**Ausgefüllt:** „P2 | fertig, im Repo fortgeschrieben
+(`docs/Konzept-P2-Terminologie.md`) | umgesetzt (**Web 8.0.1**, Push offen) |
+Sechs Pakete D1–D6; neues Prüfmittel `tools/wortliste/` (23 Muster, 44
+Ausnahmen, läuft in P3 und P6 mit); keine Migration; Uhr unverändert
+(Plan 10.4). Vorher 53 Treffer außerhalb der Ausnahmen, nachher 0; Kreisläufe
+286 739 / 8 797 Einzelvergleiche, beide 0 unerklärt. Neun Funde aus der
+Konzepterstellung (A–I) erledigt; zehn Funde während der Umsetzung (J–S),
+davon sechs behoben und **vier übergeben**: F-P2-J (Rollencode `tc` in der
+Format-Doku), F-P2-L (`rc.json` nicht in `.gitignore` — Wiederherstellungs-
+schlüssel), F-P2-Q (zwei `.pyc` im Repositorium), F-P2-S (Demo-Anlage
+scheitert an einer Gerätekennung). Offen: Prüfliste aus dem Prüfdokument,
+neun Punkte."
 
 ## 11. Umsetzungsstand
 
@@ -784,7 +810,7 @@ ungenutzte Einträge; jeder Eintrag nennt Klasse und Grund.
 | W4 | `assets/import_profiles.js` | Warntext des Excel-Rückimports: Ausrücken statt Abflug, Ankunft Klinik statt Landung Krankenhaus, Kilometer statt Flugkilometer (F-P2-A). Der Kommentar darüber verwies auf „SPEC_Export.md 7.2" — ein Dokument, das es nicht gibt; jetzt `docs/Export-Format.md` 5.2 (F-P2-F). `expectedHeaders` und Spaltenschlüssel unangetastet. |
 | W5 | `einstellungen.php` (Weitere Rettungsmittel) | „(RTW, NEF, RTH …)". Die Administrationsseite führt diesen Hinweistext nicht — dort war nichts gleichzuziehen. |
 | W6 | `einstellungen.php`, `admin_stammdaten.php` | Beide Platzhalter jetzt „z. B. Christoph 17 oder NEF Kempten 1" (E-P2-14, F-P2-E). |
-| W7 | `assets/pwquality.js` | Sechs bodengebundene Gegenstücke ergänzt (E-P2-18). |
+| W7 | `assets/pwquality.js` | **Fünf** bodengebundene Gegenstücke ergänzt (E-P2-18); `nadoku` wieder herausgenommen — es machte das Demo-Passwort unbrauchbar (F-P2-R, E-P2-22). |
 | F-P2-K | `einstellungen.php` (Gerätebezeichnung) | Platzhalter „z. B. Fenix 6 Pro" → „z. B. Dienstuhr". |
 
 **Probleme und ihre Lösung.**
@@ -807,11 +833,13 @@ ungenutzte Einträge; jeder Eintrag nennt Klasse und Grund.
    scheitert schon an `MIN_LAENGE`. Kurzformen bleiben deshalb draußen; die
    Begründung steht als Kommentar in der Liste. Dabei fiel auf, dass vier
    der sechs beschlossenen Ergänzungen durch den Teilstring-Vergleich
-   ohnehin abgedeckt sind (`rettungswagen` durch `rettung`, `einsatzdoku`
-   durch `einsatz`, `notfallsanitaeter` durch `sanitaeter`,
-   `rettungsdienst` durch `rettung`). Sie stehen trotzdem in der Liste,
-   weil die Liste auch die Stelle ist, an der man nachsieht, welche Wörter
-   gemeint sind — im Kommentar ausdrücklich vermerkt.
+   ohnehin abgedeckt sind (`rettungswagen` und `rettungsdienst` durch
+   `rettung`, `notarztwagen` durch `notarzt`, `notfallsanitaeter` durch
+   `sanitaeter`, `einsatzdoku` durch `einsatz`). Sie stehen trotzdem in der
+   Liste, weil die Liste auch die Stelle ist, an der man nachsieht, welche
+   Wörter gemeint sind — im Kommentar ausdrücklich vermerkt. **Der sechste,
+   `nadoku`, ist in D6 wieder herausgeflogen** (F-P2-R): Er hat als einziger
+   etwas verändert, und zwar das Falsche.
 
 **Prüfstand.**
 
@@ -993,4 +1021,37 @@ nicht behoben:** F-P2-J, der Rollencode `tc` in `Backup-Format.md`.
 **Offen nach D5:** nichts.
 
 
-### D6 — Abschluss (offen)
+### D6 — Abschluss (erledigt)
+
+**Ergebnis.** Version auf **8.0.1** (Korrektur, E-P2-16) mit fortgeschriebener
+Erzählung im Kopfkommentar von `version.php`; Changelog-Eintrag in Prosa mit
+Begründung — einschließlich der Feststellung, dass die Behauptung von Web 6.2.0
+nicht zutraf und woran das lag (eine Behauptung ohne Zählung); dieses Konzept
+vollständig; Prüfdokument `docs/Pruefdokument-P2-Terminologie.md` nach K9.
+
+**Backlog:** unverändert. P2 erledigt keinen Punkt und legt keinen an
+(E-P2-05). Durchgesehen: kein offener Punkt betrifft Terminologie.
+
+**Probleme und ihre Lösung.**
+
+1. **`nadoku` in der Schwachwortliste legte den Regressionsapparat still**
+   (F-P2-R). Der Kreislauf `--art edbak` lief in einen Zeitüberlauf von
+   900 s: Die erneute Sicherung wurde gar nicht erzeugt, weil das
+   Backup-Passwortfeld `nadokudemo0815` als „zu geläufig" abwies — das Wort
+   `nadoku` steckt darin. Betroffen wären außerdem `pw_handling.php` (das
+   Demo-Passwort ließe sich nicht mehr setzen) und `import.php`. `nadoku` ist
+   wieder heraus (E-P2-22), die Begründung steht im Kommentar der Liste, und
+   der Kreislauf steht danach auf **0 unerklärten Abweichungen**.
+   Bemerkenswert daran: Gefunden hat es kein Lesen, sondern eine Regression,
+   die scheinbar nichts mit Wortwahl zu tun hatte.
+2. **Die Demo-Abnahme ließ sich zunächst nicht fahren** (F-P2-S) — siehe
+   Prüfdokument 1.4.
+3. **Das Soll für P-P2-06 war überholt.** Das Konzept nennt „16/16";
+   `demo_pruefen.mjs` führt seit S1 **24** Einzelprüfungen. Ist-Zahl
+   eingetragen.
+
+**Prüfstand:** Abschnitt 7, vollständig mit Ist-Zahlen.
+
+**Offen nach D6:** der Push. Er deployt sofort (K7) und braucht ausdrückliche
+Freigabe.
+

@@ -215,5 +215,16 @@ declare(strict_types=1);
  * die eine 8.0.0 berichtigt, die es nirgends gab, waere eine Zahl ohne
  * Gegenstueck in der Welt. Was die Nachlese geaendert hat, steht im
  * CHANGELOG unter 8.0.0.
+ *
+ * 8.0.1 ist die Terminologie-Phase P2: Die Oberflaeche und die normative
+ * Dokumentation sprechen neutral von Land und Luft. Eine Korrekturnummer,
+ * weil kein Feld, keine Funktion und kein Datenformat hinzukommt — was sich
+ * aendert, sind Texte und drei Aussagen, die nicht mehr stimmten
+ * (Kopplungsanleitung, Warntext des Excel-Rueckimports, Excel-Spaltentabelle
+ * der Format-Doku). KEINE Migration: `update.php` muss nach diesem Deploy
+ * NICHT aufgerufen werden. Die Uhr bleibt unveraendert und wird nicht
+ * ausgeliefert. Neu im Repositorium, aber nicht auf dem Server:
+ * `tools/wortliste/` zaehlt nach, ob die Texte neutral sind — es laeuft in
+ * P3 und P6 mit.
  */
-const WEB_VERSION = '8.0.0';
+const WEB_VERSION = '8.0.1';

@@ -11,6 +11,166 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 8.0.1] — 2026-08-24
+
+**Die Anwendung spricht neutral von Land und Luft — vor dem Redesign, damit
+das Redesign fertige Texte übernimmt und nicht selbst Wortwahl entscheidet.**
+Geändert werden sichtbare Texte der Weboberfläche und die normative
+Dokumentation. Dabei sind fünf Aussagen aufgefallen, die schlicht nicht mehr
+stimmten. **Keine Migration** — `update.php` muss nach diesem Deploy nicht
+aufgerufen werden. Die Uhr-App bleibt unverändert.
+
+### Web — Was die Erhebung ergeben hat
+
+Der Rahmenplan nannte „~290 Fundstellen". Nachgezählt auf Web 8.0.0 waren es
+rund **330 echte Treffer** — und die Zahl war aus einem anderen Grund
+irreführend, als sie aussah: Sie zählte Teilstrings. Von 65 Treffern für
+`rth` waren **zwei** echt, die übrigen 90 hießen „dorthin", „northeast" oder
+„earth"; von 13 Treffern für `heli` **keiner** („naheliegend", ein
+Logo-Dateiname); „maschine" zur Hälfte („maschinell", „maschinenlesbar").
+Und rund 80 % der echten Treffer sind Kommentare, Bezeichner, Formatfelder
+oder ausdrückliche Historie, die bewusst stehen bleiben.
+
+Der andere Befund war unangenehmer. Der Changelog zu Web 6.2.0 behauptet:
+„Verwaiste Verweise auf „Flugtag", „Hubschrauber" und eine Phase 10 gibt es
+in der Dokumentation nicht mehr." Das traf nicht zu. Das README war
+vollständig alt, das Handbuch beschrieb eine Kopfleiste, die es so nicht
+gibt, und die Excel-Spaltentabelle der Format-Doku beschrieb einen Export,
+den es seit Web 6.0.0 nicht mehr gibt. Der alte Eintrag bleibt stehen — er
+gehört zur Geschichte. Was fehlte, war keine Sorgfalt beim Ändern, sondern
+eine **Zählung**: eine Behauptung ohne Zahl.
+
+### Web — Was jetzt anders heißt
+
+**Weboberfläche.** Die Kopplungsanleitung beschreibt den Ablauf gerätefrei
+(„Sync-Seite → Gerät koppeln → Code eintippen"); der Tastenweg steht darunter
+als eigener Absatz mit genannter Plattform und verweist für die einzelnen
+Uhren auf das Handbuch. Der Grund ist kein sprachlicher: Der alte Satz nannte
+den Weg von Fenix und Forerunner, als gälte er für jede Uhr — für die
+Venu 3s war er falsch, seit sie dazukam. Sie hat weder START noch DOWN.
+
+Dazu: „Connect-IQ-Einstellungen" → „Einstellungen der Uhr-App (bei Garmin:
+Garmin Connect)"; die Produktivdomain als Beispiel → `nadoku.beispieldomain.de`
+(jede Installation hat ihren eigenen Server); „eine Flugspur endet am
+Einsatzort" → „ein Track" (ein Bodentrack endet ebenso dort); „RTW, NEF,
+weitere Hubschrauber" → „RTW, NEF, RTH …" — „weitere" setzte voraus, dass das
+eigene Rettungsmittel ein Hubschrauber ist; und beide Stammdatenseiten zeigen
+jetzt denselben Platzhalter „z. B. Christoph 17 oder NEF Kempten 1" statt je
+einer Art.
+
+**Schwachwortliste.** Fünf bodengebundene Gegenstücke ergänzt
+(`notarztwagen`, `rettungswagen`, `notfallsanitaeter`, `rettungsdienst`,
+`einsatzdoku`) — und der Kommentar sagt jetzt, was die Liste eigentlich tut.
+Der Vergleich lautet `k === h || (h.length >= 6 && k.includes(h))`: ein Wort
+unter sechs Zeichen trifft nur als ganzes Passwort. Deshalb bleiben Kurzformen
+wie `nef` oder `rth` draußen — sie träfen ohnehin nichts, was die
+Mindestlänge nicht schon abweist.
+
+**Und deshalb sind die fünf Ergänzungen wirkungslos**, was hier stehen soll,
+statt beschönigt zu werden: `rettungswagen` und `rettungsdienst` enthalten
+`rettung`, `notarztwagen` enthält `notarzt`, `notfallsanitaeter` enthält
+`sanitaeter`, `einsatzdoku` enthält `einsatz` — alle fünf waren über den
+Teilstring-Vergleich längst abgedeckt. 768 Passwortproben durch beide
+Fassungen: **0 Abweichungen**. Die Wörter bleiben trotzdem in der Liste, weil
+sie zeigen, was gemeint ist; als Sicherheitsgewinn zählen sie nicht.
+
+**Ein sechstes Wort war vorgesehen und ist wieder heraus:** der künftige
+Produktname. Mit ihm in der Liste ließe sich das Demo-Passwort
+`nadokudemo0815` weder setzen noch als Backup- oder Exportpasswort verwenden —
+es enthält den Namen. Aufgefallen ist das nicht beim Lesen, sondern daran,
+dass der Kreislauftest in einen Zeitüberlauf lief: Die erneute Sicherung
+wurde gar nicht erzeugt, weil das Passwortfeld sie ablehnte. Der Name gehört
+in die Liste, wenn er kommt — zusammen mit einem neuen Demo-Passwort.
+
+**Dokumentation.** README neu gefasst (beide Einsatzarten, die Uhr als
+derzeitige Plattform mit allen drei Modellen, sieben fehlende Dokumente in
+der Tabelle ergänzt); Handbuch in allen Kapiteln außer 2; Export-Format und
+Technik-Doku in den berührten Abschnitten.
+
+### Web — Fünf Aussagen, die nicht mehr stimmten
+
+- **Der Warntext des Excel-Rückimports** nannte die Phasen „Abflug" und
+  „Landung Krankenhaus" und die Spalte „Flugkilometer" — Namen, die es seit
+  Web 6.0.0 nicht mehr gibt. Er lautet jetzt Ausrücken, Ankunft Klinik,
+  Kilometer, und zwar zeichengleich in `import_profiles.js` und in
+  `Export-Format.md` 5.2 (453 Zeichen, maschinell verglichen).
+- **Die Excel-Spaltentabelle** listete 29 Spalten mit „7 geschützten"; der
+  Export schreibt 31 mit 16 geschützten, und die Besatzungsspalten sind
+  sieben aus dem Rollenkatalog, nicht fünf feste. An einer erzeugten Datei
+  nachgemessen: 31 Spalten mit personenbezogenen Angaben, 15 ohne.
+- **Die Kopfzeile der Einsatzansicht** zeigt seit Web 7.0.0 gar keine Strecke
+  mehr. Das Handbuch versprach „Flugkilometer".
+- **Die Kopfleiste** heißt seit Web 6.x „Einsatzdokumentation Notarzt"; das
+  Handbuch schrieb „Luftrettung".
+- **Ein Kommentar verwies auf `SPEC_Export.md` 7.2** — ein Dokument, das es
+  nicht gibt. Gemeint ist `docs/Export-Format.md` 5.2.
+
+Dazu drei Stellen, die kein Suchmuster findet, weil sie kein Luftwort
+enthalten: die Feldgruppe „Weitere Rettungsmittel", mit „Fahrzeuge" erklärt,
+obwohl für ein NEF das weitere Mittel oft gerade der Hubschrauber ist; die
+Kachel „Höchster Einsatzort" als interaktiv in jedem Reiter beschrieben,
+obwohl es sie nur in der Luftrettung gibt; und „Basis" bzw. „Station" für
+den Standort.
+
+### Web — Was bewusst luftsprachig bleibt
+
+Der **Luftrettungs-Reiter** der Zeitraumübersicht behält seine zehn Kacheln
+mit „Flugtage", „Ø Einsätze / Flugtag" und „Flugkilometer gesamt": Er ist per
+Definition luftgebunden, und „Diensttage" wäre dort nicht neutraler, sondern
+ungenauer. Ebenso bleiben die **Fachrollen** Pilot 1, Pilot 2, HEMS-TC und
+Flugretter, die Fähigkeiten **Winde, Luftverladung, Bergwacht**, der
+Fahrzeugtyp **RTH** — er steht jetzt neben NEF, NAW und RTW statt an ihrer
+Stelle — und die Art **luftgebunden**.
+
+Unangetastet bleiben außerdem alle **gespeicherten und vertraglichen Namen**:
+DB-Spalten, Rollencodes (`p1`, `p2`, `hems`, `fr`), Spaltenbeschriftungen in
+CSV, Excel und Sicherung, der JSON-Vertrag und die Kopfzeilen der
+Import-Profile. Die Beschriftung einer Excel-Spalte ist ein Formatfeld — sie
+wird beim Rückimport wiedererkannt. Wer sie umbenennt, macht jede vorhandene
+Datei unlesbar, ohne dass jemand etwas davon hat.
+
+**Sätze mit Versionsangabe bleiben ebenfalls.** „Hieß bis Web 5.10.0
+`flugtage.csv`" erklärt eine Datei von 2025. Der alte Begriff steht nur dort,
+wo ausdrücklich gesagt wird, dass er alt ist.
+
+### Web — Ein neues Prüfmittel: `tools/wortliste/`
+
+Damit die Behauptung dieses Eintrags nicht dasselbe Schicksal erleidet wie
+die von Web 6.2.0, gibt es jetzt ein Werkzeug, das sie **zählt**. Es sucht
+23 Muster in drei Bereichen (PHP des Servers, JavaScript ohne `vendor/`,
+sieben Dokumente) und nennt je Bereich drei Zahlen: Treffer gesamt, Treffer
+außerhalb der Ausnahmen, **ungenutzte Ausnahmen**. Die letzten beiden müssen
+null sein.
+
+Gegen den Stand vor dieser Fassung meldete es **53 Treffer außerhalb der
+Ausnahmen in 44 Zeilen** und fiel damit durch — das war der Zweck des ersten
+Laufs: Ein Prüfmittel, von dem niemand weiß, ob es scheitern kann, ist keines.
+Gegen den Endstand: **0 / 0 / 0**. Die 44 Ausnahmeregeln tragen jede eine
+Fundort-Klasse und einen Grund; eine Regel ohne Begründung weist das Werkzeug
+beim Laden zurück.
+
+Kommentare werden vorher entfernt, sonst füllte Klasse E den Befund. Dafür
+gibt es einen eigenen Zerleger statt eines regulären Ausdrucks: Der
+naheliegende Einzeiler `re.sub(r'//.*$', …)` löscht die Hälfte jeder Zeile
+mit einer URL — also sichtbaren Text —, und ein so verschwundener Treffer
+fällt niemandem auf. Sechzehn Proben mit Sollergebnis sichern ihn ab.
+
+`tools/` wird nicht ausgeliefert; das Werkzeug kommt dem Produktivserver
+nicht nahe. Es läuft in P3 (neue Oberfläche) und P6 (Umbenennung) mit.
+
+### Web — Regression
+
+Beide Kreisläufe unverändert auf null unerklärten Abweichungen,
+`browser/angriffswerte.mjs` 42/0, `browser/demo_pruefen.mjs` 24/0. P2 berührt
+keinen Schreibweg, kein Datenformat und kein CSS — ein Stilvergleich war
+deshalb nicht nötig. Der Excel-Rückimport derselben Datei vor und nach der
+Änderung meldet dieselbe Bilanz (14 Diensttage, 78 Einsätze, 20 Hinweise,
+0 Fehler, 78 Dubletten).
+
+Einzelheiten, Wortliste mit Grenzfällen, Fehlerfunde und Prüfstand:
+`docs/Konzept-P2-Terminologie.md`. Was noch von Hand zu prüfen ist:
+`docs/Pruefdokument-P2-Terminologie.md`.
+
 ## [Web 8.0.0] — 2026-08-24
 
 **Die Sicherung wird vollständig: Der Papierkorb steht künftig darin und kommt
