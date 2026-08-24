@@ -572,3 +572,33 @@ Einladungsweg (`kreislauf.konto_anlegen`), das Passwort wird im Browser
 gesetzt. Die Skripte liegen **nicht** im Repositorium — sie prüfen einen
 einmaligen Übergang, und ein Prüfmittel ohne Pflege ist schlechter als keins.
 Der Bedienweg steht im Prüfdokument, damit er von Hand nachvollziehbar ist.
+
+### C3 — Demo-Nachlauf-Rückbau (erledigt)
+
+**Geändert:** `server/demo_lib.php` (`demo_nachlauf()` samt beiden Aufrufen
+entfernt, `require_once trash_lib.php` mit — die Datei braucht ihn nicht mehr),
+`server/backup_lib.php` (Kommentar zur Verschachtelung: der Nachlauf steht
+nicht mehr in der Klammer), `server/admin_demo.php` (Aufzählungspunkt neu
+geschrieben, `require_once trash_lib.php` für `TRASH_DAYS`),
+`tools/referenzdatensatz/fixture/erzeugen.php` (Format 2, kein `nachlauf`,
+Papierkorb wird nur noch für die Ausgabe gezählt), `docs/Technik.md` 4.99a und
+Verzeichnisbaum, `tools/referenzdatensatz/LIESMICH.md`, `docs/CHANGELOG.md`.
+
+**Problem, das dabei auftrat — und wie es gelöst wurde:** `demo_pruefen.mjs`
+legt ein Demo-Konto mit der Adresse `demo@gen-em.org` an. Auf der
+Referenzinstallation **ist** das die Adresse des Referenzkontos, und
+`demo_anlegen()` weigert sich (zu Recht) gegen ein bereits bestehendes Konto
+dieser Adresse. Die Abnahme lief deshalb auf einer **zweiten, getrennten
+Installation** (eigene Datenbank, eigener PHP-Server, Kopie von `server/`) mit
+der **alten** Fixture aus dem Repositorium. Das ist zugleich die schärfere
+Probe: Sie belegt B-S1-12 — eine Fixture der Version 1 bleibt unter dem neuen
+Rückweg lauffähig.
+
+**Prüfstand C3**
+
+| Was | Wie | Ergebnis |
+|---|---|---|
+| Demo-Abnahme, ganzer Weg | `browser/demo_pruefen.mjs` gegen die zweite Installation, alte Fixture (Format 1): anlegen → geschützte Angaben lesen → absichtlich verändern → zurücksetzen → Identitätssperren | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler.** Nach dem Anlegen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente, **5 im Papierkorb**, 3 Geräte; nach der Veränderung 81/6; nach dem Reset wieder 82/5 |
+| Papierkorb kommt aus dem Einspielen | SQL in der zweiten Datenbank | **5 Einsätze, 5 Ruhesegmente, 1 Diensttag**, alle mit **einem** `deleted_at` (dem Einspielzeitpunkt); `deleted_with_day = 1` an aktivem Tag: **0** |
+| Bericht ohne Nachlauf-Zähler | Adminbereich → Demo-Konto → „Auf Standard zurücksetzen", Bericht des Laufs gelesen | `papierkorb: {einsaetze: 5, diensttage: 1, ruhezeiten: 5}`; kein `nicht_gefunden`, kein Drehbuch-Zähler |
+| Reset-Dauer (P-S1-11) | dieselbe Handlung, Zeit genommen | **6,4 s** — der Ausgangswert lag bei rund 6 s, also nicht schlechter |
