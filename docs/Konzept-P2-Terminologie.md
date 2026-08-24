@@ -259,7 +259,8 @@ kontextabhängig (beide Spalten gefüllt).
 | START / DOWN / BACK (Tastennamen) | Bedienweg | K | im Web: gerätefrei, Garmin-Zusatz in Klammern (E-P2-02) | Handbuch 2.0 (Tabelle je Uhr), 2.1–2.4 (G) |
 | Fenix 6 Pro (als „die" Uhr) | Plattform | E | „Garmin-Uhren (Fenix 6 Pro, Forerunner 945, Venu 3s)" bei Ersteinführung, sonst „Uhr" | Technik 5, Handbuch 2.0 (G) |
 | Christoph 17 (als einziges Beispiel) | Beispielname | K | „Christoph 17 oder NEF Kempten 1" | Referenzdatensatz nutzt fiktive Rufnamen (H) |
-| Basis (als Standort) | Standort | — | — | bereits ersetzt (Web 6.x); `base_id` (D) |
+| Basis (als Standort) | Standort | E | Standort | **Berichtigt in D4 (F-P2-O):** nicht durchgehend ersetzt — `Handbuch.md` 1480 führte den Begriff noch. Seit D4 in der Sperrliste. Bleibt: „Basis" als Grundlage (Basis-URL, Basis-Kartenlayer, Basis einer Farbmischung) und als Bezeichner `$basis` (Homonyme bzw. Klasse E); `base_id`, `base_ref`, `basesel` (D) |
+| Station (als Standort) | Standort | E | Standort | **Neu aufgenommen in D4 (F-P2-O):** „der Regelfall an einer Station" (`Handbuch.md` 1596). „Luftrettungsstation" bleibt — Eigenname und tatsächlich eine; die Wortgrenze im Muster `\bstation` hält sie heraus |
 | RTH, NEF, NAW, RTW | Fahrzeugtypen | B | — | F; werden nebeneinander genannt (E-P2-14) |
 | Winde, Windeneinsatz, Windenzyklen, Luftverladung, Bergwacht | Fähigkeiten/Felder | B | — | F; erscheinen nur luftgebunden |
 | luftgebunden / bodengebunden / neutral | Art des Diensttags | B | — | F; das Vokabular der Anwendung |
@@ -608,6 +609,12 @@ Mit Fundort, Wirkung, und ob blockierend (dann sofort, sonst gesammelt, K4).
 |---|---|---|---|---|
 | F-P2-J | **Die Sicherungsbeschreibung nennt einen Rollencode, den es nicht gibt.** Das JSON-Schema führt `"roles": ["p1", "p2", "tc", "other"]` und `"crew": { "p1": …, "p2": null, "tc": …, "other": null }`. Die Anwendung kennt `p1`, `p2`, **`hems`**, **`fr`**, `driver`, `trainee`, `other` (`db.php` `CREW_ROLES`, `schema.sql` 123). `tc` kommt in keinem Quelltext vor; die beiden Luftrollen `hems` und `fr` fehlen im Beispiel. | `docs/Backup-Format.md` 179, 225 | Wer eine Sicherung von Hand liest oder ein Werkzeug dagegen baut, sucht einen Schlüssel, den keine Datei führt. Kein Fehler im Code. | **Gesammelt, nicht behoben.** Kein Terminologiefund: `tc` ist keine Luftlastigkeit, sondern eine falsche Angabe. Die Ausnahme von K4 in E-P2-05 gilt für Texte, die P2 ohnehin anfasst — `Backup-Format.md` steht in D5 ausdrücklich nur zur Durchsicht. Empfehlung: Backlog-Eintrag oder Mitnahme in den Gesamtabgleich R16 (P6). |
 | F-P2-K | **Vier Stellen der Klassen A/B, die die Erhebung in Abschnitt 2 nicht einzeln aufführt.** `einstellungen.php` 2301 (Platzhalter der Gerätebezeichnung „z. B. Fenix 6 Pro" — Markenmodell als einziges Beispiel auf einer plattformübergreifenden Seite), `Handbuch.md` 1230 (zweiter „Pilotenwechsel", derselbe Fall wie 634), 1571 („vier leere Flugrollen"), 1596 („RTW, NEF oder weitere Hubschrauber" — wörtlich dieselbe Formulierung wie W5). | s. Fundort | Ohne sie bliebe die Abnahme „0 Treffer außerhalb der Ausnahmen" unerreichbar, ohne dass ein Grund dafür genannt wäre. | **In P2 behoben**, D2 und D4, nach E-P2-14/15 — dieselbe Begründung wie für W5 und W6. |
+| F-P2-L | **Der dokumentierte Einspiellauf erzeugt eine Datei, die `.gitignore` nicht kennt.** `tools/referenzdatensatz/einspielen/LIESMICH.md` 39 nennt als Aufruf `node passwort_setzen.mjs '<Link>' '<Passwort>' rc.json`. Ignoriert ist aber nur `tools/referenzdatensatz/einspielen/*_rc.json` (`.gitignore` 37) — `rc.json` ohne Präfix fällt durch. | `.gitignore` 37 gegen `einspielen/LIESMICH.md` 39 | Die Datei enthält den **Wiederherstellungsschlüssel** des angelegten Kontos. Wer der Anleitung folgt und danach `git add -A` sagt, hat ihn im Repositorium. | **Gesammelt, nicht behoben** (K4) — kein Terminologiefund. Die lokal entstandene Datei wurde gelöscht, nicht committet. Empfehlung: in `.gitignore` `*_rc.json` zu `*rc.json` erweitern **oder** im LIESMICH den Aufruf auf `lauf_rc.json` ändern. Eine Zeile, und sie gehört vor den nächsten Einspiellauf. |
+| F-P2-M | **Der Vorschlag des Konzepts für Handbuch 4.2 war selbst falsch.** Das Konzept wollte „Datum, Zeitraum, **Kilometer** und am Ende genau ein Herkunftskennzeichen". Die Kopfzeile der Einsatzansicht führt seit Web 7.0.0 **keine Strecke mehr** — `einsatz.php` 352–372 nennt den Grund im Kommentar („ENTFALLEN sind zwei Angaben … die STRECKE stand hier als dritte Zahl neben zwei Uhrzeiten"). Sie zeigt Datum, Zeitraum, Rettungsmittel, Standort, Artzeichen, Herkunft. | `Handbuch.md` 384, gegen `server/einsatz.php` 352–372 | Wer die Kilometer in der Einsatzansicht sucht, findet sie dort seit Web 7.0.0 nicht. Der alte Text war doppelt falsch: im Wort und in der Sache. | **In P2 behoben**, D4 — E-P2-05 (Sachfehler im berührten Absatz). |
+| F-P2-N | **Ein Querverweis zeigte auf einen Abschnitt, den es nicht gibt.** „(Abschnitt 9.1 bzw. 8.4)" — Kapitel 8 ist „Löschen und Papierkorb" und hat keine Unterabschnitte. Gemeint sind die systemweiten Stammdaten: **9.4**. | `Handbuch.md` 645 | Ein Verweis ins Leere in demselben Absatz, den D4 ohnehin anfasst. | **In P2 behoben**, D4. Gefunden durch die maschinelle Verweisprüfung (85 Verweise). |
+| F-P2-O | **Zwei Wörter fehlten in der Sperrliste: „Basis" und „Station".** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort. Die Wortliste (5.2) führte „Basis" sogar als „bereits ersetzt (Web 6.x)" — im Handbuch stand er noch („Trägst du Rettungsmittel, **Basis** oder Besatzung …", „der Regelfall an einer **Station**"). | `Handbuch.md` 1480 und 1596; Wortliste 5.2 | Ohne die beiden Muster hätte das Werkzeug null gemeldet und zwei echte Stellen übersehen — die Art von Lücke, die eine Prüfung wertlos macht. | **In P2 behoben**, D4: beide Stellen geändert, beide Muster in die Sperrliste (23 statt 21), drei Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner). Wortliste 5.2 berichtigt. |
+| F-P2-P | **Drei Stellen waren nur von der Luft her gedacht, ohne ein Sperrwort zu enthalten** — gefunden in der Gesamtdurchsicht (D4, Schritt 11): (a) die Feldgruppe „Weitere Rettungsmittel" mit „Fahrzeuge" erklärt — für ein NEF ist das weitere Mittel oft gerade der RTH; (b) „Die Kacheln Längste Flugstrecke, Längste Einsatzdauer und **Höchster Einsatzort** sind interaktiv" — „Höchster Einsatzort" gibt es nur im Kachelsatz der Luftrettung (`zeitraum.php`, `KACHELN_LUFT`), in „Gemischt" und „Bodengebunden" sind es zwei; (c) „das **gewohnte** Listenlayout" für das Fremdformat GuteSeele — gewohnt ist es an einer Luftrettungsstation. | `Handbuch.md` 485, 742–744, 1282 | (b) ist ein Sachfehler und widerspricht der eigenen Tabelle zwei Absätze höher. | **In P2 behoben**, D4. |
+| F-P2-Q | **Zwei `.pyc`-Dateien liegen im Repositorium**, obwohl `.gitignore` 29 `tools/referenzdatensatz/**/__pycache__/` führt: `quelldaten/__pycache__/katalog.cpython-311.pyc` und `wegpunkte.cpython-311.pyc`. `.gitignore` wirkt nicht auf bereits verfolgte Dateien. | `git ls-files` | Sie ändern sich bei jedem Lauf und tauchen als Änderung im Arbeitsbaum auf, ohne dass jemand etwas getan hat — genau so ist es in dieser Umsetzung passiert. | **Gesammelt, nicht behoben** (K4). Empfehlung: `git rm --cached` für beide. |
 
 ## 10. Statuspflege und Rahmenplan-Berichtigungen
 
@@ -867,7 +874,68 @@ Push und steht im Prüfdokument als Punkt für den Auftraggeber.
 angelegt hat.
 
 
-### D4 — Handbuch (offen)
+### D4 — Handbuch (erledigt)
+
+**Ergebnis.** `docs/Handbuch.md`, alle Kapitel außer 2; Stand-Datum auf
+24.08.2026. Kapitel 4.4 (Luftrettungs-Reiter) bleibt inhaltlich, wie E-P2-04
+es verlangt — mit einer Ausnahme, die kein Wortlaut ist, sondern ein
+Sachfehler (F-P2-P, unten).
+
+| Ort | Was |
+|---|---|
+| 1 | „Eine Uhr-App (derzeit für Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst …"; die Produktivdomain hinter „Die Web-Oberfläche" entfällt |
+| 2.0 | **ergänzt** (E-P2-02): ein Absatz, dass die Kopplung derselben Tastentabelle folgt — sie ist die Stelle, auf die Web und Kapitel 12 jetzt verweisen |
+| 3 | Kopfleiste „Einsatzdokumentation **Notarzt** – *Name*", wörtlich wie `ui.php` 185 |
+| 4.2 | Kopfzeile der Einsatzansicht berichtigt (F-P2-M); „Von der **Uhr** aufgezeichnet" |
+| 4.3 | „ein Pilotenwechsel **oder Fahrerwechsel** am Nachmittag"; die Feldgruppe „Weitere Rettungsmittel" nicht mehr mit „Fahrzeuge" erklärt (F-P2-P) |
+| 4.4 | interaktive Kacheln berichtigt (F-P2-P) |
+| 7 | „Track und die übrigen **Phasenzeiten** fehlen naturgemäß"; „das **Listenlayout der Christoph-17-Jahresliste**" statt „das gewohnte Listenlayout" (F-P2-P) |
+| 7.1 | Beispieldateiname `einsatzdokumentation_export_…` |
+| 7.2 | Warntext deckungsgleich mit W4; „klassische Pilotenwechsel **oder Fahrerwechsel**" |
+| 8 | „verwerfen hieße, **die Aufzeichnung** zu verlieren"; „Rettungsmittel, **Standort** oder Besatzung" statt „Basis" (F-P2-O) |
+| 9.1 | „vier leere **Luftrollen**"; „der Regelfall überall dort, wo die **Standorte zentral gepflegt** werden" statt „an einer Station" (F-P2-O); Querverweis 8.4 → **9.4** (F-P2-N) |
+| 9.2 | „Hier legst du **weitere Rettungsmittel** als Vorbelegung an (RTW, NEF, RTH …)" |
+| 12 | nach E-P2-02 neu gegliedert: fünf gerätefreie Schritte, je Schritt der Garmin-Zusatz kursiv darunter. Die Meldungstabelle bleibt — sie ist Wortlaut der Uhr-App, nicht der Plattform |
+| 10, 11 | geprüft, gerätefrei, unverändert |
+
+**Probleme und ihre Lösung.**
+
+1. **Das Werkzeug arbeitet zeilenweise, die Prosa nicht.** Ein Garmin-Zusatz,
+   der über zwei Zeilen läuft, hat auf der zweiten kein „Garmin" mehr — die
+   Ausnahme wäre nicht formulierbar gewesen. In Kapitel 12 steht der Zusatz
+   deshalb je Schritt als eigener kursiver Satz **ohne Tastennamen**: Er
+   verweist auf die Abschnitte 2.0 und 2.2, statt den Tastenweg ein zweites
+   Mal zu führen. Das ist auch sachlich besser — der Tastenweg steht damit an
+   genau einer Stelle.
+2. **Der Vorschlag des Konzepts für 4.2 war selbst falsch** (F-P2-M). Er
+   lautete „Datum, Zeitraum, **Kilometer** und …". Die Kopfzeile der
+   Einsatzansicht führt seit Web 7.0.0 **gar keine Strecke** mehr
+   (`einsatz.php` 352–372, Kommentar „ENTFALLEN sind zwei Angaben"). Sie
+   zeigt Datum, Zeitraum, Rettungsmittel, Standort, das Artzeichen und das
+   Herkunftskennzeichen. So steht es jetzt dort.
+3. **Zwei Wörter fehlten in der Sperrliste** (F-P2-O): „Basis" und
+   „Station". Beide bezeichnen im Sprachgebrauch der Luftrettung den
+   Standort, beide enthalten kein Luftwort — das Werkzeug konnte sie nicht
+   finden, und die Wortliste führte „Basis" sogar als „bereits ersetzt". Sie
+   sind jetzt Muster der Sperrliste (23 statt 21); die Homonyme (Basis-URL,
+   Basis-Kartenlayer, `$basis`) haben zwei Ausnahmen mit Begründung.
+
+**Prüfstand.**
+
+| Prüfung | Mittel | Ergebnis |
+|---|---|---|
+| Wortliste, Bereich (c), nur Handbuch | `python3 tools/wortliste/wortliste.py --bereich c` | **0 Treffer außerhalb der Ausnahmen** (vorher 20 in 17 Zeilen) |
+| Gesamtdurchsicht auf luftgedachte Sätze **ohne** Sperrwort (Schritt 11) | sechs parallele Durchgänge über die Kapitel 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, jeder Fund danach von einem zweiten Durchgang **gegen den Quelltext** gegengeprüft mit dem Auftrag zu widerlegen | **1837 Zeilen gelesen**, 7 Kandidaten, **5 bestätigt**, 2 widerlegt |
+| — bestätigt und behoben | — | 4.3 „Fahrzeuge"; 4.4 drei interaktive Kacheln; 7.1 „das gewohnte Listenlayout"; 8 „Basis"; 9.1 „an einer Station" |
+| — widerlegt und **nicht** geändert | — | 2.2 „weil dieselbe Uhr auch am NEF läuft" (die Konstruktion erklärt die Umbenennung und steht wortgleich in Changelog und JSON-Vertrag); 4.3 „Tagescrew" (Stilfrage, keine Luftlastigkeit — „Crew" steht in Technik-Doku und Code für beide Arten) |
+| Querverweise | eigenes Skript über sechs Dokumente | **85 Abschnittsverweise geprüft, 83 aufgelöst**; die zwei übrigen sind Artefakte des Skripts (ein Verweis auf das Handbuch über zwei Zeilen; ein Verweis auf ein Konzeptdokument außerhalb des Repositoriums). Ein echter Fehler gefunden und behoben: 8.4 → 9.4 (F-P2-N) |
+| Kapitel 2.0 als Verweisziel | gelesen | Die Tabelle bildet „lang START" auf „lang Action **oder** lang Zurück" ab; der Kopplungsweg selbst stand in 2.2. Ein Absatz in 2.0 verbindet beides jetzt ausdrücklich |
+| Umbrüche | `awk 'length > 88'` | 20 Zeilen über 88 Zeichen, alle vorbestehend (Tabellen); die in D4 geänderten Absätze neu umbrochen |
+
+**Nicht geprüft:** die Darstellung des Handbuchs auf GitHub.
+
+**Offen nach D4:** nichts.
+
 
 ### D5 — Format- und Technik-Dokumentation (offen)
 
