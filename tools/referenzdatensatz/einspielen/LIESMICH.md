@@ -76,9 +76,17 @@ Geräteschlüssel, vergebene Kennungen, Fortschritt. Für eine andere
 Installation ist davon nichts gültig. Sie steht deshalb in `.gitignore`.
 
 `rc.json` — der Wiederherstellungsschlüssel aus `passwort_setzen.mjs` —
-steht bewusst **nicht** in `.gitignore`. Die Skripte dieser Ablage legen
-ausschließlich Wegwerfkonten an (Referenz-, Demo- und Umlaufkonten mit
-öffentlichem Passwort); der Schlüssel schützt dort nichts.
+steht ebenfalls in `.gitignore`, seit Web 8.0.1 unter dem Muster `*rc.json`.
+Vorher lautete es `*_rc.json` und verfehlte damit genau die Datei, die diese
+Anleitung anzulegen anweist.
+
+Im dokumentierten Ablauf ist das keine Gefahr: Die Konten dieser Ablage sind
+Wegwerfkonten mit öffentlichem Passwort, und ihr Schlüsselmaterial liegt
+ohnehin offen in `server/demo/fixture.json.gz`. Der Schlüssel ist aber
+**passwortäquivalent** — er packt den Inhaltsschlüssel ohne Passwort aus —,
+und `passwort_setzen.mjs` nimmt **jede** URL, nicht nur `127.0.0.1`. Wer das
+Skript gegen eine echte Installation richtet, hat den Schlüssel eines echten
+Kontos in der Datei.
 
 ## Grenzen dieser Prüfmittel
 

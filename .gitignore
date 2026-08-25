@@ -34,6 +34,24 @@ tools/referenzdatensatz/**/__pycache__/
 # gueltig -- und der Einrichtungslink ist bis zu seiner Einloesung ein
 # Zugang zum Konto.
 tools/referenzdatensatz/einspielen/lauf.json
+# Wiederherstellungsschluessel, geschrieben von passwort_setzen.mjs.
+#
+# `*rc.json` UND NICHT `*_rc.json`. Der frühere Eintrag war erkennbar fuer
+# genau diese Datei gedacht und verfehlte sie: LIESMICH.md 39 und
+# einspielen.py 109 weisen beide `rc.json` an, ohne Praefix.
+#
+# Warum das Muster erweitert wurde und nicht der Dateiname in der Anleitung
+# geaendert: Ein Dateiname wirkt erst, wenn ihn jemand liest. Auf Maschinen,
+# auf denen aus frueheren Laeufen schon eine `rc.json` liegt, und bei jedem,
+# der den Aufruf aus Gewohnheit oder aus einem aelteren Commit kopiert, wirkt
+# er gar nicht. Ein Muster wirkt ohne Zutun.
+#
+# Im dokumentierten Ablauf gehoert der Schluessel zu einem Wegwerfkonto und
+# schuetzt nichts. `passwort_setzen.mjs` nimmt aber jede URL, nicht nur
+# 127.0.0.1 — wer das Skript gegen eine echte Installation richtet, hat einen
+# passwortaequivalenten Schluessel in der Datei. Genau diese Person liest die
+# Anleitung nicht noch einmal.
+tools/referenzdatensatz/einspielen/*rc.json
 # Laufprotokoll des Referenz-Exports (Zeitpunkt und Dateinamen des letzten
 # Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
 # das Protokoll ihres Entstehens nicht.
