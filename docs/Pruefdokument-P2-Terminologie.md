@@ -230,10 +230,11 @@ und ein sechstes hätte genau dieses Passwort unbrauchbar gemacht (F-P2-R).
 ### 4.9 Was P2 gefunden und **nicht** behoben hat
 
 Drei Funde stehen als Empfehlung; sie brauchen deine Entscheidung. Ein
-vierter ist inzwischen erledigt: `rc.json` fiel durch `.gitignore`, und darin
-steht ein Wiederherstellungsschlüssel (F-P2-L). Das Muster lautet jetzt
-`*rc.json` — nachgewiesen an einer angelegten Datei: 0 Nennungen in
-`git status`, Einstufung `!!`.
+vierter ist **verworfen**: `rc.json` fällt durch `.gitignore` (F-P2-L) — die
+Beobachtung stimmt, meine Bewertung war falsch. Die Prüfskripte legen
+ausschließlich Wegwerfkonten mit öffentlichem Passwort an; der
+Wiederherstellungsschlüssel darin schützt nichts. Es steht jetzt **gar
+keine** Regel mehr für `rc.json` in `.gitignore` (E-P2-23).
 
 - [ ] **Der Rollencode `tc` in `docs/Backup-Format.md`** (F-P2-J). Das
       JSON-Schema der Sicherung führt `"roles": ["p1", "p2", "tc", "other"]`

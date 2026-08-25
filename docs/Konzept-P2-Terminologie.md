@@ -196,6 +196,7 @@ sind hier als E überführt.
 | E-P2-20 | **In der Ausnahmeliste erklärt die erste passende Regel den Treffer.** Notwendig, weil sich Regeln überschneiden: Die allgemeine Regel „Feldnamen und Kopfzeilen der Import-Profile" (Klasse D) passt auch auf die Zeile der Schwachwortliste in `pwquality.js`, deren Grund ein ganz anderer ist (Klasse F). Ohne feste Reihenfolge wäre nicht vorhersagbar, welche Begründung im Bericht steht. Folge für die Pflege: das Besondere steht oben, das Allgemeine unten. |
 | E-P2-21 | **„Basis" und „Station" gehören in die Sperrliste.** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort — die Erhebung in Abschnitt 2 hat sie deshalb nicht gefunden, und die Wortliste führte „Basis" sogar als „bereits ersetzt". Aufgenommen in D4 (F-P2-O), mit Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner) und für „Luftrettungsstation", das die Wortgrenze ohnehin heraushält. |
 | E-P2-22 | **`nadoku` kommt NICHT in die Schwachwortliste** — Abweichung von E-P2-18, begründet in F-P2-R. Der Vergleich in `pwquality.js` ist ein Teilstring-Vergleich; mit `nadoku` in der Liste ist `nadokudemo0815` — das Demo-Passwort aus README, Handbuch 3.2 und sämtlichen Prüfmitteln — weder setzbar noch als Backup- oder Exportpasswort verwendbar. Der Produktname existiert vor P6 ohnehin nicht (E-P2-13). Er gehört in die Liste, wenn er kommt: zusammen mit einem neuen Demo-Passwort. |
+| E-P2-23 | **Keine `.gitignore`-Regel für `rc.json`** — Entscheidung des Auftraggebers, gegen meinen Vorschlag. Die Datei hält den Wiederherstellungsschlüssel eines Kontos, das die Prüfskripte anlegen; das sind ausnahmslos Wegwerfkonten mit öffentlich dokumentiertem Passwort. Damit schützt der Schlüssel nichts, und eine Regel dagegen behauptete eine Gefahr, die es nicht gibt. Auch der bis dahin bestehende Eintrag `*_rc.json` ist entfernt. |
 
 ## 4. Offene Fragen
 
@@ -620,7 +621,7 @@ Mit Fundort, Wirkung, und ob blockierend (dann sofort, sonst gesammelt, K4).
 |---|---|---|---|---|
 | F-P2-J | **Die Sicherungsbeschreibung nennt einen Rollencode, den es nicht gibt.** Das JSON-Schema führt `"roles": ["p1", "p2", "tc", "other"]` und `"crew": { "p1": …, "p2": null, "tc": …, "other": null }`. Die Anwendung kennt `p1`, `p2`, **`hems`**, **`fr`**, `driver`, `trainee`, `other` (`db.php` `CREW_ROLES`, `schema.sql` 123). `tc` kommt in keinem Quelltext vor; die beiden Luftrollen `hems` und `fr` fehlen im Beispiel. | `docs/Backup-Format.md` 179, 225 | Wer eine Sicherung von Hand liest oder ein Werkzeug dagegen baut, sucht einen Schlüssel, den keine Datei führt. Kein Fehler im Code. | **Gesammelt, nicht behoben.** Kein Terminologiefund: `tc` ist keine Luftlastigkeit, sondern eine falsche Angabe. Die Ausnahme von K4 in E-P2-05 gilt für Texte, die P2 ohnehin anfasst — `Backup-Format.md` steht in D5 ausdrücklich nur zur Durchsicht. Empfehlung: Backlog-Eintrag oder Mitnahme in den Gesamtabgleich R16 (P6). |
 | F-P2-K | **Vier Stellen der Klassen A/B, die die Erhebung in Abschnitt 2 nicht einzeln aufführt.** `einstellungen.php` 2301 (Platzhalter der Gerätebezeichnung „z. B. Fenix 6 Pro" — Markenmodell als einziges Beispiel auf einer plattformübergreifenden Seite), `Handbuch.md` 1230 (zweiter „Pilotenwechsel", derselbe Fall wie 634), 1571 („vier leere Flugrollen"), 1596 („RTW, NEF oder weitere Hubschrauber" — wörtlich dieselbe Formulierung wie W5). | s. Fundort | Ohne sie bliebe die Abnahme „0 Treffer außerhalb der Ausnahmen" unerreichbar, ohne dass ein Grund dafür genannt wäre. | **In P2 behoben**, D2 und D4, nach E-P2-14/15 — dieselbe Begründung wie für W5 und W6. |
-| F-P2-L | **Der dokumentierte Einspiellauf erzeugt eine Datei, die `.gitignore` nicht kennt.** `tools/referenzdatensatz/einspielen/LIESMICH.md` 39 nennt als Aufruf `node passwort_setzen.mjs '<Link>' '<Passwort>' rc.json`. Ignoriert ist aber nur `tools/referenzdatensatz/einspielen/*_rc.json` (`.gitignore` 37) — `rc.json` ohne Präfix fällt durch. | `.gitignore` 37 gegen `einspielen/LIESMICH.md` 39 | Die Datei enthält den **Wiederherstellungsschlüssel** des angelegten Kontos. Wer der Anleitung folgt und danach `git add -A` sagt, hat ihn im Repositorium. | **Nachträglich behoben** (Nachtrag zu D6, auf Weisung des Auftraggebers). `.gitignore` führt jetzt `*rc.json` statt `*_rc.json` und deckt damit beide Schreibweisen ab; der Kommentar darüber nennt den Grund. Der Dateiname wurde **nicht** geändert — `LIESMICH.md` 39 und `einspielen.py` 109 weisen ihn beide an, und ein umbenannter Aufruf ließe eine bereits vorhandene `rc.json` auf anderen Maschinen weiterhin ungeschützt. Der LIESMICH-Abschnitt zu `lauf.json` führt jetzt auch `rc.json` und sagt, was darin steht. **Belegt:** eine `rc.json` mit Inhalt angelegt — 0 Nennungen in `git status`, Einstufung `!!` (ignoriert); keine verfolgte Datei der Ablage wird durch das weitere Muster ignoriert. |
+| F-P2-L | **Der dokumentierte Einspiellauf erzeugt eine Datei, die `.gitignore` nicht kennt.** `tools/referenzdatensatz/einspielen/LIESMICH.md` 39 und `einspielen.py` 109 nennen als Aufruf `node passwort_setzen.mjs '<Link>' '<Passwort>' rc.json`. Ignoriert war nur `tools/referenzdatensatz/einspielen/*_rc.json` — `rc.json` ohne Präfix fiel durch. | `.gitignore` 37 gegen `einspielen/LIESMICH.md` 39 | Die Beobachtung stimmt, **die Bewertung war falsch.** Ich hatte sie als „Wiederherstellungsschlüssel im Repositorium" und damit als sicherheitsrelevant geführt. Die Skripte dieser Ablage legen jedoch ausschliesslich **Wegwerfkonten** an — Referenz-, Demo- und Umlaufkonten mit öffentlich dokumentiertem Passwort. Der Schlüssel darin schützt nichts. | **Kein Befund; beide Einträge entfernt.** Entscheidung des Auftraggebers (E-P2-23): Weder `*_rc.json` noch `*rc.json` stehen noch in `.gitignore` — eine Regel gegen eine Gefahr, die es nicht gibt, lässt künftige Leser eine vermuten. Der Nachtrag, der das Muster erst erweitert hatte, ist zurückgenommen; `LIESMICH.md` sagt jetzt ausdrücklich, warum die Datei nicht ignoriert wird. |
 | F-P2-M | **Der Vorschlag des Konzepts für Handbuch 4.2 war selbst falsch.** Das Konzept wollte „Datum, Zeitraum, **Kilometer** und am Ende genau ein Herkunftskennzeichen". Die Kopfzeile der Einsatzansicht führt seit Web 7.0.0 **keine Strecke mehr** — `einsatz.php` 352–372 nennt den Grund im Kommentar („ENTFALLEN sind zwei Angaben … die STRECKE stand hier als dritte Zahl neben zwei Uhrzeiten"). Sie zeigt Datum, Zeitraum, Rettungsmittel, Standort, Artzeichen, Herkunft. | `Handbuch.md` 384, gegen `server/einsatz.php` 352–372 | Wer die Kilometer in der Einsatzansicht sucht, findet sie dort seit Web 7.0.0 nicht. Der alte Text war doppelt falsch: im Wort und in der Sache. | **In P2 behoben**, D4 — E-P2-05 (Sachfehler im berührten Absatz). |
 | F-P2-N | **Ein Querverweis zeigte auf einen Abschnitt, den es nicht gibt.** „(Abschnitt 9.1 bzw. 8.4)" — Kapitel 8 ist „Löschen und Papierkorb" und hat keine Unterabschnitte. Gemeint sind die systemweiten Stammdaten: **9.4**. | `Handbuch.md` 645 | Ein Verweis ins Leere in demselben Absatz, den D4 ohnehin anfasst. | **In P2 behoben**, D4. Gefunden durch die maschinelle Verweisprüfung (85 Verweise). |
 | F-P2-O | **Zwei Wörter fehlten in der Sperrliste: „Basis" und „Station".** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort. Die Wortliste (5.2) führte „Basis" sogar als „bereits ersetzt (Web 6.x)" — im Handbuch stand er noch („Trägst du Rettungsmittel, **Basis** oder Besatzung …", „der Regelfall an einer **Station**"). | `Handbuch.md` 1480 und 1596; Wortliste 5.2 | Ohne die beiden Muster hätte das Werkzeug null gemeldet und zwei echte Stellen übersehen — die Art von Lücke, die eine Prüfung wertlos macht. | **In P2 behoben**, D4: beide Stellen geändert, beide Muster in die Sperrliste (23 statt 21), drei Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner). Wortliste 5.2 berichtigt. |
@@ -700,11 +701,10 @@ Ausnahmen, läuft in P3 und P6 mit); keine Migration; Uhr unverändert
 (Plan 10.4). Vorher 53 Treffer außerhalb der Ausnahmen, nachher 0; Kreisläufe
 286 739 / 8 797 Einzelvergleiche, beide 0 unerklärt. Neun Funde aus der
 Konzepterstellung (A–I) erledigt; zehn Funde während der Umsetzung (J–S),
-davon **sieben behoben** und **drei übergeben**: F-P2-J (Rollencode `tc` in
-der Format-Doku), F-P2-Q (zwei `.pyc` im Repositorium), F-P2-S (Demo-Anlage
-scheitert an einer Gerätekennung). F-P2-L (`rc.json` fiel durch `.gitignore`,
-und darin steht ein Wiederherstellungsschlüssel) ist als Nachtrag zu D6
-behoben. Offen: Prüfliste aus dem Prüfdokument, acht Punkte."
+davon sechs behoben, **drei übergeben** — F-P2-J (Rollencode `tc` in der
+Format-Doku), F-P2-Q (zwei `.pyc` im Repositorium), F-P2-S (Demo-Anlage
+scheitert an einer Gerätekennung) — und **einer verworfen**: F-P2-L, meine
+Bewertung war falsch (E-P2-23). Offen: Prüfliste aus dem Prüfdokument."
 
 ## 11. Umsetzungsstand
 
@@ -1055,18 +1055,21 @@ vollständig; Prüfdokument `docs/Pruefdokument-P2-Terminologie.md` nach K9.
 **Offen nach D6:** der Push. Er deployt sofort (K7) und braucht ausdrückliche
 Freigabe.
 
-**Nachtrag nach dem Push** (auf Weisung des Auftraggebers): F-P2-L behoben.
-`.gitignore` führt `*rc.json` statt `*_rc.json`; damit fällt die Datei, deren
-Erzeugung `LIESMICH.md` 39 und `einspielen.py` 109 anweisen, nicht mehr durch.
-Sie enthält den Wiederherstellungsschlüssel eines Kontos. Der Aufruf selbst
-bleibt, wie er ist — ihn umzubenennen ließe eine bereits vorhandene `rc.json`
-auf anderen Maschinen ungeschützt und löste damit gerade den Fall nicht, um
-den es geht. Von den vier übergebenen Funden war dieser der einzige, der
-etwas aus der Anwendung heraustragen kann; F-P2-J, F-P2-Q und F-P2-S bleiben
-Empfehlungen im Prüfdokument.
+**Nachtrag nach dem Push, und seine Rücknahme.** Auf Weisung wurde F-P2-L
+zunächst behoben: `.gitignore` bekam `*rc.json` statt `*_rc.json`. Auf
+erneute Weisung ist das **zurückgenommen**, und zwar weiter als bis zum
+Ausgangsstand — es steht jetzt **gar keine** Regel mehr für `rc.json` dort
+(E-P2-23).
 
-Die Version bleibt **8.0.1**: Unter `server/` ändert sich nichts, und 8.0.1
-ist zum Zeitpunkt des Nachtrags noch nicht ausgeliefert — eine 8.0.2, die
-eine 8.0.1 berichtigt, die es auf keinem Server gab, wäre eine Zahl ohne
-Gegenstück (dieselbe Begründung wie in `version.php` zur 8.0.0).
+Der sachliche Kern: Ich hatte den Fund als sicherheitsrelevant geführt („ein
+Wiederherstellungsschlüssel im Repositorium"). Das war falsch bewertet. Die
+Skripte unter `tools/referenzdatensatz/einspielen/` legen ausschließlich
+Wegwerfkonten an — das Referenzkonto, das Demo-Konto und die Umlaufkonten der
+Kreisläufe, alle mit einem Passwort, das im README steht. Ein
+Wiederherstellungsschlüssel für ein solches Konto schützt nichts. Eine
+`.gitignore`-Regel dagegen behauptete eine Gefahr, die es nicht gibt, und
+führte den nächsten Leser in die Irre. `LIESMICH.md` sagt die Sache jetzt in
+zwei Sätzen: nicht ignoriert, und warum.
 
+Die Version bleibt **8.0.1** — unter `server/` hat sich in beiden Richtungen
+nichts geändert.

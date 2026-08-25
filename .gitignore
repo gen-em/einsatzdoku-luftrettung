@@ -34,15 +34,6 @@ tools/referenzdatensatz/**/__pycache__/
 # gueltig -- und der Einrichtungslink ist bis zu seiner Einloesung ein
 # Zugang zum Konto.
 tools/referenzdatensatz/einspielen/lauf.json
-# Wiederherstellungsschluessel des angelegten Kontos, geschrieben von
-# passwort_setzen.mjs.
-#
-# DAS MUSTER STAND BIS WEB 8.0.1 AUF `*_rc.json` -- und traf damit genau die
-# Datei NICHT, die LIESMICH.md 39 und einspielen.py 109 zu erzeugen anweisen:
-# `rc.json`, ohne Praefix. Wer der Anleitung folgte und `git add -A` sagte,
-# hatte den Schluessel im Repositorium. Jetzt `*rc.json`; es deckt beide
-# Schreibweisen ab (P2, F-P2-L).
-tools/referenzdatensatz/einspielen/*rc.json
 # Laufprotokoll des Referenz-Exports (Zeitpunkt und Dateinamen des letzten
 # Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
 # das Protokoll ihres Entstehens nicht.
