@@ -196,7 +196,9 @@ sind hier als E überführt.
 | E-P2-20 | **In der Ausnahmeliste erklärt die erste passende Regel den Treffer.** Notwendig, weil sich Regeln überschneiden: Die allgemeine Regel „Feldnamen und Kopfzeilen der Import-Profile" (Klasse D) passt auch auf die Zeile der Schwachwortliste in `pwquality.js`, deren Grund ein ganz anderer ist (Klasse F). Ohne feste Reihenfolge wäre nicht vorhersagbar, welche Begründung im Bericht steht. Folge für die Pflege: das Besondere steht oben, das Allgemeine unten. |
 | E-P2-21 | **„Basis" und „Station" gehören in die Sperrliste.** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort — die Erhebung in Abschnitt 2 hat sie deshalb nicht gefunden, und die Wortliste führte „Basis" sogar als „bereits ersetzt". Aufgenommen in D4 (F-P2-O), mit Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner) und für „Luftrettungsstation", das die Wortgrenze ohnehin heraushält. |
 | E-P2-22 | **`nadoku` kommt NICHT in die Schwachwortliste** — Abweichung von E-P2-18, begründet in F-P2-R. Der Vergleich in `pwquality.js` ist ein Teilstring-Vergleich; mit `nadoku` in der Liste ist `nadokudemo0815` — das Demo-Passwort aus README, Handbuch 3.2 und sämtlichen Prüfmitteln — weder setzbar noch als Backup- oder Exportpasswort verwendbar. Der Produktname existiert vor P6 ohnehin nicht (E-P2-13). Er gehört in die Liste, wenn er kommt: zusammen mit einem neuen Demo-Passwort. |
-| E-P2-23 | **Keine `.gitignore`-Regel für `rc.json`** — Entscheidung des Auftraggebers, gegen meinen Vorschlag. Die Datei hält den Wiederherstellungsschlüssel eines Kontos, das die Prüfskripte anlegen; das sind ausnahmslos Wegwerfkonten mit öffentlich dokumentiertem Passwort. Damit schützt der Schlüssel nichts, und eine Regel dagegen behauptete eine Gefahr, die es nicht gibt. Auch der bis dahin bestehende Eintrag `*_rc.json` ist entfernt. |
+| E-P2-23 | ~~Keine `.gitignore`-Regel für `rc.json`.~~ **Aufgehoben durch E-P2-24.** Die Entscheidung stand einen Tag: Weil die Prüfskripte nur Wegwerfkonten anlegen, sollte gar keine Regel für die Datei bestehen — eine Regel gegen eine Gefahr, die es nicht gibt, lasse künftige Leser eine vermuten. |
+| E-P2-24 | **Doch eine Regel, und zwar eine, die trifft: `*rc.json`.** E-P2-23 hat den Fund gegen die falsche Frage geprüft. Es ging nie darum, ob der Schlüssel schützenswert ist, sondern darum, dass ein vorhandener Eintrag sein eigenes Ziel verfehlte. Dazu kommt, was E-P2-23 nicht bedacht hatte: Der Schlüssel ist **passwortäquivalent** (er packt den Inhaltsschlüssel ohne Passwort aus), und `passwort_setzen.mjs` nimmt **jede** URL — gegen eine echte Installation gerichtet, steht in `rc.json` der Schlüssel eines echten Kontos. **Muster statt Dateiname**, weil ein Dateiname erst wirkt, wenn ihn jemand liest, und auf Maschinen mit einer alten `rc.json` gar nicht. |
+| E-P2-25 | **Die Nacharbeit wird in 8.0.1 eingefaltet**, obwohl F-P2-S eine Codeänderung ist (CLAUDE.md 2 verlangt eine Stufung). Begründung: 8.0.1 stand zum Zeitpunkt der Nacharbeit auf keinem Server. Eine 8.0.2, die eine 8.0.1 berichtigt, die es nirgends gab, wäre die Zahl ohne Gegenstück, gegen die schon der Absatz zur 8.0.0 in `version.php` argumentiert. F-P2-L und F-P2-Q liegen außerhalb von `server/` und begründen ohnehin keine Stufung; der Changelog nennt sie trotzdem. |
 
 ## 4. Offene Fragen
 
@@ -619,16 +621,16 @@ Mit Fundort, Wirkung, und ob blockierend (dann sofort, sonst gesammelt, K4).
 
 | Nr. | Fund | Fundort | Wirkung | Behandlung |
 |---|---|---|---|---|
-| F-P2-J | **Die Sicherungsbeschreibung nennt einen Rollencode, den es nicht gibt.** Das JSON-Schema führt `"roles": ["p1", "p2", "tc", "other"]` und `"crew": { "p1": …, "p2": null, "tc": …, "other": null }`. Die Anwendung kennt `p1`, `p2`, **`hems`**, **`fr`**, `driver`, `trainee`, `other` (`db.php` `CREW_ROLES`, `schema.sql` 123). `tc` kommt in keinem Quelltext vor; die beiden Luftrollen `hems` und `fr` fehlen im Beispiel. | `docs/Backup-Format.md` 179, 225 | Wer eine Sicherung von Hand liest oder ein Werkzeug dagegen baut, sucht einen Schlüssel, den keine Datei führt. Kein Fehler im Code. | **Gesammelt, nicht behoben.** Kein Terminologiefund: `tc` ist keine Luftlastigkeit, sondern eine falsche Angabe. Die Ausnahme von K4 in E-P2-05 gilt für Texte, die P2 ohnehin anfasst — `Backup-Format.md` steht in D5 ausdrücklich nur zur Durchsicht. Empfehlung: Backlog-Eintrag oder Mitnahme in den Gesamtabgleich R16 (P6). |
+| F-P2-J | **Die Sicherungsbeschreibung nennt einen Rollencode, den es nicht gibt.** Das JSON-Schema führte an **drei** Stellen `tc`: `vehicles[].roles`, `days[].crew` und die Kommentarzeile, die den Katalog aufzählt (`p1, p2, tc, fr, other`). Die Anwendung kennt `p1`, `p2`, **`hems`**, `fr`, `driver`, `trainee`, `other` (`db.php` `CREW_ROLES`). `tc` steht in keiner Quelldatei und hat nie existiert (0 Treffer in `CHANGELOG.md` und `migrations/`) — gemeint war „HEMS-**TC**". | `docs/Backup-Format.md` 179, 225, 284 | Wer ein Werkzeug gegen die Beschreibung baut, sucht einen Schlüssel, den keine Datei führt. Kein Fehler im Code. | **Nachträglich behoben** (Nacharbeit, s. u.). Dabei zwei weitere Ungenauigkeiten derselben Absätze: Die Beispiele zeigten eine **Reihenfolge**, die keine Datei hat — `backup_lib.php` liest `ORDER BY role_code`, die Listen sind alphabetisch, nicht in Katalogreihenfolge (nachgemessen an der eingecheckten Referenzsicherung: `["fr","hems","other","p1","p2"]`). Und es gab nur **ein** Beispielrettungsmittel mit der Notation `"kind": "air|ground"`, die sonst nirgends vorkommt; jetzt zwei, eines je Art. |
 | F-P2-K | **Vier Stellen der Klassen A/B, die die Erhebung in Abschnitt 2 nicht einzeln aufführt.** `einstellungen.php` 2301 (Platzhalter der Gerätebezeichnung „z. B. Fenix 6 Pro" — Markenmodell als einziges Beispiel auf einer plattformübergreifenden Seite), `Handbuch.md` 1230 (zweiter „Pilotenwechsel", derselbe Fall wie 634), 1571 („vier leere Flugrollen"), 1596 („RTW, NEF oder weitere Hubschrauber" — wörtlich dieselbe Formulierung wie W5). | s. Fundort | Ohne sie bliebe die Abnahme „0 Treffer außerhalb der Ausnahmen" unerreichbar, ohne dass ein Grund dafür genannt wäre. | **In P2 behoben**, D2 und D4, nach E-P2-14/15 — dieselbe Begründung wie für W5 und W6. |
-| F-P2-L | **Der dokumentierte Einspiellauf erzeugt eine Datei, die `.gitignore` nicht kennt.** `tools/referenzdatensatz/einspielen/LIESMICH.md` 39 und `einspielen.py` 109 nennen als Aufruf `node passwort_setzen.mjs '<Link>' '<Passwort>' rc.json`. Ignoriert war nur `tools/referenzdatensatz/einspielen/*_rc.json` — `rc.json` ohne Präfix fiel durch. | `.gitignore` 37 gegen `einspielen/LIESMICH.md` 39 | Die Beobachtung stimmt, **die Bewertung war falsch.** Ich hatte sie als „Wiederherstellungsschlüssel im Repositorium" und damit als sicherheitsrelevant geführt. Die Skripte dieser Ablage legen jedoch ausschliesslich **Wegwerfkonten** an — Referenz-, Demo- und Umlaufkonten mit öffentlich dokumentiertem Passwort. Der Schlüssel darin schützt nichts. | **Kein Befund; beide Einträge entfernt.** Entscheidung des Auftraggebers (E-P2-23): Weder `*_rc.json` noch `*rc.json` stehen noch in `.gitignore` — eine Regel gegen eine Gefahr, die es nicht gibt, lässt künftige Leser eine vermuten. Der Nachtrag, der das Muster erst erweitert hatte, ist zurückgenommen; `LIESMICH.md` sagt jetzt ausdrücklich, warum die Datei nicht ignoriert wird. |
+| F-P2-L | **Der `.gitignore`-Eintrag war für `rc.json` gedacht und verfehlte sie.** `LIESMICH.md` 39 und `einspielen.py` 109 weisen beide `node passwort_setzen.mjs … rc.json` an; ignoriert war `tools/referenzdatensatz/einspielen/*_rc.json`. | `.gitignore` 37 gegen `einspielen/LIESMICH.md` 39 | **Kein Sicherheitsvorfall** — im dokumentierten Ablauf gehört die Datei zu einem Wegwerfkonto, dessen Passwort im README steht und dessen Schlüsselmaterial offen in `server/demo/fixture.json.gz` liegt. Ich hatte den Fund zunächst als sicherheitsrelevant überzeichnet. Der Defekt bleibt: ein Eintrag, der sein eigenes Ziel verfehlt. Der Schlüssel ist zudem **passwortäquivalent**, und `passwort_setzen.mjs` nimmt jede URL, nicht nur `127.0.0.1`. | **Behoben** (Nacharbeit): Muster jetzt `*rc.json`. Erweitert wurde das **Muster**, nicht der Dateiname in der Anleitung — ein Dateiname wirkt erst, wenn ihn jemand liest, und wirkt gar nicht auf Maschinen, auf denen aus früheren Läufen schon eine `rc.json` liegt. Entscheidungsweg: E-P2-23 (beide Einträge streichen) → **aufgehoben durch E-P2-24**. |
 | F-P2-M | **Der Vorschlag des Konzepts für Handbuch 4.2 war selbst falsch.** Das Konzept wollte „Datum, Zeitraum, **Kilometer** und am Ende genau ein Herkunftskennzeichen". Die Kopfzeile der Einsatzansicht führt seit Web 7.0.0 **keine Strecke mehr** — `einsatz.php` 352–372 nennt den Grund im Kommentar („ENTFALLEN sind zwei Angaben … die STRECKE stand hier als dritte Zahl neben zwei Uhrzeiten"). Sie zeigt Datum, Zeitraum, Rettungsmittel, Standort, Artzeichen, Herkunft. | `Handbuch.md` 384, gegen `server/einsatz.php` 352–372 | Wer die Kilometer in der Einsatzansicht sucht, findet sie dort seit Web 7.0.0 nicht. Der alte Text war doppelt falsch: im Wort und in der Sache. | **In P2 behoben**, D4 — E-P2-05 (Sachfehler im berührten Absatz). |
 | F-P2-N | **Ein Querverweis zeigte auf einen Abschnitt, den es nicht gibt.** „(Abschnitt 9.1 bzw. 8.4)" — Kapitel 8 ist „Löschen und Papierkorb" und hat keine Unterabschnitte. Gemeint sind die systemweiten Stammdaten: **9.4**. | `Handbuch.md` 645 | Ein Verweis ins Leere in demselben Absatz, den D4 ohnehin anfasst. | **In P2 behoben**, D4. Gefunden durch die maschinelle Verweisprüfung (85 Verweise). |
 | F-P2-O | **Zwei Wörter fehlten in der Sperrliste: „Basis" und „Station".** Beide bezeichnen im Sprachgebrauch der Luftrettung den Standort, beide enthalten kein Luftwort. Die Wortliste (5.2) führte „Basis" sogar als „bereits ersetzt (Web 6.x)" — im Handbuch stand er noch („Trägst du Rettungsmittel, **Basis** oder Besatzung …", „der Regelfall an einer **Station**"). | `Handbuch.md` 1480 und 1596; Wortliste 5.2 | Ohne die beiden Muster hätte das Werkzeug null gemeldet und zwei echte Stellen übersehen — die Art von Lücke, die eine Prüfung wertlos macht. | **In P2 behoben**, D4: beide Stellen geändert, beide Muster in die Sperrliste (23 statt 21), drei Ausnahmen für die Homonyme (Basis-URL, Basis-Kartenlayer, `$basis` als Bezeichner). Wortliste 5.2 berichtigt. |
 | F-P2-P | **Drei Stellen waren nur von der Luft her gedacht, ohne ein Sperrwort zu enthalten** — gefunden in der Gesamtdurchsicht (D4, Schritt 11): (a) die Feldgruppe „Weitere Rettungsmittel" mit „Fahrzeuge" erklärt — für ein NEF ist das weitere Mittel oft gerade der RTH; (b) „Die Kacheln Längste Flugstrecke, Längste Einsatzdauer und **Höchster Einsatzort** sind interaktiv" — „Höchster Einsatzort" gibt es nur im Kachelsatz der Luftrettung (`zeitraum.php`, `KACHELN_LUFT`), in „Gemischt" und „Bodengebunden" sind es zwei; (c) „das **gewohnte** Listenlayout" für das Fremdformat GuteSeele — gewohnt ist es an einer Luftrettungsstation. | `Handbuch.md` 485, 742–744, 1282 | (b) ist ein Sachfehler und widerspricht der eigenen Tabelle zwei Absätze höher. | **In P2 behoben**, D4. |
-| F-P2-Q | **Zwei `.pyc`-Dateien liegen im Repositorium**, obwohl `.gitignore` 29 `tools/referenzdatensatz/**/__pycache__/` führt: `quelldaten/__pycache__/katalog.cpython-311.pyc` und `wegpunkte.cpython-311.pyc`. `.gitignore` wirkt nicht auf bereits verfolgte Dateien. | `git ls-files` | Sie ändern sich bei jedem Lauf und tauchen als Änderung im Arbeitsbaum auf, ohne dass jemand etwas getan hat — genau so ist es in dieser Umsetzung passiert. | **Gesammelt, nicht behoben** (K4). Empfehlung: `git rm --cached` für beide. |
+| F-P2-Q | **Zwei `.pyc`-Dateien liegen im Repositorium**, obwohl `.gitignore` 29 `tools/referenzdatensatz/**/__pycache__/` führt: `quelldaten/__pycache__/katalog.cpython-311.pyc` und `wegpunkte.cpython-311.pyc`. `.gitignore` wirkt nicht auf bereits verfolgte Dateien. | `git ls-files` | Sie ändern sich bei jedem Lauf und tauchen als Änderung im Arbeitsbaum auf — genau so ist es in dieser Umsetzung passiert. | **Behoben** (Nacharbeit): `git rm --cached` für beide. Gegenprobe über **alle** verfolgten Dateien (`git ls-files \| git check-ignore --stdin`): keine weitere, die ignoriert sein sollte; auch keine `.log`, `.bak`, `ausgabe/` oder `node_modules`. |
 | F-P2-R | **E-P2-18 machte das Demo-Passwort unbrauchbar.** `nadoku` in der Schwachwortliste trifft über den Teilstring-Vergleich (`h.length >= 6 && k.includes(h)`) das Passwort `nadokudemo0815`. Es steht im README, im Handbuch 3.2 und in jedem Prüfmittel. Wo `guete.erlaubt` geprüft wird — `pw_handling.php` (Passwort setzen), `einstellungen.php` (Backup-Passwort), `import.php` (Exportpasswort) —, wird es abgewiesen. | `assets/pwquality.js` 50 ff. | **Gemessen, nicht vermutet:** Der Kreislauftest `--art edbak` lief nach D2 in einen Zeitüberlauf von 900 s beim Warten auf den Download. Die Ursache war nicht der Umlauf, sondern das Passwortfeld: Die erneute Sicherung wurde gar nicht erst erzeugt. Damit hätte P2 den Regressionsapparat der eigenen Phase stillgelegt. | **In P2 behoben**, D6: `nadoku` wieder heraus, Begründung im Kommentar der Liste (E-P2-22). **Nebenbefund:** Die fünf verbleibenden Ergänzungen ändern am Verhalten **nichts** — sie sind durch kürzere Einträge der bestehenden Liste bereits abgedeckt. 768 Passwortproben durch beide Fassungen: **0 Abweichungen**. E-P2-18 hat damit als Sicherheitsmaßnahme keine Wirkung; als Dokumentation dessen, was gemeint ist, bleibt sie stehen. |
-| F-P2-S | **Das Anlegen des Demo-Kontos scheitert an einer Gerätekennung.** `devices.device_id` ist **global** eindeutig (`schema.sql` 39); die Demo-Fixture bringt die Kennungen des Referenzbestands mit (`manual-2`). Auf einer Installation, die den Referenzbestand ohnehin führt, kollidieren sie, und `admin_demo.php` zeigt der Administration den rohen Datenbankfehler: `SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'manual-2' for key 'device_id'`. | `server/demo_lib.php` 388–394, `server/schema.sql` 39 | Auf einer Entwicklungsmaschine mit Referenzbestand lässt sich das Demo-Konto nicht anlegen. Auf dem Produktivserver nur, wenn dort zufällig dieselbe Kennung existiert — die Kennungen `manual-<n>` stammen aber aus dem Prüfwerkzeug, nicht aus dem Betrieb. Unabhängig davon: Ein roher SQLSTATE-Text ist keine Meldung. | **Gesammelt, nicht behoben** (K4) — kein Terminologiefund. Für den Lauf der Demo-Abnahme wurde die kollidierende Zeile einmalig per SQL entfernt; das ist im Prüfdokument 1.4 vermerkt. Empfehlung: beim Anlegen `INSERT IGNORE` oder eine eindeutige Kennung je Konto, und in jedem Fall eine lesbare Meldung. |
+| F-P2-S | **Das Anlegen des Demo-Kontos scheitert an einer Gerätekennung.** `devices.device_id` ist **global** eindeutig (`schema.sql` 39); die Fixture bringt die Geräte des Referenzkontos mit — darunter das **virtuelle** „Manuelle Einträge", dessen Kennung `manual-<Kontonummer>` lautet. Auf einer Installation, die auch den Bestand führt, aus dem die Fixture stammt, kollidiert sie zwangsläufig; `admin_demo.php` zeigte den rohen `SQLSTATE[23000] … Duplicate entry 'manual-2'`. | `server/demo_lib.php` 388–394, `server/schema.sql` 39, `server/admin_demo.php` 44 | Anders als die zufälligen `dev-…`-Kennungen ist `manual-<n>` **deterministisch** — sie trifft jede Installation, auf der irgendein Konto diese Nummer hat. Der Eintrag ist zudem inhaltlich falsch: Die Nummer ist die des Quellkontos. | **Behoben** (Nacharbeit): Das virtuelle Gerät wird beim **Einspielen** übersprungen (`demo_lib.php`, wirkt auch für bereits ausgelieferte Fixtures) und beim **Erzeugen** nicht mehr aufgenommen (`fixture/erzeugen.php`). Belegt: 0 Vorkommen von `manual-` in der Nutzlast der ausgelieferten Fixture; `day_refs` nennen nur echte Geräte, `missions.device_id` steht gar nicht in der Sicherung. Dazu zählt `admin_demo.php` die Geräte jetzt nach `GERAETE_ECHT_SQL` — bis dahin die einzige Stelle, die das virtuelle mitzählte — und meldet Datenbankfehler lesbar statt im Wortlaut. |
 
 ## 10. Statuspflege und Rahmenplan-Berichtigungen
 
@@ -701,10 +703,9 @@ Ausnahmen, läuft in P3 und P6 mit); keine Migration; Uhr unverändert
 (Plan 10.4). Vorher 53 Treffer außerhalb der Ausnahmen, nachher 0; Kreisläufe
 286 739 / 8 797 Einzelvergleiche, beide 0 unerklärt. Neun Funde aus der
 Konzepterstellung (A–I) erledigt; zehn Funde während der Umsetzung (J–S),
-davon sechs behoben, **drei übergeben** — F-P2-J (Rollencode `tc` in der
-Format-Doku), F-P2-Q (zwei `.pyc` im Repositorium), F-P2-S (Demo-Anlage
-scheitert an einer Gerätekennung) — und **einer verworfen**: F-P2-L, meine
-Bewertung war falsch (E-P2-23). Offen: Prüfliste aus dem Prüfdokument."
+davon nach der Nacharbeit **alle zehn behoben** — die vier zunächst nur
+gesammelten (F-P2-J, F-P2-L, F-P2-Q, F-P2-S) in einem Nachgang, eingefaltet
+in 8.0.1 (E-P2-25). Offen: Prüfliste aus dem Prüfdokument."
 
 ## 11. Umsetzungsstand
 
@@ -1055,21 +1056,51 @@ vollständig; Prüfdokument `docs/Pruefdokument-P2-Terminologie.md` nach K9.
 **Offen nach D6:** der Push. Er deployt sofort (K7) und braucht ausdrückliche
 Freigabe.
 
-**Nachtrag nach dem Push, und seine Rücknahme.** Auf Weisung wurde F-P2-L
-zunächst behoben: `.gitignore` bekam `*rc.json` statt `*_rc.json`. Auf
-erneute Weisung ist das **zurückgenommen**, und zwar weiter als bis zum
-Ausgangsstand — es steht jetzt **gar keine** Regel mehr für `rc.json` dort
-(E-P2-23).
+### Nacharbeit nach P2 (F-P2-J, F-P2-L, F-P2-Q, F-P2-S)
 
-Der sachliche Kern: Ich hatte den Fund als sicherheitsrelevant geführt („ein
-Wiederherstellungsschlüssel im Repositorium"). Das war falsch bewertet. Die
-Skripte unter `tools/referenzdatensatz/einspielen/` legen ausschließlich
-Wegwerfkonten an — das Referenzkonto, das Demo-Konto und die Umlaufkonten der
-Kreisläufe, alle mit einem Passwort, das im README steht. Ein
-Wiederherstellungsschlüssel für ein solches Konto schützt nichts. Eine
-`.gitignore`-Regel dagegen behauptete eine Gefahr, die es nicht gibt, und
-führte den nächsten Leser in die Irre. `LIESMICH.md` sagt die Sache jetzt in
-zwei Sätzen: nicht ignoriert, und warum.
+P2 hatte vier Funde nur gesammelt (K4). Auf Weisung sind sie in einem
+Nachgang behoben und in **8.0.1 eingefaltet** (E-P2-25) — 8.0.1 stand zu
+diesem Zeitpunkt auf keinem Server.
 
-Die Version bleibt **8.0.1** — unter `server/` hat sich in beiden Richtungen
-nichts geändert.
+**Der Weg über `rc.json` war ein Umweg, und der gehört ins Protokoll.**
+Zuerst habe ich den Fund als sicherheitsrelevant geführt und das Muster
+erweitert; auf Weisung wurde das zurückgenommen und beide Einträge gestrichen
+(E-P2-23); auf erneute Weisung steht jetzt wieder ein Muster da, und zwar
+`*rc.json` (E-P2-24). Der Fehler in der Mitte war meiner: Ich hatte den Fund
+gegen die falsche Frage geprüft. Es ging nie darum, ob der Schlüssel
+schützenswert ist — im dokumentierten Ablauf ist er es nicht —, sondern
+darum, dass ein vorhandener Eintrag sein eigenes Ziel verfehlte.
+
+**Ein Fehler in der eigenen Änderung, gefunden im Browserlauf.** Die neue
+Fehlerbehandlung in `admin_demo.php` fragte zuerst auf `RuntimeException` und
+erst danach auf `PDOException`. In PHP **erbt** `PDOException` von
+`RuntimeException` — der erste Zweig fing damit jeden Datenbankfehler mit ab
+und gab ihn im Wortlaut aus, also genau das, was abgestellt werden sollte.
+Beim Lesen ist mir das nicht aufgefallen; der Reproduktionslauf zeigte
+weiterhin den rohen `SQLSTATE`-Text. Die Reihenfolge steht jetzt richtig, und
+der Grund steht als Kommentar daneben.
+
+**Prüfstand.** Die Prüfumgebung wurde für diese Zahlen **vollständig neu
+aufgebaut** (Datenbank verworfen, `install.php`, Referenzkonto,
+Einspiellauf mit 366 Anfragen, CSV-Import der vier Zeilen) — die aus P2 war
+durch die Untersuchung von F-P2-S nicht mehr belastbar.
+
+| Prüfung | Mittel | Ergebnis |
+|---|---|---|
+| Wortliste, alle Bereiche | `tools/wortliste/wortliste.py` | **0 / 0 / 0**, Rückgabewert 0. Zwei neue Treffer der Katalogaufzählung in `Backup-Format.md` sind durch eine erweiterte Regel erklärt; `besatzung-kurznamen` musste dafür **vor** die allgemeine Regel rücken (E-P2-20) |
+| Selbstprobe des Zerlegers | `--probe` | **16/16** |
+| **Kreislauf edbak** (R24) | `kreislauf.py --art edbak --frisch` | **286 739 Einzelvergleiche, 0 unerklärt**, 16 erwartet — unverändert gegenüber P2 |
+| **Kreislauf CSV** (R24) | `--art csv --frisch` | **8 797 Einzelvergleiche, 0 unerklärt**, 859 erwartet — unverändert |
+| Angriffswerte (R20) | `browser/angriffswerte.mjs` | **42 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** |
+| **Demo-Abnahme** — hier Pflicht, nicht Kür | `browser/demo_pruefen.mjs` | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**; `geräte` **2** beim Anlegen, vor und nach dem Reset |
+| **F-P2-S, Reproduktion** | altes `demo_lib.php` gegen neues `admin_demo.php`, Referenzkonto als `manual-2`-Halter | Anlegen bricht ab; die Seite zeigt den lesbaren Satz mit der Kennung `406B7F2A`, das Fehlerprotokoll führt darunter `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id' @ demo_lib.php:394`. Zustand danach: „Es gibt derzeit kein Demo-Konto" — die Transaktion ist zurückgerollt |
+| **F-P2-S, danach** | beide Dateien neu | Demo-Konto angelegt, 15 Diensttage / 82 Einsätze / 5 im Papierkorb, **2 Geräte, beide echt** (`device_id NOT LIKE 'manual-%'`) |
+| F-P2-L | `rc.json` angelegt, `git status --ignored` | Einstufung `!!` — ignoriert |
+| F-P2-Q | `git ls-files \| git check-ignore --stdin` | keine verfolgte Datei mehr, die ignoriert sein sollte; auch keine `.log`, `.bak`, `ausgabe/`, `node_modules` |
+| Syntax | `php -l` (5 Dateien), `node --check` | fehlerfrei |
+
+**Nicht geprüft:** dass die ausgelieferte `fixture.json.gz` mit dem
+geänderten `erzeugen.php` bitgleich ohne den Eintrag entstünde — sie wurde
+bewusst nicht neu erzeugt (der Filter beim Einspielen genügt und wirkt auch
+für bereits ausgelieferte Fixtures).
+

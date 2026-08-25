@@ -158,6 +158,80 @@ fällt niemandem auf. Sechzehn Proben mit Sollergebnis sichern ihn ab.
 `tools/` wird nicht ausgeliefert; das Werkzeug kommt dem Produktivserver
 nicht nahe. Es läuft in P3 (neue Oberfläche) und P6 (Umbenennung) mit.
 
+### Web — Zwei Funde derselben Phase, die keine Terminologie sind
+
+Beide wurden in P2 gefunden und dort nach der Regel „sammeln, nicht nebenbei
+beheben" liegengelassen. Sie sind hier eingefaltet, weil 8.0.1 zu diesem
+Zeitpunkt auf keinem Server stand: Eine 8.0.2, die eine 8.0.1 berichtigt, die
+es nirgends gab, wäre eine Zahl ohne Gegenstück.
+
+**Das Demo-Konto ließ sich auf einer Entwicklungsmaschine nicht anlegen.** Die
+Administration bekam `SQLSTATE[23000] … Duplicate entry 'manual-2' for key
+'device_id'` zu sehen und sonst nichts. Ursache: Die Fixture führt die Geräte
+des Referenzkontos mit — darunter das **virtuelle** Gerät „Manuelle
+Einträge". Dessen Kennung ist `manual-<Kontonummer>`, und `device_id` ist in
+`devices` **global** eindeutig. Auf einer Installation, die auch den Bestand
+führt, aus dem die Fixture stammt, kollidiert die Kennung zwangsläufig.
+
+Das virtuelle Gerät hat in der Fixture nichts verloren, und zwar aus einem
+zweiten Grund: Die Nummer darin ist die des **Quellkontos**. Im Demo-Konto
+wäre sie ohnehin falsch — dort entstünde bei der ersten Handeingabe ein
+zweites virtuelles Gerät mit der richtigen. Genau so ist es im Normalbetrieb
+gedacht: `einsatz_form.php` und `api/import_commit.php` legen es bei Bedarf
+an, dauerhaft deaktiviert. Verwiesen wird darauf nichts — `day_refs` nennen
+nur echte Geräte, und `missions.device_id` steht gar nicht erst in der
+Sicherung. In der ausgelieferten Fixture: **0 Vorkommen** von `manual-` in der
+Nutzlast.
+
+Es wird deshalb an zwei Stellen ausgeschlossen: beim **Einspielen**
+(`demo_lib.php` — das wirkt auch für Fixtures, die schon irgendwo liegen) und
+beim **Erzeugen** (`fixture/erzeugen.php` — damit es gar nicht erst
+hineinkommt). Die ausgelieferte `fixture.json.gz` wurde **nicht** neu erzeugt;
+sie braucht es nicht, und 745 KB Binärdatei wegen eines übersprungenen
+Eintrags neu zu schreiben, verbessert nichts.
+
+Zwei Dinge fielen dabei mit ab. Die Adminansicht zählte die Geräte des
+Demo-Kontos als einzige Stelle **mit** dem virtuellen — sie meldete drei, wo
+Geräteliste und Gerätegrenze zwei sehen; sie benutzt jetzt dieselbe Regel.
+Und der rohe Datenbankfehler ist weg: `admin_demo.php` unterscheidet jetzt
+zwischen den Meldungen, die `demo_lib.php` selbst **für** die Administration
+schreibt (die bleiben wörtlich), einer erkannten Dublette und allem übrigen.
+Die technische Ursache geht ins Fehlerprotokoll, in die Seite geht ein Satz
+und eine Kennung, unter der sie dort steht — dasselbe Muster wie in
+`admin_user.php` seit Web 5.x.
+
+**Die Sicherungsbeschreibung nannte eine Rolle, die es nicht gibt.**
+`docs/Backup-Format.md` führte an drei Stellen den Rollencode `tc`; die
+Anwendung kennt `p1`, `p2`, **`hems`**, `fr`, `driver`, `trainee`, `other`.
+`tc` kommt in keiner Quelldatei vor und hat nie existiert — gemeint war
+offenbar „HEMS-**TC**". Wer ein Werkzeug gegen die Beschreibung baute, suchte
+einen Schlüssel, den keine Datei führt.
+
+Beim Berichtigen kam zweierlei dazu: Die Beispiele zeigten eine Reihenfolge,
+die keine Datei hat — `backup_lib.php` liest `ORDER BY role_code`, die Listen
+sind also **alphabetisch**, nicht in Katalogreihenfolge. Und es gab nur ein
+luftgebundenes Rettungsmittel mit der Notation `"kind": "air|ground"`, die
+sonst nirgends vorkommt; jetzt stehen dort zwei Beispiele, eines je Art.
+
+### Werkzeuge — zwei Fragen der Repo-Hygiene
+
+Kein Deploy-Inhalt: Beides liegt außerhalb von `server/` und ändert an der
+Anwendung nichts.
+
+`.gitignore` führte `tools/referenzdatensatz/einspielen/*_rc.json` — ein
+Eintrag, der erkennbar für die Datei gedacht war, die `LIESMICH.md` und
+`einspielen.py` anzulegen anweisen, und sie verfehlte: Sie heißt `rc.json`,
+ohne Präfix. Das Muster lautet jetzt `*rc.json`. Erweitert wurde das Muster
+und nicht der Dateiname in der Anleitung geändert, weil ein Dateiname erst
+wirkt, wenn ihn jemand liest — auf Maschinen mit einer `rc.json` aus einem
+früheren Lauf und bei jedem, der den Aufruf aus Gewohnheit kopiert, wirkt er
+gar nicht.
+
+Und zwei `.pyc` lagen im Repositorium, obwohl `.gitignore` ihr Verzeichnis
+führt: Die Regel wirkt nicht auf bereits verfolgte Dateien. Sie sind
+ausgetragen. Gegenprobe über alle verfolgten Dateien: keine weitere, die
+ignoriert sein sollte.
+
 ### Web — Regression
 
 Beide Kreisläufe unverändert auf null unerklärten Abweichungen,

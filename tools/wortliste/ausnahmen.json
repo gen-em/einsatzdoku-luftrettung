@@ -55,10 +55,17 @@
       "begruendung": "`flugtage` als Feldname in Sicherungen und Umfangsangaben aelterer Fassungen. Der Code liest ihn als Zweitnamen (`diensttage ?? flugtage`), damit alte Dateien lesbar bleiben."
     },
     {
-      "id": "rollencode-hems",
-      "zeile": "(['\"`])hems\\1|crew_hems|dayCrew\\.hems|hems\\s+TINYINT",
+      "id": "besatzung-kurznamen",
+      "datei": "docs/Technik.md",
+      "zeile": "Besatzung P1, P2, HEMS, FR",
       "klasse": "D",
-      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Sicherung. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar."
+      "begruendung": "Erlaeuterung der Suchparameter `c1`…`c5`. Die Kurznamen sind Vertragsbestandteil verschickter Links (R5). Steht bewusst VOR der allgemeinen Regel zum Rollencode: Deren Muster fuer die Katalogaufzaehlung („p2, hems\") passt seit der Nacharbeit auch auf diese Zeile, und dann stuende hier die falsche Begruendung (E-P2-20)."
+    },
+    {
+      "id": "rollencode-hems",
+      "zeile": "(['\"`])hems\\1|crew_hems|dayCrew\\.hems|hems\\s+TINYINT|p2, hems",
+      "klasse": "D",
+      "begruendung": "Rollencode `hems`, Spalte `crew_hems`/`tag_crew_hems`, Schluessel in CSV, Excel und Sicherung, sowie die Aufzaehlung des Katalogs („p1, p2, hems, fr …\") in der Format-Doku. Gespeicherte und vertragliche Namen bleiben (R5, E-P2-11); ein Umbenennen machte jede vorhandene Datei unlesbar. Die Aufzaehlung kam mit der Nacharbeit dazu (F-P2-J): Vorher stand dort `tc`, ein Code, den es nie gegeben hat — das Muster fand ihn nicht, weil er kein Luftwort ist."
     },
     {
       "id": "rollenbeschriftung-vorgabe",
@@ -241,13 +248,6 @@
       "zeile": "bis (Web|Uhr|Vertrag|Version)\\b|hieß\\b|hiess\\b",
       "klasse": "C",
       "begruendung": "Historische Nennung mit Versionsangabe (E-P2-10). Der alte Begriff steht nur in einem Satz, der ausdruecklich sagt, dass er alt ist — solche Saetze erklaeren alte Exporte und Sicherungen und bleiben. Das Muster fragt nach „bis Web …\" und „hiess\", NICHT nach „seit Web\": „seit\" beschreibt meist den heutigen Zustand und wuerde Zeilen freigeben, die gar nichts Historisches sagen — so waere „Eine Flugspur endet am Einsatzort (seit Web 5.8.0, A9)\" durchgerutscht. Die zwei Stellen, deren Versionsangabe wirklich in der Zeile davor steht, haben eigene Regeln."
-    },
-    {
-      "id": "besatzung-kurznamen",
-      "datei": "docs/Technik.md",
-      "zeile": "Besatzung P1, P2, HEMS, FR",
-      "klasse": "D",
-      "begruendung": "Erlaeuterung der Suchparameter `c1`…`c5`. Die Kurznamen sind Vertragsbestandteil verschickter Links (R5)."
     },
     {
       "id": "basis-als-bezeichner",

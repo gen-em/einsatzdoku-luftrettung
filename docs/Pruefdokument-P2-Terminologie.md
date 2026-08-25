@@ -8,6 +8,10 @@ Ausgeliefert wird **Web 8.0.1**. Eine Migration gibt es **nicht** —
 `update.php` muss nach diesem Deploy **nicht** aufgerufen werden. Die Uhr-App
 ist unverändert und wird **nicht** ausgeliefert.
 
+In 8.0.1 steckt außer der Terminologie eine **Nacharbeit**: die vier Funde,
+die P2 nur gesammelt hatte (F-P2-J, F-P2-L, F-P2-Q, F-P2-S). Ihre Zahlen
+stehen in Abschnitt 2, die verbliebene Prüfung in 4.9.
+
 ---
 
 ## 1. Was NICHT geprüft werden konnte — und warum
@@ -49,18 +53,18 @@ als Platzhalter gedacht und wurde **nicht** darauf geprüft, ob sie
 registriert ist oder jemandem gehört. Wer das für heikel hält, tauscht sie
 gegen `example.com`-Form.
 
-### 1.4 Der Demo-Reset ließ sich erst nach einem Eingriff prüfen
+### 1.4 Der Demo-Reset brach ab — inzwischen behoben
 
 `browser/demo_pruefen.mjs` brach zunächst ab: Das Anlegen des Demo-Kontos
 scheiterte mit `SQLSTATE[23000] … Duplicate entry 'manual-2' for key
-'device_id'`. Die Spalte `devices.device_id` ist **global** eindeutig
-(`schema.sql` 39), und die Demo-Fixture bringt die Gerätekennungen des
-Referenzbestands mit — auf einer Installation, die den Referenzbestand
-ohnehin führt, kollidieren sie. Das ist kein Befund von P2 (F-P2-S im
-Konzept), aber es hat den Ablauf verändert: Die Zeile wurde für diesen Lauf
-**per SQL entfernt** — die einzige Stelle dieser Umsetzung, an der die
-Datenbank direkt angefasst wurde. Danach lief die Abnahme durch. Auf einer
-Installation ohne Referenzbestand tritt der Fall nicht auf.
+'device_id'`. Für den Lauf während P2 wurde die kollidierende Zeile **per
+SQL entfernt** — die einzige Stelle dieser Umsetzung, an der die Datenbank
+direkt angefasst wurde.
+
+**Das ist erledigt** (F-P2-S, Nacharbeit): Das virtuelle Gerät kommt weder in
+die Fixture noch aus ihr heraus. Die Zahlen dieses Dokuments stammen aus
+einer **von Grund auf neu aufgebauten** Prüfumgebung, in der die Abnahme ohne
+jeden Eingriff durchläuft.
 
 ### 1.5 Kein SMTP, kein echtes Gerät
 
@@ -99,6 +103,23 @@ Stelle steht, an der es nicht hingehört.
 | Schwachwortliste vorher/nachher | beide Fassungen geladen, dieselben Passwörter durchgereicht | **768 Proben, 0 Abweichungen** |
 | Syntax | `php -l` (4 Dateien), `new Function()` (2 Dateien) | fehlerfrei |
 | `style.css` unverändert | `git diff e29d593 -- server/assets/style.css` | **0 Zeilen** — deshalb kein Stilvergleich |
+
+**Nacharbeit (F-P2-J, L, Q, S), gegen eine von Grund auf neu aufgebaute
+Prüfumgebung.** Die aus P2 war durch die Untersuchung von F-P2-S nicht mehr
+belastbar; verworfen und neu: Datenbank, `install.php`, Referenzkonto,
+Einspiellauf (366 Anfragen), CSV-Import der vier Zeilen.
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Wortliste, alle Bereiche | `wortliste.py` | **0 / 0 / 0**, Rückgabewert 0 |
+| Kreislauf Sicherung | `kreislauf.py --art edbak --frisch` | **286 739 Einzelvergleiche, 0 unerklärt**, 16 erwartet — wie in P2 |
+| Kreislauf CSV | `--art csv --frisch` | **8 797 Einzelvergleiche, 0 unerklärt**, 859 erwartet — wie in P2 |
+| Angriffswerte (R20) | `browser/angriffswerte.mjs` | **42 Einzelprüfungen, 0 Befunde** |
+| Demo-Abnahme | `browser/demo_pruefen.mjs` | **24 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler**; `geräte` 2 beim Anlegen, vor und nach dem Reset |
+| F-P2-S, **Reproduktion** | altes `demo_lib.php`, neues `admin_demo.php` | Abbruch wie beschrieben; Seite zeigt den lesbaren Satz mit Kennung `406B7F2A`, Protokoll darunter `Duplicate entry 'manual-2' … @ demo_lib.php:394`; danach „Es gibt derzeit kein Demo-Konto" (Transaktion zurückgerollt) |
+| F-P2-S, **danach** | beide Dateien neu | Demo-Konto angelegt, **2 Geräte, beide echt** |
+| F-P2-L | `rc.json` angelegt, `git status --ignored` | `!!` — ignoriert |
+| F-P2-Q | `git ls-files \| git check-ignore --stdin` | keine verfolgte Datei mehr, die ignoriert sein sollte |
 
 **Zum Vergleich, was sich geändert hat:** Vor der Phase fiel das
 Wortlisten-Werkzeug mit 53 Treffern durch, danach steht es auf 0. Kreisläufe,
@@ -227,36 +248,38 @@ und ein sechstes hätte genau dieses Passwort unbrauchbar gemacht (F-P2-R).
       einer Datei. Dann ist doch ein Wort in der Liste, das im Demo-Passwort
       steckt.
 
-### 4.9 Was P2 gefunden und **nicht** behoben hat
+### 4.9 Was P2 gefunden und in der Nacharbeit behoben hat
 
-Drei Funde stehen als Empfehlung; sie brauchen deine Entscheidung. Ein
-vierter ist **verworfen**: `rc.json` fällt durch `.gitignore` (F-P2-L) — die
-Beobachtung stimmt, meine Bewertung war falsch. Die Prüfskripte legen
-ausschließlich Wegwerfkonten mit öffentlichem Passwort an; der
-Wiederherstellungsschlüssel darin schützt nichts. Es steht jetzt **gar
-keine** Regel mehr für `rc.json` in `.gitignore` (E-P2-23).
+Hier standen bis zur Nacharbeit vier offene Punkte. **Alle vier sind
+erledigt**; die Prüfung, die noch bei dir liegt, ist die Gegenprobe nach dem
+Deploy:
 
-- [ ] **Der Rollencode `tc` in `docs/Backup-Format.md`** (F-P2-J). Das
-      JSON-Schema der Sicherung führt `"roles": ["p1", "p2", "tc", "other"]`
-      und `"crew": { …, "tc": … }`. Die Anwendung kennt `hems` und `fr`;
-      `tc` kommt in keinem Quelltext vor. Wer ein Werkzeug gegen die
-      Beschreibung baut, sucht einen Schlüssel, den keine Datei führt.
-- [ ] **Zwei `.pyc` im Repositorium** (F-P2-Q). `.gitignore` 29 führt
-      `tools/referenzdatensatz/**/__pycache__/`, aber die Regel wirkt nicht
-      auf bereits verfolgte Dateien: `quelldaten/__pycache__/katalog…pyc` und
-      `…/wegpunkte…pyc` liegen weiter darin und ändern sich bei jedem Lauf.
-      `git rm --cached` für beide.
-- [ ] **Das Anlegen des Demo-Kontos** (F-P2-S). Es scheitert mit einem rohen
-      `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`,
-      sobald eine Gerätekennung der Fixture schon vergeben ist. Auf dem
-      Produktivserver unwahrscheinlich, auf einer Maschine mit dem
-      Referenzbestand sicher. Unabhängig davon ist ein SQLSTATE-Text keine
-      Meldung für eine Administration.
+- [ ] **Das Demo-Konto lässt sich anlegen** (F-P2-S). **Weg:** Administration
+      → **Demo-Konto → anlegen** (falls es schon steht: **entfernen**, dann
+      anlegen). **Erwartung:** „Demo-Konto angelegt und Standardzustand
+      eingespielt", danach 15 Diensttage, 82 Einsätze, 95 Ruhesegmente, 5 im
+      Papierkorb und **2 Geräte** — nicht mehr drei. **Scheitern erkennbar
+      an:** einer Meldung über eine bereits vergebene Kennung. Dann führt der
+      Server einen zweiten Bestand mit denselben Gerätekennungen; die Meldung
+      nennt eine Kennung, unter der die Ursache im Fehlerprotokoll steht.
+- [ ] **Die Sicherungsbeschreibung stimmt** (F-P2-J). **Weg:**
+      `docs/Backup-Format.md`, Abschnitte zu `vehicles`, `days[].crew` und
+      `missions[].crew`. **Erwartung:** Rollencodes `p1, p2, hems, fr,
+      driver, trainee, other`; kein `tc` mehr; zwei Beispielrettungsmittel,
+      eines je Art. **Scheitern erkennbar an:** einem `tc` — dann ist eine
+      alte Fassung im Umlauf.
+- [ ] **`rc.json` wird ignoriert** (F-P2-L). **Weg:** Nach einem
+      Einspiellauf `git status` im Repositorium. **Erwartung:**
+      `tools/referenzdatensatz/einspielen/rc.json` taucht **nicht** auf.
+      **Scheitern erkennbar an:** einem `?? …/rc.json`. Dann greift das
+      Muster `*rc.json` nicht — und in der Datei steht ein
+      passwortäquivalenter Schlüssel.
+- [ ] **Die beiden `.pyc` sind ausgetragen** (F-P2-Q). **Weg:**
+      `git ls-files | grep pyc`. **Erwartung:** keine Ausgabe.
 
 ---
 
 ## 5. Grenzen der benutzten Prüfmittel
-
 **Das Wortlisten-Werkzeug** prüft Wörter, keine Aussagen und keine
 Perspektive (1.6). Sein Kommentar-Zerleger ist eine Heuristik, keine
 Grammatik: Er unterscheidet Division und regulären Ausdruck am zuletzt
