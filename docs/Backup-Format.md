@@ -173,12 +173,25 @@ seit Web 4.1.2 auch:
     // Rettungsmittel (bis Version 5: "aircraft" mit der Spalte "registration"
     // und fünf Rollen-Flags). Art, Rollensatz und Fähigkeiten gehören dazu;
     // der Standort steht als NAME, weil Kennungen nur in der Datenbank gelten,
-    // aus der die Sicherung stammt.
-    "vehicles":     [ { "name": "Christoph 17", "kind": "air|ground",
+    // aus der die Sicherung stammt. `kind` ist "air" oder "ground"; zwei
+    // Beispiele, damit beide Arten zu sehen sind.
+    //
+    // ROLLENKENNUNGEN sind die des Katalogs (CREW_ROLES in server/db.php):
+    // p1, p2, hems, fr (luftgebunden), driver, trainee (bodengebunden) und
+    // other (beide). Ihre Beschriftungen stehen in docs/Export-Format.md 3.8.
+    // Die Liste kommt SORTIERT aus der Datenbank — `ORDER BY role_code`, also
+    // alphabetisch, nicht in der Reihenfolge des Katalogs. Sie bedeutet
+    // nichts; wer sie ausliest, sortiert selbst.
+    "vehicles":     [ { "name": "Christoph 17", "kind": "air",
                         "base_ref": "Kempten",
-                        "roles": ["p1", "p2", "tc", "other"],
+                        "roles": ["fr", "hems", "other", "p1", "p2"],
                         "capabilities": ["winch", "bergwacht"],
-                        "is_default": 1 } ],
+                        "is_default": 1 },
+                      { "name": "NEF Kempten 1", "kind": "ground",
+                        "base_ref": "Kempten",
+                        "roles": ["driver", "other", "trainee"],
+                        "capabilities": [],
+                        "is_default": 0 } ],
 
     // Auswahl ZENTRALER Standorte dieser NutzerIn, als Namensliste. Zentrale
     // Standorte selbst gehören dem Konto nicht und werden nicht exportiert —
@@ -221,8 +234,9 @@ seit Web 4.1.2 auch:
 
     // Besatzung des Diensttags, je Rolle ein Eintrag. Die SCHLÜSSELMENGE ist
     // der eingefrorene Rollensatz — auch leere Rollen stehen darin, denn sie
-    // sagen aus, welche Rollen dieser Dienst überhaupt anbot.
-    "crew": { "p1": "…", "p2": null, "tc": "…", "other": null },
+    // sagen aus, welche Rollen dieser Dienst überhaupt anbot. Kennungen und
+    // Sortierung wie bei "vehicles" oben.
+    "crew": { "fr": "…", "hems": "…", "other": null, "p1": "…", "p2": null },
 
     // Eingefrorene Fähigkeiten des Rettungsmittels. Sie steuern, welche
     // Einsatzfelder der Diensttag zeigt; wird der Windenhaken Jahre später
@@ -281,7 +295,9 @@ seit Web 4.1.2 auch:
     // Version 5 waren es fünf feste Spalten). crew_override = 0 -> das Objekt
     // ist leer und der Einsatz erbt die Besatzung seines Diensttags. Die
     // Rollenkennungen stammen aus dem festen Katalog im Code:
-    // p1, p2, tc, fr, other (luftgebunden) und driver, trainee, other (boden).
+    // p1, p2, hems, fr, other (luftgebunden) und driver, trainee, other
+    // (boden). Anders als bei "days" stehen hier NUR belegte Rollen — es sind
+    // Abweichungen, keine Leerzeilen.
     "crew_override": 0,
     "crew": { },
 
