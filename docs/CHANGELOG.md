@@ -158,6 +158,23 @@ fällt niemandem auf. Sechzehn Proben mit Sollergebnis sichern ihn ab.
 `tools/` wird nicht ausgeliefert; das Werkzeug kommt dem Produktivserver
 nicht nahe. Es läuft in P3 (neue Oberfläche) und P6 (Umbenennung) mit.
 
+### Werkzeuge — ein Wiederherstellungsschlüssel fiel durch `.gitignore`
+
+Nebenbefund derselben Phase, ohne Bezug zur Wortwahl und deshalb hier
+gesondert. Die Anleitung des Einspiellaufs weist an, `passwort_setzen.mjs`
+mit dem Ausgabenamen `rc.json` aufzurufen — so steht es in
+`tools/referenzdatensatz/einspielen/LIESMICH.md` und so gibt es
+`einspielen.py` nach jedem Kontoschritt aus. Ignoriert war aber nur
+`*_rc.json`. Wer der Anleitung folgte und anschließend `git add -A` sagte,
+hatte den **Wiederherstellungsschlüssel** eines Kontos im Repositorium; mit
+ihm lässt sich der Inhaltsschlüssel ohne Passwort auspacken.
+
+Das Muster lautet jetzt `*rc.json` und deckt beide Schreibweisen ab. Der
+Dateiname bleibt, wie er ist: Ihn umzubenennen hätte eine bereits
+vorhandene `rc.json` auf anderen Maschinen ungeschützt gelassen und damit
+gerade den Fall nicht gelöst, um den es geht. Der LIESMICH-Abschnitt zu
+`lauf.json` führt jetzt auch `rc.json` und sagt, was darin steht.
+
 ### Web — Regression
 
 Beide Kreisläufe unverändert auf null unerklärten Abweichungen,

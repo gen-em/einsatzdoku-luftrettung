@@ -227,22 +227,30 @@ und ein sechstes hätte genau dieses Passwort unbrauchbar gemacht (F-P2-R).
       einer Datei. Dann ist doch ein Wort in der Liste, das im Demo-Passwort
       steckt.
 
-### 4.9 Zwei Dinge, die P2 gefunden und **nicht** behoben hat
+### 4.9 Was P2 gefunden und **nicht** behoben hat
 
-Beides braucht deine Entscheidung, beides ist eine Zeile Arbeit:
+Drei Funde stehen als Empfehlung; sie brauchen deine Entscheidung. Ein
+vierter ist inzwischen erledigt: `rc.json` fiel durch `.gitignore`, und darin
+steht ein Wiederherstellungsschlüssel (F-P2-L). Das Muster lautet jetzt
+`*rc.json` — nachgewiesen an einer angelegten Datei: 0 Nennungen in
+`git status`, Einstufung `!!`.
 
-- [ ] **`.gitignore` und der Wiederherstellungsschlüssel** (F-P2-L). Die
-      Anleitung `tools/referenzdatensatz/einspielen/LIESMICH.md` 39 sagt
-      `node passwort_setzen.mjs … rc.json`; ignoriert ist aber nur
-      `*_rc.json`. Wer der Anleitung folgt und `git add -A` sagt, hat den
-      Wiederherstellungsschlüssel eines Kontos im Repositorium. **Vor dem
-      nächsten Einspiellauf** entweder `*_rc.json` zu `*rc.json` erweitern
-      oder im LIESMICH den Dateinamen ändern.
 - [ ] **Der Rollencode `tc` in `docs/Backup-Format.md`** (F-P2-J). Das
       JSON-Schema der Sicherung führt `"roles": ["p1", "p2", "tc", "other"]`
       und `"crew": { …, "tc": … }`. Die Anwendung kennt `hems` und `fr`;
       `tc` kommt in keinem Quelltext vor. Wer ein Werkzeug gegen die
       Beschreibung baut, sucht einen Schlüssel, den keine Datei führt.
+- [ ] **Zwei `.pyc` im Repositorium** (F-P2-Q). `.gitignore` 29 führt
+      `tools/referenzdatensatz/**/__pycache__/`, aber die Regel wirkt nicht
+      auf bereits verfolgte Dateien: `quelldaten/__pycache__/katalog…pyc` und
+      `…/wegpunkte…pyc` liegen weiter darin und ändern sich bei jedem Lauf.
+      `git rm --cached` für beide.
+- [ ] **Das Anlegen des Demo-Kontos** (F-P2-S). Es scheitert mit einem rohen
+      `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`,
+      sobald eine Gerätekennung der Fixture schon vergeben ist. Auf dem
+      Produktivserver unwahrscheinlich, auf einer Maschine mit dem
+      Referenzbestand sicher. Unabhängig davon ist ein SQLSTATE-Text keine
+      Meldung für eine Administration.
 
 ---
 

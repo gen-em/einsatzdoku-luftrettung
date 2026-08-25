@@ -69,11 +69,19 @@ und `messprotokoll.md`. Gemessen wird das **Sendeverhalten einer Uhr**
 anhand der Soll-Zeitpunkte, nicht die Geschwindigkeit des Skripts — der
 Lauf schaufelt in Minuten, was im Betrieb über Tage anfällt.
 
-## `lauf.json` gehört nicht ins Repositorium
+## `lauf.json` und `rc.json` gehören nicht ins Repositorium
 
-Sie hält den Zustand **einer** Installation: Einrichtungslink,
+`lauf.json` hält den Zustand **einer** Installation: Einrichtungslink,
 Geräteschlüssel, vergebene Kennungen, Fortschritt. Für eine andere
 Installation ist davon nichts gültig. Sie steht deshalb in `.gitignore`.
+
+`rc.json` — die Datei, die `passwort_setzen.mjs` oben als drittes Argument
+bekommt — hält den **Wiederherstellungsschlüssel** des angelegten Kontos.
+Mit ihm lässt sich der Inhaltsschlüssel ohne Passwort auspacken; er gehört
+nirgendwo hin, wo er länger liegt als der Lauf. Das Muster in `.gitignore`
+lautet `*rc.json` und deckt damit `rc.json` wie `<name>_rc.json` ab. Bis
+Web 8.0.1 stand dort `*_rc.json` und traf genau die Datei nicht, die diese
+Anleitung zu erzeugen anweist (Konzept P2, F-P2-L).
 
 ## Grenzen dieser Prüfmittel
 
