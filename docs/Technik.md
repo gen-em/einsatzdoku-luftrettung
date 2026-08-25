@@ -1766,7 +1766,7 @@ nicht bloß zugesichert:
 | Teil | Inhalt |
 |---|---|
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
-| `geraete` | `device_id`, `api_key_hash`, `label` |
+| `geraete` | `device_id`, `api_key_hash`, `label` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
 
 **Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen
@@ -2100,7 +2100,7 @@ Repo.
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
 die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
-5 im Papierkorb und 3 Geräte nennen. Mechanik: Abschnitt 4.99a.
+5 im Papierkorb und 2 Geräte nennen. Mechanik: Abschnitt 4.99a.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige

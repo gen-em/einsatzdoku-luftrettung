@@ -42,7 +42,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $notice = 'Demo-Konto entfernt.';
         }
     } catch (Throwable $ex) {
-        $error = $ex->getMessage();
+        /* DREI FAELLE, UND NUR EINER DAVON DARF WOERTLICH DURCH.
+         *
+         * demo_lib.php wirft an mehreren Stellen RuntimeException mit einem
+         * Satz, der FUER die Administration geschrieben ist („Es gibt bereits
+         * ein Demo-Konto …"). Der ist die Auskunft und bleibt.
+         *
+         * Alles andere kam bis Web 8.0.0 genauso heraus — auch
+         * `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`.
+         * Das ist keine Meldung, sondern ein Fund fuer jemanden, der den Code
+         * kennt. Die technische Ursache gehoert ins Fehlerprotokoll, in die
+         * Seite gehoert, WAS los ist und dass nichts geaendert wurde — alle
+         * drei Handlungen laufen in einer Transaktion und rollen zurueck.
+         *
+         * Die Kennung verbindet beides: Sie steht in der Meldung und im
+         * Protokoll (fehler_kennung(), db.php).
+         *
+         * DIE REIHENFOLGE DER ZWEIGE IST NICHT BELIEBIG: PDOException ERBT
+         * von RuntimeException. Steht die Abfrage auf RuntimeException zuerst,
+         * faengt sie jeden Datenbankfehler mit ab und gibt ihn im Wortlaut
+         * aus — also genau das, was hier abgestellt werden soll. Die erste
+         * Fassung dieser Aenderung hatte den Fehler; aufgefallen ist er im
+         * Browserlauf, nicht beim Lesen. */
+        if ($ex instanceof PDOException) {
+            $kennung = fehler_kennung($ex, 'admin_demo');
+            $error = ist_dublettenfehler($ex)
+                ? 'Der Vorgang ist fehlgeschlagen, weil ein Wert aus der Fixture '
+                  . 'auf diesem Server bereits vergeben ist — am ehesten eine '
+                  . 'Gerätekennung, wenn hier auch der Bestand liegt, aus dem die '
+                  . 'Fixture stammt. Es wurde nichts geändert. Einzelheiten stehen '
+                  . 'im Fehlerprotokoll unter der Kennung ' . $kennung . '.'
+                : 'Der Vorgang ist an der Datenbank gescheitert; es wurde nichts '
+                  . 'geändert. Einzelheiten stehen im Fehlerprotokoll unter der '
+                  . 'Kennung ' . $kennung . '.';
+        } elseif ($ex instanceof RuntimeException) {
+            $error = $ex->getMessage();
+        } else {
+            $kennung = fehler_kennung($ex, 'admin_demo');
+            $error = 'Der Vorgang ist fehlgeschlagen; es wurde nichts geändert. '
+                   . 'Einzelheiten stehen im Fehlerprotokoll unter der Kennung '
+                   . $kennung . '.';
+        }
     }
 }
 
@@ -78,7 +118,12 @@ if ($demoId !== null) {
                        => $eine('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NOT NULL'),
         'im Papierkorb, Ruhesegmente'
                        => $eine('SELECT COUNT(*) FROM rest_segments WHERE user_id = ? AND deleted_at IS NOT NULL'),
-        'Geräte'       => $eine('SELECT COUNT(*) FROM devices WHERE user_id = ?'),
+        /* OHNE das virtuelle Geraet (GERAETE_ECHT_SQL) — dieselbe Zahl, die
+         * die Geraeteliste zeigt und gegen die MAX_GERAETE zaehlt. Bis Web
+         * 8.0.0 zaehlte diese Stelle als einzige mit; sie meldete drei, wo
+         * NutzerIn und Grenze zwei sahen. */
+        'Geräte'       => $eine('SELECT COUNT(*) FROM devices
+                                 WHERE user_id = ? AND ' . GERAETE_ECHT_SQL),
     ];
 }
 

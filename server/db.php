@@ -550,6 +550,19 @@ const GERAETE_NEU_TAGE = 7;   // so lange gilt ein Geraet in der Oberflaeche als
 /** Bedingung, die das virtuelle Geraet "Manuelle Einträge" ausschliesst. */
 const GERAETE_ECHT_SQL = "device_id NOT LIKE 'manual-%'";
 
+/**
+ * Dasselbe fuer PHP: Ist das die Kennung eines virtuellen Geraets?
+ *
+ * ZWEI FASSUNGEN DERSELBEN REGEL, und das ist keine Nachlaessigkeit: Die eine
+ * filtert in SQL, die andere eine Liste im Speicher (demo_lib.php beim
+ * Einspielen der Fixture, fixture/erzeugen.php beim Erzeugen). Sie stehen
+ * deshalb nebeneinander — wer die eine aendert, sieht die andere.
+ */
+function geraet_virtuell(string $deviceId): bool
+{
+    return str_starts_with($deviceId, 'manual-');
+}
+
 /** Zahl der echten Geraete eines Kontos (aktive und deaktivierte). */
 function geraete_zahl(PDO $pdo, int $userId): int {
     $st = $pdo->prepare('SELECT COUNT(*) FROM devices

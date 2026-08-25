@@ -180,7 +180,12 @@ if (schritte.includes('anlegen')) {
   pruefe((z['diensttage'] || '') === '15', `Diensttage: ${z['diensttage']}`);
   pruefe((z['ruhesegmente'] || '') === '95', `Ruhesegmente: ${z['ruhesegmente']}`);
   pruefe((z['im papierkorb'] || '') === '5', `Papierkorb: ${z['im papierkorb']}`);
-  pruefe((z['geräte'] || '') === '3', `Geräte: ${z['geräte']}`);
+  /* ZWEI, nicht drei (seit Web 8.0.1). Die Fixture fuehrt drei Eintraege,
+     einer davon ist das virtuelle Geraet "Manuelle Einträge"; es wird nicht
+     mehr eingespielt (demo_lib.php), und die Adminansicht zaehlt es auch
+     nicht mehr mit (GERAETE_ECHT_SQL). Beides zusammen ergibt die Zahl, die
+     auch die Geraeteliste zeigt. */
+  pruefe((z['geräte'] || '') === '2', `Geräte: ${z['geräte']}`);
   await seite.screenshot({ path: `${ordner}/01-angelegt.png` });
 }
 
@@ -268,7 +273,7 @@ if (schritte.includes('reset')) {
   ergebnis.nach_reset = nachher;
   pruefe((nachher['einsätze'] || '') === '82', `Einsätze nach Reset: ${nachher['einsätze']}`);
   pruefe((nachher['im papierkorb'] || '') === '5', `Papierkorb nach Reset: ${nachher['im papierkorb']}`);
-  pruefe((nachher['geräte'] || '') === '3', `Geräte nach Reset: ${nachher['geräte']}`);
+  pruefe((nachher['geräte'] || '') === '2', `Geräte nach Reset: ${nachher['geräte']}`);
   // Nach dem Reset müssen die geschützten Angaben WEITER lesbar sein
   pruefe(await anmelden(demo, demoPw), 'Anmeldung nach Reset gescheitert');
   await seite.goto(`${basis}/index.php`, { waitUntil: 'domcontentloaded' });
