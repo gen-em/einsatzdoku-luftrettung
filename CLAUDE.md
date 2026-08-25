@@ -121,6 +121,14 @@ darüber hinaus ist unbeabsichtigt und wird geklärt, bevor committet wird.
 Der Stilvergleich ersetzt die Browserprüfung nicht: Er misst statisches
 Markup, keine Bedienzustände.
 
+**Wortliste bei jeder Textänderung.** Für jede Änderung an einem sichtbaren
+Text der Weboberfläche oder an der normativen Dokumentation wird
+`tools/wortliste/` gefahren (Anleitung in der dortigen `LIESMICH.md`): Es
+zählt nach, ob Land und Luft neutral benannt sind. Erwartet werden null
+Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen; ein
+Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
+Ausblenden.
+
 ## 7. Konzept und Umsetzung
 
 Konzeptarbeit findet in einer getrennten Sitzung statt und mündet in ein

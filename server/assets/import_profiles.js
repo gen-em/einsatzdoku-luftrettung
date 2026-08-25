@@ -372,15 +372,18 @@
             })),
         params: [],
 
-        // Wortlaut aus SPEC_Export.md 7.2. Bewusst in der Aussagerichtung
-        // "bleibt leer", nicht "geht verloren": Die Angaben stehen in dieser
-        // Datei nie drin, es werden lediglich Felder nicht befuellt.
+        // Wortlaut aus docs/Export-Format.md 5.2. Bewusst in der
+        // Aussagerichtung "bleibt leer", nicht "geht verloren": Die Angaben
+        // stehen in dieser Datei nie drin, es werden lediglich Felder nicht
+        // befuellt. Die Phasennamen sind die seit Web 6.0.0 gueltigen; bis
+        // dahin hiessen Phase 3 "Abflug" und Phase 7 "Landung Krankenhaus",
+        // und der Warntext hat das bis Web 8.0.0 weiter behauptet.
         warning: 'Diese Datei enthält nicht alle Felder, die das System kennt. '
-            + 'Nach dem Import bleiben leer: die Phasen Abflug, Ankunft '
-            + 'Einsatzort, Ankunft PatientIn, Transportbeginn, Landung '
-            + 'Krankenhaus und Übergabezeit, sämtliche Koordinaten, die '
+            + 'Nach dem Import bleiben leer: die Phasen Ausrücken, Ankunft '
+            + 'Einsatzort, Ankunft PatientIn, Transportbeginn, Ankunft Klinik '
+            + 'und Übergabezeit, sämtliche Koordinaten, die '
             + 'Reanimationsdokumentation, der Track (und damit auch die '
-            + 'Flugkilometer) sowie ein von Hand eingetragenes Alter ohne '
+            + 'Kilometer) sowie ein von Hand eingetragenes Alter ohne '
             + 'Geburtsdatum. Für einen vollständigen Rückweg nutze den '
             + 'CSV-Export, für eine echte Wiederherstellung das Backup.',
 

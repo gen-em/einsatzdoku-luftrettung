@@ -159,8 +159,9 @@ in der nur Rettungsmittel, Standort und Datum gefüllt sind.
 
 Die mit `*` markierten Spalten entfallen **ersatzlos**, wenn
 „Personenbezogene Angaben einschließen" nicht gesetzt ist; die übrigen rücken
-auf. Seit Web 5.8.0 gehören dazu auch die fünf Besatzungsspalten, „Höhe
-Einsatzort (m)" und „Notizen" — vorher blieben sie stehen (A9).
+auf. Seit Web 5.8.0 gehören dazu auch die Besatzungsspalten (seit Web 6.0.0
+sieben, aus dem Rollenkatalog), „Höhe Einsatzort (m)" und „Notizen" — vorher
+blieben sie stehen (A9).
 
 | # | Beschriftung |
 |---|---|
@@ -177,26 +178,36 @@ Einsatzort (m)" und „Notizen" — vorher blieben sie stehen (A9).
 | 11 | Alter * |
 | 12 | Einsatzort * |
 | 13 | Diagnose * |
-| 14 | Pilot 1 |
-| 15 | Pilot 2 |
-| 16 | HEMS |
-| 17 | Flugretter |
-| 18 | Sonstige Besatzung |
-| 19 | Sekundärtransport |
-| 20 | Transportziel |
-| 21 | Schockraum |
-| 22 | Windeneinsatz |
-| 23 | Windenzyklen gesamt |
-| 24 | Bergwacht |
-| 25 | Bergwacht-Einheit |
-| 26 | Weitere Rettungsmittel |
-| 27 | Höhe Einsatzort (m) |
-| 28 | Flugkilometer |
-| 29 | Notizen |
+| 14 | Pilot 1 * |
+| 15 | Pilot 2 * |
+| 16 | HEMS-TC * |
+| 17 | Flugretter * |
+| 18 | Fahrer * |
+| 19 | Praktikant * |
+| 20 | Sonstige Besatzung * |
+| 21 | Sekundärtransport |
+| 22 | Transportziel |
+| 23 | Schockraum |
+| 24 | Windeneinsatz |
+| 25 | Windenzyklen gesamt |
+| 26 | Bergwacht |
+| 27 | Bergwacht-Einheit |
+| 28 | Weitere Rettungsmittel |
+| 29 | Höhe Einsatzort (m) * |
+| 30 | Kilometer |
+| 31 | Notizen * |
 
-29 Spalten, davon 7 geschützte. Die Beschriftungen folgen dem Wortlaut aus
+31 Spalten, davon 16 geschützte. Die Beschriftungen folgen dem Wortlaut aus
 `server/mission_fields.php` — die Tabelle soll dieselben Begriffe verwenden wie
 das Eingabeformular.
+
+**Die Spalten 14 bis 20 entstehen aus dem Rollenkatalog** (`CREW_ROLES` in
+`server/db.php`), nicht aus einer festen Liste: Sie tragen dessen
+Beschriftungen und stehen in dessen Reihenfolge. Deshalb sind es sieben und
+nicht fünf, und deshalb heißt Spalte 16 „HEMS-TC" und nicht „HEMS". An einem
+**bodengebundenen** Diensttag bleiben die vier Luftrollen leer und die beiden
+Bodenrollen gefüllt; die Datei führt trotzdem alle sieben Spalten, damit
+Dateien aus beiden Arten dieselbe Form haben.
 
 **Alter** ist der angezeigte Wert: bei bekanntem Geburtsdatum daraus gerechnet
 (bezogen auf den Einsatztag, nicht auf heute), sonst der von Hand eingetragene.
@@ -212,8 +223,8 @@ Bergwacht-Zusatzangabe. Alle drei stehen weiterhin vollständig im CSV.
 
 **Effektive Besatzung:** Für jede Rolle gilt — bei abweichender Besatzung und
 belegtem Einsatzfeld der Wert vom Einsatz, sonst der Wert vom Diensttag. Woher der
-Wert stammt, wird nicht ausgewiesen; in dieser Tabelle zählt nur, wer geflogen
-ist.
+Wert stammt, wird nicht ausgewiesen; in dieser Tabelle zählt nur, wer den
+Einsatz gefahren oder geflogen ist.
 
 **Fette Schrift und Fensterfixierung** sind nicht gesetzt. Die mitgelieferte
 freie Ausgabe von SheetJS kann Zellformatierung und fixierte Fenster nicht
@@ -340,8 +351,9 @@ verworfen — maßgeblich ist `typ`.
   Kein Patientenbezug.
 - `<metadata><time>` = Erzeugungszeit des Exports.
 - Einsätze ohne Punkte bekommen **keine** Datei; `track_datei` bleibt leer.
-- **Nur mit personenbezogenen Angaben** (seit Web 5.8.0, A9). Eine Flugspur
-  endet am Einsatzort und nennt ihn genauer als jede Koordinatenspalte. Ohne
+- **Nur mit personenbezogenen Angaben** (seit Web 5.8.0, A9). Ein Track
+  endet am Einsatzort und nennt ihn genauer als jede Koordinatenspalte — der
+  bodengebundene so gut wie der luftgebundene. Ohne
   den Haken bietet die Oberfläche die GPX-Wahl gar nicht erst an, und
   `api/export_data.php` weist die Anfrage `action: 'track'` mit
   `error: 'personenbezogen'` ab — die zweite Schranke ist die wirksame.
@@ -705,9 +717,9 @@ Liest den Standard-Excel-Export (Kopfzeile in Zeile 3). Vor dem Import wird
 angezeigt:
 
 > Diese Datei enthält nicht alle Felder, die das System kennt. Nach dem Import
-> bleiben leer: die Phasen Abflug, Ankunft Einsatzort, Ankunft PatientIn,
-> Transportbeginn, Landung Krankenhaus und Übergabezeit, sämtliche Koordinaten,
-> die Reanimationsdokumentation, der Track (und damit auch die Flugkilometer)
+> bleiben leer: die Phasen Ausrücken, Ankunft Einsatzort, Ankunft PatientIn,
+> Transportbeginn, Ankunft Klinik und Übergabezeit, sämtliche Koordinaten,
+> die Reanimationsdokumentation, der Track (und damit auch die Kilometer)
 > sowie ein von Hand eingetragenes Alter ohne Geburtsdatum. Für einen
 > vollständigen Rückweg nutze den CSV-Export, für eine echte Wiederherstellung
 > das Backup.
@@ -718,8 +730,9 @@ befüllt.
 
 **Ignorierte Spalten:** `Dauer` ist gerechnet, nicht gespeichert; sie zu
 übernehmen würde zu Widersprüchen führen, sobald jemand eine Zeit korrigiert.
-`Flugkilometer` wird ebenfalls verworfen, weil der Wert aus dem Track stammt und
-ohne Track nicht nachvollziehbar wäre.
+Die Spalte `Kilometer` (bis Web 5.10.0 `Flugkilometer`) wird ebenfalls
+verworfen, weil der Wert aus dem Track stammt und ohne Track nicht
+nachvollziehbar wäre.
 
 `Alter` wird ebenfalls verworfen, aber aus einem anderen Grund: Die Spalte führt
 mal einen gerechneten, mal einen gespeicherten Wert (siehe 2), und beim Einlesen

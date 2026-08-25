@@ -49,9 +49,18 @@ if ($u['role'] !== 'user') {
 }
 $id = (int)$u['id'];
 
-/* ---- Geraete ------------------------------------------------------------- */
+/* ---- Geraete -------------------------------------------------------------
+ *
+ * OHNE das virtuelle Geraet "Manuelle Einträge" (GERAETE_ECHT_SQL). Es traegt
+ * die Kontonummer im Namen und gilt nur fuer das Konto, aus dem diese Fixture
+ * stammt; im Demo-Konto entsteht es bei Bedarf mit der richtigen Nummer von
+ * selbst. Bis Web 8.0.0 stand es mit in der Datei und brach das Anlegen des
+ * Demo-Kontos ab, sobald eine Installation beide Bestaende fuehrte
+ * (device_id ist global eindeutig). Der Filter in demo_lib.php faengt das
+ * auch fuer bereits ausgelieferte Fixtures ab; hier kommt es gar nicht erst
+ * hinein. */
 $st = $pdo->prepare('SELECT device_id, api_key_hash, label FROM devices
-                     WHERE user_id = ? ORDER BY id');
+                     WHERE user_id = ? AND ' . GERAETE_ECHT_SQL . ' ORDER BY id');
 $st->execute([$id]);
 $geraete = $st->fetchAll(PDO::FETCH_ASSOC);
 

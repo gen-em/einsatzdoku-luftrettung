@@ -49,6 +49,37 @@ const EdPwQuality = (() => {
     'deutschland', 'bayern', 'muenchen', 'berlin', 'hamburg',
     'hubschrauber', 'rettung', 'notarzt', 'einsatz', 'christoph', 'luftrettung',
     'klinik', 'krankenhaus', 'medizin', 'sanitaeter',
+    /* Bodengebundene Gegenstuecke (Web 8.0.1). Die Liste nannte bis dahin
+       nur die luftgebundenen Woerter — an einem NEF-Standort fehlte damit
+       genau das, was dort naheliegt.
+
+       KEINE Kuerzel wie "nef", "rth", "naw": Der Vergleich unten ist
+       `k === h || (h.length >= 6 && k.includes(h))`. Woerter unter sechs
+       Zeichen treffen also nur, wenn das GANZE normalisierte Passwort genau
+       so lautet — und ein dreibuchstabiges Passwort scheitert schon an der
+       Mindestlaenge. Ein Kuerzel in der Liste braeuchte einen Teilstring-
+       Vergleich, und der traefe massenhaft brauchbare Passwoerter.
+
+       KEIN "nadoku". Der kuenftige Produktname war vorgesehen, ist aber
+       wieder herausgenommen: Der Vergleich ist ein Teilstring-Vergleich, und
+       das Demo-Passwort dieser Anwendung lautet `nadokudemo0815`. Mit
+       "nadoku" in der Liste laesst es sich nicht mehr setzen (pw_handling)
+       und nicht mehr als Backup- oder Exportpasswort verwenden
+       (einstellungen.php, import.php pruefen `guete.erlaubt`) — gemessen: der
+       Kreislauftest scheiterte daran, weil die erneute Sicherung gar nicht
+       erst erzeugt wurde. Das Passwort steht im README, im Handbuch 3.2 und
+       in saemtlichen Pruefmitteln. Wenn der Produktname kommt (P6), gehoert
+       "nadoku" hierher — zusammen mit einem neuen Demo-Passwort.
+
+       Mehrere Eintraege sind durch den Teilstring-Vergleich bereits von
+       kuerzeren abgedeckt: "rettungswagen" und "rettungsdienst" von
+       "rettung", "notarztwagen" von "notarzt", "notfallsanitaeter" von
+       "sanitaeter", "einsatzdoku" von "einsatz". Sie stehen trotzdem hier:
+       Die Liste ist auch die Stelle, an der man nachsieht, WELCHE Woerter
+       gemeint sind. Sicherheitsgewinn bringt keiner von ihnen — der stand
+       schon vorher da. */
+    'notarztwagen', 'rettungswagen', 'notfallsanitaeter', 'rettungsdienst',
+    'einsatzdoku',
   ];
 
   /** Kleinschreibung, Umlaute aufgelöst, Satzzeichen entfernt. */

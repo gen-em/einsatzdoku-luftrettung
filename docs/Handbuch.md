@@ -1,15 +1,16 @@
 # Einsatzdoku — Handbuch
 
-*Stand: 03.08.2026 · Für die technische Struktur siehe `Technik.md`, für
+*Stand: 24.08.2026 · Für die technische Struktur siehe `Technik.md`, für
 Änderungen `CHANGELOG.md`.*
 
 ## 1. Was ist die Einsatzdoku?
 
 Die Einsatzdoku dokumentiert Notarzteinsätze direkt vom Handgelenk — luft-
-gebunden wie bodengebunden (RTH, NEF, NAW): Eine
-Garmin-Uhr-App erfasst Einsatzphasen mit Zeitstempeln, GPS-Tracks und
+gebunden wie bodengebunden (RTH, NEF, NAW): Eine Uhr-App (derzeit für
+Garmin-Uhren: Fenix 6 Pro, Forerunner 945, Venu 3s) erfasst Einsatzphasen
+mit Zeitstempeln, GPS-Tracks und
 Reanimations-Ereignisse und lädt alles automatisch auf einen eigenen Server.
-Die Web-Oberfläche (luftrettung.net) zeigt Diensttage mit Karte, Einsatz-Details
+Die Web-Oberfläche zeigt Diensttage mit Karte, Einsatz-Details
 und Reanimations-Protokollen — und erlaubt Nachtragen und Bearbeiten von Hand.
 
 **Patientendaten sind geschützt.** Nachname, Vorname, Geburtsdatum, Alter,
@@ -42,6 +43,11 @@ belegt — und wird deshalb zusätzlich über den Touchscreen bedient:
 Der lange Druck liegt auf der Venu bewusst doppelt: Sollte die Uhr den langen
 Druck der Action-Taste für ihr eigenes Steuerungsmenü abfangen, bleibt die App
 über den langen Zurück-Druck vollständig bedienbar.
+
+**Auch die Kopplung folgt dieser Tabelle.** Sie startet auf der Sync-Seite mit
+*lang START* (Abschnitt 2.2) — auf der Venu 3s also mit lang Action oder lang
+Zurück. Die Weboberfläche und Abschnitt 12 beschreiben den Ablauf gerätefrei
+und verweisen für den Tastenweg hierher.
 
 **Tippen auf den Bildschirm bewirkt auf den Hauptseiten nichts.** Das ist
 Absicht — unter Einsatzbedingungen soll eine versehentliche Berührung nichts
@@ -199,7 +205,7 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 ## 3. Die Web-Oberfläche — Überblick
 
 Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
-Luftrettung – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
+Notarzt – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
 **Übersicht**, **Suche** (Abschnitt 4.6) und **⚙ Einstellungen**. Hinter dem
 Zahnrad liegen Profil, **Standorte**, **Rettungsmittel**, Backup,
 Import / Export, Geräte und Abmelden (fragt sicherheitshalber nach); Admins
@@ -380,12 +386,13 @@ darunter das Menü **Aktionen** mit **Bearbeiten**, **Verschieben** und
 **Löschen** (seit Web 5.6.0; vorher standen dort zwei Schaltflächen). Das Menü
 lässt sich vollständig mit der Tastatur bedienen: Tabulator auf den Kopf, Enter
 oder Leertaste öffnet, Tabulator läuft weiter durch die Einträge, Escape
-schließt wieder. In der Kopfzeile darunter stehen
-Datum, Zeitraum, Flugkilometer und am Ende genau ein **Herkunftskennzeichen**:
+schließt wieder. In der Kopfzeile darunter stehen Datum, Zeitraum,
+Rettungsmittel und Standort, dahinter das Zeichen für die Art des Diensttags
+und am Ende genau ein **Herkunftskennzeichen**:
 
 | Kennzeichen | Bedeutung |
 |---|---|
-| **Uhr** | Von der Garmin-Uhr aufgezeichnet |
+| **Uhr** | Von der Uhr aufgezeichnet |
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
 
@@ -475,7 +482,7 @@ gegliedert, jede mit eigenem Rahmen und Überschrift, in dieser Reihenfolge:
    Beschreibung des Einsatzorts, Abfahrtort
 3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
 4. **Bergrettung** — Bergwacht, Windeneinsatz
-5. **Weitere Rettungsmittel** — Fahrzeuge, weiterer Notarzt
+5. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer Notarzt
 6. **Abweichende Besatzung**
 7. **Notizen**
 8. **Einsatzphasen**
@@ -631,11 +638,11 @@ Anlegen eingefroren.
 **Abweichende Besatzung.** Normalerweise gilt für jeden Einsatz die Besatzung
 des Diensttags — sie wird einmal am Tag eingetragen und muss am Einsatz nicht
 wiederholt werden. Wechselt jedoch während des Dienstes jemand (typisch: ein
-Pilotenwechsel am Nachmittag), setzt du am betroffenen Einsatz den Haken
-**„Abweichende Besatzung"**. Darunter erscheint je Rolle des Diensttags ein
+Pilotenwechsel oder Fahrerwechsel am Nachmittag), setzt du am betroffenen
+Einsatz den Haken **„Abweichende Besatzung"**. Darunter erscheint je Rolle des Diensttags ein
 Textfeld mit Vorschlagsliste: Sobald du hineinklickst oder zu tippen beginnst, schlägt das
 Feld deine Besatzungs-Vorbelegungen und die zentralen Stammdaten der jeweiligen
-Rolle vor (Abschnitt 9.1 bzw. 8.4).
+Rolle vor (Abschnitt 9.1 bzw. 9.4).
 
 **Seit Web 5.5.0 ist jeder Name eintragbar**, auch einer, der nicht in den
 Stammdaten steht. Das ist der eigentliche Anlass für dieses Feld: Wer aushilft,
@@ -732,9 +739,10 @@ erklärbar.
 Der gewählte Reiter steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
-Die Kacheln **„Längste Flugstrecke"** (bzw. „Längste Einsatzstrecke"),
-**„Längste Einsatzdauer"** und **„Höchster Einsatzort"** sind interaktiv: Zeigt man darauf, leuchten der
-zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
+Die Kacheln **„Längste Einsatzstrecke"** (in der Luftrettung: „Längste
+Flugstrecke") und **„Längste Einsatzdauer"** sind interaktiv, in der
+Luftrettung zusätzlich **„Höchster Einsatzort"**: Zeigt man darauf, leuchten
+der zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
 Klick fixiert diese Hervorhebung und springt zur Tabellenzeile — praktisch,
 um den Extremwert-Einsatz auf einen Blick zu finden. Ein zweiter Klick auf
 dieselbe Kachel oder ein Klick auf eine freie Stelle der Seite löst die
@@ -1227,8 +1235,8 @@ Zwei Sonderfälle werden dabei erkannt:
   **leeren**; das geht im Einsatzformular.
 - **Abweichende Besatzung.** Als Besatzung des Diensttags gilt die des ersten
   Einsatzes des Tages. Steht bei einem späteren Einsatz jemand anderes — der
-  klassische Pilotenwechsel im laufenden Dienst —, trägt dieser Einsatz
-  automatisch eine abweichende Besatzung (Abschnitt 4.3). Gibt es den Diensttag
+  klassische Pilotenwechsel oder Fahrerwechsel im laufenden Dienst —, trägt
+  dieser Einsatz automatisch eine abweichende Besatzung (Abschnitt 4.3). Gibt es den Diensttag
   schon mit einer anderen Besatzung, entscheidest du je Tag, ob die
   gespeicherte gilt oder die aus der Datei.
 
@@ -1240,7 +1248,7 @@ mit einem Link auf den ersten importierten Tag.
 Importierte Einsätze verhalten sich wie von Hand nachgetragene: Sie lassen
 sich normal öffnen und bearbeiten, und die Uhr überschreibt sie nicht. Da eine
 Liste in aller Regel nur die Alarmzeit kennt, tragen sie genau eine Phase
-(Alarmierung); Track, Flugzeiten und weitere Phasen fehlen naturgemäß. Der
+(Alarmierung); Track und die übrigen Phasenzeiten fehlen naturgemäß. Der
 Rückimport der eigenen Exportformate ist da genauer — siehe „Zurücklesen" unten.
 
 ### 7.1 Export
@@ -1272,8 +1280,9 @@ weiterhin „alles"; das ist eine bewusste Angabe.
 - **Excel (Standard)**: eine Zeile je Einsatz, deutsche Spaltenbeschriftungen,
   alle Zeiten in Ortszeit. Zum Ansehen, Sortieren und Filtern. Ein Diensttag ohne
   Einsatz erscheint als eine Zeile mit Datum und lauter Bindestrichen.
-- **Excel (GuteSeele)**: das gewohnte Listenlayout zur Weitergabe an Dritte. Bei
-  mehreren Jahren entsteht je Jahr ein Blatt.
+- **Excel (GuteSeele)**: das Listenlayout der Christoph-17-Jahresliste — für
+  EmpfängerInnen, die genau diese Liste erwarten. Bei mehreren Jahren entsteht
+  je Jahr ein Blatt.
 
 Die Namen sind dieselben wie im Auswahlfeld des Imports — was hier
 herausgeschrieben wird, lässt sich dort unter demselben Namen wieder
@@ -1366,7 +1375,7 @@ dann endgültig nicht mehr lesbar. Es gibt keinen Weg daran vorbei, auch nicht
 **Der Dateiname sagt, was drin ist.** Er ist so aufgebaut:
 
 ```
-luftrettungsdokumentation_export_06-08-2026_standard_mit-pers_verschl_philipp-mueller.zip
+einsatzdokumentation_export_06-08-2026_standard_mit-pers_verschl_philipp-mueller.zip
 ```
 
 Der Reihe nach: der Tag der Erstellung, das gewählte Format (`standard`,
@@ -1411,8 +1420,8 @@ von selbst gefunden; bei einem geschützten Archiv wird nach dem Passwort gefrag
   die internen Nummern der Einsätze (sie werden neu vergeben) und die
   GPX-Tracks — Tracks stammen von der Uhr, der Weg dafür ist das Backup.
 - Beim **Excel (Standard)** steht vor dem Import, welche Felder danach leer
-  bleiben: die Phasen zwischen Abflug und Übergabe, alle Koordinaten, die
-  Reanimationsdokumentation, der Track samt Flugkilometern und ein von Hand
+  bleiben: die Phasen Ausrücken bis Übergabezeit, alle Koordinaten, die
+  Reanimationsdokumentation, der Track samt Kilometern und ein von Hand
   eingetragenes Alter ohne Geburtsdatum. Diese Angaben stehen in der Datei nie
   drin — sie gehen nicht verloren, sie werden nur nicht befüllt. (Beim Alter ist
   es etwas anderes: Es steht in der Tabelle, lässt sich beim Einlesen aber nicht
@@ -1465,12 +1474,12 @@ vorher an einen anderen Diensttag; sonst geht er mit.
 Liefert die Uhr für einen Dienst nach, den du im Web inzwischen gelöscht hast,
 landet die Nachlieferung **nicht** im Papierkorb-Tag, sondern in einem neuen.
 Das ist Absicht: Die Uhr sendet ein Paket nur, bis der Server es bestätigt —
-verwerfen hieße, den Flug zu verlieren. Ein zusätzlicher Tag lässt sich
+verwerfen hieße, die Aufzeichnung zu verlieren. Ein zusätzlicher Tag lässt sich
 dagegen jederzeit über **Diensttage zusammenführen** wieder mit einem anderen
 vereinen.
 
 **Ein Diensttag im Papierkorb nimmt keine Änderungen an.** Trägst du Rettungsmittel,
-Basis oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
+Standort oder Besatzung für einen gelöschten Tag ein, wird das abgelehnt und du
 bekommst einen Hinweis — die Angaben werden nicht gespeichert. Dasselbe gilt
 für Import und das Einspielen einer Sicherung: Beide überspringen solche Tage
 und sagen es. Der Grund: Das Löschen war eine bewusste Handlung, und sie
@@ -1568,7 +1577,7 @@ Bergwachtkooperation zu stehen, und umgekehrt.
 
 **Die Besatzungspflege zeigt nur die Rollen, die es am Standort gibt.** Eine
 Rolle erscheint dort, sobald mindestens ein Rettungsmittel dieses Standorts sie
-führt. Vorher standen an einem reinen NEF-Standort vier leere Flugrollen mit
+führt. Vorher standen an einem reinen NEF-Standort vier leere Luftrollen mit
 vier Eingabezeilen. Hast du zu einer Rolle bereits Einträge und löschst später
 das zugehörige Rettungsmittel, bleibt sie sichtbar — sonst kämst du an deine
 eigenen Einträge nicht mehr heran.
@@ -1586,14 +1595,15 @@ Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
 Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
 Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
 Server es längst erlaubte. Ein Konto, das ausschliesslich mit vordefinierten
-Standorten arbeitet — der Regelfall an einer Station —, konnte damit gar keine
-Vorbelegung setzen. Jetzt steht sie bei jedem **ausgewählten** vordefinierten
+Standorten arbeitet — der Regelfall überall dort, wo die Standorte zentral
+gepflegt werden —, konnte damit gar keine Vorbelegung setzen. Jetzt steht sie
+bei jedem **ausgewählten** vordefinierten
 Standort. (Nicht ausgewählte bleiben aussen vor: Was nicht in den Auswahllisten
 steht, kann auch keine Vorbelegung sein.)
 
 ### 9.2 Andere Rettungsmittel
 
-Hier legst du RTW, NEF oder weitere Hubschrauber als Vorbelegung an. Im
+Hier legst du weitere Rettungsmittel als Vorbelegung an (RTW, NEF, RTH …). Im
 Einsatzformular tippst du im Feld **Weitere Rettungsmittel** mindestens zwei
 Zeichen — dann erscheinen die passenden Einträge zum Anklicken. Jeder
 übernommene Eintrag steht als eigenes Element mit kleinem Kreuz zum Entfernen;
@@ -1756,21 +1766,32 @@ und setzt danach das Häkchen an genau dieser einen Zeile.
 
 ## 12. Eine neue Uhr einrichten (Kurzanleitung)
 
-1. App auf die Uhr laden (siehe `Technik.md`). Die Server-Adresse trägst du in
-   Garmin Connect ein; die Domain genügt (z. B. `luftrettung.net`).
-2. Im Web unter **⚙ Einstellungen → „Geräte" → „Kopplungscode erzeugen"** —
-   der **6-Zeichen-Code ist 10 Minuten gültig und genau einmal verwendbar**.
+Die Schritte gelten für jede Uhr. Wo die Plattform eigene Wege hat, steht der
+Zusatz kursiv darunter — bei Garmin die folgenden.
+
+1. **App auf die Uhr laden** (siehe `Technik.md`).
+   *Bei Garmin: aus dem Connect-IQ-Projekt gebaut und per USB übertragen;
+   Abschnitt 5 der Technik-Doku.*
+2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
+   genügt (z. B. `nadoku.beispieldomain.de`).
+   *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
+3. **Im Web einen Kopplungscode erzeugen:** **⚙ Einstellungen → „Geräte" →
+   „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
+   genau einmal verwendbar**.
    Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
    je Konto immer höchstens einen offenen Code. Wird der Code zu oft falsch
    eingegeben, weist der Server weitere Versuche vorübergehend ab. Sind bereits
    fünf Geräte verbunden, lässt sich kein Code mehr erzeugen — erst ein nicht
    mehr genutztes Gerät löschen.
-3. Auf der Uhr auf der Sync-Seite **START halten**, den Code eintippen und
-   bestätigen — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
+4. **Auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen** und bestätigen
+   — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
    erscheint im Web in der Geräteliste, und du bekommst eine E-Mail darüber.
-4. Alternative ohne Code: Gerät manuell anlegen und Geräte-ID/API-Schlüssel
-   in die Connect-Einstellungen eintragen (nur nötig, wenn die Kopplung nicht
-   möglich ist).
+   *Bei Garmin: die Sync-Seite und der Tastenweg zum Koppeln stehen in den
+   Abschnitten 2.0 und 2.2 — je Uhr verschieden.*
+5. **Alternative ohne Code:** Gerät manuell anlegen und Geräte-ID sowie
+   API-Schlüssel in die Einstellungen der Uhr-App eintragen (nur nötig, wenn
+   die Kopplung nicht möglich ist).
+   *Bei Garmin: ebenfalls in Garmin Connect.*
 
 **Wenn die Kopplung nicht klappt**, sagt die Uhr seit Version 1.7.0, woran es
 liegt und was hilft — in zwei kurzen Zeilen:

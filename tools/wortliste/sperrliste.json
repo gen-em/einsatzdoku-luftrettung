@@ -1,0 +1,194 @@
+{
+  "name": "wortliste-p2",
+  "beschreibung": "Sperrliste der Phase P2 (Terminologie). Jedes Muster stammt aus der Wortliste im Konzept, Abschnitt 5.2, und traegt dort seine Begruendung. Ein Treffer in Klasse A (sichtbare Web-Texte) oder B (normative Dokumentation) ist ein Fehler; ein Treffer in den Klassen C bis H ist keiner und steht in ausnahmen.json. Die Muster sind ohne Ruecksicht auf Gross- und Kleinschreibung zu lesen, ausser wo `gross` gesetzt ist.",
+  "muster": [
+    {
+      "id": "flug",
+      "regex": "\\bflug",
+      "ersatz": "Diensttag, Kilometer, Track, Phasenzeiten, Aufzeichnung — je nach Bedeutung",
+      "grund": "Sammelmuster fuer Flugtag, Flugkilometer, Flugstrecke, Flugspur, Flugzeiten, Flugrolle, Flugretter. Die Wortgrenze davor haelt „Abflug“ heraus; der hat ein eigenes Muster, weil er einen eigenen Ersatz hat."
+    },
+    {
+      "id": "abflug",
+      "regex": "\\babflug",
+      "ersatz": "Ausrücken",
+      "grund": "Phase 3 heisst seit Web 6.0.0 „Ausrücken“. Die CSV-Spalte hiess bis dahin phase_03_abflug — Saetze mit Versionsangabe bleiben (Klasse C)."
+    },
+    {
+      "id": "landung",
+      "regex": "\\blandung",
+      "ersatz": "Ankunft Klinik",
+      "grund": "Phase 7 heisst seit Web 6.0.0 „Ankunft Klinik“. „Landung Krankenhaus“ ist der alte Name."
+    },
+    {
+      "id": "hubschrauber",
+      "regex": "hubschrauber",
+      "ersatz": "Rettungsmittel — als Fahrzeugtyp neben RTW/NEF: RTH",
+      "grund": "Das eigene Rettungsmittel ist nicht notwendig ein Hubschrauber. Als Typbezeichnung neben RTW und NEF bleibt RTH."
+    },
+    {
+      "id": "heli",
+      "regex": "\\bheli",
+      "ersatz": "—",
+      "grund": "Fasst Logo-Dateinamen (gen-em_logo_helicopter) und englische Kurzformen. Die Wortgrenze haelt „naheliegend“ heraus."
+    },
+    {
+      "id": "luftrettung",
+      "regex": "luftrettung",
+      "ersatz": "Einsatzdokumentation Notarzt (als Produktname); sonst Kontext pruefen",
+      "grund": "Als Produktbezeichnung ersetzt; als Einsatzart und als Name des Reiters in der Zeitraumuebersicht bleibt der Begriff (Klasse F)."
+    },
+    {
+      "id": "luftrettung-net",
+      "regex": "luftrettung\\.net",
+      "ersatz": "nadoku.beispieldomain.de",
+      "grund": "Die Produktivdomain wird in Web und Dokumentation nicht mehr genannt; jede Installation hat ihren eigenen Server (E-P2-03)."
+    },
+    {
+      "id": "hems",
+      "regex": "hems",
+      "ersatz": "Einsatzdoku (als Produktname)",
+      "grund": "Als Produktname ersetzt. Die Rolle HEMS-TC, der Rollencode `hems`, die Spalte crew_hems und die Einstiegsklasse HemsApp bleiben (Klassen D, E, F)."
+    },
+    {
+      "id": "pilot",
+      "regex": "pilot",
+      "ersatz": "Besatzung; in Beispielen „Pilot oder Fahrer“",
+      "grund": "Pilot 1 und Pilot 2 sind Fachrollen und bleiben (Klasse F). Als Beispiel fuer einen Besatzungswechsel steht daneben der Fahrerwechsel (E-P2-14)."
+    },
+    {
+      "id": "rth",
+      "regex": "\\brth\\b",
+      "ersatz": "—",
+      "grund": "Fahrzeugtyp; bleibt und wird neben NEF, NAW und RTW genannt. Das Muster steht in der Liste, weil die Basiszahl des Rahmenplans hier 65 Treffer zaehlte — 90-mal war es „dorthin“, „northeast“ oder „earth“ (siehe fallen)."
+    },
+    {
+      "id": "maschine",
+      "regex": "\\bmaschinen?\\b",
+      "ersatz": "Rettungsmittel",
+      "grund": "„Maschine“ als Rettungsmittel ist ersetzt. „Maschine“ als Rechner (Technik 7, lokal_starten.sh) bleibt; „maschinell“ und „maschinenlesbar“ faengt die Wortgrenze ab."
+    },
+    {
+      "id": "basis",
+      "regex": "\\bbasis\\b",
+      "ersatz": "Standort",
+      "grund": "„Basis\" ist der Ausdruck der Luftrettung fuer den Standort; bodengebunden heisst die Einrichtung Wache. Die Anwendung sagt seit Web 6.x durchgehend „Standort\". Aufgenommen in der Umsetzung (F-P2-O): Die Wortliste fuehrte den Begriff als „bereits ersetzt\", im Handbuch stand er noch."
+    },
+    {
+      "id": "station",
+      "regex": "\\bstation",
+      "ersatz": "Standort",
+      "grund": "Wie basis. Die Wortgrenze davor haelt „Luftrettungsstation\" heraus — das ist ein Eigenname und bezeichnet tatsaechlich eine."
+    },
+    {
+      "id": "christoph",
+      "regex": "christoph",
+      "ersatz": "„z. B. Christoph 17 oder NEF Kempten 1“",
+      "grund": "Als einziges Beispiel eines Rettungsmittelnamens luftlastig. Beide Arten werden nebeneinander genannt (E-P2-14)."
+    },
+    {
+      "id": "garmin",
+      "regex": "garmin",
+      "ersatz": "Uhr, Uhr-App; bei Ersteinfuehrung „derzeit für Garmin-Uhren (Connect IQ)“",
+      "grund": "In plattformspezifischen Teilen bleibt Garmin der Gegenstand (Klasse G). In plattformuebergreifenden Texten heisst es „Uhr“ (E-P2-15)."
+    },
+    {
+      "id": "connect-iq",
+      "regex": "connect[- ]?iq",
+      "ersatz": "Einstellungen der Uhr-App (bei Garmin: Connect IQ)",
+      "grund": "Wie garmin. Das Verzeichnis watch/ IST ein Connect-IQ-Projekt — dort bleibt der Begriff."
+    },
+    {
+      "id": "garmin-connect",
+      "regex": "garmin connect",
+      "ersatz": "Einstellungen der Uhr-App (bei Garmin: Garmin Connect)",
+      "grund": "Wie garmin; eigenes Muster, weil der Ersatz ein anderer ist."
+    },
+    {
+      "id": "fenix",
+      "regex": "fenix",
+      "ersatz": "Uhr; bei Ersteinfuehrung „Garmin-Uhren (Fenix 6 Pro, Forerunner 945, Venu 3s)“",
+      "grund": "Das README nannte die Fenix 6 Pro als „die“ Uhr, obwohl das Handbuch drei Modelle kennt."
+    },
+    {
+      "id": "forerunner",
+      "regex": "forerunner",
+      "ersatz": "wie fenix",
+      "grund": "Wie fenix."
+    },
+    {
+      "id": "venu",
+      "regex": "venu",
+      "ersatz": "wie fenix",
+      "grund": "Wie fenix."
+    },
+    {
+      "id": "taste-start",
+      "regex": "\\bSTART\\b",
+      "gross": true,
+      "ersatz": "gerätefreier Ablauf; Garmin-Weg in Klammern (E-P2-02)",
+      "grund": "Tastenname. Nur in Grossbuchstaben gesucht — „Start“ und „starten“ sind gewoehnliche Woerter. Im Handbuch, Kapitel 2, bleiben die Tastennamen (Klasse G): dort steht die Tabelle je Uhr."
+    },
+    {
+      "id": "taste-down",
+      "regex": "\\bDOWN\\b",
+      "gross": true,
+      "ersatz": "wie taste-start",
+      "grund": "Wie taste-start. Grossschreibung haelt „Drop-down“ und „Countdown“ heraus."
+    },
+    {
+      "id": "taste-back",
+      "regex": "\\bBACK\\b",
+      "gross": true,
+      "ersatz": "wie taste-start",
+      "grund": "Wie taste-start."
+    }
+  ],
+  "fallen": [
+    {
+      "wort": "dorthin",
+      "regex": "dorthin",
+      "grund": "Enthaelt „rth“. Der Rahmenplan zaehlte diese Stellen als Treffer und kam so auf 65 statt 2."
+    },
+    {
+      "wort": "northeast",
+      "regex": "northeast",
+      "grund": "Enthaelt „rth“ (Kartenlogik, Himmelsrichtungen)."
+    },
+    {
+      "wort": "earth",
+      "regex": "earth",
+      "grund": "Enthaelt „rth“ (Erdradius in der Luftlinienrechnung)."
+    },
+    {
+      "wort": "maschinell",
+      "regex": "maschinell",
+      "grund": "Enthaelt „maschine“, meint aber die Pruefung, nicht das Rettungsmittel."
+    },
+    {
+      "wort": "maschinenlesbar",
+      "regex": "maschinenlesbar",
+      "grund": "Wie maschinell."
+    },
+    {
+      "wort": "naheliegend",
+      "regex": "naheliegend",
+      "grund": "Enthaelt „heli“."
+    },
+    {
+      "wort": "Drop-down",
+      "regex": "drop-?down",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    },
+    {
+      "wort": "Countdown",
+      "regex": "countdown",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    },
+    {
+      "wort": "Markdown",
+      "regex": "markdown",
+      "grund": "Enthaelt „down“; kein Tastenname."
+    }
+  ]
+}

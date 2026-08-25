@@ -391,6 +391,26 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
     $geraete = 0;
     foreach ((array)($fx['geraete'] ?? []) as $g) {
         if (!is_array($g) || empty($g['device_id']) || empty($g['api_key_hash'])) { continue; }
+        /* DAS VIRTUELLE GERAET "Manuelle Einträge" WIRD UEBERSPRUNGEN.
+         *
+         * Es traegt die Kontonummer im Namen ('manual-<user_id>') und entsteht
+         * im Normalbetrieb von selbst, sobald jemand einen Einsatz von Hand
+         * anlegt oder importiert (einsatz_form.php, api/import_commit.php) —
+         * mit der Nummer DIESES Kontos und dauerhaft deaktiviert.
+         *
+         * Aus der Fixture kaeme es mit der Nummer des Kontos, aus dem die
+         * Fixture stammt. Das ist zweierlei Unfug: Fuer das Demo-Konto ist die
+         * Kennung falsch (es legte sich bei der ersten Handeingabe ein zweites
+         * an), und `devices.device_id` ist GLOBAL eindeutig (schema.sql 39) —
+         * auf einer Installation, die auch den Bestand fuehrt, aus dem die
+         * Fixture stammt, brach das Anlegen mit
+         * "Duplicate entry 'manual-2' for key 'device_id'" ab.
+         *
+         * Verwiesen wird darauf nichts: `day_refs` nennen nur echte Geraete,
+         * und `missions.device_id` steht gar nicht erst in der Sicherung
+         * (backup_lib.php, "Interne Verweise"). Gezaehlt: 0 Vorkommen von
+         * 'manual-' in der Nutzlast der ausgelieferten Fixture. */
+        if (geraet_virtuell((string)$g['device_id'])) { continue; }
         $insDev->execute([$id, (string)$g['device_id'], (string)$g['api_key_hash'],
                           $g['label'] ?? null]);
         $geraete++;

@@ -215,5 +215,36 @@ declare(strict_types=1);
  * die eine 8.0.0 berichtigt, die es nirgends gab, waere eine Zahl ohne
  * Gegenstueck in der Welt. Was die Nachlese geaendert hat, steht im
  * CHANGELOG unter 8.0.0.
+ *
+ * 8.0.1 ist die Terminologie-Phase P2: Die Oberflaeche und die normative
+ * Dokumentation sprechen neutral von Land und Luft. Eine Korrekturnummer,
+ * weil kein Feld, keine Funktion und kein Datenformat hinzukommt — was sich
+ * aendert, sind Texte und drei Aussagen, die nicht mehr stimmten
+ * (Kopplungsanleitung, Warntext des Excel-Rueckimports, Excel-Spaltentabelle
+ * der Format-Doku). KEINE Migration: `update.php` muss nach diesem Deploy
+ * NICHT aufgerufen werden. Die Uhr bleibt unveraendert und wird nicht
+ * ausgeliefert. Neu im Repositorium, aber nicht auf dem Server:
+ * `tools/wortliste/` zaehlt nach, ob die Texte neutral sind — es laeuft in
+ * P3 und P6 mit.
+ *
+ * In 8.0.1 EINGEFALTET, obwohl es keine Terminologie ist: zwei Funde
+ * derselben Phase, die dort nur gesammelt wurden. Eine eigene Nummer haetten
+ * sie verdient, aber 8.0.1 stand zu diesem Zeitpunkt auf keinem Server —
+ * eine 8.0.2, die eine 8.0.1 berichtigt, die es nirgends gab, waere dieselbe
+ * Zahl ohne Gegenstueck, gegen die schon der Absatz zur 8.0.0 argumentiert.
+ *
+ *   Das Anlegen des Demo-Kontos brach ab, sobald eine Installation auch den
+ *   Bestand fuehrte, aus dem die Fixture stammt: Sie brachte das virtuelle
+ *   Geraet "Manuelle Einträge" mit, dessen Kennung die KONTONUMMER traegt
+ *   ('manual-2') und in `devices.device_id` global eindeutig ist. Es wird
+ *   jetzt weder eingespielt noch ueberhaupt in die Fixture aufgenommen —
+ *   im Zielkonto entsteht es bei Bedarf mit der richtigen Nummer von selbst.
+ *   Dazu zaehlt die Adminansicht die Geraete jetzt nach derselben Regel wie
+ *   Geraeteliste und Grenze (ohne das virtuelle), und ein Datenbankfehler
+ *   erscheint dort nicht mehr im Wortlaut, sondern als lesbare Meldung mit
+ *   einer Kennung, unter der die Ursache im Fehlerprotokoll steht.
+ *
+ *   Die Sicherungsbeschreibung nannte einen Rollencode 'tc', den es nie
+ *   gegeben hat; gemeint ist 'hems'. Nur Dokumentation.
  */
-const WEB_VERSION = '8.0.0';
+const WEB_VERSION = '8.0.1';

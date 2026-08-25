@@ -149,10 +149,11 @@ ui_topbar('einstellungen');
         <label><input type="checkbox" id="exp_gpx" checked> GPX-Tracks einschließen</label>
       </div>
       <?php /* Tritt an die Stelle der GPX-Wahl, wenn die Schranke greift
-               (A9, Web 5.8.0). Eine Flugspur endet am Einsatzort — sie nennt
-               ihn genauer als jede Koordinatenspalte. */ ?>
+               (A9, Web 5.8.0). Ein Track endet am Einsatzort — er nennt
+               ihn genauer als jede Koordinatenspalte. Das gilt bodengebunden
+               wie luftgebunden. */ ?>
       <p class="muted" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
-         entfallen die GPX-Tracks — eine Flugspur endet am Einsatzort.</p>
+         entfallen die GPX-Tracks — ein Track endet am Einsatzort.</p>
 
       <?php /* „Personenbezogene Angaben" statt „Patientendaten" (A9, Web
                5.8.0). Der Haken schaltet seit dieser Fassung auch die Namen

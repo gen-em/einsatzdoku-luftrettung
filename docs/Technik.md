@@ -1,15 +1,15 @@
 # Einsatzdoku — Technische Dokumentation
 
-*Stand: 26.07.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
+*Stand: 24.08.2026 · Bedienung: `Handbuch.md` · Schnittstelle: `JSON-Vertrag.md` ·
 Historie: `CHANGELOG.md`.*
 
 ## 1. Architekturüberblick
 
 ```
 ┌─────────────────┐  HTTPS POST /ingest.php   ┌──────────────────────────┐
-│ Garmin Fenix 6  │  JSON (JSON-Vertrag)      │  Webspace                │
-│ Connect-IQ-App  │ ────────────────────────► │  PHP ≥ 8.1  + MySQL      │
-│ (Monkey C)      │  X-Device-Id / X-Api-Key  │                          │
+│ Uhr-App         │  JSON (JSON-Vertrag)      │  Webspace                │
+│ (derzeit Garmin,│ ────────────────────────► │  PHP ≥ 8.1  + MySQL      │
+│  Monkey C)      │  X-Device-Id / X-Api-Key  │                          │
 └─────────────────┘                           │  ingest.php   (Uhr-API)  │
                                               │  api/…        (Lese-API) │
 ┌─────────────────┐  HTTPS (Session-Login)    │  *.php        (Seiten)   │
@@ -26,7 +26,7 @@ Daten erst nach Server-Bestätigung.
 ## 2. Verzeichnisstruktur
 
 ```
-hems/
+<repo>/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
 │                          Branding (Farben, Schriften, Logo),
 │                          Backup-Format, Export-Format,
@@ -149,11 +149,15 @@ hems/
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
-│   └── wiederherstellungs-probe/
-│                          Grenzfälle von edbak_restore(), die der Kreislauf
-│                          nicht herstellen kann: Papierkorb-Mischfall und
-│                          kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
-│                          s. LIESMICH.md)
+│   ├── wiederherstellungs-probe/
+│   │                      Grenzfälle von edbak_restore(), die der Kreislauf
+│   │                      nicht herstellen kann: Papierkorb-Mischfall und
+│   │                      kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
+│   │                      s. LIESMICH.md)
+│   └── wortliste/         zählt nach, ob sichtbare Texte und normative
+│                          Dokumentation neutral von Land und Luft sprechen:
+│                          Sperrliste, Ausnahmeliste mit Begründungen, drei
+│                          Zahlen je Bereich (s. LIESMICH.md)
 └── .github/workflows/deploy.yml   FTPS-Deploy (nur server/, exkl. config)
 ```
 
@@ -648,7 +652,7 @@ unverändert. Backup exportiert/importiert beide.
 **Effektive Besatzung (Crew-Override, ab Web 2.6.0):** Die Besatzung wird
 einmal je Diensttag in `day_crew` gepflegt (bis Web 5.10.0: fünf Spalten
 `days.crew_*`). Ein einzelner Einsatz kann davon abweichen (fachlicher Anlass:
-Pilotenwechsel im laufenden Dienst) — dafür trägt `missions` die Spalte
+Pilotenwechsel oder Fahrerwechsel im laufenden Dienst) — dafür trägt `missions` die Spalte
 `crew_override` (0/1), die Namen liegen in `mission_crew`.
 **Bewusst redundanzfrei:** Ohne Abweichung gibt es in `mission_crew` keine
 Zeile; es gibt keine Kopie der Tagesbesatzung am Einsatz. Die Regel lautet je
@@ -1762,7 +1766,7 @@ nicht bloß zugesichert:
 | Teil | Inhalt |
 |---|---|
 | `konto` | E-Mail, `password_hash`, `kdf_salt`, `kdf_iter`, `pat_wrap_pw`, `pat_wrap_rc`, `pat_key_check`, `account_key` |
-| `geraete` | `device_id`, `api_key_hash`, `label` |
+| `geraete` | `device_id`, `api_key_hash`, `label` — **ohne** das virtuelle Gerät „Manuelle Einträge" (s. u.) |
 | `daten` | inneres Backup-JSON — `pat_blob` als **Chiffretext**, Papierkorb eingeschlossen |
 
 **Format 2 seit Web 8.0.0**: Der vierte Teil, `nachlauf`, ist entfallen
@@ -2096,7 +2100,7 @@ Repo.
 der Referenzbestand liegt — dann `server/demo/fixture.json.gz` mit ausrollen
 und im Adminbereich unter **Demo-Konto → anlegen**. Die Seite zeigt danach
 die Bestandszahlen; sie müssen 15 Diensttage, 82 Einsätze, 95 Ruhesegmente,
-5 im Papierkorb und 3 Geräte nennen. Mechanik: Abschnitt 4.99a.
+5 im Papierkorb und 2 Geräte nennen. Mechanik: Abschnitt 4.99a.
 
 **Demo-Konto sieht falsch aus / hängt:** Adminbereich → **Demo-Konto → Auf
 Standard zurücksetzen**. Der Vorgang ist transaktional und dauert wenige
@@ -2235,9 +2239,9 @@ veralteten Dateien, nicht am Code.
 (muss `strict-origin-when-cross-origin` sein), Hard-Reload.
 
 **Diagnose Uhr lädt nicht hoch:** Web „Geräte" → „Zuletzt gesehen"; Gerät
-aktiv? Connect-IQ-Einstellungen (Server-Domain, ID, Schlüssel)? Uhr online
-(Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
-erfolgreichem Upload.
+aktiv? Einstellungen der Uhr-App (Server-Domain, ID, Schlüssel) gesetzt?
+Uhr online (Handy-Kopplung/WLAN)? Anzeige „Sync ausstehend" verschwindet nach
+erfolgreichem Upload. *Bei Garmin liegen diese Einstellungen in Garmin Connect.*
 
 ## 8. Backlog
 
