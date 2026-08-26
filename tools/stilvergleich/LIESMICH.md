@@ -2,6 +2,35 @@
 
 Wird **nicht ausgeliefert** (`tools/` ist vom Deploy ausgenommen).
 
+> ## Während P3 nicht aussagekräftig
+>
+> Dieses Werkzeug ist auf die Frage gebaut: **Hat sich etwas geändert?** In
+> Phase P3 (Oberflächen-Redesign) ändert sich alles — Stylesheet, Bausteine,
+> Klassennamen, Schwellen. Ein Lauf liefert dort Tausende Abweichungen, die
+> niemand gegen einen Plan hält; er sagt nichts, was man nicht schon wüsste,
+> und verdeckt dabei das, worauf es ankommt.
+>
+> Der Stilvergleich **ruht deshalb während P3** und wird in Arbeitspaket O12
+> neu geeicht: Referenz aus dem Endstand aufnehmen, Breiten erweitern auf
+> `[1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390, 360]`,
+> Lauf gegen sich selbst mit 0 Abweichungen (Prüfpunkt P-P3-19). Ab P4 wacht
+> er wieder.
+>
+> An seine Stelle treten für die Dauer der Phase zwei Werkzeuge mit anderen
+> Fragen:
+>
+> - `tools/vollstaendigkeit/` — **Ist etwas verlorengegangen, und steht jeder
+>   Wert an der einen Stelle?**
+> - `tools/screenshots/` — **Sieht es in allen acht Breiten so aus, wie es
+>   soll?**
+>
+> `klassen.py` bleibt in Gebrauch, aber nicht als Sollmenge: Es zählt jedes
+> Wort im Quelltext als möglichen Klassennamen (14 784 zum Stand Web 8.0.1)
+> und ist damit für die Kaskadenfrage richtig gebaut, für eine
+> Vollständigkeitsprüfung aber unbrauchbar. Die rauschfreie Menge — die
+> Klassen aus den **Selektoren** des Stylesheets, 220 Stück — steht in
+> `tools/vollstaendigkeit/vorher-klassen.txt`.
+
 ## Wozu
 
 `assets/style.css` ist eine einzige Datei mit über 500 Regeln. Sobald man

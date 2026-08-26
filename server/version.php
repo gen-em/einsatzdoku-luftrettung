@@ -246,5 +246,39 @@ declare(strict_types=1);
  *
  *   Die Sicherungsbeschreibung nannte einen Rollencode 'tc', den es nie
  *   gegeben hat; gemeint ist 'hems'. Nur Dokumentation.
+ *
+ * 9.0.0 ist der Beginn von P3 — die WEBOBERFLAECHE WIRD NEU GEBAUT, mobil
+ * zuerst. Die Hauptnummer steigt aus demselben Grund wie bei 7.0.0: nicht
+ * wegen des Datenmodells (es bleibt unangetastet, eine Migration gibt es in
+ * diesem Schritt NICHT), sondern weil sich die Wege durch die Anwendung
+ * aendern werden — Schublade statt Seitenleiste, Kachel statt Tabelle,
+ * Aktionsblatt statt Knopfreihe.
+ *
+ * 9.0.0 selbst ist das FUNDAMENT und noch keine fertige Oberflaeche
+ * (Arbeitspaket O1). Das Stylesheet ist von Grund auf neu und enthaelt
+ * bisher nur Token und Grundlagen; die Bausteine folgen in 9.1.0. Ein
+ * Zwischenstand, in dem die Anwendung roh aussieht, ist eingeplant und
+ * ausdruecklich kein Fehler.
+ *
+ * Was 9.0.0 mitbringt:
+ *
+ *   - Ein Stylesheet mit allen Werten an EINER Stelle. Vorher: 78 Hexwerte
+ *     ausserhalb von :root, 21 verschiedene Schriftgroessen, die Kopfhoehe
+ *     fuenfmal als 50px fest verdrahtet, zwei Graufamilien nebeneinander.
+ *     Jetzt: ein Token-Block, eine Schriftskala (Major Third), eine
+ *     Graustufe, eine Kopfhoehe. Gruen und Gelb entfallen — beide waren
+ *     markenfremd.
+ *   - 44 Symbole als einzelne Dateien (Tabler Icons, MIT) statt fuenf
+ *     Inline-SVG, zwoelf Unicode-Zeichen und zwei Emoji. ui_symbol() in PHP
+ *     und edSymbol() in assets/symbol.js erzeugen dieselbe Zeichenkette.
+ *   - Die Logodateien tragen die Markenfarben; vorher trugen sie
+ *     Naeherungen. Dazu ein NEF-Platzhalter in denselben Maassen und
+ *     Fassungen, damit die Logo-Wahl gebaut werden kann, bevor die echte
+ *     Datei vorliegt.
+ *   - Zwei neue Pruefmittel (tools/vollstaendigkeit/, tools/screenshots/),
+ *     die den Stilvergleich fuer die Dauer der Phase ersetzen.
+ *
+ * Der Symbolvorrat und die Logos sind die einzigen Teile, die schon jetzt
+ * ausgeliefert werden muessen: Ohne sie zeigt 9.1.0 leere Rahmen.
  */
-const WEB_VERSION = '8.0.1';
+const WEB_VERSION = '9.0.0';

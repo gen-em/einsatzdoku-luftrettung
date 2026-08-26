@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PLATZHALTER — Logo „Fahrzeug" (NEF), Gen-EM NAdoku, P3/O1 (E-P3-19).
+
+  Dies ist NICHT das endgueltige Logo. Es steht hier, damit die Logo-Wahl aus
+  E-P3-20 (Standard / Hubschrauber / Fahrzeug / wechselnd) vollstaendig
+  gebaut, bedient und geprueft werden kann, bevor die echte Datei vorliegt.
+
+  Maße und Fassungen sind die des Hubschrauber-Logos: viewBox 400.16 x 249.81,
+  drei Dateien (farbig, weiss, Favicon). Die echte Datei ersetzt diese 1:1 —
+  gleicher Name, gleicher viewBox, kein Eingriff im Code.
+
+  ALS PLATZHALTER ERKENNBAR am gestrichelten Rahmen in Sand. Er verschwindet
+  mit der echten Datei; solange er liegt, weist ausserdem die Wartungsseite
+  darauf hin (Arbeitspaket O9).
+
+  Farben ausschliesslich aus der Marke: Asphalt 1A0500, Rot D63338,
+  Orange FF8F1F, Blau 4280E5, Schnee FFFCFA.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400.16 249.81" role="img">
+  <title>Fahrzeug (Platzhalter)</title>
+  <!-- Platzhalterrahmen -->
+  <rect x="6" y="6" width="388.16" height="237.81" rx="18"
+        fill="none" stroke="#D4C7AD" stroke-width="6" stroke-dasharray="18 14"/>
+  <g>
+    <!-- Aufbau (Kofferaufbau) -->
+    <path d="M96 96h150a10 10 0 0 1 10 10v66H86v-66a10 10 0 0 1 10-10z" fill="#1A0500"/>
+    <!-- Fahrerhaus -->
+    <path d="M256 118h44l30 34v20h-74z" fill="#1A0500"/>
+    <!-- Scheiben -->
+    <path d="M264 126h32l22 26h-54z" fill="#FFFCFA"/>
+    <rect x="104" y="110" width="52" height="34" rx="5" fill="#FFFCFA"/>
+    <!-- Roter Laengsstreifen -->
+    <rect x="86" y="150" width="244" height="14" fill="#D63338"/>
+    <!-- Rotes Kreuz auf dem Aufbau -->
+    <path d="M186 108h20v14h14v20h-14v14h-20v-14h-14v-20h14z" fill="#D63338"/>
+    <!-- Orangefarbener Keil: dasselbe Element wie im Hubschrauber-Logo -->
+    <path d="M330 152l30 10-30 10z" fill="#FF8F1F"/>
+    <!-- Blaues Blaulicht -->
+    <rect x="150" y="82" width="60" height="14" rx="7" fill="#4280E5"/>
+    <!-- Boden -->
+    <rect x="66" y="172" width="284" height="10" rx="5" fill="#1A0500"/>
+    <!-- Raeder -->
+    <circle cx="136" cy="192" r="22" fill="#1A0500"/>
+    <circle cx="136" cy="192" r="9" fill="#FFFCFA"/>
+    <circle cx="290" cy="192" r="22" fill="#1A0500"/>
+    <circle cx="290" cy="192" r="9" fill="#FFFCFA"/>
+  </g>
+</svg>

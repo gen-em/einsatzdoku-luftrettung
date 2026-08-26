@@ -56,3 +56,4 @@ tools/referenzdatensatz/einspielen/*rc.json
 # Laufs). Die erzeugten Dateien selbst gehoeren ins Repositorium (E-P1-12),
 # das Protokoll ihres Entstehens nicht.
 tools/referenzdatensatz/referenz/.export_lauf.json
+tools/screenshots/ausgabe/

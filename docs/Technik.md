@@ -101,14 +101,24 @@ Daten erst nach Server-Bestätigung.
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser),
 │   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
-│   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.)
+│   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
+│   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
+│   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
 │   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
 │   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
-│   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
+│   │   └── images/        Logos als SVG (farbig + weiss) je Hubschrauber und Fahrzeug,
+│   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
+│   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
+│   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
+│   │       └── symbole/    44 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
+│   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
+│   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
+│   │                       Verwendung. Eingebunden per Verweis, nicht eingebettet
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── config.example.php Vorlage der config.php (die selbst nur auf dem Server
 │   │                      liegt und vom Deploy ausgenommen ist)
@@ -146,9 +156,21 @@ Daten erst nach Server-Bestätigung.
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
+│   │                      nicht auseinanderlaufen (s. LIESMICH.md)
+│   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
+│   │                      auf, je Seite ein Kontaktbogen; misst dabei
+│   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
+│   │                      kontrast.py rechnet die Kontraste der Token nach
+│   │                      (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
+│   │                      plus berechnete Stile im Browser. RUHT WÄHREND P3,
+│   │                      Neueichung in O12 (s. LIESMICH.md)
+│   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
+│   │                      (jede Klasse des alten Stylesheets hat eine Regel
+│   │                      oder steht mit Begründung auf der Streichliste) und
+│   │                      ob jeder Wert in :root steht (s. LIESMICH.md)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall und

@@ -60,7 +60,15 @@ function ui_seite_start(array $o): void
        einmal je Zeile. */
     $zeilen = [
         '<!doctype html>',
-        '<html lang="de">',
+        /* data-webversion traegt den Erkennungswert fuer die Symbolverweise
+         * in den Browser: ui_symbol() in PHP und edSymbol() in
+         * assets/symbol.js muessen dieselbe Zeichenkette erzeugen, und im
+         * Browser gibt es keine Aenderungszeit einer Datei. Steht die
+         * Konstante nicht bereit (der Einrichter laeuft vor config.php),
+         * bleibt das Attribut leer und die Verweise laufen ohne
+         * Erkennungswert — richtig, denn der Einrichter laeuft genau einmal. */
+        '<html lang="de" data-webversion="'
+            . (defined('WEB_VERSION') ? ui_e(WEB_VERSION) : '') . '">',
         '<head>',
         '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
         '<title>' . ui_e((string)$o['titel']) . ' — Einsatzdoku</title>',
@@ -138,6 +146,62 @@ function ui_favicon(): string
     return '<link rel="icon" type="image/png" href="assets/images/favicon.png">' . "\n"
          . '<link rel="icon" href="favicon.ico">'
          . '<link rel="apple-touch-icon" href="assets/images/favicon.png">';
+}
+
+/**
+ * SYMBOLE — ein Zeichen, eine Datei, ein Aufruf.
+ *
+ * WARUM ES SIE GIBT (P3/O1, E-P3-18). Der Bestand trug seine Zeichen an vier
+ * verschiedenen Orten: fuenf Inline-SVG mit Pfaddaten mitten im PHP und JS
+ * (das Zahnrad zweimal, der Karten-Pin sogar wortgleich in zwei Dateien), rund
+ * zwoelf Unicode-Zeichen als Symbol (▸ ▾ ✓ ⚠ ★ ◌ ← + –) und die Emoji 🚁 und
+ * 🚑 als Artkennzeichen. Die Emoji waren dabei das Schlimmste: Sie werden je
+ * Betriebssystem in anderer Zeichnung, Farbe und Groesse gerendert, lassen
+ * sich weder faerben noch auf Kontrast pruefen — und in der Tagesleiste, den
+ * Tabellen und der Rettungsmittel-Auswahl waren sie die einzige Artauskunft
+ * neben dem Tooltip.
+ *
+ * Jetzt liegt jedes Zeichen als eigene Datei unter assets/images/symbole/,
+ * 24 x 24, Strich 2 px, Farbe ueber currentColor. Grundlage ist Tabler Icons
+ * (MIT, Lizenztext liegt daneben); ein Zeichen (Luftlinie) ist ein eigener
+ * Entwurf im selben Stil. Die Zuordnung Datei -> Tabler-Name -> Verwendung
+ * steht in LIESMICH.md im selben Ordner.
+ *
+ * EINBINDUNG PER VERWEIS, nicht per Einbetten. Das <use> holt das <g id="i">
+ * aus der Datei; der Browser laedt jede Datei genau einmal und benutzt sie
+ * beliebig oft. Kein Sprite, kein Bauschritt — die Datei bleibt am PC einzeln
+ * zu oeffnen und zu aendern, und genau das war die Anforderung.
+ *
+ * DIE STRICHATTRIBUTE STEHEN IM STYLESHEET (.symbol), nicht hier: Der Verweis
+ * holt das <g>, nicht das <svg> darum, und die Attribute fill/stroke stehen in
+ * der Datei am <svg>. Ohne den Ersatz in .symbol malte der Browser schwarze
+ * Klumpen. Details im Stylesheet, Abschnitt 3.
+ *
+ * DER ERKENNUNGSWERT IST WEB_VERSION, nicht die Aenderungszeit der Datei —
+ * anders als bei asset(). Grund: edSymbol() in assets/symbol.js muss dieselbe
+ * Zeichenkette erzeugen wie diese Funktion, und im Browser gibt es keine
+ * Aenderungszeit. WEB_VERSION steigt bei jeder Auslieferung ohnehin (CLAUDE.md
+ * Abschnitt 2), damit ist der Zwischenspeicher zuverlaessig erneuert.
+ *
+ * @param string      $name     Dateiname ohne Endung, z. B. 'haus'
+ * @param string      $klassen  zusaetzliche Klassen: 'symbol-gross',
+ *                              'symbol-links', 'symbol-gefuellt' …
+ * @param string|null $titel    Wenn gesetzt, ist das Symbol fuer Screenreader
+ *                              sichtbar und traegt diesen Namen. Ohne Titel
+ *                              gilt es als Schmuck (aria-hidden) — richtig
+ *                              ueberall dort, wo daneben Text steht.
+ */
+function ui_symbol(string $name, string $klassen = '', ?string $titel = null): string
+{
+    $v = defined('WEB_VERSION') ? WEB_VERSION : '';
+    $pfad = 'assets/images/symbole/' . $name . '.svg' . ($v !== '' ? '?v=' . $v : '') . '#i';
+    $k = 'symbol' . ($klassen !== '' ? ' ' . $klassen : '');
+
+    $a = '<svg class="' . ui_e($k) . '" viewBox="0 0 24 24" focusable="false"';
+    $a .= $titel === null
+        ? ' aria-hidden="true">'
+        : ' role="img"><title>' . ui_e($titel) . '</title>';
+    return $a . '<use href="' . ui_e($pfad) . '"></use></svg>';
 }
 
 /**

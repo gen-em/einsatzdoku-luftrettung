@@ -11,6 +11,169 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.0.0] — 2026-08-26
+
+**Die Weboberfläche wird neu gebaut, mobil zuerst — das hier ist das
+Fundament, noch nicht das Haus.** Erstes Arbeitspaket der Phase P3
+(Arbeitspaket O1): Token, Stylesheet-Gerüst, Symbolvorrat, Logos und zwei
+neue Prüfmittel. **Keine Migration** — `update.php` muss nach diesem Deploy
+nicht aufgerufen werden. Die Uhr-App bleibt unverändert.
+
+**Wichtig für den Betrieb:** Dieser Stand allein sieht roh aus. Das
+Stylesheet enthält bisher nur Token und Grundlagen; die Bausteine — Karte,
+Zeile, Knopf, Meldung, Kopfleiste, Schublade — folgen in 9.1.0. Der
+Zwischenstand ist eingeplant (Konzept P3, O2 Punkt 6) und deshalb **nicht
+für den Produktivserver bestimmt**; er liegt auf dem Phasenzweig.
+
+### Web — Warum das Stylesheet nicht repariert, sondern ersetzt wurde
+
+Die alte Datei war über zwanzig Fassungen gewachsen und in P0 bereits
+gegliedert und entdoppelt worden — sie war nicht schlecht gepflegt. Sie hatte
+nur nie eine Stelle, an der ein Wert **einmal** steht. Nachgezählt zum Stand
+Web 8.0.1:
+
+| | |
+|---|---|
+| Hexfarben außerhalb von `:root` | **78** |
+| verschiedene Schriftgrößen | 21, in 71 Regeln |
+| Pixelmaße außerhalb der Token | 154 |
+| die Kopfhöhe `50px`, fest verdrahtet | **5-mal** |
+| Graufamilien nebeneinander | 2 — eine warme (`--muted`) und eine kühle |
+| `style="…"`-Attribute in PHP und JS | 14 |
+
+Die fünf verdrahteten `50px` sind das Beispiel, an dem sich zeigt, warum
+Reparieren nicht gereicht hätte: Die tatsächliche Höhe der Kopfleiste hing
+vom Umbruch des Markentexts ab, und das Demo-Banner verschob sie zusätzlich —
+im Demo-Konto rutschte die Seitenleiste unter der Kopfleiste hervor. Man
+kann das an fünf Stellen nachbessern; man kann auch **ein** Token setzen.
+
+Jetzt: ein Token-Block mit allen Werten, eine Schriftskala (Major Third um
+15/16 px, sieben Stufen statt 21 Größen), **eine** Graustufe, eine Kopfhöhe.
+Grün und Gelb entfallen ersatzlos — beide waren markenfremd, und beide
+trugen Bedeutung doppelt: Gelb hieß „Bearbeiten" in den Stammdaten, wo es
+anderswo orange hieß.
+
+### Web — Kontraste: drei Widersprüche im Konzept, aufgelöst
+
+Die Kontrastwerte sind nicht übernommen, sondern nachgerechnet
+(`tools/screenshots/kontrast.py`, 21 Paare, 0 verfehlt). Dabei sind drei
+Stellen aufgefallen, an denen das Konzept sich selbst widerspricht:
+
+1. **Ränder von Bedienelementen.** Prüfpunkt P-P3-05 verlangt 3:1 für Flächen
+   und Ränder; die einzigen Linienfarben im Tokenvorrat erreichen 1,36:1
+   (`--linie`) und 1,64:1 (`--sand`). Ein Eingabefeld hätte damit einen Rand
+   gehabt, den gute Augen sehen und andere nicht. Aufgelöst mit **zwei**
+   Linien: `--linie` bleibt für Trenner und Kartenränder — Zierrat, den
+   WCAG 1.4.11 ausdrücklich ausnimmt —, `--linie-stark` begrenzt
+   Bedienelemente und ist `--gedaempft` (5,66:1). Ein neuer Farbwert war
+   dafür nicht nötig.
+2. **Orange als Fläche** führt Anlage G mit 2,2:1, P-P3-05 verlangt 3:1.
+   Beides stimmt und meint Verschiedenes: Anlage G misst die Farbe,
+   P-P3-05 die Rolle. Orange trägt nirgends allein — der Primärknopf hat
+   dunkelblaue Schrift darauf (5,97:1), der aktive Menüpunkt zusätzlich
+   Fläche und Fettung. Wo ein oranger Strich doch allein stünde, tritt
+   `--orange-tief` (4,32:1) an seine Stelle.
+3. **Der Primärknopf** trägt dunkelblaue Schrift auf Orange, wie E-P3-15 es
+   festlegt. Die Mockups zeigen an dieser Stelle Weiß (2,3:1) — der
+   Entscheidungstext gilt, nicht die Skizze.
+
+Vier weitere Werte in Anlage G lagen zu niedrig, alle zugunsten der
+Sicherheit (Asphalt 19,3 statt 17,5; Blau tief 7,8 statt 7,2; Rot tief 7,6
+statt 7,1; Primärknopf 6,0 statt 5,4). Die Tabelle in `docs/Design.md` wird
+in O12 aus dem Stylesheet **erzeugt**, nicht abgeschrieben.
+
+### Web — Symbole: eine Datei je Zeichen
+
+Der Bestand trug seine Zeichen an vier Orten: fünf Inline-SVG mit Pfaddaten
+mitten im PHP und JS (das Zahnrad zweimal, der Karten-Pin wortgleich in zwei
+Dateien), 147 Unicode-Zeichen als Symbol (`▸ ▾ ✓ ⚠ ★ ◌ ← →`) und die Emoji
+🚁 und 🚑 als Artkennzeichen.
+
+Die Emoji waren dabei das eigentliche Problem: Sie werden je Betriebssystem
+in anderer Zeichnung, Farbe und Größe gerendert, lassen sich weder färben
+noch auf Kontrast prüfen — und in der Tagesleiste, den Tabellen und der
+Rettungsmittel-Auswahl waren sie die einzige Artauskunft neben dem Tooltip.
+
+Jetzt liegen **44 Zeichen als einzelne Dateien** unter
+`assets/images/symbole/` (Tabler Icons, MIT-Lizenz, Lizenztext daneben; ein
+Zeichen — die Luftlinie — ist ein eigener Entwurf im selben Stil). Eingebunden
+werden sie per Verweis: `ui_symbol('haus')` in PHP, `edSymbol('haus')` in
+`assets/symbol.js`, beide erzeugen dieselbe Zeichenkette. Farbe über
+`currentColor`; ein Symbol in einem roten Knopf ist rot, ohne dass irgendwo
+eine zweite Regel stünde.
+
+**Eine Falle, die dabei zugeschnappt ist:** Der Verweis holt das `<g id="i">`
+aus der Datei — nicht das `<svg>` darum. Die Attribute `fill="none"` und
+`stroke="currentColor"` stehen aber am `<svg>`, damit die Datei sich einzeln
+öffnen und ansehen lässt. Ohne Ersatz malte der Browser schwarze Klumpen
+statt Strichzeichnungen. Sie stehen jetzt in der Regel `.symbol`, von wo aus
+sie in den geklonten Baum vererben.
+
+### Web — Logos in den Markenfarben, und ein Platzhalter fürs NEF
+
+Die drei Logodateien trugen Näherungen statt der Markenwerte (Rot `#E3322B`
+statt `#D63338`, Blau `#587ABC` statt `#4280E5`, Orange `#F7941D` statt
+`#FF8F1F` — `docs/Branding.md` B1). Sieben Farbwerte sind berichtigt; das
+Favicon entsteht seither aus der Logodatei statt daneben
+(`tools/logos/erzeugen.mjs`), damit beide nicht wieder auseinanderlaufen.
+
+Dazu ein **NEF-Platzhalter** in denselben Maßen und Fassungen (farbig, weiß,
+Favicon). Er steht dort, damit die Logo-Wahl aus E-P3-20 vollständig gebaut
+und geprüft werden kann, bevor die echte Datei vorliegt; erkennbar ist er am
+gestrichelten Rahmen in Sand. Die echte Datei ersetzt ihn 1:1 — gleicher
+Name, gleicher viewBox, kein Eingriff im Code.
+
+### Repositorium — zwei neue Prüfmittel, und warum der Stilvergleich ruht
+
+`tools/stilvergleich/` beantwortet die Frage „hat sich etwas geändert?". Das
+ist die richtige Frage nach einer Aufräumrunde und die falsche in einem
+Redesign: Dort ändert sich alles, und das Werkzeug liefert Tausende
+Abweichungen, die niemand gegen einen Plan hält. Es **ruht während P3** (mit
+Vermerk in seiner Anleitung) und wird in O12 neu geeicht, mit Messbreiten bis
+hinunter zu 360 px. Ab P4 wacht es wieder.
+
+An seine Stelle treten zwei Werkzeuge mit anderen Fragen:
+
+- **`tools/vollstaendigkeit/`** — Ist etwas verlorengegangen, und steht jeder
+  Wert an der einen Stelle? Sollmenge sind die **220 Klassen** aus den
+  Selektoren des alten Stylesheets; jede braucht am Ende eine Regel im neuen
+  oder einen Eintrag mit Begründung auf der Streichliste. Dazu Hexwerte,
+  Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"`-Attribute, Inline-SVG,
+  Unicode-Symbole, Emoji und die Knopfregel.
+- **`tools/screenshots/`** — 29 Seiten in acht Breiten von 360 bis 1920 px,
+  je Seite ein Kontaktbogen, dazu gemessener waagerechter Überlauf,
+  Konsolenfehler und Knopfhöhen. 232 Bilder je Lauf.
+
+Beide melden Zahlen, keine Urteile. Der erste Lauf gegen den Rohstand:
+**26 Fälle waagerechten Überlaufs**, alle bei 360–420 px, alle in Paketen
+O2 bis O11 zu beheben; **0 Konsolenfehler**.
+
+Nebenbei hat die Vollständigkeitsprüfung einen Bestandsfund geliefert:
+**22 Klassen stehen im Markup, für die es im alten Stylesheet keine Regel
+gibt** (`card`, `crewrole`, `dreiwert`, `fld`, `focus-target`, `mainnav`,
+`nb-veh`, `parentcheck`, `rollehaken`, `rollen-zeile`, `setup-card`, `small`,
+`vehcaps`, `vehcaps-zeile` und die `imp-*`-Familie). Sie tun nichts — aber
+sie sehen aus, als täten sie etwas, und beim nächsten Umbau richtet sich
+jemand danach.
+
+### Repositorium — Konzept, Mockups und die Pflegepflichten
+
+Die Übergabeeinheit der Konzeptphase liegt jetzt im Repositorium:
+`docs/Konzept-P3-Oberflaeche.md` und 39 Mockups unter `docs/konzept-p3/`.
+
+Zwei P0-Dokumente sind zu Beginn der Umsetzung nachgereicht worden und haben
+den Vorbehalt aus E-P3-03 eingelöst: Die Vormerkliste aus Konzept P0 (10.5)
+bestätigt vier von fünf Punkten des eigenen Befunds, liefert zwei Zusätze
+(„32 Tabellen, genau eine mit Überlaufbehälter"; `nurWenn` in
+`missiontable.js` als vorhandene Vorlage für weglassbare Spalten) und ist in
+einem Punkt überholt — die Kopfhöhe steht fünfmal verdrahtet, nicht dreimal.
+Der E-A6-02-Vorbehalt zur Tonart der Vollzugsmeldung ist damit wörtlich
+verfügbar und lautet genau so, wie E-P3-16 ihn einlöst.
+
+`CLAUDE.md` bekommt Abschnitt 9 **Pflegepflichten**: welches Dokument zu
+welcher Änderung gehört, und die Regel, dass ein neuer Baustein vorher
+freigegeben wird.
+
 ## [Web 8.0.1] — 2026-08-24
 
 **Die Anwendung spricht neutral von Land und Luft — vor dem Redesign, damit

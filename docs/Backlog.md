@@ -87,18 +87,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     irgendwo auftauchte. **Nicht entfernt**, weil nicht auf der Freigabeliste
     von A4. Zu entscheiden: streichen, oder die Regel in den Kopf von
     `install.php` ziehen, wo sie wirken würde.
+    *Stand P3/O1:* Das Konzept entscheidet die Frage anders und größer — der
+    Einrichter bekommt in O2 das **gemeinsame Stylesheet** (E-P3-02), sein
+    eigener Stil mit 17 Hexwerten entfällt, und `.btn-link` wird zum
+    Baustein `.knopf`. Damit erledigt sich der Punkt; abgehakt wird er, wenn
+    O2 steht.
 19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
     gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
     Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
     Freigabeliste.
-20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.** Von 93
-    Hex-Farben stehen 78 außerhalb von `:root` (nachgezählt Web 7.2.0); für 13
-    davon gibt es bereits ein Token mit **exakt demselben** Wert — sie ließen
-    sich ohne jede Gestaltungsfrage ersetzen. Die übrigen 65 zu benennen ist
-    dagegen eine Gestaltungsentscheidung. Gefunden in P0/A6 (dort C6).
-    Ausdrücklich dem Oberflächen-Redesign (P3) zugeordnet, weil die Palette
-    dort ohnehin angefasst wird; die Einzelwerte stehen in `docs/Branding.md`,
-    Abschnitt 5 (B3).
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -125,6 +122,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.**
+    *Erledigt mit Web 9.0.0 (P3/O1) — und zwar nicht 13, sondern alle 78.*
+    Der Punkt war klein gefasst, weil er das Redesign nicht vorwegnehmen
+    wollte: 13 Werte hatten ein Token mit exakt demselben Wert, die übrigen 65
+    zu benennen wäre eine Gestaltungsentscheidung gewesen. Genau die hat P3
+    getroffen. Das Stylesheet ist neu geschrieben; außerhalb von `:root` steht
+    **kein einziger Hexwert mehr**, dazu keine `rgb()`-Angabe, keine
+    Schriftgröße außerhalb der Skala und kein Pixelmaß außerhalb der Token.
+    Nachgezählt von `tools/vollstaendigkeit/pruefen.py`, das dieselbe Zahl
+    weiterhin bei jedem Lauf prüft — der Punkt kann also nicht stillschweigend
+    zurückkommen. Die markenfremden Familien (Grün, Gelb, die zweite
+    Graufamilie) sind dabei ersatzlos entfallen.
 
 1. **Reanimationen im Einsatzformular erfassen.**
     *Erledigt mit Web 5.5.0.* Bis dahin konnten Reanimationen nur von der Uhr

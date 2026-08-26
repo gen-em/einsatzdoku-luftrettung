@@ -1,0 +1,263 @@
+# Prüfdokument — P3 „Oberflächen-Redesign", Web 9.0.0 ff.
+
+**Programm:** Gen-EM NAdoku · **Phase:** P3 · **Konzept:**
+`Konzept-P3-Oberflaeche.md` · **Zweig:** `claude/konzept-p3-umsetzen-c4zctj`
+**Stand:** 26.08.2026, nach Arbeitspaket **O1**
+
+---
+
+## 0. Wozu dieses Dokument
+
+Das Konzept beantwortet die Frage **„ist die Änderung belegt?"**. Dieses
+Dokument beantwortet die andere: **„was muss ich noch prüfen, und wie?"**
+
+**Abschnitt 5 ist die Arbeitsliste.** Alles davor sagt, warum sie so
+aussieht. Es wächst mit jedem Arbeitspaket; solange die Phase läuft, ist es
+unvollständig — und sagt das an jeder Stelle, an der es das ist.
+
+---
+
+## 1. Was **nicht** geprüft werden konnte
+
+Das steht hier vorn, nicht in einer Fußnote.
+
+### 1.1 Nur Chromium — und daran hängt jedes Symbol
+
+Die Umsetzungsumgebung hat **ausschließlich Chromium**. WebKit (Safari,
+iPhone, iPad) und Gecko (Firefox) stehen nicht zur Verfügung und lassen sich
+nicht nachinstallieren.
+
+Das ist in dieser Phase kein Randthema, sondern **der wichtigste offene
+Punkt**, und zwar aus einem konkreten Grund: Alle 44 Symbole der neuen
+Oberfläche werden per **Verweis auf eine externe Datei** eingebunden —
+
+```html
+<svg class="symbol"><use href="assets/images/symbole/haus.svg?v=9.0.0#i"></use></svg>
+```
+
+In Chromium trägt das nachweislich (Abschnitt 3). Trägt es in Safari auf dem
+iPhone **nicht**, dann fehlt auf dem Gerät, das das Konzept zum Normalfall
+erklärt, **jedes einzelne Symbol** — und zwar lautlos: keine Fehlermeldung,
+nur leere Stellen, wo Menü, Winkel, Häkchen, Warnzeichen und Artkennzeichen
+stehen sollten.
+
+**Deshalb ist P-1 in Abschnitt 5 der erste Punkt und Pflicht.** Er kostet
+zwanzig Sekunden auf einem iPhone und entscheidet, ob die Einbindungsart
+bleibt oder in O2 gegen serverseitiges Einbetten getauscht wird. Der Umbau
+wäre klein — `ui_symbol()` und `edSymbol()` sind die einzigen beiden Stellen
+—, aber er muss **vor** O3 geschehen, nicht danach.
+
+### 1.2 Kein echtes Endgerät
+
+Gemessen sind Fensterbreiten in Chromium, nicht Geräte. Was daran hängt und
+hier **nicht** belegt ist:
+
+- **Trefferflächen.** Die 44-px-Regel ist gerechnet (`getBoundingClientRect`),
+  nicht mit einem Daumen geprüft.
+- **Weiche Tastatur.** Wenn iOS oder Android die Tastatur einblendet,
+  schrumpft der sichtbare Bereich — was mit einer klebenden Speichern-Leiste
+  geschieht (O5), sagt nur ein Gerät.
+- **Sicherer Bereich.** Notch und Home-Indicator (`env(safe-area-inset-*)`)
+  sind nicht geprüft.
+- **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
+  wo ein Hinweis nur dort steht, fällt er weg.
+
+### 1.3 Was der Zwischenstand nach O1 noch nicht ist
+
+**Web 9.0.0 sieht roh aus, und das ist beabsichtigt.** Das Stylesheet enthält
+Token und Grundlagen — keine Bausteine. Wer diesen Stand aufruft, sieht die
+Anwendung ohne Gestaltung: übergroße Grafiken, Tabellen ohne Raster, keine
+Kopfleiste. Die Bausteine folgen in O2 (Web 9.1.0).
+
+**Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
+Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
+
+---
+
+## 2. Was maschinell geprüft wurde
+
+Jede Zeile nennt das Mittel **und** die Zahl. „Geprüft" ohne Zahl steht hier
+nicht.
+
+### 2.1 Nach O1 (Web 9.0.0)
+
+| Was | Mittel | Ergebnis |
+|---|---|---|
+| Sollmenge des Stylesheets gesichert | `tools/vollstaendigkeit/pruefen.py --vorher` | **220 Klassen** aus den Selektoren des alten Stylesheets |
+| Hexfarben außerhalb `:root` | dasselbe Werkzeug | **0** — vorher 78 |
+| `rgb()`/`rgba()` mit festen Zahlen außerhalb `:root` | dasselbe | **0** — vorher 8 |
+| Schriftgrößen außerhalb der Skala | dasselbe | **0** — vorher 71 Regeln mit 21 verschiedenen Werten |
+| Pixelmaße außerhalb der Token | dasselbe | **0** — vorher 154; 5 begründete Ausnahmen in `ausnahmen.md` |
+| `50px`-Reste (die alte Kopfhöhe) | dasselbe | **0** — vorher 5 |
+| Symboldateien mit Anker `id="i"` | dasselbe | **44 von 44** |
+| Kontraste der Token | `tools/screenshots/kontrast.py` | **21 Paare gerechnet, 0 verfehlt**; Primärknopf 5,97:1; 3 benannte Ausnahmen mit Grund |
+| Bildaufnahme | `tools/screenshots/aufnehmen.mjs` | **232 Einzelbilder** (29 Seiten × 8 Breiten), 29 Kontaktbögen |
+| Waagerechter Überlauf | dieselbe Aufnahme | **26 von 232** — alle bei 360–420 px, alle im Rohstand erwartet; Sollwert 0 am Ende der Phase |
+| Konsolenfehler | dieselbe Aufnahme | **0** |
+| Knopfhöhen ≠ 44 px | dieselbe Aufnahme | **0** — es gibt in diesem Stand noch keine `.knopf`-Regel |
+| Wortliste (R28) | `tools/wortliste/wortliste.py` | **0** außerhalb der Ausnahmen, **0** ungenutzte Ausnahmen, **0** durchgerutschte Teilstring-Fallen |
+| Syntax PHP | `php -l` über die geänderten Dateien | fehlerfrei |
+| Syntax JS | `node --check` über die geänderten Dateien | fehlerfrei |
+
+### 2.2 Der Vorher-Stand, zum Gegenhalten
+
+Erhoben am Stand `main` 2e4f4fe (Web 8.0.1), bevor das Stylesheet ersetzt
+wurde. Diese Zahlen sind der Maßstab, an dem sich das Ende der Phase messen
+lässt:
+
+| | vorher | Sollwert Ende P3 |
+|---|---|---|
+| Hexfarben außerhalb `:root` | 78 | 0 |
+| Schriftgrößen außerhalb der Skala | 71 | 0 |
+| Pixelmaße außerhalb der Token | 154 | 0 |
+| `50px`-Reste | 5 | 0 |
+| `style="…"`-Attribute in PHP/JS | 14 | 0 |
+| Inline-SVG mit Pfaden | 5 | 0 |
+| Unicode-Zeichen als Symbol | 147 | 0 |
+| Emoji im Markup | 80 | 0 |
+| Klassen im Markup ohne Regel | 22 | 0 |
+
+---
+
+## 3. Was im Browser geprüft wurde
+
+Chromium, echtes Stylesheet, laufende lokale Instanz mit dem
+Referenzdatensatz, Konsole mitgelesen.
+
+| Fall | Ergebnis |
+|---|---|
+| Symbolprobe: alle 44 Zeichen in vier Zuständen — 24 px dunkelblau, 20 px orange tief, gedreht **und** gefüllt, im Primärknopf auf Orange | Alle 44 erscheinen; `currentColor` wirkt in allen vier Zuständen; die Drehung des Winkels wirkt (`menu` um 90° zeigt senkrechte Balken, `pfeil-hoch` um 90° zeigt nach rechts); **0 Konsolenfehler** |
+| Logos: farbig auf Schnee, weiß auf Dunkelblau, je Hubschrauber und NEF-Platzhalter | Beide tragen die Markenfarben; der Platzhalter ist am gestrichelten Rahmen erkennbar |
+| Favicons bei 16, 32 und 128 px | Bei 32 px beide klar erkennbar; bei 16 px der Hubschrauber besser als das NEF (der Platzhalterrahmen kostet Fläche) |
+| Entschlüsselung nach der Anmeldung | Diagnose („Schädel-Hirn-Trauma bei Motorradunfall") und Einsatzort („Brunnengasse 66, 87411 Auwiesen") erscheinen im Klartext; kein Entsperrdialog |
+| Kartenkacheln und Ortssuche | `tile.openstreetmap.org` und `photon.komoot.io` antworten mit HTTP 200 — Karte und Adresssuche sind in dieser Umgebung prüfbar |
+
+---
+
+## 4. Grenzen der Prüfmittel
+
+`tools/vollstaendigkeit/LIESMICH.md` und `tools/screenshots/LIESMICH.md`
+nennen sie vollständig. Die vier, die hier zählen:
+
+1. **Die Vollständigkeitsprüfung misst Text, keine Darstellung.** Ob eine
+   Regel richtig aussieht, sagt nur der Browser.
+2. **Klassen aus zusammengesetzten Zeichenketten** (`'imp-' + art`) erkennt
+   sie nicht. Das ist Absicht: Die erste Fassung zählte jedes Wort im
+   Quelltext und kam auf 14 784 „Klassen".
+3. **Die Bildaufnahme kennt nur die Bedienzustände, die in `seiten.json`
+   stehen.** Ein geöffnetes Aktionsblatt, ein aufgeklappter Kartenkopf, ein
+   Dialog: Was nicht in der Liste steht, ist nicht im Bild. Die Liste wächst
+   mit den Paketen.
+4. **Das Bild sagt nicht, ob es richtig ist**, sondern wie es aussieht. Der
+   Abgleich gegen die Mockups bleibt Sichtprüfung.
+
+---
+
+## 5. Prüfliste
+
+**Lesart:** *Weg* = was zu tun ist. *Erwartet* = was dastehen muss.
+*Fehlschlag heißt* = was es bedeutet, wenn es nicht so ist — der wichtigste
+Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
+
+**⬤ Pflicht** — hier kann etwas kaputt sein, das kein Werkzeug gesehen hat.
+**○ Sichtprüfung** — reine Bestätigung; eine Abweichung wäre überraschend.
+
+### 5.1 Vor allem anderen
+
+- [ ] **P-1 ⬤ Symbole auf einem iPhone.**
+      *Weg:* Den Zweigstand irgendwo erreichbar machen (lokal genügt) und die
+      Symbolprobe oder — ab O2 — eine beliebige Seite auf einem **iPhone in
+      Safari** öffnen. Ersatzweise iPad, ersatzweise Safari auf einem Mac.
+      *Erwartet:* Die Strichzeichnungen erscheinen, in der Farbe ihrer
+      Umgebung.
+      *Fehlschlag heißt:* Zweierlei, und beides ist ernst. Sind die Stellen
+      **leer**, unterstützt WebKit den externen Verweis nicht — dann muss
+      `ui_symbol()` den Dateiinhalt serverseitig einbetten, und `edSymbol()`
+      braucht denselben Vorrat als Datenblock. Erscheinen **schwarze
+      Klumpen**, kommen die Strichattribute aus `.symbol` nicht im geklonten
+      Baum an — dann müssen sie zusätzlich als Attribute am Wirts-`<svg>`
+      stehen.
+      *Warum zuerst:* Ab O2 hängen alle Bausteine daran. Ein Wechsel der
+      Einbindungsart ist jetzt eine Funktion; nach O11 ist er eine Phase.
+
+- [ ] **P-2 ○ Dasselbe in Firefox.**
+      *Weg:* Beliebige Seite in Firefox öffnen.
+      *Erwartet:* wie in Chromium.
+      *Fehlschlag heißt:* dasselbe wie P-1, aber weniger dringend — Firefox
+      ist auf dem Handy selten.
+
+### 5.2 Nach O1 (Web 9.0.0)
+
+- [ ] **L-1 ○ Die Logos tragen die Markenfarben.**
+      *Weg:* `server/assets/images/gen-em_logo_helicopter.svg` in einem
+      Browser öffnen, daneben `docs/Branding.md` B1.
+      *Erwartet:* Rot `#D63338`, Blau `#4280E5`, Orange `#FF8F1F`, Asphalt
+      `#1A0500`. Kein `#E3322B`, kein `#587ABC`, kein `#F7941D`.
+      *Fehlschlag heißt:* Die Korrektur aus O1 ist nicht angekommen — oder
+      jemand hat die Datei aus einem alten Stand zurückgeholt.
+
+- [ ] **L-2 ⬤ Der NEF-Platzhalter ist als solcher erkennbar.**
+      *Weg:* `gen-em_logo_fahrzeug.svg` ansehen, dazu `favicon-fahrzeug.png`
+      bei 16 und 32 px.
+      *Erwartet:* Ein Rettungsfahrzeug in den Markenfarben, umgeben von einem
+      **gestrichelten Rahmen** in Sand.
+      *Fehlschlag heißt:* Fehlt der Rahmen, sieht der Platzhalter aus wie ein
+      fertiges Logo — und geht als solches in eine Abnahme.
+      *Zu entscheiden:* Ob die Zeichnung als Platzhalter taugt oder ob sie
+      bis zur echten Datei ersetzt werden soll. Das ist eine
+      Gestaltungsfrage, keine technische.
+
+- [ ] **L-3 ○ Favicon und Logo passen zusammen.**
+      *Weg:* `node tools/logos/erzeugen.mjs` laufen lassen, danach
+      `git status`.
+      *Erwartet:* Keine Änderung — die eingecheckten Favicons stammen aus den
+      eingecheckten Logodateien.
+      *Fehlschlag heißt:* Jemand hat eine Logodatei geändert, ohne die
+      Favicons neu zu erzeugen. Genau so ist das Favicon zu den falschen
+      Markenfarben gekommen.
+
+- [ ] **W-1 ○ Die Prüfmittel laufen.**
+      *Weg:*
+      `python3 tools/vollstaendigkeit/pruefen.py` ·
+      `python3 tools/screenshots/kontrast.py` ·
+      `cd tools/wortliste && python3 wortliste.py`
+      *Erwartet:* Die Zahlen aus Abschnitt 2.1.
+      *Fehlschlag heißt:* Weicht eine Zahl ab, hat sich seit O1 etwas
+      geändert, das niemand eingetragen hat.
+
+- [ ] **W-2 ○ Die Bildaufnahme läuft.**
+      *Weg:* `sh tools/referenzdatensatz/einspielen/lokal_starten.sh`, dann
+      `node tools/screenshots/aufnehmen.mjs --nur 10-`.
+      *Erwartet:* Acht Bilder und ein Kontaktbogen unter
+      `tools/screenshots/ausgabe/`, 0 Konsolenfehler.
+      *Fehlschlag heißt:* Meldet der Lauf „Anmeldung gescheitert", stimmen
+      die Zugangsdaten der lokalen Installation nicht; meldet er „nicht
+      aufgelöst", ist der Referenzdatensatz nicht eingespielt.
+
+### 5.3 Ab O2
+
+*(wächst mit den Arbeitspaketen)*
+
+---
+
+## 6. Was bewusst **nicht** geprüft wird
+
+| Bereich | Warum nicht |
+|---|---|
+| Uhr-App (`watch/`) | in P3 nicht angefasst; `Const.mc` zählt getrennt. Die Logo-Wahl auf der Uhr ist P6 (R29). |
+| Datenmodell, Migrationen | O1 berührt kein Schema. Ab O8 gibt es Migrationen; sie bekommen dann eigene Punkte. |
+| Rechenwege der Prüfschicht | `validate_lib.php` ist unberührt. |
+| Export, Import, Sicherung | unberührt in O1. Die Kreisläufe (P-P3-11/12) laufen vor Abschluss der Phase. |
+
+---
+
+## 7. Wenn etwas nicht stimmt
+
+1. **Hart neu laden** (Strg+Umschalt+R). Vieles, was nach Gestaltungsfehler
+   aussieht, ist ein alter Zwischenspeicher — besonders bei den Symbolen, die
+   ihren Erkennungswert aus `WEB_VERSION` beziehen.
+2. **Browserkonsole ansehen** und die Meldung mitnotieren.
+3. **Zurückrollen ist billig:** Die Phase liegt auf einem eigenen Zweig, und
+   bis O8 gibt es keine Migration.
+4. Fund melden mit: Punktnummer aus Abschnitt 5, Seite, Fensterbreite,
+   Konsolenmeldung.

@@ -49,6 +49,9 @@ Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
    ihre Nummer. Neue Punkte hängen hinten an. Die Nummern 4, 6 und 7 bleiben
    dauerhaft frei.
 
+Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
+(Pflegepflichten).
+
 ## 3. Deployment — Vorsicht
 
 **Ein Push auf `main` mit Änderungen unter `server/` lädt sofort auf den
@@ -109,6 +112,20 @@ Bausteine; eine Änderung an `.btn-plain` trifft ein Dutzend Stellen).
 Wenn eine Änderung nicht im Browser überprüft werden konnte, das **sagen**,
 statt sie als erledigt zu melden.
 
+**Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
+Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
+`tools/stilvergleich/LIESMICH.md`):
+
+- `tools/vollstaendigkeit/` — Ist etwas verlorengegangen (jede Klasse des
+  alten Stylesheets hat eine Regel oder steht mit Begründung auf der
+  Streichliste), und steht jeder Wert an der einen Stelle (`:root`)?
+- `tools/screenshots/` — 29 Seiten in acht Breiten von 360 bis 1920 px, mit
+  gemessenem waagerechtem Überlauf, Konsolenfehlern und Knopfhöhen; dazu
+  `kontrast.py` für die Kontraste der Token.
+
+Beide nach **jedem** Arbeitspaket, nicht erst am Ende. Ab P4 wacht der
+Stilvergleich wieder.
+
 **Stilvergleich bei CSS-Umbauten.** Für jede Änderung an
 `server/assets/style.css`, die Regeln verschiebt, zusammenführt, entfernt
 oder deren Reihenfolge berührt, wird der Stilvergleich angewendet
@@ -166,3 +183,31 @@ Satz zur Sache. **Gepusht wird einmal, am Ende der Phase** — und weil ein
 Push auf `main` sofort deployt (Abschnitt 3), erst nach ausdrücklicher
 Bestätigung. Nicht committen: `config.php`, Build-Ausgaben der Uhr
 (`watch/bin/`, `*.prg`), Sicherungen.
+
+## 9. Pflegepflichten
+
+Beschlossen in P3 (E-P3-06). Abschnitt 2 sagt, **was** bei jeder Änderung
+mitläuft; dieser Abschnitt sagt, **wohin** es gehört.
+
+Wer etwas ändert, pflegt das zugehörige Dokument im selben Paket nach —
+nicht später, nicht „in P6":
+
+- **Gestaltung** (Stylesheet, Bausteine in `ui.php`, Symbole, Token,
+  Schwellen): `docs/Design.md`. Ein neuer Baustein oder eine neue
+  Darstellung entsteht nur nach ausdrücklicher Freigabe mit Mockup; bis
+  dahin werden vorhandene Bausteine verwendet.
+- **Sicherung und Import** (`backup_*`, `adminbackup_*`, `import*`,
+  Formate): `docs/Konzept-S1-Sicherung-Import.md` (Fortschreibung),
+  `docs/Backup-Format.md`, `docs/Technik.md`.
+- **Begriffe und Texte:** `tools/wortliste/` laufen lassen; Handbuch an
+  der betroffenen Stelle nachziehen.
+- **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
+  `docs/Lizenzen.md`.
+- **Prüfmittel:** nach jedem Paket `tools/vollstaendigkeit/`,
+  `tools/screenshots/` (berührte Seiten) und `tools/wortliste/`; der
+  Stilvergleich wacht ab P4 wieder.
+
+**Stand der Umsetzung:** `docs/Design.md` und `docs/Lizenzen.md` entstehen in
+Arbeitspaket O12 und lösen `docs/Branding.md` ab. Bis dahin gilt für Farben,
+Schriften und Logo weiterhin `docs/Branding.md` (Abschnitt 5) — die
+verbindlichen Token stehen bereits in `server/assets/style.css`, Abschnitt 2.

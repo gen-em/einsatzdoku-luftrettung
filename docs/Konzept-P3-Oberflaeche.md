@@ -1286,14 +1286,14 @@ Umsetzung füllen.
 
 | Nr. | Prüfung | Soll | **Ist** |
 |---|---|---|---|
-| P-P3-01 | Vollständigkeitsprüfung gegen den **Vorher-Stand** (O1) | Klassenliste gesichert; alle alten Klassen „ohne Gegenstück" — das Werkzeug kann scheitern | |
+| P-P3-01 | Vollständigkeitsprüfung gegen den **Vorher-Stand** (O1) | Klassenliste gesichert; alle alten Klassen „ohne Gegenstück" — das Werkzeug kann scheitern | **erledigt.** `klassen.py` ist gescheitert (14 784 statt 220, F-P3-P); Sollmenge jetzt **220 Klassen** aus den Selektoren. Erstlauf protokolliert: 78 Hexwerte, 71 Schriftgrößen, 154 Pixelmaße, 5 × `50px`, 14 `style=`, 5 Inline-SVG, 147 Unicode-Symbole, 80 Emoji. |
 | P-P3-02 | Vollständigkeitsprüfung gegen den **Endstand** | 0 ohne Gegenstück, 0 Hexwerte außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 `50px`, Streichliste vollständig | |
 | P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | |
 | P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | |
-| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | |
+| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
 | P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | |
 | P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | |
-| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | |
+| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
 | P-P3-11 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärt, Sollstand nach S1 (286 739 Einzelvergleiche, 16 erwartet) | |
@@ -1305,7 +1305,7 @@ Umsetzung füllen.
 | P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | |
 | P-P3-18 | Logo-Wahl (O8) | Kopfleiste und Favicon wechseln gemeinsam; „wechselnd" stabil je Sitzung | |
 | P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | |
-| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | |
+| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O1: fehlerfrei** (`php -l`, `node --check`). |
 
 ---
 
@@ -1338,7 +1338,16 @@ und O11.
 
 ### 9.2 Funde während der Umsetzung
 
-*(während der Umsetzung fortschreiben; Muster wie 9.1)*
+| Nr. | Fund | Behandlung |
+|---|---|---|
+| F-P3-I | **Die Schriftskala hat sechs Namen und sieben Werte.** Abschnitt 5.2 führt `--groesse-1 … --groesse-6`, nennt aber „12, 13, 15, 16, 19, 24, 28 (mobil) / 30 (Desktop)". | O1. Aufgelöst mit `--groesse-1 … --groesse-6` und einem eigenen `--groesse-titel`: Der Seitentitel ist als einziger von der Fensterbreite abhängig und hat deshalb einen eigenen Namen verdient, keine siebte Stufe. |
+| F-P3-J | **Anlage G und P-P3-05 widersprechen sich beim Orange.** Anlage G führt „Orange FF8F1F als Fläche/Strich 2,2:1"; P-P3-05 verlangt „≥ 3:1 (Flächen/Ränder)". | O1. Beides stimmt und meint Verschiedenes: Anlage G misst die **Farbe**, P-P3-05 die **Rolle**. Die 3:1-Schwelle (WCAG 1.4.11) gilt für Ränder und Zustandsanzeigen, die ein Bedienelement **allein** kenntlich machen. Orange trägt nirgends allein — der Primärknopf hat dunkelblaue Schrift darauf (5,97:1), der aktive Menüpunkt zusätzlich Fläche und Fettung, die Zeilenhervorhebung zusätzlich Text. Wo ein oranger Strich doch allein stünde, tritt `--orange-tief` (4,32:1) an seine Stelle. Als benannte Ausnahme in `tools/screenshots/kontrast.py` geführt, damit der Lauf sie nicht jedes Mal meldet. |
+| F-P3-K | **Kein Linienton erreicht die Randschwelle.** P-P3-05 verlangt 3:1 für Ränder; `--linie` erreicht 1,36:1, `--sand` 1,64:1. Ein Eingabefeld hätte damit einen Rand, den gute Augen sehen und andere nicht. | O1. Zwei Linien statt einer: `--linie` bleibt für Trenner und Kartenränder (Zierrat, WCAG 1.4.11 nimmt ihn aus), **`--linie-stark`** begrenzt Bedienelemente — Eingabefeld, neutraler Knopf, Segmentwahl, Kästchen. Wert ist `--gedaempft` (5,66:1); ein neuer Farbwert war dafür nicht nötig, und CLAUDE.md 5 verlangt für einen neuen Farbwert eine Herkunft. |
+| F-P3-L | **Die Mockups zeigen weiße Schrift auf dem Primärknopf** (Bilder 11, 18, 22, 23). E-P3-15 legt ausdrücklich dunkelblaue Schrift fest und nennt Weiß auf Orange (2,3:1) unzulässig. | O1. Der Entscheidungstext gilt (Konzept 3, Vorbemerkung: „verbindlich sind Bausteine, Token, Schwellen und Regeln"). Der Token `--knopf-primaer-schrift` steht auf Dunkelblau, 5,97:1. Beim Abgleich der Screenshots gegen die Mockups ist das die eine erwartete Abweichung. |
+| F-P3-M | **Vier Kontrastwerte in Anlage G liegen zu niedrig.** Asphalt 19,29 statt 17,5 · Blau tief 7,82 statt 7,2 · Rot tief 7,58 statt 7,1 · Primärknopf 5,97 statt 5,4. | O1. Alle Abweichungen gehen zugunsten der Sicherheit; kein Wert ist überschätzt. Die Tabelle in `docs/Design.md` wird in O12 aus dem Stylesheet **erzeugt** (`kontrast.py --json`), nicht abgeschrieben — dann kann sie nicht wieder veralten. |
+| F-P3-N | **22 Klassen stehen im Markup, für die es keine Regel gibt** (Bestandsfund, Stand Web 8.0.1): `card`, `crewrole`, `dreiwert`, `fld`, `focus-target`, `mainnav`, `nb-veh`, `parentcheck`, `rollehaken`, `rollen-zeile`, `setup-card`, `small`, `vehcaps`, `vehcaps-zeile` und die `imp-*`-Familie. | Sie tun nichts — aber sie sehen aus, als täten sie etwas, und beim nächsten Umbau richtet sich jemand danach. Werden in den Paketen mitgenommen, die die jeweilige Seite anfassen; die Vollständigkeitsprüfung meldet sie bis dahin. |
+| F-P3-O | **B-P3-13 nennt „13 `style=`-Attribute in PHP/JS", die eigene Aufzählung derselben Zeile summiert auf 14** (`einstellungen` 4, `pw_handling` 4, `import` 2, je 1 in `admin_users`, `index`, `login`, `import_ui.js`). Gemessen: 14. | Nur eine Zahl im Befund. Sollwert bleibt 0; die 14 verteilen sich auf O2, O8 und O10. |
+| F-P3-P | **`klassen.py` taugt nicht als Sollmenge.** O1 Schritt 1 sieht vor, die Klassenliste damit zu sichern („das ist die Sollmenge der Vollständigkeitsprüfung"). Das Werkzeug zählt jedoch **jedes Wort** im Quelltext als möglichen Klassennamen und meldet 14 784 — richtig für die Kaskadenfrage, unbrauchbar hier. Der Konzeptvorbehalt „das Werkzeug kann scheitern" ist eingetreten. | O1. Sollmenge ist stattdessen die rauschfreie Menge aus den **Selektoren** des alten Stylesheets: **220 Klassen** (`tools/vollstaendigkeit/vorher-klassen.txt`). Die Markupseite läuft als Gegenprobe mit und trennt dabei belegte Literale von geratenen Namen. |
 
 ---
 
@@ -1389,8 +1398,126 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 
 ## 11. Umsetzungsstand
 
-*(je Paket: erledigt/offen, Commit, Abweichungen vom Konzept mit Grund,
-Prüfzahlen; Muster aus Konzept P2 Abschnitt 11)*
+| Paket | Stand | Version |
+|---|---|---|
+| O1 Grundlage | **erledigt** | Web 9.0.0 |
+| O2 Seitenhülle und Bausteine | offen | |
+| O3 Startseite und Karte | offen | |
+| O4 Einsatzansicht | offen | |
+| O5 Einsatzformular | offen | |
+| O6 Suche | offen | |
+| O7 Zeitraum | offen | |
+| O8 Einstellungen und Verwaltungslisten | offen | |
+| O9 Administration | offen | |
+| O10 Anmeldung, öffentliche Seiten, R32 | offen | |
+| O11 Übrige Seiten und Dialoge | offen | |
+| O12 Dokumentation und Abschluss | offen | |
+
+---
+
+### O1 — Grundlage: Token, Stylesheet-Gerüst, Symbole, Logos, Prüfmittel
+
+**Erledigt.** Web 9.0.0. Keine Migration.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/assets/style.css` | neu geschrieben, 517 Zeilen (vorher 1 468): Schriften unverändert übernommen, Token-Block, Grundlagen. **Keine Bausteine** — die folgen in O2. |
+| `server/assets/images/symbole/` | 44 Zeichen, Lizenztext, Zuordnungstabelle, Kontaktbogen — unverändert aus der Konzeptanlage übernommen |
+| `server/ui.php` | `ui_symbol()`; `data-webversion` am `<html>` |
+| `server/assets/symbol.js` | `edSymbol()` — erzeugt dieselbe Zeichenkette wie `ui_symbol()` |
+| `server/assets/images/*.svg` | 7 Farbwerte auf die Markenwerte berichtigt (F-P3-B erledigt) |
+| `gen-em_logo_fahrzeug*.svg`, `favicon-fahrzeug.png` | NEF-Platzhalter in denselben Maßen und Fassungen |
+| `tools/vollstaendigkeit/` | Prüfskript, Sollmenge, Streichliste, Ausnahmen, Anleitung |
+| `tools/screenshots/` | Aufnahme in acht Breiten, Kontaktbögen, Bericht, Kontrastrechnung, Anleitung |
+| `tools/logos/` | Favicons aus den Logodateien erzeugen — damit Logo und Favicon nicht wieder auseinanderlaufen |
+| `tools/stilvergleich/LIESMICH.md` | Ruhevermerk für die Dauer der Phase |
+| `CLAUDE.md` | Abschnitt 9 „Pflegepflichten“ (Anlage D), Hinweis auf die neuen Prüfmittel in Abschnitt 6 |
+
+#### Abweichungen vom Konzept, mit Grund
+
+1. **Die Sollmenge kommt nicht aus `klassen.py`** (F-P3-P). 14 784 „Klassen“
+   gegen 220 echte — das Werkzeug zählt jedes Wort im Quelltext. Der
+   Konzeptvorbehalt „das Werkzeug kann scheitern“ ist eingetreten; die
+   Sollmenge stammt jetzt aus den Selektoren des alten Stylesheets.
+2. **Die Schriftskala hat sechs Stufen plus `--groesse-titel`** statt sieben
+   Stufen (F-P3-I).
+3. **`--linie-stark` ist ein Token mehr, als 5.2 führt** (F-P3-K). Ohne ihn
+   hätte kein Eingabefeld einen sichtbaren Rand.
+4. **Die Seitenliste der Bildaufnahme führt 29 Seiten, nicht 24.** Der
+   Unterschied sind ein Bedienzustand (Schublade) und die
+   Administrationsseiten, die B-P3-01 als eine Gruppe zählt. 29 × 8 = **232
+   Bilder** statt der in P-P3-07 genannten 192; die Zahl dort wird in O12
+   berichtigt.
+5. **Zwei Werkzeuge mehr als vorgesehen:** `tools/logos/` (Favicons aus den
+   Logodateien) und `kontrast.py` neben der Bildaufnahme. Beides sind
+   Ableitungen, die sonst jemand von Hand nachbaut — und genau das war der
+   Grund, warum das Favicon die falschen Markenfarben trug.
+
+#### Probleme und wie sie gelöst wurden
+
+**Der Symbolverweis holte schwarze Klumpen.** `<use href="…#i">` klont das
+`<g id="i">`, nicht das `<svg>` darum — und die Attribute `fill="none"`,
+`stroke="currentColor"`, `stroke-width="2"` stehen in der Datei am `<svg>`,
+damit sie sich einzeln öffnen lässt. Beim Verweis fehlten sie, und der
+Browser malte gefüllte Flächen. Gelöst in der Regel `.symbol`: Alle fünf
+Eigenschaften sind vererbbar und fließen vom Wirts-`<svg>` über das `<use>`
+in den geklonten Baum. Im Browser bestätigt (44 Zeichen, vier Zustände je
+Zeichen).
+
+**Der Erkennungswert musste `WEB_VERSION` sein, nicht die Änderungszeit.**
+`asset()` hängt an jede Adresse die `filemtime` der Datei. Im Browser gibt es
+die nicht — `edSymbol()` könnte sie nicht kennen, und die beiden Erzeuger
+lieferten verschiedene Zeichenketten. Beide benutzen deshalb `WEB_VERSION`,
+das die Seite als `data-webversion` am `<html>` mitgibt.
+
+**Die ersten 232 Bilder zeigten den Entsperrdialog.** Die Bildaufnahme
+öffnete je Aufnahme eine neue Registerkarte; der Inhaltsschlüssel liegt aber
+im `sessionStorage` und ist an die Registerkarte gebunden. Genau die Angaben,
+um die es geht — Einsatzort, Diagnose, Alter —, waren auf keinem Bild zu
+sehen. Jetzt gibt es **eine** Seite je Rolle, und für jede Breite ändert sich
+nur die Fenstergröße. Im Browser gegengeprüft: Diagnose und Einsatzort
+erscheinen im Klartext.
+
+**Nicht jede rote Konsolenzeile ist ein Fehler.** Der erste Lauf meldete 41 —
+davon war jede einzelne entweder eine gescheiterte Kartenkachel oder der
+Statuscode der Seite selbst (die Abbruchseite antwortet mit 404, das ist ihre
+Aufgabe). Der Filter greift jetzt an der **Fundstelle** der Meldung, nicht an
+ihrem Wortlaut. Danach: 0.
+
+**Die Wortliste fand einen Treffer im neuen Code.** `var BASIS` in
+`symbol.js` — „Basis“ ist in diesem Projekt der Luftfahrtbegriff für einen
+Standort. Umbenannt in `ORDNER`; der Kommentar daneben sagt, warum.
+
+#### Prüfstand nach O1
+
+**Was maschinell geprüft wurde:**
+
+| Was | Mittel | Ergebnis |
+|---|---|---|
+| Sollmenge gesichert | `vollstaendigkeit/pruefen.py --vorher` | **220 Klassen** |
+| Werte außerhalb der Token | `vollstaendigkeit/pruefen.py` | 0 Hexfarben, 0 `rgb()`, 0 Schriftgrößen, 0 Pixelmaße, 0 `50px` — vorher 78 / 8 / 71 / 154 / 5 |
+| Kontraste | `screenshots/kontrast.py` | **21 Paare gerechnet, 0 verfehlt**, 3 benannte Ausnahmen |
+| Bildaufnahme | `screenshots/aufnehmen.mjs` | **232 Einzelbilder, 29 Kontaktbögen**; 26 Fälle waagerechten Überlaufs (alle 360–420 px, Rohstand), **0 Konsolenfehler**, 0 Knöpfe ≠ 44 px (es gibt noch keine) |
+| Wortliste | `wortliste/wortliste.py` | **0** außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
+| Syntax | `php -l`, `node --check` | fehlerfrei |
+
+**Was im Browser geprüft wurde:** Symbolprobe mit allen 44 Zeichen in vier
+Zuständen (24 px dunkelblau, 20 px orange tief, gedreht und gefüllt, im
+Primärknopf) — der Verweis trägt, `currentColor` wirkt, die Drehung wirkt, 0
+Konsolenfehler. Logos und Favicons auf hellem und dunklem Grund, Favicons bei
+16, 32 und 128 px. Entschlüsselung der geschützten Angaben nach der Anmeldung.
+
+**Was nicht geprüft werden konnte:**
+
+- **Kein WebKit, kein Gecko.** Die Umgebung hat ausschließlich Chromium. Der
+  Symbolverweis (`<use href="externe.svg#i">`) ist damit **nur in Chromium
+  belegt**. Das ist der wichtigste offene Punkt aus O1: Trägt er in Safari
+  auf dem iPhone nicht, fehlt auf dem Hauptgerät jedes Symbol. Er steht als
+  erster Punkt im Prüfdokument.
+- **Kein echtes Endgerät.** Gemessen sind Fensterbreiten, nicht Geräte;
+  Trefferflächen sind gerechnet, nicht getastet.
 
 ### Prüfumgebung
 
