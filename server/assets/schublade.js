@@ -44,8 +44,11 @@
     var schleier = document.querySelector('.schleier');
     if (schleier) { schleier.hidden = false; }
     setzeZustand(true);
-    var erste = fokussierbare()[0];
-    if (erste) { erste.focus(); }
+    /* Fokus auf die LEISTE (tabindex="-1"), nicht auf ihr erstes
+     * Bedienelement: Sonst truege das X beim Oeffnen einen Fokusring, den
+     * niemand bestellt hat (F-P3-V). Wer per Tab weitergeht, landet trotzdem
+     * als Erstes auf dem X. */
+    leiste.focus();
   }
 
   function zu() {

@@ -49,14 +49,19 @@
    * eigenes Element je Aufruf schließt diesen ganzen Fall aus: Ein
    * nachlaufendes Ereignis kann keinen späteren Aufruf mehr erreichen.
    */
+  /* Markup und Klassen sind die des Dialog-Bausteins (.dialog, .knopf) aus
+   * P3/O2 — dieselben, die ui.php serverseitig benutzt. Die frueheren eigenen
+   * Klassen (.confirmbox, .confirmbtns, .btn-red, .btn-plain) stehen auf der
+   * Streichliste; wer hier eine aendert, aendert sie im Stylesheet-Abschnitt
+   * 15 mit. */
   function build() {
     const dlg = document.createElement('dialog');
-    dlg.className = 'confirmbox';
+    dlg.className = 'dialog';
     dlg.innerHTML =
-      '<p class="confirmtext"></p>' +
-      '<div class="confirmbtns">' +
-      '  <button type="button" class="btn-plain" data-act="no">Abbrechen</button>' +
-      '  <button type="button" class="btn-red" data-act="yes">Löschen</button>' +
+      '<div class="dialog-inhalt"><p data-text></p></div>' +
+      '<div class="dialog-fuss">' +
+      '  <button type="button" class="knopf knopf-leise" data-act="no">Abbrechen</button>' +
+      '  <button type="button" class="knopf knopf-gefahr" data-act="yes">Löschen</button>' +
       '</div>';
     document.body.appendChild(dlg);
     return dlg;
@@ -69,10 +74,10 @@
       return Promise.resolve(window.confirm(text));
     }
     const d = build();
-    d.querySelector('.confirmtext').textContent = text;
+    d.querySelector('[data-text]').textContent = text;
     const ok = d.querySelector('[data-act="yes"]');
     ok.textContent = okLabel || 'Löschen';
-    ok.className = (tone === 'normal') ? 'btn-primary' : 'btn-red';
+    ok.className = (tone === 'normal') ? 'knopf knopf-primaer' : 'knopf knopf-gefahr';
 
     return new Promise(resolve => {
       let erledigt = false;

@@ -550,6 +550,9 @@ img,svg,video{max-width:100%;height:auto}
   padding:0 var(--abstand-3);
 }
 .kopf .knopf{color:var(--auf-dunkel)}
+/* .knopf-symbol:hover setzt sonst --rauch — ein heller Block auf der dunklen
+ * Leiste. Hier gilt die gedämpfte Weißfläche. */
+.kopf .knopf-symbol:hover,.kopf .kopf-zahnrad:hover{background:var(--auf-dunkel-flaeche)}
 .kopf-menue{margin-left:calc(var(--abstand-2) * -1)}
 
 .kopf-marke{
@@ -580,6 +583,10 @@ img,svg,video{max-width:100%;height:auto}
 }
 .kopf-punkt:hover{text-decoration:none;border-bottom-color:var(--auf-dunkel-strich)}
 .kopf-punkt.aktiv{border-bottom-color:var(--orange)}
+/* Der Rückweg der öffentlichen Hülle („Zurück zur Anmeldung") gilt in jeder
+ * Breite — .kopf-punkt ist unter 1024 px ausgeblendet, weil dort die
+ * Schublade die Hauptpunkte trägt; einen Rückweg trägt sie nicht. */
+.kopf-zurueck{display:inline-flex}
 .kopf-zahnrad{margin-right:calc(var(--abstand-2) * -1)}
 .kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
 
@@ -686,11 +693,10 @@ img,svg,video{max-width:100%;height:auto}
  *
  * Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
  */
-.akkordeon{position:relative}
 .akkordeon-zeile{
   display:flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);
-  padding:0 calc(var(--knopf) + var(--abstand-1)) 0 var(--abstand-2);
+  padding:0 var(--abstand-1) 0 var(--abstand-2);
   border-radius:var(--radius-klein);
   cursor:pointer;list-style:none;
   font-family:var(--schrift-kopf);font-weight:600;
@@ -698,13 +704,24 @@ img,svg,video{max-width:100%;height:auto}
 }
 .akkordeon-zeile::-webkit-details-marker{display:none}
 .akkordeon-zeile:hover{background:var(--rauch)}
-.akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out}
-details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
+/* winkel.svg zeigt nach UNTEN. Zugeklappt wird er nach rechts gedreht,
+ * aufgeklappt steht er in Ruhelage — so zeigen es die Mockups 01/03/06:
+ * „›" heißt zu, „⌄" heißt offen. Die erste Fassung hatte es umgekehrt
+ * (offen = oben) — das ist die Konvention mancher Aufklappmenüs, aber nicht
+ * die dieses Entwurfs (Fable-Kontrolle, F-P3-Q). */
+.akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out;
+  transform:rotate(-90deg)}
+details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .akkordeon-text{flex:1 1 auto;min-width:0}
 /* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
- * Trefferfläche, 44 px. */
+ * Trefferfläche, 44 px. ER STEHT IM <summary> — die erste Fassung hatte ihn
+ * daneben, als Kind des <details>, und der Inhalt eines geschlossenen
+ * <details> wird nicht gerendert: Der Link war an jeder zugeklappten Zeile
+ * unsichtbar und unerreichbar, die Mockups zeigen ihn an jeder
+ * (Fable-Kontrolle, F-P3-R). Weil ein Link im <summary> beim Klick auch das
+ * Auf- und Zuklappen auslöste, fängt daylist.js ihn ab und navigiert selbst. */
 .akkordeon-uebersicht{
-  position:absolute;top:0;right:var(--abstand-1);
+  margin-left:auto;flex:0 0 auto;
   width:var(--knopf);height:var(--knopf);
   display:flex;align-items:center;justify-content:center;
   color:var(--sand);border-radius:var(--radius-klein);
@@ -811,7 +828,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
 .karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
 .karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
 .karte-klappbar > .karte-kopf .akkordeon-winkel{color:var(--sand)}
-.karte-klappbar[open] > .karte-kopf .akkordeon-winkel{transform:rotate(180deg)}
+.karte-klappbar[open] > .karte-kopf .akkordeon-winkel{transform:none}
 
 /* ---- Zeile ---------------------------------------------------------------
  * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
@@ -937,6 +954,9 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
   margin-bottom:var(--abstand-4);
 }
 .meldung p{flex:1 1 auto;min-width:0}
+/* JS blendet Meldungen per hidden ein und aus (Entsperrdialog); das Attribut
+ * muss gegen das display:flex gewinnen. */
+.meldung[hidden]{display:none}
 .meldung .symbol{flex:0 0 auto}
 .meldung-aktion{flex:0 0 auto}
 .meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
@@ -1255,6 +1275,12 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
   overflow:hidden;
   background:var(--rauch);
   margin-bottom:var(--abstand-4);
+  /* EIGENER STAPELKONTEXT. Leaflet vergibt intern z-index bis 1000 — seine
+   * Bedienelemente zeichneten über Schublade (60) und Schleier (50), der
+   * Kartenpin stand mitten im Menü (Fable-Kontrolle, F-P3-Y). position und
+   * z-index:0 sperren die inneren Werte in die Karte ein; kein Wettrüsten
+   * der z-Indizes nötig. */
+  position:relative;z-index:0;
 }
 
 
@@ -1269,14 +1295,45 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
  * jedes Formgefühl lässt sich weder bedienen noch gegen ein Mockup halten,
  * und die Screenshot-Prüfung nach jedem Paket liefe gegen eine Ruine.
  *
- * Sie greift NUR an Elementnamen, nie an Bestandsklassen. Eine Klasse hier
- * wiederzubeleben hieße, das Redesign zurückzunehmen; ein <table> lesbar zu
- * machen heißt es nicht.
+ * Sie greift an Elementnamen — mit EINER begründeten Ausnahme, und die ist
+ * eng gefasst (Fable-Kontrolle, F-P3-T): die alten Meldungsklassen
+ * (.alert-Familie), .muted und .swatch. Warum genau diese drei:
  *
- * DIESER ABSCHNITT DARF NICHT WACHSEN. Er verschwindet nicht — die
- * Grundformen bleiben richtig —, aber wer hier eine Klasse einträgt, umgeht
- * die Bausteinregel.
+ *   .alert   Eine Fehlermeldung, die aussieht wie Fließtext, IST keine —
+ *            sie warnt niemanden. Auf den noch nicht umgebauten Seiten
+ *            stehen Meldungen teils als Markup, teils aus JS; beide müssen
+ *            bis zu ihrem Paket als Meldung ERKENNBAR bleiben.
+ *   .muted   trägt an hunderten Stellen den Unterschied zwischen Auskunft
+ *            und Nebenbemerkung. Ohne ihn ist alles gleich laut.
+ *   .swatch  ist der Farbchip der Einsatztabelle — seine Fläche kommt aus
+ *            einem style-Attribut, seine GRÖSSE kam aus der Klasse. Ohne
+ *            Regel ist er 0 x 0, und die Zuordnung Einsatz -> Spurfarbe ist
+ *            weg.
+ *
+ * Jede dieser Klassen wird in ihrem Paket durch den Baustein ersetzt und
+ * wandert dann auf die Streichliste; dieser Block stirbt mit O11. Alles
+ * andere gilt unverändert: Eine WEITERE Klasse hier einzutragen hieße, das
+ * Redesign zurückzunehmen; ein <table> lesbar zu machen heißt es nicht.
  */
+/* Die Ausnahme: Alt-Meldungen in der Optik des Meldungs-Bausteins. Bewusst
+ * ohne Symbol — das Symbol kommt mit ui_meldung() im jeweiligen Paket. */
+.alert{
+  display:block;
+  padding:var(--abstand-3) var(--abstand-4);
+  border-radius:var(--radius);
+  margin-bottom:var(--abstand-4);
+  background:var(--rosa);color:var(--rot-tief);
+}
+.alert-info,.alert-ok{background:var(--blau-hell);color:var(--blau-tief)}
+.alert-warn{background:var(--orange-hell);color:var(--asphalt)}
+/* Das hidden-Attribut muss gegen das display:block gewinnen — JS blendet
+ * diese Behälter darüber ein und aus (#loaderror, #lockbanner). */
+.alert[hidden]{display:none}
+.muted{color:var(--gedaempft)}
+.swatch{
+  display:inline-block;width:var(--symbol);height:var(--symbol);
+  border-radius:var(--radius-klein);vertical-align:middle;
+}
 /* TABELLEN SCROLLEN WAAGERECHT STATT DIE SEITE ZU SPRENGEN.
  *
  * Der Befund zu P3 hat 32 Tabellen gezählt und genau EINE mit
@@ -1431,6 +1488,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
 }
 .uebersicht-winkel{color:var(--sand)}
+/* Blocküberschrift ÜBER einer Karte („Administration") — Mockup 07 zeigt sie
+ * als gesperrte Versalzeile außerhalb der Karte, nicht als Kartentitel. */
+.uebersicht-block{
+  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gedaempft);
+  margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1);
+}
 
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
  * stehen Formulare mit Feldgruppen, nicht zwei Zeilen. */

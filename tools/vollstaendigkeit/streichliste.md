@@ -38,3 +38,14 @@ im selben Paket hier ein, nicht später.
 | `setup-card` | Breitere Karte der Passwortvergabe → `.anmeldung-breit`. Die Klasse hatte im alten Stylesheet keine Regel (Bestandsfund F-P3-N). | O2 |
 | `btn-link` | Knopf des Einrichters → `.knopf`. Backlog Nr. 18: `.btn-link.danger` konnte nie greifen, weil `btn-link` nur in `install.php` vorkam und diese Seite `style.css` gar nicht lud. Seit O2 lädt sie es. | O2 |
 | `danger` | Zusatzklasse zu `btn-link`, siehe dort → `.knopf-gefahr`. | O2 |
+| `confirmbox` | Bestätigungsdialog aus `confirm.js` → Dialog-Baustein `.dialog`. O2-Umfang laut Konzept; in der ersten O2-Fassung übersehen, gefunden bei der Fable-Kontrolle (F-P3-S). | O2 |
+| `confirmtext` | Textzeile des Bestätigungsdialogs → `.dialog-inhalt`. | O2 |
+| `confirmbtns` | Knopfzeile des Bestätigungsdialogs → `.dialog-fuss`. | O2 |
+| `unlockbox` | Entsperrdialog aus `unlock.js` → `.dialog`. | O2 |
+| `unlocktitle` | Titel des Entsperrdialogs → `.dialog-kopf`. | O2 |
+| `unlocktext` | Erklärtext → `.dialog-inhalt`. | O2 |
+| `unlocklabel` | Passwortfeld → `.feld` mit `.feld-label` und `.feld-eingabe`. | O2 |
+| `unlockmsg` | Meldungszeile → Meldungs-Baustein (`.meldung meldung-info/-fehler`), ohne Symbol: Sie wechselt zwischen „Schlüssel wird abgeleitet …" und dem Fehler, und das sagt hier Farbe samt Text. | O2 |
+| `unlockbtns` | Knopfzeile → `.dialog-fuss`. | O2 |
+| `err` | Zusatzklasse der alten `unlockmsg` für den Fehlerfall → `meldung-fehler`. | O2 |
+| `imp-pw` | Passwortfeld der Archivabfrage im Import → `.feld-eingabe`; das `style="width:100%"` daneben ist mit dem Baustein entfallen. | O2 |

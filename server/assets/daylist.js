@@ -32,6 +32,21 @@
   var wurzel = document.querySelector('.leiste-liste');
   if (!wurzel) { return; }
 
+  /* Der Balken-Link (Jahres-/Monatsübersicht) steht IM <summary> — als Kind
+   * des <details> wäre er an zugeklappten Zeilen unsichtbar (F-P3-R). Ein
+   * Klick auf einen Link im <summary> löst aber BEIDES aus: Navigation und
+   * Auf-/Zuklappen. preventDefault unterbindet beides, danach wird von Hand
+   * navigiert. Mit gedrückter Strg-/Cmd-Taste oder Mittelklick bleibt der
+   * Browser zuständig (neuer Tab) — das <details> klappt dann eben mit, und
+   * das ist der kleinere Schaden. */
+  wurzel.addEventListener('click', function (ev) {
+    var link = ev.target.closest ? ev.target.closest('.akkordeon-uebersicht') : null;
+    if (!link) { return; }
+    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) { return; }
+    ev.preventDefault();
+    window.location.href = link.href;
+  });
+
   // Jahre: die Akkordeons unmittelbar unter der Liste.
   var jahre = Array.prototype.filter.call(wurzel.children, function (el) {
     return el.classList && el.classList.contains('akkordeon');

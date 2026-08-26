@@ -300,8 +300,9 @@ declare(strict_types=1);
  *   - DAS ZAHNRAD FUEHRT AUF EINE UEBERSICHT statt ungefragt auf „Profil".
  *   - EINE FUSSZEILE AUF JEDER SEITE, auch vor der Anmeldung, und ausserhalb
  *     von <main>. Sie fehlte bisher auf jeder Seite ohne Inhalt.
- *   - DIE ARTZEICHEN SIND KEINE EMOJI MEHR. 🚁 und 🚑 wurden je
- *     Betriebssystem anders gezeichnet; jetzt sind es Symbole aus dem Vorrat,
+ *   - DIE ARTZEICHEN SIND KEINE EMOJI MEHR. Die beiden Emoji fuer
+ *     Hubschrauber und Rettungswagen wurden je Betriebssystem anders
+ *     gezeichnet; jetzt sind es Symbole aus dem Vorrat,
  *     die sich mitfaerben. Wo kein Bild hineinpasst — in einer Auswahlliste —
  *     steht das WORT.
  *   - DER EINRICHTER BENUTZT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18). Er
@@ -310,5 +311,31 @@ declare(strict_types=1);
  *
  * Keine Migration. Verhalten, Endpunkte, Datenmodell und Feldkatalog sind
  * unveraendert; geaendert sind Huelle, Klassennamen und Markup der Huelle.
+ *
+ * 9.1.1 ist die NACHARBEIT DER FABLE-KONTROLLE zu O1/O2: Der Stand wurde
+ * Mockup fuer Mockup gegen die Screenshots gehalten und der Konzeptumfang
+ * gegen den Code. Neun Funde (F-P3-Q bis F-P3-Y, Konzept 9.2), alle behoben:
+ *
+ *   - Winkelrichtung im Akkordeon war falsch herum (zu = rechts, offen =
+ *     unten, wie in den Mockups — nicht offen = oben).
+ *   - Der Balken-Link zur Zeitraumuebersicht war an zugeklappten Zeilen
+ *     unsichtbar: Er lag ausserhalb des <summary>, und der Inhalt eines
+ *     geschlossenen <details> wird nicht gerendert. Jetzt steht er in der
+ *     Zeile; daylist.js faengt den Klick ab.
+ *   - confirm.js, unlock.js und die Archiv-Passwortabfrage des Imports
+ *     benutzen den Dialog-Baustein (.dialog, .knopf, .feld) — dieser Teil
+ *     des O2-Umfangs war schlicht vergessen. Jede Rueckfrage und der
+ *     Entsperrdialog erschienen unformatiert.
+ *   - Die Alt-Meldungsklassen (.alert-Familie), .muted und .swatch haben
+ *     eine begruendete Uebergangsregel: Eine Fehlermeldung, die aussieht wie
+ *     Fliesstext, warnt niemanden.
+ *   - "Einstellungen" als Rueckweg ueber jeder Unterseite (E-P3-11, mobil).
+ *   - Beim Oeffnen der Schublade traegt das X keinen ungebetenen Fokusring
+ *     mehr; der Fokus liegt auf der Leiste selbst.
+ *   - "Administration" steht als Blockueberschrift UEBER der Karte, wie im
+ *     Mockup — nicht als Kartentitel.
+ *   - Der Rueckweg der oeffentlichen Huelle ist auch unter 1024 px sichtbar.
+ *   - Leaflet zeichnete ueber die Schublade (interner z-index bis 1000);
+ *     die Karte hat jetzt ihren eigenen Stapelkontext.
  */
-const WEB_VERSION = '9.1.0';
+const WEB_VERSION = '9.1.1';

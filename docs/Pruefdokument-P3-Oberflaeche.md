@@ -2,7 +2,7 @@
 
 **Programm:** Gen-EM NAdoku · **Phase:** P3 · **Konzept:**
 `Konzept-P3-Oberflaeche.md` · **Zweig:** `claude/konzept-p3-umsetzen-c4zctj`
-**Stand:** 26.08.2026, nach Arbeitspaket **O2**
+**Stand:** 26.08.2026, nach Arbeitspaket **O2** und der Fable-Kontrolle (Web 9.1.1)
 
 ---
 
@@ -75,8 +75,9 @@ Sichtbare Folgen, die **kein Fehler** sind:
 
 - Tabellen scrollen auf schmalen Geräten waagerecht in ihrem eigenen Kasten,
   statt zur Kachel zu werden (O3, O8, O9).
-- Meldungen im Seiteninhalt tragen noch kein Symbol; nur die aus der Hülle
-  (Abbruchseite, Einrichter) tun es.
+- Meldungen im Seiteninhalt tragen noch **kein Symbol** — sie erscheinen
+  seit Web 9.1.1 in den Farben des Meldungs-Bausteins (Übergangsregel,
+  F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket.
 - Knöpfe im Seiteninhalt sind noch die alten `.btn-*`; sie erscheinen als
   Rohform aus der Übergangsschicht.
 - Auf der Tagesübersicht fehlen bei 360 px weiterhin Einsatzort und Diagnose —
@@ -127,6 +128,21 @@ nicht.
 | Kontraste | `tools/screenshots/kontrast.py` | 21 Paare, **0 verfehlt** |
 | Wortliste (R28) | `tools/wortliste/wortliste.py` | **0 / 0 / 0**; fünf neue Ausnahmen der Klasse *Homonym* |
 | Syntax | `php -l` über alle 57 PHP-Dateien, `node --check` | fehlerfrei |
+
+### 2.2a Nach der Fable-Kontrolle (Web 9.1.1)
+
+Neun Funde (F-P3-Q bis F-P3-Y im Konzept, 9.2), alle behoben; danach
+derselbe volle Lauf:
+
+| Was | Ergebnis |
+|---|---|
+| Bildaufnahme | 232 Bilder — **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** |
+| Werte außerhalb der Token | 0 / 0 / 0 / 0 / 0 |
+| Streichliste | **38 Einträge** mit Grund, davon 35 aus der Sollmenge des alten Stylesheets (drei — u. a. `imp-pw` — waren nur Markup-Klassen ohne eigene Regel) |
+| Dialoge im Browser | Bestätigungs- und Entsperrdialog bei 390 px fotografiert, gegen Mockup 11 gehalten |
+| Syntax | `php -l` über alle 57 PHP-Dateien, `node --check` — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -340,6 +356,26 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       `assets/style.css` nicht — der Pfad ist relativ und setzt voraus, dass
       `install.php` im selben Verzeichnis liegt wie die Anwendung.
 
+- [ ] **G-8 ⬤ Die beiden Dialoge.**
+      *Weg:* Abmelden anklicken (Rückfrage), und in einer **neuen**
+      Registerkarte einen Einsatz mit Diagnose öffnen (Entsperrdialog).
+      *Erwartet:* Beide erscheinen als Karte mit abgerundeten Ecken auf
+      abgedunkeltem Grund; die Knöpfe unten sind 44 px hoch, „Abbrechen"
+      leise, die Haupthandlung orange bzw. rot umrandet; im Entsperrdialog
+      wechselt die Meldungszeile zwischen blauem Hinweis („Schlüssel wird
+      abgeleitet …") und rosa Fehler.
+      *Fehlschlag heißt:* Erscheint ein nackter weißer Kasten, lädt der
+      Browser ein altes `confirm.js`/`unlock.js` aus dem Zwischenspeicher —
+      hart neu laden. Diese beiden Dialoge stehen in **keiner**
+      Screenshot-Seite; hier ist die Sichtprüfung der Beweis (dieselbe Lage
+      wie in P0, Prüfdokument D-5).
+- [ ] **G-9 ○ Balken-Link an zugeklappten Zeilen.**
+      *Weg:* In der Leiste bei einem **zugeklappten** Monat auf das
+      Balkensymbol rechts klicken.
+      *Erwartet:* Die Monatsübersicht öffnet sich, ohne dass die Zeile vorher
+      aufklappt.
+      *Fehlschlag heißt:* Fehlt das Symbol an zugeklappten Zeilen, ist der
+      Link wieder aus dem `<summary>` gerutscht (F-P3-R).
 - [ ] **E-2 ○ Die Einstellungs-Übersicht.**
       *Weg:* Zahnrad in der Kopfleiste.
       *Erwartet:* Eine Liste mit Symbol, Text und Winkel; für Admins ein

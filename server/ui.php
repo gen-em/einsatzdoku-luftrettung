@@ -330,7 +330,7 @@ function ui_kopf(array $o = []): void
 
     <nav class="kopf-punkte" aria-label="Hauptbereiche">
       <?php if ($zurueck !== null): ?>
-        <a class="kopf-punkt" href="<?= ui_e((string)$zurueck['href']) ?>">
+        <a class="kopf-punkt kopf-zurueck" href="<?= ui_e((string)$zurueck['href']) ?>">
           <?= ui_symbol('zurueck') ?><span><?= ui_e((string)$zurueck['text']) ?></span>
         </a>
       <?php elseif ($menue): ?>
@@ -385,7 +385,12 @@ function ui_geruest_start(array $o = []): void
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
 <div class="rahmen">
-  <aside class="leiste" id="leiste" aria-label="Bereichsmenü">
+  <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
+           die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
+           das X beim Öffnen einen Fokusring, den niemand bestellt hat
+           (F-P3-V). Per Tab ist die Leiste dadurch nicht erreichbar; ihre
+           Einträge sind es. */ ?>
+  <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
     <div class="leiste-kopf nur-schublade">
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>
@@ -407,6 +412,15 @@ function ui_geruest_start(array $o = []): void
     } elseif ($leiste === 'einstellungen') {
         ui_leiste_einstellungen((string)($o['menue'] ?? ''));
         ui_leiste_ende();
+        /* „‹ Einstellungen" über dem Titel jeder Unterseite (E-P3-11,
+         * Mockup 07). Nur unter 1024 px sichtbar — am Desktop steht das Menü
+         * daneben, und ein Rückweg auf eine Seite, die man sieht, wäre
+         * Rauschen. Auf der Übersicht selbst (menue = '') entfällt er. */
+        if ((string)($o['menue'] ?? '') !== '') {
+            echo '    <a class="rueckweg nur-schublade" href="einstellungen.php">'
+               . ui_symbol('winkel', 'symbol-links')
+               . "<span>Einstellungen</span></a>\n";
+        }
     } elseif ($leiste === '') {
         ui_leiste_ende();
     } else {
@@ -519,14 +533,19 @@ function ui_leiste_diensttage(?int $currentDayId): void
              Monatsvergleiche schlagen ab Oktober fehl. */
           $jahrS = (string)$jahr; ?>
         <details class="akkordeon" <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
+          <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
+                   wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
+                   eines geschlossenen <details> wird nicht gerendert
+                   (F-P3-R). daylist.js fängt den Klick ab, damit er nicht
+                   zusätzlich auf- und zuklappt. */ ?>
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
+            <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+               aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
+              <?= ui_symbol('balken') ?>
+            </a>
           </summary>
-          <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
-             aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
-            <?= ui_symbol('balken') ?>
-          </a>
           <div class="akkordeon-inhalt">
           <?php foreach ($monate as $monat => $monatsTage):
               $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
@@ -535,11 +554,11 @@ function ui_leiste_diensttage(?int $currentDayId): void
               <summary class="akkordeon-zeile">
                 <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
                 <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
+                <a class="akkordeon-uebersicht"
+                   href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                   aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
+                   title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
               </summary>
-              <a class="akkordeon-uebersicht"
-                 href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
-                 aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
-                 title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
               <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
                   $kind = $t['kind'] === null ? null : (string)$t['kind'];
@@ -690,7 +709,13 @@ function ui_einstellungen_uebersicht(): void
     ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => '']);
     ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
     foreach ($bloecke as [$titel, $punkte]) {
-        ui_karte_start($titel !== '' ? ['titel' => $titel] : []);
+        /* Die Blocküberschrift steht ÜBER der Karte, nicht in ihr — Mockup 07
+         * zeigt „ADMINISTRATION" als gesperrte Versalzeile außerhalb
+         * (Fable-Kontrolle, F-P3-W). */
+        if ($titel !== '') {
+            echo '  <h2 class="uebersicht-block">' . ui_e($titel) . "</h2>\n";
+        }
+        ui_karte_start([]);
         foreach ($punkte as [$href, $text, $sym]) {
             echo '    <a class="uebersicht-zeile" href="' . ui_e($href) . '">'
                . ui_symbol($sym, 'symbol-gross')

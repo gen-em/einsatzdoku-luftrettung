@@ -11,6 +11,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.1.1] — 2026-08-26
+
+**Die Fable-Kontrolle zu O1/O2 — neun Funde, alle behoben.** Nach dem Halt
+am Ende von O2 wurde der Stand Mockup für Mockup gegen die Screenshots
+gehalten und der Konzeptumfang gegen den Code. Anlass war der berechtigte
+Einwand, das Ergebnis sehe nicht aus wie die Mockups. Die Antwort ist
+zweigeteilt: Der größte Teil des Unterschieds ist **Inhalt der Pakete O3 bis
+O11** — Titelzeilen, Karten, Kacheln und Kartenbild der Mockups 02/03 sind
+noch nicht gebaut, und der Halt nach O2 zeigt absichtlich die neue Hülle um
+alte Inhalte. Aber neun Punkte waren echte Mängel an O1/O2 (F-P3-Q bis
+F-P3-Y im Konzept, Abschnitt 9.2). **Keine Migration.**
+
+### Web — Was falsch war und jetzt stimmt
+
+- **Die Winkel zeigten in die falsche Richtung.** Zugeklappt heißt in den
+  Mockups „›", offen „⌄". Gebaut war die umgekehrte Konvention (offen = oben).
+- **Der Weg in die Jahres- und Monatsübersicht war an zugeklappten Zeilen
+  unsichtbar.** Der Balken-Link lag als Kind des `<details>` außerhalb des
+  `<summary>` — und der Inhalt eines geschlossenen `<details>` wird nicht
+  gerendert. Mockup 06 zeigt ihn an jeder Zeile. Er steht jetzt in der Zeile
+  selbst; `daylist.js` fängt den Klick ab, damit er nicht zusätzlich auf- und
+  zuklappt.
+- **Der O2-Umfang „confirm.js und unlock.js auf `.dialog`" war schlicht
+  vergessen.** Jede Rückfrage — auch das Abmelden — und der Entsperrdialog
+  erschienen als unformatierte Kästen mit Klassen, für die es keine Regel
+  mehr gab. Beide benutzen jetzt den Dialog-Baustein, ebenso die
+  Archiv-Passwortabfrage des Imports (deren `style="width:100%"` dabei
+  entfiel). Im Browser belegt: Bestätigungs- und Entsperrdialog erscheinen
+  als Karte mit Fußzeile aus 44-px-Knöpfen.
+- **Alt-Meldungen sahen aus wie Fließtext.** Die Meldung „2 neue Geräte
+  wurden mit deinem Konto verbunden" und der Sperrhinweis der Suche standen
+  ohne jede Auszeichnung da — eine Fehlermeldung, die aussieht wie Text,
+  warnt niemanden. Die Übergangsschicht führt jetzt **eine eng begründete
+  Klassen-Ausnahme**: die `.alert`-Familie in der Optik des
+  Meldungs-Bausteins (ohne Symbol — das kommt mit `ui_meldung()` im
+  jeweiligen Paket), `.muted` und der Farbchip `.swatch`, ohne den die
+  Zuordnung Einsatz → Spurfarbe verloren war. Jede dieser Klassen stirbt in
+  ihrem Paket.
+- **„‹ Einstellungen" über den Unterseiten fehlte** (E-P3-11, Mockup 07). Es
+  steht jetzt dort, sichtbar nur unter 1024 px — am Desktop steht das Menü
+  daneben.
+- **Das X der Schublade trug beim Öffnen einen Fokusring**, den niemand
+  bestellt hat. Der Fokus liegt jetzt auf der Leiste selbst
+  (`tabindex="-1"`); wer per Tab weitergeht, landet trotzdem als Erstes auf
+  dem X.
+- **„Administration" stand als Kartentitel statt als Blocküberschrift** über
+  der zweiten Karte (Mockup 07).
+- **Der Rückweg der öffentlichen Hülle war unter 1024 px unsichtbar** —
+  `.kopf-punkt` ist mobil ausgeblendet, und der Rückweg der Abbruchseite
+  hing daran.
+- **Leaflet zeichnete über die Schublade.** Die Karte vergibt intern
+  z-Indizes bis 1000; Zoomknöpfe und Kartenpin standen mitten im offenen
+  Menü. Die Karte hat jetzt ihren eigenen Stapelkontext
+  (`position:relative; z-index:0`) — kein Wettrüsten der z-Indizes.
+
+Dazu Feinschliff: Der Hover der Kopfleisten-Knöpfe benutzt die gedämpfte
+Weißfläche statt eines hellen Blocks auf Dunkelblau.
+
+### Prüfstand
+
+232 Bilder über 29 Seiten und acht Breiten: **0 Überlauf, 0 Konsolenfehler,
+0 Knöpfe außerhalb der 44 px**. Kontraste 21 Paare, 0 verfehlt. Wortliste
+0 / 0 / 0. `php -l` über alle 57 PHP-Dateien und `node --check` fehlerfrei.
+Beide Dialoge im Browser bei 390 px fotografiert und gegen Mockup 11
+gehalten. Die Streichliste wächst um elf Einträge (Dialog- und
+Entsperrklassen samt Begründung).
+
 ## [Web 9.1.0] — 2026-08-26
 
 **Die Oberfläche hat wieder eine Gestalt.** Zweites Arbeitspaket der Phase P3

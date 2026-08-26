@@ -1348,6 +1348,15 @@ und O11.
 | F-P3-N | **22 Klassen stehen im Markup, für die es keine Regel gibt** (Bestandsfund, Stand Web 8.0.1): `card`, `crewrole`, `dreiwert`, `fld`, `focus-target`, `mainnav`, `nb-veh`, `parentcheck`, `rollehaken`, `rollen-zeile`, `setup-card`, `small`, `vehcaps`, `vehcaps-zeile` und die `imp-*`-Familie. | Sie tun nichts — aber sie sehen aus, als täten sie etwas, und beim nächsten Umbau richtet sich jemand danach. Werden in den Paketen mitgenommen, die die jeweilige Seite anfassen; die Vollständigkeitsprüfung meldet sie bis dahin. |
 | F-P3-O | **B-P3-13 nennt „13 `style=`-Attribute in PHP/JS", die eigene Aufzählung derselben Zeile summiert auf 14** (`einstellungen` 4, `pw_handling` 4, `import` 2, je 1 in `admin_users`, `index`, `login`, `import_ui.js`). Gemessen: 14. | Nur eine Zahl im Befund. Sollwert bleibt 0; die 14 verteilen sich auf O2, O8 und O10. |
 | F-P3-P | **`klassen.py` taugt nicht als Sollmenge.** O1 Schritt 1 sieht vor, die Klassenliste damit zu sichern („das ist die Sollmenge der Vollständigkeitsprüfung"). Das Werkzeug zählt jedoch **jedes Wort** im Quelltext als möglichen Klassennamen und meldet 14 784 — richtig für die Kaskadenfrage, unbrauchbar hier. Der Konzeptvorbehalt „das Werkzeug kann scheitern" ist eingetreten. | O1. Sollmenge ist stattdessen die rauschfreie Menge aus den **Selektoren** des alten Stylesheets: **220 Klassen** (`tools/vollstaendigkeit/vorher-klassen.txt`). Die Markupseite läuft als Gegenprobe mit und trennt dabei belegte Literale von geratenen Namen. |
+| F-P3-Q | **Winkelrichtung im Akkordeon falsch herum** (Fable-Kontrolle nach O2). Die Mockups 01/03/06 zeigen: zugeklappt „›", offen „⌄". Gebaut war offen = oben. | O2-Nacharbeit (Web 9.1.1). Zugeklappt wird der Winkel nach rechts gedreht, offen steht er in Ruhelage; gilt auch für zugeklappte Karten. |
+| F-P3-R | **Der Balken-Link zur Zeitraumübersicht war an zugeklappten Zeilen unsichtbar.** Er lag als Kind des `<details>` außerhalb des `<summary>` — der Inhalt eines geschlossenen `<details>` wird nicht gerendert. Mockup 06 zeigt ihn an jeder Zeile. | O2-Nacharbeit. Link in die Zeile (`<summary>`); `daylist.js` fängt den Klick ab und navigiert, sonst klappte er zusätzlich auf und zu. Mit Strg/Cmd bleibt der Browser zuständig (neuer Tab). |
+| F-P3-S | **O2-Umfang nicht erfüllt: `confirm.js` und `unlock.js` waren nicht auf `.dialog`.** Der Umfang nennt es ausdrücklich; jede Rückfrage (auch Abmelden) und der Entsperrdialog erschienen unformatiert. | O2-Nacharbeit. Beide auf den Dialog-Baustein (`.dialog`, `.knopf`, `.feld`, `.meldung`), ebenso die Archiv-Passwortabfrage in `import_ui.js` (ihr `style="width:100%"` entfiel dabei). Elf Klassen auf die Streichliste. Im Browser bei 390 px belegt. |
+| F-P3-T | **Alt-Meldungen erschienen als Fließtext.** Die `.alert`-Familie, `.muted` und `.swatch` hatten keine Regel mehr; die Gerätemeldung der Startseite und der Sperrhinweis der Suche standen nackt da, der Farbchip der Einsatztabelle war 0 × 0. | O2-Nacharbeit. **Eine** eng begründete Klassen-Ausnahme in der Übergangsschicht: Eine Fehlermeldung, die aussieht wie Text, warnt niemanden; `.muted` trägt den Unterschied zwischen Auskunft und Nebenbemerkung; ohne `.swatch` ist die Zuordnung Einsatz → Spurfarbe weg. Jede der Klassen stirbt in ihrem Paket. |
+| F-P3-U | **„‹ Einstellungen" über den Unterseiten fehlte** (E-P3-11, Mockup 07). | O2-Nacharbeit. `ui_geruest_start()` gibt ihn bei Einstellungs-Leiste mit gewähltem Menüpunkt aus; sichtbar nur unter 1024 px. |
+| F-P3-V | **Fokusring auf dem X beim Öffnen der Schublade.** `schublade.js` fokussierte das erste Bedienelement. | O2-Nacharbeit. Fokus auf die Leiste selbst (`tabindex="-1"`); per Tab ist das X trotzdem das Erste. |
+| F-P3-W | **„Administration" stand als Kartentitel statt als Blocküberschrift** (Mockup 07: gesperrte Versalzeile über der Karte). | O2-Nacharbeit. Blocküberschrift `.uebersicht-block` über der Karte. |
+| F-P3-X | **Der Rückweg der öffentlichen Hülle war unter 1024 px unsichtbar** — `.kopf-punkt` ist mobil ausgeblendet; die Abbruchseite hatte mobil keinen Kopf-Rückweg. | O2-Nacharbeit. Eigene Klasse `.kopf-zurueck`, in jeder Breite sichtbar. |
+| F-P3-Y | **Leaflet zeichnete über die Schublade.** Die Karte vergibt intern z-Indizes bis 1000; Zoomknöpfe und Pin standen mitten im offenen Menü. | O2-Nacharbeit. `.geo` bildet einen eigenen Stapelkontext (`position:relative; z-index:0`) — die inneren Werte bleiben in der Karte eingesperrt, kein Wettrüsten der z-Indizes. |
 
 ---
 
@@ -1401,7 +1410,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | Paket | Stand | Version |
 |---|---|---|
 | O1 Grundlage | **erledigt** | Web 9.0.0 |
-| O2 Seitenhülle und Bausteine | **erledigt** | Web 9.1.0 |
+| O2 Seitenhülle und Bausteine | **erledigt**, Nacharbeit nach Fable-Kontrolle | Web 9.1.1 |
 | O3 Startseite und Karte | offen | |
 | O4 Einsatzansicht | offen | |
 | O5 Einsatzformular | offen | |
@@ -1656,6 +1665,30 @@ Strich, Leiste mit Akkordeon und Fuß. Schublade bei 390 px gegen Mockup 01 —
 der Symbolverweis bleibt nur in Chromium belegt (Prüfdokument P-1). Dazu neu:
 Der Fokusfang der Schublade und das Verhalten der Speichern-Leiste bei
 eingeblendeter Bildschirmtastatur sind nur am Gerät zu prüfen.
+
+#### Nacharbeit nach der Fable-Kontrolle (Web 9.1.1)
+
+Nach dem Halt am Ende von O2 wurde der Stand auf ausdrücklichen Wunsch von
+Fable kontrolliert: Mockup für Mockup gegen die Screenshots, Konzeptumfang
+gegen den Code. **Neun Funde (F-P3-Q bis F-P3-Y, Abschnitt 9.2), alle
+behoben.** Die gewichtigsten: Der O2-Umfang „`confirm.js` und `unlock.js`
+auf `.dialog`" war schlicht vergessen — jede Rückfrage erschien
+unformatiert; der Balken-Link zur Zeitraumübersicht war an zugeklappten
+Zeilen unsichtbar und unerreichbar; die Winkel zeigten in die falsche
+Richtung; Leaflet zeichnete über die Schublade; und Alt-Meldungen sahen aus
+wie Fließtext, wofür die Übergangsschicht jetzt **eine** eng begründete
+Klassen-Ausnahme führt (`.alert`-Familie, `.muted`, `.swatch`).
+
+Die Kontrolle hat zugleich die Einordnung geschärft, die zum Eindruck
+„sieht nicht aus wie die Mockups" gehört: Titelzeile, Karten, Kachel und
+Kartenbild der Mockups 02/03 sind **Inhalt der Pakete O3 bis O11** und zu
+diesem Zeitpunkt absichtlich nicht gebaut. Der Halt nach O2 zeigt die neue
+Hülle um alte Inhalte.
+
+Prüfstand nach der Nacharbeit: 232 Bilder — 0 Überlauf, 0 Konsolenfehler,
+0 Knöpfe ≠ 44 px; Kontraste 21 Paare, 0 verfehlt; Wortliste 0/0/0; Syntax
+fehlerfrei. Beide Dialoge im Browser bei 390 px fotografiert und gegen
+Mockup 11 gehalten; Schublade mit Karte darunter erneut fotografiert.
 
 ---
 

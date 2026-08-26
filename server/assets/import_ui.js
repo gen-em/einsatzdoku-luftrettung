@@ -89,19 +89,22 @@
     function passwortAbfragen(text) {
         return new Promise(function (aufloesen) {
             var d = document.createElement('dialog');
-            d.className = 'confirmbox';
+            /* Dialog-Baustein aus P3/O2 — dieselben Klassen wie in confirm.js
+             * und ui.php (Stylesheet-Abschnitt 15). Das style-Attribut am
+             * Feld ist mit dem Baustein .feld-eingabe entfallen. */
+            d.className = 'dialog';
             d.innerHTML =
-                '<p class="confirmtext"></p>' +
-                '<p><input type="password" class="imp-pw" autocomplete="off" ' +
-                'style="width:100%"></p>' +
-                '<div class="confirmbtns">' +
-                '<button type="button" data-w="ab" class="btn-plain">Abbrechen</button>' +
-                '<button type="button" data-w="ok" class="btn-primary">Öffnen</button>' +
+                '<div class="dialog-inhalt"><p data-text></p>' +
+                '<div class="feld"><input type="password" class="feld-eingabe" ' +
+                'autocomplete="off"></div></div>' +
+                '<div class="dialog-fuss">' +
+                '<button type="button" data-w="ab" class="knopf knopf-leise">Abbrechen</button>' +
+                '<button type="button" data-w="ok" class="knopf knopf-primaer">Öffnen</button>' +
                 '</div>';
-            d.querySelector('.confirmtext').textContent = text;
+            d.querySelector('[data-text]').textContent = text;
             document.body.appendChild(d);
 
-            var feld = d.querySelector('.imp-pw');
+            var feld = d.querySelector('input');
             function fertig(wert) {
                 d.close();
                 d.remove();
