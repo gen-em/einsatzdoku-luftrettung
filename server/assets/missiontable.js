@@ -108,9 +108,9 @@ const EdMissionTable = (() => {
    * P9). Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
    * Notloesung, nicht die Quelle. */
   const ART_FALLBACK = {
-    air:    { zeichen: '🚁', text: 'luftgebunden' },
-    ground: { zeichen: '🚑', text: 'bodengebunden' },
-    '':     { zeichen: '◌',  text: 'ohne Zuordnung' }
+    air:    { symbol: 'hubschrauber',   text: 'luftgebunden' },
+    ground: { symbol: 'fahrzeug',       text: 'bodengebunden' },
+    '':     { symbol: 'ohne-zuordnung', text: 'ohne Zuordnung' }
   };
   function artSymbol(kind) {
     const alle = (typeof ART_SYMBOLE !== 'undefined' && ART_SYMBOLE) ? ART_SYMBOLE : ART_FALLBACK;
@@ -146,8 +146,13 @@ const EdMissionTable = (() => {
       wert: m => m.kind || '',
       zelle: m => {
         const s = artSymbol(m.kind);
-        return `<td class="c-art"><span class="artzeichen" title="${esc(s.text)}"`
-             + ` aria-label="${esc(s.text)}">${esc(s.zeichen)}</span></td>`;
+        /* Seit P3/O2 kommt das Zeichen aus dem Symbolvorrat statt als Emoji
+           (E-P3-18). edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
+           in PHP; faellt assets/symbol.js aus, bleibt das Wort. */
+        const zeichen = (typeof edSymbol === 'function')
+          ? edSymbol(s.symbol, 'artzeichen', s.text)
+          : `<span class="artzeichen">${esc(s.text)}</span>`;
+        return `<td class="c-art">${zeichen}</td>`;
       } },
     { key: 'day',   kopf: 'Datum',                 thClass: 'c-date',
       wert: m => m.day,

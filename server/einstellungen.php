@@ -9,9 +9,24 @@ require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), 
  * darf nicht an einem zufaelligen Umweg haengen. */
 require_once __DIR__ . '/trash_lib.php';
 
+/* OHNE `t` DIE ÜBERSICHT (E-P3-11, P3/O2).
+ *
+ * Das Zahnrad in der Kopfleiste führt seit P3 nicht mehr direkt auf den
+ * Reiter „Profil", sondern auf diese Seite ohne Parameter. Auf dem Handy gibt
+ * es keine sichtbare Leiste — ohne eine Übersicht käme man dort nur über die
+ * Schublade an die übrigen Punkte, und ein Menüpunkt, der ungefragt auf einem
+ * beliebigen Unterpunkt landet, sagt nichts darüber, was es sonst noch gibt.
+ *
+ * Am Desktop steht die Leiste daneben; die Übersicht ist dort die
+ * Eingangsseite des Bereichs. */
+if (!isset($_GET['t'])) {
+    ui_einstellungen_uebersicht();
+    exit;
+}
+
 $tab = $_GET['t'] ?? 'profil';
 /* „stammdaten" war bis Web 6.3.0 der Reiter, der alles trug. Er ist in zwei
- * zerlegt (siehe ui_settings_sidebar) — der alte Name bleibt als WEICHE
+ * zerlegt (siehe ui_leiste_einstellungen) — der alte Name bleibt als WEICHE
  * stehen: Er steht in Lesezeichen, in verschickten Links und in älteren
  * Fassungen der Dokumentation. Ein „Seite nicht gefunden" dafür wäre der
  * schlechteste Umgang mit einer Umbenennung. */
@@ -696,13 +711,9 @@ if ($tab === 'geraete') {
     }
 }
 ui_seite_start(['titel' => 'Einstellungen']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar($tab); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => $tab]); ?>
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if ($tab === 'profil'): ?>
@@ -1212,8 +1223,7 @@ ui_topbar('einstellungen');
                   $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
                                        $vehCaps[$vid] ?? []); ?>
               <tr>
-                <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                          aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                <td><?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
                   <?= e($v['name']) ?>
                   <?php /* DIE ART STEHT NICHT MEHR AUSGESCHRIEBEN DARUNTER
                            (Web 7.0.0). Das Symbol davor sagt sie bereits, und es
@@ -2366,7 +2376,5 @@ ui_topbar('einstellungen');
   })();
   </script>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

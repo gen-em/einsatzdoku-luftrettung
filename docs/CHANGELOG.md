@@ -11,6 +11,121 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.1.0] — 2026-08-26
+
+**Die Oberfläche hat wieder eine Gestalt.** Zweites Arbeitspaket der Phase P3
+(O2): Seitenhülle und Bausteine. Ab hier sieht die Anwendung aus wie das, was
+sie werden soll; die Seiteninhalte folgen Paket für Paket (O3 bis O11).
+**Keine Migration.** Verhalten, Endpunkte, Datenmodell und Feldkatalog sind
+unverändert.
+
+### Web — Ein Menü statt einer Leiste, die den Bildschirm frisst
+
+Der Befund zu P3 hat es bei 360 × 780 gemessen: Die Seitenleiste trug
+`position:sticky; height:calc(100vh − 50px); overflow:hidden`. Der erste
+Bildschirm war vollständig Leiste — mit rund 60 % Leerfläche —, Titel, Karte
+und Tabelle folgten erst nach etwa anderthalb Bildschirmen Scrollen, und die
+Tagesliste lief rechts aus dem Bild: Der dritte Tag eines Monats war nicht
+erreichbar.
+
+Das galt für **alle zwanzig Inhaltsseiten**, denn das Einstellungsmenü trug
+buchstäblich dieselbe Klasse und erbte jede ihrer Regeln.
+
+Jetzt gibt es **eine** Leiste im Markup und zwei Formen im Stylesheet: Unter
+1024 px liegt sie als Schublade von links über dem Inhalt, darüber steht sie
+fest daneben. Geöffnet wird sie über den Menüknopf in der Kopfleiste,
+geschlossen über das ×, die abgedunkelte Fläche oder die Esc-Taste; solange sie
+offen ist, bleibt der Tastaturfokus darin.
+
+Dass der Mechanismus an der **Klasse** hängt und nicht an der Funktion, die die
+Diensttage ausgibt, ist kein Zufall: Genau davor warnt die Vormerkliste aus
+Konzept P0 — sonst bliebe die Suchseite als einzige ohne mobiles Menü, weil sie
+ihre Filterleiste selbst hält. Sie benutzt jetzt dieselbe Leiste wie alle
+anderen Seiten.
+
+### Web — Was sich sonst noch ändert
+
+- **Die ganze Zeile klappt** das Akkordeon der Diensttage. Bis Web 8.0.1 war
+  der Text der Link in die Zeitraumübersicht und nur das Dreieck davor der
+  Schalter — mit dem Finger war beides nicht auseinanderzuhalten. Der Weg in
+  die Übersicht ist jetzt ein eigenes Balkensymbol am rechten Rand derselben
+  Zeile, mit eigener Trefferfläche von 44 px.
+- **Das Zahnrad führt auf eine Übersicht** statt ungefragt auf „Profil". Auf
+  dem Handy war der Menüpunkt sonst eine Sackgasse: Er landete auf einem
+  beliebigen Unterpunkt und verschwieg die übrigen elf.
+- **Eine Fußzeile auf jeder Seite**, auch vor der Anmeldung, und außerhalb von
+  `<main>`. Sie stand bisher mitten im Inhalt und fehlte deshalb auf jeder
+  Seite ohne Inhalt. Verweise auf Impressum und Datenschutz erscheinen, sobald
+  es die Seiten gibt (O10) — ein Verweis ins Leere ist schlimmer als keiner.
+- **Der Demo-Hinweis steht im Inhalt**, nicht mehr zwischen Kopfleiste und
+  Gerüst. Vorher verschob er die klebende Leiste um seine eigene Höhe, und im
+  Demo-Konto rutschte sie unter der Kopfleiste hervor (F-P3-G).
+- **Die Artzeichen sind keine Emoji mehr.** 🚁 und 🚑 wurden je Betriebssystem
+  in anderer Zeichnung, Farbe und Größe gerendert und ließen sich weder färben
+  noch auf Kontrast prüfen — und in Tagesleiste, Tabellen und
+  Rettungsmittel-Auswahl waren sie die einzige Artauskunft neben dem Tooltip.
+  Jetzt kommen sie aus dem Symbolvorrat. Wo kein Bild hineinpasst — in einer
+  Auswahlliste —, steht das **Wort**. Von 80 Emoji-Vorkommen sind 9 übrig, alle
+  in der Einsatzansicht (O4).
+- **Der Einrichter benutzt das gemeinsame Stylesheet** (Backlog Nr. 18). Er war
+  die einzige Seite mit eigener Gestaltung im Kopf, eigenen Knopf- und
+  Meldungsklassen und ohne Fußzeile — und die einzige, die bei einer
+  Farbänderung nicht mitzog.
+- **Meldungen tragen ein Symbol** und kommen in vier Tönen: Fehler (rosa,
+  Dreieck), Hinweis (blau, Kreis-i), Vollzug (blau, **Haken**), Warnung
+  (hellorange, Dreieck). Grün ist fort; Vollzug und Hinweis unterscheiden sich
+  jetzt durch das Symbol statt durch eine markenfremde Farbe. Damit ist der
+  Vorbehalt E-A6-02 aus Konzept P0 eingelöst, der die Tonart ausdrücklich P3
+  überlassen hatte.
+
+### Web — Die Bausteine
+
+`ui.php` führt sie als Funktionen: Kopfleiste, Gerüst, Leiste (drei Inhalte),
+Fußzeile, Demo-Hinweis, Meldung, Knopf, Plakette, Karte, Zeile, Titelzeile,
+Aktionsmenü, Feld, Schalter, Segmentwahl, Speichern-Leiste, Kennzahl,
+Abbruchseite, Einstellungs-Übersicht. Das Stylesheet beschreibt sie in den
+Abschnitten 4 bis 16, die vier Schwellen stehen gesammelt in Abschnitt 18.
+
+**Eine Knopfhöhe: 44 px**, mobil wie Desktop, auch für Zeilenaktionen. Der
+Bestand hatte sechs Varianten und sechs ortsgebundene Größen; `.btn-primary`
+trug global `width:100%` und wurde an zehn Stellen zurückgenommen. Gemessen
+über alle 232 Bilder: **0 Knöpfe außerhalb der 44 px**.
+
+**Eine Übergangsschicht** (Stylesheet, Abschnitt 17) gibt Elementen ohne
+Baustein — `table`, `input`, `label`, `fieldset` — eine Grundform, damit die
+noch nicht umgebauten Seiten lesbar und prüfbar bleiben. Sie greift nur an
+Elementnamen, nie an Bestandsklassen; eine Klasse dort einzutragen hieße, das
+Redesign zurückzunehmen.
+
+### Web — Kein waagerechter Überlauf mehr, auf keiner Seite
+
+Der Erstlauf gegen den Rohstand hatte **26 Fälle** gemeldet, alle zwischen 360
+und 420 px. Nach O2 sind es **0** — bei 232 Bildern über 29 Seiten und acht
+Breiten.
+
+Die Messung nennt seit diesem Paket auch den **Verursacher**, und das war die
+eigentliche Auskunft: In jedem einzelnen Fall war es eine `<table>` im
+Seiteninhalt, keine Stelle des Gerüsts. Der Befund hatte 32 Tabellen gezählt
+und genau eine mit Überlaufbehälter. Bis die Einsatztabellen unter 720 px zur
+Kachel werden (O3) und die Verwaltungstabellen zu Zeilen stapeln (O8/O9),
+tragen sie ihren Überlauf selbst, statt die Seite zu sprengen — mitsamt der
+Kopfleiste.
+
+### Repositorium
+
+`tools/screenshots/` misst jetzt zusätzlich, **welches Element** überläuft, und
+misst Knopfhöhen nur noch an sichtbaren Knöpfen. Beides sind Funde aus dem
+eigenen Lauf: Der erste Bericht meldete Dutzende Knöpfe mit „Höhe 0" — den
+X-Knopf der Schublade, der ab 1024 px ausgeblendet ist, und die Einträge in
+einem geschlossenen Aktionsblatt.
+
+`tools/vollstaendigkeit/` trennt Emoji und Unicode-Symbole sauber; vorher
+zählte ⚠ in beiden Listen. Die Streichliste führt die **25 Klassen**, die mit
+der Hülle entfallen sind, je mit Grund.
+
+Handbuch 3 (Web-Überblick) und 4.4 (Diensttage-Leiste) sind nachgezogen,
+`docs/Technik.md` ebenso.
+
 ## [Web 9.0.0] — 2026-08-26
 
 **Die Weboberfläche wird neu gebaut, mobil zuerst — das hier ist das

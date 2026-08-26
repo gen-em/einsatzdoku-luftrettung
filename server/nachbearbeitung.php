@@ -145,11 +145,8 @@ if (ist_admin()) {
 }
 $nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
 ui_seite_start(['titel' => 'Zuordnung nachtragen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
     <h1>Zuordnung nachtragen</h1>
     <?php ui_meldung($notice, $error, 'ok', '    '); ?>
 
@@ -198,8 +195,7 @@ ui_topbar('uebersicht');
         <?php foreach ($offeneTage as $t): $tid = (int)$t['id'];
               $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']); ?>
           <tr>
-            <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                      aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+            <td><?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
               <a href="index.php?d=<?= $tid ?>"><?= e(dt_lesbar($t, true)) ?></a></td>
             <td class="mono"><?= $t['started_at'] !== null ? e(fmt_local((string)$t['started_at'])) : '–' ?>
               – <?= $t['ended_at'] !== null ? e(fmt_local((string)$t['ended_at'])) : '–' ?></td>
@@ -226,7 +222,7 @@ ui_topbar('uebersicht');
                   <?php foreach ($SD_VEHICLES as $v): $vs = dt_art_symbol((string)$v['kind']); ?>
                     <option value="<?= (int)$v['id'] ?>" data-base="<?= (int)($v['base_id'] ?? 0) ?>"
                             <?= (int)($t['vehicle_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>>
-                      <?= e($vs['zeichen']) ?> <?= e($v['name']) ?><?php
+                      <?= e($v['name']) ?><?php
                         echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
                   <?php endforeach; ?>
                 </select>
@@ -340,10 +336,8 @@ ui_topbar('uebersicht');
     <?php endif; ?>
 
     <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
-<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+<?php ui_geruest_ende(); ?>
+<?php /* confirm.js kommt aus ui_geruest_ende() (ui.php) — eine zweite Einbindung
          haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines

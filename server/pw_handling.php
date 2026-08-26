@@ -203,12 +203,13 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start([
     'titel'  => $erstvergabe ? 'Passwort festlegen' : 'Neues Passwort',
-    'klasse' => 'login-body',
+    'klasse' => 'anmeldung-body',
 ]);
 ?>
 <div class="login-wrap">
-<main class="login-card setup-card">
-  <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="login-logo">
+<main class="anmeldung">
+ <div class="anmeldung-karte anmeldung-breit">
+  <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="anmeldung-logo">
 
   <?php if ($done): ?>
     <h1>Fertig</h1>
@@ -318,11 +319,9 @@ ui_seite_start([
       <p class="muted small" id="state" style="min-height:1.2em"></p>
     </form>
   <?php endif; ?>
+ </div>
 </main>
-<footer class="sitefooter">© Gen-EM – OpenSource Software –
-  <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE"
-     target="_blank" rel="noopener">AGPL-3.0</a></footer>
-</div>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 
 <?php if ($row && !$done): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>

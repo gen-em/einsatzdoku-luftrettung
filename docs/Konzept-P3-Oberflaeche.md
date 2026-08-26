@@ -1288,12 +1288,12 @@ Umsetzung füllen.
 |---|---|---|---|
 | P-P3-01 | Vollständigkeitsprüfung gegen den **Vorher-Stand** (O1) | Klassenliste gesichert; alle alten Klassen „ohne Gegenstück" — das Werkzeug kann scheitern | **erledigt.** `klassen.py` ist gescheitert (14 784 statt 220, F-P3-P); Sollmenge jetzt **220 Klassen** aus den Selektoren. Erstlauf protokolliert: 78 Hexwerte, 71 Schriftgrößen, 154 Pixelmaße, 5 × `50px`, 14 `style=`, 5 Inline-SVG, 147 Unicode-Symbole, 80 Emoji. |
 | P-P3-02 | Vollständigkeitsprüfung gegen den **Endstand** | 0 ohne Gegenstück, 0 Hexwerte außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 `50px`, Streichliste vollständig | |
-| P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | |
-| P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | |
-| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
-| P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | |
-| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | |
-| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. |
+| P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | **nach O2:** Inline-SVG **3** (vorher 5) · Unicode **159** · Emoji **9** (vorher 80) · fehlende Dateien **0** · Dateien ohne Anker **0**. Rest verteilt auf O3 bis O11. |
+| P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O2 erfüllt: 0 Abweichungen** über 232 Bilder. Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. |
+| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
+| P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | **nach O2: 0 Überlauf** auf allen 29 Seiten in allen acht Breiten (vorher 26). Ort und Diagnose bei 360 px sind noch **offen** — das ist die Kachel aus E-P3-32 und gehört zu O3. |
+| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. 29 Seiten × 8 = 232 Bilder** (die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
+| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
 | P-P3-11 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärt, Sollstand nach S1 (286 739 Einzelvergleiche, 16 erwartet) | |
@@ -1305,7 +1305,7 @@ Umsetzung füllen.
 | P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | |
 | P-P3-18 | Logo-Wahl (O8) | Kopfleiste und Favicon wechseln gemeinsam; „wechselnd" stabil je Sitzung | |
 | P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | |
-| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O1: fehlerfrei** (`php -l`, `node --check`). |
+| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien, `node --check` über die geänderten Skripte). |
 
 ---
 
@@ -1401,7 +1401,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | Paket | Stand | Version |
 |---|---|---|
 | O1 Grundlage | **erledigt** | Web 9.0.0 |
-| O2 Seitenhülle und Bausteine | offen | |
+| O2 Seitenhülle und Bausteine | **erledigt** | Web 9.1.0 |
 | O3 Startseite und Karte | offen | |
 | O4 Einsatzansicht | offen | |
 | O5 Einsatzformular | offen | |
@@ -1550,6 +1550,112 @@ WebKit (Safari, iOS) und Gecko (Firefox) stehen nicht zur Verfügung. Was
 davon berührt ist, steht im Prüfdokument an erster Stelle.
 
 *(300-Konten-Bestand für O9: entsteht in O9)*
+
+---
+
+### O2 — Seitenhülle und Bausteine
+
+**Erledigt.** Web 9.1.0. Keine Migration.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/ui.php` | Gerüst (`ui_kopf`, `ui_geruest_start/_ende`, `ui_leiste_ende`), drei Leisteninhalte, Fußzeile, Demo-Hinweis, Abbruchseite, Einstellungs-Übersicht und die Bausteine `ui_meldung`, `ui_knopf`, `ui_plakette`, `ui_karte_start/_ende`, `ui_zeile`, `ui_titelzeile`, `ui_aktionen`, `ui_feld`, `ui_schalter`, `ui_segment`, `ui_speichern_leiste`, `ui_kennzahl`, `ui_artzeichen` |
+| `server/assets/style.css` | Abschnitte 4–19: Gerüst, Leiste, Karte/Zeile/Titelzeile, Knopf, Plakette, Meldung, Aktionsmenü, Formular, Kennzahl, Text, Tabelle/Kachel, Dialog, Kartenansicht, Übergangsschicht, Schwellen, Übersichtszeile |
+| `server/assets/schublade.js` | Öffnen und Schließen, Schleier, Escape, Fokus bleibt in der Schublade |
+| `server/assets/blatt.js` | Aktionsblatt (mobil) und Aufklappmenü (Desktop) aus **einem** Markup |
+| `server/assets/daylist.js` | neu geschrieben: nur noch die Verkopplung der Akkordeon-Ebenen |
+| `server/assets/missiontable.js` | Artzeichen aus dem Symbolvorrat statt als Emoji |
+| `server/diensttag_lib.php` | `dt_art_symbole()` liefert einen Dateinamen statt eines Emoji |
+| 21 Seiten | auf `ui_geruest_start()` / `ui_geruest_ende()` umgestellt |
+| `server/login.php`, `reset_request.php`, `pw_handling.php`, `session_lib.php` | Anmeldehülle `.anmeldung`, Fußzeile dunkel |
+| `server/install.php` | gemeinsames Stylesheet, öffentliche Hülle, Bausteine (Backlog Nr. 18 erledigt) |
+| `docs/Handbuch.md` 3 und 4.4, `docs/Technik.md` | nachgezogen |
+
+#### Abweichungen vom Konzept, mit Grund
+
+1. **Eine Übergangsschicht im Stylesheet** (Abschnitt 17), die das Konzept
+   nicht vorsieht. O2 stellt die Hülle um und lässt die Seiteninhalte stehen;
+   ohne Grundformen für `table`, `input`, `label` und `fieldset` wäre jede
+   Zwischenprüfung von O3 bis O11 gegen eine Ruine gelaufen. Sie greift **nur
+   an Elementnamen, nie an Bestandsklassen** — eine Klasse dort einzutragen
+   hieße, das Redesign zurückzunehmen. Ihr Umfang: 12 Regeln.
+2. **Tabellen scrollen waagerecht** (`display:block; overflow-x:auto`), statt
+   die Seite zu sprengen. Das ist nicht die Lösung — die Einsatztabellen werden
+   unter 720 px zur Kachel (O3), die Verwaltungstabellen stapeln zu Zeilen
+   (O8/O9) —, sondern die Notbremse, bis es so weit ist. Ohne sie hätte O2
+   seine eigene Abnahme („kein waagerechter Überlauf bei 360") nicht erfüllt,
+   obwohl kein einziger Fall vom Gerüst kam.
+3. **Acht Token mehr, als 5.2 führt**: `--radius-rund`, `--schalter-breit`,
+   `--schalter-hoch`, `--schalter-punkt`, `--anmeldekarte`,
+   `--karte-neben-breit`, `--auf-dunkel-leise/-flaeche/-strich`. Alle entstanden
+   aus derselben Frage: Die Vollständigkeitsprüfung meldet jedes Pixelmaß
+   außerhalb der Token, und ein Schalter braucht Maße. Die Alternative wäre
+   gewesen, die Prüfung aufzuweichen.
+4. **Der Einrichter ist schon in O2 umgestellt**, nicht erst in O10. Er stand
+   ohnehin in der Liste der Seiten, die auf die neue Hülle gehen, und Backlog
+   Nr. 18 hing daran.
+
+#### Probleme und wie sie gelöst wurden
+
+**Das Datum in der Leiste wurde abgeschnitten, nicht der Name.** Datum und
+Rettungsmittelname hatten beide `flex:1 1 auto`; bei 260 px Leistenbreite wurde
+aus „27.12.2026" ein „27.12.20…". Abgeschnitten wurde also genau die Auskunft,
+die den Eintrag identifiziert. E-P3-09 will die Ellipse am **Namen**. Behoben
+mit `flex:1 0 auto` am Datum.
+
+**Die Bildaufnahme meldete Dutzende Knöpfe mit Höhe 0.** Es waren die Knöpfe,
+die es gerade nicht gibt: der X-Knopf der Schublade, ab 1024 px ausgeblendet,
+und die Einträge in einem geschlossenen Aktionsblatt. Ein Knopf, den es nicht
+gibt, ist weder zu hoch noch zu niedrig. Gemessen werden jetzt nur sichtbare.
+
+**Der Schubladenschritt lief am Desktop in einen Timeout.** Die Bildaufnahme
+klickte den Menüknopf auch bei 1024 px und höher, wo er ausgeblendet ist — und
+meldete einen Fehler, den es nicht gab. Sie fragt jetzt erst, ob es das
+Bedienelement in dieser Breite gibt.
+
+**`<label>Text <input></label>` lief nebeneinander.** Das Muster steht im
+Bestand an über hundert Stellen; ohne Regel brach die Eingabe neben der
+Beschriftung an unvorhersehbaren Stellen um. Zwei Zeilen in der
+Übergangsschicht stellen es untereinander, bis der Baustein `.feld` an die
+jeweilige Stelle kommt.
+
+**Die Wortliste fand „hubschrauber" fünfmal.** Alle fünf benennen ein **Bild**
+— die Symboldatei, die Logodatei, die Beschreibung des Artzeichens im
+Handbuch —, nicht die Einsatzart; die steht jeweils daneben und heißt
+„luftgebunden". Fünf Ausnahmen mit Begründung, Klasse *Homonym*.
+
+**Die Karte verschwand.** `#map` hatte seine Höhe aus einer Bestandsklasse; die
+gibt es nicht mehr, und die Karte war 0 px hoch. Die drei Kartenbehälter tragen
+jetzt den Baustein `.geo`. Positionen und Höhen je Schwelle kommen mit O3/O4.
+
+#### Prüfstand nach O2
+
+| Was | Mittel | Ergebnis |
+|---|---|---|
+| Waagerechter Überlauf | `screenshots/aufnehmen.mjs`, 29 Seiten × 8 Breiten | **0 von 232** — vorher 26. Die Messung nennt seither auch das überlaufende Element |
+| Konsolenfehler | dieselbe Aufnahme | **0** |
+| Knopfhöhen | dieselbe Aufnahme, nur sichtbare Knöpfe | **0 außerhalb der 44 px** |
+| Werte außerhalb der Token | `vollstaendigkeit/pruefen.py` | 0 Hexfarben, 0 `rgb()`, 0 Schriftgrößen, 0 Pixelmaße, 0 `50px` |
+| Emoji im Markup | dasselbe Werkzeug | **9** — vorher 80; alle neun in `einsatz.php` (O4) |
+| Inline-SVG mit Pfaden | dasselbe | **3** — vorher 5; Karten-Pin zweimal und der Vollbildknopf (O3) |
+| Klassen des alten Stylesheets | dasselbe | 220 Sollmenge, **25 auf der Streichliste** mit Grund, 194 offen (O3–O11) |
+| Kontraste | `screenshots/kontrast.py` | 21 Paare, **0 verfehlt** |
+| Wortliste | `wortliste/wortliste.py` | **0 / 0 / 0**; 5 neue Ausnahmen mit Begründung |
+| Syntax | `php -l` über alle 57 PHP-Dateien, `node --check` über die geänderten | fehlerfrei |
+
+**Was im Browser geprüft wurde:** Anmeldeseite bei 390 px gegen Mockup 33 —
+Karte zentriert, Logo, Primärknopf mit dunkelblauer Schrift auf Orange, dunkle
+Fußzeile. Tagesübersicht bei 1440 px gegen Mockup 03 — Kopfleiste mit aktivem
+Strich, Leiste mit Akkordeon und Fuß. Schublade bei 390 px gegen Mockup 01 —
+öffnet, Schleier, X, Startseite aktiv, Diensttage darunter, Fuß. Einstellungs-
+Übersicht bei 390 px gegen Mockup 07.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit und kein Gecko —
+der Symbolverweis bleibt nur in Chromium belegt (Prüfdokument P-1). Dazu neu:
+Der Fokusfang der Schublade und das Verhalten der Speichern-Leiste bei
+eingeblendeter Bildschirmtastatur sind nur am Gerät zu prüfen.
 
 ---
 

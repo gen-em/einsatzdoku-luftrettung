@@ -683,13 +683,9 @@ function ortWert(string $col, string $achse, string $spalte): string {
         ? (string)$mission[$spalte] : '';
 }
 ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen']);
-ui_topbar('uebersicht');
 ?>
 
-<div class="layout">
-  <?php ui_days_sidebar($dayId); ?>
-
-<main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
   <h1><?= $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen' ?></h1>
   <?php if ($editing && !(int)$mission['manual']): ?>
     <p class="alert alert-info">Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als
@@ -1317,10 +1313,7 @@ ui_topbar('uebersicht');
            : 'Der nachgetragene Einsatz wird nicht gespeichert. Trotzdem abbrechen?' ?>"
        >Abbrechen</a></p>
   </form>
-<?php ui_footer(); ?>
-</main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>

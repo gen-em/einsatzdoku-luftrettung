@@ -131,13 +131,9 @@ $letzter = demo_letzter_reset();
 $restSek = demo_reset_in();
 
 ui_seite_start(['titel' => 'Demo-Konto']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin_demo'); ?>
-
-<main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_demo']); ?>
   <h1>Demo-Konto</h1>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -230,6 +226,4 @@ ui_topbar('einstellungen');
         damit <em>ein</em> Vorgang in <em>einer</em> Transaktion: Entweder er
         gelingt ganz, oder er ändert nichts.</li>
   </ul>
-</main>
-  <?php ui_footer(); ?>
-</div>
+<?php ui_geruest_ende(); ?>

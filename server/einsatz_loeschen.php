@@ -25,11 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
 $title = 'Einsatz löschen';
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => 'Einsatz löschen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar($m['day_id'] !== null ? (int)$m['day_id'] : null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $m['day_id'] !== null ? (int)$m['day_id'] : null]); ?>
     <h1>Einsatz löschen?</h1>
 
     <div class="card">
@@ -54,7 +51,5 @@ ui_topbar('uebersicht');
       <button class="btn-red">In den Papierkorb</button>
       <a class="btn-plain" href="einsatz.php?id=<?= (int)$id ?>">Abbrechen</a>
     </form>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

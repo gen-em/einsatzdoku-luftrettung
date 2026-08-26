@@ -170,12 +170,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
-ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
+ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 ?>
-<main class="login-card">
-  <img src="<?= e(logo_src()) ?>"
-       alt="GenEM" class="login-logo">
-  <h1>Einsatzdoku</h1>
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Einsatzdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
   <?php /* Beide schliessen einander aus: Steht ein Fehler an, tritt der
            Hinweis zurueck. Die Reihenfolge in ui_meldung() ist deshalb
            ohne Wirkung. */ ?>
@@ -191,10 +192,11 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
     <label>Passwort
       <input type="password" name="password" required autocomplete="current-password">
     </label>
-    <button type="submit" class="btn-primary">Anmelden</button>
+    <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
   </form>
-  <p class="login-aux"><a href="reset_request.php">Passwort vergessen?</a></p>
-  <p class="muted" id="loginstate" style="min-height:1.2em"></p>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
+  <p class="muted" id="loginstate"></p>
+ </div>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script>
@@ -280,6 +282,7 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   }
 });
 </script>
-<?php /* Footer im Fluss unter der Karte */ ?>
-<footer class="sitefooter">© Gen-EM – OpenSource Software – <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a></footer>
+<?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
+         dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <?php ui_seite_ende(); ?>

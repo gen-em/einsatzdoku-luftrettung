@@ -103,15 +103,18 @@ function session_beenden(string $grund = 'abgemeldet'): never
     require_once __DIR__ . '/ui.php';
     ui_seite_start([
         'titel'  => 'Abmelden',
-        'klasse' => 'login-body',
+        'klasse' => 'anmeldung-body',
         'kopf'   => '<noscript><meta http-equiv="refresh" content="0;url='
                     . e($ziel) . '"></noscript>',
     ]);
     ?>
-<main class="login-card">
-  <p class="muted"><?= e($text) ?></p>
-  <p class="login-aux"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <p><?= e($text) ?></p>
+  <p class="anmeldung-neben"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>
+ </div>
 </main>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script>
 // Beide Schluessel raeumen: Daten- UND Inhaltsschluessel. Faengt das Skript

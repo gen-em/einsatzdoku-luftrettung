@@ -75,11 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ui_seite_start(['titel' => 'Diensttag anlegen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
     <h1>Diensttag anlegen</h1>
     <?php ui_meldung(null, $fehler); ?>
 
@@ -116,7 +113,7 @@ ui_topbar('uebersicht');
             <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
               <option value="<?= (int)$v['id'] ?>" data-base="<?= (int)($v['base_id'] ?? 0) ?>"
                       <?= $vehId === (int)$v['id'] ? 'selected' : '' ?>>
-                <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
+                <?= e($v['name']) ?><?php
                   echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
             <?php endforeach; ?>
           </select></label>
@@ -137,9 +134,7 @@ ui_topbar('uebersicht');
            >Abbrechen</a></p>
       </form>
     </div>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>

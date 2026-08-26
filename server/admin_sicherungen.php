@@ -245,13 +245,9 @@ function zeitpunkt_text(?string $iso): string
 }
 
 ui_seite_start(['titel' => 'Sicherungen']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin_sicherungen'); ?>
-
-<main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_sicherungen']); ?>
   <h1>Sicherungen</h1>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -564,10 +560,8 @@ ui_topbar('einstellungen');
     <?php endforeach; ?>
   <?php endif; ?>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
-<?php /* confirm.js liefert ui_footer() (ui.php) auf jeder Seite. Hier stand es
+<?php ui_geruest_ende(); ?>
+<?php /* confirm.js liefert ui_geruest_ende() (ui.php) auf jeder Seite. Hier stand es
          ein zweites Mal — und zwei Kopien hoeren beide zu, jede oeffnet ihren
          eigenen Dialog. Jede Rueckfrage dieser Seite erschien doppelt. */ ?>
 <?php ui_seite_ende(); ?>

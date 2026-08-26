@@ -132,13 +132,9 @@ $dv = db()->prepare('SELECT id, device_id, label, active, last_seen FROM devices
 $dv->execute([$uid]);
 $devices = $dv->fetchAll();
 ui_seite_start(['titel' => 'NutzerIn bearbeiten']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin'); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
   <p><a href="admin_users.php" class="add-link">← zurück zur Nutzerverwaltung</a></p>
   <h1><?= e($u['name'] ?: $u['email']) ?></h1>
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
@@ -234,7 +230,5 @@ ui_topbar('einstellungen');
     <button class="btn-red">! Nutzer endgültig löschen</button>
   </form>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

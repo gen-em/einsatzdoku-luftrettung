@@ -48,11 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
     }
 }
 ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar($dayId); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
     <h1>Datum des Diensttags <?= e(dt_lesbar($tag, true)) ?> ändern</h1>
     <?php ui_meldung(null, $fehler); ?>
 
@@ -110,7 +107,5 @@ ui_topbar('uebersicht');
          data-cancel-confirm="Das gewählte Datum geht verloren. Trotzdem abbrechen?"
          >Abbrechen</a></p>
     </form>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

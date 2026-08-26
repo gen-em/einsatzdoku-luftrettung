@@ -308,6 +308,12 @@
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
   --strich-stark:2px;                  /* Aktivstrich, Randstrich, Fokus */
+  --radius-rund:999px;                 /* Zähler, Griff, Punkt — voll rund */
+  --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
+  --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
+  --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
+  --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
+  --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
 
   /* ---- Karte (Leaflet) --------------------------------------------------- */
   --karte-mobil:160px;
@@ -338,6 +344,12 @@
   --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
   --schatten:0 2px 8px rgba(26,5,0,.10);
   --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
+  /* Auf der dunklen Kopfleiste: eine gedämpfte Fassung von Weiß für Hover
+   * und Nebenangaben. Ein eigener Hexwert wäre hier falsch — die Fläche
+   * darunter ist Dunkelblau, und der Ton soll mit ihr zusammen entstehen. */
+  --auf-dunkel-leise:rgba(255,255,255,.55);
+  --auf-dunkel-flaeche:rgba(255,255,255,.14);
+  --auf-dunkel-strich:rgba(255,255,255,.35);
 }
 
 @media (min-width:720px){
@@ -509,9 +521,917 @@ img,svg,video{max-width:100%;height:auto}
 }
 
 
-/* == 4. BAUSTEINE ==========================================================
+/* == 4. GERÜST =============================================================
  *
- * Entstehen in Arbeitspaket O2 (Seitenhülle und Bausteine). Bis dahin sieht
- * die Anwendung roh aus — das ist der eingeplante Zwischenstand, nicht ein
- * Fehler. Siehe Konzept P3, Arbeitspaket O2, Punkt 6.
+ * Kopfleiste, Rahmen, Leiste/Schublade, Inhalt, Fußzeile.
+ *
+ * DIE KOPFHÖHE IST --kopf UND SONST NICHTS. Im Bestand stand sie fünfmal als
+ * 50px im Stylesheet, und die tatsächliche Höhe hing zusätzlich vom Umbruch
+ * des Markentexts ab; das Demo-Banner verschob sie ein weiteres Mal. Ergebnis:
+ * Im Demo-Konto rutschte die Leiste unter der Kopfleiste hervor. Jetzt gibt es
+ * eine Zahl an einer Stelle, und der Demo-Hinweis steht innerhalb des Inhalts.
+ *
+ * MOBIL ZUERST. Was hier ohne Media-Abfrage steht, gilt für das Handy. Die
+ * vier Schwellen (720, 1024, 1200, 1600) bauen nach oben aus.
  */
+
+/* ---- Kopfleiste ---------------------------------------------------------- */
+.kopf{
+  position:sticky;top:0;z-index:40;
+  background:var(--dunkelblau);color:var(--auf-dunkel);
+  height:var(--kopf);
+}
+/* Der Inhalt der Kopfleiste sitzt auf demselben Raster wie Leiste und Inhalt
+ * darunter — die Leiste selbst bleibt voll breit (E-P3-12). */
+.kopf-innen{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  height:var(--kopf);
+  max-width:var(--rahmen);margin:0 auto;
+  padding:0 var(--abstand-3);
+}
+.kopf .knopf{color:var(--auf-dunkel)}
+.kopf-menue{margin-left:calc(var(--abstand-2) * -1)}
+
+.kopf-marke{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  color:var(--auf-dunkel);text-decoration:none;
+  min-width:0;flex:1 1 auto;
+}
+.kopf-marke:hover{text-decoration:none}
+.kopf-marke img{height:26px;width:auto;flex:0 0 auto}
+.kopf-name{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-5);line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Der Nutzername erscheint erst, wenn Platz dafür da ist. Auf dem Handy ist
+ * die Kopfleiste für Menü, Marke und Zahnrad da — der eigene Name steht auf
+ * der Einstellungs-Übersicht, wo man ihn sucht. */
+.kopf-nutzer{display:none}
+
+.kopf-punkte{display:flex;align-items:center;gap:var(--abstand-1);margin-left:auto}
+.kopf-punkt{
+  display:none;                        /* < 1024: nur Menüknopf und Zahnrad */
+  align-items:center;gap:var(--abstand-2);
+  height:var(--knopf);padding:0 var(--abstand-3);
+  color:var(--auf-dunkel);text-decoration:none;
+  border-bottom:var(--strich-stark) solid transparent;
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+.kopf-punkt:hover{text-decoration:none;border-bottom-color:var(--auf-dunkel-strich)}
+.kopf-punkt.aktiv{border-bottom-color:var(--orange)}
+.kopf-zahnrad{margin-right:calc(var(--abstand-2) * -1)}
+.kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+
+/* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
+.rahmen{
+  max-width:var(--rahmen);margin:0 auto;
+  display:flex;align-items:flex-start;
+}
+.inhalt{
+  flex:1 1 auto;min-width:0;
+  padding:var(--abstand-4) var(--abstand-3) var(--abstand-5);
+}
+.rahmen-lesespalte .inhalt{max-width:var(--lesespalte);margin:0 auto}
+
+/* ---- Leiste und Schublade — EIN Markup ----------------------------------
+ *
+ * Unter 1024 px liegt die Leiste als Schublade von links über dem Inhalt,
+ * darüber steht sie fest daneben. Der Unterschied ist ausschließlich hier.
+ *
+ * Das ist die Lehre aus der Vormerkliste von P0: Der Mechanismus hängt an der
+ * KLASSE, nicht an der Funktion, die die Diensttage ausgibt — sonst bliebe
+ * die Suchseite als einzige ohne mobiles Menü.
+ */
+.leiste{
+  position:fixed;inset:0 auto 0 0;z-index:60;
+  width:86%;max-width:var(--schublade);
+  background:var(--schnee);
+  border-right:var(--strich) solid var(--linie);
+  display:flex;flex-direction:column;
+  transform:translateX(-100%);
+  transition:transform var(--dauer) ease-out;
+  overscroll-behavior:contain;
+}
+.schublade-auf .leiste{transform:none}
+.schleier{
+  position:fixed;inset:0;z-index:50;
+  background:var(--schleier);
+  opacity:0;transition:opacity var(--dauer) ease-out;
+}
+.schublade-auf .schleier{opacity:1}
+/* Der Körper scrollt nicht, solange die Schublade offen ist — sonst scrollt
+ * unter dem Schleier der Inhalt weg. */
+.schublade-auf{overflow:hidden}
+
+.leiste-kopf{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  height:var(--kopf);flex:0 0 auto;
+  padding:0 var(--abstand-3);
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--dunkelblau);
+}
+.leiste-haupt{padding:var(--abstand-3) var(--abstand-2) 0;flex:0 0 auto}
+.leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
+.leiste-fuss{
+  flex:0 0 auto;padding:var(--abstand-2);
+  border-top:var(--strich) solid var(--linie);
+}
+.leiste-kopfzeile{
+  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gedaempft);
+  padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
+}
+.leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
+
+/* ---- Fußzeile ------------------------------------------------------------
+ * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
+.fuss-seite{
+  border-top:var(--strich) solid var(--linie);
+  padding:var(--abstand-4) var(--abstand-3);
+  text-align:center;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
+.fuss-rechts{margin-top:var(--abstand-1)}
+.fuss-seite a{color:var(--blau-tief);font-weight:600}
+.fuss-version{color:var(--sand)}
+.fuss-dunkel{
+  background:var(--dunkelblau);color:var(--rauch);
+  border-top:0;
+}
+.fuss-dunkel a{color:var(--auf-dunkel)}
+.fuss-dunkel .fuss-version{color:var(--auf-dunkel-leise)}
+
+/* ---- Was nur in der Schublade steht -------------------------------------- */
+.nur-schublade{display:block}
+.nur-breit{display:none}
+.nur-schmal{display:inline-flex}
+
+
+/* == 5. LEISTENINHALT ======================================================
+ *
+ * Akkordeon und Einträge. Beide Leisten — Diensttage und Einstellungen —
+ * benutzen dieselben Klassen; bis Web 8.0.1 trug das Einstellungsmenü
+ * buchstäblich die Klasse `.daylist` und erbte damit jede Regel der
+ * Tagesleiste, einschließlich der 100-vh-Höhe.
+ */
+
+/* ---- Akkordeon -----------------------------------------------------------
+ * DIE GANZE ZEILE KLAPPT, nicht nur das Dreieck (E-P3-09). Bisher war der
+ * Text der Link auf die Jahresübersicht und nur das Dreieck der Schalter — auf
+ * einem Touchgerät nicht zu unterscheiden. Der Weg in die Übersicht ist jetzt
+ * ein eigenes Symbol rechts.
+ *
+ * Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
+ */
+.akkordeon{position:relative}
+.akkordeon-zeile{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  padding:0 calc(var(--knopf) + var(--abstand-1)) 0 var(--abstand-2);
+  border-radius:var(--radius-klein);
+  cursor:pointer;list-style:none;
+  font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--dunkelblau);
+}
+.akkordeon-zeile::-webkit-details-marker{display:none}
+.akkordeon-zeile:hover{background:var(--rauch)}
+.akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out}
+details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:rotate(180deg)}
+.akkordeon-text{flex:1 1 auto;min-width:0}
+/* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
+ * Trefferfläche, 44 px. */
+.akkordeon-uebersicht{
+  position:absolute;top:0;right:var(--abstand-1);
+  width:var(--knopf);height:var(--knopf);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--sand);border-radius:var(--radius-klein);
+}
+.akkordeon-uebersicht:hover{color:var(--blau-tief);background:var(--rauch)}
+.akkordeon-inhalt{padding-left:var(--abstand-3)}
+.akkordeon-monat > .akkordeon-zeile{font-size:var(--groesse-3)}
+
+/* ---- Eintrag -------------------------------------------------------------
+ * Menüpunkt und Diensttag. Aktiv: hell orange mit orangem Strich links —
+ * in BEIDEN Leisten gleich (E-P3-10).
+ */
+.eintrag{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  padding:0 var(--abstand-2);
+  border-radius:var(--radius-klein);
+  border-left:var(--abstand-1) solid transparent;
+  color:var(--asphalt);text-decoration:none;
+}
+.eintrag:hover{background:var(--rauch);text-decoration:none}
+.eintrag .symbol{color:var(--dunkelblau)}
+/* Das Datum schrumpft NICHT. Beim ersten Anlauf hatten Datum und
+ * Rettungsmittelname beide `flex:1 1 auto`, und bei 260 px Leistenbreite wurde
+ * aus „27.12.2026" ein „27.12.20…" — abgeschnitten wurde also die Auskunft,
+ * die den Eintrag überhaupt identifiziert. Der Name absorbiert die Restbreite
+ * (E-P3-09: Ellipse am NAMEN, voller Name im Tooltip). */
+.eintrag-text{
+  flex:1 0 auto;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+/* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
+ * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
+ * ganz — das Artzeichen bleibt (E-P3-09). */
+.eintrag-neben{
+  flex:0 1 auto;min-width:0;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau)}
+
+/* Der Fuß der Leiste: „Zuordnung offen" (rosa mit rotem Zähler, nur solange
+ * etwas offen ist), „Diensttag anlegen" (orange), Papierkorb (gedämpft). */
+.eintrag-offen{background:var(--rosa)}
+.eintrag-offen .symbol{color:var(--rot-tief)}
+.eintrag-offen .eintrag-text{color:var(--rot-tief)}
+.eintrag-anlegen .symbol,
+.eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
+.eintrag-leise .symbol,
+.eintrag-leise .eintrag-text{color:var(--gedaempft);font-weight:400}
+.zaehler{
+  flex:0 0 auto;
+  min-width:var(--abstand-5);height:var(--abstand-5);padding:0 var(--abstand-1);
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-rund);
+  background:var(--rot);color:var(--auf-dunkel);
+  font-size:var(--groesse-1);font-weight:700;
+}
+
+
+/* == 6. KARTE, ZEILE, TITELZEILE ===========================================
+ *
+ * Jeder Inhaltsblock ist eine Karte mit Titel, optionaler Zahl und GENAU
+ * EINER Kopfaktion rechts. Eine zweite gibt es nicht — was mehr braucht,
+ * bekommt ein Aktionsmenü (E-P3-25).
+ */
+
+.karte{
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius-gross);
+  margin-bottom:var(--abstand-4);
+}
+.karte-kopf{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  padding:var(--abstand-3) var(--abstand-4);
+  border-bottom:var(--strich) solid var(--linie);
+  list-style:none;
+}
+.karte-kopf::-webkit-details-marker{display:none}
+.karte-titel{
+  font-size:var(--groesse-5);
+  flex:0 1 auto;min-width:0;
+}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2);flex:0 0 auto}
+/* Die Kopfaktion ist ein LINK mit Symbol, kein Knopf: Was kleiner als 44 px
+ * ist, ist kein Knopf (E-P3-22). Die Trefferfläche erreicht sie über den
+ * Innenabstand trotzdem. */
+.karte-aktion{
+  margin-left:auto;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:0 var(--abstand-2);
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+.karte-aktion-blau{color:var(--blau-tief)}
+.karte-aktion-orange{color:var(--orange-tief)}
+.karte-inhalt{padding:var(--abstand-4)}
+.karte-vorschau{
+  margin-left:auto;color:var(--gedaempft);
+  font-size:var(--groesse-2);text-align:right;
+}
+.karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
+.karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
+.karte-klappbar > .karte-kopf .akkordeon-winkel{color:var(--sand)}
+.karte-klappbar[open] > .karte-kopf .akkordeon-winkel{transform:rotate(180deg)}
+
+/* ---- Zeile ---------------------------------------------------------------
+ * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
+ * sind die Aktionen Knöpfe; mobil ein „⋯" je Zeile (E-P3-26).
+ */
+.zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) 0;
+  border-bottom:var(--strich) solid var(--linie);
+}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile:first-child{padding-top:0}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-haupt{font-weight:600;color:var(--asphalt)}
+.zeile-text a{color:inherit}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
+.zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+
+/* ---- Titelzeile ---------------------------------------------------------- */
+.titelzeile{margin-bottom:var(--abstand-4)}
+.rueckweg{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  min-height:var(--knopf);
+  color:var(--blau-tief);font-weight:600;
+}
+.titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
+.titelzeile-text{flex:1 1 14rem;min-width:0}
+.titelzeile-unter{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.titelzeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto;margin-left:auto}
+
+
+/* == 7. KNOPF ==============================================================
+ *
+ * EINE HÖHE: 44 px, mobil wie Desktop, auch für Zeilenaktionen. Es gibt keine
+ * Kompaktvariante — was kleiner ist, ist kein Knopf (E-P3-22). Der Bestand
+ * hatte sechs Varianten und sechs ortsgebundene Größen; `.btn-primary` trug
+ * global `width:100%` und wurde an zehn Stellen zurückgenommen.
+ *
+ * Die Vollständigkeitsprüfung liest die Höhenangabe nach: Sie muss aus
+ * --knopf kommen.
+ */
+.knopf{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:var(--abstand-2);
+  height:var(--knopf);
+  padding:0 var(--abstand-4);
+  border-radius:var(--radius);
+  border:var(--strich-stark) solid transparent;
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);
+  text-decoration:none;cursor:pointer;
+  white-space:nowrap;
+}
+.knopf:hover{text-decoration:none}
+.knopf[disabled],.knopf[aria-disabled="true"]{opacity:.5;cursor:default}
+
+/* Dunkelblaue Schrift auf Orange: 5,97:1. Weiß auf Orange wären 2,3:1 und
+ * damit unlesbar — die Mockups zeigen an dieser Stelle Weiß, der
+ * Entscheidungstext gilt (E-P3-15, Fund F-P3-L). */
+.knopf-primaer{
+  background:var(--knopf-primaer-flaeche);
+  color:var(--knopf-primaer-schrift);
+  border-color:var(--knopf-primaer-flaeche);
+}
+.knopf-primaer:hover{background:var(--orange-tief);border-color:var(--orange-tief);color:var(--auf-dunkel)}
+.knopf-neutral{
+  background:var(--schnee);color:var(--dunkelblau);
+  border-color:var(--linie-stark);
+}
+.knopf-neutral:hover{background:var(--rauch)}
+.knopf-gefahr{background:var(--schnee);color:var(--rot-tief);border-color:var(--rot)}
+.knopf-gefahr:hover{background:var(--rosa)}
+.knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-leise:hover{color:var(--asphalt)}
+.knopf-symbol{
+  width:var(--knopf);height:var(--knopf);padding:0;
+  background:none;color:inherit;border-color:transparent;
+}
+.knopf-symbol:hover{background:var(--rauch)}
+.knopf-breit{width:100%}
+
+
+/* == 8. PLAKETTE ===========================================================
+ *
+ * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
+ * sind keine Bedienelemente (E-P3-17).
+ */
+.plakette{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  padding:var(--abstand-1) var(--abstand-2);
+  border-radius:var(--radius-klein);
+  font-size:var(--groesse-1);font-weight:600;
+  white-space:nowrap;
+}
+.plakette .symbol{width:14px;height:14px}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
+.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.plakette-weg{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--symbol);height:var(--symbol);
+  margin-right:calc(var(--abstand-1) * -1);color:inherit;
+}
+
+
+/* == 9. MELDUNG ============================================================
+ *
+ * Vier Töne mit Symbol und optionalem fettem Auftakt (E-P3-16). Grün ist
+ * fort: Die Vollzugsmeldung ist jetzt blau wie der Hinweis und unterscheidet
+ * sich durch das Symbol — Haken gegen Kreis-i. Farbe ist nie der einzige
+ * Träger (Grundregel 3).
+ *
+ * Die Warnung trägt ihren Text in Asphalt, nicht in Orange tief: Orange tief
+ * auf Orange hell sind 3,81:1 und damit unter der Schwelle für Fließtext.
+ * Der fette Auftakt darf orange sein — für fette Schrift ab 14 px gilt 3:1.
+ */
+.meldung{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4);
+  border-radius:var(--radius);
+  margin-bottom:var(--abstand-4);
+}
+.meldung p{flex:1 1 auto;min-width:0}
+.meldung .symbol{flex:0 0 auto}
+.meldung-aktion{flex:0 0 auto}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
+.meldung-fehler .symbol{color:var(--rot)}
+.meldung-info{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-info .symbol{color:var(--blau-tief)}
+.meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-ok .symbol{color:var(--blau-tief)}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.meldung-warn strong{color:var(--orange-tief)}
+
+
+/* == 10. AKTIONSMENÜ UND BLATT =============================================
+ *
+ * Mobil ein „⋯", das ein Blatt von unten öffnet; am Desktop derselbe Vorrat
+ * als Aufklappmenü. EIN Markup für beide Formen — assets/blatt.js öffnet und
+ * schließt nur, welche Form erscheint, sagt dieses Stylesheet (E-P3-27).
+ */
+.aktionen{position:relative}
+.aktionen-knopf .symbol:last-child{transition:transform var(--dauer) ease-out}
+.aktionen-knopf[aria-expanded="true"] .symbol:last-child{transform:rotate(180deg)}
+
+.blatt{
+  position:fixed;inset:auto 0 0 0;z-index:70;
+  background:var(--schnee);
+  border-radius:var(--radius-gross) var(--radius-gross) 0 0;
+  box-shadow:var(--schatten-hoch);
+  padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
+  max-height:80vh;overflow-y:auto;
+}
+.blatt[hidden]{display:none}
+.blatt-griff{
+  width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
+  border-radius:var(--radius-rund);background:var(--sand);
+}
+.blatt-titel{
+  font-size:var(--groesse-5);text-align:center;
+  margin-bottom:var(--abstand-3);
+}
+.blatt-liste{display:flex;flex-direction:column}
+.blatt-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--blatt-zeile);
+  padding:0 var(--abstand-3);
+  border-radius:var(--radius-klein);
+  color:var(--asphalt);font-weight:600;
+}
+.blatt-zeile:hover{background:var(--rauch);text-decoration:none}
+.blatt-zeile .symbol{color:var(--dunkelblau)}
+.blatt-anlegen,.blatt-anlegen .symbol{color:var(--orange-tief)}
+/* Löschen steht rot UND durch eine Linie abgesetzt: Wer schnell tippt, soll
+ * nicht danebengreifen. */
+.blatt-gefahr{
+  color:var(--rot-tief);
+  margin-top:var(--abstand-2);padding-top:var(--abstand-2);
+  border-top:var(--strich) solid var(--linie);
+}
+.blatt-gefahr .symbol{color:var(--rot)}
+.blatt-abbrechen{width:100%;margin-top:var(--abstand-3)}
+
+
+/* == 11. FORMULAR ==========================================================
+ *
+ * Feld, Schalter, Segmentwahl, Speichern-Leiste.
+ *
+ * Die Beschriftung steht in NORMALSCHRIFT. Im Bestand waren Feldnamen,
+ * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
+ * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
+ */
+.feld{margin-bottom:var(--abstand-4)}
+.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
+.feld-pflicht{color:var(--rot-tief)}
+.feld-eingabe{
+  display:block;width:100%;
+  height:var(--knopf);
+  padding:0 var(--abstand-3);
+  background:var(--schnee);color:var(--asphalt);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+}
+.feld-mehrzeilig{height:auto;padding:var(--abstand-3)}
+.feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
+.feld-reihe > .feld{flex:1 1 12rem;min-width:0}
+
+/* ---- Schalter ------------------------------------------------------------
+ * Aus einer echten Checkbox gebaut — Tastaturbedienung, Vorlesezustand und
+ * Absenden kommen damit vom Browser und nicht aus einem Skript. */
+.schalter{margin-bottom:var(--abstand-3)}
+.schalter-box{position:absolute;opacity:0;width:0;height:0}
+.schalter-label{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--knopf);cursor:pointer;
+}
+.schalter-text{flex:1 1 auto;font-weight:600}
+.schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+.schalter-griff{
+  flex:0 0 auto;position:relative;
+  width:var(--schalter-breit);height:var(--schalter-hoch);
+  border-radius:var(--radius-rund);
+  background:var(--sand);
+  transition:background var(--dauer) ease-out;
+}
+.schalter-griff::after{
+  content:"";position:absolute;
+  top:calc((var(--schalter-hoch) - var(--schalter-punkt)) / 2);
+  left:calc((var(--schalter-hoch) - var(--schalter-punkt)) / 2);
+  width:var(--schalter-punkt);height:var(--schalter-punkt);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+  transition:transform var(--dauer) ease-out;
+}
+.schalter-box:checked + .schalter-label .schalter-griff{background:var(--orange)}
+.schalter-box:checked + .schalter-label .schalter-griff::after{
+  transform:translateX(calc(var(--schalter-breit) - var(--schalter-hoch)));
+}
+.schalter-box:focus-visible + .schalter-label .schalter-griff{
+  outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
+}
+/* Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich. */
+.schalter-abhaengig{
+  margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-3);
+  padding-left:var(--abstand-4);
+  border-left:var(--strich-stark) solid var(--orange);
+}
+
+/* ---- Segmentwahl ---------------------------------------------------------
+ * Als Radiogruppe gebaut: Pfeiltasten, Vorlesezustand und Absenden kommen
+ * damit vom Browser. */
+.segment{
+  display:flex;flex-wrap:wrap;
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.segment-box{position:absolute;opacity:0;width:0;height:0}
+.segment-taste{
+  flex:1 1 auto;
+  display:flex;align-items:center;justify-content:center;
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  cursor:pointer;text-align:center;
+  border-right:var(--strich) solid var(--linie);
+}
+.segment-taste:last-of-type{border-right:0}
+.segment-box:checked + .segment-taste{background:var(--orange);color:var(--knopf-primaer-schrift)}
+.segment-box:focus-visible + .segment-taste{
+  outline:var(--strich-stark) solid var(--blau);outline-offset:calc(var(--strich-stark) * -1);
+}
+
+/* ---- Speichern-Leiste ----------------------------------------------------
+ * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist.
+ * KEIN „Verwerfen" — der Rückweg oben genügt, und ein Verwerfen-Knopf neben
+ * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29). */
+.speichern{
+  position:sticky;bottom:0;z-index:30;
+  margin:var(--abstand-4) calc(var(--abstand-3) * -1) 0;
+  padding:var(--abstand-3);
+  background:var(--schnee);
+  border-top:var(--strich) solid var(--linie);
+  box-shadow:var(--schatten);
+}
+.speichern[hidden]{display:none}
+.speichern-innen{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  max-width:var(--rahmen);margin:0 auto;
+}
+.speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+
+/* == 12. KENNZAHL ==========================================================
+ *
+ * Wert in Bricolage mit Einheit, darunter die Beschriftung. Die Hervorhebung
+ * eines Extremwerts war rot und ist jetzt orange: Rot heißt in dieser
+ * Oberfläche „Aufmerksamkeit", und ein Höchstwert ist kein Fehler (E-P3-37).
+ */
+.kennzahl-raster{
+  display:grid;gap:var(--abstand-3);
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-bottom:var(--abstand-4);
+}
+.kennzahl{
+  position:relative;
+  padding:var(--abstand-3);
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+}
+.kennzahl.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.kennzahl-wert{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-6);line-height:var(--zeile-eng);
+  color:var(--dunkelblau);
+}
+.kennzahl-einheit{font-size:var(--groesse-2);color:var(--gedaempft);margin-left:var(--abstand-1)}
+.kennzahl-label{font-size:var(--groesse-2);color:var(--gedaempft)}
+.kennzahl-tag{display:block;color:var(--orange-tief);font-weight:600}
+.kennzahl-extrem::after{
+  content:"";position:absolute;top:var(--abstand-2);right:var(--abstand-2);
+  width:var(--abstand-2);height:var(--abstand-2);
+  border-radius:var(--radius-rund);background:var(--orange);
+}
+
+
+/* == 13. TEXT UND ÖFFENTLICHE HÜLLE ========================================
+ *
+ * Fließtext in der Lesespalte — Erklärtexte, Abbruchseite, Impressum und
+ * Datenschutz (E-P3-12, E-P3-38).
+ */
+.text{max-width:var(--lesespalte)}
+.text h1{margin-bottom:var(--abstand-4)}
+.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-3)}
+.text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2)}
+.text p{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-3)}
+.text ul,.text ol{margin:0 0 var(--abstand-3) var(--abstand-5);list-style:disc}
+.text ol{list-style:decimal}
+.text li{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-1)}
+.text a{text-decoration:underline}
+.text-stand{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-5)}
+
+/* ---- Anmeldung ----------------------------------------------------------- */
+.anmeldung-body{
+  background:var(--dunkelblau);
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+}
+.anmeldung{
+  flex:1 1 auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--abstand-5) var(--abstand-3);
+}
+.anmeldung-karte{
+  width:100%;max-width:var(--anmeldekarte);
+  background:var(--schnee);
+  border-radius:var(--radius-gross);
+  padding:var(--abstand-5);
+  box-shadow:var(--schatten-hoch);
+}
+.anmeldung-logo{display:block;height:56px;width:auto;margin:0 auto var(--abstand-4)}
+.anmeldung-titel{text-align:center;font-size:var(--groesse-6)}
+.anmeldung-unter{text-align:center;color:var(--gedaempft);margin-bottom:var(--abstand-5)}
+.anmeldung-neben{text-align:center;margin-top:var(--abstand-4)}
+
+/* ---- Demo-Hinweis --------------------------------------------------------
+ * Dauerhaft, nicht wegklickbar. Ein Hinweis, den man einmal schließt, ist
+ * beim zweiten Besuch nicht mehr da — und genau dann wäre er nötig. */
+.demo-hinweis{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4);
+  margin-bottom:var(--abstand-4);
+  background:var(--orange-hell);
+  border-radius:var(--radius);
+  font-size:var(--groesse-2);
+}
+.demo-hinweis .symbol{color:var(--orange-tief)}
+
+
+/* == 14. TABELLE UND KACHEL ================================================
+ *
+ * Das Gerüst; gefüllt wird es in O3 (Startseite und Kachelform) und O6/O7.
+ *
+ * Unter 720 px gibt es KEINE Tabelle: Die Einsätze erscheinen als dreizeilige
+ * Kachel (E-P3-32). Der Grund steht im Befund — bei 360 px bekamen Einsatzort
+ * und Diagnose null Pixel Breite und verschwanden ohne Hinweis, während sieben
+ * Zahlenspalten stehen blieben.
+ */
+.tabelle{width:100%;border-collapse:collapse}
+.tabelle th{
+  text-align:left;font-weight:600;
+  color:var(--dunkelblau);
+  padding:var(--abstand-2) var(--abstand-2);
+  border-bottom:var(--strich-stark) solid var(--linie);
+  white-space:nowrap;
+}
+.tabelle td{
+  padding:var(--abstand-3) var(--abstand-2);
+  border-bottom:var(--strich) solid var(--linie);
+  vertical-align:middle;
+}
+.tabelle tr:last-child td{border-bottom:0}
+.tabelle-scroll{overflow-x:auto}
+
+
+/* == 15. DIALOG ============================================================
+ *
+ * Bestätigen, Entsperren, Rückspielen, Karte wählen: am Desktop eine Karte im
+ * Schleier, mobil ein Blatt von unten (E-P3-27, 5.3).
+ */
+.dialog{
+  border:0;padding:0;
+  background:var(--schnee);
+  border-radius:var(--radius-gross);
+  box-shadow:var(--schatten-hoch);
+  max-width:min(92vw,32rem);width:100%;
+  color:var(--asphalt);
+}
+.dialog::backdrop{background:var(--schleier)}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+.dialog-inhalt{padding:var(--abstand-4)}
+.dialog-fuss{
+  display:flex;gap:var(--abstand-3);justify-content:flex-end;
+  padding:0 var(--abstand-4) var(--abstand-4);
+}
+.dialog-fuss .knopf{flex:1 1 auto}
+
+
+/* == 16. KARTENANSICHT (Leaflet) ===========================================
+ *
+ * Höhe nach Token, Position nach Schwellen. Der Marker-Satz entsteht in O3.
+ */
+.geo{
+  height:var(--karte-mobil);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:var(--rauch);
+  margin-bottom:var(--abstand-4);
+}
+
+
+/* == 17. ROHSCHICHT ========================================================
+ *
+ * Grundformen für Elemente, die noch kein Baustein trägt. Sie ist ein
+ * ÜBERGANG: P3 baut die Seiteninhalte Paket für Paket um (O3 bis O11), und
+ * bis dahin steht auf jeder noch nicht umgebauten Seite Markup mit
+ * Klassennamen, für die es keine Regel mehr gibt.
+ *
+ * Ohne diese Schicht wäre jede Zwischenprüfung wertlos: Eine Seite ohne
+ * jedes Formgefühl lässt sich weder bedienen noch gegen ein Mockup halten,
+ * und die Screenshot-Prüfung nach jedem Paket liefe gegen eine Ruine.
+ *
+ * Sie greift NUR an Elementnamen, nie an Bestandsklassen. Eine Klasse hier
+ * wiederzubeleben hieße, das Redesign zurückzunehmen; ein <table> lesbar zu
+ * machen heißt es nicht.
+ *
+ * DIESER ABSCHNITT DARF NICHT WACHSEN. Er verschwindet nicht — die
+ * Grundformen bleiben richtig —, aber wer hier eine Klasse einträgt, umgeht
+ * die Bausteinregel.
+ */
+/* TABELLEN SCROLLEN WAAGERECHT STATT DIE SEITE ZU SPRENGEN.
+ *
+ * Der Befund zu P3 hat 32 Tabellen gezählt und genau EINE mit
+ * Überlaufbehälter. Bei 360 px lief die Startseite um 307 px über den
+ * Bildschirmrand hinaus — die Seite selbst liess sich seitwärts schieben,
+ * und damit rutschte auch die Kopfleiste weg.
+ *
+ * `display:block` macht aus der Tabelle eine Box, die ihren eigenen Überlauf
+ * traegt. Das ist der uebliche Griff dafuer und kostet nur eines: Die Spalten
+ * dehnen sich nicht mehr auf die volle Breite, wenn der Inhalt schmal ist.
+ *
+ * FUER DIE EINSATZTABELLEN IST DAS NICHT DIE LOESUNG, sondern die Notbremse:
+ * Sie werden unter 720 px zur Kachel (E-P3-32, O3). Fuer die
+ * Verwaltungstabellen ist es die Loesung, bis sie in O8/O9 zu Zeilen
+ * stapeln. */
+table{
+  display:block;overflow-x:auto;
+  width:100%;border-collapse:collapse;font-size:var(--groesse-2);
+}
+th{text-align:left;font-weight:600;color:var(--dunkelblau);
+  padding:var(--abstand-2);border-bottom:var(--strich-stark) solid var(--linie)}
+td{padding:var(--abstand-2);border-bottom:var(--strich) solid var(--linie);vertical-align:top}
+
+input,select,textarea{
+  max-width:100%;
+  padding:var(--abstand-2) var(--abstand-3);
+  min-height:var(--knopf);
+  background:var(--schnee);color:var(--asphalt);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+}
+input[type=checkbox],input[type=radio]{
+  min-height:0;width:var(--symbol);height:var(--symbol);accent-color:var(--orange);
+}
+/* Das Muster `<label>Text <input></label>` steht im Bestand an über hundert
+ * Stellen. Ohne diese Regel liefe die Eingabe neben der Beschriftung her und
+ * bräche auf schmalen Geräten an unvorhersehbaren Stellen um. Der Baustein
+ * `.feld` macht es später richtig; bis dahin macht es diese Zeile lesbar. */
+label{display:block;margin-bottom:var(--abstand-3)}
+label > input:not([type=checkbox]):not([type=radio]),
+label > select,
+label > textarea{display:block;width:100%;margin-top:var(--abstand-1)}
+label:has(> input[type=checkbox]),
+label:has(> input[type=radio]){
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);margin-bottom:var(--abstand-1);
+}
+fieldset{margin-bottom:var(--abstand-4)}
+legend{font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau)}
+summary{cursor:pointer}
+hr{border:0;border-top:var(--strich) solid var(--linie);margin:var(--abstand-4) 0}
+code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
+pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radius:var(--radius-klein)}
+
+
+/* == 18. SCHWELLEN =========================================================
+ *
+ * Die vier Schwellen aus Anlage G des Konzepts, und NUR hier stehen sie als
+ * Zahlen: Custom Properties funktionieren in Media-Abfragen nicht. Zur
+ * Auskunft liegen dieselben Werte als --s-handy, --s-leiste, --s-zwei und
+ * --s-karte-neben in :root.
+ *
+ *    720   Handy → Tablet hoch: Kachel wird Tabelle, Karte 220 px
+ *   1024   Schublade → feste Leiste, Hauptpunkte in der Kopfleiste
+ *   1200   Leiste 260 px, Zweispalter, Formularkarten nebeneinander
+ *   1600   Karte neben Diensttag-Daten und Tabelle
+ */
+
+/* ---- ab 720: Tablet hoch ------------------------------------------------- */
+@media (min-width:720px){
+  .inhalt{padding:var(--abstand-5) var(--abstand-4)}
+  .geo{height:var(--karte-tablet)}
+  .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .speichern-hinweis{display:block}
+  .speichern .knopf-breit{width:auto}
+  .segment{display:inline-flex}
+}
+
+/* ---- ab 1024: die Leiste steht fest -------------------------------------
+ * Ab hier ist die Schublade fort und die Leiste ein Teil des Rasters. Das
+ * Markup ist dasselbe; nur diese Regeln unterscheiden sich. */
+@media (min-width:1024px){
+  .leiste{
+    position:sticky;top:var(--kopf);inset:auto;
+    width:var(--leiste-schmal);max-width:none;
+    height:calc(100vh - var(--kopf));
+    transform:none;
+    flex:0 0 auto;
+  }
+  .schleier{display:none}
+  .schublade-auf{overflow:visible}
+  .kopf-menue{display:none}
+  .kopf-punkt{display:inline-flex}
+  .kopf-nutzer{
+    display:inline;color:var(--sand);
+    font-size:var(--groesse-2);font-weight:400;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .nur-schublade{display:none}
+  .nur-breit{display:inline-flex}
+  .nur-schmal{display:none}
+
+  /* Unter 1200 px entfällt der Rettungsmittelname in der Leiste; das
+     Artzeichen bleibt (E-P3-09). Bei 220 px Leistenbreite bliebe von ihm
+     ohnehin nur eine Ellipse. */
+  .eintrag-neben{display:none}
+
+  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
+  .blatt{
+    position:absolute;inset:auto 0 auto auto;top:calc(var(--knopf) + var(--abstand-1));
+    width:16rem;
+    border-radius:var(--radius);
+    padding:var(--abstand-2);
+    border:var(--strich) solid var(--linie);
+  }
+  .blatt-griff,.blatt-titel,.blatt-abbrechen{display:none}
+  .blatt-zeile{min-height:var(--knopf)}
+}
+
+/* ---- ab 1200: breite Leiste und Zweispalter ------------------------------ */
+@media (min-width:1200px){
+  .leiste{width:var(--leiste)}
+  .eintrag-neben{display:block}
+  .geo{height:var(--karte-desktop)}
+  .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
+}
+
+/* ---- ab 1600: die Karte steht neben Daten und Tabelle -------------------- */
+@media (min-width:1600px){
+  .karte-neben{display:grid;grid-template-columns:1fr var(--karte-neben-breit);
+    gap:var(--abstand-4);align-items:start}
+}
+
+
+/* == 19. ÜBERSICHTSZEILE ===================================================
+ *
+ * Die Einstellungs-Übersicht (E-P3-11): Symbol, Text, Winkel. Auf dem Handy
+ * ist sie der einzige Weg, der zeigt, WAS es im Bereich gibt.
+ */
+.uebersicht-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:calc(var(--knopf) + var(--abstand-3));
+  padding:0 var(--abstand-2);
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--asphalt);text-decoration:none;
+}
+.uebersicht-zeile:last-child{border-bottom:0}
+.uebersicht-zeile:hover{background:var(--rauch);text-decoration:none}
+.uebersicht-zeile .symbol{color:var(--dunkelblau)}
+.uebersicht-text{
+  flex:1 1 auto;min-width:0;
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
+}
+.uebersicht-winkel{color:var(--sand)}
+
+/* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
+ * stehen Formulare mit Feldgruppen, nicht zwei Zeilen. */
+.anmeldung-breit{max-width:var(--lesespalte)}

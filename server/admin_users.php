@@ -122,13 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users   = db()->query('SELECT id, email, name, role, created_at FROM users ORDER BY email')->fetchAll();
 ui_seite_start(['titel' => 'Administration']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin'); ?>
-
-<main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php /* ---- Erinnerung an die Sicherungen (A8.4) ------------------------
@@ -193,7 +189,5 @@ ui_topbar('einstellungen');
       <button class="btn-primary">Nutzer anlegen</button>
     </form>
   </section>
-<?php ui_footer(); ?>
-</main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

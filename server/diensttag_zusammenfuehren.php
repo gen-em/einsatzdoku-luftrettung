@@ -91,14 +91,10 @@ $wer = static function (array $t): string {
 };
 $zielSym = dt_art_symbol($ziel['kind'] === null ? null : (string)$ziel['kind']);
 ui_seite_start(['titel' => 'Diensttag aufnehmen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar($zielId); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $zielId]); ?>
     <h1>Anderen Diensttag in den <?= e(dt_lesbar($ziel, true)) ?> aufnehmen</h1>
-    <p class="muted"><span class="artzeichen" title="<?= e($zielSym['text']) ?>"
-         aria-label="<?= e($zielSym['text']) ?>"><?= e($zielSym['zeichen']) ?></span>
+    <p class="muted"><?= ui_symbol($zielSym['symbol'], 'artzeichen', $zielSym['text']) ?>
        <?= e($wer($ziel)) ?> — dieser Diensttag <strong>bleibt</strong>.</p>
 
     <?php ui_meldung(null, $fehler); ?>
@@ -142,8 +138,7 @@ ui_topbar('uebersicht');
                     <input type="radio" id="<?= e($id) ?>" disabled aria-label="nicht wählbar">
                   <?php endif; ?></td>
               <td><label for="<?= e($id) ?>">
-                    <span class="artzeichen" title="<?= e($sym['text']) ?>"
-                          aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                    <?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
                     <?= e(dt_lesbar($k, true)) ?></label></td>
               <td><?= e($wer($k)) ?><?php if (!$k['vereinbar']): ?>
                     <br><span class="muted small">Nicht wählbar: <?= e($sym['text']) ?>,
@@ -170,8 +165,7 @@ ui_topbar('uebersicht');
           $ergSym   = dt_art_symbol($vorschau['kind']); ?>
     <div class="card">
       <p>Aufgenommen wird:</p>
-      <p><span class="artzeichen" title="<?= e($quellSym['text']) ?>"
-               aria-label="<?= e($quellSym['text']) ?>"><?= e($quellSym['zeichen']) ?></span>
+      <p><?= ui_symbol($quellSym['symbol'], 'artzeichen', $quellSym['text']) ?>
          <strong><?= e(dt_lesbar($quelle, true)) ?></strong> — <?= e($wer($quelle)) ?></p>
       <p class="muted">Danach gibt es diesen Diensttag <strong>nicht mehr</strong>.
          Seine Einsätze, Ruhesegmente und Uhr-Kennungen hängen am Diensttag
@@ -205,8 +199,7 @@ ui_topbar('uebersicht');
               <span class="muted small">(nur einer der beiden Diensttage hat ein
                 erfasstes Ende; es gilt für den zusammengeführten)</span>
             <?php endif; ?></li>
-        <li>Art <span class="artzeichen" title="<?= e($ergSym['text']) ?>"
-                     aria-label="<?= e($ergSym['text']) ?>"><?= e($ergSym['zeichen']) ?></span>
+        <li>Art <?= ui_symbol($ergSym['symbol'], 'artzeichen', $ergSym['text']) ?>
             <strong><?= e($ergSym['text']) ?></strong></li>
       </ul>
     </div>
@@ -260,7 +253,5 @@ ui_topbar('uebersicht');
         · <a href="index.php?d=<?= (int)$zielId ?>">Abbrechen</a></p>
     </form>
 <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

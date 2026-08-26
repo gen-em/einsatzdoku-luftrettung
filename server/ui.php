@@ -42,7 +42,7 @@ declare(strict_types=1);
  *   titel    Pflicht. Der Wortlaut VOR dem Trenner; " — Einsatzdoku" haengt
  *            diese Funktion an. Der Text wird hier maskiert — Aufrufer
  *            uebergeben Klartext, kein Markup.
- *   klasse   Klasse am <body> (z. B. 'login-body'); fehlt sie, hat das
+ *   klasse   Klasse am <body> (z. B. 'anmeldung-body'); fehlt sie, hat das
  *            <body>-Element kein Attribut.
  *   karte    true  -> Leaflet-CSS zusaetzlich einbinden (nur Kartenseiten)
  *   stil     false -> style.css NICHT einbinden. Genau ein Aufrufer: der
@@ -204,235 +204,285 @@ function ui_symbol(string $name, string $klassen = '', ?string $titel = null): s
     return $a . '<use href="' . ui_e($pfad) . '"></use></svg>';
 }
 
+/* ===========================================================================
+ * BAUSTEINE (P3/O2)
+ *
+ * Ab hier steht das Gerüst der Oberfläche und der Vorrat, aus dem jede Seite
+ * gebaut wird. Die Regel dazu ist knapp und gilt ohne Ausnahme:
+ *
+ *   Eine Seite setzt vorhandene Bausteine zusammen und definiert nichts
+ *   Eigenes. Ein neuer Baustein wird vorher beschrieben, mit Mockup
+ *   vorgelegt, freigegeben und in docs/Design.md aufgenommen (E-P3-06,
+ *   CLAUDE.md Abschnitt 9).
+ *
+ * WARUM DAS HIER STEHT UND NICHT IN DEN SEITEN. Bis Web 8.0.1 baute jede
+ * Seite ihre Karten, Zeilen, Knöpfe und Meldungen selbst. Das Ergebnis waren
+ * sechs Schaltflächenvarianten für vier Bedeutungen, zwei Farben für dieselbe
+ * Handlung („Bearbeiten" orange in der Einsatzansicht, gelb in den
+ * Stammdaten) und eine Mindesttrefferfläche, die keine Zeilenaktion erreichte.
+ * Nicht aus Nachlässigkeit — sondern weil es keine Stelle gab, an der ein Knopf
+ * EINMAL beschrieben ist.
+ *
+ * DIE JS-ERZEUGER BENUTZEN DIESELBEN KLASSEN. Große Teile der Oberfläche
+ * entstehen erst im Browser (missiontable.js, die Reiter der Einstellungen,
+ * die Feldliste der Einsatzansicht). Wer hier eine Klasse ändert, ändert sie
+ * dort mit; die Vollständigkeitsprüfung meldet jede Klasse, die nur an einer
+ * der beiden Stellen vorkommt.
+ * ======================================================================== */
+
 /**
- * Hinweis- und Fehlerzeile ueber dem Seiteninhalt.
+ * Merkzettel: Steht auf dieser Seite die Diensttage-Leiste?
  *
- * WARUM ES SIE GIBT (P0/A6, Befund C2). Dieselben zwei Zeilen standen in 13
- * Dateien — 21-mal derselbe Dreisatz aus Abfrage, Klasse und Maskierung.
- * Uneinheitlich war dabei nur eines: die Klasse der Hinweiszeile. Elf Stellen
- * schrieben "alert-info", zwei "alert-ok" (Stammdaten und Nachbearbeitung,
- * beide melden dort einen Vollzug). Deshalb der dritte Parameter — nicht als
- * Vorrat fuer kuenftige Toene, sondern weil der Bestand zwei kennt.
- *
- * Reihenfolge: erst der Hinweis, dann der Fehler. Genau so stand es an allen
- * Stellen ausser login.php, wo beide einander ausschliessen ($hinweis wird nur
- * ohne $error gezeigt) — dort ist die Reihenfolge ohne Wirkung.
- *
- * $einzug ruecken die ZWEITE Zeile ein: Die erste erbt die Einrueckung des
- * <?php-Tags im Aufrufer, die zweite nicht. Nur noetig, wo beide Zeilen
- * zugleich erscheinen koennen.
+ * ui_geruest_start() trägt es ein, ui_geruest_ende() liest es — damit
+ * daylist.js nur dort mitkommt, wo es ein Akkordeon zu verkoppeln gibt.
  */
-function ui_meldung(?string $hinweis, ?string $fehler = null,
-                    string $ton = 'info', string $einzug = ''): void
+function ui_hat_tagesleiste(?bool $setzen = null): bool
 {
-    $zeilen = [];
-    if ($hinweis !== null && $hinweis !== '') {
-        $zeilen[] = '<p class="alert alert-' . ui_e($ton) . '">' . ui_e($hinweis) . '</p>';
-    }
-    if ($fehler !== null && $fehler !== '') {
-        $zeilen[] = '<p class="alert">' . ui_e($fehler) . '</p>';
-    }
-    if ($zeilen === []) { return; }
-    echo implode("\n" . $einzug, $zeilen), "\n";
+    static $ja = false;
+    if ($setzen !== null) { $ja = $setzen; }
+    return $ja;
 }
 
+/** Anzeigename der angemeldeten Person — Name, sonst E-Mail. */
 function ui_user_label(): string {
     global $userName, $userEmail;
     return ($userName !== null && $userName !== '') ? $userName : (string)$userEmail;
 }
 
-/** Kopfleiste: Vogel-Icon + Titel + Name; Menü Übersicht / Suche / ⚙ */
-function ui_topbar(string $active): void { ?>
-<header class="topbar">
-  <a class="brand" href="index.php">
-    <img src="<?= asset('assets/images/gen-em_logo_helicopter_weiss.svg') ?>" alt="">
-    <span>Einsatzdokumentation Notarzt – <?= e(ui_user_label()) ?></span>
-  </a>
-  <nav class="mainnav">
-    <a href="index.php" <?= $active === 'uebersicht' ? 'class="active"' : '' ?>>Übersicht</a>
-    <a href="suche.php" <?= $active === 'suche' ? 'class="active"' : '' ?>>Suche</a>
-    <a class="gearlink <?= $active === 'einstellungen' ? 'active' : '' ?>"
-       href="einstellungen.php?t=profil" title="Einstellungen" aria-label="Einstellungen">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">
-        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-        <circle cx="12" cy="12" r="1.9"/>
-      </svg></a>
-  </nav>
-</header>
-<?php ui_demo_banner(); }
+/**
+ * Pfad zum Logo für die Kopfleiste (weiße Fassung) bzw. für helle Flächen.
+ *
+ * Die Wahl je Profil (E-P3-20: Standard / Hubschrauber / Fahrzeug /
+ * wechselnd) entsteht in O8. Diese Funktion ist die eine Stelle, an der sie
+ * dann greift — sie fragt schon jetzt die Sitzung, findet dort nichts und
+ * fällt auf den Standard zurück. Damit ist der Umbau in O8 eine Zuweisung
+ * und keine Suche über 25 Seiten.
+ */
+function ui_logo(bool $weiss = false): string
+{
+    $wahl = (string)($_SESSION['logo_wahl'] ?? '');
+    $stamm = match ($wahl) {
+        'fahrzeug'      => 'gen-em_logo_fahrzeug',
+        'hubschrauber'  => 'gen-em_logo_helicopter',
+        default         => 'gen-em_logo_helicopter',
+    };
+    return ui_asset('assets/images/' . $stamm . ($weiss ? '_weiss' : '') . '.svg');
+}
+
 
 /**
- * Banner im Demo-Konto (E-P1-18).
+ * Artzeichen eines Diensttags — Symbol mit Textalternative.
  *
- * DAUERHAFT, nicht wegklickbar. Ein Hinweis, den man einmal schliesst, ist
- * beim zweiten Besuch nicht mehr da — und genau dann waere er noetig: Wer
- * nach einer Pause wiederkommt, findet seine Eingaben nicht mehr vor und
- * soll wissen, warum.
+ * Die EINE Stelle, an der aus `days.kind` ein sichtbares Zeichen wird. Bis
+ * Web 8.0.1 stand an vierzehn Stellen dieselbe Zeile mit einem Emoji darin;
+ * jetzt steht hier ein Aufruf, und die Zeichnung kommt aus dem Symbolvorrat
+ * (E-P3-18).
  *
- * Er nennt VIER Dinge, und alle vier sind noetig: dass die Daten erfunden
- * sind (sonst liest jemand sie als echte Faelle), dass Ausprobieren
- * erwuenscht ist (sonst traut sich niemand), dass alles regelmaessig
- * verworfen wird (sonst ist die Ueberraschung gross) und dass hier keine
- * echten Daten hineingehoeren (das ist der Punkt, an dem es ernst wird —
- * das Schluesselmaterial dieses Kontos liegt auf dem Server).
- *
- * Steht in der Huelle, nicht auf einzelnen Seiten: Sonst fehlte er auf der
- * einen Seite, die jemand zu ergaenzen vergisst.
+ * WO KEIN SVG HINEINPASST — in einem <option> etwa —, nimmt man nicht dieses
+ * Markup, sondern das WORT aus dt_art_symbol()['text'].
  */
-function ui_demo_banner(): void
+function ui_artzeichen(?string $kind, string $klassen = ''): string
 {
-    require_once __DIR__ . '/demo_lib.php';
-    $uid = $_SESSION['user_id'] ?? null;
-    if (!demo_ist_demo($uid === null ? null : (int)$uid)) { return; }
-    $rest = demo_reset_in();
+    require_once __DIR__ . '/diensttag_lib.php';
+    $sym = dt_art_symbol($kind);
+    return ui_symbol($sym['symbol'], trim('artzeichen ' . $klassen), $sym['text']);
+}
+
+
+/* ---------------------------------------------------------------------------
+ * KOPFLEISTE  (.kopf)
+ *
+ * Mobil: Menüknopf links, Logo und Name in der Mitte, Zahnrad rechts.
+ * Ab 1024: Logo, Name und Nutzername links; rechts „Startseite" und „Suche"
+ * mit Symbol (aktiv mit orangem Strich) und das Zahnrad.
+ *
+ * Der Menüpunkt heißt STARTSEITE, nicht „Übersicht" (E-P3-07) — im Suchmenü
+ * daneben war „Übersicht" missverständlich. Der Seitentitel bleibt
+ * „Tagesübersicht", wie das Handbuch ihn nennt.
+ *
+ * Die Kopfleiste bleibt voll breit; ihr Inhalt sitzt auf demselben Raster wie
+ * Leiste und Inhalt darunter (E-P3-12).
+ *
+ * $o: aktiv   'start' | 'suche' | 'einstellungen' | ''
+ *     menue   false = kein Menüknopf und kein Zahnrad (öffentliche Hülle)
+ *     zurueck ['text' => …, 'href' => …] statt der Hauptpunkte (öffentlich)
+ * ------------------------------------------------------------------------ */
+function ui_kopf(array $o = []): void
+{
+    $aktiv  = (string)($o['aktiv'] ?? '');
+    $menue  = ($o['menue'] ?? true) !== false;
+    $zurueck = $o['zurueck'] ?? null;
     ?>
-<div class="demobanner" role="status">
-  <strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
-  erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
-  anlegen, löschen, Uhr koppeln. Der Bestand wird
-  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
-  zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
-      . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
-  <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong>
-</div>
+<header class="kopf">
+  <div class="kopf-innen">
+    <?php if ($menue): ?>
+    <button type="button" class="knopf knopf-symbol kopf-menue" data-schublade="auf"
+            aria-expanded="false" aria-controls="leiste" aria-label="Menü öffnen">
+      <?= ui_symbol('menu', 'symbol-gross') ?>
+    </button>
+    <?php endif; ?>
+
+    <a class="kopf-marke" href="index.php">
+      <img src="<?= ui_e(ui_logo(true)) ?>" alt="" width="40" height="25">
+      <span class="kopf-name">Einsatzdoku</span>
+      <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
+    </a>
+
+    <nav class="kopf-punkte" aria-label="Hauptbereiche">
+      <?php if ($zurueck !== null): ?>
+        <a class="kopf-punkt" href="<?= ui_e((string)$zurueck['href']) ?>">
+          <?= ui_symbol('zurueck') ?><span><?= ui_e((string)$zurueck['text']) ?></span>
+        </a>
+      <?php elseif ($menue): ?>
+        <a class="kopf-punkt<?= $aktiv === 'start' ? ' aktiv' : '' ?>" href="index.php"
+           <?= $aktiv === 'start' ? 'aria-current="page"' : '' ?>>
+          <?= ui_symbol('kalender') ?><span>Startseite</span>
+        </a>
+        <a class="kopf-punkt<?= $aktiv === 'suche' ? ' aktiv' : '' ?>" href="suche.php"
+           <?= $aktiv === 'suche' ? 'aria-current="page"' : '' ?>>
+          <?= ui_symbol('lupe') ?><span>Suche</span>
+        </a>
+        <a class="knopf knopf-symbol kopf-zahnrad<?= $aktiv === 'einstellungen' ? ' aktiv' : '' ?>"
+           href="einstellungen.php" aria-label="Einstellungen"
+           <?= $aktiv === 'einstellungen' ? 'aria-current="page"' : '' ?>>
+          <?= ui_symbol('zahnrad', 'symbol-gross') ?>
+        </a>
+      <?php endif; ?>
+    </nav>
+  </div>
+</header>
 <?php }
 
-/**
- * Abbruchseite: Der aufgerufene Datensatz existiert nicht, gehoert einem
- * anderen Konto oder liegt im Papierkorb — hier ist Schluss.
+
+/* ---------------------------------------------------------------------------
+ * SEITENGERÜST  (.rahmen, .leiste, .inhalt)
  *
- * WARUM ES SIE GIBT (P0/A6, Befund C3). An 16 Stellen stand dafuer
- * `exit('Einsatz nicht gefunden.')`: nackter Text ohne Zeichensatzangabe, ohne
- * Kopfleiste, ohne Weg zurueck. Wer einen veralteten Link oeffnet, landete in
- * einer weissen Seite mit sechs Woertern und musste die Zurueck-Taste finden.
- * Der HTTP-Code stimmte, die Seite war trotzdem eine Sackgasse.
+ * EINE Markup-Fassung für Leiste und Schublade. Unter 1024 px liegt dieselbe
+ * `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie
+ * fest daneben — der Unterschied ist ausschließlich CSS.
  *
- * Wortlaut und Code bleiben unveraendert — nur die Verpackung kommt hinzu.
+ * Das ist die Lehre aus der Vormerkliste von P0 (10.5): „Wird die
+ * Seitenleiste zur Schublade, muss der Mechanismus an der KLASSE hängen und
+ * nicht an ui_days_sidebar() — sonst bleibt die Suchseite als einzige ohne
+ * Mobile-Menü." Genau deshalb kennt dieses Gerüst drei Leisteninhalte und
+ * behandelt sie gleich.
  *
- * VORAUSSETZUNG: auth_guard.php ist geladen (ui_topbar() braucht $userEmail).
- * Alle 16 Aufrufstellen liegen hinter der Anmeldung; zwei davon stehen in
- * auth_guard.php selbst, in Funktionen, die erst nach dessen Durchlauf gerufen
- * werden.
+ * $o: aktiv    Hauptpunkt in der Kopfleiste ('start' | 'suche' | 'einstellungen')
+ *     leiste   'diensttage' | 'einstellungen' | 'filter' | null
+ *     tag      Kennung des gewählten Diensttags (nur bei 'diensttage')
+ *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
+ *     titel    Überschrift der Leiste bei 'filter'
  *
- * $o: titel        Titel der Seite; fehlt er, ergibt ihn der HTTP-Code
- *     zurueck      Ziel des Rueckwegs (Vorgabe: index.php)
- *     zurueck_text Beschriftung des Rueckwegs
- */
-function ui_abbruch(int $code, string $text, array $o = []): never
+ * Bei 'filter' gibt diese Funktion die Leiste NICHT aus: Die Suchseite füllt
+ * sie selbst und ruft danach ui_leiste_ende(). Bei allen anderen Werten ist
+ * nach diesem Aufruf `<main class="inhalt">` offen.
+ * ------------------------------------------------------------------------ */
+function ui_geruest_start(array $o = []): void
 {
-    http_response_code($code);
-    $titel = (string)($o['titel'] ?? match ($code) {
-        404     => 'Nicht gefunden',
-        403     => 'Kein Zugriff',
-        default => 'Nicht möglich',
-    });
-    ui_seite_start(['titel' => $titel]);
-    ui_topbar('');
-    $ziel = (string)($o['zurueck'] ?? 'index.php');
-    $wort = (string)($o['zurueck_text'] ?? 'Zur Übersicht');
-    echo '<main class="page">' . "\n";
-    echo '  <p class="alert">' . ui_e($text) . '</p>' . "\n";
-    echo '  <p><a class="add-link" href="' . ui_e($ziel) . '">← ' . ui_e($wort) . '</a></p>' . "\n";
-    echo '</main>' . "\n";
-    ui_seite_ende();
-    exit;
+    $leiste = (string)($o['leiste'] ?? '');
+    ui_hat_tagesleiste($leiste === 'diensttage');
+    ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    ?>
+<div class="schleier" data-schublade="zu" hidden></div>
+<div class="rahmen">
+  <aside class="leiste" id="leiste" aria-label="Bereichsmenü">
+    <div class="leiste-kopf nur-schublade">
+      <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
+        <?= ui_symbol('schliessen', 'symbol-gross') ?>
+      </button>
+      <span class="kopf-name">Einsatzdoku</span>
+    </div>
+    <nav class="leiste-haupt nur-schublade" aria-label="Hauptbereiche">
+      <a class="eintrag<?= ($o['aktiv'] ?? '') === 'start' ? ' aktiv' : '' ?>" href="index.php">
+        <?= ui_symbol('kalender') ?><span class="eintrag-text">Startseite</span>
+      </a>
+      <a class="eintrag<?= ($o['aktiv'] ?? '') === 'suche' ? ' aktiv' : '' ?>" href="suche.php">
+        <?= ui_symbol('lupe') ?><span class="eintrag-text">Suche</span>
+      </a>
+    </nav>
+<?php
+    if ($leiste === 'diensttage') {
+        ui_leiste_diensttage(isset($o['tag']) ? (int)$o['tag'] : null);
+        ui_leiste_ende();
+    } elseif ($leiste === 'einstellungen') {
+        ui_leiste_einstellungen((string)($o['menue'] ?? ''));
+        ui_leiste_ende();
+    } elseif ($leiste === '') {
+        ui_leiste_ende();
+    } else {
+        // 'filter' — die Seite füllt die Leiste selbst.
+        echo '    <h2 class="leiste-kopfzeile">' . ui_e((string)($o['titel'] ?? 'Filter')) . "</h2>\n";
+    }
+}
+
+/** Schließt die Leiste und öffnet den Inhalt. Siehe ui_geruest_start(). */
+function ui_leiste_ende(): void
+{
+    echo "  </aside>\n";
+    echo '  <main class="inhalt" id="inhalt">' . "\n";
+    ui_demo_hinweis();
 }
 
 /**
- * Untermenue der Einstellungen — identisch auf einstellungen.php, admin_users.php,
- * admin_user.php und admin_stammdaten.php. Die Administration (eigener,
- * abgesetzter Block) erscheint nur fuer Admins.
+ * Schließt Inhalt und Rahmen, setzt die Fußzeile darunter und lädt die
+ * Skripte des Gerüsts.
  *
- * $active: profil | standorte | rettungsmittel | backup | import | geraete
- *          | admin | admin_standorte | admin_rettungsmittel | admin_sicherungen
- *          | wartung
+ * DIE VIER SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
+ * gehören zur Hülle, und eine Seite, die eines davon zu laden vergisst, fällt
+ * nicht auf — sie verhält sich nur an einer Stelle anders als alle anderen.
+ * Genau so war es bis Web 8.0.1 mit confirm.js, das auf drei Seiten zweimal
+ * und auf drei anderen gar nicht eingebunden war.
  *
- * ZWEI EINTRAEGE STATT EINEM (Web 7.0.0). „Standortdaten" hiess der Punkt, an
- * dem sich alles sammelte: Standorte, Rettungsmittel, Besatzungen, Zielkliniken,
- * Bergwacht. Der Name war irrefuehrend — Standortdaten sind die Daten EINES
- * Standorts, hier standen aber die Standorte selbst und ihr gesamter Inhalt.
- *
- * Jetzt trennt der Schnitt danach, was man tut:
- *   Standorte       Standorte anlegen und auswaehlen — und sonst nichts.
- *   Rettungsmittel  was an den ausgewaehlten Standorten haengt.
- * Dieselbe Zweiteilung gilt in der Administration fuer die systemweiten
- * Eintraege.
+ * daylist.js kommt nur mit, wo es eine Diensttage-Leiste gibt: Auf
+ * Einstellungen, Import, Administration und Wartung sucht es sein Akkordeon,
+ * findet nichts und kehrt zurück — eine Anfrage und ein Parse-Durchgang für
+ * nichts.
  */
-function ui_settings_sidebar(string $active): void {
-    $items = [
-        'profil'         => ['einstellungen.php?t=profil', 'Profil'],
-        'standorte'      => ['einstellungen.php?t=standorte', 'Standorte'],
-        'rettungsmittel' => ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel'],
-        'backup'         => ['einstellungen.php?t=backup', 'Backup'],
-        // Eigene Seite (import.php), erscheint aber als Eintrag der
-        // Einstellungen — wie admin_stammdaten.php.
-        'import'         => ['import.php', 'Import / Export'],
-        'geraete'        => ['einstellungen.php?t=geraete', 'Geräte'],
-    ];
-    ?>
-  <aside class="daylist">
-    <h2>Einstellungen</h2>
-    <ul>
-      <?php foreach ($items as $key => [$href, $label]): ?>
-        <li><a href="<?= $href ?>" <?= $active === $key ? 'class="active"' : '' ?>><?= $label ?></a></li>
-      <?php endforeach; ?>
-      <li><a href="logout.php" data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"
-             data-confirm-tone="normal">Abmelden</a></li>
-    </ul>
-    <?php if (ist_admin()): ?>
-      <h2 class="sidebar-subhead">Administration</h2>
-      <ul>
-        <li><a href="admin_users.php" <?= $active === 'admin' ? 'class="active"' : '' ?>>NutzerInnenverwaltung</a></li>
-        <?php /* Aufgeteilt wie in der Kontoansicht (Web 7.0.0): erst die
-                 Standorte, dann was an ihnen haengt. „Zentrale Stammdaten" war
-                 EIN Eintrag fuer sechs Datenarten. */ ?>
-        <li><a href="admin_stammdaten.php?t=standorte" <?= $active === 'admin_standorte' ? 'class="active"' : '' ?>>Standorte systemweit</a></li>
-        <li><a href="admin_stammdaten.php?t=rettungsmittel" <?= $active === 'admin_rettungsmittel' ? 'class="active"' : '' ?>>Rettungsmittel systemweit</a></li>
-        <li><a href="admin_sicherungen.php" <?= $active === 'admin_sicherungen' ? 'class="active"' : '' ?>>Sicherungen</a></li>
-        <?php /* Eigener Eintrag statt eines Abschnitts in der
-                 NutzerInnenverwaltung: Dort stehen Konten in einer Liste,
-                 hier geht es um EIN Konto mit eigenen Regeln, dessen Zustand
-                 man sehen will, bevor man etwas tut. */ ?>
-        <li><a href="admin_demo.php" <?= $active === 'admin_demo' ? 'class="active"' : '' ?>>Demo-Konto</a></li>
-        <?php /* Wartung war bis Web 4.5.2 nur ueber die direkte Adresse
-           erreichbar. Das machte die Auskunft aus M3-05 wertlos: Sie meldet,
-           dass der Aufraeumjob dauerhaft scheitert — auf einer Seite, die
-           niemand oeffnet, meldet sie das niemandem.
+function ui_geruest_ende(array $o = []): void
+{
+    echo "  </main>\n</div>\n";
+    ui_fuss_seite($o);
 
-           Der Eintrag ist gefahrlos: Die Seite fuehrt beim blossen Aufrufen
-           NICHTS aus (Abnahmekriterium A19), sie zeigt nur an, was anstuende. */ ?>
-        <li><a href="update.php" <?= $active === 'wartung' ? 'class="active"' : '' ?>>Wartung</a></li>
-      </ul>
-    <?php endif; ?>
-  </aside>
-<?php }
+    $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
+                'assets/confirm.js'];
+    if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
+    foreach ($skripte as $s) {
+        echo '<script src="' . ui_e(ui_asset($s)) . '"></script>' . "\n";
+    }
+}
 
-/**
- * Diensttage-Leiste (serverseitig, auf allen Inhaltsseiten identisch).
+
+/* ---------------------------------------------------------------------------
+ * LEISTENINHALT: DIENSTTAGE
  *
- * SIE LISTET JETZT DIENSTTAGE, NICHT KALENDERTAGE (E9, Web 6.0.0). Bis dahin
- * entstand die Liste aus den vorkommenden DATEN in drei Tabellen — sie musste
- * es, weil ein Flugtag ohne eigene Zeile Einsaetze haben konnte. Seit
- * `missions.day_id` ein Fremdschluessel ist, gibt es das nicht mehr: Jeder
- * Einsatz haengt an einer Zeile in `days`, und diese Zeile IST der Eintrag.
+ * SIE LISTET DIENSTTAGE, NICHT KALENDERTAGE (E9, Web 6.0.0): Jeder Einsatz
+ * hängt an einer Zeile in `days`, und diese Zeile IST der Eintrag. Zwei
+ * Dienste an einem Kalendertag stehen als zwei Zeilen untereinander;
+ * auseinandergehalten werden sie durch die Uhrzeit des Dienstbeginns — aber
+ * nur dann, denn im Regelfall kostet sie nur Breite.
  *
- * Zwei Dienste an einem Kalendertag stehen deshalb als zwei Zeilen
- * untereinander. Auseinandergehalten werden sie durch die Uhrzeit des
- * Dienstbeginns — aber nur DANN: Im Regelfall, ein Dienst am Tag, kostet sie
- * nur Breite in einer Leiste, die auf schmalen Geraeten ohnehin knapp ist.
+ * DREI ÄNDERUNGEN GEGENÜBER DEM BESTAND (E-P3-09):
  *
- * Das Symbol der Art (E27, A7c) steht am Anfang der Zeile mit einer
- * Textalternative in `title` und `aria-label` — die Auskunft haengt nicht an
- * der Grafik.
- */
-function ui_days_sidebar(?int $currentDayId): void {
+ *  1  Die ganze Zeile klappt das Akkordeon, nicht nur das Dreieck. Bisher war
+ *     der TEXT der Link auf die Jahres-/Monatsübersicht und nur das Dreieck
+ *     der Schalter — auf einem Touchgerät nicht zu unterscheiden. Jetzt
+ *     klappt die Zeile, und der Weg in die Übersicht ist ein eigenes Symbol
+ *     rechts (Balken).
+ *  2  Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
+ *  3  Lange Rettungsmittelnamen werden mit Ellipse abgeschnitten; der volle
+ *     Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der
+ *     Name ganz, das Artzeichen bleibt.
+ *
+ * Das Artzeichen kommt aus dem Symbolvorrat statt als Emoji (E-P3-18) — es
+ * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
+ * Betriebssystem gleich aus.
+ * ------------------------------------------------------------------------ */
+function ui_leiste_diensttage(?int $currentDayId): void
+{
     global $userId;
-    ui_hat_tagesleiste(true);   // fuer ui_footer(), s. dort
     require_once __DIR__ . '/diensttag_lib.php';
     $tage = dt_liste($userId, 500);
 
-    // Nach Jahr -> Monat gruppieren (je Y => M => [Diensttage]), Reihenfolge
-    // bleibt absteigend, da $tage bereits absteigend sortiert aus der DB kommt.
     $monatsnamen = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
         'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     $baum = [];
@@ -441,8 +491,8 @@ function ui_days_sidebar(?int $currentDayId): void {
         $baum[substr($d, 0, 4)][substr($d, 5, 2)][] = $t;
     }
 
-    // Welches Jahr/Monat soll offen sein? Der aktuell gewaehlte Diensttag hat
-    // Vorrang, sonst der juengste vorhandene (oberstes Jahr/oberster Monat).
+    // Welches Jahr und welcher Monat sollen offen sein? Der gewählte Diensttag
+    // hat Vorrang, sonst der jüngste vorhandene.
     $aktuellesDatum = null;
     foreach ($tage as $t) {
         if ($currentDayId !== null && (int)$t['id'] === $currentDayId) {
@@ -459,75 +509,801 @@ function ui_days_sidebar(?int $currentDayId): void {
         $offenerMonat = substr((string)$tage[0]['day'], 5, 2);
     }
     ?>
-<aside class="daylist">
-  <h2>Diensttage</h2>
-  <div class="dayyears">
-    <?php if (!$baum): ?><p class="muted daylist-empty">noch keine</p><?php endif; ?>
-    <?php foreach ($baum as $jahr => $monate):
-        // Achtung: PHP macht aus numerischen Array-Schluesseln Integer
-        // ("2026" -> 2026, "12" -> 12, "07" bleibt String). Deshalb ueberall
-        // ausdruecklich nach String wandeln — sonst bricht e() unter
-        // strict_types ab und Monatsvergleiche schlagen ab Oktober fehl.
-        $jahrS = (string)$jahr; ?>
-      <details class="yearblock" <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
-        <summary><a class="zeitlink" href="zeitraum.php?y=<?= e($jahrS) ?>"><?= e($jahrS) ?></a></summary>
-        <?php foreach ($monate as $monat => $monatsTage):
-            $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
-          <details class="monthblock"
-                    <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
-            <summary><a class="zeitlink"
-                        href="zeitraum.php?y=<?= e($jahrS) ?>&amp;m=<?= e($monatS) ?>"><?= e($monatsnamen[(int)$monatS]) ?></a></summary>
-            <ul>
+    <h2 class="leiste-kopfzeile">Diensttage</h2>
+    <div class="leiste-liste">
+      <?php if (!$baum): ?><p class="leiste-leer">noch keine</p><?php endif; ?>
+      <?php foreach ($baum as $jahr => $monate):
+          /* PHP macht aus numerischen Array-Schlüsseln Integer ("2026" -> 2026,
+             "07" bleibt String). Deshalb überall ausdrücklich nach String
+             wandeln — sonst bricht ui_e() unter strict_types ab und
+             Monatsvergleiche schlagen ab Oktober fehl. */
+          $jahrS = (string)$jahr; ?>
+        <details class="akkordeon" <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
+          </summary>
+          <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+             aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
+            <?= ui_symbol('balken') ?>
+          </a>
+          <div class="akkordeon-inhalt">
+          <?php foreach ($monate as $monat => $monatsTage):
+              $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
+            <details class="akkordeon akkordeon-monat"
+                     <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
+              <summary class="akkordeon-zeile">
+                <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+                <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
+              </summary>
+              <a class="akkordeon-uebersicht"
+                 href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                 aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
+                 title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
+              <div class="akkordeon-inhalt">
               <?php foreach ($monatsTage as $t):
-                  $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']);
-                  $titel = $sym['text'];
-                  if ($t['vehicle_name'] !== null && $t['vehicle_name'] !== '') {
-                      $titel = (string)$t['vehicle_name'] . ' — ' . $sym['text'];
-                  } ?>
-                <li><a href="index.php?d=<?= (int)$t['id'] ?>"
-                       <?= (int)$t['id'] === $currentDayId ? 'class="active"' : '' ?>><span
-                       class="artzeichen" title="<?= e($titel) ?>"
-                       aria-label="<?= e($titel) ?>"><?= e($sym['zeichen']) ?></span>
-                       <?= e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></a></li>
+                  $kind = $t['kind'] === null ? null : (string)$t['kind'];
+                  $sym  = dt_art_symbol($kind);
+                  $name = (string)($t['vehicle_name'] ?? '');
+                  $titel = $name !== '' ? $name . ' — ' . $sym['text'] : $sym['text'];
+                  $ist = (int)$t['id'] === $currentDayId; ?>
+                <a class="eintrag<?= $ist ? ' aktiv' : '' ?>"
+                   href="index.php?d=<?= (int)$t['id'] ?>"
+                   <?= $ist ? 'aria-current="page"' : '' ?> title="<?= ui_e($titel) ?>">
+                  <?= ui_artzeichen($kind) ?>
+                  <span class="eintrag-text"><?= ui_e(dt_lesbar($t, (bool)$t['mehrfach'])) ?></span>
+                  <?php if ($name !== ''): ?>
+                    <span class="eintrag-neben"><?= ui_e($name) ?></span>
+                  <?php else: ?>
+                    <span class="eintrag-neben">—</span>
+                  <?php endif; ?>
+                </a>
               <?php endforeach; ?>
-            </ul>
-          </details>
-        <?php endforeach; ?>
-      </details>
-    <?php endforeach; ?>
-  </div>
+              </div>
+            </details>
+          <?php endforeach; ?>
+          </div>
+        </details>
+      <?php endforeach; ?>
+    </div>
     <?php
       require_once __DIR__ . '/trash_lib.php';
       $trashLeer = !trash_list_days($userId) && !trash_list_missions($userId);
       require_once __DIR__ . '/nachbearbeitung_lib.php';
       $nbOffen = nb_offen_gesamt($userId);
     ?>
-    <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist (E24,
-             A12). Ein dauerhafter Eintrag fuer eine einmalige Aufgabe waere
-             genau der Hinweis, den man nicht loswird. */ ?>
-    <?php if ($nbOffen > 0): ?>
-      <a class="dayadd nachbearbeitung" href="nachbearbeitung.php"
-         title="Zuordnungen nachtragen">
-        Zuordnung offen (<?= (int)$nbOffen ?>)
+    <div class="leiste-fuss">
+      <?php /* Die Nachbearbeitung erscheint NUR, solange etwas offen ist (E24,
+               A12, bestätigt in E-P3-09). Ein dauerhafter Eintrag für eine
+               einmalige Aufgabe wäre genau der Hinweis, den man nicht
+               loswird. */ ?>
+      <?php if ($nbOffen > 0): ?>
+        <a class="eintrag eintrag-offen" href="nachbearbeitung.php">
+          <?= ui_symbol('warnung') ?>
+          <span class="eintrag-text">Zuordnung offen</span>
+          <span class="zaehler"><?= (int)$nbOffen ?></span>
+        </a>
+      <?php endif; ?>
+      <a class="eintrag eintrag-anlegen" href="diensttag_neu.php">
+        <?= ui_symbol('plus') ?><span class="eintrag-text">Diensttag anlegen</span>
       </a>
-    <?php endif; ?>
-    <a class="dayadd" href="diensttag_neu.php" title="Diensttag von Hand anlegen">
-      + Diensttag anlegen
-    </a>
-    <a class="trashlink<?= $trashLeer ? ' leer' : '' ?>" href="papierkorb.php"
-       title="<?= $trashLeer ? 'Papierkorb ist leer' : 'Papierkorb' ?>">
-      <!-- viewBox auf die Zeichnung zugeschnitten (x 4-20, y 3-21): Ohne den
-           Leerraum entspricht die CSS-Hoehe direkt der sichtbaren Groesse. -->
-      <svg viewBox="4 3 16 18" xmlns="http://www.w3.org/2000/svg"
-           fill="currentColor" aria-hidden="true">
-        <path d="M9 3h6l1 1h4v2H4V4h4l1-1zM6 7h12l-1 13.1c-.06.5-.5.9-1 .9H8c-.5 0-.94-.4-1-.9L6 7zm3.5 2.6v9h1.6v-9H9.5zm3.4 0v9h1.6v-9h-1.6z"/>
-      </svg>
-      <span>Papierkorb</span>
-    </a>
-
-</aside>
+      <a class="eintrag eintrag-leise" href="papierkorb.php"
+         title="<?= $trashLeer ? 'Papierkorb ist leer' : 'Papierkorb' ?>">
+        <?= ui_symbol('korb') ?><span class="eintrag-text">Papierkorb</span>
+      </a>
+    </div>
 <?php }
 
+
+/* ---------------------------------------------------------------------------
+ * LEISTENINHALT: EINSTELLUNGEN
+ *
+ * Derselbe Baustein wie die Diensttage-Leiste — bis Web 8.0.1 trug das
+ * Einstellungsmenü buchstäblich die Klasse `.daylist` und erbte damit jede
+ * Regel der Tagesleiste, einschließlich der 100-vh-Höhe, die auf dem Handy
+ * anderthalb Bildschirme vor den Inhalt schob.
+ *
+ * Die Administration steht als abgesetzter zweiter Block und nur für Admins.
+ * „Abmelden" steht getrennt am Ende (E-P3-11).
+ * ------------------------------------------------------------------------ */
+function ui_leiste_einstellungen(string $aktiv): void
+{
+    $punkte = [
+        'profil'         => ['einstellungen.php?t=profil',         'Profil',          'profil'],
+        'standorte'      => ['einstellungen.php?t=standorte',      'Standorte',       'standort'],
+        'rettungsmittel' => ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel',  'fahrzeug'],
+        'geraete'        => ['einstellungen.php?t=geraete',        'Geräte',          'uhr'],
+        'backup'         => ['einstellungen.php?t=backup',         'Backup',          'sicherung'],
+        'import'         => ['import.php',                         'Import / Export', 'tausch'],
+    ];
+    $admin = [
+        'admin'                => ['admin_users.php',                       'NutzerInnen',            'gruppe'],
+        'admin_standorte'      => ['admin_stammdaten.php?t=standorte',      'Standorte systemweit',   'datenbank'],
+        'admin_rettungsmittel' => ['admin_stammdaten.php?t=rettungsmittel', 'Rettungsmittel systemweit', 'datenbank'],
+        'admin_sicherungen'    => ['admin_sicherungen.php',                 'Sicherungen',            'sicherung'],
+        'admin_demo'           => ['admin_demo.php',                        'Demo-Konto',             'kolben'],
+        'wartung'              => ['update.php',                            'Wartung',                'werkzeug'],
+    ];
+    ?>
+    <h2 class="leiste-kopfzeile">Einstellungen</h2>
+    <div class="leiste-liste">
+      <?php foreach ($punkte as $key => [$href, $text, $sym]): ?>
+        <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
+           <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
+          <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
+        </a>
+      <?php endforeach; ?>
+
+      <?php if (function_exists('ist_admin') && ist_admin()): ?>
+        <h2 class="leiste-kopfzeile">Administration</h2>
+        <?php foreach ($admin as $key => [$href, $text, $sym]): ?>
+          <a class="eintrag<?= $aktiv === $key ? ' aktiv' : '' ?>" href="<?= ui_e($href) ?>"
+             <?= $aktiv === $key ? 'aria-current="page"' : '' ?>>
+            <?= ui_symbol($sym) ?><span class="eintrag-text"><?= ui_e($text) ?></span>
+          </a>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+    <div class="leiste-fuss">
+      <a class="eintrag eintrag-leise" href="logout.php"
+         data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"
+         data-confirm-tone="normal">
+        <?= ui_symbol('abmelden') ?><span class="eintrag-text">Abmelden</span>
+      </a>
+    </div>
+<?php }
+
+
+/**
+ * Einstellungs-Übersicht — die Eingangsseite des Bereichs (E-P3-11).
+ *
+ * Sie führt dieselben Punkte wie die Leiste, aber als Liste im Inhalt: Symbol,
+ * Text, Winkel. Auf dem Handy ist sie der einzige Weg, der zeigt, WAS es
+ * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
+ * auf „Profil" landet, verschweigt die übrigen elf Punkte.
+ *
+ * Die Administration steht als abgesetzter zweiter Block. „Abmelden" steht
+ * getrennt am Ende, darunter nur der Name der angemeldeten Person.
+ */
+function ui_einstellungen_uebersicht(): void
+{
+    $bloecke = [['', [
+        ['einstellungen.php?t=profil',         'Profil',           'profil'],
+        ['einstellungen.php?t=standorte',      'Standorte',        'standort'],
+        ['einstellungen.php?t=rettungsmittel', 'Rettungsmittel',   'fahrzeug'],
+        ['einstellungen.php?t=geraete',        'Geräte',           'uhr'],
+        ['einstellungen.php?t=backup',         'Backup',           'sicherung'],
+        ['import.php',                         'Import / Export',  'tausch'],
+    ]]];
+    if (function_exists('ist_admin') && ist_admin()) {
+        $bloecke[] = ['Administration', [
+            ['admin_users.php',                       'NutzerInnen',               'gruppe'],
+            ['admin_stammdaten.php?t=standorte',      'Standorte systemweit',      'datenbank'],
+            ['admin_stammdaten.php?t=rettungsmittel', 'Rettungsmittel systemweit', 'datenbank'],
+            ['admin_sicherungen.php',                 'Sicherungen',               'sicherung'],
+            ['admin_demo.php',                        'Demo-Konto',                'kolben'],
+            ['update.php',                            'Wartung',                   'werkzeug'],
+        ]];
+    }
+
+    ui_seite_start(['titel' => 'Einstellungen']);
+    ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => '']);
+    ui_titelzeile(['titel' => 'Einstellungen', 'unter' => ui_e(ui_user_label())]);
+    foreach ($bloecke as [$titel, $punkte]) {
+        ui_karte_start($titel !== '' ? ['titel' => $titel] : []);
+        foreach ($punkte as [$href, $text, $sym]) {
+            echo '    <a class="uebersicht-zeile" href="' . ui_e($href) . '">'
+               . ui_symbol($sym, 'symbol-gross')
+               . '<span class="uebersicht-text">' . ui_e($text) . '</span>'
+               . ui_symbol('winkel', 'symbol-rechts uebersicht-winkel') . "</a>\n";
+        }
+        ui_karte_ende();
+    }
+    ui_karte_start();
+    echo '    ' . ui_knopf(['text' => 'Abmelden', 'href' => 'logout.php', 'art' => 'leise',
+        'symbol' => 'abmelden', 'breit' => true,
+        'attr' => ' data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"'
+                . ' data-confirm-tone="normal"']) . "\n";
+    ui_karte_ende();
+    ui_geruest_ende();
+    ui_seite_ende();
+}
+
+
+/* ---------------------------------------------------------------------------
+ * FUSSZEILE  (.fuss-seite)
+ *
+ * Zweizeilig und zentriert, auf JEDER Seite — auch auf Anmeldung, Passwort
+ * zurücksetzen, Abbruchseite und Einrichter (R32, E-P3-14).
+ *
+ * Sie steht AUSSERHALB von <main>. Bis Web 8.0.1 stand sie mitten im Inhalt;
+ * für ein Gerüst mit klebender Leiste unten ist das der falsche Ort — und es
+ * war der Grund, warum sie auf Seiten ohne Inhalt fehlte.
+ *
+ * Die Verweise auf Impressum und Datenschutz erscheinen erst, wenn es die
+ * Seiten gibt (sie entstehen in O10). Ein Verweis, der ins Leere führt, ist
+ * schlimmer als keiner: Er sieht aus wie ein Angebot.
+ *
+ * $o: dunkel  true = helle Schrift auf Dunkelblau (Anmeldung)
+ * ------------------------------------------------------------------------ */
+function ui_fuss_seite(array $o = []): void
+{
+    $lizenz = 'https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE';
+    $rechts = [];
+    foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutz'] as $d => $text) {
+        if (is_file(__DIR__ . '/' . $d . '.php')) {
+            $rechts[] = '<a href="' . $d . '.php">' . $text . '</a>';
+        }
+    }
+    ?>
+<footer class="fuss-seite<?= !empty($o['dunkel']) ? ' fuss-dunkel' : '' ?>">
+  <p class="fuss-zeile">© Gen-EM · Open Source
+    <a href="<?= ui_e($lizenz) ?>" target="_blank" rel="noopener">AGPL-3.0</a>
+    <span class="fuss-version">v<?= ui_e(defined('WEB_VERSION') ? WEB_VERSION : '') ?></span></p>
+  <?php if ($rechts): ?>
+  <p class="fuss-zeile fuss-rechts"><?= implode("\n    ", $rechts) ?></p>
+  <?php endif; ?>
+</footer>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * DEMO-HINWEIS  (.demo-hinweis)
+ *
+ * DAUERHAFT, nicht wegklickbar. Ein Hinweis, den man einmal schließt, ist beim
+ * zweiten Besuch nicht mehr da — und genau dann wäre er nötig: Wer nach einer
+ * Pause wiederkommt, findet seine Eingaben nicht mehr vor und soll wissen,
+ * warum.
+ *
+ * Er nennt VIER Dinge, und alle vier sind nötig: dass die Daten erfunden sind
+ * (sonst liest jemand sie als echte Fälle), dass Ausprobieren erwünscht ist
+ * (sonst traut sich niemand), dass alles regelmäßig verworfen wird (sonst ist
+ * die Überraschung groß) und dass hier keine echten Daten hineingehören — das
+ * ist der Punkt, an dem es ernst wird: Das Schlüsselmaterial dieses Kontos
+ * liegt auf dem Server.
+ *
+ * NEU IN P3: Er steht INNERHALB des Inhalts, nicht zwischen Kopfleiste und
+ * Gerüst. Vorher verschob er die klebende Leiste um seine eigene Höhe, und im
+ * Demo-Konto rutschte sie unter der Kopfleiste hervor (F-P3-G).
+ * ------------------------------------------------------------------------ */
+function ui_demo_hinweis(): void
+{
+    if (!function_exists('demo_ist_demo')) {
+        if (!is_file(__DIR__ . '/demo_lib.php')) { return; }
+        require_once __DIR__ . '/demo_lib.php';
+    }
+    $uid = $_SESSION['user_id'] ?? null;
+    if (!demo_ist_demo($uid === null ? null : (int)$uid)) { return; }
+    $rest = demo_reset_in();
+    ?>
+<div class="demo-hinweis" role="status">
+  <?= ui_symbol('kolben', 'symbol-gross') ?>
+  <p><strong>Demo-Konto.</strong> Alle Daten hier sind <strong>frei
+  erfunden</strong>. Ausprobieren ist ausdrücklich erwünscht — ändern,
+  anlegen, löschen, Uhr koppeln. Der Bestand wird
+  <strong>alle 30&nbsp;Minuten</strong> auf den Ausgangsstand
+  zurückgesetzt<?= $rest > 0 ? ', das nächste Mal in etwa '
+      . (int)ceil($rest / 60) . '&nbsp;Minuten' : '' ?>.
+  <strong>Bitte niemals echte Patienten- oder Einsatzdaten erfassen.</strong></p>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * MELDUNG  (.meldung)
+ *
+ * VIER TÖNE, jeder mit Symbol und optionalem fettem Auftakt (E-P3-16):
+ *
+ *   fehler   rosa/rot   Dreieck    „Nicht gespeichert."
+ *   info     hellblau   Kreis-i    Erklärung, Zustand
+ *   ok       hellblau   Haken      Vollzug: „Sicherung erstellt."
+ *   warn     hellorange Dreieck    Warnung, die kein Fehler ist
+ *
+ * GRÜN IST FORT. Die Vollzugsmeldung war grün — eine Farbe, die es in der
+ * Marke nicht gibt. Sie ist jetzt blau wie der Hinweis und unterscheidet sich
+ * durch das SYMBOL: Haken gegen Kreis-i. Das ist zugleich die Einlösung des
+ * Vorbehalts E-A6-02 aus Konzept P0, der die Tonart ausdrücklich P3
+ * überlassen hat.
+ *
+ * Farbe ist nie der einzige Träger (Grundregel 3) — deshalb trägt jede
+ * Meldung ein Symbol, und das war vorher bei keiner der Fall.
+ *
+ * Signatur wie im Bestand, damit die 21 Aufrufstellen unverändert bleiben:
+ *   $hinweis, $fehler, $ton, $einzug
+ * $o ergänzt sie um:
+ *   auftakt         fetter Auftakt der Hinweiszeile
+ *   auftakt_fehler  fetter Auftakt der Fehlerzeile (Vorgabe „Nicht gespeichert.")
+ *   knopf           Markup rechts in der Meldung (z. B. „Entsperren")
+ * ------------------------------------------------------------------------ */
+function ui_meldung(?string $hinweis, ?string $fehler = null,
+                    string $ton = 'info', string $einzug = '',
+                    array $o = []): void
+{
+    $zeilen = [];
+    if ($hinweis !== null && $hinweis !== '') {
+        $zeilen[] = ui_meldung_markup($ton, $hinweis,
+            (string)($o['auftakt'] ?? ''), (string)($o['knopf'] ?? ''));
+    }
+    if ($fehler !== null && $fehler !== '') {
+        $zeilen[] = ui_meldung_markup('fehler', $fehler,
+            (string)($o['auftakt_fehler'] ?? ''), '');
+    }
+    if ($zeilen === []) { return; }
+    echo implode("\n" . $einzug, $zeilen), "\n";
+}
+
+/** Markup einer einzelnen Meldung. Auch von den JS-Erzeugern nachgebaut. */
+function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
+                           string $knopf = ''): string
+{
+    $symbole = ['fehler' => 'warnung', 'warn' => 'warnung',
+                'ok' => 'haken', 'info' => 'hinweis'];
+    $sym = $symbole[$ton] ?? 'hinweis';
+    $m = '<div class="meldung meldung-' . ui_e($ton) . '" role="' . ($ton === 'fehler' ? 'alert' : 'status') . '">';
+    $m .= ui_symbol($sym, 'symbol-gross');
+    $m .= '<p>';
+    if ($auftakt !== '') { $m .= '<strong>' . ui_e($auftakt) . '</strong> '; }
+    $m .= ui_e($text) . '</p>';
+    if ($knopf !== '') { $m .= '<div class="meldung-aktion">' . $knopf . '</div>'; }
+    return $m . '</div>';
+}
+
+
+/* ---------------------------------------------------------------------------
+ * KNOPF  (.knopf)
+ *
+ * EINE HÖHE: 44 px, mobil wie Desktop, auch für Zeilenaktionen. Es gibt keine
+ * Kompaktvariante — was kleiner ist, ist kein Knopf, sondern ein Link mit
+ * Symbol (E-P3-22). Der Bestand hatte sechs Varianten und sechs
+ * ortsgebundene Größen; `.btn-primary` trug global `width:100%` und wurde an
+ * zehn Stellen zurückgenommen.
+ *
+ * VIER ARTEN, nach Bedeutung und nicht nach Aussehen:
+ *   primaer   Orange, dunkelblaue Schrift — die eine Haupthandlung
+ *   neutral   Rahmen — alles Übrige, auch „Bearbeiten"
+ *   gefahr    roter Rahmen, rote Schrift — Löschen
+ *   leise     nur Schrift — Abbrechen, Nebenwege
+ *   symbol    44 x 44, nur ein Zeichen (braucht 'titel')
+ *
+ * $o: text, href, symbol, art, titel, klasse, typ, name, wert, attr, breit
+ * ------------------------------------------------------------------------ */
+function ui_knopf(array $o): string
+{
+    $art  = (string)($o['art'] ?? 'neutral');
+    $text = (string)($o['text'] ?? '');
+    $k = 'knopf knopf-' . $art;
+    if ($art === 'symbol') { $k = 'knopf knopf-symbol'; }
+    if (!empty($o['breit']))  { $k .= ' knopf-breit'; }
+    if (!empty($o['klasse'])) { $k .= ' ' . (string)$o['klasse']; }
+
+    $inneres = '';
+    if (!empty($o['symbol'])) { $inneres .= ui_symbol((string)$o['symbol'], 'symbol-gross'); }
+    if ($text !== '') {
+        $inneres .= '<span>' . ui_e($text) . '</span>';
+    } elseif (!empty($o['titel'])) {
+        $inneres .= '<span class="nur-vorlesen">' . ui_e((string)$o['titel']) . '</span>';
+    }
+
+    $attr = (string)($o['attr'] ?? '');
+    if (!empty($o['titel'])) { $attr .= ' title="' . ui_e((string)$o['titel']) . '"'; }
+
+    if (!empty($o['href'])) {
+        return '<a class="' . $k . '" href="' . ui_e((string)$o['href']) . '"' . $attr . '>'
+             . $inneres . '</a>';
+    }
+    $b = '<button class="' . $k . '" type="' . ui_e((string)($o['typ'] ?? 'submit')) . '"';
+    if (!empty($o['name'])) { $b .= ' name="' . ui_e((string)$o['name']) . '"'; }
+    if (isset($o['wert']))  { $b .= ' value="' . ui_e((string)$o['wert']) . '"'; }
+    return $b . $attr . '>' . $inneres . '</button>';
+}
+
+
+/* ---------------------------------------------------------------------------
+ * PLAKETTE  (.plakette)
+ *
+ * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
+ * sind KEINE Bedienelemente — wer eine anklickbar braucht, nimmt einen Knopf
+ * (E-P3-17).
+ *
+ * Töne: neutral · orange (Winde, Bergwacht) · blau (Sekundär,
+ * Rettungsmittel, aktuell, freigegeben) · rot (Fehleinsatz, kein Ende, nie
+ * gesichert, leer).
+ * ------------------------------------------------------------------------ */
+function ui_plakette(string $text, array $o = []): string
+{
+    $k = 'plakette plakette-' . ui_e((string)($o['ton'] ?? 'neutral'));
+    $p = '<span class="' . $k . '">';
+    if (!empty($o['symbol'])) { $p .= ui_symbol((string)$o['symbol']); }
+    $p .= ui_e($text);
+    if (!empty($o['entfernen'])) {
+        $p .= '<button type="button" class="plakette-weg" '
+            . 'aria-label="' . ui_e($text . ' entfernen') . '" '
+            . (string)($o['entfernen_attr'] ?? '') . '>' . ui_symbol('schliessen') . '</button>';
+    }
+    return $p . '</span>';
+}
+
+
+/* ---------------------------------------------------------------------------
+ * KARTE  (.karte) — der Inhaltsblock
+ *
+ * Jeder Inhaltsblock ist eine Karte mit Titel in Bricolage, optionaler Zahl
+ * (gedämpft) und GENAU EINER Kopfaktion rechts als Link mit Symbol:
+ * „Bearbeiten" (blau) oder ein Anlegen-Weg („+ Nachtragen", orange tief).
+ * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
+ * Aktionsmenü (E-P3-25).
+ *
+ * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
+ * („keine", „vom Diensttag", „3 · 1 ausgewählt").
+ *
+ * $o: titel, zahl, aktion ['text','href','symbol','art'], zu (bool),
+ *     vorschau, klasse, id
+ * ------------------------------------------------------------------------ */
+function ui_karte_start(array $o = []): void
+{
+    $zu = !empty($o['zu']) || isset($o['vorschau']);
+    $k  = 'karte' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
+    $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
+
+    if ($zu) {
+        echo '<details class="' . $k . ' karte-klappbar"' . $id
+           . (!empty($o['offen']) ? ' open' : '') . ">\n";
+        echo '  <summary class="karte-kopf">' . "\n";
+        echo '    ' . ui_symbol('winkel', 'akkordeon-winkel') . "\n";
+        echo '    <h2 class="karte-titel">' . ui_e((string)($o['titel'] ?? '')) . "</h2>\n";
+        if (isset($o['zahl'])) {
+            echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
+        }
+        if (isset($o['vorschau'])) {
+            echo '    <span class="karte-vorschau">' . ui_e((string)$o['vorschau']) . "</span>\n";
+        }
+        echo "  </summary>\n";
+        echo '  <div class="karte-inhalt">' . "\n";
+        return;
+    }
+
+    echo '<section class="' . $k . '"' . $id . ">\n";
+    if (isset($o['titel'])) {
+        echo '  <div class="karte-kopf">' . "\n";
+        echo '    <h2 class="karte-titel">' . ui_e((string)$o['titel']) . "</h2>\n";
+        if (isset($o['zahl'])) {
+            echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
+        }
+        if (!empty($o['aktion'])) {
+            $a = $o['aktion'];
+            $art = (string)($a['art'] ?? 'blau');
+            echo '    <a class="karte-aktion karte-aktion-' . ui_e($art) . '" href="'
+               . ui_e((string)($a['href'] ?? '#')) . '"'
+               . (!empty($a['attr']) ? ' ' . (string)$a['attr'] : '') . '>'
+               . (!empty($a['symbol']) ? ui_symbol((string)$a['symbol']) : '')
+               . '<span>' . ui_e((string)($a['text'] ?? '')) . "</span></a>\n";
+        }
+        echo "  </div>\n";
+    }
+    echo '  <div class="karte-inhalt">' . "\n";
+}
+
+function ui_karte_ende(bool $klappbar = false): void
+{
+    echo "  </div>\n" . ($klappbar ? "</details>\n" : "</section>\n");
+}
+
+
+/* ---------------------------------------------------------------------------
+ * ZEILE  (.zeile)
+ *
+ * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
+ * sind die Aktionen Knöpfe zu 44 px, mobil ein einziges „⋯" je Zeile, das
+ * dasselbe Aktionsblatt öffnet (E-P3-26).
+ *
+ * $o: text, klein, plaketten (Markup), aktionen (Markup), href, klasse
+ * ------------------------------------------------------------------------ */
+function ui_zeile(array $o): void
+{
+    $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
+    echo '<div class="' . $k . '">' . "\n";
+    echo '  <div class="zeile-text">' . "\n";
+    $t = '<span class="zeile-haupt">' . ui_e((string)($o['text'] ?? '')) . '</span>';
+    echo '    ' . (!empty($o['href'])
+        ? '<a href="' . ui_e((string)$o['href']) . '">' . $t . '</a>'
+        : $t) . "\n";
+    if (!empty($o['klein'])) {
+        echo '    <span class="zeile-klein">' . ui_e((string)$o['klein']) . "</span>\n";
+    }
+    echo "  </div>\n";
+    if (!empty($o['plaketten'])) {
+        echo '  <div class="zeile-plaketten">' . (string)$o['plaketten'] . "</div>\n";
+    }
+    if (!empty($o['aktionen'])) {
+        echo '  <div class="zeile-aktionen">' . (string)$o['aktionen'] . "</div>\n";
+    }
+    echo "</div>\n";
+}
+
+
+/* ---------------------------------------------------------------------------
+ * TITELZEILE  (.titelzeile)
+ *
+ * Rückweg, Titel, Unterzeile, Aktionen rechts — der Kopf fast jeder Seite.
+ *
+ * $o: zurueck ['text','href'], titel, titel_mobil, unter, aktionen (Markup)
+ * ------------------------------------------------------------------------ */
+function ui_titelzeile(array $o): void
+{
+    ?>
+<div class="titelzeile">
+  <?php if (!empty($o['zurueck'])): ?>
+    <a class="rueckweg" href="<?= ui_e((string)$o['zurueck']['href']) ?>">
+      <?= ui_symbol('winkel', 'symbol-links') ?><span><?= ui_e((string)$o['zurueck']['text']) ?></span>
+    </a>
+  <?php endif; ?>
+  <div class="titelzeile-haupt">
+    <div class="titelzeile-text">
+      <h1<?= !empty($o['titel_mobil']) ? ' data-mobil="' . ui_e((string)$o['titel_mobil']) . '"' : '' ?>><?= ui_e((string)($o['titel'] ?? '')) ?></h1>
+      <?php if (!empty($o['unter'])): ?>
+        <p class="titelzeile-unter"><?= (string)$o['unter'] ?></p>
+      <?php endif; ?>
+    </div>
+    <?php if (!empty($o['aktionen'])): ?>
+      <div class="titelzeile-aktionen"><?= (string)$o['aktionen'] ?></div>
+    <?php endif; ?>
+  </div>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * AKTIONSMENÜ  (.aktionen) und BLATT  (.blatt)
+ *
+ * Mobil ein „⋯" neben dem Titel, das ein Blatt von unten öffnet: Griff,
+ * Titel, große Zeilen zu 50 px, „Löschen" rot und durch eine Linie
+ * abgesetzt, „Abbrechen". Am Desktop derselbe Vorrat als „Aktionen ▾" in
+ * einem Aufklappmenü. Der Anlegen-Weg steht auch dort als erste Zeile
+ * (E-P3-27).
+ *
+ * EIN Markup für beide Formen; assets/blatt.js entscheidet nichts, es öffnet
+ * und schließt nur. Welche Form erscheint, sagt das Stylesheet.
+ *
+ * $o: titel, eintraege [ ['text','href','symbol','gefahr'=>bool,'attr'] ]
+ * ------------------------------------------------------------------------ */
+function ui_aktionen(array $o): string
+{
+    $id = 'aktionen-' . substr(sha1((string)($o['titel'] ?? '') . count((array)($o['eintraege'] ?? []))), 0, 8);
+    $m  = '<div class="aktionen">';
+    $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" '
+        . 'aria-expanded="false" aria-controls="' . $id . '" data-blatt="' . $id . '">'
+        . ui_symbol('punkte', 'symbol-gross nur-schmal')
+        . '<span class="nur-breit">Aktionen</span>'
+        . ui_symbol('winkel', 'nur-breit') . '</button>';
+    $m .= '<div class="blatt" id="' . $id . '" hidden>';
+    $m .= '<div class="blatt-griff" aria-hidden="true"></div>';
+    $m .= '<h2 class="blatt-titel">' . ui_e((string)($o['titel'] ?? 'Aktionen')) . '</h2>';
+    $m .= '<div class="blatt-liste">';
+    foreach ((array)($o['eintraege'] ?? []) as $e) {
+        $k = 'blatt-zeile' . (!empty($e['gefahr']) ? ' blatt-gefahr' : '')
+           . (!empty($e['anlegen']) ? ' blatt-anlegen' : '');
+        $m .= '<a class="' . $k . '" href="' . ui_e((string)($e['href'] ?? '#')) . '"'
+            . (!empty($e['attr']) ? ' ' . (string)$e['attr'] : '') . '>'
+            . (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
+            . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span></a>';
+    }
+    $m .= '</div>';
+    $m .= '<button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>'
+        . '<span>Abbrechen</span></button>';
+    $m .= '</div></div>';
+    return $m;
+}
+
+
+/* ---------------------------------------------------------------------------
+ * FELD  (.feld)
+ *
+ * Beschriftung oben, Eingabe 44 px hoch, blauer Fokusring, optionale
+ * Kleinzeile darunter. Reihen zu zweit oder dritt entstehen über
+ * `.feld-reihe` um mehrere Felder.
+ *
+ * Die Beschriftung steht in NORMALSCHRIFT. Im Bestand waren Feldnamen,
+ * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
+ * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
+ *
+ * $o: name, label, wert, art (text|date|time|number|email|password|select|
+ *     textarea), optionen, klein, pflicht, attr, klasse, platzhalter
+ * ------------------------------------------------------------------------ */
+function ui_feld(array $o): void
+{
+    $name = (string)($o['name'] ?? '');
+    $id   = (string)($o['id'] ?? ($name !== '' ? 'f-' . preg_replace('/[^\w-]/', '-', $name) : ''));
+    $art  = (string)($o['art'] ?? 'text');
+    $attr = (string)($o['attr'] ?? '');
+    if (!empty($o['pflicht'])) { $attr .= ' required'; }
+    if (!empty($o['platzhalter'])) { $attr .= ' placeholder="' . ui_e((string)$o['platzhalter']) . '"'; }
+    ?>
+<div class="feld<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>">
+  <?php if (isset($o['label'])): ?>
+    <label class="feld-label" for="<?= ui_e($id) ?>"><?= ui_e((string)$o['label']) ?><?php
+      if (!empty($o['pflicht'])): ?> <span class="feld-pflicht" aria-hidden="true">*</span><?php endif; ?></label>
+  <?php endif; ?>
+  <?php if ($art === 'select'): ?>
+    <select class="feld-eingabe" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"<?= $attr ?>>
+      <?php foreach ((array)($o['optionen'] ?? []) as $wert => $text): ?>
+        <option value="<?= ui_e((string)$wert) ?>"
+          <?= (string)$wert === (string)($o['wert'] ?? '') ? 'selected' : '' ?>><?= ui_e((string)$text) ?></option>
+      <?php endforeach; ?>
+    </select>
+  <?php elseif ($art === 'textarea'): ?>
+    <textarea class="feld-eingabe feld-mehrzeilig" id="<?= ui_e($id) ?>"
+              name="<?= ui_e($name) ?>" rows="<?= (int)($o['zeilen'] ?? 3) ?>"<?= $attr ?>><?= ui_e((string)($o['wert'] ?? '')) ?></textarea>
+  <?php else: ?>
+    <input class="feld-eingabe" type="<?= ui_e($art) ?>" id="<?= ui_e($id) ?>"
+           name="<?= ui_e($name) ?>" value="<?= ui_e((string)($o['wert'] ?? '')) ?>"<?= $attr ?>>
+  <?php endif; ?>
+  <?php if (!empty($o['klein'])): ?>
+    <p class="feld-klein"><?= ui_e((string)$o['klein']) ?></p>
+  <?php endif; ?>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * SCHALTER  (.schalter)
+ *
+ * Ja/Nein-Felder werden Schalter in 44-px-Zeilen: Beschriftung links, an in
+ * Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem
+ * Randstrich (E-P3-28).
+ *
+ * Gebaut aus einer echten Checkbox — die Tastaturbedienung, der
+ * Vorlesezustand und das Absenden im Formular kommen damit vom Browser und
+ * nicht aus einem Skript.
+ *
+ * $o: name, label, an (bool), klein, wert, attr, id
+ * ------------------------------------------------------------------------ */
+function ui_schalter(array $o): void
+{
+    $name = (string)($o['name'] ?? '');
+    $id   = (string)($o['id'] ?? 'sw-' . preg_replace('/[^\w-]/', '-', $name));
+    ?>
+<div class="schalter">
+  <input type="checkbox" class="schalter-box" id="<?= ui_e($id) ?>"
+         name="<?= ui_e($name) ?>" value="<?= ui_e((string)($o['wert'] ?? '1')) ?>"
+         <?= !empty($o['an']) ? 'checked' : '' ?><?= (string)($o['attr'] ?? '') ?>>
+  <label class="schalter-label" for="<?= ui_e($id) ?>">
+    <span class="schalter-text"><?= ui_e((string)($o['label'] ?? '')) ?>
+      <?php if (!empty($o['klein'])): ?><span class="schalter-klein"><?= ui_e((string)$o['klein']) ?></span><?php endif; ?>
+    </span>
+    <span class="schalter-griff" aria-hidden="true"></span>
+  </label>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * SEGMENTWAHL  (.segment)
+ *
+ * Tastenreihe mit orangem Aktivzustand — für Gemischt/Luft/Boden,
+ * egal/ja/nein und die Wochentage. Mobil vollbreit (E-P3-30).
+ *
+ * Als Radiogruppe gebaut, nicht als Knopfreihe mit Skript: Pfeiltasten,
+ * Vorlesezustand und Absenden kommen damit vom Browser.
+ *
+ * $o: name, wert, optionen [wert => text], klasse, attr
+ * ------------------------------------------------------------------------ */
+function ui_segment(array $o): void
+{
+    $name = (string)($o['name'] ?? '');
+    ?>
+<div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>"
+     role="group"<?= !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
+  <?php $i = 0; foreach ((array)($o['optionen'] ?? []) as $wert => $text):
+      $id = 'sg-' . preg_replace('/[^\w-]/', '-', $name . '-' . $wert . '-' . $i++); ?>
+    <input type="radio" class="segment-box" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"
+           value="<?= ui_e((string)$wert) ?>"
+           <?= (string)$wert === (string)($o['wert'] ?? '') ? 'checked' : '' ?><?= (string)($o['attr'] ?? '') ?>>
+    <label class="segment-taste" for="<?= ui_e($id) ?>"><?= ui_e((string)$text) ?></label>
+  <?php endforeach; ?>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * SPEICHERN-LEISTE  (.speichern)
+ *
+ * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist —
+ * das Dirty-Tracking dafür liegt seit Web 7.0.0 in assets/forms.js
+ * (`data-dirty-track`). Mobil ein breiter Primärknopf; am Desktop der Knopf
+ * links plus der Hinweis „Ungespeicherte Änderungen · Strg + Enter speichert".
+ *
+ * KEIN „VERWERFEN". Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
+ * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
+ *
+ * $o: text, hinweis, name, wert, attr
+ * ------------------------------------------------------------------------ */
+function ui_speichern_leiste(array $o = []): void
+{
+    ?>
+<div class="speichern" data-speichern hidden>
+  <div class="speichern-innen">
+    <?= ui_knopf([
+        'text' => (string)($o['text'] ?? 'Speichern'),
+        'art' => 'primaer', 'symbol' => 'haken', 'breit' => true,
+        'name' => (string)($o['name'] ?? ''), 'wert' => (string)($o['wert'] ?? ''),
+        'attr' => (string)($o['attr'] ?? ''),
+    ]) ?>
+    <p class="speichern-hinweis"><?= ui_e((string)($o['hinweis']
+        ?? 'Ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
+  </div>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * KENNZAHL  (.kennzahl)
+ *
+ * Wert in Bricolage mit Einheit, darunter die Beschriftung. Extremwerte
+ * tragen einen Punkt oben rechts und den Tag in der Beschriftung; die aktive
+ * Kachel wird hell orange mit orangem Rahmen (E-P3-37).
+ *
+ * Die Hervorhebung war rot und ist jetzt orange: Rot heißt in dieser
+ * Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein Höchstwert ist kein
+ * Fehler.
+ *
+ * $o: wert, einheit, label, extrem (Text des Tages), aktiv, attr
+ * ------------------------------------------------------------------------ */
+function ui_kennzahl(array $o): string
+{
+    $k = 'kennzahl' . (!empty($o['aktiv']) ? ' aktiv' : '')
+       . (!empty($o['extrem']) ? ' kennzahl-extrem' : '');
+    $m  = '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>';
+    $m .= '<p class="kennzahl-wert">' . ui_e((string)($o['wert'] ?? '–'));
+    if (!empty($o['einheit'])) {
+        $m .= '<span class="kennzahl-einheit">' . ui_e((string)$o['einheit']) . '</span>';
+    }
+    $m .= '</p>';
+    $m .= '<p class="kennzahl-label">' . ui_e((string)($o['label'] ?? ''));
+    if (!empty($o['extrem'])) {
+        $m .= '<span class="kennzahl-tag">' . ui_e((string)$o['extrem']) . '</span>';
+    }
+    $m .= '</p></div>';
+    return $m;
+}
+
+
+/* ---------------------------------------------------------------------------
+ * ABBRUCHSEITE
+ *
+ * Der aufgerufene Datensatz existiert nicht, gehört einem anderen Konto oder
+ * liegt im Papierkorb — hier ist Schluss.
+ *
+ * An 16 Stellen stand dafür einmal `exit('Einsatz nicht gefunden.')`: nackter
+ * Text ohne Zeichensatzangabe, ohne Kopfleiste, ohne Weg zurück. Der HTTP-Code
+ * stimmte, die Seite war trotzdem eine Sackgasse.
+ *
+ * $o: titel, zurueck, zurueck_text
+ * ------------------------------------------------------------------------ */
+function ui_abbruch(int $code, string $text, array $o = []): never
+{
+    http_response_code($code);
+    $titel = (string)($o['titel'] ?? match ($code) {
+        404     => 'Nicht gefunden',
+        403     => 'Kein Zugriff',
+        default => 'Nicht möglich',
+    });
+    $ziel = (string)($o['zurueck'] ?? 'index.php');
+    $wort = (string)($o['zurueck_text'] ?? 'Zur Startseite');
+
+    ui_seite_start(['titel' => $titel]);
+    ui_kopf(['menue' => false, 'zurueck' => ['text' => $wort, 'href' => $ziel]]);
+    echo '<div class="rahmen rahmen-lesespalte">' . "\n";
+    echo '  <main class="inhalt">' . "\n";
+    echo '    <div class="text">' . "\n";
+    echo '      <h1>' . ui_e($titel) . "</h1>\n";
+    echo '      ' . ui_meldung_markup('fehler', $text) . "\n";
+    echo '      <p>' . ui_knopf(['text' => $wort, 'href' => $ziel, 'art' => 'neutral',
+                                 'symbol' => 'zurueck']) . "</p>\n";
+    echo "    </div>\n  </main>\n</div>\n";
+    ui_fuss_seite();
+    ui_seite_ende();
+    exit;
+}
 /**
  * Markup eines ORTSFELDES — Bezeichnung plus optionale Koordinaten (E37/E39).
  *
@@ -708,33 +1484,3 @@ function ui_krypto_bootstrap(array $o = []): void
     echo $ein, implode("\n" . $ein, $zeilen), "\n";
 }
 
-/**
- * Merkzettel: Steht auf dieser Seite die Einsatztage-Leiste?
- *
- * ui_days_sidebar() traegt sich ein, ui_footer() liest es. Die Reihenfolge
- * stimmt auf allen Seiten, die beides benutzen: Die Leiste steht oben im
- * Layout, die Fusszeile unten.
- */
-function ui_hat_tagesleiste(bool $setzen = false): bool
-{
-    static $ja = false;
-    if ($setzen) { $ja = true; }
-    return $ja;
-}
-
-/** Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt */
-function ui_footer(): void { ?>
-  <script src="<?= asset('assets/confirm.js') ?>"></script>
-  <?php /* daylist.js belebt das Jahr/Monat-Akkordeon der Einsatztage-Leiste.
-           Bis Web 7.1.0 kam es auf JEDER Seite mit — auch auf Einstellungen,
-           Import, Administration und Wartung, die keine Leiste haben. Dort
-           sucht das Skript .dayyears, findet nichts und kehrt zurueck: eine
-           Anfrage und ein Parse-Durchgang fuer nichts. */ ?>
-  <?php if (ui_hat_tagesleiste()): ?>
-  <script src="<?= asset('assets/daylist.js') ?>"></script>
-  <?php endif; ?>
-<footer class="sitefooter">© Gen-EM – OpenSource Software –
-  <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE"
-     target="_blank" rel="noopener">AGPL-3.0</a>
-  <span class="ver">v<?= e(WEB_VERSION) ?></span></footer>
-<?php }

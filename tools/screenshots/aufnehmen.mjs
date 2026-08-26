@@ -213,8 +213,15 @@ const PLATZ = await platzhalter();
 async function vorher(seite, schritte) {
   for (const schritt of schritte || []) {
     if (schritt === 'schublade') {
-      const knopf = seite.locator('[data-schublade-auf], .kopf-menue, .menuebtn').first();
-      if (await knopf.count()) { await knopf.click(); await seite.waitForTimeout(350); }
+      /* Die Schublade gibt es nur unter 1024 px — darueber steht die Leiste
+         fest daneben, und der Menueknopf ist ausgeblendet. Ein Klick darauf
+         lief in einen Timeout und meldete einen Fehler, den es nicht gibt.
+         Deshalb: erst fragen, ob es das Bedienelement gerade gibt. */
+      const knopf = seite.locator('[data-schublade="auf"]').first();
+      if (await knopf.count() && await knopf.isVisible()) {
+        await knopf.click();
+        await seite.waitForTimeout(350);
+      }
     }
   }
 }
@@ -249,11 +256,42 @@ for (const eintrag of liste) {
     const mass = await seite.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       innerWidth: window.innerWidth,
-      knoepfe: Array.from(document.querySelectorAll('.knopf')).map(el => ({
-        text: (el.textContent || '').trim().slice(0, 24),
-        hoehe: Math.round(el.getBoundingClientRect().height),
-      })),
-    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [] }));
+      /* WER ueberlaeuft? Ohne diese Auskunft ist „Ueberlauf bei 360" eine
+         Zahl, mit der niemand etwas anfangen kann: Man weiss, DASS die Seite
+         zu breit ist, nicht WOVON. Gesucht wird das Element, das am weitesten
+         nach rechts reicht und dessen Elternteil das nicht auch tut — also
+         der Verursacher, nicht die Kette darueber. */
+      taeter: (function () {
+        var grenze = window.innerWidth, bester = null, weiteste = grenze;
+        var alle = document.querySelectorAll('body *');
+        for (var i = 0; i < alle.length; i++) {
+          var el = alle[i];
+          var r = el.getBoundingClientRect();
+          if (r.width === 0 || r.right <= grenze + 1) { continue; }
+          var pr = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
+          if (pr && pr.right > grenze + 1) { continue; }   // Elternteil laeuft auch ueber
+          if (r.right > weiteste) {
+            weiteste = r.right;
+            bester = el.tagName.toLowerCase()
+                   + (el.id ? '#' + el.id : '')
+                   + (el.className && typeof el.className === 'string'
+                      ? '.' + el.className.trim().split(/\s+/).join('.') : '');
+          }
+        }
+        return bester ? bester + '  (' + Math.round(weiteste) + ' px)' : null;
+      })(),
+      /* NUR SICHTBARE KNOEPFE messen. Der erste Entwurf mass alle und meldete
+         Dutzende mit Hoehe 0: den X-Knopf der Schublade, der ab 1024 px
+         `display:none` ist, und die Eintraege in einem geschlossenen
+         Aktionsblatt. Ein Knopf, den es gerade nicht gibt, ist nicht zu hoch
+         und nicht zu niedrig — er ist nicht da. */
+      knoepfe: Array.from(document.querySelectorAll('.knopf'))
+        .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
+        .map(el => ({
+          text: (el.textContent || '').trim().slice(0, 24) || el.getAttribute('aria-label') || '(ohne Text)',
+          hoehe: Math.round(el.getBoundingClientRect().height),
+        })),
+    })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null }));
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
@@ -262,6 +300,7 @@ for (const eintrag of liste) {
     zeile.breiten.push({
       breite: b, status,
       ueberlauf: mass.scrollWidth > mass.innerWidth ? mass.scrollWidth - mass.innerWidth : 0,
+      taeter: mass.taeter || null,
       konsole: rolle.fehler.slice(),
     });
     for (const k of mass.knoepfe) {
@@ -318,11 +357,13 @@ md += `| Einzelbilder | ${bilderZahl} |\n`;
 md += `| Waagerechter Überlauf | **${gesamtUeberlauf}** von ${bilderZahl} |\n`;
 md += `| Konsolenfehler | **${gesamtKonsole}** |\n`;
 md += `| Knöpfe nicht 44 px | **${bericht.knopf.length}** |\n\n`;
-md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Konsole |\n|---|---|---|---|\n`;
+md += `## Je Seite\n\n| Seite | Gruppe | Überlauf bei | Verursacher | Konsole |\n|---|---|---|---|---|\n`;
 for (const s of bericht.seiten) {
-  const u = s.breiten.filter(x => x.ueberlauf).map(x => `${x.breite} (+${x.ueberlauf})`).join(', ') || '—';
+  const breit = s.breiten.filter(x => x.ueberlauf);
+  const u = breit.map(x => `${x.breite} (+${x.ueberlauf})`).join(', ') || '—';
+  const t = [...new Set(breit.map(x => x.taeter).filter(Boolean))].join('<br>') || '—';
   const k = s.breiten.reduce((n, x) => n + x.konsole.length, 0);
-  md += `| ${s.name} | ${s.gruppe} | ${u} | ${k || '—'} |\n`;
+  md += `| ${s.name} | ${s.gruppe} | ${u} | ${t} | ${k || '—'} |\n`;
 }
 if (gesamtKonsole) {
   md += `\n## Konsolenfehler im Wortlaut\n\n`;

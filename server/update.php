@@ -1800,17 +1800,13 @@ if ($istCli) {
 }
 
 ui_seite_start(['titel' => 'Datenbank-Update']);
-ui_topbar('einstellungen');
 ?>
 
 <?php /* Seitenleiste wie auf den uebrigen Verwaltungsseiten.
    Bis Web 4.5.2 stand diese Seite ohne sie da — sie war ja nur ueber die
    direkte Adresse erreichbar und damit ohnehin eine Sackgasse: Wer hier
    landete, kam nur ueber den Zurueck-Knopf wieder heraus. */ ?>
-<div class="layout">
-  <?php ui_settings_sidebar('wartung'); ?>
-
-<main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'wartung']); ?>
   <h1>Wartung &amp; Datenbank-Update</h1>
 
   <?php /* ---- ZUSTAND ZUERST, TABELLE DANACH (Web 7.0.0) --------------------
@@ -2095,7 +2091,5 @@ ui_topbar('einstellungen');
     </table>
   <?php endif; ?>
 
-<?php ui_footer(); ?>
-</main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

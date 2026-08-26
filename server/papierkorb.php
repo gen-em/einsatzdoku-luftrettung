@@ -110,11 +110,8 @@ if (!empty($_SESSION['flash_error'])) {
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
   <?php if ($zeigeListe): ?>
     <h1>Papierkorb</h1>
     <?php ui_meldung(null, $fehler, 'info', '    '); ?>
@@ -138,8 +135,7 @@ ui_topbar('uebersicht');
         <?php foreach ($trashDays as $t):
               $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']); ?>
           <tr>
-            <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                      aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+            <td><?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
                 <?= e(dt_lesbar($t, true)) ?></td>
             <td><?= $t['vehicle_name'] !== null && $t['vehicle_name'] !== ''
                     ? e((string)$t['vehicle_name']) : '<span class="dash">–</span>' ?></td>
@@ -240,7 +236,5 @@ ui_topbar('uebersicht');
       <a class="btn-plain" href="papierkorb.php">Abbrechen</a>
     </form>
   <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

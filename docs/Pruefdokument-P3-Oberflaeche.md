@@ -2,7 +2,7 @@
 
 **Programm:** Gen-EM NAdoku · **Phase:** P3 · **Konzept:**
 `Konzept-P3-Oberflaeche.md` · **Zweig:** `claude/konzept-p3-umsetzen-c4zctj`
-**Stand:** 26.08.2026, nach Arbeitspaket **O1**
+**Stand:** 26.08.2026, nach Arbeitspaket **O2**
 
 ---
 
@@ -62,12 +62,25 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O1 noch nicht ist
+### 1.3 Was der Zwischenstand nach O2 noch nicht ist
 
-**Web 9.0.0 sieht roh aus, und das ist beabsichtigt.** Das Stylesheet enthält
-Token und Grundlagen — keine Bausteine. Wer diesen Stand aufruft, sieht die
-Anwendung ohne Gestaltung: übergroße Grafiken, Tabellen ohne Raster, keine
-Kopfleiste. Die Bausteine folgen in O2 (Web 9.1.0).
+**Die Hülle ist neu, die Seiteninhalte sind es nicht.** Web 9.1.0 bringt
+Kopfleiste, Schublade, Leiste, Fußzeile und den Bausteinvorrat. Was
+**innerhalb** der Seiten steht, ist bis auf die Artzeichen unverändert: die
+Einsatztabelle, die Feldliste der Einsatzansicht, das Formular, die
+Verwaltungslisten, die Kacheln der Zeitraumübersicht. Sie folgen Paket für
+Paket in O3 bis O11.
+
+Sichtbare Folgen, die **kein Fehler** sind:
+
+- Tabellen scrollen auf schmalen Geräten waagerecht in ihrem eigenen Kasten,
+  statt zur Kachel zu werden (O3, O8, O9).
+- Meldungen im Seiteninhalt tragen noch kein Symbol; nur die aus der Hülle
+  (Abbruchseite, Einrichter) tun es.
+- Knöpfe im Seiteninhalt sind noch die alten `.btn-*`; sie erscheinen als
+  Rohform aus der Übergangsschicht.
+- Auf der Tagesübersicht fehlen bei 360 px weiterhin Einsatzort und Diagnose —
+  das ist die Kachel aus E-P3-32 und gehört zu O3.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -99,7 +112,23 @@ nicht.
 | Syntax PHP | `php -l` über die geänderten Dateien | fehlerfrei |
 | Syntax JS | `node --check` über die geänderten Dateien | fehlerfrei |
 
-### 2.2 Der Vorher-Stand, zum Gegenhalten
+### 2.2 Nach O2 (Web 9.1.0)
+
+| Was | Mittel | Ergebnis |
+|---|---|---|
+| Waagerechter Überlauf | `tools/screenshots/aufnehmen.mjs`, 29 Seiten × 8 Breiten | **0 von 232** — nach O1 waren es 26. Die Messung nennt seither auch das **überlaufende Element**; in jedem der 26 Fälle war es eine `<table>` im Seiteninhalt, keine Stelle des Gerüsts |
+| Konsolenfehler | dieselbe Aufnahme | **0** |
+| Knopfhöhen ≠ 44 px | dieselbe Aufnahme, nur sichtbare Knöpfe | **0** |
+| Emoji im Markup | `tools/vollstaendigkeit/pruefen.py` | **9** — vorher 80. Alle neun in `einsatz.php` (O4) |
+| Inline-SVG mit Pfaden | dasselbe | **3** — vorher 5. Karten-Pin zweimal, Vollbildknopf einmal (O3) |
+| Klassen des alten Stylesheets | dasselbe | 220 Sollmenge · **25 auf der Streichliste** mit Grund · 194 offen (O3–O11) |
+| Werte außerhalb der Token | dasselbe | weiterhin 0 / 0 / 0 / 0 / 0 |
+| `style="…"`-Attribute | dasselbe | **13** — vorher 14 |
+| Kontraste | `tools/screenshots/kontrast.py` | 21 Paare, **0 verfehlt** |
+| Wortliste (R28) | `tools/wortliste/wortliste.py` | **0 / 0 / 0**; fünf neue Ausnahmen der Klasse *Homonym* |
+| Syntax | `php -l` über alle 57 PHP-Dateien, `node --check` | fehlerfrei |
+
+### 2.3 Der Vorher-Stand, zum Gegenhalten
 
 Erhoben am Stand `main` 2e4f4fe (Web 8.0.1), bevor das Stylesheet ersetzt
 wurde. Diese Zahlen sind der Maßstab, an dem sich das Ende der Phase messen
@@ -234,7 +263,92 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       die Zugangsdaten der lokalen Installation nicht; meldet er „nicht
       aufgelöst", ist der Referenzdatensatz nicht eingespielt.
 
-### 5.3 Ab O2
+### 5.3 Nach O2 (Web 9.1.0)
+
+- [ ] **G-1 ⬤ Die Schublade auf dem Handy.**
+      *Weg:* Startseite auf einem schmalen Fenster (unter 1024 px) öffnen →
+      Knopf mit den drei Strichen links in der Kopfleiste → Schublade.
+      Nacheinander alle drei Schließwege probieren: das × oben links, die
+      abgedunkelte Fläche daneben, die **Esc-Taste**.
+      *Erwartet:* Die Schublade schiebt sich von links herein und trägt oben
+      Startseite und Suche, darunter die Diensttage, unten „Diensttag anlegen"
+      und Papierkorb. Alle drei Wege schließen sie. Solange sie offen ist,
+      lässt sich die Seite dahinter **nicht** scrollen.
+      *Fehlschlag heißt:* Bleibt der Hintergrund scrollbar, greift
+      `overflow:hidden` am Körper nicht — auf einem Touchgerät scrollt dann
+      unter dem Finger die falsche Ebene. Schließt Esc nicht, ist
+      `schublade.js` nicht geladen.
+
+- [ ] **G-2 ⬤ Die Schublade auf der Suchseite.**
+      *Weg:* Dasselbe auf `suche.php`.
+      *Erwartet:* Der Menüknopf ist da, und die Schublade enthält die
+      **Filter**.
+      *Fehlschlag heißt:* Fehlt der Knopf oder ist die Schublade leer, hängt
+      der Mechanismus doch an der Diensttagsfunktion statt an der Klasse —
+      genau die Falle, vor der die Vormerkliste aus Konzept P0 warnt.
+
+- [ ] **G-3 ⬤ Tastatur in der Schublade.**
+      *Weg:* Schublade mit der Tastatur öffnen (Tab bis zum Menüknopf, Enter),
+      dann mehrfach Tab drücken.
+      *Erwartet:* Der Fokus läuft im Kreis **innerhalb** der Schublade. Nach
+      dem Schließen steht er wieder auf dem Menüknopf.
+      *Fehlschlag heißt:* Wandert der Fokus hinter den Schleier, bedient man
+      Elemente, die man nicht sieht.
+
+- [ ] **G-4 ○ Die Leiste am breiten Bildschirm.**
+      *Weg:* Fenster über 1024 px ziehen.
+      *Erwartet:* Der Menüknopf verschwindet, die Leiste steht fest links,
+      „Startseite" und „Suche" erscheinen in der Kopfleiste, die aktive Seite
+      trägt einen orangen Strich darunter. Ab 1200 px steht der Name des
+      Rettungsmittels neben dem Datum.
+      *Fehlschlag heißt:* Bleibt der Körper nach dem Ziehen unscrollbar, räumt
+      der Breitenwechsel den Schubladenzustand nicht ab.
+
+- [ ] **G-5 ⬤ Das Akkordeon der Diensttage.**
+      *Weg:* In der Leiste ein anderes Jahr anklicken — irgendwo auf der Zeile,
+      nicht nur auf dem Winkel. Dann das **Balkensymbol** rechts in einer
+      Monatszeile.
+      *Erwartet:* Der Klick auf die Zeile klappt auf und zu und schließt das
+      vorher offene Jahr. Der Klick auf das Balkensymbol öffnet die
+      Monatsübersicht (`zeitraum.php`).
+      *Fehlschlag heißt:* Springt der Klick auf die Zeile in die
+      Zeitraumübersicht, ist die alte Aufteilung zurück — und auf einem
+      Touchgerät kommt man dann nicht mehr ans Auf- und Zuklappen.
+
+- [ ] **G-6 ○ Die Fußzeile steht auf jeder Seite.**
+      *Weg:* Anmeldeseite, „Passwort vergessen", Abmeldeseite, eine
+      Inhaltsseite, eine Einstellungsseite, `einsatz.php?id=0` (Abbruchseite).
+      *Erwartet:* Überall unten „© Gen-EM · Open Source · AGPL-3.0 · v9.1.0" —
+      auf der Anmeldung hell auf Dunkelblau, sonst gedämpft.
+      *Fehlschlag heißt:* Fehlt sie auf einer Seite, ruft diese Seite
+      `ui_geruest_ende()` nicht.
+
+- [ ] **G-7 ○ Die Artzeichen sind gezeichnet, nicht getippt.**
+      *Weg:* Leiste ansehen, dazu die Spalte „Art" in der Suche.
+      *Erwartet:* Ein Hubschrauber, ein Rettungswagen und ein gestrichelter
+      Kreis — **in derselben Farbe wie der Text daneben**, nicht in
+      Systemfarben.
+      *Fehlschlag heißt:* Erscheinen wieder 🚁 und 🚑, kommt `ART_SYMBOLE`
+      aus einem alten Zwischenspeicher. Erscheint gar nichts, siehe P-1.
+
+- [ ] **E-1 ⬤ Der Einrichter.**
+      *Weg:* **Nicht am Produktivsystem.** In einer frischen Installation
+      `install.php` öffnen.
+      *Erwartet:* Kopfleiste mit Logo, Karte in der Lesespalte, Formular in
+      Gruppen, Primärknopf orange mit dunkelblauer Schrift, Fußzeile unten.
+      *Fehlschlag heißt:* Sieht die Seite unformatiert aus, findet sie
+      `assets/style.css` nicht — der Pfad ist relativ und setzt voraus, dass
+      `install.php` im selben Verzeichnis liegt wie die Anwendung.
+
+- [ ] **E-2 ○ Die Einstellungs-Übersicht.**
+      *Weg:* Zahnrad in der Kopfleiste.
+      *Erwartet:* Eine Liste mit Symbol, Text und Winkel; für Admins ein
+      zweiter Block „Administration"; „Abmelden" getrennt am Ende; darunter der
+      eigene Name.
+      *Fehlschlag heißt:* Landet man direkt auf „Profil", greift die Weiche in
+      `einstellungen.php` nicht.
+
+### 5.4 Ab O3
 
 *(wächst mit den Arbeitspaketen)*
 

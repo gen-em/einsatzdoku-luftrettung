@@ -79,19 +79,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
     abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
     Restrisiko).
-18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
-    ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
-    gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).
-    Gefunden in P0/N2 (dort F-19) als Nachlese zu einem Blindfleck der
-    A4-Erhebung, die eine Klasse schon dann als benutzt zählte, wenn ihr Name
-    irgendwo auftauchte. **Nicht entfernt**, weil nicht auf der Freigabeliste
-    von A4. Zu entscheiden: streichen, oder die Regel in den Kopf von
-    `install.php` ziehen, wo sie wirken würde.
-    *Stand P3/O1:* Das Konzept entscheidet die Frage anders und größer — der
-    Einrichter bekommt in O2 das **gemeinsame Stylesheet** (E-P3-02), sein
-    eigener Stil mit 17 Hexwerten entfällt, und `.btn-link` wird zum
-    Baustein `.knopf`. Damit erledigt sich der Punkt; abgehakt wird er, wenn
-    O2 steht.
 19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
     gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
     Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
@@ -122,6 +109,23 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+18. **`.btn-link.danger` in `style.css` kann nie greifen.**
+    *Erledigt mit Web 9.1.0 (P3/O2).* Die Regel konnte nie greifen, weil
+    `btn-link` nur in `install.php` vorkam — und diese Seite lud `style.css`
+    gar nicht, sondern brachte ihre Gestaltung im Kopf mit. Der Punkt war als
+    Frage gestellt: streichen, oder die Regel dorthin ziehen, wo sie wirken
+    würde?
+
+    Beantwortet hat sie das Konzept P3 anders und größer (E-P3-02): Der
+    Einrichter bekommt das **gemeinsame Stylesheet**. Sein eigener Stil mit 17
+    Hexwerten, zwei Schriftgrößen und vier eigenen Klassen ist entfallen;
+    Knöpfe und Meldungen kommen aus den Bausteinen, und er hat zum ersten Mal
+    eine Fußzeile. Die Begründung des Sonderwegs — „er soll auch dann bedienbar
+    aussehen, wenn am Stylesheet etwas fehlt" — hat der Praxis nicht
+    standgehalten: Er war die einzige Seite, die bei einer Farbänderung nicht
+    mitzog, und das Stylesheet liegt im selben Verzeichnis. Fällt es aus, ist
+    die Anwendung ohnehin nicht eingerichtet.
 
 20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.**
     *Erledigt mit Web 9.0.0 (P3/O1) — und zwar nicht 13, sondern alle 78.*

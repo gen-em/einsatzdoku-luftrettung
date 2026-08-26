@@ -401,13 +401,9 @@ $rollenAmStandort = function (int $bid) use ($vehNach, $vehRollen, $crewNach): a
         static fn(string $rc): bool => isset($rollen[$rc])));
 };
 ui_seite_start(['titel' => $tab === 'standorte' ? 'Standorte systemweit' : 'Rettungsmittel systemweit']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar($tab === 'standorte' ? 'admin_standorte' : 'admin_rettungsmittel'); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => $tab === 'standorte' ? 'admin_standorte' : 'admin_rettungsmittel']); ?>
     <h1><?= $tab === 'standorte' ? 'Standorte systemweit' : 'Rettungsmittel systemweit' ?></h1>
     <?php ui_meldung($notice, $error, 'ok', '    '); ?>
 
@@ -532,8 +528,7 @@ ui_topbar('einstellungen');
                                        $vehCaps[$vid] ?? []);
                   $dupP = stammdaten_dup_personal_count('vehicles', 'name', (string)$v['name']); ?>
               <tr>
-                <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                          aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+                <td><?= ui_artzeichen((string)$v['kind']) ?>
                   <?= e($v['name']) ?>
                   <?php /* Die Art steht nicht mehr ausgeschrieben darunter — das
                            Symbol davor sagt sie, mit Textalternative in
@@ -815,10 +810,8 @@ ui_topbar('einstellungen');
     <?php endforeach; ?>
   <?php endif; ?>
 
-    <?php ui_footer(); ?>
-  </main>
-</div>
-<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+<?php ui_geruest_ende(); ?>
+<?php /* confirm.js kommt aus ui_geruest_ende() (ui.php) — eine zweite Einbindung
          haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>

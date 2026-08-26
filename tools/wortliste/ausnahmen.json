@@ -292,6 +292,41 @@
       "datei": "docs/Branding.md",
       "klasse": "E",
       "begruendung": "Die Bildmarke ist ein Hubschrauber; Branding.md beschreibt sie. Das Logo und seine Beschreibung aendert P3 (NEF-Bildmarke, Nutzerwahl) — eine Beschreibung zu neutralisieren, waehrend das Bild ein Hubschrauber ist, waere eine Unwahrheit."
+    },
+    {
+      "id": "symbolname-hubschrauber",
+      "datei": "server/diensttag_lib.php",
+      "zeile": "'symbol'\\s*=>\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Der Wert benennt eine DATEI, die einen Hubschrauber zeigt (assets/images/symbole/hubschrauber.svg) — nicht die Einsatzart. Die Einsatzart steht in derselben Zeile daneben und heisst 'luftgebunden'. Ein Bild eines Hubschraubers anders zu benennen waere keine neutrale Sprache, sondern eine falsche Beschriftung (P3/O2, E-P3-18)."
+    },
+    {
+      "id": "symbolname-hubschrauber-js",
+      "datei": "server/assets/missiontable.js",
+      "zeile": "symbol:\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Rueckfallliste zu dt_art_symbole(); dieselbe Begruendung wie dort — der Wert benennt die Symboldatei, nicht die Einsatzart."
+    },
+    {
+      "id": "logowahl-hubschrauber",
+      "datei": "server/ui.php",
+      "zeile": "'hubschrauber'\\s*=>\\s*'gen-em_logo_helicopter'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten sind gleichrangig vorhanden, und genau das ist der Zweck der Wahl."
+    },
+    {
+      "id": "handbuch-artzeichen",
+      "datei": "docs/Handbuch.md",
+      "zeile": "ein Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Das Handbuch beschreibt, WIE das Artzeichen aussieht: ein Hubschrauber steht fuer luftgebunden, ein Rettungswagen fuer bodengebunden. Beide Arten sind in derselben Zeile gleichrangig genannt (E-P2-14); das Wort bezeichnet die Zeichnung, nicht den Einsatz."
+    },
+    {
+      "id": "technik-logodateien",
+      "datei": "docs/Technik.md",
+      "zeile": "je Hubschrauber und Fahrzeug",
+      "klasse": "Homonym",
+      "begruendung": "Verzeichnisbaum: Es liegen zwei Logodateien, eine mit einem Hubschrauber und eine mit einem Fahrzeug. Der Satz nennt beide gleichrangig und beschreibt Dateien, nicht Einsatzarten."
     }
   ]
 }

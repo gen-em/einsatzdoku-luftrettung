@@ -22,16 +22,18 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
  * dokumentiert.
  */
 ui_seite_start(['titel' => 'Suche']);
-ui_topbar('suche');
 ?>
-<div class="layout layout-suche">
-  <!-- Statt der Einsatztage-Leiste: die Filter. Auf der Suchseite waeren
-       einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
-       Bewusst NICHT die Klasse .daylist wiederverwendet — die ist auf feste
-       Fensterhoehe mit overflow:hidden gesetzt und wuerde eine lange
-       Filterliste abschneiden. -->
-  <aside class="filterspalte">
-    <h2>Filter</h2>
+<?php /* Statt der Diensttage-Leiste: die Filter. Auf der Suchseite waeren
+         einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
+
+         SEIT P3/O2 IST ES DIESELBE LEISTE wie ueberall — nicht mehr eine
+         eigene `.filterspalte`. Genau davor warnt die Vormerkliste aus
+         Konzept P0 (10.5): Haengt der Schubladenmechanismus an der Funktion
+         statt an der Klasse, bleibt die Suchseite als einzige ohne mobiles
+         Menue. `ui_geruest_start()` mit leiste => 'filter' oeffnet die Leiste
+         und ueberlaesst der Seite den Inhalt; ui_leiste_ende() schliesst sie
+         und oeffnet den Inhalt. */ ?>
+<?php ui_geruest_start(['aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
 
     <div class="filtergruppen">
       <?php /* ---- FILTERGRUPPEN (neu geschnitten, Web 7.0.0) ----------------
@@ -175,9 +177,7 @@ ui_topbar('suche');
       <button type="button" class="btn-plain" id="reset">Filter zurücksetzen</button>
       <span class="muted" id="filtercount"></span>
     </div>
-  </aside>
-
-  <main class="page">
+<?php ui_leiste_ende(); ?>
     <h1>Suche</h1>
     <div id="loaderror" class="alert" hidden></div>
 
@@ -228,10 +228,7 @@ ui_topbar('suche');
       <tbody></tbody>
     </table>
 
-    <?php ui_footer(); ?>
-  </main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
@@ -265,7 +262,7 @@ const ART_OPTIONEN = <?php
         // im Auswahlfeld schon fuer „(egal)" vergeben und bekommt hier einen
         // eigenen Wert. Er steht auch im URL-Fragment.
         $artOpt[] = ['wert' => $code === '' ? 'neutral' : $code,
-                     'text' => $sym['zeichen'] . ' ' . $sym['text']];
+                     'text' => $sym['text']];
     }
     echo json_encode($artOpt, JSON_UNESCAPED_UNICODE);
 ?>;

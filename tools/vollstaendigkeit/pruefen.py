@@ -280,8 +280,16 @@ def pruefung_werte(bericht):
 
 
 # =========================================================== 3. Symbole
-UNICODE_SYMBOLE = '▸▾▴▿▲▼◂◃►◄✓✔✗✘⚠★☆◌●○◆■□←→↑↓⌄⌃⋯…⚙⋮'
-EMOJI = re.compile('[\U0001F000-\U0001FAFF←-⇿☀-➿️]')
+# Zeichen, die im Markup als SYMBOL dienen. Kein Emoji darunter — die stehen
+# in EMOJI, und die beiden Listen ueberschneiden sich nicht. Ein Zeichen in
+# beiden Listen wuerde zweimal gemeldet, und die Summe stimmte nie.
+UNICODE_SYMBOLE = ('▸▾▴▿▲▼◂◃►◄✓✔✗✘✕✖×⚠★☆◌●○◆■□←→↑↓⌄⌃⌃⋯…⚙⋮❯❮›‹»«'
+                   '⇧⇩⊕⊖⊗✎✓')
+
+# Emoji im engeren Sinn: die Bloecke ab U+1F000 und der Variantenwaehler
+# U+FE0F, der aus einem Textzeichen eines macht. Bewusst NICHT der Bereich
+# U+2600-27BF: Dort liegen ⚠ und ✓, und die gehoeren oben hin.
+EMOJI = re.compile('[\U0001F000-\U0001FAFF\U0001F900-\U0001F9FF]|\uFE0F')
 
 
 def pruefung_symbole(bericht):

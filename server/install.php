@@ -48,9 +48,10 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 if (file_exists($configPath) || file_exists($lockPath)) {
     http_response_code(403);
     render_page('Bereits eingerichtet',
-        '<p class="alert alert-info">Die Anwendung ist bereits eingerichtet. '
-        . 'Der Installer ist gesperrt.</p>'
-        . '<p><a class="btn-link" href="index.php">Zur Anwendung</a></p>'
+        ui_meldung_markup('info', 'Die Anwendung ist bereits eingerichtet. '
+            . 'Der Installer ist gesperrt.')
+        . '<p>' . ui_knopf(['text' => 'Zur Anwendung', 'href' => 'index.php',
+                            'art' => 'neutral']) . '</p>'
         . '<p class="muted small">Aus Sicherheitsgründen sollte <code>install.php</code> '
         . 'nach erfolgreicher Einrichtung vom Server gelöscht werden.</p>');
     exit;
@@ -285,13 +286,14 @@ function run_sql_file(PDO $pdo, string $path): void {
 /* ---- Ausgabe ------------------------------------------------------------ */
 if ($done) {
     render_page('Einrichtung abgeschlossen',
-        '<p class="alert alert-ok">Einrichtung erfolgreich. Die Konfiguration wurde '
-        . 'gespeichert und der Installer ist jetzt gesperrt.</p>'
+        ui_meldung_markup('ok', 'Einrichtung erfolgreich. Die Konfiguration wurde '
+            . 'gespeichert und der Installer ist jetzt gesperrt.', 'Fertig.')
         . '<p><strong>Letzter Schritt:</strong> Über den folgenden Link legst du das '
         . 'Passwort des Administrator-Zugangs fest. Dabei wird einmalig dein '
         . 'Wiederherstellungsschlüssel angezeigt — bitte sicher notieren. '
         . 'Der Link ist 24 Stunden gültig.</p>'
-        . '<p><a class="btn-link" href="' . h($setupLink) . '">Passwort jetzt festlegen</a></p>'
+        . '<p>' . ui_knopf(['text' => 'Passwort jetzt festlegen', 'href' => $setupLink,
+                            'art' => 'primaer', 'breit' => true]) . '</p>'
         . '<p class="muted small">Falls der Link verlorengeht: Auf der Anmeldeseite '
         . 'lässt sich über „Passwort vergessen oder erstmalig setzen“ ein neuer '
         . 'anfordern (setzt funktionierende SMTP-Angaben voraus).</p>'
@@ -321,7 +323,7 @@ function render_form(array $v, array $errors, string $nachweis,
        eine Lücke gewesen, und zwar eine unsichtbare: Neun Meldungen ohne h()
        sahen ja richtig aus. Maskieren am Ausgabepunkt kann man nicht
        vergessen; es gibt nur diese eine Stelle. */ ?>
-    <?php foreach ($errors as $e): ?><p class="alert"><?= h($e) ?></p><?php endforeach; ?>
+    <?php foreach ($errors as $e): ?><?= ui_meldung_markup('fehler', $e) ?><?php endforeach; ?>
 
     <form method="post" autocomplete="off">
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">
@@ -329,11 +331,15 @@ function render_form(array $v, array $errors, string $nachweis,
       <fieldset>
         <legend>Nachweis</legend>
         <?php if (!$nachweisOk): ?>
-          <p class="alert">Im Anwendungsverzeichnis lässt sich keine Datei anlegen.
-             Damit kann die Einrichtung weder den Nachweis erzeugen noch später
-             <code>config.php</code> schreiben. Bitte Schreibrechte auf das
-             Verzeichnis <code><?= h(basename(__DIR__)) ?></code> setzen und die
-             Seite neu laden.</p>
+          <div class="meldung meldung-fehler" role="alert">
+            <?= ui_symbol('warnung', 'symbol-gross') ?>
+            <p><strong>Kein Schreibrecht.</strong> Im Anwendungsverzeichnis lässt
+               sich keine Datei anlegen. Damit kann die Einrichtung weder den
+               Nachweis erzeugen noch später <code>config.php</code> schreiben.
+               Bitte Schreibrechte auf das Verzeichnis
+               <code><?= h(basename(__DIR__)) ?></code> setzen und die Seite neu
+               laden.</p>
+          </div>
         <?php else: ?>
           <p class="muted small">Im Anwendungsverzeichnis liegt jetzt eine Datei, deren
              Name mit <code><?= h($nachweisMuster) ?></code> beginnt. Trage die
@@ -388,7 +394,7 @@ function render_form(array $v, array $errors, string $nachweis,
         <label>Absender-Name <input name="smtp_from_name" value="<?= $val('smtp_from_name', 'Einsatzdoku') ?>"></label>
       </fieldset>
 
-      <button type="submit" class="btn-primary">Einrichten</button>
+      <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'breit' => true]) ?>
     </form>
     <?php
     render_page('Einrichten', ob_get_clean());
@@ -401,43 +407,29 @@ function render_page(string $title, string $body): void {
        config.php noch db.php, also weder asset() noch favicon_tags(). Die
        Huelle faengt das ab (ui_asset(), ui_favicon()).
 
-       ZWEI ABWEICHUNGEN VOM REST DER ANWENDUNG, beide gewollt:
-       'stil' => false  — der Einrichter bindet style.css NICHT ein. Er soll
-                          auch dann bedienbar aussehen, wenn am Stylesheet
-                          etwas fehlt; seine Gestaltung bringt er im Kopf mit.
-       Das Favicon bekommt er seit A2 trotzdem (AK-A2-5) — es haengt an
-       zwei Dateien, die neben ihm liegen, und kostet nichts. */
+       SEIT P3/O2 GILT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18, E-P3-02).
+       Bis Web 8.0.1 brachte diese Seite ihre Gestaltung im Kopf mit — 17
+       Hexwerte, eigene Knopf- und Meldungsklassen, eine zweite Schriftgroesse
+       —, und die Begruendung dafuer lautete: Der Einrichter soll auch dann
+       bedienbar aussehen, wenn am Stylesheet etwas fehlt.
+
+       Der Preis war hoeher als der Nutzen. Der Einrichter war die einzige
+       Seite, die bei einer Farbaenderung nicht mitzog, die einzige mit einer
+       eigenen `.btn-link`-Regel (die im Stylesheet daneben deshalb nie
+       greifen konnte — Backlog Nr. 18) und die einzige ohne Fusszeile. Und
+       das Stylesheet liegt neben ihm im selben Verzeichnis: Faellt es aus,
+       ist die Anwendung ohnehin nicht eingerichtet.
+
+       Der relative Pfad funktioniert hier, weil der Einrichter im selben
+       Verzeichnis liegt wie die Anwendung; ohne asset() fehlt nur der
+       Erkennungswert an der Adresse, und der Einrichter laeuft genau einmal. */
     require_once __DIR__ . '/ui.php';
-    ui_seite_start([
-        'titel' => $title,
-        'stil'  => false,
-        'kopf'  => <<<'HTML'
-<style>
-  :root{--navy:#1A2E4D;--paper:#F7F8F9;--accent:#FF8F1F;--line:#D5DAE0;--ink:#1B2733;--muted:#66707B}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--navy);color:var(--ink);
-    font:15px/1.55 system-ui,'Segoe UI',Roboto,sans-serif;display:grid;place-items:start center;min-height:100vh;padding:2rem 1rem}
-  main{background:#fff;border-radius:10px;padding:1.6rem 1.8rem;width:min(96vw,560px)}
-  h1{font-size:1.5rem;margin:.2rem 0 .6rem;letter-spacing:.02em}
-  fieldset{border:1px solid var(--line);border-radius:8px;margin:1rem 0;padding:.8rem 1rem}
-  legend{font-weight:600;padding:0 .4rem;color:var(--navy)}
-  label{display:block;margin:.55rem 0 .1rem;font-size:.92rem}
-  label.check{display:flex;gap:.5rem;align-items:flex-start;font-size:.88rem;color:var(--muted)}
-  label.check input{width:auto;margin-top:.2rem}
-  input{width:100%;padding:.5rem .6rem;border:1px solid var(--line);border-radius:5px;font:inherit}
-  input:focus{outline:2px solid var(--accent);outline-offset:1px}
-  .btn-primary{background:var(--accent);color:#fff;font-weight:600;border:0;border-radius:6px;
-    padding:.6rem 1rem;width:100%;cursor:pointer;font-size:1rem;margin-top:.4rem}
-  .btn-primary:hover{background:#E67C0E}
-  .btn-link{display:inline-block;margin-top:.4rem;color:var(--accent);font-weight:600;text-decoration:none}
-  .alert{background:#FFF0F0;border:1px solid #E8B4B4;color:#B02525;padding:.55rem .8rem;border-radius:5px;margin:.5rem 0}
-  .alert-info{background:#EDF5FF;border-color:#B6D4F2;color:#1B5E9E}
-  .alert-ok{background:#EBFBEE;border-color:#A3E5B5;color:#1B7A34}
-  .muted{color:var(--muted)} .small{font-size:.85rem}
-  code{background:#F1F3F5;padding:.1em .35em;border-radius:3px;font-family:ui-monospace,Consolas,monospace}
-</style>
-HTML,
-    ]);
-    echo '<main>', $body, '</main>', "\n";
+    ui_seite_start(['titel' => $title, 'klasse' => 'anmeldung-body']);
+    ui_kopf(['menue' => false]);
+    echo '<main class="anmeldung">' . "\n";
+    echo '  <div class="anmeldung-karte anmeldung-breit">' . "\n";
+    echo $body, "\n";
+    echo "  </div>\n</main>\n";
+    ui_fuss_seite(['dunkel' => true]);
     ui_seite_ende();
 }

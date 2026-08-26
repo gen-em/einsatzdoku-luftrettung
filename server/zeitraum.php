@@ -25,12 +25,8 @@ $titel = $monat !== ''
     ? $MONATSNAMEN[(int)$monat] . ' ' . $jahr
     : 'Jahr ' . $jahr;
 ui_seite_start(['titel' => $titel, 'karte' => true]);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
     <h1><?= e($titel) ?></h1>
     <div id="loaderror" class="alert" hidden></div>
 
@@ -61,7 +57,7 @@ ui_topbar('uebersicht');
                „Gemischt". */ ?>
       <p id="neutralhinweis" class="muted neutralhinweis" hidden></p>
 
-      <div id="rangemap" class="map" hidden></div>
+      <div id="rangemap" class="geo" hidden></div>
 
       <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
                heissen, hängt vom Tab ab (E32, E33) und bei den Windenkacheln
@@ -76,10 +72,7 @@ ui_topbar('uebersicht');
       </table>
       <p id="leer" class="muted" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
     </div>
-    <?php ui_footer(); ?>
-  </main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>

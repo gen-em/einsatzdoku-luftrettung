@@ -110,9 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     rate_gleiche_dauer($t0, RESET_MINDESTDAUER);
 }
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
-ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'login-body']);
+ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body']);
 ?>
-<main class="login-card">
+<main class="anmeldung">
+ <div class="anmeldung-karte">
   <h1>Passwort setzen</h1>
   <?php if ($done): ?>
     <p>Wenn die Adresse registriert ist, wurde eine E-Mail mit einem Link verschickt. Der Link ist eine Stunde gültig.</p>
@@ -127,7 +128,9 @@ ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'login-body']);
     </form>
     <p class="login-aux"><a href="login.php">Zurück zur Anmeldung</a></p>
   <?php endif; ?>
+ </div>
 </main>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <?php
 ui_seite_ende();
 

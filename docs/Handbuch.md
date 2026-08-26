@@ -204,20 +204,34 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
-Notarzt – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
-**Übersicht**, **Suche** (Abschnitt 4.6) und **⚙ Einstellungen**. Hinter dem
-Zahnrad liegen Profil, **Standorte**, **Rettungsmittel**, Backup,
-Import / Export, Geräte und Abmelden (fragt sicherheitshalber nach); Admins
-finden dort zusätzlich die Rubrik **Administration** mit NutzerInnenverwaltung,
-**Standorte systemweit** und **Rettungsmittel systemweit** (Abschnitt 11).
-Bis Web 6.3.0 hieß der Punkt für beides zusammen „Standortdaten"; der alte Link
-führt weiterhin zu „Standorte". Nach 30 Minuten ohne Aktivität meldet das System automatisch
-ab. Die Kopfleiste bleibt beim Scrollen oben stehen.
+Die Kopfleiste zeigt links das Logo und den Namen **Einsatzdoku**; am breiten
+Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
+E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
+das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
+Nach 30 Minuten ohne Aktivität meldet das System automatisch ab.
 
-Die **Einsatztage-Leiste** links begleitet alle Inhaltsseiten — auch
-Einsatzansicht und Formular. Sie ist nach Jahr und Monat gruppiert
-(Abschnitt 4.4).
+**Auf schmalen Geräten** — Handy und Tablet im Hochformat — zeigt die
+Kopfleiste stattdessen links einen Knopf mit drei Strichen. Er öffnet die
+**Schublade**: dieselbe Leiste, die am breiten Bildschirm dauerhaft links
+steht, hier von links hereingeschoben. Ganz oben liegen Startseite und Suche,
+darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
+Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
+links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
+
+**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
+**Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
+finden darunter einen zweiten Block **Administration** mit NutzerInnen,
+**Standorte systemweit**, **Rettungsmittel systemweit**, Sicherungen,
+Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
+Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
+„Standorte".
+
+Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
+und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
+
+**Ganz unten auf jeder Seite** steht die Fußzeile mit Lizenz und
+Versionsnummer — auch vor der Anmeldung.
 
 **Wenn ein Link ins Leere führt.** Ein Lesezeichen auf einen gelöschten
 Einsatz, eine Adresse aus einer alten E-Mail, ein Diensttag im Papierkorb:
@@ -330,8 +344,11 @@ Konto ist davon nicht betroffen.
 Startseite nach der Anmeldung. Links die Liste der Diensttage; der neueste ist
 vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
 zusätzlich die Uhrzeit des Dienstbeginns — sonst ließen sie sich nicht
-unterscheiden. Vor dem Namen des Rettungsmittels steht ein Zeichen für die Art:
-🚁 luftgebunden, 🚑 bodengebunden, ◌ noch ohne Zuordnung.
+unterscheiden. Vor dem Datum steht ein Zeichen für die Art: ein Hubschrauber
+für luftgebunden, ein Rettungswagen für bodengebunden, ein gestrichelter Kreis
+für „noch ohne Zuordnung". Der Name des Rettungsmittels steht rechts daneben.
+(Bis Web 8.0.1 waren das Emoji — sie sahen auf jedem Betriebssystem anders
+aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 
 Pro Tag:
 
@@ -701,15 +718,29 @@ Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
 Diensttag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
 
-### 4.4 Einsatztage-Leiste, Jahres- und Monatsübersicht
+### 4.4 Diensttage-Leiste, Jahres- und Monatsübersicht
 
-Die Leiste links ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur
-ein Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein anderes
+Die Leiste ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur ein
+Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein anderes
 Jahr anzuklicken schließt das vorherige automatisch. Springst du auf einen Tag
-in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf.
+in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf. Auf
+schmalen Geräten liegt sie in der Schublade (Abschnitt 3).
 
-Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Übersicht
-dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
+**Die ganze Zeile klappt auf und zu** — Jahreszahl wie Monatsname. Der Weg in
+die Übersicht des Zeitraums ist das kleine Balkensymbol am rechten Rand
+derselben Zeile. Bis Web 8.0.1 war es umgekehrt: Der Text war der Link, und nur
+das kleine Dreieck davor klappte auf; mit dem Finger war beides nicht
+auseinanderzuhalten.
+
+Jeder Tag trägt vorn ein Zeichen für seine Art — Hubschrauber für
+luftgebunden, Rettungswagen für bodengebunden, ein gestrichelter Kreis für
+einen Diensttag ohne Rettungsmittel. Rechts daneben steht der Name des
+Rettungsmittels; ist er zu lang, wird er abgekürzt, und der volle Name
+erscheint, wenn der Mauszeiger darauf steht. Auf schmaleren Bildschirmen
+entfällt er ganz.
+
+Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
+Übersicht dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
 vorhanden und die geschützten Angaben entsperrt sind), darunter die
 Statistik-Kacheln und schließlich die Tabelle aller Einsätze mit Datum statt
 Tagesnummer, sortierbar. Die Durchschnittswerte rechnen mit **allen angelegten
@@ -779,7 +810,7 @@ nur in der Zeitraum-Übersicht.
 ### 4.5 Diensttag von Hand anlegen
 
 Lief die Uhr an einem Tag nicht, legst du den Diensttag über **+ Diensttag
-anlegen** unten in der Einsatztage-Leiste an. Neben dem Datum gehören dort
+anlegen** unten in der Diensttage-Leiste an. Neben dem Datum gehören dort
 **Standort** und **Rettungsmittel** hin; daraus ergeben sich Art, Rollen und die
 sichtbaren Einsatzfelder. Beides ist freiwillig — ohne sie bleibt der Diensttag
 neutral und funktioniert trotzdem —, aber mit ihnen entsteht alles sofort statt
@@ -1446,7 +1477,7 @@ automatisch endgültig weg.
   **den kompletten Tag**: alle Einsätze, Ruhesegmente, Tracks, Reanimationen
   und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
-  der Einsatztage-Leiste (ausgegraut, solange nichts darin liegt) — je eine
+  der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine
   Tabelle für gelöschte Diensttage und einzeln gelöschte Einsätze, mit
   „Wiederherstellen" und „Endgültig löschen". Endgültiges Löschen fragt noch
   einmal nach und ist unwiderruflich.

@@ -617,18 +617,29 @@ nicht ernst zu nehmen. Der Text lässt sich je Verweis über
 `window.EdForms.istGeaendert(form)` und `.vergessen(form)`, damit eigene
 Abbruchwege nicht doch ein zweites Kennzeichen einführen.
 
-**Einsatztage-Leiste:** `ui_days_sidebar()` gruppiert die Tage serverseitig
-nach Jahr und Monat (`<details>`-Verschachtelung); welches Jahr/welcher Monat
-offen ist, bestimmt PHP anhand von `$currentDay` bzw. des jüngsten Tages —
-kein JavaScript nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
-`assets/daylist.js` erzwingt das Akkordeon-Verhalten (ein offenes Element je
-Ebene) für Klicks ohne Seitenwechsel und trennt die Klickbereiche:
-Beschriftung → `zeitraum.php`, Dreieck → nur auf/zu.
+**Seitenleiste und Schublade (P3/O2):** `ui_geruest_start()` gibt Kopfleiste,
+Leiste und Inhalt in einem Zug aus; `ui_geruest_ende()` schließt sie, setzt die
+Fußzeile **außerhalb** von `<main>` und lädt die vier Skripte des Gerüsts.
+Drei Leisteninhalte teilen sich dasselbe Markup: `ui_leiste_diensttage()`,
+`ui_leiste_einstellungen()` und — für die Suche — der von der Seite selbst
+gefüllte Filterblock (`leiste => 'filter'`, danach `ui_leiste_ende()`).
 
-> **CSS-Falle:** `.daylist a{display:block}`
-> hat höhere Spezifität als `.trashlink` und steht weiter unten — Regeln für
-> Menüpunkte müssen daher `.daylist a.klasse` lauten und **nach** `.daylist a`
-> stehen.
+**Es gibt keine zweite Leiste.** Unter 1024 px liegt dieselbe `<aside
+class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest daneben;
+der Unterschied ist ausschließlich CSS (Abschnitt 4 und 18 des Stylesheets).
+`assets/schublade.js` öffnet und schließt sie und hält den Fokus darin. Der
+Mechanismus hängt an der **Klasse**, nicht an der Funktion, die die Diensttage
+ausgibt — hinge er an der Funktion, bliebe die Suchseite als einzige ohne
+mobiles Menü (Vormerkliste aus Konzept P0, 10.5).
+
+Die Tage sind serverseitig nach Jahr und Monat gruppiert
+(`<details>`-Verschachtelung); welches Jahr und welcher Monat offen sind,
+bestimmt PHP anhand des gewählten bzw. des jüngsten Tages — kein JavaScript
+nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
+`assets/daylist.js` erzwingt nur noch das Akkordeon-Verhalten (ein offenes
+Element je Ebene). Die frühere Trennung der Klickbereiche ist entfallen: Die
+ganze Zeile klappt, und der Weg in die Zeitraumübersicht ist ein eigenes
+Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px).
 
 **Geschützte Zusatzfelder & berechnetes Alter:** `assets/patient.js` (EdPat)
 berechnet das Alter aus dem Geburtsdatum bezogen auf den **Einsatztag** und

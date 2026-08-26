@@ -280,5 +280,35 @@ declare(strict_types=1);
  *
  * Der Symbolvorrat und die Logos sind die einzigen Teile, die schon jetzt
  * ausgeliefert werden muessen: Ohne sie zeigt 9.1.0 leere Rahmen.
+ *
+ * 9.1.0 ist O2: DIE OBERFLAECHE HAT WIEDER EINE GESTALT — Seitenhuelle und
+ * Bausteine. Ab hier sieht die Anwendung aus wie das, was sie werden soll;
+ * die Seiteninhalte selbst folgen Paket fuer Paket (O3 bis O11).
+ *
+ * Was sich fuer den Menschen aendert:
+ *
+ *   - EIN MENUE STATT EINER LEISTE, DIE DEN BILDSCHIRM FRISST. Unter 1024 px
+ *     liegt die Seitenleiste als Schublade hinter einem Knopf in der
+ *     Kopfleiste. Vorher fuellte sie bei 360 px den ganzen ersten Bildschirm,
+ *     Inhalt begann nach etwa anderthalb Bildschirmen Scrollen, und die
+ *     Tagesliste lief rechts aus dem Bild. Das galt fuer ALLE zwanzig
+ *     Inhaltsseiten, weil das Einstellungsmenue dieselbe Klasse trug.
+ *   - DIE GANZE ZEILE KLAPPT das Akkordeon der Diensttage; der Weg in die
+ *     Jahres- und Monatsuebersicht ist ein eigenes Symbol rechts. Vorher war
+ *     der Text der Link und nur das Dreieck der Schalter — mit dem Finger
+ *     nicht auseinanderzuhalten.
+ *   - DAS ZAHNRAD FUEHRT AUF EINE UEBERSICHT statt ungefragt auf „Profil".
+ *   - EINE FUSSZEILE AUF JEDER SEITE, auch vor der Anmeldung, und ausserhalb
+ *     von <main>. Sie fehlte bisher auf jeder Seite ohne Inhalt.
+ *   - DIE ARTZEICHEN SIND KEINE EMOJI MEHR. 🚁 und 🚑 wurden je
+ *     Betriebssystem anders gezeichnet; jetzt sind es Symbole aus dem Vorrat,
+ *     die sich mitfaerben. Wo kein Bild hineinpasst — in einer Auswahlliste —
+ *     steht das WORT.
+ *   - DER EINRICHTER BENUTZT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18). Er
+ *     war die einzige Seite mit eigener Gestaltung, eigenen Knopfklassen und
+ *     ohne Fusszeile.
+ *
+ * Keine Migration. Verhalten, Endpunkte, Datenmodell und Feldkatalog sind
+ * unveraendert; geaendert sind Huelle, Klassennamen und Markup der Huelle.
  */
-const WEB_VERSION = '9.0.0';
+const WEB_VERSION = '9.1.0';

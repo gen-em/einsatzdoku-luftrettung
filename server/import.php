@@ -5,7 +5,7 @@ require_once __DIR__ . '/auth_guard.php';
 /**
  * Import bestehender Einsatzlisten (Excel/CSV/ZIP) und Export.
  *
- * Eigene Seite, erscheint aber ueber ui_settings_sidebar() als Eintrag der
+ * Eigene Seite, erscheint aber ueber ui_leiste_einstellungen() als Eintrag der
  * Einstellungen — dasselbe Muster wie admin_stammdaten.php. Grund fuer die
  * eigene Datei statt eines weiteren Zweigs in einstellungen.php: Die
  * Review-Tabelle bringt eine Menge Markup und Logik mit; in einer Datei mit
@@ -32,13 +32,9 @@ $SD_DEFAULTS = dt_standardwerte($userId);
 $DEF_VEHICLE = (int)($SD_DEFAULTS['vehicle_id'] ?? 0);
 $DEF_BASE    = (int)($SD_DEFAULTS['base_id'] ?? 0);
 ui_seite_start(['titel' => 'Import / Export']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('import'); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'import']); ?>
     <h1>Import / Export</h1>
 
     <p class="muted">Übernimmt eine vorhandene Einsatzliste (Excel oder CSV) in
@@ -73,7 +69,7 @@ ui_topbar('einstellungen');
           <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
             <option value="<?= (int)$v['id'] ?>"
               <?= (int)$v['id'] === $DEF_VEHICLE ? 'selected' : '' ?>>
-              <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
+              <?= e($v['name']) ?><?php
                 echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
           <?php endforeach; ?>
         </select></label>
@@ -249,7 +245,5 @@ ui_topbar('einstellungen');
     <script src="<?= asset('assets/import_ui.js') ?>"></script>
     <script src="<?= asset('assets/export.js') ?>"></script>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

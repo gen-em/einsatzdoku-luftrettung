@@ -44,13 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
 }
 $neueGeraete = geraete_neu(db(), $userId);
 ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
-ui_topbar('uebersicht');
 ?>
 
-<div class="layout">
-  <?php ui_days_sidebar($selDay); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
     <?php if ($neueGeraete): ?>
       <div class="alert alert-warn geraetehinweis">
         <p>
@@ -146,7 +142,7 @@ ui_topbar('uebersicht');
               <option value="<?= (int)$v['id'] ?>"
                       data-base="<?= (int)($v['base_id'] ?? 0) ?>"
                       data-kind="<?= e((string)$v['kind']) ?>">
-                <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
+                <?= e($v['name']) ?><?php
                   echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
             <?php endforeach; ?>
           </select>
@@ -183,7 +179,7 @@ ui_topbar('uebersicht');
       verborgen, bis die Verschlüsselung entsperrt ist.
       <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
     </p>
-    <div id="map" class="map"></div>
+    <div id="map" class="geo"></div>
     <table class="data" id="missions">
       <thead><tr>
         <th class="c-swatch"></th>
@@ -219,10 +215,7 @@ ui_topbar('uebersicht');
       <a href="einsatz_form.php" id="addmission" class="btn-primary">+ Einsatz nachtragen</a>
     </div>
 
-    <?php ui_footer(); ?>
-  </main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(['csrf' => true]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>

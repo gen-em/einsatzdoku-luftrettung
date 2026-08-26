@@ -21,11 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['confirm'] ?? '') === 'ja')
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 $sym = dt_art_symbol($tag['kind'] === null ? null : (string)$tag['kind']);
 ui_seite_start(['titel' => 'Diensttag löschen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar($dayId); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
     <h1>Diensttag <?= e(dt_lesbar($tag, true)) ?> löschen?</h1>
 
     <div class="card">
@@ -33,8 +30,7 @@ ui_topbar('uebersicht');
                mehrere auf einem Kalendertag liegen, und das Datum allein
                benennt ihn dann nicht mehr. Bezeichnungen kommen aus den
                eingefrorenen Spalten (E8). */ ?>
-      <p><span class="artzeichen" title="<?= e($sym['text']) ?>"
-               aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
+      <p><?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
          <?php $wer = [];
                if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') { $wer[] = (string)$tag['vehicle_name']; }
                if ($tag['base_name']    !== null && $tag['base_name']    !== '') { $wer[] = (string)$tag['base_name']; }
@@ -63,7 +59,5 @@ ui_topbar('uebersicht');
       <button class="btn-red">Ganzen Diensttag in den Papierkorb</button>
       <a class="btn-plain" href="index.php?d=<?= (int)$dayId ?>">Abbrechen</a>
     </form>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

@@ -12,13 +12,9 @@ if ($missionDayId === false) { ui_abbruch(404, 'Einsatz nicht gefunden.'); }
 $missionDayId = $missionDayId === null ? null : (int)$missionDayId;
 $nachtrag = ($_GET['nachtrag'] ?? '') === '1';
 ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
-ui_topbar('uebersicht');
 ?>
 
-<div class="layout">
-  <?php ui_days_sidebar($missionDayId); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
   <div class="pagehead">
     <div class="pagehead-text">
       <h1 id="title">Einsatz</h1>
@@ -71,7 +67,7 @@ ui_topbar('uebersicht');
     <dl class="fieldlist" id="crewlist"></dl>
   </section>
 
-  <div id="map" class="map map-tall"></div>
+  <div id="map" class="geo geo-hoch"></div>
 
   <section>
     <?php /* „Einsatzphasen" statt „Phasen" (Web 7.0.0). Der kurze Titel stand
@@ -90,10 +86,7 @@ ui_topbar('uebersicht');
     <div id="resus-tables"></div>
   </section>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()).
          OHNE PAT_WRAP: Diese Seite bekommt die Huelle aus der API-Antwort
          (m.pat_wrap), nicht aus PHP. */ ?>

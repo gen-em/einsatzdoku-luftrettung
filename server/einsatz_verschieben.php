@@ -83,7 +83,6 @@ foreach ($tage as $t) {
     $auswahl[] = [
         'id'        => (int)$t['id'],
         'text'      => dt_lesbar($t, true),
-        'zeichen'   => $sym['zeichen'],
         'arttext'   => $sym['text'],
         'wer'       => implode(' · ', $teile),
         'einsaetze' => $zahlen[(int)$t['id']] ?? 0,
@@ -91,11 +90,8 @@ foreach ($tage as $t) {
 }
 $gedeckelt = count($tage) >= $LIMIT;
 ui_seite_start(['titel' => 'Einsatz verschieben']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar($altDayId > 0 ? $altDayId : null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $altDayId > 0 ? $altDayId : null]); ?>
     <h1>Einsatz verschieben</h1>
     <?php ui_meldung(null, $fehler); ?>
 
@@ -149,10 +145,16 @@ ui_topbar('uebersicht');
             <option value="">– Diensttag wählen –</option>
             <?php foreach ($auswahl as $a): ?>
               <option value="<?= (int)$a['id'] ?>" <?= $ziel === (int)$a['id'] ? 'selected' : '' ?>>
-                <?= e($a['zeichen']) ?> <?= e($a['text']) ?><?php
+                <?= e($a['text']) ?><?php
+                  /* Die Art stand hier als Emoji am Zeilenanfang. Seit P3/O2
+                     steht sie als WORT am Ende: In einem <option> laesst sich
+                     kein SVG unterbringen, und die Auskunft soll nicht an
+                     einer Grafik haengen, die jedes Betriebssystem anders
+                     zeichnet (E-P3-18). */
                   echo $a['wer'] !== '' ? ' · ' . e($a['wer']) : ' · ohne Zuordnung';
                   echo ' · ' . (int)$a['einsaetze']
-                     . ((int)$a['einsaetze'] === 1 ? ' Einsatz' : ' Einsätze'); ?></option>
+                     . ((int)$a['einsaetze'] === 1 ? ' Einsatz' : ' Einsätze');
+                  echo ' · ' . e($a['arttext']); ?></option>
             <?php endforeach; ?>
           </select>
         </label>
@@ -163,7 +165,5 @@ ui_topbar('uebersicht');
            >Abbrechen</a></p>
       </form>
     <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>
