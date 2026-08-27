@@ -65,3 +65,16 @@ im selben Paket hier ein, nicht später.
 | `c-fehl` | Breitenklasse der Fehleinsatz-Spalte → `.haken-spalte`. | O3 |
 | `checkcol` | Zentrierung der Hakenspalten → `.haken-spalte`; der Haken selbst ist `edSymbol('haken', 'tabelle-haken')` statt Text-✓. | O3 |
 | `c-dc` | Sammelklasse „Katalogspalte" — ersatzlos: Die Ausrichtung sagt jetzt `haken-spalte` (bzw. nichts für Text), die feldeigene Klasse `c-dc-<spalte>` aus `mission_fields_lib.php` bleibt als Anker des Feldkatalogs bestehen. | O3 |
+| `pagehead` | Titelzeile der Einsatzansicht (und vormals der Startseite) → Baustein `.titelzeile` mit `.rueckweg`, `.titelzeile-haupt/-text/-unter/-aktionen`. | O4 |
+| `pagehead-text` | Textteil der alten Titelzeile → `.titelzeile-text`. | O4 |
+| `pagehead-actions` | Knopfbereich der alten Titelzeile → `.titelzeile-aktionen` (Primärknopf „Bearbeiten" + Aktionsblatt). | O4 |
+| `aktionsmenu` | `<details>`-Aufklappmenü „Aktionen" → `ui_aktionen()` (Blatt mobil, Menü am Desktop; `assets/blatt.js`). Die Datei `assets/aktionsmenu.js` ist mit ihrem letzten Nutzer entfallen. | O4 |
+| `aktionsliste` | Eintragsliste des alten Aktionsmenüs → `.blatt-liste` mit `.blatt-zeile`. | O4 |
+| `btn-edit` | Knopfklasse des Menükopfs und der Nachtrag-Links → `.knopf knopf-primaer` („Bearbeiten") bzw. `.knopf knopf-neutral`. | O4 |
+| `fieldlist` | Die EINE Feldliste der Einsatzansicht → vier Karten (Einsatz, PatientIn, Transport, Reanimation) mit der Leseansicht aus O3 (`.tag-lese`, `.tagfeld`); die Rangfolge (RANG) sortiert jetzt je Karte. | O4 |
+| `badge-uhr` | Herkunftskennzeichen „Uhr" → `.plakette plakette-neutral` in der Unterzeile. | O4 |
+| `badge-manuell` | Herkunftskennzeichen „manuell" → dieselbe Plakette. | O4 |
+| `badge-import` | Herkunftskennzeichen „importiert" → dieselbe Plakette. | O4 |
+| `badge-editiert` | Kennzeichen „editiert" → dieselbe Plakette. | O4 |
+| `abw` | „(abw.)" an einer überschriebenen Besatzungsrolle → Kleinzeile `.lese-klein` mit ausgeschriebenem „(abweichend vom Diensttag)". | O4 |
+| `locpin` | SVG-Pfad des Karten-Pins, wörtlich doppelt in `index.php` und `einsatz.php` → `EdGeo`-Marker-Satz (`assets/geo.js`, Zeichnung im Stylesheet, Abschnitt 21). | O4 |

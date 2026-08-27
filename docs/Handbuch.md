@@ -424,14 +424,15 @@ Pro Tag:
 
 ### 4.2 Einsatzansicht
 
-Titel „Einsatz N · Uhrzeit" (N = Nummer des Tages nach Alarmierungszeit),
-darunter das Menü **Aktionen** mit **Bearbeiten**, **Verschieben** und
-**Löschen** (seit Web 5.6.0; vorher standen dort zwei Schaltflächen). Das Menü
-lässt sich vollständig mit der Tastatur bedienen: Tabulator auf den Kopf, Enter
-oder Leertaste öffnet, Tabulator läuft weiter durch die Einträge, Escape
-schließt wieder. In der Kopfzeile darunter stehen Datum, Zeitraum,
-Rettungsmittel und Standort, dahinter das Zeichen für die Art des Diensttags
-und am Ende genau ein **Herkunftskennzeichen**:
+Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
+Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
+nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
+**„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
+**Verschieben** und **Löschen** (mobil „···", am Desktop „Aktionen"; Escape
+schließt, die Tastatur bedient es vollständig — seit Web 9.3.0 dasselbe
+Blatt wie auf der Startseite). In der Unterzeile stehen Zeitspanne — ohne
+Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
+Rettungsmittel und Standort:
 
 | Kennzeichen | Bedeutung |
 |---|---|
@@ -445,30 +446,51 @@ der Uhr aufgezeichneter, später bearbeiteter Einsatz zeigt also „Uhr" **und**
 „editiert", nicht „manuell": „manuell" beschreibt ausschließlich, **wie** ein
 Einsatz entstanden ist, „editiert" ob er danach verändert wurde.
 
-Es folgt eine Karte mit dem Track
-(Start grün, Ende rot) und — sofern vorhanden — dem Einsatzort-Pin aus den
-lokal entschlüsselten Koordinaten. Auf dem Track sitzen an den
-GPS-Positionen der Zeitstempel **Phasen-Nummern**, die standardmäßig
-**ausgeblendet** sind — ein Control auf der Karte („Phasen anzeigen") blendet
-sie ein, sofern mindestens eine Phase über GPS-Koordinaten verfügt; der
-Zustand wird nicht gespeichert, nach einem Neuladen ist er wieder aus.
-Zeigt man auf eine Phasenzeile oder einen eingeblendeten Kartenpunkt,
-leuchtet das Gegenstück orange auf (am Handy: antippen).
+Der Zustand der geschützten Angaben steht als **eine Meldung** über den
+Karten (seit Web 9.3.0): blau „Geschützte Angaben sind entsperrt" nach der
+Anmeldung, mit **Entsperren**-Knopf, solange die Verschlüsselung gesperrt
+ist, und als deutliche Fehlermeldung, falls gespeicherte Angaben mit dem
+aktuellen Schlüssel nicht lesbar sind. Schloss-Symbole an den einzelnen
+Zeilen gibt es nicht mehr — die Meldung sagt es einmal für alle.
 
-Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort,
-Beschreibung Einsatzort** — erscheinen mit einem Schloss-Symbol 🔒 in der
-Feldliste und **nur hier**, nicht
-in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
-ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
+Die Angaben selbst stehen in **vier Karten**:
 
-Darunter folgt der Block **Besatzung**. Er zeigt die für **diesen Einsatz**
-gültige Besatzung: normalerweise die Besatzung des Diensttags, bei einer
-abweichenden Besatzung (Abschnitt 4.3) die abweichende Person. Geänderte
-Rollen sind blau mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne
-Zusatz daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
-hinterlegt, entfällt der Block ganz.
+- **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
+  dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
+  Einsatzorts, Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
+  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
+  Sekundär, Fehleinsatz — nur was zutrifft.
+- **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese
+  geschützten Angaben erscheinen **nur hier**, nicht in den Übersichten.
+- **Transport**: Transportart (mit NA-Begleitung in derselben Zeile), Ziel,
+  Schockraum.
+- **Besatzung**: die für **diesen Einsatz** gültige Besatzung — normalerweise
+  die des Diensttags, bei einer abweichenden Besatzung (Abschnitt 4.3) die
+  abweichende Person, klein gekennzeichnet mit „(abweichend vom Diensttag)".
+  Rollen ohne Eintrag werden weggelassen; ohne Besatzung entfällt die Karte.
 
-Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
+Leere Felder werden nicht angezeigt; eine Karte ganz ohne Inhalt erscheint
+nicht. Die **Karte** (auf dem Handy kompakt zwischen den Angaben und den
+Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
+**Richtungspfeilen**, den Standort als Haus-Schild, das Transportziel als
+Klinik-Schild und den Einsatzort als orangen Kreis; **Start und Ende der
+Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
+an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
+selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die
+gestrichelte Luftlinie. Auf dem Track sitzen an den GPS-Positionen der
+Zeitstempel **Phasen-Nummern**, die standardmäßig **ausgeblendet** sind —
+ein Control auf der Karte („Einsatzphasen anzeigen") blendet sie ein,
+sofern mindestens eine Phase über GPS-Koordinaten verfügt; der Zustand wird
+nicht gespeichert, nach einem Neuladen ist er wieder aus.
+
+Die Karte **Einsatzphasen** nennt im Kopf die Gesamtdauer und je Zeile
+Nummer, Name, Uhrzeit und den **Minutenabstand** zur vorigen Phase. Zeigt
+man auf eine Zeile (am Handy: antippen), leuchtet sie orange und ihr
+**Teilstück des Tracks** — von der vorigen Phase bis zu ihr — färbt sich
+blau auf der Karte; ein eingeblendeter Phasenpunkt leuchtet ebenso.
+
+**Reanimation** steht als eigene Karte: ohne Sitzung schlicht „keine",
+sonst je Reanimation die Ereignisliste mit Uhrzeiten.
 
 ### 4.2a Falsche Tageszuordnung korrigieren
 

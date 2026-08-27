@@ -136,10 +136,37 @@ try {
     $p9->execute([$id]);
     $p9at = $p9->fetchColumn() ?: null;
 
-    $pt = db()->prepare('SELECT lat, lon FROM track_points
+    $pt = db()->prepare('SELECT lat, lon, ts FROM track_points
                          WHERE owner_type = \'mission\' AND owner_id = ? ORDER BY seq');
     $pt->execute([$id]);
-    $track = array_map(fn($p) => [(float)$p['lat'], (float)$p['lon']], $pt->fetchAll());
+    $punkte = $pt->fetchAll();
+    $track = array_map(fn($p) => [(float)$p['lat'], (float)$p['lon']], $punkte);
+
+    /* Je Phase der naechstliegende TRACKPUNKT (nach Zeitstempel): Die
+     * Einsatzansicht hebt zum angetippten Eintrag sein Teilstueck der Spur
+     * hervor (E-P3-33). Die Phasen der Uhr tragen nur dort eigene
+     * Koordinaten, wo sie GPS-Fix hatte — der Zeitvergleich funktioniert
+     * immer, und ein Index je Phase wiegt nichts gegen 700 Zeitstempel im
+     * Track. */
+    /* ts ist der Unix-Zeitstempel der Uhr (ingest.php speichert (int)$pt[3]);
+     * occurred_at der Phasen dagegen ein DATETIME — beide auf Epochensekunden
+     * bringen. */
+    $tsListe = array_map(fn($p) => $p['ts'] !== null ? (int)$p['ts'] : null, $punkte);
+    $trackIndexZu = function (?string $wann) use ($tsListe): ?int {
+        if ($wann === null || $tsListe === []) { return null; }
+        /* occurred_at liegt als UTC-DATETIME in der Datenbank (fmt_local
+         * rechnet erst fuer die ANZEIGE um) — hier ausdruecklich als UTC
+         * lesen, nicht in der Server-Zeitzone. */
+        try { $ziel = (new DateTime($wann, new DateTimeZone('UTC')))->getTimestamp(); }
+        catch (Exception $e) { return null; }
+        $best = null; $abstand = PHP_INT_MAX;
+        foreach ($tsListe as $i => $ts) {
+            if ($ts === null) { continue; }
+            $d = abs($ts - $ziel);
+            if ($d < $abstand) { $abstand = $d; $best = $i; }
+        }
+        return $best;
+    };
 
     $ph = db()->prepare('SELECT phase, occurred_at, lat, lon FROM mission_phases
                          WHERE mission_id = ? ORDER BY occurred_at');
@@ -148,6 +175,7 @@ try {
         'phase' => (int)$p['phase'],
         'label' => PHASE_LABELS[(int)$p['phase']] ?? ('Phase ' . $p['phase']),
         'time'  => fmt_local($p['occurred_at']),
+        'track_idx' => $trackIndexZu($p['occurred_at'] !== null ? (string)$p['occurred_at'] : null),
         'lat'   => $p['lat'] !== null ? (float)$p['lat'] : null,
         'lon'   => $p['lon'] !== null ? (float)$p['lon'] : null,
     ], $ph->fetchAll());
@@ -244,6 +272,11 @@ try {
                               ? (string)$tag['vehicle_name'] : null,
         'day_base_name'    => $tag !== null && $tag['base_name'] !== null
                               ? (string)$tag['base_name'] : null,
+        /* Standort-Koordinate des Tages (eingefroren, E8) — Klartext wie ihr
+         * Name; seit O4 zeichnet die Einsatzansicht daraus das Haus-Schild
+         * (E-P3-33/40). Vorher ging sie nur bei start_src = base mit. */
+        'base_lat' => $tag !== null && $tag['base_lat'] !== null ? (float)$tag['base_lat'] : null,
+        'base_lon' => $tag !== null && $tag['base_lon'] !== null ? (float)$tag['base_lon'] : null,
         'start_hhmm' => fmt_local($m['started_at']),
         'end_hhmm'   => fmt_local($m['ended_at']),
         'distance_m' => $m['distance_m'] !== null ? (int)$m['distance_m'] : null,

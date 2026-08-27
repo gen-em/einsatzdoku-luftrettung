@@ -15,76 +15,137 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
 ?>
 
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
-  <div class="pagehead">
-    <div class="pagehead-text">
-      <h1 id="title">Einsatz</h1>
-      <p id="meta" class="muted"></p>
+  <?php /* Titelzeile nach E-P3-33: Rueckweg zum Diensttag, Titel „Einsatz N"
+           (ab 720 px mit Uhrzeit), Unterzeile mit Zeitspanne,
+           Herkunfts-Plakette und Rettungsmittel. „Bearbeiten" ist die eine
+           Haupthandlung und steht als Primaerknopf am Titel; Verschieben und
+           Loeschen liegen im Blatt. Der Kopf wird von init() aus der
+           API-Antwort gefuellt — dieselbe Arbeitsteilung wie auf der
+           Startseite. */ ?>
+  <div class="titelzeile">
+    <a class="rueckweg" id="tagzurueck" href="index.php<?= $missionDayId !== null ? '?d=' . $missionDayId : '' ?>" hidden>
+      <?= ui_symbol('winkel', 'symbol-links') ?><span id="tagzurueck-text"></span>
+    </a>
+    <div class="titelzeile-haupt">
+      <div class="titelzeile-text">
+        <h1 id="title">Einsatz</h1>
+      </div>
+      <div class="titelzeile-aktionen">
+        <?= ui_knopf(['text' => 'Bearbeiten', 'art' => 'primaer', 'symbol' => 'stift',
+                      'href' => 'einsatz_form.php?id=' . $mid]) ?>
+        <?= ui_aktionen(['id' => 'einsatzblatt', 'titel' => 'Einsatz', 'eintraege' => [
+            ['text' => 'Verschieben', 'symbol' => 'tausch',
+             'href' => 'einsatz_verschieben.php?id=' . $mid],
+            ['text' => 'Löschen', 'symbol' => 'korb', 'gefahr' => true,
+             'href' => 'einsatz_loeschen.php?id=' . $mid],
+        ]]) ?>
+      </div>
     </div>
-    <div class="pagehead-actions">
-      <?php /* AKTIONSMENÜ (A5.1, E4). Aus zwei Schaltflächen ist ein Menü mit
-               drei Einträgen geworden — „Verschieben" kam hinzu.
-
-               Gebaut aus <details>/<summary>, nicht aus einem eigenen
-               Menü-Widget: Damit ist die Tastaturbedienung von Haus aus
-               vollständig (Tabulator auf den Kopf, Enter oder Leertaste öffnet,
-               Tabulator läuft weiter durch die Einträge), ohne dass sie hier
-               nachgebaut und dabei halb vergessen würde.
-
-               Das Schliessen daneben und mit Escape steht seit Web 5.10.0 in
-               assets/aktionsmenu.js — die Diensttagübersicht hat dasselbe Menü,
-               und zwei Fassungen desselben Verhaltens laufen auseinander. */ ?>
-      <details class="aktionsmenu" id="aktionsmenu">
-        <summary class="btn-edit">Aktionen</summary>
-        <div class="aktionsliste">
-          <a href="einsatz_form.php?id=<?= $mid ?>">Bearbeiten</a>
-          <a href="einsatz_verschieben.php?id=<?= $mid ?>">Verschieben</a>
-          <a class="gefahr" href="einsatz_loeschen.php?id=<?= $mid ?>">Löschen</a>
-        </div>
-      </details>
-    </div>
+    <p class="titelzeile-unter" id="meta" hidden></p>
   </div>
 
-  <div id="loaderror" class="alert" hidden></div>
+  <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden>
+    <?= ui_symbol('warnung', 'symbol-gross') ?>
+    <p id="loaderror"></p>
+  </div>
 
   <?php if (($_GET['verschoben'] ?? '') === '1'): ?>
     <?php /* Welchem Diensttag der Einsatz jetzt gehört, steht ohnehin im Kopf
              der Seite — die Bestätigung nennt deshalb nur, was NICHT geschehen
              ist. Genau das ist der Punkt, den man beim Verschieben wissen
-             muss. */ ?>
-    <p class="alert alert-ok">Der Einsatz gehört jetzt zum unten genannten
-      Diensttag. Die Uhrzeiten sind unverändert geblieben.</p>
+             muss. */
+          ui_meldung('Der Einsatz gehört jetzt zum oben genannten Diensttag. '
+              . 'Die Uhrzeiten sind unverändert geblieben.', null, 'ok'); ?>
   <?php endif; ?>
 
-  <?php if ($nachtrag): ?>
-    <p class="alert alert-ok">Einsatz gespeichert.
-      <a class="btn-edit" href="einsatz_form.php?d=<?= (int)$missionDayId ?>">Weiteren Einsatz nachtragen</a></p>
+  <?php if ($nachtrag):
+          ui_meldung('Einsatz gespeichert.', null, 'ok', '', [
+              'knopf' => ui_knopf(['text' => 'Weiteren Einsatz nachtragen',
+                                   'art' => 'neutral',
+                                   'href' => 'einsatz_form.php?d=' . (int)$missionDayId]),
+          ]); ?>
   <?php endif; ?>
 
-  <dl class="fieldlist" id="fieldlist" hidden></dl>
+  <?php /* Der Zustand der geschuetzten Angaben als EINE Meldung ueber den
+           Karten (E-P3-33) — nicht mehr als Zeile in der Feldliste. Drei
+           Faelle, JS blendet den passenden ein: gesperrt (mit Entsperrknopf),
+           entsperrt, unlesbar. */ ?>
+  <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
+    <?= ui_symbol('schloss', 'symbol-gross') ?>
+    <p>Geschützte Angaben sind gesperrt — Einsatzort, PatientIn und Diagnose
+       bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+    <div class="meldung-aktion">
+      <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                    'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
+    </div>
+  </div>
+  <div class="meldung meldung-info" id="freibanner" role="status" hidden>
+    <?= ui_symbol('schloss-offen', 'symbol-gross') ?>
+    <p>Geschützte Angaben sind entsperrt, bis du dich abmeldest.</p>
+  </div>
+  <div class="meldung meldung-fehler" id="patfehlerbanner" role="alert" hidden>
+    <?= ui_symbol('warnung', 'symbol-gross') ?>
+    <p>Für diesen Einsatz sind geschützte Angaben gespeichert, sie lassen sich
+       mit dem aktuellen Schlüssel aber <strong>nicht lesen</strong>. Die Daten
+       sind vorhanden und nicht verloren. Bitte den Wiederherstellungsschlüssel
+       bereithalten und vor weiteren Schritten klären, warum der Schlüssel
+       nicht passt.</p>
+  </div>
 
-  <section id="crew-section" hidden>
-    <h2>Besatzung</h2>
-    <dl class="fieldlist" id="crewlist"></dl>
-  </section>
+  <?php /* Vier Karten in der Rangfolge aus E-P3-33, dazu Besatzung (sie stand
+           schon immer auf dieser Seite; die Karte ist ihre neue Huelle). Die
+           DOM-Reihenfolge ist die MOBILE Reihenfolge (Mockup 19): Angaben,
+           Karte, Phasen, Reanimation. Ab 1200 px zieht das Raster Karte und
+           Phasen in die rechte Spalte (klebend) und die Reanimation in die
+           linke — Mockup 20. Leere Felder werden nicht gerendert, leere
+           Karten bleiben versteckt. */ ?>
+  <div class="einsatz-raster">
+    <section class="karte karte-block-einsatz" hidden>
+      <div class="karte-kopf"><h2 class="karte-titel">Einsatz</h2></div>
+      <div class="karte-inhalt">
+        <div class="tag-lese" id="liste-einsatz"></div>
+        <div class="zeile-plaketten" id="plaketten" hidden></div>
+      </div>
+    </section>
 
-  <div id="map" class="geo geo-hoch"></div>
+    <section class="karte karte-block-patientin" hidden>
+      <div class="karte-kopf"><h2 class="karte-titel">PatientIn</h2></div>
+      <div class="karte-inhalt"><div class="tag-lese" id="liste-patientin"></div></div>
+    </section>
 
-  <section>
-    <?php /* „Einsatzphasen" statt „Phasen" (Web 7.0.0). Der kurze Titel stand
-             fuer sich allein auf der Seite und war dort eindeutig; im Gespraech
-             und in der Uhr-App heisst es aber durchgaengig Einsatzphase, und
-             eine Ueberschrift, die anders heisst als die Sache, kostet bei
-             jedem Hinsehen einen Gedanken. */ ?>
-    <h2>Einsatzphasen</h2>
-    <table class="data" id="phases">
-      <thead><tr><th>Nr.</th><th>Phase</th><th>Uhrzeit</th></tr></thead>
-      <tbody id="phasebody"></tbody>
-    </table>
-  </section>
+    <section class="karte karte-block-transport" hidden>
+      <div class="karte-kopf"><h2 class="karte-titel">Transport</h2></div>
+      <div class="karte-inhalt"><div class="tag-lese" id="liste-transport"></div></div>
+    </section>
 
-  <section id="resus-section" hidden>
-    <div id="resus-tables"></div>
-  </section>
+    <section class="karte karte-block-besatzung" id="crew-section" hidden>
+      <div class="karte-kopf"><h2 class="karte-titel">Besatzung</h2></div>
+      <div class="karte-inhalt"><div class="tag-lese" id="crewlist"></div></div>
+    </section>
+
+    <div class="einsatz-neben">
+      <div class="geo-spalte"><div id="map" class="geo"></div></div>
+      <section class="karte karte-block-phasen" id="phasen-karte" hidden>
+        <div class="karte-kopf">
+          <h2 class="karte-titel">Einsatzphasen</h2>
+          <span class="karte-zahl" id="phasendauer"></span>
+        </div>
+        <?php /* „Einsatzphasen" statt „Phasen" (Web 7.0.0): Im Gespraech und
+                 in der Uhr-App heisst es durchgaengig Einsatzphase, und eine
+                 Ueberschrift, die anders heisst als die Sache, kostet bei
+                 jedem Hinsehen einen Gedanken. */ ?>
+        <div class="phasen" id="phasebody"></div>
+      </section>
+    </div>
+
+    <section class="karte karte-block-reanimation" id="resus-section">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Reanimation</h2>
+        <span class="karte-zahl" id="resus-zahl">keine</span>
+      </div>
+      <div id="resus-tables" hidden></div>
+    </section>
+  </div><?php /* .einsatz-raster */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()).
@@ -93,10 +154,10 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
 <?php ui_krypto_bootstrap(['wrap' => false]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
-<script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
@@ -107,9 +168,9 @@ const esc = EdHtml.escape;
 function fmtDay(d){ const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; }
 function zeigeLadeFehler(msg){
   document.getElementById('title').textContent = 'Einsatz nicht geladen';
-  const box = document.getElementById('loaderror');
-  box.textContent = 'Die Einsatzdaten konnten nicht geladen werden: ' + msg;
-  box.hidden = false;
+  document.getElementById('loaderror').textContent =
+    'Die Einsatzdaten konnten nicht geladen werden: ' + msg;
+  document.getElementById('loaderrorbox').hidden = false;
 }
 
 const map = L.map('map');
@@ -128,18 +189,6 @@ attachFullscreenControl(map);
 // Tracklinien: Staerke waechst beim Rauszoomen, damit kurze Tracks auf der
 // Uebersicht sichtbar bleiben (smoothFactor 0: keine Wegvereinfachung).
 const trackLines = [];
-// Einsatzort als klassischer Karten-Pin in der Einsatzfarbe (SVG-DivIcon)
-function locPin(color){
-  return L.divIcon({
-    className: 'locpin',
-    html: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 1C7.3 1 1 7.2 1 14.9 1 25.4 15 41 15 41s14-15.6 14-26.1C29 7.2 22.7 1 15 1z"
-            fill="${color}" stroke="#fff" stroke-width="2"/>
-      <circle cx="15" cy="14.5" r="5" fill="#fff"/></svg>`,
-    iconSize: [30, 42], iconAnchor: [15, 41], popupAnchor: [0, -34]
-  });
-}
-
 function trackWeight(){
   // Duenne Linien: bei kleinem Massstab wirkten dicke Striche wie Balken.
   const z = map.getZoom();
@@ -150,6 +199,7 @@ map.on('zoomend', () => {
   trackLines.forEach(l => l.setStyle({ weight: w }));
 });
 
+let M = null;                  // die API-Antwort — hlPhase braucht Track und Phasen
 let phaseMarkers = [];        // [{marker, idx}]
 let phasesVisible = false;    // Standard: Aus, keine Persistenz -> nach jedem
                                // Laden der Seite wieder aus
@@ -174,7 +224,7 @@ function buildPhaseMarkers(phases){
     list.forEach((e2, k) => {
       const icon = L.divIcon({
         className: 'phase-marker',
-        html: `<span class="chip pm-chip" data-idx="${e2.idx}">${e2.p.phase}</span>`,
+        html: `<span class="pm-chip" data-idx="${e2.idx}">${e2.p.phase}</span>`,
         iconSize: [24, 24],
         iconAnchor: [12 - k * 20, 12]
       });
@@ -229,11 +279,49 @@ function bindMarkerHover(mk, idx){
   el.addEventListener('click', () => hlPhase(idx, 'toggle'));
 }
 
+/* ---- Teilstueck der angetippten Phase (E-P3-33, Mockup 20) ----------------
+ *
+ * Die angetippte Phase hebt ihr Teilstueck des Tracks hervor: den Abschnitt
+ * von der vorigen Phase mit GPS-Position bis zu ihr selbst, in Blau ueber der
+ * orangen Spur. Der Track traegt keine Zeitstempel — die Enden des Abschnitts
+ * werden deshalb als naechstgelegene Trackpunkte der beiden Phasenpositionen
+ * bestimmt. Ohne GPS an einer der Phasen bleibt es bei Zeile und Marker. */
+const teilLinien = {};
+function naechsterTrackpunkt(lat, lon){
+  let best = 0, bd = Infinity;
+  M.track.forEach((p, i) => {
+    const dx = p[0] - lat, dy = p[1] - lon, d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = i; }
+  });
+  return best;
+}
+/* Wo eine Phase auf der Spur liegt: bevorzugt der Server-Index nach
+ * Zeitstempel (track_idx, api/mission.php) — er funktioniert auch dort, wo
+ * die Uhr fuer die Phase keinen GPS-Fix hatte. Nur als Rueckfall (aeltere
+ * Antworten) der naechste Punkt zur Phasen-Koordinate. */
+function phasenIndex(p){
+  if (!p) { return null; }
+  if (p.track_idx != null) { return p.track_idx; }
+  if (p.lat != null) { return naechsterTrackpunkt(p.lat, p.lon); }
+  return null;
+}
+function teilstueck(idx){
+  if (!M || M.track.length < 2) { return null; }
+  let b = phasenIndex(M.phases[idx]);
+  if (b == null) { return null; }
+  let j = idx - 1, a = null;
+  while (j >= 0 && (a = phasenIndex(M.phases[j])) == null) { j--; }
+  if (a == null) { return null; }
+  if (a > b) { const t = a; a = b; b = t; }
+  if (b - a < 1) { return null; }
+  return M.track.slice(a, b + 1);
+}
+
 let hlActive = {};
 function hlPhase(idx, on){
   if (on === 'toggle') { on = !hlActive[idx]; }
   hlActive[idx] = on;
-  const row = document.querySelector(`#phasebody tr[data-idx="${idx}"]`);
+  const row = document.querySelector(`#phasebody .phasen-zeile[data-idx="${idx}"]`);
   if (row) row.classList.toggle('hl', on);
   const chip = document.querySelector(`.pm-chip[data-idx="${idx}"]`);
   if (chip) {
@@ -241,33 +329,34 @@ function hlPhase(idx, on){
     const pm = phaseMarkers.find(e2 => e2.idx === idx);
     if (pm) pm.marker.setZIndexOffset(on ? 1000 : 0);
   }
+  if (on && !teilLinien[idx]) {
+    const seg = teilstueck(idx);
+    if (seg) {
+      teilLinien[idx] = L.polyline(seg, {
+        color: EdGeo.spurFarbe(1), weight: trackWeight() + 1, smoothFactor: 0
+      }).addTo(map);
+    }
+  } else if (!on && teilLinien[idx]) {
+    map.removeLayer(teilLinien[idx]);
+    delete teilLinien[idx];
+  }
 }
 
-/* ---- Reihenfolge des Inhaltskästchens (Web 7.0.0) ------------------------
+/* ---- Reihenfolge innerhalb der Karten (Web 7.0.0, seit O4 je Karte) ------
  *
- * Bis Web 6.3.0 stand hier die Reihenfolge des FELDKATALOGS, und die
- * verschlüsselten Angaben hingen als Block hinten dran — sie kommen erst nach
- * dem Entsperren an und wurden deshalb einfach angehängt. Das Ergebnis las sich
- * rückwärts: erst Transport und Winde, dann ganz unten, wer eigentlich
- * behandelt wurde.
- *
- * Jetzt hat jede Zeile einen RANG, und eingefügt wird an der Stelle, an die sie
- * gehört — unabhängig davon, wann ihr Wert eintrifft. Die Ordnung folgt dem
- * Gang der Dokumentation: erst die Person, dann der Ort, dann was gefunden
- * wurde, dann was daraus folgte (Transport zuletzt, weil er das Ende des
- * Einsatzes beschreibt).
- *
- * Ein Feld ohne Eintrag hier bekommt RANG_SONST und steht damit am Ende statt
- * zu verschwinden: Ein neues Katalogfeld erscheint auch ohne Änderung an dieser
- * Liste. */
+ * Jede Zeile hat einen RANG, und eingefuegt wird an der Stelle, an die sie
+ * gehoert — unabhaengig davon, wann ihr Wert eintrifft (die geschuetzten
+ * Angaben kommen erst nach dem Entsperren an). Die Ordnung folgt dem Gang
+ * der Dokumentation. Ein Feld ohne Eintrag hier bekommt RANG_SONST und steht
+ * am Ende der Einsatz-Karte statt zu verschwinden: Ein neues Katalogfeld
+ * erscheint auch ohne Aenderung an dieser Liste. */
 const RANG_SONST = 900;
-/* Ob die Höhe des Einsatzorts gezeigt wird und wie hoch sie liegt. Beides
- * entscheidet init(), gebraucht wird es in zeigePat(): Dort entsteht die Zeile
- * „Einsatzort", und die Höhe gehört hinein. */
+/* Ob die Hoehe des Einsatzorts gezeigt wird und wie hoch sie liegt. Beides
+ * entscheidet init(), gebraucht wird es in zeigePat(): Dort entsteht die
+ * Zeile „Einsatzort", und die Hoehe gehoert in ihre Kleinzeile. */
 let hoeheZeigen = false;
 let hoeheWert = null;
 const RANG = {
-  patlock:          5,     // Sperrhinweis bzw. Fehlermeldung: immer zuoberst
   mission_no:      10,
   pat_name:        20,
   pat_dob:         30,
@@ -278,41 +367,71 @@ const RANG = {
   notes:           80,
   other_resources: 90,
   other_ema:      100,
-  secondary:      110,
-  false_alarm:    120,
-  winch:          130, winch_cycles: 131, winch_cycles_pat: 132, winch_airload: 133,
-  bergwacht:      140, bw_unit: 141, bw_info: 142,
-  transport_mode: 150, na_escort: 151,
+  bw_info:        142,
+  transport_mode: 150,
   transport_dest: 160,
   schockraum:     170
 };
 
+/* In welcher Karte eine Zeile landet. Fehlt ein Feld hier, faellt es in die
+ * Einsatz-Karte — dieselbe Rueckfalllinie wie RANG_SONST. */
+const KARTE_ZIEL = {
+  mission_no: 'patientin', pat_name: 'patientin', pat_dob: 'patientin',
+  transport_mode: 'transport', transport_dest: 'transport', schockraum: 'transport'
+};
+const LISTEN = {
+  einsatz: 'liste-einsatz', patientin: 'liste-patientin', transport: 'liste-transport'
+};
+
 /**
- * Eine Zeile ins Inhaltskästchen einsortieren.
- *
- * dt und dd tragen denselben Rang als Datenattribut; eingefügt wird vor dem
- * ersten Element mit HÖHEREM Rang. Gleiche Ränge behalten damit ihre
- * Einfügereihenfolge — was bei den Unterfeldern der Winde die richtige ist.
- *
- * @param {number} rang
- * @param {string} dt  fertiges HTML der Beschriftung
- * @param {string} dd  fertiges HTML des Wertes
+ * Eine Zeile in die Leseansicht einer Karte einsortieren und die Karte
+ * sichtbar machen. dt und dd sind fertiges HTML.
  */
-function dlZeile(rang, dt, dd){
-  const dl = document.getElementById('fieldlist');
+function zeile(karte, rang, dt, dd){
+  const dl = document.getElementById(LISTEN[karte] || LISTEN.einsatz);
+  const feld = document.createElement('div');
+  /* Schlichtes tagfeld, NICHT tagfeld-doppelt: „doppelt" ist die
+   * Startseiten-Logik „mobil ausblenden, weil schon in der Unterzeile" —
+   * hier gilt sie nicht, und die Liste ist ohnehin einspaltig. */
+  feld.className = 'tagfeld';
+  feld.dataset.rang = rang;
+  feld.innerHTML = `<dt>${dt}</dt><dd>${dd}</dd>`;
   const vor = [...dl.children].find(el => Number(el.dataset.rang) > rang) || null;
-  const dtEl = document.createElement('dt');
-  const ddEl = document.createElement('dd');
-  dtEl.dataset.rang = rang; ddEl.dataset.rang = rang;
-  dtEl.innerHTML = dt; ddEl.innerHTML = dd;
-  dl.insertBefore(dtEl, vor);
-  dl.insertBefore(ddEl, vor);
-  dl.hidden = false;
+  dl.insertBefore(feld, vor);
+  dl.closest('.karte').hidden = false;
 }
 
-/** Zeile mit dieser Kennung wieder entfernen (Sperrhinweis beim zweiten Anlauf). */
-function dlEntferne(id){
+/** Zeile mit dieser Kennung wieder entfernen (Hoehen-Ersatzzeile nach dem
+ *  Entsperren, siehe zeigePat). */
+function zeileEntferne(id){
   document.querySelectorAll(`[data-zeile="${id}"]`).forEach(el => el.remove());
+}
+/** Die zuletzt eingefuegte Zeile eines Rangs kennzeichnen, damit
+ *  zeileEntferne() sie wiederfindet. */
+function markiere(rang, id){
+  document.querySelectorAll(`[data-rang="${rang}"]`)
+    .forEach(el => { el.dataset.zeile = id; });
+}
+
+function plakette(ton, text){
+  return `<span class="plakette plakette-${ton}">${esc(text)}</span>`;
+}
+function fmtKm(meter){
+  return (meter / 1000).toFixed(1).replace('.', ',') + ' km';
+}
+/* Dauer im Stil der Tagesuebersicht („51min", „1h 32min") — nicht „0:51 h"
+ * wie im Mockup: Die Schreibweise ist projektweit dieselbe (E-P3-32,
+ * dokumentierte Abweichung). */
+function fmtDauer(min){
+  if (min == null || min < 0) { return ''; }
+  const h = Math.floor(min / 60), r = min % 60;
+  return h > 0 ? `${h}h ${r}min` : `${r}min`;
+}
+function minutenDiff(a, b){
+  const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number);
+  let d = (bh * 60 + bm) - (ah * 60 + am);
+  if (d < 0) { d += 24 * 60; }   // ueber Mitternacht
+  return d;
 }
 
 async function init(){
@@ -330,264 +449,321 @@ async function init(){
       : (m.error || ('HTTP ' + res.status)) + (m.meldung ? ': ' + m.meldung : ''));
     return;
   }
+  M = m;
 
-  document.getElementById('title').textContent =
-    `Einsatz ${m.day_no} · ${m.start_hhmm} Uhr`;
+  /* Rueckweg „‹ Sa, 22.08.2026" — Wochentag lang/kurz wie der Titel der
+   * Startseite (dieselben Utility-Klassen). */
+  if (m.day) {
+    const dt = new Date(m.day + 'T12:00:00');
+    const LANG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const KURZ = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    const wt = dt.getDay();
+    document.getElementById('tagzurueck-text').innerHTML =
+      '<span class="wtag-lang">' + LANG[wt] + '</span>'
+      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + fmtDay(m.day);
+    document.getElementById('tagzurueck').hidden = false;
+  }
 
+  /* Titel „Einsatz N", ab 720 px mit „· 07:42 Uhr" (E-P3-33). */
+  document.getElementById('title').innerHTML =
+    `Einsatz ${m.day_no}<span class="nur-ab-720"> · ${esc(m.start_hhmm)} Uhr</span>`;
+
+  /* Unterzeile: Zeitspanne, Herkunfts-Plakette (dazu „editiert", wenn von
+   * Hand veraendert), Rettungsmittel und Standort aus den EINGEFRORENEN
+   * Spalten des Diensttags (E8). Faellt das Datum des Dienstes vom echten
+   * Einsatzdatum ab (E9), wird der Dienst ausdruecklich genannt — ohne das
+   * saehe die Zuordnung wie ein Fehler aus. */
   const ORIGIN_LABEL = { watch: 'Uhr', manual: 'manuell', import: 'importiert' };
-  const ORIGIN_KLASSE = { watch: 'badge-uhr', manual: 'badge-manuell', import: 'badge-import' };
   const zeitteil = m.has_p9
     ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
     : `${m.start_hhmm} Uhr – kein Ende`;
-  const kennzeichen =
-    `<span class="badge ${ORIGIN_KLASSE[m.origin] || 'badge-uhr'}">${ORIGIN_LABEL[m.origin] || 'Uhr'}</span>`
-    + (m.edited ? ' · <span class="badge badge-editiert">editiert</span>' : '');
+  const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || 'Uhr')
+    + (m.edited ? ' ' + plakette('neutral', 'editiert') : '');
+  const rest = [];
+  if (m.day_vehicle_name) { rest.push(m.day_vehicle_name); }
+  if (m.day_base_name) { rest.push(m.day_base_name); }
+  if (!m.day) { rest.push('kein Diensttag zugeordnet'); }
+  else if (m.day !== m.mission_day) { rest.push(`Dienst vom ${fmtDay(m.day)}`); }
+  const meta = document.getElementById('meta');
+  meta.innerHTML = esc(zeitteil) + ' ' + kennzeichen
+    + (rest.length ? ' ' + esc(rest.join(' · ')) : '');
+  meta.hidden = false;
 
-  /* Kopfzeile (Web 7.0.0 gestrafft).
-     ENTFALLEN sind zwei Angaben. Die STRECKE stand hier als dritte Zahl neben
-     zwei Uhrzeiten, ohne dass jemand sie an dieser Stelle sucht — sie gehört
-     zur Auswertung und steht dort (Zeitraum-Übersicht, Suche, Export). Und das
-     Wort „Diensttag" vor dem Datum sagte nichts, was das Datum nicht selbst
-     sagt: Darunter folgen Rettungsmittel und Standort, damit ist klar, wovon
-     die Rede ist.
-     GEBLIEBEN ist die Unterscheidung, für die es das Wort einmal gab: Fällt
-     das Datum des Dienstes vom echten Einsatzdatum ab — ein Einsatz um 01:30
-     gehört zum Dienst des Vortags (E9) —, wird der Dienst ausdrücklich
-     genannt. Ohne das sähe die Zuordnung wie ein Fehler aus.
-     Bezeichnungen kommen aus den eingefrorenen Spalten des Diensttags (E8),
-     nie aus den Stammdaten. */
-  const teile = [];
-  if (m.mission_day) { teile.push(fmtDay(m.mission_day)); }
-  teile.push(zeitteil);
-  if (m.day_vehicle_name) { teile.push(m.day_vehicle_name); }
-  if (m.day_base_name) { teile.push(m.day_base_name); }
-  if (!m.day) { teile.push('kein Diensttag zugeordnet'); }
-  else if (m.day !== m.mission_day) { teile.push(`Dienst vom ${fmtDay(m.day)}`); }
-  document.getElementById('meta').innerHTML =
-    esc(teile.join(' · '))
-    + ' <span class="artzeichen" title="' + esc(m.day_art_text || '')
-    + '" aria-label="' + esc(m.day_art_text || '') + '">'
-    + esc(m.day_art_zeichen || '') + '</span>'
-    + ' · ' + kennzeichen;
-
-  // Zusatzfelder (Server liefert nur befuellte), einsortiert nach RANG.
-  const dl = document.getElementById('fieldlist');
+  /* Zusatzfelder (Server liefert nur befuellte) auf die Karten verteilen.
+   * Winde, Bergwacht, Sekundaer und Fehleinsatz werden NICHT als Zeilen
+   * gerendert, sondern unten als Plaketten gebuendelt (E-P3-33). */
+  const wert = {};
+  m.fields.forEach(f => { wert[f.col] = f.value; });
+  const PLAKETTEN_FELDER = new Set(['secondary', 'false_alarm', 'winch',
+    'winch_cycles', 'winch_cycles_pat', 'winch_airload', 'bergwacht',
+    'bw_unit', 'na_escort']);
   m.fields.forEach(f => {
-    dlZeile(RANG[f.col] ?? RANG_SONST, esc(f.label), esc(f.value));
+    if (PLAKETTEN_FELDER.has(f.col)) { return; }
+    let dd = esc(f.value);
+    /* Transportart und NA-Begleitung in EINER Zeile: „Luft, mit
+     * NA-Begleitung" — die Begleitung ist eine Eigenschaft des Transports,
+     * keine zweite Angabe (Mockup 19). */
+    if (f.col === 'transport_mode' && wert.na_escort) { dd += ', mit NA-Begleitung'; }
+    zeile(KARTE_ZIEL[f.col] || 'einsatz', RANG[f.col] ?? RANG_SONST, esc(f.label), dd);
   });
-  /* HÖHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6), und seit
-   * Web 7.0.0 in der Zeile des Einsatzortes statt in einer eigenen (siehe
-   * zeigePat). Steht KEIN Einsatzort da — er ist verschlüsselt, die Sitzung
-   * kann gesperrt sein —, bekommt sie doch eine eigene Zeile: Die Höhe selbst
-   * liegt im Klartext, sie zu verschweigen wäre kein Gewinn.
-   *
-   * Gerechnet wird sie unverändert für jeden Einsatz mit Track
-   * (site_elevation_lib.php bleibt unangetastet); gezeigt wird sie nur, wo sie
-   * etwas aussagt. Bodengebunden ist sie die Höhe der Straße. Bei einem noch
-   * nicht zugeordneten Diensttag (day_kind === null, E26) bleibt sie verborgen:
-   * Ob sie etwas aussagt, ist dann noch nicht entschieden.
-   *
-   * DIE STEIGUNG IST GANZ ENTFALLEN (Web 7.0.0). Sie war das Profil der
-   * geflogenen Strecke und nicht das des Einsatzes — eine Zahl, aus der sich
-   * nichts ableiten liess, was nicht Track und Höhe schon sagen. In Export,
-   * Sicherung und Datenbank bleibt sie unverändert erhalten; nur diese Ansicht
-   * zeigt sie nicht mehr.
-   *
-   * Die Werte gehen weiterhin in Export und Backup — dort steht die Art
-   * daneben, und wer auswertet, kann selbst entscheiden. */
+
+  const plaketten = [];
+  if (wert.winch) {
+    let t = 'Winde';
+    if (wert.winch_cycles) { t += ' · ' + wert.winch_cycles + ' Cycles'; }
+    if (wert.winch_cycles_pat) { t += ', ' + wert.winch_cycles_pat + ' mit PatientIn'; }
+    if (wert.winch_airload) { t += ' · Luftverladung'; }
+    plaketten.push(plakette('orange', t));
+  }
+  if (wert.bergwacht) {
+    /* Traegt der Einheitsname das Wort schon („Bergwacht Sonnenau"), wird
+     * nicht noch einmal „Bergwacht" davorgesetzt. */
+    const bw = wert.bw_unit
+      ? (/^bergwacht/i.test(wert.bw_unit) ? wert.bw_unit : 'Bergwacht ' + wert.bw_unit)
+      : 'Bergwacht';
+    plaketten.push(plakette('orange', bw));
+  }
+  if (wert.secondary) { plaketten.push(plakette('blau', 'Sekundär')); }
+  if (wert.false_alarm) { plaketten.push(plakette('rot', 'Fehleinsatz')); }
+  if (plaketten.length) {
+    const box = document.getElementById('plaketten');
+    box.innerHTML = plaketten.join('');
+    box.hidden = false;
+    box.closest('.karte').hidden = false;
+  }
+
+  /* HOEHE DES EINSATZORTS — nur luftgebunden (A13, Konzept 4.6). Sie gehoert
+   * in die Kleinzeile des Einsatzortes (Mockup 19); solange der verschluesselt
+   * ist, traegt eine eigene Zeile sie trotzdem: Die Hoehe selbst liegt im
+   * Klartext, sie zu verschweigen waere kein Gewinn. Bodengebunden ist sie
+   * die Hoehe der Strasse und bleibt verborgen; bei einem noch nicht
+   * zugeordneten Diensttag (day_kind === null, E26) ebenso. */
   hoeheZeigen = m.site_ele_m != null && m.day_kind === 'air';
   hoeheWert = m.site_ele_m;
   if (hoeheZeigen) {
-    dlZeile(RANG.pat_loc, 'Höhe Einsatzort', `${m.site_ele_m} m`);
+    zeile('einsatz', RANG.pat_loc, 'Höhe Einsatzort', `${m.site_ele_m} m`);
     markiere(RANG.pat_loc, 'hoehe');
   }
-  dl.hidden = dl.children.length === 0;
 
   // Besatzung: Tagescrew, einzelne Rollen ggf. durch den Einsatz ueberschrieben
   // (Server hat die COALESCE-Regel bereits angewandt, siehe api/mission.php).
   const crewList = document.getElementById('crewlist');
   Object.values(m.crew_effektiv || {}).forEach(c => {
     crewList.insertAdjacentHTML('beforeend',
-      `<dt>${esc(c.label)}</dt><dd>${esc(c.name)}`
-      + (c.abw ? ' <span class="abw">(abw.)</span>' : '') + '</dd>');
+      `<div class="tagfeld"><dt>${esc(c.label)}</dt><dd>${esc(c.name)}`
+      + (c.abw ? ' <span class="lese-klein">(abweichend vom Diensttag)</span>' : '')
+      + '</dd></div>');
   });
   document.getElementById('crew-section').hidden = crewList.children.length === 0;
 
-  // Karte: Track (Start gruen, Ende rot), Einsatzort-Pin in Trackfarbe
-  const bounds = [];
-  if (m.track.length > 1) {
-    const line = L.polyline(m.track, { color: '#FF8F1F', weight: trackWeight(), smoothFactor: 0 }).addTo(map);
-    trackLines.push(line);
-    L.circleMarker(m.track[0], { radius: 6, color: '#1B8A3A', fillColor: '#1B8A3A', fillOpacity: 1 })
-      .addTo(map).bindPopup('Start');
-    L.circleMarker(m.track[m.track.length - 1], { radius: 6, color: '#C62828', fillColor: '#C62828', fillOpacity: 1 })
-      .addTo(map).bindPopup('Ende');
-    m.track.forEach(p => bounds.push(p));
-  }
-  /* ZIELKLINIK-PIN — ohne Freischalten sichtbar (E40, A13o).
+  /* ---- Karte: Spur, Schilder, Ringe, Pfeile (E-P3-33/40, Mockup 26) ------
    *
-   * Er steht hier und nicht in zeigePat(): Name und Koordinate der Zielklinik
-   * liegen im Klartext, ihre Einstufung ist dieselbe. Was der Pin verrät, ist
-   * wohin transportiert wurde — und das sagt der Name daneben ohnehin schon.
-   * Linie und Einsatzort-Pin bleiben dagegen hinter dem Schlüssel: Sie verraten,
-   * WO die Patientin war. */
+   * Die Spur faehrt in der ersten Spurfarbe (Orange). Start und Ende der
+   * Spur sind Ringe: blau = Start, rot = Ende — am Schild des Ortes, an dem
+   * die Spur beginnt oder endet, sonst als eigener Ringpunkt. Der Standort
+   * kommt als Haus-Schild aus den eingefrorenen Tageskoordinaten, das
+   * Transportziel als Klinik-Schild (Klartext wie sein Name, E40, A13o). */
+  const bounds = [];
+  const NAH_M = 200;   // naeher als das gilt als „am Schild"
+  const start = m.track.length > 1 ? m.track[0] : null;
+  const ende  = m.track.length > 1 ? m.track[m.track.length - 1] : null;
+  function ringFuer(latlng){
+    if (!latlng) { return ''; }
+    const ll = L.latLng(latlng);
+    const s = start && ll.distanceTo(L.latLng(start)) < NAH_M;
+    const e2 = ende && ll.distanceTo(L.latLng(ende)) < NAH_M;
+    return s && e2 ? 'beide' : s ? 'start' : e2 ? 'ende' : '';
+  }
+  const schildOrte = [];
+  if (m.base_lat != null && m.base_lon != null) {
+    const ll = [m.base_lat, m.base_lon];
+    EdGeo.markerStandort(ll, m.day_base_name || 'Standort', ringFuer(ll)).addTo(map);
+    schildOrte.push(ll);
+    bounds.push(ll);
+  }
   if (m.dest_lat != null && m.dest_lon != null) {
-    L.marker([m.dest_lat, m.dest_lon], { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
-      .addTo(map).bindPopup('Zielklinik' + (m.dest_name ? '<br>' + esc(m.dest_name) : ''));
-    bounds.push([m.dest_lat, m.dest_lon]);
+    const ll = [m.dest_lat, m.dest_lon];
+    EdGeo.markerZiel(ll, m.dest_name || 'Zielklinik', ringFuer(ll)).addTo(map);
+    schildOrte.push(ll);
+    bounds.push(ll);
+  }
+  function ringLos(latlng, art, titel){
+    // Nur wenn kein Schild in der Naehe den Ring schon traegt.
+    const ll = L.latLng(latlng);
+    if (schildOrte.some(s => ll.distanceTo(L.latLng(s)) < NAH_M)) { return; }
+    EdGeo.markerRing(latlng, art, titel).addTo(map);
+  }
+  if (m.track.length > 1) {
+    const line = L.polyline(m.track, {
+      color: EdGeo.spurFarbe(0), weight: trackWeight(), smoothFactor: 0
+    }).addTo(map);
+    trackLines.push(line);
+    EdGeo.pfeile(map, map, m.track);
+    const beide = L.latLng(start).distanceTo(L.latLng(ende)) < NAH_M;
+    if (beide) { ringLos(start, 'beide', 'Start und Ende der Aufzeichnung'); }
+    else {
+      ringLos(start, 'start', 'Start der Aufzeichnung');
+      ringLos(ende, 'ende', 'Ende der Aufzeichnung');
+    }
+    m.track.forEach(p => bounds.push(p));
   }
 
   if (bounds.length) {
-    // Rand proportional zur Kartengröße, wie auf der Tagesübersicht — und
-    // eine Zoom-Obergrenze, damit ein sehr kurzer Track (oder ein einzelner
-    // Punkt) nicht bis auf Gebäude-Ebene heranzoomt.
+    /* Rand proportional zur Kartengroesse; PADDING IST (x, y) — F-P3-Z. Und
+     * eine Zoom-Obergrenze, damit ein sehr kurzer Track (oder ein einzelner
+     * Punkt) nicht bis auf Gebaeude-Ebene heranzoomt. */
     const px = map.getSize();
-    map.fitBounds(bounds, { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
+    map.fitBounds(bounds, { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
   }
   else { map.setView([47.7, 10.3], 9); }
 
-  // Phasen-Tabelle mit Hover-/Tipp-Kopplung zur Karte
+  /* ---- Einsatzphasen: Zeilen mit Minutenabstand (E-P3-33, Mockup 19) -----
+   * Nummer, Name, Uhrzeit; klein darunter der Abstand zur vorigen Phase.
+   * Im Kartenkopf die Gesamtdauer. Hover/Tipp koppelt an die Karte. */
   const pb = document.getElementById('phasebody');
+  let vorige = null;
   m.phases.forEach((p, idx) => {
-    const tr = document.createElement('tr');
-    tr.dataset.idx = idx;
-    tr.innerHTML = `<td><span class="chip">${p.phase}</span></td><td>${esc(p.label)}</td><td class="mono">${p.time}</td>`;
-    tr.addEventListener('mouseenter', () => hlPhase(idx, true));
-    tr.addEventListener('mouseleave', () => hlPhase(idx, false));
-    tr.addEventListener('click', () => hlPhase(idx, 'toggle'));
-    pb.appendChild(tr);
+    const abstand = vorige ? minutenDiff(vorige, p.time) : null;
+    const row = document.createElement('div');
+    row.className = 'phasen-zeile';
+    row.dataset.idx = idx;
+    row.innerHTML = `<span class="phasen-nr">${p.phase}</span>`
+      + `<span class="phasen-name">${esc(p.label)}</span>`
+      + `<span class="phasen-zeit">${p.time}`
+      + (abstand != null ? `<span class="phasen-abstand">+${abstand} min</span>` : '')
+      + '</span>';
+    row.addEventListener('mouseenter', () => hlPhase(idx, true));
+    row.addEventListener('mouseleave', () => hlPhase(idx, false));
+    row.addEventListener('click', () => hlPhase(idx, 'toggle'));
+    pb.appendChild(row);
+    vorige = p.time;
   });
+  if (m.phases.length) {
+    document.getElementById('phasen-karte').hidden = false;
+    if (m.has_p9) {
+      document.getElementById('phasendauer').textContent =
+        fmtDauer(minutenDiff(m.start_hhmm, m.end_hhmm));
+    }
+  }
   buildPhaseMarkers(m.phases);
 
-  // Reanimationen: eine Zeiten-Tabelle je Sitzung
+  /* Reanimation: ohne Sitzung bleibt die Karte bei „keine" (E-P3-33);
+   * sonst eine Ereignisliste je Sitzung, im Zeilenbild der Phasen. */
   if (m.resus && m.resus.length) {
-    document.getElementById('resus-section').hidden = false;
+    document.getElementById('resus-zahl').textContent =
+      m.resus.length > 1 ? String(m.resus.length) : '';
     const wrap = document.getElementById('resus-tables');
+    wrap.hidden = false;
     m.resus.forEach((events, i) => {
-      const h = document.createElement('h2');
-      h.textContent = m.resus.length > 1 ? `Reanimation ${i + 1}` : 'Reanimation';
-      wrap.appendChild(h);
-      const t = document.createElement('table');
-      t.className = 'data';
-      t.innerHTML = '<thead><tr><th>Ereignis</th><th>Uhrzeit</th></tr></thead>';
-      const tb = document.createElement('tbody');
+      if (m.resus.length > 1) {
+        wrap.insertAdjacentHTML('beforeend',
+          `<h3 class="phasen-zwischentitel">Reanimation ${i + 1}</h3>`);
+      }
+      const liste = document.createElement('div');
+      liste.className = 'phasen';
       events.forEach(e2 => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${esc(e2.label)}</td><td class="mono">${e2.time}</td>`;
-        tb.appendChild(tr);
+        liste.insertAdjacentHTML('beforeend',
+          `<div class="phasen-zeile"><span class="phasen-nr"></span>`
+          + `<span class="phasen-name">${esc(e2.label)}</span>`
+          + `<span class="phasen-zeit">${e2.time}</span></div>`);
       });
-      t.appendChild(tb);
-      wrap.appendChild(t);
+      wrap.appendChild(liste);
     });
   }
 
   // Verschluesselte Angaben (Diagnose, Alter, Einsatzort) lokal entschluesseln
-  if (m.pat_blob && m.pat_wrap) { await zeigePat(m, dl, bounds); }
+  if (m.pat_blob && m.pat_wrap) { await zeigePat(m, bounds); }
 }
 
 /* Geschuetzte Angaben anzeigen. Ist der Inhaltsschluessel gesperrt, bietet
- * EdUnlock den Entsperrdialog an; bei Abbruch bleibt der Sperrhinweis stehen,
- * dessen Knopf diese Funktion erneut aufruft. Der Hinweis wird zu Beginn
- * entfernt, damit er beim zweiten Durchlauf nicht doppelt erscheint. */
-async function zeigePat(m, dl, bounds){
-  dlEntferne('patlock');
+ * EdUnlock den Entsperrdialog an; bei Abbruch bleibt die Sperr-Meldung
+ * stehen, deren Knopf diese Funktion erneut aufruft (E-P3-33: der Zustand
+ * steht als Meldung ueber den Karten, nicht als Zeile in der Liste). */
+async function zeigePat(m, bounds){
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (!ck) {
-    dlZeile(RANG.patlock, 'Verschlüsselt 🔒',
-      '<span class="muted">gesperrt — ' +
-      '<button type="button" class="btn-plain unlockbtn">Entsperren</button></span>');
-    markiere(RANG.patlock, 'patlock');
-    document.querySelector('.unlockbtn')
-      .addEventListener('click', () => zeigePat(m, dl, bounds));
+    document.getElementById('lockbanner').hidden = false;
     return;
   }
+  document.getElementById('lockbanner').hidden = true;
 
   const r = await EdPat.entschluessle(ck, m.pat_blob);
   if (r.zustand === 'unlesbar') {
-    // Hier ist der Fall besonders deutlich zu benennen: Auf der Einzelansicht
-    // sieht die NutzerIn genau einen Einsatz. Ein stiller Fehlschlag sieht
-    // hier aus wie "keine geschuetzten Angaben erfasst" — also wie ein
-    // normaler, unauffaelliger Zustand.
-    dlZeile(RANG.patlock, 'Verschlüsselt ⚠',
-      '<span class="patfehler">Für diesen Einsatz sind geschützte ' +
-      'Angaben gespeichert, sie lassen sich mit dem aktuellen Schlüssel aber ' +
-      '<strong>nicht lesen</strong>. Die Daten sind vorhanden und nicht verloren. ' +
-      'Bitte den Wiederherstellungsschlüssel bereithalten und vor weiteren ' +
-      'Schritten klären, warum der Schlüssel nicht passt.</span>');
-    markiere(RANG.patlock, 'patlock');
+    // Auf der Einzelansicht sieht die NutzerIn genau einen Einsatz. Ein
+    // stiller Fehlschlag saehe hier aus wie "keine geschuetzten Angaben
+    // erfasst" — also wie ein normaler, unauffaelliger Zustand. Deshalb die
+    // deutliche Fehlermeldung.
+    document.getElementById('patfehlerbanner').hidden = false;
     return;
   }
+  document.getElementById('freibanner').hidden = false;
 
   const o = r.daten || {};
   if (o.mission_no != null && String(o.mission_no) !== '') {
-    dlZeile(RANG.mission_no, 'Einsatznummer 🔒', esc(String(o.mission_no)));
+    zeile('patientin', RANG.mission_no, 'Einsatznummer', esc(String(o.mission_no)));
   }
   const pname = EdPat.name(o);
   if (pname !== '') {
-    dlZeile(RANG.pat_name, 'Name 🔒', esc(pname));
+    zeile('patientin', RANG.pat_name, 'Name', esc(pname));
   }
-  /* GEBURTSDATUM UND ALTER IN EINER ZEILE (Web 7.0.0). Sie standen als zwei
-     Zeilen untereinander und sagten dasselbe zweimal — das Alter FOLGT aus dem
-     Geburtsdatum, es ist keine zweite Angabe.
-     Die Einheit wechselt mit dem Alter (EdPat.alterText): Bei einem Säugling
-     ist „0" keine Auskunft, „3 Monate" oder „12 Tage" schon. Ohne Geburtsdatum
-     bleibt es bei der Zeile „Alter" — dort steht dann der von Hand
-     eingetragene, meist geschätzte Wert. */
+  /* GEBURTSDATUM UND ALTER IN EINER ZEILE (Web 7.0.0): Das Alter FOLGT aus
+     dem Geburtsdatum, es ist keine zweite Angabe. Die Einheit wechselt mit
+     dem Alter (EdPat.alterText): Bei einem Saeugling ist „0" keine Auskunft,
+     „3 Monate" oder „12 Tage" schon. Ohne Geburtsdatum bleibt es bei der
+     Zeile „Alter" — dort steht dann der von Hand eingetragene, meist
+     geschaetzte Wert. */
   const alterTxt = EdPat.alterText(o, m.mission_day);
   if (o.dob != null) {
-    dlZeile(RANG.pat_dob, 'Geburtsdatum 🔒',
+    zeile('patientin', RANG.pat_dob, 'Geboren',
       esc(EdPat.datumDe(o.dob))
-      + (alterTxt ? ` <span class="muted">(${esc(alterTxt)})</span>` : ''));
+      + (alterTxt ? `<span class="lese-klein">${esc(alterTxt)}</span>` : ''));
   } else if (alterTxt) {
-    dlZeile(RANG.pat_dob, 'Alter 🔒', esc(alterTxt));
+    zeile('patientin', RANG.pat_dob, 'Alter', esc(alterTxt));
   }
-  /* EINSATZORT MIT HÖHE (Web 7.0.0). Die Höhe stand als eigene Zeile weit
-     unten; sie ist aber eine Eigenschaft DIESES Ortes und sonst nichts. Steht
-     hier ein Ort, wandert sie in seine Zeile — und die Ersatzzeile aus init(),
-     die sie für den gesperrten Fall trägt, verschwindet dafür. */
+  /* EINSATZORT MIT KLEINZEILE (Mockup 19): Hoehe, Luftlinie und Strecke sind
+     Eigenschaften DIESES Ortes bzw. des Weges dorthin und stehen klein unter
+     der Adresse. Die Ersatzzeile der Hoehe aus init() verschwindet dafuer;
+     die Luftlinie traegt zeichneLuftlinie() nach, sobald sie gerechnet ist. */
   if (o.loc && o.loc.addr) {
-    if (hoeheZeigen) { dlEntferne('hoehe'); }
-    dlZeile(RANG.pat_loc, 'Einsatzort 🔒',
+    if (hoeheZeigen) { zeileEntferne('hoehe'); }
+    const klein = [];
+    if (hoeheZeigen) { klein.push(`${hoeheWert} m`); }
+    if (m.distance_m != null) { klein.push('Strecke ' + fmtKm(m.distance_m)); }
+    zeile('einsatz', RANG.pat_loc, 'Einsatzort',
       esc(o.loc.addr)
-      + (hoeheZeigen ? ` <span class="muted">(${esc(String(hoeheWert))} m)</span>` : ''));
+      + `<span class="lese-klein" id="ortklein"${klein.length ? '' : ' hidden'}>`
+      + esc(klein.join(' · ')) + '</span>');
     if (o.loc.lat != null) {
-      L.marker([o.loc.lat, o.loc.lon], { icon: locPin('#FF8F1F'), keyboard: false })
-        .addTo(map).bindPopup('Einsatzort<br>' + esc(o.loc.addr));
+      EdGeo.markerEinsatzort([o.loc.lat, o.loc.lon],
+        'Einsatzort<br>' + esc(o.loc.addr)).addTo(map);
       if (!bounds.length) { map.setView([o.loc.lat, o.loc.lon], 13); }
     }
   }
   // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
   // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
   if (o.site_desc != null) {
-    dlZeile(RANG.pat_site_desc, 'Beschreibung Einsatzort 🔒', esc(String(o.site_desc)));
+    zeile('einsatz', RANG.pat_site_desc, 'Beschreibung Einsatzort', esc(String(o.site_desc)));
   }
   if (o.dx != null) {
-    dlZeile(RANG.pat_dx, 'Diagnose 🔒', esc(String(o.dx)));
+    zeile('einsatz', RANG.pat_dx, 'Diagnose', esc(String(o.dx)));
   }
   await zeichneLuftlinie(m, o, ck, bounds);
-  dl.hidden = dl.children.length === 0;
 }
 
-/** Die zuletzt eingefuegte Zeile eines Rangs kennzeichnen, damit dlEntferne()
- *  sie wiederfindet. */
-function markiere(rang, id){
-  document.querySelectorAll(`[data-rang="${rang}"]`)
-    .forEach(el => { el.dataset.zeile = id; });
-}
 /* ---- Luftlinie ohne GPS-Aufzeichnung (E34/E35, A13g–A13i, A13n) ----------
  *
- * Sie steht hier, im entschlüsselten Teil: Ihr mittlerer Stützpunkt ist der
+ * Sie steht hier, im entschluesselten Teil: Ihr mittlerer Stuetzpunkt ist der
  * Einsatzort, und der liegt im pat_blob. Ohne Freischalten gibt es deshalb
  * keine Linie — auch dann nicht, wenn Abfahrtort und Zielklinik im Klartext
- * bekannt wären (A13o).
+ * bekannt waeren (A13o).
  *
  * Die Regeln stehen in assets/luftlinie.js und nicht hier, weil die
- * Tagesübersicht dieselben braucht. Diese Funktion beschafft nur die vier
- * möglichen Quellen des Abfahrtorts — zwei hat der Server bereits aufgelöst,
- * zwei sind verschlüsselt und lassen sich nur hier lesen. */
+ * Tagesuebersicht dieselben braucht. Diese Funktion beschafft nur die vier
+ * moeglichen Quellen des Abfahrtorts — zwei hat der Server bereits aufgeloest,
+ * zwei sind verschluesselt und lassen sich nur hier lesen. */
 async function zeichneLuftlinie(m, o, ck, bounds){
-  /* „Letzter Einsatzort" ist der Einsatzort des VORGÄNGERS und damit
-   * verschlüsselt. Der Server liefert dessen Blob nur bei genau dieser Regel
+  /* „Letzter Einsatzort" ist der Einsatzort des VORGAENGERS und damit
+   * verschluesselt. Der Server liefert dessen Blob nur bei genau dieser Regel
    * mit — auszuwerten ist er allein hier. */
   let prevSite = null;
   if (m.start_src === 'prev_site' && m.start_prev_blob) {
@@ -610,22 +786,36 @@ async function zeichneLuftlinie(m, o, ck, bounds){
   if (!punkte.length) { return; }
 
   EdLuftlinie.zeichne(map, punkte);
-  // Pin an jedem Ende. Der Einsatzort hat seinen eigenen (oben), die Zielklinik
-  // ebenso — bleibt der Abfahrtort.
+  // Punkt am Abfahrtort. Der Einsatzort hat seinen eigenen Marker (oben), die
+  // Zielklinik ihr Schild — bleibt der Abfahrtort.
   if (abfahrt) {
-    L.marker([abfahrt.lat, abfahrt.lon], { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
-      .addTo(map).bindPopup('Abfahrtort' + (abfahrt.text ? '<br>' + esc(abfahrt.text) : ''));
+    EdGeo.markerPunkt([abfahrt.lat, abfahrt.lon], EdGeo.spurFarbe(0),
+      'Abfahrtort' + (abfahrt.text ? '<br>' + esc(abfahrt.text) : '')).addTo(map);
   }
-  // Die Länge ausdrücklich BENANNT — eine Luftlinie ist keine gefahrene
-  // Strecke, und die Zahl daneben würde sonst als eine gelesen (E36).
-  dlZeile(RANG.luftlinie, 'Luftlinie 🔒',
-    `${esc(EdLuftlinie.text(punkte))}
-     <span class="muted">(gerade Verbindung, kein aufgezeichneter Weg)</span>`);
+  /* Die Laenge in der Kleinzeile des Einsatzortes (Mockup 19), ausdruecklich
+   * BENANNT — eine Luftlinie ist keine gefahrene Strecke (E36); die Erklaerung
+   * „gerade Verbindung, kein aufgezeichneter Weg" steht im Popup der Linie.
+   * Gibt es keine Einsatzort-Zeile (Adresse leer), eine eigene Zeile. */
+  const klein = document.getElementById('ortklein');
+  const text = 'Luftlinie ' + fmtKm(EdLuftlinie.meter(punkte));
+  if (klein) {
+    klein.textContent = klein.textContent
+      ? klein.textContent + ' · ' + text : text;
+    klein.hidden = false;
+  } else {
+    zeile('einsatz', RANG.luftlinie, 'Luftlinie',
+      `${esc(fmtKm(EdLuftlinie.meter(punkte)))}
+       <span class="lese-klein">gerade Verbindung, kein aufgezeichneter Weg</span>`);
+  }
 
   const px = map.getSize();
   map.fitBounds(bounds.concat(punkte.map(p => [p.lat, p.lon])),
-    { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
+    { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
 }
+
+document.getElementById('unlockbtn').addEventListener('click', () => {
+  if (M) { zeigePat(M, []); }
+});
 
 init();
 </script>

@@ -88,7 +88,6 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
       <div class="titelzeile-haupt">
         <div class="titelzeile-text">
           <h1 id="daytitle">–</h1>
-          <p class="titelzeile-unter" id="dayunter" hidden></p>
         </div>
         <div class="titelzeile-aktionen" id="dayaktionen" <?= $selDay ? '' : 'hidden' ?>>
           <?= ui_aktionen(['titel' => 'Diensttag', 'id' => 'dayblatt', 'eintraege' => [
@@ -105,6 +104,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
           ]]) ?>
         </div>
       </div>
+      <p class="titelzeile-unter" id="dayunter" hidden></p>
     </div>
     <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden>
       <?= ui_symbol('warnung', 'symbol-gross') ?><p id="loaderror"></p>

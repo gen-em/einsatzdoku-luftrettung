@@ -95,7 +95,6 @@ Daten erst nach Server-Bestätigung.
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
-│   │                      aktionsmenu.js (Verhalten des Aktionsmenüs oben rechts),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser),
@@ -354,12 +353,12 @@ Passwortwechsel im Profil-Block von `einstellungen.php`: Er leitet Schlüssel in
 einem anderen Zusammenhang ab (Re-Wrap mit dem alten Passwort) und hat mit dem
 Entsperren nichts zu tun.
 
-Jeder Sperrhinweis trägt einen Knopf `.unlockbtn`, der denselben Ablauf erneut
+Jeder Sperrhinweis trägt einen Entsperr-Knopf, der denselben Ablauf erneut
 anstößt. Wichtig dabei: Die Funktionen hinter diesen Knöpfen müssen ein
-zweites Mal aufrufbar sein, ohne doppelt zu zeichnen — in `zeitraum.php` und
-`index.php` ist das gegeben, weil ohne Schlüssel vorher kein Pin entsteht; in
-`einsatz.php` wird der Sperr-Eintrag (`#patlockdt`/`#patlockdd`) zu Beginn
-entfernt.
+zweites Mal aufrufbar sein, ohne doppelt zu zeichnen — überall gegeben, weil
+ohne Schlüssel vorher weder Pin noch Zeile entsteht. Seit Web 9.3.0 ist der
+Sperrhinweis auf allen drei Seiten eine **Meldung** (`.meldung meldung-info`
+mit Schloss und Knopf), keine Zeile in der Feldliste mehr.
 
 **Schutz beim Speichern (`einsatz_form.php`):** Ist `PAT_CK` null, verlässt der
 Submit-Handler die Blob-Erzeugung vorzeitig (`if (f.dataset.patDone === '1' ||
@@ -709,7 +708,7 @@ Rolle `crew_override = 1 AND mission_crew.name IS NOT NULL ?
 mission_crew.name : day_crew.name`. Sie ist **einmal** implementiert, in
 `api/mission.php`, das das Ergebnis als `crew_effektiv`
 (`{rolle: {label, name, abw}}`, nur belegte Rollen) liefert; `einsatz.php`
-rendert es unverändert im Block „Besatzung".
+rendert es unverändert in der Karte „Besatzung".
 
 > **Seit Web 6.0.0 (Notarzt-Erweiterung).** Die Besatzung ist normalisiert (E7):
 > Aus den Spalten `crew_p1 … crew_other` in `days` und `missions` sind Zeilen in

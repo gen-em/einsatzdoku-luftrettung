@@ -11,6 +11,49 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.3.0] — 2026-08-27
+
+**O4: Die Einsatzansicht nach den Mockups 19–21 und 26.** Die eine lange
+Feldliste hatte ihre eigene Geschichte — erst Feldkatalog-Reihenfolge, seit
+Web 7.0.0 die RANG-Ordnung —, aber sie blieb eine Liste, in der Transport
+und Diagnose gleich aussahen. Jetzt sind es **vier Karten** (Einsatz,
+PatientIn, Transport, Reanimation, dazu die Besatzung), und die RANG-Ordnung
+sortiert innerhalb jeder Karte weiter: Ein neues Katalogfeld erscheint ohne
+Änderung an der Seite am Ende der Einsatz-Karte. Winde, Bergwacht, Sekundär
+und Fehleinsatz sind **Plaketten** am Fuß der Einsatz-Karte („Winde ·
+2 Cycles, 1 mit PatientIn"); Höhe, Luftlinie und Strecke stehen klein unter
+dem Einsatzort statt als eigene Zeilen. Der Kopf: Rückweg „‹ Sonntag,
+27.12.2026", „Bearbeiten" als Primärknopf, Verschieben und Löschen im
+Aktionsblatt — das alte `<details>`-Menü samt `aktionsmenu.js` ist damit
+komplett ausgebaut. Der Zustand der geschützten Angaben steht als **eine
+Meldung** über den Karten (gesperrt mit Entsperren-Knopf, entsperrt,
+unlesbar); die neun Schloss-Emojis an den Zeilen sind fort, und mit ihnen
+der letzte Emoji-Bestand des Markups.
+
+Auf der Karte der Marker-Satz aus O3 statt des wörtlich doppelten SVG-Pfads:
+Haus- und Klinik-Schild mit Namen, oranger Einsatzort-Kreis,
+Richtungspfeile — und **Start und Ende der Aufzeichnung als blauer bzw.
+roter Ring**, am Schild des Ortes, an dem die Spur beginnt oder endet,
+sonst als eigener Ringpunkt (Mockup 26). Die Phasenliste zeigt je Zeile den
+**Minutenabstand** zur vorigen Phase und im Kopf die Gesamtdauer; die
+angetippte Phase färbt ihr **Teilstück der Spur** blau. Dafür liefert
+`api/mission.php` je Phase den nächstliegenden Trackpunkt nach
+**Zeitstempel** (`track_idx`) — die Phasen der Uhr tragen nur bei GPS-Fix
+eigene Koordinaten, die Zeit tragen sie immer. Ebenfalls neu in der
+Antwort: `base_lat/lon` des Tages (Klartext wie der Name), damit das
+Haus-Schild auch hier stehen kann. Und `fitBounds` bekommt sein Padding nun
+auch auf dieser Seite mit den richtigen Achsen (F-P3-Z war an zwei weiteren
+Stellen).
+
+Zwei Baustein-Funde nebenbei: Die Utility `nur-ab-720` stellte mit
+`display:block` wieder her und machte den Titelzusatz „· 07:13 Uhr" zur
+eigenen Zeile — jetzt `revert`, das die Grundform des Elements
+wiederherstellt. Und die Unterzeile der Titelzeile ist aus dem Flex-Block
+neben die Hauptzeile gerückt: Ihre Breite ließ sonst die Knöpfe unter einen
+kurzen Titel brechen, obwohl daneben Platz war.
+
+Keine Migration; Feldkatalog unverändert, `api/mission.php` nur erweitert.
+
 ## [Web 9.2.0] — 2026-08-27
 
 **O3: Die Startseite nach den Mockups 02–05 und 10.** Der Befund zur alten

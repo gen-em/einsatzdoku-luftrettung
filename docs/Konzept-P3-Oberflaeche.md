@@ -1361,6 +1361,8 @@ und O11.
 | F-P3-AA | **`hidden` verlor gegen jedes `display` eines Bausteins.** `.tag-lese{display:grid}` überstimmte das Attribut (Autorenregel schlägt UA-Stylesheet) — nach „Bearbeiten" standen Lese- **und** Formularzustand gleichzeitig auf der Seite. Vier Einzelwächter (`.meldung[hidden]` usw.) hatten dasselbe Problem je Baustein geflickt. | O3. Ein globaler Wächter in den Grundlagen: `[hidden]{display:none !important}`; die vier Einzelregeln sind gestrichen. Mit Bediensonde belegt (Lese sichtbar → Klick → Formular sichtbar, Lese weg). |
 | F-P3-AB | **Der Kartenkopf übermalte bei 360 px seine eigene Zahl.** `.karte-titel` darf schrumpfen (`flex:0 1 auto; min-width:0`); ein Ein-Wort-Titel kann aber nicht umbrechen, also lief der Text über die Kachelbreite hinaus über „6 · 59 km". | O3. `.karte-kopf{flex-wrap:wrap}` — wird die Zeile zu eng, rückt „+ Nachtragen" in eine zweite Zeile, statt dass Text übermalt wird. Bei 360 px fotografiert. |
 | F-P3-AC | **Der Prüf-Browser kommt nicht an die Kartenkacheln.** In der Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag zurück — direkt **und** über den Umgebungsproxy, unabhängig von TLS-Version und Post-Quantum-Merkmalen (per NetLog belegt); `curl` und Node-`fetch` kommen durch. Jede Karte auf den Prüfbildern war grau. | O3, im Prüfmittel. `aufnehmen.mjs` fängt Kachelabrufe mit einer Playwright-Route ab und beantwortet sie aus einem Node-Abruf (Lager je URL; Neustart-Weiche für `NODE_USE_ENV_PROXY`, das nur beim Prozessstart gelesen wird). Nebeneffekt: deterministische Bilder; ohne Proxy läuft derselbe Weg direkt. |
+| F-P3-AD | **Die Utility `nur-ab-720` stellte mit `display:block` wieder her.** Ihr Versprechen ist „blendet nur aus"; ein `<span>` (Titelzusatz „· 07:13 Uhr") wurde beim Wiedereinblenden aber zum Block und brach in die eigene Zeile. | O4. `display:revert` stellt die Grundform des Elements wieder her (span → inline, div → block). |
+| F-P3-AE | **Die Unterzeile der Titelzeile saß im Flex-Block und bestimmte dessen Breite.** Bei kurzem Titel („Einsatz 1") und zwei Knöpfen brachen die Knöpfe unter den Titel, obwohl neben ihm Platz war. | O4. Unterzeile NACH der Hauptzeile (volle Breite), Baustein `ui_titelzeile()` und beide Handaufbauten (Start-, Einsatzseite) angepasst — entspricht den Mockups 02/19. |
 
 ---
 
@@ -1416,7 +1418,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O1 Grundlage | **erledigt** | Web 9.0.0 |
 | O2 Seitenhülle und Bausteine | **erledigt**, Nacharbeit nach Fable-Kontrolle | Web 9.1.1 |
 | O3 Startseite und Karte | **erledigt** | Web 9.2.0 |
-| O4 Einsatzansicht | offen | |
+| O4 Einsatzansicht | **erledigt** | Web 9.3.0 |
 | O5 Einsatzformular | offen | |
 | O6 Suche | offen | |
 | O7 Zeitraum | offen | |
@@ -1765,6 +1767,65 @@ Modell gewechselt.
 Bildschirmtastatur und die Geolocation-Abfrage sind nur am Gerät zu
 prüfen. Der Vollbildmodus der Karte wurde nicht erneut fotografiert
 (unverändert aus O2, nur der Knopf-Inhalt kommt jetzt aus `edSymbol`).
+
+### O4 — Einsatzansicht
+
+**Erledigt.** Web 9.3.0. Keine Migration; `api/mission.php` nur erweitert.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/einsatz.php` | komplett auf O4: Titelzeile (Rückweg, Primärknopf „Bearbeiten", Aktionsblatt), Zustands-Meldungen der geschützten Angaben (gesperrt/entsperrt/unlesbar), vier Karten + Besatzung aus der RANG-Ordnung **je Karte**, Plaketten-Bündel, Kleinzeile (Höhe · Luftlinie · Strecke), Phasenliste mit Minutenabstand und Teilstück-Hervorhebung, Reanimations-Karte; `EdGeo`-Marker statt des doppelten SVG-Pfads; die neun Schloss-Emojis sind fort |
+| `server/api/mission.php` | erweitert um `base_lat/lon` (Haus-Schild, Klartext wie der Name) und `track_idx` je Phase — nächstliegender Trackpunkt nach **Zeitstempel** (UTC gegen die Uhr-Epoche), weil GPS nicht jede Phase trägt |
+| `server/assets/geo.js` | `markerRing()` — Start/Ende-Ring abseits von Standort/Ziel als eigener Ringpunkt |
+| `server/assets/style.css` | Abschnitt 22: `.einsatz-raster` (≥ 1200 zweispaltig, rechte Spalte klebend), `.phasen`-Zeilenliste, `.lese-klein`, `.pm-chip`, `.geo-ringpunkt`; dazu F-P3-AD (`nur-ab-720` → `revert`) und F-P3-AE (Unterzeile aus dem Flex-Block) |
+| `server/ui.php` | `ui_titelzeile()`: Unterzeile nach der Hauptzeile (F-P3-AE) |
+| entfernt | `assets/aktionsmenu.js` mitsamt letzter Nutzung; dreizehn Klassen auf der Streichliste (`pagehead`-Familie, `aktionsmenu`/`aktionsliste`, `btn-edit`, `fieldlist`, `badge-*`-Herkunftsfamilie, `abw`, `locpin`) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Besatzung bleibt als fünfte Karte.** E-P3-33 nennt vier Karten; die
+  Besatzung stand aber immer auf dieser Seite, und sie zu streichen wäre
+  ein Funktionsverlust, den kein Konzepttext verlangt. Sie steht zwischen
+  Transport und Reanimation.
+- **Teilstück nach Zeit, nicht nach Phasen-GPS.** Die Uhr schreibt
+  Koordinaten nur bei Fix an die Phase; der Referenzbestand hat keine
+  einzige. Der Server bildet deshalb je Phase den nächsten Trackpunkt nach
+  Zeitstempel — ein Index je Phase statt 700 Zeitstempel in der Antwort.
+  Der GPS-Weg bleibt als Rückfall für ältere Antworten im Client.
+- **Gesamtdauer als „52min"**, nicht „0:51 h" (Mockup 19): dieselbe
+  dokumentierte Schreibweisen-Abweichung wie auf der Tagesübersicht.
+- **Herkunfts- und editiert-Plakette neutral** (`plakette-neutral`), wie im
+  Mockup als stille Kennzeichen — keine Farbe, die eine Bedeutung
+  behauptet.
+
+#### Prüfprotokoll O4
+
+- **Screenshots:** Seite 12 in acht Breiten — 0 Überlauf, 0 Konsolenfehler,
+  0 Knöpfe ≠ 44 px; 390/768/1440 gegen Mockups 19/21/20 gehalten
+  (Kartenfolge, Plaketten, Kleinzeile, Phasenliste, klebende Spalte,
+  Ringe nach Mockup 26).
+- **Bediensonden (Playwright, 1440):** Entsperr-Fluss in frischer
+  Registerkarte (Abbruch → Sperrmeldung, keine PatientIn-Karte; Passwort →
+  Frei-Meldung, PatientIn-Karte, Einsatzort-Zeile, oranger Kreis);
+  „kein Ende" in der Unterzeile (D09, Einsatz 7); Reanimation mit zwei
+  Sitzungen (14 Ereigniszeilen, Zwischentitel); Teilstück-Hervorhebung
+  (Zeile orange, Überlagerungspfad erscheint: 4 → 5 Pfade, 261 Punkte);
+  Luft-Einsatz D02: Haus-Schild mit Start-Ring, Klinik-Schild mit
+  Ende-Ring, Plaketten Winde/Bergwacht, Kleinzeile „731 m · Strecke
+  5,5 km"; Einsatz ohne Track: gestrichelte Luftlinie, Abfahrt-Punkt,
+  Kleinzeile „Luftlinie 3,0 km".
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.5).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Die
+Phasenmarker auf der Karte (GPS je Phase) sind mit dem Referenzbestand
+nicht darstellbar — keine Phase trägt dort Koordinaten; der Weg ist
+unverändert aus dem Bestand übernommen und nur neu eingekleidet
+(`.pm-chip`). Der Fall „unlesbar" (falscher Schlüssel) wurde nicht
+durchgespielt — er bräuchte einen absichtlich beschädigten Blob.
 
 ---
 

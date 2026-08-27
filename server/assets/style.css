@@ -888,7 +888,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   color:var(--blau-tief);font-weight:600;
 }
 .titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
-.titelzeile-text{flex:1 1 14rem;min-width:0}
+/* flex-basis auto statt fester 14rem: Ein kurzer Titel („Einsatz 1") liess
+ * sonst die Knoepfe umbrechen, obwohl alles in eine Zeile passt (O4). Lange
+ * Titel sind mobil ohnehin kurz gefasst (wtag-kurz). */
+.titelzeile-text{flex:1 1 auto;min-width:0}
 .titelzeile-unter{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
 .titelzeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto;margin-left:auto}
 
@@ -1540,7 +1543,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Grundform des Elements unangetastet. */
 .nur-ab-720{display:none}
 @media (min-width:720px){
-  .nur-ab-720{display:block}
+  /* revert statt block: Die Utility soll die GRUNDFORM wiederherstellen —
+   * ein <span> (Titelzusatz „· 07:34 Uhr") wurde mit block zur eigenen
+   * Zeile (Fund aus O4). */
+  .nur-ab-720{display:revert}
   /* Doppelt geschrieben, um jede Baustein-Regel gleicher Spezifität zu
    * schlagen (der Sortier-Knopf traegt .karte-sortieren mit display:flex —
    * eine Klasse gegen eine Klasse verloere nach Reihenfolge). */
@@ -1747,3 +1753,108 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* Leaflet-DivIcons bringen eine eigene Klasse mit weißem Hintergrund mit —
  * unsere Marker zeichnen sich selbst. */
 .leaflet-div-icon{background:none;border:0}
+
+
+/* == 22. EINSATZANSICHT (O4, E-P3-33, Mockups 19/20/21) ====================
+ *
+ * Vier Karten (Einsatz, PatientIn, Transport, Reanimation) plus Besatzung;
+ * die DOM-Reihenfolge ist die MOBILE (Angaben, Karte, Phasen, Reanimation).
+ * Ab 1200 px ordnet das Raster um: Karte und Einsatzphasen wandern in eine
+ * klebende rechte Spalte, die Reanimation in die linke — Mockup 20.
+ */
+@media (min-width:1200px){
+  .einsatz-raster{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--karte-neben-breit);
+    grid-template-areas:
+      "einsatz neben" "patientin neben" "transport neben"
+      "besatzung neben" "reanimation neben" ". neben";
+    grid-template-rows:repeat(5,min-content) 1fr;
+    gap:0 var(--abstand-4);
+  }
+  .karte-block-einsatz{grid-area:einsatz}
+  .karte-block-patientin{grid-area:patientin}
+  .karte-block-transport{grid-area:transport}
+  .karte-block-besatzung{grid-area:besatzung}
+  .karte-block-reanimation{grid-area:reanimation}
+  .einsatz-neben{
+    grid-area:neben;
+    position:sticky;top:calc(var(--kopf) + var(--abstand-4));
+    align-self:start;
+  }
+  .einsatz-neben .geo{height:var(--karte-desktop)}
+}
+
+/* Die Leseansicht der Einsatz-Karten ist einspaltig — anders als die
+ * Diensttag-Daten, deren Zweispalter volle Inhaltsbreite hat. */
+.einsatz-raster .tag-lese{display:block}
+
+/* Kleinzeile unter einem Lesewert: Höhe, Luftlinie und Strecke unter dem
+ * Einsatzort, das Alter unter dem Geburtsdatum (Mockup 19). */
+.lese-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel. */
+.karte-inhalt .zeile-plaketten{margin-top:var(--abstand-3)}
+
+/* ---- Einsatzphasen als Zeilenliste (Mockup 19) ---------------------------
+ * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur
+ * vorigen Phase klein darunter. Die angetippte Zeile leuchtet orange und
+ * hebt ihr Teilstück auf der Karte hervor (einsatz.php). */
+.phasen-zeile{
+  display:grid;
+  grid-template-columns:var(--symbol-gross) minmax(0,1fr) auto;
+  gap:var(--abstand-3);align-items:center;
+  padding:var(--abstand-2) var(--abstand-4);
+  border-top:var(--strich) solid var(--linie);
+  cursor:pointer;
+}
+.phasen > .phasen-zeile:first-child{border-top:0}
+.phasen-nr{color:var(--gedaempft)}
+.phasen-zeit{text-align:right;font-weight:600;color:var(--dunkelblau)}
+.phasen-abstand{
+  display:block;font-weight:400;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.phasen-zeile.hl{background:var(--orange-hell)}
+.phasen-zwischentitel{
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  padding:var(--abstand-3) var(--abstand-4) 0;
+}
+
+/* ---- Phasenmarker auf der Karte (Bestand, neu eingekleidet) --------------
+ * Kleine Nummernschilder an den GPS-Positionen der Phasen; der Umschalter
+ * ist ein Leaflet-Control mit Text — Leaflets eigene 26-px-Knopfbreite
+ * würde ihn abschneiden. */
+.pm-chip{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--symbol-gross);height:var(--symbol-gross);
+  background:var(--schnee);color:var(--dunkelblau);
+  border:var(--strich) solid var(--dunkelblau);
+  border-radius:var(--radius-klein);
+  font:600 var(--groesse-1)/1 var(--schrift-text);
+  box-shadow:var(--schatten);
+}
+.pm-chip.hl{background:var(--orange);border-color:var(--orange-tief)}
+.geo .map-ctrl-phase a{
+  width:auto;height:auto;
+  padding:var(--abstand-1) var(--abstand-2);
+  font:600 var(--groesse-1)/var(--zeile) var(--schrift-text);
+  color:var(--dunkelblau);
+}
+.geo .map-ctrl-phase a.active{background:var(--orange-hell)}
+
+/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel ----- */
+.geo-ringpunkt{
+  display:block;
+  width:var(--abstand-4);height:var(--abstand-4);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+  border:var(--geo-ring) solid var(--blau);
+  box-shadow:var(--schatten);
+}
+.geo-ringpunkt-ende{border-color:var(--rot)}
+.geo-ringpunkt-beide{
+  border-color:var(--blau);
+  box-shadow:0 0 0 var(--strich-stark) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+}

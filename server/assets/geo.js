@@ -73,6 +73,18 @@
     return m;
   }
 
+  /* ---- Ring ohne Schild (Start/Ende der Spur abseits von Standort und
+   * Ziel) — derselbe Farbcode wie die Ringe am Schild: blau = Start,
+   * rot = Ende, Doppelring = beides. */
+  function markerRing(latlng, art, titel) {
+    var icon = L.divIcon({ className: '',
+      html: '<span class="geo-ringpunkt geo-ringpunkt-' + art + '"></span>',
+      iconSize: null, iconAnchor: [8, 8] });
+    var m = L.marker(latlng, { icon: icon, keyboard: false, zIndexOffset: 350 });
+    if (titel) { m.bindPopup(titel); }
+    return m;
+  }
+
   /* ---- Kleiner Punkt (Abfahrtort der Luftlinie) ------------------------- */
   function markerPunkt(latlng, farbe, titel) {
     var icon = L.divIcon({ className: '',
@@ -146,5 +158,5 @@
   global.EdGeo = { spurFarbe: spurFarbe, ruheFarbe: ruheFarbe,
                    markerStandort: markerStandort, markerZiel: markerZiel,
                    markerEinsatzort: markerEinsatzort, markerPunkt: markerPunkt,
-                   pfeile: pfeile };
+                   markerRing: markerRing, pfeile: pfeile };
 })(window);

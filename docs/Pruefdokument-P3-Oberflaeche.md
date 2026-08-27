@@ -62,15 +62,15 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O3 noch nicht ist
+### 1.3 Was der Zwischenstand nach O4 noch nicht ist
 
-**Hülle und Startseite sind neu, die übrigen Seiteninhalte nicht.**
-Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
+**Hülle, Startseite und Einsatzansicht sind neu, die übrigen Seiteninhalte
+nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
 Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht mit Kachelliste,
-Lesezustand und Marker-Satz. Was innerhalb der **übrigen** Seiten steht,
-ist bis auf die Artzeichen unverändert: die Feldliste der Einsatzansicht,
-das Formular, die Verwaltungslisten, die Kacheln der Zeitraumübersicht.
-Sie folgen Paket für Paket in O4 bis O11.
+Lesezustand und Marker-Satz; Web 9.3.0 (O4) die Einsatzansicht mit den
+vier Karten. Was innerhalb der **übrigen** Seiten steht, ist bis auf die
+Artzeichen unverändert: das Formular, die Verwaltungslisten, die Kacheln
+der Zeitraumübersicht. Sie folgen Paket für Paket in O5 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
@@ -82,8 +82,8 @@ Sichtbare Folgen, die **kein Fehler** sind:
   Gerätemeldung der Startseite hat ihres seit O3.
 - Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
   `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
-- Die Einsatzansicht (`einsatz.php`) trägt noch ihr altes Aktionsmenü und
-  ihre alte Titelzeile — das ist O4.
+- Das Einsatzformular (`einsatz_form.php`) trägt noch seine alte Gestalt —
+  das ist O5.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -161,6 +161,20 @@ Zwischenstände erwischt und wurde verworfen und wiederholt):
 | Bediensonden (Playwright, 390 px) | Sortierblatt: „Einsatzort" sortiert Kacheln und Tabelle **identisch**; Bearbeiten-Umschalter: Formular sichtbar, Leseansicht weg; Tagesblatt: fünf Einträge — je 0 Konsolenfehler |
 | Karte im Browser | Zoom auf die Spuren (nicht Rückfallstufe 7), Kacheln geladen, Haus-/Klinik-Schild, orange Kreise, Pfeile — bei 390/1440/1920 |
 | Syntax | `php -l` über alle PHP-Dateien, `node --check` über alle Skripte — fehlerfrei |
+
+### 2.5 Nach O4 (Web 9.3.0)
+
+| Was | Ergebnis |
+|---|---|
+| Bildaufnahme | 232 Bilder, 29 Kontaktbögen — **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Emoji im Markup | **0** (vorher 9 — die Schloss-Zeichen der Einsatzansicht) |
+| Inline-SVG mit Pfaden | **0** (vorher 1 — der doppelte Karten-Pin) |
+| Vollständigkeit | Sollmenge 220 — auf der Streichliste jetzt **64 Sollmengen-Klassen** (67 Einträge gesamt) |
+| Bediensonden (Playwright, 1440) | Entsperr-Fluss (Abbruch/Passwort), „kein Ende", Reanimation × 2, Teilstück (4 → 5 Pfade), Luft-Einsatz mit Haus-Schild und Ringen, Luftlinien-Einsatz — Einzelheiten im Konzept, Abschnitt 11/O4 |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -454,6 +468,44 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       (`zahl-spalte`, `haken-spalte`) fehlen im Markup oder Stylesheet.
 
 ---
+
+### 5.5 Nach O4 (Web 9.3.0)
+
+- [ ] **Vier Karten statt Feldliste.** *Weg:* Einsatz aus der Tagesübersicht
+      öffnen (Referenzdatensatz: 08.02.2026, Einsatz 1). *Erwartet:* Karten
+      Einsatz (mit Plaketten am Fuß), PatientIn, Transport, Besatzung,
+      Reanimation; leere Felder fehlen, leere Karten erscheinen nicht.
+      *Fehlschlag heißt:* Eine leere Karte mit Titel ohne Inhalt = der
+      Sichtbarkeits-Mechanismus (`zeile()`) greift nicht.
+- [ ] **Kleinzeile unter dem Einsatzort.** *Weg:* Luft-Einsatz mit Track
+      öffnen und entsperren. *Erwartet:* Unter der Adresse klein „731 m ·
+      Strecke 5,5 km" (Höhe nur luftgebunden); bei einem Einsatz ohne Track
+      zusätzlich „Luftlinie N km". *Fehlschlag heißt:* Höhe als eigene
+      Zeile = die Zusammenführung nach dem Entsperren lief nicht.
+- [ ] **Zustand der geschützten Angaben als Meldung.** *Weg:* Einsatzseite
+      in NEUER Registerkarte öffnen (Adresse kopieren), den Entsperrdialog
+      abbrechen. *Erwartet:* Blaue Meldung „gesperrt" mit
+      Entsperren-Knopf; keine PatientIn-Karte, kein Einsatzort. Knopf →
+      Passwort → Meldung „entsperrt", Karten füllen sich, oranger Kreis
+      erscheint. *Fehlschlag heißt:* Bleibt nach dem Passwort beides
+      stehen, klemmt der Bannerwechsel in `zeigePat()`.
+- [ ] **Phasen mit Minutenabstand und Teilstück.** *Weg:* Einsatz mit
+      Track; in der Phasen-Karte auf „Ankunft Einsatzort" zeigen bzw.
+      tippen. *Erwartet:* Zeile orange; auf der Karte färbt sich der
+      Spurabschnitt von der vorigen Phase bis zu dieser blau; im Kopf die
+      Gesamtdauer, je Zeile „+N min". *Fehlschlag heißt:* Keine blaue
+      Überlagerung = `track_idx` fehlt in der API-Antwort (harte
+      Aktualisierung, dann `api/mission.php` prüfen).
+- [ ] **Ringe nach Mockup 26.** *Weg:* Luft-Einsatz 08.02.2026 öffnen.
+      *Erwartet:* Haus-Schild mit blauem Ring (Spur beginnt am Standort),
+      Klinik-Schild mit rotem Ring (Spur endet dort); beginnt und endet
+      eine Spur am selben Ort, ein Doppelring; abseits der Schilder ein
+      kleiner Ringpunkt. *Fehlschlag heißt:* Ringe fehlen ganz = die
+      Näheprüfung (200 m) griff nicht oder `base_lat` fehlt.
+- [ ] **Klebende Spalte ab 1200 px.** *Weg:* Fenster ≥ 1200 px, Seite
+      rollen. *Erwartet:* Karte und Einsatzphasen bleiben rechts oben
+      stehen, die linken Karten rollen. *Fehlschlag heißt:* Rollt alles,
+      fehlt `position:sticky` am `.einsatz-neben`.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

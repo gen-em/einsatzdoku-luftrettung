@@ -354,5 +354,27 @@ declare(strict_types=1);
  * Lese- und Formularzustand gleichzeitig zu sehen waren.
  *
  * Keine Migration; Endpunkte und Feldkatalog unveraendert.
+ *
+ * 9.3.0 ist O4: DIE EINSATZANSICHT NACH DEN MOCKUPS 19-21 UND 26. Die eine
+ * lange Feldliste ist VIER KARTEN gewichen (Einsatz, PatientIn, Transport,
+ * Reanimation; die Besatzung behaelt ihre eigene) — die RANG-Ordnung
+ * sortiert jetzt je Karte. Titelzeile mit Rueckweg zum Diensttag,
+ * "Bearbeiten" als Primaerknopf, Verschieben und Loeschen im Blatt (das
+ * alte <details>-Aktionsmenue samt aktionsmenu.js ist fort). Der Zustand
+ * der geschuetzten Angaben steht als EINE Meldung ueber den Karten; die
+ * neun Schloss-Emojis an den Zeilen sind entfallen. Winde, Bergwacht,
+ * Sekundaer und Fehleinsatz erscheinen als Plaketten am Fuss der
+ * Einsatz-Karte; Hoehe, Luftlinie und Strecke als Kleinzeile unter dem
+ * Einsatzort. Auf der Karte der EdGeo-Marker-Satz statt des doppelten
+ * SVG-Pfads: Haus- und Klinik-Schild, oranger Einsatzort-Kreis,
+ * Start/Ende-Ringe an Schild oder als eigener Ringpunkt, Richtungspfeile.
+ * Die Phasenliste nennt den MINUTENABSTAND zur vorigen Phase und die
+ * Gesamtdauer; die angetippte Phase faerbt ihr TEILSTUECK der Spur blau —
+ * dafuer liefert api/mission.php je Phase den naechstliegenden Trackpunkt
+ * nach ZEITSTEMPEL (track_idx), denn GPS traegt nicht jede Phase. Dazu
+ * base_lat/lon des Tages in der Antwort (Haus-Schild, Klartext wie der
+ * Name). fitBounds auch hier mit den richtigen Achsen (F-P3-Z).
+ *
+ * Keine Migration; Feldkatalog unveraendert, api/mission.php nur ERWEITERT.
  */
-const WEB_VERSION = '9.2.0';
+const WEB_VERSION = '9.3.0';

@@ -1062,17 +1062,21 @@ function ui_titelzeile(array $o): void
       <?= ui_symbol('winkel', 'symbol-links') ?><span><?= ui_e((string)$o['zurueck']['text']) ?></span>
     </a>
   <?php endif; ?>
+  <?php /* Die Unterzeile steht NACH der Hauptzeile, nicht im Flex-Block:
+           Sonst bestimmt ihre Breite die des Titelblocks, und die Aktionen
+           brechen unter einen kurzen Titel („Einsatz 1"), obwohl neben ihm
+           Platz ist (Fund aus O4, Mockups 02/19). */ ?>
   <div class="titelzeile-haupt">
     <div class="titelzeile-text">
       <h1<?= !empty($o['titel_mobil']) ? ' data-mobil="' . ui_e((string)$o['titel_mobil']) . '"' : '' ?>><?= ui_e((string)($o['titel'] ?? '')) ?></h1>
-      <?php if (!empty($o['unter'])): ?>
-        <p class="titelzeile-unter"><?= (string)$o['unter'] ?></p>
-      <?php endif; ?>
     </div>
     <?php if (!empty($o['aktionen'])): ?>
       <div class="titelzeile-aktionen"><?= (string)$o['aktionen'] ?></div>
     <?php endif; ?>
   </div>
+  <?php if (!empty($o['unter'])): ?>
+    <p class="titelzeile-unter"><?= (string)$o['unter'] ?></p>
+  <?php endif; ?>
 </div>
 <?php }
 
