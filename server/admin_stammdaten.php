@@ -472,7 +472,7 @@ ui_seite_start(['titel' => $tab === 'standorte' ? 'Standorte systemweit' : 'Rett
           <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
           <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
           <div class="neu-zeile">
-            <input type="text" name="name" id="adbaseaddr" class="focus-target" maxlength="120" required
+            <input type="text" name="name" id="adbase-name" class="focus-target" maxlength="120" required
                    placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
             <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Hinzufügen' ?></button>
             <?php if ($editBase): ?><a class="btn-red" href="admin_stammdaten.php?t=standorte">Abbrechen</a><?php endif; ?>
@@ -703,7 +703,7 @@ ui_seite_start(['titel' => $tab === 'standorte' ? 'Standorte systemweit' : 'Rett
                        Standort auf der Seite (siehe einstellungen.php). */
                     $tdPraefix = 'adtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
               <div class="neu-zeile">
-                <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
+                <input type="text" name="name" id="<?= e($tdPraefix) ?>-name" maxlength="190" required
                        placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
                 <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
                 <?php if ($etHier): ?><a class="btn-red" href="admin_stammdaten.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>

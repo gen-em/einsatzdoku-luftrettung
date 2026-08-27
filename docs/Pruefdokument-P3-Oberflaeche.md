@@ -62,7 +62,7 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O8a noch nicht ist
+### 1.3 Was der Zwischenstand nach O8b noch nicht ist
 
 **Diese Fassung braucht eine Migration** (`2026_08_27_logo_wahl`). Sie ist
 die erste der Phase; ohne den Aufruf von `update.php` scheitert jede
@@ -73,10 +73,10 @@ Verwaltungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
 Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
 Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
 Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht;
-Web 9.7.0 (O8a) Profil, Logo-Wahl und die Standorte. Was innerhalb der
-**übrigen** Seiten steht, ist bis auf die Artzeichen unverändert: die
-weiteren Reiter der Einstellungen (Rettungsmittel, Geräte, Sicherung),
-der Import und die Administration. Sie folgen in O8b bis O11.
+Web 9.7.0 (O8a) Profil, Logo-Wahl und die Standorte; Web 9.7.1 (O8b) die
+übrigen Verwaltungslisten und die Geräte. Was innerhalb der **übrigen**
+Seiten steht, ist bis auf die Artzeichen unverändert: der Reiter Sicherung,
+der Import und die Administration. Sie folgen in O8c bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
@@ -261,6 +261,29 @@ Werkzeug hier ersetzen kann.
 | Wortliste | **0 / 0 / 0** — **53 Regeln** (vorher 48), 53 gegriffen; sechs neue für die Logo-Wahl (Klasse Homonym), die veraltete `logowahl-hubschrauber` ausgetragen |
 | Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
 | Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
+
+### 2.10 Nach O8b (Web 9.7.1)
+
+| Was | Ergebnis |
+|---|---|
+| Rettungsmittel-Reiter (1440) | zwei Standort-Karten, zugeklappt mit Zahl; aufgeklappt fünf Abschnitte mit **2 / 11 / 5 / 5 / 3** Zeilen, je ein Formular. **0 doppelte Element-Kennungen**, 0 Konsolenfehler, **0** der alten Klassen noch im Markup |
+| Geräte-Reiter | zwei Zeilen mit Plaketten und drei Handlungen; Löschrückfrage kommt **vollständig** an; 0 doppelte Kennungen |
+| **Lage-Feld (F-P3-AI, jetzt wirklich)** | Vorschlag „Kempten (Allgäu), 87435 Kempten" erscheint, Übernahme setzt **47.7267 / 10.3167** als Chip, **Name unverändert** |
+| **F-P3-AJ vermessen** | Antwort nach 0 ms: 30 ms → 1 Eintrag, 80 ms → 1, **160 ms → 0** (die Liste wurde gelöscht). Nach der Behebung: 1 Eintrag über den ganzen Verlauf. Antwort nach 250 ms: vorher wie nachher ab 300 ms 1 Eintrag |
+| Bildaufnahme | 240 Bilder, 30 Kontaktbögen — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** — 57 Regeln, 57 gegriffen |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Streichliste | Sollmenge 220 — 45 mit Regel, **84 gestrichen** (fünf neue in O8b) |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
+
+**Eine Behebung aus O8a war keine.** Das wiederhergestellte Lage-Feld trug
+dieselbe Element-Kennung wie das Namensfeld; `getElementById` findet das
+erste, also den Namen. Das Feld war da, sichtbar und beschriftet — und hing
+an nichts. Der Prüfsatz aus 2.9 („alle vier wieder vorhanden") war richtig
+und trug trotzdem nicht: Er hat gezählt, was dasteht, statt zu prüfen, was
+geschieht. Seit O8b prüft die Sonde die **Wirkung** — Vorschlag, Übernahme,
+Koordinaten, unveränderter Name.
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -797,6 +820,49 @@ Startseite.
       jede Zeile trägt die Plakette „systemweit" und „Auswählen" bzw.
       „Abwählen". *Fehlschlag heißt:* Aufgeklappt = die Voreinstellung
       stimmt nicht.
+
+### 5.10 Nach O8b (Web 9.7.1)
+
+- [ ] **Ein Standort ist eine Karte.** *Weg:* Einstellungen → Rettungsmittel.
+      *Erwartet:* Je Standort eine zugeklappte Karte mit der Zahl der
+      Rettungsmittel im Kopf; aufgeklappt fünf Abschnitte (Rettungsmittel,
+      Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht — letzterer
+      nur bei einem luftgebundenen Rettungsmittel am Standort). *Fehlschlag
+      heißt:* Aufgeklappt beim Öffnen = bei mehreren Standorten steht die
+      Seite sofort mehrere Bildschirme hoch.
+- [ ] **Die Lage lässt sich eintragen und ändert den Namen nicht.** *Weg:*
+      Zielkliniken → „Zielklinik hinzufügen" → Name „Testklinik" eintragen,
+      dann im Feld „Lage (optional)" einen Ort suchen und einen Vorschlag
+      wählen. *Erwartet:* Koordinaten erscheinen als Chip, **im Namensfeld
+      steht weiter „Testklinik"**. *Fehlschlag heißt:* Der Name wird durch
+      die Adresse ersetzt = das Lage-Feld hängt am falschen Element (das war
+      der Zustand in Web 9.7.0); oder es kommen keine Vorschläge = die
+      Kennung stimmt nicht.
+- [ ] **Die Vorschlagsliste bleibt stehen** (F-P3-AJ). *Weg:* Lage suchen,
+      Lupe drücken, **nicht** weiterklicken. *Erwartet:* Die Vorschläge
+      bleiben sichtbar, bis man einen wählt oder wegklickt. *Fehlschlag
+      heißt:* Sie erscheinen kurz und verschwinden von selbst — dann greift
+      der blur-Aufschub wieder, obwohl der Fokus zurückgekehrt ist. Am
+      ehesten zu sehen, wenn die Antwort schnell kommt (Zwischenspeicher,
+      zweite Suche nach demselben Ort).
+- [ ] **Zwei gleichnamige Einträge, zwei Blätter** (F-P3-AK). *Weg:* An zwei
+      Standorten je eine Zielklinik mit **demselben Namen** anlegen; auf
+      390 px bei beiden nacheinander „⋯" drücken. *Erwartet:* Jedes „⋯"
+      öffnet sein eigenes Blatt. *Fehlschlag heißt:* Es öffnet sich keines
+      oder zwei gleichzeitig = die Kennungen kollidieren wieder.
+- [ ] **Die Löschrückfrage nennt den Namen.** *Weg:* In einer beliebigen
+      Stammdatenliste „Löschen" drücken. *Erwartet:* „… „Bergwacht
+      Felsgrat" löschen?" — mit Namen. *Fehlschlag heißt:* „Eintrag
+      löschen?" ohne Namen; bei elf Besatzungseinträgen ist das keine
+      Rückfrage.
+- [ ] **Kopplungscode groß und lesbar.** *Weg:* Geräte → „Kopplungscode
+      erzeugen". *Erwartet:* Der Code steht in einem eigenen Kasten, groß
+      und in Festbreite, darunter die Gültigkeit. *Fehlschlag heißt:*
+      Fließtextgröße — er wird auf einer Uhr abgetippt, unter Zeitdruck.
+- [ ] **„Als Vorbelegung" nur, wo es eine gibt.** *Weg:* Die fünf Listen
+      durchsehen. *Erwartet:* Der Eintrag steht bei Standorten und
+      Rettungsmitteln, nicht bei Besatzung, Zielkliniken, weiteren
+      Rettungsmitteln und Bergwacht.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

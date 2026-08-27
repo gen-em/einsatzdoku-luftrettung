@@ -351,8 +351,23 @@
                 feld.focus();
             });
         }
+        /* Der Aufschub gibt dem `mousedown` eines Vorschlags Zeit, noch
+         * durchzukommen — sonst waere die Liste weg, bevor der Klick sie
+         * erreicht.
+         *
+         * ER DARF ABER NICHT ZUSCHLAGEN, WENN DER FOKUS ZURUECKKEHRT. Der
+         * Lupen-Knopf nimmt dem Feld den Fokus (`blur` faellt), sucht und
+         * gibt ihn zurueck (`feld.focus()`). Kam die Antwort schneller als
+         * 150 ms, loeschte dieser Aufschub die eben gefuellte Liste wieder —
+         * gemessen: bei sofortiger Antwort stand sie nach 80 ms mit einem
+         * Eintrag da und nach 160 ms leer; bei 250 ms Antwortzeit blieb sie.
+         * Gegen den echten Photon-Dienst faellt es deshalb nie auf, hinter
+         * einem Zwischenspeicher oder im schnellen Netz schon (F-P3-AJ). */
         feld.addEventListener('blur', function () {
-            setTimeout(versteckeListe, 150);
+            setTimeout(function () {
+                if (document.activeElement === feld) { return; }
+                versteckeListe();
+            }, 150);
         });
 
         zeichne();

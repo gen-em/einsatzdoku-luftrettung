@@ -1367,6 +1367,8 @@ und O11.
 | F-P3-AG | **Kein Filter der Suchseiten-Leiste wirkte — seit O2.** Der Zuhörer der Suche horchte auf `.filterspalte input, .filterspalte select`; die Klasse `filterspalte` ist mit dem Umzug in die gemeinsame Leiste (O2) verschwunden, der Selektor traf seither nichts. Nur Freitextfeld und Sortierwahl hingen an eigenen Zuhörern und blieben wirksam. Gemessen vor dem Fix: „Datum von 01.12.2026" ließ **82 von 82** Einsätzen stehen. Ein Klassenname am Behälter ist der falsche Ereignisanker — er beschreibt die Verpackung, nicht die Sache. | O6: Der Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am Ereignisziel (`ev.target.closest('input, select')`), nicht an einer Klasse des Behälters. |
 | F-P3-AH | **Die Zeitraumübersicht war seit O1 in keinem Screenshot.** Das Bilderwerkzeug rief `zeitraum.php` ohne `?y=` auf; die Seite leitet dann auf `index.php` um (`zeitraum.php:20`). Der Kontaktbogen „14-zeitraum" zeigte also achtmal die Tagesübersicht — die Prüfung meldete pflichtgemäß „kein Überlauf, keine Konsolenfehler" für eine Seite, die sie nie gesehen hatte. Eine Prüfung, die den falschen Gegenstand misst, ist schlimmer als keine: Sie erzeugt Sicherheit. | O7, im Werkzeug: `seiten.json` führt `zeitraum.php?y=2026` **und** `zeitraum.php?y=2026&m=01` — nur die Monatsansicht zeigt Rückweg und Monatsmarkierung. 29 → 30 Seiten, 232 → 240 Bilder. |
 | F-P3-AI | **Seit O5 gab es kein Eingabefeld für die Lage mehr.** O5 hat am Ortsfeld das zweite Suchfeld ausgebaut (der Lupen-Knopf am Namensfeld trat an seine Stelle). Die Nur-Lage-Fassung `ui_ortsfeld(['feld' => false, 'such' => true])` bestand aber genau aus diesem Suchfeld plus Zubehör — übrig blieben Vorschlagsliste, Zustandszeile, Chips und die versteckten Koordinatenfelder. Die Lage eines Standorts oder einer Zielklinik ließ sich seither **nicht mehr eingeben, nur noch behalten**; vier Aufrufstellen in `einstellungen.php` und `admin_stammdaten.php`. Der Ausbau eines Bausteins traf einen zweiten Verwendungsfall, den niemand mitgedacht hat — dieselbe Bauart wie F-P3-AG. | O8a: Die Nur-Lage-Fassung rendert wieder ein Suchfeld mit Lupe (`<praefix>addr` + `<praefix>lupe`), beschriftet aus `such_hinweis`, Platzhalter „Adresse oder Ort suchen". Ein Treffer setzt weiterhin nur die Koordinaten (`getrennteSuche` in `ortsfeld.js`), nie den Namen. |
+| F-P3-AJ | **Der Lupen-Knopf löschte die Vorschlagsliste, die er gerade gefüllt hatte.** Er nimmt dem Eingabefeld den Fokus; der `blur`-Handler plant 150 ms später `versteckeListe()` — der Aufschub existiert, damit ein `mousedown` auf einen Vorschlag noch durchkommt. Kommt die Antwort schneller als 150 ms, trifft er die eben gefüllte Liste. Gemessen (Photon-Antwort aus der Sonde zugeliefert): bei sofortiger Antwort 80 ms → 1 Eintrag, 160 ms → 0; bei 250 ms Antwortzeit blieb die Liste stehen. Gegen den echten Dienst verdeckt die Netzlatenz den Fehler zuverlässig — hinter einem Zwischenspeicher, im schnellen Netz oder bei einer Sonde nicht. Betrifft jedes Ortsfeld mit Lupe, also auch den Einsatzort aus O5. | O8b: Der Aufschub prüft `document.activeElement === feld` und lässt die Liste stehen, wenn der Fokus zurückgekehrt ist (der Lupen-Knopf gibt ihn zurück). |
+| F-P3-AK | **Zwei gleichnamige Zeilen teilten sich ein Aktionsblatt.** `ui_zeilenaktionen()` leitete die Kennung aus einem sha1 über Titel und Aktionstexte ab. In einer Stammdatenliste ist die Kollision der Normalfall, nicht die Ausnahme: zwei Standorte mit einer gleichnamigen Zielklinik, zwei Rollen mit denselben Handlungen. `data-blatt="…"` fand dann zwei Elemente und öffnete beide oder keines. Dasselbe galt für die Feld-Kennung des Besatzungsformulars, das je Rolle einmal steht — vier Rollen, vier Felder gleicher Kennung, und das Label zeigte auf das erste. | O8b: laufende Nummer (`static $lfd`) statt Hash, an beiden Stellen. Eine ausdrücklich gesetzte `id` hat weiterhin Vorrang. |
 
 ---
 
@@ -1427,7 +1429,8 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O6 Suche | **erledigt** | Web 9.5.0 |
 | O7 Zeitraum | **erledigt** | Web 9.6.0 |
 | O8a Profil, Logo-Wahl, Standorte | **erledigt** | Web 9.7.0 (Migration!) |
-| O8b Rettungsmittel, Geräte, Sicherung, Import | offen | |
+| O8b Rettungsmittel, Geräte | **erledigt** | Web 9.7.1 |
+| O8c Sicherung, Import | offen | |
 | O9 Administration | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
@@ -2146,6 +2149,68 @@ geprüft (der Browser dieser Umgebung kommt nicht hinaus, F-P3-AC); belegt
 ist, dass Feld, Lupe und Koordinatenfelder wieder da sind und die
 Registrierung mit `getrennteSuche` greift. Der Reiter „Rettungsmittel" und
 die übrigen Reiter tragen noch ihre alte Gestalt — das ist O8b.
+
+### O8b — Rettungsmittel und Geräte
+
+**Erledigt.** Web 9.7.1. Keine Migration.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/einstellungen.php` | Reiter „Rettungsmittel": ein Standort ist eine zugeklappte Karte, darin fünf Abschnitte (`.sd-liste`) statt zweier `<details>`-Ebenen; Reiter „Geräte" mit Karten für Kopplung, Liste und Zugangsdaten. Zwei Schließungen `$sdZeile` und `$sdForm` rendern das Muster **einmal** statt fünfmal |
+| `server/ui.php` | `ui_zeilenaktionen()` nummeriert statt zu hashen (F-P3-AK) |
+| `server/assets/ortsfeld.js` | Der blur-Aufschub lässt die Liste stehen, wenn der Fokus zurückgekehrt ist (F-P3-AJ) |
+| `server/einstellungen.php`, `server/admin_stammdaten.php` | Die Kennung `<praefix>addr` gehört dem **Lage-Feld**, nicht dem Namen — vier Stellen (F-P3-AI wirklich behoben) |
+| `server/assets/style.css` | `.sd-liste`, `.sd-titel`, `.sd-zahl`, `.sd-rolle`, `.codeblock`, `.feld-klein-inline` |
+| entfernt | fünf Klassen auf der Streichliste (`badge-central`, `btn-stern`, `sternmarke`, `c-stern`, `paircode`) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Die Listen im Standort sind Abschnitte, keine Karten.** Verschachtelte
+  Karten wären zwei Rahmen um dieselbe Sache; die zweite Ebene trägt hier
+  keine eigene Bedeutung, sie ordnet nur.
+- **Jede Löschrückfrage nennt den Namen.** Der Bestand fragte „Eintrag
+  löschen?" — bei einer Liste mit elf Besatzungsnamen ist das keine
+  Rückfrage, sondern eine Formalie.
+- **„Als Vorbelegung" gibt es nur, wo es eine gibt** (Standorte und
+  Rettungsmittel). Die Schließung lässt den Eintrag weg, wenn keine
+  `def_action` übergeben ist — vorher stand er bei den Rettungsmitteln und
+  fehlte bei den übrigen, ohne dass ein Grund dafür erkennbar war.
+- **Der Kopplungscode als `.codeblock`.** Er wird von einem Bildschirm auf
+  eine Uhr abgetippt, unter Zeitdruck und mit begrenzter Gültigkeit.
+
+#### Prüfprotokoll O8b
+
+- **Rettungsmittel-Reiter (1440):** zwei Standort-Karten, zugeklappt, mit
+  Zahl im Kopf; aufgeklappt fünf Abschnitte mit **2 / 11 / 5 / 5 / 3**
+  Zeilen und je einem Formular. **0 doppelte Element-Kennungen**, 0
+  Konsolenfehler, keine der alten Klassen mehr im Markup.
+- **Geräte-Reiter:** zwei Zeilen mit Plaketten (Gerätekennung, „neu seit …")
+  und den drei Handlungen; die Löschrückfrage kommt **vollständig** an
+  (vorher zerteilte ein ASCII-Anführungszeichen im Namen das Attribut).
+  0 doppelte Kennungen.
+- **Lage-Feld (F-P3-AI, jetzt wirklich):** Vorschlag erscheint
+  („Kempten (Allgäu), 87435 Kempten"), Übernahme setzt 47.7267 / 10.3167 als
+  Chip, **der Name bleibt unverändert**. Photon-Antwort aus der Sonde
+  zugeliefert (F-P3-AC).
+- **F-P3-AJ vermessen:** Antwort nach 0 ms → 30/80 ms je 1 Eintrag,
+  160 ms → **0**; nach der Behebung → 1 Eintrag über den ganzen Verlauf.
+  Antwort nach 250 ms → vorher wie nachher 1 Eintrag ab 300 ms.
+- **Screenshots:** 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+  außerhalb des Solls.
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.10).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Der
+Geräte-Reiter wurde **nicht** durch Anlegen und Löschen eines echten Geräts
+geprüft — der Referenzbestand führt genau die zwei Uhren, an denen die
+Kreisläufe hängen, und ein Löschversuch daran wäre ein Eingriff in den
+Vergleichsstand. Geprüft ist die Anzeige samt Rückfragetext und den
+Zielen der Formulare. Die Kopplung selbst (Code auf einer Uhr eintippen)
+ist nur am Gerät zu prüfen. Sicherung und Import tragen noch ihre alte
+Gestalt — das ist O8c.
 
 ---
 

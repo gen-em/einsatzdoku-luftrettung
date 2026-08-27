@@ -1057,6 +1057,111 @@ ui_seite_start(['titel' => 'Einstellungen']);
       };
     ?>
 
+  <?php
+  /* ---- EINE STAMMDATENZEILE NACH E-P3-35/26 ----------------------------
+   *
+   * Fünf Listen folgen demselben Muster (Rettungsmittel, Besatzung,
+   * Zielkliniken, weitere Rettungsmittel, Bergwacht), und im Bestand stand
+   * es fünfmal ausgeschrieben. Eine Änderung am Muster musste fünfmal
+   * ankommen — in der Praxis kam sie es nicht: Die Zeilenaktionen waren
+   * bereits auseinandergelaufen (die Rettungsmittel hatten „★ Standard",
+   * die übrigen nicht, und die Löschrückfragen lauteten verschieden).
+   *
+   * Diese Schließung gibt die versteckten POST-Formulare aus UND die Zeile.
+   * Beides gehört zusammen: Die Knöpfe der Zeile zeigen über `form=` auf
+   * die Formulare (ui_zeilenaktionen), also müssen sie im selben Atemzug
+   * entstehen.
+   *
+   * $o: name, klein, anker, praefix (eindeutig je Liste), id, base_id,
+   *     zentral (bool), stern (bool), del_action, del_frage,
+   *     def_action (optional — nur wo es eine Vorbelegung gibt),
+   *     bearbeiten_href, symbol (optional, vor dem Namen)
+   */
+  $sdZeile = function (array $o): void {
+      $id  = (int)$o['id'];
+      $pre = (string)$o['praefix'] . '-' . $id;
+      $ziel = 'einstellungen.php?t=rettungsmittel#' . (string)$o['anker'];
+      $zentral = !empty($o['zentral']);
+
+      /* Systemweite Einträge lassen sich weder bearbeiten noch löschen —
+         sie gehören der Administration. Die Vorbelegung dagegen schon:
+         Sie ist eine Eigenschaft DIESES Kontos. */
+      $eintraege = [];
+      if (!empty($o['def_action']) && empty($o['stern'])) {
+          echo '<form method="post" id="f-' . $pre . '-def" class="nur-vorlesen" action="'
+             . ui_e($ziel) . '">' . csrf_field()
+             . '<input type="hidden" name="action" value="' . ui_e((string)$o['def_action']) . '">'
+             . '<input type="hidden" name="id" value="' . $id . '">'
+             . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
+             . "</form>\n";
+          $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
+                          'art' => 'leise-orange', 'form' => 'f-' . $pre . '-def'];
+      }
+      if (!$zentral) {
+          $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                          'href' => (string)$o['bearbeiten_href']];
+          echo '<form method="post" id="f-' . $pre . '-del" class="nur-vorlesen" action="'
+             . ui_e($ziel) . '" data-confirm="' . ui_e((string)$o['del_frage']) . '">' . csrf_field()
+             . '<input type="hidden" name="action" value="' . ui_e((string)$o['del_action']) . '">'
+             . '<input type="hidden" name="id" value="' . $id . '">'
+             . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
+             . "</form>\n";
+          $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
+                          'art' => 'gefahr', 'form' => 'f-' . $pre . '-del'];
+      }
+
+      $plaketten = '';
+      if ($zentral) { $plaketten .= ui_plakette('systemweit'); }
+      if (!empty($o['stern'])) {
+          $plaketten .= ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage');
+      }
+
+      ui_zeile([
+          'text'      => (string)$o['name'],
+          'klein'     => (string)($o['klein'] ?? ''),
+          'plaketten' => $plaketten,
+          'aktionen'  => $eintraege
+              ? ui_zeilenaktionen(['titel' => (string)$o['name'], 'eintraege' => $eintraege])
+              : '',
+      ]);
+  };
+
+  /* Das Anlegen-Formular einer Stammdatenliste — ein Namensfeld, ein Knopf,
+     bei Bearbeitung ein Abbrechen daneben. Die Listen mit mehr Feldern
+     (Rettungsmittel, Zielkliniken) bauen ihr Formular selbst. */
+  $sdForm = function (array $o): void {
+      $bearb = $o['bearbeitet'] ?? null;
+      echo '<div class="listen-form">' . "\n";
+      echo '  <h3 class="listen-form-titel">'
+         . ui_e($bearb ? (string)$o['titel_bearbeiten'] : (string)$o['titel_neu']) . "</h3>\n";
+      echo '  <form method="post" action="einstellungen.php?t=rettungsmittel#'
+         . ui_e((string)$o['anker']) . '">' . "\n";
+      echo '    ' . csrf_field()
+         . '<input type="hidden" name="action" value="' . ui_e((string)$o['action']) . '">'
+         . '<input type="hidden" name="id" value="' . ($bearb ? (int)$bearb['id'] : 0) . '">'
+         . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
+         . (string)($o['felder_versteckt'] ?? '') . "\n";
+      echo '    <div class="listen-form-felder">' . "\n";
+      /* Die Kennung trägt eine laufende Nummer: Das Besatzungsformular steht
+         je ROLLE einmal, alle mit demselben Anker — ohne sie hätten vier
+         Rollen vier Felder gleicher Kennung, und das Label zeigte auf das
+         erste. */
+      static $lfdForm = 0;
+      $lfdForm++;
+      ui_feld(['label' => (string)($o['label'] ?? 'Name'), 'name' => 'name',
+               'id' => 'sdf-' . preg_replace('/[^\w-]/', '-', (string)$o['anker']) . '-' . $lfdForm,
+               'pflicht' => true, 'platzhalter' => (string)($o['platzhalter'] ?? ''),
+               'wert' => (string)($bearb['name'] ?? ''), 'attr' => ' maxlength="120"']);
+      echo "    </div>\n";
+      echo '    <div class="listen-form-fuss">'
+         . ui_knopf(['text' => $bearb ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer'])
+         . ($bearb ? ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                               'href' => 'einstellungen.php?t=rettungsmittel']) : '')
+         . "</div>\n";
+      echo "  </form>\n</div>\n";
+  };
+  ?>
+
   <?php if ($tab === 'standorte'): ?>
     <?php ui_titelzeile(['titel' => 'Standorte']); ?>
     <?php /* DREI ZEILEN ERKLÄRUNG, nicht zwei Absätze (E-P3-35). Der Bestand
@@ -1131,7 +1236,15 @@ ui_seite_start(['titel' => 'Einstellungen']);
           <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
           <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
           <div class="listen-form-felder">
-            <?php ui_feld(['label' => 'Name', 'name' => 'name', 'id' => 'sdbaseaddr',
+            <?php /* Die Kennung `<praefix>addr` gehört dem LAGE-Suchfeld, nicht
+                     dem Namen: ortsfeld.js sucht in `el(p + 'addr')`. Bis
+                     Web 9.7.0 trug das Namensfeld sie — damals gab es kein
+                     zweites Feld, und die Suche lief bewusst im Namensfeld
+                     („getrennte Suche" übernahm nur die Koordinaten). Mit dem
+                     wiederhergestellten Lage-Feld (F-P3-AI) stünde die Kennung
+                     zweimal im Markup, und getElementById fände das erste —
+                     das Lage-Feld wäre Zierde. */ ?>
+            <?php ui_feld(['label' => 'Name', 'name' => 'name', 'id' => 'sdbase-name',
                            'klasse' => 'focus-target', 'pflicht' => true,
                            'platzhalter' => 'z. B. Standort Kempten',
                            'wert' => (string)($editBase['name'] ?? ''),
@@ -1230,25 +1343,24 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <?php /* ---- Reiter „Rettungsmittel" ------------------------------------
              Alles, was an einem ausgewählten Standort hängt. Ein Block je
              Standort, darin je Datenart ein eigener. */ ?>
-    <h1>Rettungsmittel</h1>
-    <p class="muted">Was an den ausgewählten Standorten hängt: Rettungsmittel und
-       ihre Besatzungsrollen, Besatzungs-Vorbelegungen, Zielkliniken, weitere
-       Rettungsmittel und Bergwacht-Bereitschaften. Die Standorte selbst stehen
-       unter <a href="einstellungen.php?t=standorte">Standorte</a>.</p>
-    <p class="muted">Löschen entfernt nur den Listeneintrag — <strong>bereits
-       dokumentierte Diensttage bleiben unverändert</strong>. Sie haben Art,
-       Rollen, Fähigkeiten und Bezeichnungen beim Anlegen eingefroren; Änderungen
-       hier wirken ausschließlich auf neue Diensttage. ★ markiert die
-       Vorbelegung neuer Diensttage. „systemweit“ markiert vom Admin gepflegte
-       Einträge — diese stehen automatisch zur Verfügung und lassen sich hier
-       nicht bearbeiten oder löschen.</p>
+    <?php ui_titelzeile(['titel' => 'Rettungsmittel']); ?>
+    <?php /* DREI ZEILEN (E-P3-35). Der Bestand hatte hier zwei Absätze zu je
+             sechs Zeilen; was wegfällt, steht an der Handlung selbst — die
+             Löschrückfrage sagt, dass dokumentierte Diensttage bleiben, und
+             die Plakette „systemweit" sagt, warum eine Zeile keine Knöpfe
+             hat. */ ?>
+    <p class="seiten-erklaerung">Was an den ausgewählten
+       <a href="einstellungen.php?t=standorte">Standorten</a> hängt:
+       Rettungsmittel und ihre Rollen, Besatzungs-Vorbelegungen, Zielkliniken,
+       weitere Rettungsmittel und Bergwacht. Änderungen wirken nur auf neue
+       Diensttage — dokumentierte haben ihre Angaben eingefroren.</p>
 
     <?php if (!$sdBases): ?>
-      <p class="alert alert-info">Noch kein Standort verfügbar. Bitte zuerst unter
-         <a href="einstellungen.php?t=standorte">Standorte</a> einen eigenen
-         anlegen oder einen vordefinierten auswählen — ohne Standort gibt es
-         keine Rettungsmittel, keine Besatzungs-Vorbelegungen und keine
-         Zielkliniken.</p>
+      <?php ui_meldung('Noch kein Standort verfügbar. Ohne Standort gibt es keine '
+          . 'Rettungsmittel, keine Besatzungs-Vorbelegungen und keine Zielkliniken.',
+          null, 'info', '      ',
+          ['knopf' => ui_knopf(['text' => 'Zu den Standorten', 'art' => 'neutral',
+                                'href' => 'einstellungen.php?t=standorte'])]); ?>
     <?php endif; ?>
 
     <?php foreach ($sdBases as $b): $bid = (int)$b['id']; ?>
@@ -1267,64 +1379,49 @@ ui_seite_start(['titel' => 'Einstellungen']);
         $anker = 'sd-' . $bid;
         $rollenHier = $rollenAmStandort($bid);
       ?>
-      <details class="stammblock" id="<?= e($anker) ?>">
-        <summary><?= e($b['name']) ?><?= !empty($b['zentral']) ? ' <span class="badge-central">systemweit</span>' : '' ?></summary>
+      <?php /* Ein Standort ist eine zugeklappte Karte; die Listen darin sind
+               Abschnitte mit Überschrift. Verschachtelte Karten wären zwei
+               Rahmen um dieselbe Sache — die zweite Ebene trägt hier keine
+               eigene Bedeutung, sie ordnet nur. */
+             ui_karte_start(['titel' => (string)$b['name'], 'id' => $anker, 'zu' => true,
+                             'zahl' => count($vehListe) . ' Rettungsmittel']); ?>
+        <?php if (!empty($b['zentral'])): ?>
+          <p class="feld-hinweis"><?= ui_plakette('systemweit') ?> Dieser Standort wird
+             von der Administration gepflegt.</p>
+        <?php endif; ?>
 
-        <details class="stammunter" id="<?= e($anker) ?>-veh">
-          <summary>Rettungsmittel<span class="stammzahl"><?= count($vehListe) ?></span></summary>
-          <p class="muted">Die Art entscheidet über Besatzungsrollen und die im
-             Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht) gibt
-             es nur luftgebunden.</p>
-          <table class="data">
-            <tbody>
-            <?php if (!$vehListe): ?><tr><td colspan="3" class="muted">Noch keine Rettungsmittel an diesem Standort.</td></tr><?php endif; ?>
-            <?php foreach ($vehListe as $v):
-                  $vz = $istZentral($v); $vid = (int)$v['id'];
-                  $sym = dt_art_symbol((string)$v['kind']);
-                  $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
-                  $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
-                                       $vehCaps[$vid] ?? []); ?>
-              <tr>
-                <td><?= ui_symbol($sym['symbol'], 'artzeichen', $sym['text']) ?>
-                  <?= e($v['name']) ?>
-                  <?php /* DIE ART STEHT NICHT MEHR AUSGESCHRIEBEN DARUNTER
-                           (Web 7.0.0). Das Symbol davor sagt sie bereits, und es
-                           trägt seine Textalternative in title/aria-label — die
-                           Auskunft hängt also nicht an der Grafik. Übrig bleibt,
-                           was man dem Symbol nicht ansieht: die Rollen und die
-                           Fähigkeiten. */ ?>
-                  <br><span class="muted small"><?php
-                    echo $rollenTxt ? e(implode(', ', $rollenTxt)) : 'keine Rollen';
-                    echo $capsTxt ? ' · ' . e(implode(', ', $capsTxt)) : ''; ?></span>
-                </td>
-                <td class="c-stern"><?= $vid === $DEF_VEH_ID
-                    ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
-                      . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
-                <td class="th-act"><div class="rowactions">
-                  <?php if ($vz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                  <?php if ($vid !== $DEF_VEH_ID): ?>
-                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="veh_default">
-                      <input type="hidden" name="id" value="<?= $vid ?>">
-                      <input type="hidden" name="base_id" value="<?= $bid ?>">
-                      <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
-                    </form>
-                  <?php endif; ?>
-                  <?php if (!$vz): ?>
-                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ev=<?= $vid ?>#<?= e($anker) ?>-veh">Bearbeiten</a>
-                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh"
-                          data-confirm="Rettungsmittel löschen? Bereits dokumentierte Diensttage bleiben unverändert.">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="veh_del">
-                      <input type="hidden" name="id" value="<?= $vid ?>">
-                      <input type="hidden" name="base_id" value="<?= $bid ?>">
-                      <button class="btn-red">Löschen</button>
-                    </form>
-                  <?php endif; ?>
-                </div></td>
-              </tr>
-            <?php endforeach; ?>
-            </tbody>
-          </table>
+        <section class="sd-liste" id="<?= e($anker) ?>-veh">
+          <h3 class="sd-titel">Rettungsmittel <span class="sd-zahl"><?= count($vehListe) ?></span></h3>
+          <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die
+             im Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht)
+             gibt es nur luftgebunden.</p>
+          <?php if (!$vehListe): ?>
+            <p class="feld-hinweis">Noch keine Rettungsmittel an diesem Standort.</p>
+          <?php endif; ?>
+          <?php foreach ($vehListe as $v):
+                $vid = (int)$v['id'];
+                $sym = dt_art_symbol((string)$v['kind']);
+                $rollenTxt = array_map('crew_role_label', $vehRollen[$vid] ?? []);
+                $capsTxt = array_map(static fn(string $c): string => VEHICLE_CAPABILITIES[$c] ?? $c,
+                                     $vehCaps[$vid] ?? []);
+                /* DIE ART STEHT NICHT AUSGESCHRIEBEN DARUNTER (Web 7.0.0): Das
+                   Symbol vor dem Namen sagt sie, und es trägt seine
+                   Textalternative — die Auskunft hängt nicht an der Grafik.
+                   Übrig bleibt, was man dem Symbol nicht ansieht. */
+                $klein = ($rollenTxt ? implode(', ', $rollenTxt) : 'keine Rollen')
+                       . ($capsTxt ? ' · ' . implode(', ', $capsTxt) : '');
+                $sdZeile([
+                    'name' => (string)$v['name'], 'klein' => $klein,
+                    'anker' => $anker . '-veh', 'praefix' => 'veh', 'id' => $vid,
+                    'base_id' => $bid, 'zentral' => $istZentral($v),
+                    'stern' => $vid === $DEF_VEH_ID,
+                    'def_action' => 'veh_default', 'del_action' => 'veh_del',
+                    'del_frage' => 'Rettungsmittel „' . $v['name'] . '“ löschen? '
+                                 . 'Bereits dokumentierte Diensttage bleiben unverändert.',
+                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ev=' . $vid
+                                       . '#' . $anker . '-veh',
+                ]);
+          endforeach; ?>
           <?php $evHier = ($editVeh && (int)$editVeh['base_id'] === $bid) ? $editVeh : null;
                 $evRollen = $evHier ? ($vehRollen[(int)$evHier['id']] ?? []) : [];
                 $evCaps   = $evHier ? ($vehCaps[(int)$evHier['id']] ?? []) : []; ?>
@@ -1342,34 +1439,37 @@ ui_seite_start(['titel' => 'Einstellungen']);
                    von selbst da, und an einem NEF-Standort war das die falsche
                    Vorgabe, die niemand bemerkt. Ohne Auswahl weist der Server
                    die Eingabe jetzt ab und sagt, was fehlt. */ ?>
-          <div class="neu-form">
-            <h4><?= $evHier ? 'Rettungsmittel bearbeiten' : 'Rettungsmittel hinzufügen' ?></h4>
+          <div class="listen-form">
+            <h3 class="listen-form-titel"><?= $evHier ? 'Rettungsmittel bearbeiten' : 'Rettungsmittel hinzufügen' ?></h3>
             <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-veh" class="ac-form">
               <?= csrf_field() ?><input type="hidden" name="action" value="veh_save">
               <input type="hidden" name="id" value="<?= $evHier ? (int)$evHier['id'] : 0 ?>">
               <input type="hidden" name="base_id" value="<?= $bid ?>">
-              <div class="neu-zeile">
-                <input type="text" name="name" maxlength="64" required placeholder="z. B. Christoph 17 oder NEF Kempten 1"
-                       value="<?= e($evHier['name'] ?? '') ?>">
-                <button class="btn-primary"><?= $evHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-                <?php if ($evHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
+              <div class="listen-form-felder">
+                <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'name',
+                               'id' => 'vehname-' . $bid, 'pflicht' => true,
+                               'platzhalter' => 'z. B. Christoph 17 oder NEF Kempten 1',
+                               'wert' => (string)($evHier['name'] ?? ''),
+                               'attr' => ' maxlength="64"']); ?>
+                <?php /* DIE ART IST NICHT VORBELEGT (Web 7.0.0): „luftgebunden"
+                         stand von selbst da, und an einem NEF-Standort war das
+                         die falsche Vorgabe, die niemand bemerkt. Ohne Auswahl
+                         weist der Server die Eingabe ab und sagt, was fehlt.
+                         Sie steuert zugleich, welche Rollen und Fähigkeiten
+                         angehakt werden können — im Browser sichtbar, auf dem
+                         Server noch einmal gefiltert. */ ?>
+                <div class="feld">
+                  <span class="feld-label">Art <span class="feld-pflicht" aria-hidden="true">*</span></span>
+                  <span class="vehkind">
+                    <label><input type="radio" name="kind" value="air" class="vehkind-radio"
+                           <?= ($evHier && $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
+                    <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
+                           <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
+                  </span>
+                </div>
               </div>
-              <?php /* Die Art steuert, welche Rollen und Fähigkeiten überhaupt
-                       angehakt werden können. Das Umschalten passiert im Browser
-                       (Skript unten); der Server filtert unabhängig davon noch
-                       einmal — ein Haken, den die Oberfläche nicht anbietet, darf
-                       auch über eine gesendete Anfrage nicht hereinkommen. */ ?>
-              <div class="neu-feld">
-                <span class="neu-titel">Art</span>
-                <span class="vehkind">
-                  <label><input type="radio" name="kind" value="air" class="vehkind-radio"
-                         <?= ($evHier && $evHier['kind'] === 'air') ? 'checked' : '' ?>> luftgebunden</label>
-                  <label><input type="radio" name="kind" value="ground" class="vehkind-radio"
-                         <?= ($evHier && $evHier['kind'] === 'ground') ? 'checked' : '' ?>> bodengebunden</label>
-                </span>
-              </div>
-              <div class="neu-feld rollen-zeile">
-                <span class="neu-titel">Besatzungsrollen <span class="muted small">(optional)</span></span>
+              <div class="feld rollen-zeile">
+                <span class="feld-label">Besatzungsrollen <span class="feld-klein-inline">(optional)</span></span>
                 <span class="acroles">
                   <?php foreach (CREW_ROLES as $rc => $rr): ?>
                     <label class="rollehaken" data-kind="<?= e($rr['kind']) ?>">
@@ -1379,8 +1479,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
                   <?php endforeach; ?>
                 </span>
               </div>
-              <div class="neu-feld vehcaps-zeile">
-                <span class="neu-titel">Fähigkeiten <span class="muted small">(nur luftgebunden)</span></span>
+              <div class="feld vehcaps-zeile">
+                <span class="feld-label">Fähigkeiten <span class="feld-klein-inline">(nur luftgebunden)</span></span>
                 <span class="acroles vehcaps">
                   <?php foreach (VEHICLE_CAPABILITIES as $ck => $cl): ?>
                     <label><input type="checkbox" name="caps[]" value="<?= e($ck) ?>"
@@ -1389,106 +1489,89 @@ ui_seite_start(['titel' => 'Einstellungen']);
                   <?php endforeach; ?>
                 </span>
               </div>
+              <div class="listen-form-fuss">
+                <?= ui_knopf(['text' => $evHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
+                <?php if ($evHier): ?>
+                  <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                                'href' => 'einstellungen.php?t=rettungsmittel']) ?>
+                <?php endif; ?>
+              </div>
             </form>
           </div>
-        </details>
+        </section>
 
         <?php /* BESATZUNG — nur die Rollen, die es an diesem Standort gibt. */ ?>
-        <details class="stammunter" id="<?= e($anker) ?>-crew">
-          <summary>Besatzung<span class="stammzahl"><?= count($sdCrew[$bid] ?? []) ?></span></summary>
-          <p class="muted">Vorschläge für die Besatzungsfelder, je Rolle. Freitext
-             bleibt überall möglich — wer aushilft, muss nicht erst hier eingetragen
-             werden.</p>
+        <section class="sd-liste" id="<?= e($anker) ?>-crew">
+          <h3 class="sd-titel">Besatzung <span class="sd-zahl"><?= count($sdCrew[$bid] ?? []) ?></span></h3>
+          <p class="feld-hinweis">Vorschläge für die Besatzungsfelder, je Rolle.
+             Freitext bleibt überall möglich — wer aushilft, muss nicht erst hier
+             eingetragen werden.</p>
           <?php if (!$rollenHier): ?>
-            <p class="muted">Noch keine Rolle an diesem Standort. Rollen entstehen
-               am Rettungsmittel: Trage oben eines ein und hake an, welche Rollen
-               es führt.</p>
+            <p class="feld-hinweis">Noch keine Rolle an diesem Standort. Rollen
+               entstehen am Rettungsmittel: Trage oben eines ein und hake an,
+               welche Rollen es führt.</p>
           <?php endif; ?>
           <?php foreach ($rollenHier as $rk): $rr = CREW_ROLES[$rk]; ?>
-            <h4><?= e($rr['label']) ?></h4>
-            <table class="data">
-              <tbody>
-              <?php $any = false;
-                    foreach (($sdCrew[$bid] ?? []) as $c):
-                        if ($c['role_code'] !== $rk) { continue; }
-                        $any = true; $cz = $istZentral($c);
-                        $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk); ?>
-                <tr>
-                  <td><?= e($c['name']) ?>
-                    <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-                  </td>
-                  <td class="th-act"><div class="rowactions">
-                    <?php if ($cz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                    <?php if (!$cz): ?>
-                      <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ec=<?= (int)$c['id'] ?>#<?= e($anker) ?>-crew">Bearbeiten</a>
-                      <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-crew"
-                            data-confirm="Eintrag löschen?">
-                        <?= csrf_field() ?><input type="hidden" name="action" value="crew_del">
-                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
-                        <input type="hidden" name="base_id" value="<?= $bid ?>">
-                        <button class="btn-red">Löschen</button>
-                      </form>
-                    <?php endif; ?>
-                  </div></td>
-                </tr>
-              <?php endforeach; ?>
-              <?php if (!$any): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
-              </tbody>
-            </table>
+            <h4 class="sd-rolle"><?= e($rr['label']) ?></h4>
+            <?php $any = false;
+                  foreach (($sdCrew[$bid] ?? []) as $c):
+                      if ($c['role_code'] !== $rk) { continue; }
+                      $any = true; $cz = $istZentral($c);
+                      $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk);
+                      $sdZeile([
+                          'name' => (string)$c['name'],
+                          'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                          'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
+                          'base_id' => $bid, 'zentral' => $cz,
+                          'del_action' => 'crew_del',
+                          'del_frage' => 'Eintrag „' . $c['name'] . '“ löschen?',
+                          'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ec=' . (int)$c['id']
+                                             . '#' . $anker . '-crew',
+                      ]);
+                  endforeach;
+                  if (!$any): ?>
+              <p class="feld-hinweis">Noch keine Einträge.</p>
+            <?php endif; ?>
             <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
                              && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
-            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-crew" class="inline-form">
-              <?= csrf_field() ?><input type="hidden" name="action" value="crew_save">
-              <input type="hidden" name="role" value="<?= e($rk) ?>">
-              <input type="hidden" name="base_id" value="<?= $bid ?>">
-              <input type="hidden" name="id" value="<?= $ecHier ? (int)$ecHier['id'] : 0 ?>">
-              <input type="text" name="name" placeholder="Name" maxlength="120" required
-                     value="<?= e($ecHier['name'] ?? '') ?>">
-              <button class="btn-primary"><?= $ecHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-              <?php if ($ecHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-            </form>
+            <?php $sdForm([
+                'anker' => $anker . '-crew', 'action' => 'crew_save', 'base_id' => $bid,
+                'bearbeitet' => $ecHier, 'label' => 'Name',
+                'platzhalter' => 'Name der Person',
+                'titel_neu' => $rr['label'] . ' hinzufügen',
+                'titel_bearbeiten' => $rr['label'] . ' bearbeiten',
+                'felder_versteckt' => '<input type="hidden" name="role" value="' . ui_e($rk) . '">',
+            ]); ?>
           <?php endforeach; ?>
-        </details>
+        </section>
 
-        <details class="stammunter" id="<?= e($anker) ?>-td">
-          <summary>Zielkliniken<span class="stammzahl"><?= count($sdTd[$bid] ?? []) ?></span></summary>
-          <p class="muted">Vorschläge für das Feld „Transportziel“ im Einsatz.
-             Koordinaten sind freiwillig; ohne sie entsteht lediglich kein Pin auf
-             der Karte.</p>
-          <table class="data">
-            <tbody>
-            <?php if (!($sdTd[$bid] ?? [])): ?><tr><td class="muted">Noch keine Zielkliniken.</td><td></td></tr><?php endif; ?>
-            <?php foreach (($sdTd[$bid] ?? []) as $t): $tz = $istZentral($t);
-                  $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']); ?>
-              <tr>
-                <td><?= e($t['name']) ?>
-                  <?php if ($t['lat'] !== null && $t['lon'] !== null): ?>
-                    <br><span class="muted small"><?= e((string)$t['lat']) ?>, <?= e((string)$t['lon']) ?></span>
-                  <?php endif; ?>
-                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-                </td>
-                <td class="th-act"><div class="rowactions">
-                  <?php if ($tz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                  <?php if (!$tz): ?>
-                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;et=<?= (int)$t['id'] ?>#<?= e($anker) ?>-td">Bearbeiten</a>
-                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td"
-                          data-confirm="Zielklinik löschen?">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="td_del">
-                      <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
-                      <input type="hidden" name="base_id" value="<?= $bid ?>">
-                      <button class="btn-red">Löschen</button>
-                    </form>
-                  <?php endif; ?>
-                </div></td>
-              </tr>
-            <?php endforeach; ?>
-            </tbody>
-          </table>
+        <section class="sd-liste" id="<?= e($anker) ?>-td">
+          <h3 class="sd-titel">Zielkliniken <span class="sd-zahl"><?= count($sdTd[$bid] ?? []) ?></span></h3>
+          <p class="feld-hinweis">Vorschläge für das Feld „Transportziel" im
+             Einsatz. Koordinaten sind freiwillig; ohne sie entsteht lediglich
+             kein Pin auf der Karte.</p>
+          <?php if (!($sdTd[$bid] ?? [])): ?>
+            <p class="feld-hinweis">Noch keine Zielkliniken.</p>
+          <?php endif; ?>
+          <?php foreach (($sdTd[$bid] ?? []) as $t):
+                $tz = $istZentral($t);
+                $dup = !$tz && stammdaten_dup_global('transport_dests', 'name', $t['name']);
+                $klein = ($t['lat'] !== null && $t['lon'] !== null)
+                    ? $t['lat'] . ', ' . $t['lon'] : 'ohne Lage';
+                if ($dup) { $klein .= ' · identisch mit einem systemweiten Eintrag'; }
+                $sdZeile([
+                    'name' => (string)$t['name'], 'klein' => $klein,
+                    'anker' => $anker . '-td', 'praefix' => 'td', 'id' => (int)$t['id'],
+                    'base_id' => $bid, 'zentral' => $tz,
+                    'del_action' => 'td_del',
+                    'del_frage' => 'Zielklinik „' . $t['name'] . '“ löschen?',
+                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&et=' . (int)$t['id']
+                                       . '#' . $anker . '-td',
+                ]);
+          endforeach; ?>
           <?php $etHier = ($editTd && (int)$editTd['base_id'] === $bid) ? $editTd : null; ?>
-          <?php /* Gleiche Form wie beim Standort: Name und Schaltfläche in einer
-                   Zeile, die freiwillige Ortsangabe darunter. */ ?>
-          <div class="neu-form">
-            <h4><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h4>
+          <div class="listen-form">
+            <h3 class="listen-form-titel"><?= $etHier ? 'Zielklinik bearbeiten' : 'Zielklinik hinzufügen' ?></h3>
             <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-td">
               <?= csrf_field() ?><input type="hidden" name="action" value="td_save">
               <input type="hidden" name="id" value="<?= $etHier ? (int)$etHier['id'] : 0 ?>">
@@ -1497,113 +1580,98 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        EINMAL JE STANDORT auf der Seite, und zwei Ortsfelder mit
                        denselben Element-Kennungen fänden beide dasselbe Feld. */
                     $tdPraefix = 'sdtd' . $bid; $ORTSFELDER[] = $tdPraefix; ?>
-              <div class="neu-zeile">
-                <input type="text" name="name" id="<?= e($tdPraefix) ?>addr" maxlength="190" required
-                       placeholder="z. B. Klinikum Kempten" value="<?= e($etHier['name'] ?? '') ?>">
-                <button class="btn-primary"><?= $etHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-                <?php if ($etHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-              </div>
-              <div class="neu-feld">
+              <div class="listen-form-felder">
+                <?php ui_feld(['label' => 'Name', 'name' => 'name',
+                               'id' => $tdPraefix . '-name', 'pflicht' => true,
+                               'platzhalter' => 'z. B. Klinikum Kempten',
+                               'wert' => (string)($etHier['name'] ?? ''),
+                               'attr' => ' maxlength="190"']); ?>
                 <?php ui_ortsfeld([
                         'praefix' => $tdPraefix, 'feld' => false, 'such' => true,
                         'klasse' => 'loc-inline',
-                        'such_hinweis' => 'Lage der Zielklinik (optional)',
+                        'such_hinweis' => 'Lage (optional)',
                         'lat_name' => 'lat', 'lon_name' => 'lon',
                         'lat' => (string)($etHier['lat'] ?? ''),
                         'lon' => (string)($etHier['lon'] ?? ''),
                     ]); ?>
               </div>
+              <div class="listen-form-fuss">
+                <?= ui_knopf(['text' => $etHier ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
+                <?php if ($etHier): ?>
+                  <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                                'href' => 'einstellungen.php?t=rettungsmittel']) ?>
+                <?php endif; ?>
+              </div>
             </form>
           </div>
-        </details>
+        </section>
 
-        <details class="stammunter" id="<?= e($anker) ?>-res">
-          <summary>Weitere Rettungsmittel<span class="stammzahl"><?= count($sdRes[$bid] ?? []) ?></span></summary>
-          <p class="muted">Vorschläge für das Feld „Weitere Rettungsmittel“ im
-             Einsatz (RTW, NEF, RTH …).</p>
-          <table class="data">
-            <tbody>
-            <?php if (!($sdRes[$bid] ?? [])): ?><tr><td class="muted">Noch keine Einträge.</td><td></td></tr><?php endif; ?>
-            <?php foreach (($sdRes[$bid] ?? []) as $r): $rz = $istZentral($r);
-                  $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']); ?>
-              <tr>
-                <td><?= e($r['name']) ?>
-                  <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-                </td>
-                <td class="th-act"><div class="rowactions">
-                  <?php if ($rz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                  <?php if (!$rz): ?>
-                    <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;er=<?= (int)$r['id'] ?>#<?= e($anker) ?>-res">Bearbeiten</a>
-                    <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-res"
-                          data-confirm="Eintrag löschen?">
-                      <?= csrf_field() ?><input type="hidden" name="action" value="res_del">
-                      <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                      <input type="hidden" name="base_id" value="<?= $bid ?>">
-                      <button class="btn-red">Löschen</button>
-                    </form>
-                  <?php endif; ?>
-                </div></td>
-              </tr>
-            <?php endforeach; ?>
-            </tbody>
-          </table>
-          <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null; ?>
-          <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-res" class="inline-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="res_save">
-            <input type="hidden" name="id" value="<?= $erHier ? (int)$erHier['id'] : 0 ?>">
-            <input type="hidden" name="base_id" value="<?= $bid ?>">
-            <input type="text" name="name" maxlength="120" required
-                   placeholder="z. B. RTW Kempten" value="<?= e($erHier['name'] ?? '') ?>">
-            <button class="btn-primary"><?= $erHier ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-            <?php if ($erHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-          </form>
-        </details>
+        <section class="sd-liste" id="<?= e($anker) ?>-res">
+          <h3 class="sd-titel">Weitere Rettungsmittel <span class="sd-zahl"><?= count($sdRes[$bid] ?? []) ?></span></h3>
+          <p class="feld-hinweis">Vorschläge für das Feld „Weitere Rettungsmittel"
+             im Einsatz (RTW, NEF, RTH …).</p>
+          <?php if (!($sdRes[$bid] ?? [])): ?>
+            <p class="feld-hinweis">Noch keine Einträge.</p>
+          <?php endif; ?>
+          <?php foreach (($sdRes[$bid] ?? []) as $r):
+                $rz = $istZentral($r);
+                $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']);
+                $sdZeile([
+                    'name' => (string)$r['name'],
+                    'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                    'anker' => $anker . '-res', 'praefix' => 'res', 'id' => (int)$r['id'],
+                    'base_id' => $bid, 'zentral' => $rz,
+                    'del_action' => 'res_del',
+                    'del_frage' => 'Eintrag „' . $r['name'] . '“ löschen?',
+                    'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&er=' . (int)$r['id']
+                                       . '#' . $anker . '-res',
+                ]);
+          endforeach; ?>
+          <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null;
+                $sdForm([
+                    'anker' => $anker . '-res', 'action' => 'res_save', 'base_id' => $bid,
+                    'bearbeitet' => $erHier, 'label' => 'Bezeichnung',
+                    'platzhalter' => 'z. B. RTW Kempten',
+                    'titel_neu' => 'Rettungsmittel hinzufügen',
+                    'titel_bearbeiten' => 'Eintrag bearbeiten',
+                ]); ?>
+        </section>
 
         <?php if ($hatLuft): ?>
-          <details class="stammunter" id="<?= e($anker) ?>-bw">
-            <summary>Bergwacht<span class="stammzahl"><?= count($sdBw[$bid] ?? []) ?></span></summary>
-            <p class="muted">Bereitschaften für das Feld „Bergwacht“ im Einsatz.
-               Der Block erscheint, weil an diesem Standort ein luftgebundenes
-               Rettungsmittel steht — die Fähigkeit kommt nur dort vor.</p>
-            <table class="data">
-              <tbody>
-              <?php if (!($sdBw[$bid] ?? [])): ?><tr><td class="muted">Noch keine Bereitschaften.</td><td></td></tr><?php endif; ?>
-              <?php foreach (($sdBw[$bid] ?? []) as $w): $wz = $istZentral($w);
-                    $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']); ?>
-                <tr>
-                  <td><?= e($w['name']) ?>
-                    <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-                  </td>
-                  <td class="th-act"><div class="rowactions">
-                    <?php if ($wz): ?><span class="badge-central">systemweit</span><?php endif; ?>
-                    <?php if (!$wz): ?>
-                      <a class="btn-yellow" href="einstellungen.php?t=rettungsmittel&amp;ew=<?= (int)$w['id'] ?>#<?= e($anker) ?>-bw">Bearbeiten</a>
-                      <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-bw"
-                            data-confirm="Bereitschaft löschen?">
-                        <?= csrf_field() ?><input type="hidden" name="action" value="bw_del">
-                        <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
-                        <input type="hidden" name="base_id" value="<?= $bid ?>">
-                        <button class="btn-red">Löschen</button>
-                      </form>
-                    <?php endif; ?>
-                  </div></td>
-                </tr>
-              <?php endforeach; ?>
-              </tbody>
-            </table>
-            <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null; ?>
-            <form method="post" action="einstellungen.php?t=rettungsmittel#<?= e($anker) ?>-bw" class="inline-form">
-              <?= csrf_field() ?><input type="hidden" name="action" value="bw_save">
-              <input type="hidden" name="id" value="<?= $ewHier ? (int)$ewHier['id'] : 0 ?>">
-              <input type="hidden" name="base_id" value="<?= $bid ?>">
-              <input type="text" name="name" maxlength="120" required
-                     placeholder="z. B. Bereitschaft Oberstdorf" value="<?= e($ewHier['name'] ?? '') ?>">
-              <button class="btn-primary"><?= $ewHier ? 'Änderung speichern' : 'Bereitschaft hinzufügen' ?></button>
-              <?php if ($ewHier): ?><a class="btn-red" href="einstellungen.php?t=rettungsmittel">Abbrechen</a><?php endif; ?>
-            </form>
-          </details>
+          <section class="sd-liste" id="<?= e($anker) ?>-bw">
+            <h3 class="sd-titel">Bergwacht <span class="sd-zahl"><?= count($sdBw[$bid] ?? []) ?></span></h3>
+            <p class="feld-hinweis">Bereitschaften für das Feld „Bergwacht" im
+               Einsatz. Der Abschnitt erscheint, weil an diesem Standort ein
+               luftgebundenes Rettungsmittel steht — die Fähigkeit kommt nur
+               dort vor.</p>
+            <?php if (!($sdBw[$bid] ?? [])): ?>
+              <p class="feld-hinweis">Noch keine Bereitschaften.</p>
+            <?php endif; ?>
+            <?php foreach (($sdBw[$bid] ?? []) as $w):
+                  $wz = $istZentral($w);
+                  $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']);
+                  $sdZeile([
+                      'name' => (string)$w['name'],
+                      'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
+                      'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
+                      'base_id' => $bid, 'zentral' => $wz,
+                      'del_action' => 'bw_del',
+                      'del_frage' => 'Bereitschaft „' . $w['name'] . '“ löschen?',
+                      'bearbeiten_href' => 'einstellungen.php?t=rettungsmittel&ew=' . (int)$w['id']
+                                         . '#' . $anker . '-bw',
+                  ]);
+            endforeach; ?>
+            <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null;
+                  $sdForm([
+                      'anker' => $anker . '-bw', 'action' => 'bw_save', 'base_id' => $bid,
+                      'bearbeitet' => $ewHier, 'label' => 'Bereitschaft',
+                      'platzhalter' => 'z. B. Bereitschaft Oberstdorf',
+                      'titel_neu' => 'Bereitschaft hinzufügen',
+                      'titel_bearbeiten' => 'Bereitschaft bearbeiten',
+                  ]); ?>
+          </section>
         <?php endif; ?>
-      </details>
+      <?php ui_karte_ende(true); ?>
     <?php endforeach; ?>
   <?php endif; ?>
 
@@ -2272,116 +2340,141 @@ ui_seite_start(['titel' => 'Einstellungen']);
     </script>
 
   <?php else: ?>
-    <h1>Geräte</h1>
-    <p class="muted">Jedes Gerät (Uhr) bekommt eigene Zugangsdaten für den Upload.
-       Deaktivieren sperrt den Schlüssel — bereits hochgeladene Daten bleiben erhalten.
-       Je Konto sind <strong><?= MAX_GERAETE ?> Geräte</strong> möglich
-       (belegt: <?= count($devices) ?>). Deaktivierte zählen mit, weil ihre
-       Zugangsdaten bestehen bleiben; erst Löschen gibt einen Platz frei.</p>
+    <?php ui_titelzeile(['titel' => 'Geräte']); ?>
+    <p class="seiten-erklaerung">Jedes Gerät (Uhr) bekommt eigene Zugangsdaten
+       für den Upload. Deaktivieren sperrt den Schlüssel — hochgeladene Daten
+       bleiben. Je Konto sind <?= MAX_GERAETE ?> Geräte möglich, belegt sind
+       <?= count($devices) ?>; deaktivierte zählen mit, erst Löschen gibt einen
+       Platz frei.</p>
 
     <?php if ($devNeu > 0): ?>
       <?php /* Zweite Spur neben der E-Mail beim Koppeln: Wer die Post nicht
                liest, sieht ein neu hinzugekommenes Gerät wenigstens hier. */ ?>
-      <p class="alert alert-warn">
-        <?= $devNeu === 1 ? 'Ein Gerät ist' : $devNeu . ' Geräte sind' ?> in den
-        letzten <?= GERAETE_NEU_TAGE ?> Tagen hinzugekommen — unten mit
-        <strong>neu</strong> gekennzeichnet. Kommt dir davon etwas unbekannt vor,
-        lösche es hier; danach kann es nichts mehr hochladen.</p>
+      <?php ui_meldung(
+          ($devNeu === 1 ? 'Ein Gerät ist' : $devNeu . ' Geräte sind')
+          . ' in den letzten ' . GERAETE_NEU_TAGE . ' Tagen hinzugekommen — unten mit '
+          . '„neu" gekennzeichnet. Kommt dir davon etwas unbekannt vor, lösche es hier; '
+          . 'danach kann es nichts mehr hochladen.', null, 'warn', '      '); ?>
     <?php endif; ?>
 
-    <h2>Uhr koppeln (empfohlen)</h2>
-    <p class="muted">Erzeuge einen Code und gib ihn auf der Uhr ein:
-       <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>.
-       Die Uhr holt sich ihre Zugangsdaten dann selbst — kein Abtippen langer
-       Schlüssel. Der Code ist <strong><?= PAIR_TTL_MIN ?> Minuten</strong> gültig und
-       <strong>genau einmal</strong> verwendbar. Ein neuer Code macht einen
-       vorher erzeugten ungültig.</p>
-    <?php /* Der Tastenweg steht bewusst NICHT im Fließtext oben, sondern als
-             Zusatz mit genannter Plattform: Er gilt nur für Fenix und
-             Forerunner. Auf der Venu 3s gibt es weder START noch DOWN — der
-             frühere Satz war für sie schon falsch, als sie dazukam. Die
-             Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
-    <p class="muted small">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
-       Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
-       START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
-       Abschnitt 2.0.</p>
-    <?php if ($pairCode): ?>
-      <div class="keybox paircode">
-        <strong>Kopplungscode</strong>
-        <p class="codebig"><?= e($pairCode) ?></p>
-        <p class="muted">Gültig bis <?= e(fmt_local(gmdate('Y-m-d H:i:s', time() + PAIR_TTL_MIN * 60), 'H:i')) ?> Uhr.
-           Das Gerät erscheint nach der Kopplung unten in der Liste.</p>
-      </div>
-    <?php endif; ?>
-    <form method="post" action="einstellungen.php?t=geraete">
-      <?= csrf_field() ?><input type="hidden" name="action" value="pair_code">
-      <button class="btn-primary" style="width:auto">Kopplungscode erzeugen</button>
-    </form>
-
-    <?php if ($editDev): ?>
-      <form method="post" action="einstellungen.php?t=geraete" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="rename">
-        <input type="hidden" name="id" value="<?= (int)$editDev['id'] ?>">
-        <input type="text" name="label" maxlength="120" placeholder="Bezeichnung"
-               value="<?= e($editDev['label'] ?? '') ?>">
-        <button class="btn-primary">Bezeichnung speichern</button>
-        <a class="btn-red" href="einstellungen.php?t=geraete">Abbrechen</a>
+    <?php ui_karte_start(['titel' => 'Uhr koppeln', 'id' => 'koppeln']); ?>
+      <p class="feld-hinweis">Erzeuge einen Code und gib ihn auf der Uhr ein:
+         <strong>Sync-Seite → Gerät koppeln → Code eintippen</strong>. Die Uhr
+         holt sich ihre Zugangsdaten dann selbst — kein Abtippen langer
+         Schlüssel. Der Code ist <?= PAIR_TTL_MIN ?> Minuten gültig und genau
+         einmal verwendbar; ein neuer macht einen vorher erzeugten ungültig.</p>
+      <?php /* Der Tastenweg steht als Zusatz mit genannter Plattform: Er gilt
+               nur für Fenix und Forerunner. Auf der Venu 3s gibt es weder START
+               noch DOWN — der frühere Satz war für sie schon falsch, als sie
+               dazukam. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0. */ ?>
+      <p class="feld-klein">Auf Garmin-Uhren: die Sync-Seite erreichst du vom
+         Startbildschirm mit DOWN, das Koppeln startet mit gedrückt gehaltener
+         START-Taste. Die Tastenwege der einzelnen Uhren stehen im Handbuch,
+         Abschnitt 2.0.</p>
+      <?php if ($pairCode): ?>
+        <?php /* Der Code GROSS und für sich (E-P3-35): Er wird von einem
+                 Bildschirm auf eine Uhr abgetippt, und zwar unter Zeitdruck. */ ?>
+        <div class="codeblock">
+          <p class="codeblock-titel">Kopplungscode</p>
+          <p class="codeblock-wert"><?= e($pairCode) ?></p>
+          <p class="feld-klein">Gültig bis
+             <?= e(fmt_local(gmdate('Y-m-d H:i:s', time() + PAIR_TTL_MIN * 60), 'H:i')) ?> Uhr.
+             Das Gerät erscheint nach der Kopplung unten in der Liste.</p>
+        </div>
+      <?php endif; ?>
+      <form method="post" action="einstellungen.php?t=geraete">
+        <?= csrf_field() ?><input type="hidden" name="action" value="pair_code">
+        <?= ui_knopf(['text' => 'Kopplungscode erzeugen', 'art' => 'primaer']) ?>
       </form>
-    <?php endif; ?>
+    <?php ui_karte_ende(); ?>
 
-    <h2>Manuell anlegen (Alternative)</h2>
+    <?php ui_karte_start(['titel' => 'Geräte', 'zahl' => count($devices), 'id' => 'geraeteliste']); ?>
+      <?php if (!$devices): ?>
+        <p class="feld-hinweis">Noch keine Geräte angelegt.</p>
+      <?php endif; ?>
+      <?php foreach ($devices as $d):
+            $did = (int)$d['id'];
+            $aktiv = (int)$d['active'] === 1;
+            $klein = ($aktiv ? 'aktiv' : 'deaktiviert')
+                   . ' · zuletzt gesehen: '
+                   . ($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie');
+            ?>
+        <form method="post" id="f-dev-<?= $did ?>" class="nur-vorlesen"
+              action="einstellungen.php?t=geraete">
+          <?= csrf_field() ?><input type="hidden" name="action" value="toggle">
+          <input type="hidden" name="id" value="<?= $did ?>">
+        </form>
+        <form method="post" id="f-devdel-<?= $did ?>" class="nur-vorlesen"
+              action="einstellungen.php?t=geraete"
+              data-confirm="Gerät „<?= e($d['label'] ?? $d['device_id']) ?>“ wirklich löschen? Bereits hochgeladene Daten bleiben erhalten.">
+          <?= csrf_field() ?><input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="<?= $did ?>">
+        </form>
+        <?php ui_zeile([
+            'text'  => (string)($d['label'] ?? '') !== '' ? (string)$d['label'] : (string)$d['device_id'],
+            'klein' => $klein,
+            'plaketten' => ((int)$d['ist_neu']
+                ? ui_plakette('neu seit ' . fmt_local($d['created_at'], 'd.m.Y'), ['ton' => 'warn'])
+                : '')
+                . ui_plakette((string)$d['device_id'], ['ton' => 'neutral']),
+            'aktionen' => ui_zeilenaktionen([
+                'titel' => (string)($d['label'] ?? $d['device_id']),
+                'eintraege' => [
+                    ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                     'href' => 'einstellungen.php?t=geraete&ed=' . $did],
+                    ['text' => $aktiv ? 'Deaktivieren' : 'Aktivieren',
+                     'symbol' => $aktiv ? 'schloss' : 'schloss-offen',
+                     'art' => 'leise', 'form' => 'f-dev-' . $did],
+                    ['text' => 'Löschen', 'symbol' => 'korb',
+                     'art' => 'gefahr', 'form' => 'f-devdel-' . $did],
+                ],
+            ]),
+        ]); ?>
+      <?php endforeach; ?>
+
+      <div class="listen-form">
+        <h3 class="listen-form-titel"><?= $editDev ? 'Bezeichnung ändern' : 'Gerät von Hand anlegen' ?></h3>
+        <?php if (!$editDev): ?>
+          <p class="feld-hinweis">Die Alternative zum Koppeln: Geräte-ID und
+             Schlüssel werden angezeigt und in der Uhr-App eingetragen.</p>
+        <?php endif; ?>
+        <form method="post" action="einstellungen.php?t=geraete">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="<?= $editDev ? 'rename' : 'add' ?>">
+          <?php if ($editDev): ?>
+            <input type="hidden" name="id" value="<?= (int)$editDev['id'] ?>">
+          <?php endif; ?>
+          <div class="listen-form-felder">
+            <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'label', 'id' => 'devlabel',
+                           'platzhalter' => 'z. B. Dienstuhr',
+                           'wert' => (string)($editDev['label'] ?? ''),
+                           'attr' => ' maxlength="120"']); ?>
+          </div>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => $editDev ? 'Bezeichnung speichern' : 'Gerät anlegen',
+                          'art' => 'primaer']) ?>
+            <?php if ($editDev): ?>
+              <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                            'href' => 'einstellungen.php?t=geraete']) ?>
+            <?php endif; ?>
+          </div>
+        </form>
+      </div>
+    <?php ui_karte_ende(); ?>
 
     <?php if ($newKey): ?>
-      <div class="keybox">
-        <strong>Neues Gerät</strong>
-        <p>Geräte-ID: <code><?= e($newKey['device_id']) ?></code><br>
-           API-Schlüssel: <code><?= e($newKey['api_key']) ?></code></p>
-        <p>Beide Werte in den Einstellungen der Uhr-App eintragen (als Server
-           genügt die Domain, z. B. <code>nadoku.beispieldomain.de</code>).
-           Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
-      </div>
+      <?php ui_karte_start(['titel' => 'Zugangsdaten des neuen Geräts']); ?>
+        <p class="feld-hinweis">Beide Werte in den Einstellungen der Uhr-App
+           eintragen; als Server genügt die Domain.</p>
+        <p class="feld-klein">Bei Garmin stehen diese Einstellungen in Garmin Connect.</p>
+        <div class="codeblock">
+          <p class="codeblock-titel">Geräte-ID</p>
+          <p class="codeblock-wert"><?= e($newKey['device_id']) ?></p>
+          <p class="codeblock-titel">API-Schlüssel</p>
+          <p class="codeblock-wert"><?= e($newKey['api_key']) ?></p>
+        </div>
+      <?php ui_karte_ende(); ?>
     <?php endif; ?>
-
-    <table class="data">
-      <thead><tr><th>Geräte-ID</th><th>Bezeichnung</th><th>Status</th><th>Zuletzt gesehen</th><th></th></tr></thead>
-      <tbody>
-      <?php if (!$devices): ?>
-        <tr><td colspan="5" class="muted">Noch keine Geräte angelegt.</td></tr>
-      <?php endif; ?>
-      <?php foreach ($devices as $d): ?>
-        <tr>
-          <td><code><?= e($d['device_id']) ?></code>
-              <?php if ((int)$d['ist_neu']): ?>
-                <br><strong>neu</strong>
-                <span class="muted">seit <?= e(fmt_local($d['created_at'], 'd.m.Y H:i')) ?></span>
-              <?php endif; ?></td>
-          <td><?= e($d['label'] ?? '–') ?></td>
-          <td><?= (int)$d['active'] ? 'aktiv' : '<span class="muted">deaktiviert</span>' ?></td>
-          <td><?= e($d['last_seen'] ? fmt_local($d['last_seen'], 'd.m.Y H:i') : 'nie') ?></td>
-          <td class="actions">
-            <a class="btn-yellow" href="einstellungen.php?t=geraete&amp;ed=<?= (int)$d['id'] ?>">Bearbeiten</a>
-            <form method="post" action="einstellungen.php?t=geraete">
-              <?= csrf_field() ?><input type="hidden" name="action" value="toggle">
-              <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
-              <button class="btn-danger"><?= (int)$d['active'] ? 'Deaktivieren' : 'Aktivieren' ?></button>
-            </form>
-            <form method="post" action="einstellungen.php?t=geraete"
-                  data-confirm="Gerät wirklich löschen? Bereits hochgeladene Daten bleiben erhalten.">
-              <?= csrf_field() ?><input type="hidden" name="action" value="delete">
-              <input type="hidden" name="id" value="<?= (int)$d['id'] ?>">
-              <button class="btn-danger">Löschen</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-
-    <form method="post" action="einstellungen.php?t=geraete" class="inline-form">
-      <?= csrf_field() ?><input type="hidden" name="action" value="add">
-      <input type="text" name="label" placeholder="Bezeichnung, z. B. Dienstuhr">
-      <button class="btn-primary">Gerät anlegen</button>
-    </form>
   <?php endif; ?>
 
   <script>

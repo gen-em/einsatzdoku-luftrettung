@@ -501,5 +501,28 @@ declare(strict_types=1);
  * Ausbau des zweiten Suchfelds hat die Nur-Lage-Fassung von ui_ortsfeld()
  * leer zurueckgelassen — die Lage eines Standorts oder einer Zielklinik
  * liess sich seither nicht mehr eingeben, nur noch behalten (F-P3-AI).
+ *
+ * 9.7.1 ist O8b: DIE UEBRIGEN VERWALTUNGSLISTEN nach dem Muster aus O8a —
+ * der Reiter „Rettungsmittel" mit seinen fuenf Listen je Standort
+ * (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel,
+ * Bergwacht) und der Reiter „Geraete". Sicherung und Import folgen als O8c.
+ *
+ * Das Muster stand im Bestand FUENFMAL AUSGESCHRIEBEN, und es war bereits
+ * auseinandergelaufen: Die Rettungsmittel trugen „★ Standard", die uebrigen
+ * nicht, und die Loeschrueckfragen lauteten verschieden. Zwei Schliessungen
+ * ($sdZeile, $sdForm) rendern es jetzt einmal.
+ *
+ * Dabei behoben, was O8a noch offen liess: Das wiederhergestellte Lage-Feld
+ * trug DIESELBE KENNUNG wie das Namensfeld (`<praefix>addr`) — getElementById
+ * fand das erste, und das Lage-Feld war Zierde. Die Kennung gehoert jetzt dem
+ * Lage-Feld, der Name hat eine eigene (F-P3-AI, wirklich behoben).
+ *
+ * Zwei weitere Funde: Der Lupen-Knopf nimmt dem Feld den Fokus, und der
+ * blur-Aufschub loeschte die eben gefuellte Vorschlagsliste nach 150 ms —
+ * gegen den echten Photon-Dienst faellt das nie auf, hinter einem
+ * Zwischenspeicher schon (F-P3-AJ). Und ui_zeilenaktionen() leitete seine
+ * Kennung aus einem HASH ueber Titel und Aktionstexte ab; zwei gleichnamige
+ * Zeilen bekamen dieselbe, und `data-blatt` oeffnete beide oder keines —
+ * jetzt eine laufende Nummer.
  */
-const WEB_VERSION = '9.7.0';
+const WEB_VERSION = '9.7.1';

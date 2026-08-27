@@ -11,6 +11,58 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.7.1] — 2026-08-27
+
+**O8b: Die übrigen Verwaltungslisten — und drei Fehler, von denen einer aus
+O8a stammt.** Der Reiter „Rettungsmittel" führt je Standort fünf Listen
+(Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht),
+dazu kommt der Reiter „Geräte". Alle folgen jetzt dem Muster aus O8a: Karte
+statt Tabelle, Zeilen mit Knöpfen am Schreibtisch und „⋯" auf dem Handy, das
+Anlegen-Formular in derselben Karte. Ein Standort ist eine zugeklappte Karte;
+die Listen darin sind Abschnitte, keine zweite Kartenebene — zwei Rahmen um
+dieselbe Sache trennen, was zusammengehört.
+
+**Das Muster stand fünfmal ausgeschrieben, und es war bereits
+auseinandergelaufen:** Die Rettungsmittel trugen „★ Standard", die übrigen
+nicht; die Löschrückfragen lauteten „Eintrag löschen?", „Zielklinik löschen?"
+und „Bereitschaft löschen?" — ohne zu sagen, welcher. Zwei Schließungen
+rendern es jetzt einmal, und jede Rückfrage nennt den Namen.
+
+**Ein Fehler aus O8a, den erst dieser Umbau sichtbar machte:** Das
+wiederhergestellte Lage-Feld trug dieselbe Kennung wie das Namensfeld
+(`<praefix>addr`). `getElementById` findet das erste — also das Namensfeld;
+das Lage-Feld hing an nichts und war Zierde. F-P3-AI war damit **nicht
+behoben**, sondern nur bebildert. Die Kennung gehört jetzt dem Lage-Feld, der
+Name hat eine eigene. Belegt: Der Vorschlag erscheint, die Übernahme setzt die
+Koordinaten, und der Name bleibt unberührt.
+
+**Zwei weitere Funde beim Prüfen:**
+
+Der Lupen-Knopf nimmt dem Eingabefeld den Fokus. Der `blur`-Handler plant
+150 ms später das Verstecken der Vorschlagsliste — damit ein Klick auf einen
+Vorschlag noch durchkommt. Kommt die Antwort schneller als das, löscht dieser
+Aufschub die eben gefüllte Liste wieder. Gemessen: bei sofortiger Antwort
+stand sie nach 80 ms mit einem Eintrag da und nach 160 ms leer; bei 250 ms
+Antwortzeit blieb sie. Gegen den echten Photon-Dienst verdeckt die Netzlatenz
+das zuverlässig — hinter einem Zwischenspeicher oder im schnellen Netz nicht
+(F-P3-AJ). Der Aufschub prüft jetzt, ob der Fokus inzwischen zurückgekehrt ist.
+
+Und `ui_zeilenaktionen()` leitete die Kennung seines Aktionsblatts aus einem
+**Hash über Titel und Aktionstexte** ab. Zwei Zeilen mit gleichem Namen und
+gleichen Handlungen bekamen dieselbe Kennung — in einer Stammdatenliste der
+Normalfall, nicht die Ausnahme (zwei Standorte mit einer gleichnamigen
+Zielklinik). `data-blatt` öffnete dann beide oder keines. Jetzt eine laufende
+Nummer. Dasselbe galt für die Feld-Kennung des Besatzungsformulars, das je
+Rolle einmal steht.
+
+Der **Kopplungscode** und die Zugangsdaten eines neuen Geräts stehen als
+`.codeblock`: groß, in Festbreite, mit Sperrung. Sie werden von einem
+Bildschirm auf eine Uhr abgetippt, und zwar unter Zeitdruck.
+
+Screenshots 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des
+Solls; **0 doppelte Element-Kennungen** auf allen umgebauten Reitern.
+Wortliste 0/0/0, Kontraste 21/0. Sicherung und Import folgen als O8c.
+
 ## [Web 9.7.0] — 2026-08-27
 
 > **Diese Fassung braucht eine Migration.** Nach dem Ausrollen muss eine

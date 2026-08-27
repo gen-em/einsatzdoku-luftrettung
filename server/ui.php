@@ -1363,7 +1363,17 @@ function ui_zeilenaktionen(array $o): string
              . $attr . '>' . $inhalt . '</button>';
     };
 
-    $id = 'za-' . substr(sha1((string)($o['titel'] ?? '') . serialize(array_column($eintraege, 'text'))), 0, 8);
+    /* LAUFENDE NUMMER, KEIN HASH AUS DEM INHALT. Ein Hash über Titel und
+     * Aktionstexte kollidiert, sobald zwei Zeilen dasselbe heißen und
+     * dieselben Handlungen tragen — und genau das ist in einer
+     * Stammdatenliste der Normalfall, nicht die Ausnahme (zwei Standorte mit
+     * einer gleichnamigen Zielklinik). Zwei Blätter mit derselben Kennung
+     * öffnet `data-blatt` beide oder keines.
+     *
+     * `id` von außen setzen kann jede Aufrufstelle weiterhin; die Nummer ist
+     * nur der Rückfall. */
+    static $lfd = 0;
+    $id = (string)($o['id'] ?? ('za-' . (++$lfd)));
 
     /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt. */
     $m  = '<div class="zeile-knoepfe nur-ab-720">';

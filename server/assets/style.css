@@ -2344,3 +2344,56 @@ tr.hl-extrem td{background:var(--orange-hell)}
  * und „Löschen" behauptete, sie sei die zu erwartende Handlung. */
 .knopf-leise-orange{color:var(--orange-tief)}
 .knopf-leise-orange .symbol{color:var(--orange)}
+
+/* Die Listen innerhalb einer Standort-Karte (Rettungsmittel, Besatzung,
+ * Zielkliniken, weitere Rettungsmittel, Bergwacht). Sie sind Abschnitte,
+ * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
+ * zusammengehört — die zweite Ebene ordnet nur. */
+.sd-liste + .sd-liste{
+  border-top:var(--strich) solid var(--linie);
+  margin-top:var(--abstand-5);
+  padding-top:var(--abstand-4);
+}
+.sd-titel{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-4);color:var(--dunkelblau);
+  margin:0 0 var(--abstand-2);
+}
+.sd-zahl{
+  font-family:var(--schrift-text);font-weight:400;
+  font-size:var(--groesse-2);color:var(--gedaempft);
+}
+/* Die Rolle innerhalb der Besatzungsliste — eine Ebene tiefer als der
+ * Listentitel, deshalb kleiner und ohne eigene Linie. */
+.sd-rolle{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  margin:var(--abstand-4) 0 var(--abstand-2);
+}
+/* Der Klammerzusatz an einer Feldbeschriftung („(optional)"). */
+.feld-klein-inline{font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* CODEBLOCK — Kopplungscode, Geräte-ID, API-Schlüssel. Werte, die von einem
+ * Bildschirm auf eine Uhr abgetippt werden, und zwar unter Zeitdruck:
+ * groß, in Festbreite, mit Abstand zwischen den Zeichen. */
+.codeblock{
+  background:var(--rauch);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3);
+  margin:var(--abstand-3) 0;
+}
+.codeblock-titel{
+  font-size:var(--groesse-2);color:var(--gedaempft);
+  margin:0 0 var(--abstand-1);
+}
+.codeblock-titel:not(:first-child){margin-top:var(--abstand-3)}
+.codeblock-wert{
+  font-family:var(--schrift-fest);
+  font-size:var(--groesse-5);font-weight:600;
+  color:var(--dunkelblau);
+  letter-spacing:.06em;
+  word-break:break-all;
+  margin:0;
+}

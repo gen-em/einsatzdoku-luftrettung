@@ -94,3 +94,8 @@ im selben Paket hier ein, nicht später.
 | `stat-value` | Wert der Kachel → `.kennzahl-wert`; die Einheit steht seit O7 als eigenes `.kennzahl-einheit` daneben und wird kleiner gesetzt. | O7 |
 | `stat-label` | Beschriftung der Kachel → `.kennzahl-label`, bei Extremwerten mit `.kennzahl-tag` in derselben Zeile. | O7 |
 | `neutralhinweis` | Eigene Klasse des Hinweises auf neutrale Diensttage → Meldungs-Baustein (`.meldung meldung-warn`) mit Symbol und Knopf „Zuordnung nachtragen". Die Kennung `neutralhinweis` bleibt als `id` — sie ist der Anker des Skripts, nicht eine Gestaltungsangabe. | O7 |
+| `badge-central` | Kennzeichen „systemweit" an Stammdatenzeilen → Plaketten-Baustein (`ui_plakette('systemweit')`). Es war ein eigenes Element mit eigener Regel, obwohl die Plakette seit O2 dasselbe kann. | O8b |
+| `btn-stern` | „★ Standard" an einer Stammdatenzeile → `.knopf.knopf-leise.knopf-leise-orange` mit Sternsymbol, Text „Als Vorbelegung". Der Stern stand als Schriftzeichen im Knopf (E-P3-18: keine Unicode-Zeichen als Symbol). | O8b |
+| `sternmarke` | Der Stern in der Zeile, der die Vorbelegung anzeigt → `ui_symbol('stern', 'zeile-stern')` in den Plaketten der Zeile. Ebenfalls vorher ein Schriftzeichen. | O8b |
+| `c-stern` | Breitenklasse der Sternspalte in der Stammdatentabelle — ersatzlos: Es gibt keine Tabelle mehr, der Stern steht in der Zeile. | O8b |
+| `paircode` | Zusatzklasse am Kasten des Kopplungscodes → `.codeblock`, der Baustein für Werte, die von einem Bildschirm auf eine Uhr abgetippt werden (Kopplungscode, Geräte-ID, API-Schlüssel). | O8b |

@@ -1750,8 +1750,16 @@ schreibt nur die Koordinaten.
 **Die Zeilenaktionen** stehen am Schreibtisch als Knöpfe rechts in der Zeile:
 „Als Vorbelegung" (setzt den Stern), „Bearbeiten" (füllt das Formular
 darunter) und „Löschen". Auf dem Handy steht dort ein **„⋯"**, das dieselben
-Handlungen als Blatt von unten öffnet. Das Löschen fragt zurück und **beziffert
-dabei**, wie viele eigene Stammdatensätze mitgehen.
+Handlungen als Blatt von unten öffnet. Das Löschen fragt zurück, **nennt den
+Namen** und beziffert, wie viele eigene Stammdatensätze mitgehen. „Als
+Vorbelegung" gibt es nur dort, wo es eine gibt — bei Standorten und
+Rettungsmitteln.
+
+Dasselbe gilt für alle übrigen Listen: Ein **Standort** ist unter
+*Rettungsmittel* eine zugeklappte Karte; aufgeklappt stehen darin die fünf
+Abschnitte Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel
+und Bergwacht — der letzte nur, wenn an diesem Standort ein luftgebundenes
+Rettungsmittel steht.
 
 **Vordefinierte Standorte** stehen in einer eigenen, zugeklappten Karte
 darunter; ihr Kopf nennt, wie viele es gibt und wie viele davon ausgewählt
