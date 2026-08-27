@@ -41,17 +41,30 @@
                 || el.tagName === 'TEXTAREA');
   }
 
+  /* Die Speichern-Leiste des Formulars (ui_speichern_leiste, E-P3-29) haengt
+   * am selben Kennzeichen: Sie erscheint mit der ersten Aenderung und
+   * verschwindet mit dem Absenden. Ein Formular ohne Leiste bleibt davon
+   * unberuehrt. */
+  function leisteZeigen(f, an) {
+    const l = f.querySelector('[data-speichern]');
+    if (l) { l.hidden = !an; }
+  }
+
+  function merken(f) {
+    if (!f || !f.hasAttribute('data-dirty-track')) { return; }
+    dirtyForms.add(f);
+    leisteZeigen(f, true);
+  }
+
   document.addEventListener('input', ev => {
-    const f = istFormularfeld(ev.target) ? ev.target.form : null;
-    if (f && f.hasAttribute('data-dirty-track')) { dirtyForms.add(f); }
+    if (istFormularfeld(ev.target)) { merken(ev.target.form); }
   });
   document.addEventListener('change', ev => {
-    const f = istFormularfeld(ev.target) ? ev.target.form : null;
-    if (f && f.hasAttribute('data-dirty-track')) { dirtyForms.add(f); }
+    if (istFormularfeld(ev.target)) { merken(ev.target.form); }
   });
   document.addEventListener('submit', ev => {
     const f = ev.target;
-    if (f instanceof HTMLFormElement) { dirtyForms.delete(f); }
+    if (f instanceof HTMLFormElement) { dirtyForms.delete(f); leisteZeigen(f, false); }
   });
 
   window.addEventListener('beforeunload', ev => {
@@ -105,5 +118,8 @@
   window.EdForms = {
     istGeaendert(f) { return dirtyForms.has(f); },
     vergessen(f)    { dirtyForms.delete(f); },
+    /* Fuer Aenderungen, die kein Feld-Ereignis feuern (eine entfernte
+     * Phasenzeile): dasselbe Kennzeichen von aussen setzen. */
+    markieren(f)    { if (f) { dirtyForms.add(f); leisteZeigen(f, true); } },
   };
 })();

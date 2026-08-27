@@ -1858,3 +1858,159 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   box-shadow:0 0 0 var(--strich-stark) var(--schnee),
              0 0 0 calc(var(--geo-ring) * 2) var(--rot);
 }
+
+
+/* == 23. EINSATZFORMULAR (O5, E-P3-34, Mockups 22/23/25) ===================
+ *
+ * Karten statt Rahmengruppen; Ja/Nein als Schalter mit eingerückten
+ * Detailfeldern; Phasen- und Reanimationszeilen mit 44-px-Zeitfeld und
+ * rotem Entfernen-Knopf; Ortsfeld mit Lupe und Pin; Speichern-Leiste unten.
+ * Ab 1200 px zwei Kartenspalten: links PatientIn, Einsatz, Transport —
+ * rechts der Rest (die DOM-Reihenfolge ist die mobile).
+ */
+@media (min-width:1200px){
+  .form-raster{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0 var(--abstand-4);
+    align-items:start;
+  }
+}
+
+/* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
+ * auch mobil, wie im Mockup. */
+.fld-reihe,.patname{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 var(--abstand-3);
+}
+
+/* Detailfelder eines Schalters: eingerückt hinter einer orangen Linie
+ * (Mockup 22 Mitte — Cycles unter dem Windeneinsatz). */
+.childfields{
+  margin:0 0 var(--abstand-3) var(--abstand-2);
+  padding-left:var(--abstand-4);
+  border-left:var(--strich-stark) solid var(--orange);
+}
+.fld-sub{margin-left:0}
+
+/* Hinweistexte im Formular. Die frühere Kombination „muted small" trägt die
+ * Farbe aus der Übergangsschicht; die Größe kommt hierher. */
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+label .muted{display:block;font-weight:400;font-size:var(--groesse-2)}
+
+/* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
+.ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
+.ortsfeld-zeile input{flex:1 1 auto;min-width:0}
+.ortsfeld-zeile .knopf-symbol{flex:0 0 auto}
+.ortsfeld-aktionen{position:relative;display:inline-flex}
+
+/* Vorschlagsliste unter dem Feld (Photon, Stammdaten, Koordinaten). */
+.loc-suggest{
+  margin:var(--abstand-1) 0 0;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  overflow:hidden;
+}
+.loc-suggest li{padding:var(--abstand-2) var(--abstand-3);cursor:pointer}
+.loc-suggest li:hover{background:var(--rauch)}
+.locstate{color:var(--gedaempft);font-size:var(--groesse-2);margin:var(--abstand-1) 0 0}
+.locstate:empty{display:none}
+.locstate-fehler{color:var(--rot-tief)}
+
+/* ---- Chips (Koordinaten am Ortsfeld, gewählte Rettungsmittel) ------------ */
+.rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
+.rmchip{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  background:var(--blau-hell);color:var(--dunkelblau);
+  border-radius:var(--radius-rund);
+  padding:var(--abstand-1) var(--abstand-2);
+  font-size:var(--groesse-2);font-weight:600;
+}
+.rmx{
+  border:0;background:none;color:inherit;cursor:pointer;
+  min-height:0;padding:0 var(--abstand-1);
+  font-size:var(--groesse-3);line-height:1;
+}
+/* Eingabefeld mit Chips darin (Weitere Rettungsmittel, Mockup 22). */
+.rmbox{position:relative}
+.rmfeld{
+  display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  padding:var(--abstand-1) var(--abstand-2);
+  min-height:var(--knopf);
+}
+.rmeingabe,.rmfeld .rmeingabe{
+  flex:1 1 8rem;min-width:0;border:0;min-height:0;
+  padding:var(--abstand-1);background:none;
+}
+.rmlist{
+  position:absolute;left:0;right:0;z-index:20;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  overflow:hidden;
+}
+.rmlist .rmopt{
+  display:block;width:100%;text-align:left;
+  background:none;border:0;border-radius:0;min-height:var(--knopf);
+  padding:var(--abstand-2) var(--abstand-3);cursor:pointer;
+}
+.rmlist .rmopt:hover{background:var(--rauch)}
+
+/* ---- Phasen- und Reanimationszeilen (Mockup 22/25) ----------------------- */
+.phasen-eingabe{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) calc(var(--knopf) * 2) var(--knopf);
+  gap:var(--abstand-2);align-items:center;
+  margin-bottom:var(--abstand-2);
+}
+.phasen-eingabe .zeitfeld{text-align:center;width:auto}
+.phasen-eingabe label{margin:0}
+.rea-sitzung{
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3);
+  margin-bottom:var(--abstand-3);
+}
+.rea-ereignisse{margin-left:var(--abstand-2);padding-left:var(--abstand-3);
+  border-left:var(--strich-stark) solid var(--orange)}
+.zeile-weg{color:var(--rot)}
+
+/* Orange Anlegen-Wege in Kartenfüßen („+ Phase hinzufügen"). */
+.anlegen-link{
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+}
+.karte-fussweg{margin:0}
+
+/* ---- Kartendialog der Ortswahl (Fadenkreuz, E-P3-34) --------------------- */
+.dialog-karte{width:min(92vw, calc(var(--karte-neben-breit) * 1.4))}
+.ortswahl-karte{position:relative}
+.ortswahl-karte .geo{height:var(--karte-desktop);margin-bottom:0}
+.ortswahl-kreuz{
+  position:absolute;left:50%;top:50%;
+  width:var(--symbol-gross);height:var(--symbol-gross);
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:1;
+}
+.ortswahl-kreuz::before,.ortswahl-kreuz::after{
+  content:"";position:absolute;background:var(--dunkelblau);
+  box-shadow:0 0 0 var(--strich) var(--schnee);
+}
+.ortswahl-kreuz::before{left:50%;top:0;bottom:0;width:var(--strich-stark);
+  transform:translateX(-50%)}
+.ortswahl-kreuz::after{top:50%;left:0;right:0;height:var(--strich-stark);
+  transform:translateY(-50%)}
+
+/* Blatt-Zeilen gibt es seit O5 auch als <button> (Ortswahl) — dieselbe
+ * Gestalt wie die Verweise, ohne Knopf-Grundform. */
+button.blatt-zeile{
+  width:100%;background:none;border:0;text-align:left;cursor:pointer;
+  border-radius:0;
+}

@@ -11,6 +11,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.4.0] — 2026-08-27
+
+**O5: Das Einsatzformular nach den Mockups 22/23/25 — mit zwei
+Funktionsänderungen.** Die Rahmengruppen von Web 7.0.0 sind **Karten**
+geworden, ab 1200 px in zwei Spalten (links PatientIn, Einsatz, Transport;
+rechts der Rest). Der Einsatzort steht jetzt bei den übrigen verschlüsselten
+Feldern in der Karte **PatientIn** — er gehörte immer zu ihnen, nur das
+Formular behauptete etwas anderes. Ja/Nein-Felder sind **Schalter**
+(derselbe Baustein wie überall seit O2); die Detailfelder eines
+eingeschalteten Schalters rücken hinter einer orangen Linie ein. Die
+zugeklappten Karten „Abweichende Besatzung" („vom Diensttag") und
+„Reanimation" („keine") öffnen sich von selbst, wenn etwas gespeichert ist —
+ein gesetzter Wert hinter zugeklapptem Deckel wäre verborgene Wahrheit.
+
+Die erste Funktionsänderung: **Die Phasenzeilen sortieren sich sofort**,
+sobald ein Zeitfeld verlassen wird — mit derselben Mitternachtsregel, die
+beim Speichern gilt (Zeiten vor dem Dienstbeginn gehören zum Folgetag). Der
+Hinweistext „in chronologischer Reihenfolge eintragen" entfällt: Was sich
+selbst ordnet, muss keine Reihenfolge verlangen. Der Kartenkopf zählt mit
+(„8 von 9"). Entfernen-Knöpfe sind rote 44-px-Symbolknöpfe; das Entfernen
+einer Zeile meldet sich beim Dirty-Tracking, obwohl kein Feld ein Ereignis
+feuert.
+
+Die zweite: **das Ortsfeld.** Der Lupen-Knopf ersetzt das zweite Suchfeld
+(„Lokalisation …") — gesucht wird mit dem, was im Feld steht, und bei
+getrennter Suche (Transportziel) übernimmt ein Treffer weiterhin nur die
+Koordinaten, nie den Namen. Der Pin-Knopf öffnet ein Blatt mit „**Meine
+Position übernehmen**" (Geolocation) und „**Auf der Karte wählen**" — ein
+Leaflet-Dialog mit Fadenkreuz in der Mitte: Karte verschieben, „Übernehmen".
+Zur Koordinate holt die Photon-Umkehrsuche eine Adresse; sie füllt das Feld
+nur, wenn es leer ist, und die Anfrage trägt ausschließlich die Koordinate
+(neues `assets/ortswahl.js`). Gespeichert wird über die **Speichern-Leiste**
+(E-P3-29), die mit der ersten Änderung am unteren Rand erscheint; der
+Abbrechen-Link entfällt — der Rückweg oben genügt, und die
+Verlassen-Rückfrage schützt ungespeicherte Eingaben auf jedem Weg hinaus.
+
+Speicherlogik und Felder sind unverändert: Der Rundlauf über fünf Einsätze
+(öffnen, unverändert speichern, vergleichen — einschließlich entschlüsselter
+Angaben) ergab null Abweichungen, der Sicherungs-Kreislauf 286 739
+Einzelvergleiche ohne unerklärte Abweichung. Beim CSV-Kreislauf fand sich
+ein Werkzeugfehler: Ein POST an `einstellungen.php` **ohne `?t`** versandet
+seit der Übersichts-Weiche aus O2 stillschweigend in der Übersichtsseite —
+die Browser-Formulare tragen das `t`, das Einspielwerkzeug trug es nicht
+(F-P3-AF, im Werkzeug behoben).
+
+Keine Migration; Endpunkte und Feldkatalog unverändert.
+
 ## [Web 9.3.0] — 2026-08-27
 
 **O4: Die Einsatzansicht nach den Mockups 19–21 und 26.** Die eine lange

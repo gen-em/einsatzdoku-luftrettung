@@ -538,23 +538,29 @@ ein eigener Vorgang: Abschnitt 4.5a.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
-Das Formular dient beidem. Es ist seit Web 7.0.0 in **benannte Gruppen**
-gegliedert, jede mit eigenem Rahmen und Überschrift, in dieser Reihenfolge:
+Das Formular dient beidem. Über allem: der **Rückweg** (beim Bearbeiten zum
+Einsatz, beim Nachtragen zum Diensttag) und der Titel „Einsatz N bearbeiten"
+bzw. „Einsatz nachtragen" mit dem Diensttag in der Unterzeile. Die Felder
+stehen seit Web 9.4.0 in **Karten** (am Desktop ab 1200 px in zwei Spalten),
+in dieser Reihenfolge:
 
-1. **PatientInnendaten** — Einsatznummer, Nachname, Vorname, Geburtsdatum,
-   Alter, Diagnose
-2. **Einsatz** — Sekundärtransport und Fehleinsatz nebeneinander, Einsatzort,
-   Beschreibung des Einsatzorts, Abfahrtort
+1. **PatientIn** — Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter,
+   Diagnose, **Einsatzort**, Beschreibung des Einsatzorts, Abfahrtort
+   (alles gemeinsam Ende-zu-Ende-verschlüsselt)
+2. **Einsatz** — Sekundärtransport, Fehleinsatz, Windeneinsatz und Bergwacht
+   als **Schalter**; die Detailfelder eines eingeschalteten Schalters
+   (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer orangen Linie
 3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
-4. **Bergrettung** — Bergwacht, Windeneinsatz
-5. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer Notarzt
-6. **Abweichende Besatzung**
-7. **Notizen**
-8. **Einsatzphasen**
-9. **Reanimation**
+4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer
+   Notarzt
+5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
+   mit gespeicherter Abweichung offen
+6. **Notizen**
+7. **Einsatzphasen**
+8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
 
-Die Gruppe **Bergrettung** fehlt ganz, wenn der Diensttag weder Winde noch
-Bergwacht mitbringt und im Einsatz nichts dazu eingetragen ist.
+Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
+Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.
 
 **Kein Feld „Einsatzdatum" mehr.** Es stand früher direkt unter dem Diensttag
 und zeigte in aller Regel dasselbe Datum ein zweites Mal. Der Fall, für den es
@@ -566,11 +572,13 @@ gespeicherte Datum unangetastet; verschoben wird ein Einsatz über
 **Aktionen → Verschieben**.
 
 Phasen werden als Zeilen erfasst (Phase wählen, Uhrzeit eintragen, Zeilen
-hinzufügen/entfernen — auch dieselbe Phase mehrfach).
-**In chronologischer Reihenfolge eintragen**; Zeiten nach Mitternacht werden
-automatisch dem Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**,
-direkt über der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die
-Phasen meist schon vollständig da und schoben alles andere nach unten.
+hinzufügen/entfernen — auch dieselbe Phase mehrfach). Die Reihenfolge musst
+du nicht selbst einhalten: **Die Liste sortiert sich, sobald du ein Zeitfeld
+verlässt** (seit Web 9.4.0); Zeilen ohne Uhrzeit bleiben hinten. Der Kopf der
+Karte zählt mit („8 von 9"). Zeiten nach Mitternacht werden automatisch dem
+Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**, direkt über
+der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die Phasen
+meist schon vollständig da und schoben alles andere nach unten.
 
 **NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne Notarzt an
 Bord ist die Ausnahme. Der Haken setzt sich, sobald du „Luft" wählst — und nur,
@@ -587,25 +595,36 @@ dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
 `930` wird `09:30`, aus `9` wird `09:00`, der Doppelpunkt setzt sich von
 selbst. Ergibt die Eingabe keine gültige Uhrzeit, färbt sich das Feld rot, und
 gespeichert wird sie nicht. Datumsfelder bleiben die gewohnten Kalenderfelder
-deines Geräts. Trägst du eine Zeile nachträglich mit
-einer früheren Uhrzeit ein, sortiert sich die Liste nach dem Speichern von
-selbst richtig ein.
+deines Geräts.
 
-**Strg-Enter** (bzw. Cmd-Enter auf macOS) sendet das Formular ab, ohne die
-Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
-Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
-nach; das gilt auch für die Diensttag-Formulare.
+Gespeichert wird über die **Speichern-Leiste**, die am unteren Rand erscheint,
+sobald du etwas geändert hast (seit Web 9.4.0) — vorher gibt es nichts zu
+speichern und keinen Knopf. Einen „Verwerfen"-Knopf gibt es bewusst nicht:
+Der Rückweg oben genügt, und beim Verlassen mit ungespeicherten Änderungen
+fragt der Browser nach. **Strg-Enter** (bzw. Cmd-Enter auf macOS) speichert
+ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 
-**Geschützte Angaben** (Abschnitt 5) verteilen sich auf die Gruppen
-„PatientInnendaten" (Person und Diagnose) und „Einsatz" (Einsatzort,
-Beschreibung, manueller Abfahrtort). Ist der Schlüssel in dieser Sitzung
-gesperrt, sind alle diese Felder gesperrt — die übrigen bleiben bedienbar.
-Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
-(z. B. „23.04.33") — die Anwendung ergänzt automatisch das plausible
-Jahrhundert. Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
-Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
-Koordinaten und setzt den Pin auf den Karten. Freitext ohne Vorschlag geht
-auch — dann ohne Pin.
+**Geschützte Angaben** (Abschnitt 5) stehen gesammelt in der Karte
+„PatientIn" — Person, Diagnose, Einsatzort, Beschreibung, manueller
+Abfahrtort. Ist der Schlüssel in dieser Sitzung gesperrt, sind alle diese
+Felder gesperrt — die übrigen bleiben bedienbar. Beim Geburtsdatum reicht
+auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänzt
+automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
+drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
+eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
+Freitext ohne Vorschlag geht auch — dann ohne Pin.
+
+Neben dem Feld stehen seit Web 9.4.0 zwei Knöpfe: Die **Lupe** stößt die
+Suche ausdrücklich an — sie ersetzt das frühere zweite Suchfeld
+(„Lokalisation …") auch am Transportziel, wo ein Treffer weiterhin **nur die
+Koordinaten** übernimmt und den eingetragenen Namen nie überschreibt. Der
+**Pin** öffnet ein Blatt mit zwei Wegen: **„Meine Position übernehmen"**
+(Standort des Geräts; der Browser fragt nach der Freigabe) und **„Auf der
+Karte wählen"** — eine Karte mit Fadenkreuz in der Mitte; verschieben, bis
+das Kreuz auf dem Ort steht, dann „Übernehmen". In beiden Fällen holt die
+Anwendung zur Koordinate eine Adresse (Photon/OpenStreetMap-Umkehrsuche);
+sie füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich
+die Koordinate — nie Namen, Diagnose oder andere Inhalte.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten

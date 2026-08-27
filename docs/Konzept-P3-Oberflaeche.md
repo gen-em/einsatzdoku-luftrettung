@@ -1363,6 +1363,7 @@ und O11.
 | F-P3-AC | **Der Prüf-Browser kommt nicht an die Kartenkacheln.** In der Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag zurück — direkt **und** über den Umgebungsproxy, unabhängig von TLS-Version und Post-Quantum-Merkmalen (per NetLog belegt); `curl` und Node-`fetch` kommen durch. Jede Karte auf den Prüfbildern war grau. | O3, im Prüfmittel. `aufnehmen.mjs` fängt Kachelabrufe mit einer Playwright-Route ab und beantwortet sie aus einem Node-Abruf (Lager je URL; Neustart-Weiche für `NODE_USE_ENV_PROXY`, das nur beim Prozessstart gelesen wird). Nebeneffekt: deterministische Bilder; ohne Proxy läuft derselbe Weg direkt. |
 | F-P3-AD | **Die Utility `nur-ab-720` stellte mit `display:block` wieder her.** Ihr Versprechen ist „blendet nur aus"; ein `<span>` (Titelzusatz „· 07:13 Uhr") wurde beim Wiedereinblenden aber zum Block und brach in die eigene Zeile. | O4. `display:revert` stellt die Grundform des Elements wieder her (span → inline, div → block). |
 | F-P3-AE | **Die Unterzeile der Titelzeile saß im Flex-Block und bestimmte dessen Breite.** Bei kurzem Titel („Einsatz 1") und zwei Knöpfen brachen die Knöpfe unter den Titel, obwohl neben ihm Platz war. | O4. Unterzeile NACH der Hauptzeile (volle Breite), Baustein `ui_titelzeile()` und beide Handaufbauten (Start-, Einsatzseite) angepasst — entspricht den Mockups 02/19. |
+| F-P3-AF | **Ein POST an `einstellungen.php` ohne `?t` versandet stillschweigend.** Die Übersichts-Weiche aus O2 (E-P3-11: ohne `t` die Übersicht, dann `exit`) steht VOR der POST-Verarbeitung; die Antwort ist die Übersichtsseite mit HTTP 200 — kein Fehler, kein Speichern. Die Browser-Formulare tragen alle `?t=…` und sind nicht betroffen; das Einspielwerkzeug postete ohne Parameter, und sein Fehlerfänger suchte noch die vor-P3-Klasse `alert-danger`. Aufgefallen am CSV-Kreislauf (O5-Abnahme). | O5, im Werkzeug: `einspielen.py` postet mit `?t=standorte` und liest `meldung-fehler`. Die Weiche selbst bleibt — sie ist Anzeige-, nicht Speicherlogik; ein POST ohne `t` kommt aus keinem Formular der Anwendung. |
 
 ---
 
@@ -1419,7 +1420,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O2 Seitenhülle und Bausteine | **erledigt**, Nacharbeit nach Fable-Kontrolle | Web 9.1.1 |
 | O3 Startseite und Karte | **erledigt** | Web 9.2.0 |
 | O4 Einsatzansicht | **erledigt** | Web 9.3.0 |
-| O5 Einsatzformular | offen | |
+| O5 Einsatzformular | **erledigt** | Web 9.4.0 |
 | O6 Suche | offen | |
 | O7 Zeitraum | offen | |
 | O8 Einstellungen und Verwaltungslisten | offen | |
@@ -1826,6 +1827,75 @@ nicht darstellbar — keine Phase trägt dort Koordinaten; der Weg ist
 unverändert aus dem Bestand übernommen und nur neu eingekleidet
 (`.pm-chip`). Der Fall „unlesbar" (falscher Schlüssel) wurde nicht
 durchgespielt — er bräuchte einen absichtlich beschädigten Blob.
+
+### O5 — Einsatzformular
+
+**Erledigt.** Web 9.4.0. Keine Migration; Speicherlogik und Felder
+unverändert (belegt, siehe Prüfprotokoll).
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/einsatz_form.php` | Titelzeile mit Rückweg; Karten statt `fieldset`-Gruppen in der Reihenfolge aus E-P3-34 (PatientIn mit Einsatzort/Beschreibung/Abfahrtort, Einsatz mit den Schaltern und der Bergrettung, Transport, Weitere Rettungsmittel, Abweichende Besatzung [zu, „vom Diensttag"], Notizen, Einsatzphasen, Reanimation [zu, „keine"]); Checkbox-Renderer auf den Schalter-Baustein; Phasen-/Rea-Zeilen als `.phasen-eingabe` (44-px-Zeitfeld zentriert, roter Entfernen-Symbolknopf); Sofort-Sortierung + Zähler; Speichern-Leiste statt Knopf und Abbrechen-Link |
+| `server/assets/ortswahl.js` | **neu**: Pin-Blatt — Geolocation, Leaflet-Kartendialog mit Fadenkreuz, Photon-Umkehrsuche (Anfrage trägt nur die Koordinate); Adresse füllt nur ein leeres Feld |
+| `server/assets/ortsfeld.js` | Suche bei getrennter Suche nur noch per Lupen-Knopf (das zweite Suchfeld entfällt); `uebernehmen()`/`melde()` für die Ortswahl |
+| `server/ui.php` | `ui_ortsfeld()`: Feldzeile mit Lupe und (per `ortswahl`) Pin + Blatt; das `such`-Feld ist ausgebaut |
+| `server/assets/forms.js` | Speichern-Leiste hängt am Dirty-Kennzeichen (zeigen bei Änderung, verbergen beim Absenden); `EdForms.markieren()` für Änderungen ohne Feld-Ereignis (entfernte Zeile) |
+| `server/assets/style.css` | Abschnitt 23: `.form-raster` (zwei Kartenspalten ≥ 1200), `.fld-reihe`/`.patname`, `.childfields` (orange Linie), Ortsfeldzeile, Vorschlags-/Chip-Regeln (`rm*`, `loc-*` — vorher regellos), `.phasen-eingabe`, `.anlegen-link`, Kartendialog mit `.ortswahl-kreuz` |
+| `tools/referenzdatensatz/einspielen/einspielen.py` | F-P3-AF: POST mit `?t=`, Fehlerfänger liest `meldung-fehler` |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Sichtbare Speichern-Leiste erst bei Änderung** (E-P3-29/34) — die
+  Mockups zeigen sie durchgehend, aber sie zeigen den Zustand „mit
+  Änderung"; ohne Änderung gibt es nichts zu speichern.
+- **Kein Sortierhinweis** unter den Phasen — Mockup 25 trägt noch
+  „Reihenfolge wird beim Speichern sortiert"; der Konzepttext (E-P3-34,
+  „kein Hinweistext") ist jünger und gilt.
+- **Feldlabels, die den Kartentitel wiederholen** („Notizen", „Weitere
+  Rettungsmittel"), bleiben nur für das Vorlesen stehen
+  (`.nur-vorlesen`) — sichtbar sagt es der Kartenkopf.
+- **'nebeneinander' gilt nicht für Schalter**: Zwei Griffe in halber
+  Breite wären zum Tippen zu eng; Sekundär und Fehleinsatz stehen
+  untereinander (Mockup 22).
+- **Pin-Knopf nur an Einsatzort und manuellem Abfahrtort**; das
+  Transportziel behält die Lupe (nur-Koordinaten-Übernahme), aber keinen
+  Kartendialog — so weit reicht E-P3-34, und die Verwaltungsseiten
+  entscheiden in O8 selbst.
+
+#### Prüfprotokoll O5
+
+- **Screenshots:** Seite 13 in acht Breiten — 0 Überlauf, 0 Konsolenfehler,
+  0 Knöpfe ≠ 44 px; 390/1440 gegen Mockups 22/23 gehalten (Kartenfolge,
+  Schalter mit Einrückung, Chips im Feld, Phasenzeilen, zugeklappte
+  Karten, Zweispalter).
+- **Bediensonden (Playwright):** Leiste erscheint mit der ersten Änderung;
+  Zeitfeld 07:13 → 09:59 sortiert die Zeile ans Ende (Reihenfolge
+  07:17 … 08:10, 09:59), Zähler „8 von 9"; Pin-Blatt öffnet; Geolocation
+  (überstellte Position 47.5555/10.2222) setzt exakt diesen Chip;
+  Kartendialog mit Fadenkreuz übernimmt nach Verschieben die
+  Kartenmitte; die Adresse aus der Umkehrsuche überschreibt ein
+  gefülltes Feld nicht. Externe Abrufe (Kacheln, Photon) liefert die
+  Sonde aus Node zu (F-P3-AC).
+- **Rundlauf (Abnahme):** fünf Einsätze geöffnet, unverändert gespeichert,
+  API-Antwort samt **entschlüsseltem** Patientenblock verglichen
+  (schlüsselstabil serialisiert): **0 Abweichungen** — nur die
+  Schlüsselreihenfolge im neu gebauten Blob wechselt, kein Wert.
+- **Kreisläufe (P-P3-11/12):** Sicherung 286 739 Einzelvergleiche,
+  **0 unerklärte** Abweichungen (16 erwartete); CSV 8 797
+  Einzelvergleiche, **0 unerklärte** (859 erwartete) — nach dem
+  Werkzeug-Fix F-P3-AF.
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.6).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Die
+echte Geolocation (GPS-Empfang, Freigabedialog des Browsers) ist nur am
+Gerät zu prüfen — die Sonde überstellt die Position; ebenso das Verhalten
+der klebenden Speichern-Leiste über der Bildschirmtastatur. Die
+Photon-Umkehrsuche lief gegen den echten Dienst, aber aus Node — der
+Browser dieser Umgebung kommt nicht hinaus (F-P3-AC).
 
 ---
 

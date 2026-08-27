@@ -376,5 +376,28 @@ declare(strict_types=1);
  * Name). fitBounds auch hier mit den richtigen Achsen (F-P3-Z).
  *
  * Keine Migration; Feldkatalog unveraendert, api/mission.php nur ERWEITERT.
+ *
+ * 9.4.0 ist O5: DAS EINSATZFORMULAR NACH DEN MOCKUPS 22/23/25, mit zwei
+ * Funktionsaenderungen (E-P3-34). Die Rahmengruppen sind KARTEN geworden
+ * (ab 1200 px zwei Spalten); der Einsatzort steht bei den uebrigen
+ * verschluesselten Feldern in der Karte PatientIn. Ja/Nein-Felder sind
+ * SCHALTER, ihre Detailfelder ruecken hinter einer orangen Linie ein.
+ * Die Phasenzeilen SORTIEREN SICH SOFORT beim Verlassen eines Zeitfelds
+ * (Mitternachtsregel wie beim Speichern); der Hinweistext entfaellt, der
+ * Kartenkopf zaehlt mit ("8 von 9"). Gespeichert wird ueber die
+ * SPEICHERN-LEISTE, die mit der ersten Aenderung erscheint (forms.js);
+ * der Abbrechen-Link entfaellt zugunsten des Rueckwegs oben. Am Ortsfeld
+ * ersetzt der LUPEN-Knopf das zweite Suchfeld ("Lokalisation ..."), und
+ * der PIN-Knopf oeffnet das Blatt "Meine Position uebernehmen / Auf der
+ * Karte waehlen" (neues assets/ortswahl.js: Geolocation, Leaflet-Dialog
+ * mit Fadenkreuz, Photon-Umkehrsuche — die Anfrage traegt NUR die
+ * Koordinate). Speicherlogik und Felder sind unveraendert; der
+ * 5-Einsaetze-Rundlauf und beide Kreislaeufe belegen es.
+ *
+ * Dabei gefunden: Ein POST an einstellungen.php OHNE ?t versandete seit
+ * der O2-Uebersichts-Weiche stillschweigend — die Browser-Formulare tragen
+ * das t, das Einspielwerkzeug trug es nicht (F-P3-AF, im Werkzeug behoben).
+ *
+ * Keine Migration; Endpunkte und Feldkatalog unveraendert.
  */
-const WEB_VERSION = '9.3.0';
+const WEB_VERSION = '9.4.0';

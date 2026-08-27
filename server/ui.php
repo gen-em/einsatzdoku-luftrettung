@@ -1373,38 +1373,60 @@ function ui_ortsfeld(array $o): void
 {
     $p = (string)$o['praefix'];
     $mitFeld = ($o['feld'] ?? true) !== false;
-    $mitSuche = !empty($o['such']);
     $dl = $o['datalist'] ?? null;
 
     $versteckt = !empty($o['versteckt']) ? ' hidden' : '';
 
+    /* SEIT O5 (E-P3-34) GIBT ES KEIN ZWEITES SUCHFELD MEHR: An seine Stelle
+     * tritt der Lupen-Knopf neben dem Feld — er sucht mit dem, was im Feld
+     * steht (bei getrennter Suche uebernimmt der Treffer weiterhin NUR die
+     * Koordinaten, assets/ortsfeld.js). 'ortswahl' ergaenzt den Pin-Knopf mit
+     * dem Blatt „Meine Position uebernehmen / Auf der Karte waehlen"
+     * (assets/ortswahl.js). */
+    $mitWahl = !empty($o['ortswahl']);
+
     if ($mitFeld): ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
-        <label><?= e((string)($o['label'] ?? '')) ?>
+        <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?>
           <?php if (!empty($o['hinweis'])): ?>
             <span class="muted small"><?= e((string)$o['hinweis']) ?></span>
           <?php endif; ?>
+        </label>
+        <div class="ortsfeld-zeile">
           <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
                  <?= isset($o['name']) && $o['name'] !== null ? 'name="' . e((string)$o['name']) . '"' : '' ?>
                  <?= isset($o['max']) ? 'maxlength="' . (int)$o['max'] . '"' : '' ?>
                  <?= $dl !== null ? 'list="' . e($p) . 'dl"' : '' ?>
                  placeholder="<?= e((string)($o['platzhalter'] ?? '')) ?>"
                  value="<?= e((string)($o['wert'] ?? '')) ?>">
-        </label>
+          <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
+                  title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
+                  class="nur-vorlesen">Suchen</span></button>
+          <?php if ($mitWahl): ?>
+            <span class="aktionen ortsfeld-aktionen">
+              <button type="button" class="knopf knopf-symbol" title="Ort setzen"
+                      aria-expanded="false" aria-controls="<?= e($p) ?>ortsblatt"
+                      data-blatt="<?= e($p) ?>ortsblatt"><?= ui_symbol('position', 'symbol-gross') ?><span
+                      class="nur-vorlesen">Ort setzen</span></button>
+              <div class="blatt" id="<?= e($p) ?>ortsblatt" hidden>
+                <div class="blatt-griff" aria-hidden="true"></div>
+                <h2 class="blatt-titel"><?= e((string)($o['label'] ?? 'Ort')) ?> setzen</h2>
+                <div class="blatt-liste">
+                  <button type="button" class="blatt-zeile"
+                          data-ortswahl="position" data-praefix="<?= e($p) ?>">
+                    <?= ui_symbol('position') ?><span>Meine Position übernehmen</span></button>
+                  <button type="button" class="blatt-zeile"
+                          data-ortswahl="karte" data-praefix="<?= e($p) ?>">
+                    <?= ui_symbol('karte') ?><span>Auf der Karte wählen</span></button>
+                </div>
+                <button type="button" class="knopf knopf-leise blatt-abbrechen"
+                        data-blatt-zu>Abbrechen</button>
+              </div>
+            </span>
+          <?php endif; ?>
+        </div>
     <?php else: ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
-    <?php endif; ?>
-
-    <?php if ($mitSuche): ?>
-      <?php /* Getrennte Suche: Das Namensfeld darüber bleibt der Name
-               („Standort Kempten" ist keine Adresse). Hier wird gesucht oder
-               eine Koordinate eingefügt; übernommen werden nur die
-               Koordinaten. */ ?>
-      <label class="fld-sub"><?= e((string)($o['such_hinweis'] ?? 'Koordinaten (optional)')) ?>
-        <input type="text" id="<?= e($p) ?>such" autocomplete="off"
-               placeholder="<?= e((string)($o['such_platzhalter']
-                   ?? 'Adresse suchen — auch Koordinaten oder Plus Code')) ?>">
-      </label>
     <?php endif; ?>
 
       <ul id="<?= e($p) ?>suggest" class="loc-suggest" hidden></ul>

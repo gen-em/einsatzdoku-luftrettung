@@ -102,6 +102,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
+│   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
@@ -1547,14 +1548,27 @@ Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
 | Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
 | Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
 
-**Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` ist das Textfeld
-zugleich das Suchfeld; ein Adresstreffer wird zur Bezeichnung. Bei `true` gibt
-es ein eigenes Suchfeld daneben, und der Treffer setzt **nur** die Koordinaten —
-„Standort Kempten" ist keine Adresse, und eine Suche im Namensfeld schriebe den
-Namen weg. Alles übrige ist in beiden Formen dasselbe: Chip statt Zahlen im
-Textfeld, lokale Formaterkennung vor jeder Netzanfrage, Bestätigung statt
-sofortiger Übernahme, ruhende Suche bei gesetzten Koordinaten, und die Prüfung
-„Koordinaten ohne Bezeichnung" beim Absenden.
+**Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` sucht das
+Textfeld beim Tippen; ein Adresstreffer wird zur Bezeichnung. Bei `true`
+läuft die Suche **nur auf den Lupen-Knopf** (seit Web 9.4.0 — er ersetzt das
+frühere zweite Suchfeld „Lokalisation …"), und der Treffer setzt **nur** die
+Koordinaten — „Standort Kempten" ist keine Adresse, und eine Suche, die den
+Namen überschriebe, nähme ihn weg. Alles übrige ist in beiden Formen
+dasselbe: Chip statt Zahlen im Textfeld, lokale Formaterkennung vor jeder
+Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
+gesetzten Koordinaten, und die Prüfung „Koordinaten ohne Bezeichnung" beim
+Absenden.
+
+**Die Ortswahl** (`assets/ortswahl.js`, Web 9.4.0, E-P3-34): Der Pin-Knopf
+am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true` — Einsatzort und
+manueller Abfahrtort) öffnet ein Blatt mit „Meine Position übernehmen"
+(`navigator.geolocation`, nur über HTTPS) und „Auf der Karte wählen"
+(Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte statt Klick-Marker —
+auf dem Handy verdeckt der eigene Finger sonst genau die Stelle). Zur
+Koordinate holt die **Photon-Umkehrsuche** eine Adresse; sie füllt das Feld
+nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`), und die
+Anfrage trägt ausschließlich die Koordinate. Die Verwendungen registrieren
+sich mit `EdOrtswahl.registriere(praefix, steuerobjekt)`.
 
 **Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
 über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, immer

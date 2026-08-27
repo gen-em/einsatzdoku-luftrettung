@@ -78,3 +78,8 @@ im selben Paket hier ein, nicht später.
 | `badge-editiert` | Kennzeichen „editiert" → dieselbe Plakette. | O4 |
 | `abw` | „(abw.)" an einer überschriebenen Besatzungsrolle → Kleinzeile `.lese-klein` mit ausgeschriebenem „(abweichend vom Diensttag)". | O4 |
 | `locpin` | SVG-Pfad des Karten-Pins, wörtlich doppelt in `index.php` und `einsatz.php` → `EdGeo`-Marker-Satz (`assets/geo.js`, Zeichnung im Stylesheet, Abschnitt 21). | O4 |
+| `fgruppe` | Rahmengruppe (`<fieldset>`) des Einsatzformulars → Karten (`ui_karte_start`, E-P3-34): PatientIn, Einsatz, Transport, Weitere Rettungsmittel, Abweichende Besatzung (zu), Notizen, Einsatzphasen, Reanimation (zu). | O5 |
+| `fgruppe-hinweis` | „Ende-zu-Ende-verschlüsselt" neben der Gruppenüberschrift → `karte-zahl` im Kartenkopf. | O5 |
+| `fld-check` | Rahmen einer Checkbox-Zeile → Schalter-Baustein `.schalter` (E-P3-28/34); die Klasse `parentcheck` für das Auf- und Zuklappen der Unterfelder bleibt. | O5 |
+| `phase-row` | Phasenzeile des Formulars → `.phasen-eingabe` (Auswahl, 44-px-Zeitfeld zentriert, Entfernen als roter Symbolknopf); dieselbe Zeilenform tragen jetzt auch die Reanimationszeilen. | O5 |
+| `rea-row` | Reanimationszeile → `.phasen-eingabe`, siehe `phase-row`. | O5 |

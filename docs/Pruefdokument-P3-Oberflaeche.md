@@ -62,15 +62,15 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O4 noch nicht ist
+### 1.3 Was der Zwischenstand nach O5 noch nicht ist
 
-**Hülle, Startseite und Einsatzansicht sind neu, die übrigen Seiteninhalte
-nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
-Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht mit Kachelliste,
-Lesezustand und Marker-Satz; Web 9.3.0 (O4) die Einsatzansicht mit den
-vier Karten. Was innerhalb der **übrigen** Seiten steht, ist bis auf die
-Artzeichen unverändert: das Formular, die Verwaltungslisten, die Kacheln
-der Zeitraumübersicht. Sie folgen Paket für Paket in O5 bis O11.
+**Der Einsatzweg ist neu, die Verwaltungs- und Auswertungsseiten nicht.**
+Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
+Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht; Web 9.3.0 (O4) die
+Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt Ortswahl. Was
+innerhalb der **übrigen** Seiten steht, ist bis auf die Artzeichen
+unverändert: Suche, Zeitraum, Einstellungen, Verwaltungslisten,
+Administration. Sie folgen Paket für Paket in O6 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
@@ -82,8 +82,8 @@ Sichtbare Folgen, die **kein Fehler** sind:
   Gerätemeldung der Startseite hat ihres seit O3.
 - Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
   `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
-- Das Einsatzformular (`einsatz_form.php`) trägt noch seine alte Gestalt —
-  das ist O5.
+- Suche und Zeitraumübersicht tragen noch ihre alte Gestalt — das ist
+  O6/O7.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -174,6 +174,20 @@ Zwischenstände erwischt und wurde verworfen und wiederholt):
 | Inline-SVG mit Pfaden | **0** (vorher 1 — der doppelte Karten-Pin) |
 | Vollständigkeit | Sollmenge 220 — auf der Streichliste jetzt **64 Sollmengen-Klassen** (67 Einträge gesamt) |
 | Bediensonden (Playwright, 1440) | Entsperr-Fluss (Abbruch/Passwort), „kein Ende", Reanimation × 2, Teilstück (4 → 5 Pfade), Luft-Einsatz mit Haus-Schild und Ringen, Luftlinien-Einsatz — Einzelheiten im Konzept, Abschnitt 11/O4 |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
+
+### 2.6 Nach O5 (Web 9.4.0)
+
+| Was | Ergebnis |
+|---|---|
+| Bildaufnahme | 232 Bilder, 29 Kontaktbögen — **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Rundlauf Formular | 5 Einsätze unverändert gespeichert — **0 Abweichungen** (API-Antwort samt entschlüsseltem Patientenblock, schlüsselstabil verglichen) |
+| Kreislauf Sicherung | **286 739** Einzelvergleiche, **0 unerklärte** Abweichungen (16 erwartete) |
+| Kreislauf CSV | **8 797** Einzelvergleiche, **0 unerklärte** Abweichungen (859 erwartete) — nach Werkzeug-Fix F-P3-AF |
+| Bediensonden | Sofort-Sortierung, Zähler, Speichern-Leiste, Pin-Blatt, Geolocation (überstellt), Kartendialog — Einzelheiten im Konzept, Abschnitt 11/O5 |
 | Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
@@ -506,6 +520,48 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       rollen. *Erwartet:* Karte und Einsatzphasen bleiben rechts oben
       stehen, die linken Karten rollen. *Fehlschlag heißt:* Rollt alles,
       fehlt `position:sticky` am `.einsatz-neben`.
+
+### 5.6 Nach O5 (Web 9.4.0)
+
+- [ ] **Karten und Schalter.** *Weg:* Einsatz öffnen → „Bearbeiten".
+      *Erwartet:* Karten in der Reihenfolge PatientIn (mit Einsatzort),
+      Einsatz (Schalter), Transport, Weitere Rettungsmittel, Abweichende
+      Besatzung (zu, „vom Diensttag"), Notizen, Einsatzphasen, Reanimation
+      (zu, „keine"); ab 1200 px zwei Spalten. Ein eingeschalteter Schalter
+      zeigt seine Detailfelder hinter einer orangen Linie. *Fehlschlag
+      heißt:* Häkchen statt Schalter = der Checkbox-Renderer ist zurück.
+- [ ] **Phasen sortieren sich sofort.** *Weg:* In einer Phasenzeile die
+      Uhrzeit auf einen späteren Wert ändern, Feld verlassen (Tab).
+      *Erwartet:* Die Zeile rutscht sofort an die richtige Stelle; Zeilen
+      ohne Zeit bleiben hinten; der Kopf zählt („8 von 9"); kein
+      Hinweistext. *Fehlschlag heißt:* Ordnet erst das Speichern, fehlt der
+      focusout-Weg.
+- [ ] **Speichern-Leiste.** *Weg:* Beliebiges Feld ändern. *Erwartet:* Am
+      unteren Rand erscheint die klebende Leiste („✓ Änderungen speichern";
+      am Desktop mit „Strg + Enter"-Hinweis); nach dem Speichern ist sie
+      weg. Ohne Änderung gibt es keinen Speichern-Knopf und keinen
+      Abbrechen-Link — der Rückweg oben genügt. *Fehlschlag heißt:* Leiste
+      dauerhaft sichtbar = das Dirty-Kennzeichen greift nicht.
+- [ ] **Meine Position übernehmen.** *Weg:* Pin-Knopf am Einsatzort →
+      „Meine Position übernehmen"; die Standortfreigabe des Browsers
+      erlauben. *Erwartet:* Koordinaten-Chip erscheint; ein LEERES Feld
+      bekommt die Adresse aus der Umkehrsuche, ein gefülltes bleibt.
+      *Fehlschlag heißt:* Meldung „Position nicht verfügbar" trotz
+      Freigabe = kein GPS/Netz — mit „Auf der Karte wählen" gegenprüfen.
+- [ ] **Auf der Karte wählen.** *Weg:* Pin-Knopf → „Auf der Karte wählen";
+      Karte verschieben, „Übernehmen". *Erwartet:* Dialog mit Fadenkreuz in
+      der Mitte; übernommen wird die Kartenmitte; danach Chip + ggf.
+      Adresse. *Fehlschlag heißt:* Grauer Kasten ohne Karte = Leaflet nicht
+      geladen (harte Aktualisierung).
+- [ ] **Lupe am Transportziel.** *Weg:* Im Feld „Kreisklinik …" stehen
+      lassen, Lupe drücken. *Erwartet:* Vorschläge erscheinen; die Übernahme
+      setzt NUR die Koordinaten, der Name im Feld bleibt. *Fehlschlag
+      heißt:* Der Name wird ersetzt = die getrennte Suche ist verloren.
+- [ ] **Unverändert speichern ändert nichts.** *Weg:* Einsatz öffnen →
+      Bearbeiten → sofort speichern; Ansicht vergleichen. *Erwartet:* Alle
+      Werte unverändert (nur „editiert" erscheint bei Uhr-Einsätzen).
+      *Fehlschlag heißt:* Ein Feld leert sich = ein Renderer liefert den
+      Bestandswert nicht mehr ins Formular.
 
 ## 6. Was bewusst **nicht** geprüft wird
 
