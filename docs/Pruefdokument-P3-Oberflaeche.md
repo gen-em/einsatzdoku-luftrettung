@@ -62,7 +62,7 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O8b noch nicht ist
+### 1.3 Was der Zwischenstand nach O8 noch nicht ist
 
 **Diese Fassung braucht eine Migration** (`2026_08_27_logo_wahl`). Sie ist
 die erste der Phase; ohne den Aufruf von `update.php` scheitert jede
@@ -73,10 +73,11 @@ Verwaltungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
 Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
 Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
 Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht;
-Web 9.7.0 (O8a) Profil, Logo-Wahl und die Standorte; Web 9.7.1 (O8b) die
-übrigen Verwaltungslisten und die Geräte. Was innerhalb der **übrigen**
-Seiten steht, ist bis auf die Artzeichen unverändert: der Reiter Sicherung,
-der Import und die Administration. Sie folgen in O8c bis O11.
+Web 9.7.0 bis 9.7.2 (O8a–c) die Einstellungen vollständig — Profil,
+Logo-Wahl, Verwaltungslisten, Geräte, Sicherung und Import. Was innerhalb der
+**übrigen** Seiten steht, ist bis auf die Artzeichen unverändert: die
+Administration und die kleineren Seiten (Papierkorb, Diensttag anlegen,
+Zusammenführen, Anmeldung). Sie folgen in O9 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
@@ -284,6 +285,23 @@ an nichts. Der Prüfsatz aus 2.9 („alle vier wieder vorhanden") war richtig
 und trug trotzdem nicht: Er hat gezählt, was dasteht, statt zu prüfen, was
 geschieht. Seit O8b prüft die Sonde die **Wirkung** — Vorschlag, Übernahme,
 Koordinaten, unveränderter Name.
+
+### 2.11 Nach O8c (Web 9.7.2) — O8 vollständig
+
+| Was | Ergebnis |
+|---|---|
+| **Import-Durchlauf** (Referenzarchiv) | entsperren → Datei wählen → Schritt 2 **und** 3 erscheinen; Bilanz „13 Diensttage, 82 Einsätze, 1 Hinweise, 0 Fehler, 82 Dubletten"; **96** Tabellenzeilen; „Import ausführen" bleibt **gesperrt** (0 Einsätze bereit — alles schon vorhanden). **Nichts übernommen**, Bestand unverändert |
+| Zeilenwahl | „Nur Probleme" **15** · „Nur Dubletten" **96** · „Alle Zeilen" **96** |
+| Backup-Reiter | drei Karten; der Kontopasswort-Schalter benennt das Feld um, blendet Wiederholung und Stärkebalken aus, zeigt den Hinweis; ein zu kurzes Passwort meldet sich **rot** |
+| Doppelte Element-Kennungen | **0** auf beiden Seiten |
+| Waagerechter Überlauf | **keiner** |
+| Alte Klassen im Markup | **0** (`rolechecks`, `settings-form`, `alert`, `btn-plain`, `imp-wrap`) |
+| Bildaufnahme | 240 Bilder, 30 Kontaktbögen — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** — 57 Regeln, 57 gegriffen |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Streichliste | Sollmenge 220 — 45 mit Regel, **87 gestrichen** |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -863,6 +881,39 @@ Startseite.
       durchsehen. *Erwartet:* Der Eintrag steht bei Standorten und
       Rettungsmitteln, nicht bei Besatzung, Zielkliniken, weiteren
       Rettungsmitteln und Bergwacht.
+
+### 5.11 Nach O8c (Web 9.7.2)
+
+- [ ] **Ein Fehlschlag sieht aus wie ein Fehlschlag.** *Weg:* Backup →
+      „Backup erstellen", zwei verschiedene Passwörter eintippen,
+      absenden. *Erwartet:* Eine **rote** Meldung mit Warnsymbol. *Fehlschlag
+      heißt:* Grauer Text wie ein Zwischenstand — dann trägt die Meldung
+      ihren Ton nicht.
+- [ ] **Ein Ergebnis sieht aus wie ein Ergebnis.** *Weg:* Eine Sicherung
+      tatsächlich erstellen. *Erwartet:* Eine **blaue** Meldung mit Haken und
+      den Zahlen. Sind Blöcke unlesbar, ist es stattdessen eine **Warnung**
+      (orange) — die Datei ist vollständig, aber ein Teil öffnet sich nur in
+      diesem Konto. *Fehlschlag heißt:* Haken trotz unlesbarer Blöcke.
+- [ ] **Fortschritt bleibt schlicht.** *Weg:* Beim Erstellen zusehen.
+      *Erwartet:* „Daten werden geladen …" ohne Symbol und ohne Farbe.
+      *Fehlschlag heißt:* Ein Haken neben einem Zwischenstand.
+- [ ] **Die drei Schritte des Imports.** *Weg:* Import/Export öffnen.
+      *Erwartet:* Nur „1. Datei wählen" ist da; nach dem Wählen einer Datei
+      erscheinen „2. Prüfen und korrigieren" und „3. Übernehmen". *Fehlschlag
+      heißt:* Alle drei von Anfang an = die Schrittfolge ist verloren.
+- [ ] **Die Zeilenwahl zeigt, was gilt.** *Weg:* In Schritt 2 zwischen „Alle
+      Zeilen", „Nur Probleme" und „Nur Dubletten" wechseln, auch mit den
+      Pfeiltasten. *Erwartet:* Die gewählte Fläche ist orange hinterlegt, die
+      Tabelle ändert sich. *Fehlschlag heißt:* Drei gleich aussehende Knöpfe
+      = die Segmentwahl ist nicht angekommen; oder die Pfeiltasten tun nichts
+      = es hängt an `click` statt an `change`.
+- [ ] **Die Warnung steht vor der Passwortwahl.** *Weg:* Sicherung erstellen.
+      *Erwartet:* Der orange Kasten „In dieser Datei stehen alle geschützten
+      Angaben im Klartext" steht **über** den Passwortfeldern. *Fehlschlag
+      heißt:* Darunter oder gar nicht.
+- [ ] **Der Kopplungscode ist groß.** *(aus O8b, hier mitgeprüft)* Geräte →
+      „Kopplungscode erzeugen". *Erwartet:* eigener Kasten, Festbreite,
+      gesperrte Schrift.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

@@ -39,9 +39,21 @@
 
     // ------------------------------------------------------------- Anzeigen
 
+    /* Fehler und Warnungen als MELDUNGS-BAUSTEIN (E-P3-16, ab Web 9.7.2).
+     * Vorher waren beides graue `.alert`-Kästen — ein Fehler, der den Import
+     * verhindert, sah aus wie ein Hinweis zum Dateiformat. Der Text stammt
+     * teils aus der gelesenen Datei und wird deshalb maskiert. */
+    function meldungMarkup(ton, text) {
+        var sym = ton === 'fehler' ? 'warnung' : (ton === 'warn' ? 'warnung' : 'hinweis');
+        return '<div class="meldung meldung-' + ton + '" role="'
+             + (ton === 'fehler' ? 'alert' : 'status') + '">'
+             + edSymbol(sym, 'symbol-gross')
+             + '<p>' + esc(text) + '</p></div>';
+    }
+
     function fehler(text) {
         var el = $('fehler');
-        el.textContent = text || '';
+        el.innerHTML = text ? meldungMarkup('fehler', text) : '';
         el.hidden = !text;
     }
 
@@ -176,8 +188,9 @@
     function warnungZeigen(profil) {
         var el = $('profilwarnung');
         if (!el) { return; }
-        el.textContent = (profil && profil.warning) || '';
-        el.hidden = !(profil && profil.warning);
+        var text = (profil && profil.warning) || '';
+        el.innerHTML = text ? meldungMarkup('warn', text) : '';
+        el.hidden = !text;
     }
 
     async function dateiGewaehlt(datei) {
@@ -672,8 +685,9 @@
         }
         S.nutzlast = await baueNutzlast();
         if (!S.nutzlast) {
-            $('bereit').textContent = 'Die geschützten Angaben lassen sich nicht '
-                + 'verschlüsseln — bitte ab- und neu anmelden.';
+            $('bereit').innerHTML = meldungMarkup('fehler',
+                'Die geschützten Angaben lassen sich nicht verschlüsseln — '
+                + 'bitte ab- und neu anmelden.');
             knopf.disabled = true;
             return;
         }
@@ -721,7 +735,12 @@
                 verworfen.push(esc(u) + ' (' + d.rejected[u] + '×)');
             }
 
-            zustand.innerHTML = 'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
+            /* Das Ergebnis als Meldung mit Haken (E-P3-16). `innerHTML`
+                bleibt: Der Bericht trägt einen Link auf den ersten Tag, und
+                die verworfenen Werte sind bereits maskiert. */
+            zustand.innerHTML = '<div class="meldung meldung-ok" role="status">'
+                + edSymbol('haken', 'symbol-gross') + '<p>'
+                + 'Fertig: ' + d.missions_inserted + ' Einsätze angelegt, '
                 + d.missions_overwritten + ' überschrieben, ' + d.missions_skipped + ' übersprungen'
                 + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
                 + d.days_inserted + ' Diensttage angelegt, ' + d.days_updated + ' aktualisiert.'
@@ -729,7 +748,8 @@
                    ? '<br><span class="muted">Einzelne Werte verworfen: '
                      + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
                    : '')
-                + (d.first_day ? ' <a href="index.php?day=' + esc(d.first_day) + '">Ersten Tag öffnen</a>' : '');
+                + (d.first_day ? ' <a href="index.php?day=' + esc(d.first_day) + '">Ersten Tag öffnen</a>' : '')
+                + '</p></div>';
 
             // Ein zweiter Klick wuerde alles ein weiteres Mal anlegen. Der Weg
             // zurueck fuehrt bewusst ueber eine neu gewaehlte Datei.
@@ -738,8 +758,9 @@
             $('bereit').textContent = 'Übernommen. Für einen weiteren Import bitte erneut '
                 + 'eine Datei wählen.';
         } catch (e) {
-            zustand.textContent = 'Die Übernahme ist fehlgeschlagen: ' + e.message
-                + ' — es wurde nichts gespeichert.';
+            zustand.innerHTML = meldungMarkup('fehler',
+                'Die Übernahme ist fehlgeschlagen: ' + e.message
+                + ' — es wurde nichts gespeichert.');
             knopf.disabled = false;
         }
     }
@@ -768,12 +789,19 @@
         $('vehsel').addEventListener('change', function () { bereitschaft(); });
         $('basesel').addEventListener('change', function () { bereitschaft(); });
 
-        Array.prototype.forEach.call(document.querySelectorAll('[data-filter]'), function (b) {
-            b.addEventListener('click', function () {
-                S.filter = b.dataset.filter;
+        /* Die Zeilenwahl ist seit Web 9.7.2 eine Segmentwahl (E-P3-35): drei
+         * Zustände, von denen genau einer gilt. Gehorcht wird `change` an der
+         * Gruppe, nicht `click` an je einem Knopf — sonst löste die
+         * Tastaturbedienung nichts aus, die der Browser bei Radios von selbst
+         * mitbringt. */
+        var filterWahl = $('impfilter');
+        if (filterWahl) {
+            filterWahl.addEventListener('change', function (ev) {
+                if (ev.target.name !== 'impfilter') { return; }
+                S.filter = ev.target.value;
                 zeichnen();
             });
-        });
+        }
 
         // Aenderungen in der Tabelle: erst bei Verlassen des Feldes (change),
         // nicht bei jedem Tastendruck — sonst wird die Tabelle unter den

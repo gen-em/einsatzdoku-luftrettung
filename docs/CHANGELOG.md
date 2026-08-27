@@ -11,6 +11,49 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.7.2] — 2026-08-27
+
+**O8c: Backup und Import — und die Meldungen bekommen ihren Ton.** Damit ist
+O8 vollständig. Beide Seiten sind lange Wege mit vielen Zwischenmeldungen, und
+beide meldeten sie bis hierher in **einer grauen Zeile**: „Daten werden
+geladen…", „Das ist nicht dein Kontopasswort", „Fertig: 82 Einsätze" — alles in
+derselben Schrift, derselben Farbe, an derselben Stelle. Ein misslungener
+Export sah aus wie ein Zwischenstand.
+
+Jetzt tragen die Meldungen ihren Ton (E-P3-16): **rot** für einen Fehlschlag,
+**blau mit Haken** für ein Ergebnis, **schlicht** für den laufenden
+Fortschritt. Der Fortschrittstext bekommt bewusst kein Symbol — er ist kein
+Ergebnis, und ein Haken daneben behauptete eines.
+
+Ein Sonderfall bekam dabei eine eigene Antwort: Ein **Export mit unlesbaren
+Blöcken ist kein reiner Erfolg**. Die Datei ist vollständig, aber ein Teil
+ihrer Angaben lässt sich nur in diesem Konto wieder öffnen. Das meldet sich
+jetzt als Warnung statt mit einem Haken — vorher stand die Warnung als
+Nachsatz in derselben Erfolgsmeldung.
+
+**Der Import zeigt seine drei Schritte als drei Karten** mit der Zahl im Kopf;
+Schritt 2 und 3 bleiben verborgen, bis der vorige getan ist. Die Zeilenwahl
+(Alle Zeilen / Nur Probleme / Nur Dubletten) war eine Reihe von drei Knöpfen,
+bei der keiner zeigte, welcher gerade galt — jetzt eine Segmentwahl: drei
+Zustände, von denen genau einer gilt, und die Pfeiltastenbedienung bringt der
+Browser mit. Die Haken des Exports (GPX-Tracks, personenbezogene Angaben,
+Passwortschutz) sind Schalter geworden (E-P3-28).
+
+Der **Backup-Reiter** ist in drei Karten gefasst: erstellen, einspielen und
+— nur wenn eine vorliegt — die von der Administration freigegebene Sicherung.
+Die Warnung, was in der Datei steht, steht weiterhin **vor** der Passwortwahl,
+jetzt als Meldungs-Baustein: Wer ein Passwort wählt, muss wissen, was er damit
+schützt.
+
+Belegt am Referenzarchiv: Datei einlesen → Schritt 2 und 3 erscheinen, Bilanz
+„13 Diensttage, 82 Einsätze, 1 Hinweise, 0 Fehler, 82 Dubletten", 96
+Tabellenzeilen, „Import ausführen" bleibt gesperrt (alles schon vorhanden —
+richtig so). Die Filterwahl greift: 15 Zeilen bei „Nur Probleme", 96 bei
+„Alle". 0 Konsolenfehler, 0 doppelte Element-Kennungen, kein waagerechter
+Überlauf. Screenshots 240 Bilder — 0/0/0.
+
+Keine Migration.
+
 ## [Web 9.7.1] — 2026-08-27
 
 **O8b: Die übrigen Verwaltungslisten — und drei Fehler, von denen einer aus

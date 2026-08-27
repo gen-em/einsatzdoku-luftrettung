@@ -315,6 +315,7 @@
   --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
   --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
+  --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
   --balken-glied:28px;                 /* ein Segment des Passwortstärke- … */
   --strich-balken:6px;                 /* … balkens, vier davon (E-P3-16) */
   --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
@@ -2397,3 +2398,15 @@ tr.hl-extrem td{background:var(--orange-hell)}
   word-break:break-all;
   margin:0;
 }
+
+/* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Sicherung,
+ * Import). Sie hält ihre Höhe frei, damit der Kasten beim Erscheinen der
+ * ersten Meldung nicht springt; ein Ergebnis erscheint darin als
+ * Meldungs-Baustein, Fortschritt als schlichte Zeile. */
+.zustandszeile{
+  min-height:var(--zeile-frei);
+  margin-top:var(--abstand-3);
+  color:var(--gedaempft);
+  font-size:var(--groesse-2);
+}
+.zustandszeile .meldung{margin:0}

@@ -524,5 +524,28 @@ declare(strict_types=1);
  * Kennung aus einem HASH ueber Titel und Aktionstexte ab; zwei gleichnamige
  * Zeilen bekamen dieselbe, und `data-blatt` oeffnete beide oder keines —
  * jetzt eine laufende Nummer.
+ *
+ * 9.7.2 ist O8c und schliesst O8 ab: DER BACKUP-REITER UND DER IMPORT.
+ * Beide sind lange Wege mit vielen Zwischenmeldungen, und beide meldeten sie
+ * bis hierher in EINER grauen Zeile — ein misslungener Export sah aus wie ein
+ * Zwischenstand. Jetzt tragen die Meldungen ihren TON (E-P3-16): rot fuer
+ * einen Fehlschlag, blau mit Haken fuer ein Ergebnis, schlicht fuer den
+ * laufenden Fortschritt. Ein Fortschrittstext bekommt bewusst KEIN Symbol —
+ * er ist kein Ergebnis, und ein Haken daneben behauptete eines.
+ *
+ * Ein Sonderfall dabei: Ein Export mit unlesbaren Bloecken ist KEIN reiner
+ * Erfolg. Die Datei ist vollstaendig, aber ein Teil ihrer Angaben laesst sich
+ * nur in diesem Konto wieder oeffnen — das meldet sich jetzt als Warnung
+ * statt mit einem Haken.
+ *
+ * Der Import zeigt seine drei Schritte als drei KARTEN mit der Zahl im Kopf;
+ * Schritt 2 und 3 bleiben verborgen, bis der vorige getan ist. Die
+ * Zeilenwahl (Alle / Nur Probleme / Nur Dubletten) ist eine Segmentwahl
+ * geworden — drei Zustaende, von denen genau einer gilt; die
+ * Pfeiltastenbedienung bringt der Browser mit. Die Haken des Exports sind
+ * Schalter (E-P3-28).
+ *
+ * Keine Migration. Damit ist O8 vollstaendig: Profil und Logo-Wahl (O8a),
+ * die Verwaltungslisten (O8a/O8b), Sicherung und Import (O8c).
  */
-const WEB_VERSION = '9.7.1';
+const WEB_VERSION = '9.7.2';

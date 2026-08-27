@@ -99,3 +99,6 @@ im selben Paket hier ein, nicht später.
 | `sternmarke` | Der Stern in der Zeile, der die Vorbelegung anzeigt → `ui_symbol('stern', 'zeile-stern')` in den Plaketten der Zeile. Ebenfalls vorher ein Schriftzeichen. | O8b |
 | `c-stern` | Breitenklasse der Sternspalte in der Stammdatentabelle — ersatzlos: Es gibt keine Tabelle mehr, der Stern steht in der Zeile. | O8b |
 | `paircode` | Zusatzklasse am Kasten des Kopplungscodes → `.codeblock`, der Baustein für Werte, die von einem Bildschirm auf eine Uhr abgetippt werden (Kopplungscode, Geräte-ID, API-Schlüssel). | O8b |
+| `rolechecks` | Zeile mit Haken im Export (GPX, personenbezogene Angaben, Passwortschutz) → Schalter-Baustein (`ui_schalter`). Es waren `<label><input type="checkbox">`-Gruppen mit eigener Regel; der Schalter aus E-P3-28 sagt dasselbe in einer 44-px-Zeile. | O8c |
+| `rolechecks-hint` | Vorspann einer solchen Zeile („Zeitraum:") → `.feld-label` über der Segmentwahl. | O8c |
+| `imp-wrap` | Scrollbehälter um die Importtabelle → `.tabelle-scroll`, derselbe Behälter wie bei jeder anderen breiten Tabelle. Zwei Klassen für dieselbe Sache waren zwei Stellen, an denen die nächste Änderung ankommen musste. | O8c |

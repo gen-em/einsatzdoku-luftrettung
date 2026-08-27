@@ -1261,6 +1261,14 @@ verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
 geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
 die Hand bekommt, steht nur dieses Passwort.
 
+**Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
+Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis
+**blau mit Haken**, und was gerade läuft („Daten werden geladen …") steht
+schlicht in Grau — es ist kein Ergebnis, und ein Haken daneben behauptete
+eines. Ein Backup, bei dem sich einzelne Angaben nicht entschlüsseln ließen,
+meldet sich **orange**: Die Datei ist vollständig, aber dieser Teil öffnet
+sich nur wieder in diesem Konto.
+
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
@@ -1377,6 +1385,12 @@ hast, kann die Administration sie zurücknehmen.
 Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
+
+**Der Weg hat drei Schritte, und jeder ist eine eigene Karte:** *1. Datei
+wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
+erscheinen erst, wenn der vorige getan ist. In Schritt 2 lässt sich die
+Tabelle einschränken auf *Alle Zeilen*, *Nur Probleme* oder *Nur Dubletten* —
+die gewählte Fläche ist orange hinterlegt.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
 geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum,

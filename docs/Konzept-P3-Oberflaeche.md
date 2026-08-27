@@ -1430,7 +1430,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O7 Zeitraum | **erledigt** | Web 9.6.0 |
 | O8a Profil, Logo-Wahl, Standorte | **erledigt** | Web 9.7.0 (Migration!) |
 | O8b Rettungsmittel, Geräte | **erledigt** | Web 9.7.1 |
-| O8c Sicherung, Import | offen | |
+| O8c Backup, Import | **erledigt** | Web 9.7.2 |
 | O9 Administration | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
@@ -2211,6 +2211,68 @@ Vergleichsstand. Geprüft ist die Anzeige samt Rückfragetext und den
 Zielen der Formulare. Die Kopplung selbst (Code auf einer Uhr eintippen)
 ist nur am Gerät zu prüfen. Sicherung und Import tragen noch ihre alte
 Gestalt — das ist O8c.
+
+### O8c — Backup und Import
+
+**Erledigt.** Web 9.7.2. Keine Migration. Damit ist **O8 vollständig**.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/einstellungen.php` | Reiter „Backup" in drei Karten (erstellen, einspielen, freigegebene Sicherung); `melde()` trägt den Ton der Zustandszeilen |
+| `server/import.php` | drei Schritte als drei Karten mit Zahl im Kopf; Zeilenwahl als Segment; die Export-Haken als Schalter; Export in einer eigenen Karte |
+| `server/assets/import_ui.js` | `meldungMarkup()` für Fehler, Warnungen und das Ergebnis; die Zeilenwahl hört auf `change` an der Gruppe statt auf `click` an drei Knöpfen |
+| `server/assets/style.css` | `.zustandszeile` (hält ihre Höhe frei, damit der Kasten beim Erscheinen der ersten Meldung nicht springt), Token `--zeile-frei` |
+| entfernt | drei Klassen auf der Streichliste (`rolechecks`, `rolechecks-hint`, `imp-wrap`) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Fortschritt bekommt keinen Ton.** „Daten werden geladen …" ist kein
+  Ergebnis; ein Haken daneben behauptete eines. `melde()` ohne Ton ergibt
+  eine schlichte Zeile, und die Zuweisung `el.textContent = …` funktioniert
+  weiterhin — so bleiben die Stellen richtig, die nur Fortschritt melden,
+  ohne dass jede einzeln umgestellt werden musste.
+- **Ein Export mit unlesbaren Blöcken warnt, statt zu haken.** Die Datei ist
+  vollständig, aber ein Teil ihrer Angaben lässt sich nur in diesem Konto
+  wieder öffnen. Vorher stand das als Nachsatz in derselben Erfolgsmeldung.
+- **Die Warnung bleibt vor der Passwortwahl** (M2-03). Sie beantwortet die
+  Frage, die man beim Wählen eines Passworts hat: Was schütze ich damit?
+- **`.tabelle-scroll` statt `.imp-wrap`.** Zwei Klassen für denselben
+  Scrollbehälter waren zwei Stellen, an denen die nächste Änderung ankommen
+  musste.
+
+#### Prüfprotokoll O8c
+
+- **Import-Durchlauf mit dem Referenzarchiv** (Playwright, 1440): entsperren,
+  Datei wählen → Schritt 2 **und** 3 erscheinen; Bilanz „13 Diensttage, 82
+  Einsätze, 1 Hinweise, 0 Fehler, 82 Dubletten, 2 Einsätze mit abweichender
+  Besatzung"; **96** Tabellenzeilen; „Import ausführen" bleibt **gesperrt**,
+  weil alles schon vorhanden ist (0 Einsätze bereit) — genau richtig. Es
+  wurde **nichts übernommen**; der Bestand ist unverändert.
+- **Zeilenwahl:** „Nur Probleme" **15** Zeilen, „Nur Dubletten" **96**,
+  „Alle Zeilen" **96**.
+- **Backup-Reiter:** drei Karten; der Schalter „Mein Kontopasswort
+  verwenden" benennt das Feld um („Kontopasswort"), blendet Wiederholung und
+  Stärkebalken aus und zeigt den Hinweis. Ein zu kurzes Passwort meldet sich
+  **rot** (`meldung meldung-fehler`).
+- **0 doppelte Element-Kennungen**, 0 Konsolenfehler, kein waagerechter
+  Überlauf, keine der alten Klassen mehr im Markup — auf beiden Seiten.
+- **Screenshots:** 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+  außerhalb des Solls.
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.11).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Der
+**Import wurde nicht ausgeführt** — die Referenzdatei enthält denselben
+Bestand, den das Konto führt, und ein Lauf hätte entweder nichts getan oder
+den Vergleichsstand verändert. Geprüft ist der Weg bis zum letzten Klick.
+Ebenso wurden **Sicherung und Wiederherstellung nicht durchlaufen**: Der
+Kreislauf dafür (P-P3-11) gehört ans Ende der Phase und läuft gegen ein
+eigenes Konto. Die **freigegebene Sicherung** ist nur mit einer echten
+Freigabe der Administration zu sehen; geprüft ist, dass der Block verborgen
+bleibt, solange keine vorliegt.
 
 ---
 

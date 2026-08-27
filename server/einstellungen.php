@@ -1726,69 +1726,76 @@ ui_seite_start(['titel' => 'Einstellungen']);
     });
     </script>
   <?php elseif ($tab === 'backup'): ?>
-    <h1>Backup</h1>
-    <p class="muted">Sichert <strong>alle</strong> deine Daten (Einsätze mit Phasen,
-       Reanimationen und Tracks, Ruhesegmente, Diensttage, Standortdaten und die
-       geschützten Angaben) in eine einzelne Datei (<code>.edbak</code>), verschlüsselt
-       mit einem Passwort deiner Wahl (AES-256-GCM). Ver- und Entschlüsselung passieren
-       vollständig <strong>in deinem Browser</strong> — der Server sieht die Inhalte nie.
-       <?php /* Der Satz „Format-Beschreibung: docs/Backup-Format.md" stand hier
-                bis Web 5.7.0 (A6.1). Der Pfad ist für Nutzende nicht
-                erreichbar — er zeigt in das Quellverzeichnis, nicht auf den
-                Server. Die Datei bleibt bestehen, die Verweise darauf im Code
-                (backup_lib.php) ebenfalls; sie richten sich an
-                Entwicklerinnen. */ ?>
-       Dadurch lässt sich ein Backup auch in ein <strong>anderes Konto</strong>
-       einspielen.</p>
+    <?php ui_titelzeile(['titel' => 'Backup']); ?>
+    <?php /* DREI ZEILEN (E-P3-35). Was in der Datei steht und warum das
+             Passwort zählt, gehört an die Handlung — es steht in der Karte
+             „Sicherung erstellen", direkt über der Passwortwahl. */ ?>
+    <p class="seiten-erklaerung">Sichert <strong>alle</strong> deine Daten in eine
+       einzelne Datei (<code>.edbak</code>), verschlüsselt mit einem Passwort
+       deiner Wahl. Ver- und Entschlüsselung passieren vollständig in deinem
+       Browser — der Server sieht die Inhalte nie. Dadurch lässt sich eine
+       Sicherung auch in ein anderes Konto einspielen.</p>
 
-    <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
-      nicht entschlüsseln — die Verschlüsselung ist in dieser Sitzung gesperrt.
-      <button type="button" class="btn-plain unlockbtn" id="lockwarn_unlock">Entsperren</button></div>
-
-    <h2>Exportieren</h2>
-    <div class="settings-form">
-      <?php /* WAS IN DER DATEI STEHT, GEHOERT VOR DIE PASSWORTWAHL (M2-03).
-               Vorher stand hier "ohne dieses Passwort ist die Datei wertlos" —
-               richtig, aber es beantwortet die falsche Frage. Wer ein Passwort
-               waehlt, muss wissen, WAS er damit schuetzt. */ ?>
-      <p class="alert alert-warn">In dieser Datei stehen <strong>alle geschützten
-         Angaben im Klartext</strong> — Namen, Geburtsdaten, Diagnosen,
-         Einsatzorte. Zwischen ihnen und jedem, der die Datei in die Hand
-         bekommt, steht <strong>nur dieses Passwort</strong>. Es wird nirgends
-         gespeichert und lässt sich nicht zurücksetzen.</p>
-      <label class="check"><input type="checkbox" id="bpwkonto">
-        Mein Kontopasswort verwenden</label>
-      <p class="muted small" id="bpwkontohinweis" hidden>Das Kontopasswort schützt
-         dieselben Angaben bereits in der Datenbank — die Datei wird dadurch
-         nicht schwächer geschützt, und es ist ein Passwort weniger zu
-         verwahren. <strong>Nicht</strong> geeignet, wenn die Datei an jemand
-         anderen gehen soll.</p>
-      <label>Backup-Passwort (mind. 10 Zeichen)
-        <input type="password" id="bpw1" minlength="10" autocomplete="new-password"></label>
-      <span class="pwstaerke" id="bpwguete"></span>
-      <label id="bpw2label">Passwort wiederholen
-        <input type="password" id="bpw2" autocomplete="new-password"></label>
-      <button class="btn-primary" id="expbtn">Backup erstellen</button>
-      <p class="muted" id="expstate" style="min-height:1.3em"></p>
+    <div id="lockwarn" hidden>
+      <?php ui_meldung(
+          'Die geschützten Angaben lassen sich gerade nicht entschlüsseln — die '
+        . 'Verschlüsselung ist in dieser Sitzung gesperrt.', null, 'warn', '      ',
+          ['knopf' => ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                                'typ' => 'button', 'attr' => ' id="lockwarn_unlock"'])]); ?>
     </div>
 
-    <h2>Importieren</h2>
-    <p class="muted">Spielt ein Backup in <strong>dieses</strong> Konto zurück. Bereits
-       vorhandene Einsätze, Tage und Stammdaten bleiben unangetastet (Erkennung über
-       interne Referenzen) — der Import ergänzt nur Fehlendes und ist gefahrlos
-       wiederholbar.</p>
-    <div class="settings-form" id="impform">
-      <label>Backup-Datei (.edbak)
-        <input type="file" name="bfile" id="bfile" accept=".edbak" required></label>
-      <label>Backup-Passwort
-        <input type="password" id="ipw" autocomplete="off"></label>
-      <button class="btn-primary" id="impbtn">Backup importieren</button>
-      <?php /* Herkunft der geoeffneten Datei (M5-13). Steht ueber der
+    <?php ui_karte_start(['titel' => 'Backup erstellen']); ?>
+      <?php /* WAS IN DER DATEI STEHT, GEHÖRT VOR DIE PASSWORTWAHL (M2-03).
+               Vorher stand hier „ohne dieses Passwort ist die Datei wertlos" —
+               richtig, aber es beantwortet die falsche Frage. Wer ein Passwort
+               wählt, muss wissen, WAS er damit schützt. */ ?>
+      <?php ui_meldung(
+          'In dieser Datei stehen alle geschützten Angaben im Klartext — Namen, '
+        . 'Geburtsdaten, Diagnosen, Einsatzorte. Zwischen ihnen und jedem, der die '
+        . 'Datei in die Hand bekommt, steht nur dieses Passwort. Es wird nirgends '
+        . 'gespeichert und lässt sich nicht zurücksetzen.', null, 'warn', '      '); ?>
+
+      <?php ui_schalter(['name' => 'bpwkonto', 'id' => 'bpwkonto',
+                         'label' => 'Mein Kontopasswort verwenden']); ?>
+      <p class="feld-klein" id="bpwkontohinweis" hidden>Das Kontopasswort schützt
+         dieselben Angaben bereits in der Datenbank — die Datei wird dadurch nicht
+         schwächer geschützt, und es ist ein Passwort weniger zu verwahren.
+         <strong>Nicht</strong> geeignet, wenn die Datei an jemand anderen gehen soll.</p>
+
+      <?php ui_feld(['label' => 'Passwort für die Sicherung', 'id' => 'bpw1',
+                     'art' => 'password', 'klasse' => 'bpw1-feld',
+                     'klein' => 'Mindestens 10 Zeichen.',
+                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+      <span class="pwstaerke" id="bpwguete"></span>
+      <div id="bpw2label">
+        <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'bpw2',
+                       'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
+      </div>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Sicherung erstellen', 'art' => 'primaer',
+                      'typ' => 'button', 'attr' => ' id="expbtn"']) ?>
+      </div>
+      <div id="expstate" class="zustandszeile"></div>
+    <?php ui_karte_ende(); ?>
+
+    <?php ui_karte_start(['titel' => 'Backup einspielen']); ?>
+      <p class="feld-hinweis">Spielt eine Sicherung in <strong>dieses</strong> Konto
+         zurück. Vorhandene Einsätze, Tage und Stammdaten bleiben unangetastet —
+         das Einspielen ergänzt nur Fehlendes und ist gefahrlos wiederholbar.</p>
+      <?php ui_feld(['label' => 'Datei (.edbak)', 'id' => 'bfile', 'name' => 'bfile',
+                     'art' => 'file', 'pflicht' => true, 'attr' => ' accept=".edbak"']); ?>
+      <?php ui_feld(['label' => 'Passwort der Sicherung', 'id' => 'ipw',
+                     'art' => 'password', 'attr' => ' autocomplete="off"']); ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Sicherung einspielen', 'art' => 'primaer',
+                      'typ' => 'button', 'attr' => ' id="impbtn"']) ?>
+      </div>
+      <?php /* Herkunft der geöffneten Datei (M5-13). Steht ÜBER der
                Statuszeile, weil es die Frage beantwortet, die man VOR dem
                Einspielen hat: Ist das die richtige Datei? */ ?>
-      <p class="muted" id="impherkunft" hidden></p>
-      <p class="muted" id="impstate" style="min-height:1.3em"></p>
-    </div>
+      <div id="impherkunft" hidden></div>
+      <div id="impstate" class="zustandszeile"></div>
+    <?php ui_karte_ende(); ?>
 
     <?php /* ---- Von der Administration freigegebene Sicherung (A8.6) -------
              Erscheint NUR, wenn tatsächlich eine Freigabe vorliegt. Ein
@@ -1798,25 +1805,27 @@ ui_seite_start(['titel' => 'Einstellungen']);
              Der Fall dahinter: Das Konto wurde gelöscht und neu aufgesetzt.
              Die geschützten Angaben der alten Sicherung hängen am ALTEN
              Inhaltsschlüssel; nur der Wiederherstellungsschlüssel öffnet ihn,
-             und der liegt ausschliesslich hier. Deshalb kann Administration
+             und der liegt ausschliesslich hier. Deshalb kann die Administration
              ein solches Paket nicht einspielen — sie gibt es frei, und das
              Umschlüsseln passiert in diesem Browser. */ ?>
     <div id="freigabebox" hidden>
-      <hr class="sep">
-      <h2>Für dich freigegebene Sicherung</h2>
-      <p class="muted" id="freigabeinfo"></p>
-      <div class="settings-form">
-        <label id="freigabecodelabel">Wiederherstellungsschlüssel
-          <input type="text" id="freigabecode" autocomplete="off"
-                 placeholder="XXXX-XXXX-XXXX-XXXX"></label>
-        <p class="muted small">Das ist der Schlüssel, der bei der Ersteinrichtung
-           einmalig angezeigt wurde — nicht das Kontopasswort. Ohne ihn lassen sich
-           die geschützten Angaben dieser Sicherung von niemandem mehr öffnen.</p>
-        <button class="btn-primary" id="freigabebtn">Sicherung einspielen</button>
-        <p class="muted" id="freigabestate" style="min-height:1.3em"></p>
-      </div>
-      <p class="muted small">Das Einspielen <strong>ergänzt</strong>: Vorhandene
-         Einträge bleiben unverändert, es kommt nur hinzu, was fehlt.</p>
+      <?php ui_karte_start(['titel' => 'Für dich freigegebene Sicherung']); ?>
+        <p class="feld-hinweis" id="freigabeinfo"></p>
+        <?php ui_feld(['label' => 'Wiederherstellungsschlüssel', 'id' => 'freigabecode',
+                       'platzhalter' => 'XXXX-XXXX-XXXX-XXXX',
+                       'klein' => 'Der Schlüssel, der bei der Ersteinrichtung einmalig '
+                                . 'angezeigt wurde — nicht das Kontopasswort. Ohne ihn lassen '
+                                . 'sich die geschützten Angaben dieser Sicherung von niemandem '
+                                . 'mehr öffnen.',
+                       'attr' => ' autocomplete="off"']); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Sicherung einspielen', 'art' => 'primaer',
+                        'typ' => 'button', 'attr' => ' id="freigabebtn"']) ?>
+        </div>
+        <div id="freigabestate" class="zustandszeile"></div>
+        <p class="feld-klein">Das Einspielen <strong>ergänzt</strong>: Vorhandene
+           Einträge bleiben unverändert, es kommt nur hinzu, was fehlt.</p>
+      <?php ui_karte_ende(); ?>
     </div>
 
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
@@ -1826,6 +1835,11 @@ ui_seite_start(['titel' => 'Einstellungen']);
                                'guete' => true, 'einzug' => '    ']); ?>
     <?php /* patient.js liefert die gemeinsame Entschluesselungsschleife
              (Baustein B8), die der Sicherungslauf seit Web 4.6.0 benutzt. */ ?>
+    <?php /* html.js liefert EdHtml.escape() — melde() setzt fremden Text in
+             eine Meldung, und der muss maskiert sein: In „Import
+             fehlgeschlagen: …" steckt eine Fehlermeldung, die aus einer
+             fremden Datei stammen kann. */ ?>
+    <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
     <script>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
@@ -1833,6 +1847,33 @@ ui_seite_start(['titel' => 'Einstellungen']);
     const KONTO_NAME = <?= json_encode($userName) ?>;
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
+
+    /* ---- Zustandszeilen als Meldungen (E-P3-16) --------------------------
+     *
+     * Die Sicherung meldet viel: Fortschritt („Daten werden geladen …"),
+     * Fehlschläge („Das ist nicht dein Kontopasswort") und Erfolge („Fertig:
+     * 82 Einsätze"). Bis Web 9.7.1 stand alles in derselben grauen Zeile —
+     * ein misslungener Export sah aus wie ein Zwischenstand.
+     *
+     * `melde()` trägt den Ton: 'fehler' rot, 'ok' blau mit Haken, sonst eine
+     * schlichte Zeile für den laufenden Fortschritt. Ein Fortschrittstext
+     * bekommt bewusst KEIN Symbol — er ist kein Ergebnis, und ein Haken
+     * daneben behauptete eines.
+     *
+     * Die Zuweisung `el.textContent = …` funktioniert weiterhin (die
+     * Zustandszeile ist ein gewöhnliches Element); sie ergibt dann den
+     * schlichten Ton. So bleiben die Stellen richtig, die nur Fortschritt
+     * melden. */
+    function melde(el, text, ton) {
+      if (!el) { return; }
+      if (!text) { el.innerHTML = ''; return; }
+      if (!ton) { el.textContent = text; return; }
+      const sym = ton === 'fehler' ? 'warnung' : (ton === 'ok' ? 'haken' : 'hinweis');
+      el.innerHTML = '<div class="meldung meldung-' + ton + '" role="'
+        + (ton === 'fehler' ? 'alert' : 'status') + '">'
+        + edSymbol(sym, 'symbol-gross')
+        + '<p>' + EdHtml.escape(text) + '</p></div>';
+    }
 
     /* Liefert den Inhaltsschluessel; ist er gesperrt, bietet EdUnlock den
      * Entsperrdialog an. Wird er abgebrochen, bleibt der Hinweis stehen —
@@ -1871,9 +1912,13 @@ ui_seite_start(['titel' => 'Einstellungen']);
       // Die Wiederholung entfällt: Ein falsch getipptes Kontopasswort fällt
       // unten beim Öffnen der Hülle auf, nicht erst beim Öffnen der Datei.
       document.getElementById('bpw2label').hidden = an;
-      bpw1.parentElement.firstChild.textContent = an
+      /* Die Beschriftung liegt seit O8c als eigenes <label class="feld-label">
+         neben dem Feld, nicht mehr als Textknoten davor — `parentElement
+         .firstChild` traf damit den Zeilenumbruch statt der Beschriftung. */
+      document.querySelector('label[for="bpw1"]').textContent = an
         ? 'Kontopasswort'
-        : 'Backup-Passwort (mind. 10 Zeichen)';
+        : 'Passwort für die Sicherung';
+      document.querySelector('.bpw1-feld .feld-klein').hidden = an;
       bpwGuete.hidden = an;
       bpw1.value = '';
       expState.textContent = '';
@@ -1883,10 +1928,10 @@ ui_seite_start(['titel' => 'Einstellungen']);
     async function backupPasswort() {
       const pw = bpw1.value;
       if (bpwKonto.checked) {
-        if (pw === '') { expState.textContent = 'Bitte das Kontopasswort eingeben.'; return null; }
+        if (pw === '') { melde(expState, 'Bitte das Kontopasswort eingeben.', 'fehler'); return null; }
         if (!PAT_WRAP) {
-          expState.textContent = 'Für dieses Konto liegt keine Schlüsselhülle vor — '
-                               + 'bitte ein eigenes Backup-Passwort wählen.';
+          melde(expState, 'Für dieses Konto liegt keine Schlüsselhülle vor — '
+                               + 'bitte ein eigenes Backup-Passwort wählen.', 'fehler');
           return null;
         }
         expState.textContent = 'Kontopasswort wird geprüft…';
@@ -1894,15 +1939,15 @@ ui_seite_start(['titel' => 'Einstellungen']);
           const k = await EdCrypto.deriveKeys(pw, KDF_SALT, KDF_ITER);
           await EdCrypto.decrypt(k.dataKeyHex, PAT_WRAP);
         } catch (e) {
-          expState.textContent = 'Das ist nicht dein Kontopasswort. Es wurde keine '
-                               + 'Datei erzeugt.';
+          melde(expState, 'Das ist nicht dein Kontopasswort. Es wurde keine '
+                               + 'Datei erzeugt.', 'fehler');
           return null;
         }
         return pw;
       }
       const guete = EdPwQuality.pruefe(pw);
-      if (!guete.erlaubt) { expState.textContent = guete.meldung; return null; }
-      if (pw !== bpw2.value) { expState.textContent = 'Die Passwörter stimmen nicht überein.'; return null; }
+      if (!guete.erlaubt) { melde(expState, guete.meldung, 'fehler'); return null; }
+      if (pw !== bpw2.value) { melde(expState, 'Die Passwörter stimmen nicht überein.', 'fehler'); return null; }
       return pw;
     }
 
@@ -1911,7 +1956,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
       const pw = await backupPasswort();
       if (pw === null) { return; }
       const key = await ck();
-      if (!key) { expState.textContent = 'Entschlüsselung gesperrt — siehe Hinweis oben.'; return; }
+      if (!key) { melde(expState, 'Entschlüsselung gesperrt — siehe Hinweis oben.', 'fehler'); return; }
       try {
         expState.textContent = 'Daten werden geladen…';
 
@@ -1941,8 +1986,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
         }
         if (!data.missions.length && !(data.rest_segments || []).length
             && !(data.days || []).length) {
-          expState.textContent = 'Es sind keine Daten vorhanden, die gesichert werden könnten. '
-                               + 'Es wurde keine Datei erzeugt.';
+          melde(expState, 'Es sind keine Daten vorhanden, die gesichert werden könnten. '
+                               + 'Es wurde keine Datei erzeugt.', 'fehler');
           return;
         }
 
@@ -1991,7 +2036,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         a.download = 'einsatzdoku-backup-' + new Date().toISOString().slice(0, 10) + '.edbak';
         a.click();
         URL.revokeObjectURL(url);
-        expState.textContent = `Fertig: ${(data.missions || []).length} Einsätze `
+        melde(expState, `Fertig: ${(data.missions || []).length} Einsätze `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(data.rest_segments || []).length} Ruhesegmente, `
           + `${(data.days || []).length} Diensttage.`
@@ -2001,9 +2046,13 @@ ui_seite_start(['titel' => 'Einstellungen']);
                 + 'lesbar, wenn die Sicherung in DIESES Konto zurückgespielt wird. '
                 + 'Bitte klären, warum der Schlüssel nicht passt, bevor weitere '
                 + 'Schritte unternommen werden.'
-              : '');
+              : ''),
+          /* Ein Export mit unlesbaren Blobs ist kein reiner Erfolg: Die Datei
+             ist vollständig, aber ein Teil ihrer Angaben lässt sich nur in
+             diesem Konto wieder öffnen. Das ist eine Warnung, kein Haken. */
+          unlesbar ? 'warn' : 'ok');
       } catch (e) {
-        expState.textContent = 'Export fehlgeschlagen: ' + e.message;
+        melde(expState, 'Export fehlgeschlagen: ' + e.message, 'fehler');
       }
     });
 
@@ -2079,17 +2128,17 @@ ui_seite_start(['titel' => 'Einstellungen']);
     // ---- Import: läuft vollständig im Browser ----
     document.getElementById('impbtn').addEventListener('click', async () => {
       const f = document.getElementById('bfile').files[0];
-      if (!f) { impState.textContent = 'Bitte eine Backup-Datei auswählen.'; return; }
+      if (!f) { melde(impState, 'Bitte eine Backup-Datei auswählen.', 'fehler'); return; }
       const pw = document.getElementById('ipw').value;
-      if (!pw) { impState.textContent = 'Bitte das Backup-Passwort eingeben.'; return; }
+      if (!pw) { melde(impState, 'Bitte das Backup-Passwort eingeben.', 'fehler'); return; }
 
       const key = await ck();
-      if (!key) { impState.textContent = 'Entschlüsselung gesperrt — siehe Hinweis oben.'; return; }
+      if (!key) { melde(impState, 'Entschlüsselung gesperrt — siehe Hinweis oben.', 'fehler'); return; }
       try {
         impState.textContent = 'Datei wird gelesen…';
         const bytes = new Uint8Array(await f.arrayBuffer());
         if (!EdCrypto.isBackupFile(bytes)) {
-          impState.textContent = 'Das ist keine Backup-Datei dieses Programms.';
+          melde(impState, 'Das ist keine Backup-Datei dieses Programms.', 'fehler');
           return;
         }
         impState.textContent = 'Datei wird geöffnet…';
@@ -2195,9 +2244,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
               ? ` ${uebernommenFremd} Einsätze brachten verschlüsselte Angaben mit, die `
                 + `in diesem Konto nicht lesbar sind.`
               : '');
-        impState.textContent = 'Import fertig: ' + restoreBericht(s, zusatz);
+        melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz), 'ok');
       } catch (e) {
-        impState.textContent = 'Import fehlgeschlagen: ' + e.message;
+        melde(impState, 'Import fehlgeschlagen: ' + e.message, 'fehler');
       }
     });
 
@@ -2265,7 +2314,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           const code = document.getElementById('freigabecode').value;
           const pruef = EdCrypto.pruefeRecoveryCode(code);
           if (!pruef.ok) {
-            fgState.textContent = EdCrypto.recoveryCodeMeldung(pruef);
+            melde(fgState, EdCrypto.recoveryCodeMeldung(pruef), 'fehler');
             return;
           }
           if (!fgPaket.pat_wrap_rc) {
@@ -2331,7 +2380,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           body: JSON.stringify({ eingeloest: true })
         });
         const s = out.stats;
-        fgState.textContent = 'Fertig: ' + restoreBericht(s, '');
+        melde(fgState, 'Fertig: ' + restoreBericht(s, ''), 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
         fgState.textContent = 'Einspielen fehlgeschlagen: ' + e.message;
