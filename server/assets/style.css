@@ -2014,3 +2014,115 @@ button.blatt-zeile{
   width:100%;background:none;border:0;text-align:left;cursor:pointer;
   border-radius:0;
 }
+
+
+/* == 24. SUCHE (O6, E-P3-36, Mockups 27/28) ================================
+ *
+ * Die Filterspalte IST die Leiste (O2) — hier steht nur, was ihren Inhalt
+ * ausmacht: Akkordeongruppen mit einer Zahl im Kopf, von/bis nebeneinander,
+ * Wochentage und Dreiwert als Segmentwahl, der Fuß mit „Zurücksetzen" und —
+ * nur in der Schublade — „n Treffer zeigen".
+ */
+.filtergruppe > .akkordeon-zeile{padding:0 var(--abstand-3)}
+.filterzahl{flex:0 0 auto;margin-left:auto}
+.filtergruppe .akkordeon-text{flex:1 1 auto}
+.filterfelder{padding:var(--abstand-2) var(--abstand-3) var(--abstand-4)}
+.filterfelder label{margin-bottom:var(--abstand-3)}
+/* Am UNTEREN Rand ausrichten: „Strecke von (km)" bricht in der schmalen
+ * Leiste auf zwei Zeilen, „bis" daneben nicht — ohne diese Zeile stünden die
+ * beiden Eingabefelder versetzt. */
+/* Ab 1024 px ist die Segmentwahl inline (E-P3-30) — in der Filterleiste
+ * soll sie die Spaltenbreite füllen wie jedes Feld darüber. */
+.filterfelder .segment{display:flex;width:100%}
+.filterfelder .fld-reihe{gap:0 var(--abstand-2);align-items:end}
+.filterfelder .fld-reihe label{display:flex;flex-direction:column;justify-content:flex-end}
+
+/* Beschriftung über einer Gruppe von Bedienelementen (Segmentwahl), dort wo
+ * ein <label> nicht taugt: Es kann nur EIN Element beschriften. */
+.feldblock{margin-bottom:var(--abstand-3)}
+.feld-label{display:block;margin-bottom:var(--abstand-1)}
+
+/* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
+ * hell orange mit orangem Rahmen statt voller Fläche (Mockup 27/28). Bis zu
+ * sieben davon stehen untereinander; sieben orange Balken wären ein Alarm,
+ * und gemeint ist eine Einstellung. */
+.segment-filter .segment-taste{padding:0 var(--abstand-2)}
+.segment-filter .segment-box:checked + .segment-taste{
+  background:var(--orange-hell);color:var(--asphalt);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--orange);
+}
+/* Mehrfachwahl (Wochentage): dieselben Tasten, aber Kästchen statt
+ * Radioknöpfen — mehrere Tage gleichzeitig sind der Regelfall. Sieben Tasten
+ * müssen nebeneinander in die 260 px breite Leiste passen; deshalb ohne
+ * Innenabstand und mit gleicher Breite. */
+.segment-mehrfach .segment-taste{
+  padding:0 var(--abstand-1);flex:1 1 0;min-width:0;
+  font-size:var(--groesse-2);
+}
+
+.filterfuss{display:flex;flex-direction:column;gap:var(--abstand-2)}
+
+/* ---- Suchzeile: Feld und Filterknopf (Mockup 27) ------------------------- */
+.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-2)}
+.suchfeld{position:relative;flex:1 1 auto;display:flex;align-items:center}
+.suchfeld input{
+  width:100%;min-height:var(--suchfeld);
+  padding-left:calc(var(--abstand-3) * 2 + var(--symbol-gross));
+  padding-right:calc(var(--abstand-3) * 2 + var(--symbol-gross));
+  font-size:var(--groesse-4);
+}
+.suchfeld-lupe{
+  position:absolute;left:var(--abstand-3);
+  color:var(--gedaempft);pointer-events:none;
+}
+.suchfeld-x{
+  position:absolute;right:var(--abstand-2);
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  border:0;background:none;color:var(--gedaempft);cursor:pointer;
+}
+.suchfeld-x:hover{color:var(--asphalt)}
+.filterknopf{flex:0 0 auto;min-height:var(--suchfeld)}
+
+.suchhinweis{margin-bottom:var(--abstand-3)}
+/* Ein Link mitten im Fließtext, der aufklappt statt zu navigieren. */
+.leiser-link{
+  border:0;background:none;padding:0;cursor:pointer;
+  color:var(--blau-tief);font:inherit;font-weight:600;
+}
+.suchsyntax{
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3) var(--abstand-4);
+  margin-bottom:var(--abstand-3);
+}
+.suchsyntax li{margin-bottom:var(--abstand-1)}
+.suchsyntax code{
+  background:var(--rauch);border-radius:var(--radius-klein);
+  padding:0 var(--abstand-1);
+}
+
+.filterplaketten{margin-bottom:var(--abstand-3)}
+
+/* ---- Trefferkarte -------------------------------------------------------- */
+.sortieren-aktion{margin-left:auto;position:relative}
+.karte-treffer .karte-aktion{margin-left:0}
+/* Das Trefferwort hell orange hinterlegt (E-P3-36) — die Fläche trägt hier
+ * keine Bedeutung allein, sie zeigt nur, wo der Begriff steht; der Text
+ * bleibt Asphalt und damit voll lesbar. */
+mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--radius-klein)}
+
+/* Die Nachladezeile unter der Tabelle (missiontable.js, 200 Zeilen je Seite). */
+.mehrzeile{
+  display:flex;flex-wrap:wrap;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4) 0;
+}
+
+/* Artzeichen, Datum und Beginn der Kachel stehen in einer Zeile (Mockup 27);
+ * das Zeichen sitzt vor dem Datum und nimmt die Farbe der Zeile an. */
+.kachel-art{margin-right:var(--abstand-1);color:var(--dunkelblau)}
+.kachel-art .symbol{vertical-align:-.15em}
+.kachel-datum{white-space:nowrap}
+/* Mit Datum braucht die Zeitspalte mehr Platz als die reine Uhrzeit. */
+.kachel-zeit:has(.kachel-datum){min-width:0;flex:0 0 auto}

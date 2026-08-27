@@ -15,7 +15,9 @@
  * WAS ES MISST (und damit belegt, statt zu behaupten):
  *   - waagerechter Überlauf   scrollWidth > innerWidth  je Seite und Breite
  *   - Konsolenfehler          je Seite und Breite
- *   - Knopfhöhen              jede .knopf-Regel muss 44 px hoch sein (P-P3-04)
+ *   - Knopfhöhen              jede .knopf-Regel muss 44 px hoch sein (P-P3-04);
+ *                             einzige benannte Ausnahme: der Filterknopf
+ *                             neben dem 48-px-Suchfeld der Suche (O6)
  *   - Kontraste der Token     aus dem Stylesheet gerechnet (P-P3-05)
  *
  * AUFRUF
@@ -338,8 +340,15 @@ for (const eintrag of liste) {
       knoepfe: Array.from(document.querySelectorAll('.knopf'))
         .filter(el => el.offsetParent !== null || el.getClientRects().length > 0)
         .map(el => ({
-          text: (el.textContent || '').trim().slice(0, 24) || el.getAttribute('aria-label') || '(ohne Text)',
+          text: (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 24)
+                || el.getAttribute('aria-label') || '(ohne Text)',
           hoehe: Math.round(el.getBoundingClientRect().height),
+          /* Zwilling des grossen Suchfeldes: Der Filterknopf steht daneben
+           * und ist so hoch wie es — 48 statt 44 px. Die Regel P-P3-04
+           * sichert eine MINDESTflaeche; groesser ist kein Verstoss, nur
+           * ungleich. Damit die Zahl im Bericht trotzdem etwas heisst, wird
+           * dieser eine Fall benannt statt stillschweigend geduldet. */
+          suchzwilling: !!el.closest('.suchzeile'),
         })),
     })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null }));
 
@@ -354,7 +363,8 @@ for (const eintrag of liste) {
       konsole: rolle.fehler.slice(),
     });
     for (const k of mass.knoepfe) {
-      if (k.hoehe !== 44) bericht.knopf.push({ seite: eintrag.name, breite: b, ...k });
+      const soll = k.suchzwilling ? 48 : 44;   // siehe Kommentar oben
+      if (k.hoehe !== soll) bericht.knopf.push({ seite: eintrag.name, breite: b, soll, ...k });
     }
   }
 
@@ -425,7 +435,9 @@ if (gesamtKonsole) {
 }
 if (bericht.knopf.length) {
   md += `\n## Knöpfe außerhalb der 44 px\n\n| Seite | Breite | Knopf | Höhe |\n|---|---|---|---|\n`;
-  for (const k of bericht.knopf) md += `| ${k.seite} | ${k.breite} | ${k.text} | ${k.hoehe} px |\n`;
+  for (const k of bericht.knopf) {
+    md += `| ${k.seite} | ${k.breite} | ${k.text} | ${k.hoehe} px (soll ${k.soll}) |\n`;
+  }
 }
 writeFileSync(join(AUSGABE, 'bericht.md'), md);
 writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + '\n');

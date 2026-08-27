@@ -62,28 +62,27 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O5 noch nicht ist
+### 1.3 Was der Zwischenstand nach O6 noch nicht ist
 
-**Der Einsatzweg ist neu, die Verwaltungs- und Auswertungsseiten nicht.**
-Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
-Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht; Web 9.3.0 (O4) die
-Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt Ortswahl. Was
-innerhalb der **übrigen** Seiten steht, ist bis auf die Artzeichen
-unverändert: Suche, Zeitraum, Einstellungen, Verwaltungslisten,
-Administration. Sie folgen Paket für Paket in O6 bis O11.
+**Der Einsatzweg und die Suche sind neu, die Verwaltungs- und
+Auswertungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
+Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
+Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
+Ortswahl; Web 9.5.0 (O6) die Suche. Was innerhalb der **übrigen** Seiten
+steht, ist bis auf die Artzeichen unverändert: Zeitraum, Einstellungen,
+Verwaltungslisten, Administration. Sie folgen Paket für Paket in O7 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
-- Tabellen außerhalb der Startseite scrollen auf schmalen Geräten waagerecht
-  in ihrem eigenen Kasten, statt zur Kachel zu werden (O6–O9).
+- Tabellen außerhalb von Startseite und Suche scrollen auf schmalen Geräten
+  waagerecht in ihrem eigenen Kasten, statt zur Kachel zu werden (O7–O9).
 - Meldungen im Seiteninhalt tragen noch **kein Symbol** — sie erscheinen
   seit Web 9.1.1 in den Farben des Meldungs-Bausteins (Übergangsregel,
   F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket. Die
   Gerätemeldung der Startseite hat ihres seit O3.
 - Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
   `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
-- Suche und Zeitraumübersicht tragen noch ihre alte Gestalt — das ist
-  O6/O7.
+- Die Zeitraumübersicht trägt noch ihre alte Gestalt — das ist O7.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -189,6 +188,27 @@ Zwischenstände erwischt und wurde verworfen und wiederholt):
 | Kreislauf CSV | **8 797** Einzelvergleiche, **0 unerklärte** Abweichungen (859 erwartete) — nach Werkzeug-Fix F-P3-AF |
 | Bediensonden | Sofort-Sortierung, Zähler, Speichern-Leiste, Pin-Blatt, Geolocation (überstellt), Kartendialog — Einzelheiten im Konzept, Abschnitt 11/O5 |
 | Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
+
+### 2.7 Nach O6 (Web 9.5.0)
+
+| Was | Ergebnis |
+|---|---|
+| **Abnahme Suche (Kernzusage)** | **8 Proben · 8 identisch · 0 abweichend · 143 Treffer verglichen** — fünf Freitexte und drei Filterkombinationen, gleichzeitig gegen den Vor-P3-Stand `2e4f4fe` (zweiter Git-Arbeitsbaum, Port 8444) und die neue Fassung (8443), verglichen über die Einsatz-IDs der Trefferzeilen |
+| Bildaufnahme | 232 Bilder, 29 Kontaktbögen — **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls** |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** (0 Treffer, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen; 49 Regeln, 49 gegriffen) |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Streichliste | Sollmenge 220 — **39 mit Regel, 73 gestrichen** (vier neue in O6), 0 zugleich gestrichen und beregelt |
+| `style="…"`-Attribute | 16 (vorher 15): **+1** durch die Streifenspalte der Suchtabelle — dieselbe begründete Ausnahme wie beim Kachelstreifen aus O3, eine Farbe **aus den Daten** kann keine CSS-Regel sein |
+| Bediensonde 1440 | Filter setzen und über die Plakettenzeile abwählen, Gruppenzahlen, Sortierblatt — 0 Konsolenfehler |
+| Bediensonde 390 | Kacheln statt Tabelle (`true` / `false`); Schubladenfuß „82 Treffer zeigen" → nach Filter „6 Treffer zeigen", Knopfzahl 1 → nach Klick: Schublade zu, „6 von 82 · 59 km", 6 Kacheln |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
+
+**Der Sollwert der Knopfhöhe ist ab O6 nicht mehr überall 44 px.** Löschkreuz
+und Filterknopf stehen neben dem 48 px hohen Suchfeld und sind deshalb
+ebenfalls 48 px hoch — ein 44er daneben stünde sichtbar schief. Das
+Prüfwerkzeug duldet das nicht stillschweigend, sondern kennt die Ausnahme
+beim Namen (`suchzwilling`) und nennt im Bericht je Ausnahme den Sollwert.
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -562,6 +582,62 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       Werte unverändert (nur „editiert" erscheint bei Uhr-Einsätzen).
       *Fehlschlag heißt:* Ein Feld leert sich = ein Renderer liefert den
       Bestandswert nicht mehr ins Formular.
+
+### 5.7 Nach O6 (Web 9.5.0)
+
+- [ ] **Der Filter wirkt überhaupt** (die Behebung von F-P3-AG). *Weg:*
+      Suche öffnen, im Block „Einsatz" ein „Datum von" weit in der Zukunft
+      setzen (z. B. 01.12.2026). *Erwartet:* Die Trefferzahl fällt sofort
+      auf 0, die Liste ist leer. *Fehlschlag heißt:* Die Zahl bleibt beim
+      vollen Bestand stehen — dann horcht der Zuhörer wieder ins Leere,
+      und **kein** Filter dieser Seite wirkt (das war der Zustand seit
+      O2). Zum Gegenprüfen: Freitext und Sortierung wirkten auch damals.
+- [ ] **Filterzahl je Gruppe.** *Weg:* Im Block „Bergrettung" den
+      Windeneinsatz auf „ja" stellen, dann die Gruppe **zuklappen**. *Erwartet:* Am zugeklappten
+      Gruppenkopf steht eine blaue Plakette „1". *Fehlschlag heißt:* Keine
+      Plakette = ein gesetzter Filter kann sich unsichtbar verstecken; das
+      ist genau der Fall, den sie verhindert.
+- [ ] **Plakettenzeile, einzeln abwählbar.** *Weg:* Zwei Filter setzen,
+      dann über der Trefferliste bei einer Plakette das ✕ drücken.
+      *Erwartet:* Nur dieser Filter fällt weg, das Feld in der Leiste
+      steht wieder auf „Egal", die Trefferzahl steigt entsprechend.
+      *Fehlschlag heißt:* Es fallen beide weg = das ✕ setzt zurück statt
+      abzuwählen.
+- [ ] **Mobiler Weg (360–719 px).** *Weg:* Fenster auf 390 px, Suche
+      öffnen, „Filter" drücken. *Erwartet:* Die Schublade legt sich über
+      die Seite; im Fuß stehen „Filter zurücksetzen" und „*n* Treffer
+      zeigen" mit dem vollen Bestand; ein Filter ändert diese Zahl **sofort**, bevor man
+      schließt; „n Treffer zeigen" schließt die Schublade, und darunter
+      stehen genau so viele Kacheln — keine Tabelle. *Fehlschlag heißt:* Die
+      Zahl im Fuß weicht von der Zahl über der Liste ab = beide werden
+      aus verschiedenen Ständen gefüllt.
+- [ ] **Tablet-Schwelle.** *Weg:* Breite 768, dann 1024. *Erwartet:* Bei
+      768 ein Filterknopf neben dem Suchfeld und keine Leiste; bei 1024
+      die Leiste dauerhaft links, kein Filterknopf. *Fehlschlag heißt:*
+      Beides gleichzeitig = die Schwelle 1024 stimmt an einer Stelle
+      nicht.
+- [ ] **Trefferwörter hervorgehoben.** *Weg:* Entsperren, dann „sturz"
+      suchen. *Erwartet:* In den Spalten Einsatzort und Diagnose ist
+      „Sturz" gelb hinterlegt (Groß-/Kleinschreibung egal). *Fehlschlag
+      heißt:* Sichtbares `<mark>` als Text = die Hervorhebung läuft vor
+      dem Maskieren statt danach; dann wäre auch ein `<` aus den Daten
+      Markup — sofort melden. Eine Zeile **ohne** Markierung ist dagegen
+      richtig: Gesucht wird auch in Notizen, Besatzung und
+      Rettungsmitteln, und die stehen nicht in der Liste.
+- [ ] **Verneintes wird nicht markiert.** *Weg:* `bergwacht -winde`
+      suchen. *Erwartet:* „Bergwacht" ist markiert, „winde" nirgends.
+      *Fehlschlag heißt:* Ein markiertes „winde" behauptet einen Treffer,
+      der die Zeile gerade **ausgeschlossen** hätte.
+- [ ] **Farbstreifen = Kartenfarbe.** *Weg:* Einen Treffer merken, seinen
+      Diensttag öffnen. *Erwartet:* Der Streifen links in der Suchzeile
+      hat dieselbe Farbe wie die Spur dieses Einsatzes auf der Tageskarte.
+      *Fehlschlag heißt:* Die Farben folgen der Listenreihenfolge (erste
+      Zeile immer gleich) = der Streifen zählt Positionen statt Einsätze.
+- [ ] **Geteilter Link.** *Weg:* Eine Suche mit Filtern aufbauen, die
+      Adresszeile mitsamt `#…` kopieren, in einem neuen Fenster öffnen.
+      *Erwartet:* Dieselben Filter, dieselben Treffer. *Fehlschlag heißt:*
+      Leere Filter = das Fragment wird nicht mehr gelesen; alte geteilte
+      Links wären damit wertlos.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

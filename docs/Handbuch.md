@@ -938,7 +938,15 @@ nur einen Tag oder einen Zeitraum. Die Trefferliste hat dieselben Spalten wie
 die Zeitraum-Übersicht, lässt sich genauso über die Spaltenköpfe sortieren, und
 ein Klick auf eine Zeile öffnet den Einsatz. Die Zeile hebt sich dabei hervor,
 sobald der Zeiger darüber steht. Ohne Maus geht es auch: Mit der Tabulatortaste
-springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz.
+springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz. Ganz
+links trägt jede Zeile einen **Farbstreifen** — es ist die Farbe, in der die
+Spur dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
+
+**Auf schmalen Geräten** (unter 720 px) wird aus jeder Zeile eine **Kachel**,
+wie auf der Tagesübersicht: oben Artzeichen und Datum, darunter Ort und
+Diagnose, unten die Kennzeichen. Sortiert wird dann über den Knopf **Sortieren**
+im Kopf der Trefferkarte — er zeigt an, wonach gerade geordnet ist, und öffnet
+dieselbe Spaltenliste, die am Schreibtisch der Tabellenkopf ist.
 
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
@@ -968,17 +976,31 @@ nur dann als Ausschluss, wenn es frei vor einem Begriff steht; „St.-Anna" blei
 ein Wort. Eine halbfertige Eingabe wird **nicht bemängelt** — die Trefferliste
 rechnet bei jedem Tastendruck neu, und `(sturz` ist auf dem Weg zu
 `(sturz ODER fraktur)` unvermeidlich; sie wird gedeutet, so gut es geht. Die
-Kurzhilfe steht aufklappbar direkt unter dem Suchfeld.
+Erklärung steht seit Web 9.5.0 hinter **Und / Oder / Nicht verknüpfen** unter
+dem Suchfeld — sie ist für den zweiten Besuch da, nicht für jeden.
 
-**Weitere Filter.** In der linken Spalte — dort, wo auf den anderen Seiten die
-Einsatztage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
-den Gesamtbestand geht. Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die
-danach schneiden, **worüber** gefiltert wird:
+**Treffer sind hervorgehoben.** Steht dein Suchwort in Einsatzort oder
+Diagnose, ist es dort gelb hinterlegt. Eine Zeile ohne Markierung ist trotzdem
+richtig: Gesucht wird auch in Notizen, Besatzung und Rettungsmitteln, und die
+stehen nicht in der Liste — wo der Treffer sitzt, zeigt dann der Einsatz
+selbst. Verneinte Begriffe (`-winde`) werden nicht markiert; sie bezeichnen
+nichts, was dastehen soll.
+
+**Weitere Filter.** In der linken Leiste — dort, wo auf den anderen Seiten die
+Diensttage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
+den Gesamtbestand geht. Seit Web 9.5.0 ist es dieselbe Leiste wie überall: Am
+Schreibtisch steht sie links, auf Tablet und Handy (unter 1024 px) liegt sie
+als Schublade hinter dem Knopf **Filter** neben dem Suchfeld. Vorher hatte die
+Suche als einzige Seite eine eigene Filterspalte — auf dem Handy stand die
+komplett **vor** dem Ergebnis.
+
+Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die danach schneiden,
+**worüber** gefiltert wird:
 
 | Block | Enthält |
 |---|---|
 | **Einsatz** | Datum, Alarmzeit, Wochentag, Strecke, Einsatzdauer, Fehleinsatz |
-| **Patient** | Alter von / bis |
+| **PatientIn** | Alter von / bis |
 | **Transport** | Transportart, NA-Begleitung, Transportziel, Sekundärtransport, Schockraum |
 | **Beteiligte** | Standort, Rettungsmittel, Art, Besatzung je Rolle, weiteres Rettungsmittel |
 | **Bergrettung** | Bergwacht, Bereitschaft, Winde samt Cycles und Luftverladung |
@@ -989,7 +1011,7 @@ Strecke und Dauer zum Einsatz. Die Kurznamen in geteilten Links sind unveränder
 geblieben, alte Links funktionieren also weiter.
 
 Jeder Block klappt einzeln auf und zu; beim Öffnen der Seite sind alle
-zugeklappt, damit die Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
+zugeklappt, damit die Leiste ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
 auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 (UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
 Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
@@ -998,12 +1020,12 @@ enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 **Bergrettung nur, wenn es sie gibt.** Der Block erscheint nur dann, wenn
 wenigstens ein Einsatz deines Bestandes eine Winden- oder eine
 Bergwacht-Angabe trägt. Wer nie windet und nie mit der Bergwacht arbeitet, hat
-diese acht Felder also gar nicht erst in der Spalte stehen — sie könnten dort
+diese acht Felder also gar nicht erst in der Leiste stehen — sie könnten dort
 nur Filter setzen, die garantiert null Treffer ergeben. Dasselbe gilt seit
 Web 7.0.0 für das einzelne Feld **Fehleinsatz**: Es steht in einem Block, der
 bleiben muss, und erscheint deshalb feldweise nur, wenn im Bestand einer
 dokumentiert ist. Maßgeblich ist der
-**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Spalte verändert sich
+**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Leiste verändert sich
 also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
 dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
 den du nicht finden und nicht zurücknehmen könntest.
@@ -1019,9 +1041,18 @@ mehr. Die Angaben selbst bleiben vollständig erhalten — sie stehen weiterhin 
 der Einsatzansicht und im Export. Ältere geteilte Links funktionieren weiter;
 der entfallene Teil wird dabei stillschweigend übergangen.
 
-Unten in der Filterspalte steht **Filter zurücksetzen** und darunter, wie viele
-Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze von
-wie vielen angezeigt werden.
+Am **zugeklappten** Blockkopf steht eine blaue Zahl, wenn darin etwas gesetzt
+ist — so versteckt sich kein vergessener Filter hinter einem geschlossenen
+Deckel. Dieselbe Zahl steht am Knopf **Filter**, solange die Leiste als
+Schublade liegt.
+
+Unten in der Leiste steht **Filter zurücksetzen**. In der Schublade steht
+darunter **„n Treffer zeigen"** — die Zahl rechnet mit, während du filterst,
+und der Knopf schließt die Schublade: Du weißt also vorher, worauf du
+hinausläufst. Über der Trefferliste stehen die gesetzten Filter noch einmal als
+blaue Plaketten mit ✕; ein Druck darauf nimmt **genau diesen** Filter zurück.
+Daneben steht, wie viele Einsätze angezeigt werden (bei gesetztem Filter „n von
+m") und wie viele Kilometer sie zusammen sind.
 
 **Wie viele Zeilen auf einmal?** Die Liste zeigt **200 Treffer**; darunter
 liegen dann die Schaltflächen **„Weitere 200 anzeigen"** und **„Alle N

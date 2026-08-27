@@ -956,22 +956,36 @@ mit Web 7.0.0 dazu: Der Fehleinsatz steht jetzt in einem Block, der bleiben
 muss. Beide Regeln haben dieselbe Ausnahme — ein Filter aus einem geteilten
 Link bleibt sichtbar, auch wenn der eigene Bestand nichts dazu hat.
 
-**Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
-ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Suche
-über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
-`.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
-`overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
-`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Die **Überschrift**
-der Spalte ist dagegen dieselbe wie in der Einsatztage-Leiste und steht seit
-Web 7.2.0 nur noch dort (`.daylist h2,.filterspalte>h2`). Zwei Stolpersteine
-sind dort im CSS vermerkt: Die 720-px-Regel für `.layout-suche` muss **nach**
-der Grundregel stehen, weil der allgemeine 720-px-Block nur `.layout` greift
-und sonst von der gleich spezifischen, später notierten Regel ausgehebelt
-würde; und `.filterfuss .btn-plain` setzt `width:auto` gegen die globale
-Formularregel. `daylist.js` steigt ohne `.dayyears` von selbst aus, die
-Filter-`<details>` liegen ausserhalb und werden deshalb nicht wie das
-Tages-Akkordeon gegenseitig verkoppelt — die Blöcke lassen sich einzeln
-öffnen.
+**Layout (ab Web 9.5.0, O6).** Die Filter stehen in der **gemeinsamen**
+`.leiste` — derselben, die sonst die Diensttage trägt; `suche.php` ruft
+`ui_days_sidebar()` **nicht** auf (einzelne Diensttage sind bei einer Suche
+über den Gesamtbestand ohne Nutzen), sondern baut den Leisteninhalt selbst.
+Bis Web 9.4.0 hatte die Suche eine eigene Spalte (`.layout-suche`,
+`.filterspalte`); das war die einzige Seite ohne mobiles Menü, weil der
+Schubladenmechanismus an `.leiste` hängt — auf dem Handy stand die volle
+Filterliste vor dem Ergebnis. Beide Klassen sind gestrichen.
+
+Zwei Folgen davon:
+
+- **Der Ereignisanker ist die Leiste, nicht eine Klasse am Behälter.** Der
+  Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am
+  Ereignisziel (`ev.target.closest('input, select')`). Der alte Selektor
+  `.filterspalte input, .filterspalte select` traf nach dem Wegfall der
+  Klasse in O2 **nichts** — kein Filter wirkte mehr, ohne dass irgendetwas
+  einen Fehler meldete (F-P3-AG). Ein Klassenname am Behälter ist als
+  Ereignisanker zu leicht zu verlieren.
+- **Die Filterblöcke sind dieselben `<details class="akkordeon">` wie die
+  Diensttage.** `daylist.js` steigt ohne `.leiste-liste[data-akkordeon]`
+  von selbst aus, die Filtergruppen werden deshalb **nicht** gegenseitig
+  verkoppelt — mehrere Blöcke lassen sich gleichzeitig öffnen. Jede Gruppe
+  trägt eine `.filterzahl` (blaue Plakette), die zählt, wie viele ihrer
+  Felder gesetzt sind; `zeigeFilterzustand()` schreibt sie, den Zähler am
+  Filterknopf und die Plakettenzeile `#filterplaketten` aus **einer**
+  Quelle, damit die drei Anzeigen nicht auseinanderlaufen können.
+
+Der Leistenfuß trägt „Filter zurücksetzen" und — nur als Schublade
+(`nur-schublade`) — „n Treffer zeigen" mit der Zahl der laufenden Suche;
+der Knopf schließt über `data-schublade="zu"`.
 
 **Boolesche Freitextsuche (`assets/suchtext.js`, Baustein B10, ab Web 7.0.0).**
 `EdSuchtext.pruefer(q)` liefert ein Prädikat über den (bereits
@@ -996,6 +1010,26 @@ Heuhaufen der Freitextsuche und der Altersfilter ist abgeschaltet — sonst wär
 mit gesetztem Altersfilter jeder Einsatz ein Nicht-Treffer. Nach dem Entsperren
 wird der Heuhaufen neu gebaut und sofort neu gefiltert.
 
+**Trefferhervorhebung (`woerter()`/`hervor()`, ab Web 9.5.0).** `woerter(q)`
+läuft über denselben Zerleger und sammelt die **positiven Literale** —
+Wörter und Phrasen, die nicht unter einem NICHT stehen; Operatoren fallen
+weg. `hervor(maskiert, liste)` setzt darin `<mark class="treffer">`.
+
+Zwei Punkte, an denen es schiefgehen könnte:
+
+- **`hervor()` bekommt den Text BEREITS MASKIERT** und darf ihn nur noch
+  umschließen. Anders herum — erst hervorheben, dann maskieren — würde das
+  eigene `<mark>` mitmaskiert; und maskiert man gar nicht, wäre ein `<` aus
+  Diagnose oder Einsatzort plötzlich Markup. Das betrifft **verschlüsselte**
+  Felder, also fremden Klartext im eigenen DOM.
+- **Verneintes wird nicht hervorgehoben.** Ein `-winde` bezeichnet nichts,
+  was im Text stehen soll; eine Markierung dort behauptete einen Treffer,
+  der die Zeile gerade ausgeschlossen hätte.
+
+Die Prüflogik ist unberührt: `pruefer()` und `woerter()` teilen sich den
+Zerleger, aber `woerter()` liefert nur eine Liste — kein Prädikat, keine
+Entscheidung über Treffer.
+
 **Gemeinsame Einsatztabelle (`assets/missiontable.js`, ab Web 3.1.0).**
 `zeitraum.php` und `suche.php` zeigen dieselbe Liste; Spalten, Sortierung und
 Zeilenaufbau stehen deshalb genau einmal dort. `EdMissionTable.erzeuge()` baut
@@ -1005,6 +1039,20 @@ weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. `esc` und
 `escape` zeigen seit Web 4.6.0 beide auf `EdHtml.escape` (`assets/html.js`);
 die Datei muss deshalb **vor** `missiontable.js` geladen werden. Eine neue
 Spalte ist ein Eintrag in `SPALTEN` und erscheint auf beiden Seiten.
+
+Seit Web 9.5.0 baut derselbe Aufruf wahlweise **Tabelle und Kacheln** aus
+demselben Zeilenbestand (`opts.kacheln` = Zielelement, `opts.kachelOpts`):
+Die Tabelle liegt in `.nur-ab-720`, die Kachelliste in `.nur-unter-720`, und
+weil beide aus einer Zeichnung stammen, können sie nicht auseinanderlaufen.
+`opts.hervor` reicht die Hervorhebungsfunktion an die geschützten Zellen und
+an die Kachel durch — sie ist der einzige Weg, auf dem fremder Text als HTML
+in eine Zelle kommt, und sie bekommt ihn deshalb maskiert (siehe oben).
+
+Die **Streifenspalte** (`key: 'col'`) erscheint über `nurWenn` nur, wenn
+Zeilen eine Spurfarbe tragen; sie trägt als einzige Spalte ein
+`style="background:…"`, weil die Farbe aus den Daten kommt (dieselbe
+begründete Ausnahme wie beim Kachelstreifen aus O3 — eine Farbe je Einsatz
+kann keine CSS-Regel sein).
 
 Eine Rücksicht auf `zeitraum.php`, die sonst als Regression auffiele:
 `onAfterDraw` wendet dort die Hervorhebung der Extremwert-Kacheln erneut an —
@@ -1031,9 +1079,12 @@ Der Fokus wandert nach dem Nachladen nur dann in die erste neue Zeile, wenn die
 Schaltfläche dabei verschwindet; sonst bliebe die Tastaturbedienung an einem
 Element hängen, das es nicht mehr gibt.
 
-Weil `suche.php` die Ergebniszeile aus denselben zwei Zahlen baut, steht ihr
+Weil `suche.php` die Bestandszahl aus denselben zwei Zahlen baut, steht ihr
 Text in `onAfterDraw` und nicht in `anwenden()` — das Nachladen zeichnet neu,
-ohne dass sich ein Filter geändert hätte.
+ohne dass sich ein Filter geändert hätte. Seit Web 9.5.0 steht sie als
+`.karte-zahl` im Kopf der Trefferkarte und nennt „n von m" nur bei gesetztem
+Filter; `onAfterDraw` bekommt dafür als dritten Wert die sortierte Liste, aus
+der die Streckensumme fällt.
 
 **Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
 Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`,
@@ -1770,7 +1821,7 @@ Die Bausteine im Einzelnen:
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
 | Schaltflächenfamilie | `assets/style.css` (`.btn-primary/-danger/-yellow/-red/-plain/-edit`) | Ab Web 7.2.0 ein Block statt vier. Eine Sammelregel über alle sechs (`cursor`, `text-decoration`) und eine gemeinsame Regel für die kompakte Größe der drei Zeilenaktionen; in den Varianten steht nur noch, was sie unterscheidet. **`font-family` gehört nicht in die Sammelregel** — bei `.btn-primary`/`.btn-danger` kommt sie aus `button{}` und damit nur am `<button>` an. Die Größenregel der Zeilenaktionen nennt die Familie über `:is(…)` statt fünf Varianten einzeln; **eine Klasse je Element** ist dabei Bedingung, weil `.btn-plain` mit `font:inherit` arbeitet. |
-| Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. |
+| Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`, `.woerter()`, `.hervor()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. Seit Web 9.5.0 dazu `woerter()` (die positiven Literale einer Eingabe) und `hervor()` (setzt `<mark>` in **bereits maskierten** Text) für die Trefferhervorhebung. |
 | Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 
 **Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`

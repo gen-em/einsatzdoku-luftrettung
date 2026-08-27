@@ -151,6 +151,8 @@ const EdMissionTable = (() => {
    *   artDatum  true = Artzeichen, Datum und Beginn als erstes Element
    *             (Suche und Zeitraum, E-P3-32)
    *   knapp     true = Diagnose einzeilig (Suche und Zeitraum)
+   *   hervor    Funktion(maskiert) -> HTML; hebt die Suchwoerter hervor
+   *             (Suche, E-P3-36)
    */
   function kachel(m, opts) {
     opts = opts || {};
@@ -158,22 +160,25 @@ const EdMissionTable = (() => {
     var h = '<a class="' + k + '" href="einsatz.php?id=' + encodeURIComponent(m.id) + '">';
     h += '<span class="kachel-streifen"'
        + (opts.farbe ? ' style="background:' + esc(opts.farbe) + '"' : '') + '></span>';
+    /* Artzeichen, Datum und Beginn stehen in EINER Zeile (Mockup 27):
+       „<Zeichen> 22.08.2026 · 07:42". Getrennte Bloecke haetten das Zeichen
+       unter das Datum geschoben, sobald die Kachel schmal wird. */
+    h += '<span class="kachel-zeit">';
     if (opts.artDatum) {
       var s = artSymbol(m.kind);
       h += '<span class="kachel-art">'
          + (typeof edSymbol === 'function' ? edSymbol(s.symbol, '', s.text) : esc(s.text))
          + '</span>';
     }
-    h += '<span class="kachel-zeit">'
-       + (opts.artDatum && m.day ? '<span class="kachel-datum">' + fmtTag(m.day) + '</span> ' : '')
+    h += (opts.artDatum && m.day ? '<span class="kachel-datum">' + fmtTag(m.day) + '</span> · ' : '')
        + esc(m.start_hhmm || '–') + '</span>';
 
     h += '<span class="kachel-rumpf">';
     h += '<span class="kachel-kopf">'
-       + '<span class="kachel-ort">' + kachelGeschuetzt(m, m._ort) + '</span>'
+       + '<span class="kachel-ort">' + kachelGeschuetzt(m, m._ort, opts.hervor) + '</span>'
        + '<span class="kachel-km">' + (m.distance_m == null ? ''
            : Math.round(m.distance_m / 1000) + ' km') + '</span></span>';
-    h += '<span class="kachel-dx">' + kachelGeschuetzt(m, m._dx) + '</span>';
+    h += '<span class="kachel-dx">' + kachelGeschuetzt(m, m._dx, opts.hervor) + '</span>';
 
     var fuss = [];
     if (m.duration_s != null) { fuss.push(esc(fmtDur(m.duration_s))); }
@@ -198,13 +203,16 @@ const EdMissionTable = (() => {
   /** Geschuetzte Angabe in der Kachel: – fuer „keine", Warnzeichen fuer
    *  „vorhanden, aber nicht lesbar" — dieselbe Unterscheidung wie in der
    *  Tabelle (zelleGeschuetzt). */
-  function kachelGeschuetzt(m, wert) {
+  function kachelGeschuetzt(m, wert, hervor) {
     if (m._patFehler) {
       return '<span class="patfehler" title="Diese Angaben liegen verschlüsselt vor, '
            + 'lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">'
            + edSymbol('warnung', '', 'nicht lesbar') + '</span>';
     }
-    return (wert == null || wert === '') ? '–' : esc(wert);
+    if (wert == null || wert === '') { return '–'; }
+    /* hervor() bekommt den Wert BEREITS MASKIERT und darf ihn nur noch
+     * umschichten — dieselbe Arbeitsteilung wie bei zelleGeschuetzt. */
+    return hervor ? hervor(esc(wert)) : esc(wert);
   }
 
   /* ---- Spaltendefinition ----------------------------------------------
@@ -231,6 +239,18 @@ const EdMissionTable = (() => {
        schmalste Auskunft. Sie erscheint nur, wenn im Bestand ueberhaupt mehr
        als eine Art vorkommt; bei reiner Luftrettung bliebe in jeder Zeile
        dasselbe Zeichen stehen. */
+    /* Farbstreifen wie in der Tagesuebersicht (E-P3-36, Mockup 28). Die
+       Farbe steht als `_col` an der Zeile; wer sie nicht setzt, bekommt die
+       Spalte gar nicht erst. Sie traegt dieselbe Bedeutung wie dort: die
+       Spurfarbe des Einsatzes an SEINEM Diensttag — derselbe Einsatz hat in
+       Suche und Tageskarte dieselbe Farbe. Nicht sortierbar im Sinn einer
+       Ordnung, aber der Kopf bleibt anklickbar wie alle (er sortiert dann
+       nach Farbe, was niemandem schadet). */
+    { key: 'col',   kopf: '',                      thClass: 'streifen-spalte',
+      nurWenn: liste => liste.some(m => m._col),
+      wert: m => m._col || '',
+      zelle: m => '<td class="streifen-spalte"><span class="streifen"'
+        + (m._col ? ' style="background:' + esc(m._col) + '"' : '') + '></span></td>' },
     { key: 'art',   kopf: 'Art',                   thClass: '',
       nurWenn: liste => new Set(liste.map(m => m.kind || '')).size > 1,
       wert: m => m.kind || '',
@@ -255,13 +275,13 @@ const EdMissionTable = (() => {
       zelle: m => `<td class="zahl-spalte">${zelleDauer(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._ort) },
+      zelle: (m, ctx) => zelleGeschuetzt(m, m._ort, ctx && ctx.hervor) },
     { key: 'age',   kopf: 'Alter',                 thClass: 'zahl-spalte',
       wert: m => m._age == null ? -1 : m._age,
       zelle: m => zelleGeschuetzt(m, m._age, null, 'zahl-spalte') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._dx) },
+      zelle: (m, ctx) => zelleGeschuetzt(m, m._dx, ctx && ctx.hervor) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
        Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
        Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
@@ -300,6 +320,10 @@ const EdMissionTable = (() => {
    * Baut eine Tabelle auf dem uebergebenen <table>-Element auf.
    *
    * opts.table        <table> mit <thead> und <tbody> (beide duerfen leer sein)
+   * opts.kacheln      Behaelter fuer die Kachelform (unter 720 px); ohne ihn
+   *                   entsteht nur die Tabelle
+   * opts.kachelOpts   Zusatzangaben an kachel() (artDatum, knapp)
+   * opts.hervor       Funktion(maskiert) -> HTML fuer die Suchwoerter
    * opts.sortKey      Voreinstellung, Standard 'day'
    * opts.sortAsc      Voreinstellung, Standard true
    *                   (zeitraum.php tut das historisch nicht — dort false)
@@ -307,7 +331,8 @@ const EdMissionTable = (() => {
    *                   Siehe den Abschnitt „Seitengroesse" unten.
    * opts.onAfterDraw  wird nach jedem Zeichnen gerufen: (gesamt, gezeigt)
    *                   'gesamt'  Zeilen, die dem Filter entsprechen
-   *                   'gezeigt' davon tatsaechlich gezeichnete
+   *                   'gezeigt' davon tatsaechlich gezeichnete, 'zeilen'
+   *                   die vollstaendige sortierte Trefferliste
    *                   Ohne Seitengroesse sind beide Zahlen gleich — die
    *                   bisherigen Aufrufer lesen nur die erste und bleiben
    *                   damit richtig.
@@ -393,6 +418,9 @@ const EdMissionTable = (() => {
         const th = document.createElement('th');
         th.className = 'sortable' + (sp.thClass ? ' ' + sp.thClass : '');
         th.dataset.key = sp.key;
+        /* Beschriftung ohne Auszeichnung — fuer das Sortierblatt, das
+         * dieselben Spalten fuehrt wie der Kopf (E-P3-32). */
+        th.dataset.label = sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         th.innerHTML = sp.kopf;
         if (sp.key === sortKey) {
           const pfeil = document.createElement('span');
@@ -415,6 +443,10 @@ const EdMissionTable = (() => {
     function zeichne() {
       const spalten = sichtbareSpalten();
       zeichneKopf(spalten);
+      /* Der Kontext geht an JEDE Zelle und an jede Kachel: Er traegt heute
+       * nur die Hervorhebung der Suchwoerter, aber er traegt sie an EINER
+       * Stelle — sonst braeuchte jede neue Zeilenart ihren eigenen Weg. */
+      const ctx = { hervor: opts.hervor };
       /* Sortiert wird ueber ALLE Spalten, nicht nur die sichtbaren: Ein
        * geteilter Link kann nach einer Spalte sortieren, die der eigene
        * Bestand nicht zeigt. Die Reihenfolge stimmt dann trotzdem, nur der
@@ -431,7 +463,7 @@ const EdMissionTable = (() => {
         const tr = document.createElement('tr');
         tr.className = 'clickable';
         tr.dataset.mid = m.id;
-        tr.innerHTML = spalten.map(s => s.zelle(m)).join('');
+        tr.innerHTML = spalten.map(s => s.zelle(m, ctx)).join('');
         /* Die Zeile ist die Schaltflaeche. Ohne tabindex und Tastenbehandlung
          * waere das Oeffnen eines Einsatzes eine reine Mausfunktion — die
          * Hervorhebung beim Ueberfahren gaebe es dann fuer die Tastatur zwar
@@ -453,8 +485,20 @@ const EdMissionTable = (() => {
         });
         tbody.appendChild(tr);
       });
+      /* DIE KACHELN AUS DEMSELBEN ZEILENBESTAND (E-P3-32/36). Sortierung,
+       * Spaltensichtbarkeit und Seitengrenze gelten fuer beide Formen —
+       * welche zu sehen ist, entscheidet allein das Stylesheet. Ohne
+       * `kacheln` bleibt alles beim Alten. */
+      if (opts.kacheln) {
+        const ko = Object.assign({ hervor: opts.hervor }, opts.kachelOpts || {});
+        opts.kacheln.innerHTML = gezeigt
+          .map(m => kachel(m, Object.assign({ farbe: m._col }, ko))).join('');
+      }
       zeichneMehr(sortiert.length, gezeigt.length);
-      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length); }
+      /* Dritter Wert: die vollstaendige Trefferliste. Die Suche rechnet
+       * daraus ihre km-Summe — ueber ALLE Treffer, nicht nur die
+       * gezeichneten (E-P3-36). */
+      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length, sortiert); }
     }
 
     /* Nachladen. Der Fokus wandert NUR DANN in die erste neue Zeile, wenn die
@@ -505,6 +549,14 @@ const EdMissionTable = (() => {
 
     return {
       setData, zeichne, setSort, setSpaltenBestand,
+      /* Die sichtbaren Spalten mit ihrer schlichten Beschriftung — fuer ein
+       * Sortierblatt, das nicht den Tabellenkopf abklauben muss. Spalten
+       * ohne Kopftext (der Farbstreifen) bleiben draussen: Nach ihnen
+       * sortiert niemand. */
+      spalten: () => sichtbareSpalten()
+        .filter(sp => sp.kopf !== '')
+        .map(sp => ({ key: sp.key,
+                      label: sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })),
       get sortKey() { return sortKey; },
       get sortAsc() { return sortAsc; }
     };

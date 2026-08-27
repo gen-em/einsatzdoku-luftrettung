@@ -83,3 +83,7 @@ im selben Paket hier ein, nicht später.
 | `fld-check` | Rahmen einer Checkbox-Zeile → Schalter-Baustein `.schalter` (E-P3-28/34); die Klasse `parentcheck` für das Auf- und Zuklappen der Unterfelder bleibt. | O5 |
 | `phase-row` | Phasenzeile des Formulars → `.phasen-eingabe` (Auswahl, 44-px-Zeitfeld zentriert, Entfernen als roter Symbolknopf); dieselbe Zeilenform tragen jetzt auch die Reanimationszeilen. | O5 |
 | `rea-row` | Reanimationszeile → `.phasen-eingabe`, siehe `phase-row`. | O5 |
+| `suchbox` | Behälter des Freitextfeldes auf der Suchseite → `.suchzeile`: dasselbe Feld, jetzt 48 px hoch mit Lupe links, Löschkreuz rechts und dem Filterknopf daneben (Mockup 26). Ein eigener Abstandsbehälter darum wird nicht mehr gebraucht — den Abstand setzt die Karte. | O6 |
+| `suchfreitext` | Beschriftetes `label` um das Freitextfeld → `.suchfeld` mit `aria-label`; die sichtbare Beschriftung „Suchbegriff" ist entfallen, weil Lupe und Platzhalter dasselbe sagen und die Zeile sonst auf 360 px zwei Zeilen hoch wird. | O6 |
+| `wtlabel` | Überschrift „Wochentag" über der Wochentagsauswahl → `.feld-label` im `.feldblock`, dieselbe Beschriftungsform wie bei jedem anderen Filterfeld. Die Wochentage selbst sind jetzt ein Mehrfach-Segment (`.segment-mehrfach`) statt sieben lose Kästchen. | O6 |
+| `ergebniszeile` | Textzeile „n von m Einsätzen · x km" unter dem Suchfeld → `.karte-zahl` im Kopf der Trefferkarte (`#trefferzahl`), an derselben Stelle wie jede andere Bestandszahl der Anwendung. | O6 |

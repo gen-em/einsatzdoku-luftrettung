@@ -11,6 +11,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.5.0] — 2026-08-27
+
+**O6: Die Suche nach den Mockups 27/28 — und ein Filter, der seit O2 nicht
+mehr wirkte.** Die Suchseite hatte als einzige Seite eine **eigene**
+Filterspalte (`layout-suche`, `filterspalte`). Das war schon am Schreibtisch
+eine Sonderlocke; auf dem Handy war es ein Fehler: Der Schubladenmechanismus
+aus O2 hing an der gemeinsamen `.leiste`, also stand hier die volle
+Filterspalte als anderthalb Bildschirme **vor** dem Ergebnis. Die Filter
+sind deshalb in die gemeinsame Leiste gezogen — dieselbe Schublade, derselbe
+Filterknopf, dieselbe Kopfzeile wie überall.
+
+Dabei fiel auf, dass **kein Filter der Seitenleiste mehr wirkte**: Der
+Zuhörer horchte auf `.filterspalte input, .filterspalte select` — die Klasse
+ist mit O2 verschwunden, der Selektor traf seither nichts. Gemessen an
+„Datum von 01.12.2026": 82 von 82 Einsätzen blieben stehen. Der Zuhörer
+hängt jetzt an der Leiste selbst und filtert nach dem Ereignisziel, nicht
+nach einer Klasse am Behälter (F-P3-AG).
+
+Der **Zuschnitt** der fünf Blöcke aus Web 7.0.0 bleibt (Einsatz, PatientIn,
+Transport, Beteiligte, Bergrettung) — er schneidet nach dem Gegenstand, und
+daran war nichts falsch. Sie sind jetzt dieselben **Akkordeons** wie die
+Diensttage in der Leiste, jedes mit einer Plakette, die zählt, wie viele
+Filter darin gesetzt sind: So ist ein vergessener Filter in einer
+zugeklappten Gruppe sichtbar, ohne sie zu öffnen. Über der Trefferliste steht jeder gesetzte Filter noch einmal
+als **Plakette mit ✕**, einzeln abwählbar; der Fuß der mobilen Schublade
+trägt „Filter zurücksetzen" und „**n Treffer zeigen**" mit der Zahl aus der
+laufenden Suche, damit man vor dem Schließen weiß, worauf man hinausläuft.
+Ja/Nein/Egal-Filter sind Segmente statt Auswahllisten.
+
+Das Freitextfeld ist 48 px hoch, mit Lupe und Löschkreuz; die Erklärung der
+Suchsyntax steht nicht mehr dauerhaft darunter, sondern hinter
+„Syntaxhilfe" — sie ist für den zweiten Besuch da, nicht für jeden.
+**Trefferwörter werden hervorgehoben.** Das betrifft mit Einsatzort und
+Diagnose ausgerechnet die beiden verschlüsselten Textspalten, deshalb
+geschieht es erst **nach** dem Maskieren im Browser (`suchtext.js`:
+`woerter()` liest die positiven Literale aus der Anfrage, `hervor()` setzt
+`<mark>` in den bereits maskierten Text). Durchsucht wird weiterhin mehr,
+als die Liste zeigt — Notizen, Besatzung, Rettungsmittel; dort ist nichts
+hervorzuheben, weil nichts davon in der Liste steht. Die Suchlogik ist
+unberührt: Verneinte Begriffe und Operatoren werden nicht hervorgehoben,
+weil sie nichts bezeichnen, was im Text steht.
+
+Unter 720 px zeigt die Suche **Kacheln** statt Tabelle (derselbe Erzeuger
+wie auf der Startseite, `missiontable.js`), mit Artzeichen und Datum in der
+Kopfzeile und einzeiliger Diagnose. Am Desktop bekommt die Tabelle eine
+**Farbstreifen-Spalte**: die Spurfarbe des Einsatzes an seinem Diensttag —
+dieselbe Farbe wie auf der Karte des Tages, nicht eine Nummer nach
+Listenposition.
+
+Bewusst anders als das Mockup: Die Bestandszahl nennt „n von m" nur, wenn
+tatsächlich gefiltert ist (sonst genügt „m Einsätze"), und die Streckensumme
+rundet auf ganze Kilometer.
+
+Keine Migration; Suchlogik, Endpunkte und Feldkatalog unverändert. Acht
+Proben (fünf Suchbegriffe, drei Filterkombinationen) gegen den Stand vor P3
+liefern dieselben Treffer: 8 von 8 identisch, 143 Treffer verglichen.
+
 ## [Web 9.4.0] — 2026-08-27
 
 **O5: Das Einsatzformular nach den Mockups 22/23/25 — mit zwei

@@ -103,6 +103,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
 
+36. **Ein Prüfmittel für Klassennamen, die JavaScript sucht und niemand mehr
+    vergibt.** In P3/O6 fiel auf, dass seit O2 **kein einziger** Filter der
+    Suchseite mehr wirkte: Der Zuhörer horchte auf
+    `.filterspalte input, .filterspalte select`, und die Klasse
+    `filterspalte` war beim Umzug in die gemeinsame Leiste verschwunden
+    (F-P3-AG). Nichts hat das gemeldet — ein Selektor, der ins Leere greift,
+    ist in JavaScript kein Fehler, sondern eine leere Liste. Drei
+    Arbeitspakete lang blieb es unbemerkt, weil Freitext und Sortierung an
+    eigenen Zuhörern hingen und die Seite deshalb *fast* richtig aussah.
+    `tools/vollstaendigkeit/` kennt bereits beide Seiten dieser Rechnung
+    (Klassen im Markup, Klassen im Stylesheet); ihm fehlt die dritte:
+    Klassen, die **JavaScript** in einem Selektor nennt. Ein Abgleich gegen
+    die im Markup tatsächlich vergebenen Namen würde genau diesen Fall
+    melden.
+    Zwei Vorbehalte, weshalb es nicht nebenbei entsteht: Klassen, die JS
+    selbst vergibt (`classList.add('aktiv')`), sind im Markup zu Recht nicht
+    zu finden und dürfen nicht als Fund gelten; und Selektoren, die aus
+    Zeichenketten zusammengesetzt werden, sind statisch nicht auflösbar. Das
+    Mittel braucht also eine Ausnahmeliste mit Begründung — wie die
+    Streichliste — statt einer Ja/Nein-Regel. Sinnvoll gegen Ende von P3,
+    wenn die Klassennamen stehen.
+
 ---
 
 ## Erledigt

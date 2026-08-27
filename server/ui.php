@@ -1225,7 +1225,8 @@ function ui_segment(array $o): void
     $name = (string)($o['name'] ?? '');
     ?>
 <div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>"
-     role="group"<?= !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
+     <?= !empty($o['id']) ? 'id="' . ui_e((string)$o['id']) . '" ' : '' ?>role="group"<?=
+        !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
   <?php $i = 0; foreach ((array)($o['optionen'] ?? []) as $wert => $text):
       $id = 'sg-' . preg_replace('/[^\w-]/', '-', $name . '-' . $wert . '-' . $i++); ?>
     <input type="radio" class="segment-box" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"

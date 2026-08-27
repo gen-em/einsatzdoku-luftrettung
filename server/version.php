@@ -399,5 +399,38 @@ declare(strict_types=1);
  * das t, das Einspielwerkzeug trug es nicht (F-P3-AF, im Werkzeug behoben).
  *
  * Keine Migration; Endpunkte und Feldkatalog unveraendert.
+ *
+ * 9.5.0 ist O6: DIE SUCHE NACH DEN MOCKUPS 27/28 (E-P3-36). Die eigene
+ * Filterspalte ist in die gemeinsame LEISTE gezogen — damit hat die Suche
+ * unter 1024 px zum ersten Mal ein Menue (vorher stand die Filterspalte
+ * als anderthalb Bildschirme VOR dem Ergebnis). Die fuenf Bloecke aus
+ * Web 7.0.0 (Einsatz, PatientIn, Transport, Beteiligte, Bergrettung)
+ * bleiben in ihrem Zuschnitt und sind AKKORDEONS wie die Diensttage
+ * geworden — jedes mit einer PLAKETTE, die zaehlt, wie viele Filter
+ * darin gesetzt sind; der Fuss der Schublade traegt "Filter zuruecksetzen"
+ * und "n Treffer zeigen" mit der Zahl aus der laufenden Suche. Ueber der
+ * Trefferliste steht dieselbe Zahl noch einmal als PLAKETTENZEILE: je ein
+ * gesetzter Filter, einzeln abwaehlbar.
+ *
+ * Das Freitextfeld ist 48 px hoch mit Lupe und Loeschkreuz; die
+ * Suchsyntax steht nicht mehr dauerhaft darunter, sondern hinter
+ * "Syntaxhilfe". TREFFERWOERTER werden HERVORGEHOBEN (<mark>) — in den
+ * beiden angezeigten Textspalten Einsatzort und Diagnose, also in
+ * ENTSCHLUESSELTEN Feldern: Die Hervorhebung geschieht deshalb ERST NACH
+ * dem Maskieren im Browser (suchtext.js: woerter()/hervor()), die
+ * Suchlogik selbst ist unberuehrt. Durchsucht wird wie bisher mehr, als
+ * die Liste zeigt (Notizen, Besatzung, Rettungsmittel) — dort ist nichts
+ * hervorzuheben, weil nichts davon in der Liste steht.
+ * Unter 720 px zeigt die Suche KACHELN statt Tabelle, mit Artzeichen und
+ * Datum in der Kopfzeile und einzeiliger Diagnose.
+ *
+ * Dabei gefunden und behoben: Seit dem Wegfall der Klasse `filterspalte`
+ * in O2 hing der Zuhoerer der Filter an einem Selektor, der NICHTS mehr
+ * traf — kein Filter der Seitenleiste wirkte (F-P3-AG). Der Zuhoerer
+ * haengt jetzt an der Leiste selbst.
+ *
+ * Keine Migration; Suchlogik, Endpunkte und Feldkatalog unveraendert —
+ * acht Proben (fuenf Suchbegriffe, drei Filterkombinationen) liefern vor
+ * und nach O6 dieselben Treffer.
  */
-const WEB_VERSION = '9.4.0';
+const WEB_VERSION = '9.5.0';

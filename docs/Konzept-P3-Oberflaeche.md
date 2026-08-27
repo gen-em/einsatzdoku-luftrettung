@@ -1364,6 +1364,7 @@ und O11.
 | F-P3-AD | **Die Utility `nur-ab-720` stellte mit `display:block` wieder her.** Ihr Versprechen ist „blendet nur aus"; ein `<span>` (Titelzusatz „· 07:13 Uhr") wurde beim Wiedereinblenden aber zum Block und brach in die eigene Zeile. | O4. `display:revert` stellt die Grundform des Elements wieder her (span → inline, div → block). |
 | F-P3-AE | **Die Unterzeile der Titelzeile saß im Flex-Block und bestimmte dessen Breite.** Bei kurzem Titel („Einsatz 1") und zwei Knöpfen brachen die Knöpfe unter den Titel, obwohl neben ihm Platz war. | O4. Unterzeile NACH der Hauptzeile (volle Breite), Baustein `ui_titelzeile()` und beide Handaufbauten (Start-, Einsatzseite) angepasst — entspricht den Mockups 02/19. |
 | F-P3-AF | **Ein POST an `einstellungen.php` ohne `?t` versandet stillschweigend.** Die Übersichts-Weiche aus O2 (E-P3-11: ohne `t` die Übersicht, dann `exit`) steht VOR der POST-Verarbeitung; die Antwort ist die Übersichtsseite mit HTTP 200 — kein Fehler, kein Speichern. Die Browser-Formulare tragen alle `?t=…` und sind nicht betroffen; das Einspielwerkzeug postete ohne Parameter, und sein Fehlerfänger suchte noch die vor-P3-Klasse `alert-danger`. Aufgefallen am CSV-Kreislauf (O5-Abnahme). | O5, im Werkzeug: `einspielen.py` postet mit `?t=standorte` und liest `meldung-fehler`. Die Weiche selbst bleibt — sie ist Anzeige-, nicht Speicherlogik; ein POST ohne `t` kommt aus keinem Formular der Anwendung. |
+| F-P3-AG | **Kein Filter der Suchseiten-Leiste wirkte — seit O2.** Der Zuhörer der Suche horchte auf `.filterspalte input, .filterspalte select`; die Klasse `filterspalte` ist mit dem Umzug in die gemeinsame Leiste (O2) verschwunden, der Selektor traf seither nichts. Nur Freitextfeld und Sortierwahl hingen an eigenen Zuhörern und blieben wirksam. Gemessen vor dem Fix: „Datum von 01.12.2026" ließ **82 von 82** Einsätzen stehen. Ein Klassenname am Behälter ist der falsche Ereignisanker — er beschreibt die Verpackung, nicht die Sache. | O6: Der Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am Ereignisziel (`ev.target.closest('input, select')`), nicht an einer Klasse des Behälters. |
 
 ---
 
@@ -1421,7 +1422,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O3 Startseite und Karte | **erledigt** | Web 9.2.0 |
 | O4 Einsatzansicht | **erledigt** | Web 9.3.0 |
 | O5 Einsatzformular | **erledigt** | Web 9.4.0 |
-| O6 Suche | offen | |
+| O6 Suche | **erledigt** | Web 9.5.0 |
 | O7 Zeitraum | offen | |
 | O8 Einstellungen und Verwaltungslisten | offen | |
 | O9 Administration | offen | |
@@ -1896,6 +1897,83 @@ Gerät zu prüfen — die Sonde überstellt die Position; ebenso das Verhalten
 der klebenden Speichern-Leiste über der Bildschirmtastatur. Die
 Photon-Umkehrsuche lief gegen den echten Dienst, aber aus Node — der
 Browser dieser Umgebung kommt nicht hinaus (F-P3-AC).
+
+### O6 — Suche
+
+**Erledigt.** Web 9.5.0. Keine Migration; Suchlogik unverändert (belegt,
+siehe Prüfprotokoll). Ein Bestandsfehler behoben: **F-P3-AG**.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/suche.php` | Filter aus der eigenen Spalte in die gemeinsame `.leiste` gezogen — damit hat die Suche unter 1024 px erstmals eine Schublade; die fünf Blöcke aus Web 7.0.0 (Einsatz, PatientIn, Transport, Beteiligte, Bergrettung) als Akkordeons mit Zähl-Plakette je Gruppe; Leistenfuß „Filter zurücksetzen" / „n Treffer zeigen" (nur in der Schublade); Suchzeile 48 px mit Lupe, Löschkreuz und Filterknopf mit Zahl; Syntaxhilfe hinter einem Link statt dauerhaft; Plakettenzeile der gesetzten Filter, je Plakette abwählbar; Trefferkarte mit Bestandszahl im Kopf, Sortierknopf mit Blatt, Tabelle ab 720 px, Kacheln darunter |
+| `server/assets/suchtext.js` | `woerter()` liest die **positiven** Literale einer Anfrage (ohne verneinte, ohne Operatoren, Phrasen als Ganzes), `hervor()` setzt `<mark class="treffer">` in bereits **maskierten** Text — die Hervorhebung findet nach dem Escapen statt, die Prüflogik ist unberührt |
+| `server/assets/missiontable.js` | Streifenspalte (`col`, erscheint nur, wenn Zeilen eine Spurfarbe tragen); `hervor`-Kontext an die geschützten Zellen (Diagnose/Ort) und an die Kachel; Kachelkopf trägt Artzeichen und Datum; `opts.kacheln`/`opts.kachelOpts` erzeugen Tabelle **und** Kacheln aus demselben Zeilenbestand |
+| `server/ui.php` | `ui_segment()` nimmt eine `id` — die Filtersegmente brauchen einen Anker fürs Lesen und Setzen |
+| `server/assets/style.css` | Abschnitt 24 „Suche": Filtergruppen und `.filterzahl`, `.feldblock`/`.feld-label`, `.segment-filter` (hell) und `.segment-mehrfach` (Wochentage), `.filterfuss`, `.suchzeile`/`.suchfeld`/`.filterknopf`, `.leiser-link` und `.suchsyntax`, `.filterplaketten`, `.sortieren-aktion`, `mark.treffer`, `.mehrzeile`, `.kachel-art`/`.kachel-datum` |
+| `tools/screenshots/aufnehmen.mjs` | benannte Knopf-Ausnahme `suchzwilling`: Löschkreuz und Filterknopf sind **48** px hoch, weil sie neben dem 48-px-Suchfeld stehen; der Bericht nennt jetzt den Sollwert je Ausnahme |
+| entfernt | vier Klassen auf der Streichliste (`suchbox`, `suchfreitext`, `wtlabel`, `ergebniszeile`) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **„n von m" nur bei gesetztem Filter.** Mockup 27 zeigt die Bestandszahl
+  durchgehend zweiteilig; ohne Filter ist „82 von 82" eine Zahl, die eine
+  Einschränkung behauptet, die es nicht gibt. Ungefiltert steht „82
+  Einsätze".
+- **Streckensumme auf ganze Kilometer.** Eine Summe über achtzig Einsätze
+  mit einer Nachkommastelle täuscht Genauigkeit vor, die die Einzelwerte
+  nicht haben.
+- **Farbstreifen = Spurfarbe des Einsatzes an seinem Diensttag**, nicht die
+  Listenposition. Nur so bezeichnet dieselbe Farbe hier und auf der Karte
+  des Tages denselben Einsatz. Die Suche mischt Tage; eine Farbe nach
+  Listenrang wäre in jeder Suche eine andere.
+- **`.segment-filter` (helles Orange) in der Leiste.** Das gefüllte Orange
+  der Segmente aus O2 ist für einen Inhaltsbereich gedacht; sechs davon
+  untereinander in einer schmalen Leiste ergeben eine orange Wand. Die
+  helle Fassung setzt denselben Zustand, ohne die Leiste zu übertönen.
+- **Hervorhebung nur für positive Literale.** Ein verneinter Begriff
+  (`-winde`) bezeichnet nichts im Text; ihn zu markieren wäre eine
+  Falschaussage. Operatoren (`ODER`, `NICHT`) ebenso.
+- **Hervorgehoben wird nur, was die Liste zeigt.** Der Heuhaufen der
+  Freitextsuche ist größer als die Trefferliste (Notizen, Besatzung,
+  Rettungsmittel, Bergwacht-Angaben, Geburtsdatum in beiden
+  Schreibweisen). Eine Zeile kann also treffen, ohne dass in ihr etwas
+  markiert ist — das ist richtig so: Die Markierung sagt „hier steht
+  dein Wort", nicht „deshalb ist die Zeile dabei". Der Grund steht im
+  Einsatz, einen Klick weiter.
+
+#### Prüfprotokoll O6
+
+- **Abnahme (Kernzusage: dieselben Treffer wie vorher):** Der Vor-P3-Stand
+  (Commit `2e4f4fe`) läuft als zweiter Git-Arbeitsbaum auf Port 8444
+  parallel zur neuen Fassung auf 8443; beide bekommen dieselben acht
+  Proben über das URL-Fragment — fünf Freitexte (`sturz`, `fraktur`,
+  `auwiesen`, `sturz ODER fraktur`, `bergwacht -winde`) und drei
+  Filterkombinationen (Datum August; Sa/So + ab 20 km; Winde=ja +
+  luftgebunden) — und werden über die Einsatz-IDs der Trefferzeilen
+  verglichen: **8 Proben · 8 identisch · 0 abweichend · 143 Treffer
+  verglichen.** Damit ist zugleich belegt, dass geteilte Links (die
+  Kurznamen im Fragment) unverändert wirken.
+- **Screenshots:** voller Lauf, 29 Seiten × 8 Breiten = **232 Bilder** —
+  0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls; 390/768/1440
+  gegen Mockups 27/28 gehalten.
+- **Bediensonde 1440 (Playwright):** Filter setzen und wieder abwählen über
+  die Plakettenzeile; Gruppenzahlen zählen mit; Sortierblatt wechselt die
+  Ordnung — 0 Konsolenfehler.
+- **Bediensonde 390:** „Kacheln statt Tabelle: true / Tabelle sichtbar:
+  false"; Schubladenfuß „Filter zurücksetzen | 82 Treffer zeigen", nach
+  einem Filter „6 Treffer zeigen | Knopfzahl: 1", nach dem Klick
+  „Schublade offen = false | Trefferzahl: 6 von 82 · 59 km | Kacheln: 6" —
+  die Zahl im Fuß ist also die Zahl, die danach dasteht.
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.7).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Der Weg
+über 200 Treffer hinaus („weitere laden") ist
+mit 82 Einsätzen im Bestand nicht auslösbar; der Erzeuger ist an dieser
+Stelle unverändert aus O3 übernommen.
 
 ---
 
