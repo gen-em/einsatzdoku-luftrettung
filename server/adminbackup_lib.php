@@ -278,12 +278,26 @@ function edbak_sicherung_erzeugen(int $userId): array
     }
     $kennung = (string)$u['account_key'];
     $ordner  = edbak_ordner($kennung);
-    if (!is_dir($ordner) && !@mkdir($ordner, 0770, true) && !is_dir($ordner)) {
-        return [false, 'Der Ordner für dieses Konto lässt sich nicht anlegen.', null];
-    }
 
+    /* DER ORDNER ENTSTEHT ERST, WENN ES ETWAS HINEINZULEGEN GIBT.
+     *
+     * Bis Web 9.9.0 stand das mkdir hier oben, vor edbak_build(). Scheiterte
+     * danach irgendetwas — kein Datenpaket, die Datei nicht schreibbar, eine
+     * Speichergrenze mitten im Aufbau —, blieb ein LEERER Ordner ohne
+     * Begleitdatei zurueck. Der ist kein Schoenheitsfehler: Die
+     * NutzerInnen-Liste liest den Stand aus der Begleitdatei und meldete fuer
+     * dieses Konto „Stand unbekannt", waehrend die Kontoseite (die Dateien
+     * zaehlt) „nie gesichert" sagte. Zwei Seiten, zwei Antworten, beide aus
+     * demselben Fehlschlag.
+     *
+     * edbak_build() braucht den Ordner nicht — es liefert eine Zeichenkette. */
     $daten = json_decode(edbak_build($userId), true);
     if (!is_array($daten)) { return [false, 'Das Datenpaket liess sich nicht erzeugen.', null]; }
+
+    $ordnerNeu = !is_dir($ordner);
+    if ($ordnerNeu && !@mkdir($ordner, 0770, true) && !is_dir($ordner)) {
+        return [false, 'Der Ordner für dieses Konto lässt sich nicht anlegen.', null];
+    }
 
     /* 'diensttage' statt 'flugtage' (Abschnitt 3.9). Der alte Schluessel bleibt
      * ausdruecklich NICHT stehen: Diese Zahlen werden je Sicherung neu
@@ -345,6 +359,10 @@ function edbak_sicherung_erzeugen(int $userId): array
     if (@file_put_contents($tmp, json_encode($paket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) === false
         || !@rename($tmp, $ordner . '/' . $name)) {
         @unlink($tmp);
+        /* Nur einen Ordner aufraeumen, den DIESER Aufruf angelegt hat, und
+         * nur, wenn nichts darin steht. @rmdir scheitert an einem nicht leeren
+         * Verzeichnis von selbst — aber die Absicht soll dastehen. */
+        if ($ordnerNeu) { @rmdir($ordner); }
         return [false, 'Die Sicherung liess sich nicht schreiben.', null];
     }
 
@@ -396,7 +414,15 @@ function edbak_verdraengen(string $kennung): array
     $weg = array_slice($pakete, $grenze);
     if (!$weg) { return []; }
     $begleit  = edbak_begleit_lesen($kennung);
-    $freigabe = (string)($begleit['freigabe']['datei'] ?? '');
+    /* NUR EINE OFFENE FREIGABE SCHONT. Der Grund der Ausnahme ist, dass die
+     * NutzerIn das Paket im eigenen Backup-Bereich angeboten bekommt — und
+     * genau das hoert mit dem Einloesen auf: edbak_freigabe_fuer() ueberspringt
+     * eine eingeloeste Freigabe. Ohne diese Pruefung waere ein einmal
+     * freigegebenes Paket dauerhaft von der Verdraengung ausgenommen, und die
+     * eingestellte Aufbewahrung wuerde still ueberschritten. */
+    $f = $begleit['freigabe'] ?? null;
+    $freigabe = (is_array($f) && empty($f['eingeloest']))
+        ? (string)($f['datei'] ?? '') : '';
     $namen = [];
     foreach ($weg as $p) {
         if ($p['datei'] === $freigabe) { continue; }
@@ -655,15 +681,37 @@ function edbak_konto_ordner_loeschen(?string $kennung): bool
  * dem Muster der Wartungswarnung in update.php: erst sagen, was ist, dann was
  * daraus folgt.
  */
+/* JE ANFRAGE EINMAL LESEN (O9b). Die Marken sind Einstellungen, keine
+ * Messwerte: Innerhalb eines Seitenaufrufs ändern sie sich nur, wenn diese
+ * Anfrage sie selbst ändert — und dann schreibt edbak_marke_setzen() den neuen
+ * Wert gleich mit in den Zwischenspeicher.
+ *
+ * DER GRUND IST GEMESSEN. Die NutzerInnen-Liste wertet je Zeile einen
+ * Sicherungsstand und braucht dafür das Erinnerungsintervall. Ohne
+ * Zwischenspeicher waren das bei 304 Konten 304 Abfragen und 27,7 ms für eine
+ * Rechnung, die aus einer Subtraktion besteht.
+ *
+ * Der Speicher steht in einer eigenen Funktion mit Rückgabe per Referenz, weil
+ * eine `static` innerhalb von edbak_marke_lesen() von edbak_marke_setzen() aus
+ * nicht erreichbar wäre — und ein Wert, den man schreiben, aber nicht
+ * nachziehen kann, ist genau die Art Zwischenspeicher, die später lügt. */
+function &edbak_marken_speicher(): array
+{
+    static $speicher = [];
+    return $speicher;
+}
+
 function edbak_marke_lesen(string $k): ?string
 {
+    $c = &edbak_marken_speicher();
+    if (array_key_exists($k, $c)) { return $c[$k]; }
     try {
         $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
         $st->execute([$k]);
         $v = $st->fetchColumn();
-        return $v === false ? null : (string)$v;
+        return $c[$k] = ($v === false ? null : (string)$v);
     } catch (Throwable) {
-        return null;   // app_state fehlt (Migration noch nicht gelaufen)
+        return $c[$k] = null;   // app_state fehlt (Migration noch nicht gelaufen)
     }
 }
 
@@ -672,6 +720,8 @@ function edbak_marke_setzen(string $k, string $v): void
     try {
         db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
+        $c = &edbak_marken_speicher();
+        $c[$k] = $v;
     } catch (Throwable) {
         // Eine nicht schreibbare Marke darf die Sicherung selbst nicht scheitern lassen.
     }
@@ -709,7 +759,7 @@ function edbak_admin_mail_an(): bool
  * dafür ein Verzeichnisdurchlauf über den ganzen Bestand.
  *
  * Zurück kommt, was die Karte „Sicherungen" braucht: die Pakete, die
- * Freigabe, und der Stand als eines von vier Worten. „nie" ist dabei nicht
+ * Freigabe, und der Stand als eines von fünf Worten. „nie" ist dabei nicht
  * „überfällig": Ein Konto ohne jede Sicherung ist ein anderer Befund als
  * eines, dessen letzte zu alt ist — die Liste zählt beide getrennt.
  */
@@ -731,11 +781,135 @@ function edbak_konto_stand(array $konto): array
      * Ordner entfernt, bliebe die Marke stehen und meldete einen Stand, den
      * es nicht mehr gibt. edbak_pakete() zählt Dateien. */
     $letzte = (string)($pakete[0]['erzeugt'] ?? '');
-    $tage = $letzte !== '' ? (int)floor((time() - strtotime($letzte)) / 86400) : null;
-    $faellig = $tage !== null && $tage >= edbak_intervall();
-    return ['stand' => $faellig ? 'ueberfaellig' : 'aktuell', 'pakete' => $pakete,
-            'freigabe' => $begleit['freigabe'] ?? null,
-            'letzte' => $letzte !== '' ? $letzte : null, 'tage' => $tage];
+    return edbak_stand_werten($letzte !== '' ? $letzte : null)
+         + ['pakete' => $pakete, 'freigabe' => $begleit['freigabe'] ?? null];
+}
+
+/**
+ * Ein Zeitpunkt wird zu einem Stand — die EINE Regel für beide Seiten (O9b).
+ *
+ * Kontoseite und NutzerInnen-Liste beantworten dieselbe Frage aus zwei
+ * verschiedenen Quellen: die eine aus den Paketdateien, die andere aus den
+ * Begleitdateien. Die REGEL, ab wann etwas überfällig ist, darf deshalb nur
+ * an einer Stelle stehen — sonst driften Kachel und Kontoseite auseinander,
+ * und niemandem fällt auf, welche von beiden recht hat.
+ */
+function edbak_stand_werten(?string $letzte, ?int $intervall = null): array
+{
+    if ($letzte === null || $letzte === '') {
+        return ['stand' => 'nie', 'letzte' => null, 'tage' => null];
+    }
+    /* strtotime() liefert false, wenn die Zeichenkette kein Zeitpunkt ist —
+     * und (int)false ist 0, also „1970": Das Konto stuende mit rund
+     * zwanzigtausend Tagen als am dringendsten ueberfaellig ganz oben. Ein
+     * unlesbarer Wert ist kein alter Wert. */
+    $stempel = strtotime($letzte);
+    if ($stempel === false) {
+        return ['stand' => 'unbekannt', 'letzte' => null, 'tage' => null];
+    }
+    $tage = (int)floor((time() - $stempel) / 86400);
+    $grenze = $intervall ?? edbak_intervall();
+    return ['stand' => $tage >= $grenze ? 'ueberfaellig' : 'aktuell',
+            'letzte' => $letzte, 'tage' => $tage];
+}
+
+/* ---- Stand ALLER Konten mit EINEM Verzeichnisdurchlauf (O9b) --------------
+ *
+ * Die NutzerInnen-Liste braucht zu jedem Konto ein Wort („aktuell",
+ * „überfällig · 23 Tage", „nie gesichert") und zu allen Konten vier Zahlen.
+ * edbak_konto_stand() je Zeile aufzurufen hiesse: je Konto ein scandir des
+ * Kontoordners PLUS eine Begleitdatei — bei 300 Konten 300 Verzeichnisse.
+ *
+ * Hier ist es EIN scandir der Wurzel plus je Ordner eine kleine JSON-Datei.
+ * Konten, die nie gesichert wurden, haben gar keinen Ordner und kosten
+ * deshalb NICHTS — sie fehlen einfach in der Karte.
+ *
+ * DER PREIS: Die Angabe stammt aus `konto.json`, nicht aus den Paketdateien
+ * selbst. Wer ein Paket von Hand aus einem Ordner entfernt, ohne die Anwendung
+ * zu benutzen, sieht in der LISTE einen Stand, den es nicht mehr gibt — die
+ * KONTOSEITE zeigt dann das Richtige, weil sie die Dateien zählt. Das ist die
+ * bewusste Wahl: Eine Liste, die bei jedem Aufruf hunderte Verzeichnisse
+ * durchgeht, um einen Fall abzudecken, den die Anwendung selbst nie herstellt,
+ * wäre der schlechtere Tausch. `edbak_verzeichnis_abgleichen()` hält die Marke
+ * bei jeder Änderung DURCH die Anwendung nach.
+ *
+ * Liefert kennung => ['lesbar'=>bool, 'letzte'=>?string, 'pakete'=>int,
+ *                     'freigabe'=>bool].
+ */
+/** Liegt in diesem Ordner wenigstens eine Paketdatei? */
+function edbak_ordner_hat_paket(string $kennung): bool
+{
+    $ordner = edbak_ordner($kennung);
+    if (!is_dir($ordner)) { return false; }
+    foreach (scandir($ordner) ?: [] as $n) {
+        if (edbak_paketname_gueltig($n)) { return true; }
+    }
+    return false;
+}
+
+function edbak_staende(): array
+{
+    $wurzel = edbak_wurzel();
+    if (!is_dir($wurzel)) { return []; }
+    $karte = [];
+    foreach (scandir($wurzel) ?: [] as $n) {
+        if (!edbak_kennung_gueltig($n) || !is_dir($wurzel . '/' . $n)) { continue; }
+        $b = edbak_begleit_lesen($n);
+        /* WAS AUS EINER DATEI KOMMT, IST NICHT VOM ERWARTETEN TYP.
+         * `letzte_sicherung` ist eine Zeichenkette — aber konto.json ist eine
+         * Datei auf der Platte, und eine von Hand nachgezogene oder halb
+         * geschriebene kann dort eine Zahl tragen. Unter `strict_types=1`
+         * waere die Weitergabe an edbak_stand_werten(?string) ein TypeError,
+         * und EIN kaputtes konto.json legte die ganze NutzerInnen-Liste lahm.
+         * Was kein String ist, gilt als „nicht bekannt". */
+        $letzte = $b['letzte_sicherung'] ?? null;
+        $karte[$n] = [
+            'lesbar'   => (bool)$b['lesbar'],
+            'letzte'   => is_string($letzte) && $letzte !== '' ? $letzte : null,
+            'pakete'   => count((array)($b['sicherungen'] ?? [])),
+            'freigabe' => ($b['freigabe']['datei'] ?? null) !== null,
+        ];
+        if (!$b['lesbar']) {
+            /* Ordner ohne lesbare Begleitdatei: Steht wenigstens ein Paket
+             * darin? Nur DANN ist der Stand wirklich unbekannt; ein leerer
+             * Ordner ist schlicht „nie gesichert" und soll nicht anders
+             * heissen als auf der Kontoseite. Das kostet ein scandir — aber
+             * nur fuer die Ordner, die kaputt sind, und das sind im Regelfall
+             * keine. */
+            $karte[$n]['leer'] = !edbak_ordner_hat_paket($n);
+        }
+    }
+    return $karte;
+}
+
+/**
+ * Stand eines Kontos aus der Karte von edbak_staende().
+ *
+ * Die Karte wird EINMAL je Seitenaufruf gebaut und hier je Zeile gelesen —
+ * ab hier kein Dateizugriff mehr.
+ */
+function edbak_stand_aus_karte(?string $kennung, array $karte, ?int $intervall = null): array
+{
+    if (!edbak_kennung_gueltig($kennung)) {
+        return ['stand' => 'ohne_kennung', 'letzte' => null, 'tage' => null];
+    }
+    $e = $karte[(string)$kennung] ?? null;
+    if ($e === null) {
+        // Kein Ordner: nie gesichert. Der Normalfall eines neuen Kontos.
+        return ['stand' => 'nie', 'letzte' => null, 'tage' => null];
+    }
+    if (!$e['lesbar']) {
+        /* Der Ordner ist da, die Begleitdatei nicht lesbar. Steht ein Paket
+         * darin, wäre „nie gesichert" gelogen — es ist etwas da, nur nicht
+         * lesbar verzeichnet; was genau, sagt die Kontoseite. Ist der Ordner
+         * dagegen LEER, ist „nie gesichert" die richtige und dieselbe Antwort
+         * wie dort (ein leerer Ordner bleibt etwa nach einem abgebrochenen
+         * Sicherungslauf zurück). */
+        return !empty($e['leer'])
+            ? ['stand' => 'nie', 'letzte' => null, 'tage' => null]
+            : ['stand' => 'unbekannt', 'letzte' => null, 'tage' => null];
+    }
+    return edbak_stand_werten($e['letzte'], $intervall);
 }
 
 /* ---- Zwei Zeilen für die Anzeige (O9) ------------------------------------
@@ -860,6 +1034,7 @@ function edbak_stand_plakette(array $stand): array
         'aktuell'      => ['aktuell', 'blau'],
         'ueberfaellig' => ['überfällig · ' . (int)$stand['tage'] . ' Tage', 'orange'],
         'nie'          => ['nie gesichert', 'rot'],
+        'unbekannt'    => ['Stand unbekannt', 'orange'],
         default        => ['ohne Kennung', 'orange'],
     };
 }

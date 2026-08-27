@@ -62,6 +62,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
 │   ├── admin_users.php + admin_user.php  NutzerInnen (Liste · Kontoseite)
+│   │                       Die Liste ist seit Web 9.9.0 serverseitig gesucht,
+│   │                       gefiltert und seitenweise (50 je Seite), mit
+│   │                       Statuskacheln und Sammelleiste
 │   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
 │   │                       eines Kontos: Kontodaten, Geräte, Sicherungen
 │   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
@@ -2512,6 +2515,62 @@ keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
 Die zweite Ausnahme folgt derselben Regel wie
 `edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr
 vorhandene Datei löscht: Eine Freigabe und die Datei dazu gehören zusammen.
+
+### Die NutzerInnen-Liste (E-P3-41, seit Web 9.9.0)
+
+`admin_users.php` zeigt vier Statuskacheln, eine Suche, fünf Filter, sechs
+sortierbare Spalten und **50 Konten je Seite**. Zwei Kacheln, zwei Filter und
+eine Spalte hängen am **Sicherungsstand**, und der steht im Dateisystem.
+
+Deshalb genau zwei Zugriffe je Seitenaufruf, beide unabhängig von der Zahl der
+Konten je Zeile:
+
+| | |
+|---|---|
+| eine Abfrage | alle Konten mit `LEFT JOIN devices` und `COUNT`; die `GROUP BY`-Liste nennt alle nicht aggregierten Spalten ausdrücklich, weil MySQL mit `ONLY_FULL_GROUP_BY` sonst abbricht, wo MariaDB durchlässt |
+| ein Verzeichnisdurchlauf | `edbak_staende()`: ein `scandir` der Ablagewurzel plus je Ordner eine kleine `konto.json` |
+
+Konten, die nie gesichert wurden, haben gar keinen Ordner und kosten nichts.
+Gemessen an **304 Konten**: 3,2 ms Ablage, 3,3 ms Abfrage, 3,2 ms Werten, 103 ms
+der ganze Aufruf.
+
+**Gesucht, gefiltert und sortiert wird danach im Speicher.** Nicht aus
+Bequemlichkeit: Zwei Filter (überfällig, nie gesichert) und eine Sortierung
+kennen kein SQL. Eine halbe Filterung in SQL und eine halbe in PHP wären zwei
+Wege für dieselbe Frage — und der zweite hätte die falschen Zahlen. Der Browser
+bekommt in jedem Fall höchstens 50 Zeilen. Die Grenze davon steht in
+`docs/Backlog.md` Nr. 37: Bei einigen tausend Konten braucht der
+Sicherungsstand eine Spalte in der Datenbank.
+
+**Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende Suche.**
+Absicht: Die Kacheln sagen, wie es um die Installation steht; die Zahl an einer
+Filterplakette beantwortet „was bringt mir dieser Filter jetzt?".
+
+**Sortiert wird serverseitig**, weil eine Sortierung im Browser bei 50 Zeilen je
+Seite eine Sortierung der *Seite* wäre. Der Zustand steht deshalb in der Adresse
+(`?sort=…&dir=ab`), und die Spaltenköpfe sind Verweise mit `aria-sort` — die
+erste Stelle im Bestand, die es trägt.
+
+Der **Sortierschlüssel** schreibt Umlaute nach deutscher Lesart aus
+(ae/oe/ue/ss, dieselbe Regel wie `slug()` in `assets/export.js`) und führt
+übrige Akzente auf den Grundbuchstaben zurück. Ohne das stünde „Ömer" hinter
+„Zeller": Kleingeschrieben wird aus Ö ein ö, und ö liegt in der Byte-Reihenfolge
+hinter z. Bewusst **kein `Collator`** — die intl-Erweiterung ist auf geteiltem
+Webspace nicht verlässlich da, und eine Sortierung, die je nach Installation
+anders ausfällt, ist schlimmer als eine, die überall gleich näherungsweise ist.
+
+**Die Auswahl der Sammelleiste liegt im `sessionStorage`**, nicht in der
+Adresse: Eine Adresse mit dreihundert Kennungen wäre unbrauchbar lang und stünde
+im Verlauf und im Zugriffsprotokoll des Servers. Beim Absenden wandert sie als
+kommagetrennte Zeichenkette in ein verstecktes Feld. Nach einer ausgeführten
+Sammelaktion wird sie geleert — sonst sicherte der nächste Klick dieselben
+Konten noch einmal.
+
+`app_state`-Marken werden **je Anfrage einmal** gelesen
+(`edbak_marken_speicher()`, ein `static` hinter einer Funktion mit Rückgabe per
+Referenz, damit `edbak_marke_setzen()` den neuen Wert nachziehen kann). Ohne das
+holte die Liste das Erinnerungsintervall je Zeile aus der Datenbank: bei 304
+Konten 304 Abfragen und 27,7 ms.
 
 ### Die Kontoseite (E-P3-41, seit Web 9.8.0)
 

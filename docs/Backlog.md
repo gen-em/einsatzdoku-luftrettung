@@ -181,8 +181,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ordentlich mit HTTP 413: Import bei 3000 Einsätzen / 600 Diensttagen
     (`api/import_commit.php:93`), Export bei 5000 (`api/export_data.php:182`).
 
-    **Was noch fehlt:** die Serverseite. Sie ist die einzige Größe, die die
-    Sondierung nicht erreicht — dafür braucht es echte Zeilen. Beschlossen ist
+    **Die zweite Achse — viele KONTEN statt vieler Einsätze — ist seit P3/O9b
+    gemessen** und vorerst erledigt (`tools/pruefkonten/`, 300 Konten): Die
+    NutzerInnen-Liste kommt mit **einer** Abfrage und **einem**
+    Verzeichnisdurchlauf aus (3,3 ms / 3,2 ms bei 304 Konten, 103 ms für den
+    ganzen Aufruf), weil der Sicherungsstand aller Konten aus je einer kleinen
+    `konto.json` kommt statt aus je einem Verzeichnisdurchlauf. Gesucht,
+    gefiltert und sortiert wird im Speicher; der Browser bekommt höchstens 50
+    Zeilen. **Die Grenze davon:** Bei einigen tausend Konten kippt das
+    Verhältnis, und dann braucht der Sicherungsstand eine Spalte in der
+    Datenbank statt eines Verzeichnisdurchlaufs. Dabei aufgefallen und behoben:
+    `edbak_intervall()` fragte je Zeile die Datenbank — 304 Abfragen und
+    27,7 ms für eine Subtraktion.
+
+    **Noch nicht auf dieser Achse gemessen:** `admin_sicherungen.php` (die
+    Übersicht dort liest weiterhin je Konto ein Verzeichnis **und** eine
+    Begleitdatei — F-P3-F, fällig in O9c) und der Sammelvorgang „Alle sichern"
+    (222 ms je Konto mit 82 Einsätzen; die Liste begrenzt eine Sammelaktion
+    deshalb auf ein Zeitbudget von 20 s und sagt, was übrig blieb).
+
+    **Was noch fehlt:** die Serverseite bei vielen EINSÄTZEN. Sie ist die
+    einzige Größe, die die Sondierung nicht erreicht — dafür braucht es echte
+    Zeilen. Beschlossen ist
     dafür ein Werkzeug `tools/lastdatensatz/`, das den vorhandenen Bestand mit
     neuen Dienstdaten vervielfacht (250 / 500 / 1000 / 3500), in **zwei**
     Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und

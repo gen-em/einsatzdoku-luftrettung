@@ -1369,6 +1369,8 @@ und O11.
 | F-P3-AI | **Seit O5 gab es kein Eingabefeld für die Lage mehr.** O5 hat am Ortsfeld das zweite Suchfeld ausgebaut (der Lupen-Knopf am Namensfeld trat an seine Stelle). Die Nur-Lage-Fassung `ui_ortsfeld(['feld' => false, 'such' => true])` bestand aber genau aus diesem Suchfeld plus Zubehör — übrig blieben Vorschlagsliste, Zustandszeile, Chips und die versteckten Koordinatenfelder. Die Lage eines Standorts oder einer Zielklinik ließ sich seither **nicht mehr eingeben, nur noch behalten**; vier Aufrufstellen in `einstellungen.php` und `admin_stammdaten.php`. Der Ausbau eines Bausteins traf einen zweiten Verwendungsfall, den niemand mitgedacht hat — dieselbe Bauart wie F-P3-AG. | O8a: Die Nur-Lage-Fassung rendert wieder ein Suchfeld mit Lupe (`<praefix>addr` + `<praefix>lupe`), beschriftet aus `such_hinweis`, Platzhalter „Adresse oder Ort suchen". Ein Treffer setzt weiterhin nur die Koordinaten (`getrennteSuche` in `ortsfeld.js`), nie den Namen. |
 | F-P3-AJ | **Der Lupen-Knopf löschte die Vorschlagsliste, die er gerade gefüllt hatte.** Er nimmt dem Eingabefeld den Fokus; der `blur`-Handler plant 150 ms später `versteckeListe()` — der Aufschub existiert, damit ein `mousedown` auf einen Vorschlag noch durchkommt. Kommt die Antwort schneller als 150 ms, trifft er die eben gefüllte Liste. Gemessen (Photon-Antwort aus der Sonde zugeliefert): bei sofortiger Antwort 80 ms → 1 Eintrag, 160 ms → 0; bei 250 ms Antwortzeit blieb die Liste stehen. Gegen den echten Dienst verdeckt die Netzlatenz den Fehler zuverlässig — hinter einem Zwischenspeicher, im schnellen Netz oder bei einer Sonde nicht. Betrifft jedes Ortsfeld mit Lupe, also auch den Einsatzort aus O5. | O8b: Der Aufschub prüft `document.activeElement === feld` und lässt die Liste stehen, wenn der Fokus zurückgekehrt ist (der Lupen-Knopf gibt ihn zurück). |
 | F-P3-AK | **Zwei gleichnamige Zeilen teilten sich ein Aktionsblatt.** `ui_zeilenaktionen()` leitete die Kennung aus einem sha1 über Titel und Aktionstexte ab. In einer Stammdatenliste ist die Kollision der Normalfall, nicht die Ausnahme: zwei Standorte mit einer gleichnamigen Zielklinik, zwei Rollen mit denselben Handlungen. `data-blatt="…"` fand dann zwei Elemente und öffnete beide oder keines. Dasselbe galt für die Feld-Kennung des Besatzungsformulars, das je Rolle einmal steht — vier Rollen, vier Felder gleicher Kennung, und das Label zeigte auf das erste. | O8b: laufende Nummer (`static $lfd`) statt Hash, an beiden Stellen. Eine ausdrücklich gesetzte `id` hat weiterhin Vorrang. |
+| F-P3-AL | **Die Nachladeknöpfe der Einsatztabelle waren ungestaltet — seit dem Redesign.** `missiontable.js` hängt unter die Tabelle eine Nachladezeile mit zwei Knöpfen („Weitere 200 anzeigen“, „Alle n anzeigen“); beide trugen `btn-plain`, eine Klasse, für die es im neuen Stylesheet keine Regel mehr gibt und die auch nicht auf der Streichliste steht. Sie standen damit in der Grundform des Browsers — grauer Systemknopf, keine 44 px, keine Marke. **Aufgefallen ist es niemandem, weil die Zeile erst ab 200 Treffern erscheint und der Referenzbestand 82 Einsätze hat**: Der Bilderlauf hat die Suchseite acht Breiten lang fotografiert und diese Knöpfe nie gesehen. Gefunden bei der Bestandsaufnahme zu O9b. | O9b: `knopf knopf-neutral` statt `btn-plain`, beide Knöpfe. |
+| F-P3-AM | **Zwei Klassenkollisionen, beide vor dem Festschreiben abgefangen — und jede von einem anderen Prüfmittel.** Die neue Kontenliste brauchte eine Filterreihe; zwei ihrer Namen waren schon vergeben. (1) `.filterzahl` gehört seit O6 den Zählern der Filtergruppen auf der Suchseite (`filterzahl plakette plakette-blau`); die neue Regel steht weiter unten im Stylesheet und hätte bei gleicher Spezifität gewonnen — aus den blauen Zählern wären graue geworden. Gefunden durch **Lesen** (Bestandsaufnahme vor dem Bauen). (2) `.filterknopf` gehört seit O6 dem Knopf, der auf der Suchseite die Filterschublade öffnet — und der ist **48 px** hoch, weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von der 44-px-Regel). Die neue Regel hätte ihn auf 44 px gesetzt. Gefunden vom **Bilderlauf**: „15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite — und zwar nur, weil der Lauf die Suchseite mitfotografierte, obwohl das Paket sie nicht anfasst. **Die Lehre ist nicht „vorher greppen", sondern: nach jedem Paket auch die Seiten mitmessen, die es nicht anfasst.** Die Vollständigkeitsprüfung hätte beides nicht gemeldet — sie zählt Klassen **ohne** Regel, nicht zwei Regeln für **eine** Klasse. | O9b: `.listenfilter` und `.listenfilter-zahl`. Gegengeprüft: Der Gruppenzähler der Suchseite ist weiterhin `rgb(217, 236, 253)`, der Filterknopf wieder 48 px, Bilderlauf 0 Knöpfe außerhalb des Solls. |
 
 ---
 
@@ -1432,7 +1434,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O8b Rettungsmittel, Geräte | **erledigt** | Web 9.7.1 |
 | O8c Backup, Import | **erledigt** | Web 9.7.2 |
 | O9a Kontoseite | **erledigt** | Web 9.8.0 (Migration!) |
-| O9b NutzerInnen-Liste | offen | |
+| O9b NutzerInnen-Liste | **erledigt** | Web 9.9.0 |
 | O9c Regeln, Stammdaten, Demo, Wartung | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
@@ -2399,6 +2401,173 @@ steht noch aus; die Kontoseite selbst ist von der Kontenzahl unabhängig, weil
 sie genau einen Ordner liest. `admin_sicherungen.php` trägt bis O9c noch
 seine alte Gestalt und seine Kontentabelle — die Wege dorthin sind
 funktionsfähig, aber doppelt.
+
+### O9b — Die NutzerInnen-Liste
+
+**Erledigt.** Web 9.9.0. Keine Migration.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/admin_users.php` | vollständig neu: vier Statuskacheln, Suche, fünf Filterplaketten mit Zahl, sechs sortierbare Spalten, 50 je Seite mit Seitenwechsel, Auswahl und Sammelleiste, Anlegen als Dialog |
+| `server/adminbackup_lib.php` | `edbak_staende()` (Stand aller Konten mit einem Verzeichnisdurchlauf), `edbak_stand_werten()` (die eine Regel für „überfällig"), `edbak_stand_aus_karte()`, Zwischenspeicher der Marken |
+| `server/ui.php` | `ui_kennzahl` mit `ton` und `href` (Statuskachel als Weg), `ui_zeile` mit `vorn` (das Auswahlkästchen), `ui_speichern_leiste` mit `id`/`form`/`zahl`/`kein_haken` (dieselbe klebende Leiste, anderer Inhalt) |
+| `server/assets/style.css` | Filterreihe, Kontentabelle, Listenfuß mit Seitenwechsel, Statuskacheln mit Ton |
+| `server/assets/missiontable.js` | F-P3-AL: `knopf knopf-neutral` statt `btn-plain` |
+| `tools/pruefkonten/` | **neu** — 300 Testkonten mit gemischten Sicherungsständen, reproduzierbar, wieder entfernbar |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Zwei der neuen Klassennamen waren vergeben** (F-P3-AM). Der Vorrat an
+  naheliegenden Namen ist begrenzt, und `filterknopf`/`filterzahl` sind genau
+  die, auf die man zweimal kommt. Die Liste heißt deshalb `listenfilter` /
+  `listenfilter-zahl` — mit dem Ort im Namen, nicht nur der Sache.
+- **Der Seitenwechsel ist ein neuer Baustein.** Im Bestand gab es keinen: kein
+  `OFFSET` in irgendeiner Abfrage, kein Markup, keine Klasse. Das Nächstliegende
+  war die Nachladezeile von `missiontable.js` („Weitere 200 anzeigen") — ein
+  Nachladen, kein Blättern. Mockup 41 zeigt Seitenzahlen, also Seitenzahlen.
+  Erste, letzte und die Nachbarn der aktuellen Seite, dazwischen eine Ellipse;
+  eine Leiste, die mit dem Bestand wächst, ist keine Leiste.
+- **Die Pfeile am Rand bleiben stehen, wenn es nichts mehr gibt** (`.aus` statt
+  `hidden`). Ein Knopf, der sich beim Blättern in Luft auflöst, verschiebt die
+  übrigen unter dem Finger weg.
+- **Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende
+  Suche.** Absicht, keine Ungenauigkeit: Die Kacheln sagen, wie es um die
+  Installation steht; die Zahl an einer Filterplakette beantwortet „was bringt
+  mir dieser Filter jetzt?". Die Probe hält beides gegeneinander.
+- **Filter sind Verweise, keine Formularknöpfe.** Ein Filter ändert die
+  angezeigte Liste, und das ist eine Navigation: eigene Adresse (teilbar, im
+  Verlauf, mit der Zurück-Taste erreichbar), und er funktioniert ohne Skript.
+- **Gesucht, gefiltert und sortiert wird im Speicher, nicht in SQL.** Zwei der
+  fünf Filter und eine der sechs Sortierungen kennen kein SQL, weil ihre Angabe
+  im Dateisystem liegt. Eine halbe Filterung in SQL und eine halbe in PHP wären
+  zwei Wege für dieselbe Frage — und der zweite hätte die falschen Zahlen. Was
+  der Browser bekommt, sind in jedem Fall höchstens fünfzig Zeilen. Die Grenze
+  steht in Backlog Nr. 37.
+- **Der Sicherungsstand kommt aus `konto.json`, nicht aus den Paketdateien.**
+  Ein Durchlauf der Ablagewurzel statt 300 Verzeichnisdurchläufen. Der Preis:
+  Wer ein Paket von Hand entfernt, sieht in der **Liste** einen Stand, den es
+  nicht mehr gibt; die **Kontoseite** zeigt dann das Richtige, weil sie die
+  Dateien zählt. Bewusst so — eine Liste, die hunderte Verzeichnisse durchgeht,
+  um einen Fall abzudecken, den die Anwendung selbst nie herstellt, wäre der
+  schlechtere Tausch.
+- **Die Auswahl liegt im `sessionStorage`, nicht in der Adresse.** Eine Adresse
+  mit dreihundert Kennungen wäre unbrauchbar lang und stünde im Verlauf, im
+  Protokoll des Servers und im Verweis auf die nächste Seite. `sessionStorage`
+  gilt für diesen Tab und endet mit ihm — genau die Lebensdauer, die eine
+  Auswahl hat. Nach einer ausgeführten Sammelaktion wird sie geleert: Bliebe
+  sie stehen, sicherte der nächste Klick dieselben Konten noch einmal.
+- **Das Löschen eines Kontos ist aus der Liste verschwunden** und steht nur
+  noch auf der Kontoseite. Dort gehört die Entscheidung über die Sicherungen
+  dazu (E25); in einer Zeile neben 49 anderen ist sie ein Knopf, den man
+  danebengreift.
+- **Auf dem Handy lässt sich nicht sortieren.** Unter 720 px gibt es keine
+  Spaltenköpfe, und ein Sortierblatt wie in `missiontable.js` steht weder im
+  Mockup noch im Konzept. Bewusst so: Die Aufgabe auf dem Handy ist „dieses
+  eine Konto finden", und dafür sind Suche und Filter da — beide funktionieren
+  dort. Die Vorgabe (nach Namen) ist für das Suchen die richtige, und eine am
+  Schreibtisch gesetzte Reihenfolge reist in der Adresse mit. Fällt der Bedarf
+  später an, ist das Sortierblatt ein vorhandener Baustein.
+- **`aria-sort` an den Spaltenköpfen** — die erste Stelle im Bestand, die es
+  trägt. `missiontable.js` sortiert per Klick auf das `<th>` ohne ARIA und ohne
+  Tastaturweg (der führt dort über das Sortierblatt). Hier ist der Kopf ein
+  Verweis: mit der Tastatur erreichbar, teilbar, und der Zustand steht in der
+  Adresse — was er auch muss, weil serverseitig sortiert wird.
+- **Serverseitig sortiert, nicht im Browser.** Bei fünfzig Zeilen je Seite wäre
+  eine Sortierung im Browser eine Sortierung der **Seite**: Sie schöbe die
+  ersten fünfzig um und ließe die übrigen 254 unberührt. Das sieht aus wie eine
+  Sortierung und ist keine.
+- **Umlaute im Sortierschlüssel** (siehe Prüfprotokoll) — ohne die Umschreibung
+  stand „Ömer" hinter „Zeller".
+
+#### Prüfprotokoll O9b
+
+**Testbestand: 300 Prüfkonten** (`tools/pruefkonten/`), dazu die vier des
+Referenzdatensatzes — 304 insgesamt. Mischung: 180 aktuell, 28 überfällig, 86
+nie gesichert, 6 ohne Kontokennung, 6 Admins, 55 ohne Gerät, 44 nie angemeldet.
+
+- **35 Bedienproben** zu Liste, Filtern, Sortierung, Seitenwechsel und Auswahl:
+  alle erwartungsgemäß, **0 Konsolenmeldungen**. Darunter: Seite 1 zeigt 50
+  Zeilen und „Konten 1–50 von 304"; Seite 7 zeigt 4 und „Konten 301–304 von
+  304"; `?s=99` fällt auf die letzte Seite, `?s=0` auf die erste; jeder Filter
+  liefert genau die Zeilen, die seine Zahl nennt; ein unbekannter Filter und
+  eine unbekannte Sortierung fallen auf die Vorgabe; die Suche „Berger" ergibt
+  19 Treffer, die Filterzahlen beziehen sich darauf, **die Kacheln bleiben bei
+  304**; Suche in der Adresse trifft genau eines; „gibtsnicht" zeigt den
+  Hinweis statt einer leeren Tabelle; Sortierung nach Geräten ist monoton;
+  Sortierung nach Sicherung stellt aufsteigend das Frischeste, absteigend das
+  Dringlichste nach oben.
+- **19 weitere Proben** zu Anlegen, Sammelaktion und mobiler Fassung: Der
+  Anlegen-Dialog legt an (Rolle und Name übernommen, Stand „nie gesichert"),
+  eine Dublette wird als solche benannt, der Einladungslink erscheint, weil
+  SMTP lokal aus ist. Zwei ausgewählte Konten mit Stand „nie gesichert" stehen
+  nach „Auswahl sichern" auf „aktuell"; danach ist die Leiste leer und kein
+  Kästchen mehr gesetzt. Eine leere Auswahl wird abgewiesen. Unter 720 px ist
+  die Tabelle `display:none`, die 50 Zeilen stehen als Kacheln da, und das
+  Kästchen zählt dort ebenso.
+- **Auswahl über Seiten hinweg:** zwei Kästchen auf Seite 1, eines auf Seite 2
+  → „3 ausgewählt", und nach der Rückkehr auf Seite 1 sind dort wieder genau
+  die beiden gesetzt.
+- **Umlaut-Sortierung, gemessen über alle 7 Seiten:** „Ömer Berger" steht an
+  Position **211 von 304**, zwischen „Nora Vogel" und den Namen mit P. Vor der
+  Änderung stand es an erster Stelle der absteigenden Sortierung, also hinter
+  allen 303 anderen.
+- **Mengen, gemessen an 304 Konten:** `edbak_staende()` 3,2 ms für 209 Ordner,
+  die Kontenabfrage 3,3 ms für 304 Zeilen, das Werten 3,2 ms; der ganze
+  Seitenaufruf 103 ms. Vor dem Zwischenspeicher der Marken waren allein die
+  304 Wertungen **27,7 ms** (je Zeile eine Abfrage auf `app_state`).
+- **14 Bibliotheksproben** (aus O9a, erneut gefahren): unverändert 14/14.
+- **Screenshots mit dem Testbestand:** 16 Bilder (`40-nutzerinnen`,
+  `41-kontoseite` × 8 Breiten) — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+  außerhalb des Solls. Danach der volle Lauf ohne Testbestand: 240 Bilder,
+  ebenfalls 0/0/0.
+- **Gegengeprüft, dass die Suchseite unberührt bleibt** (F-P3-AM): Der
+  Gruppenzähler dort ist weiterhin `rgb(217, 236, 253)`, und der Filterknopf
+  wieder 48 px hoch. Der zweite der beiden Namenskonflikte kam **nicht** durch
+  Lesen ans Licht, sondern durch den Bilderlauf über eine Seite, die dieses
+  Paket gar nicht anfasst — deshalb steht `15-suche` in der Teilmenge, mit der
+  während der Arbeit gemessen wurde.
+- **Vollständigkeit, Wortliste, Kontraste:** Zahlen im Prüfdokument (2.11).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+##### Gegnerische Prüfung (sechs Blickwinkel)
+
+Der Stand wurde vor dem Festschreiben aus sechs Blickwinkeln gegengelesen
+(Korrektheit, Sicherheit und Maskierung, Mengenverhalten, Stylesheet und
+Bausteine, Bedienung und Tastatur, „was ist verlorengegangen"). **Neun Funde,
+alle behoben:**
+
+| Fund | Was passiert wäre |
+|---|---|
+| Statuskacheln behielten beim Klick die Suche | „7 Admins" führte bei aktivem Suchbegriff auf eine Liste mit dreien. Die Kachel zählt bestandsweit — also löscht sie beim Klick auch die Suche. Die Filterplaketten machen es umgekehrt richtig und behalten sie. |
+| Jedes Konto hatte **zwei** Auswahlkästchen | Tabelle und Kachelzeile stehen beide im DOM; nur CSS blendet eines aus. Nachgeführt wurde nur das angeklickte — nach einem Wechsel der Fensterbreite sah ein Kästchen leer aus, obwohl das Konto ausgewählt war. |
+| `sessionStorage` gilt für den Tab, nicht für die Anmeldung | Meldete sich in demselben Tab eine andere Administratorin an, sah sie die Auswahl ihrer Vorgängerin. Der Schlüssel trägt jetzt die Kennung der angemeldeten Person. |
+| `?q[]=x` erzeugte „Array to string conversion" | `(string)` auf einen unbekannten Typ, fünfmal. Jetzt `konten_param()`: Was kein String ist, ist keine Eingabe. |
+| Sammelaktion ohne Grenze | Ein POST mit 100 000 Kennungen (rund 690 kB, unter `post_max_size`) hätte 100 001 Sicherungsversuche ausgelöst; `array_filter` ohne Rückruf ließ dabei auch `-5` durch. Jetzt `$id > 0` **und** ein Zeitbudget von 20 s, das sagt, was übrig blieb. |
+| `edbak_verdraengen()` schonte eine **eingelöste** Freigabe dauerhaft | Die Ausnahme war damit begründet, dass die NutzerIn das Paket angeboten bekommt — nach dem Einlösen stimmt das nicht mehr (`edbak_freigabe_fuer()` überspringt es). Die eingestellte Aufbewahrung wurde still überschritten, für immer. |
+| Ein fehlgeschlagener Sicherungslauf ließ einen **leeren Ordner** zurück | `mkdir` stand vor `edbak_build()`. Folge: Die Liste meldete „Stand unbekannt", die Kontoseite „nie gesichert" — zwei Seiten, zwei Antworten, aus demselben Fehlschlag. Der Ordner entsteht jetzt erst, wenn es etwas hineinzulegen gibt, und wird bei einem Fehlschlag wieder entfernt. |
+| Ein kaputtes `konto.json` hätte die **ganze Liste** lahmgelegt | `"letzte_sicherung": 20260816` (Zahl statt Zeichenkette) an `edbak_stand_werten(?string)` ist unter `strict_types=1` ein TypeError. Ebenso liefert `strtotime()` bei unbrauchbarem Text `false`, und `(int)false` ist „1970" — das Konto stünde mit zwanzigtausend Tagen als dringendster Fall ganz oben. Beides abgefangen. |
+| `pruefkonten.php`: zwei Fehler im Werkzeug selbst | Der dokumentierte Aufruf `anlegen <pfad>` brach mit „Anzahl zwischen 1 und 5000 angeben" ab (die Anzahl hing an der Argumentstelle, nicht an ihrer Gestalt). Und ein abgebrochener Lauf hinterließ Sicherungsordner, die `entfernen` nie wiederfand: Die Kontozeilen standen in einer umspannenden Transaktion, die Ordner nicht. Jetzt ein Commit je Konto und ein zweiter Durchgang über die Ablage. |
+
+Belegt sind die Behebungen durch **13 Bibliotheksproben** (leerer Ordner,
+Ordner ohne Begleitdatei, Zahl statt Zeichenkette, unbrauchbarer Zeitwert,
+offene gegen eingelöste Freigabe, fehlgeschlagene Sicherung) und **13
+Bedienproben** im Browser (Array-Parameter ohne Warnung, Kachel löscht die
+Suche und liefert genau ihre Zahl, beide Kästchen eines Kontos, Schlüssel mit
+Kontokennung, Nicht-Admin gesperrt) — beide 13/13. Das Zeitbudget wurde mit
+einem auf 0,1 ms gesetzten Wert gefahren: 7/7, die Reihe hält zwischen zwei
+Sicherungen an, benennt den Rest und macht beim nächsten Klick weiter.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Der
+**Mailversand** ist lokal nicht konfiguriert — geprüft ist der
+Fehlschlagzweig. Die Sammelaktion wurde mit **zwei** Konten gefahren, nicht mit
+dreihundert: Ein Lauf über den ganzen Bestand erzeugte 300 Sicherungsordner und
+dauerte entsprechend; das ist der Fall, für den „Alle sichern" laut Konzept
+ohnehin auf Schübe in P5 vertagt ist. Die Zeitmessungen stammen aus **einer**
+lokalen Instanz auf einem Rechner ohne Last — sie zeigen Verhältnisse, keine
+Zusagen. `admin_sicherungen.php` trägt bis O9c weiterhin seine alte Gestalt.
 
 ---
 

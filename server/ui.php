@@ -1049,12 +1049,20 @@ function ui_karte_ende(bool $klappbar = false): void
  * sind die Aktionen Knöpfe zu 44 px, mobil ein einziges „⋯" je Zeile, das
  * dasselbe Aktionsblatt öffnet (E-P3-26).
  *
- * $o: text, klein, plaketten (Markup), aktionen (Markup), href, klasse
+ * $o: vorn (Markup), text, klein, plaketten (Markup), aktionen (Markup),
+ *     href, klasse
  * ------------------------------------------------------------------------ */
 function ui_zeile(array $o): void
 {
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
     echo '<div class="' . $k . '">' . "\n";
+    /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
+     * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
+     * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben
+     * Liste steht es ebenfalls in der ersten Spalte. Fertiges Markup. */
+    if (!empty($o['vorn'])) {
+        echo '  <div class="zeile-vorn">' . (string)$o['vorn'] . "</div>\n";
+    }
     echo '  <div class="zeile-text">' . "\n";
     $t = '<span class="zeile-haupt">' . ui_e((string)($o['text'] ?? '')) . '</span>';
     echo '    ' . (!empty($o['href'])
@@ -1425,16 +1433,29 @@ function ui_zeilenaktionen(array $o): string
 
 function ui_speichern_leiste(array $o = []): void
 {
+    /* ZWEI VERWENDUNGEN, EIN BAUSTEIN (O9b). Die Leiste ist ursprünglich die
+     * Speichern-Leiste eines schmutzigen Formulars (forms.js hängt an
+     * `data-speichern`). Die Sammelleiste der NutzerInnen-Liste ist derselbe
+     * Baustein mit anderem Inhalt: unten klebend, ein Hauptknopf, ein Text
+     * daneben — nur wird sie nicht von forms.js geschaltet, sondern von der
+     * Auswahl, und ihr Text ist die Zahl der ausgewählten Konten und deshalb
+     * IMMER sichtbar (der Hinweis eines Formulars erscheint erst ab 720 px).
+     *
+     * $o: text, symbol, name, wert, attr, hinweis, id, form, zahl (Hinweis
+     *     immer sichtbar), kein_haken (nicht an forms.js hängen) */
+    $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
-<div class="speichern" data-speichern hidden>
+<div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
   <div class="speichern-innen">
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
-        'art' => 'primaer', 'symbol' => 'haken', 'breit' => true,
+        'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'), 'breit' => true,
         'name' => (string)($o['name'] ?? ''), 'wert' => (string)($o['wert'] ?? ''),
-        'attr' => (string)($o['attr'] ?? ''),
+        'attr' => (string)($o['attr'] ?? '')
+                . (!empty($o['form']) ? ' form="' . ui_e((string)$o['form']) . '"' : ''),
     ]) ?>
-    <p class="speichern-hinweis"><?= ui_e((string)($o['hinweis']
+    <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
+       <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
         ?? 'Ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
   </div>
 </div>
@@ -1456,9 +1477,19 @@ function ui_speichern_leiste(array $o = []): void
  * ------------------------------------------------------------------------ */
 function ui_kennzahl(array $o): string
 {
+    /* TON UND VERWEIS (O9b, Mockup 41). Eine Statuskachel sagt nicht nur eine
+     * Zahl, sondern auch, ob sie in Ordnung ist („27 Sicherung überfällig" in
+     * Orange, „9 nie gesichert" in Rot) — und sie ist ein WEG: Ein Klick
+     * öffnet die Liste, auf die sie sich bezieht. Ein <a> statt eines <div>,
+     * weil ein Klickziel, das kein Link ist, weder Tastatur noch Kontextmenü
+     * bedient. Die Töne heissen wie die der Plakette (neutral/orange/rot). */
     $k = 'kennzahl' . (!empty($o['aktiv']) ? ' aktiv' : '')
-       . (!empty($o['extrem']) ? ' kennzahl-extrem' : '');
-    $m  = '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>';
+       . (!empty($o['extrem']) ? ' kennzahl-extrem' : '')
+       . (!empty($o['ton']) ? ' kennzahl-' . ui_e((string)$o['ton']) : '');
+    $tag = !empty($o['href']) ? 'a' : 'div';
+    $m  = '<' . $tag . ' class="' . $k . '"'
+        . (!empty($o['href']) ? ' href="' . ui_e((string)$o['href']) . '"' : '')
+        . (string)($o['attr'] ?? '') . '>';
     $m .= '<p class="kennzahl-wert">' . ui_e((string)($o['wert'] ?? '–'));
     if (!empty($o['einheit'])) {
         $m .= '<span class="kennzahl-einheit">' . ui_e((string)$o['einheit']) . '</span>';
@@ -1468,7 +1499,7 @@ function ui_kennzahl(array $o): string
     if (!empty($o['extrem'])) {
         $m .= '<span class="kennzahl-tag">' . ui_e((string)$o['extrem']) . '</span>';
     }
-    $m .= '</p></div>';
+    $m .= '</p></' . $tag . '>';
     return $m;
 }
 

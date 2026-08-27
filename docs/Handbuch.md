@@ -1906,9 +1906,10 @@ sie in Ruhe ansehen kannst.
 
 ## 11. Administration (nur Admin)
 
-NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
-(**Achtung:** entfernt alle Daten der Person unwiderruflich). Ein Klick auf eine
-NutzerIn öffnet ihre **Kontoseite**.
+Die Administration führt zwei Seiten für Konten: die **Liste** aller
+NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
+der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
+mit den Sicherungen geschieht.
 
 ### 11.1 Die Kontoseite
 
@@ -1968,15 +1969,55 @@ Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
 „Sicherungen" als Sicherung ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
 abzutippen.
 
-### 11.2 Anlegen, Rollen und Wartung
+### 11.2 Die Liste der NutzerInnen
+
+Oben stehen vier Zahlen: **Konten**, **Admins**, **Sicherung überfällig**,
+**nie gesichert**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
+Klick öffnet die Liste, die sie meint.
+
+Darunter die Liste selbst.
+
+- **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
+  nur über die angezeigte Seite.
+- **Filtern** über die Plaketten daneben: Alle, Admins, Sicherung überfällig,
+  Nie gesichert, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
+  **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
+  etwas steht, während die Zahlen oben stehen bleiben.
+- **Sortieren** durch Klick auf einen Spaltenkopf; ein zweiter Klick dreht die
+  Richtung um. Sortiert wird über alle Konten, nicht nur über die Seite.
+- **Blättern**: 50 Konten je Seite. Unten links steht, welche gerade zu sehen
+  sind („Konten 1–50 von 304"), unten rechts die Seitenzahlen.
+- **Ein Klick auf eine Zeile** öffnet die Kontoseite (11.1).
+
+Die Spalte **Sicherung** sagt je Konto eines von fünf Worten: *aktuell*,
+*überfällig · n Tage*, *nie gesichert*, *ohne Kennung* (ein Konto aus der Zeit
+vor den Admin-Sicherungen — es lässt sich erst sichern, wenn die Wartung
+gelaufen ist) oder *Stand unbekannt* (die Begleitdatei des Kontos ist nicht
+lesbar; die Kontoseite sagt dann, was wirklich da ist).
+
+**Mehrere Konten auf einmal sichern.** Vor jeder Zeile steht ein Kästchen.
+Sobald eines gesetzt ist, erscheint unten eine Leiste: „n ausgewählt · Auswahl
+sichern". **Die Auswahl gilt über Seiten hinweg** — man kann auf Seite 1
+ankreuzen, weiterblättern, auf Seite 3 weiter ankreuzen und dann alles zusammen
+sichern. Nach dem Sichern ist die Auswahl leer, damit derselbe Klick nicht
+versehentlich zweimal wirkt. Die Auswahl endet außerdem mit dem Browser-Tab.
+
+**Anlegen** über „+ Anlegen" rechts im Kartenkopf. Der Dialog fragt nach
+E-Mail-Adresse, Name und Rolle; das Konto entsteht ohne Passwort, und die Person
+bekommt einen Link, mit dem sie es selbst setzt (24 Stunden gültig).
+
+**Löschen** steht nicht in der Liste, sondern auf der Kontoseite (11.1): Dort
+gehört die Entscheidung dazu, was mit den Sicherungen des Kontos geschehen soll.
+
+### 11.3 Anlegen, Rollen und Wartung
 
 **Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
 zutrifft:
 
-- *Nutzer angelegt — Setz-Link per E-Mail verschickt.* Alles in Ordnung.
+- *Konto angelegt — Setz-Link per E-Mail verschickt.* Alles in Ordnung.
 - *Es gibt bereits ein Konto mit dieser E-Mail-Adresse.* Es wurde nichts
   angelegt.
-- *Nutzer angelegt — die E-Mail konnte NICHT verschickt werden.* Das Konto
+- *Konto angelegt — die E-Mail konnte NICHT verschickt werden.* Das Konto
   steht, nur der Versand scheiterte. Die Seite zeigt dann den Einladungslink
   an; er ist 24 Stunden gültig und muss auf einem anderen Weg weitergegeben
   werden. **Nur an die Person selbst** — wer den Link hat, kann das Passwort

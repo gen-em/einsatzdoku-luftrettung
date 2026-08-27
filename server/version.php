@@ -605,5 +605,95 @@ declare(strict_types=1);
  * einer Kartenzeile waren das drei Zeilen Umbruch fuer eine Frage, die eine
  * Zahl beantwortet: wie viel davon ist geloeschter Bestand. Jetzt „davon 11
  * im Papierkorb"; das Paket selbst fuehrt die Zahlen weiter je Art.
+ *
+ * 9.9.0 ist O9b: DIE NUTZERINNEN-LISTE, AUSGELEGT AUF MEHRERE HUNDERT KONTEN.
+ * Keine Migration.
+ *
+ * Vorher war es eine ungefilterte Tabelle ueber ALLE Konten mit vier Spalten,
+ * ein Anlegen-Formular darunter und je Zeile ein Loeschknopf. Jetzt: vier
+ * Statuskacheln (jede ein Weg in die Liste, die sie meint), Suche nach Name
+ * oder Adresse, fuenf Filterplaketten mit Zahl, sechs sortierbare Spalten,
+ * FUENFZIG Konten je Seite mit Seitenwechsel, Auswahlkaestchen und eine
+ * klebende Sammelleiste, deren Auswahl UEBER SEITEN HINWEG gilt. Das Anlegen
+ * ist ein Dialog im Kartenkopf; das Loeschen steht nur noch auf der
+ * Kontoseite, wo die Entscheidung ueber die Sicherungen dazugehoert (E25).
+ *
+ * WO DIE ARBEIT LIEGT. Der Sicherungsstand eines Kontos steht nicht in der
+ * Datenbank, sondern im Dateisystem — daran haengen zwei Kacheln, zwei Filter
+ * und eine Spalte. Ihn je Zeile zu holen waeren bei 300 Konten 300
+ * Verzeichnisdurchlaeufe. edbak_staende() macht daraus EINEN Durchlauf der
+ * Ablagewurzel plus je Ordner eine kleine JSON-Datei; wer nie gesichert
+ * wurde, hat gar keinen Ordner und kostet nichts. Gemessen an 304 Konten:
+ * 3,2 ms Ablage, 3,3 ms Abfrage, 3,2 ms Werten.
+ *
+ * DER PREIS steht im Code: Die Angabe stammt aus konto.json, nicht aus den
+ * Paketdateien. Wer ein Paket von Hand entfernt, sieht in der LISTE einen
+ * Stand, den es nicht mehr gibt — die KONTOSEITE zeigt dann das Richtige,
+ * weil sie die Dateien zaehlt.
+ *
+ * DABEI GEMESSEN UND BEHOBEN: edbak_intervall() fragte je Zeile die Datenbank.
+ * Bei 304 Konten waren das 304 Abfragen und 27,7 ms fuer eine Rechnung aus
+ * einer Subtraktion; mit einem Zwischenspeicher je Anfrage sind es 3,2 ms.
+ *
+ * UMLAUTE SORTIEREN JETZT RICHTIG. `mb_strtolower` macht aus Ö ein ö, und ö
+ * liegt in der Byte-Reihenfolge hinter z: „Ömer" stand an erster Stelle der
+ * ABSTEIGENDEN Sortierung, also hinter allem. sortschluessel() schreibt
+ * Umlaute nach deutscher Lesart aus (ae/oe/ue/ss) — dieselbe Regel wie in
+ * slug() (assets/export.js) — und fuehrt uebrige Akzente auf den
+ * Grundbuchstaben zurueck. Kein `Collator`: intl ist auf geteiltem Webspace
+ * nicht verlaesslich da, und eine Sortierung, die je nach Installation anders
+ * ausfaellt, ist schlimmer als eine, die ueberall gleich naeherungsweise ist.
+ *
+ * ZWEI FUNDE AUS DER PRUEFUNG DIESES PAKETS:
+ *
+ *   F-P3-AL  Die Nachladeknoepfe der gemeinsamen Einsatztabelle („Weitere 200
+ *            anzeigen", „Alle n anzeigen") trugen noch `btn-plain` — eine
+ *            Klasse ohne Regel im neuen Stylesheet. Sie standen seit dem
+ *            Redesign in der Grundform des Browsers. Aufgefallen ist es
+ *            niemandem, weil sie erst ab 200 Treffern erscheinen und der
+ *            Referenzbestand 82 Einsaetze hat.
+ *
+ *   F-P3-AM  ZWEI KLASSENKOLLISIONEN, beide vor dem Festschreiben abgefangen
+ *            — und jede von einem anderen Pruefmittel. `.filterzahl` gehoert
+ *            seit O6 den Zaehlern der Filtergruppen auf der Suchseite; die
+ *            neue Regel haette deren Hintergrund ueberschrieben (gefunden
+ *            durch LESEN). `.filterknopf` gehoert seit O6 dem Knopf, der dort
+ *            die Filterschublade oeffnet — und der ist 48 px hoch, die
+ *            einzige benannte Ausnahme von der 44-px-Regel; die neue Regel
+ *            haette ihn auf 44 gesetzt (gefunden vom BILDERLAUF, achtmal:
+ *            „15-suche · Filter 0 · 44 px (soll 48)"). Jetzt `.listenfilter`
+ *            und `.listenfilter-zahl`.
+ *
+ *            Die Lehre ist nicht „vorher greppen", sondern: nach jedem Paket
+ *            auch die Seiten mitmessen, die es NICHT anfasst. Die
+ *            Vollstaendigkeitspruefung haette beides nicht gemeldet — sie
+ *            zaehlt Klassen OHNE Regel, nicht zwei Regeln fuer EINE Klasse.
+ *
+ * NEU ALS PRUEFMITTEL: tools/pruefkonten/ legt 300 Konten mit gemischten
+ * Sicherungsstaenden an und entfernt sie wieder — reproduzierbar, weil der
+ * Zufall einen festen Startwert hat.
+ *
+ * NEUN FUNDE AUS DER GEGNERISCHEN PRUEFUNG des Stands, alle behoben. Die
+ * beiden, die am weitesten reichten:
+ *
+ *   edbak_verdraengen() schonte eine EINGELOESTE Freigabe dauerhaft. Die
+ *   Ausnahme war damit begruendet, dass die NutzerIn das Paket angeboten
+ *   bekommt — nach dem Einloesen stimmt das nicht mehr, und die eingestellte
+ *   Aufbewahrung wurde still ueberschritten, fuer immer.
+ *
+ *   Ein fehlgeschlagener Sicherungslauf liess einen LEEREN Ordner zurueck
+ *   (mkdir stand vor edbak_build()). Die Liste meldete dann „Stand
+ *   unbekannt", die Kontoseite „nie gesichert" — zwei Seiten, zwei Antworten
+ *   aus demselben Fehlschlag. Der Ordner entsteht jetzt erst, wenn es etwas
+ *   hineinzulegen gibt.
+ *
+ * Dazu: Die Statuskacheln behielten beim Klick die Suche und lieferten dann
+ * weniger, als sie versprachen. Jedes Konto hatte zwei Auswahlkaestchen im
+ * Markup (Tabelle und Kachelzeile), von denen nur eines nachgefuehrt wurde.
+ * Die Auswahl im sessionStorage ueberlebte den Wechsel der angemeldeten
+ * Person. `?q[]=x` erzeugte „Array to string conversion". Ein kaputtes
+ * konto.json (Zahl statt Zeichenkette) haette unter strict_types die ganze
+ * Liste lahmgelegt, und ein unbrauchbarer Zeitwert haette das Konto mit
+ * zwanzigtausend Tagen als dringendsten Fall nach oben sortiert.
  */
-const WEB_VERSION = '9.8.0';
+const WEB_VERSION = '9.9.0';

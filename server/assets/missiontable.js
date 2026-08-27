@@ -393,13 +393,18 @@ const EdMissionTable = (() => {
       mehrZeile = document.createElement('p');
       mehrZeile.className = 'mehrzeile';
       mehrZeile.hidden = true;
+      /* `knopf knopf-neutral`, nicht mehr `btn-plain` (F-P3-AL). Die alte
+       * Klasse hat im neuen Stylesheet keine Regel mehr — die beiden Knoepfe
+       * waren seit dem Redesign in der Grundform des Browsers. Aufgefallen ist
+       * es niemandem, weil sie erst ab 200 Treffern erscheinen und der
+       * Referenzbestand 82 Einsaetze hat. */
       mehrKnopf = document.createElement('button');
       mehrKnopf.type = 'button';
-      mehrKnopf.className = 'btn-plain';
+      mehrKnopf.className = 'knopf knopf-neutral';
       mehrKnopf.addEventListener('click', () => mehrZeigen(sichtbar + seite));
       mehrAlleKnopf = document.createElement('button');
       mehrAlleKnopf.type = 'button';
-      mehrAlleKnopf.className = 'btn-plain';
+      mehrAlleKnopf.className = 'knopf knopf-neutral';
       mehrAlleKnopf.addEventListener('click', () => mehrZeigen(Infinity));
       mehrZeile.appendChild(mehrKnopf);
       mehrZeile.appendChild(mehrAlleKnopf);

@@ -11,6 +11,139 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.9.0] — 2026-08-27
+
+**O9b: die NutzerInnen-Liste, ausgelegt auf mehrere hundert Konten.** Keine
+Migration.
+
+Vorher war das eine ungefilterte Tabelle über **alle** Konten mit vier Spalten,
+darunter ein Anlegen-Formular und je Zeile ein Löschknopf. Bei dreißig Konten
+geht das; bei dreihundert ist es eine Seite, die man durchscrollt, um eine Zeile
+zu suchen.
+
+Jetzt: vier **Statuskacheln** (Konten, Admins, Sicherung überfällig, nie
+gesichert — jede ein Weg in die Liste, die sie meint), eine **Suche** nach Name
+oder Adresse, fünf **Filterplaketten mit Zahl**, sechs **sortierbare Spalten**,
+**fünfzig Konten je Seite** mit Seitenwechsel, Auswahlkästchen und eine klebende
+**Sammelleiste**, deren Auswahl über Seiten hinweg gilt. Das Anlegen ist ein
+Dialog hinter „+ Anlegen" im Kartenkopf; das Löschen eines Kontos steht nur noch
+auf der Kontoseite, wo die Entscheidung über die Sicherungen dazugehört.
+
+**Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende Suche.**
+Das ist Absicht und keine Ungenauigkeit: Die Kacheln sagen, wie es um die
+Installation steht; die Zahl an einer Filterplakette beantwortet „was bringt mir
+dieser Filter jetzt?".
+
+**Wo die Arbeit liegt.** Der Sicherungsstand eines Kontos steht nicht in der
+Datenbank, sondern im Dateisystem — daran hängen zwei Kacheln, zwei Filter und
+eine Spalte. Ihn je Zeile zu holen wären bei 300 Konten 300
+Verzeichnisdurchläufe, genau der Fehler, den die alte Sicherungsseite macht.
+Stattdessen ein einziger Durchlauf der Ablagewurzel plus je Ordner eine kleine
+JSON-Datei; wer nie gesichert wurde, hat gar keinen Ordner und kostet nichts.
+Gemessen an 304 Konten: 3,2 ms für die Ablage, 3,3 ms für die Abfrage, 3,2 ms
+fürs Werten, 103 ms für den ganzen Seitenaufruf.
+
+Der Preis dieser Abkürzung steht im Code: Die Angabe stammt aus `konto.json`,
+nicht aus den Paketdateien. Wer ein Paket von Hand aus einem Ordner entfernt,
+ohne die Anwendung zu benutzen, sieht in der **Liste** einen Stand, den es nicht
+mehr gibt — die **Kontoseite** zeigt dann das Richtige, weil sie die Dateien
+zählt. Eine Liste, die bei jedem Aufruf hunderte Verzeichnisse durchgeht, um
+einen Fall abzudecken, den die Anwendung selbst nie herstellt, wäre der
+schlechtere Tausch.
+
+Gesucht, gefiltert und sortiert wird im Speicher, nicht in SQL. Nicht aus
+Bequemlichkeit: Zwei der fünf Filter und eine der sechs Sortierungen kennen kein
+SQL, weil ihre Angabe im Dateisystem liegt. Eine halbe Filterung in SQL und eine
+halbe in PHP wären zwei Wege für dieselbe Frage — und der zweite hätte die
+falschen Zahlen. Was der Browser bekommt, sind in jedem Fall höchstens fünfzig
+Zeilen.
+
+**Dabei gemessen und behoben:** Das Erinnerungsintervall wurde je Zeile aus der
+Datenbank geholt. Bei 304 Konten waren das 304 Abfragen und 27,7 ms für eine
+Rechnung, die aus einer Subtraktion besteht; mit einem Zwischenspeicher je
+Anfrage sind es 3,2 ms.
+
+**Umlaute sortieren jetzt richtig.** Kleingeschrieben wird aus Ö ein ö, und ö
+liegt in der Byte-Reihenfolge hinter z: „Ömer" stand an erster Stelle der
+**absteigenden** Sortierung, also hinter allem anderen. Wer einen Namen mit
+Umlaut sucht, fand ihn am Ende der Liste. Der Sortierschlüssel schreibt Umlaute
+jetzt nach deutscher Lesart aus (ae/oe/ue/ss) — dieselbe Regel wie beim
+Dateinamen eines Exports — und führt übrige Akzente auf den Grundbuchstaben
+zurück. Bewusst ohne `Collator`: Die intl-Erweiterung ist auf geteiltem Webspace
+nicht verlässlich da, und eine Sortierung, die je nach Installation anders
+ausfällt, ist schlimmer als eine, die überall gleich näherungsweise ist.
+
+**Ein Fund aus der Prüfung dieses Pakets (F-P3-AL).** Die Nachladeknöpfe der
+gemeinsamen Einsatztabelle („Weitere 200 anzeigen", „Alle n anzeigen") trugen
+noch `btn-plain` — eine Klasse, für die es im neuen Stylesheet keine Regel mehr
+gibt. Sie standen seit dem Redesign in der Grundform des Browsers. Aufgefallen
+ist es niemandem, weil sie erst ab 200 Treffern erscheinen und der
+Referenzbestand 82 Einsätze hat.
+
+**Zwei Klassenkollisionen, beide vor dem Festschreiben abgefangen (F-P3-AM)** —
+und jede von einem anderen Prüfmittel. Die neue Filterreihe brauchte Namen, und
+zwei der naheliegenden waren vergeben:
+
+`.filterzahl` gehört seit O6 den Zählern der Filtergruppen auf der Suchseite.
+Die neue Regel steht weiter unten im Stylesheet und hätte bei gleicher
+Spezifität gewonnen — aus den blauen Zählern wären graue geworden. Gefunden
+durch **Lesen**, bei der Bestandsaufnahme vor dem Bauen.
+
+`.filterknopf` gehört seit O6 dem Knopf, der auf der Suchseite die
+Filterschublade öffnet — und der ist **48 px** hoch, weil er neben dem
+48-px-Suchfeld steht; es ist die einzige benannte Ausnahme von der 44-px-Regel.
+Die neue Regel hätte ihn auf 44 px gesetzt. Gefunden vom **Bilderlauf**:
+„15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite — und zwar
+nur, weil der Lauf die Suchseite mitfotografierte, obwohl dieses Paket sie gar
+nicht anfasst.
+
+Die Lehre daraus ist nicht „vorher greppen", sondern: nach jedem Paket auch die
+Seiten mitmessen, die es **nicht** anfasst. Die Vollständigkeitsprüfung hätte
+beides nicht gemeldet — sie zählt Klassen **ohne** Regel, nicht zwei Regeln für
+**eine** Klasse. Beide heißen jetzt nach ihrem Ort: `.listenfilter` und
+`.listenfilter-zahl`.
+
+**Neu als Prüfmittel:** `tools/pruefkonten/` legt 300 Konten mit gemischten
+Sicherungsständen an und entfernt sie wieder — reproduzierbar, weil der Zufall
+einen festen Startwert hat. Ohne so einen Bestand lässt sich weder ein
+Seitenwechsel noch eine Auswahl über Seiten hinweg prüfen.
+
+**Neun Funde aus der gegnerischen Prüfung**, alle behoben. Die beiden, die am
+weitesten reichten, liegen in der Sicherungsbibliothek und betreffen auch die
+Kontoseite aus O9a:
+
+Die Verdrängung **schonte eine eingelöste Freigabe dauerhaft**. Die Ausnahme
+war damit begründet, dass die NutzerIn das Paket in ihrem Backup-Bereich
+angeboten bekommt — nach dem Einlösen stimmt das nicht mehr. Die eingestellte
+Aufbewahrung wurde damit still überschritten, und zwar für immer.
+
+Ein **fehlgeschlagener Sicherungslauf ließ einen leeren Ordner zurück**, weil
+der Ordner vor dem Datenpaket angelegt wurde. Die Folge war eine widersprüchliche
+Auskunft: Die Liste meldete für dieses Konto „Stand unbekannt", die Kontoseite
+„nie gesichert" — zwei Seiten, zwei Antworten aus demselben Fehlschlag. Der
+Ordner entsteht jetzt erst, wenn es etwas hineinzulegen gibt, und wird bei einem
+Fehlschlag wieder entfernt.
+
+Dazu in der Liste selbst: Die **Statuskacheln behielten beim Klick die Suche**
+und führten dann auf weniger Konten, als sie nannten. Jedes Konto hatte **zwei
+Auswahlkästchen** im Markup (Tabelle und Kachelzeile), von denen nur das
+angeklickte nachgeführt wurde — nach einem Wechsel der Fensterbreite sah ein
+Kästchen leer aus, obwohl das Konto ausgewählt war. Die **Auswahl im
+`sessionStorage` überlebte den Wechsel der angemeldeten Person**. `?q[]=x`
+erzeugte eine PHP-Warnung mitten in der Seite. Ein **kaputtes `konto.json`**
+(eine Zahl statt einer Zeichenkette) hätte unter `strict_types` die ganze Liste
+lahmgelegt, und ein unbrauchbarer Zeitwert hätte das betroffene Konto mit
+zwanzigtausend Tagen als dringendsten Fall nach oben sortiert. Und das neue
+Prüfwerkzeug hatte selbst zwei Fehler: sein eigener dokumentierter Aufruf brach
+ab, und ein abgebrochener Lauf hinterließ Sicherungsordner, die `entfernen` nie
+wiederfand.
+
+Geprüft: 35 + 19 + 13 Bedienproben im Browser gegen 304 Konten, alle
+erwartungsgemäß, keine Konsolenmeldung; 13 Bibliotheksproben zu den
+Grenzfällen der Sicherungsbibliothek; 7 Proben zum Zeitbudget der
+Sammelaktion. Vollständigkeitsprüfung, Wortliste, Kontraste und der volle
+Bilderlauf (240 Bilder, 0/0/0).
+
 ## [Web 9.8.0] — 2026-08-27
 
 **O9a: die Kontoseite wird zur Drehscheibe.** O9 (Administration) ist mit fünf

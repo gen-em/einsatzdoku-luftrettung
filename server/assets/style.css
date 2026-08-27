@@ -2437,3 +2437,132 @@ tr.hl-extrem td{background:var(--orange-hell)}
  * betreffen, nicht die Eingabe. */
 .karte-gefahr{border-color:var(--rot)}
 .karte-gefahr .karte-titel{color:var(--rot-tief)}
+
+
+/* ---- Statuskacheln mit Ton (O9b, Mockup 41) ------------------------------
+ * Eine Kachel, die einen Befund meldet, ist eingefärbt: Orange für „das will
+ * angesehen werden", Rot für „das fehlt". Dieselben zwei Töne wie bei der
+ * Plakette, dieselbe Bedeutung. Als Verweis behält sie ihre Farben und
+ * bekommt beim Überfahren nur den Rahmen. */
+.kennzahl-orange{background:var(--orange-hell);border-color:var(--orange)}
+.kennzahl-rot{background:var(--rosa);border-color:var(--rot)}
+.kennzahl-rot .kennzahl-wert{color:var(--rot-tief)}
+a.kennzahl{display:block;text-decoration:none;color:inherit}
+a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
+
+
+/* ---- Kopf einer langen Liste: Suche und Filter --------------------------- */
+.listenkopf{display:flex;flex-direction:column;gap:var(--abstand-3);
+  margin-bottom:var(--abstand-4)}
+.listensuche{display:flex;gap:var(--abstand-2);align-items:center}
+/* Ab 1024 px stehen Suche und Filter NEBENEINANDER (Mockup 41). Darunter
+ * untereinander: Fünf Filterplaketten neben einem Suchfeld ergäben auf einem
+ * Tablet fünf einzeilige Spalten. */
+@media (min-width:1024px){
+  .listenkopf{flex-direction:row;align-items:center}
+  .listensuche{flex:0 1 26rem}
+  .filterreihe{flex:1 1 auto}
+}
+
+/* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
+ * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder
+ * Filter eine eigene Adresse (teilbar, im Verlauf, mit der Zurück-Taste
+ * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
+ * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
+.filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert seit O6 dem Knopf,
+ * der auf der Suchseite die Filterschublade oeffnet — und der ist 48 px hoch,
+ * weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von
+ * der 44-px-Regel). Eine zweite Regel gleichen Namens weiter unten haette ihn
+ * auf 44 px gesetzt. Gemeldet hat es der Bilderlauf, nicht der Verstand:
+ * „15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite. */
+.listenfilter{
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  text-decoration:none;white-space:nowrap;
+}
+.listenfilter:hover{background:var(--rauch);text-decoration:none}
+.listenfilter.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+/* Die Zahl ist eine eigene Fläche, damit sie sich vom Wort abhebt, ohne eine
+ * zweite Schriftgröße zu brauchen.
+ *
+ * SIE HEISST NICHT `.filterzahl`. Diese Klasse ist seit O6 vergeben — die
+ * Suche hängt sie als `filterzahl plakette plakette-blau` in den Kopf jeder
+ * Filtergruppe (suche.php). Eine zweite Regel gleichen Namens weiter unten im
+ * Stylesheet hätte deren Hintergrund und Schriftfarbe überschrieben, weil die
+ * spätere Regel gleicher Spezifität gewinnt: Aus den blauen Zählern der
+ * Suchseite wären graue geworden, und zwar auf einer Seite, die dieses Paket
+ * gar nicht anfasst. */
+.listenfilter-zahl{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:calc(var(--symbol) + var(--abstand-1));
+  padding:0 var(--abstand-1);
+  border-radius:var(--radius-klein);
+  background:var(--rauch);color:var(--gedaempft);
+  font-size:var(--groesse-1);
+}
+.listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
+
+
+/* ---- Kontentabelle ------------------------------------------------------- */
+/* Name und Adresse stehen untereinander in EINER Zelle (Mockup 41): Zwei
+ * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
+ * Konto ohne Namen hat nur die Adresse. */
+.konto-name{display:block;font-weight:600;color:var(--dunkelblau)}
+.konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
+.tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
+.tabelle-konten th.sortable a{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  color:inherit;text-decoration:none;
+}
+.tabelle-konten th.sortable a:hover{color:var(--blau-tief);text-decoration:none}
+.oeffnen{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  min-height:var(--knopf);color:var(--blau-tief);
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+
+/* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
+.zeile-vorn{flex:0 0 auto;display:flex;align-items:center}
+
+
+/* ---- Fuß einer langen Liste: Zählung und Seitenwechsel -------------------- */
+.listenfuss{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:var(--abstand-3);
+  margin-top:var(--abstand-4);padding-top:var(--abstand-3);
+  border-top:var(--strich) solid var(--linie);
+}
+.listenzahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.seitenwahl{display:flex;flex-wrap:wrap;gap:var(--abstand-1)}
+/* Die Seitenknöpfe sind quadratisch und 44 px hoch wie jeder Knopf — sie
+ * werden auf dem Handy mit dem Daumen getroffen (E-P3-22). */
+.seitenknopf{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);padding:0 var(--abstand-2);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  text-decoration:none;
+}
+.seitenknopf:hover{background:var(--rauch);text-decoration:none}
+.seitenknopf.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+/* Der Pfeil am Rand bleibt STEHEN, wenn es nichts mehr gibt, statt zu
+ * verschwinden: Ein Knopf, der sich beim Blättern in Luft auflöst, verschiebt
+ * die übrigen unter dem Finger weg. */
+.seitenknopf.aus{color:var(--sand);border-color:var(--linie);cursor:default}
+.seitenknopf.aus:hover{background:var(--schnee)}
+.seitenluecke{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);color:var(--gedaempft);
+}
+
+/* Die Zahl der Sammelleiste ist IMMER sichtbar (der Hinweis eines schmutzigen
+ * Formulars erscheint erst ab 720 px). Sie ist die ganze Aussage der Leiste. */
+.speichern-zahl{display:block;color:var(--asphalt);font-weight:600}
