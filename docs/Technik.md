@@ -1115,25 +1115,63 @@ Pfeil hat keinen Kopf.
 `missiontable.js` führt einen Rückfall, damit die Datei für sich lauffähig
 bleibt; er ist die Notlösung, nicht die Quelle.
 
-**Tabs der Zeitraum-Übersicht (ab Web 6.2.0, Konzept 3.7.1).** Die Tableiste
-erscheint nur, wenn im Zeitraum **beide** Arten vorliegen; maßgeblich sind die
-Diensttage (`tage_art` aus `api/range.php`), nicht die Einsätze — ein
-bodengebundener Dienst ohne einen einzigen Einsatz ist trotzdem einer. Liegt nur
-eine Art vor, bestimmt sie allein die **Beschriftung** der Kacheln; gezeigt wird
-in diesem Fall alles, auch die Einsätze neutraler Diensttage, denn sonst fehlten
-sie in der einzigen Ansicht, die es dann gibt. Der Hinweis auf mitgezählte
-neutrale Diensttage steht überall dort, wo sie tatsächlich mitzählen — in
-„Gemischt" und in einer Ansicht ohne Tableiste.
+**Ansicht nach Art in der Zeitraum-Übersicht (ab Web 6.2.0, seit Web 9.6.0
+eine Segmentwahl).** Die Wahl erscheint nur, wenn im Zeitraum **beide** Arten
+vorliegen; maßgeblich sind die Diensttage (`tage_art` aus `api/range.php`),
+nicht die Einsätze — ein bodengebundener Dienst ohne einen einzigen Einsatz
+ist trotzdem einer. Liegt nur eine Art vor, bestimmt sie allein die
+**Beschriftung** der Kacheln; gezeigt wird in diesem Fall alles, auch die
+Einsätze neutraler Diensttage, denn sonst fehlten sie in der einzigen Ansicht,
+die es dann gibt. Der Hinweis auf mitgezählte neutrale Diensttage steht
+überall dort, wo sie tatsächlich mitzählen — in „Gemischt" und in einer
+Ansicht ohne Wahl.
 
-Die Kacheln entstehen im Browser (`KACHELSATZ` in `zeitraum.php`) statt fest im
-HTML zu stehen: Welche es gibt und wie sie heißen, hängt am Tab und bei den
-Windenkacheln zusätzlich am Bestand. Die Ereignisse der Extremwert-Kacheln
+Aus der Tableiste (`.arttabs` mit `<button role="tab">`) ist mit O7 der
+**Segment-Baustein** geworden (`ui_segment`, Radios in einer Gruppe). Zwei
+Folgen: Der Wechsel mit den Pfeiltasten kommt vom Browser — der eigene
+`keydown`-Handler ist entfallen —, und gehorcht wird `change`, nicht `click`;
+sonst löste die Tastaturbedienung nichts aus.
+
+**Drei Kachelsätze (`KACHELSATZ` in `zeitraum.php`, ab Web 9.6.0).** Sie
+entstehen im Browser statt fest im HTML zu stehen: Welche es gibt und wie sie
+heißen, hängt an der Ansicht und bei den Windenkacheln zusätzlich am Bestand.
+Luft führt zehn Kacheln, Boden acht, **Gemischt vier** (`KACHELN_BODEN.slice(0,4)`)
+— Kilometer, Dauern und Fehleinsätze lassen sich über beide Arten nicht
+sinnvoll addieren, ebenso wenig wie höchster Einsatzort und Windenzahlen, die
+dort nie standen. `SPALTEN_JE_SATZ` gibt die Spaltenzahl ab 720 px (4 oder 5),
+damit keine Reihe halb leer bleibt.
+
+Jede Kachel trägt `wert` und `einheit` **getrennt** — der Baustein setzt die
+Einheit kleiner, und das geht nur als eigenes Element. Vier Kacheln je Satz
+sind mit `mobil: true` markiert und unter 720 px sichtbar; der Rest trägt
+`.kennzahl-mehr` und steht hinter „Weitere Statistik (n)". Welche vier, sagt
+die Kachel und nicht ihre Position: In der Luftansicht sind es die
+Winden-Cycles statt des Durchschnitts. Fällt eine markierte Kachel am Bestand
+weg (keine Windeneinsätze), rückt die nächste des Satzes nach. Die Ereignisse der Extremwert-Kacheln
 werden deshalb beim Erzeugen vergeben, nicht am Raster delegiert — `mouseenter`
 steigt nicht auf, und `mouseover` feuerte zusätzlich bei jedem Wechsel zwischen
 Wert und Beschriftung innerhalb derselben Kachel. Die Karten-Pins werden beim
-Tabwechsel **verworfen und neu gesetzt** (`pinLayer`), nicht versteckt: Ein Pin
-ohne Bildschirmposition lässt kein `setStyle()` zu — derselbe Stolperstein wie
-beim Ausgangsausschnitt der Karte.
+Wechsel der Ansicht **verworfen und neu gesetzt** (`pinLayer`), nicht
+versteckt: Ein Pin ohne Bildschirmposition lässt kein `setStyle()` zu —
+derselbe Stolperstein wie beim Ausgangsausschnitt der Karte.
+
+Die Hervorhebung des Extremwert-Trägers wirkt auf **Tabelle und Kacheln**
+zugleich (`.hl-extrem` an beiden), weil unter 720 px die Kachelliste an die
+Stelle der Tabelle tritt; sie ist seit Web 9.6.0 orange statt rot. Die beiden
+Farben dafür standen als Hexwerte im Skript und kommen jetzt aus `:root`,
+wie in `geo.js`.
+
+**Standorte des Zeitraums (`bases` in `api/range.php`, ab Web 9.6.0).** Die
+Zeitraumkarte trägt das Standort-Haus (E-P3-40). Der Endpunkt liefert dafür
+die eingefrorenen Standorte der Diensttage des Zeitraums, nach Koordinate auf
+sechs Nachkommastellen **entdupliziert** — ein Monat mit fünf Diensten
+derselben Wache hat einen Standort, nicht fünf übereinander. Sie sind
+**Klartext** wie `kind` und `vehicle_name` (Snapshot-Spalten in `days`, E8)
+und brauchen deshalb keinen Inhaltsschlüssel: Die Karte zeigt das Haus auch
+im gesperrten Zustand. In den Artenansichten stehen nur die Standorte dieser
+Art; Standorte ohne Art bleiben immer stehen, weil sie zu beidem gehören
+könnten. Trackpunkte liefert der Endpunkt weiterhin **nicht** — bei einem
+ganzen Jahr wären das hunderttausende Koordinaten.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,

@@ -1188,7 +1188,12 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .kennzahl-einheit{font-size:var(--groesse-2);color:var(--gedaempft);margin-left:var(--abstand-1)}
 .kennzahl-label{font-size:var(--groesse-2);color:var(--gedaempft)}
-.kennzahl-tag{display:block;color:var(--orange-tief);font-weight:600}
+/* Der Tag des Extremwerts steht IN der Beschriftungszeile („Längste
+ * Flugstrecke · 14.08.", Mockup 30), nicht darunter: Er gehört zur Aussage
+ * der Kachel und nicht als zweite Zeile darunter. Bei schmalen Kacheln
+ * bricht die Zeile um — das ist richtiger, als eine feste zweite Zeile zu
+ * erzwingen, die bei den übrigen Kacheln leer bliebe. */
+.kennzahl-tag{color:var(--orange-tief);font-weight:600;white-space:nowrap}
 .kennzahl-extrem::after{
   content:"";position:absolute;top:var(--abstand-2);right:var(--abstand-2);
   width:var(--abstand-2);height:var(--abstand-2);
@@ -2126,3 +2131,80 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
 .kachel-datum{white-space:nowrap}
 /* Mit Datum braucht die Zeitspalte mehr Platz als die reine Uhrzeit. */
 .kachel-zeit:has(.kachel-datum){min-width:0;flex:0 0 auto}
+
+
+/* ===========================================================================
+ * 25  ZEITRAUM                                              (P3/O7, E-P3-37)
+ *
+ * Die Übersicht eines Monats oder Jahres. Neu daran ist weniger die
+ * Gestaltung als der ZUSCHNITT: „Gemischt" zeigt vier Kennzahlen statt acht,
+ * und unter 720 px sind von jedem Satz vier sichtbar, der Rest steht hinter
+ * „Weitere Statistik".
+ *
+ * Die Kachel selbst ist der Baustein aus O1 (`.kennzahl`, ui_kennzahl) — hier
+ * stehen nur Raster, mobile Kappung und die Segmentwahl in der Titelzeile.
+ * ======================================================================== */
+
+/* Spaltenzahl folgt dem Satz: vier Kacheln in vier Spalten, acht in zwei
+ * Reihen zu vier, zehn in zwei Reihen zu fünf — so bleibt keine Reihe halb
+ * leer. Unter 720 px sind es immer zwei (Grundregel von .kennzahl-raster). */
+@media (min-width:720px){
+  .kennzahl-raster-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kennzahl-raster-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+
+/* MOBIL VIER (E-P3-37). Die übrigen Kacheln stehen im Markup und sind nur
+ * verborgen — nicht ausgelassen: Der Knopf „Weitere Statistik" klappt sie
+ * auf, ohne dass etwas nachgeladen oder neu gerechnet würde. Deshalb
+ * `display:none` und nicht das `hidden`-Attribut: Letzteres gehört dem
+ * Zustand „gibt es nicht", nicht dem Zustand „gerade eingeklappt". */
+.kennzahl-mehr{display:none}
+.kennzahl-raster-offen .kennzahl-mehr{display:block}
+.kennzahl-mehr-knopf{
+  display:flex;align-items:center;gap:var(--abstand-1);
+  margin:calc(-1 * var(--abstand-2)) 0 var(--abstand-4);
+}
+/* Der Winkel zeigt im Ruhezustand nach unten — winkel.svg tut das von sich
+ * aus (Abschnitt 5), es braucht dafür keine Drehung. Beim Aufklappen dreht
+ * er sich nach oben. */
+.kennzahl-mehr-knopf .symbol{transition:transform var(--dauer)}
+.kennzahl-mehr-knopf.offen .symbol{transform:rotate(180deg)}
+
+@media (min-width:720px){
+  /* Ab hier gibt es nichts zu verbergen: Der ganze Satz steht da, und der
+     Knopf ist ohnehin `nur-unter-720`. */
+  .kennzahl-mehr{display:block}
+}
+
+/* Die Segmentwahl steht in den AKTIONEN der Titelzeile: ab 720 px rechts
+ * neben dem Titel (Mockup 29), darunter vollbreit unter dem Titel
+ * (Mockup 31). `width:100%` an der Wahl allein genügt dafür nicht —
+ * `.titelzeile-aktionen` ist ein Flex-Kind mit `flex:0 0 auto` und schrumpft
+ * auf die Breite seines Inhalts. Der Aktionsblock muss deshalb mobil selbst
+ * umbrechen und die volle Breite nehmen; die drei Segmente teilen sie sich
+ * dann zu gleichen Teilen. */
+.titelzeile-aktionen:has(.segment-art){flex:1 0 100%;margin-left:0}
+.segment-art{width:100%}
+.segment-art .segment-taste{flex:1 1 0;text-align:center}
+@media (min-width:720px){
+  .titelzeile-aktionen:has(.segment-art){flex:0 0 auto;margin-left:auto}
+  .segment-art{width:auto}
+  .segment-art .segment-taste{flex:0 0 auto}
+}
+
+/* DIE MARKIERUNG DES ANGEZEIGTEN ZEITRAUMS in der Leiste (E-P3-37). Sie
+ * sitzt auf der Zeile des Akkordeons, nicht auf dem `<details>` selbst —
+ * sonst färbte sich auch der aufgeklappte Inhalt. Dieselben Farben wie beim
+ * aktiven Diensttag (`.eintrag.aktiv`), damit „hier stehe ich" überall
+ * gleich aussieht. */
+.akkordeon.aktiv > .akkordeon-zeile{
+  background:var(--orange-hell);
+  box-shadow:inset var(--strich-stark) 0 0 var(--orange);
+}
+.akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--dunkelblau)}
+
+/* Die Zeile des Extremwert-Trägers, hell orange statt rot (E-P3-37): Rot
+ * heißt in dieser Oberfläche „Aufmerksamkeit" — ein Höchstwert ist kein
+ * Fehler. Gilt für die Tabellenzeile ab 720 px und die Kachel darunter. */
+.hl-extrem{background:var(--orange-hell)}
+tr.hl-extrem td{background:var(--orange-hell)}

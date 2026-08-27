@@ -119,7 +119,7 @@ Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
 - `tools/vollstaendigkeit/` — Ist etwas verlorengegangen (jede Klasse des
   alten Stylesheets hat eine Regel oder steht mit Begründung auf der
   Streichliste), und steht jeder Wert an der einen Stelle (`:root`)?
-- `tools/screenshots/` — 29 Seiten in acht Breiten von 360 bis 1920 px, mit
+- `tools/screenshots/` — 30 Seiten in acht Breiten von 360 bis 1920 px, mit
   gemessenem waagerechtem Überlauf, Konsolenfehlern und Knopfhöhen; dazu
   `kontrast.py` für die Kontraste der Token.
 

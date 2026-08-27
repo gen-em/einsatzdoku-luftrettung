@@ -8,8 +8,16 @@ Phase.
 
 Ein Redesign, das „voll mobiltauglich auf allen Seiten" verspricht, muss das
 auf allen Seiten belegen — und zwar bei jeder Breite, nicht bei der einen,
-die gerade offen war. 29 Seiten mal acht Breiten sind 232 Bilder; von Hand
+die gerade offen war. 30 Seiten mal acht Breiten sind 240 Bilder; von Hand
 macht das niemand zweimal.
+
+**Eine Seite braucht ihre Parameter.** Steht in `seiten.json` ein Pfad, den
+die Anwendung ohne Abfrageteil ablehnt, fotografiert das Werkzeug die Seite,
+auf die sie umleitet — und meldet für sie brav „kein Überlauf". Genau das ist
+mit `zeitraum.php` passiert: Ohne `?y=` leitet sie auf die Startseite um, und
+der Kontaktbogen „14-zeitraum" zeigte acht Bilder der Tagesübersicht (F-P3-AH,
+P3/O7). Wer eine Seite aufnimmt, prüft **einmal am Bild**, dass es die
+gemeinte ist.
 
 Das Werkzeug **misst** dabei mit, statt nur zu fotografieren. Drei Zahlen,
 die sonst niemand nachhält:

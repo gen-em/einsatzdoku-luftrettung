@@ -807,44 +807,71 @@ erscheint, wenn der Mauszeiger darauf steht. Auf schmaleren Bildschirmen
 entfällt er ganz.
 
 Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
-Übersicht dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
-vorhanden und die geschützten Angaben entsperrt sind), darunter die
-Statistik-Kacheln und schließlich die Tabelle aller Einsätze mit Datum statt
-Tagesnummer, sortierbar. Die Durchschnittswerte rechnen mit **allen angelegten
-Diensttagen** des Zeitraums, auch mit einsatzfreien.
+Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
+und über welche Spanne er läuft; darunter die Statistik-Kacheln, dann eine
+Karte und schließlich alle Einsätze — am Schreibtisch als Tabelle mit Datum
+statt Tagesnummer, auf schmalen Geräten als Kacheln. Die Durchschnittswerte
+rechnen mit **allen angelegten Diensttagen** des Zeitraums, auch mit
+einsatzfreien. Solange du in einer Übersicht stehst, ist der betreffende
+Monat bzw. das Jahr in der Leiste markiert.
 
-**Getrennt nach Art.** Liegen im Zeitraum luft- *und* bodengebundene Diensttage,
-steht über der Ansicht eine Leiste mit drei Reitern: **Gemischt** (aktiv),
-**Luftrettung** und **Bodengebundener Rettungsdienst**. Der Reiter filtert
-alles gemeinsam — Kacheln, Einsatztabelle und Karte. Liegt nur eine Art vor,
-gibt es keine Leiste; dann bestimmt sie allein die Beschriftung.
+Auf der Karte steht das **Standort-Haus** jedes Diensttags, sobald für ihn
+Koordinaten hinterlegt sind — dafür brauchst du die Verschlüsselung nicht zu
+entsperren, denn der Standort ist keine geschützte Angabe. Die Einsatzorte
+kommen als Punkte dazu, sobald du entsperrt hast.
 
-| Reiter | Kacheln |
+**Getrennt nach Art.** Liegen im Zeitraum luft- *und* bodengebundene
+Diensttage, steht neben dem Titel eine Wahl mit drei Schaltern: **Gemischt**
+(voreingestellt), **Luft** und **Boden**; auf dem Handy stehen sie vollbreit
+darunter. Die Wahl gilt für alles zugleich — Kacheln, Einsatzliste und Karte.
+Liegt nur eine Art vor, gibt es keine Wahl; dann bestimmt diese Art allein die
+Beschriftung.
+
+| Ansicht | Kacheln |
 |---|---|
-| **Luftrettung** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
-| **Bodengebunden** und **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
+| **Luft** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
+| **Boden** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
+| **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte |
 
-Der Luftrettungs-Reiter behält also die gewohnte Flugterminologie; für eine rein
-luftgebundene Nutzung sieht die Auswertung aus wie immer. Höchster Einsatzort und
-Windenzahlen fehlen in „Gemischt", weil sie sich über beide Arten nicht sinnvoll
-addieren lassen.
+Die Luftansicht behält die gewohnte Flugterminologie; für eine rein
+luftgebundene Nutzung sieht die Auswertung aus wie immer.
+
+**Warum „Gemischt" nur vier Kacheln hat** (seit Web 9.6.0): Kilometer, Dauern
+und Fehleinsätze standen dort bis dahin mit — als Summe über beide Arten. Eine
+Flugstrecke von 61 km und eine Fahrstrecke von 12 km stehen aber für ganz
+verschiedene Einsätze, und ihre Summe beantwortet keine Frage, die jemand
+stellt. Was über beide Arten trägt, sind Anzahl, Diensttage, ihr Verhältnis
+und die Sekundärtransporte. Die übrigen Zahlen findest du unverändert in den
+beiden Artenansichten. Höchster Einsatzort und Windenzahlen standen aus
+demselben Grund nie in „Gemischt".
+
+**Auf dem Handy** sind von jedem Satz vier Kacheln sichtbar; der Rest steht
+hinter **„Weitere Statistik (n)"**. In der Luftansicht sind es Einsätze,
+Flugtage, Flugkilometer und Winden-Cycles, in der Bodenansicht Einsätze,
+Diensttage, Einsatzkilometer und die längste Einsatzdauer — „Gemischt" hat
+ohnehin nur vier und braucht den Knopf nicht.
 
 **Diensttage ohne Zuordnung** zählen in „Gemischt" mit — die Summe der beiden
-Artenreiter ist dann kleiner. Genau deshalb weist „Gemischt" ihre Anzahl aus und
-verlinkt auf das Nachtragen; ohne den Hinweis wäre die Abweichung nicht
-erklärbar.
+Artenansichten ist dann kleiner. Genau deshalb weist „Gemischt" ihre Anzahl
+aus und verlinkt auf das Nachtragen; ohne den Hinweis wäre die Abweichung
+nicht erklärbar.
 
-Der gewählte Reiter steht im Adressteil hinter dem `#` und bleibt beim Teilen
+Die gewählte Ansicht steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
-Die Kacheln **„Längste Einsatzstrecke"** (in der Luftrettung: „Längste
-Flugstrecke") und **„Längste Einsatzdauer"** sind interaktiv, in der
-Luftrettung zusätzlich **„Höchster Einsatzort"**: Zeigt man darauf, leuchten
-der zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
-Klick fixiert diese Hervorhebung und springt zur Tabellenzeile — praktisch,
-um den Extremwert-Einsatz auf einen Blick zu finden. Ein zweiter Klick auf
-dieselbe Kachel oder ein Klick auf eine freie Stelle der Seite löst die
-Fixierung wieder.
+Die Kacheln **„Längste Einsatzstrecke"** (in der Luftansicht: „Längste
+Flugstrecke") und **„Längste Einsatzdauer"** sind bedienbar, in der Luftansicht
+zusätzlich **„Höchster Einsatzort"**. Sie tragen einen kleinen Punkt oben
+rechts und nennen in der Beschriftung den **Tag** des betreffenden Einsatzes
+(„Längste Flugstrecke · 14.08.") — oft ist die Frage damit schon beantwortet.
+Zeigt man auf die Kachel, leuchten der zugehörige Karten-Punkt und die
+zugehörige Zeile auf; ein Klick hält die Hervorhebung fest und springt zur
+Zeile. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
+Stelle der Seite löst sie wieder.
+
+Die Hervorhebung ist seit Web 9.6.0 **orange** statt rot. Rot bedeutet in
+dieser Oberfläche „Achtung" — Fehler, Löschen; ein Höchstwert ist aber kein
+Fehler, sondern nur eine Auskunft.
 
 Jede Zeile der Einsatztabelle führt zum Einsatz; ein Klick auf das
 **Dreieck** davor klappt dagegen nur die Unterpunkte auf oder zu.

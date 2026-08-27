@@ -24,54 +24,106 @@ $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
 $titel = $monat !== ''
     ? $MONATSNAMEN[(int)$monat] . ' ' . $jahr
     : 'Jahr ' . $jahr;
+/* Spanne des Zeitraums fuer die Unterzeile (E-P3-37). Sie steht hier und
+   nicht im Skript: Sie folgt aus Jahr und Monat, nicht aus den Daten — die
+   Zahl der Diensttage traegt das Skript nach, sobald api/range.php da ist. */
+if ($monat !== '') {
+    $letzter = (int)date('t', (int)mktime(0, 0, 0, (int)$monat, 1, (int)$jahr));
+    $spanne  = sprintf('01.%s. – %02d.%s.%s', $monat, $letzter, $monat, $jahr);
+} else {
+    $spanne = '01.01. – 31.12.' . $jahr;
+}
+
 ui_seite_start(['titel' => $titel, 'karte' => true]);
 ?>
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
-    <h1><?= e($titel) ?></h1>
-    <div id="loaderror" class="alert" hidden></div>
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage',
+                        'zeitraum' => ['jahr' => $jahr, 'monat' => $monat]]); ?>
+    <?php
+    /* SEGMENTWAHL NACH ART (E-P3-37, vorher eine eigene Tableiste `.arttabs`).
+       Sie steht in den Aktionen der Titelzeile — am Desktop rechts neben dem
+       Titel, mobil vollbreit darunter. Der Baustein bringt die Bedienung mit:
+       Radios in einer Gruppe wandern von sich aus mit den Pfeiltasten, der
+       eigene keydown-Handler der alten Tableiste ist damit entfallen. */
+    ob_start();
+    ui_segment(['name' => 'art', 'id' => 'artwahl', 'wert' => 'mix',
+                'label' => 'Ansicht nach Art des Diensttags',
+                'klasse' => 'segment-art',
+                'optionen' => ['mix' => 'Gemischt', 'air' => 'Luft', 'ground' => 'Boden']]);
+    $segment = ob_get_clean();
+    ?>
+    <?php ui_titelzeile([
+        'zurueck' => $monat !== '' ? ['href' => 'zeitraum.php?y=' . $jahr, 'text' => $jahr] : null,
+        'titel'   => $titel,
+        'unter'   => 'Zeitraum · <span id="untertage">…</span> · ' . ui_e($spanne),
+        'aktionen' => $segment,
+    ]); ?>
 
-    <p id="lockbanner" class="alert alert-info" hidden>
-      Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben
-      verborgen, bis die Verschlüsselung entsperrt ist.
-      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
-    </p>
+    <div id="loaderror" hidden></div>
 
-    <?php /* TABLEISTE NACH ART (E28, A13a). Sie entsteht erst im Browser und
-             bleibt verborgen, solange im Zeitraum nur EINE Art vorliegt — dann
-             gäbe es nichts zu wählen. Die Beschriftungen stehen hier und nicht
-             im Skript, damit sie ohne JavaScript im Quelltext auffindbar
-             sind. */ ?>
-    <div class="arttabs" id="arttabs" role="tablist"
-         aria-label="Ansicht nach Art des Diensttags" hidden>
-      <button type="button" class="arttab" data-tab="mix" role="tab"
-              id="tab-mix" aria-selected="true">Gemischt</button>
-      <button type="button" class="arttab" data-tab="air" role="tab"
-              id="tab-air" aria-selected="false">Luftrettung</button>
-      <button type="button" class="arttab" data-tab="ground" role="tab"
-              id="tab-ground" aria-selected="false">Bodengebundener Rettungsdienst</button>
+    <?php /* Sperrhinweis als Meldungs-Baustein. Er traegt seinen Knopf selbst;
+             ohne Inhaltsschluessel bleiben Einsatzort, Alter und Diagnose leer
+             — und damit auch die Karte, deren Pins aus dem Ort stammen. */ ?>
+    <div id="lockbanner" hidden>
+      <?php ui_meldung(
+          'Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben '
+        . 'verborgen, bis die Verschlüsselung entsperrt ist.',
+          null, 'info', '      ',
+          ['knopf' => ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                                'typ' => 'button', 'attr' => ' id="unlockbtn"'])]); ?>
     </div>
 
-    <div id="tabpanel" role="tabpanel" aria-labelledby="tab-mix">
-      <?php /* Der Hinweis auf neutrale Diensttage (E31). Ohne ihn wäre nicht
-               erklärbar, warum die Summe der beiden Artentabs kleiner ist als
-               „Gemischt". */ ?>
-      <p id="neutralhinweis" class="muted neutralhinweis" hidden></p>
+    <?php /* Der Hinweis auf neutrale Diensttage (E31). Ohne ihn wäre nicht
+             erklärbar, warum die Summe der beiden Artenansichten kleiner ist
+             als „Gemischt". */ ?>
+    <div id="neutralhinweis" hidden></div>
 
-      <div id="rangemap" class="geo" hidden></div>
+    <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
+             heissen, hängt von der Ansicht ab (E-P3-37) und bei den
+             Windenkacheln zusätzlich vom Bestand (E30, A13d). Unter 720 px
+             sind VIER sichtbar, der Rest steht hinter „Weitere Statistik". */ ?>
+    <div class="kennzahl-raster" id="kennzahlen" hidden></div>
+    <button type="button" class="leiser-link kennzahl-mehr-knopf nur-unter-720"
+            id="mehrstatistik" aria-expanded="false" aria-controls="kennzahlen" hidden>
+      <?= ui_symbol('winkel') ?><span>Weitere Statistik</span>
+    </button>
 
-      <?php /* Die Kacheln entstehen im Browser: Welche es gibt und wie sie
-               heissen, hängt vom Tab ab (E32, E33) und bei den Windenkacheln
-               zusätzlich vom Bestand (E30, A13d). */ ?>
-      <div class="stats-grid" id="statsgrid" hidden></div>
+    <div id="rangemap" class="geo" hidden></div>
 
-      <!-- Spalten, Sortierung und Zeilenaufbau kommen aus assets/missiontable.js,
-           gemeinsam mit suche.php. Kopf und Rumpf bleiben hier leer. -->
-      <table class="data" id="rangetable">
-        <thead></thead>
-        <tbody id="rangebody"></tbody>
-      </table>
-      <p id="leer" class="muted" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
-    </div>
+    <section class="karte karte-treffer">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Einsätze</h2>
+        <span class="karte-zahl" id="einsatzzahl"></span>
+        <?php /* Sortieren über dasselbe Blatt wie auf der Suchseite (E-P3-32):
+                 auf dem Handy der einzige Weg zu einer anderen Ordnung, am
+                 Desktop ein Aufklappmenü neben dem Tabellenkopf. */ ?>
+        <div class="aktionen sortieren-aktion">
+          <button type="button" class="karte-aktion karte-aktion-blau"
+                  data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
+            <?= ui_symbol('sortieren') ?><span id="sortlabel">Datum</span>
+          </button>
+          <div class="blatt" id="sortblatt" hidden>
+            <div class="blatt-griff" aria-hidden="true"></div>
+            <h2 class="blatt-titel">Sortieren</h2>
+            <div class="blatt-liste" id="sortliste"></div>
+            <button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>
+              <span>Abbrechen</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="karte-inhalt">
+        <p id="leer" class="feld-hinweis" hidden>In diesem Zeitraum sind keine Einsätze erfasst.</p>
+        <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
+                 dreizeilige Kachel mit Artzeichen und Datum — beide aus
+                 demselben Zeilenbestand (E-P3-32/37, missiontable.js). */ ?>
+        <div class="tabelle-scroll nur-ab-720">
+          <table class="tabelle" id="rangetable" hidden>
+            <thead></thead>
+            <tbody id="rangebody"></tbody>
+          </table>
+        </div>
+        <div class="kachelliste nur-unter-720" id="rangekacheln"></div>
+      </div>
+    </section>
 <?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
@@ -86,6 +138,9 @@ ui_seite_start(['titel' => $titel, 'karte' => true]);
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<?php /* geo.js liefert das Standort-Haus (E-P3-40) und die Farben aus den
+         Token — dieselbe Quelle wie auf Tages- und Einsatzkarte. */ ?>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script>
 const JAHR  = <?= json_encode($jahr) ?>;
 const MONAT = <?= json_encode($monat) ?>;
@@ -111,6 +166,7 @@ attachBaseLayers(map);
 attachFullscreenControl(map);
 
 let missions = [];
+let bases    = [];        // Standorte der Diensttage des Zeitraums (E-P3-40)
 let fixierteMid = null;   // per Klick festgesetzte Einsatz-ID oder null
 
 /* Diensttage des Zeitraums, gesamt und nach Art (api/range.php). Sie zaehlen
@@ -128,8 +184,14 @@ let tageArt = { air: 0, ground: 0, neutral: 0 };
 let tabsAn = false;
 let ansicht = 'mix';
 
-const FARBE_HERVOR = '#D63338';  // Newroz Rot
-const FARBE_NORMAL  = '#4280E5'; // Max Blau
+/* FARBEN AUS DEN TOKEN (E-P3-18). Zwei Hexwerte standen hier fest im Skript;
+   seit O7 kommen sie aus :root, wie in geo.js. Die Hervorhebung war ROT und
+   ist jetzt ORANGE: Rot heißt in dieser Oberfläche „Aufmerksamkeit" (Fehler,
+   Löschen), und ein Höchstwert ist kein Fehler (E-P3-37). */
+const _wurzel = getComputedStyle(document.documentElement);
+const token = n => _wurzel.getPropertyValue(n).trim();
+const FARBE_HERVOR = token('--orange');
+const FARBE_NORMAL = token('--blau');
 
 /* Alle Pins in EINER Ebene. Der Tab filtert die Karte mit (A13b), und eine
    Ebene laesst sich leeren, ohne die Karte selbst anzufassen. */
@@ -163,56 +225,100 @@ function fmtKmDe(meter){ return (meter / 1000).toFixed(1).replace('.', ',') + ' 
  *   nurWenn  (liste) => bool, datengetriebene Sichtbarkeit (E30, A13d)
  * ================================================================== */
 
-/* Die acht neutralen Kacheln. Sie gelten fuer den bodengebundenen Tab UND
-   fuer „Gemischt" — dieselbe Menge, dieselben Worte (E33). Zwei Saetze mit
-   identischem Inhalt waeren zwei Stellen, an denen die naechste Aenderung
-   nur zur Haelfte ankaeme. Hoechster Einsatzort und Windenzahlen fehlen hier,
-   weil sie sich ueber beide Arten nicht sinnvoll addieren lassen. */
-const KACHELN_NEUTRAL = [
-  { id: 'missioncount', label: 'Einsätze',                 text: k => String(k.n) },
-  { id: 'tage',         label: 'Diensttage',               text: k => String(k.tage) },
-  { id: 'avgmissions',  label: 'Ø Einsätze / Diensttag',   text: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
-  { id: 'secondary',    label: 'Sekundärtransporte',       text: k => String(k.sek) },
-  /* Die einzige Kachel, die es im Luftrettungs-Tab NICHT gibt (E32/A13f),
-     obwohl der Haken auch luftgebunden zur Verfuegung steht. In „Gemischt"
-     zaehlt sie luftgebundene Fehleinsaetze mit — die Zahl bleibt dadurch
-     vollstaendig. */
-  { id: 'fehl',         label: 'Fehleinsätze',             text: k => String(k.fehl) },
-  { id: 'totalkm',      label: 'Einsatzkilometer gesamt',  text: k => fmtKmDe(k.km) },
-  { id: 'maxkm',        label: 'Längste Einsatzstrecke',   extrem: 'maxKm',
-    text: k => k.maxKm.wert != null ? fmtKmDe(k.maxKm.wert) : '–' },
-  { id: 'maxdauer',     label: 'Längste Einsatzdauer',     extrem: 'maxDauer',
-    text: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' }
+/* Ein Eintrag je Kachel — seit O7 mit GETRENNTER EINHEIT:
+     wert     (k) => Zahl als Text, OHNE Einheit
+     einheit  (k) => "km" | "h" | "m" | "" — sie wird kleiner gesetzt
+   Vorher lieferte eine einzige Funktion "61,0 km" am Stück; der Baustein
+   (ui_kennzahl / .kennzahl-einheit) setzt die Einheit aber kleiner, und das
+   geht nur, wenn sie ein eigenes Element ist. */
+function wertKm(meter){ return (meter / 1000).toFixed(1).replace('.', ','); }
+
+/* SUMMEN OHNE NACHKOMMA, EINZELWERTE MIT (Mockup 30: „486 km" für die Summe,
+   „61,0 km" für die längste Strecke). Eine Summe über Dutzende Einsätze auf
+   100 m genau anzugeben behauptet eine Genauigkeit, die die Einzelwerte nicht
+   haben — dieselbe Regel wie im Kopf der Trefferliste (O6). Die
+   Tausendertrennung kommt von toLocaleString, damit „1.633" nicht als
+   Kommazahl gelesen wird. */
+function wertKmSumme(meter){ return Math.round(meter / 1000).toLocaleString('de-DE'); }
+function wertGanz(n){ return Number(n).toLocaleString('de-DE'); }
+
+/* Die acht Kacheln des bodengebundenen Rettungsdienstes. Höchster Einsatzort
+   und Windenzahlen fehlen hier, weil sie sich über beide Arten nicht sinnvoll
+   addieren lassen.
+
+   MOBIL SICHTBAR sind die vier mit `mobil: true` (E-P3-37) — und das sind
+   NICHT einfach die ersten vier: Für den Boden zählen Einsätze, Diensttage,
+   Einsatzkilometer und die längste Einsatzdauer, für die Luft die
+   Winden-Cycles statt des Durchschnitts. Die Auswahl steht deshalb an der
+   Kachel und nicht als Positionsregel im Erzeuger. */
+const KACHELN_BODEN = [
+  { id: 'missioncount', label: 'Einsätze',   mobil: true,      wert: k => String(k.n) },
+  { id: 'tage',         label: 'Diensttage', mobil: true,      wert: k => String(k.tage) },
+  { id: 'avgmissions',  label: 'Ø Einsätze / Diensttag',       wert: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
+  { id: 'secondary',    label: 'Sekundärtransporte',           wert: k => String(k.sek) },
+  /* Die einzige Kachel, die es in der Luftansicht NICHT gibt (E32/A13f),
+     obwohl der Haken auch luftgebunden zur Verfügung steht. */
+  { id: 'fehl',         label: 'Fehleinsätze',                 wert: k => String(k.fehl) },
+  { id: 'totalkm',      label: 'Einsatzkilometer gesamt', mobil: true,
+    wert: k => wertKmSumme(k.km), einheit: 'km' },
+  { id: 'maxkm',        label: 'Längste Einsatzstrecke',  extrem: 'maxKm',
+    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    einheit: k => k.maxKm.wert != null ? 'km' : '' },
+  /* OHNE Einheit: fmtDur() liefert „1h 28min" — die Einheit steckt schon im
+     Wert. Das Mockup schreibt „0:58 h"; die Anwendung schreibt Dauern seit
+     jeher als „52min" / „1h 28min", und diese Schreibweise gilt (dieselbe
+     dokumentierte Abweichung wie in O4 auf der Einsatzansicht). */
+  { id: 'maxdauer',     label: 'Längste Einsatzdauer',    extrem: 'maxDauer', mobil: true,
+    wert: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' }
 ];
 
-/* Die zehn Kacheln der Luftrettung — der heutige Bestand, unveraendert in
-   Beschriftung und Umfang (A13f). Die beiden Windenkacheln stehen am ENDE,
-   weil sie als einzige verschwinden koennen: eine Luecke mitten im Raster
-   waere schwerer zu lesen als eine kuerzere letzte Reihe. */
+/* GEMISCHT ZEIGT VIER (E-P3-37) — das ist die Funktionsänderung dieses
+   Pakets. Bisher teilte „Gemischt" den Bodensatz mit acht; über beide Arten
+   hinweg sind Kilometer, Dauern und Fehleinsätze aber Äpfel und Birnen: Eine
+   Flugstrecke von 61 km und eine Fahrstrecke von 12 km stehen für ganz
+   verschiedene Einsätze, und ihre Summe beantwortet keine Frage, die jemand
+   stellt. Was über beide Arten trägt, sind Anzahl, Diensttage, ihr Verhältnis
+   und die Sekundärtransporte. Die übrigen Zahlen stehen unverändert in den
+   beiden Artenansichten. */
+const KACHELN_GEMISCHT = KACHELN_BODEN.slice(0, 4).map(d => ({ ...d, mobil: true }));
+
+/* Die zehn Kacheln der Luftrettung — unverändert in Beschriftung und Umfang
+   (A13f). Die beiden Windenkacheln stehen am ENDE, weil sie als einzige
+   verschwinden können: eine Lücke mitten im Raster wäre schwerer zu lesen als
+   eine kürzere letzte Reihe. */
 const KACHELN_LUFT = [
-  { id: 'missioncount', label: 'Einsätze',                 text: k => String(k.n) },
-  { id: 'tage',         label: 'Flugtage',                 text: k => String(k.tage) },
-  { id: 'avgmissions',  label: 'Ø Einsätze / Flugtag',     text: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
-  { id: 'secondary',    label: 'Sekundärtransporte',       text: k => String(k.sek) },
-  { id: 'totalkm',      label: 'Flugkilometer gesamt',     text: k => fmtKmDe(k.km) },
-  { id: 'maxkm',        label: 'Längste Flugstrecke',      extrem: 'maxKm',
-    text: k => k.maxKm.wert != null ? fmtKmDe(k.maxKm.wert) : '–' },
-  { id: 'maxdauer',     label: 'Längste Einsatzdauer',     extrem: 'maxDauer',
-    text: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' },
-  { id: 'maxhoehe',     label: 'Höchster Einsatzort',      extrem: 'maxHoehe',
-    text: k => k.maxHoehe.wert != null ? k.maxHoehe.wert + ' m' : '–' },
+  { id: 'missioncount', label: 'Einsätze',  mobil: true,       wert: k => String(k.n) },
+  { id: 'tage',         label: 'Flugtage',  mobil: true,       wert: k => String(k.tage) },
+  { id: 'avgmissions',  label: 'Ø Einsätze / Flugtag',         wert: k => k.tage > 0 ? fmtDe1(k.n / k.tage) : '–' },
+  { id: 'secondary',    label: 'Sekundärtransporte',           wert: k => String(k.sek) },
+  { id: 'totalkm',      label: 'Flugkilometer gesamt', mobil: true,
+    wert: k => wertKmSumme(k.km), einheit: 'km' },
+  { id: 'maxkm',        label: 'Längste Flugstrecke',   extrem: 'maxKm',
+    wert: k => k.maxKm.wert != null ? wertKm(k.maxKm.wert) : '–',
+    einheit: k => k.maxKm.wert != null ? 'km' : '' },
+  { id: 'maxdauer',     label: 'Längste Einsatzdauer',  extrem: 'maxDauer',
+    wert: k => k.maxDauer.wert != null ? fmtDur(k.maxDauer.wert) : '–' },
+  { id: 'maxhoehe',     label: 'Höchster Einsatzort',   extrem: 'maxHoehe',
+    wert: k => k.maxHoehe.wert != null ? wertGanz(k.maxHoehe.wert) : '–',
+    einheit: k => k.maxHoehe.wert != null ? 'm' : '' },
   /* NUR BEI TATSAECHLICHEN WINDENEINSAETZEN (E30, A13d) — nicht schon, wenn
-     das Rettungsmittel es koennte. Damit laesst sich „null Windeneinsaetze"
+     das Rettungsmittel es könnte. Damit lässt sich „null Windeneinsätze"
      nicht mehr von „Winde nicht eingerichtet" unterscheiden; das ist gewollt,
      weil eine Dauerkachel mit dem Wert null nur Platz kostet. */
-  { id: 'winchcycles',  label: 'Anzahl Winden-Cycles',     text: k => String(k.winden),
+  { id: 'winchcycles',  label: 'Winden-Cycles', mobil: true,   wert: k => String(k.winden),
     nurWenn: liste => liste.some(m => m.winch) },
   { id: 'avgwinch',     label: 'Ø Winden-Cycles / Flugtag',
-    text: k => k.tage > 0 ? fmtDe1(k.winden / k.tage) : '–',
+    wert: k => k.tage > 0 ? fmtDe1(k.winden / k.tage) : '–',
     nurWenn: liste => liste.some(m => m.winch) }
 ];
 
-const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_NEUTRAL, mix: KACHELN_NEUTRAL };
+const KACHELSATZ = { air: KACHELN_LUFT, ground: KACHELN_BODEN, mix: KACHELN_GEMISCHT };
+
+/* Spalten je Satz (E-P3-37: „Spaltenzahl folgt dem Satz"). Vier Kacheln in
+   vier Spalten, acht in zwei Reihen zu vier, zehn in zwei Reihen zu fünf —
+   so bleibt keine Reihe halb leer. Gilt erst ab 720 px; darunter sind es
+   immer zwei. */
+const SPALTEN_JE_SATZ = { air: 5, ground: 4, mix: 4 };
 
 /* Alle Kennzahlen in EINEM Durchlauf. Sie kommen unverschluesselt aus
  * api/range.php, sind also sofort verfuegbar — unabhaengig von der lokalen
@@ -245,39 +351,109 @@ function rechne(liste, tage){
 }
 
 /* Baut das Kachelraster neu auf. NEU AUFBAUEN statt beschriften: Welche
- * Kacheln es gibt, haengt am Tab und am Bestand — ein fester Satz im HTML
- * muesste dieselbe Entscheidung ein zweites Mal treffen, und die Ereignisse
- * der Extremwert-Kacheln haengen an Elementen, die es je nach Tab gar nicht
- * gibt. Die Ereignisse werden deshalb hier vergeben, beim Erzeugen. */
+ * Kacheln es gibt, hängt an der Ansicht und am Bestand — ein fester Satz im
+ * HTML müsste dieselbe Entscheidung ein zweites Mal treffen, und die
+ * Ereignisse der Extremwert-Kacheln hängen an Elementen, die es je nach
+ * Ansicht gar nicht gibt. Die Ereignisse werden deshalb hier vergeben, beim
+ * Erzeugen.
+ *
+ * Das Markup ist dasselbe wie in ui_kennzahl() (ui.php) — hier von Hand
+ * nachgebaut, weil die Kacheln erst im Browser entstehen. Wer den Baustein
+ * ändert, ändert BEIDE Stellen.
+ */
 function zeichneStatistik(liste, tage){
   const k    = rechne(liste, tage);
-  const grid = document.getElementById('statsgrid');
+  const grid = document.getElementById('kennzahlen');
   grid.innerHTML = '';
-  KACHELSATZ[ansicht].forEach(def => {
-    if (def.nurWenn && !def.nurWenn(liste)) { return; }
+  grid.className = 'kennzahl-raster kennzahl-raster-' + SPALTEN_JE_SATZ[ansicht];
+
+  const satz = KACHELSATZ[ansicht].filter(def => !def.nurWenn || def.nurWenn(liste));
+
+  /* MOBIL VIER (E-P3-37). Welche vier, sagt die Kachel selbst (`mobil`).
+     Fällt eine davon am Bestand weg — die Winden-Cycles ohne Windeneinsatz —,
+     rückt die nächste des Satzes nach: Vier Kacheln füllen zwei Reihen zu
+     zweit, drei ließen eine halbe Reihe leer. Das steht so nicht im Konzept;
+     dort ist der Fall „Luftansicht ohne Winde" nicht bedacht. */
+  const vorn = satz.filter(d => d.mobil);
+  while (vorn.length < 4 && vorn.length < satz.length) {
+    const naechste = satz.find(d => !vorn.includes(d));
+    if (!naechste) { break; }
+    vorn.push(naechste);
+  }
+  const mobilSatz = vorn.slice(0, 4);
+
+  satz.forEach(def => {
     const tile = document.createElement('div');
-    tile.className = 'stat-tile';
+    tile.className = 'kennzahl' + (mobilSatz.includes(def) ? '' : ' kennzahl-mehr');
     tile.dataset.kachel = def.id;
-    const wert = document.createElement('span');
-    wert.className = 'stat-value';
-    wert.textContent = def.text(k);
-    const lab = document.createElement('span');
-    lab.className = 'stat-label';
+
+    const wert = document.createElement('p');
+    wert.className = 'kennzahl-wert';
+    wert.textContent = def.wert(k);
+    const einheit = typeof def.einheit === 'function' ? def.einheit(k) : (def.einheit || '');
+    if (einheit) {
+      const e = document.createElement('span');
+      e.className = 'kennzahl-einheit';
+      e.textContent = einheit;
+      wert.appendChild(e);
+    }
+
+    const lab = document.createElement('p');
+    lab.className = 'kennzahl-label';
     lab.textContent = def.label;
+
     tile.appendChild(wert);
     tile.appendChild(lab);
+
     /* Extremwert-Kacheln behalten ihr bisheriges Verhalten: OHNE Kandidat
        bleiben sie stumm statt zu verschwinden (Konzept 4.6) — sie zeigen
-       einen Gedankenstrich und sind nicht anklickbar. */
+       einen Gedankenstrich und sind nicht anklickbar. MIT Kandidat tragen
+       sie seit O7 den Punkt oben rechts und den TAG in der Beschriftung
+       (E-P3-37): „Längste Flugstrecke · 14.08." beantwortet die Frage
+       „welcher Einsatz war das?" schon vor dem Klick. */
     if (def.extrem && k[def.extrem].mid != null) {
+      const traeger = missions.find(m => m.id === k[def.extrem].mid);
+      if (traeger) {
+        const tag = document.createElement('span');
+        tag.className = 'kennzahl-tag';
+        tag.textContent = ' · ' + fmtTagKurz(traeger.day);
+        lab.appendChild(tag);
+      }
       tile.dataset.mid = k[def.extrem].mid;
-      tile.classList.add('stat-tile-link');
+      tile.classList.add('kennzahl-extrem');
+      if (k[def.extrem].mid === fixierteMid) { tile.classList.add('aktiv'); }
       verdrahteExtremKachel(tile);
     }
     grid.appendChild(tile);
   });
-  grid.hidden = false;
+  grid.hidden = satz.length === 0;
+
+  /* „Weitere Statistik (n)" — nur mobil, und nur wenn es etwas zu zeigen gibt.
+     In der gemischten Ansicht sind es vier von vier, der Knopf entfällt. */
+  const knopf   = document.getElementById('mehrstatistik');
+  const verdeckt = satz.length - mobilSatz.length;
+  knopf.hidden = verdeckt <= 0;
+  knopf.querySelector('span').textContent = 'Weitere Statistik (' + verdeckt + ')';
+  setzeMehrStatistik(mehrOffen);
 }
+
+/** Tag eines Extremwerts, kurz: „14.08." — das Jahr steht im Seitentitel. */
+function fmtTagKurz(iso){
+  const t = String(iso || '');
+  return t.length >= 10 ? t.slice(8, 10) + '.' + t.slice(5, 7) + '.' : t;
+}
+
+let mehrOffen = false;
+function setzeMehrStatistik(offen){
+  mehrOffen = offen;
+  const grid  = document.getElementById('kennzahlen');
+  const knopf = document.getElementById('mehrstatistik');
+  grid.classList.toggle('kennzahl-raster-offen', offen);
+  knopf.setAttribute('aria-expanded', offen ? 'true' : 'false');
+  knopf.classList.toggle('offen', offen);
+}
+document.getElementById('mehrstatistik')
+        .addEventListener('click', () => setzeMehrStatistik(!mehrOffen));
 
 /* Hervorhebung des Traeger-Einsatzes: ueberfahren zeigt, klicken setzt fest.
  * Die Kacheln entstehen bei jedem Zeichnen neu, die Ereignisse also auch —
@@ -290,7 +466,7 @@ function verdrahteExtremKachel(tile){
   tile.addEventListener('mouseleave', () => wendeHervorhebungAn(fixierteMid));
   tile.addEventListener('click', () => {
     if (fixierteMid === mid) { loeseFixierung(); return; }
-    document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
+    document.querySelectorAll('.kennzahl.aktiv').forEach(t => t.classList.remove('aktiv'));
     fixierteMid = mid;
     tile.classList.add('aktiv');
     wendeHervorhebungAn(mid);
@@ -303,10 +479,12 @@ function verdrahteExtremKachel(tile){
 // Tabellenzeile und Karten-Pin an (mid === null loescht jede Hervorhebung).
 // Einzige Stelle, die Hervorhebung anwendet — kein Aufaddieren von Klassen.
 function wendeHervorhebungAn(mid){
-  document.querySelectorAll('#rangebody tr.hl-extrem').forEach(tr => tr.classList.remove('hl-extrem'));
+  /* Tabelle UND Kacheln: Unter 720 px steht dieselbe Liste als Kachelsatz,
+     und eine Hervorhebung, die nur die Tabelle kennt, ginge dort ins Leere. */
+  document.querySelectorAll('.hl-extrem').forEach(el => el.classList.remove('hl-extrem'));
   if (mid != null) {
-    const zeile = document.querySelector(`#rangebody tr[data-mid="${mid}"]`);
-    if (zeile) { zeile.classList.add('hl-extrem'); }
+    document.querySelectorAll(`#rangebody tr[data-mid="${mid}"], #rangekacheln [data-mid="${mid}"]`)
+            .forEach(el => el.classList.add('hl-extrem'));
   }
   missions.forEach(m => {
     if (!m._marker) return;   // regulaer: keine Koordinaten oder Inhaltsschluessel gesperrt
@@ -322,12 +500,12 @@ function wendeHervorhebungAn(mid){
 function loeseFixierung(){
   if (fixierteMid == null) return;
   fixierteMid = null;
-  document.querySelectorAll('.stat-tile-link.aktiv').forEach(t => t.classList.remove('aktiv'));
+  document.querySelectorAll('.kennzahl.aktiv').forEach(t => t.classList.remove('aktiv'));
   wendeHervorhebungAn(null);
 }
 
 document.addEventListener('click', ev => {
-  if (ev.target.closest('.stat-tile')) { return; }   // Kacheln haben eigene Logik
+  if (ev.target.closest('.kennzahl')) { return; }    // Kacheln haben eigene Logik
   if (ev.target.closest('.leaflet-marker-icon, .leaflet-interactive')) { return; }
   loeseFixierung();
 });
@@ -341,13 +519,62 @@ document.addEventListener('click', ev => {
  */
 const tabelle = EdMissionTable.erzeuge({
   table: document.getElementById('rangetable'),
+  /* Unter 720 px die Kachel statt der Tabelle — mit Artzeichen und Datum,
+     weil die Einsätze aus verschiedenen Tagen kommen (E-P3-32/37). Beide
+     Formen entstehen aus demselben Zeilenbestand; welche zu sehen ist, sagt
+     das Stylesheet. */
+  kacheln: document.getElementById('rangekacheln'),
+  kachelOpts: { artDatum: true, knapp: true },
   sortKey: 'day', sortAsc: true,
-  onAfterDraw: (gesamt) => {
+  onSortChange: () => sortLabel(),
+  onAfterDraw: (gesamt, gezeigt, zeilen) => {
     document.getElementById('leer').hidden = gesamt > 0;
     document.getElementById('rangetable').hidden = gesamt === 0;
+
+    /* Kopf der Einsatzkarte: Zahl und km-Summe (Mockup 29/31). Anders als auf
+       der Suchseite steht hier NIE „n von m": Der Zeitraum ist der Rahmen,
+       nicht ein Filter über einem größeren Bestand — die Artenwahl daneben
+       sagt schon, welcher Ausschnitt gemeint ist. */
+    const km = zeilen.reduce((sum, m) => sum + (m.distance_m || 0), 0);
+    const teile = [String(gesamt)];
+    /* Ganze Kilometer, wie in der Suche: Die Summe über Dutzende Einsätze auf
+       100 m genau anzugeben behauptet eine Genauigkeit, die keine Aussage
+       trägt. */
+    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
+    document.getElementById('einsatzzahl').textContent = teile.join(' · ');
+
     wendeHervorhebungAn(fixierteMid);
   }
 });
+
+/* Sortierknopf und -blatt — dasselbe Markup und dieselbe Bedienung wie auf
+   der Suchseite (E-P3-32). Unter 720 px gibt es keinen Tabellenkopf, über den
+   sich sortieren ließe; das Blatt ist dort der einzige Weg. */
+function sortLabel(){
+  const sp = tabelle.spalten().find(x => x.key === tabelle.sortKey);
+  const richtung = tabelle.sortKey === 'day'
+    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
+    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
+  document.getElementById('sortlabel').innerHTML = sp
+    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
+    : esc(richtung);
+  const liste = document.getElementById('sortliste');
+  liste.innerHTML = '';
+  tabelle.spalten().forEach(sp2 => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const aktiv = sp2.key === tabelle.sortKey;
+    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
+    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
+      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
+    b.addEventListener('click', () => {
+      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
+      sortLabel();
+      if (window.edBlatt) { edBlatt.zu(); }
+    });
+    liste.appendChild(b);
+  });
+}
 
 /* ====================================================================
  * Tabs nach Art (Abschnitt 3.7.1).
@@ -380,39 +607,41 @@ function tageDerAnsicht(){
  * ohne Tableiste. In den beiden Artentabs nicht: Dort sind sie nicht dabei,
  * und ein Hinweis auf etwas Nichtgezaehltes verwirrt mehr, als er erklaert. */
 function zeigeNeutralHinweis(){
-  const p = document.getElementById('neutralhinweis');
+  const box   = document.getElementById('neutralhinweis');
   const dabei = !tabsAn || ansicht === 'mix';
-  if (!dabei || tageArt.neutral === 0) { p.hidden = true; return; }
+  if (!dabei || tageArt.neutral === 0) { box.hidden = true; box.innerHTML = ''; return; }
   const n = tageArt.neutral;
-  p.innerHTML = (n === 1
+  const text = (n === 1
       ? 'Ein Diensttag dieses Zeitraums ist mitgezählt, aber noch keiner Art zugeordnet'
       : `${n} Diensttage dieses Zeitraums sind mitgezählt, aber noch keiner Art zugeordnet`)
-    + ' — ihnen fehlt Standort oder Rettungsmittel. '
-    + '<a href="nachbearbeitung.php">Zuordnung nachtragen</a>';
-  p.hidden = false;
+    + ' — ihnen fehlt Standort oder Rettungsmittel.';
+  /* Derselbe Meldungs-Baustein wie überall (ui_meldung_markup), hier im
+     Browser gebaut: Ob der Hinweis nötig ist, weiß erst die Antwort. */
+  box.innerHTML = '<div class="meldung meldung-warn" role="status">'
+    + edSymbol('warnung', 'symbol-gross')
+    + '<p>' + esc(text) + '</p>'
+    + '<div class="meldung-aktion">'
+    + '<a class="knopf knopf-neutral" href="nachbearbeitung.php">'
+    + '<span>Zuordnung nachtragen</span></a></div></div>';
+  box.hidden = false;
 }
 
-/** Tableiste beschriften und den aktiven Tab markieren. */
-function zeichneTabs(){
-  const leiste = document.getElementById('arttabs');
-  leiste.hidden = !tabsAn;
+/** Segmentwahl anzeigen und den aktiven Punkt setzen. */
+function zeichneSegment(){
+  const wahl = document.getElementById('artwahl');
+  /* Die Wahl erscheint NUR, wenn im Zeitraum beide Arten vorliegen (E28) —
+     ein einzelnes Segment wäre eine Wahl ohne Alternative. */
+  wahl.hidden = !tabsAn;
   if (!tabsAn) { return; }
-  leiste.querySelectorAll('.arttab').forEach(b => {
-    const an = b.dataset.tab === ansicht;
-    b.classList.toggle('aktiv', an);
-    b.setAttribute('aria-selected', an ? 'true' : 'false');
-    // Nur der aktive Tab ist mit der Tabulatortaste erreichbar; zwischen den
-    // Tabs wird mit den Pfeiltasten gewechselt (uebliche Bedienung einer
-    // Tableiste).
-    b.tabIndex = an ? 0 : -1;
+  wahl.querySelectorAll('input[type="radio"]').forEach(r => {
+    r.checked = r.value === ansicht;
   });
-  document.getElementById('tabpanel').setAttribute('aria-labelledby', 'tab-' + ansicht);
 }
 
 /** Alles neu zeichnen, was am Tab haengt: Kacheln, Tabelle, Karte, Hinweis. */
 function zeichne(){
   const liste = gefiltert();
-  zeichneTabs();
+  zeichneSegment();
   zeigeNeutralHinweis();
   /* Die Spaltensichtbarkeit der Tabelle richtet sich nach DIESER Liste: Im
      bodengebundenen Tab gibt es keine Windeneinsaetze, also auch keine
@@ -433,8 +662,29 @@ function zeichneKarte(liste){
   pinLayer.clearLayers();
   missions.forEach(m => { m._marker = null; });
   const bounds = [];
+
+  /* DAS STANDORT-HAUS (E-P3-40). Es steht auf jeder Karte, sobald Koordinaten
+     vorliegen — und anders als die Einsatzorte braucht es dafür KEINEN
+     Inhaltsschlüssel: Der Standort des Diensttags ist Klartext (api/range.php).
+     Die Karte kann damit auch im gesperrten Zustand etwas zeigen; nur die
+     Einsatzorte bleiben dann aus.
+
+     In den beiden Artenansichten stehen nur die Standorte dieser Art: Eine
+     Wache, an der in diesem Monat kein Hubschrauber stand, gehört nicht auf
+     die Luftkarte. Standorte OHNE Art (neutrale Diensttage) bleiben immer
+     stehen — sie könnten zu beidem gehören. */
+  bases.forEach(b => {
+    if (tabsAn && ansicht !== 'mix' && b.kind !== null && b.kind !== ansicht) { return; }
+    EdGeo.markerStandort([b.lat, b.lon], b.name).addTo(pinLayer);
+    bounds.push([b.lat, b.lon]);
+  });
+
   liste.forEach(m => {
     if (m._lat == null) { return; }
+    /* Der Einsatzort bleibt ein Kreis und wird kein Pin-Symbol: Auf einer
+       Jahreskarte liegen Dutzende beieinander, und der Kreis lässt sich für
+       die Hervorhebung aus einer Extremwert-Kachel einfärben und vergrößern —
+       ein divIcon müsste dafür neu gebaut werden. */
     m._marker = L.circleMarker([m._lat, m._lon], {
       radius: 6, weight: 2, color: '#fff', fillColor: FARBE_NORMAL, fillOpacity: 1
     }).addTo(pinLayer).bindPopup(`${fmtTag(m.day)}<br>${esc(m._addr || '')}`);
@@ -447,7 +697,16 @@ function zeichneKarte(liste){
     // war beim Initialisieren unbekannt; invalidateSize() vor fitBounds ist
     // Pflicht, sonst bleiben die Kacheln grau oder falsch zugeschnitten.
     map.invalidateSize();
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+    /* PADDING NACH DER KARTENGROESSE, nicht als feste 30 px (Muster aus O3,
+       index.php). Das Standort-Schild ist breiter als sein Anker: Liegt der
+       Standort am Rand des Ausschnitts, ragte das Schild bei 390 px aus der
+       Karte und legte sich über die Bedienknöpfe. Ein Achtel der Kantenlänge
+       je Seite hält es drin — und bleibt bei jeder Breite verhältnismäßig.
+       Leaflet erwartet L.point(x, y); ein vertauschtes Paar fraß in O3 fast
+       die ganze Kartenhöhe (F-P3-Z). */
+    const px = map.getSize();
+    map.fitBounds(L.latLngBounds(bounds),
+      { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
   }
 }
 
@@ -491,26 +750,19 @@ window.addEventListener('hashchange', () => {
   if (ansicht !== vorher) { fixierteMid = null; zeichne(); }
 });
 
-document.querySelectorAll('.arttab').forEach(b => {
-  b.addEventListener('click', () => setzeAnsicht(b.dataset.tab));
-});
-/* Pfeiltasten in der Tableiste. Ohne sie waere die Leiste zwar erreichbar,
-   aber nur der aktive Tab — die uebrigen sind bewusst aus der
-   Tabulatorreihenfolge genommen. */
-document.getElementById('arttabs').addEventListener('keydown', ev => {
-  if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') { return; }
-  const tabs = [...document.querySelectorAll('.arttab')];
-  const i = tabs.findIndex(b => b.dataset.tab === ansicht);
-  if (i < 0) { return; }
-  ev.preventDefault();
-  const j = (i + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
-  setzeAnsicht(tabs[j].dataset.tab);
-  tabs[j].focus();
+/* Die Segmentwahl ist eine Radiogruppe: Der Wechsel mit den Pfeiltasten
+   kommt vom Browser, der eigene keydown-Handler der alten Tableiste ist
+   damit entfallen. Gehorcht wird `change`, nicht `click` — sonst löste die
+   Tastaturbedienung nichts aus. */
+document.getElementById('artwahl').addEventListener('change', ev => {
+  if (ev.target.name === 'art') { setzeAnsicht(ev.target.value); }
 });
 
 function zeigeFehler(msg){
   const box = document.getElementById('loaderror');
-  box.textContent = 'Die Daten konnten nicht geladen werden: ' + msg;
+  box.innerHTML = '<div class="meldung meldung-fehler" role="alert">'
+    + edSymbol('warnung', 'symbol-gross')
+    + '<p><strong>Nicht geladen.</strong> ' + esc(msg) + '</p></div>';
   box.hidden = false;
 }
 
@@ -530,6 +782,7 @@ function zeigeFehler(msg){
   } catch (e) { zeigeFehler(e.message); return; }
 
   missions = d.missions;
+  bases      = d.bases || [];
   tageGesamt = d.tage || 0;
   tageArt = d.tage_art || { air: 0, ground: 0, neutral: 0 };
 
@@ -543,10 +796,18 @@ function zeigeFehler(msg){
   else { ansicht = 'mix'; }   // nur neutrale Diensttage oder gar keine
   fragmentLesen();
 
+  /* Die Unterzeile trägt die Zahl der Diensttage nach — sie steht erst mit
+     der Antwort fest (PHP kennt nur die Spanne). Die Zahl gilt für den
+     ganzen Zeitraum und wechselt NICHT mit der Ansicht: Sie beschreibt den
+     Zeitraum, nicht den Ausschnitt; wie viele Tage auf eine Art entfallen,
+     sagt die Kachel „Diensttage". */
+  document.getElementById('untertage').textContent =
+    tageGesamt === 1 ? '1 Diensttag' : tageGesamt + ' Diensttage';
+
   zeichne();
-  // Den Tab von Anfang an ins Fragment schreiben, nicht erst beim ersten
-  // Wechsel: Sonst zeigte ein sofort kopierter Link auf keinen bestimmten Tab.
-  fragmentSchreiben();
+  sortLabel();
+  // Die Ansicht von Anfang an ins Fragment schreiben, nicht erst beim ersten
+  // Wechsel: Sonst zeigte ein sofort kopierter Link auf keine bestimmte.
 
   if (PAT_WRAP) { await entschluesselePat(); }
 })();

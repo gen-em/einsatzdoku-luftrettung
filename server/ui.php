@@ -370,6 +370,8 @@ function ui_kopf(array $o = []): void
  * $o: aktiv    Hauptpunkt in der Kopfleiste ('start' | 'suche' | 'einstellungen')
  *     leiste   'diensttage' | 'einstellungen' | 'filter' | null
  *     tag      Kennung des gewählten Diensttags (nur bei 'diensttage')
+ *     zeitraum ['jahr'=>'2026','monat'=>'08'] — markiert Jahres- bzw.
+ *              Monatszeile der Leiste (nur bei 'diensttage', E-P3-37)
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
  *     titel    Überschrift der Leiste bei 'filter'
  *
@@ -407,7 +409,8 @@ function ui_geruest_start(array $o = []): void
     </nav>
 <?php
     if ($leiste === 'diensttage') {
-        ui_leiste_diensttage(isset($o['tag']) ? (int)$o['tag'] : null);
+        ui_leiste_diensttage(isset($o['tag']) ? (int)$o['tag'] : null,
+                             (array)($o['zeitraum'] ?? []));
         ui_leiste_ende();
     } elseif ($leiste === 'einstellungen') {
         ui_leiste_einstellungen((string)($o['menue'] ?? ''));
@@ -491,7 +494,7 @@ function ui_geruest_ende(array $o = []): void
  * lässt sich damit färben und auf Kontrast prüfen, und es sieht auf jedem
  * Betriebssystem gleich aus.
  * ------------------------------------------------------------------------ */
-function ui_leiste_diensttage(?int $currentDayId): void
+function ui_leiste_diensttage(?int $currentDayId, array $zeitraum = []): void
 {
     global $userId;
     require_once __DIR__ . '/diensttag_lib.php';
@@ -522,6 +525,18 @@ function ui_leiste_diensttage(?int $currentDayId): void
         $offenesJahr  = substr((string)$tage[0]['day'], 0, 4);
         $offenerMonat = substr((string)$tage[0]['day'], 5, 2);
     }
+
+    /* DER ANGEZEIGTE ZEITRAUM WIRD MARKIERT (E-P3-37). Wer auf der
+       Jahres- oder Monatsübersicht steht, sah in der Leiste bisher nichts
+       davon — der aktive Eintrag war stets ein Diensttag, und den gibt es
+       dort nicht. Jetzt trägt die Jahres- bzw. Monatszeile die Markierung,
+       und der Zweig wird dafür aufgeklappt. */
+    $aktivesJahr  = isset($zeitraum['jahr'])  ? (string)$zeitraum['jahr']  : '';
+    $aktiverMonat = isset($zeitraum['monat']) ? (string)$zeitraum['monat'] : '';
+    if ($aktivesJahr !== '') {
+        $offenesJahr = $aktivesJahr;
+        if ($aktiverMonat !== '') { $offenerMonat = $aktiverMonat; }
+    }
     ?>
     <h2 class="leiste-kopfzeile">Diensttage</h2>
     <div class="leiste-liste">
@@ -532,7 +547,11 @@ function ui_leiste_diensttage(?int $currentDayId): void
              wandeln — sonst bricht ui_e() unter strict_types ab und
              Monatsvergleiche schlagen ab Oktober fehl. */
           $jahrS = (string)$jahr; ?>
-        <details class="akkordeon" <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
+        <?php /* Aktiv ist die JAHRESzeile nur bei der Jahresübersicht — steht
+                 ein Monat an, trägt der Monat die Markierung. */
+              $jahrAktiv = $aktivesJahr === $jahrS && $aktiverMonat === ''; ?>
+        <details class="akkordeon<?= $jahrAktiv ? ' aktiv' : '' ?>"
+                 <?= $jahrS === $offenesJahr ? 'open' : '' ?>>
           <?php /* Der Balken-Link steht IM summary: Als Kind des <details>
                    wäre er an jeder zugeklappten Zeile unsichtbar — der Inhalt
                    eines geschlossenen <details> wird nicht gerendert
@@ -542,6 +561,7 @@ function ui_leiste_diensttage(?int $currentDayId): void
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
             <span class="akkordeon-text"><?= ui_e($jahrS) ?></span>
             <a class="akkordeon-uebersicht" href="zeitraum.php?y=<?= ui_e($jahrS) ?>"
+               <?= $jahrAktiv ? 'aria-current="page"' : '' ?>
                aria-label="Jahresübersicht <?= ui_e($jahrS) ?>" title="Jahresübersicht">
               <?= ui_symbol('balken') ?>
             </a>
@@ -549,13 +569,15 @@ function ui_leiste_diensttage(?int $currentDayId): void
           <div class="akkordeon-inhalt">
           <?php foreach ($monate as $monat => $monatsTage):
               $monatS = str_pad((string)$monat, 2, '0', STR_PAD_LEFT); ?>
-            <details class="akkordeon akkordeon-monat"
+            <?php $monatAktiv = $aktivesJahr === $jahrS && $aktiverMonat === $monatS; ?>
+            <details class="akkordeon akkordeon-monat<?= $monatAktiv ? ' aktiv' : '' ?>"
                      <?= ($jahrS === $offenesJahr && $monatS === $offenerMonat) ? 'open' : '' ?>>
               <summary class="akkordeon-zeile">
                 <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
                 <span class="akkordeon-text"><?= ui_e($monatsnamen[(int)$monatS]) ?></span>
                 <a class="akkordeon-uebersicht"
                    href="zeitraum.php?y=<?= ui_e($jahrS) ?>&amp;m=<?= ui_e($monatS) ?>"
+                   <?= $monatAktiv ? 'aria-current="page"' : '' ?>
                    aria-label="Monatsübersicht <?= ui_e($monatsnamen[(int)$monatS]) ?>"
                    title="Monatsübersicht"><?= ui_symbol('balken') ?></a>
               </summary>

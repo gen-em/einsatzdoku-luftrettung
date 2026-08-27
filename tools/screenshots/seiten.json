@@ -1,37 +1,193 @@
 {
   "_lies_mich": "Seitenliste der Bildaufnahme. Jede Zeile: name (Dateiname und Überschrift im Kontaktbogen), gruppe, rolle ('aus' = abgemeldet, 'demo', 'admin'), pfad (relativ zur Basis; Platzhalter in __GROSSBUCHSTABEN__ löst aufnehmen.mjs zur Laufzeit aus dem Bestand auf), karte (true = zusätzlich auf Leaflet warten), vorher (Bedienschritte vor der Aufnahme).",
   "seiten": [
-    {"name":"01-anmeldung",              "gruppe":"Öffentlich",   "rolle":"aus",   "pfad":"login.php"},
-    {"name":"02-passwort-vergessen",     "gruppe":"Öffentlich",   "rolle":"aus",   "pfad":"reset_request.php"},
-    {"name":"03-abbruchseite",           "gruppe":"Öffentlich",   "rolle":"demo",  "pfad":"einsatz.php?id=0"},
-
-    {"name":"10-tagesuebersicht",        "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"index.php", "karte":true},
-    {"name":"11-tagesuebersicht-schublade","gruppe":"Inhalt",     "rolle":"demo",  "pfad":"index.php", "karte":true, "vorher":["schublade"]},
-    {"name":"12-einsatzansicht",         "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__EINSATZ__", "karte":true},
-    {"name":"13-einsatzformular",        "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__FORMULAR__"},
-    {"name":"14-zeitraum",               "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"zeitraum.php", "karte":true},
-    {"name":"15-suche",                  "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"suche.php"},
-    {"name":"16-papierkorb",             "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"papierkorb.php"},
-    {"name":"17-zuordnung-nachtragen",   "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"nachbearbeitung.php"},
-    {"name":"18-diensttag-anlegen",      "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"diensttag_neu.php"},
-    {"name":"19-diensttag-datum",        "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__TAG_DATUM__"},
-    {"name":"20-diensttag-loeschen",     "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__TAG_LOESCHEN__"},
-    {"name":"21-diensttag-zusammenfuehren","gruppe":"Inhalt",     "rolle":"demo",  "pfad":"diensttag_zusammenfuehren.php"},
-    {"name":"22-einsatz-verschieben",    "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__VERSCHIEBEN__"},
-    {"name":"23-einsatz-loeschen",       "gruppe":"Inhalt",       "rolle":"demo",  "pfad":"__LOESCHEN__"},
-
-    {"name":"30-einstellungen-profil",   "gruppe":"Einstellungen","rolle":"demo",  "pfad":"einstellungen.php?t=profil"},
-    {"name":"31-einstellungen-standorte","gruppe":"Einstellungen","rolle":"demo",  "pfad":"einstellungen.php?t=standorte"},
-    {"name":"32-einstellungen-rettungsmittel","gruppe":"Einstellungen","rolle":"demo","pfad":"einstellungen.php?t=rettungsmittel"},
-    {"name":"33-einstellungen-geraete",  "gruppe":"Einstellungen","rolle":"demo",  "pfad":"einstellungen.php?t=geraete"},
-    {"name":"34-einstellungen-backup",   "gruppe":"Einstellungen","rolle":"demo",  "pfad":"einstellungen.php?t=backup"},
-    {"name":"35-import-export",          "gruppe":"Einstellungen","rolle":"demo",  "pfad":"import.php"},
-
-    {"name":"40-nutzerinnen",            "gruppe":"Administration","rolle":"admin","pfad":"admin_users.php"},
-    {"name":"41-kontoseite",             "gruppe":"Administration","rolle":"admin","pfad":"__KONTO__"},
-    {"name":"42-stammdaten-systemweit",  "gruppe":"Administration","rolle":"admin","pfad":"admin_stammdaten.php"},
-    {"name":"43-sicherungen",            "gruppe":"Administration","rolle":"admin","pfad":"admin_sicherungen.php"},
-    {"name":"44-demo-konto",             "gruppe":"Administration","rolle":"admin","pfad":"admin_demo.php"},
-    {"name":"45-wartung",                "gruppe":"Administration","rolle":"admin","pfad":"update.php"}
+    {
+      "name": "01-anmeldung",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "login.php"
+    },
+    {
+      "name": "02-passwort-vergessen",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "reset_request.php"
+    },
+    {
+      "name": "03-abbruchseite",
+      "gruppe": "Öffentlich",
+      "rolle": "demo",
+      "pfad": "einsatz.php?id=0"
+    },
+    {
+      "name": "10-tagesuebersicht",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "index.php",
+      "karte": true
+    },
+    {
+      "name": "11-tagesuebersicht-schublade",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "index.php",
+      "karte": true,
+      "vorher": [
+        "schublade"
+      ]
+    },
+    {
+      "name": "12-einsatzansicht",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__EINSATZ__",
+      "karte": true
+    },
+    {
+      "name": "13-einsatzformular",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__FORMULAR__"
+    },
+    {
+      "name": "14-zeitraum",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "zeitraum.php?y=2026",
+      "karte": true
+    },
+    {
+      "name": "14a-zeitraum-monat",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "zeitraum.php?y=2026&m=01",
+      "karte": true
+    },
+    {
+      "name": "15-suche",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "suche.php"
+    },
+    {
+      "name": "16-papierkorb",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "papierkorb.php"
+    },
+    {
+      "name": "17-zuordnung-nachtragen",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "nachbearbeitung.php"
+    },
+    {
+      "name": "18-diensttag-anlegen",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "diensttag_neu.php"
+    },
+    {
+      "name": "19-diensttag-datum",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_DATUM__"
+    },
+    {
+      "name": "20-diensttag-loeschen",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_LOESCHEN__"
+    },
+    {
+      "name": "21-diensttag-zusammenfuehren",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "diensttag_zusammenfuehren.php"
+    },
+    {
+      "name": "22-einsatz-verschieben",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__VERSCHIEBEN__"
+    },
+    {
+      "name": "23-einsatz-loeschen",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__LOESCHEN__"
+    },
+    {
+      "name": "30-einstellungen-profil",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=profil"
+    },
+    {
+      "name": "31-einstellungen-standorte",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=standorte"
+    },
+    {
+      "name": "32-einstellungen-rettungsmittel",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=rettungsmittel"
+    },
+    {
+      "name": "33-einstellungen-geraete",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete"
+    },
+    {
+      "name": "34-einstellungen-backup",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=backup"
+    },
+    {
+      "name": "35-import-export",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "import.php"
+    },
+    {
+      "name": "40-nutzerinnen",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_users.php"
+    },
+    {
+      "name": "41-kontoseite",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "__KONTO__"
+    },
+    {
+      "name": "42-stammdaten-systemweit",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_stammdaten.php"
+    },
+    {
+      "name": "43-sicherungen",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_sicherungen.php"
+    },
+    {
+      "name": "44-demo-konto",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_demo.php"
+    },
+    {
+      "name": "45-wartung",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "update.php"
+    }
   ]
 }

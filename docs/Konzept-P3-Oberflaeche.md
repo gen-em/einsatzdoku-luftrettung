@@ -1292,7 +1292,7 @@ Umsetzung füllen.
 | P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O2 erfüllt: 0 Abweichungen** über 232 Bilder. Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. |
 | P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
 | P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | **nach O2: 0 Überlauf** auf allen 29 Seiten in allen acht Breiten (vorher 26). Ort und Diagnose bei 360 px sind noch **offen** — das ist die Kachel aus E-P3-32 und gehört zu O3. |
-| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. 29 Seiten × 8 = 232 Bilder** (die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
+| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. Seit O7: 30 Seiten × 8 = 240 Bilder** (vorher 29/232; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
 | P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
@@ -1365,6 +1365,7 @@ und O11.
 | F-P3-AE | **Die Unterzeile der Titelzeile saß im Flex-Block und bestimmte dessen Breite.** Bei kurzem Titel („Einsatz 1") und zwei Knöpfen brachen die Knöpfe unter den Titel, obwohl neben ihm Platz war. | O4. Unterzeile NACH der Hauptzeile (volle Breite), Baustein `ui_titelzeile()` und beide Handaufbauten (Start-, Einsatzseite) angepasst — entspricht den Mockups 02/19. |
 | F-P3-AF | **Ein POST an `einstellungen.php` ohne `?t` versandet stillschweigend.** Die Übersichts-Weiche aus O2 (E-P3-11: ohne `t` die Übersicht, dann `exit`) steht VOR der POST-Verarbeitung; die Antwort ist die Übersichtsseite mit HTTP 200 — kein Fehler, kein Speichern. Die Browser-Formulare tragen alle `?t=…` und sind nicht betroffen; das Einspielwerkzeug postete ohne Parameter, und sein Fehlerfänger suchte noch die vor-P3-Klasse `alert-danger`. Aufgefallen am CSV-Kreislauf (O5-Abnahme). | O5, im Werkzeug: `einspielen.py` postet mit `?t=standorte` und liest `meldung-fehler`. Die Weiche selbst bleibt — sie ist Anzeige-, nicht Speicherlogik; ein POST ohne `t` kommt aus keinem Formular der Anwendung. |
 | F-P3-AG | **Kein Filter der Suchseiten-Leiste wirkte — seit O2.** Der Zuhörer der Suche horchte auf `.filterspalte input, .filterspalte select`; die Klasse `filterspalte` ist mit dem Umzug in die gemeinsame Leiste (O2) verschwunden, der Selektor traf seither nichts. Nur Freitextfeld und Sortierwahl hingen an eigenen Zuhörern und blieben wirksam. Gemessen vor dem Fix: „Datum von 01.12.2026" ließ **82 von 82** Einsätzen stehen. Ein Klassenname am Behälter ist der falsche Ereignisanker — er beschreibt die Verpackung, nicht die Sache. | O6: Der Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am Ereignisziel (`ev.target.closest('input, select')`), nicht an einer Klasse des Behälters. |
+| F-P3-AH | **Die Zeitraumübersicht war seit O1 in keinem Screenshot.** Das Bilderwerkzeug rief `zeitraum.php` ohne `?y=` auf; die Seite leitet dann auf `index.php` um (`zeitraum.php:20`). Der Kontaktbogen „14-zeitraum" zeigte also achtmal die Tagesübersicht — die Prüfung meldete pflichtgemäß „kein Überlauf, keine Konsolenfehler" für eine Seite, die sie nie gesehen hatte. Eine Prüfung, die den falschen Gegenstand misst, ist schlimmer als keine: Sie erzeugt Sicherheit. | O7, im Werkzeug: `seiten.json` führt `zeitraum.php?y=2026` **und** `zeitraum.php?y=2026&m=01` — nur die Monatsansicht zeigt Rückweg und Monatsmarkierung. 29 → 30 Seiten, 232 → 240 Bilder. |
 
 ---
 
@@ -1423,7 +1424,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O4 Einsatzansicht | **erledigt** | Web 9.3.0 |
 | O5 Einsatzformular | **erledigt** | Web 9.4.0 |
 | O6 Suche | **erledigt** | Web 9.5.0 |
-| O7 Zeitraum | offen | |
+| O7 Zeitraum | **erledigt** | Web 9.6.0 |
 | O8 Einstellungen und Verwaltungslisten | offen | |
 | O9 Administration | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
@@ -1974,6 +1975,87 @@ siehe Prüfprotokoll). Ein Bestandsfehler behoben: **F-P3-AG**.
 über 200 Treffer hinaus („weitere laden") ist
 mit 82 Einsätzen im Bestand nicht auslösbar; der Erzeuger ist an dieser
 Stelle unverändert aus O3 übernommen.
+
+### O7 — Zeitraum
+
+**Erledigt.** Web 9.6.0. Keine Migration. Eine Funktionsänderung (Kachelsatz
+„Gemischt"), ein Werkzeugfund: **F-P3-AH**.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/zeitraum.php` | Titelzeile mit Rückweg zum Jahr, Unterzeile („Zeitraum · 15 Diensttage · 01.01. – 31.12.2026") und der Segmentwahl in den Aktionen; Kachelsätze **Gemischt 4 / Luft 10 / Boden 8** mit getrennter Einheit, Extremwert-Tag und mobiler Kappung auf vier; Meldungen auf den Baustein (Sperre, Ladefehler, Neutralhinweis); Karte mit Standort-Haus; Einsätze als Karte mit Zahl, Sortierblatt, Tabelle ab 720 px und Kacheln darunter |
+| `server/api/range.php` | neu `bases`: die eingefrorenen Standorte der Diensttage des Zeitraums (Name, Koordinate, Art), nach Koordinate entdupliziert — Klartext wie `kind` und `vehicle_name` |
+| `server/ui.php` | `ui_leiste_diensttage()` nimmt einen Zeitraum entgegen und markiert die Jahres- bzw. Monatszeile; `ui_geruest_start(['zeitraum' => …])` reicht ihn durch |
+| `server/assets/style.css` | Abschnitt 25: `.kennzahl-raster-4/-5`, `.kennzahl-mehr` samt Knopf, `.segment-art` (mobil vollbreit über `:has()` am Aktionsblock), `.akkordeon.aktiv`, `.hl-extrem`; dazu `.kennzahl-tag` von `display:block` auf dieselbe Zeile |
+| `tools/screenshots/seiten.json` | F-P3-AH: `zeitraum.php?y=2026` und `?y=2026&m=01` statt `zeitraum.php` |
+| `tools/wortliste/ausnahmen.json` | Ausnahme `luftrettungs-reiter` **ausgetragen** — der Reiter heißt jetzt „Luft", der Begriff ist fort. Eine Ausnahme ohne Gegenstand ist eine Unwahrheit über den Bestand. |
+| entfernt | sieben Klassen auf der Streichliste (`arttabs`, `arttab`, `statsgrid`, `stat-tile`, `stat-value`, `stat-label`, `neutralhinweis`) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Keine Spuren auf der Zeitraumkarte.** Die Mockups 29 und 31 zeigen
+  farbige Linien vom Standort aus — das ist die Kartendarstellung der
+  **Tagesübersicht**, aus der der Entwurf sie übernommen hat.
+  `api/range.php` liefert ausdrücklich keine Trackpunkte („Bei einem ganzen
+  Jahr wären das schnell hunderttausende Koordinaten"), und diese
+  Entscheidung wiegt schwerer als das übernommene Bild. Es bleibt bei
+  Einsatzort-Kreisen und dem Standort-Haus.
+- **Der Einsatzort bleibt ein Kreis**, kein Pin-Symbol wie auf Tages- und
+  Einsatzkarte: Auf einer Jahreskarte liegen Dutzende beieinander, und der
+  Kreis lässt sich für die Hervorhebung aus einer Extremwert-Kachel
+  einfärben und vergrößern — ein `divIcon` müsste dafür neu gebaut werden.
+- **Dauern ohne Einheit.** Das Mockup schreibt „0:58 h"; die Anwendung
+  schreibt Dauern seit jeher als „52min" / „1h 28min", und die Einheit
+  steckt damit im Wert. Dieselbe dokumentierte Abweichung wie in O4.
+- **Summen ohne Nachkomma, Einzelwerte mit** („1.633 km" gegen „123,7 km",
+  Mockup 30). Eine Summe über Dutzende Einsätze auf 100 m genau anzugeben
+  behauptet eine Genauigkeit, die die Einzelwerte nicht haben — dieselbe
+  Regel wie im Kopf der Trefferliste aus O6.
+- **Die Zahl der Diensttage in der Unterzeile wechselt nicht mit der
+  Ansicht.** Sie beschreibt den Zeitraum, nicht den Ausschnitt; wie viele
+  Tage auf eine Art entfallen, sagt die Kachel „Diensttage".
+- **Nachrücken, wenn eine mobile Kachel wegfällt.** Der Fall „Luftansicht
+  ohne Windeneinsatz" ist im Konzept nicht bedacht; dann wären nur drei der
+  vier mobilen Kacheln vorhanden. Es rückt die nächste des Satzes nach.
+
+#### Prüfprotokoll O7
+
+- **Abnahme (Kernzusage: Kachelwerte identisch zu vorher für Luft und
+  Boden):** Der Vor-O7-Stand läuft als zweiter Git-Arbeitsbaum auf Port 8444
+  gegen **dieselbe** Datenbank wie die neue Fassung auf 8443. Verglichen wird
+  je Kachel der **Zahlenwert** (Dauern in Sekunden), über fünf Zeiträume und
+  beide Artenansichten: **10 Proben · 10 ohne Abweichung · 88 Kachelwerte
+  verglichen · 0 unerklärte Abweichungen.** Acht Abweichungen sind
+  Schreibweise und einzeln begründet (Summenrundung, Tausendertrennung,
+  gekürzte Beschriftung „Anzahl Winden-Cycles" → „Winden-Cycles").
+- **Screenshots:** voller Lauf, jetzt **30 Seiten × 8 Breiten = 240 Bilder** —
+  0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls. Darunter zum
+  ersten Mal die Zeitraumübersicht selbst (F-P3-AH).
+- **Kachelsätze (1440):** Gemischt 4 Kacheln / 4 Spalten, Luft 10 / 5, Boden
+  8 / 4 — je Ansicht nachgezählt, 0 Konsolenfehler.
+- **Mobil (390):** je Ansicht genau **4 sichtbare Kacheln**, und zwar die
+  richtigen (Luft: Einsätze, Flugtage, Flugkilometer, Winden-Cycles; Boden:
+  Einsätze, Diensttage, Einsatzkilometer, längste Dauer; Gemischt alle vier
+  ohne Knopf). „Weitere Statistik (6)" bzw. „(4)"; nach dem Klick 8
+  sichtbar, `aria-expanded=true`. Kacheln statt Tabelle, Segmentwahl 366 von
+  390 px breit.
+- **Extremwert-Klick (1440):** Kachel hell orange (`rgb(255,235,214)` =
+  `--orange-hell`) mit orangem Rahmen (`rgb(255,143,31)` = `--orange`),
+  Trägerzeile in derselben Fläche, beide auf **denselben** Einsatz
+  (`mid=117`).
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.8).
+- **Syntax:** `php -l` über alle geänderten Dateien fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Die
+Zeitraumtabelle hat **keine Seitengrenze** — bei 82 Einsätzen entstehen 82
+Zeilen, bei einem großen Bestand entsprechend mehr; das ist eine Frage der
+Datenmenge und steht als Backlog Nr. 37, nicht als O7-Aufgabe. Der Fall
+„zwei Standorte im selben Zeitraum" ist im Referenzbestand nur einseitig
+belegt: Der bodengebundene Standort trägt **keine** Koordinaten, deshalb
+zeigt die Bodenansicht kein Haus — die Entduplizierung nach Koordinate ist
+damit nicht an zwei gleichzeitig sichtbaren Häusern erprobt.
 
 ---
 

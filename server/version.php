@@ -432,5 +432,37 @@ declare(strict_types=1);
  * Keine Migration; Suchlogik, Endpunkte und Feldkatalog unveraendert —
  * acht Proben (fuenf Suchbegriffe, drei Filterkombinationen) liefern vor
  * und nach O6 dieselben Treffer.
+ *
+ * 9.6.0 ist O7: DIE ZEITRAUMUEBERSICHT NACH DEN MOCKUPS 29/30/31, mit einer
+ * FUNKTIONSAENDERUNG an den Kachelsaetzen (E-P3-37). „GEMISCHT" ZEIGT VIER
+ * KENNZAHLEN STATT ACHT: Einsaetze, Diensttage, ihr Verhaeltnis und die
+ * Sekundaertransporte. Bisher teilte Gemischt den Bodensatz mit acht — ueber
+ * beide Arten hinweg sind Kilometer, Dauern und Fehleinsaetze aber Aepfel
+ * und Birnen: Eine Flugstrecke von 61 km und eine Fahrstrecke von 12 km
+ * stehen fuer verschiedene Einsaetze, und ihre Summe beantwortet keine
+ * Frage, die jemand stellt. Luft (10) und Boden (8) bleiben unveraendert;
+ * ihre Zahlen sind belegt gleich geblieben (88 Kachelwerte verglichen).
+ *
+ * Die Tableiste nach Art ist eine SEGMENTWAHL in der Titelzeile geworden
+ * („Gemischt / Luft / Boden") — mobil vollbreit. Aus <button role="tab">
+ * sind Radios geworden: Der Wechsel mit den Pfeiltasten kommt damit vom
+ * Browser. Unter 720 px sind je Satz VIER Kacheln sichtbar, der Rest steht
+ * hinter „Weitere Statistik (n)"; welche vier, sagt die Kachel selbst.
+ * Extremwerte tragen den TAG in der Beschriftung („Laengste Flugstrecke
+ * · 14.08.") und sind HELL ORANGE statt rot — Rot heisst in dieser
+ * Oberflaeche „Aufmerksamkeit", und ein Hoechstwert ist kein Fehler.
+ * Darunter Karte mit STANDORT-HAUS (E-P3-40), dann die Einsaetze als
+ * Tabelle ab 720 px und als Kacheln darunter.
+ *
+ * api/range.php liefert dafuer neu die STANDORTE der Diensttage
+ * (`bases`) — Klartext wie `kind` und `vehicle_name`, entdupliziert nach
+ * Koordinate. Die verschluesselten Angaben bleiben unberuehrt im pat_blob.
+ *
+ * Dabei gefunden: Das Screenshot-Werkzeug fotografierte `zeitraum.php`
+ * OHNE `?y=` — die Seite leitet dann auf die Startseite um. Die
+ * Zeitraumuebersicht war damit seit O1 nie im Bilderlauf (F-P3-AH,
+ * im Werkzeug behoben; jetzt zwei Seiten: Jahr und Monat).
+ *
+ * Keine Migration; Kennzahlen, Endpunkte und Feldkatalog unveraendert.
  */
-const WEB_VERSION = '9.5.0';
+const WEB_VERSION = '9.6.0';

@@ -11,6 +11,64 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.6.0] — 2026-08-27
+
+**O7: Die Zeitraumübersicht nach den Mockups 29/30/31 — und „Gemischt" zeigt
+vier Kennzahlen statt acht.** Das ist die Funktionsänderung dieses Pakets, und
+sie streicht etwas: Bisher teilte die gemischte Ansicht den Bodensatz mit acht
+Kacheln, also auch Einsatzkilometer, längste Strecke, längste Dauer und
+Fehleinsätze. Über beide Arten hinweg sind das Äpfel und Birnen — eine
+Flugstrecke von 61 km und eine Fahrstrecke von 12 km stehen für ganz
+verschiedene Einsätze, und ihre Summe beantwortet keine Frage, die jemand
+stellt. Was über beide Arten trägt, sind Anzahl, Diensttage, ihr Verhältnis
+und die Sekundärtransporte. Die übrigen Zahlen stehen unverändert in den
+beiden Artenansichten: **Luft behält zehn Kacheln, Boden acht**, und ihre
+Werte sind belegt dieselben geblieben (zehn Proben über fünf Zeiträume, 88
+Kachelwerte verglichen, keine unerklärte Abweichung).
+
+Die Tableiste nach Art ist eine **Segmentwahl in der Titelzeile** geworden —
+„Gemischt / Luft / Boden" statt „Gemischt / Luftrettung / Bodengebundener
+Rettungsdienst". Die lange Fassung war bei 360 px breiter als der Bildschirm.
+Aus `<button role="tab">` sind Radios geworden; der Wechsel mit den
+Pfeiltasten kommt damit vom Browser, und der eigene Tastatur-Handler ist
+entfallen. Mobil steht die Wahl vollbreit unter dem Titel.
+
+Unter 720 px sind je Satz **vier Kacheln sichtbar**, der Rest hinter
+„Weitere Statistik (n)". Welche vier, sagt die Kachel selbst und nicht ihre
+Position: Für die Luft sind es Einsätze, Flugtage, Flugkilometer und
+Winden-Cycles, für den Boden Einsätze, Diensttage, Einsatzkilometer und die
+längste Einsatzdauer. Fällt eine davon am Bestand weg — die Winden-Cycles
+ohne einen einzigen Windeneinsatz —, rückt die nächste nach; vier Kacheln
+füllen zwei Reihen zu zweit, drei ließen eine halbe Reihe leer. Diesen Fall
+bedenkt das Konzept nicht, er ist hier entschieden worden.
+
+Extremwerte tragen jetzt den **Tag in der Beschriftung** („Längste
+Flugstrecke · 14.08.") — das beantwortet „welcher Einsatz war das?" schon vor
+dem Klick. Die Hervorhebung der Trägerzeile ist **hell orange statt rot**:
+Rot heißt in dieser Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein
+Höchstwert ist kein Fehler. Zwei Hexwerte, die dafür fest im Skript standen,
+kommen jetzt aus den Token.
+
+Auf der Karte steht das **Standort-Haus** (E-P3-40). `api/range.php` liefert
+dafür neu die Standorte der Diensttage des Zeitraums, nach Koordinate
+entdupliziert — ein Monat mit fünf Diensten derselben Wache hat einen
+Standort, nicht fünf übereinander. Sie sind Klartext wie Art und
+Rettungsmittel und brauchen deshalb keinen Inhaltsschlüssel: Die Karte zeigt
+das Haus auch im gesperrten Zustand, nur die Einsatzorte bleiben dann aus.
+In der Leiste ist der angezeigte Monat bzw. das Jahr markiert — bisher war
+dort auf dieser Seite nichts aktiv, weil der aktive Eintrag stets ein
+Diensttag war und den gibt es hier nicht.
+
+**Beim Prüfen gefunden:** Das Screenshot-Werkzeug rief `zeitraum.php` **ohne**
+`?y=` auf. Die Seite leitet dann auf die Startseite um — die
+Zeitraumübersicht war damit seit O1 in keinem einzigen der bislang 232
+Bilder, und der Kontaktbogen „14-zeitraum" zeigte in Wahrheit die
+Tagesübersicht (F-P3-AH). Im Werkzeug behoben; sie steht jetzt mit zwei
+Seiten darin, Jahr und Monat, weil nur die Monatsansicht Rückweg und
+Monatsmarkierung zeigt.
+
+Keine Migration; Kennzahlen, Endpunkte und Feldkatalog unverändert.
+
 ## [Web 9.5.0] — 2026-08-27
 
 **O6: Die Suche nach den Mockups 27/28 — und ein Filter, der seit O2 nicht

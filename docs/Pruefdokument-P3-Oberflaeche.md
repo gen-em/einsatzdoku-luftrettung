@@ -62,27 +62,29 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O6 noch nicht ist
+### 1.3 Was der Zwischenstand nach O7 noch nicht ist
 
-**Der Einsatzweg und die Suche sind neu, die Verwaltungs- und
-Auswertungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
+**Der Einsatzweg, die Suche und die Auswertung sind neu, die
+Verwaltungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
 Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
 Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
-Ortswahl; Web 9.5.0 (O6) die Suche. Was innerhalb der **übrigen** Seiten
-steht, ist bis auf die Artzeichen unverändert: Zeitraum, Einstellungen,
-Verwaltungslisten, Administration. Sie folgen Paket für Paket in O7 bis O11.
+Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht.
+Was innerhalb der **übrigen** Seiten steht, ist bis auf die Artzeichen
+unverändert: Einstellungen, Verwaltungslisten, Administration. Sie folgen
+Paket für Paket in O8 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
-- Tabellen außerhalb von Startseite und Suche scrollen auf schmalen Geräten
-  waagerecht in ihrem eigenen Kasten, statt zur Kachel zu werden (O7–O9).
+- Tabellen der Verwaltungsseiten scrollen auf schmalen Geräten waagerecht in
+  ihrem eigenen Kasten, statt zur Kachel zu werden (O8–O9).
 - Meldungen im Seiteninhalt tragen noch **kein Symbol** — sie erscheinen
   seit Web 9.1.1 in den Farben des Meldungs-Bausteins (Übergangsregel,
   F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket. Die
   Gerätemeldung der Startseite hat ihres seit O3.
 - Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
   `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
-- Die Zeitraumübersicht trägt noch ihre alte Gestalt — das ist O7.
+- Die Verwaltungs- und Administrationsseiten tragen noch ihre alte Gestalt —
+  das ist O8 bis O11.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -209,6 +211,31 @@ und Filterknopf stehen neben dem 48 px hohen Suchfeld und sind deshalb
 ebenfalls 48 px hoch — ein 44er daneben stünde sichtbar schief. Das
 Prüfwerkzeug duldet das nicht stillschweigend, sondern kennt die Ausnahme
 beim Namen (`suchzwilling`) und nennt im Bericht je Ausnahme den Sollwert.
+
+### 2.8 Nach O7 (Web 9.6.0)
+
+| Was | Ergebnis |
+|---|---|
+| **Abnahme Kachelwerte (Kernzusage)** | **10 Proben · 10 ohne Abweichung · 88 Kachelwerte verglichen · 0 unerklärte Abweichungen** — fünf Zeiträume × zwei Artenansichten, gleichzeitig gegen den Vor-O7-Stand (zweiter Git-Arbeitsbaum, Port 8444) und die neue Fassung (8443) gegen **dieselbe** Datenbank; verglichen wurde der Zahlenwert, nicht der Text. Acht Abweichungen sind Schreibweise und einzeln begründet. |
+| Bildaufnahme | **240 Bilder, 30 Kontaktbögen** (vorher 232/29) — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** — 48 Regeln (vorher 49), 48 gegriffen; die Ausnahme `luftrettungs-reiter` ist ausgetragen, weil der Reiter jetzt „Luft" heißt |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste — dazu **zwei Hexwerte weniger im Skript** (`zeitraum.php` las Rot und Blau fest, jetzt aus `:root`) |
+| Streichliste | Sollmenge 220 — **40 mit Regel, 79 gestrichen** (sieben neue in O7) |
+| Kachelsätze (1440) | Gemischt **4** Kacheln / 4 Spalten, Luft **10** / 5, Boden **8** / 4 — je Ansicht nachgezählt |
+| Mobil (390) | je Ansicht genau **4** sichtbare Kacheln, „Weitere Statistik (6)" bzw. „(4)", nach Klick **8** sichtbar; Kacheln statt Tabelle; Segmentwahl **366 von 390 px** |
+| Extremwert-Klick | Kachel `rgb(255,235,214)` mit Rahmen `rgb(255,143,31)`, Trägerzeile dieselbe Fläche, **derselbe** Einsatz |
+| Syntax | `php -l` über alle geänderten Dateien — fehlerfrei |
+
+**Ein Prüfmittel hat sich selbst geprüft und war falsch.** Das
+Bilderwerkzeug rief `zeitraum.php` **ohne** `?y=` auf; die Seite leitet dann
+auf die Startseite um. Der Kontaktbogen „14-zeitraum" zeigte seit O1
+achtmal die Tagesübersicht, und die Prüfung meldete pflichtgemäß „0
+Überlauf, 0 Konsolenfehler" für eine Seite, die sie nie gesehen hatte
+(F-P3-AH). Behoben; die Übersicht steht jetzt mit zwei Seiten im Lauf (Jahr
+und Monat), daher 232 → 240 Bilder. **Für die früheren Pakete heißt das:
+Die Zahl 232 war richtig, aber eine der 29 Seiten war nicht die, die
+draufstand.**
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -638,6 +665,58 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       *Erwartet:* Dieselben Filter, dieselben Treffer. *Fehlschlag heißt:*
       Leere Filter = das Fragment wird nicht mehr gelesen; alte geteilte
       Links wären damit wertlos.
+
+### 5.8 Nach O7 (Web 9.6.0)
+
+- [ ] **„Gemischt" zeigt vier Kacheln.** *Weg:* Jahresübersicht eines Jahres
+      mit luft- **und** bodengebundenen Diensttagen öffnen, Segment
+      „Gemischt". *Erwartet:* Genau vier Kacheln — Einsätze, Diensttage,
+      Ø Einsätze / Diensttag, Sekundärtransporte —, alle in einer Reihe.
+      *Fehlschlag heißt:* Acht Kacheln mit Kilometern und Dauern = der alte
+      Bodensatz ist zurück, und die Summen mischen Flug- mit Fahrstrecken.
+- [ ] **Luft und Boden sind unverändert.** *Weg:* Segment „Luft", dann
+      „Boden". *Erwartet:* Luft 10 Kacheln in zwei Reihen zu fünf, Boden 8
+      in zwei Reihen zu vier; die **Zahlen** dieselben wie vor der
+      Umstellung. *Fehlschlag heißt:* Eine Zahl weicht ab — dann hat die
+      Umstellung des Kachelsatzes eine Rechnung getroffen, was sie nicht
+      sollte. (Anders als die Zahlen dürfen sich drei Schreibweisen
+      geändert haben: Summen ohne Nachkomma, Tausendertrennung,
+      „Winden-Cycles" statt „Anzahl Winden-Cycles".)
+- [ ] **Vier Kacheln auf dem Handy.** *Weg:* Fenster auf 390 px, dieselbe
+      Übersicht. *Erwartet:* Vier Kacheln zweispaltig, darunter „Weitere
+      Statistik (6)" in der Luftansicht und „(4)" in der Bodenansicht; in
+      „Gemischt" **kein** Knopf. Der Klick klappt den Rest auf, der Winkel
+      dreht sich. *Fehlschlag heißt:* Alle Kacheln stehen sofort da = die
+      mobile Kappung greift nicht, und die Seite ist wieder zwei
+      Bildschirme lang, bevor die Karte kommt.
+- [ ] **Der Extremwert findet seinen Einsatz.** *Weg:* Luftansicht, auf die
+      Kachel „Längste Flugstrecke" klicken. *Erwartet:* Die Kachel wird hell
+      orange mit orangem Rahmen, die zugehörige Zeile in der Liste ebenfalls
+      hell orange, und die Liste rollt zu ihr. In der Beschriftung stand
+      der Tag schon vorher („· 14.08."). *Fehlschlag heißt:* Die Zeile wird
+      **rot** = die alte Hervorhebungsfarbe ist zurück; oder es wird eine
+      andere Zeile markiert = Kachel und Zeile zeigen auf verschiedene
+      Einsätze.
+- [ ] **Standort-Haus auf der Karte.** *Weg:* Übersicht mit einem Standort,
+      der Koordinaten trägt. *Erwartet:* Ein Haus-Symbol mit Namensschild,
+      auch **ohne** Entsperren (der Standort ist Klartext). Das Schild ragt
+      nicht aus der Karte. *Fehlschlag heißt:* Kein Haus trotz hinterlegter
+      Koordinaten = `api/range.php` liefert `bases` nicht; oder das Schild
+      liegt über den Kartenknöpfen = das Padding von `fitBounds` greift nicht.
+- [ ] **Die Leiste weiß, wo man ist.** *Weg:* Monatsübersicht öffnen.
+      *Erwartet:* Der Monat ist in der Leiste hell orange mit orangem Strich
+      markiert, das Jahr darüber aufgeklappt; bei der Jahresübersicht trägt
+      die Jahreszeile die Markierung. *Fehlschlag heißt:* Nichts ist
+      markiert = der Zeitraum wird nicht durchgereicht.
+- [ ] **Segmentwahl mit der Tastatur.** *Weg:* Mit der Tabulatortaste auf
+      die Segmentwahl, dann Pfeil rechts/links. *Erwartet:* Die Ansicht
+      wechselt, Kacheln, Karte und Liste ziehen mit. *Fehlschlag heißt:*
+      Nichts geschieht = der Zuhörer horcht auf `click` statt auf `change`.
+- [ ] **Nur eine Art im Zeitraum.** *Weg:* Einen Monat öffnen, in dem nur
+      luftgebundene (oder nur bodengebundene) Diensttage liegen.
+      *Erwartet:* **Keine** Segmentwahl — es gibt nichts zu wählen —, und
+      die Kacheln tragen die Beschriftung dieser Art („Flugtage").
+      *Fehlschlag heißt:* Die Wahl steht da mit zwei leeren Ansichten.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

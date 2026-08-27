@@ -17,13 +17,6 @@
       "begruendung": "Die zehn Kacheln des Luftrettungs-Reiters behalten ihre Flugterminologie (E32, bestaetigt in E-P2-04). Der Reiter ist per Definition luftgebunden; „Flugtage\" ist dort die richtige Beschriftung, nicht die bequeme."
     },
     {
-      "id": "luftrettungs-reiter",
-      "datei": "server/zeitraum.php",
-      "zeile": "tab-air|>Luftrettung<",
-      "klasse": "F",
-      "begruendung": "Name des Reiters in der Zeitraumuebersicht. Er bezeichnet die Einsatzart, nicht das Produkt."
-    },
-    {
       "id": "rollenkatalog-db",
       "datei": "server/db.php",
       "zeile": "'label'\\s*=>\\s*'(Pilot|HEMS-TC|Flugretter)",
