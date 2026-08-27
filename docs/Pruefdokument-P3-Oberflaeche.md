@@ -62,26 +62,28 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O2 noch nicht ist
+### 1.3 Was der Zwischenstand nach O3 noch nicht ist
 
-**Die Hülle ist neu, die Seiteninhalte sind es nicht.** Web 9.1.0 bringt
-Kopfleiste, Schublade, Leiste, Fußzeile und den Bausteinvorrat. Was
-**innerhalb** der Seiten steht, ist bis auf die Artzeichen unverändert: die
-Einsatztabelle, die Feldliste der Einsatzansicht, das Formular, die
-Verwaltungslisten, die Kacheln der Zeitraumübersicht. Sie folgen Paket für
-Paket in O3 bis O11.
+**Hülle und Startseite sind neu, die übrigen Seiteninhalte nicht.**
+Web 9.1.0 brachte Kopfleiste, Schublade, Leiste, Fußzeile und den
+Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht mit Kachelliste,
+Lesezustand und Marker-Satz. Was innerhalb der **übrigen** Seiten steht,
+ist bis auf die Artzeichen unverändert: die Feldliste der Einsatzansicht,
+das Formular, die Verwaltungslisten, die Kacheln der Zeitraumübersicht.
+Sie folgen Paket für Paket in O4 bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
-- Tabellen scrollen auf schmalen Geräten waagerecht in ihrem eigenen Kasten,
-  statt zur Kachel zu werden (O3, O8, O9).
+- Tabellen außerhalb der Startseite scrollen auf schmalen Geräten waagerecht
+  in ihrem eigenen Kasten, statt zur Kachel zu werden (O6–O9).
 - Meldungen im Seiteninhalt tragen noch **kein Symbol** — sie erscheinen
   seit Web 9.1.1 in den Farben des Meldungs-Bausteins (Übergangsregel,
-  F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket.
-- Knöpfe im Seiteninhalt sind noch die alten `.btn-*`; sie erscheinen als
-  Rohform aus der Übergangsschicht.
-- Auf der Tagesübersicht fehlen bei 360 px weiterhin Einsatzort und Diagnose —
-  das ist die Kachel aus E-P3-32 und gehört zu O3.
+  F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket. Die
+  Gerätemeldung der Startseite hat ihres seit O3.
+- Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
+  `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
+- Die Einsatzansicht (`einsatz.php`) trägt noch ihr altes Aktionsmenü und
+  ihre alte Titelzeile — das ist O4.
 
 **Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
 Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
@@ -143,6 +145,22 @@ derselbe volle Lauf:
 | Streichliste | **38 Einträge** mit Grund, davon 35 aus der Sollmenge des alten Stylesheets (drei — u. a. `imp-pw` — waren nur Markup-Klassen ohne eigene Regel) |
 | Dialoge im Browser | Bestätigungs- und Entsperrdialog bei 390 px fotografiert, gegen Mockup 11 gehalten |
 | Syntax | `php -l` über alle 57 PHP-Dateien, `node --check` — fehlerfrei |
+
+### 2.4 Nach O3 (Web 9.2.0)
+
+Alle Läufe auf dem Endstand des Pakets (ein erster voller Bilderlauf hatte
+Zwischenstände erwischt und wurde verworfen und wiederholt):
+
+| Was | Ergebnis |
+|---|---|
+| Bildaufnahme | 232 Bilder, 29 Kontaktbögen — **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** (49 Regeln, 49 gegriffen) |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Vollständigkeit | Sollmenge 220 — 11 mit Regel, **51 auf der Streichliste** (54 Einträge gesamt), 158 offen auf noch nicht umgebauten Seiten |
+| Bediensonden (Playwright, 390 px) | Sortierblatt: „Einsatzort" sortiert Kacheln und Tabelle **identisch**; Bearbeiten-Umschalter: Formular sichtbar, Leseansicht weg; Tagesblatt: fünf Einträge — je 0 Konsolenfehler |
+| Karte im Browser | Zoom auf die Spuren (nicht Rückfallstufe 7), Kacheln geladen, Haus-/Klinik-Schild, orange Kreise, Pfeile — bei 390/1440/1920 |
+| Syntax | `php -l` über alle PHP-Dateien, `node --check` über alle Skripte — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -384,9 +402,56 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       *Fehlschlag heißt:* Landet man direkt auf „Profil", greift die Weiche in
       `einstellungen.php` nicht.
 
-### 5.4 Ab O3
+### 5.4 Nach O3 (Web 9.2.0)
 
-*(wächst mit den Arbeitspaketen)*
+- [ ] **Kachelliste auf dem Handy.** *Weg:* Startseite bei < 720 px (oder
+      Browserfenster schmal ziehen). *Erwartet:* Je Einsatz eine dreizeilige
+      Kachel — Farbstreifen und Beginn, Einsatzort **fett** mit km-Zahl,
+      Diagnose, darunter Dauer · Alter und ggf. Plaketten (Winde, Bergwacht,
+      Sekundär, Fehleinsatz, „kein Ende" rot). *Fehlschlag heißt:* Erscheint
+      stattdessen eine seitwärts scrollende Tabelle, greift die
+      720-px-Schwelle nicht; fehlen Ort/Diagnose, ist die Entschlüsselung
+      nicht gelaufen (dann muss der Sperrbanner mit „Entsperren" dastehen).
+- [ ] **Sortieren mobil = Desktop.** *Weg:* Auf dem Handy das Pfeilsymbol im
+      Einsätze-Kopf → „Einsatzort" wählen; dann dasselbe am Desktop per Klick
+      auf den Spaltenkopf. *Erwartet:* Dieselbe Reihenfolge in Kacheln und
+      Tabelle; zweite Wahl derselben Spalte kehrt sie um. *Fehlschlag heißt:*
+      Weichen die Reihenfolgen ab, ziehen Kachel und Tabelle nicht aus
+      demselben Zeilenbestand.
+- [ ] **Lesezustand und Bearbeiten.** *Weg:* Startseite → Karte
+      „Diensttag-Daten" → „Bearbeiten" → Feld ändern → „Speichern".
+      *Erwartet:* Erst Leseansicht (oder „Noch keine Angaben"), nach dem
+      Klick NUR das Formular, nach dem Speichern wieder NUR die aktualisierte
+      Leseansicht. *Fehlschlag heißt:* Stehen Lese- und Formularzustand
+      gleichzeitig da, ist der `[hidden]`-Wächter (F-P3-AA) verloren
+      gegangen.
+- [ ] **Aktionsblatt des Tages.** *Weg:* „···" neben dem Datum. *Erwartet:*
+      Auf dem Handy ein Blatt von unten, am Desktop ein Menü am Knopf; fünf
+      Einträge (Einsatz nachtragen, Diensttag-Daten bearbeiten, Datum ändern,
+      Anderen Diensttag aufnehmen, Tag löschen), „Tag löschen" in Rot;
+      Escape schließt. *Fehlschlag heißt:* Fehlt ein Eintrag oder führt
+      „Diensttag-Daten bearbeiten" nicht zum aufgeklappten Formular, ist die
+      Blatt-Verdrahtung gerissen.
+- [ ] **Marker-Satz der Tageskarte.** *Weg:* Diensttag mit Einsätzen und
+      Koordinaten öffnen (Referenzdatensatz: 27.12.2026). *Erwartet:* Karte
+      zoomt auf die Spuren; Standort als Haus-Schild (mit Ringen an
+      Beginn/Ende des Dienstes), Transportziele als Klinik-Schilder,
+      Einsatzorte als orange Kreise, kleine Richtungspfeile auf den Spuren,
+      Einsätze ohne Track als gestrichelte Linie in der Einsatzfarbe.
+      *Fehlschlag heißt:* Zeigt die Karte halb Bayern, ist F-P3-Z zurück;
+      fehlen die Schilder, liefert die API keine `base_lat/lon` bzw.
+      `dest_lat/lon`.
+- [ ] **Zweispalter ab 1600 px.** *Weg:* Fenster ≥ 1600 px breit ziehen.
+      *Erwartet:* Karte rechts NEBEN Diensttag-Daten und Einsatzliste, von
+      deren Oberkante bis unter die Tabelle; darunter (< 1600) liegt sie als
+      Band ÜBER der Einsatzliste. *Fehlschlag heißt:* Bleibt sie in jeder
+      Breite oben, greift das `.tag-raster` nicht.
+- [ ] **Spaltenausrichtung der Tabelle (ab 720 px).** *Weg:* Startseite breit.
+      *Erwartet:* Nr., Dauer, Alter und km rechtsbündig, Haken (Winde,
+      Bergwacht, Sekundär) zentriert, Beginn/Ort/Diagnose linksbündig; ohne
+      Ende steht die rote Plakette „kein Ende" in der Dauer-Spalte.
+      *Fehlschlag heißt:* Alles linksbündig = die Spaltenklassen
+      (`zahl-spalte`, `haken-spalte`) fehlen im Markup oder Stylesheet.
 
 ---
 

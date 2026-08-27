@@ -238,7 +238,7 @@ try {
          * 01:30 eines Dienstes vom Vortag hat sein eigenes Datum (E14). */
         'mission_day' => fmt_local($m['started_at'], 'Y-m-d'),
         'day_kind'         => $tag !== null && $tag['kind'] !== null ? (string)$tag['kind'] : null,
-        'day_art_zeichen'  => $sym['zeichen'],
+        'day_art_symbol'   => $sym['symbol'],
         'day_art_text'     => $sym['text'],
         'day_vehicle_name' => $tag !== null && $tag['vehicle_name'] !== null
                               ? (string)$tag['vehicle_name'] : null,

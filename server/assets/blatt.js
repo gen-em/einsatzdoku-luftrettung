@@ -57,4 +57,9 @@
   document.addEventListener('keydown', function (ev) {
     if (offenes && ev.key === 'Escape') { ev.preventDefault(); zu(); }
   });
+
+  /* Kleine Schliess-API fuer Seiten, die nach einer Wahl im Blatt selbst
+   * schliessen wollen (Sortierblatt: Wahl getroffen -> Blatt zu). Mehr gibt
+   * es absichtlich nicht — oeffnen laeuft ueber data-blatt. */
+  window.edBlatt = { zu: zu };
 })();

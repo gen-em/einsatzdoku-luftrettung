@@ -158,7 +158,7 @@
    * muss.
    */
   function zeigeUnlesbar(zahl) {
-    const main = document.querySelector('main.page');
+    const main = document.querySelector('main.inhalt');
     if (!main) { return; }
     let el = document.getElementById('patwarn');
     if (!zahl || !zahl.unlesbar) { if (el) { el.remove(); } return; }

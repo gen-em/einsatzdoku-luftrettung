@@ -38,6 +38,19 @@ import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/* Hinter einem HTTPS_PROXY (etwa in der Claude-Umgebung) braucht Nodes
+ * eingebautes fetch die Variable NODE_USE_ENV_PROXY — und die wird nur beim
+ * Prozessstart gelesen. Nachtraeglich gesetzt gehen die Abrufe am Proxy
+ * vorbei und laufen in die Egress-Sperre. Deshalb startet sich das Skript
+ * einmal selbst neu, wenn die Variable fehlt. Ohne Proxy: kein Neustart. */
+if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY) {
+  const { spawnSync } = await import('node:child_process');
+  const kind = spawnSync(process.execPath, process.argv.slice(1), {
+    stdio: 'inherit', env: { ...process.env, NODE_USE_ENV_PROXY: '1' },
+  });
+  process.exit(kind.status ?? 1);
+}
+
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
 const { chromium } = await import(MODUL.startsWith('/') ? 'file://' + MODUL : MODUL);
@@ -105,6 +118,42 @@ mkdirSync(join(AUSGABE, 'bogen'), { recursive: true });
 
 const browser = await chromium.launch();
 
+/* Kartenkacheln liefert NODE, nicht der Browser (Fund aus O3).
+ *
+ * Der Pruef-Browser kommt in der Claude-Umgebung nicht an tile.openstreetmap.org:
+ * Direktverbindungen setzt die Egress-Sperre zurueck, und auch mit
+ * --proxy-server bricht der TLS-Handschlag nach dem CONNECT ab
+ * (ERR_CONNECTION_RESET; per NetLog belegt, unabhaengig von TLS-Version und
+ * Post-Quantum-Merkmalen — der Weg ist fuer diesen Browser schlicht zu).
+ * Nodes fetch kommt durch den Umgebungsproxy dagegen zuverlaessig an (siehe
+ * Neustart-Weiche oben). Also faengt eine Playwright-Route die Kachelabrufe ab
+ * und beantwortet sie aus einem Node-Abruf — mit Lager je URL, damit 232
+ * Aufnahmen die Kachelserver nicht 232-fach fragen. Nebeneffekt: Die Bilder
+ * werden deterministischer, und ohne Proxy (lokaler Rechner) funktioniert
+ * derselbe Weg unveraendert direkt. */
+const kachelLager = new Map();
+async function kachelAntwort(route) {
+  const url = route.request().url();
+  try {
+    if (!kachelLager.has(url)) {
+      const a = await fetch(url, { headers: { 'User-Agent': 'einsatzdoku-pruefwerkzeug/1.0' } });
+      kachelLager.set(url, {
+        status: a.status,
+        ct: a.headers.get('content-type') || 'image/png',
+        body: Buffer.from(await a.arrayBuffer()),
+      });
+    }
+    const k = kachelLager.get(url);
+    await route.fulfill({ status: k.status, contentType: k.ct, body: k.body });
+  } catch {
+    await route.abort('failed');
+  }
+}
+const KACHELMUSTER = [
+  'https://tile.openstreetmap.org/**',
+  'https://*.tile.openstreetmap.org/**',
+];
+
 /* EINE Seite je Rolle, nicht eine je Aufnahme.
  *
  * Der Inhaltsschluessel liegt nach der Anmeldung im sessionStorage — und der
@@ -121,6 +170,7 @@ async function anmelden(rolle) {
     ignoreHTTPSErrors: true, deviceScaleFactor: SKALA,
     viewport: { width: 1280, height: 900 },
   });
+  for (const muster of KACHELMUSTER) await kontext.route(muster, kachelAntwort);
   const seite = await kontext.newPage();
   if (rolle !== 'aus') {
     const konto = rolle === 'admin' ? ADMIN : DEMO;

@@ -337,5 +337,22 @@ declare(strict_types=1);
  *   - Der Rueckweg der oeffentlichen Huelle ist auch unter 1024 px sichtbar.
  *   - Leaflet zeichnete ueber die Schublade (interner z-index bis 1000);
  *     die Karte hat jetzt ihren eigenen Stapelkontext.
+ *
+ * 9.2.0 ist O3: DIE STARTSEITE NACH DEN MOCKUPS 02-05 UND 10. Titelzeile
+ * mit Aktionsblatt statt Knopfreihe; Diensttag-Daten als Karte mit
+ * LESEANSICHT und aufklappendem Formular; die Einsaetze unter 720 px als
+ * dreizeilige KACHEL (Streifen, Ort, Diagnose, Plaketten) statt einer
+ * Tabelle, deren Ort- und Diagnosespalte auf 360 px null Pixel bekamen;
+ * Sortieren mobil ueber ein Blatt, mit derselben Reihenfolge wie am
+ * Desktop. Auf der Karte der MARKER-SATZ nach E-P3-40: Standort-Haus,
+ * Ziel-Klinik-Schild, Einsatzort orange, Start/Ende-Ringe, Richtungspfeile;
+ * die Spurfarben kommen als Token aus dem Stylesheet (EdGeo statt der
+ * COLORS-Liste). Nebenbei behoben: fitBounds bekam sein Padding mit
+ * vertauschten Achsen (F-P3-Z, Bestandsfehler) — die Tageskarte blieb
+ * deshalb oft auf der Rueckfallzoomstufe haengen; und ein globaler
+ * [hidden]-Waechter, weil display:grid das Attribut ueberstimmte und
+ * Lese- und Formularzustand gleichzeitig zu sehen waren.
+ *
+ * Keine Migration; Endpunkte und Feldkatalog unveraendert.
  */
-const WEB_VERSION = '9.1.1';
+const WEB_VERSION = '9.2.0';

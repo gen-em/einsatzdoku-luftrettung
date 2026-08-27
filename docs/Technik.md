@@ -102,6 +102,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
 │   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
+│   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
+│   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
@@ -435,6 +437,20 @@ steht.
 `{z}/{x}/{y}` wie die drei anderen. Vertauscht liefert er kommentarlos falsche
 oder leere Kacheln. Der Layer ist **nicht** Standard: Er lädt deutlich größere
 Kacheln, und die Karte soll beim Öffnen einer Einsatzansicht schnell dastehen.
+
+**Marker-Satz und Spurfarben (`assets/geo.js`, ab Web 9.2.0):** Das
+`EdGeo`-Modul liefert alles, was auf einer Einsatzkarte steht, aus einer
+Hand: `markerStandort()`/`markerZiel()` (weiße Schilder mit Haus- bzw.
+Klinik-Symbol; `ring: 'start' | 'ende' | 'beide'` legt Farbringe für
+Dienstbeginn und -ende darum), `markerEinsatzort()` (oranger Kreis mit
+Einsatzort-Symbol), `markerPunkt()` (kleiner Farbpunkt, z. B. Abfahrt) und
+`pfeile()` (Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu
+verteilt bei jedem Zoom; der `remove`-Handler der Ebene räumt den Zuhörer
+ab). Alle Marker sind `divIcon`s mit CSS-Klassen (`.geo-schild`,
+`.geo-kreis`, `.geo-ring-*`, `.geo-pfeil`) — Form und Farbe stehen im
+Stylesheet, nicht im Skript. Die **Spurfarben** kommen als Token aus
+`:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)` liest
+sie per `getComputedStyle`, JS enthält keinen Farbwert.
 
 Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
 (Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
@@ -1542,9 +1558,12 @@ sofortiger Übernahme, ruhende Suche bei gesetzten Koordinaten, und die Prüfung
 „Koordinaten ohne Bezeichnung" beim Absenden.
 
 **Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
-über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, gestrichelt
-und in Max Blau, damit sie nicht mit dem Track-Orange verwechselt wird. Drei
-Regeln, die sie nie verletzt:
+über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, immer
+gestrichelt — das Strichmuster, nicht die Farbe, trägt die Unterscheidung zum
+aufgezeichneten Track. In der Einsatzansicht ist sie Max Blau; die
+Tagesübersicht färbt sie seit Web 9.2.0 in der Spurfarbe ihres Einsatzes, weil
+bei mehreren Einsätzen sonst nicht erkennbar wäre, welche Linie zu welchem
+gehört. Drei Regeln, die sie nie verletzt:
 
 * **Ein Track hat Vorrang.** Liegt er vor, unterbleibt die Linie; die
   Abfahrtortangabe bleibt gespeichert und wird lediglich nicht gezeichnet.

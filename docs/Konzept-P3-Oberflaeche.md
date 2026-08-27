@@ -1357,6 +1357,10 @@ und O11.
 | F-P3-W | **„Administration" stand als Kartentitel statt als Blocküberschrift** (Mockup 07: gesperrte Versalzeile über der Karte). | O2-Nacharbeit. Blocküberschrift `.uebersicht-block` über der Karte. |
 | F-P3-X | **Der Rückweg der öffentlichen Hülle war unter 1024 px unsichtbar** — `.kopf-punkt` ist mobil ausgeblendet; die Abbruchseite hatte mobil keinen Kopf-Rückweg. | O2-Nacharbeit. Eigene Klasse `.kopf-zurueck`, in jeder Breite sichtbar. |
 | F-P3-Y | **Leaflet zeichnete über die Schublade.** Die Karte vergibt intern z-Indizes bis 1000; Zoomknöpfe und Pin standen mitten im offenen Menü. | O2-Nacharbeit. `.geo` bildet einen eigenen Stapelkontext (`position:relative; z-index:0`) — die inneren Werte bleiben in der Karte eingesperrt, kein Wettrüsten der z-Indizes. |
+| F-P3-Z | **`fitBounds` bekam sein Padding seit jeher mit vertauschten Achsen** (Bestandsfehler, älter als P3). Leaflet erwartet `padding` als Punkt **(x, y)**; übergeben wurde `[Höhe·⅛, Breite·⅛]`. Bei einer Karte, die deutlich breiter als hoch ist (Tagesübersicht: 1128 × 300), forderte das Padding fast die ganze Höhe — Leaflet fand keine gültige Zoomstufe und blieb auf dem Rückfall (Zoom 7, halb Bayern) hängen. Diagnose über fünf Sonden: `setView` griff, `fitBounds` nicht; die Grenzen waren korrekt; die Padding-Rechnung entlarvte es. | O3. `L.point(px.x·⅛, px.y·⅛)`; die Tageskarte zoomt jetzt auf die Spuren. Im Browser bei 390/1440/1920 belegt. |
+| F-P3-AA | **`hidden` verlor gegen jedes `display` eines Bausteins.** `.tag-lese{display:grid}` überstimmte das Attribut (Autorenregel schlägt UA-Stylesheet) — nach „Bearbeiten" standen Lese- **und** Formularzustand gleichzeitig auf der Seite. Vier Einzelwächter (`.meldung[hidden]` usw.) hatten dasselbe Problem je Baustein geflickt. | O3. Ein globaler Wächter in den Grundlagen: `[hidden]{display:none !important}`; die vier Einzelregeln sind gestrichen. Mit Bediensonde belegt (Lese sichtbar → Klick → Formular sichtbar, Lese weg). |
+| F-P3-AB | **Der Kartenkopf übermalte bei 360 px seine eigene Zahl.** `.karte-titel` darf schrumpfen (`flex:0 1 auto; min-width:0`); ein Ein-Wort-Titel kann aber nicht umbrechen, also lief der Text über die Kachelbreite hinaus über „6 · 59 km". | O3. `.karte-kopf{flex-wrap:wrap}` — wird die Zeile zu eng, rückt „+ Nachtragen" in eine zweite Zeile, statt dass Text übermalt wird. Bei 360 px fotografiert. |
+| F-P3-AC | **Der Prüf-Browser kommt nicht an die Kartenkacheln.** In der Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag zurück — direkt **und** über den Umgebungsproxy, unabhängig von TLS-Version und Post-Quantum-Merkmalen (per NetLog belegt); `curl` und Node-`fetch` kommen durch. Jede Karte auf den Prüfbildern war grau. | O3, im Prüfmittel. `aufnehmen.mjs` fängt Kachelabrufe mit einer Playwright-Route ab und beantwortet sie aus einem Node-Abruf (Lager je URL; Neustart-Weiche für `NODE_USE_ENV_PROXY`, das nur beim Prozessstart gelesen wird). Nebeneffekt: deterministische Bilder; ohne Proxy läuft derselbe Weg direkt. |
 
 ---
 
@@ -1411,7 +1415,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 |---|---|---|
 | O1 Grundlage | **erledigt** | Web 9.0.0 |
 | O2 Seitenhülle und Bausteine | **erledigt**, Nacharbeit nach Fable-Kontrolle | Web 9.1.1 |
-| O3 Startseite und Karte | offen | |
+| O3 Startseite und Karte | **erledigt** | Web 9.2.0 |
 | O4 Einsatzansicht | offen | |
 | O5 Einsatzformular | offen | |
 | O6 Suche | offen | |
@@ -1689,6 +1693,78 @@ Prüfstand nach der Nacharbeit: 232 Bilder — 0 Überlauf, 0 Konsolenfehler,
 0 Knöpfe ≠ 44 px; Kontraste 21 Paare, 0 verfehlt; Wortliste 0/0/0; Syntax
 fehlerfrei. Beide Dialoge im Browser bei 390 px fotografiert und gegen
 Mockup 11 gehalten; Schublade mit Karte darunter erneut fotografiert.
+
+### O3 — Startseite (Tagesübersicht) und Kartenbaustein
+
+**Erledigt.** Web 9.2.0. Keine Migration.
+
+*Arbeitsmodus:* Auf Anweisung nach der Fable-Kontrolle führt **Fable** die
+designtragenden Pakete O3, O4 und O5 selbst aus (mit Selbstkontrolle gegen
+die Mockups und Umfangs-Checkliste je Paket); vor O6 wird gehalten und das
+Modell gewechselt.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/index.php` | komplett auf O3: Titelzeile mit Aktionsblatt (`ui_aktionen`, 5 Einträge), Diensttag-Daten als Karte mit Leseansicht (`zeigeTagLese`) und Umschalter (`tagdatenBearbeiten`), Einsätze-Karte mit Zahl/km-Summe/„+ Nachtragen", Tabelle **und** Kachelliste aus demselben Zeilenbestand, Sortierblatt (`#sortblatt`), `EdGeo`-Marker statt `COLORS`/`locPin` |
+| `server/assets/geo.js` | **neu**: EdGeo — Spurfarben aus den Token, Schild-/Kreis-/Punkt-Marker, Start/Ende-Ringe, Richtungspfeile (Verteilung je Zoom) |
+| `server/assets/missiontable.js` | `kachel()` (dreizeilig, Plaketten), `kachelGeschuetzt()`, `zelleDauer()` mit „kein Ende"-Plakette, `fmtKmZahl()`; Spaltenausrichtung nach Mockup 03 (Zahlen rechts, Haken zentriert), Symbole statt Text-Pfeilen |
+| `server/assets/style.css` | Abschnitte 20/21: `--spur-1…8`, `--spur-ruhe`, Kachel-, Tag-Lese-, Raster- (`.tag-raster`, ≥ 1600 zweispaltig) und Marker-Regeln (`.geo-*`); globaler `[hidden]`-Wächter (F-P3-AA); `.karte-kopf` umbruchfähig (F-P3-AB); `.streifen-spalte`/`.zahl-spalte`/`.haken-spalte`, `tabular-nums` in Tabellen |
+| `server/ui.php` | `ui_aktionen()` mit `id`-Option; `ui_artzeichen()` |
+| `server/api/day.php`, `api/mission.php` | `art_symbol`/`day_art_symbol` statt des toten Schlüssels `zeichen` (O2-Rest) |
+| `tools/screenshots/aufnehmen.mjs` | Kachel-Lieferung per Playwright-Route aus Node-fetch (F-P3-AC); Verursacher-Messung beim Überlauf; eine Seite je Rolle (sessionStorage ist registerkartengebunden) |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Luftlinie in der Spurfarbe ihres Einsatzes** statt einheitlich grau
+  (Konzepttext zu O3): Bei mehreren Einsätzen am Tag wäre sonst nicht
+  erkennbar, welche Linie zu welchem gehört. Gestrichelt bleibt sie überall —
+  das Strichmuster trägt die Unterscheidung zum Track, nicht die Farbe.
+  Begründung steht im Code (`index.php`, Luftlinien-Block).
+- **Dauer als „57min" / „1h 15min"** statt „0:51" (Mockup 02/03): die
+  bestehende `fmtDur`-Schreibweise ist eindeutiger als ein nacktes
+  Stunden-Doppelpunkt-Paar und bleibt.
+- **km-Zelle nennt nur die Zahl**, die Einheit steht im Spaltenkopf
+  (Mockup 04); die Kachel rundet auf ganze km („38 km").
+- **F-P3-A** (`.metanotes` doppelt definiert) hat sich mit der Karte
+  erledigt; die Klasse steht auf der Streichliste.
+- Sechzehn Klassen der alten Startseite auf die **Streichliste** (u. a.
+  `daymeta`, `meta-form`, `dayactions`, `geraetehinweis`, `swatch`,
+  `checkcol` und die Spaltenfamilie `c-no`/`c-km`/`c-winde` …);
+  `c-dc-<spalte>` bleibt als Anker des Feldkatalogs, `mono` lebt auf den
+  Verwaltungsseiten bis zu deren Paketen weiter.
+
+#### Prüfprotokoll O3
+
+- **Vollständigkeit:** Sollmenge 220 Klassen — 11 mit Regel, 51 auf der
+  Streichliste, 158 offen (alle auf noch nicht umgebauten Seiten). 0 Werte
+  außerhalb der Token (Hex, Schriftgrößen, Pixelmaße). 0 Knopfhöhen abseits
+  `--knopf`.
+- **Screenshots:** 29 Seiten × 8 Breiten — Zahlen siehe Prüfdokument;
+  Startseite bei 360/390/1440/1920 gegen Mockups 02/03/04 gehalten
+  (Kachel dreizeilig, Titelzeile, Lesezustand, Marker-Satz, Zweispalter
+  ab 1600).
+- **Bediensonden (Playwright, 390 px):** Sortierblatt öffnet, „Einsatzort"
+  sortiert Kacheln **und** Tabelle identisch (Auwiesen ×2, Felsgrat,
+  Steinach ×3 — belegt gegen die Dauer-Spalte derselben Zeilen);
+  Bearbeiten-Umschalter: Lese sichtbar → Klick → Formular sichtbar, Lese
+  weg; Tagesblatt zeigt die fünf Einträge. 0 Konsolenfehler (die
+  abgefangenen Kachelabrufe der Sonde ausgenommen).
+- **Karte im Browser:** Zoom auf die Spuren statt Rückfallstufe (F-P3-Z
+  behoben), Kacheln laden (F-P3-AC), Haus-/Klinik-Schild, orange
+  Einsatzort-Kreise, Richtungspfeile, gestrichelte Luftlinie — bei 390,
+  1440 und 1920 fotografiert.
+- **Wortliste:** 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen,
+  0 durchgerutschte Fallen (49 Regeln, 49 gegriffen).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko
+(Prüfdokument P-1). Das Verhalten des Aktionsblatts mit
+Bildschirmtastatur und die Geolocation-Abfrage sind nur am Gerät zu
+prüfen. Der Vollbildmodus der Karte wurde nicht erneut fotografiert
+(unverändert aus O2, nur der Knopf-Inhalt kommt jetzt aus `edSymbol`).
 
 ---
 

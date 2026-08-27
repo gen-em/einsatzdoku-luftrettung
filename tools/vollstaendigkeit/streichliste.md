@@ -49,3 +49,19 @@ im selben Paket hier ein, nicht später.
 | `unlockbtns` | Knopfzeile → `.dialog-fuss`. | O2 |
 | `err` | Zusatzklasse der alten `unlockmsg` für den Fehlerfall → `meldung-fehler`. | O2 |
 | `imp-pw` | Passwortfeld der Archivabfrage im Import → `.feld-eingabe`; das `style="width:100%"` daneben ist mit dem Baustein entfallen. | O2 |
+| `daymeta` | Diensttag-Daten unter dem Seitentitel → Karte `Diensttag-Daten` mit Leseansicht `.tag-lese` (E-P3-31). | O3 |
+| `meta-form` | Formular der Diensttag-Daten, dauerhaft sichtbar → dasselbe Formular, aber zugeklappt hinter „Bearbeiten" in derselben Karte (`.tag-form`). | O3 |
+| `metanotes` | Notizfeld der Diensttag-Daten → gewöhnliches `label`+`textarea` im Formular; die Leseansicht zeigt Notizen als `.tagfeld`. | O3 |
+| `dayactions` | Knopfreihe (Datum ändern, Zusammenführen, Löschen …) unter den Tagesdaten → Aktionsblatt hinter „···" (`ui_aktionen`, E-P3-25): EINE sichtbare Handlung je Karte, der Rest im Blatt. | O3 |
+| `geraetehinweis` | Kasten „neue Geräte verbunden" → Meldungs-Baustein `.meldung meldung-warn` mit Symbol und Quittungsknopf. (`geraetehinweis:` in `db.php` ist ein Speicherschlüssel, keine Klasse.) | O3 |
+| `swatch` | Farbchip der Einsatztabelle → `.streifen` (voll hoher Farbstreifen am Zeilen- bzw. Kachelrand, Mockup 02/03). Stand zunächst als Übergangsausnahme im Stylesheet; seit O3 nirgends mehr im Markup. | O3 |
+| `c-no` | Breitenklasse der Nr.-Spalte → `.zahl-spalte` (rechtsbündig, Mockup 03); eine eigene Breitenregel braucht die Spalte nicht mehr. | O3 |
+| `c-km` | Breitenklasse der km-Spalte → `.zahl-spalte`. | O3 |
+| `c-date` | Breitenklasse der Datumsspalte (Suche/Zeitraum) — ersatzlos, die Spalte kommt ohne Breitenregel aus. | O3 |
+| `c-art` | Breitenklasse der Artspalte (Suche/Zeitraum) — ersatzlos wie `c-date`. | O3 |
+| `c-winde` | Breitenklasse der Winde-Spalte → `.haken-spalte` (zentriert, Mockup 03). | O3 |
+| `c-bw` | Breitenklasse der Bergwacht-Spalte → `.haken-spalte`. | O3 |
+| `c-sek` | Breitenklasse der Sekundär-Spalte → `.haken-spalte`. | O3 |
+| `c-fehl` | Breitenklasse der Fehleinsatz-Spalte → `.haken-spalte`. | O3 |
+| `checkcol` | Zentrierung der Hakenspalten → `.haken-spalte`; der Haken selbst ist `edSymbol('haken', 'tabelle-haken')` statt Text-✓. | O3 |
+| `c-dc` | Sammelklasse „Katalogspalte" — ersatzlos: Die Ausrichtung sagt jetzt `haken-spalte` (bzw. nichts für Text), die feldeigene Klasse `c-dc-<spalte>` aus `mission_fields_lib.php` bleibt als Anker des Feldkatalogs bestehen. | O3 |

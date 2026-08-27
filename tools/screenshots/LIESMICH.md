@@ -72,7 +72,7 @@ Installation und dürfen nicht in einer eingecheckten Datei stehen.
 `karte: true` wartet zusätzlich auf Leaflet. `vorher` führt Bedienschritte
 vor der Aufnahme aus (bisher: `schublade`).
 
-## Zwei Fallen, die hier schon zugeschnappt sind
+## Drei Fallen, die hier schon zugeschnappt sind
 
 **Der Inhaltsschlüssel hängt an der Registerkarte.** Der erste Entwurf
 öffnete je Aufnahme eine neue Seite. Jede davon startete mit leerem
@@ -87,6 +87,18 @@ ihre Aufgabe, nicht ihr Fehler. Beides wird ausgefiltert, und zwar über die
 **Fundstelle** der Meldung, nicht über ihren Wortlaut. Ein Bericht, der
 jede rote Zeile meldet, wird nach zwei Läufen weggeklickt, und dann geht der
 echte Fehler mit unter.
+
+**Der Prüf-Browser kommt nicht überall hin, wo `curl` hinkommt.** In der
+Claude-Arbeitsumgebung setzt die Egress-Sperre Chromiums TLS-Handschlag zu
+den Kachelservern zurück — direkt wie über den Umgebungsproxy, unabhängig
+von TLS-Version und Post-Quantum-Merkmalen (per NetLog belegt, F-P3-AC).
+Jede Karte war grau. Deshalb fängt eine Playwright-Route die Kachelabrufe ab
+und beantwortet sie aus einem **Node-Abruf** (Lager je URL, damit 232
+Aufnahmen die Server nicht 232-fach fragen). Nodes eingebautes `fetch`
+liest den Proxy wiederum nur, wenn `NODE_USE_ENV_PROXY` **beim
+Prozessstart** gesetzt ist — das Skript startet sich dafür einmal selbst
+neu. Ohne Proxy (lokaler Rechner) läuft derselbe Weg unverändert direkt;
+Nebeneffekt überall: deterministische Kartenbilder.
 
 ## Grenzen
 

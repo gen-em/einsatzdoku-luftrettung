@@ -312,6 +312,8 @@
   --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
+  --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
   --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
 
@@ -319,6 +321,27 @@
   --karte-mobil:160px;
   --karte-tablet:220px;
   --karte-desktop:300px;
+
+  /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
+   * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge. Bis
+   * Web 9.1.1 stand die Liste als COLORS-Array in index.php und enthielt
+   * fünf markenfremde Werte (F-P3-H). Jetzt: die drei Markenfarben,
+   * Dunkelblau und vier ABGELEITETE Töne — jede Ableitung mit Herkunft:
+   *   spur-5..7  die Tief-Töne der drei Markenfarben (stehen oben bereits
+   *              als Schrifttöne; hier tragen sie Fläche auf der Karte)
+   *   spur-8     Sand, von L 75 % auf 40 % abgedunkelt (4,6:1 auf Schnee)
+   * Die Ruhespur ist Mechanik, keine Botschaft — sie fährt gedämpft.
+   * JavaScript liest die Werte über getComputedStyle; eine zweite Liste im
+   * Code gibt es nicht mehr. */
+  --spur-1:var(--orange);
+  --spur-2:var(--blau);
+  --spur-3:var(--rot);
+  --spur-4:var(--dunkelblau);
+  --spur-5:var(--orange-tief);
+  --spur-6:var(--blau-tief);
+  --spur-7:var(--rot-tief);
+  --spur-8:#867146;
+  --spur-ruhe:var(--gedaempft);
 
   /* ---- Schwellen ---------------------------------------------------------
    * Diese vier Werte stehen hier zur AUSKUNFT — für JavaScript, für
@@ -365,6 +388,12 @@
  */
 
 *,*::before,*::after{box-sizing:border-box}
+
+/* hidden gewinnt IMMER — auch gegen Bausteine mit eigenem display (flex,
+ * grid). Ohne diese Regel überstimmt jede display-Angabe das Attribut, und
+ * JS-Umschalter zeigen Lese- und Formularzustand gleichzeitig (Fund aus O3
+ * am Diensttag-Umschalter). */
+[hidden]{display:none !important}
 
 /* Innenabstände und Ränder der Standardelemente auf null. Was Abstand
  * braucht, bekommt ihn vom Baustein — nicht vom Browser. */
@@ -797,8 +826,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   border-radius:var(--radius-gross);
   margin-bottom:var(--abstand-4);
 }
+/* flex-wrap: Wird die Zeile zu eng (Titel + Zahl + Sortieren + Nachtragen bei
+ * 360 px), bricht die Kopfaktion in eine zweite Zeile um. Ohne wrap schrumpft
+ * die Titelspalte unter ihre Textbreite und der Text uebermalt die Zahl. */
 .karte-kopf{
-  display:flex;align-items:center;gap:var(--abstand-2);
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
   padding:var(--abstand-3) var(--abstand-4);
   border-bottom:var(--strich) solid var(--linie);
   list-style:none;
@@ -948,15 +980,15 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Der fette Auftakt darf orange sein — für fette Schrift ab 14 px gilt 3:1.
  */
 .meldung{
-  display:flex;align-items:center;gap:var(--abstand-3);
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
   border-radius:var(--radius);
   margin-bottom:var(--abstand-4);
 }
-.meldung p{flex:1 1 auto;min-width:0}
-/* JS blendet Meldungen per hidden ein und aus (Entsperrdialog); das Attribut
- * muss gegen das display:flex gewinnen. */
-.meldung[hidden]{display:none}
+/* Der Text braucht eine Mindestbreite, unter der die Aktion in die naechste
+ * Zeile umbricht — sonst quetscht ein breiter Knopf den Text auf ein Wort je
+ * Zeile (Fund aus O3 am Geraetehinweis bei 390 px). */
+.meldung p{flex:1 1 16rem;min-width:0}
 .meldung .symbol{flex:0 0 auto}
 .meldung-aktion{flex:0 0 auto}
 .meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
@@ -988,7 +1020,6 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
   max-height:80vh;overflow-y:auto;
 }
-.blatt[hidden]{display:none}
 .blatt-griff{
   width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
   border-radius:var(--radius-rund);background:var(--sand);
@@ -1121,7 +1152,6 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   border-top:var(--strich) solid var(--linie);
   box-shadow:var(--schatten);
 }
-.speichern[hidden]{display:none}
 .speichern-innen{
   display:flex;align-items:center;gap:var(--abstand-3);
   max-width:var(--rahmen);margin:0 auto;
@@ -1225,7 +1255,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * und Diagnose null Pixel Breite und verschwanden ohne Hinweis, während sieben
  * Zahlenspalten stehen blieben.
  */
-.tabelle{width:100%;border-collapse:collapse}
+/* tabular-nums: Ziffern gleicher Breite, damit Zahlenspalten (Beginn, Dauer,
+ * km) untereinander fluchten — die frühere mono-Klasse entfällt (Mockup 03
+ * setzt die Textschrift, keine Schreibmaschine). */
+.tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .tabelle th{
   text-align:left;font-weight:600;
   color:var(--dunkelblau);
@@ -1297,7 +1330,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  *
  * Sie greift an Elementnamen — mit EINER begründeten Ausnahme, und die ist
  * eng gefasst (Fable-Kontrolle, F-P3-T): die alten Meldungsklassen
- * (.alert-Familie), .muted und .swatch. Warum genau diese drei:
+ * (.alert-Familie) und .muted. Warum genau diese:
  *
  *   .alert   Eine Fehlermeldung, die aussieht wie Fließtext, IST keine —
  *            sie warnt niemanden. Auf den noch nicht umgebauten Seiten
@@ -1305,10 +1338,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  *            bis zu ihrem Paket als Meldung ERKENNBAR bleiben.
  *   .muted   trägt an hunderten Stellen den Unterschied zwischen Auskunft
  *            und Nebenbemerkung. Ohne ihn ist alles gleich laut.
- *   .swatch  ist der Farbchip der Einsatztabelle — seine Fläche kommt aus
- *            einem style-Attribut, seine GRÖSSE kam aus der Klasse. Ohne
- *            Regel ist er 0 x 0, und die Zuordnung Einsatz -> Spurfarbe ist
- *            weg.
+ *
+ * (.swatch stand anfangs mit in dieser Liste; seit die Tabellen der
+ * Tagesübersicht den Streifen tragen, gibt es den Farbchip nirgends mehr —
+ * O3 hat ihn auf die Streichliste gesetzt.)
  *
  * Jede dieser Klassen wird in ihrem Paket durch den Baustein ersetzt und
  * wandert dann auf die Streichliste; dieser Block stirbt mit O11. Alles
@@ -1326,14 +1359,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .alert-info,.alert-ok{background:var(--blau-hell);color:var(--blau-tief)}
 .alert-warn{background:var(--orange-hell);color:var(--asphalt)}
-/* Das hidden-Attribut muss gegen das display:block gewinnen — JS blendet
- * diese Behälter darüber ein und aus (#loaderror, #lockbanner). */
-.alert[hidden]{display:none}
 .muted{color:var(--gedaempft)}
-.swatch{
-  display:inline-block;width:var(--symbol);height:var(--symbol);
-  border-radius:var(--radius-klein);vertical-align:middle;
-}
 /* TABELLEN SCROLLEN WAAGERECHT STATT DIE SEITE ZU SPRENGEN.
  *
  * Der Befund zu P3 hat 32 Tabellen gezählt und genau EINE mit
@@ -1500,3 +1526,224 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
  * stehen Formulare mit Feldgruppen, nicht zwei Zeilen. */
 .anmeldung-breit{max-width:var(--lesespalte)}
+
+
+/* == 20. TAGESÜBERSICHT UND EINSATZLISTE (O3) ==============================
+ *
+ * Kachel, Tabelle mit Farbstreifen, Diensttag-Daten als Lesezustand und das
+ * Raster, das die Karte ab 1600 px neben Daten und Tabelle stellt.
+ */
+
+/* ---- Sichtbarkeitsschwelle 720 -------------------------------------------
+ * Unter 720 px gibt es KEINE Einsatztabelle, sondern die Kachel (E-P3-32).
+ * Zwei Hilfsklassen tragen den Wechsel; sie blenden nur AUS und lassen die
+ * Grundform des Elements unangetastet. */
+.nur-ab-720{display:none}
+@media (min-width:720px){
+  .nur-ab-720{display:block}
+  /* Doppelt geschrieben, um jede Baustein-Regel gleicher Spezifität zu
+   * schlagen (der Sortier-Knopf traegt .karte-sortieren mit display:flex —
+   * eine Klasse gegen eine Klasse verloere nach Reihenfolge). */
+  .nur-unter-720.nur-unter-720{display:none}
+}
+
+/* ---- Kachel (E-P3-32, Mockup 10) ---------------------------------------- */
+.kachelliste{display:flex;flex-direction:column}
+.kachel{
+  display:flex;gap:var(--abstand-3);
+  padding:var(--abstand-3) 0;
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--asphalt);text-decoration:none;
+}
+.kachel:last-child{border-bottom:0;padding-bottom:0}
+.kachel:first-child{padding-top:0}
+.kachel:hover{text-decoration:none;background:var(--rauch)}
+.kachel-streifen{
+  flex:0 0 auto;width:var(--abstand-1);
+  border-radius:var(--radius-rund);
+  /* Die Farbe kommt je Einsatz aus den Spur-Token (style-Attribut aus JS —
+   * ein Wert, kein Stil; die Ausnahme steht in tools/vollstaendigkeit). */
+}
+.kachel-zeit{
+  flex:0 0 auto;
+  font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--dunkelblau);
+  min-width:3.2em;
+}
+.kachel-rumpf{flex:1 1 auto;min-width:0}
+.kachel-kopf{display:flex;align-items:baseline;gap:var(--abstand-2)}
+.kachel-ort{
+  flex:1 1 auto;min-width:0;
+  font-weight:600;font-size:var(--groesse-4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.kachel-km{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
+.kachel-dx{
+  color:var(--asphalt);
+  display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-clamp:2;overflow:hidden;
+}
+/* In Suche und Zeitraum eine Zeile mit Abschneiden (E-P3-32). */
+.kachel-knapp .kachel-dx{-webkit-line-clamp:1;line-clamp:1}
+.kachel-fuss{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:var(--abstand-1) var(--abstand-2);
+  margin-top:var(--abstand-1);
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+/* Artzeichen und Datum als erstes Element (Suche, Zeitraum). */
+.kachel-art{flex:0 0 auto;color:var(--dunkelblau);align-self:center}
+.kachel-datum{
+  flex:0 0 auto;
+  font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau);
+}
+/* Warnzeichen „vorhanden, aber nicht lesbar" in der Kachel. */
+.kachel .patfehler{color:var(--rot-tief)}
+
+/* ---- Tabelle: Verfeinerungen (E-P3-32, Mockup 04) ------------------------
+ * Der Baustein .tabelle steht in Abschnitt 14; hier kommt dazu, was die
+ * EINSATZtabelle braucht: display:table gegen die Übergangsregel (der
+ * Überlauf gehört dem Behälter .tabelle-scroll), Farbstreifen, blauer
+ * Sortierpfeil, dunkelblaue Haken, die klickbare Zeile. */
+.tabelle{display:table}
+.tabelle-scroll{overflow-x:auto}
+.tabelle th.sortable{cursor:pointer;white-space:nowrap}
+.tabelle th.sortable:hover{color:var(--blau-tief)}
+.tabelle .arrow{color:var(--blau);vertical-align:middle}
+.tabelle .arrow .symbol{width:var(--groesse-2);height:var(--groesse-2)}
+.tabelle .tabelle-haken{color:var(--dunkelblau)}
+.tabelle .streifen{
+  display:inline-block;width:var(--abstand-1);height:var(--abstand-5);
+  border-radius:var(--radius-rund);vertical-align:middle;
+}
+.tabelle .streifen-spalte{width:var(--abstand-3)}
+.tabelle tr.clickable{cursor:pointer}
+.tabelle tr.clickable:hover td{background:var(--rauch)}
+.tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
+.tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
+.tabelle .patfehler .symbol{color:var(--rot-tief)}
+.tabelle td.zahl-spalte,.tabelle th.zahl-spalte{text-align:right}
+.tabelle td.haken-spalte,.tabelle th.haken-spalte{text-align:center}
+
+/* Sortieren-Link im Kartenkopf — nur dort, wo es keine Spaltenköpfe gibt. */
+.karte-sortieren{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);
+  color:var(--blau-tief);flex:0 0 auto;
+}
+.blatt-zeile.aktiv{background:var(--orange-hell);color:var(--dunkelblau)}
+
+/* ---- Wochentag im Titel: lang ab 720, kurz darunter (E-P3-31) ------------ */
+.wtag-lang{display:none}
+.wtag-kurz{display:inline}
+@media (min-width:720px){
+  .wtag-lang{display:inline}
+  .wtag-kurz{display:none}
+}
+
+/* ---- Diensttag-Daten: Lesezustand (E-P3-31, Mockups 02/03) --------------- */
+.tag-lese{display:block}
+.tagfeld{
+  display:grid;grid-template-columns:minmax(7em,auto) 1fr;
+  gap:var(--abstand-1) var(--abstand-4);
+  padding:var(--abstand-1) 0;
+}
+.tagfeld dt{color:var(--gedaempft)}
+.tagfeld dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.tag-lese-leer{color:var(--gedaempft)}
+/* Standort und Rettungsmittel entfallen mobil — sie stehen dort schon in der
+ * Unterzeile des Titels (Mockup 02). */
+.tagfeld-doppelt{display:none}
+@media (min-width:720px){
+  .tagfeld-doppelt{display:grid}
+}
+.tag-form-fuss{display:flex;align-items:center;gap:var(--abstand-3)}
+@media (min-width:720px){
+  .tag-lese{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0 var(--abstand-5)}
+}
+
+/* ---- Das Raster der Tagesübersicht (E-P3-31) -----------------------------
+ * Unter 1600 px gewöhnlicher Fluss: Daten, Karte, Einsätze. Ab 1600 rückt
+ * die Karte in eine rechte Spalte und läuft von der Höhe der Diensttag-Daten
+ * bis unter die Tabelle. */
+@media (min-width:1600px){
+  .tag-raster{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--karte-neben-breit);
+    grid-template-areas:"daten karte" "einsaetze karte";
+    grid-template-rows:auto 1fr;
+    gap:0 var(--abstand-4);
+    align-items:start;
+  }
+  .tag-raster > .karte-daten{grid-area:daten}
+  .tag-raster > .geo-spalte{grid-area:karte;align-self:stretch}
+  .tag-raster > .karte-einsaetze{grid-area:einsaetze}
+  .geo-spalte .geo{height:100%;min-height:var(--karte-desktop)}
+}
+
+
+/* == 21. KARTENMARKER (O3, E-P3-40, Mockup 26) =============================
+ *
+ * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
+ * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße, dunkel-
+ * blau umrandete Kästchen mit Namensschild darunter; der Einsatzort als
+ * oranger Kreis mit Pin; Start und Ende als blauer bzw. roter Ring UM das
+ * Schild des Ortes, an dem die Spur beginnt oder endet — beides am selben
+ * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
+ * bei der sie nicht gedrängt stehen.
+ */
+.geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
+.geo-schild-kasten{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  background:var(--schnee);color:var(--dunkelblau);
+  border:var(--strich-stark) solid var(--dunkelblau);
+  border-radius:var(--radius);
+  box-shadow:var(--schatten);
+}
+/* Ringe liegen als zusätzliche Rahmen um das Kästchen. Der Doppelring ist
+ * außen rot (Ende) und innen blau (Start) — wie im Mockup. */
+.geo-ring-start .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--blau);
+}
+.geo-ring-ende .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+}
+.geo-ring-beide .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--blau),
+             0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 4) var(--rot);
+}
+.geo-schild-text{
+  background:var(--schnee);color:var(--asphalt);
+  font:600 var(--groesse-2)/1.3 var(--schrift-text);
+  padding:var(--abstand-1) var(--abstand-2);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  white-space:nowrap;
+}
+.geo-kreis{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--geo-kreis);height:var(--geo-kreis);
+  background:var(--orange);color:var(--dunkelblau);
+  border:var(--strich-stark) solid var(--schnee);
+  border-radius:var(--radius-rund);
+  box-shadow:var(--schatten);
+}
+.geo-punkt{
+  width:var(--abstand-3);height:var(--abstand-3);
+  border-radius:var(--radius-rund);
+  border:var(--strich-stark) solid var(--schnee);
+}
+.geo-pfeil{color:var(--dunkelblau)}
+.geo-pfeil .symbol{
+  filter:drop-shadow(0 0 var(--strich) var(--schnee))
+         drop-shadow(0 0 var(--strich) var(--schnee));
+}
+/* Leaflet-DivIcons bringen eine eigene Klasse mit weißem Hintergrund mit —
+ * unsere Marker zeichnen sich selbst. */
+.leaflet-div-icon{background:none;border:0}

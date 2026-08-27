@@ -11,6 +11,55 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.2.0] — 2026-08-27
+
+**O3: Die Startseite nach den Mockups 02–05 und 10.** Der Befund zur alten
+Tagesübersicht war der Ausgangspunkt des ganzen Redesigns: Bei 360 px
+bekamen Einsatzort und Diagnose — die beiden Angaben, um die es geht — null
+Pixel Breite und verschwanden ohne Hinweis, während sieben Zahlenspalten
+stehen blieben. Deshalb gibt es unter 720 px jetzt **keine Tabelle mehr**,
+sondern eine dreizeilige Kachel je Einsatz: Farbstreifen und Beginn, Ort
+fett mit Kilometerzahl, Diagnose, darunter Dauer, Alter und die Plaketten
+(Winde, Bergwacht, Sekundär, Fehleinsatz, „kein Ende"). Tabelle und Kachel
+entstehen aus **demselben Zeilenbestand** — sortiert wird mobil über ein
+Blatt mit denselben Spalten, und die Reihenfolge ist belegt dieselbe wie am
+Desktop. Die Knopfreihe unter den Tagesdaten ist einem Aktionsblatt hinter
+„···" gewichen (eine sichtbare Handlung je Karte, E-P3-25); die
+Diensttag-Daten zeigen einen **Lesezustand** und klappen erst auf
+„Bearbeiten" ins Formular.
+
+Auf der Karte der neue Marker-Satz (E-P3-40): Standort als Haus-Schild,
+Transportziel als Klinik-Schild, Einsatzort als oranger Kreis,
+Dienstbeginn/-ende als Ringe, Richtungspfeile auf den Spuren. Die
+Spurfarben sind **Token** (`--spur-1 … --spur-8`, `--spur-ruhe`) und werden
+per `getComputedStyle` gelesen — die alte `COLORS`-Liste im Seitenskript
+ist weg. Die Luftlinie bleibt gestrichelt, trägt aber die Farbe ihres
+Einsatzes statt einheitlichem Grau: Bei acht Einsätzen am Tag wäre sonst
+nicht erkennbar, welche Linie zu welchem gehört — die bewusste Abweichung
+vom Konzepttext ist im Code begründet.
+
+Zwei Funde nebenbei, beide älter als P3: `fitBounds` bekam sein Padding
+seit jeher mit **vertauschten Achsen** (F-P3-Z) — bei einer Karte, die
+breiter als hoch ist, fraß das fast die ganze Höhe, und die Tageskarte
+blieb auf der Rückfall-Zoomstufe hängen, statt auf die Spuren zu zoomen.
+Und das `hidden`-Attribut verlor gegen jede `display`-Angabe eines
+Bausteins; ein globaler Wächter (`[hidden]{display:none !important}`)
+ersetzt die vier verstreuten Einzelregeln — ohne ihn standen Lese- und
+Formularzustand der Tagesdaten gleichzeitig auf der Seite. Die
+Tabellenspalten richten sich jetzt nach Mockup 03 aus (Nr., Dauer, Alter,
+km rechts; Haken zentriert; Ziffern in Tabellenbreite statt der alten
+`mono`-Schreibmaschinenklasse), und sechzehn tote Klassen der alten
+Startseite stehen mit Begründung auf der Streichliste.
+
+Für die Prüfmittel: Der Prüf-Browser kommt in der Arbeitsumgebung nicht an
+die OSM-Kachelserver (die Egress-Sperre setzt seinen TLS-Handschlag
+zurück, mit wie ohne Proxy — per NetLog belegt); `aufnehmen.mjs` fängt
+Kachelabrufe deshalb mit einer Playwright-Route ab und beantwortet sie aus
+einem Node-Abruf mit Lager je URL. Nebeneffekt: deterministische Bilder,
+und ohne Proxy läuft derselbe Weg unverändert direkt.
+
+Keine Migration; Endpunkte und Feldkatalog unverändert.
+
 ## [Web 9.1.1] — 2026-08-26
 
 **Die Fable-Kontrolle zu O1/O2 — neun Funde, alle behoben.** Nach dem Halt

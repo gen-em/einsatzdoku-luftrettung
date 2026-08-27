@@ -1093,7 +1093,11 @@ function ui_titelzeile(array $o): void
  * ------------------------------------------------------------------------ */
 function ui_aktionen(array $o): string
 {
-    $id = 'aktionen-' . substr(sha1((string)($o['titel'] ?? '') . count((array)($o['eintraege'] ?? []))), 0, 8);
+    /* Eine feste Kennung ('id'), wenn die Seite das Blatt ansprechen will —
+     * etwa um seinen Titel nachzutragen („Diensttag 22.08.2026"). Sonst eine
+     * aus dem Inhalt abgeleitete. */
+    $id = (string)($o['id'] ?? ('aktionen-' . substr(sha1((string)($o['titel'] ?? '')
+        . count((array)($o['eintraege'] ?? []))), 0, 8)));
     $m  = '<div class="aktionen">';
     $m .= '<button type="button" class="knopf knopf-neutral aktionen-knopf" '
         . 'aria-expanded="false" aria-controls="' . $id . '" data-blatt="' . $id . '">'

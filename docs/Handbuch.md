@@ -350,22 +350,42 @@ für „noch ohne Zuordnung". Der Name des Rettungsmittels steht rechts daneben.
 (Bis Web 8.0.1 waren das Emoji — sie sahen auf jedem Betriebssystem anders
 aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 
+Über allem steht die **Titelzeile** (seit Web 9.2.0): Wochentag und Datum
+als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
+einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
+Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
+**„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
+(Abschnitt 4.5a) und **„Tag löschen"** (Abschnitt 8). Auf dem Handy fährt
+das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
+schließt es, die Tastatur bedient es vollständig.
+
 Pro Tag:
 
-- **Diensttag-Daten** (aufklappbar): Standort, Rettungsmittel, Besatzung,
-  Notizen — direkt editier- und speicherbar. Die Kopfzeile zeigt eine
-  Kurzfassung.
+- **Diensttag-Daten**: Die Karte zeigt Standort, Rettungsmittel, Besatzung
+  und Notizen als **Leseansicht**. Erst **„Bearbeiten"** (in der Kopfzeile
+  oder im Aktionsblatt) klappt an derselben Stelle das Formular auf;
+  Speichern — oder ein zweiter Klick auf „Bearbeiten" — klappt zurück.
+  Solange noch nichts eingetragen ist, sagt die Karte das („Noch keine
+  Angaben") statt leere Zeilen zu zeigen.
 
-  Welche **Besatzungsrollen** hier stehen, ergibt sich aus dem gewählten
-  Rettungsmittel: luftgebunden Pilot 1, Pilot 2, HEMS-TC, Flugretter und
-  Sonstige, bodengebunden Fahrer, Praktikant und Sonstige. Ein Diensttag ohne
-  Rettungsmittel zeigt keine Rollen — trag Standort und Rettungsmittel nach,
-  dann erscheinen sie.
+  Welche **Besatzungsrollen** im Formular stehen, ergibt sich aus dem
+  gewählten Rettungsmittel: luftgebunden
+  Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
+  bodengebunden Fahrer, Praktikant und Sonstige.
+  Ein Diensttag ohne Rettungsmittel zeigt keine Rollen — trag Standort und
+  Rettungsmittel nach, dann erscheinen sie.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
-  mit Orange/Blau/Rot) und dem Ruhe-Track in Schwarz. Die Einsatzort-Pins
-  tragen die Farbe des jeweiligen Einsatzes. Die Karte zoomt automatisch so,
-  dass alle Tracks sichtbar sind; Tracklinien werden beim Rauszoomen etwas
-  dicker. Oben links lässt sich die Karte per Klick auf **Vollbild**
+  mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
+  **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
+  Der **Standort** steht als Haus-Schild auf der Karte, das
+  **Transportziel** jedes Einsatzes als Klinik-Schild, der **Einsatzort**
+  als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
+  Luftlinie** in der Farbe des Einsatzes — gestrichelt heißt immer: gerade
+  Verbindung, kein aufgezeichneter Weg. Die Karte zoomt automatisch so, dass
+  alles sichtbar ist. Auf dem Handy liegt sie kompakt über der Einsatzliste,
+  auf sehr breiten Bildschirmen (ab 1600 px) rückt sie neben Daten und
+  Tabelle. Oben links lässt sich die Karte per Klick auf **Vollbild**
   stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
   rechts zwischen vier Kartenebenen umschalten: **Standard**, **Wanderkarte**
   (mit Höhenlinien), **Topographisch** und — seit Web 7.0.0 —
@@ -373,28 +393,34 @@ Pro Tag:
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
-- **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
-  der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
-  Sekundärtransport, Kilometer. Winde und Bergwacht stehen nur an einem
-  Diensttag, dessen Rettungsmittel sie führt. Den **Fehleinsatz** führt diese
-  Tabelle bewusst nicht — er steht im Einsatz selbst; auswerten lässt er sich
-  in der Zeitraum-Übersicht und der Suche. Alle Spalten sind zentriert und
-  in abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz,
-  ein Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der
-  Alarmierung bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
+- **Einsätze**: Die Kopfzeile der Karte nennt Anzahl und Kilometersumme des
+  Tages und trägt rechts **„+ Nachtragen"** — das öffnet das
+  Eingabeformular für diesen Tag.
+
+  Auf dem Handy (unter 720 px) erscheint jeder Einsatz als **dreizeilige
+  Kachel**: Farbstreifen und Beginn, der **Einsatzort** fett mit der
+  Kilometerzahl, die **Diagnose**, darunter Dauer und Alter samt Plaketten
+  (Winde, Bergwacht, Sekundär, Fehleinsatz, „kein Ende"). Das ist die
+  Antwort auf den alten Zustand, in dem Ort und Diagnose auf schmalen
+  Bildschirmen schlicht verschwanden. Sortiert wird über das
+  Pfeilsymbol im Kopf: Es öffnet ein Blatt mit denselben Spalten wie am
+  Desktop, die Reihenfolge ist dieselbe.
+
+  Ab 720 px steht die **Tabelle**: Nr., Beginn, Dauer, **Einsatzort**
+  (Ortschaft aus der verschlüsselten Adresse), **Alter**, **Diagnose**,
+  Winde, Bergwacht, Sekundärtransport, Kilometer. Winde und Bergwacht
+  stehen nur an einem Diensttag, dessen Rettungsmittel sie führt. Den
+  **Fehleinsatz** führt diese Tabelle bewusst nicht — er steht im Einsatz
+  selbst und auf der Kachel; auswerten lässt er sich in der
+  Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
+  Haken zentriert; ein Klick auf eine Zeile öffnet den Einsatz, ein Klick
+  auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung bis
+  Phase 9; fehlt Phase 9, steht dort die Plakette „kein Ende".
   Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
   entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
   Ob für einen Einsatz eine vom Diensttag abweichende Besatzung eingetragen ist,
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
-- **„+ Einsatz nachtragen"** unter der Tabelle öffnet das Eingabeformular für
-  diesen Tag. Oben rechts steht das Menü **Aktionen** (seit Web 5.10.0; vorher
-  standen die Einträge als Schaltflächen unter der Tabelle) mit
-  **„Datum ändern"** — korrigiert das Datum des ganzen Tages (Abschnitt 4.2a) —,
-  **„Anderen Diensttag aufnehmen"** — führt zwei Diensttage zusammen
-  (Abschnitt 4.5a) — und **„Tag löschen"** — entfernt den gesamten Diensttag
-  (Abschnitt 8). Das Menü lässt sich wie das der Einsatzansicht vollständig mit
-  der Tastatur bedienen; Escape schliesst es wieder.
 
 ### 4.2 Einsatzansicht
 

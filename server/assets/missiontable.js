@@ -71,8 +71,11 @@ const EdMissionTable = (() => {
   function zelleGeschuetzt(m, wert, formatiere, klassen) {
     const kl = klassen ? klassen + ' ' : '';
     if (m._patFehler) {
+      /* Das Warnzeichen kommt aus dem Symbolvorrat (E-P3-18), nicht als
+         Unicode-Zeichen — es faerbt sich mit und sieht ueberall gleich aus. */
       return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
-           + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
+           + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">`
+           + edSymbol('warnung', '', 'nicht lesbar') + `</td>`;
     }
     const leer = wert == null || wert === '';
     const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
@@ -117,6 +120,93 @@ const EdMissionTable = (() => {
     return alle[kind || ''] || alle[''] || ART_FALLBACK[''];
   }
 
+  /* ---- Bausteine der Zellen (P3/O3) ------------------------------------- */
+
+  /** Haken aus dem Symbolvorrat, dunkelblau (E-P3-32). */
+  function HAKEN() { return edSymbol('haken', 'tabelle-haken', 'ja'); }
+
+  /** Dauer-Zelle: „kein Ende" ist eine rote Plakette, keine Zahl (E-P3-32). */
+  function zelleDauer(s) {
+    return s == null
+      ? '<span class="plakette plakette-rot">kein Ende</span>'
+      : fmtDur(s);
+  }
+
+  /** Kilometer ohne Einheit, eine Nachkommastelle, deutsches Komma. */
+  function fmtKmZahl(m) {
+    return m == null ? '<span class="dash">–</span>'
+                     : (m / 1000).toFixed(1).replace('.', ',');
+  }
+
+  /* ---- Die Kachel (E-P3-32, Mockup 10) ----------------------------------
+   *
+   * Unter 720 px gibt es keine Einsatztabelle: Bei 360 px bekamen Einsatzort
+   * und Diagnose — die beiden wichtigsten Spalten — null Pixel Breite und
+   * verschwanden ohne Hinweis, waehrend sieben Zahlenspalten stehen blieben
+   * (Befund B-P3-03). Die Kachel dreht das um: Zeile 1 Ort und km, Zeile 2
+   * Diagnose, Zeile 3 Dauer, Alter und Plaketten.
+   *
+   * EIN ERZEUGER FUER ALLE DREI SEITEN. opts:
+   *   farbe     Farbstreifen (Spurfarbe des Einsatzes; Tagesuebersicht)
+   *   artDatum  true = Artzeichen, Datum und Beginn als erstes Element
+   *             (Suche und Zeitraum, E-P3-32)
+   *   knapp     true = Diagnose einzeilig (Suche und Zeitraum)
+   */
+  function kachel(m, opts) {
+    opts = opts || {};
+    var k = 'kachel' + (opts.knapp ? ' kachel-knapp' : '');
+    var h = '<a class="' + k + '" href="einsatz.php?id=' + encodeURIComponent(m.id) + '">';
+    h += '<span class="kachel-streifen"'
+       + (opts.farbe ? ' style="background:' + esc(opts.farbe) + '"' : '') + '></span>';
+    if (opts.artDatum) {
+      var s = artSymbol(m.kind);
+      h += '<span class="kachel-art">'
+         + (typeof edSymbol === 'function' ? edSymbol(s.symbol, '', s.text) : esc(s.text))
+         + '</span>';
+    }
+    h += '<span class="kachel-zeit">'
+       + (opts.artDatum && m.day ? '<span class="kachel-datum">' + fmtTag(m.day) + '</span> ' : '')
+       + esc(m.start_hhmm || '–') + '</span>';
+
+    h += '<span class="kachel-rumpf">';
+    h += '<span class="kachel-kopf">'
+       + '<span class="kachel-ort">' + kachelGeschuetzt(m, m._ort) + '</span>'
+       + '<span class="kachel-km">' + (m.distance_m == null ? ''
+           : Math.round(m.distance_m / 1000) + ' km') + '</span></span>';
+    h += '<span class="kachel-dx">' + kachelGeschuetzt(m, m._dx) + '</span>';
+
+    var fuss = [];
+    if (m.duration_s != null) { fuss.push(esc(fmtDur(m.duration_s))); }
+    if (m._age != null && m._age !== '' && !m._patFehler) { fuss.push(esc(m._age) + ' J.'); }
+    var plaketten = [];
+    function pl(ton, text) {
+      plaketten.push('<span class="plakette plakette-' + ton + '">' + text + '</span>');
+    }
+    if (m.winch)          { pl('orange', 'Winde'); }
+    if (m.bergwacht)      { pl('orange', 'Bergwacht'); }
+    if (m.secondary)      { pl('blau',   'Sekundär'); }
+    if (m.false_alarm)    { pl('rot',    'Fehleinsatz'); }
+    if (m.duration_s == null) { pl('rot', 'kein Ende'); }
+    h += '<span class="kachel-fuss">'
+       + fuss.join(' · ')
+       + (fuss.length && plaketten.length ? ' ' : '')
+       + plaketten.join('') + '</span>';
+    h += '</span></a>';
+    return h;
+  }
+
+  /** Geschuetzte Angabe in der Kachel: – fuer „keine", Warnzeichen fuer
+   *  „vorhanden, aber nicht lesbar" — dieselbe Unterscheidung wie in der
+   *  Tabelle (zelleGeschuetzt). */
+  function kachelGeschuetzt(m, wert) {
+    if (m._patFehler) {
+      return '<span class="patfehler" title="Diese Angaben liegen verschlüsselt vor, '
+           + 'lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">'
+           + edSymbol('warnung', '', 'nicht lesbar') + '</span>';
+    }
+    return (wert == null || wert === '') ? '–' : esc(wert);
+  }
+
   /* ---- Spaltendefinition ----------------------------------------------
    * Eine Zeile je Spalte: Sortierschluessel, Kopftext, Klassen und die
    * beiden Funktionen fuer Sortierwert und Zellinhalt. Neue Spalte = ein
@@ -141,7 +231,7 @@ const EdMissionTable = (() => {
        schmalste Auskunft. Sie erscheint nur, wenn im Bestand ueberhaupt mehr
        als eine Art vorkommt; bei reiner Luftrettung bliebe in jeder Zeile
        dasselbe Zeichen stehen. */
-    { key: 'art',   kopf: 'Art',                   thClass: 'c-art',
+    { key: 'art',   kopf: 'Art',                   thClass: '',
       nurWenn: liste => new Set(liste.map(m => m.kind || '')).size > 1,
       wert: m => m.kind || '',
       zelle: m => {
@@ -152,55 +242,58 @@ const EdMissionTable = (() => {
         const zeichen = (typeof edSymbol === 'function')
           ? edSymbol(s.symbol, 'artzeichen', s.text)
           : `<span class="artzeichen">${esc(s.text)}</span>`;
-        return `<td class="c-art">${zeichen}</td>`;
+        return `<td>${zeichen}</td>`;
       } },
-    { key: 'day',   kopf: 'Datum',                 thClass: 'c-date',
+    { key: 'day',   kopf: 'Datum',                 thClass: '',
       wert: m => m.day,
-      zelle: m => `<td class="mono c-date">${fmtTag(m.day)}</td>` },
-    { key: 'start', kopf: 'Beginn',                thClass: 'c-mid',
+      zelle: m => `<td>${fmtTag(m.day)}</td>` },
+    { key: 'start', kopf: 'Beginn',                thClass: '',
       wert: m => m.start_hhmm,
-      zelle: m => `<td class="mono c-mid">${m.start_hhmm}</td>` },
-    { key: 'dur',   kopf: 'Dauer',                 thClass: 'c-mid',
+      zelle: m => `<td>${m.start_hhmm}</td>` },
+    { key: 'dur',   kopf: 'Dauer',                 thClass: 'zahl-spalte',
       wert: m => m.duration_s == null ? -1 : m.duration_s,
-      zelle: m => `<td class="c-mid">${fmtDur(m.duration_s)}</td>` },
+      zelle: m => `<td class="zahl-spalte">${zelleDauer(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
       zelle: m => zelleGeschuetzt(m, m._ort) },
-    { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
+    { key: 'age',   kopf: 'Alter',                 thClass: 'zahl-spalte',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => zelleGeschuetzt(m, m._age, null, 'mono c-mid') },
+      zelle: m => zelleGeschuetzt(m, m._age, null, 'zahl-spalte') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
       zelle: m => zelleGeschuetzt(m, m._dx) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
        Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
        Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
-    { key: 'winch', kopf: 'Winde',                 thClass: 'c-winde',
+    { key: 'winch', kopf: 'Winde',                 thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.winch),
       wert: m => m.winch ? 1 : 0,
-      zelle: m => `<td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>` },
-    { key: 'bw',    kopf: 'Bergwacht',             thClass: 'c-bw',
+      zelle: m => `<td class="haken-spalte">${m.winch ? HAKEN() : ''}</td>` },
+    { key: 'bw',    kopf: 'Bergwacht',             thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
-      zelle: m => `<td class="checkcol c-bw">${m.bergwacht ? '✓' : ''}</td>` },
-    { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'c-sek',
+      zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
+    { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'haken-spalte',
       wert: m => m.secondary ? 1 : 0,
-      zelle: m => `<td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>` },
+      zelle: m => `<td class="haken-spalte">${m.secondary ? HAKEN() : ''}</td>` },
     /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
        datengetrieben: Der Haken steht beiden Arten offen, gesetzt ist er
        selten, und eine Spalte voller leerer Zellen liest sich als Mangel. */
-    { key: 'fehl',  kopf: 'Fehl<br>einsatz',       thClass: 'c-fehl',
+    { key: 'fehl',  kopf: 'Fehl<br>einsatz',       thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.false_alarm),
       wert: m => m.false_alarm ? 1 : 0,
-      zelle: m => `<td class="checkcol c-fehl">${m.false_alarm ? '✓' : ''}</td>` },
+      zelle: m => `<td class="haken-spalte">${m.false_alarm ? HAKEN() : ''}</td>` },
     /* Neutral beschriftet, nicht „Flug km" (Abschnitt 3.9/3.7.3). Diese
        Tabelle wird von zeitraum.php UND suche.php gemeinsam erzeugt; in der
        Suche stehen luft- und bodengebundene Einsaetze NEBENEINANDER, ein
        artabhaengiger Spaltenkopf ist dort gar nicht darstellbar. Die
        Flugterminologie bleibt allein den Kacheln vorbehalten (E32). */
-    { key: 'km',    kopf: 'km',                    thClass: 'c-mid',
+    /* Die Zelle nennt nur die ZAHL — die Einheit steht im Spaltenkopf, und
+       „38,4 km" in jeder Zeile unter einem Kopf „km" sagt sie doppelt
+       (Mockup 04). fmtKm mit Einheit bleibt fuer Fliesstext bestehen. */
+    { key: 'km',    kopf: 'km',                    thClass: 'zahl-spalte',
       wert: m => m.distance_m == null ? -1 : m.distance_m,
-      zelle: m => `<td class="mono c-mid">${fmtKm(m.distance_m)}</td>` }
+      zelle: m => `<td class="zahl-spalte">${fmtKmZahl(m.distance_m)}</td>` }
   ];
 
   /**
@@ -304,7 +397,8 @@ const EdMissionTable = (() => {
         if (sp.key === sortKey) {
           const pfeil = document.createElement('span');
           pfeil.className = 'arrow';
-          pfeil.textContent = sortAsc ? ' ▲' : ' ▼';
+          pfeil.innerHTML = ' ' + edSymbol('pfeil-hoch', sortAsc ? '' : 'symbol-oben',
+            sortAsc ? 'aufsteigend' : 'absteigend');
           th.appendChild(pfeil);
         }
         th.addEventListener('click', () => {
@@ -423,6 +517,6 @@ const EdMissionTable = (() => {
      die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
      die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
      gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
-  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt,
-           artSymbol, zelleGeschuetzt };
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, fmtKmZahl,
+           extractOrt, artSymbol, zelleGeschuetzt, zelleDauer, kachel };
 })();
