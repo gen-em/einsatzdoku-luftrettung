@@ -1302,6 +1302,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .dialog::backdrop{background:var(--schleier)}
 .dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
 .dialog-inhalt{padding:var(--abstand-4)}
+/* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
+ * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte
+ * Absatz bekommt keine: Er steht ohnehin vor dem Fuß mit eigenem Abstand. */
+.dialog-inhalt p{margin:0 0 var(--abstand-3)}
+.dialog-inhalt p:last-child{margin-bottom:0}
 .dialog-fuss{
   display:flex;gap:var(--abstand-3);justify-content:flex-end;
   padding:0 var(--abstand-4) var(--abstand-4);
@@ -1904,6 +1909,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* Hinweistexte im Formular. Die frühere Kombination „muted small" trägt die
  * Farbe aus der Übergangsschicht; die Größe kommt hierher. */
 .feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+/* Steht der Hinweis VOR einem Feld (Gefahrenzone der Kontoseite: erst die
+ * Folgen, dann die Eingabe), braucht er Abstand nach unten — p hat global
+ * keinen. Steht er danach, ist der Abstand des Feldes schon da. */
+.feld-hinweis + .feld,.feld-hinweis + form{margin-top:var(--abstand-3)}
 label .muted{display:block;font-weight:400;font-size:var(--groesse-2)}
 
 /* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
@@ -2410,3 +2419,21 @@ tr.hl-extrem td{background:var(--orange-hell)}
   font-size:var(--groesse-2);
 }
 .zustandszeile .meldung{margin:0}
+
+
+/* ===========================================================================
+ * 27  ADMINISTRATION                                        (P3/O9, E-P3-41)
+ *
+ * Kontoseite, NutzerInnen-Liste, Sicherungsregeln. Fast alles daran sind
+ * vorhandene Bausteine — Karte, Zeile, Zeilenaktionen, Kennzahl, Dialog.
+ * Neu ist nur die GEFAHRENZONE: eine Karte, die von weitem als solche zu
+ * erkennen ist.
+ * ======================================================================== */
+
+/* GEFAHRENZONE (.karte-gefahr) — Mockup 40, Karte „Konto löschen". Roter
+ * Rand, roter Titel, sonst eine gewöhnliche Karte. Kein roter GRUND: Eine
+ * rot geflutete Fläche zwingt jeden Text darin auf einen zweiten Kontrastwert
+ * und macht das Formular darin schwerer lesbar — die Warnung soll den Rahmen
+ * betreffen, nicht die Eingabe. */
+.karte-gefahr{border-color:var(--rot)}
+.karte-gefahr .karte-titel{color:var(--rot-tief)}

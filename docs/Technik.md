@@ -61,7 +61,10 @@ Daten erst nach Server-Bestätigung.
 │   │                        den alten, geteilten Punkt „Standortdaten")
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
-│   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail)
+│   ├── admin_users.php + admin_user.php  NutzerInnen (Liste · Kontoseite)
+│   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
+│   │                       eines Kontos: Kontodaten, Geräte, Sicherungen
+│   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
 │   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`)
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
@@ -104,6 +107,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
 │   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
 │   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
+│   │                      dialog.js (öffnet Dialoge, die im Markup stehen, und füllt sie
+│   │                       aus `data-w-*` des öffnenden Knopfes — ein Dialog für viele Zeilen),
 │   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
 │   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
@@ -189,7 +194,7 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
@@ -213,7 +218,7 @@ Daten erst nach Server-Bestätigung.
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
+| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -2433,8 +2438,9 @@ Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
 Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
 
 **Ablage.** `server/sicherungen/<kontokennung>/`, je Ordner eine
-`konto.json` (Begleitdatei **und** Verzeichnis) und höchstens drei Pakete
-`<zeitstempel>_<zufall>.json`. Nicht in der Datenbank: Ein Paket liegt bei
+`konto.json` (Begleitdatei **und** Verzeichnis) und höchstens `n` Pakete
+`<zeitstempel>_<zufall>.json` — `n` ist seit Web 9.8.0 eine Einstellung
+(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, Vorgabe 3). Nicht in der Datenbank: Ein Paket liegt bei
 größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
 geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
 Behälter wie das Gesicherte ist keine Rückfallebene.
@@ -2488,6 +2494,60 @@ verschliessen → zurück über den vorhandenen Endpunkt `api/backup_restore.php
 Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup — dieselbe
 Nutzlast wie in einer `.edbak` (seit Web 8.0.0 Version 7) —, und ein zweiter
 Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
+
+### Aufbewahrung und Verdrängung (seit Web 9.8.0)
+
+`edbak_verdraengen()` läuft nach **jedem** Sichern eines Kontos und entfernt,
+was über der Aufbewahrung liegt. Keine Altersgrenze: Bei rein manueller
+Auslösung würde sie genau die letzte vorhandene Sicherung entfernen, wenn lange
+keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
+
+**Zwei Pakete sind ausgenommen**, seit die Zahl einstellbar ist:
+
+| Ausnahme | Grund |
+|---|---|
+| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat |
+| ein **freigegebenes** Paket | Die NutzerIn bekommt es im eigenen Backup-Bereich angeboten; es unter ihr wegzuräumen hieße, einen Weg anzubieten, der beim Klick ins Leere läuft |
+
+Die zweite Ausnahme folgt derselben Regel wie
+`edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr
+vorhandene Datei löscht: Eine Freigabe und die Datei dazu gehören zusammen.
+
+### Die Kontoseite (E-P3-41, seit Web 9.8.0)
+
+Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
+Formular, ein Speichern), Geräte, die Sicherungen **dieses** Kontos, ein
+reservierter Platz für das Abonnement (R33) und die Löschung als
+Gefahrenzone. `admin_sicherungen.php` behält die Regeln.
+
+Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
+für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
+zeigen — Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein
+Konto ansieht. `edbak_konto_stand($userzeile)` liest genau einen Ordner und
+liefert `stand` (`aktuell` · `ueberfaellig` · `nie` · `ohne_kennung`), die
+Pakete, die Freigabe und das Alter der jüngsten Sicherung.
+
+Der Zeitpunkt kommt dabei aus dem jüngsten **vorhandenen** Paket, nicht aus
+`konto.json`: Wird eine Datei von Hand aus dem Ordner entfernt, bliebe die
+Marke stehen und meldete einen Stand, den es nicht mehr gibt.
+
+**Die Plakette „lesbar"** an einer Paketzeile ist eine echte Prüfung —
+`edbak_paket_lesen()` liest die Datei und decodiert sie. Das ist vertretbar,
+weil die Aufbewahrung die Zahl der Pakete je Konto begrenzt (Vorgabe drei) und
+die Seite immer nur ein Konto zeigt. In einer Liste über alle Konten wäre
+dieselbe Prüfung untragbar — deshalb steht sie hier und nicht dort.
+
+**Einspielen, Freigeben und Löschen** stehen in Dialogen (`assets/dialog.js`):
+Das Markup steht in der Seite, der öffnende Knopf trägt die Werte des Falls
+(`data-w-datei`, `data-w-zeit`), das Skript setzt sie in die Felder mit
+`data-fuell`. Ein Dialog für alle Zeilen statt eines je Zeile. Geprüft wird
+weiterhin **serverseitig** — die abgetippte Adresse muss stimmen; ein
+Browser-Dialog ließe sich umgehen.
+
+Das Einspielen zielt auf **dieses** Konto. Ein Auswahlfeld mit allen Konten
+stünde für einen Fall, den es auf dieser Seite nicht gibt: Wer eine Sicherung
+in ein fremdes Konto bringen will, gibt sie frei; ein Paket ohne Konto findet
+man unter „Sicherungen ohne Konto".
 
 **Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht

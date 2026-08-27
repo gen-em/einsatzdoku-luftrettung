@@ -156,6 +156,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
                spraenge das Logo beim Blaettern. */
             logo_sitzung_setzen($u['logo_wahl'] ?? '');
+            /* ZULETZT ANGEMELDET (E-P3-41). Die einzige Stelle, an der der
+               Wert geschrieben wird — nicht bei jedem Seitenaufruf. Ein
+               Fehlschlag darf die Anmeldung nicht aufhalten: Der Wert ist
+               eine Auskunft fuer die Administration, kein Teil des Zugangs.
+               Solange die Migration nicht gelaufen ist, gibt es die Spalte
+               nicht; dann bleibt es beim Fangen. */
+            try {
+                db()->prepare('UPDATE users SET last_login = NOW() WHERE id = ?')
+                    ->execute([(int)$u['id']]);
+            } catch (Throwable) {
+                // Spalte fehlt (Migration steht aus) — ohne Folgen.
+            }
             rate_erfolg('login', $email);
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich

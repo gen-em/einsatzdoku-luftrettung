@@ -11,6 +11,80 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.8.0] — 2026-08-27
+
+**O9a: die Kontoseite wird zur Drehscheibe.** O9 (Administration) ist mit fünf
+Seiten, drei Funktionsänderungen und einer Migration zu groß für einen Zug und
+zerfällt in drei Teile: Kontoseite (O9a), NutzerInnen-Liste (O9b), Regeln,
+Stammdaten, Demo und Wartung (O9c).
+
+**Diese Fassung braucht eine Migration.** `2026_08_28_last_login` legt
+`users.last_login` an. Ohne sie fehlt auf Kontoseite und Liste die Angabe
+„zuletzt angemeldet"; die Anmeldung selbst läuft weiter, `login.php` fängt den
+Fall. Nach dem Ausrollen also `update.php` aufrufen.
+
+Diese Spalte stand nicht in der Migrationsliste des Konzepts, wird von E-P3-41
+aber zweimal verlangt — in der Unterzeile der Kontoseite und als Spalte der
+Liste. Eine Quelle dafür gab es bisher nicht: `devices.last_seen` ist der Stand
+einer **Uhr**, nicht der einer Anmeldung. Der Bestand bekommt `NULL`, nicht
+`NOW()`: Sonst sähe jedes Konto so aus, als hätte es sich am Tag der Migration
+angemeldet — eine erfundene Angabe genau in der Spalte, die man liest, um
+ungenutzte Konten zu finden. Angezeigt wird `NULL` als „—".
+
+**Alles zu einem Konto liegt jetzt auf dessen Seite.** Vorher waren die
+Kontodaten drei Formulare mit drei Speichern-Knöpfen (Rolle, E-Mail, Name) —
+drei Absendevorgänge für eine Änderung, die man als eine denkt. Und die
+**Sicherungen** eines Kontos standen woanders: auf `admin_sicherungen.php`, in
+einer Tabelle über alle Konten, in der man seine Zeile suchen musste. Jetzt ein
+Formular mit einem Speichern, dazu Karten für Geräte, Sicherungen, Abonnement
+(reservierter Platz, kommt mit R33) und die Löschung als rote Gefahrenzone. Ab
+1200 px zweispaltig, mobil untereinander.
+
+Das ist auch eine Antwort auf die Menge. Die alte Übersicht las für **jedes**
+Konto ein Verzeichnis und eine Begleitdatei, um eine einzige Zeile zu zeigen —
+Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein Konto
+ansieht. Die Kontoseite liest genau einen Ordner.
+
+**Drei Handlungen brauchen mehr als eine Rückfrage** — eine Sicherung
+einspielen, freigeben, löschen. Sie stehen jetzt in Dialogen, die im Markup
+stehen und ihre Werte vom öffnenden Knopf bekommen; ein Dialog für alle Zeilen
+statt eines je Zeile. Geprüft wird weiterhin serverseitig: Die abgetippte
+E-Mail-Adresse muss stimmen, und ein Browser-Dialog ließe sich umgehen. Das
+Einspielen zielt dabei auf **dieses** Konto — ein Auswahlfeld mit allen Konten
+stünde für einen Fall, den es hier nicht gibt; wer eine Sicherung in ein fremdes
+Konto bringen will, gibt sie frei.
+
+**Die Aufbewahrung je Konto ist einstellbar geworden.** Bisher waren es fest
+drei Pakete. Der Wert kommt jetzt aus den Regeln (die Einstellung dazu entsteht
+in O9c; die Vorgabe bleibt drei, damit ein Bestand ohne Einstellung sich verhält
+wie vorher). Zwei Pakete sind von der Verdrängung ausgenommen: das **jüngste** —
+sonst räumte eine Aufbewahrung von 0 beim Sichern alles weg, und eine Sicherung,
+die beim Sichern alles entfernt, ist das Gegenteil der Funktion — und ein
+**freigegebenes**, weil die NutzerIn es im eigenen Backup-Bereich angeboten
+bekommt und der Weg dorthin sonst ins Leere liefe.
+
+**„Passwort zurücksetzen"** ist neu im Aktionsmenü der Kontoseite. Es setzt kein
+Passwort — das kann diese Seite nicht, und das ist der Punkt: Die Daten sind mit
+dem Passwort der Person Ende-zu-Ende-verschlüsselt. Verschickt wird derselbe
+Link wie bei „Passwort vergessen", mit derselben Regel (der neue Token entwertet
+alle offenen). Kommt die Mail nicht weg, steht der Link auf der Seite: Ein
+gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechteste
+aller Lagen — dasselbe Muster wie beim Anlegen eines Kontos.
+
+Bewusst gekürzt: Die Umfangszeile einer Sicherung nannte den Papierkorb bisher
+nach Art aufgeteilt („davon im Papierkorb: 5 Einsätze, 1 Diensttag, 5
+Ruhezeiten"). In der Zeile einer Karte, halb so breit wie die alte Tabelle,
+waren das drei Zeilen Umbruch für eine Frage, die eine Zahl beantwortet: wie
+viel davon ist gelöschter Bestand. Jetzt „davon 11 im Papierkorb"; das Paket
+selbst führt die Zahlen weiter je Art.
+
+Geprüft: 29 Bedienproben im Browser (Speichern, Dublette, Setz-Link,
+Aufbewahrung, Einspielen mit falscher und richtiger Adresse, Freigabe und
+Widerruf, Löschen des letzten Pakets, eigenes Konto, Kontolöschung) — alle
+erwartungsgemäß, keine Konsolenmeldung. 14 Bibliotheksproben zur Verdrängung
+und zum Kontostand. Vollständigkeitsprüfung, Wortliste (0 Treffer außerhalb der
+Ausnahmen), Kontraste (21 Paare, 0 verfehlt) und der volle Bilderlauf.
+
 ## [Web 9.7.2] — 2026-08-27
 
 **O8c: Backup und Import — und die Meldungen bekommen ihren Ton.** Damit ist

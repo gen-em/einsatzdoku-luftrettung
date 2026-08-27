@@ -1015,6 +1015,13 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
+        /* Eine Plakette neben Titel und Zahl (O9, Mockup 40: „Sicherungen 3
+         * [überfällig · 23 Tage]"). Sie sagt den ZUSTAND des Karteninhalts —
+         * und gehört deshalb dorthin, wo man den Titel liest, nicht in die
+         * erste Zeile darunter. Fertiges Markup aus ui_plakette(). */
+        if (!empty($o['plakette'])) {
+            echo '    ' . (string)$o['plakette'] . "\n";
+        }
         if (!empty($o['aktion'])) {
             $a = $o['aktion'];
             $art = (string)($a['art'] ?? 'blau');
@@ -1136,10 +1143,27 @@ function ui_aktionen(array $o): string
     foreach ((array)($o['eintraege'] ?? []) as $e) {
         $k = 'blatt-zeile' . (!empty($e['gefahr']) ? ' blatt-gefahr' : '')
            . (!empty($e['anlegen']) ? ' blatt-anlegen' : '');
+        $inhalt = (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
+                . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span>';
+        $attr = !empty($e['attr']) ? ' ' . (string)$e['attr'] : '';
+        /* EIN EINTRAG KANN AUCH EINE HANDLUNG SEIN, nicht nur ein Weg (O9).
+         * „Passwort zurücksetzen" auf der Kontoseite ist ein POST — als
+         * <a href> wäre es entweder wirkungslos oder ein Zustandswechsel auf
+         * einen GET hin, und genau das ist an anderer Stelle schon einmal
+         * teuer geworden (update.php, Kopf „Zweistufiger Ablauf").
+         *
+         * Der Knopf verweist über `form` auf ein Formular an anderer Stelle
+         * der Seite — dasselbe Verfahren wie in ui_zeilenaktionen(): Ein
+         * <form> um den Eintrag herum ginge nicht, weil das Blatt selbst in
+         * einem Formular stehen kann. `button.blatt-zeile` trägt seit O5
+         * dieselbe Gestalt wie der Verweis (Stylesheet, Abschnitt 23). */
+        if (!empty($e['form'])) {
+            $m .= '<button type="submit" class="' . $k . '" form="'
+                . ui_e((string)$e['form']) . '"' . $attr . '>' . $inhalt . '</button>';
+            continue;
+        }
         $m .= '<a class="' . $k . '" href="' . ui_e((string)($e['href'] ?? '#')) . '"'
-            . (!empty($e['attr']) ? ' ' . (string)$e['attr'] : '') . '>'
-            . (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
-            . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span></a>';
+            . $attr . '>' . $inhalt . '</a>';
     }
     $m .= '</div>';
     $m .= '<button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>'

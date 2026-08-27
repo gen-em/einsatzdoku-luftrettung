@@ -1431,7 +1431,9 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O8a Profil, Logo-Wahl, Standorte | **erledigt** | Web 9.7.0 (Migration!) |
 | O8b Rettungsmittel, Geräte | **erledigt** | Web 9.7.1 |
 | O8c Backup, Import | **erledigt** | Web 9.7.2 |
-| O9 Administration | offen | |
+| O9a Kontoseite | **erledigt** | Web 9.8.0 (Migration!) |
+| O9b NutzerInnen-Liste | offen | |
+| O9c Regeln, Stammdaten, Demo, Wartung | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
 | O12 Dokumentation und Abschluss | offen | |
@@ -2273,6 +2275,130 @@ Kreislauf dafür (P-P3-11) gehört ans Ende der Phase und läuft gegen ein
 eigenes Konto. Die **freigegebene Sicherung** ist nur mit einer echten
 Freigabe der Administration zu sehen; geprüft ist, dass der Block verborgen
 bleibt, solange keine vorliegt.
+
+### O9a — Kontoseite als Drehscheibe
+
+**Erledigt.** Web 9.8.0. **Mit Migration** (`2026_08_28_last_login`).
+
+O9 ist mit fünf Seiten, drei Funktionsänderungen und einer Migration erneut
+zu groß für einen Zug — wie O8. Der Schnitt folgt der Reihenfolge, die das
+Konzept selbst nennt (Kontoseite → Liste → Regeln): **O9a** die Kontoseite,
+**O9b** die NutzerInnen-Liste, **O9c** Sicherungsregeln, Stammdaten
+systemweit, Demo-Konto und Wartung.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/admin_user.php` | vollständig neu: Titelzeile mit „Jetzt sichern" und Aktionsmenü, Karten Konto / Geräte / Sicherungen / Abonnement / Konto löschen, ab 1200 px zweispaltig |
+| `server/adminbackup_lib.php` | `edbak_aufbewahrung()`, `edbak_admin_mail_an()`, `edbak_konto_stand()`, `edbak_stand_plakette()`, `edbak_umfang_text()`, `edbak_groesse_text()`, `edbak_zeitpunkt_text()`; `edbak_verdraengen()` liest die Einstellung und schont zwei Pakete |
+| `server/assets/dialog.js` | neu: öffnet und schließt Dialoge, die im Markup stehen, und füllt sie aus `data-w-*` des öffnenden Knopfes |
+| `server/ui.php` | `ui_karte_start(['plakette' => …])`; `ui_aktionen()` nimmt Einträge mit `form` und rendert sie als Knopf statt als Verweis |
+| `server/update.php` | Migration `2026_08_28_last_login` |
+| `server/login.php` | schreibt `users.last_login` bei jeder Anmeldung |
+| `server/assets/style.css` | Abschnitt 27 „Administration" mit `.karte-gefahr`; Absatzabstand im Dialog; `.feld-hinweis + .feld/form` |
+| verschoben | `umfang_text()` / `zeitpunkt_text()` aus `admin_sicherungen.php` in die Bibliothek — sie werden jetzt von zwei Seiten gebraucht |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **`users.last_login` ist eine Migration, die das Konzept nicht nennt.**
+  E-P3-41 verlangt „zuletzt angemeldet" zweimal (Unterzeile der Kontoseite,
+  Spalte der Liste); eine Quelle dafür gab es nicht. `devices.last_seen` ist
+  der Stand einer **Uhr**, nicht der einer Anmeldung. Bestand bekommt `NULL`,
+  nicht `NOW()`: Sonst sähe jedes Konto so aus, als hätte es sich am Tag der
+  Migration angemeldet — erfunden, und ausgerechnet in der Spalte, mit der
+  man ungenutzte Konten sucht. Geschrieben wird nur bei der Anmeldung, nicht
+  bei jedem Seitenaufruf.
+- **Zwei Spalten, zwei DOM-Blöcke.** Mockup 40 zeigt links Konto/Geräte/
+  Abonnement, rechts Sicherungen/Konto löschen — Karten unterschiedlicher
+  Höhe, die einander nicht auf Zeilen ausrichten. Ein Raster mit
+  Auto-Platzierung kann das nicht (die Zeilenhöhe folgt der höchsten Karte);
+  zwei Spalten-`<div>`s können es, aber dann ist die mobile Reihenfolge die
+  DOM-Reihenfolge. Genommen: `.form-raster`/`.form-spalte` aus O5, mit
+  **Abonnement in der rechten Spalte** — so lautet die mobile Reihenfolge
+  Konto, Geräte, Sicherungen, Abonnement, Konto löschen, also genau die
+  Aufzählung aus E-P3-41. Mockup 39 (mobil) stellt Sicherungen vor Geräte;
+  die beiden Vorlagen widersprechen einander an dieser Stelle, gewählt ist
+  die Prosa.
+- **Das Einspielen zielt auf dieses Konto.** Ein Auswahlfeld mit allen Konten
+  stünde für einen Fall, den es auf **dieser** Seite nicht gibt: Wer eine
+  Sicherung in ein fremdes Konto bringen will, gibt sie frei; ein Paket ohne
+  Konto findet man über die Sicherungen ohne Konto (O9c). `edbak_weg()`
+  entscheidet trotzdem — ein Paket fremder Herkunft darf nicht unmittelbar
+  hierher.
+- **Zwei Pakete sind von der Verdrängung ausgenommen.** Seit die Aufbewahrung
+  einstellbar ist, kann sie auf 1 stehen. Das **jüngste** Paket bleibt (sonst
+  räumte das Sichern alles weg, was es gerade angelegt hat), und ein
+  **freigegebenes** bleibt (die NutzerIn bekommt es im eigenen Backup-Bereich
+  angeboten; es unter ihr wegzuräumen hieße, einen Weg anzubieten, der ins
+  Leere läuft — derselbe Grund, aus dem `edbak_verzeichnis_abgleichen()` eine
+  gegenstandslose Freigabe löscht).
+- **„Passwort zurücksetzen" verschickt den Link, es setzt kein Passwort.**
+  Kommt die Mail nicht weg, steht der Link auf der Seite; ein gültiger Token,
+  von dem niemand weiß, ist die schlechteste aller Lagen. Das Demo-Konto ist
+  ausgenommen (E-P1-19).
+- **Die Härte der Bestätigung folgt dem Verlust** (E24, unverändert): Ist es
+  die letzte Sicherung des Kontos, verlangt der Dialog die E-Mail-Adresse;
+  sonst genügt die Rückfrage.
+- **Ein Dialog für alle Zeilen.** Drei Sicherungen bekämen sonst drei
+  Formulare im Markup, mit durchnummerierten Kennungen. Der öffnende Knopf
+  trägt die Werte (`data-w-datei`, `data-w-zeit`), `dialog.js` setzt sie ein.
+- **Gekürzt: der Papierkorb in der Umfangszeile.** Statt der Aufteilung nach
+  Art („5 Einsätze, 1 Diensttag, 5 Ruhezeiten") steht dort eine Zahl („davon
+  11 im Papierkorb"). In einer Kartenzeile waren es drei Zeilen Umbruch für
+  eine Frage, die eine Zahl beantwortet. Das Paket selbst führt die Zahlen
+  weiter je Art.
+- **Die Geräteliste behält die Gerätekennung.** Mockup 40 zeigt sie („Venu 3S
+  · 4F2A…91"); sie stand bis Web 9.7.2 als eigene Tabellenspalte da und ist
+  das Einzige, woran sich ein Gerät in einer Rückfrage zweifelsfrei benennen
+  lässt. Gekürzt auf 8 + 2 Zeichen.
+
+#### Prüfprotokoll O9a
+
+- **29 Bedienproben im Browser** (Playwright, 1440, Admin-Konto, gegen ein
+  eigens angelegtes Probekonto — der Referenzbestand blieb unberührt): alle
+  29 erwartungsgemäß, **0 Konsolenmeldungen**. Darunter: ein Speichern für
+  Name, Rolle und Adresse („Rolle, Name und E-Mail-Adresse gespeichert.");
+  Dublette wird als solche benannt; ohne Änderung „Es gab nichts zu ändern.";
+  Setz-Link — SMTP lokal aus, also der Fehlschlagzweig, der Link steht
+  sichtbar da; **vier Sicherungen erzeugt, drei bleiben** und die Meldung
+  nennt die Verdrängung; Einspielen mit falscher Adresse blockt, mit
+  richtiger läuft; Freigabe an ein Zielkonto und Widerruf; Löschen eines
+  Pakets ohne Adresse, des **letzten** nur mit; Stand fällt danach auf „nie
+  gesichert"; eigenes Konto ohne Löschformular und ohne Rollenrückstufung;
+  Kontolöschung mit falscher Adresse blockt, mit richtiger führt sie zurück
+  auf die Liste.
+- **14 Bibliotheksproben** (PHP, gegen einen Probeordner mit fünf Paketen):
+  Aufbewahrung wird aus `app_state` gelesen (Vorgabe 3); bei 2 werden zwei
+  verdrängt und **das freigegebene bleibt**; bei 1 bleiben das freigegebene
+  und das jüngste; ohne Freigabe bleibt genau eines. Kontostand: „aktuell"
+  bei 22 Tagen und Intervall 30, „nie" ohne Paket, „ohne Kennung" ohne
+  `account_key`.
+- **Migration:** `users.last_login` von Hand gelöscht, `update.php` im
+  Browser aufgerufen — die Migration wird mit Klartextnamen genannt,
+  ausgeführt, die Spalte steht. Danach eine Anmeldung: der Zeitpunkt wird
+  geschrieben, die übrigen Konten bleiben `NULL`.
+- **Kontolöschung:** Konto und **Sicherungsordner** waren danach fort
+  (`server/sicherungen/` enthielt nur noch den des Demo-Kontos).
+- **Screenshots:** 240 Bilder (30 Seiten × 8 Breiten) — 0 Überlauf, 0
+  Konsolenfehler, 0 Knöpfe außerhalb des Solls. Kein waagerechter Überlauf
+  auf der Kontoseite bei 360 und 1440.
+- **Vollständigkeit:** „im Markup ohne Regel" **85 → 84** (der alte Pfeil
+  „←" des Rückwegs ist fort). „Unicode-Zeichen als Symbol" **148 → 150**:
+  zwei Treffer in Kommentaren, einer eine echte Auslassungsellipse in der
+  gekürzten Gerätekennung — Typografie, kein Symbolersatz.
+- **Wortliste:** 203 Treffer, 203 durch Ausnahmen erklärt, **0 außerhalb**, 0
+  ungenutzte Ausnahmen. **Kontraste:** 21 Paare, **0 verfehlt**.
+- **Syntax:** `php -l` über alle geänderten Dateien fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. Der
+**Mailversand** ist lokal nicht konfiguriert — geprüft ist der
+Fehlschlagzweig (Link steht auf der Seite), nicht der gelungene Versand.
+Die Abnahme über **300 Konten**, die O9 verlangt, gehört zur Liste (O9b) und
+steht noch aus; die Kontoseite selbst ist von der Kontenzahl unabhängig, weil
+sie genau einen Ordner liest. `admin_sicherungen.php` trägt bis O9c noch
+seine alte Gestalt und seine Kontentabelle — die Wege dorthin sind
+funktionsfähig, aber doppelt.
 
 ---
 

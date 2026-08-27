@@ -1908,9 +1908,67 @@ sie in Ruhe ansehen kannst.
 
 NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
 (**Achtung:** entfernt alle Daten der Person unwiderruflich). Ein Klick auf eine
-NutzerIn öffnet die Editierseite: Rolle wechseln, E-Mail ändern und die
-verbundenen Geräte einsehen (aktivieren/deaktivieren/löschen — Löschen lässt
-hochgeladene Daten bestehen).
+NutzerIn öffnet ihre **Kontoseite**.
+
+### 11.1 Die Kontoseite
+
+Seit Web 9.8.0 liegt **alles zu einem Konto auf dessen Seite**. Der Titel ist
+der Name, darunter Adresse, Rolle, seit wann es das Konto gibt und wann sich
+die Person zuletzt angemeldet hat. Oben rechts stehen **„Jetzt sichern"** und
+ein Aktionsmenü (Freigeben, Passwort zurücksetzen, Konto löschen).
+
+Darunter:
+
+| Karte | Was dort steht |
+|---|---|
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
+| **Geräte** | Die gekoppelten Uhren mit Kennung, Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
+| **Sicherungen** | Die Sicherungen **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
+| **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
+| **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
+
+Am breiten Bildschirm stehen die Karten in zwei Spalten, auf dem Handy
+untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
+
+**Ein Passwort lässt sich hier nicht setzen.** Die Daten sind mit dem Passwort
+der Person Ende-zu-Ende-verschlüsselt — niemand außer ihr kann sie öffnen.
+**„Passwort zurücksetzen"** im Aktionsmenü verschickt denselben Link wie
+„Passwort vergessen" auf der Anmeldeseite; die Person setzt ihr Passwort selbst
+und entsperrt danach mit ihrem Wiederherstellungsschlüssel. Ein zuvor
+verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
+verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
+eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
+
+**Die Sicherungen dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
+Diensttage, Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und
+Größe, dazu eine Plakette: *lesbar*, *freigegeben* oder *nicht lesbar*. Über der
+Liste steht der Stand des Kontos — *aktuell*, *überfällig · n Tage* oder *nie
+gesichert*.
+
+- **Einspielen** bringt eine Sicherung zurück in **dieses** Konto. Zur
+  Bestätigung ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
+  **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
+- **Für Zielkonto freigeben** gibt eine Sicherung an ein **anderes** Konto
+  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht sie
+  danach in ihrem eigenen Backup-Bereich und spielt sie dort mit ihrem
+  Wiederherstellungsschlüssel ein. Die Administration bekommt zu keinem
+  Zeitpunkt Klartext zu sehen.
+- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Sicherung des
+  Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+
+**Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
+drei, einstellbar unter „Sicherungen"); ältere verschwinden beim nächsten
+Sichern. Zwei bleiben immer: die **jüngste** Sicherung und eine, die gerade
+**freigegeben** ist. Nach **Alter** wird nie etwas entfernt.
+
+**Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
+und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
+Sicherungen geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
+Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
+„Sicherungen" als Sicherung ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
+abzutippen.
+
+### 11.2 Anlegen, Rollen und Wartung
 
 **Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
 zutrifft:
@@ -1949,12 +2007,15 @@ abgelehnt; existieren bereits persönliche Einträge mit demselben Namen bei
 einzelnen NutzerInnen, weist ein Hinweis darauf hin (keine Blockade).
 
 Unter **„Sicherungen"** stehen alle vorhandenen Sicherungen **als Tabelle** —
-eine Zeile je Sicherung mit Zeitpunkt, Herkunft, Umfang und Zustand. Die
-Formulare zum Einspielen, Freigeben und Löschen klappen hinter der jeweiligen
-Zeile auf. Bis Web 6.3.0 stand je Sicherung ein eigener Kasten mit vollständigem
-Formular; bei mehreren Konten waren das schnell mehrere Bildschirmseiten. An den
-Rückfragen ändert das nichts: Vor dem Einspielen ist weiterhin die E-Mail-Adresse
-des Zielkontos abzutippen.
+eine Zeile je Sicherung mit Zeitpunkt, Herkunft, Umfang und Zustand, dazu die
+Sicherungen ohne Konto. Die Formulare zum Einspielen, Freigeben und Löschen
+klappen hinter der jeweiligen Zeile auf. An den Rückfragen ändert das nichts:
+Vor dem Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+
+Die Sicherungen **eines** Kontos stehen seit Web 9.8.0 zusätzlich auf dessen
+Kontoseite (11.1) — dort ist der übliche Weg, weil man dort ohnehin ist, wenn
+man zu einem bestimmten Konto etwas tun will. Die Seite „Sicherungen" behält
+die Übersicht über alle Konten und die Regeln.
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt

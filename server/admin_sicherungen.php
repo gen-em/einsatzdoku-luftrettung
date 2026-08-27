@@ -25,28 +25,8 @@ require_once __DIR__ . '/adminbackup_lib.php';
 
 $notice = null; $error = null; $bericht = null;
 
-/** Zielkonto samt Kennung lesen — für Rückspielung und Freigabe. */
-function ziel_konto(int $id): ?array
-{
-    $st = db()->prepare('SELECT id, email, name, account_key FROM users WHERE id = ?');
-    $st->execute([$id]);
-    $r = $st->fetch();
-    return $r ?: null;
-}
-
-/**
- * Harte Bestätigung: die E-Mail-Adresse des ZIELKONTOS muss abgetippt sein (E21).
- *
- * Abgetippt wird die Adresse des Ziels, nicht die der Herkunft. Das Risiko ist
- * nicht Datenverlust — edbak_restore() ergänzt und ersetzt nicht —, sondern das
- * Einspielen FREMDER Daten in ein falsches Konto. Abgesichert werden muss
- * deshalb das Ziel. Geprüft wird serverseitig, nach dem Muster von
- * admin_user.php: Ein Browser-Dialog liesse sich umgehen.
- */
-function bestaetigung_passt(string $eingabe, string $soll): bool
-{
-    return strcasecmp(trim($eingabe), trim($soll)) === 0;
-}
+/* edbak_ziel_konto() und edbak_bestaetigung_passt() stehen seit Web 9.8.0 in
+ * adminbackup_lib.php — die Kontoseite braucht sie ebenso. */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -99,13 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Einspielen (A8.6) ---------------------------------------------- */
     if ($action === 'einspielen') {
-        $ziel = ziel_konto((int)($_POST['ziel_user'] ?? 0));
+        $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
         $paket = edbak_paket_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Die Sicherung liess sich nicht lesen.';
-        } elseif (!bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts eingespielt.';
         } else {
@@ -130,13 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* ---- Freigeben und widerrufen (A8.6) -------------------------------- */
     if ($action === 'freigeben') {
-        $ziel = ziel_konto((int)($_POST['ziel_user'] ?? 0));
+        $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
         $paket = edbak_paket_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Die Sicherung liess sich nicht lesen.';
-        } elseif (!bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
@@ -175,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  * dass eine nicht mehr zuordenbare Sicherung endgültig entfernt
                  * wird (Akzeptanzkriterium 64). */
                 ? (($_POST['confirm_unlesbar'] ?? '') === 'ja')
-                : bestaetigung_passt($eingabe, $sollAdresse);
+                : edbak_bestaetigung_passt($eingabe, $sollAdresse);
         }
 
         if (!$bestaetigt) {
@@ -203,46 +183,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $u = edbak_uebersicht();
 $erinnerung = edbak_erinnerung();
 $konten = db()->query('SELECT id, email FROM users ORDER BY email')->fetchAll();
-
-/** Umfang einer Sicherung als eine Zeile — nur Zahlen, nie Inhalte (A8.7). */
-function umfang_text(array $p): string
-{
-    $z = $p['umfang'] ?? null;
-    $teile = [];
-    if (is_array($z)) {
-        $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
-        $teile[] = (int)($z['diensttage'] ?? $z['flugtage'] ?? 0) . ' Diensttage';
-        $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
-        /* „davon im Papierkorb" (E-S1-02). Seit Nutzlast 7 steht der
-         * Papierkorb in jeder Sicherung und zaehlt in den drei Zahlen oben
-         * MIT. Ohne diesen Zusatz waere aus „87 Einsätze" nicht zu erkennen,
-         * dass fünf davon geloescht sind.
-         *
-         * Fehlt der Block (Sicherungen vor S1), wird NICHTS angezeigt statt
-         * einer Null: Eine Null behauptete „nichts im Papierkorb", richtig ist
-         * „nicht erhoben". */
-        $pk = $z['papierkorb'] ?? null;
-        if (is_array($pk)) {
-            $summe = (int)($pk['einsaetze'] ?? 0) + (int)($pk['diensttage'] ?? 0)
-                   + (int)($pk['ruhezeiten'] ?? 0);
-            $tag = (int)($pk['diensttage'] ?? 0);
-            $teile[] = $summe === 0
-                ? 'nichts im Papierkorb'
-                : 'davon im Papierkorb: ' . (int)($pk['einsaetze'] ?? 0) . ' Einsätze, '
-                  . $tag . ($tag === 1 ? ' Diensttag, ' : ' Diensttage, ')
-                  . (int)($pk['ruhezeiten'] ?? 0) . ' Ruhezeiten';
-        }
-    }
-    $teile[] = number_format($p['groesse'] / 1024, 0, ',', '.') . ' KB';
-    return implode(', ', $teile);
-}
-
-function zeitpunkt_text(?string $iso): string
-{
-    if (!$iso) { return 'unbekannt'; }
-    try { return fmt_local(str_replace(['T', 'Z'], [' ', ''], $iso), 'd.m.Y H:i'); }
-    catch (Throwable) { return $iso; }
-}
 
 ui_seite_start(['titel' => 'Sicherungen']);
 ?>
@@ -272,7 +212,7 @@ ui_seite_start(['titel' => 'Sicherungen']);
 
   <p class="muted">Sicherungen entstehen <strong>ausschliesslich hier und von Hand</strong>.
      Es gibt keinen Zeitplan — auf diesem Webspace läuft kein Cron. Je Konto werden
-     höchstens <?= EDBAK_MAX_JE_KONTO ?> Sicherungen aufbewahrt; die vierte verdrängt
+     höchstens <?= edbak_aufbewahrung() ?> Sicherungen aufbewahrt; die nächste verdrängt
      die älteste. Nach Alter wird <strong>nie</strong> etwas entfernt.</p>
 
   <p class="muted">Administration sieht zu keinem Zeitpunkt Klartext der geschützten
@@ -332,7 +272,7 @@ ui_seite_start(['titel' => 'Sicherungen']);
             <?php else: ?>
               <ul class="small">
               <?php foreach ($k['pakete'] as $p): ?>
-                <li><?= e(zeitpunkt_text($p['erzeugt'])) ?> — <?= e(umfang_text($p)) ?></li>
+                <li><?= e(edbak_zeitpunkt_text($p['erzeugt'])) ?> — <?= e(edbak_umfang_text($p)) ?></li>
               <?php endforeach; ?>
               </ul>
             <?php endif; ?>
@@ -428,13 +368,13 @@ ui_seite_start(['titel' => 'Sicherungen']);
             $hart = !$weitere || $e['verwaist'];
             $unlesbar = $hart && !$e['lesbar']; ?>
         <tr>
-          <td class="mono"><?= e(zeitpunkt_text($e['paket']['erzeugt'])) ?></td>
+          <td class="mono"><?= e(edbak_zeitpunkt_text($e['paket']['erzeugt'])) ?></td>
           <td><?php if ($e['lesbar'] && $e['herkunft']): ?>
                 <?= e((string)$e['herkunft']) ?>
               <?php else: ?>
                 <em class="muted">unbekannt — Begleitdatei nicht lesbar</em>
               <?php endif; ?></td>
-          <td class="muted small"><?= e(umfang_text($e['paket'])) ?></td>
+          <td class="muted small"><?= e(edbak_umfang_text($e['paket'])) ?></td>
           <td class="small"><?php
                 $zustand = [];
                 if ($e['verwaist']) { $zustand[] = '<strong>verwaist</strong>'; }

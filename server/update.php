@@ -1543,6 +1543,32 @@ $MIGRATIONS = [
             "ALTER TABLE users ADD COLUMN logo_wahl VARCHAR(20) NOT NULL DEFAULT '' AFTER account_key",
         ],
     ],
+    [
+        'id'    => '2026_08_28_last_login',
+        'web'   => '9.8',
+        'label' => 'Zeitpunkt der letzten Anmeldung je Konto (Kontoseite, NutzerInnen-Liste)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users' AND column_name = 'last_login'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        /* NULL FUER DEN BESTAND, kein NOW(). Die Kontoseite und die
+         * NutzerInnen-Liste zeigen „zuletzt angemeldet" (E-P3-41). Wuerde die
+         * Migration den Zeitpunkt der Migration eintragen, saehe der ganze
+         * Bestand aus, als haette sich jedes Konto heute angemeldet — eine
+         * erfundene Angabe genau in der Spalte, die man liest, um ungenutzte
+         * Konten zu finden. NULL heisst hier „nicht bekannt" und wird als
+         * „—" gezeigt; nach der ersten Anmeldung steht der wahre Wert da.
+         *
+         * KEIN Zugriffszaehler und keine zweite Zeitangabe: Gefragt ist, ob
+         * ein Konto benutzt wird, nicht wie oft. Ein Feld, das bei jedem
+         * Seitenaufruf geschrieben wuerde, waere ausserdem eine Schreiblast
+         * ohne Nutzen — geschrieben wird nur bei der Anmeldung. */
+        'sql'   => [
+            'ALTER TABLE users ADD COLUMN last_login DATETIME NULL AFTER logo_wahl',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

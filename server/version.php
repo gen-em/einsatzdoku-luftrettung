@@ -547,5 +547,63 @@ declare(strict_types=1);
  *
  * Keine Migration. Damit ist O8 vollstaendig: Profil und Logo-Wahl (O8a),
  * die Verwaltungslisten (O8a/O8b), Sicherung und Import (O8c).
+ *
+ * 9.8.0 ist O9a: DIE KONTOSEITE ALS DREHSCHEIBE (E-P3-41). O9 ist mit fuenf
+ * Seiten, drei Funktionsaenderungen und einer Migration erneut zu gross fuer
+ * einen Zug; es zerfaellt in Kontoseite (O9a), NutzerInnen-Liste (O9b) und
+ * Regeln, Stammdaten, Demo, Wartung (O9c).
+ *
+ * !!! DIESE FASSUNG BRAUCHT EINE MIGRATION !!!
+ * `2026_08_28_last_login` legt `users.last_login` an. Ohne die Spalte zeigen
+ * Kontoseite und NutzerInnen-Liste kein „zuletzt angemeldet"; die Anmeldung
+ * selbst laeuft weiter (login.php faengt den Fall). Nach dem Ausrollen also
+ * update.php aufrufen — dringlich ist es nicht, notwendig schon.
+ *
+ * WARUM EINE SPALTE, DIE IM KONZEPT NICHT STAND. E-P3-41 verlangt „zuletzt
+ * angemeldet" in der Unterzeile der Kontoseite UND als Spalte der Liste; die
+ * Migrationsliste des Konzepts nennt sie nicht. Es gab dafuer bisher keine
+ * Quelle: `devices.last_seen` ist der Stand einer UHR, nicht der einer
+ * Anmeldung. Der Bestand bekommt NULL und nicht NOW() — sonst saehe jedes
+ * Konto so aus, als haette es sich am Tag der Migration angemeldet, und genau
+ * in dieser Spalte sucht man ungenutzte Konten.
+ *
+ * ALLES ZU EINEM KONTO LIEGT JETZT AUF DESSEN SEITE. Vorher waren die
+ * Kontodaten drei Formulare mit drei Speichern-Knoepfen (Rolle, E-Mail,
+ * Name), und die SICHERUNGEN des Kontos standen woanders — auf
+ * admin_sicherungen.php, in einer Tabelle ueber alle Konten, in der man
+ * seine Zeile suchen musste. Jetzt: EIN Formular mit EINEM Speichern, dazu
+ * Karten fuer Geraete, Sicherungen, Abonnement (reservierter Platz, R33) und
+ * die Loeschung als rote Gefahrenzone. Ab 1200 px zweispaltig.
+ *
+ * DAS IST AUCH EINE ANTWORT AUF DIE MENGE. Die alte Uebersicht las fuer
+ * JEDES Konto ein Verzeichnis und eine Begleitdatei, um eine einzige Zeile
+ * zu zeigen — Arbeit, die mit der Zahl der Konten waechst, obwohl man immer
+ * nur ein Konto ansieht. edbak_konto_stand() liest genau einen Ordner.
+ *
+ * DREI HANDLUNGEN BRAUCHEN MEHR ALS EINE RUECKFRAGE — Einspielen, Freigeben,
+ * Loeschen einer Sicherung. Sie stehen in Dialogen (neu: assets/dialog.js),
+ * die im Markup stehen und ihre Werte vom oeffnenden Knopf bekommen; EIN
+ * Dialog fuer alle Zeilen statt eines je Zeile. Geprueft wird serverseitig.
+ * Das Einspielen zielt auf DIESES Konto — ein Auswahlfeld mit allen Konten
+ * stuende fuer einen Fall, den es hier nicht gibt.
+ *
+ * DIE AUFBEWAHRUNG IST EINSTELLBAR GEWORDEN (E-P3-41): `EDBAK_MAX_JE_KONTO`
+ * war fest verdrahtet, jetzt liest edbak_aufbewahrung() den Wert aus
+ * app_state (die Einstellung dazu entsteht in O9c; die Vorgabe bleibt drei,
+ * damit ein Bestand ohne Einstellung sich verhaelt wie vorher). Zwei Pakete
+ * sind von der Verdraengung ausgenommen: das juengste — sonst raeumte eine
+ * Aufbewahrung von 0 beim Sichern alles weg — und ein freigegebenes, weil
+ * die NutzerIn es im eigenen Backup-Bereich angeboten bekommt.
+ *
+ * „PASSWORT ZURUECKSETZEN" ist neu im Aktionsmenue und setzt KEIN Passwort:
+ * Es verschickt denselben Link wie „Passwort vergessen". Kommt die Mail
+ * nicht weg, steht der Link auf der Seite — ein gueltiger Token, von dem
+ * niemand weiss, ist die schlechteste aller Lagen (Muster aus admin_users).
+ *
+ * Bewusst gekuerzt: Die Umfangszeile einer Sicherung nannte den Papierkorb
+ * bisher nach Art aufgeteilt („5 Einsätze, 1 Diensttag, 5 Ruhezeiten"). In
+ * einer Kartenzeile waren das drei Zeilen Umbruch fuer eine Frage, die eine
+ * Zahl beantwortet: wie viel davon ist geloeschter Bestand. Jetzt „davon 11
+ * im Papierkorb"; das Paket selbst fuehrt die Zahlen weiter je Art.
  */
-const WEB_VERSION = '9.7.2';
+const WEB_VERSION = '9.8.0';
