@@ -125,6 +125,75 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Streichliste — statt einer Ja/Nein-Regel. Sinnvoll gegen Ende von P3,
     wenn die Klassennamen stehen.
 
+37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
+    Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
+    gehört nicht ins Oberflächen-Redesign. Der Bestand ist ausgelegt auf
+    „50–80 Einsätze pro Jahr, nach zwei Jahrzehnten unter etwa 1600
+    Datensätze"; die Frage ist, was darüber hinaus passiert.
+
+    **Was bereits gemessen ist** (Sondierung ohne Lastdatensatz: die Antworten
+    von `api/suchindex.php` und `api/range.php` wurden auf dem Weg in den
+    Browser vervielfacht, der Client durchlief damit den echten Weg):
+
+    - **Die Suche skaliert sublinear und ist nicht das Problem.** 85-fache
+      Menge (82 → 7000 Einsätze) ergibt 2,2-fache Ladezeit (558 → 1224 ms)
+      und 4,8-fache Rechenzeit je Tastendruck (14,5 → 69,9 ms). Grund ist die
+      Seitengrenze 200 aus Web 5.9.0: Ab 250 Einsätzen stehen immer genau 200
+      Zeilen im DOM, gefiltert und gezählt wird über alles.
+    - **Die Entschlüsselung ist billig.** 0,039 ms je Einsatz auf dem Weg, den
+      die Anwendung geht (seriell, `importKey` je Datensatz) — bei 3500
+      Einsätzen 0,14 s. Die naheliegende Vermutung, die Ende-zu-Ende-
+      Verschlüsselung sei der Engpass, ist um etwa Faktor 100 daneben. Ein
+      einmaliger Schlüsselimport brächte 0,013 ms je Einsatz; das lohnt den
+      Eingriff nicht.
+    - **Die Zeitraumübersicht wächst dagegen linear und ungedeckelt.**
+      `zeitraum.php` ruft `EdMissionTable.erzeuge` ohne `seite`; bei 3500
+      Einsätzen entstehen 3500 `<tr>`, ein Tabwechsel dauert 854 ms statt 191
+      (gemessen **ohne** Kartenmarker — die Kacheln waren in der Messumgebung
+      nicht erreichbar, der Markeranteil kommt oben drauf).
+    - **Der Suchindex überträgt den gesamten Bestand**: 1097 Bytes je Einsatz,
+      ohne LIMIT — 3500 Einsätze wären 3,66 MB in einer Antwort. Das ist die
+      Folge der Verschlüsselungszusage: Diagnose, Alter und Einsatzort kann
+      der Server nicht filtern. Die **übrigen** rund dreißig Filter arbeiten
+      auf unverschlüsselten Spalten und könnten serverseitig vorschneiden —
+      das ist der eigentliche Hebel, und er ist unangetastet.
+    - **Die Sicherung ist zu 93 % Spur.** 31,9 kB je Einsatz mit Spurpunkten,
+      2,2 kB ohne; 3500 Einsätze ergäben rund 109 MB rohes JSON. Die
+      `.edbak`-Datei selbst ist gzip-komprimiert und handlich (739 kB für 87
+      Einsätze) — beim **Zurückspielen** aber entsiegelt der Browser sie und
+      schickt das rohe, unkomprimierte JSON per POST
+      (`einstellungen.php:2053` und `:2191`). `crypto.js` bringt mit
+      `CompressionStream` bereits alles mit, was ein komprimierter POST
+      bräuchte.
+    - **Offen und lokal nicht klärbar:** Ob und wo `post_max_size` diesen POST
+      abschneidet. Lokal kamen 32 MB durch, obwohl `post_max_size` auf 8M
+      steht — der eingebaute PHP-Server verhält sich bei
+      `Content-Type: application/json` offenbar anders als ein Webspace mit
+      Apache oder nginx. Die Grenze des **Produktivservers** ist damit
+      ungemessen; sie entscheidet, ab wie vielen Einsätzen eine
+      Wiederherstellung scheitert.
+
+    **Stille Kappungen** — gefährlicher als langsame Seiten, weil eine
+    Dokumentation, die Zeilen verschweigt, falsch ist: `dt_liste($userId, 500)`
+    in der Diensttage-Leiste (`ui.php:498`), 120 in `api/day.php:130`, 400 im
+    Verschiebe-Dialog (`einsatz_verschieben.php:64`). Keine davon sagt der
+    Anwenderin, dass sie greift. **Laute Grenzen** dagegen melden sich
+    ordentlich mit HTTP 413: Import bei 3000 Einsätzen / 600 Diensttagen
+    (`api/import_commit.php:93`), Export bei 5000 (`api/export_data.php:182`).
+
+    **Was noch fehlt:** die Serverseite. Sie ist die einzige Größe, die die
+    Sondierung nicht erreicht — dafür braucht es echte Zeilen. Beschlossen ist
+    dafür ein Werkzeug `tools/lastdatensatz/`, das den vorhandenen Bestand mit
+    neuen Dienstdaten vervielfacht (250 / 500 / 1000 / 3500), in **zwei**
+    Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und
+    verdichtet auf ein Kalenderjahr für die Zeitraumübersicht. Zwei Fallstricke
+    stehen dabei fest: Das Demo-Konto scheidet als Ziel aus (es setzt sich alle
+    1800 s selbst zurück, `demo_lib.php:52`), und ein `pat_blob` ist zwar 1:1
+    kopierbar (AES-GCM ohne `additionalData`, IV im Blob — `crypto.js:109`),
+    darf aber niemals mit behaltenem IV und geändertem Klartext geschrieben
+    werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
+    Kontos gleich mit.
+
 ---
 
 ## Erledigt
