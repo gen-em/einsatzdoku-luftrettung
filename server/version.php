@@ -464,5 +464,42 @@ declare(strict_types=1);
  * im Werkzeug behoben; jetzt zwei Seiten: Jahr und Monat).
  *
  * Keine Migration; Kennzahlen, Endpunkte und Feldkatalog unveraendert.
+ *
+ * 9.7.0 ist O8a: PROFIL, LOGO-WAHL UND DIE VERWALTUNGSLISTEN AM MUSTER DER
+ * STANDORTE — der erste Teil eines Pakets, das sich beim Bauen als zu gross
+ * fuer einen Zug erwiesen hat (Rettungsmittel, Geraete, Sicherung und
+ * Import folgen als O8b).
+ *
+ * !!! DIESE FASSUNG BRAUCHT EINE MIGRATION !!!
+ * `2026_08_27_logo_wahl` legt `users.logo_wahl` an. Nach dem Ausrollen muss
+ * eine Administratorin update.php aufrufen; ohne die Spalte scheitert JEDE
+ * Anmeldung, weil login.php sie mitliest. Es ist die erste Schemaaenderung
+ * dieser Phase.
+ *
+ * DIE LOGO-WAHL (E-P3-20) steht im Profil: Standard der Installation /
+ * Hubschrauber (RTH) / Fahrzeug (NEF) / wechselnd. Aufgeloest wird sie
+ * EINMAL bei der Anmeldung (session_lib.php) — in der Sitzung steht danach
+ * das Ergebnis, nicht die Wahl; sonst wuerfelte „wechselnd" bei jedem
+ * Seitenaufruf neu, und das Logo spraenge beim Blaettern. Kopfleiste und
+ * Favicon fragen dieselbe Stelle (logo_stamm()) und koennen deshalb nicht
+ * auseinanderlaufen. Die Anmeldeseite zeigt immer den Standard — dort ist
+ * noch niemand angemeldet, und die Wahl haengt am Konto.
+ *
+ * DIE VERWALTUNGSLISTEN (E-P3-35) am Muster der Standorte: Erklaertext auf
+ * drei Zeilen statt zweier Absaetze, Karte mit Zeilen statt Tabelle,
+ * Zeilenaktionen am Schreibtisch als Knoepfe und mobil als „···"-Blatt
+ * (neuer Baustein ui_zeilenaktionen), das Anlegen-Formular IN derselben
+ * Karte, die vordefinierten Eintraege als zweite, zugeklappte Karte mit
+ * „n · m ausgewaehlt". Die POST-Formulare stehen dabei nur EINMAL im
+ * Markup; Knopf und Blatt zeigen ueber `form=` darauf.
+ *
+ * DIE PASSWORTSTAERKE ist ein Balken aus vier Segmenten geworden (E-P3-16,
+ * Mockup 11). Vorher war es eine Textzeile in fuenf Farben, darunter Gruen
+ * und Gelb — zwei Toene, die es in der Marke nicht gibt.
+ *
+ * Dabei gefunden: Seit O5 gab es KEIN EINGABEFELD FUER DIE LAGE mehr. Der
+ * Ausbau des zweiten Suchfelds hat die Nur-Lage-Fassung von ui_ortsfeld()
+ * leer zurueckgelassen — die Lage eines Standorts oder einer Zielklinik
+ * liess sich seither nicht mehr eingeben, nur noch behalten (F-P3-AI).
  */
-const WEB_VERSION = '9.6.0';
+const WEB_VERSION = '9.7.0';

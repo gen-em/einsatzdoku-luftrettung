@@ -11,6 +11,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.7.0] — 2026-08-27
+
+> **Diese Fassung braucht eine Migration.** Nach dem Ausrollen muss eine
+> Administratorin `update.php` aufrufen — `2026_08_27_logo_wahl` legt die
+> Spalte `users.logo_wahl` an. Ohne sie scheitert **jede Anmeldung**, weil
+> `login.php` die Spalte mitliest. Es ist die erste Schemaänderung dieser
+> Phase.
+
+**O8a: Profil, Logo-Wahl und die Verwaltungslisten am Muster der Standorte.**
+O8 hat sich beim Bauen als zu groß für ein Paket erwiesen — fünf Reiter, der
+Import und eine Migration. Es ist deshalb geteilt: Dieser Teil bringt Profil,
+Logo-Wahl, Standorte und den Passwortstärke-Balken; Rettungsmittel, Geräte,
+Sicherung und Import folgen als O8b.
+
+**Die Logo-Wahl** (E-P3-20) steht im Profil und kennt vier Werte: Standard der
+Installation, Hubschrauber (RTH), Fahrzeug (NEF), wechselnd. Aufgelöst wird sie
+**einmal bei der Anmeldung**; in der Sitzung steht danach das Ergebnis, nicht
+die Wahl. Der Unterschied ist die ganze Sache: Würde bei jedem Seitenaufruf
+gewürfelt, spränge das Logo beim Blättern von Seite zu Seite — „wechselnd"
+heißt je Anmeldung, nicht je Klick. Wer die Wahl im Profil ändert, muss sich
+trotzdem nicht neu anmelden; dieselbe Auflösung läuft nach dem Speichern.
+
+Kopfleiste und Browser-Symbol fragen **dieselbe Stelle** (`logo_stamm()` in
+`session_lib.php`) und können deshalb nicht auseinanderlaufen — ein Konto mit
+dem Fahrzeug in der Kopfleiste und dem Hubschrauber im Tab wäre ein
+Widerspruch, den niemand erklären könnte. Die Anmeldeseite zeigt immer den
+Standard: Dort ist noch niemand angemeldet, und die Wahl hängt am Konto. Als
+Vorgabe steht **Leerstring** in der Spalte, nicht „Hubschrauber" — wer nie
+gewählt hat, folgt dem Standard der Installation, und der kann sich ändern
+(die Wahl dafür kommt in O9). Stünde dort ein fester Wert, hätten alle
+bestehenden Konten eine ausdrückliche Wahl getroffen, die sie nie getroffen
+haben.
+
+**Die Verwaltungslisten** (E-P3-35) sind am Muster der Standorte umgebaut: der
+Erklärtext auf drei Zeilen statt zweier Absätze, eine Karte mit Zeilen statt
+einer Tabelle, das Anlegen-Formular **in** derselben Karte darunter, die
+vordefinierten Einträge als zweite, zugeklappte Karte mit „n · m ausgewählt".
+Die Zeilenaktionen sind am Schreibtisch Knöpfe und mobil ein „⋯", das ein
+Blatt öffnet (neuer Baustein `ui_zeilenaktionen`). Die POST-Formulare stehen
+dabei **einmal** im Markup: Löschen und „Als Vorbelegung" sind Formulare mit
+Token, und sie zweimal auszugeben — einmal für den Knopf, einmal für das
+Blatt — wäre dieselbe Handlung an zwei Stellen, von denen die nächste
+Änderung nur eine erreicht. Stattdessen trägt der Knopf ein `form`-Attribut;
+HTML erlaubt es ihm, ein Formular abzusenden, in dem er gar nicht steht.
+
+**Die Passwortstärke** ist ein Balken aus vier Segmenten geworden (E-P3-16,
+Mockup 11). Vorher war es eine Textzeile in fünf Farben, darunter Grün und
+Gelb — zwei Töne, die es in der Marke nicht gibt. Der Balken sagt dasselbe
+ohne fremde Farbe: Wie viele Segmente gefüllt sind, ist die Auskunft; rot,
+orange oder dunkelblau verstärken sie nur.
+
+**Beim Prüfen gefunden:** Seit Web 9.4.0 (O5) gab es **kein Eingabefeld für
+die Lage** mehr. O5 hat das zweite Suchfeld am Ortsfeld ausgebaut — der
+Lupen-Knopf am Namensfeld trat an seine Stelle —, und dabei ist die
+Nur-Lage-Fassung von `ui_ortsfeld()` leer zurückgeblieben: Sie gab nur noch
+Vorschlagsliste, Zustandszeile und die versteckten Koordinatenfelder aus. Die
+Lage eines Standorts oder einer Zielklinik ließ sich seither **nicht mehr
+eingeben, nur noch behalten** (F-P3-AI). Betroffen waren vier Stellen in
+`einstellungen.php` und `admin_stammdaten.php`. Die Fassung hat jetzt wieder
+ein Suchfeld mit Lupe; ein Treffer setzt weiterhin nur die Koordinaten, nie
+den Namen.
+
+Screenshots 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des
+Solls. Logo-Wahl belegt: Standard und Hubschrauber liefern dasselbe Logo,
+Fahrzeug wechselt Kopfleiste **und** Favicon, „wechselnd" bleibt über fünf
+Seiten einer Sitzung stabil und ergab über zwanzig Anmeldungen 11 zu 9.
+
 ## [Web 9.6.0] — 2026-08-27
 
 **O7: Die Zeitraumübersicht nach den Mockups 29/30/31 — und „Gemischt" zeigt

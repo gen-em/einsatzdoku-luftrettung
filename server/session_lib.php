@@ -143,3 +143,71 @@ function session_ende_text(?string $grund): string
         default      => '',
     };
 }
+
+
+/* ---------------------------------------------------------------------------
+ * LOGO-WAHL JE PROFIL  (E-P3-20, ab Web 9.7.0)
+ *
+ * Vier Werte stehen in `users.logo_wahl`:
+ *
+ *   ''             Standard der Installation — der Vorgabewert. Wer nie
+ *                  gewaehlt hat, folgt dem Standard, und der kann sich
+ *                  aendern (die Wahl dafuer entsteht in O9).
+ *   'hubschrauber' Hubschrauber (RTH)
+ *   'fahrzeug'     Fahrzeug (NEF)
+ *   'wechselnd'    je Anmeldung neu gewuerfelt
+ *
+ * AUFGELOEST WIRD EINMAL, BEI DER ANMELDUNG. In der Sitzung steht danach
+ * nicht die Wahl, sondern ihr ERGEBNIS ('hubschrauber' oder 'fahrzeug') —
+ * sonst muesste ui_logo() bei jedem Seitenaufruf wuerfeln, und das Logo
+ * spraenge innerhalb einer Sitzung von Seite zu Seite. „Wechselnd" heisst
+ * je Anmeldung, nicht je Klick.
+ *
+ * Wer die Wahl im Profil aendert, muss sich deshalb NICHT neu anmelden:
+ * einstellungen.php ruft dieselbe Funktion nach dem Speichern auf.
+ * ------------------------------------------------------------------------ */
+
+/** Standard der Installation. Bis O9 fest; danach eine Option der Wartung. */
+const LOGO_STANDARD = 'hubschrauber';
+
+/** Die waehlbaren Werte — auch die Pruefliste beim Speichern. */
+const LOGO_WAHLEN = ['', 'hubschrauber', 'fahrzeug', 'wechselnd'];
+
+/**
+ * Wahl -> tatsaechliches Logo ('hubschrauber' | 'fahrzeug').
+ *
+ * `random_int` statt `rand`: Es ist ohnehin da (die Anwendung braucht es
+ * fuer Tokens), und ein Zufall, der aus derselben Quelle kommt wie alles
+ * andere, ist eine Sorge weniger. Kryptographisch muss er hier nicht sein.
+ */
+function logo_aufloesen(?string $wahl): string
+{
+    $w = (string)$wahl;
+    if ($w === 'wechselnd') {
+        return random_int(0, 1) === 1 ? 'fahrzeug' : 'hubschrauber';
+    }
+    if ($w === 'hubschrauber' || $w === 'fahrzeug') { return $w; }
+    return LOGO_STANDARD;
+}
+
+/** Das aufgeloeste Logo in der Sitzung ablegen (Anmeldung, Profil-Speichern). */
+function logo_sitzung_setzen(?string $wahl): void
+{
+    $_SESSION['logo_wahl'] = logo_aufloesen($wahl);
+}
+
+/**
+ * Dateistamm des Logos fuer die laufende Sitzung.
+ *
+ * DIE EINE STELLE, an der aus der Sitzung ein Dateiname wird — ui_logo()
+ * (Kopfleiste) und favicon_tags() (Browser-Symbol) fragen beide hier.
+ * Kopfleiste und Favicon wechseln damit zwangslaeufig gemeinsam (E-P3-20);
+ * zwei getrennte Abfragen waeren zwei Gelegenheiten, es auseinanderlaufen
+ * zu lassen.
+ */
+function logo_stamm(): string
+{
+    return ($_SESSION['logo_wahl'] ?? '') === 'fahrzeug'
+        ? 'gen-em_logo_fahrzeug'
+        : 'gen-em_logo_helicopter';
+}

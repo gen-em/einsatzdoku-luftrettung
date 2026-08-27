@@ -1366,6 +1366,7 @@ und O11.
 | F-P3-AF | **Ein POST an `einstellungen.php` ohne `?t` versandet stillschweigend.** Die Übersichts-Weiche aus O2 (E-P3-11: ohne `t` die Übersicht, dann `exit`) steht VOR der POST-Verarbeitung; die Antwort ist die Übersichtsseite mit HTTP 200 — kein Fehler, kein Speichern. Die Browser-Formulare tragen alle `?t=…` und sind nicht betroffen; das Einspielwerkzeug postete ohne Parameter, und sein Fehlerfänger suchte noch die vor-P3-Klasse `alert-danger`. Aufgefallen am CSV-Kreislauf (O5-Abnahme). | O5, im Werkzeug: `einspielen.py` postet mit `?t=standorte` und liest `meldung-fehler`. Die Weiche selbst bleibt — sie ist Anzeige-, nicht Speicherlogik; ein POST ohne `t` kommt aus keinem Formular der Anwendung. |
 | F-P3-AG | **Kein Filter der Suchseiten-Leiste wirkte — seit O2.** Der Zuhörer der Suche horchte auf `.filterspalte input, .filterspalte select`; die Klasse `filterspalte` ist mit dem Umzug in die gemeinsame Leiste (O2) verschwunden, der Selektor traf seither nichts. Nur Freitextfeld und Sortierwahl hingen an eigenen Zuhörern und blieben wirksam. Gemessen vor dem Fix: „Datum von 01.12.2026" ließ **82 von 82** Einsätzen stehen. Ein Klassenname am Behälter ist der falsche Ereignisanker — er beschreibt die Verpackung, nicht die Sache. | O6: Der Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am Ereignisziel (`ev.target.closest('input, select')`), nicht an einer Klasse des Behälters. |
 | F-P3-AH | **Die Zeitraumübersicht war seit O1 in keinem Screenshot.** Das Bilderwerkzeug rief `zeitraum.php` ohne `?y=` auf; die Seite leitet dann auf `index.php` um (`zeitraum.php:20`). Der Kontaktbogen „14-zeitraum" zeigte also achtmal die Tagesübersicht — die Prüfung meldete pflichtgemäß „kein Überlauf, keine Konsolenfehler" für eine Seite, die sie nie gesehen hatte. Eine Prüfung, die den falschen Gegenstand misst, ist schlimmer als keine: Sie erzeugt Sicherheit. | O7, im Werkzeug: `seiten.json` führt `zeitraum.php?y=2026` **und** `zeitraum.php?y=2026&m=01` — nur die Monatsansicht zeigt Rückweg und Monatsmarkierung. 29 → 30 Seiten, 232 → 240 Bilder. |
+| F-P3-AI | **Seit O5 gab es kein Eingabefeld für die Lage mehr.** O5 hat am Ortsfeld das zweite Suchfeld ausgebaut (der Lupen-Knopf am Namensfeld trat an seine Stelle). Die Nur-Lage-Fassung `ui_ortsfeld(['feld' => false, 'such' => true])` bestand aber genau aus diesem Suchfeld plus Zubehör — übrig blieben Vorschlagsliste, Zustandszeile, Chips und die versteckten Koordinatenfelder. Die Lage eines Standorts oder einer Zielklinik ließ sich seither **nicht mehr eingeben, nur noch behalten**; vier Aufrufstellen in `einstellungen.php` und `admin_stammdaten.php`. Der Ausbau eines Bausteins traf einen zweiten Verwendungsfall, den niemand mitgedacht hat — dieselbe Bauart wie F-P3-AG. | O8a: Die Nur-Lage-Fassung rendert wieder ein Suchfeld mit Lupe (`<praefix>addr` + `<praefix>lupe`), beschriftet aus `such_hinweis`, Platzhalter „Adresse oder Ort suchen". Ein Treffer setzt weiterhin nur die Koordinaten (`getrennteSuche` in `ortsfeld.js`), nie den Namen. |
 
 ---
 
@@ -1425,7 +1426,8 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O5 Einsatzformular | **erledigt** | Web 9.4.0 |
 | O6 Suche | **erledigt** | Web 9.5.0 |
 | O7 Zeitraum | **erledigt** | Web 9.6.0 |
-| O8 Einstellungen und Verwaltungslisten | offen | |
+| O8a Profil, Logo-Wahl, Standorte | **erledigt** | Web 9.7.0 (Migration!) |
+| O8b Rettungsmittel, Geräte, Sicherung, Import | offen | |
 | O9 Administration | offen | |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
@@ -2056,6 +2058,94 @@ Datenmenge und steht als Backlog Nr. 37, nicht als O7-Aufgabe. Der Fall
 belegt: Der bodengebundene Standort trägt **keine** Koordinaten, deshalb
 zeigt die Bodenansicht kein Haus — die Entduplizierung nach Koordinate ist
 damit nicht an zwei gleichzeitig sichtbaren Häusern erprobt.
+
+### O8a — Profil, Logo-Wahl, Standorte
+
+**Erledigt.** Web 9.7.0. **MIT MIGRATION** (`2026_08_27_logo_wahl`).
+
+**O8 ist geteilt.** Das Paket umfasste laut Konzept fünf Reiter der
+Einstellungen, den Import, eine Migration, den Würfel je Anmeldung und den
+Passwortstärke-Balken. Beim Bauen zeigte sich, dass das kein Arbeitspaket
+ist, sondern drei: Allein der Reiter „Rettungsmittel" führt je Standort fünf
+Listen (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel,
+Bergwacht). O8a bringt deshalb das **Muster** (Standorte) samt Logo-Wahl und
+Passwortbalken; O8b wendet es auf die übrigen Listen an und nimmt Geräte,
+Sicherung und Import dazu.
+
+#### Was entstanden ist
+
+| | |
+|---|---|
+| `server/update.php`, `server/schema.sql` | Migration `2026_08_27_logo_wahl`: `users.logo_wahl VARCHAR(20) NOT NULL DEFAULT ''` |
+| `server/session_lib.php` | `LOGO_STANDARD`, `LOGO_WAHLEN`, `logo_aufloesen()`, `logo_sitzung_setzen()`, `logo_stamm()` — die eine Stelle, an der aus der Wahl ein Dateistamm wird |
+| `server/login.php` | löst die Wahl bei der Anmeldung auf (hier fällt der Würfel), liest `logo_wahl` mit |
+| `server/auth_guard.php` | lädt `session_lib.php` fest statt nur im Abbruchzweig — `logo_stamm()` wird auf **jeder** angemeldeten Seite gebraucht |
+| `server/db.php` | `favicon_tags()` folgt der Wahl (`favicon-fahrzeug.png`); die `.ico` bleibt als Rückfall unverändert |
+| `server/ui.php` | `ui_logo()` fragt `logo_stamm()`; neue Bausteine `ui_wahlliste()` (Mockup 13) und `ui_zeilenaktionen()` (E-P3-26); `ui_ortsfeld()` Nur-Lage-Fassung mit Suchfeld (F-P3-AI) |
+| `server/einstellungen.php` | Profil als Karten mit Logo-Wahl und Passwortkarte; Standorte nach E-P3-35 (Erklärung dreizeilig, Karte mit Zeilen, Formular in der Karte, vordefinierte zugeklappt) |
+| `server/assets/pwquality.js` | `anzeige()` erzeugt den Balken aus vier Segmenten statt einer gefärbten Textzeile |
+| `server/assets/style.css` | Abschnitt 26: `.wahlliste`, `.pwstaerke`, `.seiten-erklaerung`, `.listen-form`, `.zeile-knoepfe`, `.knopf-leise-orange`; zwei neue Token (`--balken-glied`, `--strich-balken`) |
+| `tools/wortliste/ausnahmen.json` | sechs Einträge für die Logo-Wahl (Klasse Homonym); die veraltete Regel `logowahl-hubschrauber` ausgetragen |
+
+#### Entscheidungen und bewusste Abweichungen
+
+- **Leerstring als Vorgabe, nicht „hubschrauber".** Wer nie gewählt hat,
+  folgt dem Standard der Installation — und der kann sich ändern. Ein
+  fester Vorgabewert hätte allen bestehenden Konten eine ausdrückliche
+  Wahl untergeschoben, die sie nie getroffen haben, und ein späterer
+  Wechsel des Installationsstandards ginge an ihnen vorbei.
+- **Aufgelöst wird bei der Anmeldung, nicht bei jedem Aufruf.** In der
+  Sitzung steht das Ergebnis, nicht die Wahl. Sonst würfelte „wechselnd"
+  auf jeder Seite neu.
+- **Eine `.ico` für beide Logos.** Sie liegt als einzelne Datei in der
+  Wurzel und ist der Rückfall für Browser ohne PNG-Icon; eine zweite wäre
+  zwei Dateien für einen Fall, den heute kaum ein Browser braucht. Das
+  PNG-Favicon wechselt.
+- **Die Wahlliste ist ein eigener Baustein**, kein Segment und kein
+  Schalter: Ein Segment trägt kurze Wörter nebeneinander, hier stehen vier
+  Zeilen mit Erklärung daneben; ein Schalter schaltet eines ein oder aus,
+  hier ist eine aus vieren zu wählen.
+- **`form=` statt zweier Formulare.** Die Zeilenaktionen erscheinen zweimal
+  (Knopfreihe und Blatt), die Handlung gibt es aber nur einmal.
+
+#### Prüfprotokoll O8a
+
+- **Logo-Wahl (Playwright):** Anmeldeseite zeigt den Standard; „Standard"
+  und „Hubschrauber" liefern dasselbe Logo; „Fahrzeug" wechselt Kopfleiste
+  **und** Favicon (`gen-em_logo_fahrzeug_weiss.svg` / `favicon-fahrzeug.png`).
+  „Wechselnd" über fünf Seiten **einer** Sitzung: **stabil**; über **20
+  frische Anmeldungen**: 11 Hubschrauber, 9 Fahrzeug — beide Logos kamen vor.
+  0 Konsolenfehler.
+- **Standorte (Playwright, 1440):** anlegen → 3 Zeilen; „Als Vorbelegung"
+  setzt den Stern und lässt sich zurücksetzen; „Bearbeiten" füllt dasselbe
+  Formular („Standort bearbeiten", Feld gefüllt, Abbrechen-Knopf da);
+  „Löschen" fragt beziffert zurück („Es hängen keine eigenen Stammdaten
+  daran.") und entfernt die Zeile. Der Bestand steht danach wieder wie
+  zuvor.
+- **Standorte mobil (390):** Knopfreihe verborgen, „⋯" sichtbar; das Blatt
+  trägt den Namen der Zeile als Titel und dieselben Einträge.
+- **Lage-Feld (F-P3-AI):** Namensfeld, Lage-Suchfeld mit Platzhalter
+  „Adresse oder Ort suchen", Lupe und die versteckten Koordinatenfelder —
+  alle vier wieder vorhanden.
+- **Passwortstärke:** vier Segmente; „abc" 1 gefüllt in Rot
+  (`rgb(214,51,56)`), „talwangwiese" 1 in Orange, „Talwangwiese7" 2 in
+  Orange, „k7#Zq!ver-Talwang-92" 4 in Dunkelblau (`rgb(26,46,77)`); bei
+  leerem Feld kein Markup und nicht sichtbar.
+- **Screenshots:** 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe
+  außerhalb des Solls.
+- **Vollständigkeit/Wortliste/Kontraste:** Zahlen im Prüfdokument (2.9).
+- **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
+  fehlerfrei.
+
+**Was nicht geprüft werden konnte:** Weiterhin kein WebKit/Gecko. **Die
+Migration ist nur lokal gelaufen** — auf dem Produktivserver muss
+`update.php` nach dem Ausrollen aufgerufen werden, und das ist ein Handgriff
+einer Administratorin, den kein Werkzeug hier ersetzen kann. Die
+Adresssuche des wiederhergestellten Lage-Felds wurde **nicht** gegen Photon
+geprüft (der Browser dieser Umgebung kommt nicht hinaus, F-P3-AC); belegt
+ist, dass Feld, Lupe und Koordinatenfelder wieder da sind und die
+Registrierung mit `getrennteSuche` greift. Der Reiter „Rettungsmittel" und
+die übrigen Reiter tragen noch ihre alte Gestalt — das ist O8b.
 
 ---
 

@@ -253,19 +253,18 @@ function ui_user_label(): string {
  * Pfad zum Logo für die Kopfleiste (weiße Fassung) bzw. für helle Flächen.
  *
  * Die Wahl je Profil (E-P3-20: Standard / Hubschrauber / Fahrzeug /
- * wechselnd) entsteht in O8. Diese Funktion ist die eine Stelle, an der sie
- * dann greift — sie fragt schon jetzt die Sitzung, findet dort nichts und
- * fällt auf den Standard zurück. Damit ist der Umbau in O8 eine Zuweisung
- * und keine Suche über 25 Seiten.
+ * wechselnd) steht seit Web 9.7.0 in `users.logo_wahl` und wird bei der
+ * Anmeldung EINMAL aufgelöst (session_lib.php). Diese Funktion liest nur
+ * das Ergebnis — die Vorarbeit aus O1 hat sich bewährt: Der Umbau in O8
+ * war eine Zuweisung und keine Suche über 25 Seiten.
  */
 function ui_logo(bool $weiss = false): string
 {
-    $wahl = (string)($_SESSION['logo_wahl'] ?? '');
-    $stamm = match ($wahl) {
-        'fahrzeug'      => 'gen-em_logo_fahrzeug',
-        'hubschrauber'  => 'gen-em_logo_helicopter',
-        default         => 'gen-em_logo_helicopter',
-    };
+    /* Seit Web 9.7.0 entscheidet logo_stamm() (session_lib.php) — dieselbe
+     * Stelle, die auch favicon_tags() fragt. So können Kopfleiste und
+     * Browser-Symbol nicht auseinanderlaufen (E-P3-20). Ohne Sitzung
+     * (Anmeldung, Einrichter) liefert sie den Standard. */
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
     return ui_asset('assets/images/' . $stamm . ($weiss ? '_weiss' : '') . '.svg');
 }
 
@@ -1273,6 +1272,123 @@ function ui_segment(array $o): void
  *
  * $o: text, hinweis, name, wert, attr
  * ------------------------------------------------------------------------ */
+/* ---------------------------------------------------------------------------
+ * WAHLLISTE  (.wahlliste)
+ *
+ * Eine Reihe großer Auswahlzeilen mit Radio links, Beschriftung und einem
+ * gedämpften Zusatz rechts; die gewählte Zeile wird hell orange mit orangem
+ * Rahmen. Freigegeben mit Mockup 13 (Logo-Wahl, E-P3-20).
+ *
+ * WARUM NICHT DIE SEGMENTWAHL: Ein Segment trägt kurze Wörter nebeneinander
+ * („Gemischt / Luft / Boden"). Hier stehen vier Zeilen mit Erklärung
+ * daneben („Standard der Installation — zurzeit Hubschrauber"), und die
+ * längste ist breiter als ein Viertel des Bildschirms. Untereinander mit
+ * 44 px Höhe ist das auf jedem Gerät zu treffen.
+ *
+ * WARUM NICHT DER SCHALTER: Der schaltet EINES ein oder aus. Hier ist eine
+ * aus vieren zu wählen — das ist eine Radiogruppe, und der Browser bringt
+ * die Pfeiltastenbedienung dafür mit.
+ *
+ * $o: name, wert, optionen [ wert => ['text', 'zusatz'] ], label, attr
+ * ------------------------------------------------------------------------ */
+function ui_wahlliste(array $o): void
+{
+    $name = (string)($o['name'] ?? '');
+    ?>
+<div class="wahlliste" role="radiogroup"<?=
+    !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
+  <?php $i = 0; foreach ((array)($o['optionen'] ?? []) as $wert => $eintrag):
+      $text   = is_array($eintrag) ? (string)($eintrag['text'] ?? '') : (string)$eintrag;
+      $zusatz = is_array($eintrag) ? (string)($eintrag['zusatz'] ?? '') : '';
+      $id     = 'wl-' . preg_replace('/[^\w-]/', '-', $name . '-' . $wert . '-' . $i++);
+      $an     = (string)$wert === (string)($o['wert'] ?? ''); ?>
+    <input type="radio" class="wahl-box" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"
+           value="<?= ui_e((string)$wert) ?>"<?= $an ? ' checked' : '' ?><?= (string)($o['attr'] ?? '') ?>>
+    <label class="wahl-zeile" for="<?= ui_e($id) ?>">
+      <span class="wahl-punkt" aria-hidden="true"></span>
+      <span class="wahl-text"><?= ui_e($text) ?></span>
+      <?php if ($zusatz !== ''): ?>
+        <span class="wahl-zusatz"><?= ui_e($zusatz) ?></span>
+      <?php endif; ?>
+    </label>
+  <?php endforeach; ?>
+</div>
+<?php }
+
+
+/* ---------------------------------------------------------------------------
+ * ZEILENAKTIONEN  (.zeile-aktionen)  — E-P3-26
+ *
+ * Am Schreibtisch stehen die Handlungen einer Zeile als Knöpfe nebeneinander
+ * (Mockup 08); unter 720 px steht dort EIN „⋯", das ein Aktionsblatt öffnet
+ * (Mockup 07). Ein Dutzend Knöpfe untereinander wäre auf dem Handy eine
+ * Bildschirmlänge je Zeile.
+ *
+ * FORMULARE STEHEN NUR EINMAL IM MARKUP. Die meisten Zeilenaktionen sind
+ * POSTs mit Token (löschen, Vorbelegung setzen) — sie zweimal auszugeben,
+ * einmal für den Knopf und einmal für das Blatt, wäre dieselbe Handlung an
+ * zwei Stellen, und die nächste Änderung käme nur an einer an. Stattdessen
+ * trägt der Eintrag die `form`-Kennung: HTML erlaubt einem Knopf, ein
+ * Formular abzusenden, in dem er gar nicht steht. Die Seite gibt das
+ * Formular einmal versteckt aus, beide Knöpfe zeigen darauf.
+ *
+ * $o: titel (für das Blatt), eintraege [ ['text','symbol','art','href'|'form','attr'] ]
+ *     art: 'neutral' (Vorgabe) | 'gefahr' | 'leise' | 'leise-orange'
+ * ------------------------------------------------------------------------ */
+function ui_zeilenaktionen(array $o): string
+{
+    $eintraege = (array)($o['eintraege'] ?? []);
+    if ($eintraege === []) { return ''; }
+
+    /* Ein Knopf oder Link je Eintrag — dieselbe Bauart für beide Formen,
+     * damit Blatt und Knopfreihe nicht auseinanderlaufen können. */
+    $knopf = static function (array $e, string $klasse) : string {
+        $art = (string)($e['art'] ?? 'neutral');
+        $k   = $klasse . ' ' . match ($art) {
+            'gefahr'       => 'knopf-gefahr',
+            'leise'        => 'knopf-leise',
+            'leise-orange' => 'knopf-leise knopf-leise-orange',
+            default        => 'knopf-neutral',
+        };
+        $inhalt = (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
+                . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span>';
+        $attr = (string)($e['attr'] ?? '');
+        if (!empty($e['href'])) {
+            return '<a class="' . $k . '" href="' . ui_e((string)$e['href']) . '"' . $attr . '>'
+                 . $inhalt . '</a>';
+        }
+        /* `form` statt eines eigenen <form> um den Knopf: siehe Kopf. */
+        return '<button type="submit" class="' . $k . '"'
+             . (!empty($e['form']) ? ' form="' . ui_e((string)$e['form']) . '"' : '')
+             . $attr . '>' . $inhalt . '</button>';
+    };
+
+    $id = 'za-' . substr(sha1((string)($o['titel'] ?? '') . serialize(array_column($eintraege, 'text'))), 0, 8);
+
+    /* Desktop: die Knöpfe. Mobil: das „⋯" und dasselbe wieder im Blatt. */
+    $m  = '<div class="zeile-knoepfe nur-ab-720">';
+    foreach ($eintraege as $e) { $m .= $knopf($e, 'knopf'); }
+    $m .= '</div>';
+
+    $m .= '<div class="aktionen nur-unter-720">';
+    $m .= '<button type="button" class="knopf knopf-symbol" data-blatt="' . $id . '"'
+        . ' aria-expanded="false" aria-controls="' . $id . '"'
+        . ' title="Weitere Handlungen">' . ui_symbol('punkte', '', 'Weitere Handlungen') . '</button>';
+    $m .= '<div class="blatt" id="' . $id . '" hidden>';
+    $m .= '<div class="blatt-griff" aria-hidden="true"></div>';
+    if (!empty($o['titel'])) {
+        $m .= '<h2 class="blatt-titel">' . ui_e((string)$o['titel']) . '</h2>';
+    }
+    $m .= '<div class="blatt-liste">';
+    foreach ($eintraege as $e) { $m .= $knopf($e, 'blatt-zeile'); }
+    $m .= '</div>';
+    $m .= '<button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>'
+        . '<span>Abbrechen</span></button>';
+    $m .= '</div></div>';
+    return $m;
+}
+
+
 function ui_speichern_leiste(array $o = []): void
 {
     ?>
@@ -1449,7 +1565,32 @@ function ui_ortsfeld(array $o): void
           <?php endif; ?>
         </div>
     <?php else: ?>
+      <?php /* NUR-LAGE-FASSUNG (feld = false): ein Suchfeld ohne Namensfeld.
+               Die Verwaltungslisten führen den Namen in einem EIGENEN Feld
+               („Standort Kempten"); hier wird nur die Lage gesucht, und ein
+               Treffer setzt ausschließlich die Koordinaten (ortsfeld.js,
+               `getrennteSuche`).
+
+               BIS WEB 9.6.0 STAND HIER GAR KEIN FELD. Diese Fassung gab nur
+               das Zubehör aus — Vorschlagsliste, Zustandszeile, Chips, die
+               versteckten Koordinatenfelder —, weil das sichtbare Suchfeld
+               getrennt daneben stand ('such' => true). Mit O5 ist das zweite
+               Suchfeld ausgebaut worden (der Lupen-Knopf am Namensfeld trat
+               an seine Stelle), und dabei ist diese Fassung leer
+               zurückgeblieben: Die Lage eines Standorts oder einer Zielklinik
+               ließ sich seither nicht mehr eingeben, nur noch behalten
+               (F-P3-AI). */ ?>
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
+        <?php if (!empty($o['such_hinweis'])): ?>
+          <label class="feld-label" for="<?= e($p) ?>addr"><?= e((string)$o['such_hinweis']) ?></label>
+        <?php endif; ?>
+        <div class="ortsfeld-zeile">
+          <input type="text" id="<?= e($p) ?>addr" autocomplete="off"
+                 placeholder="<?= e((string)($o['platzhalter'] ?? 'Adresse oder Ort suchen')) ?>">
+          <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
+                  title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
+                  class="nur-vorlesen">Suchen</span></button>
+        </div>
     <?php endif; ?>
 
       <ul id="<?= e($p) ?>suggest" class="loc-suggest" hidden></ul>

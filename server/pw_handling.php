@@ -277,7 +277,7 @@ ui_seite_start([
       <label>Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
-      <span class="pwquality" id="pwq"></span>
+      <span class="pwstaerke" id="pwq"></span>
       <label>Wiederholen
         <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
       </label>
@@ -311,7 +311,7 @@ ui_seite_start([
       <label>Neues Passwort (min. 10 Zeichen)
         <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
       </label>
-      <span class="pwquality" id="pwq"></span>
+      <span class="pwstaerke" id="pwq"></span>
       <label>Wiederholen
         <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
       </label>

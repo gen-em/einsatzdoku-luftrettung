@@ -1522,6 +1522,27 @@ $MIGRATIONS = [
             }
         },
     ],
+    [
+        'id'    => '2026_08_27_logo_wahl',
+        'web'   => '9.7',
+        'label' => 'Logo-Wahl je Profil (Standard / Hubschrauber / Fahrzeug / wechselnd)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'users' AND column_name = 'logo_wahl'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        /* LEERSTRING IST DER STANDARD, kein 'hubschrauber'. Wer nichts
+         * gewaehlt hat, folgt dem Standard der Installation — und der kann
+         * sich aendern (E-P3-20; die Wahl dafuer entsteht in O9). Stuende
+         * hier 'hubschrauber' als Vorgabe, haetten alle bestehenden Konten
+         * eine ausdrueckliche Wahl getroffen, die sie nie getroffen haben,
+         * und ein spaeterer Wechsel des Installationsstandards ginge an
+         * ihnen vorbei. */
+        'sql'   => [
+            "ALTER TABLE users ADD COLUMN logo_wahl VARCHAR(20) NOT NULL DEFAULT '' AFTER account_key",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

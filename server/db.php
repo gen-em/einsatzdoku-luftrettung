@@ -147,12 +147,27 @@ function favicon_tags(): string {
     // unter welcher Adresse die Seite gerade aufgerufen wird.
     $basis = rtrim(str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/'))), '/');
 
+    /* DAS FAVICON FOLGT DER LOGO-WAHL (E-P3-20, ab Web 9.7.0). Kopfleiste
+     * und Browser-Symbol wechseln gemeinsam — ein Konto mit dem Fahrzeug in
+     * der Kopfleiste und dem Hubschrauber im Tab waere ein Widerspruch, den
+     * niemand erklaeren koennte. Die Auswahl trifft logo_stamm()
+     * (session_lib.php); ohne Sitzung — Anmeldung, Einrichter — kommt der
+     * Standard zurueck, und genau das soll die Anmeldeseite zeigen.
+     *
+     * Die .ico bleibt unveraendert: Sie liegt als EINE Datei in der Wurzel
+     * und ist der Rueckfall fuer Browser, die kein PNG-Icon nehmen. Eine
+     * zweite .ico je Logo waere zwei Dateien fuer einen Rueckfall, den
+     * heute kaum ein Browser braucht. */
+    $png = function_exists('logo_stamm') && logo_stamm() === 'gen-em_logo_fahrzeug'
+        ? 'assets/images/favicon-fahrzeug.png'
+        : 'assets/images/favicon.png';
+
     // PNG zuerst: Es ist die Fassung, die wir sicher ausliefern. Die .ico ohne
     // sizes-Angabe hinterher — mit sizes="any" wuerden manche Browser sie
     // bevorzugen und bei ihrem Fehlen gar kein Symbol zeigen.
-    return '<link rel="icon" type="image/png" href="' . e($basis . '/' . asset('assets/images/favicon.png')) . '">' . "\n"
+    return '<link rel="icon" type="image/png" href="' . e($basis . '/' . asset($png)) . '">' . "\n"
          . '<link rel="icon" href="' . e($basis . '/favicon.ico') . '">'
-         . '<link rel="apple-touch-icon" href="' . e($basis . '/' . asset('assets/images/favicon.png')) . '">';
+         . '<link rel="apple-touch-icon" href="' . e($basis . '/' . asset($png)) . '">';
 }
 
 /**

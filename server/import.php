@@ -197,7 +197,7 @@ ui_seite_start(['titel' => 'Import / Export']);
       <div class="rolechecks" id="exp_pw_fields" hidden>
         <label>Passwort (mind. 10 Zeichen)
           <input type="password" id="exp_pw1" minlength="10" autocomplete="new-password"></label>
-        <span class="pwquality" id="exp_pw_guete"></span>
+        <span class="pwstaerke" id="exp_pw_guete"></span>
         <label>Passwort wiederholen
           <input type="password" id="exp_pw2" autocomplete="new-password"></label>
       </div>

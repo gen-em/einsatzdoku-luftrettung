@@ -67,14 +67,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'profile') {
         $name  = mb_substr(trim($_POST['name'] ?? ''), 0, 120);
         $email = email_pruefen($_POST['email'] ?? '');
+        /* Ein unbekannter Wert wird zum Leerstring, nicht zum Fehler: Er
+           bedeutet „Standard der Installation", und das ist der harmlose
+           Ausgang. Die Liste steht in session_lib.php, damit Prüfung und
+           Auflösung dieselbe Quelle haben (E-P3-20). */
+        $logo = (string)($_POST['logo_wahl'] ?? '');
+        if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
         if ($email === null) {
             $error = 'Bitte eine gültige E-Mail-Adresse angeben (höchstens 190 Zeichen).';
         } else {
             try {
-                db()->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
-                    ->execute([$name !== '' ? $name : null, $email, $userId]);
+                db()->prepare('UPDATE users SET name = ?, email = ?, logo_wahl = ? WHERE id = ?')
+                    ->execute([$name !== '' ? $name : null, $email, $logo, $userId]);
                 $userName = $name !== '' ? $name : null;
                 $userEmail = $email;
+                $logoWahl  = $logo;
+                /* Sofort wirksam, ohne Neuanmeldung: Wer die Wahl ändert,
+                   soll das Ergebnis auf derselben Seite sehen. Bei
+                   „wechselnd" fällt hier ein neuer Würfel — das ist richtig,
+                   denn eine Wahl IST eine Gelegenheit zu würfeln. */
+                logo_sitzung_setzen($logo);
                 $notice = 'Profil gespeichert.';
             } catch (PDOException $ex) {
                 /* NUR der Schluesselkonflikt heisst "bereits verwendet" (M1-16).
@@ -717,19 +729,53 @@ ui_seite_start(['titel' => 'Einstellungen']);
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if ($tab === 'profil'): ?>
-    <h1>Profil</h1>
+    <?php
+    /* Die gespeicherte Wahl steht NICHT in der Sitzung — dort liegt ihr
+       Ergebnis ('hubschrauber' oder 'fahrzeug'). Für das gesetzte Radio
+       braucht es die Wahl selbst, und die wird genau hier gebraucht:
+       auth_guard.php liest bewusst nur, was jede Seite braucht (M1-20). */
+    if (!isset($logoWahl)) {
+        $lw = db()->prepare('SELECT logo_wahl FROM users WHERE id = ?');
+        $lw->execute([$userId]);
+        $logoWahl = (string)$lw->fetchColumn();
+    }
+    $standardName = LOGO_STANDARD === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)';
+    ?>
+    <?php ui_titelzeile(['titel' => 'Profil']); ?>
 
-    <form method="post" class="settings-form">
+    <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="profile">
-      <label>Name <input type="text" name="name" maxlength="120"
-        value="<?= e($userName ?? '') ?>" placeholder="wird in der Kopfleiste angezeigt"></label>
-      <label>E-Mail-Adresse (Login) <input type="email" name="email" required
-        value="<?= e($userEmail) ?>"></label>
-      <button class="btn-primary">Profil speichern</button>
+
+      <?php ui_karte_start(['titel' => 'Angaben']); ?>
+        <?php ui_feld(['label' => 'Name', 'name' => 'name', 'wert' => (string)($userName ?? ''),
+                       'platzhalter' => 'wird in der Kopfleiste angezeigt',
+                       'attr' => ' maxlength="120"']); ?>
+        <?php ui_feld(['label' => 'E-Mail-Adresse (Anmeldung)', 'name' => 'email',
+                       'art' => 'email', 'wert' => $userEmail, 'pflicht' => true]); ?>
+      <?php ui_karte_ende(); ?>
+
+      <?php /* LOGO-WAHL (E-P3-20, Mockup 13). Sie gilt für Kopfleiste UND
+               Browser-Symbol; die Anmeldeseite zeigt immer den Standard, weil
+               dort noch niemand angemeldet ist und die Wahl am Konto hängt. */ ?>
+      <?php ui_karte_start(['titel' => 'Logo']); ?>
+        <p class="feld-hinweis">Gilt für Kopfleiste und Browser-Symbol. Die Wahl
+          übersteuert den Standard der Installation.</p>
+        <?php ui_wahlliste([
+            'name' => 'logo_wahl', 'wert' => $logoWahl, 'label' => 'Logo',
+            'optionen' => [
+                ''             => ['text' => 'Standard der Installation',
+                                   'zusatz' => 'zurzeit ' . $standardName],
+                'hubschrauber' => ['text' => 'Hubschrauber (RTH)'],
+                'fahrzeug'     => ['text' => 'Fahrzeug (NEF)'],
+                'wechselnd'    => ['text' => 'Wechselnd', 'zusatz' => 'neu je Anmeldung'],
+            ],
+        ]); ?>
+      <?php ui_karte_ende(); ?>
+
+      <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
     </form>
 
-    <h2>Passwort ändern</h2>
-    <form method="post" class="settings-form" id="pwform">
+    <form method="post" id="pwform">
       <?= csrf_field() ?><input type="hidden" name="action" value="password">
       <input type="hidden" name="old_token" id="pw_oldtok">
       <input type="hidden" name="new_token" id="pw_newtok">
@@ -740,12 +786,22 @@ ui_seite_start(['titel' => 'Einstellungen']);
       <input type="hidden" name="new_iter" id="pw_newiter">
       <input type="hidden" name="wrap_pw" id="pw_wrap">
       <input type="hidden" name="key_check" id="pw_keychk">
-      <label>Aktuelles Passwort <input type="password" name="old" id="pw_old" required autocomplete="current-password"></label>
-      <label>Neues Passwort (mind. 10 Zeichen) <input type="password" name="new1" id="pw_new1" required minlength="10" autocomplete="new-password"></label>
-      <span class="pwquality" id="pw_guete"></span>
-      <label>Neues Passwort wiederholen <input type="password" name="new2" id="pw_new2" required autocomplete="new-password"></label>
-      <button class="btn-primary">Passwort ändern</button>
-      <span class="muted" id="pwstate"></span>
+      <?php ui_karte_start(['titel' => 'Passwort ändern']); ?>
+        <?php ui_feld(['label' => 'Aktuelles Passwort', 'name' => 'old', 'id' => 'pw_old',
+                       'art' => 'password', 'pflicht' => true,
+                       'attr' => ' autocomplete="current-password"']); ?>
+        <?php ui_feld(['label' => 'Neues Passwort', 'name' => 'new1', 'id' => 'pw_new1',
+                       'art' => 'password', 'pflicht' => true,
+                       'klein' => 'Mindestens 10 Zeichen. Die Stärke des Passworts ist '
+                                . 'unmittelbar die Stärke der Verschlüsselung.',
+                       'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+        <span class="pwstaerke" id="pw_guete"></span>
+        <?php ui_feld(['label' => 'Neues Passwort wiederholen', 'name' => 'new2', 'id' => 'pw_new2',
+                       'art' => 'password', 'pflicht' => true,
+                       'attr' => ' autocomplete="new-password"']); ?>
+      <?php ui_karte_ende(); ?>
+      <?= ui_knopf(['text' => 'Passwort ändern', 'art' => 'primaer']) ?>
+      <span class="feld-hinweis" id="pwstate"></span>
     </form>
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),
              dazu pwquality.js: Passwortguete nach derselben Regel wie bei
@@ -1002,160 +1058,166 @@ ui_seite_start(['titel' => 'Einstellungen']);
     ?>
 
   <?php if ($tab === 'standorte'): ?>
-    <h1>Standorte</h1>
-    <p class="muted">Der Standort ist der <strong>Anker</strong> aller
-       Vorbelegungen: Jedes Rettungsmittel, jede Zielklinik, jede
-       Besatzungs-Vorbelegung und jede Bergwacht-Bereitschaft gehört zu genau
-       einem Standort. Angelegt und ausgewählt werden sie hier — gepflegt wird
-       ihr Inhalt unter
-       <a href="einstellungen.php?t=rettungsmittel">Rettungsmittel</a>.</p>
-    <p class="muted">★ markiert die Vorbelegung neuer Diensttage. Löschen
-       entfernt nur den Listeneintrag — <strong>bereits dokumentierte Diensttage
-       bleiben unverändert</strong>: Sie haben Art, Rollen, Fähigkeiten und
-       Bezeichnungen beim Anlegen eingefroren.</p>
+    <?php ui_titelzeile(['titel' => 'Standorte']); ?>
+    <?php /* DREI ZEILEN ERKLÄRUNG, nicht zwei Absätze (E-P3-35). Der Bestand
+             hatte hier zwei Blöcke à fünf Zeilen; wer die Seite zum zehnten
+             Mal öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
+             Was wegfällt, steht an der Handlung selbst: Die Rückfrage beim
+             Löschen beziffert, was mitgeht. */ ?>
+    <p class="seiten-erklaerung">Der Standort ist der Anker aller Diensttage: Er trägt
+       die Vorbelegung, den Abfahrtsort und die
+       <a href="einstellungen.php?t=rettungsmittel">Rettungsmittel</a>. Der Stern
+       markiert die Vorbelegung neuer Diensttage. Löschen entfernt nur den
+       Listeneintrag — dokumentierte Diensttage bleiben unverändert.</p>
 
-    <details class="stammblock" id="standorte" open>
-      <summary>Eigene Standorte</summary>
-      <table class="data">
-        <tbody>
-        <?php if (!$eigene): ?><tr><td colspan="3" class="muted">Noch keine eigenen Standorte.</td></tr><?php endif; ?>
-        <?php foreach ($eigene as $b):
-              $dup = stammdaten_dup_global('bases', 'name', $b['name']);
-              $anz = $sdAnzahl((int)$b['id']); ?>
-          <tr>
-            <td><?= e($b['name']) ?>
-              <?php if ($b['lat'] !== null && $b['lon'] !== null): ?>
-                <br><span class="muted small"><?= e((string)$b['lat']) ?>, <?= e((string)$b['lon']) ?></span>
-              <?php endif; ?>
-              <?php if ($dup): ?><br><span class="muted">⚠ identisch mit systemweitem Eintrag — kann gelöscht werden</span><?php endif; ?>
-            </td>
-            <td class="c-stern"><?= (int)$b['id'] === $DEF_BASE_ID
-                ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
-                  . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
-            <td class="th-act"><div class="rowactions">
-              <?php if ((int)$b['id'] !== $DEF_BASE_ID): ?>
-                <form method="post" action="einstellungen.php?t=standorte#standorte">
-                  <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
-                  <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-                  <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
-                </form>
-              <?php endif; ?>
-              <a class="btn-yellow" href="einstellungen.php?t=standorte&amp;eb=<?= (int)$b['id'] ?>#standorte">Bearbeiten</a>
-              <?php /* Die Rückfrage BEZIFFERT, was mitgeht (Konzept 4.2). Ein
-                       „Standort löschen?" allein verschwieg, dass Rettungsmittel,
-                       Zielkliniken und Besatzungen daran hängen. */ ?>
-              <form method="post" action="einstellungen.php?t=standorte#standorte"
-                    data-confirm="Standort „<?= e($b['name']) ?>“ löschen? <?= $anz > 0
-                        ? ($anz === 1 ? 'Ein eigener Stammdatensatz' : $anz . ' eigene Stammdatensätze')
-                          . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
-                        : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
-                <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
-                <input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
-                <button class="btn-red">Löschen</button>
-              </form>
-            </div></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-      <?php /* EINGABE IM EIGENEN RAHMEN (Web 7.0.0, zweiter Anlauf).
-               Erster Anlauf war `.inline-form` mit `align-items:flex-start`.
-               Damit war die Überhöhe weg — die Ausrichtung aber immer noch
-               falsch: Das Namensfeld stand ohne Beschriftung ganz oben, das
-               Suchfeld daneben trägt eine („Lage des Standorts") und rutschte
-               dadurch eine Zeile tiefer. Zwei Eingabefelder derselben Zeile auf
-               zwei Höhen — das sah nach Fehler aus, weil es einer war.
+    <?php ui_karte_start(['titel' => 'Eigene Standorte', 'zahl' => count($eigene), 'id' => 'standorte']); ?>
+      <?php if (!$eigene): ?>
+        <p class="feld-hinweis">Noch keine eigenen Standorte.</p>
+      <?php endif; ?>
+      <?php foreach ($eigene as $b):
+            $bid = (int)$b['id'];
+            $dup = stammdaten_dup_global('bases', 'name', $b['name']);
+            $anz = $sdAnzahl($bid);
+            $istDef = $bid === $DEF_BASE_ID;
+            /* Die POST-Formulare stehen EINMAL und versteckt; die Knöpfe der
+               Zeile und die des Aktionsblatts zeigen beide über `form` darauf
+               (ui_zeilenaktionen). */ ?>
+        <form method="post" id="f-bdef-<?= $bid ?>" class="nur-vorlesen"
+              action="einstellungen.php?t=standorte#standorte">
+          <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
+          <input type="hidden" name="id" value="<?= $bid ?>">
+        </form>
+        <form method="post" id="f-bdel-<?= $bid ?>" class="nur-vorlesen"
+              action="einstellungen.php?t=standorte#standorte"
+              data-confirm="Standort „<?= e($b['name']) ?>“ löschen? <?= $anz > 0
+                  ? ($anz === 1 ? 'Ein eigener Stammdatensatz' : $anz . ' eigene Stammdatensätze')
+                    . ' dieses Standorts (Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht) werden mitgelöscht.'
+                  : 'Es hängen keine eigenen Stammdaten daran.' ?> Bereits dokumentierte Diensttage bleiben unverändert.">
+          <?= csrf_field() ?><input type="hidden" name="action" value="base_del">
+          <input type="hidden" name="id" value="<?= $bid ?>">
+        </form>
+        <?php
+        $klein = [];
+        if ($b['lat'] !== null && $b['lon'] !== null) {
+            $klein[] = $b['lat'] . ', ' . $b['lon'];
+        } else {
+            $klein[] = 'ohne Lage';
+        }
+        if ($dup) { $klein[] = 'identisch mit einem systemweiten Eintrag'; }
+        $eintraege = [];
+        if (!$istDef) {
+            $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
+                            'art' => 'leise-orange', 'form' => 'f-bdef-' . $bid];
+        }
+        $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
+                        'href' => 'einstellungen.php?t=standorte&eb=' . $bid . '#standorte'];
+        $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
+                        'art' => 'gefahr', 'form' => 'f-bdel-' . $bid];
+        ui_zeile([
+            'text'  => (string)$b['name'],
+            'klein' => implode(' · ', $klein),
+            'plaketten' => $istDef ? ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage') : '',
+            'aktionen' => ui_zeilenaktionen(['titel' => (string)$b['name'], 'eintraege' => $eintraege]),
+        ]);
+      endforeach; ?>
 
-               Jetzt dieselbe Form wie beim Rettungsmittel: Name und
-               Schaltfläche in EINER Zeile, die freiwillige Ortsangabe als
-               eigener Block darunter. Damit stellt sich die Frage nach der
-               Ausrichtung gar nicht mehr, und die Zusammengehörigkeit ist zu
-               sehen. */ ?>
-      <div class="neu-form">
-        <h4><?= $editBase ? 'Standort bearbeiten' : 'Standort hinzufügen' ?></h4>
+      <?php /* Das Formular bleibt IN der Karte unter der Liste (E-P3-35):
+               „Hinzufügen" gehört zu dem, was darüber steht, und eine eigene
+               Karte dafür trennte, was zusammengehört. „Bearbeiten" füllt
+               dasselbe Formular und macht daraus „Standort bearbeiten". */ ?>
+      <div class="listen-form">
+        <h3 class="listen-form-titel"><?= $editBase ? 'Standort bearbeiten' : 'Standort hinzufügen' ?></h3>
         <form method="post" action="einstellungen.php?t=standorte#standorte">
           <?= csrf_field() ?><input type="hidden" name="action" value="base_save">
           <input type="hidden" name="id" value="<?= $editBase ? (int)$editBase['id'] : 0 ?>">
-          <div class="neu-zeile">
-            <input type="text" name="name" id="sdbaseaddr" class="focus-target" maxlength="120" required
-                   placeholder="z. B. Standort Kempten" value="<?= e($editBase['name'] ?? '') ?>">
-            <button class="btn-primary"><?= $editBase ? 'Änderung speichern' : 'Hinzufügen' ?></button>
-            <?php if ($editBase): ?><a class="btn-red" href="einstellungen.php?t=standorte">Abbrechen</a><?php endif; ?>
-          </div>
-          <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
-                   Abfahrtorts „Standort" und werden beim Anlegen eines Diensttags
-                   eingefroren (E8). Seit Web 6.1.0 mit Adresssuche — dieselbe
-                   Komponente wie am Einsatzort (assets/ortsfeld.js), hier aber mit
-                   GETRENNTEM Suchfeld: „Standort Kempten" ist keine Adresse, und
-                   eine Suche im Namensfeld schriebe den Namen weg. */
-                $ORTSFELDER[] = 'sdbase'; ?>
-          <div class="neu-feld">
+          <div class="listen-form-felder">
+            <?php ui_feld(['label' => 'Name', 'name' => 'name', 'id' => 'sdbaseaddr',
+                           'klasse' => 'focus-target', 'pflicht' => true,
+                           'platzhalter' => 'z. B. Standort Kempten',
+                           'wert' => (string)($editBase['name'] ?? ''),
+                           'attr' => ' maxlength="120"']); ?>
+            <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
+                     Abfahrtorts „Standort" und werden beim Anlegen eines
+                     Diensttags eingefroren (E8). Mit GETRENNTEM Suchfeld:
+                     „Standort Kempten" ist keine Adresse, und eine Suche im
+                     Namensfeld schriebe den Namen weg. */
+                  $ORTSFELDER[] = 'sdbase'; ?>
             <?php ui_ortsfeld([
                     'praefix' => 'sdbase', 'feld' => false, 'such' => true,
                     'klasse' => 'loc-inline',
-                    'such_hinweis' => 'Lage des Standorts (optional)',
+                    'such_hinweis' => 'Lage (optional)',
                     'lat_name' => 'lat', 'lon_name' => 'lon',
                     'lat' => (string)($editBase['lat'] ?? ''),
                     'lon' => (string)($editBase['lon'] ?? ''),
                 ]); ?>
+            <p class="feld-klein">Wird als Abfahrtsort neuer Diensttage übernommen.</p>
+          </div>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => $editBase ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer']) ?>
+            <?php if ($editBase): ?>
+              <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                            'href' => 'einstellungen.php?t=standorte']) ?>
+            <?php endif; ?>
           </div>
         </form>
       </div>
-    </details>
+    <?php ui_karte_ende(); ?>
 
     <?php /* „Vordefinierte Standorte" statt „Zentrale Standorte auswählen"
-             (Web 7.0.0). „Zentral" beschrieb die Verwaltung, nicht den Nutzen;
-             was man hier vor sich hat, sind fertige Standorte, die man
-             übernehmen kann. */ ?>
-    <details class="stammblock" id="zentrale">
-      <summary>Vordefinierte Standorte</summary>
-      <p class="muted">Vordefinierte Standorte legt eine Administratorin an. Sie
-         stehen allen zur Verfügung, erscheinen aber erst dann in den
-         Auswahllisten, wenn du sie hier auswählst (E16). Abwählen entfernt keine
-         Daten — bereits dokumentierte Diensttage bleiben unverändert.</p>
-      <table class="data">
-        <tbody>
-        <?php if (!$zentral): ?><tr><td colspan="3" class="muted">Keine vordefinierten Standorte hinterlegt.</td></tr><?php endif; ?>
-        <?php foreach ($zentral as $z): $an = !empty($z['gewaehlt']); ?>
-          <tr>
-            <td><?= e($z['name']) ?> <span class="badge-central">systemweit</span>
-              <?php if ($z['lat'] !== null && $z['lon'] !== null): ?>
-                <br><span class="muted small"><?= e((string)$z['lat']) ?>, <?= e((string)$z['lon']) ?></span>
-              <?php endif; ?>
-            </td>
-            <td class="c-stern"><?= (int)$z['id'] === $DEF_BASE_ID
-                ? '<span class="sternmarke" title="Vorbelegung neuer Diensttage"'
-                  . ' aria-label="Vorbelegung neuer Diensttage">★</span>' : '' ?></td>
-            <td class="th-act"><div class="rowactions">
-              <?php /* ★ AUCH FÜR SYSTEMWEITE STANDORTE (Web 7.0.0). Die
-                       Schaltfläche stand nur bei den eigenen — ein Konto, das
-                       ausschließlich mit vordefinierten Standorten arbeitet
-                       (der Regelfall an einer Station), konnte damit gar keine
-                       Vorbelegung setzen. Die Serverseite ließ es längst zu:
-                       `base_default` prüft mit dt_base_erlaubt(), und das
-                       erlaubt eigene UND ausgewählte zentrale. Es fehlte allein
-                       der Knopf.
-                       Voraussetzung bleibt die Auswahl: Was nicht in den
-                       Auswahllisten steht, kann auch keine Vorbelegung sein. */ ?>
-              <?php if ($an && (int)$z['id'] !== $DEF_BASE_ID): ?>
-                <form method="post" action="einstellungen.php?t=standorte#zentrale">
-                  <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
-                  <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-                  <button class="btn-plain btn-stern" title="Als Vorbelegung neuer Diensttage setzen">★ Standard</button>
-                </form>
-              <?php endif; ?>
-              <form method="post" action="einstellungen.php?t=standorte#zentrale">
-                <?= csrf_field() ?><input type="hidden" name="action" value="ub_toggle">
-                <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-                <input type="hidden" name="an" value="<?= $an ? '0' : '1' ?>">
-                <button class="<?= $an ? 'btn-red' : 'btn-primary' ?>"><?= $an ? 'Abwählen' : 'Auswählen' ?></button>
-              </form>
-            </div></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    </details>
+             (Web 7.0.0). „Zentral" beschrieb die Verwaltung, nicht den Nutzen.
+             ZUGEKLAPPT (E-P3-35): Wer eigene Standorte gepflegt hat, braucht
+             sie selten — und die Zahl im Kopf sagt schon, was drinsteht. */ ?>
+    <?php
+    $gewaehlt = count(array_filter($zentral, static fn($z) => !empty($z['gewaehlt'])));
+    ui_karte_start(['titel' => 'Vordefinierte Standorte', 'id' => 'zentrale', 'zu' => true,
+                    'zahl' => count($zentral) . ' · ' . $gewaehlt . ' ausgewählt']);
+    ?>
+      <p class="feld-hinweis">Vordefinierte Standorte legt eine Administratorin an.
+         Sie erscheinen erst dann in den Auswahllisten, wenn du sie hier auswählst.
+         Abwählen entfernt keine Daten.</p>
+      <?php if (!$zentral): ?>
+        <p class="feld-hinweis">Keine vordefinierten Standorte hinterlegt.</p>
+      <?php endif; ?>
+      <?php foreach ($zentral as $z):
+            $zid = (int)$z['id']; $an = !empty($z['gewaehlt']);
+            $istDef = $zid === $DEF_BASE_ID; ?>
+        <?php /* ★ AUCH FÜR SYSTEMWEITE STANDORTE (Web 7.0.0): Ein Konto, das
+                 ausschließlich mit vordefinierten Standorten arbeitet — der
+                 Regelfall an einer Station —, konnte sonst gar keine
+                 Vorbelegung setzen. Voraussetzung bleibt die Auswahl. */ ?>
+        <?php if ($an && !$istDef): ?>
+          <form method="post" id="f-zdef-<?= $zid ?>" class="nur-vorlesen"
+                action="einstellungen.php?t=standorte#zentrale">
+            <?= csrf_field() ?><input type="hidden" name="action" value="base_default">
+            <input type="hidden" name="id" value="<?= $zid ?>">
+          </form>
+        <?php endif; ?>
+        <form method="post" id="f-zsel-<?= $zid ?>" class="nur-vorlesen"
+              action="einstellungen.php?t=standorte#zentrale">
+          <?= csrf_field() ?><input type="hidden" name="action" value="ub_toggle">
+          <input type="hidden" name="id" value="<?= $zid ?>">
+          <input type="hidden" name="an" value="<?= $an ? '0' : '1' ?>">
+        </form>
+        <?php
+        $klein = ($z['lat'] !== null && $z['lon'] !== null)
+            ? $z['lat'] . ', ' . $z['lon'] : 'ohne Lage';
+        $eintraege = [];
+        if ($an && !$istDef) {
+            $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
+                            'art' => 'leise-orange', 'form' => 'f-zdef-' . $zid];
+        }
+        $eintraege[] = $an
+            ? ['text' => 'Abwählen', 'symbol' => 'schliessen', 'art' => 'leise', 'form' => 'f-zsel-' . $zid]
+            : ['text' => 'Auswählen', 'symbol' => 'plus', 'form' => 'f-zsel-' . $zid];
+        ui_zeile([
+            'text'  => (string)$z['name'],
+            'klein' => $klein,
+            'plaketten' => ui_plakette('systemweit')
+                         . ($istDef ? ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage') : ''),
+            'aktionen' => ui_zeilenaktionen(['titel' => (string)$z['name'], 'eintraege' => $eintraege]),
+        ]);
+      endforeach; ?>
+    <?php ui_karte_ende(true); ?>
 
     <?php if (!$sdBases): ?>
       <p class="alert alert-info">Noch kein Standort verfügbar. Lege oben einen
@@ -1635,7 +1697,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
          anderen gehen soll.</p>
       <label>Backup-Passwort (mind. 10 Zeichen)
         <input type="password" id="bpw1" minlength="10" autocomplete="new-password"></label>
-      <span class="pwquality" id="bpwguete"></span>
+      <span class="pwstaerke" id="bpwguete"></span>
       <label id="bpw2label">Passwort wiederholen
         <input type="password" id="bpw2" autocomplete="new-password"></label>
       <button class="btn-primary" id="expbtn">Backup erstellen</button>

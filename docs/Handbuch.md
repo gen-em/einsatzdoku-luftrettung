@@ -253,6 +253,13 @@ verschlüsselten Daten vorliegen.
 wird der vorherige damit ungültig. Nimm also die neueste E-Mail — eine ältere
 führt zu „Link ungültig oder abgelaufen".
 
+**Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
+je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
+Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
+Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
+den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
+(Abschnitt 5).
+
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
@@ -297,6 +304,33 @@ lesbar waren, bis man sich neu anmeldete. Das ist behoben.
 genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig.
 
 ---
+
+### 3.1a Profil: Name, Adresse und Logo
+
+Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
+Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
+**Logo-Wahl**.
+
+Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
+Welches du siehst, entscheidest du selbst:
+
+| Wahl | Bedeutung |
+|---|---|
+| **Standard der Installation** | folgt der Vorgabe dieser Installation. Was das gerade ist, steht rechts daneben. Das ist die Voreinstellung. |
+| **Hubschrauber (RTH)** | immer der Hubschrauber |
+| **Fahrzeug (NEF)** | immer das Fahrzeug |
+| **Wechselnd** | bei jeder Anmeldung neu ausgewürfelt |
+
+Die Wahl gilt für die **Kopfleiste und das Symbol im Browser-Tab** — beide
+wechseln gemeinsam. Sie wirkt sofort nach dem Speichern; abmelden musst du
+dich dafür nicht.
+
+„Wechselnd" heißt **je Anmeldung**, nicht je Seite: Innerhalb einer Sitzung
+bleibt das Logo, wie es ist. Ein Logo, das beim Blättern springt, wäre keine
+Abwechslung, sondern Unruhe.
+
+Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
+niemand angemeldet, und die Wahl hängt am Konto.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -1707,9 +1741,21 @@ dafür, dass in den Auswahllisten genau die Einträge des Standorts stehen, der
 am Diensttag hinterlegt ist, und sonst nichts.
 
 Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind
-die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie wie
-der Einsatzort: Adresse suchen, Koordinatenpaar oder Plus Code eintippen, der
-Vorschlag darunter übernimmt sie.
+die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
+Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
+oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
+bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
+schreibt nur die Koordinaten.
+
+**Die Zeilenaktionen** stehen am Schreibtisch als Knöpfe rechts in der Zeile:
+„Als Vorbelegung" (setzt den Stern), „Bearbeiten" (füllt das Formular
+darunter) und „Löschen". Auf dem Handy steht dort ein **„⋯"**, das dieselben
+Handlungen als Blatt von unten öffnet. Das Löschen fragt zurück und **beziffert
+dabei**, wie viele eigene Stammdatensätze mitgehen.
+
+**Vordefinierte Standorte** stehen in einer eigenen, zugeklappten Karte
+darunter; ihr Kopf nennt, wie viele es gibt und wie viele davon ausgewählt
+sind.
 
 Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
 Diese Wahl entscheidet über alles Weitere:

@@ -62,16 +62,21 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O7 noch nicht ist
+### 1.3 Was der Zwischenstand nach O8a noch nicht ist
+
+**Diese Fassung braucht eine Migration** (`2026_08_27_logo_wahl`). Sie ist
+die erste der Phase; ohne den Aufruf von `update.php` scheitert jede
+Anmeldung.
 
 **Der Einsatzweg, die Suche und die Auswertung sind neu, die
 Verwaltungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
 Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
 Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
-Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht.
-Was innerhalb der **übrigen** Seiten steht, ist bis auf die Artzeichen
-unverändert: Einstellungen, Verwaltungslisten, Administration. Sie folgen
-Paket für Paket in O8 bis O11.
+Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht;
+Web 9.7.0 (O8a) Profil, Logo-Wahl und die Standorte. Was innerhalb der
+**übrigen** Seiten steht, ist bis auf die Artzeichen unverändert: die
+weiteren Reiter der Einstellungen (Rettungsmittel, Geräte, Sicherung),
+der Import und die Administration. Sie folgen in O8b bis O11.
 
 Sichtbare Folgen, die **kein Fehler** sind:
 
@@ -236,6 +241,26 @@ achtmal die Tagesübersicht, und die Prüfung meldete pflichtgemäß „0
 und Monat), daher 232 → 240 Bilder. **Für die früheren Pakete heißt das:
 Die Zahl 232 war richtig, aber eine der 29 Seiten war nicht die, die
 draufstand.**
+
+### 2.9 Nach O8a (Web 9.7.0) — **mit Migration**
+
+**Diese Fassung braucht `update.php`.** Ohne die Spalte `users.logo_wahl`
+scheitert jede Anmeldung, weil `login.php` sie mitliest. Lokal ist die
+Migration gelaufen; auf dem Produktivserver ist sie ein Handgriff, den kein
+Werkzeug hier ersetzen kann.
+
+| Was | Ergebnis |
+|---|---|
+| **Logo-Wahl (Kernzusage)** | Anmeldeseite zeigt den Standard; „Standard" und „Hubschrauber" liefern dasselbe Logo; „Fahrzeug" wechselt **Kopfleiste und Favicon** gemeinsam. „Wechselnd": über **5 Seiten einer Sitzung stabil**, über **20 frische Anmeldungen 11 zu 9** — beide Logos kamen vor. 0 Konsolenfehler |
+| Standorte, Desktop | anlegen · Vorbelegung setzen · zurücksetzen · bearbeiten · löschen — alle fünf Wege durchlaufen, Bestand danach unverändert |
+| Standorte, mobil (390) | Knopfreihe verborgen, „⋯" sichtbar, Blatt mit Zeilentitel und denselben Einträgen |
+| Lage-Feld (F-P3-AI) | Namensfeld, Suchfeld „Adresse oder Ort suchen", Lupe, zwei Koordinatenfelder — **alle vier wieder vorhanden** |
+| Passwortstärke | 4 Segmente; 1 rot `rgb(214,51,56)` · 1–2 orange · 4 dunkelblau `rgb(26,46,77)`; leeres Feld = kein Markup |
+| Bildaufnahme | 240 Bilder, 30 Kontaktbögen — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Wortliste | **0 / 0 / 0** — **53 Regeln** (vorher 48), 53 gegriffen; sechs neue für die Logo-Wahl (Klasse Homonym), die veraltete `logowahl-hubschrauber` ausgetragen |
+| Werte außerhalb der Token | 0 Hex, 0 rgb(), 0 Schriftgrößen, 0 Pixelmaße, 0 50px-Reste |
+| Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
 
 ### 2.3 Der Vorher-Stand, zum Gegenhalten
 
@@ -717,6 +742,61 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
       *Erwartet:* **Keine** Segmentwahl — es gibt nichts zu wählen —, und
       die Kacheln tragen die Beschriftung dieser Art („Flugtage").
       *Fehlschlag heißt:* Die Wahl steht da mit zwei leeren Ansichten.
+
+### 5.9 Nach O8a (Web 9.7.0)
+
+**Vor allem anderen: `update.php` aufrufen.** Diese Fassung legt die Spalte
+`users.logo_wahl` an. Läuft die Migration nicht, scheitert **jede
+Anmeldung** — auch die eigene. *Fehlschlag heißt:* „Anmeldung
+fehlgeschlagen" trotz richtigem Passwort, oder eine Fehlerseite statt der
+Startseite.
+
+- [ ] **Logo-Wahl greift.** *Weg:* Profil → Logo → „Fahrzeug (NEF)" →
+      Profil speichern. *Erwartet:* Die Kopfleiste zeigt sofort das
+      Fahrzeug, **und** das Symbol im Browser-Tab wechselt mit. *Fehlschlag
+      heißt:* Nur eines von beidem wechselt — dann fragen Kopfleiste und
+      Favicon nicht dieselbe Stelle.
+- [ ] **„Wechselnd" springt nicht.** *Weg:* „Wechselnd" wählen, speichern,
+      dann fünf Seiten durchklicken (Startseite, Suche, Zeitraum,
+      Einstellungen, zurück). *Erwartet:* Dasselbe Logo auf allen fünf.
+      *Fehlschlag heißt:* Es wechselt beim Blättern = es wird bei jedem
+      Aufruf gewürfelt statt einmal bei der Anmeldung.
+- [ ] **„Wechselnd" wechselt wirklich.** *Weg:* Abmelden und neu anmelden,
+      mehrfach. *Erwartet:* Über mehrere Anmeldungen kommen beide Logos vor.
+      *Fehlschlag heißt:* Immer dasselbe = der Würfel liegt an der falschen
+      Stelle.
+- [ ] **Die Anmeldeseite zeigt den Standard.** *Weg:* „Fahrzeug" wählen,
+      abmelden, Anmeldeseite ansehen. *Erwartet:* Hubschrauber — dort ist
+      niemand angemeldet, und die Wahl hängt am Konto.
+- [ ] **Die Lage lässt sich wieder eingeben** (die Behebung von F-P3-AI).
+      *Weg:* Standorte → „Standort hinzufügen" → im Feld „Lage (optional)"
+      einen Ort suchen. *Erwartet:* Ein Eingabefeld mit Lupe ist da,
+      Vorschläge erscheinen, die Übernahme setzt die Koordinaten als Chip —
+      und **der Name im Feld darüber bleibt unberührt**. *Fehlschlag heißt:*
+      Kein Feld unter „Name" = die Nur-Lage-Fassung ist wieder leer (das war
+      der Zustand seit O5); oder der Name wird überschrieben = die getrennte
+      Suche ist verloren.
+- [ ] **Zeilenaktionen am Schreibtisch.** *Weg:* Standorte bei ≥ 720 px.
+      *Erwartet:* Je Zeile „Als Vorbelegung" (orange, leise), „Bearbeiten",
+      „Löschen" (rot umrandet) als Knöpfe; **kein** „⋯". *Fehlschlag heißt:*
+      Beides gleichzeitig = eine `display`-Regel schlägt die Hilfsklasse.
+- [ ] **Zeilenaktionen auf dem Handy.** *Weg:* Dieselbe Seite bei 390 px,
+      „⋯" drücken. *Erwartet:* Ein Blatt von unten mit dem Namen der Zeile
+      als Titel und denselben Einträgen; „Löschen" rot. *Fehlschlag heißt:*
+      Die Knöpfe stehen untereinander in der Zeile = das Blatt greift nicht.
+- [ ] **Löschen fragt beziffert zurück.** *Weg:* Einen Standort löschen, an
+      dem Rettungsmittel hängen. *Erwartet:* Die Rückfrage nennt die **Zahl**
+      der mitgelöschten Stammdatensätze und sagt, dass dokumentierte
+      Diensttage bleiben. *Fehlschlag heißt:* „Standort löschen?" ohne Zahl.
+- [ ] **Passwortstärke als Balken.** *Weg:* Profil → Neues Passwort, tippen.
+      *Erwartet:* Vier Segmente füllen sich; rot bei zu kurz, orange in der
+      Mitte, dunkelblau bei stark. Kein Grün, kein Gelb. *Fehlschlag heißt:*
+      Eine gefärbte Textzeile ohne Balken = die alte Anzeige ist zurück.
+- [ ] **Vordefinierte Standorte.** *Weg:* Die zweite Karte aufklappen.
+      *Erwartet:* Sie ist zugeklappt, der Kopf nennt „n · m ausgewählt",
+      jede Zeile trägt die Plakette „systemweit" und „Auswählen" bzw.
+      „Abwählen". *Fehlschlag heißt:* Aufgeklappt = die Voreinstellung
+      stimmt nicht.
 
 ## 6. Was bewusst **nicht** geprüft wird
 

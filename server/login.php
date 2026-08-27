@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl
                              FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
@@ -152,6 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
             // Fassung angemeldet waren, liegen die beiden Werte noch herum.
             unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
+            /* LOGO-WAHL EINMAL AUFLOESEN (E-P3-20). Bei „wechselnd" faellt
+               hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
+               spraenge das Logo beim Blaettern. */
+            logo_sitzung_setzen($u['logo_wahl'] ?? '');
             rate_erfolg('login', $email);
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich

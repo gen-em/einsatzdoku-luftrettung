@@ -315,6 +315,8 @@
   --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
   --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
+  --balken-glied:28px;                 /* ein Segment des Passwortstärke- … */
+  --strich-balken:6px;                 /* … balkens, vier davon (E-P3-16) */
   --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
 
   /* ---- Karte (Leaflet) --------------------------------------------------- */
@@ -2208,3 +2210,137 @@ mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--rad
  * Fehler. Gilt für die Tabellenzeile ab 720 px und die Kachel darunter. */
 .hl-extrem{background:var(--orange-hell)}
 tr.hl-extrem td{background:var(--orange-hell)}
+
+
+/* ===========================================================================
+ * 26  EINSTELLUNGEN UND VERWALTUNGSLISTEN                   (P3/O8, E-P3-35)
+ * ======================================================================== */
+
+/* WAHLLISTE (.wahlliste) — eine aus vieren, untereinander, 44 px hoch.
+ * Freigegeben mit Mockup 13. Die Radios selbst sind unsichtbar; die Zeile
+ * ist das Bedienelement, und der Punkt links wird gezeichnet — so lässt er
+ * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt. */
+.wahlliste{display:flex;flex-direction:column;gap:var(--abstand-2)}
+.wahl-box{position:absolute;opacity:0;width:0;height:0}
+.wahl-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--knopf);
+  padding:var(--abstand-2) var(--abstand-3);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  background:var(--schnee);
+  cursor:pointer;
+}
+.wahl-zeile:hover{background:var(--rauch)}
+.wahl-punkt{
+  flex:0 0 auto;width:var(--symbol);height:var(--symbol);
+  border:var(--strich-stark) solid var(--linie-stark);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+}
+.wahl-text{flex:1 1 auto;font-weight:600;color:var(--dunkelblau)}
+.wahl-zusatz{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* Gewählt: hell orange mit orangem Rahmen und gefülltem Punkt — dieselbe
+ * Sprache wie die aktive Kennzahl-Kachel und der aktive Leisteneintrag. */
+.wahl-box:checked + .wahl-zeile{background:var(--orange-hell);border-color:var(--orange)}
+.wahl-box:checked + .wahl-zeile .wahl-punkt{
+  border-color:var(--orange);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--schnee);
+  background:var(--orange);
+}
+/* Der Fokusring gehört an die ZEILE, nicht an das versteckte Radio: Sonst
+ * ist die Tastaturbedienung unsichtbar. */
+.wahl-box:focus-visible + .wahl-zeile{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark)}
+
+/* Unter 480 px rutscht der Zusatz unter den Text — „zurzeit Hubschrauber
+ * (RTH)" neben „Standard der Installation" sprengt sonst jede Zeile. */
+@media (max-width:479px){
+  .wahl-zeile{flex-wrap:wrap}
+  .wahl-zusatz{flex:1 0 100%;padding-left:calc(var(--symbol) + var(--abstand-3))}
+}
+
+/* PASSWORTSTÄRKE als Balken (E-P3-16, Mockup 11). Vier Segmente, gefüllt
+ * nach Stufe; die Farbe verstärkt nur, was die Zahl der Segmente schon
+ * sagt. Vorher war es eine Textzeile in fünf Farben, darunter Grün und
+ * Gelb — zwei Töne, die es in der Marke nicht gibt. */
+.pwstaerke{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:var(--abstand-2);
+  font-size:var(--groesse-2);color:var(--gedaempft);
+}
+.pwstaerke:empty{display:none}
+.pwstaerke-balken{display:flex;gap:var(--abstand-1);flex:0 0 auto}
+.pwstaerke-balken > span{
+  width:var(--balken-glied);height:var(--strich-balken);
+  border-radius:var(--radius-klein);
+  background:var(--linie);
+}
+.pwstaerke-text{font-weight:600;color:var(--dunkelblau)}
+/* Der Hinweissatz steht in eigener Zeile — er ist zwei Zeilen lang und
+ * schöbe die Stufe sonst aus dem Bild. */
+.pwstaerke-hinweis{flex:1 0 100%}
+
+/* Rot bis Stufe 0, orange für 1–2, Dunkelblau ab 3: dieselbe Bedeutung wie
+ * überall — Rot ist ein Halt, Orange ein Hinweis, Dunkelblau die Ruhe. */
+.pwq-0 .pwstaerke-balken > span.an{background:var(--rot)}
+.pwq-0 .pwstaerke-text{color:var(--rot-tief)}
+.pwq-1 .pwstaerke-balken > span.an,
+.pwq-2 .pwstaerke-balken > span.an{background:var(--orange)}
+.pwq-1 .pwstaerke-text,
+.pwq-2 .pwstaerke-text{color:var(--orange-tief)}
+.pwq-3 .pwstaerke-balken > span.an,
+.pwq-4 .pwstaerke-balken > span.an{background:var(--dunkelblau)}
+
+/* VERWALTUNGSLISTEN (E-P3-35). Erklärtext auf drei Zeilen unter dem Titel,
+ * dann die Karte mit Zeilen und darunter — IN derselben Karte — das
+ * Formular zum Anlegen. */
+.seiten-erklaerung{
+  max-width:var(--lesespalte);
+  margin:calc(-1 * var(--abstand-2)) 0 var(--abstand-4);
+  color:var(--gedaempft);
+}
+
+/* Das Formular unter der Liste, durch eine Linie abgesetzt: Es gehört zur
+ * Karte, ist aber eine andere Art von Inhalt als die Zeilen darüber. */
+.listen-form{
+  border-top:var(--strich) solid var(--linie);
+  padding-top:var(--abstand-4);
+  margin-top:var(--abstand-3);
+}
+.listen-form-titel{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  margin:0 0 var(--abstand-3);
+}
+.listen-form-felder{display:grid;gap:var(--abstand-3)}
+.listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
+
+/* Ab 720 px stehen Name und Lage nebeneinander (Mockup 08) — sie gehören
+ * zusammen und passen in eine Zeile. */
+@media (min-width:720px){
+  .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
+}
+
+/* Der Vorbelegungsstern in der Zeile: orange, weil er eine Auszeichnung ist
+ * und keine Warnung. */
+.zeile-stern{color:var(--orange)}
+
+/* Die Knopfreihe der Zeilenaktionen (Desktop). Mobil steht dort das „⋯",
+ * das der Aktionsblatt-Baustein mitbringt.
+ *
+ * KEIN `display` in der Grundregel: `.nur-ab-720` blendet mit `display:none`
+ * aus und stellt ab 720 px die Grundform mit `revert` wieder her. Eine
+ * eigene `display:flex`-Regel gleicher Spezifität, die später steht, schlägt
+ * beides — und dann stehen unter 720 px die Knöpfe UND das „⋯" nebeneinander.
+ * Die Flex-Eigenschaften gehören deshalb in die 720er-Regel; sie greifen
+ * genau dort, wo die Reihe überhaupt sichtbar ist. */
+@media (min-width:720px){
+  .zeile-knoepfe{display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:flex-end}
+}
+
+/* „Als Vorbelegung" ist leise UND orange (Mockup 11): Sie ist eine
+ * Auszeichnung, kein Hauptweg — ein voller Orangeknopf neben „Bearbeiten"
+ * und „Löschen" behauptete, sie sei die zu erwartende Handlung. */
+.knopf-leise-orange{color:var(--orange-tief)}
+.knopf-leise-orange .symbol{color:var(--orange)}
