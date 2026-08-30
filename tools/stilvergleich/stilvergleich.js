@@ -15,7 +15,15 @@ const SP  = process.argv[2];          // Ordner mit fixtures/
 const ALT = process.argv[3];
 const NEU = process.argv[4];
 const PROBEN = (process.env.PROBEN || 'seiten.html,katalog.html').split(',');
-const BREITEN = [1400, 1100, 1000, 900, 720, 700, 560, 520, 500];
+/* DREIZEHN BREITEN, NEU GEEICHT IN P3/O12.
+ *
+ * Die alten neun (1400, 1100, 1000, 900, 720, 700, 560, 520, 500) stammen aus
+ * P0 und lagen um die damaligen Schwellen. Das Redesign hat andere: 720, 1024,
+ * 1200 und 1600. Die Liste deckt jetzt jede davon von BEIDEN Seiten ab und
+ * reicht bis 360 px hinunter — die schmalste Breite, die das Konzept zusagt.
+ * Ohne 1024 und 1600 haette der Vergleich die halben Media-Bloecke nie
+ * gesehen. */
+const BREITEN = [1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390, 360];
 
 function eigenschaften(css) {
   const s = css.replace(/\/\*[\s\S]*?\*\//g, '');

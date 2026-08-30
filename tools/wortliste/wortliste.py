@@ -75,7 +75,8 @@ BEREICHE: dict[str, dict] = {
             "docs/Technik.md",
             "docs/Backup-Format.md",
             "docs/JSON-Vertrag.md",
-            "docs/Branding.md",
+            "docs/Design.md",
+            "docs/Lizenzen.md",
         ],
     },
 }

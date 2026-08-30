@@ -2,34 +2,44 @@
 
 Wird **nicht ausgeliefert** (`tools/` ist vom Deploy ausgenommen).
 
-> ## Während P3 nicht aussagekräftig
+> ## Neu geeicht nach P3 (O12)
 >
 > Dieses Werkzeug ist auf die Frage gebaut: **Hat sich etwas geändert?** In
-> Phase P3 (Oberflächen-Redesign) ändert sich alles — Stylesheet, Bausteine,
-> Klassennamen, Schwellen. Ein Lauf liefert dort Tausende Abweichungen, die
-> niemand gegen einen Plan hält; er sagt nichts, was man nicht schon wüsste,
-> und verdeckt dabei das, worauf es ankommt.
+> Phase P3 (Oberflächen-Redesign) hat sich alles geändert — Stylesheet,
+> Bausteine, Klassennamen, Schwellen. Es hat deshalb während der ganzen Phase
+> **geruht**; an seiner Stelle standen `tools/vollstaendigkeit/` (ist etwas
+> verlorengegangen?) und `tools/screenshots/` (sieht es in allen acht Breiten
+> so aus, wie es soll?). Beide bleiben in Gebrauch.
 >
-> Der Stilvergleich **ruht deshalb während P3** und wird in Arbeitspaket O12
-> neu geeicht: Referenz aus dem Endstand aufnehmen, Breiten erweitern auf
-> `[1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390, 360]`,
-> Lauf gegen sich selbst mit 0 Abweichungen (Prüfpunkt P-P3-19). Ab P4 wacht
-> er wieder.
+> **Ab P4 wacht der Stilvergleich wieder.** Drei Dinge sind dafür in O12
+> geändert worden:
 >
-> An seine Stelle treten für die Dauer der Phase zwei Werkzeuge mit anderen
-> Fragen:
+> - **Dreizehn Breiten statt neun.** Die alten (1400 … 500) lagen um die
+>   Schwellen von P0. Das Redesign hat andere — 720, 1024, 1200, 1600 —, und
+>   ohne 1024 und 1600 hätte der Vergleich die halben Media-Blöcke nie
+>   gesehen. Jetzt: `1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560,
+>   420, 390, 360`, jede Schwelle von beiden Seiten.
+> - **Die Seitenprobe liest jetzt auch PHP-Zeichenketten.** Das war der blinde
+>   Fleck, vor dem die Grenzen-Liste unten seit P0 warnte: `entphp()` schneidet
+>   alles zwischen `<?php` und `?>` heraus, und seit P3 baut `ui.php` das
+>   Markup mit `echo '<div class="zeile">'` — also *innerhalb* eines
+>   PHP-Blocks. Gemessen: Die Probe wuchs von 114 205 auf 119 726 Zeichen, die
+>   Zahl der abgedeckten Klassen von **228 auf 253**. Neu dabei sind die
+>   Innereien der Bausteine — `zeile-haupt`, `zeile-klein`, `zeile-text`,
+>   `zeile-aktionen`, `kennzahl-wert`, `uebersicht-zeile`, `plakette-weg` und
+>   neunzehn weitere.
+> - **`klassen.py` bleibt in Gebrauch, aber nicht als Sollmenge.** Es zählt
+>   jedes Wort im Quelltext als möglichen Klassennamen (14 784 zum Stand
+>   Web 8.0.1) und ist damit für die Kaskadenfrage richtig gebaut, für eine
+>   Vollständigkeitsprüfung aber unbrauchbar. Die rauschfreie Menge — die
+>   Klassen aus den **Selektoren** des Stylesheets — steht in
+>   `tools/vollstaendigkeit/vorher-klassen.txt`.
 >
-> - `tools/vollstaendigkeit/` — **Ist etwas verlorengegangen, und steht jeder
->   Wert an der einen Stelle?**
-> - `tools/screenshots/` — **Sieht es in allen acht Breiten so aus, wie es
->   soll?**
->
-> `klassen.py` bleibt in Gebrauch, aber nicht als Sollmenge: Es zählt jedes
-> Wort im Quelltext als möglichen Klassennamen (14 784 zum Stand Web 8.0.1)
-> und ist damit für die Kaskadenfrage richtig gebaut, für eine
-> Vollständigkeitsprüfung aber unbrauchbar. Die rauschfreie Menge — die
-> Klassen aus den **Selektoren** des Stylesheets, 220 Stück — steht in
-> `tools/vollstaendigkeit/vorher-klassen.txt`.
+> **Und die Regel, unter der er ab P4 gelesen wird:** Bei einer
+> *beabsichtigten* Gestaltungsänderung ist das Ergebnis keine Null, sondern
+> eine **Liste**. Sie wird gegen die Liste der geplanten Änderungen gehalten;
+> jede Abweichung darüber hinaus ist unbeabsichtigt und wird geklärt, bevor
+> committet wird.
 
 ## Wozu
 
@@ -69,7 +79,7 @@ python3 kaskade.py <alt.css> <neu.css>
 Nachweis.** Lädt **dieselbe DOM** einmal mit dem alten und einmal mit dem
 neuen Stylesheet in Chromium und vergleicht für **jedes Element** alle
 Eigenschaften, die in einem der beiden Stylesheets überhaupt vorkommen — bei
-neun Fensterbreiten, damit auch Media Queries mitgeprüft sind.
+**dreizehn** Fensterbreiten, damit auch Media Queries mitgeprüft sind.
 
 ```
 python3 proben.py <alt.css> [<neu.css>] [<ausgabeordner>]
@@ -111,12 +121,13 @@ waren so 44 von 253 Paaren auffällig und alle 44 unerreichbar.
   vorkommt, gilt als **unbenutzt** und damit als kollisionsfrei; eine Klasse,
   die ein Skript vollständig zur Laufzeit zusammensetzt, kann so falsch
   eingeordnet werden.
-- Die Seitenprobe schneidet das Markup aus den **Seiten**. Was aus einem
-  Baustein in `ui.php` kommt — seit Web 7.2.0 die Meldungszeile und die
-  Abbruchseite —, steht dort nicht mehr und fehlt in der Probe. Solange die
-  betroffenen Klassen anderswo im Markup vorkommen (`.alert` tut das), faellt
-  das nicht ins Gewicht; mit jedem weiteren Baustein waechst der blinde Fleck.
-  Die Abhilfe waere, `ui.php` als zusaetzliche Markup-Quelle aufzunehmen.
+- ~~Die Seitenprobe schneidet das Markup aus den **Seiten**; was aus einem
+  Baustein in `ui.php` kommt, fehlt.~~ **Geschlossen in O12** (siehe oben):
+  Die Probe liest jetzt zusätzlich die HTML-Schnipsel aus PHP-Zeichenketten,
+  und `ui.php` steckt ohnehin im selben Glob. Was bleibt: Ein Baustein, der
+  sein Markup über mehrere Zeichenketten hinweg zusammensetzt, erscheint in
+  der Probe **zerlegt** — die einzelnen Stücke werden gemessen, ihr
+  Zusammenspiel nicht.
 - Die beiden Dialogkaesten (`.confirmbox`, `.unlockbox`) entstehen als
   `<dialog>` im Skript und stehen in **keiner** Markup-Probe; fuer sie traegt
   der Selektorkatalog den Nachweis.

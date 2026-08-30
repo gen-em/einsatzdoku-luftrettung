@@ -232,38 +232,78 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ohnehin am meisten Bestand tragen. Behebung: eine eigene Zählfunktion
     neben `nb_offene_tage()`, die nur `COUNT(*)` fragt.
 
-39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
-    *Aufgenommen in P3/O11, fällig in O12 (Neueichung).* Die
-    Vollständigkeitsprüfung meldet Klassen, die im Markup stehen und im
-    Stylesheet keine Regel haben. Nach O11 sind es 29 (vorher 48). Sie
-    zerfallen in drei Gruppen:
-
-    - **Falsche Treffer des Werkzeugs** (8): Bruchstücke aus zusammengesetzten
-      Klassennamen in JavaScript — `art`, `k`, `klasse`, `ton`,
-      `kennzahl-raster-`, `plakette-`, `pwq-`, `imp-param`. Das Werkzeug liest
-      Zeichenketten, nicht ausgeführten Code.
-    - **Skriptanker und Behälter** (~21): `nb-veh`, `showif`, `parentcheck`,
-      `rmneu`, `feld-gesperrt`, `filtergruppen`, `wochentage`, `tag-form`,
-      `fld`, `loc-widget`, `karte-block-phasen`, `phasen-name`, `rea-kopf`,
-      `rea-beginn`, `imp-*`. Sie brauchen zu Recht keine Regel.
-    - **Echte Lücken**: nach O11 keine mehr bekannt. Die letzte war der
-      Export-Knopf mit `btn-primary` (F-P3-BA) — 23 px hoch und ohne jede
-      Gestaltung, und die Knopfhöhenmessung des Bilderlaufs konnte ihn nicht
-      finden, weil sie `.knopf` sucht.
-
-    Zu tun in O12: Für die zweite Gruppe eine `[bleibt]`-Auszeichnung wie auf
-    der Streichliste, damit die erste Gruppe (und damit ein echter Fund)
-    sichtbar bleibt.
-
 40. **55 Altklassen ohne Gegenstück.**
-    *Aufgenommen in P3/O11, fällig in O12 (Neueichung).* Die
-    Vollständigkeitsprüfung verlangt für jede der 220 Klassen des alten
-    Stylesheets entweder eine Regel im neuen oder einen Eintrag auf der
-    Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl fiel von 78 auf
-    55); die übrigen stammen aus O1 bis O10 und sind dort mit dem Umbau
-    verschwunden, ohne eingetragen zu werden. Die Streichliste ist damit
-    unvollständig — sie sagt nicht zu jeder verschwundenen Klasse, *warum* sie
-    verschwunden ist, und genau das ist ihr Zweck.
+    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
+    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
+    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
+    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
+    fiel von 78 auf 55); die übrigen stammen aus O1 bis O10 und sind dort mit
+    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
+    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
+    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
+
+    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
+    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
+    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
+    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
+    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
+    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
+    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
+    Liste ist die Begründung, nicht die Zeile.
+
+    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
+    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
+    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
+    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
+    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
+    Auskunft, „ersatzlos" wäre eine erfundene.
+
+41. **Sechs Klassen im Markup ohne Regel — offene Gestaltungsfragen.**
+    *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der
+    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` bleiben sechs
+    Namen übrig, bei denen die Frage offen ist, ob sie eine Regel brauchen.
+    Sie stehen dort mit dem Vermerk `[offen]` und bleiben deshalb ein Befund:
+
+    - `imp-warn` — „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe
+      der Importvorschau. Ein **Warnhinweis, der wie Fließtext aussieht**;
+      von allen sechs der wahrscheinlichste echte Fund.
+    - `imp-daygroup` — die Kopfzeile einer Tagesgruppe selbst. Sie trägt ihren
+      Text in `<strong>`, sonst nichts: eine Gruppenüberschrift, die aussieht
+      wie eine Datenzeile.
+    - `rea-kopf`, `rea-beginn` — Kopfzeile und Beschriftung einer
+      Reanimationssitzung. Das Aussehen kommt vom Nachbarn `phasen-eingabe`
+      bzw. von der Elementregel für `label`; kein Skript liest die Klassen.
+      Entweder Reste, oder die Kopfzeile soll sich von einer gewöhnlichen
+      Phasenzeile abheben.
+    - `rmneu` — der Knopf „neu" in der Rettungsmittelwahl, neben `rmopt`.
+    - `phasen-name` — der Name einer Phase in der Einsatzansicht.
+
+    Jedes davon ist eine **Entscheidung**, kein Aufräumen: Entweder die Klasse
+    verschwindet, oder sie bekommt eine Regel — und dann ist das eine neue
+    Darstellung und braucht nach `docs/Design.md` 1 eine Freigabe. Deshalb
+    nicht am Phasenende erledigt.
+
+42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
+    *Aufgenommen in P3/O12.* P-P3-03 verlangt null. Die Prüfung meldet 158
+    Treffer; 155 davon sind Kommentare oder richtige Typografie (die
+    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der
+    Hinweise, das Malzeichen in „3× RTW"). Drei sind echte Symbole:
+
+    - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
+      `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
+      Begründung im Code; das ist kein Fehler, sondern ein Netz, und es
+      gehört eher dokumentiert als entfernt.
+    - `server/assets/ortsfeld.js:197` — `x.textContent = '×'` am
+      Koordinaten-Chip. Der Knopf `.rmx` ist textgroß gebaut und hat keine
+      Symbolregel; ein SVG hineinzusetzen heißt, ihn neu zu bemaßen.
+    - `server/assets/patient.js:133` — `⚠` für einen nicht entschlüsselbaren
+      Datensatz. Das Zeichen steht nicht nur in einer Zelle, sondern **im
+      Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine
+      Gestaltungsfrage, keine Ersetzung.
+
+    Die beiden letzten sind also kein mechanischer Tausch. Solange sie
+    stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
+    Prüfprotokoll, statt die Zahl schönzurechnen.
 
 ---
 
@@ -271,6 +311,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
+    *Erledigt mit Web 9.13.0 (P3/O12).* Der Punkt war eine Frage nach dem
+    **Prüfmittel**, nicht nach dem Stylesheet: Die Gegenprobe „im Markup, aber
+    ohne Regel" hatte in O11 einen echten Fund gemacht (der Export-Knopf mit
+    `btn-primary`, 23 px statt 44 — F-P3-BA), und dieser eine Fund stand
+    zwischen 28 falschen. Eine Liste in diesem Mischungsverhältnis wird nach
+    dem dritten Mal nicht mehr gelesen, und dann findet sie auch den echten
+    nicht.
+
+    Es gibt jetzt `tools/vollstaendigkeit/ohne-regel.md` nach dem Muster der
+    Streichliste: `[bleibt]` für die begründeten Fälle (acht Bruchstücke
+    zusammengesetzter Klassennamen, fünfzehn Skriptanker und Behälter — jeder
+    mit Begründung und Fundstelle), `[offen]` für die ungeklärten. Die
+    Prüfung meldet dadurch **0** ohne eingetragenen Grund statt 29, führt die
+    sechs offenen unter eigener Überschrift — und meldet **ihre eigenen
+    verwahrlosten Einträge**: Wessen Klasse inzwischen eine Regel hat oder aus
+    dem Markup verschwunden ist, steht als „Eintrag ungenutzt" da. Ohne diese
+    Rückfrage wäre die Liste in zwei Paketen dasselbe geworden, wogegen sie
+    schützt. Die Gesamtzahl der Befunde fiel von 247 auf 224.
+
+    Der Rest — die sechs `[offen]` — steht als **Nr. 41**.
 
 18. **`.btn-link.danger` in `style.css` kann nie greifen.**
     *Erledigt mit Web 9.1.0 (P3/O2).* Die Regel konnte nie greifen, weil

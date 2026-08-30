@@ -210,6 +210,8 @@ E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
 das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
 Nach 30 Minuten ohne Aktivität meldet das System automatisch ab.
 
+![Die Web-Oberfläche am Schreibtisch](bilder/tagesuebersicht-desktop.png)
+
 **Auf schmalen Geräten** — Handy und Tablet im Hochformat — zeigt die
 Kopfleiste stattdessen links einen Knopf mit drei Strichen. Er öffnet die
 **Schublade**: dieselbe Leiste, die am breiten Bildschirm dauerhaft links
@@ -227,8 +229,16 @@ fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
 
+![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
+
 Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
 und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
+
+**Handlungen an einer Zeile** — bearbeiten, verschieben, löschen — stehen am
+Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
+**ein** Knopf mit drei Punkten (**⋯**); er öffnet ein Blatt von unten, in dem
+dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
+gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
 
 **Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
 Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
@@ -386,6 +396,8 @@ Konto ist davon nicht betroffen.
 ## 4. Einsätze ansehen und bearbeiten
 
 ### 4.1 Tagesübersicht
+
+![Tagesübersicht auf dem Handy](bilder/tagesuebersicht-mobil.png)
 
 Startseite nach der Anmeldung. Links die Liste der Diensttage; der neueste ist
 vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
@@ -674,7 +686,7 @@ die Koordinate — nie Namen, Diagnose oder andere Inhalte.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
-Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem ✕ zum
+Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem Kreuz zum
 Entfernen, genau wie bei den weiteren Rettungsmitteln. Das Textfeld bleibt
 davon unberührt: Du kannst dort weiterschreiben, ohne die Koordinaten zu
 verlieren.
@@ -683,7 +695,7 @@ verlieren.
 reines Bezeichnungsfeld: keine Adressvorschläge, keine Erkennung weiterer
 Koordinatenformate. Andernfalls würde ein Klick auf einen Vorschlag die
 bestätigten Koordinaten stillschweigend überschreiben. Entfernst du sie über
-das ✕, arbeitet die Suche ab dem nächsten Tastenanschlag wieder wie gewohnt.
+das Kreuz, arbeitet die Suche ab dem nächsten Tastenanschlag wieder wie gewohnt.
 
 Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
@@ -803,8 +815,8 @@ seit Web 5.5.0, vorher konnten diese Zeiten nur von der Uhr kommen. „+
 Reanimation hinzufügen" legt einen Block an: oben der **Reanimationsbeginn**,
 darunter „+ Ereignis hinzufügen" für jedes weitere Ereignis, jeweils Art
 (Zugang, Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation,
-Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das ✕ am Beginn entfernt die
-ganze Reanimation, das ✕ an einer Ereigniszeile nur diese.
+Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das Kreuz am Beginn entfernt
+die ganze Reanimation, das Kreuz an einer Ereigniszeile nur diese.
 
 Gab es an einem Einsatz **mehrere Reanimationen**, legst du einfach mehrere
 Blöcke an. Eine Zeile ohne Uhrzeit wird nicht gespeichert — du musst eine
@@ -1123,7 +1135,8 @@ Unten in der Leiste steht **Filter zurücksetzen**. In der Schublade steht
 darunter **„n Treffer zeigen"** — die Zahl rechnet mit, während du filterst,
 und der Knopf schließt die Schublade: Du weißt also vorher, worauf du
 hinausläufst. Über der Trefferliste stehen die gesetzten Filter noch einmal als
-blaue Plaketten mit ✕; ein Druck darauf nimmt **genau diesen** Filter zurück.
+blaue Plaketten mit einem Kreuz; ein Druck darauf nimmt **genau diesen**
+Filter zurück.
 Daneben steht, wie viele Einsätze angezeigt werden (bei gesetztem Filter „n von
 m") und wie viele Kilometer sie zusammen sind.
 
@@ -1267,7 +1280,8 @@ Datei und kann nicht auseinanderlaufen.
 
 ## 6. Backup
 
-Unter **⚙ Einstellungen → „Backup"** lädst du alle deine Daten als einzelne
+Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
+deine Daten als einzelne
 verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
 10 Zeichen, wird nirgends gespeichert. In dieser Datei stehen **alle
 geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
@@ -1368,7 +1382,7 @@ Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
 Grund, der sich nicht umgehen lässt: Die geschützten Angaben der alten Sicherung
 hängen am alten Inhaltsschlüssel, und den öffnet allein dein
 **Wiederherstellungsschlüssel**. Die Administration gibt die Sicherung dann für
-dein Konto frei. Unter **⚙ Einstellungen → „Backup"** erscheint danach ein
+dein Konto frei. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebene Sicherung*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
@@ -1777,8 +1791,8 @@ Schnitt folgt der Tätigkeit:
 
 | Menüpunkt | Inhalt |
 |---|---|
-| **⚙ Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
-| **⚙ Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
+| **Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
+| **Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
 
 Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
 der beiden Teile. Ein alter Link (`?t=stammdaten`) führt weiterhin zu
@@ -1858,7 +1872,8 @@ nichts — auch nicht bei einem Tippfehler im Namen. Ein Diensttag ist ein
 abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
 wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
 
-Mit **„★ Standard"** markiertes Rettungsmittel und Standort werden bei neuen
+Das mit einem **Stern** als Vorbelegung markierte Rettungsmittel und der so
+markierte Standort werden bei neuen
 Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
 Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
 Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
@@ -1925,7 +1940,7 @@ Bedarf löschen.
 
 ## 10. Geräte
 
-Unter **⚙ Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
+Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
 **„Gerät anlegen"** erzeugt Geräte-ID und API-Schlüssel — der Schlüssel wird
 **nur einmal** angezeigt, also sofort notieren bzw. eintragen. **Deaktivieren**
 sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
@@ -2207,7 +2222,7 @@ Einstellungen rechnen, die diese Programmfassung anbietet. Steht dort eine
 Warnung, können sich die genannten Konten **nicht anmelden** — die Behebung
 steht dabei.
 
-Ein Update, das eine Spalte löscht, ist seit 4.7.0 in der Liste **mit ⚠
+Ein Update, das eine Spalte löscht, trägt in der Liste die Plakette **blockiert
 gekennzeichnet** und mit einem Satz versehen, was verlorenginge. Steht in einer
 solchen Spalte noch etwas, wird das Update **nicht ausgeführt** — die Zeile
 nennt stattdessen Spalte und Zeilenzahl. Alle übrigen Updates laufen trotzdem
@@ -2231,7 +2246,7 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
 2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
    genügt (z. B. `nadoku.beispieldomain.de`).
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
-3. **Im Web einen Kopplungscode erzeugen:** **⚙ Einstellungen → „Geräte" →
+3. **Im Web einen Kopplungscode erzeugen:** **Einstellungen → „Geräte" →
    „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
    genau einmal verwendbar**.
    Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
@@ -2240,7 +2255,7 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    fünf Geräte verbunden, lässt sich kein Code mehr erzeugen — erst ein nicht
    mehr genutztes Gerät löschen.
 4. **Auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen** und bestätigen
-   — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
+   — die Uhr meldet „Gekoppelt" mit einem Haken und ist einsatzbereit. Das Gerät
    erscheint im Web in der Geräteliste, und du bekommst eine E-Mail darüber.
    *Bei Garmin: die Sync-Seite und der Tastenweg zum Koppeln stehen in den
    Abschnitten 2.0 und 2.2 — je Uhr verschieden.*

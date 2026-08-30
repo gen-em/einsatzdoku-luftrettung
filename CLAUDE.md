@@ -90,16 +90,26 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 
 ## 5. Oberfläche
 
-Farben, Schriften und Logo-Einsatz stehen in **`docs/Branding.md`**. Kurz:
+Die Gestaltungsrichtlinie ist **`docs/Design.md`** — Farben, Token, Schriften,
+Schwellen, Symbole, Bausteine, Seitentypen. Sie ist verbindlich; wer eine
+Oberflächenänderung anfängt, liest zuerst dort. Kurz:
 
-- Farben ausschließlich über die CSS-Variablen aus `:root` in
+- **Ein neuer Baustein oder eine neue Darstellung entsteht nur nach
+  ausdrücklicher Freigabe mit Mockup.** Bis dahin werden vorhandene Bausteine
+  verwendet — der Vorrat steht in `Design.md`, Kapitel 9.
+- Farben ausschließlich über die Token aus `:root` in
   `server/assets/style.css`. Kein Hexwert direkt in einer Regel.
-- Ein neuer Farbwert braucht eine Herkunft (Markenwert oder begründete
-  Ableitung) und wird in `docs/Branding.md` nachgetragen.
+- Ein neuer Farbwert oder eine neue Schriftgröße braucht eine Herkunft
+  (Markenwert oder begründete Ableitung) und wird in `docs/Design.md`
+  nachgetragen. Die Skala ist geschlossen.
 - Kontrast gegen die tatsächliche Fläche prüfen (Schnee/Rauch, nicht Weiß),
-  Zielwert AA.
+  Zielwert AA. `python3 tools/screenshots/kontrast.py` rechnet ihn nach.
+- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch.
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
+- Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
+  **erzeugt**: `python3 tools/design/tabellen.py alle`. Wer eine davon von Hand
+  ändert, ändert sie an der falschen Stelle.
 
 ## 6. Prüfen
 
@@ -219,7 +229,8 @@ nicht später, nicht „in P6":
   `tools/screenshots/` (berührte Seiten) und `tools/wortliste/`; der
   Stilvergleich wacht ab P4 wieder.
 
-**Stand der Umsetzung:** `docs/Design.md` und `docs/Lizenzen.md` entstehen in
-Arbeitspaket O12 und lösen `docs/Branding.md` ab. Bis dahin gilt für Farben,
-Schriften und Logo weiterhin `docs/Branding.md` (Abschnitt 5) — die
-verbindlichen Token stehen bereits in `server/assets/style.css`, Abschnitt 2.
+**Stand der Umsetzung:** erledigt mit O12. `docs/Design.md` und
+`docs/Lizenzen.md` stehen; `docs/Branding.md` ist damit abgelöst und aus dem
+Repositorium entfernt. Was daraus noch galt, ist übernommen — die drei offenen
+Punkte B1 bis B3 sind in P3 erledigt worden und in `Design.md` als solche
+vermerkt.

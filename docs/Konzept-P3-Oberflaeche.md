@@ -1310,13 +1310,13 @@ Umsetzung füllen.
 | Nr. | Prüfung | Soll | **Ist** |
 |---|---|---|---|
 | P-P3-01 | Vollständigkeitsprüfung gegen den **Vorher-Stand** (O1) | Klassenliste gesichert; alle alten Klassen „ohne Gegenstück" — das Werkzeug kann scheitern | **erledigt.** `klassen.py` ist gescheitert (14 784 statt 220, F-P3-P); Sollmenge jetzt **220 Klassen** aus den Selektoren. Erstlauf protokolliert: 78 Hexwerte, 71 Schriftgrößen, 154 Pixelmaße, 5 × `50px`, 14 `style=`, 5 Inline-SVG, 147 Unicode-Symbole, 80 Emoji. |
-| P-P3-02 | Vollständigkeitsprüfung gegen den **Endstand** | 0 ohne Gegenstück, 0 Hexwerte außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 `50px`, Streichliste vollständig | |
-| P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | **nach O2:** Inline-SVG **3** (vorher 5) · Unicode **159** · Emoji **9** (vorher 80) · fehlende Dateien **0** · Dateien ohne Anker **0**. Rest verteilt auf O3 bis O11. |
+| P-P3-02 | Vollständigkeitsprüfung gegen den **Endstand** | 0 ohne Gegenstück, 0 Hexwerte außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 `50px`, Streichliste vollständig | **teilweise erfüllt, Endstand nach O12: 224 Befunde** (O1: 294; nach O11 noch 247 — die Differenz ist keine Änderung am Code, sondern `ohne-regel.md`, siehe unten). Erfüllt sind die Wertefragen **vollständig**: Hexfarben außerhalb `:root` **0**, `rgb()`/`rgba()` mit festen Zahlen **0**, Schriftgrößen außerhalb der Skala **0**, Pixelmaße außerhalb der Token **0**, `50px`-Reste **0**, Knopfhöhen nicht aus `--knopf` **0**; Streichliste vollständig abgearbeitet (`auf der Streichliste, aber noch im Markup` **0**, `zugleich gestrichen und mit Regel` **0**). **Nicht erfüllt und bewusst offen:** *ohne Gegenstück* **55** (Backlog Nr. 40), *im Markup ohne Regel, Grund nicht eingetragen* **0** — davon **6** als `[offen]` vermerkt (Backlog Nr. 41) —, *Regel ohne Fund im Markup* **47**, *Unicode als Symbol* **158** (Backlog Nr. 42), *Symboldatei ohne Verweis* **19**, `style=`-Attribute **5**. Diese Zahlen sind keine Nullen und werden es in P3 nicht mehr; jede einzelne ist im Prüfdokument mit Begründung aufgeschlüsselt. **Eine davon ist in O12 aber echte Arbeit geworden:** „im Markup ohne Regel" stand auf 29 und war unbrauchbar, weil ein echter Fund (F-P3-BA) zwischen 28 falschen stand. Es gibt jetzt `tools/vollstaendigkeit/ohne-regel.md` nach dem Muster der Streichliste — `[bleibt]` für die 23 begründeten Fälle, `[offen]` für die 6 ungeklärten, und die Liste meldet ihre eigenen verwahrlosten Einträge. Das ist Backlog Nr. 39, erledigt. |
+| P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | **Endstand nach O12: Inline-SVG 0** (O1: 5, nach O2: 3) · **Emoji 0** (O1: 80) · **fehlende Symboldateien 0** · **Symboldateien ohne Anker `id="i"` 0**. Vier von fünf Sollwerten sind erreicht. **Offen: Unicode als Symbol 158** (O1: 147). Die Zahl ist **gelesen, nicht nur gezählt** — jeder Fund einzeln, mit Datei und Zeile. Nach Zeichen: 101 × `…`, 32 × `→`, 6 × `✕`, 5 × `×`, 3 × `⚠`, 3 × `★`, 2 × `✓`, 2 × `⋯`, je 1 × `✖ ✔ ● ‹`. Nach Ort: **76 stehen in Kommentaren** und erreichen nie einen Browser; der große Rest ist **Typografie in sichtbarem Text** und dort richtig — die Auslassungspunkte der Fortschrittsmeldungen („Datei wird verschlüsselt…"), die Pfad-Pfeile der Hinweise („Einstellungen → Papierkorb"), das Malzeichen in „3× RTW" und „(2×)", die Bereichsangabe „00:00…23:59". **Echte Symbole im Markup sind es genau drei**, und sie sind nicht behoben: `einsatz_form.php:1416` (`✕` als **Rückfall**, wenn `edSymbol` beim synchronen Aufbau noch nicht geladen ist — mit Begründung im Code, kein Fehler), `assets/ortsfeld.js:197` (`x.textContent = '×'` am Koordinaten-Chip) und `assets/patient.js:133` (`⚠` für einen nicht entschlüsselbaren Datensatz). Die letzten beiden sind kein mechanischer Tausch: Das `×` sitzt an einem textgroßen Knopf ohne Symbolregel, und das `⚠` steht nicht nur in einer Zelle, sondern **im Satz** („… ist mit ⚠ gekennzeichnet") — ein SVG im Fließtext ist eine Gestaltungsfrage, keine Ersetzung. Beide stehen darum als **Backlog Nr. 42** und nicht als stille Änderung am Phasenende. Der Sollwert 0 ist damit **nicht erreicht**, und die Zahl 158 ist keine Ausrede: 155 davon sind erklärt, 3 sind benannt. |
 | P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O11 erfüllt: 0 Abweichungen** über 272 Bilder (nach O2: 0 über 232). Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. **Eine Grenze, die O11 gekostet hat:** Gemessen wird `.knopf`. Ein Knopf, der die Klasse gar nicht trägt, fällt der Messung nicht auf — genau so ist der Export-Knopf mit `btn-primary` durchgerutscht (F-P3-BA). Die Gegenprobe dafür ist die Liste der Klassen ohne Regel in der Vollständigkeitsprüfung, und die gehört gelesen, nicht nur gezählt. |
-| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2, O10 und O11).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K): Orange als Fläche, Linie auf Schnee, Sand auf Schnee. Der Geltungsbereich der dritten ist in O10 **kleiner** geworden — die Versionsnummer der Fußzeile trug Sand ebenfalls, und dort stimmte die Begründung nicht; sie steht jetzt in `--gedaempft` (5,30:1). |
+| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2, O10, O11 und O12).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K): Orange als Fläche, Linie auf Schnee, Sand auf Schnee. Der Geltungsbereich der dritten ist in O10 **kleiner** geworden — die Versionsnummer der Fußzeile trug Sand ebenfalls, und dort stimmte die Begründung nicht; sie steht jetzt in `--gedaempft` (5,30:1). |
 | P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | **nach O2: 0 Überlauf** auf allen 29 Seiten in allen acht Breiten (vorher 26). Ort und Diagnose bei 360 px sind noch **offen** — das ist die Kachel aus E-P3-32 und gehört zu O3. |
-| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **nach O11: 34 Seiten × 8 = 272 Bilder, 271 verschiedene Prüfsummen** (die eine Dublette ist das Paar `10-tagesuebersicht` / `11-tagesuebersicht-schublade` bei 1024 px — ab 1024 px gibt es keine Schublade, beide fotografieren dieselbe Seite; siehe Umsetzungsstand O11), Überlauf 0, Konsole 0, Knöpfe ≠ 44 px 0. Vorher: 31 Seiten × 8 = 248 Bilder, seit Web 9.10.1 mit **248 verschiedenen Prüfsummen** (F-P3-AQ: davor zeigten 176 davon die Anmeldeseite) (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
-| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O11: 0 / 0 / 0** bei 62 Ausnahmen, alle gegriffen — ein Treffer im eigenen neuen Text vor dem Commit behoben. **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
+| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **Endstand O12: 34 Seiten × 8 Breiten = 272 Bilder, 272 verschiedene Prüfsummen** (also **0 Dubletten**), Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0**. Dass hier null Dubletten stehen und nach O11 eine, ist **kein Fortschritt, sondern Aufnahmerauschen** — die Erklärung dazu steht unverändert beim O11-Prüfstand. Die Zahl **192** aus der Soll-Spalte ist überholt: Es sind 34 Seiten, weil O7 die Monatsansicht, O9c die Rettungsmittel-Fassung der Stammdaten und O10 die Rechtstexte dazugenommen haben. **nach O11: 34 Seiten × 8 = 272 Bilder, 271 verschiedene Prüfsummen** (die eine Dublette ist das Paar `10-tagesuebersicht` / `11-tagesuebersicht-schublade` bei 1024 px — ab 1024 px gibt es keine Schublade, beide fotografieren dieselbe Seite; siehe Umsetzungsstand O11), Überlauf 0, Konsole 0, Knöpfe ≠ 44 px 0. Vorher: 31 Seiten × 8 = 248 Bilder, seit Web 9.10.1 mit **248 verschiedenen Prüfsummen** (F-P3-AQ: davor zeigten 176 davon die Anmeldeseite) (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
+| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **Endstand O12: 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** bei **66 Regeln, alle 66 gegriffen** — über 3 Bereiche mit zusammen 8 normativen Dokumenten (neu dabei `Design.md` und `Lizenzen.md`, ausgetragen `Branding.md`), 339 Treffer gesamt, alle 339 durch eine Ausnahme erklärt. **O11: 0 / 0 / 0** bei 62 Ausnahmen, alle gegriffen — ein Treffer im eigenen neuen Text vor dem Commit behoben. **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
 | P-P3-11 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärt, Sollstand nach S1 (286 739 Einzelvergleiche, 16 erwartet) | **nach O11 erfüllt: 286 739 Einzelvergleiche, 0 unerklärte Abweichungen, 16 erwartete.** Das Werkzeug selbst war dabei zu reparieren — `--frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr löschen (F-P3-BB). |
@@ -1327,8 +1327,8 @@ Umsetzung füllen.
 | P-P3-16 | Administration (O9) | 300-Konten-Bestand: Seitenwechsel, Suche, Filter, Sammelauswahl; Aufbewahrung löscht korrekt | **erledigt (O9b/O9c).** `tools/pruefkonten/` legt 304 Konten mit gemischten Sicherungsständen an (fester Zufallsstartwert). Gemessen: Seitenwechsel über 7 Seiten zu 50, Suche und fünf Filter mit den erwarteten Zahlen, Auswahl über Seitengrenzen hinweg; ganzer Seitenaufruf 103 ms. Verdrängung geprüft in O9a (jüngstes und freigegebenes Paket bleiben), die einstellbare Aufbewahrung in O9c (3 → 5 → 3 gespeichert). **Nicht geprüft:** ein Sammelsichern über alle 304 Konten — das erzeugte 304 Ordner und ist der Fall, für den F-P3-C ohnehin auf P5 verweist. |
 | P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | **erledigt (O10).** Impressum und Datenschutz ohne Anmeldung erreichbar (HTTP 200 abgemeldet, geprüft). Leerzustand: beide Plaketten „leer", keine Vorschau, Meldung „Der Betreiber dieser Installation hat noch kein Impressum hinterlegt"; für Admins mit Weg zum Editor. **Markdown-Probe: 81 Einzelproben in `tools/rechtstexte/`, 0 fehlgeschlagen**, dazu 65 Ausgaben gegen die Positivliste erlaubter Tags und Attribute gehalten — `<script>alert(1)</script>` erscheint als sichtbarer Text, im Browser gegengeprüft. Fußzeile zweizeilig auf allen 34 Seiten des Bilderlaufs; Ausnahme Einrichter (ohne Rechtslinks, mit Grund). |
 | P-P3-18 | Logo-Wahl (O8) | Kopfleiste und Favicon wechseln gemeinsam; „wechselnd" stabil je Sitzung | **erledigt (O8a, erweitert in O9c).** Kopfleiste und Favicon folgen beide `logo_stamm()`; „wechselnd" wird nur bei der Anmeldung ausgewürfelt und bleibt in der Sitzung stehen. O9c hat den **Standard der Installation** dazugenommen und acht Messungen in einer Sitzung gefahren: Anmeldeseite folgt dem Standard (F-P3-AN), Kopfleiste folgt **ohne Neuanmeldung**, ein Konto mit eigener Wahl bleibt unberührt. |
-| P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | |
-| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O11: fehlerfrei** über alle geänderten PHP- und JS-Dateien (`php -l`, `node --check`), dazu `ast.parse` über `kreislauf.py`. **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien). |
+| P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | **erfüllt, und stärker als gefordert.** Gefahren wurde nicht gegen sich selbst, sondern gegen den Stand **vor** der einen Stylesheet-Änderung dieses Pakets (F-P3-BC) — ein Lauf gegen sich selbst beweist nur, dass das Werkzeug schweigt, nicht dass es sieht. Ergebnis über vier Proben und **13 Breiten**: **53 638 Elementmessungen, 149 Eigenschaften je Element, 12 Abweichungen** — und alle zwölf sind **dieselbe** beabsichtigte: `div.leiste-filter`, Eigenschaft `width`, bei 1024/1100/1280/1440/1680/1920 px in den Proben `katalog.html` und `pseudo.html` (6 × 2). Keine einzige darüber hinaus, kein anderes Element, keine andere Eigenschaft. `kaskade.py` daneben: **625 → 627 Regeln, 0 entfallen, 2 neu** (genau die beiden geplanten), **0 mit anderem Endwert, 0 vertauschte Reihenfolgen**. Die Seitenprobe wuchs durch das Mitlesen der PHP-Zeichenketten von 114 205 auf **119 726 Zeichen**, die abgedeckten Klassen von **228 auf 253**. **Eine Grenze, die derselbe Lauf sichtbar gemacht hat:** In `seiten.html` erschien die Abweichung **nicht** — die Klasse `leiste-filter` entsteht dort aus einem `<?= … ?>`-Ausdruck, und `entphp()` schneidet den heraus. Bedingte Klassen aus PHP-Ausdrücken sieht die Seitenprobe weiterhin nicht; `katalog.html` fängt sie, weil es je Selektor ein Element baut. |
+| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O12: fehlerfrei** (`php -l` über `version.php` und `ui.php` — mehr PHP hat O12 nicht angefasst; `python3 -m py_compile` über `tools/design/tabellen.py` und `tools/stilvergleich/proben.py`, `node --check` über `tools/stilvergleich/stilvergleich.js`). **O11: fehlerfrei** über alle geänderten PHP- und JS-Dateien (`php -l`, `node --check`), dazu `ast.parse` über `kreislauf.py`. **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien). |
 
 ---
 
@@ -1409,6 +1409,7 @@ und O11.
 | F-P3-AZ | **Das ausgeblendete Kästchen lag nicht, wo es sollte — dieselbe Falle wie F-P3-AP, zum dritten Mal.** `.schalter-box` und `.wahl-box` (0,1,0) verlieren gegen `input[type=checkbox]` bzw. `input[type=radio]` aus der Rohschicht (0,1,1), die jedem Kästchen 20 × 20 px gibt. Gemessen: 20 × 20 statt 0 × 0. Und weil weder `.schalter` noch `.wahlliste` `position:relative` trägt, saß das Kästchen auf seiner statischen Stelle über dem linken Rand der Beschriftung — es fing dort Klicks ab. | O11: `input[type=checkbox].schalter-box` / `input[type=radio].wahl-box` mit `min-height:0`. Der lange Selektor verschwindet mit der Rohschicht, die in diesem Paket fällt. |
 | F-P3-BA | **Der Export-Knopf war seit dem Neubau des Stylesheets ungestaltet.** `import.php` trug an einer Stelle noch `btn-primary` — eine Klasse ohne Regel seit Web 9.0.0. Gemessen: 23 px hoch, Hintergrund `rgba(0,0,0,0)`, kein Rahmen, Radius 0, Textschrift; der Nachbarknopf im selben Formular („Import ausführen", über `ui_knopf()`) ist 44 px, orange, Radius 10 px, Bricolage. O8c hat die Seite umgebaut und diesen einen Knopf übersehen — er steht am Ende eines Blocks, der im Prüfbrowser erst nach mehreren Bedienschritten sichtbar wird. Aufgefallen ist er **nicht** im Bilderlauf (dessen Knopfmessung sucht `.knopf`, und genau die Klasse fehlte), sondern beim Abarbeiten der Liste „im Markup, aber ohne Regel". | O11: `ui_knopf(['art' => 'primaer', 'typ' => 'button', 'attr' => ' id="exp_go"'])` in einem `.listen-form-fuss`. Die Kennung bleibt — `assets/export.js` hängt daran. Nachgemessen: 44 px, `rgb(255,143,31)`, Radius 10 px, Bricolage. **Und die Lücke im Prüfmittel benannt:** Ein Knopf ohne `.knopf` fällt der Knopfhöhenmessung nicht auf; die Liste „ohne Regel" ist dafür die Gegenprobe und gehört deshalb gelesen, nicht nur gezählt. |
 | F-P3-BB | **`kreislauf.py --frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr löschen** — und zwar aus zwei Gründen gleichzeitig, die beide aus O9 stammen. Erstens suchte `konto_loeschen()` die Kennung mit `admin_user\.php\?id=(\d+)"[^>]*>([^<]+)</a>`; seit dem Umbau der Kontenliste (O9b) ist die Zeile ab 720 px eine Tabellenzeile mit `data-ziel` und einem Verweis, der „Öffnen" heißt, darunter eine `.zeile`, deren Verweis den Text in ein `<span class="zeile-haupt">` wickelt — der Ausdruck lieferte **null** Paare. Zweitens liegt die Löschung seit O9a nicht mehr in der Liste (`admin_users.php`, `action=user_del`), sondern auf der Kontoseite (`admin_user.php?id=N`, `action=user_delete`) und verlangt die **abgetippte E-Mail-Adresse** als zweite Stufe. Unbemerkt geblieben, weil `--frisch` diesen Weg nur betritt, wenn das Konto schon besteht: Beim ersten Lauf auf einer frischen Datenbank endet die Funktion eine Zeile früher mit `return False`. | O11: Statt eines neuen, ebenso zerbrechlichen Musters wird die **Stelle** gesucht — die Kennung steht in beiden Fassungen vor der Adresse, also die letzte `admin_user.php?id=N` vor deren Vorkommen. Die Löschung geht auf die Kontoseite, mit `confirm_email` und `sicherungen_mit=1`. Geprüft: zweimal hintereinander gelöscht (erst `True`, dann „war nicht da"), danach `kreislauf.py --art edbak --frisch` durchgelaufen — 286 739 Einzelvergleiche, 0 unerklärte Abweichungen. |
+| F-P3-BC | **Zwei tote Token, und dahinter eine Leiste, die zwei Pakete lang zu schmal war.** Die Vollständigkeitsprüfung führte `--leiste-filter` (280 px) und `--leiste-filter-schmal` (240 px) unter „ungenutzt". Sie waren es — der Grund war aber kein vergessenes Aufräumen, sondern eine Regel, die nie angekommen ist: `ui_geruest_start()` gab der Seitenleiste immer nur `.leiste`, auch auf der Suche. Die Filterleiste war damit **220 px** breit (bzw. 260 ab 1200 px) statt der in Anlage G für sie vorgesehenen **240/280 px**. Sie trägt mehr als eine Tagesliste — Datum von/bis, drei Auswahlfelder, Freitext —, und dafür waren die 220 px zu knapp. Unbemerkt seit O6, weil eine zu schmale Leiste nicht bricht, sondern nur enger umbricht: kein Überlauf, kein Konsolenfehler, kein Knopf unter 44 px — nichts, was ein Prüfmittel meldet. Gefunden hat sie erst die Frage nach dem **ungenutzten Token**. | O12: `ui_geruest_start()` vergibt zusätzlich `leiste-filter`, das Stylesheet bekommt zwei Regeln (`@media min-width:1024` und `:1200`). Im Browser nachgemessen, angemeldet, bei fünf Breiten: Suche **240/240/280/280/280 px** bei 1024/1100/1200/1440/1920, Tagesübersicht unverändert **220/220/260/260/260**. Der Stilvergleich gegen den Stand davor meldet genau diese zwölf Abweichungen und keine dreizehnte (P-P3-19). **Die Lehre steht in `docs/Design.md` 4:** Ein ungenutztes Token ist nicht immer Müll, das man wegwirft — manchmal ist es die Quittung für eine Regel, die nie angekommen ist. Wer die Zeile länger werden sieht, prüft das zuerst. |
 
 ---
 
@@ -1431,6 +1432,16 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
   mit Kartendialog aus O5 wiederverwenden).
 - Backlog Nr. 18 (Einrichter-Stil) und Nr. 20 (Hexwerte) werden mit P3
   erledigt und im Backlog abgehakt.
+- **`docs/Design.md` ist ab sofort verbindlich** (CLAUDE.md §5 und §9). Neue
+  Seiten werden aus dem Bausteinvorrat gebaut; ein neuer Baustein oder eine
+  neue Darstellung entsteht nur nach ausdrücklicher Freigabe mit Mockup.
+  Kapitel 10 enthält dafür das Rezept, Kapitel 9.0 die Entscheidungstabelle.
+- **Der Stilvergleich ist wieder Pflicht** bei jedem CSS-Umbau — neu geeicht
+  auf 13 Breiten, und die Seitenprobe liest jetzt auch PHP-Zeichenketten. Bei
+  einer beabsichtigten Änderung ist das Ergebnis eine **Liste**, die gegen die
+  geplanten Änderungen gehalten wird, keine Null.
+- **Drei Unicode-Symbole im Markup** (Backlog Nr. 42) — die Behebung ist eine
+  Gestaltungsfrage und braucht eine Entscheidung, keinen Tausch.
 
 ### 10.3 Übergabeliste an P5
 
@@ -1453,7 +1464,43 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 
 ### 10.6 Statuszeile P3 (nach Abschluss)
 
-*(bei Abschluss ausfüllen: Web-Version, Pakete, Prüfzahlen, offene Punkte)*
+**P3 abgeschlossen mit Web 9.13.0.** Zwölf Arbeitspakete (O1–O12),
+**neunzehn** Versionen von 9.0.0 bis 9.13.0 (vierzehn Neben-, fünf
+Korrekturstände), drei Migrationen (9.7.0 Standorte, 9.8.0 Kontoseite, 9.11.0
+Rechtstexte). Jede Seite der Anwendung ist aus Bausteinen
+gebaut; die Übergangsschicht des Stylesheets ist aufgelöst (O11).
+
+**Die Zahlen am Ende** (alle nach der letzten Änderung gemessen):
+
+| | |
+|---|---|
+| Bilderlauf | 34 Seiten × 8 Breiten = **272 Bilder**, 272 verschiedene Prüfsummen; Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0** |
+| Kontraste | **21 Paare, 0 verfehlt**, Primärknopf 5,97:1, drei benannte Ausnahmen |
+| Wortliste | **0 / 0 / 0** bei 66 Regeln, alle gegriffen |
+| Vollständigkeit | **224 Befunde** (O1: 294); alle Wertefragen 0, Streichliste vollständig, „ohne Regel" ohne eingetragenen Grund 0 |
+| Stilvergleich (neu geeicht) | **53 638 Elementmessungen**, 12 Abweichungen — alle zwölf beabsichtigt |
+| Kreislauf edbak | **286 739 Einzelvergleiche**, 0 unerklärt (O11) |
+| Rechtstexte | **81 Einzelproben**, 0 fehlgeschlagen (O10) |
+| Funde | **F-P3-A bis F-P3-BC** — 55 Kennungen, alle im Abschnitt 9 mit Behebung |
+
+**Was offen bleibt und wohin es geht:**
+
+| offen | wohin |
+|---|---|
+| Handbuch-Gesamtabgleich (R16) | vor 1.0, ausdrückliche Entscheidung in O12 |
+| Drei Unicode-Symbole im Markup (P-P3-03) | Backlog Nr. 42 |
+| Sechs Klassen ohne Regel, Frage offen | Backlog Nr. 41 |
+| 55 Altklassen ohne Gegenstück auf der Streichliste | Backlog Nr. 40, P4 |
+| `nb_offen_gesamt()` zählt durch Holen (O11) | Backlog Nr. 38 |
+| NEF-Logo, Impressums- und Datenschutztext | Zuarbeit Philipp (10.5) |
+| „Alle sichern" in Schüben (F-P3-C) | P5 (10.3) |
+| Kurzname je Rettungsmittel, „Auf der Karte setzen" für Standorte | P4 (10.2) |
+
+**Kein Prüfmittel misst, ob die Gestaltungsrichtlinie trägt.** Das zeigt erst
+die erste Seite, die jemand nach ihr baut. Wenn dabei ein Fall auftritt, der
+in der Tabelle „Wenn du X willst, nimm Y" nicht steht, ist das kein Mangel der
+Seite, sondern eine Zeile, die der Richtlinie fehlt — und der Weg dahin ist
+die Rückfrage, nicht das neue Element.
 
 ---
 
@@ -1475,8 +1522,11 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O9b NutzerInnen-Liste | **erledigt** | Web 9.9.0 |
 | O9c Regeln, Stammdaten, Demo, Wartung | **erledigt** | Web 9.10.0 |
 | O10 Anmeldung, öffentliche Seiten, R32 | **erledigt** | Web 9.11.0 (Migration!) |
-| O11 Übrige Seiten und Dialoge | offen | |
-| O12 Dokumentation und Abschluss | offen | |
+| O11 Übrige Seiten und Dialoge | **erledigt** (davor Bausteinreparaturen 9.11.1) | Web 9.12.0 |
+| O12 Dokumentation, Lizenzen, Neueichung | **erledigt** | Web 9.13.0 |
+
+**P3 ist damit abgeschlossen.** Zwölf Pakete, Web 9.0.0 bis 9.13.0, drei
+Migrationen (9.7.0, 9.8.0, 9.11.0). Was offen bleibt, steht in 10.6.
 
 ---
 
@@ -2568,7 +2618,7 @@ nie gesichert, 6 ohne Kontokennung, 6 Admins, 55 ohne Gerät, 44 nie angemeldet.
   Lesen ans Licht, sondern durch den Bilderlauf über eine Seite, die dieses
   Paket gar nicht anfasst — deshalb steht `15-suche` in der Teilmenge, mit der
   während der Arbeit gemessen wurde.
-- **Vollständigkeit, Wortliste, Kontraste:** Zahlen im Prüfdokument (2.11).
+- **Vollständigkeit, Wortliste, Kontraste:** Zahlen im Prüfdokument (2.13).
 - **Syntax:** `php -l` und `node --check` über alle geänderten Dateien
   fehlerfrei.
 
@@ -3166,6 +3216,289 @@ sie mit `LIMIT 500` **holt** und die Zeilen zählt — ein `COUNT(*)` täte es.
 Dazu bis zu zehn weitere Abfragen für die Stammdatentabellen. Das ist kein
 Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn zu
 beenden), aber es ist unnötig.
+---
+
+### O12 — Dokumentation, Lizenzen, Neueichung, Abschluss
+
+*Erledigt mit Web 9.13.0. Ohne Migration. Am Server ändert sich eine einzige
+Zeile — die aus F-P3-BC.*
+
+#### Was das Paket eigentlich löst
+
+Elf Pakete haben eine Oberfläche gebaut und dabei laufend Regeln gesetzt: die
+44-px-Regel, die Schwellen, wann eine Karte zuklappt, wann eine Meldung welchen
+Ton trägt, warum eine Löschbestätigung eine Seite ist und kein Dialog. Diese
+Regeln standen alle irgendwo — im Stylesheet, in `ui.php`, in den
+Kopfkommentaren von `version.php`, in diesem Konzept. **Nur nirgends
+zusammen.** Wer die zwölfte Seite baut, findet alles; er findet es nur nach
+einem Tag Lesen, und bis dahin hat er sich sein eigenes Muster ausgedacht.
+
+`docs/Design.md` ist die Antwort darauf. Zwölf Kapitel nach der Gliederung aus
+Anlage C: Zweck und Freigaberegel · Marke · Farbrollen · Token · Schriftskala ·
+Grundregeln · Schwellen · Symbole · **Bausteine** · Seitentypen · Prüfmittel ·
+Änderungsverlauf.
+
+#### Die Entscheidung, die das Dokument brauchbar gemacht hat
+
+Der erste Entwurf war ein *Nachschlagewerk*: Kapitel für Kapitel beschrieben,
+was es gibt. Vollständig und unbenutzbar — denn niemand schlägt eine
+Gestaltungsrichtlinie auf, um zu erfahren, was es gibt. Man schlägt sie auf,
+weil man etwas bauen will und nicht weiß, womit.
+
+Kapitel 9 beginnt deshalb jetzt mit einer Tabelle: **„Wenn du X willst, nimm
+Y"** — 27 Zeilen, drei Spalten (*Ich will … | nimm | nicht*). Die dritte Spalte
+ist die wichtigere: „eine Liste von Einträgen → `ui_zeile()` in einer Karte,
+**nicht** eine `<table>`". Sie benennt genau den Griff, zu dem man ohne die
+Richtlinie greifen würde.
+
+Und am Ende desselben Kapitels stehen die **Anti-Muster** — zehn Fallen, in die
+P3 tatsächlich getreten ist. Keine erfundene Liste guter Vorsätze, sondern:
+
+| Falle | Fund |
+|---|---|
+| `.klasse{width:0}` auf einem Kästchen verliert gegen `input[type=checkbox]` | F-P3-AP, F-P3-AZ |
+| `knopf-gefahr` im Aktionsblatt statt `blatt-gefahr` | F-P3-AX |
+| Rückfrage doppelt (`data-confirm` **und** eigener Dialog) | F-P3-AY |
+| Formular ohne `forms.js` — keine Verlassen-Warnung | F-P3-AV |
+| Eine Klasse, die keine Regel hat (`btn-primary`) | F-P3-BA |
+| `:nth-child` für Spaltenbreiten | Branding, Abschnitt 5 |
+| Unicode-Zeichen statt `ui_symbol()` | P-P3-03 |
+| Ein Token, das keiner benutzt | **F-P3-BC** |
+
+#### Vier Tabellen werden erzeugt
+
+Eine abgeschriebene Tabelle mit 87 Token ist am Tag nach dem Schreiben falsch.
+`tools/design/tabellen.py` liest sie deshalb aus der Quelle:
+
+| Aufruf | liest | Ergebnis |
+|---|---|---|
+| `tabellen.py token` | `:root` in `style.css`, samt der Gruppenüberschriften `/* ---- Flächen ---- */` | 87 Token in 15 Gruppen, je mit Wert und Zahl der `var()`-Verweise |
+| `tabellen.py schwellen` | die `@media`-Blöcke | 19 Blöcke über 5 Breiten |
+| `tabellen.py symbole` | `assets/symbole/` und die Verweise darauf | 44 Dateien mit Tabler-Namen |
+| `tabellen.py bausteine` | `ui.php` | 32 Funktionen mit Klasse, Zeilennummer und Markup |
+
+Eine Stelle war dabei nicht mechanisch: Der Klassenname eines Bausteins folgt
+meist dem Funktionsnamen (`ui_karte_start` → `.karte`), aber nicht immer
+(`ui_zeilenaktionen` → `.zeile-aktionen`, `ui_speichern_leiste` → `.speichern`,
+`ui_abbruch` → `.rahmen`). Diese Ausnahmen stehen als benannte Abbildung
+`ABWEICHEND` im Werkzeug — sichtbar und begründet, statt als stille Heuristik.
+
+#### Was beim Erzeugen aufgefallen ist: F-P3-BC
+
+Die Tokentabelle trägt eine Zeile „Ungenutzt". Sie nannte fünfzehn Namen. Neun
+davon (`--spur-1` bis `--spur-8`, `--spur-ruhe`) liest **JavaScript** über
+`getComputedStyle`, vier (`--s-handy`, `--s-leiste`, `--s-zwei`,
+`--s-karte-neben`) sind reine Auskunft, weil Custom Properties in
+`@media`-Abfragen nicht funktionieren. Blieben zwei ohne Erklärung — und die
+waren ein Fehler. Der Fund steht in Abschnitt 9.2; die Lehre daraus in
+`Design.md` 4: *Wer die Zeile länger werden sieht, prüft zuerst den dritten
+Fall.*
+
+#### Ein Prüfmittel, das wieder gelesen wird (Backlog Nr. 39)
+
+O11 hatte zwei Punkte in den Backlog geschrieben, beide „fällig in O12". Der
+eine ist erledigt, der andere ausdrücklich nicht — und das ist eine
+Entscheidung, keine Auslassung.
+
+**Nr. 39 — 29 Klassen im Markup ohne Regel.** Diese Gegenprobe hatte in O11
+den ungestalteten Export-Knopf gefunden (F-P3-BA). Genau ein echter Fund unter
+29 Zeilen: acht davon sind Bruchstücke zusammengesetzter Klassennamen
+(`'plakette-' + ton` — das Werkzeug liest Zeichenketten, nicht ausgeführten
+Code), fünfzehn sind Skriptanker und Behälter ohne eigenes Aussehen. Eine
+Liste in diesem Mischungsverhältnis wird nach dem dritten Mal überflogen statt
+gelesen, und dann findet sie den nächsten echten Fund nicht mehr.
+
+`tools/vollstaendigkeit/ohne-regel.md` funktioniert jetzt wie die
+Streichliste: `[bleibt]` heißt begründet ohne Regel — der Treffer verschwindet
+aus dem Befund und wird nur gezählt; `[offen]` heißt, die Frage ist offen —
+der Treffer bleibt ein Befund, aber unter eigener Überschrift. Jeder der 29
+Namen ist am Fundort nachgesehen und einzeln begründet worden. Ergebnis:
+**0 ohne eingetragenen Grund** statt 29, **6 als `[offen]`**, Befunde gesamt
+**247 → 224**.
+
+Und die Liste kann nicht verwahrlosen: Ein Eintrag, dessen Klasse inzwischen
+eine Regel hat oder aus dem Markup verschwunden ist, wird als „Eintrag
+ungenutzt" gemeldet — dieselbe Disziplin, die die Wortliste seit P2 hat. Ohne
+diese Rückfrage wäre die neue Liste in zwei Paketen genau das geworden, wogegen
+sie schützt.
+
+Die sechs `[offen]` sind keine Reste, sondern Entscheidungen: `imp-warn` ist
+ein Warnhinweis, der aussieht wie Fließtext; `imp-daygroup` eine
+Gruppenüberschrift, die aussieht wie eine Datenzeile; `rea-kopf`,
+`rea-beginn`, `rmneu` und `phasen-name` sind Namen, deren Aussehen vom
+Nachbarn kommt und die kein Skript liest. Jede Antwort darauf ist entweder
+eine gestrichene Klasse oder eine **neue Darstellung** — und die braucht nach
+`Design.md` 1 eine Freigabe. Sie stehen als Backlog Nr. 41.
+
+**Nr. 40 — 55 Altklassen ohne Gegenstück — ist zurückgestellt**, mit Grund.
+Nr. 39 war Werkzeugarbeit: 29 Namen, jeder in Minuten am Fundort zu klären.
+Nr. 40 verlangt für 55 Klassen die Rekonstruktion, in welchem von zehn Paketen
+sie verschwunden sind und wodurch sie ersetzt wurden. Das halbherzig zu machen
+wäre schlimmer, als es zu lassen: Eine Streichliste mit 55 Einträgen
+„ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
+Liste ist die Begründung, nicht die Zeile. Der Weg dahin steht im Backlog.
+
+#### Die Lizenzen, und eine Trennung, die gefehlt hat
+
+`docs/Lizenzen.md` nennt drei Bibliotheken (Leaflet 1.9.4 BSD-2, SheetJS 0.18.5
+Apache-2.0, zip.js 2.8.34 BSD-3) mit Version, Lizenz und SHA-256, zwei
+Schriftfamilien (Bricolage Grotesque, Open Sans — beide OFL-1.1), den
+Symbolvorrat (Tabler Icons, MIT) und die Anwendung selbst (AGPL-3.0).
+
+Wichtiger als die Aufzählung ist die **Trennung**, die vorher nirgends stand:
+Die feste Zusage „keine fremde Quelle zur Laufzeit" gilt für **Code und
+Schriften** — die liegen alle unter `assets/vendor/` bzw. `assets/fonts/`. Sie
+gilt *nicht* für die **Kartenkacheln** und die Adresssuche: Wer eine Karte
+öffnet, spricht mit einem fremden Server, und das ist Absicht (eine
+Kachelsammlung liegt nicht in einem Repositorium). Beides in einem Satz zu
+führen wäre falsch gewesen, beides zu verschweigen auch.
+
+#### `docs/Branding.md` ist abgelöst und entfernt
+
+Sein Verbindliches ist in `Design.md` aufgegangen. Nicht übernommen wurde ein
+einziger Teil: die Abbildung der Markenfarben auf die alten CSS-Variablen
+(`--ink`, `--navy`, `--accent`, `--muted`) — die gibt es seit Web 9.0.0 nicht
+mehr. Die drei offenen Punkte sind erledigt und dort als solche vermerkt:
+
+- **B1** (Logodateien tragen Näherungen der Markenfarben) — berichtigt in O1.
+- **B2** (keine geschlossene Größenskala) — es gibt jetzt eine: sieben
+  Schriftgrößen und drei Zeilenhöhen, je mit Angabe, wofür sie gilt.
+- **B3** (78 Hexwerte verstreut im Stylesheet) — heute **0** außerhalb `:root`,
+  maschinell nachgezählt.
+
+#### Der Stilvergleich, neu geeicht
+
+Er ruhte seit O1 aus einem guten Grund: Ein Werkzeug, das fragt „hat sich etwas
+geändert?", ist in einem Redesign nur ein Zähler der eigenen Arbeit. Für P4
+musste er wieder scharf werden, und dafür waren zwei Dinge zu tun.
+
+**Erstens die Breiten.** Die alten neun (1400 … 500) lagen um die Schwellen von
+P0. P3 hat andere — 720, 1024, 1200, 1600. Ohne 1024 und ohne 1600 hätte der
+Vergleich die halben Medienblöcke nie zu Gesicht bekommen. Jetzt sind es
+dreizehn: `1920, 1680, 1440, 1280, 1100, 1024, 900, 768, 720, 560, 420, 390,
+360` — jede Schwelle von beiden Seiten, und mit 390 endlich die Breite, in der
+die meisten Telefone stehen.
+
+**Zweitens der blinde Fleck, vor dem seine eigene `LIESMICH.md` seit P0
+gewarnt hat.** `entphp()` schneidet alles zwischen `<?php` und `?>` heraus —
+und seit P3 baut `ui.php` sein Markup mit `echo '<div class="zeile">'`, also
+*innerhalb* eines PHP-Blocks. Der Vergleich hat die Innereien der Bausteine
+nie gesehen. `proben.py` liest jetzt zusätzlich die HTML-Schnipsel aus
+PHP-Zeichenketten (`php_zeichenketten()`): Die Seitenprobe wuchs von 114 205
+auf **119 726 Zeichen**, die abgedeckten Klassen von **228 auf 253** — neu
+dabei `zeile-haupt`, `zeile-klein`, `zeile-text`, `zeile-aktionen`,
+`kennzahl-wert`, `uebersicht-zeile`, `plakette-weg` und neunzehn weitere.
+
+Geeicht wurde dann **nicht gegen sich selbst**. Ein Lauf gegen den identischen
+Stand beweist nur, dass das Werkzeug schweigt — nicht, dass es sieht. Gefahren
+wurde gegen den Stand *vor* der F-P3-BC-Änderung; das Ergebnis steht bei
+P-P3-19 und ist die Probe aufs Exempel: **12 Abweichungen, alle zwölf dieselbe
+beabsichtigte**, und in `seiten.html` erschien sie **nicht** — weil die Klasse
+dort aus einem `<?= … ?>`-Ausdruck kommt. Auch das ist ein Ergebnis: Bedingte
+Klassen aus PHP-Ausdrücken sieht die Seitenprobe weiterhin nicht. In der
+Grenzen-Liste steht es jetzt.
+
+#### Eine Umpriorisierung mitten im Paket
+
+Der ursprüngliche Umfang von O12 sah das **Handbuch** mit vor. Auf ausdrückliche
+Entscheidung ist es herausgenommen worden: Das Handbuch beschreibt die
+*Bedienung*, und die ändert sich bis 1.0 noch — es jetzt und noch einmal vor der
+Auslieferung zu schreiben wäre dieselbe Arbeit zweimal. Die frei gewordene
+Kraft ist in `Design.md` geflossen; die Entscheidungstabelle, vier weitere
+Bausteinkapitel (Aktionsmenü, Ortsfeld, Abbruchseite, Symbol/Artzeichen) und
+die Anti-Muster sind erst dadurch entstanden.
+
+Am Handbuch geändert wurde nur, was ohne Wert veraltet ist: **14
+Unicode-Symbolzeichen** im Text (⚙ ✕ ★ ⚠ ✓) durch Worte ersetzt — kein
+Bildschirmleser spricht ein Kreuzzeichen als „Schließen" —, drei Bildschirmfotos
+ergänzt und ein Absatz zum Aktionsblatt. **Der Rest ist offen und gehört vor
+1.0.**
+
+#### Das Prüfdokument, endlich vollständig
+
+`docs/Pruefdokument-P3-Oberflaeche.md` stand seit O8c auf demselben Stand, mit
+einem Kasten darin, der das sagte. Es ist jetzt der Abschluss, den der
+Phasenplan verlangt — und in zwei Punkten anders als vorher:
+
+**Was nicht erreicht wurde, steht vorn.** Abschnitt 1.3 heißt nicht mehr „was
+der Zwischenstand noch nicht ist", sondern „was am Ende der Phase offen ist",
+und nennt es mit Zahl und Backlog-Nummer: 158 Unicode-Treffer, davon drei
+echte Symbole (Nr. 42); sechs Klassen ohne Regel, Frage offen (Nr. 41); 55
+Altklassen ohne Begründung (Nr. 40); das zurückgestellte Handbuch. Dazu
+Abschnitt 1.4: die **drei Migrationen**, ohne deren `update.php` die Anwendung
+stillsteht, und die zwei fehlenden Zuarbeiten.
+
+**Die Prüfliste hat einen kurzen Weg bekommen.** Zwölf Pakete ergeben eine
+Liste, die niemand abarbeitet. Abschnitt **5.0** ist deshalb neu: vierzehn
+Punkte, die die Phase als Ganzes abnehmen, in etwa einer Stunde — ein Telefon
+quer durch die Anwendung, Symbole in Safari, der Daumentest, ein
+Speicher-Rundlauf, die Verschlüsselung, die einfache Rückfrage, „Löschen" in
+Rot, die Verlassen-Warnung, die Karte, Sichern und Zurückholen, die
+öffentlichen Seiten, das Logo, die Versionsnummer. 5.1 bis 5.16 bleiben als
+ausführliche Fassung je Paket daneben stehen.
+
+Der letzte dieser vierzehn Punkte ist absichtlich einer, der scheitern **darf**:
+Wenn der Warnhinweis „abweichende Crew" in der Importvorschau wie Fließtext
+aussieht, ist der offene Punkt Nr. 41 bestätigt. Das ist eine nützliche
+Antwort, kein Fehler der Prüfung — eine Prüfliste, die nur Bestätigungen
+zulässt, prüft nichts.
+
+#### Prüfstand
+
+**Maschinell** (alle Läufe nach der letzten Änderung, nicht zwischendurch)
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/wortliste/wortliste.py` | **0** Treffer außerhalb der Ausnahmen, **0** ungenutzte Ausnahmen, **0** durchgerutschte Fallen — bei **66 Regeln, alle 66 gegriffen**; 339 Treffer gesamt, alle erklärt. Bereich (c) liest jetzt 8 Dokumente: `Design.md` und `Lizenzen.md` neu, `Branding.md` ausgetragen |
+| `tools/vollstaendigkeit/pruefen.py` | **224 Befunde** (O11-Endstand: 247). Alle Wertefragen **0**: Hexfarben außerhalb `:root` 0, `rgb()`/`rgba()` 0, Schriftgrößen außerhalb der Skala 0, Pixelmaße außerhalb der Token 0, `50px`-Reste 0, Knopfhöhen nicht aus `--knopf` 0, Streichliste vollständig 0/0. **Neu: „im Markup ohne Regel, Grund nicht eingetragen" 29 → 0**, davon 6 als `[offen]` weitergeführt; „ohne-regel.md: Eintrag ohne Vermerk" 0, „Eintrag ungenutzt" 0 |
+| `tools/design/tabellen.py` | vier Läufe: **87** Token / **19** Medienblöcke / **44** Symbole / **32** Bausteine — die Zahlen der Kapitel 4, 7, 8 und 9 stammen aus diesen Läufen und nicht aus dem Gedächtnis |
+| `tools/screenshots/aufnehmen.mjs` | 34 Seiten × 8 Breiten = **272 Bilder**; Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0** |
+| Gegenprobe Prüfsummen | 272 Bilder, **272 verschiedene** — 0 Dubletten. Nach O11 war es eine; der Unterschied ist Aufnahmerauschen im Paar `10-tagesuebersicht`/`11-tagesuebersicht-schublade`, nicht Fortschritt |
+| Gegenprobe Anmeldeseite (F-P3-AQ) | Das Werkzeug prüft sie selbst: Eine Seite, die auf `login.php` zurückfällt, wird **nicht** fotografiert, sondern gemeldet — 0 solche Meldungen |
+| `tools/screenshots/kontrast.py` | **21 Paare gerechnet, 0 verfehlt**; Primärknopf 5,97:1; drei benannte Ausnahmen mit Grund |
+| `tools/stilvergleich/` (Neueichung) | **53 638 Elementmessungen** über 4 Proben × 13 Breiten, 149 Eigenschaften je Element, **12 Abweichungen — alle zwölf die beabsichtigte** (`div.leiste-filter`, `width`). `kaskade.py`: 625 → 627 Regeln, **0 entfallen, 2 neu, 0 anderer Endwert, 0 vertauschte Reihenfolgen** |
+| Syntax | `php -l` über `version.php` und `ui.php` fehlerfrei; `py_compile` über `tabellen.py` und `proben.py`; `node --check` über `stilvergleich.js` |
+
+**Im Browser** (Chromium, lokale Instanz mit Referenzdatensatz, angemeldet)
+
+- **Die Filterleiste bei fünf Breiten gemessen** — der Beleg für F-P3-BC.
+  Suche: 240 / 240 / 280 / 280 / 280 px bei 1024 / 1100 / 1200 / 1440 /
+  1920 px, Klassen `leiste leiste-filter`. Tagesübersicht zum Vergleich
+  unverändert: 220 / 220 / 260 / 260 / 260 px, Klasse `leiste`. Beides in
+  derselben Sitzung, dieselbe Messmethode.
+- **Die acht Bilder für die Dokumentation** aus der laufenden Instanz
+  aufgenommen (Tagesübersicht mobil und Desktop, Schublade, Einsatzansicht,
+  Einsatzformular, Zeitraum, Suche, Papierkorb) — jedes einmal angesehen,
+  bevor es ins Repositorium ging.
+
+**Was nicht geprüft werden konnte**
+
+- **Die Richtigkeit der Richtlinie selbst.** Kein Prüfmittel misst, ob
+  „nimm `ui_zeile()`, nicht eine Tabelle" ein guter Rat ist. Was maschinell
+  belegt ist, sind die **Tabellen** (sie stammen aus dem Quelltext) und die
+  **Verweise** (jede genannte Funktion existiert). Ob die Richtlinie trägt,
+  zeigt erst die erste Seite, die jemand nach ihr baut — das ist P4.
+- **Die Vollständigkeit des Bausteinvorrats.** `tabellen.py bausteine` zählt
+  32 Funktionen in `ui.php`. Ein Baustein, der anderswo lebt (etwa in
+  `assets/blatt.js`), fällt dieser Zählung nicht auf; Kapitel 9.11 beschreibt
+  das Aktionsblatt deshalb von Hand.
+- **Kein WebKit, kein Gecko, kein echtes Telefon** (unverändert seit O3).
+- **Der Sollwert 0 bei P-P3-03** ist nicht erreicht: Drei echte
+  Unicode-Symbole stehen weiterhin im Markup (`einsatz_form.php:1416` als
+  begründeter Rückfall, `ortsfeld.js:197`, `patient.js:133`). Sie sind
+  **nicht** stillschweigend geblieben, sondern stehen als Backlog Nr. 42 —
+  ihre Behebung ist eine Gestaltungsfrage, keine Ersetzung, und die gehört
+  nicht ans Phasenende.
+
+#### Ein Wort zur Reihenfolge
+
+Die Prüfmittel sind nach der letzten Änderung gelaufen, nicht zwischendurch —
+und das war in diesem Paket nicht bloß Form. Die Vollständigkeitsprüfung stand
+zunächst auf **248** statt der erwarteten 247. Der eine zusätzliche Befund war ein
+Kreuzzeichen, das ich selbst in die Versionserzählung geschrieben hatte, um zu
+erklären, warum Kreuzzeichen im Handbuch nichts zu suchen haben. Ein Lauf
+davor hätte 247 gemeldet — und die Zahl wäre falsch gewesen.
+
 ---
 
 ## Anlage A — Mockups

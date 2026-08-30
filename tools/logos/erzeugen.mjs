@@ -9,7 +9,8 @@
  *
  * Genau das war der Fall: Die Logodateien trugen bis P3 Naeherungen der
  * Markenfarben (Rot E3322B statt D63338, Blau 587ABC statt 4280E5, Orange
- * F7941D statt FF8F1F — Branding.md B1), und das Favicon trug sie mit.
+ * F7941D statt FF8F1F), und das Favicon trug sie mit. Die verbindlichen
+ * Markenwerte stehen in docs/Design.md, Abschnitt 2.
  *
  * WANN LAUFEN LASSEN. Immer, wenn eine Logodatei sich aendert — insbesondere,
  * wenn Philipp das echte NEF-Logo liefert und den Platzhalter ersetzt
