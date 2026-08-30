@@ -1421,13 +1421,32 @@ function ui_zeilenaktionen(array $o): string
     /* Ein Knopf oder Link je Eintrag — dieselbe Bauart für beide Formen,
      * damit Blatt und Knopfreihe nicht auseinanderlaufen können. */
     $knopf = static function (array $e, string $klasse) : string {
-        $art = (string)($e['art'] ?? 'neutral');
+        $art  = (string)($e['art'] ?? 'neutral');
+        /* ZWEI VOKABELN FÜR DIESELBE SACHE, und sie sind nicht austauschbar
+         * (O11). Die Knopfreihe am Desktop kennt `knopf-gefahr`, das Blatt
+         * kennt `blatt-gefahr` — und die Blattzeile setzt ihre Schriftfarbe
+         * SELBST (`.blatt-zeile{color:var(--asphalt)}`, Stylesheet
+         * Abschnitt 11). Beide Regeln haben Spezifität (0,1,0); die spätere
+         * gewinnt, und das ist `.blatt-zeile`.
+         *
+         * Bis Web 9.11.0 bekam die Blattzeile deshalb `knopf-gefahr` und sah
+         * aus wie jede andere: kein Rot, dunkelblaues Symbol statt rotem,
+         * keine abgesetzte Trennlinie. Gemessen an „Löschen" in der
+         * Stammdatenliste: rgb(26,5,0) — dieselbe Farbe wie „Bearbeiten".
+         *
+         * Betroffen waren sechs abgenommene Aufrufstellen, darunter
+         * „Gerät entkoppeln" und „Konto löschen". Am Schreibtisch stimmte
+         * alles, weil `.knopf` keine Farbe setzt; mobil sah die
+         * unumkehrbarste Handlung der Anwendung harmlos aus. Aufgefallen
+         * ist es niemandem, weil die Bildaufnahme kein Blatt öffnet. */
+        $blatt = str_contains($klasse, 'blatt-zeile');
         $k   = $klasse . ' ' . match ($art) {
-            'gefahr'       => 'knopf-gefahr',
-            'leise'        => 'knopf-leise',
-            'leise-orange' => 'knopf-leise knopf-leise-orange',
-            default        => 'knopf-neutral',
+            'gefahr'       => $blatt ? 'blatt-gefahr' : 'knopf-gefahr',
+            'leise'        => $blatt ? '' : 'knopf-leise',
+            'leise-orange' => $blatt ? 'blatt-anlegen' : 'knopf-leise knopf-leise-orange',
+            default        => $blatt ? '' : 'knopf-neutral',
         };
+        $k = rtrim($k);
         $inhalt = (!empty($e['symbol']) ? ui_symbol((string)$e['symbol']) : '')
                 . '<span>' . ui_e((string)($e['text'] ?? '')) . '</span>';
         $attr = (string)($e['attr'] ?? '');

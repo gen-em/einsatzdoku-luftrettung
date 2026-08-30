@@ -11,6 +11,90 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.11.1] — 2026-08-30
+
+**Vier Reparaturen an geteilten Bausteinen.** Sie sind beim Aufräumen vor O11
+aufgefallen und stehen vor dem Paket, nicht darin: Jede war schon vorher
+kaputt, drei davon an Stellen, die O11 gar nicht anfasst. Was sie verbindet,
+ist die Art des Fehlers — alle vier waren *lautlos*. Nichts brach, nichts
+meldete sich; die Oberfläche sah nur an einer Stelle anders aus, als sie
+sollte.
+
+### Der Vollbildknopf der Karte tat auf iOS nichts (F-P3-AW)
+
+`map_fullscreen.js` nimmt die Fullscreen-API, wo es sie gibt, und sonst einen
+Rückfall über die Klassen `map-fs` und `map-fs-lock` — „relevant v. a. iOS
+Safari, das `requestFullscreen()` für beliebige Elemente nicht unterstützt",
+sagt der Dateikopf. Diese beiden Klassen haben seit dem Neubau des Stylesheets
+(Web 9.0.0) **keine Regel mehr**. Der Rückfall war seit vier Monaten tot:
+gemessen 366 × 160 px vor wie nach dem Druck, nur die Beschriftung wechselte
+auf „Vollbild verlassen". Jetzt 390 × 800 px.
+
+Die alten Zeilen zurückzukopieren hätte den Fehler stehen lassen — der
+Kartenbehälter heißt seit O1 `.geo` und nicht mehr `.map`. Der `z-index` ist
+bei der Gelegenheit von 2000 auf 70 gefallen, die Ebene des Blatts; höher
+braucht die Anwendung nicht mehr, seit `.geo` einen eigenen Stapelkontext hat.
+Dazu eine `:fullscreen`-Zeile, die auch am Schreibtisch nötig ist: Das
+Browser-Stylesheet setzt Größe und Rand mit `!important`, den `border-radius`
+aber nicht — die Karte hätte im Vollbild abgerundete Ecken auf schwarzem Grund
+gehabt.
+
+Unbemerkt geblieben ist es, weil der Weg nur auf iOS genommen wird und die
+Bildaufnahme den Vollbildzustand nicht herstellt.
+
+### „Löschen" war im Blatt nicht rot (F-P3-AX)
+
+`ui_zeilenaktionen()` vergab die Klasse `knopf-gefahr` auch im Blatt. Dort
+setzt aber `.blatt-zeile` seine Schriftfarbe selbst, mit gleicher Spezifität
+und später in der Datei — also gewinnt sie. Gemessen an „Löschen" in der
+Stammdatenliste: `rgb(26,5,0)`, dieselbe Farbe wie „Bearbeiten"; jetzt
+`rgb(158,34,38)`, und das Symbol rot statt dunkelblau.
+
+Betroffen waren sechs Aufrufstellen, darunter „Gerät entkoppeln" und „Konto
+löschen". Am Schreibtisch stimmte alles, weil `.knopf` keine Farbe setzt —
+**mobil** sah die unumkehrbarste Handlung der Anwendung harmlos aus.
+Aufgefallen ist es niemandem, weil die Bildaufnahme kein Blatt öffnet.
+
+Der Baustein kennt jetzt beide Vokabeln und wählt danach, wo er steht.
+
+### Zwei Rückfragen hintereinander (F-P3-AY)
+
+Ein Formular mit `data-confirm` **und** `data-dirty-track` fragte nach der
+bestätigten Rückfrage ein zweites Mal, diesmal der Browser: „Änderungen werden
+möglicherweise nicht gespeichert." Ursache ist das `stopPropagation()` der
+Erfassungsphase in `confirm.js`: Der Zuhörer von `forms.js` hängt in der
+Blasenphase am selben `document` und läuft deshalb nie, und `f.submit()` löst
+gar kein `submit`-Ereignis aus. Das Formular blieb für `forms.js` bis zuletzt
+„schmutzig".
+
+Genau das, was `forms.js` für den Abbrechen-Weg ausdrücklich verhindert:
+„zweimal dasselbe fragen heißt, die erste Frage nicht ernst zu nehmen."
+`confirm.js` sagt jetzt ab. Betroffen war `diensttag_datum.php` — die einzige
+Stelle mit beiden Attributen, und dort praktisch immer, weil man das Feld
+ändern *muss*, um etwas zu tun.
+
+### Das unsichtbare Kästchen lag nicht, wo es sollte (F-P3-AZ)
+
+`.schalter-box` und `.wahl-box` haben Spezifität (0,1,0) und verlieren gegen
+`input[type=checkbox]` aus der Rohschicht (0,1,1), die jedem Kästchen
+20 × 20 px gibt. Gemessen: 20 × 20 statt 0 × 0 — und weil weder `.schalter`
+noch `.wahlliste` `position:relative` trägt, saß das ausgeblendete Kästchen
+auf seiner statischen Stelle über dem linken Rand der Beschriftung.
+
+Dieselbe Falle wie F-P3-AP, zum dritten Mal. Sie verschwindet mit der
+Rohschicht, die in O11 fällt; bis dahin steht der lange Selektor.
+
+### Der Rückfragedialog hat einen Namen
+
+Bis hierher hatte er keinen: kein Titel, kein `aria-label`, kein `role`.
+Ausgerechnet die Rückfrage vor dem Löschen war damit die anonymste Stelle der
+Oberfläche — ein Screenreader las den Text und zwei Knöpfe, ohne zu sagen,
+*was* da fragt. Er trägt jetzt eine Überschrift („Bestätigen", je Aufrufstelle
+über `data-confirm-titel` überschreibbar) und `role="alertdialog"`. Die Rolle
+ist für genau diesen Fall da: eine Meldung, die eine Antwort verlangt und den
+Ablauf anhält — der Text wird beim Öffnen vorgelesen, nicht erst, wenn der
+Fokus ihn erreicht.
+
 ## [Web 9.11.0] — 2026-08-30
 
 **O10: Anmeldung, öffentliche Seiten und Rechtstexte (R32).**

@@ -919,5 +919,51 @@ declare(strict_types=1);
  * 5,30:1 — sie ist die Auskunft, mit der ein Fehlerbericht anfaengt, also ein
  * zu LESENDER Text), und „Passwort vergessen?" steht linksbuendig statt
  * zentriert.
+ *
+ * 9.11.1 — VIER REPARATUREN AN GETEILTEN BAUSTEINEN, gefunden beim Aufraeumen
+ * vor O11. Sie stehen vor dem Paket und nicht darin, weil sie nichts mit den
+ * neun Seiten zu tun haben, die O11 umbaut: Jede von ihnen war schon vorher
+ * kaputt, und drei davon an Stellen, die O11 gar nicht anfasst.
+ *
+ *   F-P3-AW  DER VOLLBILDKNOPF DER KARTE TAT AUF iOS NICHTS. map_fullscreen.js
+ *            nimmt die Fullscreen-API, wo es sie gibt, und sonst einen
+ *            CSS-Rueckfall ueber die Klassen `map-fs` und `map-fs-lock`.
+ *            Diese beiden Klassen haben seit dem Neubau des Stylesheets
+ *            (9.0.0) keine Regel mehr — der Rueckfall war also seit vier
+ *            Monaten tot. Gemessen: 366 x 160 px vor wie nach dem Druck, nur
+ *            die Beschriftung wechselte auf „Vollbild verlassen". Jetzt
+ *            390 x 800 px. Unbemerkt geblieben, weil der Weg nur auf iOS
+ *            Safari genommen wird und die Bildaufnahme den Vollbildzustand
+ *            nicht herstellt.
+ *
+ *   F-P3-AX  „LOESCHEN" WAR IM BLATT NICHT ROT. ui_zeilenaktionen() vergab
+ *            `knopf-gefahr` auch im Blatt; dort setzt aber `.blatt-zeile`
+ *            seine Schriftfarbe selbst, mit gleicher Spezifitaet und spaeter
+ *            in der Datei — also gewinnt sie. Gemessen an „Loeschen" in der
+ *            Stammdatenliste: rgb(26,5,0), dieselbe Farbe wie „Bearbeiten";
+ *            jetzt rgb(158,34,38). Betroffen waren sechs Aufrufstellen,
+ *            darunter „Geraet entkoppeln" und „Konto loeschen" — mobil sah
+ *            die unumkehrbarste Handlung der Anwendung harmlos aus.
+ *
+ *   F-P3-AY  ZWEI RUECKFRAGEN HINTEREINANDER. Ein Formular mit `data-confirm`
+ *            UND `data-dirty-track` fragte nach der bestaetigten Rueckfrage
+ *            ein zweites Mal, diesmal der Browser: „Aenderungen werden
+ *            moeglicherweise nicht gespeichert." Ursache ist das
+ *            stopPropagation() der Erfassungsphase in confirm.js — forms.js
+ *            haengt in der Blasenphase und erfaehrt vom Absenden nie.
+ *            confirm.js sagt jetzt ab. Betroffen war diensttag_datum.php,
+ *            und dort praktisch immer.
+ *
+ *   F-P3-AZ  DAS UNSICHTBARE KAESTCHEN LAG NICHT, WO ES SOLLTE. `.schalter-box`
+ *            und `.wahl-box` (0,1,0) verlieren gegen `input[type=checkbox]`
+ *            aus der Rohschicht (0,1,1), die jedem Kaestchen 20 x 20 px gibt.
+ *            Gemessen: 20 x 20 statt 0 x 0, und weil keine Huelle
+ *            `position:relative` traegt, sass das Kaestchen ueber dem linken
+ *            Rand der Beschriftung. Dieselbe Falle wie F-P3-AP, drittes Mal.
+ *
+ * Dazu eine freigegebene Aenderung: Der Rueckfragedialog hat jetzt eine
+ * Ueberschrift („Bestaetigen", je Aufrufstelle ueberschreibbar) und
+ * `role="alertdialog"`. Er war die anonymste Stelle der Oberflaeche — ein
+ * Screenreader las Text und zwei Knoepfe, ohne zu sagen, was da fragt.
  */
-const WEB_VERSION = '9.11.0';
+const WEB_VERSION = '9.11.1';

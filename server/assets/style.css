@@ -1090,7 +1090,13 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Aus einer echten Checkbox gebaut — Tastaturbedienung, Vorlesezustand und
  * Absenden kommen damit vom Browser und nicht aus einem Skript. */
 .schalter{margin-bottom:var(--abstand-3)}
-.schalter-box{position:absolute;opacity:0;width:0;height:0}
+/* DER SELEKTOR IST ABSICHTLICH SO LANG — dieselbe Falle wie F-P3-AP, hier
+ * in O11 nachgezogen. `.schalter-box` (0,1,0) verliert gegen
+ * `input[type=checkbox]` in der Rohschicht (0,1,1), die jedem Kästchen
+ * 20 x 20 px gibt; gemessen war es genau das. Weder `.schalter` noch
+ * `.wahlliste` setzen `position:relative`, das unsichtbare Kästchen lag also
+ * auf seiner statischen Stelle über dem linken Rand der Beschriftung. */
+input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
 .schalter-label{
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--knopf);cursor:pointer;
@@ -1872,7 +1878,46 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   font:600 var(--groesse-1)/var(--zeile) var(--schrift-text);
   color:var(--dunkelblau);
 }
-.geo .map-ctrl-phase a.active{background:var(--orange-hell)}
+/* Der Vollbildknopf teilt den aktiven Zustand mit dem Phasenumschalter — ein
+ * Selektor mehr, keine zweite Regel (O11). Vorher hatte `a.active` am
+ * Vollbildknopf gar keine: Der Knopf hiess im Vollbild „Vollbild verlassen"
+ * und sah aus wie vorher. */
+.geo .map-ctrl-phase a.active,
+.geo .map-ctrl-fs a.active{background:var(--orange-hell)}
+
+/* ---- VOLLBILD (O11) ------------------------------------------------------
+ *
+ * ZWEI WEGE, EIN AUSSEHEN. `map_fullscreen.js` nimmt die Fullscreen-API,
+ * wenn es sie gibt, und sonst einen CSS-Rueckfall — „relevant v. a. iOS
+ * Safari, das requestFullscreen() fuer beliebige Elemente nicht
+ * unterstuetzt" (Dateikopf des Skripts).
+ *
+ * DER RUECKFALL WAR TOT. Die Klassen `map-fs` und `map-fs-lock` hatten seit
+ * dem Neubau des Stylesheets (Web 9.0.0, O1) keine Regel mehr — auf einem
+ * iPhone passierte beim Druck auf „Vollbild" NICHTS: Die Karte blieb, wie
+ * sie war, nur der Knopf hiess jetzt „Vollbild verlassen". Vier Monate
+ * unbemerkt, weil der Weg nur dort genommen wird und die Bildaufnahme den
+ * Vollbildzustand nie herstellt.
+ *
+ * Der Selektor heisst jetzt `.geo`, nicht mehr `.map`: Der Kartenbehaelter
+ * wurde in O1 umbenannt. Die alten Zeilen zurueckzukopieren haette den
+ * Fehler stehen lassen.
+ *
+ * z-index 70 statt der alten 2000: Das ist die Ebene des Blatts. Hoehere
+ * Werte braucht die Anwendung nicht mehr, seit `.geo` einen eigenen
+ * Stapelkontext hat (Abschnitt 16, oben).
+ *
+ * Die `:fullscreen`-Zeile ist auch am Schreibtisch noetig: Das UA-Blatt
+ * setzt Groesse und Rand mit `!important`, den `border-radius` von `.geo`
+ * aber nicht — die Karte haette im Vollbild abgerundete Ecken auf schwarzem
+ * Grund. */
+.geo.map-fs{
+  position:fixed;inset:0;z-index:70;
+  width:100%;height:100%;
+  margin:0;border-radius:0;
+}
+body.map-fs-lock{overflow:hidden}
+.geo:fullscreen{margin:0;border-radius:0}
 
 /* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel ----- */
 .geo-ringpunkt{
@@ -2249,7 +2294,7 @@ tr.hl-extrem td{background:var(--orange-hell)}
  * ist das Bedienelement, und der Punkt links wird gezeichnet — so lässt er
  * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt. */
 .wahlliste{display:flex;flex-direction:column;gap:var(--abstand-2)}
-.wahl-box{position:absolute;opacity:0;width:0;height:0}
+input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
 .wahl-zeile{
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--knopf);
