@@ -657,12 +657,16 @@ function ui_leiste_einstellungen(string $aktiv): void
         'import'         => ['import.php',                         'Import / Export', 'tausch'],
     ];
     $admin = [
-        'admin'                => ['admin_users.php',                       'NutzerInnen',            'gruppe'],
-        'admin_standorte'      => ['admin_stammdaten.php?t=standorte',      'Standorte systemweit',   'datenbank'],
-        'admin_rettungsmittel' => ['admin_stammdaten.php?t=rettungsmittel', 'Rettungsmittel systemweit', 'datenbank'],
-        'admin_sicherungen'    => ['admin_sicherungen.php',                 'Sicherungen',            'sicherung'],
-        'admin_demo'           => ['admin_demo.php',                        'Demo-Konto',             'kolben'],
-        'wartung'              => ['update.php',                            'Wartung',                'werkzeug'],
+        'admin'             => ['admin_users.php',       'NutzerInnen',           'gruppe'],
+        /* EIN PUNKT STATT ZWEIER (O9c). Bis Web 9.9.0 standen „Standorte
+         * systemweit" und „Rettungsmittel systemweit" nebeneinander — zwei
+         * Eintraege mit demselben Symbol, die auf dieselbe Datei zeigten und
+         * sich nur im Reiter unterschieden. Der Reiter gehoert in die Seite
+         * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
+        'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
+        'admin_sicherungen' => ['admin_sicherungen.php', 'Sicherungen',           'sicherung'],
+        'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
+        'wartung'           => ['update.php',            'Wartung',               'werkzeug'],
     ];
     ?>
     <h2 class="leiste-kopfzeile">Einstellungen</h2>
@@ -700,7 +704,7 @@ function ui_leiste_einstellungen(string $aktiv): void
  * Sie führt dieselben Punkte wie die Leiste, aber als Liste im Inhalt: Symbol,
  * Text, Winkel. Auf dem Handy ist sie der einzige Weg, der zeigt, WAS es
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
- * auf „Profil" landet, verschweigt die übrigen elf Punkte.
+ * auf „Profil" landet, verschweigt die übrigen zehn Punkte.
  *
  * Die Administration steht als abgesetzter zweiter Block. „Abmelden" steht
  * getrennt am Ende, darunter nur der Name der angemeldeten Person.
@@ -717,12 +721,11 @@ function ui_einstellungen_uebersicht(): void
     ]]];
     if (function_exists('ist_admin') && ist_admin()) {
         $bloecke[] = ['Administration', [
-            ['admin_users.php',                       'NutzerInnen',               'gruppe'],
-            ['admin_stammdaten.php?t=standorte',      'Standorte systemweit',      'datenbank'],
-            ['admin_stammdaten.php?t=rettungsmittel', 'Rettungsmittel systemweit', 'datenbank'],
-            ['admin_sicherungen.php',                 'Sicherungen',               'sicherung'],
-            ['admin_demo.php',                        'Demo-Konto',                'kolben'],
-            ['update.php',                            'Wartung',                   'werkzeug'],
+            ['admin_users.php',      'NutzerInnen',           'gruppe'],
+            ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
+            ['admin_sicherungen.php','Sicherungen',           'sicherung'],
+            ['admin_demo.php',       'Demo-Konto',            'kolben'],
+            ['update.php',           'Wartung',               'werkzeug'],
         ]];
     }
 
@@ -1275,6 +1278,21 @@ function ui_schalter(array $o): void
  * ------------------------------------------------------------------------ */
 function ui_segment(array $o): void
 {
+    echo ui_segment_markup($o);
+}
+
+/**
+ * Dieselbe Segmentwahl als Zeichenkette (O9c).
+ *
+ * WARUM BEIDES: `ui_segment()` gibt aus und passt damit ueberall dorthin, wo
+ * ein Formular Zeile fuer Zeile geschrieben wird. Die Titelzeile
+ * (`ui_titelzeile`) dagegen NIMMT Markup entgegen — sie setzt es zwischen
+ * Ueberschrift und Aktionen. Wie bei `ui_meldung` / `ui_meldung_markup` ist
+ * die ausgebende Fassung die kurze, und das Markup entsteht an einer Stelle.
+ */
+function ui_segment_markup(array $o): string
+{
+    ob_start();
     $name = (string)($o['name'] ?? '');
     ?>
 <div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>"
@@ -1288,7 +1306,8 @@ function ui_segment(array $o): void
     <label class="segment-taste" for="<?= ui_e($id) ?>"><?= ui_e((string)$text) ?></label>
   <?php endforeach; ?>
 </div>
-<?php }
+<?php return (string)ob_get_clean();
+}
 
 
 /* ---------------------------------------------------------------------------
@@ -1449,7 +1468,13 @@ function ui_speichern_leiste(array $o = []): void
   <div class="speichern-innen">
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
-        'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'), 'breit' => true,
+        'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'),
+        /* MIT ZAHL IST DER KNOPF NICHT BREIT. `knopf-breit` (width:100%) wird
+         * erst ab 720 px zurueckgenommen (`.speichern .knopf-breit{width:auto}`)
+         * — passend zum Hinweis, der genau dort erscheint. Die Zahl steht in
+         * JEDER Breite; ein 100 % breiter Knopf daneben drueckt sie auf zwei
+         * Zeilen und die Leiste auf die doppelte Hoehe. */
+        'breit' => empty($o['zahl']),
         'name' => (string)($o['name'] ?? ''), 'wert' => (string)($o['wert'] ?? ''),
         'attr' => (string)($o['attr'] ?? '')
                 . (!empty($o['form']) ? ' form="' . ui_e((string)$o['form']) . '"' : ''),

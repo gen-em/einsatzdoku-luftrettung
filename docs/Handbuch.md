@@ -221,8 +221,8 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Standorte systemweit**, **Rettungsmittel systemweit**, Sicherungen,
-Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+**Stammdaten systemweit**, Sicherungen, Demo-Konto und Wartung
+(Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -330,7 +330,13 @@ bleibt das Logo, wie es ist. Ein Logo, das beim Blättern springt, wäre keine
 Abwechslung, sondern Unruhe.
 
 Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
-niemand angemeldet, und die Wahl hängt am Konto.
+niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
+stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
+
+Den **Standard der Installation** setzt die Administration unter
+Einstellungen → Wartung. Er wirkt sofort, auch für bereits angemeldete Konten —
+aber nur bei denen, die hier „Standard der Installation" stehen haben. Eine
+getroffene eigene Wahl bleibt unberührt.
 
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
@@ -1373,8 +1379,9 @@ hast, kann die Administration sie zurücknehmen.
   angezeigt und danach nie wieder (Abschnitt 5).
 - Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
   entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **drei** Sicherungen. Die vierte verdrängt die
-  älteste — nach Alter wird dagegen nie etwas entfernt.
+- Je Konto liegen höchstens **drei** Sicherungen (die Administration kann die
+  Zahl unter „Sicherungen" ändern). Die älteste wird beim nächsten Sichern
+  verdrängt — nach Alter wird dagegen nie etwas entfernt.
 - Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
   ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
 
@@ -2039,24 +2046,65 @@ dem Aufspielen einer neuen Fassung dort nachsehen) und ob der tägliche
 Aufräumjob durchläuft. Das bloße Öffnen der Seite ändert nichts — sie zeigt
 erst an, was anstünde, und wartet auf eine Bestätigung.
 
-Unter **„Standorte systemweit"** und **„Rettungsmittel systemweit"** pflegt der
-Admin dieselben sechs Bereiche wie eine NutzerIn unter Standorte und
-Rettungsmittel (9.1–9.3), jedoch für **alle** Konten gemeinsam (siehe 9.4). Die
-Zweiteilung ist seit Web 7.0.0 dieselbe wie in der Kontoansicht; vorher hieß
-beides zusammen „Zentrale Stammdaten". Namensgleiche Einträge werden auch hier
-abgelehnt; existieren bereits persönliche Einträge mit demselben Namen bei
-einzelnen NutzerInnen, weist ein Hinweis darauf hin (keine Blockade).
+Unter **„Stammdaten systemweit"** pflegt der Admin dieselben sechs Bereiche wie
+eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für **alle**
+Konten gemeinsam (siehe 9.4). Oben rechts steht die Wahl zwischen **Standorte**
+und **Rettungsmittel** — bis Web 9.9.0 waren das zwei Menüpunkte, die auf
+dieselbe Seite führten.
 
-Unter **„Sicherungen"** stehen alle vorhandenen Sicherungen **als Tabelle** —
-eine Zeile je Sicherung mit Zeitpunkt, Herkunft, Umfang und Zustand, dazu die
-Sicherungen ohne Konto. Die Formulare zum Einspielen, Freigeben und Löschen
-klappen hinter der jeweiligen Zeile auf. An den Rückfragen ändert das nichts:
-Vor dem Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+Namensgleiche Einträge werden auch hier abgelehnt; existieren bereits
+persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen, weist ein
+Hinweis darauf hin (keine Blockade). Seit Web 9.10.0 gilt das auch für
+**Standorte** — dort fehlte der Hinweis als einzigem der sechs Bereiche, und
+ein systemweiter Standort, den ein Dutzend Konten bereits selbst angelegt
+hatte, entstand ohne jede Warnung.
 
-Die Sicherungen **eines** Kontos stehen seit Web 9.8.0 zusätzlich auf dessen
-Kontoseite (11.1) — dort ist der übliche Weg, weil man dort ohnehin ist, wenn
-man zu einem bestimmten Konto etwas tun will. Die Seite „Sicherungen" behält
-die Übersicht über alle Konten und die Regeln.
+Unter **„Sicherungen"** stehen seit Web 9.10.0 nur noch die Dinge, die für
+**alle** Konten gelten. Wer eine bestimmte Sicherung sucht, ist hier falsch:
+
+| Was du willst | Wo es steht |
+|---|---|
+| Wie steht es um die Installation? Welche Regeln gelten? | **Sicherungen** |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Sicherung überfällig" bzw. „nie gesichert") |
+| Die Sicherungen **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+
+Oben vier Zahlen: Konten, Pakete samt Größe der Ablage, überfällig, nie
+gesichert. Die letzten beiden sind anklickbar und öffnen die NutzerInnen-Liste
+mit genau diesem Filter.
+
+**Regeln.** Drei Einstellungen, ein Speichern:
+
+- **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
+  (Vorgabe 30).
+- **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
+  3). Ältere werden beim nächsten Sichern gelöscht; die jüngste und eine
+  freigegebene nie. Bis Web 9.9.0 war das eine feste Zahl im Programm.
+- **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
+
+**Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
+mit Adresse und Alter der letzten Sicherung — keine Namen und keine Zahlen aus
+den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
+Admins mit gesetztem Passwort.
+
+> **Sie hängt an der Benutzung, nicht an einer Uhr.** Auf diesem Webspace läuft
+> kein Zeitplan; was regelmäßig geschieht, fährt auf dem täglichen Aufräumjob
+> mit, und der startet bei der ersten Anfrage des Tages. Die Erinnerung kommt
+> deshalb höchstens einmal je Woche, nur wenn es etwas zu melden gibt — und nur,
+> wenn die Anwendung in dieser Zeit überhaupt benutzt wurde. Wird sie zwei
+> Wochen nicht angefasst, kommt die Mail zwei Wochen später.
+
+**„Alle sichern"** oben rechts sichert die fälligen Konten, das mit der
+ältesten Sicherung zuerst. Sind es sehr viele, hört die Reihe nach etwa 20
+Sekunden auf und sagt, wie viele geschafft und wie viele übrig sind — ein
+zweiter Klick macht weiter, und weil das Älteste zuerst kommt, kommt man
+zuverlässig durch.
+
+**Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
+und wie viele Konten eine Ablage haben. **Sicherungen ohne Konto** steht
+zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
+„Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
+genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
+Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt

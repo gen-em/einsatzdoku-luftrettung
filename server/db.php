@@ -172,18 +172,36 @@ function favicon_tags(): string {
 
 /**
  * Pfad zum Logo fuer Anmelde- und Einrichtungsseite.
- * Die Einstellung 'logo_path' darf auf eine eigene Datei zeigen; existiert
+ * Die Einstellung 'logo_path' darf auf eine EIGENE Datei zeigen; existiert
  * sie nicht, wird die mitgelieferte Bildmarke genommen. Ohne diese Pruefung
  * bliebe die Seite bei einem veralteten Eintrag in der config.php ohne Logo.
  */
 function logo_src(): string {
     global $CFG;
-    $standard = 'assets/images/gen-em_logo_helicopter.svg';
+    /* SEIT WEB 9.10.0 ENTSCHEIDET DIE LOGO-WAHL (F-P3-AN).
+     *
+     * Diese Funktion versorgt die beiden Seiten OHNE Sitzung — Anmeldung und
+     * Passwort setzen. Genau dort soll der Standard der Installation stehen
+     * (E-P3-20), und genau dort stand er nicht: Sie las `app.logo_path` aus
+     * der config.php, und der Einrichter schreibt dort den Hubschrauber
+     * hinein. Ein Wechsel des Standards in der Wartung wirkte damit ueberall
+     * ausser auf der Anmeldeseite — auf der einen Seite, die ihn zeigen soll.
+     *
+     * `logo_path` bleibt, aber nur fuer seinen eigentlichen Zweck: eine
+     * FREMDE Datei. Zeigt die Einstellung auf eines der beiden mitgelieferten
+     * Logos (was der Einrichter vorgibt), entscheidet die Wahl.
+     *
+     * `function_exists`: db.php ist die untere Schicht und laedt session_lib
+     * nicht. Wo sie fehlt — im Einrichter vor der ersten Einrichtung —, bleibt
+     * es beim Hubschrauber. */
     $pfad = (string)($CFG['app']['logo_path'] ?? '');
-    if ($pfad !== '' && is_file(__DIR__ . '/' . ltrim($pfad, '/'))) {
-        return asset($pfad);
-    }
-    return asset($standard);
+    $eigen = $pfad !== ''
+        && !str_contains($pfad, 'gen-em_logo_helicopter')
+        && !str_contains($pfad, 'gen-em_logo_fahrzeug')
+        && is_file(__DIR__ . '/' . ltrim($pfad, '/'));
+    if ($eigen) { return asset($pfad); }
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
+    return asset('assets/images/' . $stamm . '.svg');
 }
 
 /** UTC-DATETIME (aus DB) -> Anzeige in App-Zeitzone */
@@ -751,6 +769,24 @@ function run_cleanup_if_due(): void {
             $pdo->exec("DELETE FROM password_resets
                         WHERE used_at IS NOT NULL
                            OR expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        },
+        /* ---- Erinnerung an die Administration (E-P3-41, seit Web 9.10.0) --
+         *
+         * DER EINZIGE ZEITGEBER, DEN DIESE INSTALLATION HAT, IST DIESER JOB.
+         * Es laeuft kein Cron; was regelmaessig geschehen soll, muss hier
+         * mitfahren. Der Schritt PLANT nur — verschickt wird nach der Antwort
+         * (register_shutdown_function in adminbackup_lib.php), weil ein
+         * SMTP-Gespraech an dieser Stelle die Seite verzoegern wuerde, auf der
+         * es gerade huckepack sitzt.
+         *
+         * Er steht als letzter Schritt: Was er tut, ist kein Aufraeumen, und
+         * wenn er scheitert, soll wenigstens alles davor gelaufen sein. Wie
+         * jeder Schritt zaehlt ein Fehler hier in `$fehler` und verhindert die
+         * Erfolgsmarke — eine Erinnerung, die dauerhaft nicht zustande kommt,
+         * ist ein Befund und soll auf der Wartungsseite auffallen. */
+        'Erinnerung an die Administration' => function (PDO $pdo): void {
+            require_once __DIR__ . '/adminbackup_lib.php';
+            edbak_erinnerung_planen();
         },
     ];
 

@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+/* Fuer logo_src(): Die Seite hat keine Sitzung und zeigt den Standard der
+ * Installation (E-P3-20). Ohne session_lib.php faende logo_src() logo_stamm()
+ * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
+require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 
 /**

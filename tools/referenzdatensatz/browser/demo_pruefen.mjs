@@ -67,10 +67,25 @@ async function rueckfragen(hoechstens = 3) {
 async function zustand() {
   await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(700);
-  const zeilen = await seite.locator('table.data tr').allInnerTexts().catch(() => []);
+  /* ZWEI TRAEGER STATT EINER TABELLE (seit Web 9.10.0). Bis Web 9.9.0 stand
+     der ganze Zustand in einer `table.data`; O9c hat die Seite auf die
+     Bausteine umgestellt, und die Zahlen des Bestands sind jetzt Kacheln
+     (`.kennzahl`: Wert oben, Beschriftung darunter), die uebrigen Angaben
+     Zeilen (`.zeile`: Beschriftung oben, Wert darunter). Beide liefern zwei
+     Zeilen Text — nur in umgekehrter Reihenfolge, und getrennt durch einen
+     Umbruch statt durch einen Tabulator. */
+  const paare = [];
+  for (const t of await seite.locator('.kennzahl').allInnerTexts().catch(() => [])) {
+    const [v, k] = t.split('\n');
+    paare.push([k, v]);
+  }
+  for (const t of await seite.locator('.zeile').allInnerTexts().catch(() => [])) {
+    const [k, v] = t.split('\n');
+    paare.push([k, v]);
+  }
   const aus = {};
-  for (const z of zeilen) {
-    const [k, v] = z.split('\t').map(x => (x || '').trim());
+  for (const p of paare) {
+    const [k, v] = p.map(x => (x || '').trim());
     /* SCHLÜSSEL KLEINGESCHRIEBEN. Die Beschriftungen stehen per CSS in
        Versalien, und innerText liefert den GERENDERTEN Text — „EINSÄTZE",
        nicht „Einsätze". Ein Vergleich auf die Schreibweise im Markup fand
@@ -78,7 +93,7 @@ async function zustand() {
        der Diagnose-Beschriftung in P-07. */
     if (k) { aus[k.toLowerCase()] = v; }
   }
-  /* LEER IST EIN ERGEBNIS, KEIN ZUSTAND. Steht keine Tabelle auf der Seite,
+  /* LEER IST EIN ERGEBNIS, KEIN ZUSTAND. Steht kein Zustand auf der Seite,
      gibt es kein Demo-Konto — oder die Handlung ist gescheitert und die
      Seite trägt eine Fehlermeldung. Ohne diesen Zweig meldete die Prüfung
      fünfmal „undefined" und verschwieg den Grund, der daneben stand. */
@@ -179,7 +194,8 @@ if (schritte.includes('anlegen')) {
   pruefe((z['einsätze'] || '') === '82', `Einsätze nach Anlegen: ${z['einsätze']}`);
   pruefe((z['diensttage'] || '') === '15', `Diensttage: ${z['diensttage']}`);
   pruefe((z['ruhesegmente'] || '') === '95', `Ruhesegmente: ${z['ruhesegmente']}`);
-  pruefe((z['im papierkorb'] || '') === '5', `Papierkorb: ${z['im papierkorb']}`);
+  pruefe((z['einsätze im papierkorb'] || '') === '5',
+         `Papierkorb: ${z['einsätze im papierkorb']}`);
   /* ZWEI, nicht drei (seit Web 8.0.1). Die Fixture fuehrt drei Eintraege,
      einer davon ist das virtuelle Geraet "Manuelle Einträge"; es wird nicht
      mehr eingespielt (demo_lib.php), und die Adminansicht zaehlt es auch
@@ -272,7 +288,8 @@ if (schritte.includes('reset')) {
   melde(`nach dem Reset: ${JSON.stringify(nachher)}`);
   ergebnis.nach_reset = nachher;
   pruefe((nachher['einsätze'] || '') === '82', `Einsätze nach Reset: ${nachher['einsätze']}`);
-  pruefe((nachher['im papierkorb'] || '') === '5', `Papierkorb nach Reset: ${nachher['im papierkorb']}`);
+  pruefe((nachher['einsätze im papierkorb'] || '') === '5',
+         `Papierkorb nach Reset: ${nachher['einsätze im papierkorb']}`);
   pruefe((nachher['geräte'] || '') === '2', `Geräte nach Reset: ${nachher['geräte']}`);
   // Nach dem Reset müssen die geschützten Angaben WEITER lesbar sein
   pruefe(await anmelden(demo, demoPw), 'Anmeldung nach Reset gescheitert');

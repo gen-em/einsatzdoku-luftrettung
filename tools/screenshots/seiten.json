@@ -172,6 +172,12 @@
       "pfad": "admin_stammdaten.php"
     },
     {
+      "name": "42a-stammdaten-rettungsmittel",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_stammdaten.php?t=rettungsmittel"
+    },
+    {
       "name": "43-sicherungen",
       "gruppe": "Administration",
       "rolle": "admin",

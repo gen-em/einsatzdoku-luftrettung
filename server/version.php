@@ -695,5 +695,76 @@ declare(strict_types=1);
  * konto.json (Zahl statt Zeichenkette) haette unter strict_types die ganze
  * Liste lahmgelegt, und ein unbrauchbarer Zeitwert haette das Konto mit
  * zwanzigtausend Tagen als dringendsten Fall nach oben sortiert.
+ *
+ * 9.10.0 ist O9c: DIE DREI UEBRIGEN ADMINSEITEN. Keine Migration.
+ *
+ * SICHERUNGEN ist nicht mehr die Liste aller Konten — die steht seit 9.9.0 in
+ * der NutzerInnen-Liste, und die Pakete eines Kontos seit 9.8.0 auf dessen
+ * Kontoseite. Was bleibt, ist das, was fuer ALLE gilt: vier Zahlen, die Regeln
+ * (Erinnerungsintervall, Aufbewahrung je Konto, Erinnerungsmail) in EINEM
+ * Formular mit EINEM Speichern, der Zustand der Ablage und die Sicherungen
+ * ohne Konto. „Alle sichern" arbeitet die faelligen Konten ab, das aelteste
+ * zuerst, in einem Zeitbudget von 20 Sekunden; wer nicht mehr hineinpasst,
+ * ist beim naechsten Klick der aelteste und kommt zuerst — die Reihenfolge
+ * sorgt selbst dafuer, dass es konvergiert.
+ *
+ * DIE WOECHENTLICHE ERINNERUNG (E-P3-41) haengt am Aufraeumjob, weil es auf
+ * diesem Webspace keinen Cron gibt. Sie kommt hoechstens einmal je Woche, nur
+ * wenn ueberfaellige Konten da sind, und nur wenn die Anwendung an dem Tag
+ * ueberhaupt benutzt wurde — das steht so auf der Seite, denn eine Zusage,
+ * die an der Benutzung haengt, muss man als solche kennzeichnen. Verschickt
+ * wird NACH der Antwort (register_shutdown_function): Der Aufraeumjob laeuft
+ * vor der Seitenausgabe, und ein SMTP-Gespraech dort waere eine messbare
+ * Verzoegerung fuer jemanden, der damit nichts zu tun hat. In der Mail stehen
+ * Adressen und Tage, keine Namen und keine Zahlen aus den Konten.
+ *
+ * STAMMDATEN SYSTEMWEIT ist EIN Menuepunkt statt zweier. „Standorte
+ * systemweit" und „Rettungsmittel systemweit" zeigten auf dieselbe Datei mit
+ * demselben Symbol und unterschieden sich nur im Reiter; der Reiter ist jetzt
+ * eine Segmentwahl in der Titelzeile. Dabei ist das Markup der Zeilen und
+ * Formulare nach server/stammdaten_ui.php gewandert — es stand bis 9.9.0 zu
+ * grossen Teilen zeichengleich in zwei Dateien.
+ *
+ * DEMO-KONTO war seit dem Redesign eine ungestaltete Seite: `table.data`,
+ * `pre.mono`, `div.rowactions`, `button.btn-primary` — Klassen, deren Regeln
+ * in den Bausteinen aufgegangen sind. Jetzt vier Kacheln fuer den Bestand,
+ * die Papierkorbzahlen als Kontrollzeilen, die Handlungen in der Titelzeile.
+ * Das Pruefwerkzeug tools/referenzdatensatz/browser/demo_pruefen.mjs las die
+ * alte Tabelle und ist mitgezogen.
+ *
+ * DER LOGO-STANDARD ist einstellbar (E-P3-19/20) — in der Wartung, weil er
+ * eine Eigenschaft der Installation ist und nicht eines Kontos. Er wirkt
+ * SOFORT, auch fuer bereits angemeldete Konten: In der Sitzung steht seit
+ * jetzt die WAHL und nicht mehr ihr Ergebnis; nur „wechselnd" wird bei der
+ * Anmeldung ausgewuerfelt, sonst spraenge das Logo beim Blaettern. Wer im
+ * Profil eine eigene Wahl getroffen hat, bleibt unberuehrt.
+ *
+ * DREI FUNDE AUS DIESEM PAKET:
+ *
+ *   F-P3-AN  logo_src() — die Funktion fuer die beiden Seiten OHNE Sitzung
+ *            (Anmeldung, Passwort setzen) — las `app.logo_path` aus der
+ *            config.php und ignorierte die Logo-Wahl. Der Einrichter schreibt
+ *            dort den Hubschrauber hinein; die Anmeldeseite zeigte damit nie
+ *            den Standard der Installation, obwohl E-P3-20 genau das zusagt.
+ *            `logo_path` gilt jetzt nur noch fuer eine FREMDE Datei.
+ *
+ *   F-P3-AO  Die Standorteliste war die einzige der sechs Stammdatenlisten
+ *            ohne den weichen Hinweis auf gleichnamige eigene Eintraege. Ein
+ *            systemweiter Standort, den ein Dutzend Konten bereits selbst
+ *            angelegt hatte, entstand ohne jeden Hinweis — und stand danach
+ *            zweimal in deren Auswahlliste.
+ *
+ *   F-P3-AP  Die Radios der Segmentwahl waren 20 x 20 px gross statt 0 x 0:
+ *            `.segment-box` (0,1,0) verliert gegen `input[type=radio]`
+ *            (0,1,1) im Abschnitt davor. Absolut positioniert und
+ *            durchsichtig lagen sie ueber der Umgebung und fingen Klicks ab.
+ *            Das betraf JEDE Segmentwahl — Zeitraum, Suchfilter, die neuen
+ *            Reiter. Aufgefallen beim Bedienen im Browser („intercepts
+ *            pointer events"), nicht beim Lesen.
+ *
+ * Dazu behoben: Die Sammelleiste der NutzerInnen-Liste zeigte ihre Zahl in
+ * jeder Breite, aber der Knopf daneben war unter 720 px 100 % breit — die
+ * Zahl brach auf zwei Zeilen. Die Breitenausnahme haengt jetzt an der Zahl
+ * statt an der Schwelle.
  */
-const WEB_VERSION = '9.9.0';
+const WEB_VERSION = '9.10.0';

@@ -1329,10 +1329,10 @@ und O11.
 |---|---|---|
 | F-P3-A | `.metanotes` erbt Versalien und Sperrung vom `summary` — Diensttag-Notizen erscheinen als gesperrte Versalzeile (B-P3-07) | erledigt sich mit O3 (Karte Diensttag-Daten) |
 | F-P3-B | Logodateien tragen nicht die Markenfarben (Branding.md B1) | O1 |
-| F-P3-C | „Alle sichern" läuft in einer Anfrage über alle Konten; bei hunderten Konten über PHP-Laufzeit | Hinweis in O9; Schübe mit Fortschritt → P5 (Rahmenplan 5) |
+| F-P3-C | „Alle sichern" läuft in einer Anfrage über alle Konten; bei hunderten Konten über PHP-Laufzeit | **O9c: Zeitbudget statt Stückzahl** (20 s). Die fälligen Konten werden nach Alter der letzten Sicherung sortiert, das älteste zuerst; die Reihe hört auf, wenn das Budget aufgebraucht ist, und nennt den Rest. Weil das Älteste zuerst kommt, ist der Rest beim nächsten Klick wieder vorn — wiederholtes Klicken konvergiert. Echte Schübe mit Fortschrittsanzeige bleiben P5 (Rahmenplan 5). |
 | F-P3-D | Keine Lizenzliste der Fremdbestandteile im Repo | `docs/Lizenzen.md` in O12; P6 prüft Vollständigkeit |
 | F-P3-E | `CLAUDE.md` „keine fremde Quelle zur Laufzeit" vs. Photon (Ortssuche) und OSM-Kacheln (Karte) — im Betrieb notwendig, aber undokumentiert | in `Technik.md` und `Lizenzen.md` als bewusste Ausnahme benennen; Datenschutzhinweis ist Betreibersache (R32) |
-| F-P3-F | Admin-Sicherungsseite skaliert nicht (alle Pakete aller Konten mit Formularen auf einer Seite, B-P3-14) | O9 |
+| F-P3-F | Admin-Sicherungsseite skaliert nicht (alle Pakete aller Konten mit Formularen auf einer Seite, B-P3-14) | **Erledigt über drei Pakete:** die Pakete eines Kontos auf dessen Kontoseite (O9a), die Konten in die gesuchte und seitenweise Liste (O9b), und O9c hat beide Tabellen aus `admin_sicherungen.php` entfernt — geblieben sind Regeln, Ablage und die Sicherungen ohne Konto. |
 | F-P3-G | Kopfhöhe 50 px fünffach verdrahtet; Demo-Banner verschiebt sticky-Leiste (B-P3-02) | O1/O2 (Token, Banner innerhalb der Kopfleiste) |
 | F-P3-H | Sekundär-Filter in der Tagesansicht der Uhr-Daten: `COLORS` in `index.php` enthält fünf markenfremde Farben (B-P3-06) | O3 (Token) |
 
@@ -1371,6 +1371,9 @@ und O11.
 | F-P3-AK | **Zwei gleichnamige Zeilen teilten sich ein Aktionsblatt.** `ui_zeilenaktionen()` leitete die Kennung aus einem sha1 über Titel und Aktionstexte ab. In einer Stammdatenliste ist die Kollision der Normalfall, nicht die Ausnahme: zwei Standorte mit einer gleichnamigen Zielklinik, zwei Rollen mit denselben Handlungen. `data-blatt="…"` fand dann zwei Elemente und öffnete beide oder keines. Dasselbe galt für die Feld-Kennung des Besatzungsformulars, das je Rolle einmal steht — vier Rollen, vier Felder gleicher Kennung, und das Label zeigte auf das erste. | O8b: laufende Nummer (`static $lfd`) statt Hash, an beiden Stellen. Eine ausdrücklich gesetzte `id` hat weiterhin Vorrang. |
 | F-P3-AL | **Die Nachladeknöpfe der Einsatztabelle waren ungestaltet — seit dem Redesign.** `missiontable.js` hängt unter die Tabelle eine Nachladezeile mit zwei Knöpfen („Weitere 200 anzeigen“, „Alle n anzeigen“); beide trugen `btn-plain`, eine Klasse, für die es im neuen Stylesheet keine Regel mehr gibt und die auch nicht auf der Streichliste steht. Sie standen damit in der Grundform des Browsers — grauer Systemknopf, keine 44 px, keine Marke. **Aufgefallen ist es niemandem, weil die Zeile erst ab 200 Treffern erscheint und der Referenzbestand 82 Einsätze hat**: Der Bilderlauf hat die Suchseite acht Breiten lang fotografiert und diese Knöpfe nie gesehen. Gefunden bei der Bestandsaufnahme zu O9b. | O9b: `knopf knopf-neutral` statt `btn-plain`, beide Knöpfe. |
 | F-P3-AM | **Zwei Klassenkollisionen, beide vor dem Festschreiben abgefangen — und jede von einem anderen Prüfmittel.** Die neue Kontenliste brauchte eine Filterreihe; zwei ihrer Namen waren schon vergeben. (1) `.filterzahl` gehört seit O6 den Zählern der Filtergruppen auf der Suchseite (`filterzahl plakette plakette-blau`); die neue Regel steht weiter unten im Stylesheet und hätte bei gleicher Spezifität gewonnen — aus den blauen Zählern wären graue geworden. Gefunden durch **Lesen** (Bestandsaufnahme vor dem Bauen). (2) `.filterknopf` gehört seit O6 dem Knopf, der auf der Suchseite die Filterschublade öffnet — und der ist **48 px** hoch, weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von der 44-px-Regel). Die neue Regel hätte ihn auf 44 px gesetzt. Gefunden vom **Bilderlauf**: „15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite — und zwar nur, weil der Lauf die Suchseite mitfotografierte, obwohl das Paket sie nicht anfasst. **Die Lehre ist nicht „vorher greppen", sondern: nach jedem Paket auch die Seiten mitmessen, die es nicht anfasst.** Die Vollständigkeitsprüfung hätte beides nicht gemeldet — sie zählt Klassen **ohne** Regel, nicht zwei Regeln für **eine** Klasse. | O9b: `.listenfilter` und `.listenfilter-zahl`. Gegengeprüft: Der Gruppenzähler der Suchseite ist weiterhin `rgb(217, 236, 253)`, der Filterknopf wieder 48 px, Bilderlauf 0 Knöpfe außerhalb des Solls. |
+| F-P3-AN | **Die Anmeldeseite zeigte nie den Standard der Installation.** `logo_src()` versorgt die beiden Seiten **ohne Sitzung** — Anmeldung und Passwort setzen — und genau dort soll der Standard stehen (E-P3-20). Sie las stattdessen `app.logo_path` aus der `config.php`, und der Einrichter schreibt dort den Hubschrauber hinein. Ein Wechsel des Standards wirkte damit überall außer auf der einen Seite, die ihn zeigen soll; `version.php` und E-P3-20 behaupteten seit O8a etwas anderes. Gefunden beim Bauen der Wartungs-Einstellung (O9c), nicht vom Bilderlauf: Der fotografiert die Anmeldeseite, aber er weiß nicht, welches Logo dort stehen **soll**. | O9c: `logo_path` gilt nur noch für eine **fremde** Datei (weder `gen-em_logo_helicopter` noch `gen-em_logo_fahrzeug` im Pfad); sonst entscheidet `logo_stamm()`. `pw_handling.php` lädt dafür `session_lib.php`. Gegengeprüft im Browser: Standard umgestellt → Anmeldeseite folgt, Konto mit eigener Wahl nicht. |
+| F-P3-AO | **Die Standorteliste warnte als einzige nicht vor Namensdubletten.** Fünf der sechs Stammdatenlisten zeigen seit jeher den weichen Hinweis „n Konten führen einen gleichnamigen eigenen Eintrag" (`stammdaten_dup_personal_count()`); die Standorteliste rief die Funktion nicht auf, ohne Begründung im Code. Ein systemweiter Standort, den bereits ein Dutzend Konten unter demselben Namen selbst angelegt hat, entstand damit ohne jeden Hinweis — und stand danach zweimal in deren Auswahlliste. | O9c: Der Hinweis steht jetzt auch dort, mit Plakette „Namensdublette" in Orange. |
+| F-P3-AP | **Die Radios der Segmentwahl waren 20 × 20 px groß und fingen Klicks ab.** `.segment-box` setzt `position:absolute; opacity:0; width:0; height:0` — Spezifität (0,1,0). Weiter unten im Stylesheet steht `input[type=checkbox],input[type=radio]{width:var(--symbol);height:var(--symbol)}` mit (0,1,1) und gewinnt. Die Kästchen blieben damit 20 × 20 px, nur durchsichtig, und lagen absolut positioniert über ihrer Umgebung. Das betraf **jede** Segmentwahl der Anwendung — die Artwahl im Zeitraum (O7), die Filter der Suche (O6), die neuen Reiter (O9c). Gefunden beim **Bedienen im Browser** („`<input …value=fahrzeug>` intercepts pointer events"), nicht beim Lesen und nicht vom Bilderlauf: Ein unsichtbares Element, das nichts verdeckt, sieht auf einem Bild aus wie keines. | O9c: `input[type=radio].segment-box, input[type=checkbox].segment-box` (0,2,1) plus `min-height:0`. Nachgemessen: 20 × 20 → 0 × 0. |
 
 ---
 
@@ -1435,7 +1438,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O8c Backup, Import | **erledigt** | Web 9.7.2 |
 | O9a Kontoseite | **erledigt** | Web 9.8.0 (Migration!) |
 | O9b NutzerInnen-Liste | **erledigt** | Web 9.9.0 |
-| O9c Regeln, Stammdaten, Demo, Wartung | offen | |
+| O9c Regeln, Stammdaten, Demo, Wartung | **erledigt** | Web 9.10.0 |
 | O10 Anmeldung, öffentliche Seiten, R32 | offen | |
 | O11 Übrige Seiten und Dialoge | offen | |
 | O12 Dokumentation und Abschluss | offen | |
@@ -2568,6 +2571,208 @@ dauerte entsprechend; das ist der Fall, für den „Alle sichern" laut Konzept
 ohnehin auf Schübe in P5 vertagt ist. Die Zeitmessungen stammen aus **einer**
 lokalen Instanz auf einem Rechner ohne Last — sie zeigen Verhältnisse, keine
 Zusagen. `admin_sicherungen.php` trägt bis O9c weiterhin seine alte Gestalt.
+
+### O9c — Sicherungsregeln, Stammdaten, Demo, Wartung
+
+*Erledigt mit Web 9.10.0. Keine Migration.*
+
+O9c räumt ab, was O9a und O9b übrig gelassen haben. Der Umbau der
+Sicherungsseite ist dabei **Wegnahme**: Von den drei Listen, die sie trug,
+gehört keine mehr hierher.
+
+#### Sicherungen: Regeln statt Listen
+
+Die Seite hatte eine Kontentabelle (jede Zeile ein „Sichern"), darunter eine
+Tabelle **aller Pakete aller Konten** mit je drei Formularen, dazu drei
+verstreute Einstellungen mit drei Speichern-Knöpfen. Das war der Fund F-P3-F
+(skaliert nicht), und es war zugleich die falsche Aufteilung: Die Sicherungen
+**eines** Kontos gehören auf dessen Kontoseite (O9a), die Auswahl über **viele**
+Konten in die Liste (O9b).
+
+Geblieben ist, was für alle gilt:
+
+- **Vier Kacheln** — Konten, Pakete samt Größe der Ablage, überfällig, nie
+  gesichert. Die letzten beiden sind Wege in die gefilterte Liste.
+- **Regeln** — Erinnerungsintervall, Aufbewahrung je Konto, Erinnerungsmail:
+  ein Formular, ein Speichern. Die Aufbewahrung war bis hierher eine Konstante
+  (`EDBAK_MAX_JE_KONTO = 3`); eine Zahl, die entscheidet, wann Sicherungen
+  gelöscht werden, gehört nicht in eine Datei, die man nur mit einem Deploy
+  ändert.
+- **Ablage** — Pfad, Zustand (beschreibbar?), letzte Sicherung, Zahl der Ordner.
+- **Sicherungen ohne Konto** — zugeklappt, weil es sie im Normalfall nicht gibt.
+  Sie sind der Grund, aus dem die Übersicht überhaupt aus dem **Verzeichnis**
+  entsteht und nicht aus der Datenbank: Eine Liste aus `users` verschwiege genau
+  die Sicherungen, um derentwillen es sie gibt (A8.2).
+
+**„Alle sichern" hat ein Zeitbudget, keine Stückzahl** (20 s). Die Konten
+werden nach Alter der letzten Sicherung sortiert, das älteste zuerst; wer nicht
+mehr hineinpasst, ist beim nächsten Klick der älteste. Die Reihenfolge sorgt
+selbst dafür, dass wiederholtes Klicken konvergiert. Das ist die kleine Antwort
+auf **F-P3-C**; echte Schübe mit Fortschrittsanzeige bleiben in P5 (Rahmenplan).
+
+#### Die wöchentliche Erinnerung (E-P3-41)
+
+**Es gibt keinen Cron.** Einziger Zeitgeber der Anwendung ist
+`run_cleanup_if_due()` (db.php), und der läuft huckepack auf der ersten Anfrage
+des Tages — aus `auth_guard.php` (Web) oder `ingest.php` (Uhr). Die Erinnerung
+hängt sich dort als Schritt ein. Damit gilt:
+
+- höchstens einmal je Woche,
+- nur wenn es überfällige oder nie gesicherte Konten gibt,
+- und **nur, wenn die Anwendung an dem Tag benutzt wurde**.
+
+Der letzte Punkt steht auf der Seite. Eine Zusage, die an der Benutzung hängt,
+muss man als solche kennzeichnen — sonst ist der stille Ausfall die
+unangenehmste Sorte Fehler: einer, den niemand bemerkt, weil nichts passiert.
+
+Der Aufräumschritt **plant** nur; verschickt wird nach der Antwort
+(`register_shutdown_function`, wie der übrige Mailversand seit Web 8.2). Die
+Marke `adminbackup_mail_last` steht **vor** dem Versand, wie beim Aufräumjob
+selbst: Der teurere Fehler ist die doppelte Mail, nicht die ausgefallene.
+
+In der Mail stehen Adressen und Tage — **keine Namen, keine Zahlen aus den
+Konten**. Eine Mail liegt unverschlüsselt im Postfach und auf jedem Server
+dazwischen; die Adresse muss hinein, sonst weiß niemand, welches Konto gemeint
+ist, alles Weitere steht in der Anwendung.
+
+#### Stammdaten systemweit: ein Punkt, zwei Reiter
+
+„Standorte systemweit" und „Rettungsmittel systemweit" waren zwei Einträge in
+der Leiste, mit demselben Symbol, auf dieselbe Datei, unterschieden nur durch
+`?t=`. Der Reiter gehört in die Seite: eine Segmentwahl in der Titelzeile, die
+sich beim Wechsel selbst abschickt — dasselbe Muster wie die Artwahl im
+Zeitraum (E-P3-37). Dafür entstand `ui_segment_markup()`, die Markup liefernde
+Fassung von `ui_segment()`; die Titelzeile **nimmt** Markup entgegen, sie gibt
+nicht aus.
+
+**Die Verdopplung ist damit auch im Code fort.** Gemessen am Stand vor O8a
+waren rund 70 % des Rettungsmittel-Bereichs von `admin_stammdaten.php`
+zeichengleich mit `einstellungen.php`. O8b hatte das Muster in
+`einstellungen.php` zu zwei Schließungen zusammengezogen; sie ein zweites Mal
+zu kopieren hieße, denselben Fehler eine Ebene höher zu wiederholen. Sie stehen
+jetzt in `server/stammdaten_ui.php` und tragen drei Optionen für den
+Unterschied: `seite` (wohin abgesendet wird), `zentral` (systemweit ist in der
+Kontoansicht unveränderlich, in der Adminansicht der Gegenstand), `def_action`
+(die Vorbelegung gibt es nur im Konto).
+
+Der Schlüssel heißt `seite` und nicht `basis`: In dieser Anwendung ist eine
+Basis ein Standort. Die Wortliste hätte das Homonym zu Recht gemeldet — und hat
+es, in der ersten Fassung.
+
+#### Demo-Konto
+
+Die Seite war seit O2 ungestaltet und ist es niemandem aufgefallen, weil sie
+selten geöffnet wird: `table.data`, `pre.mono`, `div.rowactions`,
+`button.btn-primary`. Jetzt vier Kacheln für den Bestand (Diensttage, Einsätze,
+Ruhesegmente, Geräte), die drei Papierkorbzahlen als Kontrollzeilen in einer
+eigenen Karte, die Handlungen in der Titelzeile.
+
+Der Papierkorb steht **nicht** als Kachel dabei: Er ist die Kontrollzahl des
+Resets, keine Bestandszahl — und eine Kachel „5 im Papierkorb" neben „82
+Einsätze" liest sich wie ein Problem, wo keines ist.
+
+`demo_pruefen.mjs` las `table.data tr` und splittete an `\t`. Es liest jetzt
+`.kennzahl` (Wert oben, Beschriftung darunter) und `.zeile` (umgekehrt) und
+splittet am Umbruch. Die drei Papierkorbzeilen heißen dabei nicht mehr „im
+Papierkorb", „im Papierkorb, Diensttage", „im Papierkorb, Ruhesegmente" —
+Beschriftungen aus einer Tabelle, in der die erste ohne Zusatz die Einsätze
+meinte —, sondern „Einsätze im Papierkorb" und so fort.
+
+#### Der Logo-Standard zieht in die Wartung (E-P3-19/20)
+
+Bis hierher eine Konstante in `session_lib.php`, mit dem Vermerk „bis O9 fest".
+Jetzt eine Zeile in `app_state`, einstellbar in der **Wartung** — nicht im
+Profil und nicht auf einer eigenen Seite: Es ist eine Einstellung, die einmal im
+Leben einer Installation gesetzt wird, zusammen mit dem, was dort sonst steht
+(Umgebung, Aufräumjob, Schlüsselableitung). Eine eigene Seite für eine
+Einstellung ist ein Menüpunkt, den man einmal braucht und dreihundertmal
+überliest.
+
+**Sie wirkt sofort.** Dafür musste sich ändern, was in der Sitzung steht: bis
+Web 9.9.0 das **Ergebnis** der Wahl, jetzt die **Wahl**. Nur „wechselnd" wird
+bei der Anmeldung ausgewürfelt — sonst spränge das Logo beim Blättern. Der
+Leerstring dagegen bleibt stehen und wird erst in `logo_stamm()` aufgelöst; sonst
+sähe eine Administratorin die Wirkung ihrer Umstellung erst, wenn sich jede
+NutzerIn neu angemeldet hat.
+
+Der Platzhalterhinweis (E-P3-19) fragt die **Datei**, nicht eine Zahl im Code:
+Der Platzhalter trägt das Wort „PLATZHALTER" in seinem Kopfkommentar, gelesen
+werden die ersten 400 Byte. Damit verschwindet der Hinweis von selbst, sobald
+die echte Datei liegt — sie ersetzt den Platzhalter 1:1.
+
+#### Prüfprotokoll O9c
+
+**Maschinell.**
+
+- **Vollständigkeitsprüfung**: 220 Altklassen, 45 mit Regel, 95 auf der
+  Streichliste (+14 in diesem Paket), 80 ohne Gegenstück (vorher 88). „Im
+  Markup ohne Regel und ohne Streichung": **54** (vorher 68 vor dem Paket, 82
+  vor O9b). Die verbliebenen 54 stammen sämtlich aus Seiten, die O10 und O11
+  anfassen. Neu eingetragen wurden zwei Sorten: Klassen, deren Regeln in
+  Bausteinen aufgegangen sind (`data`, `mono`, `rowactions`, `inline-form`,
+  `check`), und **Skriptanker ohne Gestaltung** (`ac-form`, `vehkind-radio`,
+  `rollehaken`, `rollen-zeile`, `vehcaps-zeile`, `acroles`, `vehkind`,
+  `vehcaps`) — dazu `form-spalte`, die einzige neue Klasse aus P3 auf der
+  Liste: Sie ist der Behälter einer Rasterspalte und trägt bewusst keine Regel.
+- **Wortliste**: 58 Regeln, **58 gegriffen, 0 ungenutzt**, **0 Treffer außerhalb
+  der Ausnahmen** in allen drei Bereichen. Zwei Ausnahmen nachgezogen
+  (`LOGO_STANDARD` → `LOGO_STANDARD_VORGABE`, neue Regel für das Lesen des
+  Standards); ein Treffer wurde **nicht** durch eine Ausnahme erledigt, sondern
+  durch Umbenennen: `sd_zeile(['basis' => …])` heißt jetzt `seite`.
+- **Kontraste**: 21 Paare gerechnet, **0 verfehlt** (unverändert).
+- **Syntaxprüfung**: `php -l` über alle 11 geänderten PHP-Dateien, 0 Fehler.
+- **Bilderlauf, vollständig**: 31 Seiten × 8 Breiten = **248 Einzelbilder**, 31
+  Kontaktbögen. **Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px: 0.** Neu in der
+  Seitenliste: `42a-stammdaten-rettungsmittel` — die Standorte-Fassung stand
+  schon darin, die Rettungsmittel-Fassung ist die andere Hälfte desselben
+  Menüpunkts und sieht völlig anders aus. Zwei Platzhalter der Seitenliste
+  (`__TAG_DATUM__`, `__TAG_LOESCHEN__`) ließen sich im Bestand nicht auflösen;
+  die beiden Seiten sind damit **nicht** gemessen — sie gehören zu O11.
+
+**Im Browser** (Chromium über Playwright, lokale Instanz mit Referenzdatensatz
+und Demo-Konto):
+
+- **Sechs Seiten geladen** (Stammdaten in beiden Reitern, Demo, Sicherungen,
+  Wartung, Einstellungs-Übersicht): **0 waagerechter Überlauf**, Knopfhöhen
+  ausschließlich **44 px**, **0 Konsolenfehler** außer den absichtlich
+  abgebrochenen Kartenkacheln.
+- **Stammdaten angelegt und bearbeitet**: zwei Standorte, ein Rettungsmittel
+  mit Art „luftgebunden" und einer Rolle. Nach der Artwahl **5 sichtbare
+  Rollenhaken**, Speichern mit der erwarteten Meldung, Anker
+  `#sd-14-veh` angesprungen, 0 Skriptfehler.
+- **Sicherungsregeln**: 30/3/aus → 14/5/ein → gespeichert („Erinnerung nach 14
+  Tagen, Aufbewahrung 5 Pakete, Erinnerung per E-Mail ein gespeichert.") →
+  zurückgestellt. Beim Einschalten der Mail wird `adminbackup_mail_last`
+  geleert, damit die erste Erinnerung nicht im Rhythmus einer abgeschalteten
+  Zeit hängt.
+- **„Alle sichern"**: 4 → 6 Pakete, 7,3 → 9,7 MB, „nie gesichert" 1 → 0,
+  Meldung „2 Sicherungen erzeugt."
+- **Sicherungen ohne Konto**: die Karte zeigt den verwaisten Ordner mit Adresse
+  aus der Begleitdatei, drei Paketen und je Paket Umfang und Größe.
+- **Logo-Standard**, acht Messungen in einer Sitzung: Anmeldeseite folgt dem
+  Standard (`gen-em_logo_helicopter.svg` → `gen-em_logo_fahrzeug.svg` → zurück);
+  die Kopfleiste folgt **ohne Neuanmeldung**; ein Konto mit eigener Wahl
+  (`logo_wahl='fahrzeug'`) bleibt bei seinem Logo, gleich wie der Standard steht;
+  ein Konto ohne Wahl folgt sofort. Das ist der Beleg für **F-P3-AN**.
+- **F-P3-AP nachgemessen**: die Segment-Radios sind von 20 × 20 px auf 0 × 0
+  gefallen; der Trefferpunkt in der Mitte des Knopfes „Standard speichern" ist
+  wieder der Knopf.
+
+**Was nicht geprüft werden konnte.**
+
+- **Der Mailversand.** Die lokale Instanz hat kein SMTP; geprüft ist, dass der
+  Aufräumschritt die Erinnerung plant und dass `edbak_faellige_konten()` die
+  richtigen Konten in der richtigen Reihenfolge liefert. **Dass eine Mail
+  ankommt, ist nicht geprüft** — das geht erst auf dem Produktivserver.
+- **Der Wochenrhythmus.** Sieben Tage sind nicht abwartbar; geprüft ist die
+  Marke, nicht der Kalender.
+- **Weiterhin kein WebKit und kein Gecko** (nur Chromium).
+- **Der NEF-Platzhalter.** Der Hinweis auf der Wartungsseite erscheint, weil die
+  Dateien Platzhalter sind. Dass er **verschwindet**, sobald echte Dateien
+  liegen, ist am Code belegt, nicht am Bild.
+- **Die Rettungsmittelseite mit vielen Standorten.** Geprüft mit zwei; die
+  Karten sind zugeklappt, die Last wächst also linear mit der Zahl der
+  Standorte, nicht mit der der Einträge.
 
 ---
 

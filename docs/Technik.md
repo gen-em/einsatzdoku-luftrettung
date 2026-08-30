@@ -69,7 +69,13 @@ Daten erst nach Server-Bestätigung.
 │   │                       eines Kontos: Kontodaten, Geräte, Sicherungen
 │   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
-│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`)
+│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
+│   │                        seit Web 9.10.0 EIN Menuepunkt „Stammdaten
+│   │                        systemweit" mit Segmentwahl in der Titelzeile)
+│   ├── stammdaten_ui.php  Zeile und Anlegen-Formular der Stammdatenlisten —
+│   │                       eine Fassung fuer die Kontoansicht
+│   │                       (einstellungen.php) und die Adminansicht
+│   │                       (admin_stammdaten.php), seit Web 9.10.0
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
 │   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
 │   │                         wieder zu einem Diensttag vereinen
@@ -80,7 +86,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
-│   ├── admin_sicherungen.php  Adminseite dazu · sicherungen/ die Ablage selbst
+│   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
+│   │                       Regeln, Ablage und Sicherungen ohne Konto;
+│   │                       die Konten stehen in admin_users.php, die
+│   │                       Pakete eines Kontos auf dessen Kontoseite
+│   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
@@ -221,7 +231,7 @@ Daten erst nach Server-Bestätigung.
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
+| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -2577,7 +2587,8 @@ Konten 304 Abfragen und 27,7 ms.
 Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
 Formular, ein Speichern), Geräte, die Sicherungen **dieses** Kontos, ein
 reservierter Platz für das Abonnement (R33) und die Löschung als
-Gefahrenzone. `admin_sicherungen.php` behält die Regeln.
+Gefahrenzone. `admin_sicherungen.php` behält die Regeln — und seit Web 9.10.0
+nur noch sie (Abschnitt „Sicherungen: was auf welcher Seite steht").
 
 Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
 für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
@@ -2612,3 +2623,86 @@ man unter „Sicherungen ohne Konto".
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht
 wiederherstellbar. Das ist kein Mangel der Umsetzung, sondern die Folge der
 Ende-zu-Ende-Verschlüsselung — der Schlüssel existiert nirgends sonst.
+
+### Die Regelseite (seit Web 9.10.0)
+
+`admin_sicherungen.php` trägt seit O9c nur noch, was für **alle** Konten gilt.
+Die Aufteilung über die drei Seiten:
+
+| Frage | Seite |
+|---|---|
+| Wie steht es um die Installation? Welche Regeln gelten? | `admin_sicherungen.php` |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | `admin_users.php` (Filter `?f=ueberfaellig` / `?f=nie`) |
+| Die Sicherungen **eines** Kontos: einspielen, freigeben, löschen | `admin_user.php?id=…` |
+
+Vier Kacheln (`edbak_stand_zaehlen()`, `edbak_ablage_zahlen()`), die Karten
+**Regeln**, **Ablage** und — zugeklappt — **Sicherungen ohne Konto**
+(`edbak_verwaiste()`).
+
+**Warum die Ablagezahlen hier Verzeichnisse lesen dürfen und in der Liste
+nicht:** Eine Größe in Bytes steht in keiner Begleitdatei, sie steht nur an den
+Dateien. Diese Seite existiert, um genau das zu beantworten, und wird selten
+geöffnet; die Liste dagegen ist der Weg zu einem Konto und wird ständig
+aufgerufen.
+
+**„Alle sichern" hat ein Zeitbudget** (`SICHERN_BUDGET = 20.0` Sekunden), keine
+Stückzahl. Die fälligen Konten werden nach Alter der letzten Sicherung
+sortiert, das älteste zuerst. Wer nicht mehr hineinpasst, ist beim nächsten
+Klick der älteste — die Reihenfolge sorgt selbst dafür, dass wiederholtes
+Klicken konvergiert. Gemessen: 222 ms je Konto mit 82 Einsätzen, 7 ms für ein
+leeres.
+
+### Die wöchentliche Erinnerung an die Administration (seit Web 9.10.0)
+
+**Es gibt keinen Cron.** Einziger Zeitgeber ist `run_cleanup_if_due()`
+(`db.php`), der huckepack auf der ersten Anfrage des Tages läuft — aus
+`auth_guard.php` (Web) oder `ingest.php` (Uhr). Die Erinnerung hängt dort als
+letzter Aufräumschritt (`edbak_erinnerung_planen()`).
+
+Daraus folgt, und das steht auch auf der Seite: höchstens einmal je Woche, nur
+wenn es überfällige oder nie gesicherte Konten gibt, **und nur, wenn die
+Anwendung an dem Tag benutzt wurde**. Wird sie zwei Wochen nicht angefasst,
+kommt die Mail zwei Wochen später.
+
+Der Schritt **plant** nur; verschickt wird nach der Antwort
+(`register_shutdown_function`). Die Marke `adminbackup_mail_last` wird **vor**
+dem Versand gesetzt: Der teurere Fehler ist die doppelte Mail, nicht die
+ausgefallene — die nächste kommt in sieben Tagen.
+
+**Inhalt:** Adressen und Alter, sortiert (nie gesichert zuerst, dann das
+Älteste). Keine Namen, keine Zahlen aus den Konten — eine Mail liegt
+unverschlüsselt im Postfach und auf jedem Server dazwischen.
+
+Abschalten: Einstellungen → Sicherungen → „Erinnerung an Admins per E-Mail".
+Beim Einschalten wird `adminbackup_mail_last` geleert, damit die erste
+Erinnerung nicht im Rhythmus einer abgeschalteten Zeit hängt.
+
+### Das Logo der Installation (E-P3-19/20, einstellbar seit Web 9.10.0)
+
+Drei Ebenen, von unten nach oben:
+
+1. `LOGO_STANDARD_VORGABE` in `session_lib.php` — Hubschrauber. Gilt, solange
+   es keine Datenbank gibt (Einrichter) oder nichts gesetzt ist.
+2. `app_state.logo_standard` — der Standard **dieser Installation**, gesetzt in
+   der Wartung (`update.php`). `logo_standard()` liest ihn je Anfrage einmal
+   und fängt jede Ausnahme ab: Das Logo ist Zierde, kein Zugang.
+3. `users.logo_wahl` — die Wahl **eines Kontos** (`''` = folgt dem Standard,
+   `hubschrauber`, `fahrzeug`, `wechselnd`).
+
+**In der Sitzung steht die Wahl, nicht ihr Ergebnis.** `logo_sitzung_setzen()`
+löst nur `wechselnd` auf (dort fällt der Würfel je Anmeldung, sonst spränge das
+Logo beim Blättern); der Leerstring bleibt stehen und wird erst in
+`logo_stamm()` aufgelöst. Damit wirkt eine Umstellung des Standards **sofort**,
+auch für bereits angemeldete Konten — und nur bei denen, die keine eigene Wahl
+getroffen haben.
+
+**`logo_src()`** ist die Fassung für die beiden Seiten **ohne** Sitzung
+(Anmeldung, Passwort setzen). Sie folgt seit Web 9.10.0 ebenfalls der Wahl;
+`$CFG['app']['logo_path']` gewinnt nur noch, wenn dort eine **fremde** Datei
+steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
+
+**Der Platzhalterhinweis** auf der Wartungsseite fragt die Datei, nicht eine
+Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
+`gen-em_logo_fahrzeug.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
+im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
+liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).

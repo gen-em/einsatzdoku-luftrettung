@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/stammdaten_ui.php';   // sd_zeile(), sd_form()
 require_once __DIR__ . '/demo_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 require_once __DIR__ . '/diensttag_lib.php';  // dt_bases(), dt_base_erlaubt(), Rollenkatalog
@@ -739,7 +740,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
         $lw->execute([$userId]);
         $logoWahl = (string)$lw->fetchColumn();
     }
-    $standardName = LOGO_STANDARD === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)';
+    $standardName = logo_standard() === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)';
     ?>
     <?php ui_titelzeile(['titel' => 'Profil']); ?>
 
@@ -1058,108 +1059,11 @@ ui_seite_start(['titel' => 'Einstellungen']);
     ?>
 
   <?php
-  /* ---- EINE STAMMDATENZEILE NACH E-P3-35/26 ----------------------------
-   *
-   * Fünf Listen folgen demselben Muster (Rettungsmittel, Besatzung,
-   * Zielkliniken, weitere Rettungsmittel, Bergwacht), und im Bestand stand
-   * es fünfmal ausgeschrieben. Eine Änderung am Muster musste fünfmal
-   * ankommen — in der Praxis kam sie es nicht: Die Zeilenaktionen waren
-   * bereits auseinandergelaufen (die Rettungsmittel hatten „★ Standard",
-   * die übrigen nicht, und die Löschrückfragen lauteten verschieden).
-   *
-   * Diese Schließung gibt die versteckten POST-Formulare aus UND die Zeile.
-   * Beides gehört zusammen: Die Knöpfe der Zeile zeigen über `form=` auf
-   * die Formulare (ui_zeilenaktionen), also müssen sie im selben Atemzug
-   * entstehen.
-   *
-   * $o: name, klein, anker, praefix (eindeutig je Liste), id, base_id,
-   *     zentral (bool), stern (bool), del_action, del_frage,
-   *     def_action (optional — nur wo es eine Vorbelegung gibt),
-   *     bearbeiten_href, symbol (optional, vor dem Namen)
-   */
-  $sdZeile = function (array $o): void {
-      $id  = (int)$o['id'];
-      $pre = (string)$o['praefix'] . '-' . $id;
-      $ziel = 'einstellungen.php?t=rettungsmittel#' . (string)$o['anker'];
-      $zentral = !empty($o['zentral']);
-
-      /* Systemweite Einträge lassen sich weder bearbeiten noch löschen —
-         sie gehören der Administration. Die Vorbelegung dagegen schon:
-         Sie ist eine Eigenschaft DIESES Kontos. */
-      $eintraege = [];
-      if (!empty($o['def_action']) && empty($o['stern'])) {
-          echo '<form method="post" id="f-' . $pre . '-def" class="nur-vorlesen" action="'
-             . ui_e($ziel) . '">' . csrf_field()
-             . '<input type="hidden" name="action" value="' . ui_e((string)$o['def_action']) . '">'
-             . '<input type="hidden" name="id" value="' . $id . '">'
-             . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
-             . "</form>\n";
-          $eintraege[] = ['text' => 'Als Vorbelegung', 'symbol' => 'stern',
-                          'art' => 'leise-orange', 'form' => 'f-' . $pre . '-def'];
-      }
-      if (!$zentral) {
-          $eintraege[] = ['text' => 'Bearbeiten', 'symbol' => 'stift',
-                          'href' => (string)$o['bearbeiten_href']];
-          echo '<form method="post" id="f-' . $pre . '-del" class="nur-vorlesen" action="'
-             . ui_e($ziel) . '" data-confirm="' . ui_e((string)$o['del_frage']) . '">' . csrf_field()
-             . '<input type="hidden" name="action" value="' . ui_e((string)$o['del_action']) . '">'
-             . '<input type="hidden" name="id" value="' . $id . '">'
-             . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
-             . "</form>\n";
-          $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb',
-                          'art' => 'gefahr', 'form' => 'f-' . $pre . '-del'];
-      }
-
-      $plaketten = '';
-      if ($zentral) { $plaketten .= ui_plakette('systemweit'); }
-      if (!empty($o['stern'])) {
-          $plaketten .= ui_symbol('stern', 'zeile-stern', 'Vorbelegung neuer Diensttage');
-      }
-
-      ui_zeile([
-          'text'      => (string)$o['name'],
-          'klein'     => (string)($o['klein'] ?? ''),
-          'plaketten' => $plaketten,
-          'aktionen'  => $eintraege
-              ? ui_zeilenaktionen(['titel' => (string)$o['name'], 'eintraege' => $eintraege])
-              : '',
-      ]);
-  };
-
-  /* Das Anlegen-Formular einer Stammdatenliste — ein Namensfeld, ein Knopf,
-     bei Bearbeitung ein Abbrechen daneben. Die Listen mit mehr Feldern
-     (Rettungsmittel, Zielkliniken) bauen ihr Formular selbst. */
-  $sdForm = function (array $o): void {
-      $bearb = $o['bearbeitet'] ?? null;
-      echo '<div class="listen-form">' . "\n";
-      echo '  <h3 class="listen-form-titel">'
-         . ui_e($bearb ? (string)$o['titel_bearbeiten'] : (string)$o['titel_neu']) . "</h3>\n";
-      echo '  <form method="post" action="einstellungen.php?t=rettungsmittel#'
-         . ui_e((string)$o['anker']) . '">' . "\n";
-      echo '    ' . csrf_field()
-         . '<input type="hidden" name="action" value="' . ui_e((string)$o['action']) . '">'
-         . '<input type="hidden" name="id" value="' . ($bearb ? (int)$bearb['id'] : 0) . '">'
-         . '<input type="hidden" name="base_id" value="' . (int)$o['base_id'] . '">'
-         . (string)($o['felder_versteckt'] ?? '') . "\n";
-      echo '    <div class="listen-form-felder">' . "\n";
-      /* Die Kennung trägt eine laufende Nummer: Das Besatzungsformular steht
-         je ROLLE einmal, alle mit demselben Anker — ohne sie hätten vier
-         Rollen vier Felder gleicher Kennung, und das Label zeigte auf das
-         erste. */
-      static $lfdForm = 0;
-      $lfdForm++;
-      ui_feld(['label' => (string)($o['label'] ?? 'Name'), 'name' => 'name',
-               'id' => 'sdf-' . preg_replace('/[^\w-]/', '-', (string)$o['anker']) . '-' . $lfdForm,
-               'pflicht' => true, 'platzhalter' => (string)($o['platzhalter'] ?? ''),
-               'wert' => (string)($bearb['name'] ?? ''), 'attr' => ' maxlength="120"']);
-      echo "    </div>\n";
-      echo '    <div class="listen-form-fuss">'
-         . ui_knopf(['text' => $bearb ? 'Änderung speichern' : 'Hinzufügen', 'art' => 'primaer'])
-         . ($bearb ? ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
-                               'href' => 'einstellungen.php?t=rettungsmittel']) : '')
-         . "</div>\n";
-      echo "  </form>\n</div>\n";
-  };
+  /* Die beiden Bausteine der Stammdatenlisten stehen seit Web 9.10.0 in
+     `stammdaten_ui.php`: Dieselben Listen gibt es systemweit noch einmal
+     (`admin_stammdaten.php`), und ein Muster, das an zwei Stellen steht,
+     laeuft auseinander — genau das war der Befund, aus dem in O8b die
+     Schliessungen entstanden sind. */
   ?>
 
   <?php if ($tab === 'standorte'): ?>
@@ -1410,7 +1314,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                    Übrig bleibt, was man dem Symbol nicht ansieht. */
                 $klein = ($rollenTxt ? implode(', ', $rollenTxt) : 'keine Rollen')
                        . ($capsTxt ? ' · ' . implode(', ', $capsTxt) : '');
-                $sdZeile([
+                sd_zeile([
                     'name' => (string)$v['name'], 'klein' => $klein,
                     'anker' => $anker . '-veh', 'praefix' => 'veh', 'id' => $vid,
                     'base_id' => $bid, 'zentral' => $istZentral($v),
@@ -1518,7 +1422,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                       if ($c['role_code'] !== $rk) { continue; }
                       $any = true; $cz = $istZentral($c);
                       $dup = !$cz && stammdaten_dup_global('crew_presets', 'name', $c['name'], 'role_code', $rk);
-                      $sdZeile([
+                      sd_zeile([
                           'name' => (string)$c['name'],
                           'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                           'anker' => $anker . '-crew', 'praefix' => 'crew', 'id' => (int)$c['id'],
@@ -1534,7 +1438,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             <?php endif; ?>
             <?php $ecHier = ($editCrew && (int)$editCrew['base_id'] === $bid
                              && $editCrew['role_code'] === $rk) ? $editCrew : null; ?>
-            <?php $sdForm([
+            <?php sd_form([
                 'anker' => $anker . '-crew', 'action' => 'crew_save', 'base_id' => $bid,
                 'bearbeitet' => $ecHier, 'label' => 'Name',
                 'platzhalter' => 'Name der Person',
@@ -1559,7 +1463,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                 $klein = ($t['lat'] !== null && $t['lon'] !== null)
                     ? $t['lat'] . ', ' . $t['lon'] : 'ohne Lage';
                 if ($dup) { $klein .= ' · identisch mit einem systemweiten Eintrag'; }
-                $sdZeile([
+                sd_zeile([
                     'name' => (string)$t['name'], 'klein' => $klein,
                     'anker' => $anker . '-td', 'praefix' => 'td', 'id' => (int)$t['id'],
                     'base_id' => $bid, 'zentral' => $tz,
@@ -1616,7 +1520,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           <?php foreach (($sdRes[$bid] ?? []) as $r):
                 $rz = $istZentral($r);
                 $dup = !$rz && stammdaten_dup_global('resources', 'name', $r['name']);
-                $sdZeile([
+                sd_zeile([
                     'name' => (string)$r['name'],
                     'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                     'anker' => $anker . '-res', 'praefix' => 'res', 'id' => (int)$r['id'],
@@ -1628,7 +1532,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                 ]);
           endforeach; ?>
           <?php $erHier = ($editRes && (int)$editRes['base_id'] === $bid) ? $editRes : null;
-                $sdForm([
+                sd_form([
                     'anker' => $anker . '-res', 'action' => 'res_save', 'base_id' => $bid,
                     'bearbeitet' => $erHier, 'label' => 'Bezeichnung',
                     'platzhalter' => 'z. B. RTW Kempten',
@@ -1650,7 +1554,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             <?php foreach (($sdBw[$bid] ?? []) as $w):
                   $wz = $istZentral($w);
                   $dup = !$wz && stammdaten_dup_global('bw_units', 'name', $w['name']);
-                  $sdZeile([
+                  sd_zeile([
                       'name' => (string)$w['name'],
                       'klein' => $dup ? 'identisch mit einem systemweiten Eintrag' : '',
                       'anker' => $anker . '-bw', 'praefix' => 'bw', 'id' => (int)$w['id'],
@@ -1662,7 +1566,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                   ]);
             endforeach; ?>
             <?php $ewHier = ($editBw && (int)$editBw['base_id'] === $bid) ? $editBw : null;
-                  $sdForm([
+                  sd_form([
                       'anker' => $anker . '-bw', 'action' => 'bw_save', 'base_id' => $bid,
                       'bearbeitet' => $ewHier, 'label' => 'Bereitschaft',
                       'platzhalter' => 'z. B. Bereitschaft Oberstdorf',

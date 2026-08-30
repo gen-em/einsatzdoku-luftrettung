@@ -11,6 +11,118 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.10.0] — 2026-08-30
+
+**O9c: die drei übrigen Adminseiten.** Keine Migration.
+
+### Sicherungen — eine Seite über Regeln, keine Liste mehr
+
+Die Seite listete bisher **alle Konten** und darunter **alle Pakete aller
+Konten**, jedes mit eigenen Formularen. Beides steht seit Web 9.8.0/9.9.0
+anderswo: die Konten in der NutzerInnen-Liste, die Pakete eines Kontos auf
+dessen Kontoseite. Was hier bleibt, ist das, was für **alle** gilt.
+
+Oben vier Zahlen (Konten, Pakete samt Größe der Ablage, überfällig, nie
+gesichert — die letzten beiden führen in die gefilterte Liste). Darunter drei
+Karten: **Regeln**, **Ablage**, **Sicherungen ohne Konto**.
+
+Die Regeln standen vorher an drei Stellen mit drei Speichern-Knöpfen; jetzt
+sind es ein Formular und ein Knopf: Erinnerungsintervall, Aufbewahrung je Konto
+und der Schalter für die Erinnerungsmail. Die Aufbewahrung war bis hierher eine
+Konstante im Code (`EDBAK_MAX_JE_KONTO = 3`) — eine Zahl, die entscheidet, wann
+Sicherungen gelöscht werden, gehört nicht in eine Datei, die man nur mit einem
+Deploy ändern kann.
+
+„Alle sichern" arbeitet die fälligen Konten ab, **das älteste zuerst**, in
+einem Zeitbudget von 20 Sekunden. Wer nicht mehr hineinpasst, ist beim nächsten
+Klick der älteste und kommt zuerst — die Reihenfolge sorgt selbst dafür, dass
+wiederholtes Klicken zum Ziel führt. Das ist die kleine Antwort auf F-P3-C;
+echte Schübe mit Fortschrittsanzeige bleiben für P5 vorgemerkt.
+
+### Die wöchentliche Erinnerung an die Administration
+
+Neu, abschaltbar, standardmäßig aus. Sie nennt die überfälligen und die nie
+gesicherten Konten mit Adresse und Alter — **keine Namen, keine Zahlen aus den
+Konten**: Eine Mail liegt unverschlüsselt im Postfach und auf jedem Server
+dazwischen.
+
+**Es gibt keinen Cron.** Auf diesem Webspace läuft kein Zeitplan; was
+regelmäßig geschieht, fährt auf dem täglichen Aufräumjob mit, und der startet
+bei der ersten Anfrage des Tages. Die Erinnerung ist deshalb genau genommen
+keine Wochenmail, sondern: höchstens einmal je Woche, und nur wenn die
+Anwendung an dem Tag überhaupt benutzt wurde. Wird sie zwei Wochen nicht
+angefasst, kommt die Mail zwei Wochen später. **Das steht so auf der Seite** —
+eine Zusage, die an der Benutzung hängt, muss man als solche kennzeichnen.
+
+Sie kommt nur, wenn es etwas zu melden gibt. Eine Wochenmail „0 Konten
+überfällig" ist nach dem dritten Mal keine Meldung mehr, sondern etwas, das man
+wegklickt — und dann geht auch die vierte unter, in der etwas steht. Verschickt
+wird **nach** der Antwort (`register_shutdown_function`); der Aufräumjob läuft
+vor der Seitenausgabe, und ein SMTP-Gespräch dort wäre eine messbare
+Verzögerung für jemanden, der damit nichts zu tun hat.
+
+### Stammdaten systemweit — ein Menüpunkt statt zweier
+
+„Standorte systemweit" und „Rettungsmittel systemweit" zeigten auf dieselbe
+Datei mit demselben Symbol und unterschieden sich nur im Reiter. Jetzt steht
+dort ein Punkt, und der Reiter ist eine Segmentwahl in der Titelzeile — dasselbe
+Muster wie die Artwahl in der Zeitraumübersicht.
+
+Dabei ist das Markup der Zeilen und Formulare in eine eigene Datei gewandert
+(`server/stammdaten_ui.php`). Es stand bis hierher zu großen Teilen
+zeichengleich in `einstellungen.php` **und** `admin_stammdaten.php`; die
+Schließungen aus O8b ein zweites Mal zu kopieren hieße, denselben Fehler eine
+Ebene höher zu wiederholen.
+
+### Demo-Konto
+
+Die Seite war seit dem Redesign ungestaltet: `table.data`, `pre.mono`,
+`div.rowactions`, `button.btn-primary` — Klassen, deren Regeln in den
+Bausteinen aufgegangen sind. Jetzt vier Kacheln für den Bestand, die drei
+Papierkorbzahlen als Kontrollzeilen, die Handlungen in der Titelzeile
+(„Zurücksetzen" als Knopf, „Entfernen" im Aktionsmenü hinter einer Rückfrage).
+Das Prüfwerkzeug `tools/referenzdatensatz/browser/demo_pruefen.mjs` las die
+alte Tabelle und ist mitgezogen.
+
+### Das Logo der Installation ist einstellbar
+
+In der **Wartung**, nicht im Profil: Es ist eine Eigenschaft der Installation.
+Die Anmeldeseite zeigt es, und jedes Konto ohne eigene Wahl folgt ihm. Bis
+hierher war es eine Konstante im Code — eine Installation, die überwiegend am
+Boden fährt, sollte nicht dauerhaft einen Hubschrauber im Kopf tragen.
+
+Die Änderung wirkt **sofort**, auch für bereits angemeldete Konten: In der
+Sitzung steht jetzt die *Wahl* und nicht mehr ihr Ergebnis. Nur „wechselnd"
+wird bei der Anmeldung ausgewürfelt — sonst spränge das Logo beim Blättern.
+Wer im Profil eine eigene Wahl getroffen hat, bleibt unberührt.
+
+### Drei Funde
+
+**F-P3-AN — die Anmeldeseite zeigte nie den Standard der Installation.**
+`logo_src()` versorgt die beiden Seiten ohne Sitzung (Anmeldung, Passwort
+setzen) und las `app.logo_path` aus der `config.php`. Der Einrichter schreibt
+dort den Hubschrauber hinein; ein Wechsel des Standards wirkte damit überall
+außer auf der einen Seite, die ihn zeigen soll. `logo_path` gilt jetzt nur noch
+für eine **fremde** Datei.
+
+**F-P3-AO — die Standorteliste warnte nicht vor Namensdubletten.** Sie war die
+einzige der sechs Stammdatenlisten ohne den weichen Hinweis auf gleichnamige
+eigene Einträge. Ein systemweiter Standort, den bereits ein Dutzend Konten
+selbst angelegt hatte, entstand ohne jeden Hinweis — und stand danach zweimal
+in deren Auswahlliste.
+
+**F-P3-AP — die Radios der Segmentwahl fingen Klicks ab.** `.segment-box`
+(Spezifität 0,1,0) verliert gegen `input[type=radio]` (0,1,1) weiter unten im
+Stylesheet, die jedem Radio 20 × 20 px gibt. Absolut positioniert und
+durchsichtig lagen die Kästchen damit über ihrer Umgebung. Das betraf **jede**
+Segmentwahl der Anwendung — Zeitraum, Suchfilter, die neuen Reiter. Aufgefallen
+beim Bedienen im Browser, nicht beim Lesen.
+
+Dazu behoben: Die Sammelleiste der NutzerInnen-Liste zeigte ihre Zahl in jeder
+Breite, aber der Knopf daneben war unter 720 px 100 % breit — die Zahl brach auf
+zwei Zeilen (40,3 px statt 20,1 px). Die Breitenausnahme hängt jetzt an der
+Zahl statt an der Schwelle.
+
 ## [Web 9.9.0] — 2026-08-27
 
 **O9b: die NutzerInnen-Liste, ausgelegt auf mehrere hundert Konten.** Keine

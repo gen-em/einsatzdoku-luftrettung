@@ -1130,7 +1130,15 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   border-radius:var(--radius);
   overflow:hidden;
 }
-.segment-box{position:absolute;opacity:0;width:0;height:0}
+/* DER SELEKTOR IST ABSICHTLICH SO LANG (F-P3-AP, O9c). `.segment-box`
+ * allein (0,1,0) verliert gegen `input[type=radio]` (0,1,1) in Abschnitt 15,
+ * die jedem Radio 20 x 20 px gibt — und weil diese Regel spaeter steht, blieb
+ * das Kaestchen 20 x 20 gross, nur durchsichtig. Absolut positioniert und
+ * unsichtbar lag es damit UEBER der Umgebung und fing Klicks ab; gefunden
+ * beim Bedienen der Wartungsseite („intercepts pointer events"). Es betraf
+ * jede Segmentwahl der Anwendung — Zeitraum, Suchfilter, Reiter. */
+input[type=radio].segment-box,
+input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
 .segment-taste{
   flex:1 1 auto;
   display:flex;align-items:center;justify-content:center;

@@ -1601,6 +1601,61 @@ $ausfuehren = $istCli
     || ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'run');
 if ($ausfuehren && !$istCli) { csrf_check(); }
 
+/* ---- Logo-Standard der Installation (E-P3-19/20, seit Web 9.10.0) ---------
+ *
+ * Bis Web 9.9.0 war der Standard eine Konstante in session_lib.php. Er gehoert
+ * hierher und nicht ins Profil: Er betrifft die ganze Installation und nicht
+ * ein Konto — die Anmeldeseite zeigt ihn, und jedes Konto ohne eigene Wahl
+ * folgt ihm.
+ *
+ * Warum die WARTUNG und nicht eine eigene Seite: Es ist eine Einstellung, die
+ * einmal im Leben einer Installation gesetzt wird, zusammen mit dem, was hier
+ * sonst steht (Umgebung, Aufraeumjob, Schluesselableitung). Eine eigene Seite
+ * fuer eine Einstellung ist ein Menuepunkt, den man einmal braucht und
+ * dreihundertmal ueberliest.
+ */
+$logoMeldung = null;
+if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['action'] ?? '') === 'logo_standard') {
+    csrf_check();
+    $wahl = (string)($_POST['logo'] ?? '');
+    if ($wahl !== 'hubschrauber' && $wahl !== 'fahrzeug') {
+        $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
+    } else {
+        $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
+            ->execute(['logo_standard', $wahl]);
+        $logoMeldung = ['ok', 'Standard der Installation: '
+            . ($wahl === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)')
+            . '. Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.'];
+    }
+}
+
+/**
+ * Liegt der NEF-Platzhalter noch (E-P3-19)?
+ *
+ * Die echte Datei ersetzt ihn 1:1 — gleicher Name, gleicher viewBox, kein
+ * Eingriff im Code. Damit der Hinweis dann VON SELBST verschwindet, wird nicht
+ * eine Zahl im Code gepflegt, sondern die DATEI gefragt: Der Platzhalter
+ * traegt das Wort in seinem Kopfkommentar. Gelesen werden nur die ersten 400
+ * Byte — der Kommentar steht ganz oben, und die ganze Datei zu lesen waere
+ * fuer eine Ja/Nein-Frage zu viel.
+ */
+function logo_platzhalter_liegt(): array
+{
+    $liegt = [];
+    foreach (['gen-em_logo_fahrzeug.svg', 'gen-em_logo_fahrzeug_weiss.svg'] as $datei) {
+        $pfad = __DIR__ . '/assets/images/' . $datei;
+        if (!is_file($pfad)) { continue; }
+        $f = @fopen($pfad, 'rb');
+        if ($f === false) { continue; }
+        $kopf = (string)fread($f, 400);
+        fclose($f);
+        if (str_contains($kopf, 'PLATZHALTER')) { $liegt[] = $datei; }
+    }
+    return $liegt;
+}
+
 /* ---- Inhaltspruefung vor destruktiven Migrationen (M6-01) ------------------
  *
  * Liefert je Spalte aus 'inhalt', wie viele Zeilen dort etwas stehen haben.
@@ -1916,6 +1971,35 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
        (<code>server/db.php</code>) wieder aufnehmen. Danach melden sich die
        Konten wie gewohnt an und werden beim nächsten Mal still angehoben.</p>
   <?php endif; ?>
+
+  <?php /* ---- Logo der Installation (E-P3-19/20) ----------------------- */ ?>
+  <h2>Logo</h2>
+  <?php if ($logoMeldung !== null): ?>
+    <?= ui_meldung_markup($logoMeldung[0], $logoMeldung[1]) ?>
+  <?php endif; ?>
+  <?php $platzhalter = logo_platzhalter_liegt(); ?>
+  <?php if ($platzhalter): ?>
+    <?= ui_meldung_markup('warn',
+        'Das Fahrzeug-Logo (NEF) ist ein Platzhalter — es steht hier, damit die '
+      . 'Logo-Wahl vollständig gebaut und geprüft werden kann, bevor die echte '
+      . 'Datei vorliegt. Sie ersetzt ihn 1:1: gleicher Name, gleiche Maße, kein '
+      . 'Eingriff im Code. Betroffen: ' . implode(', ', $platzhalter) . '. '
+      . 'Dieser Hinweis verschwindet von selbst, sobald die echten Dateien liegen.') ?>
+  <?php endif; ?>
+  <form method="post" class="listen-form">
+    <?= csrf_field() ?><input type="hidden" name="action" value="logo_standard">
+    <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
+                      'wert' => logo_standard(),
+                      'optionen' => ['hubschrauber' => 'Hubschrauber (RTH)',
+                                     'fahrzeug'     => 'Fahrzeug (NEF)']]); ?>
+    <p class="feld-hinweis">Der <strong>Standard dieser Installation</strong>. Er gilt für
+       die Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
+       hat — eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
+       bereits angemeldete Konten.</p>
+    <div class="listen-form-fuss">
+      <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+    </div>
+  </form>
 
   <h2>Umgebung</h2>
   <?php require_once __DIR__ . '/smtp.php'; ?>

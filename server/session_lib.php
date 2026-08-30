@@ -167,8 +167,40 @@ function session_ende_text(?string $grund): string
  * einstellungen.php ruft dieselbe Funktion nach dem Speichern auf.
  * ------------------------------------------------------------------------ */
 
-/** Standard der Installation. Bis O9 fest; danach eine Option der Wartung. */
-const LOGO_STANDARD = 'hubschrauber';
+/** Vorbelegung, solange die Installation nichts anderes gesetzt hat. */
+const LOGO_STANDARD_VORGABE = 'hubschrauber';
+
+/**
+ * Der Standard DIESER Installation (E-P3-19/20, einstellbar seit Web 9.10.0).
+ *
+ * Bis Web 9.9.0 war das eine Konstante. Jetzt steht der Wert in `app_state`
+ * und laesst sich in der Wartung umstellen — eine Installation, die
+ * ueberwiegend am Boden faehrt, soll nicht dauerhaft einen Hubschrauber im
+ * Kopf tragen.
+ *
+ * JE ANFRAGE EINMAL GELESEN. logo_stamm() faellt auf diese Funktion zurueck
+ * und wird auf jeder Seite mehrfach aufgerufen (Kopfleiste, Favicon).
+ *
+ * OHNE DATENBANK GILT DIE VORBELEGUNG. Diese Funktion laeuft auch dort, wo es
+ * noch keine Datenbank gibt: im Einrichter, und auf der Anmeldeseite bevor
+ * eine Verbindung steht. Eine Ausnahme darf die Seite nicht kosten — das Logo
+ * ist Zierde, kein Zugang.
+ */
+function logo_standard(): string
+{
+    static $wert = null;
+    if ($wert !== null) { return $wert; }
+    $wert = LOGO_STANDARD_VORGABE;
+    try {
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute(['logo_standard']);
+        $v = (string)$st->fetchColumn();
+        if ($v === 'fahrzeug' || $v === 'hubschrauber') { $wert = $v; }
+    } catch (Throwable) {
+        // Keine Datenbank, keine Tabelle, kein Eintrag: Vorbelegung.
+    }
+    return $wert;
+}
 
 /** Die waehlbaren Werte — auch die Pruefliste beim Speichern. */
 const LOGO_WAHLEN = ['', 'hubschrauber', 'fahrzeug', 'wechselnd'];
@@ -187,13 +219,26 @@ function logo_aufloesen(?string $wahl): string
         return random_int(0, 1) === 1 ? 'fahrzeug' : 'hubschrauber';
     }
     if ($w === 'hubschrauber' || $w === 'fahrzeug') { return $w; }
-    return LOGO_STANDARD;
+    return logo_standard();
 }
 
-/** Das aufgeloeste Logo in der Sitzung ablegen (Anmeldung, Profil-Speichern). */
+/**
+ * Die Wahl in der Sitzung ablegen (Anmeldung, Profil-Speichern).
+ *
+ * NUR „WECHSELND" WIRD HIER AUFGELOEST — dort faellt der Wuerfel, und zwar je
+ * Anmeldung; sonst spraenge das Logo beim Blaettern.
+ *
+ * Der Leerstring dagegen BLEIBT stehen und wird erst in logo_stamm()
+ * aufgeloest. Bis Web 9.9.0 wurde auch er hier festgeschrieben — das war
+ * richtig, solange der Standard eine Konstante war. Seit er eine Einstellung
+ * ist, waere es falsch: Wer ihn in der Wartung umstellt, saehe die Wirkung
+ * erst, wenn sich jede NutzerIn neu angemeldet hat. Jetzt wirkt sie sofort,
+ * und zwar bei genau denen, die keine eigene Wahl getroffen haben.
+ */
 function logo_sitzung_setzen(?string $wahl): void
 {
-    $_SESSION['logo_wahl'] = logo_aufloesen($wahl);
+    $w = (string)$wahl;
+    $_SESSION['logo_wahl'] = $w === 'wechselnd' ? logo_aufloesen($w) : $w;
 }
 
 /**
@@ -207,7 +252,11 @@ function logo_sitzung_setzen(?string $wahl): void
  */
 function logo_stamm(): string
 {
-    return ($_SESSION['logo_wahl'] ?? '') === 'fahrzeug'
-        ? 'gen-em_logo_fahrzeug'
-        : 'gen-em_logo_helicopter';
+    /* In der Sitzung steht die WAHL, nicht immer das Ergebnis: „wechselnd"
+     * ist schon bei der Anmeldung aufgeloest, der Leerstring erst hier —
+     * damit ein Wechsel des Installationsstandards sofort wirkt und nicht
+     * erst nach der naechsten Anmeldung (siehe logo_sitzung_setzen). */
+    $w = (string)($_SESSION['logo_wahl'] ?? '');
+    $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard();
+    return $auf === 'fahrzeug' ? 'gen-em_logo_fahrzeug' : 'gen-em_logo_helicopter';
 }

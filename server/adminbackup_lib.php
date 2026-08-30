@@ -1024,6 +1024,224 @@ function edbak_bestaetigung_passt(string $eingabe, string $soll): bool
     return $soll !== '' && strcasecmp(trim($eingabe), $soll) === 0;
 }
 
+/* ---- Zahlen der ganzen Ablage (O9c) --------------------------------------
+ *
+ * Die Regelseite nennt oben, wie viel in der Ablage liegt: Ordner, Pakete,
+ * Bytes. Anders als die NutzerInnen-Liste kommt das NICHT ohne Verzeichnisse
+ * aus — eine Groesse in Bytes steht in keiner Begleitdatei, sie steht nur an
+ * den Dateien.
+ *
+ * Das ist hier vertretbar und in der Liste nicht: Diese Seite EXISTIERT, um
+ * genau das zu beantworten, und sie wird selten geoeffnet. Die Liste dagegen
+ * ist der Weg zu einem Konto und wird staendig aufgerufen. Gemessen an 209
+ * Ordnern mit 421 Paketen: siehe Pruefprotokoll O9c.
+ */
+function edbak_ablage_zahlen(): array
+{
+    $wurzel = edbak_wurzel();
+    $z = ['ordner' => 0, 'pakete' => 0, 'bytes' => 0];
+    if (!is_dir($wurzel)) { return $z; }
+    foreach (scandir($wurzel) ?: [] as $n) {
+        if (!edbak_kennung_gueltig($n) || !is_dir($wurzel . '/' . $n)) { continue; }
+        $z['ordner']++;
+        foreach (scandir($wurzel . '/' . $n) ?: [] as $d) {
+            if (!edbak_paketname_gueltig($d)) { continue; }
+            $z['pakete']++;
+            $z['bytes'] += (int)@filesize($wurzel . '/' . $n . '/' . $d);
+        }
+    }
+    return $z;
+}
+
+/* ---- Die Zaehler ueber alle Konten (O9c) ----------------------------------
+ *
+ * Dieselbe Frage wie die Statuskacheln der NutzerInnen-Liste, aber ohne deren
+ * Zeilendaten: eine schmale Abfrage (Kennung und Rolle) plus die Karte aus
+ * edbak_staende(). Die Liste rechnet die Zahlen aus ihren eigenen Zeilen —
+ * beide benutzen dieselbe Regel (edbak_stand_aus_karte), damit sie nicht
+ * auseinanderlaufen koennen.
+ */
+function edbak_stand_zaehlen(): array
+{
+    $konten = db()->query('SELECT id, email, name, role, account_key FROM users')->fetchAll();
+    $karte  = edbak_staende();
+    $z = ['konten' => count($konten), 'admins' => 0, 'aktuell' => 0,
+          'ueberfaellig' => 0, 'nie' => 0, 'ohne_kennung' => 0, 'unbekannt' => 0];
+    foreach ($konten as $k) {
+        if ($k['role'] === 'admin') { $z['admins']++; }
+        $stand = edbak_stand_aus_karte($k['account_key'], $karte)['stand'];
+        if (isset($z[$stand])) { $z[$stand]++; }
+    }
+    return $z;
+}
+
+/**
+ * Die überfälligen und nie gesicherten Konten — für die Erinnerungsmail.
+ *
+ * Liefert je Konto Adresse, Name, Stand und Alter. Sortiert: was nie gesichert
+ * wurde zuerst, danach das Älteste — die Reihenfolge, in der man die Liste
+ * abarbeitet.
+ */
+function edbak_faellige_konten(): array
+{
+    $konten = db()->query('SELECT id, email, name, account_key FROM users ORDER BY email')->fetchAll();
+    $karte  = edbak_staende();
+    $liste = [];
+    foreach ($konten as $k) {
+        $stand = edbak_stand_aus_karte($k['account_key'], $karte);
+        if (!in_array($stand['stand'], ['ueberfaellig', 'nie'], true)) { continue; }
+        $liste[] = ['id' => (int)$k['id'], 'email' => (string)$k['email'],
+                    'name' => $k['name'], 'stand' => $stand['stand'],
+                    'tage' => $stand['tage']];
+    }
+    usort($liste, static function (array $a, array $b): int {
+        if ($a['stand'] !== $b['stand']) { return $a['stand'] === 'nie' ? -1 : 1; }
+        return (int)$b['tage'] <=> (int)$a['tage'];
+    });
+    return $liste;
+}
+
+/* ---- Sicherungen ohne Konto (O9c) -----------------------------------------
+ *
+ * Ordner, zu deren Kennung es keine Zeile in `users` (mehr) gibt — der Fall
+ * „Konto geloescht und neu aufgesetzt" (A8.2). Sie sind der Grund, aus dem die
+ * Uebersicht ueberhaupt aus dem VERZEICHNIS entsteht und nicht aus der
+ * Datenbank: Eine Liste aus `users` verschwiege genau die Sicherungen, um
+ * derentwillen es sie gibt.
+ *
+ * Das ist die schmale Fassung von edbak_uebersicht(): NUR die verwaisten
+ * Ordner. Die Konten selbst brauchen hier nichts mehr — ihre Sicherungen
+ * stehen seit Web 9.8.0 auf der Kontoseite.
+ */
+function edbak_verwaiste(): array
+{
+    $bekannt = [];
+    foreach (db()->query('SELECT account_key FROM users')->fetchAll(PDO::FETCH_COLUMN) as $k) {
+        if (edbak_kennung_gueltig($k)) { $bekannt[(string)$k] = true; }
+    }
+    $wurzel = edbak_wurzel();
+    if (!is_dir($wurzel)) { return []; }
+    $liste = [];
+    foreach (scandir($wurzel) ?: [] as $n) {
+        if (!edbak_kennung_gueltig($n) || !is_dir($wurzel . '/' . $n)) { continue; }
+        if (isset($bekannt[$n])) { continue; }
+        $begleit = edbak_begleit_lesen($n);
+        $liste[] = [
+            'account_key' => $n,
+            'lesbar'      => (bool)$begleit['lesbar'],
+            'email'       => $begleit['email'],
+            'name'        => $begleit['name'],
+            'pakete'      => edbak_pakete($n),
+            'freigabe'    => $begleit['freigabe'] ?? null,
+        ];
+    }
+    return $liste;
+}
+
+/* ---- Die wöchentliche Erinnerung an die Administration (E-P3-41, O9c) -----
+ *
+ * ES GIBT KEINEN CRON. Auf diesem Webspace laeuft kein Zeitplan; was
+ * regelmaessig geschieht, haengt am Aufraeumjob (run_cleanup_if_due, db.php),
+ * und der laeuft huckepack auf der ersten Anfrage des Tages. Die Erinnerung
+ * ist deshalb genau genommen keine Wochenmail, sondern: hoechstens einmal je
+ * Woche, und zwar dann, wenn die Anwendung an diesem Tag ueberhaupt benutzt
+ * wurde. Wird sie zwei Wochen lang nicht angefasst, kommt die Mail zwei
+ * Wochen spaeter. Das steht so auf der Seite — eine Zusage, die nur bei
+ * Benutzung gilt, muss man als solche kennzeichnen.
+ *
+ * SIE KOMMT NUR, WENN ES ETWAS ZU MELDEN GIBT. Eine Wochenmail „0 Konten
+ * ueberfaellig" ist nach dem dritten Mal keine Meldung mehr, sondern etwas,
+ * das man wegklickt — und dann geht auch die vierte unter, in der etwas steht.
+ *
+ * VERSCHICKT WIRD NACH DER ANTWORT (register_shutdown_function). Der
+ * Aufraeumjob laeuft VOR der Seitenausgabe; ein SMTP-Gespraech an dieser
+ * Stelle waere eine messbare Verzoegerung auf der Seite irgendeiner NutzerIn,
+ * die damit nichts zu tun hat.
+ */
+function edbak_erinnerung_faellig(): bool
+{
+    if (!edbak_admin_mail_an()) { return false; }
+    $letzte = edbak_marke_lesen('adminbackup_mail_last');
+    if ($letzte !== null && $letzte !== '') {
+        $stempel = strtotime($letzte);
+        if ($stempel !== false && (time() - $stempel) < 7 * 86400) { return false; }
+    }
+    return true;
+}
+
+/**
+ * Prüfen und, wenn nötig, den Versand für nach der Antwort vormerken.
+ *
+ * Aufgerufen aus dem Aufräumjob (db.php). Gibt zurück, wie viele Konten
+ * gemeldet werden — 0 heisst „nichts zu tun".
+ */
+function edbak_erinnerung_planen(): int
+{
+    if (!edbak_erinnerung_faellig()) { return 0; }
+    $faellig = edbak_faellige_konten();
+    if (!$faellig) { return 0; }
+
+    $admins = db()->query("SELECT email, name FROM users
+                            WHERE role = 'admin' AND password_hash IS NOT NULL
+                            ORDER BY email")->fetchAll();
+    if (!$admins) { return 0; }
+
+    /* Die Marke steht VOR dem Versand, wie beim Aufräumjob selbst: Zwei
+     * gleichzeitige Anfragen sollen nicht beide schicken. Der teurere Fehler
+     * ist die doppelte Mail, nicht die ausgefallene — die nächste kommt in
+     * sieben Tagen. */
+    edbak_marke_setzen('adminbackup_mail_last', gmdate('Y-m-d'));
+
+    $text = edbak_erinnerung_text($faellig);
+    register_shutdown_function(static function () use ($admins, $text): void {
+        require_once __DIR__ . '/smtp.php';
+        foreach ($admins as $a) {
+            @smtp_send((string)$a['email'],
+                'Sicherungen fällig — Gen-EM Einsatzdokumentation Notarzt', $text);
+        }
+    });
+    return count($faellig);
+}
+
+/**
+ * Der Text der Erinnerungsmail.
+ *
+ * KEINE NAMEN, KEINE ZAHLEN AUS DEN KONTEN — nur Adressen und das Alter der
+ * letzten Sicherung. Eine Mail liegt unverschlüsselt im Postfach; was darin
+ * steht, steht damit auch auf jedem Mailserver dazwischen. Die Adresse muss
+ * hinein, sonst weiss niemand, welches Konto gemeint ist; alles Weitere steht
+ * in der Anwendung.
+ *
+ * Aufbau wie die übrigen Vorlagen (admin_users.php, reset_request.php): Anrede,
+ * Sache, was zu tun ist, Support-Adresse, Gruss. Reiner Text, kein HTML.
+ */
+function edbak_erinnerung_text(array $faellig): string
+{
+    global $CFG;
+    $nie   = array_filter($faellig, static fn($k) => $k['stand'] === 'nie');
+    $alt   = array_filter($faellig, static fn($k) => $k['stand'] === 'ueberfaellig');
+    $zeilen = [];
+    foreach ($nie as $k) { $zeilen[] = '  ' . $k['email'] . ' — nie gesichert'; }
+    foreach ($alt as $k) {
+        $zeilen[] = '  ' . $k['email'] . ' — letzte Sicherung vor ' . (int)$k['tage'] . ' Tagen';
+    }
+    $basis = (string)($CFG['app']['base_url'] ?? '');
+
+    return "Hallo,\n\n"
+         . "in der Gen-EM Einsatzdokumentation Notarzt sind " . count($faellig)
+         . " Konten ohne aktuelle Sicherung:\n\n"
+         . implode("\n", $zeilen) . "\n\n"
+         . "Als überfällig gilt ein Konto, dessen letzte Sicherung älter ist als "
+         . edbak_intervall() . " Tage.\n\n"
+         . "Sichern lässt sich jedes Konto auf seiner Kontoseite, mehrere auf einmal\n"
+         . "über die Auswahl in der NutzerInnen-Liste:\n\n"
+         . ($basis !== '' ? $basis . "/admin_users.php?f=nie\n" . $basis . "/admin_users.php?f=ueberfaellig\n\n" : '')
+         . "Diese Erinnerung kommt höchstens einmal je Woche und nur, wenn es etwas zu\n"
+         . "melden gibt. Abschalten lässt sie sich unter Einstellungen → Sicherungen.\n\n"
+         . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+         . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n";
+}
+
 /** Plakettentext und -ton zu einem Stand aus edbak_konto_stand(). */
 function edbak_stand_plakette(array $stand): array
 {
