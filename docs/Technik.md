@@ -217,6 +217,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
+│   │                      Rechner auf, übersetzt die Uhr-App und startet
+│   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
 │   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
 │   │                      (jede Klasse des alten Stylesheets hat eine Regel
 │   │                      oder steht mit Begründung auf der Streichliste) und
@@ -2196,6 +2199,30 @@ Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klasse
 > jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
 > aufgefallen ist.
 
+**Was der Typprüfer verlangt (Stand 1.8.2).** Drei Eigenheiten kosten sonst
+jedes Mal aufs Neue Zeit:
+
+- **Die Null-Prüfung greift nur über lokale Variablen.** `if (mission == null)
+  { return; }` überzeugt den Prüfer nicht, wenn danach `mission[...]` steht —
+  bei einem Modul-Feld verfolgt er den Fluss nicht. Den Wert zuerst in eine
+  lokale Variable holen, dann prüfen, dann benutzen. Dasselbe gilt für
+  `info.position` und jedes andere Feld.
+- **`Storage.getValue()` liefert einen Sammeltyp** über alles Speicherbare, von
+  `BitmapResource` bis `ScanResult`. Jede Zuweisung daraus braucht eine
+  Zusicherung — sinnvollerweise dieselbe Struktur, die das zugehörige `save()`
+  geschrieben hat.
+- **Arrays brauchen einen Elementtyp.** `Lang.Array` allein lässt offen, ob
+  `x[i][2]` erlaubt ist. Für die Tupellisten `Lang.Array<Lang.Array>`, für die
+  Warteschlangen `Lang.Array<Lang.Dictionary>`.
+
+Beim Zusichern gilt: **lieber keine Angabe als eine falsche.** Der Punktpuffer
+in `Track` führt Breite und Länge als `Double`, die Höhe als `Float` (die
+fehlen darf) und den Zeitstempel als `Number` — `Lang.Array<Lang.Number>` wäre
+bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
+Lokale Variablen lassen sich übrigens **nicht** annotieren
+(„Local variable types are inferred"); die Zusicherung gehört dann an die
+Zuweisung.
+
 ### 5.1 Tastenbelegung je Geräteprofil
 
 Die Zielgeräte unterscheiden sich in zwei Achsen: **fünf oder drei Tasten**
@@ -2337,6 +2364,41 @@ Arbeitszustand zurück (Zähler, Phase, Tag) und beendet die App per
 Sende-Ansicht läuft verzögert (Modul `EndDay`), weil ein direkter
 `switchToView()` aus `ConfirmationDelegate.onResponse()` von der sich
 schließenden Bestätigung wieder entfernt würde.
+
+### 5.2b Uhr-App ohne Arbeitsplatz prüfen — `tools/uhr-pruefstand`
+
+Der Build oben setzt einen eingerichteten Arbeitsplatz voraus. Damit war jede
+Änderung am Monkey-C-Code aus einer Wegwerf-Umgebung heraus blind: kein
+Kompilat, kein Simulatorlauf, nur Lesen. `tools/uhr-pruefstand/pruefstand.sh`
+schließt diese Lücke — es baut SDK und Simulator auf einer nackten
+Linux-Rechner auf und startet die App unter einem virtuellen X-Server.
+
+Drei der vier nötigen Teile beschafft das Skript allein: das SDK von
+`developer.garmin.com` (keine Anmeldung nötig), die Systembibliotheken aus den
+Ubuntu-Quellen und den Entwickler-Schlüssel per `openssl` — für den Simulator
+genügt jeder gültige Schlüssel, der des Arbeitsplatzes gehört nicht dorthin.
+
+Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
+(`Fonts/`) liefert nur der SDK-Manager aus**, und der ist eine
+Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
+nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
+geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
+Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Fehlen die
+Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
+`Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
+aber an der Umgebung.
+
+Zwei Eigenheiten sind der Erwähnung wert. Der Simulator ist gegen
+`webkit2gtk 4.0` gebunden, das es in Ubuntu 24.04 nicht mehr gibt; das Skript
+holt die 22.04-Stände und legt sie **neben** den Simulator, statt am System zu
+drehen. Und Bedienung wird als X-Ereignis zugestellt — Tastendruck, Tipp,
+Langdruck und Wischgeste kommen so bis in die App durch, gemessen mit der
+Eingabe-Probe (s. `Geraete-Eingabe.md`).
+
+Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
+keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
+aussieht — nicht, dass es richtig ist. Anleitung:
+`tools/uhr-pruefstand/LIESMICH.md`.
 
 ## 6. Deployment
 

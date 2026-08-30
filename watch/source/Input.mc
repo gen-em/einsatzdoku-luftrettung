@@ -53,7 +53,6 @@ module Input {
     // Bedienhinweise auf den Oberflaechen — je Profil andere Woerter
     function lSelect() as Lang.String     { return DeviceProfile.L_SELECT; }
     function lSelectHold() as Lang.String { return DeviceProfile.L_SELECT_HOLD; }
-    function lPageDown() as Lang.String   { return DeviceProfile.L_PAGE_DOWN; }
 }
 
 // ---------------------------------------------------------------------------

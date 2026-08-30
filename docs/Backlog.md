@@ -51,10 +51,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
     Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
     abgebildet und bleibt.
-13. **Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen.**
-    Stand bis Web 5.4.0 irrtümlich als zweite Nummer 5 in dieser Liste — die
-    5 gehört dem Geräte-Limit (siehe *Erledigt*). Inhalt unverändert, nur die
-    Nummer ist neu vergeben; ältere Verweise auf „Nr. 5b" meinen diesen Punkt.
 14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
     abfragen und trennen.** Fall: eine geteilt genutzte Uhr. Wird sie neu
     gekoppelt und schlägt der Vorgang fehl, dokumentiert sie stillschweigend
@@ -451,6 +447,49 @@ zutreffen.
     (Content-Security-Policy) eng formulieren lässt.
     *(Eintrag rekonstruiert in Web 7.2.0 — s. Kopfnotiz. Fundstellen:
     Backlog Nr. 8, `docs/Technik.md`, Changelog Web 5.2.0.)*
+
+13. **Kosmetik Uhr-Code: Typprüfer-Warnungen („container access") auflösen.**
+    *Erledigt mit Uhr 1.8.1.* Stand bis Web 5.4.0 irrtümlich als zweite
+    Nummer 5 in dieser Liste; ältere Verweise auf „Nr. 5b" meinen diesen Punkt.
+    Der Bau meldete **29 Warnungen**, davon 28 „Cannot determine if container
+    access is using container type" in `ClockView.mc`, `CprView.mc`,
+    `Model.mc`, `Track.mc` und `Uploader.mc`, dazu eine nicht erreichbare
+    Anweisung. Die Ursache war überall dieselbe und harmloser als der Wortlaut
+    vermuten lässt: Arrays waren als `Lang.Array` **ohne Elementtyp**
+    deklariert, weshalb der Prüfer bei `items[i][2]` nicht wusste, ob das
+    innere Ding überhaupt indizierbar ist. Die Zusicherungen auf den Einzelwert
+    (`as Lang.String`) standen längst da — es fehlte nur die Angabe am Behälter.
+    Ergänzt wurden `Lang.Array<Lang.Array>` für die Tupellisten
+    (Menüeinträge `[Label, Farbe, ID]`, Phasen, Reanimationsereignisse) und
+    `Lang.Array<Lang.Dictionary>` für die beiden Warteschlangen in `Model`.
+    Zwei Stellen brauchten mehr als eine Zeile. Der Punktpuffer in `Track`
+    heißt jetzt `Lang.Array<Lang.Numeric or Null>` und **nicht**
+    `<Lang.Number>` — der erste Versuch mit `Number` erzeugte drei
+    Übersetzungsfehler, weil dort Breite und Länge als `Double`, die Höhe als
+    `Float` und der Zeitstempel als `Number` nebeneinander liegen; die Höhe
+    kann fehlen. Und die lokale Variable `chunk` ließ sich nicht annotieren
+    („Local variable types are inferred"), weshalb die Zusicherung an die
+    Zuweisung aus `Storage.getValue()` wanderte.
+    Die nicht erreichbare Anweisung war ein `return true;` hinter
+    `System.exit()` in `StartView.actBack()`. Es ist entfallen; ein Kommentar
+    hält fest, warum dort keines steht.
+    Ergebnis: **0 Warnungen, 0 Fehler** auf allen drei Zielgeräten, und die
+    Kompilate sind dabei 16 bis 32 Byte **kleiner** geworden — die Typangaben
+    kosten zur Laufzeit nichts. Geprüft mit `tools/uhr-pruefstand`.
+    *Fortgesetzt mit Uhr 1.8.2:* Die strenge Typprüfung `-l 3` meldet statt
+    **226** noch **4**. Die erste Zahl war irreführend — eine einzelne Zeile
+    erzeugt bis zu 16 Meldungen, weil der Prüfer jeden Typ des Sammeltyps
+    einzeln durchgeht; nach Fundstelle gezählt waren es **77 Stellen**. Drei
+    Muster erklärten fast alles: Zuweisungen aus `Storage.getValue()` (dessen
+    Sammeltyp alles Speicherbare umfasst), die Null-Flussanalyse (sie greift
+    **nur über lokale Variablen**, nicht über ein Modul-Feld hinweg) und
+    fehlende Parametertypen. Anders als der erste Teil kostet das Platz:
+    **+448 Byte** (fenix6pro, fr945) bzw. **+480 Byte** (venu3s). Die vier
+    verbliebenen Stellen sind alle `Storage.setValue()` mit Dictionary oder
+    Array; sie aufzulösen hieße, die Datenstruktur zu ändern — für vier
+    Meldungen der falsche Preis. Mit erledigt: `Input.lPageDown()` und
+    `L_PAGE_DOWN` waren toter Code und sind entfallen, und die Wisch-Kommentare
+    an `CprView.onPreviousPage/onNextPage` waren vertauscht.
 
 15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
     *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.

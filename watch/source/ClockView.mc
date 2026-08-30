@@ -267,7 +267,7 @@ class QuitConfirmDelegate extends WatchUi.ConfirmationDelegate {
 
 class QuickMenuView extends WatchUi.View {
 
-    var items as Lang.Array = [];   // [Label, Farbe, ID]
+    var items as Lang.Array<Lang.Array> = [];   // [Label, Farbe, ID]
     var index as Lang.Number = 0;
 
     function initialize() {
@@ -367,12 +367,15 @@ class QuickMenuDelegate extends WatchUi.BehaviorDelegate {
         if (src == null) {
             menu.addItem(new WatchUi.MenuItem("Kein Einsatz", null, 0, null));
         } else {
-            var phases = src["phases"] as Lang.Array;
+            var phases = src["phases"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < phases.size(); i++) {
                 var p = phases[i];
-                var hhmm = (p.size() > 4) ? p[4] : (p[1] as Lang.String).substring(11, 16);
+                var hhmm = (p.size() > 4)
+                    ? p[4] as Lang.String
+                    : (p[1] as Lang.String).substring(11, 16);
                 menu.addItem(new WatchUi.MenuItem(
-                    hhmm + "  " + Const.PHASE_LABELS[p[0]], null, i, null));
+                    hhmm + "  " + Const.PHASE_LABELS[p[0] as Lang.Number],
+                    null, i, null));
             }
         }
         WatchUi.pushView(menu, new ListCloseDelegate(), WatchUi.SLIDE_LEFT);

@@ -79,9 +79,12 @@ module Cpr {
     }
 
     function _startTimer() as Void {
-        if (_timer == null) { _timer = new Timer.Timer(); }
-        if (_cb == null) { _cb = new CprCb(); }
-        _timer.start(_cb.method(:tick), 1000, true);
+        // s. Hinweis in Uploader._send(): lokal halten, in einem Zug anlegen.
+        var tmr = _timer;
+        if (tmr == null) { tmr = new Timer.Timer(); _timer = tmr; }
+        var cb = _cb;
+        if (cb == null) { cb = new CprCb(); _cb = cb; }
+        tmr.start(cb.method(:tick), 1000, true);
     }
 
     function _persist() as Void {
@@ -96,11 +99,11 @@ module Cpr {
     // waehrend des Neustarts verstrichen, steht er wie vorgesehen auf 0:00.
     function restore() as Void {
         var s = Storage.getValue("cpr");
-        if (s instanceof Lang.Dictionary && s["a"] == true) {
+        if (s instanceof Lang.Dictionary && true.equals(s["a"])) {
             active = true;
-            paused = (s["p"] == true);         // Pausenzustand uebersteht Neustart
-            startEpoch = s["s"] != null ? s["s"] : Util.epochNow();
-            cycleEndEpoch = s["c"] != null ? s["c"] : 0;
+            paused = true.equals(s["p"]);      // Pausenzustand uebersteht Neustart
+            startEpoch = s["s"] != null ? s["s"] as Lang.Number : Util.epochNow();
+            cycleEndEpoch = s["c"] != null ? s["c"] as Lang.Number : 0;
             if (cycleEndEpoch > 0 && Util.epochNow() >= cycleEndEpoch) {
                 cycleEndEpoch = 0;               // Ende verpasst -> steht bei 0:00
                 _alarmFired = true;              // nicht nachtraeglich vibrieren

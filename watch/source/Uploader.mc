@@ -54,21 +54,25 @@ module Uploader {
     function _findJob() as Lang.Dictionary or Null {
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
             var m = Model.pendingMissions[i];
-            if (_openPoints(m["ref"]) > 0 || !_isAcked(m["ref"])) {
+            var mref = m["ref"] as Lang.String;
+            if (_openPoints(mref) > 0 || !_isAcked(mref)) {
                 return { "kind" => "mission", "data" => m, "pendingIdx" => i };
             }
         }
         for (var i = 0; i < Model.pendingRest.size(); i++) {
             var r = Model.pendingRest[i];
-            if (_openPoints(r["ref"]) > 0 || !_isAcked(r["ref"])) {
+            var rref = r["ref"] as Lang.String;
+            if (_openPoints(rref) > 0 || !_isAcked(rref)) {
                 return { "kind" => "rest_segment", "data" => r, "pendingIdx" => i };
             }
         }
-        if (Model.restSegment != null && _openPoints(Model.restSegment["ref"]) > 0) {
-            return { "kind" => "rest_segment", "data" => Model.restSegment, "pendingIdx" => -1 };
+        var rest = Model.restSegment;        // lokal: Null-Pruefung greift nur so
+        if (rest != null && _openPoints(rest["ref"] as Lang.String) > 0) {
+            return { "kind" => "rest_segment", "data" => rest, "pendingIdx" => -1 };
         }
-        if (Model.mission != null && _openPoints(Model.mission["ref"]) > 0) {
-            return { "kind" => "mission", "data" => Model.mission, "pendingIdx" => -1 };
+        var mis = Model.mission;
+        if (mis != null && _openPoints(mis["ref"] as Lang.String) > 0) {
+            return { "kind" => "mission", "data" => mis, "pendingIdx" => -1 };
         }
         return null;
     }
@@ -117,11 +121,11 @@ module Uploader {
         // dasselbe in umstaendlich.
         if (d["dref"] != null) { body["day_ref"] = d["dref"]; }
 
-        if ("mission".equals(job["kind"])) {
+        if ("mission".equals(job["kind"] as Lang.String)) {
             body["distance_m"] = (d["dist"] != null) ? d["dist"] : Track.distanceM.toNumber();
             body["ascent_m"]   = (d["asc"]  != null) ? d["asc"]  : Track.ascentM.toNumber();
             var phases = [];
-            var raw = d["phases"] as Lang.Array;
+            var raw = d["phases"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < raw.size(); i++) {
                 var p = raw[i];
                 phases.add({ "phase" => p[0], "at" => p[1], "lat" => p[2], "lon" => p[3] });
@@ -133,7 +137,7 @@ module Uploader {
                 for (var s = 0; s < sessions.size(); s++) {
                     var sess = sessions[s] as Lang.Dictionary;
                     var evs = [];
-                    var rraw = sess["events"] as Lang.Array;
+                    var rraw = sess["events"] as Lang.Array<Lang.Array>;
                     for (var i = 0; i < rraw.size(); i++) {
                         evs.add({ "type" => rraw[i][0], "at" => rraw[i][1] });
                     }
@@ -159,8 +163,12 @@ module Uploader {
                       "pendingIdx" => job["pendingIdx"],
                       "final" => d["final"] == true };
 
-        if (_cb == null) { _cb = new UploaderCb(); }
-        Communications.makeWebRequest(url, body, opts, _cb.method(:onResponse));
+        // Lokal statt ueber _cb: Die Typpruefung verfolgt eine Null-Pruefung
+        // nur ueber lokale Variablen. Anlegen und Merken in einem Zug, sonst
+        // entsteht eine Pruefung, die der Compiler als unerreichbar meldet.
+        var cb = _cb;
+        if (cb == null) { cb = new UploaderCb(); _cb = cb; }
+        Communications.makeWebRequest(url, body, opts, cb.method(:onResponse));
     }
 
     // Zugangsdaten: bevorzugt aus der Kopplung (Storage), sonst aus den
@@ -196,7 +204,7 @@ module Uploader {
         // ".../xyz.php" -> ".../"
         var cut = u.length();
         for (var i = u.length() - 1; i >= 8; i--) {
-            if (u.substring(i, i + 1).equals("/")) { cut = i + 1; break; }
+            if ("/".equals(u.substring(i, i + 1))) { cut = i + 1; break; }
         }
         return u.substring(0, cut) as Lang.String;
     }
@@ -234,7 +242,7 @@ module Uploader {
                 Storage.deleteValue("meta_" + ref);
                 var idx = ctx["pendingIdx"] as Lang.Number;
                 if (idx >= 0) {
-                    if ("mission".equals(ctx["kind"])) { Model.pendingMissions.remove(Model.pendingMissions[idx]); }
+                    if ("mission".equals(ctx["kind"] as Lang.String)) { Model.pendingMissions.remove(Model.pendingMissions[idx]); }
                     else { Model.pendingRest.remove(Model.pendingRest[idx]); }
                     Model.save();
                 }
@@ -250,10 +258,10 @@ module Uploader {
 
     function _ackedSeq(ref as Lang.String) as Lang.Number {
         var v = Storage.getValue("ack_" + ref);
-        return v != null ? v : 0;
+        return v != null ? v as Lang.Number : 0;
     }
     function _isAcked(ref as Lang.String) as Lang.Boolean {
-        return Storage.getValue("meta_" + ref) == true;   // Metadaten mind. 1x bestaetigt
+        return true.equals(Storage.getValue("meta_" + ref));   // Metadaten mind. 1x bestaetigt
     }
     function _setAcked(ref as Lang.String, seq as Lang.Number, meta as Lang.Boolean) as Void {
         Storage.setValue("ack_" + ref, seq);

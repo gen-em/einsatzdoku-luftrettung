@@ -248,14 +248,14 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
         _v = v;
     }
 
-    function onPreviousPage() as Lang.Boolean {           // UP bzw. Wischen hoch
+    function onPreviousPage() as Lang.Boolean {           // UP-Taste bzw. Wischen RUNTER
         var n = CprMenuView.ITEMS.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
         return true;
     }
 
-    function onNextPage() as Lang.Boolean {               // DOWN bzw. Wischen runter
+    function onNextPage() as Lang.Boolean {               // DOWN-Taste bzw. Wischen HOCH
         _v.index = (_v.index + 1) % CprMenuView.ITEMS.size();
         WatchUi.requestUpdate();
         return true;
@@ -309,7 +309,7 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
 // ist nicht anwaehlbar; das Blaettern ueberspringt ihn.
 class ResusOverviewView extends WatchUi.View {
 
-    var items as Lang.Array = [];      // [Label, Farbe, ID]
+    var items as Lang.Array<Lang.Array> = [];      // [Label, Farbe, ID]
     var index as Lang.Number = 0;
 
     function initialize() {
@@ -325,7 +325,7 @@ class ResusOverviewView extends WatchUi.View {
         } else {
             items.add([(sess["startLocal"] as Lang.String) + "  Beginn",
                        0xFFFFFF, :none]);
-            var evs = sess["events"] as Lang.Array;
+            var evs = sess["events"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < evs.size(); i++) {
                 var ev = evs[i];
                 items.add([(ev[2] as Lang.String) + "  " + Const.RESUS_LABELS[ev[0]],

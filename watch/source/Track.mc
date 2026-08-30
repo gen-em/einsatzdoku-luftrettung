@@ -5,6 +5,7 @@
 // Persistenz: Chunks a 200 Punkte unter Schluesseln "<ref>_<n>", damit die
 // 8-KB-Grenze pro Storage-Wert eingehalten wird. Meta unter K_TRACK_META.
 using Toybox.Position;
+using Toybox.Application;
 using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.Math;
@@ -25,10 +26,12 @@ module Track {
     // aktiver Puffer (Einsatz ODER Ruhe-Segment — nie beides)
     var _ref as Lang.String or Null = null;   // client_ref des aktiven Tracks
     var _isMission as Lang.Boolean = false;
-    var _buf as Lang.Array = [];              // flacher Punktpuffer (nur Tail seit letztem Flush)
+    var _buf as Lang.Array<Lang.Numeric or Null> = [];              // flacher Punktpuffer (nur Tail seit letztem Flush)
     var _count as Lang.Number = 0;            // Gesamtpunkte des aktiven Tracks
 
-    var _lastLat = null; var _lastLon = null; var _lastEle = null;
+    var _lastLat as Lang.Double or Null = null;
+    var _lastLon as Lang.Double or Null = null;
+    var _lastEle as Lang.Float or Null = null;
     var _lastTs as Lang.Number = 0;
 
     var distanceM as Lang.Float = 0.0;        // aktueller Einsatz
@@ -36,7 +39,7 @@ module Track {
     var speedMs as Lang.Float = 0.0;          // aktuelle Geschwindigkeit (m/s)
 
     // Anzeige-Polylinie (nur aktueller Einsatz), flach [lat,lon,...]
-    var display as Lang.Array = [];
+    var display as Lang.Array<Lang.Double> = [];
     var _displayStride as Lang.Number = 1;    // jeder n-te Punkt kommt in die Anzeige
     var _sinceDisplay as Lang.Number = 0;
 
@@ -77,21 +80,28 @@ module Track {
     // ---- Positions-Callback -------------------------------------------------
 
     function onPosition(info as Position.Info) as Void {
-        if (_ref == null || info.position == null) { return; }
-        if (info.accuracy != null && info.accuracy < Position.QUALITY_POOR) { return; }
+        // Ueber lokale Variablen statt ueber info.xxx: Die Typpruefung verfolgt
+        // eine Null-Pruefung nur bei lokalen Variablen weiter, nicht ueber den
+        // Feldzugriff hinweg.
+        var pos = info.position;
+        if (_ref == null || pos == null) { return; }
+        var acc = info.accuracy;
+        if (acc != null && acc < Position.QUALITY_POOR) { return; }
 
-        var deg = info.position.toDegrees();
+        var deg = pos.toDegrees();
         var lat = deg[0]; var lon = deg[1];
         var ele = info.altitude;
         var now = Util.epochNow();
 
         // Geschwindigkeit immer uebernehmen (auch wenn der Punkt ausgeduennt wird)
-        if (info.speed != null) { speedMs = info.speed; }
+        var spd = info.speed;
+        if (spd != null) { speedMs = spd; }
 
         // Ausduennung: nie oefter als 1/s; dann >= 15 m ODER >= 10 s
         if (now - _lastTs < Const.THIN_MIN_GAP_S) { return; }
-        if (_lastLat != null) {
-            var d = _haversine(_lastLat, _lastLon, lat, lon);
+        var pLat = _lastLat; var pLon = _lastLon;   // lokal: s. Hinweis oben
+        if (pLat != null && pLon != null) {
+            var d = _haversine(pLat, pLon, lat, lon);
             if (d < Const.THIN_MIN_DIST_M && (now - _lastTs) < Const.THIN_MAX_GAP_S) {
                 return;
             }
@@ -126,7 +136,7 @@ module Track {
 
     // ---- Anzeige-Polylinie (Cap 1000 mit Dichte-Halbierung) -----------------
 
-    function _addDisplayPoint(lat, lon) as Void {
+    function _addDisplayPoint(lat as Lang.Double, lon as Lang.Double) as Void {
         _sinceDisplay += 1;
         if (_sinceDisplay < _displayStride) { return; }
         _sinceDisplay = 0;
@@ -134,7 +144,7 @@ module Track {
 
         if (display.size() >= Const.DISPLAY_MAX_POINTS * 2) {
             // jeden zweiten Punkt entfernen -> gesamter Track bleibt sichtbar
-            var halved = [];
+            var halved = [] as Lang.Array<Lang.Double>;
             for (var i = 0; i < display.size(); i += 4) {
                 halved.add(display[i]); halved.add(display[i + 1]);
             }
@@ -146,9 +156,11 @@ module Track {
     // ---- Persistenz + Upload-Zugriff ---------------------------------------
 
     function _flush() as Void {
-        if (_ref == null || _buf.size() == 0) { return; }
+        var ref = _ref;                             // lokal: s. Hinweis oben
+        if (ref == null || _buf.size() == 0) { return; }
         var chunkIdx = (_count - (_buf.size() / 4)) / CHUNK_POINTS;
-        Storage.setValue(_ref + "_" + chunkIdx.toString(), _buf);
+        Storage.setValue(ref + "_" + chunkIdx.toString(),
+                         _buf as Lang.Array<Application.PropertyValueType>);
         // Achtung: Chunks sind nur dann sauber ausgerichtet, wenn immer bei
         // vollem Chunk geflusht wird; Rest-Flush (App-Ende) erzeugt Teilchunk,
         // der beim naechsten Punkt ueberschrieben wuerde -> deshalb nach einem
@@ -169,10 +181,15 @@ module Track {
     function restore() as Void {
         var m = Storage.getValue(Const.K_TRACK_META);
         if (m instanceof Lang.Dictionary && m["ref"] != null) {
-            _ref = m["ref"]; _isMission = m["isMission"] == true;
-            _count = m["count"] != null ? m["count"] : 0;
-            distanceM = m["dist"] != null ? m["dist"] : 0.0;
-            ascentM = m["asc"] != null ? m["asc"] : 0.0;
+            // Storage.getValue() liefert einen Sammeltyp, der von BitmapResource
+            // bis ScanResult alles einschliesst. Was hier herauskommt, hat
+            // _saveMeta() geschrieben — die Zusicherungen halten den Typprüfer
+            // an derselben Stelle fest, an der die Struktur ohnehin feststeht.
+            var ref = m["ref"] as Lang.String;
+            _ref = ref; _isMission = true.equals(m["isMission"]);
+            _count = m["count"] != null ? m["count"] as Lang.Number : 0;
+            distanceM = m["dist"] != null ? m["dist"] as Lang.Float : 0.0;
+            ascentM = m["asc"] != null ? m["asc"] as Lang.Float : 0.0;
 
             // WICHTIG: Ein beim Herunterfahren gesicherter TEIL-Chunk muss
             // zurueck in den RAM-Puffer, damit die Chunk-Ausrichtung stimmt
@@ -181,16 +198,18 @@ module Track {
             // Teil-Chunk ueberschreiben -> Datenverlust.
             _buf = [];
             if (_count % CHUNK_POINTS != 0) {
-                var tail = Storage.getValue(_ref + "_" + (_count / CHUNK_POINTS).toString());
-                if (tail instanceof Lang.Array) { _buf = tail; }
+                var tail = Storage.getValue(ref + "_" + (_count / CHUNK_POINTS).toString());
+                if (tail instanceof Lang.Array) {
+                    _buf = tail as Lang.Array<Lang.Numeric or Null>;
+                }
             }
 
             // Anzeige-Polylinie aus Chunks grob rekonstruieren
             display = []; _displayStride = 1; _sinceDisplay = 0;
             if (_isMission) {
-                var pts = readPoints(_ref, 0, _count);
+                var pts = readPoints(ref, 0, _count);
                 for (var i = 0; i < pts.size(); i += 4) {
-                    _addDisplayPoint(pts[i], pts[i + 1]);
+                    _addDisplayPoint(pts[i] as Lang.Double, pts[i + 1] as Lang.Double);
                 }
             }
         }
@@ -205,13 +224,15 @@ module Track {
         var isActive = ref.equals(_ref);
         var tailStart = isActive ? (_count - (_buf.size() / 4)) : -1;
         while (out.size() / 4 < n) {
-            var chunk; var offs; var end;
+            var chunk;
+            var offs; var end;
             if (isActive && seq >= tailStart) {
                 chunk = _buf;
                 offs = (seq - tailStart) * 4;
                 end = chunk.size();
             } else {
-                chunk = Storage.getValue(ref + "_" + (seq / CHUNK_POINTS).toString());
+                chunk = Storage.getValue(ref + "_" + (seq / CHUNK_POINTS).toString())
+                        as Lang.Array<Lang.Numeric or Null> or Null;
                 if (chunk == null) { break; }
                 offs = (seq % CHUNK_POINTS) * 4;
                 end = chunk.size();
@@ -240,7 +261,7 @@ module Track {
         while (true) {
             var chunk = Storage.getValue(ref + "_" + i.toString());
             if (chunk == null) { break; }
-            n += chunk.size() / 4; i += 1;
+            n += (chunk as Lang.Array).size() / 4; i += 1;
         }
         return n;
     }
@@ -256,7 +277,8 @@ module Track {
 
     // ---- Geometrie ----------------------------------------------------------
 
-    function _haversine(lat1, lon1, lat2, lon2) as Lang.Float {
+    function _haversine(lat1 as Lang.Double, lon1 as Lang.Double,
+                        lat2 as Lang.Double, lon2 as Lang.Double) as Lang.Float {
         var r = 6371000.0;
         var p1 = Math.toRadians(lat1); var p2 = Math.toRadians(lat2);
         var dp = Math.toRadians(lat2 - lat1);

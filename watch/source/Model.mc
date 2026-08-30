@@ -32,11 +32,11 @@ module Model {
     var mission as Lang.Dictionary or Null = null;
 
     // Abgeschlossene, aber noch nicht (fertig) hochgeladene Einsaetze
-    var pendingMissions as Lang.Array = [];
+    var pendingMissions as Lang.Array<Lang.Dictionary> = [];
 
     // Aktives Ruhe-Segment: null oder { "ref", "startedAt", "endedAt", "final" }
     var restSegment as Lang.Dictionary or Null = null;
-    var pendingRest as Lang.Array = [];
+    var pendingRest as Lang.Array<Lang.Dictionary> = [];
 
     // Sende-Rueckstand: nur ABGESCHLOSSENE, noch unbestaetigte Pakete.
     // Das laufende Segment/der laufende Einsatz zaehlt bewusst nicht mit.
@@ -49,7 +49,7 @@ module Model {
         var changed = false;
         for (var i = pendingMissions.size() - 1; i >= 0; i--) {
             var m = pendingMissions[i];
-            if (!Uploader.hasWork(m["ref"])) {
+            if (!Uploader.hasWork(m["ref"] as Lang.String)) {
                 if (m["final"] == true) { pendingMissions.remove(m); changed = true; }
             } else if (m["final"] == true) {
                 n += 1;
@@ -57,7 +57,7 @@ module Model {
         }
         for (var j = pendingRest.size() - 1; j >= 0; j--) {
             var r = pendingRest[j];
-            if (!Uploader.hasWork(r["ref"])) {
+            if (!Uploader.hasWork(r["ref"] as Lang.String)) {
                 if (r["final"] == true) { pendingRest.remove(r); changed = true; }
             } else if (r["final"] == true) {
                 n += 1;
@@ -72,15 +72,20 @@ module Model {
     function load() as Void {
         var s = Storage.getValue(Const.K_STATE);
         if (s instanceof Lang.Dictionary) {
-            serviceActive   = s["svc"]  == true;
-            day             = s["day"];
-            phase           = s["ph"]   != null ? s["ph"] : 1;
-            mission         = s["mis"];
-            restSegment     = s["rest"];
-            pendingMissions = s["pm"] != null ? s["pm"] : [];
-            pendingRest     = s["pr"] != null ? s["pr"] : [];
-            dayMissions = s["dm"] != null ? s["dm"] : 0;
-            dayRef          = s["dref"];
+            // Storage.getValue() liefert einen Sammeltyp ueber alle speicherbaren
+            // Arten. Was hier steht, hat save() geschrieben — die Zusicherungen
+            // benennen die Struktur, die dort ohnehin schon feststeht.
+            serviceActive   = true.equals(s["svc"]);
+            day             = s["day"] as Lang.String or Null;
+            phase           = s["ph"]   != null ? s["ph"] as Lang.Number : 1;
+            mission         = s["mis"] as Lang.Dictionary or Null;
+            restSegment     = s["rest"] as Lang.Dictionary or Null;
+            pendingMissions = s["pm"] != null
+                ? s["pm"] as Lang.Array<Lang.Dictionary> : [];
+            pendingRest     = s["pr"] != null
+                ? s["pr"] as Lang.Array<Lang.Dictionary> : [];
+            dayMissions = s["dm"] != null ? s["dm"] as Lang.Number : 0;
+            dayRef          = s["dref"] as Lang.String or Null;
         }
     }
 
@@ -173,9 +178,15 @@ module Model {
         if (p < 2 || p > 9) { return; }
         if (mission == null) { _startMission(); }    // Phase 2..9 ohne Einsatz -> Einsatz beginnt
 
+        // Lokale Kopie: Die Typpruefung verfolgt eine Null-Pruefung nur ueber
+        // lokale Variablen, nicht ueber ein Modul-Feld hinweg. _startMission()
+        // hat gerade gesetzt, der Ruecksprung kann also nicht eintreten.
+        var m = mission;
+        if (m == null) { return; }
+
         var pos = Track.lastLatLon();
         // [phase, isoUTC, lat, lon, lokaleAnzeige]
-        (mission["phases"] as Lang.Array).add([p, Util.isoNow(), pos[0], pos[1], Util.localHHMM()]);
+        (m["phases"] as Lang.Array).add([p, Util.isoNow(), pos[0], pos[1], Util.localHHMM()]);
         phase = p;
         Util.vibrateShort();
         save();
@@ -201,23 +212,27 @@ module Model {
     }
 
     function _finishMission() as Void {
+        var m = mission;                     // lokal: s. Hinweis in markPhase()
+        if (m == null) { return; }
         Cpr.stopRecording();                 // laufende Rea sauber schliessen
         // Einsatzende = Zeit der (letzten) Phase 9; ohne Phase 9 der
         // Abschluss-Zeitpunkt als Rueckfall.
         var end = Util.isoNow();
-        var ph = mission["phases"] as Lang.Array;
+        var ph = m["phases"] as Lang.Array;
         for (var i = 0; i < ph.size(); i++) {
-            if ((ph[i] as Lang.Array)[0] == 9) { end = (ph[i] as Lang.Array)[1]; }
+            if ((ph[i] as Lang.Array)[0] == 9) {
+                end = (ph[i] as Lang.Array)[1] as Lang.String;
+            }
         }
-        mission["endedAt"] = end;
+        m["endedAt"] = end;
         // Kilometer/Anstieg einfrieren: gehoeren zu DIESEM Einsatz, auch wenn
         // der Upload erst spaeter (waehrend eines neuen Einsatzes) gelingt
-        mission["dist"] = Track.distanceM.toNumber();
-        mission["asc"]  = Track.ascentM.toNumber();
-        mission["final"] = true;
+        m["dist"] = Track.distanceM.toNumber();
+        m["asc"]  = Track.ascentM.toNumber();
+        m["final"] = true;
         dayMissions += 1;                  // zaehlt erst mit bestaetigtem Ende
         Track.endMissionTrack();
-        pendingMissions.add(mission);
+        pendingMissions.add(m);
         mission = null;
         phase = 1;
         _startRestSegment();
@@ -238,11 +253,12 @@ module Model {
     }
 
     function _closeRestSegment() as Void {
-        if (restSegment == null) { return; }
-        restSegment["endedAt"] = Util.isoNow();
-        restSegment["final"] = true;
+        var r = restSegment;                 // lokal: s. Hinweis in markPhase()
+        if (r == null) { return; }
+        r["endedAt"] = Util.isoNow();
+        r["final"] = true;
         Track.endRestTrack();
-        pendingRest.add(restSegment);
+        pendingRest.add(r);
         restSegment = null;
     }
 
@@ -253,7 +269,9 @@ module Model {
 
     function resusStart() as Void {
         if (mission == null) { _startMission(); }
-        (mission["resus"] as Lang.Array).add({
+        var m = mission;                     // lokal: s. Hinweis in markPhase()
+        if (m == null) { return; }
+        (m["resus"] as Lang.Array).add({
             "start" => Util.isoNow(), "startLocal" => Util.localHHMM(),
             "events" => []
         });
@@ -264,7 +282,9 @@ module Model {
         if (mission == null || (mission["resus"] as Lang.Array).size() == 0) {
             resusStart();
         }
-        var sessions = mission["resus"] as Lang.Array;
+        var m = mission;                     // lokal: s. Hinweis in markPhase()
+        if (m == null) { return; }
+        var sessions = m["resus"] as Lang.Array;
         var cur = sessions[sessions.size() - 1] as Lang.Dictionary;
         // [typ, isoUTC, lokaleAnzeige]
         (cur["events"] as Lang.Array).add([type, Util.isoNow(), Util.localHHMM()]);
@@ -274,8 +294,10 @@ module Model {
 
     // Letzte (= aktuelle) Rea-Sitzung, fuer die Uebersicht auf der Uhr
     function currentResus() as Lang.Dictionary or Null {
-        if (mission == null) { return null; }
-        var sessions = mission["resus"] as Lang.Array;
-        return sessions.size() > 0 ? sessions[sessions.size() - 1] : null;
+        var m = mission;                     // lokal: s. Hinweis in markPhase()
+        if (m == null) { return null; }
+        var sessions = m["resus"] as Lang.Array;
+        return sessions.size() > 0
+            ? sessions[sessions.size() - 1] as Lang.Dictionary : null;
     }
 }

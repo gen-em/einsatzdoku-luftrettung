@@ -7,5 +7,4 @@ module DeviceProfile {
     // Bedienhinweise auf den Oberflaechen
     const L_SELECT      = "Action";
     const L_SELECT_HOLD = "Action halten";
-    const L_PAGE_DOWN   = "nach unten wischen";
 }

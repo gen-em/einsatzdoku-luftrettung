@@ -11,6 +11,196 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.8.2] — 2026-08-30
+
+**Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung
+von 1.8.1, das nur die Warnungen des normalen Baus behandelt hatte. Wieder ohne
+Verhaltensänderung — aber diesmal nicht ohne Preis, siehe unten.
+
+### Uhr — Die Zahl 226 war irreführend
+
+Der erste Blick zählte Meldungen, und das führt in die Irre: Eine einzelne
+Zeile wie `m["final"] == true` erzeugt bis zu **16 Meldungen**, weil der Prüfer
+jeden denkbaren Typ des Sammeltyps einzeln durchgeht — von
+`WatchFaceConfig.Id` über `ScanResult` bis `BitmapReference`. Gezählt nach
+Fundstelle waren es **77 Stellen**, nicht 226. Davon sind jetzt **4** übrig.
+
+### Uhr — Drei Muster, immer dieselben
+
+Fast alles ließ sich auf drei Ursachen zurückführen.
+
+**Erstens `Storage.getValue()`.** Es ist mit einem Sammeltyp über alles
+Speicherbare deklariert. Jede Zuweisung daraus an ein konkretes Feld ist unter
+`-l 3` ein Fehler, obwohl an der Stelle längst feststeht, was dort liegt —
+geschrieben hat es das zugehörige `save()` wenige Zeilen weiter oben. Die
+Zusicherungen benennen jetzt, was die Struktur ohnehin ist.
+
+**Zweitens die Null-Flussanalyse.** Der Prüfer verfolgt eine Prüfung wie
+`if (mission == null) { return; }` **nur über lokale Variablen**, nicht über
+ein Modul-Feld hinweg. `info.position` blieb deshalb „möglicherweise null",
+obwohl zwei Zeilen darüber genau das ausgeschlossen wurde. Betroffene Stellen
+holen den Wert jetzt zuerst in eine lokale Variable. Das ist kein Trick,
+sondern die Form, in der die Prüfung überhaupt greifen kann.
+
+**Drittens fehlende Parametertypen.** `_haversine(lat1, lon1, lat2, lon2)` und
+`_addDisplayPoint(lat, lon)` waren untypisiert, ebenso drei Member in `Track`.
+
+Dazu einige Einzelfälle: `Gregorian.Info` führt seine Felder nominell nullbar,
+bei `FORMAT_SHORT` sind es immer Zahlen; `u.substring(...).equals("/")` wurde zu
+`"/".equals(u.substring(...))`, weil `substring` null liefern kann; aus
+`x == true` wurde `true.equals(x)`.
+
+### Uhr — Der Preis: 400 Byte
+
+Anders als bei 1.8.1, wo die Kompilate **kleiner** wurden, kosten diese
+Zusicherungen Platz: **+448 Byte** auf fenix6pro und fr945, **+480 Byte** auf
+venu3s — rund 0,27 % des Kompilats. Das ist wenig, aber es ist nicht nichts,
+und es geht in die andere Richtung als beim letzten Mal. Wer künftig abwägt, ob
+sich weitere Typarbeit lohnt, sollte diese Zahl kennen: Warnungsfreiheit im
+normalen Bau war gratis, `-l 3` ist es nicht.
+
+### Uhr — Was bewusst stehen bleibt
+
+Vier Stellen melden weiterhin denselben Fall: `Storage.setValue()` mit einem
+Dictionary oder Array (`Model.mc:93`, `Pair.mc:113`, `Track.mc:162`,
+`Uploader.mc:171`). Der erwartete Typ ist enger als das, was sich zusichern
+lässt — beim Punktpuffer etwa, weil dort `null` vorkommen darf, wenn die Höhe
+fehlt. Das aufzulösen hieße, die Datenstruktur zu ändern, und damit echtes
+Verhalten. Für vier Meldungen ist das der falsche Preis.
+
+### Uhr — Zwei Nebenfunde, mit erledigt
+
+`Input.lPageDown()` und die Konstante `L_PAGE_DOWN` in beiden Geräteprofilen
+waren toter Code: definiert, nirgends aufgerufen. Sie sind entfallen —
+`lSelect()` und `lSelectHold()` bleiben, die werden benutzt.
+
+Die Kommentare an `CprView.onPreviousPage/onNextPage` ordneten die
+Wischrichtungen falsch zu. Gemessen im Simulator gilt: Wischen **runter** ist
+`onPreviousPage`, Wischen **hoch** ist `onNextPage` — bei den Tasten ist es
+UP beziehungsweise DOWN. Die Kommentare sagen das jetzt.
+
+## [Uhr 1.8.1] — 2026-08-30
+
+**Der Uhr-Code übersetzt ohne Warnung.** Backlog Nr. 13, seit Web 5.4.0 offen.
+Reiner Feinschliff: kein Verhalten geändert, keine Funktion ergänzt, keine
+Migration. Die Weboberfläche bleibt unberührt.
+
+### Uhr — Warum das liegen blieb
+
+Der Punkt stand als „Kosmetik" in der Liste, und das war er auch — nur ließ er
+sich nicht abarbeiten, solange niemand die Warnungen erzeugen konnte. Der Bau
+setzte einen eingerichteten Arbeitsplatz voraus; aus jeder anderen Umgebung war
+der Uhr-Code blind. Mit `tools/uhr-pruefstand` ist das nicht mehr so, und damit
+wurde aus „einige Warnungen" eine Zahl: **29**, davon 28 vom Typ „Cannot
+determine if container access is using container type", verteilt auf
+`ClockView.mc`, `CprView.mc`, `Model.mc`, `Track.mc` und `Uploader.mc`.
+
+### Uhr — Was tatsächlich fehlte
+
+Der Wortlaut der Warnung klingt nach einem Zugriffsproblem, gemeint ist aber
+eine fehlende Typangabe. Die Arrays waren als `Lang.Array` **ohne Elementtyp**
+deklariert. Bei `items[i][2]` wusste der Prüfer deshalb nicht, ob das innere
+Ding überhaupt indizierbar ist — die Zusicherung auf den Einzelwert
+(`as Lang.String`) stand längst da, es fehlte die Angabe am Behälter.
+
+Ergänzt wurden `Lang.Array<Lang.Array>` für die Tupellisten — Menüeinträge
+`[Label, Farbe, ID]`, Phasen, Reanimationsereignisse — und
+`Lang.Array<Lang.Dictionary>` für die beiden Warteschlangen in `Model`.
+
+Zwei Stellen waren mehr als eine Zeile. Der Punktpuffer in `Track` heißt jetzt
+`Lang.Array<Lang.Numeric or Null>`; der naheliegende erste Versuch mit
+`<Lang.Number>` erzeugte **drei Übersetzungsfehler**, denn dort liegen Breite
+und Länge als `Double`, die Höhe als `Float` und der Zeitstempel als `Number`
+nebeneinander — und die Höhe kann fehlen. Eine falsche Typbehauptung ist
+schlechter als gar keine, deshalb der genaue Typ statt des bequemen. Die lokale
+Variable `chunk` wiederum ließ sich nicht annotieren („Local variable types are
+inferred"), weshalb die Zusicherung an die Zuweisung aus `Storage.getValue()`
+wanderte.
+
+Die 29. Warnung war eine nicht erreichbare Anweisung: ein `return true;` hinter
+`System.exit()` in `StartView.actBack()`. Es ist entfallen. Ein Kommentar hält
+fest, warum dort keines steht — sonst liest sich die Stelle wie ein Versehen.
+
+### Uhr — Was das gebracht hat
+
+**0 Warnungen, 0 Fehler** auf allen drei Zielgeräten. Die Kompilate sind dabei
+**kleiner** geworden: fenix6pro und fr945 je 16 Byte, venu3s 32 Byte. Die
+Typangaben kosten zur Laufzeit also nichts — auf einer Uhr keine
+Selbstverständlichkeit, sondern der Grund, warum diese Art Aufräumen überhaupt
+vertretbar ist. Alle drei Geräte starten im Simulator und rendern den
+Startbildschirm unverändert.
+
+### Uhr — Was bewusst offen bleibt
+
+Die strenge Typprüfung `-l 3` ist **nicht** Teil dieser Änderung. Sie meldet
+weiterhin **211 Fehler** (vor dieser Änderung 226), überwiegend
+Rechenoperationen mit unklaren Typen. Das ließe sich nicht durch Typangaben
+beheben, sondern nur durch Umbau an vielen Stellen — ein eigenes Vorhaben, kein
+Feinschliff, und auf einem Gerät mit knappem Speicher nichts, was man nebenbei
+macht.
+
+## [Werkzeug: Uhr-Prüfstand] — 2026-08-30
+
+**Der Uhr-Code lässt sich jetzt auch ohne eingerichteten Arbeitsplatz
+übersetzen und im Simulator starten.** Weder die Weboberfläche noch die Uhr-App
+sind geändert, deshalb trägt dieser Eintrag keine Versionsnummer — das weicht
+vom bisherigen Schema ab, in dem Werkzeuge immer innerhalb einer
+Anwendungsversion miterwähnt wurden.
+
+### Werkzeug — Warum
+
+Bisher galt für die Uhr: Build nur mit VS Code, Monkey-C-Erweiterung und
+installiertem SDK. Jede Änderung am Monkey-C-Code außerhalb dieses
+Arbeitsplatzes war damit blind — kein Kompilat, kein Simulatorlauf, nur Lesen.
+Für einen Punkt wie Backlog Nr. 13 (Typprüfer-Warnungen) ist das zu wenig: Man
+kann die Warnungen nicht zählen, die man nicht erzeugen kann.
+
+### Werkzeug — Was der Prüfstand beschafft
+
+`tools/uhr-pruefstand/pruefstand.sh` baut auf einem nackten Linux-Rechner auf,
+was der Simulator braucht. Drei der vier Teile gehen von allein: das SDK von
+`developer.garmin.com` (ohne Anmeldung abrufbar), die Systembibliotheken aus
+den Ubuntu-Quellen, der Entwickler-Schlüssel per `openssl` — für den Simulator
+genügt jeder gültige Schlüssel.
+
+Der vierte Teil geht nicht von allein und bleibt es auch. **Gerätedateien und
+Zeichensätze liefert nur der SDK-Manager**, eine Fensteranwendung mit
+Garmin-Anmeldung, die sich ohne Bildschirm nicht bedienen lässt. Sie werden
+deshalb von einer selbst bereitgestellten Quelle geholt; deren Adresse steht in
+`CIQ_GERAETE_URL` und **bewusst nicht im Repositorium** — es ist öffentlich,
+und die Dateien gehören Garmin. Aus demselben Grund werden sie nicht
+eingecheckt.
+
+Zwei Fallen kostete das. Der Simulator ist gegen `webkit2gtk 4.0` gebunden, das
+Ubuntu 24.04 nicht mehr führt; die 22.04-Stände liegen jetzt **neben** dem
+Simulator statt im System, damit alles unberührt bleibt, was 4.1 erwartet. Und
+fehlen die Zeichensätze, übersetzt die App zwar, bricht aber beim ersten
+Zeichnen mit `Invalid Font Specified` ab — die Meldung zeigt auf die eigene
+Zeile und meint die Umgebung. Beides steht in der `LIESMICH.md`, damit es beim
+nächsten Aufbau nicht erneut gesucht werden muss.
+
+### Werkzeug — Was damit belegt ist
+
+Alle drei Zielgeräte übersetzen (`fenix6pro` 165 KB, `fr945` 165 KB, `venu3s`
+175 KB) und starten im Simulator. Der Startbildschirm rendert auf jedem Gerät
+mit dem richtigen Bedienhinweis — „START drücken" auf den Tastengeräten,
+„Action drücken" auf der Venu 3S; das Geräteprofil greift also nachweislich.
+Der Bau meldet **29 Warnungen**, davon 28 „container access" und eine nicht
+erreichbare Anweisung; die strenge Typprüfung `-l 3` meldet **226**. Das sind
+die Zahlen zu Backlog Nr. 13, die bislang fehlten.
+
+Bedienung ist simulierbar: Tipp, Langdruck und Wischgeste kommen als
+X-Ereignisse bis in die App durch, gemessen mit der Eingabe-Probe auf der
+Venu 3S.
+
+### Werkzeug — Was bewusst nicht gelöst ist
+
+Der Prüfstand ersetzt die echte Uhr nicht, und die Grenzen aus
+`Geraete-Eingabe.md` gelten unverändert: keine Systemgesten, kein Halten über
+4,6 s, keine Kopplung, kein Server. Die App meldet im Simulator „Server fehlt" —
+richtiges Verhalten, kein Fehler. Und ein Lauf zeigt, dass es startet und wie
+es aussieht, nicht dass es richtig ist.
+
 ## [Web 9.14.0] — 2026-08-30
 
 **Die erste Rückmeldungsrunde nach P3.** Vierzehn Punkte aus einer Durchsicht
