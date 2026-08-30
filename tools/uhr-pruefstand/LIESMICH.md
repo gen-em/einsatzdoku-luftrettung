@@ -1,6 +1,6 @@
 # Uhr-Prüfstand
 
-Baut das Connect-IQ-SDK samt Simulator auf einer nackten Linux-Maschine auf,
+Baut das Connect-IQ-SDK samt Simulator auf einem nackten Linux-Rechner auf,
 übersetzt die Uhr-App und startet sie im Simulator — ohne Fensteroberfläche,
 ohne installiertes SDK, ohne Garmin-Anmeldung.
 
@@ -25,7 +25,7 @@ Der Aufbau hat vier Teile, und nur der letzte ist unangenehm:
 Die ersten drei löst das Skript allein. Der vierte ist der Haken: Gerätedateien
 (`Devices/`) und Zeichensätze (`Fonts/`) liefert nur der **SDK-Manager** aus,
 und der ist eine Fensteranwendung, die eine Garmin-Anmeldung verlangt. Auf
-einer Maschine ohne Bildschirm ist er nicht zu bedienen.
+einem Rechner ohne Bildschirm ist er nicht zu bedienen.
 
 ### Quelle
 
@@ -48,7 +48,7 @@ Dateien nicht eingecheckt.
 ## Bedienung
 
 ```bash
-tools/uhr-pruefstand/pruefstand.sh aufbau        # einmal je Maschine
+tools/uhr-pruefstand/pruefstand.sh aufbau        # einmal je Rechner
 tools/uhr-pruefstand/pruefstand.sh pruefen       # Bestand auflisten
 tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro -l 3
 tools/uhr-pruefstand/pruefstand.sh starten fenix6pro
@@ -113,6 +113,6 @@ Was der Prüfstand **nicht** leistet, und woran das liegt:
 Der Simulator ist gegen `webkit2gtk 4.0` gebunden. Ubuntu 24.04 führt nur noch
 4.1, und die 4.0-Pakete sind dort ersatzlos fort. Das Skript holt die alten
 Stände aus 22.04 und legt sie **neben** den Simulator statt sie ins System zu
-installieren: So bleibt die Maschine für alles andere unberührt, das 4.1
+installieren: So bleibt der Rechner für alles andere unberührt, das 4.1
 erwartet. Betroffen sind `libwebkit2gtk-4.0`, `libjavascriptcoregtk-4.0`,
 `libsoup2.4` und `libicu70`.

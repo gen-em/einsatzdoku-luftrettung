@@ -130,7 +130,8 @@ class StartDelegate extends ActionDelegate {
     }
 
     function actBack() as Lang.Boolean {
+        // Kein return danach: System.exit() kehrt nicht zurueck, der Compiler
+        // meldet die Anweisung als nicht erreichbar.
         System.exit();
-        return true;
     }
 }

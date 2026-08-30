@@ -150,7 +150,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einer nackten Linux-
-│   │                      Maschine auf, übersetzt die Uhr-App und startet
+│   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
@@ -2092,7 +2092,7 @@ Der Build oben setzt einen eingerichteten Arbeitsplatz voraus. Damit war jede
 Änderung am Monkey-C-Code aus einer Wegwerf-Umgebung heraus blind: kein
 Kompilat, kein Simulatorlauf, nur Lesen. `tools/uhr-pruefstand/pruefstand.sh`
 schließt diese Lücke — es baut SDK und Simulator auf einer nackten
-Linux-Maschine auf und startet die App unter einem virtuellen X-Server.
+Linux-Rechner auf und startet die App unter einem virtuellen X-Server.
 
 Drei der vier nötigen Teile beschafft das Skript allein: das SDK von
 `developer.garmin.com` (keine Anmeldung nötig), die Systembibliotheken aus den
@@ -2101,7 +2101,7 @@ genügt jeder gültige Schlüssel, der des Arbeitsplatzes gehört nicht dorthin.
 
 Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
 (`Fonts/`) liefert nur der SDK-Manager aus**, und der ist eine
-Fensteranwendung mit Garmin-Anmeldung — auf einer Maschine ohne Bildschirm
+Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
 nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
 geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
 Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Fehlen die

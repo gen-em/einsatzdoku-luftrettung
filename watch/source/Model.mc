@@ -32,11 +32,11 @@ module Model {
     var mission as Lang.Dictionary or Null = null;
 
     // Abgeschlossene, aber noch nicht (fertig) hochgeladene Einsaetze
-    var pendingMissions as Lang.Array = [];
+    var pendingMissions as Lang.Array<Lang.Dictionary> = [];
 
     // Aktives Ruhe-Segment: null oder { "ref", "startedAt", "endedAt", "final" }
     var restSegment as Lang.Dictionary or Null = null;
-    var pendingRest as Lang.Array = [];
+    var pendingRest as Lang.Array<Lang.Dictionary> = [];
 
     // Sende-Rueckstand: nur ABGESCHLOSSENE, noch unbestaetigte Pakete.
     // Das laufende Segment/der laufende Einsatz zaehlt bewusst nicht mit.

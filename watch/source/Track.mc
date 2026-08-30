@@ -25,7 +25,7 @@ module Track {
     // aktiver Puffer (Einsatz ODER Ruhe-Segment — nie beides)
     var _ref as Lang.String or Null = null;   // client_ref des aktiven Tracks
     var _isMission as Lang.Boolean = false;
-    var _buf as Lang.Array = [];              // flacher Punktpuffer (nur Tail seit letztem Flush)
+    var _buf as Lang.Array<Lang.Numeric or Null> = [];              // flacher Punktpuffer (nur Tail seit letztem Flush)
     var _count as Lang.Number = 0;            // Gesamtpunkte des aktiven Tracks
 
     var _lastLat = null; var _lastLon = null; var _lastEle = null;
@@ -205,13 +205,15 @@ module Track {
         var isActive = ref.equals(_ref);
         var tailStart = isActive ? (_count - (_buf.size() / 4)) : -1;
         while (out.size() / 4 < n) {
-            var chunk; var offs; var end;
+            var chunk;
+            var offs; var end;
             if (isActive && seq >= tailStart) {
                 chunk = _buf;
                 offs = (seq - tailStart) * 4;
                 end = chunk.size();
             } else {
-                chunk = Storage.getValue(ref + "_" + (seq / CHUNK_POINTS).toString());
+                chunk = Storage.getValue(ref + "_" + (seq / CHUNK_POINTS).toString())
+                        as Lang.Array<Lang.Numeric or Null> or Null;
                 if (chunk == null) { break; }
                 offs = (seq % CHUNK_POINTS) * 4;
                 end = chunk.size();

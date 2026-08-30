@@ -121,7 +121,7 @@ module Uploader {
             body["distance_m"] = (d["dist"] != null) ? d["dist"] : Track.distanceM.toNumber();
             body["ascent_m"]   = (d["asc"]  != null) ? d["asc"]  : Track.ascentM.toNumber();
             var phases = [];
-            var raw = d["phases"] as Lang.Array;
+            var raw = d["phases"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < raw.size(); i++) {
                 var p = raw[i];
                 phases.add({ "phase" => p[0], "at" => p[1], "lat" => p[2], "lon" => p[3] });
@@ -133,7 +133,7 @@ module Uploader {
                 for (var s = 0; s < sessions.size(); s++) {
                     var sess = sessions[s] as Lang.Dictionary;
                     var evs = [];
-                    var rraw = sess["events"] as Lang.Array;
+                    var rraw = sess["events"] as Lang.Array<Lang.Array>;
                     for (var i = 0; i < rraw.size(); i++) {
                         evs.add({ "type" => rraw[i][0], "at" => rraw[i][1] });
                     }

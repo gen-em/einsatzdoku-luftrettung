@@ -309,7 +309,7 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
 // ist nicht anwaehlbar; das Blaettern ueberspringt ihn.
 class ResusOverviewView extends WatchUi.View {
 
-    var items as Lang.Array = [];      // [Label, Farbe, ID]
+    var items as Lang.Array<Lang.Array> = [];      // [Label, Farbe, ID]
     var index as Lang.Number = 0;
 
     function initialize() {
@@ -325,7 +325,7 @@ class ResusOverviewView extends WatchUi.View {
         } else {
             items.add([(sess["startLocal"] as Lang.String) + "  Beginn",
                        0xFFFFFF, :none]);
-            var evs = sess["events"] as Lang.Array;
+            var evs = sess["events"] as Lang.Array<Lang.Array>;
             for (var i = 0; i < evs.size(); i++) {
                 var ev = evs[i];
                 items.add([(ev[2] as Lang.String) + "  " + Const.RESUS_LABELS[ev[0]],

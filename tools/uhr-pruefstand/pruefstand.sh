@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uhr-Pruefstand — Connect-IQ-SDK und Simulator auf einer nackten Linux-Maschine
+# Uhr-Pruefstand — Connect-IQ-SDK und Simulator auf einem nackten Linux-Rechner
 # aufbauen, die Uhr-App uebersetzen und im Simulator starten.
 #
 # Gedacht fuer Wegwerf-Umgebungen (Claude Code on the web, CI-Laeufer), in denen
@@ -54,7 +54,7 @@ for e in json.load(sys.stdin):
 
 # Der Simulator ist gegen webkit2gtk 4.0 gebunden. Ubuntu 24.04 fuehrt nur noch
 # 4.1 — die alten Staende kommen deshalb aus 22.04 und werden NEBEN den
-# Simulator gelegt, nicht ins System installiert. Das haelt die Maschine sauber
+# Simulator gelegt, nicht ins System installiert. Das haelt den Rechner sauber
 # und vermeidet Konflikte mit allem, was 4.1 erwartet.
 bibliotheken() {
     [ -f "$LIB_DIR/libwebkit2gtk-4.0.so.37" ] && { melde "Bibliotheken liegen bereits"; return; }
@@ -95,7 +95,7 @@ schluessel() {
 
 # Geraetedateien und Schriften gehoeren Garmin und werden vom SDK-Manager
 # ausgeliefert, der eine Anmeldung verlangt und nur als Fensteranwendung
-# existiert. Auf einer Wegwerfmaschine ist beides nicht zu haben — deshalb der
+# existiert. In einer Wegwerf-Umgebung ist beides nicht zu haben — deshalb der
 # Umweg ueber eine selbst bereitgestellte Quelle. Deren Adresse steht in
 # CIQ_GERAETE_URL und bewusst nicht in diesem Repositorium: sie ist privat, und
 # die Dateien duerfen nicht oeffentlich weiterverbreitet werden.

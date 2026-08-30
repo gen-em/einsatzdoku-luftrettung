@@ -11,6 +11,66 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.8.1] — 2026-08-30
+
+**Der Uhr-Code übersetzt ohne Warnung.** Backlog Nr. 13, seit Web 5.4.0 offen.
+Reiner Feinschliff: kein Verhalten geändert, keine Funktion ergänzt, keine
+Migration. Die Weboberfläche bleibt unberührt.
+
+### Uhr — Warum das liegen blieb
+
+Der Punkt stand als „Kosmetik" in der Liste, und das war er auch — nur ließ er
+sich nicht abarbeiten, solange niemand die Warnungen erzeugen konnte. Der Bau
+setzte einen eingerichteten Arbeitsplatz voraus; aus jeder anderen Umgebung war
+der Uhr-Code blind. Mit `tools/uhr-pruefstand` ist das nicht mehr so, und damit
+wurde aus „einige Warnungen" eine Zahl: **29**, davon 28 vom Typ „Cannot
+determine if container access is using container type", verteilt auf
+`ClockView.mc`, `CprView.mc`, `Model.mc`, `Track.mc` und `Uploader.mc`.
+
+### Uhr — Was tatsächlich fehlte
+
+Der Wortlaut der Warnung klingt nach einem Zugriffsproblem, gemeint ist aber
+eine fehlende Typangabe. Die Arrays waren als `Lang.Array` **ohne Elementtyp**
+deklariert. Bei `items[i][2]` wusste der Prüfer deshalb nicht, ob das innere
+Ding überhaupt indizierbar ist — die Zusicherung auf den Einzelwert
+(`as Lang.String`) stand längst da, es fehlte die Angabe am Behälter.
+
+Ergänzt wurden `Lang.Array<Lang.Array>` für die Tupellisten — Menüeinträge
+`[Label, Farbe, ID]`, Phasen, Reanimationsereignisse — und
+`Lang.Array<Lang.Dictionary>` für die beiden Warteschlangen in `Model`.
+
+Zwei Stellen waren mehr als eine Zeile. Der Punktpuffer in `Track` heißt jetzt
+`Lang.Array<Lang.Numeric or Null>`; der naheliegende erste Versuch mit
+`<Lang.Number>` erzeugte **drei Übersetzungsfehler**, denn dort liegen Breite
+und Länge als `Double`, die Höhe als `Float` und der Zeitstempel als `Number`
+nebeneinander — und die Höhe kann fehlen. Eine falsche Typbehauptung ist
+schlechter als gar keine, deshalb der genaue Typ statt des bequemen. Die lokale
+Variable `chunk` wiederum ließ sich nicht annotieren („Local variable types are
+inferred"), weshalb die Zusicherung an die Zuweisung aus `Storage.getValue()`
+wanderte.
+
+Die 29. Warnung war eine nicht erreichbare Anweisung: ein `return true;` hinter
+`System.exit()` in `StartView.actBack()`. Es ist entfallen. Ein Kommentar hält
+fest, warum dort keines steht — sonst liest sich die Stelle wie ein Versehen.
+
+### Uhr — Was das gebracht hat
+
+**0 Warnungen, 0 Fehler** auf allen drei Zielgeräten. Die Kompilate sind dabei
+**kleiner** geworden: fenix6pro und fr945 je 16 Byte, venu3s 32 Byte. Die
+Typangaben kosten zur Laufzeit also nichts — auf einer Uhr keine
+Selbstverständlichkeit, sondern der Grund, warum diese Art Aufräumen überhaupt
+vertretbar ist. Alle drei Geräte starten im Simulator und rendern den
+Startbildschirm unverändert.
+
+### Uhr — Was bewusst offen bleibt
+
+Die strenge Typprüfung `-l 3` ist **nicht** Teil dieser Änderung. Sie meldet
+weiterhin **211 Fehler** (vor dieser Änderung 226), überwiegend
+Rechenoperationen mit unklaren Typen. Das ließe sich nicht durch Typangaben
+beheben, sondern nur durch Umbau an vielen Stellen — ein eigenes Vorhaben, kein
+Feinschliff, und auf einem Gerät mit knappem Speicher nichts, was man nebenbei
+macht.
+
 ## [Werkzeug: Uhr-Prüfstand] — 2026-08-30
 
 **Der Uhr-Code lässt sich jetzt auch ohne eingerichteten Arbeitsplatz
@@ -29,7 +89,7 @@ kann die Warnungen nicht zählen, die man nicht erzeugen kann.
 
 ### Werkzeug — Was der Prüfstand beschafft
 
-`tools/uhr-pruefstand/pruefstand.sh` baut auf einer nackten Linux-Maschine auf,
+`tools/uhr-pruefstand/pruefstand.sh` baut auf einem nackten Linux-Rechner auf,
 was der Simulator braucht. Drei der vier Teile gehen von allein: das SDK von
 `developer.garmin.com` (ohne Anmeldung abrufbar), die Systembibliotheken aus
 den Ubuntu-Quellen, der Entwickler-Schlüssel per `openssl` — für den Simulator
