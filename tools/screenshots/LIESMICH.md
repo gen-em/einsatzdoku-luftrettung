@@ -35,6 +35,11 @@ das nicht, und der Preis war hoch: Der Lauf meldete „31 Seiten, 0 Überlauf,
   Vorher fiel er auf `index.php` zurück oder fehlte ganz — dann wurde
   `__FORMULAR__` als Adresse aufgerufen, und der Server antwortete mit **200**
   und der Startseite.
+- **Ein abweichender Statuscode** ergibt kein Bild mehr (seit O11). Erwartet
+  werden 200; eine Seite, die es anders meint, sagt das in `seiten.json` mit
+  `"status": 404`. Der Fund dahinter: `diensttag_zusammenfuehren.php` stand
+  ohne Parameter in der Liste, lieferte 404 mit der Abbruchseite — und acht
+  Bilder davon galten als „kein Überlauf" (F-P3-AV).
 
 In beiden Fällen entsteht jetzt **kein Bild**, sondern ein Fehler, und der
 Rückgabewert ist ≠ 0. Ein fehlendes Bild ist eine Auskunft; ein falsches ist
@@ -104,7 +109,8 @@ Abhängigkeit.
 ## Die Seitenliste
 
 `seiten.json`. Jede Zeile nennt Name, Gruppe, Rolle (`aus` = abgemeldet,
-`demo`, `admin`) und Pfad. Platzhalter in `__GROSSBUCHSTABEN__` werden zur
+`demo`, `admin`) und Pfad; `status` nennt einen erwarteten Code, wenn es nicht
+200 ist. Platzhalter in `__GROSSBUCHSTABEN__` werden zur
 Laufzeit aus dem Bestand aufgelöst — Kennungen gehören zu **einer**
 Installation und dürfen nicht in einer eingecheckten Datei stehen.
 

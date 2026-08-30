@@ -29,7 +29,8 @@
       "name": "03-abbruchseite",
       "gruppe": "Öffentlich",
       "rolle": "demo",
-      "pfad": "einsatz.php?id=0"
+      "pfad": "einsatz.php?id=0",
+      "status": 404
     },
     {
       "name": "10-tagesuebersicht",
@@ -115,7 +116,7 @@
       "name": "21-diensttag-zusammenfuehren",
       "gruppe": "Inhalt",
       "rolle": "demo",
-      "pfad": "diensttag_zusammenfuehren.php"
+      "pfad": "__TAG_ZUSAMMEN__"
     },
     {
       "name": "22-einsatz-verschieben",

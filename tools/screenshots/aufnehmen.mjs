@@ -264,6 +264,12 @@ async function platzhalter() {
     '__LOESCHEN__':    einsatz ? `einsatz_loeschen.php?id=${einsatz}`   : null,
     '__TAG_DATUM__':    tag ? `diensttag_datum.php?d=${tag}`    : null,
     '__TAG_LOESCHEN__': tag ? `diensttag_loeschen.php?d=${tag}` : null,
+    /* Die Zusammenfuehrung braucht ihren Zieltag genauso — sie stand bis O11
+       OHNE Parameter in der Seitenliste und lieferte deshalb 404 mit der
+       Abbruchseite. Acht Bilder, alle von der falschen Seite, und der Lauf
+       meldete „kein Ueberlauf". Dieselbe Falle wie F-P3-AH und F-P3-AQ, ein
+       drittes Mal. */
+    '__TAG_ZUSAMMEN__': tag ? `diensttag_zusammenfuehren.php?d=${tag}` : null,
   };
 
   const a = rollen.admin.seite;
@@ -398,6 +404,16 @@ for (const eintrag of liste) {
 
     const hin = await gehZu(rolle, adresse, pfad);
     const status = hin.status;
+    /* DER STATUS MUSS STIMMEN (O11). Eine Seite, die 404 liefert, zeigt die
+       Abbruchseite — ein Bild davon unter dem Namen einer anderen Seite ist
+       so wertlos wie ein Bild der Anmeldung. Erwartet wird 200; eine Seite,
+       die es anders meint (03-abbruchseite), sagt das in der Seitenliste
+       ausdruecklich mit "status". */
+    const sollStatus = eintrag.status || 200;
+    if (status && status !== sollStatus && !hin.abbruch) {
+      rolle.fehler.push(`Status ${status}, erwartet ${sollStatus} — kein Bild aufgenommen`);
+      hin.abbruch = true;
+    }
     if (hin.verloren && !hin.abbruch) {
       /* Kein Fehler, aber eine Auskunft: Der Reset des Demo-Kontos ist im
          Lauf normal, und wer den Bericht liest, soll wissen, dass hier neu
