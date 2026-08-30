@@ -19,6 +19,37 @@ der Kontaktbogen „14-zeitraum" zeigte acht Bilder der Tagesübersicht (F-P3-AH
 P3/O7). Wer eine Seite aufnimmt, prüft **einmal am Bild**, dass es die
 gemeinte ist.
 
+**Und es prüft, ob es die richtige Seite vor sich hat.** Bis Web 9.10.1 tat es
+das nicht, und der Preis war hoch: Der Lauf meldete „31 Seiten, 0 Überlauf,
+0 Konsolenfehler" — 22 dieser 31 Seiten waren Bilder der **Anmeldeseite**.
+176 von 248 Einzelbildern, byteweise identisch. Zwei Ursachen, beide behoben
+(F-P3-AQ):
+
+- **Die Sitzung stirbt mitten im Lauf.** Das Demo-Konto setzt sich alle 30
+  Minuten zurück und erhöht dabei die Sitzungs-Epoche; `auth_guard.php`
+  beendet daraufhin jede offene Sitzung — und der Lauf löst den fälligen Reset
+  durch seine **eigenen** Anfragen aus. Die Prüfung stand einmal, direkt nach
+  dem Anmelden; danach hat nichts mehr hingesehen. Jetzt wird nach **jedem**
+  Seitenaufruf geprüft, bei Bedarf neu angemeldet und einmal wiederholt.
+- **Ein Platzhalter, der sich nicht auflösen lässt**, ergibt kein Bild mehr.
+  Vorher fiel er auf `index.php` zurück oder fehlte ganz — dann wurde
+  `__FORMULAR__` als Adresse aufgerufen, und der Server antwortete mit **200**
+  und der Startseite.
+
+In beiden Fällen entsteht jetzt **kein Bild**, sondern ein Fehler, und der
+Rückgabewert ist ≠ 0. Ein fehlendes Bild ist eine Auskunft; ein falsches ist
+eine Lüge, die durch jede weitere Prüfung durchmarschiert.
+
+**Die einfachste Gegenprobe** — sie hätte den Fehler jederzeit gefunden:
+
+```
+cd tools/screenshots/ausgabe/einzeln
+ls *.png | wc -l                                  # 248
+md5sum *.png | cut -d' ' -f1 | sort -u | wc -l    # muss dieselbe Zahl sein
+```
+
+Stehen dort zwei verschiedene Zahlen, zeigen mehrere Seiten dasselbe Bild.
+
 Das Werkzeug **misst** dabei mit, statt nur zu fotografieren. Drei Zahlen,
 die sonst niemand nachhält:
 

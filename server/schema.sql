@@ -21,6 +21,7 @@ CREATE TABLE users (
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
+  last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -512,4 +513,13 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_16_kontokennung', 'skipped'),
   -- Der Umbau auf Diensttage und bodengebundene Rettungsmittel (Web 6.0.0).
   -- Dieses Schema IST das Ergebnis der Migration.
-  ('2026_08_17_notarzt_erweiterung', 'skipped');
+  ('2026_08_17_notarzt_erweiterung', 'skipped'),
+  -- Nachgetragen (Web 9.10.1): Beide Spalten stehen oben schon in der Tabelle,
+  -- die Kennungen fehlten hier. Folge auf einer Neuinstallation: update.php
+  -- haette beide Migrationen erneut angesetzt und waere an der bereits
+  -- vorhandenen Spalte haengengeblieben -- oder, schlimmer, still
+  -- durchgelaufen (update.php schluckt MySQL 1060 „Duplicate column").
+  -- last_login fehlte zusaetzlich in der Tabelle selbst; eine frisch
+  -- eingerichtete Anwendung hatte die Spalte gar nicht.
+  ('2026_08_27_logo_wahl', 'skipped'),
+  ('2026_08_28_last_login', 'skipped');

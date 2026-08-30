@@ -378,6 +378,34 @@
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile darunter nennt das Fahrzeug."
     },
     {
+      "id": "handbuch-logostandard-vorher",
+      "datei": "docs/Handbuch.md",
+      "zeile": "stattdessen immer den Hubschrauber, gleich wie der Standard",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Der Halbsatz erklaert den Fund F-P3-AN: Bis Web 9.9.0 zeigte die Anmeldeseite immer dasselbe BILD, statt dem eingestellten Standard zu folgen. Ohne die Nennung waere nicht gesagt, was falsch war."
+    },
+    {
+      "id": "technik-logostandard-appstate",
+      "datei": "docs/Technik.md",
+      "zeile": "`logo_standard` = Logo dieser Installation",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile der Tabellenuebersicht nennt den WERT des Schluessels `app_state.logo_standard` und beide Moeglichkeiten nebeneinander."
+    },
+    {
+      "id": "technik-logostandard-vorgabe",
+      "datei": "docs/Technik.md",
+      "zeile": "`LOGO_STANDARD_VORGABE` in `session_lib.php`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile nennt die Vorbelegung der Logo-Wahl, solange die Installation nichts gesetzt hat — ein Bildname, keine Einsatzart."
+    },
+    {
+      "id": "technik-logostandard-wahl",
+      "datei": "docs/Technik.md",
+      "zeile": "`hubschrauber`, `fahrzeug`, `wechselnd`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile zaehlt die vier moeglichen Werte von `users.logo_wahl` auf; Hubschrauber und Fahrzeug stehen darin gleichrangig nebeneinander."
+    },
+    {
       "id": "technik-logowahl-spalte",
       "datei": "docs/Technik.md",
       "zeile": "sonst `hubschrauber` / `fahrzeug` / `wechselnd`",

@@ -11,6 +11,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.10.1] — 2026-08-30
+
+**Drei Reparaturen, die vor O10 stehen mussten.** Keine Migration — aber
+`schema.sql` ändert sich, und das betrifft **Neuinstallationen**.
+
+### Der Einrichter war tot
+
+`install.php` lud die Seitenhülle erst **innerhalb** von `render_page()`. Die
+Aufrufer bauen ihr Argument aber mit `ui_meldung_markup()`, `ui_knopf()` und
+`ui_symbol()` — und PHP wertet Argumente vor dem Aufruf aus. Alle drei Zweige
+endeten in „Call to undefined function", seit Web 9.1.0.
+
+Das traf **jede Neuinstallation**: `index.php` leitet ohne `config.php` genau
+dorthin, und der Deploy liefert die Datei aus. Aufgefallen ist es niemandem,
+weil der Einrichter genau einmal im Leben einer Installation läuft — und die
+bestehende läuft längst. Gefunden bei der Bestandsaufnahme zu O10.
+
+### `schema.sql` war zwei Migrationen im Rückstand
+
+Die Spalte `users.last_login` (Web 9.8.0) fehlte, und die Kennungen der
+Migrationen `2026_08_27_logo_wahl` und `2026_08_28_last_login` standen nicht
+in der Erledigt-Liste. Eine frisch eingerichtete Anwendung hätte die Spalte
+gar nicht gehabt; die Nachtragsmigrationen wären erneut angesetzt worden und
+entweder hängengeblieben oder — schlimmer — still durchgelaufen, weil
+`update.php` den MySQL-Fehler 1060 („Duplicate column") schluckt.
+
+Geprüft: `schema.sql` in eine Wegwerfdatenbank eingespielt, genau so, wie
+`install.php` es tut — 32 Anweisungen, 30 Tabellen, `users.last_login`
+vorhanden, 32 Migrationskennungen.
+
+### Die Bildaufnahme fotografierte die Anmeldeseite
+
+Der schwerste der drei Funde, weil er ein **Prüfmittel** betrifft. Der Lauf
+meldete „31 Seiten, 0 Überlauf, 0 Konsolenfehler" — und 22 dieser 31 Seiten
+waren Bilder von `login.php`: 176 von 248 Einzelbildern, byteweise identisch.
+
+Zwei unabhängige Ursachen:
+
+**Die Sitzung starb mitten im Lauf.** Das Demo-Konto setzt sich alle 30
+Minuten zurück, und `demo_zuruecksetzen()` erhöht dabei die Sitzungs-Epoche;
+`auth_guard.php` beendet daraufhin jede offene Sitzung. Der Lauf braucht
+Minuten und löst den fälligen Reset durch seine **eigenen** Anfragen aus. Die
+alte Prüfung stand einmal, unmittelbar nach dem Anmelden — danach hat nichts
+mehr hingesehen. Jetzt wird nach **jedem** Seitenaufruf geprüft, bei Bedarf
+neu angemeldet und einmal wiederholt; hilft das nicht, entsteht **kein** Bild,
+sondern ein Fehler. Ein fehlendes Bild ist eine Auskunft, ein falsches eine
+Lüge, die durch jede weitere Prüfung durchmarschiert.
+
+**Vier Platzhalter wurden nie aufgelöst.** Die Kennungen der Einsatzseiten
+holt das Werkzeug aus der Tagesübersicht — und lief als erstes in denselben
+Sitzungsverlust. Fehlte die Kennung, blieb das Verzeichnis leer, und die vier
+Seiten wurden mit ihrem eigenen Platzhalter als Adresse aufgerufen; der Server
+antwortet darauf mit **200** und der Startseite. Ein nicht aufgelöster
+Platzhalter ist jetzt ausdrücklich `null` und führt dazu, dass die Seite nicht
+fotografiert wird.
+
+Nach der Reparatur: **248 Bilder, 248 verschiedene Prüfsummen**, alle sieben
+Platzhalter aufgelöst, ein bemerkter und behobener Sitzungsverlust im Bericht.
+Die Zahlen aus O9c sind im Konzept berichtigt (F-P3-AQ).
+
+### Die Wortliste stand auf fünf Treffern
+
+O9c hatte das Werkzeug **vor** dem Schreiben der Dokumentation laufen lassen
+und „0 Treffer" gemeldet; die danach geschriebenen Logo-Abschnitte in Handbuch
+und Technik-Doku brachten fünf. Vier Ausnahmen der Klasse *Homonym* sind
+nachgetragen — sie benennen ein Bild, nicht die Einsatzart, wie die sechs
+gleichartigen davor. Jetzt wieder 0 Treffer, 62 Regeln, 0 ungenutzt.
+
 ## [Web 9.10.0] — 2026-08-30
 
 **O9c: die drei übrigen Adminseiten.** Keine Migration.

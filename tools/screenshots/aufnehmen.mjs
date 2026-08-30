@@ -167,6 +167,21 @@ const KACHELMUSTER = [
  *
  * Also: anmelden, die Seite behalten, fuer jede Breite nur die Fenstergroesse
  * aendern. Das haelt den Schluessel und ist nebenbei erheblich schneller. */
+/* Die eigentliche Anmeldung — als eigener Schritt, weil sie MITTEN IM LAUF
+ * wiederholt werden muss (siehe `sitzungHalten`). */
+async function anmeldenAuf(seite, rolle) {
+  if (rolle === 'aus') { return true; }
+  const konto = rolle === 'admin' ? ADMIN : DEMO;
+  await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
+  await seite.fill('input[name="email"]', konto.email);
+  await seite.fill('input[name="password"]', konto.pw);
+  await Promise.all([
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    seite.click('button[type="submit"]'),
+  ]);
+  return !seite.url().includes('login.php');
+}
+
 async function anmelden(rolle) {
   const kontext = await browser.newContext({
     ignoreHTTPSErrors: true, deviceScaleFactor: SKALA,
@@ -174,18 +189,9 @@ async function anmelden(rolle) {
   });
   for (const muster of KACHELMUSTER) await kontext.route(muster, kachelAntwort);
   const seite = await kontext.newPage();
-  if (rolle !== 'aus') {
+  if (!await anmeldenAuf(seite, rolle)) {
     const konto = rolle === 'admin' ? ADMIN : DEMO;
-    await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
-    await seite.fill('input[name="email"]', konto.email);
-    await seite.fill('input[name="password"]', konto.pw);
-    await Promise.all([
-      seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
-      seite.click('button[type="submit"]'),
-    ]);
-    if (seite.url().includes('login.php')) {
-      throw new Error(`Anmeldung als ${konto.email} gescheitert`);
-    }
+    throw new Error(`Anmeldung als ${konto.email} gescheitert`);
   }
 
   /* Die Fehlersammlung haengt an der Seite und wird je Aufnahme geleert. */
@@ -198,7 +204,7 @@ async function anmelden(rolle) {
     }
   });
   seite.on('pageerror', e => fehler.push('pageerror: ' + e.message));
-  return { kontext, seite, fehler, setzeAdresse: (a) => { adresse = a; } };
+  return { kontext, seite, fehler, rolle, setzeAdresse: (a) => { adresse = a; } };
 }
 
 const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'), admin: await anmelden('admin') };
@@ -211,7 +217,14 @@ const rollen = { aus: await anmelden('aus'), demo: await anmelden('demo'), admin
  * NutzerIn ginge. */
 async function platzhalter() {
   const s = rollen.demo.seite;
-  await s.goto(`${BASIS}/index.php`, { waitUntil: 'domcontentloaded' });
+  /* UEBER DIE SITZUNGSWACHE (Web 9.10.1). Diese Funktion laeuft als erste im
+     Lauf und ist damit die erste, die einen faelligen Demo-Reset ausloest.
+     Landete sie auf der Anmeldeseite, fand sie keine Einsatzzeile, lieferte
+     ein leeres Verzeichnis — und alle vier Einsatzseiten wurden mit ihrem
+     eigenen Platzhalter als Adresse aufgerufen. Der lokale Server antwortet
+     darauf mit 200 und der Startseite; acht Bilder je Seite, alle falsch,
+     kein Fehler. Genau die Falle aus F-P3-AH, eine Ebene tiefer. */
+  await gehZu(rollen.demo, `${BASIS}/index.php`, 'index.php');
 
   /* Auf die ERSTE Einsatzzeile warten, nicht auf eine feste Zeit. Die
    * Tagesübersicht holt ihre Einsätze über api/day.php nach; eine Wartezeit
@@ -237,24 +250,32 @@ async function platzhalter() {
     einsatz = new URL(s.url()).searchParams.get('id');
   }
 
-  const p = einsatz ? {
-    '__EINSATZ__':     `einsatz.php?id=${einsatz}`,
-    '__FORMULAR__':    `einsatz_form.php?id=${einsatz}`,
-    '__VERSCHIEBEN__': `einsatz_verschieben.php?id=${einsatz}`,
-    '__LOESCHEN__':    `einsatz_loeschen.php?id=${einsatz}`,
-  } : {};
-  p['__TAG_DATUM__']    = tag ? `diensttag_datum.php?d=${tag}`    : 'index.php';
-  p['__TAG_LOESCHEN__'] = tag ? `diensttag_loeschen.php?d=${tag}` : 'index.php';
+  /* NULL STATT EINES RUECKFALLS. Bis Web 9.10.1 lieferte ein nicht
+     aufloesbarer Platzhalter entweder 'index.php' (Tag-Seiten) oder gar
+     keinen Eintrag (Einsatz-Seiten). Beides endete in einem Bild der
+     falschen Seite unter dem richtigen Namen: einmal die Startseite als
+     „Diensttag Datum aendern", einmal die Startseite als „Einsatzformular".
+     Ein fehlender Wert ist jetzt ausdruecklich `null` und fuehrt dazu, dass
+     die Seite NICHT fotografiert wird. */
+  const p = {
+    '__EINSATZ__':     einsatz ? `einsatz.php?id=${einsatz}`            : null,
+    '__FORMULAR__':    einsatz ? `einsatz_form.php?id=${einsatz}`       : null,
+    '__VERSCHIEBEN__': einsatz ? `einsatz_verschieben.php?id=${einsatz}`: null,
+    '__LOESCHEN__':    einsatz ? `einsatz_loeschen.php?id=${einsatz}`   : null,
+    '__TAG_DATUM__':    tag ? `diensttag_datum.php?d=${tag}`    : null,
+    '__TAG_LOESCHEN__': tag ? `diensttag_loeschen.php?d=${tag}` : null,
+  };
 
   const a = rollen.admin.seite;
-  await a.goto(`${BASIS}/admin_users.php`, { waitUntil: 'domcontentloaded' });
+  await gehZu(rollen.admin, `${BASIS}/admin_users.php`, 'admin_users.php');
   const href = await a.locator('a[href*="admin_user.php?id="]').first()
                       .getAttribute('href').catch(() => null);
-  p['__KONTO__'] = href || 'admin_users.php';
+  p['__KONTO__'] = href || null;
 
-  const fehlend = Object.entries(p).filter(([, v]) => v === 'index.php' || v === 'admin_users.php');
+  const fehlend = Object.entries(p).filter(([, v]) => v === null).map(([k]) => k);
   if (fehlend.length) {
-    console.log('Hinweis: nicht aufgelöst — ' + fehlend.map(([k]) => k).join(', '));
+    console.log('NICHT AUFGELÖST (diese Seiten werden nicht fotografiert): '
+                + fehlend.join(', '));
   }
   return p;
 }
@@ -278,11 +299,92 @@ async function vorher(seite, schritte) {
   }
 }
 
+/* ---- DIE SITZUNGSWACHE (Web 9.10.1) ---------------------------------------
+ *
+ * WAS HIER SCHIEFGING, UND WARUM ES NIEMAND SAH.
+ *
+ * Der Lauf meldete „31 Seiten, 0 Ueberlauf, 0 Konsolenfehler" — und 22 der
+ * 31 Seiten waren Bilder der ANMELDESEITE. 176 von 248 Einzelbildern. Sie
+ * waren byteweise identisch; nachgewiesen mit `md5sum`, 23 Dateien je Breite
+ * mit derselben Pruefsumme.
+ *
+ * Die Ursache steht nicht in diesem Werkzeug, sondern in der Anwendung:
+ * Das Demo-Konto setzt sich alle 30 Minuten zurueck, und dabei erhoeht
+ * `demo_zuruecksetzen()` die Sitzungs-Epoche (server/demo_lib.php,
+ * `session_epoch = session_epoch + 1`). `auth_guard.php` beendet daraufhin
+ * jede offene Sitzung dieses Kontos — auch unsere. Der Lauf braucht
+ * mehrere Minuten und loest den faelligen Reset durch seine EIGENEN
+ * Anfragen aus; ab da fotografiert er die Anmeldeseite.
+ *
+ * Die alte Pruefung (`if (seite.url().includes('login.php')) throw`) stand
+ * EINMAL, unmittelbar nach dem Anmelden. Danach hat nichts mehr hingesehen.
+ *
+ * ZWEI DINGE SIND NOETIG, UND BEIDE STEHEN HIER:
+ *
+ *   1. Bemerken. Nach jedem `goto` wird geprueft, ob die Seite noch die
+ *      gemeinte ist. Eine Umleitung auf die Anmeldung ist kein Bild wert.
+ *   2. Weitermachen. Ein Sitzungsverlust ist im Demo-Betrieb NORMAL, nicht
+ *      aussergewoehnlich — der Reset gehoert zum Konto. Also wird neu
+ *      angemeldet und die Aufnahme einmal wiederholt.
+ *
+ * Hilft auch das nicht, wird NICHT fotografiert, sondern ein Fehler
+ * vermerkt. Ein fehlendes Bild ist eine Auskunft; ein falsches ist eine
+ * Luege, die durch jede weitere Pruefung durchmarschiert.
+ */
+function istAnmeldung(seite) {
+  return seite.url().includes('login.php');
+}
+
+/* Bringt die Seite auf `adresse` und stellt sicher, dass sie auch dort ist.
+ * Rueckgabe: { status, verloren } — `verloren` sagt, dass die Sitzung neu
+ * aufgebaut werden musste (fuer den Bericht). Wirft nicht; Fehler landen in
+ * `rolle.fehler`. */
+async function gehZu(rolle, adresse, zielPfad) {
+  const seite = rolle.seite;
+  let status = 0, verloren = false;
+  for (let versuch = 0; versuch < 2; versuch++) {
+    try {
+      const antwort = await seite.goto(adresse, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      status = antwort ? antwort.status() : 0;
+    } catch (e) {
+      rolle.fehler.push('laden: ' + e.message);
+      return { status, verloren };
+    }
+    /* Die Anmeldeseite ist nur dann die richtige Antwort, wenn sie auch
+       gemeint war (01-anmeldung, Rolle „aus"). */
+    if (!istAnmeldung(seite) || zielPfad.startsWith('login.php')) {
+      return { status, verloren };
+    }
+    if (versuch === 1) { break; }
+    verloren = true;
+    if (!await anmeldenAuf(seite, rolle.rolle)) {
+      rolle.fehler.push('Sitzung verloren und Neuanmeldung gescheitert');
+      return { status, verloren };
+    }
+  }
+  rolle.fehler.push('Sitzung verloren: die Seite leitet auf die Anmeldung um '
+                  + '(auch nach Neuanmeldung) — kein Bild aufgenommen');
+  return { status, verloren, abbruch: true };
+}
+
 /* ---- Eine Aufnahme --------------------------------------------------------- */
 const bericht = { basis: BASIS, skala: SKALA, seiten: [], knopf: [], stand: new Date().toISOString() };
+/* Aufnahmen, bei denen die Sitzung mitten im Lauf neu aufgebaut werden
+ * musste (Demo-Reset), und solche, die deshalb GAR NICHT entstanden. */
+const verlorene = [];
+const ausgefallen = [];
 
 for (const eintrag of liste) {
-  const pfad = PLATZ[eintrag.pfad] || eintrag.pfad;
+  /* Ein Platzhalter, der in PLATZ steht, MUSS einen Wert haben — sonst gibt
+     es diese Seite im Bestand nicht, und ein Bild waere geraten. */
+  const aufgeloest = Object.prototype.hasOwnProperty.call(PLATZ, eintrag.pfad)
+    ? PLATZ[eintrag.pfad] : eintrag.pfad;
+  if (aufgeloest === null) {
+    for (const { b } of BREITEN) { ausgefallen.push(`${eintrag.name} @ ${b}`); }
+    console.log(`${eintrag.name.padEnd(34)} OHNE BILD — Platzhalter ${eintrag.pfad} nicht auflösbar`);
+    continue;
+  }
+  const pfad = aufgeloest;
   const rolle = rollen[eintrag.rolle || 'demo'];
   const seite = rolle.seite;
   const zeile = { name: eintrag.name, gruppe: eintrag.gruppe, pfad, breiten: [] };
@@ -294,15 +396,22 @@ for (const eintrag of liste) {
     rolle.setzeAdresse(adresse);
     await seite.setViewportSize({ width: b, height: h });
 
-    let status = 0;
-    try {
-      const antwort = await seite.goto(adresse, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      status = antwort ? antwort.status() : 0;
-      await seite.waitForTimeout(eintrag.karte ? 900 : 400);
-      await vorher(seite, eintrag.vorher);
-      await seite.waitForTimeout(150);
-    } catch (e) {
-      rolle.fehler.push('laden: ' + e.message);
+    const hin = await gehZu(rolle, adresse, pfad);
+    const status = hin.status;
+    if (hin.verloren && !hin.abbruch) {
+      /* Kein Fehler, aber eine Auskunft: Der Reset des Demo-Kontos ist im
+         Lauf normal, und wer den Bericht liest, soll wissen, dass hier neu
+         angemeldet wurde. */
+      verlorene.push(`${eintrag.name} @ ${b}`);
+    }
+    if (!hin.abbruch) {
+      try {
+        await seite.waitForTimeout(eintrag.karte ? 900 : 400);
+        await vorher(seite, eintrag.vorher);
+        await seite.waitForTimeout(150);
+      } catch (e) {
+        rolle.fehler.push('laden: ' + e.message);
+      }
     }
 
     const mass = await seite.evaluate(() => ({
@@ -353,8 +462,15 @@ for (const eintrag of liste) {
     })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null }));
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
-    await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
-    bilder.push({ datei, b, art });
+    if (hin.abbruch) {
+      /* KEIN BILD. Ein Bild der Anmeldeseite unter dem Namen einer anderen
+         Seite ist schlimmer als gar keines: Es sieht wie ein Beleg aus. */
+      ausgefallen.push(`${eintrag.name} @ ${b}`);
+      rmSync(datei, { force: true });
+    } else {
+      await seite.screenshot({ path: datei, fullPage: true }).catch(() => {});
+      bilder.push({ datei, b, art });
+    }
 
     zeile.breiten.push({
       breite: b, status,
@@ -439,12 +555,37 @@ if (bericht.knopf.length) {
     md += `| ${k.seite} | ${k.breite} | ${k.text} | ${k.hoehe} px (soll ${k.soll}) |\n`;
   }
 }
+/* DIE SITZUNG STEHT IM BERICHT, nicht nur in der Konsole. Wer den Bericht
+ * spaeter liest, muss sehen koennen, ob die Bilder ueberhaupt die gemeinten
+ * Seiten zeigen — genau das war bis Web 9.10.1 nicht der Fall. */
+bericht.sitzung = { neu_angemeldet: verlorene, ohne_bild: ausgefallen };
+if (verlorene.length || ausgefallen.length) {
+  md += `\n## Sitzung\n\n`;
+  if (verlorene.length) {
+    md += `Bei ${verlorene.length} Aufnahmen war die Sitzung fort und wurde neu `
+       +  `aufgebaut; das Bild entstand danach. Im Demo-Konto ist das normal — `
+       +  `sein Reset alle 30 Minuten erhöht die Sitzungs-Epoche.\n\n`;
+    for (const v of verlorene) md += `- ${v}\n`;
+  }
+  if (ausgefallen.length) {
+    md += `\n**${ausgefallen.length} Aufnahmen sind AUSGEFALLEN** — die Seite `
+       +  `leitete auch nach einer Neuanmeldung auf die Anmeldung um. Für sie `
+       +  `gibt es kein Bild; das ist Absicht.\n\n`;
+    for (const a of ausgefallen) md += `- ${a}\n`;
+  }
+}
+
 writeFileSync(join(AUSGABE, 'bericht.md'), md);
 writeFileSync(join(AUSGABE, 'bericht.json'), JSON.stringify(bericht, null, 2) + '\n');
 
 console.log(`\n${bilderZahl} Einzelbilder, ${bericht.seiten.length} Kontaktbögen.`);
 console.log(`Überlauf: ${gesamtUeberlauf} · Konsolenfehler: ${gesamtKonsole} · Knöpfe ≠ 44 px: ${bericht.knopf.length}`);
+if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
+if (ausgefallen.length) { console.log(`OHNE BILD: ${ausgefallen.length} Aufnahmen — Sitzung nicht zu halten`); }
 console.log(`Bericht: ${join(AUSGABE, 'bericht.md')}`);
 
 await browser.close();
-process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0 && bericht.knopf.length === 0 ? 0 : 1);
+/* Eine ausgefallene Aufnahme ist ein Fehlschlag: Der Lauf hat seine Frage
+   nicht beantwortet. */
+process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0
+             && bericht.knopf.length === 0 && ausgefallen.length === 0 ? 0 : 1);

@@ -146,6 +146,18 @@ Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen; ein
 Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
 Ausblenden.
 
+**Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Erst der Code, dann
+die Dokumentation, **dann** Wortliste, Vollständigkeit, Kontraste und
+Bilderlauf. Ein Werkzeug, das vor der letzten Änderung lief, misst einen Stand,
+den es nicht mehr gibt — in O9c stand die Wortliste dadurch auf fünf Treffern,
+gemeldet worden waren null (Web 9.10.1).
+
+**Eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt.**
+Der Bilderlauf meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten
+die Anmeldeseite (F-P3-AQ). Bei jedem Prüfmittel dazusagen, **was** es
+gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren; für den
+Bilderlauf steht sie in seiner `LIESMICH.md`.
+
 ## 7. Konzept und Umsetzung
 
 Konzeptarbeit findet in einer getrennten Sitzung statt und mündet in ein

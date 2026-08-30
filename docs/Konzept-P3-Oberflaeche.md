@@ -1292,7 +1292,7 @@ Umsetzung füllen.
 | P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O2 erfüllt: 0 Abweichungen** über 232 Bilder. Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. |
 | P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
 | P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | **nach O2: 0 Überlauf** auf allen 29 Seiten in allen acht Breiten (vorher 26). Ort und Diagnose bei 360 px sind noch **offen** — das ist die Kachel aus E-P3-32 und gehört zu O3. |
-| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. Seit O9c: 31 Seiten × 8 = 248 Bilder** (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
+| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. Seit O9c: 31 Seiten × 8 = 248 Bilder**, seit Web 9.10.1 mit **248 verschiedenen Prüfsummen** (F-P3-AQ: davor zeigten 176 davon die Anmeldeseite) (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
 | P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
@@ -1374,6 +1374,8 @@ und O11.
 | F-P3-AN | **Die Anmeldeseite zeigte nie den Standard der Installation.** `logo_src()` versorgt die beiden Seiten **ohne Sitzung** — Anmeldung und Passwort setzen — und genau dort soll der Standard stehen (E-P3-20). Sie las stattdessen `app.logo_path` aus der `config.php`, und der Einrichter schreibt dort den Hubschrauber hinein. Ein Wechsel des Standards wirkte damit überall außer auf der einen Seite, die ihn zeigen soll; `version.php` und E-P3-20 behaupteten seit O8a etwas anderes. Gefunden beim Bauen der Wartungs-Einstellung (O9c), nicht vom Bilderlauf: Der fotografiert die Anmeldeseite, aber er weiß nicht, welches Logo dort stehen **soll**. | O9c: `logo_path` gilt nur noch für eine **fremde** Datei (weder `gen-em_logo_helicopter` noch `gen-em_logo_fahrzeug` im Pfad); sonst entscheidet `logo_stamm()`. `pw_handling.php` lädt dafür `session_lib.php`. Gegengeprüft im Browser: Standard umgestellt → Anmeldeseite folgt, Konto mit eigener Wahl nicht. |
 | F-P3-AO | **Die Standorteliste warnte als einzige nicht vor Namensdubletten.** Fünf der sechs Stammdatenlisten zeigen seit jeher den weichen Hinweis „n Konten führen einen gleichnamigen eigenen Eintrag" (`stammdaten_dup_personal_count()`); die Standorteliste rief die Funktion nicht auf, ohne Begründung im Code. Ein systemweiter Standort, den bereits ein Dutzend Konten unter demselben Namen selbst angelegt hat, entstand damit ohne jeden Hinweis — und stand danach zweimal in deren Auswahlliste. | O9c: Der Hinweis steht jetzt auch dort, mit Plakette „Namensdublette" in Orange. |
 | F-P3-AP | **Die Radios der Segmentwahl waren 20 × 20 px groß und fingen Klicks ab.** `.segment-box` setzt `position:absolute; opacity:0; width:0; height:0` — Spezifität (0,1,0). Weiter unten im Stylesheet steht `input[type=checkbox],input[type=radio]{width:var(--symbol);height:var(--symbol)}` mit (0,1,1) und gewinnt. Die Kästchen blieben damit 20 × 20 px, nur durchsichtig, und lagen absolut positioniert über ihrer Umgebung. Das betraf **jede** Segmentwahl der Anwendung — die Artwahl im Zeitraum (O7), die Filter der Suche (O6), die neuen Reiter (O9c). Gefunden beim **Bedienen im Browser** („`<input …value=fahrzeug>` intercepts pointer events"), nicht beim Lesen und nicht vom Bilderlauf: Ein unsichtbares Element, das nichts verdeckt, sieht auf einem Bild aus wie keines. | O9c: `input[type=radio].segment-box, input[type=checkbox].segment-box` (0,2,1) plus `min-height:0`. Nachgemessen: 20 × 20 → 0 × 0. |
+| F-P3-AQ | **Die Bildaufnahme fotografierte die Anmeldeseite — und meldete dafür „0 Überlauf".** Der Lauf nach O9c berichtete „31 Seiten × 8 Breiten = 248 Bilder, Überlauf 0, Konsolenfehler 0"; **22 dieser 31 Seiten waren Bilder von `login.php`**, 176 von 248 Einzelbildern, byteweise identisch (nachgewiesen mit `md5sum`: 23 Dateien je Breite mit derselben Prüfsumme). Zwei unabhängige Ursachen. (1) **Die Sitzung starb mitten im Lauf:** Das Demo-Konto setzt sich alle 30 Minuten zurück, `demo_zuruecksetzen()` erhöht dabei `session_epoch`, `auth_guard.php` beendet daraufhin jede offene Sitzung — und der Lauf löst den fälligen Reset durch seine **eigenen** Anfragen aus. Die alte Prüfung stand **einmal**, unmittelbar nach dem Anmelden. (2) **Vier Platzhalter wurden nie aufgelöst:** `platzhalter()` holt die Kennungen aus der Tagesübersicht und lief als erste Funktion in denselben Sitzungsverlust; fehlte die Kennung, blieb das Verzeichnis leer, und `einsatz.php`/`einsatz_form.php`/`einsatz_verschieben.php`/`einsatz_loeschen.php` wurden mit ihrem eigenen Platzhalter als Adresse aufgerufen — der Server antwortet darauf mit **200** und der Startseite. Dieselbe Falle wie F-P3-AH, eine Ebene tiefer. Gefunden bei der Bestandsaufnahme zu O10, nicht vom Werkzeug selbst. | Web 9.10.1: Sitzungswache nach **jedem** Seitenaufruf mit einer Neuanmeldung und einem harten Abbruch statt eines Bildes; nicht auflösbare Platzhalter sind `null` und führen zum Ausfall der Aufnahme, nicht zu einem geratenen Bild; beides steht im Bericht. **Nachgemessen: 248 Bilder, 248 verschiedene Prüfsummen** (vorher 228 nach der ersten Teilreparatur, davor 23 gleiche je Breite), alle sieben Platzhalter aufgelöst. Die O9c-Zahlen sind unten berichtigt. |
+| F-P3-AR | **Der Einrichter stürzte bei jeder Neuinstallation ab.** `install.php` lud `ui.php` erst **innerhalb** von `render_page()` (Zeile 426); die Aufrufer bauen ihr Argument aber mit `ui_meldung_markup()` (:51), `ui_knopf()` (:53) und `ui_symbol()` (:335), und PHP wertet Argumente **vor** dem Aufruf aus. Alle drei Zweige endeten in „Call to undefined function" — seit Web 9.1.0 (O2), als die Seite auf das gemeinsame Stylesheet umgestellt wurde. `index.php` leitet ohne `config.php` genau dorthin, und der Deploy liefert die Datei aus. Nicht aufgefallen, weil der Einrichter genau einmal im Leben einer Installation läuft. Dazu, im selben Zug gefunden: `schema.sql` war zwei Migrationen im Rückstand — `users.last_login` fehlte als Spalte, die Kennungen `2026_08_27_logo_wahl` und `2026_08_28_last_login` in der Erledigt-Liste. | Web 9.10.1: `require_once ui.php` an den Dateianfang; Spalte und beide Kennungen in `schema.sql` nachgetragen. Geprüft durch Einspielen in eine Wegwerfdatenbank nach dem Verfahren von `install.php` (32 Anweisungen, 30 Tabellen, `last_login` vorhanden) und durch Aufruf beider Zweige des Einrichters. |
 
 ---
 
@@ -2716,8 +2718,18 @@ die echte Datei liegt — sie ersetzt den Platzhalter 1:1.
   `rollehaken`, `rollen-zeile`, `vehcaps-zeile`, `acroles`, `vehkind`,
   `vehcaps`) — dazu `form-spalte`, die einzige neue Klasse aus P3 auf der
   Liste: Sie ist der Behälter einer Rasterspalte und trägt bewusst keine Regel.
-- **Wortliste**: 58 Regeln, **58 gegriffen, 0 ungenutzt**, **0 Treffer außerhalb
-  der Ausnahmen** in allen drei Bereichen. Zwei Ausnahmen nachgezogen
+- **Wortliste**: 58 Regeln, 58 gegriffen, 0 ungenutzt, 0 Treffer außerhalb der
+  Ausnahmen in allen drei Bereichen.
+
+  > **Auch diese Zahl war zu früh gemessen — berichtigt mit Web 9.10.1.** Das
+  > Werkzeug lief **vor** dem Schreiben der Dokumentation; die danach
+  > entstandenen Logo-Abschnitte in `Handbuch.md` und `Technik.md` brachten
+  > **fünf** Treffer. Vier Ausnahmen der Klasse *Homonym* sind nachgetragen
+  > (sie benennen ein Bild, nicht die Einsatzart — wie die sechs
+  > gleichartigen davor). Stand jetzt: 62 Regeln, 62 gegriffen, 0 ungenutzt,
+  > **0 Treffer**, Rückgabewert 0. Die Lehre steht in Abschnitt 6 der
+  > Arbeitsanweisung und gilt ab sofort: **Die Prüfmittel laufen nach der
+  > Dokumentation, nicht davor.** Zwei Ausnahmen nachgezogen
   (`LOGO_STANDARD` → `LOGO_STANDARD_VORGABE`, neue Regel für das Lesen des
   Standards); ein Treffer wurde **nicht** durch eine Ausnahme erledigt, sondern
   durch Umbenennen: `sd_zeile(['basis' => …])` heißt jetzt `seite`.
@@ -2727,9 +2739,23 @@ die echte Datei liegt — sie ersetzt den Platzhalter 1:1.
   Kontaktbögen. **Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px: 0.** Neu in der
   Seitenliste: `42a-stammdaten-rettungsmittel` — die Standorte-Fassung stand
   schon darin, die Rettungsmittel-Fassung ist die andere Hälfte desselben
-  Menüpunkts und sieht völlig anders aus. Zwei Platzhalter der Seitenliste
-  (`__TAG_DATUM__`, `__TAG_LOESCHEN__`) ließen sich im Bestand nicht auflösen;
-  die beiden Seiten sind damit **nicht** gemessen — sie gehören zu O11.
+  Menüpunkts und sieht völlig anders aus.
+
+  > **Diese Zahl war zum Zeitpunkt der Messung wertlos — berichtigt mit Web
+  > 9.10.1 (F-P3-AQ).** 22 der 31 Seiten waren Bilder der **Anmeldeseite**;
+  > sechs weitere zeigten wegen nicht aufgelöster Platzhalter die Startseite.
+  > Gemessen war damit die Anmeldeseite in acht Breiten, nicht die
+  > Administration. **Was von O9c belegt bleibt:** die neun Seiten mit den
+  > Rollen `aus` und `admin` — darunter `43-sicherungen`, `44-demo-konto`,
+  > `45-wartung` und beide Stammdaten-Fassungen, also die Seiten dieses
+  > Pakets. Die Demo-Seiten (Tagesübersicht, Einsatz, Suche, Zeitraum,
+  > Einstellungen) waren **nicht** gemessen; sie sind mit dem Lauf zu Web
+  > 9.10.1 nachgeholt: 248 Bilder, **248 verschiedene Prüfsummen**, Überlauf
+  > 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0.
+  >
+  > Die beiden Platzhalter `__TAG_DATUM__` und `__TAG_LOESCHEN__` galten in
+  > O9c als „nicht auflösbar" — auch das war eine Folge desselben Fehlers.
+  > Seit 9.10.1 lösen sich **alle sieben** auf.
 
 **Im Browser** (Chromium über Playwright, lokale Instanz mit Referenzdatensatz
 und Demo-Konto):

@@ -14,6 +14,26 @@ declare(strict_types=1);
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
 
+/* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page() (Web 9.10.1).
+ *
+ * Sie stand seit P3/O2 in render_page() selbst — an der Stelle, an der sie
+ * gebraucht wird. Das war falsch, und zwar toedlich: Die Aufrufer BAUEN ihr
+ * Argument mit ui_meldung_markup() (Zeile 62), ui_knopf() (Zeile 66) und
+ * ui_symbol(), und PHP wertet Argumente VOR dem Aufruf aus. Die Huelle wurde
+ * also erst geladen, nachdem die Funktionen daraus schon gebraucht worden
+ * waren. Jeder der drei Zweige endete in „Call to undefined function".
+ *
+ * DAS TRAF JEDE NEUINSTALLATION: index.php leitet ohne config.php hierher,
+ * und der Deploy liefert diese Datei aus. Aufgefallen ist es niemandem, weil
+ * der Einrichter genau einmal im Leben einer Installation laeuft — und die
+ * bestehende laeuft laengst. Gefunden bei der Bestandsaufnahme zu O10.
+ *
+ * ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb auch
+ * hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder config.php
+ * noch db.php, also weder asset() noch favicon_tags(). Die Huelle faengt das
+ * ab (ui_asset(), ui_favicon()). */
+require_once __DIR__ . '/ui.php';
+
 $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
 $schemaPath = __DIR__ . '/schema.sql';
@@ -402,10 +422,8 @@ function render_form(array $v, array $errors, string $nachweis,
 
 function render_page(string $title, string $body): void {
     /* Die Seitenhuelle kommt aus ui.php — wie ueberall sonst (P0/A2).
-       ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb
-       auch hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder
-       config.php noch db.php, also weder asset() noch favicon_tags(). Die
-       Huelle faengt das ab (ui_asset(), ui_favicon()).
+       Geladen wird sie am DATEIANFANG, nicht hier; die Begruendung steht
+       dort (Web 9.10.1).
 
        SEIT P3/O2 GILT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18, E-P3-02).
        Bis Web 8.0.1 brachte diese Seite ihre Gestaltung im Kopf mit — 17
@@ -423,7 +441,6 @@ function render_page(string $title, string $body): void {
        Der relative Pfad funktioniert hier, weil der Einrichter im selben
        Verzeichnis liegt wie die Anwendung; ohne asset() fehlt nur der
        Erkennungswert an der Adresse, und der Einrichter laeuft genau einmal. */
-    require_once __DIR__ . '/ui.php';
     ui_seite_start(['titel' => $title, 'klasse' => 'anmeldung-body']);
     ui_kopf(['menue' => false]);
     echo '<main class="anmeldung">' . "\n";

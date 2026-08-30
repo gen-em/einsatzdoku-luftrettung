@@ -766,5 +766,61 @@ declare(strict_types=1);
  * jeder Breite, aber der Knopf daneben war unter 720 px 100 % breit — die
  * Zahl brach auf zwei Zeilen. Die Breitenausnahme haengt jetzt an der Zahl
  * statt an der Schwelle.
+ *
+ * 9.10.1 REPARIERT DREI DINGE, DIE VOR O10 STEHEN MUSSTEN. Keine Migration —
+ * aber schema.sql aendert sich, und das betrifft NEUINSTALLATIONEN.
+ *
+ * DER EINRICHTER WAR TOT. install.php lud ui.php erst INNERHALB von
+ * render_page(); die Aufrufer bauen ihr Argument aber mit
+ * ui_meldung_markup(), ui_knopf() und ui_symbol(), und PHP wertet Argumente
+ * VOR dem Aufruf aus. Alle drei Zweige endeten in „Call to undefined
+ * function" — seit Web 9.1.0, also seit O2. Das traf JEDE Neuinstallation:
+ * index.php leitet ohne config.php dorthin, und der Deploy liefert die Datei
+ * aus. Niemandem aufgefallen, weil der Einrichter genau einmal im Leben
+ * einer Installation laeuft und die bestehende laengst laeuft. Die Huelle
+ * wird jetzt am Dateianfang geladen.
+ *
+ * schema.sql WAR ZWEI MIGRATIONEN IM RUECKSTAND. `users.last_login` (Web
+ * 9.8.0) fehlte als SPALTE, und die Kennungen der beiden Migrationen
+ * 2026_08_27_logo_wahl und 2026_08_28_last_login fehlten in der
+ * Erledigt-Liste. Eine frisch eingerichtete Anwendung haette die Spalte gar
+ * nicht gehabt; die Nachtragsmigrationen waeren erneut angesetzt und
+ * entweder haengengeblieben oder — schlimmer — still durchgelaufen, weil
+ * update.php MySQL 1060 („Duplicate column") schluckt.
+ *
+ * DIE BILDAUFNAHME FOTOGRAFIERTE DIE ANMELDESEITE. Das ist der schwerste
+ * der drei Funde, weil er ein PRUEFMITTEL betrifft: Der Lauf meldete „31
+ * Seiten, 0 Ueberlauf, 0 Konsolenfehler", und 22 dieser 31 Seiten waren
+ * Bilder von login.php — 176 von 248 Einzelbildern, byteweise identisch
+ * (nachgewiesen mit md5sum: 23 Dateien je Breite mit derselben Pruefsumme).
+ *
+ * Zwei unabhaengige Ursachen, beide behoben:
+ *
+ *   1. DIE SITZUNG STARB MITTEN IM LAUF. Das Demo-Konto setzt sich alle 30
+ *      Minuten zurueck, und demo_zuruecksetzen() erhoeht dabei die
+ *      Sitzungs-Epoche; auth_guard.php beendet daraufhin jede offene
+ *      Sitzung. Der Lauf braucht Minuten und loest den faelligen Reset durch
+ *      seine EIGENEN Anfragen aus. Die alte Pruefung stand einmal,
+ *      unmittelbar nach dem Anmelden — danach hat nichts mehr hingesehen.
+ *      Jetzt prueft die Aufnahme nach JEDEM Seitenaufruf, meldet sich bei
+ *      Bedarf neu an und wiederholt einmal; hilft das nicht, entsteht KEIN
+ *      Bild, sondern ein Fehler.
+ *
+ *   2. VIER PLATZHALTER WURDEN NIE AUFGELOEST. Die Kennungen der
+ *      Einsatzseiten holt platzhalter() aus der Tagesuebersicht — und lief
+ *      als erste Funktion des Laufs in denselben Sitzungsverlust. Fehlte
+ *      die Kennung, war das Verzeichnis LEER, und die vier Seiten wurden mit
+ *      ihrem eigenen Platzhalter als Adresse aufgerufen; der Server
+ *      antwortet darauf mit 200 und der Startseite. Ein nicht aufgeloester
+ *      Platzhalter ist jetzt ausdruecklich `null` und fuehrt dazu, dass die
+ *      Seite nicht fotografiert wird.
+ *
+ * NACH DER REPARATUR: 248 Bilder, 248 VERSCHIEDENE Pruefsummen, alle sieben
+ * Platzhalter aufgeloest, ein bemerkter und behobener Sitzungsverlust im
+ * Bericht. Die Zahlen aus O9c sind im Konzept berichtigt (F-P3-AQ).
+ *
+ * Dazu: Vier Wortlisten-Ausnahmen fuer die Logo-Abschnitte der Dokumentation
+ * (O9c hatte die Doku nach dem Lauf des Werkzeugs geschrieben; die Pruefung
+ * stand auf 5 Treffern, gemeldet worden waren 0).
  */
-const WEB_VERSION = '9.10.0';
+const WEB_VERSION = '9.10.1';
