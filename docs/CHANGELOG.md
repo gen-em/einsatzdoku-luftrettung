@@ -11,6 +11,68 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Uhr-Prüfstand] — 2026-08-30
+
+**Der Uhr-Code lässt sich jetzt auch ohne eingerichteten Arbeitsplatz
+übersetzen und im Simulator starten.** Weder die Weboberfläche noch die Uhr-App
+sind geändert, deshalb trägt dieser Eintrag keine Versionsnummer — das weicht
+vom bisherigen Schema ab, in dem Werkzeuge immer innerhalb einer
+Anwendungsversion miterwähnt wurden.
+
+### Werkzeug — Warum
+
+Bisher galt für die Uhr: Build nur mit VS Code, Monkey-C-Erweiterung und
+installiertem SDK. Jede Änderung am Monkey-C-Code außerhalb dieses
+Arbeitsplatzes war damit blind — kein Kompilat, kein Simulatorlauf, nur Lesen.
+Für einen Punkt wie Backlog Nr. 13 (Typprüfer-Warnungen) ist das zu wenig: Man
+kann die Warnungen nicht zählen, die man nicht erzeugen kann.
+
+### Werkzeug — Was der Prüfstand beschafft
+
+`tools/uhr-pruefstand/pruefstand.sh` baut auf einer nackten Linux-Maschine auf,
+was der Simulator braucht. Drei der vier Teile gehen von allein: das SDK von
+`developer.garmin.com` (ohne Anmeldung abrufbar), die Systembibliotheken aus
+den Ubuntu-Quellen, der Entwickler-Schlüssel per `openssl` — für den Simulator
+genügt jeder gültige Schlüssel.
+
+Der vierte Teil geht nicht von allein und bleibt es auch. **Gerätedateien und
+Zeichensätze liefert nur der SDK-Manager**, eine Fensteranwendung mit
+Garmin-Anmeldung, die sich ohne Bildschirm nicht bedienen lässt. Sie werden
+deshalb von einer selbst bereitgestellten Quelle geholt; deren Adresse steht in
+`CIQ_GERAETE_URL` und **bewusst nicht im Repositorium** — es ist öffentlich,
+und die Dateien gehören Garmin. Aus demselben Grund werden sie nicht
+eingecheckt.
+
+Zwei Fallen kostete das. Der Simulator ist gegen `webkit2gtk 4.0` gebunden, das
+Ubuntu 24.04 nicht mehr führt; die 22.04-Stände liegen jetzt **neben** dem
+Simulator statt im System, damit alles unberührt bleibt, was 4.1 erwartet. Und
+fehlen die Zeichensätze, übersetzt die App zwar, bricht aber beim ersten
+Zeichnen mit `Invalid Font Specified` ab — die Meldung zeigt auf die eigene
+Zeile und meint die Umgebung. Beides steht in der `LIESMICH.md`, damit es beim
+nächsten Aufbau nicht erneut gesucht werden muss.
+
+### Werkzeug — Was damit belegt ist
+
+Alle drei Zielgeräte übersetzen (`fenix6pro` 165 KB, `fr945` 165 KB, `venu3s`
+175 KB) und starten im Simulator. Der Startbildschirm rendert auf jedem Gerät
+mit dem richtigen Bedienhinweis — „START drücken" auf den Tastengeräten,
+„Action drücken" auf der Venu 3S; das Geräteprofil greift also nachweislich.
+Der Bau meldet **29 Warnungen**, davon 28 „container access" und eine nicht
+erreichbare Anweisung; die strenge Typprüfung `-l 3` meldet **226**. Das sind
+die Zahlen zu Backlog Nr. 13, die bislang fehlten.
+
+Bedienung ist simulierbar: Tipp, Langdruck und Wischgeste kommen als
+X-Ereignisse bis in die App durch, gemessen mit der Eingabe-Probe auf der
+Venu 3S.
+
+### Werkzeug — Was bewusst nicht gelöst ist
+
+Der Prüfstand ersetzt die echte Uhr nicht, und die Grenzen aus
+`Geraete-Eingabe.md` gelten unverändert: keine Systemgesten, kein Halten über
+4,6 s, keine Kopplung, kein Server. Die App meldet im Simulator „Server fehlt" —
+richtiges Verhalten, kein Fehler. Und ein Lauf zeigt, dass es startet und wie
+es aussieht, nicht dass es richtig ist.
+
 ## [Web 8.0.1] — 2026-08-24
 
 **Die Anwendung spricht neutral von Land und Luft — vor dem Redesign, damit

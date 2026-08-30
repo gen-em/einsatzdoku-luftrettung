@@ -149,6 +149,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
+│   ├── uhr-pruefstand/    baut SDK und Simulator auf einer nackten Linux-
+│   │                      Maschine auf, übersetzt die Uhr-App und startet
+│   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall und
@@ -2082,6 +2085,41 @@ Arbeitszustand zurück (Zähler, Phase, Tag) und beendet die App per
 Sende-Ansicht läuft verzögert (Modul `EndDay`), weil ein direkter
 `switchToView()` aus `ConfirmationDelegate.onResponse()` von der sich
 schließenden Bestätigung wieder entfernt würde.
+
+### 5.2b Uhr-App ohne Arbeitsplatz prüfen — `tools/uhr-pruefstand`
+
+Der Build oben setzt einen eingerichteten Arbeitsplatz voraus. Damit war jede
+Änderung am Monkey-C-Code aus einer Wegwerf-Umgebung heraus blind: kein
+Kompilat, kein Simulatorlauf, nur Lesen. `tools/uhr-pruefstand/pruefstand.sh`
+schließt diese Lücke — es baut SDK und Simulator auf einer nackten
+Linux-Maschine auf und startet die App unter einem virtuellen X-Server.
+
+Drei der vier nötigen Teile beschafft das Skript allein: das SDK von
+`developer.garmin.com` (keine Anmeldung nötig), die Systembibliotheken aus den
+Ubuntu-Quellen und den Entwickler-Schlüssel per `openssl` — für den Simulator
+genügt jeder gültige Schlüssel, der des Arbeitsplatzes gehört nicht dorthin.
+
+Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
+(`Fonts/`) liefert nur der SDK-Manager aus**, und der ist eine
+Fensteranwendung mit Garmin-Anmeldung — auf einer Maschine ohne Bildschirm
+nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
+geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
+Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Fehlen die
+Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
+`Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
+aber an der Umgebung.
+
+Zwei Eigenheiten sind der Erwähnung wert. Der Simulator ist gegen
+`webkit2gtk 4.0` gebunden, das es in Ubuntu 24.04 nicht mehr gibt; das Skript
+holt die 22.04-Stände und legt sie **neben** den Simulator, statt am System zu
+drehen. Und Bedienung wird als X-Ereignis zugestellt — Tastendruck, Tipp,
+Langdruck und Wischgeste kommen so bis in die App durch, gemessen mit der
+Eingabe-Probe (s. `Geraete-Eingabe.md`).
+
+Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
+keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es
+aussieht — nicht, dass es richtig ist. Anleitung:
+`tools/uhr-pruefstand/LIESMICH.md`.
 
 ## 6. Deployment
 
