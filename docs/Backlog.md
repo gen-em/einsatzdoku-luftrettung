@@ -305,6 +305,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
     Prüfprotokoll, statt die Zahl schönzurechnen.
 
+43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+    *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
+    ist mit Adresse und Koordinaten Ende-zu-Ende verschlüsselt — die Spur, die
+    dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
+    ist damit nominell geschützt und faktisch rekonstruierbar.
+
+    Die Bestandsaufnahme steht in `docs/Konzept-V1-Ortsdaten.md`: was liegt wo,
+    was verrät was, was kosten die drei Wege. Kurzfassung — der Server rechnet
+    mit den Koordinaten **nicht** (Strecke und Höhenmeter kommen von der Uhr,
+    die Phasenzuordnung über Zeitstempel), aber die **Uhr hat keinen
+    Schlüssel** und kann deshalb nur Klartext liefern.
+
+    Empfehlung dort: die Zusage zuerst auf das eingrenzen, was sie hält (ein
+    Nachmittag), und die eigentliche Lösung — Schlüssel auf die Uhr — in eine
+    eigene Phase zusammen mit der ohnehin anstehenden Uhr-Arbeit.
+
+44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
+    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
+    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
+    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
+    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
+    ganz.
+
+    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
+    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
+    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+
+45. **Dritte Kartengröße zwischen klein und Vollbild.**
+    *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
+    Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
+    eine mittlere Fassung über die volle Breite des Diensttags, über der
+    Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
+
 ---
 
 ## Erledigt

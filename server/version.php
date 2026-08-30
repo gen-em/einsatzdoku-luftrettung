@@ -1111,5 +1111,97 @@ declare(strict_types=1);
  * Angepasst wurde nur, was ohne Wert veraltet: die 14 Unicode-Zeichen im
  * Text (kein Bildschirmleser spricht das Kreuzzeichen als „Schliessen") und
  * drei Bildschirmfotos.
+ *
+ * 9.14.0 — DIE ERSTE RUECKMELDUNGSRUNDE NACH P3. Keine Migration. Vierzehn
+ * Punkte aus einer Durchsicht mit Bildschirmfotos, dazu vier Fehler, die
+ * dabei ans Licht kamen. Was sie verbindet: Kein einziger davon haette von
+ * einem Pruefmittel gefunden werden koennen — sie brechen nichts, sie sehen
+ * nur falsch aus.
+ *
+ *   F-N1-A  DIE SEITENLEISTE LIEF UEBER DIE KOPFLEISTE, und zwar aus zwei
+ *           Gruenden in derselben Regel. `.leiste` bekommt ab 1024 px
+ *           `position:sticky; top:var(--kopf); inset:auto` — und `inset` ist
+ *           die Kurzform fuer alle vier Seiten, setzt das `top` eine Zeile
+ *           davor also wieder auf `auto`. Gemessen bei 600 px Scrollhoehe:
+ *           Die Leiste stand auf -544 px. Dazu blieb ihr `z-index:60` aus der
+ *           Schubladen-Regel stehen, waehrend die Kopfleiste auf 40 liegt —
+ *           sie malte darueber statt dahinter. Jetzt steht `inset` ZUERST,
+ *           `top` danach, und der z-index geht auf 1 zurueck.
+ *
+ *   F-N1-L  EIN TOTER STREIFEN UNTER JEDER SEGMENTWAHL. Die Taste ist ein
+ *           `<label>`, und die Grundformen geben jedem `label` 12 px Abstand
+ *           nach unten. Im Segmentrahmen ist das kein Abstand, sondern Leere
+ *           im Kasten: Rahmen 58 px, Tasten 44. Betroffen war jede
+ *           Segmentwahl der Anwendung — Wochentage, Dreiwertfilter,
+ *           Zeitraum-Reiter, Logo-Wahl. Genau das erklaert zwei
+ *           Rueckmeldungen auf einmal („Wochentagauswahl sieht komisch aus",
+ *           „Tabelle passt irgendwie nicht").
+ *
+ *           UND DIE ZWEITE HAELFTE DES FUNDES: `.segment-taste{margin:0}`
+ *           allein half nicht. In der Filterleiste stand
+ *           `.filterfelder label{margin-bottom:var(--abstand-3)}` — eine
+ *           Regel, die GENAU DEN WERT setzt, den die Grundform schon setzt.
+ *           Sie tat nichts, ausser mit ihrer hoeheren Spezifitaet (0,1,1) den
+ *           Baustein (0,1,0) zu schlagen. Eine Dublette ist nie harmlos: Sie
+ *           tut nichts, bis sie etwas verhindert.
+ *
+ *   F-N1-B  WELCHES FELD VERSCHLUESSELT IST, STAND NICHT MEHR DA. Bis O4 trug
+ *           jedes geschuetzte Feld ein Schloss-Emoji; O4 ersetzte sie durch
+ *           EINE Meldung ueber den Karten — und verlor damit die Auskunft je
+ *           Feld. Sie kommt zurueck, aber auf der richtigen Ebene: In der
+ *           Karte „PatientIn" ist alles verschluesselt, das sagt jetzt eine
+ *           Plakette am Kartenkopf. Die drei geschuetzten Felder der
+ *           Einsatz-Karte (Einsatzort, Beschreibung, Diagnose) stehen
+ *           zwischen Klartextfeldern und tragen ihr Schloss einzeln.
+ *
+ *   F-N1-C  „WECHSELND" GAB ES NUR IM PROFIL, nicht fuer die Installation.
+ *           Die Wartung kannte zwei Werte. Der dritte ist nicht einfach
+ *           dazugekommen: `logo_stamm()` haette „wechselnd" durchgereicht und
+ *           stumm beim Hubschrauber landen lassen — die Einstellung waere da
+ *           gewesen und haette nichts getan. Es gibt deshalb
+ *           `logo_standard_aufgeloest()`, und der Wuerfel faellt je SITZUNG,
+ *           nicht je Seitenaufruf; sonst spraenge das Logo beim Blaettern.
+ *           Ein Adminwechsel wirkt trotzdem sofort: Gemerkt wird nur das
+ *           Ergebnis des Wuerfelns.
+ *
+ * DIE UEBRIGEN VIERZEHN, knapp:
+ *
+ *   Kopfleiste  Wortzeichen „Gen-EM Einsatzdoku" (vorher „Einsatzdoku"), Logo
+ *               von 26 auf 34 px, der Kontoname von 13 auf 15 px und auf
+ *               dieselbe Zeilenhoehe wie das Wortzeichen — beide Mitten
+ *               liegen jetzt auf 28 px. Unter 480 px faellt das Wortzeichen
+ *               auf 16 px: Bei 360 px braeuchte es 193 px und hat 187
+ *               (F-N1-D).
+ *   Startseite  Besatzung und Notizen laufen ab 720 px ueber BEIDE
+ *               Rasterspalten — die Besatzung brach in der halben Breite um,
+ *               neben einer leeren Spalte (F-N1-E). Das Aktionsmenue steht
+ *               auf 400 statt 600; ein 500er-Schnitt von Open Sans existiert
+ *               nicht und waere still auf 400 gefallen (F-N1-F).
+ *   Tabelle     Spaltentitel zentriert, „Dauer" ohne Umbruch,
+ *               „Sekundaertransport" und „Fehleinsatz" mit weichem
+ *               Trennzeichen statt hartem <br> (F-N1-G).
+ *   Einsatz     Die Reanimations-Karte erscheint nur noch, wenn es eine
+ *               Sitzung gibt — sie war die einzige Karte der Seite, die leer
+ *               stehen blieb und „keine" sagte (F-N1-H).
+ *   Formular    Das Ortsfeld hatte 12 px zwischen Beschriftung und Feld, jedes
+ *               andere Feld 4 — „Einsatzort" hing zwischen den Feldern statt
+ *               zu seinem zu gehoeren. Der Kleintext unter einem Feld ruecht
+ *               an dieses heran. Die Zustandszeile passt in eine Zeile
+ *               (gemessen: 480 von 532 px) (F-N1-I).
+ *   Suche       Die vier von/bis-Paare tragen ihren Namen jetzt UEBER sich;
+ *               „Strecke von (km)" brach in der 280 px breiten Leiste um,
+ *               „bis" daneben nicht, und die Felder standen versetzt. Drei
+ *               weitere Paare waren dabei zu finden (F-N1-J). „FILTER" 12 →
+ *               13 px, die Gruppen 15 → 16 px: Die Ueberschrift war das
+ *               kleinste Element in der Leiste, die sie ordnet (F-N1-K).
+ *   Einstell.   Die erste Stammdatenliste bekommt Abstand nach oben (F-N1-M);
+ *               „luftgebunden" und „bodengebunden" stehen nebeneinander
+ *               (F-N1-N); „Kopplungscode erzeugen" steht im
+ *               `.listen-form-fuss` wie jeder andere Knopf am Formularende
+ *               (F-N1-O).
+ *
+ * EIN NEUES TOKEN: `--symbol-klein` (16 px), das Zusatzzeichen an einer
+ * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
+ * 4-px-Schritt nach unten fort.
  */
-const WEB_VERSION = '9.13.0';
+const WEB_VERSION = '9.14.0';

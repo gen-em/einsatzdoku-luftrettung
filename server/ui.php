@@ -330,8 +330,8 @@ function ui_kopf(array $o = []): void
     <?php endif; ?>
 
     <a class="kopf-marke" href="index.php">
-      <img src="<?= ui_e(ui_logo(true)) ?>" alt="" width="40" height="25">
-      <span class="kopf-name">Einsatzdoku</span>
+      <img src="<?= ui_e(ui_logo(true)) ?>" alt="" width="54" height="34">
+      <span class="kopf-name">Gen-EM Einsatzdoku</span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>
 
@@ -1361,7 +1361,8 @@ function ui_segment_markup(array $o): string
  * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist —
  * das Dirty-Tracking dafür liegt seit Web 7.0.0 in assets/forms.js
  * (`data-dirty-track`). Mobil ein breiter Primärknopf; am Desktop der Knopf
- * links plus der Hinweis „Ungespeicherte Änderungen · Strg + Enter speichert".
+ * links plus der Hinweis „Es gibt ungespeicherte Änderungen · Strg + Enter
+ * speichert".
  *
  * KEIN „VERWERFEN". Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
  * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
@@ -1545,7 +1546,7 @@ function ui_speichern_leiste(array $o = []): void
     ]) ?>
     <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
        <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
-        ?? 'Ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
+        ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
   </div>
 </div>
 <?php }

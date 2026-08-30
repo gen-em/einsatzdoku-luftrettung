@@ -108,8 +108,19 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
       </div>
     </section>
 
+    <?php /* PLAKETTE STATT NEUN SCHLOESSERN (F-N1-B). Bis O4 trug jedes
+             geschuetzte Feld ein Schloss-Emoji; O4 hat sie durch EINE Meldung
+             ueber den Karten ersetzt — und damit die Auskunft verloren,
+             WELCHES Feld geschuetzt ist. Sie kommt zurueck, aber an der
+             richtigen Ebene: In dieser Karte ist ALLES verschluesselt, also
+             sagt es die Karte einmal. Die drei geschuetzten Felder der
+             Einsatz-Karte stehen zwischen Klartextfeldern und tragen ihr
+             Schloss einzeln (siehe zeigePat). */ ?>
     <section class="karte karte-block-patientin" hidden>
-      <div class="karte-kopf"><h2 class="karte-titel">PatientIn</h2></div>
+      <div class="karte-kopf">
+        <h2 class="karte-titel">PatientIn</h2>
+        <?= ui_plakette('verschlüsselt', ['ton' => 'blau']) ?>
+      </div>
       <div class="karte-inhalt"><div class="tag-lese" id="liste-patientin"></div></div>
     </section>
 
@@ -138,10 +149,18 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
       </section>
     </div>
 
-    <section class="karte karte-block-reanimation" id="resus-section">
+    <?php /* VERSTECKT, BIS ES ETWAS ZU ZEIGEN GIBT (F-N1-H). Die Karte stand
+             bisher immer da und sagte „keine" — auf einer Seite, auf der
+             jede andere leere Karte verschwindet (E-P3-33: „leere Felder
+             werden nicht gerendert, leere Karten bleiben versteckt"). Sie
+             war die einzige Ausnahme, und sie kostete auf jedem Einsatz ohne
+             Reanimation eine Karte Aufmerksamkeit fuer die Auskunft, dass
+             nichts passiert ist. Das Skript blendet sie ein, wenn es eine
+             Sitzung gibt. */ ?>
+    <section class="karte karte-block-reanimation" id="resus-section" hidden>
       <div class="karte-kopf">
         <h2 class="karte-titel">Reanimation</h2>
-        <span class="karte-zahl" id="resus-zahl">keine</span>
+        <span class="karte-zahl" id="resus-zahl"></span>
       </div>
       <div id="resus-tables" hidden></div>
     </section>
@@ -416,6 +435,20 @@ function markiere(rang, id){
 function plakette(ton, text){
   return `<span class="plakette plakette-${ton}">${esc(text)}</span>`;
 }
+/* Beschriftung eines Feldes, das im pat_blob liegt (F-N1-B). Nur fuer Felder
+ * der Einsatz-Karte: Dort stehen sie zwischen Klartextfeldern, und ohne
+ * Kennzeichen sieht man ihnen nicht an, dass sie den Server nie im Klartext
+ * erreichen. In der PatientIn-Karte waere das Zeichen an jeder Zeile Laerm —
+ * dort sagt es die Plakette der Karte einmal.
+ *
+ * Das <title> ist keine Zier: Ohne es waere das Symbol fuer einen
+ * Bildschirmleser stumm (aria-hidden), und die Auskunft ginge genau denen
+ * verloren, die sie nicht sehen koennen. */
+function dtGeschuetzt(text){
+  return esc(text)
+    + (typeof edSymbol === 'function'
+       ? edSymbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') : '');
+}
 function fmtKm(meter){
   return (meter / 1000).toFixed(1).replace('.', ',') + ' km';
 }
@@ -647,9 +680,11 @@ async function init(){
   }
   buildPhaseMarkers(m.phases);
 
-  /* Reanimation: ohne Sitzung bleibt die Karte bei „keine" (E-P3-33);
-   * sonst eine Ereignisliste je Sitzung, im Zeilenbild der Phasen. */
+  /* Reanimation: OHNE SITZUNG BLEIBT DIE KARTE FORT (F-N1-H) — wie jede
+   * andere leere Karte dieser Seite. Mit Sitzung eine Ereignisliste je
+   * Sitzung, im Zeilenbild der Phasen. */
   if (m.resus && m.resus.length) {
+    document.getElementById('resus-section').hidden = false;
     document.getElementById('resus-zahl').textContent =
       m.resus.length > 1 ? String(m.resus.length) : '';
     const wrap = document.getElementById('resus-tables');
@@ -729,7 +764,7 @@ async function zeigePat(m, bounds){
     const klein = [];
     if (hoeheZeigen) { klein.push(`${hoeheWert} m`); }
     if (m.distance_m != null) { klein.push('Strecke ' + fmtKm(m.distance_m)); }
-    zeile('einsatz', RANG.pat_loc, 'Einsatzort',
+    zeile('einsatz', RANG.pat_loc, dtGeschuetzt('Einsatzort'),
       esc(o.loc.addr)
       + `<span class="lese-klein" id="ortklein"${klein.length ? '' : ' hidden'}>`
       + esc(klein.join(' · ')) + '</span>');
@@ -742,10 +777,11 @@ async function zeigePat(m, bounds){
   // Beschreibung steht direkt unter dem Einsatzort statt in der generischen
   // Zusatzfeldliste — sie liegt seit Web 3.3.0 im pat_blob (E5).
   if (o.site_desc != null) {
-    zeile('einsatz', RANG.pat_site_desc, 'Beschreibung Einsatzort', esc(String(o.site_desc)));
+    zeile('einsatz', RANG.pat_site_desc, dtGeschuetzt('Beschreibung Einsatzort'),
+          esc(String(o.site_desc)));
   }
   if (o.dx != null) {
-    zeile('einsatz', RANG.pat_dx, 'Diagnose', esc(String(o.dx)));
+    zeile('einsatz', RANG.pat_dx, dtGeschuetzt('Diagnose'), esc(String(o.dx)));
   }
   await zeichneLuftlinie(m, o, ck, bounds);
 }

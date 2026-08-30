@@ -344,6 +344,13 @@
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Pruefung laesst beide Werte gleichrangig zu."
     },
     {
+      "id": "logowahl-standardwurf",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$gemerkt !== 'hubschrauber' && \\$gemerkt !== 'fahrzeug'",
+      "klasse": "Homonym",
+      "begruendung": "Seit Web 9.14.0 kann auch die INSTALLATION 'wechselnd' als Standard waehlen (F-N1-C). logo_standard_aufgeloest() merkt sich den Wurf je Sitzung und prueft dabei, ob der gemerkte Wert eines der beiden BILDER ist. Wie bei logowahl-pruefung: Der Wert benennt eine Bilddatei, nicht die Einsatzart, und beide stehen gleichrangig nebeneinander."
+    },
+    {
       "id": "logowahl-standardname",
       "datei": "server/einstellungen.php",
       "zeile": "\\$standardName = LOGO_STANDARD",

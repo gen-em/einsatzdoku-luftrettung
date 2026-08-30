@@ -156,9 +156,16 @@
                 /* Die Koordinaten selbst zeigt der Chip. Der Hinweis erklaert,
                  * warum hier keine Vorschlaege mehr erscheinen — sonst wirkt
                  * das Feld defekt. */
+                /* KURZ GENUG FUER EINE ZEILE (F-N1-I). Der Satz stand in der
+                 * Formularspalte auf zwei Zeilen und schob die Felder
+                 * darunter weg. Die Auskunft bleibt dieselbe; nur der Verweis
+                 * auf das Kreuz ist fort — es steht sichtbar daneben, und
+                 * seine Beschreibung im Text kostete mehr Platz, als sie
+                 * erklaerte (nebenbei ein Unicode-Zeichen weniger, Backlog
+                 * Nr. 42). */
                 melde(adresssuche
                     ? 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung. '
-                      + 'Für eine Suche zuerst die Koordinaten entfernen (✕).'
+                      + 'Zum Suchen erst entfernen.'
                     : 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung.', false);
                 return;
             }

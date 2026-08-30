@@ -42,7 +42,6 @@ gegen die sie schützt.
 | `wochentage` | [bleibt] Zusatzname an einer Segmentgruppe; das Aussehen kommt aus `.segment .segment-mehrfach` am selben Element (`suche.php:103`). |
 | `tag-form` | [bleibt] Kennzeichnung des Diensttag-Formulars für die Skripte; die Gestaltung liegt bei `.tag-form-fuss` und den Feldbausteinen darin. |
 | `fld` | [bleibt] Beschriftung im Einsatzformular (`<label class="fld">`); das Aussehen kommt aus der Elementregel für `label` in Abschnitt 17 (Grundformen). Der Name ist der Rest einer Namensfamilie, deren übrige Glieder (`fld-reihe`) Regeln haben. |
-| `loc-widget` | [bleibt] Behälter des Ortsfelds (`ui.php:1682`); die Gestaltung sitzt an den Kindern (`.ortsfeld-zeile`, `.rmchips`) und an der Klasse, die der Aufrufer zusätzlich mitgibt. |
 | `karte-block-phasen` | [bleibt] Skriptanker an der Phasenkarte (`einsatz.php:128`); das Aussehen kommt aus `.karte` am selben Element. |
 | `imp-cell` | [bleibt] Skriptanker; `import_ui.js:811` unterscheidet über `classList.contains` die Zelltypen der Importtabelle. Das Aussehen kommt aus `.tabelle` und den Eingabe-Grundformen. |
 | `imp-skip` | [bleibt] Wie `imp-cell` — Beschriftung um das Überspringen-Kästchen. |

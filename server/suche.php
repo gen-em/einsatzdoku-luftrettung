@@ -90,10 +90,25 @@ ui_seite_start(['titel' => 'Suche']);
                bricht sie stillschweigend. */ ?>
       <?php $gruppe_auf('einsatz', 'Einsatz', true); ?>
           <?php /* Von/bis nebeneinander (E-P3-36): Sie gehören zusammen und
-                   kosten untereinander die doppelte Höhe der Spalte. */ ?>
-          <div class="fld-reihe">
-            <label for="f-dv">Datum von <input type="date" id="f-dv"></label>
-            <label for="f-db">bis <input type="date" id="f-db"></label>
+                   kosten untereinander die doppelte Höhe der Spalte.
+
+                   DER NAME STEHT ÜBER DEM PAAR, NICHT IM LINKEN FELD
+                   (F-N1-J). Vorher hieß die linke Beschriftung „Strecke von
+                   (km)" und die rechte „bis" — in einer 240 px breiten Leiste
+                   brach die linke auf zwei Zeilen um, die rechte nicht, und
+                   die beiden Eingabefelder standen auf verschiedener Höhe.
+                   Jetzt trägt ein `.feld-label` den Namen und die Felder
+                   heißen „von" und „bis": gleich kurz, gleich hoch. Was die
+                   Bildschirmleserin hört, bleibt vollständig — das steht im
+                   `aria-label` des Feldes. */ ?>
+          <div class="feldblock">
+            <span class="feld-label">Datum</span>
+            <div class="fld-reihe">
+              <label for="f-dv">von <input type="date" id="f-dv"
+                     aria-label="Datum von"></label>
+              <label for="f-db">bis <input type="date" id="f-db"
+                     aria-label="Datum bis"></label>
+            </div>
           </div>
           <div class="feldblock">
             <span class="feld-label">Wochentage</span>
@@ -109,22 +124,37 @@ ui_seite_start(['titel' => 'Suche']);
               <?php endforeach; ?>
             </div>
           </div>
-          <div class="fld-reihe">
-            <label for="f-zv">Alarmzeit von <input type="text" class="zeitfeld" id="f-zv" placeholder="hh:mm"></label>
-            <label for="f-zb">bis <input type="text" class="zeitfeld" id="f-zb" placeholder="hh:mm"></label>
+          <div class="feldblock">
+            <span class="feld-label">Alarmzeit</span>
+            <div class="fld-reihe">
+              <label for="f-zv">von <input type="text" class="zeitfeld" id="f-zv"
+                     placeholder="hh:mm" aria-label="Alarmzeit von"></label>
+              <label for="f-zb">bis <input type="text" class="zeitfeld" id="f-zb"
+                     placeholder="hh:mm" aria-label="Alarmzeit bis"></label>
+            </div>
           </div>
           <?php /* Strecke und Dauer standen unter „Werte" — beides sind
                    Eigenschaften DIESES Einsatzes und gehören zu ihm.
                    Neutral beschriftet (Abschnitt 3.9): Die Suche führt beide
                    Arten in einer Ansicht, „Flugstrecke" wäre für die Hälfte der
                    Einsätze falsch. */ ?>
-          <div class="fld-reihe">
-            <label for="f-kv">Strecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
-            <label for="f-kb">bis <input type="number" id="f-kb" min="0" step="1"></label>
+          <div class="feldblock">
+            <span class="feld-label">Strecke <span class="feld-klein-inline">km</span></span>
+            <div class="fld-reihe">
+              <label for="f-kv">von <input type="number" id="f-kv" min="0" step="1"
+                     aria-label="Strecke von, Kilometer"></label>
+              <label for="f-kb">bis <input type="number" id="f-kb" min="0" step="1"
+                     aria-label="Strecke bis, Kilometer"></label>
+            </div>
           </div>
-          <div class="fld-reihe">
-            <label for="f-ev">Dauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
-            <label for="f-eb">bis <input type="number" id="f-eb" min="0" step="1"></label>
+          <div class="feldblock">
+            <span class="feld-label">Dauer <span class="feld-klein-inline">min</span></span>
+            <div class="fld-reihe">
+              <label for="f-ev">von <input type="number" id="f-ev" min="0" step="1"
+                     aria-label="Dauer von, Minuten"></label>
+              <label for="f-eb">bis <input type="number" id="f-eb" min="0" step="1"
+                     aria-label="Dauer bis, Minuten"></label>
+            </div>
           </div>
           <?php /* Der Fehleinsatz ist selten. Er erscheint nur, wenn im Bestand
                    überhaupt einer dokumentiert ist — sonst ergäbe „ja" dauerhaft
@@ -139,9 +169,14 @@ ui_seite_start(['titel' => 'Suche']);
                Patientendatum. Gesucht wird nach ihnen über das Freitextfeld,
                das nach dem Entsperren auch die geschützten Felder durchsucht. */ ?>
       <?php $gruppe_auf('patient', 'PatientIn'); ?>
-          <div class="fld-reihe">
-            <label id="lab-av" for="f-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
-            <label id="lab-ab" for="f-ab">bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
+          <div class="feldblock">
+            <span class="feld-label">Alter</span>
+            <div class="fld-reihe">
+              <label id="lab-av" for="f-av">von <input type="number" id="f-av"
+                     min="0" max="130" step="1" aria-label="Alter von"></label>
+              <label id="lab-ab" for="f-ab">bis <input type="number" id="f-ab"
+                     min="0" max="130" step="1" aria-label="Alter bis"></label>
+            </div>
           </div>
           <p class="feld-hinweis" id="alterlock" hidden>Der Altersfilter braucht die
              entsperrte Verschlüsselung — das Alter liegt geschützt vor.</p>
@@ -172,13 +207,23 @@ ui_seite_start(['titel' => 'Suche']);
           <?php $dreiwert('f-bw', 'Bergwacht'); ?>
           <label for="f-bu">Bereitschaft <select id="f-bu"></select></label>
           <?php $dreiwert('f-wi', 'Windeneinsatz'); ?>
-          <div class="fld-reihe">
-            <label for="f-cv">Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
-            <label for="f-cb">bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
+          <div class="feldblock">
+            <span class="feld-label">Windenzyklen</span>
+            <div class="fld-reihe">
+              <label for="f-cv">von <input type="number" id="f-cv" min="0" max="8"
+                     step="1" aria-label="Windenzyklen von"></label>
+              <label for="f-cb">bis <input type="number" id="f-cb" min="0" max="8"
+                     step="1" aria-label="Windenzyklen bis"></label>
+            </div>
           </div>
-          <div class="fld-reihe">
-            <label for="f-pv">mit PatientIn von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
-            <label for="f-pb">bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
+          <div class="feldblock">
+            <span class="feld-label">Zyklen mit PatientIn</span>
+            <div class="fld-reihe">
+              <label for="f-pv">von <input type="number" id="f-pv" min="0" max="8"
+                     step="1" aria-label="Zyklen mit PatientIn, von"></label>
+              <label for="f-pb">bis <input type="number" id="f-pb" min="0" max="8"
+                     step="1" aria-label="Zyklen mit PatientIn, bis"></label>
+            </div>
           </div>
           <?php $dreiwert('f-lv', 'Luftverladung'); ?>
       <?php $gruppe_zu(); ?>
