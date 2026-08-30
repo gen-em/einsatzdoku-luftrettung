@@ -355,6 +355,47 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
     Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
 
+47. **Die Uhr kennt die Logo-Wahl nicht.** Die Weboberfläche lässt zwischen
+    `hubschrauber`, `fahrzeug` und `wechselnd` wählen — je Nutzer über
+    `users.logo_wahl`, systemweit über `app_state.logo_standard`. Die Uhr lädt
+    dagegen eine feste `Rez.Drawables.Logo` und führt **kein zweites Motiv**
+    mit; keine Schnittstelle überträgt die Wahl. Eine Installation, die
+    überwiegend am Boden fährt, sieht auf der Uhr bei jedem Dienstbeginn einen
+    Hubschrauber.
+    Das ist kein Schönheitsfehler, sondern derselbe Punkt, den `Const.mc` seit
+    1.8.0 bei den Phasenbeschriftungen behandelt und den `session_lib.php` für
+    die Weboberfläche ausdrücklich begründet: „eine Installation, die
+    überwiegend am Boden fährt, soll nicht dauerhaft einen Hubschrauber im Kopf
+    tragen."
+    Drei Wege stehen offen: (a) Der Server schickt die Wahl in der Antwort von
+    `pair.php` mit, die Uhr merkt sie sich — dieselbe Stelle wie der
+    `geraet`-Block aus Nr. 46, nur in der Gegenrichtung. (b) Eine
+    App-Einstellung auf der Uhr, wie `touchEnabled`; ohne Serveränderung, aber
+    zwei Orte für dieselbe Entscheidung. (c) Bewusst so lassen — dann gehört es
+    aber vermerkt, sonst wird es beim nächsten Durchgang erneut als Fehler
+    gemeldet.
+    Kosten für (a) oder (b): ein zweites Bild je Kompilat, nach den gemessenen
+    Größen rund 5 kB. Zu klären ist vorher, ob die Bildmarke damit in **zwei
+    Motiven** je Größenstufe gebraucht wird — das verdoppelt die
+    Gestaltungsarbeit aus Nr. 48.
+
+48. **Bildmarke und Launcher-Symbol fehlen in den meisten Größen.** Die 99
+    Geräte verlangen neun Symbolgrößen (35, 36, 40, 54, 56, 60, 61, 65, 70 px);
+    im Repositorium liegen zwei. `monkeyc` skaliert und meldet es als Warnung —
+    42 der 99 Geräte bauen mit genau dieser einen Warnung. Hochskaliert wird
+    das Symbol unscharf.
+    Schwerer wiegt die **Bildmarke**: Sie wird mit `dc.drawBitmap` 1:1
+    gezeichnet und über die *Symbolgröße* zugeordnet statt über die
+    Displayhöhe. 37 Geräte bekommen sie dadurch mit 15–18 % der Displayhöhe, wo
+    die bestehende Gestaltung auf 25–27 % ausgelegt ist; die Bildschirmfotos
+    aus Stufe II zeigen es. Nötig wäre eine Staffelung nach Displayhöhe in drei
+    Stufen.
+    Am Platzbedarf scheitert es nicht: Gemessen kostet der vollständige
+    70er-Satz gegenüber dem geerbten 40er **6 432 Byte**, und nur in den
+    Geräten, die ihn bekommen — jedes Kompilat trägt allein seine eigenen
+    Ressourcen. Es ist Gestaltungsarbeit und braucht nach der Arbeitsanweisung
+    eine Freigabe mit Mockup.
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter

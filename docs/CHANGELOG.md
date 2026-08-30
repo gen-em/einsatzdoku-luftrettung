@@ -78,6 +78,20 @@ rechtfertigt. Die Zuordnung leistet die `device_id`. Aus demselben Grund hält
 Nr. 46 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
 ausgewertet wird.
 
+### Uhr — Was geprüft ist
+
+**Stufe I, alle 99 Geräte übersetzt: 99 erfolgreich, 0 fehlgeschlagen.** 57
+davon ohne jede Warnung, 42 mit genau einer — durchweg die Skalierung des
+Launcher-Symbols. Kein Gerät scheitert an einer fehlenden API-Funktion, keines
+am Speicher. Die Kompilate liegen zwischen 162 940 B (`fr255`) und 179 980 B
+(`approachs7047mm`), im Mittel bei 169 723 B.
+
+**Stufe II, 20 Vertreter im Simulator (5 je Klasse): alle 20 starten und
+rendern den Startbildschirm**, keine Absturzmeldung. Sichtbar bestätigt hat
+sich dabei die Eingabe-Zuordnung: Die Venu-Reihe, `approachs50` und `d2airx10`
+zeigen „Action drücken", die Tastengeräte „START drücken" — das
+Drei-Tasten-Profil greift also dort, wo es soll.
+
 ### Uhr — Was dabei offen bleibt
 
 Zwei Punkte, beide Gestaltungsarbeit und deshalb nicht nebenbei entschieden:
@@ -95,8 +109,20 @@ eigenen Ressourcen.
 statt über die Displayhöhe. Das passt bei der Venu 3s zufällig und geht sonst
 auseinander: **37 Geräte** bekämen eine Bildmarke, die nur 15–18 % der
 Displayhöhe einnimmt, wo die bestehende Gestaltung auf 25–27 % ausgelegt ist.
-Auf einer Fenix 9 Pro 51 mm säße das Logo verloren in der Mitte. Die Lösung
-wäre eine Staffelung nach Displayhöhe in drei Stufen.
+Auf einer Fenix 9 Pro 51 mm säße das Logo verloren in der Mitte. Die
+Bildschirmfotos aus Stufe II zeigen genau das — auf 208 px sitzt die Bildmarke
+satt, auf 466 px verliert sie sich. Die Lösung wäre eine Staffelung nach
+Displayhöhe in drei Stufen.
+
+Dazu kommt eine Frage, die dabei aufgefallen ist und über die Größen
+hinausgeht: **Die Weboberfläche lässt zwischen Hubschrauber, Fahrzeug und
+„wechselnd" wählen (`logo_wahl`, `app_state.logo_standard`) — die Uhr weiß
+davon nichts.** Sie lädt eine feste `Rez.Drawables.Logo` und führt gar kein
+zweites Motiv mit; keine Schnittstelle überträgt die Wahl. Eine Installation,
+die überwiegend am Boden fährt, sieht auf der Uhr trotzdem bei jedem
+Dienstbeginn einen Hubschrauber. Das widerspricht der Linie, die `Const.mc`
+seit 1.8.0 bei den Phasenbeschriftungen verfolgt und die `session_lib.php` für
+die Weboberfläche ausdrücklich begründet.
 
 ## [Uhr 1.8.2] — 2026-08-30
 
