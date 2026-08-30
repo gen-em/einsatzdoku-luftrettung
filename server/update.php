@@ -1569,6 +1569,27 @@ $MIGRATIONS = [
             'ALTER TABLE users ADD COLUMN last_login DATETIME NULL AFTER logo_wahl',
         ],
     ],
+    [
+        'id'    => '2026_08_30_rechtstexte',
+        'web'   => '9.11',
+        'label' => 'Impressum und Datenschutzerklärung dieser Installation (R32)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'rechtstexte'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* MEDIUMTEXT, nicht TEXT: TEXT sind 64 KB in BYTES, und deutsche
+             * Rechtstexte in utf8mb4 haben Umlaute. Der Unterschied kostet
+             * nichts. Kein Vorgabeinhalt — die Anwendung liefert keinen
+             * Rechtstext mit; der Leerzustand IST die Auslieferung. */
+            'CREATE TABLE rechtstexte (
+               schluessel VARCHAR(32) NOT NULL PRIMARY KEY,
+               inhalt     MEDIUMTEXT NULL,
+               stand_am   DATE NULL
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

@@ -695,7 +695,13 @@ img,svg,video{max-width:100%;height:auto}
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
 .fuss-seite a{color:var(--blau-tief);font-weight:600}
-.fuss-version{color:var(--sand)}
+/* --gedaempft, nicht --sand (O10). Auf --rauch ergab Sand 1,53:1 — die
+ * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
+ * damit ein zu LESENDER Text. `kontrast.py` fuehrte „Sand auf Schnee" als
+ * Ausnahme, begruendet aber nur den Akkordeon-Winkel („Mechanik, keine
+ * Botschaft"); das trifft auf eine Zahl nicht zu, die man abtippen soll.
+ * Jetzt 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
+.fuss-version{color:var(--gedaempft)}
 .fuss-dunkel{
   background:var(--dunkelblau);color:var(--rauch);
   border-top:0;
@@ -1249,7 +1255,11 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .anmeldung-logo{display:block;height:56px;width:auto;margin:0 auto var(--abstand-4)}
 .anmeldung-titel{text-align:center;font-size:var(--groesse-6)}
 .anmeldung-unter{text-align:center;color:var(--gedaempft);margin-bottom:var(--abstand-5)}
-.anmeldung-neben{text-align:center;margin-top:var(--abstand-4)}
+/* LINKSBUENDIG, nicht zentriert (O10, Mockup 32). Der Link steht unter einem
+ * 100 % breiten Knopf und ueber dem linken Rand der Feldbeschriftungen;
+ * zentriert schwebt er zwischen beidem. Betrifft Anmeldung, „Passwort
+ * vergessen" und die Abmeldeseite — alle drei tragen dieselbe Klasse. */
+.anmeldung-neben{margin-top:var(--abstand-4)}
 
 /* ---- Demo-Hinweis --------------------------------------------------------
  * Dauerhaft, nicht wegklickbar. Ein Hinweis, den man einmal schließt, ist
@@ -1549,7 +1559,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 
 /* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
  * stehen Formulare mit Feldgruppen, nicht zwei Zeilen. */
-.anmeldung-breit{max-width:var(--lesespalte)}
+
 
 
 /* == 20. TAGESÜBERSICHT UND EINSATZLISTE (O3) ==============================
@@ -2318,6 +2328,11 @@ tr.hl-extrem td{background:var(--orange-hell)}
   margin:calc(-1 * var(--abstand-2)) 0 var(--abstand-4);
   color:var(--gedaempft);
 }
+/* Der negative Rand oben ist auf die TITELZEILE abgestimmt, die ihren eigenen
+ * Abstand nach unten mitbringt. Steht die Erklärung dagegen direkt unter einem
+ * blanken <h1> — öffentliche Seiten und Einrichter, die kein Gerüst und damit
+ * keine Titelzeile haben —, zieht er sie an die Überschrift heran (O10). */
+h1 + .seiten-erklaerung{margin-top:0}
 
 /* Das Formular unter der Liste, durch eine Linie abgesetzt: Es gehört zur
  * Karte, ist aber eine andere Art von Inhalt als die Zeilen darüber. */
@@ -2574,3 +2589,45 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
 /* Die Zahl der Sammelleiste ist IMMER sichtbar (der Hinweis eines schmutzigen
  * Formulars erscheint erst ab 720 px). Sie ist die ganze Aussage der Leiste. */
 .speichern-zahl{display:block;color:var(--asphalt);font-weight:600}
+
+
+/* ===========================================================================
+ * 28  RECHTSTEXTE                                       (P3/O10, E-P3-38, R32)
+ *
+ * Impressum und Datenschutzerklärung — die beiden öffentlichen Seiten und
+ * ihr Editor. Erstaunlich wenig eigenes: Die Seiten sind Lesespalte
+ * (`.rahmen-lesespalte`) plus eine Karte plus `.text`, der Editor ist der
+ * Zweispalter mit zwei Karten und je einem Textfeld. Was hier steht, sind
+ * die drei Dinge, für die es im Bestand nichts gab.
+ * ======================================================================== */
+
+/* Monospace im Textfeld (Mockup 35). Das Token gibt es seit O1
+ * (--schrift-fest), benutzt haben es bisher nur `code, kbd, pre` und
+ * `.codeblock-wert` — ein <textarea> erbt von keinem der beiden.
+ *
+ * Die Klasse hängt an der HÜLLE, nicht am Feld: ui_feld() setzt $o['klasse']
+ * an `.feld`. Ein Nachfahrenselektor kommt damit ohne jede Änderung am
+ * Baustein aus. */
+.feld-fest .feld-eingabe{font-family:var(--schrift-fest)}
+
+/* Der Vorschaukasten (Mockup 35). GESTRICHELT, und das ist der ganze Zweck:
+ * Er sagt „das hier ist nicht die Seite, sondern ein Blick darauf". Ein
+ * durchgezogener Rahmen sähe aus wie eine zweite Karte. `dashed` kommt
+ * sonst nirgends im Stylesheet vor — deshalb steht es hier und nicht als
+ * Zusatz an `.karte`. */
+.vorschau{
+  border:var(--strich) dashed var(--linie-stark);
+  border-radius:var(--radius);
+  padding:var(--abstand-4);
+  margin-top:var(--abstand-3);
+}
+.vorschau > h4{margin-bottom:var(--abstand-3)}
+/* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
+ * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
+.vorschau .text{max-width:none}
+
+/* Die Fußzeile einer Editorkarte: Plakette und Pfad nebeneinander. */
+.rechtstext-fuss{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  margin-top:var(--abstand-3);flex-wrap:wrap;
+}

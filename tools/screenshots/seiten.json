@@ -14,6 +14,18 @@
       "pfad": "reset_request.php"
     },
     {
+      "name": "04-impressum",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "impressum.php"
+    },
+    {
+      "name": "05-datenschutz",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "datenschutz.php"
+    },
+    {
       "name": "03-abbruchseite",
       "gruppe": "Öffentlich",
       "rolle": "demo",
@@ -182,6 +194,12 @@
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "admin_sicherungen.php"
+    },
+    {
+      "name": "43a-rechtstexte",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_rechtstexte.php"
     },
     {
       "name": "44-demo-konto",

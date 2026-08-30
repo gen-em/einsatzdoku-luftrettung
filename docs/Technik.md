@@ -98,6 +98,15 @@ Daten erst nach Server-Bestätigung.
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
 │   │                       (ohne Abhängigkeiten — auch für install.php)
+│   ├── impressum.php · datenschutz.php   die beiden OEFFENTLICHEN Seiten
+│   │                      (R32) — zwei Zeilen je Datei, der Rest steht in
+│   │                      rechtstext_seite.php
+│   ├── rechtstext_seite.php  die gemeinsame Seite dahinter: liest die Sitzung,
+│   │                      ohne sie zu erzwingen (Leerzustand mit Admin-Weg)
+│   ├── rechtstexte_lib.php   Ablage, Pruefung und der eingeschraenkte
+│   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
+│   │                      Projekts, an der aus einer Eingabe HTML wird
+│   ├── admin_rechtstexte.php  Editor dazu (Administration)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
@@ -235,6 +244,7 @@ Daten erst nach Server-Bestätigung.
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
+| `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -2710,3 +2720,72 @@ Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
 `gen-em_logo_fahrzeug.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
 im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
 liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
+
+
+### Rechtstexte: Impressum und Datenschutz (R32, seit Web 9.11.0)
+
+**Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache des
+Betreibers; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
+Verweise in jeder Fußzeile. Der Leerzustand ist die Auslieferung.
+
+| Datei | Aufgabe |
+|---|---|
+| `rechtstexte_lib.php` | Ablage (`rt_lesen`, `rt_speichern`, `rt_pruefen`) und der Renderer `rt_html()` |
+| `rechtstext_seite.php` | Die öffentliche Seite — beide Dokumente teilen sie sich |
+| `impressum.php`, `datenschutz.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
+| `admin_rechtstexte.php` | Editor, ein Formular für beide Texte |
+| `tools/rechtstexte/` | Angriffsprobe für `rt_html()` |
+
+#### `rt_html()` — erst maskieren, dann Struktur erkennen
+
+Die einzige Stelle des Projekts, an der aus einer Eingabe HTML wird. Der Ablauf:
+
+1. **Säubern** — CRLF zu LF; C0-Steuerzeichen außer `\n` und `\t`; Zero-Width
+   (U+200B–200F, U+FEFF); Zeilen- und Absatztrenner (U+2028/2029);
+   **Bidi-Steuerung** (U+202A–202E, U+2066–2069). Letztere sind kein Zierrat:
+   Mit ihnen lässt sich ein Linktext bauen, der etwas anderes anzeigt, als im
+   Ziel steht („Trojan Source").
+2. **UTF-8 prüfen** — schlägt es fehl, kommt der Leerstring zurück.
+3. **Maskieren** — `htmlspecialchars($t, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')`,
+   genau einmal, über den ganzen Text. **`ENT_SUBSTITUTE` ausdrücklich**, anders
+   als `e()` in `db.php`: Ohne den Schalter liefert PHP seit 8.1 bei ungültigem
+   UTF-8 den Leerstring — bei einem Feldwert unauffällig, bei einem Rechtstext
+   verschwände die ganze Seite wortlos.
+4. **Blöcke zeilenweise** — `#`/`##` → `<h2>`, `###` → `<h3>`, `- `/`* ` →
+   `<ul>`, `1. ` → `<ol>`, Leerzeile trennt Absätze, mehrere Zeilen ohne
+   Leerzeile bleiben **ein** Absatz mit `<br>` (im Impressum stehen Anschriften
+   so untereinander).
+5. **Inline** — genau ein Muster, `[Text](Ziel)`.
+
+**Erzeugt werden ausschließlich** `h2 h3 p br ul ol li a` und **ein** Attribut
+(`href`). Das ist keine Absichtserklärung, sondern geprüft: Die Angriffsprobe
+hält jede Ausgabe gegen diese Liste.
+
+**Linkziele stehen auf einer Positivliste** (`rt_ziel_erlaubt()`): `https://`,
+`http://`, `mailto:`, eine eigene `.php` mit optionalem Abfrageteil, ein Anker.
+Alles andere fällt durch — auch protokollrelative Adressen wie
+`//fremde.example/…`, die relativ aussehen und es nicht sind. Ein abgelehntes
+Ziel lässt die ganze Konstruktion **als Text** stehen; stilles Schlucken machte
+aus einem Fehler eine Unsichtbarkeit.
+
+#### Die öffentliche Seite kennt die Sitzung, ohne sie zu erzwingen
+
+`rechtstext_seite.php` lädt **nicht** `auth_guard.php` — der leitet
+Nichtangemeldete auf die Anmeldung um, und das ist bei einem Impressum falsch.
+Sie ruft stattdessen selbst `session_start()` (das nimmt ein vorhandenes Cookie
+an und meldet niemanden an) und liest die Rolle **aus der Datenbank**, nicht aus
+der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
+Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
+
+Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
+Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es
+darf keinen weißen Fehler zeigen.
+
+#### Grenzen
+
+- **Keine Content-Security-Policy.** Backlog Nr. 8 bleibt offen; sie wäre die
+  zweite Verteidigungslinie hinter dem Renderer.
+- **Kein Versionsstand der Texte.** Wer den Text überschreibt, überschreibt ihn;
+  eine Historie gibt es nicht. Für ein Dokument, dessen alte Fassung
+  rechtlich zählen kann, ist das eine bewusst offene Stelle.
+- **Die Vorschau zeigt den gespeicherten Stand**, nicht das Getippte.

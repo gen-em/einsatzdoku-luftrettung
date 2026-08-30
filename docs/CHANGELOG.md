@@ -11,6 +11,135 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.11.0] — 2026-08-30
+
+**O10: Anmeldung, öffentliche Seiten und Rechtstexte (R32).**
+
+> **Diese Fassung braucht eine Migration.** Nach dem Aufspielen muss eine
+> Administratorin **`update.php`** aufrufen. Ohne den Aufruf gibt es die
+> Tabelle `rechtstexte` nicht; Impressum und Datenschutz zeigen dann ihren
+> Leerzustand. Die Anwendung läuft weiter — die neue Funktion ist nur nicht da.
+
+### Impressum und Datenschutzerklärung
+
+Die Anwendung hat zum ersten Mal beides — und zwar **keine mitgelieferten**.
+Was darin steht, ist Sache des Betreibers; wir stellen zwei öffentliche Seiten,
+einen Editor unter Einstellungen → Rechtstexte und die Verweise in jeder
+Fußzeile. Eine mitgelieferte Datenschutzerklärung wäre eine Rechtsauskunft, die
+dieses Projekt nicht geben kann.
+
+Der **Leerzustand ist die Auslieferung** und eine gültige Antwort: „Der
+Betreiber dieser Installation hat noch kein Impressum hinterlegt." Für
+angemeldete Admins steht der Weg zum Editor daneben.
+
+Das **Standdatum wird von Hand gesetzt**. Automatisch wäre bequemer und an
+einem Rechtstext falsch: Das Datum sagt, auf welchem Stand der Text
+*inhaltlich* ist — eine Kommakorrektur soll ihn nicht neu datieren. Leer heißt:
+keine Standzeile.
+
+### Der Renderer maskiert zuerst und erkennt dann Struktur
+
+`rt_html()` ist die einzige Stelle des Projekts, an der aus einer Eingabe HTML
+wird. Sie schickt den **ganzen** Text durch `htmlspecialchars`, bevor der
+Parser das erste Zeichen ansieht. Rohes HTML ist damit nicht gefiltert, sondern
+unmöglich — wenn der Parser `<` sieht, ist es längst `&lt;`. Eine Sperrliste
+von Tags wäre der falsche Ansatz: Sie ist immer unvollständig, und die Lücke
+findet man erst, wenn sie jemand benutzt hat.
+
+Erzeugt werden ausschließlich `h2`, `h3`, `p`, `br`, `ul`, `ol`, `li` und `a`
+mit `href`. Linkziele stehen auf einer **Positivliste** (https, http, mailto,
+eigene `.php`, Anker) — `javascript:`, `data:`, `vbscript:`, `blob:`, `file:`
+und alles, was es morgen gibt, fallen ohne eigenen Eintrag durch. Ein
+abgelehntes Ziel lässt die ganze Konstruktion **als Text** stehen: Stilles
+Schlucken macht aus einem Fehler eine Unsichtbarkeit.
+
+Nicht unterstützt, jeweils mit Grund: Bilder (holten eine fremde Quelle zur
+Laufzeit und brächen eine feste Zusage des Projekts), Autolinks und
+Referenzlinks (umgehen die Zielprüfung), fett und kursiv (E-P3-38 nennt sie
+nicht — jede Erweiterung ist eine Vertragsänderung), `target="_blank"` (auf
+einer Rechtstextseite ist der Zurück-Weg des Browsers die richtige Antwort).
+
+**Neues Prüfmittel `tools/rechtstexte/`:** 81 Proben — rohes HTML, Linkziele in
+allen Schreibweisen, Attribut-Ausbruch, Autolinks, Bidi-Steuerzeichen („Trojan
+Source"), Kodierungstricks, Ränder. Dazu werden 65 Ausgaben gegen eine
+Positivliste erlaubter Tags und Attribute gehalten. Das ist die eigentliche
+Prüfung: Die Einzelproben sagen, was schiefgehen kann; die Schranke sagt, dass
+nichts anderes herauskommt.
+
+### Eine eigene Tabelle, nicht `app_state`
+
+Dort ist der Wert `VARCHAR(190)`; eine Datenschutzerklärung hat 8 000 bis
+20 000 Zeichen. Ohne strict mode kürzt MySQL **still** — ein Rechtstext, der ab
+Zeichen 191 verschwindet, sieht in der Vorschau vollständig aus, solange
+niemand ans Ende scrollt. Bei einem Dokument, das rechtlich vollständig sein
+muss, ist das der schlechteste denkbare Ausgang.
+
+### Die Fußzeile führt jetzt immer auf beide Seiten
+
+Die `is_file()`-Prüfung aus O2 war richtig, solange es die Seiten nicht gab, und
+danach tote Logik: zwei Dateisystemzugriffe je Seitenaufruf für eine Frage,
+deren Antwort feststeht. Sie sagte auch die falsche Sache — „die Datei ist da"
+heißt nicht „ein Text ist hinterlegt". Ausnahme bleibt der **Einrichter**: Er
+läuft vor der Ersteinrichtung, die beiden Seiten brauchen aber eine Datenbank;
+der Verweis wäre eine Schleife.
+
+### Der Einrichter trägt die öffentliche Hülle
+
+Er hatte die Anmeldehülle — dunkelblaue Fläche, 400-px-Karte — und half sich
+mit `.anmeldung-breit`, was der Sache nach die Lesespalte ist, nur unter
+falschem Namen. Dazu hatte seine Kopfleiste dieselbe Farbe wie die Fläche
+darunter; das Logo schwebte ohne sichtbare Leiste.
+
+Jetzt: helle Lesespalte wie Abbruchseite und Rechtstextseiten, **fünf Karten
+statt fünf `<fieldset>`**, alle Felder über den Baustein. Die Elementregeln für
+`fieldset`/`legend` stehen in der Übergangsschicht des Stylesheets, die mit O11
+stirbt — danach hätte der Einrichter wieder ohne Gestaltung dagestanden.
+
+Das Konzept widersprach sich an dieser Stelle (E-P3-38 sagt „dunkle Hülle",
+Tabelle 5.4 führt ihn unter „Öffentlich"). Es gilt die Tabelle.
+
+### Drei Seiten derselben Familie
+
+Anmeldung, Passwort-vergessen und Passwort-setzen haben jetzt **dieselbe
+Kartenbreite** (400 px), dasselbe Logo und dieselben Bausteine. Die
+Passwortseite war 760 px breit, die Anmeldung daneben 400 — zwei Seiten, die
+man unmittelbar nacheinander sieht, sprangen dabei in der Breite.
+Passwort-vergessen bekommt zum ersten Mal ein Logo; sie war die einzige der
+drei ohne Marke.
+
+### Kein Demo-Hinweis auf der Anmeldeseite
+
+E-P3-38 sieht ihn vor, Mockup 32 zeigt ihn mit Zugangsdaten. Entschieden wurde
+dagegen: Die Anmeldeseite einer Anwendung mit Patientendaten ist nicht der Ort
+für ein Werbefeld, und die Zugangsdaten des Demo-Kontos stehen ohnehin in
+README und Handbuch. Im Konzept ausgetragen.
+
+### Drei Funde
+
+**F-P3-AS — `login-wrap` war nie geschlossen.** Drei `<div>` gegen zwei
+`</div>` in `pw_handling.php`, dazu eine Klasse ohne Regel. Das Element stand
+zwischen `.anmeldung-body` und `<main class="anmeldung">`; damit war `main` kein
+direktes Flex-Kind mehr, `flex:1 1 auto` griff nicht, und die Fußzeile klebte
+unter der Karte statt am unteren Rand.
+
+**F-P3-AT — die Fußzeile zeigte im Einrichter „v" ohne Zahl.** `WEB_VERSION`
+ist dort nicht definiert: `version.php` kommt über `db.php`, und das braucht die
+`config.php`, die es zu dem Zeitpunkt noch nicht gibt.
+
+**F-P3-AU — der Erklärabsatz klebte an der Überschrift.**
+`.seiten-erklaerung` hat einen negativen Rand oben, abgestimmt auf die
+Titelzeile. Unter einem blanken `<h1>` — öffentliche Seiten und Einrichter
+haben kein Gerüst und damit keine Titelzeile — zog er den Text heran.
+
+### Zwei freigegebene Änderungen an geteilten Bausteinen
+
+Die **Versionsnummer** der Fußzeile steht in `--gedaempft` statt `--sand`: von
+1,53:1 auf 5,30:1. Sie ist die Auskunft, mit der ein Fehlerbericht anfängt, also
+ein zu *lesender* Text; die Kontrastprüfung führte sie als Ausnahme, begründet
+aber nur den Akkordeon-Winkel. **„Passwort vergessen?"** steht linksbündig statt
+zentriert — es sitzt unter einem 100 % breiten Knopf und über dem linken Rand
+der Feldbeschriftungen.
+
 ## [Web 9.10.1] — 2026-08-30
 
 **Drei Reparaturen, die vor O10 stehen mussten.** Keine Migration — aber

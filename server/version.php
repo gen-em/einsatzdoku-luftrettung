@@ -822,5 +822,102 @@ declare(strict_types=1);
  * Dazu: Vier Wortlisten-Ausnahmen fuer die Logo-Abschnitte der Dokumentation
  * (O9c hatte die Doku nach dem Lauf des Werkzeugs geschrieben; die Pruefung
  * stand auf 5 Treffern, gemeldet worden waren 0).
+ *
+ * !!! DIESE FASSUNG BRAUCHT EINE MIGRATION !!!
+ * Nach dem Aufspielen muss eine Administratorin update.php aufrufen. Ohne den
+ * Aufruf gibt es die Tabelle `rechtstexte` nicht; Impressum und Datenschutz
+ * zeigen dann ihren Leerzustand — die Anwendung laeuft weiter, aber die neue
+ * Funktion ist nicht da (rechtstexte_lib.php faengt die fehlende Tabelle ab).
+ *
+ * 9.11.0 ist O10: ANMELDUNG, OEFFENTLICHE SEITEN UND RECHTSTEXTE (R32).
+ *
+ * DIE ANWENDUNG HAT ZUM ERSTEN MAL EIN IMPRESSUM UND EINE
+ * DATENSCHUTZERKLAERUNG — und zwar keine mitgelieferten. Was darin steht, ist
+ * Sache des Betreibers; wir stellen zwei oeffentliche Seiten, einen Editor in
+ * der Administration und die Verweise in jeder Fusszeile. Der Leerzustand ist
+ * die Auslieferung und eine gueltige Antwort: „Der Betreiber dieser
+ * Installation hat noch kein Impressum hinterlegt", fuer angemeldete Admins
+ * mit dem Weg zum Editor daneben.
+ *
+ * DER RENDERER MASKIERT ZUERST UND ERKENNT DANN STRUKTUR. rt_html()
+ * (rechtstexte_lib.php) ist die einzige Stelle des Projekts, an der aus einer
+ * Eingabe HTML wird. Sie schickt den GANZEN Text durch htmlspecialchars,
+ * bevor der Parser das erste Zeichen ansieht — rohes HTML ist damit nicht
+ * gefiltert, sondern unmoeglich. Eine Sperrliste von Tags waere der falsche
+ * Ansatz; sie ist immer unvollstaendig, und die Luecke findet man erst, wenn
+ * sie jemand benutzt hat.
+ *
+ * Erzeugt werden ausschliesslich h2, h3, p, br, ul, ol, li und a mit href.
+ * Linkziele stehen auf einer POSITIVLISTE (https, http, mailto, eigene .php,
+ * Anker) — javascript:, data:, vbscript:, blob:, file: und alles, was es
+ * morgen gibt, fallen ohne eigenen Eintrag durch. Ein abgelehntes Ziel laesst
+ * die ganze Konstruktion als TEXT stehen: Stilles Schlucken macht aus einem
+ * Fehler eine Unsichtbarkeit.
+ *
+ * GEPRUEFT MIT tools/rechtstexte/: 81 Proben (rohes HTML, Linkziele,
+ * Attribut-Ausbruch, Autolinks, Bidi-Steuerzeichen, Kodierung, Raender),
+ * dazu 65 Ausgaben gegen eine Positivliste erlaubter Tags und Attribute
+ * gehalten — die eigentliche Pruefung: Sie sagt nicht, was schiefgehen kann,
+ * sondern dass nichts anderes herauskommt.
+ *
+ * DIE ABLAGE IST EINE EIGENE TABELLE, nicht app_state. Dort ist der Wert
+ * VARCHAR(190); eine Datenschutzerklaerung hat 8000 bis 20000 Zeichen. Ohne
+ * strict mode kuerzt MySQL still — ein Rechtstext, der ab Zeichen 191
+ * verschwindet, sieht in der Vorschau vollstaendig aus, solange niemand ans
+ * Ende scrollt.
+ *
+ * DAS STANDDATUM WIRD VON HAND GESETZT. Automatisch waere bequemer und an
+ * einem Rechtstext falsch: Das Datum sagt, auf welchem Stand der Text
+ * INHALTLICH ist — eine Kommakorrektur soll ihn nicht neu datieren.
+ *
+ * DIE FUSSZEILE FUEHRT JETZT IMMER auf beide Seiten. Die is_file()-Pruefung
+ * von O2 war richtig, solange es die Seiten nicht gab, und danach tote Logik:
+ * zwei Dateisystemzugriffe je Seitenaufruf fuer eine Frage, deren Antwort
+ * feststeht. Ausnahme bleibt der Einrichter — er laeuft vor der
+ * Ersteinrichtung, die beiden Seiten brauchen aber eine Datenbank.
+ *
+ * DER EINRICHTER TRAEGT DIE OEFFENTLICHE HUELLE. Er hatte die Anmeldehuelle
+ * (dunkelblaue Flaeche, 400-px-Karte) und half sich mit `.anmeldung-breit` —
+ * der Lesespalte unter falschem Namen. Jetzt: helle Lesespalte, fuenf Karten
+ * statt fuenf <fieldset>, alle Felder ueber ui_feld(). Das Konzept
+ * widersprach sich an dieser Stelle (E-P3-38 gegen Tabelle 5.4); es gilt die
+ * Tabelle.
+ *
+ * ANMELDUNG, PASSWORT-VERGESSEN UND PASSWORT-SETZEN sind jetzt DREI SEITEN
+ * DERSELBEN FAMILIE: gleiche Kartenbreite (400 px), gleiches Logo, gleiche
+ * Bausteine. Die Passwortseite war 760 px breit, die Anmeldung daneben 400 —
+ * zwei Seiten, die man unmittelbar nacheinander sieht, sprangen dabei.
+ *
+ * KEIN DEMO-HINWEIS AUF DER ANMELDESEITE. E-P3-38 sieht ihn vor, Mockup 32
+ * zeigt ihn mit Zugangsdaten. Entschieden wurde dagegen: Die Anmeldeseite
+ * einer Anwendung mit Patientendaten ist nicht der Ort fuer ein
+ * Werbefeld — und die Zugangsdaten stehen ohnehin in README und Handbuch.
+ * Im Konzept ausgetragen.
+ *
+ * DREI FUNDE AUS DIESEM PAKET:
+ *
+ *   F-P3-AS  `<div class="login-wrap">` in pw_handling.php war seit jeher
+ *            NICHT GESCHLOSSEN (drei <div>, zwei </div>) und hatte im neuen
+ *            Stylesheet keine Regel. Es stand zwischen `.anmeldung-body` und
+ *            `<main class="anmeldung">`; damit war main kein direktes
+ *            Flex-Kind mehr, `flex:1 1 auto` griff nicht, und die Fusszeile
+ *            klebte unter der Karte statt am unteren Rand.
+ *
+ *   F-P3-AT  Die Fusszeile zeigte im Einrichter ein nacktes „v" ohne Zahl:
+ *            WEB_VERSION ist dort nicht definiert (version.php kommt ueber
+ *            db.php, und das braucht die config.php, die es noch nicht gibt).
+ *            Eine Auskunft, die keine ist.
+ *
+ *   F-P3-AU  `.seiten-erklaerung` hat einen NEGATIVEN Rand oben, abgestimmt
+ *            auf die Titelzeile darueber. Unter einem blanken <h1> — auf den
+ *            oeffentlichen Seiten und im Einrichter, die kein Geruest und
+ *            damit keine Titelzeile haben — zog er den Erklaertext an die
+ *            Ueberschrift heran.
+ *
+ * Dazu zwei freigegebene Aenderungen an geteilten Bausteinen: Die
+ * Versionsnummer der Fusszeile steht in --gedaempft statt --sand (1,53:1 auf
+ * 5,30:1 — sie ist die Auskunft, mit der ein Fehlerbericht anfaengt, also ein
+ * zu LESENDER Text), und „Passwort vergessen?" steht linksbuendig statt
+ * zentriert.
  */
-const WEB_VERSION = '9.10.1';
+const WEB_VERSION = '9.11.0';

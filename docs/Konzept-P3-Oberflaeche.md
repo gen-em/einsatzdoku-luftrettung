@@ -728,9 +728,32 @@ der Monat bzw. das Jahr aktiv.
 
 **E-P3-38 Anmeldung und R32-Seiten.** Anmeldung: dunkelblaue Fläche, Karte
 mit farbigem Logo, Name, Untertitel, E-Mail und Passwort, Primärknopf,
-„Passwort vergessen?", Demo-Hinweis als Baustein (hell orange mit
-Kolben, nur im Demo-Betrieb), Fußzeile dunkel. Zurücksetzen und Abbruch in
-derselben Hülle. Impressum und Datenschutz: öffentliche Hülle (Kopfleiste
+„Passwort vergessen?", Fußzeile dunkel.
+
+> **Der Demo-Hinweis ist ausgetragen (O10).** Diese Entscheidung sah ihn
+> ursprünglich vor — „Demo-Hinweis als Baustein (hell orange mit Kolben, nur
+> im Demo-Betrieb)", so auch Mockup 32, dort sogar mit Zugangsdaten.
+> Entschieden wurde beim Bauen dagegen: Die Anmeldeseite einer Anwendung mit
+> Patientendaten ist nicht der Ort für ein Werbefeld, und die Zugangsdaten des
+> Demo-Kontos stehen ohnehin öffentlich in README und Handbuch. Der Baustein
+> `ui_demo_hinweis()` bleibt, wo er hingehört: im angemeldeten Gerüst des
+> Demo-Kontos.
+>
+> Nebenbei: Der Text in Mockup 32 war an zwei Stellen falsch — er nennt
+> `demo@beispiel.de` / „demo" statt der echten Zugangsdaten und „nächtlich"
+> statt „alle 30 Minuten". Zurücksetzen und Abbruch in
+derselben Hülle. Zurücksetzen und Abbruch in
+derselben Hülle.
+
+> **Der Einrichter trägt die ÖFFENTLICHE Hülle (O10).** Diese Entscheidung
+> und Tabelle 5.4 widersprachen sich: Hier stand „in derselben Hülle" (dunkel),
+> dort steht der Einrichter unter „Öffentlich" (hell, Lesespalte). Umgesetzt
+> war beides gemischt. Es gilt die Tabelle — die Anmeldekarte ist für zwei
+> Zeilen gemacht, der Einrichter trägt fünf Feldgruppen und half sich schon
+> mit `.anmeldung-breit`, was der Sache nach die Lesespalte ist. Die
+> Abbruchseite bleibt ebenfalls hell.
+
+Impressum und Datenschutz: öffentliche Hülle (Kopfleiste
 ohne Menü und Zahnrad, rechts „Zurück zur Anmeldung" bzw. „Zurück"),
 Titel, Text in einer Karte in der Lesespalte; Markdown-Elemente:
 Überschriften (Bricolage, Dunkelblau), Absätze (16 px, 1,6), Listen, Links;
@@ -1302,7 +1325,7 @@ Umsetzung füllen.
 | P-P3-14 | Suche (O6) | 5 Begriffe × 3 Filterkombinationen: Trefferzahlen identisch | |
 | P-P3-15 | Zeitraum (O7) | Kachelwerte Luft/Boden identisch; Gemischt genau 4 | |
 | P-P3-16 | Administration (O9) | 300-Konten-Bestand: Seitenwechsel, Suche, Filter, Sammelauswahl; Aufbewahrung löscht korrekt | **erledigt (O9b/O9c).** `tools/pruefkonten/` legt 304 Konten mit gemischten Sicherungsständen an (fester Zufallsstartwert). Gemessen: Seitenwechsel über 7 Seiten zu 50, Suche und fünf Filter mit den erwarteten Zahlen, Auswahl über Seitengrenzen hinweg; ganzer Seitenaufruf 103 ms. Verdrängung geprüft in O9a (jüngstes und freigegebenes Paket bleiben), die einstellbare Aufbewahrung in O9c (3 → 5 → 3 gespeichert). **Nicht geprüft:** ein Sammelsichern über alle 304 Konten — das erzeugte 304 Ordner und ist der Fall, für den F-P3-C ohnehin auf P5 verweist. |
-| P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | |
+| P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | **erledigt (O10).** Impressum und Datenschutz ohne Anmeldung erreichbar (HTTP 200 abgemeldet, geprüft). Leerzustand: beide Plaketten „leer", keine Vorschau, Meldung „Der Betreiber dieser Installation hat noch kein Impressum hinterlegt"; für Admins mit Weg zum Editor. **Markdown-Probe: 81 Einzelproben in `tools/rechtstexte/`, 0 fehlgeschlagen**, dazu 65 Ausgaben gegen die Positivliste erlaubter Tags und Attribute gehalten — `<script>alert(1)</script>` erscheint als sichtbarer Text, im Browser gegengeprüft. Fußzeile zweizeilig auf allen 34 Seiten des Bilderlaufs; Ausnahme Einrichter (ohne Rechtslinks, mit Grund). |
 | P-P3-18 | Logo-Wahl (O8) | Kopfleiste und Favicon wechseln gemeinsam; „wechselnd" stabil je Sitzung | **erledigt (O8a, erweitert in O9c).** Kopfleiste und Favicon folgen beide `logo_stamm()`; „wechselnd" wird nur bei der Anmeldung ausgewürfelt und bleibt in der Sitzung stehen. O9c hat den **Standard der Installation** dazugenommen und acht Messungen in einer Sitzung gefahren: Anmeldeseite folgt dem Standard (F-P3-AN), Kopfleiste folgt **ohne Neuanmeldung**, ein Konto mit eigener Wahl bleibt unberührt. |
 | P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | |
 | P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien, `node --check` über die geänderten Skripte). |
@@ -1376,6 +1399,9 @@ und O11.
 | F-P3-AP | **Die Radios der Segmentwahl waren 20 × 20 px groß und fingen Klicks ab.** `.segment-box` setzt `position:absolute; opacity:0; width:0; height:0` — Spezifität (0,1,0). Weiter unten im Stylesheet steht `input[type=checkbox],input[type=radio]{width:var(--symbol);height:var(--symbol)}` mit (0,1,1) und gewinnt. Die Kästchen blieben damit 20 × 20 px, nur durchsichtig, und lagen absolut positioniert über ihrer Umgebung. Das betraf **jede** Segmentwahl der Anwendung — die Artwahl im Zeitraum (O7), die Filter der Suche (O6), die neuen Reiter (O9c). Gefunden beim **Bedienen im Browser** („`<input …value=fahrzeug>` intercepts pointer events"), nicht beim Lesen und nicht vom Bilderlauf: Ein unsichtbares Element, das nichts verdeckt, sieht auf einem Bild aus wie keines. | O9c: `input[type=radio].segment-box, input[type=checkbox].segment-box` (0,2,1) plus `min-height:0`. Nachgemessen: 20 × 20 → 0 × 0. |
 | F-P3-AQ | **Die Bildaufnahme fotografierte die Anmeldeseite — und meldete dafür „0 Überlauf".** Der Lauf nach O9c berichtete „31 Seiten × 8 Breiten = 248 Bilder, Überlauf 0, Konsolenfehler 0"; **22 dieser 31 Seiten waren Bilder von `login.php`**, 176 von 248 Einzelbildern, byteweise identisch (nachgewiesen mit `md5sum`: 23 Dateien je Breite mit derselben Prüfsumme). Zwei unabhängige Ursachen. (1) **Die Sitzung starb mitten im Lauf:** Das Demo-Konto setzt sich alle 30 Minuten zurück, `demo_zuruecksetzen()` erhöht dabei `session_epoch`, `auth_guard.php` beendet daraufhin jede offene Sitzung — und der Lauf löst den fälligen Reset durch seine **eigenen** Anfragen aus. Die alte Prüfung stand **einmal**, unmittelbar nach dem Anmelden. (2) **Vier Platzhalter wurden nie aufgelöst:** `platzhalter()` holt die Kennungen aus der Tagesübersicht und lief als erste Funktion in denselben Sitzungsverlust; fehlte die Kennung, blieb das Verzeichnis leer, und `einsatz.php`/`einsatz_form.php`/`einsatz_verschieben.php`/`einsatz_loeschen.php` wurden mit ihrem eigenen Platzhalter als Adresse aufgerufen — der Server antwortet darauf mit **200** und der Startseite. Dieselbe Falle wie F-P3-AH, eine Ebene tiefer. Gefunden bei der Bestandsaufnahme zu O10, nicht vom Werkzeug selbst. | Web 9.10.1: Sitzungswache nach **jedem** Seitenaufruf mit einer Neuanmeldung und einem harten Abbruch statt eines Bildes; nicht auflösbare Platzhalter sind `null` und führen zum Ausfall der Aufnahme, nicht zu einem geratenen Bild; beides steht im Bericht. **Nachgemessen: 248 Bilder, 248 verschiedene Prüfsummen** (vorher 228 nach der ersten Teilreparatur, davor 23 gleiche je Breite), alle sieben Platzhalter aufgelöst. Die O9c-Zahlen sind unten berichtigt. |
 | F-P3-AR | **Der Einrichter stürzte bei jeder Neuinstallation ab.** `install.php` lud `ui.php` erst **innerhalb** von `render_page()` (Zeile 426); die Aufrufer bauen ihr Argument aber mit `ui_meldung_markup()` (:51), `ui_knopf()` (:53) und `ui_symbol()` (:335), und PHP wertet Argumente **vor** dem Aufruf aus. Alle drei Zweige endeten in „Call to undefined function" — seit Web 9.1.0 (O2), als die Seite auf das gemeinsame Stylesheet umgestellt wurde. `index.php` leitet ohne `config.php` genau dorthin, und der Deploy liefert die Datei aus. Nicht aufgefallen, weil der Einrichter genau einmal im Leben einer Installation läuft. Dazu, im selben Zug gefunden: `schema.sql` war zwei Migrationen im Rückstand — `users.last_login` fehlte als Spalte, die Kennungen `2026_08_27_logo_wahl` und `2026_08_28_last_login` in der Erledigt-Liste. | Web 9.10.1: `require_once ui.php` an den Dateianfang; Spalte und beide Kennungen in `schema.sql` nachgetragen. Geprüft durch Einspielen in eine Wegwerfdatenbank nach dem Verfahren von `install.php` (32 Anweisungen, 30 Tabellen, `last_login` vorhanden) und durch Aufruf beider Zweige des Einrichters. |
+| F-P3-AS | **`<div class="login-wrap">` in `pw_handling.php` war nie geschlossen.** Drei öffnende `<div>` gegen zwei schließende in derselben Datei, dazu eine Klasse ohne Regel im neuen Stylesheet. Das Element stand zwischen `.anmeldung-body` und `<main class="anmeldung">`; damit war `main` kein direktes Flex-Kind mehr, `flex:1 1 auto` griff nicht, und die Fußzeile klebte dicht unter der Karte statt am unteren Rand. Der Fehler ist so alt wie die Datei — ein nicht geschlossenes `div` am Dokumentende repariert der Browser stillschweigend. | O10: Das **öffnende** Tag entfernt, nicht das schließende ergänzt. Sichtbare Änderung, beabsichtigt: Die Fußzeile sitzt jetzt unten. |
+| F-P3-AT | **Die Fußzeile zeigte im Einrichter „v" ohne Zahl.** `WEB_VERSION` ist dort nicht definiert — `version.php` kommt über `db.php`, und das braucht die `config.php`, die es vor der Ersteinrichtung noch nicht gibt. Die Fußzeile gab deshalb `v` plus Leerstring aus: eine Auskunft, die keine ist. Sichtbar erst, seit der Einrichter überhaupt eine Fußzeile hat (O2) — und erst geprüft, seit er überhaupt wieder läuft (F-P3-AR). | O10: Ohne bekannte Version entfällt das ganze `<span>`. |
+| F-P3-AU | **Der Erklärabsatz klebte an der Überschrift.** `.seiten-erklaerung` trägt `margin-top:calc(-1 * var(--abstand-2))` — ein negativer Rand, abgestimmt auf die Titelzeile, die ihren eigenen Abstand nach unten mitbringt. Auf den öffentlichen Seiten und im Einrichter gibt es kein Gerüst und damit keine Titelzeile; dort steht die Erklärung direkt unter einem blanken `<h1>`, und der negative Rand zog sie heran. | O10: `h1 + .seiten-erklaerung{margin-top:0}`. |
 
 ---
 
@@ -1441,7 +1467,7 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
 | O9a Kontoseite | **erledigt** | Web 9.8.0 (Migration!) |
 | O9b NutzerInnen-Liste | **erledigt** | Web 9.9.0 |
 | O9c Regeln, Stammdaten, Demo, Wartung | **erledigt** | Web 9.10.0 |
-| O10 Anmeldung, öffentliche Seiten, R32 | offen | |
+| O10 Anmeldung, öffentliche Seiten, R32 | **erledigt** | Web 9.11.0 (Migration!) |
 | O11 Übrige Seiten und Dialoge | offen | |
 | O12 Dokumentation und Abschluss | offen | |
 
@@ -2801,6 +2827,161 @@ und Demo-Konto):
 - **Die Rettungsmittelseite mit vielen Standorten.** Geprüft mit zwei; die
   Karten sind zugeklappt, die Last wächst also linear mit der Zahl der
   Standorte, nicht mit der der Einträge.
+
+### O10 — Anmeldung, öffentliche Seiten und Rechtstexte (R32)
+
+*Erledigt mit Web 9.11.0. **Mit Migration** — nach dem Deploy muss eine
+Administratorin `update.php` aufrufen.*
+
+Vor dem Paket standen drei Reparaturen (Web 9.10.1, F-P3-AQ und F-P3-AR): Der
+Einrichter stürzte bei jeder Neuinstallation ab, `schema.sql` war zwei
+Migrationen im Rückstand, und die Bildaufnahme fotografierte die Anmeldeseite.
+Ohne die dritte hätte O10 seine eigene Abnahme gegen Bilder von `login.php`
+bestanden.
+
+#### Der Renderer ist das Paket
+
+R32 klingt nach zwei Seiten und ist der Sache nach eine Frage: **Wie kommt
+fremder Text sicher auf eine Seite dieser Anwendung?** Überall sonst geht jede
+Ausgabe durch `e()` und erscheint als Text. Hier soll sie Struktur bekommen —
+und damit ist `rt_html()` die einzige Stelle, an der aus einer Eingabe HTML
+wird.
+
+Die Antwort ist eine Reihenfolge: **erst maskieren, dann Struktur erkennen.**
+Der ganze Text geht durch `htmlspecialchars()`, bevor der Parser das erste
+Zeichen ansieht. Rohes HTML ist damit nicht gefiltert, sondern unmöglich — wenn
+der Parser `<` sieht, ist es längst `&lt;`. Eine Sperrliste von Tags wäre der
+falsche Ansatz: Sie ist immer unvollständig, und die Lücke findet man erst,
+wenn sie jemand benutzt hat.
+
+Erzeugt werden ausschließlich acht Tags und **ein** Attribut. Linkziele stehen
+auf einer Positivliste; ein abgelehntes Ziel lässt die Konstruktion als Text
+stehen, statt sie zu schlucken.
+
+**Was bewusst fehlt**, jeweils mit Grund:
+
+| Nicht unterstützt | Warum |
+|---|---|
+| Bilder `![alt](url)` | Holten eine fremde Quelle zur Laufzeit — bräche eine feste Zusage des Projekts (CLAUDE.md §4) |
+| Autolinks `<https://…>` | Umgehen die Zielprüfung |
+| Referenzlinks `[x][1]` | Ebenso |
+| fett, kursiv | E-P3-38 nennt sie nicht. Jede Erweiterung ist eine Vertragsänderung, keine Formatierung |
+| Titel `[x](u "T")` | Ein Attribut mehr ist eine Angriffsfläche mehr |
+| `target="_blank"` | Auf einer Rechtstextseite ist der Zurück-Weg des Browsers die richtige Antwort — und ohne `target` braucht es kein `rel="noopener"` |
+| `####` und tiefer | Die Seite hat ihr `<h1>` aus der Titelzeile; unter `<h3>` wird die Gliederung unlesbar |
+
+**Die Vorschau kommt vom Server.** Ein zweiter Renderer im Browser wäre genau
+die Stelle, an der die Regeln auseinanderlaufen: Er müsste dieselbe
+Positivliste, dieselbe Maskierreihenfolge und dieselben Zeichenfilter führen,
+und beim nächsten Fund würde einer von beiden vergessen. Sie zeigt deshalb den
+zuletzt **gespeicherten** Stand — und sagt das auch, denn wer gerade getippt
+hat und nichts davon sieht, hält den Editor für kaputt.
+
+#### Die Ablage
+
+Eine eigene Tabelle, nicht `app_state`. Dort ist der Wert `VARCHAR(190)`; eine
+Datenschutzerklärung hat 8 000 bis 20 000 Zeichen. Entscheidend ist nicht die
+Enge, sondern **wie sie sich äußert**: Ohne strict mode kürzt MySQL still, und
+ein Rechtstext, der ab Zeichen 191 verschwindet, sieht in der Vorschau
+vollständig aus, solange niemand ans Ende scrollt.
+
+`MEDIUMTEXT`, nicht `TEXT`: `TEXT` sind 64 KB in **Bytes**, und deutsche
+Rechtstexte in utf8mb4 haben Umlaute.
+
+**Das Standdatum wird von Hand gesetzt.** Automatisch wäre bequemer und an
+einem Rechtstext falsch: Das Datum sagt, auf welchem Stand der Text
+*inhaltlich* ist — eine Kommakorrektur soll ihn nicht neu datieren. Leer heißt:
+keine Standzeile.
+
+#### Was sonst noch anders ist
+
+- **Die Fußzeile führt immer auf beide Seiten.** Die `is_file()`-Prüfung aus O2
+  war richtig, solange es die Seiten nicht gab, und danach tote Logik. Ausnahme
+  bleibt der Einrichter — er läuft vor der Ersteinrichtung, die beiden Seiten
+  brauchen eine Datenbank; der Verweis wäre eine Schleife.
+- **Der Einrichter trägt die öffentliche Hülle** und fünf Karten statt fünf
+  `<fieldset>`. Die Elementregeln dafür stehen in der Übergangsschicht, die mit
+  O11 stirbt.
+- **Drei Seiten derselben Familie:** Anmeldung, Passwort-vergessen und
+  Passwort-setzen mit gleicher Kartenbreite (400 px), gleichem Logo, gleichen
+  Bausteinen. Passwort-vergessen bekommt zum ersten Mal ein Logo.
+- **Kein Demo-Hinweis auf der Anmeldeseite** — E-P3-38 an dieser Stelle
+  ausgetragen, Begründung dort.
+
+#### Prüfprotokoll O10
+
+**Maschinell.**
+
+- **Rechtstext-Renderer** (`tools/rechtstexte/`, neu): **81 Proben, 0
+  fehlgeschlagen** — 15 zum Umfang, 12 rohes HTML, 13 Linkziele, 5
+  Attribut-Injektion, 6 nicht unterstützte Formen, 8 Zeichen und Kodierung, 6
+  Ränder, 16 zu den übrigen Funktionen. Dazu **65 Ausgaben gegen die
+  Positivliste** erlaubter Tags (`h2 h3 p br ul ol li a`) und Attribute
+  (`href`) gehalten. Ein während des Bauens fehlgeschlagener Fall war ein
+  Fehler der **Probe**, nicht des Renderers (sie suchte `onerror=alert` und
+  fand es im maskierten Text) — daraufhin ist die Positivliste entstanden, die
+  seither die eigentliche Prüfung ist.
+- **Vollständigkeitsprüfung**: 220 Altklassen, 45 mit Regel, **99 auf der
+  Streichliste** (+4 in diesem Paket), 76 ohne Gegenstück (vorher 80). Die vier
+  neuen sind `login-wrap`, `keybox`, `codebig`, `checklabel`. **Nicht**
+  eingetragen: `login-aux`, `btn-primary` und `small` — sie stehen noch in
+  Dateien, die O11 anfasst; sie hier zu streichen nähme der Prüfung dort die
+  Stimme.
+- **Wortliste**: 62 Regeln, 62 gegriffen, 0 ungenutzt, **0 Treffer**,
+  Rückgabewert 0 — gefahren **nach** der Dokumentation (die Lehre aus O9c).
+- **Kontraste**: 21 Paare, 0 verfehlt. Die Versionsnummer der Fußzeile ist von
+  1,53:1 auf 5,30:1 gestiegen; die Ausnahme „Sand auf Schnee" nennt jetzt
+  ausdrücklich, was sie noch deckt.
+- **Bilderlauf**: 34 Seiten × 8 Breiten = **272 Einzelbilder**, Überlauf 0,
+  Konsolenfehler 0, Knöpfe ≠ 44 px 0. Neu in der Seitenliste:
+  `04-impressum`, `05-datenschutz`, `43a-rechtstexte`.
+- **`schema.sql`** in eine Wegwerfdatenbank eingespielt, nach dem Verfahren von
+  `install.php`: 33 Anweisungen, 31 Tabellen, `rechtstexte` dabei.
+- **Syntax**: `php -l` über alle geänderten PHP-Dateien, `node --check` über
+  `aufnehmen.mjs`, JSON-Prüfung über `seiten.json` und `ausnahmen.json`.
+
+**Im Browser** (Chromium, lokale Instanz):
+
+- **Der ganze Weg des Editors**: Leerzustand (zwei Plaketten „leer", keine
+  Vorschau, keine Speichern-Leiste) → Tippen (Leiste erscheint,
+  „Ungespeicherte Änderungen") → Speichern („Impressum gespeichert.", Plakette
+  wird „öffentlich", Vorschau mit 3 `<h2>` und 2 Links) → erneut speichern
+  ohne Änderung („Es gab nichts zu ändern.") → zu langer Text (abgelehnt, mit
+  Zahl: „60.001 Zeichen länger als die zulässigen 60.000").
+- **Der Angriffsversuch im echten Weg**: `<script>alert(…)</script>`,
+  `[böse](javascript:alert(1))` und `<img src=x onerror=…>` durch das
+  Textfeld gespeichert und auf der **öffentlichen Seite abgemeldet** geprüft —
+  kein `<script>`, kein `href="javascript`, kein `<img>`; der sichtbare Text
+  enthält `<script>` als Zeichenfolge. Das ist der Abnahmefall des Konzepts.
+- **Öffentliche Erreichbarkeit**: `impressum.php` und `datenschutz.php`
+  abgemeldet HTTP 200, Überlauf 0, Konsolenfehler 0 bei 390 und 1440 px.
+- **Kartenbreiten** nachgemessen: Anmeldung 400 px, Passwort-vergessen 400 px,
+  Passwort-setzen 400 px (vorher 760). Erstvergabe-Zweig bei 390 px ohne
+  Überlauf, Absatzabstand 12 px (vorher 0 — `p{margin:0}`).
+- **Der Einrichter** in beiden Zweigen (403-Sperre und Formular) gegen eine
+  Kopie ohne `config.php` und `install.lock` gefahren: keine Fehler, Überlauf
+  0, Knopfhöhen 44 px, Fußzeile ohne Versionsnummer und ohne Rechtslinks.
+
+**Was nicht geprüft werden konnte.**
+
+- **Der Einrichter im echten Betrieb.** Er ist lokal nur über eine Kopie
+  erreichbar, weil `config.php` und `install.lock` beide liegen. Geprüft ist
+  die **Ausgabe** (PHP-CLI, gegen die laufende Instanz gerendert), nicht der
+  Durchlauf: Eine echte Einrichtung bräuchte eine leere Datenbank und würde
+  die lokale Instanz zerstören. **Das Anlegen der Datenbank, das Schreiben der
+  `config.php` und der Passwort-Link am Ende sind damit nicht durchgespielt.**
+  Nebenbei: Ein Aufruf im nicht eingerichteten Zustand legt eine Datei
+  `install-nachweis-<32 Hex>.txt` an; sie steht nicht in `.gitignore` und ist
+  nach der Probe von Hand entfernt worden.
+- **Die Symbole im Einrichter.** Sie stehen im Markup, erscheinen aber in der
+  `setContent`-Probe nicht: `<use href="relativ">` löst gegen `about:blank`
+  auf, und ein `<base>` hilft dort nicht. Ein Artefakt der Prüfmethode, kein
+  Befund — im echten Betrieb ist es derselbe Aufruf wie überall sonst.
+- **Das Datumsfeld in deutscher Schreibweise.** Der Prüfbrowser läuft ohne
+  gesetzte Sprache und zeigt `mm/dd/yyyy`; ein deutscher Browser zeigt
+  `TT.MM.JJJJ`. Die Formatierung macht der Browser, nicht die Anwendung.
+- **Weiterhin kein WebKit und kein Gecko.**
+- **Der Mailversand** (unverändert seit O9c: lokal kein SMTP).
 
 ---
 

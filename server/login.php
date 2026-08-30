@@ -211,7 +211,11 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
     <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
   </form>
   <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
-  <p class="muted" id="loginstate"></p>
+  <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
+           `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
+           Erscheinen der Meldung nicht springt — `.muted` tat das nicht
+           und stammt aus der Uebergangsschicht, die mit O11 stirbt. */ ?>
+  <p class="zustandszeile" id="loginstate"></p>
  </div>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>

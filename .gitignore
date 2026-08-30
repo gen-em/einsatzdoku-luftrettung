@@ -21,6 +21,10 @@ server/sicherungen/
 tools/stilvergleich/pruefstand/
 tools/stilvergleich/__pycache__/
 tools/wortliste/__pycache__/
+# Ein Muster statt einer Liste: Die drei Eintraege davor sind einzeln
+# gewachsen, und tools/vollstaendigkeit/ und tools/screenshots/ fehlten —
+# beide erzeugen inzwischen ebenfalls Bytecode (O10).
+tools/**/__pycache__/
 
 # Erzeugnisse des Referenzdatensatz-Generators. Rund 25 MB, vollstaendig aus
 # den Quelldaten ableitbar (ein Lauf dauert zwei Sekunden) und deterministisch

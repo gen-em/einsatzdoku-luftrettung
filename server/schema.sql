@@ -469,6 +469,18 @@ CREATE TABLE track_points (
 -- sonst laeuft sie bei jeder Neuinstallation unnoetig (und ggf. auf Daten,
 -- die es noch gar nicht gibt).
 -- ---------------------------------------------------------------------------
+-- Impressum und Datenschutzerklaerung dieser Installation (R32, seit Web 9.11.0).
+-- Kein Vorgabeinhalt: Was darin steht, ist Sache des Betreibers; die Anwendung
+-- liefert keinen Rechtstext mit. Solange nichts hinterlegt ist, zeigen
+-- impressum.php und datenschutz.php ihren Leerzustand.
+-- MEDIUMTEXT statt TEXT, weil TEXT 64 KB in BYTES sind und deutsche
+-- Rechtstexte in utf8mb4 Umlaute haben.
+CREATE TABLE rechtstexte (
+  schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
+  inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL/leer = nichts hinterlegt
+  stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -522,4 +534,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- last_login fehlte zusaetzlich in der Tabelle selbst; eine frisch
   -- eingerichtete Anwendung hatte die Spalte gar nicht.
   ('2026_08_27_logo_wahl', 'skipped'),
-  ('2026_08_28_last_login', 'skipped');
+  ('2026_08_28_last_login', 'skipped'),
+  -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
+  ('2026_08_30_rechtstexte', 'skipped');

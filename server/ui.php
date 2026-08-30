@@ -665,6 +665,8 @@ function ui_leiste_einstellungen(string $aktiv): void
          * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
         'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
         'admin_sicherungen' => ['admin_sicherungen.php', 'Sicherungen',           'sicherung'],
+        /* Zwischen Sicherungen und Demo-Konto — so steht es in Mockup 35. */
+        'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
         'wartung'           => ['update.php',            'Wartung',               'werkzeug'],
     ];
@@ -704,7 +706,7 @@ function ui_leiste_einstellungen(string $aktiv): void
  * Sie führt dieselben Punkte wie die Leiste, aber als Liste im Inhalt: Symbol,
  * Text, Winkel. Auf dem Handy ist sie der einzige Weg, der zeigt, WAS es
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
- * auf „Profil" landet, verschweigt die übrigen zehn Punkte.
+ * auf „Profil" landet, verschweigt die übrigen elf Punkte.
  *
  * Die Administration steht als abgesetzter zweiter Block. „Abmelden" steht
  * getrennt am Ende, darunter nur der Name der angemeldeten Person.
@@ -724,6 +726,7 @@ function ui_einstellungen_uebersicht(): void
             ['admin_users.php',      'NutzerInnen',           'gruppe'],
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
             ['admin_sicherungen.php','Sicherungen',           'sicherung'],
+            ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
             ['update.php',           'Wartung',               'werkzeug'],
         ]];
@@ -769,26 +772,40 @@ function ui_einstellungen_uebersicht(): void
  * für ein Gerüst mit klebender Leiste unten ist das der falsche Ort — und es
  * war der Grund, warum sie auf Seiten ohne Inhalt fehlte.
  *
- * Die Verweise auf Impressum und Datenschutz erscheinen erst, wenn es die
- * Seiten gibt (sie entstehen in O10). Ein Verweis, der ins Leere führt, ist
- * schlimmer als keiner: Er sieht aus wie ein Angebot.
+ * DIE VERWEISE STEHEN SEIT WEB 9.11.0 IMMER. Bis dahin prüfte diese Funktion
+ * mit is_file(), ob es die Seiten überhaupt gibt — richtig, solange sie noch
+ * nicht existierten (sie entstanden in O10), und danach tote Logik: zwei
+ * Dateisystemzugriffe je Seitenaufruf für eine Frage, deren Antwort feststeht.
  *
- * $o: dunkel  true = helle Schrift auf Dunkelblau (Anmeldung)
+ * Sie sagte auch die falsche Sache. „Die Datei ist da" heißt nicht „ein Text
+ * ist hinterlegt" — der Leerzustand ist eine gültige Antwort und gehört
+ * erreichbar, gerade weil er der Administration sagt, dass noch etwas fehlt.
+ *
+ * AUSNAHME EINRICHTER ('rechtslinks' => false). Er läuft VOR der
+ * Ersteinrichtung, die beiden Seiten brauchen aber eine Datenbank. Der
+ * Verweis führte dort in eine Weiterleitung zurück auf den Einrichter — eine
+ * Schleife auf der einen Seite, auf der niemand eine gebrauchen kann.
+ *
+ * $o: dunkel       true = helle Schrift auf Dunkelblau (Anmeldung)
+ *     rechtslinks  false = zweite Zeile weglassen (nur der Einrichter)
  * ------------------------------------------------------------------------ */
 function ui_fuss_seite(array $o = []): void
 {
     $lizenz = 'https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE';
-    $rechts = [];
-    foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutz'] as $d => $text) {
-        if (is_file(__DIR__ . '/' . $d . '.php')) {
-            $rechts[] = '<a href="' . $d . '.php">' . $text . '</a>';
-        }
-    }
+    $rechts = ($o['rechtslinks'] ?? true)
+        ? ['<a href="impressum.php">Impressum</a>',
+           '<a href="datenschutz.php">Datenschutz</a>']
+        : [];
     ?>
 <footer class="fuss-seite<?= !empty($o['dunkel']) ? ' fuss-dunkel' : '' ?>">
   <p class="fuss-zeile">© Gen-EM · Open Source
     <a href="<?= ui_e($lizenz) ?>" target="_blank" rel="noopener">AGPL-3.0</a>
-    <span class="fuss-version">v<?= ui_e(defined('WEB_VERSION') ? WEB_VERSION : '') ?></span></p>
+    <?php /* OHNE VERSION KEIN „v". Im Einrichter ist WEB_VERSION nicht
+             definiert — version.php kommt über db.php, und das braucht die
+             config.php, die es dort noch nicht gibt. Die Fußzeile zeigte
+             deshalb ein nacktes „v" ohne Zahl: eine Auskunft, die keine ist. */ ?>
+    <?php if (defined('WEB_VERSION')): ?>
+    <span class="fuss-version">v<?= ui_e(WEB_VERSION) ?></span><?php endif; ?></p>
   <?php if ($rechts): ?>
   <p class="fuss-zeile fuss-rechts"><?= implode("\n    ", $rechts) ?></p>
   <?php endif; ?>
@@ -1200,6 +1217,10 @@ function ui_aktionen(array $o): string
  * ------------------------------------------------------------------------ */
 function ui_feld(array $o): void
 {
+    /* $o: name, id, label, label_zusatz (gedämpft, in der Beschriftung),
+     *     art (text|email|number|date|select|textarea), wert, optionen,
+     *     zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht, klein,
+     *     klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr */
     $name = (string)($o['name'] ?? '');
     $id   = (string)($o['id'] ?? ($name !== '' ? 'f-' . preg_replace('/[^\w-]/', '-', $name) : ''));
     $art  = (string)($o['art'] ?? 'text');
@@ -1210,7 +1231,13 @@ function ui_feld(array $o): void
 <div class="feld<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>">
   <?php if (isset($o['label'])): ?>
     <label class="feld-label" for="<?= ui_e($id) ?>"><?= ui_e((string)$o['label']) ?><?php
-      if (!empty($o['pflicht'])): ?> <span class="feld-pflicht" aria-hidden="true">*</span><?php endif; ?></label>
+      if (!empty($o['pflicht'])): ?> <span class="feld-pflicht" aria-hidden="true">*</span><?php endif;
+      /* EIN GEDAEMPFTER ZUSATZ IN DER BESCHRIFTUNG (O10, Mockup 35):
+         „Text (Markdown: Überschriften, Absätze, Listen, Links)". Er gehört
+         zur Beschriftung, nicht unter das Feld — dort steht schon `klein`.
+         Als eigener Schlüssel und nicht als Markup in `label`: Der Wert
+         geht durch ui_e(), und das soll so bleiben. */
+      if (!empty($o['label_zusatz'])): ?> <span class="feld-klein-inline"><?= ui_e((string)$o['label_zusatz']) ?></span><?php endif; ?></label>
   <?php endif; ?>
   <?php if ($art === 'select'): ?>
     <select class="feld-eingabe" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"<?= $attr ?>>

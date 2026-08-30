@@ -221,8 +221,8 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Sicherungen, Demo-Konto und Wartung
-(Abschnitt 11). Abmelden steht getrennt am Ende und
+**Stammdaten systemweit**, Sicherungen, **Rechtstexte**, Demo-Konto und
+Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -230,8 +230,14 @@ Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
 und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
 
-**Ganz unten auf jeder Seite** steht die Fußzeile mit Lizenz und
-Versionsnummer — auch vor der Anmeldung.
+**Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
+Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
+**Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
+was darin steht, hinterlegt die Administration (Abschnitt 11.3).
+
+Die einzige Seite ohne diese Verweise ist der **Einrichter**: Er läuft, bevor
+die Anwendung eine Datenbank hat, und die beiden Rechtstextseiten brauchen
+eine.
 
 **Wenn ein Link ins Leere führt.** Ein Lesezeichen auf einen gelöschten
 Einsatz, eine Adresse aus einer alten E-Mail, ein Diensttag im Papierkorb:
@@ -2105,6 +2111,42 @@ zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fal
 „Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
 genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
 Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+
+Unter **„Rechtstexte"** stehen Impressum und Datenschutzerklärung dieser
+Installation. Beide Seiten sind **ohne Anmeldung** erreichbar und in jeder
+Fußzeile verlinkt.
+
+> **Die Anwendung liefert keinen Text mit.** Was in Impressum und
+> Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte
+> Datenschutzerklärung wäre eine Rechtsauskunft, die dieses Projekt nicht geben
+> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
+> Installation hat noch kein Impressum hinterlegt." Als Administration siehst du
+> dort zusätzlich den Weg hierher.
+
+**Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
+
+| Schreibweise | Ergebnis |
+|---|---|
+| `## Überschrift` | eine Überschrift (`###` für eine kleinere) |
+| Leerzeile dazwischen | ein neuer Absatz. Zeilen **ohne** Leerzeile bleiben ein Absatz mit Umbrüchen — so setzt man eine Anschrift untereinander |
+| `- Punkt` oder `1. Punkt` | eine Aufzählung bzw. Nummerierung |
+| `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
+
+**HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
+sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
+sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
+sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
+es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
+lädt zur Laufzeit nichts von außen.
+
+**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
+Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
+bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
+Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
+
+**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
+Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
+öffentliche Seite.
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt

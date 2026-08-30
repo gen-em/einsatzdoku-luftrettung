@@ -104,7 +104,17 @@ AUSNAHMEN = [
     ('Sand auf Schnee', 'sand', 'schnee',
      'Der Winkel des Akkordeons ist Mechanik, keine Botschaft: Er sagt nichts, '
      'was die aufklappbare Zeile daneben nicht auch sagt, und die ist in '
-     'Dunkelblau beschriftet.'),
+     'Dunkelblau beschriftet. Dasselbe gilt fuer den Winkel der '
+     'Einstellungs-Uebersicht und fuer den abgeschalteten Blaetterknopf '
+     '(.seitenknopf.aus) — ein deaktiviertes Bedienelement nimmt WCAG 1.4.3 '
+     'ausdruecklich aus. Sand als FLAECHE (Blattgriff, ausgeschalteter '
+     'Schalter) faellt ohnehin nicht darunter, und Sand auf DUNKELBLAU '
+     '(.kopf-nutzer) steht mit 8,15:1 weit ueber der Schwelle. '
+     'SEIT O10 IST DAS DIE GANZE LISTE: Die Versionsnummer der Fusszeile trug '
+     'Sand ebenfalls, und dort stimmte die Begruendung nicht — sie ist die '
+     'Auskunft, mit der ein Fehlerbericht anfaengt, also ein zu LESENDER Text. '
+     'Sie steht jetzt in --gedaempft (5,30:1). Wer diese Ausnahme kuenftig '
+     'weiterreicht, pruefe zuerst, ob der Text gelesen werden soll.'),
 ]
 
 
