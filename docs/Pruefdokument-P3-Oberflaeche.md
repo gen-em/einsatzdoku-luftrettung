@@ -64,6 +64,17 @@ hier **nicht** belegt ist:
 
 ### 1.3 Was der Zwischenstand nach O8 noch nicht ist
 
+> **Dieses Dokument ist auf dem Stand nach O8c (Web 9.7.2).** Die Phase steht
+> inzwischen bei **O11 (Web 9.12.0)** — O9, O10 und O11 sind im Konzept
+> (`docs/Konzept-P3-Oberflaeche.md`, Abschnitt „Umsetzungsstand") mit Prüfstand
+> und Zahlen festgehalten und werden hier in **O12** nachgezogen; so sieht es
+> der Phasenplan vor. Alles unterhalb dieser Zeile beschreibt den Stand nach
+> O8 und ist als Momentaufnahme zu lesen, nicht als heutiger Zustand. Was seit
+> O8 vor allem anders ist: Die Verwaltungs- und Administrationsseiten sind
+> umgebaut, es gibt keine waagerecht scrollende Verwaltungstabelle mehr, die
+> Meldungen tragen ihr Symbol, die alten `.btn-*`-Knöpfe gibt es nicht mehr —
+> und die Übergangsschicht des Stylesheets ist mit O11 aufgelöst.
+
 **Diese Fassung braucht eine Migration** (`2026_08_27_logo_wahl`). Sie ist
 die erste der Phase; ohne den Aufruf von `update.php` scheitert jede
 Anmeldung.

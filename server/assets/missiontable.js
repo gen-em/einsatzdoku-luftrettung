@@ -260,8 +260,8 @@ const EdMissionTable = (() => {
            (E-P3-18). edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
            in PHP; faellt assets/symbol.js aus, bleibt das Wort. */
         const zeichen = (typeof edSymbol === 'function')
-          ? edSymbol(s.symbol, 'artzeichen', s.text)
-          : `<span class="artzeichen">${esc(s.text)}</span>`;
+          ? edSymbol(s.symbol, '', s.text)
+          : esc(s.text);
         return `<td>${zeichen}</td>`;
       } },
     { key: 'day',   kopf: 'Datum',                 thClass: '',

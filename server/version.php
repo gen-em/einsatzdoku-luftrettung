@@ -956,7 +956,7 @@ declare(strict_types=1);
  *
  *   F-P3-AZ  DAS UNSICHTBARE KAESTCHEN LAG NICHT, WO ES SOLLTE. `.schalter-box`
  *            und `.wahl-box` (0,1,0) verlieren gegen `input[type=checkbox]`
- *            aus der Rohschicht (0,1,1), die jedem Kaestchen 20 x 20 px gibt.
+ *            aus den Grundformen (0,1,1), die jedem Kaestchen 20 x 20 px geben.
  *            Gemessen: 20 x 20 statt 0 x 0, und weil keine Huelle
  *            `position:relative` traegt, sass das Kaestchen ueber dem linken
  *            Rand der Beschriftung. Dieselbe Falle wie F-P3-AP, drittes Mal.
@@ -965,5 +965,71 @@ declare(strict_types=1);
  * Ueberschrift („Bestaetigen", je Aufrufstelle ueberschreibbar) und
  * `role="alertdialog"`. Er war die anonymste Stelle der Oberflaeche — ein
  * Screenreader las Text und zwei Knoepfe, ohne zu sagen, was da fragt.
+ *
+ * 9.12.0 — O11: DIE UEBRIGEN SEITEN, UND DIE UEBERGANGSSCHICHT FAELLT.
+ *
+ * Neun Seiten sind aus Bausteinen neu gebaut: Papierkorb, Zuordnung
+ * nachtragen, Diensttag anlegen / Datum aendern / loeschen /
+ * zusammenfuehren, Einsatz verschieben / loeschen und die Wartungsseite.
+ * Damit ist keine Seite der Anwendung mehr im alten Zustand.
+ *
+ * ES GIBT KEINE VERWALTUNGSTABELLE MEHR. Sechs Tabellen sind zu Karten mit
+ * Zeilen geworden — der Papierkorb hatte fuenf Spalten, die Wartungsseite
+ * vier, die Zusammenfuehrung sechs. Bei 360 px lief jede von ihnen waagerecht
+ * aus dem Bild; die Notbremse `table{display:block;overflow-x:auto}` hat das
+ * abgefangen, aber abgefangen ist nicht geloest. Geblieben sind die drei
+ * Einsatztabellen (Tagesuebersicht, Suche, Zeitraum), die unter 720 px zur
+ * Kachel werden, und die Importtabelle — sie tragen alle `.tabelle`.
+ *
+ * LOESCHBESTAETIGUNGEN BLEIBEN SEITEN, keine Dialoge. Was dort steht, ist
+ * eine Aufstellung — Einsaetze, Phasen, Reanimationen, Ruhesegmente,
+ * Trackpunkte —, und eine Aufstellung gehoert nicht in einen
+ * Rueckfragedialog. Der ist fuer das Gegenteil da: eine Handlung, die sich in
+ * einem Satz beschreiben laesst. Die Aufstellungen selbst sind von
+ * Aufzaehlungen zu Zeilen mit Plakette geworden: Die Zahl ist die Auskunft,
+ * und im Fliesstext war sie beim Ueberfliegen nicht zu finden.
+ *
+ * KEINE SPEICHERN-LEISTE AUF DIESEN SEITEN. Sie gehoert zu Formularen, die
+ * man BEARBEITET und deren Stand man verlieren kann. Hier ist der Knopf das
+ * Ziel des Weges und steht am Ende des Formulars, wo man ihn sucht.
+ * `data-dirty-track` bleibt trotzdem — es traegt die Verlassen-Warnung und
+ * die bedingte Abbrechen-Rueckfrage; die Leiste ist nur einer seiner
+ * Verwender.
+ *
+ * DIE UEBERGANGSSCHICHT IST AUFGELOEST. Abschnitt 17 des Stylesheets hiess
+ * ROHSCHICHT und war ausdruecklich befristet: „dieser Block stirbt mit O11".
+ * Er tut es. Weg sind die beiden Klassen-Ausnahmen `.alert` und `.muted`
+ * (zuletzt 1 und 16 Stellen), die Elementregeln fuer `table`/`th`/`td`
+ * (die letzte Tabelle ohne eigene Regel war die des Imports), fuer
+ * `fieldset`/`legend`
+ * und fuer `hr` (jeweils null Verwendungen). Der Abschnitt heisst jetzt
+ * GRUNDFORMEN und traegt nur noch, worauf die Bausteine aufsetzen:
+ * `input`/`select`/`textarea`, Kaestchen und Radios, das Muster
+ * `<label>Text <input></label>`, `summary` und `code`/`kbd`/`pre`.
+ *
+ * DIE LABEL-REGELN BLEIBEN — abweichend vom urspruenglichen Plan. Das Muster
+ * steht an 46 Stellen, darunter die Filterreihen der Suche und das
+ * Einsatzformular. Sie zu tilgen hiesse, die beiden kompliziertesten Seiten
+ * der Anwendung fuer eine Regel umzubauen, die nichts falsch macht: `.feld`
+ * ist der BAUSTEIN fuer ein beschriftetes Feld, nicht das Gebot, dass jede
+ * Beschriftung einer sein muesse.
+ *
+ * ZWEI FUNDE BEIM STREICHEN:
+ *
+ *   F-P3-BA  DER EXPORT-KNOPF WAR UNGESTALTET. `import.php` trug an einer
+ *            Stelle noch `btn-primary` — eine Klasse ohne Regel seit Web
+ *            9.0.0. Gemessen: 23 px hoch, ohne Flaeche, ohne Rahmen, ohne
+ *            Radius, in der Textschrift; der Nachbarknopf im selben Formular
+ *            ist 44 px, orange, Bricolage. O8c hat die Seite umgebaut und
+ *            diesen einen Knopf uebersehen.
+ *
+ *   F-P3-BB  `kreislauf.py --frisch` KONNTE SEIT WEB 9.9.0 KEIN UMLAUFKONTO
+ *            MEHR LOESCHEN, und zwar aus zwei Gruenden gleichzeitig: Sein
+ *            Ausdruck suchte `<a href="admin_user.php?id=N">adresse</a>` und
+ *            fand nichts mehr (die Liste ist seit O9b eine Tabelle mit
+ *            `data-ziel` bzw. eine `.zeile` mit gewickeltem Text), und die
+ *            Loeschung liegt seit O9a auf der Kontoseite und verlangt die
+ *            abgetippte Adresse. Unbemerkt, weil der Weg nur betreten wird,
+ *            wenn das Konto schon besteht.
  */
-const WEB_VERSION = '9.11.1';
+const WEB_VERSION = '9.12.0';

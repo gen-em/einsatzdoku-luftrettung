@@ -349,10 +349,10 @@ function render_form(array $v, array $errors, string $nachweis,
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">
 
       <?php /* FUENF KARTEN STATT FUENF <fieldset> (O10). Die Elementregeln
-               fuer fieldset/legend stehen in der Uebergangsschicht des
-               Stylesheets, die mit O11 stirbt; danach staende der Einrichter
-               wieder ohne Gestaltung da. Eine Karte mit Titel ist ohnehin
-               das, was E-P3-35 fuer eine Feldgruppe vorsieht. */ ?>
+               fuer fieldset/legend standen in der Uebergangsschicht des
+               Stylesheets; sie sind mit O11 gefallen, und der Einrichter
+               staende sonst jetzt ohne Gestaltung da. Eine Karte mit Titel
+               ist ohnehin das, was E-P3-35 fuer eine Feldgruppe vorsieht. */ ?>
 
       <?php ui_karte_start(['titel' => 'Nachweis']); ?>
         <?php if (!$nachweisOk): ?>

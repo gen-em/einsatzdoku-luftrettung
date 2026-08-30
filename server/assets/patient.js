@@ -163,12 +163,21 @@
     let el = document.getElementById('patwarn');
     if (!zahl || !zahl.unlesbar) { if (el) { el.remove(); } return; }
     if (!el) {
-      el = document.createElement('p');
+      /* DER MELDUNGS-BAUSTEIN, nicht mehr die alte `.alert`-Klasse (P3/O11).
+         Sie war eine Ausnahme der Uebergangsschicht und ist mit ihr gefallen;
+         eine Warnung ohne Regel saehe aus wie Fliesstext und waere keine.
+         Das Markup ist dasselbe, das ui_meldung_markup() in PHP erzeugt —
+         `role="status"`, weil die Meldung beim Aufbau der Seite entsteht und
+         nicht auf eine Handlung antwortet. Ohne Symbol: Es kaeme aus
+         assets/symbol.js, das diese Seite nicht in jedem Fall laedt. */
+      el = document.createElement('div');
       el.id = 'patwarn';
-      el.className = 'alert alert-warn';
+      el.className = 'meldung meldung-warn';
+      el.setAttribute('role', 'status');
+      el.appendChild(document.createElement('p'));
       main.insertBefore(el, main.firstChild);
     }
-    el.textContent = hinweisUnlesbar(zahl);
+    el.querySelector('p').textContent = hinweisUnlesbar(zahl);
   }
 
   /**

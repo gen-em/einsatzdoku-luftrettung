@@ -1930,7 +1930,8 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
    direkte Adresse erreichbar und damit ohnehin eine Sackgasse: Wer hier
    landete, kam nur ueber den Zurueck-Knopf wieder heraus. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'wartung']); ?>
-  <h1>Wartung &amp; Datenbank-Update</h1>
+
+  <?php ui_titelzeile(['titel' => 'Wartung & Datenbank-Update']); ?>
 
   <?php /* ---- ZUSTAND ZUERST, TABELLE DANACH (Web 7.0.0) --------------------
      *
@@ -1942,7 +1943,12 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
      * Also andersherum: erst was JETZT gilt (Schlüsselableitung, Mailversand,
      * Aufräumjob), dann was anstünde. Der Knopf für das Update steht seither
      * ÜBER seiner Tabelle: Er gehört zu ihr, und wer die Liste gelesen hat,
-     * scrollt nicht wieder ans Ende zurück, um sie auszuführen. */ ?>
+     * scrollt nicht wieder ans Ende zurück, um sie auszuführen.
+     *
+     * P3/O11: Jeder dieser Abschnitte ist jetzt eine KARTE. Vorher waren es
+     * <h2>-Überschriften über losem Fließtext, getrennt durch waagerechte
+     * Linien mit einer Klasse, die es im neuen Stylesheet nicht mehr gibt —
+     * die Trenner waren also seit Web 9.0.0 nur noch die des Browsers. */ ?>
 
   <?php /* ---- Rundenzahl der Schluesselableitung (M2-01) -------------------
      *
@@ -1979,63 +1985,76 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
      * Bestandskonto mehr anmelden, und an der Anmeldemaske ist die Ursache
      * nicht zu erkennen. */ ?>
   <?php if ($kdfVerwaist): ?>
-    <h2>Schlüsselableitung</h2>
-    <p class="alert"><strong>Achtung: <?php
-        $summe = array_sum(array_column($kdfVerwaist, 'n'));
-        echo (int)$summe; ?> Konto/Konten können sich nicht anmelden.</strong>
-       Sie tragen eine Rundenzahl, die diese Fassung nicht mehr anbietet:
-       <?php $t = [];
-             foreach ($kdfVerwaist as $z) { $t[] = $z['kdf_iter'] . ' (' . $z['n'] . '×)'; }
-             echo e(implode(', ', $t)); ?>.
-       Angeboten wird nur <?= e(implode(', ', array_map('strval', $kdfListe))) ?>.<br>
-       <strong>Behebung:</strong> Den fehlenden Wert in <code>KDF_ITER_LISTE</code>
-       (<code>server/db.php</code>) wieder aufnehmen. Danach melden sich die
-       Konten wie gewohnt an und werden beim nächsten Mal still angehoben.</p>
+    <?php ui_karte_start(['titel' => 'Schlüsselableitung',
+                          'plakette' => ui_plakette('Anmeldung blockiert', ['ton' => 'rot'])]); ?>
+      <?php $summe = array_sum(array_column($kdfVerwaist, 'n'));
+            $t = [];
+            foreach ($kdfVerwaist as $z) { $t[] = $z['kdf_iter'] . ' (' . $z['n'] . '×)'; } ?>
+      <?= ui_meldung_markup('fehler',
+          $summe . ' Konto/Konten können sich nicht anmelden. Sie tragen eine '
+        . 'Rundenzahl, die diese Fassung nicht mehr anbietet: '
+        . implode(', ', $t) . '. Angeboten wird nur '
+        . implode(', ', array_map('strval', $kdfListe)) . '.', 'Achtung:') ?>
+      <p class="feld-hinweis"><strong>Behebung:</strong> Den fehlenden Wert in
+         <code>KDF_ITER_LISTE</code> (<code>server/db.php</code>) wieder
+         aufnehmen. Danach melden sich die Konten wie gewohnt an und werden beim
+         nächsten Mal still angehoben.</p>
+    <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
   <?php /* ---- Logo der Installation (E-P3-19/20) ----------------------- */ ?>
-  <h2>Logo</h2>
-  <?php if ($logoMeldung !== null): ?>
-    <?= ui_meldung_markup($logoMeldung[0], $logoMeldung[1]) ?>
-  <?php endif; ?>
-  <?php $platzhalter = logo_platzhalter_liegt(); ?>
-  <?php if ($platzhalter): ?>
-    <?= ui_meldung_markup('warn',
-        'Das Fahrzeug-Logo (NEF) ist ein Platzhalter — es steht hier, damit die '
-      . 'Logo-Wahl vollständig gebaut und geprüft werden kann, bevor die echte '
-      . 'Datei vorliegt. Sie ersetzt ihn 1:1: gleicher Name, gleiche Maße, kein '
-      . 'Eingriff im Code. Betroffen: ' . implode(', ', $platzhalter) . '. '
-      . 'Dieser Hinweis verschwindet von selbst, sobald die echten Dateien liegen.') ?>
-  <?php endif; ?>
-  <form method="post" class="listen-form">
-    <?= csrf_field() ?><input type="hidden" name="action" value="logo_standard">
-    <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
-                      'wert' => logo_standard(),
-                      'optionen' => ['hubschrauber' => 'Hubschrauber (RTH)',
-                                     'fahrzeug'     => 'Fahrzeug (NEF)']]); ?>
-    <p class="feld-hinweis">Der <strong>Standard dieser Installation</strong>. Er gilt für
-       die Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
-       hat — eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
-       bereits angemeldete Konten.</p>
-    <div class="listen-form-fuss">
-      <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
-    </div>
-  </form>
+  <?php ui_karte_start(['titel' => 'Logo']); ?>
+    <?php if ($logoMeldung !== null): ?>
+      <?= ui_meldung_markup($logoMeldung[0], $logoMeldung[1]) ?>
+    <?php endif; ?>
+    <?php $platzhalter = logo_platzhalter_liegt(); ?>
+    <?php if ($platzhalter): ?>
+      <?= ui_meldung_markup('warn',
+          'Das Fahrzeug-Logo (NEF) ist ein Platzhalter — es steht hier, damit die '
+        . 'Logo-Wahl vollständig gebaut und geprüft werden kann, bevor die echte '
+        . 'Datei vorliegt. Sie ersetzt ihn 1:1: gleicher Name, gleiche Maße, kein '
+        . 'Eingriff im Code. Betroffen: ' . implode(', ', $platzhalter) . '. '
+        . 'Dieser Hinweis verschwindet von selbst, sobald die echten Dateien liegen.') ?>
+    <?php endif; ?>
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="logo_standard">
+      <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
+                        'wert' => logo_standard(),
+                        'optionen' => ['hubschrauber' => 'Hubschrauber (RTH)',
+                                       'fahrzeug'     => 'Fahrzeug (NEF)']]); ?>
+      <p class="feld-hinweis">Der <strong>Standard dieser Installation</strong>. Er gilt für
+         die Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
+         hat — eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
+         bereits angemeldete Konten.</p>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </div>
+    </form>
+  <?php ui_karte_ende(); ?>
 
-  <h2>Umgebung</h2>
   <?php require_once __DIR__ . '/smtp.php'; ?>
-  <?php if (antwort_entkoppelbar()): ?>
-    <p class="muted">Mailversand: <strong>entkoppelt</strong> — die Antwort wird
-       abgeschlossen, bevor der Versand beginnt. Die Anforderung „Passwort
-       vergessen“ dauert damit für vorhandene und unbekannte Adressen gleich lang.</p>
-  <?php else: ?>
-    <p class="alert alert-warn">Mailversand: <strong>nicht sicher entkoppelbar</strong>
-       — diese PHP-Anbindung kennt weder <code>fastcgi_finish_request</code> noch
-       <code>litespeed_finish_request</code>. Die Antwort wird zwar mit
-       Längenangabe abgeschlossen, was üblicherweise reicht; verbindlich ist es
-       nicht. Im ungünstigen Fall bleibt die Dauer der Anforderung „Passwort
-       vergessen“ ein Hinweis darauf, ob es zu einer Adresse ein Konto gibt.</p>
-  <?php endif; ?>
+  <?php ui_karte_start(['titel' => 'Umgebung']); ?>
+    <?php if (antwort_entkoppelbar()): ?>
+      <?php ui_zeile([
+          'text'  => 'Mailversand',
+          'klein' => 'Die Antwort wird abgeschlossen, bevor der Versand beginnt. '
+                   . 'Die Anforderung „Passwort vergessen" dauert damit für '
+                   . 'vorhandene und unbekannte Adressen gleich lang.',
+          'plaketten' => ui_plakette('entkoppelt', ['ton' => 'blau']),
+      ]); ?>
+    <?php else: ?>
+      <?php ui_zeile([
+          'text' => 'Mailversand',
+          'plaketten' => ui_plakette('nicht sicher entkoppelbar', ['ton' => 'orange']),
+      ]); ?>
+      <?= ui_meldung_markup('warn', 'Diese PHP-Anbindung kennt weder '
+          . 'fastcgi_finish_request noch litespeed_finish_request. Die Antwort '
+          . 'wird zwar mit Längenangabe abgeschlossen, was üblicherweise reicht; '
+          . 'verbindlich ist es nicht. Im ungünstigen Fall bleibt die Dauer der '
+          . 'Anforderung „Passwort vergessen" ein Hinweis darauf, ob es zu einer '
+          . 'Adresse ein Konto gibt.') ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
 
   <?php /* ---- Wartung (M3-05) ------------------------------------------------
      * Der Aufraeumjob laeuft huckepack auf Anfragen und ist gegenueber der
@@ -2054,29 +2073,35 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
   }
   $wVersuch = $wartung['last_cleanup']    ?: null;
   $wErfolg  = $wartung['last_cleanup_ok'] ?: null;
+  $wOk      = $wVersuch !== null && $wErfolg === $wVersuch;
   ?>
-  <h2>Aufräumjob</h2>
-  <?php if ($wVersuch === null): ?>
-    <p class="muted">Der Aufräumjob ist noch nie gelaufen. Das ist auf einer
-       frischen Installation normal — er startet bei der ersten Anfrage des
-       nächsten Tages.</p>
-  <?php elseif ($wErfolg === null): ?>
-    <p class="alert alert-warn">Letzter Versuch: <strong><?= e((string)$wVersuch) ?></strong> —
-       aber <strong>noch kein einziger vollständiger Lauf</strong>. Mindestens ein
-       Schritt scheitert dauerhaft; die Ursache steht im Fehlerprotokoll des
-       Webspace (Suchwort <code>cleanup:</code>). Solange das so bleibt, wird
-       unter anderem der Papierkorb nicht geleert.</p>
-  <?php elseif ($wErfolg !== $wVersuch): ?>
-    <p class="alert alert-warn">Letzter Versuch: <strong><?= e((string)$wVersuch) ?></strong>,
-       letzter <strong>vollständiger</strong> Lauf: <strong><?= e((string)$wErfolg) ?></strong>.
-       Es scheitert mindestens ein Schritt — Ursache im Fehlerprotokoll des
-       Webspace (Suchwort <code>cleanup:</code>).</p>
-  <?php else: ?>
-    <p class="muted">Aufräumjob zuletzt vollständig durchgelaufen:
-       <strong><?= e((string)$wErfolg) ?></strong>.</p>
-  <?php endif; ?>
+  <?php ui_karte_start(['titel' => 'Aufräumjob',
+      'plakette' => $wVersuch === null
+          ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
+          : ($wOk ? ui_plakette('läuft', ['ton' => 'blau'])
+                  : ui_plakette('scheitert', ['ton' => 'rot']))]); ?>
+    <?php
+      ui_zeile(['text' => 'Letzter Versuch',
+                'plaketten' => ui_plakette($wVersuch ?? 'nie',
+                    ['ton' => $wVersuch === null ? 'neutral' : 'blau'])]);
+      ui_zeile(['text' => 'Letzter vollständiger Lauf',
+                'plaketten' => ui_plakette($wErfolg ?? 'nie',
+                    ['ton' => $wErfolg === null ? 'rot' : 'blau'])]);
+    ?>
+    <?php if ($wVersuch === null): ?>
+      <p class="feld-hinweis">Auf einer frischen Installation ist das normal — er
+         startet bei der ersten Anfrage des nächsten Tages.</p>
+    <?php elseif (!$wOk): ?>
+      <?= ui_meldung_markup('warn', $wErfolg === null
+          ? 'Noch kein einziger vollständiger Lauf. Mindestens ein Schritt '
+          . 'scheitert dauerhaft; die Ursache steht im Fehlerprotokoll des '
+          . 'Webspace (Suchwort cleanup:). Solange das so bleibt, wird unter '
+          . 'anderem der Papierkorb nicht geleert.'
+          : 'Es scheitert mindestens ein Schritt — Ursache im Fehlerprotokoll '
+          . 'des Webspace (Suchwort cleanup:).') ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
 
-  <hr class="sep">
   <?php
   /* ---- Bestandsaufnahme: Einsätze ohne Diensttag (Backlog Nr. 33) --------
    *
@@ -2106,101 +2131,109 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
         WHERE m.day_id IS NULL AND m.deleted_at IS NULL
         ORDER BY u.email, m.started_at')->fetchAll(PDO::FETCH_ASSOC);
   ?>
-  <h2>Einsätze ohne Diensttag</h2>
-  <?php if (!$waisen): ?>
-    <p class="muted">Keine. Jeder aktive Einsatz hängt an einem Diensttag —
-       so soll es sein.</p>
-  <?php else: ?>
-    <p class="alert alert-warn"><strong><?= count($waisen) ?></strong> aktive
-       Einsätze haben <strong>keinen Diensttag</strong>. Sie stammen aus einem
-       Stand vor Web 8.0.0 (siehe Changelog, Backlog Nr. 33). Sie sind in der
-       Suche zu finden, fehlen aber in Tagesübersicht, Zeitraum, Export und
-       Nachbearbeitung — und eine Sicherung führt sie zwar mit, spielt sie
-       aber nicht zurück.</p>
-    <p class="muted">Zu tun: Jeden Einsatz öffnen und über
-       <strong>Verschieben</strong> an einen Diensttag hängen (oder löschen,
-       wenn er nicht gebraucht wird). Diese Seite ändert von sich aus nichts —
-       welcher Diensttag der richtige ist, steht hier nicht.</p>
-    <table class="data">
-      <thead><tr><th>Konto</th><th>Einsatzbeginn</th><th>Kennung</th></tr></thead>
-      <tbody>
-      <?php foreach ($waisen as $w): ?>
-        <tr>
-          <td><?= e((string)$w['email']) ?></td>
-          <td><?= e(fmt_local((string)$w['started_at'], 'd.m.Y H:i')) ?></td>
-          <td class="mono"><?= (int)$w['id'] ?></td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php endif; ?>
-
-  <hr class="sep">
-  <h2>Datenbank-Update</h2>
-  <p class="muted">Diese Weboberfläche läuft als <strong>Web <?= e(WEB_VERSION) ?></strong>.
-     Die Tabelle nennt zu jedem Eintrag die Fassung, mit der er ausgeliefert
-     wurde — <strong>neueste zuerst</strong>.</p>
-
-  <?php if (!$results): ?>
-    <p class="alert alert-info">Keine Migrationen definiert.</p>
-
-  <?php elseif (!$ausfuehren): ?>
-    <?php /* ---- Vorschau: es wurde noch NICHTS geändert ---- */ ?>
-    <?php if ($offen === 0): ?>
-      <p class="alert alert-info">Die Datenbank ist auf dem aktuellen Stand.
-         Es steht nichts an.</p>
+  <?php ui_karte_start(['titel' => 'Einsätze ohne Diensttag',
+      'zahl' => count($waisen),
+      'plakette' => $waisen ? ui_plakette('unvollständig sichtbar', ['ton' => 'rot']) : '']); ?>
+    <?php if (!$waisen): ?>
+      <p class="feld-hinweis">Keine. Jeder aktive Einsatz hängt an einem
+         Diensttag — so soll es sein.</p>
     <?php else: ?>
-      <p class="alert alert-warn"><strong>Es wurde noch nichts geändert.</strong>
-         <?= (int)$offen ?> Eintrag/Einträge stehen aus. Unten steht, was
-         passieren würde.</p>
-      <p class="alert alert-warn"><strong>Vorher eine Sicherung erstellen.</strong>
-         Migrationen können Spalten und Daten unwiderruflich entfernen. Die
-         Sicherung liegt unter
-         <a href="einstellungen.php?t=backup">Einstellungen → Backup</a> und
-         dauert eine Minute — eine verlorene Spalte dagegen ist verloren.</p>
+      <?= ui_meldung_markup('warn', count($waisen) . ' aktive Einsätze haben '
+          . 'keinen Diensttag. Sie stammen aus einem Stand vor Web 8.0.0 (siehe '
+          . 'Changelog, Backlog Nr. 33). Sie sind in der Suche zu finden, fehlen '
+          . 'aber in Tagesübersicht, Zeitraum, Export und Nachbearbeitung — und '
+          . 'eine Sicherung führt sie zwar mit, spielt sie aber nicht zurück.') ?>
+      <p class="feld-hinweis"><strong>Zu tun:</strong> Jeden Einsatz öffnen und über
+         <strong>Verschieben</strong> an einen Diensttag hängen (oder löschen,
+         wenn er nicht gebraucht wird). Diese Seite ändert von sich aus nichts —
+         welcher Diensttag der richtige ist, steht hier nicht.</p>
+      <?php foreach ($waisen as $w): ?>
+        <?php ui_zeile([
+            'text'  => (string)$w['email'],
+            'klein' => 'Einsatzbeginn ' . fmt_local((string)$w['started_at'], 'd.m.Y H:i'),
+            'plaketten' => ui_plakette('Nr. ' . (int)$w['id'], ['ton' => 'neutral']),
+            'aktionen' => ui_zeilenaktionen([
+                'titel' => 'Einsatz Nr. ' . (int)$w['id'],
+                'eintraege' => [
+                    ['text' => 'Ansehen', 'symbol' => 'lupe',
+                     'href' => 'einsatz.php?id=' . (int)$w['id']],
+                    ['text' => 'Verschieben', 'symbol' => 'tausch',
+                     'href' => 'einsatz_verschieben.php?id=' . (int)$w['id']],
+                ],
+            ]),
+        ]); ?>
+      <?php endforeach; ?>
     <?php endif; ?>
-    <?php if ($blockiert > 0): ?>
-      <p class="alert"><strong><?= (int)$blockiert ?> Migration(en) werden
-         NICHT ausgeführt</strong>, weil sie Spalten löschen würden, in denen
-         noch Daten stehen. Unten ist je Eintrag genannt, um welche Spalte und
-         wie viele Zeilen es geht.<br>
-         Diese Daten lassen sich <strong>nicht automatisch</strong> in den
-         verschlüsselten Block überführen — er entsteht ausschließlich im
-         Browser. Wer sie behalten will, trägt sie vorher von Hand in den
-         jeweiligen Einsatz ein (oder sichert sie außerhalb) und gibt die
-         Migration danach einzeln frei.</p>
-    <?php endif; ?>
-  <?php elseif ($ranSomething): ?>
-    <p class="alert alert-info">Updates wurden angewendet — Details unten.</p>
-  <?php else: ?>
-    <p class="alert alert-info">Es war nichts anzuwenden.</p>
-  <?php endif; ?>
+  <?php ui_karte_ende(); ?>
 
-  <?php if ($results): ?>
-    <?php /* DER KNOPF STEHT ÜBER DER TABELLE (Web 7.0.0). Er stand darunter,
-             hinter dreissig Zeilen — man las die Vorschau und scrollte dann
-             zurück zum Anfang, weil man dort die Schaltfläche vermutete.
-             Das Formular trägt weiterhin die Kennung `migform`: Die
-             Freigabe-Häkchen in den Zeilen darunter gehören über `form=` zu
-             ihm, und das funktioniert unabhängig von der Reihenfolge im
-             Dokument. */ ?>
-    <?php if (!$ausfuehren && ($offen > 0 || $blockiert > 0)): ?>
-      <form method="post" action="update.php" id="migform" class="migstart">
-        <?= csrf_field() ?><input type="hidden" name="action" value="run">
-        <button type="submit" class="btn-primary">Updates jetzt anwenden</button>
-        <span class="muted">Der Aufruf dieser Seite ändert nichts. Erst dieser
-           Knopf führt die Updates aus.<?php if ($blockiert > 0): ?> Die mit ⚠
-           gekennzeichneten Einträge bleiben dabei unangetastet, solange ihr
-           Häkchen nicht gesetzt ist.<?php endif; ?></span>
-      </form>
-    <?php elseif ($ausfuehren): ?>
-      <p class="muted">Bereits erledigte Updates werden übersprungen —
-         ein erneuter Lauf ist ungefährlich.</p>
+  <?php /* ---- Datenbank-Update ---------------------------------------------- */ ?>
+  <?php ui_karte_start(['titel' => 'Datenbank-Update',
+      'zahl' => 'Web ' . WEB_VERSION,
+      'plakette' => $results
+          ? ($offen > 0 || $blockiert > 0
+             ? ui_plakette($offen + $blockiert === 1 ? '1 offen'
+                         : ($offen + $blockiert) . ' offen', ['ton' => 'orange'])
+             : ui_plakette('aktuell', ['ton' => 'blau']))
+          : '']); ?>
+
+    <?php if (!$results): ?>
+      <?= ui_meldung_markup('info', 'Keine Migrationen definiert.') ?>
+
+    <?php elseif (!$ausfuehren): ?>
+      <?php /* ---- Vorschau: es wurde noch NICHTS geändert ---- */ ?>
+      <?php if ($offen === 0): ?>
+        <?= ui_meldung_markup('info', 'Die Datenbank ist auf dem aktuellen Stand. '
+            . 'Es steht nichts an.') ?>
+      <?php else: ?>
+        <?= ui_meldung_markup('warn', $offen . ' Eintrag/Einträge stehen aus. '
+            . 'Unten steht, was passieren würde.', 'Es wurde noch nichts geändert.') ?>
+        <?= ui_meldung_markup('warn', 'Migrationen können Spalten und Daten '
+            . 'unwiderruflich entfernen. Die Sicherung dauert eine Minute — eine '
+            . 'verlorene Spalte dagegen ist verloren.', 'Vorher eine Sicherung erstellen.',
+            ui_knopf(['text' => 'Zur Sicherung', 'art' => 'neutral', 'symbol' => 'sicherung',
+                      'href' => 'einstellungen.php?t=backup'])) ?>
+      <?php endif; ?>
+      <?php if ($blockiert > 0): ?>
+        <?= ui_meldung_markup('fehler', $blockiert . ' Migration(en) werden NICHT '
+            . 'ausgeführt, weil sie Spalten löschen würden, in denen noch Daten '
+            . 'stehen. Unten ist je Eintrag genannt, um welche Spalte und wie '
+            . 'viele Zeilen es geht. Diese Daten lassen sich nicht automatisch in '
+            . 'den verschlüsselten Block überführen — er entsteht ausschließlich '
+            . 'im Browser. Wer sie behalten will, trägt sie vorher von Hand in den '
+            . 'jeweiligen Einsatz ein (oder sichert sie außerhalb) und gibt die '
+            . 'Migration danach einzeln frei.') ?>
+      <?php endif; ?>
+    <?php elseif ($ranSomething): ?>
+      <?= ui_meldung_markup('ok', 'Updates wurden angewendet — Details unten.') ?>
+    <?php else: ?>
+      <?= ui_meldung_markup('info', 'Es war nichts anzuwenden.') ?>
     <?php endif; ?>
 
-    <table class="data">
-      <thead><tr><th>Web</th><th>Update</th><th>Status</th><th>Details</th></tr></thead>
-      <tbody>
+    <?php if ($results): ?>
+      <?php /* DER KNOPF STEHT ÜBER DER LISTE (Web 7.0.0). Er stand darunter,
+               hinter dreissig Zeilen — man las die Vorschau und scrollte dann
+               zurück zum Anfang, weil man dort die Schaltfläche vermutete.
+               Das Formular trägt weiterhin die Kennung `migform`: Die
+               Freigabe-Häkchen in den Zeilen darunter gehören über `form=` zu
+               ihm, und das funktioniert unabhängig von der Reihenfolge im
+               Dokument. */ ?>
+      <?php if (!$ausfuehren && ($offen > 0 || $blockiert > 0)): ?>
+        <form method="post" action="update.php" id="migform">
+          <?= csrf_field() ?><input type="hidden" name="action" value="run">
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Updates jetzt anwenden', 'art' => 'primaer',
+                          'symbol' => 'datenbank']) ?>
+          </div>
+          <p class="feld-klein">Der Aufruf dieser Seite ändert nichts. Erst dieser
+             Knopf führt die Updates aus.<?php if ($blockiert > 0): ?> Die
+             blockierten Einträge bleiben dabei unangetastet, solange ihr Häkchen
+             nicht gesetzt ist.<?php endif; ?></p>
+        </form>
+      <?php elseif ($ausfuehren): ?>
+        <p class="feld-hinweis">Bereits erledigte Updates werden übersprungen —
+           ein erneuter Lauf ist ungefährlich.</p>
+      <?php endif; ?>
+
       <?php /* UMGEKEHRTE REIHENFOLGE (Web 7.0.0). Die Liste wächst hinten an,
                und die Einträge, die interessieren, sind die neuen: Was ansteht,
                steht am Ende der Datei. Wer die Seite öffnet, sah zuerst die
@@ -2208,40 +2241,50 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
                Umgekehrt steht die Antwort oben.
                Die AUSFÜHRUNG bleibt in Katalogreihenfolge — sie muss es, weil
                Migrationen aufeinander aufbauen. Gedreht wird allein die
-               Anzeige. */ ?>
+               Anzeige.
+
+               P3/O11: Aus der vierspaltigen Tabelle sind Zeilen geworden. Der
+               Anlass ist die Statusspalte: Sie trug ✔ ● ! ✖ ⚠ — Schriftzeichen
+               als Symbol, und genau das schliesst E-P3-18 aus. Ein Häkchen und
+               ein Ausrufezeichen sagen ohnehin nichts, was ein Wort nicht
+               besser sagte. Jetzt steht der Status als Plakette mit Ton. */ ?>
       <?php foreach (array_reverse($results) as [$id, $label, $status, $detail, $zerstoert, $blockId, $web]): ?>
-        <tr<?= $status === 'stopp' ? ' class="warnzeile"' : '' ?>>
-          <td class="mono c-web"><?= $web !== null ? e($web) : '–' ?></td>
-          <td><?= e($label) ?><br><span class="muted"><code><?= e($id) ?></code></span></td>
-          <td><?= match ($status) {
-                    'ok'    => '✔',
-                    'todo'  => '●',
-                    'warn'  => '!',
-                    'stopp' => '⚠',
-                    default => '✖',
-                  } ?></td>
-          <td>
-            <?= e($detail) ?>
-            <?php /* Destruktive Migration: benennen, WAS verlorenginge — und
-                     zwar an der Zeile, nicht in einem allgemeinen Hinweis
-                     ueber der Tabelle (M6-01). */ ?>
-            <?php if ($zerstoert !== null): ?>
-              <br><strong class="loeschhinweis">Löscht Daten:</strong>
-              <span class="muted"><?= e($zerstoert) ?></span>
-            <?php endif; ?>
-            <?php if ($blockId !== null && !$ausfuehren): ?>
-              <br><label class="check">
-                <input type="checkbox" name="forcieren[]" form="migform"
-                       value="<?= e($blockId) ?>">
-                Daten sind gesichert — diese eine Migration trotzdem ausführen
-              </label>
-            <?php endif; ?>
-          </td>
-        </tr>
+        <?php
+          [$statusText, $statusTon] = match ($status) {
+              'ok'    => ['erledigt',  'blau'],
+              'todo'  => ['steht aus', 'orange'],
+              'warn'  => ['Hinweis',   'orange'],
+              'stopp' => ['blockiert', 'rot'],
+              default => ['Fehler',    'rot'],
+          };
+          $klein = [$detail];
+          if ($zerstoert !== null) { $klein[] = 'Löscht Daten: ' . $zerstoert; }
+          $klein[] = $id;
+          $plaketten = ui_plakette($statusText, ['ton' => $statusTon]);
+          if ($web !== null) { $plaketten .= ui_plakette('Web ' . $web, ['ton' => 'neutral']); }
+          /* Das Freigabe-Häkchen steht VORN in der Zeile — dort, wo der
+             Baustein Auswahlkästchen erwartet (ui_zeile, Schlüssel `vorn`).
+             Es gehört über `form=` zum Formular oben, nicht zu einem eigenen. */
+          $vorn = ($blockId !== null && !$ausfuehren)
+              ? '<input type="checkbox" name="forcieren[]" form="migform" value="'
+                . e($blockId) . '" aria-label="' . e($label)
+                . ' trotzdem ausführen — Daten sind gesichert">'
+              : '';
+          ui_zeile([
+              'vorn'  => $vorn,
+              'text'  => $label,
+              'klein' => implode(' · ', $klein),
+              'plaketten' => $plaketten,
+          ]);
+        ?>
       <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php endif; ?>
+      <?php if (!$ausfuehren && $blockiert > 0): ?>
+        <p class="feld-hinweis">Ein gesetztes Häkchen vor einer blockierten
+           Migration heißt: <strong>Die Daten sind gesichert, diese eine trotzdem
+           ausführen.</strong></p>
+      <?php endif; ?>
+    <?php endif; ?>
+  <?php ui_karte_ende(); ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

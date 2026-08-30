@@ -74,69 +74,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+/* Der Standortkatalog als Wert=>Text-Abbildung; ui_feld baut daraus die
+ * Optionen. Der Rettungsmittelkatalog braucht ein `data-base` je Option und
+ * steht deshalb von Hand im Markup. */
+$baseOpt = ['' => '–'];
+foreach ($SD_BASES as $b) {
+    $baseOpt[(string)(int)$b['id']] = (string)$b['name']
+        . (!empty($b['zentral']) ? ' (zentral)' : '');
+}
+
 ui_seite_start(['titel' => 'Diensttag anlegen']);
 ?>
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
-    <h1>Diensttag anlegen</h1>
-    <?php ui_meldung(null, $fehler); ?>
 
-    <div class="card">
-      <p class="muted">Für Dienste, an denen die Uhr nicht mitgelaufen ist. Der
-         Diensttag erscheint danach in der Liste links; Besatzung und Einsätze
-         trägst du dort nach.</p>
-      <p class="muted"><strong>Mehrere Dienste an einem Kalendertag sind
-         möglich</strong> — etwa ein Hubschrauberdienst am Tag und ein
-         NEF-Nachtdienst am Abend. Damit sie sich unterscheiden lassen, gehört zu
-         jedem eine Uhrzeit des Dienstbeginns; ohne Angabe gilt 00:00.</p>
-      <form method="post" id="diensttagform" class="formcol" data-dirty-track data-submit-on-ctrl-enter>
-        <?= csrf_field() ?>
-        <label>Datum
-          <input type="date" name="day" required value="<?= e($tag) ?>"
-                 max="<?= e(date('Y-m-d')) ?>"></label>
-        <label>Dienstbeginn <span class="muted small">optional, HH:MM</span>
-          <?php /* Textfeld statt type="time" (E1): Native Zeitfelder zeigen je
-                   nach Systemsprache 12 Stunden mit AM/PM. Format und Maske
-                   sichert assets/zeitfeld.js über die Klasse. */ ?>
-          <input type="text" class="zeitfeld" name="zeit" value="<?= e($zeit) ?>"
-                 placeholder="z. B. 07:00" autocomplete="off"></label>
-        <label>Standort
-          <select name="base_id" id="basesel">
+  <?php ui_titelzeile([
+      'titel'   => 'Diensttag anlegen',
+      'zurueck' => ['text' => 'Zur Startseite', 'href' => 'index.php'],
+  ]); ?>
+  <?php ui_meldung(null, $fehler, 'info', '  '); ?>
+
+  <p class="seiten-erklaerung">Für Dienste, an denen die Uhr nicht mitgelaufen
+     ist. Der Diensttag erscheint danach in der Liste links; Besatzung und
+     Einsätze trägst du dort nach. <strong>Mehrere Dienste an einem Kalendertag
+     sind möglich</strong> — etwa ein Hubschrauberdienst am Tag und ein
+     NEF-Nachtdienst am Abend. Damit sie sich unterscheiden lassen, gehört zu
+     jedem eine Uhrzeit des Dienstbeginns; ohne Angabe gilt 00:00.</p>
+
+  <?php ui_karte_start(['titel' => 'Neuer Diensttag']); ?>
+
+    <?php /* KEINE SPEICHERN-LEISTE. Sie gehoert zu Formularen, die man
+             BEARBEITET und deren Stand man verlieren kann — dort erscheint sie
+             mit der ersten Aenderung und klebt unten fest. Hier ist der Knopf
+             das Ziel des Weges und steht am Ende des Formulars, wo man ihn
+             sucht. `data-dirty-track` bleibt trotzdem: Es traegt die
+             Verlassen-Warnung und die bedingte Abbrechen-Rueckfrage; die
+             Leiste ist nur einer seiner Verwender (assets/forms.js). */ ?>
+    <form method="post" id="diensttagform" data-dirty-track data-submit-on-ctrl-enter>
+      <?= csrf_field() ?>
+
+      <div class="listen-form-felder">
+        <?php ui_feld([
+            'name' => 'day', 'label' => 'Datum', 'art' => 'date',
+            'wert' => $tag, 'pflicht' => true,
+            'attr' => ' max="' . e(date('Y-m-d')) . '"',
+        ]); ?>
+
+        <?php /* VON HAND, NICHT DURCH ui_feld — und der Grund ist die Klasse:
+                 `zeitfeld` ist der Anker, an dem assets/zeitfeld.js die
+                 24-Stunden-Maske aufhaengt. ui_feld setzt Klassen an der HUELLE
+                 (`.feld`), nicht am Eingabefeld; ohne diese Klasse fiele die
+                 Maske STILL aus, und das Feld nähme wieder alles an.
+
+                 Textfeld statt type="time" (E1): Native Zeitfelder zeigen je
+                 nach Systemsprache 12 Stunden mit AM/PM. */ ?>
+        <div class="feld">
+          <label class="feld-label" for="f-zeit">Dienstbeginn
+            <span class="feld-klein-inline">optional, HH:MM</span></label>
+          <input class="feld-eingabe zeitfeld" type="text" id="f-zeit" name="zeit"
+                 value="<?= e($zeit) ?>" placeholder="z. B. 07:00" autocomplete="off">
+        </div>
+
+        <?php ui_feld([
+            'name' => 'base_id', 'id' => 'basesel', 'label' => 'Standort',
+            'art' => 'select', 'optionen' => $baseOpt,
+            'wert' => $baseId > 0 ? (string)$baseId : '',
+        ]); ?>
+
+        <div class="feld">
+          <label class="feld-label" for="vehsel">Rettungsmittel</label>
+          <select class="feld-eingabe" id="vehsel" name="vehicle_id">
             <option value="">–</option>
-            <?php foreach ($SD_BASES as $b): ?>
-              <option value="<?= (int)$b['id'] ?>" <?= $baseId === (int)$b['id'] ? 'selected' : '' ?>>
-                <?= e($b['name']) ?><?= !empty($b['zentral']) ? ' (zentral)' : '' ?></option>
-            <?php endforeach; ?>
-          </select></label>
-        <label>Rettungsmittel
-          <select name="vehicle_id" id="vehsel">
-            <option value="">–</option>
-            <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
+            <?php foreach ($SD_VEHICLES as $v): ?>
               <option value="<?= (int)$v['id'] ?>" data-base="<?= (int)($v['base_id'] ?? 0) ?>"
                       <?= $vehId === (int)$v['id'] ? 'selected' : '' ?>>
                 <?= e($v['name']) ?><?php
                   echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
             <?php endforeach; ?>
-          </select></label>
-        <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
-          <p class="muted">Noch keine Standorte hinterlegt — unter
-             <a href="einstellungen.php?t=standorte">Einstellungen →
-             Standorte</a> anlegen. Ohne Zuordnung bleibt der Diensttag
-             neutral: Zeiten, Phasen, Track und Reanimation werden trotzdem
-             vollständig erfasst.</p>
-        <?php endif; ?>
-        <button class="btn-primary">Diensttag anlegen</button>
+          </select>
+        </div>
+      </div>
+
+      <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
+        <?= ui_meldung_markup('info', 'Noch keine Standorte hinterlegt. Ohne '
+            . 'Zuordnung bleibt der Diensttag neutral: Zeiten, Phasen, Track und '
+            . 'Reanimation werden trotzdem vollständig erfasst.', '',
+            ui_knopf(['text' => 'Zu den Standorten', 'art' => 'neutral',
+                      'href' => 'einstellungen.php?t=standorte'])) ?>
+      <?php endif; ?>
+
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Diensttag anlegen', 'art' => 'primaer',
+                      'symbol' => 'plus']) ?>
         <?php /* Abbrechen mit Rückfrage (A4.1) — sie erscheint nur, wenn
                  tatsächlich etwas geändert wurde. Beim unveränderten Vorschlag
-                 wäre sie eine Frage nach nichts. */ ?>
-        <p class="login-aux"><a href="index.php"
-           data-cancel-form="diensttagform"
-           data-cancel-confirm="Die Eingaben gehen verloren. Trotzdem abbrechen?"
-           >Abbrechen</a></p>
-      </form>
-    </div>
+                 wäre sie eine Frage nach nichts. Das Attribut gehört an einen
+                 <a>; forms.js sucht `a[data-cancel-form]`. */ ?>
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'href' => 'index.php',
+                      'attr' => ' data-cancel-form="diensttagform"'
+                              . ' data-cancel-confirm="Die Eingaben gehen verloren.'
+                              . ' Trotzdem abbrechen?"']) ?>
+      </div>
+    </form>
+
+  <?php ui_karte_ende(); ?>
+
 <?php ui_geruest_ende(); ?>
-<script src="<?= asset('assets/forms.js') ?>"></script>
-<script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines
    Rettungsmittels zieht seinen Standort nach, statt eine Kombination
@@ -153,4 +196,4 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
   });
 })();
 </script>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/zeitfeld.js']]); ?>

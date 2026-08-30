@@ -1092,7 +1092,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .schalter{margin-bottom:var(--abstand-3)}
 /* DER SELEKTOR IST ABSICHTLICH SO LANG — dieselbe Falle wie F-P3-AP, hier
  * in O11 nachgezogen. `.schalter-box` (0,1,0) verliert gegen
- * `input[type=checkbox]` in der Rohschicht (0,1,1), die jedem Kästchen
+ * `input[type=checkbox]` in den Grundformen (0,1,1), die jedem Kästchen
  * 20 x 20 px gibt; gemessen war es genau das. Weder `.schalter` noch
  * `.wahlliste` setzen `position:relative`, das unsichtbare Kästchen lag also
  * auf seiner statischen Stelle über dem linken Rand der Beschriftung. */
@@ -1357,72 +1357,53 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 }
 
 
-/* == 17. ROHSCHICHT ========================================================
+/* == 17. GRUNDFORMEN ======================================================
  *
- * Grundformen für Elemente, die noch kein Baustein trägt. Sie ist ein
- * ÜBERGANG: P3 baut die Seiteninhalte Paket für Paket um (O3 bis O11), und
- * bis dahin steht auf jeder noch nicht umgebauten Seite Markup mit
- * Klassennamen, für die es keine Regel mehr gibt.
+ * Bis Web 9.11.1 hieß dieser Abschnitt ROHSCHICHT und war ausdrücklich ein
+ * ÜBERGANG: P3 baute die Seiteninhalte Paket für Paket um (O3 bis O11), und
+ * bis dahin stand auf jeder noch nicht umgebauten Seite Markup mit
+ * Klassennamen, für die es keine Regel mehr gab. Dieser Übergang ist mit
+ * O11 zu Ende, und was ihn ausmachte, ist weg:
  *
- * Ohne diese Schicht wäre jede Zwischenprüfung wertlos: Eine Seite ohne
- * jedes Formgefühl lässt sich weder bedienen noch gegen ein Mockup halten,
- * und die Screenshot-Prüfung nach jedem Paket liefe gegen eine Ruine.
+ *   .alert-Familie  Die eine begründete Klassen-Ausnahme (F-P3-T). Ersetzt
+ *                   durch den Meldungs-Baustein `.meldung` — in PHP über
+ *                   ui_meldung_markup(), in JS über dasselbe Markup
+ *                   (import_ui.js, einstellungen.php, patient.js).
+ *   .muted          Die zweite Ausnahme, zuletzt 16 Stellen. Ersetzt durch
+ *                   `.feld-hinweis` (Absatz), `.feld-klein` (Absatz unter
+ *                   einem Feld), `.feld-klein-inline` (Zusatz in einer
+ *                   Beschriftung) und `.dash` (Tabellenzelle) — vier Rollen,
+ *                   die eine Klasse vorher gemeinsam trug.
+ *   table/th/td     Die Notbremse gegen waagerechten Überlauf. Es gibt keine
+ *                   Tabelle mehr, die ihre Gestaltung von hier bezieht: Die
+ *                   letzte (`.imp-table` im Import — eine Klasse, die selbst
+ *                   nie eine Regel hatte) trägt jetzt `.tabelle` und liegt wie
+ *                   die übrigen in `.tabelle-scroll`.
+ *   fieldset/legend Null Verwendungen — die letzten fünf standen im
+ *                   Einrichter und sind in O10 zu Karten geworden.
+ *   hr              Null Verwendungen — der letzte Trenner stand auf der
+ *                   Wartungsseite und ist in O11 mit den Karten entfallen.
  *
- * Sie greift an Elementnamen — mit EINER begründeten Ausnahme, und die ist
- * eng gefasst (Fable-Kontrolle, F-P3-T): die alten Meldungsklassen
- * (.alert-Familie) und .muted. Warum genau diese:
+ * WAS BLEIBT, IST KEIN ÜBERGANG MEHR, sondern die Grundform der Elemente,
+ * auf denen die Bausteine aufsetzen. Ein `.feld` ist eine Beschriftung mit
+ * Eingabefeld — aber ein `<input>` gibt es auch außerhalb davon (im
+ * Suchfeld, im Auswahlkästchen einer Zeile, in einem Filter), und es muss
+ * dort dieselbe Höhe, denselben Rahmen und dieselbe Farbe haben. Diese
+ * Regeln setzen das, und zwar an Elementnamen, damit keine Stelle sie
+ * vergessen kann.
  *
- *   .alert   Eine Fehlermeldung, die aussieht wie Fließtext, IST keine —
- *            sie warnt niemanden. Auf den noch nicht umgebauten Seiten
- *            stehen Meldungen teils als Markup, teils aus JS; beide müssen
- *            bis zu ihrem Paket als Meldung ERKENNBAR bleiben.
- *   .muted   trägt an hunderten Stellen den Unterschied zwischen Auskunft
- *            und Nebenbemerkung. Ohne ihn ist alles gleich laut.
+ * Die label-Regeln bleiben mit: Das Muster `<label>Text <input></label>` ist
+ * gültiges HTML und steht an 46 Stellen — die Filterreihen der Suche, das
+ * Einsatzformular, die Anmeldung. Sie zu tilgen hieße, jede dieser Stellen
+ * in eine `.feld`-Hülle umzubauen; das wäre ein Umbau der beiden
+ * kompliziertesten Seiten der Anwendung für eine Regel, die nichts falsch
+ * macht. `.feld` ist der BAUSTEIN für ein beschriftetes Feld, nicht das
+ * Gebot, dass jede Beschriftung einer sein müsse.
  *
- * (.swatch stand anfangs mit in dieser Liste; seit die Tabellen der
- * Tagesübersicht den Streifen tragen, gibt es den Farbchip nirgends mehr —
- * O3 hat ihn auf die Streichliste gesetzt.)
- *
- * Jede dieser Klassen wird in ihrem Paket durch den Baustein ersetzt und
- * wandert dann auf die Streichliste; dieser Block stirbt mit O11. Alles
- * andere gilt unverändert: Eine WEITERE Klasse hier einzutragen hieße, das
- * Redesign zurückzunehmen; ein <table> lesbar zu machen heißt es nicht.
+ * DIE EINTRITTSKARTE BLEIBT ENG: Hier stehen ausschließlich Elementnamen.
+ * Eine KLASSE hier einzutragen hieße, das Redesign zurückzunehmen — dafür
+ * gibt es die Bausteine in den Abschnitten davor.
  */
-/* Die Ausnahme: Alt-Meldungen in der Optik des Meldungs-Bausteins. Bewusst
- * ohne Symbol — das Symbol kommt mit ui_meldung() im jeweiligen Paket. */
-.alert{
-  display:block;
-  padding:var(--abstand-3) var(--abstand-4);
-  border-radius:var(--radius);
-  margin-bottom:var(--abstand-4);
-  background:var(--rosa);color:var(--rot-tief);
-}
-.alert-info,.alert-ok{background:var(--blau-hell);color:var(--blau-tief)}
-.alert-warn{background:var(--orange-hell);color:var(--asphalt)}
-.muted{color:var(--gedaempft)}
-/* TABELLEN SCROLLEN WAAGERECHT STATT DIE SEITE ZU SPRENGEN.
- *
- * Der Befund zu P3 hat 32 Tabellen gezählt und genau EINE mit
- * Überlaufbehälter. Bei 360 px lief die Startseite um 307 px über den
- * Bildschirmrand hinaus — die Seite selbst liess sich seitwärts schieben,
- * und damit rutschte auch die Kopfleiste weg.
- *
- * `display:block` macht aus der Tabelle eine Box, die ihren eigenen Überlauf
- * traegt. Das ist der uebliche Griff dafuer und kostet nur eines: Die Spalten
- * dehnen sich nicht mehr auf die volle Breite, wenn der Inhalt schmal ist.
- *
- * FUER DIE EINSATZTABELLEN IST DAS NICHT DIE LOESUNG, sondern die Notbremse:
- * Sie werden unter 720 px zur Kachel (E-P3-32, O3). Fuer die
- * Verwaltungstabellen ist es die Loesung, bis sie in O8/O9 zu Zeilen
- * stapeln. */
-table{
-  display:block;overflow-x:auto;
-  width:100%;border-collapse:collapse;font-size:var(--groesse-2);
-}
-th{text-align:left;font-weight:600;color:var(--dunkelblau);
-  padding:var(--abstand-2);border-bottom:var(--strich-stark) solid var(--linie)}
-td{padding:var(--abstand-2);border-bottom:var(--strich) solid var(--linie);vertical-align:top}
-
 input,select,textarea{
   max-width:100%;
   padding:var(--abstand-2) var(--abstand-3);
@@ -1431,13 +1412,17 @@ input,select,textarea{
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
+/* Kästchen und Radios sind keine Textfelder: feste Größe statt Mindesthöhe.
+ * ACHTUNG, DRITTE FALLE DIESER ART (F-P3-AP, F-P3-AZ): Diese Regel hat
+ * Spezifität (0,1,1) und schlägt damit jede bloße Klasse. Wer ein solches
+ * Kästchen ausblenden will, braucht `input[type=checkbox].meine-klasse` —
+ * `.meine-klasse` allein verliert. */
 input[type=checkbox],input[type=radio]{
   min-height:0;width:var(--symbol);height:var(--symbol);accent-color:var(--orange);
 }
-/* Das Muster `<label>Text <input></label>` steht im Bestand an über hundert
- * Stellen. Ohne diese Regel liefe die Eingabe neben der Beschriftung her und
- * bräche auf schmalen Geräten an unvorhersehbaren Stellen um. Der Baustein
- * `.feld` macht es später richtig; bis dahin macht es diese Zeile lesbar. */
+/* Das Muster `<label>Text <input></label>`: Beschriftung oben, Feld darunter
+ * in voller Breite. Ohne diese Regel liefe die Eingabe neben der Beschriftung
+ * her und bräche auf schmalen Geräten an unvorhersehbaren Stellen um. */
 label{display:block;margin-bottom:var(--abstand-3)}
 label > input:not([type=checkbox]):not([type=radio]),
 label > select,
@@ -1447,10 +1432,7 @@ label:has(> input[type=radio]){
   display:flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);margin-bottom:var(--abstand-1);
 }
-fieldset{margin-bottom:var(--abstand-4)}
-legend{font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau)}
 summary{cursor:pointer}
-hr{border:0;border-top:var(--strich) solid var(--linie);margin:var(--abstand-4) 0}
 code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
 pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radius:var(--radius-klein)}
 
@@ -1969,14 +1951,14 @@ body.map-fs-lock{overflow:hidden}
 }
 .fld-sub{margin-left:0}
 
-/* Hinweistexte im Formular. Die frühere Kombination „muted small" trägt die
- * Farbe aus der Übergangsschicht; die Größe kommt hierher. */
+/* Hinweistexte im Formular. Sie hiessen bis Web 9.11.1 „muted small" und
+ * bezogen Farbe und Groesse aus der Uebergangsschicht; seit deren Auflösung
+ * (O11) steht beides hier. */
 .feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
 /* Steht der Hinweis VOR einem Feld (Gefahrenzone der Kontoseite: erst die
  * Folgen, dann die Eingabe), braucht er Abstand nach unten — p hat global
  * keinen. Steht er danach, ist der Abstand des Feldes schon da. */
 .feld-hinweis + .feld,.feld-hinweis + form{margin-top:var(--abstand-3)}
-label .muted{display:block;font-weight:400;font-size:var(--groesse-2)}
 
 /* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
 .ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}

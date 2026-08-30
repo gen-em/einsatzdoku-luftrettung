@@ -214,7 +214,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
   <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
            `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
            Erscheinen der Meldung nicht springt — `.muted` tat das nicht
-           und stammt aus der Uebergangsschicht, die mit O11 stirbt. */ ?>
+           und ist mit der Uebergangsschicht in O11 gefallen. */ ?>
   <p class="zustandszeile" id="loginstate"></p>
  </div>
 </main>

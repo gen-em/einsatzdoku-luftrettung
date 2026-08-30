@@ -166,14 +166,14 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
                  Ein bodengebundener Dienst zeigt damit Fahrer, Praktikant und
                  Sonstige (A3), ein neutraler keine (A7a). */ ?>
         <div id="crewfields"></div>
-        <p class="muted" id="crewhint" hidden></p>
-        <p class="muted" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
+        <p class="feld-hinweis" id="crewhint" hidden></p>
+        <p class="feld-hinweis" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
           Noch keine Standorte hinterlegt — unter
           <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
         <label>Notizen <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
         <div class="tag-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'art' => 'primaer']) ?>
-          <span id="savestate" class="muted" role="status"></span>
+          <span id="savestate" class="feld-klein-inline" role="status"></span>
         </div>
       </form>
       </div>
@@ -257,7 +257,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
           </table>
         </div>
         <div class="kachelliste nur-unter-720" id="missionskacheln"></div>
-        <p id="empty" class="muted" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
+        <p id="empty" class="feld-hinweis" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
       </div>
     </section>
     </div><?php /* .tag-raster */ ?>

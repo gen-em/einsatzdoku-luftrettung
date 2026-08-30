@@ -117,7 +117,7 @@ ui_seite_start(['titel' => 'Import / Export']);
            änderbar; nach jeder Änderung wird die Zeile neu geprüft. Fehlerhafte
            Zeilen blockieren nur sich selbst — entweder korrigieren oder
            überspringen.</p>
-        <div class="tabelle-scroll"><table class="imp-table" id="tabelle"></table></div>
+        <div class="tabelle-scroll"><table class="tabelle" id="tabelle"></table></div>
       <?php ui_karte_ende(); ?>
     </div>
 
@@ -166,7 +166,7 @@ ui_seite_start(['titel' => 'Import / Export']);
                (A9, Web 5.8.0). Ein Track endet am Einsatzort — er nennt
                ihn genauer als jede Koordinatenspalte. Das gilt bodengebunden
                wie luftgebunden. */ ?>
-      <p class="muted" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
+      <p class="feld-hinweis" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
          entfallen die GPX-Tracks — ein Track endet am Einsatzort.</p>
 
       <?php /* „Personenbezogene Angaben" statt „Patientendaten" (A9, Web
@@ -208,7 +208,7 @@ ui_seite_start(['titel' => 'Import / Export']);
                mit welchen Rettungsmitteln, mit welchem Reanimationsverlauf.
                Kein Personenbezug, aber auch nichts, was ohne Weiteres in
                fremde Hände gehört. */ ?>
-      <p class="muted small" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
+      <p class="feld-hinweis" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
          enthält die Datei keine Namen, keine Notizen und keine Koordinaten des
          Einsatzortes. <strong>Betriebsangaben bleiben enthalten:</strong>
          Einsatzzeiten, Transportziele, weitere Rettungsmittel und der Verlauf
@@ -222,13 +222,22 @@ ui_seite_start(['titel' => 'Import / Export']);
         <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'exp_pw2',
                        'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
       </div>
-      <p class="muted">Das Passwort wird nirgends gespeichert und lässt sich nicht
+      <p class="feld-hinweis">Das Passwort wird nirgends gespeichert und lässt sich nicht
          zurücksetzen. Geht es verloren, lässt sich die Datei nicht mehr öffnen —
          die Daten darin sind dann endgültig nicht mehr lesbar. Zum Öffnen wird
          zusätzlich 7-Zip (Windows) oder Keka bzw. The Unarchiver (macOS)
          benötigt; der Windows-Explorer kann solche Archive nicht öffnen.</p>
 
-      <button type="button" class="btn-primary" id="exp_go">Export erstellen</button>
+      <?php /* DER EINE KNOPF, DEN O8c UEBERSEHEN HAT (F-P3-BA). Er trug
+               `btn-primary` — eine Klasse, die es seit dem Neubau des
+               Stylesheets (Web 9.0.0) nicht mehr gibt. Gemessen: 23 px hoch,
+               ohne Flaeche, ohne Rahmen, ohne Radius, in der Textschrift; der
+               Nachbar `#commit` daneben ist 44 px, orange, Bricolage. Die
+               Kennung `exp_go` bleibt — assets/export.js haengt daran. */ ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Export erstellen', 'art' => 'primaer',
+                      'typ' => 'button', 'attr' => ' id="exp_go"']) ?>
+      </div>
       <div id="exp_state" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
 

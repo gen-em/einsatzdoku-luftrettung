@@ -351,7 +351,7 @@
 
     function zelle(z, spaltenName) {
         var idx = S.erg.spalten[spaltenName];
-        if (idx === undefined) { return '<td class="muted">–</td>'; }
+        if (idx === undefined) { return '<td class="dash">–</td>'; }
         var roh = (S.mat[z.srcRow - 1] || [])[idx];
         var problem = null;
         z.issues.forEach(function (i) { if (i.spalte === spaltenName) { problem = i; } });
@@ -376,7 +376,7 @@
                 '<option value="insert"' + (v === 'insert' ? ' selected' : '') + '>trotzdem anlegen</option>' +
                 '</select></td>';
         }
-        return '<td class="muted">neu</td>';
+        return '<td class="dash">neu</td>';
     }
 
     function zeichnen() {
@@ -457,7 +457,7 @@
         if ((S.wahlZeile[z.srcRow] || {}).skip) { klasse += ' imp-skipped'; }
         var hinweise = z.issues.map(function (i) { return i.spalte + ': ' + i.text; }).join(' | ');
         return '<tr class="' + klasse + '"' + (hinweise ? ' title="' + esc(hinweise) + '"' : '') + '>' +
-            '<td class="muted">' + z.srcRow + (m && m.crew_override ? ' <span title="abweichende Besatzung">*</span>' : '') + '</td>' +
+            '<td class="dash">' + z.srcRow + (m && m.crew_override ? ' <span title="abweichende Besatzung">*</span>' : '') + '</td>' +
             anzeigeSpalten().map(function (s) { return zelle(z, s); }).join('') +
             aktionZelle(z, dup) + '</tr>';
     }
@@ -745,7 +745,7 @@
                 + (teile.length ? ' (' + esc(teile.join(', ')) + ')' : '') + '; '
                 + d.days_inserted + ' Diensttage angelegt, ' + d.days_updated + ' aktualisiert.'
                 + (verworfen.length
-                   ? '<br><span class="muted">Einzelne Werte verworfen: '
+                   ? '<br><span class="feld-klein-inline">Einzelne Werte verworfen: '
                      + verworfen.join(', ') + '. Die Einsätze wurden trotzdem angelegt.</span>'
                    : '')
                 + (d.first_day ? ' <a href="index.php?day=' + esc(d.first_day) + '">Ersten Tag öffnen</a>' : '')

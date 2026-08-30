@@ -737,7 +737,11 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         endif; ?>
   <?php ui_meldung(null, $error); ?>
 
-  <form method="post" id="missionform" class="formcol" data-dirty-track data-submit-on-ctrl-enter>
+  <?php /* `formcol` ist ersatzlos gestrichen (O11): Die Klasse hatte seit dem
+           Neubau des Stylesheets keine Regel mehr — sie setzte frueher
+           `display:flex;flex-direction:column`, was der normale Fluss ohnehin
+           tut. */ ?>
+  <form method="post" id="missionform" data-dirty-track data-submit-on-ctrl-enter>
     <?= csrf_field() ?>
     <?php if ($editing): ?><input type="hidden" name="id" value="<?= $id ?>"><?php endif; ?>
 
@@ -1176,7 +1180,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
             <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
           <label>Alter
             <input type="number" id="pat_age" min="0" max="120" step="1">
-            <span class="muted small" id="agehint"></span></label>
+            <span class="feld-klein-inline" id="agehint"></span></label>
         </div>
         <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
       </div>
@@ -1213,10 +1217,17 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                   'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
                   'ortswahl'    => true,
               ]); ?>
+        <?php /* Der Zusatz steht UNTER dem Feld, nicht zwischen Beschriftung
+                 und Eingabe (P3/O11). Bis dahin hielt ihn `label .muted` mit
+                 `display:block` in einer eigenen Zeile — eine Regel der
+                 Uebergangsschicht, die mit ihr gefallen ist. Statt sie unter
+                 neuem Namen wiederaufzubauen, steht der Zusatz jetzt dort, wo
+                 ihn `ui_feld()` auch hinsetzt: als `.feld-klein` hinter dem
+                 Feld. */ ?>
         <label>Beschreibung Einsatzort
-          <span class="muted small">Zufahrt, Besonderheiten, Lage vor Ort</span>
           <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
         </label>
+        <p class="feld-klein">Zufahrt, Besonderheiten, Lage vor Ort</p>
 
         <?php /* ---- ABFAHRTORT (E34, Konzept 3.5.1) --------------------------
                  Fällt die Uhr aus, fehlt der Track — die Karte bleibt leer,
@@ -1235,8 +1246,6 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                  bleibt in der Datenbank unangetastet. */ ?>
         <?php if (!$hatTrack): ?>
           <label>Abfahrtort
-            <span class="muted small">erzeugt die gestrichelte Luftlinie auf der
-              Karte — dieser Einsatz hat keine GPS-Aufzeichnung</span>
             <select name="start_src" id="start_src">
               <option value="">– nicht angegeben (keine Linie)</option>
               <?php
@@ -1259,6 +1268,8 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               <?php endforeach; ?>
             </select>
           </label>
+          <p class="feld-klein">Erzeugt die gestrichelte Luftlinie auf der Karte —
+             dieser Einsatz hat keine GPS-Aufzeichnung.</p>
           <div id="startfields" <?= $startWert === 'manual' ? '' : 'hidden' ?>>
             <?php ui_ortsfeld([
                     'praefix'     => 'start',

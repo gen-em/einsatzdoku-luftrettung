@@ -1312,14 +1312,14 @@ Umsetzung füllen.
 | P-P3-01 | Vollständigkeitsprüfung gegen den **Vorher-Stand** (O1) | Klassenliste gesichert; alle alten Klassen „ohne Gegenstück" — das Werkzeug kann scheitern | **erledigt.** `klassen.py` ist gescheitert (14 784 statt 220, F-P3-P); Sollmenge jetzt **220 Klassen** aus den Selektoren. Erstlauf protokolliert: 78 Hexwerte, 71 Schriftgrößen, 154 Pixelmaße, 5 × `50px`, 14 `style=`, 5 Inline-SVG, 147 Unicode-Symbole, 80 Emoji. |
 | P-P3-02 | Vollständigkeitsprüfung gegen den **Endstand** | 0 ohne Gegenstück, 0 Hexwerte außerhalb `:root`, 0 Schriftgrößen außerhalb der Skala, 0 Pixelmaße außerhalb der Token, 0 `50px`, Streichliste vollständig | |
 | P-P3-03 | Symbole | 0 Inline-`<svg>` mit Pfaden in PHP/JS außer `ui_symbol`/`edSymbol`, 0 Unicode-Symbolzeichen (▸ ▾ ▲ ▼ ✓ ⚠ ★ ◌) im Markup, 0 Emoji; jede referenzierte Datei existiert | **nach O2:** Inline-SVG **3** (vorher 5) · Unicode **159** · Emoji **9** (vorher 80) · fehlende Dateien **0** · Dateien ohne Anker **0**. Rest verteilt auf O3 bis O11. |
-| P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O2 erfüllt: 0 Abweichungen** über 232 Bilder. Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. |
-| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K). |
+| P-P3-04 | Knopfhöhe | Screenshot-Werkzeug misst jedes `.knopf`: computed height = 44 px in allen Breiten | **nach O11 erfüllt: 0 Abweichungen** über 272 Bilder (nach O2: 0 über 232). Gemessen werden nur sichtbare Knöpfe — ein ausgeblendeter ist weder zu hoch noch zu niedrig. **Eine Grenze, die O11 gekostet hat:** Gemessen wird `.knopf`. Ein Knopf, der die Klasse gar nicht trägt, fällt der Messung nicht auf — genau so ist der Export-Knopf mit `btn-primary` durchgerutscht (F-P3-BA). Die Gegenprobe dafür ist die Liste der Klassen ohne Regel in der Vollständigkeitsprüfung, und die gehört gelesen, nicht nur gezählt. |
+| P-P3-05 | Kontrast | alle Schrift/Fläche-Paare der Token ≥ 4,5:1 (Schrift) bzw. ≥ 3:1 (Flächen/Ränder); Primärknopf 5,4:1 | **erfüllt (O1, bestätigt nach O2, O10 und O11).** 21 Paare gerechnet, **0 verfehlt**; Primärknopf **5,97:1**. Drei benannte Ausnahmen mit Grund (F-P3-J, F-P3-K): Orange als Fläche, Linie auf Schnee, Sand auf Schnee. Der Geltungsbereich der dritten ist in O10 **kleiner** geworden — die Versionsnummer der Fußzeile trug Sand ebenfalls, und dort stimmte die Begründung nicht; sie steht jetzt in `--gedaempft` (5,30:1). |
 | P-P3-06 | Kein Verlust bei 360 px | auf jeder Seite `scrollWidth ≤ innerWidth`; Tagesübersicht zeigt Ort und Diagnose jedes Einsatzes | **nach O2: 0 Überlauf** auf allen 29 Seiten in allen acht Breiten (vorher 26). Ort und Diagnose bei 360 px sind noch **offen** — das ist die Kachel aus E-P3-32 und gehört zu O3. |
-| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **läuft. Seit O9c: 31 Seiten × 8 = 248 Bilder**, seit Web 9.10.1 mit **248 verschiedenen Prüfsummen** (F-P3-AQ: davor zeigten 176 davon die Anmeldeseite) (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
-| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
+| P-P3-07 | Screenshots | 24 Seiten × 8 Breiten = 192 Bilder, Sichtprüfung gegen die Mockups, Konsole 0 Fehler | **nach O11: 34 Seiten × 8 = 272 Bilder, 271 verschiedene Prüfsummen** (die eine Dublette ist das Paar `10-tagesuebersicht` / `11-tagesuebersicht-schublade` bei 1024 px — ab 1024 px gibt es keine Schublade, beide fotografieren dieselbe Seite; siehe Umsetzungsstand O11), Überlauf 0, Konsole 0, Knöpfe ≠ 44 px 0. Vorher: 31 Seiten × 8 = 248 Bilder, seit Web 9.10.1 mit **248 verschiedenen Prüfsummen** (F-P3-AQ: davor zeigten 176 davon die Anmeldeseite) (vorher 30/240 seit O7 und 29/232 davor; die Zeitraumübersicht kam als Jahres- **und** Monatsansicht dazu, F-P3-AH, und in O9c die Rettungsmittel-Fassung der Stammdaten — die Zahl 192 wird in O12 berichtigt), Konsole **0**. Sichtprüfung gegen die Mockups je Paket. |
+| P-P3-08 | Wortliste (R28) | 0 außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen | **O11: 0 / 0 / 0** bei 62 Ausnahmen, alle gegriffen — ein Treffer im eigenen neuen Text vor dem Commit behoben. **O1: 0 / 0 / 0.** Ein Treffer im neuen Code (`var BASIS` in `symbol.js`) vor dem Commit behoben. **O2: 0 / 0 / 0**, mit fünf neuen Ausnahmen der Klasse *Homonym* — sie benennen ein Bild, nicht die Einsatzart. |
 | P-P3-09 | Dauer-Regression R20 (`browser/angriffswerte.mjs`) | 42 Einzelprüfungen, 0 Befunde | |
 | P-P3-10 | Demo (`browser/demo_pruefen.mjs`) | 24 Einzelprüfungen, 0 Befunde | |
-| P-P3-11 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärt, Sollstand nach S1 (286 739 Einzelvergleiche, 16 erwartet) | |
+| P-P3-11 | Kreislauf edbak (`kreislauf.py --art edbak --frisch`) | 0 unerklärt, Sollstand nach S1 (286 739 Einzelvergleiche, 16 erwartet) | **nach O11 erfüllt: 286 739 Einzelvergleiche, 0 unerklärte Abweichungen, 16 erwartete.** Das Werkzeug selbst war dabei zu reparieren — `--frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr löschen (F-P3-BB). |
 | P-P3-12 | Kreislauf CSV | 0 unerklärt (8 797 / 859 erwartet) | |
 | P-P3-13 | Formular-Rundlauf (O5) | 5 Einsätze bearbeitet und gespeichert: alle Feldwerte identisch | |
 | P-P3-14 | Suche (O6) | 5 Begriffe × 3 Filterkombinationen: Trefferzahlen identisch | |
@@ -1328,7 +1328,7 @@ Umsetzung füllen.
 | P-P3-17 | R32 (O10) | Seiten öffentlich, Leerzustand, Markdown-Probe inkl. `<script>`, Fußzeile auf allen Seiten | **erledigt (O10).** Impressum und Datenschutz ohne Anmeldung erreichbar (HTTP 200 abgemeldet, geprüft). Leerzustand: beide Plaketten „leer", keine Vorschau, Meldung „Der Betreiber dieser Installation hat noch kein Impressum hinterlegt"; für Admins mit Weg zum Editor. **Markdown-Probe: 81 Einzelproben in `tools/rechtstexte/`, 0 fehlgeschlagen**, dazu 65 Ausgaben gegen die Positivliste erlaubter Tags und Attribute gehalten — `<script>alert(1)</script>` erscheint als sichtbarer Text, im Browser gegengeprüft. Fußzeile zweizeilig auf allen 34 Seiten des Bilderlaufs; Ausnahme Einrichter (ohne Rechtslinks, mit Grund). |
 | P-P3-18 | Logo-Wahl (O8) | Kopfleiste und Favicon wechseln gemeinsam; „wechselnd" stabil je Sitzung | **erledigt (O8a, erweitert in O9c).** Kopfleiste und Favicon folgen beide `logo_stamm()`; „wechselnd" wird nur bei der Anmeldung ausgewürfelt und bleibt in der Sitzung stehen. O9c hat den **Standard der Installation** dazugenommen und acht Messungen in einer Sitzung gefahren: Anmeldeseite folgt dem Standard (F-P3-AN), Kopfleiste folgt **ohne Neuanmeldung**, ein Konto mit eigener Wahl bleibt unberührt. |
 | P-P3-19 | Stilvergleich neu geeicht (O12) | Referenz aufgenommen, Lauf gegen sich selbst 0 Abweichungen | |
-| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien, `node --check` über die geänderten Skripte). |
+| P-P3-20 | Syntax | `php -l` über alle geänderten PHP-Dateien, JS über `new Function()`; fehlerfrei | **O11: fehlerfrei** über alle geänderten PHP- und JS-Dateien (`php -l`, `node --check`), dazu `ast.parse` über `kreislauf.py`. **O1 und O2: fehlerfrei** (`php -l` über alle 57 PHP-Dateien). |
 
 ---
 
@@ -1407,6 +1407,8 @@ und O11.
 | F-P3-AX | **„Löschen" war im Blatt nicht rot.** `ui_zeilenaktionen()` vergab `knopf-gefahr` in beiden Formen — Knopfreihe am Schreibtisch und Blatt auf dem Telefon. Im Blatt setzt aber `.blatt-zeile` seine Schriftfarbe selbst (`color:var(--asphalt)`, Abschnitt 11); beide Regeln haben Spezifität (0,1,0), und die spätere gewinnt. Gemessen an „Löschen" in der Stammdatenliste: `rgb(26,5,0)` — dieselbe Farbe wie „Bearbeiten", Symbol dunkelblau statt rot, keine abgesetzte Trennlinie. Betroffen waren sechs Aufrufstellen, darunter „Gerät entkoppeln" und „Konto löschen": mobil sah die unumkehrbarste Handlung der Anwendung harmlos aus. Am Schreibtisch stimmte alles, weil `.knopf` keine Farbe setzt — und die Bildaufnahme öffnet kein Blatt. | O11: Der Baustein kennt beide Vokabeln und wählt nach dem Ort (`blatt-gefahr` / `blatt-anlegen` im Blatt, `knopf-*` in der Reihe). Gemessen danach: `rgb(158,34,38)`. |
 | F-P3-AY | **Zwei Rückfragen hintereinander.** Ein Formular mit `data-confirm` **und** `data-dirty-track` fragte nach der bestätigten Rückfrage ein zweites Mal, diesmal der Browser: „Änderungen werden möglicherweise nicht gespeichert." Ursache ist das `stopPropagation()` der **Erfassungsphase** in `confirm.js`: Der Zuhörer von `forms.js` hängt in der Blasenphase am selben `document` und läuft deshalb nie; danach sendet `f.submit()` ab, was gar kein `submit`-Ereignis auslöst. Das Formular blieb für `forms.js` bis zuletzt „schmutzig", und beim Verlassen der Seite feuerte dessen `beforeunload`-Abfrage. Genau das, was `forms.js` für den Abbrechen-Weg ausdrücklich verhindert: „zweimal dasselbe fragen heißt, die erste Frage nicht ernst zu nehmen." | O11: `confirm.js` ruft nach dem Ja `EdForms.vergessen(f)`. Gemessen mit gezielt abgeschalteter Reparatur: 1 Browserdialog ohne, 0 mit. Betroffen war `diensttag_datum.php` — die einzige Stelle mit beiden Attributen, und dort praktisch immer, weil man das Feld ändern *muss*, um etwas zu tun. |
 | F-P3-AZ | **Das ausgeblendete Kästchen lag nicht, wo es sollte — dieselbe Falle wie F-P3-AP, zum dritten Mal.** `.schalter-box` und `.wahl-box` (0,1,0) verlieren gegen `input[type=checkbox]` bzw. `input[type=radio]` aus der Rohschicht (0,1,1), die jedem Kästchen 20 × 20 px gibt. Gemessen: 20 × 20 statt 0 × 0. Und weil weder `.schalter` noch `.wahlliste` `position:relative` trägt, saß das Kästchen auf seiner statischen Stelle über dem linken Rand der Beschriftung — es fing dort Klicks ab. | O11: `input[type=checkbox].schalter-box` / `input[type=radio].wahl-box` mit `min-height:0`. Der lange Selektor verschwindet mit der Rohschicht, die in diesem Paket fällt. |
+| F-P3-BA | **Der Export-Knopf war seit dem Neubau des Stylesheets ungestaltet.** `import.php` trug an einer Stelle noch `btn-primary` — eine Klasse ohne Regel seit Web 9.0.0. Gemessen: 23 px hoch, Hintergrund `rgba(0,0,0,0)`, kein Rahmen, Radius 0, Textschrift; der Nachbarknopf im selben Formular („Import ausführen", über `ui_knopf()`) ist 44 px, orange, Radius 10 px, Bricolage. O8c hat die Seite umgebaut und diesen einen Knopf übersehen — er steht am Ende eines Blocks, der im Prüfbrowser erst nach mehreren Bedienschritten sichtbar wird. Aufgefallen ist er **nicht** im Bilderlauf (dessen Knopfmessung sucht `.knopf`, und genau die Klasse fehlte), sondern beim Abarbeiten der Liste „im Markup, aber ohne Regel". | O11: `ui_knopf(['art' => 'primaer', 'typ' => 'button', 'attr' => ' id="exp_go"'])` in einem `.listen-form-fuss`. Die Kennung bleibt — `assets/export.js` hängt daran. Nachgemessen: 44 px, `rgb(255,143,31)`, Radius 10 px, Bricolage. **Und die Lücke im Prüfmittel benannt:** Ein Knopf ohne `.knopf` fällt der Knopfhöhenmessung nicht auf; die Liste „ohne Regel" ist dafür die Gegenprobe und gehört deshalb gelesen, nicht nur gezählt. |
+| F-P3-BB | **`kreislauf.py --frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr löschen** — und zwar aus zwei Gründen gleichzeitig, die beide aus O9 stammen. Erstens suchte `konto_loeschen()` die Kennung mit `admin_user\.php\?id=(\d+)"[^>]*>([^<]+)</a>`; seit dem Umbau der Kontenliste (O9b) ist die Zeile ab 720 px eine Tabellenzeile mit `data-ziel` und einem Verweis, der „Öffnen" heißt, darunter eine `.zeile`, deren Verweis den Text in ein `<span class="zeile-haupt">` wickelt — der Ausdruck lieferte **null** Paare. Zweitens liegt die Löschung seit O9a nicht mehr in der Liste (`admin_users.php`, `action=user_del`), sondern auf der Kontoseite (`admin_user.php?id=N`, `action=user_delete`) und verlangt die **abgetippte E-Mail-Adresse** als zweite Stufe. Unbemerkt geblieben, weil `--frisch` diesen Weg nur betritt, wenn das Konto schon besteht: Beim ersten Lauf auf einer frischen Datenbank endet die Funktion eine Zeile früher mit `return False`. | O11: Statt eines neuen, ebenso zerbrechlichen Musters wird die **Stelle** gesucht — die Kennung steht in beiden Fassungen vor der Adresse, also die letzte `admin_user.php?id=N` vor deren Vorkommen. Die Löschung geht auf die Kontoseite, mit `confirm_email` und `sicherungen_mit=1`. Geprüft: zweimal hintereinander gelöscht (erst `True`, dann „war nicht da"), danach `kreislauf.py --art edbak --frisch` durchgelaufen — 286 739 Einzelvergleiche, 0 unerklärte Abweichungen. |
 
 ---
 
@@ -2988,6 +2990,182 @@ keine Standzeile.
 - **Weiterhin kein WebKit und kein Gecko.**
 - **Der Mailversand** (unverändert seit O9c: lokal kein SMTP).
 
+
+### O11 — Übrige Seiten und Dialoge
+
+*Erledigt mit Web 9.12.0; davor die Bausteinreparaturen mit Web 9.11.1.
+Ohne Migration.*
+
+#### Zwei Etappen, und die erste stand vor dem Paket
+
+Vor dem eigentlichen Umbau standen **vier Reparaturen an geteilten
+Bausteinen** (Web 9.11.1, F-P3-AW bis F-P3-AZ). Sie gehören nicht in O11, denn
+sie haben mit den neun Seiten nichts zu tun; drei von ihnen sitzen an Stellen,
+die O11 gar nicht anfasst. Gefunden wurden sie beim Durchgehen der Bausteine,
+das dem Umbau vorausging — und was sie verbindet, ist die Art des Fehlers:
+Alle vier waren *lautlos*. Der Vollbildknopf der Karte tat auf iOS nichts,
+„Löschen" war im Blatt nicht rot, ein Formular fragte zweimal, und die
+ausgeblendeten Kästchen der Schalter waren 20 × 20 px groß und fingen Klicks
+ab. Nichts davon brach, nichts meldete sich.
+
+Die Lehre daraus steht in der Tabelle der Funde: Drei der vier hätte kein
+Prüfmittel gefunden, weil keines den Zustand herstellt, in dem sie sichtbar
+werden — ein geöffnetes Blatt, ein Vollbild, ein Formular mit zwei Attributen.
+Der Bilderlauf fotografiert Seiten, keine Bedienzustände.
+
+#### Neun Seiten, ein Muster
+
+| Seite | Vorher | Nachher |
+|---|---|---|
+| `papierkorb.php` | zwei Tabellen à 4–5 Spalten | zwei Karten mit `ui_zeile` + `ui_zeilenaktionen` |
+| `nachbearbeitung.php` | zwei Tabellen, eine mit zwei Auswahlfeldern in einer Zelle | drei bis vier Karten, je Eintrag ein `.listen-form`-Block |
+| `diensttag_neu.php` | `.card` mit blanken `<label>` | Karte mit `ui_feld`, Zweispalter ab 720 px |
+| `diensttag_datum.php` | zwei `.card`, Aufzählung, `btn-red` | Karte mit Zeilen und Plaketten, zugeklappte Zusatzkarte |
+| `diensttag_loeschen.php` | `.card` mit `<ul>` | Karte mit sechs Zeilen, Zahl als Plakette |
+| `diensttag_zusammenfuehren.php` | Tabelle mit Radios, `<fieldset>` | `ui_wahlliste`, getrennte Karte für Nichtwählbares |
+| `einsatz_loeschen.php` | `.card` mit `<ul>` | Karte mit vier Zeilen |
+| `einsatz_verschieben.php` | `.card`, blankes `<label>` mit `<select>` | Karte mit zwei Zeilen und `ui_feld` |
+| `update.php` | `<h2>` + `<hr class="sep">`, zwei Tabellen | fünf bis sechs Karten, Migrationen als Zeilen |
+
+`update.php` stand nicht im Umfang des Konzepts und ist auf ausdrückliche
+Entscheidung mitgenommen worden: Sie ist die letzte Seite mit
+`<hr class="sep">` und einer vierspaltigen Tabelle gewesen, und die
+Übergangsschicht hätte ohne sie nicht fallen können.
+
+#### Drei Entscheidungen, die beim Bauen gefallen sind
+
+**Löschbestätigungen bleiben Seiten.** Das Konzept sah „Bestätigungen als
+Aktionsblatt (mobil) bzw. Dialog (Desktop)" vor. Für Rückfragen, die sich in
+*einem Satz* beschreiben lassen, gilt das auch — `confirm.js` macht genau das,
+und in O11 hat es dafür einen Titel und `role="alertdialog"` bekommen. Die
+vier Löschseiten bleiben aber Seiten: Was dort steht, ist eine **Aufstellung**
+(Einsätze, Phasen, Reanimationen, Ruhesegmente, Trackpunkte), und ein Dialog,
+der einen halben Bildschirm Text trägt, ist keiner mehr. Dazu kommt, dass der
+Weg dorthin eine eigene Adresse hat, die man zurückgehen kann — bei einem
+Dialog gibt es die nicht.
+
+**Keine Speichern-Leiste.** Sie gehört zu Formularen, die man *bearbeitet* und
+deren Stand man verlieren kann. Auf den O11-Seiten ist der Knopf das Ziel des
+Weges und steht am Ende des Formulars. `data-dirty-track` bleibt trotzdem an
+den Formularen: Es trägt die Verlassen-Warnung und die bedingte
+Abbrechen-Rückfrage; die Leiste ist nur einer seiner Verwender
+(`assets/forms.js`, „Ein Formular ohne Leiste bleibt davon unberührt").
+
+**Die Übergangsschicht wird geteilt, nicht ersatzlos gestrichen.** Siehe
+unten.
+
+#### Die Übergangsschicht: was fällt und was bleibt
+
+Abschnitt 17 des Stylesheets hieß **Rohschicht** und war befristet: „dieser
+Block stirbt mit O11." Er ist aufgelöst — aber nicht restlos, und der
+Unterschied ist eine Entscheidung.
+
+**Gefallen** ist alles, was *Übergang* war:
+
+| | zuletzt | Ersatz |
+|---|---|---|
+| `.alert`-Familie | 1 Stelle PHP, 1 Stelle JS | `.meldung` über `ui_meldung_markup()` bzw. dasselbe Markup in JS |
+| `.muted` | 16 Stellen in 6 Dateien | `.feld-hinweis`, `.feld-klein`, `.feld-klein-inline`, `.dash` — vier Rollen, die eine Klasse trug |
+| `table` / `th` / `td` | 1 Tabelle ohne eigene Regel (`.imp-table` im Import) | `.tabelle` |
+| `fieldset` / `legend` | 0 Verwendungen | — |
+| `hr` | 0 Verwendungen | — |
+
+**Geblieben** ist, was *Grundform* ist — der Abschnitt heißt jetzt so:
+`input`/`select`/`textarea`, Kästchen und Radios, `summary`, `code`/`kbd`/`pre`
+und die Regeln für `<label>Text <input></label>`.
+
+Die Label-Regeln bleiben **abweichend vom ursprünglichen Plan**. Gezählt
+wurden 46 Stellen: 22 in `suche.php`, 8 in `einsatz_form.php`, je 3 in
+`index.php`, `einstellungen.php` und `admin_stammdaten.php`, je 2 in
+`login.php` und `admin_sicherungen.php`, je 1 in `ui.php`, `pw_handling.php`
+und `assets/import_ui.js`. Sie zu tilgen hieße, die Filterreihen der Suche und
+das Einsatzformular umzubauen — die beiden kompliziertesten Seiten der
+Anwendung — für eine Regel, die nichts falsch macht. `.feld` ist der
+*Baustein* für ein beschriftetes Feld, nicht das Gebot, dass jede Beschriftung
+einer sein müsse.
+
+Die Eintrittskarte in den Abschnitt bleibt eng: **nur Elementnamen.** Eine
+Klasse dort einzutragen hieße, das Redesign zurückzunehmen.
+
+#### Prüfstand
+
+**Maschinell**
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/screenshots/aufnehmen.mjs` | 34 Seiten × 8 Breiten = **272 Bilder**; Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0** |
+| Gegenprobe Prüfsummen | 272 Bilder, **271 verschiedene** (zweiter Lauf; im ersten 269). **Die Zahl schwankt, und das ist erklärt:** Ab 1024 px gibt es keine Schublade, `10-tagesuebersicht` und `11-tagesuebersicht-schublade` fotografieren dort also **dieselbe** Seite. Ob die Bytes exakt gleich ausfallen, entscheidet Aufnahmerauschen: bei 1024 px waren sie es beide Male, bei 1280/1440 px unterscheiden sie sich um einen **1 × 75 px** großen Streifen und bei 1920 px darum, wie viele Kartenkacheln zum Aufnahmezeitpunkt geladen waren (pixelweise nachgemessen mit `ImageChops.difference`). Eine Dublette in diesem Paar ist also kein Befund; eine Dublette zwischen zwei **verschiedenen** Seiten wäre einer |
+| `tools/vollstaendigkeit/pruefen.py` | Streichliste-im-Markup **5 → 0**; „ohne Gegenstück" 78 → **55**; „im Markup ohne Regel" 48 → **29**; Unicode-als-Symbol 163 → **158**; Befunde gesamt 294 → **247** |
+| `tools/wortliste/wortliste.py` | **0** Treffer außerhalb der Ausnahmen, **0** ungenutzte Ausnahmen, **0** durchgerutschte Fallen |
+| `tools/screenshots/kontrast.py` | siehe Prüfdokument |
+| `papierkorb_misch.mjs` | **15 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** — auf zwei frisch angelegten Umlaufkonten |
+| `kreislauf.py --art edbak --frisch` | **286 739 Einzelvergleiche, 0 unerklärte Abweichungen**, 16 erwartete |
+| PHP-Syntax | alle geänderten Dateien fehlerfrei (`php -l`) |
+| JS-Syntax | alle geänderten Dateien fehlerfrei (`node --check`) |
+
+**Im Browser** (Chromium, lokale Instanz mit Referenzdatensatz)
+
+- Alle acht Inhaltsseiten des Pakets bei **360, 390 und 1280 px** einzeln
+  gemessen: Status 200, keine der 23 gesuchten Altklassen im DOM (`card`,
+  `btn-primary/-red/-plain`, `rowactions`, `trashtable`, `th-act`, `data`,
+  `muted`, `alert`/`-warn`/`-info`/`-ok`, `inline-form`, `mono`, `artzeichen`,
+  `formcol`, `login-aux`, `zeile-aus`, `c-swatch`, `c-mid`, `feldgruppe`,
+  `small`), 0 Tabellen,
+  0 waagerechter Überlauf, kein sichtbarer Knopf unter 44 px.
+- **Zuordnung nachtragen** vollständig durchgeklickt — der Zustand dafür wurde
+  eigens hergestellt (`vehicles.base_id` nullbar gemacht, zwei Diensttage und
+  ein Rettungsmittel ohne Standort): Rettungsmittel gewählt → Standort zieht
+  nach (`base_id` 22 wie erwartet); gespeichert → Meldung „Diensttag
+  29.12.2026 07:00 zugeordnet", Liste 2 → 1; Stammdatensatz zugeordnet →
+  „Zuordnung gespeichert"; „Standortbezug verbindlich machen" → Dialog mit
+  `role="alertdialog"` und dem eigenen Titel, danach 0 Karten und der
+  Leerzustand. Der Schemastand wurde anschließend wiederhergestellt.
+- **Zusammenführen** in beiden Schritten und mit Widerspruch: Wahlliste mit
+  einer Zeile, `wahl-box` **0 × 0 px** (Gegenprobe zu F-P3-AZ), Schritt 2 mit
+  drei Karten, Widerspruchskarte mit `.listen-form-titel` „Rettungsmittel",
+  Vorbelegung `w_vehicle=ziel`, nach Klick auf die zweite Zeile
+  `w_vehicle=quelle`; Rückfragedialog mit Titel „Diensttag aufnehmen".
+- **Papierkorb** in beiden Zuständen: Liste (2 Karten, 2 Zeilen, 4
+  Zeilenknöpfe, 2 Blätter) und Bestätigungsseite. Im Blatt ist „Endgültig
+  löschen" rot mit rotem Symbol — die Gegenprobe zu F-P3-AX an einer echten
+  Seite.
+- **Export-Knopf** vor und nach der Reparatur gemessen: 23 px, transparent,
+  Radius 0, Textschrift → 44 px, `rgb(255,143,31)`, Radius 10 px, Bricolage.
+
+**Was nicht geprüft werden konnte**
+
+- **Kein WebKit, kein Gecko** (unverändert seit O3). Der Vollbild-Rückfall
+  F-P3-AW ist ausdrücklich für iOS Safari gebaut und wurde in Chromium mit
+  *abgeschalteter* Fullscreen-API gemessen — das prüft den CSS-Weg, nicht
+  Safari.
+- **Kein echtes Telefon.** Alles über Viewport-Breiten.
+- **`nachbearbeitung.php` im Regelbetrieb**: Auf einer Neuinstallation trägt
+  `vehicles.base_id` von Anfang an `NOT NULL`; die Seite zeigt dann ihren
+  Leerzustand. Der gefüllte Zustand war nur herstellbar, indem das Schema
+  vorübergehend geändert wurde — geprüft wurde also der echte Code auf
+  künstlich hergestellten Daten.
+- **Die blockierte Migration** auf der Wartungsseite (Häkchen „Daten sind
+  gesichert") — dafür müsste eine destruktive Migration mit Daten anstehen.
+  Die Zeile wurde im Markup gelesen, nicht bedient.
+- **Der Mailversand** (unverändert: lokal kein SMTP).
+
+#### Eine Korrektur an einer eigenen Annahme
+
+In der Vorbereitung zu O11 stand die Vermutung, `nb_moeglich()` sei auf jeder
+Neuinstallation dauerhaft wahr und koste damit bei jedem Seitenaufruf mit
+Diensttage-Leiste eine Reihe unnötiger Abfragen. **Das stimmt nicht.**
+`schema.sql` legt `vehicles.base_id` als `NOT NULL` an; `nb_moeglich()` ist
+auf einer Neuinstallation also **falsch**, und `nb_offen_gesamt()` bricht in
+der ersten Zeile ab. Nachgemessen an der lokalen Instanz: Die Seite zeigt
+„Es ist nichts nachzutragen."
+
+Was bleibt, ist kleiner und gehört in den Backlog: Auf einer *migrierten*
+Installation, deren Nachbearbeitung noch niemand abgeschlossen hat, zählt
+`nb_offen_gesamt()` bei jedem Seitenaufruf die offenen Diensttage, indem es
+sie mit `LIMIT 500` **holt** und die Zeilen zählt — ein `COUNT(*)` täte es.
+Dazu bis zu zehn weitere Abfragen für die Stammdatentabellen. Das ist kein
+Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn zu
+beenden), aber es ist unnötig.
 ---
 
 ## Anlage A — Mockups

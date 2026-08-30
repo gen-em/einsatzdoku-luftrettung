@@ -11,6 +11,134 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.12.0] — 2026-08-30
+
+**O11: die übrigen Seiten — und die Übergangsschicht fällt.** Neun Seiten sind
+aus Bausteinen neu gebaut: Papierkorb, Zuordnung nachtragen, Diensttag anlegen
+/ Datum ändern / löschen / zusammenführen, Einsatz verschieben / löschen und
+die Wartungsseite. Damit ist keine Seite der Anwendung mehr im alten Zustand.
+
+### Es gibt keine Verwaltungstabelle mehr
+
+Sechs Tabellen sind zu Karten mit Zeilen geworden. Der Papierkorb hatte fünf
+Spalten, die Wartungsseite vier, die Zusammenführung sechs — bei 360 px lief
+jede von ihnen waagerecht aus dem Bild. Die Notbremse aus der
+Übergangsschicht (`table{display:block; overflow-x:auto}`) hat das abgefangen,
+aber abgefangen ist nicht gelöst: Eine Tabelle, in der man seitwärts schieben
+muss, um die Aktionsspalte zu sehen, ist auf einem Telefon keine Liste,
+sondern ein Hindernis.
+
+Geblieben sind die drei **Einsatztabellen** (Tagesübersicht, Suche, Zeitraum),
+die unter 720 px zur Kachel werden, und die **Importtabelle** — sie tragen
+alle den Baustein `.tabelle`.
+
+### Löschbestätigungen bleiben Seiten
+
+Das Konzept sah für O11 „Bestätigungen als Aktionsblatt (mobil) bzw. Dialog
+(Desktop)" vor. Für die Rückfragen, die sich in *einem Satz* beschreiben
+lassen, gilt das auch — dafür ist `confirm.js` da. Die vier Löschseiten
+bleiben aber Seiten, und der Grund steht auf ihnen: Was dort steht, ist eine
+**Aufstellung** — Einsätze, Phasen, Reanimationen, Ruhesegmente, Trackpunkte.
+Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und der
+Weg dorthin hat eine eigene Adresse, die man zurückgehen kann.
+
+Die Aufstellungen selbst haben sich geändert: aus Aufzählungen sind **Zeilen
+mit Plakette** geworden. Die Zahl ist die Auskunft, und im Fließtext („6
+Einsätze mit allen Angaben") war sie beim Überfliegen nicht zu finden.
+
+### Keine Speichern-Leiste auf diesen Seiten
+
+Die Leiste gehört zu Formularen, die man *bearbeitet* und deren Stand man
+verlieren kann; sie erscheint mit der ersten Änderung und klebt unten fest.
+Auf den O11-Seiten ist der Knopf das **Ziel des Weges** — „Diensttag anlegen",
+„Einsatz verschieben", „Datum ändern" — und steht am Ende des Formulars, wo
+man ihn sucht. `data-dirty-track` bleibt trotzdem: Es trägt die
+Verlassen-Warnung und die bedingte Abbrechen-Rückfrage; die Leiste ist nur
+einer seiner Verwender.
+
+### Zwei Seiten, die dabei besser geworden sind
+
+**Zuordnung nachtragen** hatte eine Tabelle mit fünf Spalten, von denen eine
+zwei Auswahlfelder und einen Knopf enthielt. Bei 360 px war die Auswahl
+praktisch nicht zu treffen. Jetzt steht je Diensttag ein Formularblock:
+Überschrift, Kennzeile (Zeitraum · Einsätze · bisherige Zuordnung), zwei
+Felder nebeneinander ab 720 px, ein Knopf.
+
+**Zusammenführen** zeigte wählbare und nicht wählbare Diensttage in *einer*
+Tabelle, die nicht wählbaren mit abgeschaltetem Radio und der Klasse
+`zeile-aus` — die es im neuen Stylesheet gar nicht mehr gibt. Sie sahen also
+aus wie die anderen, und ein abgeschaltetes Radio ist auf einem Telefon kaum
+von einem leeren zu unterscheiden. Jetzt stehen die wählbaren in einer
+Wahlliste mit 44-px-Zeilen und die übrigen darunter in einer eigenen,
+zugeklappten Karte — mit dem Grund an jeder Zeile.
+
+### Die Übergangsschicht ist aufgelöst
+
+Abschnitt 17 des Stylesheets hieß **Rohschicht** und war ausdrücklich
+befristet: „dieser Block stirbt mit O11." Er tut es. Weg sind
+
+- die beiden Klassen-Ausnahmen **`.alert`** und **`.muted`** — zuletzt eine
+  Stelle in PHP und eine in JS bzw. 16 Stellen in sechs Dateien. `.muted` trug
+  dabei vier Rollen gleichzeitig; sie sind auf die vier Bausteine verteilt,
+  die sie meinte: `.feld-hinweis` (Absatz), `.feld-klein` (Absatz unter einem
+  Feld), `.feld-klein-inline` (Zusatz in einer Beschriftung), `.dash`
+  (gedämpfte Tabellenzelle);
+- die Elementregeln für **`table`/`th`/`td`** — die letzte Tabelle ohne
+  eigene Regel war die des Imports (`.imp-table` hatte selbst nie eine), sie
+  trägt jetzt `.tabelle`;
+- die Elementregeln für **`fieldset`/`legend`** und **`hr`** — jeweils null
+  Verwendungen in der ganzen Anwendung.
+
+Der Abschnitt heißt jetzt **Grundformen** und trägt nur noch, worauf die
+Bausteine aufsetzen: `input`/`select`/`textarea`, Kästchen und Radios, das
+Muster `<label>Text <input></label>`, `summary` und `code`/`kbd`/`pre`. Der
+Unterschied ist nicht bloß der Name: Eine Rohschicht ist ein Versprechen auf
+später, eine Grundform ist eine Entscheidung.
+
+**Die Label-Regeln bleiben** — abweichend vom ursprünglichen Plan. Das Muster
+steht an 46 Stellen, darunter die Filterreihen der Suche (22) und das
+Einsatzformular (8). Sie zu tilgen hieße, die beiden kompliziertesten Seiten
+der Anwendung für eine Regel umzubauen, die nichts falsch macht: `.feld` ist
+der *Baustein* für ein beschriftetes Feld, nicht das Gebot, dass jede
+Beschriftung einer sein müsse.
+
+### Vier Reparaturen an Bausteinen, zwei Funde beim Streichen
+
+Die vier Bausteinreparaturen stehen in Web 9.11.1 (Vollbild der Karte,
+„Löschen" im Blatt, doppelte Rückfrage, ausgeblendete Kästchen). Beim
+Auflösen der Übergangsschicht kamen zwei weitere dazu:
+
+**Der Export-Knopf war ungestaltet (F-P3-BA).** `import.php` trug an einer
+Stelle noch `btn-primary` — eine Klasse ohne Regel seit Web 9.0.0. Gemessen:
+23 px hoch, ohne Fläche, ohne Rahmen, ohne Radius, in der Textschrift; der
+Nachbarknopf im selben Formular ist 44 px, orange, Bricolage. O8c hat die
+Seite umgebaut und diesen einen Knopf übersehen.
+
+**`kreislauf.py --frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr
+löschen (F-P3-BB)** — aus zwei Gründen gleichzeitig: Sein Ausdruck suchte
+`<a href="admin_user.php?id=N">adresse</a>` und fand nichts mehr (die
+Kontenliste ist seit O9b eine Tabelle mit `data-ziel` bzw. eine `.zeile` mit
+gewickeltem Text), und die Löschung liegt seit O9a auf der Kontoseite und
+verlangt die abgetippte Adresse. Unbemerkt geblieben, weil der Weg nur
+betreten wird, wenn das Konto schon besteht — beim ersten Lauf auf einer
+frischen Datenbank endet die Funktion eine Zeile früher.
+
+### Nebenbei
+
+- Der **Papierkorb** holte sich für jede Löschbestätigung einen Umfang, den er
+  nie ausgab (`trash_scope_day()`); das kostete je Einsatz drei weitere
+  Abfragen. Ersatzlos gestrichen — die Funktion bleibt, `diensttag_loeschen.php`
+  braucht sie wirklich.
+- Die **Statusspalte der Migrationsliste** trug ✔ ● ! ✖ ⚠ — Schriftzeichen als
+  Symbol, was E-P3-18 ausschließt. Der Status steht jetzt als Plakette mit Ton
+  („erledigt" blau, „steht aus" orange, „blockiert" rot).
+- `artzeichen` ist gestrichen: das Breitenkorsett des Art-**Emojis**, das seit
+  O2 ein SVG ist.
+- `papierkorb_misch.mjs` zählte 12 Konsolenfehler, die keine waren — sein
+  Kachelfilter sah nur den Meldungstext an, und „Failed to load resource:
+  net::ERR_CONNECTION_RESET" trägt keine URL darin. Er prüft jetzt auch die
+  Adresse, wie die Bildaufnahme seit O3.
+
 ## [Web 9.11.1] — 2026-08-30
 
 **Vier Reparaturen an geteilten Bausteinen.** Sie sind beim Aufräumen vor O11

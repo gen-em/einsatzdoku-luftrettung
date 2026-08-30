@@ -89,81 +89,96 @@ foreach ($tage as $t) {
     ];
 }
 $gedeckelt = count($tage) >= $LIMIT;
+
+/* Die Auswahlliste als Wert=>Text-Abbildung fuer ui_feld. Der Text traegt
+ * alles, was zwei Dienste eines Kalendertags unterscheidet — Uhrzeit, Wer,
+ * Einsatzzahl und Art. Die Art steht als WORT am Ende: In einem <option>
+ * laesst sich kein SVG unterbringen, und die Auskunft soll nicht an einer
+ * Grafik haengen, die jedes Betriebssystem anders zeichnet (E-P3-18). */
+$zielOpt = ['' => '– Diensttag wählen –'];
+foreach ($auswahl as $a) {
+    $zielOpt[(string)(int)$a['id']] = $a['text']
+        . ($a['wer'] !== '' ? ' · ' . $a['wer'] : ' · ohne Zuordnung')
+        . ' · ' . (int)$a['einsaetze']
+        . ((int)$a['einsaetze'] === 1 ? ' Einsatz' : ' Einsätze')
+        . ' · ' . $a['arttext'];
+}
+
 ui_seite_start(['titel' => 'Einsatz verschieben']);
 ?>
 <?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $altDayId > 0 ? $altDayId : null]); ?>
-    <h1>Einsatz verschieben</h1>
-    <?php ui_meldung(null, $fehler); ?>
 
-    <div class="card">
-      <p>Der Einsatz vom
-         <strong><?= e(fmt_local((string)$mission['started_at'], 'd.m.Y')) ?></strong>,
-         <strong><?= e(fmt_local($mission['started_at'])) ?>
-         bis <?= e(fmt_local($mission['ended_at'])) ?></strong> Uhr,
-         wird einem anderen Diensttag zugeordnet.<?php
-         if ($altTag !== null): ?> Derzeit gehört er zum Diensttag
-         <strong><?= e(dt_lesbar($altTag, true)) ?></strong>.<?php endif; ?></p>
-      <p class="muted">Die <strong>Uhrzeiten bleiben unverändert</strong> — es
-         ändert sich allein, zu welchem Dienst der Einsatz gehört. Sollen auch die
-         Zeiten mitwandern, weil die Uhr falsch gestellt war, ist
-         <?php if ($altDayId > 0): ?>
-           <a href="diensttag_datum.php?d=<?= (int)$altDayId ?>">Datum des Diensttags
-           ändern</a> der richtige Weg.
-         <?php else: ?>
-           „Datum des Diensttags ändern" der richtige Weg.
-         <?php endif; ?></p>
-      <p class="muted">Gewählt wird ein <strong>vorhandener Diensttag</strong>.
-         Angelegt wird hier keiner — dafür gibt es
-         <a href="diensttag_neu.php">+ Diensttag anlegen</a> in der Leiste links.
-         Ein späterer Upload derselben Uhr zieht den Einsatz nicht zurück.</p>
-      <?php if ($gedeckelt): ?>
-        <p class="muted">Die Liste zeigt die <?= (int)$LIMIT ?> jüngsten
-           Diensttage. Ältere sind nicht darunter — das heißt nicht, dass es sie
-           nicht gibt.</p>
-      <?php endif; ?>
-    </div>
+  <?php ui_titelzeile([
+      'titel'   => 'Einsatz verschieben',
+      'zurueck' => ['text' => 'Zurück zum Einsatz', 'href' => 'einsatz.php?id=' . $mid],
+  ]); ?>
+  <?php ui_meldung(null, $fehler, 'info', '  '); ?>
+
+  <p class="seiten-erklaerung">Die <strong>Uhrzeiten bleiben unverändert</strong>
+     — es ändert sich allein, zu welchem Dienst der Einsatz gehört. Sollen auch
+     die Zeiten mitwandern, weil die Uhr falsch gestellt war, ist
+     <?php if ($altDayId > 0): ?><a href="diensttag_datum.php?d=<?= (int)$altDayId ?>">Datum
+     des Diensttags ändern</a><?php else: ?>„Datum des Diensttags ändern"<?php endif; ?>
+     der richtige Weg.</p>
+
+  <?php ui_karte_start(['titel' => 'Einsatz vom '
+      . fmt_local((string)$mission['started_at'], 'd.m.Y')]); ?>
+
+    <?php
+      ui_zeile([
+          'text'  => fmt_local($mission['started_at']) . ' – '
+                   . fmt_local($mission['ended_at']) . ' Uhr',
+          'klein' => 'Diese Zeiten bleiben stehen.',
+      ]);
+      ui_zeile([
+          'text'  => 'Derzeitiger Diensttag',
+          'klein' => $altTag !== null ? dt_lesbar($altTag, true) : 'keiner',
+          'href'  => $altDayId > 0 ? 'index.php?d=' . $altDayId : '',
+      ]);
+    ?>
 
     <?php if (!$auswahl): ?>
-      <div class="card">
-        <p class="alert alert-warn">Es gibt keinen anderen Diensttag, dem dieser
-           Einsatz zugeordnet werden könnte. Bitte zuerst einen
-           <a href="diensttag_neu.php">Diensttag anlegen</a>.</p>
-        <p class="login-aux"><a href="einsatz.php?id=<?= $mid ?>">Zurück zum Einsatz</a></p>
+      <?= ui_meldung_markup('warn', 'Es gibt keinen anderen Diensttag, dem dieser '
+          . 'Einsatz zugeordnet werden könnte.', '',
+          ui_knopf(['text' => 'Diensttag anlegen', 'art' => 'primaer',
+                    'symbol' => 'plus', 'href' => 'diensttag_neu.php'])) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Zurück zum Einsatz', 'art' => 'leise',
+                      'href' => 'einsatz.php?id=' . $mid]) ?>
       </div>
     <?php else: ?>
-      <form method="post" action="einsatz_verschieben.php" class="formcol"
+      <form method="post" action="einsatz_verschieben.php"
             id="verschiebeform" data-dirty-track>
         <?= csrf_field() ?>
         <input type="hidden" name="id" value="<?= $mid ?>">
-        <label>Neuer Diensttag
-          <?php /* Ein Auswahlfeld, kein Datumsfeld: Der Zieltag ist eine
-                   Kennung, und die Liste sagt, welcher Dienst dahintersteht.
-                   Art, Rettungsmittel und Einsatzzahl stehen mit im Eintrag —
-                   zwei Dienste eines Kalendertags sind sonst nicht
-                   auseinanderzuhalten. */ ?>
-          <select name="ziel" required>
-            <option value="">– Diensttag wählen –</option>
-            <?php foreach ($auswahl as $a): ?>
-              <option value="<?= (int)$a['id'] ?>" <?= $ziel === (int)$a['id'] ? 'selected' : '' ?>>
-                <?= e($a['text']) ?><?php
-                  /* Die Art stand hier als Emoji am Zeilenanfang. Seit P3/O2
-                     steht sie als WORT am Ende: In einem <option> laesst sich
-                     kein SVG unterbringen, und die Auskunft soll nicht an
-                     einer Grafik haengen, die jedes Betriebssystem anders
-                     zeichnet (E-P3-18). */
-                  echo $a['wer'] !== '' ? ' · ' . e($a['wer']) : ' · ohne Zuordnung';
-                  echo ' · ' . (int)$a['einsaetze']
-                     . ((int)$a['einsaetze'] === 1 ? ' Einsatz' : ' Einsätze');
-                  echo ' · ' . e($a['arttext']); ?></option>
-            <?php endforeach; ?>
-          </select>
-        </label>
-        <button type="submit" class="btn-primary">Einsatz verschieben</button>
-        <p class="login-aux"><a href="einsatz.php?id=<?= $mid ?>"
-           data-cancel-form="verschiebeform"
-           data-cancel-confirm="Der gewählte Diensttag geht verloren. Trotzdem abbrechen?"
-           >Abbrechen</a></p>
+        <?php /* Ein Auswahlfeld, kein Datumsfeld: Der Zieltag ist eine Kennung,
+                 und die Liste sagt, welcher Dienst dahintersteht. */ ?>
+        <?php ui_feld([
+            'name' => 'ziel', 'label' => 'Neuer Diensttag', 'art' => 'select',
+            'optionen' => $zielOpt, 'pflicht' => true,
+            'wert' => $ziel > 0 ? (string)$ziel : '',
+            'klein' => 'Gewählt wird ein vorhandener Diensttag; angelegt wird hier '
+                     . 'keiner. Ein späterer Upload derselben Uhr zieht den '
+                     . 'Einsatz nicht zurück.'
+                     . ($gedeckelt
+                        ? ' Die Liste zeigt die ' . (int)$LIMIT . ' jüngsten '
+                        . 'Diensttage — ältere sind nicht darunter, und das heißt '
+                        . 'nicht, dass es sie nicht gibt.'
+                        : ''),
+        ]); ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Einsatz verschieben', 'art' => 'primaer',
+                        'symbol' => 'tausch']) ?>
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                        'href' => 'einsatz.php?id=' . $mid,
+                        'attr' => ' data-cancel-form="verschiebeform"'
+                                . ' data-cancel-confirm="Der gewählte Diensttag geht'
+                                . ' verloren. Trotzdem abbrechen?"']) ?>
+        </div>
       </form>
     <?php endif; ?>
+
+  <?php ui_karte_ende(); ?>
+
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>

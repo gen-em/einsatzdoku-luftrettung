@@ -214,6 +214,57 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
     Kontos gleich mit.
 
+38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
+    *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
+    ruft bei **jedem** Seitenaufruf `nb_offen_gesamt()`. Die Funktion bricht
+    zwar sofort ab, wenn `vehicles.base_id` schon `NOT NULL` trägt — auf einer
+    Neuinstallation ist das von Anfang an so, dort kostet sie eine einzige
+    `information_schema`-Abfrage, die zusätzlich pro Aufruf gemerkt wird.
+
+    Auf einer **migrierten** Installation, deren Nachbearbeitung noch niemand
+    abgeschlossen hat, läuft sie dagegen durch: `nb_offene_tage($userId)` holt
+    bis zu 500 Diensttage samt einer Unterabfrage je Zeile — nur um
+    `count()` darauf anzuwenden —, dazu bis zu zehn weitere Abfragen für die
+    Stammdatentabellen. Ein `SELECT COUNT(*)` täte es in allen Fällen.
+
+    Kein Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn
+    zu beenden) — aber unnötig, und er trifft genau die Installationen, die
+    ohnehin am meisten Bestand tragen. Behebung: eine eigene Zählfunktion
+    neben `nb_offene_tage()`, die nur `COUNT(*)` fragt.
+
+39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
+    *Aufgenommen in P3/O11, fällig in O12 (Neueichung).* Die
+    Vollständigkeitsprüfung meldet Klassen, die im Markup stehen und im
+    Stylesheet keine Regel haben. Nach O11 sind es 29 (vorher 48). Sie
+    zerfallen in drei Gruppen:
+
+    - **Falsche Treffer des Werkzeugs** (8): Bruchstücke aus zusammengesetzten
+      Klassennamen in JavaScript — `art`, `k`, `klasse`, `ton`,
+      `kennzahl-raster-`, `plakette-`, `pwq-`, `imp-param`. Das Werkzeug liest
+      Zeichenketten, nicht ausgeführten Code.
+    - **Skriptanker und Behälter** (~21): `nb-veh`, `showif`, `parentcheck`,
+      `rmneu`, `feld-gesperrt`, `filtergruppen`, `wochentage`, `tag-form`,
+      `fld`, `loc-widget`, `karte-block-phasen`, `phasen-name`, `rea-kopf`,
+      `rea-beginn`, `imp-*`. Sie brauchen zu Recht keine Regel.
+    - **Echte Lücken**: nach O11 keine mehr bekannt. Die letzte war der
+      Export-Knopf mit `btn-primary` (F-P3-BA) — 23 px hoch und ohne jede
+      Gestaltung, und die Knopfhöhenmessung des Bilderlaufs konnte ihn nicht
+      finden, weil sie `.knopf` sucht.
+
+    Zu tun in O12: Für die zweite Gruppe eine `[bleibt]`-Auszeichnung wie auf
+    der Streichliste, damit die erste Gruppe (und damit ein echter Fund)
+    sichtbar bleibt.
+
+40. **55 Altklassen ohne Gegenstück.**
+    *Aufgenommen in P3/O11, fällig in O12 (Neueichung).* Die
+    Vollständigkeitsprüfung verlangt für jede der 220 Klassen des alten
+    Stylesheets entweder eine Regel im neuen oder einen Eintrag auf der
+    Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl fiel von 78 auf
+    55); die übrigen stammen aus O1 bis O10 und sind dort mit dem Umbau
+    verschwunden, ohne eingetragen zu werden. Die Streichliste ist damit
+    unvollständig — sie sagt nicht zu jeder verschwundenen Klasse, *warum* sie
+    verschwunden ist, und genau das ist ihr Zweck.
+
 ---
 
 ## Erledigt

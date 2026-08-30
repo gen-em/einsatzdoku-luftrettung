@@ -1663,10 +1663,11 @@ automatisch endgültig weg.
   **den kompletten Tag**: alle Einsätze, Ruhesegmente, Tracks, Reanimationen
   und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
-  der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine
-  Tabelle für gelöschte Diensttage und einzeln gelöschte Einsätze, mit
-  „Wiederherstellen" und „Endgültig löschen". Endgültiges Löschen fragt noch
-  einmal nach und ist unwiderruflich.
+  der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine Karte
+  für gelöschte Diensttage und einzeln gelöschte Einsätze. Zu jedem Eintrag
+  stehen „Wiederherstellen" und „Endgültig löschen" bereit; auf schmalen
+  Geräten hinter dem **⋯** am rechten Rand der Zeile. Endgültiges Löschen führt
+  auf eine Seite, die den Umfang beziffert, und ist unwiderruflich.
 
 Solange etwas im Papierkorb liegt, nimmt der Server Nachlieferungen der Uhr
 für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
@@ -1683,9 +1684,10 @@ und im Zeitraum nicht, und öffnen ließe er sich auch nicht mehr.
 
 **„Endgültig löschen" bei einem Diensttag nimmt wirklich alles mit.** Falls am
 gelöschten Tag noch etwas Aktives hängt — das kann aus einer älteren Fassung
-stammen —, nennt die Rückfrage es einzeln mit Datum und Uhrzeit und bietet
-einen Link zum Verschieben an. Wer einen davon behalten will, verschiebt ihn
-vorher an einen anderen Diensttag; sonst geht er mit.
+stammen —, steht es in einer eigenen Karte **„Aktives an diesem Diensttag"**
+mit Datum und Uhrzeit, und zu jedem Eintrag gibt es „Ansehen" und
+„Verschieben". Wer einen davon behalten will, verschiebt ihn vorher an einen
+anderen Diensttag; sonst geht er mit.
 
 **Die Uhr legt einen neuen Diensttag an, wenn der alte im Papierkorb liegt.**
 Liefert die Uhr für einen Dienst nach, den du im Web inzwischen gelöscht hast,
@@ -1736,6 +1738,35 @@ Besatzungsnamen und Bergwacht-Angaben stehen ohnehin als Text im Diensttag, und
 beim Löschen eines Rettungsmittels oder eines Standorts wird dessen Name vorher in die
 betroffenen Diensttage übernommen. Ein **Nutzerkonto** zu löschen verlangt
 zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
+
+### 8.1 „Zuordnung offen" in der Leiste
+
+Steht unten in der Diensttage-Leiste ein oranger Eintrag **„Zuordnung offen"**
+mit einer Zahl, gibt es Diensttage oder Stammdatensätze, denen der Umbau auf
+Diensttage keinen Standort und kein Rettungsmittel zuordnen konnte. Der
+Eintrag erscheint **nur, solange etwas offen ist** — auf einer neu
+eingerichteten Installation gibt es ihn nie.
+
+**Nichts davon ist dringend.** Ein Diensttag ohne Zuordnung funktioniert:
+Zeiten, Phasen, Track und Reanimation sind vollständig erfasst. Es fehlen die
+Art (luftgebunden/bodengebunden), die Besatzungsrollen und die Felder, die von
+der Art abhängen.
+
+Auf der Seite steht je offenem Eintrag ein kleiner Block:
+
+- **Diensttage** — Datum und Dienstbeginn als Überschrift, darunter Zeitraum,
+  Zahl der Einsätze und die bisherigen Bezeichnungen. Wähle Standort und
+  Rettungsmittel; die Wahl eines Rettungsmittels setzt seinen Standort gleich
+  mit. Mit dem Speichern werden Art, Rollensatz, Fähigkeiten und Bezeichnungen
+  **eingefroren** — spätere Änderungen an deinen Stammdaten wirken darauf nicht
+  mehr.
+- **Eigene Einträge ohne Standort** — je Eintrag Name, Art des Stammdatensatzes
+  und die Wahl eines Standorts.
+
+Ganz unten steht **„Standortbezug verbindlich machen"**. Diesen letzten
+Schritt führt eine Administratorin aus: Er ändert das Datenbankschema und gilt
+für **alle** Konten — er geht deshalb erst, wenn in *keinem* Konto mehr etwas
+offen ist. Danach verschwindet die Seite von selbst.
 
 ---
 
@@ -2041,16 +2072,25 @@ zutrifft:
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
-Unter **„Wartung/Update"** steht seit 4.5.1 zusätzlich, wann der tägliche
-Aufräumjob zuletzt **vollständig** durchgelaufen ist. Steht dort eine Warnung,
-scheitert einer der Aufräumschritte dauerhaft — dann wird unter anderem der
+Unter **„Wartung"** steht seit 4.5.1 zusätzlich, wann der tägliche Aufräumjob
+zuletzt **vollständig** durchgelaufen ist — als zwei Zeilen „Letzter Versuch"
+und „Letzter vollständiger Lauf". Weichen die beiden Daten voneinander ab,
+scheitert einer der Aufräumschritte dauerhaft, und dann wird unter anderem der
 Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
 Webspace unter dem Suchwort `cleanup:`.
 
-Unter **„Wartung"** stehen zwei Dinge: ob Datenbank-Updates anstehen (nach
-dem Aufspielen einer neuen Fassung dort nachsehen) und ob der tägliche
-Aufräumjob durchläuft. Das bloße Öffnen der Seite ändert nichts — sie zeigt
-erst an, was anstünde, und wartet auf eine Bestätigung.
+Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
+Installation, die Umgebung (Mailversand), der Aufräumjob, Einsätze ohne
+Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
+ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
+Bestätigung.
+
+Jede Migration steht als eigene Zeile mit ihrem Stand als Plakette:
+**erledigt** (blau), **steht aus** (orange), **blockiert** (rot) oder
+**Fehler** (rot). Nach einem Update müssen alle „erledigt" tragen. Eine
+*blockierte* Migration würde eine Spalte löschen, in der noch Daten stehen;
+sie läuft nur, wenn du das Kästchen vor ihrer Zeile setzt — und dieses
+Kästchen heißt: **Die Daten sind gesichert.**
 
 Unter **„Stammdaten systemweit"** pflegt der Admin dieselben sechs Bereiche wie
 eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für **alle**

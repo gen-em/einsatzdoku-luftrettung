@@ -1237,10 +1237,10 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <?php ui_karte_ende(true); ?>
 
     <?php if (!$sdBases): ?>
-      <p class="alert alert-info">Noch kein Standort verfügbar. Lege oben einen
-         eigenen an oder wähle einen vordefinierten aus — ohne Standort gibt es
-         keine Rettungsmittel, keine Besatzungs-Vorbelegungen und keine
-         Zielkliniken.</p>
+      <?= ui_meldung_markup('info', 'Noch kein Standort verfügbar. Lege oben '
+          . 'einen eigenen an oder wähle einen vordefinierten aus — ohne Standort '
+          . 'gibt es keine Rettungsmittel, keine Besatzungs-Vorbelegungen und '
+          . 'keine Zielkliniken.') ?>
     <?php endif; ?>
 
   <?php else: ?>

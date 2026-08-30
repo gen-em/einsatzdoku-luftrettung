@@ -84,18 +84,47 @@ def konto_loeschen(basis: str, admin: tuple[str, str], konto: str) -> bool:
     if konto not in html:
         return False
 
-    # Die Zeile traegt ihren Verweis: <a href="admin_user.php?id=N">adresse</a>
-    kennung = None
-    for k, adresse in re.findall(
-            r'admin_user\.php\?id=(\d+)"[^>]*>([^<]+)</a>', html):
-        if adresse.strip() == konto:
-            kennung = k
-            break
-    if kennung is None:
+    # DIE KENNUNG STEHT VOR DER ADRESSE, NICHT DARIN (P3/O11, F-P3-BB).
+    #
+    # Bis Web 9.8.x war die Kontenzeile <a href="admin_user.php?id=N">adresse</a>,
+    # und der Ausdruck `id=(\d+)"[^>]*>([^<]+)</a>` holte beides in einem Griff.
+    # Mit dem Umbau der Liste (P3/O9b) stimmt das nicht mehr: Ab 720 px ist sie
+    # eine Tabelle, deren Zeile die Kennung in `data-ziel` traegt und deren
+    # Verweis „Öffnen" heisst; darunter ist sie eine `.zeile`, deren Verweis den
+    # Text in ein <span class="zeile-haupt"> wickelt. In beiden Faellen findet
+    # `>([^<]+)</a>` die Adresse nicht — der Ausdruck lieferte NULL Paare.
+    #
+    # Aufgefallen ist es erst in O11, weil `--frisch` nur dann hier hereinlaeuft,
+    # wenn das Umlaufkonto schon besteht; beim ersten Lauf auf einer frischen
+    # Datenbank endet die Funktion eine Zeile hoeher mit `return False`.
+    #
+    # Statt eines neuen, ebenso zerbrechlichen Musters wird jetzt die STELLE
+    # gesucht: Die Kennung steht in beiden Fassungen VOR der Adresse — als
+    # `data-ziel` der Tabellenzeile bzw. als `href` des Zeilenverweises. Also
+    # die letzte Kennung vor dem Vorkommen der Adresse.
+    stelle = html.find(konto)
+    treffer = [m for m in re.finditer(r'admin_user\.php\?id=(\d+)', html)
+               if m.start() < stelle]
+    if not treffer:
         raise RuntimeError(f"Kennung von {konto} nicht gefunden")
+    kennung = treffer[-1].group(1)
 
-    s.csrf_auffrischen("admin_users.php")
-    s.post("admin_users.php", {"csrf": s.csrf, "action": "user_del", "id": kennung})
+    # DAS LOESCHEN LIEGT AUF DER KONTOSEITE, NICHT IN DER LISTE (P3/O9a, E-P3-41).
+    #
+    # Bis Web 9.8.x nahm `admin_users.php` ein `action=user_del` mit der
+    # Kennung entgegen. Seit die Kontoseite die Drehscheibe ist, steht die
+    # Loeschung dort — `admin_user.php?id=N` mit `action=user_delete` — und sie
+    # verlangt eine ZWEITE STUFE: Die E-Mail-Adresse muss abgetippt werden,
+    # serverseitig geprueft. Der alte Aufruf lief ins Leere und meldete nichts;
+    # die Funktion merkte es erst an der Gegenprobe unten (F-P3-BB).
+    #
+    # `sicherungen_mit=1` ist die Vorbelegung der Oberflaeche: Zum Umlaufkonto
+    # gehoerende Admin-Sicherungen gehen mit. Genau das ist hier richtig — ein
+    # Pruefkonto soll keine verwaisten Sicherungen hinterlassen.
+    seite = f"admin_user.php?id={kennung}"
+    s.csrf_auffrischen(seite)
+    s.post(seite, {"csrf": s.csrf, "action": "user_delete",
+                   "confirm_email": konto, "sicherungen_mit": "1"})
     nachher = s.get("admin_users.php").text
     if konto in nachher:
         raise RuntimeError(f"{konto} liess sich nicht loeschen")

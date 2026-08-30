@@ -633,8 +633,12 @@ Feld:
   Liste — mit Datum, Dienstbeginn, Rettungsmittel, Standort und Zahl der
   Einsätze. Angelegt wird dort nichts mehr: Welchem Dienst ein Einsatz gehört,
   ist eine Auswahl, keine Nebenwirkung.
-* `diensttag_datum.php` nennt, was am gewählten Datum bereits liegt. Es ist
-  reine Auskunft — belegt oder frei ändert nichts an der Zulässigkeit.
+* `diensttag_datum.php` beziffert, **was mitwandert** — Einsätze (mit denen im
+  Papierkorb), Ruhesegmente, Trackpunkte, Phasenzeiten, Start und Ende des
+  Diensttags. Bis Web 6.0.0 nannte die Seite stattdessen, was am gewählten
+  Datum bereits liegt; diese Liste ist mit dem Tagesschlüssel entfallen, weil
+  mehrere Diensttage je Kalendertag seit E9 der vorgesehene Fall sind. Seit
+  P3/O11 steht die Aufstellung als Zeilen mit Plakette statt als Aufzählung.
 
 Beides ist **rein anzeigend**, und das ist keine Nachlässigkeit: Die Listen
 sind auf 400 Einträge gedeckelt und veralten, sobald in einem zweiten Fenster
@@ -671,6 +675,32 @@ Fußzeile **außerhalb** von `<main>` und lädt die vier Skripte des Gerüsts.
 Drei Leisteninhalte teilen sich dasselbe Markup: `ui_leiste_diensttage()`,
 `ui_leiste_einstellungen()` und — für die Suche — der von der Seite selbst
 gefüllte Filterblock (`leiste => 'filter'`, danach `ui_leiste_ende()`).
+
+**Die Grundformen des Stylesheets (Abschnitt 17, seit Web 9.12.0).** Bis dahin
+hieß dieser Abschnitt **Rohschicht** und war ausdrücklich befristet: Solange
+P3 die Seiten Paket für Paket umbaute, stand auf jeder noch nicht umgebauten
+Seite Markup mit Klassennamen, für die es keine Regel mehr gab. Zwei Klassen
+waren dafür begründete Ausnahmen (`.alert`, `.muted`), dazu Elementregeln für
+`table`/`th`/`td`, `fieldset`/`legend` und `hr`. Mit O11 sind alle fünf
+gefallen — die letzte Tabelle ohne eigene Regel (`.imp-table` im Import)
+trägt jetzt `.tabelle`, und
+`fieldset`, `legend` und `hr` kommen in der Anwendung nirgends mehr vor.
+
+Geblieben ist, was **Grundform** ist und keine Übergangslösung:
+`input`/`select`/`textarea` (ein Eingabefeld gibt es auch außerhalb von
+`.feld` — im Suchfeld, im Auswahlkästchen einer Zeile, in einem Filter, und es
+muss dort dieselbe Höhe, denselben Rahmen und dieselbe Farbe haben), Kästchen
+und Radios, das Muster `<label>Text <input></label>` (46 Stellen, überwiegend
+in den Filterreihen der Suche und im Einsatzformular), `summary` und
+`code`/`kbd`/`pre`.
+
+**Die Eintrittskarte bleibt eng: nur Elementnamen.** Eine Klasse dort
+einzutragen hieße, das Redesign zurückzunehmen — dafür gibt es die Bausteine
+in den Abschnitten davor. Und eine Falle hat der Abschnitt: Seine Regeln
+haben Spezifität (0,1,1) und schlagen damit jede bloße Klasse. Wer ein
+Kästchen über eine Klasse ausblenden will, braucht
+`input[type=checkbox].meine-klasse` — dreimal ist genau das schiefgegangen
+(F-P3-AP, F-P3-AZ).
 
 **Es gibt keine zweite Leiste.** Unter 1024 px liegt dieselbe `<aside
 class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest daneben;
@@ -1910,7 +1940,7 @@ Die Bausteine im Einzelnen:
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
-| Schaltflächenfamilie | `assets/style.css` (`.btn-primary/-danger/-yellow/-red/-plain/-edit`) | Ab Web 7.2.0 ein Block statt vier. Eine Sammelregel über alle sechs (`cursor`, `text-decoration`) und eine gemeinsame Regel für die kompakte Größe der drei Zeilenaktionen; in den Varianten steht nur noch, was sie unterscheidet. **`font-family` gehört nicht in die Sammelregel** — bei `.btn-primary`/`.btn-danger` kommt sie aus `button{}` und damit nur am `<button>` an. Die Größenregel der Zeilenaktionen nennt die Familie über `:is(…)` statt fünf Varianten einzeln; **eine Klasse je Element** ist dabei Bedingung, weil `.btn-plain` mit `font:inherit` arbeitet. |
+| Knopf | `ui.php` (`ui_knopf()`), `assets/style.css` (`.knopf` mit `-primaer/-neutral/-gefahr/-leise/-symbol`) | **Seit Web 9.0.0 (P3/O1) eine Höhe: 44 px**, mobil wie am Schreibtisch, auch für Zeilenaktionen — es gibt keine Kompaktvariante, was kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Vier Arten nach **Bedeutung**, nicht nach Aussehen: `primaer` (die eine Haupthandlung), `neutral` (alles Übrige, auch „Bearbeiten"), `gefahr` (Löschen), `leise` (Abbrechen, Nebenwege). Die Vorgängerfamilie `.btn-primary/-danger/-yellow/-red/-plain/-edit` ist mit O11 vollständig verschwunden; ihr letzter Rest war der Export-Knopf in `import.php`, der damit seit Web 9.0.0 ungestaltet war (F-P3-BA). **Im Aktionsblatt heißen dieselben Arten anders** (`blatt-gefahr`, `blatt-anlegen`) — `ui_zeilenaktionen()` wählt danach, wo der Knopf steht; wer das übersieht, bekommt ein „Löschen", das nicht rot ist (F-P3-AX). |
 | Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`, `.woerter()`, `.hervor()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. Seit Web 9.5.0 dazu `woerter()` (die positiven Literale einer Eingabe) und `hervor()` (setzt `<mark>` in **bereits maskierten** Text) für die Trefferhervorhebung. |
 | Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 
@@ -2326,7 +2356,10 @@ sieht vollständig aus und ist es nicht.
 Uhr = neues Gerät anlegen.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
-→ als Admin **`/update.php`** aufrufen → alle Zeilen müssen ✔ zeigen.
+→ als Admin **`/update.php`** aufrufen → jede Zeile muss die Plakette
+**„erledigt"** tragen. (Bis Web 9.11.1 stand dort ein ✔; seit P3/O11 sagt der
+Status ein Wort — `erledigt` blau, `steht aus` orange, `blockiert` rot,
+`Fehler` rot —, weil Schriftzeichen als Symbol ausgeschlossen sind, E-P3-18.)
 Fehlgeschlagene Migrationen werden nicht verbucht und beim nächsten Aufruf
 erneut versucht; Folge-Migrationen stoppen bis dahin. **Version in `version.php`
 erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.

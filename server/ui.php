@@ -284,7 +284,15 @@ function ui_artzeichen(?string $kind, string $klassen = ''): string
 {
     require_once __DIR__ . '/diensttag_lib.php';
     $sym = dt_art_symbol($kind);
-    return ui_symbol($sym['symbol'], trim('artzeichen ' . $klassen), $sym['text']);
+    /* OHNE DIE KLASSE `artzeichen` (P3/O11). Sie stammt aus der Zeit, als das
+     * Artzeichen ein EMOJI war, und war dessen Korsett:
+     * `width:1.4em;text-align:center;font-size:1.05em;cursor:help`. Seit O2
+     * kommt das Zeichen aus dem Symbolvorrat (E-P3-18) und bringt seine Groesse
+     * selbst mit; im neuen Stylesheet hatte die Klasse folgerichtig keine Regel
+     * mehr. Eine Klasse ohne Regel im Markup ist kein Schaden, aber auch keine
+     * Auskunft — und die naechste, die sie wieder mit Leben fuellt, baut das
+     * Korsett um ein SVG. Auf der Streichliste. */
+    return ui_symbol($sym['symbol'], trim($klassen), $sym['text']);
 }
 
 
@@ -1664,7 +1672,7 @@ function ui_ortsfeld(array $o): void
       <div class="loc-widget <?= e((string)($o['klasse'] ?? '')) ?>"<?= $versteckt ?>>
         <label for="<?= e($p) ?>addr"><?= e((string)($o['label'] ?? '')) ?>
           <?php if (!empty($o['hinweis'])): ?>
-            <span class="muted small"><?= e((string)$o['hinweis']) ?></span>
+            <span class="feld-klein-inline"><?= e((string)$o['hinweis']) ?></span>
           <?php endif; ?>
         </label>
         <div class="ortsfeld-zeile">
