@@ -2,7 +2,8 @@
 
 **Programm:** Gen-EM NAdoku · **Phase:** P3 · **Konzept:**
 `Konzept-P3-Oberflaeche.md` · **Zweig:** `claude/konzept-p3-umsetzen-c4zctj`
-**Stand:** 26.08.2026, nach Arbeitspaket **O2** und der Fable-Kontrolle (Web 9.1.1)
+**Stand:** 30.08.2026, **nach Abschluss der Phase** — Arbeitspaket O12,
+Web 9.13.0
 
 ---
 
@@ -12,8 +13,19 @@ Das Konzept beantwortet die Frage **„ist die Änderung belegt?"**. Dieses
 Dokument beantwortet die andere: **„was muss ich noch prüfen, und wie?"**
 
 **Abschnitt 5 ist die Arbeitsliste.** Alles davor sagt, warum sie so
-aussieht. Es wächst mit jedem Arbeitspaket; solange die Phase läuft, ist es
-unvollständig — und sagt das an jeder Stelle, an der es das ist.
+aussieht.
+
+**Die Phase ist abgeschlossen; dieses Dokument ist es damit auch.** Es ist mit
+den Arbeitspaketen gewachsen und war bis O11 an mehreren Stellen ausdrücklich
+unvollständig. Diese Stellen sind mit O12 nachgezogen: Abschnitt 2 nennt jetzt
+zu **jedem** Paket Mittel und Zahl, Abschnitt 5 führt die Bedienwege bis O12.
+
+**Der Umfang von Abschnitt 5.** Zwölf Pakete ergeben eine lange Liste, und
+eine lange Liste wird nicht abgearbeitet. Sie ist deshalb zweigeteilt:
+**5.0 ist der kurze Weg** — vierzehn Punkte, die die Phase als Ganzes
+abnehmen, in etwa einer Stunde. Die Abschnitte 5.1 bis 5.16 sind die
+ausführliche Fassung je Paket; sie sind das Nachschlagewerk, wenn 5.0 etwas
+findet, und die Prüfliste für den, der es genau wissen will.
 
 ---
 
@@ -62,49 +74,69 @@ hier **nicht** belegt ist:
 - **Zeigen ohne Maus.** `:hover`-Zustände gibt es auf einem Touchgerät nicht;
   wo ein Hinweis nur dort steht, fällt er weg.
 
-### 1.3 Was der Zwischenstand nach O8 noch nicht ist
+### 1.3 Was am Ende der Phase offen ist
 
-> **Dieses Dokument ist auf dem Stand nach O8c (Web 9.7.2).** Die Phase steht
-> inzwischen bei **O11 (Web 9.12.0)** — O9, O10 und O11 sind im Konzept
-> (`docs/Konzept-P3-Oberflaeche.md`, Abschnitt „Umsetzungsstand") mit Prüfstand
-> und Zahlen festgehalten und werden hier in **O12** nachgezogen; so sieht es
-> der Phasenplan vor. Alles unterhalb dieser Zeile beschreibt den Stand nach
-> O8 und ist als Momentaufnahme zu lesen, nicht als heutiger Zustand. Was seit
-> O8 vor allem anders ist: Die Verwaltungs- und Administrationsseiten sind
-> umgebaut, es gibt keine waagerecht scrollende Verwaltungstabelle mehr, die
-> Meldungen tragen ihr Symbol, die alten `.btn-*`-Knöpfe gibt es nicht mehr —
-> und die Übergangsschicht des Stylesheets ist mit O11 aufgelöst.
+Die Phase ist fertig; das heißt nicht, dass alles null ist. Was **nicht**
+erreicht wurde, steht hier — vorn, nicht in einer Fußnote.
 
-**Diese Fassung braucht eine Migration** (`2026_08_27_logo_wahl`). Sie ist
-die erste der Phase; ohne den Aufruf von `update.php` scheitert jede
-Anmeldung.
+**Der Sollwert „0 Unicode-Zeichen als Symbol" ist nicht erreicht.** Die
+Prüfung meldet 158 Treffer. 155 davon sind erklärt: 76 stehen in Kommentaren
+und erreichen nie einen Browser, der Rest ist richtige Typografie in
+sichtbarem Text — die Auslassungspunkte der Fortschrittsmeldungen („Datei wird
+verschlüsselt…"), die Pfad-Pfeile der Hinweise („Einstellungen → Papierkorb"),
+das Malzeichen in „3× RTW", die Bereichsangabe „00:00…23:59". **Drei sind
+echte Symbole im Markup** und stehen als Backlog Nr. 42:
 
-**Der Einsatzweg, die Suche und die Auswertung sind neu, die
-Verwaltungsseiten nicht.** Web 9.1.0 brachte Kopfleiste, Schublade, Leiste,
-Fußzeile und den Bausteinvorrat; Web 9.2.0 (O3) die Tagesübersicht;
-Web 9.3.0 (O4) die Einsatzansicht; Web 9.4.0 (O5) das Einsatzformular samt
-Ortswahl; Web 9.5.0 (O6) die Suche; Web 9.6.0 (O7) die Zeitraumübersicht;
-Web 9.7.0 bis 9.7.2 (O8a–c) die Einstellungen vollständig — Profil,
-Logo-Wahl, Verwaltungslisten, Geräte, Sicherung und Import. Was innerhalb der
-**übrigen** Seiten steht, ist bis auf die Artzeichen unverändert: die
-Administration und die kleineren Seiten (Papierkorb, Diensttag anlegen,
-Zusammenführen, Anmeldung). Sie folgen in O9 bis O11.
+| Stelle | was | warum nicht behoben |
+|---|---|---|
+| `einsatz_form.php:1416` | `✕` als Rückfall, falls `edSymbol()` beim synchronen Aufbau noch nicht geladen ist | Ein Netz, kein Fehler — mit Begründung im Code |
+| `assets/ortsfeld.js:197` | `×` am Koordinaten-Chip | `.rmx` ist textgroß gebaut; ein SVG hineinzusetzen heißt, den Knopf neu zu bemaßen |
+| `assets/patient.js:133` | `⚠` für einen nicht entschlüsselbaren Datensatz | Steht nicht nur in einer Zelle, sondern **im Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine Gestaltungsfrage |
 
-Sichtbare Folgen, die **kein Fehler** sind:
+**Sechs Klassen im Markup haben keine Regel, und ob sie eine brauchen, ist
+offen** (Backlog Nr. 41). Der wahrscheinlichste echte Fund darunter:
+`imp-warn` — der Hinweis „abweichende Crew (…)" in der Importvorschau sieht
+aus wie Fließtext. Dazu `imp-daygroup` (eine Gruppenüberschrift, die aussieht
+wie eine Datenzeile), `rea-kopf`, `rea-beginn`, `rmneu`, `phasen-name`.
 
-- Tabellen der Verwaltungsseiten scrollen auf schmalen Geräten waagerecht in
-  ihrem eigenen Kasten, statt zur Kachel zu werden (O8–O9).
-- Meldungen im Seiteninhalt tragen noch **kein Symbol** — sie erscheinen
-  seit Web 9.1.1 in den Farben des Meldungs-Bausteins (Übergangsregel,
-  F-P3-T); das Symbol kommt mit `ui_meldung()` im jeweiligen Paket. Die
-  Gerätemeldung der Startseite hat ihres seit O3.
-- Knöpfe im Seiteninhalt der noch nicht umgebauten Seiten sind die alten
-  `.btn-*`; sie erscheinen als Rohform aus der Übergangsschicht.
-- Die Verwaltungs- und Administrationsseiten tragen noch ihre alte Gestalt —
-  das ist O8 bis O11.
+**55 Altklassen stehen ohne Gegenstück da** (Backlog Nr. 40). Die
+Streichliste sagt zu ihnen nicht, *warum* sie verschwunden sind. Das ist
+Rekonstruktionsarbeit über zehn Pakete und in O12 bewusst zurückgestellt
+worden — eine Liste mit 55 Einträgen „ersatzlos entfallen" sähe vollständig
+aus und sagte nichts.
 
-**Dieser Stand gehört nicht auf den Produktivserver.** Er liegt auf dem
-Phasenzweig; die Deploy-Action greift nur bei einem Push auf `main`.
+**Das Handbuch ist nicht vollständig nachgezogen.** Ausdrückliche
+Entscheidung: Es beschreibt die Bedienung, und die ändert sich bis 1.0 noch.
+Geändert wurde nur, was ohne Wert veraltet ist — 14 Unicode-Symbolzeichen im
+Text und drei Bildschirmfotos. **Wer nach diesem Dokument prüft, prüft die
+Anwendung, nicht das Handbuch.**
+
+**Kein Prüfmittel misst, ob die Gestaltungsrichtlinie trägt.** `docs/Design.md`
+ist in O12 entstanden und ab sofort verbindlich. Maschinell belegt sind ihre
+**Tabellen** (sie stammen aus dem Quelltext, erzeugt von `tools/design/`) und
+ihre **Verweise** (jede genannte Funktion existiert). Ob „nimm `ui_zeile()`,
+nicht eine Tabelle" ein guter Rat ist, zeigt erst die erste Seite, die jemand
+nach ihr baut.
+
+### 1.4 Was der Stand ist, wenn er ausgeliefert wird
+
+**Drei Migrationen** sind in dieser Phase entstanden. Nach dem Deploy muss
+eine Administratorin **`update.php`** aufrufen — sonst steht die Anwendung:
+
+| Migration | aus | wofür |
+|---|---|---|
+| `2026_08_27_logo_wahl` | O8a (Web 9.7.0) | Logo-Wahl je Konto |
+| `2026_08_28_last_login` | O9a (Web 9.8.0) | `users.last_login` für die Kontenliste |
+| Rechtstexte | O10 (Web 9.11.0) | Tabelle `rechtstexte` |
+
+**Ohne erhöhte `WEB_VERSION` sieht der Browser alte Dateien.** Sie steht auf
+9.13.0.
+
+**Zwei Zuarbeiten fehlen** und sind keine Fehler der Umsetzung: das echte
+NEF-Logo (bis dahin steht der Platzhalter aus O1, am gestrichelten Rahmen
+erkennbar) und die Impressums- und Datenschutztexte der eigenen Installation
+(einzugeben über den Editor aus O10; bis dahin zeigen beide Seiten ihren
+Leerzustand mit Hinweis).
 
 ---
 
@@ -314,23 +346,142 @@ Koordinaten, unveränderter Name.
 | Streichliste | Sollmenge 220 — 45 mit Regel, **87 gestrichen** |
 | Syntax | `php -l` und `node --check` über alle geänderten Dateien — fehlerfrei |
 
-### 2.3 Der Vorher-Stand, zum Gegenhalten
+### 2.12 Nach O9a (Web 9.8.0) — **mit Migration**
+
+| Was | Ergebnis |
+|---|---|
+| Bedienproben Kontoseite | **29 Proben** (Playwright, 1440 px, Admin-Konto, gegen ein eigens angelegtes Probekonto), alle erwartungsgemäß, **0 Konsolenmeldungen** |
+| Bibliotheksproben Sicherungsregeln | **14 Proben** gegen einen Probeordner mit fünf Paketen: Verdrängung hält das freigegebene und das jüngste Paket |
+| Migration `2026_08_28_last_login` | Spalte von Hand gelöscht, `update.php` aufgerufen → Migration mit Klartextnamen genannt und ausgeführt; danach eine Anmeldung schreibt den Zeitpunkt, die übrigen Konten bleiben `NULL` |
+| Kontolöschung | Konto **und** Sicherungsordner danach fort |
+| Bildaufnahme | 240 Bilder (30 Seiten × 8 Breiten) — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des Solls |
+| Wortliste | 203 Treffer, 203 erklärt, **0 außerhalb**, 0 ungenutzte Ausnahmen |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Syntax | `php -l` über alle geänderten Dateien — fehlerfrei |
+
+### 2.13 Nach O9b (Web 9.9.0) — die Abnahme mit 304 Konten
+
+Der einzige Ort der Phase, an dem eine **Menge** geprüft wurde.
+`tools/pruefkonten/` legt 300 Konten mit festem Zufallsstartwert an, dazu die
+vier des Referenzdatensatzes: 180 aktuell, 28 überfällig, 86 nie gesichert,
+6 ohne Kontokennung, 6 Admins, 55 ohne Gerät, 44 nie angemeldet.
+
+| Was | Ergebnis |
+|---|---|
+| Liste, Filter, Sortierung, Seitenwechsel | **35 Proben**, alle erwartungsgemäß, **0 Konsolenmeldungen**. Seite 1: 50 Zeilen, „Konten 1–50 von 304"; Seite 7: 4 Zeilen, „301–304 von 304"; `?s=99` fällt auf die letzte Seite, `?s=0` auf die erste |
+| Anlegen, Sammelaktion, mobile Fassung | **19 Proben**. Zwei Konten „nie gesichert" stehen nach „Auswahl sichern" auf „aktuell"; unter 720 px ist die Tabelle `display:none` und dieselben 50 Zeilen stehen als Kacheln |
+| Auswahl über Seitengrenzen | 2 Kästchen auf Seite 1 + 1 auf Seite 2 → „3 ausgewählt"; nach der Rückkehr sind auf Seite 1 wieder genau die beiden gesetzt |
+| Umlaut-Sortierung | „Ömer Berger" an Position **211 von 304**, zwischen „Nora Vogel" und den P-Namen. Vorher stand es hinter allen 303 anderen |
+| Mengen | `edbak_staende()` 3,2 ms für 209 Ordner; Kontenabfrage 3,3 ms für 304 Zeilen; ganzer Seitenaufruf **103 ms**. Ohne den Zwischenspeicher der Marken allein 27,7 ms für die 304 Wertungen |
+| Bildaufnahme mit Testbestand | 16 Bilder (`40-nutzerinnen`, `41-kontoseite` × 8 Breiten) — 0/0/0; danach der volle Lauf ohne Testbestand: 240 Bilder, ebenfalls 0/0/0 |
+| Gegenprobe Suchseite (F-P3-AM) | Gruppenzähler weiterhin `rgb(217, 236, 253)`, Filterknopf wieder 48 px |
+| Syntax | `php -l`, `node --check` — fehlerfrei |
+
+### 2.14 Nach O9c (Web 9.10.0) und der Berichtigung (Web 9.10.1)
+
+**Zwei Zahlen aus O9c waren falsch, und beide aus demselben Grund: Sie waren
+zu früh gemessen.** Das steht hier so ausführlich, weil es die Lehre der
+ganzen Phase ist.
+
+| Was | Ergebnis |
+|---|---|
+| Vollständigkeit | 220 Altklassen, 45 mit Regel, **95 auf der Streichliste** (+14), 80 ohne Gegenstück (vorher 88); „im Markup ohne Regel" **54** (vorher 68) |
+| Wortliste | ~~58 Regeln, 0 Treffer~~ → **falsch.** Das Werkzeug lief **vor** dem Schreiben der Dokumentation; die danach entstandenen Logo-Abschnitte brachten **5 Treffer**. Berichtigt mit 9.10.1: 62 Regeln, 62 gegriffen, **0 Treffer** |
+| Bilderlauf | ~~248 Bilder, 0 Überlauf~~ → **wertlos** (F-P3-AQ). 22 der 31 Seiten zeigten die **Anmeldeseite**, sechs weitere die Startseite. Gemessen war die Anmeldeseite in acht Breiten. Berichtigt mit 9.10.1: 248 Bilder, **248 verschiedene Prüfsummen**, 0/0/0 |
+| Kontraste | 21 Paare, **0 verfehlt** |
+| Syntax | `php -l` über 11 geänderte Dateien, 0 Fehler |
+
+**Was daraus folgt und seither gilt** (`CLAUDE.md` §6): *Die Prüfmittel laufen
+zuletzt, nicht zwischendurch.* Und: *Eine grüne Zahl ist erst dann ein Beleg,
+wenn sie das Gemessene benennt.* Der Bilderlauf prüft seither selbst, ob eine
+Seite auf die Anmeldung zurückgefallen ist, und fotografiert sie dann **nicht**,
+sondern meldet sie.
+
+### 2.15 Nach O10 (Web 9.11.0) — **mit Migration**
+
+| Was | Ergebnis |
+|---|---|
+| Rechtstext-Renderer | `tools/rechtstexte/` (neu): **81 Proben, 0 fehlgeschlagen** — 15 Umfang, 12 rohes HTML, 13 Linkziele, 5 Attribut-Injektion, 6 nicht unterstützte Formen, 8 Zeichen und Kodierung, 6 Ränder, 16 übrige Funktionen. Dazu **65 Ausgaben gegen eine Positivliste** erlaubter Tags (`h2 h3 p br ul ol li a`) und Attribute (`href`) |
+| Vollständigkeit | 220 Altklassen, 45 mit Regel, **99 auf der Streichliste** (+4), 76 ohne Gegenstück |
+| Wortliste | 62 Regeln, 62 gegriffen, 0 ungenutzt, **0 Treffer** — gefahren **nach** der Dokumentation |
+| Kontraste | 21 Paare, 0 verfehlt. Die Versionsnummer der Fußzeile stieg von **1,53:1 auf 5,30:1** |
+| Bilderlauf | 34 Seiten × 8 Breiten = **272 Bilder**, 0/0/0. Neu: `04-impressum`, `05-datenschutz`, `43a-rechtstexte` |
+| `schema.sql` | in eine Wegwerfdatenbank eingespielt nach dem Verfahren von `install.php`: 33 Anweisungen, 31 Tabellen, `rechtstexte` dabei |
+| Syntax | `php -l`, `node --check`, JSON-Prüfung über `seiten.json` und `ausnahmen.json` |
+
+### 2.16 Nach O11 (Web 9.11.1 und 9.12.0)
+
+| Was | Ergebnis |
+|---|---|
+| Bilderlauf | 34 Seiten × 8 Breiten = **272 Bilder**; Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0** |
+| Gegenprobe Prüfsummen | 272 Bilder, **271 verschiedene**. Die eine Dublette ist das Paar `10-tagesuebersicht` / `11-tagesuebersicht-schublade` bei 1024 px — ab 1024 px gibt es keine Schublade, beide fotografieren dieselbe Seite. Pixelweise nachgemessen; bei 1280/1440 px unterscheiden sie sich um einen 1 × 75 px großen Streifen |
+| Vollständigkeit | Streichliste-im-Markup **5 → 0**; „ohne Gegenstück" 78 → **55**; „im Markup ohne Regel" 48 → **29**; Unicode 163 → **158**; Befunde gesamt 294 → **247** |
+| Wortliste | **0 / 0 / 0** bei 62 Regeln, alle gegriffen |
+| `papierkorb_misch.mjs` | **15 Einzelprüfungen, 0 Befunde, 0 Konsolenfehler** — auf zwei frisch angelegten Umlaufkonten |
+| `kreislauf.py --art edbak --frisch` | **286 739 Einzelvergleiche, 0 unerklärte Abweichungen**, 16 erwartete. Das Werkzeug selbst war dafür zu reparieren (F-P3-BB) |
+| Export-Knopf, vorher/nachher | 23 px, transparent, Radius 0, Textschrift → **44 px**, `rgb(255,143,31)`, Radius 10 px, Bricolage (F-P3-BA) |
+| Syntax | `php -l`, `node --check`, `ast.parse` über `kreislauf.py` — fehlerfrei |
+
+### 2.17 Nach O12 (Web 9.13.0) — der Endstand
+
+Alle Läufe **nach** der letzten Änderung, nicht zwischendurch.
+
+| Was | Ergebnis |
+|---|---|
+| Wortliste | **0** Treffer außerhalb der Ausnahmen, **0** ungenutzte Ausnahmen, **0** durchgerutschte Fallen — bei **66 Regeln, alle 66 gegriffen**. 339 Treffer gesamt, alle erklärt. Bereich (c) liest 8 normative Dokumente (neu `Design.md` und `Lizenzen.md`, ausgetragen `Branding.md`) |
+| Vollständigkeit | **224 Befunde** (O1: 294, O11: 247). Alle Wertefragen **0**. Neu: „im Markup ohne Regel, Grund nicht eingetragen" **29 → 0**, davon 6 als `[offen]` weitergeführt; „ohne-regel.md: Eintrag ohne Vermerk" 0, „Eintrag ungenutzt" 0 |
+| `tools/design/tabellen.py` | vier Läufe: **87** Token in 15 Gruppen · **19** Medienblöcke über 5 Breiten · **44** Symboldateien · **32** Bausteine. Die Tabellen der Design-Kapitel 4, 7, 8 und 9 stammen aus diesen Läufen |
+| Bilderlauf | 34 Seiten × 8 Breiten = **272 Bilder**; Überlauf **0**, Konsolenfehler **0**, Knöpfe ≠ 44 px **0** |
+| Gegenprobe Prüfsummen | 272 Bilder, **272 verschiedene** — 0 Dubletten. Nach O11 war es eine; der Unterschied ist Aufnahmerauschen im erklärten Paar, kein Fortschritt |
+| Gegenprobe Anmeldeseite | Das Werkzeug prüft sie selbst (seit F-P3-AQ): Eine Seite, die auf `login.php` zurückfällt, wird nicht fotografiert, sondern gemeldet — **0** solche Meldungen |
+| Kontraste | **21 Paare, 0 verfehlt**; Primärknopf 5,97:1; drei benannte Ausnahmen mit Grund |
+| Stilvergleich (Neueichung) | **53 638 Elementmessungen** über 4 Proben × 13 Breiten, 149 Eigenschaften je Element, **12 Abweichungen — alle zwölf die eine beabsichtigte** (`div.leiste-filter`, `width`, bei 1024/1100/1280/1440/1680/1920 px in `katalog.html` und `pseudo.html`) |
+| `kaskade.py` | 625 → 627 Regeln; **0 entfallen, 2 neu** (die beiden geplanten), **0 mit anderem Endwert, 0 vertauschte Reihenfolgen** |
+| Filterleiste (F-P3-BC) | im Browser bei fünf Breiten: Suche **240 / 240 / 280 / 280 / 280 px**, Tagesübersicht unverändert **220 / 220 / 260 / 260 / 260 px** |
+| Syntax | `php -l` über `version.php` und `ui.php`; `py_compile` über `tabellen.py`, `proben.py`, `pruefen.py`; `node --check` über `stilvergleich.js` |
+
+### 2.18 Der Vorher-Stand, zum Gegenhalten — und der Endstand daneben
 
 Erhoben am Stand `main` 2e4f4fe (Web 8.0.1), bevor das Stylesheet ersetzt
 wurde. Diese Zahlen sind der Maßstab, an dem sich das Ende der Phase messen
 lässt:
 
-| | vorher | Sollwert Ende P3 |
-|---|---|---|
-| Hexfarben außerhalb `:root` | 78 | 0 |
-| Schriftgrößen außerhalb der Skala | 71 | 0 |
-| Pixelmaße außerhalb der Token | 154 | 0 |
-| `50px`-Reste | 5 | 0 |
-| `style="…"`-Attribute in PHP/JS | 14 | 0 |
-| Inline-SVG mit Pfaden | 5 | 0 |
-| Unicode-Zeichen als Symbol | 147 | 0 |
-| Emoji im Markup | 80 | 0 |
-| Klassen im Markup ohne Regel | 22 | 0 |
+| | vorher | Sollwert Ende P3 | **Ist am Ende** |
+|---|---|---|---|
+| Hexfarben außerhalb `:root` | 78 | 0 | **0** ✔ |
+| `rgb()`/`rgba()` mit festen Zahlen | 8 | 0 | **0** ✔ |
+| Schriftgrößen außerhalb der Skala | 71 | 0 | **0** ✔ |
+| Pixelmaße außerhalb der Token | 154 | 0 | **0** ✔ |
+| `50px`-Reste | 5 | 0 | **0** ✔ |
+| `style="…"`-Attribute in PHP/JS | 14 | 0 | **5** — siehe unten |
+| Inline-SVG mit Pfaden | 5 | 0 | **0** ✔ |
+| Unicode-Zeichen als Symbol | 147 | 0 | **158**, davon 3 echte — Abschnitt 1.3 |
+| Emoji im Markup | 80 | 0 | **0** ✔ |
+| Klassen im Markup ohne Regel | 22 | 0 | **0** ohne eingetragenen Grund, 6 als `[offen]` |
+
+Sieben von zehn Sollwerten sind erreicht, und zwar vollständig: **Kein
+einziger Farbwert, keine Schriftgröße und kein Pixelmaß steht mehr außerhalb
+der Token.** Das war der Kern des Umbaus, und es ist maschinell nachgezählt.
+
+Die drei übrigen sind keine Nullen, und keine davon ist eine Ausrede:
+
+- **`style="…"` — 5 statt 0**, und alle fünf nachgesehen: viermal
+  `background:<farbe>` (`index.php:379`, `geo.js:91`, `missiontable.js:162`,
+  `missiontable.js:253`) und einmal
+  `transform:rotate(<winkel>deg)` (`geo.js:112`). Die Farbe ist in allen vier
+  Fällen die **Spurfarbe eines Diensttags**, die `geo.js` über
+  `getComputedStyle` aus `--spur-1` … `--spur-8` holt; der Winkel ist die
+  gemessene Fahrtrichtung. Beides sind Werte, die es erst zur Laufzeit gibt —
+  für eine Farbe, die von der Position in einer Liste abhängt, und für einen
+  Winkel in Grad kann es keine Regel im Stylesheet geben. Die Farben **kommen
+  aus den Token**, sie umgehen sie nicht.
+- **Unicode als Symbol — 158 statt 0.** 155 sind Kommentare oder richtige
+  Typografie, 3 sind echt und benannt (1.3, Backlog Nr. 42).
+- **Klassen ohne Regel.** Der Sollwert ist erreicht, aber anders als gedacht:
+  Die 29 Namen sind nicht verschwunden, sondern **begründet** — 23 mit
+  `[bleibt]`, 6 mit `[offen]`. Der Unterschied ist wesentlich: Eine Zahl, die
+  auf null gedrückt wird, sagt nichts; eine Liste mit 29 Begründungen sagt zu
+  jedem Namen, warum er richtig ist.
 
 ---
 
@@ -346,6 +497,14 @@ Referenzdatensatz, Konsole mitgelesen.
 | Favicons bei 16, 32 und 128 px | Bei 32 px beide klar erkennbar; bei 16 px der Hubschrauber besser als das NEF (der Platzhalterrahmen kostet Fläche) |
 | Entschlüsselung nach der Anmeldung | Diagnose („Schädel-Hirn-Trauma bei Motorradunfall") und Einsatzort („Brunnengasse 66, 87411 Auwiesen") erscheinen im Klartext; kein Entsperrdialog |
 | Kartenkacheln und Ortssuche | `tile.openstreetmap.org` und `photon.komoot.io` antworten mit HTTP 200 — Karte und Adresssuche sind in dieser Umgebung prüfbar |
+
+**Dazu je Paket, im Konzept mit Fundstelle festgehalten:** 29 + 19 + 35
+Bedienproben zur Administration (O9a/b), der Angriffsversuch gegen den
+Rechtstext-Renderer im echten Weg (O10: `<script>`, `javascript:`-Link und
+`onerror` gespeichert und auf der **öffentlichen Seite abgemeldet** geprüft —
+kein `<script>`, kein `href="javascript`, kein `<img>`), acht Inhaltsseiten
+bei 360/390/1280 px auf 23 gesuchte Altklassen (O11), die Filterleiste bei
+fünf Breiten (O12, F-P3-BC).
 
 ---
 
@@ -365,6 +524,23 @@ nennen sie vollständig. Die vier, die hier zählen:
    mit den Paketen.
 4. **Das Bild sagt nicht, ob es richtig ist**, sondern wie es aussieht. Der
    Abgleich gegen die Mockups bleibt Sichtprüfung.
+5. **Die Knopfhöhenmessung sucht `.knopf`.** Ein Knopf ohne diese Klasse
+   fällt ihr nicht auf — genau so ist der Export-Knopf mit `btn-primary` vier
+   Monate lang 23 px hoch geblieben (F-P3-BA). Die Gegenprobe dafür ist die
+   Liste „im Markup ohne Regel", und die gehört **gelesen**, nicht gezählt.
+   Seit O12 ist sie lesbar (`ohne-regel.md`).
+6. **Der Bilderlauf zeigt nur, was in `seiten.json` steht** — und bis 9.10.1
+   nicht einmal das: 176 von 248 Bildern zeigten die Anmeldeseite, und die
+   Zahl „0 Überlauf" war dennoch grün (F-P3-AQ). Er prüft das seither selbst.
+   Die einfachste Gegenprobe bleibt trotzdem richtig: `ls *.png | wc -l` gegen
+   `md5sum *.png | cut -d' ' -f1 | sort -u | wc -l`. Stehen dort zwei
+   verschiedene Zahlen, zeigen mehrere Seiten dasselbe Bild.
+7. **Die Seitenprobe des Stilvergleichs sieht keine bedingten Klassen aus
+   PHP-Ausdrücken.** `entphp()` schneidet `<?= … ?>` heraus; eine Klasse, die
+   dort entsteht (`$leiste === 'filter' ? ' leiste-filter' : ''`), fehlt in
+   `seiten.html`. Aufgefallen in O12 am eigenen Eichlauf. `katalog.html`
+   fängt solche Fälle, weil es je Selektor ein Element baut — wer eine Regel
+   nur in der Seitenprobe prüft, prüft zu wenig.
 
 ---
 
@@ -376,6 +552,93 @@ Teil, denn sonst prüft man, **ob** etwas erscheint, statt **was**.
 
 **⬤ Pflicht** — hier kann etwas kaputt sein, das kein Werkzeug gesehen hat.
 **○ Sichtprüfung** — reine Bestätigung; eine Abweichung wäre überraschend.
+
+### 5.0 Der kurze Weg — die Phase in einer Stunde
+
+**Wer nur einmal prüfen will, prüft das hier.** Vierzehn Punkte, die die Phase
+als Ganzes abnehmen. Alles darunter (5.1 bis 5.16) ist die ausführliche
+Fassung je Paket — das Nachschlagewerk, wenn hier etwas auffällt.
+
+Voraussetzung: eine Installation mit dem eigenen Datenbestand, **`update.php`
+aufgerufen**, hart neu geladen (Strg+Umschalt+R).
+
+- [ ] **K-1 ⬤ Ein Telefon, quer durch die Anwendung.** *Weg:* Auf einem
+      echten Handy (nicht nur schmalem Fenster) anmelden und den ganzen Weg
+      gehen: Tagesübersicht → Einsatz öffnen → bearbeiten → speichern →
+      Suche → Zeitraum → Einstellungen. *Erwartet:* Nirgends muss man
+      **seitwärts schieben**, um etwas zu lesen oder zu treffen.
+      *Fehlschlag heißt:* Der Kern der Phase ist verfehlt. Die Zahl „0
+      Überlauf" ist an Viewport-Breiten gemessen, nicht an einem Gerät — sie
+      kennt weder Notch noch Adressleiste noch Systemschrift.
+- [ ] **K-2 ⬤ Symbole in Safari.** *Weg:* Dieselbe Seite auf iPhone oder iPad
+      öffnen. *Erwartet:* Die Strichzeichnungen erscheinen, in der Farbe
+      ihrer Umgebung. *Fehlschlag heißt:* Leere Stellen = WebKit lädt den
+      externen Symbolverweis nicht; schwarze Klumpen = die Strichattribute
+      kommen im geklonten Baum nicht an. Beides ist ernst und in 5.1 (P-1)
+      ausführlich beschrieben — **die gesamte Phase ist nur in Chromium
+      geprüft.**
+- [ ] **K-3 ⬤ Der Daumen trifft.** *Weg:* Auf dem Handy die kleinen Knöpfe
+      antippen: das Zahnrad in der Kopfleiste, die drei Punkte an einer
+      Einsatzzeile, das ✕ am Koordinaten-Chip. *Erwartet:* Jeder trifft beim
+      ersten Versuch. *Fehlschlag heißt:* Die 44-px-Regel ist an einer Stelle
+      nicht angekommen. Der Bilderlauf misst nur, was `.knopf` trägt.
+- [ ] **K-4 ⬤ Nichts geht beim Speichern verloren.** *Weg:* Einen Einsatz mit
+      **allen** Feldern öffnen (Diagnose, Alter, Einsatzort mit Koordinaten,
+      Phasen, Reanimation), nichts ändern, speichern, neu laden.
+      *Erwartet:* Jeder Wert steht unverändert da, die Karte zeigt denselben
+      Punkt. *Fehlschlag heißt:* Ein Feld ist beim Umbau des Formulars aus
+      dem Katalog gefallen — das wäre Datenverlust, nicht Gestaltung.
+- [ ] **K-5 ⬤ Die Verschlüsselung trägt.** *Weg:* Nach der Anmeldung eine
+      Einsatzansicht öffnen. *Erwartet:* Diagnose, Alter und Einsatzort
+      stehen im **Klartext** da, ohne Entsperrdialog. *Fehlschlag heißt:*
+      Punkte oder ein Warnzeichen = der Inhaltsschlüssel passt nicht. Sofort
+      aufhören und **keine Sicherung erstellen**.
+- [ ] **K-6 ⬤ Löschen fragt nach — einmal.** *Weg:* Einen Einsatz löschen und
+      abbrechen; dann einen Diensttag löschen und abbrechen. *Erwartet:* Genau
+      **eine** Rückfrage, danach steht alles noch da. *Fehlschlag heißt:*
+      Zwei Rückfragen hintereinander (F-P3-AY) oder gar keine.
+- [ ] **K-7 ⬤ „Löschen" ist rot.** *Weg:* Auf dem Handy an einer Einsatzzeile
+      die drei Punkte antippen. *Erwartet:* Ein Blatt fährt von unten herein;
+      der Eintrag „Löschen" ist **rot**, mit rotem Symbol. *Fehlschlag
+      heißt:* Schwarz wie die übrigen — dann trägt der Eintrag `knopf-gefahr`
+      statt `blatt-gefahr` (F-P3-AX), und die gefährlichste Handlung sieht
+      aus wie die harmloseste.
+- [ ] **K-8 ⬤ Die Verlassen-Warnung.** *Weg:* Ein Einsatzformular öffnen, ein
+      Feld ändern, **ohne zu speichern** zurückgehen. *Erwartet:* Der Browser
+      fragt nach; unten klebt eine Speichern-Leiste mit „Ungespeicherte
+      Änderungen". *Fehlschlag heißt:* Kommentarloses Verlassen = dem
+      Formular fehlt `forms.js` (F-P3-AV).
+- [ ] **K-9 ⬤ Die Karte.** *Weg:* Einen Einsatz mit Spur öffnen; auf dem Handy
+      den Vollbildknopf drücken. *Erwartet:* Kacheln laden, die Spur ist
+      farbig, Vollbild geht auf **und wieder zu**. *Fehlschlag heißt:* Auf
+      iOS ist der Rückfall aus F-P3-AW gebaut, aber nie in Safari geprüft —
+      klemmt es dort, ist das genau dieser Fall.
+- [ ] **K-10 ⬤ Sichern und Zurückholen.** *Weg:* Eine Sicherung erstellen,
+      herunterladen, in einem **frischen** Konto oder einer Testinstallation
+      einspielen. *Erwartet:* Die Zahlen der Bilanz stimmen; die
+      zurückgeholten Einsätze tragen dieselben Werte. *Fehlschlag heißt:* Der
+      Kreislauf ist mit 286 739 Einzelvergleichen maschinell geprüft — ein
+      Fehler hier wäre einer im Weg, nicht im Format.
+- [ ] **K-11 ○ Impressum und Datenschutz.** *Weg:* Abgemeldet
+      `impressum.php` und `datenschutz.php` öffnen. *Erwartet:* Beide sind
+      erreichbar. Ohne eingegebenen Text steht dort der **Leerzustand** mit
+      Hinweis — das ist richtig, solange die Texte fehlen (1.4).
+      *Fehlschlag heißt:* Weiterleitung auf die Anmeldung = die Seiten sind
+      nicht öffentlich, und das ist ein Rechtsproblem.
+- [ ] **K-12 ○ Das Logo stimmt.** *Weg:* Einstellungen → Profil, das Logo
+      wechseln; Kopfleiste und Browser-Tab ansehen. *Erwartet:* Beide
+      wechseln gemeinsam. *Fehlschlag heißt:* Nur eines wechselt = Favicon
+      und Logo sind auseinandergelaufen (`tools/logos/`).
+- [ ] **K-13 ○ Die Version steht in der Fußzeile.** *Weg:* Nach unten
+      scrollen. *Erwartet:* **9.13.0**. *Fehlschlag heißt:* Eine kleinere
+      Zahl = der Browser zeigt alte Dateien, und **alles darüber ist
+      wertlos**. Erst hart neu laden, dann noch einmal anfangen.
+- [ ] **K-14 ○ Der Warnhinweis im Import.** *Weg:* Import/Export öffnen, eine
+      Datei mit abweichender Besatzung wählen, in Schritt 2 die Kopfzeile
+      einer Tagesgruppe ansehen. *Erwartet:* „abweichende Crew (…)" fällt
+      auf. *Fehlschlag heißt:* Es liest sich wie Fließtext — dann ist der
+      offene Punkt aus 1.3 (`imp-warn`, Backlog Nr. 41) bestätigt, und das
+      ist eine nützliche Antwort, kein Fehler dieser Prüfung.
 
 ### 5.1 Vor allem anderen
 
@@ -926,14 +1189,144 @@ Startseite.
       „Kopplungscode erzeugen". *Erwartet:* eigener Kasten, Festbreite,
       gesperrte Schrift.
 
+### 5.12 Nach O9a (Web 9.8.0) — Kontoseite
+
+- [ ] **⬤ Die Migration ist gelaufen.** *Weg:* Nach dem Deploy `update.php`
+      als Administratorin aufrufen. *Erwartet:* `2026_08_28_last_login` wird
+      mit Klartextnamen genannt und ausgeführt. *Fehlschlag heißt:* Ohne sie
+      scheitert die Kontenliste — die Spalte `users.last_login` fehlt.
+- [ ] **⬤ Die Verdrängung hält das Richtige.** *Weg:* Bei Aufbewahrung 3 vier
+      Sicherungen erzeugen, eine davon vorher freigeben. *Erwartet:* Drei
+      bleiben, **das freigegebene ist dabei**, und die Meldung nennt die
+      Verdrängung. *Fehlschlag heißt:* Ein freigegebenes Paket verschwindet —
+      dann verliert jemand einen Zugang, den er bekommen hat.
+- [ ] **⬤ Löschen verlangt die abgetippte Adresse.** *Weg:* Auf der
+      Kontoseite ein fremdes Konto löschen, erst mit falscher, dann mit
+      richtiger Adresse. *Erwartet:* Falsch blockt; richtig führt zurück auf
+      die Liste, **und der Sicherungsordner ist mit fort**. *Fehlschlag
+      heißt:* Ein Ordner bleibt liegen = verwaiste Daten eines gelöschten
+      Kontos.
+- [ ] **○ Das eigene Konto lässt sich nicht selbst zerstören.** *Weg:* Die
+      eigene Kontoseite öffnen. *Erwartet:* Kein Löschformular, keine
+      Rollenrückstufung. *Fehlschlag heißt:* Man kann sich selbst aussperren.
+
+### 5.13 Nach O9b (Web 9.9.0) — die Kontenliste
+
+- [ ] **⬤ Auswahl über Seitengrenzen.** *Weg:* Auf Seite 1 zwei Konten
+      auswählen, auf Seite 2 eines, zurück auf Seite 1. *Erwartet:* „3
+      ausgewählt", und auf Seite 1 sind wieder genau die beiden gesetzt.
+      *Fehlschlag heißt:* Die Auswahl hängt am DOM statt am Zustand — dann
+      sichert eine Sammelaktion die falschen Konten.
+- [ ] **⬤ Suche und Filterzahlen gehören zusammen.** *Weg:* Nach einem Namen
+      suchen, der mehrfach vorkommt. *Erwartet:* Die **Filterzahlen** beziehen
+      sich auf die Treffer, die **Kacheln** oben auf den Gesamtbestand.
+      *Fehlschlag heißt:* Beide gleich = eine der Zahlen lügt, und man trifft
+      Entscheidungen über den Bestand anhand einer Suche.
+- [ ] **○ Umlaute sortieren richtig.** *Weg:* Nach Name sortieren.
+      *Erwartet:* „Ömer" steht bei den O, nicht am Ende. *Fehlschlag heißt:*
+      Byteweise Sortierung — alle Umlautnamen stehen hinter allen anderen.
+- [ ] **○ Unter 720 px werden Zeilen zu Kacheln.** *Weg:* Fenster schmal
+      ziehen. *Erwartet:* Dieselben Konten stehen als Kacheln da, das
+      Auswahlkästchen zählt dort ebenso. *Fehlschlag heißt:* Eine waagerecht
+      scrollende Tabelle.
+
+### 5.14 Nach O9c (Web 9.10.0/9.10.1) — Regeln, Stammdaten, Demo, Wartung
+
+- [ ] **⬤ Der Logo-Standard der Installation wirkt sofort.** *Weg:* Wartung →
+      Standardlogo umstellen, **ohne** neu anzumelden die Kopfleiste ansehen;
+      dann abmelden und die Anmeldeseite ansehen. *Erwartet:* Beide folgen dem
+      neuen Standard; ein Konto mit **eigener** Wahl bleibt unberührt.
+      *Fehlschlag heißt:* Die eigene Wahl wird überschrieben — dann ist der
+      Standard keine Vorgabe, sondern ein Befehl.
+- [ ] **⬤ Die Aufbewahrung ist einstellbar und gilt.** *Weg:* 3 → 5 → 3
+      setzen, dazwischen sichern. *Erwartet:* Die Zahl wird gespeichert und
+      die Verdrängung folgt ihr.
+- [ ] **○ Stammdaten systemweit: zwei Reiter, ein Menüpunkt.** *Weg:*
+      Stammdaten öffnen und zwischen Standorten und Rettungsmitteln wechseln.
+      *Erwartet:* Zwei völlig verschiedene Listen unter einem Punkt.
+- [ ] **○ Das Demo-Konto setzt sich zurück.** *Weg:* Im Demo-Konto etwas
+      ändern und eine halbe Stunde warten. *Erwartet:* Der Ausgangsstand ist
+      zurück.
+
+### 5.15 Nach O10 (Web 9.11.0) — Anmeldung, öffentliche Seiten, Rechtstexte
+
+- [ ] **⬤ Der Angriffsversuch prallt ab.** *Weg:* Als Administratorin im
+      Rechtstext-Editor speichern:
+      `<script>alert(1)</script>`, `[böse](javascript:alert(1))` und
+      `<img src=x onerror=alert(1)>`. Dann die **öffentliche Seite abgemeldet**
+      öffnen und den Quelltext ansehen. *Erwartet:* Kein `<script>`, kein
+      `href="javascript`, kein `<img>`; `<script>` steht als **sichtbarer
+      Text** da. *Fehlschlag heißt:* Ein `<script>` im Quelltext = jeder
+      Besucher der Impressumsseite führt fremden Code aus. Das ist der
+      Abnahmefall des Pakets, und er ist maschinell mit 81 Proben und 65
+      Ausgaben gegen eine Positivliste belegt — diese eine Bedienprobe prüft,
+      ob derselbe Weg auch im Browser gilt.
+- [ ] **⬤ Die Seiten sind ohne Anmeldung erreichbar.** *Weg:* Abgemeldet
+      `impressum.php` und `datenschutz.php` aufrufen. *Erwartet:* HTTP 200,
+      Inhalt oder Leerzustand. *Fehlschlag heißt:* Weiterleitung auf die
+      Anmeldung.
+- [ ] **○ Der Leerzustand sagt, was fehlt.** *Weg:* Vor dem Eintragen der
+      Texte. *Erwartet:* Zwei Plaketten „leer", keine Vorschau, die Meldung
+      „Der Betreiber dieser Installation hat noch kein Impressum
+      hinterlegt" — für Administratorinnen mit dem Weg zum Editor.
+- [ ] **○ Die Anmeldekarte ist schmal.** *Weg:* Anmeldung bei 1440 px.
+      *Erwartet:* 400 px breit, nicht 760.
+
+### 5.16 Nach O11 und O12 (Web 9.12.0 / 9.13.0) — der Rest und der Abschluss
+
+- [ ] **⬤ Keine Verwaltungstabelle scrollt mehr.** *Weg:* Bei **360 px**
+      nacheinander öffnen: Papierkorb, Wartung, Diensttag zusammenführen,
+      Zuordnung nachtragen. *Erwartet:* Karten mit Zeilen, kein seitliches
+      Schieben, jede Handlung erreichbar. *Fehlschlag heißt:* Eine Tabelle,
+      in der die Aktionsspalte rechts aus dem Bild läuft — genau das, was
+      O11 beseitigt hat.
+- [ ] **⬤ Löschbestätigungen zeigen Zahlen.** *Weg:* Einen Diensttag mit
+      Einsätzen löschen (und abbrechen). *Erwartet:* Eine **Seite** mit
+      Karte und Zeilen; je Zeile eine **Plakette mit der Zahl** (Einsätze,
+      Phasen, Reanimationen, Ruhesegmente, Trackpunkte). *Fehlschlag heißt:*
+      Ein Dialog mit einem halben Bildschirm Fließtext, oder die Zahlen
+      stecken im Satz — dann findet man beim Überfliegen nicht, was man
+      verliert.
+- [ ] **⬤ Die Filterleiste der Suche ist breiter als die Tagesliste.**
+      *Weg:* Suche und Tagesübersicht nebeneinander bei **1280 px** öffnen und
+      die linke Leiste vergleichen. *Erwartet:* Suche **280 px**,
+      Tagesübersicht **260 px**; bei 1024–1199 px 240 gegen 220.
+      *Fehlschlag heißt:* Gleich breit = `leiste-filter` wird nicht vergeben
+      (F-P3-BC), und die Filter brechen enger um, als sie müssten.
+- [ ] **⬤ Der Export-Knopf sieht aus wie ein Knopf.** *Weg:* Import/Export →
+      bis zum Export-Knopf durchgehen. *Erwartet:* 44 px hoch, orange, mit
+      Radius — wie sein Nachbar „Import ausführen". *Fehlschlag heißt:*
+      Blauer Text ohne Fläche = die Reparatur aus F-P3-BA ist verloren.
+- [ ] **○ Die Schalter sind anklickbar, das Kästchen nicht.** *Weg:* Auf einen
+      Schalter tippen, und zwar genau links davon. *Erwartet:* Er schaltet.
+      *Fehlschlag heißt:* Ein toter Bereich von 20 × 20 px = das
+      ausgeblendete Kästchen fängt wieder Klicks (F-P3-AZ).
+- [ ] **○ Die Version stimmt.** *Weg:* Fußzeile. *Erwartet:* **9.13.0**.
+- [ ] **○ Die Gestaltungsrichtlinie ist auffindbar.** *Weg:* `docs/Design.md`
+      öffnen und Kapitel 9.0 lesen („Wenn du X willst, nimm Y").
+      *Erwartet:* Für den Fall, den man gerade bauen will, steht dort eine
+      Zeile. *Fehlschlag heißt:* Steht der Fall nicht darin, ist das **keine
+      Erlaubnis, ein neues Element zu bauen**, sondern der Moment für eine
+      Rückfrage — und eine Zeile, die der Richtlinie fehlt.
+
 ## 6. Was bewusst **nicht** geprüft wird
 
 | Bereich | Warum nicht |
 |---|---|
 | Uhr-App (`watch/`) | in P3 nicht angefasst; `Const.mc` zählt getrennt. Die Logo-Wahl auf der Uhr ist P6 (R29). |
-| Datenmodell, Migrationen | O1 berührt kein Schema. Ab O8 gibt es Migrationen; sie bekommen dann eigene Punkte. |
-| Rechenwege der Prüfschicht | `validate_lib.php` ist unberührt. |
-| Export, Import, Sicherung | unberührt in O1. Die Kreisläufe (P-P3-11/12) laufen vor Abschluss der Phase. |
+| Rechenwege der Prüfschicht | `validate_lib.php` ist über die ganze Phase unberührt geblieben. |
+| Das **Handbuch** | ausdrücklich zurückgestellt bis vor 1.0 (1.3). Wer nach diesem Dokument prüft, prüft die Anwendung. |
+| Mailversand | lokal kein SMTP. Geprüft ist der Fehlschlagzweig — der Einladungs- bzw. Setz-Link steht sichtbar auf der Seite —, nicht der gelungene Versand. |
+| Sammelsichern über alle Konten | erzeugte bei 304 Konten 304 Ordner; das ist der Fall, für den F-P3-C ohnehin auf P5 verweist („Alle sichern" in Schüben). |
+| Die blockierte Migration auf der Wartungsseite | verlangt eine destruktive Migration mit Daten. Die Zeile wurde im Markup gelesen, nicht bedient. |
+
+**Und was in P3 sehr wohl geprüft wurde, obwohl es hier einmal stand:**
+Datenmodell und Migrationen. Drei Migrationen sind entstanden (1.4); jede ist
+einzeln gefahren worden — bei `2026_08_28_last_login` wurde die Spalte eigens
+von Hand gelöscht, um den Weg wirklich zu betreten. `schema.sql` ist in O10 in
+eine Wegwerfdatenbank eingespielt worden (33 Anweisungen, 31 Tabellen). Die
+Kreisläufe sind gefahren: edbak mit **286 739 Einzelvergleichen**, 0
+unerklärt.
 
 ---
 
@@ -943,7 +1336,13 @@ Startseite.
    aussieht, ist ein alter Zwischenspeicher — besonders bei den Symbolen, die
    ihren Erkennungswert aus `WEB_VERSION` beziehen.
 2. **Browserkonsole ansehen** und die Meldung mitnotieren.
-3. **Zurückrollen ist billig:** Die Phase liegt auf einem eigenen Zweig, und
-   bis O8 gibt es keine Migration.
+3. **Zurückrollen ist nicht mehr billig.** Bis O8 gab es keine Migration;
+   inzwischen sind es drei (1.4). Ein Rückschritt hinter Web 9.7.0 heißt,
+   ein Schema zurückzubauen — vorher sichern, und im Zweifel fragen statt
+   zurückrollen.
 4. Fund melden mit: Punktnummer aus Abschnitt 5, Seite, Fensterbreite,
    Konsolenmeldung.
+5. **Prüfen, ob es schon bekannt ist.** Abschnitt 1.3 nennt, was am Ende der
+   Phase offen ist; Backlog Nr. 40, 41 und 42 nennen die Punkte mit Nummer.
+   Ein Fund, der dort steht, ist keiner — er ist eine Bestätigung, und die
+   ist auch etwas wert.

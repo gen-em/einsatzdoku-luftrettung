@@ -28,7 +28,9 @@ Daten erst nach Server-Bestätigung.
 ```
 <repo>/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
-│                          Branding (Farben, Schriften, Logo),
+│                          Design (Gestaltungsrichtlinie: Token, Schwellen,
+│                          Symbole, Bausteine, Seitentypen — verbindlich),
+│                          Lizenzen (Fremdbestandteile mit Version und Lizenz),
 │                          Backup-Format, Export-Format,
 │                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
 │                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen),
@@ -185,8 +187,22 @@ Daten erst nach Server-Bestätigung.
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   ├── design/            erzeugt die Tabellen von docs/Design.md aus den
+│   │                      Quellen: Token aus :root, Schwellen aus den
+│   │                      @media-Bloecken, Symbole aus dem Vorrat, Bausteine
+│   │                      aus ui.php. Eine abgeschriebene Tabelle stimmt am
+│   │                      Tag des Abschreibens und danach nie wieder
+│   │                      (s. LIESMICH.md)
 │   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
 │   │                      nicht auseinanderlaufen (s. LIESMICH.md)
+│   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
+│   │                      Sicherungsstaenden an (fester Zufallsstartwert) —
+│   │                      fuer Seitenwechsel, Filter und Sammelauswahl der
+│   │                      NutzerInnen-Liste (P-P3-16)
+│   ├── rechtstexte/       Angriffsprobe fuer den Markdown-Renderer der
+│   │                      Rechtstexte: 81 Proben in acht Gruppen plus eine
+│   │                      Positivlisten-Schranke ueber JEDE erzeugte Ausgabe
+│   │                      (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
@@ -198,12 +214,15 @@ Daten erst nach Server-Bestätigung.
 │   │                      (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser. RUHT WÄHREND P3,
-│   │                      Neueichung in O12 (s. LIESMICH.md)
+│   │                      plus berechnete Stile im Browser, 13 Breiten.
+│   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
+│   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
 │   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
 │   │                      (jede Klasse des alten Stylesheets hat eine Regel
 │   │                      oder steht mit Begründung auf der Streichliste) und
-│   │                      ob jeder Wert in :root steht (s. LIESMICH.md)
+│   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
+│   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
+│   │                      ohne-regel.md (s. LIESMICH.md)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall und

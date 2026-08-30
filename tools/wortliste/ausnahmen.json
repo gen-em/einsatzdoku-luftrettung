@@ -281,12 +281,6 @@
       "begruendung": "Die Grenze ist plattformbedingt begruendet. Der Vertrag soll sie plattformneutral begruenden — das ist Vertragsreview (R12) und gehoert nach P6 (Uebergabeliste 10.3), nicht in eine Wortersetzung."
     },
     {
-      "id": "branding-bildmarke",
-      "datei": "docs/Branding.md",
-      "klasse": "E",
-      "begruendung": "Die Bildmarke ist ein Hubschrauber; Branding.md beschreibt sie. Das Logo und seine Beschreibung aendert P3 (NEF-Bildmarke, Nutzerwahl) — eine Beschreibung zu neutralisieren, waehrend das Bild ein Hubschrauber ist, waere eine Unwahrheit."
-    },
-    {
       "id": "symbolname-hubschrauber",
       "datei": "server/diensttag_lib.php",
       "zeile": "'symbol'\\s*=>\\s*'hubschrauber'",
@@ -418,6 +412,41 @@
       "zeile": "ein `hubschrauber` oder `fahrzeug`",
       "klasse": "Homonym",
       "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt den WERT der Wahl, nicht die Einsatzart."
+    },
+    {
+      "id": "design-bildmarke",
+      "datei": "docs/Design.md",
+      "zeile": "Hubschrauber, (farbig|wei\\u00df)|Hubschrauber, Fahrzeug|ist der Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Drei Stellen in Kapitel 2.3, das die beiden BILDMARKEN und die Wahl zwischen ihnen beschreibt: die beiden Dateizeilen der Logotabelle, die Aufzaehlung der Wahlmoeglichkeiten und der Rueckfall. 'Hubschrauber' benennt dort ein Bild und einen Wert der Einstellung, nicht die Einsatzart — die heisst in derselben Richtlinie durchgaengig 'luftgebunden'. Eine Bildbeschreibung zu neutralisieren, waehrend das Bild einen Hubschrauber zeigt, waere eine falsche Beschriftung (dieselbe Begruendung wie symbolname-hubschrauber). Der Ausdruck ist bewusst eng: Ein blosses 'Hubschrauber' haette jede weitere Stelle mitgedeckt, auch eine, die die Einsatzart meint."
+    },
+    {
+      "id": "design-symbolvorrat",
+      "datei": "docs/Design.md",
+      "zeile": "hubschrauber.svg",
+      "klasse": "Homonym",
+      "begruendung": "Zeile der erzeugten Symboltabelle (Kapitel 8). Sie nennt DATEINAME und Tabler-Quellnamen ('helicopter') — beides sind Bezeichner, keine Beschreibung einer Einsatzart."
+    },
+    {
+      "id": "design-beispieltext",
+      "datei": "docs/Design.md",
+      "zeile": "Luftrettungsstation Hochkreuth",
+      "klasse": "Homonym",
+      "begruendung": "Beispielmarkup in Kapitel 9.2. Der Text stammt aus dem erfundenen Referenzdatensatz und ist der EIGENNAME eines Standorts, kein Gattungsbegriff — genauso wie 'Notarztstandort Talwang' daneben."
+    },
+    {
+      "id": "design-wahlzusatz",
+      "datei": "docs/Design.md",
+      "zeile": "zurzeit Hubschrauber \\(RTH\\)",
+      "klasse": "Homonym",
+      "begruendung": "Woertliches Zitat des Zusatztextes der Wahlliste (Mockup 13). Er nennt den Wert der Logo-Wahl; das Beispiel steht hier, weil genau seine Laenge die Umbruchregel unter 480 px begruendet."
+    },
+    {
+      "id": "lizenzen-garmin",
+      "datei": "docs/Lizenzen.md",
+      "zeile": "Connect-IQ-SDK von Garmin",
+      "klasse": "E",
+      "begruendung": "Garmin ist der Hersteller des SDK, mit dem die Uhr-App gebaut wird — eine Lizenzangabe nennt den Rechteinhaber beim Namen. Das ist keine Aussage ueber die Einsatzart."
     }
   ]
 }

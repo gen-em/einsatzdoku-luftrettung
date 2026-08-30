@@ -399,7 +399,17 @@ function ui_geruest_start(array $o = []): void
            das X beim Öffnen einen Fokusring, den niemand bestellt hat
            (F-P3-V). Per Tab ist die Leiste dadurch nicht erreichbar; ihre
            Einträge sind es. */ ?>
-  <aside class="leiste" id="leiste" aria-label="Bereichsmenü" tabindex="-1">
+  <?php /* DIE FILTERLEISTE DER SUCHE IST BREITER (E-P3-Anlage G, nachgezogen
+           in O12). Sie traegt Auswahlfelder und Zahlenpaare, die
+           Diensttage-Leiste nur Zeilen; Anlage G fuehrt sie deshalb mit
+           240 px (1024–1199) und 280 px (ab 1200) statt 220/260.
+
+           Die beiden Token dafuer standen seit O1 in :root und wurden von
+           NIEMANDEM benutzt — aufgefallen ist das der erzeugten Tokentabelle
+           in O12 (F-P3-BC). Gemessen war die Filterleiste 220 bzw. 260 px
+           breit, also so breit wie die Tagesliste. */ ?>
+  <aside class="leiste<?= $leiste === 'filter' ? ' leiste-filter' : '' ?>"
+         id="leiste" aria-label="Bereichsmenü" tabindex="-1">
     <div class="leiste-kopf nur-schublade">
       <button type="button" class="knopf knopf-symbol" data-schublade="zu" aria-label="Menü schließen">
         <?= ui_symbol('schliessen', 'symbol-gross') ?>

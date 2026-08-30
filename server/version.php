@@ -1031,5 +1031,85 @@ declare(strict_types=1);
  *            Loeschung liegt seit O9a auf der Kontoseite und verlangt die
  *            abgetippte Adresse. Unbemerkt, weil der Weg nur betreten wird,
  *            wenn das Konto schon besteht.
+ *
+ * 9.13.0 ist O12 und schliesst P3 ab: DIE GESTALTUNGSRICHTLINIE. Keine
+ * Migration, keine Aenderung am Datenmodell; am Server aendert sich eine
+ * einzige Zeile (siehe F-P3-BC).
+ *
+ * ZWOELF PAKETE HABEN EINE OBERFLAECHE GEBAUT, ABER KEINE REGEL
+ * HINTERLASSEN, die man nachschlagen kann. Das Wissen stand verteilt: die
+ * Token im Stylesheet, die Bausteine in `ui.php`, die Begruendungen in den
+ * Kopfkommentaren dieser Datei, die Entscheidungen im Konzept. Wer eine neue
+ * Seite baut, findet dort alles — aber erst, nachdem er alles gelesen hat.
+ * `docs/Design.md` ist die eine Stelle: Marke, Farbrollen, Token, Schrift,
+ * Grundregeln, Schwellen, Symbole, Bausteine, Seitentypen, Pruefmittel.
+ *
+ * DER EINSTIEG IST EINE TABELLE, KEINE EINLEITUNG. Kapitel 9 beginnt mit
+ * „Wenn du X willst, nimm Y" — 27 Zeilen von der Absicht zum Baustein. Das
+ * ist die Frage, mit der jemand das Dokument aufschlaegt; alles andere ist
+ * die Antwort auf die zweite Frage. Am Ende desselben Kapitels stehen die
+ * Anti-Muster: zehn Fallen, jede davon in P3 tatsaechlich hineingetreten
+ * (Spezifitaet gegen `input[type=checkbox]`, `blatt-gefahr` gegen
+ * `knopf-gefahr`, die doppelte Rueckfrage, das fehlende `forms.js`, eine
+ * Klasse ohne Regel, `:nth-child` fuer Spaltenbreiten, Unicode statt Symbol).
+ *
+ * VIER TABELLEN WERDEN ERZEUGT, NICHT ABGESCHRIEBEN. `tools/design/`
+ * liest 87 Token aus `:root`, 19 Medienbloecke aus den Schwellen, 44
+ * Symboldateien und 32 Bausteine aus `ui.php` und setzt daraus das Markup
+ * der Kapitel 4, 7, 8 und 9. Eine abgeschriebene Tabelle ist ab dem ersten
+ * Tag falsch; diese ist mit einem Aufruf wieder richtig.
+ *
+ * DIE LIZENZEN STEHEN JETZT ZUSAMMEN. `docs/Lizenzen.md` nennt die drei
+ * Bibliotheken mit Version, Lizenz und SHA-256, die zwei Schriftfamilien,
+ * den Symbolvorrat und — getrennt davon — die Dienste, die zur Laufzeit
+ * angesprochen werden, wenn die Nutzerin eine Karte oeffnet. Genau diese
+ * Trennung fehlte: „keine fremde Quelle zur Laufzeit" gilt fuer Code und
+ * Schriften, nicht fuer Kartenkacheln, und das war nirgends gesagt.
+ *
+ * `docs/Branding.md` IST ABGELOEST und entfernt. Sein Verbindliches steht in
+ * `Design.md`, seine drei offenen Punkte sind erledigt: B1 (die Logodateien
+ * trugen Naeherungen der Markenfarben) in O1, B2 (keine geschlossene
+ * Groessenskala) mit den Schriftstufen, B3 (78 Hexwerte im Stylesheet) mit
+ * den Token — heute steht kein Farbwert mehr ausserhalb von `:root`.
+ *
+ *   F-P3-BC  ZWEI TOTE TOKEN, UND DAHINTER EINE ZU SCHMALE LEISTE. Die
+ *            Vollstaendigkeitspruefung meldete `--leiste-filter` und
+ *            `--leiste-filter-schmal` als unbenutzt. Sie waren es: Die
+ *            Filterleiste der Suche trug seit O6 nur `.leiste` und damit
+ *            220/260 px statt der fuer sie vorgesehenen 240/280 px. Sie
+ *            traegt mehr als eine Tagesliste — Datum von/bis, drei
+ *            Auswahlfelder, Freitext —, und dafuer waren die 220 px zu
+ *            knapp. `ui_geruest_start()` vergibt jetzt zusaetzlich
+ *            `leiste-filter`. Zwei Pakete lang unbemerkt, weil eine zu
+ *            schmale Leiste nicht bricht, sondern nur enger umbricht.
+ *
+ * EIN PRUEFMITTEL, DAS WIEDER GELESEN WIRD. Die Vollstaendigkeitspruefung
+ * meldet Klassen, die im Markup stehen und im Stylesheet keine Regel haben —
+ * die Gegenprobe, die in O11 den ungestalteten Export-Knopf fand (F-P3-BA).
+ * Genau EIN echter Fund unter 29 Zeilen: acht Bruchstuecke zusammengesetzter
+ * Klassennamen (`'plakette-' . $ton` — das Werkzeug liest Zeichenketten,
+ * nicht ausgefuehrten Code), fuenfzehn Skriptanker ohne eigenes Aussehen.
+ * Eine Liste in diesem Verhaeltnis wird nach dem dritten Mal ueberflogen
+ * statt gelesen, und findet dann auch den naechsten echten Fund nicht.
+ * `tools/vollstaendigkeit/ohne-regel.md` traegt jetzt zu jedem Namen einen
+ * Grund: `[bleibt]` verschwindet aus dem Befund, `[offen]` bleibt einer.
+ * 0 ohne eingetragenen Grund statt 29, 6 offen, Befunde 247 -> 224. Und die
+ * Liste meldet ihre eigenen toten Eintraege, sonst wird sie in zwei Paketen
+ * das, wogegen sie schuetzt.
+ *
+ * DER STILVERGLEICH WACHT WIEDER. Er ruhte waehrend P3, weil er dort die
+ * falsche Frage stellte (jede beabsichtigte Aenderung ist ein Treffer). Neu
+ * geeicht auf 13 Fensterbreiten von 360 bis 1920 px — die alten neun endeten
+ * bei 500 px und kannten die 390er-Klasse der Telefone nicht. Und die
+ * Seitenproben lesen jetzt auch die HTML-Schnipsel aus PHP-Zeichenketten:
+ * Der blinde Fleck, vor dem seine LIESMICH seit P0 warnte, ist zu. Gemessen:
+ * 228 Klassen vorher, 253 nachher.
+ *
+ * DAS HANDBUCH BLEIBT STEHEN — ausdrueckliche Entscheidung. Es beschreibt
+ * die Bedienung, und die aendert sich bis 1.0 noch; es einmal jetzt und
+ * einmal vor der Auslieferung zu schreiben, waere dieselbe Arbeit zweimal.
+ * Angepasst wurde nur, was ohne Wert veraltet: die 14 Unicode-Zeichen im
+ * Text (kein Bildschirmleser spricht das Kreuzzeichen als „Schliessen") und
+ * drei Bildschirmfotos.
  */
-const WEB_VERSION = '9.12.0';
+const WEB_VERSION = '9.13.0';

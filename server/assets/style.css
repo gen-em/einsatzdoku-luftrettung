@@ -1484,6 +1484,12 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .nur-breit{display:inline-flex}
   .nur-schmal{display:none}
 
+  /* Die Filterleiste der Suche ist breiter als die Tagesliste: Sie traegt
+     Auswahlfelder und Zahlenpaare („von … bis"), nicht Zeilen. Die Werte
+     kommen aus Anlage G des Konzepts; die beiden Token lagen bis O12
+     ungenutzt in :root (F-P3-BC). */
+  .leiste-filter{width:var(--leiste-filter-schmal)}
+
   /* Unter 1200 px entfällt der Rettungsmittelname in der Leiste; das
      Artzeichen bleibt (E-P3-09). Bei 220 px Leistenbreite bliebe von ihm
      ohnehin nur eine Ellipse. */
@@ -1504,6 +1510,7 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 /* ---- ab 1200: breite Leiste und Zweispalter ------------------------------ */
 @media (min-width:1200px){
   .leiste{width:var(--leiste)}
+  .leiste-filter{width:var(--leiste-filter)}
   .eintrag-neben{display:block}
   .geo{height:var(--karte-desktop)}
   .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}

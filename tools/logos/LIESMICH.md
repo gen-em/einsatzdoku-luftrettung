@@ -7,8 +7,9 @@ jemand in einem Bildprogramm nachbaut.
 
 Genau das war der Fall: Die Logodateien trugen bis P3 Näherungen der
 Markenfarben (Rot `#E3322B` statt `#D63338`, Blau `#587ABC` statt `#4280E5`,
-Orange `#F7941D` statt `#FF8F1F` — `docs/Branding.md` B1), und das Favicon
-trug sie mit. Beides ist in P3/O1 berichtigt.
+Orange `#F7941D` statt `#FF8F1F`), und das Favicon trug sie mit. Beides ist
+in P3/O1 berichtigt; die verbindlichen Markenwerte stehen in `docs/Design.md`,
+Abschnitt 2.
 
 ```
 node tools/logos/erzeugen.mjs

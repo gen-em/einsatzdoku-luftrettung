@@ -220,9 +220,40 @@ def pruefung_klassen(bericht):
     # Gegenrichtung: im Markup benutzt, aber nirgends beschrieben.
     sicher, vermutet = markup_klassen(list(quelldateien()))
     verwaist = sorted(k for k in sicher if k not in jetzt_css and k not in streich)
+
+    # ohne-regel.md — DAMIT DIE LISTE GELESEN WIRD (O12, Backlog Nr. 39).
+    # Von 29 Treffern waren 23 keine: acht Bruchstuecke zusammengesetzter
+    # Klassennamen (das Werkzeug liest Zeichenketten, nicht ausgefuehrten
+    # Code) und fuenfzehn Skriptanker und Behaelter, die zu Recht keine Regel
+    # haben. Eine Liste, in der ein echter Fund neben 28 falschen steht, wird
+    # nach dem dritten Mal nicht mehr gelesen — und findet dann auch den
+    # echten nicht (genau so ist F-P3-BA durchgerutscht).
+    #   [bleibt]  begruendet ohne Regel  -> kein Befund, nur eine Zahl
+    #   [offen]   Frage noch offen       -> Befund, aber unter eigener
+    #                                       Ueberschrift
+    or_zeilen = liste_lesen('ohne-regel.md', 2)
+    or_bleibt = {z[0].strip('`') for z in or_zeilen
+                 if z[1].lstrip().startswith('[bleibt]')}
+    or_offen = {z[0].strip('`') for z in or_zeilen
+                if z[1].lstrip().startswith('[offen]')}
+    or_ohne_vermerk = sorted(z[0].strip('`') for z in or_zeilen
+                             if not z[1].lstrip().startswith(('[bleibt]', '[offen]')))
+    # Ein Eintrag, dessen Klasse inzwischen eine Regel hat oder aus dem
+    # Markup verschwunden ist, ist Ballast und wird gemeldet — sonst
+    # verwahrlost die Liste so still wie die Sache, gegen die sie schuetzt.
+    or_ungenutzt = sorted((or_bleibt | or_offen) - set(verwaist))
+
     bericht.zahl('1 Klassen', 'Klassen im Markup (als Literal belegt)', len(sicher))
-    bericht.befund('1 Klassen', 'im Markup, aber ohne Regel und ohne Streichung',
-                   ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3])) for k in verwaist])
+    bericht.befund('1 Klassen', 'im Markup ohne Regel, Grund nicht eingetragen',
+                   ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3]))
+                    for k in verwaist if k not in or_bleibt and k not in or_offen])
+    bericht.befund('1 Klassen', 'im Markup ohne Regel, als [offen] vermerkt',
+                   ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3]))
+                    for k in verwaist if k in or_offen])
+    bericht.zahl('1 Klassen', 'davon ausdruecklich [bleibt] (Anker, Bruchstuecke)',
+                 len([k for k in verwaist if k in or_bleibt]))
+    bericht.befund('1 Klassen', 'ohne-regel.md: Eintrag ohne Vermerk', or_ohne_vermerk)
+    bericht.befund('1 Klassen', 'ohne-regel.md: Eintrag ungenutzt', or_ungenutzt)
     # DER BLINDE FLECK (O11): Eine Klasse, die GESTRICHEN ist und trotzdem noch
     # im Markup steht, fiel bisher durch jedes Netz — `verwaist` schliesst sie
     # ausdruecklich aus (`k not in streich`), und `ohne` sieht nur die

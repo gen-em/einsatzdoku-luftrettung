@@ -43,7 +43,7 @@ zur Sollmenge und verliert damit genau die Auskunft, um die es geht.
 
 | Nr. | Was | Sollwert |
 |---|---|---|
-| 1 | Klassen ohne Gegenstück — aus `vorher-klassen.txt` gegen Stylesheet und `streichliste.md`; dazu die Gegenrichtung (im Markup benutzt, nirgends beschrieben) | 0 |
+| 1 | Klassen ohne Gegenstück — aus `vorher-klassen.txt` gegen Stylesheet und `streichliste.md`; dazu die Gegenrichtung (im Markup benutzt, nirgends beschrieben) gegen `ohne-regel.md` | 0 |
 | 2 | Werte außerhalb der Token — Hexfarben, `rgb()`, Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"` in PHP/JS | 0 außer `ausnahmen.md` |
 | 3 | Symbole — Inline-SVG mit Pfaden, Unicode-Zeichen als Symbol, Emoji, Verweise auf fehlende Dateien, Dateien ohne Anker `id="i"` | 0 |
 | 4 | Knopfregel — jede Höhenangabe an einer `.knopf`-Regel kommt aus `--knopf` | 0 |
@@ -54,14 +54,31 @@ im Markup nicht vorkommt, und Symboldateien, auf die nichts verweist. Beides
 kann richtig sein — eine Klasse kann zur Laufzeit zusammengesetzt werden, ein
 Symbol kann für ein späteres Paket schon dabeiliegen.
 
-## Die beiden Hilfslisten
+## Die drei Hilfslisten
 
-`streichliste.md` und `ausnahmen.md` sind Markdown-Tabellen, damit ein Mensch
-sie liest. Beide verlangen eine **Begründung**; ein Eintrag ohne Grund ist
-keiner, sondern ein weggedrücktes Ergebnis.
+`streichliste.md`, `ausnahmen.md` und `ohne-regel.md` sind Markdown-Tabellen,
+damit ein Mensch sie liest. Alle drei verlangen eine **Begründung**; ein
+Eintrag ohne Grund ist keiner, sondern ein weggedrücktes Ergebnis.
+
+| Liste | wofür | Vermerke |
+|---|---|---|
+| `streichliste.md` | Klassen des **alten** Stylesheets, die es nicht mehr gibt — je mit dem Baustein, der sie ersetzt | `[bleibt]` für die wenigen, die im Markup stehen bleiben (Skriptanker) |
+| `ausnahmen.md` | Werte, die außerhalb der Token stehen dürfen — Geometrie statt Gestaltung | — |
+| `ohne-regel.md` | Klassen im Markup, die **keine** Regel brauchen | `[bleibt]` = begründet, kein Befund · `[offen]` = Frage offen, bleibt Befund unter eigener Überschrift |
 
 Die erste Spalte von `ausnahmen.md` ist der **Eigenschaftsname**, nicht die
 Zeilennummer — so überlebt die Liste jede Umsortierung des Stylesheets.
+
+**Warum `ohne-regel.md` überhaupt nötig war** (O12, Backlog Nr. 39): Die
+Gegenprobe „im Markup, aber ohne Regel" hat in O11 einen echten Fund gemacht —
+der Export-Knopf trug `btn-primary`, eine Klasse ohne Regel, und war 23 px
+hoch statt 44 (F-P3-BA). Nur stand dieser eine Fund zwischen 28 falschen:
+acht Bruchstücken zusammengesetzter Klassennamen und zwanzig Skriptankern.
+Eine solche Liste wird nach dem dritten Mal nicht mehr gelesen, und dann
+findet sie auch den echten Fund nicht. Seit O12 zählt sie die begründeten
+Fälle nur noch, meldet die ungeklärten einzeln — und meldet **ihre eigenen
+verwahrlosten Einträge**: Wessen Klasse inzwischen eine Regel hat oder aus dem
+Markup verschwunden ist, steht als „Eintrag ungenutzt" da.
 
 ## Was das Werkzeug nicht kann
 

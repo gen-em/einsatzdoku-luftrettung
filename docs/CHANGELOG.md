@@ -11,6 +11,163 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.13.0] — 2026-08-30
+
+**O12: die Gestaltungsrichtlinie.** Zwölf Arbeitspakete haben eine Oberfläche
+gebaut, aber keine Regel hinterlassen, die man nachschlagen kann. Das Wissen
+stand verteilt: die Token im Stylesheet, die Bausteine in `ui.php`, die
+Begründungen in den Kopfkommentaren von `version.php`, die Entscheidungen im
+Konzept. Wer eine neue Seite baut, findet dort alles — aber erst, nachdem er
+alles gelesen hat. **`docs/Design.md`** ist die eine Stelle: Marke,
+Farbrollen, Token, Schrift, Grundregeln, Schwellen, Symbole, Bausteine,
+Seitentypen, Prüfmittel.
+
+Keine Migration, keine Änderung am Datenmodell; am Server ändert sich eine
+einzige Zeile (siehe F-P3-BC unten).
+
+### Der Einstieg ist eine Tabelle, keine Einleitung
+
+Kapitel 9 beginnt mit *„Wenn du X willst, nimm Y"* — 27 Zeilen von der
+Absicht zum Baustein, samt der Spalte „nicht": *eine Liste von Einträgen →
+`ui_zeile()` in einer Karte, **nicht** eine `<table>`.* Das ist die Frage, mit
+der jemand das Dokument aufschlägt; alles andere ist die Antwort auf die
+zweite Frage. Steht ein Fall nicht in der Tabelle, ist das der Moment für eine
+Rückfrage — nicht für ein neues Element (CLAUDE.md §9).
+
+Am Ende desselben Kapitels stehen die **Anti-Muster**: zehn Fallen, jede davon
+in P3 tatsächlich hineingetreten. Eine Klasse auf einem Kästchen, die gegen
+`input[type=checkbox]` verliert (F-P3-AP, F-P3-AZ). `knopf-gefahr` im
+Aktionsblatt, wo `blatt-gefahr` hingehört (F-P3-AX). Die doppelte Rückfrage.
+Ein Formular ohne `forms.js`. `:nth-child` für Spaltenbreiten. Ein
+Unicode-Zeichen statt eines Symbols. Eine Tabelle mit erfundenen
+Fehlernummern wäre wohlfeil gewesen; diese zehn haben je einen Fund als Beleg.
+
+### Vier Tabellen werden erzeugt, nicht abgeschrieben
+
+`tools/design/tabellen.py` liest **87 Token** aus `:root` (in den 15 Gruppen,
+die das Stylesheet selbst überschreibt), **19 Medienblöcke** über fünf
+Breiten, **44 Symboldateien** mit ihren Tabler-Namen und **32 Bausteine** aus
+`ui.php` mit Klasse, Zeilennummer und Markup — und setzt daraus das Markup der
+Kapitel 4, 7, 8 und 9. Eine abgeschriebene Tabelle ist ab dem ersten Tag
+falsch; diese ist mit einem Aufruf wieder richtig.
+
+### Die Lizenzen stehen jetzt zusammen
+
+**`docs/Lizenzen.md`** nennt die drei Bibliotheken mit Version, Lizenz und
+SHA-256 (Leaflet 1.9.4, SheetJS 0.18.5, zip.js 2.8.34), die zwei
+Schriftfamilien, den Symbolvorrat — und, davon **getrennt**, die Dienste, die
+zur Laufzeit angesprochen werden, wenn die Nutzerin eine Karte öffnet
+(Kartenkacheln, Photon). Genau diese Trennung fehlte bisher: Die Zusage „keine
+fremde Quelle zur Laufzeit" gilt für Code und Schriften, nicht für
+Kartenkacheln — und das war nirgends gesagt.
+
+### `docs/Branding.md` ist abgelöst
+
+Sein Verbindliches steht in `Design.md`; die Datei ist entfernt. Ihre drei
+offenen Punkte sind erledigt und dort als solche vermerkt:
+
+- **B1** — die Logodateien trugen Näherungen der Markenfarben (Rot `#E3322B`
+  statt `#D63338`). Berichtigt in O1.
+- **B2** — keine geschlossene Größenskala. Es gibt jetzt eine: sieben
+  Schriftgrößen (12/13/15/16/19/24/28 px) und drei Zeilenhöhen, je mit der
+  Angabe, wofür sie gilt.
+- **B3** — 78 Hexwerte verstreut im Stylesheet. Heute steht **kein**
+  Farbwert mehr außerhalb von `:root` (gemessen: 0).
+
+### F-P3-BC: zwei tote Token, und dahinter eine zu schmale Leiste
+
+Die Vollständigkeitsprüfung meldete `--leiste-filter` und
+`--leiste-filter-schmal` als unbenutzt. Sie waren es — und der Grund war kein
+vergessenes Aufräumen, sondern ein Fehler: Die **Filterleiste der Suche** trug
+seit O6 nur `.leiste` und war damit 220 px breit (bzw. 260 ab 1200 px) statt
+der für sie vorgesehenen 240/280 px. Sie trägt mehr als eine Tagesliste —
+Datum von/bis, drei Auswahlfelder, Freitext —, und dafür waren die 220 px zu
+knapp. `ui_geruest_start()` vergibt jetzt zusätzlich `leiste-filter`.
+
+Zwei Pakete lang unbemerkt, weil eine zu schmale Leiste nicht bricht, sondern
+nur enger umbricht. Ein totes Token ist nicht immer Müll; manchmal ist es die
+Quittung für eine Regel, die nie angekommen ist.
+
+### Ein Prüfmittel, das wieder gelesen wird
+
+Die Vollständigkeitsprüfung meldet Klassen, die im Markup stehen und im
+Stylesheet keine Regel haben. Diese Gegenprobe hat in O11 den ungestalteten
+Export-Knopf gefunden — 23 px hoch statt 44, weil er `btn-primary` trug, eine
+Klasse ohne Regel. Genau **ein** echter Fund unter 29 Zeilen: Acht davon sind
+Bruchstücke zusammengesetzter Klassennamen (`'plakette-' + ton` — das Werkzeug
+liest Zeichenketten, nicht ausgeführten Code), fünfzehn sind Skriptanker ohne
+eigenes Aussehen. Eine Liste in diesem Mischungsverhältnis wird nach dem
+dritten Mal überflogen statt gelesen, und findet dann auch den nächsten echten
+Fund nicht.
+
+`tools/vollstaendigkeit/ohne-regel.md` funktioniert jetzt wie die
+Streichliste: **`[bleibt]`** = begründet ohne Regel, verschwindet aus dem
+Befund und wird nur gezählt. **`[offen]`** = die Frage ist offen, bleibt ein
+Befund, aber unter eigener Überschrift. Alle 29 Namen sind am Fundort
+nachgesehen und einzeln begründet. Ergebnis: **0 ohne eingetragenen Grund**
+statt 29, **6 als `[offen]`** — und die Befunde gesamt fielen von 247 auf
+**224**.
+
+Damit die Liste nicht selbst verwahrlost, meldet die Prüfung ihre eigenen
+toten Einträge: Wessen Klasse inzwischen eine Regel hat oder aus dem Markup
+verschwunden ist, steht als „Eintrag ungenutzt" da — dieselbe Disziplin, die
+die Wortliste seit P2 hat.
+
+Die sechs offenen sind Entscheidungen, keine Reste: `imp-warn` ist ein
+Warnhinweis, der aussieht wie Fließtext; `imp-daygroup` eine
+Gruppenüberschrift, die aussieht wie eine Datenzeile. Sie stehen als Backlog
+Nr. 41 — jede Antwort darauf ist eine neue Darstellung und braucht eine
+Freigabe.
+
+### Der Stilvergleich wacht wieder
+
+Er ruhte während P3, weil er dort die falsche Frage stellte: Wenn jede
+beabsichtigte Änderung ein Treffer ist, misst er nur noch die eigene
+Arbeitsmenge. Für P4 ist er neu geeicht:
+
+- **13 Fensterbreiten** von 360 bis 1920 px statt bisher neun. Die alten
+  endeten bei 500 px und kannten die 390er-Klasse der Telefone nicht.
+- Die Seitenproben lesen jetzt auch die **HTML-Schnipsel aus
+  PHP-Zeichenketten** (`proben.py`, `php_zeichenketten()`). Das ist der blinde
+  Fleck, vor dem seine `LIESMICH.md` seit P0 warnte: Markup, das aus `echo
+  '<div class="…">'` stammt, war für ihn unsichtbar. Gemessen: **228 Klassen
+  vorher, 253 nachher.**
+
+### Das Handbuch bleibt stehen
+
+Ausdrückliche Entscheidung: Das Handbuch beschreibt die *Bedienung*, und die
+ändert sich bis 1.0 noch. Es einmal jetzt und einmal vor der Auslieferung zu
+schreiben wäre dieselbe Arbeit zweimal. Angepasst wurde nur, was ohne Wert
+veraltet ist: die 14 Unicode-Zeichen im Text (kein Bildschirmleser spricht
+„✕" als „Schließen") und drei Bildschirmfotos.
+
+### Das Prüfdokument ist abgeschlossen
+
+`docs/Pruefdokument-P3-Oberflaeche.md` stand seit O8c auf demselben Stand. Es
+ist jetzt vollständig — mit Mittel **und** Zahl zu jedem der zwölf Pakete —,
+und in zwei Punkten anders als vorher.
+
+**Was nicht erreicht wurde, steht vorn.** Abschnitt 1.3 nennt es mit Zahl und
+Backlog-Nummer: 158 Unicode-Treffer, davon drei echte Symbole (Nr. 42); sechs
+Klassen ohne Regel mit offener Frage (Nr. 41); 55 Altklassen ohne Begründung
+(Nr. 40); das zurückgestellte Handbuch. Abschnitt 1.4 nennt die **drei
+Migrationen** der Phase — ohne den Aufruf von `update.php` steht die Anwendung.
+
+**Die Prüfliste hat einen kurzen Weg.** Zwölf Pakete ergeben eine Liste, die
+niemand abarbeitet. Abschnitt 5.0 ist neu: vierzehn Punkte, die die Phase als
+Ganzes abnehmen, in etwa einer Stunde. Die ausführliche Fassung je Paket
+(5.1–5.16) steht daneben.
+
+### Auch geändert
+
+- `README.md` zeigt vier Bildschirmfotos („So sieht es aus") und verweist auf
+  Design und Lizenzen statt auf Branding.
+- `CLAUDE.md` §5 zeigt auf `docs/Design.md`, nennt die Freigaberegel für neue
+  Bausteine und die 44-px-Regel.
+- `docs/Technik.md`: Verzeichnisbaum um `tools/design/`, `tools/pruefkonten/`
+  und `tools/rechtstexte/` ergänzt; der Stilvergleich steht nicht mehr auf
+  „ruht".
+
 ## [Web 9.12.0] — 2026-08-30
 
 **O11: die übrigen Seiten — und die Übergangsschicht fällt.** Neun Seiten sind
