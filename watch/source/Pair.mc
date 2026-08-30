@@ -9,6 +9,7 @@ using Toybox.Lang;
 using Toybox.WatchUi;
 using Toybox.Communications;
 using Toybox.Application.Storage;
+using Toybox.System;
 
 // Rueckruf-Traeger (method() existiert nur auf Objekten)
 class PairCb {
@@ -53,6 +54,54 @@ module Pair {
         WatchUi.pushView(tp, new PairTextDelegate(), WatchUi.SLIDE_LEFT);
     }
 
+    /* Was fuer ein Geraet koppelt sich hier? (Statistik, Web-Konzept)
+     *
+     * WOZU. Bis hierher wusste der Server nur, DASS ein Geraet gekoppelt ist,
+     * nicht welches. Fuer die Frage "welche Uhren sollen wir kuenftig
+     * unterstuetzen" gibt es keine brauchbare aeussere Quelle: Garmin
+     * veroeffentlicht keine modellgenauen Zahlen, und der Connect-IQ-Store
+     * schluesselt Installationen nicht nach Geraet auf. Wer es wissen will,
+     * muss selbst zaehlen.
+     *
+     * WAS GESENDET WIRD. Die Teilenummer ist der Schluessel: Sie ist eindeutig
+     * und laesst sich serverseitig gegen die Geraetedateien aufloesen (325
+     * Teilenummern -> 173 Modelle), samt Geraeteart. Deshalb traegt die Uhr
+     * KEINE Modelltabelle mit sich herum — auf einem Geraet mit 128 kB waere
+     * das der falsche Platz dafuer.
+     *
+     * Die Art steht fest auf "uhr": Eine Connect-IQ-App laeuft nur auf einem
+     * Garmin-Geraet. Handy und Rechner tauchen in der Statistik ueber die
+     * Web-Zugriffe auf, nicht hier.
+     *
+     * WAS BEWUSST NICHT GESENDET WIRD: `uniqueIdentifier`. Das ist eine
+     * dauerhafte, geraeteweite Kennung — fuer eine Stueckzahl-Statistik nicht
+     * noetig, und in einer kleinen Gruppe ein Personenbezug mehr, als die
+     * Frage rechtfertigt. Die Zuordnung leistet die device_id, die der Server
+     * bei der Kopplung ohnehin vergibt.
+     *
+     * Eine fehlende oder unbekannte Angabe darf die Kopplung NIE verhindern:
+     * Alle Felder sind fuer den Server freiwillig, und ein Geraet, das eines
+     * davon nicht kennt, sendet dort null. */
+    function _geraeteInfo() as Lang.Dictionary {
+        var d = System.getDeviceSettings();
+        var ciq = null;
+        var mv = d.monkeyVersion;
+        if (mv != null && (mv as Lang.Array).size() >= 3) {
+            var v = mv as Lang.Array<Lang.Number>;
+            ciq = v[0].toString() + "." + v[1].toString() + "." + v[2].toString();
+        }
+        return {
+            "art"   => "uhr",
+            "teil"  => d.partNumber,          // z. B. "006-B4261-00"
+            "br"    => d.screenWidth,
+            "ho"    => d.screenHeight,
+            "touch" => d.isTouchScreen,
+            "fw"    => d.firmwareVersion,
+            "ciq"   => ciq,
+            "app"   => Const.APP_VERSION
+        };
+    }
+
     function request(code as Lang.String) as Void {
         var base = Uploader.serverBase();
         if (base.length() == 0) {
@@ -66,16 +115,20 @@ module Pair {
         statusHint = null;
         statusKind = :busy;
         WatchUi.requestUpdate();
-        if (_cb == null) { _cb = new PairCb(); }
+        // Lokal halten und in einem Zug anlegen — s. Uploader._send():
+        // die Typpruefung verfolgt eine Null-Pruefung nur ueber lokale
+        // Variablen, und ein nachgestelltes if waere unerreichbar.
+        var cb = _cb;
+        if (cb == null) { cb = new PairCb(); _cb = cb; }
         Communications.makeWebRequest(
             base + "pair.php",
-            { "code" => code.toUpper() },
+            { "code" => code.toUpper(), "geraet" => _geraeteInfo() },
             {
                 :method => Communications.HTTP_REQUEST_METHOD_POST,
                 :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
                 :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
             },
-            _cb.method(:onResponse));
+            cb.method(:onResponse));
     }
 
     /* Antwort auswerten.

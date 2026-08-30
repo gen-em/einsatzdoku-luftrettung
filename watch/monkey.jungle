@@ -13,13 +13,38 @@ base.sourcePath      = source;source-tasten5
 
 fenix6pro.sourcePath = source;source-tasten5
 fr945.sourcePath     = source;source-tasten5
-venu3s.sourcePath    = source;source-tasten3
 
-# Launcher-Icon und Bildmarke der Venu 3s sind groesser (70x70 statt 40x40).
-# Gleiche Regel: vollstaendig zuweisen. Der spaetere Pfad gewinnt bei
-# gleichnamigen Ressourcen-IDs.
+# Geraete mit Touch und ohne eigene UP/DOWN-Tasten brauchen das
+# Drei-Tasten-Profil. Wer das vergisst, merkt es NICHT beim Uebersetzen:
+# Die App baut sauber und ist auf dem Geraet unbedienbar.
+# Erzeugt mit: geraeteklassen.py --bloecke
+approachs50.sourcePath = source;source-tasten3
+approachs7042mm.sourcePath = source;source-tasten3
+approachs7047mm.sourcePath = source;source-tasten3
+d2air.sourcePath = source;source-tasten3
+d2airx10.sourcePath = source;source-tasten3
+venu.sourcePath = source;source-tasten3
+venu2.sourcePath = source;source-tasten3
+venu2plus.sourcePath = source;source-tasten3
+venu2s.sourcePath = source;source-tasten3
+venu3.sourcePath = source;source-tasten3
+venu3s.sourcePath = source;source-tasten3
+venud.sourcePath = source;source-tasten3
+vivoactive5.sourcePath = source;source-tasten3
+
+# Launcher-Icon und Bildmarke: Der Ordner resources-icon70 traegt die
+# 70x70-Fassung. Gleiche Regel wie oben: vollstaendig zuweisen, der
+# spaetere Pfad gewinnt bei gleichnamigen Ressourcen-IDs.
+#
+# Die uebrigen Groessen (35, 36, 54, 56, 60, 61, 65) haben KEINEN eigenen
+# Ordner — monkeyc skaliert das 40x40-Symbol darauf und meldet das als
+# Warnung. Hochskaliert wird es unscharf; eigene Fassungen waeren
+# Gestaltungsarbeit und brauchen eine Freigabe.
 base.resourcePath    = resources
 
-fenix6pro.resourcePath = resources
-fr945.resourcePath     = resources
-venu3s.resourcePath    = resources;resources-venu3s
+approachs7047mm.resourcePath = resources;resources-icon70
+d2airx10.resourcePath = resources;resources-icon70
+venu2.resourcePath = resources;resources-icon70
+venu2plus.resourcePath = resources;resources-icon70
+venu3.resourcePath = resources;resources-icon70
+venu3s.resourcePath = resources;resources-icon70

@@ -1568,6 +1568,24 @@ Zeitlimit des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist
 das klein, aber nicht null — deshalb steht das Zeitlimit bei der Kopplung, wo
 die Uhr wartet, auf fünf statt fünfzehn Sekunden.
 
+### Was die Uhr beim Koppeln über sich meldet — seit Uhr 1.9.0
+
+Die Kopplung sendet neben dem Code einen Block `geraet` mit Teilenummer,
+Displaymaßen, Touch, Firmware, Plattform- und App-Fassung; die Art steht fest
+auf `"uhr"`. Feldliste und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
+
+**Der Server verwirft den Block derzeit stillschweigend** — die Auswertung ist
+Backlog Nr. 46. Bis dahin sammelt niemand etwas; die Uhr sendet nur.
+
+Zwei Entscheidungen dahinter. Gesendet wird die **Teilenummer**, nicht der
+Modellname: Den kennt die Uhr nicht, `DeviceSettings` führt ihn nicht. Die
+Teilenummer ist eindeutig und serverseitig gegen die Gerätedateien der
+Uhr-Plattform auflösbar (325 Teilenummern auf 173 Modelle, samt Geräteart) — eine
+Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Platz. Und
+**`uniqueIdentifier` wird bewusst nicht gesendet**: eine dauerhafte
+Gerätekennung, die für eine Stückzahl-Statistik nicht gebraucht wird und in
+einer kleinen Gruppe mehr Personenbezug schafft, als die Frage rechtfertigt.
+
 ### Geräte je Konto
 
 Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft beim Koppeln

@@ -336,6 +336,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
+46. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
+    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
+    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
+    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
+    Auflösung der Teilenummer auf Modell und Geräteart über die
+    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
+    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
+    Dateien ziehen), und eine Auswertung in der Weboberfläche.
+    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
+    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
+    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
+    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
+    sie eins.
+    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
+    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
+    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
+    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
+    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter

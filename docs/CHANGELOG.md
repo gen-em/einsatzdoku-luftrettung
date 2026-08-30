@@ -11,6 +11,93 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.9.0] — 2026-08-30
+
+**Die App unterstützt 99 statt drei Geräte, und sie sagt beim Koppeln, auf
+welchem sie läuft.** Zwei Dinge, die zusammengehören: Wer die Geräteliste
+öffnet, will hinterher wissen, welche davon tatsächlich getragen werden.
+
+### Uhr — Von drei auf 99 Geräten
+
+Die Auswahl folgt abgestimmten Regeln, die als Konstanten in
+`tools/uhr-pruefstand/geraeteklassen.py` stehen: Uhren mit API ≥ 3.1
+(das `minApiLevel` der App) und mindestens 128 kB Speicher, davon die vier
+größten Geräteklassen, dazu alle Fenix ab Fenix 5 und alle Forerunner ab 2018.
+Von 173 Gerätedateien bleiben so **122 taugliche Uhren**, davon sind **99
+ausgewählt** — verteilt auf nur **vier Klassen**.
+
+Bemerkenswert daran: Die Sonderregeln für Fenix und Forerunner bringen **keine
+einzige zusätzliche Klasse**. Sie überlappen vollständig mit den vier größten;
+die vier Klassen allein hätten dieselbe Liste ergeben. Herausgefallen sind 23
+Geräte in acht kleinen Klassen, darunter die einzigen **eckigen** (`venusq`,
+`venusq2`, `venux1`) und die Instinct-Reihe — genau die Formen, für die
+`Ui.chordW()` mit seiner Kreissehnen-Formel nicht gebaut ist.
+
+Die Geräteliste im Manifest ist nach Klassen gruppiert und kommentiert. Die
+Regel darüber hat sich dabei geändert: Sie verlangte, **jedes** neue Gerät
+einzeln auszumessen. Bei 96 neuen ist das weder zu leisten noch sinnvoll — ein
+Gerät zeigt nichts, was sein Klassenvertreter nicht schon zeigt, und die Höhe
+innerhalb einer Klasse skaliert stetig. Gemessen wird jetzt **je Klasse**. Eine
+neue Klasse bleibt dagegen immer eine Messung wert.
+
+### Uhr — Die stille Falle im Jungle
+
+`base.sourcePath` steht auf dem Fünf-Tasten-Profil. Ein neu eingetragenes
+Touch-Gerät ohne eigene UP/DOWN-Tasten erbt es stillschweigend, **übersetzt
+sauber und ist auf dem Gerät unbedienbar** — der Compiler merkt davon nichts.
+Für die 99er-Auswahl brauchen **13 Geräte** deshalb explizit `source-tasten3`:
+die Venu-Reihe, `approachs50`, die Approach S70, `d2air`, `d2airx10` und
+`vivoactive5`.
+
+`resources-venu3s` heißt jetzt `resources-icon70`. Der Ordner trägt die
+70×70-Fassung von Symbol und Bildmarke, und die brauchen sechs Geräte, nicht
+nur die Venu 3s.
+
+### Uhr — Was die Uhr beim Koppeln über sich meldet
+
+`pair.php` bekommt neben dem Code einen Block `geraet`: Teilenummer,
+Displaymaße, Touch, Firmware, Connect-IQ- und App-Fassung. Feldliste und
+Begründungen stehen im JSON-Vertrag, Abschnitt 1a. **Der Server verwirft ihn
+derzeit stillschweigend** — die Auswertung ist Backlog Nr. 46.
+
+Warum überhaupt selbst zählen: Für die Frage, welche Uhren künftig unterstützt
+werden sollen, gibt es keine brauchbare äußere Quelle. Garmin veröffentlicht
+keine modellgenauen Verkaufszahlen, und der Connect-IQ-Store schlüsselt
+Installationen nicht nach Gerät auf — Entwickler fragen das seit Jahren an.
+Wer es wissen will, muss selbst zählen.
+
+Gesendet wird die **Teilenummer**, nicht der Modellname: Den kennt die Uhr
+nicht, `DeviceSettings` führt ihn nicht. Die Teilenummer ist eindeutig und
+serverseitig auflösbar — 325 Teilenummern führen auf 173 Modelle, samt
+Geräteart. Eine Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Ort.
+
+**Nicht gesendet wird `uniqueIdentifier`.** Das ist eine dauerhafte,
+geräteweite Kennung; für eine Stückzahl-Statistik wird sie nicht gebraucht, und
+in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
+rechtfertigt. Die Zuordnung leistet die `device_id`. Aus demselben Grund hält
+Nr. 46 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
+ausgewertet wird.
+
+### Uhr — Was dabei offen bleibt
+
+Zwei Punkte, beide Gestaltungsarbeit und deshalb nicht nebenbei entschieden:
+
+**Die Launcher-Symbole sind unvollständig.** Die 99 Geräte verlangen neun
+Größen (35, 36, 40, 54, 56, 60, 61, 65, 70 px); im Repositorium liegen zwei.
+`monkeyc` skaliert und meldet es als Warnung — hochskaliert wird das Symbol
+unscharf. Die Kompilate wachsen davon übrigens nicht nennenswert: Gemessen
+kostet der vollständige 70er-Satz gegenüber dem geerbten 40er **6 432 Byte**,
+und zwar nur in den Geräten, die ihn bekommen. Jedes `.prg` trägt allein seine
+eigenen Ressourcen.
+
+**Die Bildmarke sitzt auf großen Displays zu klein.** Sie wird mit
+`dc.drawBitmap` 1:1 gezeichnet und über die *Launcher-Symbolgröße* zugeordnet
+statt über die Displayhöhe. Das passt bei der Venu 3s zufällig und geht sonst
+auseinander: **37 Geräte** bekämen eine Bildmarke, die nur 15–18 % der
+Displayhöhe einnimmt, wo die bestehende Gestaltung auf 25–27 % ausgelegt ist.
+Auf einer Fenix 9 Pro 51 mm säße das Logo verloren in der Mitte. Die Lösung
+wäre eine Staffelung nach Displayhöhe in drei Stufen.
+
 ## [Uhr 1.8.2] — 2026-08-30
 
 **Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung

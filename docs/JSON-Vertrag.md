@@ -56,6 +56,55 @@ Eine Ausnahme steht ausdrücklich darin: Die **Präfixe** der Client-Kennung
 
 Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 
+## 1a. Kopplung (`pair.php`) — seit Uhr 1.9.0
+
+Die Kopplung ist der einzige Weg, der **ohne** die Header aus Abschnitt 1
+auskommt: Sie erzeugt die Zugangsdaten ja erst. Gesendet wird per POST:
+
+```json
+{
+  "code": "AB3K7Q",
+  "geraet": {
+    "art":   "uhr",
+    "teil":  "006-B4261-00",
+    "br":    390,
+    "ho":    390,
+    "touch": true,
+    "fw":    1140,
+    "ciq":   "5.2.0",
+    "app":   "1.9.0"
+  }
+}
+```
+
+`code` ist Pflicht; **`geraet` ist es nicht.** Ein Server, der den Block nicht
+kennt, ignoriert ihn, und eine Uhr, die ein Feld nicht liefern kann, sendet
+dort `null` — eine Kopplung darf an einer Statistikangabe nie scheitern.
+
+| Feld | Bedeutung |
+|---|---|
+| `art` | `"uhr"`, fest. Die Uhr-App läuft nur auf der Uhr; Handy und Rechner erscheinen über die Web-Zugriffe, nicht hier. |
+| `teil` | Teilenummer aus `System.getDeviceSettings().partNumber`. Der eigentliche Schlüssel. |
+| `br`, `ho` | Displaybreite und -höhe in Pixeln |
+| `touch` | Touchscreen vorhanden |
+| `fw` | Firmware-Stand des Geräts |
+| `ciq` | Fassung der Uhr-Plattform, `major.minor.patch` |
+| `app` | `Const.APP_VERSION` der Uhr-App |
+
+**Warum die Teilenummer und nicht der Modellname.** Die Uhr kennt ihren
+Modellnamen nicht — `DeviceSettings` führt ihn nicht. Die Teilenummer ist
+dagegen eindeutig und lässt sich gegen die Gerätedateien der Uhr-Plattform
+auflösen:
+325 Teilenummern führen auf 173 Modelle, samt Geräteart. Diese Zuordnung
+gehört auf den Server; eine Uhr mit 128 kB ist der falsche Ort für eine
+Modelltabelle.
+
+**Was bewusst fehlt: `uniqueIdentifier`.** Das ist eine dauerhafte,
+geräteweite Kennung. Für eine Stückzahl-Statistik wird sie nicht gebraucht,
+und in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
+rechtfertigt. Die Zuordnung leistet die `device_id`, die der Server bei der
+Kopplung ohnehin vergibt.
+
 ## 2. Grundprinzipien
 
 - **Zeitstempel:** ISO 8601 in UTC mit `Z`-Suffix, Sekundenauflösung (`2026-07-16T08:31:05Z`). Track-Punkte nutzen kompakte Unix-Epochen (Sekunden, UTC).

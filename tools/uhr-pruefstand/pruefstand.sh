@@ -206,6 +206,12 @@ reihe() {
     local liste="${1:?Listendatei fehlt}"; shift || true
     [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
     umgebung; mkdir -p "$AUSGABE"
+    # monkeyc braucht eine Grafikumgebung, sobald es das Launcher-Icon auf die
+    # Groesse des Geraets skalieren muss (java.awt.BufferedImage). Fehlt sie,
+    # bricht es mit einem AWTError ab — und zwar OHNE ERROR-Zeile: Das Kompilat
+    # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
+    # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
+    export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
     local ok=0 mangel=0 fehlend=0
     printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
     printf '%s\n' "----------------------------------------------------------------------"
@@ -221,7 +227,9 @@ reihe() {
         sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
         local w e sz
         w=$(grep -c 'WARNING' "$log" || true)
-        e=$(grep -c 'ERROR' "$log" || true)
+        # Ausnahmen der Java-Ebene tragen keine ERROR-Zeile — mitzaehlen,
+        # sonst steht da "0 Fehler" neben einem fehlenden Kompilat.
+        e=$(grep -cE 'ERROR|Exception in thread' "$log" || true)
         sz=$(stat -c%s "$AUSGABE/$g.prg" 2>/dev/null || echo 0)
         if [ "$e" -gt 0 ] || [ "$sz" -eq 0 ]; then
             printf '%-26s %5s %6s %10s  %s\n' "$g" "$w" "$e" "$sz" "FEHLGESCHLAGEN"
