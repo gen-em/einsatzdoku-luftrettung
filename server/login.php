@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Der Browser sendet nie das Passwort, sondern das daraus
         // abgeleitete Token (siehe assets/crypto.js).
-        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter
+        $st = db()->prepare('SELECT id, password_hash, session_epoch, kdf_iter, logo_wahl
                              FROM users WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
@@ -152,6 +152,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Alte Sitzungsbremse aufraeumen: Auf Rechnern, die vor dieser
             // Fassung angemeldet waren, liegen die beiden Werte noch herum.
             unset($_SESSION['login_fails'], $_SESSION['login_last'], $_SESSION['role']);
+            /* LOGO-WAHL EINMAL AUFLOESEN (E-P3-20). Bei „wechselnd" faellt
+               hier der Wuerfel — je Anmeldung, nicht je Seitenaufruf; sonst
+               spraenge das Logo beim Blaettern. */
+            logo_sitzung_setzen($u['logo_wahl'] ?? '');
+            /* ZULETZT ANGEMELDET (E-P3-41). Die einzige Stelle, an der der
+               Wert geschrieben wird — nicht bei jedem Seitenaufruf. Ein
+               Fehlschlag darf die Anmeldung nicht aufhalten: Der Wert ist
+               eine Auskunft fuer die Administration, kein Teil des Zugangs.
+               Solange die Migration nicht gelaufen ist, gibt es die Spalte
+               nicht; dann bleibt es beim Fangen. */
+            try {
+                db()->prepare('UPDATE users SET last_login = NOW() WHERE id = ?')
+                    ->execute([(int)$u['id']]);
+            } catch (Throwable) {
+                // Spalte fehlt (Migration steht aus) — ohne Folgen.
+            }
             rate_erfolg('login', $email);
             // Auch den Zaehler des Salz-Endpunkts leeren — jede Anmeldung
             // verbraucht dort einen Versuch, und wer sich erfolgreich
@@ -170,12 +186,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
-ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
+ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
 ?>
-<main class="login-card">
-  <img src="<?= e(logo_src()) ?>"
-       alt="GenEM" class="login-logo">
-  <h1>Einsatzdoku</h1>
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Einsatzdoku</h1>
+  <p class="anmeldung-unter">Einsatzdokumentation Notarzt</p>
   <?php /* Beide schliessen einander aus: Steht ein Fehler an, tritt der
            Hinweis zurueck. Die Reihenfolge in ui_meldung() ist deshalb
            ohne Wirkung. */ ?>
@@ -191,10 +208,15 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'login-body']);
     <label>Passwort
       <input type="password" name="password" required autocomplete="current-password">
     </label>
-    <button type="submit" class="btn-primary">Anmelden</button>
+    <?= ui_knopf(['text' => 'Anmelden', 'art' => 'primaer', 'breit' => true]) ?>
   </form>
-  <p class="login-aux"><a href="reset_request.php">Passwort vergessen?</a></p>
-  <p class="muted" id="loginstate" style="min-height:1.2em"></p>
+  <p class="anmeldung-neben"><a href="reset_request.php">Passwort vergessen?</a></p>
+  <?php /* Zustandszeile der Anmeldung (Schluesselableitung laeuft …).
+           `.zustandszeile` haelt ihre Hoehe frei, damit die Karte beim
+           Erscheinen der Meldung nicht springt — `.muted` tat das nicht
+           und ist mit der Uebergangsschicht in O11 gefallen. */ ?>
+  <p class="zustandszeile" id="loginstate"></p>
+ </div>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script>
@@ -280,6 +302,7 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
   }
 });
 </script>
-<?php /* Footer im Fluss unter der Karte */ ?>
-<footer class="sitefooter">© Gen-EM – OpenSource Software – <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0</a></footer>
+<?php /* Fusszeile auf JEDER Seite, auch vor der Anmeldung (R32, E-P3-14) —
+         dunkel, weil sie hier auf der dunkelblauen Flaeche liegt. */ ?>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <?php ui_seite_ende(); ?>

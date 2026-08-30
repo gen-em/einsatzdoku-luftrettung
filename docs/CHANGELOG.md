@@ -201,6 +201,1775 @@ Der Prüfstand ersetzt die echte Uhr nicht, und die Grenzen aus
 richtiges Verhalten, kein Fehler. Und ein Lauf zeigt, dass es startet und wie
 es aussieht, nicht dass es richtig ist.
 
+## [Web 9.14.0] — 2026-08-30
+
+**Die erste Rückmeldungsrunde nach P3.** Vierzehn Punkte aus einer Durchsicht
+mit Bildschirmfotos — und vier Fehler, die dabei ans Licht kamen. Was alle
+verbindet: Kein einziger hätte von einem Prüfmittel gefunden werden können.
+Sie brechen nichts. Sie sehen nur falsch aus. Keine Migration.
+
+### Die Seitenleiste lief über die Kopfleiste
+
+Zwei Fehler in einer Regel, und der erste steckt in vier Zeichen:
+
+```css
+.leiste{ position:sticky; top:var(--kopf); inset:auto; }
+```
+
+`inset` ist die Kurzform für alle vier Seiten. Es setzt das `top` eine Zeile
+davor wieder auf `auto` — die Leiste klebte also gar nicht, sondern scrollte
+mit. Gemessen bei 600 px Scrollhöhe: Sie stand auf **−544 px**. Dazu blieb ihr
+`z-index: 60` aus der Schubladen-Regel stehen, während die Kopfleiste auf 40
+liegt; sie malte darüber statt dahinter. Jetzt steht `inset` **zuerst** und
+`top` danach, und der z-index geht auf 1 zurück — ab 1024 px ist die Leiste
+ein Teil des Rasters und braucht keine eigene Ebene.
+
+### Ein toter Streifen unter jeder Segmentwahl
+
+Die Segmenttaste ist ein `<label>`, und die Grundformen geben jedem `label`
+12 px Abstand nach unten. Innerhalb des Segmentrahmens ist das kein Abstand,
+sondern Leere im Kasten: **Rahmen 58 px, Tasten 44**. Betroffen war *jede*
+Segmentwahl der Anwendung — Wochentage, Dreiwertfilter, Zeitraum-Reiter,
+Logo-Wahl. Das erklärt zwei Rückmeldungen auf einmal („Wochentagauswahl sieht
+komisch aus", „Tabelle passt irgendwie nicht"). Jetzt: **46 px**, also die
+Tasten plus die beiden Haarlinien.
+
+Die zweite Hälfte des Fundes ist die lehrreichere. `.segment-taste{margin:0}`
+allein half nicht — in der Filterleiste stand:
+
+```css
+.filterfelder label{margin-bottom:var(--abstand-3)}
+```
+
+Diese Regel setzt **genau den Wert, den die Grundform `label` schon setzt**.
+Sie tat nichts, außer mit ihrer höheren Spezifität (0,1,1) den Baustein
+(0,1,0) zu schlagen. Eine Dublette ist nie harmlos: Sie tut nichts, bis sie
+etwas verhindert.
+
+### Welches Feld verschlüsselt ist, stand nicht mehr da
+
+Bis O4 trug jedes geschützte Feld ein Schloss-Emoji. O4 hat sie durch **eine**
+Meldung über den Karten ersetzt — und dabei die Auskunft *je Feld* verloren.
+Sie kommt zurück, aber auf der richtigen Ebene:
+
+- In der Karte **PatientIn** ist alles verschlüsselt. Das sagt jetzt eine
+  Plakette am Kartenkopf, einmal.
+- Die drei geschützten Felder der **Einsatz**-Karte (Einsatzort, Beschreibung
+  Einsatzort, Diagnose) stehen zwischen Klartextfeldern und tragen ihr
+  Schloss einzeln — mit `<title>`, damit es auch ein Bildschirmleser nennt.
+
+### „Wechselnd" gibt es jetzt auch für die Installation
+
+Die Wartung kannte zwei Werte. Der dritte war nicht einfach dazuzuschreiben:
+`logo_stamm()` hätte „wechselnd" durchgereicht und wäre stumm beim
+Hubschrauber gelandet — die Einstellung wäre da gewesen und hätte nichts
+getan. Es gibt deshalb `logo_standard_aufgeloest()`, und der Würfel fällt **je
+Sitzung**, nicht je Seitenaufruf; sonst spränge das Logo beim Blättern. Ein
+Adminwechsel wirkt trotzdem sofort: Gemerkt wird nur das *Ergebnis* des
+Würfelns.
+
+### Kopfleiste
+
+Das Wortzeichen heißt **„Gen-EM Einsatzdoku"** (vorher „Einsatzdoku"), das
+Logo wächst von 26 auf **34 px**, und der Kontoname steht auf 15 statt 13 px.
+Er war außerdem nicht wirklich lotrecht zentriert: Das Wortzeichen trug
+`line-height: 1`, der Name die geerbte 1,55 — die höhere Zeilenbox schob seine
+Grundlinie nach unten. Beide auf dieselbe Zeilenhöhe, und die Mitten liegen
+jetzt gemessen **beide auf 28 px**.
+
+Unter 480 px fällt das Wortzeichen auf 16 px: Bei 360 px Fensterbreite
+bräuchte es 193 px und bekommt 187 — sechs zu wenig, und die Marke endete auf
+einer Ellipse.
+
+### Die übrigen Punkte
+
+- **Besatzung und Notizen** laufen ab 720 px über *beide* Rasterspalten. Die
+  Besatzung ist eine Aufzählung aus bis zu sieben Rollen und brach in der
+  halben Breite um — neben einer leeren Spalte. Gemessen: 545 → **1114 px**,
+  eine Zeile.
+- **Das Aktionsmenü** steht auf Gewicht 400 statt 600. Nicht 500 als
+  Mittelweg: Open Sans liegt in 400, 600 und 700 vor — die Angabe wäre still
+  auf 400 gefallen, und im Stylesheet stünde eine Zahl ohne Bedeutung.
+- **Die Einsatztabelle**: Spaltentitel zentriert (die Zellen behalten ihre
+  Ausrichtung), „Dauer" ohne Umbruch, und „Sekundärtransport" und
+  „Fehleinsatz" mit weichem Trennzeichen statt hartem `<br>` — beides ist
+  *ein* Wort, und das `<br>` trennte es ohne Bindestrich.
+- **Die Reanimations-Karte** erscheint nur noch, wenn es eine Sitzung gibt.
+  Sie war die einzige Karte der Einsatzansicht, die leer stehen blieb und
+  „keine" sagte, während jede andere verschwindet.
+- **Im Einsatzformular** hatte das Ortsfeld 12 px zwischen Beschriftung und
+  Feld, jedes andere Feld 4 — „Einsatzort" hing zwischen den Feldern, statt zu
+  seinem zu gehören. Der Kleintext unter einem Feld rückt an dieses heran
+  (vorher 16 px darunter und 4 px über dem nächsten: Er las sich als
+  Überschrift des folgenden). Die Zustandszeile passt in eine Zeile —
+  gemessen 480 von 532 px verfügbarer Breite.
+- **In der Suche** tragen die von/bis-Paare ihren Namen jetzt *über* sich:
+  „Strecke von (km)" brach in der 280 px schmalen Leiste um, „bis" daneben
+  nicht, und die beiden Eingabefelder standen versetzt. Drei weitere Paare
+  waren dabei zu finden, darunter „mit PatientIn von" mit demselben Fehler.
+  Was eine Bildschirmleserin hört, bleibt vollständig — das steht im
+  `aria-label`.
+- **Die Überschrift „FILTER"** war mit 12 px das kleinste Element in der
+  Leiste, die sie ordnet; jetzt 13 px. Die Gruppentitel gehen auf 16 px und
+  stehen damit über den Feldtiteln (15 px), statt gleichauf.
+- **In den Einstellungen** bekommt die erste Stammdatenliste Abstand nach
+  oben (der Hinweis „[systemweit] …" klebte an „Rettungsmittel"),
+  „luftgebunden" und „bodengebunden" stehen nebeneinander statt untereinander,
+  und „Kopplungscode erzeugen" steht im `.listen-form-fuss` wie jeder andere
+  Knopf am Ende eines Formulars.
+
+### Ein neues Token
+
+`--symbol-klein` (16 px) für das Zusatzzeichen an einer Beschriftung. Die
+Symbolskala hieß 20 und 24; 16 setzt sie im selben 4-px-Schritt nach unten
+fort. Nachgetragen in `docs/Design.md`, Kapitel 4.
+
+## [Web 9.13.0] — 2026-08-30
+
+**O12: die Gestaltungsrichtlinie.** Zwölf Arbeitspakete haben eine Oberfläche
+gebaut, aber keine Regel hinterlassen, die man nachschlagen kann. Das Wissen
+stand verteilt: die Token im Stylesheet, die Bausteine in `ui.php`, die
+Begründungen in den Kopfkommentaren von `version.php`, die Entscheidungen im
+Konzept. Wer eine neue Seite baut, findet dort alles — aber erst, nachdem er
+alles gelesen hat. **`docs/Design.md`** ist die eine Stelle: Marke,
+Farbrollen, Token, Schrift, Grundregeln, Schwellen, Symbole, Bausteine,
+Seitentypen, Prüfmittel.
+
+Keine Migration, keine Änderung am Datenmodell; am Server ändert sich eine
+einzige Zeile (siehe F-P3-BC unten).
+
+### Der Einstieg ist eine Tabelle, keine Einleitung
+
+Kapitel 9 beginnt mit *„Wenn du X willst, nimm Y"* — 27 Zeilen von der
+Absicht zum Baustein, samt der Spalte „nicht": *eine Liste von Einträgen →
+`ui_zeile()` in einer Karte, **nicht** eine `<table>`.* Das ist die Frage, mit
+der jemand das Dokument aufschlägt; alles andere ist die Antwort auf die
+zweite Frage. Steht ein Fall nicht in der Tabelle, ist das der Moment für eine
+Rückfrage — nicht für ein neues Element (CLAUDE.md §9).
+
+Am Ende desselben Kapitels stehen die **Anti-Muster**: zehn Fallen, jede davon
+in P3 tatsächlich hineingetreten. Eine Klasse auf einem Kästchen, die gegen
+`input[type=checkbox]` verliert (F-P3-AP, F-P3-AZ). `knopf-gefahr` im
+Aktionsblatt, wo `blatt-gefahr` hingehört (F-P3-AX). Die doppelte Rückfrage.
+Ein Formular ohne `forms.js`. `:nth-child` für Spaltenbreiten. Ein
+Unicode-Zeichen statt eines Symbols. Eine Tabelle mit erfundenen
+Fehlernummern wäre wohlfeil gewesen; diese zehn haben je einen Fund als Beleg.
+
+### Vier Tabellen werden erzeugt, nicht abgeschrieben
+
+`tools/design/tabellen.py` liest **87 Token** aus `:root` (in den 15 Gruppen,
+die das Stylesheet selbst überschreibt), **19 Medienblöcke** über fünf
+Breiten, **44 Symboldateien** mit ihren Tabler-Namen und **32 Bausteine** aus
+`ui.php` mit Klasse, Zeilennummer und Markup — und setzt daraus das Markup der
+Kapitel 4, 7, 8 und 9. Eine abgeschriebene Tabelle ist ab dem ersten Tag
+falsch; diese ist mit einem Aufruf wieder richtig.
+
+### Die Lizenzen stehen jetzt zusammen
+
+**`docs/Lizenzen.md`** nennt die drei Bibliotheken mit Version, Lizenz und
+SHA-256 (Leaflet 1.9.4, SheetJS 0.18.5, zip.js 2.8.34), die zwei
+Schriftfamilien, den Symbolvorrat — und, davon **getrennt**, die Dienste, die
+zur Laufzeit angesprochen werden, wenn die Nutzerin eine Karte öffnet
+(Kartenkacheln, Photon). Genau diese Trennung fehlte bisher: Die Zusage „keine
+fremde Quelle zur Laufzeit" gilt für Code und Schriften, nicht für
+Kartenkacheln — und das war nirgends gesagt.
+
+### `docs/Branding.md` ist abgelöst
+
+Sein Verbindliches steht in `Design.md`; die Datei ist entfernt. Ihre drei
+offenen Punkte sind erledigt und dort als solche vermerkt:
+
+- **B1** — die Logodateien trugen Näherungen der Markenfarben (Rot `#E3322B`
+  statt `#D63338`). Berichtigt in O1.
+- **B2** — keine geschlossene Größenskala. Es gibt jetzt eine: sieben
+  Schriftgrößen (12/13/15/16/19/24/28 px) und drei Zeilenhöhen, je mit der
+  Angabe, wofür sie gilt.
+- **B3** — 78 Hexwerte verstreut im Stylesheet. Heute steht **kein**
+  Farbwert mehr außerhalb von `:root` (gemessen: 0).
+
+### F-P3-BC: zwei tote Token, und dahinter eine zu schmale Leiste
+
+Die Vollständigkeitsprüfung meldete `--leiste-filter` und
+`--leiste-filter-schmal` als unbenutzt. Sie waren es — und der Grund war kein
+vergessenes Aufräumen, sondern ein Fehler: Die **Filterleiste der Suche** trug
+seit O6 nur `.leiste` und war damit 220 px breit (bzw. 260 ab 1200 px) statt
+der für sie vorgesehenen 240/280 px. Sie trägt mehr als eine Tagesliste —
+Datum von/bis, drei Auswahlfelder, Freitext —, und dafür waren die 220 px zu
+knapp. `ui_geruest_start()` vergibt jetzt zusätzlich `leiste-filter`.
+
+Zwei Pakete lang unbemerkt, weil eine zu schmale Leiste nicht bricht, sondern
+nur enger umbricht. Ein totes Token ist nicht immer Müll; manchmal ist es die
+Quittung für eine Regel, die nie angekommen ist.
+
+### Ein Prüfmittel, das wieder gelesen wird
+
+Die Vollständigkeitsprüfung meldet Klassen, die im Markup stehen und im
+Stylesheet keine Regel haben. Diese Gegenprobe hat in O11 den ungestalteten
+Export-Knopf gefunden — 23 px hoch statt 44, weil er `btn-primary` trug, eine
+Klasse ohne Regel. Genau **ein** echter Fund unter 29 Zeilen: Acht davon sind
+Bruchstücke zusammengesetzter Klassennamen (`'plakette-' + ton` — das Werkzeug
+liest Zeichenketten, nicht ausgeführten Code), fünfzehn sind Skriptanker ohne
+eigenes Aussehen. Eine Liste in diesem Mischungsverhältnis wird nach dem
+dritten Mal überflogen statt gelesen, und findet dann auch den nächsten echten
+Fund nicht.
+
+`tools/vollstaendigkeit/ohne-regel.md` funktioniert jetzt wie die
+Streichliste: **`[bleibt]`** = begründet ohne Regel, verschwindet aus dem
+Befund und wird nur gezählt. **`[offen]`** = die Frage ist offen, bleibt ein
+Befund, aber unter eigener Überschrift. Alle 29 Namen sind am Fundort
+nachgesehen und einzeln begründet. Ergebnis: **0 ohne eingetragenen Grund**
+statt 29, **6 als `[offen]`** — und die Befunde gesamt fielen von 247 auf
+**224**.
+
+Damit die Liste nicht selbst verwahrlost, meldet die Prüfung ihre eigenen
+toten Einträge: Wessen Klasse inzwischen eine Regel hat oder aus dem Markup
+verschwunden ist, steht als „Eintrag ungenutzt" da — dieselbe Disziplin, die
+die Wortliste seit P2 hat.
+
+Die sechs offenen sind Entscheidungen, keine Reste: `imp-warn` ist ein
+Warnhinweis, der aussieht wie Fließtext; `imp-daygroup` eine
+Gruppenüberschrift, die aussieht wie eine Datenzeile. Sie stehen als Backlog
+Nr. 41 — jede Antwort darauf ist eine neue Darstellung und braucht eine
+Freigabe.
+
+### Der Stilvergleich wacht wieder
+
+Er ruhte während P3, weil er dort die falsche Frage stellte: Wenn jede
+beabsichtigte Änderung ein Treffer ist, misst er nur noch die eigene
+Arbeitsmenge. Für P4 ist er neu geeicht:
+
+- **13 Fensterbreiten** von 360 bis 1920 px statt bisher neun. Die alten
+  endeten bei 500 px und kannten die 390er-Klasse der Telefone nicht.
+- Die Seitenproben lesen jetzt auch die **HTML-Schnipsel aus
+  PHP-Zeichenketten** (`proben.py`, `php_zeichenketten()`). Das ist der blinde
+  Fleck, vor dem seine `LIESMICH.md` seit P0 warnte: Markup, das aus `echo
+  '<div class="…">'` stammt, war für ihn unsichtbar. Gemessen: **228 Klassen
+  vorher, 253 nachher.**
+
+### Das Handbuch bleibt stehen
+
+Ausdrückliche Entscheidung: Das Handbuch beschreibt die *Bedienung*, und die
+ändert sich bis 1.0 noch. Es einmal jetzt und einmal vor der Auslieferung zu
+schreiben wäre dieselbe Arbeit zweimal. Angepasst wurde nur, was ohne Wert
+veraltet ist: die 14 Unicode-Zeichen im Text (kein Bildschirmleser spricht
+„✕" als „Schließen") und drei Bildschirmfotos.
+
+### Das Prüfdokument ist abgeschlossen
+
+`docs/Pruefdokument-P3-Oberflaeche.md` stand seit O8c auf demselben Stand. Es
+ist jetzt vollständig — mit Mittel **und** Zahl zu jedem der zwölf Pakete —,
+und in zwei Punkten anders als vorher.
+
+**Was nicht erreicht wurde, steht vorn.** Abschnitt 1.3 nennt es mit Zahl und
+Backlog-Nummer: 158 Unicode-Treffer, davon drei echte Symbole (Nr. 42); sechs
+Klassen ohne Regel mit offener Frage (Nr. 41); 55 Altklassen ohne Begründung
+(Nr. 40); das zurückgestellte Handbuch. Abschnitt 1.4 nennt die **drei
+Migrationen** der Phase — ohne den Aufruf von `update.php` steht die Anwendung.
+
+**Die Prüfliste hat einen kurzen Weg.** Zwölf Pakete ergeben eine Liste, die
+niemand abarbeitet. Abschnitt 5.0 ist neu: vierzehn Punkte, die die Phase als
+Ganzes abnehmen, in etwa einer Stunde. Die ausführliche Fassung je Paket
+(5.1–5.16) steht daneben.
+
+### Auch geändert
+
+- `README.md` zeigt vier Bildschirmfotos („So sieht es aus") und verweist auf
+  Design und Lizenzen statt auf Branding.
+- `CLAUDE.md` §5 zeigt auf `docs/Design.md`, nennt die Freigaberegel für neue
+  Bausteine und die 44-px-Regel.
+- `docs/Technik.md`: Verzeichnisbaum um `tools/design/`, `tools/pruefkonten/`
+  und `tools/rechtstexte/` ergänzt; der Stilvergleich steht nicht mehr auf
+  „ruht".
+
+## [Web 9.12.0] — 2026-08-30
+
+**O11: die übrigen Seiten — und die Übergangsschicht fällt.** Neun Seiten sind
+aus Bausteinen neu gebaut: Papierkorb, Zuordnung nachtragen, Diensttag anlegen
+/ Datum ändern / löschen / zusammenführen, Einsatz verschieben / löschen und
+die Wartungsseite. Damit ist keine Seite der Anwendung mehr im alten Zustand.
+
+### Es gibt keine Verwaltungstabelle mehr
+
+Sechs Tabellen sind zu Karten mit Zeilen geworden. Der Papierkorb hatte fünf
+Spalten, die Wartungsseite vier, die Zusammenführung sechs — bei 360 px lief
+jede von ihnen waagerecht aus dem Bild. Die Notbremse aus der
+Übergangsschicht (`table{display:block; overflow-x:auto}`) hat das abgefangen,
+aber abgefangen ist nicht gelöst: Eine Tabelle, in der man seitwärts schieben
+muss, um die Aktionsspalte zu sehen, ist auf einem Telefon keine Liste,
+sondern ein Hindernis.
+
+Geblieben sind die drei **Einsatztabellen** (Tagesübersicht, Suche, Zeitraum),
+die unter 720 px zur Kachel werden, und die **Importtabelle** — sie tragen
+alle den Baustein `.tabelle`.
+
+### Löschbestätigungen bleiben Seiten
+
+Das Konzept sah für O11 „Bestätigungen als Aktionsblatt (mobil) bzw. Dialog
+(Desktop)" vor. Für die Rückfragen, die sich in *einem Satz* beschreiben
+lassen, gilt das auch — dafür ist `confirm.js` da. Die vier Löschseiten
+bleiben aber Seiten, und der Grund steht auf ihnen: Was dort steht, ist eine
+**Aufstellung** — Einsätze, Phasen, Reanimationen, Ruhesegmente, Trackpunkte.
+Ein Dialog, der einen halben Bildschirm Text trägt, ist keiner mehr; und der
+Weg dorthin hat eine eigene Adresse, die man zurückgehen kann.
+
+Die Aufstellungen selbst haben sich geändert: aus Aufzählungen sind **Zeilen
+mit Plakette** geworden. Die Zahl ist die Auskunft, und im Fließtext („6
+Einsätze mit allen Angaben") war sie beim Überfliegen nicht zu finden.
+
+### Keine Speichern-Leiste auf diesen Seiten
+
+Die Leiste gehört zu Formularen, die man *bearbeitet* und deren Stand man
+verlieren kann; sie erscheint mit der ersten Änderung und klebt unten fest.
+Auf den O11-Seiten ist der Knopf das **Ziel des Weges** — „Diensttag anlegen",
+„Einsatz verschieben", „Datum ändern" — und steht am Ende des Formulars, wo
+man ihn sucht. `data-dirty-track` bleibt trotzdem: Es trägt die
+Verlassen-Warnung und die bedingte Abbrechen-Rückfrage; die Leiste ist nur
+einer seiner Verwender.
+
+### Zwei Seiten, die dabei besser geworden sind
+
+**Zuordnung nachtragen** hatte eine Tabelle mit fünf Spalten, von denen eine
+zwei Auswahlfelder und einen Knopf enthielt. Bei 360 px war die Auswahl
+praktisch nicht zu treffen. Jetzt steht je Diensttag ein Formularblock:
+Überschrift, Kennzeile (Zeitraum · Einsätze · bisherige Zuordnung), zwei
+Felder nebeneinander ab 720 px, ein Knopf.
+
+**Zusammenführen** zeigte wählbare und nicht wählbare Diensttage in *einer*
+Tabelle, die nicht wählbaren mit abgeschaltetem Radio und der Klasse
+`zeile-aus` — die es im neuen Stylesheet gar nicht mehr gibt. Sie sahen also
+aus wie die anderen, und ein abgeschaltetes Radio ist auf einem Telefon kaum
+von einem leeren zu unterscheiden. Jetzt stehen die wählbaren in einer
+Wahlliste mit 44-px-Zeilen und die übrigen darunter in einer eigenen,
+zugeklappten Karte — mit dem Grund an jeder Zeile.
+
+### Die Übergangsschicht ist aufgelöst
+
+Abschnitt 17 des Stylesheets hieß **Rohschicht** und war ausdrücklich
+befristet: „dieser Block stirbt mit O11." Er tut es. Weg sind
+
+- die beiden Klassen-Ausnahmen **`.alert`** und **`.muted`** — zuletzt eine
+  Stelle in PHP und eine in JS bzw. 16 Stellen in sechs Dateien. `.muted` trug
+  dabei vier Rollen gleichzeitig; sie sind auf die vier Bausteine verteilt,
+  die sie meinte: `.feld-hinweis` (Absatz), `.feld-klein` (Absatz unter einem
+  Feld), `.feld-klein-inline` (Zusatz in einer Beschriftung), `.dash`
+  (gedämpfte Tabellenzelle);
+- die Elementregeln für **`table`/`th`/`td`** — die letzte Tabelle ohne
+  eigene Regel war die des Imports (`.imp-table` hatte selbst nie eine), sie
+  trägt jetzt `.tabelle`;
+- die Elementregeln für **`fieldset`/`legend`** und **`hr`** — jeweils null
+  Verwendungen in der ganzen Anwendung.
+
+Der Abschnitt heißt jetzt **Grundformen** und trägt nur noch, worauf die
+Bausteine aufsetzen: `input`/`select`/`textarea`, Kästchen und Radios, das
+Muster `<label>Text <input></label>`, `summary` und `code`/`kbd`/`pre`. Der
+Unterschied ist nicht bloß der Name: Eine Rohschicht ist ein Versprechen auf
+später, eine Grundform ist eine Entscheidung.
+
+**Die Label-Regeln bleiben** — abweichend vom ursprünglichen Plan. Das Muster
+steht an 46 Stellen, darunter die Filterreihen der Suche (22) und das
+Einsatzformular (8). Sie zu tilgen hieße, die beiden kompliziertesten Seiten
+der Anwendung für eine Regel umzubauen, die nichts falsch macht: `.feld` ist
+der *Baustein* für ein beschriftetes Feld, nicht das Gebot, dass jede
+Beschriftung einer sein müsse.
+
+### Vier Reparaturen an Bausteinen, zwei Funde beim Streichen
+
+Die vier Bausteinreparaturen stehen in Web 9.11.1 (Vollbild der Karte,
+„Löschen" im Blatt, doppelte Rückfrage, ausgeblendete Kästchen). Beim
+Auflösen der Übergangsschicht kamen zwei weitere dazu:
+
+**Der Export-Knopf war ungestaltet (F-P3-BA).** `import.php` trug an einer
+Stelle noch `btn-primary` — eine Klasse ohne Regel seit Web 9.0.0. Gemessen:
+23 px hoch, ohne Fläche, ohne Rahmen, ohne Radius, in der Textschrift; der
+Nachbarknopf im selben Formular ist 44 px, orange, Bricolage. O8c hat die
+Seite umgebaut und diesen einen Knopf übersehen.
+
+**`kreislauf.py --frisch` konnte seit Web 9.9.0 kein Umlaufkonto mehr
+löschen (F-P3-BB)** — aus zwei Gründen gleichzeitig: Sein Ausdruck suchte
+`<a href="admin_user.php?id=N">adresse</a>` und fand nichts mehr (die
+Kontenliste ist seit O9b eine Tabelle mit `data-ziel` bzw. eine `.zeile` mit
+gewickeltem Text), und die Löschung liegt seit O9a auf der Kontoseite und
+verlangt die abgetippte Adresse. Unbemerkt geblieben, weil der Weg nur
+betreten wird, wenn das Konto schon besteht — beim ersten Lauf auf einer
+frischen Datenbank endet die Funktion eine Zeile früher.
+
+### Nebenbei
+
+- Der **Papierkorb** holte sich für jede Löschbestätigung einen Umfang, den er
+  nie ausgab (`trash_scope_day()`); das kostete je Einsatz drei weitere
+  Abfragen. Ersatzlos gestrichen — die Funktion bleibt, `diensttag_loeschen.php`
+  braucht sie wirklich.
+- Die **Statusspalte der Migrationsliste** trug ✔ ● ! ✖ ⚠ — Schriftzeichen als
+  Symbol, was E-P3-18 ausschließt. Der Status steht jetzt als Plakette mit Ton
+  („erledigt" blau, „steht aus" orange, „blockiert" rot).
+- `artzeichen` ist gestrichen: das Breitenkorsett des Art-**Emojis**, das seit
+  O2 ein SVG ist.
+- `papierkorb_misch.mjs` zählte 12 Konsolenfehler, die keine waren — sein
+  Kachelfilter sah nur den Meldungstext an, und „Failed to load resource:
+  net::ERR_CONNECTION_RESET" trägt keine URL darin. Er prüft jetzt auch die
+  Adresse, wie die Bildaufnahme seit O3.
+
+## [Web 9.11.1] — 2026-08-30
+
+**Vier Reparaturen an geteilten Bausteinen.** Sie sind beim Aufräumen vor O11
+aufgefallen und stehen vor dem Paket, nicht darin: Jede war schon vorher
+kaputt, drei davon an Stellen, die O11 gar nicht anfasst. Was sie verbindet,
+ist die Art des Fehlers — alle vier waren *lautlos*. Nichts brach, nichts
+meldete sich; die Oberfläche sah nur an einer Stelle anders aus, als sie
+sollte.
+
+### Der Vollbildknopf der Karte tat auf iOS nichts (F-P3-AW)
+
+`map_fullscreen.js` nimmt die Fullscreen-API, wo es sie gibt, und sonst einen
+Rückfall über die Klassen `map-fs` und `map-fs-lock` — „relevant v. a. iOS
+Safari, das `requestFullscreen()` für beliebige Elemente nicht unterstützt",
+sagt der Dateikopf. Diese beiden Klassen haben seit dem Neubau des Stylesheets
+(Web 9.0.0) **keine Regel mehr**. Der Rückfall war seit vier Monaten tot:
+gemessen 366 × 160 px vor wie nach dem Druck, nur die Beschriftung wechselte
+auf „Vollbild verlassen". Jetzt 390 × 800 px.
+
+Die alten Zeilen zurückzukopieren hätte den Fehler stehen lassen — der
+Kartenbehälter heißt seit O1 `.geo` und nicht mehr `.map`. Der `z-index` ist
+bei der Gelegenheit von 2000 auf 70 gefallen, die Ebene des Blatts; höher
+braucht die Anwendung nicht mehr, seit `.geo` einen eigenen Stapelkontext hat.
+Dazu eine `:fullscreen`-Zeile, die auch am Schreibtisch nötig ist: Das
+Browser-Stylesheet setzt Größe und Rand mit `!important`, den `border-radius`
+aber nicht — die Karte hätte im Vollbild abgerundete Ecken auf schwarzem Grund
+gehabt.
+
+Unbemerkt geblieben ist es, weil der Weg nur auf iOS genommen wird und die
+Bildaufnahme den Vollbildzustand nicht herstellt.
+
+### „Löschen" war im Blatt nicht rot (F-P3-AX)
+
+`ui_zeilenaktionen()` vergab die Klasse `knopf-gefahr` auch im Blatt. Dort
+setzt aber `.blatt-zeile` seine Schriftfarbe selbst, mit gleicher Spezifität
+und später in der Datei — also gewinnt sie. Gemessen an „Löschen" in der
+Stammdatenliste: `rgb(26,5,0)`, dieselbe Farbe wie „Bearbeiten"; jetzt
+`rgb(158,34,38)`, und das Symbol rot statt dunkelblau.
+
+Betroffen waren sechs Aufrufstellen, darunter „Gerät entkoppeln" und „Konto
+löschen". Am Schreibtisch stimmte alles, weil `.knopf` keine Farbe setzt —
+**mobil** sah die unumkehrbarste Handlung der Anwendung harmlos aus.
+Aufgefallen ist es niemandem, weil die Bildaufnahme kein Blatt öffnet.
+
+Der Baustein kennt jetzt beide Vokabeln und wählt danach, wo er steht.
+
+### Zwei Rückfragen hintereinander (F-P3-AY)
+
+Ein Formular mit `data-confirm` **und** `data-dirty-track` fragte nach der
+bestätigten Rückfrage ein zweites Mal, diesmal der Browser: „Änderungen werden
+möglicherweise nicht gespeichert." Ursache ist das `stopPropagation()` der
+Erfassungsphase in `confirm.js`: Der Zuhörer von `forms.js` hängt in der
+Blasenphase am selben `document` und läuft deshalb nie, und `f.submit()` löst
+gar kein `submit`-Ereignis aus. Das Formular blieb für `forms.js` bis zuletzt
+„schmutzig".
+
+Genau das, was `forms.js` für den Abbrechen-Weg ausdrücklich verhindert:
+„zweimal dasselbe fragen heißt, die erste Frage nicht ernst zu nehmen."
+`confirm.js` sagt jetzt ab. Betroffen war `diensttag_datum.php` — die einzige
+Stelle mit beiden Attributen, und dort praktisch immer, weil man das Feld
+ändern *muss*, um etwas zu tun.
+
+### Das unsichtbare Kästchen lag nicht, wo es sollte (F-P3-AZ)
+
+`.schalter-box` und `.wahl-box` haben Spezifität (0,1,0) und verlieren gegen
+`input[type=checkbox]` aus der Rohschicht (0,1,1), die jedem Kästchen
+20 × 20 px gibt. Gemessen: 20 × 20 statt 0 × 0 — und weil weder `.schalter`
+noch `.wahlliste` `position:relative` trägt, saß das ausgeblendete Kästchen
+auf seiner statischen Stelle über dem linken Rand der Beschriftung.
+
+Dieselbe Falle wie F-P3-AP, zum dritten Mal. Sie verschwindet mit der
+Rohschicht, die in O11 fällt; bis dahin steht der lange Selektor.
+
+### Der Rückfragedialog hat einen Namen
+
+Bis hierher hatte er keinen: kein Titel, kein `aria-label`, kein `role`.
+Ausgerechnet die Rückfrage vor dem Löschen war damit die anonymste Stelle der
+Oberfläche — ein Screenreader las den Text und zwei Knöpfe, ohne zu sagen,
+*was* da fragt. Er trägt jetzt eine Überschrift („Bestätigen", je Aufrufstelle
+über `data-confirm-titel` überschreibbar) und `role="alertdialog"`. Die Rolle
+ist für genau diesen Fall da: eine Meldung, die eine Antwort verlangt und den
+Ablauf anhält — der Text wird beim Öffnen vorgelesen, nicht erst, wenn der
+Fokus ihn erreicht.
+
+## [Web 9.11.0] — 2026-08-30
+
+**O10: Anmeldung, öffentliche Seiten und Rechtstexte (R32).**
+
+> **Diese Fassung braucht eine Migration.** Nach dem Aufspielen muss eine
+> Administratorin **`update.php`** aufrufen. Ohne den Aufruf gibt es die
+> Tabelle `rechtstexte` nicht; Impressum und Datenschutz zeigen dann ihren
+> Leerzustand. Die Anwendung läuft weiter — die neue Funktion ist nur nicht da.
+
+### Impressum und Datenschutzerklärung
+
+Die Anwendung hat zum ersten Mal beides — und zwar **keine mitgelieferten**.
+Was darin steht, ist Sache des Betreibers; wir stellen zwei öffentliche Seiten,
+einen Editor unter Einstellungen → Rechtstexte und die Verweise in jeder
+Fußzeile. Eine mitgelieferte Datenschutzerklärung wäre eine Rechtsauskunft, die
+dieses Projekt nicht geben kann.
+
+Der **Leerzustand ist die Auslieferung** und eine gültige Antwort: „Der
+Betreiber dieser Installation hat noch kein Impressum hinterlegt." Für
+angemeldete Admins steht der Weg zum Editor daneben.
+
+Das **Standdatum wird von Hand gesetzt**. Automatisch wäre bequemer und an
+einem Rechtstext falsch: Das Datum sagt, auf welchem Stand der Text
+*inhaltlich* ist — eine Kommakorrektur soll ihn nicht neu datieren. Leer heißt:
+keine Standzeile.
+
+### Der Renderer maskiert zuerst und erkennt dann Struktur
+
+`rt_html()` ist die einzige Stelle des Projekts, an der aus einer Eingabe HTML
+wird. Sie schickt den **ganzen** Text durch `htmlspecialchars`, bevor der
+Parser das erste Zeichen ansieht. Rohes HTML ist damit nicht gefiltert, sondern
+unmöglich — wenn der Parser `<` sieht, ist es längst `&lt;`. Eine Sperrliste
+von Tags wäre der falsche Ansatz: Sie ist immer unvollständig, und die Lücke
+findet man erst, wenn sie jemand benutzt hat.
+
+Erzeugt werden ausschließlich `h2`, `h3`, `p`, `br`, `ul`, `ol`, `li` und `a`
+mit `href`. Linkziele stehen auf einer **Positivliste** (https, http, mailto,
+eigene `.php`, Anker) — `javascript:`, `data:`, `vbscript:`, `blob:`, `file:`
+und alles, was es morgen gibt, fallen ohne eigenen Eintrag durch. Ein
+abgelehntes Ziel lässt die ganze Konstruktion **als Text** stehen: Stilles
+Schlucken macht aus einem Fehler eine Unsichtbarkeit.
+
+Nicht unterstützt, jeweils mit Grund: Bilder (holten eine fremde Quelle zur
+Laufzeit und brächen eine feste Zusage des Projekts), Autolinks und
+Referenzlinks (umgehen die Zielprüfung), fett und kursiv (E-P3-38 nennt sie
+nicht — jede Erweiterung ist eine Vertragsänderung), `target="_blank"` (auf
+einer Rechtstextseite ist der Zurück-Weg des Browsers die richtige Antwort).
+
+**Neues Prüfmittel `tools/rechtstexte/`:** 81 Proben — rohes HTML, Linkziele in
+allen Schreibweisen, Attribut-Ausbruch, Autolinks, Bidi-Steuerzeichen („Trojan
+Source"), Kodierungstricks, Ränder. Dazu werden 65 Ausgaben gegen eine
+Positivliste erlaubter Tags und Attribute gehalten. Das ist die eigentliche
+Prüfung: Die Einzelproben sagen, was schiefgehen kann; die Schranke sagt, dass
+nichts anderes herauskommt.
+
+### Eine eigene Tabelle, nicht `app_state`
+
+Dort ist der Wert `VARCHAR(190)`; eine Datenschutzerklärung hat 8 000 bis
+20 000 Zeichen. Ohne strict mode kürzt MySQL **still** — ein Rechtstext, der ab
+Zeichen 191 verschwindet, sieht in der Vorschau vollständig aus, solange
+niemand ans Ende scrollt. Bei einem Dokument, das rechtlich vollständig sein
+muss, ist das der schlechteste denkbare Ausgang.
+
+### Die Fußzeile führt jetzt immer auf beide Seiten
+
+Die `is_file()`-Prüfung aus O2 war richtig, solange es die Seiten nicht gab, und
+danach tote Logik: zwei Dateisystemzugriffe je Seitenaufruf für eine Frage,
+deren Antwort feststeht. Sie sagte auch die falsche Sache — „die Datei ist da"
+heißt nicht „ein Text ist hinterlegt". Ausnahme bleibt der **Einrichter**: Er
+läuft vor der Ersteinrichtung, die beiden Seiten brauchen aber eine Datenbank;
+der Verweis wäre eine Schleife.
+
+### Der Einrichter trägt die öffentliche Hülle
+
+Er hatte die Anmeldehülle — dunkelblaue Fläche, 400-px-Karte — und half sich
+mit `.anmeldung-breit`, was der Sache nach die Lesespalte ist, nur unter
+falschem Namen. Dazu hatte seine Kopfleiste dieselbe Farbe wie die Fläche
+darunter; das Logo schwebte ohne sichtbare Leiste.
+
+Jetzt: helle Lesespalte wie Abbruchseite und Rechtstextseiten, **fünf Karten
+statt fünf `<fieldset>`**, alle Felder über den Baustein. Die Elementregeln für
+`fieldset`/`legend` stehen in der Übergangsschicht des Stylesheets, die mit O11
+stirbt — danach hätte der Einrichter wieder ohne Gestaltung dagestanden.
+
+Das Konzept widersprach sich an dieser Stelle (E-P3-38 sagt „dunkle Hülle",
+Tabelle 5.4 führt ihn unter „Öffentlich"). Es gilt die Tabelle.
+
+### Drei Seiten derselben Familie
+
+Anmeldung, Passwort-vergessen und Passwort-setzen haben jetzt **dieselbe
+Kartenbreite** (400 px), dasselbe Logo und dieselben Bausteine. Die
+Passwortseite war 760 px breit, die Anmeldung daneben 400 — zwei Seiten, die
+man unmittelbar nacheinander sieht, sprangen dabei in der Breite.
+Passwort-vergessen bekommt zum ersten Mal ein Logo; sie war die einzige der
+drei ohne Marke.
+
+### Kein Demo-Hinweis auf der Anmeldeseite
+
+E-P3-38 sieht ihn vor, Mockup 32 zeigt ihn mit Zugangsdaten. Entschieden wurde
+dagegen: Die Anmeldeseite einer Anwendung mit Patientendaten ist nicht der Ort
+für ein Werbefeld, und die Zugangsdaten des Demo-Kontos stehen ohnehin in
+README und Handbuch. Im Konzept ausgetragen.
+
+### Drei Funde
+
+**F-P3-AS — `login-wrap` war nie geschlossen.** Drei `<div>` gegen zwei
+`</div>` in `pw_handling.php`, dazu eine Klasse ohne Regel. Das Element stand
+zwischen `.anmeldung-body` und `<main class="anmeldung">`; damit war `main` kein
+direktes Flex-Kind mehr, `flex:1 1 auto` griff nicht, und die Fußzeile klebte
+unter der Karte statt am unteren Rand.
+
+**F-P3-AT — die Fußzeile zeigte im Einrichter „v" ohne Zahl.** `WEB_VERSION`
+ist dort nicht definiert: `version.php` kommt über `db.php`, und das braucht die
+`config.php`, die es zu dem Zeitpunkt noch nicht gibt.
+
+**F-P3-AU — der Erklärabsatz klebte an der Überschrift.**
+`.seiten-erklaerung` hat einen negativen Rand oben, abgestimmt auf die
+Titelzeile. Unter einem blanken `<h1>` — öffentliche Seiten und Einrichter
+haben kein Gerüst und damit keine Titelzeile — zog er den Text heran.
+
+### Zwei freigegebene Änderungen an geteilten Bausteinen
+
+Die **Versionsnummer** der Fußzeile steht in `--gedaempft` statt `--sand`: von
+1,53:1 auf 5,30:1. Sie ist die Auskunft, mit der ein Fehlerbericht anfängt, also
+ein zu *lesender* Text; die Kontrastprüfung führte sie als Ausnahme, begründet
+aber nur den Akkordeon-Winkel. **„Passwort vergessen?"** steht linksbündig statt
+zentriert — es sitzt unter einem 100 % breiten Knopf und über dem linken Rand
+der Feldbeschriftungen.
+
+## [Web 9.10.1] — 2026-08-30
+
+**Drei Reparaturen, die vor O10 stehen mussten.** Keine Migration — aber
+`schema.sql` ändert sich, und das betrifft **Neuinstallationen**.
+
+### Der Einrichter war tot
+
+`install.php` lud die Seitenhülle erst **innerhalb** von `render_page()`. Die
+Aufrufer bauen ihr Argument aber mit `ui_meldung_markup()`, `ui_knopf()` und
+`ui_symbol()` — und PHP wertet Argumente vor dem Aufruf aus. Alle drei Zweige
+endeten in „Call to undefined function", seit Web 9.1.0.
+
+Das traf **jede Neuinstallation**: `index.php` leitet ohne `config.php` genau
+dorthin, und der Deploy liefert die Datei aus. Aufgefallen ist es niemandem,
+weil der Einrichter genau einmal im Leben einer Installation läuft — und die
+bestehende läuft längst. Gefunden bei der Bestandsaufnahme zu O10.
+
+### `schema.sql` war zwei Migrationen im Rückstand
+
+Die Spalte `users.last_login` (Web 9.8.0) fehlte, und die Kennungen der
+Migrationen `2026_08_27_logo_wahl` und `2026_08_28_last_login` standen nicht
+in der Erledigt-Liste. Eine frisch eingerichtete Anwendung hätte die Spalte
+gar nicht gehabt; die Nachtragsmigrationen wären erneut angesetzt worden und
+entweder hängengeblieben oder — schlimmer — still durchgelaufen, weil
+`update.php` den MySQL-Fehler 1060 („Duplicate column") schluckt.
+
+Geprüft: `schema.sql` in eine Wegwerfdatenbank eingespielt, genau so, wie
+`install.php` es tut — 32 Anweisungen, 30 Tabellen, `users.last_login`
+vorhanden, 32 Migrationskennungen.
+
+### Die Bildaufnahme fotografierte die Anmeldeseite
+
+Der schwerste der drei Funde, weil er ein **Prüfmittel** betrifft. Der Lauf
+meldete „31 Seiten, 0 Überlauf, 0 Konsolenfehler" — und 22 dieser 31 Seiten
+waren Bilder von `login.php`: 176 von 248 Einzelbildern, byteweise identisch.
+
+Zwei unabhängige Ursachen:
+
+**Die Sitzung starb mitten im Lauf.** Das Demo-Konto setzt sich alle 30
+Minuten zurück, und `demo_zuruecksetzen()` erhöht dabei die Sitzungs-Epoche;
+`auth_guard.php` beendet daraufhin jede offene Sitzung. Der Lauf braucht
+Minuten und löst den fälligen Reset durch seine **eigenen** Anfragen aus. Die
+alte Prüfung stand einmal, unmittelbar nach dem Anmelden — danach hat nichts
+mehr hingesehen. Jetzt wird nach **jedem** Seitenaufruf geprüft, bei Bedarf
+neu angemeldet und einmal wiederholt; hilft das nicht, entsteht **kein** Bild,
+sondern ein Fehler. Ein fehlendes Bild ist eine Auskunft, ein falsches eine
+Lüge, die durch jede weitere Prüfung durchmarschiert.
+
+**Vier Platzhalter wurden nie aufgelöst.** Die Kennungen der Einsatzseiten
+holt das Werkzeug aus der Tagesübersicht — und lief als erstes in denselben
+Sitzungsverlust. Fehlte die Kennung, blieb das Verzeichnis leer, und die vier
+Seiten wurden mit ihrem eigenen Platzhalter als Adresse aufgerufen; der Server
+antwortet darauf mit **200** und der Startseite. Ein nicht aufgelöster
+Platzhalter ist jetzt ausdrücklich `null` und führt dazu, dass die Seite nicht
+fotografiert wird.
+
+Nach der Reparatur: **248 Bilder, 248 verschiedene Prüfsummen**, alle sieben
+Platzhalter aufgelöst, ein bemerkter und behobener Sitzungsverlust im Bericht.
+Die Zahlen aus O9c sind im Konzept berichtigt (F-P3-AQ).
+
+### Die Wortliste stand auf fünf Treffern
+
+O9c hatte das Werkzeug **vor** dem Schreiben der Dokumentation laufen lassen
+und „0 Treffer" gemeldet; die danach geschriebenen Logo-Abschnitte in Handbuch
+und Technik-Doku brachten fünf. Vier Ausnahmen der Klasse *Homonym* sind
+nachgetragen — sie benennen ein Bild, nicht die Einsatzart, wie die sechs
+gleichartigen davor. Jetzt wieder 0 Treffer, 62 Regeln, 0 ungenutzt.
+
+## [Web 9.10.0] — 2026-08-30
+
+**O9c: die drei übrigen Adminseiten.** Keine Migration.
+
+### Sicherungen — eine Seite über Regeln, keine Liste mehr
+
+Die Seite listete bisher **alle Konten** und darunter **alle Pakete aller
+Konten**, jedes mit eigenen Formularen. Beides steht seit Web 9.8.0/9.9.0
+anderswo: die Konten in der NutzerInnen-Liste, die Pakete eines Kontos auf
+dessen Kontoseite. Was hier bleibt, ist das, was für **alle** gilt.
+
+Oben vier Zahlen (Konten, Pakete samt Größe der Ablage, überfällig, nie
+gesichert — die letzten beiden führen in die gefilterte Liste). Darunter drei
+Karten: **Regeln**, **Ablage**, **Sicherungen ohne Konto**.
+
+Die Regeln standen vorher an drei Stellen mit drei Speichern-Knöpfen; jetzt
+sind es ein Formular und ein Knopf: Erinnerungsintervall, Aufbewahrung je Konto
+und der Schalter für die Erinnerungsmail. Die Aufbewahrung war bis hierher eine
+Konstante im Code (`EDBAK_MAX_JE_KONTO = 3`) — eine Zahl, die entscheidet, wann
+Sicherungen gelöscht werden, gehört nicht in eine Datei, die man nur mit einem
+Deploy ändern kann.
+
+„Alle sichern" arbeitet die fälligen Konten ab, **das älteste zuerst**, in
+einem Zeitbudget von 20 Sekunden. Wer nicht mehr hineinpasst, ist beim nächsten
+Klick der älteste und kommt zuerst — die Reihenfolge sorgt selbst dafür, dass
+wiederholtes Klicken zum Ziel führt. Das ist die kleine Antwort auf F-P3-C;
+echte Schübe mit Fortschrittsanzeige bleiben für P5 vorgemerkt.
+
+### Die wöchentliche Erinnerung an die Administration
+
+Neu, abschaltbar, standardmäßig aus. Sie nennt die überfälligen und die nie
+gesicherten Konten mit Adresse und Alter — **keine Namen, keine Zahlen aus den
+Konten**: Eine Mail liegt unverschlüsselt im Postfach und auf jedem Server
+dazwischen.
+
+**Es gibt keinen Cron.** Auf diesem Webspace läuft kein Zeitplan; was
+regelmäßig geschieht, fährt auf dem täglichen Aufräumjob mit, und der startet
+bei der ersten Anfrage des Tages. Die Erinnerung ist deshalb genau genommen
+keine Wochenmail, sondern: höchstens einmal je Woche, und nur wenn die
+Anwendung an dem Tag überhaupt benutzt wurde. Wird sie zwei Wochen nicht
+angefasst, kommt die Mail zwei Wochen später. **Das steht so auf der Seite** —
+eine Zusage, die an der Benutzung hängt, muss man als solche kennzeichnen.
+
+Sie kommt nur, wenn es etwas zu melden gibt. Eine Wochenmail „0 Konten
+überfällig" ist nach dem dritten Mal keine Meldung mehr, sondern etwas, das man
+wegklickt — und dann geht auch die vierte unter, in der etwas steht. Verschickt
+wird **nach** der Antwort (`register_shutdown_function`); der Aufräumjob läuft
+vor der Seitenausgabe, und ein SMTP-Gespräch dort wäre eine messbare
+Verzögerung für jemanden, der damit nichts zu tun hat.
+
+### Stammdaten systemweit — ein Menüpunkt statt zweier
+
+„Standorte systemweit" und „Rettungsmittel systemweit" zeigten auf dieselbe
+Datei mit demselben Symbol und unterschieden sich nur im Reiter. Jetzt steht
+dort ein Punkt, und der Reiter ist eine Segmentwahl in der Titelzeile — dasselbe
+Muster wie die Artwahl in der Zeitraumübersicht.
+
+Dabei ist das Markup der Zeilen und Formulare in eine eigene Datei gewandert
+(`server/stammdaten_ui.php`). Es stand bis hierher zu großen Teilen
+zeichengleich in `einstellungen.php` **und** `admin_stammdaten.php`; die
+Schließungen aus O8b ein zweites Mal zu kopieren hieße, denselben Fehler eine
+Ebene höher zu wiederholen.
+
+### Demo-Konto
+
+Die Seite war seit dem Redesign ungestaltet: `table.data`, `pre.mono`,
+`div.rowactions`, `button.btn-primary` — Klassen, deren Regeln in den
+Bausteinen aufgegangen sind. Jetzt vier Kacheln für den Bestand, die drei
+Papierkorbzahlen als Kontrollzeilen, die Handlungen in der Titelzeile
+(„Zurücksetzen" als Knopf, „Entfernen" im Aktionsmenü hinter einer Rückfrage).
+Das Prüfwerkzeug `tools/referenzdatensatz/browser/demo_pruefen.mjs` las die
+alte Tabelle und ist mitgezogen.
+
+### Das Logo der Installation ist einstellbar
+
+In der **Wartung**, nicht im Profil: Es ist eine Eigenschaft der Installation.
+Die Anmeldeseite zeigt es, und jedes Konto ohne eigene Wahl folgt ihm. Bis
+hierher war es eine Konstante im Code — eine Installation, die überwiegend am
+Boden fährt, sollte nicht dauerhaft einen Hubschrauber im Kopf tragen.
+
+Die Änderung wirkt **sofort**, auch für bereits angemeldete Konten: In der
+Sitzung steht jetzt die *Wahl* und nicht mehr ihr Ergebnis. Nur „wechselnd"
+wird bei der Anmeldung ausgewürfelt — sonst spränge das Logo beim Blättern.
+Wer im Profil eine eigene Wahl getroffen hat, bleibt unberührt.
+
+### Drei Funde
+
+**F-P3-AN — die Anmeldeseite zeigte nie den Standard der Installation.**
+`logo_src()` versorgt die beiden Seiten ohne Sitzung (Anmeldung, Passwort
+setzen) und las `app.logo_path` aus der `config.php`. Der Einrichter schreibt
+dort den Hubschrauber hinein; ein Wechsel des Standards wirkte damit überall
+außer auf der einen Seite, die ihn zeigen soll. `logo_path` gilt jetzt nur noch
+für eine **fremde** Datei.
+
+**F-P3-AO — die Standorteliste warnte nicht vor Namensdubletten.** Sie war die
+einzige der sechs Stammdatenlisten ohne den weichen Hinweis auf gleichnamige
+eigene Einträge. Ein systemweiter Standort, den bereits ein Dutzend Konten
+selbst angelegt hatte, entstand ohne jeden Hinweis — und stand danach zweimal
+in deren Auswahlliste.
+
+**F-P3-AP — die Radios der Segmentwahl fingen Klicks ab.** `.segment-box`
+(Spezifität 0,1,0) verliert gegen `input[type=radio]` (0,1,1) weiter unten im
+Stylesheet, die jedem Radio 20 × 20 px gibt. Absolut positioniert und
+durchsichtig lagen die Kästchen damit über ihrer Umgebung. Das betraf **jede**
+Segmentwahl der Anwendung — Zeitraum, Suchfilter, die neuen Reiter. Aufgefallen
+beim Bedienen im Browser, nicht beim Lesen.
+
+Dazu behoben: Die Sammelleiste der NutzerInnen-Liste zeigte ihre Zahl in jeder
+Breite, aber der Knopf daneben war unter 720 px 100 % breit — die Zahl brach auf
+zwei Zeilen (40,3 px statt 20,1 px). Die Breitenausnahme hängt jetzt an der
+Zahl statt an der Schwelle.
+
+## [Web 9.9.0] — 2026-08-27
+
+**O9b: die NutzerInnen-Liste, ausgelegt auf mehrere hundert Konten.** Keine
+Migration.
+
+Vorher war das eine ungefilterte Tabelle über **alle** Konten mit vier Spalten,
+darunter ein Anlegen-Formular und je Zeile ein Löschknopf. Bei dreißig Konten
+geht das; bei dreihundert ist es eine Seite, die man durchscrollt, um eine Zeile
+zu suchen.
+
+Jetzt: vier **Statuskacheln** (Konten, Admins, Sicherung überfällig, nie
+gesichert — jede ein Weg in die Liste, die sie meint), eine **Suche** nach Name
+oder Adresse, fünf **Filterplaketten mit Zahl**, sechs **sortierbare Spalten**,
+**fünfzig Konten je Seite** mit Seitenwechsel, Auswahlkästchen und eine klebende
+**Sammelleiste**, deren Auswahl über Seiten hinweg gilt. Das Anlegen ist ein
+Dialog hinter „+ Anlegen" im Kartenkopf; das Löschen eines Kontos steht nur noch
+auf der Kontoseite, wo die Entscheidung über die Sicherungen dazugehört.
+
+**Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende Suche.**
+Das ist Absicht und keine Ungenauigkeit: Die Kacheln sagen, wie es um die
+Installation steht; die Zahl an einer Filterplakette beantwortet „was bringt mir
+dieser Filter jetzt?".
+
+**Wo die Arbeit liegt.** Der Sicherungsstand eines Kontos steht nicht in der
+Datenbank, sondern im Dateisystem — daran hängen zwei Kacheln, zwei Filter und
+eine Spalte. Ihn je Zeile zu holen wären bei 300 Konten 300
+Verzeichnisdurchläufe, genau der Fehler, den die alte Sicherungsseite macht.
+Stattdessen ein einziger Durchlauf der Ablagewurzel plus je Ordner eine kleine
+JSON-Datei; wer nie gesichert wurde, hat gar keinen Ordner und kostet nichts.
+Gemessen an 304 Konten: 3,2 ms für die Ablage, 3,3 ms für die Abfrage, 3,2 ms
+fürs Werten, 103 ms für den ganzen Seitenaufruf.
+
+Der Preis dieser Abkürzung steht im Code: Die Angabe stammt aus `konto.json`,
+nicht aus den Paketdateien. Wer ein Paket von Hand aus einem Ordner entfernt,
+ohne die Anwendung zu benutzen, sieht in der **Liste** einen Stand, den es nicht
+mehr gibt — die **Kontoseite** zeigt dann das Richtige, weil sie die Dateien
+zählt. Eine Liste, die bei jedem Aufruf hunderte Verzeichnisse durchgeht, um
+einen Fall abzudecken, den die Anwendung selbst nie herstellt, wäre der
+schlechtere Tausch.
+
+Gesucht, gefiltert und sortiert wird im Speicher, nicht in SQL. Nicht aus
+Bequemlichkeit: Zwei der fünf Filter und eine der sechs Sortierungen kennen kein
+SQL, weil ihre Angabe im Dateisystem liegt. Eine halbe Filterung in SQL und eine
+halbe in PHP wären zwei Wege für dieselbe Frage — und der zweite hätte die
+falschen Zahlen. Was der Browser bekommt, sind in jedem Fall höchstens fünfzig
+Zeilen.
+
+**Dabei gemessen und behoben:** Das Erinnerungsintervall wurde je Zeile aus der
+Datenbank geholt. Bei 304 Konten waren das 304 Abfragen und 27,7 ms für eine
+Rechnung, die aus einer Subtraktion besteht; mit einem Zwischenspeicher je
+Anfrage sind es 3,2 ms.
+
+**Umlaute sortieren jetzt richtig.** Kleingeschrieben wird aus Ö ein ö, und ö
+liegt in der Byte-Reihenfolge hinter z: „Ömer" stand an erster Stelle der
+**absteigenden** Sortierung, also hinter allem anderen. Wer einen Namen mit
+Umlaut sucht, fand ihn am Ende der Liste. Der Sortierschlüssel schreibt Umlaute
+jetzt nach deutscher Lesart aus (ae/oe/ue/ss) — dieselbe Regel wie beim
+Dateinamen eines Exports — und führt übrige Akzente auf den Grundbuchstaben
+zurück. Bewusst ohne `Collator`: Die intl-Erweiterung ist auf geteiltem Webspace
+nicht verlässlich da, und eine Sortierung, die je nach Installation anders
+ausfällt, ist schlimmer als eine, die überall gleich näherungsweise ist.
+
+**Ein Fund aus der Prüfung dieses Pakets (F-P3-AL).** Die Nachladeknöpfe der
+gemeinsamen Einsatztabelle („Weitere 200 anzeigen", „Alle n anzeigen") trugen
+noch `btn-plain` — eine Klasse, für die es im neuen Stylesheet keine Regel mehr
+gibt. Sie standen seit dem Redesign in der Grundform des Browsers. Aufgefallen
+ist es niemandem, weil sie erst ab 200 Treffern erscheinen und der
+Referenzbestand 82 Einsätze hat.
+
+**Zwei Klassenkollisionen, beide vor dem Festschreiben abgefangen (F-P3-AM)** —
+und jede von einem anderen Prüfmittel. Die neue Filterreihe brauchte Namen, und
+zwei der naheliegenden waren vergeben:
+
+`.filterzahl` gehört seit O6 den Zählern der Filtergruppen auf der Suchseite.
+Die neue Regel steht weiter unten im Stylesheet und hätte bei gleicher
+Spezifität gewonnen — aus den blauen Zählern wären graue geworden. Gefunden
+durch **Lesen**, bei der Bestandsaufnahme vor dem Bauen.
+
+`.filterknopf` gehört seit O6 dem Knopf, der auf der Suchseite die
+Filterschublade öffnet — und der ist **48 px** hoch, weil er neben dem
+48-px-Suchfeld steht; es ist die einzige benannte Ausnahme von der 44-px-Regel.
+Die neue Regel hätte ihn auf 44 px gesetzt. Gefunden vom **Bilderlauf**:
+„15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite — und zwar
+nur, weil der Lauf die Suchseite mitfotografierte, obwohl dieses Paket sie gar
+nicht anfasst.
+
+Die Lehre daraus ist nicht „vorher greppen", sondern: nach jedem Paket auch die
+Seiten mitmessen, die es **nicht** anfasst. Die Vollständigkeitsprüfung hätte
+beides nicht gemeldet — sie zählt Klassen **ohne** Regel, nicht zwei Regeln für
+**eine** Klasse. Beide heißen jetzt nach ihrem Ort: `.listenfilter` und
+`.listenfilter-zahl`.
+
+**Neu als Prüfmittel:** `tools/pruefkonten/` legt 300 Konten mit gemischten
+Sicherungsständen an und entfernt sie wieder — reproduzierbar, weil der Zufall
+einen festen Startwert hat. Ohne so einen Bestand lässt sich weder ein
+Seitenwechsel noch eine Auswahl über Seiten hinweg prüfen.
+
+**Neun Funde aus der gegnerischen Prüfung**, alle behoben. Die beiden, die am
+weitesten reichten, liegen in der Sicherungsbibliothek und betreffen auch die
+Kontoseite aus O9a:
+
+Die Verdrängung **schonte eine eingelöste Freigabe dauerhaft**. Die Ausnahme
+war damit begründet, dass die NutzerIn das Paket in ihrem Backup-Bereich
+angeboten bekommt — nach dem Einlösen stimmt das nicht mehr. Die eingestellte
+Aufbewahrung wurde damit still überschritten, und zwar für immer.
+
+Ein **fehlgeschlagener Sicherungslauf ließ einen leeren Ordner zurück**, weil
+der Ordner vor dem Datenpaket angelegt wurde. Die Folge war eine widersprüchliche
+Auskunft: Die Liste meldete für dieses Konto „Stand unbekannt", die Kontoseite
+„nie gesichert" — zwei Seiten, zwei Antworten aus demselben Fehlschlag. Der
+Ordner entsteht jetzt erst, wenn es etwas hineinzulegen gibt, und wird bei einem
+Fehlschlag wieder entfernt.
+
+Dazu in der Liste selbst: Die **Statuskacheln behielten beim Klick die Suche**
+und führten dann auf weniger Konten, als sie nannten. Jedes Konto hatte **zwei
+Auswahlkästchen** im Markup (Tabelle und Kachelzeile), von denen nur das
+angeklickte nachgeführt wurde — nach einem Wechsel der Fensterbreite sah ein
+Kästchen leer aus, obwohl das Konto ausgewählt war. Die **Auswahl im
+`sessionStorage` überlebte den Wechsel der angemeldeten Person**. `?q[]=x`
+erzeugte eine PHP-Warnung mitten in der Seite. Ein **kaputtes `konto.json`**
+(eine Zahl statt einer Zeichenkette) hätte unter `strict_types` die ganze Liste
+lahmgelegt, und ein unbrauchbarer Zeitwert hätte das betroffene Konto mit
+zwanzigtausend Tagen als dringendsten Fall nach oben sortiert. Und das neue
+Prüfwerkzeug hatte selbst zwei Fehler: sein eigener dokumentierter Aufruf brach
+ab, und ein abgebrochener Lauf hinterließ Sicherungsordner, die `entfernen` nie
+wiederfand.
+
+Geprüft: 35 + 19 + 13 Bedienproben im Browser gegen 304 Konten, alle
+erwartungsgemäß, keine Konsolenmeldung; 13 Bibliotheksproben zu den
+Grenzfällen der Sicherungsbibliothek; 7 Proben zum Zeitbudget der
+Sammelaktion. Vollständigkeitsprüfung, Wortliste, Kontraste und der volle
+Bilderlauf (240 Bilder, 0/0/0).
+
+## [Web 9.8.0] — 2026-08-27
+
+**O9a: die Kontoseite wird zur Drehscheibe.** O9 (Administration) ist mit fünf
+Seiten, drei Funktionsänderungen und einer Migration zu groß für einen Zug und
+zerfällt in drei Teile: Kontoseite (O9a), NutzerInnen-Liste (O9b), Regeln,
+Stammdaten, Demo und Wartung (O9c).
+
+**Diese Fassung braucht eine Migration.** `2026_08_28_last_login` legt
+`users.last_login` an. Ohne sie fehlt auf Kontoseite und Liste die Angabe
+„zuletzt angemeldet"; die Anmeldung selbst läuft weiter, `login.php` fängt den
+Fall. Nach dem Ausrollen also `update.php` aufrufen.
+
+Diese Spalte stand nicht in der Migrationsliste des Konzepts, wird von E-P3-41
+aber zweimal verlangt — in der Unterzeile der Kontoseite und als Spalte der
+Liste. Eine Quelle dafür gab es bisher nicht: `devices.last_seen` ist der Stand
+einer **Uhr**, nicht der einer Anmeldung. Der Bestand bekommt `NULL`, nicht
+`NOW()`: Sonst sähe jedes Konto so aus, als hätte es sich am Tag der Migration
+angemeldet — eine erfundene Angabe genau in der Spalte, die man liest, um
+ungenutzte Konten zu finden. Angezeigt wird `NULL` als „—".
+
+**Alles zu einem Konto liegt jetzt auf dessen Seite.** Vorher waren die
+Kontodaten drei Formulare mit drei Speichern-Knöpfen (Rolle, E-Mail, Name) —
+drei Absendevorgänge für eine Änderung, die man als eine denkt. Und die
+**Sicherungen** eines Kontos standen woanders: auf `admin_sicherungen.php`, in
+einer Tabelle über alle Konten, in der man seine Zeile suchen musste. Jetzt ein
+Formular mit einem Speichern, dazu Karten für Geräte, Sicherungen, Abonnement
+(reservierter Platz, kommt mit R33) und die Löschung als rote Gefahrenzone. Ab
+1200 px zweispaltig, mobil untereinander.
+
+Das ist auch eine Antwort auf die Menge. Die alte Übersicht las für **jedes**
+Konto ein Verzeichnis und eine Begleitdatei, um eine einzige Zeile zu zeigen —
+Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein Konto
+ansieht. Die Kontoseite liest genau einen Ordner.
+
+**Drei Handlungen brauchen mehr als eine Rückfrage** — eine Sicherung
+einspielen, freigeben, löschen. Sie stehen jetzt in Dialogen, die im Markup
+stehen und ihre Werte vom öffnenden Knopf bekommen; ein Dialog für alle Zeilen
+statt eines je Zeile. Geprüft wird weiterhin serverseitig: Die abgetippte
+E-Mail-Adresse muss stimmen, und ein Browser-Dialog ließe sich umgehen. Das
+Einspielen zielt dabei auf **dieses** Konto — ein Auswahlfeld mit allen Konten
+stünde für einen Fall, den es hier nicht gibt; wer eine Sicherung in ein fremdes
+Konto bringen will, gibt sie frei.
+
+**Die Aufbewahrung je Konto ist einstellbar geworden.** Bisher waren es fest
+drei Pakete. Der Wert kommt jetzt aus den Regeln (die Einstellung dazu entsteht
+in O9c; die Vorgabe bleibt drei, damit ein Bestand ohne Einstellung sich verhält
+wie vorher). Zwei Pakete sind von der Verdrängung ausgenommen: das **jüngste** —
+sonst räumte eine Aufbewahrung von 0 beim Sichern alles weg, und eine Sicherung,
+die beim Sichern alles entfernt, ist das Gegenteil der Funktion — und ein
+**freigegebenes**, weil die NutzerIn es im eigenen Backup-Bereich angeboten
+bekommt und der Weg dorthin sonst ins Leere liefe.
+
+**„Passwort zurücksetzen"** ist neu im Aktionsmenü der Kontoseite. Es setzt kein
+Passwort — das kann diese Seite nicht, und das ist der Punkt: Die Daten sind mit
+dem Passwort der Person Ende-zu-Ende-verschlüsselt. Verschickt wird derselbe
+Link wie bei „Passwort vergessen", mit derselben Regel (der neue Token entwertet
+alle offenen). Kommt die Mail nicht weg, steht der Link auf der Seite: Ein
+gültiger Token in der Datenbank, von dem niemand weiß, ist die schlechteste
+aller Lagen — dasselbe Muster wie beim Anlegen eines Kontos.
+
+Bewusst gekürzt: Die Umfangszeile einer Sicherung nannte den Papierkorb bisher
+nach Art aufgeteilt („davon im Papierkorb: 5 Einsätze, 1 Diensttag, 5
+Ruhezeiten"). In der Zeile einer Karte, halb so breit wie die alte Tabelle,
+waren das drei Zeilen Umbruch für eine Frage, die eine Zahl beantwortet: wie
+viel davon ist gelöschter Bestand. Jetzt „davon 11 im Papierkorb"; das Paket
+selbst führt die Zahlen weiter je Art.
+
+Geprüft: 29 Bedienproben im Browser (Speichern, Dublette, Setz-Link,
+Aufbewahrung, Einspielen mit falscher und richtiger Adresse, Freigabe und
+Widerruf, Löschen des letzten Pakets, eigenes Konto, Kontolöschung) — alle
+erwartungsgemäß, keine Konsolenmeldung. 14 Bibliotheksproben zur Verdrängung
+und zum Kontostand. Vollständigkeitsprüfung, Wortliste (0 Treffer außerhalb der
+Ausnahmen), Kontraste (21 Paare, 0 verfehlt) und der volle Bilderlauf.
+
+## [Web 9.7.2] — 2026-08-27
+
+**O8c: Backup und Import — und die Meldungen bekommen ihren Ton.** Damit ist
+O8 vollständig. Beide Seiten sind lange Wege mit vielen Zwischenmeldungen, und
+beide meldeten sie bis hierher in **einer grauen Zeile**: „Daten werden
+geladen…", „Das ist nicht dein Kontopasswort", „Fertig: 82 Einsätze" — alles in
+derselben Schrift, derselben Farbe, an derselben Stelle. Ein misslungener
+Export sah aus wie ein Zwischenstand.
+
+Jetzt tragen die Meldungen ihren Ton (E-P3-16): **rot** für einen Fehlschlag,
+**blau mit Haken** für ein Ergebnis, **schlicht** für den laufenden
+Fortschritt. Der Fortschrittstext bekommt bewusst kein Symbol — er ist kein
+Ergebnis, und ein Haken daneben behauptete eines.
+
+Ein Sonderfall bekam dabei eine eigene Antwort: Ein **Export mit unlesbaren
+Blöcken ist kein reiner Erfolg**. Die Datei ist vollständig, aber ein Teil
+ihrer Angaben lässt sich nur in diesem Konto wieder öffnen. Das meldet sich
+jetzt als Warnung statt mit einem Haken — vorher stand die Warnung als
+Nachsatz in derselben Erfolgsmeldung.
+
+**Der Import zeigt seine drei Schritte als drei Karten** mit der Zahl im Kopf;
+Schritt 2 und 3 bleiben verborgen, bis der vorige getan ist. Die Zeilenwahl
+(Alle Zeilen / Nur Probleme / Nur Dubletten) war eine Reihe von drei Knöpfen,
+bei der keiner zeigte, welcher gerade galt — jetzt eine Segmentwahl: drei
+Zustände, von denen genau einer gilt, und die Pfeiltastenbedienung bringt der
+Browser mit. Die Haken des Exports (GPX-Tracks, personenbezogene Angaben,
+Passwortschutz) sind Schalter geworden (E-P3-28).
+
+Der **Backup-Reiter** ist in drei Karten gefasst: erstellen, einspielen und
+— nur wenn eine vorliegt — die von der Administration freigegebene Sicherung.
+Die Warnung, was in der Datei steht, steht weiterhin **vor** der Passwortwahl,
+jetzt als Meldungs-Baustein: Wer ein Passwort wählt, muss wissen, was er damit
+schützt.
+
+Belegt am Referenzarchiv: Datei einlesen → Schritt 2 und 3 erscheinen, Bilanz
+„13 Diensttage, 82 Einsätze, 1 Hinweise, 0 Fehler, 82 Dubletten", 96
+Tabellenzeilen, „Import ausführen" bleibt gesperrt (alles schon vorhanden —
+richtig so). Die Filterwahl greift: 15 Zeilen bei „Nur Probleme", 96 bei
+„Alle". 0 Konsolenfehler, 0 doppelte Element-Kennungen, kein waagerechter
+Überlauf. Screenshots 240 Bilder — 0/0/0.
+
+Keine Migration.
+
+## [Web 9.7.1] — 2026-08-27
+
+**O8b: Die übrigen Verwaltungslisten — und drei Fehler, von denen einer aus
+O8a stammt.** Der Reiter „Rettungsmittel" führt je Standort fünf Listen
+(Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel, Bergwacht),
+dazu kommt der Reiter „Geräte". Alle folgen jetzt dem Muster aus O8a: Karte
+statt Tabelle, Zeilen mit Knöpfen am Schreibtisch und „⋯" auf dem Handy, das
+Anlegen-Formular in derselben Karte. Ein Standort ist eine zugeklappte Karte;
+die Listen darin sind Abschnitte, keine zweite Kartenebene — zwei Rahmen um
+dieselbe Sache trennen, was zusammengehört.
+
+**Das Muster stand fünfmal ausgeschrieben, und es war bereits
+auseinandergelaufen:** Die Rettungsmittel trugen „★ Standard", die übrigen
+nicht; die Löschrückfragen lauteten „Eintrag löschen?", „Zielklinik löschen?"
+und „Bereitschaft löschen?" — ohne zu sagen, welcher. Zwei Schließungen
+rendern es jetzt einmal, und jede Rückfrage nennt den Namen.
+
+**Ein Fehler aus O8a, den erst dieser Umbau sichtbar machte:** Das
+wiederhergestellte Lage-Feld trug dieselbe Kennung wie das Namensfeld
+(`<praefix>addr`). `getElementById` findet das erste — also das Namensfeld;
+das Lage-Feld hing an nichts und war Zierde. F-P3-AI war damit **nicht
+behoben**, sondern nur bebildert. Die Kennung gehört jetzt dem Lage-Feld, der
+Name hat eine eigene. Belegt: Der Vorschlag erscheint, die Übernahme setzt die
+Koordinaten, und der Name bleibt unberührt.
+
+**Zwei weitere Funde beim Prüfen:**
+
+Der Lupen-Knopf nimmt dem Eingabefeld den Fokus. Der `blur`-Handler plant
+150 ms später das Verstecken der Vorschlagsliste — damit ein Klick auf einen
+Vorschlag noch durchkommt. Kommt die Antwort schneller als das, löscht dieser
+Aufschub die eben gefüllte Liste wieder. Gemessen: bei sofortiger Antwort
+stand sie nach 80 ms mit einem Eintrag da und nach 160 ms leer; bei 250 ms
+Antwortzeit blieb sie. Gegen den echten Photon-Dienst verdeckt die Netzlatenz
+das zuverlässig — hinter einem Zwischenspeicher oder im schnellen Netz nicht
+(F-P3-AJ). Der Aufschub prüft jetzt, ob der Fokus inzwischen zurückgekehrt ist.
+
+Und `ui_zeilenaktionen()` leitete die Kennung seines Aktionsblatts aus einem
+**Hash über Titel und Aktionstexte** ab. Zwei Zeilen mit gleichem Namen und
+gleichen Handlungen bekamen dieselbe Kennung — in einer Stammdatenliste der
+Normalfall, nicht die Ausnahme (zwei Standorte mit einer gleichnamigen
+Zielklinik). `data-blatt` öffnete dann beide oder keines. Jetzt eine laufende
+Nummer. Dasselbe galt für die Feld-Kennung des Besatzungsformulars, das je
+Rolle einmal steht.
+
+Der **Kopplungscode** und die Zugangsdaten eines neuen Geräts stehen als
+`.codeblock`: groß, in Festbreite, mit Sperrung. Sie werden von einem
+Bildschirm auf eine Uhr abgetippt, und zwar unter Zeitdruck.
+
+Screenshots 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des
+Solls; **0 doppelte Element-Kennungen** auf allen umgebauten Reitern.
+Wortliste 0/0/0, Kontraste 21/0. Sicherung und Import folgen als O8c.
+
+## [Web 9.7.0] — 2026-08-27
+
+> **Diese Fassung braucht eine Migration.** Nach dem Ausrollen muss eine
+> Administratorin `update.php` aufrufen — `2026_08_27_logo_wahl` legt die
+> Spalte `users.logo_wahl` an. Ohne sie scheitert **jede Anmeldung**, weil
+> `login.php` die Spalte mitliest. Es ist die erste Schemaänderung dieser
+> Phase.
+
+**O8a: Profil, Logo-Wahl und die Verwaltungslisten am Muster der Standorte.**
+O8 hat sich beim Bauen als zu groß für ein Paket erwiesen — fünf Reiter, der
+Import und eine Migration. Es ist deshalb geteilt: Dieser Teil bringt Profil,
+Logo-Wahl, Standorte und den Passwortstärke-Balken; Rettungsmittel, Geräte,
+Sicherung und Import folgen als O8b.
+
+**Die Logo-Wahl** (E-P3-20) steht im Profil und kennt vier Werte: Standard der
+Installation, Hubschrauber (RTH), Fahrzeug (NEF), wechselnd. Aufgelöst wird sie
+**einmal bei der Anmeldung**; in der Sitzung steht danach das Ergebnis, nicht
+die Wahl. Der Unterschied ist die ganze Sache: Würde bei jedem Seitenaufruf
+gewürfelt, spränge das Logo beim Blättern von Seite zu Seite — „wechselnd"
+heißt je Anmeldung, nicht je Klick. Wer die Wahl im Profil ändert, muss sich
+trotzdem nicht neu anmelden; dieselbe Auflösung läuft nach dem Speichern.
+
+Kopfleiste und Browser-Symbol fragen **dieselbe Stelle** (`logo_stamm()` in
+`session_lib.php`) und können deshalb nicht auseinanderlaufen — ein Konto mit
+dem Fahrzeug in der Kopfleiste und dem Hubschrauber im Tab wäre ein
+Widerspruch, den niemand erklären könnte. Die Anmeldeseite zeigt immer den
+Standard: Dort ist noch niemand angemeldet, und die Wahl hängt am Konto. Als
+Vorgabe steht **Leerstring** in der Spalte, nicht „Hubschrauber" — wer nie
+gewählt hat, folgt dem Standard der Installation, und der kann sich ändern
+(die Wahl dafür kommt in O9). Stünde dort ein fester Wert, hätten alle
+bestehenden Konten eine ausdrückliche Wahl getroffen, die sie nie getroffen
+haben.
+
+**Die Verwaltungslisten** (E-P3-35) sind am Muster der Standorte umgebaut: der
+Erklärtext auf drei Zeilen statt zweier Absätze, eine Karte mit Zeilen statt
+einer Tabelle, das Anlegen-Formular **in** derselben Karte darunter, die
+vordefinierten Einträge als zweite, zugeklappte Karte mit „n · m ausgewählt".
+Die Zeilenaktionen sind am Schreibtisch Knöpfe und mobil ein „⋯", das ein
+Blatt öffnet (neuer Baustein `ui_zeilenaktionen`). Die POST-Formulare stehen
+dabei **einmal** im Markup: Löschen und „Als Vorbelegung" sind Formulare mit
+Token, und sie zweimal auszugeben — einmal für den Knopf, einmal für das
+Blatt — wäre dieselbe Handlung an zwei Stellen, von denen die nächste
+Änderung nur eine erreicht. Stattdessen trägt der Knopf ein `form`-Attribut;
+HTML erlaubt es ihm, ein Formular abzusenden, in dem er gar nicht steht.
+
+**Die Passwortstärke** ist ein Balken aus vier Segmenten geworden (E-P3-16,
+Mockup 11). Vorher war es eine Textzeile in fünf Farben, darunter Grün und
+Gelb — zwei Töne, die es in der Marke nicht gibt. Der Balken sagt dasselbe
+ohne fremde Farbe: Wie viele Segmente gefüllt sind, ist die Auskunft; rot,
+orange oder dunkelblau verstärken sie nur.
+
+**Beim Prüfen gefunden:** Seit Web 9.4.0 (O5) gab es **kein Eingabefeld für
+die Lage** mehr. O5 hat das zweite Suchfeld am Ortsfeld ausgebaut — der
+Lupen-Knopf am Namensfeld trat an seine Stelle —, und dabei ist die
+Nur-Lage-Fassung von `ui_ortsfeld()` leer zurückgeblieben: Sie gab nur noch
+Vorschlagsliste, Zustandszeile und die versteckten Koordinatenfelder aus. Die
+Lage eines Standorts oder einer Zielklinik ließ sich seither **nicht mehr
+eingeben, nur noch behalten** (F-P3-AI). Betroffen waren vier Stellen in
+`einstellungen.php` und `admin_stammdaten.php`. Die Fassung hat jetzt wieder
+ein Suchfeld mit Lupe; ein Treffer setzt weiterhin nur die Koordinaten, nie
+den Namen.
+
+Screenshots 240 Bilder — 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe außerhalb des
+Solls. Logo-Wahl belegt: Standard und Hubschrauber liefern dasselbe Logo,
+Fahrzeug wechselt Kopfleiste **und** Favicon, „wechselnd" bleibt über fünf
+Seiten einer Sitzung stabil und ergab über zwanzig Anmeldungen 11 zu 9.
+
+## [Web 9.6.0] — 2026-08-27
+
+**O7: Die Zeitraumübersicht nach den Mockups 29/30/31 — und „Gemischt" zeigt
+vier Kennzahlen statt acht.** Das ist die Funktionsänderung dieses Pakets, und
+sie streicht etwas: Bisher teilte die gemischte Ansicht den Bodensatz mit acht
+Kacheln, also auch Einsatzkilometer, längste Strecke, längste Dauer und
+Fehleinsätze. Über beide Arten hinweg sind das Äpfel und Birnen — eine
+Flugstrecke von 61 km und eine Fahrstrecke von 12 km stehen für ganz
+verschiedene Einsätze, und ihre Summe beantwortet keine Frage, die jemand
+stellt. Was über beide Arten trägt, sind Anzahl, Diensttage, ihr Verhältnis
+und die Sekundärtransporte. Die übrigen Zahlen stehen unverändert in den
+beiden Artenansichten: **Luft behält zehn Kacheln, Boden acht**, und ihre
+Werte sind belegt dieselben geblieben (zehn Proben über fünf Zeiträume, 88
+Kachelwerte verglichen, keine unerklärte Abweichung).
+
+Die Tableiste nach Art ist eine **Segmentwahl in der Titelzeile** geworden —
+„Gemischt / Luft / Boden" statt „Gemischt / Luftrettung / Bodengebundener
+Rettungsdienst". Die lange Fassung war bei 360 px breiter als der Bildschirm.
+Aus `<button role="tab">` sind Radios geworden; der Wechsel mit den
+Pfeiltasten kommt damit vom Browser, und der eigene Tastatur-Handler ist
+entfallen. Mobil steht die Wahl vollbreit unter dem Titel.
+
+Unter 720 px sind je Satz **vier Kacheln sichtbar**, der Rest hinter
+„Weitere Statistik (n)". Welche vier, sagt die Kachel selbst und nicht ihre
+Position: Für die Luft sind es Einsätze, Flugtage, Flugkilometer und
+Winden-Cycles, für den Boden Einsätze, Diensttage, Einsatzkilometer und die
+längste Einsatzdauer. Fällt eine davon am Bestand weg — die Winden-Cycles
+ohne einen einzigen Windeneinsatz —, rückt die nächste nach; vier Kacheln
+füllen zwei Reihen zu zweit, drei ließen eine halbe Reihe leer. Diesen Fall
+bedenkt das Konzept nicht, er ist hier entschieden worden.
+
+Extremwerte tragen jetzt den **Tag in der Beschriftung** („Längste
+Flugstrecke · 14.08.") — das beantwortet „welcher Einsatz war das?" schon vor
+dem Klick. Die Hervorhebung der Trägerzeile ist **hell orange statt rot**:
+Rot heißt in dieser Oberfläche „Aufmerksamkeit" (Fehler, Löschen), und ein
+Höchstwert ist kein Fehler. Zwei Hexwerte, die dafür fest im Skript standen,
+kommen jetzt aus den Token.
+
+Auf der Karte steht das **Standort-Haus** (E-P3-40). `api/range.php` liefert
+dafür neu die Standorte der Diensttage des Zeitraums, nach Koordinate
+entdupliziert — ein Monat mit fünf Diensten derselben Wache hat einen
+Standort, nicht fünf übereinander. Sie sind Klartext wie Art und
+Rettungsmittel und brauchen deshalb keinen Inhaltsschlüssel: Die Karte zeigt
+das Haus auch im gesperrten Zustand, nur die Einsatzorte bleiben dann aus.
+In der Leiste ist der angezeigte Monat bzw. das Jahr markiert — bisher war
+dort auf dieser Seite nichts aktiv, weil der aktive Eintrag stets ein
+Diensttag war und den gibt es hier nicht.
+
+**Beim Prüfen gefunden:** Das Screenshot-Werkzeug rief `zeitraum.php` **ohne**
+`?y=` auf. Die Seite leitet dann auf die Startseite um — die
+Zeitraumübersicht war damit seit O1 in keinem einzigen der bislang 232
+Bilder, und der Kontaktbogen „14-zeitraum" zeigte in Wahrheit die
+Tagesübersicht (F-P3-AH). Im Werkzeug behoben; sie steht jetzt mit zwei
+Seiten darin, Jahr und Monat, weil nur die Monatsansicht Rückweg und
+Monatsmarkierung zeigt.
+
+Keine Migration; Kennzahlen, Endpunkte und Feldkatalog unverändert.
+
+## [Web 9.5.0] — 2026-08-27
+
+**O6: Die Suche nach den Mockups 27/28 — und ein Filter, der seit O2 nicht
+mehr wirkte.** Die Suchseite hatte als einzige Seite eine **eigene**
+Filterspalte (`layout-suche`, `filterspalte`). Das war schon am Schreibtisch
+eine Sonderlocke; auf dem Handy war es ein Fehler: Der Schubladenmechanismus
+aus O2 hing an der gemeinsamen `.leiste`, also stand hier die volle
+Filterspalte als anderthalb Bildschirme **vor** dem Ergebnis. Die Filter
+sind deshalb in die gemeinsame Leiste gezogen — dieselbe Schublade, derselbe
+Filterknopf, dieselbe Kopfzeile wie überall.
+
+Dabei fiel auf, dass **kein Filter der Seitenleiste mehr wirkte**: Der
+Zuhörer horchte auf `.filterspalte input, .filterspalte select` — die Klasse
+ist mit O2 verschwunden, der Selektor traf seither nichts. Gemessen an
+„Datum von 01.12.2026": 82 von 82 Einsätzen blieben stehen. Der Zuhörer
+hängt jetzt an der Leiste selbst und filtert nach dem Ereignisziel, nicht
+nach einer Klasse am Behälter (F-P3-AG).
+
+Der **Zuschnitt** der fünf Blöcke aus Web 7.0.0 bleibt (Einsatz, PatientIn,
+Transport, Beteiligte, Bergrettung) — er schneidet nach dem Gegenstand, und
+daran war nichts falsch. Sie sind jetzt dieselben **Akkordeons** wie die
+Diensttage in der Leiste, jedes mit einer Plakette, die zählt, wie viele
+Filter darin gesetzt sind: So ist ein vergessener Filter in einer
+zugeklappten Gruppe sichtbar, ohne sie zu öffnen. Über der Trefferliste steht jeder gesetzte Filter noch einmal
+als **Plakette mit ✕**, einzeln abwählbar; der Fuß der mobilen Schublade
+trägt „Filter zurücksetzen" und „**n Treffer zeigen**" mit der Zahl aus der
+laufenden Suche, damit man vor dem Schließen weiß, worauf man hinausläuft.
+Ja/Nein/Egal-Filter sind Segmente statt Auswahllisten.
+
+Das Freitextfeld ist 48 px hoch, mit Lupe und Löschkreuz; die Erklärung der
+Suchsyntax steht nicht mehr dauerhaft darunter, sondern hinter
+„Syntaxhilfe" — sie ist für den zweiten Besuch da, nicht für jeden.
+**Trefferwörter werden hervorgehoben.** Das betrifft mit Einsatzort und
+Diagnose ausgerechnet die beiden verschlüsselten Textspalten, deshalb
+geschieht es erst **nach** dem Maskieren im Browser (`suchtext.js`:
+`woerter()` liest die positiven Literale aus der Anfrage, `hervor()` setzt
+`<mark>` in den bereits maskierten Text). Durchsucht wird weiterhin mehr,
+als die Liste zeigt — Notizen, Besatzung, Rettungsmittel; dort ist nichts
+hervorzuheben, weil nichts davon in der Liste steht. Die Suchlogik ist
+unberührt: Verneinte Begriffe und Operatoren werden nicht hervorgehoben,
+weil sie nichts bezeichnen, was im Text steht.
+
+Unter 720 px zeigt die Suche **Kacheln** statt Tabelle (derselbe Erzeuger
+wie auf der Startseite, `missiontable.js`), mit Artzeichen und Datum in der
+Kopfzeile und einzeiliger Diagnose. Am Desktop bekommt die Tabelle eine
+**Farbstreifen-Spalte**: die Spurfarbe des Einsatzes an seinem Diensttag —
+dieselbe Farbe wie auf der Karte des Tages, nicht eine Nummer nach
+Listenposition.
+
+Bewusst anders als das Mockup: Die Bestandszahl nennt „n von m" nur, wenn
+tatsächlich gefiltert ist (sonst genügt „m Einsätze"), und die Streckensumme
+rundet auf ganze Kilometer.
+
+Keine Migration; Suchlogik, Endpunkte und Feldkatalog unverändert. Acht
+Proben (fünf Suchbegriffe, drei Filterkombinationen) gegen den Stand vor P3
+liefern dieselben Treffer: 8 von 8 identisch, 143 Treffer verglichen.
+
+## [Web 9.4.0] — 2026-08-27
+
+**O5: Das Einsatzformular nach den Mockups 22/23/25 — mit zwei
+Funktionsänderungen.** Die Rahmengruppen von Web 7.0.0 sind **Karten**
+geworden, ab 1200 px in zwei Spalten (links PatientIn, Einsatz, Transport;
+rechts der Rest). Der Einsatzort steht jetzt bei den übrigen verschlüsselten
+Feldern in der Karte **PatientIn** — er gehörte immer zu ihnen, nur das
+Formular behauptete etwas anderes. Ja/Nein-Felder sind **Schalter**
+(derselbe Baustein wie überall seit O2); die Detailfelder eines
+eingeschalteten Schalters rücken hinter einer orangen Linie ein. Die
+zugeklappten Karten „Abweichende Besatzung" („vom Diensttag") und
+„Reanimation" („keine") öffnen sich von selbst, wenn etwas gespeichert ist —
+ein gesetzter Wert hinter zugeklapptem Deckel wäre verborgene Wahrheit.
+
+Die erste Funktionsänderung: **Die Phasenzeilen sortieren sich sofort**,
+sobald ein Zeitfeld verlassen wird — mit derselben Mitternachtsregel, die
+beim Speichern gilt (Zeiten vor dem Dienstbeginn gehören zum Folgetag). Der
+Hinweistext „in chronologischer Reihenfolge eintragen" entfällt: Was sich
+selbst ordnet, muss keine Reihenfolge verlangen. Der Kartenkopf zählt mit
+(„8 von 9"). Entfernen-Knöpfe sind rote 44-px-Symbolknöpfe; das Entfernen
+einer Zeile meldet sich beim Dirty-Tracking, obwohl kein Feld ein Ereignis
+feuert.
+
+Die zweite: **das Ortsfeld.** Der Lupen-Knopf ersetzt das zweite Suchfeld
+(„Lokalisation …") — gesucht wird mit dem, was im Feld steht, und bei
+getrennter Suche (Transportziel) übernimmt ein Treffer weiterhin nur die
+Koordinaten, nie den Namen. Der Pin-Knopf öffnet ein Blatt mit „**Meine
+Position übernehmen**" (Geolocation) und „**Auf der Karte wählen**" — ein
+Leaflet-Dialog mit Fadenkreuz in der Mitte: Karte verschieben, „Übernehmen".
+Zur Koordinate holt die Photon-Umkehrsuche eine Adresse; sie füllt das Feld
+nur, wenn es leer ist, und die Anfrage trägt ausschließlich die Koordinate
+(neues `assets/ortswahl.js`). Gespeichert wird über die **Speichern-Leiste**
+(E-P3-29), die mit der ersten Änderung am unteren Rand erscheint; der
+Abbrechen-Link entfällt — der Rückweg oben genügt, und die
+Verlassen-Rückfrage schützt ungespeicherte Eingaben auf jedem Weg hinaus.
+
+Speicherlogik und Felder sind unverändert: Der Rundlauf über fünf Einsätze
+(öffnen, unverändert speichern, vergleichen — einschließlich entschlüsselter
+Angaben) ergab null Abweichungen, der Sicherungs-Kreislauf 286 739
+Einzelvergleiche ohne unerklärte Abweichung. Beim CSV-Kreislauf fand sich
+ein Werkzeugfehler: Ein POST an `einstellungen.php` **ohne `?t`** versandet
+seit der Übersichts-Weiche aus O2 stillschweigend in der Übersichtsseite —
+die Browser-Formulare tragen das `t`, das Einspielwerkzeug trug es nicht
+(F-P3-AF, im Werkzeug behoben).
+
+Keine Migration; Endpunkte und Feldkatalog unverändert.
+
+## [Web 9.3.0] — 2026-08-27
+
+**O4: Die Einsatzansicht nach den Mockups 19–21 und 26.** Die eine lange
+Feldliste hatte ihre eigene Geschichte — erst Feldkatalog-Reihenfolge, seit
+Web 7.0.0 die RANG-Ordnung —, aber sie blieb eine Liste, in der Transport
+und Diagnose gleich aussahen. Jetzt sind es **vier Karten** (Einsatz,
+PatientIn, Transport, Reanimation, dazu die Besatzung), und die RANG-Ordnung
+sortiert innerhalb jeder Karte weiter: Ein neues Katalogfeld erscheint ohne
+Änderung an der Seite am Ende der Einsatz-Karte. Winde, Bergwacht, Sekundär
+und Fehleinsatz sind **Plaketten** am Fuß der Einsatz-Karte („Winde ·
+2 Cycles, 1 mit PatientIn"); Höhe, Luftlinie und Strecke stehen klein unter
+dem Einsatzort statt als eigene Zeilen. Der Kopf: Rückweg „‹ Sonntag,
+27.12.2026", „Bearbeiten" als Primärknopf, Verschieben und Löschen im
+Aktionsblatt — das alte `<details>`-Menü samt `aktionsmenu.js` ist damit
+komplett ausgebaut. Der Zustand der geschützten Angaben steht als **eine
+Meldung** über den Karten (gesperrt mit Entsperren-Knopf, entsperrt,
+unlesbar); die neun Schloss-Emojis an den Zeilen sind fort, und mit ihnen
+der letzte Emoji-Bestand des Markups.
+
+Auf der Karte der Marker-Satz aus O3 statt des wörtlich doppelten SVG-Pfads:
+Haus- und Klinik-Schild mit Namen, oranger Einsatzort-Kreis,
+Richtungspfeile — und **Start und Ende der Aufzeichnung als blauer bzw.
+roter Ring**, am Schild des Ortes, an dem die Spur beginnt oder endet,
+sonst als eigener Ringpunkt (Mockup 26). Die Phasenliste zeigt je Zeile den
+**Minutenabstand** zur vorigen Phase und im Kopf die Gesamtdauer; die
+angetippte Phase färbt ihr **Teilstück der Spur** blau. Dafür liefert
+`api/mission.php` je Phase den nächstliegenden Trackpunkt nach
+**Zeitstempel** (`track_idx`) — die Phasen der Uhr tragen nur bei GPS-Fix
+eigene Koordinaten, die Zeit tragen sie immer. Ebenfalls neu in der
+Antwort: `base_lat/lon` des Tages (Klartext wie der Name), damit das
+Haus-Schild auch hier stehen kann. Und `fitBounds` bekommt sein Padding nun
+auch auf dieser Seite mit den richtigen Achsen (F-P3-Z war an zwei weiteren
+Stellen).
+
+Zwei Baustein-Funde nebenbei: Die Utility `nur-ab-720` stellte mit
+`display:block` wieder her und machte den Titelzusatz „· 07:13 Uhr" zur
+eigenen Zeile — jetzt `revert`, das die Grundform des Elements
+wiederherstellt. Und die Unterzeile der Titelzeile ist aus dem Flex-Block
+neben die Hauptzeile gerückt: Ihre Breite ließ sonst die Knöpfe unter einen
+kurzen Titel brechen, obwohl daneben Platz war.
+
+Keine Migration; Feldkatalog unverändert, `api/mission.php` nur erweitert.
+
+## [Web 9.2.0] — 2026-08-27
+
+**O3: Die Startseite nach den Mockups 02–05 und 10.** Der Befund zur alten
+Tagesübersicht war der Ausgangspunkt des ganzen Redesigns: Bei 360 px
+bekamen Einsatzort und Diagnose — die beiden Angaben, um die es geht — null
+Pixel Breite und verschwanden ohne Hinweis, während sieben Zahlenspalten
+stehen blieben. Deshalb gibt es unter 720 px jetzt **keine Tabelle mehr**,
+sondern eine dreizeilige Kachel je Einsatz: Farbstreifen und Beginn, Ort
+fett mit Kilometerzahl, Diagnose, darunter Dauer, Alter und die Plaketten
+(Winde, Bergwacht, Sekundär, Fehleinsatz, „kein Ende"). Tabelle und Kachel
+entstehen aus **demselben Zeilenbestand** — sortiert wird mobil über ein
+Blatt mit denselben Spalten, und die Reihenfolge ist belegt dieselbe wie am
+Desktop. Die Knopfreihe unter den Tagesdaten ist einem Aktionsblatt hinter
+„···" gewichen (eine sichtbare Handlung je Karte, E-P3-25); die
+Diensttag-Daten zeigen einen **Lesezustand** und klappen erst auf
+„Bearbeiten" ins Formular.
+
+Auf der Karte der neue Marker-Satz (E-P3-40): Standort als Haus-Schild,
+Transportziel als Klinik-Schild, Einsatzort als oranger Kreis,
+Dienstbeginn/-ende als Ringe, Richtungspfeile auf den Spuren. Die
+Spurfarben sind **Token** (`--spur-1 … --spur-8`, `--spur-ruhe`) und werden
+per `getComputedStyle` gelesen — die alte `COLORS`-Liste im Seitenskript
+ist weg. Die Luftlinie bleibt gestrichelt, trägt aber die Farbe ihres
+Einsatzes statt einheitlichem Grau: Bei acht Einsätzen am Tag wäre sonst
+nicht erkennbar, welche Linie zu welchem gehört — die bewusste Abweichung
+vom Konzepttext ist im Code begründet.
+
+Zwei Funde nebenbei, beide älter als P3: `fitBounds` bekam sein Padding
+seit jeher mit **vertauschten Achsen** (F-P3-Z) — bei einer Karte, die
+breiter als hoch ist, fraß das fast die ganze Höhe, und die Tageskarte
+blieb auf der Rückfall-Zoomstufe hängen, statt auf die Spuren zu zoomen.
+Und das `hidden`-Attribut verlor gegen jede `display`-Angabe eines
+Bausteins; ein globaler Wächter (`[hidden]{display:none !important}`)
+ersetzt die vier verstreuten Einzelregeln — ohne ihn standen Lese- und
+Formularzustand der Tagesdaten gleichzeitig auf der Seite. Die
+Tabellenspalten richten sich jetzt nach Mockup 03 aus (Nr., Dauer, Alter,
+km rechts; Haken zentriert; Ziffern in Tabellenbreite statt der alten
+`mono`-Schreibmaschinenklasse), und sechzehn tote Klassen der alten
+Startseite stehen mit Begründung auf der Streichliste.
+
+Für die Prüfmittel: Der Prüf-Browser kommt in der Arbeitsumgebung nicht an
+die OSM-Kachelserver (die Egress-Sperre setzt seinen TLS-Handschlag
+zurück, mit wie ohne Proxy — per NetLog belegt); `aufnehmen.mjs` fängt
+Kachelabrufe deshalb mit einer Playwright-Route ab und beantwortet sie aus
+einem Node-Abruf mit Lager je URL. Nebeneffekt: deterministische Bilder,
+und ohne Proxy läuft derselbe Weg unverändert direkt.
+
+Keine Migration; Endpunkte und Feldkatalog unverändert.
+
+## [Web 9.1.1] — 2026-08-26
+
+**Die Fable-Kontrolle zu O1/O2 — neun Funde, alle behoben.** Nach dem Halt
+am Ende von O2 wurde der Stand Mockup für Mockup gegen die Screenshots
+gehalten und der Konzeptumfang gegen den Code. Anlass war der berechtigte
+Einwand, das Ergebnis sehe nicht aus wie die Mockups. Die Antwort ist
+zweigeteilt: Der größte Teil des Unterschieds ist **Inhalt der Pakete O3 bis
+O11** — Titelzeilen, Karten, Kacheln und Kartenbild der Mockups 02/03 sind
+noch nicht gebaut, und der Halt nach O2 zeigt absichtlich die neue Hülle um
+alte Inhalte. Aber neun Punkte waren echte Mängel an O1/O2 (F-P3-Q bis
+F-P3-Y im Konzept, Abschnitt 9.2). **Keine Migration.**
+
+### Web — Was falsch war und jetzt stimmt
+
+- **Die Winkel zeigten in die falsche Richtung.** Zugeklappt heißt in den
+  Mockups „›", offen „⌄". Gebaut war die umgekehrte Konvention (offen = oben).
+- **Der Weg in die Jahres- und Monatsübersicht war an zugeklappten Zeilen
+  unsichtbar.** Der Balken-Link lag als Kind des `<details>` außerhalb des
+  `<summary>` — und der Inhalt eines geschlossenen `<details>` wird nicht
+  gerendert. Mockup 06 zeigt ihn an jeder Zeile. Er steht jetzt in der Zeile
+  selbst; `daylist.js` fängt den Klick ab, damit er nicht zusätzlich auf- und
+  zuklappt.
+- **Der O2-Umfang „confirm.js und unlock.js auf `.dialog`" war schlicht
+  vergessen.** Jede Rückfrage — auch das Abmelden — und der Entsperrdialog
+  erschienen als unformatierte Kästen mit Klassen, für die es keine Regel
+  mehr gab. Beide benutzen jetzt den Dialog-Baustein, ebenso die
+  Archiv-Passwortabfrage des Imports (deren `style="width:100%"` dabei
+  entfiel). Im Browser belegt: Bestätigungs- und Entsperrdialog erscheinen
+  als Karte mit Fußzeile aus 44-px-Knöpfen.
+- **Alt-Meldungen sahen aus wie Fließtext.** Die Meldung „2 neue Geräte
+  wurden mit deinem Konto verbunden" und der Sperrhinweis der Suche standen
+  ohne jede Auszeichnung da — eine Fehlermeldung, die aussieht wie Text,
+  warnt niemanden. Die Übergangsschicht führt jetzt **eine eng begründete
+  Klassen-Ausnahme**: die `.alert`-Familie in der Optik des
+  Meldungs-Bausteins (ohne Symbol — das kommt mit `ui_meldung()` im
+  jeweiligen Paket), `.muted` und der Farbchip `.swatch`, ohne den die
+  Zuordnung Einsatz → Spurfarbe verloren war. Jede dieser Klassen stirbt in
+  ihrem Paket.
+- **„‹ Einstellungen" über den Unterseiten fehlte** (E-P3-11, Mockup 07). Es
+  steht jetzt dort, sichtbar nur unter 1024 px — am Desktop steht das Menü
+  daneben.
+- **Das X der Schublade trug beim Öffnen einen Fokusring**, den niemand
+  bestellt hat. Der Fokus liegt jetzt auf der Leiste selbst
+  (`tabindex="-1"`); wer per Tab weitergeht, landet trotzdem als Erstes auf
+  dem X.
+- **„Administration" stand als Kartentitel statt als Blocküberschrift** über
+  der zweiten Karte (Mockup 07).
+- **Der Rückweg der öffentlichen Hülle war unter 1024 px unsichtbar** —
+  `.kopf-punkt` ist mobil ausgeblendet, und der Rückweg der Abbruchseite
+  hing daran.
+- **Leaflet zeichnete über die Schublade.** Die Karte vergibt intern
+  z-Indizes bis 1000; Zoomknöpfe und Kartenpin standen mitten im offenen
+  Menü. Die Karte hat jetzt ihren eigenen Stapelkontext
+  (`position:relative; z-index:0`) — kein Wettrüsten der z-Indizes.
+
+Dazu Feinschliff: Der Hover der Kopfleisten-Knöpfe benutzt die gedämpfte
+Weißfläche statt eines hellen Blocks auf Dunkelblau.
+
+### Prüfstand
+
+232 Bilder über 29 Seiten und acht Breiten: **0 Überlauf, 0 Konsolenfehler,
+0 Knöpfe außerhalb der 44 px**. Kontraste 21 Paare, 0 verfehlt. Wortliste
+0 / 0 / 0. `php -l` über alle 57 PHP-Dateien und `node --check` fehlerfrei.
+Beide Dialoge im Browser bei 390 px fotografiert und gegen Mockup 11
+gehalten. Die Streichliste wächst um elf Einträge (Dialog- und
+Entsperrklassen samt Begründung).
+
+## [Web 9.1.0] — 2026-08-26
+
+**Die Oberfläche hat wieder eine Gestalt.** Zweites Arbeitspaket der Phase P3
+(O2): Seitenhülle und Bausteine. Ab hier sieht die Anwendung aus wie das, was
+sie werden soll; die Seiteninhalte folgen Paket für Paket (O3 bis O11).
+**Keine Migration.** Verhalten, Endpunkte, Datenmodell und Feldkatalog sind
+unverändert.
+
+### Web — Ein Menü statt einer Leiste, die den Bildschirm frisst
+
+Der Befund zu P3 hat es bei 360 × 780 gemessen: Die Seitenleiste trug
+`position:sticky; height:calc(100vh − 50px); overflow:hidden`. Der erste
+Bildschirm war vollständig Leiste — mit rund 60 % Leerfläche —, Titel, Karte
+und Tabelle folgten erst nach etwa anderthalb Bildschirmen Scrollen, und die
+Tagesliste lief rechts aus dem Bild: Der dritte Tag eines Monats war nicht
+erreichbar.
+
+Das galt für **alle zwanzig Inhaltsseiten**, denn das Einstellungsmenü trug
+buchstäblich dieselbe Klasse und erbte jede ihrer Regeln.
+
+Jetzt gibt es **eine** Leiste im Markup und zwei Formen im Stylesheet: Unter
+1024 px liegt sie als Schublade von links über dem Inhalt, darüber steht sie
+fest daneben. Geöffnet wird sie über den Menüknopf in der Kopfleiste,
+geschlossen über das ×, die abgedunkelte Fläche oder die Esc-Taste; solange sie
+offen ist, bleibt der Tastaturfokus darin.
+
+Dass der Mechanismus an der **Klasse** hängt und nicht an der Funktion, die die
+Diensttage ausgibt, ist kein Zufall: Genau davor warnt die Vormerkliste aus
+Konzept P0 — sonst bliebe die Suchseite als einzige ohne mobiles Menü, weil sie
+ihre Filterleiste selbst hält. Sie benutzt jetzt dieselbe Leiste wie alle
+anderen Seiten.
+
+### Web — Was sich sonst noch ändert
+
+- **Die ganze Zeile klappt** das Akkordeon der Diensttage. Bis Web 8.0.1 war
+  der Text der Link in die Zeitraumübersicht und nur das Dreieck davor der
+  Schalter — mit dem Finger war beides nicht auseinanderzuhalten. Der Weg in
+  die Übersicht ist jetzt ein eigenes Balkensymbol am rechten Rand derselben
+  Zeile, mit eigener Trefferfläche von 44 px.
+- **Das Zahnrad führt auf eine Übersicht** statt ungefragt auf „Profil". Auf
+  dem Handy war der Menüpunkt sonst eine Sackgasse: Er landete auf einem
+  beliebigen Unterpunkt und verschwieg die übrigen elf.
+- **Eine Fußzeile auf jeder Seite**, auch vor der Anmeldung, und außerhalb von
+  `<main>`. Sie stand bisher mitten im Inhalt und fehlte deshalb auf jeder
+  Seite ohne Inhalt. Verweise auf Impressum und Datenschutz erscheinen, sobald
+  es die Seiten gibt (O10) — ein Verweis ins Leere ist schlimmer als keiner.
+- **Der Demo-Hinweis steht im Inhalt**, nicht mehr zwischen Kopfleiste und
+  Gerüst. Vorher verschob er die klebende Leiste um seine eigene Höhe, und im
+  Demo-Konto rutschte sie unter der Kopfleiste hervor (F-P3-G).
+- **Die Artzeichen sind keine Emoji mehr.** 🚁 und 🚑 wurden je Betriebssystem
+  in anderer Zeichnung, Farbe und Größe gerendert und ließen sich weder färben
+  noch auf Kontrast prüfen — und in Tagesleiste, Tabellen und
+  Rettungsmittel-Auswahl waren sie die einzige Artauskunft neben dem Tooltip.
+  Jetzt kommen sie aus dem Symbolvorrat. Wo kein Bild hineinpasst — in einer
+  Auswahlliste —, steht das **Wort**. Von 80 Emoji-Vorkommen sind 9 übrig, alle
+  in der Einsatzansicht (O4).
+- **Der Einrichter benutzt das gemeinsame Stylesheet** (Backlog Nr. 18). Er war
+  die einzige Seite mit eigener Gestaltung im Kopf, eigenen Knopf- und
+  Meldungsklassen und ohne Fußzeile — und die einzige, die bei einer
+  Farbänderung nicht mitzog.
+- **Meldungen tragen ein Symbol** und kommen in vier Tönen: Fehler (rosa,
+  Dreieck), Hinweis (blau, Kreis-i), Vollzug (blau, **Haken**), Warnung
+  (hellorange, Dreieck). Grün ist fort; Vollzug und Hinweis unterscheiden sich
+  jetzt durch das Symbol statt durch eine markenfremde Farbe. Damit ist der
+  Vorbehalt E-A6-02 aus Konzept P0 eingelöst, der die Tonart ausdrücklich P3
+  überlassen hatte.
+
+### Web — Die Bausteine
+
+`ui.php` führt sie als Funktionen: Kopfleiste, Gerüst, Leiste (drei Inhalte),
+Fußzeile, Demo-Hinweis, Meldung, Knopf, Plakette, Karte, Zeile, Titelzeile,
+Aktionsmenü, Feld, Schalter, Segmentwahl, Speichern-Leiste, Kennzahl,
+Abbruchseite, Einstellungs-Übersicht. Das Stylesheet beschreibt sie in den
+Abschnitten 4 bis 16, die vier Schwellen stehen gesammelt in Abschnitt 18.
+
+**Eine Knopfhöhe: 44 px**, mobil wie Desktop, auch für Zeilenaktionen. Der
+Bestand hatte sechs Varianten und sechs ortsgebundene Größen; `.btn-primary`
+trug global `width:100%` und wurde an zehn Stellen zurückgenommen. Gemessen
+über alle 232 Bilder: **0 Knöpfe außerhalb der 44 px**.
+
+**Eine Übergangsschicht** (Stylesheet, Abschnitt 17) gibt Elementen ohne
+Baustein — `table`, `input`, `label`, `fieldset` — eine Grundform, damit die
+noch nicht umgebauten Seiten lesbar und prüfbar bleiben. Sie greift nur an
+Elementnamen, nie an Bestandsklassen; eine Klasse dort einzutragen hieße, das
+Redesign zurückzunehmen.
+
+### Web — Kein waagerechter Überlauf mehr, auf keiner Seite
+
+Der Erstlauf gegen den Rohstand hatte **26 Fälle** gemeldet, alle zwischen 360
+und 420 px. Nach O2 sind es **0** — bei 232 Bildern über 29 Seiten und acht
+Breiten.
+
+Die Messung nennt seit diesem Paket auch den **Verursacher**, und das war die
+eigentliche Auskunft: In jedem einzelnen Fall war es eine `<table>` im
+Seiteninhalt, keine Stelle des Gerüsts. Der Befund hatte 32 Tabellen gezählt
+und genau eine mit Überlaufbehälter. Bis die Einsatztabellen unter 720 px zur
+Kachel werden (O3) und die Verwaltungstabellen zu Zeilen stapeln (O8/O9),
+tragen sie ihren Überlauf selbst, statt die Seite zu sprengen — mitsamt der
+Kopfleiste.
+
+### Repositorium
+
+`tools/screenshots/` misst jetzt zusätzlich, **welches Element** überläuft, und
+misst Knopfhöhen nur noch an sichtbaren Knöpfen. Beides sind Funde aus dem
+eigenen Lauf: Der erste Bericht meldete Dutzende Knöpfe mit „Höhe 0" — den
+X-Knopf der Schublade, der ab 1024 px ausgeblendet ist, und die Einträge in
+einem geschlossenen Aktionsblatt.
+
+`tools/vollstaendigkeit/` trennt Emoji und Unicode-Symbole sauber; vorher
+zählte ⚠ in beiden Listen. Die Streichliste führt die **25 Klassen**, die mit
+der Hülle entfallen sind, je mit Grund.
+
+Handbuch 3 (Web-Überblick) und 4.4 (Diensttage-Leiste) sind nachgezogen,
+`docs/Technik.md` ebenso.
+
+## [Web 9.0.0] — 2026-08-26
+
+**Die Weboberfläche wird neu gebaut, mobil zuerst — das hier ist das
+Fundament, noch nicht das Haus.** Erstes Arbeitspaket der Phase P3
+(Arbeitspaket O1): Token, Stylesheet-Gerüst, Symbolvorrat, Logos und zwei
+neue Prüfmittel. **Keine Migration** — `update.php` muss nach diesem Deploy
+nicht aufgerufen werden. Die Uhr-App bleibt unverändert.
+
+**Wichtig für den Betrieb:** Dieser Stand allein sieht roh aus. Das
+Stylesheet enthält bisher nur Token und Grundlagen; die Bausteine — Karte,
+Zeile, Knopf, Meldung, Kopfleiste, Schublade — folgen in 9.1.0. Der
+Zwischenstand ist eingeplant (Konzept P3, O2 Punkt 6) und deshalb **nicht
+für den Produktivserver bestimmt**; er liegt auf dem Phasenzweig.
+
+### Web — Warum das Stylesheet nicht repariert, sondern ersetzt wurde
+
+Die alte Datei war über zwanzig Fassungen gewachsen und in P0 bereits
+gegliedert und entdoppelt worden — sie war nicht schlecht gepflegt. Sie hatte
+nur nie eine Stelle, an der ein Wert **einmal** steht. Nachgezählt zum Stand
+Web 8.0.1:
+
+| | |
+|---|---|
+| Hexfarben außerhalb von `:root` | **78** |
+| verschiedene Schriftgrößen | 21, in 71 Regeln |
+| Pixelmaße außerhalb der Token | 154 |
+| die Kopfhöhe `50px`, fest verdrahtet | **5-mal** |
+| Graufamilien nebeneinander | 2 — eine warme (`--muted`) und eine kühle |
+| `style="…"`-Attribute in PHP und JS | 14 |
+
+Die fünf verdrahteten `50px` sind das Beispiel, an dem sich zeigt, warum
+Reparieren nicht gereicht hätte: Die tatsächliche Höhe der Kopfleiste hing
+vom Umbruch des Markentexts ab, und das Demo-Banner verschob sie zusätzlich —
+im Demo-Konto rutschte die Seitenleiste unter der Kopfleiste hervor. Man
+kann das an fünf Stellen nachbessern; man kann auch **ein** Token setzen.
+
+Jetzt: ein Token-Block mit allen Werten, eine Schriftskala (Major Third um
+15/16 px, sieben Stufen statt 21 Größen), **eine** Graustufe, eine Kopfhöhe.
+Grün und Gelb entfallen ersatzlos — beide waren markenfremd, und beide
+trugen Bedeutung doppelt: Gelb hieß „Bearbeiten" in den Stammdaten, wo es
+anderswo orange hieß.
+
+### Web — Kontraste: drei Widersprüche im Konzept, aufgelöst
+
+Die Kontrastwerte sind nicht übernommen, sondern nachgerechnet
+(`tools/screenshots/kontrast.py`, 21 Paare, 0 verfehlt). Dabei sind drei
+Stellen aufgefallen, an denen das Konzept sich selbst widerspricht:
+
+1. **Ränder von Bedienelementen.** Prüfpunkt P-P3-05 verlangt 3:1 für Flächen
+   und Ränder; die einzigen Linienfarben im Tokenvorrat erreichen 1,36:1
+   (`--linie`) und 1,64:1 (`--sand`). Ein Eingabefeld hätte damit einen Rand
+   gehabt, den gute Augen sehen und andere nicht. Aufgelöst mit **zwei**
+   Linien: `--linie` bleibt für Trenner und Kartenränder — Zierrat, den
+   WCAG 1.4.11 ausdrücklich ausnimmt —, `--linie-stark` begrenzt
+   Bedienelemente und ist `--gedaempft` (5,66:1). Ein neuer Farbwert war
+   dafür nicht nötig.
+2. **Orange als Fläche** führt Anlage G mit 2,2:1, P-P3-05 verlangt 3:1.
+   Beides stimmt und meint Verschiedenes: Anlage G misst die Farbe,
+   P-P3-05 die Rolle. Orange trägt nirgends allein — der Primärknopf hat
+   dunkelblaue Schrift darauf (5,97:1), der aktive Menüpunkt zusätzlich
+   Fläche und Fettung. Wo ein oranger Strich doch allein stünde, tritt
+   `--orange-tief` (4,32:1) an seine Stelle.
+3. **Der Primärknopf** trägt dunkelblaue Schrift auf Orange, wie E-P3-15 es
+   festlegt. Die Mockups zeigen an dieser Stelle Weiß (2,3:1) — der
+   Entscheidungstext gilt, nicht die Skizze.
+
+Vier weitere Werte in Anlage G lagen zu niedrig, alle zugunsten der
+Sicherheit (Asphalt 19,3 statt 17,5; Blau tief 7,8 statt 7,2; Rot tief 7,6
+statt 7,1; Primärknopf 6,0 statt 5,4). Die Tabelle in `docs/Design.md` wird
+in O12 aus dem Stylesheet **erzeugt**, nicht abgeschrieben.
+
+### Web — Symbole: eine Datei je Zeichen
+
+Der Bestand trug seine Zeichen an vier Orten: fünf Inline-SVG mit Pfaddaten
+mitten im PHP und JS (das Zahnrad zweimal, der Karten-Pin wortgleich in zwei
+Dateien), 147 Unicode-Zeichen als Symbol (`▸ ▾ ✓ ⚠ ★ ◌ ← →`) und die Emoji
+🚁 und 🚑 als Artkennzeichen.
+
+Die Emoji waren dabei das eigentliche Problem: Sie werden je Betriebssystem
+in anderer Zeichnung, Farbe und Größe gerendert, lassen sich weder färben
+noch auf Kontrast prüfen — und in der Tagesleiste, den Tabellen und der
+Rettungsmittel-Auswahl waren sie die einzige Artauskunft neben dem Tooltip.
+
+Jetzt liegen **44 Zeichen als einzelne Dateien** unter
+`assets/images/symbole/` (Tabler Icons, MIT-Lizenz, Lizenztext daneben; ein
+Zeichen — die Luftlinie — ist ein eigener Entwurf im selben Stil). Eingebunden
+werden sie per Verweis: `ui_symbol('haus')` in PHP, `edSymbol('haus')` in
+`assets/symbol.js`, beide erzeugen dieselbe Zeichenkette. Farbe über
+`currentColor`; ein Symbol in einem roten Knopf ist rot, ohne dass irgendwo
+eine zweite Regel stünde.
+
+**Eine Falle, die dabei zugeschnappt ist:** Der Verweis holt das `<g id="i">`
+aus der Datei — nicht das `<svg>` darum. Die Attribute `fill="none"` und
+`stroke="currentColor"` stehen aber am `<svg>`, damit die Datei sich einzeln
+öffnen und ansehen lässt. Ohne Ersatz malte der Browser schwarze Klumpen
+statt Strichzeichnungen. Sie stehen jetzt in der Regel `.symbol`, von wo aus
+sie in den geklonten Baum vererben.
+
+### Web — Logos in den Markenfarben, und ein Platzhalter fürs NEF
+
+Die drei Logodateien trugen Näherungen statt der Markenwerte (Rot `#E3322B`
+statt `#D63338`, Blau `#587ABC` statt `#4280E5`, Orange `#F7941D` statt
+`#FF8F1F` — `docs/Branding.md` B1). Sieben Farbwerte sind berichtigt; das
+Favicon entsteht seither aus der Logodatei statt daneben
+(`tools/logos/erzeugen.mjs`), damit beide nicht wieder auseinanderlaufen.
+
+Dazu ein **NEF-Platzhalter** in denselben Maßen und Fassungen (farbig, weiß,
+Favicon). Er steht dort, damit die Logo-Wahl aus E-P3-20 vollständig gebaut
+und geprüft werden kann, bevor die echte Datei vorliegt; erkennbar ist er am
+gestrichelten Rahmen in Sand. Die echte Datei ersetzt ihn 1:1 — gleicher
+Name, gleicher viewBox, kein Eingriff im Code.
+
+### Repositorium — zwei neue Prüfmittel, und warum der Stilvergleich ruht
+
+`tools/stilvergleich/` beantwortet die Frage „hat sich etwas geändert?". Das
+ist die richtige Frage nach einer Aufräumrunde und die falsche in einem
+Redesign: Dort ändert sich alles, und das Werkzeug liefert Tausende
+Abweichungen, die niemand gegen einen Plan hält. Es **ruht während P3** (mit
+Vermerk in seiner Anleitung) und wird in O12 neu geeicht, mit Messbreiten bis
+hinunter zu 360 px. Ab P4 wacht es wieder.
+
+An seine Stelle treten zwei Werkzeuge mit anderen Fragen:
+
+- **`tools/vollstaendigkeit/`** — Ist etwas verlorengegangen, und steht jeder
+  Wert an der einen Stelle? Sollmenge sind die **220 Klassen** aus den
+  Selektoren des alten Stylesheets; jede braucht am Ende eine Regel im neuen
+  oder einen Eintrag mit Begründung auf der Streichliste. Dazu Hexwerte,
+  Schriftgrößen, Pixelmaße, `50px`-Reste, `style="…"`-Attribute, Inline-SVG,
+  Unicode-Symbole, Emoji und die Knopfregel.
+- **`tools/screenshots/`** — 29 Seiten in acht Breiten von 360 bis 1920 px,
+  je Seite ein Kontaktbogen, dazu gemessener waagerechter Überlauf,
+  Konsolenfehler und Knopfhöhen. 232 Bilder je Lauf.
+
+Beide melden Zahlen, keine Urteile. Der erste Lauf gegen den Rohstand:
+**26 Fälle waagerechten Überlaufs**, alle bei 360–420 px, alle in Paketen
+O2 bis O11 zu beheben; **0 Konsolenfehler**.
+
+Nebenbei hat die Vollständigkeitsprüfung einen Bestandsfund geliefert:
+**22 Klassen stehen im Markup, für die es im alten Stylesheet keine Regel
+gibt** (`card`, `crewrole`, `dreiwert`, `fld`, `focus-target`, `mainnav`,
+`nb-veh`, `parentcheck`, `rollehaken`, `rollen-zeile`, `setup-card`, `small`,
+`vehcaps`, `vehcaps-zeile` und die `imp-*`-Familie). Sie tun nichts — aber
+sie sehen aus, als täten sie etwas, und beim nächsten Umbau richtet sich
+jemand danach.
+
+### Repositorium — Konzept, Mockups und die Pflegepflichten
+
+Die Übergabeeinheit der Konzeptphase liegt jetzt im Repositorium:
+`docs/Konzept-P3-Oberflaeche.md` und 39 Mockups unter `docs/konzept-p3/`.
+
+Zwei P0-Dokumente sind zu Beginn der Umsetzung nachgereicht worden und haben
+den Vorbehalt aus E-P3-03 eingelöst: Die Vormerkliste aus Konzept P0 (10.5)
+bestätigt vier von fünf Punkten des eigenen Befunds, liefert zwei Zusätze
+(„32 Tabellen, genau eine mit Überlaufbehälter"; `nurWenn` in
+`missiontable.js` als vorhandene Vorlage für weglassbare Spalten) und ist in
+einem Punkt überholt — die Kopfhöhe steht fünfmal verdrahtet, nicht dreimal.
+Der E-A6-02-Vorbehalt zur Tonart der Vollzugsmeldung ist damit wörtlich
+verfügbar und lautet genau so, wie E-P3-16 ihn einlöst.
+
+`CLAUDE.md` bekommt Abschnitt 9 **Pflegepflichten**: welches Dokument zu
+welcher Änderung gehört, und die Regel, dass ein neuer Baustein vorher
+freigegeben wird.
+
 ## [Web 8.0.1] — 2026-08-24
 
 **Die Anwendung spricht neutral von Land und Luft — vor dem Redesign, damit

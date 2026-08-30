@@ -17,6 +17,15 @@ Ende-zu-Ende-Verschlüsselung bewusst ausgesetzt ist — sein Schlüsselmaterial
 liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 (Abschnitt 3.2) und in `docs/Technik.md` 4.99a.
 
+## So sieht es aus
+
+| | |
+|---|---|
+| ![Tagesübersicht am Schreibtisch](docs/bilder/tagesuebersicht-desktop.png) | **Tagesübersicht**, 1440 px: links die Diensttage nach Jahr und Monat, oben die Angaben des Tages, darunter Karte und Einsatztabelle. |
+| ![Tagesübersicht auf dem Handy](docs/bilder/tagesuebersicht-mobil.png) ![Die Schublade](docs/bilder/schublade-mobil.png) | **Dasselbe bei 390 px.** Aus der Tabelle wird eine Kachelliste, aus der Leiste eine Schublade hinter dem Menüknopf. Keine Seite läuft waagerecht aus dem Bild — in keiner der acht geprüften Breiten. |
+| ![Einsatzansicht](docs/bilder/einsatzansicht-desktop.png) | **Einsatzansicht:** Phasen, Karte, geschützte Angaben. Diagnose, Alter und Einsatzort werden erst im Browser entschlüsselt. |
+| ![Zeitraumübersicht](docs/bilder/zeitraum-desktop.png) | **Zeitraum:** Kennzahlen je Jahr oder Monat, darunter dieselbe Einsatztabelle wie in der Suche. |
+
 ## Dokumentation
 
 | Dokument | Inhalt |
@@ -28,7 +37,8 @@ liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 | [`docs/Backup-Format.md`](docs/Backup-Format.md) | Aufbau der `.edbak` und was **nicht** darin steht |
 | [`docs/Export-Format.md`](docs/Export-Format.md) | CSV- und Excel-Export, Rückimport |
 | [`docs/Backlog.md`](docs/Backlog.md) | bewusst offene Punkte, Nummern sind dauerhaft |
-| [`docs/Branding.md`](docs/Branding.md) | Farben, Schriften, Logo-Einsatz — verbindlich für jede Oberflächenänderung |
+| [`docs/Design.md`](docs/Design.md) | Gestaltungsrichtlinie: Farben, Token, Schwellen, Symbole, Bausteine, Seitentypen — verbindlich für jede Oberflächenänderung |
+| [`docs/Lizenzen.md`](docs/Lizenzen.md) | Bibliotheken, Schriften, Symbole und Dienste — Herkunft, Version, Lizenz |
 | [`docs/Geraete-Eingabe.md`](docs/Geraete-Eingabe.md) | gemessenes Eingabeverhalten je Uhrmodell |
 | [`docs/Uhr-Layout_Regeln.md`](docs/Uhr-Layout_Regeln.md) | Layoutregeln der Uhr-Oberflächen |
 | [`docs/Konzept-S1-Sicherung-Import.md`](docs/Konzept-S1-Sicherung-Import.md) | Konzept der Phase S1 (Sicherung und Rückspielweg) |

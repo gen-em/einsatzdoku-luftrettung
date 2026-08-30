@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+/* Seit Web 9.7.0 fest statt nur im Abbruchzweig: logo_stamm() entscheidet
+ * ueber Kopfleiste UND Favicon (E-P3-20), und beide werden auf JEDER
+ * angemeldeten Seite gebraucht — nicht nur, wenn eine Sitzung endet. */
+require_once __DIR__ . '/session_lib.php';
 
 session_set_cookie_params([
     'httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/',
@@ -38,7 +42,7 @@ function ist_api_aufruf(): bool {
 
 /** Sitzung beenden — als JSON, wenn das Gegenueber JSON erwartet. */
 function sitzung_beenden_passend(string $grund): never {
-    require_once __DIR__ . '/session_lib.php';
+    require_once __DIR__ . '/session_lib.php';   // oben bereits geladen; idempotent
     if (ist_api_aufruf()) {
         session_verwerfen();
         json_out(['error'   => 'session_ende',

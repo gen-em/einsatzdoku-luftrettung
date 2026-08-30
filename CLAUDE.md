@@ -49,6 +49,9 @@ Diese vier Punkte sind kein Nachklapp, sondern Teil der Änderung:
    ihre Nummer. Neue Punkte hängen hinten an. Die Nummern 4, 6 und 7 bleiben
    dauerhaft frei.
 
+Welches Dokument zu welcher Änderung gehört, steht in Abschnitt 9
+(Pflegepflichten).
+
 ## 3. Deployment — Vorsicht
 
 **Ein Push auf `main` mit Änderungen unter `server/` lädt sofort auf den
@@ -87,16 +90,26 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
 
 ## 5. Oberfläche
 
-Farben, Schriften und Logo-Einsatz stehen in **`docs/Branding.md`**. Kurz:
+Die Gestaltungsrichtlinie ist **`docs/Design.md`** — Farben, Token, Schriften,
+Schwellen, Symbole, Bausteine, Seitentypen. Sie ist verbindlich; wer eine
+Oberflächenänderung anfängt, liest zuerst dort. Kurz:
 
-- Farben ausschließlich über die CSS-Variablen aus `:root` in
+- **Ein neuer Baustein oder eine neue Darstellung entsteht nur nach
+  ausdrücklicher Freigabe mit Mockup.** Bis dahin werden vorhandene Bausteine
+  verwendet — der Vorrat steht in `Design.md`, Kapitel 9.
+- Farben ausschließlich über die Token aus `:root` in
   `server/assets/style.css`. Kein Hexwert direkt in einer Regel.
-- Ein neuer Farbwert braucht eine Herkunft (Markenwert oder begründete
-  Ableitung) und wird in `docs/Branding.md` nachgetragen.
+- Ein neuer Farbwert oder eine neue Schriftgröße braucht eine Herkunft
+  (Markenwert oder begründete Ableitung) und wird in `docs/Design.md`
+  nachgetragen. Die Skala ist geschlossen.
 - Kontrast gegen die tatsächliche Fläche prüfen (Schnee/Rauch, nicht Weiß),
-  Zielwert AA.
+  Zielwert AA. `python3 tools/screenshots/kontrast.py` rechnet ihn nach.
+- Eine Höhe für Bedienelemente: **44 px**, mobil wie am Schreibtisch.
 - Spaltenbreiten in Tabellen nie über `:nth-child` — sie zählen Spalten ab und
   rutschen beim Streichen einer Spalte still auf die falsche. Klassen benutzen.
+- Die Tabellen in `Design.md` (Token, Schwellen, Symbole, Bausteine) sind
+  **erzeugt**: `python3 tools/design/tabellen.py alle`. Wer eine davon von Hand
+  ändert, ändert sie an der falschen Stelle.
 
 ## 6. Prüfen
 
@@ -108,6 +121,20 @@ Bausteine; eine Änderung an `.btn-plain` trifft ein Dutzend Stellen).
 
 Wenn eine Änderung nicht im Browser überprüft werden konnte, das **sagen**,
 statt sie als erledigt zu melden.
+
+**Während P3 (Oberflächen-Redesign) treten zwei Werkzeuge an die Stelle des
+Stilvergleichs**, weil er dort die falsche Frage stellt (Begründung in
+`tools/stilvergleich/LIESMICH.md`):
+
+- `tools/vollstaendigkeit/` — Ist etwas verlorengegangen (jede Klasse des
+  alten Stylesheets hat eine Regel oder steht mit Begründung auf der
+  Streichliste), und steht jeder Wert an der einen Stelle (`:root`)?
+- `tools/screenshots/` — 30 Seiten in acht Breiten von 360 bis 1920 px, mit
+  gemessenem waagerechtem Überlauf, Konsolenfehlern und Knopfhöhen; dazu
+  `kontrast.py` für die Kontraste der Token.
+
+Beide nach **jedem** Arbeitspaket, nicht erst am Ende. Ab P4 wacht der
+Stilvergleich wieder.
 
 **Stilvergleich bei CSS-Umbauten.** Für jede Änderung an
 `server/assets/style.css`, die Regeln verschiebt, zusammenführt, entfernt
@@ -128,6 +155,18 @@ zählt nach, ob Land und Luft neutral benannt sind. Erwartet werden null
 Treffer außerhalb der Ausnahmeliste und null ungenutzte Ausnahmen; ein
 Luftbegriff, der bleiben soll, braucht einen Eintrag mit Begründung — kein
 Ausblenden.
+
+**Die Prüfmittel laufen zuletzt, nicht zwischendurch.** Erst der Code, dann
+die Dokumentation, **dann** Wortliste, Vollständigkeit, Kontraste und
+Bilderlauf. Ein Werkzeug, das vor der letzten Änderung lief, misst einen Stand,
+den es nicht mehr gibt — in O9c stand die Wortliste dadurch auf fünf Treffern,
+gemeldet worden waren null (Web 9.10.1).
+
+**Eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt.**
+Der Bilderlauf meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten
+die Anmeldeseite (F-P3-AQ). Bei jedem Prüfmittel dazusagen, **was** es
+gemessen hat, und im Zweifel eine unabhängige Gegenprobe fahren; für den
+Bilderlauf steht sie in seiner `LIESMICH.md`.
 
 ## 7. Konzept und Umsetzung
 
@@ -166,3 +205,32 @@ Satz zur Sache. **Gepusht wird einmal, am Ende der Phase** — und weil ein
 Push auf `main` sofort deployt (Abschnitt 3), erst nach ausdrücklicher
 Bestätigung. Nicht committen: `config.php`, Build-Ausgaben der Uhr
 (`watch/bin/`, `*.prg`), Sicherungen.
+
+## 9. Pflegepflichten
+
+Beschlossen in P3 (E-P3-06). Abschnitt 2 sagt, **was** bei jeder Änderung
+mitläuft; dieser Abschnitt sagt, **wohin** es gehört.
+
+Wer etwas ändert, pflegt das zugehörige Dokument im selben Paket nach —
+nicht später, nicht „in P6":
+
+- **Gestaltung** (Stylesheet, Bausteine in `ui.php`, Symbole, Token,
+  Schwellen): `docs/Design.md`. Ein neuer Baustein oder eine neue
+  Darstellung entsteht nur nach ausdrücklicher Freigabe mit Mockup; bis
+  dahin werden vorhandene Bausteine verwendet.
+- **Sicherung und Import** (`backup_*`, `adminbackup_*`, `import*`,
+  Formate): `docs/Konzept-S1-Sicherung-Import.md` (Fortschreibung),
+  `docs/Backup-Format.md`, `docs/Technik.md`.
+- **Begriffe und Texte:** `tools/wortliste/` laufen lassen; Handbuch an
+  der betroffenen Stelle nachziehen.
+- **Fremdbestandteile** (Bibliotheken, Schriften, Symbole, Dienste):
+  `docs/Lizenzen.md`.
+- **Prüfmittel:** nach jedem Paket `tools/vollstaendigkeit/`,
+  `tools/screenshots/` (berührte Seiten) und `tools/wortliste/`; der
+  Stilvergleich wacht ab P4 wieder.
+
+**Stand der Umsetzung:** erledigt mit O12. `docs/Design.md` und
+`docs/Lizenzen.md` stehen; `docs/Branding.md` ist damit abgelöst und aus dem
+Repositorium entfernt. Was daraus noch galt, ist übernommen — die drei offenen
+Punkte B1 bis B3 sind in P3 erledigt worden und in `Design.md` als solche
+vermerkt.

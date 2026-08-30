@@ -133,6 +133,42 @@ try {
        Mit der Umstellung entfaellt JSON_UNESCAPED_UNICODE — Umlaute stehen
        jetzt als \uXXXX in der Antwort. Fuer den Abnehmer ist das dasselbe:
        zeitraum.php liest mit res.json(). */
+    /* ---- Standorte des Zeitraums (E-P3-40, ab Web 9.6.0) -----------------
+     *
+     * Das Standort-Haus gehoert seit P3 auf JEDE Karte, sobald Koordinaten
+     * vorliegen — Tages-, Einsatz- und Zeitraumkarte. Die Zeitraumkarte
+     * bekommt dafuer die eingefrorenen Standorte der DIENSTTAGE des
+     * Zeitraums, entdupliziert nach Koordinate: Ein Monat mit fuenf Diensten
+     * derselben Wache hat einen Standort, nicht fuenf uebereinander liegende
+     * Haeuser.
+     *
+     * KLARTEXT, und das ist richtig so: `base_name`/`base_lat`/`base_lon`
+     * sind der eingefrorene Standort des Dienstes (E8), kein Patientendatum.
+     * Sie stehen unverschluesselt in `days` und reisen wie `kind` und
+     * `vehicle_name` mit. Die verschluesselten Angaben bleiben davon
+     * unberuehrt im `pat_blob`. */
+    $orte = db()->prepare('SELECT DISTINCT d.base_name, d.base_lat, d.base_lon, d.kind
+                             FROM days d
+                            WHERE d.user_id = ? AND d.day BETWEEN ? AND ?
+                              AND d.deleted_at IS NULL
+                              AND d.base_lat IS NOT NULL AND d.base_lon IS NOT NULL');
+    $orte->execute([$userId, $von, $bis]);
+    $bases = [];
+    $gesehen = [];
+    foreach ($orte->fetchAll() as $b) {
+        /* Auf sechs Nachkommastellen entduplizieren — dieselbe Genauigkeit,
+           mit der die Ortswahl Koordinaten schreibt (assets/ortswahl.js). */
+        $schluessel = round((float)$b['base_lat'], 6) . ',' . round((float)$b['base_lon'], 6);
+        if (isset($gesehen[$schluessel])) { continue; }
+        $gesehen[$schluessel] = true;
+        $bases[] = [
+            'name' => (string)($b['base_name'] ?? ''),
+            'lat'  => (float)$b['base_lat'],
+            'lon'  => (float)$b['base_lon'],
+            'kind' => $b['kind'] === null ? null : (string)$b['kind'],
+        ];
+    }
+
     json_out([
         'jahr'     => $jahr,
         'monat'    => $monat !== '' ? $monat : null,
@@ -140,6 +176,7 @@ try {
         'bis'      => $bis,
         'tage'     => $gesamt,
         'tage_art' => $jeArt,
+        'bases'    => $bases,
         'missions' => $missions,
     ]);
 } catch (Throwable $ex) {

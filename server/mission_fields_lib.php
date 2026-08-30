@@ -39,8 +39,10 @@ declare(strict_types=1);
  *   'label'  Spaltentitel: 'day_label', ersatzweise 'label'. Darf Auszeichnung
  *            enthalten (z. B. `<br>`) und wird deshalb UNMASKIERT ausgegeben.
  *            Der Wert stammt aus dem Katalog, nie aus einer Eingabe.
- *   'klasse' CSS-Klasse der Spalte, `c-dc-<spalte>`. Die Breite steht in
- *            style.css; ohne eigenen Eintrag greift die Vorgabe von `.c-dc`.
+ *   'klasse' CSS-Klasse der Spalte, `c-dc-<spalte>` — der Anker fuer eine
+ *            Breiten- oder Sonderregel in style.css, wenn eine Spalte eine
+ *            braucht. Die Ausrichtung kommt nicht von hier: Hakenspalten
+ *            (`art` = 'check') erhalten im Markup zusaetzlich `haken-spalte`.
  *
  * @return list<array{col:string,art:string,label:string,klasse:string}>
  */

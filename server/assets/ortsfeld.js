@@ -23,12 +23,16 @@
  *                           Adresse die Bezeichnung. Unveraendertes Verhalten
  *                           seit Web 3.x.
  *
- *   getrennteSuche: true    Textfeld = NAME, daneben ein eigenes Suchfeld
- *                           (Zielklinik, Standort). „Standort Kempten" ist
- *                           keine Adresse; wuerde die Suche das Textfeld
- *                           ueberschreiben, waere der Name weg. Der Treffer
- *                           setzt deshalb nur die Koordinaten — und faellt nur
- *                           dann in das Namensfeld, wenn es leer ist.
+ *   getrennteSuche: true    Textfeld = NAME (Zielklinik, Standort). „Standort
+ *                           Kempten" ist keine Adresse; wuerde die Suche das
+ *                           Textfeld ueberschreiben, waere der Name weg. Ein
+ *                           Treffer setzt deshalb nur die Koordinaten — und
+ *                           faellt nur dann in das Namensfeld, wenn es leer
+ *                           ist. SEIT O5 (E-P3-34) sucht hier kein zweites
+ *                           Feld mehr, sondern der Lupen-Knopf mit dem, was
+ *                           im Namensfeld steht — die Suche laeuft also nur
+ *                           auf ausdruecklichen Anstoss, nie beim Tippen des
+ *                           Namens.
  *
  * WAS IN BEIDEN FORMEN GLEICH BLEIBT und der eigentliche Grund fuer die
  * Zusammenfassung ist:
@@ -112,7 +116,12 @@
         var liste = el(p + 'suggest');
         var zeile = el(p + 'state');
         var chips = el(p + 'chips');
-        var suchF = opt.getrennteSuche ? el(p + 'such') : feld;
+        var lupe = el(p + 'lupe');
+        /* Das Textfeld ist immer auch die Suchquelle; bei getrennter Suche
+         * unterscheidet sich nur, WANN gesucht wird (Lupe statt Tippen) und
+         * WAS ein Treffer uebernimmt (nur Koordinaten). */
+        var suchF = feld;
+        var nurKoordinaten = !!opt.getrennteSuche;
 
         var adresssuche = opt.adresssuche !== false;
         var formate = opt.formate !== false;
@@ -147,9 +156,16 @@
                 /* Die Koordinaten selbst zeigt der Chip. Der Hinweis erklaert,
                  * warum hier keine Vorschlaege mehr erscheinen — sonst wirkt
                  * das Feld defekt. */
+                /* KURZ GENUG FUER EINE ZEILE (F-N1-I). Der Satz stand in der
+                 * Formularspalte auf zwei Zeilen und schob die Felder
+                 * darunter weg. Die Auskunft bleibt dieselbe; nur der Verweis
+                 * auf das Kreuz ist fort — es steht sichtbar daneben, und
+                 * seine Beschreibung im Text kostete mehr Platz, als sie
+                 * erklaerte (nebenbei ein Unicode-Zeichen weniger, Backlog
+                 * Nr. 42). */
                 melde(adresssuche
                     ? 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung. '
-                      + 'Für eine Suche zuerst die Koordinaten entfernen (✕).'
+                      + 'Zum Suchen erst entfernen.'
                     : 'Koordinaten gesetzt — dieses Feld ist die Bezeichnung.', false);
                 return;
             }
@@ -175,10 +191,6 @@
              * (Einsatzort) aendert sich nichts — dort IST das Bezeichnungsfeld
              * das Suchfeld, und es zu verstecken hiesse, den Ort zu
              * verstecken. */
-            if (opt.getrennteSuche && suchF && suchF !== feld) {
-                var huelle = suchF.closest('label') || suchF;
-                huelle.hidden = hatKoordinaten();
-            }
             if (!chips) { return; }
             chips.innerHTML = '';
             if (!hatKoordinaten()) { return; }
@@ -255,11 +267,12 @@
         /* ---- Eingabe im Bezeichnungsfeld ---------------------------------- */
         feld.addEventListener('input', function () {
             pruefeVorschlag();
-            if (suchF === feld) { sucheTippen(); } else { zustand(); }
+            if (nurKoordinaten) { zustand(); } else { sucheTippen(); }
         });
 
-        /* ---- Eingabe im Such-/Koordinatenfeld ----------------------------- */
-        function sucheTippen() {
+        /* ---- Suche (beim Tippen bzw. per Lupe) ---------------------------- */
+        function sucheJetzt() { sucheTippen(true); }
+        function sucheTippen(sofort) {
             clearTimeout(timer);
 
             /* Stehen bereits Koordinaten, ist hier Schluss. Weder
@@ -280,11 +293,13 @@
                 var erg = erkennung;
                 if (liste) { liste.innerHTML = ''; }
                 zeigeEintrag(UEBERNAHME[erg.typ] + ': ' + erg.anzeige, function () {
-                    /* Das Suchfeld LEEREN statt mit der Zahlendarstellung zu
-                     * ueberschreiben — es gehoert ab hier der Bezeichnung
-                     * (bzw. der naechsten Suche). Die Koordinaten stehen im
-                     * Chip. */
-                    suchF.value = '';
+                    /* Die Zahlendarstellung raeumen — das Feld gehoert ab hier
+                     * der Bezeichnung; die Koordinaten stehen im Chip. Bei
+                     * getrennter Suche steht im Feld womoeglich schon ein NAME
+                     * (und die Koordinate kam per Lupe daneben): Ein Name wird
+                     * nie geleert — geleert wird nur, was die Erkennung selbst
+                     * gerade als Koordinate gelesen hat. */
+                    if (!nurKoordinaten || erg.anzeige === feld.value.trim()) { feld.value = ''; }
                     versteckeListe();
                     erkennung = { typ: null };
                     setzeKoordinaten(erg.lat, erg.lon);
@@ -317,8 +332,7 @@
                             /* Getrennte Suche: NUR die Koordinaten. Das
                              * Namensfeld gehoert der Nutzerin — es wird
                              * hoechstens gefuellt, wenn es leer ist. */
-                            if (suchF !== feld) {
-                                suchF.value = '';
+                            if (nurKoordinaten) {
                                 if (feld.value.trim() === '') { feld.value = text; }
                             } else {
                                 feld.value = text;
@@ -331,12 +345,36 @@
                     });
                     liste.hidden = liste.children.length === 0;
                 }).catch(function () { versteckeListe(); });
-            }, 300);
+            }, sofort ? 0 : 300);   // Lupe: sofort, Tippen: entprellt
         }
 
-        if (suchF !== feld) { suchF.addEventListener('input', sucheTippen); }
-        suchF.addEventListener('blur', function () {
-            setTimeout(versteckeListe, 150);
+        /* Der Lupen-Knopf (ui_ortsfeld) stoesst die Suche ausdruecklich an —
+         * fuer getrennte Suche der EINZIGE Weg, beim Einsatzort ein zweiter
+         * neben dem Tippen. */
+        if (lupe) {
+            lupe.addEventListener('click', function () {
+                clearTimeout(timer);
+                sucheJetzt();
+                feld.focus();
+            });
+        }
+        /* Der Aufschub gibt dem `mousedown` eines Vorschlags Zeit, noch
+         * durchzukommen — sonst waere die Liste weg, bevor der Klick sie
+         * erreicht.
+         *
+         * ER DARF ABER NICHT ZUSCHLAGEN, WENN DER FOKUS ZURUECKKEHRT. Der
+         * Lupen-Knopf nimmt dem Feld den Fokus (`blur` faellt), sucht und
+         * gibt ihn zurueck (`feld.focus()`). Kam die Antwort schneller als
+         * 150 ms, loeschte dieser Aufschub die eben gefuellte Liste wieder —
+         * gemessen: bei sofortiger Antwort stand sie nach 80 ms mit einem
+         * Eintrag da und nach 160 ms leer; bei 250 ms Antwortzeit blieb sie.
+         * Gegen den echten Photon-Dienst faellt es deshalb nie auf, hinter
+         * einem Zwischenspeicher oder im schnellen Netz schon (F-P3-AJ). */
+        feld.addEventListener('blur', function () {
+            setTimeout(function () {
+                if (document.activeElement === feld) { return; }
+                versteckeListe();
+            }, 150);
         });
 
         zeichne();
@@ -385,6 +423,23 @@
                 zustand();
                 return true;
             },
+
+            /**
+             * Uebernahme aus der Ortswahl (Geolocation, Kartendialog —
+             * assets/ortswahl.js): Koordinaten setzen; die Adresse aus der
+             * Umkehrsuche fuellt das Feld nur, wenn es LEER ist — ein
+             * eingetragener Name (oder eine Adresse) wird nie ueberschrieben.
+             */
+            uebernehmen: function (lat, lon, addr) {
+                if (addr && feld.value.trim() === '') {
+                    feld.value = addr;
+                    letzterTreffer = feld.value.trim().toLowerCase();
+                }
+                setzeKoordinaten(lat, lon);
+            },
+
+            /** Meldungszeile — fuer die Fehlertexte der Ortswahl. */
+            melde: melde,
 
             /** Bezeichnungsfeld — fuer Aufrufer, die es sperren muessen. */
             feld: feld

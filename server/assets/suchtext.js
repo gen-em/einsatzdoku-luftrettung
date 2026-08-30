@@ -230,5 +230,64 @@
        aber statisches Markup (<details class="suchsyntax"> in suche.php) und
        wird von keinem Skript ein- oder ausgeblendet. Die Funktion war
        exportiert und hatte nie einen Aufrufer. */
-    global.EdSuchtext = { pruefer: pruefer };
+    /* ---- Wörter für die Hervorhebung (P3/O6) -----------------------------
+     *
+     * Die Trefferliste hinterlegt die gefundenen Wörter hell orange
+     * (E-P3-36). Dafür braucht sie die POSITIVEN Literale des Ausdrucks —
+     * ohne die verneinten: Ein Wort, das gerade NICHT vorkommen darf, ist
+     * kein Treffer und darf keinen markieren.
+     *
+     * Gelesen wird derselbe Text wie in pruefer(), aber flach: Klammern und
+     * Verknüpfungen spielen für die Hervorhebung keine Rolle — was
+     * angezeigt wird, hat der Prüfer ohnehin schon durchgelassen.
+     */
+    function woerter(q) {
+        var roh = String(q == null ? '' : q).trim();
+        if (roh === '') { return []; }
+        var raus = [], i = 0, negiert = false;
+        var muster = /("[^"]*"|\S+)/g, m;
+        while ((m = muster.exec(roh)) !== null) {
+            var w = m[1];
+            /* Nicht-Zeichen am Wortanfang: '-' und '!' hängen am Wort,
+             * NICHT/NOT stehen als eigenes Wort davor. */
+            var ohne = w.replace(/^[-!]+/, '');
+            var vorZeichen = ohne !== w;
+            var gross = ohne.toUpperCase();
+            if (gross === 'NICHT' || gross === 'NOT') { negiert = true; continue; }
+            if (gross === 'ODER' || gross === 'OR' || gross === '|'
+                || gross === 'UND' || gross === 'AND' || gross === '&') { continue; }
+            ohne = ohne.replace(/^\(+|\)+$/g, '');
+            if (ohne.charAt(0) === '"' && ohne.charAt(ohne.length - 1) === '"') {
+                ohne = ohne.slice(1, -1);
+            }
+            if (ohne !== '' && !negiert && !vorZeichen) { raus.push(ohne); }
+            negiert = false;
+            i++;
+        }
+        return raus;
+    }
+
+    /**
+     * Text mit hervorgehobenen Suchwörtern als HTML.
+     *
+     * ERWARTET MASKIERTEN TEXT und liefert HTML — dieselbe Arbeitsteilung
+     * wie zelleGeschuetzt() in missiontable.js: Wer hier roh hineingibt,
+     * baut sich eine Lücke. Die Suche vergleicht ohne Rücksicht auf
+     * Groß-/Kleinschreibung, die Hervorhebung deshalb auch.
+     */
+    function hervor(maskiert, liste) {
+        if (!liste || !liste.length) { return maskiert; }
+        var teile = liste.slice().sort(function (a, b) { return b.length - a.length; })
+            .map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); })
+            .filter(function (w) { return w !== ''; });
+        if (!teile.length) { return maskiert; }
+        /* Auf dem MASKIERTEN Text gesucht: Entitäten (&amp;) bleiben
+         * unangetastet, weil das Muster nur außerhalb von & … ; greift —
+         * hier reicht der einfache Weg, weil Suchwörter aus Buchstaben und
+         * Ziffern bestehen. */
+        var re = new RegExp('(' + teile.join('|') + ')', 'gi');
+        return maskiert.replace(re, '<mark class="treffer">$1</mark>');
+    }
+
+    global.EdSuchtext = { pruefer: pruefer, woerter: woerter, hervor: hervor };
 })(window);

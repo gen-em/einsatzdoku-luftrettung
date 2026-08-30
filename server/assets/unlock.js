@@ -40,18 +40,26 @@ const EdUnlock = (() => {
 
   function baueDialog() {
     const d = document.createElement('dialog');
-    d.className = 'unlockbox';
+    /* Markup und Klassen des Dialog-Bausteins aus P3/O2 (.dialog, .feld,
+     * .knopf, .meldung) — dieselben wie serverseitig in ui.php. Die
+     * Meldungszeile benutzt den Meldungs-Baustein ohne Symbol: Sie wechselt
+     * zwischen Hinweis („Schlüssel wird abgeleitet …") und Fehler, und das
+     * sagt hier die Farbe samt Text. */
+    d.className = 'dialog';
     d.innerHTML =
-      '<h2 class="unlocktitle">Geschützte Angaben entsperren</h2>' +
-      '<p class="unlocktext">Die verschlüsselten Angaben sind in dieser Sitzung' +
+      '<div class="dialog-kopf"><h2>Geschützte Angaben entsperren</h2></div>' +
+      '<div class="dialog-inhalt">' +
+      '  <p>Die verschlüsselten Angaben sind in dieser Sitzung' +
       ' gesperrt. Zum Entsperren bitte das Kontopasswort eingeben — es wird' +
       ' nur im Browser verwendet und nicht übertragen.</p>' +
-      '<label class="unlocklabel">Kontopasswort' +
-      '  <input type="password" autocomplete="current-password"></label>' +
-      '<p class="unlockmsg" hidden></p>' +
-      '<div class="unlockbtns">' +
-      '  <button type="button" class="btn-plain" data-act="no">Abbrechen</button>' +
-      '  <button type="button" class="btn-primary" data-act="yes">Entsperren</button>' +
+      '  <div class="feld"><label class="feld-label">Kontopasswort' +
+      '    <input class="feld-eingabe" type="password" autocomplete="current-password">' +
+      '  </label></div>' +
+      '  <p class="meldung" data-msg hidden></p>' +
+      '</div>' +
+      '<div class="dialog-fuss">' +
+      '  <button type="button" class="knopf knopf-leise" data-act="no">Abbrechen</button>' +
+      '  <button type="button" class="knopf knopf-primaer" data-act="yes">Entsperren</button>' +
       '</div>';
     document.body.appendChild(d);
     return d;
@@ -63,7 +71,7 @@ const EdUnlock = (() => {
     const feld = d.querySelector('input');
     const ok = d.querySelector('[data-act="yes"]');
     const nein = d.querySelector('[data-act="no"]');
-    const msg = d.querySelector('.unlockmsg');
+    const msg = d.querySelector('[data-msg]');
 
     return new Promise(resolve => {
       let erledigt = false;      // gegen nachlaufende close-Ereignisse
@@ -79,7 +87,7 @@ const EdUnlock = (() => {
 
       function melde(text, art) {
         msg.textContent = text;
-        msg.className = 'unlockmsg' + (art ? ' ' + art : '');
+        msg.className = 'meldung ' + (art === 'err' ? 'meldung-fehler' : 'meldung-info');
         msg.hidden = false;
       }
 

@@ -28,7 +28,9 @@ Daten erst nach Server-Bestätigung.
 ```
 <repo>/
 ├── docs/                  Handbuch, Technik, Changelog, Backlog, JSON-Vertrag,
-│                          Branding (Farben, Schriften, Logo),
+│                          Design (Gestaltungsrichtlinie: Token, Schwellen,
+│                          Symbole, Bausteine, Seitentypen — verbindlich),
+│                          Lizenzen (Fremdbestandteile mit Version und Lizenz),
 │                          Backup-Format, Export-Format,
 │                          Geraete-Eingabe (gemessenes Eingabeverhalten je Uhr),
 │                          Uhr-Layout (Layoutregeln der Uhr-Oberflächen),
@@ -61,9 +63,21 @@ Daten erst nach Server-Bestätigung.
 │   │                        den alten, geteilten Punkt „Standortdaten")
 │   ├── import.php         Import/Export (eigene Seite, erscheint als Eintrag
 │   │                      der Einstellungs-Leiste)
-│   ├── admin_users.php + admin_user.php  Nutzerverwaltung (Liste · Detail)
+│   ├── admin_users.php + admin_user.php  NutzerInnen (Liste · Kontoseite)
+│   │                       Die Liste ist seit Web 9.9.0 serverseitig gesucht,
+│   │                       gefiltert und seitenweise (50 je Seite), mit
+│   │                       Statuskacheln und Sammelleiste
+│   │                       Die Kontoseite ist seit Web 9.8.0 die Drehscheibe
+│   │                       eines Kontos: Kontodaten, Geräte, Sicherungen
+│   │                       dieses Kontos, Abonnement (Platz für R33), Löschung
 │   ├── admin_stammdaten.php  Systemweite Stammdaten aller sechs Typen
-│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`)
+│   │                       (Reiter `?t=standorte` / `?t=rettungsmittel`;
+│   │                        seit Web 9.10.0 EIN Menuepunkt „Stammdaten
+│   │                        systemweit" mit Segmentwahl in der Titelzeile)
+│   ├── stammdaten_ui.php  Zeile und Anlegen-Formular der Stammdatenlisten —
+│   │                       eine Fassung fuer die Kontoansicht
+│   │                       (einstellungen.php) und die Adminansicht
+│   │                       (admin_stammdaten.php), seit Web 9.10.0
 │   ├── diensttag_neu.php  Diensttag von Hand anlegen · diensttag_datum.php Datum ändern
 │   │                       · diensttag_zusammenfuehren.php  mehrfach gestartete Dienste
 │   │                         wieder zu einem Diensttag vereinen
@@ -74,7 +88,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
-│   ├── admin_sicherungen.php  Adminseite dazu · sicherungen/ die Ablage selbst
+│   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
+│   │                       Regeln, Ablage und Sicherungen ohne Konto;
+│   │                       die Konten stehen in admin_users.php, die
+│   │                       Pakete eines Kontos auf dessen Kontoseite
+│   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
@@ -82,6 +100,15 @@ Daten erst nach Server-Bestätigung.
 │   │                       gelöschtes Konto, Passwortwechsel)
 │   ├── email_lib.php      E-Mail: Normalisierung, Prüfung, Dublettenerkennung
 │   │                       (ohne Abhängigkeiten — auch für install.php)
+│   ├── impressum.php · datenschutz.php   die beiden OEFFENTLICHEN Seiten
+│   │                      (R32) — zwei Zeilen je Datei, der Rest steht in
+│   │                      rechtstext_seite.php
+│   ├── rechtstext_seite.php  die gemeinsame Seite dahinter: liest die Sitzung,
+│   │                      ohne sie zu erzwingen (Leerzustand mit Admin-Weg)
+│   ├── rechtstexte_lib.php   Ablage, Pruefung und der eingeschraenkte
+│   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
+│   │                      Projekts, an der aus einer Eingabe HTML wird
+│   ├── admin_rechtstexte.php  Editor dazu (Administration)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
@@ -95,20 +122,34 @@ Daten erst nach Server-Bestätigung.
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      html.js (HTML-Maskierung, die eine Fassung für alle Seiten),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
-│   │                      aktionsmenu.js (Verhalten des Aktionsmenüs oben rechts),
 │   │                      map_fullscreen.js + map_layers.js (gemeinsame Leaflet-Controls, s. u.),
 │   │                      import.js (Pipeline) + import_profiles.js (Formate) + import_ui.js (Bedienung),
 │   │                      export.js (alle drei Exportprofile, Aufbau im Browser),
 │   │                      ortsfeld.js (Ortsfeld-Komponente: Bezeichnung + optionale
 │   │                       Koordinaten, sechs Verwendungen, s. u.),
-│   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.)
+│   │                      luftlinie.js (gestrichelte Verbindung ohne GPS-Track, s. u.),
+│   │                      geo.js (EdGeo: Marker-Satz und Spurfarben der Karten, s. u.),
+│   │                      ortswahl.js (Geolocation + Kartendialog am Ortsfeld, s. u.),
+│   │                      blatt.js (Aktions- und Sortierblätter) + schublade.js (mobile Leiste),
+│   │                      dialog.js (öffnet Dialoge, die im Markup stehen, und füllt sie
+│   │                       aus `data-w-*` des öffnenden Knopfes — ein Dialog für viele Zeilen),
+│   │                      symbol.js (edSymbol() — dieselbe Zeichenkette wie ui_symbol()
+│   │                       in PHP; kein Zeichen liegt als Inline-Pfad im Code)
 │   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      leaflet/ — Leaflet 1.9.4, BSD-2-Clause (Karten; CSS, JS, images/);
 │   │                      alle lokal vendoriert (kein CDN), Herkunft und SHA-256 im Dateikopf
 │   │   └── fonts/         Bricolage Grotesque 500/600 und Open Sans 400/600/700 als woff2,
 │   │                      je Subset latin und latin-ext (@fontsource, OFL-1.1)
-│   │   └── images/        Logo als SVG (farbig + weiss), favicon.png
+│   │   └── images/        Logos als SVG (farbig + weiss) je Hubschrauber und Fahrzeug,
+│   │       │                favicon.png + favicon-fahrzeug.png (erzeugt aus den
+│   │       │                Logodateien, s. tools/logos/); das Fahrzeug-Logo ist bis
+│   │       │                zur Zulieferung ein PLATZHALTER (gestrichelter Rahmen)
+│   │       └── symbole/    44 Zeichen als je eine SVG-Datei (Tabler Icons, MIT;
+│   │                       ein eigener Entwurf), 24 x 24, currentColor, Anker
+│   │                       <g id="i">; dazu LICENSE-tabler-icons.txt und
+│   │                       LIESMICH.md mit der Zuordnung Datei -> Tabler-Name ->
+│   │                       Verwendung. Eingebunden per Verweis, nicht eingebettet
 │   ├── favicon.ico        Browser-Symbol im Wurzelverzeichnis
 │   ├── config.example.php Vorlage der config.php (die selbst nur auf dem Server
 │   │                      liegt und vom Deploy ausgenommen ist)
@@ -146,12 +187,45 @@ Daten erst nach Server-Bestätigung.
 │   │   ├── referenz/      die eingecheckten Referenz-Exporte
 │   │   ├── vergleich/     Vergleichswerkzeug und Kreislauftests
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz
+│   ├── design/            erzeugt die Tabellen von docs/Design.md aus den
+│   │                      Quellen: Token aus :root, Schwellen aus den
+│   │                      @media-Bloecken, Symbole aus dem Vorrat, Bausteine
+│   │                      aus ui.php. Eine abgeschriebene Tabelle stimmt am
+│   │                      Tag des Abschreibens und danach nie wieder
+│   │                      (s. LIESMICH.md)
+│   ├── logos/             erzeugt die Favicons AUS den Logodateien, damit beide
+│   │                      nicht auseinanderlaufen (s. LIESMICH.md)
+│   ├── pruefkonten/       legt einen Bestand von 300+ Konten mit gemischten
+│   │                      Sicherungsstaenden an (fester Zufallsstartwert) —
+│   │                      fuer Seitenwechsel, Filter und Sammelauswahl der
+│   │                      NutzerInnen-Liste (P-P3-16)
+│   ├── rechtstexte/       Angriffsprobe fuer den Markdown-Renderer der
+│   │                      Rechtstexte: 81 Proben in acht Gruppen plus eine
+│   │                      Positivlisten-Schranke ueber JEDE erzeugte Ausgabe
+│   │                      (s. LIESMICH.md)
+│   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
+│   │                      auf, je Seite ein Kontaktbogen; misst dabei
+│   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
+│   │                      Seit Web 9.10.1 prueft er nach JEDEM Aufruf, ob er
+│   │                      die richtige Seite vor sich hat, und meldet sich bei
+│   │                      Bedarf neu an; ein nicht aufloesbarer Platzhalter
+│   │                      ergibt kein Bild (F-P3-AQ).
+│   │                      kontrast.py rechnet die Kontraste der Token nach
+│   │                      (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
-│   │                      plus berechnete Stile im Browser (s. LIESMICH.md)
-│   ├── uhr-pruefstand/    baut SDK und Simulator auf einer nackten Linux-
+│   │                      plus berechnete Stile im Browser, 13 Breiten.
+│   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
+│   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
+│   ├── vollstaendigkeit/  prüft, ob beim Redesign etwas verlorengegangen ist
+│   │                      (jede Klasse des alten Stylesheets hat eine Regel
+│   │                      oder steht mit Begründung auf der Streichliste) und
+│   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
+│   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
+│   │                      ohne-regel.md (s. LIESMICH.md)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
 │   │                      nicht herstellen kann: Papierkorb-Mischfall und
@@ -168,7 +242,7 @@ Daten erst nach Server-Bestätigung.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin |
+| `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
@@ -192,7 +266,8 @@ Daten erst nach Server-Bestätigung.
 | `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
+| `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
+| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -333,12 +408,12 @@ Passwortwechsel im Profil-Block von `einstellungen.php`: Er leitet Schlüssel in
 einem anderen Zusammenhang ab (Re-Wrap mit dem alten Passwort) und hat mit dem
 Entsperren nichts zu tun.
 
-Jeder Sperrhinweis trägt einen Knopf `.unlockbtn`, der denselben Ablauf erneut
+Jeder Sperrhinweis trägt einen Entsperr-Knopf, der denselben Ablauf erneut
 anstößt. Wichtig dabei: Die Funktionen hinter diesen Knöpfen müssen ein
-zweites Mal aufrufbar sein, ohne doppelt zu zeichnen — in `zeitraum.php` und
-`index.php` ist das gegeben, weil ohne Schlüssel vorher kein Pin entsteht; in
-`einsatz.php` wird der Sperr-Eintrag (`#patlockdt`/`#patlockdd`) zu Beginn
-entfernt.
+zweites Mal aufrufbar sein, ohne doppelt zu zeichnen — überall gegeben, weil
+ohne Schlüssel vorher weder Pin noch Zeile entsteht. Seit Web 9.3.0 ist der
+Sperrhinweis auf allen drei Seiten eine **Meldung** (`.meldung meldung-info`
+mit Schloss und Knopf), keine Zeile in der Feldliste mehr.
 
 **Schutz beim Speichern (`einsatz_form.php`):** Ist `PAT_CK` null, verlässt der
 Submit-Handler die Blob-Erzeugung vorzeitig (`if (f.dataset.patDone === '1' ||
@@ -416,6 +491,20 @@ steht.
 `{z}/{x}/{y}` wie die drei anderen. Vertauscht liefert er kommentarlos falsche
 oder leere Kacheln. Der Layer ist **nicht** Standard: Er lädt deutlich größere
 Kacheln, und die Karte soll beim Öffnen einer Einsatzansicht schnell dastehen.
+
+**Marker-Satz und Spurfarben (`assets/geo.js`, ab Web 9.2.0):** Das
+`EdGeo`-Modul liefert alles, was auf einer Einsatzkarte steht, aus einer
+Hand: `markerStandort()`/`markerZiel()` (weiße Schilder mit Haus- bzw.
+Klinik-Symbol; `ring: 'start' | 'ende' | 'beide'` legt Farbringe für
+Dienstbeginn und -ende darum), `markerEinsatzort()` (oranger Kreis mit
+Einsatzort-Symbol), `markerPunkt()` (kleiner Farbpunkt, z. B. Abfahrt) und
+`pfeile()` (Richtungspfeile alle 140 Bildschirm-Pixel auf einer Spur, neu
+verteilt bei jedem Zoom; der `remove`-Handler der Ebene räumt den Zuhörer
+ab). Alle Marker sind `divIcon`s mit CSS-Klassen (`.geo-schild`,
+`.geo-kreis`, `.geo-ring-*`, `.geo-pfeil`) — Form und Farbe stehen im
+Stylesheet, nicht im Skript. Die **Spurfarben** kommen als Token aus
+`:root` (`--spur-1 … --spur-8`, `--spur-ruhe`); `EdGeo.spurFarbe(i)` liest
+sie per `getComputedStyle`, JS enthält keinen Farbwert.
 
 Der Phasenmarker-Toggle in `einsatz.php` ist als eigenes `L.Control`
 (Position `topleft`, unterhalb des Vollbild-Controls) umgesetzt statt als
@@ -566,8 +655,12 @@ Feld:
   Liste — mit Datum, Dienstbeginn, Rettungsmittel, Standort und Zahl der
   Einsätze. Angelegt wird dort nichts mehr: Welchem Dienst ein Einsatz gehört,
   ist eine Auswahl, keine Nebenwirkung.
-* `diensttag_datum.php` nennt, was am gewählten Datum bereits liegt. Es ist
-  reine Auskunft — belegt oder frei ändert nichts an der Zulässigkeit.
+* `diensttag_datum.php` beziffert, **was mitwandert** — Einsätze (mit denen im
+  Papierkorb), Ruhesegmente, Trackpunkte, Phasenzeiten, Start und Ende des
+  Diensttags. Bis Web 6.0.0 nannte die Seite stattdessen, was am gewählten
+  Datum bereits liegt; diese Liste ist mit dem Tagesschlüssel entfallen, weil
+  mehrere Diensttage je Kalendertag seit E9 der vorgesehene Fall sind. Seit
+  P3/O11 steht die Aufstellung als Zeilen mit Plakette statt als Aufzählung.
 
 Beides ist **rein anzeigend**, und das ist keine Nachlässigkeit: Die Listen
 sind auf 400 Einträge gedeckelt und veralten, sobald in einem zweiten Fenster
@@ -598,18 +691,55 @@ nicht ernst zu nehmen. Der Text lässt sich je Verweis über
 `window.EdForms.istGeaendert(form)` und `.vergessen(form)`, damit eigene
 Abbruchwege nicht doch ein zweites Kennzeichen einführen.
 
-**Einsatztage-Leiste:** `ui_days_sidebar()` gruppiert die Tage serverseitig
-nach Jahr und Monat (`<details>`-Verschachtelung); welches Jahr/welcher Monat
-offen ist, bestimmt PHP anhand von `$currentDay` bzw. des jüngsten Tages —
-kein JavaScript nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
-`assets/daylist.js` erzwingt das Akkordeon-Verhalten (ein offenes Element je
-Ebene) für Klicks ohne Seitenwechsel und trennt die Klickbereiche:
-Beschriftung → `zeitraum.php`, Dreieck → nur auf/zu.
+**Seitenleiste und Schublade (P3/O2):** `ui_geruest_start()` gibt Kopfleiste,
+Leiste und Inhalt in einem Zug aus; `ui_geruest_ende()` schließt sie, setzt die
+Fußzeile **außerhalb** von `<main>` und lädt die vier Skripte des Gerüsts.
+Drei Leisteninhalte teilen sich dasselbe Markup: `ui_leiste_diensttage()`,
+`ui_leiste_einstellungen()` und — für die Suche — der von der Seite selbst
+gefüllte Filterblock (`leiste => 'filter'`, danach `ui_leiste_ende()`).
 
-> **CSS-Falle:** `.daylist a{display:block}`
-> hat höhere Spezifität als `.trashlink` und steht weiter unten — Regeln für
-> Menüpunkte müssen daher `.daylist a.klasse` lauten und **nach** `.daylist a`
-> stehen.
+**Die Grundformen des Stylesheets (Abschnitt 17, seit Web 9.12.0).** Bis dahin
+hieß dieser Abschnitt **Rohschicht** und war ausdrücklich befristet: Solange
+P3 die Seiten Paket für Paket umbaute, stand auf jeder noch nicht umgebauten
+Seite Markup mit Klassennamen, für die es keine Regel mehr gab. Zwei Klassen
+waren dafür begründete Ausnahmen (`.alert`, `.muted`), dazu Elementregeln für
+`table`/`th`/`td`, `fieldset`/`legend` und `hr`. Mit O11 sind alle fünf
+gefallen — die letzte Tabelle ohne eigene Regel (`.imp-table` im Import)
+trägt jetzt `.tabelle`, und
+`fieldset`, `legend` und `hr` kommen in der Anwendung nirgends mehr vor.
+
+Geblieben ist, was **Grundform** ist und keine Übergangslösung:
+`input`/`select`/`textarea` (ein Eingabefeld gibt es auch außerhalb von
+`.feld` — im Suchfeld, im Auswahlkästchen einer Zeile, in einem Filter, und es
+muss dort dieselbe Höhe, denselben Rahmen und dieselbe Farbe haben), Kästchen
+und Radios, das Muster `<label>Text <input></label>` (46 Stellen, überwiegend
+in den Filterreihen der Suche und im Einsatzformular), `summary` und
+`code`/`kbd`/`pre`.
+
+**Die Eintrittskarte bleibt eng: nur Elementnamen.** Eine Klasse dort
+einzutragen hieße, das Redesign zurückzunehmen — dafür gibt es die Bausteine
+in den Abschnitten davor. Und eine Falle hat der Abschnitt: Seine Regeln
+haben Spezifität (0,1,1) und schlagen damit jede bloße Klasse. Wer ein
+Kästchen über eine Klasse ausblenden will, braucht
+`input[type=checkbox].meine-klasse` — dreimal ist genau das schiefgegangen
+(F-P3-AP, F-P3-AZ).
+
+**Es gibt keine zweite Leiste.** Unter 1024 px liegt dieselbe `<aside
+class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest daneben;
+der Unterschied ist ausschließlich CSS (Abschnitt 4 und 18 des Stylesheets).
+`assets/schublade.js` öffnet und schließt sie und hält den Fokus darin. Der
+Mechanismus hängt an der **Klasse**, nicht an der Funktion, die die Diensttage
+ausgibt — hinge er an der Funktion, bliebe die Suchseite als einzige ohne
+mobiles Menü (Vormerkliste aus Konzept P0, 10.5).
+
+Die Tage sind serverseitig nach Jahr und Monat gruppiert
+(`<details>`-Verschachtelung); welches Jahr und welcher Monat offen sind,
+bestimmt PHP anhand des gewählten bzw. des jüngsten Tages — kein JavaScript
+nötig, da jede Navigation ohnehin einen Seitenaufruf auslöst.
+`assets/daylist.js` erzwingt nur noch das Akkordeon-Verhalten (ein offenes
+Element je Ebene). Die frühere Trennung der Klickbereiche ist entfallen: Die
+ganze Zeile klappt, und der Weg in die Zeitraumübersicht ist ein eigenes
+Symbol am rechten Rand (`.akkordeon-uebersicht`, 44 px).
 
 **Geschützte Zusatzfelder & berechnetes Alter:** `assets/patient.js` (EdPat)
 berechnet das Alter aus dem Geburtsdatum bezogen auf den **Einsatztag** und
@@ -663,7 +793,7 @@ Rolle `crew_override = 1 AND mission_crew.name IS NOT NULL ?
 mission_crew.name : day_crew.name`. Sie ist **einmal** implementiert, in
 `api/mission.php`, das das Ergebnis als `crew_effektiv`
 (`{rolle: {label, name, abw}}`, nur belegte Rollen) liefert; `einsatz.php`
-rendert es unverändert im Block „Besatzung".
+rendert es unverändert in der Karte „Besatzung".
 
 > **Seit Web 6.0.0 (Notarzt-Erweiterung).** Die Besatzung ist normalisiert (E7):
 > Aus den Spalten `crew_p1 … crew_other` in `days` und `missions` sind Zeilen in
@@ -910,22 +1040,36 @@ mit Web 7.0.0 dazu: Der Fehleinsatz steht jetzt in einem Block, der bleiben
 muss. Beide Regeln haben dieselbe Ausnahme — ein Filter aus einem geteilten
 Link bleibt sichtbar, auch wenn der eigene Bestand nichts dazu hat.
 
-**Layout (ab Web 3.1.1).** Die Filter stehen in der linken Spalte; `suche.php`
-ruft `ui_days_sidebar()` **nicht** auf — einzelne Diensttage sind bei einer Suche
-über den Gesamtbestand ohne Nutzen. Die Spalte nutzt bewusst eine eigene Klasse
-`.filterspalte` statt `.daylist`: Letztere ist auf feste Fensterhöhe mit
-`overflow:hidden` gesetzt und würde eine lange Filterliste abschneiden.
-`.layout-suche` verbreitert die Spalte von 200 auf 280 px. Die **Überschrift**
-der Spalte ist dagegen dieselbe wie in der Einsatztage-Leiste und steht seit
-Web 7.2.0 nur noch dort (`.daylist h2,.filterspalte>h2`). Zwei Stolpersteine
-sind dort im CSS vermerkt: Die 720-px-Regel für `.layout-suche` muss **nach**
-der Grundregel stehen, weil der allgemeine 720-px-Block nur `.layout` greift
-und sonst von der gleich spezifischen, später notierten Regel ausgehebelt
-würde; und `.filterfuss .btn-plain` setzt `width:auto` gegen die globale
-Formularregel. `daylist.js` steigt ohne `.dayyears` von selbst aus, die
-Filter-`<details>` liegen ausserhalb und werden deshalb nicht wie das
-Tages-Akkordeon gegenseitig verkoppelt — die Blöcke lassen sich einzeln
-öffnen.
+**Layout (ab Web 9.5.0, O6).** Die Filter stehen in der **gemeinsamen**
+`.leiste` — derselben, die sonst die Diensttage trägt; `suche.php` ruft
+`ui_days_sidebar()` **nicht** auf (einzelne Diensttage sind bei einer Suche
+über den Gesamtbestand ohne Nutzen), sondern baut den Leisteninhalt selbst.
+Bis Web 9.4.0 hatte die Suche eine eigene Spalte (`.layout-suche`,
+`.filterspalte`); das war die einzige Seite ohne mobiles Menü, weil der
+Schubladenmechanismus an `.leiste` hängt — auf dem Handy stand die volle
+Filterliste vor dem Ergebnis. Beide Klassen sind gestrichen.
+
+Zwei Folgen davon:
+
+- **Der Ereignisanker ist die Leiste, nicht eine Klasse am Behälter.** Der
+  Zuhörer hängt an `#leiste` (`input` **und** `change`) und entscheidet am
+  Ereignisziel (`ev.target.closest('input, select')`). Der alte Selektor
+  `.filterspalte input, .filterspalte select` traf nach dem Wegfall der
+  Klasse in O2 **nichts** — kein Filter wirkte mehr, ohne dass irgendetwas
+  einen Fehler meldete (F-P3-AG). Ein Klassenname am Behälter ist als
+  Ereignisanker zu leicht zu verlieren.
+- **Die Filterblöcke sind dieselben `<details class="akkordeon">` wie die
+  Diensttage.** `daylist.js` steigt ohne `.leiste-liste[data-akkordeon]`
+  von selbst aus, die Filtergruppen werden deshalb **nicht** gegenseitig
+  verkoppelt — mehrere Blöcke lassen sich gleichzeitig öffnen. Jede Gruppe
+  trägt eine `.filterzahl` (blaue Plakette), die zählt, wie viele ihrer
+  Felder gesetzt sind; `zeigeFilterzustand()` schreibt sie, den Zähler am
+  Filterknopf und die Plakettenzeile `#filterplaketten` aus **einer**
+  Quelle, damit die drei Anzeigen nicht auseinanderlaufen können.
+
+Der Leistenfuß trägt „Filter zurücksetzen" und — nur als Schublade
+(`nur-schublade`) — „n Treffer zeigen" mit der Zahl der laufenden Suche;
+der Knopf schließt über `data-schublade="zu"`.
 
 **Boolesche Freitextsuche (`assets/suchtext.js`, Baustein B10, ab Web 7.0.0).**
 `EdSuchtext.pruefer(q)` liefert ein Prädikat über den (bereits
@@ -950,6 +1094,26 @@ Heuhaufen der Freitextsuche und der Altersfilter ist abgeschaltet — sonst wär
 mit gesetztem Altersfilter jeder Einsatz ein Nicht-Treffer. Nach dem Entsperren
 wird der Heuhaufen neu gebaut und sofort neu gefiltert.
 
+**Trefferhervorhebung (`woerter()`/`hervor()`, ab Web 9.5.0).** `woerter(q)`
+läuft über denselben Zerleger und sammelt die **positiven Literale** —
+Wörter und Phrasen, die nicht unter einem NICHT stehen; Operatoren fallen
+weg. `hervor(maskiert, liste)` setzt darin `<mark class="treffer">`.
+
+Zwei Punkte, an denen es schiefgehen könnte:
+
+- **`hervor()` bekommt den Text BEREITS MASKIERT** und darf ihn nur noch
+  umschließen. Anders herum — erst hervorheben, dann maskieren — würde das
+  eigene `<mark>` mitmaskiert; und maskiert man gar nicht, wäre ein `<` aus
+  Diagnose oder Einsatzort plötzlich Markup. Das betrifft **verschlüsselte**
+  Felder, also fremden Klartext im eigenen DOM.
+- **Verneintes wird nicht hervorgehoben.** Ein `-winde` bezeichnet nichts,
+  was im Text stehen soll; eine Markierung dort behauptete einen Treffer,
+  der die Zeile gerade ausgeschlossen hätte.
+
+Die Prüflogik ist unberührt: `pruefer()` und `woerter()` teilen sich den
+Zerleger, aber `woerter()` liefert nur eine Liste — kein Prädikat, keine
+Entscheidung über Treffer.
+
 **Gemeinsame Einsatztabelle (`assets/missiontable.js`, ab Web 3.1.0).**
 `zeitraum.php` und `suche.php` zeigen dieselbe Liste; Spalten, Sortierung und
 Zeilenaufbau stehen deshalb genau einmal dort. `EdMissionTable.erzeuge()` baut
@@ -959,6 +1123,20 @@ weil `zeitraum.php` sie auch für Karten-Popups und Kacheln braucht. `esc` und
 `escape` zeigen seit Web 4.6.0 beide auf `EdHtml.escape` (`assets/html.js`);
 die Datei muss deshalb **vor** `missiontable.js` geladen werden. Eine neue
 Spalte ist ein Eintrag in `SPALTEN` und erscheint auf beiden Seiten.
+
+Seit Web 9.5.0 baut derselbe Aufruf wahlweise **Tabelle und Kacheln** aus
+demselben Zeilenbestand (`opts.kacheln` = Zielelement, `opts.kachelOpts`):
+Die Tabelle liegt in `.nur-ab-720`, die Kachelliste in `.nur-unter-720`, und
+weil beide aus einer Zeichnung stammen, können sie nicht auseinanderlaufen.
+`opts.hervor` reicht die Hervorhebungsfunktion an die geschützten Zellen und
+an die Kachel durch — sie ist der einzige Weg, auf dem fremder Text als HTML
+in eine Zelle kommt, und sie bekommt ihn deshalb maskiert (siehe oben).
+
+Die **Streifenspalte** (`key: 'col'`) erscheint über `nurWenn` nur, wenn
+Zeilen eine Spurfarbe tragen; sie trägt als einzige Spalte ein
+`style="background:…"`, weil die Farbe aus den Daten kommt (dieselbe
+begründete Ausnahme wie beim Kachelstreifen aus O3 — eine Farbe je Einsatz
+kann keine CSS-Regel sein).
 
 Eine Rücksicht auf `zeitraum.php`, die sonst als Regression auffiele:
 `onAfterDraw` wendet dort die Hervorhebung der Extremwert-Kacheln erneut an —
@@ -985,9 +1163,12 @@ Der Fokus wandert nach dem Nachladen nur dann in die erste neue Zeile, wenn die
 Schaltfläche dabei verschwindet; sonst bliebe die Tastaturbedienung an einem
 Element hängen, das es nicht mehr gibt.
 
-Weil `suche.php` die Ergebniszeile aus denselben zwei Zahlen baut, steht ihr
+Weil `suche.php` die Bestandszahl aus denselben zwei Zahlen baut, steht ihr
 Text in `onAfterDraw` und nicht in `anwenden()` — das Nachladen zeichnet neu,
-ohne dass sich ein Filter geändert hätte.
+ohne dass sich ein Filter geändert hätte. Seit Web 9.5.0 steht sie als
+`.karte-zahl` im Kopf der Trefferkarte und nennt „n von m" nur bei gesetztem
+Filter; `onAfterDraw` bekommt dafür als dritten Wert die sortierte Liste, aus
+der die Streckensumme fällt.
 
 **Filterblöcke nach Bestand (`GRUPPE_NUR_WENN` in `suche.php`, ab Web 5.10.0).**
 Ein Eintrag je Block: die Bedingung, unter der er gebraucht wird (heute `winde`,
@@ -1018,25 +1199,83 @@ Pfeil hat keinen Kopf.
 `missiontable.js` führt einen Rückfall, damit die Datei für sich lauffähig
 bleibt; er ist die Notlösung, nicht die Quelle.
 
-**Tabs der Zeitraum-Übersicht (ab Web 6.2.0, Konzept 3.7.1).** Die Tableiste
-erscheint nur, wenn im Zeitraum **beide** Arten vorliegen; maßgeblich sind die
-Diensttage (`tage_art` aus `api/range.php`), nicht die Einsätze — ein
-bodengebundener Dienst ohne einen einzigen Einsatz ist trotzdem einer. Liegt nur
-eine Art vor, bestimmt sie allein die **Beschriftung** der Kacheln; gezeigt wird
-in diesem Fall alles, auch die Einsätze neutraler Diensttage, denn sonst fehlten
-sie in der einzigen Ansicht, die es dann gibt. Der Hinweis auf mitgezählte
-neutrale Diensttage steht überall dort, wo sie tatsächlich mitzählen — in
-„Gemischt" und in einer Ansicht ohne Tableiste.
+**Ansicht nach Art in der Zeitraum-Übersicht (ab Web 6.2.0, seit Web 9.6.0
+eine Segmentwahl).** Die Wahl erscheint nur, wenn im Zeitraum **beide** Arten
+vorliegen; maßgeblich sind die Diensttage (`tage_art` aus `api/range.php`),
+nicht die Einsätze — ein bodengebundener Dienst ohne einen einzigen Einsatz
+ist trotzdem einer. Liegt nur eine Art vor, bestimmt sie allein die
+**Beschriftung** der Kacheln; gezeigt wird in diesem Fall alles, auch die
+Einsätze neutraler Diensttage, denn sonst fehlten sie in der einzigen Ansicht,
+die es dann gibt. Der Hinweis auf mitgezählte neutrale Diensttage steht
+überall dort, wo sie tatsächlich mitzählen — in „Gemischt" und in einer
+Ansicht ohne Wahl.
 
-Die Kacheln entstehen im Browser (`KACHELSATZ` in `zeitraum.php`) statt fest im
-HTML zu stehen: Welche es gibt und wie sie heißen, hängt am Tab und bei den
-Windenkacheln zusätzlich am Bestand. Die Ereignisse der Extremwert-Kacheln
+Aus der Tableiste (`.arttabs` mit `<button role="tab">`) ist mit O7 der
+**Segment-Baustein** geworden (`ui_segment`, Radios in einer Gruppe). Zwei
+Folgen: Der Wechsel mit den Pfeiltasten kommt vom Browser — der eigene
+`keydown`-Handler ist entfallen —, und gehorcht wird `change`, nicht `click`;
+sonst löste die Tastaturbedienung nichts aus.
+
+**Drei Kachelsätze (`KACHELSATZ` in `zeitraum.php`, ab Web 9.6.0).** Sie
+entstehen im Browser statt fest im HTML zu stehen: Welche es gibt und wie sie
+heißen, hängt an der Ansicht und bei den Windenkacheln zusätzlich am Bestand.
+Luft führt zehn Kacheln, Boden acht, **Gemischt vier** (`KACHELN_BODEN.slice(0,4)`)
+— Kilometer, Dauern und Fehleinsätze lassen sich über beide Arten nicht
+sinnvoll addieren, ebenso wenig wie höchster Einsatzort und Windenzahlen, die
+dort nie standen. `SPALTEN_JE_SATZ` gibt die Spaltenzahl ab 720 px (4 oder 5),
+damit keine Reihe halb leer bleibt.
+
+Jede Kachel trägt `wert` und `einheit` **getrennt** — der Baustein setzt die
+Einheit kleiner, und das geht nur als eigenes Element. Vier Kacheln je Satz
+sind mit `mobil: true` markiert und unter 720 px sichtbar; der Rest trägt
+`.kennzahl-mehr` und steht hinter „Weitere Statistik (n)". Welche vier, sagt
+die Kachel und nicht ihre Position: In der Luftansicht sind es die
+Winden-Cycles statt des Durchschnitts. Fällt eine markierte Kachel am Bestand
+weg (keine Windeneinsätze), rückt die nächste des Satzes nach. Die Ereignisse der Extremwert-Kacheln
 werden deshalb beim Erzeugen vergeben, nicht am Raster delegiert — `mouseenter`
 steigt nicht auf, und `mouseover` feuerte zusätzlich bei jedem Wechsel zwischen
 Wert und Beschriftung innerhalb derselben Kachel. Die Karten-Pins werden beim
-Tabwechsel **verworfen und neu gesetzt** (`pinLayer`), nicht versteckt: Ein Pin
-ohne Bildschirmposition lässt kein `setStyle()` zu — derselbe Stolperstein wie
-beim Ausgangsausschnitt der Karte.
+Wechsel der Ansicht **verworfen und neu gesetzt** (`pinLayer`), nicht
+versteckt: Ein Pin ohne Bildschirmposition lässt kein `setStyle()` zu —
+derselbe Stolperstein wie beim Ausgangsausschnitt der Karte.
+
+Die Hervorhebung des Extremwert-Trägers wirkt auf **Tabelle und Kacheln**
+zugleich (`.hl-extrem` an beiden), weil unter 720 px die Kachelliste an die
+Stelle der Tabelle tritt; sie ist seit Web 9.6.0 orange statt rot. Die beiden
+Farben dafür standen als Hexwerte im Skript und kommen jetzt aus `:root`,
+wie in `geo.js`.
+
+**Standorte des Zeitraums (`bases` in `api/range.php`, ab Web 9.6.0).** Die
+Zeitraumkarte trägt das Standort-Haus (E-P3-40). Der Endpunkt liefert dafür
+die eingefrorenen Standorte der Diensttage des Zeitraums, nach Koordinate auf
+sechs Nachkommastellen **entdupliziert** — ein Monat mit fünf Diensten
+derselben Wache hat einen Standort, nicht fünf übereinander. Sie sind
+**Klartext** wie `kind` und `vehicle_name` (Snapshot-Spalten in `days`, E8)
+und brauchen deshalb keinen Inhaltsschlüssel: Die Karte zeigt das Haus auch
+im gesperrten Zustand. In den Artenansichten stehen nur die Standorte dieser
+Art; Standorte ohne Art bleiben immer stehen, weil sie zu beidem gehören
+könnten. Trackpunkte liefert der Endpunkt weiterhin **nicht** — bei einem
+ganzen Jahr wären das hunderttausende Koordinaten.
+
+**Logo-Wahl je Profil (E-P3-20, ab Web 9.7.0).** `users.logo_wahl` trägt die
+Wahl, die Sitzung ihr **Ergebnis**. Der Unterschied ist die ganze Sache:
+`logo_aufloesen()` (session_lib.php) macht aus `wechselnd` genau einmal —
+bei der Anmeldung — ein `hubschrauber` oder `fahrzeug`, und `$_SESSION`
+trägt danach diesen Wert. Würde stattdessen die Wahl in der Sitzung stehen
+und `ui_logo()` bei jedem Aufruf würfeln, spränge das Logo beim Blättern von
+Seite zu Seite.
+
+`logo_stamm()` ist die **eine Stelle**, an der aus der Sitzung ein
+Dateistamm wird; `ui_logo()` (Kopfleiste) und `favicon_tags()` (db.php,
+Browser-Symbol) fragen beide dort. Damit können sie nicht auseinanderlaufen —
+zwei getrennte Abfragen wären zwei Gelegenheiten dafür. Die `.ico` in der
+Wurzel bleibt unverändert: Sie ist der Rückfall für Browser ohne PNG-Icon,
+und eine zweite je Logo wären zwei Dateien für einen Fall, den heute kaum ein
+Browser braucht.
+
+`auth_guard.php` lädt `session_lib.php` deshalb **fest** und nicht mehr nur
+im Abbruchzweig. Ohne Sitzung — Anmeldung, Einrichter — liefert `logo_stamm()`
+den Standard, und genau das soll die Anmeldeseite zeigen.
 
 **Papierkorb (Soft-Delete):** Einsätze, Ruhesegmente und Diensttage tragen
 `deleted_at`; alle Lesepfade (Übersicht, Tages-/Einsatz-/Zeitraum-API,
@@ -1502,19 +1741,35 @@ Eine Verwendung ist damit ein PHP-Aufruf und ein `init()`. Die sechs:
 | Standort im Konto / zentral | `sdbase` / `adbase` | getrennte Suche, nur Zubehör (`feld => false`) |
 | Zielklinik im Konto / zentral | `sdtd<id>` / `adtd<id>` | dito, Präfix trägt die Standortkennung — das Formular steht einmal je Standort auf der Seite |
 
-**Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` ist das Textfeld
-zugleich das Suchfeld; ein Adresstreffer wird zur Bezeichnung. Bei `true` gibt
-es ein eigenes Suchfeld daneben, und der Treffer setzt **nur** die Koordinaten —
-„Standort Kempten" ist keine Adresse, und eine Suche im Namensfeld schriebe den
-Namen weg. Alles übrige ist in beiden Formen dasselbe: Chip statt Zahlen im
-Textfeld, lokale Formaterkennung vor jeder Netzanfrage, Bestätigung statt
-sofortiger Übernahme, ruhende Suche bei gesetzten Koordinaten, und die Prüfung
-„Koordinaten ohne Bezeichnung" beim Absenden.
+**Zwei Bedienformen, ein Code.** Bei `getrennteSuche: false` sucht das
+Textfeld beim Tippen; ein Adresstreffer wird zur Bezeichnung. Bei `true`
+läuft die Suche **nur auf den Lupen-Knopf** (seit Web 9.4.0 — er ersetzt das
+frühere zweite Suchfeld „Lokalisation …"), und der Treffer setzt **nur** die
+Koordinaten — „Standort Kempten" ist keine Adresse, und eine Suche, die den
+Namen überschriebe, nähme ihn weg. Alles übrige ist in beiden Formen
+dasselbe: Chip statt Zahlen im Textfeld, lokale Formaterkennung vor jeder
+Netzanfrage, Bestätigung statt sofortiger Übernahme, ruhende Suche bei
+gesetzten Koordinaten, und die Prüfung „Koordinaten ohne Bezeichnung" beim
+Absenden.
+
+**Die Ortswahl** (`assets/ortswahl.js`, Web 9.4.0, E-P3-34): Der Pin-Knopf
+am Ortsfeld (`ui_ortsfeld` mit `'ortswahl' => true` — Einsatzort und
+manueller Abfahrtort) öffnet ein Blatt mit „Meine Position übernehmen"
+(`navigator.geolocation`, nur über HTTPS) und „Auf der Karte wählen"
+(Leaflet-Dialog mit **Fadenkreuz** in der Kartenmitte statt Klick-Marker —
+auf dem Handy verdeckt der eigene Finger sonst genau die Stelle). Zur
+Koordinate holt die **Photon-Umkehrsuche** eine Adresse; sie füllt das Feld
+nur, wenn es leer ist (`EdOrtsfeld`-Steuerobjekt, `uebernehmen()`), und die
+Anfrage trägt ausschließlich die Koordinate. Die Verwendungen registrieren
+sich mit `EdOrtswahl.registriere(praefix, steuerobjekt)`.
 
 **Die Luftlinie** (`assets/luftlinie.js`) zeichnet, was ohne GPS-Aufzeichnung
-über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, gestrichelt
-und in Max Blau, damit sie nicht mit dem Track-Orange verwechselt wird. Drei
-Regeln, die sie nie verletzt:
+über den Weg bekannt ist: **Abfahrtort → Einsatzort → Zielklinik**, immer
+gestrichelt — das Strichmuster, nicht die Farbe, trägt die Unterscheidung zum
+aufgezeichneten Track. In der Einsatzansicht ist sie Max Blau; die
+Tagesübersicht färbt sie seit Web 9.2.0 in der Spurfarbe ihres Einsatzes, weil
+bei mehreren Einsätzen sonst nicht erkennbar wäre, welche Linie zu welchem
+gehört. Drei Regeln, die sie nie verletzt:
 
 * **Ein Track hat Vorrang.** Liegt er vor, unterbleibt die Linie; die
   Abfahrtortangabe bleibt gespeichert und wird lediglich nicht gezeichnet.
@@ -1703,12 +1958,12 @@ Die Bausteine im Einzelnen:
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Wartungsseite meldet diesen Zustand unter „Schlüsselableitung". |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
-| Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. |
+| Seitenhülle | `ui.php` (`ui_seite_start()`, `ui_seite_ende()`) | Ab Web 7.1.0. Doctype, `<head>`, Eröffnung und Abschluss des `<body>` — vorher 28-mal von Hand, mit zwei Schreibweisen des Viewports und zwei Titeltrennern. Leaflet-CSS nur auf Kartenseiten und **vor** `style.css`, damit eigene Regeln die des Kartenwerks überschreiben. **Ohne Abhängigkeit auf oberster Ebene**, damit `install.php` sie vor der Ersteinrichtung laden kann; `asset()`, `e()` und `favicon_tags()` werden über `ui_asset()`/`ui_e()`/`ui_favicon()` nur benutzt, wo es sie gibt. **`install.php` lädt sie seit Web 9.10.1 am Dateianfang** — vorher stand das `require_once` in `render_page()` selbst, und weil die Aufrufer ihr Argument mit `ui_meldung_markup()` und `ui_knopf()` bauen (PHP wertet Argumente vor dem Aufruf aus), endete jeder Zweig in „Call to undefined function". Der Einrichter war damit seit Web 9.1.0 unbenutzbar (F-P3-AR). |
 | Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und schreibt ins Fehlerlog**: Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
-| Schaltflächenfamilie | `assets/style.css` (`.btn-primary/-danger/-yellow/-red/-plain/-edit`) | Ab Web 7.2.0 ein Block statt vier. Eine Sammelregel über alle sechs (`cursor`, `text-decoration`) und eine gemeinsame Regel für die kompakte Größe der drei Zeilenaktionen; in den Varianten steht nur noch, was sie unterscheidet. **`font-family` gehört nicht in die Sammelregel** — bei `.btn-primary`/`.btn-danger` kommt sie aus `button{}` und damit nur am `<button>` an. Die Größenregel der Zeilenaktionen nennt die Familie über `:is(…)` statt fünf Varianten einzeln; **eine Klasse je Element** ist dabei Bedingung, weil `.btn-plain` mit `font:inherit` arbeitet. |
-| Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. |
+| Knopf | `ui.php` (`ui_knopf()`), `assets/style.css` (`.knopf` mit `-primaer/-neutral/-gefahr/-leise/-symbol`) | **Seit Web 9.0.0 (P3/O1) eine Höhe: 44 px**, mobil wie am Schreibtisch, auch für Zeilenaktionen — es gibt keine Kompaktvariante, was kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Vier Arten nach **Bedeutung**, nicht nach Aussehen: `primaer` (die eine Haupthandlung), `neutral` (alles Übrige, auch „Bearbeiten"), `gefahr` (Löschen), `leise` (Abbrechen, Nebenwege). Die Vorgängerfamilie `.btn-primary/-danger/-yellow/-red/-plain/-edit` ist mit O11 vollständig verschwunden; ihr letzter Rest war der Export-Knopf in `import.php`, der damit seit Web 9.0.0 ungestaltet war (F-P3-BA). **Im Aktionsblatt heißen dieselben Arten anders** (`blatt-gefahr`, `blatt-anlegen`) — `ui_zeilenaktionen()` wählt danach, wo der Knopf steht; wer das übersieht, bekommt ein „Löschen", das nicht rot ist (F-P3-AX). |
+| Boolesche Freitextsuche | `assets/suchtext.js` (`EdSuchtext.pruefer()`, `.woerter()`, `.hervor()`) | Ab Web 7.0.0. Zerlegt eine Sucheingabe in ein Prädikat über den Heuhaufen: UND / ODER / NICHT, Klammern, Phrasen. Ohne Operator verhält sie sich wie die alte Wortliste. Scheitert **nie** an einer Eingabe — die Trefferliste rechnet bei jedem Tastendruck, also ist eine halbfertige Eingabe der Normalfall. Ohne Kenntnis der Seite und darum ohne die Seite prüfbar. Seit Web 9.5.0 dazu `woerter()` (die positiven Literale einer Eingabe) und `hervor()` (setzt `<mark>` in **bereits maskierten** Text) für die Trefferhervorhebung. |
 | Alter mit Einheit | `assets/patient.js` (`EdPat.alterText()`) | Ab Web 7.0.0. Unter einem Monat Tage, unter zwei Jahren Monate, darüber Jahre. Bei einem Säugling ist „0" keine Auskunft. Grundlage ist das Geburtsdatum; aus einem von Hand eingetragenen Alter lässt sich nur „Jahre" ableiten. |
 
 **Grenzen des verschlüsselten Patientenblocks** (`PAT_BLOB_MIN`/`PAT_BLOB_MAX`
@@ -2182,7 +2437,10 @@ sieht vollständig aus und ist es nicht.
 Uhr = neues Gerät anlegen.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
-→ als Admin **`/update.php`** aufrufen → alle Zeilen müssen ✔ zeigen.
+→ als Admin **`/update.php`** aufrufen → jede Zeile muss die Plakette
+**„erledigt"** tragen. (Bis Web 9.11.1 stand dort ein ✔; seit P3/O11 sagt der
+Status ein Wort — `erledigt` blau, `steht aus` orange, `blockiert` rot,
+`Fehler` rot —, weil Schriftzeichen als Symbol ausgeschlossen sind, E-P3-18.)
 Fehlgeschlagene Migrationen werden nicht verbucht und beim nächsten Aufruf
 erneut versucht; Folge-Migrationen stoppen bis dahin. **Version in `version.php`
 erhöhen** nicht vergessen, sonst sieht der Browser alte Dateien.
@@ -2321,8 +2579,9 @@ Einblick in die Daten zu bekommen. Der Serverteil war im Kern vorhanden:
 Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
 
 **Ablage.** `server/sicherungen/<kontokennung>/`, je Ordner eine
-`konto.json` (Begleitdatei **und** Verzeichnis) und höchstens drei Pakete
-`<zeitstempel>_<zufall>.json`. Nicht in der Datenbank: Ein Paket liegt bei
+`konto.json` (Begleitdatei **und** Verzeichnis) und höchstens `n` Pakete
+`<zeitstempel>_<zufall>.json` — `n` ist seit Web 9.8.0 eine Einstellung
+(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, Vorgabe 3). Nicht in der Datenbank: Ein Paket liegt bei
 größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
 geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
 Behälter wie das Gesicherte ist keine Rückfallebene.
@@ -2377,7 +2636,270 @@ Der letzte Schritt ist Absicht: Das Feld `daten` **ist** ein Backup — dieselbe
 Nutzlast wie in einer `.edbak` (seit Web 8.0.0 Version 7) —, und ein zweiter
 Rückspielpfad wäre eine zweite Stelle, an der dieselben Fehler zu machen sind.
 
+### Aufbewahrung und Verdrängung (seit Web 9.8.0)
+
+`edbak_verdraengen()` läuft nach **jedem** Sichern eines Kontos und entfernt,
+was über der Aufbewahrung liegt. Keine Altersgrenze: Bei rein manueller
+Auslösung würde sie genau die letzte vorhandene Sicherung entfernen, wenn lange
+keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
+
+**Zwei Pakete sind ausgenommen**, seit die Zahl einstellbar ist:
+
+| Ausnahme | Grund |
+|---|---|
+| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat |
+| ein **freigegebenes** Paket | Die NutzerIn bekommt es im eigenen Backup-Bereich angeboten; es unter ihr wegzuräumen hieße, einen Weg anzubieten, der beim Klick ins Leere läuft |
+
+Die zweite Ausnahme folgt derselben Regel wie
+`edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr
+vorhandene Datei löscht: Eine Freigabe und die Datei dazu gehören zusammen.
+
+### Die NutzerInnen-Liste (E-P3-41, seit Web 9.9.0)
+
+`admin_users.php` zeigt vier Statuskacheln, eine Suche, fünf Filter, sechs
+sortierbare Spalten und **50 Konten je Seite**. Zwei Kacheln, zwei Filter und
+eine Spalte hängen am **Sicherungsstand**, und der steht im Dateisystem.
+
+Deshalb genau zwei Zugriffe je Seitenaufruf, beide unabhängig von der Zahl der
+Konten je Zeile:
+
+| | |
+|---|---|
+| eine Abfrage | alle Konten mit `LEFT JOIN devices` und `COUNT`; die `GROUP BY`-Liste nennt alle nicht aggregierten Spalten ausdrücklich, weil MySQL mit `ONLY_FULL_GROUP_BY` sonst abbricht, wo MariaDB durchlässt |
+| ein Verzeichnisdurchlauf | `edbak_staende()`: ein `scandir` der Ablagewurzel plus je Ordner eine kleine `konto.json` |
+
+Konten, die nie gesichert wurden, haben gar keinen Ordner und kosten nichts.
+Gemessen an **304 Konten**: 3,2 ms Ablage, 3,3 ms Abfrage, 3,2 ms Werten, 103 ms
+der ganze Aufruf.
+
+**Gesucht, gefiltert und sortiert wird danach im Speicher.** Nicht aus
+Bequemlichkeit: Zwei Filter (überfällig, nie gesichert) und eine Sortierung
+kennen kein SQL. Eine halbe Filterung in SQL und eine halbe in PHP wären zwei
+Wege für dieselbe Frage — und der zweite hätte die falschen Zahlen. Der Browser
+bekommt in jedem Fall höchstens 50 Zeilen. Die Grenze davon steht in
+`docs/Backlog.md` Nr. 37: Bei einigen tausend Konten braucht der
+Sicherungsstand eine Spalte in der Datenbank.
+
+**Die Kacheln zählen den ganzen Bestand, die Filterzahlen die laufende Suche.**
+Absicht: Die Kacheln sagen, wie es um die Installation steht; die Zahl an einer
+Filterplakette beantwortet „was bringt mir dieser Filter jetzt?".
+
+**Sortiert wird serverseitig**, weil eine Sortierung im Browser bei 50 Zeilen je
+Seite eine Sortierung der *Seite* wäre. Der Zustand steht deshalb in der Adresse
+(`?sort=…&dir=ab`), und die Spaltenköpfe sind Verweise mit `aria-sort` — die
+erste Stelle im Bestand, die es trägt.
+
+Der **Sortierschlüssel** schreibt Umlaute nach deutscher Lesart aus
+(ae/oe/ue/ss, dieselbe Regel wie `slug()` in `assets/export.js`) und führt
+übrige Akzente auf den Grundbuchstaben zurück. Ohne das stünde „Ömer" hinter
+„Zeller": Kleingeschrieben wird aus Ö ein ö, und ö liegt in der Byte-Reihenfolge
+hinter z. Bewusst **kein `Collator`** — die intl-Erweiterung ist auf geteiltem
+Webspace nicht verlässlich da, und eine Sortierung, die je nach Installation
+anders ausfällt, ist schlimmer als eine, die überall gleich näherungsweise ist.
+
+**Die Auswahl der Sammelleiste liegt im `sessionStorage`**, nicht in der
+Adresse: Eine Adresse mit dreihundert Kennungen wäre unbrauchbar lang und stünde
+im Verlauf und im Zugriffsprotokoll des Servers. Beim Absenden wandert sie als
+kommagetrennte Zeichenkette in ein verstecktes Feld. Nach einer ausgeführten
+Sammelaktion wird sie geleert — sonst sicherte der nächste Klick dieselben
+Konten noch einmal.
+
+`app_state`-Marken werden **je Anfrage einmal** gelesen
+(`edbak_marken_speicher()`, ein `static` hinter einer Funktion mit Rückgabe per
+Referenz, damit `edbak_marke_setzen()` den neuen Wert nachziehen kann). Ohne das
+holte die Liste das Erinnerungsintervall je Zeile aus der Datenbank: bei 304
+Konten 304 Abfragen und 27,7 ms.
+
+### Die Kontoseite (E-P3-41, seit Web 9.8.0)
+
+Alles zu **einem** Konto liegt auf `admin_user.php?id=…`: Kontodaten (ein
+Formular, ein Speichern), Geräte, die Sicherungen **dieses** Kontos, ein
+reservierter Platz für das Abonnement (R33) und die Löschung als
+Gefahrenzone. `admin_sicherungen.php` behält die Regeln — und seit Web 9.10.0
+nur noch sie (Abschnitt „Sicherungen: was auf welcher Seite steht").
+
+Der Grund ist nicht nur Bedienung, sondern Menge: `edbak_uebersicht()` liest
+für **jedes** Konto ein Verzeichnis und eine Begleitdatei, um eine Zeile zu
+zeigen — Arbeit, die mit der Zahl der Konten wächst, obwohl man immer nur ein
+Konto ansieht. `edbak_konto_stand($userzeile)` liest genau einen Ordner und
+liefert `stand` (`aktuell` · `ueberfaellig` · `nie` · `ohne_kennung`), die
+Pakete, die Freigabe und das Alter der jüngsten Sicherung.
+
+Der Zeitpunkt kommt dabei aus dem jüngsten **vorhandenen** Paket, nicht aus
+`konto.json`: Wird eine Datei von Hand aus dem Ordner entfernt, bliebe die
+Marke stehen und meldete einen Stand, den es nicht mehr gibt.
+
+**Die Plakette „lesbar"** an einer Paketzeile ist eine echte Prüfung —
+`edbak_paket_lesen()` liest die Datei und decodiert sie. Das ist vertretbar,
+weil die Aufbewahrung die Zahl der Pakete je Konto begrenzt (Vorgabe drei) und
+die Seite immer nur ein Konto zeigt. In einer Liste über alle Konten wäre
+dieselbe Prüfung untragbar — deshalb steht sie hier und nicht dort.
+
+**Einspielen, Freigeben und Löschen** stehen in Dialogen (`assets/dialog.js`):
+Das Markup steht in der Seite, der öffnende Knopf trägt die Werte des Falls
+(`data-w-datei`, `data-w-zeit`), das Skript setzt sie in die Felder mit
+`data-fuell`. Ein Dialog für alle Zeilen statt eines je Zeile. Geprüft wird
+weiterhin **serverseitig** — die abgetippte Adresse muss stimmen; ein
+Browser-Dialog ließe sich umgehen.
+
+Das Einspielen zielt auf **dieses** Konto. Ein Auswahlfeld mit allen Konten
+stünde für einen Fall, den es auf dieser Seite nicht gibt: Wer eine Sicherung
+in ein fremdes Konto bringen will, gibt sie frei; ein Paket ohne Konto findet
+man unter „Sicherungen ohne Konto".
+
 **Grenze, die im Handbuch steht und hier wiederholt gehört:** Ohne
 Wiederherstellungsschlüssel ist ein neu aufgesetztes Konto nicht
 wiederherstellbar. Das ist kein Mangel der Umsetzung, sondern die Folge der
 Ende-zu-Ende-Verschlüsselung — der Schlüssel existiert nirgends sonst.
+
+### Die Regelseite (seit Web 9.10.0)
+
+`admin_sicherungen.php` trägt seit O9c nur noch, was für **alle** Konten gilt.
+Die Aufteilung über die drei Seiten:
+
+| Frage | Seite |
+|---|---|
+| Wie steht es um die Installation? Welche Regeln gelten? | `admin_sicherungen.php` |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | `admin_users.php` (Filter `?f=ueberfaellig` / `?f=nie`) |
+| Die Sicherungen **eines** Kontos: einspielen, freigeben, löschen | `admin_user.php?id=…` |
+
+Vier Kacheln (`edbak_stand_zaehlen()`, `edbak_ablage_zahlen()`), die Karten
+**Regeln**, **Ablage** und — zugeklappt — **Sicherungen ohne Konto**
+(`edbak_verwaiste()`).
+
+**Warum die Ablagezahlen hier Verzeichnisse lesen dürfen und in der Liste
+nicht:** Eine Größe in Bytes steht in keiner Begleitdatei, sie steht nur an den
+Dateien. Diese Seite existiert, um genau das zu beantworten, und wird selten
+geöffnet; die Liste dagegen ist der Weg zu einem Konto und wird ständig
+aufgerufen.
+
+**„Alle sichern" hat ein Zeitbudget** (`SICHERN_BUDGET = 20.0` Sekunden), keine
+Stückzahl. Die fälligen Konten werden nach Alter der letzten Sicherung
+sortiert, das älteste zuerst. Wer nicht mehr hineinpasst, ist beim nächsten
+Klick der älteste — die Reihenfolge sorgt selbst dafür, dass wiederholtes
+Klicken konvergiert. Gemessen: 222 ms je Konto mit 82 Einsätzen, 7 ms für ein
+leeres.
+
+### Die wöchentliche Erinnerung an die Administration (seit Web 9.10.0)
+
+**Es gibt keinen Cron.** Einziger Zeitgeber ist `run_cleanup_if_due()`
+(`db.php`), der huckepack auf der ersten Anfrage des Tages läuft — aus
+`auth_guard.php` (Web) oder `ingest.php` (Uhr). Die Erinnerung hängt dort als
+letzter Aufräumschritt (`edbak_erinnerung_planen()`).
+
+Daraus folgt, und das steht auch auf der Seite: höchstens einmal je Woche, nur
+wenn es überfällige oder nie gesicherte Konten gibt, **und nur, wenn die
+Anwendung an dem Tag benutzt wurde**. Wird sie zwei Wochen nicht angefasst,
+kommt die Mail zwei Wochen später.
+
+Der Schritt **plant** nur; verschickt wird nach der Antwort
+(`register_shutdown_function`). Die Marke `adminbackup_mail_last` wird **vor**
+dem Versand gesetzt: Der teurere Fehler ist die doppelte Mail, nicht die
+ausgefallene — die nächste kommt in sieben Tagen.
+
+**Inhalt:** Adressen und Alter, sortiert (nie gesichert zuerst, dann das
+Älteste). Keine Namen, keine Zahlen aus den Konten — eine Mail liegt
+unverschlüsselt im Postfach und auf jedem Server dazwischen.
+
+Abschalten: Einstellungen → Sicherungen → „Erinnerung an Admins per E-Mail".
+Beim Einschalten wird `adminbackup_mail_last` geleert, damit die erste
+Erinnerung nicht im Rhythmus einer abgeschalteten Zeit hängt.
+
+### Das Logo der Installation (E-P3-19/20, einstellbar seit Web 9.10.0)
+
+Drei Ebenen, von unten nach oben:
+
+1. `LOGO_STANDARD_VORGABE` in `session_lib.php` — Hubschrauber. Gilt, solange
+   es keine Datenbank gibt (Einrichter) oder nichts gesetzt ist.
+2. `app_state.logo_standard` — der Standard **dieser Installation**, gesetzt in
+   der Wartung (`update.php`). `logo_standard()` liest ihn je Anfrage einmal
+   und fängt jede Ausnahme ab: Das Logo ist Zierde, kein Zugang.
+3. `users.logo_wahl` — die Wahl **eines Kontos** (`''` = folgt dem Standard,
+   `hubschrauber`, `fahrzeug`, `wechselnd`).
+
+**In der Sitzung steht die Wahl, nicht ihr Ergebnis.** `logo_sitzung_setzen()`
+löst nur `wechselnd` auf (dort fällt der Würfel je Anmeldung, sonst spränge das
+Logo beim Blättern); der Leerstring bleibt stehen und wird erst in
+`logo_stamm()` aufgelöst. Damit wirkt eine Umstellung des Standards **sofort**,
+auch für bereits angemeldete Konten — und nur bei denen, die keine eigene Wahl
+getroffen haben.
+
+**`logo_src()`** ist die Fassung für die beiden Seiten **ohne** Sitzung
+(Anmeldung, Passwort setzen). Sie folgt seit Web 9.10.0 ebenfalls der Wahl;
+`$CFG['app']['logo_path']` gewinnt nur noch, wenn dort eine **fremde** Datei
+steht (F-P3-AN). `pw_handling.php` lädt dafür `session_lib.php`.
+
+**Der Platzhalterhinweis** auf der Wartungsseite fragt die Datei, nicht eine
+Zahl im Code: `logo_platzhalter_liegt()` liest die ersten 400 Byte von
+`gen-em_logo_fahrzeug.svg` und `…_weiss.svg` und sucht das Wort „PLATZHALTER"
+im Kopfkommentar. Er verschwindet damit von selbst, sobald die echten Dateien
+liegen — sie ersetzen den Platzhalter 1:1 (gleicher Name, gleicher `viewBox`).
+
+
+### Rechtstexte: Impressum und Datenschutz (R32, seit Web 9.11.0)
+
+**Die Anwendung liefert keinen Rechtstext mit.** Was darin steht, ist Sache des
+Betreibers; die Anwendung stellt zwei öffentliche Seiten, einen Editor und die
+Verweise in jeder Fußzeile. Der Leerzustand ist die Auslieferung.
+
+| Datei | Aufgabe |
+|---|---|
+| `rechtstexte_lib.php` | Ablage (`rt_lesen`, `rt_speichern`, `rt_pruefen`) und der Renderer `rt_html()` |
+| `rechtstext_seite.php` | Die öffentliche Seite — beide Dokumente teilen sie sich |
+| `impressum.php`, `datenschutz.php` | Zwei Zeilen: Schlüssel setzen, Seite laden |
+| `admin_rechtstexte.php` | Editor, ein Formular für beide Texte |
+| `tools/rechtstexte/` | Angriffsprobe für `rt_html()` |
+
+#### `rt_html()` — erst maskieren, dann Struktur erkennen
+
+Die einzige Stelle des Projekts, an der aus einer Eingabe HTML wird. Der Ablauf:
+
+1. **Säubern** — CRLF zu LF; C0-Steuerzeichen außer `\n` und `\t`; Zero-Width
+   (U+200B–200F, U+FEFF); Zeilen- und Absatztrenner (U+2028/2029);
+   **Bidi-Steuerung** (U+202A–202E, U+2066–2069). Letztere sind kein Zierrat:
+   Mit ihnen lässt sich ein Linktext bauen, der etwas anderes anzeigt, als im
+   Ziel steht („Trojan Source").
+2. **UTF-8 prüfen** — schlägt es fehl, kommt der Leerstring zurück.
+3. **Maskieren** — `htmlspecialchars($t, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')`,
+   genau einmal, über den ganzen Text. **`ENT_SUBSTITUTE` ausdrücklich**, anders
+   als `e()` in `db.php`: Ohne den Schalter liefert PHP seit 8.1 bei ungültigem
+   UTF-8 den Leerstring — bei einem Feldwert unauffällig, bei einem Rechtstext
+   verschwände die ganze Seite wortlos.
+4. **Blöcke zeilenweise** — `#`/`##` → `<h2>`, `###` → `<h3>`, `- `/`* ` →
+   `<ul>`, `1. ` → `<ol>`, Leerzeile trennt Absätze, mehrere Zeilen ohne
+   Leerzeile bleiben **ein** Absatz mit `<br>` (im Impressum stehen Anschriften
+   so untereinander).
+5. **Inline** — genau ein Muster, `[Text](Ziel)`.
+
+**Erzeugt werden ausschließlich** `h2 h3 p br ul ol li a` und **ein** Attribut
+(`href`). Das ist keine Absichtserklärung, sondern geprüft: Die Angriffsprobe
+hält jede Ausgabe gegen diese Liste.
+
+**Linkziele stehen auf einer Positivliste** (`rt_ziel_erlaubt()`): `https://`,
+`http://`, `mailto:`, eine eigene `.php` mit optionalem Abfrageteil, ein Anker.
+Alles andere fällt durch — auch protokollrelative Adressen wie
+`//fremde.example/…`, die relativ aussehen und es nicht sind. Ein abgelehntes
+Ziel lässt die ganze Konstruktion **als Text** stehen; stilles Schlucken machte
+aus einem Fehler eine Unsichtbarkeit.
+
+#### Die öffentliche Seite kennt die Sitzung, ohne sie zu erzwingen
+
+`rechtstext_seite.php` lädt **nicht** `auth_guard.php` — der leitet
+Nichtangemeldete auf die Anmeldung um, und das ist bei einem Impressum falsch.
+Sie ruft stattdessen selbst `session_start()` (das nimmt ein vorhandenes Cookie
+an und meldet niemanden an) und liest die Rolle **aus der Datenbank**, nicht aus
+der Sitzung — dieselbe Regel wie im Guard (M1-05): Eine zurückgenommene
+Adminrolle würde sonst bis zur nächsten Anmeldung weitergelten.
+
+Ohne `config.php` leitet sie auf `install.php` um, wie `login.php` es tut. Ein
+Impressum ist das erste, was jemand auf einer frischen Installation aufruft — es
+darf keinen weißen Fehler zeigen.
+
+#### Grenzen
+
+- **Keine Content-Security-Policy.** Backlog Nr. 8 bleibt offen; sie wäre die
+  zweite Verteidigungslinie hinter dem Renderer.
+- **Kein Versionsstand der Texte.** Wer den Text überschreibt, überschreibt ihn;
+  eine Historie gibt es nicht. Für ein Dokument, dessen alte Fassung
+  rechtlich zählen kann, ist das eine bewusst offene Stelle.
+- **Die Vorschau zeigt den gespeicherten Stand**, nicht das Getippte.

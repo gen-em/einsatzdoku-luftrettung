@@ -20,6 +20,8 @@ CREATE TABLE users (
   role          ENUM('user','admin') NOT NULL DEFAULT 'user',
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich (E17)
+  logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd' (E-P3-20)
+  last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -467,6 +469,18 @@ CREATE TABLE track_points (
 -- sonst laeuft sie bei jeder Neuinstallation unnoetig (und ggf. auf Daten,
 -- die es noch gar nicht gibt).
 -- ---------------------------------------------------------------------------
+-- Impressum und Datenschutzerklaerung dieser Installation (R32, seit Web 9.11.0).
+-- Kein Vorgabeinhalt: Was darin steht, ist Sache des Betreibers; die Anwendung
+-- liefert keinen Rechtstext mit. Solange nichts hinterlegt ist, zeigen
+-- impressum.php und datenschutz.php ihren Leerzustand.
+-- MEDIUMTEXT statt TEXT, weil TEXT 64 KB in BYTES sind und deutsche
+-- Rechtstexte in utf8mb4 Umlaute haben.
+CREATE TABLE rechtstexte (
+  schluessel VARCHAR(32) NOT NULL PRIMARY KEY,  -- 'impressum' | 'datenschutz'
+  inhalt     MEDIUMTEXT NULL,                   -- Markdown-Quelle; NULL/leer = nichts hinterlegt
+  stand_am   DATE NULL                          -- im Editor von Hand gesetzt; NULL = keine Standzeile
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS schema_migrations (
   id         VARCHAR(120) NOT NULL PRIMARY KEY,
   applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -511,4 +525,15 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_16_kontokennung', 'skipped'),
   -- Der Umbau auf Diensttage und bodengebundene Rettungsmittel (Web 6.0.0).
   -- Dieses Schema IST das Ergebnis der Migration.
-  ('2026_08_17_notarzt_erweiterung', 'skipped');
+  ('2026_08_17_notarzt_erweiterung', 'skipped'),
+  -- Nachgetragen (Web 9.10.1): Beide Spalten stehen oben schon in der Tabelle,
+  -- die Kennungen fehlten hier. Folge auf einer Neuinstallation: update.php
+  -- haette beide Migrationen erneut angesetzt und waere an der bereits
+  -- vorhandenen Spalte haengengeblieben -- oder, schlimmer, still
+  -- durchgelaufen (update.php schluckt MySQL 1060 „Duplicate column").
+  -- last_login fehlte zusaetzlich in der Tabelle selbst; eine frisch
+  -- eingerichtete Anwendung hatte die Spalte gar nicht.
+  ('2026_08_27_logo_wahl', 'skipped'),
+  ('2026_08_28_last_login', 'skipped'),
+  -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
+  ('2026_08_30_rechtstexte', 'skipped');

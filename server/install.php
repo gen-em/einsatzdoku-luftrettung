@@ -14,6 +14,26 @@ declare(strict_types=1);
 // email_lib.php, dieselbe Fassung wie im Rest der Anwendung.
 require_once __DIR__ . '/email_lib.php';
 
+/* DIE SEITENHUELLE MUSS HIER STEHEN, NICHT IN render_page() (Web 9.10.1).
+ *
+ * Sie stand seit P3/O2 in render_page() selbst — an der Stelle, an der sie
+ * gebraucht wird. Das war falsch, und zwar toedlich: Die Aufrufer BAUEN ihr
+ * Argument mit ui_meldung_markup() (Zeile 62), ui_knopf() (Zeile 66) und
+ * ui_symbol(), und PHP wertet Argumente VOR dem Aufruf aus. Die Huelle wurde
+ * also erst geladen, nachdem die Funktionen daraus schon gebraucht worden
+ * waren. Jeder der drei Zweige endete in „Call to undefined function".
+ *
+ * DAS TRAF JEDE NEUINSTALLATION: index.php leitet ohne config.php hierher,
+ * und der Deploy liefert diese Datei aus. Aufgefallen ist es niemandem, weil
+ * der Einrichter genau einmal im Leben einer Installation laeuft — und die
+ * bestehende laeuft laengst. Gefunden bei der Bestandsaufnahme zu O10.
+ *
+ * ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb auch
+ * hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder config.php
+ * noch db.php, also weder asset() noch favicon_tags(). Die Huelle faengt das
+ * ab (ui_asset(), ui_favicon()). */
+require_once __DIR__ . '/ui.php';
+
 $configPath = __DIR__ . '/config.php';
 $lockPath   = __DIR__ . '/install.lock';
 $schemaPath = __DIR__ . '/schema.sql';
@@ -48,10 +68,11 @@ function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8')
 if (file_exists($configPath) || file_exists($lockPath)) {
     http_response_code(403);
     render_page('Bereits eingerichtet',
-        '<p class="alert alert-info">Die Anwendung ist bereits eingerichtet. '
-        . 'Der Installer ist gesperrt.</p>'
-        . '<p><a class="btn-link" href="index.php">Zur Anwendung</a></p>'
-        . '<p class="muted small">Aus Sicherheitsgründen sollte <code>install.php</code> '
+        ui_meldung_markup('info', 'Die Anwendung ist bereits eingerichtet. '
+            . 'Der Installer ist gesperrt.')
+        . '<p>' . ui_knopf(['text' => 'Zur Anwendung', 'href' => 'index.php',
+                            'art' => 'neutral']) . '</p>'
+        . '<p class="feld-hinweis">Aus Sicherheitsgründen sollte <code>install.php</code> '
         . 'nach erfolgreicher Einrichtung vom Server gelöscht werden.</p>');
     exit;
 }
@@ -285,17 +306,18 @@ function run_sql_file(PDO $pdo, string $path): void {
 /* ---- Ausgabe ------------------------------------------------------------ */
 if ($done) {
     render_page('Einrichtung abgeschlossen',
-        '<p class="alert alert-ok">Einrichtung erfolgreich. Die Konfiguration wurde '
-        . 'gespeichert und der Installer ist jetzt gesperrt.</p>'
+        ui_meldung_markup('ok', 'Einrichtung erfolgreich. Die Konfiguration wurde '
+            . 'gespeichert und der Installer ist jetzt gesperrt.', 'Fertig.')
         . '<p><strong>Letzter Schritt:</strong> Über den folgenden Link legst du das '
         . 'Passwort des Administrator-Zugangs fest. Dabei wird einmalig dein '
         . 'Wiederherstellungsschlüssel angezeigt — bitte sicher notieren. '
         . 'Der Link ist 24 Stunden gültig.</p>'
-        . '<p><a class="btn-link" href="' . h($setupLink) . '">Passwort jetzt festlegen</a></p>'
-        . '<p class="muted small">Falls der Link verlorengeht: Auf der Anmeldeseite '
+        . '<p>' . ui_knopf(['text' => 'Passwort jetzt festlegen', 'href' => $setupLink,
+                            'art' => 'primaer', 'breit' => true]) . '</p>'
+        . '<p class="feld-hinweis">Falls der Link verlorengeht: Auf der Anmeldeseite '
         . 'lässt sich über „Passwort vergessen oder erstmalig setzen“ ein neuer '
         . 'anfordern (setzt funktionierende SMTP-Angaben voraus).</p>'
-        . '<p class="muted small">Empfehlung: <code>install.php</code> jetzt vom Server '
+        . '<p class="feld-hinweis">Empfehlung: <code>install.php</code> jetzt vom Server '
         . 'löschen. Solange <code>install.lock</code> existiert, ist eine erneute '
         . 'Ausführung ohnehin blockiert.</p>');
     exit;
@@ -307,12 +329,12 @@ render_form($_POST ?? [], $errors, $nachweis, $nachweisMuster, $nachweisOk);
 /* ---- Templates ---------------------------------------------------------- */
 function render_form(array $v, array $errors, string $nachweis,
                      string $nachweisMuster, bool $nachweisOk): void {
-    $val = fn(string $k, string $d = ''): string => h((string)($v[$k] ?? $d));
     $guessUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'einsatz.example.de');
     ob_start(); ?>
     <h1>Einsatzdoku einrichten</h1>
-    <p class="muted">Diese Angaben werden in <code>config.php</code> gespeichert und die
-       Datenbank wird angelegt. Der Installer läuft nur dieses eine Mal.</p>
+    <p class="seiten-erklaerung">Diese Angaben werden in <code>config.php</code>
+       gespeichert und die Datenbank wird angelegt. Der Einrichter läuft nur
+       dieses eine Mal.</p>
 
     <?php /* Maskierung HIER, an der Ausgabestelle (M1-18).
        Vorher maskierten zwei der zehn Meldungen ihren variablen Teil selbst,
@@ -321,74 +343,104 @@ function render_form(array $v, array $errors, string $nachweis,
        eine Lücke gewesen, und zwar eine unsichtbare: Neun Meldungen ohne h()
        sahen ja richtig aus. Maskieren am Ausgabepunkt kann man nicht
        vergessen; es gibt nur diese eine Stelle. */ ?>
-    <?php foreach ($errors as $e): ?><p class="alert"><?= h($e) ?></p><?php endforeach; ?>
+    <?php foreach ($errors as $e): ?><?= ui_meldung_markup('fehler', $e) ?><?php endforeach; ?>
 
     <form method="post" autocomplete="off">
       <input type="hidden" name="csrf" value="<?= h($_SESSION['inst_csrf']) ?>">
 
-      <fieldset>
-        <legend>Nachweis</legend>
+      <?php /* FUENF KARTEN STATT FUENF <fieldset> (O10). Die Elementregeln
+               fuer fieldset/legend standen in der Uebergangsschicht des
+               Stylesheets; sie sind mit O11 gefallen, und der Einrichter
+               staende sonst jetzt ohne Gestaltung da. Eine Karte mit Titel
+               ist ohnehin das, was E-P3-35 fuer eine Feldgruppe vorsieht. */ ?>
+
+      <?php ui_karte_start(['titel' => 'Nachweis']); ?>
         <?php if (!$nachweisOk): ?>
-          <p class="alert">Im Anwendungsverzeichnis lässt sich keine Datei anlegen.
-             Damit kann die Einrichtung weder den Nachweis erzeugen noch später
-             <code>config.php</code> schreiben. Bitte Schreibrechte auf das
-             Verzeichnis <code><?= h(basename(__DIR__)) ?></code> setzen und die
-             Seite neu laden.</p>
+          <?= ui_meldung_markup('fehler',
+              'Im Anwendungsverzeichnis lässt sich keine Datei anlegen. Damit kann '
+            . 'die Einrichtung weder den Nachweis erzeugen noch später config.php '
+            . 'schreiben. Bitte Schreibrechte auf das Verzeichnis '
+            . basename(__DIR__) . ' setzen und die Seite neu laden.',
+              'Kein Schreibrecht.') ?>
         <?php else: ?>
-          <p class="muted small">Im Anwendungsverzeichnis liegt jetzt eine Datei, deren
+          <p class="feld-hinweis">Im Anwendungsverzeichnis liegt jetzt eine Datei, deren
              Name mit <code><?= h($nachweisMuster) ?></code> beginnt. Trage die
              Zeichenfolge aus dem Dateinamen hier ein (oder den ganzen Dateinamen,
              oder den Inhalt der Datei — alle drei enthalten dieselbe Angabe).</p>
-          <p class="muted small">Das belegt, dass du Zugriff auf dieses Verzeichnis
+          <p class="feld-hinweis">Das belegt, dass du Zugriff auf dieses Verzeichnis
              hast. Ohne diesen Nachweis könnte jemand, der die frisch hochgeladene
              Installation vor dir findet, sich selbst als Administrator eintragen.</p>
-          <label>Zeichenfolge aus dem Dateinamen
-            <input name="nachweis" value="<?= $val('nachweis') ?>" required
-                   autocomplete="off" spellcheck="false"></label>
+          <?php ui_feld(['name' => 'nachweis', 'label' => 'Zeichenfolge aus dem Dateinamen',
+                         'wert' => (string)($v['nachweis'] ?? ''), 'pflicht' => true,
+                         'attr' => ' autocomplete="off" spellcheck="false"']); ?>
         <?php endif; ?>
-      </fieldset>
+      <?php ui_karte_ende(); ?>
 
-      <fieldset>
-        <legend>Datenbank</legend>
-        <label>Host <input name="db_host" value="<?= $val('db_host', 'localhost') ?>" required></label>
-        <label>Datenbank-Name <input name="db_name" value="<?= $val('db_name') ?>" required></label>
-        <label>Benutzer <input name="db_user" value="<?= $val('db_user') ?>" required></label>
-        <label>Passwort <input type="password" name="db_pass"></label>
-        <p class="muted small">Bitte eine <strong>leere</strong> Datenbank verwenden.
+      <?php ui_karte_start(['titel' => 'Datenbank']); ?>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'db_host', 'label' => 'Host', 'pflicht' => true,
+                         'wert' => (string)($v['db_host'] ?? 'localhost')]); ?>
+          <?php ui_feld(['name' => 'db_name', 'label' => 'Datenbank-Name', 'pflicht' => true,
+                         'wert' => (string)($v['db_name'] ?? '')]); ?>
+        </div>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'db_user', 'label' => 'Benutzer', 'pflicht' => true,
+                         'wert' => (string)($v['db_user'] ?? '')]); ?>
+          <?php ui_feld(['name' => 'db_pass', 'label' => 'Passwort', 'art' => 'password']); ?>
+        </div>
+        <p class="feld-hinweis">Bitte eine <strong>leere</strong> Datenbank verwenden.
            Vorhandene Tabellen werden nicht gelöscht.</p>
-      </fieldset>
+      <?php ui_karte_ende(); ?>
 
-      <fieldset>
-        <legend>Administrator-Zugang</legend>
-        <label>E-Mail (= Login) <input type="email" name="admin_email" value="<?= $val('admin_email') ?>" required></label>
-        <p class="muted small">Das Passwort wird nicht hier gesetzt: Es verlässt den
+      <?php ui_karte_start(['titel' => 'Administrator-Zugang']); ?>
+        <?php ui_feld(['name' => 'admin_email', 'label' => 'E-Mail (= Anmeldung)',
+                       'art' => 'email', 'pflicht' => true,
+                       'wert' => (string)($v['admin_email'] ?? '')]); ?>
+        <p class="feld-hinweis">Das Passwort wird nicht hier gesetzt: Es verlässt den
            Browser nie. Nach der Einrichtung erscheint ein Link, über den du es
            festlegst — zusammen mit dem Wiederherstellungsschlüssel.</p>
-      </fieldset>
+      <?php ui_karte_ende(); ?>
 
-      <fieldset>
-        <legend>Anwendung</legend>
-        <label>Basis-URL (ohne Slash am Ende)
-          <input name="base_url" value="<?= $val('base_url', $guessUrl) ?>" required></label>
-        <label>Zeitzone (Anzeige)
-          <input name="timezone" value="<?= $val('timezone', 'Europe/Berlin') ?>"></label>
-        <label>Logo-Pfad
-          <input name="logo_path" value="<?= $val('logo_path', 'assets/images/gen-em_logo_helicopter.svg') ?>"></label>
-      </fieldset>
+      <?php ui_karte_start(['titel' => 'Anwendung']); ?>
+        <?php ui_feld(['name' => 'base_url', 'label' => 'Basis-URL', 'pflicht' => true,
+                       'wert' => (string)($v['base_url'] ?? $guessUrl),
+                       'klein' => 'Ohne Schrägstrich am Ende.']); ?>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'timezone', 'label' => 'Zeitzone (Anzeige)',
+                         'wert' => (string)($v['timezone'] ?? 'Europe/Berlin')]); ?>
+          <?php ui_feld(['name' => 'logo_path', 'label' => 'Logo-Pfad',
+                         'wert' => (string)($v['logo_path'] ?? 'assets/images/gen-em_logo_helicopter.svg'),
+                         'klein' => 'Nur für ein EIGENES Logo. Zeigt der Pfad auf eines '
+                                  . 'der beiden mitgelieferten, entscheidet die Logo-Wahl '
+                                  . '(Wartung und Profil).']); ?>
+        </div>
+      <?php ui_karte_ende(); ?>
 
-      <fieldset>
-        <legend>SMTP (für Passwort-Reset-Mails, optional)</legend>
-        <p class="muted small">Kann leer bleiben — der Admin-Zugang funktioniert auch ohne.
-           Ohne SMTP können NutzerInnen ihr Passwort aber nicht per Mail zurücksetzen.</p>
-        <label>Host <input name="smtp_host" value="<?= $val('smtp_host') ?>"></label>
-        <label>Port <input name="smtp_port" value="<?= $val('smtp_port', '465') ?>"></label>
-        <label>Benutzer <input name="smtp_user" value="<?= $val('smtp_user') ?>"></label>
-        <label>Passwort <input type="password" name="smtp_pass"></label>
-        <label>Absender-Adresse <input name="smtp_from" value="<?= $val('smtp_from') ?>"></label>
-        <label>Absender-Name <input name="smtp_from_name" value="<?= $val('smtp_from_name', 'Einsatzdoku') ?>"></label>
-      </fieldset>
+      <?php ui_karte_start(['titel' => 'SMTP', 'zahl' => 'optional']); ?>
+        <p class="feld-hinweis">Kann leer bleiben — der Admin-Zugang funktioniert auch
+           ohne. Ohne SMTP können NutzerInnen ihr Passwort aber nicht per Mail
+           zurücksetzen.</p>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'smtp_host', 'label' => 'Host',
+                         'wert' => (string)($v['smtp_host'] ?? '')]); ?>
+          <?php ui_feld(['name' => 'smtp_port', 'label' => 'Port',
+                         'wert' => (string)($v['smtp_port'] ?? '465')]); ?>
+        </div>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'smtp_user', 'label' => 'Benutzer',
+                         'wert' => (string)($v['smtp_user'] ?? '')]); ?>
+          <?php ui_feld(['name' => 'smtp_pass', 'label' => 'Passwort', 'art' => 'password']); ?>
+        </div>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'smtp_from', 'label' => 'Absender-Adresse',
+                         'wert' => (string)($v['smtp_from'] ?? '')]); ?>
+          <?php ui_feld(['name' => 'smtp_from_name', 'label' => 'Absender-Name',
+                         'wert' => (string)($v['smtp_from_name'] ?? 'Einsatzdoku')]); ?>
+        </div>
+      <?php ui_karte_ende(); ?>
 
-      <button type="submit" class="btn-primary">Einrichten</button>
+      <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'breit' => true,
+                    'symbol' => 'haken']) ?>
     </form>
     <?php
     render_page('Einrichten', ob_get_clean());
@@ -396,48 +448,49 @@ function render_form(array $v, array $errors, string $nachweis,
 
 function render_page(string $title, string $body): void {
     /* Die Seitenhuelle kommt aus ui.php — wie ueberall sonst (P0/A2).
-       ui.php hat auf oberster Ebene keine Abhaengigkeit und laeuft deshalb
-       auch hier, VOR der Ersteinrichtung: Es gibt zu diesem Zeitpunkt weder
-       config.php noch db.php, also weder asset() noch favicon_tags(). Die
-       Huelle faengt das ab (ui_asset(), ui_favicon()).
+       Geladen wird sie am DATEIANFANG, nicht hier; die Begruendung steht
+       dort (Web 9.10.1).
 
-       ZWEI ABWEICHUNGEN VOM REST DER ANWENDUNG, beide gewollt:
-       'stil' => false  — der Einrichter bindet style.css NICHT ein. Er soll
-                          auch dann bedienbar aussehen, wenn am Stylesheet
-                          etwas fehlt; seine Gestaltung bringt er im Kopf mit.
-       Das Favicon bekommt er seit A2 trotzdem (AK-A2-5) — es haengt an
-       zwei Dateien, die neben ihm liegen, und kostet nichts. */
-    require_once __DIR__ . '/ui.php';
-    ui_seite_start([
-        'titel' => $title,
-        'stil'  => false,
-        'kopf'  => <<<'HTML'
-<style>
-  :root{--navy:#1A2E4D;--paper:#F7F8F9;--accent:#FF8F1F;--line:#D5DAE0;--ink:#1B2733;--muted:#66707B}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--navy);color:var(--ink);
-    font:15px/1.55 system-ui,'Segoe UI',Roboto,sans-serif;display:grid;place-items:start center;min-height:100vh;padding:2rem 1rem}
-  main{background:#fff;border-radius:10px;padding:1.6rem 1.8rem;width:min(96vw,560px)}
-  h1{font-size:1.5rem;margin:.2rem 0 .6rem;letter-spacing:.02em}
-  fieldset{border:1px solid var(--line);border-radius:8px;margin:1rem 0;padding:.8rem 1rem}
-  legend{font-weight:600;padding:0 .4rem;color:var(--navy)}
-  label{display:block;margin:.55rem 0 .1rem;font-size:.92rem}
-  label.check{display:flex;gap:.5rem;align-items:flex-start;font-size:.88rem;color:var(--muted)}
-  label.check input{width:auto;margin-top:.2rem}
-  input{width:100%;padding:.5rem .6rem;border:1px solid var(--line);border-radius:5px;font:inherit}
-  input:focus{outline:2px solid var(--accent);outline-offset:1px}
-  .btn-primary{background:var(--accent);color:#fff;font-weight:600;border:0;border-radius:6px;
-    padding:.6rem 1rem;width:100%;cursor:pointer;font-size:1rem;margin-top:.4rem}
-  .btn-primary:hover{background:#E67C0E}
-  .btn-link{display:inline-block;margin-top:.4rem;color:var(--accent);font-weight:600;text-decoration:none}
-  .alert{background:#FFF0F0;border:1px solid #E8B4B4;color:#B02525;padding:.55rem .8rem;border-radius:5px;margin:.5rem 0}
-  .alert-info{background:#EDF5FF;border-color:#B6D4F2;color:#1B5E9E}
-  .alert-ok{background:#EBFBEE;border-color:#A3E5B5;color:#1B7A34}
-  .muted{color:var(--muted)} .small{font-size:.85rem}
-  code{background:#F1F3F5;padding:.1em .35em;border-radius:3px;font-family:ui-monospace,Consolas,monospace}
-</style>
-HTML,
-    ]);
-    echo '<main>', $body, '</main>', "\n";
+       SEIT P3/O2 GILT DAS GEMEINSAME STYLESHEET (Backlog Nr. 18, E-P3-02).
+       Bis Web 8.0.1 brachte diese Seite ihre Gestaltung im Kopf mit — 17
+       Hexwerte, eigene Knopf- und Meldungsklassen, eine zweite Schriftgroesse
+       —, und die Begruendung dafuer lautete: Der Einrichter soll auch dann
+       bedienbar aussehen, wenn am Stylesheet etwas fehlt.
+
+       Der Preis war hoeher als der Nutzen. Der Einrichter war die einzige
+       Seite, die bei einer Farbaenderung nicht mitzog, die einzige mit einer
+       eigenen `.btn-link`-Regel (die im Stylesheet daneben deshalb nie
+       greifen konnte — Backlog Nr. 18) und die einzige ohne Fusszeile. Und
+       das Stylesheet liegt neben ihm im selben Verzeichnis: Faellt es aus,
+       ist die Anwendung ohnehin nicht eingerichtet.
+
+       Der relative Pfad funktioniert hier, weil der Einrichter im selben
+       Verzeichnis liegt wie die Anwendung; ohne asset() fehlt nur der
+       Erkennungswert an der Adresse, und der Einrichter laeuft genau einmal. */
+    /* DIE OEFFENTLICHE HUELLE, nicht die der Anmeldung (O10).
+     *
+     * Bis Web 9.10.1 stand hier `anmeldung-body` mit `.anmeldung-karte`: die
+     * dunkelblaue Flaeche und die schmale Karte des Anmeldeformulars. Die ist
+     * fuer zwei Zeilen gemacht — der Einrichter traegt fuenf Feldgruppen und
+     * half sich schon mit `.anmeldung-breit`, was der Sache nach die
+     * Lesespalte ist, nur unter falschem Namen. Dazu hatte die Kopfleiste
+     * dieselbe Farbe wie die Flaeche darunter (beide --dunkelblau), das Logo
+     * schwebte also ohne sichtbare Leiste.
+     *
+     * Das Konzept widersprach sich an dieser Stelle: E-P3-38 nennt „dunkle
+     * Huelle", Tabelle 5.4 fuehrt den Einrichter unter „Oeffentlich". Es gilt
+     * die Tabelle — dieselbe Huelle wie Abbruchseite, Impressum und
+     * Datenschutz. */
+    ui_seite_start(['titel' => $title]);
+    ui_kopf(['menue' => false]);
+    echo '<div class="rahmen rahmen-lesespalte">' . "\n";
+    echo '  <main class="inhalt">' . "\n";
+    echo $body, "\n";
+    echo "  </main>\n</div>\n";
+    /* OHNE die Verweise auf Impressum und Datenschutz: Diese Seite laeuft
+       VOR der Ersteinrichtung, die beiden Rechtstextseiten brauchen aber eine
+       Datenbank und leiten ohne config.php hierher zurueck. Der Verweis waere
+       eine Schleife. */
+    ui_fuss_seite(['rechtslinks' => false]);
     ui_seite_ende();
 }

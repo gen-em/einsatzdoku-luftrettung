@@ -75,26 +75,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ein fester Abstand je Anfrage wäre falsch. Das Demo-Konto ist mit
     abgedeckt, sobald der Topf existiert (E-P1-09 führt es als benanntes
     Restrisiko).
-18. **`.btn-link.danger` in `style.css` kann nie greifen.** `btn-link` kommt im
-    ganzen Projekt nur in `install.php` vor, und diese Seite lädt `style.css`
-    gar nicht — sie bringt ihre Gestaltung im Kopf mit (`'stil' => false`).
-    Gefunden in P0/N2 (dort F-19) als Nachlese zu einem Blindfleck der
-    A4-Erhebung, die eine Klasse schon dann als benutzt zählte, wenn ihr Name
-    irgendwo auftauchte. **Nicht entfernt**, weil nicht auf der Freigabeliste
-    von A4. Zu entscheiden: streichen, oder die Regel in den Kopf von
-    `install.php` ziehen, wo sie wirken würde.
 19. **`$title` in `einsatz_loeschen.php` wird nie gelesen.** Die Variable wird
     gesetzt, der Titel steht daneben als Literal. Gefunden in P0 (dort F-06).
     Einzeiler, aber bewusst nicht nebenbei erledigt: Er stand nicht auf der
     Freigabeliste.
-20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.** Von 93
-    Hex-Farben stehen 78 außerhalb von `:root` (nachgezählt Web 7.2.0); für 13
-    davon gibt es bereits ein Token mit **exakt demselben** Wert — sie ließen
-    sich ohne jede Gestaltungsfrage ersetzen. Die übrigen 65 zu benennen ist
-    dagegen eine Gestaltungsentscheidung. Gefunden in P0/A6 (dort C6).
-    Ausdrücklich dem Oberflächen-Redesign (P3) zugeordnet, weil die Palette
-    dort ohnehin angefasst wird; die Einzelwerte stehen in `docs/Branding.md`,
-    Abschnitt 5 (B3).
 21. **Die 43 weiteren Funde der A4-Nachlese sichten.** Die Erhebung „toter
     Code" in P0/A4 hat mit einer zweiten, breiteren Methode 43 zusätzliche
     Kandidaten geliefert (Abschnitt 9.3 des P0-Konzepts). Sie sind **nicht**
@@ -115,12 +99,299 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nebenbei geändert, weil der Vertrag die führende Quelle ist und eine
     Änderung an ihm eine Entscheidung wäre, keine Korrektur.
 
+36. **Ein Prüfmittel für Klassennamen, die JavaScript sucht und niemand mehr
+    vergibt.** In P3/O6 fiel auf, dass seit O2 **kein einziger** Filter der
+    Suchseite mehr wirkte: Der Zuhörer horchte auf
+    `.filterspalte input, .filterspalte select`, und die Klasse
+    `filterspalte` war beim Umzug in die gemeinsame Leiste verschwunden
+    (F-P3-AG). Nichts hat das gemeldet — ein Selektor, der ins Leere greift,
+    ist in JavaScript kein Fehler, sondern eine leere Liste. Drei
+    Arbeitspakete lang blieb es unbemerkt, weil Freitext und Sortierung an
+    eigenen Zuhörern hingen und die Seite deshalb *fast* richtig aussah.
+    `tools/vollstaendigkeit/` kennt bereits beide Seiten dieser Rechnung
+    (Klassen im Markup, Klassen im Stylesheet); ihm fehlt die dritte:
+    Klassen, die **JavaScript** in einem Selektor nennt. Ein Abgleich gegen
+    die im Markup tatsächlich vergebenen Namen würde genau diesen Fall
+    melden.
+    Zwei Vorbehalte, weshalb es nicht nebenbei entsteht: Klassen, die JS
+    selbst vergibt (`classList.add('aktiv')`), sind im Markup zu Recht nicht
+    zu finden und dürfen nicht als Fund gelten; und Selektoren, die aus
+    Zeichenketten zusammengesetzt werden, sind statisch nicht auflösbar. Das
+    Mittel braucht also eine Ausnahmeliste mit Begründung — wie die
+    Streichliste — statt einer Ja/Nein-Regel. Sinnvoll gegen Ende von P3,
+    wenn die Klassennamen stehen.
+
+37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
+    Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
+    gehört nicht ins Oberflächen-Redesign. Der Bestand ist ausgelegt auf
+    „50–80 Einsätze pro Jahr, nach zwei Jahrzehnten unter etwa 1600
+    Datensätze"; die Frage ist, was darüber hinaus passiert.
+
+    **Was bereits gemessen ist** (Sondierung ohne Lastdatensatz: die Antworten
+    von `api/suchindex.php` und `api/range.php` wurden auf dem Weg in den
+    Browser vervielfacht, der Client durchlief damit den echten Weg):
+
+    - **Die Suche skaliert sublinear und ist nicht das Problem.** 85-fache
+      Menge (82 → 7000 Einsätze) ergibt 2,2-fache Ladezeit (558 → 1224 ms)
+      und 4,8-fache Rechenzeit je Tastendruck (14,5 → 69,9 ms). Grund ist die
+      Seitengrenze 200 aus Web 5.9.0: Ab 250 Einsätzen stehen immer genau 200
+      Zeilen im DOM, gefiltert und gezählt wird über alles.
+    - **Die Entschlüsselung ist billig.** 0,039 ms je Einsatz auf dem Weg, den
+      die Anwendung geht (seriell, `importKey` je Datensatz) — bei 3500
+      Einsätzen 0,14 s. Die naheliegende Vermutung, die Ende-zu-Ende-
+      Verschlüsselung sei der Engpass, ist um etwa Faktor 100 daneben. Ein
+      einmaliger Schlüsselimport brächte 0,013 ms je Einsatz; das lohnt den
+      Eingriff nicht.
+    - **Die Zeitraumübersicht wächst dagegen linear und ungedeckelt.**
+      `zeitraum.php` ruft `EdMissionTable.erzeuge` ohne `seite`; bei 3500
+      Einsätzen entstehen 3500 `<tr>`, ein Tabwechsel dauert 854 ms statt 191
+      (gemessen **ohne** Kartenmarker — die Kacheln waren in der Messumgebung
+      nicht erreichbar, der Markeranteil kommt oben drauf).
+    - **Der Suchindex überträgt den gesamten Bestand**: 1097 Bytes je Einsatz,
+      ohne LIMIT — 3500 Einsätze wären 3,66 MB in einer Antwort. Das ist die
+      Folge der Verschlüsselungszusage: Diagnose, Alter und Einsatzort kann
+      der Server nicht filtern. Die **übrigen** rund dreißig Filter arbeiten
+      auf unverschlüsselten Spalten und könnten serverseitig vorschneiden —
+      das ist der eigentliche Hebel, und er ist unangetastet.
+    - **Die Sicherung ist zu 93 % Spur.** 31,9 kB je Einsatz mit Spurpunkten,
+      2,2 kB ohne; 3500 Einsätze ergäben rund 109 MB rohes JSON. Die
+      `.edbak`-Datei selbst ist gzip-komprimiert und handlich (739 kB für 87
+      Einsätze) — beim **Zurückspielen** aber entsiegelt der Browser sie und
+      schickt das rohe, unkomprimierte JSON per POST
+      (`einstellungen.php:2053` und `:2191`). `crypto.js` bringt mit
+      `CompressionStream` bereits alles mit, was ein komprimierter POST
+      bräuchte.
+    - **Offen und lokal nicht klärbar:** Ob und wo `post_max_size` diesen POST
+      abschneidet. Lokal kamen 32 MB durch, obwohl `post_max_size` auf 8M
+      steht — der eingebaute PHP-Server verhält sich bei
+      `Content-Type: application/json` offenbar anders als ein Webspace mit
+      Apache oder nginx. Die Grenze des **Produktivservers** ist damit
+      ungemessen; sie entscheidet, ab wie vielen Einsätzen eine
+      Wiederherstellung scheitert.
+
+    **Stille Kappungen** — gefährlicher als langsame Seiten, weil eine
+    Dokumentation, die Zeilen verschweigt, falsch ist: `dt_liste($userId, 500)`
+    in der Diensttage-Leiste (`ui.php:498`), 120 in `api/day.php:130`, 400 im
+    Verschiebe-Dialog (`einsatz_verschieben.php:64`). Keine davon sagt der
+    Anwenderin, dass sie greift. **Laute Grenzen** dagegen melden sich
+    ordentlich mit HTTP 413: Import bei 3000 Einsätzen / 600 Diensttagen
+    (`api/import_commit.php:93`), Export bei 5000 (`api/export_data.php:182`).
+
+    **Die zweite Achse — viele KONTEN statt vieler Einsätze — ist seit P3/O9b
+    gemessen** und vorerst erledigt (`tools/pruefkonten/`, 300 Konten): Die
+    NutzerInnen-Liste kommt mit **einer** Abfrage und **einem**
+    Verzeichnisdurchlauf aus (3,3 ms / 3,2 ms bei 304 Konten, 103 ms für den
+    ganzen Aufruf), weil der Sicherungsstand aller Konten aus je einer kleinen
+    `konto.json` kommt statt aus je einem Verzeichnisdurchlauf. Gesucht,
+    gefiltert und sortiert wird im Speicher; der Browser bekommt höchstens 50
+    Zeilen. **Die Grenze davon:** Bei einigen tausend Konten kippt das
+    Verhältnis, und dann braucht der Sicherungsstand eine Spalte in der
+    Datenbank statt eines Verzeichnisdurchlaufs. Dabei aufgefallen und behoben:
+    `edbak_intervall()` fragte je Zeile die Datenbank — 304 Abfragen und
+    27,7 ms für eine Subtraktion.
+
+    **Noch nicht auf dieser Achse gemessen:** `admin_sicherungen.php` (die
+    Übersicht dort liest weiterhin je Konto ein Verzeichnis **und** eine
+    Begleitdatei — F-P3-F, fällig in O9c) und der Sammelvorgang „Alle sichern"
+    (222 ms je Konto mit 82 Einsätzen; die Liste begrenzt eine Sammelaktion
+    deshalb auf ein Zeitbudget von 20 s und sagt, was übrig blieb).
+
+    **Was noch fehlt:** die Serverseite bei vielen EINSÄTZEN. Sie ist die
+    einzige Größe, die die Sondierung nicht erreicht — dafür braucht es echte
+    Zeilen. Beschlossen ist
+    dafür ein Werkzeug `tools/lastdatensatz/`, das den vorhandenen Bestand mit
+    neuen Dienstdaten vervielfacht (250 / 500 / 1000 / 3500), in **zwei**
+    Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und
+    verdichtet auf ein Kalenderjahr für die Zeitraumübersicht. Zwei Fallstricke
+    stehen dabei fest: Das Demo-Konto scheidet als Ziel aus (es setzt sich alle
+    1800 s selbst zurück, `demo_lib.php:52`), und ein `pat_blob` ist zwar 1:1
+    kopierbar (AES-GCM ohne `additionalData`, IV im Blob — `crypto.js:109`),
+    darf aber niemals mit behaltenem IV und geändertem Klartext geschrieben
+    werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
+    Kontos gleich mit.
+
+38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
+    *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
+    ruft bei **jedem** Seitenaufruf `nb_offen_gesamt()`. Die Funktion bricht
+    zwar sofort ab, wenn `vehicles.base_id` schon `NOT NULL` trägt — auf einer
+    Neuinstallation ist das von Anfang an so, dort kostet sie eine einzige
+    `information_schema`-Abfrage, die zusätzlich pro Aufruf gemerkt wird.
+
+    Auf einer **migrierten** Installation, deren Nachbearbeitung noch niemand
+    abgeschlossen hat, läuft sie dagegen durch: `nb_offene_tage($userId)` holt
+    bis zu 500 Diensttage samt einer Unterabfrage je Zeile — nur um
+    `count()` darauf anzuwenden —, dazu bis zu zehn weitere Abfragen für die
+    Stammdatentabellen. Ein `SELECT COUNT(*)` täte es in allen Fällen.
+
+    Kein Fehler und kein Zustand, der bleiben soll (die Seite existiert, um ihn
+    zu beenden) — aber unnötig, und er trifft genau die Installationen, die
+    ohnehin am meisten Bestand tragen. Behebung: eine eigene Zählfunktion
+    neben `nb_offene_tage()`, die nur `COUNT(*)` fragt.
+
+40. **55 Altklassen ohne Gegenstück.**
+    *Aufgenommen in P3/O11, war für O12 vorgesehen, in O12 bewusst
+    zurückgestellt.* Die Vollständigkeitsprüfung verlangt für jede der 220
+    Klassen des alten Stylesheets entweder eine Regel im neuen oder einen
+    Eintrag auf der Streichliste. O11 hat 22 Einträge nachgetragen (die Zahl
+    fiel von 78 auf 55); die übrigen stammen aus O1 bis O10 und sind dort mit
+    dem Umbau verschwunden, ohne eingetragen zu werden. Die Streichliste ist
+    damit unvollständig — sie sagt nicht zu jeder verschwundenen Klasse,
+    *warum* sie verschwunden ist, und genau das ist ihr Zweck.
+
+    **Warum nicht in O12 erledigt.** Nr. 39 daneben war Werkzeugarbeit: 29
+    Namen, jeder in wenigen Minuten am Fundort zu klären. Dieser Punkt ist
+    etwas anderes — er verlangt für 55 Klassen die Rekonstruktion, in welchem
+    von zehn Paketen sie verschwunden sind und wodurch sie ersetzt wurden.
+    Das ist Archäologie in zehn Commits, und sie **halbherzig** zu machen
+    wäre schlimmer als sie zu lassen: Eine Streichliste mit 55 Einträgen
+    „ersatzlos entfallen" sieht vollständig aus und sagt nichts. Der Zweck der
+    Liste ist die Begründung, nicht die Zeile.
+
+    **Weg dahin** (P4, vor dem ersten CSS-Umbau): Die 55 Namen gruppenweise
+    gegen die Konzeptabschnitte O2 bis O10 halten — der Umsetzungsstand nennt
+    zu jedem Paket, welcher Baustein welche alte Klasse abgelöst hat. Was sich
+    daraus nicht klären lässt, bekommt einen Eintrag „Herkunft nicht mehr
+    feststellbar" und wird als solcher gezählt; auch das ist eine ehrliche
+    Auskunft, „ersatzlos" wäre eine erfundene.
+
+41. **Sechs Klassen im Markup ohne Regel — offene Gestaltungsfragen.**
+    *Aufgenommen in P3/O12 als Rest von Nr. 39.* Nach dem Eintragen der
+    begründeten Fälle in `tools/vollstaendigkeit/ohne-regel.md` bleiben sechs
+    Namen übrig, bei denen die Frage offen ist, ob sie eine Regel brauchen.
+    Sie stehen dort mit dem Vermerk `[offen]` und bleiben deshalb ein Befund:
+
+    - `imp-warn` — „abweichende Crew (…)" in der Kopfzeile einer Tagesgruppe
+      der Importvorschau. Ein **Warnhinweis, der wie Fließtext aussieht**;
+      von allen sechs der wahrscheinlichste echte Fund.
+    - `imp-daygroup` — die Kopfzeile einer Tagesgruppe selbst. Sie trägt ihren
+      Text in `<strong>`, sonst nichts: eine Gruppenüberschrift, die aussieht
+      wie eine Datenzeile.
+    - `rea-kopf`, `rea-beginn` — Kopfzeile und Beschriftung einer
+      Reanimationssitzung. Das Aussehen kommt vom Nachbarn `phasen-eingabe`
+      bzw. von der Elementregel für `label`; kein Skript liest die Klassen.
+      Entweder Reste, oder die Kopfzeile soll sich von einer gewöhnlichen
+      Phasenzeile abheben.
+    - `rmneu` — der Knopf „neu" in der Rettungsmittelwahl, neben `rmopt`.
+    - `phasen-name` — der Name einer Phase in der Einsatzansicht.
+
+    Jedes davon ist eine **Entscheidung**, kein Aufräumen: Entweder die Klasse
+    verschwindet, oder sie bekommt eine Regel — und dann ist das eine neue
+    Darstellung und braucht nach `docs/Design.md` 1 eine Freigabe. Deshalb
+    nicht am Phasenende erledigt.
+
+42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
+    *Aufgenommen in P3/O12.* P-P3-03 verlangt null. Die Prüfung meldet 158
+    Treffer; 155 davon sind Kommentare oder richtige Typografie (die
+    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der
+    Hinweise, das Malzeichen in „3× RTW"). Drei sind echte Symbole:
+
+    - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
+      `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
+      Begründung im Code; das ist kein Fehler, sondern ein Netz, und es
+      gehört eher dokumentiert als entfernt.
+    - `server/assets/ortsfeld.js:197` — `x.textContent = '×'` am
+      Koordinaten-Chip. Der Knopf `.rmx` ist textgroß gebaut und hat keine
+      Symbolregel; ein SVG hineinzusetzen heißt, ihn neu zu bemaßen.
+    - `server/assets/patient.js:133` — `⚠` für einen nicht entschlüsselbaren
+      Datensatz. Das Zeichen steht nicht nur in einer Zelle, sondern **im
+      Satz** („… ist mit ⚠ gekennzeichnet"). Ein SVG im Fließtext ist eine
+      Gestaltungsfrage, keine Ersetzung.
+
+    Die beiden letzten sind also kein mechanischer Tausch. Solange sie
+    stehen, ist der Sollwert von P-P3-03 nicht erreicht — und das steht so im
+    Prüfprotokoll, statt die Zahl schönzurechnen.
+
+43. **Ortsdaten: die GPS-Spur ist nicht verschlüsselt.**
+    *Aufgenommen 30.08.2026 aus der ersten Rückmeldungsrunde.* Der Einsatzort
+    ist mit Adresse und Koordinaten Ende-zu-Ende verschlüsselt — die Spur, die
+    dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
+    ist damit nominell geschützt und faktisch rekonstruierbar.
+
+    Die Bestandsaufnahme steht in `docs/Konzept-V1-Ortsdaten.md`: was liegt wo,
+    was verrät was, was kosten die drei Wege. Kurzfassung — der Server rechnet
+    mit den Koordinaten **nicht** (Strecke und Höhenmeter kommen von der Uhr,
+    die Phasenzuordnung über Zeitstempel), aber die **Uhr hat keinen
+    Schlüssel** und kann deshalb nur Klartext liefern.
+
+    Empfehlung dort: die Zusage zuerst auf das eingrenzen, was sie hält (ein
+    Nachmittag), und die eigentliche Lösung — Schlüssel auf die Uhr — in eine
+    eigene Phase zusammen mit der ohnehin anstehenden Uhr-Arbeit.
+
+44. **Sprungliste bei Standorten mit vielen Rettungsmitteln.**
+    *Aufgenommen 30.08.2026.* Ein Standort mit neun Rettungsmitteln zwingt zum
+    Scrollen, um den zu finden, den man sucht. Vorschlag: eine Zeile runder
+    Marken direkt unter der Überschrift „Rettungsmittel", die zum Eintrag
+    springen — erst ab sechs Einträgen, darunter sieht man die Liste ohnehin
+    ganz.
+
+    Mockup liegt: `docs/mockups/N1-sprungliste.html` mit Bildern für 900 und
+    390 px. **Wartet auf Freigabe** — es wäre eine neue Darstellung, und die
+    braucht nach `docs/Design.md` 1 eine ausdrückliche Zustimmung.
+
+45. **Dritte Kartengröße zwischen klein und Vollbild.**
+    *Aufgenommen 30.08.2026, zurückgestellt.* Die Karte des Diensttags ist im
+    Regelfall klein und im Vollbild oft zu groß. Vorschlag aus der Durchsicht:
+    eine mittlere Fassung über die volle Breite des Diensttags, über der
+    Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
+
 ---
 
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
+    *Erledigt mit Web 9.13.0 (P3/O12).* Der Punkt war eine Frage nach dem
+    **Prüfmittel**, nicht nach dem Stylesheet: Die Gegenprobe „im Markup, aber
+    ohne Regel" hatte in O11 einen echten Fund gemacht (der Export-Knopf mit
+    `btn-primary`, 23 px statt 44 — F-P3-BA), und dieser eine Fund stand
+    zwischen 28 falschen. Eine Liste in diesem Mischungsverhältnis wird nach
+    dem dritten Mal nicht mehr gelesen, und dann findet sie auch den echten
+    nicht.
+
+    Es gibt jetzt `tools/vollstaendigkeit/ohne-regel.md` nach dem Muster der
+    Streichliste: `[bleibt]` für die begründeten Fälle (acht Bruchstücke
+    zusammengesetzter Klassennamen, fünfzehn Skriptanker und Behälter — jeder
+    mit Begründung und Fundstelle), `[offen]` für die ungeklärten. Die
+    Prüfung meldet dadurch **0** ohne eingetragenen Grund statt 29, führt die
+    sechs offenen unter eigener Überschrift — und meldet **ihre eigenen
+    verwahrlosten Einträge**: Wessen Klasse inzwischen eine Regel hat oder aus
+    dem Markup verschwunden ist, steht als „Eintrag ungenutzt" da. Ohne diese
+    Rückfrage wäre die Liste in zwei Paketen dasselbe geworden, wogegen sie
+    schützt. Die Gesamtzahl der Befunde fiel von 247 auf 224.
+
+    Der Rest — die sechs `[offen]` — steht als **Nr. 41**.
+
+18. **`.btn-link.danger` in `style.css` kann nie greifen.**
+    *Erledigt mit Web 9.1.0 (P3/O2).* Die Regel konnte nie greifen, weil
+    `btn-link` nur in `install.php` vorkam — und diese Seite lud `style.css`
+    gar nicht, sondern brachte ihre Gestaltung im Kopf mit. Der Punkt war als
+    Frage gestellt: streichen, oder die Regel dorthin ziehen, wo sie wirken
+    würde?
+
+    Beantwortet hat sie das Konzept P3 anders und größer (E-P3-02): Der
+    Einrichter bekommt das **gemeinsame Stylesheet**. Sein eigener Stil mit 17
+    Hexwerten, zwei Schriftgrößen und vier eigenen Klassen ist entfallen;
+    Knöpfe und Meldungen kommen aus den Bausteinen, und er hat zum ersten Mal
+    eine Fußzeile. Die Begründung des Sonderwegs — „er soll auch dann bedienbar
+    aussehen, wenn am Stylesheet etwas fehlt" — hat der Praxis nicht
+    standgehalten: Er war die einzige Seite, die bei einer Farbänderung nicht
+    mitzog, und das Stylesheet liegt im selben Verzeichnis. Fällt es aus, ist
+    die Anwendung ohnehin nicht eingerichtet.
+
+20. **13 Hexwerte in `style.css` durch das vorhandene Token ersetzen.**
+    *Erledigt mit Web 9.0.0 (P3/O1) — und zwar nicht 13, sondern alle 78.*
+    Der Punkt war klein gefasst, weil er das Redesign nicht vorwegnehmen
+    wollte: 13 Werte hatten ein Token mit exakt demselben Wert, die übrigen 65
+    zu benennen wäre eine Gestaltungsentscheidung gewesen. Genau die hat P3
+    getroffen. Das Stylesheet ist neu geschrieben; außerhalb von `:root` steht
+    **kein einziger Hexwert mehr**, dazu keine `rgb()`-Angabe, keine
+    Schriftgröße außerhalb der Skala und kein Pixelmaß außerhalb der Token.
+    Nachgezählt von `tools/vollstaendigkeit/pruefen.py`, das dieselbe Zahl
+    weiterhin bei jedem Lauf prüft — der Punkt kann also nicht stillschweigend
+    zurückkommen. Die markenfremden Familien (Grün, Gelb, die zweite
+    Graufamilie) sind dabei ersatzlos entfallen.
 
 1. **Reanimationen im Einsatzformular erfassen.**
     *Erledigt mit Web 5.5.0.* Bis dahin konnten Reanimationen nur von der Uhr

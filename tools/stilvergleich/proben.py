@@ -33,6 +33,33 @@ def entphp(t):
     return t
 
 
+TAGS = (r'<(tr|td|th|li|div|span|button|a|p|dt|dd|details|summary|section|aside|'
+        r'nav|main|header|footer|form|h1|h2|h3|h4|table|thead|tbody|label|input|'
+        r'select|option|textarea|dialog|svg|use|fieldset|legend)\b')
+
+
+def php_zeichenketten(text):
+    """HTML-Schnipsel aus PHP-ZEICHENKETTEN — der blinde Fleck bis O12.
+
+    `entphp()` schneidet alles zwischen <?php und ?> heraus. Das war richtig,
+    solange das Markup einer Seite ZWISCHEN den PHP-Bloecken stand. Seit P3
+    kommt es zum groessten Teil aus den Bausteinen in ui.php, und die bauen es
+    mit `echo '<div class="zeile">'` — also INNERHALB eines PHP-Blocks. Genau
+    davor warnte die LIESMICH: „mit jedem weiteren Baustein waechst der blinde
+    Fleck." Nach O11 war er die halbe Oberflaeche.
+
+    Geholt wird jede Zeichenkette, die wie Markup aussieht; PHP-Ausdruecke
+    darin werden zu X, wie in jsprobe(). Doppelt gezaehlte Schnipsel schaden
+    nicht — verglichen wird dieselbe DOM gegen sich selbst.
+    """
+    st = []
+    for muster in (r"'((?:[^'\\\n]|\\.)*)'", r'"((?:[^"\\\n]|\\.)*)"'):
+        st += [m.group(1) for m in re.finditer(muster, text, re.S)]
+    h = [x for x in st if re.search(TAGS, x)]
+    h = [x.replace("\\'", "'").replace('\\"', '"') for x in h]
+    return h
+
+
 def seitenprobe():
     teile = []
     for pfad in sorted(glob.glob(SERVER + '/*.php')):
@@ -44,6 +71,11 @@ def seitenprobe():
         h = re.sub(r'<style\b.*?</style>', '', h, flags=re.S | re.I)
         h = re.sub(r'<!doctype[^>]*>|</?html[^>]*>|<head>.*?</head>|</?body[^>]*>', '',
                    h, flags=re.S | re.I)
+        # Dazu das Markup, das in PHP-Zeichenketten steckt (siehe oben).
+        aus_php = php_zeichenketten(t)
+        if aus_php:
+            h += '\n<div data-quelle="%s (Zeichenketten)">%s</div>' % (
+                os.path.basename(pfad), '\n'.join(aus_php))
         if h.strip():
             teile.append('<div data-quelle="%s">%s</div>' % (os.path.basename(pfad), h))
     return '\n'.join(teile)

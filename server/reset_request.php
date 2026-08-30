@@ -109,25 +109,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // wo jemand oft genug dieselbe Adresse angefragt hat.
     rate_gleiche_dauer($t0, RESET_MINDESTDAUER);
 }
+/* Fuer logo_src(): Ohne session_lib.php faende es logo_stamm() nicht und
+ * fiele still auf den Hubschrauber zurueck, gleich was die Installation
+ * eingestellt hat — F-P3-AN, eine Seite weiter. */
+require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
-ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'login-body']);
+ui_seite_start(['titel' => 'Passwort zurücksetzen', 'klasse' => 'anmeldung-body']);
 ?>
-<main class="login-card">
-  <h1>Passwort setzen</h1>
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <?php /* DAS LOGO STEHT JETZT AUCH HIER (O10). Diese Seite ist die
+           Nachbarin der Anmeldung — dieselbe dunkelblaue Fläche, dieselbe
+           Karte —, und sie war die einzige der drei ohne Marke. logo_src()
+           braucht dafür session_lib.php; die Datei lädt sie seit Web 9.10.1
+           ohnehin (F-P3-AN). */ ?>
+  <img src="<?= e(logo_src()) ?>" alt="" class="anmeldung-logo">
+  <h1 class="anmeldung-titel">Passwort setzen</h1>
   <?php if ($done): ?>
-    <p>Wenn die Adresse registriert ist, wurde eine E-Mail mit einem Link verschickt. Der Link ist eine Stunde gültig.</p>
-    <p class="login-aux"><a href="login.php">Zur Anmeldung</a></p>
+    <?= ui_meldung_markup('ok',
+        'Wenn die Adresse registriert ist, wurde eine E-Mail mit einem Link '
+      . 'verschickt. Der Link ist eine Stunde gültig.') ?>
+    <p class="anmeldung-neben"><a href="login.php">Zur Anmeldung</a></p>
   <?php else: ?>
-    <p>E-Mail-Adresse eingeben — du bekommst einen Link, um ein neues Passwort zu setzen.</p>
+    <p class="anmeldung-unter">E-Mail-Adresse eingeben — du bekommst einen Link,
+       um ein neues Passwort zu setzen.</p>
     <form method="post">
-      <label>E-Mail
-        <input type="email" name="email" required autofocus>
-      </label>
-      <button type="submit" class="btn-primary">Link anfordern</button>
+      <?php ui_feld(['name' => 'email', 'label' => 'E-Mail', 'art' => 'email',
+                     'pflicht' => true, 'attr' => ' autofocus']); ?>
+      <?= ui_knopf(['text' => 'Link anfordern', 'art' => 'primaer', 'breit' => true]) ?>
     </form>
-    <p class="login-aux"><a href="login.php">Zurück zur Anmeldung</a></p>
+    <p class="anmeldung-neben"><a href="login.php">Zurück zur Anmeldung</a></p>
   <?php endif; ?>
+ </div>
 </main>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <?php
 ui_seite_ende();
 

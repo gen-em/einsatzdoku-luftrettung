@@ -71,8 +71,11 @@ const EdMissionTable = (() => {
   function zelleGeschuetzt(m, wert, formatiere, klassen) {
     const kl = klassen ? klassen + ' ' : '';
     if (m._patFehler) {
+      /* Das Warnzeichen kommt aus dem Symbolvorrat (E-P3-18), nicht als
+         Unicode-Zeichen — es faerbt sich mit und sieht ueberall gleich aus. */
       return `<td class="${kl}patfehler" title="Diese Angaben liegen verschlüsselt vor, `
-           + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">⚠</td>`;
+           + `lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">`
+           + edSymbol('warnung', '', 'nicht lesbar') + `</td>`;
     }
     const leer = wert == null || wert === '';
     const text = leer ? '–' : (formatiere ? formatiere(esc(wert)) : esc(wert));
@@ -108,13 +111,108 @@ const EdMissionTable = (() => {
    * P9). Der Rueckfall haelt die Datei fuer sich lauffaehig; er ist die
    * Notloesung, nicht die Quelle. */
   const ART_FALLBACK = {
-    air:    { zeichen: '🚁', text: 'luftgebunden' },
-    ground: { zeichen: '🚑', text: 'bodengebunden' },
-    '':     { zeichen: '◌',  text: 'ohne Zuordnung' }
+    air:    { symbol: 'hubschrauber',   text: 'luftgebunden' },
+    ground: { symbol: 'fahrzeug',       text: 'bodengebunden' },
+    '':     { symbol: 'ohne-zuordnung', text: 'ohne Zuordnung' }
   };
   function artSymbol(kind) {
     const alle = (typeof ART_SYMBOLE !== 'undefined' && ART_SYMBOLE) ? ART_SYMBOLE : ART_FALLBACK;
     return alle[kind || ''] || alle[''] || ART_FALLBACK[''];
+  }
+
+  /* ---- Bausteine der Zellen (P3/O3) ------------------------------------- */
+
+  /** Haken aus dem Symbolvorrat, dunkelblau (E-P3-32). */
+  function HAKEN() { return edSymbol('haken', 'tabelle-haken', 'ja'); }
+
+  /** Dauer-Zelle: „kein Ende" ist eine rote Plakette, keine Zahl (E-P3-32). */
+  function zelleDauer(s) {
+    return s == null
+      ? '<span class="plakette plakette-rot">kein Ende</span>'
+      : fmtDur(s);
+  }
+
+  /** Kilometer ohne Einheit, eine Nachkommastelle, deutsches Komma. */
+  function fmtKmZahl(m) {
+    return m == null ? '<span class="dash">–</span>'
+                     : (m / 1000).toFixed(1).replace('.', ',');
+  }
+
+  /* ---- Die Kachel (E-P3-32, Mockup 10) ----------------------------------
+   *
+   * Unter 720 px gibt es keine Einsatztabelle: Bei 360 px bekamen Einsatzort
+   * und Diagnose — die beiden wichtigsten Spalten — null Pixel Breite und
+   * verschwanden ohne Hinweis, waehrend sieben Zahlenspalten stehen blieben
+   * (Befund B-P3-03). Die Kachel dreht das um: Zeile 1 Ort und km, Zeile 2
+   * Diagnose, Zeile 3 Dauer, Alter und Plaketten.
+   *
+   * EIN ERZEUGER FUER ALLE DREI SEITEN. opts:
+   *   farbe     Farbstreifen (Spurfarbe des Einsatzes; Tagesuebersicht)
+   *   artDatum  true = Artzeichen, Datum und Beginn als erstes Element
+   *             (Suche und Zeitraum, E-P3-32)
+   *   knapp     true = Diagnose einzeilig (Suche und Zeitraum)
+   *   hervor    Funktion(maskiert) -> HTML; hebt die Suchwoerter hervor
+   *             (Suche, E-P3-36)
+   */
+  function kachel(m, opts) {
+    opts = opts || {};
+    var k = 'kachel' + (opts.knapp ? ' kachel-knapp' : '');
+    var h = '<a class="' + k + '" href="einsatz.php?id=' + encodeURIComponent(m.id) + '">';
+    h += '<span class="kachel-streifen"'
+       + (opts.farbe ? ' style="background:' + esc(opts.farbe) + '"' : '') + '></span>';
+    /* Artzeichen, Datum und Beginn stehen in EINER Zeile (Mockup 27):
+       „<Zeichen> 22.08.2026 · 07:42". Getrennte Bloecke haetten das Zeichen
+       unter das Datum geschoben, sobald die Kachel schmal wird. */
+    h += '<span class="kachel-zeit">';
+    if (opts.artDatum) {
+      var s = artSymbol(m.kind);
+      h += '<span class="kachel-art">'
+         + (typeof edSymbol === 'function' ? edSymbol(s.symbol, '', s.text) : esc(s.text))
+         + '</span>';
+    }
+    h += (opts.artDatum && m.day ? '<span class="kachel-datum">' + fmtTag(m.day) + '</span> · ' : '')
+       + esc(m.start_hhmm || '–') + '</span>';
+
+    h += '<span class="kachel-rumpf">';
+    h += '<span class="kachel-kopf">'
+       + '<span class="kachel-ort">' + kachelGeschuetzt(m, m._ort, opts.hervor) + '</span>'
+       + '<span class="kachel-km">' + (m.distance_m == null ? ''
+           : Math.round(m.distance_m / 1000) + ' km') + '</span></span>';
+    h += '<span class="kachel-dx">' + kachelGeschuetzt(m, m._dx, opts.hervor) + '</span>';
+
+    var fuss = [];
+    if (m.duration_s != null) { fuss.push(esc(fmtDur(m.duration_s))); }
+    if (m._age != null && m._age !== '' && !m._patFehler) { fuss.push(esc(m._age) + ' J.'); }
+    var plaketten = [];
+    function pl(ton, text) {
+      plaketten.push('<span class="plakette plakette-' + ton + '">' + text + '</span>');
+    }
+    if (m.winch)          { pl('orange', 'Winde'); }
+    if (m.bergwacht)      { pl('orange', 'Bergwacht'); }
+    if (m.secondary)      { pl('blau',   'Sekundär'); }
+    if (m.false_alarm)    { pl('rot',    'Fehleinsatz'); }
+    if (m.duration_s == null) { pl('rot', 'kein Ende'); }
+    h += '<span class="kachel-fuss">'
+       + fuss.join(' · ')
+       + (fuss.length && plaketten.length ? ' ' : '')
+       + plaketten.join('') + '</span>';
+    h += '</span></a>';
+    return h;
+  }
+
+  /** Geschuetzte Angabe in der Kachel: – fuer „keine", Warnzeichen fuer
+   *  „vorhanden, aber nicht lesbar" — dieselbe Unterscheidung wie in der
+   *  Tabelle (zelleGeschuetzt). */
+  function kachelGeschuetzt(m, wert, hervor) {
+    if (m._patFehler) {
+      return '<span class="patfehler" title="Diese Angaben liegen verschlüsselt vor, '
+           + 'lassen sich mit dem aktuellen Schlüssel aber nicht lesen.">'
+           + edSymbol('warnung', '', 'nicht lesbar') + '</span>';
+    }
+    if (wert == null || wert === '') { return '–'; }
+    /* hervor() bekommt den Wert BEREITS MASKIERT und darf ihn nur noch
+     * umschichten — dieselbe Arbeitsteilung wie bei zelleGeschuetzt. */
+    return hervor ? hervor(esc(wert)) : esc(wert);
   }
 
   /* ---- Spaltendefinition ----------------------------------------------
@@ -141,67 +239,101 @@ const EdMissionTable = (() => {
        schmalste Auskunft. Sie erscheint nur, wenn im Bestand ueberhaupt mehr
        als eine Art vorkommt; bei reiner Luftrettung bliebe in jeder Zeile
        dasselbe Zeichen stehen. */
-    { key: 'art',   kopf: 'Art',                   thClass: 'c-art',
+    /* Farbstreifen wie in der Tagesuebersicht (E-P3-36, Mockup 28). Die
+       Farbe steht als `_col` an der Zeile; wer sie nicht setzt, bekommt die
+       Spalte gar nicht erst. Sie traegt dieselbe Bedeutung wie dort: die
+       Spurfarbe des Einsatzes an SEINEM Diensttag — derselbe Einsatz hat in
+       Suche und Tageskarte dieselbe Farbe. Nicht sortierbar im Sinn einer
+       Ordnung, aber der Kopf bleibt anklickbar wie alle (er sortiert dann
+       nach Farbe, was niemandem schadet). */
+    { key: 'col',   kopf: '',                      thClass: 'streifen-spalte',
+      nurWenn: liste => liste.some(m => m._col),
+      wert: m => m._col || '',
+      zelle: m => '<td class="streifen-spalte"><span class="streifen"'
+        + (m._col ? ' style="background:' + esc(m._col) + '"' : '') + '></span></td>' },
+    { key: 'art',   kopf: 'Art',                   thClass: '',
       nurWenn: liste => new Set(liste.map(m => m.kind || '')).size > 1,
       wert: m => m.kind || '',
       zelle: m => {
         const s = artSymbol(m.kind);
-        return `<td class="c-art"><span class="artzeichen" title="${esc(s.text)}"`
-             + ` aria-label="${esc(s.text)}">${esc(s.zeichen)}</span></td>`;
+        /* Seit P3/O2 kommt das Zeichen aus dem Symbolvorrat statt als Emoji
+           (E-P3-18). edSymbol() erzeugt dieselbe Zeichenkette wie ui_symbol()
+           in PHP; faellt assets/symbol.js aus, bleibt das Wort. */
+        const zeichen = (typeof edSymbol === 'function')
+          ? edSymbol(s.symbol, '', s.text)
+          : esc(s.text);
+        return `<td>${zeichen}</td>`;
       } },
-    { key: 'day',   kopf: 'Datum',                 thClass: 'c-date',
+    { key: 'day',   kopf: 'Datum',                 thClass: '',
       wert: m => m.day,
-      zelle: m => `<td class="mono c-date">${fmtTag(m.day)}</td>` },
-    { key: 'start', kopf: 'Beginn',                thClass: 'c-mid',
+      zelle: m => `<td>${fmtTag(m.day)}</td>` },
+    { key: 'start', kopf: 'Beginn',                thClass: '',
       wert: m => m.start_hhmm,
-      zelle: m => `<td class="mono c-mid">${m.start_hhmm}</td>` },
-    { key: 'dur',   kopf: 'Dauer',                 thClass: 'c-mid',
+      zelle: m => `<td>${m.start_hhmm}</td>` },
+    /* NOWRAP STATT UMBRUCH (F-N1-G). „1h 06min" passte nicht in die Spalte
+       und brach nach der Stunde um — eine Dauer auf zwei Zeilen liest sich
+       wie zwei Angaben. Die Spalte richtet sich jetzt nach ihrem laengsten
+       Wert; das kostet in der Breite weniger als der Umbruch an Klarheit. */
+    { key: 'dur',   kopf: 'Dauer',                 thClass: 'zahl-spalte',
       wert: m => m.duration_s == null ? -1 : m.duration_s,
-      zelle: m => `<td class="c-mid">${fmtDur(m.duration_s)}</td>` },
+      zelle: m => `<td class="zahl-spalte zeit-spalte">${zelleDauer(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._ort) },
-    { key: 'age',   kopf: 'Alter',                 thClass: 'c-mid',
+      zelle: (m, ctx) => zelleGeschuetzt(m, m._ort, ctx && ctx.hervor) },
+    { key: 'age',   kopf: 'Alter',                 thClass: 'zahl-spalte',
       wert: m => m._age == null ? -1 : m._age,
-      zelle: m => zelleGeschuetzt(m, m._age, null, 'mono c-mid') },
+      zelle: m => zelleGeschuetzt(m, m._age, null, 'zahl-spalte') },
     { key: 'dx',    kopf: 'Diagnose',              thClass: '',
       wert: m => (m._dx || '').toLowerCase(),
-      zelle: m => zelleGeschuetzt(m, m._dx) },
+      zelle: (m, ctx) => zelleGeschuetzt(m, m._dx, ctx && ctx.hervor) },
     /* Winde und Bergwacht sind FAEHIGKEITEN einzelner Rettungsmittel (E29).
        Wer nie windet, sah bisher zwei dauerhaft leere Spalten — dieselbe
        Ueberlegung, die in der Suche schon die Filterbloecke ausblendet. */
-    { key: 'winch', kopf: 'Winde',                 thClass: 'c-winde',
+    { key: 'winch', kopf: 'Winde',                 thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.winch),
       wert: m => m.winch ? 1 : 0,
-      zelle: m => `<td class="checkcol c-winde">${m.winch ? '✓' : ''}</td>` },
-    { key: 'bw',    kopf: 'Bergwacht',             thClass: 'c-bw',
+      zelle: m => `<td class="haken-spalte">${m.winch ? HAKEN() : ''}</td>` },
+    { key: 'bw',    kopf: 'Bergwacht',             thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
-      zelle: m => `<td class="checkcol c-bw">${m.bergwacht ? '✓' : ''}</td>` },
-    { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'c-sek',
+      zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
+    /* WEICHES TRENNZEICHEN STATT <br> (F-N1-G). „Sekundaertransport" ist EIN
+       Wort; das harte <br> trennte es ohne Bindestrich in zwei
+       („Sekundaer Transport"), und genau so las es sich auch. `&shy;` laesst
+       den Browser entscheiden: Passt es in eine Zeile, steht es in einer;
+       muss er trennen, setzt er den Bindestrich dazu. Dasselbe bei
+       „Fehleinsatz". */
+    { key: 'sec',   kopf: 'Sekundär&shy;transport', thClass: 'haken-spalte',
       wert: m => m.secondary ? 1 : 0,
-      zelle: m => `<td class="checkcol c-sek">${m.secondary ? '✓' : ''}</td>` },
+      zelle: m => `<td class="haken-spalte">${m.secondary ? HAKEN() : ''}</td>` },
     /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
        datengetrieben: Der Haken steht beiden Arten offen, gesetzt ist er
        selten, und eine Spalte voller leerer Zellen liest sich als Mangel. */
-    { key: 'fehl',  kopf: 'Fehl<br>einsatz',       thClass: 'c-fehl',
+    { key: 'fehl',  kopf: 'Fehl&shy;einsatz',       thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.false_alarm),
       wert: m => m.false_alarm ? 1 : 0,
-      zelle: m => `<td class="checkcol c-fehl">${m.false_alarm ? '✓' : ''}</td>` },
+      zelle: m => `<td class="haken-spalte">${m.false_alarm ? HAKEN() : ''}</td>` },
     /* Neutral beschriftet, nicht „Flug km" (Abschnitt 3.9/3.7.3). Diese
        Tabelle wird von zeitraum.php UND suche.php gemeinsam erzeugt; in der
        Suche stehen luft- und bodengebundene Einsaetze NEBENEINANDER, ein
        artabhaengiger Spaltenkopf ist dort gar nicht darstellbar. Die
        Flugterminologie bleibt allein den Kacheln vorbehalten (E32). */
-    { key: 'km',    kopf: 'km',                    thClass: 'c-mid',
+    /* Die Zelle nennt nur die ZAHL — die Einheit steht im Spaltenkopf, und
+       „38,4 km" in jeder Zeile unter einem Kopf „km" sagt sie doppelt
+       (Mockup 04). fmtKm mit Einheit bleibt fuer Fliesstext bestehen. */
+    { key: 'km',    kopf: 'km',                    thClass: 'zahl-spalte',
       wert: m => m.distance_m == null ? -1 : m.distance_m,
-      zelle: m => `<td class="mono c-mid">${fmtKm(m.distance_m)}</td>` }
+      zelle: m => `<td class="zahl-spalte">${fmtKmZahl(m.distance_m)}</td>` }
   ];
 
   /**
    * Baut eine Tabelle auf dem uebergebenen <table>-Element auf.
    *
    * opts.table        <table> mit <thead> und <tbody> (beide duerfen leer sein)
+   * opts.kacheln      Behaelter fuer die Kachelform (unter 720 px); ohne ihn
+   *                   entsteht nur die Tabelle
+   * opts.kachelOpts   Zusatzangaben an kachel() (artDatum, knapp)
+   * opts.hervor       Funktion(maskiert) -> HTML fuer die Suchwoerter
    * opts.sortKey      Voreinstellung, Standard 'day'
    * opts.sortAsc      Voreinstellung, Standard true
    *                   (zeitraum.php tut das historisch nicht — dort false)
@@ -209,7 +341,8 @@ const EdMissionTable = (() => {
    *                   Siehe den Abschnitt „Seitengroesse" unten.
    * opts.onAfterDraw  wird nach jedem Zeichnen gerufen: (gesamt, gezeigt)
    *                   'gesamt'  Zeilen, die dem Filter entsprechen
-   *                   'gezeigt' davon tatsaechlich gezeichnete
+   *                   'gezeigt' davon tatsaechlich gezeichnete, 'zeilen'
+   *                   die vollstaendige sortierte Trefferliste
    *                   Ohne Seitengroesse sind beide Zahlen gleich — die
    *                   bisherigen Aufrufer lesen nur die erste und bleiben
    *                   damit richtig.
@@ -270,13 +403,18 @@ const EdMissionTable = (() => {
       mehrZeile = document.createElement('p');
       mehrZeile.className = 'mehrzeile';
       mehrZeile.hidden = true;
+      /* `knopf knopf-neutral`, nicht mehr `btn-plain` (F-P3-AL). Die alte
+       * Klasse hat im neuen Stylesheet keine Regel mehr — die beiden Knoepfe
+       * waren seit dem Redesign in der Grundform des Browsers. Aufgefallen ist
+       * es niemandem, weil sie erst ab 200 Treffern erscheinen und der
+       * Referenzbestand 82 Einsaetze hat. */
       mehrKnopf = document.createElement('button');
       mehrKnopf.type = 'button';
-      mehrKnopf.className = 'btn-plain';
+      mehrKnopf.className = 'knopf knopf-neutral';
       mehrKnopf.addEventListener('click', () => mehrZeigen(sichtbar + seite));
       mehrAlleKnopf = document.createElement('button');
       mehrAlleKnopf.type = 'button';
-      mehrAlleKnopf.className = 'btn-plain';
+      mehrAlleKnopf.className = 'knopf knopf-neutral';
       mehrAlleKnopf.addEventListener('click', () => mehrZeigen(Infinity));
       mehrZeile.appendChild(mehrKnopf);
       mehrZeile.appendChild(mehrAlleKnopf);
@@ -295,11 +433,15 @@ const EdMissionTable = (() => {
         const th = document.createElement('th');
         th.className = 'sortable' + (sp.thClass ? ' ' + sp.thClass : '');
         th.dataset.key = sp.key;
+        /* Beschriftung ohne Auszeichnung — fuer das Sortierblatt, das
+         * dieselben Spalten fuehrt wie der Kopf (E-P3-32). */
+        th.dataset.label = sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         th.innerHTML = sp.kopf;
         if (sp.key === sortKey) {
           const pfeil = document.createElement('span');
           pfeil.className = 'arrow';
-          pfeil.textContent = sortAsc ? ' ▲' : ' ▼';
+          pfeil.innerHTML = ' ' + edSymbol('pfeil-hoch', sortAsc ? '' : 'symbol-oben',
+            sortAsc ? 'aufsteigend' : 'absteigend');
           th.appendChild(pfeil);
         }
         th.addEventListener('click', () => {
@@ -316,6 +458,10 @@ const EdMissionTable = (() => {
     function zeichne() {
       const spalten = sichtbareSpalten();
       zeichneKopf(spalten);
+      /* Der Kontext geht an JEDE Zelle und an jede Kachel: Er traegt heute
+       * nur die Hervorhebung der Suchwoerter, aber er traegt sie an EINER
+       * Stelle — sonst braeuchte jede neue Zeilenart ihren eigenen Weg. */
+      const ctx = { hervor: opts.hervor };
       /* Sortiert wird ueber ALLE Spalten, nicht nur die sichtbaren: Ein
        * geteilter Link kann nach einer Spalte sortieren, die der eigene
        * Bestand nicht zeigt. Die Reihenfolge stimmt dann trotzdem, nur der
@@ -332,7 +478,7 @@ const EdMissionTable = (() => {
         const tr = document.createElement('tr');
         tr.className = 'clickable';
         tr.dataset.mid = m.id;
-        tr.innerHTML = spalten.map(s => s.zelle(m)).join('');
+        tr.innerHTML = spalten.map(s => s.zelle(m, ctx)).join('');
         /* Die Zeile ist die Schaltflaeche. Ohne tabindex und Tastenbehandlung
          * waere das Oeffnen eines Einsatzes eine reine Mausfunktion — die
          * Hervorhebung beim Ueberfahren gaebe es dann fuer die Tastatur zwar
@@ -354,8 +500,20 @@ const EdMissionTable = (() => {
         });
         tbody.appendChild(tr);
       });
+      /* DIE KACHELN AUS DEMSELBEN ZEILENBESTAND (E-P3-32/36). Sortierung,
+       * Spaltensichtbarkeit und Seitengrenze gelten fuer beide Formen —
+       * welche zu sehen ist, entscheidet allein das Stylesheet. Ohne
+       * `kacheln` bleibt alles beim Alten. */
+      if (opts.kacheln) {
+        const ko = Object.assign({ hervor: opts.hervor }, opts.kachelOpts || {});
+        opts.kacheln.innerHTML = gezeigt
+          .map(m => kachel(m, Object.assign({ farbe: m._col }, ko))).join('');
+      }
       zeichneMehr(sortiert.length, gezeigt.length);
-      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length); }
+      /* Dritter Wert: die vollstaendige Trefferliste. Die Suche rechnet
+       * daraus ihre km-Summe — ueber ALLE Treffer, nicht nur die
+       * gezeichneten (E-P3-36). */
+      if (opts.onAfterDraw) { opts.onAfterDraw(sortiert.length, gezeigt.length, sortiert); }
     }
 
     /* Nachladen. Der Fokus wandert NUR DANN in die erste neue Zeile, wenn die
@@ -406,6 +564,14 @@ const EdMissionTable = (() => {
 
     return {
       setData, zeichne, setSort, setSpaltenBestand,
+      /* Die sichtbaren Spalten mit ihrer schlichten Beschriftung — fuer ein
+       * Sortierblatt, das nicht den Tabellenkopf abklauben muss. Spalten
+       * ohne Kopftext (der Farbstreifen) bleiben draussen: Nach ihnen
+       * sortiert niemand. */
+      spalten: () => sichtbareSpalten()
+        .filter(sp => sp.kopf !== '')
+        .map(sp => ({ key: sp.key,
+                      label: sp.kopf.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() })),
       get sortKey() { return sortKey; },
       get sortAsc() { return sortAsc; }
     };
@@ -418,6 +584,6 @@ const EdMissionTable = (() => {
      die Angaben da, aber nicht lesbar sind. Seit Web 7.2.1 bringt sie auch
      die Maskierung mit — beide Zeilen sind damit an derselben einen Stelle
      gegen Markup aus einer Importdatei abgesichert (Backlog Nr. 22). */
-  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, extractOrt,
-           artSymbol, zelleGeschuetzt };
+  return { erzeuge, SPALTEN, esc, escape, fmtTag, fmtDur, fmtKm, fmtKmZahl,
+           extractOrt, artSymbol, zelleGeschuetzt, zelleDauer, kachel };
 })();

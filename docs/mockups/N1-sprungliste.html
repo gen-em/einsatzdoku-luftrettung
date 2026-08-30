@@ -1,0 +1,81 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup N1 — Sprungliste bei vielen Rettungsmitteln</title>
+<link rel="stylesheet" href="../../server/assets/style.css">
+<style>
+  body{padding:var(--abstand-5) var(--abstand-4);background:var(--rauch)}
+  .buehne{max-width:820px;margin:0 auto}
+  .notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);
+         padding:var(--abstand-3);margin:var(--abstand-5) 0 var(--abstand-4);
+         font-size:var(--groesse-2)}
+
+  /* ---- VORSCHLAG: die Sprungliste ------------------------------------- */
+  .sprungliste{
+    display:flex;flex-wrap:wrap;gap:var(--abstand-1);
+    margin:0 0 var(--abstand-4);
+  }
+  .sprungziel{
+    display:inline-flex;align-items:center;
+    height:var(--knopf);padding:0 var(--abstand-3);
+    border:var(--strich) solid var(--linie-stark);
+    border-radius:var(--radius-rund);
+    background:var(--schnee);color:var(--dunkelblau);
+    font-size:var(--groesse-2);text-decoration:none;
+  }
+  .sprungziel:hover{background:var(--rauch);text-decoration:none}
+</style></head><body>
+<div class="buehne">
+
+<h1 class="karte-titel" style="font-size:var(--groesse-6)">Mockup N1 — Sprungliste</h1>
+<p class="feld-hinweis">Vorschlag zu: „Bei Öffnen von Rettungsmittel muss beim Standort
+   mit mehr Einträgen irgendwie eine schnelle Navigation möglich sein."</p>
+
+<div class="notiz"><strong>Was neu ist:</strong> die Zeile mit den runden Marken direkt
+  unter der Überschrift „Rettungsmittel". Sie erscheint <strong>nur ab sechs
+  Einträgen</strong> — darunter sieht man die Liste ohnehin ganz. Ein Klick springt zum
+  Eintrag. Alles andere auf dieser Seite ist unverändert.</div>
+
+<section class="karte">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Kempten</h2>
+    <span class="karte-zahl">9 Rettungsmittel</span>
+  </div>
+  <div class="karte-inhalt">
+
+    <section class="sd-liste">
+      <h3 class="sd-titel">Rettungsmittel <span class="sd-zahl">9</span></h3>
+
+      <nav class="sprungliste" aria-label="Zu einem Rettungsmittel springen">
+        <a class="sprungziel" href="#">Christoph 17</a>
+        <a class="sprungziel" href="#">Christoph 22</a>
+        <a class="sprungziel" href="#">NEF Kempten 1</a>
+        <a class="sprungziel" href="#">NEF Kempten 2</a>
+        <a class="sprungziel" href="#">NEF Sonthofen</a>
+        <a class="sprungziel" href="#">RTW 71/1</a>
+        <a class="sprungziel" href="#">RTW 71/2</a>
+        <a class="sprungziel" href="#">RTW Oberstdorf</a>
+        <a class="sprungziel" href="#">ITW Allgäu</a>
+      </nav>
+
+      <p class="feld-hinweis">Die Art entscheidet über Besatzungsrollen und die im
+         Einsatzformular sichtbaren Felder. Fähigkeiten (Winde, Bergwacht) gibt es
+         nur luftgebunden.</p>
+
+      <div class="zeile"><div class="zeile-haupt"><span class="zeile-text">Christoph 17</span>
+        <span class="plakette plakette-neutral">luftgebunden</span></div></div>
+      <div class="zeile"><div class="zeile-haupt"><span class="zeile-text">Christoph 22</span>
+        <span class="plakette plakette-neutral">luftgebunden</span></div></div>
+      <div class="zeile"><div class="zeile-haupt"><span class="zeile-text">NEF Kempten 1</span>
+        <span class="plakette plakette-neutral">bodengebunden</span></div></div>
+      <div class="zeile"><div class="zeile-haupt"><span class="zeile-text">NEF Kempten 2</span>
+        <span class="plakette plakette-neutral">bodengebunden</span></div></div>
+    </section>
+  </div>
+</section>
+
+<div class="notiz"><strong>Warum runde Marken und keine Aufzählung:</strong> Sie liegen
+  auf einer Zeile statt auf neun, sie sind 44 px hoch und damit auf dem Telefon zu
+  treffen, und sie sehen aus wie das, was sie sind — Sprungziele, keine Daten. Der
+  Vorrat kennt dafür bisher nichts; deshalb dieses Mockup und keine fertige Seite.</div>
+
+</div></body></html>

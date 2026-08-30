@@ -204,20 +204,50 @@ den vollständigen Empfang bestätigt hat. Den aktuellen Stand zeigt die
 
 ## 3. Die Web-Oberfläche — Überblick
 
-Die Kopfleiste zeigt links die GenEM-Bildmarke mit „Einsatzdokumentation
-Notarzt – *Name*" (Name im Profil setzbar, sonst E-Mail), rechts die Menüs
-**Übersicht**, **Suche** (Abschnitt 4.6) und **⚙ Einstellungen**. Hinter dem
-Zahnrad liegen Profil, **Standorte**, **Rettungsmittel**, Backup,
-Import / Export, Geräte und Abmelden (fragt sicherheitshalber nach); Admins
-finden dort zusätzlich die Rubrik **Administration** mit NutzerInnenverwaltung,
-**Standorte systemweit** und **Rettungsmittel systemweit** (Abschnitt 11).
-Bis Web 6.3.0 hieß der Punkt für beides zusammen „Standortdaten"; der alte Link
-führt weiterhin zu „Standorte". Nach 30 Minuten ohne Aktivität meldet das System automatisch
-ab. Die Kopfleiste bleibt beim Scrollen oben stehen.
+Die Kopfleiste zeigt links das Logo und den Namen **Einsatzdoku**; am breiten
+Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
+E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
+das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
+Nach 30 Minuten ohne Aktivität meldet das System automatisch ab.
 
-Die **Einsatztage-Leiste** links begleitet alle Inhaltsseiten — auch
-Einsatzansicht und Formular. Sie ist nach Jahr und Monat gruppiert
-(Abschnitt 4.4).
+![Die Web-Oberfläche am Schreibtisch](bilder/tagesuebersicht-desktop.png)
+
+**Auf schmalen Geräten** — Handy und Tablet im Hochformat — zeigt die
+Kopfleiste stattdessen links einen Knopf mit drei Strichen. Er öffnet die
+**Schublade**: dieselbe Leiste, die am breiten Bildschirm dauerhaft links
+steht, hier von links hereingeschoben. Ganz oben liegen Startseite und Suche,
+darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
+Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
+links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
+
+**Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
+**Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
+finden darunter einen zweiten Block **Administration** mit NutzerInnen,
+**Stammdaten systemweit**, Sicherungen, **Rechtstexte**, Demo-Konto und
+Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
+Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
+„Standorte".
+
+![Dieselbe Seite bei 390 px und die geöffnete Schublade](bilder/schublade-mobil.png)
+
+Die **Diensttage-Leiste** begleitet alle Inhaltsseiten — auch Einsatzansicht
+und Formular. Sie ist nach Jahr und Monat gruppiert (Abschnitt 4.4).
+
+**Handlungen an einer Zeile** — bearbeiten, verschieben, löschen — stehen am
+Schreibtisch als Knöpfe am rechten Zeilenrand. Auf schmalen Geräten steht dort
+**ein** Knopf mit drei Punkten (**⋯**); er öffnet ein Blatt von unten, in dem
+dieselben Handlungen untereinander stehen, „Löschen" rot und abgesetzt. Das
+gilt überall: Stammdaten, Geräte, NutzerInnen, Papierkorb.
+
+**Ganz unten auf jeder Seite** steht die Fußzeile — auch vor der Anmeldung.
+Sie ist zweizeilig: oben Lizenz und Versionsnummer, darunter die Verweise auf
+**Impressum** und **Datenschutz**. Beide Seiten sind ohne Anmeldung erreichbar;
+was darin steht, hinterlegt die Administration (Abschnitt 11.3).
+
+Die einzige Seite ohne diese Verweise ist der **Einrichter**: Er läuft, bevor
+die Anwendung eine Datenbank hat, und die beiden Rechtstextseiten brauchen
+eine.
 
 **Wenn ein Link ins Leere führt.** Ein Lesezeichen auf einen gelöschten
 Einsatz, eine Adresse aus einer alten E-Mail, ein Diensttag im Papierkorb:
@@ -238,6 +268,13 @@ verschlüsselten Daten vorliegen.
 **Es gilt immer nur der zuletzt verschickte Link.** Forderst du einen neuen an,
 wird der vorherige damit ungültig. Nimm also die neueste E-Mail — eine ältere
 führt zu „Link ungültig oder abgelaufen".
+
+**Die Passwortstärke** zeigt sich beim Tippen als Balken aus vier Segmenten:
+je mehr gefüllt, desto besser. Rot heißt zu kurz oder zu leicht zu raten,
+Orange geht, Dunkelblau ist gut. Die Stärke des Passworts ist unmittelbar die
+Stärke der Verschlüsselung — es schützt nicht nur den Zugang, sondern leitet
+den Schlüssel ab, mit dem Diagnose, Alter und Einsatzort verschlüsselt werden
+(Abschnitt 5).
 
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
@@ -284,6 +321,39 @@ genommen, gilt das ab dem nächsten Klick; ein Ab- und Anmelden ist nicht nötig
 
 ---
 
+### 3.1a Profil: Name, Adresse und Logo
+
+Unter dem Zahnrad → **Profil** stehen dein Anzeigename (er erscheint in der
+Kopfleiste neben der Marke), deine Anmelde-Adresse und seit Web 9.7.0 die
+**Logo-Wahl**.
+
+Die Anwendung bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug.
+Welches du siehst, entscheidest du selbst:
+
+| Wahl | Bedeutung |
+|---|---|
+| **Standard der Installation** | folgt der Vorgabe dieser Installation. Was das gerade ist, steht rechts daneben. Das ist die Voreinstellung. |
+| **Hubschrauber (RTH)** | immer der Hubschrauber |
+| **Fahrzeug (NEF)** | immer das Fahrzeug |
+| **Wechselnd** | bei jeder Anmeldung neu ausgewürfelt |
+
+Die Wahl gilt für die **Kopfleiste und das Symbol im Browser-Tab** — beide
+wechseln gemeinsam. Sie wirkt sofort nach dem Speichern; abmelden musst du
+dich dafür nicht.
+
+„Wechselnd" heißt **je Anmeldung**, nicht je Seite: Innerhalb einer Sitzung
+bleibt das Logo, wie es ist. Ein Logo, das beim Blättern springt, wäre keine
+Abwechslung, sondern Unruhe.
+
+Die **Anmeldeseite** zeigt immer den Standard der Installation. Dort ist noch
+niemand angemeldet, und die Wahl hängt am Konto. (Bis Web 9.9.0 zeigte sie
+stattdessen immer den Hubschrauber, gleich wie der Standard eingestellt war.)
+
+Den **Standard der Installation** setzt die Administration unter
+Einstellungen → Wartung. Er wirkt sofort, auch für bereits angemeldete Konten —
+aber nur bei denen, die hier „Standard der Installation" stehen haben. Eine
+getroffene eigene Wahl bleibt unberührt.
+
 ### 3.2 Demo-Konto — ausprobieren, ohne etwas kaputtzumachen
 
 Es gibt ein Konto, in dem sich alles gefahrlos ausprobieren lässt:
@@ -327,28 +397,53 @@ Konto ist davon nicht betroffen.
 
 ### 4.1 Tagesübersicht
 
+![Tagesübersicht auf dem Handy](bilder/tagesuebersicht-mobil.png)
+
 Startseite nach der Anmeldung. Links die Liste der Diensttage; der neueste ist
 vorausgewählt. Liegen mehrere Diensttage auf einem Kalendertag, steht bei jedem
 zusätzlich die Uhrzeit des Dienstbeginns — sonst ließen sie sich nicht
-unterscheiden. Vor dem Namen des Rettungsmittels steht ein Zeichen für die Art:
-🚁 luftgebunden, 🚑 bodengebunden, ◌ noch ohne Zuordnung.
+unterscheiden. Vor dem Datum steht ein Zeichen für die Art: ein Hubschrauber
+für luftgebunden, ein Rettungswagen für bodengebunden, ein gestrichelter Kreis
+für „noch ohne Zuordnung". Der Name des Rettungsmittels steht rechts daneben.
+(Bis Web 8.0.1 waren das Emoji — sie sahen auf jedem Betriebssystem anders
+aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
+
+Über allem steht die **Titelzeile** (seit Web 9.2.0): Wochentag und Datum
+als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
+einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
+Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
+**„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
+(Abschnitt 4.5a) und **„Tag löschen"** (Abschnitt 8). Auf dem Handy fährt
+das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
+schließt es, die Tastatur bedient es vollständig.
 
 Pro Tag:
 
-- **Diensttag-Daten** (aufklappbar): Standort, Rettungsmittel, Besatzung,
-  Notizen — direkt editier- und speicherbar. Die Kopfzeile zeigt eine
-  Kurzfassung.
+- **Diensttag-Daten**: Die Karte zeigt Standort, Rettungsmittel, Besatzung
+  und Notizen als **Leseansicht**. Erst **„Bearbeiten"** (in der Kopfzeile
+  oder im Aktionsblatt) klappt an derselben Stelle das Formular auf;
+  Speichern — oder ein zweiter Klick auf „Bearbeiten" — klappt zurück.
+  Solange noch nichts eingetragen ist, sagt die Karte das („Noch keine
+  Angaben") statt leere Zeilen zu zeigen.
 
-  Welche **Besatzungsrollen** hier stehen, ergibt sich aus dem gewählten
-  Rettungsmittel: luftgebunden Pilot 1, Pilot 2, HEMS-TC, Flugretter und
-  Sonstige, bodengebunden Fahrer, Praktikant und Sonstige. Ein Diensttag ohne
-  Rettungsmittel zeigt keine Rollen — trag Standort und Rettungsmittel nach,
-  dann erscheinen sie.
+  Welche **Besatzungsrollen** im Formular stehen, ergibt sich aus dem
+  gewählten Rettungsmittel: luftgebunden
+  Pilot 1, Pilot 2, HEMS-TC, Flugretter und Sonstige,
+  bodengebunden Fahrer, Praktikant und Sonstige.
+  Ein Diensttag ohne Rettungsmittel zeigt keine Rollen — trag Standort und
+  Rettungsmittel nach, dann erscheinen sie.
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
-  mit Orange/Blau/Rot) und dem Ruhe-Track in Schwarz. Die Einsatzort-Pins
-  tragen die Farbe des jeweiligen Einsatzes. Die Karte zoomt automatisch so,
-  dass alle Tracks sichtbar sind; Tracklinien werden beim Rauszoomen etwas
-  dicker. Oben links lässt sich die Karte per Klick auf **Vollbild**
+  mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
+  **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
+  Der **Standort** steht als Haus-Schild auf der Karte, das
+  **Transportziel** jedes Einsatzes als Klinik-Schild, der **Einsatzort**
+  als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
+  Luftlinie** in der Farbe des Einsatzes — gestrichelt heißt immer: gerade
+  Verbindung, kein aufgezeichneter Weg. Die Karte zoomt automatisch so, dass
+  alles sichtbar ist. Auf dem Handy liegt sie kompakt über der Einsatzliste,
+  auf sehr breiten Bildschirmen (ab 1600 px) rückt sie neben Daten und
+  Tabelle. Oben links lässt sich die Karte per Klick auf **Vollbild**
   stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
   rechts zwischen vier Kartenebenen umschalten: **Standard**, **Wanderkarte**
   (mit Höhenlinien), **Topographisch** und — seit Web 7.0.0 —
@@ -356,39 +451,46 @@ Pro Tag:
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
-- **Tabelle** der Einsätze: Nr., Beginn, Dauer, **Einsatzort** (Ortschaft aus
-  der verschlüsselten Adresse), **Alter**, **Diagnose**, Winde, Bergwacht,
-  Sekundärtransport, Kilometer. Winde und Bergwacht stehen nur an einem
-  Diensttag, dessen Rettungsmittel sie führt. Den **Fehleinsatz** führt diese
-  Tabelle bewusst nicht — er steht im Einsatz selbst; auswerten lässt er sich
-  in der Zeitraum-Übersicht und der Suche. Alle Spalten sind zentriert und
-  in abwechselnden Zeilenfarben; ein Klick auf eine Zeile öffnet den Einsatz,
-  ein Klick auf einen Spaltenkopf sortiert. Die Dauer rechnet von der
-  Alarmierung bis Phase 9; fehlt Phase 9, steht dort „kein Ende".
+- **Einsätze**: Die Kopfzeile der Karte nennt Anzahl und Kilometersumme des
+  Tages und trägt rechts **„+ Nachtragen"** — das öffnet das
+  Eingabeformular für diesen Tag.
+
+  Auf dem Handy (unter 720 px) erscheint jeder Einsatz als **dreizeilige
+  Kachel**: Farbstreifen und Beginn, der **Einsatzort** fett mit der
+  Kilometerzahl, die **Diagnose**, darunter Dauer und Alter samt Plaketten
+  (Winde, Bergwacht, Sekundär, Fehleinsatz, „kein Ende"). Das ist die
+  Antwort auf den alten Zustand, in dem Ort und Diagnose auf schmalen
+  Bildschirmen schlicht verschwanden. Sortiert wird über das
+  Pfeilsymbol im Kopf: Es öffnet ein Blatt mit denselben Spalten wie am
+  Desktop, die Reihenfolge ist dieselbe.
+
+  Ab 720 px steht die **Tabelle**: Nr., Beginn, Dauer, **Einsatzort**
+  (Ortschaft aus der verschlüsselten Adresse), **Alter**, **Diagnose**,
+  Winde, Bergwacht, Sekundärtransport, Kilometer. Winde und Bergwacht
+  stehen nur an einem Diensttag, dessen Rettungsmittel sie führt. Den
+  **Fehleinsatz** führt diese Tabelle bewusst nicht — er steht im Einsatz
+  selbst und auf der Kachel; auswerten lässt er sich in der
+  Zeitraum-Übersicht und der Suche. Zahlenspalten stehen rechtsbündig,
+  Haken zentriert; ein Klick auf eine Zeile öffnet den Einsatz, ein Klick
+  auf einen Spaltenkopf sortiert. Die Dauer rechnet von der Alarmierung bis
+  Phase 9; fehlt Phase 9, steht dort die Plakette „kein Ende".
   Eine Spalte **abw. Crew** gab es von Web 5.4.0 bis 5.9.0; sie ist wieder
   entfallen, weil der Haken an den allermeisten Tagen in keiner Zeile stand.
   Ob für einen Einsatz eine vom Diensttag abweichende Besatzung eingetragen ist,
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
-- **„+ Einsatz nachtragen"** unter der Tabelle öffnet das Eingabeformular für
-  diesen Tag. Oben rechts steht das Menü **Aktionen** (seit Web 5.10.0; vorher
-  standen die Einträge als Schaltflächen unter der Tabelle) mit
-  **„Datum ändern"** — korrigiert das Datum des ganzen Tages (Abschnitt 4.2a) —,
-  **„Anderen Diensttag aufnehmen"** — führt zwei Diensttage zusammen
-  (Abschnitt 4.5a) — und **„Tag löschen"** — entfernt den gesamten Diensttag
-  (Abschnitt 8). Das Menü lässt sich wie das der Einsatzansicht vollständig mit
-  der Tastatur bedienen; Escape schliesst es wieder.
 
 ### 4.2 Einsatzansicht
 
-Titel „Einsatz N · Uhrzeit" (N = Nummer des Tages nach Alarmierungszeit),
-darunter das Menü **Aktionen** mit **Bearbeiten**, **Verschieben** und
-**Löschen** (seit Web 5.6.0; vorher standen dort zwei Schaltflächen). Das Menü
-lässt sich vollständig mit der Tastatur bedienen: Tabulator auf den Kopf, Enter
-oder Leertaste öffnet, Tabulator läuft weiter durch die Einträge, Escape
-schließt wieder. In der Kopfzeile darunter stehen Datum, Zeitraum,
-Rettungsmittel und Standort, dahinter das Zeichen für die Art des Diensttags
-und am Ende genau ein **Herkunftskennzeichen**:
+Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
+Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
+nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
+**„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
+**Verschieben** und **Löschen** (mobil „···", am Desktop „Aktionen"; Escape
+schließt, die Tastatur bedient es vollständig — seit Web 9.3.0 dasselbe
+Blatt wie auf der Startseite). In der Unterzeile stehen Zeitspanne — ohne
+Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
+Rettungsmittel und Standort:
 
 | Kennzeichen | Bedeutung |
 |---|---|
@@ -402,30 +504,51 @@ der Uhr aufgezeichneter, später bearbeiteter Einsatz zeigt also „Uhr" **und**
 „editiert", nicht „manuell": „manuell" beschreibt ausschließlich, **wie** ein
 Einsatz entstanden ist, „editiert" ob er danach verändert wurde.
 
-Es folgt eine Karte mit dem Track
-(Start grün, Ende rot) und — sofern vorhanden — dem Einsatzort-Pin aus den
-lokal entschlüsselten Koordinaten. Auf dem Track sitzen an den
-GPS-Positionen der Zeitstempel **Phasen-Nummern**, die standardmäßig
-**ausgeblendet** sind — ein Control auf der Karte („Phasen anzeigen") blendet
-sie ein, sofern mindestens eine Phase über GPS-Koordinaten verfügt; der
-Zustand wird nicht gespeichert, nach einem Neuladen ist er wieder aus.
-Zeigt man auf eine Phasenzeile oder einen eingeblendeten Kartenpunkt,
-leuchtet das Gegenstück orange auf (am Handy: antippen).
+Der Zustand der geschützten Angaben steht als **eine Meldung** über den
+Karten (seit Web 9.3.0): blau „Geschützte Angaben sind entsperrt" nach der
+Anmeldung, mit **Entsperren**-Knopf, solange die Verschlüsselung gesperrt
+ist, und als deutliche Fehlermeldung, falls gespeicherte Angaben mit dem
+aktuellen Schlüssel nicht lesbar sind. Schloss-Symbole an den einzelnen
+Zeilen gibt es nicht mehr — die Meldung sagt es einmal für alle.
 
-Die geschützten Angaben — **Name, Geburtsdatum, Alter, Diagnose, Einsatzort,
-Beschreibung Einsatzort** — erscheinen mit einem Schloss-Symbol 🔒 in der
-Feldliste und **nur hier**, nicht
-in den Übersichten. Ist aus dem GPS-Track eine Höhe am Patientenkontakt
-ermittelbar, steht zusätzlich **„Höhe Einsatzort"** in der Feldliste.
+Die Angaben selbst stehen in **vier Karten**:
 
-Darunter folgt der Block **Besatzung**. Er zeigt die für **diesen Einsatz**
-gültige Besatzung: normalerweise die Besatzung des Diensttags, bei einer
-abweichenden Besatzung (Abschnitt 4.3) die abweichende Person. Geänderte
-Rollen sind blau mit **„(abw.)"** gekennzeichnet, unveränderte stehen ohne
-Zusatz daneben. Rollen ohne Eintrag werden weggelassen; ist gar keine Besatzung
-hinterlegt, entfällt der Block ganz.
+- **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
+  dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
+  Einsatzorts, Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
+  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
+  Sekundär, Fehleinsatz — nur was zutrifft.
+- **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese
+  geschützten Angaben erscheinen **nur hier**, nicht in den Übersichten.
+- **Transport**: Transportart (mit NA-Begleitung in derselben Zeile), Ziel,
+  Schockraum.
+- **Besatzung**: die für **diesen Einsatz** gültige Besatzung — normalerweise
+  die des Diensttags, bei einer abweichenden Besatzung (Abschnitt 4.3) die
+  abweichende Person, klein gekennzeichnet mit „(abweichend vom Diensttag)".
+  Rollen ohne Eintrag werden weggelassen; ohne Besatzung entfällt die Karte.
 
-Es folgen die Phasen-Tabelle und je Reanimation eine eigene Zeiten-Tabelle.
+Leere Felder werden nicht angezeigt; eine Karte ganz ohne Inhalt erscheint
+nicht. Die **Karte** (auf dem Handy kompakt zwischen den Angaben und den
+Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
+**Richtungspfeilen**, den Standort als Haus-Schild, das Transportziel als
+Klinik-Schild und den Einsatzort als orangen Kreis; **Start und Ende der
+Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
+an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
+selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die
+gestrichelte Luftlinie. Auf dem Track sitzen an den GPS-Positionen der
+Zeitstempel **Phasen-Nummern**, die standardmäßig **ausgeblendet** sind —
+ein Control auf der Karte („Einsatzphasen anzeigen") blendet sie ein,
+sofern mindestens eine Phase über GPS-Koordinaten verfügt; der Zustand wird
+nicht gespeichert, nach einem Neuladen ist er wieder aus.
+
+Die Karte **Einsatzphasen** nennt im Kopf die Gesamtdauer und je Zeile
+Nummer, Name, Uhrzeit und den **Minutenabstand** zur vorigen Phase. Zeigt
+man auf eine Zeile (am Handy: antippen), leuchtet sie orange und ihr
+**Teilstück des Tracks** — von der vorigen Phase bis zu ihr — färbt sich
+blau auf der Karte; ein eingeblendeter Phasenpunkt leuchtet ebenso.
+
+**Reanimation** steht als eigene Karte: ohne Sitzung schlicht „keine",
+sonst je Reanimation die Ereignisliste mit Uhrzeiten.
 
 ### 4.2a Falsche Tageszuordnung korrigieren
 
@@ -473,23 +596,29 @@ ein eigener Vorgang: Abschnitt 4.5a.
 
 ### 4.3 Einsätze nachtragen und bearbeiten
 
-Das Formular dient beidem. Es ist seit Web 7.0.0 in **benannte Gruppen**
-gegliedert, jede mit eigenem Rahmen und Überschrift, in dieser Reihenfolge:
+Das Formular dient beidem. Über allem: der **Rückweg** (beim Bearbeiten zum
+Einsatz, beim Nachtragen zum Diensttag) und der Titel „Einsatz N bearbeiten"
+bzw. „Einsatz nachtragen" mit dem Diensttag in der Unterzeile. Die Felder
+stehen seit Web 9.4.0 in **Karten** (am Desktop ab 1200 px in zwei Spalten),
+in dieser Reihenfolge:
 
-1. **PatientInnendaten** — Einsatznummer, Nachname, Vorname, Geburtsdatum,
-   Alter, Diagnose
-2. **Einsatz** — Sekundärtransport und Fehleinsatz nebeneinander, Einsatzort,
-   Beschreibung des Einsatzorts, Abfahrtort
+1. **PatientIn** — Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter,
+   Diagnose, **Einsatzort**, Beschreibung des Einsatzorts, Abfahrtort
+   (alles gemeinsam Ende-zu-Ende-verschlüsselt)
+2. **Einsatz** — Sekundärtransport, Fehleinsatz, Windeneinsatz und Bergwacht
+   als **Schalter**; die Detailfelder eines eingeschalteten Schalters
+   (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer orangen Linie
 3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
-4. **Bergrettung** — Bergwacht, Windeneinsatz
-5. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer Notarzt
-6. **Abweichende Besatzung**
-7. **Notizen**
-8. **Einsatzphasen**
-9. **Reanimation**
+4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weiterer
+   Notarzt
+5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
+   mit gespeicherter Abweichung offen
+6. **Notizen**
+7. **Einsatzphasen**
+8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
 
-Die Gruppe **Bergrettung** fehlt ganz, wenn der Diensttag weder Winde noch
-Bergwacht mitbringt und im Einsatz nichts dazu eingetragen ist.
+Windeneinsatz und Bergwacht fehlen ganz, wenn der Diensttag die jeweilige
+Fähigkeit nicht mitbringt und im Einsatz nichts dazu eingetragen ist.
 
 **Kein Feld „Einsatzdatum" mehr.** Es stand früher direkt unter dem Diensttag
 und zeigte in aller Regel dasselbe Datum ein zweites Mal. Der Fall, für den es
@@ -501,11 +630,13 @@ gespeicherte Datum unangetastet; verschoben wird ein Einsatz über
 **Aktionen → Verschieben**.
 
 Phasen werden als Zeilen erfasst (Phase wählen, Uhrzeit eintragen, Zeilen
-hinzufügen/entfernen — auch dieselbe Phase mehrfach).
-**In chronologischer Reihenfolge eintragen**; Zeiten nach Mitternacht werden
-automatisch dem Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**,
-direkt über der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die
-Phasen meist schon vollständig da und schoben alles andere nach unten.
+hinzufügen/entfernen — auch dieselbe Phase mehrfach). Die Reihenfolge musst
+du nicht selbst einhalten: **Die Liste sortiert sich, sobald du ein Zeitfeld
+verlässt** (seit Web 9.4.0); Zeilen ohne Uhrzeit bleiben hinten. Der Kopf der
+Karte zählt mit („8 von 9"). Zeiten nach Mitternacht werden automatisch dem
+Folgetag zugerechnet. Der Block steht seit Web 7.0.0 **unten**, direkt über
+der Reanimation: Beim Bearbeiten — dem häufigeren Fall — stehen die Phasen
+meist schon vollständig da und schoben alles andere nach unten.
 
 **NA-Begleitung ist bei „Luft" vorbelegt.** Ein Lufttransport ohne Notarzt an
 Bord ist die Ausnahme. Der Haken setzt sich, sobald du „Luft" wählst — und nur,
@@ -522,29 +653,40 @@ dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
 `930` wird `09:30`, aus `9` wird `09:00`, der Doppelpunkt setzt sich von
 selbst. Ergibt die Eingabe keine gültige Uhrzeit, färbt sich das Feld rot, und
 gespeichert wird sie nicht. Datumsfelder bleiben die gewohnten Kalenderfelder
-deines Geräts. Trägst du eine Zeile nachträglich mit
-einer früheren Uhrzeit ein, sortiert sich die Liste nach dem Speichern von
-selbst richtig ein.
+deines Geräts.
 
-**Strg-Enter** (bzw. Cmd-Enter auf macOS) sendet das Formular ab, ohne die
-Maus zu benutzen — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
-Verlässt du die Seite mit ungespeicherten Änderungen, fragt der Browser vorher
-nach; das gilt auch für die Diensttag-Formulare.
+Gespeichert wird über die **Speichern-Leiste**, die am unteren Rand erscheint,
+sobald du etwas geändert hast (seit Web 9.4.0) — vorher gibt es nichts zu
+speichern und keinen Knopf. Einen „Verwerfen"-Knopf gibt es bewusst nicht:
+Der Rückweg oben genügt, und beim Verlassen mit ungespeicherten Änderungen
+fragt der Browser nach. **Strg-Enter** (bzw. Cmd-Enter auf macOS) speichert
+ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
 
-**Geschützte Angaben** (Abschnitt 5) verteilen sich auf die Gruppen
-„PatientInnendaten" (Person und Diagnose) und „Einsatz" (Einsatzort,
-Beschreibung, manueller Abfahrtort). Ist der Schlüssel in dieser Sitzung
-gesperrt, sind alle diese Felder gesperrt — die übrigen bleiben bedienbar.
-Beim Geburtsdatum reicht auch eine zweistellige Jahreszahl
-(z. B. „23.04.33") — die Anwendung ergänzt automatisch das plausible
-Jahrhundert. Der Einsatzort hat ein Suchfeld: Ab drei Buchstaben erscheinen
-Adressvorschläge (OpenStreetMap); die Auswahl eines Vorschlags speichert die
-Koordinaten und setzt den Pin auf den Karten. Freitext ohne Vorschlag geht
-auch — dann ohne Pin.
+**Geschützte Angaben** (Abschnitt 5) stehen gesammelt in der Karte
+„PatientIn" — Person, Diagnose, Einsatzort, Beschreibung, manueller
+Abfahrtort. Ist der Schlüssel in dieser Sitzung gesperrt, sind alle diese
+Felder gesperrt — die übrigen bleiben bedienbar. Beim Geburtsdatum reicht
+auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänzt
+automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
+drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
+eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
+Freitext ohne Vorschlag geht auch — dann ohne Pin.
+
+Neben dem Feld stehen seit Web 9.4.0 zwei Knöpfe: Die **Lupe** stößt die
+Suche ausdrücklich an — sie ersetzt das frühere zweite Suchfeld
+(„Lokalisation …") auch am Transportziel, wo ein Treffer weiterhin **nur die
+Koordinaten** übernimmt und den eingetragenen Namen nie überschreibt. Der
+**Pin** öffnet ein Blatt mit zwei Wegen: **„Meine Position übernehmen"**
+(Standort des Geräts; der Browser fragt nach der Freigabe) und **„Auf der
+Karte wählen"** — eine Karte mit Fadenkreuz in der Mitte; verschieben, bis
+das Kreuz auf dem Ort steht, dann „Übernehmen". In beiden Fällen holt die
+Anwendung zur Koordinate eine Adresse (Photon/OpenStreetMap-Umkehrsuche);
+sie füllt das Feld nur, wenn es leer ist. Die Anfrage trägt ausschließlich
+die Koordinate — nie Namen, Diagnose oder andere Inhalte.
 
 **Gespeicherte Koordinaten stehen unter dem Feld.** Sobald Koordinaten gesetzt
 sind — egal ob über einen Adressvorschlag oder über eine der unten genannten
-Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem ✕ zum
+Eingabeformen —, erscheinen sie darunter als kleines Feld mit einem Kreuz zum
 Entfernen, genau wie bei den weiteren Rettungsmitteln. Das Textfeld bleibt
 davon unberührt: Du kannst dort weiterschreiben, ohne die Koordinaten zu
 verlieren.
@@ -553,7 +695,7 @@ verlieren.
 reines Bezeichnungsfeld: keine Adressvorschläge, keine Erkennung weiterer
 Koordinatenformate. Andernfalls würde ein Klick auf einen Vorschlag die
 bestätigten Koordinaten stillschweigend überschreiben. Entfernst du sie über
-das ✕, arbeitet die Suche ab dem nächsten Tastenanschlag wieder wie gewohnt.
+das Kreuz, arbeitet die Suche ab dem nächsten Tastenanschlag wieder wie gewohnt.
 
 Alternativ zur Adresse erkennt das Feld beim Tippen auch vier weitere
 Formate — die Umwandlung erfolgt lokal im Browser, es wird dabei keine
@@ -673,8 +815,8 @@ seit Web 5.5.0, vorher konnten diese Zeiten nur von der Uhr kommen. „+
 Reanimation hinzufügen" legt einen Block an: oben der **Reanimationsbeginn**,
 darunter „+ Ereignis hinzufügen" für jedes weitere Ereignis, jeweils Art
 (Zugang, Adrenalingabe, Rhythmuskontrolle, Defibrillation, Intubation,
-Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das ✕ am Beginn entfernt die
-ganze Reanimation, das ✕ an einer Ereigniszeile nur diese.
+Amiodaron, Sonographie, ROSC, Tod) und Uhrzeit. Das Kreuz am Beginn entfernt
+die ganze Reanimation, das Kreuz an einer Ereigniszeile nur diese.
 
 Gab es an einem Einsatz **mehrere Reanimationen**, legst du einfach mehrere
 Blöcke an. Eine Zeile ohne Uhrzeit wird nicht gespeichert — du musst eine
@@ -701,52 +843,93 @@ Nach dem **Neuanlegen** eines Einsatzes zeigt die Einsatzansicht den Button
 „Weiteren Einsatz nachtragen" — er öffnet die Neuanlage direkt für denselben
 Diensttag. Beim Bearbeiten eines bestehenden Einsatzes erscheint er nicht.
 
-### 4.4 Einsatztage-Leiste, Jahres- und Monatsübersicht
+### 4.4 Diensttage-Leiste, Jahres- und Monatsübersicht
 
-Die Leiste links ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur
-ein Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein anderes
+Die Leiste ist nach **Jahr → Monat → Tage** gruppiert. Es ist immer nur ein
+Jahr geöffnet und darin ein Monat (standardmäßig der jüngste); ein anderes
 Jahr anzuklicken schließt das vorherige automatisch. Springst du auf einen Tag
-in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf.
+in einem anderen Zeitraum, klappt die Leiste automatisch dorthin auf. Auf
+schmalen Geräten liegt sie in der Schublade (Abschnitt 3).
 
-Ein Klick auf die **Jahreszahl** oder den **Monatsnamen** öffnet eine Übersicht
-dieses Zeitraums: eine Karte mit einem Pin je Einsatzort (sofern Koordinaten
-vorhanden und die geschützten Angaben entsperrt sind), darunter die
-Statistik-Kacheln und schließlich die Tabelle aller Einsätze mit Datum statt
-Tagesnummer, sortierbar. Die Durchschnittswerte rechnen mit **allen angelegten
-Diensttagen** des Zeitraums, auch mit einsatzfreien.
+**Die ganze Zeile klappt auf und zu** — Jahreszahl wie Monatsname. Der Weg in
+die Übersicht des Zeitraums ist das kleine Balkensymbol am rechten Rand
+derselben Zeile. Bis Web 8.0.1 war es umgekehrt: Der Text war der Link, und nur
+das kleine Dreieck davor klappte auf; mit dem Finger war beides nicht
+auseinanderzuhalten.
 
-**Getrennt nach Art.** Liegen im Zeitraum luft- *und* bodengebundene Diensttage,
-steht über der Ansicht eine Leiste mit drei Reitern: **Gemischt** (aktiv),
-**Luftrettung** und **Bodengebundener Rettungsdienst**. Der Reiter filtert
-alles gemeinsam — Kacheln, Einsatztabelle und Karte. Liegt nur eine Art vor,
-gibt es keine Leiste; dann bestimmt sie allein die Beschriftung.
+Jeder Tag trägt vorn ein Zeichen für seine Art — Hubschrauber für
+luftgebunden, Rettungswagen für bodengebunden, ein gestrichelter Kreis für
+einen Diensttag ohne Rettungsmittel. Rechts daneben steht der Name des
+Rettungsmittels; ist er zu lang, wird er abgekürzt, und der volle Name
+erscheint, wenn der Mauszeiger darauf steht. Auf schmaleren Bildschirmen
+entfällt er ganz.
 
-| Reiter | Kacheln |
+Ein Klick auf das **Balkensymbol** neben Jahreszahl oder Monatsname öffnet eine
+Übersicht dieses Zeitraums. Unter dem Titel steht, wie viele Diensttage er hat
+und über welche Spanne er läuft; darunter die Statistik-Kacheln, dann eine
+Karte und schließlich alle Einsätze — am Schreibtisch als Tabelle mit Datum
+statt Tagesnummer, auf schmalen Geräten als Kacheln. Die Durchschnittswerte
+rechnen mit **allen angelegten Diensttagen** des Zeitraums, auch mit
+einsatzfreien. Solange du in einer Übersicht stehst, ist der betreffende
+Monat bzw. das Jahr in der Leiste markiert.
+
+Auf der Karte steht das **Standort-Haus** jedes Diensttags, sobald für ihn
+Koordinaten hinterlegt sind — dafür brauchst du die Verschlüsselung nicht zu
+entsperren, denn der Standort ist keine geschützte Angabe. Die Einsatzorte
+kommen als Punkte dazu, sobald du entsperrt hast.
+
+**Getrennt nach Art.** Liegen im Zeitraum luft- *und* bodengebundene
+Diensttage, steht neben dem Titel eine Wahl mit drei Schaltern: **Gemischt**
+(voreingestellt), **Luft** und **Boden**; auf dem Handy stehen sie vollbreit
+darunter. Die Wahl gilt für alles zugleich — Kacheln, Einsatzliste und Karte.
+Liegt nur eine Art vor, gibt es keine Wahl; dann bestimmt diese Art allein die
+Beschriftung.
+
+| Ansicht | Kacheln |
 |---|---|
-| **Luftrettung** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
-| **Bodengebunden** und **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
+| **Luft** | Einsätze, Flugtage, Ø Einsätze/Flugtag, Sekundärtransporte, Flugkilometer gesamt, längste Flugstrecke, längste Einsatzdauer, höchster Einsatzort — dazu Anzahl und Ø Winden-Cycles, sofern im Zeitraum tatsächlich Windeneinsätze dokumentiert sind |
+| **Boden** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte, **Fehleinsätze**, Einsatzkilometer gesamt, längste Einsatzstrecke, längste Einsatzdauer |
+| **Gemischt** | Einsätze, Diensttage, Ø Einsätze/Diensttag, Sekundärtransporte |
 
-Der Luftrettungs-Reiter behält also die gewohnte Flugterminologie; für eine rein
-luftgebundene Nutzung sieht die Auswertung aus wie immer. Höchster Einsatzort und
-Windenzahlen fehlen in „Gemischt", weil sie sich über beide Arten nicht sinnvoll
-addieren lassen.
+Die Luftansicht behält die gewohnte Flugterminologie; für eine rein
+luftgebundene Nutzung sieht die Auswertung aus wie immer.
+
+**Warum „Gemischt" nur vier Kacheln hat** (seit Web 9.6.0): Kilometer, Dauern
+und Fehleinsätze standen dort bis dahin mit — als Summe über beide Arten. Eine
+Flugstrecke von 61 km und eine Fahrstrecke von 12 km stehen aber für ganz
+verschiedene Einsätze, und ihre Summe beantwortet keine Frage, die jemand
+stellt. Was über beide Arten trägt, sind Anzahl, Diensttage, ihr Verhältnis
+und die Sekundärtransporte. Die übrigen Zahlen findest du unverändert in den
+beiden Artenansichten. Höchster Einsatzort und Windenzahlen standen aus
+demselben Grund nie in „Gemischt".
+
+**Auf dem Handy** sind von jedem Satz vier Kacheln sichtbar; der Rest steht
+hinter **„Weitere Statistik (n)"**. In der Luftansicht sind es Einsätze,
+Flugtage, Flugkilometer und Winden-Cycles, in der Bodenansicht Einsätze,
+Diensttage, Einsatzkilometer und die längste Einsatzdauer — „Gemischt" hat
+ohnehin nur vier und braucht den Knopf nicht.
 
 **Diensttage ohne Zuordnung** zählen in „Gemischt" mit — die Summe der beiden
-Artenreiter ist dann kleiner. Genau deshalb weist „Gemischt" ihre Anzahl aus und
-verlinkt auf das Nachtragen; ohne den Hinweis wäre die Abweichung nicht
-erklärbar.
+Artenansichten ist dann kleiner. Genau deshalb weist „Gemischt" ihre Anzahl
+aus und verlinkt auf das Nachtragen; ohne den Hinweis wäre die Abweichung
+nicht erklärbar.
 
-Der gewählte Reiter steht im Adressteil hinter dem `#` und bleibt beim Teilen
+Die gewählte Ansicht steht im Adressteil hinter dem `#` und bleibt beim Teilen
 eines Links erhalten.
 
-Die Kacheln **„Längste Einsatzstrecke"** (in der Luftrettung: „Längste
-Flugstrecke") und **„Längste Einsatzdauer"** sind interaktiv, in der
-Luftrettung zusätzlich **„Höchster Einsatzort"**: Zeigt man darauf, leuchten
-der zugehörige Karten-Pin (rot) und die zugehörige Tabellenzeile (rosa) auf. Ein
-Klick fixiert diese Hervorhebung und springt zur Tabellenzeile — praktisch,
-um den Extremwert-Einsatz auf einen Blick zu finden. Ein zweiter Klick auf
-dieselbe Kachel oder ein Klick auf eine freie Stelle der Seite löst die
-Fixierung wieder.
+Die Kacheln **„Längste Einsatzstrecke"** (in der Luftansicht: „Längste
+Flugstrecke") und **„Längste Einsatzdauer"** sind bedienbar, in der Luftansicht
+zusätzlich **„Höchster Einsatzort"**. Sie tragen einen kleinen Punkt oben
+rechts und nennen in der Beschriftung den **Tag** des betreffenden Einsatzes
+(„Längste Flugstrecke · 14.08.") — oft ist die Frage damit schon beantwortet.
+Zeigt man auf die Kachel, leuchten der zugehörige Karten-Punkt und die
+zugehörige Zeile auf; ein Klick hält die Hervorhebung fest und springt zur
+Zeile. Ein zweiter Klick auf dieselbe Kachel oder ein Klick auf eine freie
+Stelle der Seite löst sie wieder.
+
+Die Hervorhebung ist seit Web 9.6.0 **orange** statt rot. Rot bedeutet in
+dieser Oberfläche „Achtung" — Fehler, Löschen; ein Höchstwert ist aber kein
+Fehler, sondern nur eine Auskunft.
 
 Jede Zeile der Einsatztabelle führt zum Einsatz; ein Klick auf das
 **Dreieck** davor klappt dagegen nur die Unterpunkte auf oder zu.
@@ -779,7 +962,7 @@ nur in der Zeitraum-Übersicht.
 ### 4.5 Diensttag von Hand anlegen
 
 Lief die Uhr an einem Tag nicht, legst du den Diensttag über **+ Diensttag
-anlegen** unten in der Einsatztage-Leiste an. Neben dem Datum gehören dort
+anlegen** unten in der Diensttage-Leiste an. Neben dem Datum gehören dort
 **Standort** und **Rettungsmittel** hin; daraus ergeben sich Art, Rollen und die
 sichtbaren Einsatzfelder. Beides ist freiwillig — ohne sie bleibt der Diensttag
 neutral und funktioniert trotzdem —, aber mit ihnen entsteht alles sofort statt
@@ -840,7 +1023,15 @@ nur einen Tag oder einen Zeitraum. Die Trefferliste hat dieselben Spalten wie
 die Zeitraum-Übersicht, lässt sich genauso über die Spaltenköpfe sortieren, und
 ein Klick auf eine Zeile öffnet den Einsatz. Die Zeile hebt sich dabei hervor,
 sobald der Zeiger darüber steht. Ohne Maus geht es auch: Mit der Tabulatortaste
-springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz.
+springst du von Zeile zu Zeile, Enter oder Leertaste öffnen den Einsatz. Ganz
+links trägt jede Zeile einen **Farbstreifen** — es ist die Farbe, in der die
+Spur dieses Einsatzes auf der Karte seines Diensttags gezeichnet ist.
+
+**Auf schmalen Geräten** (unter 720 px) wird aus jeder Zeile eine **Kachel**,
+wie auf der Tagesübersicht: oben Artzeichen und Datum, darunter Ort und
+Diagnose, unten die Kennzeichen. Sortiert wird dann über den Knopf **Sortieren**
+im Kopf der Trefferkarte — er zeigt an, wonach gerade geordnet ist, und öffnet
+dieselbe Spaltenliste, die am Schreibtisch der Tabellenkopf ist.
 
 **Suchbegriff.** Das obere Feld durchsucht Einsatznummer, Name, Geburtsdatum,
 Diagnose, Einsatzort, Transportziel, Beschreibung des Einsatzorts,
@@ -870,17 +1061,31 @@ nur dann als Ausschluss, wenn es frei vor einem Begriff steht; „St.-Anna" blei
 ein Wort. Eine halbfertige Eingabe wird **nicht bemängelt** — die Trefferliste
 rechnet bei jedem Tastendruck neu, und `(sturz` ist auf dem Weg zu
 `(sturz ODER fraktur)` unvermeidlich; sie wird gedeutet, so gut es geht. Die
-Kurzhilfe steht aufklappbar direkt unter dem Suchfeld.
+Erklärung steht seit Web 9.5.0 hinter **Und / Oder / Nicht verknüpfen** unter
+dem Suchfeld — sie ist für den zweiten Besuch da, nicht für jeden.
 
-**Weitere Filter.** In der linken Spalte — dort, wo auf den anderen Seiten die
-Einsatztage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
-den Gesamtbestand geht. Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die
-danach schneiden, **worüber** gefiltert wird:
+**Treffer sind hervorgehoben.** Steht dein Suchwort in Einsatzort oder
+Diagnose, ist es dort gelb hinterlegt. Eine Zeile ohne Markierung ist trotzdem
+richtig: Gesucht wird auch in Notizen, Besatzung und Rettungsmitteln, und die
+stehen nicht in der Liste — wo der Treffer sitzt, zeigt dann der Einsatz
+selbst. Verneinte Begriffe (`-winde`) werden nicht markiert; sie bezeichnen
+nichts, was dastehen soll.
+
+**Weitere Filter.** In der linken Leiste — dort, wo auf den anderen Seiten die
+Diensttage stehen. Auf der Suchseite gibt es die nicht, weil es hier gerade um
+den Gesamtbestand geht. Seit Web 9.5.0 ist es dieselbe Leiste wie überall: Am
+Schreibtisch steht sie links, auf Tablet und Handy (unter 1024 px) liegt sie
+als Schublade hinter dem Knopf **Filter** neben dem Suchfeld. Vorher hatte die
+Suche als einzige Seite eine eigene Filterspalte — auf dem Handy stand die
+komplett **vor** dem Ergebnis.
+
+Die Filter liegen seit Web 7.0.0 in fünf Blöcken, die danach schneiden,
+**worüber** gefiltert wird:
 
 | Block | Enthält |
 |---|---|
 | **Einsatz** | Datum, Alarmzeit, Wochentag, Strecke, Einsatzdauer, Fehleinsatz |
-| **Patient** | Alter von / bis |
+| **PatientIn** | Alter von / bis |
 | **Transport** | Transportart, NA-Begleitung, Transportziel, Sekundärtransport, Schockraum |
 | **Beteiligte** | Standort, Rettungsmittel, Art, Besatzung je Rolle, weiteres Rettungsmittel |
 | **Bergrettung** | Bergwacht, Bereitschaft, Winde samt Cycles und Luftverladung |
@@ -891,7 +1096,7 @@ Strecke und Dauer zum Einsatz. Die Kurznamen in geteilten Links sind unveränder
 geblieben, alte Links funktionieren also weiter.
 
 Jeder Block klappt einzeln auf und zu; beim Öffnen der Seite sind alle
-zugeklappt, damit die Spalte ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
+zugeklappt, damit die Leiste ruhig bleibt. Öffnest du einen geteilten Link, gehen genau die Blöcke
 auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 (UND); leere Felder schränken nichts ein. Die Auswahllisten für Standort,
 Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
@@ -900,12 +1105,12 @@ enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 **Bergrettung nur, wenn es sie gibt.** Der Block erscheint nur dann, wenn
 wenigstens ein Einsatz deines Bestandes eine Winden- oder eine
 Bergwacht-Angabe trägt. Wer nie windet und nie mit der Bergwacht arbeitet, hat
-diese acht Felder also gar nicht erst in der Spalte stehen — sie könnten dort
+diese acht Felder also gar nicht erst in der Leiste stehen — sie könnten dort
 nur Filter setzen, die garantiert null Treffer ergeben. Dasselbe gilt seit
 Web 7.0.0 für das einzelne Feld **Fehleinsatz**: Es steht in einem Block, der
 bleiben muss, und erscheint deshalb feldweise nur, wenn im Bestand einer
 dokumentiert ist. Maßgeblich ist der
-**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Spalte verändert sich
+**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Leiste verändert sich
 also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
 dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
 den du nicht finden und nicht zurücknehmen könntest.
@@ -921,9 +1126,19 @@ mehr. Die Angaben selbst bleiben vollständig erhalten — sie stehen weiterhin 
 der Einsatzansicht und im Export. Ältere geteilte Links funktionieren weiter;
 der entfallene Teil wird dabei stillschweigend übergangen.
 
-Unten in der Filterspalte steht **Filter zurücksetzen** und darunter, wie viele
-Filter gerade gesetzt sind. Über der Trefferliste steht, wie viele Einsätze von
-wie vielen angezeigt werden.
+Am **zugeklappten** Blockkopf steht eine blaue Zahl, wenn darin etwas gesetzt
+ist — so versteckt sich kein vergessener Filter hinter einem geschlossenen
+Deckel. Dieselbe Zahl steht am Knopf **Filter**, solange die Leiste als
+Schublade liegt.
+
+Unten in der Leiste steht **Filter zurücksetzen**. In der Schublade steht
+darunter **„n Treffer zeigen"** — die Zahl rechnet mit, während du filterst,
+und der Knopf schließt die Schublade: Du weißt also vorher, worauf du
+hinausläufst. Über der Trefferliste stehen die gesetzten Filter noch einmal als
+blaue Plaketten mit einem Kreuz; ein Druck darauf nimmt **genau diesen**
+Filter zurück.
+Daneben steht, wie viele Einsätze angezeigt werden (bei gesetztem Filter „n von
+m") und wie viele Kilometer sie zusammen sind.
 
 **Wie viele Zeilen auf einmal?** Die Liste zeigt **200 Treffer**; darunter
 liegen dann die Schaltflächen **„Weitere 200 anzeigen"** und **„Alle N
@@ -1065,11 +1280,20 @@ Datei und kann nicht auseinanderlaufen.
 
 ## 6. Backup
 
-Unter **⚙ Einstellungen → „Backup"** lädst du alle deine Daten als einzelne
+Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
+deine Daten als einzelne
 verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
 10 Zeichen, wird nirgends gespeichert. In dieser Datei stehen **alle
 geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
 die Hand bekommt, steht nur dieses Passwort.
+
+**Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
+Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis
+**blau mit Haken**, und was gerade läuft („Daten werden geladen …") steht
+schlicht in Grau — es ist kein Ergebnis, und ein Haken daneben behauptete
+eines. Ein Backup, bei dem sich einzelne Angaben nicht entschlüsseln ließen,
+meldet sich **orange**: Die Datei ist vollständig, aber dieser Teil öffnet
+sich nur wieder in diesem Konto.
 
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
@@ -1158,7 +1382,7 @@ Sicherung unmittelbar zurück; du musst nichts tun. Eingespielt wird immer
 Grund, der sich nicht umgehen lässt: Die geschützten Angaben der alten Sicherung
 hängen am alten Inhaltsschlüssel, und den öffnet allein dein
 **Wiederherstellungsschlüssel**. Die Administration gibt die Sicherung dann für
-dein Konto frei. Unter **⚙ Einstellungen → „Backup"** erscheint danach ein
+dein Konto frei. Unter **Einstellungen → „Backup"** erscheint danach ein
 Abschnitt *Für dich freigegebene Sicherung*: Dort gibst du deinen
 Wiederherstellungsschlüssel ein, dein Browser schlüsselt die Angaben auf deinen
 neuen Schlüssel um und spielt sie ein. Solange du eine Freigabe nicht eingelöst
@@ -1175,8 +1399,9 @@ hast, kann die Administration sie zurücknehmen.
   angezeigt und danach nie wieder (Abschnitt 5).
 - Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
   entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **drei** Sicherungen. Die vierte verdrängt die
-  älteste — nach Alter wird dagegen nie etwas entfernt.
+- Je Konto liegen höchstens **drei** Sicherungen (die Administration kann die
+  Zahl unter „Sicherungen" ändern). Die älteste wird beim nächsten Sichern
+  verdrängt — nach Alter wird dagegen nie etwas entfernt.
 - Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
   ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
 
@@ -1187,6 +1412,12 @@ hast, kann die Administration sie zurücknehmen.
 Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
 Jahresliste.
+
+**Der Weg hat drei Schritte, und jeder ist eine eigene Karte:** *1. Datei
+wählen*, *2. Prüfen und korrigieren*, *3. Übernehmen*. Die Schritte 2 und 3
+erscheinen erst, wenn der vorige getan ist. In Schritt 2 lässt sich die
+Tabelle einschränken auf *Alle Zeilen*, *Nur Probleme* oder *Nur Dubletten* —
+die gewählte Fläche ist orange hinterlegt.
 
 Die Datei wird **nicht hochgeladen**. Sie wird in deinem Browser gelesen,
 geprüft und dort verschlüsselt; der Server bekommt Name, Geburtsdatum,
@@ -1446,10 +1677,11 @@ automatisch endgültig weg.
   **den kompletten Tag**: alle Einsätze, Ruhesegmente, Tracks, Reanimationen
   und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
-  der Einsatztage-Leiste (ausgegraut, solange nichts darin liegt) — je eine
-  Tabelle für gelöschte Diensttage und einzeln gelöschte Einsätze, mit
-  „Wiederherstellen" und „Endgültig löschen". Endgültiges Löschen fragt noch
-  einmal nach und ist unwiderruflich.
+  der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine Karte
+  für gelöschte Diensttage und einzeln gelöschte Einsätze. Zu jedem Eintrag
+  stehen „Wiederherstellen" und „Endgültig löschen" bereit; auf schmalen
+  Geräten hinter dem **⋯** am rechten Rand der Zeile. Endgültiges Löschen führt
+  auf eine Seite, die den Umfang beziffert, und ist unwiderruflich.
 
 Solange etwas im Papierkorb liegt, nimmt der Server Nachlieferungen der Uhr
 für diese Einsätze zwar entgegen, verwirft sie aber — gelöschte Einsätze
@@ -1466,9 +1698,10 @@ und im Zeitraum nicht, und öffnen ließe er sich auch nicht mehr.
 
 **„Endgültig löschen" bei einem Diensttag nimmt wirklich alles mit.** Falls am
 gelöschten Tag noch etwas Aktives hängt — das kann aus einer älteren Fassung
-stammen —, nennt die Rückfrage es einzeln mit Datum und Uhrzeit und bietet
-einen Link zum Verschieben an. Wer einen davon behalten will, verschiebt ihn
-vorher an einen anderen Diensttag; sonst geht er mit.
+stammen —, steht es in einer eigenen Karte **„Aktives an diesem Diensttag"**
+mit Datum und Uhrzeit, und zu jedem Eintrag gibt es „Ansehen" und
+„Verschieben". Wer einen davon behalten will, verschiebt ihn vorher an einen
+anderen Diensttag; sonst geht er mit.
 
 **Die Uhr legt einen neuen Diensttag an, wenn der alte im Papierkorb liegt.**
 Liefert die Uhr für einen Dienst nach, den du im Web inzwischen gelöscht hast,
@@ -1520,6 +1753,35 @@ beim Löschen eines Rettungsmittels oder eines Standorts wird dessen Name vorher
 betroffenen Diensttage übernommen. Ein **Nutzerkonto** zu löschen verlangt
 zusätzlich das Abtippen der E-Mail-Adresse und geht nicht über den Papierkorb.
 
+### 8.1 „Zuordnung offen" in der Leiste
+
+Steht unten in der Diensttage-Leiste ein oranger Eintrag **„Zuordnung offen"**
+mit einer Zahl, gibt es Diensttage oder Stammdatensätze, denen der Umbau auf
+Diensttage keinen Standort und kein Rettungsmittel zuordnen konnte. Der
+Eintrag erscheint **nur, solange etwas offen ist** — auf einer neu
+eingerichteten Installation gibt es ihn nie.
+
+**Nichts davon ist dringend.** Ein Diensttag ohne Zuordnung funktioniert:
+Zeiten, Phasen, Track und Reanimation sind vollständig erfasst. Es fehlen die
+Art (luftgebunden/bodengebunden), die Besatzungsrollen und die Felder, die von
+der Art abhängen.
+
+Auf der Seite steht je offenem Eintrag ein kleiner Block:
+
+- **Diensttage** — Datum und Dienstbeginn als Überschrift, darunter Zeitraum,
+  Zahl der Einsätze und die bisherigen Bezeichnungen. Wähle Standort und
+  Rettungsmittel; die Wahl eines Rettungsmittels setzt seinen Standort gleich
+  mit. Mit dem Speichern werden Art, Rollensatz, Fähigkeiten und Bezeichnungen
+  **eingefroren** — spätere Änderungen an deinen Stammdaten wirken darauf nicht
+  mehr.
+- **Eigene Einträge ohne Standort** — je Eintrag Name, Art des Stammdatensatzes
+  und die Wahl eines Standorts.
+
+Ganz unten steht **„Standortbezug verbindlich machen"**. Diesen letzten
+Schritt führt eine Administratorin aus: Er ändert das Datenbankschema und gilt
+für **alle** Konten — er geht deshalb erst, wenn in *keinem* Konto mehr etwas
+offen ist. Danach verschwindet die Seite von selbst.
+
 ---
 
 ## 9. Stammdaten (Standorte und Rettungsmittel)
@@ -1529,8 +1791,8 @@ Schnitt folgt der Tätigkeit:
 
 | Menüpunkt | Inhalt |
 |---|---|
-| **⚙ Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
-| **⚙ Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
+| **Einstellungen → Standorte** | Eigene Standorte anlegen und bearbeiten, **vordefinierte** Standorte auswählen. Und sonst nichts. |
+| **Einstellungen → Rettungsmittel** | Was an den ausgewählten Standorten hängt: Rettungsmittel samt Rollen und Fähigkeiten, Besatzungs-Vorbelegungen, Zielkliniken, weitere Rettungsmittel, Bergwacht-Bereitschaften. |
 
 Bis Web 6.3.0 hieß beides zusammen „Standortdaten" — der Name passte auf keinen
 der beiden Teile. Ein alter Link (`?t=stammdaten`) führt weiterhin zu
@@ -1551,9 +1813,29 @@ dafür, dass in den Auswahllisten genau die Einträge des Standorts stehen, der
 am Diensttag hinterlegt ist, und sonst nichts.
 
 Zu einem **Standort** lassen sich Koordinaten hinterlegen — freiwillig. Sie sind
-die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie wie
-der Einsatzort: Adresse suchen, Koordinatenpaar oder Plus Code eintippen, der
-Vorschlag darunter übernimmt sie.
+die Quelle des Abfahrtorts „Standort" (Abschnitt 4.3). Erfasst werden sie im
+Feld **„Lage (optional)"** unter dem Namen: Adresse suchen, Koordinatenpaar
+oder Plus Code eintippen, der Vorschlag darunter übernimmt sie. Der **Name**
+bleibt dabei unberührt — „Standort Kempten" ist keine Adresse, und die Suche
+schreibt nur die Koordinaten.
+
+**Die Zeilenaktionen** stehen am Schreibtisch als Knöpfe rechts in der Zeile:
+„Als Vorbelegung" (setzt den Stern), „Bearbeiten" (füllt das Formular
+darunter) und „Löschen". Auf dem Handy steht dort ein **„⋯"**, das dieselben
+Handlungen als Blatt von unten öffnet. Das Löschen fragt zurück, **nennt den
+Namen** und beziffert, wie viele eigene Stammdatensätze mitgehen. „Als
+Vorbelegung" gibt es nur dort, wo es eine gibt — bei Standorten und
+Rettungsmitteln.
+
+Dasselbe gilt für alle übrigen Listen: Ein **Standort** ist unter
+*Rettungsmittel* eine zugeklappte Karte; aufgeklappt stehen darin die fünf
+Abschnitte Rettungsmittel, Besatzung, Zielkliniken, weitere Rettungsmittel
+und Bergwacht — der letzte nur, wenn an diesem Standort ein luftgebundenes
+Rettungsmittel steht.
+
+**Vordefinierte Standorte** stehen in einer eigenen, zugeklappten Karte
+darunter; ihr Kopf nennt, wie viele es gibt und wie viele davon ausgewählt
+sind.
 
 Ein **Rettungsmittel** ist entweder **luftgebunden** oder **bodengebunden**.
 Diese Wahl entscheidet über alles Weitere:
@@ -1590,7 +1872,8 @@ nichts — auch nicht bei einem Tippfehler im Namen. Ein Diensttag ist ein
 abgeschlossener Dienstnachweis, kein Blick auf den heutigen Stammdatenbestand;
 wer eine alte Bezeichnung korrigieren will, tut das am Diensttag selbst.
 
-Mit **„★ Standard"** markiertes Rettungsmittel und Standort werden bei neuen
+Das mit einem **Stern** als Vorbelegung markierte Rettungsmittel und der so
+markierte Standort werden bei neuen
 Diensttagen vorbelegt — das gilt auch für vom Admin zentral hinterlegte
 Einträge (s. 9.4). Bei **Standorten** ließ sich das bis Web 6.3.0 nur für eigene
 Einträge setzen; die Schaltfläche fehlte bei den vordefinierten, obwohl der
@@ -1657,7 +1940,7 @@ Bedarf löschen.
 
 ## 10. Geräte
 
-Unter **⚙ Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
+Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Uhren:
 **„Gerät anlegen"** erzeugt Geräte-ID und API-Schlüssel — der Schlüssel wird
 **nur einmal** angezeigt, also sofort notieren bzw. eintragen. **Deaktivieren**
 sperrt den Upload sofort (z. B. bei Verlust); alle bereits hochgeladenen Daten
@@ -1682,19 +1965,118 @@ sie in Ruhe ansehen kannst.
 
 ## 11. Administration (nur Admin)
 
-NutzerInnen anlegen (verschickt automatisch den Passwort-Setz-Link) und löschen
-(**Achtung:** entfernt alle Daten der Person unwiderruflich). Ein Klick auf eine
-NutzerIn öffnet die Editierseite: Rolle wechseln, E-Mail ändern und die
-verbundenen Geräte einsehen (aktivieren/deaktivieren/löschen — Löschen lässt
-hochgeladene Daten bestehen).
+Die Administration führt zwei Seiten für Konten: die **Liste** aller
+NutzerInnen (11.2) und je Konto dessen **Kontoseite** (11.1). Angelegt wird in
+der Liste, gelöscht auf der Kontoseite — dort gehört die Entscheidung dazu, was
+mit den Sicherungen geschieht.
+
+### 11.1 Die Kontoseite
+
+Seit Web 9.8.0 liegt **alles zu einem Konto auf dessen Seite**. Der Titel ist
+der Name, darunter Adresse, Rolle, seit wann es das Konto gibt und wann sich
+die Person zuletzt angemeldet hat. Oben rechts stehen **„Jetzt sichern"** und
+ein Aktionsmenü (Freigeben, Passwort zurücksetzen, Konto löschen).
+
+Darunter:
+
+| Karte | Was dort steht |
+|---|---|
+| **Konto** | Name, Rolle und E-Mail-Adresse in **einem** Formular mit **einem** Speichern. Vorher waren es drei Formulare mit drei Knöpfen. |
+| **Geräte** | Die gekoppelten Uhren mit Kennung, Kopplungsdatum und letztem Kontakt. „Deaktivieren" schaltet ein Gerät still, „Entkoppeln" entfernt es — die hochgeladenen Daten bleiben in beiden Fällen erhalten. |
+| **Sicherungen** | Die Sicherungen **dieses** Kontos mit Zeitpunkt, Umfang, Größe und Zustand; dazu „Jetzt sichern" und „Für Zielkonto freigeben". |
+| **Abonnement** | Reservierter Platz. Tarif, Laufzeit und Rechnungen kommen mit den Abomodellen. |
+| **Konto löschen** | Die Gefahrenzone, rot abgesetzt, ganz unten. |
+
+Am breiten Bildschirm stehen die Karten in zwei Spalten, auf dem Handy
+untereinander; dort öffnet ein **„⋯"** je Zeile dieselben Handlungen.
+
+**Ein Passwort lässt sich hier nicht setzen.** Die Daten sind mit dem Passwort
+der Person Ende-zu-Ende-verschlüsselt — niemand außer ihr kann sie öffnen.
+**„Passwort zurücksetzen"** im Aktionsmenü verschickt denselben Link wie
+„Passwort vergessen" auf der Anmeldeseite; die Person setzt ihr Passwort selbst
+und entsperrt danach mit ihrem Wiederherstellungsschlüssel. Ein zuvor
+verschickter Link wird dabei ungültig — es gilt immer nur der zuletzt
+verschickte. Kommt die E-Mail nicht weg, **zeigt die Seite den Link an**; er ist
+eine Stunde gültig und darf nur an die Person selbst weitergegeben werden.
+
+**Die Sicherungen dieses Kontos.** Jede Zeile nennt Zeitpunkt, Umfang (wie viele
+Diensttage, Einsätze und Ruhezeiten, wie viel davon im Papierkorb liegt) und
+Größe, dazu eine Plakette: *lesbar*, *freigegeben* oder *nicht lesbar*. Über der
+Liste steht der Stand des Kontos — *aktuell*, *überfällig · n Tage* oder *nie
+gesichert*.
+
+- **Einspielen** bringt eine Sicherung zurück in **dieses** Konto. Zur
+  Bestätigung ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
+  **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
+- **Für Zielkonto freigeben** gibt eine Sicherung an ein **anderes** Konto
+  weiter — der Weg für ein neu aufgesetztes Konto. Die NutzerIn sieht sie
+  danach in ihrem eigenen Backup-Bereich und spielt sie dort mit ihrem
+  Wiederherstellungsschlüssel ein. Die Administration bekommt zu keinem
+  Zeitpunkt Klartext zu sehen.
+- **Löschen** entfernt ein Paket endgültig. Ist es die **letzte** Sicherung des
+  Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
+
+**Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
+drei, einstellbar unter „Sicherungen"); ältere verschwinden beim nächsten
+Sichern. Zwei bleiben immer: die **jüngste** Sicherung und eine, die gerade
+**freigegeben** ist. Nach **Alter** wird nie etwas entfernt.
+
+**Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
+und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
+Sicherungen geschieht: Werden sie mitgelöscht (Vorgabe), bleibt nichts zurück.
+Bleiben sie erhalten, überleben sie die Löschung und erscheinen unter
+„Sicherungen" als Sicherung ohne Konto. Zur Bestätigung ist die E-Mail-Adresse
+abzutippen.
+
+### 11.2 Die Liste der NutzerInnen
+
+Oben stehen vier Zahlen: **Konten**, **Admins**, **Sicherung überfällig**,
+**nie gesichert**. Sie zählen den ganzen Bestand, und jede ist ein Weg: Ein
+Klick öffnet die Liste, die sie meint.
+
+Darunter die Liste selbst.
+
+- **Suchen** nach Name oder E-Mail-Adresse. Gesucht wird über alle Konten, nicht
+  nur über die angezeigte Seite.
+- **Filtern** über die Plaketten daneben: Alle, Admins, Sicherung überfällig,
+  Nie gesichert, Ohne Gerät. Die Zahl an einer Plakette sagt, was der Filter
+  **bei der laufenden Suche** ergäbe — deshalb ändert sie sich, wenn im Suchfeld
+  etwas steht, während die Zahlen oben stehen bleiben.
+- **Sortieren** durch Klick auf einen Spaltenkopf; ein zweiter Klick dreht die
+  Richtung um. Sortiert wird über alle Konten, nicht nur über die Seite.
+- **Blättern**: 50 Konten je Seite. Unten links steht, welche gerade zu sehen
+  sind („Konten 1–50 von 304"), unten rechts die Seitenzahlen.
+- **Ein Klick auf eine Zeile** öffnet die Kontoseite (11.1).
+
+Die Spalte **Sicherung** sagt je Konto eines von fünf Worten: *aktuell*,
+*überfällig · n Tage*, *nie gesichert*, *ohne Kennung* (ein Konto aus der Zeit
+vor den Admin-Sicherungen — es lässt sich erst sichern, wenn die Wartung
+gelaufen ist) oder *Stand unbekannt* (die Begleitdatei des Kontos ist nicht
+lesbar; die Kontoseite sagt dann, was wirklich da ist).
+
+**Mehrere Konten auf einmal sichern.** Vor jeder Zeile steht ein Kästchen.
+Sobald eines gesetzt ist, erscheint unten eine Leiste: „n ausgewählt · Auswahl
+sichern". **Die Auswahl gilt über Seiten hinweg** — man kann auf Seite 1
+ankreuzen, weiterblättern, auf Seite 3 weiter ankreuzen und dann alles zusammen
+sichern. Nach dem Sichern ist die Auswahl leer, damit derselbe Klick nicht
+versehentlich zweimal wirkt. Die Auswahl endet außerdem mit dem Browser-Tab.
+
+**Anlegen** über „+ Anlegen" rechts im Kartenkopf. Der Dialog fragt nach
+E-Mail-Adresse, Name und Rolle; das Konto entsteht ohne Passwort, und die Person
+bekommt einen Link, mit dem sie es selbst setzt (24 Stunden gültig).
+
+**Löschen** steht nicht in der Liste, sondern auf der Kontoseite (11.1): Dort
+gehört die Entscheidung dazu, was mit den Sicherungen des Kontos geschehen soll.
+
+### 11.3 Anlegen, Rollen und Wartung
 
 **Beim Anlegen gibt es drei mögliche Antworten**, und die Seite sagt, welche
 zutrifft:
 
-- *Nutzer angelegt — Setz-Link per E-Mail verschickt.* Alles in Ordnung.
+- *Konto angelegt — Setz-Link per E-Mail verschickt.* Alles in Ordnung.
 - *Es gibt bereits ein Konto mit dieser E-Mail-Adresse.* Es wurde nichts
   angelegt.
-- *Nutzer angelegt — die E-Mail konnte NICHT verschickt werden.* Das Konto
+- *Konto angelegt — die E-Mail konnte NICHT verschickt werden.* Das Konto
   steht, nur der Versand scheiterte. Die Seite zeigt dann den Einladungslink
   an; er ist 24 Stunden gültig und muss auf einem anderen Weg weitergegeben
   werden. **Nur an die Person selbst** — wer den Link hat, kann das Passwort
@@ -1705,32 +2087,121 @@ zutrifft:
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
-Unter **„Wartung/Update"** steht seit 4.5.1 zusätzlich, wann der tägliche
-Aufräumjob zuletzt **vollständig** durchgelaufen ist. Steht dort eine Warnung,
-scheitert einer der Aufräumschritte dauerhaft — dann wird unter anderem der
+Unter **„Wartung"** steht seit 4.5.1 zusätzlich, wann der tägliche Aufräumjob
+zuletzt **vollständig** durchgelaufen ist — als zwei Zeilen „Letzter Versuch"
+und „Letzter vollständiger Lauf". Weichen die beiden Daten voneinander ab,
+scheitert einer der Aufräumschritte dauerhaft, und dann wird unter anderem der
 Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
 Webspace unter dem Suchwort `cleanup:`.
 
-Unter **„Wartung"** stehen zwei Dinge: ob Datenbank-Updates anstehen (nach
-dem Aufspielen einer neuen Fassung dort nachsehen) und ob der tägliche
-Aufräumjob durchläuft. Das bloße Öffnen der Seite ändert nichts — sie zeigt
-erst an, was anstünde, und wartet auf eine Bestätigung.
+Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
+Installation, die Umgebung (Mailversand), der Aufräumjob, Einsätze ohne
+Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
+ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
+Bestätigung.
 
-Unter **„Standorte systemweit"** und **„Rettungsmittel systemweit"** pflegt der
-Admin dieselben sechs Bereiche wie eine NutzerIn unter Standorte und
-Rettungsmittel (9.1–9.3), jedoch für **alle** Konten gemeinsam (siehe 9.4). Die
-Zweiteilung ist seit Web 7.0.0 dieselbe wie in der Kontoansicht; vorher hieß
-beides zusammen „Zentrale Stammdaten". Namensgleiche Einträge werden auch hier
-abgelehnt; existieren bereits persönliche Einträge mit demselben Namen bei
-einzelnen NutzerInnen, weist ein Hinweis darauf hin (keine Blockade).
+Jede Migration steht als eigene Zeile mit ihrem Stand als Plakette:
+**erledigt** (blau), **steht aus** (orange), **blockiert** (rot) oder
+**Fehler** (rot). Nach einem Update müssen alle „erledigt" tragen. Eine
+*blockierte* Migration würde eine Spalte löschen, in der noch Daten stehen;
+sie läuft nur, wenn du das Kästchen vor ihrer Zeile setzt — und dieses
+Kästchen heißt: **Die Daten sind gesichert.**
 
-Unter **„Sicherungen"** stehen alle vorhandenen Sicherungen **als Tabelle** —
-eine Zeile je Sicherung mit Zeitpunkt, Herkunft, Umfang und Zustand. Die
-Formulare zum Einspielen, Freigeben und Löschen klappen hinter der jeweiligen
-Zeile auf. Bis Web 6.3.0 stand je Sicherung ein eigener Kasten mit vollständigem
-Formular; bei mehreren Konten waren das schnell mehrere Bildschirmseiten. An den
-Rückfragen ändert das nichts: Vor dem Einspielen ist weiterhin die E-Mail-Adresse
-des Zielkontos abzutippen.
+Unter **„Stammdaten systemweit"** pflegt der Admin dieselben sechs Bereiche wie
+eine NutzerIn unter Standorte und Rettungsmittel (9.1–9.3), jedoch für **alle**
+Konten gemeinsam (siehe 9.4). Oben rechts steht die Wahl zwischen **Standorte**
+und **Rettungsmittel** — bis Web 9.9.0 waren das zwei Menüpunkte, die auf
+dieselbe Seite führten.
+
+Namensgleiche Einträge werden auch hier abgelehnt; existieren bereits
+persönliche Einträge mit demselben Namen bei einzelnen NutzerInnen, weist ein
+Hinweis darauf hin (keine Blockade). Seit Web 9.10.0 gilt das auch für
+**Standorte** — dort fehlte der Hinweis als einzigem der sechs Bereiche, und
+ein systemweiter Standort, den ein Dutzend Konten bereits selbst angelegt
+hatte, entstand ohne jede Warnung.
+
+Unter **„Sicherungen"** stehen seit Web 9.10.0 nur noch die Dinge, die für
+**alle** Konten gelten. Wer eine bestimmte Sicherung sucht, ist hier falsch:
+
+| Was du willst | Wo es steht |
+|---|---|
+| Wie steht es um die Installation? Welche Regeln gelten? | **Sicherungen** |
+| Welche Konten sind überfällig? Mehrere auf einmal sichern | **NutzerInnen** (Kachel „Sicherung überfällig" bzw. „nie gesichert") |
+| Die Sicherungen **eines** Kontos einspielen, freigeben, löschen | Die **Kontoseite** dieses Kontos (11.1) |
+
+Oben vier Zahlen: Konten, Pakete samt Größe der Ablage, überfällig, nie
+gesichert. Die letzten beiden sind anklickbar und öffnen die NutzerInnen-Liste
+mit genau diesem Filter.
+
+**Regeln.** Drei Einstellungen, ein Speichern:
+
+- **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
+  (Vorgabe 30).
+- **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
+  3). Ältere werden beim nächsten Sichern gelöscht; die jüngste und eine
+  freigegebene nie. Bis Web 9.9.0 war das eine feste Zahl im Programm.
+- **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
+
+**Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
+mit Adresse und Alter der letzten Sicherung — keine Namen und keine Zahlen aus
+den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
+Admins mit gesetztem Passwort.
+
+> **Sie hängt an der Benutzung, nicht an einer Uhr.** Auf diesem Webspace läuft
+> kein Zeitplan; was regelmäßig geschieht, fährt auf dem täglichen Aufräumjob
+> mit, und der startet bei der ersten Anfrage des Tages. Die Erinnerung kommt
+> deshalb höchstens einmal je Woche, nur wenn es etwas zu melden gibt — und nur,
+> wenn die Anwendung in dieser Zeit überhaupt benutzt wurde. Wird sie zwei
+> Wochen nicht angefasst, kommt die Mail zwei Wochen später.
+
+**„Alle sichern"** oben rechts sichert die fälligen Konten, das mit der
+ältesten Sicherung zuerst. Sind es sehr viele, hört die Reihe nach etwa 20
+Sekunden auf und sagt, wie viele geschafft und wie viele übrig sind — ein
+zweiter Klick macht weiter, und weil das Älteste zuerst kommt, kommt man
+zuverlässig durch.
+
+**Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
+und wie viele Konten eine Ablage haben. **Sicherungen ohne Konto** steht
+zugeklappt darunter: Ordner, zu deren Konto es keine Zeile mehr gibt — der Fall
+„Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
+genau dafür sind sie da. An den Rückfragen ändert sich nichts: Vor dem
+Einspielen ist weiterhin die E-Mail-Adresse des Zielkontos abzutippen.
+
+Unter **„Rechtstexte"** stehen Impressum und Datenschutzerklärung dieser
+Installation. Beide Seiten sind **ohne Anmeldung** erreichbar und in jeder
+Fußzeile verlinkt.
+
+> **Die Anwendung liefert keinen Text mit.** Was in Impressum und
+> Datenschutzerklärung steht, ist Sache des Betreibers — eine mitgelieferte
+> Datenschutzerklärung wäre eine Rechtsauskunft, die dieses Projekt nicht geben
+> kann. Solange nichts hinterlegt ist, zeigen die Seiten: „Der Betreiber dieser
+> Installation hat noch kein Impressum hinterlegt." Als Administration siehst du
+> dort zusätzlich den Weg hierher.
+
+**Geschrieben wird in eingeschränktem Markdown.** Erlaubt sind vier Dinge:
+
+| Schreibweise | Ergebnis |
+|---|---|
+| `## Überschrift` | eine Überschrift (`###` für eine kleinere) |
+| Leerzeile dazwischen | ein neuer Absatz. Zeilen **ohne** Leerzeile bleiben ein Absatz mit Umbrüchen — so setzt man eine Anschrift untereinander |
+| `- Punkt` oder `1. Punkt` | eine Aufzählung bzw. Nummerierung |
+| `[Text](https://…)` | ein Link. Auch `mailto:` und eigene Seiten wie `datenschutz.php` |
+
+**HTML wird nicht ausgeführt, sondern angezeigt.** Wer `<b>fett</b>` schreibt,
+sieht `<b>fett</b>` auf der Seite stehen. Das ist Absicht: Diese beiden Seiten
+sind die einzigen, auf denen fremder Text zu Struktur wird, und die einzige
+sichere Regel dafür ist, gar kein HTML durchzulassen. Aus demselben Grund gibt
+es keine Bilder — sie würden von einem fremden Server geladen, und die Anwendung
+lädt zur Laufzeit nichts von außen.
+
+**Das Standdatum setzt du selbst.** Es erscheint als „Stand: …" am Ende der
+Seite; leer lassen heißt: kein Datum. Es wird **nicht** automatisch gesetzt —
+bei einem Rechtstext ist das Datum eine Aussage darüber, auf welchem Stand der
+Text inhaltlich ist, und eine Tippfehlerkorrektur soll ihn nicht neu datieren.
+
+**Die Vorschau zeigt den zuletzt gespeicherten Stand**, nicht das gerade
+Getippte. Sie entsteht auf dem Server, mit demselben Renderer wie die
+öffentliche Seite.
 
 Nach Code-Updates mit Datenbank-Änderungen einmal **`update.php`** aufrufen
 (siehe Technik-Doku, Betrieb). Die Seite läuft **zweistufig**: Der Aufruf zeigt
@@ -1751,7 +2222,7 @@ Einstellungen rechnen, die diese Programmfassung anbietet. Steht dort eine
 Warnung, können sich die genannten Konten **nicht anmelden** — die Behebung
 steht dabei.
 
-Ein Update, das eine Spalte löscht, ist seit 4.7.0 in der Liste **mit ⚠
+Ein Update, das eine Spalte löscht, trägt in der Liste die Plakette **blockiert
 gekennzeichnet** und mit einem Satz versehen, was verlorenginge. Steht in einer
 solchen Spalte noch etwas, wird das Update **nicht ausgeführt** — die Zeile
 nennt stattdessen Spalte und Zeilenzahl. Alle übrigen Updates laufen trotzdem
@@ -1775,7 +2246,7 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
 2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
    genügt (z. B. `nadoku.beispieldomain.de`).
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
-3. **Im Web einen Kopplungscode erzeugen:** **⚙ Einstellungen → „Geräte" →
+3. **Im Web einen Kopplungscode erzeugen:** **Einstellungen → „Geräte" →
    „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
    genau einmal verwendbar**.
    Ein neu erzeugter Code macht einen vorher erzeugten ungültig, und es gibt
@@ -1784,7 +2255,7 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    fünf Geräte verbunden, lässt sich kein Code mehr erzeugen — erst ein nicht
    mehr genutztes Gerät löschen.
 4. **Auf der Uhr: Sync-Seite → Gerät koppeln → Code eintippen** und bestätigen
-   — die Uhr meldet „Gekoppelt ✓" und ist einsatzbereit. Das Gerät
+   — die Uhr meldet „Gekoppelt" mit einem Haken und ist einsatzbereit. Das Gerät
    erscheint im Web in der Geräteliste, und du bekommst eine E-Mail darüber.
    *Bei Garmin: die Sync-Seite und der Tastenweg zum Koppeln stehen in den
    Abschnitten 2.0 und 2.2 — je Uhr verschieden.*

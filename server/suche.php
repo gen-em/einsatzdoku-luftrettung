@@ -22,19 +22,59 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_optionen()
  * dokumentiert.
  */
 ui_seite_start(['titel' => 'Suche']);
-ui_topbar('suche');
 ?>
-<div class="layout layout-suche">
-  <!-- Statt der Einsatztage-Leiste: die Filter. Auf der Suchseite waeren
-       einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
-       Bewusst NICHT die Klasse .daylist wiederverwendet — die ist auf feste
-       Fensterhoehe mit overflow:hidden gesetzt und wuerde eine lange
-       Filterliste abschneiden. -->
-  <aside class="filterspalte">
-    <h2>Filter</h2>
+<?php /* Statt der Diensttage-Leiste: die Filter. Auf der Suchseite waeren
+         einzelne Tage sinnlos, hier geht es gerade um den Gesamtbestand.
 
-    <div class="filtergruppen">
-      <?php /* ---- FILTERGRUPPEN (neu geschnitten, Web 7.0.0) ----------------
+         SEIT P3/O2 IST ES DIESELBE LEISTE wie ueberall — nicht mehr eine
+         eigene `.filterspalte`. Genau davor warnt die Vormerkliste aus
+         Konzept P0 (10.5): Haengt der Schubladenmechanismus an der Funktion
+         statt an der Klasse, bleibt die Suchseite als einzige ohne mobiles
+         Menue. `ui_geruest_start()` mit leiste => 'filter' oeffnet die Leiste
+         und ueberlaesst der Seite den Inhalt; ui_leiste_ende() schliesst sie
+         und oeffnet den Inhalt. */ ?>
+<?php ui_geruest_start(['aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
+
+    <?php
+      /* ---- Bausteine dieser Seite -------------------------------------
+       *
+       * Zwei kleine Erzeuger, damit die fünf Filtergruppen unten nicht
+       * fünfmal dasselbe Markup ausschreiben. Sie stehen HIER und nicht in
+       * ui.php: Der Dreiwert („egal / ja / nein") ist eine Eigenart der
+       * Suche, und die Filtergruppe ist das Akkordeon aus O2 mit einer
+       * Zahl im Kopf. Was beide benutzen — Akkordeon, Segmentwahl —, kommt
+       * aus dem gemeinsamen Vorrat. */
+      $gruppe_auf = function (string $name, string $titel, bool $offen = false): void { ?>
+        <details class="akkordeon filtergruppe" data-gruppe="<?= e($name) ?>"<?= $offen ? ' open' : '' ?>>
+          <summary class="akkordeon-zeile">
+            <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
+            <span class="akkordeon-text"><?= e($titel) ?></span>
+            <?php /* Zahl gesetzter Filter dieser Gruppe (E-P3-36) — blau, weil
+                     sie einen Zustand nennt und keine Warnung ist. Gefüllt
+                     wird sie im Skript, aus demselben Filterkatalog, aus dem
+                     auch die Plaketten entstehen. */ ?>
+            <span class="filterzahl plakette plakette-blau" data-zahl="<?= e($name) ?>" hidden></span>
+          </summary>
+          <div class="filterfelder">
+      <?php };
+      $gruppe_zu = function (): void { ?>
+          </div>
+        </details>
+      <?php };
+      /* Dreiwert als Segmentwahl (E-P3-36, Mockup 27). Die gespeicherten
+       * Werte bleiben '' / 'j' / 'n' — sie stehen in verschickten Links. */
+      $dreiwert = function (string $id, string $titel): void { ?>
+        <div class="feldblock" id="lab-<?= e(substr($id, 2)) ?>">
+          <span class="feld-label"><?= e($titel) ?></span>
+          <?php ui_segment(['id' => $id, 'name' => 'sg-' . $id, 'label' => $titel,
+                            'wert' => '', 'klasse' => 'segment-filter',
+                            'optionen' => ['' => 'egal', 'j' => 'ja', 'n' => 'nein']]); ?>
+        </div>
+      <?php };
+    ?>
+
+    <div class="leiste-liste filtergruppen">
+      <?php /* ---- FILTERGRUPPEN (Schnitt aus Web 7.0.0, Gestalt aus P3/O6) ---
                Die Spalte hatte sechs Blöcke, und drei davon liessen sich nicht
                erklären: „Zeit" enthielt Datum und Uhrzeit, „Werte" Alter,
                Strecke und Dauer, „Einsatz" einen einzigen Haken. Wer nach
@@ -44,50 +84,83 @@ ui_topbar('suche');
                Jetzt schneidet die Gliederung nach dem, WORÜBER gefiltert wird:
                der Einsatz selbst (wann, wie weit, wie lange, überhaupt einer),
                die Patientin, der Transport, die Beteiligten, die Bergrettung.
-               „Werte" ist damit ersatzlos entfallen — es war nie ein Gegenstand,
-               sondern eine Datenart.
 
                DIE KURZNAMEN IM FRAGMENT BLEIBEN, WAS SIE SIND (kv, ab, lv …):
                Sie stehen in verschickten Links, und ein umbenannter Parameter
-               bricht sie stillschweigend. Nur ihre GRUPPE hat sich geändert,
-               und die entscheidet allein, welcher Block bei einem geteilten
-               Link aufgeht. */ ?>
-      <details class="filtergruppe" data-gruppe="einsatz">
-        <summary>Einsatz</summary>
-        <div class="filterfelder">
-          <label>Datum von <input type="date" id="f-dv"></label>
-          <label>Datum bis <input type="date" id="f-db"></label>
-          <label>Alarmzeit von <input type="text" class="zeitfeld" id="f-zv"></label>
-          <label>Alarmzeit bis <input type="text" class="zeitfeld" id="f-zb"></label>
-          <div class="wochentage" id="f-wd">
-            <span class="wtlabel">Wochentag</span>
-            <label><input type="checkbox" value="1"> Mo</label>
-            <label><input type="checkbox" value="2"> Di</label>
-            <label><input type="checkbox" value="3"> Mi</label>
-            <label><input type="checkbox" value="4"> Do</label>
-            <label><input type="checkbox" value="5"> Fr</label>
-            <label><input type="checkbox" value="6"> Sa</label>
-            <label><input type="checkbox" value="7"> So</label>
+               bricht sie stillschweigend. */ ?>
+      <?php $gruppe_auf('einsatz', 'Einsatz', true); ?>
+          <?php /* Von/bis nebeneinander (E-P3-36): Sie gehören zusammen und
+                   kosten untereinander die doppelte Höhe der Spalte.
+
+                   DER NAME STEHT ÜBER DEM PAAR, NICHT IM LINKEN FELD
+                   (F-N1-J). Vorher hieß die linke Beschriftung „Strecke von
+                   (km)" und die rechte „bis" — in einer 240 px breiten Leiste
+                   brach die linke auf zwei Zeilen um, die rechte nicht, und
+                   die beiden Eingabefelder standen auf verschiedener Höhe.
+                   Jetzt trägt ein `.feld-label` den Namen und die Felder
+                   heißen „von" und „bis": gleich kurz, gleich hoch. Was die
+                   Bildschirmleserin hört, bleibt vollständig — das steht im
+                   `aria-label` des Feldes. */ ?>
+          <div class="feldblock">
+            <span class="feld-label">Datum</span>
+            <div class="fld-reihe">
+              <label for="f-dv">von <input type="date" id="f-dv"
+                     aria-label="Datum von"></label>
+              <label for="f-db">bis <input type="date" id="f-db"
+                     aria-label="Datum bis"></label>
+            </div>
+          </div>
+          <div class="feldblock">
+            <span class="feld-label">Wochentage</span>
+            <?php /* Mehrfachwahl in der Gestalt der Segmentwahl: dieselben
+                     Tasten, aber Kästchen statt Radioknöpfen — mehrere Tage
+                     gleichzeitig sind der Regelfall. */ ?>
+            <div class="segment segment-mehrfach wochentage" id="f-wd" role="group"
+                 aria-label="Wochentage">
+              <?php foreach ([1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do',
+                              5 => 'Fr', 6 => 'Sa', 7 => 'So'] as $nr => $kurz): ?>
+                <input type="checkbox" class="segment-box" id="wt-<?= $nr ?>" value="<?= $nr ?>">
+                <label class="segment-taste" for="wt-<?= $nr ?>"><?= $kurz ?></label>
+              <?php endforeach; ?>
+            </div>
+          </div>
+          <div class="feldblock">
+            <span class="feld-label">Alarmzeit</span>
+            <div class="fld-reihe">
+              <label for="f-zv">von <input type="text" class="zeitfeld" id="f-zv"
+                     placeholder="hh:mm" aria-label="Alarmzeit von"></label>
+              <label for="f-zb">bis <input type="text" class="zeitfeld" id="f-zb"
+                     placeholder="hh:mm" aria-label="Alarmzeit bis"></label>
+            </div>
           </div>
           <?php /* Strecke und Dauer standen unter „Werte" — beides sind
                    Eigenschaften DIESES Einsatzes und gehören zu ihm.
                    Neutral beschriftet (Abschnitt 3.9): Die Suche führt beide
                    Arten in einer Ansicht, „Flugstrecke" wäre für die Hälfte der
-                   Einsätze falsch. Die Flugterminologie bleibt allein den
-                   Kacheln des Luftrettungs-Tabs vorbehalten (E32). */ ?>
-          <label>Strecke von (km) <input type="number" id="f-kv" min="0" step="1"></label>
-          <label>Strecke bis (km) <input type="number" id="f-kb" min="0" step="1"></label>
-          <label>Einsatzdauer von (min) <input type="number" id="f-ev" min="0" step="1"></label>
-          <label>Einsatzdauer bis (min) <input type="number" id="f-eb" min="0" step="1"></label>
+                   Einsätze falsch. */ ?>
+          <div class="feldblock">
+            <span class="feld-label">Strecke <span class="feld-klein-inline">km</span></span>
+            <div class="fld-reihe">
+              <label for="f-kv">von <input type="number" id="f-kv" min="0" step="1"
+                     aria-label="Strecke von, Kilometer"></label>
+              <label for="f-kb">bis <input type="number" id="f-kb" min="0" step="1"
+                     aria-label="Strecke bis, Kilometer"></label>
+            </div>
+          </div>
+          <div class="feldblock">
+            <span class="feld-label">Dauer <span class="feld-klein-inline">min</span></span>
+            <div class="fld-reihe">
+              <label for="f-ev">von <input type="number" id="f-ev" min="0" step="1"
+                     aria-label="Dauer von, Minuten"></label>
+              <label for="f-eb">bis <input type="number" id="f-eb" min="0" step="1"
+                     aria-label="Dauer bis, Minuten"></label>
+            </div>
+          </div>
           <?php /* Der Fehleinsatz ist selten. Er erscheint nur, wenn im Bestand
                    überhaupt einer dokumentiert ist — sonst ergäbe „ja" dauerhaft
-                   null Treffer und „nein" den ganzen Bestand. Bis Web 6.3.0 fiel
-                   dafür der ganze Block weg; jetzt trägt der Block auch die
-                   Datums- und Zeitfilter und muss bleiben, also entscheidet die
-                   Regel über das einzelne FELD (FELD_NUR_WENN). */ ?>
-          <label id="lab-fe">Fehleinsatz <select id="f-fe" class="dreiwert"></select></label>
-        </div>
-      </details>
+                   null Treffer und „nein" den ganzen Bestand (FELD_NUR_WENN). */
+                $dreiwert('f-fe', 'Fehleinsatz'); ?>
+      <?php $gruppe_zu(); ?>
 
       <?php /* Alles, was die Person betrifft. Derzeit ist das der Altersfilter
                — und er wird es bleiben, solange die übrigen Angaben
@@ -95,143 +168,186 @@ ui_topbar('suche');
                Auswahlliste aller Namen aufzubauen, und die wäre selbst ein
                Patientendatum. Gesucht wird nach ihnen über das Freitextfeld,
                das nach dem Entsperren auch die geschützten Felder durchsucht. */ ?>
-      <details class="filtergruppe" data-gruppe="patient">
-        <summary>Patient</summary>
-        <div class="filterfelder">
-          <label id="lab-av">Alter von <input type="number" id="f-av" min="0" max="130" step="1"></label>
-          <label id="lab-ab">Alter bis <input type="number" id="f-ab" min="0" max="130" step="1"></label>
-          <p class="muted" id="alterlock" hidden>Der Altersfilter braucht die
-            entschlüsselten Angaben und ist deshalb gesperrt.</p>
-        </div>
-      </details>
+      <?php $gruppe_auf('patient', 'PatientIn'); ?>
+          <div class="feldblock">
+            <span class="feld-label">Alter</span>
+            <div class="fld-reihe">
+              <label id="lab-av" for="f-av">von <input type="number" id="f-av"
+                     min="0" max="130" step="1" aria-label="Alter von"></label>
+              <label id="lab-ab" for="f-ab">bis <input type="number" id="f-ab"
+                     min="0" max="130" step="1" aria-label="Alter bis"></label>
+            </div>
+          </div>
+          <p class="feld-hinweis" id="alterlock" hidden>Der Altersfilter braucht die
+             entsperrte Verschlüsselung — das Alter liegt geschützt vor.</p>
+      <?php $gruppe_zu(); ?>
 
-      <details class="filtergruppe" data-gruppe="transport">
-        <summary>Transport</summary>
-        <div class="filterfelder">
-          <?php /* Die Transportart speichert einen Code ('air'/'ground'/'ambulant')
-                   und zeigt eine Beschriftung — die Liste kommt deshalb aus dem
-                   Feldkatalog (mf_optionen(), Befund P17) und nicht aus einer
-                   zweiten, hier abgeschriebenen Aufzählung. */ ?>
-          <label>Transportart <select id="f-ta"></select></label>
-          <label>NA-Begleitung <select id="f-nb" class="dreiwert"></select></label>
-          <label>Transportziel <select id="f-tz"></select></label>
-          <label>Sekundärtransport <select id="f-se" class="dreiwert"></select></label>
-          <label>Schockraum <select id="f-sr" class="dreiwert"></select></label>
-        </div>
-      </details>
+      <?php $gruppe_auf('transport', 'Transport'); ?>
+          <label for="f-ta">Transportart <select id="f-ta"></select></label>
+          <?php $dreiwert('f-nb', 'NA-Begleitung'); ?>
+          <label for="f-tz">Transportziel <select id="f-tz"></select></label>
+          <?php $dreiwert('f-se', 'Sekundärtransport');
+                $dreiwert('f-sr', 'Schockraum'); ?>
+      <?php $gruppe_zu(); ?>
 
-      <details class="filtergruppe" data-gruppe="wer">
-        <summary>Beteiligte</summary>
-        <div class="filterfelder">
-          <label>Standort <select id="f-st"></select></label>
-          <label>Rettungsmittel <select id="f-veh"></select></label>
-          <?php /* Die Art steht beim Rettungsmittel, weil sie von ihm kommt
-                   (E3): Sie ist keine eigene Angabe am Einsatz, sondern die
-                   Eigenschaft des Rettungsmittels, mit dem der Diensttag
-                   gefahren wurde. */ ?>
-          <label>Art <select id="f-art"></select></label>
-          <?php /* Die Besatzungsfilter entstehen aus dem Rollenkatalog CREW_ROLES
-                   (db.php, E4) — nicht als fünf feste Flugrollen. Mit den
-                   bodengebundenen Rollen wären es sieben geworden, und jede neue
-                   Rolle hätte hier, im Skript unten und in der Filterlogik
-                   gleichzeitig nachgezogen werden müssen.
-
-                   Alle Rollen stehen NEBENEINANDER, ohne Trennung nach Art: Die
-                   Suche zeigt beide Arten in einer Tabelle (Abschnitt 3.7.3),
-                   und wer nach einem Fahrer sucht, will nicht vorher die Art
-                   wählen. Ein Filter ohne Werte im Bestand bleibt leer — das ist
-                   dieselbe Regel wie bei allen übrigen Auswahlfeldern hier. */
-                foreach (CREW_ROLES as $rc => $rr): ?>
-            <label><?= e($rr['label']) ?>
+      <?php $gruppe_auf('wer', 'Beteiligte'); ?>
+          <label for="f-st">Standort <select id="f-st"></select></label>
+          <label for="f-veh">Rettungsmittel <select id="f-veh"></select></label>
+          <label for="f-art">Art <select id="f-art"></select></label>
+          <?php /* Ein Auswahlfeld je Besatzungsrolle des Katalogs (E4). Welche
+                   Rollen es gibt, sagt CREW_ROLES — nicht diese Seite. */
+                foreach (CREW_ROLES as $rc => $rolle): ?>
+            <label for="f-crew-<?= e($rc) ?>"><?= e($rolle['label']) ?>
               <select id="f-crew-<?= e($rc) ?>" data-rolle="<?= e($rc) ?>"></select></label>
           <?php endforeach; ?>
-          <label>Weiteres Rettungsmittel <select id="f-rm"></select></label>
-        </div>
-      </details>
+          <label for="f-rm">Weiteres Rettungsmittel <select id="f-rm"></select></label>
+      <?php $gruppe_zu(); ?>
 
-      <?php /* BERGRETTUNG — Bergwacht und Winde in EINEM Block (Web 7.0.0).
-               Sie standen als zwei getrennte Blöcke da und gehören fachlich
-               zusammen: Beides ist Bergrettung, beides hängt an einer Fähigkeit
-               des Rettungsmittels, und beides betrifft dieselben Standorte. Wer
-               keines von beidem dokumentiert, sieht den Block gar nicht
-               (GRUPPE_NUR_WENN) — vorher waren es zwei Blöcke, die dauerhaft
-               null Treffer versprachen. */ ?>
-      <details class="filtergruppe" data-gruppe="bergrettung">
-        <summary>Bergrettung</summary>
-        <div class="filterfelder">
-          <label>Bergwacht <select id="f-bw" class="dreiwert"></select></label>
-          <label>Bereitschaft <select id="f-bu"></select></label>
-          <label>Windeneinsatz <select id="f-wi" class="dreiwert"></select></label>
-          <label>Cycles von <input type="number" id="f-cv" min="0" max="8" step="1"></label>
-          <label>Cycles bis <input type="number" id="f-cb" min="0" max="8" step="1"></label>
-          <label>Cycles mit Patient von <input type="number" id="f-pv" min="0" max="8" step="1"></label>
-          <label>Cycles mit Patient bis <input type="number" id="f-pb" min="0" max="8" step="1"></label>
-          <label>Luftverladung <select id="f-lv" class="dreiwert"></select></label>
-        </div>
-      </details>
+      <?php $gruppe_auf('bergrettung', 'Bergrettung'); ?>
+          <?php $dreiwert('f-bw', 'Bergwacht'); ?>
+          <label for="f-bu">Bereitschaft <select id="f-bu"></select></label>
+          <?php $dreiwert('f-wi', 'Windeneinsatz'); ?>
+          <div class="feldblock">
+            <span class="feld-label">Windenzyklen</span>
+            <div class="fld-reihe">
+              <label for="f-cv">von <input type="number" id="f-cv" min="0" max="8"
+                     step="1" aria-label="Windenzyklen von"></label>
+              <label for="f-cb">bis <input type="number" id="f-cb" min="0" max="8"
+                     step="1" aria-label="Windenzyklen bis"></label>
+            </div>
+          </div>
+          <div class="feldblock">
+            <span class="feld-label">Zyklen mit PatientIn</span>
+            <div class="fld-reihe">
+              <label for="f-pv">von <input type="number" id="f-pv" min="0" max="8"
+                     step="1" aria-label="Zyklen mit PatientIn, von"></label>
+              <label for="f-pb">bis <input type="number" id="f-pb" min="0" max="8"
+                     step="1" aria-label="Zyklen mit PatientIn, bis"></label>
+            </div>
+          </div>
+          <?php $dreiwert('f-lv', 'Luftverladung'); ?>
+      <?php $gruppe_zu(); ?>
     </div>
 
-    <div class="filterfuss">
-      <button type="button" class="btn-plain" id="reset">Filter zurücksetzen</button>
-      <span class="muted" id="filtercount"></span>
+    <?php /* Fuß der Leiste (E-P3-36): „Filter zurücksetzen" immer, „n Treffer
+             zeigen" nur in der Schublade — am Desktop steht die Trefferzahl
+             ohnehin daneben, und der Knopf schlösse nichts. */ ?>
+    <div class="leiste-fuss filterfuss">
+      <?= ui_knopf(['text' => 'Filter zurücksetzen', 'art' => 'leise', 'breit' => true,
+                    'symbol' => 'schliessen', 'typ' => 'button', 'attr' => ' id="reset"']) ?>
+      <?= ui_knopf(['text' => 'Treffer zeigen', 'art' => 'primaer', 'breit' => true,
+                    'typ' => 'button', 'klasse' => 'nur-schublade',
+                    'attr' => ' id="trefferzeigen" data-schublade="zu"']) ?>
     </div>
-  </aside>
+<?php ui_leiste_ende(); ?>
 
-  <main class="page">
-    <h1>Suche</h1>
-    <div id="loaderror" class="alert" hidden></div>
+    <?php ui_titelzeile(['titel' => 'Suche']); ?>
 
-    <p id="lockbanner" class="alert alert-info" hidden>
-      Geschützte Angaben sind gesperrt — Einsatznummer, Name, Geburtsdatum,
-      Alter, Diagnose und Einsatzort werden nicht durchsucht und bleiben in der
-      Trefferliste verborgen.
-      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
-    </p>
+    <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden>
+      <?= ui_symbol('warnung', 'symbol-gross') ?>
+      <p id="loaderror"></p>
+    </div>
 
-    <div class="suchbox">
-      <label class="suchfreitext">Suchbegriff
+    <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
+      <?= ui_symbol('schloss', 'symbol-gross') ?>
+      <p>Geschützte Angaben sind gesperrt — Einsatznummer, Name, Geburtsdatum,
+         Alter, Diagnose und Einsatzort werden nicht durchsucht und bleiben in
+         der Trefferliste verborgen.</p>
+      <div class="meldung-aktion">
+        <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                      'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
+      </div>
+    </div>
+
+    <?php /* Suchfeld und Filterknopf in EINER Zeile (Mockup 27/28). Das Feld
+             ist 48 px hoch — es ist die Haupthandlung dieser Seite; der Knopf
+             daneben steht nur, solange die Leiste eine Schublade ist. */ ?>
+    <div class="suchzeile">
+      <div class="suchfeld">
+        <?= ui_symbol('lupe', 'symbol-gross suchfeld-lupe') ?>
+        <label class="nur-vorlesen" for="f-q">Suchbegriff</label>
         <input type="search" id="f-q" autocomplete="off" spellcheck="false"
-               placeholder="Mehrere Wörter: alle müssen vorkommen">
-      </label>
-      <p class="muted suchhinweis">Durchsucht Einsatznummer, Name, Geburtsdatum,
-        Diagnose, Einsatzort, Transportziel, Beschreibung, Bergwacht-Angaben,
-        weiteren Notarzt, weitere Rettungsmittel, Besatzung und Notizen.
-        Weitere Filter in der Spalte links.</p>
-      <?php /* Die Operatoren stehen aufklappbar da, nicht als Dauertext: Wer
-               sie nicht braucht, tippt weiterhin einfach Wörter — genau so
-               verhält sich die Suche ohne Operator auch (assets/suchtext.js).
-               Ein Hinweis, den man bei jedem Suchvorgang überliest, wäre
-               schlechter als einer, den man einmal aufklappt. */ ?>
-      <details class="suchsyntax">
-        <summary>Und / Oder / Nicht — Suchbegriffe verknüpfen</summary>
-        <ul class="muted small">
-          <li><code>sturz fraktur</code> — beide Begriffe (Leerzeichen heißt UND)</li>
-          <li><code>sturz ODER fraktur</code> — mindestens einer
-            (<code>OR</code> und <code>|</code> gehen auch)</li>
-          <li><code>bergwacht -winde</code> — der erste ja, der zweite nicht
-            (<code>NICHT</code>, <code>NOT</code> und <code>!</code> gehen auch)</li>
-          <li><code>"zwei wörter"</code> — genau diese Folge</li>
-          <li><code>(sturz ODER fraktur) oberstdorf</code> — Klammern binden
-            zusammen; ohne sie bindet UND stärker als ODER</li>
-        </ul>
-        <p class="muted small">Groß- und Kleinschreibung spielt nirgends eine
-          Rolle. Eine unfertige Eingabe wird nicht bemängelt — sie sucht
-          weiter, so gut es geht.</p>
-      </details>
+               placeholder="Suchen">
+        <button type="button" class="suchfeld-x" id="qleeren" hidden
+                title="Suchfeld leeren"><?= ui_symbol('schliessen', 'symbol-gross', 'Suchfeld leeren') ?></button>
+      </div>
+      <?php /* Der Filterknopf traegt die Zahl gesetzter Filter (E-P3-36) —
+               dieselbe, die auch in den Gruppenkoepfen steht. Von Hand
+               gebaut, weil ui_knopf() genau einen Text kennt und hier ein
+               zweites Element danebensteht. */ ?>
+      <button type="button" class="knopf knopf-neutral filterknopf nur-schublade"
+              data-schublade="auf" aria-controls="leiste">
+        <span>Filter</span>
+        <span class="plakette plakette-blau" id="filterknopfzahl" hidden></span>
+      </button>
     </div>
 
-    <p class="muted ergebniszeile" id="ergebniszeile">Bestand wird geladen …</p>
+    <p class="suchhinweis feld-hinweis">Mehrere Wörter: alle müssen vorkommen ·
+      durchsucht Einsatznummer, Name, Ort, Diagnose, Notizen
+      <button type="button" class="leiser-link" id="syntaxknopf"
+              aria-expanded="false" aria-controls="suchsyntax">Und / Oder / Nicht verknüpfen</button></p>
 
-    <p id="leer" class="muted" hidden>Keine Treffer.</p>
-    <table class="data" id="suchtable" hidden>
-      <thead></thead>
-      <tbody></tbody>
-    </table>
+    <?php /* Die Operatoren stehen aufklappbar da, nicht als Dauertext: Wer
+             sie nicht braucht, tippt weiterhin einfach Wörter — genau so
+             verhält sich die Suche ohne Operator auch (assets/suchtext.js). */ ?>
+    <div class="suchsyntax" id="suchsyntax" hidden>
+      <ul>
+        <li><code>sturz fraktur</code> — beide Begriffe (Leerzeichen heißt UND)</li>
+        <li><code>sturz ODER fraktur</code> — mindestens einer
+          (<code>OR</code> und <code>|</code> gehen auch)</li>
+        <li><code>bergwacht -winde</code> — der erste ja, der zweite nicht
+          (<code>NICHT</code>, <code>NOT</code> und <code>!</code> gehen auch)</li>
+        <li><code>"zwei wörter"</code> — genau diese Folge</li>
+        <li><code>(sturz ODER fraktur) oberstdorf</code> — Klammern binden
+          zusammen; ohne sie bindet UND stärker als ODER</li>
+      </ul>
+      <p class="feld-hinweis">Groß- und Kleinschreibung spielt nirgends eine
+        Rolle. Eine unfertige Eingabe wird nicht bemängelt — sie sucht
+        weiter, so gut es geht.</p>
+    </div>
 
-    <?php ui_footer(); ?>
-  </main>
-</div>
+    <?php /* Die gesetzten Filter als blaue Plaketten mit ✕ (E-P3-36): Sie
+             sagen im Inhalt, was in der Leiste steht — auf dem Handy ist die
+             sonst zu. Jede Plakette nimmt ihren Filter zurück. */ ?>
+    <div class="zeile-plaketten filterplaketten" id="filterplaketten" hidden></div>
 
+    <section class="karte karte-treffer">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Treffer</h2>
+        <span class="karte-zahl" id="trefferzahl"></span>
+        <?php /* Sortieren über ein Blatt — dieselben Spalten wie der
+                 Tabellenkopf, und auf dem Handy der einzige Weg (E-P3-32).
+                 Am Desktop erscheint dasselbe Markup als Aufklappmenü. */ ?>
+        <div class="aktionen sortieren-aktion">
+          <button type="button" class="karte-aktion karte-aktion-blau"
+                  data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
+            <?= ui_symbol('sortieren') ?><span id="sortlabel">Datum</span>
+          </button>
+          <div class="blatt" id="sortblatt" hidden>
+            <div class="blatt-griff" aria-hidden="true"></div>
+            <h2 class="blatt-titel">Sortieren</h2>
+            <div class="blatt-liste" id="sortliste"></div>
+            <button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>
+              <span>Abbrechen</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="karte-inhalt">
+        <p id="leer" class="feld-hinweis" hidden>Keine Treffer.</p>
+        <?php /* Ab 720 px die Tabelle im eigenen Scrollbehälter, darunter die
+                 dreizeilige Kachel mit Artzeichen und Datum — beide aus
+                 demselben Zeilenbestand (E-P3-32/36, missiontable.js). */ ?>
+        <div class="tabelle-scroll nur-ab-720">
+          <table class="tabelle" id="suchtable" hidden>
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="kachelliste nur-unter-720" id="suchkacheln"></div>
+      </div>
+    </section>
+
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
@@ -243,6 +359,10 @@ ui_topbar('suche');
 <?php /* Boolesche Freitextsuche (Baustein B10, Web 7.0.0). Eigene Datei, weil
          sie ohne die Seite prüfbar ist und keine Kenntnis von ihr braucht. */ ?>
 <script src="<?= asset('assets/suchtext.js') ?>"></script>
+<?php /* geo.js NUR wegen der Spurfarben: Sie stehen als Token in :root, und
+         EdGeo.spurFarbe() ist die eine Stelle, die sie liest. Leaflet braucht
+         diese Seite nicht — die Markerfunktionen bleiben ungenutzt. */ ?>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script>
 let missions = [];        // gesamter Bestand aus api/suchindex.php
 let entsperrt = false;    // geschuetzte Angaben verfuegbar?
@@ -265,7 +385,7 @@ const ART_OPTIONEN = <?php
         // im Auswahlfeld schon fuer „(egal)" vergeben und bekommt hier einen
         // eigenen Wert. Er steht auch im URL-Fragment.
         $artOpt[] = ['wert' => $code === '' ? 'neutral' : $code,
-                     'text' => $sym['zeichen'] . ' ' . $sym['text']];
+                     'text' => $sym['text']];
     }
     echo json_encode($artOpt, JSON_UNESCAPED_UNICODE);
 ?>;
@@ -294,12 +414,18 @@ const CREW_FILTER = <?php
         $liste[] = ['kurz'   => $CREW_KURZ[$rc] ?? ('crew_' . $rc),
                     'el'     => 'f-crew-' . $rc,
                     'art'    => 'text',
-                    'gruppe' => 'wer'];
+                    'gruppe' => 'wer',
+                    /* Anzeigename fuer die Plakettenzeile (E-P3-36) — aus dem
+                     * Rollenkatalog, nicht abgeschrieben. */
+                    'titel'  => CREW_ROLES[$rc]['label']];
     }
     echo json_encode($liste);
 ?>;
 
 const $ = id => document.getElementById(id);
+/* Maskierung aus dem gemeinsamen Baustein (assets/html.js) — dieselbe
+   Fassung wie in den Tabellen und Kacheln. */
+const esc = EdHtml.escape;
 
 /* ====================================================================
  * Filterkatalog — EINE Liste, aus der sich alles ableitet: Auslesen der
@@ -317,49 +443,49 @@ const $ = id => document.getElementById(id);
  * ================================================================== */
 const FILTER = [
   { kurz: 'q', el: 'f-q', art: 'text', gruppe: null },
-  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'einsatz' },
+  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'einsatz', titel: 'seit' },
+  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'einsatz', titel: 'bis' },
+  { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'einsatz', titel: 'Alarm ab' },
+  { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'einsatz', titel: 'Alarm bis' },
+  { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'einsatz', titel: 'Wochentage' },
   /* Winde und Bergwacht liegen seit Web 7.0.0 in EINEM Block „Bergrettung".
      Die Kurznamen bleiben unveraendert — sie stehen in verschickten Links. */
-  { kurz: 'wi', el: 'f-wi', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'lv', el: 'f-lv', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'bw', el: 'f-bw', art: 'text', gruppe: 'bergrettung' },
+  { kurz: 'wi', el: 'f-wi', art: 'segment', gruppe: 'bergrettung', titel: 'Windeneinsatz' },
+  { kurz: 'cv', el: 'f-cv', art: 'text', gruppe: 'bergrettung', titel: 'Cycles ab' },
+  { kurz: 'cb', el: 'f-cb', art: 'text', gruppe: 'bergrettung', titel: 'Cycles bis' },
+  { kurz: 'pv', el: 'f-pv', art: 'text', gruppe: 'bergrettung', titel: 'Cycles m. Pat. ab' },
+  { kurz: 'pb', el: 'f-pb', art: 'text', gruppe: 'bergrettung', titel: 'Cycles m. Pat. bis' },
+  { kurz: 'lv', el: 'f-lv', art: 'segment', gruppe: 'bergrettung', titel: 'Luftverladung' },
+  { kurz: 'bw', el: 'f-bw', art: 'segment', gruppe: 'bergrettung', titel: 'Bergwacht' },
   { kurz: 'bu', el: 'f-bu', art: 'text', gruppe: 'bergrettung' },
-  { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport' },
-  { kurz: 'nb', el: 'f-nb', art: 'text', gruppe: 'transport' },
-  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport' },
-  { kurz: 'se', el: 'f-se', art: 'text', gruppe: 'transport' },
-  { kurz: 'sr', el: 'f-sr', art: 'text', gruppe: 'transport' },
-  { kurz: 'fe', el: 'f-fe', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer' },
+  { kurz: 'ta', el: 'f-ta', art: 'text', gruppe: 'transport', titel: 'Transportart' },
+  { kurz: 'nb', el: 'f-nb', art: 'segment', gruppe: 'transport', titel: 'NA-Begleitung' },
+  { kurz: 'tz', el: 'f-tz', art: 'text', gruppe: 'transport', titel: 'Ziel' },
+  { kurz: 'se', el: 'f-se', art: 'segment', gruppe: 'transport', titel: 'Sekundärtransport' },
+  { kurz: 'sr', el: 'f-sr', art: 'segment', gruppe: 'transport', titel: 'Schockraum' },
+  { kurz: 'fe', el: 'f-fe', art: 'segment', gruppe: 'einsatz', titel: 'Fehleinsatz' },
+  { kurz: 'st', el: 'f-st', art: 'text', gruppe: 'wer', titel: 'Standort' },
   /* 'ac' hiess bis Web 5.10.0 „Maschine" und filterte nach aircraft. Der
      Parametername BLEIBT, obwohl das Feld jetzt Rettungsmittel heisst: Die
      Namen im Fragment sind Teil verschickter Links, und ein umbenannter
      Parameter bricht sie stillschweigend. Was er filtert, ist unveraendert —
      der Name des Rettungsmittels des Diensttags. */
-  { kurz: 'ac', el: 'f-veh', art: 'text', gruppe: 'wer' },
-  { kurz: 'art', el: 'f-art', art: 'text', gruppe: 'wer' },
+  { kurz: 'ac', el: 'f-veh', art: 'text', gruppe: 'wer', titel: 'Rettungsmittel' },
+  { kurz: 'art', el: 'f-art', art: 'text', gruppe: 'wer', titel: 'Art' },
   /* Besatzungsfilter je Rolle. Die Kurznamen c1…c5 der fuenf Flugrollen sind
      ebenfalls in verschickten Links unterwegs und bleiben deshalb, was sie
      sind; die bodengebundenen Rollen bekommen eigene. Die Zuordnung steht
      serverseitig in CREW_KURZ und nicht als zweite Liste hier. */
   ...CREW_FILTER,
-  { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer' },
+  { kurz: 'rm', el: 'f-rm', art: 'text', gruppe: 'wer', titel: 'Weiteres Mittel' },
   /* Die Gruppe „werte" ist entfallen: Alter gehoert zur Patientin, Strecke und
      Dauer zum Einsatz. Die Kurznamen sind dieselben geblieben. */
-  { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'patient' },
-  { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'patient' },
-  { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'einsatz' },
-  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'einsatz' }
+  { kurz: 'av', el: 'f-av', art: 'text', gruppe: 'patient', titel: 'Alter ab' },
+  { kurz: 'ab', el: 'f-ab', art: 'text', gruppe: 'patient', titel: 'Alter bis' },
+  { kurz: 'kv', el: 'f-kv', art: 'text', gruppe: 'einsatz', titel: 'ab km' },
+  { kurz: 'kb', el: 'f-kb', art: 'text', gruppe: 'einsatz', titel: 'bis km' },
+  { kurz: 'ev', el: 'f-ev', art: 'text', gruppe: 'einsatz', titel: 'ab min' },
+  { kurz: 'eb', el: 'f-eb', art: 'text', gruppe: 'einsatz', titel: 'bis min' }
 ];
 
 /* ---- Werte lesen und setzen ---------------------------------------- */
@@ -369,6 +495,13 @@ function wertLesen(f) {
     return [...$(f.el).querySelectorAll('input[type=checkbox]')]
       .filter(c => c.checked).map(c => c.value).join(',');
   }
+  /* Segmentwahl (Dreiwert, P3/O6): Werttraeger ist der gewaehlte Radioknopf.
+     Die gespeicherten Werte sind unveraendert '' / 'j' / 'n' — sie stehen in
+     verschickten Links. */
+  if (f.art === 'segment') {
+    const an = $(f.el).querySelector('input:checked');
+    return an ? an.value : '';
+  }
   return $(f.el).value.trim();
 }
 
@@ -377,6 +510,13 @@ function wertSetzen(f, v) {
     const gesetzt = new Set((v || '').split(',').filter(Boolean));
     $(f.el).querySelectorAll('input[type=checkbox]')
       .forEach(c => { c.checked = gesetzt.has(c.value); });
+    return;
+  }
+  if (f.art === 'segment') {
+    const gruppe = $(f.el);
+    const treffer = gruppe.querySelector(`input[value="${v || ''}"]`)
+                 || gruppe.querySelector('input[value=""]');
+    if (treffer) { treffer.checked = true; }
     return;
   }
   const el = $(f.el);
@@ -455,11 +595,8 @@ function fuelleCodeSelect(id, liste) {
 }
 
 function baueAuswahllisten() {
-  document.querySelectorAll('select.dreiwert').forEach(el => {
-    el.innerHTML = '<option value="">(egal)</option>' +
-                   '<option value="j">ja</option><option value="n">nein</option>';
-  });
-
+  /* Die Dreiwert-Felder sind seit P3/O6 Segmentwahlen aus dem Markup
+     (egal / ja / nein) — hier ist nichts mehr zu füllen. */
   fuelleCodeSelect('f-art', ART_OPTIONEN);
   fuelleCodeSelect('f-ta', TRANSPORT_OPTIONEN);
   fuelleSelect('f-bu', optionen(missions.map(m => m.bw_unit)));
@@ -502,9 +639,10 @@ function minuten(v) {
   return t ? Number(t[1]) * 60 + Number(t[2]) : null;
 }
 
-/** Dreiwert-Auswahl gegen einen Ja/Nein-Wert prüfen. */
+/** Dreiwert-Segmentwahl gegen einen Ja/Nein-Wert prüfen. */
 function dreiwert(id, wert) {
-  const v = $(id).value;
+  const an = $(id).querySelector('input:checked');
+  const v = an ? an.value : '';
   if (v === '') { return true; }
   return v === 'j' ? !!wert : !wert;
 }
@@ -622,8 +760,12 @@ function trifft(m) {
  *  gerufen — später soll der Zustand der Person erhalten bleiben, auch wenn
  *  sie einen Block mit gesetztem Filter von Hand zuklappt. */
 function gruppenOeffnen() {
+  const irgendwas = FILTER.some(f => f.kurz !== 'q' && wertLesen(f) !== '');
   document.querySelectorAll('.filtergruppe').forEach(d => {
-    d.open = FILTER.some(f => f.gruppe === d.dataset.gruppe && wertLesen(f) !== '');
+    const eigene = FILTER.some(f => f.gruppe === d.dataset.gruppe && wertLesen(f) !== '');
+    /* Ohne jeden gesetzten Filter bleibt „Einsatz" offen (Mockup 28): Eine
+       Spalte aus fuenf zugeklappten Zeilen sagt nicht, was sie kann. */
+    d.open = eigene || (!irgendwas && d.dataset.gruppe === 'einsatz');
   });
 }
 
@@ -706,30 +848,149 @@ function gruppenSichtbarkeit() {
  * der Tabelle steht das Nachladen — sichtbar nur, wenn wirklich etwas fehlt. */
 const ZEILEN_JE_SEITE = 200;
 
+let trefferworte = [];   // die hervorzuhebenden Suchwoerter (E-P3-36)
+
 const tabelle = EdMissionTable.erzeuge({
   table: $('suchtable'),
+  /* Unter 720 px die Kachel statt der Tabelle — mit Artzeichen und Datum,
+     weil die Treffer aus verschiedenen Tagen kommen, und einzeiliger
+     Diagnose (E-P3-32/36). Beide Formen entstehen aus demselben
+     Zeilenbestand; welche zu sehen ist, sagt das Stylesheet. */
+  kacheln: $('suchkacheln'),
+  kachelOpts: { artDatum: true, knapp: true },
+  hervor: maskiert => EdSuchtext.hervor(maskiert, trefferworte),
   sortKey: 'day', sortAsc: false,   // neueste zuerst
   seite: ZEILEN_JE_SEITE,
-  onSortChange: fragmentSchreiben,
+  onSortChange: () => { fragmentSchreiben(); sortLabel(); },
   /* Die Ergebniszeile entsteht HIER und nicht in anwenden(): Auch das
      Nachladen zeichnet neu, ohne dass ein Filter sich geändert hätte. Stünde
      der Text dort, bliebe nach dem ersten Klick auf „Weitere 200 anzeigen"
      die alte Zahl stehen. */
-  onAfterDraw: (gesamt, gezeigt) => {
+  onAfterDraw: (gesamt, gezeigt, zeilen) => {
     $('leer').hidden = gesamt > 0;
     $('suchtable').hidden = gesamt === 0;
 
+    /* Kopf der Trefferkarte: Zahl und km-Summe (Mockup 27/28). Die
+       Bestandszahl steht NUR dabei, wenn gefiltert wird — ohne Filter waere
+       „82 von 82" eine Zahl, die sich selbst erklaert. Sie ist die einzige
+       bewusste Ergaenzung gegenueber dem Mockup: Ohne sie ginge die Auskunft
+       „wie viel vom Ganzen" verloren, die es seit Web 5.10.0 gibt. */
     const n = aktiveFilter();
-    $('filtercount').textContent = n > 0 ? `(${n} aktiv)` : '';
-    const teile = [`${gesamt} von ${missions.length} Einsätzen`];
-    if (n > 0 || $('f-q').value.trim() !== '') { teile.push('gefiltert'); }
+    const gefiltert = n > 0 || $('f-q').value.trim() !== '';
+    const km = zeilen.reduce((s, m) => s + (m.distance_m || 0), 0);
+    const teile = [gefiltert ? `${gesamt} von ${missions.length}` : String(gesamt)];
+    /* Ganze Kilometer: Die Summe ueber Dutzende Einsaetze auf 100 m genau
+       anzugeben behauptet eine Genauigkeit, die keine Aussage traegt. */
+    if (km > 0) { teile.push(Math.round(km / 1000).toLocaleString('de-DE') + ' km'); }
     if (gezeigt < gesamt) { teile.push(`${gezeigt} angezeigt`); }
-    $('ergebniszeile').textContent = teile.join(' · ');
+    $('trefferzahl').textContent = teile.join(' · ');
+
+    zeigeFilterzustand(gesamt);
   }
 });
 
+/* ---- Filterzustand: Plaketten, Gruppenzahlen, Knopfzahl (E-P3-36) ------
+ *
+ * Alles aus DEMSELBEN Katalog: Was ein Filter heisst, steht als `titel` an
+ * seinem Eintrag, was er gerade sagt, liest wertLesen(). Eine zweite Liste
+ * mit Beschriftungen waere die Stelle, an der beide auseinanderlaufen. */
+const WOCHENTAGE = { 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa', 7: 'So' };
+
+/** Was auf der Plakette steht: „seit 01.01.2026", „Sa, So", „Art: Luft". */
+function plakettenText(f, wert) {
+  if (f.art === 'haken') {
+    return wert.split(',').map(v => WOCHENTAGE[v] || v).join(', ');
+  }
+  if (f.art === 'segment') { return `${f.titel}: ${wert === 'j' ? 'ja' : 'nein'}`; }
+  if (f.kurz === 'dv' || f.kurz === 'db') {
+    const [y, m, d] = wert.split('-');
+    return `${f.titel} ${d}.${m}.${y}`;
+  }
+  /* Auswahlfelder zeigen ihre BESCHRIFTUNG, nicht ihren Wert: 'air' heisst
+     „luftgebunden" (siehe ART_OPTIONEN). */
+  const el = $(f.el);
+  const text = (el.tagName === 'SELECT' && el.selectedOptions.length)
+    ? el.selectedOptions[0].textContent : wert;
+  return `${f.titel}: ${text}`;
+}
+
+function zeigeFilterzustand(treffer) {
+  const gesetzt = FILTER.filter(f => f.kurz !== 'q' && wertLesen(f) !== '');
+
+  // Plaketten im Inhalt — jede nimmt ihren Filter zurueck.
+  const box = $('filterplaketten');
+  box.innerHTML = '';
+  gesetzt.forEach(f => {
+    const p = document.createElement('span');
+    p.className = 'plakette plakette-blau';
+    p.innerHTML = esc(plakettenText(f, wertLesen(f)))
+      + `<button type="button" class="plakette-weg" aria-label="Filter entfernen">`
+      + edSymbol('schliessen') + '</button>';
+    p.querySelector('button').addEventListener('click', () => {
+      wertSetzen(f, '');
+      if (f.art === 'text' && $(f.el).classList.contains('zeitfeld')) { EdZeitfeld.pruefeAlle(); }
+      gruppenSichtbarkeit();
+      anwenden();
+    });
+    box.appendChild(p);
+  });
+  box.hidden = gesetzt.length === 0;
+
+  // Zahl je Gruppe im Akkordeonkopf.
+  document.querySelectorAll('[data-zahl]').forEach(el => {
+    const n = gesetzt.filter(f => f.gruppe === el.dataset.zahl).length;
+    el.textContent = n;
+    el.hidden = n === 0;
+  });
+
+  // Der Filterknopf neben dem Suchfeld traegt dieselbe Zahl.
+  const knopfzahl = $('filterknopfzahl');
+  knopfzahl.textContent = gesetzt.length;
+  knopfzahl.hidden = gesetzt.length === 0;
+
+  /* „n Treffer zeigen" im Fuss der Schublade — die Zahl lebt, weil die Suche
+     schon beim Tippen filtert (E-P3-36). */
+  $('trefferzeigen').querySelector('span').textContent =
+    treffer === 1 ? '1 Treffer zeigen' : `${treffer} Treffer zeigen`;
+}
+
+/** Beschriftung des Sortierknopfs: Spalte und Richtung im Klartext. */
+function sortLabel() {
+  const sp = tabelle.spalten().find(s => s.key === tabelle.sortKey);
+  /* Beim Datum sagt „neueste zuerst" mehr als „absteigend" (Mockup 28) —
+     überall sonst ist die Richtung selbst die Auskunft. Mobil bleibt nur der
+     Spaltenname stehen, daneben zeigt der Pfeil die Richtung. */
+  const richtung = tabelle.sortKey === 'day'
+    ? (tabelle.sortAsc ? 'älteste zuerst' : 'neueste zuerst')
+    : (tabelle.sortAsc ? 'aufsteigend' : 'absteigend');
+  $('sortlabel').innerHTML = sp
+    ? esc(sp.label) + '<span class="nur-ab-720">, ' + esc(richtung) + '</span>'
+    : esc(richtung);
+  // Das Blatt fuehrt dieselben Spalten wie der Kopf — keine zweite Liste.
+  const liste = $('sortliste');
+  liste.innerHTML = '';
+  tabelle.spalten().forEach(sp2 => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    const aktiv = sp2.key === tabelle.sortKey;
+    b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
+    b.innerHTML = '<span>' + esc(sp2.label) + '</span>'
+      + (aktiv ? edSymbol('pfeil-hoch', tabelle.sortAsc ? '' : 'symbol-oben', richtung) : '');
+    b.addEventListener('click', () => {
+      tabelle.setSort(sp2.key, aktiv ? !tabelle.sortAsc : true);
+      fragmentSchreiben();
+      sortLabel();
+      if (window.edBlatt) { edBlatt.zu(); }
+    });
+    liste.appendChild(b);
+  });
+}
+
 function anwenden() {
-  freitext = EdSuchtext.pruefer($('f-q').value);
+  const q = $('f-q').value;
+  freitext = EdSuchtext.pruefer(q);
+  trefferworte = EdSuchtext.woerter(q);
+  $('qleeren').hidden = q.trim() === '';
   tabelle.setData(missions.filter(trifft));
   fragmentSchreiben();
 }
@@ -766,13 +1027,51 @@ async function entschluesselePat() {
 
 /* ---- Start ---------------------------------------------------------- */
 
+/* ---- Farbstreifen der Treffer (E-P3-36, Mockup 27/28) ------------------
+ *
+ * DIESELBE FARBE WIE AUF DER TAGESKARTE: Ein Einsatz traegt hier die
+ * Spurfarbe, die er an SEINEM Diensttag hat — die Position innerhalb des
+ * Tages entscheidet, nicht die Position in der Trefferliste. Wer einen
+ * Treffer oeffnet und von dort auf den Tag geht, findet dieselbe Farbe
+ * wieder; eine Farbe nach Listenposition waere blosse Zierde und wechselte
+ * bei jeder Sortierung.
+ *
+ * Gerechnet wird einmal ueber den Gesamtbestand, nicht je Trefferliste. */
+function spurfarben() {
+  const jeTag = new Map();
+  missions.forEach(m => {
+    const k = m.day_id == null ? 'x' : String(m.day_id);
+    if (!jeTag.has(k)) { jeTag.set(k, []); }
+    jeTag.get(k).push(m);
+  });
+  jeTag.forEach(liste => {
+    liste.sort((a, b) => (a.start_min || 0) - (b.start_min || 0));
+    liste.forEach((m, i) => { m._col = EdGeo.spurFarbe(i); });
+  });
+}
+
 function verdrahten() {
   // input deckt Tippen, Datums-, Zeit- und Zahlenfelder ab; change ergänzt
   // Auswahllisten und Haken.
   $('f-q').addEventListener('input', anwenden);
-  // Freitext steht in der Hauptspalte, alle uebrigen Filter in der linken.
-  document.querySelectorAll('#f-q, .filterspalte input, .filterspalte select')
-    .forEach(el => { el.addEventListener('change', anwenden); });
+  /* ALLE FILTER LIEGEN IN DER LEISTE (F-P3-AG).
+   *
+   * Hier stand `.filterspalte` — die eigene Leiste der Suchseite, die O2
+   * ersatzlos gestrichen hat (sie steht auf der Streichliste). Der Selektor
+   * traf seit Web 9.1.0 nichts mehr: Kein Datum, keine Auswahl, kein Haken
+   * loeste noch eine neue Suche aus; nur das Freitextfeld mit seinem eigenen
+   * Zuhoerer wirkte. Gemessen an 82 Einsaetzen: „Datum von 01.12.2026"
+   * lieferte unveraendert 82 Treffer.
+   *
+   * Der Zuhoerer haengt jetzt an der Leiste selbst und ausserdem an `input`,
+   * damit Datums-, Zahlen- und Zeitfelder schon beim Tippen filtern — die
+   * Schublade nennt ihre Trefferzahl lebend (E-P3-36). */
+  const leiste = document.getElementById('leiste');
+  ['input', 'change'].forEach(ereignis => {
+    leiste.addEventListener(ereignis, ev => {
+      if (ev.target.closest('input, select')) { anwenden(); }
+    });
+  });
   $('reset').addEventListener('click', () => {
     FILTER.forEach(f => wertSetzen(f, ''));
     // Zeitfelder bewerten ihren Zustand selbst, aber nur auf Ereignisse hin;
@@ -785,6 +1084,22 @@ function verdrahten() {
     anwenden();
   });
   $('unlockbtn').addEventListener('click', () => entschluesselePat());
+
+  // Das ✕ im Suchfeld (E-P3-36) — es erscheint erst mit Inhalt.
+  $('qleeren').addEventListener('click', () => {
+    $('f-q').value = '';
+    anwenden();
+    $('f-q').focus();
+  });
+
+  /* Der Hinweis auf die Und/Oder/Nicht-Syntax klappt den Kasten auf. Kein
+     <details>: Der Auslöser steht MITTEN im Hinweistext, und ein <summary>
+     kann dort nicht stehen. */
+  $('syntaxknopf').addEventListener('click', () => {
+    const kasten = $('suchsyntax');
+    kasten.hidden = !kasten.hidden;
+    $('syntaxknopf').setAttribute('aria-expanded', kasten.hidden ? 'false' : 'true');
+  });
 }
 
 (async () => {
@@ -795,11 +1110,12 @@ function verdrahten() {
     missions = d.missions || [];
   } catch (e) {
     $('loaderror').textContent = 'Der Einsatzbestand konnte nicht geladen werden: ' + e.message;
-    $('loaderror').hidden = false;
-    $('ergebniszeile').textContent = '';
+    $('loaderrorbox').hidden = false;
+    $('trefferzahl').textContent = '';
     return;
   }
 
+  spurfarben();
   baueAuswahllisten();
   verdrahten();
   /* Welche Spalten die Tabelle zeigt, entscheidet der GESAMTE Bestand und
@@ -814,6 +1130,7 @@ function verdrahten() {
   gruppenOeffnen();   // Blöcke aus einem geteilten Link sichtbar machen
   missions.forEach(baueHeuhaufen);
   anwenden();
+  sortLabel();
 
   // Auch ohne Wrap aufrufen: dann liefert EdUnlock sofort null, es erscheint
   // kein Dialog, und der Altersfilter wird korrekt als unbenutzbar markiert.

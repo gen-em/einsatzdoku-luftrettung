@@ -59,7 +59,18 @@ const browser = await chromium.launch();
 const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal, acceptDownloads: true });
 const seite = await kontext.newPage();
 const konsole = [];
-seite.on('console', m => { if (m.type() === 'error' && !KACHELFEHLER.test(m.text())) konsole.push(m.text()); });
+/* DER FILTER MUSS AUCH DIE ADRESSE ANSEHEN, nicht nur den Text (P3/O11).
+ * Eine gescheiterte Kachel meldet sich als „Failed to load resource:
+ * net::ERR_CONNECTION_RESET" — ohne jede URL im Text. Der Ausdruck oben lief
+ * also ins Leere, und der Lauf zaehlte 12 Konsolenfehler, die keine waren;
+ * die Bildaufnahme prueft seit O3 beides (tools/screenshots, istRauschen).
+ * Der Pruef-Browser kommt in dieser Umgebung nicht an tile.openstreetmap.org. */
+seite.on('console', m => {
+  if (m.type() !== 'error') { return; }
+  const ort = (m.location && m.location().url) || '';
+  if (KACHELFEHLER.test(m.text()) || KACHELFEHLER.test(ort)) { return; }
+  konsole.push(m.text() + (ort ? '  [' + ort + ']' : ''));
+});
 seite.on('pageerror', e => konsole.push('pageerror: ' + e.message));
 
 const befunde = [];
@@ -108,12 +119,28 @@ schritt(`Als ${quelle} anmelden`);
  * ein einzeln gelöschter an einem AKTIVEN Tag). Wer hier „erwartet 1" schreibt,
  * misst den Referenzbestand mit und bekommt sieben Befunde, die keine sind.
  * Geprüft wird deshalb die VERÄNDERUNG gegenüber dem Grundstand. */
+/* DIE SELEKTOREN FOLGEN DEM UMBAU (P3/O11). Der Papierkorb hatte zwei Tabellen
+ * unter zwei <h2>; jetzt sind es zwei Karten mit Zeilen. Die Zahl steht
+ * ausserdem im Kartenkopf — sie wird gegen die gezaehlten Zeilen gehalten,
+ * damit ein Selektor, der ins Leere greift, nicht als „0 Eintraege" durchgeht.
+ * Genau diese Sorte stiller Null hat F-S1-E fast durchrutschen lassen. */
+const KARTE = (titel) => `.karte:has(.karte-titel:text-is("${titel}"))`;
+
 async function papierkorbZaehlen() {
   await seite.goto(`${basis}/papierkorb.php`, { waitUntil: 'domcontentloaded' });
-  return {
-    tage: await seite.locator('h2:text("Diensttage") + table tbody tr').count().catch(() => 0),
-    einsaetze: await seite.locator('h2:text("Einsätze") + table tbody tr').count().catch(() => 0),
+  const eine = async (titel) => {
+    const karte = seite.locator(KARTE(titel));
+    if (await karte.count() === 0) { return 0; }
+    const zeilen = await karte.locator('.zeile').count();
+    const kopf = parseInt((await karte.locator('.karte-zahl').first().innerText()
+                            .catch(() => '')) || '0', 10);
+    if (!Number.isNaN(kopf) && kopf !== zeilen) {
+      befunde.push(`Papierkorb „${titel}": Kartenkopf nennt ${kopf}, gezaehlt wurden `
+        + `${zeilen} Zeilen — einer der beiden Wege misst falsch.`);
+    }
+    return zeilen;
   };
+  return { tage: await eine('Diensttage'), einsaetze: await eine('Einsätze') };
 }
 const grund = await papierkorbZaehlen();
 schritt(`Grundstand des Papierkorbs im Quellkonto: `
@@ -152,7 +179,7 @@ schritt(`Diensttag ${tagId} mit ${einsaetze.length} Einsätzen gewählt `
 // Einsatz einzeln löschen — über die reguläre Zwischenseite.
 await seite.goto(`${basis}/einsatz_loeschen.php?id=${einzeln}`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(400);
-await seite.locator('form button.btn-red, form button[type="submit"]').first().click();
+await seite.locator('form button.knopf-gefahr, form button[type="submit"]').first().click();
 await rueckfragen();
 await seite.waitForTimeout(800);
 schritt(`Einsatz ${einzeln} einzeln gelöscht`);
@@ -160,7 +187,7 @@ schritt(`Einsatz ${einzeln} einzeln gelöscht`);
 // Danach den ganzen Diensttag.
 await seite.goto(`${basis}/diensttag_loeschen.php?d=${tagId}`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(400);
-await seite.locator('form button.btn-red, form button[type="submit"]').first().click();
+await seite.locator('form button.knopf-gefahr, form button[type="submit"]').first().click();
 await rueckfragen();
 await seite.waitForTimeout(800);
 schritt(`Diensttag ${tagId} gelöscht`);
@@ -237,17 +264,26 @@ pruefe(zielStand.einsaetze === nachher.einsaetze,
  * alle. Die Zeile wird über das Datum gesucht — `nth(0)` träfe den Tag, der
  * schon im Referenzbestand im Papierkorb lag. */
 const tagZeile = tagDatum
-  ? seite.locator('h2:text("Diensttage") + table tbody tr')
+  ? seite.locator(`${KARTE('Diensttage')} .zeile`)
          .filter({ hasText: tagDatum.split('-').reverse().join('.') })
-  : seite.locator('h2:text("Diensttage") + table tbody tr').last();
+  : seite.locator(`${KARTE('Diensttage')} .zeile`).last();
 const tagTreffer = await tagZeile.count();
 pruefe(tagTreffer === 1,
   `Der gelöschte Diensttag (${tagDatum}) ist im Papierkorb ${tagTreffer}× zu finden, erwartet 1×`);
 if (tagTreffer === 1) {
-  const tagZelle = await tagZeile.locator('td').nth(2).innerText().catch(() => '');
-  pruefe(parseInt(tagZelle, 10) === mitTag.length,
-    `Der Diensttag im Papierkorb nennt ${tagZelle} Einsätze, erwartet ${mitTag.length} `
-    + `(der einzeln gelöschte darf NICHT mitgezählt werden)`);
+  /* Die Einsatzzahl steht nicht mehr in einer eigenen Spalte, sondern in der
+   * Kleinzeile („Alpenfalke 2 · 4 Einsätze · gelöscht am …"). Gesucht wird
+   * genau dieses Stueck; findet der Ausdruck nichts, ist das ein Befund und
+   * kein stilles 0. */
+  const klein = await tagZeile.locator('.zeile-klein').innerText().catch(() => '');
+  const zahl = klein.match(/(\d+)\s+Eins\u00e4tze?/);
+  pruefe(zahl !== null,
+    `In der Kleinzeile des Diensttags steht keine Einsatzzahl: „${klein}"`);
+  if (zahl) {
+    pruefe(parseInt(zahl[1], 10) === mitTag.length,
+      `Der Diensttag im Papierkorb nennt ${zahl[1]} Einsätze, erwartet ${mitTag.length} `
+      + `(der einzeln gelöschte darf NICHT mitgezählt werden)`);
+  }
 }
 
 // ---- 4b. Zurückholen des einzelnen wird abgelehnt (Backlog Nr. 33) ------
@@ -261,13 +297,19 @@ if (tagTreffer === 1) {
  * DER hängt an einem aktiven Tag — bei ihm ist das Zurückholen richtig. */
 const deTag = tagDatum ? tagDatum.split('-').reverse().join('.') : null;
 const meineZeile = deTag
-  ? seite.locator('h2:text("Einsätze") + table tbody tr').filter({ hasText: deTag })
+  ? seite.locator(`${KARTE('Einsätze')} .zeile`).filter({ hasText: deTag })
   : null;
 const meineTreffer = meineZeile ? await meineZeile.count() : 0;
 pruefe(meineTreffer === 1,
   `Der einzeln gelöschte Einsatz vom ${deTag} ist ${meineTreffer}× im Papierkorb, erwartet 1×`);
 if (meineTreffer === 1) {
-  await meineZeile.locator('button.btn-primary').first().click();
+  /* „Wiederherstellen" steht ZWEIMAL im Markup: in der Knopfreihe
+     (`.zeile-knoepfe`, ab 720 px sichtbar) und noch einmal im Aktionsblatt
+     fuer schmale Geraete. Der Lauf arbeitet in der Vorgabebreite 1280 px, also
+     wird ausdruecklich der sichtbare aus der Knopfreihe genommen — ein
+     `.first()` ueber beide traefe je nach Reihenfolge den unsichtbaren im
+     Blatt, und ein Klick darauf tut nichts. */
+  await meineZeile.locator('.zeile-knoepfe button').first().click();
   await rueckfragen();
   await seite.waitForTimeout(800);
   const text = await seite.locator('main').innerText();
@@ -288,7 +330,7 @@ if (meineTreffer === 1) {
 
 // ---- 5. Diensttag wiederherstellen — der einzelne bleibt liegen ----------
 if (tagTreffer === 1) {
-  await tagZeile.locator('button.btn-primary').first().click();
+  await tagZeile.locator('.zeile-knoepfe button').first().click();
   await rueckfragen();
   await seite.waitForTimeout(1000);
 }
@@ -307,9 +349,9 @@ pruefe(nachRestore.einsaetze === zielStand.einsaetze,
 /* Und die Gegenprobe zu 4b: Jetzt, wo der Tag wieder aktiv ist, MUSS das
  * Zurückholen gehen. Ohne sie belegte 4b nur, dass der Knopf nichts tut. */
 if (meineTreffer === 1) {
-  const zeile = seite.locator('h2:text("Einsätze") + table tbody tr').filter({ hasText: deTag });
+  const zeile = seite.locator(`${KARTE('Einsätze')} .zeile`).filter({ hasText: deTag });
   if (await zeile.count() === 1) {
-    await zeile.locator('button.btn-primary').first().click();
+    await zeile.locator('.zeile-knoepfe button').first().click();
     await rueckfragen();
     await seite.waitForTimeout(800);
   }

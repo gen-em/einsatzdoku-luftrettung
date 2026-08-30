@@ -62,7 +62,7 @@ echt waren es zwei.
 |---|---|
 | **a** | `server/*.php`, `server/api/*.php` — ohne Kommentare |
 | **b** | `server/assets/*.js` ohne `vendor/` — ohne Kommentare |
-| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Branding.md` |
+| **c** | `README.md`, `docs/Handbuch.md`, `docs/Export-Format.md`, `docs/Technik.md`, `docs/Backup-Format.md`, `docs/JSON-Vertrag.md`, `docs/Design.md`, `docs/Lizenzen.md` |
 
 **Nicht geprüft**, und jedes mit Grund: `docs/CHANGELOG.md` (Historie — dort
 stehen die alten Begriffe zu Recht), die Konzept- und Prüfdokumente,
