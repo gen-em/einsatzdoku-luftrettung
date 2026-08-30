@@ -94,7 +94,7 @@ async function rueckfragenBestaetigen(hoechstens = 4) {
     const ja = seite.locator('dialog[open] button[data-act="yes"]');
     try { await ja.first().waitFor({ state: 'visible', timeout: 8000 }); }
     catch { break; }
-    const text = (await seite.locator('dialog[open] .confirmtext').first()
+    const text = (await seite.locator('dialog[open] [data-text]').first()
       .textContent().catch(() => '') || '').trim().slice(0, 60);
     await ja.first().click();
     await seite.waitForTimeout(500);

@@ -682,23 +682,66 @@ function ortWert(string $col, string $achse, string $spalte): string {
     return ($mission !== null && ($mission[$spalte] ?? null) !== null)
         ? (string)$mission[$spalte] : '';
 }
-ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen']);
-ui_topbar('uebersicht');
+/* 'karte' laedt das Leaflet-CSS: Der Kartendialog der Ortswahl (O5) braucht
+ * es; die Seite selbst zeigt weiterhin keine Karte. */
+ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen',
+                'karte' => true]);
 ?>
 
-<div class="layout">
-  <?php ui_days_sidebar($dayId); ?>
-
-<main class="page">
-  <h1><?= $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen' ?></h1>
-  <?php if ($editing && !(int)$mission['manual']): ?>
-    <p class="alert alert-info">Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als
-       manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht mehr
-       (GPS-Track wird weiterhin ergänzt).</p>
-  <?php endif; ?>
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
+  <?php
+    /* Titelzeile nach E-P3-34 (Mockup 22): Rueckweg dorthin, wo man herkam —
+       beim Bearbeiten zum Einsatz, beim Nachtragen zum Diensttag. Der Titel
+       nennt beim Bearbeiten die Tagesnummer des Einsatzes; die Unterzeile
+       traegt, was frueher die Zeile "Diensttag: ..." sagte, samt der beiden
+       Sonderfaelle (abweichendes Einsatzdatum, Tag ohne Zuordnung). */
+    $wtage = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    $tagKurz = $wtage[(int)date('w', strtotime((string)$tag['day']))]
+             . ', ' . dt_datum_lesbar((string)$tag['day']);
+    $dayNo = null;
+    if ($editing) {
+        $noQ = db()->prepare('SELECT COUNT(*) FROM missions
+                               WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
+                                 AND (started_at < ? OR (started_at = ? AND id <= ?))');
+        $noQ->execute([$userId, $dayId, (string)$mission['started_at'],
+                       (string)$mission['started_at'], $id]);
+        $dayNo = (int)$noQ->fetchColumn();
+    }
+    $unterTeile = [$tagKurz];
+    if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') {
+        $unterTeile[] = (string)$tag['vehicle_name'];
+    }
+    if ($tag['base_name'] !== null && $tag['base_name'] !== '') {
+        $unterTeile[] = (string)$tag['base_name'];
+    }
+    if ($day !== (string)$tag['day']) {
+        $unterTeile[] = 'Einsatzdatum ' . date('d.m.Y', strtotime($day));
+    }
+    $unter = e(implode(' · ', $unterTeile));
+    if ($tag['kind'] === null) {
+        $unter .= ' — <em>ohne Zuordnung: keine Art, keine Besatzungsrollen, '
+                . 'keine artabhängigen Felder</em>';
+    }
+    ui_titelzeile([
+        'zurueck' => $editing
+            ? ['text' => 'Einsatz ' . $dayNo, 'href' => 'einsatz.php?id=' . $id]
+            : ['text' => $tagKurz, 'href' => 'index.php?d=' . (int)$dayId],
+        'titel' => $editing ? 'Einsatz ' . $dayNo . ' bearbeiten' : 'Einsatz nachtragen',
+        'unter' => $unter,
+    ]);
+  ?>
+  <?php if ($editing && !(int)$mission['manual']):
+          ui_meldung('Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als '
+              . 'manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht '
+              . 'mehr (GPS-Track wird weiterhin ergänzt).', null, 'info');
+        endif; ?>
   <?php ui_meldung(null, $error); ?>
 
-  <form method="post" id="missionform" class="formcol" data-dirty-track data-submit-on-ctrl-enter>
+  <?php /* `formcol` ist ersatzlos gestrichen (O11): Die Klasse hatte seit dem
+           Neubau des Stylesheets keine Regel mehr — sie setzte frueher
+           `display:flex;flex-direction:column`, was der normale Fluss ohnehin
+           tut. */ ?>
+  <form method="post" id="missionform" data-dirty-track data-submit-on-ctrl-enter>
     <?= csrf_field() ?>
     <?php if ($editing): ?><input type="hidden" name="id" value="<?= $id ?>"><?php endif; ?>
 
@@ -829,8 +872,18 @@ ui_topbar('uebersicht');
        * Praefix, Vorschlaege und Beschriftung. So steht die Liste an EINER
        * Stelle statt als zweite, von Hand gepflegte Aufzaehlung im Skript. */
       $LOC_FELDER = [];
+      /* Titel der Karte, in der gerade gerendert wird: Wiederholt ein
+       * Feldlabel ihn woertlich („Notizen" in der Karte „Notizen"), bleibt es
+       * nur fuer das Vorlesen stehen — sichtbar sagt es der Kartenkopf schon
+       * (Mockup 22). */
+      $kartenTitel = '';
+      $labelSichtbar = function (string $label) use (&$kartenTitel): string {
+          return $label === $kartenTitel
+              ? '<span class="nur-vorlesen">' . e($label) . '</span>'
+              : e($label);
+      };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER): void {
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, $labelSichtbar): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -857,7 +910,7 @@ ui_topbar('uebersicht');
                      nicht mehr um das <input>; das Eingabefeld selbst hat
                      keinen eigenen mehr (style.css). */ ?>
             <label class="fld">
-              <span><?= e($f['label']) ?></span>
+              <span><?= $labelSichtbar($f['label']) ?></span>
               <div class="rmbox">
                 <div class="rmfeld" id="rmfeld">
                   <div class="rmchips" id="rmchips"></div>
@@ -888,21 +941,28 @@ ui_topbar('uebersicht');
                      Datenaenderung hinter dem Ruecken. */
                   $vorbelegt = !empty($f['vorbelegt_bei'])
                       ? (array)$f['vorbelegt_bei'] : []; ?>
-            <div class="fld-check<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
-              <label class="checklabel">
-                <input type="checkbox" name="f_<?= e($col) ?>" class="parentcheck"
-                       data-target="ch_<?= e($col) ?>" <?= $on ? 'checked' : '' ?>
-                       <?php foreach ($vorbelegt as $vFeld => $vWert): ?>
-                         data-vor-feld="<?= e((string)$vFeld) ?>"
-                         data-vor-wert="<?= e((string)$vWert) ?>"
-                       <?php endforeach; ?>>
-                <?= e($f['label']) ?></label>
-              <?php if (!empty($f['children'])): ?>
-                <div class="childfields" id="ch_<?= e($col) ?>" <?= $on ? '' : 'hidden' ?>>
-                  <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
-                </div>
-              <?php endif; ?>
+            <?php /* Ja/Nein als SCHALTER (E-P3-34, Baustein aus O2): eine echte
+                     Checkbox mit Griff-Optik — Tastatur, Vorlesen und Absenden
+                     kommen vom Browser. Die Klasse `parentcheck` und die
+                     data-Attribute bleiben, die Skripte unten kennen sie. */ ?>
+            <div class="schalter<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
+              <input type="checkbox" name="f_<?= e($col) ?>"
+                     class="schalter-box parentcheck" id="sw_<?= e($col) ?>"
+                     data-target="ch_<?= e($col) ?>" <?= $on ? 'checked' : '' ?>
+                     <?php foreach ($vorbelegt as $vFeld => $vWert): ?>
+                       data-vor-feld="<?= e((string)$vFeld) ?>"
+                       data-vor-wert="<?= e((string)$vWert) ?>"
+                     <?php endforeach; ?>>
+              <label class="schalter-label" for="sw_<?= e($col) ?>">
+                <span class="schalter-text"><?= e($f['label']) ?></span>
+                <span class="schalter-griff" aria-hidden="true"></span>
+              </label>
             </div>
+            <?php if (!empty($f['children'])): ?>
+              <div class="childfields" id="ch_<?= e($col) ?>" <?= $on ? '' : 'hidden' ?>>
+                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+              </div>
+            <?php endif; ?>
           <?php return; }
           if ($type === 'select') { $opts = mf_optionen($optSrc($f));
               // Stammdaten sind aenderbar: Ein gespeicherter Wert, der nicht
@@ -957,13 +1017,10 @@ ui_topbar('uebersicht');
                   'max'         => (int)($f['max'] ?? 190),
                   'platzhalter' => (string)($f['placeholder'] ?? ''),
                   'wert'        => $val,
-                  'such'        => true,
-                  /* Beschriftung des Suchfeldes aus dem Katalog ('such_label',
-                   * Web 7.0.0). Beim Transportziel heisst es „Lokalisation
-                   * Transportziel" — „Koordinaten" beschrieb, was hinten
-                   * herauskommt, nicht was vorne einzugeben ist. */
-                  'such_hinweis'     => (string)($f['such_label'] ?? 'Koordinaten (optional)'),
-                  'such_platzhalter' => 'Adresse suchen — auch Koordinaten oder Plus Code',
+                  /* Das fruehere zweite Suchfeld („Lokalisation …",
+                   * Katalogschluessel 'such_label') ist dem Lupen-Knopf
+                   * gewichen (E-P3-34); die getrennte Uebernahme — nur die
+                   * Koordinaten, nie der Name — bleibt in ortsfeld.js. */
                   'lat_name'    => 'f_' . $col . '_lat',
                   'lon_name'    => 'f_' . $col . '_lon',
                   'versteckt'   => $hide,
@@ -983,7 +1040,7 @@ ui_topbar('uebersicht');
               return;
           }
           if ($type === 'textarea') { ?>
-            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
+            <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= $labelSichtbar($f['label']) ?>
               <textarea name="f_<?= e($col) ?>" rows="3" maxlength="<?= (int)($f['max'] ?? 190) ?>"
                 placeholder="<?= e($f['placeholder'] ?? '') ?>"><?= e($val) ?></textarea>
             </label>
@@ -1052,7 +1109,10 @@ ui_topbar('uebersicht');
           $felder = $gruppeFelder($name);
           $offen = false;                 // laeuft gerade eine `.fld-reihe`?
           foreach ($felder as $col => $f) {
-              $reihe = !empty($f['nebeneinander']);
+              /* Schalter stehen IMMER untereinander (Mockup 22): Ein Griff
+               * neben einem Griff in halber Breite waere zum Tippen zu eng —
+               * 'nebeneinander' gilt nur fuer Text- und Auswahlfelder. */
+              $reihe = !empty($f['nebeneinander']) && ($f['type'] ?? 'text') !== 'checkbox';
               if ($reihe && !$offen) { echo '<div class="fld-reihe">'; $offen = true; }
               if (!$reihe && $offen)  { echo '</div>'; $offen = false; }
               $renderField($col, $f);
@@ -1083,37 +1143,30 @@ ui_topbar('uebersicht');
              Dienstes ab, steht es hier ausdrücklich daneben; sonst wäre nicht
              zu sehen, auf welchen Tag sich die Uhrzeiten beziehen. */ ?>
     <input type="hidden" name="day_id" value="<?= (int)$dayId ?>">
-    <p class="muted">Diensttag:
-      <strong><?= e(dt_lesbar($tag, true)) ?></strong><?php
-        if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') {
-            echo ' · ' . e((string)$tag['vehicle_name']);
-        }
-        if ($tag['base_name'] !== null && $tag['base_name'] !== '') {
-            echo ' · ' . e((string)$tag['base_name']);
-        }
-        if ($day !== (string)$tag['day']) {
-            echo ' · Einsatzdatum: <strong>'
-               . e(date('d.m.Y', strtotime($day))) . '</strong>';
-        }
-        if ($tag['kind'] === null) {
-            echo ' — <em>ohne Zuordnung: keine Art, keine Besatzungsrollen, '
-               . 'keine artabhängigen Felder</em>';
-        } ?></p>
+    <?php /* Die sichtbare "Diensttag:"-Zeile ist in die Unterzeile der
+             Titelzeile aufgegangen (O5). */ ?>
 
     <input type="hidden" name="pat_blob" id="pat_blob">
-    <div id="patlocked" class="alert" hidden>Entschlüsselung nicht möglich —
-      die geschützten Angaben sind in dieser Sitzung gesperrt. Vorhandene
-      verschlüsselte Angaben bleiben beim Speichern unverändert.
-      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button></div>
+    <div id="patlocked" class="meldung meldung-warn" role="status" hidden>
+      <?= ui_symbol('schloss', 'symbol-gross') ?>
+      <p>Entschlüsselung nicht möglich — die geschützten Angaben sind in
+         dieser Sitzung gesperrt. Vorhandene verschlüsselte Angaben bleiben
+         beim Speichern unverändert.</p>
+      <div class="meldung-aktion">
+        <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                      'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
+      </div>
+    </div>
 
     <?php /* ---- GRUPPE 1: PatientInnendaten --------------------------------
              Alles, was die Person betrifft, und sonst nichts. Vollständig
              Ende-zu-Ende-verschlüsselt — deshalb tragen die Felder hier keine
              `name`-Attribute: Sie wandern beim Absenden in den `pat_blob`
              (Skript unten), nicht als Formularwerte zum Server. */ ?>
-    <fieldset class="fgruppe">
-      <legend>PatientInnendaten
-        <span class="fgruppe-hinweis">Ende-zu-Ende-verschlüsselt</span></legend>
+    <div class="form-raster">
+    <div class="form-spalte">
+    <?php ui_karte_start(['titel' => 'PatientIn', 'zahl' => 'Ende-zu-Ende-verschlüsselt',
+                          'klasse' => 'form-block-patientin']); ?>
       <div id="patfields">
         <label>Einsatznummer
           <input type="text" id="pat_mission_no" maxlength="64" autocomplete="off"
@@ -1127,11 +1180,10 @@ ui_topbar('uebersicht');
             <input type="date" id="pat_dob" max="<?= e(date('Y-m-d')) ?>"></label>
           <label>Alter
             <input type="number" id="pat_age" min="0" max="120" step="1">
-            <span class="muted small" id="agehint"></span></label>
+            <span class="feld-klein-inline" id="agehint"></span></label>
         </div>
         <label>Diagnose <input type="text" id="pat_dx" maxlength="190"></label>
       </div>
-    </fieldset>
 
     <?php /* ---- GRUPPE 2: Einsatz ------------------------------------------
              Wo, welcher Art, und woher gestartet wurde. Die beiden Haken oben
@@ -1143,9 +1195,9 @@ ui_topbar('uebersicht');
              das Skript zusammen mit `#patfields` sperrt, solange der Schlüssel
              zu ist. Die Auswahl des Abfahrtorts daneben ist Klartext und bleibt
              bedienbar (sie speichert nur eine REGEL, siehe unten). */ ?>
-    <fieldset class="fgruppe">
-      <legend>Einsatz</legend>
-      <?php $gruppeRendern('einsatz'); ?>
+      <?php /* Einsatzort und Ortsbeschreibung stehen IN der PatientIn-Karte
+               (E-P3-34, Mockup 22): Sie sind Teil des verschluesselten Blocks
+               und werden gemeinsam mit den Namensfeldern gesperrt. */ ?>
       <div id="patort">
         <?php /* EINSATZORT — erste Verwendung der Ortsfeld-Komponente (V8).
                  Hier stand bis Web 6.0.0 das Markup ausgeschrieben, und rund 25
@@ -1163,11 +1215,19 @@ ui_topbar('uebersicht');
                   'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                   'max'         => 255,
                   'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
+                  'ortswahl'    => true,
               ]); ?>
+        <?php /* Der Zusatz steht UNTER dem Feld, nicht zwischen Beschriftung
+                 und Eingabe (P3/O11). Bis dahin hielt ihn `label .muted` mit
+                 `display:block` in einer eigenen Zeile — eine Regel der
+                 Uebergangsschicht, die mit ihr gefallen ist. Statt sie unter
+                 neuem Namen wiederaufzubauen, steht der Zusatz jetzt dort, wo
+                 ihn `ui_feld()` auch hinsetzt: als `.feld-klein` hinter dem
+                 Feld. */ ?>
         <label>Beschreibung Einsatzort
-          <span class="muted small">Zufahrt, Besonderheiten, Lage vor Ort</span>
           <input type="text" id="pat_site_desc" maxlength="190" autocomplete="off">
         </label>
+        <p class="feld-klein">Zufahrt, Besonderheiten, Lage vor Ort</p>
 
         <?php /* ---- ABFAHRTORT (E34, Konzept 3.5.1) --------------------------
                  Fällt die Uhr aus, fehlt der Track — die Karte bleibt leer,
@@ -1186,8 +1246,6 @@ ui_topbar('uebersicht');
                  bleibt in der Datenbank unangetastet. */ ?>
         <?php if (!$hatTrack): ?>
           <label>Abfahrtort
-            <span class="muted small">erzeugt die gestrichelte Luftlinie auf der
-              Karte — dieser Einsatz hat keine GPS-Aufzeichnung</span>
             <select name="start_src" id="start_src">
               <option value="">– nicht angegeben (keine Linie)</option>
               <?php
@@ -1210,6 +1268,8 @@ ui_topbar('uebersicht');
               <?php endforeach; ?>
             </select>
           </label>
+          <p class="feld-klein">Erzeugt die gestrichelte Luftlinie auf der Karte —
+             dieser Einsatz hat keine GPS-Aufzeichnung.</p>
           <div id="startfields" <?= $startWert === 'manual' ? '' : 'hidden' ?>>
             <?php ui_ortsfeld([
                     'praefix'     => 'start',
@@ -1218,60 +1278,62 @@ ui_topbar('uebersicht');
                     'hinweis'     => 'Adresse, Koordinaten oder Plus Code',
                     'max'         => 255,
                     'platzhalter' => 'tippen für Vorschläge — auch Koordinaten oder Plus Code',
+                    'ortswahl'    => true,
                   ]); ?>
           </div>
         <?php endif; ?>
       </div>
-    </fieldset>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Karte "Einsatz": die Schalter (Sekundaer, Fehleinsatz) und
+             die Bergrettung (Winde, Bergwacht) in EINER Karte (Mockup 22).
+             Die Bergrettungsfelder haengen an Faehigkeiten des Diensttags —
+             fehlen sie und ist nichts belegt, stehen hier nur die zwei
+             Schalter. */ ?>
+    <?php ui_karte_start(['titel' => 'Einsatz', 'klasse' => 'form-block-einsatz']); ?>
+      <?php $gruppeRendern('einsatz'); ?>
+      <?php if ($gruppeSichtbar('bergrettung')) { $gruppeRendern('bergrettung'); } ?>
+    <?php ui_karte_ende(); ?>
 
     <?php /* ---- GRUPPE 3: Transport -----------------------------------------
              Transportart, NA-Begleitung, Transportziel samt Schockraum. Die
              Abhängigkeiten stehen im Katalog ('show_if'): „Ambulant" blendet
              NA-Begleitung und Transportziel aus, und der Server LEERT sie dann
              auch (A5). */ ?>
-    <fieldset class="fgruppe">
-      <legend>Transport</legend>
+    <?php ui_karte_start(['titel' => 'Transport', 'klasse' => 'form-block-transport']); ?>
       <?php $gruppeRendern('transport'); ?>
-    </fieldset>
+    <?php ui_karte_ende(); ?>
+    </div><?php /* .form-spalte (links) */ ?>
+    <div class="form-spalte">
 
-    <?php /* ---- GRUPPE 4: Bergrettung ---------------------------------------
-             Bergwacht und Winde hängen beide an einer FÄHIGKEIT des Diensttags
-             ('cap_gate'). Bringt der Dienst keine davon mit und ist auch nichts
-             belegt, hat die Gruppe keinen Inhalt — dann fällt sie ganz weg
-             statt als leerer Rahmen dazustehen. */ ?>
-    <?php if ($gruppeSichtbar('bergrettung')): ?>
-      <fieldset class="fgruppe">
-        <legend>Bergrettung</legend>
-        <?php $gruppeRendern('bergrettung'); ?>
-      </fieldset>
-    <?php endif; ?>
+    <?php /* ---- Weitere Rettungsmittel (offen, E-P3-34) --------------------- */ ?>
+    <?php ui_karte_start(['titel' => 'Weitere Rettungsmittel', 'klasse' => 'form-block-mittel']); ?>
+      <?php $kartenTitel = 'Weitere Rettungsmittel'; $gruppeRendern('mittel'); $kartenTitel = ''; ?>
+    <?php ui_karte_ende(); ?>
 
-    <?php /* ---- GRUPPE 5: Weitere Rettungsmittel ---------------------------- */ ?>
-    <fieldset class="fgruppe">
-      <legend>Weitere Rettungsmittel</legend>
-      <?php $gruppeRendern('mittel'); ?>
-    </fieldset>
-
-    <?php /* ---- GRUPPE 6: Abweichende Besatzung ----------------------------- */ ?>
-    <fieldset class="fgruppe">
-      <legend>Abweichende Besatzung</legend>
+    <?php /* ---- Abweichende Besatzung: zugeklappt, Vorschau "vom Diensttag"
+             (E-P3-34). Ist eine Abweichung gespeichert, ist die Karte OFFEN —
+             ein gesetzter Haken hinter zugeklapptem Deckel waere verborgene
+             Wahrheit. */ ?>
+    <?php $besatzungAbw = fieldValue('crew_override') === '1';
+          ui_karte_start(['titel' => 'Abweichende Besatzung',
+                          'vorschau' => $besatzungAbw ? 'abweichend' : 'vom Diensttag',
+                          'offen' => $besatzungAbw,
+                          'klasse' => 'form-block-besatzung']); ?>
       <?php $gruppeRendern('besatzung'); ?>
-    </fieldset>
+    <?php ui_karte_ende(true); ?>
 
-    <?php /* ---- GRUPPE 7: Notizen -------------------------------------------- */ ?>
-    <fieldset class="fgruppe">
-      <legend>Notizen</legend>
-      <?php $gruppeRendern('notizen'); ?>
-    </fieldset>
+    <?php ui_karte_start(['titel' => 'Notizen', 'klasse' => 'form-block-notizen']); ?>
+      <?php $kartenTitel = 'Notizen'; $gruppeRendern('notizen'); $kartenTitel = ''; ?>
+    <?php ui_karte_ende(); ?>
 
     <?php /* Felder ohne Gruppe — es gibt derzeit keine. Der Block steht da,
              damit ein neu angelegtes Katalogfeld ohne 'gruppe' sichtbar bleibt
              statt aus dem Formular zu fallen. */ ?>
     <?php if ($gruppeSichtbar('')): ?>
-      <fieldset class="fgruppe">
-        <legend>Weitere Angaben</legend>
+      <?php ui_karte_start(['titel' => 'Weitere Angaben', 'klasse' => 'form-block-weitere']); ?>
         <?php $gruppeRendern(''); ?>
-      </fieldset>
+      <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
     <?php /* ---- GRUPPE 8: Einsatzphasen --------------------------------------
@@ -1281,67 +1343,93 @@ ui_topbar('uebersicht');
              stehen sie meist schon vollständig da und schoben alles andere nach
              unten. Jetzt stehen sie dort, wo sie hingehören: bei den
              Zeitangaben, unmittelbar über der Reanimation. */ ?>
-    <fieldset class="fgruppe">
-      <legend>Einsatzphasen</legend>
-      <p class="muted">In chronologischer Reihenfolge eintragen. Zeiten nach Mitternacht
-         werden automatisch dem Folgetag zugerechnet.</p>
+    <?php /* KEIN Hinweistext mehr (E-P3-34): Die Liste sortiert sich sofort
+             beim Verlassen eines Zeitfelds — was sich selbst ordnet, muss
+             nicht erklaeren, in welcher Reihenfolge man es eintraegt. Der
+             Mitternachts-Hinweis steht im Handbuch. Die Zahl im Kopf
+             ("8 von 9") fuellt das Skript. */ ?>
+    <?php ui_karte_start(['titel' => 'Einsatzphasen', 'zahl' => '',
+                          'id' => 'phasen-karte', 'klasse' => 'form-block-phasen']); ?>
       <div id="phaserows"></div>
-      <p><a href="#" id="addrow" class="add-link">+ Phase hinzufügen</a></p>
-    </fieldset>
+      <p class="karte-fussweg"><a href="#" id="addrow" class="anlegen-link">
+        <?= ui_symbol('plus') ?><span>Phase hinzufügen</span></a></p>
+    <?php ui_karte_ende(); ?>
 
 
-    <?php /* ---- GRUPPE 9: Reanimation ---------------------------------- */ ?>
-    <fieldset class="fgruppe">
-      <legend>Reanimation</legend>
-      <p class="muted">Nur ausfüllen, wenn reanimiert wurde. Mehrere Reanimationen
-         je Einsatz sind möglich. Zeiten nach Mitternacht werden automatisch dem
-         Folgetag zugerechnet; eine Zeile ohne Uhrzeit wird nicht gespeichert.</p>
+    <?php /* ---- Reanimation: zugeklappt (E-P3-34); mit Bestand offen. ------- */ ?>
+    <?php ui_karte_start(['titel' => 'Reanimation',
+                          'vorschau' => $reaPrefill ? count($reaPrefill) . ' erfasst' : 'keine',
+                          'offen' => (bool)$reaPrefill,
+                          'klasse' => 'form-block-rea']); ?>
+      <p class="feld-hinweis">Nur ausfüllen, wenn reanimiert wurde. Mehrere
+         Reanimationen je Einsatz sind möglich; eine Zeile ohne Uhrzeit wird
+         nicht gespeichert.</p>
       <div id="rearows"></div>
-      <p><a href="#" id="addrea" class="add-link">+ Reanimation hinzufügen</a></p>
-    </fieldset>
+      <p class="karte-fussweg"><a href="#" id="addrea" class="anlegen-link">
+        <?= ui_symbol('plus') ?><span>Reanimation hinzufügen</span></a></p>
+    <?php ui_karte_ende(true); ?>
+    </div><?php /* .form-spalte (rechts) */ ?>
+    </div><?php /* .form-raster */ ?>
 
-    <button type="submit" class="btn-primary"><?= $editing ? 'Änderungen speichern' : 'Einsatz anlegen' ?></button>
-    <?php /* Abbrechen in BEIDEN Zustaenden (A4.1). Beim Nachtragen fehlte der
-             Weg bisher ganz — wer das Formular offen hatte, kam nur ueber die
-             Seitenleiste oder den Zurueck-Knopf des Browsers heraus.
-             Rücksprungziel ist fest (E7): beim Bearbeiten der Einsatz, beim
-             Nachtragen die Tagesansicht. Ein Rücksprung auf die tatsaechlich
-             zuletzt besuchte Seite waere fehleranfaellig und der Gewinn gering.
-             Die Rückfrage erscheint nur bei tatsaechlichen Eingaben — die
-             Bedingung steckt in assets/forms.js. */ ?>
-    <p class="login-aux"><a
-       href="<?= $editing ? 'einsatz.php?id=' . $id : 'index.php?d=' . (int)$dayId ?>"
-       data-cancel-form="missionform"
-       data-cancel-confirm="<?= $editing
-           ? 'Die Änderungen an diesem Einsatz gehen verloren. Trotzdem abbrechen?'
-           : 'Der nachgetragene Einsatz wird nicht gespeichert. Trotzdem abbrechen?' ?>"
-       >Abbrechen</a></p>
+    <?php /* Speichern-Leiste statt Knopf am Ende (E-P3-29): Sie klebt unten
+             und erscheint, sobald das Formular schmutzig ist (forms.js).
+             KEIN "Verwerfen" und kein Abbrechen-Link mehr — der Rueckweg oben
+             genuegt, und die beforeunload-Rueckfrage des Dirty-Trackings
+             schuetzt ungespeicherte Eingaben auf jedem Weg hinaus. */
+          ui_speichern_leiste(['text' => $editing ? 'Änderungen speichern' : 'Einsatz anlegen']); ?>
   </form>
-<?php ui_footer(); ?>
-</main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(); ?>
 <script src="<?= asset('assets/patient.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
 <script src="<?= asset('assets/openlocationcode.js') ?>"></script>
 <script src="<?= asset('assets/locparse.js') ?>"></script>
 <script src="<?= asset('assets/ortsfeld.js') ?>"></script>
+<script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
+<script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/ortswahl.js') ?>"></script>
 <script src="<?= asset('assets/zeitfeld.js') ?>"></script>
 <script>
 const PHASE_LABELS = <?= json_encode(PHASE_LABELS) ?>;
 const START_ROWS = <?= json_encode($prefillRows) ?>;
+/* Dienstbeginn in Minuten — Anker der Mitternachtsregel beim Sortieren
+   (Zeiten davor gehoeren zum Folgetag, wie in local_to_utc()). */
+const DIENSTBEGINN_MIN = <?= !empty($tag['started_at'])
+    ? (int)substr(fmt_local((string)$tag['started_at']), 0, 2) * 60
+      + (int)substr(fmt_local((string)$tag['started_at']), 3, 2)
+    : 'null' ?>;
 const REA_ARTEN = <?= json_encode($REA_ARTEN, JSON_UNESCAPED_UNICODE) ?>;
 const REA_START = <?= json_encode($reaPrefill, JSON_UNESCAPED_UNICODE) ?>;
 
+/* Entfernen-Knopf einer Zeile (Phasen wie Reanimation): 44-px-Symbolknopf in
+ * Gefahr-Rot. Entfernen ist eine Aenderung — die Speichern-Leiste muss
+ * erscheinen, obwohl kein Formularfeld ein Ereignis feuert. */
+function wegKnopf(titel, ziel) {
+  const rm = document.createElement('button');
+  rm.type = 'button';
+  rm.className = 'knopf knopf-symbol knopf-gefahr zeile-weg';
+  rm.title = titel;
+  /* symbol.js laedt erst am Seitenende (ui_seite_ende); dieser Aufbau laeuft
+   * synchron davor. Faellt edSymbol aus, bleibt das Zeichen — wie in
+   * missiontable.js. */
+  rm.innerHTML = (typeof edSymbol === 'function')
+    ? edSymbol('schliessen', '', titel) : '✕';
+  rm.addEventListener('click', () => {
+    ziel().remove();
+    EdForms.markieren(document.getElementById('missionform'));
+    phasenZahl();
+  });
+  return rm;
+}
+
 function addRow(no, time) {
   const div = document.createElement('div');
-  div.className = 'phase-row';
+  div.className = 'phasen-eingabe';
   const sel = document.createElement('select');
   sel.name = 'ph_no[]';
   for (let p = 2; p <= 9; p++) {
     const o = document.createElement('option');
-    o.value = p; o.textContent = p + ' ' + PHASE_LABELS[p];
+    o.value = p; o.textContent = p + ' · ' + PHASE_LABELS[p];
     if (p === no) o.selected = true;
     sel.appendChild(o);
   }
@@ -1352,13 +1440,51 @@ function addRow(no, time) {
   // erfasst. Serverseitig prueft weiterhin local_to_utc().
   t.type = 'text'; t.className = 'zeitfeld';
   t.name = 'ph_time[]'; t.value = time || '';
-  const rm = document.createElement('button');
-  rm.type = 'button'; rm.className = 'btn-danger'; rm.textContent = '✕';
-  rm.addEventListener('click', () => div.remove());
-  div.append(sel, t, rm);
+  div.append(sel, t, wegKnopf('Diese Phase entfernen', () => div));
   document.getElementById('phaserows').appendChild(div);
   return sel;
 }
+
+/* ---- Sofort sortieren (E-P3-34, Funktionsaenderung b) ---------------------
+ *
+ * Die Liste ordnet sich, sobald ein Zeitfeld verlassen wird — kein
+ * Hinweistext mehr. Zeilen ohne Zeit bleiben hinten in Eingabereihenfolge.
+ * MITTERNACHT: Eine Zeit vor dem Dienstbeginn gehoert zum Folgetag
+ * (dieselbe Regel wie local_to_utc() beim Speichern) — sonst spraenge
+ * "00:10" vor "23:50". Serverseitig bleibt die Sortierung unveraendert
+ * massgeblich. */
+function sortMinuten(wert) {
+  const m = /^(\d{2}):(\d{2})$/.exec(wert || '');
+  if (!m) { return null; }
+  let min = Number(m[1]) * 60 + Number(m[2]);
+  if (DIENSTBEGINN_MIN != null && min < DIENSTBEGINN_MIN) { min += 24 * 60; }
+  return min;
+}
+function phasenSortieren() {
+  const box = document.getElementById('phaserows');
+  const zeilen = [...box.children];
+  const mit = [], ohne = [];
+  zeilen.forEach(z => {
+    const t = sortMinuten(z.querySelector('.zeitfeld').value.trim());
+    (t == null ? ohne : mit).push({ z, t });
+  });
+  mit.sort((a, b) => a.t - b.t);          // stabil: gleiche Zeiten bleiben
+  mit.concat(ohne).forEach(e => box.appendChild(e.z));
+}
+/* Die Zahl im Kartenkopf: erfasste Phasen (Zeile mit gueltiger Zeit) von
+ * allen, die der Katalog kennt. */
+function phasenZahl() {
+  const gesetzt = [...document.querySelectorAll('#phaserows .zeitfeld')]
+    .filter(f => /^\d{2}:\d{2}$/.test(f.value.trim())).length;
+  const el = document.querySelector('#phasen-karte .karte-zahl');
+  if (el) { el.textContent = gesetzt + ' von ' + Object.keys(PHASE_LABELS).length; }
+}
+document.getElementById('phaserows').addEventListener('focusout', ev => {
+  if (ev.target.classList && ev.target.classList.contains('zeitfeld')) {
+    phasenSortieren();
+    phasenZahl();
+  }
+});
 
 /* ---- Reanimationen (A4.3) ------------------------------------------------
  * Aufbau wie bei den Phasen: Die Zeilen entstehen im Browser, die Zeitfelder
@@ -1379,7 +1505,7 @@ function reaEreignisZeile(box, evBox, daten) {
   box.dataset.evNr = m + 1;
 
   const row = document.createElement('div');
-  row.className = 'rea-row';
+  row.className = 'phasen-eingabe';
   const sel = document.createElement('select');
   sel.name = `rea[${n}][ev][${m}][typ]`;
   Object.keys(REA_ARTEN).forEach(k => {
@@ -1392,12 +1518,7 @@ function reaEreignisZeile(box, evBox, daten) {
   t.type = 'text'; t.className = 'zeitfeld';
   t.name = `rea[${n}][ev][${m}][zeit]`;
   t.value = (daten && daten.zeit && daten.zeit !== '–') ? daten.zeit : '';
-  const weg = document.createElement('button');
-  weg.type = 'button'; weg.className = 'btn-danger'; weg.textContent = '✕';
-  weg.title = 'Dieses Ereignis entfernen';
-  weg.addEventListener('click', () => row.remove());
-
-  row.append(sel, t, weg);
+  row.append(sel, t, wegKnopf('Dieses Ereignis entfernen', () => row));
   evBox.appendChild(row);
   return t;
 }
@@ -1409,26 +1530,25 @@ function reaSitzung(daten) {
   box.dataset.nr = n;
 
   const kopf = document.createElement('div');
-  kopf.className = 'rea-row rea-kopf';
+  kopf.className = 'phasen-eingabe rea-kopf';
   const lab = document.createElement('label');
+  lab.className = 'rea-beginn';
   lab.textContent = 'Reanimationsbeginn';
   const start = document.createElement('input');
   start.type = 'text'; start.className = 'zeitfeld';
   start.name = `rea[${n}][start]`;
+  start.id = `rea_start_${n}`;
+  lab.htmlFor = start.id;
   start.value = (daten && daten.start && daten.start !== '–') ? daten.start : '';
-  lab.appendChild(start);
-  const weg = document.createElement('button');
-  weg.type = 'button'; weg.className = 'btn-danger'; weg.textContent = '✕';
-  weg.title = 'Diese Reanimation entfernen';
-  weg.addEventListener('click', () => box.remove());
-  kopf.append(lab, weg);
+  kopf.append(lab, start, wegKnopf('Diese Reanimation entfernen', () => box));
 
   const evBox = document.createElement('div');
   evBox.className = 'rea-ereignisse';
 
   const add = document.createElement('a');
-  add.href = '#'; add.className = 'add-link';
-  add.textContent = '+ Ereignis hinzufügen';
+  add.href = '#'; add.className = 'anlegen-link';
+  add.innerHTML = ((typeof edSymbol === 'function') ? edSymbol('plus') : '+')
+    + '<span>Ereignis hinzufügen</span>';
   add.addEventListener('click', ev => {
     ev.preventDefault();
     reaEreignisZeile(box, evBox, null).focus();   // direkt per Tastatur bedienbar
@@ -1473,6 +1593,10 @@ const ortStart = EdOrtsfeld.init({
   praefix: 'start',
   bezeichnungPlatzhalter: 'Bezeichnung des Abfahrtortes'
 });
+
+// Pin-Blatt (Geolocation, Kartendialog) an beide Felder haengen (E-P3-34).
+EdOrtswahl.registriere('loc', ortEinsatz);
+EdOrtswahl.registriere('start', ortStart);
 
 /* Ortsfelder aus dem Feldkatalog (derzeit die Zielklinik). Sie tragen einen
  * NAMEN und daneben eine Koordinate, deshalb getrennte Suche: „Klinikum
@@ -1720,11 +1844,13 @@ document.querySelectorAll('input[data-vor-feld]').forEach(cb => {
 
 
 START_ROWS.forEach(r => addRow(r[0], r[1] === '–' ? '' : r[1]));
+phasenSortieren();
+phasenZahl();
 document.getElementById('addrow').addEventListener('click', ev => {
   ev.preventDefault();
   // Auswahlfelder AUS DEM PHASENBLOCK, nicht alle der Seite: Seit Web 5.5.0
   // stehen weiter unten die Reanimationsereignisse, ebenfalls mit Auswahl.
-  const rows = document.querySelectorAll('#phaserows .phase-row select');
+  const rows = document.querySelectorAll('#phaserows .phasen-eingabe select');
   const last = rows.length ? parseInt(rows[rows.length - 1].value) : 1;
   addRow(Math.min(last + 1, 10), '').focus();   // direkt per Tastatur bedienbar
 });

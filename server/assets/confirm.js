@@ -12,6 +12,7 @@
  * Optional:
  *   data-confirm-ok    Beschriftung des Bestätigungsknopfes (Standard: „Löschen")
  *   data-confirm-tone  "danger" (Standard) oder "normal"
+ *   data-confirm-titel Überschrift des Dialogs (Standard: „Bestätigen")
  *
  * WANN AN DEN KNOPF UND NICHT AN DAS FORMULAR: Wenn EIN Formular mehrere
  * Absendeknöpfe hat, die verschiedene Dinge tun. Am Formular hinge dann eine
@@ -49,30 +50,54 @@
    * eigenes Element je Aufruf schließt diesen ganzen Fall aus: Ein
    * nachlaufendes Ereignis kann keinen späteren Aufruf mehr erreichen.
    */
-  function build() {
+  /* Markup und Klassen sind die des Dialog-Bausteins (.dialog, .knopf) aus
+   * P3/O2 — dieselben, die ui.php serverseitig benutzt. Die frueheren eigenen
+   * Klassen (.confirmbox, .confirmbtns, .btn-red, .btn-plain) stehen auf der
+   * Streichliste; wer hier eine aendert, aendert sie im Stylesheet-Abschnitt
+   * 15 mit. */
+  /* DER DIALOG HAT EINEN NAMEN (O11).
+   *
+   * Bis Web 9.11.0 hatte er keinen: kein Titel, kein `aria-label`, kein
+   * `role`. Ausgerechnet die Rueckfrage vor dem Loeschen war damit die
+   * anonymste Stelle der Oberflaeche — ein Screenreader las den Text und
+   * zwei Knoepfe, ohne zu sagen, WAS da fragt.
+   *
+   * `alertdialog` statt `dialog`: Die Rolle ist fuer genau diesen Fall da —
+   * eine Meldung, die eine Antwort verlangt und den Ablauf anhaelt. Sie
+   * bewirkt, dass der Text beim Oeffnen vorgelesen wird, und nicht erst,
+   * wenn der Fokus ihn erreicht.
+   *
+   * Der Titel ist ueberschreibbar (`data-confirm-titel`), denn „Bestaetigen"
+   * ist richtig, aber allgemein; wo eine Seite es genauer sagen kann, soll
+   * sie es tun. Der unlock-Dialog macht es seit jeher so
+   * (assets/unlock.js: „Geschuetzte Angaben entsperren"). */
+  function build(titel) {
     const dlg = document.createElement('dialog');
-    dlg.className = 'confirmbox';
+    dlg.className = 'dialog';
+    dlg.setAttribute('role', 'alertdialog');
     dlg.innerHTML =
-      '<p class="confirmtext"></p>' +
-      '<div class="confirmbtns">' +
-      '  <button type="button" class="btn-plain" data-act="no">Abbrechen</button>' +
-      '  <button type="button" class="btn-red" data-act="yes">Löschen</button>' +
+      '<div class="dialog-kopf"><h2 data-titel></h2></div>' +
+      '<div class="dialog-inhalt"><p data-text></p></div>' +
+      '<div class="dialog-fuss">' +
+      '  <button type="button" class="knopf knopf-leise" data-act="no">Abbrechen</button>' +
+      '  <button type="button" class="knopf knopf-gefahr" data-act="yes">Löschen</button>' +
       '</div>';
+    dlg.querySelector('[data-titel]').textContent = titel || 'Bestätigen';
     document.body.appendChild(dlg);
     return dlg;
   }
 
   /** Zeigt die Rückfrage; liefert ein Promise mit true/false. */
-  function ask(text, okLabel, tone) {
+  function ask(text, okLabel, tone, titel) {
     // Sehr alte Browser ohne <dialog>: lieber nativ fragen als gar nicht.
     if (typeof HTMLDialogElement === 'undefined') {
       return Promise.resolve(window.confirm(text));
     }
-    const d = build();
-    d.querySelector('.confirmtext').textContent = text;
+    const d = build(titel);
+    d.querySelector('[data-text]').textContent = text;
     const ok = d.querySelector('[data-act="yes"]');
     ok.textContent = okLabel || 'Löschen';
-    ok.className = (tone === 'normal') ? 'btn-primary' : 'btn-red';
+    ok.className = (tone === 'normal') ? 'knopf knopf-primaer' : 'knopf knopf-gefahr';
 
     return new Promise(resolve => {
       let erledigt = false;
@@ -100,10 +125,30 @@
     if (!text || f.dataset.confirmed === '1') return;
     ev.preventDefault();
     ev.stopPropagation();
-    ask(text, f.getAttribute('data-confirm-ok'), f.getAttribute('data-confirm-tone'))
+    ask(text, f.getAttribute('data-confirm-ok'), f.getAttribute('data-confirm-tone'),
+        f.getAttribute('data-confirm-titel'))
       .then(ja => {
         if (!ja) return;
         f.dataset.confirmed = '1';
+        /* DEM DIRTY-TRACKING BESCHEID SAGEN (O11).
+         *
+         * Traegt ein Formular BEIDES — `data-confirm` und `data-dirty-track`
+         * —, fragt der Browser nach der bestaetigten Rueckfrage ein zweites
+         * Mal: „Aenderungen werden moeglicherweise nicht gespeichert".
+         *
+         * Der Grund steht drei Zeilen weiter oben: `stopPropagation()` in der
+         * ERFASSUNGSPHASE. Der Zuhoerer von forms.js haengt in der
+         * Blasenphase am selben `document` und laeuft deshalb nie; danach
+         * sendet `f.submit()` ab, was gar kein submit-Ereignis ausloest. Das
+         * Formular bleibt also fuer forms.js bis zuletzt „schmutzig", und
+         * beim Verlassen der Seite feuert dessen beforeunload-Abfrage.
+         *
+         * Genau das, was forms.js fuer den Abbrechen-Weg ausdruecklich
+         * verhindert: „zweimal dasselbe fragen heisst, die erste Frage nicht
+         * ernst zu nehmen". Betroffen war diensttag_datum.php — die einzige
+         * Stelle mit beiden Attributen, und dort praktisch immer, weil man
+         * das Feld aendern MUSS, um etwas zu tun. */
+        if (window.EdForms && window.EdForms.vergessen) { window.EdForms.vergessen(f); }
         f.submit();                 // löst kein erneutes submit-Ereignis aus
       });
   }, true);
@@ -115,7 +160,7 @@
     ev.preventDefault();
     ev.stopPropagation();
     ask(a.getAttribute('data-confirm'), a.getAttribute('data-confirm-ok'),
-        a.getAttribute('data-confirm-tone'))
+        a.getAttribute('data-confirm-tone'), a.getAttribute('data-confirm-titel'))
       .then(ja => { if (ja) location.href = a.href; });
   }, true);
 
@@ -142,7 +187,7 @@
     ev.preventDefault();
     ev.stopPropagation();
     ask(b.getAttribute('data-confirm'), b.getAttribute('data-confirm-ok'),
-        b.getAttribute('data-confirm-tone'))
+        b.getAttribute('data-confirm-tone'), b.getAttribute('data-confirm-titel'))
       .then(ja => {
         if (!ja) return;
         b.dataset.confirmed = '1';

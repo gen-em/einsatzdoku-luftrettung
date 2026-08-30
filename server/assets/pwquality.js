@@ -183,14 +183,39 @@ const EdPwQuality = (() => {
   }
 
   /**
-   * Schreibt das Ergebnis in ein Element. Erwartet ein beliebiges Element;
-   * die Klasse pwq-N erlaubt der Seite eine farbliche Darstellung.
+   * Schreibt das Ergebnis in ein Element — als BALKEN aus vier Segmenten mit
+   * der Stufe daneben (E-P3-16, Mockup 11; ab Web 9.7.0).
+   *
+   * Vorher stand hier eine Textzeile in einer von fünf Farben, darunter Grün
+   * und Gelb — zwei Töne, die es in der Marke nicht gibt. Der Balken sagt
+   * dasselbe ohne fremde Farbe: Wie viele Segmente gefüllt sind, ist die
+   * Auskunft; die Farbe (rot / orange / dunkelblau) verstärkt sie nur.
+   *
+   * VIER SEGMENTE bei fünf Stufen (0..4): Stufe 0 füllt eines und färbt es
+   * rot. Null gefüllte Segmente wären ein leerer Kasten — von „noch nichts
+   * eingegeben" nicht zu unterscheiden, und genau dort steht die Anzeige gar
+   * nicht.
+   *
+   * Der Balken ist `aria-hidden`: Er wiederholt, was der Text daneben sagt,
+   * und vier leere Elemente vorzulesen hilft niemandem. Die Zeile selbst ist
+   * `role="status"`, damit die Stufe beim Tippen angesagt wird.
    */
   function anzeige(el, ergebnis) {
     if (!el) { return; }
-    el.className = 'pwquality pwq-' + ergebnis.staerke;
-    el.textContent = 'Stärke: ' + ergebnis.stufe
-                   + (ergebnis.meldung ? ' — ' + ergebnis.meldung : '');
+    const gefuellt = Math.max(1, ergebnis.staerke);
+    el.className = 'pwstaerke pwq-' + ergebnis.staerke;
+    el.setAttribute('role', 'status');
+    let balken = '<span class="pwstaerke-balken" aria-hidden="true">';
+    for (let i = 0; i < 4; i++) {
+      balken += '<span' + (i < gefuellt ? ' class="an"' : '') + '></span>';
+    }
+    balken += '</span>';
+    /* Stufe und Hinweis als Text — EdHtml.escape ist hier nicht nötig, weil
+       beide aus STUFEN und festen Zeichenketten dieser Datei stammen; ein
+       Passwort steht nie darin. */
+    el.innerHTML = balken
+      + '<span class="pwstaerke-text">' + ergebnis.stufe + '</span>'
+      + (ergebnis.meldung ? '<span class="pwstaerke-hinweis">' + ergebnis.meldung + '</span>' : '');
   }
 
   /**
@@ -202,7 +227,7 @@ const EdPwQuality = (() => {
     const lauf = () => {
       letzte = pruefe(feld.value);
       if (feld.value === '') {
-        if (anzeigeEl) { anzeigeEl.textContent = ''; anzeigeEl.className = 'pwquality'; }
+        if (anzeigeEl) { anzeigeEl.innerHTML = ''; anzeigeEl.className = 'pwstaerke'; }
       } else {
         anzeige(anzeigeEl, letzte);
       }

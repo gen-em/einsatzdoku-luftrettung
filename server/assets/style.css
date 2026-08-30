@@ -1,79 +1,71 @@
-/* Einsatzdoku — GenEM-Branding
-   Navy #1A2E4D · Orange #FF8F1F · Blau #2B6CB0 · Rot #D63338
-   Schriften: Bricolage Grotesque (Titel/Knoepfe) + Open Sans (Text),
-   lokal ausgeliefert aus assets/fonts/.
+/* Einsatzdoku — Stylesheet
+   ===========================================================================
 
-   GLIEDERUNG (P0/A3, vom Allgemeinen zum Speziellen). Bis Web 7.0.2 war die
-   Datei ohne Abschnitte gewachsen: Was neu dazukam, landete unten, und
-   siebzehn Regeln standen dadurch ein zweites Mal da — bis zu 700 Zeilen von
-   der ersten entfernt. Wer eine davon aendern wollte, musste erst suchen, ob
-   es noch eine zweite gibt.
+   Neu geschrieben in P3 (Oberflächen-Redesign, mobil-first). Die Vorgängerin
+   war über zwanzig Fassungen gewachsen: 1 468 Zeilen, 78 Hexwerte außerhalb
+   von :root, 21 verschiedene Schriftgrößen, die Kopfhöhe fünfmal als 50px
+   fest verdrahtet, sechs Schaltflächenvarianten und zwei Graufamilien
+   nebeneinander. Sie war nicht schlecht gepflegt — sie hatte nur nie eine
+   Stelle, an der ein Wert **einmal** steht.
 
-     1  Schriften
-     2  Farben und Masse
-     3  Grundlagen
-     4  Seitengeruest — Kopfleiste, Layout, Fusszeile
-     5  Einsatztage-Leiste
-     6  Formulare und Schaltflaechen
-     7  Tabellen
-     8  Karte
-     9  Tagesuebersicht
-    10  Einsatzansicht und Einsatzformular
-    11  Zeitraum-Uebersicht
-    12  Suche
-    13  Einstellungen und Stammdaten
-    14  Papierkorb
-    15  Import
-    16  Verwaltung und Wartung
-    17  Anmeldung und Einrichtung
-    18  Dialoge
-    19  Media Queries
+   DIE DREI EBENEN (Konzept P3, E-P3-06):
 
-   Die Media Queries stehen GESAMMELT am Schluss (Abschnitt 19). Verstreut
-   waren sie das, was am ehesten uebersehen wird — und zweimal stand eine
-   Grundregel spaeter in der Datei als die Abfrage, die sie fuer schmale
-   Geraete korrigieren sollte. Am Ende gewinnt die Abfrage immer, und man
-   sieht auf einen Blick, welche Schwellen es ueberhaupt gibt.
+     Token      Jeder Wert — Farbe, Größe, Abstand, Maß — steht in :root und
+                nirgends sonst. Wer eine Farbe ändern will, ändert sie hier.
+     Bausteine  Benannte Klassen mit Skelett in ui.php, von PHP **und** von
+                den JS-Erzeugern verwendet. Eine Karte sieht überall gleich
+                aus, weil es nur eine Karte gibt.
+     Regel      Eine neue Seite setzt vorhandene Bausteine zusammen und
+                definiert nichts Eigenes. Ein neuer Baustein wird vorher
+                beschrieben, vorgelegt, freigegeben und in docs/Design.md
+                aufgenommen.
 
-   EIN SELEKTOR STEHT NUR NOCH EINMAL DA — mit einer benannten Ausnahme: Wo
-   mehrere Selektoren sich eine Regel teilen und danach EINER davon verfeinert
-   wird, stehen zwei Regeln untereinander. Das ist Absicht und keine Dopplung:
+   MOBIL-FIRST heißt hier wörtlich: Was ohne Media-Abfrage dasteht, gilt für
+   das Handy. Die Abfragen bauen nach oben aus (min-width), nie nach unten
+   ab. Das ist der Grund, warum die Datei überhaupt neu entstanden ist — die
+   alte war für den Desktop geschrieben und nahm für schmale Geräte Regeln
+   zurück, weshalb unter 720 px anderthalb Bildschirme Seitenleiste vor dem
+   Inhalt standen.
 
-     .checklabel,.check{...}      gemeinsam
-     .checklabel{font-weight:600} nur diese eine
+   GLIEDERUNG. Die Abschnittsnummern stehen auch in docs/Design.md.
 
-   Erkennbar daran, dass die beiden Regeln unmittelbar beieinander stehen.
-   Wer eine aendert, sieht die andere. Zwoelf solche Paare gibt es; alles
-   Weitere war Dopplung und ist zusammengefuehrt.
+     1  Schriften                (@font-face, unverändert aus dem Bestand)
+     2  Token                    (:root — alle Werte, sonst keiner)
+     3  Grundlagen               (Reset, Körper, Typografie, Fokus, Symbole)
+
+   Die Bausteine folgen in Abschnitt 4 ff. — sie entstehen in Arbeitspaket O2.
+   Bis dahin ist diese Datei bewusst unvollständig: O1 legt das Fundament,
+   O2 setzt die Bausteine darauf. Ein Zwischenstand, in dem die Anwendung roh
+   aussieht, ist eingeplant (Konzept, O2 Punkt 6).
+
+   PRÜFMITTEL. tools/vollstaendigkeit/ liest diese Datei und meldet jeden
+   Hexwert, jede Schriftgröße und jedes Pixelmaß außerhalb von :root, dazu
+   jede Klasse des alten Stylesheets, die weder eine neue Regel noch einen
+   Eintrag auf der Streichliste hat. Der Stilvergleich (tools/stilvergleich/)
+   ruht während P3 und wird in O12 neu geeicht.
 */
 
 
-/* == 1. SCHRIFTEN ========================================================== */
-
-/* ---- Schriften ------------------------------------------------------------
+/* == 1. SCHRIFTEN ==========================================================
+ *
+ * Wortgleich aus dem Bestand übernommen — an den Schriften ändert P3 nichts.
  *
  * Beide Schriften werden SELBST AUSGELIEFERT (assets/fonts/, Backlog Nr. 12).
  * Vorher kamen sie per @import von Google; das meldete bei jedem Seitenaufruf
  * die IP-Adresse der NutzerIn an Google — in einer Anwendung, deren ganzer
- * Zweck darin besteht, dass Patientendaten den Browser nicht unverschluesselt
- * verlassen, war das ein Bruch in der Linie. Zugleich faellt der Abruf nun
- * nicht mehr aus, wenn ein Werbeblocker oder ein strenger Trackingschutz
- * fonts.gstatic.com sperrt.
+ * Zweck darin besteht, dass Patientendaten den Browser nicht unverschlüsselt
+ * verlassen, war das ein Bruch in der Linie.
  *
  * Herkunft: npm-Pakete @fontsource/bricolage-grotesque 5.3.0 und
  * @fontsource/open-sans 5.3.0 (beide OFL-1.1), Unterverzeichnis files/.
- * Uebernommen wurden ausschliesslich die tatsaechlich benutzten Schnitte:
+ * Übernommen wurden ausschließlich die tatsächlich benutzten Schnitte:
  * Bricolage 500/600, Open Sans 400/600/700 — je in den Subsets latin und
  * latin-ext. Wer einen weiteren Schnitt braucht, legt die Datei dazu UND
- * traegt sie hier ein; ohne @font-face nutzt die Datei nichts.
+ * trägt sie hier ein; ohne @font-face nutzt die Datei nichts.
  *
  * unicode-range trennt die beiden Subsets: latin-ext wird nur geladen, wenn
- * ein Zeichen daraus tatsaechlich vorkommt (z. B. in osteuropaeischen Namen).
+ * ein Zeichen daraus tatsächlich vorkommt (z. B. in osteuropäischen Namen).
  * font-display:swap zeigt sofort die Ersatzschrift und tauscht danach.
- *
- * Die Ersatzliste unten bleibt trotzdem bestehen und bleibt normal breit
- * (siehe Web 5.1.1) — sie traegt jetzt nur noch den Fall, dass eine der
- * Dateien fehlt.
  */
 @font-face{font-family:'Bricolage Grotesque';font-style:normal;font-weight:500;
   font-display:swap;src:url(fonts/bricolage-grotesque-latin-500-normal.woff2) format('woff2');
@@ -127,1342 +119,2542 @@
     U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 
 
-/* == 2. FARBEN UND MASSE =================================================== */
+/* == 2. TOKEN ==============================================================
+ *
+ * Hier steht jeder Wert der Oberfläche — und nur hier. Die
+ * Vollständigkeitsprüfung meldet jeden Hexwert, jede Schriftgröße und jedes
+ * Pixelmaß, das außerhalb dieses Blocks steht.
+ *
+ * FARBROLLEN (E-P3-15). Die Farbe sagt, worum es geht:
+ *
+ *   Orange       Handeln und „hier bin ich" — Primärknopf, aktiver
+ *                Menüpunkt, Anlegen-Wege, Vorbelegungsstern, aktive Kachel,
+ *                Zeilenhervorhebung.
+ *   Rot          Aufmerksamkeit — Löschen, Fehler, offene Zuordnung,
+ *                unvollständiger Einsatz, Fehleinsatz.
+ *   Blau         Auswählen und Erklären — Textlinks, Sortierpfeil, gewählte
+ *                Filter, Fokusring, Hinweis, Vollzug.
+ *   Dunkelblau   Struktur — Kopfleiste, Überschriften, Häkchen, Symbole,
+ *                Tabellenkopf.
+ *   Sand/Grau    Mechanik — Winkel, Trennlinien, inaktive Symbole.
+ *
+ * Grün und Gelb gibt es nicht mehr. Beide waren markenfremd: Grün trug die
+ * Vollzugsmeldung und die Passwortstärke, Gelb den Knopf „Bearbeiten" in den
+ * Stammdaten — dieselbe Handlung, die anderswo orange war. Vollzug ist jetzt
+ * Blau mit Haken (E-P3-16), „Bearbeiten" der neutrale Rahmenknopf.
+ *
+ * JE FARBE EIN TIEF UND EIN HELL. Das „Tief" ist die Schriftfassung und
+ * erreicht auf Schnee die Kontrastschwelle; das „Hell" ist die Fläche. Die
+ * Marke selbst (Orange FF8F1F, Blau 4280E5, Rot D63338) ist Fläche und
+ * Strich, nicht Schrift.
+ *
+ * NACHGERECHNETE KONTRASTE (gegen Schnee FFFCFA, WCAG 2.1):
+ *
+ *   Asphalt          19,29:1     Dunkelblau auf Orange     5,97:1  Primärknopf
+ *   Dunkelblau       13,33:1     Weiß auf Dunkelblau      13,62:1  Kopfleiste
+ *   Gedämpft          5,66:1     Blau als Strich/Fokus     3,77:1
+ *   Blau tief         7,82:1     Orange als Fläche         2,23:1  nie Schrift
+ *   Rot tief          7,58:1     Rot D63338                4,68:1
+ *   Orange tief       4,32:1  — nur ab 14 px fett oder 18 px (Schwelle 3:1)
+ *
+ * Drei Werte weichen von Anlage G des Konzepts ab, alle nach oben (Asphalt
+ * 19,3 statt 17,5; Blau tief 7,8 statt 7,2; Rot tief 7,6 statt 7,1; Primärknopf
+ * 6,0 statt 5,4). Die Rechnung steht in tools/screenshots/kontrast.py und
+ * läuft bei jedem Screenshot-Lauf mit; die Tabelle in docs/Design.md wird
+ * daraus erzeugt, nicht abgeschrieben.
+ */
 
 :root{
-  --schnee:#FFFCFA; --rauch:#F7F5ED; --sand:#D4C7AD;
-  --ink:#1A0500;                       /* Asphalt */
-  --navy:#1A2E4D;                      /* Dunkelblau */
-  --accent:#FF8F1F;                    /* Philipp Orange */
-  --accent-dark:#E67C0E;
-  --accent-light:#FFEBD6;              /* Philipp Hellorange */
-  --blau:#4280E5; --blau-light:#D9ECFD;
-  --blau-dark:#3670D8;                 /* Max Blau eine Stufe dunkler:
-                                          4,6:1 auf Schnee, damit auch kleine
-                                          Beschriftungen die Kontrastschwelle
-                                          erreichen (reines Max Blau: 3,8:1) */
-  --rot:#D63338;  --rot-light:#FCE2D6;
-  --line:#E3DAC6;                      /* aufgehelltes Sand */
-  --muted:#6E6459;
-  --mono:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Consolas,monospace;
-  /* ZIFFERN IN TABELLEN (Web 7.0.0) — eigene Familie, nicht --mono.
+  /* ---- Flächen ---------------------------------------------------------
+   * Schnee ist die Karte, Rauch die Seite darunter, Sand die Mechanik.
+   * Weiß (#FFF) ist KEIN Token: In der Marke ist Weiß nur Logo- und
+   * Schriftfarbe auf Dunkel. Im alten Stylesheet stand es vierzehnmal als
+   * Fläche — das ist der Grund, warum die Oberfläche stellenweise kalt
+   * wirkte, während der Rest warm war. */
+  --schnee:#FFFCFA;
+  --rauch:#F7F5ED;
+  --sand:#D4C7AD;
+
+  /* ---- Schrift ---------------------------------------------------------
+   * Gedämpft ist die EINZIGE Graustufe. Der Bestand hatte daneben eine
+   * zweite, kühle Familie (5B5F66, 9AA0A6, 8A96A8, C6CEDB …) — zwei
+   * Grauwelten in einer Oberfläche. Sie ist ersatzlos fort. */
+  --asphalt:#1A0500;
+  --dunkelblau:#1A2E4D;
+  --gedaempft:#6E6459;
+  --auf-dunkel:#FFFFFF;                /* Schrift auf Dunkelblau, 13,62:1 */
+
+  /* ---- Linien ----------------------------------------------------------
+   * ZWEI Linien, und der Unterschied ist keine Geschmacksfrage:
    *
-   * Die Zahlenspalten liefen bis Web 6.3.0 in der Monospace-Familie darueber.
-   * Die tat, was sie sollte (gleich breite Ziffern, buendige Spalten), brachte
-   * aber die DURCHGESTRICHENE NULL mit: Consolas, Cascadia Mono und DejaVu Sans
-   * Mono zeichnen sie so, und abschalten laesst sie sich dort nicht — der
-   * Schraegstrich ist bei diesen Schriften die Normalform und keine
-   * zuschaltbare Variante ('zero' greift nur, wo es eine Wahl gibt). In einer
-   * Uhrzeit oder einer Streckenangabe sieht das aus wie ein Sonderzeichen.
+   *   --linie        aufgehelltes Sand, 1,36:1. Trennt, schmückt, umrandet
+   *                  Karten. Rein zeichnerisch — WCAG 1.4.11 nimmt
+   *                  dekorative Trenner ausdrücklich aus.
+   *   --linie-stark  begrenzt BEDIENELEMENTE: Eingabefeld, neutraler Knopf,
+   *                  Segmentwahl, Kästchen. Dort ist der Rand die einzige
+   *                  Auskunft darüber, wo das Element anfängt und aufhört,
+   *                  und dafür verlangt WCAG 3:1. Gedämpft erreicht 5,66:1
+   *                  und ist ohnehin schon Token — ein neuer Farbwert war
+   *                  dafür nicht nötig.
    *
-   * Ersatz ist die Schrift, die die Anwendung ohnehin ausliefert: Open Sans mit
-   * 'tnum'. Sie hat eine glatte Null und feste Ziffernbreiten — die
-   * Spaltenbuendigkeit bleibt also erhalten, sie kam nie vom Monospace-Zeichen,
-   * sondern von der Ziffernbreite. Zugleich faellt der Bruch zum uebrigen Text
-   * weg.
+   * Das ist der Fund F-P3-K: Anlage G führt für Ränder 3:1, nennt aber nur
+   * Farben, die darunter liegen. Ohne die Trennung hätte jedes Eingabefeld
+   * einen Rand von 1,4:1 — sichtbar für gute Augen, unsichtbar für andere. */
+  --linie:#E3DAC6;
+  --linie-stark:var(--gedaempft);
+
+  /* ---- Orange — Handeln ------------------------------------------------ */
+  --orange:#FF8F1F;
+  --orange-tief:#C25A00;
+  --orange-hell:#FFEBD6;
+
+  /* ---- Blau — Auswählen und Erklären ----------------------------------- */
+  --blau:#4280E5;
+  --blau-tief:#1F4E9C;
+  --blau-hell:#D9ECFD;
+
+  /* ---- Rot — Aufmerksamkeit -------------------------------------------- */
+  --rot:#D63338;
+  --rot-tief:#9E2226;
+  --rosa:#FCE2D6;
+
+  /* ---- Primärknopf -----------------------------------------------------
+   * Die eine Stelle, an der die Kontrastfrage entschieden wurde: Weiß auf
+   * Orange sind 2,3:1 und damit unlesbar; Dunkelblau auf Orange sind 5,97:1.
+   * Der Knopf trägt deshalb dunkelblaue Schrift (E-P3-15). Die Mockups
+   * zeigen an dieser Stelle Weiß — der Entscheidungstext gilt, nicht die
+   * Skizze (Konzept 3, Vorbemerkung). */
+  --knopf-primaer-flaeche:var(--orange);
+  --knopf-primaer-schrift:var(--dunkelblau);
+
+  /* ---- Schriftfamilien -------------------------------------------------
+   * Die Ersatzlisten sind NORMAL BREIT. Hier stand einmal 'Arial Narrow' an
+   * zweiter Stelle; kam die Webschrift nicht durch, wurde die ganze
+   * Oberfläche gedrungen, und es sah nach einem Gestaltungsfehler aus statt
+   * nach einem fehlgeschlagenen Download. */
+  --schrift-kopf:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',
+                 Roboto,'Helvetica Neue',Arial,sans-serif;
+  --schrift-text:'Open Sans',system-ui,'Segoe UI',Roboto,
+                 'Helvetica Neue',Arial,sans-serif;
+  /* Schreibmaschinenschrift nur, wo sie die Aussage IST: Kopplungscode,
+   * Wiederherstellungsschlüssel, Rechtstext-Editor. */
+  --schrift-fest:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',
+                 Consolas,monospace;
+
+  /* ---- Schriftskala ----------------------------------------------------
+   * Major Third (1,25) um die Grundgröße 15/16 px. Der Bestand hatte 21
+   * verschiedene Größen und damit keine Skala, sondern eine Sammlung.
    *
-   * --mono bleibt, wo eine Schreibmaschinenschrift die Aussage IST: der
-   * Kopplungscode (.codebig), der Wiederherstellungsschluessel (.keybox code)
-   * und die Phasenkachel (.chip). */
-  --zahl:'Open Sans',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
-  /* Ersatzliste fuer Ueberschriften und Knoepfe.
+   *   1  12  Kleinzeile, Plakette, Tabellenfuß
+   *   2  13  Kleinzeile groß, Beschriftung, Meta
+   *   3  15  Grundgröße der Oberfläche
+   *   4  16  Fließtext (Lesespalte, Rechtstexte) — 15 × 1,067
+   *   5  19  Kartentitel, Abschnittskopf        — 15 × 1,25
+   *   6  24  Seitentitel klein, Kennzahl        — 19 × 1,25
+   *   titel  Seitentitel: 28 mobil, 30 ab 720   — 24 × 1,25
    *
-   * HIER STAND 'Arial Narrow' AN ZWEITER STELLE. Das war der Fehler: Bricolage
-   * Grotesque ist eine normal breite Grotesk, Arial Narrow eine schmale. Kam
-   * die Webschrift nicht durch, wurde die ganze Oberflaeche gedrungen —
-   * Kopfleiste, Knoepfe, Ueberschriften, Tabellenkoepfe. Es sah nach einem
-   * Gestaltungsfehler aus, war aber ein fehlgeschlagener Download.
+   * Der Seitentitel hat einen eigenen Namen statt --groesse-7, weil er als
+   * einziger von der Fensterbreite abhängt. Das Konzept nennt in 5.2 sechs
+   * Namen und sieben Werte; das ist die Auflösung (Fund F-P3-I). */
+  --groesse-1:12px;
+  --groesse-2:13px;
+  --groesse-3:15px;
+  --groesse-4:16px;
+  --groesse-5:19px;
+  --groesse-6:24px;
+  --groesse-titel:28px;
+
+  --zeile-eng:1.3;                     /* Titel, Kacheln */
+  --zeile:1.55;                        /* Oberfläche */
+  --zeile-lesen:1.6;                   /* Fließtext in der Lesespalte */
+
+  /* ---- Abstände --------------------------------------------------------
+   * Fünf Stufen, Vierer-Raster. Mehr braucht es nicht; weniger hätte den
+   * Bestand nicht abgebildet. */
+  --abstand-1:4px;
+  --abstand-2:8px;
+  --abstand-3:12px;
+  --abstand-4:16px;
+  --abstand-5:24px;
+
+  /* ---- Radien ----------------------------------------------------------- */
+  --radius-klein:6px;                  /* Plakette, Kästchen, Eingabefeld */
+  --radius:10px;                       /* Knopf, Meldung */
+  --radius-gross:12px;                 /* Karte, Blatt, Dialog */
+
+  /* ---- Maße -------------------------------------------------------------
+   * --kopf ist die Kopfhöhe und steht GENAU HIER. Im Bestand stand sie
+   * fünfmal als 50px im Stylesheet (.layout min-height, .daylist top und
+   * height, .filterspalte top und height) — und weil die tatsächliche Höhe
+   * vom Umbruch des Markentexts abhing und das Demo-Banner sie zusätzlich
+   * verschob, rutschte im Demo-Konto die Leiste unter der Kopfleiste hervor.
+   * Das ist Fund F-P3-G; er ist mit diesem einen Token erledigt.
    *
-   * Der Ersatz ist jetzt normal breit: erst die Systemschrift, dann die
-   * ueblichen Verdaechtigen je Betriebssystem. Faellt die Webschrift aus,
-   * faellt es kaum noch auf. */
-  --head:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,
-         'Helvetica Neue',Arial,sans-serif;
+   * --knopf ist 44 px, für JEDEN Knopf, mobil wie Desktop, auch für
+   * Zeilenaktionen. Es gibt keine Kompaktvariante: Was kleiner ist, ist kein
+   * Knopf, sondern ein Link mit Symbol (E-P3-22). */
+  --kopf:56px;
+  --knopf:44px;
+  --leiste:260px;                      /* Seitenleiste ab 1200 */
+  --leiste-schmal:220px;               /* Seitenleiste 1024–1199 */
+  --leiste-filter:280px;               /* Filterleiste der Suche ab 1200 */
+  --leiste-filter-schmal:240px;        /* Filterleiste 1024–1199 */
+  --rahmen:1680px;                     /* Leiste und Inhalt als Einheit */
+  --lesespalte:760px;                  /* Fließtext */
+  --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
+  --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
+  --suchfeld:48px;                     /* das große Suchfeld */
+  --symbol:20px;                       /* Symbolgröße in der Zeile */
+  --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
+  --strich:1px;                        /* Haarlinie */
+  --strich-stark:2px;                  /* Aktivstrich, Randstrich, Fokus */
+  --radius-rund:999px;                 /* Zähler, Griff, Punkt — voll rund */
+  --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
+  --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
+  --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
+  --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
+  --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
+  --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
+  --balken-glied:28px;                 /* ein Segment des Passwortstärke- … */
+  --strich-balken:6px;                 /* … balkens, vier davon (E-P3-16) */
+  --karte-neben-breit:400px;           /* Kartenspalte ab 1600 px (E-P3-31) */
+
+  /* ---- Karte (Leaflet) --------------------------------------------------- */
+  --karte-mobil:160px;
+  --karte-tablet:220px;
+  --karte-desktop:300px;
+
+  /* ---- Spurfarben (P3/O3, E-P3-40) --------------------------------------
+   * Acht Farben für die Einsätze eines Tages, in Vergabereihenfolge. Bis
+   * Web 9.1.1 stand die Liste als COLORS-Array in index.php und enthielt
+   * fünf markenfremde Werte (F-P3-H). Jetzt: die drei Markenfarben,
+   * Dunkelblau und vier ABGELEITETE Töne — jede Ableitung mit Herkunft:
+   *   spur-5..7  die Tief-Töne der drei Markenfarben (stehen oben bereits
+   *              als Schrifttöne; hier tragen sie Fläche auf der Karte)
+   *   spur-8     Sand, von L 75 % auf 40 % abgedunkelt (4,6:1 auf Schnee)
+   * Die Ruhespur ist Mechanik, keine Botschaft — sie fährt gedämpft.
+   * JavaScript liest die Werte über getComputedStyle; eine zweite Liste im
+   * Code gibt es nicht mehr. */
+  --spur-1:var(--orange);
+  --spur-2:var(--blau);
+  --spur-3:var(--rot);
+  --spur-4:var(--dunkelblau);
+  --spur-5:var(--orange-tief);
+  --spur-6:var(--blau-tief);
+  --spur-7:var(--rot-tief);
+  --spur-8:#867146;
+  --spur-ruhe:var(--gedaempft);
+
+  /* ---- Schwellen ---------------------------------------------------------
+   * Diese vier Werte stehen hier zur AUSKUNFT — für JavaScript, für
+   * docs/Design.md und für den, der die Datei liest. In @media-Abfragen
+   * lassen sich Custom Properties nicht verwenden; dort stehen dieselben
+   * Zahlen als Literale, und zwar ausschließlich dort. Die
+   * Vollständigkeitsprüfung sieht Media-Präludien nicht an.
+   *
+   *   720   Handy → Tablet hoch: Kachel wird Tabelle
+   *  1024   Schublade → feste Leiste, Hauptpunkte in der Kopfleiste
+   *  1200   Zweispalter: Einsatzansicht, Formularkarten, Kontoseite
+   *  1600   Karte neben Diensttag-Daten und Tabelle
+   */
+  --s-handy:720px;
+  --s-leiste:1024px;
+  --s-zwei:1200px;
+  --s-karte-neben:1600px;
+
+  /* ---- Bewegung ----------------------------------------------------------
+   * Kurz und einheitlich. Wer Bewegung abbestellt hat, bekommt keine
+   * (Abschnitt 3). */
+  --dauer:.18s;
+  --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
+  --schatten:0 2px 8px rgba(26,5,0,.10);
+  --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
+  /* Auf der dunklen Kopfleiste: eine gedämpfte Fassung von Weiß für Hover
+   * und Nebenangaben. Ein eigener Hexwert wäre hier falsch — die Fläche
+   * darunter ist Dunkelblau, und der Ton soll mit ihr zusammen entstehen. */
+  --auf-dunkel-leise:rgba(255,255,255,.55);
+  --auf-dunkel-flaeche:rgba(255,255,255,.14);
+  --auf-dunkel-strich:rgba(255,255,255,.35);
+}
+
+@media (min-width:720px){
+  :root{ --groesse-titel:30px; }
 }
 
 
-/* == 3. GRUNDLAGEN ========================================================= */
+/* == 3. GRUNDLAGEN =========================================================
+ *
+ * Was hier steht, gilt für die ganze Anwendung und hängt an keinem Baustein:
+ * Reset, Körper, Typografie, Fokus, Symbole, Bewegung. Alles Weitere sind
+ * Bausteine und steht ab Abschnitt 4 (Arbeitspaket O2).
+ */
 
-*{box-sizing:border-box}
-body{margin:0;background:var(--rauch);color:var(--ink);
-  font:15px/1.55 'Open Sans',system-ui,'Segoe UI',Roboto,sans-serif}
+*,*::before,*::after{box-sizing:border-box}
 
-.page{padding:1.2rem 1.6rem;max-width:1200px}
-h1{font-family:var(--head);font-weight:600;font-size:1.7rem;
-  letter-spacing:.01em;margin:.2rem 0 1rem;color:var(--navy)}
-h2{font-family:var(--head);font-weight:600;font-size:1rem;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .5rem}
-.muted{color:var(--muted)}
-
-section{margin-bottom:1.8rem}
-
-/* WICHTIG: hidden-Attribut muss sich gegen display-Regeln durchsetzen
-   (behebt u. a. nicht verschwindende Rollenfelder am Flugtag) */
+/* hidden gewinnt IMMER — auch gegen Bausteine mit eigenem display (flex,
+ * grid). Ohne diese Regel überstimmt jede display-Angabe das Attribut, und
+ * JS-Umschalter zeigen Lese- und Formularzustand gleichzeitig (Fund aus O3
+ * am Diensttag-Umschalter). */
 [hidden]{display:none !important}
 
-/* 'zero' 0 steht zusaetzlich da: Sollte die Ersatzschrift einmal greifen und
-   eine zuschaltbare Schraegstrich-Null mitbringen, bleibt sie damit aus. */
-.mono{font-family:var(--zahl);font-size:.94rem;
-  font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'zero' 0}
-.swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px}
-.chip{display:inline-block;min-width:1.7em;text-align:center;
-  font-family:var(--mono);font-size:.85rem;font-weight:600;
-  background:var(--navy);color:#fff;border-radius:4px;padding:.1em .3em}
-
-/* Markiert einen Wert, der vom uebergeordneten Stand abweicht — derzeit die
-   Besatzung eines einzelnen Einsatzes gegenueber der Besatzung des Flugtags. */
-.abw{color:var(--blau-dark);font-weight:600;white-space:nowrap}
-
-
-/* == 4. SEITENGERUEST ====================================================== */
-
-/* Kopfleiste (Dunkelblau, helle Logo-Variante) */
-.topbar{display:flex;justify-content:space-between;align-items:center;
-  background:var(--navy);color:#fff;padding:.7rem 1.3rem;
-  position:sticky;top:0;z-index:900}
-/* Demo-Banner. Steht unmittelbar unter der Kopfleiste, auf jeder Seite, und
-   laesst sich nicht wegklicken (ui_demo_banner() in ui.php).
-
-   Farben aus dem Warnton der Marke: Hellorange als Flaeche, Orange als Kante,
-   Asphalt als Schrift — 15,7:1 auf Hellorange und damit weit ueber AA. Nicht
-   rot: Es ist keine Stoerung, sondern eine Auskunft. */
-.demobanner{background:var(--accent-light);border-bottom:2px solid var(--accent);
-  color:var(--ink);padding:.55rem 1.3rem;font-size:.9rem;line-height:1.45}
-.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;color:#fff;
-  font-family:var(--head);font-size:1rem;font-weight:600;letter-spacing:.02em;min-width:0}
-.brand img{height:34px;width:auto;display:block;flex:none}
-.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.topbar nav a{color:#C6CEDB;text-decoration:none;margin-left:1.1rem;
-  font-family:var(--head);font-weight:500;
-  padding-bottom:2px;border-bottom:2px solid transparent}
-.topbar nav{display:flex;align-items:center}
-.gearlink{color:#C6CEDB;text-decoration:none;margin-left:1.1rem;
-  display:inline-flex;align-items:center;
-  padding-bottom:2px;border-bottom:2px solid transparent}
-.gearlink svg{width:21px;height:21px;display:block}
-
-/* Aktiv oder ueberfahren — Menuepunkt und Zahnrad tun dasselbe (C4). */
-.topbar nav a.active,.topbar nav a:hover,
-.gearlink:hover,.gearlink.active{color:#fff;border-bottom-color:var(--accent)}
-
-/* Layout Tagesuebersicht */
-.layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 50px)}
-
-/* Menuespalte: volle Fensterhoehe, Tage scrollen intern, der
-   Papierkorb bleibt unten immer sichtbar. Die Regel stand bis Web 7.0.2
-   zweimal in der Datei — 700 Zeilen auseinander, ohne gemeinsame
-   Eigenschaft. Beide Haelften stehen jetzt hier. */
-.daylist{border-right:1px solid var(--line);padding:1rem;background:var(--schnee);
-  position:sticky;top:50px;align-self:start;
-  height:calc(100vh - 50px);display:flex;flex-direction:column;
-  box-sizing:border-box;overflow:hidden}
-/* Ueberschrift der Seitenleiste — Einsatztage UND Suchfilter. Zwei Leisten,
-   dieselbe Ueberschrift; bis Web 7.1.0 zweimal geschrieben (C4). */
-.daylist h2,.filterspalte>h2{font-family:var(--head);font-size:.85rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--muted);margin:.2rem 0 .7rem;flex:0 0 auto}
-.daylist h2.sidebar-subhead{margin-top:1.6rem}
-
-/* Gilt fuer Einsatztage- UND Einstellungsmenue: keine Aufzaehlungspunkte.
-   (Beim Umbau der Tagesleiste auf das Akkordeon war diese Regel entfallen,
-   wodurch im Einstellungsmenue Punkte auftauchten.) */
-.daylist ul{list-style:none;margin:0;padding:0}
-
-/* Fusszeile: im Dokumentfluss, rechtsbündig unter dem Inhalt (auch mobil) */
-.sitefooter{text-align:right;margin-top:2.2rem;padding-bottom:.4rem;
-  color:var(--muted);font-size:.8rem}
-.sitefooter a{color:var(--muted)}
-.login-wrap{display:flex;flex-direction:column}
-.login-wrap .sitefooter{color:#8A96A8;margin-top:.7rem}
-.login-wrap .sitefooter a{color:#8A96A8}
-
-/* Versionsangabe in der Fußzeile */
-.sitefooter .ver{margin-left:.6rem;color:#9AA0A6;font-variant-numeric:tabular-nums}
-
-
-/* == 5. EINSATZTAGE-LEISTE ================================================= */
-
-/* Jahr/Monat-Akkordeon der Einsatztage-Leiste. Die Scroll-Eigenschaften von
-   .dayyears standen 100 Zeilen weiter oben in einer zweiten Regel und sind
-   hier eingerechnet. */
-.dayyears{display:flex;flex-direction:column;gap:.15rem;
-  flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin}
-.daylist-empty{color:#8A8378;padding:.3rem .5rem}
-
-.yearblock,.monthblock{border:0}
-.yearblock > summary,.monthblock > summary{
-  cursor:pointer;list-style:none;user-select:none;
-  display:flex;align-items:center;gap:.4rem;
-  padding:.35rem .5rem .35rem .15rem;border-radius:5px;min-height:1.9rem}
-.yearblock > summary::-webkit-details-marker,
-.monthblock > summary::-webkit-details-marker{display:none}
-.yearblock > summary::before,.monthblock > summary::before{
-  content:'▸';width:1.9em;color:var(--blau);text-align:center;
-  display:flex;align-items:center;justify-content:center;align-self:stretch;
-  transition:transform .12s;flex:0 0 auto}
-.yearblock[open] > summary::before,.monthblock[open] > summary::before{transform:rotate(90deg)}
-
-.yearblock > summary{font-family:var(--head);font-weight:600;font-size:.95rem;color:var(--navy)}
-.yearblock > summary:hover{background:var(--accent-light)}
-.yearblock{margin-bottom:.15rem}
-.yearblock > .monthblock{margin-left:.55rem}
-
-.monthblock > summary{font-size:.82rem;color:#5B5F66}
-.monthblock > summary:hover{background:var(--accent-light)}
-.monthblock ul{list-style:none;margin:0;padding:.1rem 0 .25rem 1.3rem}
-
-.daylist a{display:block;padding:.3rem .5rem;color:var(--ink);text-decoration:none;
-  border-radius:5px;font-size:.86rem;font-variant-numeric:tabular-nums}
-.daylist a.active{background:var(--navy);color:#fff}
-.daylist a:hover:not(.active){background:var(--accent-light)}
-
-/* Jahres-/Monatszeilen liegen auf eigener Ebene, damit die Markierung des
-   aktiven Tages nicht ueberdeckt wird (Fokusring siehe summary:focus-visible) */
-.yearblock > summary,.monthblock > summary{position:relative;z-index:1}
-.daylist a.active{position:relative;z-index:2}
-
-/* Aktiver Tag: eigene Ebene und etwas Abstand, damit die Markierung frei steht */
-.monthblock li{margin:.05rem 0}
-
-/* "Diensttag anlegen" in der Leiste — Markenblau als ruhiger Gegenpart */
-.dayadd{color:var(--blau)}
-.dayadd:hover{color:var(--navy)}
-
-/* Hinweis auf offene Zuordnungen in der Seitenleiste (E24). Er erscheint nur,
-   solange etwas offen ist, und soll dann auffallen — aber nicht wie eine
-   Fehlermeldung: Es ist eine Aufgabe, kein Fehler. */
-.dayadd.nachbearbeitung{color:var(--navy);background:var(--blau-light);
-  border-radius:6px;font-weight:600}
-
-/* ===================== Papierkorb + "Flugtag anlegen" ===================== *
- * ACHTUNG Spezifitaet: `.daylist a` (0-1-1) steht weiter oben und setzt
- * display:block. Die Selektoren hier muessen daher `.daylist a.<klasse>`
- * lauten (0-2-1) und NACH `.daylist a` stehen — sonst greift display:flex
- * nicht, und Symbol und Text stehen untereinander statt nebeneinander. */
-.daylist a.dayadd,
-.daylist a.trashlink{display:flex;align-items:center;justify-content:center;
-  gap:.45rem;text-decoration:none;font-size:.82rem;
-  padding:.55rem .5rem;border-radius:0;color:var(--blau)}
-.daylist a.dayadd:hover{color:var(--navy);background:none}
-.daylist a.trashlink{border-top:1px solid var(--line);margin-top:.4rem;color:#8A8378}
-.daylist a.trashlink:hover{color:var(--accent);background:none}
-.daylist a.trashlink.leer,
-.daylist a.trashlink.leer:hover{color:#CFCABF}
-
-/* Symbol rund 30 % hoeher als die Schrift. Die viewBox im Markup ist auf die
-   Zeichnung zugeschnitten (kein Leerraum), daher entspricht die Hoehe hier
-   direkt der sichtbaren Groesse. Textbox und Symbol sind gleich hoch, wodurch
-   align-items:center beide zwangslaeufig auf eine gemeinsame Mitte setzt. */
-.daylist a.trashlink svg{height:1.3em;width:1.156em;flex:0 0 auto;display:block}
-.daylist a.trashlink span{white-space:nowrap;line-height:1.3;display:block}
-
-
-/* == 6. FORMULARE UND SCHALTFLAECHEN ======================================= */
-
-/* Formulare / Buttons */
-label{display:block;margin:.7rem 0 .2rem;font-size:.92rem}
-input,select{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
-  border-radius:5px;font:inherit;background:var(--schnee)}
-
-/* Fokusring nur bei Tastaturbedienung zeigen. Nach einem Mausklick blieb er
- * sonst stehen — bei <summary> umschliesst er zudem den gesamten aufgeklappten
- * Bereich statt nur der Kopfzeile und lief damit ueber den Inhalt. */
-input:focus-visible,select:focus-visible,textarea:focus-visible,
-button:focus-visible,a:focus-visible,
-/* Das Merkfeld der Rettungsmittel ist ein Kasten aus mehreren Bedienteilen —
-   der Ring gehoert um den ganzen Kasten, ist aber derselbe Ring (C4). */
-.rmfeld:focus-within{
-  outline:2px solid var(--blau);outline-offset:1px}
-
-/* Aufklapp-Ueberschriften: kein Rahmen. Der Rahmen passte nicht zur Form und
- * umschloss bei geoeffnetem Abschnitt den ganzen Inhalt. Stattdessen dieselbe
- * dezente Faerbung wie beim Ueberfahren — bleibt fuer Tastaturbedienung
- * erkennbar, ohne aufzufallen. */
-summary:focus{outline:none}
-summary:focus-visible{outline:none;box-shadow:none;background:var(--accent-light)}
-button{font:inherit;font-family:var(--head);font-weight:600;border:0;
-  border-radius:5px;padding:.5rem .9rem;cursor:pointer}
-
-/* ---- DIE SCHALTFLAECHENFAMILIE (Web 7.2.0, Befund C5) --------------------
- *
- * Sechs Varianten: .btn-primary (Hauptaktion eines Formulars), .btn-danger
- * (Loeschen in einer Zeile), .btn-yellow und .btn-red (Zeilenaktionen),
- * .btn-plain (die ruhige, eigenstaendige Schaltflaeche) und .btn-edit
- * ("Aktionen"/"Bearbeiten"). Sie standen in vier ueber 110 Zeilen verteilten
- * Bloecken und wiederholten einander: DREIMAL dieselben fuenf Angaben zur
- * kompakten Groesse, SECHSMAL dieselbe abgeschaltete Unterstreichung.
- * Zweimal hat diese Streuung bereits gekostet (Web 7.0.1 und 7.0.2).
- *
- * WAS HIER NICHT STEHT UND WARUM. Eine Sammelregel mit dem vollen Aussehen
- * ist nicht moeglich: Die sechs teilen keine einzige Farb- oder Massangabe.
- * `font-family:var(--head)` gehoert ausdruecklich NICHT in die Sammelregel —
- * bei .btn-primary und .btn-danger kommt sie heute von `button{}` und damit
- * NUR am <button> an. `a.btn-primary` traegt heute Open Sans; in die
- * Sammelregel gezogen wuerde die Schrift dort wechseln, und das waere eine
- * Gestaltungsaenderung, keine Zusammenfuehrung.
- *
- * Die Sammelregel traegt deshalb genau das, was jede der sechs schon hatte
- * oder ohne jeden Unterschied bekommen kann:
- *   text-decoration  ersetzt die handgepflegte Liste `a.btn-red,a.btn-edit,…`
- *   cursor           <button> hat ihn aus `button{}`, <a href> vom Browser,
- *                    die drei <summary> aus .aktionsmenu/.zeilenmenu
- *
- * EINE KLASSE JE ELEMENT. Die sechs schliessen einander aus und werden nie
- * gemeinsam an ein Element geschrieben (nachgezaehlt: kein einziger Fall).
- * Das ist keine Kleinigkeit, sondern die Bedingung, unter der die Reihenfolge
- * hier gleichgueltig ist: `.btn-plain` setzt `font:inherit` und nimmt damit
- * als Kurzform auch Groesse und Schnitt zurueck. Traegt ein Element eines
- * Tages `btn-plain` UND `btn-edit`, entscheidet nicht mehr die Absicht,
- * sondern wer weiter unten steht.
- */
-.btn-primary,.btn-danger,.btn-yellow,.btn-red,.btn-plain,.btn-edit{
-  cursor:pointer;text-decoration:none}
-
-/* Die kompakte Aktionsgroesse — dreimal zeichengleich gewesen. */
-.btn-yellow,.btn-red,.btn-edit{font-family:var(--head);font-weight:600;
-  font-size:.85rem;padding:.25rem .7rem;border-radius:5px}
-
-/* Und nun je Variante nur noch, was sie von den uebrigen unterscheidet. */
-.btn-primary{background:var(--accent);color:#fff;width:100%;margin-top:.9rem}
-.btn-danger{background:var(--schnee);color:var(--rot);border:1px solid #EBC3C4;
-  padding:.25rem .6rem;font-size:.85rem}
-.btn-yellow{display:inline-block;background:#F5C518;color:#3A2E00;border:0}
-.btn-red{background:var(--rot);color:#fff;border:0}
-/* .btn-plain war bis Web 7.0.2 ZWEIMAL definiert: hier vollstaendig und
-   250 Zeilen weiter oben kompakt, wovon keine einzige Eigenschaft ankam
-   (`font:inherit` nimmt als Kurzform auch die Schriftgroesse zurueck). Die
-   kompakte Groesse einer ZEILENAKTION kommt nicht aus der Klasse, sondern aus
-   dem Ort — siehe .rowactions weiter unten (Web 7.0.1). */
-.btn-plain{display:inline-block;padding:.45rem 1rem;border-radius:6px;
-  border:1px solid #D8D3C8;background:#FFFCFA;color:#1A0500;font:inherit}
-.btn-edit{display:inline-block;background:var(--accent);color:#fff !important;
-  vertical-align:1px}
-
-.btn-primary:hover,.btn-edit:hover{background:var(--accent-dark)}
-.btn-danger:hover{background:var(--rot-light)}
-.btn-yellow:hover{background:#E0B310}
-.btn-red:hover{background:#B92A2E}
-.btn-plain:hover{background:#F3EFE7}
-
-/* ZEILENFORMULARE (Stammdaten): ein Feld, eine Schaltflaeche, eine Zeile —
-   Besatzung, weitere Rettungsmittel, Bergwacht.
-   `align-items:flex-start` haelt die Kinder auf ihrer eigenen Hoehe, statt sie
-   auf die des groessten zu strecken. Gebraucht wurde die Regel urspruenglich
-   gegen das Ortsfeld, das aus Suchfeld, Zustandszeile und Merkfeld besteht und
-   Namensfeld wie Schaltflaeche drei Zeilen hoch zog. Die Formulare MIT Ortsfeld
-   (Standort, Zielklinik) sind seit Web 7.0.0 auf `.neu-form` umgestellt — die
-   Regel bleibt trotzdem: Sie ist auch fuer die uebrigen richtig, und ohne sie
-   kaeme der Fehler zurueck, sobald hier wieder ein hoeheres Feld steht. */
-.inline-form{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;
-  align-items:flex-start}
-.inline-form input,.inline-form select{width:auto;flex:1;min-width:160px}
-.inline-form .btn-primary{width:auto;margin-top:0}
-.inline-form .btn-red{align-self:center}
-
-.alert{background:var(--rot-light);border:1px solid #E5A9AB;color:#9E2226;
-  padding:.55rem .8rem;border-radius:5px}
-.alert-info{background:var(--blau-light);border-color:#A9C9EE;color:#255A9E}
-.alert-ok{background:#EBF7EC;border-color:#ABD8B0;color:#1E7A2E}
-
-/* Warnung: steht zwischen Hinweis (blau) und Fehler (rot) — fuer
-   Handlungen, die noch nicht geschehen sind, aber unumkehrbar waeren */
-.alert-warn{background:var(--accent-light);border-color:#EFC9A0;color:#8A4A00}
-
-/* Passwortgüte (Baustein B9). Die Stufen sind bewusst nur vier plus
-   "zu schwach" — eine feinere Skala taeuscht eine Genauigkeit vor, die
-   eine Schaetzung nicht hat. */
-.pwquality{display:block;font-size:.85rem;margin:.2rem 0 .1rem;color:var(--muted)}
-.pwquality.pwq-0{color:#9E2226}
-.pwquality.pwq-1{color:#8A4A00}
-.pwquality.pwq-2{color:#8A4A00}
-.pwquality.pwq-3{color:#1E7A2E}
-.pwquality.pwq-4{color:#1E7A2E}
-
-/* --- Max Blau (Markenfarbe) etwas praesenter einsetzen --- *
- * Bisher stand die Markenfarbe fast nur in der Legende der Markenrichtlinie.
- * Sie uebernimmt jetzt Fokusringe und die Sortierpfeile (siehe oben) sowie
- * Kontrollkaestchen und den "Diensttag anlegen"-Link — als ruhiger Gegenpart
- * zu Orange (Haupt-Aktionen) und Rot (Loeschen), ohne deren Bedeutung zu
- * verwaessern. */
-input[type=checkbox]{accent-color:var(--blau)}
-
-/* Textareas ueberall im Eingabefeld-Stil (z. B. Notizen im Einsatzformular).
-   `.meta-form textarea` sagte bis Web 7.1.0 dasselbe noch einmal (C4). */
-textarea,.meta-form textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--line);
-  border-radius:5px;font:inherit;background:var(--schnee);resize:vertical}
-
-/* Zeiteingabe als Textfeld mit Maske (Auftragspunkt 4, E1). Native
-   <input type=time> zeigen je nach Spracheinstellung des Systems 12 Stunden
-   mit AM/PM; das laesst sich weder per HTML noch per CSS oder JavaScript
-   erzwingen. Deshalb ein Textfeld, dessen Format assets/zeitfeld.js sichert.
-   Ziffernbreite fest (tabular-nums), damit die Maske beim Tippen nicht
-   springt. */
-input.zeitfeld{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'zero' 0}
-input.zeitfeld[aria-invalid=true]{border-color:var(--rot);
-  background:var(--rot-light)}
-
-/* AUSRICHTUNG VON KÄSTCHEN UND TEXT (A6.2, Web 5.7.0).
-   `.check` stand im Markup (einstellungen.php, update.php), hatte im
-   Stylesheet aber überhaupt keine Regel — genau deshalb saß das Kästchen
-   höher als der Text: Ein <label> ist ein Blockelement, die Grundlinie des
-   Kästchens richtet sich ohne Zutun an der Textgrundlinie aus.
-   Beide Klassen teilen sich die Regel, statt sie zweimal zu führen; sie
-   unterscheiden sich allein in der Schriftstärke. Wer eine davon ändert,
-   sieht die andere direkt daneben. */
-.checklabel,.check{display:flex;align-items:center;gap:.5rem;margin:0}
-.checklabel{font-weight:600}
-.checklabel input,.check input{width:auto;flex:0 0 auto;margin:0}
-.childfields{border-left:3px solid var(--line);margin:.3rem 0 .6rem .35rem;
-  padding-left:.9rem}
-.fld-sub{font-size:.92rem}
-
-/* Bedingte Unterfelder im Einsatzformular */
-.fld-check{margin:.7rem 0 .2rem}
-
-/* Wertabhaengige Unterfelder (`show_if`): reiner Rahmen ohne eigene Optik —
-   er traegt nur die Bedingung und das hidden-Attribut. */
-.showif{display:contents}
-.showif[hidden]{display:none}
-
-.rowactions{display:flex;gap:.4rem;align-items:center;justify-content:flex-end;
-  flex-wrap:wrap}
-.rowactions form{display:inline;margin:0}
-.th-act{text-align:right}
-
-/* ---- EINE GROESSE FUER ALLE ZEILENAKTIONEN (Web 7.0.1) -------------------
- *
- * Die Schaltflaechen einer Tabellenzeile sind EIN Satz und muessen gleich
- * aussehen. Sie taten es nicht, und zwar aus zwei unabhaengigen Gruenden:
- *
- *  1. `.btn-plain` ist in dieser Datei ZWEIMAL definiert — einmal mit
- *     `.25rem/.6rem` bei .85rem, weiter unten noch einmal mit `.45rem/1rem`
- *     bei `font:inherit`. Die spaetere gewinnt, also war jeder „einheitliche
- *     Aktions-Button" in Wahrheit groesser als die gelbe und die rote daneben.
- *  2. `.btn-primary` traegt die Formularmasse (`button{padding:.5rem .9rem}`,
- *     volle Schriftgroesse, `width:100%`). In einer Zeile neben `.btn-red`
- *     fiel das sofort auf — „Auswaehlen" war sichtbar groesser als
- *     „Abwaehlen" eine Zeile darueber.
- *
- * Statt beides einzeln nachzubessern, gilt die Groesse jetzt fuer den ORT:
- * Was in `.rowactions` steht, ist eine Zeilenaktion und wird so gross wie die
- * uebrigen. Damit kann auch die naechste Schaltflaechenklasse dort nicht mehr
- * aus der Reihe fallen. (Punkt 1 hat sich mit Web 7.1.0 erledigt: `.btn-plain`
- * steht seither nur noch einmal da. Punkt 2 gilt weiter.)
- *
- * NICHT betroffen sind die Absendeknoepfe der Eingabekaesten (.neu-zeile,
- * .inline-form): Sie sind die Hauptaktion eines Formulars und duerfen groesser
- * sein als eine Zeilenaktion. Zwei Groessen mit einer klaren Regel — nicht
- * fuenf ohne.
- *
- * ZWEITE HANDGEPFLEGTE LISTE, JETZT KEINE MEHR (Web 7.2.0). Hier standen
- * fuenf der sechs Varianten einzeln aufgezaehlt — wer eine siebte ergaenzt,
- * haette sie hier nachtragen muessen und es nicht gemerkt. `:is(…)` nennt
- * dieselbe Familie wie die Sammelregel oben; die Spezifitaet bleibt dieselbe
- * (`:is()` zaehlt sein staerkstes Argument, also (0,2,0) wie zuvor).
- * `.btn-danger` kommt dadurch neu hinzu und steht heute in keinem
- * `.rowactions` — die Regel wirkt also auf kein Element anders als bisher. */
-.rowactions :is(.btn-primary,.btn-danger,.btn-yellow,.btn-red,.btn-plain,.btn-edit){
-  width:auto;margin:0;font-size:.85rem;padding:.25rem .7rem;
-  border-radius:5px;line-height:1.5}
-
-/* Der Stern und seine Beschriftung bleiben auf einer Zeile. */
-.btn-stern{white-space:nowrap}
-
-/* Entsperrknopf in den Sperrhinweisen. Auch hier muss width:auto gegen die
-   globale Formularregel von .btn-primary gesetzt werden. */
-.unlockbtn{width:auto;margin:.5rem 0 0;display:inline-block}
-
-
-/* == 7. TABELLEN =========================================================== */
-
-/* Tabellen — das Flight-Log */
-table.data{width:100%;border-collapse:collapse;background:var(--schnee);
-  border:1px solid var(--line);border-radius:6px;overflow:hidden}
-table.data th{font-family:var(--head);font-weight:600;font-size:.8rem;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;
-  padding:.5rem .8rem;border-bottom:2px solid var(--navy)}
-table.data td{padding:.5rem .8rem;border-bottom:1px solid var(--line)}
-table.data tbody tr:last-child td{border-bottom:0}
-
-#missions tbody tr{cursor:pointer}
-
-/* Sortierbare Tabellenspalten */
-th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
-th.sortable:hover{color:var(--navy)}
-th.sortable .arrow{color:var(--blau)}
-.checkcol{text-align:center;color:var(--navy);font-weight:700}
-
-/* Anklickbare Tabellenzeilen (Suche, Zeitraum). Die Klasse setzt
-   assets/missiontable.js seit jeher — eine Regel dazu gab es bis Web 5.2.0
-   nicht, die Zeilen sahen also unklickbar aus (Auftragspunkt 9).
-   :focus-visible ist nicht schmueckendes Beiwerk: Ohne die Regel waere die
-   Zeilenauswahl eine reine Mausfunktion. */
-tr.clickable{cursor:pointer}
-tr.clickable:hover{background:var(--accent-light)}
-tr.clickable:focus-visible{background:var(--accent-light);
-  outline:2px solid var(--blau);outline-offset:-2px}
-
-/* W2/W9: Platzhalter und Spaltentitel */
-#missions td.dash,#missions .dash{text-align:center;color:#9AA0A6}
-.data th{text-align:center}
-.data th:first-child{text-align:left}
-.data td{vertical-align:middle}
-
-/* KENNZEICHEN DER VORBELEGUNG (Web 7.0.0, zweiter Anlauf).
-   Der Stern stand in einer Spalte, die sich den freien Platz mit der
-   Namensspalte teilte — er landete dadurch mitten in der Zeile, weit weg von
-   den Schaltflaechen, auf die er sich bezieht. `width:1px` plus `nowrap` laesst
-   die Spalte in einer Tabelle mit automatischer Breite auf ihren Inhalt
-   schrumpfen: Der Stern rueckt damit unmittelbar vor die Aktionen.
-   Groesser als der Text ist er, weil er als Zeichen gelesen wird und nicht als
-   Buchstabe — dieselbe Ueberlegung wie beim Artsymbol (.artzeichen). */
-table.data td.c-stern,table.data th.c-stern{width:1px;white-space:nowrap;
-  text-align:right;padding-left:0;padding-right:.3rem}
-.sternmarke{font-size:1.4rem;line-height:1;color:var(--accent);cursor:help}
-
-/* Fassungsspalte: schmal und ohne Umbruch — sie trägt „6.3.0", nicht mehr. */
-.c-web{width:5.5rem;white-space:nowrap;color:var(--muted)}
-
-
-/* == 8. KARTE ============================================================== */
-
-/* Karte */
-.map{height:380px;border:1px solid var(--line);border-radius:6px;margin-bottom:1rem}
-.map-tall{height:460px}
-
-/* Vollbildmodus: native Fullscreen-API rendert den Container bereits
-   randlos/flaechenfuellend -- hier nur Rand/Radius entfernen. Das
-   CSS-Overlay (Fallback ohne Fullscreen-API, z. B. iOS Safari) braucht die
-   volle Positionierung selbst. */
-.map:fullscreen,.map:-webkit-full-screen{border:0;border-radius:0;margin:0}
-.map.map-fs{position:fixed;inset:0;z-index:2000;width:100vw;
-  height:100vh;height:100dvh;border:0;border-radius:0;margin:0}
-body.map-fs-lock{overflow:hidden}
-
-/* Leaflet-Bedienelemente unter den Kopfbereich (Auftragspunkt 3).
-   Leaflet 1.9.4 setzt .leaflet-top/.leaflet-bottom auf z-index:1000, der
-   klebende Kopfbereich steht auf 900 (oben, .topbar) — Zoom, Ebenenwahl und
-   Quellenangabe schoben sich deshalb beim Scrollen darueber. Die Kartenflaechen
-   selbst liegen bei 100..700 und verschwanden korrekt darunter.
-   800 gewaehlt, nicht kleiner: Der Wert muss ueber der obersten Kartenebene
-   (.leaflet-popup-pane, 700) bleiben, sonst verdecken Popups die Bedienung.
-   Der Vollbildmodus bleibt unberuehrt: .map.map-fs (z-index:2000, s. o.) und
-   :fullscreen bilden einen eigenen Stapelkontext, die Werte darin zaehlen nur
-   noch untereinander. */
-.leaflet-top,.leaflet-bottom{z-index:800}
-
-/* Eigene Karten-Controls (Vollbild, Phasen-Toggle) in der Optik der
-   Leaflet-Standardcontrols (Zoom): weisser Hintergrund, dezenter Hover. */
-.map-ctrl-fs a{width:30px;height:30px;line-height:30px;display:flex;
-  align-items:center;justify-content:center;background:#fff;color:var(--ink);
-  text-decoration:none;cursor:pointer}
-.map-ctrl-fs a:hover{background:#f4f4f4}
-.map-ctrl-fs a.active{background:var(--accent-light);color:var(--accent-dark)}
-.map-ctrl-fs svg{width:16px;height:16px}
-.map-ctrl-phase a{display:block;padding:0 .6rem;height:30px;line-height:30px;
-  background:#fff;color:var(--rot);text-decoration:none;cursor:pointer;
-  font:600 .78rem/30px 'Open Sans',sans-serif;white-space:nowrap}
-.map-ctrl-phase a:hover{background:var(--rot-light)}
-.map-ctrl-phase a.active{background:var(--rot-light)}
-
-/* Layer-Umschalter (Leaflet-Standardcontrol): an die App-Optik angepasst.
-   Ursache fuer zunaechst verzerrte Radiobuttons (Kreis weit rechts, Text
-   weit links): die globale Regel "input,select{width:100%;padding:...;
-   border:...}" (fuer Formular-Textfelder gedacht) traf auch die Leaflet-
-   Radios. Wie bei anderen Checkbox-Kontexten der Anwendung (.rolechecks,
-   .checklabel, .patfields) hier gezielt ueber die von Leaflet vergebene
-   Klasse zurueckgesetzt statt den Elementselektor zu verbreitern. */
-.leaflet-control-layers{border:1px solid var(--line);border-radius:6px;
-  font-family:'Open Sans',sans-serif;box-shadow:0 1px 5px rgba(0,0,0,.25)}
-.leaflet-control-layers-expanded{padding:.55rem .8rem}
-.leaflet-control-layers label{margin:.3rem 0;font-size:.85rem;color:var(--ink)}
-.leaflet-control-layers-selector{width:auto;padding:0;border:0;
-  background:none;accent-color:var(--blau);margin:0 .45rem 0 0;
-  vertical-align:middle}
-.leaflet-control-layers-separator{margin:.4rem -.8rem .4rem -.2rem}
-
-/* Phasen-Marker auf der Karte (Kachel-Design wie in der Tabelle) */
-.phase-marker{background:none;border:0}
-.pm-chip{cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.35);
-  border:2px solid #fff;display:inline-block;min-width:1.7em;text-align:center;
-  font-family:var(--mono);font-size:.85rem;font-weight:600;
-  background:var(--navy);color:#fff;border-radius:4px;padding:.1em .3em}
-.pm-chip.hl{background:var(--accent)}
-#phases tr.hl td{background:var(--accent-light)}
-#phases tbody tr{cursor:pointer}
-
-/* Einsatzort-Pin */
-.locpin svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
-
-
-/* == 9. TAGESUEBERSICHT ==================================================== */
-
-/* Diensttag-Daten (aufklappbar ueber der Karte). Die zweite, 660 Zeilen
-   spaetere .daymeta-Regel mit margin-bottom:.9rem ist hier eingerechnet —
-   sie war der wirksame Wert. */
-.daymeta{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
-  margin-bottom:.9rem;padding:.15rem .8rem}
-.daymeta summary{cursor:pointer;font-family:var(--head);font-weight:600;
-  font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);
-  padding:.45rem 0;user-select:none}
-.daymeta summary .muted{text-transform:none;letter-spacing:0;
-  font-family:'Open Sans',sans-serif;font-weight:400;font-size:.85rem}
-.meta-form{padding:.2rem 0 .8rem}
-.meta-form .btn-primary{width:auto;margin-top:.6rem;margin-right:.6rem}
-
-/* Karte, Diensttag-Kasten und Tabelle laufen gleich breit */
-.daymeta,.map,#missions{width:100%;box-sizing:border-box}
-
-/* HIER STANDEN SPALTENBREITEN NACH POSITION (:nth-child) für #missions.
-   Entfernt in Web 5.10.0. Sie stammten aus der Zeit vor den Spaltenklassen und
-   zählten Spalten ab: nth-child(8) war „Winde", solange die Reihenfolge stimmte.
-   Wirkung hatten sie zuletzt keine mehr — die Regeln mit .c-no/.c-mid/.c-dc
-   weiter unten haben dieselbe Spezifität und stehen später —, aber sie waren
-   die Sorte Regel, die beim Streichen einer Spalte still auf die falsche
-   rutscht. Genau das stand mit „abw. Crew" an. Breiten stehen jetzt
-   ausschliesslich bei den Klassen (Abschnitt „Tagesübersicht"). */
-
-/* --- Tagesübersicht: feste Spaltenaufteilung --- */
-#missions{table-layout:fixed;width:100%}
-#missions th{white-space:nowrap;hyphens:none;-webkit-hyphens:none;
-  font-size:.74rem;line-height:1.15;padding:.3rem .3rem}
-#missions td{padding:.35rem .3rem;overflow:hidden;text-overflow:ellipsis}
-
-#missions th.c-swatch,#missions td.c-swatch{width:1.7rem;padding-left:.2rem}
-#missions th.c-no,   #missions td.c-no    {width:2.6rem}
-#missions th.c-mid,  #missions td.c-mid   {width:5.2rem}   /* Beginn, Dauer, Alter */
-#missions th.c-km,   #missions td.c-km    {width:5.4rem}
-
-/* SPALTEN AUS 'day_col' (mission_fields.php, seit Web 5.4.0).
-   Vorher hiessen sie .c-winde/.c-bw/.c-sek und waren an die feste Spaltenfolge
-   von index.php gebunden. Jetzt traegt jede Spalte .c-dc plus .c-dc-<spalte>:
-   .c-dc setzt eine brauchbare Vorgabe, damit ein neues Feld im Katalog ohne
-   Eintrag hier auskommt; die Klasse je Spalte ueberschreibt sie, wo die
-   Vorgabe nicht passt. Umbruch erlaubt — der Titel kommt aus dem Katalog und
-   ist nicht auf eine Zeile zugeschnitten.
-   Die gleichnamigen Klassen von #rangetable (assets/missiontable.js, weiter
-   unten) sind davon unberuehrt: Jene Tabelle hat einen eigenen Spaltenkatalog. */
-#missions th.c-dc,              #missions td.c-dc              {width:5.4rem;white-space:normal}
-#missions th.c-dc-winch,        #missions td.c-dc-winch        {width:4.4rem}
-#missions th.c-dc-bergwacht,    #missions td.c-dc-bergwacht    {width:6.2rem}
-#missions th.c-dc-secondary,    #missions td.c-dc-secondary    {width:6.4rem}
-
-/* „Fehleinsatz" (Web 6.1.0). Der Titel traegt im Katalog ein `&shy;`, bricht
-   also selbst um — die Breite muss nur das laengere Teilwort tragen.
-
-   GREIFT DERZEIT NICHT, und das ist Absicht (A4, T-17): Das Feld
-   'false_alarm' traegt in mission_fields.php kein 'day_col' und bekommt
-   deshalb keine Spalte in der Tagestabelle — anders als seine Schwestern
-   winch, bergwacht und secondary. Die Regel bleibt trotzdem stehen: Wer
-   'day_col' => 'check' ergaenzt, braucht sie im selben Augenblick wieder,
-   und ohne sie faellt die Spalte auf die Vorgabebreite von .c-dc zurueck. */
-#missions th.c-dc-false_alarm,  #missions td.c-dc-false_alarm  {width:5.6rem}
-
-/* Alle Spalten mittig — auch Einsatzort und Diagnose */
-#missions th,#missions td{text-align:center}
-
-/* --- Block J: Zeilenstreifen zur besseren Unterscheidung --- */
-#missions tbody tr:nth-child(odd){background:var(--schnee)}
-#missions tbody tr:nth-child(even){background:var(--rauch)}
-#missions tbody tr:hover{background:var(--accent-light)}
-
-/* ===================== Aktionsleiste unter der Tagestabelle ===================== *
- * Seit Web 5.10.0 steht hier nur noch "+ Einsatz nachtragen"; "Datum ändern"
- * und "Tag löschen" sind ins Aktionsmenü oben rechts gewandert (.aktionsmenu).
- * Die Regel für .btn-red bleibt trotzdem stehen: Sie hält die beiden Klassen
- * auf gleicher Höhe, Schriftgröße und Grundlinie — käme hier je wieder eine
- * rote Schaltfläche dazu, liefe sie sonst wieder auseinander. */
-.dayactions{display:flex;justify-content:space-between;align-items:center;
-  gap:1rem;margin:1.4rem 0 .2rem}
-.dayactions .btn-primary,.dayactions .btn-red{
-  display:inline-flex;align-items:center;justify-content:center;
-  flex:0 0 auto;box-sizing:border-box;
-  /* .btn-primary hat global width:100% (fuer Formulare) — hier ausdruecklich
-     zuruecknehmen, sonst zieht sich der Knopf ueber die volle Breite. */
-  width:auto;margin-top:0;
-  font-family:var(--head);font-weight:600;font-size:.9rem;line-height:1.2;
-  padding:.55rem 1.2rem;min-height:2.4rem;
-  border-radius:6px;text-decoration:none;white-space:nowrap}
-
-/* Gerätehinweis auf der Tagesübersicht: Text und Quittungsknopf in EINEM
-   Rahmen. Der Knopf stand zuerst als unterstrichener Text unter dem Absatz
-   und war kaum zu finden — ein Hinweis, dessen Ausweg man nicht sieht, ist
-   derselbe Hinweis, der nicht wegzuklicken ist.
-   Gedeckte Farben statt des orangen Standardknopfs: Er soll auffindbar sein,
-   aber nicht mehr Gewicht haben als die Warnung selbst. */
-.geraetehinweis{display:flex;gap:.9rem;align-items:flex-start;
-  justify-content:space-between;flex-wrap:wrap}
-.geraetehinweis p{margin:0;flex:1;min-width:16rem}
-.geraetehinweis form{margin:0;flex:0 0 auto}
-.geraetehinweis button{background:#8A4A00;color:var(--schnee);
-  padding:.35rem .8rem;font-size:.85rem;white-space:nowrap}
-.geraetehinweis button:hover{background:#6E3B00}
-
-
-/* == 10. EINSATZANSICHT UND EINSATZFORMULAR ================================ */
-
-/* Seitenkopf mit Aktionen rechts (Einsatzansicht) */
-.pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:1.2rem}
-.pagehead-text{min-width:0}
-.pagehead-text h1{margin-bottom:.2rem}
-.pagehead-actions{display:flex;gap:.6rem;flex:0 0 auto;padding-top:.45rem}
-.pagehead-actions a{text-decoration:none;white-space:nowrap}
-
-/* AKTIONSMENÜ auf der Einsatzseite (A5.1, Web 5.6.0).
-   <details>/<summary> statt eines eigenen Widgets — die Tastaturbedienung
-   kommt damit vom Browser. Der Marker (Dreieck) wird entfernt, weil der
-   Kopf wie eine Schaltfläche aussehen soll; das Zeichen dahinter dreht sich
-   stattdessen mit.
-   z-index bewusst 850: über dem Seiteninhalt, aber unter dem Kopfbereich
-   (900) — die Liste soll beim Scrollen nicht darüber stehen bleiben. */
-.aktionsmenu{position:relative}
-.aktionsmenu>summary{list-style:none;cursor:pointer;user-select:none}
-.aktionsmenu>summary::-webkit-details-marker{display:none}
-.aktionsmenu>summary::after{content:'▾';margin-left:.4rem;font-size:.8em;
-  display:inline-block;transition:transform .12s}
-.aktionsmenu[open]>summary::after{transform:rotate(180deg)}
-.aktionsliste{position:absolute;right:0;top:calc(100% + .35rem);z-index:850;
-  min-width:11rem;display:flex;flex-direction:column;
-  background:var(--schnee);border:1px solid var(--line);border-radius:.4rem;
-  box-shadow:0 6px 18px rgba(0,0,0,.14);overflow:hidden}
-.aktionsliste a{padding:.55rem .8rem;color:inherit;text-decoration:none}
-.aktionsliste a:hover,.aktionsliste a:focus-visible{background:var(--line)}
-.aktionsliste a.gefahr{color:var(--rot)}
-
-/* Manuelle Einsaetze */
-.add-link{color:var(--accent-dark);font-weight:600;text-decoration:none}
-.add-link:hover{text-decoration:underline}
-.badge{border-radius:4px;padding:.05em .45em;font-size:.8rem;font-weight:600}
-.badge-uhr{background:#D9ECFD;color:#1A2E4D}          /* Max Hellblau / Dunkelblau */
-.badge-manuell{background:var(--accent-light);color:#8A5A00}
-.badge-import{background:#F7F5ED;color:#5B5F66}       /* Rauch */
-.badge-editiert{background:#FCE2D6;color:#8A2E31}     /* Newroz Rosa */
-.badge-central{background:var(--blau-light);color:var(--navy);border-radius:4px;
-  padding:.05em .45em;font-size:.75rem;font-weight:600;margin-left:.4em;
-  text-transform:uppercase;letter-spacing:.03em}
-.fieldlist{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
-  padding:.6rem .9rem;margin:0 0 1rem;display:grid;grid-template-columns:auto 1fr;
-  gap:.15rem .9rem;align-items:center}
-.fieldlist dt{font-family:var(--head);font-weight:600;font-size:.85rem;
-  color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.fieldlist dd{margin:0;white-space:pre-line}
-/* Phasen- und Reanimationszeile sind dieselbe Zeile (C4) — s. .rea-row. */
-.phase-row,.rea-row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}
-.phase-row select{flex:1;width:auto}
-.phase-row input.zeitfeld{width:110px}
-.phase-row .btn-danger{padding:.35rem .6rem}
-
-/* REANIMATION IM EINSATZFORMULAR (A4.3, Web 5.5.0).
-   Eigene Klasse statt .phase-row: Die beiden Bloecke sehen gleich aus, aber
-   das Skript sucht die Phasen ueber ihre Klasse ab, um die naechste
-   Phasennummer zu raten. Eine gemeinsame Klasse haette die
-   Reanimationsereignisse dort mitgezaehlt.
-   Je Reanimation ein abgesetzter Block, damit sichtbar ist, welche Ereignisse
-   zu welchem Beginn gehoeren — bei mehreren Reanimationen je Einsatz ist das
-   die einzige Auskunft darueber. */
-.rea-row select{flex:1;width:auto}
-.rea-row input.zeitfeld{width:110px}
-.rea-row .btn-danger{padding:.35rem .6rem}
-.rea-sitzung{border-left:3px solid var(--line);padding:.1rem 0 .1rem .6rem;
-  margin:.6rem 0 .9rem}
-.rea-kopf label{display:flex;gap:.5rem;align-items:center;flex:1;
-  font-weight:600;margin:0}
-.rea-ereignisse{margin-left:.9rem}
-.rea-sitzung p{margin:.2rem 0 0 .9rem}
-#meta a{color:var(--accent-dark)}
-
-/* Einsatzformular: Seitenrahmen wie überall, Eingaben in lesbarer Spalte */
-.formcol{max-width:760px}
-
-/* ===================== Web 7.0.0: Feldgruppen im Einsatzformular ==========
- *
- * Das Formular hatte bis Web 6.3.0 vier Ueberschriften und darunter eine lange
- * Kette gleich aussehender Felder — die Zusammengehoerigkeit von Transportart,
- * NA-Begleitung und Transportziel war nur zu erraten. Jetzt traegt jede Gruppe
- * einen eigenen, leicht abgesetzten Rahmen; welches Feld in welche gehoert,
- * steht im Feldkatalog ('gruppe', mission_fields.php).
- *
- * <fieldset> und <legend> statt <div>/<h2>: Das ist die Auszeichnung, die es
- * fuer genau diesen Zweck gibt, und Screenreader nennen die Gruppe beim
- * Betreten eines Feldes von selbst. Der Preis sind ein paar Zeilen, die die
- * Voreinstellungen der Browser zuruecksetzen. */
-.fgruppe{border:1px solid var(--line);border-radius:8px;background:var(--schnee);
-  margin:0 0 1.1rem;padding:.85rem 1rem 1rem;min-width:0}
-
-/* DIE UEBERSCHRIFT STEHT IM KASTEN, NICHT AUF SEINEM RAND.
- *
- * In der Voreinstellung der Browser sitzt eine <legend> MITTIG AUF der oberen
- * Rahmenlinie und schneidet dort eine Luecke hinein. Mit einer kleinen,
- * gesperrten Versalschrift und einem abgerundeten Rahmen ging das nicht auf:
- * Die Schrift stand halb ueber der Linie, halb darauf, und die Luecke sass auf
- * der falschen Hoehe. Es sah nach einem Fehler aus, weil es einer war.
- *
- * `float:left; width:100%` nimmt der <legend> genau diese Sonderbehandlung —
- * sie wird zu einem gewoehnlichen Block im Kasten, der Rahmen laeuft
- * durchgehend. Das ist zugleich dieselbe Form wie die Ueberschrift der
- * Eingabekaesten in den Einstellungen (.neu-form h4).
- *
- * KEIN `overflow:hidden` zum Aufraeumen des Floats: Die Vorschlagsliste des
- * Ortsfeldes (.loc-suggest) ist absolut positioniert und wuerde am Rand des
- * Kastens abgeschnitten. Stattdessen raeumt das erste Element danach auf. */
-
-/* GROESSE UND TRENNLINIE (Web 7.0.2). Die Ueberschrift stand mit .8rem UNTER
- * der Groesse der Feldbeschriftungen darunter (label = .92rem) und ohne
- * Abstand dazu — sie las sich damit als Vorbemerkung des ersten Feldes und
- * nicht als Titel der Gruppe. Jetzt ist sie groesser als der Feldtext, und
- * eine Linie trennt sie ab; das ist dieselbe Ordnung wie im Tabellenkopf
- * (`table.data th`), nur leiser, weil auf einer Seite bis zu neun Gruppen
- * untereinander stehen. */
-.fgruppe>legend{float:left;width:100%;
-  padding:0 0 .45rem;margin:0 0 .8rem;border-bottom:1px solid var(--line);
-  font-family:var(--head);font-weight:600;font-size:.95rem;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
-.fgruppe>legend+*{clear:both}
-
-/* Der Zusatz neben dem Titel bleibt Beiwerk: kleiner, nicht gesperrt, gedaempft
-   — er ergaenzt die Ueberschrift, er ist nicht Teil von ihr. */
-.fgruppe-hinweis{font-family:'Open Sans',sans-serif;font-weight:400;
-  text-transform:none;letter-spacing:0;color:var(--muted);font-size:.8rem}
-
-/* Erstes Feld einer Gruppe ohne den ueblichen Abstand nach oben — die
-   Trennlinie der Ueberschrift setzt ihn bereits. */
-.fgruppe>legend+label,.fgruppe>legend+div>label:first-child,
-.fgruppe>legend+.fld-reihe>label,.fgruppe>legend+.fld-check{margin-top:0}
-
-/* Kurze Felder nebeneinander ('nebeneinander' im Katalog, ausserdem von Hand
-   fuer Geburtsdatum/Alter). Sie brechen auf schmalen Bildschirmen um. */
-.fld-reihe{display:flex;flex-wrap:wrap;gap:.2rem 1.4rem;align-items:flex-start}
-.fld-reihe>label,.fld-reihe>.fld-check{flex:1 1 14rem;min-width:12rem;margin-top:.7rem}
-
-/* PatientInnendaten-Modul */
-/* Dieselbe Reihe umbrechender Kontrollkaestchen wie .rolechecks (C4). */
-.patfields,.rolechecks{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;margin:.5rem 0 1rem}
-.patfields label,.rolechecks label{display:inline-flex;align-items:center;gap:.35rem;margin:0}
-.patfields input{width:auto}
-#patfields label{max-width:460px}
-
-/* Geschützte PatientInnendaten: Name nebeneinander, Alter mit Hinweis */
-.patname{display:flex;gap:.8rem;flex-wrap:wrap}
-.patname label{flex:1 1 12rem;min-width:0}
-#pat_age[readonly]{background:var(--rauch);color:#5B5F66;cursor:not-allowed}
-#agehint{margin-left:.5rem}
-
-/* Angaben, die verschluesselt vorliegen, sich aber nicht lesen lassen.
-   Bewusst NICHT wie 'keine Angaben' (.dash) dargestellt — der
-   Unterschied zwischen 'nichts erfasst' und 'nicht lesbar' ist der
-   ganze Zweck. */
-td.patfehler{color:var(--rot);text-align:center;font-weight:600}
-
-/* Seit Web 7.0.0 steht der Hinweis als <span> IN der Wertzelle, nicht als
-   Klasse am <dd> selbst: Die Zeilen des Inhaltskaestchens entstehen jetzt ueber
-   einen gemeinsamen Einfuegehelfer (dlZeile), und der setzt keine Klassen an dt
-   und dd. Der Selektor deckt beides ab. */
-dd.patfehler,dd .patfehler{color:#8A4A00}
-
-/* Flugtag-Notizen sichtbar im zugeklappten Kästchen */
-.metanotes{display:block;margin:.35rem 0 0 1.1rem;color:var(--muted);
-  font-size:.9rem;white-space:pre-line}
-.metanotes:empty{display:none}
-
-/* Symbol der Einsatzart (E27, A7c). Es steht neben dem Namen des
-   Rettungsmittels und traegt seine Textalternative in title/aria-label — die
-   Auskunft haengt nicht an der Grafik. Etwas groesser als der Text, damit es
-   auf kleinen Bildschirmen erkennbar bleibt, und mit fester Breite, damit die
-   Liste nicht ausfranst. */
-.artzeichen{display:inline-block;width:1.4em;text-align:center;
-  font-size:1.05em;line-height:1;cursor:help}
-
-
-/* == 11. ZEITRAUM-UEBERSICHT =============================================== */
-
-/* Statistik-Kacheln (Zeitraum-Uebersicht) */
-.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.7rem;margin-bottom:1.2rem}
-.stat-tile{background:var(--schnee);border:1px solid var(--line);border-radius:6px;
-  padding:.7rem .5rem;text-align:center}
-.stat-value{display:block;font-family:var(--head);font-weight:600;font-size:1.35rem;
-  color:var(--navy);font-variant-numeric:tabular-nums}
-.stat-label{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.04em;margin-top:.15rem}
-.stat-tile-link{cursor:pointer}
-.stat-tile-link:hover{border-color:#D63338}
-.stat-tile-link.aktiv{border-color:#D63338;box-shadow:0 0 0 1px #D63338}
-
-/* Tableiste der Zeitraum-Übersicht (Web 6.2.0, E28). Sie erscheint nur, wenn
-   im Zeitraum beide Arten vorliegen — deshalb steht sie über der Karte und
-   nicht in der Kopfzeile: Sie gehört zur Ansicht, nicht zur Navigation.
-   Umbruch statt Scrollen, weil der dritte Tab („Bodengebundener
-   Rettungsdienst") auf schmalen Geräten allein eine Zeile füllt. */
-.arttabs{display:flex;flex-wrap:wrap;gap:.3rem;margin:0 0 1rem;
-  border-bottom:1px solid var(--line)}
-
-/* ACHTUNG: Die globale `button`-Regel setzt border:0 und font-weight:600.
-   Beides wird hier bewusst überschrieben — der Rahmen macht die Lasche, und
-   fett ist allein der aktive Tab. */
-.arttab{background:none;border:1px solid transparent;border-bottom:none;
-  border-radius:6px 6px 0 0;padding:.45rem .9rem;margin-bottom:-1px;
-  width:auto;font-size:.86rem;font-weight:500;color:var(--muted)}
-.arttab:hover{color:var(--navy)}
-.arttab.aktiv{background:var(--schnee);border-color:var(--line);
-  border-bottom:1px solid var(--schnee);color:var(--navy);font-weight:600}
-
-/* Hinweis auf mitgezählte, noch nicht zugeordnete Diensttage (E31). */
-.neutralhinweis{margin:0 0 1rem}
-
-/* Zeitraum-Übersicht (Jahr/Monat): Datumsspalte, sonst wie die Tagestabelle */
-#rangetable{table-layout:fixed;width:100%}
-#rangetable th{white-space:nowrap;hyphens:none;font-size:.74rem;line-height:1.15;
-  padding:.3rem .3rem;text-align:center}
-#rangetable td{padding:.35rem .3rem;overflow:hidden;text-overflow:ellipsis;text-align:center}
-#rangetable th.c-date,#rangetable td.c-date{width:6rem}
-#rangetable th.c-mid,#rangetable td.c-mid{width:5.2rem}
-#rangetable th.c-winde,#rangetable td.c-winde{width:4.4rem}
-#rangetable th.c-bw,#rangetable td.c-bw{width:6.2rem}
-#rangetable th.c-sek,#rangetable td.c-sek{width:6.4rem;white-space:normal}
-
-/* Artsymbol und Fehleinsatz (Web 6.2.0). Beide Spalten erscheinen nur bei
-   passendem Bestand (A13d); die Breiten gelten also nicht immer. Die
-   Artspalte ist so schmal wie ihr Zeichen — sie soll nichts kosten. */
-#rangetable th.c-art,#rangetable td.c-art{width:2.4rem}
-#rangetable th.c-fehl,#rangetable td.c-fehl{width:4.6rem;white-space:normal}
-#rangetable tbody tr{cursor:pointer}
-#rangetable tbody tr:nth-child(odd){background:var(--schnee)}
-#rangetable tbody tr:nth-child(even){background:var(--rauch)}
-#rangetable tbody tr:hover{background:var(--accent-light)}
-#rangetable tbody tr.hl-extrem td{background:#FCE2D6}
-
-/* Jahr/Monat in der Leiste: Beschriftung ist ein Link, Dreieck bleibt Umschalter */
-.zeitlink{color:inherit;text-decoration:none;flex:1 1 auto}
-.zeitlink:hover{text-decoration:underline}
-
-
-/* == 12. SUCHE ============================================================= */
-
-/* Suchseite (suche.php) — Filter in der linken Spalte.
-   Die Einsatztage-Leiste entfaellt hier; einzelne Tage sind bei einer Suche
-   ueber den Gesamtbestand ohne Nutzen. Bewusst eine eigene Klasse statt
-   .daylist: jene ist auf feste Fensterhoehe mit overflow:hidden gesetzt und
-   wuerde die Filterliste abschneiden. */
-.layout-suche{grid-template-columns:280px 1fr}
-.filterspalte{border-right:1px solid var(--line);background:var(--schnee);
-  padding:1rem;position:sticky;top:50px;align-self:start;
-  height:calc(100vh - 50px);display:flex;flex-direction:column;
-  box-sizing:border-box;overflow:hidden}
-/* Die Ueberschrift der Filterspalte ist dieselbe wie die der Einsatztage-
-   Leiste; die Regel steht dort (.daylist h2, Abschnitt 5). */
-
-/* Nur die Gruppen scrollen — Ueberschrift und Fuss bleiben stehen. */
-.filtergruppen{flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:thin}
-.filtergruppe{border-top:1px solid var(--line)}
-.filtergruppe:last-child{border-bottom:1px solid var(--line)}
-.filtergruppe>summary{cursor:pointer;padding:.55rem .2rem;font-weight:600;
-  font-size:.9rem;display:flex;align-items:center;justify-content:space-between;
-  list-style:none}
-.filtergruppe>summary::-webkit-details-marker{display:none}
-.filtergruppe>summary::after{content:'\25B8';color:var(--muted);font-size:.75rem}
-.filtergruppe[open]>summary::after{content:'\25BE'}
-.filtergruppe>summary:hover{background:var(--accent-light)}
-.filterfelder{display:flex;flex-direction:column;gap:.55rem;padding:.1rem .2rem .9rem}
-.filterfelder label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem}
-.filterfelder input,.filterfelder select{width:100%;box-sizing:border-box;margin:0}
-.filterfuss{flex:0 0 auto;border-top:1px solid var(--line);margin-top:.6rem;
-  padding-top:.7rem;display:flex;flex-direction:column;align-items:flex-start;
-  gap:.35rem}
-
-/* Gegen das globale width:100% der Formularknoepfe. */
-.filterfuss .btn-plain{width:auto;margin:0}
-
-/* Wochentage: mehrere Haken nebeneinander, umbrechend. */
-.wochentage{display:flex;flex-wrap:wrap;align-items:center;
-  gap:.3rem .7rem;font-size:.85rem}
-.wochentage label{display:inline-flex;align-items:center;gap:.25rem;
-  flex-direction:row}
-.wtlabel{display:block;width:100%;font-weight:600;margin-bottom:.15rem}
-
-/* Gesperrtes Filterfeld: sichtbar, aber erkennbar nicht bedienbar. */
-.feld-gesperrt{opacity:.55}
-
-/* Hauptspalte der Suchseite */
-.suchbox{margin-bottom:1rem}
-.suchfreitext{display:block;font-weight:600}
-.suchfreitext input{width:100%;box-sizing:border-box;margin-top:.3rem}
-.suchhinweis{margin:.4rem 0 0;font-size:.85rem}
-.ergebniszeile{margin:0 0 .8rem}
-
-/* Nachladen unter der Trefferliste (assets/missiontable.js, Web 5.10.0).
-   Die Zeile wird vom Tabellen-Baustein selbst erzeugt und hinter das <table>
-   gehängt; sie erscheint nur, wenn tatsächlich Zeilen fehlen. Mittig, damit
-   sie als Abschluss der Tabelle gelesen wird und nicht als neue Spalte. */
-.mehrzeile{display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap;
-  margin:.9rem 0 .2rem}
-
-/* Kurzhilfe zu den Suchoperatoren (Web 7.0.0). Aufklappbar und dezent — sie
-   soll auffindbar sein, nicht dauernd sichtbar. */
-.suchsyntax{margin:.2rem 0 .4rem}
-.suchsyntax>summary{cursor:pointer;font-size:.85rem;color:var(--blau-dark);
-  list-style:none;width:fit-content}
-.suchsyntax>summary::-webkit-details-marker{display:none}
-/* Das Aufklappdreieck — dieselbe Marke wie bei .stammunter (C4). */
-.suchsyntax>summary::before,.stammunter>summary::before{content:'▸';display:inline-block;width:1em;
-  color:var(--accent);transition:transform .12s}
-.suchsyntax[open]>summary::before{transform:rotate(90deg)}
-.suchsyntax ul{margin:.4rem 0 .3rem;padding-left:1.3rem}
-.suchsyntax li{margin:.15rem 0}
-.suchsyntax code{font-family:var(--mono);background:var(--rauch);
-  border:1px solid var(--line);border-radius:4px;padding:0 .25em}
-
-
-/* == 13. EINSTELLUNGEN UND STAMMDATEN ====================================== */
-
-/* Formulare in den Einstellungen */
-.settings-form{max-width:460px;margin-bottom:1.4rem}
-.settings-form .btn-primary{width:auto}
-
-/* Stammdaten */
-.chips{list-style:none;margin:.3rem 0 .6rem;padding:0;display:flex;flex-wrap:wrap;gap:.4rem}
-.chips li{display:flex;align-items:center;gap:.35rem;background:var(--schnee);
-  border:1px solid var(--line);border-radius:99px;padding:.2rem .35rem .2rem .7rem}
-.chips form{display:inline}
-/* Reihe und Beschriftung stehen bei .patfields (Abschnitt 10). */
-.rolechecks input{width:auto}
-.ac-form{margin-bottom:1.6rem}
-td.actions{display:flex;gap:.4rem;align-items:center}
-td.actions form{display:inline}
-a.btn-danger{display:inline-block}   /* text-decoration: s. Sammelregel */
-.rowlink{cursor:pointer}
-.rowlink a{color:var(--ink);text-decoration:none}
-.rowlink:hover a{color:var(--accent-dark)}
-
-/* Stammdaten: Abschnitts-Trennung */
-hr.sep{border:0;border-top:1px solid var(--line);margin:2rem 0 1.4rem}
-
-/* Rollen-Hinweis in den Standortdaten */
-.rolechecks-hint{color:var(--muted);font-size:.9rem;margin-right:.3rem}
-
-/* Admin: ganze Zeile als Hover-Ziel */
-.rowlink:hover td{background:var(--accent-light)}
-
-/* Standortdaten: aufklappbare Abschnitte */
-.stammblock{border:1px solid var(--line);border-radius:8px;background:var(--schnee);
-  margin:0 0 .7rem;padding:0 1rem}
-.stammblock>summary{cursor:pointer;list-style:none;padding:.7rem .2rem;border-radius:6px;
-  font-family:var(--head);font-size:.95rem;font-weight:600;color:var(--navy)}
-.stammblock>summary::-webkit-details-marker{display:none}
-.stammblock>summary::before{content:'▸';display:inline-block;width:1.1em;
-  color:var(--accent);transition:transform .12s}
-.stammblock[open]>summary::before{transform:rotate(90deg)}
-.stammblock[open]{padding-bottom:1rem}
-.stammblock>summary:hover{color:var(--accent)}
-
-/* ZWEITE EBENE der aufklappbaren Bloecke: je Standort einer, darin je Datenart
-   einer. Optisch flacher als .stammblock — sonst saehe die Verschachtelung wie
-   zwei gleichrangige Listen aus. */
-.stammunter{border-top:1px solid var(--line);margin:0;padding:0 0 .3rem}
-.stammunter>summary{cursor:pointer;list-style:none;padding:.55rem .2rem;
-  font-family:var(--head);font-size:.85rem;font-weight:600;color:var(--navy);
-  display:flex;align-items:center;gap:.4rem}
-.stammunter>summary::-webkit-details-marker{display:none}
-/* Das Aufklappdreieck steht bei .suchsyntax (Abschnitt 12) — dieselbe Marke. */
-.stammunter[open]>summary::before{transform:rotate(90deg)}
-.stammunter>summary:hover{color:var(--accent)}
-
-/* Zahl der Eintraege im Kopf: Sie beantwortet die Frage, wegen der man
-   aufklappt („ist da ueberhaupt was drin?"), ohne dass man aufklappen muss. */
-.stammzahl{margin-left:auto;font-family:'Open Sans',sans-serif;font-weight:400;
-  font-size:.78rem;color:var(--muted);background:var(--rauch);
-  border:1px solid var(--line);border-radius:999px;padding:0 .5em;min-width:1.9em;
-  text-align:center}
-.stammunter h4{font-family:var(--head);font-size:.85rem;margin:.9rem 0 .3rem;
-  color:var(--navy)}
-
-/* --- Weitere Rettungsmittel: Eingabe mit Merkfeldern --- */
-.rmbox{position:relative}
-.rmchips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem}
-
-/* CHIPS IM FELD (Web 7.0.0). Der Rahmen liegt um .rmfeld, nicht mehr um das
-   <input> darin: Gewaehlte Eintraege und die weiterlaufende Eingabe stehen
-   dadurch in EINEM Feld nebeneinander, wie im Empfaengerfeld eines
-   Mailprogramms. `display:contents` an .rmchips loest den Zwischencontainer
-   auf, sodass die Chips unmittelbare Flex-Kinder werden und mit dem Eingabefeld
-   zusammen umbrechen — mit einem eigenen Kasten saessen sie als Block darueber,
-   also genau da, wo sie vorher standen.
-   Die Regel ist auf .rmfeld beschraenkt: .rmchips traegt auch die
-   Koordinaten-Chips der Ortsfelder (ui_ortsfeld), und die stehen weiterhin als
-   eigene Zeile unter ihrem Feld. */
-.rmfeld{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;
-  border:1px solid var(--line);border-radius:5px;padding:.3rem .4rem;
-  background:var(--schnee);min-height:2.4rem}
-.rmfeld .rmchips{display:contents}
-/* .rmfeld:focus-within traegt denselben Fokusring wie die Bedienelemente —
-   die Regel steht bei ihnen (Abschnitt 6). */
-.rmeingabe{flex:1 1 10rem;min-width:8rem;width:auto;border:0;background:transparent;
-  padding:.15rem .2rem}
-.rmeingabe:focus-visible{outline:none}
-.rmchip{display:inline-flex;align-items:center;gap:.35rem;background:var(--accent-light);
-  border:1px solid #F0C89A;border-radius:999px;padding:.2rem .3rem .2rem .7rem;font-size:.85rem}
-.rmx{border:0;background:none;cursor:pointer;font-size:1.05rem;line-height:1;
-  color:#9A6B2F;padding:0 .25rem}
-.rmx:hover{color:var(--rot)}
-.rmlist{position:absolute;left:0;right:0;top:100%;z-index:50;background:#fff;
-  border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.12);
-  max-height:12rem;overflow-y:auto}
-.rmopt{display:block;width:100%;text-align:left;border:0;background:none;cursor:pointer;
-  padding:.45rem .7rem;font:inherit}
-.rmopt:hover{background:var(--accent-light)}
-.rmneu{color:#5B5F66;font-style:italic;border-top:1px solid var(--line)}
-
-/* EINGABEBEREICH mit eigenem Rahmen (Rettungsmittel). Vorher klebten
-   Eingabezeile, Artauswahl und Rollenhaken ohne Abstand unter der Tabelle, und
-   es war nicht zu sehen, dass sie zusammengehoeren — die Haken sahen aus wie
-   Zubehoer der letzten Tabellenzeile. */
-.neu-form{border:1px solid var(--line);border-radius:8px;background:var(--rauch);
-  padding:.7rem .9rem 1rem;margin:1.1rem 0 .3rem}
-.neu-form h4{margin:0 0 .5rem;font-family:var(--head);font-size:.85rem;
-  color:var(--navy)}
-
-/* Die Schaltflaeche steht IN der Eingabezeile: Was darunter folgt, sind
-   Zusatzangaben, nicht der naechste Schritt. */
-.neu-zeile{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-.neu-zeile input{flex:1 1 14rem;min-width:12rem;width:auto}
-.neu-zeile .btn-primary{width:auto;margin-top:0}
-.neu-feld{margin-top:.8rem}
-.neu-titel{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.25rem}
-
-/* Ortsfeld im Rahmen: Es ist hier ein Block und kein Flex-Kind mehr, also
-   greift `flex:1 1 240px` aus .loc-inline nicht. Ohne Obergrenze liefe das
-   Suchfeld ueber die volle Breite und waere doppelt so breit wie das Namensfeld
-   darueber — bei einer FREIWILLIGEN Angabe die falsche Gewichtung. */
-.neu-feld>.loc-inline{max-width:30rem}
-.neu-feld>.loc-inline>label:first-child{margin-top:0}
-
-/* Einsatzort-Autocomplete (Photon) */
-.loc-widget{position:relative}
-.loc-suggest{position:absolute;left:0;right:0;z-index:1200;list-style:none;
-  margin:.15rem 0 0;padding:.25rem 0;background:var(--schnee);
-  border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
-.loc-suggest li{padding:.4rem .7rem;cursor:pointer}
-.loc-suggest li:hover{background:var(--accent-light)}
-
-/* Meldungszeile des Einsatzort-Widgets (Auftragspunkt 5).
-   Sie steht unmittelbar unter dem Eingabefeld und ist kleiner gesetzt als der
-   Feldtext, damit der Bezug eindeutig ist und sie nicht wie eine zweite
-   Beschriftung wirkt. Farbe: Max Blau eine Stufe dunkler (--blau-dark) statt
-   des reinen #4280E5 — bei dieser Schriftgroesse erreicht nur die dunklere
-   Stufe die Kontrastschwelle (4,6:1 statt 3,8:1 auf Schnee), siehe Kommentar
-   an --blau-dark. Der Fehlerfall bleibt rot. */
-.locstate{margin:.15rem 0 0;font-size:.82rem;line-height:1.35;
-  color:var(--blau-dark)}
-.locstate:empty{display:none}
-.locstate-fehler{color:var(--rot)}
-
-/* Ortsfeld in einer Flex-Zeile (Stammdatenpflege, Web 6.1.0).
-   Dort traegt das Namensfeld daneben den Namen; hier stehen nur Suchfeld, Chip
-   und Zustandszeile. Als eigenes Flex-Kind, damit die Zeile nicht umbricht,
-   sobald ein Chip erscheint. */
-.loc-inline{flex:1 1 240px;min-width:200px}
-.loc-inline input{width:100%}
-.loc-inline .fld-sub{font-size:.82rem;color:var(--muted)}
-
-/* Rollen- und Faehigkeitshaken am Rettungsmittel. Sie stehen in einer Reihe
-   und brechen um; die Haken duerfen nicht auf Feldbreite wachsen. */
-.acroles,.vehkind{display:inline-flex;flex-wrap:wrap;gap:.35rem 1rem;align-items:center}
-.acroles label,.vehkind label{display:inline-flex;align-items:center;gap:.3rem;margin:0}
-.acroles input,.vehkind input{width:auto}
-
-/* Ein Kandidat, der sich NICHT aufnehmen laesst (E11), bleibt in der Liste
-   stehen — er wird nur als nicht waehlbar gezeigt. Warum er dasteht und nicht
-   weggelassen wird, begruendet dt_merge_kandidaten(): Eine fehlende Zeile
-   sieht aus wie ein Fehler der Anwendung, A7 verlangt aber eine verstaendliche
-   Meldung, und die braucht eine Zeile, an der sie haengen kann.
-
-   Gedaempft, nicht durchgestrichen: Der Diensttag ist gueltig, er passt nur
-   hier nicht. Durchgestrichen liest sich wie geloescht. */
-.data tr.zeile-aus{opacity:.55}
-.data tr.zeile-aus label{cursor:default}
-
-/* Die Entscheidung bei widerspruechlichen Angaben. Ein <fieldset> ist hier die
-   richtige Auszeichnung und keine Zierde: Die <legend> sagt Vorleseprogrammen,
-   WORUEBER die beiden Auswahlknoepfe entscheiden — ohne sie stuende zweimal
-   ein Name ohne Bezug im Raum. */
-.feldgruppe{border:1px solid var(--line);border-radius:6px;
-  padding:.6rem .8rem;margin:0 0 .8rem}
-.feldgruppe legend{padding:0 .35rem;font-weight:600;color:var(--navy)}
-.feldgruppe label{display:flex;align-items:baseline;gap:.45rem;margin:.25rem 0}
-.feldgruppe input[type=radio]{width:auto;flex:none}
-
-
-/* == 14. PAPIERKORB ======================================================== */
-
-/* Papierkorb.
-   Sieben Regeln dieses Abschnitts sind mit A4 entfallen, weil keine Seite die
-   Klassen traegt: .daydelete, .trash (+ h2, h3) und .trashactions (+ form,
-   .btn-link). Nicht zu verwechseln mit .trashtable und .trashlink weiter
-   unten — die werden benutzt. */
-.btn-link.danger{color:#D63338}
-.trashtable{width:100%;border-collapse:collapse;font-size:.88rem}
-.trashtable th{text-align:left;font-weight:600;color:#5B5F66;padding:.25rem .5rem}
-.trashtable td{padding:.25rem .5rem;border-top:1px solid #EFECE6}
-
-/* Papierkorb-Aktionen: gleich groß, gleiche Grundlinie */
-.trashtable .rowactions{display:flex;gap:.6rem;justify-content:flex-end;align-items:stretch}
-.trashtable .rowactions form{display:flex}
-.trashtable .rowactions .btn-primary,
-.trashtable .rowactions .btn-red{display:inline-flex;align-items:center;justify-content:center;
-  width:auto;margin:0;                      /* globales width:100% zuruecknehmen */
-  min-width:10.5rem;padding:.42rem .9rem;font-size:.85rem;line-height:1.2;
-  border-radius:5px;text-decoration:none;box-sizing:border-box}
-
-
-
-/* == 15. IMPORT ============================================================ */
-
-/* ---- Import-Review (import.php) -----------------------------------------
-   .btn-primary traegt global width:100% — ausserhalb von .settings-form muss
-   das jedes Mal zurueckgesetzt werden, sonst laeuft der Knopf ueber die
-   ganze Spaltenbreite. */
-#schritt3 .btn-primary{width:auto}
-.imp-wrap{overflow-x:auto;margin-bottom:1.4rem}
-.imp-table{border-collapse:collapse;font-size:.86rem;min-width:100%}
-.imp-table th,.imp-table td{border:1px solid var(--line);padding:.2rem .35rem;
-  text-align:left;vertical-align:middle;white-space:nowrap}
-.imp-table th{background:var(--rauch);font-family:var(--head);font-weight:600}
-.imp-table input.imp-cell{border:0;background:transparent;font:inherit;
-  padding:.1rem .2rem;min-width:5.5rem;width:100%}
-.imp-table input.imp-cell:focus{background:#fff;outline:2px solid var(--accent)}
-.imp-daygroup td{background:var(--sand);font-family:var(--head);font-weight:600;
-  white-space:normal}
-.imp-table td.imp-warn{background:#FDF3D0}
-.imp-table td.imp-error{background:var(--rot-light)}
-.imp-row.imp-skipped{opacity:.45;text-decoration:line-through}
-.imp-row.imp-dupe td:first-child{border-left:3px solid var(--accent)}
-.imp-skip{white-space:nowrap;font-size:.82rem}
-span.imp-warn{color:#8A6D00}
-
-
-/* == 16. VERWALTUNG UND WARTUNG ============================================ */
-
-/* Wartungsseite: Zeile einer Migration, die Daten vernichten wuerde und
-   deshalb NICHT ausgefuehrt wird (M6-01). Sie muss sich beim Ueberfliegen
-   der Tabelle von den uebrigen abheben — wer die Liste durchsieht, sucht
-   genau diese Zeile und nicht die neunzehn erledigten. */
-tr.warnzeile>td{background:var(--rot-light)}
-.loeschhinweis{color:#9E2226}
-
-/* Wartungsseite: Startknopf über der Updatetabelle (Web 7.0.0). Er steht in
-   einer Zeile mit seiner Erläuterung — untereinander wirkte der Text wie ein
-   eigener Absatz und der Knopf wie ein Abschluss der Seite. */
-.migstart{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;
-  margin:1rem 0 .8rem}
-.migstart .btn-primary{width:auto;margin-top:0;flex:0 0 auto}
-.migstart .muted{flex:1 1 20rem;font-size:.85rem}
-
-/* Aktionen einer Tabellenzeile, aufklappbar (Sicherungen, Web 7.0.0). Der Kopf
-   sieht aus wie eine Schaltfläche, der Inhalt öffnet sich darunter in der
-   Zeile. <details> statt eines eigenen Menü-Widgets: Tastaturbedienung von
-   Haus aus, kein nachgebautes Verhalten. */
-.zeilenmenu{display:inline-block;text-align:left}
-.zeilenmenu>summary{cursor:pointer;list-style:none;display:inline-block;
-  font-family:var(--head);font-weight:600;font-size:.85rem;
-  padding:.25rem .7rem;border-radius:5px;white-space:nowrap}
-.zeilenmenu>summary::-webkit-details-marker{display:none}
-.zeilenmenu-inhalt{margin-top:.7rem;padding:.7rem .9rem;background:var(--rauch);
-  border:1px solid var(--line);border-radius:8px;min-width:min(30rem,72vw)}
-.zeilenmenu-inhalt .settings-form{max-width:none;margin-bottom:.9rem}
-.zeilenmenu-inhalt .settings-form:last-child{margin-bottom:0}
-
-/* Die Tabelle darf für den aufgeklappten Inhalt in die Breite gehen; auf
-   schmalen Geräten scrollt sie waagerecht statt die Seite zu sprengen. */
-.sictab td{vertical-align:top}
-
-
-/* == 17. ANMELDUNG UND EINRICHTUNG ========================================= */
-
-/* Login */
-.login-body{display:grid;place-items:center;min-height:100vh;background:var(--navy)}
-.login-card{background:var(--schnee);border-radius:10px;padding:2rem 2.2rem;
-  width:min(94vw,400px)}
-.login-card h1{font-size:1.4rem;text-align:center;margin-top:.4rem}
-.login-logo{display:block;width:200px;max-width:70%;height:auto;margin:0 auto .6rem}
-.login-aux{text-align:center;font-size:.9rem;margin-top:1rem}
-.login-aux a{color:var(--accent-dark)}
-
-.keybox{background:var(--accent-light);border:1px solid #EFC9A0;border-radius:6px;
-  padding:.8rem 1rem;margin-bottom:1.2rem}
-.keybox code{font-family:var(--mono);background:var(--schnee);
-  border:1px solid var(--line);padding:.1em .35em;border-radius:3px}
-
-/* Kopplungscode */
-.codebig{font-family:var(--mono);font-size:2.4rem;font-weight:700;
-  letter-spacing:.35em;color:var(--navy);margin:.3rem 0}
-
-/* Kopplungscode: derselbe Kasten wie .keybox, nur mit dem Orange der
-   Hauptfarbe. Er MUSS nach .keybox stehen — pair.php setzt beide Klassen
-   an dasselbe Element, und .keybox setzt die volle border-Kurzform,
-   die border-color mit zuruecksetzt. */
-.paircode{border-color:var(--accent)}
-
-
-/* == 18. DIALOGE =========================================================== */
-
-/* ZWEI DIALOGE, EIN KASTEN (C4). Der Bestaetigungsdialog (ersetzt
-   window.confirm) und der Entsperrdialog fuer die geschuetzten Angaben
-   (unlock.js) waren bis Web 7.1.0 zweimal derselbe Kasten — bis auf EINE
-   Angabe: Der Entsperrdialog darf 2 rem breiter werden. Genau diese eine
-   Angabe steht weiter unten noch einmal, alles uebrige nur hier. */
-.confirmbox,.unlockbox{border:0;border-radius:10px;padding:1.3rem 1.4rem;max-width:26rem;
-  box-shadow:0 12px 40px rgba(0,0,0,.28);background:#FFFCFA;color:#1A0500}
-.confirmbox::backdrop,.unlockbox::backdrop{background:rgba(26,46,77,.45)}
-.confirmtext{margin:0 0 1.1rem;font-size:1rem;line-height:1.45}
-
-/* Beide Knoepfe exakt gleich gross. Wichtig: .btn-primary traegt global
-   width:100% und margin-top (fuer Formulare) — im Dialog beides ausdruecklich
-   zuruecknehmen, sonst wird "Abmelden" breiter und sitzt tiefer als
-   "Abbrechen". Gleiche Falle wie bei der Aktionsleiste des Flugtags. */
-.confirmbtns,.unlockbtns{display:flex;gap:.7rem;justify-content:flex-end}
-.confirmbtns button,.unlockbtns button{display:inline-flex;align-items:center;justify-content:center;
-  width:auto;margin:0;min-height:2.3rem;padding:.42rem 1.2rem;
-  border-radius:6px;cursor:pointer;font:inherit;line-height:1.2;
-  box-sizing:border-box}
-
-/* Die eine Abweichung des Entsperrdialogs: 2 rem mehr Breite, weil in ihm ein
-   Passwortfeld samt Erklaerung steht. Alles uebrige steht oben. */
-.unlockbox{max-width:28rem}
-.unlocktitle{margin:0 0 .6rem;font-size:1.05rem}
-.unlocktext{margin:0 0 1rem;font-size:.92rem;line-height:1.45;color:#5B5F66}
-.unlocklabel{display:block;margin:0 0 .8rem;font-size:.92rem}
-.unlocklabel input{width:100%;box-sizing:border-box;margin-top:.25rem}
-.unlockmsg{margin:0 0 .9rem;font-size:.88rem;color:#5B5F66;min-height:1.2em}
-.unlockmsg.err{color:#9E2226}
-/* Knopfleiste und Knopfmasse stehen oben beim Bestaetigungsdialog. */
-.unlockbtns button[disabled]{opacity:.6;cursor:default}
-
-
-/* == 19. MEDIA QUERIES ===================================================== */
-
-/* Reihenfolge wie bisher in der Datei — sie entscheidet, wenn zwei
-   Abfragen dieselbe Eigenschaft setzen (720 px allgemein vor 720 px
-   Suchseite). */
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-
-@media (max-width:560px){.brand span{font-size:.85rem}}
-
-@media (max-width:720px){.layout{grid-template-columns:1fr}
-  .daylist{border-right:0;border-bottom:1px solid var(--line)}
-  .daylist ul{display:flex;flex-wrap:wrap;gap:.3rem}}
-
-@media (max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
-
-@media (max-width:820px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
-
-/* Unter 720 px klappt die Filterspalte wie die Einsatztage-Leiste ueber den
-   Inhalt. Dieser Block muss NACH dem allgemeinen 720-px-Block stehen: Jener
-   greift nur .layout, .layout-suche traegt aber beide Klassen und setzt
-   dieselbe Eigenschaft mit gleicher Spezifitaet. */
-@media (max-width:720px){
-  .layout-suche{grid-template-columns:1fr}
-  .filterspalte{position:static;height:auto;overflow:visible;
-    border-right:0;border-bottom:1px solid var(--line)}
-  .filtergruppen{overflow:visible}
+/* Innenabstände und Ränder der Standardelemente auf null. Was Abstand
+ * braucht, bekommt ihn vom Baustein — nicht vom Browser. */
+body,h1,h2,h3,h4,p,figure,blockquote,dl,dd,ul,ol,fieldset,legend{margin:0;padding:0}
+ul,ol{list-style:none}
+fieldset{border:0;min-width:0}
+
+html{
+  /* Beim Sprung zu einem Anker nicht unter die klebende Kopfleiste rutschen. */
+  scroll-padding-top:calc(var(--kopf) + var(--abstand-4));
+  -webkit-text-size-adjust:100%;
 }
 
-@media (max-width:520px){
-  .aktionsliste{right:auto;left:0;min-width:min(14rem,80vw)}
+body{
+  background:var(--rauch);
+  color:var(--asphalt);
+  font-family:var(--schrift-text);
+  font-size:var(--groesse-3);
+  line-height:var(--zeile);
+  /* Der Rahmen ist zentriert (E-P3-12); die Kopfleiste bleibt voll breit und
+   * setzt ihr Inneres selbst auf dasselbe Raster. */
+  min-height:100vh;
+  min-height:100dvh;
+}
+
+/* ---- Überschriften -------------------------------------------------------
+ *
+ * Bricolage 600 für alles, was Titel ist. GESPERRTE VERSALIEN gibt es nur
+ * noch für Abschnittsköpfe in den Leisten („Diensttage", „Filter",
+ * „Administration") — im Bestand trugen sie acht Regeln, darunter jeder
+ * Tabellenkopf, jede Legende und jeder Feldname. Auf 360 px war das die
+ * teuerste Zeile der Anwendung.
+ *
+ * Nebenbei erledigt sich damit Fund F-P3-A: `.metanotes` erbte Versalien und
+ * Sperrung vom umgebenden `summary` und setzte sie nicht zurück, sodass die
+ * Notiz „Wetter: Nebel bis 9 Uhr" als gesperrte Versalzeile erschien. Wenn
+ * das `summary` selbst keine Versalien mehr trägt, gibt es nichts mehr zu
+ * erben. */
+h1,h2,h3,h4{
+  font-family:var(--schrift-kopf);
+  font-weight:600;
+  line-height:var(--zeile-eng);
+  color:var(--dunkelblau);
+  text-wrap:balance;
+}
+h1{font-size:var(--groesse-titel)}
+h2{font-size:var(--groesse-6)}
+h3{font-size:var(--groesse-5)}
+h4{font-size:var(--groesse-4)}
+
+p{margin:0}
+
+/* ---- Zahlen --------------------------------------------------------------
+ *
+ * Tabellarische Ziffern überall, wo Zahlen untereinanderstehen. Open Sans
+ * kann das über 'tnum' und hat dabei — anders als jede Schreibmaschinenschrift
+ * auf dem Markt — eine GLATTE NULL. Die durchgestrichene Null der
+ * Monospace-Familien sah in einer Uhrzeit aus wie ein Sonderzeichen; das war
+ * der Grund, diese Familie in Web 7.0.0 aus den Tabellen zu nehmen. */
+.zahl,td,th,time,output{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
+
+/* ---- Links ---------------------------------------------------------------
+ *
+ * Blau ist „Auswählen und Erklären". Textlinks tragen es; sie sind nicht
+ * unterstrichen, solange sie in einer Zeile mit anderer Auszeichnung stehen,
+ * aber im Fließtext schon — dort ist die Farbe allein zu wenig. */
+a{color:var(--blau-tief);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---- Formularelemente erben die Schrift ----------------------------------
+ * Ohne das nehmen sie die des Betriebssystems, und die Seite hat plötzlich
+ * zwei Schriften. */
+input,select,textarea,button{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+
+img,svg,video{max-width:100%;height:auto}
+
+/* ---- Fokus ---------------------------------------------------------------
+ *
+ * EIN Fokusring für die ganze Anwendung, in Blau, außen liegend. :focus-visible
+ * statt :focus — der Ring erscheint bei Tastaturbedienung, nicht bei jedem
+ * Mausklick auf einen Knopf.
+ *
+ * outline-offset ist wichtig: Ohne ihn verschwindet der Ring bei Elementen
+ * mit eigenem Rand in dessen Farbe. */
+:focus{outline:none}
+:focus-visible{
+  outline:var(--strich-stark) solid var(--blau);
+  outline-offset:var(--strich-stark);
+  border-radius:var(--radius-klein);
+}
+
+/* Textauswahl in der Markenfarbe statt im Systemblau. */
+::selection{background:var(--orange-hell);color:var(--asphalt)}
+
+/* ---- Symbole -------------------------------------------------------------
+ *
+ * Jedes Zeichen der Oberfläche liegt als eigene Datei unter
+ * assets/images/symbole/ und wird per Verweis eingebunden:
+ *
+ *     <svg class="symbol"><use href="assets/images/symbole/haus.svg#i"></use></svg>
+ *
+ * WARUM DIE STRICHATTRIBUTE HIER STEHEN und nicht in der Datei: Der Verweis
+ * holt das <g id="i"> — nicht das <svg> darum. Die Attribute fill="none",
+ * stroke="currentColor" und stroke-width="2" stehen in der Datei aber am
+ * <svg>, damit sie sich auch einzeln öffnen und ansehen lässt. Beim Verweis
+ * sind sie deshalb nicht dabei, und ohne Ersatz malte der Browser schwarze
+ * Klumpen statt Strichzeichnungen. Alle fünf Eigenschaften sind vererbbar
+ * und fließen vom Wirts-<svg> über das <use> in den geklonten Baum.
+ *
+ * currentColor heißt: Das Symbol nimmt die Schriftfarbe seiner Umgebung an.
+ * Ein Symbol in einem roten Knopf ist rot, ohne dass irgendwo eine zweite
+ * Regel stünde. */
+.symbol{
+  width:var(--symbol);height:var(--symbol);
+  flex:0 0 auto;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vertical-align:middle;
+}
+.symbol-gross{width:var(--symbol-gross);height:var(--symbol-gross)}
+
+/* Der Winkel liegt EINMAL vor (winkel.svg, zeigt nach unten) und wird
+ * gedreht — statt vier Dateien für vier Richtungen. */
+.symbol-links{transform:rotate(90deg)}
+.symbol-rechts{transform:rotate(-90deg)}
+.symbol-oben{transform:rotate(180deg)}
+
+/* Der Stern wird gefüllt, wenn die Vorbelegung gesetzt ist. Dasselbe Zeichen,
+ * zwei Zustände — kein zweites Symbol. */
+.symbol-gefuellt{fill:currentColor}
+
+/* ---- Nur für Screenreader ------------------------------------------------
+ * Text, der gelesen, aber nicht gezeigt wird. Braucht jeder Symbolknopf, der
+ * keine sichtbare Beschriftung trägt. */
+.nur-vorlesen{
+  position:absolute;width:1px;height:1px;
+  padding:0;margin:-1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0;
+}
+
+/* ---- Bewegung abbestellt -------------------------------------------------
+ * Wer im Betriebssystem „Bewegung reduzieren" gesetzt hat, meint es. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+
+/* == 4. GERÜST =============================================================
+ *
+ * Kopfleiste, Rahmen, Leiste/Schublade, Inhalt, Fußzeile.
+ *
+ * DIE KOPFHÖHE IST --kopf UND SONST NICHTS. Im Bestand stand sie fünfmal als
+ * 50px im Stylesheet, und die tatsächliche Höhe hing zusätzlich vom Umbruch
+ * des Markentexts ab; das Demo-Banner verschob sie ein weiteres Mal. Ergebnis:
+ * Im Demo-Konto rutschte die Leiste unter der Kopfleiste hervor. Jetzt gibt es
+ * eine Zahl an einer Stelle, und der Demo-Hinweis steht innerhalb des Inhalts.
+ *
+ * MOBIL ZUERST. Was hier ohne Media-Abfrage steht, gilt für das Handy. Die
+ * vier Schwellen (720, 1024, 1200, 1600) bauen nach oben aus.
+ */
+
+/* ---- Kopfleiste ---------------------------------------------------------- */
+.kopf{
+  position:sticky;top:0;z-index:40;
+  background:var(--dunkelblau);color:var(--auf-dunkel);
+  height:var(--kopf);
+}
+/* Der Inhalt der Kopfleiste sitzt auf demselben Raster wie Leiste und Inhalt
+ * darunter — die Leiste selbst bleibt voll breit (E-P3-12). */
+.kopf-innen{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  height:var(--kopf);
+  max-width:var(--rahmen);margin:0 auto;
+  padding:0 var(--abstand-3);
+}
+.kopf .knopf{color:var(--auf-dunkel)}
+/* .knopf-symbol:hover setzt sonst --rauch — ein heller Block auf der dunklen
+ * Leiste. Hier gilt die gedämpfte Weißfläche. */
+.kopf .knopf-symbol:hover,.kopf .kopf-zahnrad:hover{background:var(--auf-dunkel-flaeche)}
+.kopf-menue{margin-left:calc(var(--abstand-2) * -1)}
+
+.kopf-marke{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  color:var(--auf-dunkel);text-decoration:none;
+  min-width:0;flex:1 1 auto;
+}
+.kopf-marke:hover{text-decoration:none}
+.kopf-marke img{height:26px;width:auto;flex:0 0 auto}
+.kopf-name{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-5);line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Der Nutzername erscheint erst, wenn Platz dafür da ist. Auf dem Handy ist
+ * die Kopfleiste für Menü, Marke und Zahnrad da — der eigene Name steht auf
+ * der Einstellungs-Übersicht, wo man ihn sucht. */
+.kopf-nutzer{display:none}
+
+.kopf-punkte{display:flex;align-items:center;gap:var(--abstand-1);margin-left:auto}
+.kopf-punkt{
+  display:none;                        /* < 1024: nur Menüknopf und Zahnrad */
+  align-items:center;gap:var(--abstand-2);
+  height:var(--knopf);padding:0 var(--abstand-3);
+  color:var(--auf-dunkel);text-decoration:none;
+  border-bottom:var(--strich-stark) solid transparent;
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+.kopf-punkt:hover{text-decoration:none;border-bottom-color:var(--auf-dunkel-strich)}
+.kopf-punkt.aktiv{border-bottom-color:var(--orange)}
+/* Der Rückweg der öffentlichen Hülle („Zurück zur Anmeldung") gilt in jeder
+ * Breite — .kopf-punkt ist unter 1024 px ausgeblendet, weil dort die
+ * Schublade die Hauptpunkte trägt; einen Rückweg trägt sie nicht. */
+.kopf-zurueck{display:inline-flex}
+.kopf-zahnrad{margin-right:calc(var(--abstand-2) * -1)}
+.kopf-zahnrad.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+
+/* ---- Rahmen: Leiste und Inhalt als Einheit, zentriert -------------------- */
+.rahmen{
+  max-width:var(--rahmen);margin:0 auto;
+  display:flex;align-items:flex-start;
+}
+.inhalt{
+  flex:1 1 auto;min-width:0;
+  padding:var(--abstand-4) var(--abstand-3) var(--abstand-5);
+}
+.rahmen-lesespalte .inhalt{max-width:var(--lesespalte);margin:0 auto}
+
+/* ---- Leiste und Schublade — EIN Markup ----------------------------------
+ *
+ * Unter 1024 px liegt die Leiste als Schublade von links über dem Inhalt,
+ * darüber steht sie fest daneben. Der Unterschied ist ausschließlich hier.
+ *
+ * Das ist die Lehre aus der Vormerkliste von P0: Der Mechanismus hängt an der
+ * KLASSE, nicht an der Funktion, die die Diensttage ausgibt — sonst bliebe
+ * die Suchseite als einzige ohne mobiles Menü.
+ */
+.leiste{
+  position:fixed;inset:0 auto 0 0;z-index:60;
+  width:86%;max-width:var(--schublade);
+  background:var(--schnee);
+  border-right:var(--strich) solid var(--linie);
+  display:flex;flex-direction:column;
+  transform:translateX(-100%);
+  transition:transform var(--dauer) ease-out;
+  overscroll-behavior:contain;
+}
+.schublade-auf .leiste{transform:none}
+.schleier{
+  position:fixed;inset:0;z-index:50;
+  background:var(--schleier);
+  opacity:0;transition:opacity var(--dauer) ease-out;
+}
+.schublade-auf .schleier{opacity:1}
+/* Der Körper scrollt nicht, solange die Schublade offen ist — sonst scrollt
+ * unter dem Schleier der Inhalt weg. */
+.schublade-auf{overflow:hidden}
+
+.leiste-kopf{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  height:var(--kopf);flex:0 0 auto;
+  padding:0 var(--abstand-3);
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--dunkelblau);
+}
+.leiste-haupt{padding:var(--abstand-3) var(--abstand-2) 0;flex:0 0 auto}
+.leiste-liste{flex:1 1 auto;overflow-y:auto;padding:var(--abstand-2)}
+.leiste-fuss{
+  flex:0 0 auto;padding:var(--abstand-2);
+  border-top:var(--strich) solid var(--linie);
+}
+.leiste-kopfzeile{
+  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gedaempft);
+  padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
+}
+.leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
+
+/* ---- Fußzeile ------------------------------------------------------------
+ * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
+.fuss-seite{
+  border-top:var(--strich) solid var(--linie);
+  padding:var(--abstand-4) var(--abstand-3);
+  text-align:center;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
+.fuss-rechts{margin-top:var(--abstand-1)}
+.fuss-seite a{color:var(--blau-tief);font-weight:600}
+/* --gedaempft, nicht --sand (O10). Auf --rauch ergab Sand 1,53:1 — die
+ * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
+ * damit ein zu LESENDER Text. `kontrast.py` fuehrte „Sand auf Schnee" als
+ * Ausnahme, begruendet aber nur den Akkordeon-Winkel („Mechanik, keine
+ * Botschaft"); das trifft auf eine Zahl nicht zu, die man abtippen soll.
+ * Jetzt 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
+.fuss-version{color:var(--gedaempft)}
+.fuss-dunkel{
+  background:var(--dunkelblau);color:var(--rauch);
+  border-top:0;
+}
+.fuss-dunkel a{color:var(--auf-dunkel)}
+.fuss-dunkel .fuss-version{color:var(--auf-dunkel-leise)}
+
+/* ---- Was nur in der Schublade steht -------------------------------------- */
+.nur-schublade{display:block}
+.nur-breit{display:none}
+.nur-schmal{display:inline-flex}
+
+
+/* == 5. LEISTENINHALT ======================================================
+ *
+ * Akkordeon und Einträge. Beide Leisten — Diensttage und Einstellungen —
+ * benutzen dieselben Klassen; bis Web 8.0.1 trug das Einstellungsmenü
+ * buchstäblich die Klasse `.daylist` und erbte damit jede Regel der
+ * Tagesleiste, einschließlich der 100-vh-Höhe.
+ */
+
+/* ---- Akkordeon -----------------------------------------------------------
+ * DIE GANZE ZEILE KLAPPT, nicht nur das Dreieck (E-P3-09). Bisher war der
+ * Text der Link auf die Jahresübersicht und nur das Dreieck der Schalter — auf
+ * einem Touchgerät nicht zu unterscheiden. Der Weg in die Übersicht ist jetzt
+ * ein eigenes Symbol rechts.
+ *
+ * Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
+ */
+.akkordeon-zeile{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  padding:0 var(--abstand-1) 0 var(--abstand-2);
+  border-radius:var(--radius-klein);
+  cursor:pointer;list-style:none;
+  font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--dunkelblau);
+}
+.akkordeon-zeile::-webkit-details-marker{display:none}
+.akkordeon-zeile:hover{background:var(--rauch)}
+/* winkel.svg zeigt nach UNTEN. Zugeklappt wird er nach rechts gedreht,
+ * aufgeklappt steht er in Ruhelage — so zeigen es die Mockups 01/03/06:
+ * „›" heißt zu, „⌄" heißt offen. Die erste Fassung hatte es umgekehrt
+ * (offen = oben) — das ist die Konvention mancher Aufklappmenüs, aber nicht
+ * die dieses Entwurfs (Fable-Kontrolle, F-P3-Q). */
+.akkordeon-winkel{color:var(--sand);transition:transform var(--dauer) ease-out;
+  transform:rotate(-90deg)}
+details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
+.akkordeon-text{flex:1 1 auto;min-width:0}
+/* Der Weg in die Jahres- bzw. Monatsübersicht: eigenes Ziel, eigene
+ * Trefferfläche, 44 px. ER STEHT IM <summary> — die erste Fassung hatte ihn
+ * daneben, als Kind des <details>, und der Inhalt eines geschlossenen
+ * <details> wird nicht gerendert: Der Link war an jeder zugeklappten Zeile
+ * unsichtbar und unerreichbar, die Mockups zeigen ihn an jeder
+ * (Fable-Kontrolle, F-P3-R). Weil ein Link im <summary> beim Klick auch das
+ * Auf- und Zuklappen auslöste, fängt daylist.js ihn ab und navigiert selbst. */
+.akkordeon-uebersicht{
+  margin-left:auto;flex:0 0 auto;
+  width:var(--knopf);height:var(--knopf);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--sand);border-radius:var(--radius-klein);
+}
+.akkordeon-uebersicht:hover{color:var(--blau-tief);background:var(--rauch)}
+.akkordeon-inhalt{padding-left:var(--abstand-3)}
+.akkordeon-monat > .akkordeon-zeile{font-size:var(--groesse-3)}
+
+/* ---- Eintrag -------------------------------------------------------------
+ * Menüpunkt und Diensttag. Aktiv: hell orange mit orangem Strich links —
+ * in BEIDEN Leisten gleich (E-P3-10).
+ */
+.eintrag{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  padding:0 var(--abstand-2);
+  border-radius:var(--radius-klein);
+  border-left:var(--abstand-1) solid transparent;
+  color:var(--asphalt);text-decoration:none;
+}
+.eintrag:hover{background:var(--rauch);text-decoration:none}
+.eintrag .symbol{color:var(--dunkelblau)}
+/* Das Datum schrumpft NICHT. Beim ersten Anlauf hatten Datum und
+ * Rettungsmittelname beide `flex:1 1 auto`, und bei 260 px Leistenbreite wurde
+ * aus „27.12.2026" ein „27.12.20…" — abgeschnitten wurde also die Auskunft,
+ * die den Eintrag überhaupt identifiziert. Der Name absorbiert die Restbreite
+ * (E-P3-09: Ellipse am NAMEN, voller Name im Tooltip). */
+.eintrag-text{
+  flex:1 0 auto;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+/* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
+ * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
+ * ganz — das Artzeichen bleibt (E-P3-09). */
+.eintrag-neben{
+  flex:0 1 auto;min-width:0;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau)}
+
+/* Der Fuß der Leiste: „Zuordnung offen" (rosa mit rotem Zähler, nur solange
+ * etwas offen ist), „Diensttag anlegen" (orange), Papierkorb (gedämpft). */
+.eintrag-offen{background:var(--rosa)}
+.eintrag-offen .symbol{color:var(--rot-tief)}
+.eintrag-offen .eintrag-text{color:var(--rot-tief)}
+.eintrag-anlegen .symbol,
+.eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
+.eintrag-leise .symbol,
+.eintrag-leise .eintrag-text{color:var(--gedaempft);font-weight:400}
+.zaehler{
+  flex:0 0 auto;
+  min-width:var(--abstand-5);height:var(--abstand-5);padding:0 var(--abstand-1);
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-rund);
+  background:var(--rot);color:var(--auf-dunkel);
+  font-size:var(--groesse-1);font-weight:700;
+}
+
+
+/* == 6. KARTE, ZEILE, TITELZEILE ===========================================
+ *
+ * Jeder Inhaltsblock ist eine Karte mit Titel, optionaler Zahl und GENAU
+ * EINER Kopfaktion rechts. Eine zweite gibt es nicht — was mehr braucht,
+ * bekommt ein Aktionsmenü (E-P3-25).
+ */
+
+.karte{
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius-gross);
+  margin-bottom:var(--abstand-4);
+}
+/* flex-wrap: Wird die Zeile zu eng (Titel + Zahl + Sortieren + Nachtragen bei
+ * 360 px), bricht die Kopfaktion in eine zweite Zeile um. Ohne wrap schrumpft
+ * die Titelspalte unter ihre Textbreite und der Text uebermalt die Zahl. */
+.karte-kopf{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2);
+  padding:var(--abstand-3) var(--abstand-4);
+  border-bottom:var(--strich) solid var(--linie);
+  list-style:none;
+}
+.karte-kopf::-webkit-details-marker{display:none}
+.karte-titel{
+  font-size:var(--groesse-5);
+  flex:0 1 auto;min-width:0;
+}
+.karte-zahl{color:var(--gedaempft);font-size:var(--groesse-2);flex:0 0 auto}
+/* Die Kopfaktion ist ein LINK mit Symbol, kein Knopf: Was kleiner als 44 px
+ * ist, ist kein Knopf (E-P3-22). Die Trefferfläche erreicht sie über den
+ * Innenabstand trotzdem. */
+.karte-aktion{
+  margin-left:auto;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:0 var(--abstand-2);
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+.karte-aktion-blau{color:var(--blau-tief)}
+.karte-aktion-orange{color:var(--orange-tief)}
+.karte-inhalt{padding:var(--abstand-4)}
+.karte-vorschau{
+  margin-left:auto;color:var(--gedaempft);
+  font-size:var(--groesse-2);text-align:right;
+}
+.karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
+.karte-klappbar[open] > .karte-kopf{border-bottom:var(--strich) solid var(--linie)}
+.karte-klappbar > .karte-kopf .akkordeon-winkel{color:var(--sand)}
+.karte-klappbar[open] > .karte-kopf .akkordeon-winkel{transform:none}
+
+/* ---- Zeile ---------------------------------------------------------------
+ * Text links (fett plus Kleinzeile), Plaketten, Aktionen rechts. Am Desktop
+ * sind die Aktionen Knöpfe; mobil ein „⋯" je Zeile (E-P3-26).
+ */
+.zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) 0;
+  border-bottom:var(--strich) solid var(--linie);
+}
+.zeile:last-child{border-bottom:0;padding-bottom:0}
+.zeile:first-child{padding-top:0}
+.zeile-text{flex:1 1 auto;min-width:0}
+.zeile-haupt{font-weight:600;color:var(--asphalt)}
+.zeile-text a{color:inherit}
+.zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
+.zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+
+/* ---- Titelzeile ---------------------------------------------------------- */
+.titelzeile{margin-bottom:var(--abstand-4)}
+.rueckweg{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  min-height:var(--knopf);
+  color:var(--blau-tief);font-weight:600;
+}
+.titelzeile-haupt{display:flex;align-items:flex-start;gap:var(--abstand-3);flex-wrap:wrap}
+/* flex-basis auto statt fester 14rem: Ein kurzer Titel („Einsatz 1") liess
+ * sonst die Knoepfe umbrechen, obwohl alles in eine Zeile passt (O4). Lange
+ * Titel sind mobil ohnehin kurz gefasst (wtag-kurz). */
+.titelzeile-text{flex:1 1 auto;min-width:0}
+.titelzeile-unter{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.titelzeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto;margin-left:auto}
+
+
+/* == 7. KNOPF ==============================================================
+ *
+ * EINE HÖHE: 44 px, mobil wie Desktop, auch für Zeilenaktionen. Es gibt keine
+ * Kompaktvariante — was kleiner ist, ist kein Knopf (E-P3-22). Der Bestand
+ * hatte sechs Varianten und sechs ortsgebundene Größen; `.btn-primary` trug
+ * global `width:100%` und wurde an zehn Stellen zurückgenommen.
+ *
+ * Die Vollständigkeitsprüfung liest die Höhenangabe nach: Sie muss aus
+ * --knopf kommen.
+ */
+.knopf{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:var(--abstand-2);
+  height:var(--knopf);
+  padding:0 var(--abstand-4);
+  border-radius:var(--radius);
+  border:var(--strich-stark) solid transparent;
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);
+  text-decoration:none;cursor:pointer;
+  white-space:nowrap;
+}
+.knopf:hover{text-decoration:none}
+.knopf[disabled],.knopf[aria-disabled="true"]{opacity:.5;cursor:default}
+
+/* Dunkelblaue Schrift auf Orange: 5,97:1. Weiß auf Orange wären 2,3:1 und
+ * damit unlesbar — die Mockups zeigen an dieser Stelle Weiß, der
+ * Entscheidungstext gilt (E-P3-15, Fund F-P3-L). */
+.knopf-primaer{
+  background:var(--knopf-primaer-flaeche);
+  color:var(--knopf-primaer-schrift);
+  border-color:var(--knopf-primaer-flaeche);
+}
+.knopf-primaer:hover{background:var(--orange-tief);border-color:var(--orange-tief);color:var(--auf-dunkel)}
+.knopf-neutral{
+  background:var(--schnee);color:var(--dunkelblau);
+  border-color:var(--linie-stark);
+}
+.knopf-neutral:hover{background:var(--rauch)}
+.knopf-gefahr{background:var(--schnee);color:var(--rot-tief);border-color:var(--rot)}
+.knopf-gefahr:hover{background:var(--rosa)}
+.knopf-leise{background:none;color:var(--gedaempft);padding:0 var(--abstand-2)}
+.knopf-leise:hover{color:var(--asphalt)}
+.knopf-symbol{
+  width:var(--knopf);height:var(--knopf);padding:0;
+  background:none;color:inherit;border-color:transparent;
+}
+.knopf-symbol:hover{background:var(--rauch)}
+.knopf-breit{width:100%}
+
+
+/* == 8. PLAKETTE ===========================================================
+ *
+ * Plaketten tragen KEIN Häkchen: Ihr Vorhandensein ist das Häkchen. Und sie
+ * sind keine Bedienelemente (E-P3-17).
+ */
+.plakette{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  padding:var(--abstand-1) var(--abstand-2);
+  border-radius:var(--radius-klein);
+  font-size:var(--groesse-1);font-weight:600;
+  white-space:nowrap;
+}
+.plakette .symbol{width:14px;height:14px}
+.plakette-neutral{background:var(--rauch);color:var(--gedaempft);border:var(--strich) solid var(--linie)}
+.plakette-orange{background:var(--orange-hell);color:var(--asphalt)}
+.plakette-blau{background:var(--blau-hell);color:var(--dunkelblau)}
+.plakette-rot{background:var(--rosa);color:var(--rot-tief)}
+.plakette-weg{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:var(--symbol);height:var(--symbol);
+  margin-right:calc(var(--abstand-1) * -1);color:inherit;
+}
+
+
+/* == 9. MELDUNG ============================================================
+ *
+ * Vier Töne mit Symbol und optionalem fettem Auftakt (E-P3-16). Grün ist
+ * fort: Die Vollzugsmeldung ist jetzt blau wie der Hinweis und unterscheidet
+ * sich durch das Symbol — Haken gegen Kreis-i. Farbe ist nie der einzige
+ * Träger (Grundregel 3).
+ *
+ * Die Warnung trägt ihren Text in Asphalt, nicht in Orange tief: Orange tief
+ * auf Orange hell sind 3,81:1 und damit unter der Schwelle für Fließtext.
+ * Der fette Auftakt darf orange sein — für fette Schrift ab 14 px gilt 3:1.
+ */
+.meldung{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4);
+  border-radius:var(--radius);
+  margin-bottom:var(--abstand-4);
+}
+/* Der Text braucht eine Mindestbreite, unter der die Aktion in die naechste
+ * Zeile umbricht — sonst quetscht ein breiter Knopf den Text auf ein Wort je
+ * Zeile (Fund aus O3 am Geraetehinweis bei 390 px). */
+.meldung p{flex:1 1 16rem;min-width:0}
+.meldung .symbol{flex:0 0 auto}
+.meldung-aktion{flex:0 0 auto}
+.meldung-fehler{background:var(--rosa);color:var(--rot-tief)}
+.meldung-fehler .symbol{color:var(--rot)}
+.meldung-info{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-info .symbol{color:var(--blau-tief)}
+.meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
+.meldung-ok .symbol{color:var(--blau-tief)}
+.meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
+.meldung-warn .symbol{color:var(--orange-tief)}
+.meldung-warn strong{color:var(--orange-tief)}
+
+
+/* == 10. AKTIONSMENÜ UND BLATT =============================================
+ *
+ * Mobil ein „⋯", das ein Blatt von unten öffnet; am Desktop derselbe Vorrat
+ * als Aufklappmenü. EIN Markup für beide Formen — assets/blatt.js öffnet und
+ * schließt nur, welche Form erscheint, sagt dieses Stylesheet (E-P3-27).
+ */
+.aktionen{position:relative}
+.aktionen-knopf .symbol:last-child{transition:transform var(--dauer) ease-out}
+.aktionen-knopf[aria-expanded="true"] .symbol:last-child{transform:rotate(180deg)}
+
+.blatt{
+  position:fixed;inset:auto 0 0 0;z-index:70;
+  background:var(--schnee);
+  border-radius:var(--radius-gross) var(--radius-gross) 0 0;
+  box-shadow:var(--schatten-hoch);
+  padding:var(--abstand-3) var(--abstand-3) var(--abstand-5);
+  max-height:80vh;overflow-y:auto;
+}
+.blatt-griff{
+  width:2.5rem;height:var(--abstand-1);margin:0 auto var(--abstand-3);
+  border-radius:var(--radius-rund);background:var(--sand);
+}
+.blatt-titel{
+  font-size:var(--groesse-5);text-align:center;
+  margin-bottom:var(--abstand-3);
+}
+.blatt-liste{display:flex;flex-direction:column}
+.blatt-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--blatt-zeile);
+  padding:0 var(--abstand-3);
+  border-radius:var(--radius-klein);
+  color:var(--asphalt);font-weight:600;
+}
+.blatt-zeile:hover{background:var(--rauch);text-decoration:none}
+.blatt-zeile .symbol{color:var(--dunkelblau)}
+.blatt-anlegen,.blatt-anlegen .symbol{color:var(--orange-tief)}
+/* Löschen steht rot UND durch eine Linie abgesetzt: Wer schnell tippt, soll
+ * nicht danebengreifen. */
+.blatt-gefahr{
+  color:var(--rot-tief);
+  margin-top:var(--abstand-2);padding-top:var(--abstand-2);
+  border-top:var(--strich) solid var(--linie);
+}
+.blatt-gefahr .symbol{color:var(--rot)}
+.blatt-abbrechen{width:100%;margin-top:var(--abstand-3)}
+
+
+/* == 11. FORMULAR ==========================================================
+ *
+ * Feld, Schalter, Segmentwahl, Speichern-Leiste.
+ *
+ * Die Beschriftung steht in NORMALSCHRIFT. Im Bestand waren Feldnamen,
+ * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
+ * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
+ */
+.feld{margin-bottom:var(--abstand-4)}
+.feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
+.feld-pflicht{color:var(--rot-tief)}
+.feld-eingabe{
+  display:block;width:100%;
+  height:var(--knopf);
+  padding:0 var(--abstand-3);
+  background:var(--schnee);color:var(--asphalt);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+}
+.feld-mehrzeilig{height:auto;padding:var(--abstand-3)}
+.feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
+.feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
+.feld-reihe > .feld{flex:1 1 12rem;min-width:0}
+
+/* ---- Schalter ------------------------------------------------------------
+ * Aus einer echten Checkbox gebaut — Tastaturbedienung, Vorlesezustand und
+ * Absenden kommen damit vom Browser und nicht aus einem Skript. */
+.schalter{margin-bottom:var(--abstand-3)}
+/* DER SELEKTOR IST ABSICHTLICH SO LANG — dieselbe Falle wie F-P3-AP, hier
+ * in O11 nachgezogen. `.schalter-box` (0,1,0) verliert gegen
+ * `input[type=checkbox]` in den Grundformen (0,1,1), die jedem Kästchen
+ * 20 x 20 px gibt; gemessen war es genau das. Weder `.schalter` noch
+ * `.wahlliste` setzen `position:relative`, das unsichtbare Kästchen lag also
+ * auf seiner statischen Stelle über dem linken Rand der Beschriftung. */
+input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.schalter-label{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--knopf);cursor:pointer;
+}
+.schalter-text{flex:1 1 auto;font-weight:600}
+.schalter-klein{display:block;font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+.schalter-griff{
+  flex:0 0 auto;position:relative;
+  width:var(--schalter-breit);height:var(--schalter-hoch);
+  border-radius:var(--radius-rund);
+  background:var(--sand);
+  transition:background var(--dauer) ease-out;
+}
+.schalter-griff::after{
+  content:"";position:absolute;
+  top:calc((var(--schalter-hoch) - var(--schalter-punkt)) / 2);
+  left:calc((var(--schalter-hoch) - var(--schalter-punkt)) / 2);
+  width:var(--schalter-punkt);height:var(--schalter-punkt);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+  transition:transform var(--dauer) ease-out;
+}
+.schalter-box:checked + .schalter-label .schalter-griff{background:var(--orange)}
+.schalter-box:checked + .schalter-label .schalter-griff::after{
+  transform:translateX(calc(var(--schalter-breit) - var(--schalter-hoch)));
+}
+.schalter-box:focus-visible + .schalter-label .schalter-griff{
+  outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark);
+}
+/* Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich. */
+.schalter-abhaengig{
+  margin:var(--abstand-2) 0 var(--abstand-4) var(--abstand-3);
+  padding-left:var(--abstand-4);
+  border-left:var(--strich-stark) solid var(--orange);
+}
+
+/* ---- Segmentwahl ---------------------------------------------------------
+ * Als Radiogruppe gebaut: Pfeiltasten, Vorlesezustand und Absenden kommen
+ * damit vom Browser. */
+.segment{
+  display:flex;flex-wrap:wrap;
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+/* DER SELEKTOR IST ABSICHTLICH SO LANG (F-P3-AP, O9c). `.segment-box`
+ * allein (0,1,0) verliert gegen `input[type=radio]` (0,1,1) in Abschnitt 15,
+ * die jedem Radio 20 x 20 px gibt — und weil diese Regel spaeter steht, blieb
+ * das Kaestchen 20 x 20 gross, nur durchsichtig. Absolut positioniert und
+ * unsichtbar lag es damit UEBER der Umgebung und fing Klicks ab; gefunden
+ * beim Bedienen der Wartungsseite („intercepts pointer events"). Es betraf
+ * jede Segmentwahl der Anwendung — Zeitraum, Suchfilter, Reiter. */
+input[type=radio].segment-box,
+input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.segment-taste{
+  flex:1 1 auto;
+  display:flex;align-items:center;justify-content:center;
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  cursor:pointer;text-align:center;
+  border-right:var(--strich) solid var(--linie);
+}
+.segment-taste:last-of-type{border-right:0}
+.segment-box:checked + .segment-taste{background:var(--orange);color:var(--knopf-primaer-schrift)}
+.segment-box:focus-visible + .segment-taste{
+  outline:var(--strich-stark) solid var(--blau);outline-offset:calc(var(--strich-stark) * -1);
+}
+
+/* ---- Speichern-Leiste ----------------------------------------------------
+ * Klebt am unteren Rand und erscheint, sobald das Formular schmutzig ist.
+ * KEIN „Verwerfen" — der Rückweg oben genügt, und ein Verwerfen-Knopf neben
+ * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29). */
+.speichern{
+  position:sticky;bottom:0;z-index:30;
+  margin:var(--abstand-4) calc(var(--abstand-3) * -1) 0;
+  padding:var(--abstand-3);
+  background:var(--schnee);
+  border-top:var(--strich) solid var(--linie);
+  box-shadow:var(--schatten);
+}
+.speichern-innen{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  max-width:var(--rahmen);margin:0 auto;
+}
+.speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+
+/* == 12. KENNZAHL ==========================================================
+ *
+ * Wert in Bricolage mit Einheit, darunter die Beschriftung. Die Hervorhebung
+ * eines Extremwerts war rot und ist jetzt orange: Rot heißt in dieser
+ * Oberfläche „Aufmerksamkeit", und ein Höchstwert ist kein Fehler (E-P3-37).
+ */
+.kennzahl-raster{
+  display:grid;gap:var(--abstand-3);
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-bottom:var(--abstand-4);
+}
+.kennzahl{
+  position:relative;
+  padding:var(--abstand-3);
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+}
+.kennzahl.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+.kennzahl-wert{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-6);line-height:var(--zeile-eng);
+  color:var(--dunkelblau);
+}
+.kennzahl-einheit{font-size:var(--groesse-2);color:var(--gedaempft);margin-left:var(--abstand-1)}
+.kennzahl-label{font-size:var(--groesse-2);color:var(--gedaempft)}
+/* Der Tag des Extremwerts steht IN der Beschriftungszeile („Längste
+ * Flugstrecke · 14.08.", Mockup 30), nicht darunter: Er gehört zur Aussage
+ * der Kachel und nicht als zweite Zeile darunter. Bei schmalen Kacheln
+ * bricht die Zeile um — das ist richtiger, als eine feste zweite Zeile zu
+ * erzwingen, die bei den übrigen Kacheln leer bliebe. */
+.kennzahl-tag{color:var(--orange-tief);font-weight:600;white-space:nowrap}
+.kennzahl-extrem::after{
+  content:"";position:absolute;top:var(--abstand-2);right:var(--abstand-2);
+  width:var(--abstand-2);height:var(--abstand-2);
+  border-radius:var(--radius-rund);background:var(--orange);
+}
+
+
+/* == 13. TEXT UND ÖFFENTLICHE HÜLLE ========================================
+ *
+ * Fließtext in der Lesespalte — Erklärtexte, Abbruchseite, Impressum und
+ * Datenschutz (E-P3-12, E-P3-38).
+ */
+.text{max-width:var(--lesespalte)}
+.text h1{margin-bottom:var(--abstand-4)}
+.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-3)}
+.text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2)}
+.text p{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-3)}
+.text ul,.text ol{margin:0 0 var(--abstand-3) var(--abstand-5);list-style:disc}
+.text ol{list-style:decimal}
+.text li{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-1)}
+.text a{text-decoration:underline}
+.text-stand{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-5)}
+
+/* ---- Anmeldung ----------------------------------------------------------- */
+.anmeldung-body{
+  background:var(--dunkelblau);
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+}
+.anmeldung{
+  flex:1 1 auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--abstand-5) var(--abstand-3);
+}
+.anmeldung-karte{
+  width:100%;max-width:var(--anmeldekarte);
+  background:var(--schnee);
+  border-radius:var(--radius-gross);
+  padding:var(--abstand-5);
+  box-shadow:var(--schatten-hoch);
+}
+.anmeldung-logo{display:block;height:56px;width:auto;margin:0 auto var(--abstand-4)}
+.anmeldung-titel{text-align:center;font-size:var(--groesse-6)}
+.anmeldung-unter{text-align:center;color:var(--gedaempft);margin-bottom:var(--abstand-5)}
+/* LINKSBUENDIG, nicht zentriert (O10, Mockup 32). Der Link steht unter einem
+ * 100 % breiten Knopf und ueber dem linken Rand der Feldbeschriftungen;
+ * zentriert schwebt er zwischen beidem. Betrifft Anmeldung, „Passwort
+ * vergessen" und die Abmeldeseite — alle drei tragen dieselbe Klasse. */
+.anmeldung-neben{margin-top:var(--abstand-4)}
+
+/* ---- Demo-Hinweis --------------------------------------------------------
+ * Dauerhaft, nicht wegklickbar. Ein Hinweis, den man einmal schließt, ist
+ * beim zweiten Besuch nicht mehr da — und genau dann wäre er nötig. */
+.demo-hinweis{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4);
+  margin-bottom:var(--abstand-4);
+  background:var(--orange-hell);
+  border-radius:var(--radius);
+  font-size:var(--groesse-2);
+}
+.demo-hinweis .symbol{color:var(--orange-tief)}
+
+
+/* == 14. TABELLE UND KACHEL ================================================
+ *
+ * Das Gerüst; gefüllt wird es in O3 (Startseite und Kachelform) und O6/O7.
+ *
+ * Unter 720 px gibt es KEINE Tabelle: Die Einsätze erscheinen als dreizeilige
+ * Kachel (E-P3-32). Der Grund steht im Befund — bei 360 px bekamen Einsatzort
+ * und Diagnose null Pixel Breite und verschwanden ohne Hinweis, während sieben
+ * Zahlenspalten stehen blieben.
+ */
+/* tabular-nums: Ziffern gleicher Breite, damit Zahlenspalten (Beginn, Dauer,
+ * km) untereinander fluchten — die frühere mono-Klasse entfällt (Mockup 03
+ * setzt die Textschrift, keine Schreibmaschine). */
+.tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tabelle th{
+  text-align:left;font-weight:600;
+  color:var(--dunkelblau);
+  padding:var(--abstand-2) var(--abstand-2);
+  border-bottom:var(--strich-stark) solid var(--linie);
+  white-space:nowrap;
+}
+.tabelle td{
+  padding:var(--abstand-3) var(--abstand-2);
+  border-bottom:var(--strich) solid var(--linie);
+  vertical-align:middle;
+}
+.tabelle tr:last-child td{border-bottom:0}
+.tabelle-scroll{overflow-x:auto}
+
+
+/* == 15. DIALOG ============================================================
+ *
+ * Bestätigen, Entsperren, Rückspielen, Karte wählen: am Desktop eine Karte im
+ * Schleier, mobil ein Blatt von unten (E-P3-27, 5.3).
+ */
+.dialog{
+  border:0;padding:0;
+  background:var(--schnee);
+  border-radius:var(--radius-gross);
+  box-shadow:var(--schatten-hoch);
+  max-width:min(92vw,32rem);width:100%;
+  color:var(--asphalt);
+}
+.dialog::backdrop{background:var(--schleier)}
+.dialog-kopf{padding:var(--abstand-4) var(--abstand-4) 0}
+.dialog-inhalt{padding:var(--abstand-4)}
+/* Ein erklärender Absatz vor den Feldern braucht Luft nach unten — sonst
+ * klebt die erste Beschriftung an ihm (O9, Rückspieldialog). Der letzte
+ * Absatz bekommt keine: Er steht ohnehin vor dem Fuß mit eigenem Abstand. */
+.dialog-inhalt p{margin:0 0 var(--abstand-3)}
+.dialog-inhalt p:last-child{margin-bottom:0}
+.dialog-fuss{
+  display:flex;gap:var(--abstand-3);justify-content:flex-end;
+  padding:0 var(--abstand-4) var(--abstand-4);
+}
+.dialog-fuss .knopf{flex:1 1 auto}
+
+
+/* == 16. KARTENANSICHT (Leaflet) ===========================================
+ *
+ * Höhe nach Token, Position nach Schwellen. Der Marker-Satz entsteht in O3.
+ */
+.geo{
+  height:var(--karte-mobil);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:var(--rauch);
+  margin-bottom:var(--abstand-4);
+  /* EIGENER STAPELKONTEXT. Leaflet vergibt intern z-index bis 1000 — seine
+   * Bedienelemente zeichneten über Schublade (60) und Schleier (50), der
+   * Kartenpin stand mitten im Menü (Fable-Kontrolle, F-P3-Y). position und
+   * z-index:0 sperren die inneren Werte in die Karte ein; kein Wettrüsten
+   * der z-Indizes nötig. */
+  position:relative;z-index:0;
+}
+
+
+/* == 17. GRUNDFORMEN ======================================================
+ *
+ * Bis Web 9.11.1 hieß dieser Abschnitt ROHSCHICHT und war ausdrücklich ein
+ * ÜBERGANG: P3 baute die Seiteninhalte Paket für Paket um (O3 bis O11), und
+ * bis dahin stand auf jeder noch nicht umgebauten Seite Markup mit
+ * Klassennamen, für die es keine Regel mehr gab. Dieser Übergang ist mit
+ * O11 zu Ende, und was ihn ausmachte, ist weg:
+ *
+ *   .alert-Familie  Die eine begründete Klassen-Ausnahme (F-P3-T). Ersetzt
+ *                   durch den Meldungs-Baustein `.meldung` — in PHP über
+ *                   ui_meldung_markup(), in JS über dasselbe Markup
+ *                   (import_ui.js, einstellungen.php, patient.js).
+ *   .muted          Die zweite Ausnahme, zuletzt 16 Stellen. Ersetzt durch
+ *                   `.feld-hinweis` (Absatz), `.feld-klein` (Absatz unter
+ *                   einem Feld), `.feld-klein-inline` (Zusatz in einer
+ *                   Beschriftung) und `.dash` (Tabellenzelle) — vier Rollen,
+ *                   die eine Klasse vorher gemeinsam trug.
+ *   table/th/td     Die Notbremse gegen waagerechten Überlauf. Es gibt keine
+ *                   Tabelle mehr, die ihre Gestaltung von hier bezieht: Die
+ *                   letzte (`.imp-table` im Import — eine Klasse, die selbst
+ *                   nie eine Regel hatte) trägt jetzt `.tabelle` und liegt wie
+ *                   die übrigen in `.tabelle-scroll`.
+ *   fieldset/legend Null Verwendungen — die letzten fünf standen im
+ *                   Einrichter und sind in O10 zu Karten geworden.
+ *   hr              Null Verwendungen — der letzte Trenner stand auf der
+ *                   Wartungsseite und ist in O11 mit den Karten entfallen.
+ *
+ * WAS BLEIBT, IST KEIN ÜBERGANG MEHR, sondern die Grundform der Elemente,
+ * auf denen die Bausteine aufsetzen. Ein `.feld` ist eine Beschriftung mit
+ * Eingabefeld — aber ein `<input>` gibt es auch außerhalb davon (im
+ * Suchfeld, im Auswahlkästchen einer Zeile, in einem Filter), und es muss
+ * dort dieselbe Höhe, denselben Rahmen und dieselbe Farbe haben. Diese
+ * Regeln setzen das, und zwar an Elementnamen, damit keine Stelle sie
+ * vergessen kann.
+ *
+ * Die label-Regeln bleiben mit: Das Muster `<label>Text <input></label>` ist
+ * gültiges HTML und steht an 46 Stellen — die Filterreihen der Suche, das
+ * Einsatzformular, die Anmeldung. Sie zu tilgen hieße, jede dieser Stellen
+ * in eine `.feld`-Hülle umzubauen; das wäre ein Umbau der beiden
+ * kompliziertesten Seiten der Anwendung für eine Regel, die nichts falsch
+ * macht. `.feld` ist der BAUSTEIN für ein beschriftetes Feld, nicht das
+ * Gebot, dass jede Beschriftung einer sein müsse.
+ *
+ * DIE EINTRITTSKARTE BLEIBT ENG: Hier stehen ausschließlich Elementnamen.
+ * Eine KLASSE hier einzutragen hieße, das Redesign zurückzunehmen — dafür
+ * gibt es die Bausteine in den Abschnitten davor.
+ */
+input,select,textarea{
+  max-width:100%;
+  padding:var(--abstand-2) var(--abstand-3);
+  min-height:var(--knopf);
+  background:var(--schnee);color:var(--asphalt);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+}
+/* Kästchen und Radios sind keine Textfelder: feste Größe statt Mindesthöhe.
+ * ACHTUNG, DRITTE FALLE DIESER ART (F-P3-AP, F-P3-AZ): Diese Regel hat
+ * Spezifität (0,1,1) und schlägt damit jede bloße Klasse. Wer ein solches
+ * Kästchen ausblenden will, braucht `input[type=checkbox].meine-klasse` —
+ * `.meine-klasse` allein verliert. */
+input[type=checkbox],input[type=radio]{
+  min-height:0;width:var(--symbol);height:var(--symbol);accent-color:var(--orange);
+}
+/* Das Muster `<label>Text <input></label>`: Beschriftung oben, Feld darunter
+ * in voller Breite. Ohne diese Regel liefe die Eingabe neben der Beschriftung
+ * her und bräche auf schmalen Geräten an unvorhersehbaren Stellen um. */
+label{display:block;margin-bottom:var(--abstand-3)}
+label > input:not([type=checkbox]):not([type=radio]),
+label > select,
+label > textarea{display:block;width:100%;margin-top:var(--abstand-1)}
+label:has(> input[type=checkbox]),
+label:has(> input[type=radio]){
+  display:flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);margin-bottom:var(--abstand-1);
+}
+summary{cursor:pointer}
+code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
+pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radius:var(--radius-klein)}
+
+
+/* == 18. SCHWELLEN =========================================================
+ *
+ * Die vier Schwellen aus Anlage G des Konzepts, und NUR hier stehen sie als
+ * Zahlen: Custom Properties funktionieren in Media-Abfragen nicht. Zur
+ * Auskunft liegen dieselben Werte als --s-handy, --s-leiste, --s-zwei und
+ * --s-karte-neben in :root.
+ *
+ *    720   Handy → Tablet hoch: Kachel wird Tabelle, Karte 220 px
+ *   1024   Schublade → feste Leiste, Hauptpunkte in der Kopfleiste
+ *   1200   Leiste 260 px, Zweispalter, Formularkarten nebeneinander
+ *   1600   Karte neben Diensttag-Daten und Tabelle
+ */
+
+/* ---- ab 720: Tablet hoch ------------------------------------------------- */
+@media (min-width:720px){
+  .inhalt{padding:var(--abstand-5) var(--abstand-4)}
+  .geo{height:var(--karte-tablet)}
+  .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .speichern-hinweis{display:block}
+  .speichern .knopf-breit{width:auto}
+  .segment{display:inline-flex}
+}
+
+/* ---- ab 1024: die Leiste steht fest -------------------------------------
+ * Ab hier ist die Schublade fort und die Leiste ein Teil des Rasters. Das
+ * Markup ist dasselbe; nur diese Regeln unterscheiden sich. */
+@media (min-width:1024px){
+  .leiste{
+    position:sticky;top:var(--kopf);inset:auto;
+    width:var(--leiste-schmal);max-width:none;
+    height:calc(100vh - var(--kopf));
+    transform:none;
+    flex:0 0 auto;
+  }
+  .schleier{display:none}
+  .schublade-auf{overflow:visible}
+  .kopf-menue{display:none}
+  .kopf-punkt{display:inline-flex}
+  .kopf-nutzer{
+    display:inline;color:var(--sand);
+    font-size:var(--groesse-2);font-weight:400;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .nur-schublade{display:none}
+  .nur-breit{display:inline-flex}
+  .nur-schmal{display:none}
+
+  /* Unter 1200 px entfällt der Rettungsmittelname in der Leiste; das
+     Artzeichen bleibt (E-P3-09). Bei 220 px Leistenbreite bliebe von ihm
+     ohnehin nur eine Ellipse. */
+  .eintrag-neben{display:none}
+
+  /* Das Aktionsmenü wird ein Aufklappmenü statt eines Blattes. */
+  .blatt{
+    position:absolute;inset:auto 0 auto auto;top:calc(var(--knopf) + var(--abstand-1));
+    width:16rem;
+    border-radius:var(--radius);
+    padding:var(--abstand-2);
+    border:var(--strich) solid var(--linie);
+  }
+  .blatt-griff,.blatt-titel,.blatt-abbrechen{display:none}
+  .blatt-zeile{min-height:var(--knopf)}
+}
+
+/* ---- ab 1200: breite Leiste und Zweispalter ------------------------------ */
+@media (min-width:1200px){
+  .leiste{width:var(--leiste)}
+  .eintrag-neben{display:block}
+  .geo{height:var(--karte-desktop)}
+  .zweispalter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--abstand-4);align-items:start}
+}
+
+/* ---- ab 1600: die Karte steht neben Daten und Tabelle -------------------- */
+@media (min-width:1600px){
+  .karte-neben{display:grid;grid-template-columns:1fr var(--karte-neben-breit);
+    gap:var(--abstand-4);align-items:start}
+}
+
+
+/* == 19. ÜBERSICHTSZEILE ===================================================
+ *
+ * Die Einstellungs-Übersicht (E-P3-11): Symbol, Text, Winkel. Auf dem Handy
+ * ist sie der einzige Weg, der zeigt, WAS es im Bereich gibt.
+ */
+.uebersicht-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:calc(var(--knopf) + var(--abstand-3));
+  padding:0 var(--abstand-2);
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--asphalt);text-decoration:none;
+}
+.uebersicht-zeile:last-child{border-bottom:0}
+.uebersicht-zeile:hover{background:var(--rauch);text-decoration:none}
+.uebersicht-zeile .symbol{color:var(--dunkelblau)}
+.uebersicht-text{
+  flex:1 1 auto;min-width:0;
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
+}
+.uebersicht-winkel{color:var(--sand)}
+/* Blocküberschrift ÜBER einer Karte („Administration") — Mockup 07 zeigt sie
+ * als gesperrte Versalzeile außerhalb der Karte, nicht als Kartentitel. */
+.uebersicht-block{
+  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gedaempft);
+  margin:var(--abstand-5) 0 var(--abstand-2) var(--abstand-1);
+}
+
+/* Die Anmeldekarte des Einrichters und der Passwortvergabe ist breiter: Dort
+ * stehen Formulare mit Feldgruppen, nicht zwei Zeilen. */
+
+
+
+/* == 20. TAGESÜBERSICHT UND EINSATZLISTE (O3) ==============================
+ *
+ * Kachel, Tabelle mit Farbstreifen, Diensttag-Daten als Lesezustand und das
+ * Raster, das die Karte ab 1600 px neben Daten und Tabelle stellt.
+ */
+
+/* ---- Sichtbarkeitsschwelle 720 -------------------------------------------
+ * Unter 720 px gibt es KEINE Einsatztabelle, sondern die Kachel (E-P3-32).
+ * Zwei Hilfsklassen tragen den Wechsel; sie blenden nur AUS und lassen die
+ * Grundform des Elements unangetastet. */
+.nur-ab-720{display:none}
+@media (min-width:720px){
+  /* revert statt block: Die Utility soll die GRUNDFORM wiederherstellen —
+   * ein <span> (Titelzusatz „· 07:34 Uhr") wurde mit block zur eigenen
+   * Zeile (Fund aus O4). */
+  .nur-ab-720{display:revert}
+  /* Doppelt geschrieben, um jede Baustein-Regel gleicher Spezifität zu
+   * schlagen (der Sortier-Knopf traegt .karte-sortieren mit display:flex —
+   * eine Klasse gegen eine Klasse verloere nach Reihenfolge). */
+  .nur-unter-720.nur-unter-720{display:none}
+}
+
+/* ---- Kachel (E-P3-32, Mockup 10) ---------------------------------------- */
+.kachelliste{display:flex;flex-direction:column}
+.kachel{
+  display:flex;gap:var(--abstand-3);
+  padding:var(--abstand-3) 0;
+  border-bottom:var(--strich) solid var(--linie);
+  color:var(--asphalt);text-decoration:none;
+}
+.kachel:last-child{border-bottom:0;padding-bottom:0}
+.kachel:first-child{padding-top:0}
+.kachel:hover{text-decoration:none;background:var(--rauch)}
+.kachel-streifen{
+  flex:0 0 auto;width:var(--abstand-1);
+  border-radius:var(--radius-rund);
+  /* Die Farbe kommt je Einsatz aus den Spur-Token (style-Attribut aus JS —
+   * ein Wert, kein Stil; die Ausnahme steht in tools/vollstaendigkeit). */
+}
+.kachel-zeit{
+  flex:0 0 auto;
+  font-family:var(--schrift-kopf);font-weight:600;
+  color:var(--dunkelblau);
+  min-width:3.2em;
+}
+.kachel-rumpf{flex:1 1 auto;min-width:0}
+.kachel-kopf{display:flex;align-items:baseline;gap:var(--abstand-2)}
+.kachel-ort{
+  flex:1 1 auto;min-width:0;
+  font-weight:600;font-size:var(--groesse-4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.kachel-km{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
+.kachel-dx{
+  color:var(--asphalt);
+  display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;line-clamp:2;overflow:hidden;
+}
+/* In Suche und Zeitraum eine Zeile mit Abschneiden (E-P3-32). */
+.kachel-knapp .kachel-dx{-webkit-line-clamp:1;line-clamp:1}
+.kachel-fuss{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:var(--abstand-1) var(--abstand-2);
+  margin-top:var(--abstand-1);
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+/* Artzeichen und Datum als erstes Element (Suche, Zeitraum). */
+.kachel-art{flex:0 0 auto;color:var(--dunkelblau);align-self:center}
+.kachel-datum{
+  flex:0 0 auto;
+  font-family:var(--schrift-kopf);font-weight:600;color:var(--dunkelblau);
+}
+/* Warnzeichen „vorhanden, aber nicht lesbar" in der Kachel. */
+.kachel .patfehler{color:var(--rot-tief)}
+
+/* ---- Tabelle: Verfeinerungen (E-P3-32, Mockup 04) ------------------------
+ * Der Baustein .tabelle steht in Abschnitt 14; hier kommt dazu, was die
+ * EINSATZtabelle braucht: display:table gegen die Übergangsregel (der
+ * Überlauf gehört dem Behälter .tabelle-scroll), Farbstreifen, blauer
+ * Sortierpfeil, dunkelblaue Haken, die klickbare Zeile. */
+.tabelle{display:table}
+.tabelle-scroll{overflow-x:auto}
+.tabelle th.sortable{cursor:pointer;white-space:nowrap}
+.tabelle th.sortable:hover{color:var(--blau-tief)}
+.tabelle .arrow{color:var(--blau);vertical-align:middle}
+.tabelle .arrow .symbol{width:var(--groesse-2);height:var(--groesse-2)}
+.tabelle .tabelle-haken{color:var(--dunkelblau)}
+.tabelle .streifen{
+  display:inline-block;width:var(--abstand-1);height:var(--abstand-5);
+  border-radius:var(--radius-rund);vertical-align:middle;
+}
+.tabelle .streifen-spalte{width:var(--abstand-3)}
+.tabelle tr.clickable{cursor:pointer}
+.tabelle tr.clickable:hover td{background:var(--rauch)}
+.tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
+.tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
+.tabelle .patfehler .symbol{color:var(--rot-tief)}
+.tabelle td.zahl-spalte,.tabelle th.zahl-spalte{text-align:right}
+.tabelle td.haken-spalte,.tabelle th.haken-spalte{text-align:center}
+
+/* Sortieren-Link im Kartenkopf — nur dort, wo es keine Spaltenköpfe gibt. */
+.karte-sortieren{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);
+  color:var(--blau-tief);flex:0 0 auto;
+}
+.blatt-zeile.aktiv{background:var(--orange-hell);color:var(--dunkelblau)}
+
+/* ---- Wochentag im Titel: lang ab 720, kurz darunter (E-P3-31) ------------ */
+.wtag-lang{display:none}
+.wtag-kurz{display:inline}
+@media (min-width:720px){
+  .wtag-lang{display:inline}
+  .wtag-kurz{display:none}
+}
+
+/* ---- Diensttag-Daten: Lesezustand (E-P3-31, Mockups 02/03) --------------- */
+.tag-lese{display:block}
+.tagfeld{
+  display:grid;grid-template-columns:minmax(7em,auto) 1fr;
+  gap:var(--abstand-1) var(--abstand-4);
+  padding:var(--abstand-1) 0;
+}
+.tagfeld dt{color:var(--gedaempft)}
+.tagfeld dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.tag-lese-leer{color:var(--gedaempft)}
+/* Standort und Rettungsmittel entfallen mobil — sie stehen dort schon in der
+ * Unterzeile des Titels (Mockup 02). */
+.tagfeld-doppelt{display:none}
+@media (min-width:720px){
+  .tagfeld-doppelt{display:grid}
+}
+.tag-form-fuss{display:flex;align-items:center;gap:var(--abstand-3)}
+@media (min-width:720px){
+  .tag-lese{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0 var(--abstand-5)}
+}
+
+/* ---- Das Raster der Tagesübersicht (E-P3-31) -----------------------------
+ * Unter 1600 px gewöhnlicher Fluss: Daten, Karte, Einsätze. Ab 1600 rückt
+ * die Karte in eine rechte Spalte und läuft von der Höhe der Diensttag-Daten
+ * bis unter die Tabelle. */
+@media (min-width:1600px){
+  .tag-raster{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--karte-neben-breit);
+    grid-template-areas:"daten karte" "einsaetze karte";
+    grid-template-rows:auto 1fr;
+    gap:0 var(--abstand-4);
+    align-items:start;
+  }
+  .tag-raster > .karte-daten{grid-area:daten}
+  .tag-raster > .geo-spalte{grid-area:karte;align-self:stretch}
+  .tag-raster > .karte-einsaetze{grid-area:einsaetze}
+  .geo-spalte .geo{height:100%;min-height:var(--karte-desktop)}
+}
+
+
+/* == 21. KARTENMARKER (O3, E-P3-40, Mockup 26) =============================
+ *
+ * Der Marker-Satz gilt für alle drei Kartenseiten und entsteht in
+ * assets/geo.js. Die Zeichnung: Schilder (Haus, Klinik) als weiße, dunkel-
+ * blau umrandete Kästchen mit Namensschild darunter; der Einsatzort als
+ * oranger Kreis mit Pin; Start und Ende als blauer bzw. roter Ring UM das
+ * Schild des Ortes, an dem die Spur beginnt oder endet — beides am selben
+ * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
+ * bei der sie nicht gedrängt stehen.
+ */
+.geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
+.geo-schild-kasten{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  background:var(--schnee);color:var(--dunkelblau);
+  border:var(--strich-stark) solid var(--dunkelblau);
+  border-radius:var(--radius);
+  box-shadow:var(--schatten);
+}
+/* Ringe liegen als zusätzliche Rahmen um das Kästchen. Der Doppelring ist
+ * außen rot (Ende) und innen blau (Start) — wie im Mockup. */
+.geo-ring-start .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--blau);
+}
+.geo-ring-ende .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+}
+.geo-ring-beide .geo-schild-kasten{
+  box-shadow:0 0 0 var(--geo-ring) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--blau),
+             0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 4) var(--rot);
+}
+.geo-schild-text{
+  background:var(--schnee);color:var(--asphalt);
+  font:600 var(--groesse-2)/1.3 var(--schrift-text);
+  padding:var(--abstand-1) var(--abstand-2);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  white-space:nowrap;
+}
+.geo-kreis{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--geo-kreis);height:var(--geo-kreis);
+  background:var(--orange);color:var(--dunkelblau);
+  border:var(--strich-stark) solid var(--schnee);
+  border-radius:var(--radius-rund);
+  box-shadow:var(--schatten);
+}
+.geo-punkt{
+  width:var(--abstand-3);height:var(--abstand-3);
+  border-radius:var(--radius-rund);
+  border:var(--strich-stark) solid var(--schnee);
+}
+.geo-pfeil{color:var(--dunkelblau)}
+.geo-pfeil .symbol{
+  filter:drop-shadow(0 0 var(--strich) var(--schnee))
+         drop-shadow(0 0 var(--strich) var(--schnee));
+}
+/* Leaflet-DivIcons bringen eine eigene Klasse mit weißem Hintergrund mit —
+ * unsere Marker zeichnen sich selbst. */
+.leaflet-div-icon{background:none;border:0}
+
+
+/* == 22. EINSATZANSICHT (O4, E-P3-33, Mockups 19/20/21) ====================
+ *
+ * Vier Karten (Einsatz, PatientIn, Transport, Reanimation) plus Besatzung;
+ * die DOM-Reihenfolge ist die MOBILE (Angaben, Karte, Phasen, Reanimation).
+ * Ab 1200 px ordnet das Raster um: Karte und Einsatzphasen wandern in eine
+ * klebende rechte Spalte, die Reanimation in die linke — Mockup 20.
+ */
+@media (min-width:1200px){
+  .einsatz-raster{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) var(--karte-neben-breit);
+    grid-template-areas:
+      "einsatz neben" "patientin neben" "transport neben"
+      "besatzung neben" "reanimation neben" ". neben";
+    grid-template-rows:repeat(5,min-content) 1fr;
+    gap:0 var(--abstand-4);
+  }
+  .karte-block-einsatz{grid-area:einsatz}
+  .karte-block-patientin{grid-area:patientin}
+  .karte-block-transport{grid-area:transport}
+  .karte-block-besatzung{grid-area:besatzung}
+  .karte-block-reanimation{grid-area:reanimation}
+  .einsatz-neben{
+    grid-area:neben;
+    position:sticky;top:calc(var(--kopf) + var(--abstand-4));
+    align-self:start;
+  }
+  .einsatz-neben .geo{height:var(--karte-desktop)}
+}
+
+/* Die Leseansicht der Einsatz-Karten ist einspaltig — anders als die
+ * Diensttag-Daten, deren Zweispalter volle Inhaltsbreite hat. */
+.einsatz-raster .tag-lese{display:block}
+
+/* Kleinzeile unter einem Lesewert: Höhe, Luftlinie und Strecke unter dem
+ * Einsatzort, das Alter unter dem Geburtsdatum (Mockup 19). */
+.lese-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel. */
+.karte-inhalt .zeile-plaketten{margin-top:var(--abstand-3)}
+
+/* ---- Einsatzphasen als Zeilenliste (Mockup 19) ---------------------------
+ * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur
+ * vorigen Phase klein darunter. Die angetippte Zeile leuchtet orange und
+ * hebt ihr Teilstück auf der Karte hervor (einsatz.php). */
+.phasen-zeile{
+  display:grid;
+  grid-template-columns:var(--symbol-gross) minmax(0,1fr) auto;
+  gap:var(--abstand-3);align-items:center;
+  padding:var(--abstand-2) var(--abstand-4);
+  border-top:var(--strich) solid var(--linie);
+  cursor:pointer;
+}
+.phasen > .phasen-zeile:first-child{border-top:0}
+.phasen-nr{color:var(--gedaempft)}
+.phasen-zeit{text-align:right;font-weight:600;color:var(--dunkelblau)}
+.phasen-abstand{
+  display:block;font-weight:400;
+  color:var(--gedaempft);font-size:var(--groesse-2);
+}
+.phasen-zeile.hl{background:var(--orange-hell)}
+.phasen-zwischentitel{
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  padding:var(--abstand-3) var(--abstand-4) 0;
+}
+
+/* ---- Phasenmarker auf der Karte (Bestand, neu eingekleidet) --------------
+ * Kleine Nummernschilder an den GPS-Positionen der Phasen; der Umschalter
+ * ist ein Leaflet-Control mit Text — Leaflets eigene 26-px-Knopfbreite
+ * würde ihn abschneiden. */
+.pm-chip{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--symbol-gross);height:var(--symbol-gross);
+  background:var(--schnee);color:var(--dunkelblau);
+  border:var(--strich) solid var(--dunkelblau);
+  border-radius:var(--radius-klein);
+  font:600 var(--groesse-1)/1 var(--schrift-text);
+  box-shadow:var(--schatten);
+}
+.pm-chip.hl{background:var(--orange);border-color:var(--orange-tief)}
+.geo .map-ctrl-phase a{
+  width:auto;height:auto;
+  padding:var(--abstand-1) var(--abstand-2);
+  font:600 var(--groesse-1)/var(--zeile) var(--schrift-text);
+  color:var(--dunkelblau);
+}
+/* Der Vollbildknopf teilt den aktiven Zustand mit dem Phasenumschalter — ein
+ * Selektor mehr, keine zweite Regel (O11). Vorher hatte `a.active` am
+ * Vollbildknopf gar keine: Der Knopf hiess im Vollbild „Vollbild verlassen"
+ * und sah aus wie vorher. */
+.geo .map-ctrl-phase a.active,
+.geo .map-ctrl-fs a.active{background:var(--orange-hell)}
+
+/* ---- VOLLBILD (O11) ------------------------------------------------------
+ *
+ * ZWEI WEGE, EIN AUSSEHEN. `map_fullscreen.js` nimmt die Fullscreen-API,
+ * wenn es sie gibt, und sonst einen CSS-Rueckfall — „relevant v. a. iOS
+ * Safari, das requestFullscreen() fuer beliebige Elemente nicht
+ * unterstuetzt" (Dateikopf des Skripts).
+ *
+ * DER RUECKFALL WAR TOT. Die Klassen `map-fs` und `map-fs-lock` hatten seit
+ * dem Neubau des Stylesheets (Web 9.0.0, O1) keine Regel mehr — auf einem
+ * iPhone passierte beim Druck auf „Vollbild" NICHTS: Die Karte blieb, wie
+ * sie war, nur der Knopf hiess jetzt „Vollbild verlassen". Vier Monate
+ * unbemerkt, weil der Weg nur dort genommen wird und die Bildaufnahme den
+ * Vollbildzustand nie herstellt.
+ *
+ * Der Selektor heisst jetzt `.geo`, nicht mehr `.map`: Der Kartenbehaelter
+ * wurde in O1 umbenannt. Die alten Zeilen zurueckzukopieren haette den
+ * Fehler stehen lassen.
+ *
+ * z-index 70 statt der alten 2000: Das ist die Ebene des Blatts. Hoehere
+ * Werte braucht die Anwendung nicht mehr, seit `.geo` einen eigenen
+ * Stapelkontext hat (Abschnitt 16, oben).
+ *
+ * Die `:fullscreen`-Zeile ist auch am Schreibtisch noetig: Das UA-Blatt
+ * setzt Groesse und Rand mit `!important`, den `border-radius` von `.geo`
+ * aber nicht — die Karte haette im Vollbild abgerundete Ecken auf schwarzem
+ * Grund. */
+.geo.map-fs{
+  position:fixed;inset:0;z-index:70;
+  width:100%;height:100%;
+  margin:0;border-radius:0;
+}
+body.map-fs-lock{overflow:hidden}
+.geo:fullscreen{margin:0;border-radius:0}
+
+/* ---- Ring ohne Schild: Start/Ende der Spur abseits von Standort/Ziel ----- */
+.geo-ringpunkt{
+  display:block;
+  width:var(--abstand-4);height:var(--abstand-4);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+  border:var(--geo-ring) solid var(--blau);
+  box-shadow:var(--schatten);
+}
+.geo-ringpunkt-ende{border-color:var(--rot)}
+.geo-ringpunkt-beide{
+  border-color:var(--blau);
+  box-shadow:0 0 0 var(--strich-stark) var(--schnee),
+             0 0 0 calc(var(--geo-ring) * 2) var(--rot);
+}
+
+
+/* == 23. EINSATZFORMULAR (O5, E-P3-34, Mockups 22/23/25) ===================
+ *
+ * Karten statt Rahmengruppen; Ja/Nein als Schalter mit eingerückten
+ * Detailfeldern; Phasen- und Reanimationszeilen mit 44-px-Zeitfeld und
+ * rotem Entfernen-Knopf; Ortsfeld mit Lupe und Pin; Speichern-Leiste unten.
+ * Ab 1200 px zwei Kartenspalten: links PatientIn, Einsatz, Transport —
+ * rechts der Rest (die DOM-Reihenfolge ist die mobile).
+ */
+@media (min-width:1200px){
+  .form-raster{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0 var(--abstand-4);
+    align-items:start;
+  }
+}
+
+/* Zwei kurze Felder in einer Zeile (Nachname/Vorname, Geburtsdatum/Alter) —
+ * auch mobil, wie im Mockup. */
+.fld-reihe,.patname{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 var(--abstand-3);
+}
+
+/* Detailfelder eines Schalters: eingerückt hinter einer orangen Linie
+ * (Mockup 22 Mitte — Cycles unter dem Windeneinsatz). */
+.childfields{
+  margin:0 0 var(--abstand-3) var(--abstand-2);
+  padding-left:var(--abstand-4);
+  border-left:var(--strich-stark) solid var(--orange);
+}
+.fld-sub{margin-left:0}
+
+/* Hinweistexte im Formular. Sie hiessen bis Web 9.11.1 „muted small" und
+ * bezogen Farbe und Groesse aus der Uebergangsschicht; seit deren Auflösung
+ * (O11) steht beides hier. */
+.feld-hinweis{color:var(--gedaempft);font-size:var(--groesse-2)}
+/* Steht der Hinweis VOR einem Feld (Gefahrenzone der Kontoseite: erst die
+ * Folgen, dann die Eingabe), braucht er Abstand nach unten — p hat global
+ * keinen. Steht er danach, ist der Abstand des Feldes schon da. */
+.feld-hinweis + .feld,.feld-hinweis + form{margin-top:var(--abstand-3)}
+
+/* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
+.ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
+.ortsfeld-zeile input{flex:1 1 auto;min-width:0}
+.ortsfeld-zeile .knopf-symbol{flex:0 0 auto}
+.ortsfeld-aktionen{position:relative;display:inline-flex}
+
+/* Vorschlagsliste unter dem Feld (Photon, Stammdaten, Koordinaten). */
+.loc-suggest{
+  margin:var(--abstand-1) 0 0;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  overflow:hidden;
+}
+.loc-suggest li{padding:var(--abstand-2) var(--abstand-3);cursor:pointer}
+.loc-suggest li:hover{background:var(--rauch)}
+.locstate{color:var(--gedaempft);font-size:var(--groesse-2);margin:var(--abstand-1) 0 0}
+.locstate:empty{display:none}
+.locstate-fehler{color:var(--rot-tief)}
+
+/* ---- Chips (Koordinaten am Ortsfeld, gewählte Rettungsmittel) ------------ */
+.rmchips{display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center}
+.rmchip{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  background:var(--blau-hell);color:var(--dunkelblau);
+  border-radius:var(--radius-rund);
+  padding:var(--abstand-1) var(--abstand-2);
+  font-size:var(--groesse-2);font-weight:600;
+}
+.rmx{
+  border:0;background:none;color:inherit;cursor:pointer;
+  min-height:0;padding:0 var(--abstand-1);
+  font-size:var(--groesse-3);line-height:1;
+}
+/* Eingabefeld mit Chips darin (Weitere Rettungsmittel, Mockup 22). */
+.rmbox{position:relative}
+.rmfeld{
+  display:flex;flex-wrap:wrap;gap:var(--abstand-1);align-items:center;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  padding:var(--abstand-1) var(--abstand-2);
+  min-height:var(--knopf);
+}
+.rmeingabe,.rmfeld .rmeingabe{
+  flex:1 1 8rem;min-width:0;border:0;min-height:0;
+  padding:var(--abstand-1);background:none;
+}
+.rmlist{
+  position:absolute;left:0;right:0;z-index:20;
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius-klein);
+  box-shadow:var(--schatten);
+  overflow:hidden;
+}
+.rmlist .rmopt{
+  display:block;width:100%;text-align:left;
+  background:none;border:0;border-radius:0;min-height:var(--knopf);
+  padding:var(--abstand-2) var(--abstand-3);cursor:pointer;
+}
+.rmlist .rmopt:hover{background:var(--rauch)}
+
+/* ---- Phasen- und Reanimationszeilen (Mockup 22/25) ----------------------- */
+.phasen-eingabe{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) calc(var(--knopf) * 2) var(--knopf);
+  gap:var(--abstand-2);align-items:center;
+  margin-bottom:var(--abstand-2);
+}
+.phasen-eingabe .zeitfeld{text-align:center;width:auto}
+.phasen-eingabe label{margin:0}
+.rea-sitzung{
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3);
+  margin-bottom:var(--abstand-3);
+}
+.rea-ereignisse{margin-left:var(--abstand-2);padding-left:var(--abstand-3);
+  border-left:var(--strich-stark) solid var(--orange)}
+.zeile-weg{color:var(--rot)}
+
+/* Orange Anlegen-Wege in Kartenfüßen („+ Phase hinzufügen"). */
+.anlegen-link{
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);
+  color:var(--orange-tief);font-family:var(--schrift-kopf);font-weight:600;
+}
+.karte-fussweg{margin:0}
+
+/* ---- Kartendialog der Ortswahl (Fadenkreuz, E-P3-34) --------------------- */
+.dialog-karte{width:min(92vw, calc(var(--karte-neben-breit) * 1.4))}
+.ortswahl-karte{position:relative}
+.ortswahl-karte .geo{height:var(--karte-desktop);margin-bottom:0}
+.ortswahl-kreuz{
+  position:absolute;left:50%;top:50%;
+  width:var(--symbol-gross);height:var(--symbol-gross);
+  transform:translate(-50%,-50%);
+  pointer-events:none;z-index:1;
+}
+.ortswahl-kreuz::before,.ortswahl-kreuz::after{
+  content:"";position:absolute;background:var(--dunkelblau);
+  box-shadow:0 0 0 var(--strich) var(--schnee);
+}
+.ortswahl-kreuz::before{left:50%;top:0;bottom:0;width:var(--strich-stark);
+  transform:translateX(-50%)}
+.ortswahl-kreuz::after{top:50%;left:0;right:0;height:var(--strich-stark);
+  transform:translateY(-50%)}
+
+/* Blatt-Zeilen gibt es seit O5 auch als <button> (Ortswahl) — dieselbe
+ * Gestalt wie die Verweise, ohne Knopf-Grundform. */
+button.blatt-zeile{
+  width:100%;background:none;border:0;text-align:left;cursor:pointer;
+  border-radius:0;
+}
+
+
+/* == 24. SUCHE (O6, E-P3-36, Mockups 27/28) ================================
+ *
+ * Die Filterspalte IST die Leiste (O2) — hier steht nur, was ihren Inhalt
+ * ausmacht: Akkordeongruppen mit einer Zahl im Kopf, von/bis nebeneinander,
+ * Wochentage und Dreiwert als Segmentwahl, der Fuß mit „Zurücksetzen" und —
+ * nur in der Schublade — „n Treffer zeigen".
+ */
+.filtergruppe > .akkordeon-zeile{padding:0 var(--abstand-3)}
+.filterzahl{flex:0 0 auto;margin-left:auto}
+.filtergruppe .akkordeon-text{flex:1 1 auto}
+.filterfelder{padding:var(--abstand-2) var(--abstand-3) var(--abstand-4)}
+.filterfelder label{margin-bottom:var(--abstand-3)}
+/* Am UNTEREN Rand ausrichten: „Strecke von (km)" bricht in der schmalen
+ * Leiste auf zwei Zeilen, „bis" daneben nicht — ohne diese Zeile stünden die
+ * beiden Eingabefelder versetzt. */
+/* Ab 1024 px ist die Segmentwahl inline (E-P3-30) — in der Filterleiste
+ * soll sie die Spaltenbreite füllen wie jedes Feld darüber. */
+.filterfelder .segment{display:flex;width:100%}
+.filterfelder .fld-reihe{gap:0 var(--abstand-2);align-items:end}
+.filterfelder .fld-reihe label{display:flex;flex-direction:column;justify-content:flex-end}
+
+/* Beschriftung über einer Gruppe von Bedienelementen (Segmentwahl), dort wo
+ * ein <label> nicht taugt: Es kann nur EIN Element beschriften. */
+.feldblock{margin-bottom:var(--abstand-3)}
+.feld-label{display:block;margin-bottom:var(--abstand-1)}
+
+/* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
+ * hell orange mit orangem Rahmen statt voller Fläche (Mockup 27/28). Bis zu
+ * sieben davon stehen untereinander; sieben orange Balken wären ein Alarm,
+ * und gemeint ist eine Einstellung. */
+.segment-filter .segment-taste{padding:0 var(--abstand-2)}
+.segment-filter .segment-box:checked + .segment-taste{
+  background:var(--orange-hell);color:var(--asphalt);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--orange);
+}
+/* Mehrfachwahl (Wochentage): dieselben Tasten, aber Kästchen statt
+ * Radioknöpfen — mehrere Tage gleichzeitig sind der Regelfall. Sieben Tasten
+ * müssen nebeneinander in die 260 px breite Leiste passen; deshalb ohne
+ * Innenabstand und mit gleicher Breite. */
+.segment-mehrfach .segment-taste{
+  padding:0 var(--abstand-1);flex:1 1 0;min-width:0;
+  font-size:var(--groesse-2);
+}
+
+.filterfuss{display:flex;flex-direction:column;gap:var(--abstand-2)}
+
+/* ---- Suchzeile: Feld und Filterknopf (Mockup 27) ------------------------- */
+.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-2)}
+.suchfeld{position:relative;flex:1 1 auto;display:flex;align-items:center}
+.suchfeld input{
+  width:100%;min-height:var(--suchfeld);
+  padding-left:calc(var(--abstand-3) * 2 + var(--symbol-gross));
+  padding-right:calc(var(--abstand-3) * 2 + var(--symbol-gross));
+  font-size:var(--groesse-4);
+}
+.suchfeld-lupe{
+  position:absolute;left:var(--abstand-3);
+  color:var(--gedaempft);pointer-events:none;
+}
+.suchfeld-x{
+  position:absolute;right:var(--abstand-2);
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);
+  border:0;background:none;color:var(--gedaempft);cursor:pointer;
+}
+.suchfeld-x:hover{color:var(--asphalt)}
+.filterknopf{flex:0 0 auto;min-height:var(--suchfeld)}
+
+.suchhinweis{margin-bottom:var(--abstand-3)}
+/* Ein Link mitten im Fließtext, der aufklappt statt zu navigieren. */
+.leiser-link{
+  border:0;background:none;padding:0;cursor:pointer;
+  color:var(--blau-tief);font:inherit;font-weight:600;
+}
+.suchsyntax{
+  background:var(--schnee);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3) var(--abstand-4);
+  margin-bottom:var(--abstand-3);
+}
+.suchsyntax li{margin-bottom:var(--abstand-1)}
+.suchsyntax code{
+  background:var(--rauch);border-radius:var(--radius-klein);
+  padding:0 var(--abstand-1);
+}
+
+.filterplaketten{margin-bottom:var(--abstand-3)}
+
+/* ---- Trefferkarte -------------------------------------------------------- */
+.sortieren-aktion{margin-left:auto;position:relative}
+.karte-treffer .karte-aktion{margin-left:0}
+/* Das Trefferwort hell orange hinterlegt (E-P3-36) — die Fläche trägt hier
+ * keine Bedeutung allein, sie zeigt nur, wo der Begriff steht; der Text
+ * bleibt Asphalt und damit voll lesbar. */
+mark.treffer{background:var(--orange-hell);color:inherit;border-radius:var(--radius-klein)}
+
+/* Die Nachladezeile unter der Tabelle (missiontable.js, 200 Zeilen je Seite). */
+.mehrzeile{
+  display:flex;flex-wrap:wrap;gap:var(--abstand-3);
+  padding:var(--abstand-3) var(--abstand-4) 0;
+}
+
+/* Artzeichen, Datum und Beginn der Kachel stehen in einer Zeile (Mockup 27);
+ * das Zeichen sitzt vor dem Datum und nimmt die Farbe der Zeile an. */
+.kachel-art{margin-right:var(--abstand-1);color:var(--dunkelblau)}
+.kachel-art .symbol{vertical-align:-.15em}
+.kachel-datum{white-space:nowrap}
+/* Mit Datum braucht die Zeitspalte mehr Platz als die reine Uhrzeit. */
+.kachel-zeit:has(.kachel-datum){min-width:0;flex:0 0 auto}
+
+
+/* ===========================================================================
+ * 25  ZEITRAUM                                              (P3/O7, E-P3-37)
+ *
+ * Die Übersicht eines Monats oder Jahres. Neu daran ist weniger die
+ * Gestaltung als der ZUSCHNITT: „Gemischt" zeigt vier Kennzahlen statt acht,
+ * und unter 720 px sind von jedem Satz vier sichtbar, der Rest steht hinter
+ * „Weitere Statistik".
+ *
+ * Die Kachel selbst ist der Baustein aus O1 (`.kennzahl`, ui_kennzahl) — hier
+ * stehen nur Raster, mobile Kappung und die Segmentwahl in der Titelzeile.
+ * ======================================================================== */
+
+/* Spaltenzahl folgt dem Satz: vier Kacheln in vier Spalten, acht in zwei
+ * Reihen zu vier, zehn in zwei Reihen zu fünf — so bleibt keine Reihe halb
+ * leer. Unter 720 px sind es immer zwei (Grundregel von .kennzahl-raster). */
+@media (min-width:720px){
+  .kennzahl-raster-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kennzahl-raster-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+
+/* MOBIL VIER (E-P3-37). Die übrigen Kacheln stehen im Markup und sind nur
+ * verborgen — nicht ausgelassen: Der Knopf „Weitere Statistik" klappt sie
+ * auf, ohne dass etwas nachgeladen oder neu gerechnet würde. Deshalb
+ * `display:none` und nicht das `hidden`-Attribut: Letzteres gehört dem
+ * Zustand „gibt es nicht", nicht dem Zustand „gerade eingeklappt". */
+.kennzahl-mehr{display:none}
+.kennzahl-raster-offen .kennzahl-mehr{display:block}
+.kennzahl-mehr-knopf{
+  display:flex;align-items:center;gap:var(--abstand-1);
+  margin:calc(-1 * var(--abstand-2)) 0 var(--abstand-4);
+}
+/* Der Winkel zeigt im Ruhezustand nach unten — winkel.svg tut das von sich
+ * aus (Abschnitt 5), es braucht dafür keine Drehung. Beim Aufklappen dreht
+ * er sich nach oben. */
+.kennzahl-mehr-knopf .symbol{transition:transform var(--dauer)}
+.kennzahl-mehr-knopf.offen .symbol{transform:rotate(180deg)}
+
+@media (min-width:720px){
+  /* Ab hier gibt es nichts zu verbergen: Der ganze Satz steht da, und der
+     Knopf ist ohnehin `nur-unter-720`. */
+  .kennzahl-mehr{display:block}
+}
+
+/* Die Segmentwahl steht in den AKTIONEN der Titelzeile: ab 720 px rechts
+ * neben dem Titel (Mockup 29), darunter vollbreit unter dem Titel
+ * (Mockup 31). `width:100%` an der Wahl allein genügt dafür nicht —
+ * `.titelzeile-aktionen` ist ein Flex-Kind mit `flex:0 0 auto` und schrumpft
+ * auf die Breite seines Inhalts. Der Aktionsblock muss deshalb mobil selbst
+ * umbrechen und die volle Breite nehmen; die drei Segmente teilen sie sich
+ * dann zu gleichen Teilen. */
+.titelzeile-aktionen:has(.segment-art){flex:1 0 100%;margin-left:0}
+.segment-art{width:100%}
+.segment-art .segment-taste{flex:1 1 0;text-align:center}
+@media (min-width:720px){
+  .titelzeile-aktionen:has(.segment-art){flex:0 0 auto;margin-left:auto}
+  .segment-art{width:auto}
+  .segment-art .segment-taste{flex:0 0 auto}
+}
+
+/* DIE MARKIERUNG DES ANGEZEIGTEN ZEITRAUMS in der Leiste (E-P3-37). Sie
+ * sitzt auf der Zeile des Akkordeons, nicht auf dem `<details>` selbst —
+ * sonst färbte sich auch der aufgeklappte Inhalt. Dieselben Farben wie beim
+ * aktiven Diensttag (`.eintrag.aktiv`), damit „hier stehe ich" überall
+ * gleich aussieht. */
+.akkordeon.aktiv > .akkordeon-zeile{
+  background:var(--orange-hell);
+  box-shadow:inset var(--strich-stark) 0 0 var(--orange);
+}
+.akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--dunkelblau)}
+
+/* Die Zeile des Extremwert-Trägers, hell orange statt rot (E-P3-37): Rot
+ * heißt in dieser Oberfläche „Aufmerksamkeit" — ein Höchstwert ist kein
+ * Fehler. Gilt für die Tabellenzeile ab 720 px und die Kachel darunter. */
+.hl-extrem{background:var(--orange-hell)}
+tr.hl-extrem td{background:var(--orange-hell)}
+
+
+/* ===========================================================================
+ * 26  EINSTELLUNGEN UND VERWALTUNGSLISTEN                   (P3/O8, E-P3-35)
+ * ======================================================================== */
+
+/* WAHLLISTE (.wahlliste) — eine aus vieren, untereinander, 44 px hoch.
+ * Freigegeben mit Mockup 13. Die Radios selbst sind unsichtbar; die Zeile
+ * ist das Bedienelement, und der Punkt links wird gezeichnet — so lässt er
+ * sich färben und auf Größe bringen, was ein Systemradio nicht zulässt. */
+.wahlliste{display:flex;flex-direction:column;gap:var(--abstand-2)}
+input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.wahl-zeile{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  min-height:var(--knopf);
+  padding:var(--abstand-2) var(--abstand-3);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  background:var(--schnee);
+  cursor:pointer;
+}
+.wahl-zeile:hover{background:var(--rauch)}
+.wahl-punkt{
+  flex:0 0 auto;width:var(--symbol);height:var(--symbol);
+  border:var(--strich-stark) solid var(--linie-stark);
+  border-radius:var(--radius-rund);
+  background:var(--schnee);
+}
+.wahl-text{flex:1 1 auto;font-weight:600;color:var(--dunkelblau)}
+.wahl-zusatz{flex:0 0 auto;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* Gewählt: hell orange mit orangem Rahmen und gefülltem Punkt — dieselbe
+ * Sprache wie die aktive Kennzahl-Kachel und der aktive Leisteneintrag. */
+.wahl-box:checked + .wahl-zeile{background:var(--orange-hell);border-color:var(--orange)}
+.wahl-box:checked + .wahl-zeile .wahl-punkt{
+  border-color:var(--orange);
+  box-shadow:inset 0 0 0 var(--strich-stark) var(--schnee);
+  background:var(--orange);
+}
+/* Der Fokusring gehört an die ZEILE, nicht an das versteckte Radio: Sonst
+ * ist die Tastaturbedienung unsichtbar. */
+.wahl-box:focus-visible + .wahl-zeile{outline:var(--strich-stark) solid var(--blau);outline-offset:var(--strich-stark)}
+
+/* Unter 480 px rutscht der Zusatz unter den Text — „zurzeit Hubschrauber
+ * (RTH)" neben „Standard der Installation" sprengt sonst jede Zeile. */
+@media (max-width:479px){
+  .wahl-zeile{flex-wrap:wrap}
+  .wahl-zusatz{flex:1 0 100%;padding-left:calc(var(--symbol) + var(--abstand-3))}
+}
+
+/* PASSWORTSTÄRKE als Balken (E-P3-16, Mockup 11). Vier Segmente, gefüllt
+ * nach Stufe; die Farbe verstärkt nur, was die Zahl der Segmente schon
+ * sagt. Vorher war es eine Textzeile in fünf Farben, darunter Grün und
+ * Gelb — zwei Töne, die es in der Marke nicht gibt. */
+.pwstaerke{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:var(--abstand-2);
+  font-size:var(--groesse-2);color:var(--gedaempft);
+}
+.pwstaerke:empty{display:none}
+.pwstaerke-balken{display:flex;gap:var(--abstand-1);flex:0 0 auto}
+.pwstaerke-balken > span{
+  width:var(--balken-glied);height:var(--strich-balken);
+  border-radius:var(--radius-klein);
+  background:var(--linie);
+}
+.pwstaerke-text{font-weight:600;color:var(--dunkelblau)}
+/* Der Hinweissatz steht in eigener Zeile — er ist zwei Zeilen lang und
+ * schöbe die Stufe sonst aus dem Bild. */
+.pwstaerke-hinweis{flex:1 0 100%}
+
+/* Rot bis Stufe 0, orange für 1–2, Dunkelblau ab 3: dieselbe Bedeutung wie
+ * überall — Rot ist ein Halt, Orange ein Hinweis, Dunkelblau die Ruhe. */
+.pwq-0 .pwstaerke-balken > span.an{background:var(--rot)}
+.pwq-0 .pwstaerke-text{color:var(--rot-tief)}
+.pwq-1 .pwstaerke-balken > span.an,
+.pwq-2 .pwstaerke-balken > span.an{background:var(--orange)}
+.pwq-1 .pwstaerke-text,
+.pwq-2 .pwstaerke-text{color:var(--orange-tief)}
+.pwq-3 .pwstaerke-balken > span.an,
+.pwq-4 .pwstaerke-balken > span.an{background:var(--dunkelblau)}
+
+/* VERWALTUNGSLISTEN (E-P3-35). Erklärtext auf drei Zeilen unter dem Titel,
+ * dann die Karte mit Zeilen und darunter — IN derselben Karte — das
+ * Formular zum Anlegen. */
+.seiten-erklaerung{
+  max-width:var(--lesespalte);
+  margin:calc(-1 * var(--abstand-2)) 0 var(--abstand-4);
+  color:var(--gedaempft);
+}
+/* Der negative Rand oben ist auf die TITELZEILE abgestimmt, die ihren eigenen
+ * Abstand nach unten mitbringt. Steht die Erklärung dagegen direkt unter einem
+ * blanken <h1> — öffentliche Seiten und Einrichter, die kein Gerüst und damit
+ * keine Titelzeile haben —, zieht er sie an die Überschrift heran (O10). */
+h1 + .seiten-erklaerung{margin-top:0}
+
+/* Das Formular unter der Liste, durch eine Linie abgesetzt: Es gehört zur
+ * Karte, ist aber eine andere Art von Inhalt als die Zeilen darüber. */
+.listen-form{
+  border-top:var(--strich) solid var(--linie);
+  padding-top:var(--abstand-4);
+  margin-top:var(--abstand-3);
+}
+.listen-form-titel{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  margin:0 0 var(--abstand-3);
+}
+.listen-form-felder{display:grid;gap:var(--abstand-3)}
+.listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
+
+/* Ab 720 px stehen Name und Lage nebeneinander (Mockup 08) — sie gehören
+ * zusammen und passen in eine Zeile. */
+@media (min-width:720px){
+  .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
+}
+
+/* Der Vorbelegungsstern in der Zeile: orange, weil er eine Auszeichnung ist
+ * und keine Warnung. */
+.zeile-stern{color:var(--orange)}
+
+/* Die Knopfreihe der Zeilenaktionen (Desktop). Mobil steht dort das „⋯",
+ * das der Aktionsblatt-Baustein mitbringt.
+ *
+ * KEIN `display` in der Grundregel: `.nur-ab-720` blendet mit `display:none`
+ * aus und stellt ab 720 px die Grundform mit `revert` wieder her. Eine
+ * eigene `display:flex`-Regel gleicher Spezifität, die später steht, schlägt
+ * beides — und dann stehen unter 720 px die Knöpfe UND das „⋯" nebeneinander.
+ * Die Flex-Eigenschaften gehören deshalb in die 720er-Regel; sie greifen
+ * genau dort, wo die Reihe überhaupt sichtbar ist. */
+@media (min-width:720px){
+  .zeile-knoepfe{display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:flex-end}
+}
+
+/* „Als Vorbelegung" ist leise UND orange (Mockup 11): Sie ist eine
+ * Auszeichnung, kein Hauptweg — ein voller Orangeknopf neben „Bearbeiten"
+ * und „Löschen" behauptete, sie sei die zu erwartende Handlung. */
+.knopf-leise-orange{color:var(--orange-tief)}
+.knopf-leise-orange .symbol{color:var(--orange)}
+
+/* Die Listen innerhalb einer Standort-Karte (Rettungsmittel, Besatzung,
+ * Zielkliniken, weitere Rettungsmittel, Bergwacht). Sie sind Abschnitte,
+ * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
+ * zusammengehört — die zweite Ebene ordnet nur. */
+.sd-liste + .sd-liste{
+  border-top:var(--strich) solid var(--linie);
+  margin-top:var(--abstand-5);
+  padding-top:var(--abstand-4);
+}
+.sd-titel{
+  display:flex;align-items:center;gap:var(--abstand-2);
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-4);color:var(--dunkelblau);
+  margin:0 0 var(--abstand-2);
+}
+.sd-zahl{
+  font-family:var(--schrift-text);font-weight:400;
+  font-size:var(--groesse-2);color:var(--gedaempft);
+}
+/* Die Rolle innerhalb der Besatzungsliste — eine Ebene tiefer als der
+ * Listentitel, deshalb kleiner und ohne eigene Linie. */
+.sd-rolle{
+  font-family:var(--schrift-kopf);font-weight:600;
+  font-size:var(--groesse-3);color:var(--dunkelblau);
+  margin:var(--abstand-4) 0 var(--abstand-2);
+}
+/* Der Klammerzusatz an einer Feldbeschriftung („(optional)"). */
+.feld-klein-inline{font-weight:400;color:var(--gedaempft);font-size:var(--groesse-2)}
+
+/* CODEBLOCK — Kopplungscode, Geräte-ID, API-Schlüssel. Werte, die von einem
+ * Bildschirm auf eine Uhr abgetippt werden, und zwar unter Zeitdruck:
+ * groß, in Festbreite, mit Abstand zwischen den Zeichen. */
+.codeblock{
+  background:var(--rauch);
+  border:var(--strich) solid var(--linie);
+  border-radius:var(--radius);
+  padding:var(--abstand-3);
+  margin:var(--abstand-3) 0;
+}
+.codeblock-titel{
+  font-size:var(--groesse-2);color:var(--gedaempft);
+  margin:0 0 var(--abstand-1);
+}
+.codeblock-titel:not(:first-child){margin-top:var(--abstand-3)}
+.codeblock-wert{
+  font-family:var(--schrift-fest);
+  font-size:var(--groesse-5);font-weight:600;
+  color:var(--dunkelblau);
+  letter-spacing:.06em;
+  word-break:break-all;
+  margin:0;
+}
+
+/* ZUSTANDSZEILE — Fortschritt und Ergebnis einer langen Handlung (Sicherung,
+ * Import). Sie hält ihre Höhe frei, damit der Kasten beim Erscheinen der
+ * ersten Meldung nicht springt; ein Ergebnis erscheint darin als
+ * Meldungs-Baustein, Fortschritt als schlichte Zeile. */
+.zustandszeile{
+  min-height:var(--zeile-frei);
+  margin-top:var(--abstand-3);
+  color:var(--gedaempft);
+  font-size:var(--groesse-2);
+}
+.zustandszeile .meldung{margin:0}
+
+
+/* ===========================================================================
+ * 27  ADMINISTRATION                                        (P3/O9, E-P3-41)
+ *
+ * Kontoseite, NutzerInnen-Liste, Sicherungsregeln. Fast alles daran sind
+ * vorhandene Bausteine — Karte, Zeile, Zeilenaktionen, Kennzahl, Dialog.
+ * Neu ist nur die GEFAHRENZONE: eine Karte, die von weitem als solche zu
+ * erkennen ist.
+ * ======================================================================== */
+
+/* GEFAHRENZONE (.karte-gefahr) — Mockup 40, Karte „Konto löschen". Roter
+ * Rand, roter Titel, sonst eine gewöhnliche Karte. Kein roter GRUND: Eine
+ * rot geflutete Fläche zwingt jeden Text darin auf einen zweiten Kontrastwert
+ * und macht das Formular darin schwerer lesbar — die Warnung soll den Rahmen
+ * betreffen, nicht die Eingabe. */
+.karte-gefahr{border-color:var(--rot)}
+.karte-gefahr .karte-titel{color:var(--rot-tief)}
+
+
+/* ---- Statuskacheln mit Ton (O9b, Mockup 41) ------------------------------
+ * Eine Kachel, die einen Befund meldet, ist eingefärbt: Orange für „das will
+ * angesehen werden", Rot für „das fehlt". Dieselben zwei Töne wie bei der
+ * Plakette, dieselbe Bedeutung. Als Verweis behält sie ihre Farben und
+ * bekommt beim Überfahren nur den Rahmen. */
+.kennzahl-orange{background:var(--orange-hell);border-color:var(--orange)}
+.kennzahl-rot{background:var(--rosa);border-color:var(--rot)}
+.kennzahl-rot .kennzahl-wert{color:var(--rot-tief)}
+a.kennzahl{display:block;text-decoration:none;color:inherit}
+a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
+
+
+/* ---- Kopf einer langen Liste: Suche und Filter --------------------------- */
+.listenkopf{display:flex;flex-direction:column;gap:var(--abstand-3);
+  margin-bottom:var(--abstand-4)}
+.listensuche{display:flex;gap:var(--abstand-2);align-items:center}
+/* Ab 1024 px stehen Suche und Filter NEBENEINANDER (Mockup 41). Darunter
+ * untereinander: Fünf Filterplaketten neben einem Suchfeld ergäben auf einem
+ * Tablet fünf einzeilige Spalten. */
+@media (min-width:1024px){
+  .listenkopf{flex-direction:row;align-items:center}
+  .listensuche{flex:0 1 26rem}
+  .filterreihe{flex:1 1 auto}
+}
+
+/* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
+ * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder
+ * Filter eine eigene Adresse (teilbar, im Verlauf, mit der Zurück-Taste
+ * erreichbar), und er funktioniert ohne Skript. Der aktive ist orange
+ * hinterlegt — dieselbe Auszeichnung wie die aktive Kennzahl. */
+.filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* AUCH DIESER NAME IST NICHT FREI: `.filterknopf` gehoert seit O6 dem Knopf,
+ * der auf der Suchseite die Filterschublade oeffnet — und der ist 48 px hoch,
+ * weil er neben dem 48-px-Suchfeld steht (die einzige benannte Ausnahme von
+ * der 44-px-Regel). Eine zweite Regel gleichen Namens weiter unten haette ihn
+ * auf 44 px gesetzt. Gemeldet hat es der Bilderlauf, nicht der Verstand:
+ * „15-suche · Filter 0 · 44 px (soll 48)", achtmal, in jeder Breite. */
+.listenfilter{
+  display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--knopf);padding:0 var(--abstand-3);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  text-decoration:none;white-space:nowrap;
+}
+.listenfilter:hover{background:var(--rauch);text-decoration:none}
+.listenfilter.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+/* Die Zahl ist eine eigene Fläche, damit sie sich vom Wort abhebt, ohne eine
+ * zweite Schriftgröße zu brauchen.
+ *
+ * SIE HEISST NICHT `.filterzahl`. Diese Klasse ist seit O6 vergeben — die
+ * Suche hängt sie als `filterzahl plakette plakette-blau` in den Kopf jeder
+ * Filtergruppe (suche.php). Eine zweite Regel gleichen Namens weiter unten im
+ * Stylesheet hätte deren Hintergrund und Schriftfarbe überschrieben, weil die
+ * spätere Regel gleicher Spezifität gewinnt: Aus den blauen Zählern der
+ * Suchseite wären graue geworden, und zwar auf einer Seite, die dieses Paket
+ * gar nicht anfasst. */
+.listenfilter-zahl{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:calc(var(--symbol) + var(--abstand-1));
+  padding:0 var(--abstand-1);
+  border-radius:var(--radius-klein);
+  background:var(--rauch);color:var(--gedaempft);
+  font-size:var(--groesse-1);
+}
+.listenfilter.aktiv .listenfilter-zahl{background:var(--orange);color:var(--knopf-primaer-schrift)}
+
+
+/* ---- Kontentabelle ------------------------------------------------------- */
+/* Name und Adresse stehen untereinander in EINER Zelle (Mockup 41): Zwei
+ * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
+ * Konto ohne Namen hat nur die Adresse. */
+.konto-name{display:block;font-weight:600;color:var(--dunkelblau)}
+.konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
+.tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
+.tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
+.tabelle-konten th.sortable a{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  color:inherit;text-decoration:none;
+}
+.tabelle-konten th.sortable a:hover{color:var(--blau-tief);text-decoration:none}
+.oeffnen{
+  display:inline-flex;align-items:center;gap:var(--abstand-1);
+  min-height:var(--knopf);color:var(--blau-tief);
+  font-family:var(--schrift-kopf);font-weight:600;
+}
+
+/* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
+.zeile-vorn{flex:0 0 auto;display:flex;align-items:center}
+
+
+/* ---- Fuß einer langen Liste: Zählung und Seitenwechsel -------------------- */
+.listenfuss{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:var(--abstand-3);
+  margin-top:var(--abstand-4);padding-top:var(--abstand-3);
+  border-top:var(--strich) solid var(--linie);
+}
+.listenzahl{color:var(--gedaempft);font-size:var(--groesse-2)}
+.seitenwahl{display:flex;flex-wrap:wrap;gap:var(--abstand-1)}
+/* Die Seitenknöpfe sind quadratisch und 44 px hoch wie jeder Knopf — sie
+ * werden auf dem Handy mit dem Daumen getroffen (E-P3-22). */
+.seitenknopf{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);padding:0 var(--abstand-2);
+  border:var(--strich) solid var(--linie-stark);
+  border-radius:var(--radius);
+  background:var(--schnee);color:var(--dunkelblau);
+  font-family:var(--schrift-kopf);font-weight:600;
+  text-decoration:none;
+}
+.seitenknopf:hover{background:var(--rauch);text-decoration:none}
+.seitenknopf.aktiv{background:var(--orange-hell);border-color:var(--orange)}
+/* Der Pfeil am Rand bleibt STEHEN, wenn es nichts mehr gibt, statt zu
+ * verschwinden: Ein Knopf, der sich beim Blättern in Luft auflöst, verschiebt
+ * die übrigen unter dem Finger weg. */
+.seitenknopf.aus{color:var(--sand);border-color:var(--linie);cursor:default}
+.seitenknopf.aus:hover{background:var(--schnee)}
+.seitenluecke{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:var(--knopf);min-height:var(--knopf);color:var(--gedaempft);
+}
+
+/* Die Zahl der Sammelleiste ist IMMER sichtbar (der Hinweis eines schmutzigen
+ * Formulars erscheint erst ab 720 px). Sie ist die ganze Aussage der Leiste. */
+.speichern-zahl{display:block;color:var(--asphalt);font-weight:600}
+
+
+/* ===========================================================================
+ * 28  RECHTSTEXTE                                       (P3/O10, E-P3-38, R32)
+ *
+ * Impressum und Datenschutzerklärung — die beiden öffentlichen Seiten und
+ * ihr Editor. Erstaunlich wenig eigenes: Die Seiten sind Lesespalte
+ * (`.rahmen-lesespalte`) plus eine Karte plus `.text`, der Editor ist der
+ * Zweispalter mit zwei Karten und je einem Textfeld. Was hier steht, sind
+ * die drei Dinge, für die es im Bestand nichts gab.
+ * ======================================================================== */
+
+/* Monospace im Textfeld (Mockup 35). Das Token gibt es seit O1
+ * (--schrift-fest), benutzt haben es bisher nur `code, kbd, pre` und
+ * `.codeblock-wert` — ein <textarea> erbt von keinem der beiden.
+ *
+ * Die Klasse hängt an der HÜLLE, nicht am Feld: ui_feld() setzt $o['klasse']
+ * an `.feld`. Ein Nachfahrenselektor kommt damit ohne jede Änderung am
+ * Baustein aus. */
+.feld-fest .feld-eingabe{font-family:var(--schrift-fest)}
+
+/* Der Vorschaukasten (Mockup 35). GESTRICHELT, und das ist der ganze Zweck:
+ * Er sagt „das hier ist nicht die Seite, sondern ein Blick darauf". Ein
+ * durchgezogener Rahmen sähe aus wie eine zweite Karte. `dashed` kommt
+ * sonst nirgends im Stylesheet vor — deshalb steht es hier und nicht als
+ * Zusatz an `.karte`. */
+.vorschau{
+  border:var(--strich) dashed var(--linie-stark);
+  border-radius:var(--radius);
+  padding:var(--abstand-4);
+  margin-top:var(--abstand-3);
+}
+.vorschau > h4{margin-bottom:var(--abstand-3)}
+/* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
+ * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
+.vorschau .text{max-width:none}
+
+/* Die Fußzeile einer Editorkarte: Plakette und Pfad nebeneinander. */
+.rechtstext-fuss{
+  display:flex;align-items:center;gap:var(--abstand-3);
+  margin-top:var(--abstand-3);flex-wrap:wrap;
 }

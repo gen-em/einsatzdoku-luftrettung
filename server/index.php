@@ -44,15 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gerae
 }
 $neueGeraete = geraete_neu(db(), $userId);
 ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
-ui_topbar('uebersicht');
 ?>
 
-<div class="layout">
-  <?php ui_days_sidebar($selDay); ?>
-
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
     <?php if ($neueGeraete): ?>
-      <div class="alert alert-warn geraetehinweis">
+      <?php /* Warnmeldung nach E-P3-16: Symbol, Text, Ausweg als Knopf IM
+               Rahmen. Der Hinweis bleibt bestaetigbar (M4-10) — eine Warnung,
+               die man nicht loswird, wird ueberlesen. */ ?>
+      <div class="meldung meldung-warn" role="status">
+        <?= ui_symbol('warnung', 'symbol-gross') ?>
         <p>
           <?= count($neueGeraete) === 1 ? 'Ein neues Gerät wurde' : count($neueGeraete) . ' neue Geräte wurden' ?>
           mit deinem Konto verbunden:
@@ -66,61 +66,70 @@ ui_topbar('uebersicht');
           <?= count($neueGeraete) === 1 ? 'das Gerät' : 'die Geräte' ?> unter
           <a href="einstellungen.php?t=geraete">Einstellungen → Geräte</a>.
         </p>
-        <?php /* Der Knopf gehoert IN den Rahmen und muss wie ein Knopf
-                 aussehen. Als unterstrichener Text unter dem Absatz war er
-                 kaum zu sehen — und ein Hinweis, dessen Ausweg man nicht
-                 findet, ist derselbe Hinweis, der nicht wegzuklicken ist. */ ?>
-        <form method="post" action="index.php">
-          <?= csrf_field() ?><input type="hidden" name="action" value="geraete_ok">
-          <button type="submit">Verstanden, das war ich</button>
-        </form>
+        <div class="meldung-aktion">
+          <form method="post" action="index.php">
+            <?= csrf_field() ?><input type="hidden" name="action" value="geraete_ok">
+            <?= ui_knopf(['text' => 'Verstanden, das war ich', 'art' => 'neutral']) ?>
+          </form>
+        </div>
       </div>
     <?php endif; ?>
-    <?php /* AKTIONSMENÜ DES DIENSTTAGS (Web 5.10.0).
-             „Datum ändern" und „Tag löschen" standen bis dahin als zwei
-             Schaltflächen unter der Tabelle, direkt neben „+ Einsatz
-             nachtragen" — also das Alltagsgeschäft und zwei Eingriffe in den
-             Bestand nebeneinander in einer Reihe. Auf der Einsatzseite ist
-             genau diese Trennung seit Web 5.6.0 gezogen: die eine Haupt-
-             handlung im Fluss der Seite, alles Weitere im Menü oben rechts.
-             Die Diensttagübersicht folgt jetzt derselben Ordnung, mit demselben
-             Bauteil (.aktionsmenu) und demselben Verhalten
-             (assets/aktionsmenu.js).
+    <?php /* TITELZEILE NACH E-P3-31: kein Rueckweg (das hier IST die
+             Startseite), Titel „Samstag, 22.08.2026" — mobil kurz „Sa" —,
+             Unterzeile Rettungsmittel · Standort, rechts das Aktionsmenue
+             (E-P3-27): mobil „⋯" und ein Blatt von unten, am Desktop
+             „Aktionen" als Aufklappmenue. Der Anlegen-Weg steht als erste
+             Zeile auch dort; „Tag loeschen" ist rot und abgesetzt.
 
-             Das Menü bleibt verborgen, solange kein Tag gewählt ist — beide
-             Einträge brauchen einen Diensttag. loadDay() blendet es ein. */ ?>
-    <div class="pagehead">
-      <div class="pagehead-text">
-        <h1 id="daytitle">–</h1>
+             Titel und Unterzeile fuellt loadDay() — die Seite kennt ihren
+             Tag erst aus api/day.php. Das Menue bleibt verborgen, solange
+             kein Tag gewaehlt ist: Beide Eintraege brauchen einen. */ ?>
+    <div class="titelzeile">
+      <div class="titelzeile-haupt">
+        <div class="titelzeile-text">
+          <h1 id="daytitle">–</h1>
+        </div>
+        <div class="titelzeile-aktionen" id="dayaktionen" <?= $selDay ? '' : 'hidden' ?>>
+          <?= ui_aktionen(['titel' => 'Diensttag', 'id' => 'dayblatt', 'eintraege' => [
+            ['text' => 'Einsatz nachtragen', 'symbol' => 'plus', 'anlegen' => true,
+             'href' => 'einsatz_form.php', 'attr' => 'id="addmission-menu"'],
+            ['text' => 'Diensttag-Daten bearbeiten', 'symbol' => 'stift',
+             'href' => '#tagdaten', 'attr' => 'data-tagdaten-bearbeiten'],
+            ['text' => 'Datum ändern', 'symbol' => 'kalender',
+             'href' => 'diensttag_datum.php?d=' . (int)$selDay, 'attr' => 'id="daydatelink"'],
+            ['text' => 'Anderen Diensttag aufnehmen', 'symbol' => 'ordner-plus',
+             'href' => 'diensttag_zusammenfuehren.php?d=' . (int)$selDay, 'attr' => 'id="daymergelink"'],
+            ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
+             'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
+          ]]) ?>
+        </div>
       </div>
-      <div class="pagehead-actions">
-        <details class="aktionsmenu" id="dayaktionen" <?= $selDay ? '' : 'hidden' ?>>
-          <summary class="btn-edit">Aktionen</summary>
-          <div class="aktionsliste">
-            <a id="daydatelink"
-               href="diensttag_datum.php?d=<?= (int)$selDay ?>">Datum ändern</a>
-            <?php /* „Anderen Diensttag aufnehmen" (E25): Der Einstieg liegt im
-                     ZIELTAG und nicht in der Tagesliste, damit die Richtung
-                     eindeutig ist — der geöffnete Tag bleibt, der gewählte
-                     verschwindet. Bei einer Auswahl von zwei Zeilen in einer
-                     Liste wäre sie eine Frage der Lesart, und der Vorgang ist
-                     nicht umkehrbar (E13).
-
-                     Der Eintrag steht über „Tag löschen": beides sind Eingriffe
-                     in den Bestand, aber nur einer davon ist endgültig. */ ?>
-            <a id="daymergelink"
-               href="diensttag_zusammenfuehren.php?d=<?= (int)$selDay ?>">Anderen Diensttag aufnehmen</a>
-            <a class="gefahr" id="daydellink"
-               href="diensttag_loeschen.php?d=<?= (int)$selDay ?>">Tag löschen</a>
-          </div>
-        </details>
-      </div>
+      <p class="titelzeile-unter" id="dayunter" hidden></p>
     </div>
-    <div id="loaderror" class="alert" hidden></div>
-    <details class="daymeta" id="daymeta">
-      <summary>Diensttag-Daten <span id="metahint" class="muted"></span>
-        <span id="metanotes" class="metanotes"></span></summary>
-      <form id="dayform" class="meta-form" data-dirty-track data-submit-on-ctrl-enter>
+    <div class="meldung meldung-fehler" id="loaderrorbox" role="alert" hidden>
+      <?= ui_symbol('warnung', 'symbol-gross') ?><p id="loaderror"></p>
+    </div>
+    <div class="tag-raster">
+    <?php /* DIENSTTAG-DATEN ALS KARTE MIT LESEZUSTAND (E-P3-31, Mockup 02/03).
+             Bis Web 9.1.1 war das ein <details>-Aufklapper, dessen summary die
+             eingefrorenen Namen UND die Notizen trug — als gesperrte
+             Versalzeile (Fund F-P3-A, damit erledigt). Jetzt: eine Karte, die
+             LIEST — Standort, Rettungsmittel, Besatzung, Notizen; am Desktop
+             zweispaltig, mobil ohne Standort und Rettungsmittel (die stehen
+             dort schon in der Unterzeile des Titels). „Bearbeiten" klappt
+             dasselbe Formular in der Karte auf — es ist dasselbe wie vorher,
+             mitsamt Dirty-Tracking. */ ?>
+    <section class="karte karte-daten" id="tagdaten">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Diensttag-Daten</h2>
+        <a class="karte-aktion karte-aktion-blau" href="#tagdaten"
+           id="tagdatenknopf" data-tagdaten-bearbeiten aria-expanded="false">
+          <?= ui_symbol('stift') ?><span>Bearbeiten</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+        <div class="tag-lese" id="taglese"></div>
+        <form id="dayform" class="tag-form" hidden data-dirty-track data-submit-on-ctrl-enter>
         <label>Standort
           <select name="base_id" id="basesel">
             <option value="">–</option>
@@ -146,7 +155,7 @@ ui_topbar('uebersicht');
               <option value="<?= (int)$v['id'] ?>"
                       data-base="<?= (int)($v['base_id'] ?? 0) ?>"
                       data-kind="<?= e((string)$v['kind']) ?>">
-                <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
+                <?= e($v['name']) ?><?php
                   echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
             <?php endforeach; ?>
           </select>
@@ -157,72 +166,115 @@ ui_topbar('uebersicht');
                  Ein bodengebundener Dienst zeigt damit Fahrer, Praktikant und
                  Sonstige (A3), ein neutraler keine (A7a). */ ?>
         <div id="crewfields"></div>
-        <p class="muted" id="crewhint" hidden></p>
-        <p class="muted" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
+        <p class="feld-hinweis" id="crewhint" hidden></p>
+        <p class="feld-hinweis" id="sd-hint" <?= ($SD_VEHICLES || $SD_BASES) ? 'hidden' : '' ?>>
           Noch keine Standorte hinterlegt — unter
           <a href="einstellungen.php?t=standorte">Einstellungen → Standorte</a> anlegen.</p>
         <label>Notizen <textarea name="notes" rows="3" maxlength="2000"></textarea></label>
-        <button type="submit" class="btn-primary">Speichern</button>
-        <span id="savestate" class="muted"></span>
+        <div class="tag-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'art' => 'primaer']) ?>
+          <span id="savestate" class="feld-klein-inline" role="status"></span>
+        </div>
       </form>
-    </details>
-    <?php /* Rückmeldung nach dem Zusammenführen. Sie gehört hierher und nicht
-             auf die Zwischenseite: Die ist nach dem Vorgang verschwunden, und
-             die Bestätigung soll an dem Tag stehen, der jetzt alles trägt. */ ?>
+      </div>
+    </section>
+    <?php /* Rueckmeldung nach dem Zusammenfuehren. Sie gehoert hierher und
+             nicht auf die Zwischenseite: Die ist nach dem Vorgang
+             verschwunden, und die Bestaetigung soll an dem Tag stehen, der
+             jetzt alles traegt. Vollzug = blau mit Haken (E-P3-16). */ ?>
     <?php if (($_GET['aufgenommen'] ?? '') === '1' && $selDay): ?>
-      <p class="alert alert-ok">Die beiden Diensttage sind zusammengeführt.
-        Einsätze, Ruhesegmente und Uhr-Kennungen hängen jetzt an diesem Tag;
-        der aufgenommene ist verschwunden.</p>
+      <?= ui_meldung_markup('ok', 'Einsätze, Ruhesegmente und Uhr-Kennungen hängen '
+            . 'jetzt an diesem Tag; der aufgenommene ist verschwunden.',
+            'Die beiden Diensttage sind zusammengeführt.') ?>
     <?php endif; ?>
     <?php if (($_GET['umdatiert'] ?? '') === '1' && $selDay): ?>
-      <p class="alert alert-ok">Der Diensttag ist umdatiert. Alle Zeitstempel
-        sind mitgewandert; die Uhrzeiten stehen unverändert da.</p>
+      <?= ui_meldung_markup('ok', 'Alle Zeitstempel sind mitgewandert; die '
+            . 'Uhrzeiten stehen unverändert da.', 'Der Diensttag ist umdatiert.') ?>
     <?php endif; ?>
-    <p id="lockbanner" class="alert alert-info" hidden>
-      Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose bleiben
-      verborgen, bis die Verschlüsselung entsperrt ist.
-      <button type="button" class="btn-plain unlockbtn" id="unlockbtn">Entsperren</button>
-    </p>
-    <div id="map" class="map"></div>
-    <table class="data" id="missions">
-      <thead><tr>
-        <th class="c-swatch"></th>
-        <th class="sortable c-no"   data-key="no">Nr.</th>
-        <th class="sortable c-mid"  data-key="start">Beginn</th>
-        <th class="sortable c-mid"  data-key="dur">Dauer</th>
-        <th class="sortable"        data-key="site">Einsatzort</th>
-        <th class="sortable c-mid"   data-key="age">Alter</th>
-        <th class="sortable"        data-key="dx">Diagnose</th>
-        <?php /* Spaltentitel aus dem Feldkatalog. Bewusst unmaskiert: Der Wert
-                 ist 'day_label' aus mission_fields.php und darf Auszeichnung
-                 enthalten (Sekundär<br>Transport). Er stammt aus einer Datei
-                 des Projekts, nie aus einer Eingabe. */
-              foreach ($TAGESSPALTEN as $dc): ?>
-        <th class="sortable c-dc <?= e($dc['klasse']) ?>"
-            data-key="dc:<?= e($dc['col']) ?>"><?= $dc['label'] ?></th>
-        <?php endforeach; ?>
-        <?php /* Neutral beschriftet (Abschnitt 3.9): Die Einsatztabelle spricht
-                 durchgehend artunabhängig, auch im luftgebundenen Dienst. Die
-                 Flugterminologie bleibt allein den Kacheln der
-                 Zeitraumübersicht vorbehalten (E32). */ ?>
-        <th class="sortable c-km"    data-key="km">km</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
-    <p id="empty" class="muted" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
-    <?php /* Nur noch die eine Handlung, die zum täglichen Erfassen gehört.
-             „Datum ändern" und „Tag löschen" stehen seit Web 5.10.0 im
-             Aktionsmenü oben rechts: Umdatieren ist keine Angabe zum Tag,
-             sondern ein Eingriff in seine Zuordnung — mit Wirkung auf jeden
-             Zeitstempel des Tages —, und Löschen erst recht. */ ?>
-    <div class="dayactions">
-      <a href="einsatz_form.php" id="addmission" class="btn-primary">+ Einsatz nachtragen</a>
+
+    <?php /* Die Karte. Mobil 160 px ueber der Liste, ab 720 px 220, ab 1200
+             300; ab 1600 rueckt sie in die rechte Spalte des Rasters und
+             laeuft von der Hoehe der Diensttag-Daten bis unter die Tabelle
+             (E-P3-31, Anlage G). */ ?>
+    <div class="geo-spalte"><div id="map" class="geo"></div></div>
+
+    <section class="karte karte-einsaetze" id="einsatzliste">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Einsätze</h2>
+        <span class="karte-zahl" id="mzahl"></span>
+        <?php /* Sortieren mobil: Die Kachel hat keine Spaltenkoepfe — der
+                 leise Link oeffnet das Blatt mit den Spalten (E-P3-32). Er
+                 ist bewusst KEINE zweite Kopfaktion: Die eine Handlung der
+                 Karte bleibt „+ Nachtragen" (E-P3-25). */ ?>
+        <button type="button" class="karte-sortieren nur-unter-720"
+                data-blatt="sortblatt" aria-expanded="false" aria-controls="sortblatt">
+          <?= ui_symbol('sortieren', '', 'Sortieren') ?>
+        </button>
+        <a class="karte-aktion karte-aktion-orange" id="addmission" href="einsatz_form.php">
+          <?= ui_symbol('plus') ?><span>Nachtragen</span>
+        </a>
+      </div>
+      <div class="karte-inhalt">
+        <?php /* Sperrhinweis als Meldung mit Schloss und „Entsperren"
+                 (E-P3-31). Der Knopf steht IN der Meldung, mittig rechts. */ ?>
+        <div class="meldung meldung-info" id="lockbanner" role="status" hidden>
+          <?= ui_symbol('schloss', 'symbol-gross') ?>
+          <p>Geschützte Angaben sind gesperrt — Einsatzort, Alter und Diagnose
+             bleiben verborgen, bis die Verschlüsselung entsperrt ist.</p>
+          <div class="meldung-aktion">
+            <?= ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                          'typ' => 'button', 'attr' => ' id="unlockbtn"']) ?>
+          </div>
+        </div>
+
+        <?php /* Ab 720 px die Tabelle im eigenen Scrollbehaelter; darunter
+                 die dreizeilige Kachel (E-P3-32). Beide entstehen aus
+                 demselben Zeilenbestand in renderMissionTable(). */ ?>
+        <div class="tabelle-scroll nur-ab-720">
+          <table class="tabelle" id="missions">
+            <thead><tr>
+              <th class="streifen-spalte"></th>
+              <th class="sortable zahl-spalte" data-key="no"    data-label="Nr.">Nr.</th>
+              <th class="sortable"             data-key="start" data-label="Beginn">Beginn</th>
+              <th class="sortable zahl-spalte" data-key="dur"   data-label="Dauer">Dauer</th>
+              <th class="sortable"             data-key="site"  data-label="Einsatzort">Einsatzort</th>
+              <th class="sortable zahl-spalte" data-key="age"   data-label="Alter">Alter</th>
+              <th class="sortable"             data-key="dx"    data-label="Diagnose">Diagnose</th>
+              <?php /* Spaltentitel aus dem Feldkatalog. Bewusst unmaskiert: Der
+                       Wert ist 'day_label' aus mission_fields.php und darf
+                       Auszeichnung enthalten (Sekundär<br>Transport). Er stammt
+                       aus einer Datei des Projekts, nie aus einer Eingabe.
+                       data-label ist derselbe Text ohne Auszeichnung — fuer
+                       das Sortierblatt. */
+                    foreach ($TAGESSPALTEN as $dc): ?>
+              <th class="sortable <?= $dc['art'] === 'check' ? 'haken-spalte ' : '' ?><?= e($dc['klasse']) ?>"
+                  data-key="dc:<?= e($dc['col']) ?>"
+                  data-label="<?= e(strip_tags(str_replace('<br>', ' ', (string)$dc['label']))) ?>"><?= $dc['label'] ?></th>
+              <?php endforeach; ?>
+              <th class="sortable zahl-spalte" data-key="km" data-label="km">km</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="kachelliste nur-unter-720" id="missionskacheln"></div>
+        <p id="empty" class="feld-hinweis" hidden>Für diesen Tag sind keine Einsätze dokumentiert.</p>
+      </div>
+    </section>
+    </div><?php /* .tag-raster */ ?>
+
+    <?php /* Das Sortierblatt (E-P3-32): dieselben Spalten wie der
+             Tabellenkopf, mobil als Blatt von unten. Die Eintraege baut
+             renderMissionTable() aus den Koepfen — eine zweite Spaltenliste
+             gaebe es sonst hier. */ ?>
+    <div class="blatt" id="sortblatt" hidden>
+      <div class="blatt-griff" aria-hidden="true"></div>
+      <h2 class="blatt-titel">Sortieren</h2>
+      <div class="blatt-liste" id="sortliste"></div>
+      <button type="button" class="knopf knopf-leise blatt-abbrechen" data-blatt-zu>
+        <span>Abbrechen</span></button>
     </div>
 
-    <?php ui_footer(); ?>
-  </main>
-</div>
-
+<?php ui_geruest_ende(); ?>
 <?php ui_krypto_bootstrap(['csrf' => true]); ?>
 <script src="<?= asset('assets/html.js') ?>"></script>
 <script src="<?= asset('assets/patient.js') ?>"></script>
@@ -231,10 +283,10 @@ ui_topbar('uebersicht');
          schon beim Laden. */ ?>
 <script src="<?= asset('assets/missiontable.js') ?>"></script>
 <script src="<?= asset('assets/forms.js') ?>"></script>
-<script src="<?= asset('assets/aktionsmenu.js') ?>"></script>
 <script src="<?= asset('assets/vendor/leaflet/leaflet.js') ?>"></script>
 <script src="<?= asset('assets/map_fullscreen.js') ?>"></script>
 <script src="<?= asset('assets/map_layers.js') ?>"></script>
+<script src="<?= asset('assets/geo.js') ?>"></script>
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const SEL_DAY_ID = <?= json_encode($selDay) ?>;
@@ -247,7 +299,8 @@ const DAY_COLS = <?= json_encode(array_map(
         static fn(array $dc): array => ['col' => $dc['col'], 'art' => $dc['art'],
                                         'klasse' => $dc['klasse']],
         $TAGESSPALTEN), JSON_UNESCAPED_UNICODE) ?>;
-const COLORS = ['#FF8F1F','#4280E5','#D63338','#1A2E4D','#0C8599','#9C36B5','#2F9E44','#8A5A00'];
+/* Die Spurfarben kommen aus den Token (--spur-1..8, EdGeo.spurFarbe) — hier
+   stand eine COLORS-Liste mit fuenf markenfremden Werten (F-P3-H). */
 let currentDayId = null;
 let currentDay = null;      // Datum des Diensttags, fuer die Altersberechnung
 /* Standortkoordinate DIESES Diensttags, eingefroren (E8). Quelle des
@@ -262,17 +315,8 @@ map.setView([48.5, 10.5], 7); // Fallback, bis Daten da sind
 
 let layerGroup = L.layerGroup().addTo(map);
 const trackLines = [];
-// Einsatzort als klassischer Karten-Pin in der Einsatzfarbe (SVG-DivIcon)
-function locPin(color){
-  return L.divIcon({
-    className: 'locpin',
-    html: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 1C7.3 1 1 7.2 1 14.9 1 25.4 15 41 15 41s14-15.6 14-26.1C29 7.2 22.7 1 15 1z"
-            fill="${color}" stroke="#fff" stroke-width="2"/>
-      <circle cx="15" cy="14.5" r="5" fill="#fff"/></svg>`,
-    iconSize: [30, 42], iconAnchor: [15, 41], popupAnchor: [0, -34]
-  });
-}
+/* Die Marker kommen aus dem gemeinsamen Satz (assets/geo.js, E-P3-40) — hier
+   stand ein Inline-SVG-Pin, wortgleich noch einmal in einsatz.php. */
 
 let mapHasBounds = false;
 function trackWeight(){
@@ -321,24 +365,26 @@ function renderMissionTable(){
   });
   list.forEach(m => {
     const tr = document.createElement('tr');
-    // Zellen der Katalogspalten in der Reihenfolge des Tabellenkopfes
+    tr.className = 'clickable';
+    // Zellen der Katalogspalten in der Reihenfolge des Tabellenkopfes.
+    // Haken aus dem Symbolvorrat, dunkelblau (E-P3-32).
     const dcZellen = DAY_COLS.map(d => {
       const v = m[d.col];
       if (d.art === 'check') {
-        return `<td class="checkcol c-dc ${d.klasse}">${v ? '✓' : ''}</td>`;
+        return `<td class="haken-spalte ${d.klasse}">${v ? edSymbol('haken', 'tabelle-haken', 'ja') : ''}</td>`;
       }
       const t = (v == null || v === '') ? '' : String(v);
-      return `<td class="c-dc ${d.klasse}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
+      return `<td class="${d.klasse}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
     }).join('');
-    tr.innerHTML = `<td class="c-swatch"><span class="swatch" style="background:${m._col}"></span></td>
-      <td class="mono c-no">${m._no}</td>
-      <td class="mono c-mid">${m.start_hhmm}</td>
-      <td class="c-mid">${fmtDur(m.duration_s)}</td>
+    tr.innerHTML = `<td class="streifen-spalte"><span class="streifen" style="background:${m._col}"></span></td>
+      <td class="zahl-spalte">${m._no}</td>
+      <td>${m.start_hhmm}</td>
+      <td class="zahl-spalte">${EdMissionTable.zelleDauer(m.duration_s)}</td>
       ${zelleGeschuetzt(m, m._ort)}
-      ${zelleGeschuetzt(m, m._age, null, 'mono c-mid')}
+      ${zelleGeschuetzt(m, m._age, null, 'zahl-spalte')}
       ${zelleGeschuetzt(m, m._dx)}
       ${dcZellen}
-      <td class="mono c-km">${fmtKm(m.distance_m)}</td>`;
+      <td class="zahl-spalte">${EdMissionTable.fmtKmZahl(m.distance_m)}</td>`;
     /* Die Zeile ist die Schaltflaeche — auch fuer die Tastatur (Backlog Nr. 16).
      * Bis Web 6.3.0 hatte sie hier nur einen Klick-Handler und `cursor:pointer`:
      * Die Tagesuebersicht war damit die einzige der drei Einsatztabellen, die
@@ -365,10 +411,48 @@ function renderMissionTable(){
     if (th.dataset.key === sortKey) {
       const a = document.createElement('span');
       a.className = 'arrow';
-      a.textContent = sortDir > 0 ? ' ▲' : ' ▼';
+      a.innerHTML = ' ' + edSymbol('pfeil-hoch', sortDir > 0 ? '' : 'symbol-oben',
+        sortDir > 0 ? 'aufsteigend' : 'absteigend');
       th.appendChild(a);
     }
   });
+
+  /* Die Kachelliste — dieselben Zeilen in derselben Reihenfolge, aus dem
+     gemeinsamen Erzeuger (E-P3-32). Unter 720 px ist sie die einzige Form. */
+  document.getElementById('missionskacheln').innerHTML =
+    list.map(m => EdMissionTable.kachel(m, { farbe: m._col })).join('');
+
+  /* Zahl und km-Summe im Kartenkopf: „4 · 140 km" (Mockup 02). */
+  {
+    const km = list.reduce((s, m) => s + (m.distance_m || 0), 0);
+    document.getElementById('mzahl').textContent = list.length
+      ? list.length + (km > 0 ? ' · ' + Math.round(km / 1000) + ' km' : '')
+      : '';
+  }
+
+  /* Das Sortierblatt fuehrt dieselben Spalten wie der Tabellenkopf — es
+     entsteht aus ihm, eine zweite Spaltenliste gibt es nicht (E-P3-32). Die
+     aktive Spalte ist hervorgehoben und traegt die Richtung. */
+  {
+    const liste = document.getElementById('sortliste');
+    liste.innerHTML = '';
+    document.querySelectorAll('#missions th.sortable').forEach(th => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      const aktiv = th.dataset.key === sortKey;
+      b.className = 'blatt-zeile' + (aktiv ? ' aktiv' : '');
+      b.innerHTML = '<span>' + esc(th.dataset.label || '') + '</span>'
+        + (aktiv ? edSymbol('pfeil-hoch', sortDir > 0 ? '' : 'symbol-oben',
+                            sortDir > 0 ? 'aufsteigend' : 'absteigend') : '');
+      b.addEventListener('click', () => {
+        if (sortKey === th.dataset.key) { sortDir = -sortDir; }
+        else { sortKey = th.dataset.key; sortDir = 1; }
+        renderMissionTable();
+        if (window.edBlatt) { edBlatt.zu(); }
+      });
+      liste.appendChild(b);
+    });
+  }
 }
 
 /* GEMEINSAME BAUSTEINE STATT EIGENER FASSUNGEN (A6, E-A6-07).
@@ -390,9 +474,9 @@ const { extractOrt, fmtDur, fmtKm, zelleGeschuetzt } = EdMissionTable;
 const esc = EdHtml.escape;
 
 function showLoadError(msg){
-  const box = document.getElementById('loaderror');
-  box.textContent = 'Die Tagesdaten konnten nicht geladen werden: ' + msg;
-  box.hidden = false;
+  document.getElementById('loaderror').textContent =
+    'Die Tagesdaten konnten nicht geladen werden: ' + msg;
+  document.getElementById('loaderrorbox').hidden = false;
 }
 
 async function loadDay(dayId){
@@ -409,7 +493,7 @@ async function loadDay(dayId){
     }
     if (d.error) { showLoadError(d.error + (d.meldung ? ': ' + d.meldung : '')); return; }
   } catch (e) { showLoadError(e.message); return; }
-  document.getElementById('loaderror').hidden = true;
+  document.getElementById('loaderrorbox').hidden = true;
 
   /* Liegt der Tag im Papierkorb, steht das jetzt in der Antwort. Ohne diesen
    * Hinweis wären fehlende Diensttagangaben nicht von "noch nichts eingetragen"
@@ -420,8 +504,8 @@ async function loadDay(dayId){
       if (!hinweis) {
         hinweis = document.createElement('p');
         hinweis.id = 'daytrash';
-        hinweis.className = 'alert alert-warn';
-        const main = document.querySelector('main.page');
+        hinweis.className = 'meldung meldung-warn';
+        const main = document.querySelector('main.inhalt');
         main.insertBefore(hinweis, main.firstChild);
       }
       hinweis.textContent = 'Dieser Diensttag liegt im Papierkorb. Angaben zu '
@@ -434,27 +518,37 @@ async function loadDay(dayId){
   }
   currentDayId = d.day_id;
   currentDay = d.day;
-  /* Titel: Datum, dazu die Uhrzeit des Dienstbeginns, wenn es eine gibt.
-     Seit E9 können mehrere Dienste auf einem Kalendertag liegen — ohne die
-     Uhrzeit sähen die beiden Seiten gleich aus. Das Symbol der Art steht davor
-     (E27) und trägt seine Textalternative in title/aria-label (A7c). */
+  /* Titel nach E-P3-31: „Samstag, 22.08.2026", mobil „Sa, 22.08.2026" — beide
+     Fassungen stehen im Markup, das Stylesheet waehlt. Die Art steckt nicht
+     mehr im Titel: Sie traegt das Rettungsmittel in der Unterzeile, und in
+     der Leiste steht ihr Zeichen. Die Uhrzeit des Dienstbeginns steht in der
+     Unterzeile — seit E9 koennen zwei Dienste auf einem Kalendertag liegen,
+     und ohne sie saehen beide Seiten gleich aus. */
   {
-    const t = document.getElementById('daytitle');
-    t.textContent = '';
-    const sym = document.createElement('span');
-    sym.className = 'artzeichen';
-    sym.textContent = (d.meta && d.meta.art_zeichen) ? d.meta.art_zeichen : '';
-    sym.title = (d.meta && d.meta.art_text) ? d.meta.art_text : '';
-    sym.setAttribute('aria-label', sym.title);
-    t.appendChild(sym);
-    let text = ' Diensttag ' + fmtDay(d.day);
-    if (d.meta && d.meta.started_at) { text += ', ' + d.meta.started_at; }
-    if (d.meta && d.meta.vehicle_name) { text += ' · ' + d.meta.vehicle_name; }
-    t.appendChild(document.createTextNode(text));
+    const [y, mo, dd] = d.day.split('-').map(Number);
+    const wt = new Date(y, mo - 1, dd).getDay();
+    const LANG = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    const KURZ = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    document.getElementById('daytitle').innerHTML =
+      '<span class="wtag-lang">' + LANG[wt] + '</span>'
+      + '<span class="wtag-kurz">' + KURZ[wt] + '</span>, ' + fmtDay(d.day);
+
+    const unter = document.getElementById('dayunter');
+    const teile = [];
+    if (d.meta && d.meta.vehicle_name) { teile.push(d.meta.vehicle_name); }
+    if (d.meta && d.meta.base_name)    { teile.push(d.meta.base_name); }
+    if (!teile.length && d.meta && d.meta.art_text) { teile.push(d.meta.art_text); }
+    if (d.meta && d.meta.started_at)   { teile.push('Dienstbeginn ' + d.meta.started_at); }
+    unter.textContent = teile.join(' · ');
+    unter.hidden = !teile.length;
+
+    const blattTitel = document.querySelector('#dayblatt .blatt-titel');
+    if (blattTitel) { blattTitel.textContent = 'Diensttag ' + fmtDay(d.day); }
   }
   document.getElementById('daydellink').href = 'diensttag_loeschen.php?d=' + d.day_id;
   document.getElementById('daydatelink').href = 'diensttag_datum.php?d=' + d.day_id;
   document.getElementById('daymergelink').href = 'diensttag_zusammenfuehren.php?d=' + d.day_id;
+  document.getElementById('addmission-menu').href = 'einsatz_form.php?d=' + d.day_id;
   // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
   // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.
   document.getElementById('dayaktionen').hidden = false;
@@ -471,18 +565,7 @@ async function loadDay(dayId){
     ? d.meta.base_id : (DEF_BASE || '');
   f.elements['notes'].value = (d.meta && d.meta.notes) ? d.meta.notes : '';
   renderCrewFields(d.meta);
-  /* Kopfzeile des aufklappbaren Blocks: die EINGEFRORENEN Bezeichnungen aus
-     dem Diensttag (E8), nie die heutigen Stammdaten. Ein umbenanntes
-     Rettungsmittel ändert an einem dokumentierten Dienst nichts (A4). */
-  const parts = [];
-  if (d.meta) {
-    if (d.meta.vehicle_name) parts.push(d.meta.vehicle_name);
-    if (d.meta.base_name) parts.push(d.meta.base_name);
-    (d.meta.crew || []).forEach(c => { if (c.name) parts.push(c.name); });
-  }
-  document.getElementById('metahint').textContent = parts.length ? '— ' + parts.join(' · ') : '';
-  document.getElementById('metanotes').textContent =
-    (d.meta && d.meta.notes) ? d.meta.notes : '';
+  zeigeTagLese(d.meta);
   document.getElementById('savestate').textContent = '';
   document.getElementById('addmission').href = 'einsatz_form.php?d=' + d.day_id;
 
@@ -493,8 +576,8 @@ async function loadDay(dayId){
   // Ruhe-Track: schwarz, dezent
   d.rest_segments.forEach(seg => {
     if (seg.length > 1) {
-      const rl = L.polyline(seg, { color:'#8A8378', weight: Math.max(3, trackWeight() - 1),
-        opacity:0.9, smoothFactor:0 });
+      const rl = L.polyline(seg, { color: EdGeo.ruheFarbe(),
+        weight: Math.max(3, trackWeight() - 1), opacity:0.9, smoothFactor:0 });
       layerGroup.addLayer(rl);
       trackLines.push(rl);
       seg.forEach(p => bounds.push(p));
@@ -506,24 +589,34 @@ async function loadDay(dayId){
   // (API liefert aufsteigend nach Beginn), danach frei sortierbar.
   dayMissions = d.missions.map((m, i) => {
     m._no = i + 1;
-    m._col = COLORS[i % COLORS.length];
+    m._col = EdGeo.spurFarbe(i);
     return m;
   });
   currentBase = (d.meta && d.meta.base_lat != null && d.meta.base_lon != null)
     ? { lat: d.meta.base_lat, lon: d.meta.base_lon } : null;
+  /* Standort-Haus (E-P3-40): immer sichtbar, sobald der Diensttag eine
+     eingefrorene Standortkoordinate traegt — mit Namensschild. */
+  if (currentBase) {
+    layerGroup.addLayer(EdGeo.markerStandort([currentBase.lat, currentBase.lon],
+      (d.meta && d.meta.base_name) || 'Standort'));
+    bounds.push([currentBase.lat, currentBase.lon]);
+  }
   d.missions.forEach(m => {
     if (m.track.length > 1) {
       const line = L.polyline(m.track, { color: m._col, weight: trackWeight(), smoothFactor: 0 });
       layerGroup.addLayer(line);
       trackLines.push(line);
+      /* Richtungspfeile ab einer Zoomstufe, bei der sie nicht gedraengt
+         stehen (E-P3-40) — die Verteilung rechnet assets/geo.js. */
+      EdGeo.pfeile(map, layerGroup, m.track);
       m.track.forEach(p => bounds.push(p));
     }
-    /* Zielklinik-Pin: Klartext, also ohne Freischalten (E40, A13o). Er steht
-       hier und nicht in entschluesselePat() — dort landet nur, was den
-       Schlüssel braucht. */
+    /* Zielklinik-Schild: Klartext, also ohne Freischalten (E40, A13o). Es
+       steht hier und nicht in entschluesselePat() — dort landet nur, was den
+       Schluessel braucht. Der NAME des Ziels liegt verschluesselt; das
+       Schild traegt deshalb kein Namensschild, das Popup nennt den Einsatz. */
     if (m.dest_lat != null && m.dest_lon != null) {
-      layerGroup.addLayer(L.marker([m.dest_lat, m.dest_lon],
-        { icon: locPin(EdLuftlinie.FARBE), keyboard: false })
+      layerGroup.addLayer(EdGeo.markerZiel([m.dest_lat, m.dest_lon], '')
         .bindPopup(`Einsatz ${m._no}<br>Zielklinik`));
       bounds.push([m.dest_lat, m.dest_lon]);
     }
@@ -538,8 +631,12 @@ async function loadDay(dayId){
   if (bounds.length) {
     mapHasBounds = true;
     const px = map.getSize();
+    /* PADDING IST (x, y) — hier stand [px.y…, px.x…], also die Achsen
+       vertauscht (Bestandsfehler, F-P3-Z). Bei der alten 380-px-Karte fiel
+       das nicht auf; bei 300 px frass das vertauschte y-Padding 287 der
+       300 Pixel, und der Zoom blieb auf der Fallback-Stufe haengen. */
     map.fitBounds(L.latLngBounds(bounds),
-      { padding: [px.y * 0.125, px.x * 0.125], maxZoom: 15 });
+      { padding: L.point(px.x * 0.125, px.y * 0.125), maxZoom: 15 });
   }
 }
 
@@ -577,9 +674,11 @@ async function entschluesselePat(){
       m._ort = extractOrt(o.loc.addr);
       changed = true;
       if (o.loc.lat != null) {
-        layerGroup.addLayer(L.marker([o.loc.lat, o.loc.lon],
-          { icon: locPin(m._col), keyboard: false })
-          .bindPopup(`Einsatz ${m._no}<br>` + esc(o.loc.addr)));
+        /* Einsatzort: oranger Kreis mit Pin (E-P3-40) — einheitlich fuer
+           alle Einsaetze; welcher zu welchem gehoert, sagen Spurfarbe und
+           Popup. */
+        layerGroup.addLayer(EdGeo.markerEinsatzort([o.loc.lat, o.loc.lon],
+          `Einsatz ${m._no}<br>` + esc(o.loc.addr)));
         pinBounds.push([o.loc.lat, o.loc.lon]);
       }
     }
@@ -618,9 +717,11 @@ async function entschluesselePat(){
         { ziel: layerGroup, farbe: m._col, titel: `Einsatz ${m._no}` });
       punkte.forEach(p => pinBounds.push([p.lat, p.lon]));
       if (abfahrt) {
-        layerGroup.addLayer(L.marker([abfahrt.lat, abfahrt.lon],
-          { icon: locPin(m._col), keyboard: false })
-          .bindPopup(`Einsatz ${m._no}<br>Abfahrtort`
+        /* Der Abfahrtort ist kein Mitglied des Marker-Satzes — er ist die
+           gerechnete Gegenstelle der Luftlinie und bleibt ein leiser Punkt
+           in der Spurfarbe seines Einsatzes. */
+        layerGroup.addLayer(EdGeo.markerPunkt([abfahrt.lat, abfahrt.lon], m._col,
+          `Einsatz ${m._no}<br>Abfahrtort`
             + (abfahrt.text ? '<br>' + esc(abfahrt.text) : '')));
       }
     }
@@ -667,7 +768,6 @@ function renderCrewFields(meta){
 
   crew.forEach(c => {
     const lab = document.createElement('label');
-    lab.className = 'crewrole';
     lab.dataset.role = c.role;
     lab.textContent = c.label;
     const inp = document.createElement('input');
@@ -706,9 +806,60 @@ function vehicleBaseSync(){
   if (bid > 0) { base.value = String(bid); }
 }
 
+/* Lesezustand der Diensttag-Daten (E-P3-31): Standort, Rettungsmittel,
+   Besatzung, Notizen — die EINGEFRORENEN Bezeichnungen aus dem Diensttag
+   (E8), nie die heutigen Stammdaten. Mobil entfallen Standort und
+   Rettungsmittel: Sie stehen dort schon in der Unterzeile des Titels
+   (Mockup 02). Leere Felder erscheinen nicht (E-P3-33 sinngemaess). */
+function zeigeTagLese(meta){
+  const lese = document.getElementById('taglese');
+  const zeilen = [];
+  const zeile = (dt, dd, doppelt) => zeilen.push(
+    '<div class="tagfeld' + (doppelt ? ' tagfeld-doppelt' : '') + '"><dt>'
+    + esc(dt) + '</dt><dd>' + esc(dd) + '</dd></div>');
+  if (meta) {
+    if (meta.base_name)    { zeile('Standort', meta.base_name, true); }
+    if (meta.vehicle_name) { zeile('Rettungsmittel', meta.vehicle_name, true); }
+    const crew = (meta.crew || []).filter(c => c.name)
+      .map(c => c.label + ' ' + c.name).join(' · ');
+    if (crew)        { zeile('Besatzung', crew, false); }
+    if (meta.notes)  { zeile('Notizen', meta.notes, false); }
+  }
+  lese.innerHTML = zeilen.length ? zeilen.join('')
+    : '<p class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</p>';
+}
+
+/* „Bearbeiten" klappt dasselbe Formular in der Karte auf (E-P3-31); der
+   zweite Klick — oder Speichern — klappt zurueck in den Lesezustand. */
+function tagdatenBearbeiten(auf){
+  const form = document.getElementById('dayform');
+  const lese = document.getElementById('taglese');
+  const knopf = document.getElementById('tagdatenknopf');
+  form.hidden = !auf;
+  lese.hidden = auf;
+  knopf.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  if (auf) {
+    const erstes = form.querySelector('select, input, textarea');
+    if (erstes) { erstes.focus(); }
+  }
+}
+
 async function init(){
   document.getElementById('vehsel').addEventListener('change', vehicleBaseSync);
   document.getElementById('unlockbtn').addEventListener('click', () => entschluesselePat());
+  document.getElementById('tagdatenknopf').addEventListener('click', ev => {
+    ev.preventDefault();
+    tagdatenBearbeiten(document.getElementById('dayform').hidden);
+  });
+  /* Derselbe Weg aus dem Aktionsmenue: Blatt schliessen, Formular oeffnen,
+     zur Karte rollen. */
+  document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
+    ?.addEventListener('click', ev => {
+      ev.preventDefault();
+      if (window.edBlatt) { edBlatt.zu(); }
+      tagdatenBearbeiten(true);
+      document.getElementById('tagdaten').scrollIntoView({ block: 'start' });
+    });
   document.querySelectorAll('#missions th.sortable').forEach(th => {
     th.addEventListener('click', () => {
       if (sortKey === th.dataset.key) { sortDir = -sortDir; }
@@ -739,6 +890,7 @@ async function init(){
     });
     if (res.ok) {
       state.textContent = 'Gespeichert.';
+      tagdatenBearbeiten(false);
       loadDay(currentDayId);
     } else {
       /* Den GRUND zeigen, nicht nur "Fehler".

@@ -103,15 +103,18 @@ function session_beenden(string $grund = 'abgemeldet'): never
     require_once __DIR__ . '/ui.php';
     ui_seite_start([
         'titel'  => 'Abmelden',
-        'klasse' => 'login-body',
+        'klasse' => 'anmeldung-body',
         'kopf'   => '<noscript><meta http-equiv="refresh" content="0;url='
                     . e($ziel) . '"></noscript>',
     ]);
     ?>
-<main class="login-card">
-  <p class="muted"><?= e($text) ?></p>
-  <p class="login-aux"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>
+<main class="anmeldung">
+ <div class="anmeldung-karte">
+  <p><?= e($text) ?></p>
+  <p class="anmeldung-neben"><a href="<?= e($ziel) ?>">Zur Anmeldung</a></p>
+ </div>
 </main>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
 <script>
 // Beide Schluessel raeumen: Daten- UND Inhaltsschluessel. Faengt das Skript
@@ -139,4 +142,121 @@ function session_ende_text(?string $grund): string
         'konto'      => 'Das Konto steht nicht mehr zur Verfügung.',
         default      => '',
     };
+}
+
+
+/* ---------------------------------------------------------------------------
+ * LOGO-WAHL JE PROFIL  (E-P3-20, ab Web 9.7.0)
+ *
+ * Vier Werte stehen in `users.logo_wahl`:
+ *
+ *   ''             Standard der Installation — der Vorgabewert. Wer nie
+ *                  gewaehlt hat, folgt dem Standard, und der kann sich
+ *                  aendern (die Wahl dafuer entsteht in O9).
+ *   'hubschrauber' Hubschrauber (RTH)
+ *   'fahrzeug'     Fahrzeug (NEF)
+ *   'wechselnd'    je Anmeldung neu gewuerfelt
+ *
+ * AUFGELOEST WIRD EINMAL, BEI DER ANMELDUNG. In der Sitzung steht danach
+ * nicht die Wahl, sondern ihr ERGEBNIS ('hubschrauber' oder 'fahrzeug') —
+ * sonst muesste ui_logo() bei jedem Seitenaufruf wuerfeln, und das Logo
+ * spraenge innerhalb einer Sitzung von Seite zu Seite. „Wechselnd" heisst
+ * je Anmeldung, nicht je Klick.
+ *
+ * Wer die Wahl im Profil aendert, muss sich deshalb NICHT neu anmelden:
+ * einstellungen.php ruft dieselbe Funktion nach dem Speichern auf.
+ * ------------------------------------------------------------------------ */
+
+/** Vorbelegung, solange die Installation nichts anderes gesetzt hat. */
+const LOGO_STANDARD_VORGABE = 'hubschrauber';
+
+/**
+ * Der Standard DIESER Installation (E-P3-19/20, einstellbar seit Web 9.10.0).
+ *
+ * Bis Web 9.9.0 war das eine Konstante. Jetzt steht der Wert in `app_state`
+ * und laesst sich in der Wartung umstellen — eine Installation, die
+ * ueberwiegend am Boden faehrt, soll nicht dauerhaft einen Hubschrauber im
+ * Kopf tragen.
+ *
+ * JE ANFRAGE EINMAL GELESEN. logo_stamm() faellt auf diese Funktion zurueck
+ * und wird auf jeder Seite mehrfach aufgerufen (Kopfleiste, Favicon).
+ *
+ * OHNE DATENBANK GILT DIE VORBELEGUNG. Diese Funktion laeuft auch dort, wo es
+ * noch keine Datenbank gibt: im Einrichter, und auf der Anmeldeseite bevor
+ * eine Verbindung steht. Eine Ausnahme darf die Seite nicht kosten — das Logo
+ * ist Zierde, kein Zugang.
+ */
+function logo_standard(): string
+{
+    static $wert = null;
+    if ($wert !== null) { return $wert; }
+    $wert = LOGO_STANDARD_VORGABE;
+    try {
+        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+        $st->execute(['logo_standard']);
+        $v = (string)$st->fetchColumn();
+        if ($v === 'fahrzeug' || $v === 'hubschrauber') { $wert = $v; }
+    } catch (Throwable) {
+        // Keine Datenbank, keine Tabelle, kein Eintrag: Vorbelegung.
+    }
+    return $wert;
+}
+
+/** Die waehlbaren Werte — auch die Pruefliste beim Speichern. */
+const LOGO_WAHLEN = ['', 'hubschrauber', 'fahrzeug', 'wechselnd'];
+
+/**
+ * Wahl -> tatsaechliches Logo ('hubschrauber' | 'fahrzeug').
+ *
+ * `random_int` statt `rand`: Es ist ohnehin da (die Anwendung braucht es
+ * fuer Tokens), und ein Zufall, der aus derselben Quelle kommt wie alles
+ * andere, ist eine Sorge weniger. Kryptographisch muss er hier nicht sein.
+ */
+function logo_aufloesen(?string $wahl): string
+{
+    $w = (string)$wahl;
+    if ($w === 'wechselnd') {
+        return random_int(0, 1) === 1 ? 'fahrzeug' : 'hubschrauber';
+    }
+    if ($w === 'hubschrauber' || $w === 'fahrzeug') { return $w; }
+    return logo_standard();
+}
+
+/**
+ * Die Wahl in der Sitzung ablegen (Anmeldung, Profil-Speichern).
+ *
+ * NUR „WECHSELND" WIRD HIER AUFGELOEST — dort faellt der Wuerfel, und zwar je
+ * Anmeldung; sonst spraenge das Logo beim Blaettern.
+ *
+ * Der Leerstring dagegen BLEIBT stehen und wird erst in logo_stamm()
+ * aufgeloest. Bis Web 9.9.0 wurde auch er hier festgeschrieben — das war
+ * richtig, solange der Standard eine Konstante war. Seit er eine Einstellung
+ * ist, waere es falsch: Wer ihn in der Wartung umstellt, saehe die Wirkung
+ * erst, wenn sich jede NutzerIn neu angemeldet hat. Jetzt wirkt sie sofort,
+ * und zwar bei genau denen, die keine eigene Wahl getroffen haben.
+ */
+function logo_sitzung_setzen(?string $wahl): void
+{
+    $w = (string)$wahl;
+    $_SESSION['logo_wahl'] = $w === 'wechselnd' ? logo_aufloesen($w) : $w;
+}
+
+/**
+ * Dateistamm des Logos fuer die laufende Sitzung.
+ *
+ * DIE EINE STELLE, an der aus der Sitzung ein Dateiname wird — ui_logo()
+ * (Kopfleiste) und favicon_tags() (Browser-Symbol) fragen beide hier.
+ * Kopfleiste und Favicon wechseln damit zwangslaeufig gemeinsam (E-P3-20);
+ * zwei getrennte Abfragen waeren zwei Gelegenheiten, es auseinanderlaufen
+ * zu lassen.
+ */
+function logo_stamm(): string
+{
+    /* In der Sitzung steht die WAHL, nicht immer das Ergebnis: „wechselnd"
+     * ist schon bei der Anmeldung aufgeloest, der Leerstring erst hier —
+     * damit ein Wechsel des Installationsstandards sofort wirkt und nicht
+     * erst nach der naechsten Anmeldung (siehe logo_sitzung_setzen). */
+    $w = (string)($_SESSION['logo_wahl'] ?? '');
+    $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard();
+    return $auf === 'fahrzeug' ? 'gen-em_logo_fahrzeug' : 'gen-em_logo_helicopter';
 }

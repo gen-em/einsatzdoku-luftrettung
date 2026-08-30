@@ -130,106 +130,186 @@ if ($demoId !== null) {
 $letzter = demo_letzter_reset();
 $restSek = demo_reset_in();
 
+/* ---- Anzeige --------------------------------------------------------------
+ *
+ * UMGEBAUT IN O9C (Web 9.10.0). Bis Web 9.9.0 war diese Seite eine Folge von
+ * <h2>-Ueberschriften mit einer `table.data`, einem `pre.mono` und drei
+ * `button.btn-primary` in einem `div.rowactions` — Klassen, die es im neuen
+ * Stylesheet nicht mehr gibt, weil ihre Regeln in den Bausteinen aufgegangen
+ * sind. Sie stand deshalb seit O2 ohne Gestaltung da.
+ *
+ * DIE ZAHLEN STEHEN JETZT OBEN. Was man vor dem Klicken wissen will, ist
+ * „steht da ueberhaupt etwas?" — vier Kacheln beantworten das in einem Blick,
+ * wo vorher sieben Tabellenzeilen zu lesen waren. Die Papierkorbzahlen bleiben
+ * Zeilen: Sie sind die Kontrollzahlen des Resets, nicht sein Ergebnis.
+ *
+ * DIE HANDLUNGEN STEHEN IN DER TITELZEILE, wie auf der Kontoseite (O9a): der
+ * haeufige Fall als Knopf, der endgueltige im Aktionsmenue. Die Formulare
+ * dazu liegen versteckt im Seitenkopf und werden ueber `form="…"` bedient —
+ * dasselbe Verfahren wie dort.
+ */
 ui_seite_start(['titel' => 'Demo-Konto']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin_demo'); ?>
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_demo']); ?>
 
-<main class="page">
-  <h1>Demo-Konto</h1>
+  <?php /* Die Formulare der Titelzeile. Versteckt, weil ihr Knopf woanders
+           steht; `data-confirm` haengt am Formular, nicht am Knopf — es gibt
+           je Formular nur eine Handlung. */ ?>
+  <form method="post" id="f-demo-anlegen" hidden>
+    <?= csrf_field() ?><input type="hidden" name="action" value="demo_anlegen">
+  </form>
+  <form method="post" id="f-demo-reset" hidden>
+    <?= csrf_field() ?><input type="hidden" name="action" value="demo_reset">
+  </form>
+  <form method="post" id="f-demo-weg" hidden
+        data-confirm="Demo-Konto samt allen Daten endgültig entfernen?"
+        data-confirm-ok="Entfernen">
+    <?= csrf_field() ?><input type="hidden" name="action" value="demo_entfernen">
+    <input type="hidden" name="confirm" value="ja">
+  </form>
+
+  <?php
+  /* KEINE RUECKFRAGE VOR DEM ZURUECKSETZEN: Der Verlust ist der Zweck, und
+     dasselbe passiert alle 30 Minuten von selbst. Eine Rueckfrage, die man
+     dreissigmal am Tag wegklickt, entwertet die Rueckfragen, die etwas
+     bedeuten. „Entfernen" dagegen ist endgueltig und steht deshalb im
+     Aktionsmenue, hinter einer Rueckfrage. */
+  $gesperrt = $fixtureDa ? '' : ' disabled';
+  if ($demoId === null) {
+      $aktionen = ui_knopf(['text' => 'Demo-Konto anlegen', 'art' => 'primaer',
+                            'symbol' => 'plus', 'attr' => ' form="f-demo-anlegen"' . $gesperrt]);
+  } else {
+      $aktionen = ui_knopf(['text' => 'Zurücksetzen', 'art' => 'primaer', 'symbol' => 'tausch',
+                            'attr' => ' form="f-demo-reset"' . $gesperrt])
+        . ui_aktionen(['titel' => 'Demo-Konto', 'eintraege' => [
+              ['text' => 'Demo-Konto entfernen', 'symbol' => 'korb',
+               'gefahr' => true, 'form' => 'f-demo-weg'],
+          ]]);
+  }
+  ?>
+  <?php ui_titelzeile(['titel' => 'Demo-Konto', 'aktionen' => $aktionen]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
-  <p class="muted">Ein Konto zum Ausprobieren: erfundene Daten, öffentliche
-     Zugangsdaten, Änderungen ausdrücklich erwünscht. Es setzt sich
+  <?php /* DIE WARNUNG STEHT VOR ALLEM ANDEREN und bleibt stehen — sie ist der
+           einzige Ort im Projekt, an dem die Ende-zu-Ende-Verschluesselung
+           bewusst ausgesetzt ist. */ ?>
+  <?= ui_meldung_markup('warn',
+      'In diesem Konto liegt das Schlüsselmaterial auf dem Server. Das ist die '
+    . 'einzige Stelle im Projekt, an der die Ende-zu-Ende-Verschlüsselung bewusst '
+    . 'ausgesetzt ist, und sie ist nur vertretbar, weil dort ausschließlich '
+    . 'erfundene Daten stehen. Niemals echte Daten in diesem Konto erfassen.',
+      'Schlüsselmaterial auf dem Server') ?>
+
+  <?php if (!$fixtureDa): ?>
+    <?= ui_meldung_markup('fehler',
+        'Es liegt keine Fixture unter server/demo/fixture.json.gz. Ohne sie lässt '
+      . 'sich weder anlegen noch zurücksetzen. Sie entsteht mit '
+      . '„php tools/referenzdatensatz/fixture/erzeugen.php" aus dem Referenzkonto.',
+        'Keine Fixture') ?>
+  <?php endif; ?>
+
+  <p class="seiten-erklaerung">Ein Konto zum Ausprobieren: erfundene Daten,
+     öffentliche Zugangsdaten, Änderungen ausdrücklich erwünscht. Es setzt sich
      <strong>alle 30 Minuten</strong> selbst auf den Standardzustand zurück —
      ausgelöst von der nächsten Anfrage, nicht von einem Zeitdienst.</p>
 
-  <p class="alert alert-warn">In diesem Konto liegt das Schlüsselmaterial
-     <strong>auf dem Server</strong>. Das ist die einzige Stelle im Projekt,
-     an der die Ende-zu-Ende-Verschlüsselung bewusst ausgesetzt ist, und sie
-     ist nur vertretbar, weil dort ausschließlich erfundene Daten stehen.
-     <strong>Niemals echte Daten in diesem Konto erfassen.</strong></p>
+<?php if ($demoId === null): ?>
 
-  <?php if (!$fixtureDa): ?>
-    <p class="alert">Es liegt keine Fixture unter
-       <code>server/demo/fixture.json.gz</code>. Ohne sie lässt sich weder
-       anlegen noch zurücksetzen. Sie entsteht mit
-       <code>php tools/referenzdatensatz/fixture/erzeugen.php</code> aus dem
-       Referenzkonto.</p>
-  <?php endif; ?>
+  <?php ui_karte_start(['titel' => 'Zustand']); ?>
+    <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto.
+       „Demo-Konto anlegen" legt es an und spielt die Fixture ein.</p>
+  <?php ui_karte_ende(); ?>
 
-  <h2>Zustand</h2>
-  <?php if ($demoId === null): ?>
-    <p>Es gibt derzeit <strong>kein</strong> Demo-Konto.</p>
-  <?php else: ?>
-    <?php /* table.data statt einer eigenen Klasse: Der Adminbereich zeigt
-             Auskuenfte ueberall so, und eine neue Klasse fuer eine Handvoll
-             Zeilen waere ein Sonderfall, den spaeter niemand pflegt. */ ?>
-    <table class="data">
-      <tbody>
-        <tr><th>Konto</th><td><?= e((string)$email) ?></td></tr>
-        <tr><th>Letzter Reset</th>
-            <td><?= $letzter > 0 ? e(fmt_local(gmdate('Y-m-d H:i:s', $letzter))) : 'unbekannt' ?></td></tr>
-        <tr><th>Nächster Reset</th>
-            <td><?= $restSek > 0 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
-                                 : 'bei der nächsten Anfrage' ?></td></tr>
-        <?php foreach (($zahlen ?? []) as $k => $v): ?>
-          <tr><th><?= e((string)$k) ?></th><td><?= (int)$v ?></td></tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php endif; ?>
+<?php else: ?>
 
-  <?php if ($bericht !== null): ?>
-    <h2>Bericht des letzten Laufs</h2>
-    <pre class="mono"><?= e(json_encode($bericht,
-        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
-  <?php endif; ?>
-
-  <h2>Handlungen</h2>
-  <div class="rowactions">
-    <?php if ($demoId === null): ?>
-      <form method="post" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="demo_anlegen">
-        <button class="btn-primary" <?= $fixtureDa ? '' : 'disabled' ?>>Demo-Konto anlegen</button>
-      </form>
-    <?php else: ?>
-      <?php /* KEINE Rueckfrage: Der Verlust ist der Zweck, und dasselbe
-               passiert alle 30 Minuten von selbst. Eine Rueckfrage, die man
-               dreissigmal am Tag wegklickt, entwertet die Rueckfragen, die
-               etwas bedeuten. */ ?>
-      <form method="post" class="inline-form">
-        <?= csrf_field() ?><input type="hidden" name="action" value="demo_reset">
-        <button class="btn-primary" <?= $fixtureDa ? '' : 'disabled' ?>>Auf Standard zurücksetzen</button>
-      </form>
-      <form method="post" class="inline-form"
-            data-confirm="Demo-Konto samt allen Daten endgültig entfernen?"
-            data-confirm-ok="Entfernen">
-        <?= csrf_field() ?><input type="hidden" name="action" value="demo_entfernen">
-        <input type="hidden" name="confirm" value="ja">
-        <button class="btn-red">Demo-Konto entfernen</button>
-      </form>
-    <?php endif; ?>
+  <?php /* Die vier Zahlen des laufenden Bestands. Der Papierkorb steht nicht
+           dabei: Er ist eine Kontrollzahl des Resets, keine Bestandszahl —
+           und eine Kachel „5 im Papierkorb" neben „82 Einsätze" liest sich
+           wie ein Problem, wo keines ist. */ ?>
+  <div class="kennzahl-raster kennzahl-raster-4">
+    <?= ui_kennzahl(['wert' => (string)$zahlen['Diensttage'],   'label' => 'Diensttage']) ?>
+    <?= ui_kennzahl(['wert' => (string)$zahlen['Einsätze'],     'label' => 'Einsätze']) ?>
+    <?= ui_kennzahl(['wert' => (string)$zahlen['Ruhesegmente'], 'label' => 'Ruhesegmente']) ?>
+    <?= ui_kennzahl(['wert' => (string)$zahlen['Geräte'],       'label' => 'Geräte']) ?>
   </div>
 
-  <h2>Was der Reset umfasst</h2>
-  <ul class="muted">
-    <li>Diensttage, Einsätze, Ruhesegmente, Spuren, Stammdaten — vollständig
-        ersetzt.</li>
-    <li>Geräte, Kopplungscodes, Papierkorb und Sperrliste — auch das, was
-        Besucher angelegt haben.</li>
-    <li>Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
-        Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
-        unerwartet gelungene Änderung der Konto-Identität bliebe damit
-        folgenlos.</li>
-    <li>Der Papierkorb kommt <strong>aus der Fixture</strong> zurück — als
-        Papierkorb, mit frischer <?= TRASH_DAYS ?>-Tage-Frist. Der Reset ist
-        damit <em>ein</em> Vorgang in <em>einer</em> Transaktion: Entweder er
-        gelingt ganz, oder er ändert nichts.</li>
-  </ul>
-</main>
-  <?php ui_footer(); ?>
-</div>
+  <div class="form-raster">
+  <div class="form-spalte">
+
+    <?php ui_karte_start(['titel' => 'Zustand']); ?>
+      <?php
+      ui_zeile(['text' => 'Konto', 'klein' => (string)$email]);
+      ui_zeile(['text' => 'Letzter Reset',
+                'klein' => $letzter > 0 ? fmt_local(gmdate('Y-m-d H:i:s', $letzter)) : 'unbekannt']);
+      ui_zeile(['text' => 'Nächster Reset',
+                'klein' => $restSek > 0 ? 'in ' . (int)ceil($restSek / 60) . ' Minuten'
+                                        : 'bei der nächsten Anfrage']);
+      ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* DREI PAPIERKORBZAHLEN, NICHT EINE. Bis Web 8.0.0 stand hier nur
+             die der Einsaetze — solange der Papierkorb aus einem
+             Nachlauf-Drehbuch kam, war das die einzige, die etwas aussagte.
+             Seit er aus der Fixture kommt, meldet der Reset drei
+             (`stats.papierkorb`), und eine Ansicht, die nur eine davon zeigt,
+             laesst zwei Fehlerbilder unsichtbar. */ ?>
+    <?php ui_karte_start(['titel' => 'Papierkorb']); ?>
+      <?php
+      /* DIE BESCHRIFTUNG TRAEGT DIE ART, DER WERT NUR DIE ZAHL. Bis Web
+         9.9.0 hiessen die drei Zeilen „im Papierkorb", „im Papierkorb,
+         Diensttage" und „im Papierkorb, Ruhesegmente" — Beschriftungen aus
+         einer Tabelle, in der „im Papierkorb" ohne Zusatz die Einsaetze
+         meinte. In einer Karte namens „Papierkorb" ist das doppelt gesagt
+         und einmal zu ungenau. `demo_pruefen.mjs` liest diese Zeilen und
+         ist mitgezogen. */
+      ui_zeile(['text' => 'Einsätze im Papierkorb',     'klein' => (string)$zahlen['im Papierkorb']]);
+      ui_zeile(['text' => 'Diensttage im Papierkorb',   'klein' => (string)$zahlen['im Papierkorb, Diensttage']]);
+      ui_zeile(['text' => 'Ruhesegmente im Papierkorb', 'klein' => (string)$zahlen['im Papierkorb, Ruhesegmente']]);
+      ?>
+      <p class="feld-hinweis">Diese drei Zahlen sind die Kontrolle des Resets: Der
+         Papierkorb kommt <strong>aus der Fixture</strong> zurück, nicht aus einem
+         Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen
+         worden.</p>
+    <?php ui_karte_ende(); ?>
+
+  </div>
+  <div class="form-spalte">
+
+    <?php if ($bericht !== null): ?>
+      <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'zu' => true]); ?>
+        <pre><?= e(json_encode($bericht,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
+      <?php ui_karte_ende(true); ?>
+    <?php endif; ?>
+
+    <?php ui_karte_start(['titel' => 'Was der Reset umfasst', 'zu' => true]); ?>
+      <?php /* `.text` ist der Lesetext-Baustein: nur darin haben ul/li
+               Punkte und Einzug (Stylesheet, Abschnitt 13). Eine eigene
+               Klasse fuer eine vierzeilige Liste waere ein Sonderfall. */ ?>
+      <div class="text">
+      <ul>
+        <li>Diensttage, Einsätze, Ruhesegmente, Spuren, Stammdaten — vollständig
+            ersetzt.</li>
+        <li>Geräte, Kopplungscodes, Papierkorb und Sperrliste — auch das, was
+            Besucher angelegt haben.</li>
+        <li>Konto- und Schlüsselmaterial: E-Mail, Passwort, Salz und beide
+            Schlüsselhüllen werden aus der Fixture überschrieben. Selbst eine
+            unerwartet gelungene Änderung der Konto-Identität bliebe damit
+            folgenlos.</li>
+        <li>Der Papierkorb kommt aus der Fixture zurück — als Papierkorb, mit
+            frischer <?= TRASH_DAYS ?>-Tage-Frist. Der Reset ist damit
+            <em>ein</em> Vorgang in <em>einer</em> Transaktion: Entweder er
+            gelingt ganz, oder er ändert nichts.</li>
+      </ul>
+      </div>
+    <?php ui_karte_ende(true); ?>
+
+  </div>
+  </div>
+
+<?php endif; ?>
+
+<?php ui_geruest_ende(); ?>
+<?php ui_seite_ende(); ?>

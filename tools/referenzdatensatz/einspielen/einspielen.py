@@ -115,9 +115,14 @@ def stufe_stammdaten(lauf: Lauf) -> None:
     st = json.loads((QUELLE / "stammdaten.json").read_text("utf-8"))
 
     def speichern(daten: dict) -> None:
-        s.csrf_auffrischen("einstellungen.php")
-        antwort = s.post("einstellungen.php", {**daten, "csrf": s.csrf})
-        fehler = re.search(r'alert-danger[^>]*>(.*?)</', antwort.text, re.S)
+        # MIT ?t: Seit P3/O2 zeigt einstellungen.php ohne `t` die UEBERSICHT
+        # und beendet sich VOR der POST-Verarbeitung (E-P3-11) — ein POST ohne
+        # Parameter versandete stillschweigend (Fund F-P3-AF in O5).
+        s.csrf_auffrischen("einstellungen.php?t=standorte")
+        antwort = s.post("einstellungen.php?t=standorte", {**daten, "csrf": s.csrf})
+        # Fehlerkasten seit P3 als Meldungs-Baustein; die alte Klasse davor.
+        fehler = (re.search(r'meldung-fehler[^>]*>.*?<p[^>]*>(.*?)</p>', antwort.text, re.S)
+                  or re.search(r'alert-danger[^>]*>(.*?)</', antwort.text, re.S))
         if fehler:
             raise RuntimeError(f"{daten.get('action')}: {fehler.group(1).strip()}")
 

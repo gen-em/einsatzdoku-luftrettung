@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+/* Fuer logo_src(): Die Seite hat keine Sitzung und zeigt den Standard der
+ * Installation (E-P3-20). Ohne session_lib.php faende logo_src() logo_stamm()
+ * nicht und fiele auf den Hubschrauber zurueck — F-P3-AN. */
+require_once __DIR__ . '/session_lib.php';
 require_once __DIR__ . '/validate_lib.php';   // WRAP_RE, Formatkennung
 
 /**
@@ -203,63 +207,92 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once __DIR__ . '/ui.php';   // Seitenhuelle; laedt selbst nichts nach
 ui_seite_start([
     'titel'  => $erstvergabe ? 'Passwort festlegen' : 'Neues Passwort',
-    'klasse' => 'login-body',
+    'klasse' => 'anmeldung-body',
 ]);
 ?>
-<div class="login-wrap">
-<main class="login-card setup-card">
-  <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="login-logo">
+<?php /* HIER STAND EIN div mit der Klasse `login-wrap` — ohne schliessendes Tag und
+         ohne Regel im neuen Stylesheet. Entfernt (O10): Erst dadurch ist
+         `<main class="anmeldung">` direktes Flex-Kind von `.anmeldung-body`,
+         und `flex:1 1 auto` greift — die Fusszeile sitzt jetzt unten am Rand
+         statt dicht unter der Karte. Sichtbare Aenderung, beabsichtigt. */ ?>
+<main class="anmeldung">
+ <?php /* DIESELBE BREITE WIE DIE ANMELDUNG (O10). Die Karte war 760 px
+          breit (`.anmeldung-breit`), die Anmeldung daneben 400 — zwei
+          Seiten derselben Familie, die man unmittelbar nacheinander
+          sieht, sprangen dabei in der Breite. Der lange Erklaertext der
+          Erstvergabe hat die breite Karte einmal gerechtfertigt; er ist
+          aber Fliesstext, und bei 400 px liest er sich wie auf dem
+          Handy — was er dort ohnehin tut. */ ?>
+ <div class="anmeldung-karte">
+  <img src="<?= e(logo_src()) ?>" alt="Einsatzdoku" class="anmeldung-logo">
 
   <?php if ($done): ?>
-    <h1>Fertig</h1>
+    <h1 class="anmeldung-titel">Fertig</h1>
     <?php if ($erstvergabe): ?>
-      <p>Passwort gespeichert und die Verschlüsselung eingerichtet.
-         Du kannst dich jetzt anmelden.</p>
-      <p class="muted small">Bewahre den Wiederherstellungsschlüssel sicher auf —
+      <?= ui_meldung_markup('ok',
+          'Passwort gespeichert und die Verschlüsselung eingerichtet. Du kannst '
+        . 'dich jetzt anmelden.') ?>
+      <p class="feld-hinweis">Bewahre den Wiederherstellungsschlüssel sicher auf —
          nach einem Passwort-Reset ist er der einzige Weg zu deinen Daten.</p>
     <?php else: ?>
-      <p>Passwort gespeichert und die verschlüsselten Angaben übernommen.
-         Du kannst dich jetzt anmelden.</p>
+      <?= ui_meldung_markup('ok',
+          'Passwort gespeichert und die verschlüsselten Angaben übernommen. Du '
+        . 'kannst dich jetzt anmelden.') ?>
     <?php endif; ?>
-    <p class="login-aux"><a href="login.php">Zur Anmeldung</a></p>
+    <p class="anmeldung-neben"><a href="login.php">Zur Anmeldung</a></p>
 
   <?php elseif ($keinCookie): ?>
-    <h1>Cookie nötig</h1>
-    <p class="alert">Dieser Browser hat den nötigen Cookie nicht angenommen.
-       Der Link lässt sich deshalb nicht öffnen.</p>
-    <p class="muted">Der Link aus der E-Mail wird beim ersten Öffnen aus der
-       Adresszeile genommen und in einem Cookie abgelegt — er soll weder im
-       Verlauf noch in Protokollen stehen bleiben. Ohne Cookies geht dieser
-       Weg nicht; die Anmeldung selbst braucht ebenfalls einen.</p>
-    <p class="muted">Bitte Cookies für diese Seite erlauben (auch ein privates
-       Fenster mit strengen Einstellungen kann die Ursache sein) und den Link
-       aus der E-Mail erneut öffnen.</p>
-    <p class="login-aux"><a href="reset_request.php">Neuen Link anfordern</a></p>
+    <h1 class="anmeldung-titel">Cookie nötig</h1>
+    <?= ui_meldung_markup('fehler',
+        'Dieser Browser hat den nötigen Cookie nicht angenommen. Der Link '
+      . 'lässt sich deshalb nicht öffnen.') ?>
+    <div class="text">
+      <p>Der Link aus der E-Mail wird beim ersten Öffnen aus der Adresszeile
+         genommen und in einem Cookie abgelegt — er soll weder im Verlauf noch
+         in Protokollen stehen bleiben. Ohne Cookies geht dieser Weg nicht; die
+         Anmeldung selbst braucht ebenfalls einen.</p>
+      <p>Bitte Cookies für diese Seite erlauben (auch ein privates Fenster mit
+         strengen Einstellungen kann die Ursache sein) und den Link aus der
+         E-Mail erneut öffnen.</p>
+    </div>
+    <p class="anmeldung-neben"><a href="reset_request.php">Neuen Link anfordern</a></p>
 
   <?php elseif (!$row): ?>
-    <h1>Link ungültig</h1>
-    <p class="alert">Dieser Link ist ungültig oder abgelaufen.</p>
-    <p class="login-aux"><a href="reset_request.php">Neuen Link anfordern</a></p>
+    <h1 class="anmeldung-titel">Link ungültig</h1>
+    <?= ui_meldung_markup('fehler', 'Dieser Link ist ungültig oder abgelaufen.') ?>
+    <p class="anmeldung-neben"><a href="reset_request.php">Neuen Link anfordern</a></p>
 
   <?php elseif ($erstvergabe): ?>
-    <h1>Passwort festlegen</h1>
+    <h1 class="anmeldung-titel">Passwort festlegen</h1>
     <?php ui_meldung(null, $error); ?>
-    <p>Diagnose, Alter und Einsatzort werden <strong>Ende-zu-Ende-verschlüsselt</strong>
-       gespeichert. Der Schlüssel entsteht aus deinem Passwort und verlässt deinen
-       Browser nie — der Server kann die Angaben nicht lesen.</p>
-    <p><strong>Deshalb ist die Stärke deines Passworts unmittelbar die Stärke der
-       Verschlüsselung.</strong> Weil der Server das Passwort nie sieht, kann er
-       seine Güte auch nicht prüfen und ein schwaches nicht ausgleichen — es gibt
-       keine zweite Hürde dahinter. Wähle etwas Langes, das du dir merken kannst;
-       vier zufällige Wörter sind besser als acht verdrehte Zeichen.</p>
-    <p><strong>Wichtig:</strong> Nach dem Festlegen wird einmalig dein persönlicher
-       <strong>Wiederherstellungsschlüssel</strong> angezeigt. Er ist nach einem
-       Passwort-Reset der einzige Weg zu deinen Daten — ausdrucken oder sicher ablegen.</p>
+    <?php /* IN `.text`, weil `p{margin:0}` gilt (Grundregel, Abschnitt 3):
+             Ohne die Hülle kleben die drei Absätze aneinander und lesen sich
+             wie einer. `.text` bringt Absatzabstand, Lesegröße und Zeilenhöhe
+             — die Lesespalte darin greift nicht, die Karte ist schmaler. */ ?>
+    <div class="text">
+      <p>Diagnose, Alter und Einsatzort werden <strong>Ende-zu-Ende-verschlüsselt</strong>
+         gespeichert. Der Schlüssel entsteht aus deinem Passwort und verlässt deinen
+         Browser nie — der Server kann die Angaben nicht lesen.</p>
+      <p><strong>Deshalb ist die Stärke deines Passworts unmittelbar die Stärke der
+         Verschlüsselung.</strong> Weil der Server das Passwort nie sieht, kann er
+         seine Güte auch nicht prüfen und ein schwaches nicht ausgleichen — es gibt
+         keine zweite Hürde dahinter. Wähle etwas Langes, das du dir merken kannst;
+         vier zufällige Wörter sind besser als acht verdrehte Zeichen.</p>
+      <p><strong>Wichtig:</strong> Nach dem Festlegen wird einmalig dein persönlicher
+         <strong>Wiederherstellungsschlüssel</strong> angezeigt. Er ist nach einem
+         Passwort-Reset der einzige Weg zu deinen Daten — ausdrucken oder sicher ablegen.</p>
+    </div>
 
-    <div id="rcbox" class="keybox" hidden>
-      <strong>Dein Wiederherstellungsschlüssel</strong>
-      <p class="codebig" id="rccode" style="font-size:1.25rem"></p>
-      <label class="checklabel"><input type="checkbox" id="rcok">
+    <?php /* DER CODEBLOCK-BAUSTEIN statt dreier eigener Klassen (O10).
+             `.codeblock` traegt Festbreitenschrift, Groesse und Sperrung schon
+             — er ist genau dafuer da: Werte, die von einem Bildschirm
+             abgeschrieben werden (Kopplungscode, Geraete-ID, jetzt auch der
+             Wiederherstellungsschluessel). Das Inline-`style` fuer die
+             Schriftgroesse entfaellt damit ebenfalls. */ ?>
+    <div id="rcbox" class="codeblock" hidden>
+      <p class="codeblock-titel">Dein Wiederherstellungsschlüssel</p>
+      <p class="codeblock-wert" id="rccode"></p>
+      <label><input type="checkbox" id="rcok">
         Ich habe den Schlüssel sicher notiert.</label>
     </div>
 
@@ -273,21 +306,22 @@ ui_seite_start([
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
       <input type="hidden" name="wrap_rc"   id="wrap_rc">
       <input type="hidden" name="key_check" id="key_check">
-      <label>Passwort (min. 10 Zeichen)
-        <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
-      </label>
-      <span class="pwquality" id="pwq"></span>
-      <label>Wiederholen
-        <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
-      </label>
-      <button type="submit" class="btn-primary" id="gobtn">Passwort festlegen</button>
-      <p class="muted small" id="state" style="min-height:1.2em"></p>
+      <?php ui_feld(['id' => 'pw1', 'label' => 'Passwort', 'art' => 'password',
+                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
+                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+      <span class="pwstaerke" id="pwq"></span>
+      <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
+                     'pflicht' => true,
+                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+      <?= ui_knopf(['text' => 'Passwort festlegen', 'art' => 'primaer',
+                    'breit' => true, 'attr' => ' id="gobtn"']) ?>
+      <p class="zustandszeile" id="state"></p>
     </form>
 
   <?php else: ?>
-    <h1>Neues Passwort</h1>
+    <h1 class="anmeldung-titel">Neues Passwort</h1>
     <?php ui_meldung(null, $error); ?>
-    <p class="muted">Deine Einsatzdaten sind mit deinem Passwort verschlüsselt.
+    <p class="anmeldung-unter">Deine Einsatzdaten sind mit deinem Passwort verschlüsselt.
        Damit sie lesbar bleiben, brauchst du hier den
        <strong>Wiederherstellungsschlüssel</strong> aus der Einrichtung.</p>
     <form method="post" id="pwform">
@@ -299,30 +333,27 @@ ui_seite_start([
       <input type="hidden" name="new_iter"  id="new_iter">
       <input type="hidden" name="wrap_pw"   id="wrap_pw">
       <input type="hidden" name="key_check" id="key_check">
-      <label>Wiederherstellungsschlüssel
-        <input type="text" id="rc" required autocomplete="off" autocapitalize="characters"
-               placeholder="ABCD-EFGH-JKMN-PQRS-TVWX">
-      </label>
+      <?php ui_feld(['id' => 'rc', 'label' => 'Wiederherstellungsschlüssel',
+                     'pflicht' => true, 'platzhalter' => 'ABCD-EFGH-JKMN-PQRS-TVWX',
+                     'attr' => ' autocomplete="off" autocapitalize="characters"']); ?>
       <?php /* Sofortmeldung zur Eingabe (M2-06). Sie steht direkt am Feld,
                weil sie waehrend des Abtippens hilft — nicht erst, wenn alles
                eingegeben ist und der Knopf gedrueckt wurde. */ ?>
-      <p class="muted small" id="rcstate" style="min-height:1.2em"></p>
-      <label>Neues Passwort (min. 10 Zeichen)
-        <input type="password" id="pw1" required minlength="10" autocomplete="new-password">
-      </label>
-      <span class="pwquality" id="pwq"></span>
-      <label>Wiederholen
-        <input type="password" id="pw2" required minlength="10" autocomplete="new-password">
-      </label>
-      <button type="submit" class="btn-primary">Passwort speichern</button>
-      <p class="muted small" id="state" style="min-height:1.2em"></p>
+      <p class="zustandszeile" id="rcstate"></p>
+      <?php ui_feld(['id' => 'pw1', 'label' => 'Neues Passwort', 'art' => 'password',
+                     'pflicht' => true, 'klein' => 'Mindestens 10 Zeichen.',
+                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+      <span class="pwstaerke" id="pwq"></span>
+      <?php ui_feld(['id' => 'pw2', 'label' => 'Wiederholen', 'art' => 'password',
+                     'pflicht' => true,
+                     'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+      <?= ui_knopf(['text' => 'Passwort speichern', 'art' => 'primaer', 'breit' => true]) ?>
+      <p class="zustandszeile" id="state"></p>
     </form>
   <?php endif; ?>
+ </div>
 </main>
-<footer class="sitefooter">© Gen-EM – OpenSource Software –
-  <a href="https://github.com/gen-em/einsatzdoku-luftrettung/blob/main/LICENSE"
-     target="_blank" rel="noopener">AGPL-3.0</a></footer>
-</div>
+<?php ui_fuss_seite(['dunkel' => true]); ?>
 
 <?php if ($row && !$done): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
@@ -410,7 +441,11 @@ if (ERSTVERGABE) {
 
       document.getElementById('rccode').textContent = rc;
       document.getElementById('rcbox').hidden = false;
-      document.getElementById('gobtn').textContent = 'Speichern und abschließen';
+      /* AUF DAS <span> ZIELEN, nicht auf den Knopf (O10). ui_knopf() legt
+         den Text in ein <span> und stellt ihm ggf. ein Symbol voran;
+         `textContent` am Knopf selbst wuerde beides ersetzen — der Text
+         staende dann da, das Symbol waere fort. */
+      document.querySelector('#gobtn span').textContent = 'Speichern und abschließen';
       state.textContent = 'Schlüssel notieren, Haken setzen, dann abschließen.';
       erzeugt = true;
     } catch (e) {

@@ -5,7 +5,7 @@ require_once __DIR__ . '/auth_guard.php';
 /**
  * Import bestehender Einsatzlisten (Excel/CSV/ZIP) und Export.
  *
- * Eigene Seite, erscheint aber ueber ui_settings_sidebar() als Eintrag der
+ * Eigene Seite, erscheint aber ueber ui_leiste_einstellungen() als Eintrag der
  * Einstellungen — dasselbe Muster wie admin_stammdaten.php. Grund fuer die
  * eigene Datei statt eines weiteren Zweigs in einstellungen.php: Die
  * Review-Tabelle bringt eine Menge Markup und Logik mit; in einer Datei mit
@@ -32,127 +32,141 @@ $SD_DEFAULTS = dt_standardwerte($userId);
 $DEF_VEHICLE = (int)($SD_DEFAULTS['vehicle_id'] ?? 0);
 $DEF_BASE    = (int)($SD_DEFAULTS['base_id'] ?? 0);
 ui_seite_start(['titel' => 'Import / Export']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('import'); ?>
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'import']); ?>
+    <?php ui_titelzeile(['titel' => 'Import / Export']); ?>
+    <p class="seiten-erklaerung">Übernimmt eine vorhandene Einsatzliste (Excel oder
+       CSV) in dieses Konto. Die Datei wird <strong>nicht hochgeladen</strong> — sie
+       wird in deinem Browser gelesen, geprüft und dort verschlüsselt. Der Server
+       erhält Name, Geburtsdatum, Diagnose und Einsatzort nur als Chiffretext.</p>
 
-  <main class="page">
-    <h1>Import / Export</h1>
+    <div id="lockwarn" hidden>
+      <?php ui_meldung(
+          'Die geschützten Angaben lassen sich gerade nicht verschlüsseln — die '
+        . 'Verschlüsselung ist in dieser Sitzung gesperrt. Ohne sie ist kein Import '
+        . 'möglich.', null, 'warn', '      ',
+          ['knopf' => ui_knopf(['text' => 'Entsperren', 'art' => 'neutral',
+                                'typ' => 'button', 'attr' => ' id="lockwarn_unlock"'])]); ?>
+    </div>
+    <div id="fehler" hidden></div>
 
-    <p class="muted">Übernimmt eine vorhandene Einsatzliste (Excel oder CSV) in
-       dieses Konto. Die Datei wird <strong>nicht hochgeladen</strong> — sie wird in
-       deinem Browser gelesen, geprüft und dort verschlüsselt. Der Server erhält
-       Name, Geburtsdatum, Diagnose und Einsatzort ausschließlich als Chiffretext.</p>
+    <?php /* DREI SCHRITTE, DREI KARTEN (E-P3-35). Schritt 2 und 3 sind
+             verborgen, bis der vorige getan ist — die Schrittfolge steht damit
+             als Zahl im Kartenkopf und nicht als Überschrift im Fließtext. */ ?>
+    <?php ui_karte_start(['titel' => '1. Datei wählen']); ?>
+      <?php ui_feld(['label' => 'Datei', 'id' => 'datei', 'art' => 'file',
+                     'klein' => 'Excel (.xlsx, .xls, .ods), CSV oder ein Archiv aus dem '
+                              . 'CSV-Export (.zip) — die Tabelle darin wird von selbst '
+                              . 'gefunden. Ist das Archiv mit einem Passwort geschützt, '
+                              . 'wird danach gefragt.',
+                     'attr' => ' accept=".xlsx,.xls,.csv,.ods,.zip"']); ?>
 
-    <div id="lockwarn" class="alert" hidden>Die geschützten Angaben lassen sich gerade
-      nicht verschlüsseln — die Verschlüsselung ist in dieser Sitzung gesperrt. Ohne
-      sie ist kein Import möglich.
-      <button type="button" class="btn-plain unlockbtn" id="lockwarn_unlock">Entsperren</button></div>
-    <div id="fehler" class="alert" hidden></div>
-
-    <!-- ---------------------------------------------------------------- 1 -->
-    <h2>1. Datei wählen</h2>
-    <div class="settings-form">
-      <label>Datei (.xlsx, .xls, .csv, .zip)
-        <input type="file" id="datei" accept=".xlsx,.xls,.csv,.ods,.zip"></label>
-      <p class="muted">Ein Archiv aus dem CSV-Export (.zip) kann direkt gewählt
-         werden — die Tabelle darin wird von selbst gefunden. Ist das Archiv mit
-         einem Passwort geschützt, wird danach gefragt.</p>
-
-      <label>Format
-        <select id="profil"></select></label>
-      <p class="alert" id="profilwarnung" hidden></p>
+      <div class="feld">
+        <label class="feld-label" for="profil">Format</label>
+        <select class="feld-eingabe" id="profil"></select>
+      </div>
+      <div id="profilwarnung" hidden></div>
 
       <div id="params"></div>
 
-      <label>Rettungsmittel für neu angelegte Diensttage
-        <select id="vehsel">
-          <option value="">–</option>
-          <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
-            <option value="<?= (int)$v['id'] ?>"
-              <?= (int)$v['id'] === $DEF_VEHICLE ? 'selected' : '' ?>>
-              <?= e($sym['zeichen']) ?> <?= e($v['name']) ?><?php
-                echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
-          <?php endforeach; ?>
-        </select></label>
+      <div class="listen-form-felder">
+        <div class="feld">
+          <label class="feld-label" for="vehsel">Rettungsmittel für neue Diensttage</label>
+          <select class="feld-eingabe" id="vehsel">
+            <option value="">–</option>
+            <?php foreach ($SD_VEHICLES as $v): $sym = dt_art_symbol((string)$v['kind']); ?>
+              <option value="<?= (int)$v['id'] ?>"
+                <?= (int)$v['id'] === $DEF_VEHICLE ? 'selected' : '' ?>>
+                <?= e($v['name']) ?><?php
+                  echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="feld">
+          <label class="feld-label" for="basesel">Standort für neue Diensttage</label>
+          <select class="feld-eingabe" id="basesel">
+            <option value="">–</option>
+            <?php foreach ($SD_BASES as $b): ?>
+              <option value="<?= (int)$b['id'] ?>"
+                <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?><?php
+                echo !empty($b['zentral']) ? ' (systemweit)' : ''; ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <p class="feld-klein">Beides gilt nur für Diensttage, die der Import neu anlegt;
+         bestehende bleiben unangetastet und lassen sich später je Diensttag ändern.
+         Ein Import legt <strong>je Kalendertag höchstens einen</strong> Diensttag an
+         und ordnet alle Einsätze dieses Datums ihm zu — mehrere Dienste an einem Tag
+         lassen sich aus einer Tabelle nicht ableiten; wer sie braucht, teilt sie
+         danach über „Aktionen → Verschieben" auf.</p>
+    <?php ui_karte_ende(); ?>
 
-      <label>Standort für neu angelegte Diensttage
-        <select id="basesel">
-          <option value="">–</option>
-          <?php foreach ($SD_BASES as $b): ?>
-            <option value="<?= (int)$b['id'] ?>"
-              <?= (int)$b['id'] === $DEF_BASE ? 'selected' : '' ?>><?= e($b['name']) ?><?php
-              echo !empty($b['zentral']) ? ' (zentral)' : ''; ?></option>
-          <?php endforeach; ?>
-        </select></label>
-      <p class="muted">Gilt nur für Diensttage, die der Import neu anlegt. Bestehende
-         bleiben unangetastet, und beides lässt sich später je Diensttag in der
-         Übersicht ändern.</p>
-      <p class="muted">Ein Import legt <strong>je Kalendertag höchstens einen</strong>
-         Diensttag neu an und ordnet alle Einsätze dieses Datums ihm zu. Mehrere
-         Dienste an einem Tag lassen sich aus einer Tabelle nicht ableiten — wer sie
-         braucht, teilt sie danach mit „Aktionen → Verschieben" auf.</p>
-    </div>
-
-    <!-- ---------------------------------------------------------------- 2 -->
     <div id="schritt2" hidden>
-      <h2>2. Prüfen und korrigieren</h2>
-      <p class="muted" id="bilanz"></p>
-      <p>
-        <button type="button" class="btn-plain" data-filter="alle">Alle Zeilen</button>
-        <button type="button" class="btn-plain" data-filter="probleme">Nur Probleme</button>
-        <button type="button" class="btn-plain" data-filter="dubletten">Nur Dubletten</button>
-      </p>
-      <p class="muted">Gelb = Hinweis, Rot = Fehler. Zellen sind direkt änderbar;
-         nach jeder Änderung wird die Zeile neu geprüft. Fehlerhafte Zeilen blockieren
-         nur sich selbst — entweder korrigieren oder überspringen.</p>
-      <div class="imp-wrap"><table class="imp-table" id="tabelle"></table></div>
+      <?php ui_karte_start(['titel' => '2. Prüfen und korrigieren']); ?>
+        <p class="feld-hinweis" id="bilanz"></p>
+        <?php /* Die Filterwahl als Segment: drei Zustände, von denen genau
+                 einer gilt — dasselbe Muster wie die Artenwahl im Zeitraum. */ ?>
+        <?php ui_segment(['name' => 'impfilter', 'id' => 'impfilter', 'wert' => 'alle',
+                          'label' => 'Zeilen filtern',
+                          'optionen' => ['alle' => 'Alle Zeilen',
+                                         'probleme' => 'Nur Probleme',
+                                         'dubletten' => 'Nur Dubletten']]); ?>
+        <p class="feld-klein">Gelb = Hinweis, Rot = Fehler. Zellen sind direkt
+           änderbar; nach jeder Änderung wird die Zeile neu geprüft. Fehlerhafte
+           Zeilen blockieren nur sich selbst — entweder korrigieren oder
+           überspringen.</p>
+        <div class="tabelle-scroll"><table class="tabelle" id="tabelle"></table></div>
+      <?php ui_karte_ende(); ?>
     </div>
 
-    <!-- ---------------------------------------------------------------- 3 -->
     <div id="schritt3" hidden>
-      <h2>3. Übernehmen</h2>
-      <p class="muted" id="bereit"></p>
-      <button type="button" class="btn-primary" id="commit" disabled>Import ausführen</button>
-      <p class="muted" id="commitstate" style="min-height:1.3em"></p>
+      <?php ui_karte_start(['titel' => '3. Übernehmen']); ?>
+        <p class="feld-hinweis" id="bereit"></p>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Import ausführen', 'art' => 'primaer',
+                        'typ' => 'button', 'attr' => ' id="commit" disabled']) ?>
+        </div>
+        <div id="commitstate" class="zustandszeile"></div>
+      <?php ui_karte_ende(); ?>
     </div>
 
-    <!-- --------------------------------------------------------- Export -->
-    <h2>Export</h2>
-    <p class="muted">Erzeugt eine Datei aus den vorhandenen Einsätzen dieses Kontos —
-       zum Weiterverarbeiten in anderen Programmen. Der Aufbau der Datei passiert
-       vollständig <strong>in deinem Browser</strong>.</p>
-
-    <div class="settings-form" id="exportform">
-      <div class="rolechecks">
-        <span class="rolechecks-hint">Zeitraum:</span>
-        <label><input type="radio" name="exp_zr" value="range" checked> Von–Bis</label>
-        <label><input type="radio" name="exp_zr" value="all"> Alles</label>
+    <?php ui_karte_start(['titel' => 'Export', 'id' => 'exportform']); ?>
+      <p class="feld-hinweis">Erzeugt eine Datei aus den vorhandenen Einsätzen dieses
+         Kontos — zum Weiterverarbeiten in anderen Programmen. Der Aufbau der Datei
+         passiert vollständig <strong>in deinem Browser</strong>.</p>
+      <div class="feld">
+        <span class="feld-label">Zeitraum</span>
+        <?php ui_segment(['name' => 'exp_zr', 'wert' => 'range',
+                          'label' => 'Zeitraum des Exports',
+                          'optionen' => ['range' => 'Von–Bis', 'all' => 'Alles']]); ?>
       </div>
       <?php /* Eigene Kennung, damit assets/export.js bei „Alles" die ganze
                Zeile ausblenden kann statt nur die Felder auszugrauen
                (A6.3). */ ?>
-      <p id="exp_zeitraum_row">
-        <label>Von <input type="date" id="exp_von"></label>
-        <label>Bis <input type="date" id="exp_bis"></label>
-      </p>
+      <div id="exp_zeitraum_row" class="listen-form-felder">
+        <?php ui_feld(['label' => 'Von', 'id' => 'exp_von', 'art' => 'date']); ?>
+        <?php ui_feld(['label' => 'Bis', 'id' => 'exp_bis', 'art' => 'date']); ?>
+      </div>
 
-      <label>Format
-        <select id="exp_fmt">
+      <div class="feld">
+        <label class="feld-label" for="exp_fmt">Format</label>
+        <select class="feld-eingabe" id="exp_fmt">
           <option value="b">CSV (Standard)</option>
           <option value="a" selected>Excel (Standard)</option>
           <option value="c">Excel (GuteSeele)</option>
-        </select></label>
-      <div class="rolechecks" id="exp_gpx_row" hidden>
-        <label><input type="checkbox" id="exp_gpx" checked> GPX-Tracks einschließen</label>
+        </select>
+      </div>
+      <div id="exp_gpx_row" hidden>
+        <?php ui_schalter(['id' => 'exp_gpx', 'name' => 'exp_gpx', 'an' => true,
+                           'label' => 'GPX-Tracks einschließen']); ?>
       </div>
       <?php /* Tritt an die Stelle der GPX-Wahl, wenn die Schranke greift
                (A9, Web 5.8.0). Ein Track endet am Einsatzort — er nennt
                ihn genauer als jede Koordinatenspalte. Das gilt bodengebunden
                wie luftgebunden. */ ?>
-      <p class="muted" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
+      <p class="feld-hinweis" id="exp_gpx_pers_hint" hidden>Ohne personenbezogene Angaben
          entfallen die GPX-Tracks — ein Track endet am Einsatzort.</p>
 
       <?php /* „Personenbezogene Angaben" statt „Patientendaten" (A9, Web
@@ -161,21 +175,23 @@ ui_topbar('einstellungen');
                die Koordinaten des Einsatzortes ab. Die Kennung exp_pat bleibt:
                Sie ist der Vertrag zu assets/export.js und
                api/export_data.php. */ ?>
-      <div class="rolechecks">
-        <label><input type="checkbox" id="exp_pat"> Personenbezogene Angaben einschließen</label>
+      <?php ui_schalter(['id' => 'exp_pat', 'name' => 'exp_pat',
+                         'label' => 'Personenbezogene Angaben einschließen']); ?>
+      <div id="exp_pat_hint" hidden>
+        <?php ui_meldung(
+            'Gesperrt — geschützte Angaben lassen sich gerade nicht entschlüsseln. '
+          . 'Ein Export ohne personenbezogene Angaben bleibt möglich.', null, 'warn', '        ',
+            ['knopf' => ui_knopf(['text' => 'Entsperren', 'art' => 'neutral', 'typ' => 'button',
+                                  'klasse' => 'unlockbtn', 'attr' => ' id="exp_pat_unlock"'])]); ?>
       </div>
-      <p class="muted" id="exp_pat_hint" hidden>Gesperrt — geschützte Angaben lassen sich
-         gerade nicht entschlüsseln. Export ohne personenbezogene Angaben bleibt möglich.
-         <button type="button" class="btn-plain unlockbtn" id="exp_pat_unlock">Entsperren</button></p>
 
       <?php /* Vorbelegt auf AN (A6.4, Web 5.7.0). In dieser Datei stehen die
                geschützten Angaben im Klartext; der Schutz ist der Normalfall,
                nicht die Ausnahme. Abwählen bleibt eine Handlung, Anwählen war
                vorher eine — die Vorbelegung dreht nur um, welche der beiden
                man bewusst treffen muss. */ ?>
-      <div class="rolechecks">
-        <label><input type="checkbox" id="exp_pw" checked> Mit Passwort schützen (AES-256)</label>
-      </div>
+      <?php ui_schalter(['id' => 'exp_pw', 'name' => 'exp_pw', 'an' => true,
+                         'label' => 'Mit Passwort schützen (AES-256)']); ?>
       <?php /* Erscheint nur ohne personenbezogene Angaben. Kein selbsttätiges
                Abschalten (E31) — die Entscheidung von A6.4 bleibt, ihre
                Begründung hat sich mit A9 geändert.
@@ -192,28 +208,38 @@ ui_topbar('einstellungen');
                mit welchen Rettungsmitteln, mit welchem Reanimationsverlauf.
                Kein Personenbezug, aber auch nichts, was ohne Weiteres in
                fremde Hände gehört. */ ?>
-      <p class="muted small" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
+      <p class="feld-hinweis" id="exp_pw_hint" hidden>Ohne personenbezogene Angaben
          enthält die Datei keine Namen, keine Notizen und keine Koordinaten des
          Einsatzortes. <strong>Betriebsangaben bleiben enthalten:</strong>
          Einsatzzeiten, Transportziele, weitere Rettungsmittel und der Verlauf
          einer Reanimation. Der Passwortschutz lässt sich abwählen — eine
          bewusste Entscheidung sollte es bleiben.</p>
-      <div class="rolechecks" id="exp_pw_fields" hidden>
-        <label>Passwort (mind. 10 Zeichen)
-          <input type="password" id="exp_pw1" minlength="10" autocomplete="new-password"></label>
-        <span class="pwquality" id="exp_pw_guete"></span>
-        <label>Passwort wiederholen
-          <input type="password" id="exp_pw2" autocomplete="new-password"></label>
+      <div id="exp_pw_fields" hidden>
+        <?php ui_feld(['label' => 'Passwort', 'id' => 'exp_pw1', 'art' => 'password',
+                       'klein' => 'Mindestens 10 Zeichen.',
+                       'attr' => ' minlength="10" autocomplete="new-password"']); ?>
+        <span class="pwstaerke" id="exp_pw_guete"></span>
+        <?php ui_feld(['label' => 'Passwort wiederholen', 'id' => 'exp_pw2',
+                       'art' => 'password', 'attr' => ' autocomplete="new-password"']); ?>
       </div>
-      <p class="muted">Das Passwort wird nirgends gespeichert und lässt sich nicht
+      <p class="feld-hinweis">Das Passwort wird nirgends gespeichert und lässt sich nicht
          zurücksetzen. Geht es verloren, lässt sich die Datei nicht mehr öffnen —
          die Daten darin sind dann endgültig nicht mehr lesbar. Zum Öffnen wird
          zusätzlich 7-Zip (Windows) oder Keka bzw. The Unarchiver (macOS)
          benötigt; der Windows-Explorer kann solche Archive nicht öffnen.</p>
 
-      <button type="button" class="btn-primary" id="exp_go">Export erstellen</button>
-      <p class="muted" id="exp_state" style="min-height:1.3em"></p>
-    </div>
+      <?php /* DER EINE KNOPF, DEN O8c UEBERSEHEN HAT (F-P3-BA). Er trug
+               `btn-primary` — eine Klasse, die es seit dem Neubau des
+               Stylesheets (Web 9.0.0) nicht mehr gibt. Gemessen: 23 px hoch,
+               ohne Flaeche, ohne Rahmen, ohne Radius, in der Textschrift; der
+               Nachbar `#commit` daneben ist 44 px, orange, Bricolage. Die
+               Kennung `exp_go` bleibt — assets/export.js haengt daran. */ ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Export erstellen', 'art' => 'primaer',
+                      'typ' => 'button', 'attr' => ' id="exp_go"']) ?>
+      </div>
+      <div id="exp_state" class="zustandszeile"></div>
+    <?php ui_karte_ende(); ?>
 
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
@@ -249,7 +275,5 @@ ui_topbar('einstellungen');
     <script src="<?= asset('assets/import_ui.js') ?>"></script>
     <script src="<?= asset('assets/export.js') ?>"></script>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

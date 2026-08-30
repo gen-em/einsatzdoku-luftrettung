@@ -74,11 +74,9 @@
         btn.href = '#';
         // Vollbild-Symbol (vier Ecken-Pfeile), Inline-SVG statt externer
         // Icon-Bibliothek.
-        btn.innerHTML =
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
-          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-          '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3' +
-          'M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg>';
+        /* Das Zeichen kommt aus dem Symbolvorrat (E-P3-18) — hier stand
+         * einer der Inline-SVG-Pfade des Bestands. */
+        btn.innerHTML = edSymbol('vollbild', 'symbol-gross', 'Vollbild');
         L.DomEvent.disableClickPropagation(wrap);
         L.DomEvent.on(btn, 'click', L.DomEvent.stop)
           .on(btn, 'click', function () {

@@ -13,6 +13,12 @@ require_once __DIR__ . '/diensttag_lib.php';
  * Die frueheren Formatpruefungen auf 'YYYY-MM-DD' sind damit zu Pruefungen auf
  * eine positive Kennung geworden — dieselbe Absicherung an derselben Stelle,
  * nur fuer den neuen Schluessel (M5-08).
+ *
+ * DIE RUECKFRAGE BLEIBT EINE SEITE (P3/O11). Sie waere als Dialog schneller,
+ * und genau das ist der Einwand: Was hier steht, will gelesen werden — der
+ * Umfang, das Mitgeloeschte, die Unumkehrbarkeit. Ein Dialog, der einen
+ * halben Bildschirm Text traegt, ist keiner mehr; und der Weg dorthin hat
+ * eine eigene Adresse, die man zurueckgehen kann.
  */
 
 $action = (string)($_POST['action'] ?? $_GET['action'] ?? '');
@@ -76,9 +82,12 @@ $zeigeListe = ($action !== 'purge_day' && $action !== 'purge_mission');
 if (!$zeigeListe && $istTag) {
     $tag = dt_laden($userId, $dayId, true);
     if ($tag === null) { header('Location: papierkorb.php'); exit; }
-    $scope = trash_scope_day($userId, $dayId);
-    // Der Umfang zaehlt nur nicht-geloeschte Zeilen; im Papierkorb sind alle
-    // markiert, deshalb hier direkt zaehlen.
+    /* HIER STAND EIN AUFRUF INS LEERE (P3/O11). `$scope = trash_scope_day(...)`
+     * wurde geholt und nie ausgegeben — die Zahl darunter kommt aus der
+     * eigenen Abfrage, weil trash_scope_day() nur NICHT-geloeschte Zeilen
+     * zaehlt und im Papierkorb alle markiert sind. Der Aufruf kostete je
+     * Einsatz drei weitere Abfragen. Er ist ersatzlos weg; die Funktion
+     * bleibt, `diensttag_loeschen.php` braucht sie wirklich. */
     $c = db()->prepare('SELECT COUNT(*) FROM missions
                         WHERE user_id = ? AND day_id = ? AND deleted_at IS NOT NULL');
     $c->execute([$userId, $dayId]);
@@ -110,137 +119,189 @@ if (!empty($_SESSION['flash_error'])) {
 
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-  <main class="page">
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
   <?php if ($zeigeListe): ?>
-    <h1>Papierkorb</h1>
+
+    <?php ui_titelzeile(['titel' => 'Papierkorb']); ?>
     <?php ui_meldung(null, $fehler, 'info', '    '); ?>
-    <p class="muted">Gelöschtes bleibt <?= TRASH_DAYS ?> Tage hier und wird danach
-       automatisch endgültig entfernt.</p>
+
+    <p class="seiten-erklaerung">Gelöschtes bleibt <?= TRASH_DAYS ?> Tage hier und
+       wird danach automatisch endgültig entfernt. Wiederherstellen ist jederzeit
+       möglich; endgültig löschen ist es nicht.</p>
 
     <?php if (!$trashDays && !$trashMissions): ?>
-      <div class="card"><p>Der Papierkorb ist leer.</p></div>
+      <?= ui_meldung_markup('info', 'Der Papierkorb ist leer.') ?>
     <?php endif; ?>
 
     <?php if ($trashDays): ?>
-      <h2>Diensttage</h2>
       <?php /* Datum UND Dienstbeginn: Seit E9 können mehrere Diensttage auf
                einem Kalendertag liegen, und im Papierkorb sind sie ohne die
-               Uhrzeit nicht auseinanderzuhalten. Rettungsmittel und Art stehen
-               daneben — aus den eingefrorenen Spalten (E8). */ ?>
-      <table class="data trashtable">
-        <thead><tr><th>Diensttag</th><th>Rettungsmittel</th><th>Einsätze</th>
-                   <th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
-        <tbody>
+               Uhrzeit nicht auseinanderzuhalten. Rettungsmittel, Zahl der
+               Einsätze und Löschzeitpunkt stehen in der Kleinzeile — aus den
+               eingefrorenen Spalten (E8). Die Tabelle davor hatte fünf
+               Spalten und lief bei 360 px waagerecht aus dem Bild. */ ?>
+      <?php ui_karte_start(['titel' => 'Diensttage', 'zahl' => count($trashDays)]); ?>
         <?php foreach ($trashDays as $t):
-              $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']); ?>
-          <tr>
-            <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                      aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
-                <?= e(dt_lesbar($t, true)) ?></td>
-            <td><?= $t['vehicle_name'] !== null && $t['vehicle_name'] !== ''
-                    ? e((string)$t['vehicle_name']) : '<span class="dash">–</span>' ?></td>
-            <td><?= (int)$t['einsaetze'] ?></td>
-            <td><?= e(fmt_local((string)$t['deleted_at'], 'd.m.Y H:i')) ?></td>
-            <td><div class="rowactions">
-              <form method="post" action="papierkorb.php">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="restore_day">
-                <input type="hidden" name="d" value="<?= (int)$t['id'] ?>">
-                <button class="btn-primary">Wiederherstellen</button>
-              </form>
-              <a class="btn-red"
-                 href="papierkorb.php?action=purge_day&amp;d=<?= (int)$t['id'] ?>">Endgültig löschen</a>
-            </div></td>
-          </tr>
+              $tid = (int)$t['id'];
+              $klein = [];
+              $klein[] = $t['vehicle_name'] !== null && $t['vehicle_name'] !== ''
+                       ? (string)$t['vehicle_name'] : 'ohne Rettungsmittel';
+              $klein[] = (int)$t['einsaetze'] === 1
+                       ? '1 Einsatz' : (int)$t['einsaetze'] . ' Einsätze';
+              $klein[] = 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i');
+        ?>
+          <?php /* Das POST-Formular steht EINMAL und versteckt; der Knopf der
+                   Zeile und der des Aktionsblatts zeigen beide über `form`
+                   darauf (ui_zeilenaktionen). */ ?>
+          <form method="post" action="papierkorb.php" id="f-tag-<?= $tid ?>" class="nur-vorlesen">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="restore_day">
+            <input type="hidden" name="d" value="<?= $tid ?>">
+          </form>
+          <?php ui_zeile([
+              'text'  => dt_lesbar($t, true),
+              'klein' => implode(' · ', $klein),
+              'plaketten' => ui_artzeichen($t['kind'] === null ? null : (string)$t['kind']),
+              'aktionen' => ui_zeilenaktionen([
+                  'titel' => dt_lesbar($t, true),
+                  'eintraege' => [
+                      ['text' => 'Wiederherstellen', 'symbol' => 'zurueck',
+                       'form' => 'f-tag-' . $tid],
+                      ['text' => 'Endgültig löschen', 'symbol' => 'korb', 'art' => 'gefahr',
+                       'href' => 'papierkorb.php?action=purge_day&d=' . $tid],
+                  ],
+              ]),
+          ]); ?>
         <?php endforeach; ?>
-        </tbody>
-      </table>
+      <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
     <?php if ($trashMissions): ?>
-      <h2>Einsätze</h2>
-      <table class="data trashtable">
-        <thead><tr><th>Einsatzdatum</th><th>Beginn</th><th>gelöscht am</th><th class="th-act">Aktionen</th></tr></thead>
-        <tbody>
-        <?php foreach ($trashMissions as $t): ?>
-          <tr>
-            <?php /* Das ECHTE Einsatzdatum aus `started_at` (E14) — der Einsatz
-                     trägt seit Web 6.0.0 kein eigenes Datum mehr, und das
-                     seines Dienstes kann ein anderes sein. */ ?>
-            <td><?= e(fmt_local((string)$t['started_at'], 'd.m.Y')) ?></td>
-            <td><?= e(fmt_local((string)$t['started_at'])) ?></td>
-            <td><?= e(fmt_local((string)$t['deleted_at'], 'd.m.Y H:i')) ?></td>
-            <td><div class="rowactions">
-              <form method="post" action="papierkorb.php">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="restore_mission">
-                <input type="hidden" name="id" value="<?= (int)$t['id'] ?>">
-                <button class="btn-primary">Wiederherstellen</button>
-              </form>
-              <a class="btn-red"
-                 href="papierkorb.php?action=purge_mission&amp;id=<?= (int)$t['id'] ?>">Endgültig löschen</a>
-            </div></td>
-          </tr>
+      <?php ui_karte_start(['titel' => 'Einsätze', 'zahl' => count($trashMissions)]); ?>
+        <?php foreach ($trashMissions as $t):
+              $mid = (int)$t['id'];
+              /* Das ECHTE Einsatzdatum aus `started_at` (E14) — der Einsatz
+                 trägt seit Web 6.0.0 kein eigenes Datum mehr, und das seines
+                 Dienstes kann ein anderes sein. */
+        ?>
+          <form method="post" action="papierkorb.php" id="f-eins-<?= $mid ?>" class="nur-vorlesen">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="restore_mission">
+            <input type="hidden" name="id" value="<?= $mid ?>">
+          </form>
+          <?php
+            $bez = 'Einsatz vom ' . fmt_local((string)$t['started_at'], 'd.m.Y')
+                 . ', ' . fmt_local((string)$t['started_at']) . ' Uhr';
+            ui_zeile([
+              'text'  => $bez,
+              'klein' => 'gelöscht am ' . fmt_local((string)$t['deleted_at'], 'd.m.Y H:i'),
+              'aktionen' => ui_zeilenaktionen([
+                  'titel' => $bez,
+                  'eintraege' => [
+                      ['text' => 'Wiederherstellen', 'symbol' => 'zurueck',
+                       'form' => 'f-eins-' . $mid],
+                      ['text' => 'Endgültig löschen', 'symbol' => 'korb', 'art' => 'gefahr',
+                       'href' => 'papierkorb.php?action=purge_mission&id=' . $mid],
+                  ],
+              ]),
+            ]);
+          ?>
         <?php endforeach; ?>
-        </tbody>
-      </table>
+      <?php ui_karte_ende(); ?>
     <?php endif; ?>
 
   <?php else: ?>
-    <h1>Endgültig löschen?</h1>
-    <div class="card">
+
+    <?php ui_titelzeile([
+        'titel'   => 'Endgültig löschen?',
+        'zurueck' => ['text' => 'Zum Papierkorb', 'href' => 'papierkorb.php'],
+    ]); ?>
+
+    <?php ui_karte_start(['titel' => $istTag
+        ? 'Diensttag ' . dt_lesbar($tag, true)
+        : 'Einsatz vom ' . fmt_local((string)$m['started_at'], 'd.m.Y')
+          . ', ' . fmt_local((string)$m['started_at']) . ' Uhr']); ?>
+
       <?php if ($istTag): ?>
-        <p><strong>Diensttag <?= e(dt_lesbar($tag, true)) ?></strong><?php
+        <p>Mitgelöscht werden <strong><?= $anzahl ?> <?= $anzahl === 1 ? 'Einsatz'
+           : 'Einsätze' ?></strong>, alle Ruhesegmente und alle Tracks<?php
              if ($tag['vehicle_name'] !== null && $tag['vehicle_name'] !== '') {
-                 echo ' · ' . e((string)$tag['vehicle_name']);
-             } ?>
-           mit <?= $anzahl ?> Einsätzen, Ruhesegmenten und allen Tracks.</p>
-        <?php /* AKTIVE EINTRÄGE AM GELÖSCHTEN TAG (Backlog Nr. 33). Sie gehen
-                 seit Web 8.0.0 mit — vorher blieben sie ohne Diensttag zurück
-                 und waren danach halb sichtbar. Deshalb werden sie hier
-                 EINZELN genannt, nicht bloß gezählt: Wer sie behalten will,
-                 muss sie erkennen können. */ ?>
-        <?php if ($aktiv['einsaetze'] || $aktiv['segmente']): ?>
-          <p class="alert alert-warn">An diesem Diensttag hängt außerdem noch
-             <strong>Aktives</strong>, das <strong>mitgelöscht</strong> wird:</p>
-          <ul>
-            <?php foreach ($aktiv['einsaetze'] as $a): ?>
-              <li>Einsatz vom <?= e(fmt_local((string)$a['started_at'], 'd.m.Y')) ?>,
-                  <?= e(fmt_local((string)$a['started_at'])) ?> Uhr —
-                  <a href="einsatz.php?id=<?= (int)$a['id'] ?>">ansehen</a>,
-                  <a href="einsatz_verschieben.php?id=<?= (int)$a['id'] ?>">verschieben</a></li>
-            <?php endforeach; ?>
-            <?php if ($aktiv['segmente'] > 0): ?>
-              <li><?= (int)$aktiv['segmente'] ?> Ruhesegment(e)</li>
-            <?php endif; ?>
-          </ul>
-          <p class="muted">Wer einen davon behalten will, verschiebt ihn
-             vorher an einen anderen Diensttag.</p>
-        <?php endif; ?>
-      <?php else: ?>
-        <p><strong>Einsatz vom <?= e(fmt_local((string)$m['started_at'], 'd.m.Y')) ?>,
-           <?= e(fmt_local((string)$m['started_at'])) ?> Uhr</strong></p>
+                 echo ' — Rettungsmittel ' . e((string)$tag['vehicle_name']);
+             } ?>.</p>
       <?php endif; ?>
-      <p class="alert">Dieser Schritt lässt sich <strong>nicht</strong> rückgängig machen.
-         Die Daten sind danach unwiederbringlich fort — auch die verschlüsselten Angaben.</p>
-      <p class="muted">Anschließend werden die betroffenen Einsätze für die Uhr gesperrt,
-         damit sie nicht durch Nachlieferungen erneut angelegt werden.</p>
-    </div>
-    <form method="post" action="papierkorb.php" class="inline-form">
-      <?= csrf_field() ?>
-      <input type="hidden" name="action" value="<?= $istTag ? 'purge_day' : 'purge_mission' ?>">
-      <input type="hidden" name="d" value="<?= (int)$dayId ?>">
-      <input type="hidden" name="id" value="<?= (int)$id ?>">
-      <input type="hidden" name="confirm" value="ja">
-      <button class="btn-red">Ja, endgültig löschen</button>
-      <a class="btn-plain" href="papierkorb.php">Abbrechen</a>
-    </form>
+
+      <?= ui_meldung_markup('fehler', 'Dieser Schritt lässt sich nicht rückgängig '
+          . 'machen. Die Daten sind danach unwiederbringlich fort — auch die '
+          . 'verschlüsselten Angaben.') ?>
+
+      <p class="feld-hinweis">Anschließend werden die betroffenen Einsätze für die
+         Uhr gesperrt, damit sie nicht durch Nachlieferungen erneut angelegt
+         werden.</p>
+
+      <?php /* Die Bestätigung steht IN der Karte, nicht in einer
+               Speichern-Leiste: Die Leiste gehört zu einem Formular, das man
+               ausfüllt und dessen Stand man verlieren kann. Hier gibt es
+               nichts auszufüllen — nur eine Entscheidung, und die gehört
+               unter den Text, der sie begründet. */ ?>
+      <form method="post" action="papierkorb.php">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="<?= $istTag ? 'purge_day' : 'purge_mission' ?>">
+        <input type="hidden" name="d" value="<?= (int)$dayId ?>">
+        <input type="hidden" name="id" value="<?= (int)$id ?>">
+        <input type="hidden" name="confirm" value="ja">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Ja, endgültig löschen', 'art' => 'gefahr',
+                        'symbol' => 'korb']) ?>
+          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
+                        'href' => 'papierkorb.php']) ?>
+        </div>
+      </form>
+
+    <?php ui_karte_ende(); ?>
+
+    <?php /* AKTIVE EINTRÄGE AM GELÖSCHTEN TAG (Backlog Nr. 33). Sie gehen
+             seit Web 8.0.0 mit — vorher blieben sie ohne Diensttag zurück und
+             waren danach halb sichtbar. Deshalb stehen sie hier EINZELN und
+             als Zeilen mit ihren eigenen Wegen, nicht als Aufzählung: Wer
+             einen behalten will, muss ihn erkennen und erreichen können.
+
+             Die Karte steht UNTER der Bestätigung, obwohl sie eine Warnung
+             ist. Das ist Absicht: Sie erscheint fast nie, und stünde sie
+             oben, schöbe sie im Normalfall nichts und im Ausnahmefall die
+             Entscheidung aus dem Bild. */ ?>
+    <?php if ($istTag && ($aktiv['einsaetze'] || $aktiv['segmente'])): ?>
+      <?php ui_karte_start(['titel' => 'Aktives an diesem Diensttag',
+                            'plakette' => ui_plakette('wird mitgelöscht', ['ton' => 'rot'])]); ?>
+        <?= ui_meldung_markup('warn', 'Diese Einträge sind nicht gelöscht. '
+            . 'Wer einen davon behalten will, verschiebt ihn vorher an einen '
+            . 'anderen Diensttag.') ?>
+        <?php foreach ($aktiv['einsaetze'] as $a):
+              $abez = 'Einsatz vom ' . fmt_local((string)$a['started_at'], 'd.m.Y')
+                    . ', ' . fmt_local((string)$a['started_at']) . ' Uhr';
+              ui_zeile([
+                  'text' => $abez,
+                  'aktionen' => ui_zeilenaktionen([
+                      'titel' => $abez,
+                      'eintraege' => [
+                          ['text' => 'Ansehen', 'symbol' => 'lupe',
+                           'href' => 'einsatz.php?id=' . (int)$a['id']],
+                          ['text' => 'Verschieben', 'symbol' => 'tausch',
+                           'href' => 'einsatz_verschieben.php?id=' . (int)$a['id']],
+                      ],
+                  ]),
+              ]);
+        endforeach; ?>
+        <?php if ($aktiv['segmente'] > 0): ?>
+          <?php ui_zeile([
+              'text'  => (int)$aktiv['segmente'] === 1
+                       ? '1 Ruhesegment' : (int)$aktiv['segmente'] . ' Ruhesegmente',
+              'klein' => 'Ruhesegmente lassen sich nicht verschieben.',
+          ]); ?>
+        <?php endif; ?>
+      <?php ui_karte_ende(); ?>
+    <?php endif; ?>
+
   <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
+<?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

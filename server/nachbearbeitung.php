@@ -144,171 +144,223 @@ if (ist_admin()) {
                                   ORDER BY name')->fetchAll();
 }
 $nichtsOffen = !$offeneTage && !$offeneSd && !$offeneSdZ;
+
+/* Die Zahl fuer den Kartenkopf: eigene und zentrale Stammdatensaetze
+ * zusammen. Sie steht neben dem Titel, weil eine Liste ohne Zahl nicht sagt,
+ * wie viel Arbeit sie ist. */
+$sdOffenEigen = array_sum(array_map('count', $offeneSd));
+$sdOffenZentral = array_sum(array_map('count', $offeneSdZ));
+
 ui_seite_start(['titel' => 'Zuordnung nachtragen']);
-ui_topbar('uebersicht');
 ?>
-<div class="layout">
-  <?php ui_days_sidebar(null); ?>
-  <main class="page">
-    <h1>Zuordnung nachtragen</h1>
-    <?php ui_meldung($notice, $error, 'ok', '    '); ?>
+<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
 
-    <?php if (!$moeglich): ?>
-      <div class="card">
-        <p>Es ist nichts nachzutragen. Der Standortbezug ist in dieser
-           Installation schon verbindlich — entweder war die Nachbearbeitung
-           bereits abgeschlossen, oder es war von Anfang an eine
-           Neuinstallation.</p>
-        <p class="login-aux"><a href="index.php">Zur Übersicht</a></p>
-      </div>
-    <?php else: ?>
+  <?php ui_titelzeile(['titel' => 'Zuordnung nachtragen']); ?>
+  <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
-    <div class="card">
-      <p>Der Umbau auf Diensttage hat den mechanischen Teil automatisch
-         erledigt. <strong>Zwei Zuordnungen lassen sich nicht ableiten</strong> —
-         sie stehen hier, weil Raten schlechter wäre als Fragen.</p>
-      <p class="muted">Nichts davon ist dringend: Ein Diensttag ohne Zuordnung
-         funktioniert. Zeiten, Phasen, Track und Reanimation sind vollständig
-         erfasst; es fehlen die Art, die Besatzungsrollen und die artabhängigen
-         Felder. Diese Seite verschwindet von selbst, sobald beide Listen leer
-         sind.</p>
-    </div>
+  <?php if (!$moeglich): ?>
 
-    <!-- ------------------------------------------------------------ 1 -->
-    <h2>Diensttage ohne Standort oder Rettungsmittel</h2>
-    <?php if (!$offeneTage): ?>
-      <div class="card"><p>Alle Diensttage sind zugeordnet.</p></div>
-    <?php else: ?>
-      <p class="muted">Datum, Zeitraum und Einsatzzahl stehen dabei, weil sich
-         ohne sie nicht entscheiden lässt, welcher Dienst gemeint war. Mit dem
-         Speichern werden Art, Rollensatz, Fähigkeiten und Bezeichnungen
-         <strong>eingefroren</strong> — spätere Änderungen an den Standorten
-         wirken darauf nicht mehr.</p>
-      <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
-        <p class="alert alert-warn">Es stehen keine Standorte und Rettungsmittel
-           zur Verfügung. Bitte zuerst unter
-           <a href="einstellungen.php?t=standorte">Einstellungen →
-           Standorte</a> welche anlegen oder einen vordefinierten Standort
-           auswählen.</p>
-      <?php endif; ?>
-      <table class="data">
-        <thead><tr><th>Diensttag</th><th>Zeitraum</th><th>Einsätze</th>
-                   <th>bisher</th><th class="th-act">Zuordnen</th></tr></thead>
-        <tbody>
+    <?= ui_meldung_markup('ok',
+        'Es ist nichts nachzutragen. Der Standortbezug ist in dieser '
+      . 'Installation schon verbindlich — entweder war die Nachbearbeitung '
+      . 'bereits abgeschlossen, oder es war von Anfang an eine '
+      . 'Neuinstallation.', '',
+        ui_knopf(['text' => 'Zur Startseite', 'art' => 'neutral',
+                  'href' => 'index.php'])) ?>
+
+  <?php else: ?>
+
+    <p class="seiten-erklaerung">Der Umbau auf Diensttage hat den mechanischen
+       Teil automatisch erledigt. <strong>Zwei Zuordnungen lassen sich nicht
+       ableiten</strong> — sie stehen hier, weil Raten schlechter wäre als
+       Fragen. Nichts davon ist dringend: Ein Diensttag ohne Zuordnung
+       funktioniert, es fehlen nur Art, Besatzungsrollen und die artabhängigen
+       Felder. Diese Seite verschwindet von selbst, sobald beide Listen leer
+       sind.</p>
+
+    <?php /* ---------------------------------------------------------- 1 --
+             DIENSTTAGE. Die Tabelle davor hatte fuenf Spalten, darunter zwei
+             Auswahlfelder und einen Knopf in EINER Zelle — bei 360 px lief sie
+             waagerecht aus dem Bild, und die Auswahl war praktisch nicht zu
+             treffen. Jetzt je Diensttag ein Formularblock aus dem
+             Listenbaustein: Ueberschrift, Kennzeile, zwei Felder (ab 720 px
+             nebeneinander), ein Knopf. */ ?>
+    <?php /* KURZER KARTENTITEL. „Diensttage ohne Standort oder Rettungsmittel"
+             bricht bei 390 px auf zwei Zeilen, und die Zahl im Kartenkopf
+             rutscht darunter auf eine dritte. Was fehlt, sagt ohnehin jede
+             Kennzeile. */ ?>
+    <?php ui_karte_start(['titel' => 'Diensttage ohne Zuordnung',
+                          'zahl'  => count($offeneTage)]); ?>
+
+      <?php if (!$offeneTage): ?>
+        <p class="feld-hinweis">Alle Diensttage sind zugeordnet.</p>
+      <?php else: ?>
+
+        <p class="feld-hinweis">Datum, Zeitraum und Einsatzzahl stehen dabei, weil
+           sich ohne sie nicht entscheiden lässt, welcher Dienst gemeint war. Mit
+           dem Speichern werden Art, Rollensatz, Fähigkeiten und Bezeichnungen
+           <strong>eingefroren</strong> — spätere Änderungen an den Standorten
+           wirken darauf nicht mehr.</p>
+
+        <?php if (!$SD_BASES && !$SD_VEHICLES): ?>
+          <?= ui_meldung_markup('warn', 'Es stehen keine Standorte und '
+              . 'Rettungsmittel zur Verfügung. Bitte zuerst welche anlegen oder '
+              . 'einen vordefinierten Standort auswählen.', '',
+              ui_knopf(['text' => 'Zu den Standorten', 'art' => 'neutral',
+                        'href' => 'einstellungen.php?t=standorte'])) ?>
+        <?php endif; ?>
+
         <?php foreach ($offeneTage as $t): $tid = (int)$t['id'];
-              $sym = dt_art_symbol($t['kind'] === null ? null : (string)$t['kind']); ?>
-          <tr>
-            <td><span class="artzeichen" title="<?= e($sym['text']) ?>"
-                      aria-label="<?= e($sym['text']) ?>"><?= e($sym['zeichen']) ?></span>
-              <a href="index.php?d=<?= $tid ?>"><?= e(dt_lesbar($t, true)) ?></a></td>
-            <td class="mono"><?= $t['started_at'] !== null ? e(fmt_local((string)$t['started_at'])) : '–' ?>
-              – <?= $t['ended_at'] !== null ? e(fmt_local((string)$t['ended_at'])) : '–' ?></td>
-            <td><?= (int)$t['einsaetze'] ?></td>
-            <td class="muted small"><?php
+              $kenn = [];
+              $kenn[] = ($t['started_at'] !== null ? fmt_local((string)$t['started_at']) : '–')
+                      . ' – ' . ($t['ended_at'] !== null ? fmt_local((string)$t['ended_at']) : '–');
+              $kenn[] = (int)$t['einsaetze'] === 1
+                      ? '1 Einsatz' : (int)$t['einsaetze'] . ' Einsätze';
               $bisher = [];
               if ($t['vehicle_name'] !== null && $t['vehicle_name'] !== '') { $bisher[] = (string)$t['vehicle_name']; }
               if ($t['base_name'] !== null && $t['base_name'] !== '') { $bisher[] = (string)$t['base_name']; }
-              echo $bisher ? e(implode(' · ', $bisher)) : 'ohne Angaben'; ?></td>
-            <td class="th-act">
-              <form method="post" action="nachbearbeitung.php" class="inline-form">
-                <?= csrf_field() ?><input type="hidden" name="action" value="tag_zuordnen">
-                <input type="hidden" name="day_id" value="<?= $tid ?>">
-                <select name="base_id">
-                  <option value="">Standort –</option>
-                  <?php foreach ($SD_BASES as $b): ?>
-                    <option value="<?= (int)$b['id'] ?>"
-                            <?= (int)($t['base_id'] ?? 0) === (int)$b['id'] ? 'selected' : '' ?>>
-                      <?= e($b['name']) ?></option>
-                  <?php endforeach; ?>
-                </select>
-                <select name="vehicle_id" class="nb-veh">
-                  <option value="">Rettungsmittel –</option>
-                  <?php foreach ($SD_VEHICLES as $v): $vs = dt_art_symbol((string)$v['kind']); ?>
-                    <option value="<?= (int)$v['id'] ?>" data-base="<?= (int)($v['base_id'] ?? 0) ?>"
-                            <?= (int)($t['vehicle_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>>
-                      <?= e($vs['zeichen']) ?> <?= e($v['name']) ?><?php
-                        echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
-                  <?php endforeach; ?>
-                </select>
-                <button class="btn-primary">Speichern</button>
-              </form>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    <?php endif; ?>
+              $kenn[] = $bisher ? 'bisher ' . implode(' · ', $bisher) : 'ohne Angaben';
+              /* Der Standortkatalog als Wert=>Text-Abbildung — ui_feld baut
+                 daraus die Optionen. Der Rettungsmittelkatalog braucht ein
+                 `data-base` je Option und steht deshalb von Hand darunter. */
+              $baseOpt = ['' => 'Standort –'];
+              foreach ($SD_BASES as $b) { $baseOpt[(string)(int)$b['id']] = (string)$b['name']; }
+        ?>
+          <div class="listen-form">
+            <h3 class="listen-form-titel">
+              <?= ui_artzeichen($t['kind'] === null ? null : (string)$t['kind']) ?>
+              <a href="index.php?d=<?= $tid ?>"><?= e(dt_lesbar($t, true)) ?></a>
+            </h3>
+            <?php /* `.feld-hinweis`, nicht `.feld-klein`: Der Text steht VOR
+                     einem Feld, und dafuer gibt es die Regel
+                     `.feld-hinweis + form{margin-top:...}` schon. `.feld-klein`
+                     hat nur einen Abstand nach OBEN und klebte am
+                     Standort-Etikett darunter. */ ?>
+            <p class="feld-hinweis"><?= e(implode(' · ', $kenn)) ?></p>
+            <form method="post" action="nachbearbeitung.php">
+              <?= csrf_field() ?><input type="hidden" name="action" value="tag_zuordnen">
+              <input type="hidden" name="day_id" value="<?= $tid ?>">
+              <div class="listen-form-felder">
+                <?php ui_feld([
+                    'name' => 'base_id', 'id' => 'nb-base-' . $tid,
+                    'label' => 'Standort', 'art' => 'select',
+                    'optionen' => $baseOpt,
+                    'wert' => (string)(int)($t['base_id'] ?? 0) === '0'
+                            ? '' : (string)(int)$t['base_id'],
+                ]); ?>
+                <?php /* VON HAND, NICHT DURCH ui_feld. Jede Option braucht ein
+                         `data-base`, aus dem das Skript unten den Standort
+                         nachzieht; ui_feld kennt nur Wert und Text, und ihm
+                         dafuer einen Attributkanal beizubringen hiesse, den
+                         Baustein fuer einen Einzelfall aufzubohren. Das Markup
+                         ist dasselbe: `.feld` mit `.feld-label` und
+                         `.feld-eingabe`.
 
-    <!-- ------------------------------------------------------------ 2 -->
-    <h2>Stammdaten ohne Standort</h2>
-    <?php if (!$offeneSd && !$offeneSdZ): ?>
-      <div class="card"><p>Alle deine Stammdatensätze sind einem Standort
-         zugeordnet.</p></div>
-    <?php else: ?>
-      <p class="muted">Jeder Eintrag gehört zu genau einem Standort (E15). Wo die
-         Migration ihn nicht ableiten konnte — bei mehreren oder bei keinem
-         Standort —, blieb er offen.</p>
-    <?php endif; ?>
-
-    <?php
-      /* Ein Block je Art, eigene und (fuer Admins) zentrale getrennt: Sie
-       * brauchen verschiedene Standortlisten, und die Verwechslung waere
-       * folgenreich — ein zentraler Eintrag an einem persoenlichen Standort
-       * erschiene in keiner Auswahlliste. */
-      $blocks = [['eigene', $offeneSd, false, $SD_BASES]];
-      if (ist_admin()) { $blocks[] = ['zentrale', $offeneSdZ, true, $zentraleBases]; }
-      foreach ($blocks as [$titel, $liste, $istZentral, $basen]):
-        if (!$liste) { continue; } ?>
-      <h3><?= $istZentral ? 'Zentrale Einträge' : 'Eigene Einträge' ?></h3>
-      <?php if (!$basen): ?>
-        <p class="alert alert-warn">Es steht kein passender Standort zur
-           Verfügung<?= $istZentral ? ' — bitte zuerst unter „Standorte systemweit" einen anlegen.'
-                                    : '.' ?></p>
-      <?php endif; ?>
-      <?php foreach ($liste as $tabelle => $zeilen): ?>
-        <h4><?= e(NB_STAMMDATEN[$tabelle]) ?></h4>
-        <table class="data">
-          <tbody>
-          <?php foreach ($zeilen as $z): ?>
-            <tr>
-              <td><?= e((string)$z['name']) ?></td>
-              <td class="th-act">
-                <form method="post" action="nachbearbeitung.php" class="inline-form">
-                  <?= csrf_field() ?><input type="hidden" name="action" value="sd_zuordnen">
-                  <input type="hidden" name="tabelle" value="<?= e($tabelle) ?>">
-                  <input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-                  <input type="hidden" name="zentral" value="<?= $istZentral ? '1' : '0' ?>">
-                  <select name="base_id" required>
-                    <option value="">Standort wählen –</option>
-                    <?php foreach ($basen as $b): ?>
-                      <option value="<?= (int)$b['id'] ?>"><?= e($b['name']) ?></option>
+                         `nb-veh` ist ein SKRIPTANKER, keine Gestaltung. */ ?>
+                <div class="feld">
+                  <label class="feld-label" for="nb-veh-<?= $tid ?>">Rettungsmittel</label>
+                  <select class="feld-eingabe nb-veh" id="nb-veh-<?= $tid ?>" name="vehicle_id">
+                    <option value="">Rettungsmittel –</option>
+                    <?php foreach ($SD_VEHICLES as $v): ?>
+                      <option value="<?= (int)$v['id'] ?>" data-base="<?= (int)($v['base_id'] ?? 0) ?>"
+                              <?= (int)($t['vehicle_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>>
+                        <?= e($v['name']) ?><?php
+                          echo $v['base_name'] !== null ? ' · ' . e((string)$v['base_name']) : ''; ?></option>
                     <?php endforeach; ?>
                   </select>
-                  <button class="btn-primary">Zuordnen</button>
+                </div>
+              </div>
+              <div class="listen-form-fuss">
+                <?= ui_knopf(['text' => 'Zuordnung speichern', 'art' => 'primaer',
+                              'symbol' => 'haken']) ?>
+              </div>
+            </form>
+          </div>
+        <?php endforeach; ?>
+
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---------------------------------------------------------- 2 --
+             STAMMDATEN. Ein Block je Art, eigene und (fuer Admins) zentrale
+             getrennt: Sie brauchen verschiedene Standortlisten, und die
+             Verwechslung waere folgenreich — ein zentraler Eintrag an einem
+             persoenlichen Standort erschiene in keiner Auswahlliste. */ ?>
+    <?php
+      $blocks = [['Eigene Einträge ohne Standort', $offeneSd, false, $SD_BASES, $sdOffenEigen]];
+      if (ist_admin()) {
+          $blocks[] = ['Zentrale Einträge ohne Standort', $offeneSdZ, true,
+                       $zentraleBases, $sdOffenZentral];
+      }
+      foreach ($blocks as [$kartentitel, $liste, $istZentral, $basen, $anzahl]):
+    ?>
+      <?php ui_karte_start(['titel' => $kartentitel, 'zahl' => $anzahl]); ?>
+
+        <?php if (!$anzahl): ?>
+          <p class="feld-hinweis">Alles zugeordnet.</p>
+        <?php else: ?>
+
+          <p class="feld-hinweis">Jeder Eintrag gehört zu genau einem Standort
+             (E15). Wo die Migration ihn nicht ableiten konnte — bei mehreren
+             oder bei keinem Standort —, blieb er offen.</p>
+
+          <?php if (!$basen): ?>
+            <?= ui_meldung_markup('warn', 'Es steht kein passender Standort zur '
+                . 'Verfügung' . ($istZentral
+                    ? ' — bitte zuerst unter „Standorte systemweit" einen anlegen.'
+                    : '.')) ?>
+          <?php endif; ?>
+
+          <?php foreach ($liste as $tabelle => $zeilen): ?>
+            <?php foreach ($zeilen as $z): $zid = (int)$z['id'];
+                  $anker = ($istZentral ? 'z' : 'e') . '-' . $tabelle . '-' . $zid;
+                  $bOpt = ['' => 'Standort wählen –'];
+                  foreach ($basen as $b) { $bOpt[(string)(int)$b['id']] = (string)$b['name']; }
+            ?>
+              <div class="listen-form">
+                <h3 class="listen-form-titel"><?= e((string)$z['name']) ?></h3>
+                <p class="feld-hinweis"><?= e(NB_STAMMDATEN[$tabelle]) ?></p>
+                <form method="post" action="nachbearbeitung.php">
+                  <?= csrf_field() ?><input type="hidden" name="action" value="sd_zuordnen">
+                  <input type="hidden" name="tabelle" value="<?= e($tabelle) ?>">
+                  <input type="hidden" name="id" value="<?= $zid ?>">
+                  <input type="hidden" name="zentral" value="<?= $istZentral ? '1' : '0' ?>">
+                  <?php ui_feld([
+                      'name' => 'base_id', 'id' => 'nb-sd-' . $anker,
+                      'label' => 'Standort', 'art' => 'select',
+                      'optionen' => $bOpt, 'pflicht' => true,
+                  ]); ?>
+                  <div class="listen-form-fuss">
+                    <?= ui_knopf(['text' => 'Zuordnen', 'art' => 'primaer',
+                                  'symbol' => 'haken']) ?>
+                  </div>
                 </form>
-              </td>
-            </tr>
+              </div>
+            <?php endforeach; ?>
           <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php endforeach; ?>
+
+        <?php endif; ?>
+      <?php ui_karte_ende(); ?>
     <?php endforeach; ?>
 
-    <!-- ------------------------------------------------------------ 3 -->
-    <h2>Standortbezug verbindlich machen</h2>
-    <div class="card">
+    <?php /* ---------------------------------------------------------- 3 -- */ ?>
+    <?php ui_karte_start(['titel' => 'Standortbezug verbindlich machen']); ?>
+
       <?php if ($sdGesamt): ?>
         <?php /* Die Bedingung gilt fuer die TABELLE, nicht fuer eine
                  Zeilenmenge: Ein einziger offener Eintrag — auch aus einem
                  anderen Konto — liesse das ALTER TABLE scheitern. Deshalb steht
-                 hier die Gesamtzahl und nicht nur die eigene. */ ?>
+                 hier die Gesamtzahl und nicht nur die eigene. Als Zeilen mit
+                 Plakette statt als Aufzaehlung: Die Zahl ist die Auskunft, und
+                 in einer Aufzaehlung stand sie vorn im Fliesstext. */ ?>
         <p>Noch offen, über alle Konten hinweg:</p>
-        <ul>
-          <?php foreach ($sdGesamt as $tab => $n): ?>
-            <li><?= (int)$n ?> × <?= e(NB_STAMMDATEN[$tab] ?? $tab) ?></li>
-          <?php endforeach; ?>
-        </ul>
-        <p class="muted">Solange davon etwas offen ist, bleibt die Spalte
+        <?php foreach ($sdGesamt as $tab => $n): ?>
+          <?php ui_zeile([
+              'text' => NB_STAMMDATEN[$tab] ?? (string)$tab,
+              'plaketten' => ui_plakette((string)(int)$n, ['ton' => 'orange']),
+          ]); ?>
+        <?php endforeach; ?>
+        <p class="feld-hinweis">Solange davon etwas offen ist, bleibt die Spalte
            <code>base_id</code> nullbar. Die Bedingung gilt für die ganze
            Tabelle — ein einziger offener Eintrag, auch aus einem anderen Konto,
            verhindert sie. Bei mehreren Konten heißt das: Alle müssen ihre
@@ -320,30 +372,36 @@ ui_topbar('uebersicht');
            Danach stimmen aktualisierte Installation und Neuinstallation in genau
            den fünf Spalten überein, in denen sie sich bis dahin unterschieden.</p>
         <?php if (ist_admin()): ?>
-          <form method="post" action="nachbearbeitung.php" class="inline-form"
+          <?php /* Der Dialogtitel steht ausdruecklich dabei (O11): „Bestaetigen"
+                   waere hier zu wenig — es geht um eine Schemaaenderung, und
+                   der Titel ist das erste, was ein Screenreader vorliest. */ ?>
+          <form method="post" action="nachbearbeitung.php"
                 data-confirm="Die Spalte base_id bekommt in fünf Tabellen die Bedingung NOT NULL. Das ist eine Schemaänderung und lässt sich nicht über den Papierkorb zurücknehmen. Fortfahren?"
+                data-confirm-titel="Standortbezug verbindlich machen"
                 data-confirm-ok="Bedingung setzen" data-confirm-tone="danger">
             <?= csrf_field() ?><input type="hidden" name="action" value="notnull">
-            <button class="btn-red">Standortbezug verbindlich machen</button>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Standortbezug verbindlich machen',
+                            'art' => 'gefahr', 'symbol' => 'datenbank']) ?>
+            </div>
           </form>
         <?php else: ?>
-          <p class="muted">Diesen letzten Schritt führt eine Administratorin aus —
-             er ändert das Datenbankschema und gilt für alle Konten.</p>
+          <p class="feld-hinweis">Diesen letzten Schritt führt eine Administratorin
+             aus — er ändert das Datenbankschema und gilt für alle Konten.</p>
         <?php endif; ?>
       <?php endif; ?>
-    </div>
+
+    <?php ui_karte_ende(); ?>
 
     <?php if ($nichtsOffen): ?>
-      <p class="alert alert-ok">Für dein Konto ist nichts mehr offen. Diese Seite
-         verschwindet aus der Leiste links, sobald auch die Bedingung gesetzt
-         ist.</p>
+      <?= ui_meldung_markup('ok', 'Für dein Konto ist nichts mehr offen. Diese '
+          . 'Seite verschwindet aus der Leiste links, sobald auch die Bedingung '
+          . 'gesetzt ist.') ?>
     <?php endif; ?>
 
-    <?php endif; ?>
-    <?php ui_footer(); ?>
-  </main>
-</div>
-<?php /* confirm.js kommt aus ui_footer() (ui.php) — eine zweite Einbindung
+  <?php endif; ?>
+<?php ui_geruest_ende(); ?>
+<?php /* confirm.js kommt aus ui_geruest_ende() (ui.php) — eine zweite Einbindung
          haette den Rueckfragedialog doppelt geoeffnet. */ ?>
 <script>
 /* Standort und Rettungsmittel gehören zusammen (E15): Die Auswahl eines

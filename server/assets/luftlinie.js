@@ -146,7 +146,7 @@
             dashArray: STRICHEL, smoothFactor: 0
         });
         linie.bindPopup((opt.titel ? opt.titel + '<br>' : '') + text(liste)
-            + '<br><span class="muted">gerade Verbindung, kein aufgezeichneter Weg</span>');
+            + '<br><span class="feld-klein-inline">gerade Verbindung, kein aufgezeichneter Weg</span>');
         ziel.addLayer ? ziel.addLayer(linie) : linie.addTo(map);
         return [linie];
     }

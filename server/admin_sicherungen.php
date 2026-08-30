@@ -5,48 +5,41 @@ require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
 
 /**
- * Admin-Sicherungen: Übersicht, Erzeugen, Einspielen, Freigeben, Löschen (A8).
+ * SICHERUNGEN — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
  *
- * ZWEI ABSCHNITTE, ZWEI QUELLEN (E19)
- *   1. Bestehende Konten aus `users`, je Zeile mit ihren Sicherungen.
- *   2. Verwaiste Sicherungen — Ordner, deren Kennung in `users` nicht mehr
- *      vorkommt. Die Angaben stammen aus der Begleitdatei.
+ * WAS SICH GEAENDERT HAT. Bis Web 9.9.0 stand hier alles: eine Tabelle mit
+ * jedem Konto und seinen Paketen, eine zweite mit jeder einzelnen Sicherung
+ * der ganzen Installation, dazu je Zeile ein aufklappbares Formular zum
+ * Einspielen, Freigeben und Loeschen. Bei dreissig Konten war das eine lange
+ * Seite; bei dreihundert war es F-P3-F — sie las je Konto ein Verzeichnis UND
+ * eine Begleitdatei, um eine Zeile zu zeigen, die man nie ansieht.
  *
- * Abschnitt 2 trägt den eigentlichen Anwendungsfall: das gelöschte und neu
- * aufgesetzte Konto. Es trägt eine neue Kennung, zum alten Ordner existiert
- * keine Datenbankzeile mehr — eine Liste allein aus `users` würde genau die
- * Sicherungen verschweigen, um derentwillen es diese Seite gibt.
+ * Seit Web 9.8.0 liegen die Sicherungen eines Kontos auf dessen Kontoseite,
+ * seit Web 9.9.0 zaehlt die NutzerInnen-Liste, welche Konten faellig sind.
+ * Hier bleibt, was WEDER zu einem Konto noch in eine Liste gehoert:
  *
- * DIE KONTOKENNUNG ERSCHEINT NIRGENDS IN DER OBERFLÄCHE (A8.7). Sie ist ein
- * interner Ordnername, keine Angabe für Menschen — und die zweite Schranke
- * gegen den Abruf über den Browser. Sie steckt nur in den Formularfeldern, weil
- * die Seite ohne sie nicht sagen könnte, welcher Ordner gemeint ist.
+ *   die REGELN       Erinnerungsintervall, Aufbewahrung je Konto,
+ *                    Erinnerung an die Administration per E-Mail
+ *   die ABLAGE       Pfad, Zustand, letzte Sicherung
+ *   „OHNE KONTO"     Ordner, zu denen es keine Kontozeile mehr gibt — der
+ *                    Fall „Konto geloescht und neu aufgesetzt" (A8.2). Sie
+ *                    haben keine Kontoseite; ihr Weg ist nur hier.
+ *
+ * Die Seite liest damit EIN Verzeichnis fuer die Zahlen (edbak_ablage_zahlen)
+ * und EIN weiteres fuer die verwaisten Ordner. Die Kontenschleife ist fort.
  */
-
-$notice = null; $error = null; $bericht = null;
-
-/** Zielkonto samt Kennung lesen — für Rückspielung und Freigabe. */
-function ziel_konto(int $id): ?array
-{
-    $st = db()->prepare('SELECT id, email, name, account_key FROM users WHERE id = ?');
-    $st->execute([$id]);
-    $r = $st->fetch();
-    return $r ?: null;
-}
 
 /**
- * Harte Bestätigung: die E-Mail-Adresse des ZIELKONTOS muss abgetippt sein (E21).
+ * Zeitbudget eines Durchgangs „Alle sichern" in Sekunden.
  *
- * Abgetippt wird die Adresse des Ziels, nicht die der Herkunft. Das Risiko ist
- * nicht Datenverlust — edbak_restore() ergänzt und ersetzt nicht —, sondern das
- * Einspielen FREMDER Daten in ein falsches Konto. Abgesichert werden muss
- * deshalb das Ziel. Geprüft wird serverseitig, nach dem Muster von
- * admin_user.php: Ein Browser-Dialog liesse sich umgehen.
+ * Dieselbe Ueberlegung wie bei der Sammelaktion der NutzerInnen-Liste: Eine
+ * Sicherung dauert gemessen 222 ms bei einem Konto mit 82 Einsaetzen, und
+ * zwanzig Sekunden liegen unter der `max_execution_time`, die geteilter
+ * Webspace ueblicherweise setzt.
  */
-function bestaetigung_passt(string $eingabe, string $soll): bool
-{
-    return strcasecmp(trim($eingabe), trim($soll)) === 0;
-}
+const SICHERN_BUDGET = 20.0;
+
+$notice = null; $error = null; $bericht = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -58,54 +51,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kennung = edbak_kennung_aus_handgriff((string)($_POST['handgriff'] ?? '')) ?? '';
     $datei   = (string)($_POST['datei'] ?? '');
 
-    if ($action === 'intervall') {
-        $tage = (int)($_POST['tage'] ?? 0);
+    /* ---- Die Regeln: ein Formular, ein Speichern (E-P3-41) --------------- */
+    if ($action === 'regeln') {
+        $tage  = (int)($_POST['tage'] ?? 0);
+        $pakete = (int)($_POST['pakete'] ?? 0);
+        $teile = [];
         if ($tage < 1 || $tage > 3650) {
-            $error = 'Bitte ein Intervall zwischen 1 und 3650 Tagen angeben.';
-        } else {
+            $error = 'Bitte ein Erinnerungsintervall zwischen 1 und 3650 Tagen angeben.';
+        } elseif ($tage !== edbak_intervall()) {
             edbak_marke_setzen('adminbackup_intervall', (string)$tage);
-            $notice = 'Erinnerungsintervall gespeichert: alle ' . $tage . ' Tage.';
+            $teile[] = 'Erinnerung nach ' . $tage . ' Tagen';
+        }
+        if ($error === null) {
+            if ($pakete < 1 || $pakete > 100) {
+                $error = 'Bitte eine Aufbewahrung zwischen 1 und 100 Paketen angeben.';
+            } elseif ($pakete !== edbak_aufbewahrung()) {
+                edbak_marke_setzen('adminbackup_aufbewahrung', (string)$pakete);
+                $teile[] = 'Aufbewahrung ' . $pakete . ' Pakete';
+            }
+        }
+        if ($error === null) {
+            $mailAn = ($_POST['mail'] ?? '') === '1';
+            if ($mailAn !== edbak_admin_mail_an()) {
+                edbak_marke_setzen('adminbackup_mail', $mailAn ? '1' : '0');
+                $teile[] = 'Erinnerung per E-Mail ' . ($mailAn ? 'ein' : 'aus');
+                /* BEIM EINSCHALTEN DIE UHR NEU STELLEN. Stuende die alte Marke
+                 * noch, kaeme die erste Mail erst sieben Tage nach der letzten
+                 * von damals — und wer den Schalter gerade umgelegt hat,
+                 * erwartet die naechste faellige Erinnerung, nicht eine aus
+                 * dem Rhythmus einer abgeschalteten Zeit. */
+                if ($mailAn) { edbak_marke_setzen('adminbackup_mail_last', ''); }
+            }
+            $notice = $teile ? implode(', ', $teile) . ' gespeichert.'
+                             : 'Es gab nichts zu ändern.';
         }
     }
 
-    /* ---- Sichern: einzeln, Auswahl, alle (A8.3) ------------------------- */
-    if ($action === 'sichern' || $action === 'sichern_auswahl' || $action === 'sichern_alle') {
-        if ($action === 'sichern') {
-            $ids = [(int)($_POST['user_id'] ?? 0)];
-        } elseif ($action === 'sichern_auswahl') {
-            $ids = array_map('intval', (array)($_POST['auswahl'] ?? []));
-        } else {
-            $ids = array_map('intval', db()->query('SELECT id FROM users ORDER BY email')
-                                            ->fetchAll(PDO::FETCH_COLUMN));
+    /* ---- Alle sichern (A8.3) --------------------------------------------
+     *
+     * „ALLE" HEISST ALLE, aber nicht in einer Anfrage. Eine Sicherung dauert
+     * gemessen 222 ms bei einem Konto mit 82 Einsaetzen; bei dreihundert
+     * Konten liefe die Anfrage in die Zeitgrenze des Webspace und braeche
+     * mittendrin ab — mit einem Teil erledigt und ohne Auskunft darueber,
+     * welchem.
+     *
+     * Statt eines Merkzettels zwischen den Anfragen entscheidet die
+     * REIHENFOLGE: Gesichert wird, was am laengsten her ist, zuerst. Wer eben
+     * gesichert wurde, steht danach ganz hinten. Ein zweiter Klick macht
+     * deshalb genau dort weiter, wo der erste aufgehoert hat — ohne dass sich
+     * irgendetwas irgendetwas merken muesste. Nach genug Klicks ist jedes
+     * Konto genau einmal drangewesen, und die Seite sagt jedes Mal, wie viele
+     * noch offen sind.
+     *
+     * Schuebe im Hintergrund sind auf P5 vertagt (E-P3-41).
+     */
+    if ($action === 'sichern_alle') {
+        $karte = edbak_staende();
+        $konten = db()->query('SELECT id, account_key FROM users')->fetchAll();
+        $reihe = [];
+        foreach ($konten as $k) {
+            $stand = edbak_stand_aus_karte($k['account_key'], $karte);
+            if ($stand['stand'] === 'ohne_kennung') { continue; }
+            $reihe[] = ['id' => (int)$k['id'],
+                        'alter' => $stand['tage'] === null ? PHP_INT_MAX : (int)$stand['tage']];
         }
-        $ids = array_values(array_filter($ids, static fn($i) => $i > 0));
-        if (!$ids) {
-            $error = 'Es war kein Konto ausgewählt.';
+        usort($reihe, static fn($a, $b) => $b['alter'] <=> $a['alter']);
+
+        if (!$reihe) {
+            $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst die Wartung '
+                   . 'aufrufen und die Migration ausführen.';
         } else {
-            $gut = 0; $schlecht = [];
-            foreach ($ids as $id) {
-                [$ok, $grund, ] = edbak_sicherung_erzeugen($id);
+            $t0 = microtime(true);
+            $gut = 0; $schlecht = []; $offen = 0;
+            foreach ($reihe as $n => $r) {
+                if ($n > 0 && microtime(true) - $t0 > SICHERN_BUDGET) {
+                    $offen = count($reihe) - $n;
+                    break;
+                }
+                [$ok, $grund, ] = edbak_sicherung_erzeugen($r['id']);
                 if ($ok) { $gut++; } else { $schlecht[] = $grund; }
             }
             $notice = $gut . ' ' . ($gut === 1 ? 'Sicherung' : 'Sicherungen') . ' erzeugt.';
+            if ($offen > 0) {
+                $notice .= ' ' . $offen . ' ' . ($offen === 1 ? 'Konto ist' : 'Konten sind')
+                         . ' noch offen — die Zeit für eine Anfrage reicht nicht für alle. '
+                         . 'Noch einmal auf „Alle sichern" klicken macht dort weiter, wo '
+                         . 'dieser Durchgang aufgehört hat.';
+            }
             if ($schlecht) {
-                /* Gleichlautende Gründe zusammenfassen: Bei „alle Konten"
-                 * stünde derselbe Satz sonst dutzendfach untereinander und
-                 * verdeckte den einen, der anders lautet. */
                 $error = 'Nicht erzeugt: ' . implode(' · ', array_unique($schlecht));
             }
         }
     }
 
-    /* ---- Einspielen (A8.6) ---------------------------------------------- */
+    /* ---- Einspielen aus einer Sicherung OHNE KONTO (A8.6) ---------------- */
     if ($action === 'einspielen') {
-        $ziel = ziel_konto((int)($_POST['ziel_user'] ?? 0));
+        $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
         $paket = edbak_paket_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Die Sicherung liess sich nicht lesen.';
-        } elseif (!bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts eingespielt.';
         } else {
@@ -117,8 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
             } else {
                 try {
-                    $stats = edbak_restore((int)$ziel['id'], $paket['daten']);
-                    $bericht = $stats;
+                    $bericht = edbak_restore((int)$ziel['id'], $paket['daten']);
                     $notice = 'Sicherung eingespielt in ' . $ziel['email'] . '.';
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -128,15 +174,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    /* ---- Freigeben und widerrufen (A8.6) -------------------------------- */
+    /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
-        $ziel = ziel_konto((int)($_POST['ziel_user'] ?? 0));
+        $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
         $paket = edbak_paket_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
             $error = 'Die Sicherung liess sich nicht lesen.';
-        } elseif (!bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
+        } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
@@ -148,35 +194,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'widerrufen') {
-        $notice = edbak_freigabe_widerrufen($kennung)
-            ? 'Freigabe widerrufen.'
-            : null;
-        if ($notice === null) { $error = 'Die Freigabe liess sich nicht widerrufen.'; }
+        if (edbak_freigabe_widerrufen($kennung)) { $notice = 'Freigabe widerrufen.'; }
+        else { $error = 'Die Freigabe liess sich nicht widerrufen.'; }
     }
 
     /* ---- Löschen (A8.8) -------------------------------------------------
      *
-     * Die Härte der Bestätigung richtet sich danach, was verloren geht (E24):
-     * Bleibt danach mindestens eine weitere Sicherung desselben Kontos, genügt
-     * die übliche Rückfrage. Ist es die letzte oder gehört sie zu einem
-     * verwaisten Ordner, ist zusätzlich die E-Mail-Adresse abzutippen.
+     * Eine Sicherung OHNE KONTO ist immer die letzte ihrer Art: Es gibt kein
+     * Konto mehr, das sie neu erzeugen könnte. Deshalb ist die Bestätigung
+     * hier immer die harte — die abgetippte Adresse aus der Begleitdatei.
+     * Ist die Begleitdatei unlesbar, gibt es keine Adresse zum Abtippen; an
+     * ihre Stelle tritt eine ausdrückliche Bestätigung (Kriterium 64).
      */
     if ($action === 'paket_loeschen' || $action === 'ordner_loeschen') {
-        $hart  = ($_POST['hart'] ?? '') === '1';
         $sollAdresse = (string)($_POST['soll_email'] ?? '');
         $eingabe = (string)($_POST['confirm_email'] ?? '');
         $unlesbar = ($_POST['unlesbar'] ?? '') === '1';
 
-        $bestaetigt = true;
-        if ($hart) {
-            $bestaetigt = $unlesbar
-                /* Ist die Begleitdatei unlesbar, gibt es keine Adresse zum
-                 * Abtippen. An ihre Stelle tritt eine ausdrückliche Bestätigung,
-                 * dass eine nicht mehr zuordenbare Sicherung endgültig entfernt
-                 * wird (Akzeptanzkriterium 64). */
-                ? (($_POST['confirm_unlesbar'] ?? '') === 'ja')
-                : bestaetigung_passt($eingabe, $sollAdresse);
-        }
+        $bestaetigt = $unlesbar
+            ? (($_POST['confirm_unlesbar'] ?? '') === 'ja')
+            : edbak_bestaetigung_passt($eingabe, $sollAdresse);
 
         if (!$bestaetigt) {
             $error = $unlesbar
@@ -200,374 +237,293 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 [$ablageBereit, $ablageGrund] = edbak_ablage_bereit();
-$u = edbak_uebersicht();
-$erinnerung = edbak_erinnerung();
-$konten = db()->query('SELECT id, email FROM users ORDER BY email')->fetchAll();
+$zahlen    = edbak_stand_zaehlen();
+$ablage    = edbak_ablage_zahlen();
+$verwaist  = edbak_verwaiste();
+$letzte    = edbak_marke_lesen('adminbackup_last');
+$paketeOhneKonto = array_sum(array_map(static fn($v) => count($v['pakete']), $verwaist));
 
-/** Umfang einer Sicherung als eine Zeile — nur Zahlen, nie Inhalte (A8.7). */
-function umfang_text(array $p): string
-{
-    $z = $p['umfang'] ?? null;
-    $teile = [];
-    if (is_array($z)) {
-        $teile[] = (int)($z['einsaetze'] ?? 0) . ' Einsätze';
-        $teile[] = (int)($z['diensttage'] ?? $z['flugtage'] ?? 0) . ' Diensttage';
-        $teile[] = (int)($z['ruhezeiten'] ?? 0) . ' Ruhezeiten';
-        /* „davon im Papierkorb" (E-S1-02). Seit Nutzlast 7 steht der
-         * Papierkorb in jeder Sicherung und zaehlt in den drei Zahlen oben
-         * MIT. Ohne diesen Zusatz waere aus „87 Einsätze" nicht zu erkennen,
-         * dass fünf davon geloescht sind.
-         *
-         * Fehlt der Block (Sicherungen vor S1), wird NICHTS angezeigt statt
-         * einer Null: Eine Null behauptete „nichts im Papierkorb", richtig ist
-         * „nicht erhoben". */
-        $pk = $z['papierkorb'] ?? null;
-        if (is_array($pk)) {
-            $summe = (int)($pk['einsaetze'] ?? 0) + (int)($pk['diensttage'] ?? 0)
-                   + (int)($pk['ruhezeiten'] ?? 0);
-            $tag = (int)($pk['diensttage'] ?? 0);
-            $teile[] = $summe === 0
-                ? 'nichts im Papierkorb'
-                : 'davon im Papierkorb: ' . (int)($pk['einsaetze'] ?? 0) . ' Einsätze, '
-                  . $tag . ($tag === 1 ? ' Diensttag, ' : ' Diensttage, ')
-                  . (int)($pk['ruhezeiten'] ?? 0) . ' Ruhezeiten';
-        }
-    }
-    $teile[] = number_format($p['groesse'] / 1024, 0, ',', '.') . ' KB';
-    return implode(', ', $teile);
-}
-
-function zeitpunkt_text(?string $iso): string
-{
-    if (!$iso) { return 'unbekannt'; }
-    try { return fmt_local(str_replace(['T', 'Z'], [' ', ''], $iso), 'd.m.Y H:i'); }
-    catch (Throwable) { return $iso; }
-}
+/* Zielkonten für das Einspielen einer Sicherung ohne Konto. Eine Abfrage,
+ * kein Dateizugriff — und nur nötig, wenn es überhaupt verwaiste Ordner gibt. */
+$konten = $verwaist
+    ? db()->query('SELECT id, email FROM users ORDER BY email')->fetchAll()
+    : [];
 
 ui_seite_start(['titel' => 'Sicherungen']);
-ui_topbar('einstellungen');
 ?>
 
-<div class="layout">
-  <?php ui_settings_sidebar('admin_sicherungen'); ?>
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_sicherungen']); ?>
 
-<main class="page">
-  <h1>Sicherungen</h1>
+  <form method="post" id="f-alle" hidden
+        data-confirm="Für alle Konten eine Sicherung erzeugen? Das dauert — je Konto wird der ganze Bestand gelesen und eine Datei geschrieben. Was in einem Durchgang nicht fertig wird, bleibt offen; ein zweiter Klick macht dort weiter."
+        data-confirm-ok="Alle sichern" data-confirm-tone="normal">
+    <?= csrf_field() ?><input type="hidden" name="action" value="sichern_alle">
+  </form>
+
+  <?php ui_titelzeile([
+      'titel' => 'Sicherungen',
+      'unter' => 'Regeln für alle Konten. Die Sicherungen einzelner Konten liegen auf '
+               . 'deren Kontoseite unter <a href="admin_users.php">NutzerInnen</a>.',
+      'aktionen' => ui_knopf(['text' => 'Alle sichern', 'symbol' => 'sicherung',
+                              'art' => 'primaer', 'attr' => ' form="f-alle"']),
+  ]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
   <?php if (!$ablageBereit): ?>
-    <p class="alert"><?= e((string)$ablageGrund) ?></p>
+    <?= ui_meldung_markup('fehler', (string)$ablageGrund) ?>
   <?php endif; ?>
 
   <?php /* Rückmeldung nach der Rückspielung (E22). Die übersprungenen Einträge
            stehen NACH GRÜNDEN GETRENNT da: Wer eine Wiederherstellung beurteilen
-           muss, braucht den Unterschied zwischen "war schon da" (gut) und
-           "Aufbau unbrauchbar" (schlecht). Eine einzige Zahl beantwortet die
+           muss, braucht den Unterschied zwischen „war schon da" (gut) und
+           „Aufbau unbrauchbar" (schlecht). Eine einzige Zahl beantwortet die
            Frage nicht, die man in diesem Moment hat. */ ?>
   <?php if ($bericht !== null): ?>
-    <div class="keybox">
-      <strong>Ergebnis der Rückspielung</strong>
-      <p class="muted">Eine Rückspielung <strong>ergänzt</strong>, sie ersetzt nicht.
-         Bereits vorhandene Einträge bleiben unverändert und werden übersprungen.</p>
-      <pre class="small"><?= e(json_encode($bericht, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></pre>
-    </div>
+    <?= ui_meldung_markup('ok', 'Eingespielt: '
+        . (int)($bericht['days'] ?? 0) . ' Diensttage, '
+        . (int)($bericht['missions'] ?? 0) . ' Einsätze, '
+        . (int)($bericht['rest_segments'] ?? 0) . ' Ruhezeiten. '
+        . 'Ergänzt, nicht ersetzt — Vorhandenes bleibt stehen.') ?>
+    <p class="codeblock"><?= e(json_encode($bericht, JSON_UNESCAPED_UNICODE)) ?></p>
   <?php endif; ?>
 
-  <p class="muted">Sicherungen entstehen <strong>ausschliesslich hier und von Hand</strong>.
-     Es gibt keinen Zeitplan — auf diesem Webspace läuft kein Cron. Je Konto werden
-     höchstens <?= EDBAK_MAX_JE_KONTO ?> Sicherungen aufbewahrt; die vierte verdrängt
-     die älteste. Nach Alter wird <strong>nie</strong> etwas entfernt.</p>
+  <?php /* ---- Vier Zahlen, zwei davon ein Weg ---------------------------- */ ?>
+  <div class="kennzahl-raster kennzahl-raster-4">
+    <?= ui_kennzahl(['wert' => number_format($zahlen['konten'], 0, ',', '.'),
+                     'label' => 'Konten', 'href' => 'admin_users.php']) ?>
+    <?= ui_kennzahl(['wert' => number_format($ablage['pakete'], 0, ',', '.'),
+                     'label' => 'Pakete · ' . edbak_groesse_text($ablage['bytes'])
+                              . ' in der Ablage']) ?>
+    <?= ui_kennzahl(['wert' => (string)$zahlen['ueberfaellig'],
+                     'label' => 'überfällig · Liste öffnen',
+                     'ton' => $zahlen['ueberfaellig'] > 0 ? 'orange' : '',
+                     'href' => 'admin_users.php?f=ueberfaellig']) ?>
+    <?= ui_kennzahl(['wert' => (string)$zahlen['nie'],
+                     'label' => 'nie gesichert · Liste öffnen',
+                     'ton' => $zahlen['nie'] > 0 ? 'rot' : '',
+                     'href' => 'admin_users.php?f=nie']) ?>
+  </div>
 
-  <p class="muted">Administration sieht zu keinem Zeitpunkt Klartext der geschützten
-     Angaben. In der Sicherung stecken sie als Chiffretext, genau wie in der
-     Datenbank — lesbar werden sie erst im Browser der NutzerIn.</p>
+  <div class="form-raster">
+  <div class="form-spalte">
 
-  <?php /* ---- Erinnerung (A8.4) ------------------------------------------
-     * Muster wie die Wartungswarnung in update.php: erst sagen, was ist, dann
-     * was daraus folgt. Ein Hinweis ohne Handlungsanweisung erzeugt nur
-     * Unbehagen. */ ?>
-  <h2>Erinnerung</h2>
-  <?php if ($erinnerung['letzte'] === null): ?>
-    <p class="alert alert-warn">Es wurde noch <strong>nie</strong> eine Sicherung
-       erzeugt.</p>
-  <?php elseif ($erinnerung['faellig']): ?>
-    <p class="alert alert-warn">Letzte Sicherung vor
-       <strong><?= (int)$erinnerung['tage'] ?> Tagen</strong>
-       (<?= e((string)$erinnerung['letzte']) ?>) — das eingestellte Intervall von
-       <?= (int)$erinnerung['intervall'] ?> Tagen ist überschritten.</p>
-  <?php else: ?>
-    <p class="muted">Letzte Sicherung: <strong><?= e((string)$erinnerung['letzte']) ?></strong>
-       (vor <?= (int)$erinnerung['tage'] ?> Tagen). Intervall:
-       <?= (int)$erinnerung['intervall'] ?> Tage.</p>
-  <?php endif; ?>
-  <form method="post" class="settings-form">
-    <?= csrf_field() ?><input type="hidden" name="action" value="intervall">
-    <label>Erinnern nach (Tage)
-      <input type="number" name="tage" min="1" max="3650"
-             value="<?= (int)$erinnerung['intervall'] ?>"></label>
-    <button class="btn-primary">Intervall speichern</button>
-  </form>
+    <?php /* ---- Regeln ---------------------------------------------------- */ ?>
+    <?php ui_karte_start(['titel' => 'Regeln']); ?>
+      <form method="post">
+        <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'tage', 'label' => 'Erinnerung nach', 'art' => 'number',
+                         'wert' => (string)edbak_intervall(),
+                         'attr' => 'min="1" max="3650"',
+                         'klein' => 'Tagen. Konten, deren letzte Sicherung älter ist, '
+                                  . 'gelten als überfällig.']); ?>
+          <?php ui_feld(['name' => 'pakete', 'label' => 'Aufbewahrung je Konto',
+                         'art' => 'number', 'wert' => (string)edbak_aufbewahrung(),
+                         'attr' => 'min="1" max="100"',
+                         'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
+                                  . 'gelöscht — die jüngste und eine freigegebene nie.']); ?>
+        </div>
+        <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
+                           'an' => edbak_admin_mail_an(),
+                           'klein' => 'Liste der überfälligen Konten, höchstens einmal '
+                                    . 'je Woche und nur, wenn es etwas zu melden gibt.']); ?>
+        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+      </form>
+      <p class="feld-hinweis"><strong>Es gibt keinen Zeitplan.</strong> Auf diesem
+         Webspace läuft kein Cron; was regelmäßig geschieht, fährt auf dem täglichen
+         Aufräumjob mit, und der startet bei der ersten Anfrage des Tages. Die
+         Erinnerung kommt deshalb, sobald die Anwendung nach Ablauf der Woche
+         wieder benutzt wird — wird sie zwei Wochen nicht angefasst, kommt die
+         Mail zwei Wochen später. Sicherungen selbst entstehen ausschließlich von
+         Hand: hier über „Alle sichern", auf der Kontoseite je Konto oder über
+         die Auswahl in der NutzerInnen-Liste.</p>
+    <?php ui_karte_ende(); ?>
 
-  <hr class="sep">
-  <h2>Konten</h2>
+  </div><?php /* .form-spalte (links) */ ?>
+  <div class="form-spalte">
 
-  <form method="post">
-    <?= csrf_field() ?>
-    <table class="data">
-      <thead><tr>
-        <th></th><th>Konto</th><th>Sicherungen</th><th class="actions">Aktionen</th>
-      </tr></thead>
-      <tbody>
-      <?php foreach ($u['konten'] as $k): ?>
-        <tr>
-          <td><input type="checkbox" name="auswahl[]" value="<?= (int)$k['user_id'] ?>"></td>
-          <td>
-            <strong><?= e($k['name'] ?: '—') ?></strong><br>
-            <span class="muted small"><?= e($k['email']) ?></span>
-            <?php if (!$k['kennung_ok']): ?>
-              <br><span class="muted small">Ohne Kontokennung — bitte die Wartung
-                 aufrufen und die Migration ausführen.</span>
+    <?php /* ---- Ablage ---------------------------------------------------- */ ?>
+    <?php ui_karte_start(['titel' => 'Ablage']); ?>
+      <?php
+      ui_zeile(['text' => 'Pfad', 'klein' => edbak_wurzel()]);
+      ui_zeile(['text' => 'Zustand',
+                'plaketten' => $ablageBereit
+                    ? ui_plakette('bereit · beschreibbar', ['ton' => 'blau'])
+                    : ui_plakette('nicht bereit', ['ton' => 'rot'])]);
+      ui_zeile(['text' => 'Letzte Sicherung',
+                'klein' => $letzte ? fmt_local($letzte . ' 00:00:00', 'd.m.Y') : 'noch keine',
+                'plaketten' => $letzte ? '' : ui_plakette('nie', ['ton' => 'rot'])]);
+      ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage']);
+      ?>
+      <p class="feld-hinweis">Die Ablage liegt außerhalb der Auslieferung und wird beim
+         Aufspielen einer neuen Fassung nicht angefasst. Sie ist über den Browser nicht
+         erreichbar: eine <code>.htaccess</code> sperrt sie, und der Ordnername je Konto
+         ist nicht zu erraten.</p>
+    <?php ui_karte_ende(); ?>
+
+    <?php /* ---- Sicherungen ohne Konto ------------------------------------
+         Zugeklappt: Im Regelfall ist die Karte leer, und eine Liste, die
+         meistens nichts enthält, soll nicht die halbe Seite einnehmen. Die
+         Vorschau im Kopf sagt, ob es sich lohnt. */ ?>
+    <?php ui_karte_start(['titel' => 'Sicherungen ohne Konto',
+                          'vorschau' => $verwaist
+                              ? $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket' : ' Pakete')
+                              : 'keine']); ?>
+      <p class="feld-hinweis">Ordner, zu denen es kein Konto mehr gibt — der Fall
+         „Konto gelöscht und neu aufgesetzt". Sie überleben die Löschung mit Absicht;
+         genau dafür sind sie da. Einspielen geht nur in ein bestehendes Konto, und
+         weicht die Kontokennung ab, ist der Weg die <strong>Freigabe</strong>: Die
+         geschützten Angaben öffnet nur der Wiederherstellungsschlüssel der Person,
+         und der liegt ausschließlich bei ihr.</p>
+
+      <?php if (!$verwaist): ?>
+        <p class="feld-hinweis">Zurzeit keine.</p>
+      <?php endif; ?>
+
+      <?php foreach ($verwaist as $v):
+        $handgriff = edbak_handgriff((string)$v['account_key']);
+        $titel = $v['lesbar'] && $v['email'] ? (string)$v['email'] : 'Herkunft unbekannt'; ?>
+        <div class="sd-liste">
+          <p class="sd-titel"><?= e($titel) ?>
+            <span class="sd-zahl"><?= count($v['pakete']) ?></span>
+            <?php if (!$v['lesbar']): ?>
+              <?= ui_plakette('Begleitdatei nicht lesbar', ['ton' => 'orange']) ?>
             <?php endif; ?>
-          </td>
-          <td>
-            <?php if (!$k['pakete']): ?>
-              <span class="muted">keine</span>
-            <?php else: ?>
-              <ul class="small">
-              <?php foreach ($k['pakete'] as $p): ?>
-                <li><?= e(zeitpunkt_text($p['erzeugt'])) ?> — <?= e(umfang_text($p)) ?></li>
-              <?php endforeach; ?>
-              </ul>
+            <?php if ($v['freigabe']): ?>
+              <?= ui_plakette('freigegeben', ['ton' => 'blau']) ?>
             <?php endif; ?>
-            <?php if ($k['freigabe']): ?>
-              <p class="muted small">Freigegeben für ein Zielkonto, noch nicht eingelöst.</p>
-            <?php endif; ?>
-          </td>
-          <td class="actions">
-            <?php /* Der Knopf gehoert ueber form= zum eigenen Formular weiter
-                     unten, obwohl er in der Auswahlliste steht: Innerhalb des
-                     Auswahlformulars wuerde er dessen Kaestchen mitsenden, und
-                     "Jetzt sichern" in Zeile 3 hiesse dann in Wahrheit
-                     "Zeile 3 und alles Angekreuzte". */ ?>
-            <button class="btn-primary" form="sichern-<?= (int)$k['user_id'] ?>">Jetzt sichern</button>
-          </td>
-        </tr>
+          </p>
+          <?php foreach ($v['pakete'] as $p):
+            $zeit = edbak_zeitpunkt_text($p['erzeugt']);
+            ui_zeile([
+              'text'  => $zeit,
+              'klein' => edbak_umfang_text($p),
+              'aktionen' => ui_zeilenaktionen(['titel' => $zeit, 'eintraege' => [
+                  ['text' => 'Einspielen', 'href' => '#',
+                   'attr' => ' data-dialog="dlg-einspielen"'
+                           . ' data-w-handgriff="' . e($handgriff) . '"'
+                           . ' data-w-datei="' . e((string)$p['datei']) . '"'
+                           . ' data-w-zeit="' . e($zeit) . '"'],
+                  ['text' => 'Löschen', 'art' => 'gefahr', 'href' => '#',
+                   'attr' => ' data-dialog="dlg-paket-weg"'
+                           . ' data-w-handgriff="' . e($handgriff) . '"'
+                           . ' data-w-datei="' . e((string)$p['datei']) . '"'
+                           . ' data-w-zeit="' . e($zeit) . '"'
+                           . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
+                           . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"'],
+              ]]),
+            ]);
+          endforeach; ?>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Ganzen Ordner löschen', 'symbol' => 'korb',
+                          'art' => 'gefahr', 'typ' => 'button',
+                          'attr' => ' data-dialog="dlg-ordner-weg"'
+                                  . ' data-w-handgriff="' . e($handgriff) . '"'
+                                  . ' data-w-titel="' . e($titel) . '"'
+                                  . ' data-w-soll="' . e((string)($v['email'] ?? '')) . '"'
+                                  . ' data-w-unlesbar="' . ($v['lesbar'] ? '' : '1') . '"']) ?>
+          </div>
+        </div>
       <?php endforeach; ?>
-      </tbody>
-    </table>
-    <p>
-      <button class="btn-primary" name="action" value="sichern_auswahl">Auswahl sichern</button>
-      <button class="btn-plain" name="action" value="sichern_alle"
-              data-confirm="Für alle Konten eine Sicherung erzeugen?"
-              data-confirm-ok="Alle sichern" data-confirm-tone="normal">Alle sichern</button>
-    </p>
-  </form>
+    <?php ui_karte_ende(true); ?>
 
-  <?php foreach ($u['konten'] as $k): ?>
-    <form method="post" id="sichern-<?= (int)$k['user_id'] ?>" hidden>
-      <?= csrf_field() ?><input type="hidden" name="action" value="sichern">
-      <input type="hidden" name="user_id" value="<?= (int)$k['user_id'] ?>">
-    </form>
-  <?php endforeach; ?>
+  </div><?php /* .form-spalte (rechts) */ ?>
+  </div><?php /* .form-raster */ ?>
 
-  <hr class="sep">
-  <h2>Sicherungen einspielen</h2>
-  <p class="muted">Eine Rückspielung <strong>ergänzt</strong>, sie ersetzt nicht:
-     Bereits vorhandene Einträge bleiben unverändert. Vor jedem Einspielen ist die
-     E-Mail-Adresse des <strong>Zielkontos</strong> abzutippen — das Risiko ist nicht
-     Datenverlust, sondern das Einspielen fremder Daten in ein falsches Konto.</p>
-
+  <?php if ($verwaist): ?>
+  <?php /* ---- Dialoge (assets/dialog.js) ---------------------------------- */ ?>
   <?php
-  /* Alle Pakete beider Abschnitte in einer Liste: Die Entscheidung „direkt
-     einspielen oder freigeben" hängt am Vergleich der Kennungen und nicht
-     daran, in welchem Abschnitt die Sicherung steht. */
-  $alle = [];
-  foreach ($u['konten'] as $k) {
-      foreach ($k['pakete'] as $p) {
-          $alle[] = ['kennung' => $k['account_key'], 'paket' => $p,
-                     'herkunft' => $k['email'], 'verwaist' => false,
-                     'lesbar' => true, 'freigabe' => $k['freigabe']];
-      }
-  }
-  foreach ($u['verwaist'] as $v) {
-      foreach ($v['pakete'] as $p) {
-          $alle[] = ['kennung' => $v['account_key'], 'paket' => $p,
-                     'herkunft' => $v['email'], 'verwaist' => true,
-                     'lesbar' => $v['lesbar'], 'freigabe' => $v['freigabe']];
-      }
-  }
+  /* Das Auswahlfeld der Zielkonten steht in beiden Dialogen. Es ist eine
+     Abfrage über `users` — bei dreihundert Konten dreihundert Zeilen in einem
+     Auswahlfeld, was gerade noch geht. Ein Suchfeld dafür wäre ein eigener
+     Baustein; er entsteht, wenn er gebraucht wird. */
+  $zielwahl = ['' => '— Konto wählen —'];
+  foreach ($konten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }
   ?>
-
-  <?php /* ---- EINE TABELLE STATT EINER KACHEL JE SICHERUNG (Web 7.0.0) -----
-     *
-     * Vorher stand hier je Sicherung ein Kasten mit Herkunftszeile, einem
-     * vollständigen Einspiel-Formular (Zielkonto, Bestätigungsfeld, zwei
-     * Schaltflächen, Erläuterung) und einem Lösch-Formular. Bei fünf Konten mit
-     * je drei Sicherungen waren das fünfzehn solcher Kästen — mehrere
-     * Bildschirmseiten, auf denen fünfzehnmal dasselbe stand und die eine
-     * gesuchte Zeile nicht zu finden war.
-     *
-     * Jetzt: eine Zeile je Sicherung mit dem, was man zum Suchen braucht
-     * (Zeitpunkt, Herkunft, Umfang, Zustand). Die Formulare stecken in einem
-     * aufklappbaren Feld dahinter — sie erscheinen für die EINE Sicherung, mit
-     * der man gerade etwas tun will.
-     *
-     * NICHTS AN DEN SICHERUNGEN SELBST ÄNDERT SICH: Dieselben Formulare,
-     * dieselben Bestätigungen, dieselbe Abtippregel für die Zielkonto-Adresse.
-     * Die Rückfragen sind der Schutz vor dem Einspielen in ein falsches Konto,
-     * und der wird durch eine Umgestaltung nicht weicher. */ ?>
-  <?php if (!$alle): ?>
-    <p class="muted">Es liegt noch keine Sicherung vor.</p>
-  <?php else: ?>
-    <table class="data sictab">
-      <thead><tr>
-        <th>Zeitpunkt</th><th>Herkunft</th><th>Umfang</th><th>Zustand</th><th class="th-act">Aktionen</th>
-      </tr></thead>
-      <tbody>
-      <?php foreach ($alle as $e):
-            /* Härte der Löschbestätigung nach E24: Bleibt danach noch eine
-               weitere Sicherung desselben Kontos, ist die Löschung folgenlos. */
-            $weitere = count(array_filter($alle, static fn($x) => $x['kennung'] === $e['kennung'])) > 1;
-            $hart = !$weitere || $e['verwaist'];
-            $unlesbar = $hart && !$e['lesbar']; ?>
-        <tr>
-          <td class="mono"><?= e(zeitpunkt_text($e['paket']['erzeugt'])) ?></td>
-          <td><?php if ($e['lesbar'] && $e['herkunft']): ?>
-                <?= e((string)$e['herkunft']) ?>
-              <?php else: ?>
-                <em class="muted">unbekannt — Begleitdatei nicht lesbar</em>
-              <?php endif; ?></td>
-          <td class="muted small"><?= e(umfang_text($e['paket'])) ?></td>
-          <td class="small"><?php
-                $zustand = [];
-                if ($e['verwaist']) { $zustand[] = '<strong>verwaist</strong>'; }
-                if ($e['freigabe']) { $zustand[] = 'freigegeben'; }
-                if ($hart)          { $zustand[] = 'letzte dieses Kontos'; }
-                echo $zustand ? implode(' · ', $zustand) : '<span class="muted">—</span>'; ?></td>
-          <td class="th-act">
-            <details class="zeilenmenu">
-              <summary class="btn-plain">Einspielen / Löschen</summary>
-              <div class="zeilenmenu-inhalt">
-                <?php if ($e['verwaist']): ?>
-                  <p class="muted small">Zu dieser Sicherung existiert kein Konto
-                     mehr (Fall „Konto gelöscht und neu aufgesetzt").</p>
-                <?php endif; ?>
-                <form method="post" class="settings-form">
-                  <?= csrf_field() ?>
-                  <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
-                  <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
-                  <label>Zielkonto
-                    <select name="ziel_user" required>
-                      <option value="">— bitte wählen —</option>
-                      <?php foreach ($konten as $z): ?>
-                        <option value="<?= (int)$z['id'] ?>"><?= e($z['email']) ?></option>
-                      <?php endforeach; ?>
-                    </select></label>
-                  <label>Zur Bestätigung die E-Mail-Adresse des Zielkontos abtippen
-                    <input type="text" name="confirm_email" autocomplete="off" required></label>
-                  <p>
-                    <button class="btn-primary" name="action" value="einspielen"
-                            data-confirm="Sicherung in das gewählte Konto einspielen? Vorhandene Einträge bleiben unverändert."
-                            data-confirm-ok="Einspielen" data-confirm-tone="normal">Einspielen</button>
-                    <button class="btn-plain" name="action" value="freigeben"
-                            data-confirm="Sicherung für das gewählte Konto freigeben? Die NutzerIn spielt sie dann selbst mit ihrem Wiederherstellungsschlüssel ein."
-                            data-confirm-ok="Freigeben" data-confirm-tone="normal">Für NutzerIn freigeben</button>
-                  </p>
-                  <p class="muted small">Stimmt die Kennung im Paket mit der des Zielkontos
-                     überein, lässt sich unmittelbar einspielen. Weicht sie ab, ist das
-                     gesperrt — dann ist die Freigabe der Weg: Die geschützten Angaben sind
-                     mit einem Inhaltsschlüssel verschlüsselt, den nur der
-                     Wiederherstellungsschlüssel öffnet, und der liegt ausschliesslich bei
-                     der NutzerIn.</p>
-                </form>
-
-                <form method="post" class="settings-form"
-                      data-confirm="Diese Sicherung endgültig löschen? Es gibt keinen Papierkorb."
-                      data-confirm-ok="Löschen">
-                  <?= csrf_field() ?><input type="hidden" name="action" value="paket_loeschen">
-                  <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($e['kennung'])) ?>">
-                  <input type="hidden" name="datei" value="<?= e($e['paket']['datei']) ?>">
-                  <input type="hidden" name="hart" value="<?= $hart ? '1' : '0' ?>">
-                  <input type="hidden" name="unlesbar" value="<?= $unlesbar ? '1' : '0' ?>">
-                  <input type="hidden" name="soll_email" value="<?= e((string)($e['herkunft'] ?? '')) ?>">
-                  <?php if ($hart && !$unlesbar): ?>
-                    <label>Letzte Sicherung dieses Kontos — zur Bestätigung die
-                           E-Mail-Adresse <strong><?= e((string)$e['herkunft']) ?></strong> abtippen
-                      <input type="text" name="confirm_email" autocomplete="off" required></label>
-                  <?php elseif ($unlesbar): ?>
-                    <label class="check"><input type="checkbox" name="confirm_unlesbar" value="ja" required>
-                      Ich bestätige, dass eine <strong>nicht mehr zuordenbare</strong> Sicherung
-                      endgültig entfernt wird.</label>
-                  <?php endif; ?>
-                  <button class="btn-red">Sicherung löschen</button>
-                </form>
-              </div>
-            </details>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php endif; ?>
-
-  <hr class="sep">
-  <h2>Verwaiste Sicherungen</h2>
-  <p class="muted">Ordner, zu deren Kennung kein Konto mehr existiert — der Fall
-     „Konto gelöscht und neu aufgesetzt". Ein Ordner lässt sich hier vollständig
-     entfernen; das ist der einzige Weg, ihn loszuwerden.</p>
-
-  <?php if (!$u['verwaist']): ?>
-    <p class="muted">Keine.</p>
-  <?php else: ?>
-    <?php foreach ($u['verwaist'] as $v): ?>
-      <div class="keybox">
-        <?php if ($v['lesbar'] && $v['email']): ?>
-          <strong><?= e($v['name'] ?: '—') ?></strong>
-          <span class="muted">(<?= e((string)$v['email']) ?>)</span>
-        <?php else: ?>
-          <strong>Ordner ohne lesbare Begleitdatei</strong>
-          <p class="muted small">Name und Adresse sind nicht bekannt. Der Ordner wird
-             hier trotzdem aufgeführt — stillschweigend zu übergehen, was man nicht
-             zuordnen kann, ist die schlechtere Auskunft.</p>
-        <?php endif; ?>
-        <p class="muted small"><?= count($v['pakete']) ?>
-           <?= count($v['pakete']) === 1 ? 'Sicherung' : 'Sicherungen' ?></p>
-        <?php if ($v['freigabe']): ?>
-          <form method="post" class="settings-form">
-            <?= csrf_field() ?><input type="hidden" name="action" value="widerrufen">
-            <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($v['account_key'])) ?>">
-            <p class="muted small">Für ein Zielkonto freigegeben, noch nicht eingelöst.</p>
-            <button class="btn-plain">Freigabe widerrufen</button>
-          </form>
-        <?php endif; ?>
-        <form method="post" class="settings-form"
-              data-confirm="Alle Sicherungen dieses Ordners endgültig löschen?"
-              data-confirm-ok="Endgültig löschen">
-          <?= csrf_field() ?><input type="hidden" name="action" value="ordner_loeschen">
-          <input type="hidden" name="handgriff" value="<?= e(edbak_handgriff($v['account_key'])) ?>">
-          <input type="hidden" name="hart" value="1">
-          <input type="hidden" name="unlesbar" value="<?= $v['lesbar'] ? '0' : '1' ?>">
-          <input type="hidden" name="soll_email" value="<?= e((string)($v['email'] ?? '')) ?>">
-          <?php if ($v['lesbar'] && $v['email']): ?>
-            <label>Zur Bestätigung die E-Mail-Adresse
-                   <strong><?= e((string)$v['email']) ?></strong> abtippen
-              <input type="text" name="confirm_email" autocomplete="off" required></label>
-          <?php else: ?>
-            <label class="check"><input type="checkbox" name="confirm_unlesbar" value="ja" required>
-              Ich bestätige, dass eine <strong>nicht mehr zuordenbare</strong> Sicherung
-              endgültig entfernt wird.</label>
-          <?php endif; ?>
-          <button class="btn-red">Ordner vollständig löschen</button>
-        </form>
+  <dialog class="dialog" id="dlg-einspielen">
+    <form method="post">
+      <?= csrf_field() ?>
+      <input type="hidden" name="handgriff" data-fuell="handgriff">
+      <input type="hidden" name="datei" data-fuell="datei">
+      <div class="dialog-kopf"><h2>Sicherung ohne Konto einspielen</h2></div>
+      <div class="dialog-inhalt">
+        <p>Paket <strong data-fuell="zeit"></strong>. Eingespielt wird
+           <strong>ergänzend</strong>: Vorhandenes im Zielkonto bleibt stehen.</p>
+        <?php
+        ui_feld(['name' => 'ziel_user', 'label' => 'Zielkonto', 'art' => 'select',
+                 'optionen' => $zielwahl, 'pflicht' => true]);
+        ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Zielkontos',
+                 'pflicht' => true, 'attr' => 'autocomplete="off"',
+                 'klein' => 'Zur Bestätigung abtippen — geprüft wird das Ziel, '
+                          . 'nicht die Herkunft.']);
+        ?>
+        <p class="feld-hinweis">Stimmt die Kontokennung im Paket mit der des Zielkontos
+           überein, lässt sich unmittelbar einspielen. Weicht sie ab und enthält das
+           Paket geschützte Angaben, ist das gesperrt — dann ist die Freigabe der Weg.</p>
       </div>
-    <?php endforeach; ?>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-dialog-zu']) ?>
+        <?= ui_knopf(['text' => 'Freigeben', 'art' => 'neutral',
+                      'name' => 'action', 'wert' => 'freigeben']) ?>
+        <?= ui_knopf(['text' => 'Einspielen', 'art' => 'primaer',
+                      'name' => 'action', 'wert' => 'einspielen']) ?>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog" id="dlg-paket-weg">
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="paket_loeschen">
+      <input type="hidden" name="handgriff" data-fuell="handgriff">
+      <input type="hidden" name="datei" data-fuell="datei">
+      <input type="hidden" name="soll_email" data-fuell="soll">
+      <input type="hidden" name="unlesbar" data-fuell="unlesbar">
+      <div class="dialog-kopf"><h2>Sicherung löschen</h2></div>
+      <div class="dialog-inhalt">
+        <p>Paket <strong data-fuell="zeit"></strong> endgültig entfernen. Zu diesem
+           Paket gibt es kein Konto mehr, das es neu erzeugen könnte.</p>
+        <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse der Herkunft',
+                       'attr' => 'autocomplete="off"',
+                       'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
+                                . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']); ?>
+        <label><input type="checkbox" name="confirm_unlesbar" value="ja">
+          Ich entferne eine Sicherung, die sich keinem Konto mehr zuordnen lässt.</label>
+      </div>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-dialog-zu']) ?>
+        <?= ui_knopf(['text' => 'Löschen', 'art' => 'gefahr']) ?>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog" id="dlg-ordner-weg">
+    <form method="post">
+      <?= csrf_field() ?><input type="hidden" name="action" value="ordner_loeschen">
+      <input type="hidden" name="handgriff" data-fuell="handgriff">
+      <input type="hidden" name="soll_email" data-fuell="soll">
+      <input type="hidden" name="unlesbar" data-fuell="unlesbar">
+      <div class="dialog-kopf"><h2>Ganzen Ordner löschen</h2></div>
+      <div class="dialog-inhalt">
+        <p><strong data-fuell="titel"></strong> — <strong>alle</strong> Sicherungen dieses
+           Ordners endgültig entfernen. Danach ist von diesem Konto nichts mehr da.</p>
+        <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse der Herkunft',
+                       'attr' => 'autocomplete="off"',
+                       'klein' => 'Zur Bestätigung abtippen. Ist die Begleitdatei nicht '
+                                . 'lesbar, gibt es keine Adresse — dann genügt der Haken.']); ?>
+        <label><input type="checkbox" name="confirm_unlesbar" value="ja">
+          Ich entferne eine Sicherung, die sich keinem Konto mehr zuordnen lässt.</label>
+      </div>
+      <div class="dialog-fuss">
+        <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button',
+                      'attr' => ' data-dialog-zu']) ?>
+        <?= ui_knopf(['text' => 'Ordner löschen', 'art' => 'gefahr']) ?>
+      </div>
+    </form>
+  </dialog>
   <?php endif; ?>
 
-  <?php ui_footer(); ?>
-  </main>
-</div>
-<?php /* confirm.js liefert ui_footer() (ui.php) auf jeder Seite. Hier stand es
-         ein zweites Mal — und zwei Kopien hoeren beide zu, jede oeffnet ihren
-         eigenen Dialog. Jede Rueckfrage dieser Seite erschien doppelt. */ ?>
-<?php ui_seite_ende(); ?>
+<?php ui_geruest_ende(); ?>
+<?php ui_seite_ende(['skripte' => ['assets/dialog.js']]); ?>

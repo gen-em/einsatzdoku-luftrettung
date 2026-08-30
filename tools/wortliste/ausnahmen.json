@@ -17,13 +17,6 @@
       "begruendung": "Die zehn Kacheln des Luftrettungs-Reiters behalten ihre Flugterminologie (E32, bestaetigt in E-P2-04). Der Reiter ist per Definition luftgebunden; „Flugtage\" ist dort die richtige Beschriftung, nicht die bequeme."
     },
     {
-      "id": "luftrettungs-reiter",
-      "datei": "server/zeitraum.php",
-      "zeile": "tab-air|>Luftrettung<",
-      "klasse": "F",
-      "begruendung": "Name des Reiters in der Zeitraumuebersicht. Er bezeichnet die Einsatzart, nicht das Produkt."
-    },
-    {
       "id": "rollenkatalog-db",
       "datei": "server/db.php",
       "zeile": "'label'\\s*=>\\s*'(Pilot|HEMS-TC|Flugretter)",
@@ -292,6 +285,139 @@
       "datei": "docs/Branding.md",
       "klasse": "E",
       "begruendung": "Die Bildmarke ist ein Hubschrauber; Branding.md beschreibt sie. Das Logo und seine Beschreibung aendert P3 (NEF-Bildmarke, Nutzerwahl) — eine Beschreibung zu neutralisieren, waehrend das Bild ein Hubschrauber ist, waere eine Unwahrheit."
+    },
+    {
+      "id": "symbolname-hubschrauber",
+      "datei": "server/diensttag_lib.php",
+      "zeile": "'symbol'\\s*=>\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Der Wert benennt eine DATEI, die einen Hubschrauber zeigt (assets/images/symbole/hubschrauber.svg) — nicht die Einsatzart. Die Einsatzart steht in derselben Zeile daneben und heisst 'luftgebunden'. Ein Bild eines Hubschraubers anders zu benennen waere keine neutrale Sprache, sondern eine falsche Beschriftung (P3/O2, E-P3-18)."
+    },
+    {
+      "id": "symbolname-hubschrauber-js",
+      "datei": "server/assets/missiontable.js",
+      "zeile": "symbol:\\s*'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Rueckfallliste zu dt_art_symbole(); dieselbe Begruendung wie dort — der Wert benennt die Symboldatei, nicht die Einsatzart."
+    },
+    {
+      "id": "handbuch-artzeichen",
+      "datei": "docs/Handbuch.md",
+      "zeile": "ein Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Das Handbuch beschreibt, WIE das Artzeichen aussieht: ein Hubschrauber steht fuer luftgebunden, ein Rettungswagen fuer bodengebunden. Beide Arten sind in derselben Zeile gleichrangig genannt (E-P2-14); das Wort bezeichnet die Zeichnung, nicht den Einsatz."
+    },
+    {
+      "id": "technik-logodateien",
+      "datei": "docs/Technik.md",
+      "zeile": "je Hubschrauber und Fahrzeug",
+      "klasse": "Homonym",
+      "begruendung": "Verzeichnisbaum: Es liegen zwei Logodateien, eine mit einem Hubschrauber und eine mit einem Fahrzeug. Der Satz nennt beide gleichrangig und beschreibt Dateien, nicht Einsatzarten."
+    },
+    {
+      "id": "logowahl-standard",
+      "datei": "server/session_lib.php",
+      "zeile": "LOGO_STANDARD_VORGABE = 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Seit O9c ist der Standard der Installation einstellbar (Wartung); dies ist nur noch die Vorbelegung, solange nichts gesetzt wurde."
+    },
+    {
+      "id": "logowahl-liste",
+      "datei": "server/session_lib.php",
+      "zeile": "LOGO_WAHLEN = \\['', 'hubschrauber', 'fahrzeug', 'wechselnd'\\]",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Liste nennt beide Werte nebeneinander."
+    },
+    {
+      "id": "logowahl-wuerfel",
+      "datei": "server/session_lib.php",
+      "zeile": "random_int\\(0, 1\\) === 1 \\? 'fahrzeug' : 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Der Wuerfel entscheidet zwischen genau diesen beiden."
+    },
+    {
+      "id": "logowahl-standardlesen",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$v === 'fahrzeug' \\|\\| \\$v === 'hubschrauber'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Diese Zeile liest den in der Wartung gesetzten Standard der Installation (O9c) und laesst beide Werte gleichrangig zu."
+    },
+    {
+      "id": "logowahl-pruefung",
+      "datei": "server/session_lib.php",
+      "zeile": "\\$w === 'hubschrauber' \\|\\| \\$w === 'fahrzeug'",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Pruefung laesst beide Werte gleichrangig zu."
+    },
+    {
+      "id": "logowahl-standardname",
+      "datei": "server/einstellungen.php",
+      "zeile": "\\$standardName = LOGO_STANDARD",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Zeile nennt beide Bezeichnungen als die zwei moeglichen."
+    },
+    {
+      "id": "logowahl-option",
+      "datei": "server/einstellungen.php",
+      "zeile": "'hubschrauber' => \\['text' => 'Hubschrauber \\(RTH\\)'\\]",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Wert benennt, WELCHES BILD gewaehlt ist — beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Die Beschriftung der Wahlmoeglichkeit; die Zeile darunter nennt das Fahrzeug."
+    },
+    {
+      "id": "handbuch-logowahl-zwei",
+      "datei": "docs/Handbuch.md",
+      "zeile": "bringt zwei Logos mit — einen Hubschrauber und ein Fahrzeug",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart."
+    },
+    {
+      "id": "handbuch-logowahl-zeile",
+      "datei": "docs/Handbuch.md",
+      "zeile": "\\*\\*Hubschrauber \\(RTH\\)\\*\\* \\| immer der Hubschrauber",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet ausdruecklich zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile darunter nennt das Fahrzeug."
+    },
+    {
+      "id": "handbuch-logostandard-vorher",
+      "datei": "docs/Handbuch.md",
+      "zeile": "stattdessen immer den Hubschrauber, gleich wie der Standard",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Der Halbsatz erklaert den Fund F-P3-AN: Bis Web 9.9.0 zeigte die Anmeldeseite immer dasselbe BILD, statt dem eingestellten Standard zu folgen. Ohne die Nennung waere nicht gesagt, was falsch war."
+    },
+    {
+      "id": "technik-logostandard-appstate",
+      "datei": "docs/Technik.md",
+      "zeile": "`logo_standard` = Logo dieser Installation",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile der Tabellenuebersicht nennt den WERT des Schluessels `app_state.logo_standard` und beide Moeglichkeiten nebeneinander."
+    },
+    {
+      "id": "technik-logostandard-vorgabe",
+      "datei": "docs/Technik.md",
+      "zeile": "`LOGO_STANDARD_VORGABE` in `session_lib.php`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile nennt die Vorbelegung der Logo-Wahl, solange die Installation nichts gesetzt hat — ein Bildname, keine Einsatzart."
+    },
+    {
+      "id": "technik-logostandard-wahl",
+      "datei": "docs/Technik.md",
+      "zeile": "`hubschrauber`, `fahrzeug`, `wechselnd`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt das BILD, nicht die Einsatzart. Die Zeile zaehlt die vier moeglichen Werte von `users.logo_wahl` auf; Hubschrauber und Fahrzeug stehen darin gleichrangig nebeneinander."
+    },
+    {
+      "id": "technik-logowahl-spalte",
+      "datei": "docs/Technik.md",
+      "zeile": "sonst `hubschrauber` / `fahrzeug` / `wechselnd`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt den WERT der Wahl, nicht die Einsatzart."
+    },
+    {
+      "id": "technik-logowahl-aufloesen",
+      "datei": "docs/Technik.md",
+      "zeile": "ein `hubschrauber` oder `fahrzeug`",
+      "klasse": "Homonym",
+      "begruendung": "Die Logo-Wahl aus E-P3-20 bietet zwei Logos an: Hubschrauber (RTH) und Fahrzeug (NEF). Der Satz nennt beide gleichrangig und beschreibt den WERT der Wahl, nicht die Einsatzart."
     }
   ]
 }

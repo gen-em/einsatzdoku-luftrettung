@@ -114,14 +114,26 @@ function dt_datum_lesbar(string $tag): string
  * naechsten Symbolwechsel auseinanderlaufen (dieselbe Ueberlegung wie bei
  * CREW_ROLES, Befund P9).
  *
- * @return array<string,array{zeichen:string,text:string}>
+ * SEIT P3/O2 STEHT HIER EIN DATEINAME, KEIN EMOJI (E-P3-18). Die beiden
+ * Emoji fuer Hubschrauber und Rettungswagen wurden je Betriebssystem in
+ * anderer Zeichnung, Farbe und Groesse gerendert und liessen sich weder
+ * faerben noch auf Kontrast pruefen — und in
+ * Tagesleiste, Tabellen und Rettungsmittel-Auswahl waren sie die einzige
+ * Artauskunft neben dem Tooltip. Jetzt verweist `symbol` auf eine Datei unter
+ * assets/images/symbole/; ausgegeben wird sie mit ui_symbol() in PHP und
+ * edSymbol() in JavaScript.
+ *
+ * `text` ist damit nicht weniger wichtig, sondern mehr: In einem <option>
+ * laesst sich kein SVG unterbringen — dort steht seither das WORT.
+ *
+ * @return array<string,array{symbol:string,text:string}>
  */
 function dt_art_symbole(): array
 {
     return [
-        'air'    => ['zeichen' => '🚁', 'text' => 'luftgebunden'],
-        'ground' => ['zeichen' => '🚑', 'text' => 'bodengebunden'],
-        ''       => ['zeichen' => '◌',  'text' => 'ohne Zuordnung'],
+        'air'    => ['symbol' => 'hubschrauber',   'text' => 'luftgebunden'],
+        'ground' => ['symbol' => 'fahrzeug',       'text' => 'bodengebunden'],
+        ''       => ['symbol' => 'ohne-zuordnung', 'text' => 'ohne Zuordnung'],
     ];
 }
 
@@ -136,7 +148,7 @@ function dt_art_symbole(): array
  * Die Textalternative ist Pflicht, nicht Zierde: Ohne sie haengt die Auskunft
  * allein an der Grafik.
  *
- * @return array{zeichen:string,text:string}
+ * @return array{symbol:string,text:string}
  */
 function dt_art_symbol(?string $kind): array
 {
