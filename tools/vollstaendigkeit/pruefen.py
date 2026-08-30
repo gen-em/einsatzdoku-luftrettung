@@ -196,7 +196,17 @@ def pruefung_klassen(bericht):
             vorher.add(z)
 
     jetzt_css = css_klassen(lies(CSS)) if os.path.exists(CSS) else set()
-    streich = {z[0].strip('`') for z in liste_lesen('streichliste.md', 3)}
+    streich_zeilen = liste_lesen('streichliste.md', 3)
+    streich = {z[0].strip('`') for z in streich_zeilen}
+    # ZWEI SORTEN AUF EINER LISTE (O11). Die meisten Eintraege sind Klassen,
+    # die aus dem Markup VERSCHWINDEN — ihr Vorkommen dort waere ein Rest.
+    # Einige wenige aber bleiben mit Absicht stehen: Skriptanker (`ac-form`,
+    # `rollehaken`) und Behaelter ohne eigene Gestaltung (`form-spalte`). Sie
+    # tragen im Grund den Vermerk `[bleibt]`; ohne diese Unterscheidung
+    # meldete die Pruefung unten sie als Rest und waere nach dem dritten Mal
+    # nichts wert.
+    bleibt = {z[0].strip('`') for z in streich_zeilen
+              if len(z) > 1 and z[1].lstrip().startswith('[bleibt]')}
 
     ohne = sorted(k for k in vorher if k not in jetzt_css and k not in streich)
     doppelt = sorted(k for k in vorher if k in jetzt_css and k in streich)
@@ -213,6 +223,18 @@ def pruefung_klassen(bericht):
     bericht.zahl('1 Klassen', 'Klassen im Markup (als Literal belegt)', len(sicher))
     bericht.befund('1 Klassen', 'im Markup, aber ohne Regel und ohne Streichung',
                    ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3])) for k in verwaist])
+    # DER BLINDE FLECK (O11): Eine Klasse, die GESTRICHEN ist und trotzdem noch
+    # im Markup steht, fiel bisher durch jedes Netz — `verwaist` schliesst sie
+    # ausdruecklich aus (`k not in streich`), und `ohne` sieht nur die
+    # Sollmenge. Die Streichliste behauptet dann, etwas sei ersetzt, und das
+    # Markup sagt das Gegenteil; die Zahl „im Markup ohne Regel" liest sich
+    # dabei als vollstaendiger Beleg, ist aber keiner.
+    noch_da = sorted(k for k in sicher
+                     if k in streich and k not in jetzt_css and k not in bleibt)
+    bericht.befund('1 Klassen', 'auf der Streichliste, aber noch im Markup',
+                   ['%s  (%s)' % (k, ', '.join(sorted(sicher[k])[:3])) for k in noch_da])
+    bericht.zahl('1 Klassen', 'davon ausdruecklich [bleibt] (Skriptanker, Behaelter)',
+                 len([k for k in sicher if k in bleibt]))
     unbenutzt = sorted(k for k in jetzt_css
                        if k not in sicher and k not in vermutet)
     bericht.hinweis('1 Klassen', 'Regel im Stylesheet, im Markup nicht gefunden', unbenutzt)

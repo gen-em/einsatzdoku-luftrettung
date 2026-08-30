@@ -896,7 +896,7 @@ declare(strict_types=1);
  *
  * DREI FUNDE AUS DIESEM PAKET:
  *
- *   F-P3-AS  `<div class="login-wrap">` in pw_handling.php war seit jeher
+ *   F-P3-AS  Das div mit der Klasse `login-wrap` in pw_handling.php war
  *            NICHT GESCHLOSSEN (drei <div>, zwei </div>) und hatte im neuen
  *            Stylesheet keine Regel. Es stand zwischen `.anmeldung-body` und
  *            `<main class="anmeldung">`; damit war main kein direktes

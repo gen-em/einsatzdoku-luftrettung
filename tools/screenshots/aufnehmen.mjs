@@ -289,8 +289,24 @@ async function platzhalter() {
 const PLATZ = await platzhalter();
 
 /* ---- Bedienschritte vor der Aufnahme -------------------------------------- */
-async function vorher(seite, schritte) {
+/* EIN UNBEKANNTER SCHRITT IST EIN FEHLER, kein Achselzucken (O11).
+ *
+ * Diese Funktion hatte kein `else`: Wer `"vorher": ["dialog"]` in die
+ * Seitenliste schrieb, bekam anstandslos acht Bilder OHNE Dialog und einen
+ * Bericht „0 Ueberlauf, 0 Konsolenfehler". Dieselbe Falle wie F-P3-AH
+ * (Seite ohne Parameter), F-P3-AQ (verlorene Sitzung) und F-P3-AV (falscher
+ * Statuscode) — zum vierten Mal, und jedes Mal ist das Muster dasselbe: Das
+ * Werkzeug tut etwas anderes als bestellt und meldet Erfolg.
+ *
+ * Rueckgabe: null bei Erfolg, sonst der Fehlertext. */
+async function vorher(seite, schritte, fehlerSammler) {
+  const BEKANNT = ['schublade'];
   for (const schritt of schritte || []) {
+    if (!BEKANNT.includes(schritt)) {
+      fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
+                       + BEKANNT.join(', '));
+      continue;
+    }
     if (schritt === 'schublade') {
       /* Die Schublade gibt es nur unter 1024 px — darueber steht die Leiste
          fest daneben, und der Menueknopf ist ausgeblendet. Ein Klick darauf
@@ -423,7 +439,7 @@ for (const eintrag of liste) {
     if (!hin.abbruch) {
       try {
         await seite.waitForTimeout(eintrag.karte ? 900 : 400);
-        await vorher(seite, eintrag.vorher);
+        await vorher(seite, eintrag.vorher, rolle.fehler);
         await seite.waitForTimeout(150);
       } catch (e) {
         rolle.fehler.push('laden: ' + e.message);

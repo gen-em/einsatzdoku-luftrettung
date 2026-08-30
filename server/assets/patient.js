@@ -153,7 +153,7 @@
   /**
    * Setzt oder entfernt den Hinweis auf unlesbare Datensaetze.
    *
-   * Legt das Hinweisfeld bei Bedarf als erstes Kind von <main class="page">
+   * Legt das Hinweisfeld bei Bedarf als erstes Kind von `main.inhalt`
    * an, damit jede Seite es bekommt, ohne dass ihr Aufbau angefasst werden
    * muss.
    */
