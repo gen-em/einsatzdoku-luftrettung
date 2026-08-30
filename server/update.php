@@ -1640,15 +1640,25 @@ if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['action'] ?? '') === 'logo_standard') {
     csrf_check();
     $wahl = (string)($_POST['logo'] ?? '');
-    if ($wahl !== 'hubschrauber' && $wahl !== 'fahrzeug') {
+    /* „wechselnd" ist seit Web 9.14.0 auch fuer die INSTALLATION waehlbar
+     * (F-N1-C). Es war nur im Profil da — und eine Installation, die beide
+     * Rettungsmittel fuehrt, hat denselben Grund dafuer wie eine einzelne
+     * Person. Die Aufloesung liegt in logo_standard_aufgeloest(). */
+    $namen = ['hubschrauber' => 'Hubschrauber (RTH)',
+              'fahrzeug'     => 'Fahrzeug (NEF)',
+              'wechselnd'    => 'wechselnd'];
+    if (!isset($namen[$wahl])) {
         $logoMeldung = ['fehler', 'Unbekannte Logo-Wahl — es wurde nichts geändert.'];
     } else {
         $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')
             ->execute(['logo_standard', $wahl]);
-        $logoMeldung = ['ok', 'Standard der Installation: '
-            . ($wahl === 'fahrzeug' ? 'Fahrzeug (NEF)' : 'Hubschrauber (RTH)')
-            . '. Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.'];
+        $logoMeldung = ['ok', 'Standard der Installation: ' . $namen[$wahl]
+            . ($wahl === 'wechselnd'
+               ? '. Je Anmeldung wird neu gewürfelt — innerhalb einer Sitzung '
+                 . 'bleibt das Logo stehen.'
+               : '.')
+            . ' Wer im Profil keine eigene Wahl getroffen hat, sieht das ab sofort.'];
     }
 }
 
@@ -2021,11 +2031,14 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
       <?php ui_segment(['name' => 'logo', 'id' => 'logo-standard',
                         'wert' => logo_standard(),
                         'optionen' => ['hubschrauber' => 'Hubschrauber (RTH)',
-                                       'fahrzeug'     => 'Fahrzeug (NEF)']]); ?>
+                                       'fahrzeug'     => 'Fahrzeug (NEF)',
+                                       'wechselnd'    => 'wechselnd']]); ?>
       <p class="feld-hinweis">Der <strong>Standard dieser Installation</strong>. Er gilt für
          die Anmeldeseite und für jedes Konto, das im Profil keine eigene Wahl getroffen
          hat — eine getroffene Wahl bleibt unberührt. Die Änderung wirkt sofort, auch für
-         bereits angemeldete Konten.</p>
+         bereits angemeldete Konten. <strong>Wechselnd</strong> würfelt je Anmeldung neu;
+         innerhalb einer Sitzung bleibt das Logo stehen, damit es beim Blättern nicht
+         springt.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Standard speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>

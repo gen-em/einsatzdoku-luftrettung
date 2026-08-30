@@ -270,9 +270,13 @@ const EdMissionTable = (() => {
     { key: 'start', kopf: 'Beginn',                thClass: '',
       wert: m => m.start_hhmm,
       zelle: m => `<td>${m.start_hhmm}</td>` },
+    /* NOWRAP STATT UMBRUCH (F-N1-G). „1h 06min" passte nicht in die Spalte
+       und brach nach der Stunde um — eine Dauer auf zwei Zeilen liest sich
+       wie zwei Angaben. Die Spalte richtet sich jetzt nach ihrem laengsten
+       Wert; das kostet in der Breite weniger als der Umbruch an Klarheit. */
     { key: 'dur',   kopf: 'Dauer',                 thClass: 'zahl-spalte',
       wert: m => m.duration_s == null ? -1 : m.duration_s,
-      zelle: m => `<td class="zahl-spalte">${zelleDauer(m.duration_s)}</td>` },
+      zelle: m => `<td class="zahl-spalte zeit-spalte">${zelleDauer(m.duration_s)}</td>` },
     { key: 'site',  kopf: 'Einsatzort',            thClass: '',
       wert: m => (m._ort || '').toLowerCase(),
       zelle: (m, ctx) => zelleGeschuetzt(m, m._ort, ctx && ctx.hervor) },
@@ -293,13 +297,19 @@ const EdMissionTable = (() => {
       nurWenn: liste => liste.some(m => m.bergwacht),
       wert: m => m.bergwacht ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.bergwacht ? HAKEN() : ''}</td>` },
-    { key: 'sec',   kopf: 'Sekundär<br>Transport', thClass: 'haken-spalte',
+    /* WEICHES TRENNZEICHEN STATT <br> (F-N1-G). „Sekundaertransport" ist EIN
+       Wort; das harte <br> trennte es ohne Bindestrich in zwei
+       („Sekundaer Transport"), und genau so las es sich auch. `&shy;` laesst
+       den Browser entscheiden: Passt es in eine Zeile, steht es in einer;
+       muss er trennen, setzt er den Bindestrich dazu. Dasselbe bei
+       „Fehleinsatz". */
+    { key: 'sec',   kopf: 'Sekundär&shy;transport', thClass: 'haken-spalte',
       wert: m => m.secondary ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.secondary ? HAKEN() : ''}</td>` },
     /* Fehleinsatz (E17, seit Web 6.1.0 erfassbar). Wie Winde und Bergwacht
        datengetrieben: Der Haken steht beiden Arten offen, gesetzt ist er
        selten, und eine Spalte voller leerer Zellen liest sich als Mangel. */
-    { key: 'fehl',  kopf: 'Fehl<br>einsatz',       thClass: 'haken-spalte',
+    { key: 'fehl',  kopf: 'Fehl&shy;einsatz',       thClass: 'haken-spalte',
       nurWenn: liste => liste.some(m => m.false_alarm),
       wert: m => m.false_alarm ? 1 : 0,
       zelle: m => `<td class="haken-spalte">${m.false_alarm ? HAKEN() : ''}</td>` },

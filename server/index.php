@@ -814,16 +814,21 @@ function vehicleBaseSync(){
 function zeigeTagLese(meta){
   const lese = document.getElementById('taglese');
   const zeilen = [];
-  const zeile = (dt, dd, doppelt) => zeilen.push(
-    '<div class="tagfeld' + (doppelt ? ' tagfeld-doppelt' : '') + '"><dt>'
+  /* `doppelt` = mobil ausblenden (steht schon in der Unterzeile des Titels).
+     `breit`   = ab 720 px ueber BEIDE Rasterspalten (F-N1-E): Die Besatzung
+                 ist eine Aufzaehlung aus bis zu sieben Rollen und brach in
+                 der halben Breite um, obwohl daneben nichts stand. */
+  const zeile = (dt, dd, doppelt, breit) => zeilen.push(
+    '<div class="tagfeld' + (doppelt ? ' tagfeld-doppelt' : '')
+    + (breit ? ' tagfeld-breit' : '') + '"><dt>'
     + esc(dt) + '</dt><dd>' + esc(dd) + '</dd></div>');
   if (meta) {
-    if (meta.base_name)    { zeile('Standort', meta.base_name, true); }
-    if (meta.vehicle_name) { zeile('Rettungsmittel', meta.vehicle_name, true); }
+    if (meta.base_name)    { zeile('Standort', meta.base_name, true, false); }
+    if (meta.vehicle_name) { zeile('Rettungsmittel', meta.vehicle_name, true, false); }
     const crew = (meta.crew || []).filter(c => c.name)
       .map(c => c.label + ' ' + c.name).join(' · ');
-    if (crew)        { zeile('Besatzung', crew, false); }
-    if (meta.notes)  { zeile('Notizen', meta.notes, false); }
+    if (crew)        { zeile('Besatzung', crew, false, true); }
+    if (meta.notes)  { zeile('Notizen', meta.notes, false, true); }
   }
   lese.innerHTML = zeilen.length ? zeilen.join('')
     : '<p class="tag-lese-leer">Noch keine Angaben — über „Bearbeiten" nachtragen.</p>';

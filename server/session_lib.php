@@ -195,7 +195,7 @@ function logo_standard(): string
         $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
         $st->execute(['logo_standard']);
         $v = (string)$st->fetchColumn();
-        if ($v === 'fahrzeug' || $v === 'hubschrauber') { $wert = $v; }
+        if ($v === 'fahrzeug' || $v === 'hubschrauber' || $v === 'wechselnd') { $wert = $v; }
     } catch (Throwable) {
         // Keine Datenbank, keine Tabelle, kein Eintrag: Vorbelegung.
     }
@@ -250,6 +250,36 @@ function logo_sitzung_setzen(?string $wahl): void
  * zwei getrennte Abfragen waeren zwei Gelegenheiten, es auseinanderlaufen
  * zu lassen.
  */
+/**
+ * Der Installationsstandard, aufgeloest auf ein tatsaechliches Logo.
+ *
+ * WARUM NICHT logo_standard() DIREKT (F-N1-C): Seit die Installation selbst
+ * „wechselnd" waehlen kann, ist ihr Standard nicht mehr zwangslaeufig ein
+ * Dateiname. Wuerde logo_stamm() den Rohwert weiterreichen, faelle
+ * „wechselnd" durch jede Abfrage und landete stumm beim Hubschrauber — die
+ * Einstellung waere da und taete nichts.
+ *
+ * DER WUERFEL FAELLT JE SITZUNG, nicht je Seitenaufruf. Sonst spraenge das
+ * Logo beim Blaettern, und Kopfleiste und Favicon koennten auseinanderlaufen
+ * — dieselbe Regel, die fuer die persoenliche Wahl gilt (logo_sitzung_setzen).
+ *
+ * DER ADMINWECHSEL WIRKT TROTZDEM SOFORT: Gemerkt wird nur das Ergebnis des
+ * Wuerfelns. Steht in `app_state` etwas anderes als „wechselnd", gilt das
+ * unmittelbar und der gemerkte Wurf bleibt unbeachtet liegen.
+ */
+function logo_standard_aufgeloest(): string
+{
+    $std = logo_standard();
+    if ($std !== 'wechselnd') { return $std; }
+    if (!isset($_SESSION)) { return logo_aufloesen('wechselnd'); }
+    $gemerkt = (string)($_SESSION['logo_standard_wurf'] ?? '');
+    if ($gemerkt !== 'hubschrauber' && $gemerkt !== 'fahrzeug') {
+        $gemerkt = logo_aufloesen('wechselnd');
+        $_SESSION['logo_standard_wurf'] = $gemerkt;
+    }
+    return $gemerkt;
+}
+
 function logo_stamm(): string
 {
     /* In der Sitzung steht die WAHL, nicht immer das Ergebnis: „wechselnd"
@@ -257,6 +287,6 @@ function logo_stamm(): string
      * damit ein Wechsel des Installationsstandards sofort wirkt und nicht
      * erst nach der naechsten Anmeldung (siehe logo_sitzung_setzen). */
     $w = (string)($_SESSION['logo_wahl'] ?? '');
-    $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard();
+    $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard_aufgeloest();
     return $auf === 'fahrzeug' ? 'gen-em_logo_fahrzeug' : 'gen-em_logo_helicopter';
 }

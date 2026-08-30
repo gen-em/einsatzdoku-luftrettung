@@ -2335,9 +2335,14 @@ ui_seite_start(['titel' => 'Einstellungen']);
              Das Gerät erscheint nach der Kopplung unten in der Liste.</p>
         </div>
       <?php endif; ?>
+      <?php /* Der Knopf steht im `.listen-form-fuss` wie jeder andere Knopf am
+               Ende eines Formulars (Design.md 9.0). Vorher stand er blank im
+               <form> und klebte am Absatz darüber (F-N1-O). */ ?>
       <form method="post" action="einstellungen.php?t=geraete">
         <?= csrf_field() ?><input type="hidden" name="action" value="pair_code">
-        <?= ui_knopf(['text' => 'Kopplungscode erzeugen', 'art' => 'primaer']) ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Kopplungscode erzeugen', 'art' => 'primaer']) ?>
+        </div>
       </form>
     <?php ui_karte_ende(); ?>
 

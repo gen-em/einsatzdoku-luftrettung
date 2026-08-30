@@ -290,7 +290,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-87 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+88 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -351,10 +351,10 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-1` | `12px` | 7 |  |
+| `--groesse-1` | `12px` | 6 |  |
 | `--groesse-2` | `13px` | 34 |  |
-| `--groesse-3` | `15px` | 7 |  |
-| `--groesse-4` | `16px` | 8 |  |
+| `--groesse-3` | `15px` | 8 |  |
+| `--groesse-4` | `16px` | 10 |  |
 | `--groesse-5` | `19px` | 6 |  |
 | `--groesse-6` | `24px` | 3 |  |
 | `--groesse-titel` | `28px` | 1 |  |
@@ -366,10 +366,10 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 51 |  |
+| `--abstand-1` | `4px` | 53 |  |
 | `--abstand-2` | `8px` | 75 |  |
-| `--abstand-3` | `12px` | 97 |  |
-| `--abstand-4` | `16px` | 52 |  |
+| `--abstand-3` | `12px` | 99 |  |
+| `--abstand-4` | `16px` | 54 |  |
 | `--abstand-5` | `24px` | 15 |  |
 
 **Radien**
@@ -395,6 +395,7 @@ auseinanderlaufen kann.
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
+| `--symbol-klein` | `16px` | 2 | Zusatzzeichen an einer Beschriftung |
 | `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 38 | Haarlinie |
@@ -1121,6 +1122,10 @@ ein echter Fund, kein erfundenes Beispiel:
 |---|---|---|
 | `.meine-klasse{width:0}` auf einem Kästchen | Verliert gegen `input[type=checkbox]` (0,1,1). Kästchen bleibt 20 × 20 px und fängt Klicks ab. | `input[type=checkbox].meine-klasse` (F-P3-AP, F-P3-AZ) |
 | `knopf-gefahr` im Aktionsblatt | `.blatt-zeile` setzt die Schriftfarbe selbst und gewinnt. „Löschen" ist nicht rot. | `blatt-gefahr` (F-P3-AX) |
+| Ein Baustein auf einem `<label>`, der dessen Grundform nicht zurücknimmt | `label` trägt `margin-bottom: --abstand-3`. In einem Rahmen ist das kein Abstand, sondern ein toter Streifen — bei jeder Segmentwahl 12 px (F-N1-L). | `margin:0` im Baustein, und nachmessen |
+| `inset` nach `top` in derselben Regel | `inset` ist die Kurzform für alle vier Seiten und setzt das `top` davor auf `auto` zurück. Die Leiste klebte nicht mehr und lief über die Kopfleiste (F-N1-A). | `inset` zuerst, die einzelne Seite danach |
+| Eine Regel, die denselben Wert setzt wie die Grundform | Sie tut nichts — bis ihre höhere Spezifität einen Baustein schlägt, der etwas anderes will (F-N1-L). | Löschen. Eine Dublette ist nie harmlos |
+| Einen `z-index` aus einem anderen Zustand stehen lassen | `.leiste` brauchte 60 als Schublade und behielt es als Rasterspalte — über der Kopfleiste (40). | In jedem Zustand den nötigen Wert setzen, auch den zurücknehmenden |
 | `data-confirm` **und** `data-dirty-track` am selben Formular | Der Browser fragt nach der bestätigten Rückfrage ein zweites Mal. | `confirm.js` sagt dem Dirty-Tracking ab (F-P3-AY) |
 | `ui_speichern_leiste()` ohne `assets/forms.js` | Die Leiste erscheint **nie** — ohne jede Fehlermeldung. | `ui_seite_ende(['skripte' => ['assets/forms.js']])` |
 | eine Klasse ohne Regel im Stylesheet | Das Element ist ungestaltet, und niemand merkt es. Der Export-Knopf war so vier Monate lang 23 px hoch. | Vollständigkeitsprüfung lesen, nicht nur zählen (F-P3-BA) |
@@ -1200,6 +1205,15 @@ Gestaltungsänderung ist das Ergebnis keine Null, sondern eine Liste.** Sie
 wird gegen die Liste der geplanten Änderungen gehalten; jede Abweichung
 darüber hinaus ist unbeabsichtigt und wird geklärt, bevor committet wird.
 
+**Und kein Prüfmittel sieht, wie es aussieht.** Die vierzehn Punkte der ersten
+Rückmeldungsrunde nach P3 (Web 9.14.0) sind allesamt durch jedes Werkzeug
+gelaufen: kein Überlauf, kein Konsolenfehler, kein Knopf ≠ 44 px, alle Werte
+aus den Token. Vier davon waren echte Fehler — eine Leiste, die über die
+Kopfleiste malt; ein toter Streifen unter *jeder* Segmentwahl; ein
+verschwundenes Schloss; eine Einstellung, die nichts tat. Was sie gemeinsam
+haben: Sie brechen nichts. **Die Prüfmittel sichern die Untergrenze, nicht die
+Gestalt** — dafür braucht es einen Menschen, der hinsieht.
+
 **Eine grüne Zahl ist erst dann ein Beleg, wenn sie das Gemessene benennt.**
 Der Bilderlauf meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten
 die Anmeldeseite (F-P3-AQ). Und die Knopfhöhenmessung sucht `.knopf`: Ein
@@ -1236,4 +1250,5 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 9.14.0** | Erste Rückmeldungsrunde nach P3. Neues Token `--symbol-klein` (16 px). Fünf neue Anti-Muster in 9.16, alle aus echten Funden dieser Runde. Kopfleiste: Wortzeichen „Gen-EM Einsatzdoku", Logo 34 px. Segmenttasten ohne geerbten Rand. Neue Regeln: `.symbol-schutz`, `.tagfeld-breit`, `.vehkind`, `.sd-liste`, `.loc-widget`. |
 | **Web 9.13.0 (P3/O12)** | Erstfassung. Ersetzt `docs/Branding.md`. Farben, Schriften und Logo-Regeln von dort übernommen; die Abbildung auf CSS-Variablen (dort Abschnitt 1.3, mit `--ink`, `--navy`, `--accent`, `--muted`) ist entfallen — diese Token gibt es seit Web 9.0.0 nicht mehr. Die offenen Punkte B1 (Logo trägt nicht die Markenwerte), B2 (keine geschlossene Größenskala) und B3 (78 Hexwerte) sind **erledigt** und in 2.5, 5 und 6 als solche vermerkt. |

@@ -304,6 +304,7 @@
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --suchfeld:48px;                     /* das große Suchfeld */
+  --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
   --symbol:20px;                       /* Symbolgröße in der Zeile */
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
@@ -532,6 +533,17 @@ img,svg,video{max-width:100%;height:auto}
  * zwei Zustände — kein zweites Symbol. */
 .symbol-gefuellt{fill:currentColor}
 
+/* Das Schloss an der Beschriftung eines verschlüsselten Feldes (F-N1-B). Es
+ * steht NEBEN dem Wort, nicht davor: Die Beschriftung ist die Auskunft, das
+ * Zeichen der Zusatz. Kleiner als ein gewöhnliches Symbol und in der Farbe
+ * der Beschriftung — es soll gefunden werden, wenn man danach sucht, und
+ * nicht auffallen, wenn man es nicht tut. */
+.symbol-schutz{
+  width:var(--symbol-klein);height:var(--symbol-klein);
+  margin-left:var(--abstand-1);
+  vertical-align:baseline;
+}
+
 /* ---- Nur für Screenreader ------------------------------------------------
  * Text, der gelesen, aber nicht gezeigt wird. Braucht jeder Symbolknopf, der
  * keine sichtbare Beschriftung trägt. */
@@ -593,7 +605,10 @@ img,svg,video{max-width:100%;height:auto}
   min-width:0;flex:1 1 auto;
 }
 .kopf-marke:hover{text-decoration:none}
-.kopf-marke img{height:26px;width:auto;flex:0 0 auto}
+/* 34 px statt 26 (F-N1-D). Die Bildmarke ist das einzige Bild der Kopfleiste
+ * und war darin das kleinste Element — kleiner als die Schrift daneben.
+ * 34 px lassen in der 56 px hohen Leiste oben und unten je 11 px Luft. */
+.kopf-marke img{height:34px;width:auto;flex:0 0 auto}
 .kopf-name{
   font-family:var(--schrift-kopf);font-weight:600;
   font-size:var(--groesse-5);line-height:1;
@@ -676,8 +691,14 @@ img,svg,video{max-width:100%;height:auto}
   flex:0 0 auto;padding:var(--abstand-2);
   border-top:var(--strich) solid var(--linie);
 }
+/* EINE STUFE GRÖSSER (F-N1-K). Mit 12 px war die Überschrift der Leiste das
+ * kleinste Element darin — kleiner als die Gruppen, die sie überschreibt, und
+ * kleiner als jede Beschriftung darunter. Eine Überschrift, die von allem
+ * überragt wird, das sie ordnet, ordnet nichts. 13 px, weiterhin
+ * versalgesetzt und gesperrt: Sie soll den Bereich benennen, nicht mit den
+ * Gruppentiteln konkurrieren. */
 .leiste-kopfzeile{
-  font-family:var(--schrift-kopf);font-size:var(--groesse-1);
+  font-family:var(--schrift-kopf);font-size:var(--groesse-2);
   font-weight:600;letter-spacing:.08em;text-transform:uppercase;
   color:var(--gedaempft);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
@@ -731,13 +752,18 @@ img,svg,video{max-width:100%;height:auto}
  *
  * Der Winkel steht in Sand: Er ist Mechanik, keine Botschaft.
  */
+/* GRÖSSER ALS DIE FELDTITEL DARIN (F-N1-K). Beide standen auf 15 px und
+ * unterschieden sich nur durch die Schrift — die Gruppe „Einsatz" war
+ * genauso groß wie „Wochentage" darin, obwohl sie eine Ebene darüber steht.
+ * 16 px, und mit Bricolage dazu ist der Unterschied auch ohne Nachmessen zu
+ * sehen. */
 .akkordeon-zeile{
   display:flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--knopf);
   padding:0 var(--abstand-1) 0 var(--abstand-2);
   border-radius:var(--radius-klein);
   cursor:pointer;list-style:none;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:600;font-size:var(--groesse-4);
   color:var(--dunkelblau);
 }
 .akkordeon-zeile::-webkit-details-marker{display:none}
@@ -1041,12 +1067,22 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   margin-bottom:var(--abstand-3);
 }
 .blatt-liste{display:flex;flex-direction:column}
+/* NORMAL STATT FETT (F-N1-F). Die Einträge standen auf 600 — dasselbe
+ * Gewicht wie ein Kartentitel. In einem Menü, in dem JEDE Zeile so gesetzt
+ * ist, hebt das nichts hervor; es macht nur den ganzen Block schwer.
+ * Unterschieden wird hier ohnehin durch Symbol und Farbe (orange fürs
+ * Anlegen, rot fürs Löschen), nicht durch das Gewicht.
+ *
+ * WARUM NICHT 500 als Mittelweg: Open Sans liegt in 400, 600 und 700 vor —
+ * einen 500er-Schnitt gibt es nicht. Die Angabe fiele still auf 400 zurück,
+ * und im Stylesheet stünde eine Zahl, die nichts bedeutet. Ein vierter
+ * Schriftschnitt wäre eine weitere Datei für einen Menüeintrag. */
 .blatt-zeile{
   display:flex;align-items:center;gap:var(--abstand-3);
   min-height:var(--blatt-zeile);
   padding:0 var(--abstand-3);
   border-radius:var(--radius-klein);
-  color:var(--asphalt);font-weight:600;
+  color:var(--asphalt);font-weight:400;
 }
 .blatt-zeile:hover{background:var(--rauch);text-decoration:none}
 .blatt-zeile .symbol{color:var(--dunkelblau)}
@@ -1151,8 +1187,17 @@ input[type=checkbox].schalter-box{position:absolute;opacity:0;width:0;height:0;m
  * jede Segmentwahl der Anwendung — Zeitraum, Suchfilter, Reiter. */
 input[type=radio].segment-box,
 input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+/* DER RAND MUSS WEG (F-N1-L). Die Taste ist ein `<label>`, und die
+ * Grundformen geben jedem `label` `margin-bottom: --abstand-3` — den Abstand
+ * zum nächsten Feld. Innerhalb des Segmentrahmens ist das kein Abstand,
+ * sondern ein toter Streifen: Der Rahmen war 58 px hoch, die Tasten 44, und
+ * unter ihnen lagen 12 px Leere im Kasten. Betroffen war JEDE Segmentwahl der
+ * Anwendung — Wochentage, Dreiwertfilter, Zeitraum-Reiter, Logo-Wahl.
+ *
+ * Das ist die Falle aus `Design.md` 9.16, in Reinform: Ein Baustein auf einem
+ * Elementnamen, dessen Grundform er nicht zurücknimmt. */
 .segment-taste{
-  flex:1 1 auto;
+  flex:1 1 auto;margin:0;
   display:flex;align-items:center;justify-content:center;
   min-height:var(--knopf);padding:0 var(--abstand-3);
   background:var(--schnee);color:var(--dunkelblau);
@@ -1294,13 +1339,23 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * km) untereinander fluchten — die frühere mono-Klasse entfällt (Mockup 03
  * setzt die Textschrift, keine Schreibmaschine). */
 .tabelle{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+/* SPALTENTITEL ZENTRIERT (F-N1-G). Vorher folgte der Titel der Ausrichtung
+ * seiner Zellen: links über Text, rechts über Zahlen, mittig über Haken —
+ * drei Ausrichtungen in einer Zeile. Der Kopf ist aber keine Zeile der
+ * Daten, sondern ihre Beschriftung; einheitlich zentriert liest er sich als
+ * das, was er ist. Die ZELLEN behalten ihre Ausrichtung: Zahlen fluchten
+ * weiter rechts, Text steht weiter links. */
 .tabelle th{
-  text-align:left;font-weight:600;
+  text-align:center;font-weight:600;
   color:var(--dunkelblau);
   padding:var(--abstand-2) var(--abstand-2);
   border-bottom:var(--strich-stark) solid var(--linie);
   white-space:nowrap;
 }
+/* Die Hakenspalten tragen zusammengesetzte Wörter („Sekundärtransport") mit
+ * weichem Trennzeichen. Sie dürfen umbrechen — sonst wäre die Spalte so
+ * breit wie ihr Titel, obwohl in ihr nur ein Haken steht. */
+.tabelle th.haken-spalte{white-space:normal}
 .tabelle td{
   padding:var(--abstand-3) var(--abstand-2);
   border-bottom:var(--strich) solid var(--linie);
@@ -1465,7 +1520,18 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Markup ist dasselbe; nur diese Regeln unterscheiden sich. */
 @media (min-width:1024px){
   .leiste{
-    position:sticky;top:var(--kopf);inset:auto;
+    /* REIHENFOLGE IST HIER DIE SACHE (F-N1-A). `inset` ist die Kurzform fuer
+       alle vier Seiten und setzt ein davor stehendes `top` wieder auf `auto`.
+       Genau das ist passiert: Die Leiste klebte gar nicht, sondern scrollte
+       mit — bei 600 px Scrollhoehe gemessen auf -544 px, also weit ueber der
+       Kopfleiste. `inset` steht deshalb ZUERST und `top` danach.
+
+       Und der z-index muss zurueck: 60 stammt aus der Schubladen-Regel, wo er
+       ueber dem Schleier liegen muss. Hier liegt die Kopfleiste bei 40 — mit
+       60 malte die Leiste ueber sie. Ab 1024 px ist sie ein Teil des Rasters
+       und braucht gar keine eigene Ebene. */
+    inset:auto;
+    position:sticky;top:var(--kopf);z-index:1;
     width:var(--leiste-schmal);max-width:none;
     height:calc(100vh - var(--kopf));
     transform:none;
@@ -1476,8 +1542,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
   .kopf-menue{display:none}
   .kopf-punkt{display:inline-flex}
   .kopf-nutzer{
-    display:inline;color:var(--sand);
-    font-size:var(--groesse-2);font-weight:400;
+    /* MITTE AUF MITTE (F-N1-D). Beide sitzen als Flex-Kinder in .kopf-marke
+       und sind damit lotrecht zentriert — optisch aber nicht, solange das
+       eine `line-height:1` trägt und das andere die geerbte 1,55: Die höhere
+       Zeilenbox verschiebt die Grundlinie nach unten. Dieselbe Zeilenhöhe
+       für beide, und die Mitten liegen übereinander.
+       15 px statt 13: Der Name ist eine Auskunft, kein Kleingedrucktes. */
+    display:inline-block;color:var(--sand);
+    font-size:var(--groesse-3);font-weight:400;line-height:1;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .nur-schublade{display:none}
@@ -1654,8 +1726,10 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tabelle tr.clickable:focus-visible{outline-offset:calc(var(--strich-stark) * -1)}
 .tabelle td.dash,.tabelle .patfehler{color:var(--gedaempft)}
 .tabelle .patfehler .symbol{color:var(--rot-tief)}
-.tabelle td.zahl-spalte,.tabelle th.zahl-spalte{text-align:right}
-.tabelle td.haken-spalte,.tabelle th.haken-spalte{text-align:center}
+.tabelle td.zahl-spalte{text-align:right}
+.tabelle td.haken-spalte{text-align:center}
+/* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */
+.tabelle td.zeit-spalte{white-space:nowrap}
 
 /* Sortieren-Link im Kartenkopf — nur dort, wo es keine Spaltenköpfe gibt. */
 .karte-sortieren{
@@ -1693,6 +1767,12 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 @media (min-width:720px){
   .tag-lese{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
     gap:0 var(--abstand-5)}
+  /* BESATZUNG UND NOTIZEN UEBER BEIDE SPALTEN (F-N1-E). Standort und
+     Rettungsmittel sind zwei Wörter und teilen sich die Zeile; die Besatzung
+     ist eine Aufzählung aus bis zu sieben Rollen mit Namen und brach in der
+     halben Breite auf zwei bis drei Zeilen um — neben einer leeren rechten
+     Spalte. Notizen sind Fließtext und haben dasselbe Problem. */
+  .tagfeld-breit{grid-column:1 / -1}
 }
 
 /* ---- Das Raster der Tagesübersicht (E-P3-31) -----------------------------
@@ -1967,7 +2047,26 @@ body.map-fs-lock{overflow:hidden}
  * keinen. Steht er danach, ist der Abstand des Feldes schon da. */
 .feld-hinweis + .feld,.feld-hinweis + form{margin-top:var(--abstand-3)}
 
+/* KLEINTEXT GEHOERT ZU DEM FELD UEBER IHM (F-N1-I). `label` traegt
+ * `margin-bottom: --abstand-3` als Abstand zum NAECHSTEN Feld. Folgt ein
+ * `.feld-klein` („Zufahrt, Besonderheiten, Lage vor Ort"), stand der Hinweis
+ * damit 16 px unter seinem eigenen Feld und 4 px ueber dem naechsten — er
+ * las sich als Ueberschrift des folgenden statt als Erlaeuterung des
+ * vorigen. Der Abstand wandert vom Feld hinter den Hinweis. */
+label:has(+ .feld-klein){margin-bottom:0}
+label + .feld-klein{margin-bottom:var(--abstand-3)}
+
 /* ---- Ortsfeld: Feld + Lupe + Pin (E-P3-34) ------------------------------- */
+/* DIESELBE NAEHE WIE UEBERALL SONST (F-N1-I). Beim Muster
+ * `<label>Text <input></label>` liegen 4 px zwischen Beschriftung und Feld
+ * (`label > input{margin-top: --abstand-1}`). Das Ortsfeld kann dieses Muster
+ * nicht benutzen — sein Feld steht in einer Zeile mit Lupe und Pin —, und so
+ * griff nur `label{margin-bottom: --abstand-3}`: 12 px statt 4. „Einsatzort"
+ * hing dadurch zwischen den Feldern, statt zu seinem zu gehoeren. */
+.loc-widget > label{margin-bottom:var(--abstand-1)}
+/* Und der Block als Ganzes braucht den Abstand nach unten, den ein `label`
+ * mitbraechte — sonst klebte „Beschreibung Einsatzort" am Koordinaten-Chip. */
+.loc-widget{margin-bottom:var(--abstand-3)}
 .ortsfeld-zeile{display:flex;gap:var(--abstand-2);align-items:stretch}
 .ortsfeld-zeile input{flex:1 1 auto;min-width:0}
 .ortsfeld-zeile .knopf-symbol{flex:0 0 auto}
@@ -2096,13 +2195,22 @@ button.blatt-zeile{
 .filterzahl{flex:0 0 auto;margin-left:auto}
 .filtergruppe .akkordeon-text{flex:1 1 auto}
 .filterfelder{padding:var(--abstand-2) var(--abstand-3) var(--abstand-4)}
-.filterfelder label{margin-bottom:var(--abstand-3)}
-/* Am UNTEREN Rand ausrichten: „Strecke von (km)" bricht in der schmalen
- * Leiste auf zwei Zeilen, „bis" daneben nicht — ohne diese Zeile stünden die
- * beiden Eingabefelder versetzt. */
+/* HIER STAND `.filterfelder label{margin-bottom:var(--abstand-3)}` — und
+ * setzte damit GENAU DEN WERT, den die Grundform `label` schon setzt. Eine
+ * Regel ohne eigene Wirkung, aber mit höherer Spezifität (0,1,1): Sie schlug
+ * jedes `.segment-taste{margin:0}` (0,1,0) und hielt den toten Streifen unter
+ * den Segmenttasten der Filterleiste fest, nachdem er überall sonst fort war
+ * (F-N1-L). Eine Dublette ist nie harmlos — sie tut nichts, bis sie etwas
+ * verhindert. */
+
 /* Ab 1024 px ist die Segmentwahl inline (E-P3-30) — in der Filterleiste
  * soll sie die Spaltenbreite füllen wie jedes Feld darüber. */
 .filterfelder .segment{display:flex;width:100%}
+/* Am UNTEREN Rand ausrichten — als Netz, nicht als Reparatur: Seit die
+ * Paare „von"/„bis" heißen und ihren Namen über sich tragen (F-N1-J), sind
+ * beide Beschriftungen gleich kurz und stehen ohnehin auf einer Höhe. Bliebe
+ * eine künftig doch einmal länger, stünden die Felder trotzdem nebeneinander
+ * und nicht versetzt. */
 .filterfelder .fld-reihe{gap:0 var(--abstand-2);align-items:end}
 .filterfelder .fld-reihe label{display:flex;flex-direction:column;justify-content:flex-end}
 
@@ -2320,6 +2428,12 @@ input[type=radio].wahl-box{position:absolute;opacity:0;width:0;height:0;min-heig
 @media (max-width:479px){
   .wahl-zeile{flex-wrap:wrap}
   .wahl-zusatz{flex:1 0 100%;padding-left:calc(var(--symbol) + var(--abstand-3))}
+  /* DAS WORTZEICHEN EINE STUFE KLEINER (F-N1-D). „Gen-EM Einsatzdoku" braucht
+     bei 19 px genau 193 px; bei 360 px Fenster bleiben neben Menüknopf, Logo
+     und Zahnrad 187 übrig — sechs zu wenig, und die Marke endete auf einer
+     Ellipse. Bei 16 px sind es 163 px und damit Luft. Die Stufe steht in der
+     Skala; eine Zwischengröße gäbe es dafür nicht. */
+  .kopf-name{font-size:var(--groesse-4)}
 }
 
 /* PASSWORTSTÄRKE als Balken (E-P3-16, Mockup 11). Vier Segmente, gefüllt
@@ -2416,11 +2530,25 @@ h1 + .seiten-erklaerung{margin-top:0}
  * Zielkliniken, weitere Rettungsmittel, Bergwacht). Sie sind Abschnitte,
  * keine eigenen Karten: Zwei Rahmen um dieselbe Sache trennen, was
  * zusammengehört — die zweite Ebene ordnet nur. */
+/* ABSTAND AUCH VOR DER ERSTEN LISTE (F-N1-M). Die Regel setzte den Abstand
+ * nur ZWISCHEN zwei Listen. Steht davor etwas anderes — der Hinweis
+ * „[systemweit] Dieser Standort wird von der Administration gepflegt" —,
+ * klebte die Überschrift „Rettungsmittel" unmittelbar daran. */
+.sd-liste{margin-top:var(--abstand-4)}
+.sd-liste:first-child{margin-top:0}
 .sd-liste + .sd-liste{
   border-top:var(--strich) solid var(--linie);
   margin-top:var(--abstand-5);
   padding-top:var(--abstand-4);
 }
+
+/* ART NEBENEINANDER (F-N1-N). „luftgebunden" und „bodengebunden" sind zwei
+ * Wörter und standen untereinander — zwei Zeilen für eine Entweder-oder-Wahl,
+ * neben der die halbe Formularbreite leer blieb. Sie umbrechen weiterhin,
+ * wenn der Platz nicht reicht. Dieselbe Überlegung wie bei den beiden Haken
+ * des Einsatzformulars („nebeneinander" im Feldkatalog). */
+.vehkind{display:flex;flex-wrap:wrap;gap:0 var(--abstand-4)}
+.vehkind label{margin-bottom:0}
 .sd-titel{
   display:flex;align-items:center;gap:var(--abstand-2);
   font-family:var(--schrift-kopf);font-weight:600;

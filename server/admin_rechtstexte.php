@@ -160,7 +160,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
              f.querySelector('[data-speichern]'). Außerhalb erschiene sie nie,
              ohne Fehlermeldung. */ ?>
     <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
-                               'hinweis' => 'Ungespeicherte Änderungen']); ?>
+                               'hinweis' => 'Es gibt ungespeicherte Änderungen']); ?>
   </form>
 
   <?php /* Die Vorschau zeigt den GESPEICHERTEN Stand. Das ist keine

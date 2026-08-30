@@ -11,6 +11,129 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.14.0] — 2026-08-30
+
+**Die erste Rückmeldungsrunde nach P3.** Vierzehn Punkte aus einer Durchsicht
+mit Bildschirmfotos — und vier Fehler, die dabei ans Licht kamen. Was alle
+verbindet: Kein einziger hätte von einem Prüfmittel gefunden werden können.
+Sie brechen nichts. Sie sehen nur falsch aus. Keine Migration.
+
+### Die Seitenleiste lief über die Kopfleiste
+
+Zwei Fehler in einer Regel, und der erste steckt in vier Zeichen:
+
+```css
+.leiste{ position:sticky; top:var(--kopf); inset:auto; }
+```
+
+`inset` ist die Kurzform für alle vier Seiten. Es setzt das `top` eine Zeile
+davor wieder auf `auto` — die Leiste klebte also gar nicht, sondern scrollte
+mit. Gemessen bei 600 px Scrollhöhe: Sie stand auf **−544 px**. Dazu blieb ihr
+`z-index: 60` aus der Schubladen-Regel stehen, während die Kopfleiste auf 40
+liegt; sie malte darüber statt dahinter. Jetzt steht `inset` **zuerst** und
+`top` danach, und der z-index geht auf 1 zurück — ab 1024 px ist die Leiste
+ein Teil des Rasters und braucht keine eigene Ebene.
+
+### Ein toter Streifen unter jeder Segmentwahl
+
+Die Segmenttaste ist ein `<label>`, und die Grundformen geben jedem `label`
+12 px Abstand nach unten. Innerhalb des Segmentrahmens ist das kein Abstand,
+sondern Leere im Kasten: **Rahmen 58 px, Tasten 44**. Betroffen war *jede*
+Segmentwahl der Anwendung — Wochentage, Dreiwertfilter, Zeitraum-Reiter,
+Logo-Wahl. Das erklärt zwei Rückmeldungen auf einmal („Wochentagauswahl sieht
+komisch aus", „Tabelle passt irgendwie nicht"). Jetzt: **46 px**, also die
+Tasten plus die beiden Haarlinien.
+
+Die zweite Hälfte des Fundes ist die lehrreichere. `.segment-taste{margin:0}`
+allein half nicht — in der Filterleiste stand:
+
+```css
+.filterfelder label{margin-bottom:var(--abstand-3)}
+```
+
+Diese Regel setzt **genau den Wert, den die Grundform `label` schon setzt**.
+Sie tat nichts, außer mit ihrer höheren Spezifität (0,1,1) den Baustein
+(0,1,0) zu schlagen. Eine Dublette ist nie harmlos: Sie tut nichts, bis sie
+etwas verhindert.
+
+### Welches Feld verschlüsselt ist, stand nicht mehr da
+
+Bis O4 trug jedes geschützte Feld ein Schloss-Emoji. O4 hat sie durch **eine**
+Meldung über den Karten ersetzt — und dabei die Auskunft *je Feld* verloren.
+Sie kommt zurück, aber auf der richtigen Ebene:
+
+- In der Karte **PatientIn** ist alles verschlüsselt. Das sagt jetzt eine
+  Plakette am Kartenkopf, einmal.
+- Die drei geschützten Felder der **Einsatz**-Karte (Einsatzort, Beschreibung
+  Einsatzort, Diagnose) stehen zwischen Klartextfeldern und tragen ihr
+  Schloss einzeln — mit `<title>`, damit es auch ein Bildschirmleser nennt.
+
+### „Wechselnd" gibt es jetzt auch für die Installation
+
+Die Wartung kannte zwei Werte. Der dritte war nicht einfach dazuzuschreiben:
+`logo_stamm()` hätte „wechselnd" durchgereicht und wäre stumm beim
+Hubschrauber gelandet — die Einstellung wäre da gewesen und hätte nichts
+getan. Es gibt deshalb `logo_standard_aufgeloest()`, und der Würfel fällt **je
+Sitzung**, nicht je Seitenaufruf; sonst spränge das Logo beim Blättern. Ein
+Adminwechsel wirkt trotzdem sofort: Gemerkt wird nur das *Ergebnis* des
+Würfelns.
+
+### Kopfleiste
+
+Das Wortzeichen heißt **„Gen-EM Einsatzdoku"** (vorher „Einsatzdoku"), das
+Logo wächst von 26 auf **34 px**, und der Kontoname steht auf 15 statt 13 px.
+Er war außerdem nicht wirklich lotrecht zentriert: Das Wortzeichen trug
+`line-height: 1`, der Name die geerbte 1,55 — die höhere Zeilenbox schob seine
+Grundlinie nach unten. Beide auf dieselbe Zeilenhöhe, und die Mitten liegen
+jetzt gemessen **beide auf 28 px**.
+
+Unter 480 px fällt das Wortzeichen auf 16 px: Bei 360 px Fensterbreite
+bräuchte es 193 px und bekommt 187 — sechs zu wenig, und die Marke endete auf
+einer Ellipse.
+
+### Die übrigen Punkte
+
+- **Besatzung und Notizen** laufen ab 720 px über *beide* Rasterspalten. Die
+  Besatzung ist eine Aufzählung aus bis zu sieben Rollen und brach in der
+  halben Breite um — neben einer leeren Spalte. Gemessen: 545 → **1114 px**,
+  eine Zeile.
+- **Das Aktionsmenü** steht auf Gewicht 400 statt 600. Nicht 500 als
+  Mittelweg: Open Sans liegt in 400, 600 und 700 vor — die Angabe wäre still
+  auf 400 gefallen, und im Stylesheet stünde eine Zahl ohne Bedeutung.
+- **Die Einsatztabelle**: Spaltentitel zentriert (die Zellen behalten ihre
+  Ausrichtung), „Dauer" ohne Umbruch, und „Sekundärtransport" und
+  „Fehleinsatz" mit weichem Trennzeichen statt hartem `<br>` — beides ist
+  *ein* Wort, und das `<br>` trennte es ohne Bindestrich.
+- **Die Reanimations-Karte** erscheint nur noch, wenn es eine Sitzung gibt.
+  Sie war die einzige Karte der Einsatzansicht, die leer stehen blieb und
+  „keine" sagte, während jede andere verschwindet.
+- **Im Einsatzformular** hatte das Ortsfeld 12 px zwischen Beschriftung und
+  Feld, jedes andere Feld 4 — „Einsatzort" hing zwischen den Feldern, statt zu
+  seinem zu gehören. Der Kleintext unter einem Feld rückt an dieses heran
+  (vorher 16 px darunter und 4 px über dem nächsten: Er las sich als
+  Überschrift des folgenden). Die Zustandszeile passt in eine Zeile —
+  gemessen 480 von 532 px verfügbarer Breite.
+- **In der Suche** tragen die von/bis-Paare ihren Namen jetzt *über* sich:
+  „Strecke von (km)" brach in der 280 px schmalen Leiste um, „bis" daneben
+  nicht, und die beiden Eingabefelder standen versetzt. Drei weitere Paare
+  waren dabei zu finden, darunter „mit PatientIn von" mit demselben Fehler.
+  Was eine Bildschirmleserin hört, bleibt vollständig — das steht im
+  `aria-label`.
+- **Die Überschrift „FILTER"** war mit 12 px das kleinste Element in der
+  Leiste, die sie ordnet; jetzt 13 px. Die Gruppentitel gehen auf 16 px und
+  stehen damit über den Feldtiteln (15 px), statt gleichauf.
+- **In den Einstellungen** bekommt die erste Stammdatenliste Abstand nach
+  oben (der Hinweis „[systemweit] …" klebte an „Rettungsmittel"),
+  „luftgebunden" und „bodengebunden" stehen nebeneinander statt untereinander,
+  und „Kopplungscode erzeugen" steht im `.listen-form-fuss` wie jeder andere
+  Knopf am Ende eines Formulars.
+
+### Ein neues Token
+
+`--symbol-klein` (16 px) für das Zusatzzeichen an einer Beschriftung. Die
+Symbolskala hieß 20 und 24; 16 setzt sie im selben 4-px-Schritt nach unten
+fort. Nachgetragen in `docs/Design.md`, Kapitel 4.
+
 ## [Web 9.13.0] — 2026-08-30
 
 **O12: die Gestaltungsrichtlinie.** Zwölf Arbeitspakete haben eine Oberfläche
