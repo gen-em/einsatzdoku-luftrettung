@@ -197,6 +197,81 @@ starten() {
 # Aufrufliste. Nach jeder Bedienung erneut lesen — die Ausgabe waechst.
 konsole() { grep -v 'JAVA_TOOL_OPTIONS' "$BASIS/konsole.log" 2>/dev/null || true; }
 
+# ---- Stufe I: uebersetzen, fuer viele Geraete --------------------------------
+#
+# Uebersetzen ist billig (wenige Sekunden je Geraet) und faengt schon eine
+# Menge: fehlende API-Funktionen, nicht vorhandene Ressourcen, Speicherbedarf.
+# Deshalb laeuft es ueber ALLE Zielgeraete, nicht nur ueber Vertreter.
+reihe() {
+    local liste="${1:?Listendatei fehlt}"; shift || true
+    [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
+    umgebung; mkdir -p "$AUSGABE"
+    local ok=0 mangel=0 fehlend=0
+    printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
+    printf '%s\n' "----------------------------------------------------------------------"
+    while read -r g; do
+        [ -z "$g" ] && continue
+        if [ ! -f "$GARMIN_HOME/Devices/$g/compiler.json" ]; then
+            printf '%-26s %5s %6s %10s  %s\n' "$g" "-" "-" "-" "Gerätedatei fehlt"
+            fehlend=$((fehlend+1)); continue
+        fi
+        local log="$BASIS/reihe_$g.txt"
+        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+                -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
+        sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
+        local w e sz
+        w=$(grep -c 'WARNING' "$log" || true)
+        e=$(grep -c 'ERROR' "$log" || true)
+        sz=$(stat -c%s "$AUSGABE/$g.prg" 2>/dev/null || echo 0)
+        if [ "$e" -gt 0 ] || [ "$sz" -eq 0 ]; then
+            printf '%-26s %5s %6s %10s  %s\n' "$g" "$w" "$e" "$sz" "FEHLGESCHLAGEN"
+            mangel=$((mangel+1))
+        else
+            printf '%-26s %5s %6s %10s\n' "$g" "$w" "$e" "$sz"
+            ok=$((ok+1))
+        fi
+    done < "$liste"
+    printf '%s\n' "----------------------------------------------------------------------"
+    printf 'übersetzt: %s   fehlgeschlagen: %s   ohne Gerätedatei: %s\n' \
+           "$ok" "$mangel" "$fehlend"
+    [ "$mangel" -eq 0 ] && [ "$fehlend" -eq 0 ]
+}
+
+# ---- Stufe II: im Simulator starten, je Geraet ein Abbild --------------------
+#
+# Teuer (rund eine Minute je Geraet), deshalb nur fuer die Vertreter der
+# Klassen. monkeydo wird bewusst direkt gestartet und wieder beendet statt
+# ueber starten() — in einer Schleife blockiert das sonst (s. LIESMICH).
+bildreihe() {
+    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}"
+    [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
+    umgebung; simulator_starten; mkdir -p "$ziel"
+    local wartezeit="${CIQ_WARTEZEIT:-26}"
+    while read -r g; do
+        [ -z "$g" ] && continue
+        if [ ! -f "$AUSGABE/$g.prg" ]; then
+            printf '%-26s %s\n' "$g" "kein Kompilat — erst 'reihe'"; continue
+        fi
+        : >"$BASIS/konsole.log"
+        nohup monkeydo "$AUSGABE/$g.prg" "$g" >"$BASIS/konsole.log" 2>&1 &
+        local md=$!
+        sleep "$wartezeit"
+        xwd -root -display "$ANZEIGE" 2>/dev/null | convert xwd:- "$ziel/$g.png" 2>/dev/null
+        # Absturzmeldungen des Simulators sind die eigentliche Ausbeute
+        local stoerung
+        stoerung=$(grep -c -iE 'error|crash|exception' "$BASIS/konsole.log" 2>/dev/null || true)
+        if [ "${stoerung:-0}" -gt 0 ]; then
+            printf '%-26s %s\n' "$g" "MELDUNG:"
+            konsole | head -6 | sed 's/^/    /'
+        else
+            printf '%-26s %s\n' "$g" "ok"
+        fi
+        kill "$md" 2>/dev/null || true
+        sleep 2
+    done < "$liste"
+    printf 'Abbilder unter %s\n' "$ziel"
+}
+
 # Der Simulator kennt keinen Bildschirmabzug ueber die Kommandozeile — deshalb
 # der Umweg ueber den X-Server. Was hier herauskommt, ist das Fenster, nicht
 # das Geraet: Rahmen und Menueleiste sind mit drauf.
@@ -277,13 +352,14 @@ Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
   CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau
   CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s)
+  CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE
 }
 
 befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
-    aufbau|pruefen|bauen|alle|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
+    aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
     *) hilfe; exit 1 ;;
 esac

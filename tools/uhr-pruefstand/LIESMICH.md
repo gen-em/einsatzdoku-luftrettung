@@ -66,6 +66,49 @@ Für die Eingabe-Probe genügt ein anderer Jungle-Pfad:
 tools/uhr-pruefstand/pruefstand.sh bauen venu3s tools/eingabe-probe/monkey.jungle
 ```
 
+## Viele Geräte prüfen — zwei Stufen
+
+Über 170 Geräte einzeln durchzuklicken ist weder nötig noch bezahlbar. Der
+Hebel: **Übersetzen ist billig, Simulieren ist teuer.**
+
+| | Aufwand je Gerät | Läuft über | Fängt |
+|---|---|---|---|
+| **Stufe I** `reihe` | ~3 s | **alle** Zielgeräte | fehlende API-Funktionen, fehlende Ressourcen, Speicherbedarf |
+| **Stufe II** `bildreihe` | ~50 s | nur **Vertreter** je Klasse | Layout, Bedienhinweise, Abstürze beim Zeichnen |
+
+```bash
+python3 geraeteklassen.py ~/.Garmin/ConnectIQ/Devices \
+        --vertreter 5 --liste vertreter.txt --alle-liste auswahl.txt
+pruefstand.sh reihe     auswahl.txt          # Stufe I
+pruefstand.sh bildreihe vertreter.txt bilder # Stufe II
+```
+
+### Wonach `geraeteklassen.py` gruppiert
+
+Nicht nach Garmins Katalog, sondern nach den vier Achsen, die **diese App**
+tatsächlich unterscheidet — Herleitung im Kopf des Skripts:
+
+| Achse | Wo im Code |
+|---|---|
+| Displayform | `Ui.chordW()` rechnet eine Kreissehne, nimmt also ein rundes Display an |
+| Schwelle 320 px | `Ui.fontHint()` springt dort von `FONT_TINY` auf `FONT_XTINY` |
+| Eingabe (Touch, Tastenzahl) | `DeviceProfile.HAS_UP_DOWN`, Zuordnung im Jungle |
+| Speicher | `appTypes[watchApp].memoryLimit`; die App belegt im Leerlauf rund 54 kB |
+
+Die Displayhöhe **innerhalb** einer Klasse bildet keine eigene Klasse:
+`Ui.s()` und `Ui.pct()` skalieren stetig. Deshalb zieht das Skript je Klasse
+nicht ein Gerät, sondern eine Spanne — die Höhen-Extreme zuerst, dann
+gleichmäßig aufgefüllt.
+
+### Was der Compiler nicht fängt
+
+Stufe I ist blind für den gefährlichsten Fehler: `base.sourcePath` im Jungle
+steht auf dem **Fünf-Tasten-Profil**. Ein neu eingetragenes Gerät erbt es
+stillschweigend. Für ein Touch-Gerät mit zwei nutzbaren Tasten übersetzt das
+sauber und ist auf dem Gerät **unbedienbar** — genau der Fall, den
+`docs/Geraete-Eingabe.md` für die Venu 3s beschreibt. Die Eingabe-Zuordnung
+bleibt Handarbeit je Klasse, mit `tools/eingabe-probe`.
+
 ## Bedienung simulieren
 
 Tastendrücke und Touch gehen als X-Ereignisse an das Simulatorfenster:
