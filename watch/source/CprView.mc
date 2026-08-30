@@ -248,14 +248,14 @@ class CprMenuDelegate extends WatchUi.BehaviorDelegate {
         _v = v;
     }
 
-    function onPreviousPage() as Lang.Boolean {           // UP bzw. Wischen hoch
+    function onPreviousPage() as Lang.Boolean {           // UP-Taste bzw. Wischen RUNTER
         var n = CprMenuView.ITEMS.size();
         _v.index = (_v.index - 1 + n) % n;
         WatchUi.requestUpdate();
         return true;
     }
 
-    function onNextPage() as Lang.Boolean {               // DOWN bzw. Wischen runter
+    function onNextPage() as Lang.Boolean {               // DOWN-Taste bzw. Wischen HOCH
         _v.index = (_v.index + 1) % CprMenuView.ITEMS.size();
         WatchUi.requestUpdate();
         return true;

@@ -6,5 +6,4 @@ module DeviceProfile {
     // Bedienhinweise auf den Oberflaechen
     const L_SELECT      = "START";
     const L_SELECT_HOLD = "START halten";
-    const L_PAGE_DOWN   = "DOWN drücken";
 }

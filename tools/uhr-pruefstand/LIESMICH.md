@@ -107,6 +107,17 @@ Was der Prüfstand **nicht** leistet, und woran das liegt:
   1,2 GB Schriften sind dabei der langsame Teil.
 - **Ein Lauf im Simulator ersetzt das Lesen nicht.** Er zeigt, dass es startet
   und wie es aussieht — nicht, dass es richtig ist.
+- **`starten` kehrt in einer nicht-interaktiven Umgebung nicht immer zurück.**
+  `monkeydo` hält die Verbindung zum Simulator, solange die App läuft; startet
+  man mehrere Geräte in einer Schleife, wartet der Aufrufer unter Umständen auf
+  den Kindprozess, obwohl er abgelöst gestartet wird. Interaktiv fällt das
+  nicht auf. Für einen Reihendurchlauf über mehrere Geräte ist der direkte Weg
+  zuverlässiger:
+
+  ```bash
+  monkeydo "$CIQ_BASIS/bin/fenix6pro.prg" fenix6pro >lauf.log 2>&1 &
+  MD=$!; sleep 26; kill $MD
+  ```
 
 ## Warum die Bibliotheken aus 22.04 kommen
 

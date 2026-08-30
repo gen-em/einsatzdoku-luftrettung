@@ -101,10 +101,10 @@ module Pair {
      * Entschieden wird am Feld "error", nicht am Zahlencode: Der Schluessel
      * benennt die Ursache, der Code nur ihre Klasse.
      */
-    function onResponse(code as Lang.Number, data) as Void {
+    function onResponse(code as Lang.Number, data as Lang.Object or Null) as Void {
         var dict = (data instanceof Lang.Dictionary) ? data : null;
         var fehler = (dict != null && dict["error"] instanceof Lang.String)
-                     ? dict["error"] : null;
+                     ? dict["error"] as Lang.String : null;
 
         statusHint = null;
         statusKind = :error;

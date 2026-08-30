@@ -77,9 +77,10 @@ module Ui {
         var edge = (top + lineH / 2 >= mid) ? (top + lineH) : top;
         var avail = chordW(dc, edge);
         for (var i = 0; i < fonts.size(); i++) {
-            if (dc.getTextWidthInPixels(text, fonts[i]) <= avail) { return fonts[i]; }
+            var f = fonts[i] as Graphics.FontDefinition;
+            if (dc.getTextWidthInPixels(text, f) <= avail) { return f; }
         }
-        return fonts[fonts.size() - 1];
+        return fonts[fonts.size() - 1] as Graphics.FontDefinition;
     }
 
     // Schrift fuer Hinweiszeilen. Auf grossen Displays eine Stufe groesser:

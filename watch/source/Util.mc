@@ -76,17 +76,25 @@ module Util {
     }
 
     function isoFromMoment(moment as Time.Moment) as Lang.String {
+        // Die Felder von Gregorian.Info sind nominell nullbar; bei FORMAT_SHORT
+        // sind es immer Zahlen. Die Zusicherungen benennen das.
         var g = Gregorian.utcInfo(moment, Time.FORMAT_SHORT);
         return Lang.format("$1$-$2$-$3$T$4$:$5$:$6$Z", [
-            g.year.format("%04d"), g.month.format("%02d"), g.day.format("%02d"),
-            g.hour.format("%02d"), g.min.format("%02d"), g.sec.format("%02d")]);
+            (g.year as Lang.Number).format("%04d"),
+            (g.month as Lang.Number).format("%02d"),
+            (g.day as Lang.Number).format("%02d"),
+            (g.hour as Lang.Number).format("%02d"),
+            (g.min as Lang.Number).format("%02d"),
+            (g.sec as Lang.Number).format("%02d")]);
     }
 
     // Betriebstag = lokales Datum des Dienstbeginns ("YYYY-MM-DD")
     function localDay() as Lang.String {
         var g = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
         return Lang.format("$1$-$2$-$3$", [
-            g.year.format("%04d"), g.month.format("%02d"), g.day.format("%02d")]);
+            (g.year as Lang.Number).format("%04d"),
+            (g.month as Lang.Number).format("%02d"),
+            (g.day as Lang.Number).format("%02d")]);
     }
 
     // Kurzes Anzeigedatum, z. B. "Mo, 20.07." (eigene Wochentagsliste,
@@ -95,8 +103,9 @@ module Util {
 
     function localDateShort() as Lang.String {
         var g = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
-        var wd = WD[(g.day_of_week - 1) % 7];
-        return wd + ", " + g.day.format("%02d") + "." + g.month.format("%02d") + ".";
+        var wd = WD[((g.day_of_week as Lang.Number) - 1) % 7];
+        return wd + ", " + (g.day as Lang.Number).format("%02d")
+                  + "." + (g.month as Lang.Number).format("%02d") + ".";
     }
 
     function epochNow() as Lang.Number {
@@ -121,7 +130,7 @@ module Util {
     // Absturzsicherer Vibrationsaufruf (Hardware-Limit: max. 8 Profile!)
     function _vibe(p as Lang.Array) as Void {
         if (Attention has :vibrate) {
-            try { Attention.vibrate(p); } catch (ex) { }
+            try { Attention.vibrate(p as Lang.Array<Attention.VibeProfile>); } catch (ex) { }
         }
     }
 

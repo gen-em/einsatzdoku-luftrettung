@@ -1944,6 +1944,30 @@ Rückruf-Muster: `method()` existiert nur auf Objekten → kleine Träger-Klasse
 > jede davon, weil sie einmal verletzt wurde und der Fehler erst im Simulator
 > aufgefallen ist.
 
+**Was der Typprüfer verlangt (Stand 1.8.2).** Drei Eigenheiten kosten sonst
+jedes Mal aufs Neue Zeit:
+
+- **Die Null-Prüfung greift nur über lokale Variablen.** `if (mission == null)
+  { return; }` überzeugt den Prüfer nicht, wenn danach `mission[...]` steht —
+  bei einem Modul-Feld verfolgt er den Fluss nicht. Den Wert zuerst in eine
+  lokale Variable holen, dann prüfen, dann benutzen. Dasselbe gilt für
+  `info.position` und jedes andere Feld.
+- **`Storage.getValue()` liefert einen Sammeltyp** über alles Speicherbare, von
+  `BitmapResource` bis `ScanResult`. Jede Zuweisung daraus braucht eine
+  Zusicherung — sinnvollerweise dieselbe Struktur, die das zugehörige `save()`
+  geschrieben hat.
+- **Arrays brauchen einen Elementtyp.** `Lang.Array` allein lässt offen, ob
+  `x[i][2]` erlaubt ist. Für die Tupellisten `Lang.Array<Lang.Array>`, für die
+  Warteschlangen `Lang.Array<Lang.Dictionary>`.
+
+Beim Zusichern gilt: **lieber keine Angabe als eine falsche.** Der Punktpuffer
+in `Track` führt Breite und Länge als `Double`, die Höhe als `Float` (die
+fehlen darf) und den Zeitstempel als `Number` — `Lang.Array<Lang.Number>` wäre
+bequem und unwahr; richtig ist `Lang.Array<Lang.Numeric or Null>`.
+Lokale Variablen lassen sich übrigens **nicht** annotieren
+(„Local variable types are inferred"); die Zusicherung gehört dann an die
+Zuweisung.
+
 ### 5.1 Tastenbelegung je Geräteprofil
 
 Die Zielgeräte unterscheiden sich in zwei Achsen: **fünf oder drei Tasten**

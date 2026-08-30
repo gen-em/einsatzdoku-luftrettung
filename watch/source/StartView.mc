@@ -61,7 +61,7 @@ class StartView extends WatchUi.View {
         var y      = (zone - blockH) / 2;
         if (y < Ui.s(dc, 4)) { y = Ui.s(dc, 4); }     // Notbremse bei engen Displays
 
-        dc.drawBitmap(cx - logoW / 2, y, _logo);
+        dc.drawBitmap(cx - logoW / 2, y, _logo as WatchUi.BitmapResource);
         y += logoH + gLogo;
 
         dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);

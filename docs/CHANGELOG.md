@@ -11,6 +11,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.8.2] — 2026-08-30
+
+**Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung
+von 1.8.1, das nur die Warnungen des normalen Baus behandelt hatte. Wieder ohne
+Verhaltensänderung — aber diesmal nicht ohne Preis, siehe unten.
+
+### Uhr — Die Zahl 226 war irreführend
+
+Der erste Blick zählte Meldungen, und das führt in die Irre: Eine einzelne
+Zeile wie `m["final"] == true` erzeugt bis zu **16 Meldungen**, weil der Prüfer
+jeden denkbaren Typ des Sammeltyps einzeln durchgeht — von
+`WatchFaceConfig.Id` über `ScanResult` bis `BitmapReference`. Gezählt nach
+Fundstelle waren es **77 Stellen**, nicht 226. Davon sind jetzt **4** übrig.
+
+### Uhr — Drei Muster, immer dieselben
+
+Fast alles ließ sich auf drei Ursachen zurückführen.
+
+**Erstens `Storage.getValue()`.** Es ist mit einem Sammeltyp über alles
+Speicherbare deklariert. Jede Zuweisung daraus an ein konkretes Feld ist unter
+`-l 3` ein Fehler, obwohl an der Stelle längst feststeht, was dort liegt —
+geschrieben hat es das zugehörige `save()` wenige Zeilen weiter oben. Die
+Zusicherungen benennen jetzt, was die Struktur ohnehin ist.
+
+**Zweitens die Null-Flussanalyse.** Der Prüfer verfolgt eine Prüfung wie
+`if (mission == null) { return; }` **nur über lokale Variablen**, nicht über
+ein Modul-Feld hinweg. `info.position` blieb deshalb „möglicherweise null",
+obwohl zwei Zeilen darüber genau das ausgeschlossen wurde. Betroffene Stellen
+holen den Wert jetzt zuerst in eine lokale Variable. Das ist kein Trick,
+sondern die Form, in der die Prüfung überhaupt greifen kann.
+
+**Drittens fehlende Parametertypen.** `_haversine(lat1, lon1, lat2, lon2)` und
+`_addDisplayPoint(lat, lon)` waren untypisiert, ebenso drei Member in `Track`.
+
+Dazu einige Einzelfälle: `Gregorian.Info` führt seine Felder nominell nullbar,
+bei `FORMAT_SHORT` sind es immer Zahlen; `u.substring(...).equals("/")` wurde zu
+`"/".equals(u.substring(...))`, weil `substring` null liefern kann; aus
+`x == true` wurde `true.equals(x)`.
+
+### Uhr — Der Preis: 400 Byte
+
+Anders als bei 1.8.1, wo die Kompilate **kleiner** wurden, kosten diese
+Zusicherungen Platz: **+448 Byte** auf fenix6pro und fr945, **+480 Byte** auf
+venu3s — rund 0,27 % des Kompilats. Das ist wenig, aber es ist nicht nichts,
+und es geht in die andere Richtung als beim letzten Mal. Wer künftig abwägt, ob
+sich weitere Typarbeit lohnt, sollte diese Zahl kennen: Warnungsfreiheit im
+normalen Bau war gratis, `-l 3` ist es nicht.
+
+### Uhr — Was bewusst stehen bleibt
+
+Vier Stellen melden weiterhin denselben Fall: `Storage.setValue()` mit einem
+Dictionary oder Array (`Model.mc:93`, `Pair.mc:113`, `Track.mc:162`,
+`Uploader.mc:171`). Der erwartete Typ ist enger als das, was sich zusichern
+lässt — beim Punktpuffer etwa, weil dort `null` vorkommen darf, wenn die Höhe
+fehlt. Das aufzulösen hieße, die Datenstruktur zu ändern, und damit echtes
+Verhalten. Für vier Meldungen ist das der falsche Preis.
+
+### Uhr — Zwei Nebenfunde, mit erledigt
+
+`Input.lPageDown()` und die Konstante `L_PAGE_DOWN` in beiden Geräteprofilen
+waren toter Code: definiert, nirgends aufgerufen. Sie sind entfallen —
+`lSelect()` und `lSelectHold()` bleiben, die werden benutzt.
+
+Die Kommentare an `CprView.onPreviousPage/onNextPage` ordneten die
+Wischrichtungen falsch zu. Gemessen im Simulator gilt: Wischen **runter** ist
+`onPreviousPage`, Wischen **hoch** ist `onNextPage` — bei den Tasten ist es
+UP beziehungsweise DOWN. Die Kommentare sagen das jetzt.
+
 ## [Uhr 1.8.1] — 2026-08-30
 
 **Der Uhr-Code übersetzt ohne Warnung.** Backlog Nr. 13, seit Web 5.4.0 offen.

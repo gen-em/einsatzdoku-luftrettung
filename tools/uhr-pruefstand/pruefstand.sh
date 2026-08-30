@@ -65,7 +65,7 @@ bibliotheken() {
         libsecret-1-0 libusb-1.0-0 libenchant-2-2 libmanette-0.2-0 \
         libwayland-server0 libwebpdemux2 libwebpmux3 libwoff1 \
         libgstreamer-plugins-base1.0-0 libgstreamer-gl1.0-0 \
-        wget unzip imagemagick x11-apps xdotool xvfb >/dev/null 2>&1 \
+        wget unzip imagemagick x11-apps x11-utils xdotool xvfb >/dev/null 2>&1 \
         || fehler "apt-get fehlgeschlagen"
 
     mkdir -p "$BASIS/libs" && cd "$BASIS/libs"
@@ -151,8 +151,17 @@ bauen() {
 anzeige_starten() {
     umgebung
     pgrep -f "Xvfb $ANZEIGE" >/dev/null && return
+    # Ein abgebrochener Lauf laesst die Sperrdatei stehen; Xvfb weigert sich
+    # dann mit "Server is already active" und der Simulator startet ins Leere.
+    local n="${ANZEIGE#:}"
+    if [ -e "/tmp/.X${n}-lock" ]; then
+        melde "verwaiste Anzeige-Sperre entfernen"
+        rm -f "/tmp/.X${n}-lock" "/tmp/.X11-unix/X${n}"
+    fi
     nohup Xvfb "$ANZEIGE" -screen 0 1400x1000x24 >/dev/null 2>&1 &
     sleep 3
+    xdpyinfo -display "$ANZEIGE" >/dev/null 2>&1 \
+        || fehler "Anzeige $ANZEIGE liess sich nicht starten"
 }
 
 simulator_starten() {
@@ -173,9 +182,13 @@ starten() {
 "Kein Kompilat fuer $geraet. Erst uebersetzen:
    $(basename "${BASH_SOURCE[0]}") bauen $geraet"
     umgebung; simulator_starten
+    # Eine vorherige Sitzung zuerst beenden: monkeydo laeuft weiter, solange die
+    # App laeuft, und zwei gleichzeitige Verbindungen blockieren einander.
+    pkill -f "monkeydo" 2>/dev/null || true
     melde "App laden: $geraet"
     : >"$BASIS/konsole.log"
-    nohup monkeydo "$AUSGABE/$geraet.prg" "$geraet" >"$BASIS/konsole.log" 2>&1 &
+    setsid nohup monkeydo "$AUSGABE/$geraet.prg" "$geraet" \
+        >"$BASIS/konsole.log" 2>&1 </dev/null &
     sleep "$wartezeit"
     konsole
 }

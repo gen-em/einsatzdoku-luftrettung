@@ -205,9 +205,20 @@ zutreffen.
     Ergebnis: **0 Warnungen, 0 Fehler** auf allen drei Zielgeräten, und die
     Kompilate sind dabei 16 bis 32 Byte **kleiner** geworden — die Typangaben
     kosten zur Laufzeit nichts. Geprüft mit `tools/uhr-pruefstand`.
-    Nicht Teil dieses Punktes ist die strenge Typprüfung `-l 3`: Sie meldet
-    weiterhin **211 Fehler** (vorher 226), überwiegend Rechenoperationen mit
-    unklaren Typen. Das ist ein eigener Umbau, kein Feinschliff.
+    *Fortgesetzt mit Uhr 1.8.2:* Die strenge Typprüfung `-l 3` meldet statt
+    **226** noch **4**. Die erste Zahl war irreführend — eine einzelne Zeile
+    erzeugt bis zu 16 Meldungen, weil der Prüfer jeden Typ des Sammeltyps
+    einzeln durchgeht; nach Fundstelle gezählt waren es **77 Stellen**. Drei
+    Muster erklärten fast alles: Zuweisungen aus `Storage.getValue()` (dessen
+    Sammeltyp alles Speicherbare umfasst), die Null-Flussanalyse (sie greift
+    **nur über lokale Variablen**, nicht über ein Modul-Feld hinweg) und
+    fehlende Parametertypen. Anders als der erste Teil kostet das Platz:
+    **+448 Byte** (fenix6pro, fr945) bzw. **+480 Byte** (venu3s). Die vier
+    verbliebenen Stellen sind alle `Storage.setValue()` mit Dictionary oder
+    Array; sie aufzulösen hieße, die Datenstruktur zu ändern — für vier
+    Meldungen der falsche Preis. Mit erledigt: `Input.lPageDown()` und
+    `L_PAGE_DOWN` waren toter Code und sind entfallen, und die Wisch-Kommentare
+    an `CprView.onPreviousPage/onNextPage` waren vertauscht.
 
 15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
     *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.

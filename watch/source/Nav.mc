@@ -10,15 +10,18 @@ module Nav {
     function go(delta as Lang.Number) as Void {
         index = (index + delta + PAGES.size()) % PAGES.size();
         var t = (delta > 0) ? WatchUi.SLIDE_UP : WatchUi.SLIDE_DOWN;
-        var pair = build(PAGES[index]);
-        WatchUi.switchToView(pair[0], pair[1], t);
+        var pair = build(PAGES[index] as Lang.Symbol);
+        WatchUi.switchToView(pair[0] as WatchUi.View,
+                             pair[1] as WatchUi.InputDelegate, t);
     }
 
     function goTo(page as Lang.Symbol) as Void {
         index = PAGES.indexOf(page);
         if (index < 0) { index = 0; }
-        var pair = build(PAGES[index]);
-        WatchUi.switchToView(pair[0], pair[1], WatchUi.SLIDE_IMMEDIATE);
+        var pair = build(PAGES[index] as Lang.Symbol);
+        WatchUi.switchToView(pair[0] as WatchUi.View,
+                             pair[1] as WatchUi.InputDelegate,
+                             WatchUi.SLIDE_IMMEDIATE);
     }
 
     function build(page as Lang.Symbol) as Lang.Array {
