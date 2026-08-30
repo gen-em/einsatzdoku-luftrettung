@@ -1475,11 +1475,13 @@ Einordnung der P3-Admin-Optionen; P6 um `Lizenzen.md`; Statuszeile P3
    Stufen (F-P3-I).
 3. **`--linie-stark` ist ein Token mehr, als 5.2 führt** (F-P3-K). Ohne ihn
    hätte kein Eingabefeld einen sichtbaren Rand.
-4. **Die Seitenliste der Bildaufnahme führt 29 Seiten, nicht 24.** Der
-   Unterschied sind ein Bedienzustand (Schublade) und die
-   Administrationsseiten, die B-P3-01 als eine Gruppe zählt. 29 × 8 = **232
-   Bilder** statt der in P-P3-07 genannten 192; die Zahl dort wird in O12
-   berichtigt.
+4. **Die Seitenliste der Bildaufnahme führt mehr Seiten als vorgesehen.** Bei
+   der Aufnahme in O1 waren es 29 statt 24 — der Unterschied sind ein
+   Bedienzustand (Schublade) und die Administrationsseiten, die B-P3-01 als
+   eine Gruppe zählt. Seither sind zwei dazugekommen: die Monatsansicht der
+   Zeitraumübersicht (O7, F-P3-AH) und die Rettungsmittel-Fassung der
+   systemweiten Stammdaten (O9c). Stand: 31 × 8 = **248 Bilder** statt der in
+   P-P3-07 genannten 192; die Zahl dort wird in O12 berichtigt.
 5. **Zwei Werkzeuge mehr als vorgesehen:** `tools/logos/` (Favicons aus den
    Logodateien) und `kontrast.py` neben der Bildaufnahme. Beides sind
    Ableitungen, die sonst jemand von Hand nachbaut — und genau das war der
