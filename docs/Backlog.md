@@ -334,33 +334,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 
 
-48. **Bildmarke fehlt in den meisten Größen.**
-    *Erste Hälfte erledigt mit Uhr 1.10.2:* Das **Launcher-Symbol** liegt jetzt
-    in allen neun verlangten Größen vor (35, 36, 40, 54, 56, 60, 61, 65, 70 px),
-    erzeugt aus der Vektorvorlage mit `tools/uhr-bilder/erzeugen.sh`. Stufe I
-    meldet 0 statt 42 Warnungen, und kein Kompilat wird dadurch größer: Garmin
-    legt Bitmaps palettiert und in fester Breite ab, der Platzbedarf hängt an
-    den Maßen, nicht am Inhalt.
-    *Offen bleibt die* **Bildmarke**: Sie wird mit `dc.drawBitmap` 1:1
-    gezeichnet und über die *Symbolgröße* zugeordnet statt über die
-    Displayhöhe. 37 Geräte bekommen sie dadurch mit 15–18 % der Displayhöhe, wo
-    die bestehende Gestaltung auf 25–27 % ausgelegt ist; die Bildschirmfotos
-    aus Stufe II zeigen es. Nötig wäre eine Staffelung nach Displayhöhe in drei
-    Stufen.
-    Es ist Gestaltungsarbeit und braucht nach der Arbeitsanweisung eine
-    Freigabe mit Mockup. Das Mockup liegt vor (31.08.2026, Simulatorabzüge
-    Descent G2 / fenix 9 Pro 51mm / FR 55, je heute gegen Vorschlag), ebenso
-    das Werkzeug: `tools/uhr-bilder/erzeugen.sh marken` rastert alle zehn
-    Kachelgrößen, `geraeteklassen.py --bloecke` erzeugt die Jungle-Zeilen.
-    Vorgeschlagene Regel: **Kachelhöhe = 70/260 × Displayhöhe**, rund 27 %.
-    Sie ist nicht erfunden, sondern die vorhandene — die beiden Größen, die es
-    heute gibt, liegen exakt auf dieser Geraden (260 → 70, 390 → 105). Heute
-    reicht die Spanne über die 99 Geräte von 15 % (fenix 9 Pro 51mm) bis 34 %
-    (FR 55); zwei Uhren mit **demselben** 390-px-Display zeigen die Marke in
-    zwei Größen, weil die Zuordnung am Launcher-Symbol hängt.
-    Am Platzbedarf scheitert es nicht (s. o.: Bitmaps kosten nach Maßen, und
-    jedes Kompilat trägt allein seine eigenen Ressourcen).
-
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
@@ -887,3 +860,31 @@ zutreffen.
     *Geprüft:* fünf Zustände im Simulator mit Bildabzug (fenix6pro alle fünf,
     Venu 3s die beiden mit geänderter Blockhöhe); Rückstand über ein
     Probekompilat mit fest verdrahtetem `backlogCount() == 3`.
+
+48. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+    *Erledigt mit Uhr 1.10.2 (Symbol) und 1.10.3 (Bildmarke).*
+    **Das Launcher-Symbol** lag in zwei von neun verlangten Größen vor (35, 36,
+    40, 54, 56, 60, 61, 65, 70 px). Die Größe ist keine Wahl, sondern eine
+    Vorgabe des Geräts; fehlt sie, skaliert `monkeyc` und meldet es — 42 der 99
+    Geräte bauten mit genau dieser einen Warnung. Jetzt sind es 0, und es kostet
+    kein Byte: Garmin legt Bitmaps palettiert und in fester Breite ab, der
+    Platzbedarf hängt an den Maßen, nicht am Inhalt.
+    **Die Bildmarke** wird mit `dc.drawBitmap` 1:1 gezeichnet und war über die
+    *Symbolgröße* zugeordnet statt über die Displayhöhe. Spanne über die 99
+    Geräte: 15 % bis 34 % der Displayhöhe, wo die Gestaltung 27 % vorsieht —
+    Venu 3s und Descent G2 teilen sich dasselbe 390-px-Display und zeigten sie
+    in 27 % gegen 18 %. Jetzt vier vorgerasterte Stufen (Kachel 60, 73, 101,
+    118), Spanne 25,0–28,8 %.
+    Freigegeben am 31.08.2026 mit Mockup (Simulatorabzüge, je heute gegen
+    Vorschlag) nach einer Rechnung über 3, 4, 5 und 10 Stufen. Bewusst
+    mitentschieden: Bei vier Stufen fällt das Bezugsgerät mit der
+    260/280-Gruppe zusammen, die Kachel der fenix6pro wächst von 70 auf 73.
+    Das Abnahmekriterium „auf der Fenix verschiebt sich nichts" hat damit eine
+    Ausnahme; sie steht im Kopf von `Ui.mc` und in `docs/Uhr-Layout_Regeln.md`
+    2.1.
+    Neues Werkzeug `tools/uhr-bilder/erzeugen.sh` — das Rezept der Bilder war
+    bis dahin nirgends festgehalten. Es ist aus den vorhandenen Dateien
+    zurückgerechnet und reproduziert sie bitgleich.
+    *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
+    im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
+    knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.

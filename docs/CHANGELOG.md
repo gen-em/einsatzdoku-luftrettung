@@ -11,6 +11,81 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.10.3] — 2026-08-31
+
+**Die Bildmarke ist auf allen 99 Geräten gleich groß im Verhältnis zum
+Display.** Zweite Hälfte von Backlog Nr. 48; damit ist der Punkt erledigt.
+
+### Uhr — Zwei gleiche Displays, zwei Größen
+
+Die Bildmarke wird mit `dc.drawBitmap` **1:1** gezeichnet — ein Bitmap folgt
+`Ui.s()` nicht, egal wie das Layout gerechnet ist. Zugeordnet wurde sie über
+den Ressourcenordner, und der hing an der **Launcher-Symbolgröße**. Mit der
+Displayhöhe hat die aber nichts zu tun.
+
+Das Ergebnis war über die 99 Geräte eine Spanne von **15 % bis 34 %** der
+Displayhöhe, wo die Gestaltung 27 % vorsieht — und, am deutlichsten: Venu 3s
+und Descent G2 haben **dasselbe** 390-px-Display und zeigten die Marke in
+27 % gegen 18 %.
+
+### Uhr — Vier Stufen, gerechnet statt geschätzt
+
+| Kachel | Displayhöhen | Geräte | Anteil |
+|---|---|---|---|
+| 60 | 208–240 | 35 | 25–29 % |
+| **73** | 260–280 | 19 | 26–28 % |
+| 101 | 360–390 | 20 | 26–28 % |
+| 118 | 416–466 | 25 | 25–28 % |
+
+Zielwert sind 27 % — genauer 70/260, das Verhältnis des Bezugsgeräts
+fenix6pro, dem `Ui.s()` ohnehin jede Länge folgt. Für jede Stufenzahl wurde
+die Aufteilung gesucht, die die größte Abweichung klein hält; die Wahl fiel
+auf vier:
+
+| Stufen | Spanne | |
+|---|---|---|
+| vorher | 15–34 % | Zuordnung hing an der Symbolgröße |
+| 3 | 23,6–30,4 % | oben und unten noch deutlich daneben |
+| **4** | **25,0–28,8 %** | gewählt |
+| 5 | 25,3–28,4 % | die fünfte Stufe trägt **ein** Gerät (FR 55) |
+| 10 | 26,8–27,1 % | eine Kachel je Höhe |
+
+### Uhr — Der Preis, ausdrücklich
+
+Bei vier Stufen fällt das Bezugsgerät mit der 260/280-Gruppe zusammen: Die
+Kachel der fenix6pro wächst von 70 auf **73** Pixel, die der Venu 3s schrumpft
+von 105 auf 101. Damit hat das Abnahmekriterium aus dem Kopf von `Ui.mc` —
+„damit bleibt die Fenix pixelgenau wie zuvor" — eine benannte Ausnahme, und sie
+steht jetzt dort. Nur eine Kachel je Displayhöhe hätte sie vermieden, um den
+Preis von acht Ordnern statt drei; die Entscheidung ist bewusst so gefallen.
+Alles Übrige auf der Fenix ist unverändert.
+
+### Uhr — Was es kostet
+
+Die Kompilate ändern sich zwischen **−3 520 B** (fenix7s, Kachel 70 → 60) und
+**+10 992 B** (vivoactive5, 70 → 101), im Mittel +2 613 B. Die kleinen Geräte
+werden also leichter, die großen schwerer — was der Sache nach richtig ist.
+
+Der Speicher zur Laufzeit trägt es mühelos. Auf den beiden knappsten Geräten,
+gemessen im Simulator auf dem Startbildschirm (dort ist die Bildmarke
+geladen — der ungünstigste Fall):
+
+| Gerät | Kachel | belegt |
+|---|---|---|
+| fenix6 (260 px, 128 kB) | 73 | **55,9 / 123,8 kB** |
+| FR 55 (208 px, 128 kB) | 60 | **52,3 / 123,8 kB** |
+
+### Uhr — Nachgerechnet, nicht behauptet
+
+Beim Schreiben der Begründung stellte sich ein Argument aus 1.10.2 als falsch
+heraus: Die getrennten Ordner (`resources-icon<N>` und `resources-marke<K>`)
+sollten Ordner sparen — „18 statt 14". Das galt für eine Kachel je Displayhöhe.
+Bei vier Stufen kommen nur zwölf Paare aus Symbolgröße und Kachel vor, und
+getrennt sind es ebenfalls 11 Ordner. Die Trennung bleibt trotzdem richtig,
+aber aus einem anderen Grund: Zusammengelegt läge dieselbe 101er Kachel in
+fünf Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
+Der Text sagt das jetzt so.
+
 ## [Uhr 1.10.2] — 2026-08-31
 
 **Das Launcher-Symbol liegt in allen neun Größen vor, die die 99 Geräte

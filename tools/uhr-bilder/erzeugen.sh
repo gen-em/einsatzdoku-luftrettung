@@ -36,15 +36,28 @@ command -v convert      >/dev/null || { echo "convert fehlt (Paket imagemagick)"
 # (51 der 99 Geraete verlangen genau 40).
 SYMBOLE="35 36 54 56 60 61 65 70"
 
-# Kachelgroessen der Bildmarke, eine je vorkommender Displayhoehe.
-# Die Regel: KACHELHOEHE = 27 % DER DISPLAYHOEHE, genauer 70/260 — das
+# Kachelgroessen der Bildmarke — VIER STUFEN ueber die zehn vorkommenden
+# Displayhoehen. Zielwert ist 27 % der Displayhoehe (genauer 70/260, das
 # Verhaeltnis des Bezugsgeraets fenix6pro, dem `Ui.s()` ohnehin jede Laenge
-# der Oberflaeche folgt. Die Bildmarke konnte ihm als Bitmap nicht folgen;
-# vorgerasterte Stufen holen das nach.
-# Zwei der Werte gab es schon und sie bleiben, was sie waren: 260 -> 70
-# (Grundordner) und 390 -> 105. Sie liegen exakt auf derselben Geraden.
+# der Oberflaeche folgt). Die Bildmarke konnte ihm als Bitmap nicht folgen —
+# `dc.drawBitmap` zeichnet 1:1; vorgerasterte Stufen holen das nach.
+#
+# Die Stufengrenzen sind nicht geschaetzt, sondern gerechnet: Fuer jede
+# Stufenzahl wurde die Aufteilung gesucht, die die groesste Abweichung vom
+# Zielwert klein haelt. Vier Stufen ergeben 25,0-28,8 %; heute reicht die
+# Spanne von 15 % bis 34 %.
+#
+#   Stufen  Spanne         warum nicht
+#   3       23,6-30,4 %    oben und unten noch deutlich daneben
+#   4       25,0-28,8 %    <- gewaehlt
+#   5       25,3-28,4 %    die fuenfte Stufe traegt EIN Geraet (FR 55)
+#   10      26,8-27,1 %    eine Kachel je Hoehe, 8 Ordner statt 3
+#
+# 73 liegt im Grundordner: Es ist die Stufe des Bezugsgeraets, und ein neu
+# eingetragenes Geraet ohne eigene Zeile liegt damit am wenigsten falsch.
 # Format: <Displayhoehe>:<Kachel>
-KACHELN="208:56 218:59 240:65 260:70 280:75 360:97 390:105 416:112 454:122 466:125"
+KACHELN="208:60 218:60 240:60 260:73 280:73 360:101 390:101 416:118 454:118 466:118"
+KACHEL_GRUND=73
 
 # Hubschrauber auf die volle Kachelbreite, senkrecht mittig in eine
 # durchsichtige quadratische Kachel. Das Seitenverhaeltnis 400,16:249,81
@@ -101,7 +114,7 @@ marken() {
             case " $nur " in *" ${paar##*:} "*) ;; *) continue ;; esac
         fi
         local h="${paar%%:*}" k="${paar##*:}" z
-        if [ "$k" = "70" ]; then
+        if [ "$k" = "$KACHEL_GRUND" ]; then
             z="$UHR/resources/drawables"          # Grundordner
         else
             z="$UHR/resources-marke$k/drawables"

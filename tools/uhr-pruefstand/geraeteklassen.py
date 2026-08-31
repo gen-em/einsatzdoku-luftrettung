@@ -190,20 +190,28 @@ def profil_von(g):
 # Grundordner watch/resources: Launcher-Symbol 40 px (51 der 99 Geräte
 # verlangen genau das) und Bildmarke 70 px.
 ICON_GRUND = 40
-KACHEL_GRUND = 70
-KACHEL_BEZUG = 260      # fenix6pro, Bezugsgerät von Ui.s()
+KACHEL_GRUND = 73       # Stufe des Bezugsgeräts, liegt in watch/resources
+
+# Vier Stufen über die zehn vorkommenden Displayhöhen. Muss mit KACHELN in
+# tools/uhr-bilder/erzeugen.sh übereinstimmen — dort steht auch, warum es
+# vier sind und nicht drei, fünf oder zehn.
+KACHEL_STUFEN = [(240, 60), (280, 73), (390, 101), (10**6, 118)]
 
 
 def kachel_von(hoehe):
     """Kachelhöhe der Bildmarke zu einer Displayhöhe.
 
-    Die Bildmarke wird mit dc.drawBitmap 1:1 gezeichnet und kann `Ui.s()`
-    als Bitmap nicht folgen. Vorgerasterte Stufen holen das nach: Die Kachel
-    behält das Verhältnis des Bezugsgeräts, 70/260 — rund 27 % der
-    Displayhöhe. Die beiden Größen, die es vor der Staffelung schon gab,
-    liegen exakt auf dieser Geraden (260 → 70, 390 → 105).
+    Zielwert sind 27 % der Displayhöhe — 70/260, das Verhältnis des
+    Bezugsgeräts fenix6pro, dem `Ui.s()` ohnehin jede Länge der Oberfläche
+    folgt. Die Bildmarke konnte ihm als Bitmap nicht folgen: `dc.drawBitmap`
+    zeichnet 1:1. Vier vorgerasterte Stufen holen das nach und halten alle
+    99 Geräte zwischen 25,0 und 28,8 %; vorher reichte die Spanne von 15 %
+    bis 34 %.
     """
-    return round(KACHEL_GRUND * hoehe / KACHEL_BEZUG)
+    for grenze, kachel in KACHEL_STUFEN:
+        if hoehe <= grenze:
+            return kachel
+    return KACHEL_STUFEN[-1][1]
 
 
 def zeige_bloecke(auswahl, icon_von):
@@ -232,7 +240,7 @@ def zeige_bloecke(auswahl, icon_von):
 
     print("\n=== Vorschlag: resourcePath-Zeilen für watch/monkey.jungle ===")
     print(f"# Grundordner trägt Symbol {ICON_GRUND} px und Kachel"
-          f" {KACHEL_GRUND} px (Bezugsgerät {KACHEL_BEZUG} px).")
+          f" {KACHEL_GRUND} px (Stufe des Bezugsgeräts fenix6pro).")
     print("# Aufgeführt sind nur Geräte, die davon abweichen.")
     for g in sorted(auswahl, key=lambda g: (g["hoehe"], g["id"])):
         teile = []

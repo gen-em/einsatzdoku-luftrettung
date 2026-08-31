@@ -2353,18 +2353,29 @@ konservativere Profil.
 
 | Ordner | Inhalt |
 |---|---|
-| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 70 px |
+| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 73 px |
 | `resources-icon<N>` | **nur** das Launcher-Symbol in N Pixeln (35, 36, 54, 56, 60, 61, 65, 70) |
 | `resources-marke<K>` | **nur** die Bildmarke in einer Kachel von K Pixeln |
 
 Getrennt, weil die beiden Größen nicht miteinander laufen: Ein Gerät mit
-60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. In einem
-Ordner zusammengefasst bräuchte es eine Kombination je Paar.
+60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. Die
+Ordnerzahl gewinnt dabei nichts — getrennt 8 + 3, zusammengelegt ebenfalls 11 —,
+wohl aber die Pflege: Zusammengelegt läge dieselbe 101er Kachel in fünf
+Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
 
 Die Symbolgröße ist eine **Vorgabe des Geräts** (`launcherIcon.width` in
 seiner `compiler.json`), keine Wahl; fehlt sie, skaliert `monkeyc` und meldet
-es als Warnung. Die Kachelgröße folgt der Regel `70/260 × Displayhöhe` — dem
-Verhältnis des Bezugsgeräts fenix6pro, dem `Ui.s()` ohnehin jede Länge folgt.
+es als Warnung.
+
+Die Kachelgröße der Bildmarke kommt dagegen aus einer Entscheidung: vier
+Stufen (60, 73, 101, 118) über die zehn vorkommenden Displayhöhen, Zielwert
+27 % — das Verhältnis 70/260 des Bezugsgeräts, dem `Ui.s()` ohnehin jede Länge
+folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
+vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
+und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
+Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
+`tools/uhr-bilder/LIESMICH.md`.
+
 Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
 `tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
 
