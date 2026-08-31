@@ -1230,8 +1230,13 @@ function ui_aktionen(array $o): string
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  *
- * $o: name, label, wert, art (text|date|time|number|email|password|select|
+ * $o: name, label, wert, art (text|date|number|email|password|file|select|
  *     textarea), optionen, klein, pflicht, attr, klasse, platzhalter
+ *
+ * Die vollständige Liste der Schlüssel steht unten in der Funktion; diese
+ * hier nennt die häufigen. Beide führen dieselben Arten — sie sind schon
+ * einmal auseinandergelaufen: `file` fehlte, `time` stand da, ohne dass es
+ * irgendwo benutzt wird.
  * ------------------------------------------------------------------------ */
 function ui_feld(array $o): void
 {

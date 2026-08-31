@@ -1772,7 +1772,15 @@ ui_seite_start(['titel' => 'Einstellungen']);
       if (!el) { return; }
       if (!text) { el.innerHTML = ''; return; }
       if (!ton) { el.textContent = text; return; }
-      const sym = ton === 'fehler' ? 'warnung' : (ton === 'ok' ? 'haken' : 'hinweis');
+      /* SYMBOLE WIE IM BAUSTEIN, nicht ungefähr wie im Baustein.
+       * ui_meldung_markup() (ui.php) führt die Tabelle
+       * ['fehler'=>'warnung','warn'=>'warnung','ok'=>'haken','info'=>'hinweis'],
+       * Design.md 9.5 schreibt sie vor. Dieser Nachbau ließ `warn` in den
+       * Sonst-Zweig fallen und zeigte das Hinweiszeichen. Erreichbar ist der
+       * Ton genau einmal — bei einer Sicherung mit unlesbaren geschützten
+       * Angaben, also gerade der Meldung, die auffallen soll. */
+      const symbole = { fehler: 'warnung', warn: 'warnung', ok: 'haken', info: 'hinweis' };
+      const sym = symbole[ton] || 'hinweis';
       el.innerHTML = '<div class="meldung meldung-' + ton + '" role="'
         + (ton === 'fehler' ? 'alert' : 'status') + '">'
         + edSymbol(sym, 'symbol-gross')
