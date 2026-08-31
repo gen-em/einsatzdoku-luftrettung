@@ -101,7 +101,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
 │   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
 │   │                       Sperre)
-│   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
+│   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
+│   │                       · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Sicherungen ohne Konto;
@@ -126,7 +127,11 @@ Daten erst nach Server-Bestätigung.
 │   ├── admin_rechtstexte.php  Editor dazu (Administration)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
-│   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
+│   ├── api/               day.php · mission.php · range.php · suchindex.php ·
+│   │                      backup_data.php (Kern, mit `?ohne_spuren=1` ohne
+│   │                      Punktlisten) · backup_restore.php ·
+│   │                      backup_spuren.php und backup_spuren_restore.php
+│   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
@@ -609,15 +614,26 @@ bleibt unverändert. Denselben Weg nutzt auch `install.php`: Der Installer legt
 den Administrator **ohne** Passwort an und zeigt auf der Erfolgsseite den
 Einmal-Link.
 
-**Backup (portabel):** `api/backup_data.php` liefert alle Daten der NutzerIn als
-Roh-JSON (geschützte Angaben weiterhin als Chiffretext). Der Browser
-entschlüsselt sie mit dem Inhaltsschlüssel, ersetzt sie durch Klartext und
-versiegelt das Ganze per `EdCrypto.sealBackup()` (AES-256-GCM, PBKDF2 mit der
-Rundenzahl des Kontos — sie steht seit Web 5.0.0 im Dateikopf, gzip via
-CompressionStream) zur `.edbak`-Datei. Beim Import öffnet der Browser
-die Datei, verschlüsselt die Angaben mit dem Schlüssel des **Zielkontos** neu
-und schickt sie an `api/backup_restore.php`. Dadurch sind Backups zwischen
-Konten übertragbar; der Server sieht nie Klartext. Aufbau: `docs/Backup-Format.md`.
+**Backup (portabel):** `api/backup_data.php?ohne_spuren=1` liefert den **Kern** —
+alle Daten der NutzerIn ohne Punktlisten, geschützte Angaben weiterhin als
+Chiffretext. Der Browser entschlüsselt sie mit dem Inhaltsschlüssel, ersetzt
+sie durch Klartext, holt die Spuren blockweise als SPUR1-Blobs
+(`api/backup_spuren.php`, 25 Kennungen je Anfrage) und schreibt daraus ein ZIP
+mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.0.0): Manifest,
+Kern, Spurteile. Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
+Sicherungskennung, Teilname und Nummer, und abgeleitet wird **einmal je
+Vorgang**.
+
+Beim Einspielen öffnet der Browser Manifest und Kern, verschlüsselt die
+Angaben mit dem Schlüssel des **Zielkontos** neu und schickt den Kern an
+`api/backup_restore.php`; der Server antwortet mit der Zuordnung
+`spur_ref` → angelegter Datensatz. Danach gehen die Blobs an
+`api/backup_spuren_restore.php` — geprüft, und Vorhandenes übersprungen.
+
+Dadurch sind Backups zwischen Konten übertragbar; der Server sieht nie
+Klartext. Die einteiligen Fassungen 2 und 3 werden weiterhin **gelesen** und
+nicht mehr geschrieben (bis NaDoku 1.0, Backlog Nr. 46). Aufbau:
+`docs/Backup-Format.md`.
 
 **Versionierung & Zwischenspeicher:** `WEB_VERSION` steht ausschließlich in
 `server/version.php` und erscheint in der Fußzeile. `asset($pfad)` (in
@@ -1731,7 +1747,9 @@ sechs sind umgestellt:
 | Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
 | Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
 | Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` |
-| Sicherung (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
+| Sicherung, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
+| Sicherung, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
+| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`) | `spur_blob_pruefen()`, `spur_blob_schreiben()` | — |
 | Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
 

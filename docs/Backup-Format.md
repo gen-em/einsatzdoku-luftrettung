@@ -1,13 +1,194 @@
 # Backup-Dateiformat (`.edbak`)
 
-Der Export sichert **alle** Daten einer NutzerIn in einer einzelnen,
+Der Export sichert **alle** Daten einer NutzerIn in einer
 passwortverschlüsselten Datei. Seit **Version 2** passieren Ver- und
 Entschlüsselung vollständig im Browser (`assets/crypto.js`) — der Server sieht
 zu keinem Zeitpunkt Klartext. Weil die geschützten Angaben dabei entschlüsselt
 in den Container wandern und beim Import mit dem Schlüssel des Zielkontos neu
 verschlüsselt werden, lässt sich ein Backup **in jedes Konto** einspielen.
 
-## 1. Container, Version 3 (seit Web 5.0.0)
+**Seit Web 11.0.0 ist die Datei mehrteilig** (Containerfassung 4): ein ZIP mit
+versiegelten Teilen. Die einteiligen Fassungen 2 und 3 werden weiterhin
+**gelesen** und nicht mehr geschrieben; mit NaDoku 1.0 fallen sie weg
+(Entscheidung vom 31.08.2026, `docs/Backlog.md` Nr. 46).
+
+| Fassung | Gestalt | geschrieben | gelesen |
+|---|---|---|---|
+| **4** | ZIP mit versiegelten Teilen (`PK`-Magie) | seit Web 11.0.0 | ja |
+| 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | ja, bis NaDoku 1.0 |
+| 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | ja, bis NaDoku 1.0 |
+
+---
+
+## 1. Container, Fassung 4 (seit Web 11.0.0)
+
+### 1.1 Warum mehrteilig
+
+Eine Sicherung mit 5000 Einsätzen trägt rund drei Millionen Spurpunkte. Bis
+Web 10.3.0 entstand sie als **eine** JSON-Zeichenkette im Browser und ging als
+**ein** POST zurück. Beides sprengt jedes Budget, das ein Telefon oder ein
+einfacher Webspace hat — und zwar an der Stelle, an der jemand ohnehin schon
+beunruhigt ist.
+
+Fassung 4 zerlegt sie deshalb. **Gemessen** am Referenzbestand (87 Einsätze,
+100 Ruhesegmente, 48 981 Spurpunkte): 218 KB statt 739 KB, also 70 % weniger,
+bei gleichem Inhalt.
+
+### 1.2 Aufbau
+
+Ein ZIP, **gespeichert und nicht gepackt** (`level: 0`) — die Teile sind
+bereits gzip *und* verschlüsselt; ein zweiter Packlauf kostet Zeit und bringt
+nichts:
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit, Web-Version |
+| `kern.edbak` | die Nutzlast (Abschnitt 2) **ohne** Punktlisten |
+| `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 2 MB |
+
+Das Manifest steht **physisch zuletzt** im Archiv: Es kennt erst dann alle
+Prüfsummen. Gelesen wird ohnehin nach Namen, nicht nach Reihenfolge.
+
+Das Manifest im Klartext:
+
+```jsonc
+{
+  "format": "einsatzdoku-backup-manifest",
+  "fassung": 4,
+  "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
+  "erzeugt_am": "2026-08-31T12:00:00.000Z",
+  "web_version": "11.0.0",
+  "nutzlast": 8,                   // Fassung des Kerns, s. Abschnitt 2
+  "teile": [
+    { "name": "kern.edbak",        "art": "kern",   "sha256": "…" },
+    { "name": "spuren/0001.edbak", "art": "spuren", "sha256": "…" }
+  ],
+  "spurteile": 1,
+  "spuren": 181,                   // wie viele Spuren die Datei trägt
+  "punkte": 48981,                 // und wie viele Punkte darin stecken
+  "pat_key_check": "3f2a…"         // wie bisher, s. Abschnitt 2
+}
+```
+
+Ein Spurteil im Klartext:
+
+```jsonc
+{
+  "spuren": [
+    { "spur_ref": 1, "blob": "<SPUR1, Base64>",
+      "stufe": 2, "n_original": 443, "n": 443 }
+  ]
+}
+```
+
+**Geschnitten wird an Spurgrenzen.** Eine Spur liegt ganz in einem Teil; eine
+über die Grenze gestückelte wäre nur mit beiden Teilen brauchbar, und dann
+hätte die Teilung nichts gebracht. Die Einteilung steht **vor** dem ersten
+Abruf fest (250 000 Punkte je Teil), weil die Zusatzdaten `<nr>/<gesamt>`
+tragen — die Gesamtzahl muss bekannt sein, bevor das erste Teil versiegelt
+wird.
+
+### 1.3 Jedes Teil ist ein Container
+
+| Bytes | Inhalt |
+|---|---|
+| 0–7 | Magie: ASCII `EDBAK2` + `0x00` + Fassung `0x04` |
+| 8 | Flag: `1` = Inhalt gzip-komprimiert, `0` = roh |
+| 9–12 | Rundenzahl der Schlüsselableitung (4 Bytes, big endian) |
+| 13–28 | Salt (16 Bytes) — **in allen Teilen derselbe** |
+| 29–40 | AES-GCM-Initialisierungsvektor (12 Bytes, je Teil neu) |
+| ab 41 | Chiffretext, die letzten 16 Bytes sind das GCM-Auth-Tag |
+
+Der Aufbau ist der der Fassung 3 — **bis auf die Fassungsnummer und die
+Zusatzdaten.**
+
+**Warum das Fassungsbyte trotzdem 0x04 ist.** Die Zusage aus Abschnitt 1a
+lautet „AAD = die ersten 13 Bytes", und für ein Teil stimmt sie nicht mehr.
+Wer ein Teil einzeln öffnet — von Hand, mit dem Rezept unten —, bekäme mit
+`0x03` die Meldung für ein falsches Passwort und suchte den Fehler an der
+falschen Stelle. Mit `0x04` kann jeder Leser sagen, was es wirklich ist.
+
+### 1.4 Die Zusatzdaten binden den Platz des Teils
+
+```
+AAD = die ersten 13 Bytes  ‖  eine der beiden Zeichenketten (UTF-8):
+
+  Manifest       EDBAK4|manifest
+  jedes andere   EDBAK4|<kennung>|<name>|<nr>/<gesamt>
+```
+
+`<kennung>` ist die Sicherungskennung aus dem Manifest, `<name>` der
+Archivname des Teils, `<nr>` seine Stellung in der Teileliste (1-basiert) und
+`<gesamt>` deren Länge. Der Kopf bleibt gebunden wie bisher; der Platz kommt
+dazu.
+
+**Was das leistet:** Ein fehlendes, doppeltes, vertauschtes oder aus einer
+**anderen** Sicherung stammendes Teil fällt beim Entsiegeln auf — nicht erst
+beim Datenvergleich, und nicht gar nicht. Ohne diese Bindung ließe sich
+`spuren/0003.edbak` einer fremden Sicherung unterschieben; sie entsiegelte
+klaglos (dasselbe Passwort genügt) und brächte die Spuren eines fremden
+Bestands mit. Das Muster ist von Cryptomator und age abgeschaut, wo der
+Blockindex aus demselben Grund in die Zusatzdaten wandert.
+
+**Zwei Sicherungen, und jede trägt für sich.** Die SHA-256 aus dem Manifest
+fängt dieselben Fälle wie die Zusatzdaten — aber sie sagt Verschiedenes: „Teil
+X ist nicht das, das hier stehen soll" gegen „ließ sich nicht öffnen". Für
+wen eine Sicherung nicht aufgeht, ist das der Unterschied zwischen zehnmal
+Passwort tippen und die richtige Datei suchen. `tools/containerprobe/` weist
+beide **einzeln** nach.
+
+### 1.5 Eine PBKDF2 je Vorgang
+
+Salt und Rundenzahl stehen in **allen** Teilköpfen gleich; der Schlüssel wird
+einmal abgeleitet und weitergereicht. Bei zwölf Teilen wären es sonst zwölf
+Ableitungen zu je 320 000 Runden — auf einem gedrosselten Telefon eine knappe
+Minute reines Warten, und zwar zweimal: beim Sichern und beim Einspielen.
+
+Wer eine Fassung-4-Datei liest, nimmt Salt und Runden aus dem **Manifest** —
+es ist das erste Teil, das er anfasst.
+
+### 1.6 Von Hand öffnen (Python)
+
+```python
+import hashlib, gzip, json, struct, zipfile, base64
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+passwort = '…'
+
+def teil_oeffnen(roh, schluessel, aad_text):
+    assert roh[:6] == b'EDBAK2' and roh[7] == 4, 'kein Teil der Fassung 4'
+    kopf, flag = roh[:13], roh[8]
+    aad = kopf + aad_text.encode('utf-8')
+    koerper = AESGCM(schluessel).decrypt(roh[29:41], roh[41:], aad)
+    return json.loads(gzip.decompress(koerper) if flag == 1 else koerper)
+
+with zipfile.ZipFile('backup.edbak') as z:
+    m = z.read('manifest.edbak')
+    runden = struct.unpack('>I', m[9:13])[0]
+    salz = m[13:29]
+    key = hashlib.pbkdf2_hmac('sha256', passwort.encode(), salz, runden, 32)
+
+    manifest = teil_oeffnen(m, key, 'EDBAK4|manifest')
+    gesamt = len(manifest['teile'])
+    for nr, t in enumerate(manifest['teile'], start=1):
+        roh = z.read(t['name'])
+        assert hashlib.sha256(roh).hexdigest() == t['sha256'], t['name']
+        aad = f"EDBAK4|{manifest['kennung']}|{t['name']}|{nr}/{gesamt}"
+        inhalt = teil_oeffnen(roh, key, aad)
+        if t['art'] == 'kern':
+            kern = inhalt
+        else:
+            for e in inhalt['spuren']:
+                blob = base64.b64decode(e['blob'])   # SPUR1, s. Abschnitt 2
+```
+
+Die Spur aus dem Blob holt `spur1_lesen()` weiter unten. Dieselben Handgriffe
+gehen in PHP mit `unpack('l*', gzuncompress(...))` und in JavaScript mit
+`DataView`.
+
+---
+
+## 1a. Container, Fassung 3 (Web 5.0.0 bis 10.3.0) — wird weiterhin gelesen
 
 | Bytes   | Inhalt                                                          |
 |---------|-----------------------------------------------------------------|
@@ -32,7 +213,7 @@ sieht aus wie ein falsches Passwort. Sicherungen werden aber gerade für den
 Fall aufbewahrt, dass etwas schiefgeht; eine Datei, die genau dann nicht mehr
 aufgeht, ist keine.
 
-## 1a. Container, Version 2 (bis Web 4.7.0) — wird weiterhin gelesen
+## 1b. Container, Fassung 2 (bis Web 4.7.0) — wird weiterhin gelesen
 
 | Bytes   | Inhalt                                                          |
 |---------|-----------------------------------------------------------------|
@@ -46,9 +227,12 @@ Rundenzahl: **immer 310 000**, nirgends vermerkt. AAD: die ersten 9 Bytes.
 Die Fassungsnummer ersetzt die fehlende Angabe — deshalb bleiben diese Dateien
 lesbar. Geschrieben werden sie nicht mehr.
 
-Eine Datei mit einer **höheren** Fassungsnummer als 3 wird nicht als „Passwort
-falsch" gemeldet, sondern als „stammt aus einer neueren Fassung" — sonst sucht
-die lesende Person den Fehler an der falschen Stelle.
+Eine Datei mit einer Fassungsnummer, die diese Installation nicht kennt, wird
+nicht als „Passwort falsch" gemeldet, sondern als „stammt aus einer neueren
+Fassung" — sonst sucht die lesende Person den Fehler an der falschen Stelle.
+Ein einzeln vorgelegtes **Teil** (Fassung 4) bekommt eine eigene Meldung: Es
+ist kein Bestand, sondern ein Stück, und die Meldung sagt, wonach zu suchen
+ist.
 
 Entschlüsselung von Hand (Beispiel, Python; behandelt beide Fassungen):
 
@@ -72,7 +256,7 @@ roh = AESGCM(key).decrypt(b[kopf+16:kopf+28], b[kopf+28:], b[0:kopf])
 daten = json.loads(gzip.decompress(roh) if b[8] == 1 else roh)
 ```
 
-## 1a. Unlesbare Angaben (seit Web 4.1.0)
+## 1c. Unlesbare Angaben (seit Web 4.1.0)
 
 Der Export entschlüsselt die geschützten Angaben, bevor er die Datei
 versiegelt — das ist der Grund, warum sich ein Backup in **jedes** Konto
@@ -108,9 +292,21 @@ einem Hashwert nicht zurückrechenbar.
 
 ## 2. Inneres JSON
 
-**Nutzlastversion 7.** Der Container bleibt Version 3, die Signatur `EDBAK2`
-unverändert — geändert hat sich allein der **Inhalt**: Die Datei führt jetzt
-den **Papierkorb**. Gelöschte Einsätze, Ruhesegmente und Diensttage stehen
+**Nutzlastversion 8 (seit Web 11.0.0).** Sie trägt **keine Punktlisten mehr**:
+Jedes spurtragende Objekt hat statt `track` eine `spur_ref` und die Angaben
+`stufe`, `n_original` und `n`; die Punkte stehen als SPUR1-Blobs in den
+Spurteilen des Containers (Abschnitt 1.2).
+
+> **Die Fassung entscheidet, welchen Weg der Rückweg nimmt** — nicht die
+> Anwesenheit eines `track`-Feldes. Eine Spur ohne Punkte sähe genauso aus wie
+> ein Verweis, und dann liefe eine Fassung-8-Datei still in den alten Zweig
+> und verlöre alle Spuren. `api/backup_restore.php` prüft deshalb nach unten
+> **und nach oben**: unter 6 abgelehnt (s. u.), über 8 ebenfalls, mit der
+> Meldung „stammt aus einer neueren Fassung".
+
+**Nutzlastversion 7 (Web 8.0.0 bis 10.3.0).** Der Container blieb Version 3,
+die Signatur `EDBAK2` unverändert — geändert hatte sich allein der **Inhalt**:
+Die Datei führt seither den **Papierkorb**. Gelöschte Einsätze, Ruhesegmente und Diensttage stehen
 darin und kommen beim Einspielen als Papierkorbeinträge zurück. Bis Version 6
 fehlten sie ganz; eine Wiederherstellung leerte den Papierkorb endgültig.
 
@@ -157,9 +353,9 @@ seit Web 4.1.2 auch:
 ```jsonc
 {
   "format": "einsatzdoku-backup",       // Kennung, immer dieser Wert
-  "version": 7,
+  "version": 8,                         // 8 = Verweise, 6/7 = Punktlisten
+  "app": "einsatzdoku-notarzt",         // Kennung der Anwendung
   "created_at": "2026-07-20T18:00:00+00:00",   // Export-Zeitpunkt (UTC)
-  "app": "einsatzdoku-notarzt",
   "user": { "email": "...", "name": "..." },   // Herkunftskonto, wird beim
                                                // Einspielen angezeigt
 
@@ -330,30 +526,67 @@ seit Web 4.1.2 auch:
     "resus": [ { "started_at": "2026-07-19 08:40:00",
                  "events": [ { "type": "adrenalin",
                                "occurred_at": "2026-07-19 08:43:00" } ] } ],
-    "track": [ [0, 47.72, 10.31, 712.5, 1721383200] ]
-    //          seq  lat    lon    ele    ts(Unix-Sekunden UTC); ele kann null sein
+    "resources": [ "RTW 1", "First Responder" ],   // Namen aus den Stammdaten
+
+    // AB NUTZLAST 8: ein Verweis statt der Punkte. Die Spur selbst steht als
+    // SPUR1-Blob im Spurteil (Abschnitt 1.2). `spur_ref` ist eine laufende
+    // Nummer DIESES Exportvorgangs und sonst nichts — die Datenbankkennung
+    // gälte nur in der Datenbank, aus der die Sicherung stammt (E9, E15).
+    //
+    // WER KEINE SPUR HAT, BEKOMMT KEINE `spur_ref`. Ein leeres Feld sähe aus
+    // wie „hat keine Spur"; die Fassung sagt, dass die Punkte woanders stehen.
+    "spur_ref": 1, "stufe": 2, "n_original": 443, "n": 443
+
+    // BIS NUTZLAST 7 stand hier stattdessen die Punktliste:
+    // "track": [ [0, 47.72, 10.31, 712.5, 1721383200] ]
+    //             seq  lat    lon    ele    ts(Unix-Sekunden UTC); ele kann null sein
   } ],
 
   "rest_segments": [ {
     "client_ref": "r-…", "day_id": 17,
     "started_at": "…", "ended_at": "…", "final": 1,
     "deleted_at": null, "deleted_with_day": 0,   // Papierkorb, seit Version 7
-    "track": [ [0, 47.72, 10.31, 712.5, 1721383200] ]
+    "spur_ref": 82, "stufe": 2, "n_original": 129, "n": 129
   } ]
 }
 ```
 
-### Woher die Punkte kommen (seit Web 10.0.0)
+### Woher die Punkte kommen (seit Web 10.0.0, neu gefasst mit Web 11.0.0)
 
-**Am Dateiformat ändert sich nichts.** Die Spur steht weiterhin als
-`[seq, lat, lon, ele, ts]` je Punkt in der Zeile ihres Einsatzes oder
-Ruhesegments.
+Serverseitig liegen die Punkte seit Web 10.0.0 nicht mehr nur als Zeilen in
+`track_points`, sondern je nach Alter als **Blob** in `track_blobs` (Format
+SPUR1, `docs/Technik.md` 4.97). **Seit Web 11.0.0 gibt die Sicherung sie
+genauso weiter**, statt sie auszupacken: Der Spurteil trägt den Blob, wie er
+liegt.
 
-Serverseitig liegen die Punkte seit Web 10.0.0 aber nicht mehr nur als Zeilen
-in `track_points`, sondern je nach Alter als **Blob** in `track_blobs`
-(Format SPUR1, `docs/Technik.md` 4.97). `edbak_build()` liest sie über
-`spur_lib.php` und setzt beide Stufen zusammen; die Sicherung sieht deshalb
-gleich aus, egal in welcher Stufe der Bestand gerade steht.
+**Eine Zusage hat sich dabei geändert, und das gehört gesagt.** Bis Web 10.3.0
+hieß es hier: „die Sicherung nimmt den Datenbankstand und kodiert nicht neu".
+Das gilt so nicht mehr:
+
+| Bestand | in der Datei |
+|---|---|
+| Stufe 1 (nur Zeilen) | **Stufe 2** — verlustfrei kodiert beim Sichern |
+| Stufe 2, dazu nachgereichte Zeilen | **Stufe 2** — zusammengesetzt und neu kodiert |
+| Stufe 2 ohne Nachzügler | Stufe 2 — der Blob, wie er liegt |
+| Stufe 3 (ausgedünnt) | Stufe 3 — der Blob, wie er liegt |
+
+Der **Bestand** bleibt dabei unangetastet; nur die Datei trägt die Spur
+kodiert. Der Grund: Ohne das müsste die Datei zwei Spurformen führen und der
+Rückweg zwei Wege haben, und der ganze Mengengewinn entfiele für frische
+Bestände — gerade die mit den meisten Punkten.
+
+**Eine Folge, die man kennen sollte:** Eine so kodierte Stufe-1-Spur kommt
+beim Einspielen als Blob zurück und überspringt damit die Karenzfrist
+(E-S2-06). Für die Spur ist das folgenlos — sie ist verlustfrei —, aber der
+Bestand steht danach eine Stufe weiter, als er stand.
+
+**Drei Fälle werden abgelehnt statt still halbiert** (`spur_lib.php`,
+`spur_fuer_sicherung_viele()`): eine ausgedünnte Spur *mit* nachgereichten
+Zeilen (die Nummern der beiden Teile meinen Verschiedenes), eine Lücke in den
+Punktnummern (die Position *ist* die Nummer) und eine Spur über **50 000
+Punkten** (die Grenze, die auch der Rückweg zieht — `LIMIT_TRACKPUNKTE_SPUR`
+in `validate_lib.php`; abgelehnt wird die ganze Spur, nicht gekappt). Jeder
+dieser Fälle wird beim Sichern **benannt**.
 
 **Eine Folge davon gehört gesagt:** Die Blob-Stufen legen die Koordinaten mit
 **10⁻⁶ Grad** (≈ 0,11 m) und die Höhe mit **0,1 m** ab. Eine Sicherung aus
@@ -464,7 +697,8 @@ in Abschnitt 3.
 - `day` ist das **lokale** Kalenderdatum des Beginns (Tageswechsel 0:00).
 - Zusatzfelder der Einsätze folgen `server/mission_fields.php`; künftige
   Versionen können Felder ergänzen (Import ignoriert Unbekanntes).
-- `is_default` bei `bases`/`aircraft`: intern seit Version 3 in einer
+- `is_default` bei `bases`/`vehicles` (bis Nutzlast 5 hieß der Block
+  `aircraft`): intern seit Version 3 in einer
   nutzerbezogenen Tabelle (`user_defaults`) abgelegt, im Exportformat aber
   weiterhin als Flag je Zeile abgebildet (Abwärtskompatibilität).
 - **Zentrale (globale) Stammdaten** (vom Admin gepflegt, seit Version 3)
@@ -480,6 +714,33 @@ in Abschnitt 3.
   `manual=1` und keines der beiden Präfixe zutrifft, sonst `edited=0`.
 
 ## 3. Import-Verhalten
+
+### Zwei Schritte statt einem (seit Nutzlast 8)
+
+Eine Fassung-4-Datei wird in zwei Zügen eingespielt, und zwar in dieser
+Reihenfolge:
+
+1. **Manifest öffnen und die Teileliste prüfen** — *bevor* irgendetwas
+   angelegt wird. Ein fehlendes Teil soll auffallen, solange noch nichts
+   geschehen ist, nicht auf halbem Weg.
+2. **Kern senden** (`api/backup_restore.php`). Der Server legt an wie bisher
+   und liefert die **Spurkarte** zurück: `spur_ref` → angelegter Datensatz.
+   Sie steht getrennt von der Rückmeldung an die Nutzerin — sie ist eine
+   Arbeitsangabe für den nächsten Zug, keine Auskunft.
+3. **Spurteile senden** (`api/backup_spuren_restore.php`), in Häppchen von
+   höchstens 1,5 MB. Der Server prüft Eigentum und Blob, schreibt über
+   `spur_lib.php` und **überspringt Vorhandenes** — eine abgebrochene
+   Wiederherstellung lässt sich damit fortsetzen.
+
+**Eine `spur_ref` ohne Ziel ist kein Fehler**, sondern der Normalfall beim
+zweiten Einspielen derselben Datei: Der Einsatz war schon da und wurde
+übersprungen, also gibt es für seine Spur keine neue Kennung. Gezählt und
+gemeldet wird es trotzdem.
+
+**Die Höhe des Einsatzortes entsteht erst im dritten Zug**, weil sie aus der
+Spur gerechnet wird und die dann erst da ist.
+
+### Allgemein
 
 - Import immer in das **eigene, angemeldete** Konto; bestehende Daten werden
   nie überschrieben.
@@ -620,6 +881,16 @@ automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
   Datenbank: Beim Einspielen wird sie auf die neu vergebene Kennung
   umgeschrieben. Bis Web 7.2.3 behauptete dieser Abschnitt das Gegenteil,
   und das Beispiel weiter oben zeigte den Schlüssel nicht.
+
+- **`_spur_index`** (seit Web 11.0.0). Der Kern trägt beim Abruf ein
+  Arbeitsfeld mit den Datenbankkennungen der Spuren — der Browser braucht sie,
+  um die Blobs zu holen (`api/backup_spuren.php`). Es wird **entfernt, bevor
+  versiegelt wird**, und trägt den Unterstrich, den dieses Projekt für solche
+  Felder benutzt (`_pat`, `_patState`). In der Datei steht statt dessen die
+  laufende `spur_ref`.
+
+  Dass es wirklich draußen bleibt, ist geprüft: `tools/containerprobe/` sieht
+  nach, ob im entsiegelten Kern noch ein Feld mit Unterstrich steht.
 - `other_resources` (in `missions`) — tote Altspalte. Die weiteren
   Rettungsmittel liegen seit der Migration `2026_07` als einzelne Zeilen in
   `mission_resources` und stehen in der Datei unter `resources`. Die Spalte
@@ -700,6 +971,11 @@ Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
 ---
 
 ## 5. Admin-Sicherung (seit Web 5.9.0)
+
+> **Sie schreibt weiterhin das einteilige Format.** Containerfassung 4 gilt
+> seit Web 11.0.0 für die Sicherung, die eine NutzerIn selbst erstellt; die
+> Serversicherung zieht in AP6 nach (Konzept S2, 3.3). Bis dahin gilt für sie
+> unverändert, was hier steht.
 
 Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
 `adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/` als

@@ -1325,11 +1325,28 @@ Datei und kann nicht auseinanderlaufen.
 ## 6. Backup
 
 Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
-deine Daten als einzelne
-verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
-10 Zeichen, wird nirgends gespeichert. In dieser Datei stehen **alle
-geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
-die Hand bekommt, steht nur dieses Passwort.
+deine Daten als **eine** verschlüsselte Datei (`.edbak`) herunter — Passwort
+frei wählbar, mindestens 10 Zeichen, wird nirgends gespeichert. In dieser
+Datei stehen **alle geschützten Angaben im Klartext**; zwischen ihnen und
+jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
+
+**Seit Web 11.0.0 ist die Datei innen mehrteilig.** An der Bedienung ändert
+das nichts — eine Datei, ein Passwort, ein Knopf. Innen liegen jetzt aber ein
+Verzeichnis, ein Kern und die Spuren in eigenen, einzeln verschlüsselten
+Teilen. Der Grund ist die Menge: Bei ein paar tausend Einsätzen sind die
+Spurpunkte der weitaus größte Teil, und in einem Stück brachten sie ältere
+Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt statt ausgeschrieben —
+gemessen am Beispielbestand **218 KB statt 739 KB**, also 70 % weniger.
+
+Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
+die Teile mit („Spuren werden geholt (Teil 2 von 5) …"), und die
+Abschlussmeldung nennt Spuren und Punkte.
+
+**Ältere Sicherungen kannst du weiterhin einspielen.** Umgekehrt gilt das
+nicht: Eine Datei aus Web 11.0.0 lässt sich in einer älteren Installation
+nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
+Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
+entpackt hast), sagt die Anwendung auch das.
 
 **Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
 Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis

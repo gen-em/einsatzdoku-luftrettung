@@ -1722,3 +1722,104 @@ schreiben, sagen genau das.
 - **Eine Spur über 50 000 Punkten.** Der Bestand hat keine.
 - **Nebenläufigkeit** zwischen Abruf und Ausdünnungsjob. Die Probe hält die
   Jobs an, statt den Fall herzustellen.
+
+### AP5 — Containerfassung 4 (in Arbeit, Web 11.0.0)
+
+**Stand:** Container, Sichern, Wiederherstellen und der Kreislauf stehen; der
+Messstand und das Prüfdokument fehlen noch. Vier Commits, einer je Schritt.
+
+#### Vier Entscheidungen, alle vorgelegt
+
+| Frage | Entscheidung (31.08.2026) |
+|---|---|
+| Trägt ein Teil weiterhin das Fassungsbyte `0x03` oder bekommt es `0x04`? | **`0x04`.** Die Zusage „AAD = die ersten 13 Bytes" stimmt für ein Teil nicht mehr; wer eines einzeln öffnet, bekäme sonst die Meldung für ein falsches Passwort |
+| Base64 im Spurteil (Konzeptwortlaut) oder binär mit Längenpräfix? | **Base64.** Der Teil bleibt JSON und damit von Hand lesbar; der Aufschlag verschwindet größtenteils in der gzip-Schicht des Containers |
+| Baut der Messstand seinen Großbestand in der Altfassung oder braucht es einen SPUR1-Kodierer in Python? | **Weder noch** — s. u. „Der Messstand bleibt, wie er ist" |
+| Stufe-1-Spuren beim Sichern im Vorbeigehen kodieren, obwohl `Backup-Format.md` das Gegenteil zusagt? | **Ja, und die Zusage wird fortgeschrieben.** Ohne das müsste die Datei zwei Spurformen führen |
+
+Dazu eine Richtungsentscheidung von außerhalb dieses Pakets: **Das Altformat
+wird mit NaDoku 1.0 abgeschafft** (Backlog Nr. 46). Fassung 4 ist damit nicht
+die Zweitform, sondern der Standard — die Prüfmittel werden auf sie gebaut.
+
+#### Was der Kreislauf gefunden hat
+
+Zwei Fehler, beide in dieser Umsetzung, beide von den Prüfmitteln und nicht
+vom Lesen gefunden:
+
+1. **`spur_umriss()['gesamt']` meint etwas anderes, als es hier gebraucht
+   wurde.** Es ist die höchste Punktnummer plus eins — bei einer ausgedünnten
+   Spur also die Zahl **vor** der Ausdünnung (443 statt 148). Der Kern hätte
+   für jede ausgedünnte Spur eine Punktzahl genannt, die es in ihr nicht gibt.
+   Aufgefallen beim Nachmessen gegen den Demo-Bestand, nicht beim Schreiben.
+2. **Die Höhe des Einsatzortes fiel beim Wiederherstellen weg.**
+   `compute_site_elevation()` rechnet sie aus der Spur; bei Nutzlast 7 lagen
+   die Punkte in derselben Anfrage, bei Fassung 4 kommen sie erst danach.
+   **79 von 87 Einsätzen** kamen ohne `site_ele_m` zurück. Kein Datenverlust
+   — die Angabe ist abgeleitet —, aber ein stiller Unterschied zwischen
+   Sicherung und Wiederherstellung, und genau die sucht ein Kreislauf.
+
+Dazu eine Zahl, die etwas anderes maß als ihre Beschriftung: „Das ZIP packt
+nicht noch einmal" verglich Dateigrößen und schlug fehl (+57,7 %). Bei drei
+Teilen zu 500 Byte ist der ZIP-Rahmen größer als jede Ersparnis; gemessen war
+der Rahmen. Jetzt wird das Verfahren je Eintrag gelesen (`0` = gespeichert).
+
+#### Der Messstand bleibt, wie er ist — und warum das die richtige Wahl ist
+
+Vorgelegt war die Frage, ob `vervielfaeltigen.py` künftig Fassung 4 baut. Die
+erste Antwort darauf war „ja, mit wörtlich übernommenen Blobs". Beim
+Durchdenken der Abnahme hat sie sich als überflüssig erwiesen:
+
+Der Messstand **erzeugt** einen Bestand; **gemessen** wird das Sichern und
+Wiederherstellen dieses Bestands. Der Weg dorthin ist der Altformat-Lesepfad —
+und der muss bis NaDoku 1.0 ohnehin funktionieren, ist also selbst ein
+Prüffall (R11). Die Kette lautet damit:
+
+```
+Altformat vervielfältigen  →  einspielen (Altweg, R11)
+                           →  sichern (Fassung 4, GEMESSEN)
+                           →  wiederherstellen (Fassung 4, GEMESSEN)
+```
+
+Beide gemessenen Schritte laufen in Fassung 4. Ein Python-Schreiber für den
+Container wäre eine zweite Umsetzung des Formats, die bei jeder Änderung
+mitgezogen werden müsste — für nichts, was er belegt.
+
+**Was das kostet, gehört gesagt:** Der Messstand hängt damit am Altformat und
+muss zum Stichtag NaDoku 1.0 umgebaut werden. Das steht in Backlog Nr. 46 bei
+den Dingen, die dann fallen.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Container gegen drei unabhängige Umsetzungen | `containerprobe/probe.mjs` | **31 Erwartungen, 0 nicht erfüllt** |
+| Punkt für Punkt PHP → Chromium → Python | dieselbe | **9000 Einzelvergleiche, 0 Abweichungen** |
+| Die Bindung der Teile | dieselbe | vertauscht · falsche Nummer · fremde Sicherung · verfälschtes Byte · falsches Passwort — **je abgewiesen** |
+| Gegenprobe zur Bindung | dieselbe | dasselbe fremde Teil geht **mit seiner eigenen Kennung** auf |
+| Beide Sicherungen tragen einzeln | dieselbe | Prüfsumme allein: gefangen · Zusatzdaten allein (Manifest nachgezogen): gefangen |
+| Schadensfälle am Archiv | dieselbe | fehlend · vertauscht · fremd · verfälscht · überzählig · ohne Manifest — **je benannt** |
+| ZIP ohne Kompression | dieselbe | Verfahren je Eintrag **0**, alle vier |
+| Base64 für 2 MB | dieselbe | 2 796 204 Zeichen im Rundlauf; der alte Wandler scheitert daran |
+| **Kreislauf `edbak`** (Fassung 4 rein → raus) | `kreislauf.py --art edbak` | **252 882 Einzelvergleiche, 0 unerklärt** (16 erwartet) |
+| **Kreislauf `edbak-alt`** (Altformat rein, R11) | `--art edbak-alt` | **287 282 Einzelvergleiche, 0 unerklärt** (560 erwartet, kein Spurpunkt darunter) |
+| Kreislauf `csv` | `--art csv` | 8797, **0 unerklärt** (859 erwartet) |
+| Der Rückweg schreibt Blobs, keine Zeilen | SQL im Umlaufkonto | 181 Blobs mit **48 981 Punkten**, **0 Zeilen** in `track_points` |
+| Neue Datei gegen die alte Nutzlast | Punktvergleich | **244 905 Einzelvergleiche, 0 Abweichungen** |
+| Sicherung des Demo-Bestands im Browser | Chromium | 87/100/16, 181 Spuren, 48 981 Punkte — **212,9 kB in 0,2 s, 0 Konsolenfehler** |
+| Kern ohne Spuren gegen Kern mit Spuren | `edbak_build()` | **183 878 statt 2 248 092 Byte (8,2 %)** |
+| Referenzdatei | Dateigröße | **218 KB statt 739 KB** (70 % weniger) |
+| Das dokumentierte Python-Rezept | von Hand gegen die Referenz gefahren | öffnet Manifest, Kern und **181 Blobs** |
+| spur/job/ingest/gpx/Wiederherstellung | die Proben | 25 · 24 · 24 · 75 · 30, **je 0 nicht erfüllt** |
+| Wortliste (R28) | `wortliste.py` | 0 / 0 / 0 |
+
+**Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
+
+- **Der Großbestand.** 5000 Einsätze sichern und wiederherstellen unter Drossel
+  — die Abnahme von AP5. Der Messstand kann es, gefahren ist es nicht.
+- **Die Wiederaufnahme nach einem echten Abbruch** mitten in den Spurteilen.
+  Der Weg ist gebaut und die Überspringlogik geprüft; der Abbruch selbst ist
+  nicht hergestellt.
+- **Andere Browser als Chromium.** WebKit und Gecko stehen in dieser Umgebung
+  nicht zur Verfügung.
+- **Die Admin-Sicherungen.** Sie schreiben weiter das einteilige Format; das
+  ist AP6.

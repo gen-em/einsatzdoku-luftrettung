@@ -325,9 +325,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3 und S2/AP4.*
-    P-P3-03 verlangt null. Die Prüfung meldet **174** Treffer (bei Aufnahme
-    158); 171 davon sind Kommentare oder richtige Typografie (die
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4 und AP5.*
+    P-P3-03 verlangt null. Die Prüfung meldet **189** Treffer (bei Aufnahme
+    158); 186 davon sind Kommentare oder richtige Typografie (die
     Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
     das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
     bei der Aufnahme:
@@ -336,7 +336,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
     > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
     > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
-    > auf 174 (`?art=…&id=…` allein zählt viermal). Wer die Zahl als
+    > auf 174 (`?art=…&id=…` allein zählt viermal) und S2/AP5 mit den
+    > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189.
+    > Wer die Zahl als
     > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
     > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
     > eine Fußnote.
@@ -399,9 +401,20 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     Zu entfernen sind dann: der Lesezweig in `assets/crypto.js`
     (`openBackup`, Fassung 2 und 3), der Punktlisten-Rückweg in
-    `backup_lib.php` (`$spurSchreiben`, `$insPoint`), die Fassungsweiche in
-    `tools/referenzdatensatz/vergleich/lesen.py` und die einteilige
-    Referenzdatei samt dem Lauf, der sie fährt.
+    `backup_lib.php` (`$spurSchreiben`, `$insPoint`), die Annahme von
+    Nutzlast 6 und 7 in `api/backup_restore.php`, die Fassungsweiche in
+    `tools/referenzdatensatz/vergleich/lesen.py`, die einteilige
+    Referenzdatei unter `referenz/altformat/` samt dem Lauf `--art edbak-alt`
+    und seiner Ausnahmeliste.
+
+    **Und der Messstand hängt daran.** `tools/messstand/vervielfaeltigen.py`
+    baut den 5000er-Bestand, indem es die Referenz-Nutzlast vervielfältigt und
+    als einteilige Datei versiegelt; eingespielt wird über den
+    Altformat-Lesepfad. Das ist heute die richtige Wahl (S2/AP5 begründet sie:
+    Gemessen wird das Sichern und Wiederherstellen, und beides läuft in
+    Fassung 4 — der Weg zum Bestand ist selbst ein R11-Prüffall). Zum Stichtag
+    braucht er einen anderen Weg: entweder einen Container-Schreiber in Python
+    oder ein Herstellen des Bestands über die Uhr-Schnittstelle.
 
     > **Warum das hier steht und nicht einfach passiert.** Ein Lesezweig, der
     > niemandem mehr auffällt, wird nicht gepflegt und trotzdem mitgeschleppt

@@ -184,3 +184,19 @@ Unterordner statt in derselben Ablage.
 mehr als Fünftupel je Punkt gezählt, sondern als dekodierte Spur — dieselben
 48 981 Punkte, anders gezählt. Wer die Zahl als Fortschrittsmaß liest, liest
 sie falsch.
+
+## Die Werkzeuge brauchen HTTPS
+
+`kreislauf.py` spricht mit `https://127.0.0.1:8443` und nicht mit
+`http://127.0.0.1:8080` — das ist kein Geschmack, sondern Notwendigkeit:
+
+> Das Sitzungs-Cookie trägt `Secure` (`auth_guard.php`). Chromium schickt ein
+> solches Cookie auch über `http://127.0.0.1`, weil es localhost als
+> vertrauenswürdig behandelt; Pythons `requests` hält sich an die Regel und
+> schickt es nicht. Die Anmeldung geht dann durch, index.php wirft die Sitzung
+> gleich wieder weg, und die Meldung lautet **„Anmeldung gescheitert:
+> unbekannt"** — im Browser funktioniert dieselbe Anmeldung.
+
+Wer also eine Anmeldung sieht, die nur in Python scheitert: die Adresse
+prüfen, nicht das Passwort. `einspielen/lokal_starten.sh` fährt beide Ports
+hoch (8080 ohne, 8443 mit TLS).
