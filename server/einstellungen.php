@@ -1937,13 +1937,31 @@ ui_seite_start(['titel' => 'Einstellungen']);
         const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'einsatzdoku-backup-' + new Date().toISOString().slice(0, 10) + '.edbak';
+        /* DER DATEINAME STEHT IN EINER VARIABLEN, weil ihn zwei Stellen
+         * brauchen: der Download und die Meldung darunter. Zwei Ausdrücke
+         * nebeneinander liefen mit dem nächsten Tageswechsel auseinander. */
+        const dateiname = 'einsatzdoku-backup-'
+          + new Date().toISOString().slice(0, 10) + '.edbak';
+        a.download = dateiname;
         a.click();
         URL.revokeObjectURL(url);
         melde(expState, `Fertig: ${(data.missions || []).length} Einsätze `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(data.rest_segments || []).length} Ruhesegmente, `
           + `${(data.days || []).length} Diensttage.`
+          /* DASS DIE DATEI DA IST, MUSS DASTEHEN (Rückmeldung nach P3).
+           *
+           * Der Download läuft ohne Dialog und ohne Ton durch; wer nicht
+           * gerade auf die Download-Leiste des Browsers sieht, merkt nichts
+           * davon und sucht anschließend eine Datei, deren Namen er nicht
+           * kennt. Der Name ist deshalb der eigentliche Inhalt dieses Satzes
+           * — „wurde heruntergeladen" allein hilft beim Suchen nicht.
+           *
+           * WO sie liegt, sagt der Satz bewusst NICHT: Das entscheidet die
+           * Einstellung des Browsers, nicht diese Anwendung. Eine Zusage
+           * „in deinem Download-Ordner" wäre für jeden falsch, der sein
+           * Ziel selbst wählt. */
+          + ` Die Datei „${dateiname}" wurde heruntergeladen.`
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
                 + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '

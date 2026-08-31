@@ -950,6 +950,17 @@ Skript.
 </div>
 ```
 
+**Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
+nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
+senkrechte Polsterung ganz oben — gemessen 0 px Luft darüber, 19 px darunter.
+Es gibt dafür genau eine Regel im Stylesheet, die die Zeilenhöhe auf den
+Innenraum setzt; die 44 px bleiben dabei stehen. **`align-items` löst es
+nicht:** Chromium legt den Shadow-Inhalt eines Eingabefeldes nicht in einen
+Flex-Fluss, `display:flex` bleibt an dieser Stelle wirkungslos (nachgemessen).
+Wer ein weiteres Dateifeld baut, nimmt `ui_feld()` mit `'art' => 'file'` und
+bekommt die Regel mit; sie hängt am Attributselektor, nicht an einer
+Zusatzklasse.
+
 ### 9.8 Titelzeile
 
 **Zweck:** Rückweg, Titel, Unterzeile, Aktionen rechts — der Kopf fast jeder

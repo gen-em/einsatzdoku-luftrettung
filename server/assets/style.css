@@ -1118,6 +1118,24 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   border-radius:var(--radius-klein);
 }
 .feld-mehrzeilig{height:auto;padding:var(--abstand-3)}
+/* DAS DATEIFELD: sein Knopf hängt oben, solange ihn nichts in die Mitte holt.
+ *
+ * `input[type=file]` stellt den nativen Knopf auf die Textzeile. Die steht bei
+ * `height:var(--knopf)` ohne senkrechte Polsterung am oberen Innenrand —
+ * gemessen 0 px Luft darüber, 19 px darunter, und genau das ist als schiefer
+ * „Browse…"-Knopf zu sehen.
+ *
+ * `display:flex;align-items:center` ändert daran NICHTS. Chromium legt den
+ * Shadow-Inhalt eines Eingabefeldes nicht in einen Flex-Fluss; nachgemessen
+ * blieb es bei 0/19. Die Zeilenhöhe auf den Innenraum zu setzen wirkt dagegen
+ * und lässt die 44 px stehen — gemessen 10 px oben, 9 px unten (die 42 px
+ * Innenraum sind ungerade, mittiger geht es nicht).
+ *
+ * Der Attributselektor ist nicht Zierde, sondern die Abgrenzung: Getroffen
+ * werden nur die beiden Dateifelder (import.php, einstellungen.php). 77
+ * Eigenschaftsmessungen über sieben Feldarten zeigten genau diese eine
+ * Änderung und keine zweite. */
+input[type=file].feld-eingabe{line-height:calc(var(--knopf) - 2*var(--strich))}
 .feld-klein{color:var(--gedaempft);font-size:var(--groesse-2);margin-top:var(--abstand-1)}
 .feld-reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-3)}
 .feld-reihe > .feld{flex:1 1 12rem;min-width:0}
