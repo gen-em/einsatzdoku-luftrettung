@@ -1,4 +1,4 @@
-// Einsatzdoku — Geraete-Kopplung per Kurzcode
+// NAdoku — Geraete-Kopplung per Kurzcode
 //
 // Auf dem Startbildschirm UP halten -> Code eintippen (5 Zeichen, aus dem
 // Web unter Einstellungen -> Geraete). Die Uhr tauscht den Code bei pair.php

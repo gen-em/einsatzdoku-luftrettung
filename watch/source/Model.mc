@@ -1,4 +1,4 @@
-// Einsatzdoku — app-weiter Zustand + Persistenz.
+// NAdoku — app-weiter Zustand + Persistenz.
 // Alles Wichtige liegt in einem Dictionary, das nach jeder Aenderung in den
 // persistenten Storage geschrieben wird -> uebersteht App-/Uhren-Neustart.
 using Toybox.Application.Storage;

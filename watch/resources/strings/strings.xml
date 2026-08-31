@@ -1,5 +1,5 @@
 <strings>
-    <string id="AppName">Einsatzdoku</string>
+    <string id="AppName">NAdoku</string>
     <string id="LogoLuft">Luftgebunden</string>
     <string id="LogoBoden">Bodengebunden</string>
     <string id="LogoWechselnd">Wechselnd</string>

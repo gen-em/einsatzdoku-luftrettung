@@ -1,4 +1,4 @@
-// Einsatzdoku — Oberflaeche: aktuelle Geschwindigkeit + Einsatzdistanz
+// NAdoku — Oberflaeche: aktuelle Geschwindigkeit + Einsatzdistanz
 //
 // Der Block aus Zahl, Einheit und Distanz wird als Ganzes vertikal zentriert.
 // "km/h" sitzt eng unter der Zahl (gehoert dazu), die Distanz mit Abstand

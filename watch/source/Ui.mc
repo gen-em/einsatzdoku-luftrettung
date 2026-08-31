@@ -1,4 +1,4 @@
-// Einsatzdoku — Geometrie-Helfer.
+// NAdoku — Geometrie-Helfer.
 //
 // Alle Oberflaechen waren auf 260x260 (Fenix 6 Pro) ausgemessen. Mit der
 // FR945 (240x240) und der Venu 3s (390x390) kamen zwei weitere Groessen dazu.

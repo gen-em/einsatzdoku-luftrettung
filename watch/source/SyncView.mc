@@ -1,4 +1,4 @@
-// Einsatzdoku — Sync-Status & App-Version (eigene Seite)
+// NAdoku — Sync-Status & App-Version (eigene Seite)
 //
 // Waehrend des Dienstes im Seiten-Pager zwischen Statistik und Rea;
 // vom Startbildschirm aus per DOWN erreichbar (BACK fuehrt zurueck).

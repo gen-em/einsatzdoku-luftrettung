@@ -1,4 +1,4 @@
-// Einsatzdoku — GPS-Aufzeichnung mit Ausduennung und Chunk-Persistenz.
+// NAdoku — GPS-Aufzeichnung mit Ausduennung und Chunk-Persistenz.
 //
 // Punktformat im Puffer (flach, speicherschonend):
 //   [lat0, lon0, ele0, ts0, lat1, lon1, ele1, ts1, ...]

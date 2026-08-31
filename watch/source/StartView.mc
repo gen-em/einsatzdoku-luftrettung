@@ -1,4 +1,4 @@
-// Einsatzdoku — Startbildschirm "Dienst beginnen" (Anforderungen 1.1)
+// NAdoku — Startbildschirm "Dienst beginnen" (Anforderungen 1.1)
 //
 // Aufbau: Die oberen 75 % der Displayhoehe tragen den Block aus Bildmarke,
 // Titel, Frage und Bedienhinweis — darin vertikal zentriert. Die unteren 25 %
@@ -65,7 +65,7 @@ class StartView extends WatchUi.View {
         y += logoH + gLogo;
 
         dc.setColor(Ui.ORANGE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, Graphics.FONT_MEDIUM, "Einsatzdoku",
+        dc.drawText(cx, y, Graphics.FONT_MEDIUM, "NAdoku",
             Graphics.TEXT_JUSTIFY_CENTER);
         y += hTitel + gTitel;
 

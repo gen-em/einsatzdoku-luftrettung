@@ -1,4 +1,4 @@
-// Einsatzdoku — Upload gemaess JSON-Vertrag v1.0.
+// NAdoku — Upload gemaess JSON-Vertrag v1.0.
 // Sendet Einsaetze und Ruhe-Segmente inkrementell (max. 500 Punkte/Request),
 // merkt sich pro Track die bestaetigte next_seq und raeumt nach final+komplett auf.
 using Toybox.Communications;

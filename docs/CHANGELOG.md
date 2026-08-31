@@ -11,6 +11,52 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 2.0.0] — 2026-08-31
+
+**Die Uhr-App heißt „NAdoku" und hat eine echte Anwendungs-ID.** Der Rest der
+Umbenennung aus R29, vorgezogen aus P6 — und die Beseitigung eines
+Platzhalters, der nur teurer geworden wäre.
+
+Die Hauptnummer steigt, weil die App danach eine **andere Identität** hat: Für
+die Uhr ist sie eine neue Anwendung, mit eigenen Einstellungen und eigenem
+Speicher. Wer 1.x gekoppelt hatte, koppelt einmal neu und löscht die alte
+Fassung vom Gerät.
+
+### Uhr — Die Anwendungs-ID war ein durchgezählter Platzhalter
+
+Im Manifest stand `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6` — von Hand durchgezählt,
+kein Zufallswert; der Kommentar darüber sagte selbst, sie sei „beim ersten
+Projekt-Setup durch eine eigene zu ersetzen". Die SDK-Beispiele tragen
+durchweg echte UUID, und für den Connect-IQ-Store braucht es eine.
+
+**Warum jetzt und nicht in P6:** Die ID ist die Identität der App auf dem
+Gerät. Ein Wechsel kostet jede gekoppelte Uhr eine Neukopplung — heute ist das
+**eine**, nach der Öffnung sind es alle. Der Kommentar im Manifest hält das
+jetzt fest, samt der Ansage, dass hier nicht mehr geändert wird.
+
+**Was dazu nicht behauptet wird:** Die Folge für den Gerätespeicher ist hier
+**nicht gemessen**. Der Simulator legt seinen App-Speicher unter
+`GARMIN/APPS/DATA/<DATEINAME>.DAT` ab — benannt nach der geladenen `.prg`, nicht
+nach der Anwendungs-ID. Er kann die Frage also gar nicht beantworten, und die
+Annahme oben folgt der Plattformdokumentation, nicht einer eigenen Messung.
+
+### Uhr — Der Name
+
+`@Strings.AppName`, der Titel auf dem Startbildschirm und die Beschriftung der
+Server-Einstellung tragen jetzt **NAdoku**; die Einstiegsklasse heißt
+`NAdokuApp` (`HemsApp.mc` → `NAdokuApp.mc`), und die Dateiköpfe aller 17
+Quelldateien ziehen mit.
+
+**Die Uneinheitlichkeit ist bewusst in Kauf genommen.** R29 hielt die
+Umbenennung in P6, damit Uhr und Web zusammen umziehen; die Uhr geht jetzt
+voran. Das Handbuch sagt es an der Stelle, an der jemand sonst vergeblich
+sucht: In der Geräteliste heißt die App **NAdoku**, im Web steht weiter
+„Einsatzdoku", bis der v1.0-Schnitt nachzieht.
+
+Für das Gerätemenü ist es die **Kurzform** ohne „Gen-EM": Der Träger gehört in
+den Store-Eintrag, nicht auf ein Uhrendisplay, und `nadoku.beispieldomain.de`
+führt dieselbe Kurzform seit P2.
+
 ## [Uhr 1.11.1] — 2026-08-31
 
 **Die Uhr trägt die Terminologie-Nachträge aus P2 nach.** Kein neues Verhalten

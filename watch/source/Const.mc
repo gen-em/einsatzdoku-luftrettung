@@ -1,9 +1,9 @@
-// Einsatzdoku — zentrale Konstanten (Werte aus Anforderungen v1.0)
+// NAdoku — zentrale Konstanten (Werte aus Anforderungen v1.0)
 using Toybox.Lang;
 
 module Const {
 
-    const APP_VERSION = "1.11.1";      // bei jedem Release erhoehen
+    const APP_VERSION = "2.0.0";      // bei jedem Release erhoehen
 
     // Werte der App-Einstellung "logoWahl" (properties.xml). Zahlen, weil
     // settingConfig type="list" nur Zahlen einliest.

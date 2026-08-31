@@ -2260,6 +2260,10 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    Abschnitt 5 der Technik-Doku.*
 2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
    genügt (z. B. `nadoku.beispieldomain.de`).
+   **Die Uhr-App heißt „NAdoku"** — der künftige Name, seit Uhr 2.0.0. Die
+   Weboberfläche und dieses Handbuch tragen noch „Einsatzdoku" und ziehen mit
+   dem v1.0-Schnitt nach; wer die App in der Liste sucht, sucht also nach
+   **NAdoku**.
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
 3. **Im Web einen Kopplungscode erzeugen:** **Einstellungen → „Geräte" →
    „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
