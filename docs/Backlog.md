@@ -355,29 +355,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
     Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
 
-47. **Die Uhr kennt die Logo-Wahl nicht.** Die Weboberfläche lässt zwischen
-    `hubschrauber`, `fahrzeug` und `wechselnd` wählen — je Nutzer über
-    `users.logo_wahl`, systemweit über `app_state.logo_standard`. Die Uhr lädt
-    dagegen eine feste `Rez.Drawables.Logo` und führt **kein zweites Motiv**
-    mit; keine Schnittstelle überträgt die Wahl. Eine Installation, die
-    überwiegend am Boden fährt, sieht auf der Uhr bei jedem Dienstbeginn einen
-    Hubschrauber.
-    Das ist kein Schönheitsfehler, sondern derselbe Punkt, den `Const.mc` seit
-    1.8.0 bei den Phasenbeschriftungen behandelt und den `session_lib.php` für
-    die Weboberfläche ausdrücklich begründet: „eine Installation, die
-    überwiegend am Boden fährt, soll nicht dauerhaft einen Hubschrauber im Kopf
-    tragen."
-    Drei Wege stehen offen: (a) Der Server schickt die Wahl in der Antwort von
-    `pair.php` mit, die Uhr merkt sie sich — dieselbe Stelle wie der
-    `geraet`-Block aus Nr. 46, nur in der Gegenrichtung. (b) Eine
-    App-Einstellung auf der Uhr, wie `touchEnabled`; ohne Serveränderung, aber
-    zwei Orte für dieselbe Entscheidung. (c) Bewusst so lassen — dann gehört es
-    aber vermerkt, sonst wird es beim nächsten Durchgang erneut als Fehler
-    gemeldet.
-    Kosten für (a) oder (b): ein zweites Bild je Kompilat, nach den gemessenen
-    Größen rund 5 kB. Zu klären ist vorher, ob die Bildmarke damit in **zwei
-    Motiven** je Größenstufe gebraucht wird — das verdoppelt die
-    Gestaltungsarbeit aus Nr. 48.
+
 
 48. **Bildmarke und Launcher-Symbol fehlen in den meisten Größen.** Die 99
     Geräte verlangen neun Symbolgrößen (35, 36, 40, 54, 56, 60, 61, 65, 70 px);
@@ -883,3 +861,18 @@ zutreffen.
     nicht als mehrdeutig gemeldet). Am Stand davor fallen drei durch: Der
     Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
     eigener Diensttag, und gemeldet wurde nichts.
+
+47. **Die Uhr kennt die Logo-Wahl nicht.**
+    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
+    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
+    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
+    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
+    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
+    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
+    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
+    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
+    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
+    **Offen bleibt das Motiv selbst:** Das Boden-Bild ist vorläufig aus dem
+    Web-SVG gerastert, trägt sichtbar einen gestrichelten Rahmen und füllt das
+    Quadrat nicht wie der Hubschrauber. Das gehört zu Nr. 48.

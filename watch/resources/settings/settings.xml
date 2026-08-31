@@ -15,4 +15,12 @@
              title="Touchbedienung verwenden (nur bei Uhren mit Touch und UP/DOWN-Tasten)">
         <settingConfig type="boolean"/>
     </setting>
+    <setting propertyKey="@Properties.logoWahl"
+             title="Bildmarke auf dem Startbildschirm">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.LogoLuft</listEntry>
+            <listEntry value="1">@Strings.LogoBoden</listEntry>
+            <listEntry value="2">@Strings.LogoWechselnd</listEntry>
+        </settingConfig>
+    </setting>
 </settings>

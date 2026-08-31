@@ -40,7 +40,7 @@ class StartView extends WatchUi.View {
         var cx = dc.getWidth() / 2;
 
         if (_logo == null) {
-            _logo = WatchUi.loadResource(Rez.Drawables.Logo) as WatchUi.BitmapResource;
+            _logo = Ui.logoRes();   // Luft oder Boden, s. Ui.logoRes()
         }
         var logoH = _logo.getHeight();
         var logoW = _logo.getWidth();

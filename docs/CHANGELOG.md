@@ -11,6 +11,51 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.10.0] — 2026-08-31
+
+**Die Bildmarke auf dem Startbildschirm ist wählbar: luft- oder bodengebunden.**
+Backlog Nr. 47, entschieden zugunsten der App-Einstellung statt einer
+Server-Übertragung — die Uhr kennt die Kontoeinstellung nicht, und eine
+Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+
+### Uhr — Warum überhaupt
+
+Die Anwendung dokumentiert Einsätze luft- **wie** bodengebunden. Die
+Weboberfläche trägt dem seit Web 9.9.0 Rechnung (`logo_wahl` je Konto,
+`app_state.logo_standard` je Installation) und begründet es dort so:
+„eine Installation, die überwiegend am Boden fährt, soll nicht dauerhaft einen
+Hubschrauber im Kopf tragen." Die Uhr tat bis hierher genau das — bei jedem
+Dienstbeginn, auch im Nachtdienst am Boden. Dieselbe Linie führt `Const.mc`
+seit 1.8.0 bei den Phasenbeschriftungen.
+
+### Uhr — Wie es eingestellt wird
+
+Neue App-Einstellung **„Bildmarke auf dem Startbildschirm"** (Garmin Connect,
+neben Server-Adresse und Touchbedienung) mit drei Werten: *Luftgebunden*
+(Vorgabe), *Bodengebunden*, *Wechselnd*.
+
+Zwei Eigenheiten, beide im Code vermerkt. **Die Property führt Zahlen, keine
+Wörter**: `settingConfig type="list"` liest die Werte als Zahl ein und bricht
+bei Text mit `For input string: "luft"` ab. Die Bedeutung tragen
+`Const.LOGO_LUFT`, `LOGO_BODEN`, `LOGO_WECHSELND`. Und **„Wechselnd" würfelt
+einmal je App-Start**, nicht bei jedem Zeichnen: `onUpdate` läuft ständig neu,
+das Bild spränge sonst mitten im Dienst.
+
+Ein Fehler beim Lesen der Einstellung kostet nichts — die Vorgabe bleibt
+stehen. Die Bildmarke ist Zierde, kein Zugang.
+
+Die Ressourcen heißen jetzt `LogoLuft` und `LogoBoden` (Dateien
+`logo_luft.png`, `logo_boden.png`, je in 70 und 105 px). Das kostet ein
+zweites Bild im Kompilat: **+5 888 Byte** auf fenix6pro, +12 864 auf venu3s.
+
+### Uhr — Das Boden-Motiv ist noch ein Platzhalter
+
+Es ist aus `gen-em_logo_fahrzeug_weiss.svg` der Weboberfläche gerastert und
+trägt sichtbar einen gestrichelten Rahmen; außerdem füllt es das Quadrat nicht
+so aus wie der Hubschrauber, weil das Web-SVG im Querformat liegt. Es ist
+bewusst als Zwischenstand erkennbar. Sobald die endgültige Vorlage vorliegt,
+werden zwei Dateien getauscht — am Code ändert sich nichts.
+
 ## [Uhr 1.9.0] — 2026-08-30
 
 **Die App unterstützt 99 statt drei Geräte, und sie sagt beim Koppeln, auf
