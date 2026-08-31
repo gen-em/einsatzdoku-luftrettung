@@ -616,6 +616,9 @@ P1 laufen unverändert durch (526 Anfragen, 0 Fehlversuche).
 Original/ausgedünnt (E-S2-09); Validierung gegen den P1-Datensatz.
 *Abnahme:* GPX validiert gegen Schema; Punktzahl entspricht der jeweiligen
 Stufe; Kennzeichnung sichtbar.
+*Während der Umsetzung dazugekommen* (Rückfrage vom 31.08.2026, nicht Teil
+der ursprünglichen Abnahme): eine **Mehrfachauswahl** auf der Spurenseite, die
+die ausgewählten Spuren als eine Datei mit mehreren `<trk>` ausgibt.
 
 **AP5 — Containerfassung 4: Sichern und Wiederherstellen.** Nach 3.2;
 einschließlich Altformat-Lesepfad, Fortschrittsanzeigen, Kreislauf- und
@@ -1509,3 +1512,213 @@ Vollständigkeitsprüfung meldet **233 statt 232** Befunde. Der Unterschied ist
 ein Auslassungszeichen in einem neuen Hinweissatz — richtige Typografie, kein
 Gestaltungsbefund. Der Zähler trennt Prosa und Symbole nicht; das steht seit
 P3/O12 im Backlog (Nr. 42) und ist dort mit dieser Runde fortgeschrieben.
+
+---
+
+### AP4 — GPX-Abruf (erledigt, Web 10.3.0)
+
+**Erledigt.** `server/gpx_lib.php` als einzige Stelle, die GPX schreibt,
+`server/gpx.php` als Abruf (einzeln **und** als Auswahl), ein Eintrag im
+Aktionsmenü der Einsatzansicht, die neue Seite `server/tag_spuren.php` für
+Einsätze **und** Ruhesegmente, `tools/gpxprobe/` samt vendoriertem
+GPX-1.1-Schema. Keine Migration. Backlog Nr. 3 ist damit erledigt.
+
+#### Drei Entscheidungen, alle vorgelegt
+
+| Frage | Entscheidung (31.08.2026) |
+|---|---|
+| Ruhesegmente haben in der Oberfläche keine Identität — wo steht ihr Abruf? | **Eine eigene Seite je Diensttag**, erreichbar aus dem Aktionsmenü des Tages: Karte plus Liste aller Spuren, nummeriert, mit der Karte verknüpft, einzeln herunterladbar |
+| Das amtliche GPX-XSD war aus der Arbeitsumgebung nicht erreichbar | **topografix.com ist freigegeben** — das Schema ist vendoriert, der Schemalauf ist gebaut |
+| Lässt sich eine Mehrfachauswahl einbauen, die die Spuren kombiniert ausgibt? | **Ja, gebaut** — ein Kästchen je Zeile, eine Sammelleiste, eine Datei mit mehreren `<trk>`. Nachgereicht kam die Frage, ob die Liste nicht besser chronologisch stünde als nach Art gruppiert: **ja**, beide Reihenfolgen sind jetzt dieselbe |
+
+Die zweite Antwort hat einen Abnahmepunkt gerettet: „GPX validiert gegen
+Schema" wäre sonst nicht erfüllbar gewesen. Bezogen wurde es von
+`https://topografix.com/GPX/1/1/gpx.xsd` — **ohne `www.`**; mit `www.` wies der
+Proxy die Verbindung ab.
+
+#### Wo die Datei entsteht — und warum das eine Architekturfrage war
+
+Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer Nutzerin
+landet, im Browser aus einem Blob. Kein Zufall: Ihr Inhalt ist Ende-zu-Ende
+verschlüsselt, der Server **kann** ihn nicht zusammensetzen.
+
+Für eine Spur gilt das nicht. Drei Gründe für den Server:
+
+1. Er hat die Punkte im Klartext **und** die Stufe (`spur_stand()`). Der
+   Browser hat beides nicht — `api/mission.php` liefert bloße Paare
+   `[lat, lon]`, ohne Höhe, ohne Zeit, ohne Stufe.
+2. Ein browsergebautes GPX bräuchte also einen neuen, breiteren Abrufweg, nur
+   um danach zusammenzusetzen, was auf dem Server schon beieinander liegt.
+3. **Der Dateiname.** Serverseitig gebaut *kann* er keine geschützte Angabe
+   tragen — der Server kann Diagnose, Alter und Einsatzort nicht lesen.
+   Browserseitig gebaut könnte er es, und das wäre ein neuer Weg, auf dem
+   Klartext das Haus verlässt.
+
+#### Die Falle, die kein Parser meldet
+
+GPX 1.1 beschreibt die Kindelemente als `xsd:sequence`, nicht als
+`xsd:choice`. `<desc>` steht in `<metadata>` **vor** `<time>` und in `<trk>`
+zwischen `<name>` und `<trkseg>`. Wer sie hinten anhängt, schreibt eine Datei,
+die wohlgeformt ist, die manche Programme klaglos lesen — und die gegen das
+Schema durchfällt. Genau das misst die Abnahme.
+
+#### Mehrfachauswahl: mehrere `<trk>`, kein zusammengeklebtes `<trkseg>`
+
+Die naheliegende Umsetzung wäre gewesen, die ausgewählten Punktfolgen
+aneinanderzuhängen. Sie ist falsch, und der Fehler wäre nicht aufgefallen,
+weil die Datei gültig bleibt: Jedes Kartenprogramm zöge eine gerade Linie vom
+Ende der einen Spur zum Anfang der nächsten — quer über das Land, einen Weg,
+den niemand gefahren ist. Auch mehrere `<trkseg>` in *einem* `<trk>` wären
+falsch: Die meinen Abschnitte **einer** Aufzeichnung mit einer Lücke
+dazwischen. GPX 1.1 erlaubt beliebig viele `<trk>` nebeneinander; das ist der
+richtige Weg, und die Probe misst ihn ausdrücklich (3 `<trk>`, je ein
+`<trkseg>`).
+
+Vier weitere Entscheidungen:
+
+- **Kein neuer Baustein.** Kästchen in `ui_zeile(['vorn' => …])`, Leiste als
+  `ui_speichern_leiste()` — dieselben zwei Bausteine wie die Sammelaktion der
+  NutzerInnen-Liste (P3/O9b). Kein neues CSS, keine neue Farbe.
+- **Eine Zeichenstelle für zwei Zustände.** Auf die Deckkraft der Linien
+  wirken das Zeigen *und* die Auswahl. Zwei Funktionen, die beide daran
+  drehen, überschreiben einander — nach einem Zeigen wäre die Auswahl von der
+  Karte verschwunden. Es gibt deshalb *eine* Funktion, die beide Zustände
+  liest; geprüft ist das im Browser, an den gemessenen Deckkräften aller 15
+  Linien in drei Zuständen.
+- **Eine Mengengrenze aus Speichergründen** (100), nicht aus Rechtsgründen:
+  Die Datei entsteht vollständig im Arbeitsspeicher, weil ihre Länge in die
+  Kopfzeile gehört. `gpx_bauen_viele()` nimmt dafür einen **Generator** und
+  keine Liste — sonst lägen alle dekodierten Spuren gleichzeitig im Speicher
+  (rund 4 MB je Spur, AP3). Gemessen: hundert Spuren der größten Art des
+  Bestands (1063 Punkte) → 9,7 MB Datei, 23,4 MB Spitze von 64 MB.
+- **Streng bei der Form, nachsichtig beim Bestand.** `mission-abc` → 400.
+  Eine wohlgeformte Kennung, die nicht zu diesem Tag und Konto gehört, fällt
+  beim Lesen heraus (sie kann aus einem alten Tab stammen); Dateiname und
+  `<desc>` sagen, wie viele Spuren wirklich drin sind. Ausgeforscht wird dabei
+  nichts, weil die Abfrage ohnehin auf `user_id` **und** `day_id` filtert.
+  Bleibt nichts übrig: 404, und er zählt.
+
+#### Chronologisch statt nach Art — eine Rückfrage, die recht hatte
+
+Die Liste stand zuerst nach Art gruppiert: erst alle Einsätze, dann alle
+Ruhezeiten. Das war keine Entscheidung, sondern die Reihenfolge der beiden
+Abfragen im Code. Ein Diensttag verläuft aber in *einer* Folge — Ruhezeit,
+Einsatz, Ruhezeit, Einsatz —, und zwei Gruppen zwingen dazu, zwischen ihnen
+hin und her zu rechnen. Seite und Datei sortieren jetzt beide nach Beginn,
+Art und Kennung; die laufende Nummer der Einsätze und die Farben der Karte
+zählen weiter nur die Einsätze durch und bleiben unberührt.
+
+**Die erste Fassung der Prüfung hätte den Unterschied nicht gesehen:** Im
+Prüfkonto lagen alle Ruhesegmente hinter allen Einsätzen, dort sieht eine
+gruppierte Liste genauso aus wie eine chronologische. Die Probe legt jetzt
+eigens ein Ruhesegment **vor** dem ersten Einsatz an.
+
+#### Beinahe: Git hätte das vendorierte Schema verändert
+
+Beim Einchecken meldete Git `CRLF will be replaced by LF` für
+`tools/gpxprobe/gpx11.xsd`. Die `.gitattributes` setzen `* text=auto eol=lf`,
+das Schema hat 788 CRLF: 26 665 Byte wären zu 25 877 geworden, und die
+Prüfsumme, mit der die Probe **jeden Lauf** beginnt, hätte nicht mehr
+gestimmt.
+
+**Warum das hier niemandem aufgefallen wäre:** Die Arbeitskopie bleibt, wie
+sie kam. Auf diesem Rechner wäre die Erwartung weiter grün gewesen; rot erst
+auf dem nächsten frisch geklonten Arbeitsplatz — also dort, wo niemand mehr
+weiß, woher die Datei kam. Dieselbe Sorte Fund wie die farblose Plakette
+darunter: eine grüne Zahl, die etwas anderes misst, als ihre Beschriftung
+sagt. Behoben mit `tools/gpxprobe/gpx11.xsd -text`, nachgerechnet über
+`git checkout-index` in ein leeres Verzeichnis.
+
+#### Ein Fehler aus AP2 und AP3, gefunden beim Lesen
+
+**`.plakette-warn` gibt es im Stylesheet nicht.** Gültig sind `neutral`,
+`orange`, `blau`, `rot`; der Ton `warn` wurde an drei Stellen übergeben, zwei
+davon aus dieser Phase (Rückstand der Jobs, Zählerlisten). Die Plaketten
+standen ohne Hintergrund da, als bloßer Text.
+
+Zwei Dinge daran sind der eigentliche Befund:
+
+- **Das Prüfmittel kann es nicht finden.** Der Klassenname wird
+  zusammengesetzt (`'plakette-' . $ton`) und taucht als Literal nirgends auf.
+  `tools/vollstaendigkeit/` kennt Klassen im Markup und Klassen im Stylesheet
+  — keine, die zur Laufzeit entstehen. Backlog Nr. 36 beschreibt dieselbe
+  Lücke seit P3/O6 von der anderen Seite und ist um diesen Fall erweitert,
+  samt einem billigen Sonderweg: Die Bausteine mit geschlossenem Wertevorrat
+  kennen ihre erlaubten Werte selbst.
+- **Ich hatte das Bild angesehen und es übersehen.** Der Screenshot der
+  Wartungsseite lag mir in AP2 vor, die farblose Plakette war darauf zu sehen.
+  Ein Bild anzusehen ist nur dann eine Prüfung, wenn man weiß, wonach man
+  sieht. Das ist die Grenze des Bilderlaufs, und sie gehört neben seine
+  grünen Zahlen.
+
+#### Was die Gegenprobe gefunden hat
+
+Ein Workflow hat den Entwurf aus vier Blickwinkeln gegengelesen (Datenabfluss,
+Rechte, stille Verfälschung, Projektregeln). Vier Befunde waren zu
+entscheiden:
+
+| Befund | Entscheidung |
+|---|---|
+| Der Export verweigert Spurpunkte ohne den Haken „personenbezogene Angaben" (A9) — der Abruf nicht | **Verneint.** Der Abruf hat keine anonyme Fassung; es gäbe keinen Haken zu umgehen |
+| Der Abruf braucht keinen Inhaltsschlüssel, obwohl die Seite „Einsatzort bleibt verborgen" verspricht | **Verneint.** Die Karte derselben Seite zeigt die Spur bereits ohne Schlüssel. Eine Sperre wäre Theater; die Ursache ist Backlog Nr. 43 |
+| Kein Ratenschutz, keine Mengenbremse | **Behoben.** Ratenschutz im Topf `pair`, aber nur auf Fehlgriffe |
+| Der Link zeigt als erster der Oberfläche nach `api/` — Sitzungsende ergäbe JSON statt Anmeldeseite | **Behoben.** Der Abruf liegt jetzt neben den anderen Seiten |
+
+Dazu zwei Nachbesserungen am Text, beide zu Recht angemahnt: Der Eintrag in
+der Einsatzansicht fragt vor dem Herunterladen zurück (der große Export tut
+das schon), und der Hinweis über der Liste nennt jetzt auch Ruhespuren — sie
+zeigen den Aufenthalt der Besatzung zwischen den Einsätzen, und davon stand
+dort nichts.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Gültig gegen das amtliche GPX-1.1-XSD | `gpxprobe` Teil 0/3/6 | Stufe 2, Stufe 3, Ruhesegment — **je gültig** |
+| Prüfsumme des vendorierten Schemas | dieselbe, bei jedem Lauf | `9e4d1988…`, 26 665 Byte |
+| Punkt für Punkt gegen die browsergebauten Referenzdateien | `gpxprobe` Teil 2 | **146 Dateien, 174 804 Einzelvergleiche, 0 Abweichungen** |
+| Sind die Referenzdateien selbst schemagültig? | dieselbe | **171 Dateien, 0 ungültig** |
+| Punktzahl entspricht der Stufe | `gpxprobe` Teil 3 | 300 von 300 · **56 von 300** |
+| Kennzeichnung in der Datei | dieselbe | je 2 von 2 (`<metadata>`, `<trk>`) |
+| Kennzeichnung im Dateinamen | dieselbe | `…_original.gpx` / `…_ausgeduennt.gpx` |
+| Kennzeichnung auf der Seite | `gpxprobe` Teil 5 | Stufe und Punktzahl stimmen mit der Datei überein |
+| Ohne Spur kein toter Menüeintrag | dieselbe | „Spur als GPX" fehlt — richtig |
+| Datentrennung | `gpxprobe` Teil 1/4/6 | unangemeldet 302 · fremder Einsatz **404 statt 403** · Papierkorb 404 · fremder Diensttag 404 |
+| Grenzfälle | `gpxprobe` Teil 4 | keine Spur → 404 statt leerem GPX · unbekannte Art 400 · Kennung 0 400 |
+| Ruhesegment über die Spurenseite | `gpxprobe` Teil 6 | eigener Abruf, schemagültig, `ruhezeit_…gpx` |
+| Auswahl aus drei Spuren | `gpxprobe` Teil 7 | schemagültig · **3 `<trk>`, je 1 `<trkseg>`** |
+| Auswahl gegen die Einzelabrufe | dieselbe | **436 = 436 Punkte, 1744 Einzelvergleiche, 0 Abweichungen** |
+| Kennzeichnung in der Auswahl | dieselbe | 1× ausgedünnt, 2× Original an den `<trk>`; der Kopf nennt beide |
+| Reihenfolge auf der Seite | dieselbe | chronologisch, gegen die Datenbank — **eine Ruhezeit vor dem ersten Einsatz steht auch davor** |
+| Reihenfolge in der Datei | dieselbe | gleich der Seite, gegen die Datenbank geprüft |
+| Grenzfälle der Auswahl | dieselbe | Eintrag ohne Spur → kein leeres `<trk>` · fremde Kennung fällt heraus · nur fremde → 404 · `mission-abc` → 400 · > 100 → 400 · fremder Diensttag → 404 |
+| Speicher bei 100 Spuren der größten Art | dieselbe | Datei **9,7 MB**, Spitze **23,4 MB von 64 MB** |
+| Bedienzustand der Auswahl | Chromium, 1280 und 360 px | Leiste ab dem ersten Haken · „2 Spuren als eine Datei" · Download `diensttag_2026-05-10_2-spuren_original.gpx` mit **2 `<trk>`** · Deckkräfte in drei Zuständen richtig · 0 Konsolenfehler |
+| Spurenseite, acht Breiten (360–1920 px) | `aufnehmen.mjs --nur 21a` | 8 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**; Gegenprobe: 16 Bilder → 16 verschiedene Prüfsummen |
+| Einsatzansicht, acht Breiten | `--nur 12-` | dieselben Nullen |
+| Hexfarben, Pixelmaße, Schriftgrößen außerhalb der Token | `vollstaendigkeit` | **je 0** |
+| Unter `api/` gibt es den Abruf nicht | `gpxprobe` Teil 4 | **404** — sonst wäre Sitzungsende JSON statt Anmeldeseite |
+| Ratenschutz auf Fehlgriffe | dieselbe | 12 Fehlgriffe → **429**, gelungener Abruf zählt nicht |
+| `gpxprobe/probe.php` gesamt | — | **75 Erwartungen, 0 nicht erfüllt** |
+| Vendoriertes Schema nach simuliertem Klon | `git checkout-index` | **26 665 Byte, Summe `9e4d1988…`** — ohne die neue `.gitattributes`-Zeile wären es 25 877 |
+| Wortliste (R28) | `wortliste.py` | 0 / 0 / 0 |
+
+**Der Punkt-für-Punkt-Vergleich belegt mehr als der Schemalauf.** Ein Schema
+sagt, dass die Datei richtig *aufgebaut* ist; es sagt nichts darüber, ob die
+richtigen Punkte darin stehen. Zwei unabhängige Umsetzungen — PHP auf dem
+Server, JavaScript im Browser —, die auf denselben Bestand dieselbe Datei
+schreiben, sagen genau das.
+
+**Nicht geprüft:**
+
+- **Fremde Kartenprogramme.** Dass eine schemagültige Datei in QGIS, BaseCamp
+  oder Komoot so aussieht wie gemeint, sagt kein Schema.
+- **Andere Browser als Chromium.** WebKit (Safari, iOS) und Gecko stehen in
+  dieser Umgebung nicht zur Verfügung.
+- **Die Auswahl ohne JavaScript.** Die Kästchen sind ein gewöhnliches
+  GET-Formular, aber die Sammelleiste blendet das Skript ein; ohne Skript
+  bleibt der Einzelabruf. Nicht gemessen, weil kein Prüfmittel hier ohne
+  Skript lädt.
+- **Eine Spur über 50 000 Punkten.** Der Bestand hat keine.
+- **Nebenläufigkeit** zwischen Abruf und Ausdünnungsjob. Die Probe hält die
+  Jobs an, statt den Fall herzustellen.

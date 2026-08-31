@@ -119,6 +119,13 @@
       "pfad": "__TAG_ZUSAMMEN__"
     },
     {
+      "name": "21a-tag-spuren",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_SPUREN__",
+      "karte": true
+    },
+    {
       "name": "22-einsatz-verschieben",
       "gruppe": "Inhalt",
       "rolle": "demo",

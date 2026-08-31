@@ -1093,7 +1093,12 @@ function ui_karte_ende(bool $klappbar = false): void
 function ui_zeile(array $o): void
 {
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
-    echo '<div class="' . $k . '">' . "\n";
+    /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
+     * Aufrufer anhaengt — etwa `data-…` und `tabindex` fuer eine Zeile, die
+     * mit etwas anderem auf der Seite verknuepft ist (S2/AP4, tag_spuren.php).
+     * Keine neue Darstellung, nur dieselbe Zusatzoption an einem dritten
+     * Baustein. */
+    echo '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>' . "\n";
     /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
      * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
      * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben

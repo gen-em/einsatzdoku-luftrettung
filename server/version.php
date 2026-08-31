@@ -1299,5 +1299,49 @@ declare(strict_types=1);
  *
  * AUCH HIER MUSS NACH DEM AUSROLLEN `update.php` AUFGERUFEN WERDEN.
  *
+ * 10.3.0 ist AP4: DER GPX-ABRUF (E-S2-09, Backlog Nr. 3). Neue Funktion,
+ * keine Migration.
+ *
+ * Eine Spur laesst sich jetzt einzeln herunterladen — je Einsatz aus dessen
+ * Aktionsmenue, und je Einsatz UND Ruhesegment ueber die neue Seite
+ * `tag_spuren.php`: die Karte des Diensttages, darunter jede Spur als eigene
+ * Zeile mit Stufe, Punktzahl und Abruf. Wer auf eine Zeile zeigt, sieht auf
+ * der Karte, welche Linie gemeint ist.
+ *
+ * DIE SEITE WAR NOETIG, weil Ruhesegmente in der Oberflaeche bis hierher
+ * ueberhaupt keine Identitaet hatten: nur eine schwarze Linie auf der
+ * Tageskarte, ohne Zeile, ohne Popup, und `api/day.php` liefert nicht einmal
+ * ihre Kennung. Ein Knopf je Ruhesegment haette nirgendwo hingekonnt.
+ *
+ * DIE ERSTE DATEI, DIE DIESER SERVER AUSLIEFERT. Alle uebrigen Downloads der
+ * Anwendung entstehen im Browser, und zwar aus gutem Grund: Ihr Inhalt ist
+ * Ende-zu-Ende verschluesselt, der Server KANN ihn nicht zusammensetzen. Fuer
+ * eine Spur gilt das nicht — Spurpunkte sind Klartext, und die Stufe, die
+ * E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server. Dazu ein
+ * Sicherheitsargument: Ein serverseitig gebauter DATEINAME kann keine
+ * geschuetzte Angabe tragen, weil der Server sie nicht lesen kann.
+ *
+ * DIE KENNZEICHNUNG Original/ausgeduennt steht an DREI Stellen: in der Datei
+ * (`<metadata><desc>` und `<trk><desc>`), im Dateinamen — nur der ueberlebt
+ * das Verschieben in einen anderen Ordner — und auf der Seite, vor dem
+ * Herunterladen.
+ *
+ * MEHRERE SPUREN AUF EINMAL: Ein Kaestchen je Zeile, eine Sammelleiste, eine
+ * Datei. Die ausgewaehlten Spuren bleiben darin MEHRERE `<trk>` und werden
+ * nicht zusammengeklebt — sonst zoege jedes Kartenprogramm eine gerade Linie
+ * vom Ende der einen zum Anfang der naechsten, quer ueber das Land. Die Liste
+ * steht dabei chronologisch, wie der Tag verlaufen ist, und nicht nach Art
+ * gruppiert; die Datei folgt derselben Folge.
+ *
+ * NEBENBEI BEHOBEN: `.plakette-warn` gibt es im Stylesheet nicht. Der Ton
+ * `warn` wurde an drei Stellen benutzt, zwei davon aus AP2 und AP3 — die
+ * Plaketten standen dort ohne Hintergrund da. Der Grund, warum es niemandem
+ * auffiel: Der Klassenname wird zusammengesetzt (`'plakette-' . $ton`) und
+ * taucht als Literal nirgends auf, die Vollstaendigkeitspruefung kann ihn also
+ * nicht finden. Der Fall ist in Backlog Nr. 36 vermerkt.
+ *
+ * `ui_zeile()` kennt jetzt `attr` — dieselbe Zusatzoption, die `ui_knopf()`
+ * und `ui_aktionen()` schon haben. Kein neuer Baustein.
+ *
  */
-const WEB_VERSION = '10.2.0';
+const WEB_VERSION = '10.3.0';

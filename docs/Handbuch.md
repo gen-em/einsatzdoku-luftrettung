@@ -413,7 +413,8 @@ als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
 Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a) und **„Tag löschen"** (Abschnitt 8). Auf dem Handy fährt
+(Abschnitt 4.5a), **„Spuren als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig.
 
@@ -480,15 +481,52 @@ Pro Tag:
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
 
+### 4.1a Spuren des Diensttages
+
+Erreichbar über **„···" → „Spuren als GPX"**. Die Seite zeigt oben die Karte
+des Tages und darunter **jede aufgezeichnete Spur als eigene Zeile**, in der
+Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
+Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
+wo zutreffend, die Plakette **„ausgedünnt"**.
+
+Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
+Klick zoomt auf sie. **GPX** lädt genau diese Spur herunter.
+
+**Mehrere auf einmal.** Links in jeder Zeile steht ein Kästchen. Sobald eines
+angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Spuren
+ausgewählt sind, und **„Auswahl als GPX"** lädt sie als *eine* Datei herunter.
+Die Karte zeigt dabei mit: Was ausgewählt ist, bleibt kräftig, der Rest tritt
+zurück.
+
+In der Datei bleibt jede Spur ein eigener Track — Kartenprogramme zeigen sie
+getrennt an und ziehen keine Verbindungslinie vom Ende der einen zum Anfang
+der nächsten. Der Dateiname nennt Tag und Anzahl,
+z. B. `diensttag_2026-05-10_4-spuren_original.gpx`; sind Original- und
+ausgedünnte Spuren gemischt, heißt er `…_gemischt.gpx`, und jede Spur trägt
+ihre Kennzeichnung in der Datei bei sich.
+
+Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
+Kästchen und keinen Abruf — es gibt an ihm nichts herunterzuladen.
+
+Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
+greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
+der Karte.
+
+> **Eine Spur zeigt den Weg, also auch den Einsatzort.** Die Datei ist damit
+> so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
+> Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
+
 ### 4.2 Einsatzansicht
 
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 **„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
-**Verschieben** und **Löschen** (mobil „···", am Desktop „Aktionen"; Escape
-schließt, die Tastatur bedient es vollständig — seit Web 9.3.0 dasselbe
-Blatt wie auf der Startseite). In der Unterzeile stehen Zeitspanne — ohne
+**Verschieben**, **Spur als GPX** und **Löschen** (mobil „···", am Desktop
+„Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
+Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
+nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
+herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — ohne
 Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 
@@ -497,6 +535,12 @@ Rettungsmittel und Standort:
 | **Uhr** | Von der Uhr aufgezeichnet |
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
+
+Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
+und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
+geschieht sechs Monate nach dem Einsatz, siehe Abschnitt 9). Bei einer
+ausgedünnten Spur nennt die Plakette beide Zahlen: „Spur ausgedünnt · 113 von
+443 Punkten".
 
 Wurde der Einsatz nach dem Anlegen verändert, erscheint zusätzlich das
 Bearbeitungskennzeichen **„editiert"** — unabhängig von der Herkunft. Ein von

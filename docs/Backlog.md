@@ -23,8 +23,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`).
-   *Vorgesehen als S2/AP4.*
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
@@ -120,6 +118,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Mittel braucht also eine Ausnahmeliste mit Begründung — wie die
     Streichliste — statt einer Ja/Nein-Regel. Sinnvoll gegen Ende von P3,
     wenn die Klassennamen stehen.
+
+    **Derselbe Fall von der anderen Seite, gefunden in S2/AP4:** `ui_plakette()`
+    setzt ihre Klasse aus dem Ton zusammen — `'plakette-' . $ton`. Der Ton
+    `warn` wurde an drei Stellen übergeben, und `.plakette-warn` gibt es im
+    Stylesheet nicht (gültig sind `neutral`, `orange`, `blau`, `rot`). Die
+    Plaketten standen dort ohne Hintergrund da, als bloßer Text. Zwei der drei
+    Stellen stammten aus AP2 und AP3, also aus derselben Phase; behoben mit
+    Web 10.3.0.
+
+    `tools/vollstaendigkeit/` konnte das nicht finden: Es kennt Klassen im
+    Markup und Klassen im Stylesheet, aber `plakette-warn` taucht als Literal
+    in keinem von beiden auf. Das gesuchte Prüfmittel muss also **beide**
+    Richtungen abdecken — Selektoren, die JavaScript nennt, und Klassennamen,
+    die PHP oder JS zur Laufzeit zusammensetzen. Für den zweiten Fall gibt es
+    einen billigen Sonderweg, der ohne allgemeine Auflösung auskommt: Die
+    Bausteine mit geschlossenem Wertevorrat (`ui_plakette` mit vier Tönen,
+    `ui_knopf` mit fünf Arten, `ui_meldung_markup`) kennen ihre erlaubten Werte
+    selbst — eine Prüfung, die jeden übergebenen Wert gegen diese Liste hält,
+    hätte den Fall sofort gemeldet.
 
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
@@ -308,18 +325,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3.* P-P3-03 verlangt
-    null. Die Prüfung meldet **168** Treffer (bei Aufnahme 158); 165 davon
-    sind Kommentare oder richtige Typografie (die Auslassungspunkte der
-    Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise, das Malzeichen in
-    „3× RTW"). Drei sind echte Symbole — dieselben drei wie bei der Aufnahme:
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3 und S2/AP4.*
+    P-P3-03 verlangt null. Die Prüfung meldet **174** Treffer (bei Aufnahme
+    158); 171 davon sind Kommentare oder richtige Typografie (die
+    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
+    das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
+    bei der Aufnahme:
 
     > **Die Zahl wächst mit dem Text, nicht mit dem Problem.** Jeder neue
     > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
     > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
-    > gebracht. Wer die Zahl als Fortschrittsmaß liest, liest sie falsch —
-    > gemeint sind die drei unten. Das Prüfmittel trennt beides nicht, und
-    > das gehört hierhin und nicht in eine Fußnote.
+    > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
+    > auf 174 (`?art=…&id=…` allein zählt viermal). Wer die Zahl als
+    > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
+    > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
+    > eine Fußnote.
 
 
     - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
@@ -399,6 +419,29 @@ zutreffen.
    nachgemessen; am Messstand 4973 Spuren in 15,2 s. Gegenprobe zur
    Notwendigkeit der zweiten Toleranz: rein zweidimensional ausgedünnt liegt
    der schlimmste verworfene Punkt **82,76 m** neben dem Höhenprofil.
+
+3. **GPX-Export** (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`).
+   *Erledigt mit Web 10.3.0 (S2/AP4).*
+   Umgesetzt als **Abruf je Spur**, nicht als weiteres Exportprofil: ein
+   Eintrag im Aktionsmenü der Einsatzansicht und die Seite „Spuren des
+   Diensttages" (`tag_spuren.php`), die Einsätze **und Ruhesegmente**
+   chronologisch auflistet, mit der Karte verknüpft und einzeln
+   herunterladbar macht. Wer mehrere ankreuzt, bekommt sie als **eine** Datei
+   mit mehreren `<trk>` — zusammengeklebt würde jedes Kartenprogramm eine
+   gerade Linie vom Ende der einen Spur zum Anfang der nächsten ziehen. GPX
+   gab es vorher nur als Beiwerk im großen Export, im Browser
+   zusammengesetzt.
+
+   Zwei Entscheidungen dabei: Die Datei entsteht **serverseitig** — die erste
+   des Projekts, denn alle übrigen Downloads sind Ende-zu-Ende verschlüsselt
+   und können nur im Browser entstehen; hier ist es umgekehrt, und ein
+   serverseitig gebauter Dateiname kann keine geschützte Angabe tragen. Und
+   die Kennzeichnung Original/ausgedünnt (E-S2-09) steht an **drei** Stellen:
+   in der Datei, im Dateinamen und auf der Seite.
+
+   *Gemessen:* `tools/gpxprobe/` — 47 Erwartungen, 0 nicht erfüllt; gültig
+   gegen das amtliche GPX-1.1-XSD; **174 804 Einzelvergleiche** Punkt für Punkt
+   gegen die browsergebauten Referenzdateien, 0 Abweichungen.
 
 39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
     *Erledigt mit Web 9.13.0 (P3/O12).* Der Punkt war eine Frage nach dem

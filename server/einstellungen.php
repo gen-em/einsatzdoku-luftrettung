@@ -2372,7 +2372,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
             'text'  => (string)($d['label'] ?? '') !== '' ? (string)$d['label'] : (string)$d['device_id'],
             'klein' => $klein,
             'plaketten' => ((int)$d['ist_neu']
-                ? ui_plakette('neu seit ' . fmt_local($d['created_at'], 'd.m.Y'), ['ton' => 'warn'])
+                ? ui_plakette('neu seit ' . fmt_local($d['created_at'], 'd.m.Y'), ['ton' => 'orange'])
                 : '')
                 . ui_plakette((string)$d['device_id'], ['ton' => 'neutral']),
             'aktionen' => ui_zeilenaktionen([

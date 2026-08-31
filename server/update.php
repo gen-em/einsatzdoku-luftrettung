@@ -2274,7 +2274,7 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
             $plaketten .= ui_plakette((string)$j['letzter_ausloeser'], ['ton' => 'neutral']);
         }
         if ($j['rueckstand'] !== null && (int)$j['rueckstand'] > 0) {
-            $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'warn']);
+            $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'orange']);
         }
         if (!empty($j['letzter_fehler'])) {
             $plaketten .= ui_plakette('Fehler', ['ton' => 'rot']);
@@ -2331,7 +2331,7 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
             'klein' => $erklaerung . ' — ' . implode(', ', array_slice($liste, 0, 12))
                      . (count($liste) > 12 ? ' …' : ''),
             'plaketten' => ui_plakette((string)count($liste),
-                ['ton' => $art === 'nachzuegler' ? 'neutral' : 'warn']),
+                ['ton' => $art === 'nachzuegler' ? 'neutral' : 'orange']),
         ]); ?>
       <?php endforeach; ?>
     <?php endforeach; endif; ?>

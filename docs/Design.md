@@ -757,9 +757,9 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 108 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
-| `ui_symbol()` | `.symbol` | ja (+5 Unterklassen) | 194 |
+| `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo()` | — | Hüllenfunktion, kein eigenes Element | 261 |
-| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 317 |
+| `ui_kopf()` | `.kopf` | ja (+21 Unterklassen) | 317 |
 | `ui_geruest_start()` | `.inhalt` | ja | 389 |
 | `ui_leiste_ende()` | `.leiste` | ja (+8 Unterklassen) | 453 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 475 |
@@ -773,19 +773,19 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 996 |
 | `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1026 |
 | `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1077 |
-| `ui_zeile()` | `.zeile` | ja (+11 Unterklassen) | 1093 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1130 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1172 |
-| `ui_feld()` | `.feld` | ja (+17 Unterklassen) | 1236 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1294 |
-| `ui_segment_markup()` | `.segment` | ja (+24 Unterklassen) | 1338 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1390 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1434 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1517 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1567 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1608 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1665 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1818 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1093 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1135 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1177 |
+| `ui_feld()` | `.feld` | ja (+20 Unterklassen) | 1241 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1299 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1343 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1396 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1440 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1523 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1573 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1614 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1671 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1824 |
 
 32 Funktionen mit Markup in `server/ui.php`, davon 5 Hüllenfunktionen ohne eigenes Element.
 
@@ -830,7 +830,26 @@ Plaketten, Aktionen rechts.
 ```
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
-rechts steht, *handelt an ihr*.
+rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
+(Sammelsicherung) und die Spurenliste des Diensttages (mehrere Spuren als eine
+GPX-Datei, seit Web 10.3.0). Ein Eintrag, an dem es nichts auszuwählen gibt,
+bekommt ein **abgeschaltetes** Kästchen und nicht gar keines — ein fehlendes
+ließe die Zeile um seine Breite nach links rutschen, und die Liste sähe
+verrutscht aus.
+
+**`attr` (seit Web 10.3.0)** hängt fertige Attribute an — dieselbe
+Zusatzoption, die `ui_knopf()` und `ui_aktionen()` schon haben. Gebraucht für
+Zeilen, die mit etwas anderem auf der Seite verknüpft sind: die Spurenliste des
+Diensttages trägt darüber `data-spur` und `tabindex`.
+
+**`.zeile-hervor` (seit Web 10.3.0)** hebt eine Zeile hervor, solange etwas
+anderes auf sie zeigt — Rauchfläche plus ein orangener Balken links in
+`--strich-stark`. Kein neuer Farbwert, kein neues Maß, kein eigener Fokusring
+(es gibt **einen** für die ganze Anwendung).
+
+> **Nur für eine Verknüpfung, nicht für einen Zustand.** „Hervorgehoben" heißt
+> *worauf gerade gezeigt wird*, nicht *was ausgewählt ist* und nicht *was
+> wichtig ist*. Für einen Zustand ist die Plakette da (9.6).
 
 ### 9.3 Zeilenaktionen — dieselben Handlungen, zwei Formen
 
@@ -927,6 +946,13 @@ aktuell, freigegeben) · `rot` (Fehleinsatz, kein Ende, nie gesichert, leer).
 sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 (E-P3-17).
 
+> **Es sind genau diese vier Töne.** Ein fünfter Wert erzeugt eine Klasse ohne
+> Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
+> das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
+> auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
+> Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
+> finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
+
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
 Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
@@ -984,6 +1010,15 @@ einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
 > steht er am Ende des Formulars in `.listen-form-fuss`, wo man ihn sucht.
 > `data-dirty-track` bleibt trotzdem: Es trägt auch die Verlassen-Warnung und
 > die bedingte Abbrechen-Rückfrage.
+
+**Zweite Verwendung: die Sammelleiste** (`kein_haken`, `form`, `zahl`).
+Derselbe Baustein, anderer Anlass: Nicht ein schmutziges Formular blendet sie
+ein, sondern eine **Auswahl** — und ihr Text ist deren Zahl und deshalb immer
+sichtbar (der Hinweis eines Formulars erscheint erst ab 720 px). Zwei
+Verwendungen: „Auswahl sichern" in der NutzerInnen-Liste (P3/O9b) und
+„Auswahl als GPX" auf der Spurenseite des Diensttages (Web 10.3.0). Mit `form`
+kann sie einem Formular an anderer Stelle der Seite gehören; `kein_haken`
+hängt sie von `forms.js` ab, das dann nichts zu tun hätte.
 
 ### 9.10 Kennzahl
 

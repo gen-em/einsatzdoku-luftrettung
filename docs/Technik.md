@@ -89,6 +89,14 @@ Daten erst nach Server-Bestätigung.
 │   ├── pair.php           Uhr-Kopplung per Code
 │   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
 │   │                       die `track_points`/`track_blobs` anfasst (4.97)
+│   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
+│   │                       EINZIGE Stelle, die GPX schreibt (4.97b)
+│   ├── gpx.php            der Abruf. Bewusst NICHT unter api/: Ein Link, den
+│   │                       eine Nutzerin anklickt, braucht bei Sitzungsende
+│   │                       die Anmeldeseite und kein JSON (4.97b)
+│   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
+│   │                       auf einmal abrufbar: Karte plus chronologische
+│   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
 │   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
 │   │                       mit Token, huckepack auf einer Anfrage (4.97a)
 │   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
@@ -179,6 +187,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── gpxprobe/          prüft den GPX-Abruf (S2/AP4): gültig gegen das
+│   │                       vendorierte amtliche GPX-1.1-XSD, Punkt für Punkt
+│   │                       gegen die browsergebauten Referenzdateien,
+│   │                       Kennzeichnung in Datei, Dateiname und Seite
+│   │                       (s. LIESMICH.md)
 │   ├── ingestprobe/       prüft die Uhr-Schnittstelle nach der Ausdünnung
 │   │                      (S2/AP3) über ECHTES HTTP: Nachzügler an Stufe 2
 │   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
@@ -2205,6 +2218,204 @@ kaputtmachen.
 
 Die Marken `last_cleanup` und `last_cleanup_ok` in `app_state` sind damit
 entfallen; ihre Auskunft steht vollständiger in `jobs`.
+
+---
+
+### 4.97b GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09)
+
+Eine Spur lässt sich einzeln herunterladen — je Einsatz aus dessen
+Aktionsmenü, und je Einsatz **und Ruhesegment** über `tag_spuren.php`; auf
+derselben Seite lassen sich mehrere ankreuzen und als **eine** Datei laden.
+Der Bauplatz ist `server/gpx_lib.php`; er ist die **einzige** Stelle, die GPX
+schreibt.
+
+| Adresse | liefert |
+|---|---|
+| `gpx.php?art=mission&id=42` | eine Spur |
+| `gpx.php?art=rest&id=17` | eine Ruhespur |
+| `gpx.php?tag=7&auswahl[]=mission-42&auswahl[]=rest-17` | beide in einer Datei |
+
+Der Auswahlweg nimmt `auswahl[]` (so schickt es das Formular) genauso wie
+`auswahl=mission-42,rest-17` (so tippt man es von Hand). Beide gehen durch
+dieselbe Prüfung, dieselbe Datentrennung und dieselbe Bau-Funktion
+(`gpx_bauen_viele()`) — sonst wäre die Auswahl ein zweiter, schwächerer Weg an
+denselben Bestand.
+
+#### Warum serverseitig — und warum das die erste ausgelieferte Datei ist
+
+Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer Nutzerin
+landet, im Browser aus einem Blob. Das hat einen Grund und keinen Zufall: Ihr
+Inhalt ist Ende-zu-Ende verschlüsselt, der Server **kann** ihn nicht
+zusammensetzen.
+
+Für eine Spur gilt das nicht. Spurpunkte liegen im Klartext (Backlog Nr. 43),
+und die Stufe, die E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server
+(`spur_stand()`). Der Browser hätte beides nicht: `api/mission.php` liefert die
+Spur als bloße Paare `[lat, lon]` — ohne Höhe, ohne Zeit, ohne Stufe. Ein
+browsergebautes GPX bräuchte also einen neuen, breiteren Abrufweg, nur um
+danach zusammenzusetzen, was auf dem Server schon beieinander liegt.
+
+Den Ausschlag gibt ein Sicherheitsargument: Der **Dateiname** landet im
+Downloadordner, in einem Backup, vielleicht in einer Mail. Serverseitig gebaut
+**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter
+und Einsatzort nicht lesen. Browserseitig gebaut könnte er es.
+
+`gpx.php` prüft die **Datentrennung selbst**: `spur_lib.php` prüft kein
+Eigentum, es nimmt `owner_type` und `owner_id` und liest, was da ist. Erst
+gegen `user_id` und `deleted_at` filtern, dann lesen — dasselbe Muster wie in
+`api/export_data.php`. Und „gehört nicht mir" antwortet **404 wie „gibt es
+nicht"**: Ein eigener Code verriete, dass es die Kennung anderswo gibt.
+
+#### Warum der Abruf nicht unter `api/` liegt
+
+Er lag dort zuerst, und das war falsch. `ist_api_aufruf()` (`auth_guard.php`)
+entscheidet **allein am Pfad**: Enthält er `/api/`, gilt die Anfrage als
+`fetch()` eines Skripts und bekommt bei abgelaufener Sitzung JSON 401 statt
+der Anmeldeseite. Diese Annahme stimmte, solange nichts in der Oberfläche nach
+`api/` **verlinkte** — der GPX-Abruf ist der erste `<a href>`, den eine
+Nutzerin selbst anklickt. Nach einer Mittagspause hätte sie
+`{"error":"session_ende"}` im Browserfenster gesehen.
+
+#### Drei Schranken, die es NICHT gibt — und warum
+
+- **Keine A9-Schranke wie im Export.** `api/export_data.php` verweigert
+  Spurpunkte, solange der Haken „personenbezogene Angaben" fehlt: Ein Export
+  *ohne* diese Angaben ist eine Datei zum Weitergeben, und eine Spur endet am
+  Einsatzort. Hier gibt es diese anonyme Fassung gar nicht — es gibt nur den
+  einen Abruf, und der *ist* die personenbezogene Fassung. Es gäbe keinen
+  Haken zu umgehen.
+- **Keine Sperre auf den Inhaltsschlüssel.** Die Einsatzansicht zeichnet
+  dieselbe Spur bereits auf ihre Karte, ohne dass jemand entsperrt haben muss
+  — die Punkte sind Klartext. Eine Sperre hier wäre Theater: Sie verweigerte
+  die Datei und zeigte den Weg daneben weiter an. Dass die Spur überhaupt
+  unverschlüsselt liegt, ist ein bekannter offener Punkt (**Backlog Nr. 43**)
+  und gehört dorthin, nicht in eine halbe Maßnahme an dieser Stelle.
+- **Keine Mengengrenze aus Rechtsgründen** — es sind die eigenen Spuren. Die
+  Grenze von `GPX_AUSWAHL_MAX` = 100 Spuren je Auswahl steht aus einem anderen
+  Grund da: Die Datei entsteht vollständig im Arbeitsspeicher, weil ihre Länge
+  in die Kopfzeile gehört. Gemessen mit der größten Spur des Referenzbestands
+  (1063 Punkte) kosten hundert Spuren 9,7 MB Datei bei 23,4 MB Spitze — im
+  Budget von 64 MB (Z3). Dazu ein **Ratenschutz** im Topf `pair`, und zwar nur
+  auf Fehlgriffe: Ein gelungener Abruf geht nicht aufs Kontingent, sonst träfe
+  die Bremse die Spurenseite eines Tages mit zwölf Einträgen. Gezählt wird,
+  was auf ein Abtasten fremder Kennungen hindeutet.
+
+**Was die Datei bedeutet, sagt die Oberfläche.** Der Eintrag in der
+Einsatzansicht fragt vor dem Herunterladen zurück — wie der große Export es
+tut —, und über der Liste in `tag_spuren.php` steht derselbe Satz. Eine
+Ruhespur ist dabei ausdrücklich mitgemeint: Sie zeigt den Aufenthalt der
+Besatzung zwischen den Einsätzen.
+
+#### Die Reihenfolge im GPX ist nicht frei
+
+GPX 1.1 beschreibt die Kindelemente als `xsd:sequence`, nicht als
+`xsd:choice`. Zwei Stellen kommen darauf an:
+
+| Typ | Folge | heißt |
+|---|---|---|
+| `metadataType` | name, **desc**, author, copyright, link, **time**, … | `<desc>` steht **vor** `<time>` |
+| `trkType` | **name**, cmt, **desc**, src, link, number, type, ext, **trkseg** | `<desc>` steht zwischen `<name>` und `<trkseg>` |
+
+Wer `<desc>` hinten anhängt, schreibt eine Datei, die wohlgeformt ist, die
+manche Programme klaglos lesen — und die gegen das Schema durchfällt. Kein
+XML-Parser meldet das.
+
+#### Die Kennzeichnung steht an drei Stellen
+
+E-S2-09 verlangt, dass sichtbar ist, welche Fassung der Spur die Datei trägt:
+
+1. **In der Datei**, als `<desc>` in `<metadata>` und in `<trk>` — mit Zahl:
+   „ausgedünnt — 113 von ursprünglich 443 Punkten (Douglas-Peucker, 2 m
+   waagerecht / 3 m senkrecht)".
+2. **Im Dateinamen** (`einsatz_000001_2026-01-17_0605_ausgeduennt.gpx`). Das
+   ist die einzige Kennzeichnung, die das Verschieben in einen anderen Ordner
+   überlebt.
+3. **Auf der Seite**, vor dem Herunterladen. Eine Auszeichnung, die nur in der
+   Datei steht, sieht erst, wer sie schon hat.
+
+Der Dateiname wird auf `[A-Za-z0-9._-]` beschränkt (`gpx_dateiname()`): Er geht
+durch eine HTTP-Kopfzeile, ein Dateisystem und womöglich ein Archiv; ein
+Anführungszeichen oder ein Zeilenumbruch darin wäre eine Einladung zur
+Kopfzeilen-Einschleusung.
+
+#### Die Spurenseite des Diensttages
+
+**Ruhesegmente hatten in der Oberfläche keine Identität.** In der Tagesansicht
+sind sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` liefert
+nicht einmal ihre Kennung. Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+— die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
+
+`tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
+jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit Stufe,
+Punktzahl und Abruf. Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
+auf sie.
+
+**Die Liste steht chronologisch, nicht nach Art gruppiert.** Der erste Entwurf
+listete erst alle Einsätze und dann alle Ruhezeiten — die Reihenfolge, in der
+die beiden Abfragen im Code stehen. So liest sich aber kein Diensttag: Er
+verläuft in *einer* Folge, Ruhezeit, Einsatz, Ruhezeit, Einsatz. Zwei Gruppen
+zwingen dazu, zwischen ihnen hin und her zu rechnen, um zu sehen, was worauf
+folgte. Die laufende Nummer der Einsätze („Einsatz 3") und die Farben auf der
+Karte zählen weiter nur die Einsätze durch und bleiben davon unberührt.
+
+**Serverseitig gerendert**, und das ist Absicht: Die Liste besteht aus dem
+vorhandenen Baustein `ui_zeile()`. Sie im Browser aus Zeichenketten
+nachzubauen hieße, dasselbe Markup ein zweites Mal zu pflegen. An den Browser
+geht nur, was die Karte braucht: die Punktfolgen, und von denen nur der Ort —
+weder Höhe noch Zeit.
+
+Ohne Spur steht der Eintrag trotzdem in der Liste, aber ohne Abruf: Wer einen
+Einsatz sucht und ihn hier nicht fände, hielte die Liste für unvollständig.
+
+#### Mehrere Spuren in einer Datei
+
+Jede Zeile trägt ein Auswahlkästchen, die Sammelleiste darunter lädt die
+angekreuzten als eine Datei. **Kein neuer Baustein:** das Kästchen sitzt in
+`ui_zeile(['vorn' => …])`, die Leiste ist `ui_speichern_leiste()` — dieselben
+zwei Bausteine wie die Sammelaktion der NutzerInnen-Liste (P3/O9b). Ein
+Eintrag ohne Spur bekommt ein abgeschaltetes Kästchen statt gar keines: Ein
+fehlendes ließe die Zeile um seine Breite nach links rutschen.
+
+**Mehrere `<trk>`, kein zusammengeklebtes `<trkseg>`.** GPX 1.1 erlaubt
+beliebig viele `<trk>` in einem Dokument. Zwei Spuren in *ein* `<trkseg>`
+geschrieben ergäbe eine Datei, die jedes Kartenprogramm klaglos öffnet und in
+der es eine gerade Linie vom Ende der einen zum Anfang der nächsten zieht —
+einen Weg, den niemand gefahren ist. Auch mehrere `<trkseg>` in *einem* `<trk>`
+wären falsch: Die meinen Abschnitte **einer** Aufzeichnung mit einer Lücke
+dazwischen, nicht zwei verschiedene Fahrten.
+
+| Frage | Antwort |
+|---|---|
+| Reihenfolge | chronologisch über beide Arten hinweg — dieselbe Folge wie die Liste auf der Seite, aus der ausgewählt wurde. Sortierschlüssel dort wie hier: Beginn, Art, Kennung |
+| Name je Spur | derselbe wie beim Einzelabruf (`Einsatz 42 — 10.05.2026 07:09`), damit man dieselbe Spur in beiden Dateien wiederfindet |
+| Kennzeichnung | jede Spur nennt ihre Stufe an ihrem `<trk>`; der Kopf sagt, was die Datei als Ganzes ist („3 Spuren — 436 Punkte insgesamt · teils ausgedünnt") |
+| Dateiname | `diensttag_2026-05-10_3-spuren_gemischt.gpx` — Datum, Anzahl und Stufe (`original`, `ausgeduennt` oder `gemischt`) |
+| Speicher | `gpx_bauen_viele()` nimmt einen **Generator**, keine Liste: Eine dekodierte Spur kostet rund 4 MB, hundert gleichzeitig sprengten das Budget. Deshalb entstehen die `<trk>` zuerst und der Kopf danach — die Gesamtzahl kennt man erst am Ende, das `<metadata>` steht aber vorn |
+
+**Streng bei der Form, nachsichtig beim Bestand.** Was nicht genau
+`mission-<Zahl>` oder `rest-<Zahl>` ist, kommt nicht von dieser Seite: 400.
+Eine wohlgeformte Kennung, die zu diesem Tag und diesem Konto nicht gehört,
+fällt beim Lesen heraus, ohne dass die ganze Datei scheitert — sie kann aus
+einem Tab stammen, der seit einer Löschung offen steht; wie viele Spuren
+wirklich drin sind, sagen Dateiname und `<desc>`. Ausgeforscht wird dabei
+nichts: Die Abfrage filtert auf `user_id` **und** `day_id`, eine fremde
+Kennung liefert also nie einen Treffer, gleich ob es sie gibt. Bleibt gar
+nichts übrig, ist es doch ein Fehlgriff: 404, und er zählt.
+
+**Ohne JavaScript** bleibt der Einzelabruf. Die Kästchen stehen in einem
+gewöhnlichen GET-Formular und würden auch ohne Skript absenden, aber die
+Sammelleiste erscheint erst, wenn etwas ausgewählt ist — und das entscheidet
+das Skript.
+
+#### Was der Abruf nicht tut
+
+- **Kein leeres GPX.** Eine Datei mit null Punkten sieht aus wie eine Spur, die
+  es gibt — und in einem Kartenprogramm wie ein Fehler des Programms. Der Abruf
+  antwortet 404.
+- **Keine anonyme Fassung.** Der große Export bindet GPX-Spuren an die
+  personenbezogenen Angaben, weil eine Spur am Einsatzort endet. Hier gibt es
+  diese Wahl nicht; stattdessen steht der Satz über der Liste, an der Stelle,
+  an der jemand herunterlädt.
 
 ---
 

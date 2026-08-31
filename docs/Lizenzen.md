@@ -180,6 +180,37 @@ nicht in dieser Aufstellung.
 Für die Uhr-App gilt dasselbe in die andere Richtung: `watch/` ist Monkey C
 und benutzt ausschließlich das Connect-IQ-SDK von Garmin.
 
+### 7.1 Das GPX-1.1-Schema (seit Web 10.3.0)
+
+Eine Ausnahme von „hier steht nur, was ausgeliefert wird" — sie steht
+trotzdem in dieser Aufstellung, weil es eine **fremde Datei** ist und die
+Herkunft nachweisbar bleiben soll.
+
+| | |
+|---|---|
+| Datei | `tools/gpxprobe/gpx11.xsd` |
+| Herkunft | `https://topografix.com/GPX/1/1/gpx.xsd`, bezogen am 31.08.2026 |
+| Größe | 26 665 Byte, **byteweise unverändert** |
+| SHA-256 | `9e4d1988b862edbe556305b130f8f6f1b29864fefd0dc02d5dab04ccdd1f34d6` |
+| Urheber | TopoGrafix (Dan Foster), GPX 1.1 |
+| Zweck | `tools/gpxprobe/` validiert damit die erzeugten GPX-Dateien |
+
+**Die Prüfsumme steht hier und in `tools/gpxprobe/LIESMICH.md`, nicht im
+Dateikopf.** Ein Kommentar in der Datei änderte sie, und sie ist der Punkt: Die
+Probe rechnet sie bei jedem Lauf nach. Ein Schemalauf gegen ein verändertes
+Schema belegt nichts.
+
+**Und Git schreibt sie nicht um.** Die `.gitattributes` des Projekts setzen
+`* text=auto eol=lf`; das Schema hat 788 CRLF und wäre auf 25 877 Byte
+geschrumpft — die Arbeitskopie hier unverändert, jeder frische Klon aber mit
+falscher Prüfsumme. Die Zeile `tools/gpxprobe/gpx11.xsd -text` hält es
+byteweise so, wie es kam. **Wer die Datei austauscht, prüft beides nach:**
+Summe hier und Größe nach einem Klon.
+
+**Zur Laufzeit wird sie nie geladen.** Sie liegt unter `tools/`, der Deploy
+nimmt den Ordner aus, und die Anwendung kennt sie nicht. Die Zusage aus
+Abschnitt 2 bleibt unberührt.
+
 ---
 
 ## 8. Was hier NICHT steht
@@ -200,4 +231,5 @@ und benutzt ausschließlich das Connect-IQ-SDK von Garmin.
 
 | Fassung | Was |
 |---|---|
+| Web 10.3.0 (S2/AP4) | Abschnitt 7.1: das vendorierte GPX-1.1-Schema von TopoGrafix, mit Herkunft und SHA-256. Es liegt unter `tools/` und wird zur Laufzeit nie geladen. |
 | Web 9.13.0 (P3/O12) | Erstfassung. Zusammengetragen aus den Dateiköpfen unter `server/assets/vendor/`, dem Stylesheet-Kommentar zu den Schriften, `LICENSE-tabler-icons.txt` und den Adressen in `map_layers.js`, `ortsfeld.js` und `ortswahl.js`. |
