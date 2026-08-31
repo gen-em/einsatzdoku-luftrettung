@@ -755,6 +755,46 @@ mitziehen.
 vorab; B1 übernimmt den dann aktuellen Stand der Dateien. Damit der Fund
 nicht verschwindet, ist er als **Backlog Nr. 49** eingetragen.
 
+### B-S4-02 — Bedienhöhe: 44 px der Weboberfläche gegen 48 dp der Android-Vorgabe
+
+Gefunden beim Bau der Handy-Bausteine (B1). `CLAUDE.md` 5 sagt: „Eine Höhe
+für Bedienelemente: **44 px**, mobil wie am Schreibtisch. Es gibt keine
+Kompaktvariante." Das App-Mockup (`docs/mockups/S4-app.html`) benutzt
+entsprechend `var(--knopf)` = 44 px.
+
+Androids eigene Vorgabe für Berührziele ist **48 dp**. Die vier Pixel
+Unterschied wären an einem Schreibtisch gleichgültig; hier nicht — die App
+wird **mit Handschuhen im Einsatz** bedient, und das ist genau der Fall, für
+den die 48 dp gedacht sind. Zugleich sagt das Mockup selbst, die App folge
+„den Android-Konventionen und übernehme aus der Marke Farben und
+Zurückhaltung" — die 44 sind eine Web-Zahl, keine Markenzahl.
+
+**Stand B1: 44 dp umgesetzt**, weil `CLAUDE.md` eindeutig ist und eine Zahl
+nicht nebenbei geändert wird. Die Konstante steht an **einer** Stelle
+(`BEDIENHOEHE` in `handy/src/main/java/.../Bausteine.kt`); eine Änderung ist
+eine Zeile. **Zu entscheiden vor dem Gerätetest**, weil der S24-Dienst genau
+das prüfen kann, was hier strittig ist.
+
+### B-S4-03 — Das APK der Uhr ist 18 MB groß
+
+Gemessen in B1: `uhr-release-unsigned.apk` = 18 005 460 B (Debug-Fassung
+24 376 580 B), `handy-release-unsigned.apk` = 6 989 468 B. Das Uhr-APK ist
+also **mehr als doppelt so groß wie das Handy-APK** — obwohl die Uhr-App
+weniger tut.
+
+Die Ursache ist bekannt und liegt nicht in eigenem Code: Compose for Wear OS
+bringt einen eigenen vollständigen Satz Bausteine mit, und `isMinifyEnabled`
+steht auf `false` (Begründung in `uhr/proguard-rules.pro`: ein lesbarer
+Stapelauszug ist im Gerätetest mehr wert als ein kleineres APK).
+
+Warum es trotzdem notiert wird: Eine Uhr hat wenig Speicher, und das APK wird
+**per FTPS auf den Server gelegt und von dort heruntergeladen** (E-S4-16) —
+über Mobilfunk. **Zu entscheiden vor der ersten Auslieferung**, nicht jetzt:
+Kandidaten sind R8 für das Release der Uhr (Stapelauszüge dann über die
+`mapping.txt`, die verwahrt werden müsste) oder das Weglassen der
+Compose-Werkzeugvorschau im Release. Kein B1-Umfang — hier steht nur die
+Zahl, damit sie nicht erst beim Hochladen auffällt.
+
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
@@ -764,3 +804,157 @@ Entscheidungen, Prüfstand). Nach Phasenende: Prüfdokument
 `Android` (Blöcke B/C). Die Entscheidung zu F-S4-A bis F-S4-C wird vor dem
 jeweils betroffenen Paket eingeholt und hier als E-Eintrag nachgetragen
 (K6).
+
+---
+
+## 12. Umsetzung — Stand und Prüfstand
+
+Fortschreibung nach jedem Arbeitspaket (K5, CLAUDE.md 7). Bis Block D trägt
+dieses Kapitel die Chronik: Die Einträge in `docs/CHANGELOG.md` mit dem Präfix
+`Android`, die Backlog-Pflege und die Nachträge in `Lizenzen.md`, `Technik.md`,
+`Handbuch.md` und `Geraete-Eingabe.md` folgen dort gesammelt (Abschnitt 6 —
+so entsteht bis dahin keine Datei, an der zwei Zweige gleichzeitig arbeiten).
+
+**Was bis zum Gerätetest offen bleibt** (steht hier vorn, nicht in einer
+Fußnote): echtes GPS, Akkuverhalten, Mobilfunk-Upload, Bluetooth und der Data
+Layer auf Hardware. Es gibt **keinen Emulator** im Container (E-R45-8) und
+damit **keine Bildschirmfotos** dieser App — weder vom Handy noch von der Uhr.
+Die Uhr-App ist vollständig blind gebaut (E-R45-7).
+
+### B1 — Gerüst und Probebau · Android 0.1.0 · erledigt
+
+**Was entstanden ist.** Das Gradle-Projekt `android/` mit den Modulen `handy/`
+und `uhr/`, beide auf Anwendungs-ID `org.genem.nadoku` (E-S4-01); die
+Versionszählung in `android/version.properties` samt gerechnetem Versionscode;
+die siebzehn Farb-Token als Android-Ressource; beide Bildmarken in vier
+Fassungen; das Launcher-Symbol als adaptives Symbol; die ersten Bausteine der
+Handy-Oberfläche (Kopfleiste, Karte, drei Knopfarten, Zustandszeile,
+Hinweiskasten); `android/LIESMICH.md` mit Bauanleitung für Container und
+Arbeitsplatz.
+
+**Der Probebau ist die eigentliche Abnahme, und er trägt** — aber erst nach
+zwei Nachträgen an der Zuarbeitenliste (siehe „Probleme").
+
+#### Prüfstand B1
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew clean build`, headless | **BUILD SUCCESSFUL, 53 s** | fehlerfrei |
+| Lint `handy` | `lintDebug`, Textbericht | **0 Fehler, 18 Warnungen** | 0 Fehler |
+| Lint `uhr` | `lintDebug`, Textbericht | **0 Fehler, 0 Warnungen** | 0 Fehler |
+| APK `handy` | `assembleRelease` unsigniert | **6 989 468 B, 120 Einträge** | baut |
+| APK `uhr` | `assembleRelease` unsigniert | **18 005 460 B, 136 Einträge** | baut |
+| Paketkennung beider APK | `aapt2 dump badging` | `org.genem.nadoku`, Code 100, Name 0.1.0, `targetSdk 36` — **identisch** | gleich (E-S4-01) |
+| Berechtigungen `uhr` | `aapt2 dump badging` | **`WAKE_LOCK`, kein `INTERNET`** | kein Serverzugang (E-S4-11) |
+| Signaturweg | `signatur.properties` gesetzt, `assembleRelease`, `apksigner verify` | **beide APK signiert, Zertifikat SHA-256 `078c…ad64` identisch** | dieselbe Signatur (E-S4-01) |
+| Signaturschlüssel im Repositorium? | `git check-ignore -v` | **`*.jks` und `signatur.properties` greifen; `git status` sieht beide als ignoriert** | nie eingecheckt (E-S4-16) |
+| Farb-Token gegen `:root` | `android/werkzeuge/farbabgleich.py` | **18 Web-Token, 17 App-Token, 0 Abweichungen, 0 eigene Farbwerte**, 1 nicht übernommen (`--spur-8`, Spurfarbe der Karte — die App hat keine Karte) | 0 / 0 (E-S4-22a) |
+| Kontraste | `android/werkzeuge/kontraste.py` | **16 Paare, 0 unter dem Zielwert**; Kleinstwert `--rot` auf `--asphalt` = 4,12:1 (grafisches Objekt, Ziel 3:1) | AA (CLAUDE.md 5) |
+| Bildmarken gegen Vorlage | `android/werkzeuge/bildmarken.sh pruefen` | **4 Dateien, 0 Abweichungen** | bitgleich |
+| Gradle-Verteilung | Quervergleich Wrapper-Bezug ↔ Container-Gradle | **188 von 188 JAR bitgleich, 0 Abweichungen** | belegt |
+| Dateien im Commit | `git add -An android/` | **41, keine Bauausgabe, kein Geheimnis** | sauber |
+
+**Was der Prüfstand nicht sagt.** Kein Prüffall ist gelaufen — es gibt in B1
+noch keinen (`test` meldet `NO-SOURCE`). Kein APK wurde installiert oder
+gestartet; „baut" heißt hier gebaut, nicht lauffähig. Die achtzehn
+Lint-Warnungen sind sämtlich derselbe Befund („eine neuere Fassung ist
+verfügbar") auf `gradle/libs.versions.toml`; sie werden **nicht**
+stummgeschaltet, weil eine unterdrückte Warnung später eine echte verdeckt.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Die Android-Kommandozeilenwerkzeuge lagen nicht im Container.** Die
+   Zuarbeitenliste (Abschnitt 9) nennt sie zusammen mit dem JDK als vorhanden;
+   JDK 21 und Gradle 8.14.3 waren da, das SDK nicht (`ANDROID_HOME` leer, kein
+   Verzeichnis). Geholt von `dl.google.com` — der Domain, die ohnehin auf der
+   Freigabeliste steht: `commandlinetools-linux-11076708`, dazu
+   `platform-tools`, `platforms;android-36` und `build-tools;36.0.0`, rund
+   460 MB. Der Ablauf steht in `android/LIESMICH.md` 2, damit die nächste
+   Sitzung ihn nicht wiederfinden muss.
+   **Nachtrag zur Zuarbeitenliste:** „Android-Kommandozeilenwerkzeuge im
+   Container" ist keine Zuarbeit, sondern ein Schritt der Bauanleitung.
+
+2. **Eine sechste Netzfreigabe fehlte auf der Liste, und ohne sie gibt es
+   keinen Wrapper-Lauf.** Die fünf genannten Domains antworten alle. Der
+   Gradle-Wrapper lädt seine Verteilung aber von `services.gradle.org`, und
+   diese Adresse **leitet auf `github.com` weiter**
+   (`gradle/gradle-distributions`). Im Container trägt die Weiterleitung; auf
+   der Freigabeliste stand sie nicht. Eine **siebte**, `downloads.gradle.org`,
+   ist gesperrt (403) — sie trägt die Prüfsummendatei der Verteilung.
+   **Folge:** `gradle-wrapper.properties` führt **kein**
+   `distributionSha256Sum`. Die Prüfsumme aus der Datei zu rechnen, die man
+   gerade geladen hat, wäre keine Prüfung. Stattdessen wurde gegenseitig
+   belegt: Die vom Wrapper geladene Verteilung und das im Container
+   vorinstallierte Gradle 8.14.3 stammen aus zwei Quellen; ihre
+   Programmbibliotheken sind **188 von 188 JAR bitgleich**. Wer ohne diese
+   Sperre arbeitet, trägt die Prüfsumme von `gradle.org/release-checksums/`
+   nach; der Hinweis steht in `LIESMICH.md` 2.1.
+
+3. **Der erste Baulauf scheiterte an XML-Kommentaren.** In einem
+   XML-Kommentar ist die Zeichenfolge `--` unzulässig; die deutschen
+   Gedankenstriche im Kommentarstil dieses Repositoriums sind genau das. In
+   vierzehn Dateien durch `—` ersetzt. Kein inhaltlicher Eingriff, aber eine
+   Regel, die für jede künftige XML-Ressource gilt — sie steht deshalb hier
+   und nicht nur im Commit.
+
+4. **Zwei Lint-Fehler und drei Lint-Warnungen aus dem Gerüst selbst**, alle
+   behoben statt stummgeschaltet: `MissingClass` (die Activity-Namen im
+   Manifest sind relativ zum Namensraum, die Klassen liegen aber in
+   Unterpaketen → `.handy.HauptActivity` bzw. `.uhr.UhrActivity`),
+   `RedundantLabel`, `ObsoleteSdkInt` (der Ordner `mipmap-anydpi-v26` ist bei
+   `minSdk` 26 bzw. 30 überflüssig) und eine ungenutzte Zeichenkette. Das
+   adaptive Symbol liegt jetzt im Grundordner `mipmap/`.
+   **Nebenbefund:** `mipmap-anydpi` **ohne** Versionsstufe wurde von AAPT2
+   nicht als Ressource aufgenommen (`resource mipmap/symbol not found`) —
+   deshalb `mipmap/` und nicht `mipmap-anydpi/`.
+
+#### Entscheidungen, die in B1 gefallen sind
+
+Sie füllen die vorhandenen E-Einträge aus und ersetzen keinen davon.
+
+- **E-S4-23 — `compileSdk`/`targetSdk` ist 36, nicht 37; AGP bleibt bei
+  8.13.2.** E-S4-03 verlangt „`targetSdk` aktuell". Aktuell wäre API 37 — es
+  gibt dieses API aber **nur mit Nebenversionen** (`android-37.0`, `-37.1`,
+  `-37.2`); eine schlichte `platforms;android-37` existiert nicht, und die
+  Schreibweise dafür (`compileSdk` + `compileSdkMinor`) beherrscht erst AGP 9.
+  AGP 9 ist ein Umbau der Bau-Sprache; ihn blind einzuführen, um eine
+  API-Stufe zu gewinnen, die die App nicht braucht, ist der teure Weg zum
+  kleinen Gewinn. **API 36 erfüllt den Zweck von E-S4-03 vollständig:** Die
+  strengen Regeln für Vordergrunddienste gelten ab API 34, und die App
+  deklariert `FOREGROUND_SERVICE_LOCATION` (ab B3). Der Wechsel auf AGP 9 samt
+  API 37 ist eine eigene, absichtliche Runde — nicht ein Nebeneffekt von B1.
+- **E-S4-24 — Der gemeinsame Quelltext bekommt kein drittes Modul.**
+  E-S4-02 legt zwei Module fest. Beide brauchen dieselben Farb-Token,
+  Bildmarken, Phasenlisten und später dasselbe Nachrichtenformat. Statt ein
+  drittes Modul zu erfinden, wird `android/gemeinsam/` in **beide** Module
+  eingebunden (`sourceSets[…].java.srcDir` und `.res.srcDir`). Der gemeinsame
+  Teil wird zweimal übersetzt; das kostet Bauzeit und sonst nichts, und es
+  spart eine Modulgrenze mit eigenem Manifest, eigener Versionierung und
+  eigener Lint-Auswertung.
+- **E-S4-25 — Die Versionszählung beginnt bei 0.1.0.** Eine 1.0.0 auf einem
+  Stand, der noch nicht koppeln und nicht senden kann, wäre eine falsche
+  Zusage. Die Nebennummer zählt bis dahin die Arbeitspakete (0.1.0 = B1 …
+  0.7.0 = C2); die 1.0.0 gehört an das Ende des Gerätetests (E-R45-7). Der
+  Versionscode wird aus der Nummer **gerechnet** (`Haupt·10000 + Neben·100 +
+  Korrektur`) und nicht danebengeschrieben.
+- **E-S4-26 — Kein eigener Farbwert, auch nicht für die Uhr.** Das
+  App-Mockup zeigt für die Uhr reines Schwarz (`#000`) und eine Nebenschrift
+  in `#B9B2A9`. Beide stehen nicht in `:root`, und E-S4-22a sagt „ein eigener
+  Farbwert entsteht nicht". Genommen werden deshalb `--asphalt` (#1A0500) als
+  Grund — auf einem OLED-Display derselbe abgeschaltete Bildpunkt und derselbe
+  Stromverbrauch — und `--sand` (#D4C7AD) als Nebenschrift (11,80:1 auf
+  Asphalt gegen 19,71:1 für Weiß). Der Entscheidungstext gilt, nicht die
+  Skizze; auf dem Gerät ist der Unterschied nicht zu sehen, in der Skala
+  schon.
+- **E-S4-27 — Der Signaturweg ist belegt, nicht nur beschrieben.** Der
+  Schlüssel (RSA 4096, PKCS#12, gültig bis 23.08.2056) ist erzeugt, liegt
+  außerhalb des Repositoriums und wurde dem Auftraggeber als Datei übergeben.
+  Der Bauweg findet ihn über `android/signatur.properties`; fehlt sie,
+  entsteht ein unsigniertes Release — genau so läuft es im Container und im
+  CI-Prüftor (E-R45-9). Beide Module wurden **einmal probeweise signiert**;
+  `apksigner verify` bestätigt dasselbe Zertifikat für Handy und Uhr, was die
+  Bedingung des Data Layer (gleiches Paket, gleiche Signatur) belegt.
+
+#### Neue Fehlerfunde (K4, gesammelt in Abschnitt 10)
+
+`B-S4-02` und `B-S4-03` — Beschreibung dort.

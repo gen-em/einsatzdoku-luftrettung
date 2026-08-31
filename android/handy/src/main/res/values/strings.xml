@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sichtbare Texte der Handy-App.
+
+    DEUTSCH, EINSPRACHIG. Die Weboberflaeche ist es auch; eine zweite Sprache
+    waere eine Zusage, die niemand pflegt.
+
+    GERAETEFREI FORMULIERT (E-S4-19, P2-Muster E-P2-02): Es heisst "Dienst",
+    nicht "Flugdienst"; "Einsatzort", nicht "Landeplatz". Die App laeuft an
+    bodengebundenen Notarzteinsaetzen genauso wie an luftgebundenen und
+    erfaehrt die Art gar nicht — die Einordnung geschieht im Browser.
+-->
+<resources>
+    <string name="app_name">NAdoku</string>
+    <string name="marke_luft_beschreibung">Bildmarke Rettungshubschrauber</string>
+    <string name="marke_boden_beschreibung">Bildmarke Notarzteinsatzfahrzeug</string>
+
+    <string name="stand_geruest">Gerüst steht</string>
+    <string name="stand_geruest_hinweis">Diese Fassung baut, koppelt aber noch nicht und zeichnet noch nicht auf. Kopplung folgt mit dem nächsten Arbeitspaket.</string>
+    <string name="fassung">Fassung %1$s</string>
+</resources>

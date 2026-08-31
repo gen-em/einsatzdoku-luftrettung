@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Das Thema der Uhr-App.
+
+    Der Grund ist `marke_asphalt` (#1A0500), nicht reines Schwarz. Warum, steht
+    in farben.xml: Auf einem OLED-Display ist der Unterschied weder zu sehen
+    noch am Stromverbrauch zu messen, aber es ist ein Wert der Marke und kein
+    neuer (E-S4-22a).
+
+    Elternthema ist `Theme.DeviceDefault`, das Wear-OS-Grundthema der
+    Plattform — damit gelten die Systemvorgaben fuer runde Displays und den
+    Always-on-Zustand, ohne eine weitere Bibliothek.
+-->
+<resources>
+    <style name="Theme.NAdokuUhr" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:windowBackground">@color/marke_asphalt</item>
+        <item name="android:colorBackground">@color/marke_asphalt</item>
+    </style>
+</resources>

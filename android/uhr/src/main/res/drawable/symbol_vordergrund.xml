@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Vordergrund des adaptiven Symbols.
+
+    Die Kachel eines adaptiven Symbols ist 108 x 108 dp; sichtbar ist davon
+    garantiert nur der innere Kreis von 66 dp (der Rest wird je nach Hersteller
+    beschnitten). Die Marke steht deshalb auf 52 dp Breite, mittig — innerhalb
+    des sicheren Bereichs, mit Luft.
+
+    `android:gravity="center"` mit fester Breite und Hoehe statt einer
+    Skalierung auf die volle Kachel: Die Vorlage liegt quer (1,602:1); auf die
+    Kachel gestreckt waere sie verzerrt, und die Verzerrung faellt an einem
+    Symbol sofort auf.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="52dp"
+        android:height="33dp"
+        android:drawable="@drawable/marke_luft_weiss"
+        android:gravity="center" />
+</layer-list>

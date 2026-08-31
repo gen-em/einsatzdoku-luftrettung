@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Farb-Token der App (E-S4-22a).
+
+    JEDER FARBWERT DER APP STEHT HIER UND NIRGENDS SONST. Das ist dieselbe
+    Regel wie im Web (`:root` in server/assets/style.css, CLAUDE.md 5) und aus
+    demselben Grund: Ein Hexwert, der an zwei Stellen steht, laeuft an einer
+    davon irgendwann auseinander, und niemand sieht es.
+
+    DIE WERTE SIND DIE DES WEB, ZEICHENGENAU. Ein eigener Farbwert fuer die App
+    entsteht nicht — die Skala ist geschlossen. Nachgeprueft wird das nicht
+    von Hand, sondern von werkzeuge/farbabgleich.py: Es liest :root aus dem
+    Stylesheet und diese Datei und meldet jede Abweichung.
+
+    DIE ROLLEN (Design.md 3.1, in der App unveraendert):
+
+      Orange handelt      Primaerknoepfe, laufender Dienst
+      Blau erklaert und   Verbindungs- und Sync-Zustand in Ordnung, gesetzte
+      bestaetigt          Phasenzeiten, Erklaerkaesten, Auswahlflaechen
+      Rot warnt           "Nicht eingerichtet", abgewiesener Schluessel,
+                          "Handy nicht erreichbar" — und, groesser als im Web,
+                          jede BEENDENDE Handlung (vollflaechig, weisse
+                          Schrift): Einsatz abschliessen, Dienst beenden,
+                          Geraet trennen, Abschluss-Rueckfrage der Uhr. Auf
+                          einem Geraet im Einsatz muss die beendende Handlung
+                          ohne Lesen erkennbar sein; die Rueckfrage
+                          (E-S4-21b) faengt den Fehltipp ab.
+
+    DER UNTERSCHIED ZUM WEB, mit der Freigabe vom 31.08.2026 bestaetigt:
+    Auswahlflaechen (Moduswahl, Logo-Wahl, Hinweiskaesten) stehen auf
+    HELLBLAU, nicht auf Hell-Orange wie die Wahlliste im Web (E-P3-20). In der
+    App waehlt Blau, damit die Rolle aus 3.1 sichtbar wird.
+-->
+<resources>
+
+    <!-- ==== Flaechen ====================================================
+         Schnee ist die Karte, Rauch die Flaeche darunter, Sand die Mechanik.
+         Weiss ist KEINE Flaeche: In der Marke ist es Logo- und Schriftfarbe
+         auf Dunkel. -->
+    <color name="marke_schnee">#FFFCFA</color>
+    <color name="marke_rauch">#F7F5ED</color>
+    <color name="marke_sand">#D4C7AD</color>
+
+    <!-- ==== Schrift ====================================================
+         Gedaempft ist die EINZIGE Graustufe. -->
+    <color name="marke_asphalt">#1A0500</color>
+    <color name="marke_dunkelblau">#1A2E4D</color>
+    <color name="marke_gedaempft">#6E6459</color>
+    <color name="marke_auf_dunkel">#FFFFFF</color>
+
+    <!-- ==== Linien ====================================================== -->
+    <color name="marke_linie">#E3DAC6</color>
+
+    <!-- ==== Orange — Handeln =========================================== -->
+    <color name="marke_orange">#FF8F1F</color>
+    <color name="marke_orange_tief">#C25A00</color>
+    <color name="marke_orange_hell">#FFEBD6</color>
+
+    <!-- ==== Blau — Auswaehlen und Erklaeren ============================ -->
+    <color name="marke_blau">#4280E5</color>
+    <color name="marke_blau_tief">#1F4E9C</color>
+    <color name="marke_blau_hell">#D9ECFD</color>
+
+    <!-- ==== Rot — Aufmerksamkeit ======================================= -->
+    <color name="marke_rot">#D63338</color>
+    <color name="marke_rot_tief">#9E2226</color>
+    <color name="marke_rosa">#FCE2D6</color>
+
+    <!-- ==== Was hier BEWUSST NICHT steht ===============================
+
+         Ein eigener Farbwert fuer die App entsteht nicht (E-S4-22a) — auch
+         nicht fuer die Uhr. Zwei Stellen waeren dafuer in Frage gekommen:
+
+           Der Grund der Uhr. Das Mockup zeigt reines Schwarz (#000). Genommen
+           wird stattdessen `marke_asphalt` (#1A0500): Auf einem OLED-Display
+           sind 26/5/0 von 255 praktisch dieselbe abgeschaltete Flaeche und
+           derselbe Stromverbrauch, aber es ist ein Wert der Marke und kein
+           neuer. Der Entscheidungstext gilt, nicht die Skizze.
+
+           Die Nebenschrift der Uhr. Das Mockup zeigt #B9B2A9. Genommen wird
+           `marke_sand` (#D4C7AD, 11,80:1 auf Asphalt gegen 19,71:1 fuer Weiss)
+           — deutlich zweite Ebene und trotzdem weit ueber AA.
+
+         Beide Male ist der Unterschied auf dem Geraet nicht zu sehen; was man
+         sieht, ist eine geschlossene Skala.
+    -->
+
+</resources>

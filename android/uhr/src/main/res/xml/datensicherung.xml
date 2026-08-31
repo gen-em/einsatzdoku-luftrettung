@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Ab Android 12 fragt das System nicht mehr `allowBackup` allein, sondern
+    diese Regeln (Cloud-Sicherung und Geraeteuebertragung getrennt). Beide sind
+    LEER: Es wird nichts uebertragen (E-S4-13).
+
+    Eine leere Regelmenge ist hier die vollstaendige Aussage — `allowBackup`
+    ist ohnehin aus, aber ohne diese Datei meldet Lint die Luecke, und zu Recht:
+    Die beiden Angaben koennen auseinanderlaufen.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="file" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="file" />
+    </device-transfer>
+</data-extraction-rules>

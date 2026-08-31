@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Das Thema der Handy-App.
+
+    ES IST BEWUSST DUENN. Die Oberflaeche entsteht in Compose; ein XML-Thema
+    wird nur noch fuer das gebraucht, was VOR der ersten Composable da sein
+    muss: die Fensterfarbe waehrend des Starts und die Farbe der Systemleisten.
+    Alles andere — Farben, Abstaende, Schriftgroessen — steht in Compose und
+    holt seine Werte aus `farben.xml`.
+
+    Das Elternthema ist die PLATTFORM-Fassung (`android:Theme.Material.Light`),
+    nicht die von AppCompat oder Material Components: Beide waeren eine weitere
+    Abhaengigkeit fuer nichts (E-S4-04).
+
+    Die Fensterfarbe ist `—rauch`, die Flaeche der Seite — nicht Weiss. Weiss
+    ist in dieser Marke keine Flaeche (siehe farben.xml); ein weisses
+    Startfenster, das eine Sekunde spaeter auf Rauch umspringt, sieht nach
+    Fehler aus.
+-->
+<resources>
+    <style name="Theme.NAdoku" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/marke_rauch</item>
+        <item name="android:statusBarColor">@color/marke_dunkelblau</item>
+        <item name="android:navigationBarColor">@color/marke_rauch</item>
+        <item name="android:colorAccent">@color/marke_orange</item>
+    </style>
+</resources>

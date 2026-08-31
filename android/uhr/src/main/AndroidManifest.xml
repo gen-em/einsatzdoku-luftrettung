@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NAdoku Uhr (Wear OS).
+
+    `uses-feature android.hardware.type.watch` mit `required="true"` ist die
+    Kennzeichnung, an der Wear OS eine Uhr-App erkennt. Ohne sie laesst sich
+    das APK auf einem Handy installieren — wo es nichts tut, weil es kein
+    Handy ist.
+
+    KEINE INTERNET-BERECHTIGUNG, und das ist kein Versehen (E-S4-11): Die Uhr
+    spricht nur mit dem Handy, nie mit dem Server. Sie traegt keine
+    Zugangsdaten; ein gestohlener Uhr-Speicher gibt nichts preis. Eine
+    Berechtigung, die sie nicht braucht, waere die erste Stelle, an der das
+    aufweicht.
+
+    ALLOWBACKUP ist auch hier aus. Auf der Uhr liegt zwar kein Geheimnis, aber
+    der Ereignispuffer (C2) gehoert zu GENAU DIESEM Geraet und genau dieser
+    Kopplung — auf eine andere Uhr uebertragen waere er eine Quelle doppelter
+    Einsaetze.
+
+    Die Berechtigungen wachsen mit den Paketen: der Data Layer kommt mit C2,
+    die Vibration mit C1.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature
+        android:name="android.hardware.type.watch"
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/datensicherung"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/symbol"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/symbol"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NAdokuUhr">
+
+        <!--
+            Ohne diese Zeile haelt Wear OS die App fuer eine, die ein Handy als
+            Gegenstueck BRAUCHT, und blendet sie auf einer eigenstaendig
+            genutzten Uhr aus. NAdoku braucht das Handy tatsaechlich (es
+            zeichnet auf) — aber die Uhr-App soll sich trotzdem starten und
+            "Handy nicht erreichbar" sagen koennen, statt gar nicht da zu sein.
+        -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <activity
+            android:name=".uhr.UhrActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.NAdokuUhr">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
