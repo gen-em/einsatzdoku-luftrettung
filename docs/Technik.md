@@ -217,6 +217,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── uhr-bilder/        rastert Launcher-Symbole und Bildmarken der Uhr
+│   │                      aus den beiden SVG unter server/assets/images/.
+│   │                      Das Rezept ist aus den vorhandenen Dateien
+│   │                      zurückgerechnet und reproduziert sie bitgleich
+│   │                      (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
@@ -2329,20 +2334,39 @@ Sonderbehandlung.
 zu:
 
 ```
-fenix6pro.sourcePath = source;source-tasten5
-venu3s.sourcePath    = source;source-tasten3
-venu3s.resourcePath  = resources;resources-venu3s
+fenix6pro.sourcePath   = source;source-tasten5
+venu3s.sourcePath      = source;source-tasten3
+venu3s.resourcePath    = resources;resources-icon70;resources-marke105
 ```
 
 **Nicht** `$(<gerät>.sourcePath);source-tasten5` schreiben. Der Selbstbezug
 fällt auf eine Vorgabe zurück, die alle `source*`-Ordner einsammelt; dann
 landen beide `DeviceProfile.mc` im Build und der Compiler meldet
 `Redefinition of 'HAS_UP_DOWN'`. Dasselbe gilt für `resourcePath` — sonst
-bekäme die Fenix das 70×70-Icon der Venu 3s.
+bekäme die Fenix das Symbol der Venu 3s.
 
 `base.sourcePath` steht auf dem Fünf-Tasten-Profil: Ein Gerät, das jemand ins
 Manifest einträgt ohne hier eine Zeile zu ergänzen, baut damit gegen das
 konservativere Profil.
+
+**Die Ressourcenordner sind nach Größe geschnitten, nicht nach Gerät:**
+
+| Ordner | Inhalt |
+|---|---|
+| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 70 px |
+| `resources-icon<N>` | **nur** das Launcher-Symbol in N Pixeln (35, 36, 54, 56, 60, 61, 65, 70) |
+| `resources-marke<K>` | **nur** die Bildmarke in einer Kachel von K Pixeln |
+
+Getrennt, weil die beiden Größen nicht miteinander laufen: Ein Gerät mit
+60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. In einem
+Ordner zusammengefasst bräuchte es eine Kombination je Paar.
+
+Die Symbolgröße ist eine **Vorgabe des Geräts** (`launcherIcon.width` in
+seiner `compiler.json`), keine Wahl; fehlt sie, skaliert `monkeyc` und meldet
+es als Warnung. Die Kachelgröße folgt der Regel `70/260 × Displayhöhe` — dem
+Verhältnis des Bezugsgeräts fenix6pro, dem `Ui.s()` ohnehin jede Länge folgt.
+Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
+`tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
 
 ### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
 

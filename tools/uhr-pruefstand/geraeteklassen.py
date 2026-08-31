@@ -187,6 +187,25 @@ def profil_von(g):
     return "source-tasten5" if g["tasten"] >= TASTEN_FUER_UP_DOWN else "source-tasten3"
 
 
+# Grundordner watch/resources: Launcher-Symbol 40 px (51 der 99 Geräte
+# verlangen genau das) und Bildmarke 70 px.
+ICON_GRUND = 40
+KACHEL_GRUND = 70
+KACHEL_BEZUG = 260      # fenix6pro, Bezugsgerät von Ui.s()
+
+
+def kachel_von(hoehe):
+    """Kachelhöhe der Bildmarke zu einer Displayhöhe.
+
+    Die Bildmarke wird mit dc.drawBitmap 1:1 gezeichnet und kann `Ui.s()`
+    als Bitmap nicht folgen. Vorgerasterte Stufen holen das nach: Die Kachel
+    behält das Verhältnis des Bezugsgeräts, 70/260 — rund 27 % der
+    Displayhöhe. Die beiden Größen, die es vor der Staffelung schon gab,
+    liegen exakt auf dieser Geraden (260 → 70, 390 → 105).
+    """
+    return round(KACHEL_GRUND * hoehe / KACHEL_BEZUG)
+
+
 def zeige_bloecke(auswahl, icon_von):
     vorgabe = "source-tasten5"   # base.sourcePath im Jungle
     print("\n=== Vorschlag: Geräte für watch/manifest.xml ===")
@@ -210,6 +229,21 @@ def zeige_bloecke(auswahl, icon_von):
     for gr, n in sorted(groessen.items(), key=lambda x: -x[1]):
         if gr:
             print(f"#   {gr[0]}x{gr[1]:<4} {n:>3} Geräte")
+
+    print("\n=== Vorschlag: resourcePath-Zeilen für watch/monkey.jungle ===")
+    print(f"# Grundordner trägt Symbol {ICON_GRUND} px und Kachel"
+          f" {KACHEL_GRUND} px (Bezugsgerät {KACHEL_BEZUG} px).")
+    print("# Aufgeführt sind nur Geräte, die davon abweichen.")
+    for g in sorted(auswahl, key=lambda g: (g["hoehe"], g["id"])):
+        teile = []
+        ic = (icon_von.get(g["id"]) or (None,))[0]
+        if ic and ic != ICON_GRUND:
+            teile.append(f"resources-icon{ic}")
+        ka = kachel_von(g["hoehe"])
+        if ka != KACHEL_GRUND:
+            teile.append(f"resources-marke{ka}")
+        if teile:
+            print(f'{g["id"]}.resourcePath = resources;' + ";".join(teile))
 
 
 def main():

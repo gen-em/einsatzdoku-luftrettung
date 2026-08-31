@@ -32,19 +32,67 @@ venu3s.sourcePath = source;source-tasten3
 venud.sourcePath = source;source-tasten3
 vivoactive5.sourcePath = source;source-tasten3
 
-# Launcher-Icon und Bildmarke: Der Ordner resources-icon70 traegt die
-# 70x70-Fassung. Gleiche Regel wie oben: vollstaendig zuweisen, der
-# spaetere Pfad gewinnt bei gleichnamigen Ressourcen-IDs.
+# Launcher-Symbol und Bildmarke: eigene Ressourcenordner je Groesse.
+# Gleiche Regel wie oben bei sourcePath: vollstaendig zuweisen, der spaetere
+# Pfad gewinnt bei gleichnamigen Ressourcen-IDs.
 #
-# Die uebrigen Groessen (35, 36, 54, 56, 60, 61, 65) haben KEINEN eigenen
-# Ordner — monkeyc skaliert das 40x40-Symbol darauf und meldet das als
-# Warnung. Hochskaliert wird es unscharf; eigene Fassungen waeren
-# Gestaltungsarbeit und brauchen eine Freigabe.
+# resources-icon<N>  traegt NUR das Launcher-Symbol in N Pixeln. Neun Groessen
+#                    verlangen die 99 Geraete (35, 36, 40, 54, 56, 60, 61, 65,
+#                    70); 40 liegt im Grundordner, weil 51 Geraete genau das
+#                    verlangen. Fehlt die passende, skaliert monkeyc und meldet
+#                    es als Warnung — hochskaliert wird das Symbol unscharf.
+# resources-marke<K> traegt NUR die Bildmarke in einer Kachel von K Pixeln.
+#                    70 liegt im Grundordner (Bezugsgeraet fenix6pro, 260 px).
+#
+# Erzeugt mit: geraeteklassen.py --bloecke
+# Die Bilder selbst: tools/uhr-bilder/erzeugen.sh
 base.resourcePath    = resources
 
-approachs7047mm.resourcePath = resources;resources-icon70
-d2airx10.resourcePath = resources;resources-icon70
-venu2.resourcePath = resources;resources-icon70
-venu2plus.resourcePath = resources;resources-icon70
-venu3.resourcePath = resources;resources-icon70
-venu3s.resourcePath = resources;resources-icon70
+fr55.resourcePath = resources;resources-icon35
+fenix5s.resourcePath = resources;resources-icon36
+fenixchronos.resourcePath = resources;resources-icon36
+fr265s.resourcePath = resources;resources-icon60
+venu2s.resourcePath = resources;resources-icon61
+approachs50.resourcePath = resources;resources-icon56
+approachs7042mm.resourcePath = resources;resources-icon60
+d2air.resourcePath = resources;resources-icon60
+descentg2.resourcePath = resources;resources-icon60
+descentmk343mm.resourcePath = resources;resources-icon60
+epix2pro42mm.resourcePath = resources;resources-icon60
+fr165.resourcePath = resources;resources-icon54
+fr165m.resourcePath = resources;resources-icon54
+fr170.resourcePath = resources;resources-icon54
+fr170m.resourcePath = resources;resources-icon54
+fr57042mm.resourcePath = resources;resources-icon54
+fr70.resourcePath = resources;resources-icon54
+marq2.resourcePath = resources;resources-icon60
+marq2aviator.resourcePath = resources;resources-icon60
+venu.resourcePath = resources;resources-icon60
+venu3s.resourcePath = resources;resources-icon70;resources-marke105
+venud.resourcePath = resources;resources-icon60
+vivoactive5.resourcePath = resources;resources-icon56
+d2airx10.resourcePath = resources;resources-icon70;resources-marke105
+d2mach1.resourcePath = resources;resources-icon60
+epix2.resourcePath = resources;resources-icon60
+epix2pro47mm.resourcePath = resources;resources-icon60
+fenix843mm.resourcePath = resources;resources-icon60
+fenix943mm.resourcePath = resources;resources-icon60
+fenix9pro43mm.resourcePath = resources;resources-icon60
+fenixe.resourcePath = resources;resources-icon60
+fr265.resourcePath = resources;resources-icon60
+venu2.resourcePath = resources;resources-icon70;resources-marke105
+venu2plus.resourcePath = resources;resources-icon70;resources-marke105
+approachs7047mm.resourcePath = resources;resources-icon70;resources-marke105
+d2mach2.resourcePath = resources;resources-icon65
+d2mach2pro.resourcePath = resources;resources-icon65
+descentmk351mm.resourcePath = resources;resources-icon60
+epix2pro51mm.resourcePath = resources;resources-icon60
+fenix847mm.resourcePath = resources;resources-icon65
+fenix8pro47mm.resourcePath = resources;resources-icon65
+fenix947mm.resourcePath = resources;resources-icon65
+fenix9pro47mm.resourcePath = resources;resources-icon65
+fr57047mm.resourcePath = resources;resources-icon65
+fr965.resourcePath = resources;resources-icon65
+fr970.resourcePath = resources;resources-icon65
+venu3.resourcePath = resources;resources-icon70;resources-marke105
+fenix9pro51mm.resourcePath = resources;resources-icon65

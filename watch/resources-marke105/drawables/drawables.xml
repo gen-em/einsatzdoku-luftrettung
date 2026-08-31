@@ -1,0 +1,4 @@
+<drawables>
+    <bitmap id="LogoLuft"  filename="logo_luft.png"/>
+    <bitmap id="LogoBoden" filename="logo_boden.png"/>
+</drawables>

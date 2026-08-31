@@ -334,22 +334,32 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 
 
-48. **Bildmarke und Launcher-Symbol fehlen in den meisten Größen.** Die 99
-    Geräte verlangen neun Symbolgrößen (35, 36, 40, 54, 56, 60, 61, 65, 70 px);
-    im Repositorium liegen zwei. `monkeyc` skaliert und meldet es als Warnung —
-    42 der 99 Geräte bauen mit genau dieser einen Warnung. Hochskaliert wird
-    das Symbol unscharf.
-    Schwerer wiegt die **Bildmarke**: Sie wird mit `dc.drawBitmap` 1:1
+48. **Bildmarke fehlt in den meisten Größen.**
+    *Erste Hälfte erledigt mit Uhr 1.10.2:* Das **Launcher-Symbol** liegt jetzt
+    in allen neun verlangten Größen vor (35, 36, 40, 54, 56, 60, 61, 65, 70 px),
+    erzeugt aus der Vektorvorlage mit `tools/uhr-bilder/erzeugen.sh`. Stufe I
+    meldet 0 statt 42 Warnungen, und kein Kompilat wird dadurch größer: Garmin
+    legt Bitmaps palettiert und in fester Breite ab, der Platzbedarf hängt an
+    den Maßen, nicht am Inhalt.
+    *Offen bleibt die* **Bildmarke**: Sie wird mit `dc.drawBitmap` 1:1
     gezeichnet und über die *Symbolgröße* zugeordnet statt über die
     Displayhöhe. 37 Geräte bekommen sie dadurch mit 15–18 % der Displayhöhe, wo
     die bestehende Gestaltung auf 25–27 % ausgelegt ist; die Bildschirmfotos
     aus Stufe II zeigen es. Nötig wäre eine Staffelung nach Displayhöhe in drei
     Stufen.
-    Am Platzbedarf scheitert es nicht: Gemessen kostet der vollständige
-    70er-Satz gegenüber dem geerbten 40er **6 432 Byte**, und nur in den
-    Geräten, die ihn bekommen — jedes Kompilat trägt allein seine eigenen
-    Ressourcen. Es ist Gestaltungsarbeit und braucht nach der Arbeitsanweisung
-    eine Freigabe mit Mockup.
+    Es ist Gestaltungsarbeit und braucht nach der Arbeitsanweisung eine
+    Freigabe mit Mockup. Das Mockup liegt vor (31.08.2026, Simulatorabzüge
+    Descent G2 / fenix 9 Pro 51mm / FR 55, je heute gegen Vorschlag), ebenso
+    das Werkzeug: `tools/uhr-bilder/erzeugen.sh marken` rastert alle zehn
+    Kachelgrößen, `geraeteklassen.py --bloecke` erzeugt die Jungle-Zeilen.
+    Vorgeschlagene Regel: **Kachelhöhe = 70/260 × Displayhöhe**, rund 27 %.
+    Sie ist nicht erfunden, sondern die vorhandene — die beiden Größen, die es
+    heute gibt, liegen exakt auf dieser Geraden (260 → 70, 390 → 105). Heute
+    reicht die Spanne über die 99 Geräte von 15 % (fenix 9 Pro 51mm) bis 34 %
+    (FR 55); zwei Uhren mit **demselben** 390-px-Display zeigen die Marke in
+    zwei Größen, weil die Zuordnung am Launcher-Symbol hängt.
+    Am Platzbedarf scheitert es nicht (s. o.: Bitmaps kosten nach Maßen, und
+    jedes Kompilat trägt allein seine eigenen Ressourcen).
 
 ## Erledigt
 

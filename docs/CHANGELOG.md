@@ -11,6 +11,80 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.10.2] — 2026-08-31
+
+**Das Launcher-Symbol liegt in allen neun Größen vor, die die 99 Geräte
+verlangen — und es kommt jetzt aus der Vektorvorlage.** Erste Hälfte von
+Backlog Nr. 48; die Staffelung der Bildmarke steht noch aus.
+
+### Uhr — 42 Warnungen, eine Ursache
+
+Im Repositorium lagen zwei Symbolgrößen, 40 und 70 px. Verlangt werden neun:
+35, 36, 40, 54, 56, 60, 61, 65, 70. Die Größe ist keine Wahl, sondern eine
+Vorgabe des Geräts (`launcherIcon.width` in seiner `compiler.json`). Fehlt sie,
+skaliert `monkeyc` und meldet es — **42 der 99 Geräte** bauten mit genau dieser
+einen Warnung, und hochskaliert ist das Symbol unscharf.
+
+Jetzt trägt jede Größe einen eigenen Ordner `resources-icon<N>`. Stufe I meldet
+**0 Warnungen auf allen 99 Geräten**.
+
+**Und es kostet nichts.** Kein einziges der 99 Kompilate ändert seine Größe —
+kein Byte, in keiner Richtung. Garmin legt Bitmaps palettiert und in fester
+Breite ab: Der Platzbedarf hängt an den Maßen, nicht am Inhalt. Ein scharfes
+Symbol ist hier also gratis.
+
+### Uhr — Die Bilder haben endlich ein Rezept
+
+Die PNG unter `watch/resources*/drawables/` sind Ableitungen der beiden SVG in
+`server/assets/images/`. Bis hierher lagen sie ohne Rezept da: Wer eine Größe
+ergänzen wollte, musste raten, mit welcher Breite und welcher Ausrichtung die
+vorhandenen entstanden waren. Genau davor warnt `tools/logos/LIESMICH.md` seit
+P3 für das Favicon — „das PNG ist eine Ableitung und soll keine sein, die
+jemand in einem Bildprogramm nachbaut".
+
+Neues Werkzeug `tools/uhr-bilder/erzeugen.sh`. Sein Rezept ist aus den
+vorhandenen Dateien **zurückgerechnet** und reproduziert sie bitgleich
+(`compare -metric AE` = 0 für alle vier, die es vorher schon gab). Das ist der
+Beleg, dass es das richtige ist und nicht bloß ein ähnliches — an einer Stelle
+hing er an einem einzigen Pixel: Die NEF-Breite ist `int(Kachel × 0,78)`,
+**abgerundet**. Kaufmännisch gerundet ergäbe 70 × 0,78 = 55 statt 54, und der
+Altstand wäre nicht mehr reproduzierbar.
+
+Der einzige beabsichtigte Unterschied betrifft die beiden **Launcher-Symbole**:
+Sie stammten aus der Zeit vor der Vektorumstellung und waren aus einem
+40-px-Bitmap hochskaliert. Sie kommen jetzt aus derselben Vorlage wie alles
+andere (RMSE 5,9 % auf der 70er Fassung, gleiche Zeichnung).
+
+### Uhr — Ordner nach Größe, nicht nach Gerät
+
+`resources-icon70` trug bisher Symbol **und** Bildmarke. Das geht nicht
+weiter: Ein Gerät mit 60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln
+Displayhöhe — Symbolgröße und Displayhöhe laufen nicht miteinander. In einem
+Ordner zusammengefasst bräuchte es eine Kombination je Paar, 18 Ordner statt
+14.
+
+Deshalb getrennt: `resources-icon<N>` trägt nur das Symbol,
+`resources-marke<K>` nur die Bildmarke. Der Umbau ist beweisbar folgenlos —
+die 105er Kacheln wurden aus `resources-icon70` nach `resources-marke105`
+verschoben und dort bitgleich neu erzeugt; die sechs betroffenen Geräte sehen
+unverändert aus.
+
+Die passenden Jungle-Zeilen erzeugt `geraeteklassen.py --bloecke`. Der
+`resourcePath`-Block im Jungle ist damit nicht mehr handgeschrieben.
+
+### Uhr — Nebenbei: `tools/logos/erzeugen.mjs` war kaputt
+
+Es zeigte auf `gen-em_logo_fahrzeug.svg` und schrieb `favicon-fahrzeug.png` —
+beide Namen gibt es seit dem Austausch des NEF-Platzhalters nicht mehr; jeder
+Aufruf brach mit `ENOENT` ab. Namen berichtigt, Werkzeug gelaufen: Das Ergebnis
+ist von den Dateien im Repositorium nicht zu unterscheiden (gleiche Zeichnung,
+andere Kantenglättung). Die Dateien selbst bleiben deshalb, wie sie sind.
+
+Der Platzhalter-Abschnitt in der dortigen `LIESMICH.md` beschrieb einen
+Austausch „1:1, gleicher Name, gleicher viewBox". So ist es nicht gekommen —
+der Name wurde ein anderer und der viewBox auch (420 × 420 statt
+400,16 × 249,81). Der Abschnitt hält jetzt fest, was daraus folgte.
+
 ## [Uhr 1.10.1] — 2026-08-31
 
 **Die Sync-Seite behauptet nicht mehr „Sync vollständig", wenn die Uhr gar
