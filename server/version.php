@@ -1204,4 +1204,4 @@ declare(strict_types=1);
  * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
  * 4-px-Schritt nach unten fort.
  */
-const WEB_VERSION = '9.14.0';
+const WEB_VERSION = '9.14.1';
