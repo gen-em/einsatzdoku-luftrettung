@@ -1,0 +1,9 @@
+# Soll-Zahlen der Ausdünnung — erzeugt von werkzeuge/stroeme.py.
+# NICHT von Hand ändern: Die Zahlen sind nachgerechnet, nicht gesetzt.
+# Format: name;rohpunkte;behalten;strecke_m;anstieg_m;schwellenabstand_m
+
+reiseflug;901;901;53862.780;200.000;44.749
+anfahrt_boden;601;301;7191.981;0.000;3.011
+stand_einsatzort;901;91;0.000;0.000;15.000
+stadtfahrt;901;331;4795.005;0.000;0.981
+dienst12h;43201;9505;341635.953;1080.000;15.000

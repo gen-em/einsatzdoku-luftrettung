@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -243,6 +246,102 @@ fun Eingabefeld(
             },
         )
     }
+}
+
+/**
+ * Die Wahl aus zwei Moeglichkeiten, nebeneinander (E-S4-20).
+ *
+ * DIE GEWAEHLTE HAELFTE STEHT AUF HELLBLAU, nicht auf Hell-Orange wie die
+ * Wahlliste im Web (E-P3-20). In der App waehlt Blau — damit die Rolle aus
+ * Design.md 3.1 sichtbar wird. Der Unterschied ist mit der Freigabe vom
+ * 31.08.2026 bestaetigt (E-S4-22a).
+ */
+@Composable
+fun Zweierwahl(
+    links: String,
+    rechts: String,
+    linksGewaehlt: Boolean,
+    modifier: Modifier = Modifier,
+    aufWahl: (linksGewaehlt: Boolean) -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = BEDIENHOEHE)
+            .border(1.dp, Farbe.gedaempft, RoundedCornerShape(Radius.normal))
+            .clip(RoundedCornerShape(Radius.normal)),
+    ) {
+        Haelfte(links, linksGewaehlt, Modifier.weight(1f)) { aufWahl(true) }
+        Box(Modifier.fillMaxHeight().width(1.dp).background(Farbe.gedaempft))
+        Haelfte(rechts, !linksGewaehlt, Modifier.weight(1f)) { aufWahl(false) }
+    }
+}
+
+@Composable
+private fun Haelfte(text: String, gewaehlt: Boolean, modifier: Modifier, aufTippen: () -> Unit) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .background(if (gewaehlt) Farbe.blauHell else Farbe.schnee)
+            .clickable(onClick = aufTippen)
+            .padding(horizontal = Abstand.zwei, vertical = Abstand.drei),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (gewaehlt) Farbe.blauTief else Farbe.dunkelblau,
+            fontSize = 13.sp,
+            fontWeight = if (gewaehlt) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** Eine Zeile mit Beschriftung links und Zustand rechts, als Ganzes tippbar. */
+@Composable
+fun Wahlzeile(
+    beschriftung: String,
+    modifier: Modifier = Modifier,
+    zustand: String? = null,
+    gewaehlt: Boolean = false,
+    aufTippen: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = BEDIENHOEHE)
+            .background(
+                if (gewaehlt) Farbe.blauHell else Farbe.schnee,
+                RoundedCornerShape(Radius.normal),
+            )
+            .border(1.dp, Farbe.linie, RoundedCornerShape(Radius.normal))
+            .clickable(onClick = aufTippen)
+            .padding(horizontal = Abstand.drei, vertical = Abstand.zwei),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = beschriftung,
+            color = if (gewaehlt) Farbe.blauTief else Farbe.dunkelblau,
+            fontSize = 15.sp,
+            fontWeight = if (gewaehlt) FontWeight.SemiBold else FontWeight.Normal,
+        )
+        if (zustand != null) {
+            Text(text = zustand, color = Farbe.gedaempft, fontSize = 13.sp)
+        }
+    }
+}
+
+/**
+ * Der rote Aufnahmepunkt (E-S4-22a).
+ *
+ * Er steht auf JEDEM laufenden Bildschirm — Handy wie Uhr. Ein grafisches
+ * Objekt, gemessen gegen 3:1 und nicht gegen 4,5:1
+ * (werkzeuge/kontraste.py).
+ */
+@Composable
+fun Aufnahmepunkt(modifier: Modifier = Modifier) {
+    Box(modifier.size(10.dp).background(Farbe.rot, CircleShape))
 }
 
 /** Eine Karte: Schneeflaeche, Rand aus `--linie`, Inhalt untereinander. */

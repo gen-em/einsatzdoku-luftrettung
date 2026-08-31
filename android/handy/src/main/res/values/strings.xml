@@ -15,8 +15,6 @@
     <string name="marke_luft_beschreibung">Bildmarke Rettungshubschrauber</string>
     <string name="marke_boden_beschreibung">Bildmarke Notarzteinsatzfahrzeug</string>
 
-    <string name="stand_geruest">Gerüst steht</string>
-    <string name="stand_geruest_hinweis">Diese Fassung baut, koppelt aber noch nicht und zeichnet noch nicht auf. Kopplung folgt mit dem nächsten Arbeitspaket.</string>
     <string name="fassung">Fassung %1$s</string>
 
     <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
@@ -87,4 +85,52 @@
 
     <!-- ==== Einstellungen =============================================== -->
     <string name="einstellungen">Einstellungen</string>
+
+    <!-- ==== Dienst und Aufzeichnung (E-S4-05, E-S4-20) ================== -->
+    <string name="dienst_kanal">Aufzeichnung</string>
+    <string name="dienst_kanal_zweck">Zeigt an, dass die Spur des laufenden Dienstes aufgezeichnet wird.</string>
+    <string name="dienst_meldung_laeuft">Aufzeichnung läuft seit %1$s</string>
+    <string name="dienst_meldung_ohne">Kein Dienst</string>
+
+    <string name="dienst_keiner">Kein Dienst</string>
+    <string name="dienst_beginnen">Dienst beginnen</string>
+    <string name="dienst_beenden">Dienst beenden</string>
+    <string name="dienst_beenden_frage">Dienst beenden?</string>
+    <string name="dienst_beenden_text">Die Aufzeichnung hört auf, und alles Offene wird abgeschlossen und gesendet.</string>
+    <string name="dienst_beenden_ja">Beenden</string>
+    <string name="dienst_laeuft_seit">Aufzeichnung läuft seit %1$s · GPS an</string>
+    <string name="dienst_laeuft_seit_ohne_gps">Aufzeichnung läuft seit %1$s · GPS fehlt</string>
+    <plurals name="dienst_punkte">
+        <item quantity="one">%1$d Punkt · %2$s km</item>
+        <item quantity="other">%1$d Punkte · %2$s km</item>
+    </plurals>
+
+    <string name="modus_phasen">Mit Phasenknöpfen</string>
+    <string name="modus_nur_aufzeichnen">Nur aufzeichnen</string>
+    <string name="modus_nur_aufzeichnen_hinweis">Die ganze Spur wird aufgezeichnet. Einsätze schneidest du später im Browser heraus — in der Tagesansicht am Ruhesegment.</string>
+    <string name="modus_doch_phasen">Doch mit Phasenknöpfen</string>
+    <string name="modus_doch_nur_aufzeichnen">Doch nur aufzeichnen</string>
+
+    <!-- Freigaben und Akku -->
+    <string name="ortung_fehlt">Ortung nicht freigegeben</string>
+    <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine Spur auf. Tippe hier, um sie zu erteilen.</string>
+    <string name="ortung_freigeben">Ortung freigeben</string>
+    <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
+    <string name="akku_hinweis">Android darf Apps im Hintergrund anhalten. Für einen Dienst über zwölf Stunden heißt das: Die Aufzeichnung bricht ab, ohne dass es jemand merkt. Nimm NAdoku von der Optimierung aus.</string>
+    <string name="akku_oeffnen">Einstellung öffnen</string>
+    <string name="akku_spaeter">Später</string>
+
+    <!-- Einstellungen -->
+    <string name="einstellungen_logo">Bildmarke</string>
+    <string name="logo_wechselnd">Wechselnd</string>
+    <string name="logo_wechselnd_hinweis">Vorgabe · je App-Start gewürfelt</string>
+    <string name="logo_luft">RTH</string>
+    <string name="logo_boden">NEF</string>
+    <string name="einstellungen_uhr">Uhr</string>
+    <string name="uhr_sperre">Anzeige nach 10 s sperren</string>
+    <string name="uhr_sperre_hinweis">Verhindert einen versehentlichen Druck mit Handschuhen. Entsperrt wird durch Halten.</string>
+    <string name="an">an</string>
+    <string name="aus">aus</string>
+    <string name="zurueck">Zurück</string>
+    <string name="trennen_erst_dienst_beenden">Erst den Dienst beenden. Ein Trennen mitten in der Aufzeichnung risse den laufenden Dienst von seinem Konto ab.</string>
 </resources>

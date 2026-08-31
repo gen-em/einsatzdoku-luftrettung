@@ -9,10 +9,10 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket B2.** Die App koppelt sich, trennt sich wieder und
-> legt ihren Geräteschlüssel verschlüsselt ab. Sie zeichnet noch nicht auf
-> (B3) und sendet noch nichts (B4); der Rückstand steht deshalb fest auf 0 —
-> die Warteschlange, die ihn zählt, gibt es erst mit B4.
+> **Stand: Arbeitspaket B3.** Die App koppelt sich, zeichnet über einen
+> Vordergrunddienst auf und übersteht Absturz und Neustart. Sie **sendet noch
+> nichts** (B4) und kennt noch keine Phasen (B5); der Rückstand steht deshalb
+> fest auf 0 — die Warteschlange, die ihn zählt, gibt es erst mit B4.
 
 ---
 
@@ -97,24 +97,27 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand B2 (Android 0.2.0), `./gradlew clean build` im Container:
+Stand B3 (Android 0.3.0), `./gradlew build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
-| Lint-Warnungen | **18** | **0** |
-| Prüffälle | **56**, davon 6 übersprungen | keine (kommen mit C1) |
+| Lint-Warnungen | **19** | **0** |
+| Prüffälle | **96**, davon 6 übersprungen | keine (kommen mit C1) |
 
-Alle 18 Warnungen sind derselbe Befund in achtzehn Zeilen:
-*„A newer version of … is available"* (`GradleDependency`,
-`AndroidGradlePluginVersion`, `NewerVersionAvailable`) — sie beziehen sich
-sämtlich auf `gradle/libs.versions.toml`. Die Nummern dort sind **absichtlich**
-nicht die neuesten; der Grund steht in Abschnitt 4. Sie werden nicht
-stummgeschaltet: Eine unterdrückte Warnung wäre eine Warnung weniger, die
-später auffällt.
+Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
+available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
+nicht die neuesten (Abschnitt 4). Die **eine** übrige ist `BatteryLife` und
+gehört zum Fund **B-S4-04** im Konzept: Die Akku-Freistellung, die diese App
+braucht, verstößt gegen die Inhaltsrichtlinie des Play Store — folgenlos,
+solange ohne Store verteilt wird (E-R45-6), und zu entscheiden beim
+Betriebsübergang.
+
+Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
+Warnung weniger, die später auffällt.
 
 Die **6 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 56 von 56 (siehe unten).
+Installation sind es 96 von 96 (siehe unten).
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -265,6 +268,7 @@ einmal erzeugt und dem Auftraggeber zur Verwahrung übergeben.
 | `farbabgleich.py` | App-Token gegen `:root` des Web | 0 Abweichungen, 0 eigene Farbwerte |
 | `kontraste.py` | Kontrast jedes Farbpaars der App | 0 Paare unter dem Zielwert |
 | `bildmarken.sh` | Bildmarken gegen ihre Vorlagen | 0 Abweichungen |
+| `stroeme.py` | Soll-Zahlen der Ausdünnung, mit der Referenzregel aus `tools/referenzdatensatz/` nachgerechnet | 0 Abweichungen gegen die analytischen Werte |
 
 Sie sind das Gegenstück zu `tools/vollstaendigkeit/` und
 `tools/screenshots/kontrast.py` der Weboberfläche — und sie mussten eigene
@@ -294,6 +298,14 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 - **Die Kamera.** `QrKamera` ist eine Hülle um CameraX; ohne Emulator gibt es
   keine. Geprüft ist, was dahinterliegt: die Erkennung (`QrLeser`) und die
   Auswertung des Inhalts (`QrInhalt`).
+- **Der Vordergrunddienst.** `AufzeichnungsDienst` bekommt im Container weder
+  GPS noch einen `LocationManager`. Geprüft ist die Logik dahinter —
+  `Ausduenner` gegen fünf synthetische Ströme, `Dienstklammer` gegen echtes
+  SQLite, samt Wiederaufnahme nach Absturz und Neustart. Ob der Dienst zwölf
+  Stunden durchhält, sagt nur der S24-Dienst.
+- **Die Akku-Freistellung.** Ob sie hält, zeigt allein das Gerät; Samsungs
+  „Apps im Tiefschlaf" ist ein zweiter, herstellereigener Schalter, den keine
+  App erreicht.
 
 Geprüft wird deshalb: der Baulauf, Lint, Prüffälle auf der JVM (teils mit
 Robolectric) und — ab B4 — der Rundlauf gegen `ingest.php` in der lokalen

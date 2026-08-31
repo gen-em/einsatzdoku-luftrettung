@@ -804,6 +804,25 @@ Kandidaten sind R8 für das Release der Uhr (Stapelauszüge dann über die
 Compose-Werkzeugvorschau im Release. Kein B1-Umfang — hier steht nur die
 Zahl, damit sie nicht erst beim Hochladen auffällt.
 
+### B-S4-04 — Die Akku-Freistellung verträgt sich nicht mit dem Play Store
+
+Gefunden von Lint in B3: `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` verstößt gegen
+die Inhaltsrichtlinie des Play Store; erlaubt sind dort nur wenige benannte
+Fälle (Wecker, VoIP, Gerätesuche). Eine App, die eine GPS-Spur über zwölf
+Stunden führt, steht nicht auf dieser Liste — obwohl genau sie die Freistellung
+braucht: Ohne sie hält Android die Aufzeichnung an, und niemand merkt es.
+
+**Heute ist das folgenlos:** S4 verteilt ohne Store (E-R45-6), und die
+Store-Verteilung steht ausdrücklich nicht im Umfang (Abschnitt 8). Die Warnung
+bleibt deshalb **stehen und gezählt**, statt stummgeschaltet zu werden — sie
+ist die Erinnerung an eine Entscheidung, die beim Betriebsübergang nach v1.0
+ansteht.
+
+**Was dann zu entscheiden wäre:** die Freistellung nur noch als Hinweistext
+anbieten (die NutzerIn stellt sie selbst in den Systemeinstellungen ein) statt
+über den gezielten Dialog — das ist richtlinienkonform und einen Schritt
+umständlicher. Kein S4-Umfang; nach K4 gesammelt.
+
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
@@ -1117,3 +1136,116 @@ Fußnote:
   drei zugelassenen aufzählt (E-S4-04). Der Prüfstand bringt stattdessen
   sechzig Zeilen `ServerSocket` mit (`PruefServer`). Der Gewinn ist nicht die
   Ersparnis, sondern dass die Liste der Fremdbestandteile die Wahrheit sagt.
+
+### B3 — Aufzeichnung und Dienstklammer · Android 0.3.0 · erledigt
+
+**Was entstanden ist.** Der Vordergrunddienst vom Typ `location` mit
+dauerhafter Benachrichtigung, die Ausdünnung nach der Regel der Uhr, der
+SQLite-Puffer (er trägt schon die Tabellen für B4 und B5), die Dienstklammer
+mit Moduswahl „Mit Phasenknöpfen / Nur aufzeichnen", die Wiederaufnahme nach
+Absturz und Neustart, die Erststart-Führung zur Akku-Freistellung und die
+App-Einstellungen (Logo-Wahl, Sperre der Uhr).
+
+**Der Zustand liegt im Puffer, nicht im Arbeitsspeicher.** Das ist die
+tragende Entscheidung dieses Pakets: Oberfläche und Vordergrunddienst sehen
+denselben Dienst, und die Wiederaufnahme ist damit kein Sonderfall, sondern
+die Regel — nach einem Absturz findet die App den Dienst vor, in dem sie
+steckt.
+
+#### Prüfstand B3
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew build`, headless | **BUILD SUCCESSFUL** | fehlerfrei |
+| Lint `handy` | `lintDebug` | **0 Fehler, 19 Warnungen** (18 „neuere Fassung verfügbar", 1 `BatteryLife` → Fund B-S4-04) | 0 Fehler |
+| Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** | 0 Fehler |
+| Prüffälle | `testDebugUnitTest` **und** `testReleaseUnitTest` | je **96 Fälle, 0 Fehlschläge, 0 Fehler** (6 übersprungen = Server-Rundlauf ohne Installation) | alle grün |
+| **Ausdünnung** | 5 synthetische Ströme, **drei unabhängige Wege** verglichen | **5 von 5 Strömen auf den Punkt gleich**, 0 Abweichungen | Soll getroffen |
+| — Reiseflug 60 m/s, 900 s | analytisch / `stroeme.py` / App | **901 roh → 901 behalten**, 53 862,8 m, 200,0 m Anstieg | jeder Punkt (60 m ≥ 15 m) |
+| — Anfahrt 12 m/s, 600 s | dito | **601 → 301**, 7 192,0 m | jeder zweite (24 m ≥ 15 m) |
+| — Stillstand 900 s | dito | **901 → 91**, 0,0 m | nur die 10-s-Bedingung |
+| — Stadtfahrt (10× 60 s/8 m/s + 30 s Halt) | `stroeme.py` / App | **901 → 331**, 4 795,0 m | gemischt |
+| — **12-h-Dienst** | `stroeme.py` / App | **43 201 → 9 505**, 341 636 m, 1 080 m Anstieg | Größenordnung |
+| Größenordnung gegen die Referenz | `messprotokoll.json` | Referenz **56 587 Punkte / 16 Dienste = 3 537 je Diensttag**; App **9 505** = **2,69 ×** | 1 ≤ x ≤ 4 |
+| Abstand zur 15-m-Schwelle | `stroeme.py` | kleinster Abstand **0,98 m** (Stadtfahrt) | keine Entscheidung an der letzten Nachkommastelle |
+| Dienstklammer | Robolectric mit echtem SQLite | **13 Fälle** — Beginn legt `ad-`-Kennung, Tag und erstes `ar-`-Segment an; zweiter Start ist kein zweiter Dienst; Beenden schließt das Segment; Punkte landen im offenen Segment; `seq` lückenlos | E-S4-08, E-R45-13 |
+| **Wiederaufnahme** | Robolectric | **3 Fälle** — Absturz der App (neues Exemplar findet den Dienst, schreibt in dasselbe Segment), Neustart des Handys (Puffer von der Platte neu geöffnet, kein Punkt verloren), erster Punkt nach dem Neustart wird genommen | Abnahme B3 |
+| Moduswechsel verlustfrei | Robolectric | **1 Fall** — kein Punkt verloren, dasselbe Segment, es bleibt offen, kein zweites entsteht | E-S4-20 |
+| Nur-Aufzeichnen-Dienst | Robolectric, 12-h-Strom | **genau 1 Ruhesegment, 0 Einsätze** | E-S4-20 |
+| Kennungen | reine JVM | **8 Fälle** — Präfixe `am-`/`ar-`/`ad-`, Bauform Präfix-Zähler-Zufall(10), kein Zeitstempel, Zähler wird **vor** der Ausgabe gesichert, Überlauf, **2 000 Kennungen ohne eine einzige doppelte** | Vertrag 8, E-S4-09 |
+| Zeitformate | reine JVM | **5 Fälle** — ISO/UTC/sekundengenau, Bruchteile fallen weg, Unix-Epoche für Spurpunkte, **`day` ist der lokale Tag** (Nachtdienst über Mitternacht geprüft) | Vertrag 2 |
+| Farb-Token, Kontraste, Bildmarken | `werkzeuge/` | **0 / 0 / 0** Abweichungen; 16 Kontrastpaare, 0 unter dem Zielwert | unverändert |
+| APK | `assembleRelease` | `handy` **9 052 248 B**, `uhr` 18 005 460 B | baut |
+
+**Was der Prüfstand nicht sagt** — vorn, nicht in einer Fußnote:
+
+- **Der Vordergrunddienst selbst ist ungeprüft.** Es gibt keinen Emulator
+  (E-R45-8), kein GPS, keinen `LocationManager`, keine Möglichkeit, Samsungs
+  „Apps im Tiefschlaf" nachzustellen. Geprüft ist die Logik dahinter —
+  Ausdünnung und Dienstklammer — gegen synthetische Ströme. Ob der Dienst
+  zwölf Stunden durchhält, sagt **nur der S24-Dienst**.
+- **Die Akku-Freistellung ist ungeprüft.** Ob sie hält, zeigt allein das
+  Gerät; der zweite Schalter („Apps im Tiefschlaf") ist herstellereigen und
+  von keiner App erreichbar.
+- **Die Genauigkeitsschwelle von 100 m ist blind gewählt.** Wie oft sie
+  greift, zeigt erst ein Dienst im Feld — im Wald, in der Klinikeinfahrt.
+- **Kein Bildschirmfoto.** Auch die neuen Ansichten sind gebaut, nicht gesehen.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Lint fand zwei Fehler, die erst auf dem Gerät aufgefallen wären.**
+   `LocalDate.ofInstant` gibt es erst ab **API 34**, unser `minSdk` ist 26 —
+   auf einem Android 8 bis 13 wäre die Bestimmung des Diensttages abgestürzt,
+   und zwar beim **Dienstbeginn**. Ersetzt durch
+   `augenblick.atZone(zone).toLocalDate()`. Und: Seit Android 12 muss
+   `ACCESS_COARSE_LOCATION` **neben** `ACCESS_FINE_LOCATION` stehen, sonst
+   lehnt das System die Freigabeanfrage ab. Beides behoben; aufgezeichnet wird
+   weiterhin nur mit der genauen Ortung.
+
+2. **Zwei Klassennamen im Manifest waren wieder relativ zum Namensraum
+   gemeint.** `.NAdokuApp` und `.aufzeichnung.AufzeichnungsDienst` lösen gegen
+   `org.genem.nadoku` auf, die Klassen liegen in `…handy`. Folge: **jeder
+   einzelne Robolectric-Fall** schlug fehl (`ClassNotFoundException`), auch
+   die aus B2, die zuvor grün waren. Derselbe Fehler wie bei der Activity in
+   B1 — er wird beim nächsten Manifest-Eintrag wieder drohen und steht
+   deshalb hier.
+
+3. **Die Soll-Zahlen der Ausdünnung durften nicht aus der App stammen.** Eine
+   Zahl, die aus derselben Umsetzung kommt, die sie belegen soll, belegt
+   nichts. `android/werkzeuge/stroeme.py` rechnet sie deshalb mit einer
+   **Portierung der Referenzregel** aus
+   `tools/referenzdatensatz/generator/spur.py` nach, und für drei der fünf
+   Ströme steht zusätzlich der **analytisch** erwartete Wert daneben (bei
+   60 m/s jeder Punkt, bei 12 m/s jeder zweite, im Stand jeder zehnte). Der
+   Kotlin-Prüffall erzeugt den Strom **noch einmal selbst** und vergleicht.
+   Drei Wege, dieselben Zahlen.
+   Damit die drei Wege nicht an der letzten Nachkommastelle auseinandergehen,
+   enthalten die Ströme **keinen Zufall und keine Trigonometrie im Erzeuger**
+   (nur +, −, ×, ÷ auf festen Dezimalzahlen), und die Geschwindigkeiten sind
+   so gewählt, dass keine Entscheidung dicht an der 15-m-Schwelle liegt — der
+   kleinste Abstand ist **0,98 m** und wird mitgemessen.
+
+#### Entscheidungen, die in B3 gefallen sind
+
+- **E-S4-31 — Der Zustand des Dienstes lebt im Puffer, nicht im
+  Arbeitsspeicher.** Oberfläche und Vordergrunddienst sind zwei Prozessteile,
+  die denselben Dienst sehen; ein Zustandsobjekt im Speicher wären zwei
+  Wahrheiten, und SQLite ließe beide gleichzeitig schreiben. [Dienstklammer]
+  liest deshalb bei jedem Zugriff aus dem Puffer, und die Oberfläche fragt im
+  Sekundentakt nach, statt zu halten. **Der Preis** ist eine Abfrage je
+  Sekunde, solange die Ansicht offen ist. **Der Gewinn** ist, dass die
+  Wiederaufnahme kein Sonderfall mehr ist, sondern das Normalverhalten —
+  belegt mit drei Prüffällen.
+- **E-S4-32 — Die Genauigkeitsschwelle ist 100 m.** Die Uhr verwirft alles
+  unterhalb von `QUALITY_POOR`; Android kennt keine Stufen, sondern einen
+  geschätzten Fehler in Metern. 100 m ist bewusst großzügig: Bei dieser
+  Streuung ist der Fund aus Funkzelle oder WLAN abgeleitet und läge weit
+  jenseits der 15 m, um die es geht. Ein strengerer Wert würfe im Wald oder in
+  der Klinikeinfahrt echte Punkte weg. **Blind gewählt, am Gerät
+  nachzumessen** (E-R45-7).
+- **E-S4-33 — Der Puffer trägt die Tabellen für B4 und B5 von Anfang an.**
+  `phase` bleibt bis B5 leer, und `bestaetigt_seq` bis B4 auf 0. Der Grund:
+  Eine Schemaänderung an einem Puffer, in dem ein **laufender Dienst** liegt,
+  ist teurer als eine Tabelle, die eine Fassung lang leer steht — und
+  `onUpgrade` wirft absichtlich eine Ausnahme, statt zu löschen: Hier liegt
+  die einzige Kopie ungesendeter Aufzeichnungen.

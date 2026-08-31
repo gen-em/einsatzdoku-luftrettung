@@ -35,7 +35,46 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
+    <!--
+        Ortung und Vordergrunddienst (E-S4-05).
+
+        ACCESS_FINE_LOCATION, nicht COARSE: Die Ausdünnung entscheidet auf
+        15 Metern; eine grobe Ortung liegt um Größenordnungen daneben und
+        erzeugte eine Spur, die keine ist.
+
+        ACCESS_BACKGROUND_LOCATION steht hier BEWUSST NICHT. Ein
+        Vordergrunddienst vom Typ `location`, der bei laufender
+        Aufzeichnung sichtbar in der Leiste steht, braucht sie nicht — und
+        sie ist die Freigabe, für die Android einen eigenen Bildschirm mit
+        einer Warnung zeigt. Was die App nicht braucht, fragt sie nicht.
+
+        FOREGROUND_SERVICE_LOCATION ist ab Android 14 Pflicht; ohne sie
+        wirft startForeground eine SecurityException.
+
+        POST_NOTIFICATIONS ab Android 13: Die dauerhafte Meldung ist die
+        einzige Auskunft, dass aufgezeichnet wird, solange die App zu ist.
+        Wird sie abgelehnt, läuft der Dienst trotzdem — Android zeigt für
+        einen Vordergrunddienst ohnehin einen Hinweis.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--
+        COARSE steht neben FINE, und das ist Pflicht, keine Höflichkeit: Seit
+        Android 12 zeigt der Freigabedialog zwei Möglichkeiten — „genau" und
+        „ungefähr" —, und ohne die zweite Erklärung lehnt das System die
+        Anfrage ab. Aufgezeichnet wird trotzdem nur mit der genauen: Eine
+        ungefähre Ortung liegt um Größenordnungen neben den 15 m, auf denen
+        die Ausdünnung entscheidet. Die App sagt in dem Fall, dass die Spur
+        so nichts taugt, statt eine unbrauchbare aufzuzeichnen.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
     <application
+        android:name=".handy.NAdokuApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/datensicherung"
         android:fullBackupContent="false"
@@ -55,6 +94,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            Der Vordergrunddienst der Aufzeichnung.
+
+            `stopWithTask="false"`: Wer die App aus der Übersicht wischt,
+            beendet den DIENST nicht. Genau darum geht es — die Aufzeichnung
+            läuft über zwölf Stunden weiter, während das Handy in der Tasche
+            liegt. Beendet wird sie über „Dienst beenden", nicht durch eine
+            Handbewegung, die man auch versehentlich macht.
+        -->
+        <service
+            android:name=".handy.aufzeichnung.AufzeichnungsDienst"
+            android:exported="false"
+            android:foregroundServiceType="location"
+            android:stopWithTask="false" />
 
     </application>
 

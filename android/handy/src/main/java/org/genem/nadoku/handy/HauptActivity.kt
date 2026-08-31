@@ -1,104 +1,110 @@
 package org.genem.nadoku.handy
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.genem.nadoku.BuildConfig
 import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
-import org.genem.nadoku.handy.kopplung.Abweisung
+import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
+import org.genem.nadoku.handy.dienst.Modus
+import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.kopplung.Kopplungsdienst
 import org.genem.nadoku.handy.kopplung.Kopplungsergebnis
-import org.genem.nadoku.handy.kopplung.Syncstand
 import org.genem.nadoku.handy.kopplung.Trennergebnis
 import org.genem.nadoku.handy.tresor.KeystoreTresorschluessel
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import java.io.File
+import java.time.Instant
 
 /**
  * Der eine Bildschirm der Handy-App.
  *
- * EINE ACTIVITY, mehrere Ansichten darin. Der Grund ist der Vordergrunddienst
- * (ab B3): Die Aufzeichnung läuft weiter, während die Oberfläche beendet ist —
- * die Activity ist ein Fenster auf einen Zustand, den sie nicht besitzt.
- * Mehrere Activities müssten sich diesen Zustand teilen und wären nur mehr
- * Stellen, an denen er auseinanderlaufen kann.
+ * EINE ACTIVITY, mehrere Ansichten darin. Der Grund ist der
+ * Vordergrunddienst: Die Aufzeichnung läuft weiter, während die Oberfläche
+ * beendet ist — die Activity ist ein **Fenster auf einen Zustand, den sie
+ * nicht besitzt**. Mehrere Activities müssten sich diesen Zustand teilen und
+ * wären nur mehr Stellen, an denen er auseinanderlaufen kann.
  *
- * STAND B2: Kopplung, Trennen und Schlüsselablage stehen. Aufzeichnung (B3)
- * und Senden (B4) folgen; der Rückstand ist deshalb noch fest 0 — die
- * Warteschlange, die ihn zählt, gibt es erst mit B4.
+ * DER ZUSTAND KOMMT AUS DEM PUFFER, nicht aus dem Arbeitsspeicher. Deshalb
+ * überlebt er den Absturz der App und den Neustart des Handys, und deshalb
+ * fragt die Oberfläche ihn regelmäßig ab, statt ihn zu halten.
+ *
+ * STAND B3: Aufzeichnung und Dienstklammer stehen. Gesendet wird noch nichts
+ * (B4), Phasen gibt es noch keine (B5) — der Rückstand ist deshalb fest 0.
  */
 class HauptActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val einstellungen = Einstellungen(this)
-        val tresor = Schluesseltresor(
-            File(filesDir, Schluesseltresor.DATEINAME),
-            KeystoreTresorschluessel(),
-        )
-        val dienst = Kopplungsdienst(
-            netzweg = HttpNetzweg(),
-            tresor = tresor,
-            // B4 setzt hier die Warteschlange ein. Bis dahin gibt es nichts zu
-            // senden -- und eine erfundene Zahl waere schlimmer als die Null.
-            rueckstand = { 0 },
-        )
-
-        val masse = resources.displayMetrics
-        val geraet = Geraeteangabe.vomGeraet(
-            breite = masse.widthPixels,
-            hoehe = masse.heightPixels,
-            appFassung = BuildConfig.VERSION_NAME,
-        )
-
-        setContent {
-            NAdokuOberflaeche(einstellungen, tresor, dienst, geraet)
-        }
+        setContent { NAdokuOberflaeche(NAdokuApp.von(this)) }
     }
 }
 
+/** Welche Ansicht gerade offen ist. */
+private sealed interface Ansicht {
+    data object Dienst : Ansicht
+    data object Einstellungen : Ansicht
+}
+
 @Composable
-fun NAdokuOberflaeche(
-    einstellungen: Einstellungen,
-    tresor: Schluesseltresor,
-    dienst: Kopplungsdienst,
-    geraet: Geraeteangabe,
-) {
+fun NAdokuOberflaeche(app: NAdokuApp) {
+    val kontext = LocalContext.current
     val hilfsfaden = rememberCoroutineScope()
 
-    // „Wechselnd“ wird EINMAL JE APP-START gewürfelt und bleibt stehen
-    // (E-S4-22b). Die feste Wahl kommt mit den App-Einstellungen in B3.
-    val logoWahl = remember { LogoWahl.WECHSELND }
+    val tresor = remember {
+        Schluesseltresor(
+            File(kontext.applicationContext.filesDir, Schluesseltresor.DATEINAME),
+            KeystoreTresorschluessel(),
+        )
+    }
+    val dienst = remember {
+        Kopplungsdienst(
+            netzweg = HttpNetzweg(),
+            tresor = tresor,
+            // B4 setzt hier die Warteschlange ein. Bis dahin gibt es nichts
+            // zu senden — und eine erfundene Zahl wäre schlimmer als die Null.
+            rueckstand = { 0 },
+        )
+    }
+    val geraet = remember {
+        val masse = kontext.resources.displayMetrics
+        Geraeteangabe.vomGeraet(masse.widthPixels, masse.heightPixels, BuildConfig.VERSION_NAME)
+    }
 
-    var serverBasis by remember { mutableStateOf(einstellungen.serverBasis) }
+    var serverBasis by remember { mutableStateOf(app.einstellungen.serverBasis) }
     var gekoppelt by remember { mutableStateOf(tresor.gekoppelt()) }
     var schritt by remember { mutableStateOf<Kopplungsschritt>(Kopplungsschritt.Wahl) }
     var trennmeldung by remember { mutableStateOf<Trennergebnis?>(null) }
@@ -108,17 +114,15 @@ fun NAdokuOberflaeche(
         KopplungAnsicht(
             schritt = schritt,
             serverBasis = serverBasis,
-            logoWahl = logoWahl,
+            logoWahl = app.einstellungen.logoWahl,
             aufSchritt = { schritt = it },
             aufKoppeln = { basis, code ->
                 schritt = Kopplungsschritt.Laeuft
                 hilfsfaden.launch {
-                    // Netz gehört nicht auf den Anzeigefaden: Android bricht
-                    // die App dafür mit NetworkOnMainThreadException ab.
                     val e = withContext(Dispatchers.IO) { dienst.koppeln(basis, code, geraet) }
                     when (e) {
                         is Kopplungsergebnis.Gekoppelt -> {
-                            einstellungen.serverBasis = basis
+                            app.einstellungen.serverBasis = basis
                             serverBasis = basis
                             gekoppelt = true
                             schritt = Kopplungsschritt.Wahl
@@ -132,9 +136,9 @@ fun NAdokuOberflaeche(
         return
     }
 
-    GekoppeltAnsicht(
+    GekoppelteOberflaeche(
+        app = app,
         serverBasis = serverBasis,
-        logoWahl = logoWahl,
         trennmeldung = trennmeldung,
         trennfrageOffen = trennfrageOffen,
         aufTrennfrage = { trennfrageOffen = it },
@@ -143,11 +147,6 @@ fun NAdokuOberflaeche(
             hilfsfaden.launch {
                 val e = withContext(Dispatchers.IO) { dienst.trennen(serverBasis.orEmpty()) }
                 trennmeldung = e
-                // Nur ein Rückstand lässt die Kopplung stehen — in jedem
-                // anderen Fall ist sie lokal fort (E-S4-12). Was geschehen ist,
-                // wird auf dem Kopplungsbildschirm GESAGT und nicht
-                // verschwiegen: Ein Servereintrag, der noch steht, belegt einen
-                // der fünf Geräteplätze.
                 if (e !is Trennergebnis.Rueckstand) {
                     schritt = Kopplungsschritt.Getrennt(nurLokal = e is Trennergebnis.NurLokal)
                     gekoppelt = false
@@ -158,111 +157,216 @@ fun NAdokuOberflaeche(
 }
 
 @Composable
-fun GekoppeltAnsicht(
+private fun GekoppelteOberflaeche(
+    app: NAdokuApp,
     serverBasis: String?,
-    logoWahl: LogoWahl,
     trennmeldung: Trennergebnis?,
-    trennfrageOffen: Boolean = false,
-    aufTrennfrage: (Boolean) -> Unit = {},
+    trennfrageOffen: Boolean,
+    aufTrennfrage: (Boolean) -> Unit,
     aufTrennen: () -> Unit,
 ) {
-    // Der Rückstand kommt mit B4; bis dahin gibt es keine Warteschlange.
-    val stand = Syncstand.ermittle(serverBasis, gekoppelt = true, rueckstand = 0)
+    val kontext = LocalContext.current
 
-    if (trennfrageOffen) {
-        Trennfrage(aufJa = aufTrennen, aufNein = { aufTrennfrage(false) })
+    var ansicht by remember { mutableStateOf<Ansicht>(Ansicht.Dienst) }
+    var logoWahl by remember { mutableStateOf(app.einstellungen.logoWahl) }
+    var uhrSperre by remember { mutableStateOf(app.einstellungen.uhrSperre) }
+    var modus by remember { mutableStateOf(app.einstellungen.letzterModus) }
+    var beendenFrageOffen by remember { mutableStateOf(false) }
+    var akkuFrageOffen by remember { mutableStateOf(false) }
+
+    var ortungFrei by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(kontext, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+        )
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Farbe.rauch)) {
-        Kopfleiste(titel = stringResource(R.string.app_name), logoWahl = logoWahl)
-
-        Column(
-            modifier = Modifier.padding(Abstand.vier),
-            verticalArrangement = Arrangement.spacedBy(Abstand.drei),
-        ) {
-            Karte {
-                Zustandszeile(
-                    text = stringResource(
-                        R.string.sync_gekoppelt_mit,
-                        serverBasis?.removePrefix("https://")?.trimEnd('/').orEmpty(),
-                    ),
-                    punktfarbe = Farbe.blau,
-                    schriftfarbe = Farbe.blauTief,
-                )
-                Zustandszeile(
-                    text = when (stand) {
-                        is Syncstand.Vollstaendig -> stringResource(R.string.sync_vollstaendig)
-                        is Syncstand.Rueckstand -> pluralStringResource(
-                            R.plurals.sync_rueckstand, stand.pakete, stand.pakete,
-                        )
-                        is Syncstand.NichtEingerichtet ->
-                            stringResource(R.string.sync_nicht_eingerichtet)
-                    },
-                    punktfarbe = when (stand) {
-                        is Syncstand.Vollstaendig -> Farbe.blau
-                        is Syncstand.Rueckstand -> Farbe.orange
-                        is Syncstand.NichtEingerichtet -> Farbe.rot
-                    },
-                    schriftfarbe = Farbe.gedaempft,
-                )
-
-                Text(
-                    text = stringResource(R.string.stand_geruest),
-                    color = Farbe.dunkelblau, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
-                )
-                Hinweiskasten(stringResource(R.string.stand_geruest_hinweis))
-                Text(
-                    text = stringResource(R.string.fassung, BuildConfig.VERSION_NAME),
-                    color = Farbe.gedaempft, fontSize = 12.sp,
-                )
-            }
-
-            Karte {
-                Text(
-                    text = stringResource(R.string.einstellungen),
-                    color = Farbe.dunkelblau, fontSize = 19.sp, fontWeight = FontWeight.SemiBold,
-                )
-                if (trennmeldung is Trennergebnis.Rueckstand) {
-                    Meldungsblock(
-                        titel = pluralStringResource(
-                            R.plurals.trennen_rueckstand,
-                            trennmeldung.pakete, trennmeldung.pakete,
-                        ),
-                        hinweis = stringResource(R.string.trennen_rueckstand_hinweis),
-                        warnend = true,
-                    )
-                }
-
-                /* BEENDENDE HANDLUNG: vollflächig rot (E-S4-22a) UND MIT
-                 * RÜCKFRAGE. Das eine ohne das andere wäre schlimmer als
-                 * keines von beidem: Ein großer roter Knopf zieht den Blick
-                 * an, und ein Fehltipp löschte die Kopplung samt
-                 * Geräteschlüssel. Die Rückfrage fängt ihn ab — dieselbe
-                 * Bauform wie beim Einsatzabschluss (E-S4-21b) und wie an der
-                 * Garmin-Uhr (Pair.TrennenDelegate). */
-                KnopfBeenden(stringResource(R.string.trennen)) { aufTrennfrage(true) }
-            }
+    /* DER ZUSTAND WIRD ABGEFRAGT, NICHT GEHALTEN. Der Vordergrunddienst
+     * schreibt in denselben Puffer; die Oberfläche muss also nachsehen, statt
+     * sich auf einen Wert im Arbeitsspeicher zu verlassen. Eine Sekunde ist
+     * für einen Punktzähler reichlich schnell und kostet nichts, solange die
+     * Ansicht offen ist — sie läuft mit ihr an und mit ihr aus. */
+    var takt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            takt++
         }
+    }
+
+    val stand = remember(takt, modus, ortungFrei) {
+        val laufend = app.klammer.laufenderDienst()
+        val offenesPaket = laufend?.let {
+            app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_EINSATZ)
+                ?: app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_RUHESEGMENT)
+        }
+        Dienststand(
+            laeuft = laufend != null,
+            begonnenHhmm = laufend?.let { Zeit.hhmm(Instant.parse(it.begonnenAt)) },
+            modus = if (laufend != null) app.klammer.modus() else modus,
+            punkte = offenesPaket?.let { app.puffer.punktzahl(it.id) } ?: 0L,
+            streckeKm = "%.1f".format(app.klammer.streckeM() / 1000.0),
+            ortungFreigegeben = ortungFrei,
+        )
+    }
+
+    val freigabeFrage = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { ergebnis ->
+        ortungFrei = ergebnis[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
+    }
+
+    if (beendenFrageOffen) {
+        Rueckfrage(
+            titel = stringResource(R.string.dienst_beenden_frage),
+            text = stringResource(R.string.dienst_beenden_text),
+            ja = stringResource(R.string.dienst_beenden_ja),
+            aufJa = {
+                beendenFrageOffen = false
+                app.klammer.beenden()
+                AufzeichnungsDienst.beenden(kontext)
+                takt++
+            },
+            aufNein = { beendenFrageOffen = false },
+        )
+    }
+    if (trennfrageOffen) {
+        Rueckfrage(
+            titel = stringResource(R.string.trennen_frage),
+            text = stringResource(R.string.trennen_frage_text),
+            ja = stringResource(R.string.trennen_ja),
+            aufJa = aufTrennen,
+            aufNein = { aufTrennfrage(false) },
+        )
+    }
+    if (akkuFrageOffen) {
+        Akkufrage(
+            aufOeffnen = {
+                akkuFrageOffen = false
+                app.einstellungen.akkuHinweisGezeigt = true
+                akkuEinstellungOeffnen(kontext)
+            },
+            aufSpaeter = {
+                akkuFrageOffen = false
+                app.einstellungen.akkuHinweisGezeigt = true
+            },
+        )
+    }
+
+    when (ansicht) {
+        is Ansicht.Einstellungen -> EinstellungenAnsicht(
+            logoWahl = logoWahl,
+            uhrSperre = uhrSperre,
+            dienstLaeuft = stand.laeuft,
+            trennmeldung = trennmeldung,
+            aufLogoWahl = { app.einstellungen.logoWahl = it; logoWahl = it },
+            aufUhrSperre = { app.einstellungen.uhrSperre = it; uhrSperre = it },
+            aufTrennen = { aufTrennfrage(true) },
+            aufZurueck = { ansicht = Ansicht.Dienst },
+        )
+
+        is Ansicht.Dienst -> DienstAnsicht(
+            stand = stand,
+            serverBasis = serverBasis,
+            logoWahl = logoWahl,
+            rueckstand = 0,
+            aufModus = { gewaehlt ->
+                modus = gewaehlt
+                app.einstellungen.letzterModus = gewaehlt
+                // Während des Dienstes: verlustfrei umschalten (E-S4-20).
+                app.klammer.modusWechseln(gewaehlt)
+                takt++
+            },
+            aufBeginnen = {
+                if (!ortungFrei) {
+                    freigabeFrage.launch(noetigeFreigaben())
+                } else {
+                    app.klammer.beginnen(modus)
+                    AufzeichnungsDienst.starten(kontext)
+                    if (!app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
+                    takt++
+                }
+            },
+            aufBeenden = { beendenFrageOffen = true },
+            aufOrtungFreigeben = { freigabeFrage.launch(noetigeFreigaben()) },
+            aufEinstellungen = { ansicht = Ansicht.Einstellungen },
+        )
     }
 }
 
 /**
- * Die Rückfrage vor dem Trennen.
+ * Ortung immer, Benachrichtigung erst ab Android 13 — davor gibt es die
+ * Freigabe nicht, und sie anzufragen wirft eine Ausnahme.
+ */
+private fun noetigeFreigaben(): Array<String> =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.POST_NOTIFICATIONS,
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+    }
+
+/**
+ * Die Führung zur Akku-Freistellung (E-S4-05).
+ *
+ * SIE FÜHRT HIN UND ERZWINGT NICHTS. Ob die Freistellung hält, zeigt nur das
+ * Gerät — und namentlich Samsungs „Apps im Tiefschlaf" ist ein zweiter
+ * Schalter an ganz anderer Stelle, den keine App erreicht. Die App fragt
+ * deshalb **einmal**, merkt sich das und drängt nicht wieder.
+ */
+private fun akkuEinstellungOeffnen(kontext: Context) {
+    val strom = kontext.getSystemService(Context.POWER_SERVICE) as PowerManager
+    val schonFrei = strom.isIgnoringBatteryOptimizations(kontext.packageName)
+    val absicht = if (schonFrei) {
+        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    } else {
+        /* Der gezielte Weg (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) zeigt
+         * den Dialog direkt. Fehlt er auf dem Gerät — manche Hersteller haben
+         * ihn nicht —, bleibt die allgemeine Liste. */
+        Intent(
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            "package:${kontext.packageName}".toUri(),
+        )
+    }
+    try {
+        kontext.startActivity(absicht.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: android.content.ActivityNotFoundException) {
+        kontext.startActivity(
+            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+}
+
+/**
+ * Die Rückfrage vor einer beendenden Handlung.
  *
  * `AlertDialog` aus Material 3, weil es der Systembaustein für genau diese
  * Frage ist — er bringt Fokusführung, Zurück-Taste und Vorlesbarkeit mit.
  * Die bestätigende Handlung trägt die beendende Farbe, die abbrechende nicht.
  */
 @Composable
-private fun Trennfrage(aufJa: () -> Unit, aufNein: () -> Unit) {
+private fun Rueckfrage(
+    titel: String,
+    text: String,
+    ja: String,
+    aufJa: () -> Unit,
+    aufNein: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = aufNein,
-        title = { Text(stringResource(R.string.trennen_frage), color = Farbe.dunkelblau) },
-        text = { Text(stringResource(R.string.trennen_frage_text), color = Farbe.asphalt) },
+        title = { Text(titel, color = Farbe.dunkelblau) },
+        text = { Text(text, color = Farbe.asphalt) },
         confirmButton = {
             TextButton(onClick = aufJa) {
-                Text(stringResource(R.string.trennen_ja), color = Farbe.rotTief,
-                    fontWeight = FontWeight.SemiBold)
+                Text(ja, color = Farbe.rotTief, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
@@ -274,14 +378,25 @@ private fun Trennfrage(aufJa: () -> Unit, aufNein: () -> Unit) {
     )
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun VorschauGekoppelt() =
-    GekoppeltAnsicht("https://einsatz.beispieldomain.de/", LogoWahl.LUFT, null) {}
-
-@Preview(showBackground = true)
-@Composable
-private fun VorschauKopplung() = KopplungAnsicht(
-    schritt = Kopplungsschritt.Abgewiesen(Abweisung.ZU_VIELE_GERAETE, null),
-    serverBasis = null, logoWahl = LogoWahl.BODEN, aufSchritt = {}, aufKoppeln = { _, _ -> },
-)
+private fun Akkufrage(aufOeffnen: () -> Unit, aufSpaeter: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = aufSpaeter,
+        title = { Text(stringResource(R.string.akku_titel), color = Farbe.dunkelblau) },
+        text = { Text(stringResource(R.string.akku_hinweis), color = Farbe.asphalt) },
+        confirmButton = {
+            TextButton(onClick = aufOeffnen) {
+                Text(
+                    stringResource(R.string.akku_oeffnen),
+                    color = Farbe.blauTief, fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = aufSpaeter) {
+                Text(stringResource(R.string.akku_spaeter), color = Farbe.dunkelblau)
+            }
+        },
+        containerColor = Farbe.schnee,
+    )
+}
