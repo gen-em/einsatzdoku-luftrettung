@@ -60,8 +60,23 @@ require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_s
  * kommt als Papierkorbeintrag zurueck. Der ZEITPUNKT wandert dabei nicht mit
  * — der Eintrag entsteht in der Zielinstallation neu und bekommt volle
  * 90 Tage (E-S1-03, docs/Backup-Format.md 2 und 3).
+ *
+ * `$ohneSpuren` IST DER KERN DER FASSUNG 4 (S2/AP5, Konzept 3.2.1). Statt der
+ * Punktlisten traegt jedes spurtragende Objekt dann eine fortlaufende
+ * `spur_ref` und die Angaben `stufe`, `n_original` und `n`; die Punkte kommen
+ * ueber `api/backup_spuren.php` als SPUR1-Blobs in eigene Teile.
+ *
+ * WARUM DIE ZAHLEN IN DEN KERN GEHOEREN und nicht nur in die Spurteile: Sie
+ * sind die einzige Stelle, an der beim Vergleich zu sehen ist, dass eine Spur
+ * AUSGEDUENNT ist statt verlorengegangen. Und sie kosten nichts — `spur_zahlen()`
+ * und `spur_umriss()` holen sie, ohne einen Punkt zu lesen.
+ *
+ * WARUM DIE NUMMER FORTLAUFEND IST und nicht die Datenbankkennung: Die
+ * Kennung gilt nur in der Datenbank, aus der die Sicherung stammt — dieselbe
+ * Ueberlegung wie beim Diensttag (E9) und beim Standortnamen (E15). `spur_ref`
+ * ist eine Nummer DIESES Vorgangs und sonst nichts.
  */
-function edbak_build(int $userId): string {
+function edbak_build(int $userId, bool $ohneSpuren = false): string {
     $pdo = db();
     $q = function (string $sql, array $p) use ($pdo): array {
         $st = $pdo->prepare($sql); $st->execute($p); return $st->fetchAll(PDO::FETCH_ASSOC);
@@ -112,6 +127,47 @@ function edbak_build(int $userId): string {
                 $nach[$id][] = [$zahl($p[0], true), $zahl($p[1]), $zahl($p[2]),
                                 $zahl($p[3]), $zahl($p[4], true)];
             }
+        }
+        return $nach;
+    };
+
+    /* FASSUNG 4: statt der Punkte nur ihr Umriss. Vier Abfragen je Art, kein
+     * gelesener Punkt — und die laufende Nummer, unter der der Spurteil den
+     * Blob wiederfindet.
+     *
+     * DIE ZAHLEN BESCHREIBEN, WAS IN DER DATEI STEHT, nicht was in der
+     * Datenbank liegt. Der Unterschied ist eine Stufe: Eine Spur, die noch als
+     * Zeilen liegt (Stufe 1), wird beim Sichern verlustfrei kodiert und steht
+     * in der Datei als Stufe 2 (Konzept 3.2.3). Wuerde der Kern hier „Stufe 1"
+     * sagen und das Spurteil einen Stufe-2-Blob tragen, stuenden zwei
+     * Wahrheiten in derselben Datei — und die falsche waere die, die der
+     * Rueckweg zuerst liest.
+     *
+     *   Bestand Stufe 1 oder 2  ->  Datei Stufe 2, n_original = n
+     *   Bestand Stufe 3         ->  Datei Stufe 3, n_original aus dem Blobkopf
+     *
+     * `n` KOMMT AUS `spur_zahlen()` UND NICHT AUS `$umriss['gesamt']`. Die
+     * beiden sind nicht dasselbe: `gesamt` ist die hoechste Punktnummer plus
+     * eins — bei einer ausgeduennten Spur also die Zahl VOR der Ausduennung
+     * (443 statt der 148, die tatsaechlich gespeichert sind). Der erste Entwurf
+     * hat das verwechselt, und die Sicherung haette fuer jede ausgeduennte Spur
+     * eine Punktzahl genannt, die es in ihr nicht gibt. */
+    $spurRefZaehler = 0;
+    $spurVerzeichnis = [];
+    $umrisse = function (string $type, array $ids) use ($pdo, &$spurRefZaehler): array {
+        $nach = [];
+        if (!$ids) { return $nach; }
+        $u = spur_umriss($pdo, $type, $ids);
+        $z = spur_zahlen($pdo, $type, $ids);
+        foreach ($ids as $id) {
+            $x = $u[$id] ?? null;
+            $n = (int)($z[$id] ?? 0);
+            if ($x === null || $n === 0) { continue; }
+            $duenn = $x['stufe'] === SPUR_STUFE_DUENN;
+            $nach[$id] = ['spur_ref' => ++$spurRefZaehler,
+                          'stufe' => $duenn ? SPUR_STUFE_DUENN : SPUR_STUFE_ROH,
+                          'n_original' => $duenn ? $x['n_original'] : $n,
+                          'n' => $n];
         }
         return $nach;
     };
@@ -224,7 +280,8 @@ function edbak_build(int $userId): string {
             ];
         }
     }
-    $spurNachEinsatz = $spuren('mission', $missionIds);
+    $spurNachEinsatz = $ohneSpuren ? $umrisse('mission', $missionIds)
+                                   : $spuren('mission', $missionIds);
 
     foreach ($missionZeilen as $m) {
         $mid = (int)$m['id'];
@@ -232,8 +289,19 @@ function edbak_build(int $userId): string {
         $m['phases']    = $phasenNach[$mid]    ?? [];
         $m['resources'] = $mittelNach[$mid]    ?? [];
         $m['resus']     = $sitzungenNach[$mid] ?? [];
-        $m['track']     = $spurNachEinsatz[$mid] ?? [];
         $m['crew']      = $einsatzCrewNach[$mid] ?? [];
+        if ($ohneSpuren) {
+            /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe aus
+             * wie „hat keine Spur"; die Fassung sagt, dass die Punkte woanders
+             * stehen. Wer keine Spur hat, bekommt gar keine `spur_ref`. */
+            if (isset($spurNachEinsatz[$mid])) {
+                $m += $spurNachEinsatz[$mid];
+                $spurVerzeichnis[] = ['spur_ref' => $m['spur_ref'], 'art' => 'mission',
+                                      'id' => $mid, 'n' => $m['n']];
+            }
+        } else {
+            $m['track'] = $spurNachEinsatz[$mid] ?? [];
+        }
         $missions[] = $m;
     }
 
@@ -242,11 +310,20 @@ function edbak_build(int $userId): string {
                              deleted_at, deleted_with_day
                       FROM rest_segments
                       WHERE user_id = ? ORDER BY started_at', [$userId]);
-    $spurNachRuhe = $spuren('rest', array_map(static fn($r) => (int)$r['id'], $restZeilen));
+    $restIds = array_map(static fn($r) => (int)$r['id'], $restZeilen);
+    $spurNachRuhe = $ohneSpuren ? $umrisse('rest', $restIds) : $spuren('rest', $restIds);
     foreach ($restZeilen as $r) {
         $rid = (int)$r['id'];
         unset($r['id']);
-        $r['track'] = $spurNachRuhe[$rid] ?? [];
+        if ($ohneSpuren) {
+            if (isset($spurNachRuhe[$rid])) {
+                $r += $spurNachRuhe[$rid];
+                $spurVerzeichnis[] = ['spur_ref' => $r['spur_ref'], 'art' => 'rest',
+                                      'id' => $rid, 'n' => $r['n']];
+            }
+        } else {
+            $r['track'] = $spurNachRuhe[$rid] ?? [];
+        }
         $rests[] = $r;
     }
 
@@ -408,7 +485,18 @@ function edbak_build(int $userId): string {
          * Umgekehrt bleiben Version-6-Dateien vollstaendig einspielbar: Sie
          * enthalten keinen Papierkorb, `deleted_at` fehlt oder ist null, und
          * der Rueckweg legt sie als aktiven Bestand an — genau wie bisher. */
-        'version' => 7,
+        /* NUTZLAST 8 (S2/AP5): der Kern der Fassung 4 — ohne Punktlisten,
+         * dafuer mit `spur_ref`, `stufe`, `n_original` und `n` je Spur.
+         *
+         * DIE ZAHL SAGT, WIE DIE SPUREN DRINSTEHEN, und der Rueckweg
+         * entscheidet daran, welchen der beiden Wege er nimmt: 6 und 7 tragen
+         * Punktlisten, 8 traegt Verweise. Das ist der Unterschied, an dem es
+         * haengt — nicht die Anwesenheit eines `track`-Feldes, denn eine Spur
+         * ohne Punkte saehe genauso aus.
+         *
+         * Nutzlast 7 wird weiterhin GELESEN (E-S2-12) und nicht mehr
+         * geschrieben. Mit NaDoku 1.0 faellt sie weg (Backlog Nr. 46). */
+        'version' => $ohneSpuren ? 8 : 7,
         'created_at' => gmdate('c'),
         'app' => 'einsatzdoku-notarzt',
         'user' => ['email' => $u['email'], 'name' => $u['name']],
@@ -441,6 +529,20 @@ function edbak_build(int $userId): string {
         'missions' => $missions,
         'rest_segments' => $rests,
     ];
+
+    /* DAS VERZEICHNIS DER SPUREN — ein ARBEITSFELD, das nicht in die Datei
+     * gehoert (S2/AP5).
+     *
+     * Der Browser braucht die Datenbankkennung, um die Blobs zu holen
+     * (`api/backup_spuren.php`); die Datei darf sie nicht tragen, denn sie
+     * gilt nur in DIESER Datenbank — genau deshalb loescht `edbak_build()`
+     * `id` aus jedem Objekt (E9, E15).
+     *
+     * Beides zusammen geht nur so: Die Zuordnung steht getrennt und traegt den
+     * Unterstrich, den dieses Projekt fuer Arbeitsfelder benutzt (`_pat`,
+     * `_patState`). Der Sicherungslauf loescht sie, bevor er versiegelt — und
+     * die Containerprobe sieht nach, ob er es getan hat. */
+    if ($ohneSpuren) { $data['_spur_index'] = $spurVerzeichnis; }
     return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
@@ -539,6 +641,19 @@ function edbak_restore(int $userId, array $data): array {
     }
     $pruef = new Pruefliste();
     $hoeheOffen = [];   // Einsatz-IDs fuer die Hoehenberechnung nach dem Commit (M5-05)
+
+    /* DIE SPURKARTE (S2/AP5, Konzept 3.2.4).
+     *
+     * Nutzlast 8 traegt keine Punktlisten, sondern je Spur eine `spur_ref`.
+     * Der Browser schickt die Blobs danach in eigenen Anfragen — und braucht
+     * dafuer die Kennung, unter der der Datensatz HIER angelegt wurde. Die
+     * kennt nur dieser Lauf.
+     *
+     * Sie steht bewusst nicht in `$stats`: `$stats` ist die Rueckmeldung an
+     * die Nutzerin und wird angezeigt; das hier ist eine Arbeitsangabe. */
+    $spurKarte = [];
+    $nutzlast = (int)($data['version'] ?? 0);
+    $mitVerweisen = $nutzlast >= 8;
 
     /* VERSCHACHTELUNGSFAEHIG (Web 7.3.0).
      *
@@ -1296,7 +1411,17 @@ function edbak_restore(int $userId, array $data): array {
                     $insEv->execute([$sid, $typ, $wann]);
                 }
             }
-            $spurSchreiben('mission', $mid, $m['track'] ?? []);
+            /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
+             * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
+             * wie ein Verweis, und dann liefe eine Fassung-8-Datei still in
+             * den Altweg und verloere alle Spuren. */
+            if ($mitVerweisen) {
+                if (isset($m['spur_ref'])) {
+                    $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission', 'id' => $mid];
+                }
+            } else {
+                $spurSchreiben('mission', $mid, $m['track'] ?? []);
+            }
 
             /* Einsatzort-Hoehe: NACH dem Abschluss, nicht hier (M5-05).
              *
@@ -1384,7 +1509,13 @@ function edbak_restore(int $userId, array $data): array {
                            pruef_flag($r['final'] ?? 1),
                            $rGeloescht ? $loeschZeit : null, $rMitTag]);
             $rid = (int)$pdo->lastInsertId();
-            $spurSchreiben('rest', $rid, $r['track'] ?? []);
+            if ($mitVerweisen) {
+                if (isset($r['spur_ref'])) {
+                    $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid];
+                }
+            } else {
+                $spurSchreiben('rest', $rid, $r['track'] ?? []);
+            }
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }
         }
@@ -1427,5 +1558,6 @@ function edbak_restore(int $userId, array $data): array {
     }
     if ($hoeheFehler > 0) { $stats['hoehe_fehler'] = $hoeheFehler; }
 
+    if ($mitVerweisen) { $stats['spur_karte'] = $spurKarte; }
     return $stats;
 }

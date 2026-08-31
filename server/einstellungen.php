@@ -1745,10 +1745,29 @@ ui_seite_start(['titel' => 'Einstellungen']);
              fremden Datei stammen kann. */ ?>
     <script src="<?= asset('assets/html.js') ?>"></script>
     <script src="<?= asset('assets/patient.js') ?>"></script>
+    <?php /* zip.js: Seit Containerfassung 4 (S2/AP5) ist eine Sicherung ein
+             ZIP mit versiegelten Teilen — geschrieben beim Sichern, gelesen
+             beim Einspielen. Dieselbe vendorierte Bibliothek, die der Export
+             und der Import schon benutzen (assets/vendor/zipjs.min.js,
+             docs/Lizenzen.md). Sie steht als eigene Zeile und NICHT in der
+             Skriptliste von ui_krypto_bootstrap(): Der Baustein ersetzt dort
+             seine Vorgabeliste, und crypto.js fiele weg. */ ?>
+    <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>
     <script>
     // Eigenes Konto — nur fuer den Vergleich mit der Herkunft der Datei (M5-13).
     const KONTO_MAIL = <?= json_encode($userEmail) ?>;
     const KONTO_NAME = <?= json_encode($userName) ?>;
+    /* Die Fassung der Anwendung wandert ins Manifest der Sicherung: Wer eine
+       Datei in zwei Jahren wiederfindet, soll ihr ansehen, womit sie
+       entstanden ist. */
+    const WEB_VERSION = <?= json_encode(WEB_VERSION) ?>;
+
+    /* EINE WACHE, wie sie import_ui.js seit je hat: Ein vergessener
+       Skriptverweis ergibt sonst „zip is not defined" genau in dem Augenblick,
+       in dem jemand seine Daten sichern will. */
+    if (typeof zip === 'undefined') {
+      throw new Error('Die Bibliothek zum Schreiben von Archiven ist nicht geladen.');
+    }
     const expState = document.getElementById('expstate');
     const impState = document.getElementById('impstate');
 
@@ -1873,7 +1892,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
          * die ausschließlich die Fehlermeldung enthielt. Sie ließe sich
          * öffnen und wäre erst beim Einspielen als leer zu erkennen,
          * möglicherweise Monate später. */
-        const res = await fetch('api/backup_data.php');
+        const res = await fetch('api/backup_data.php?ohne_spuren=1');
         if (!res.ok) {
           let grund = 'HTTP ' + res.status;
           try { const j = await res.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
@@ -1926,35 +1945,188 @@ ui_seite_start(['titel' => 'Einstellungen']);
           delete m._pat; delete m._patState; delete m._patFehler;
         }
 
-        expState.textContent = 'Datei wird verschlüsselt…';
-        /* Die Rundenzahl der Datei ist die des Kontos — nicht der Zielwert.
+        /* ---- Fassung 4: die Spuren in eigene Teile (S2/AP5) --------------
          *
-         * Beides waere vertretbar; entscheidend ist, dass sie IN DER DATEI
-         * steht (S7) und beim Oeffnen von dort gelesen wird. Der Wert des
-         * Kontos ist der ehrlichere: Er sagt, unter welchen Bedingungen diese
-         * Sicherung entstanden ist. */
-        const bytes = await EdCrypto.sealBackup(pw, JSON.stringify(data), KDF_ITER);
-        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+         * Der Kern trägt keine Punktlisten mehr, sondern je Spur eine
+         * `spur_ref`. Die Punkte holt dieser Lauf als SPUR1-Blobs und legt
+         * sie in eigene, versiegelte Teile.
+         *
+         * DAS VERZEICHNIS IST EIN ARBEITSFELD. Es trägt die Datenbank­kennungen,
+         * die zum Holen nötig sind — und die in der Datei nichts zu suchen
+         * haben: Sie gelten nur in der Datenbank, aus der die Sicherung
+         * stammt (E9, E15). Es wird deshalb HIER entfernt, vor allem
+         * Weiteren, damit es keinen Weg gibt, auf dem es doch mitwandert. */
+        const index = Array.isArray(data._spur_index) ? data._spur_index : [];
+        delete data._spur_index;
+
+        /* DIE TEILE WERDEN VORHER GEPLANT, nicht unterwegs gebildet.
+         *
+         * Grund: Die Zusatzdaten jedes Teils tragen `<nr>/<gesamt>` — die
+         * Gesamtzahl muss also feststehen, BEVOR das erste Teil versiegelt
+         * wird. Die Punktzahl je Spur steht im Kern; damit lässt sich die
+         * Einteilung ausrechnen, ohne einen einzigen Blob geholt zu haben.
+         *
+         * Geschnitten wird an SPURGRENZEN: Eine Spur liegt ganz in einem
+         * Teil. Eine über die Grenze gestückelte Spur wäre nur mit beiden
+         * Teilen brauchbar, und dann hätte die Teilung nichts gebracht.
+         *
+         * 250 000 Punkte je Teil: gemessen kostet ein Punkt 3,56 Byte als
+         * SPUR1 (S2/AP1), Base64 macht 4,77 daraus — also rund 1,2 MB je
+         * Teil im Regelfall. Selbst eine sehr sprunghafte Spur mit 6 Byte je
+         * Punkt bliebe unter den 2 MB, die das Ziel sind (Konzept 3.2.1). */
+        const TEIL_PUNKTE = 250000;
+        const teileplan = [];
+        let laufend = [], laufendePunkte = 0;
+        for (const e of index) {
+          if (laufend.length && laufendePunkte + (e.n || 0) > TEIL_PUNKTE) {
+            teileplan.push(laufend); laufend = []; laufendePunkte = 0;
+          }
+          laufend.push(e); laufendePunkte += (e.n || 0);
+        }
+        if (laufend.length) { teileplan.push(laufend); }
+
+        const gesamt = 1 + teileplan.length;          // kern + Spurteile
+        const kennung = EdCrypto.randomHex(16);
+
+        /* EINE PBKDF2 FÜR ALLE TEILE (E-S2-10). Bei zwölf Teilen wären es
+         * sonst zwölf Ableitungen zu je KDF_ITER Runden — auf einem
+         * gedrosselten Telefon eine knappe Minute reines Warten. */
+        expState.textContent = 'Schlüssel wird abgeleitet…';
+        const vorgang = await EdCrypto.backupSchluessel(pw, KDF_ITER);
+
+        const schreiber = new zip.BlobWriter('application/octet-stream');
+        const zw = new zip.ZipWriter(schreiber, { level: 0 });
+        const teileliste = [];
+        let nr = 1;
+
+        async function teilAnhaengen(name, art, inhalt) {
+          const bytes = await EdCrypto.sealTeilJson(vorgang, inhalt,
+            EdCrypto.aadTeil(kennung, name, nr, gesamt));
+          teileliste.push({ name, art, sha256: await EdCrypto.sha256Hex(bytes) });
+          /* `level: 0` — gespeichert, nicht gepackt. Die Teile sind bereits
+             gzip UND verschlüsselt; ein zweiter Packlauf kostet Zeit und
+             bringt nichts. */
+          await zw.add(name, new zip.Uint8ArrayReader(bytes), { level: 0 });
+          nr++;
+          return bytes.length;
+        }
+
+        expState.textContent = 'Kern wird verschlüsselt…';
+        await teilAnhaengen('kern.edbak', 'kern', data);
+
+        /* Die Blobs holt der Server in Blöcken; 25 Kennungen je Anfrage,
+           dieselbe Zahl wie im Export. */
+        const BLOCK = 25;
+        const fehlerhaft = [];
+        let punkteGesamt = 0, spurenGesamt = 0;
+
+        for (const [i, teil] of teileplan.entries()) {
+          expState.textContent = `Spuren werden geholt (Teil ${i + 1} von ${teileplan.length})…`;
+          const eintraege = [];
+          for (const art of ['mission', 'rest']) {
+            const dieser = teil.filter(e => e.art === art);
+            for (let k = 0; k < dieser.length; k += BLOCK) {
+              let rest = dieser.slice(k, k + BLOCK).map(e => e.id);
+              const refNach = new Map(dieser.slice(k, k + BLOCK).map(e => [e.id, e.spur_ref]));
+              /* `offen` heißt: Dem Server ist die Zeit ausgegangen, bevor er
+                 alle Spuren des Blocks kodiert hatte. Dann wird derselbe Rest
+                 noch einmal geholt — nicht abgebrochen, denn es ist kein
+                 Fehler, sondern eine Grenze. */
+              for (let versuch = 0; rest.length && versuch < 10; versuch++) {
+                const a = await fetch('api/backup_spuren.php', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+                  body: JSON.stringify({ owner_type: art, ids: rest }),
+                });
+                if (!a.ok) {
+                  let grund = 'HTTP ' + a.status;
+                  try { const j = await a.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
+                  throw new Error('Die Spuren konnten nicht geladen werden (' + grund
+                                + '). Es wurde KEINE Datei erzeugt.');
+                }
+                const spuren = (await a.json()).spuren || {};
+                const nochOffen = [];
+                for (const [idText, s] of Object.entries(spuren)) {
+                  const id = Number(idText);
+                  if (s.offen) { nochOffen.push(id); continue; }
+                  if (s.leer) { continue; }
+                  if (s.fehler) {
+                    fehlerhaft.push(`${art} ${id}: ${s.grund || s.fehler}`);
+                    continue;
+                  }
+                  eintraege.push({ spur_ref: refNach.get(id), blob: s.blob,
+                                   stufe: s.stufe, n_original: s.n_original, n: s.n });
+                  punkteGesamt += s.n; spurenGesamt++;
+                }
+                rest = nochOffen;
+              }
+              if (rest.length) {
+                throw new Error('Der Server kam mit ' + rest.length + ' Spuren auch nach '
+                              + 'zehn Anläufen nicht durch. Es wurde KEINE Datei erzeugt.');
+              }
+            }
+          }
+          const name = 'spuren/' + String(i + 1).padStart(4, '0') + '.edbak';
+          expState.textContent = `Teil ${i + 1} von ${teileplan.length} wird verschlüsselt…`;
+          await teilAnhaengen(name, 'spuren', { spuren: eintraege });
+        }
+
+        /* DAS MANIFEST ZULETZT — es kennt dann alle Prüfsummen. */
+        expState.textContent = 'Manifest wird geschrieben…';
+        const manifest = {
+          format: 'einsatzdoku-backup-manifest',
+          fassung: 4,
+          kennung: kennung,
+          erzeugt_am: new Date().toISOString(),
+          web_version: WEB_VERSION,
+          nutzlast: data.version,
+          teile: teileliste,
+          spurteile: teileplan.length,
+          spuren: spurenGesamt,
+          punkte: punkteGesamt,
+          pat_key_check: data.pat_key_check || null,
+        };
+        const manifestBytes = await EdCrypto.sealTeilJson(vorgang, manifest,
+          EdCrypto.aadManifest());
+        await zw.add('manifest.edbak', new zip.Uint8ArrayReader(manifestBytes), { level: 0 });
+        await zw.close();
+
+        const blob = await schreiber.getData();
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'einsatzdoku-backup-' + new Date().toISOString().slice(0, 10) + '.edbak';
         a.click();
         URL.revokeObjectURL(url);
+
+        const mb = (blob.size / 1048576).toFixed(1).replace('.', ',');
         melde(expState, `Fertig: ${(data.missions || []).length} Einsätze `
           + `(davon ${n} mit geschützten Angaben), `
           + `${(data.rest_segments || []).length} Ruhesegmente, `
-          + `${(data.days || []).length} Diensttage.`
+          + `${(data.days || []).length} Diensttage, `
+          + `${spurenGesamt} Spuren mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
+          + `in ${teileplan.length} ${teileplan.length === 1 ? 'Teil' : 'Teilen'} `
+          + `— ${mb} MB.`
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
                 + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '
                 + 'lesbar, wenn die Sicherung in DIESES Konto zurückgespielt wird. '
                 + 'Bitte klären, warum der Schlüssel nicht passt, bevor weitere '
                 + 'Schritte unternommen werden.'
+              : '')
+          + (fehlerhaft.length
+              /* EINE ABGELEHNTE SPUR WIRD GENANNT, nicht verschwiegen. Die
+                 Datei ist im Übrigen vollständig; das Fehlen einer Spur
+                 fiele sonst erst beim Einspielen auf — und da ist die Quelle
+                 vielleicht schon weg. */
+              ? ` ACHTUNG: ${fehlerhaft.length} `
+                + `${fehlerhaft.length === 1 ? 'Spur konnte' : 'Spuren konnten'} nicht `
+                + 'mitgesichert werden: ' + fehlerhaft.slice(0, 3).join(' · ')
+                + (fehlerhaft.length > 3 ? ' · …' : '')
               : ''),
-          /* Ein Export mit unlesbaren Blobs ist kein reiner Erfolg: Die Datei
-             ist vollständig, aber ein Teil ihrer Angaben lässt sich nur in
-             diesem Konto wieder öffnen. Das ist eine Warnung, kein Haken. */
-          unlesbar ? 'warn' : 'ok');
+          /* Ein Export mit unlesbaren Blobs oder fehlenden Spuren ist kein
+             reiner Erfolg: Die Datei ist vollständig bis auf das Genannte. */
+          (unlesbar || fehlerhaft.length) ? 'warn' : 'ok');
       } catch (e) {
         melde(expState, 'Export fehlgeschlagen: ' + e.message, 'fehler');
       }
@@ -2030,6 +2202,81 @@ ui_seite_start(['titel' => 'Einstellungen']);
     }
 
     // ---- Import: läuft vollständig im Browser ----
+    /* ---- Eine mehrteilige Sicherung öffnen (S2/AP5, Containerfassung 4) --
+     *
+     * Reihenfolge, und jeder Schritt hat einen Grund:
+     *
+     *   1. Manifest holen und seinen KOPF lesen — dort stehen Salz und
+     *      Rundenzahl. Ohne sie lässt sich der Schlüssel nicht ableiten, und
+     *      abgeleitet wird EINMAL für alle Teile (E-S2-10).
+     *   2. Manifest entsiegeln. Geht das nicht, ist entweder das Passwort
+     *      falsch oder die Datei beschädigt — und das ist der einzige Punkt,
+     *      an dem diese beiden noch zusammenfallen dürfen.
+     *   3. VOLLSTÄNDIGKEIT prüfen, bevor irgendetwas eingespielt wird. Ein
+     *      fehlendes Teil soll auffallen, solange noch nichts geschehen ist —
+     *      nicht auf halbem Weg, wenn der Bestand schon halb angelegt ist.
+     *   4. Erst dann Teil für Teil, jedes gegen seine Prüfsumme und mit
+     *      seinen Zusatzdaten.
+     *
+     * Der Archivleser bleibt offen; die Teile werden einzeln geholt, statt
+     * die ganze Datei ein zweites Mal in den Speicher zu legen. */
+    async function fassung4Oeffnen(pw, bytes) {
+      const leser = new zip.ZipReader(new zip.Uint8ArrayReader(bytes));
+      const eintraege = await leser.getEntries();
+      const nach = new Map(eintraege.map(e => [e.filename, e]));
+      const holen = async (name) => nach.get(name).getData(new zip.Uint8ArrayWriter());
+
+      if (!nach.has('manifest.edbak')) {
+        await leser.close();
+        throw new Error('Diese Datei ist ein Archiv, aber keine Sicherung dieser '
+          + 'Anwendung: Das Manifest fehlt. Womöglich ist es ein Export (CSV/Excel) '
+          + 'statt einer Sicherung.');
+      }
+      const mBytes = await holen('manifest.edbak');
+      const kopf = EdCrypto.teilKopf(mBytes);
+      const vorgang = await EdCrypto.backupSchluessel(pw, kopf.iter, kopf.salt);
+      const manifest = await EdCrypto.openTeilJson(vorgang, mBytes,
+        EdCrypto.aadManifest(), 'Das Manifest der Sicherung');
+
+      const teile = manifest.teile || [];
+      if (!teile.length || teile[0].art !== 'kern') {
+        await leser.close();
+        throw new Error('Das Manifest nennt keinen Kern — die Sicherung ist unvollständig.');
+      }
+      const fehlend = teile.filter(t => !nach.has(t.name)).map(t => t.name);
+      if (fehlend.length) {
+        await leser.close();
+        throw new Error(`Der Sicherung fehlen ${fehlend.length} von ${teile.length} `
+          + `Teilen: ${fehlend.slice(0, 3).join(', ')}`
+          + (fehlend.length > 3 ? ' …' : '')
+          + '. Es wurde nichts geändert.');
+      }
+
+      const teilOeffnen = async (index) => {
+        const t = teile[index];
+        const roh = await holen(t.name);
+        /* DIE PRÜFSUMME ZUERST. Sie sagt deutlicher, was los ist, als die
+           Zusatzdaten: „dieses Teil ist nicht das, das hier stehen soll"
+           gegen „ließ sich nicht öffnen". Beide fangen dieselben Fälle; für
+           wen eine Sicherung nicht aufgeht, ist der Unterschied der zwischen
+           zehnmal Passwort tippen und die richtige Datei suchen. */
+        if (t.sha256 && await EdCrypto.sha256Hex(roh) !== t.sha256) {
+          throw new Error(`Das Teil ${t.name} ist nicht das, das laut Manifest hier `
+            + 'stehen soll. Es ist verändert, vertauscht oder stammt aus einer '
+            + 'anderen Sicherung. Es wurde nichts geändert.');
+        }
+        return EdCrypto.openTeilJson(vorgang, roh,
+          EdCrypto.aadTeil(manifest.kennung, t.name, index + 1, teile.length),
+          `Das Teil ${t.name}`);
+      };
+
+      return {
+        manifest, teile, teilOeffnen,
+        spurteile: teile.map((t, i) => (t.art === 'spuren' ? i : -1)).filter(i => i >= 0),
+        schliessen: () => leser.close(),
+      };
+    }
+
     document.getElementById('impbtn').addEventListener('click', async () => {
       const f = document.getElementById('bfile').files[0];
       if (!f) { melde(impState, 'Bitte eine Backup-Datei auswählen.', 'fehler'); return; }
@@ -2059,7 +2306,21 @@ ui_seite_start(['titel' => 'Einstellungen']);
           return;
         }
         impState.textContent = 'Datei wird geöffnet…';
-        const data = await EdCrypto.openBackup(pw, bytes);
+        /* ZWEI WEGE AB HIER. Die einteilige Datei geht auf wie immer; die
+           mehrteilige wird zuerst als Archiv geöffnet, ihr Manifest gelesen
+           und gegen die Teileliste gehalten — erst dann der Kern. */
+        let fassung4 = null;
+        let data;
+        if (art === 'zip') {
+          fassung4 = await fassung4Oeffnen(pw, bytes);
+          impState.textContent = `Sicherung vom ${(fassung4.manifest.erzeugt_am || '')
+            .slice(0, 10)} mit ${fassung4.spurteile.length} `
+            + `${fassung4.spurteile.length === 1 ? 'Spurteil' : 'Spurteilen'} — `
+            + 'Kern wird geöffnet…';
+          data = await fassung4.teilOeffnen(0);
+        } else {
+          data = await EdCrypto.openBackup(pw, bytes);
+        }
 
         /* HERKUNFT DER DATEI NENNEN (M5-13).
          *
@@ -2154,6 +2415,75 @@ ui_seite_start(['titel' => 'Einstellungen']);
         const out = await res.json();
         if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
         const s = out.stats;
+
+        /* ---- Die Spuren hinterher (S2/AP5, Konzept 3.2.4) ---------------
+         *
+         * Der Kern liegt; der Server hat gesagt, unter welcher Kennung jede
+         * `spur_ref` angelegt wurde. Jetzt gehen die Blobs zurück, in
+         * Häppchen von höchstens 1,5 MB — die Grenze ist der POST (Z3), und
+         * sie wird hier eingehalten und nicht am Server erhofft.
+         *
+         * WAS SCHIEFGEHEN KANN UND GEMELDET WIRD: eine `spur_ref`, zu der es
+         * keinen angelegten Datensatz gibt (dann wurde der Einsatz beim
+         * Einspielen übersprungen — er war schon da), und eine Spur, die der
+         * Server ablehnt. Beides ist kein Abbruch, aber beides gehört in die
+         * Rückmeldung: Eine Wiederherstellung, die eine Spur still verliert,
+         * ist genau das, wovor eine Sicherung schützen soll. */
+        let spurenGeschrieben = 0, spurenUebersprungen = 0;
+        const spurenAbgelehnt = [];
+        let ohneZiel = 0;
+        if (fassung4 && fassung4.spurteile.length) {
+          const karte = out.spur_karte || {};
+          const HAPPEN = 1.5 * 1024 * 1024;
+          for (const [i, teilIndex] of fassung4.spurteile.entries()) {
+            impState.textContent = `Spuren werden übertragen `
+              + `(Teil ${i + 1} von ${fassung4.spurteile.length})…`;
+            const teil = await fassung4.teilOeffnen(teilIndex);
+            let happen = [], groesse = 0;
+            const senden = async () => {
+              if (!happen.length) { return; }
+              const a = await fetch('api/backup_spuren_restore.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+                body: JSON.stringify({ spuren: happen }),
+              });
+              const o = await a.json();
+              if (!o.ok) {
+                throw new Error('Die Spuren konnten nicht übertragen werden ('
+                  + (o.meldung || o.hinweis || o.error || 'HTTP ' + a.status) + '). '
+                  + 'Der übrige Bestand ist bereits eingespielt.');
+              }
+              spurenGeschrieben += o.geschrieben || 0;
+              spurenUebersprungen += o.uebersprungen || 0;
+              for (const x of (o.abgelehnt || [])) {
+                spurenAbgelehnt.push(`${x.owner_type} ${x.owner_id}: ${x.grund}`);
+              }
+              happen = []; groesse = 0;
+            };
+            for (const e of (teil.spuren || [])) {
+              const ziel = karte[String(e.spur_ref)];
+              if (!ziel) { ohneZiel++; continue; }
+              const blob = String(e.blob || '');
+              if (groesse + blob.length > HAPPEN) { await senden(); }
+              happen.push({ owner_type: ziel.art, owner_id: ziel.id,
+                            blob: blob, n: e.n });
+              groesse += blob.length;
+            }
+            await senden();
+          }
+          await fassung4.schliessen();
+        }
+
+        const spurText = fassung4
+          ? ` ${spurenGeschrieben} Spuren übernommen`
+            + (spurenUebersprungen ? `, ${spurenUebersprungen} waren schon da` : '')
+            + (ohneZiel ? `, ${ohneZiel} ohne zugehörigen Einsatz (übersprungen)` : '')
+            + (spurenAbgelehnt.length
+                ? `. ACHTUNG: ${spurenAbgelehnt.length} Spuren abgelehnt: `
+                  + spurenAbgelehnt.slice(0, 3).join(' · ')
+                  + (spurenAbgelehnt.length > 3 ? ' · …' : '')
+                : '.')
+          : '';
         const zusatz = uebernommen
           ? ` ${uebernommen} Einsätze brachten ihre geschützten Angaben verschlüsselt `
             + `mit und sind wieder lesbar.`
@@ -2161,7 +2491,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
               ? ` ${uebernommenFremd} Einsätze brachten verschlüsselte Angaben mit, die `
                 + `in diesem Konto nicht lesbar sind.`
               : '');
-        melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz), 'ok');
+        melde(impState, 'Import fertig: ' + restoreBericht(s, zusatz) + spurText,
+              spurenAbgelehnt.length || ohneZiel ? 'warn' : 'ok');
       } catch (e) {
         melde(impState, 'Import fehlgeschlagen: ' + e.message, 'fehler');
       }

@@ -301,6 +301,13 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
         for obj in kern.get(schluessel_name, []):
             ref = obj.pop("spur_ref", None)
             if ref is None:
+                # OHNE VERWEIS IST DIE SPUR LEER, NICHT ABWESEND. Die
+                # einteilige Datei traegt fuer einen Einsatz ohne Aufzeichnung
+                # `"track": []`; wer das Feld hier weglaesst, erzeugt im
+                # Vergleich eine Abweichung `[] -> None` fuer jeden solchen
+                # Eintrag — vier davon im Referenzbestand, und keine davon
+                # sagt etwas ueber die Daten.
+                obj["track"] = []
                 continue
             blob = offen.pop(int(ref), None)
             if blob is None:

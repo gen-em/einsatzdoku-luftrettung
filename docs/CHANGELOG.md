@@ -64,6 +64,75 @@ abgeleitet wird einmal. Bei zwölf Teilen wären es sonst zwölf Ableitungen zu
 je 320 000 Runden — auf einem gedrosselten Telefon eine knappe Minute reines
 Warten, und zwar zweimal.
 
+### Web — Sichern: Kern, Spurteile, ZIP
+
+Der Sicherungslauf im Browser besteht jetzt aus fünf Schritten statt einem:
+
+1. **Kern holen** — `api/backup_data.php?ohne_spuren=1` liefert dieselbe
+   Nutzlast ohne Punktlisten. Gemessen am Demo-Bestand: **183 878 statt
+   2 248 092 Byte, also 8,2 %**.
+2. **Geschützte Angaben entschlüsseln** — unverändert.
+3. **Teile planen.** 250 000 Punkte je Teil, geschnitten an Spurgrenzen. Die
+   Einteilung steht *vor* dem ersten Abruf fest, weil die Zusatzdaten jedes
+   Teils `<nr>/<gesamt>` tragen — die Gesamtzahl muss also bekannt sein, bevor
+   das erste Teil versiegelt wird. Die Punktzahl je Spur steht im Kern; damit
+   lässt sich das ausrechnen, ohne einen Blob geholt zu haben.
+4. **Blobs holen** — `api/backup_spuren.php`, 25 Kennungen je Anfrage.
+5. **Versiegeln und ins ZIP**, Manifest zuletzt (es kennt dann alle
+   Prüfsummen). Fortschritt je Teil in der Zustandszeile.
+
+**Der neue Endpunkt reicht durch, er packt nicht aus.** Die Fallunterscheidung
+steht in `spur_lib.php` (`spur_fuer_sicherung_viele()`) und nur dort:
+
+| Lage | was geschieht |
+|---|---|
+| kein Zeilen, Blob da | Blob durchreichen, so wie er liegt |
+| Zeilen da (Stufe 1, oder Nachzügler zu Stufe 2) | zusammensetzen und **verlustfrei neu kodieren** |
+| Stufe 3 **mit** Zeilen | abgelehnt und benannt — der ausgedünnte Blob nummeriert nach Position, die Nachzügler tragen Originalnummern; die Vereinigung ist keine Spur |
+| Lücke in den Nummern | abgelehnt und benannt — `spur_kodieren()` speichert die Nummer nicht, die *Position* ist die Nummer |
+| über 50 000 Punkte | abgelehnt und benannt — der Rückweg nähme sie nicht an |
+
+Gelesen wird **Spur für Spur**, nicht der ganze Block auf einmal: 25 Spuren an
+der Obergrenze wären rund 350 MB gegen ein Budget von 64 MB. Am
+Referenzbestand mit höchstens 1133 Punkten je Spur fiele das nie auf.
+
+**Die Zusage „die Sicherung kodiert nicht neu" gilt so nicht mehr**, und das
+ist eine Entscheidung: Eine Spur, die noch als Zeilen liegt (Stufe 1), steht
+in der Datei als Stufe-2-Blob. Ohne das müsste die Datei zwei Spurformen
+führen und zwei Rückwege haben, und der ganze Mengengewinn entfiele für
+frische Bestände — gerade die mit den meisten Punkten. Der Bestand selbst
+bleibt unangetastet; `docs/Backup-Format.md` sagt das jetzt so.
+
+### Web — Wiederherstellen: erst der Kern, dann die Spuren
+
+Der Kern geht als ein POST zurück wie bisher; der Server liefert die
+**Spurkarte** mit — `spur_ref` → angelegter Datensatz. Danach gehen die Blobs
+in Häppchen von höchstens 1,5 MB an `api/backup_spuren_restore.php`.
+
+Drei Dinge, die dabei nicht fehlen dürfen:
+
+- **Eigentum wird geprüft**, obwohl die Kennungen aus der Antwort dieses
+  Servers stammen. Wer sich darauf verlässt, dass der Browser nur zurückgibt,
+  was er bekommen hat, hat eine Schnittstelle gebaut, die fremde Spuren
+  überschreibt.
+- **Der Blob wird geprüft, bevor er liegt** (`spur_blob_pruefen()`): Kopf,
+  Auflösung, Punktzahl gegen die Grenze, Auspacken, Punktzahl gegen den Kopf,
+  Wertebereiche. Für Punktlisten gibt es diese Schicht seit je; ohne sie wäre
+  der Blobweg die einzige Stelle der Anwendung, an der ungeprüfter
+  Binärinhalt in die Datenbank ginge (CLAUDE.md 4).
+- **Vorhandene werden übersprungen.** `spur_blob_schreiben()` ist ein Upsert
+  und überschreibt — an seiner Stelle richtig, hier falsch: Eine abgebrochene
+  Wiederherstellung soll sich fortsetzen lassen.
+
+**Ein Fehler, den der Kreislauf gefunden hat.** Die Höhe des Einsatzortes
+(`site_ele_m`) wird nach dem Einspielen aus der Spur berechnet. Bei Nutzlast 7
+lagen die Punkte da schon; bei Fassung 4 kommen sie erst danach — der
+Kernlauf hatte eine Spur ohne Punkte vor sich und trug nichts ein. **79 von
+87 Einsätzen** kamen ohne Höhe zurück, obwohl die Quelle sie hatte. Kein
+Datenverlust (die Angabe ist abgeleitet), aber ein stiller Unterschied
+zwischen Sicherung und Wiederherstellung — und genau die sucht ein Kreislauf.
+Die Berechnung läuft jetzt, wo die Punkte ankommen.
+
 ### Web — Das Altformat wird gelesen, nicht mehr geschrieben
 
 Fassung 2 und 3 bleiben lesbar; sie sind der Weg, auf dem ein vorhandener
@@ -110,6 +179,13 @@ unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
 | ZIP ohne Kompression | Verfahren je Eintrag **0 (gespeichert)**, alle vier |
 | Base64 für 2 MB | 2 796 204 Zeichen im Rundlauf; der alte Wandler scheitert daran |
 | Altformat unverändert lesbar | Referenzdatei Fassung 3, **87 Einsätze, 443 Punkte im ersten** |
+| **Kreislauf `edbak` in Fassung 4** (sichern → einspielen → sichern) | **252 882 Einzelvergleiche, 0 unerklärt** (16 erwartet) |
+| Kreislauf `csv` | 8797 Einzelvergleiche, **0 unerklärt** (859 erwartet) |
+| Der Rückweg schreibt Blobs, keine Zeilen | 181 Blobs mit **48 981 Punkten**, **0 Zeilen** in `track_points` |
+| Neue Datei gegen die alte Nutzlast, Punkt für Punkt | **244 905 Einzelvergleiche, 0 Abweichungen** |
+| Sicherung des Demo-Bestands im Browser | 87 Einsätze, 100 Ruhesegmente, 181 Spuren mit 48 981 Punkten — **212,9 kB in 0,2 s, 0 Konsolenfehler** |
+| Kern ohne Spuren gegen Kern mit Spuren | **183 878 statt 2 248 092 Byte (8,2 %)** |
+| spurprobe · jobprobe · ingestprobe · gpxprobe · Wiederherstellungsprobe | 25 · 24 · 24 · 75 · 30 Erwartungen, **je 0 nicht erfüllt** |
 
 > **Eine Zahl, die etwas anderes maß, als ihre Beschriftung sagte** — und
 > deshalb ersetzt wurde: Die erste Fassung der Prüfung „das ZIP packt nicht
@@ -117,9 +193,20 @@ unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
 > zu 500 Byte ist der ZIP-Rahmen größer als jede Ersparnis; gemessen war der
 > Rahmen, nicht das Verfahren. Jetzt wird das Verfahren je Eintrag gelesen.
 
-**Nicht geprüft:** der Weg durch die Anwendung (kommt mit den nächsten
-Schritten des Pakets) · große Dateien (das misst der Messstand) · andere
-Browser als Chromium.
+> **Zwei Fehler, die die Prüfmittel gefunden haben — beide meine:**
+>
+> - `spur_umriss()['gesamt']` meint „höchste Punktnummer + 1", nicht
+>   „gespeicherte Punkte". Bei einer ausgedünnten Spur sind das 443 statt 148.
+>   Der Kern hätte für jede ausgedünnte Spur eine Punktzahl genannt, die es in
+>   ihr nicht gibt. Aufgefallen beim Nachmessen gegen den Demo-Bestand.
+> - Die Höhe des Einsatzortes fiel beim Wiederherstellen weg (oben).
+>   Aufgefallen im Kreislauf, an 79 Zeilen `site_ele_m: 901 → —`.
+
+**Nicht geprüft:** große Bestände (das misst der Messstand, kommt mit dem
+Prüfmittel-Schritt) · andere Browser als Chromium · die Wiederaufnahme nach
+einem echten Abbruch mitten in den Spurteilen (der Weg ist gebaut und die
+Überspringlogik geprüft, der Abbruch selbst nicht hergestellt) · die
+Admin-Sicherungen, die noch das alte Format schreiben (AP6).
 
 ## [Web 10.3.0] — 2026-08-31
 

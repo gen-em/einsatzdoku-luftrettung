@@ -73,9 +73,35 @@ if ($nutzlast < 6) {
                          . 'Web 6.0.0 einspielen und dort neu sichern.'], 409);
 }
 
+/* UND EINE SCHRANKE NACH OBEN (S2/AP5).
+ *
+ * Die gab es bisher nicht, und das war so lange harmlos, wie es nur eine
+ * Nutzlast gab. Mit Fassung 8 (Kern ohne Punktlisten) ist es das nicht mehr:
+ * Eine kuenftige Fassung 9, die etwas anders ablegt, liefe hier in den
+ * Fassung-8-Zweig und legte still einen halben Bestand an.
+ *
+ * Die Meldung sagt deshalb, was los ist — dieselbe Linie wie bei einem
+ * Container aus einer neueren Fassung (`assets/crypto.js`). */
+const NUTZLAST_HOECHSTENS = 8;
+if ($nutzlast > NUTZLAST_HOECHSTENS) {
+    json_out(['error' => 'version_neu',
+              'meldung' => 'Diese Sicherung hat das Format ' . $nutzlast
+                         . ' und stammt aus einer neueren Fassung der Anwendung. '
+                         . 'Diese Installation kennt höchstens Format '
+                         . NUTZLAST_HOECHSTENS . '. Es wurde nichts geändert — '
+                         . 'bitte die Anwendung aktualisieren.'], 409);
+}
+
 try {
     $stats = edbak_restore($userId, $data);
-    json_out(['ok' => true, 'stats' => $stats]);
+    /* DIE SPURKARTE GEHT GETRENNT ZURUECK, nicht in `stats`: `stats` ist die
+     * Rueckmeldung an die Nutzerin und wird angezeigt; die Karte ist eine
+     * Arbeitsangabe fuer den naechsten Schritt des Browsers (Konzept 3.2.4). */
+    $karte = $stats['spur_karte'] ?? null;
+    unset($stats['spur_karte']);
+    $antwort = ['ok' => true, 'stats' => $stats];
+    if ($karte !== null) { $antwort['spur_karte'] = $karte ?: new stdClass(); }
+    json_out($antwort);
 } catch (Throwable $ex) {
     json_fehler($ex, 'restore');
 }

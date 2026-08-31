@@ -1186,3 +1186,271 @@ function spur_zeit_verschieben(PDO $pdo, string $ownerType, array $ids, int $del
                             (int)$r['stufe'], (int)$r['n_original'], count($punkte));
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * ROHER ZUGRIFF FUER DIE SICHERUNG (S2/AP5)
+ *
+ * Die Sicherung Fassung 4 legt Spuren als SPUR1-Blob in die Datei, statt sie
+ * zu Punktlisten auszupacken. Sie braucht dafuer den Blob, nicht die Punkte —
+ * und bis hierher gab es dafuer KEINEN erlaubten Weg: `spur_lesen_viele()`
+ * dekodiert in derselben Schleife, in der es liest.
+ *
+ * Ohne diese Funktionen schriebe jeder neue Verbraucher eigenes SQL gegen
+ * `track_blobs`, und genau das schliesst CLAUDE.md 4 aus. Sie stehen deshalb
+ * hier und nicht im Endpunkt.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Die rohen Blobs mehrerer Spuren — OHNE zu dekodieren.
+ *
+ * @return array<int, array{stufe:int,n_original:int,n_gespeichert:int,blob:string}>
+ *         nur Eintraege, die einen Blob haben
+ */
+function spur_blob_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) { return []; }
+    require_once __DIR__ . '/db.php';
+
+    $aus = [];
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, stufe, n_original, n_gespeichert, blob_daten
+           FROM track_blobs WHERE owner_type = ? AND owner_id IN ({IDS})',
+        $ids, [$ownerType]) as $r) {
+        $aus[(int)$r['owner_id']] = [
+            'stufe'         => (int)$r['stufe'],
+            'n_original'    => (int)$r['n_original'],
+            'n_gespeichert' => (int)$r['n_gespeichert'],
+            'blob'          => (string)$r['blob_daten'],
+        ];
+    }
+    return $aus;
+}
+
+/**
+ * Die Spuren mehrerer Eigentuemer, fertig fuer die Sicherungsdatei.
+ *
+ * DIE FALLUNTERSCHEIDUNG STEHT AN EINER STELLE — hier. Der Endpunkt, die
+ * Admin-Sicherung und alles, was spaeter dazukommt, ruft sie; keiner baut sie
+ * nach. Sie ist naemlich nicht offensichtlich:
+ *
+ *   Zeilen 0, Blob da        -> Blob durchreichen, so wie er liegt
+ *   Zeilen 0, kein Blob      -> es gibt keine Spur (leer, kein Fehler)
+ *   Zeilen da                -> Blob und Zeilen zusammensetzen und NEU
+ *                               kodieren (Stufe 1 oder Nachzuegler zu Stufe 2)
+ *
+ * UND DREI FAELLE, DIE ABGELEHNT WERDEN, statt still etwas Falsches zu
+ * liefern:
+ *
+ *   Stufe 3 mit Zeilen       Der ausgeduennte Blob nummeriert nach POSITION,
+ *                            die Nachzuegler tragen Originalnummern — die
+ *                            Vereinigung ist keine Spur. Erwartungswert 0
+ *                            (ingest.php nimmt solche Punkte seit AP3 nicht
+ *                            mehr an), aber eine Sicherung ist der falsche
+ *                            Ort fuer eine Annahme.
+ *   Luecke in den Nummern    `spur_kodieren()` speichert die Nummer nicht, die
+ *                            POSITION ist die Nummer. Eine Luecke verschoebe
+ *                            still jeden Punkt dahinter.
+ *   Ueber LIMIT_TRACKPUNKTE_SPUR
+ *                            Der Rueckweg lehnt eine solche Spur ab
+ *                            (validate_lib.php). Eine Sicherung, die etwas
+ *                            enthaelt, das sich nicht einspielen laesst, ist
+ *                            eine Falle.
+ *
+ * DER SPEICHER ENTSCHEIDET DIE BAUART. Die Punkte werden SPUR FUER SPUR
+ * gelesen und nach dem Kodieren freigegeben — nicht `spur_lesen_viele()` ueber
+ * den ganzen Block. Bei 25 Spuren an der Obergrenze waeren das sonst rund
+ * 350 MB gegen ein Budget von 64 MB (Z3); am Referenzbestand mit hoechstens
+ * 1133 Punkten je Spur faellt das NIE auf.
+ *
+ * @param float|null $bisZeit absoluter `microtime(true)`-Zeitpunkt, ab dem
+ *        keine weitere Spur mehr begonnen wird; die uebrigen kommen als
+ *        `['offen' => true]` zurueck und sind erneut zu holen
+ * @return array<int, array> je Kennung entweder
+ *         {blob, stufe, n_original, n} · {leer:true} · {fehler, grund} · {offen:true}
+ */
+function spur_fuer_sicherung_viele(PDO $pdo, string $ownerType, array $ids,
+                                   ?float $bisZeit = null): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) { return []; }
+    require_once __DIR__ . '/validate_lib.php';   // LIMIT_TRACKPUNKTE_SPUR
+
+    $umriss = spur_umriss($pdo, $ownerType, $ids);
+
+    /* Erst entscheiden, dann lesen. Die Durchreicher lassen sich buendeln,
+     * die Neukodierer nicht — und wer das trennt, liest keinen Blob umsonst. */
+    $durchreichen = [];
+    $neu = [];
+    $aus = [];
+    foreach ($ids as $id) {
+        $u = $umriss[$id] ?? null;
+        if ($u === null) { $aus[$id] = ['leer' => true]; continue; }
+
+        if ($u['zeilen'] === 0) {
+            /* Ohne Zeilen entscheidet der Blob. Seine Laenge wird unten
+             * geprueft, wo `n_gespeichert` bekannt ist — `$u['gesamt']` waere
+             * hier die falsche Zahl: Es ist die hoechste Punktnummer plus eins
+             * und bei einer ausgeduennten Spur die Zahl VOR der Ausduennung. */
+            if ($u['n_original'] === 0 && $u['gesamt'] === 0) { $aus[$id] = ['leer' => true]; }
+            else { $durchreichen[] = $id; }
+            continue;
+        }
+        /* MIT ZEILEN wird neu kodiert, und dann ist `gesamt` die richtige
+         * Zahl — sie ist die Laenge der zusammengesetzten Spur. Die Pruefung
+         * steht VOR dem Lesen: Eine Spur ueber der Grenze soll gar nicht erst
+         * in den Speicher. */
+        if ($u['gesamt'] > LIMIT_TRACKPUNKTE_SPUR) {
+            $aus[$id] = ['fehler' => 'zu_lang',
+                         'grund' => $u['gesamt'] . ' Punkte — mehr als die Grenze von '
+                                  . LIMIT_TRACKPUNKTE_SPUR . ', die der Rückweg annimmt'];
+            continue;
+        }
+        if ($u['stufe'] === SPUR_STUFE_DUENN) {
+            $aus[$id] = ['fehler' => 'duenn_mit_zeilen',
+                         'grund' => 'ausgedünnte Spur mit ' . $u['zeilen'] . ' nachgereichten '
+                                  . 'Zeilen — die Nummern der beiden Teile meinen '
+                                  . 'Verschiedenes und lassen sich nicht zusammenlegen'];
+            continue;
+        }
+        if (!$u['lueckenlos']) {
+            $aus[$id] = ['fehler' => 'luecke',
+                         'grund' => 'Lücke in den Punktnummern (' . $u['min_seq'] . '…'
+                                  . $u['max_seq'] . ' bei ' . $u['zeilen'] . ' Zeilen)'];
+            continue;
+        }
+        $neu[] = $id;
+    }
+
+    /* ---- Durchreichen: gebuendelt, ein Blob je Spur ---------------------- */
+    foreach (spur_blob_lesen_viele($pdo, $ownerType, $durchreichen) as $id => $b) {
+        if ($b['n_gespeichert'] > LIMIT_TRACKPUNKTE_SPUR) {
+            $aus[$id] = ['fehler' => 'zu_lang',
+                         'grund' => $b['n_gespeichert'] . ' gespeicherte Punkte — mehr '
+                                  . 'als die Grenze von ' . LIMIT_TRACKPUNKTE_SPUR
+                                  . ', die der Rückweg annimmt'];
+            continue;
+        }
+        $aus[$id] = ['blob' => $b['blob'], 'stufe' => $b['stufe'],
+                     'n_original' => $b['n_original'], 'n' => $b['n_gespeichert']];
+    }
+    foreach ($durchreichen as $id) {
+        // Ein Umriss ohne Blob und ohne Zeilen ist oben schon leer; kommt hier
+        // trotzdem nichts an, fehlt die Blobzeile — das ist ein Befund.
+        if (!isset($aus[$id])) {
+            $aus[$id] = ['fehler' => 'kein_blob',
+                         'grund' => 'Der Umriss nennt Punkte, aber es gibt keinen Blob'];
+        }
+    }
+
+    /* ---- Neu kodieren: eine Spur nach der anderen ------------------------ */
+    foreach ($neu as $id) {
+        if ($bisZeit !== null && microtime(true) >= $bisZeit) {
+            $aus[$id] = ['offen' => true];
+            continue;
+        }
+        $punkte = spur_lesen($pdo, $ownerType, $id);
+        if (!$punkte) { $aus[$id] = ['leer' => true]; continue; }
+
+        /* ZWEITE LUECKENPRUEFUNG, auf der tatsaechlich gelesenen Liste.
+         * Die erste lief in SQL ueber Randwerte; diese sieht jede einzelne
+         * Nummer. Der Verdichtungsjob prueft aus demselben Grund zweimal. */
+        $luecke = null;
+        foreach ($punkte as $i => $p) {
+            if ((int)$p[0] !== $i) { $luecke = "Punkt $i traegt die Nummer " . $p[0]; break; }
+        }
+        if ($luecke !== null) {
+            $aus[$id] = ['fehler' => 'luecke', 'grund' => $luecke];
+            unset($punkte);
+            continue;
+        }
+
+        $n = count($punkte);
+        $blob = spur_kodieren($punkte, SPUR_STUFE_ROH, $n);
+
+        /* RUNDLAUF VOR DEM AUSLIEFERN. Eine Sicherung, die still einen
+         * unbelegten Blob mitnimmt, ist schlimmer als eine, die einen Fehler
+         * meldet: Der Fehler faellt beim Sichern auf, der Blob beim
+         * Einspielen — und da ist die Quelle vielleicht schon weg. */
+        $fehler = spur_rundlauf_pruefen($punkte, $blob);
+        unset($punkte);
+        if ($fehler !== null) {
+            $aus[$id] = ['fehler' => 'rundlauf', 'grund' => $fehler];
+            continue;
+        }
+        $aus[$id] = ['blob' => $blob, 'stufe' => SPUR_STUFE_ROH,
+                     'n_original' => $n, 'n' => $n];
+    }
+
+    return $aus;
+}
+
+/**
+ * Einen ANKOMMENDEN Blob pruefen, bevor er in die Datenbank geht (S2/AP5).
+ *
+ * WARUM ES DIESE FUNKTION GIBT. Der Rueckweg der Fassung 4 nimmt fertige
+ * SPUR1-Blobs entgegen — Binaerinhalt aus einer Datei, die irgendwo gelegen
+ * hat. Fuer PUNKTLISTEN hat dieser Weg seit je eine Pruefschicht
+ * (`validate_lib.php`: Punktzahl, Wertebereiche, Dubletten); fuer Blobs gab
+ * es sie nicht, und CLAUDE.md 4 sagt „alle Schreibwege, ohne Ausnahme".
+ *
+ * WAS SIE PRUEFT — und was jede Pruefung verhindert:
+ *
+ *   Kopf (Signatur, Fassung, Aufloesung)  Ein Blob aus einer anderen Fassung
+ *       oder mit anderer Aufloesung liesse sich entpacken und ergaebe
+ *       Koordinaten, die um Groessenordnungen daneben liegen. `spur_kopf()`
+ *       wirft dafuer bereits.
+ *   Punktzahl gegen LIMIT_TRACKPUNKTE_SPUR  Dieselbe Grenze wie fuer
+ *       Punktlisten. Ohne sie waere der Blobweg die Tuer, durch die geht,
+ *       was der andere Weg ablehnt.
+ *   Dekodieren  Ein beschaedigter zlib-Strom faellt hier auf und nicht erst,
+ *       wenn jemand die Spur ansehen will.
+ *   Punktzahl gegen den Kopf  Der Kopf ist eine Behauptung; die Zahl der
+ *       dekodierten Punkte ist die Tatsache.
+ *   Wertebereiche  Breite, Laenge und Zeit ueber `validate_lib.php` — dieselben
+ *       Grenzen, die eine Punktliste einhalten muss.
+ *
+ * WAS SIE NICHT PRUEFT: ob die Spur PLAUSIBEL ist. Ein Weg quer durch Europa
+ * in zehn Sekunden ist gueltig; das zu beurteilen ist nicht Sache eines
+ * Rueckwegs, und eine Sicherung darf ihren eigenen Bestand mitbringen.
+ *
+ * @return string|null null = in Ordnung, sonst der Grund im Klartext
+ */
+function spur_blob_pruefen(string $blob, ?int $erwartetN = null): ?string
+{
+    require_once __DIR__ . '/validate_lib.php';
+    try {
+        $kopf = spur_kopf($blob);
+    } catch (Throwable $ex) {
+        return $ex->getMessage();
+    }
+    if ($kopf['n'] > LIMIT_TRACKPUNKTE_SPUR) {
+        return $kopf['n'] . ' Punkte — mehr als die Grenze von '
+             . LIMIT_TRACKPUNKTE_SPUR . ' je Spur';
+    }
+    if ($kopf['n_original'] < $kopf['n']) {
+        return 'Der Kopf nennt ' . $kopf['n'] . ' gespeicherte Punkte bei nur '
+             . $kopf['n_original'] . ' ursprünglichen';
+    }
+    if ($erwartetN !== null && $erwartetN !== $kopf['n']) {
+        return 'Der Kern nennt ' . $erwartetN . ' Punkte, der Blob ' . $kopf['n'];
+    }
+    try {
+        $punkte = spur_dekodieren($blob);
+    } catch (Throwable $ex) {
+        return 'Der Blob lässt sich nicht auspacken: ' . $ex->getMessage();
+    }
+    if (count($punkte) !== $kopf['n']) {
+        return 'Der Kopf nennt ' . $kopf['n'] . ' Punkte, ausgepackt sind es '
+             . count($punkte);
+    }
+    foreach ($punkte as $i => $p) {
+        if (pruef_breite($p[1]) === null || pruef_laenge($p[2]) === null) {
+            return "Punkt $i liegt außerhalb des Wertebereichs ({$p[1]}, {$p[2]})";
+        }
+        if ($p[4] < 0 || $p[4] > 4294967295) {
+            return "Punkt $i trägt einen Zeitstempel außerhalb des Wertebereichs";
+        }
+    }
+    return null;
+}
