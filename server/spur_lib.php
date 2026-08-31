@@ -345,6 +345,384 @@ function spur_quantisieren(array $p): array
     ];
 }
 
+/* ---- Ausduennen (Stufe 2 -> 3) ------------------------------------------- */
+
+/**
+ * Deckel der Abschnittslaenge im Douglas-Peucker.
+ *
+ * WARUM ES IHN GIBT. Douglas-Peucker ist im schlechtesten Fall QUADRATISCH,
+ * und der schlechteste Fall ist nicht konstruiert: Die Uhr nimmt einen Punkt
+ * auf, sobald 15 m ODER 10 s vergangen sind (`watch/source/Track.mc`). Ein
+ * laengerer Schwebeflug mit GPS-Rauschen ueber 2 m ergibt genau den Zickzack,
+ * in dem kein Punkt verworfen werden darf. Gemessen in PHP fuer eine einzige
+ * solche Spur:
+ *
+ *      2 000 Punkte    0,198 s
+ *      5 000 Punkte    1,219 s
+ *     10 000 Punkte    4,340 s
+ *     20 000 Punkte   18,658 s
+ *     50 000 Punkte  114,500 s      <- LIMIT_TRACKPUNKTE_SPUR
+ *
+ * 114 Sekunden fuer eine Spur, bei Haeppchenbudgets von 3 / 20 / 300 s und
+ * einer Z3-Grenze von 30 s je Serveranfrage. Auf dem Token-Weg liefe das in
+ * `max_execution_time` — und ein Zeitablauf ist KEIN `Throwable`: Der
+ * `catch` in `jobs_lib.php` faengt ihn nicht, die Sperre bleibt stehen, und
+ * der Job ist eine Stunde tot. Dann stirbt er wieder.
+ *
+ * Mit einer zusaetzlichen Abschnittsgrenze alle 1000 Punkte sinkt derselbe
+ * Fall auf 2,40 s. Das ist zulaessig, weil zusaetzliche Abschnittsgrenzen nur
+ * zusaetzliche behaltene Punkte erzeugen koennen — die Zusage wird nie
+ * schwaecher, hoechstens die Ersparnis kleiner. Und am Normalfall kostet es
+ * nichts: Eine glatte Spur mit 50 000 Punkten braucht MIT Deckel 0,031 s und
+ * behaelt 786 Punkte, OHNE Deckel 0,161 s und 816 — der Deckel ist dort
+ * schneller und behaelt weniger. Am Referenzbestand greift er gar nicht, der
+ * laengste Abschnitt hat 804 Punkte.
+ */
+const SPUR_DP_ABSCHNITT_MAX = 1000;
+
+/**
+ * Punktvergleiche je Sekunde, gemessen (10,9 Mio.; hier bewusst niedriger
+ * angesetzt). Grundlage von `spur_ausduenn_dauer_s()`.
+ */
+const SPUR_DP_VERGLEICHE_JE_S = 10000000;
+
+/** Frist bis zur Ausduennung (E-S2-03): sechs Monate nach Einsatzende. */
+const SPUR_AUSDUENN_FRIST_MONATE = 6;
+
+/**
+ * Der oertliche Meterrahmen einer Spur.
+ *
+ * Grad in Meter, EINMAL je Spur statt je Punktpaar. Haversine fuer jeden der
+ * bis zu 50 000 Punkte waere genauer und um Groessenordnungen teurer; gemessen
+ * weicht diese Naeherung ueber 52 232 Referenz-Punktabstaende im Mittel um
+ * 0,116 % ab, im schlimmsten Einzelfall um 1,16 %. Bei 2 m Toleranz sind das
+ * hoechstens 2,3 cm — weit unter der Aufloesung des Formats (0,11 m).
+ *
+ * @return array{0:float,1:float} [Meter je Grad Breite, Meter je Grad Laenge]
+ */
+function spur_ortsrahmen(array $punkte): array
+{
+    $lat0 = $punkte ? (float)$punkte[0][1] : 0.0;
+    return [111132.95, 111319.49 * cos(deg2rad($lat0))];
+}
+
+/**
+ * Die Bezugshoehen einer Spur — je Index eine, auch wo keine gemessen wurde.
+ *
+ * WARUM DAS NOETIG IST. Die Hoehe darf fehlen (Bitfeld im Format). Die
+ * naheliegende Regel „fehlt einem Sehnenende die Hoehe, entfaellt der
+ * Hoehentest fuer diesen Abschnitt" ist eine FALLE: Ein einzelner hoehenloser
+ * Punkt an einer waagerechten Ecke wird zum Teilungspunkt — und damit zum
+ * Sehnenende BEIDER Teilstuecke. Danach ist der Hoehentest dort tot.
+ *
+ * Im Prueffall (waagerechte Kante bei Index 200 ohne Hoehe, eine Hoehenspitze
+ * von 150 m bei Index 300) behaelt diese Regel drei Punkte und verliert
+ * 150,0 m Hoehe; mit Ankerreihe sind es 16 Punkte und 2,5 m. Und das
+ * Perfide: Eine Pruefung, die Abschnitte mit hoehenlosem Ende ueberspringt,
+ * weil sie dort „nicht bewerten kann", meldet dafuer 0,0 m Verlust. Der
+ * Fehler versteckt sich in genau der Luecke, die ihn erzeugt.
+ *
+ * Deshalb hier: Luecken werden ueber die ZEIT zwischen den naechsten
+ * gemessenen Nachbarn linear gefuellt, die Raender konstant fortgesetzt.
+ * Traegt die Spur ueberhaupt keine Hoehe, bleibt die Reihe leer und der
+ * Hoehentest entfaellt vollstaendig — sonst bliebe eine Spur ohne Barometer
+ * zu 100 % stehen.
+ *
+ * Die dritte denkbare Regel — jeden WECHSEL der Hoehenverfuegbarkeit zur
+ * Abschnittsgrenze machen — ist zwar richtig, aber bei sporadischen Luecken
+ * ruinoes: bei „jeder siebte Punkt ohne Hoehe" erzwingt sie 859 von 3000
+ * Punkten (28,6 %) statt 2,8 %.
+ *
+ * @return list<float> leer, wenn die Spur gar keine Hoehe traegt
+ */
+function spur_hoehenanker(array $punkte): array
+{
+    $n = count($punkte);
+    $anker = [];
+    $bekannt = [];               // Indizes mit gemessener Hoehe
+    for ($i = 0; $i < $n; $i++) {
+        if ($punkte[$i][3] !== null) { $bekannt[] = $i; }
+    }
+    if (!$bekannt) { return []; }
+
+    $j = 0;                      // Zeiger in $bekannt
+    for ($i = 0; $i < $n; $i++) {
+        if ($punkte[$i][3] !== null) { $anker[$i] = (float)$punkte[$i][3]; continue; }
+        while ($j < count($bekannt) - 1 && $bekannt[$j] < $i) { $j++; }
+        $rechts = $bekannt[$j];
+        $links  = null;
+        for ($k = $j; $k >= 0; $k--) { if ($bekannt[$k] < $i) { $links = $bekannt[$k]; break; } }
+        if ($links === null)          { $anker[$i] = (float)$punkte[$rechts][3]; continue; }
+        if ($rechts <= $i)            { $anker[$i] = (float)$punkte[$links][3];  continue; }
+        $tl = (int)$punkte[$links][4];  $tr = (int)$punkte[$rechts][4];
+        $t  = ($tr > $tl) ? ((int)$punkte[$i][4] - $tl) / ($tr - $tl) : 0.0;
+        $anker[$i] = (float)$punkte[$links][3]
+                   + $t * ((float)$punkte[$rechts][3] - (float)$punkte[$links][3]);
+    }
+    return $anker;
+}
+
+/**
+ * Wie weit liegt Punkt $k von der Sehne $i-$j — waagerecht und senkrecht.
+ *
+ * VERBUNDEN WERDEN DIE BEIDEN TOLERANZEN ALS MAXIMUM DER NORMIERTEN WERTE:
+ *
+ *      s = max( waagerecht / 2 m , senkrecht / 3 m ),   behalten wenn s > 1
+ *
+ * Das ist genau „beide Toleranzen eingehalten" (s <= 1 gilt dann und nur
+ * dann, wenn waagerecht <= 2 m UND senkrecht <= 3 m) — und liefert zugleich
+ * die EINE Zahl, die Douglas-Peucker fuer die Wahl des Teilungspunkts
+ * braucht.
+ *
+ * DIE NAHELIEGENDE ALTERNATIVE IST FALSCH: zwei getrennte Laeufe (einer
+ * waagerecht, einer senkrecht) und die Behaltelisten vereinigen. Die
+ * Vereinigung erzeugt einen DRITTEN Streckenzug, fuer den keiner der beiden
+ * Laeufe etwas zugesagt hat. Am Referenzbestand gemessen: 8,59 m waagerechte
+ * und 31,97 m senkrechte Abweichung verworfener Punkte, bei zugesagten 2 und
+ * 3. Sie behaelt dabei sogar MEHR Punkte (39,44 % gegen 38,32 %), sieht also
+ * nach der sicheren Wahl aus und ist die unsicherste.
+ *
+ * @return array{0:float,1:float} [waagerecht in m, senkrecht in m]
+ */
+function spur_dp_abstand(array $punkte, array $anker, int $i, int $j, int $k,
+                         float $ky, float $kx): array
+{
+    $bx = ((float)$punkte[$j][2] - (float)$punkte[$i][2]) * $kx;
+    $by = ((float)$punkte[$j][1] - (float)$punkte[$i][1]) * $ky;
+    $px = ((float)$punkte[$k][2] - (float)$punkte[$i][2]) * $kx;
+    $py = ((float)$punkte[$k][1] - (float)$punkte[$i][1]) * $ky;
+
+    /* Fusspunkt auf [0,1] GEKLEMMT — gemessen wird gegen die Strecke, nicht
+     * gegen die unendliche Gerade. Ohne das Klemmen liesse eine Kehre den
+     * Abstand kleiner erscheinen, als er ist. */
+    $l2 = $bx * $bx + $by * $by;
+    $t  = $l2 > 0.0 ? max(0.0, min(1.0, ($px * $bx + $py * $by) / $l2)) : 0.0;
+    $dx = $px - $t * $bx;
+    $dy = $py - $t * $by;
+    $waag = sqrt($dx * $dx + $dy * $dy);
+
+    $senk = 0.0;
+    if ($anker && $punkte[$k][3] !== null) {
+        $sehne = $anker[$i] + $t * ($anker[$j] - $anker[$i]);
+        $senk  = abs((float)$punkte[$k][3] - $sehne);
+    }
+    return [$waag, $senk];
+}
+
+/**
+ * Die Pflichtpunkte einer Spur (E-S2-05): erster, letzter, und je
+ * Schutzzeitpunkt der zeitnaechste Punkt.
+ *
+ * DIE WAHL BEI GLEICHSTAND IST NICHT GESCHMACK. `site_elevation_lib.php` und
+ * `api/mission.php` suchen den zeitnaechsten Punkt mit `<` und behalten damit
+ * den FRUEHEREN. Waehlte die Behalteliste den spaeteren, fiele der
+ * eigentliche Gewinner weg — und der naechste Aufruf von
+ * `compute_site_elevation()` (er kommt bei jedem Speichern im Formular)
+ * schriebe eine andere oder gar keine Hoehe, ohne Meldung. Am Referenzbestand
+ * faellt das nicht auf: 576 Phasenzeitpunkte, 0 Gleichstaende.
+ *
+ * @param list<int> $zeiten Epochensekunden; fuer Ruhesegmente leer
+ * @return list<int> aufsteigende Indizes in $punkte
+ */
+function spur_schutzpunkte(array $punkte, array $zeiten): array
+{
+    $n = count($punkte);
+    if ($n === 0) { return []; }
+    $pflicht = [0 => true, $n - 1 => true];
+
+    foreach ($zeiten as $ts) {
+        $ts = (int)$ts;
+        $best = 0; $bestD = PHP_INT_MAX;
+        for ($i = 0; $i < $n; $i++) {
+            $d = abs((int)$punkte[$i][4] - $ts);
+            if ($d < $bestD) { $bestD = $d; $best = $i; }   // `<`, nicht `<=`
+        }
+        $pflicht[$best] = true;
+    }
+    $aus = array_keys($pflicht);
+    sort($aus);
+    return $aus;
+}
+
+/**
+ * Die Behalteliste einer Spur — Douglas-Peucker dreidimensional (E-S2-05).
+ *
+ * ABSCHNITTSWEISE, und das ist keine Feinheit. Die naheliegende Reihenfolge —
+ * global ausduennen, dann die Pflichtpunkte hinterher einfuegen — bricht die
+ * Zusage: Douglas-Peucker sichert Naehe zu DEM Streckenzug zu, den es selbst
+ * gebaut hat; ein nachtraeglich eingefuegter Punkt knickt den Weg zu sich
+ * hin, und ein Punkt, der 1,9 m auf der anderen Seite der Sehne lag und
+ * deshalb wegfiel, liegt danach fast das Doppelte entfernt. Gemessen: 41 von
+ * 171 Referenzspuren bekommen ueberhaupt einen Punkt nachtraeglich
+ * eingefuegt, 9 davon verletzen danach die Zusage — schlimmstenfalls mit
+ * 9,71 m waagerecht und 4,16 m senkrecht. Abschnittsweise: 0 Verletzungen,
+ * und es kostet 56 Punkte auf 52 484 (38,32 % statt 38,22 %).
+ *
+ * ITERATIV, nicht rekursiv, und dabei immer die GROESSERE Haelfte auf den
+ * Stapel. Begruendung: siehe SPUR_DP_ABSCHNITT_MAX oben — ein rekursiver Lauf
+ * ueber 50 000 Punkte kostet 38 MB VM-Stapel (797 Byte je Rahmen, gemessen),
+ * und der Abbruch waere ein nicht fangbarer Fatal. Mit „groessere Haelfte auf
+ * den Stapel" ist jedes fortgesetzte Teilstueck hoechstens halb so lang wie
+ * das vorige; der Stapel hat nie mehr als ceil(log2 n) Eintraege — 16 bei
+ * 50 000 Punkten statt 50 000.
+ *
+ * @param list<int> $zeiten Schutzzeitpunkte (Epochensekunden)
+ * @return list<int> aufsteigende Indizes der behaltenen Punkte
+ */
+function spur_ausduennen(array $punkte, array $zeiten = [],
+                         float $tolW = SPUR_TOL_WAAGERECHT_M,
+                         float $tolS = SPUR_TOL_SENKRECHT_M,
+                         int $abschnittMax = SPUR_DP_ABSCHNITT_MAX): array
+{
+    $n = count($punkte);
+    if ($n <= 2) { return range(0, max(0, $n - 1)); }
+
+    [$ky, $kx] = spur_ortsrahmen($punkte);
+    $anker = spur_hoehenanker($punkte);
+
+    $behalten = [];
+    foreach (spur_schutzpunkte($punkte, $zeiten) as $i) { $behalten[$i] = true; }
+
+    /* Der Deckel als zusaetzliche Grenze. Er steht VOR dem Lauf, damit die
+     * Abschnitte, die der Lauf sieht, schon gedeckelt sind. */
+    if ($abschnittMax > 0) {
+        $grenzen = array_keys($behalten);
+        sort($grenzen);
+        for ($g = 0; $g < count($grenzen) - 1; $g++) {
+            $von = $grenzen[$g]; $bis = $grenzen[$g + 1];
+            for ($m = $von + $abschnittMax; $m < $bis; $m += $abschnittMax) {
+                $behalten[$m] = true;
+            }
+        }
+    }
+
+    $grenzen = array_keys($behalten);
+    sort($grenzen);
+
+    for ($g = 0; $g < count($grenzen) - 1; $g++) {
+        $stapel = [[$grenzen[$g], $grenzen[$g + 1]]];
+        while ($stapel) {
+            [$i, $j] = array_pop($stapel);
+            if ($j <= $i + 1) { continue; }
+            $maxS = 0.0; $maxK = -1;
+            for ($k = $i + 1; $k < $j; $k++) {
+                [$w, $s] = spur_dp_abstand($punkte, $anker, $i, $j, $k, $ky, $kx);
+                $rel = max($w / $tolW, $s / $tolS);
+                if ($rel > $maxS) { $maxS = $rel; $maxK = $k; }
+            }
+            if ($maxS <= 1.0 || $maxK < 0) { continue; }
+            $behalten[$maxK] = true;
+            // GROESSERE Haelfte auf den Stapel, mit der kleineren weiter.
+            $links = [$i, $maxK]; $rechts = [$maxK, $j];
+            if (($maxK - $i) >= ($j - $maxK)) { $stapel[] = $links;  $stapel[] = $rechts; }
+            else                              { $stapel[] = $rechts; $stapel[] = $links;  }
+        }
+    }
+
+    $aus = array_keys($behalten);
+    sort($aus);
+    return $aus;
+}
+
+/**
+ * Obere Schranke der Rechenzeit — damit ein Haeppchen VORHER weiss, ob es
+ * eine Spur noch schafft.
+ *
+ * Mit Deckel ist die Arbeit durch n * Deckel / 2 Punktvergleiche begrenzt.
+ * Vorhersage fuer 50 000 Punkte bei Deckel 1000: 2,29 s; gemessen 2,40 s —
+ * 5 % daneben, und in die sichere Richtung waere zu wenig. Deshalb ist
+ * SPUR_DP_VERGLEICHE_JE_S bewusst unter dem gemessenen Wert angesetzt.
+ */
+function spur_ausduenn_dauer_s(int $n, int $abschnittMax = SPUR_DP_ABSCHNITT_MAX): float
+{
+    if ($n < 3) { return 0.0; }
+    $deckel = $abschnittMax > 0 ? min($abschnittMax, $n) : $n;
+    return ($n * $deckel / 2.0) / SPUR_DP_VERGLEICHE_JE_S;
+}
+
+/**
+ * Die Rundlaufpruefung der Stufe 3 (E-S2-07) — und sie ist eine ANDERE.
+ *
+ * `spur_rundlauf_pruefen()` allein ist hier WERTLOS: Die Behalteliste stammt
+ * aus `spur_dekodieren()` des Stufe-2-Blobs, ihre Werte liegen also schon auf
+ * der Formataufloesung; `spur_quantisieren()` ist darauf ein Nulloperator,
+ * und der Vergleich geht IMMER auf. Er waere gruen, auch wenn die Ausduennung
+ * die halbe Spur an der falschen Stelle wegwirft — und er ist die letzte
+ * Instanz vor dem Ersetzen eines Blobs, nach dem das Original weg ist.
+ *
+ * Die Zusage der Stufe 3 lautet deshalb, in fuenf Teilen:
+ *
+ *   1. NICHTS ERFUNDEN. Jeder behaltene Punkt ist wertgleich mit einem Punkt
+ *      der Eingabe an genau diesem Index. Die Ausduennung verschiebt und
+ *      mittelt nicht.
+ *   2. REIHENFOLGE UND ZEIT BLEIBEN. Indizes streng aufsteigend, Zeitstempel
+ *      nicht fallend.
+ *   3. DIE RAENDER BLEIBEN. Index 0 und n-1 sind enthalten — die Ringe
+ *      „Start/Ende der Aufzeichnung" in der Einsatzansicht haengen daran.
+ *   4. DIE ZEITANKER BLEIBEN. Zu jedem Schutzzeitpunkt ist der Index
+ *      enthalten, den die Verbraucher waehlen wuerden.
+ *   5. DIE GENAUIGKEIT IST EINGEHALTEN. Fuer JEDEN verworfenen Punkt gilt
+ *      gegen den ENDGUELTIGEN Streckenzug — unabhaengig nachgemessen, nicht
+ *      aus der Buchfuehrung der Rekursion uebernommen — waagerecht <= 2 m und
+ *      senkrecht <= 3 m.
+ *
+ * Punkt 5 ist der Kern. Er kostet O(n) mit einem mitwandernden Segmentzeiger
+ * und haette jede der 9 Zusageverletzungen des „global plus einfuegen"-Wegs
+ * gefangen.
+ *
+ * @return string|null null = in Ordnung, sonst die erste Abweichung
+ */
+function spur_ausduennung_pruefen(array $punkte, array $behalten, array $zeiten,
+                                  float $tolW = SPUR_TOL_WAAGERECHT_M,
+                                  float $tolS = SPUR_TOL_SENKRECHT_M): ?string
+{
+    $n = count($punkte);
+    $m = count($behalten);
+    if ($m === 0)  { return 'Behalteliste ist leer'; }
+    if ($m > $n)   { return "Behalteliste ist laenger als die Spur ($m > $n)"; }
+
+    // (1)+(2) Teilmenge, aufsteigend, Zeit nicht fallend
+    $vorher = -1;
+    foreach ($behalten as $pos => $i) {
+        if (!is_int($i) || $i < 0 || $i >= $n) { return "Index $i liegt ausserhalb der Spur"; }
+        if ($i <= $vorher) { return "Indizes nicht streng aufsteigend bei Position $pos"; }
+        if ($vorher >= 0 && (int)$punkte[$i][4] < (int)$punkte[$vorher][4]) {
+            return "Zeit faellt zwischen Index $vorher und $i";
+        }
+        $vorher = $i;
+    }
+
+    // (3) Raender
+    if ($behalten[0] !== 0)          { return 'Der erste Punkt fehlt'; }
+    if ($behalten[$m - 1] !== $n - 1) { return 'Der letzte Punkt fehlt'; }
+
+    // (4) Zeitanker
+    $dabei = array_flip($behalten);
+    foreach (spur_schutzpunkte($punkte, $zeiten) as $i) {
+        if (!isset($dabei[$i])) { return "Schutzpunkt $i fehlt in der Behalteliste"; }
+    }
+
+    // (5) Genauigkeit gegen den ENDGUELTIGEN Streckenzug
+    [$ky, $kx] = spur_ortsrahmen($punkte);
+    $anker = spur_hoehenanker($punkte);
+    $seg = 0;
+    for ($k = 0; $k < $n; $k++) {
+        if (isset($dabei[$k])) { continue; }
+        while ($seg < $m - 2 && $behalten[$seg + 1] < $k) { $seg++; }
+        $i = $behalten[$seg]; $j = $behalten[$seg + 1];
+        [$w, $s] = spur_dp_abstand($punkte, $anker, $i, $j, $k, $ky, $kx);
+        if ($w > $tolW + 1e-6) {
+            return sprintf('Punkt %d liegt %.3f m waagerecht von der Strecke '
+                         . '%d-%d (zugesagt %.1f)', $k, $w, $i, $j, $tolW);
+        }
+        if ($s > $tolS + 1e-6) {
+            return sprintf('Punkt %d liegt %.3f m senkrecht von der Strecke '
+                         . '%d-%d (zugesagt %.1f)', $k, $s, $i, $j, $tolS);
+        }
+    }
+    return null;
+}
+
 /* ---- Lesen ueber beide Stufen hinweg ------------------------------------- */
 
 /**
@@ -494,6 +872,150 @@ function spur_naechste_seq(PDO $pdo, string $ownerType, int $ownerId): int
     return max($ausBlob, $ausZeilen);
 }
 
+/**
+ * Der Zustand einer Spur in einem Blick — Stufe, Zahlen, Fortsetzungsmarke.
+ *
+ * WOFUER. `ingest.php` muss seit AP3 wissen, ob eine Spur AUSGEDUENNT ist
+ * (E-S2-08: dann werden Punkte verworfen und quittiert, statt angenommen).
+ * Es darf `track_blobs` aber nicht selbst abfragen — SPUR1 nur ueber diese
+ * Datei (CLAUDE.md 4). Und es soll dafuer keine zusaetzliche Abfrage
+ * bezahlen: Diese Funktion ERSETZT den bisherigen Aufruf von
+ * `spur_naechste_seq()`, sie kommt nicht dazu. Gemessen an dieser
+ * Installation (3,3 Mio. Zeilen, 181 Blobs): 0,13 ms, genau wie vorher.
+ *
+ * `stufe` ist 1, wenn es keine Blobzeile gibt — damit bildet der
+ * Rueckgabewert das Stufenmodell aus E-S2-03 vollstaendig ab, und der
+ * Aufrufer muss „kein Blob" nicht von „Stufe 1" unterscheiden.
+ *
+ * @return array{stufe:int,n_original:int,n_gespeichert:int,naechste_seq:int}
+ */
+function spur_stand(PDO $pdo, string $ownerType, int $ownerId): array
+{
+    $q = $pdo->prepare('SELECT stufe, n_original, n_gespeichert FROM track_blobs
+                         WHERE owner_type = ? AND owner_id = ?');
+    $q->execute([$ownerType, $ownerId]);
+    $r = $q->fetch(PDO::FETCH_ASSOC);
+
+    $q = $pdo->prepare('SELECT COALESCE(MAX(seq)+1, 0) FROM track_points
+                         WHERE owner_type = ? AND owner_id = ?');
+    $q->execute([$ownerType, $ownerId]);
+    $ausZeilen = (int)$q->fetchColumn();
+
+    if (!$r) {
+        return ['stufe' => 1, 'n_original' => 0, 'n_gespeichert' => 0,
+                'naechste_seq' => $ausZeilen];
+    }
+    $nOriginal = (int)$r['n_original'];
+    return ['stufe' => (int)$r['stufe'], 'n_original' => $nOriginal,
+            'n_gespeichert' => (int)$r['n_gespeichert'],
+            'naechste_seq' => max($nOriginal, $ausZeilen)];
+}
+
+/**
+ * Ist die Spur ausgeduennt?
+ *
+ * DAS KRITERIUM IST DIE STUFE, NICHT `n_gespeichert < n_original`. Eine kurze
+ * Spur kann die Ausduennung ohne einen einzigen Verlust ueberstehen — jeder
+ * Punkt liegt innerhalb 2 m/3 m —, dann sind die beiden Zahlen gleich, obwohl
+ * die Spur Stufe 3 ist. Wer ueber die Zahlen entscheidet, haelt eine solche
+ * Spur fuer nicht ausgeduennt und legt ihre Nachzuegler als Zeilen hinter
+ * einen Stufe-3-Blob. Die Stufe ist eine Aussage, die Zahlen sind eine Folge.
+ */
+function spur_ist_ausgeduennt(array $stand): bool
+{
+    return ($stand['stufe'] ?? 0) === SPUR_STUFE_DUENN;
+}
+
+/**
+ * Die Schutzzeitpunkte einer Spur (E-S2-05) aus der Datenbank.
+ *
+ * Fuer Ruhesegmente immer leer: Sie haben keine Phasen (`rest_segments` traegt
+ * sie nicht), dort bleiben nur erster und letzter Punkt.
+ *
+ * @return list<int> Epochensekunden
+ */
+function spur_schutzzeiten(PDO $pdo, string $ownerType, int $ownerId): array
+{
+    if ($ownerType !== 'mission') { return []; }
+    $q = $pdo->prepare('SELECT UNIX_TIMESTAMP(occurred_at) FROM mission_phases
+                         WHERE mission_id = ? ORDER BY occurred_at');
+    $q->execute([$ownerId]);
+    return array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+}
+
+/**
+ * Der Umriss einer Menge von Spuren — alles, was der Verdichtungsjob zum
+ * ENTSCHEIDEN braucht, ohne einen einzigen Punkt zu lesen.
+ *
+ * WARUM DAS EINE EIGENE FUNKTION IST. Der Job muss je Kandidat wissen:
+ * Wie viele Zeilen? Lueckenlos? Wann kam der letzte Punkt? Gibt es schon
+ * einen Blob, und auf welcher Stufe? Diese vier Fragen einzeln zu stellen
+ * waere ein N+1 ueber den ganzen Block; hier sind es zwei Abfragen fuer alle.
+ *
+ * Und sie stehen HIER und nicht im Job, weil Lueckenlosigkeit eine
+ * FORMATAUSSAGE ist: `seq` wird nicht gespeichert, die Position im Blob IST
+ * die Nummer (siehe `spur_kodieren()`). Wer eine Spur mit Luecke verdichtet,
+ * verschiebt stillschweigend jeden Punkt dahinter.
+ *
+ * @param list<int> $ids
+ * @return array<int,array{zeilen:int,min_seq:?int,max_seq:?int,max_ts:?int,
+ *                         stufe:int,n_original:int,lueckenlos:bool,gesamt:int}>
+ */
+function spur_umriss(PDO $pdo, string $ownerType, array $ids): array
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (!$ids) { return []; }
+    require_once __DIR__ . '/db.php';
+
+    $aus = [];
+    foreach ($ids as $id) {
+        $aus[$id] = ['zeilen' => 0, 'min_seq' => null, 'max_seq' => null,
+                     'max_ts' => null, 'stufe' => 1, 'n_original' => 0,
+                     'lueckenlos' => true, 'gesamt' => 0];
+    }
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, COUNT(*) n, MIN(seq) mn, MAX(seq) mx, MAX(ts) mts
+           FROM track_points WHERE owner_type = ? AND owner_id IN ({IDS})
+          GROUP BY owner_id', $ids, [$ownerType]) as $r) {
+        $id = (int)$r['owner_id'];
+        $aus[$id]['zeilen']  = (int)$r['n'];
+        $aus[$id]['min_seq'] = (int)$r['mn'];
+        $aus[$id]['max_seq'] = (int)$r['mx'];
+        $aus[$id]['max_ts']  = (int)$r['mts'];
+    }
+    foreach (sql_in_bloecken($pdo,
+        'SELECT owner_id, stufe, n_original FROM track_blobs
+          WHERE owner_type = ? AND owner_id IN ({IDS})', $ids, [$ownerType]) as $r) {
+        $id = (int)$r['owner_id'];
+        $aus[$id]['stufe']      = (int)$r['stufe'];
+        $aus[$id]['n_original'] = (int)$r['n_original'];
+    }
+
+    foreach ($aus as $id => &$u) {
+        $nO = $u['n_original'];
+        if ($u['zeilen'] === 0) {
+            $u['gesamt'] = $nO;
+            continue;
+        }
+        /* Die Vereinigung aus Blobpunkten (0 .. n_original-1) und Zeilen ist
+         * genau dann lueckenlos, wenn die Zeilen bei 0 (ohne Blob) bzw.
+         * spaetestens bei n_original (mit Blob) anfangen und selbst keine
+         * Luecke haben.
+         *
+         * BEI STUFE 3 IST DIE FRAGE NICHT SO ZU BEANTWORTEN: Ein
+         * ausgeduennter Blob gibt seine Punkte mit der POSITION zurueck, nicht
+         * mit der Originalnummer; die Vereinigung saehe immer nach Luecke aus.
+         * Der Job darf eine solche Spur deshalb gar nicht erst als Kandidaten
+         * nehmen — siehe dort. */
+        $u['gesamt'] = max($nO, $u['max_seq'] + 1);
+        $u['lueckenlos'] = ($u['min_seq'] <= max(0, $nO))
+                        && ($u['max_seq'] - $u['min_seq'] + 1 === $u['zeilen'])
+                        && ($nO === 0 ? $u['min_seq'] === 0 : true);
+    }
+    unset($u);
+    return $aus;
+}
+
 /* ---- Schreiben und Loeschen ---------------------------------------------- */
 
 /** Einen Blob ablegen oder ersetzen. */
@@ -556,7 +1078,7 @@ function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
 }
 
 /**
- * NUR die Zeilen entfernen, den Blob behalten.
+ * NUR die Zeilen UNTERHALB einer Nummer entfernen, den Blob behalten.
  *
  * Das ist der letzte Schritt der Verdichtung (AP3): Blob geschrieben,
  * Rundlauf bestanden, jetzt duerfen die Zeilen gehen. Bewusst eine EIGENE
@@ -564,21 +1086,35 @@ function spur_loeschen(PDO $pdo, string $ownerType, array $ids): array
  * Gegensaetzliches. Wer sie verwechselt, loescht entweder eine Spur, die
  * bleiben sollte, oder laesst Zeilen stehen, die der Blob schon traegt.
  *
+ * WARUM DIE OBERGRENZE PFLICHT IST — und warum sie in AP3 dazugekommen ist.
+ *
+ * Bis Web 10.1.0 loeschte diese Funktion ALLE Zeilen eines Eigentuemers, ohne
+ * Grenze. Der Verdichtungsjob liest die Punkte, kodiert, prueft und loescht;
+ * `ingest.php` laeuft dabei in einer EIGENEN Transaktion mit eigenem Commit.
+ * Ein DELETE ist in MySQL ein *current read* — er sieht auch, was nach dem
+ * Schnappschuss des Jobs committet wurde. Traf also ein Upload genau
+ * dazwischen ein, verschwanden Punkte, die in keinem Blob stehen. Still,
+ * endgueltig, und der Uhr mit „ok" quittiert.
+ *
+ * `$unterhalbSeq` ist deshalb VERPFLICHTEND und nicht wahlweise: Eine
+ * wahlweise Obergrenze ist eine, die vergessen wird, und das Vergessen ist
+ * hier stiller Datenverlust. Und es ist EIN Parameter statt einer zweiten
+ * Funktion, weil zwei aehnlich heissende Loeschfunktionen genau das Problem
+ * sind, vor dem der Absatz darueber warnt.
+ *
+ * Der Aufrufer uebergibt die Punktzahl, die er tatsaechlich in den Blob
+ * geschrieben hat. Was danach eintraf, traegt eine hoehere Nummer und bleibt
+ * als Nachzuegler stehen — der naechste Lauf arbeitet es ein.
+ *
  * @return int Zahl der entfernten Zeilen
  */
-function spur_loeschen_nur_zeilen(PDO $pdo, string $ownerType, array $ids): int
+function spur_loeschen_nur_zeilen(PDO $pdo, string $ownerType, int $ownerId,
+                                  int $unterhalbSeq): int
 {
-    $ids = array_values(array_unique(array_map('intval', $ids)));
-    if (!$ids) { return 0; }
-    $weg = 0;
-    foreach (array_chunk($ids, 1000) as $block) {
-        $platz = implode(',', array_fill(0, count($block), '?'));
-        $q = $pdo->prepare("DELETE FROM track_points
-                             WHERE owner_type = ? AND owner_id IN ($platz)");
-        $q->execute(array_merge([$ownerType], $block));
-        $weg += $q->rowCount();
-    }
-    return $weg;
+    $q = $pdo->prepare('DELETE FROM track_points
+                         WHERE owner_type = ? AND owner_id = ? AND seq < ?');
+    $q->execute([$ownerType, $ownerId, $unterhalbSeq]);
+    return $q->rowCount();
 }
 
 /* ---- Umdatieren ---------------------------------------------------------- */

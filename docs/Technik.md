@@ -179,6 +179,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── ingestprobe/       prüft die Uhr-Schnittstelle nach der Ausdünnung
+│   │                      (S2/AP3) über ECHTES HTTP: Nachzügler an Stufe 2
+│   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
+│   │                      verworfen UND quittiert. Legt ihr eigenes Konto an
+│   │                      und räumt es ab (s. LIESMICH.md)
 │   ├── jobprobe/          prüft den Job-Rahmen (S2/AP2): dass alle drei
 │   │                      Auslöser denselben Rückstand abtragen, dass die
 │   │                      gemeldete Zahl stimmt, dass die Sperre greift und
@@ -296,6 +301,7 @@ Daten erst nach Server-Bestätigung.
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
@@ -1790,6 +1796,160 @@ zugesagt hat.
 Nachgemessen wird sie mit `php tools/spurprobe/probe.php`; der Lauf arbeitet in
 einer Transaktion, die er am Ende zurückrollt, und ändert deshalb nichts.
 
+#### Stufe 3: die Ausdünnung (ab Web 10.2.0, E-S2-05)
+
+Sechs Monate nach Einsatzende wird der verlustfreie Blob durch einen
+ausgedünnten ersetzt. **Das Original ist danach weg** — es gibt keine zweite
+Quelle. Entsprechend viel Prüfung steht davor.
+
+**Das Verfahren** ist Douglas-Peucker, dreidimensional, mit zwei getrennten
+Toleranzen: 2 m waagerecht, 3 m senkrecht (`SPUR_TOL_WAAGERECHT_M` /
+`SPUR_TOL_SENKRECHT_M`). Erhalten bleiben immer: der erste und der letzte
+Punkt sowie **je Phasenzeitpunkt der zeitnächste** — ohne diesen Schutz ginge
+die Höhenermittlung des Einsatzorts (`SITE_ELE_TOLERANCE_S` = ±300 s) leer aus.
+
+**Die beiden Toleranzen sind EIN Lauf, nicht zwei.** Das Abstandsmaß je
+Kandidatenpunkt lautet
+
+```
+s = max( waagerecht / 2 m , senkrecht / 3 m )      behalten, wenn s > 1
+```
+
+`s ≤ 1` gilt genau dann, wenn *beide* Toleranzen eingehalten sind — und `s`
+liefert zugleich die eine Zahl, die Douglas-Peucker für die Wahl des
+Teilungspunkts braucht.
+
+Die naheliegende Alternative — zwei getrennte Läufe, Behaltelisten vereinigen —
+ist **falsch**: Die Vereinigung erzeugt einen dritten Streckenzug, für den
+keiner der beiden Läufe etwas zugesagt hat. Am Referenzbestand gemessen:
+**8,62 m waagerecht und 4,16 m senkrecht** bei zugesagten 2 und 3. Sie behält
+dabei sogar mehr Punkte, sieht also nach der sicheren Wahl aus.
+
+Dass die zweite Toleranz nötig ist, ist ebenfalls gemessen: Rein
+zweidimensional liegt der schlimmste verworfene Punkt **82,76 m** neben dem
+Höhenprofil.
+
+**Pflichtpunkte sind Abschnittsgrenzen, keine Nachträge.** Global ausdünnen und
+die geschützten Punkte hinterher einfügen bricht die Zusage — ein nachträglich
+eingefügter Punkt knickt den Weg zu sich hin. Gemessen: 46 von 181
+Referenzspuren betroffen, **11 mit Zusageverletzung**. Abschnittsweise: 0.
+
+**Fehlende Höhen** (das Bitfeld im Format erlaubt sie) laufen über eine
+Ankerreihe (`spur_hoehenanker()`): Lücken werden über die *Zeit* zwischen den
+nächsten gemessenen Nachbarn linear gefüllt, die Ränder konstant fortgesetzt.
+Trägt die Spur gar keine Höhe, entfällt der Höhentest ganz.
+
+Die naheliegende Regel „fehlt einem Sehnenende die Höhe, entfällt der Höhentest
+für diesen Abschnitt" ist eine Falle: Ein einzelner höhenloser Punkt an einer
+waagerechten Ecke wird zum Teilungspunkt und damit zum Sehnenende *beider*
+Teilstücke — danach ist der Höhentest dort tot. Im Prüffall verschwindet so
+eine 150-m-Spitze vollständig, und eine Prüfung, die solche Abschnitte
+überspringt, meldet dafür 0,0 m Verlust.
+
+#### Douglas-Peucker ist quadratisch — der Deckel und der Stapel
+
+Der schlechteste Fall ist nicht konstruiert: Die Uhr nimmt einen Punkt auf,
+sobald 15 m **oder** 10 s vergangen sind (`watch/source/Track.mc`). Ein längerer
+Schwebeflug mit GPS-Rauschen über 2 m ergibt genau den Zickzack, in dem kein
+Punkt wegfallen darf. Gemessen für **eine** Spur:
+
+| Punkte | ohne Deckel |
+|---|---|
+| 2 000 | 0,198 s |
+| 5 000 | 1,219 s |
+| 10 000 | 4,340 s |
+| 20 000 | 18,658 s |
+| **50 000** | **114,50 s** |
+
+Die Häppchenbudgets sind 3 / 20 / 300 s. Auf dem Token-Weg liefe das in
+`max_execution_time`, und ein Zeitablauf ist **kein `Throwable`**: Der `catch`
+im Job-Rahmen fängt ihn nicht, `laeuft_seit` bleibt stehen, der Job ist eine
+Stunde gesperrt — und stirbt dann wieder. Dauerhafter, unsichtbarer Stillstand
+mit `letzter_fehler = NULL`.
+
+Zwei Vorkehrungen:
+
+- **`SPUR_DP_ABSCHNITT_MAX` = 1000.** Zusätzlich zu den Pflichtpunkten wird
+  alle 1000 Punkte eine Abschnittsgrenze gesetzt. Zulässig, weil zusätzliche
+  Grenzen nur zusätzliche *behaltene* Punkte erzeugen — die Zusage wird nie
+  schwächer. Derselbe Zickzack sinkt damit auf **2,40 s**. Am Normalfall kostet
+  er nichts: eine glatte 50 000-Punkte-Spur braucht *mit* Deckel 0,031 s und
+  behält 786 Punkte, *ohne* 0,161 s und 816. Am Referenzbestand greift er gar
+  nicht (längster Abschnitt 804 Punkte).
+- **Iterativ mit ausdrücklichem Stapel**, und immer die *größere* Hälfte auf den
+  Stapel. Dann ist jedes fortgesetzte Teilstück höchstens halb so lang wie das
+  vorige, und der Stapel hat nie mehr als ⌈log₂ n⌉ = 16 Einträge statt 50 000.
+  Rekursiv wären es 38 MB VM-Stapel (797 Byte je Rahmen, gemessen) gegen ein
+  Z3-Budget von 64 MB.
+
+Beides fällt an einer Prüfung am Referenzbestand **nicht** auf: Dort ist die
+größte erreichte Rekursionstiefe 23. `spur_ausduenn_dauer_s()` rechnet daraus
+eine obere Schranke, mit der ein Häppchen *vorher* entscheiden kann, ob es eine
+Spur noch schafft (vorhergesagt 2,29 s, gemessen 2,40 s).
+
+#### Die Rundlaufprüfung der Stufe 3 ist eine andere
+
+`spur_rundlauf_pruefen()` allein ist hier **wertlos**: Die Behalteliste stammt
+aus `spur_dekodieren()` des Stufe-2-Blobs, ihre Werte liegen also schon auf der
+Formatauflösung; `spur_quantisieren()` ist darauf ein Nulloperator, und der
+Vergleich geht *immer* auf. Er wäre grün, auch wenn die Ausdünnung die halbe
+Spur an der falschen Stelle wegwirft — und er ist die letzte Instanz vor dem
+Ersetzen eines Blobs.
+
+`spur_ausduennung_pruefen()` prüft deshalb fünf Dinge:
+
+1. **Nichts erfunden** — jeder behaltene Punkt ist wertgleich mit einem Punkt
+   der Eingabe an genau diesem Index.
+2. **Reihenfolge und Zeit bleiben** — Indizes streng aufsteigend, Zeit nicht
+   fallend.
+3. **Die Ränder bleiben** — Index 0 und n−1.
+4. **Die Zeitanker bleiben** — zu jedem Schutzzeitpunkt der Index, den die
+   Verbraucher wählen würden (der *früheste* mit kleinstem |Δt|, mit `<`, wie
+   `site_elevation_lib.php` und `api/mission.php` es tun).
+5. **Die Genauigkeit ist eingehalten** — für *jeden* verworfenen Punkt gilt
+   gegen den **endgültigen** Streckenzug, unabhängig nachgemessen und nicht aus
+   der Buchführung der Rekursion übernommen, waagerecht ≤ 2 m und senkrecht
+   ≤ 3 m.
+
+Punkt 5 ist der Kern. Er kostet O(n) mit einem mitwandernden Segmentzeiger und
+fängt jede der 11 Zusageverletzungen des „global plus einfügen"-Wegs.
+
+#### Was die Ausdünnung wirklich spart
+
+Weniger, als die Punktzahl vermuten lässt. Sie entfernt genau die
+**vorhersagbaren** Punkte; die verbleibenden Differenzen sind größer und lassen
+sich schlechter packen.
+
+| Bestand | Punkte bleiben | Bytes bleiben |
+|---|---|---|
+| Referenzkonto (156 Spuren, 47 078 Punkte) | 40,7 % | **73,6 %** |
+| Messstand (4973 Spuren, 1 628 340 Punkte) | 31,6 % | **57,4 %** |
+
+Stufe 2 kostet gemessen 3,90 Byte je Punkt, Stufe 3 **2,24 Byte je
+Originalpunkt** (7,10 je behaltenem). Wer den Erfolg an der Punktzahl misst,
+misst das Falsche. Beide Stufen halten E-S2-24 mit Abstand: **1,60 MB je 1000
+Einsätzen** gegen 3 MB Zielwert.
+
+#### Was nach der Ausdünnung nicht mehr gilt
+
+- **Eine geänderte Phasenzeit sagt über die Ortshöhe nichts mehr.** Die
+  behaltenen Punkte wurden für die *damaligen* Phasenzeiten geschützt.
+  `compute_site_elevation()` läuft bei jedem Speichern und schrieb bis Web
+  10.1.0 bedingungslos, auch `NULL` — wer einen zwei Jahre alten Einsatz
+  öffnet und eine Phase um zehn Minuten verschiebt, hätte die Höhe still
+  verloren. Auf Stufe 3 wird ein vorhandener Wert deshalb **nicht mehr durch
+  `NULL` ersetzt**; ein neu gefundener Wert wird sehr wohl geschrieben. Auf
+  Stufe 1 und 2 bleibt es beim bisherigen Verhalten, denn dort trägt die Spur
+  alle Punkte und ein leeres Ergebnis ist die Wahrheit.
+- **Die angezeigte Punktzahl sinkt.** `spur_zahlen()` liefert
+  `n_gespeichert`; Export, Papierkorb und Tageszuordnung zeigen danach die
+  ausgedünnte Zahl. Das ist richtig — die Datei hat wirklich weniger Punkte —,
+  gehört aber ins Handbuch, sonst liest es sich wie Datenverlust.
+- **Reanimationszeitpunkte sind nicht geschützt.** E-S2-05 nennt nur
+  Phasenzeitpunkte, und heute bindet nichts `resus_sessions` an die Spur. Wer
+  die Hervorhebung später darauf ausweitet, findet für Alteinsätze keinen
+  passenden Punkt mehr. Bewusste Grenze, keine Nachlässigkeit.
+
 #### Zwei Grenzen, weil es zwei Fragen sind
 
 `LIMIT_TRACKPUNKTE` galt bis Web 9.14.0 an zwei Stellen, die Verschiedenes
@@ -1897,6 +2057,8 @@ stehen, und der Job liefe nie wieder, stillschweigend. Nach
 | Job | täglich? | was er tut |
 |---|---|---|
 | `aufraeumen` | ja, höchstens 1×/Kalendertag | Kopplungscodes, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
+| `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
+| `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
 | `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
 
 Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
@@ -1904,8 +2066,92 @@ scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
 bleibt). Der Unterschied ist, dass das Ergebnis jetzt in `jobs` landet und
 nicht nur im Fehlerprotokoll des Webspace.
 
-**AP3 hängt hier Verdichtung und Ausdünnung ein.** Der Rahmen kennt sie nicht;
-er kennt nur diesen Katalog.
+**Die Reihenfolge ist Absicht.** `jobs_lauf()` arbeitet den Katalog der Reihe
+nach ab und überspringt, was ins Restbudget nicht mehr passt. `waisen` ist ein
+Sicherheitsnetz und kein Hauptweg — die eigentliche Arbeit gehört deshalb nach
+vorn, sonst bekäme sie am Huckepack-Weg (3 s) nur noch den Rest.
+
+#### Verdichtung und Ausdünnung als Jobs (ab Web 10.2.0)
+
+**Der Einstieg der Verdichtung kommt von der PUNKTSEITE**, wie beim
+Waisenjob — und das ist keine Bequemlichkeit. Die Menge „`final = 1` und
+Ankunft älter als 14 Tage" enthält *jeden je abgeschlossenen* Einsatz, auch
+alle längst verdichteten; sie wächst monoton, und ein Index darauf fände bei Z2
+Millionen Zeilen, von denen 99,9 % nichts mehr zu tun haben. Der Punkteinstieg
+dagegen **räumt seinen eigenen Vorrat ab**: Eine verdichtete Spur hat keine
+Zeilen mehr und erscheint nie wieder. Übrig bleibt nur der Rückstand. Der nötige
+Index existiert bereits — der Primärschlüssel.
+
+**Blockgröße 200, und gelesen wird Spur für Spur.** `JOB_WAISEN_BLOCK` (2000)
+ist hier falsch: Der Waisenjob materialisiert nie Punkte, die Verdichtung muss
+jede Kandidatenspur wirklich lesen. Gemessen kostet eine Punktliste in PHP 237
+bis 294 Byte je Punkt; 200 Spuren des Messstands (524 Punkte im Mittel)
+gebündelt zu halten sprengt ein `memory_limit` von 64 MB — nachgemessen mit
+`Allowed memory size exhausted`. Spur für Spur gelesen ist die Spitze die
+**einer** Spur: gemessen 4,0 MB.
+
+**Ablauf je Spur.** Erst der Umriss (`spur_umriss()`, eine Abfrage für den
+ganzen Block: Zeilenzahl, kleinste und größte Nummer, größter Zeitstempel,
+Blobstufe). Daraus wird entschieden, **ohne einen Punkt gelesen zu haben**:
+Eigentümer weg → der Waisenjob räumt · im Papierkorb → nicht anfassen · Stufe 3
+→ nicht anfassen und zählen · über `LIMIT_TRACKPUNKTE_SPUR` → ablehnen und
+benennen · `letzter_punkt_am` fehlt → nachtragen · Karenz nicht abgelaufen →
+liegen lassen · Lücke → benennen. Erst wer alles passiert, kostet einen
+Punktzugriff.
+
+Dann: lesen, kodieren, Rundlauf prüfen — **alles außerhalb der Transaktion**,
+denn `spur_rundlauf_pruefen()` braucht kein PDO. Schlägt sie an, geschieht gar
+nichts. Die Transaktion selbst ist zwei Anweisungen lang, **erst Blob, dann
+Zeilen**: Der Zwischenzustand ist im Code vorgesehen (`spur_lesen_viele()`
+übergeht Zeilen unterhalb `n_original` als Rest eines abgebrochenen Laufs),
+umgekehrt wäre ein Abbruch Datenverlust.
+
+**Die Ausdünnung geht über den Primärschlüssel von `track_blobs`**, nicht über
+den Index `stufe_alter (stufe, geaendert_am)`. Der trägt das Änderungsdatum des
+*Blobs*, nicht das Einsatzende, und ist als Näherung in beide Richtungen
+falsch: Das Einspielen einer Sicherung schreibt einen frischen `geaendert_am`
+auf zwei Jahre alte Punkte, und `spur_zeit_verschieben()` schreibt ihn bei
+jeder Umdatierung neu. Bezugsgröße ist `COALESCE(ended_at, started_at)` —
+`started_at` ist in beiden Tabellen `NOT NULL`, und bei sechs Monaten Frist ist
+der Unterschied zwischen Beginn und Ende Rauschen (und geht in die sichere
+Richtung).
+
+**Nachzügler gehen vor.** Eine Spur mit Stufe-1-Zeilen wird *nicht* ausgedünnt;
+sie gehört der Verdichtung, die Blob und Nachzügler zu einem neuen
+verlustfreien Blob zusammenführt. Sonst nummerierte der Blob 0 … n_gespeichert−1
+und die Nachzügler begännen bei `n_original` — eine Nummernlücke, die der
+Rückweg der Sicherung nicht verträgt.
+
+**Verkettet wird nicht.** Konzept 3.1.4 sah vor, dass die Ausdünnung im selben
+Häppchen hinterherläuft, wenn die Frist schon abgelaufen ist. Dagegen sprach:
+zwei unwiderrufliche Schritte mit zwei verschiedenen Rundlaufbegriffen in einem
+Budgetfenster, deren Scheitern sich hinterher nicht mehr zuordnen lässt.
+Getrennt kostet es einen Jobzyklus. Entschieden am 31.08.2026; das Konzept ist
+an dieser Stelle fortgeschrieben.
+
+Gemessen am Messstand (5345 Einsätze, 3,3 Mio. Punkte, `memory_limit=64M`):
+Verdichtung **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze
+4,0 MB · Ausdünnung **4973 Spuren in 15,2 s**, Spitze 4,0 MB.
+
+#### Die Jobs anhalten (ab Web 10.2.0)
+
+`php jobs.php --pause <Sekunden>` (0 hebt auf). Die Pause gilt für **alle drei
+Auslöser** — sonst räumte ein Cron weg, was gerade gemessen wird — und läuft
+von selbst ab (`JOB_PAUSE_MAX_S` = 2 h); eine Pause ohne Ende wäre eine, die
+jemand vergisst. Die Wartungsseite zeigt sie als eigene Plakette an, damit eine
+laufende Pause nicht wie ein arbeitender Job aussieht.
+
+**Warum es sie gibt.** Seit die Jobs Zeilen löschen und Blobs ersetzen, ändern
+sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt eine
+Sicherung in ein frisches Konto und exportiert sie sofort wieder; die
+wiederhergestellten Einsätze sind alt, der Verdichtungsjob hält sie für reif,
+und was älter als sechs Monate ist, wird ausgedünnt. Der Vergleich misst dann
+nicht mehr „kommt zurück, was hineinging", sondern „hat der Job dazwischen
+zugeschlagen". Beim ersten Lauf nach AP3 ging es gut, aber nur **zufällig** —
+nachgemessen verdichtete ein Lauf ohne Pause 125 Spuren des Umlaufkontos.
+
+Im Betrieb ist sie ebenfalls nützlich: Wer eine große Sicherung einspielt, will
+die Jobs so lange still haben.
 
 #### Die Waisensuche läuft bereichsweise (E-S2-18)
 
@@ -2749,6 +2995,32 @@ und Adresse fertig zum Kopieren:
    `https://…/jobs.php?token=…`. **Die Adresse enthält ein Geheimnis** — nicht
    in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
    ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
+
+**Spuren werden nicht verdichtet (Rückstand wächst):** `/update.php` → Karte
+„Hintergrundjobs" → Zeile **„Spuren verdichten"**. Darunter steht, was
+liegenbleibt und warum, mit Kennung: *Lücke in der Nummernfolge* (eine Uhr hat
+ein Teilstück nie nachgeliefert — die Spur bleibt als Zeilen stehen, das ist
+richtig so), *Zu viele Punkte* (über 50 000; aus einer Sicherung nicht
+wiederherstellbar), *Punkte auf einer ausgedünnten Spur* (Erwartungswert **0** —
+steht dort eine Zahl, nimmt `ingest.php` an, was es verwerfen sollte),
+*Prüfung nicht bestanden* (es wurde nichts gelöscht und nichts ersetzt).
+
+Ein Rückstand ohne diese Listen ist normal: Er zählt auch, was schlicht noch in
+der **Karenz** ist (14 Tage ohne neuen Punkt nach `final`, sonst 60 Tage) oder
+im Papierkorb liegt.
+
+**Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
+einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
+Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
+ab, und die Wartungsseite zeigt sie an. **Sie ist kein Ersatz für eine
+Sicherung:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
+
+**Nach dem Ausrollen von Web 10.2.0 auf einen gewachsenen Bestand:** Der erste
+Verdichtungslauf trägt den ganzen Altbestand ab. Gemessen an 3,3 Mio. Punkten:
+9395 Spuren in 44 s über die Kommandozeile. Am Huckepack-Weg (3 s je Anfrage,
+frühestens alle fünf Minuten) dauert dasselbe Tage — wer den Altbestand zügig
+abgetragen haben will, richtet vorher einen der beiden anderen Auslöser ein
+oder ruft einmal `php jobs.php verdichtung` von Hand auf.
 
 **Zeitplan-Eintrag antwortet `429` (`zu_viele_versuche`):** Das Token stimmt
 nicht, und zehn Fehlversuche haben die IP für zehn Minuten gesperrt. Adresse

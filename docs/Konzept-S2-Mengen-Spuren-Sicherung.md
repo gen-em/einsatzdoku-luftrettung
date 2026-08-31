@@ -400,8 +400,15 @@ Tagesansicht (`api/day.php`), Einsatz (`api/mission.php`), Export
 abgeschlossener Stufe-1-Spuren (E-S2-06), kodiert, Rundlaufprüfung, löscht
 Zeilen — eine Transaktion je Spur, wiederholbar. Existiert schon ein Blob
 (Nachzügler-Fall), wird Blob + Zeilen zu einem neuen verlustfreien Blob
-zusammengeführt; liegt der Einsatz bereits jenseits der Sechsmonatsfrist,
-läuft unmittelbar die Ausdünnung hinterher. *Ausdünnung:* wählt Stufe-2-Blobs
+zusammengeführt.
+
+> **Fortgeschrieben in AP3 (31.08.2026).** Hier stand: „liegt der Einsatz
+> bereits jenseits der Sechsmonatsfrist, läuft unmittelbar die Ausdünnung
+> hinterher." Das wird **nicht** gebaut. Zwei unwiderrufliche Schritte mit zwei
+> verschiedenen Rundlaufbegriffen in einem Budgetfenster ergeben einen Job,
+> dessen Scheitern sich hinterher nicht mehr zuordnen lässt. Die frisch
+> verdichtete Spur trägt Stufe 2 und wird vom Ausdünnungsjob im nächsten
+> Durchlauf gefunden; der Verlust ist ein Jobzyklus. *Ausdünnung:* wählt Stufe-2-Blobs
 mit Einsatzende älter sechs Monate, rechnet die Behalteliste (E-S2-05),
 prüft, ersetzt den Blob durch Stufe 3. Beide Jobs protokollieren Stückzahlen
 auf der Wartungsseite.
@@ -1320,3 +1327,185 @@ Tabellengröße.
   anders als die Spurprobe. Die Sperre ist auf `COMMIT` angewiesen; ein
   Rollback würde über sie nichts beweisen. Stattdessen eigene Waisen oberhalb
   aller vergebenen Kennungen, mit Aufräumen im `finally`.
+
+---
+
+### AP3 — Verdichtung und Ausdünnung (erledigt, Web 10.2.0)
+
+**Erledigt.** `spur_ausduennen()` samt eigener Prüfung in `spur_lib.php`, zwei
+neue Jobs (`verdichtung`, `ausduennen`), Spalte `letzter_punkt_am`
+(`2026_09_01_letzter_punkt_am`), `ingest.php` nach E-S2-08, Zähler und Listen
+auf der Wartungsseite, Laufpause für die Prüfmittel, `tools/ingestprobe/` neu
+und `tools/spurprobe/` um zwei Teile erweitert.
+
+#### Vier Entscheidungen, die vom Konzept abweichen — alle vorgelegt
+
+Am 31.08.2026 vorgelegt und beantwortet:
+
+| Frage | Entscheidung |
+|---|---|
+| Lohnt Stufe 3, wenn sie nur 28 % der Bytes spart und Stufe 2 E-S2-24 schon hält? | **Wie geplant bauen.** E-S2-03 bleibt: sechs Monate, Original danach weg |
+| Woher kommt die Ankunftszeit für die Karenz (E-S2-06)? | **Neue Spalte `letzter_punkt_am`** auf beiden Eigentümertabellen |
+| Konzept 3.1.4: Ausdünnung unmittelbar nach der Verdichtung? | **Trennen**, zwei Katalogeinträge; 3.1.4 ist hier fortgeschrieben |
+| `next_seq`-Untergrenze allgemein oder nur nach der Ausdünnung? | **Allgemein** (neue Nummer E-S2-25) |
+
+**E-S2-25 — `next_seq` hat allgemein die Untergrenze `seq_from` + Zahl der
+gesendeten Punkte.** Alles unterhalb ist *erledigt* — gespeichert oder
+endgültig verworfen. Das behebt einen vorhandenen Fehler: Scheiterte der
+**letzte** Punkt eines Teilstücks an der Wertprüfung, meldete der Server eine
+Marke kleiner als die Punktzahl des Pakets; die Uhr räumt aber erst bei
+`next_seq >= pointCount` auf und sandte dasselbe Stück endlos. Der Preis, offen
+gesagt: Ein an der Prüfung gescheiterter Punkt kann danach nicht mehr berichtigt
+nachkommen — für jeden Punkt außer dem letzten galt das ohnehin schon.
+
+#### Was gebaut wurde
+
+| Was | Wo |
+|---|---|
+| Behalteliste rechnen | `spur_ausduennen()`, iterativ, abschnittsweise |
+| Örtlicher Meterrahmen, Höhenanker, Abstandsmaß | `spur_ortsrahmen()`, `spur_hoehenanker()`, `spur_dp_abstand()` |
+| Pflichtpunkte (erster, letzter, je Phase der zeitnächste) | `spur_schutzpunkte()`, `spur_schutzzeiten()` |
+| Eigene Prüfung der Stufe 3 | `spur_ausduennung_pruefen()` |
+| Obere Schranke der Rechenzeit | `spur_ausduenn_dauer_s()` |
+| Stufe und Zahlen in einem Blick | `spur_stand()`, `spur_ist_ausgeduennt()` |
+| Umriss für die Kandidatenwahl | `spur_umriss()` |
+| Die Jobs | `job_verdichtung()`, `spur_verdichten_eine()`, `job_ausduennen()`, `spur_ausduennen_eine()` |
+| Laufpause | `jobs_pause()`, `jobs_pause_bis()`, `php jobs.php --pause` |
+
+#### Die drei Fallen der Ausdünnung — jede mit ihrer Zahl
+
+**1. Zwei Toleranzen sind EIN Lauf.** `s = max(waagerecht/2 m, senkrecht/3 m)`,
+behalten wenn `s > 1`. Zwei getrennte Läufe mit vereinigten Behaltelisten
+erzeugen einen dritten Streckenzug, für den keiner der beiden etwas zugesagt
+hat: gemessen **8,62 m waagerecht und 4,16 m senkrecht** bei zugesagten 2 und 3
+— und sie behalten dabei *mehr* Punkte, sehen also nach der sicheren Wahl aus.
+Gegenprobe zur Notwendigkeit der Höhentoleranz: rein zweidimensional liegt der
+schlimmste verworfene Punkt **82,76 m** neben dem Höhenprofil.
+
+**2. Pflichtpunkte sind Abschnittsgrenzen, keine Nachträge.** Global ausdünnen
+und hinterher einfügen: **46 von 181** Referenzspuren betroffen, **11 mit
+Zusageverletzung**. Abschnittsweise: **0**.
+
+**3. Eine fehlende Höhe darf den Höhentest nicht stilllegen.** Die naheliegende
+Regel („fehlt einem Sehnenende die Höhe, entfällt der Test") verliert im
+Prüffall eine 150-m-Spitze vollständig — und eine Prüfung, die solche
+Abschnitte überspringt, meldet dafür **0,0 m Verlust**. Stattdessen eine
+Ankerreihe über die Zeit.
+
+#### Douglas-Peucker ist quadratisch, und der Fall tritt ein
+
+Gemessen für **eine** Zickzack-Spur: 2 000 Punkte 0,198 s · 5 000 1,219 s ·
+10 000 4,340 s · 20 000 18,658 s · **50 000 114,50 s**. Die Häppchenbudgets
+sind 3 / 20 / 300 s.
+
+Das Bedrohliche daran ist nicht die Dauer, sondern die Art des Abbruchs: Ein
+Zeitablauf oder eine Speichergrenze ist **kein `Throwable`**. Der `catch` im
+Job-Rahmen fängt ihn nicht, `laeuft_seit` bleibt stehen, der Job ist eine
+Stunde gesperrt — und stirbt dann wieder. Dauerhafter Stillstand mit
+`letzter_fehler = NULL`.
+
+Zwei Vorkehrungen, beide gemessen: ein Deckel auf die Abschnittslänge
+(114,50 s → **2,40 s**; am Normalfall kostet er nichts und ist dort sogar
+schneller) und ein iterativer Lauf, der immer die größere Hälfte auf den Stapel
+legt (Stapeltiefe ⌈log₂ n⌉ = 16 statt 50 000; rekursiv wären es 38 MB
+VM-Stapel gegen ein Z3-Budget von 64 MB).
+
+**Beides fällt an einer Prüfung am Referenzbestand nicht auf** — dort ist die
+größte erreichte Rekursionstiefe 23. Das ist der eigentliche Befund: Der
+Referenzbestand kann diese Klasse von Fehlern nicht finden.
+
+#### Zwei Funde beim Lesen, beide behoben
+
+**`spur_loeschen_nur_zeilen()` löschte zu viel.** Ohne `seq`-Obergrenze nahm sie
+alle Zeilen eines Eigentümers, auch die, die während des Laufs eintrafen: Der
+Job liest die Punkte, `ingest.php` committet dazwischen einen Upload, der Job
+löscht — ein `DELETE` ist ein *current read* und sieht auch das. Punkte, die in
+keinem Blob stehen, verschwanden still und wurden mit „ok" quittiert. Die
+Obergrenze ist jetzt verpflichtend.
+
+**Die Ortshöhe konnte still verschwinden.** `compute_site_elevation()` läuft bei
+jedem Speichern und schrieb bedingungslos, auch `NULL`. Auf Stufe 3 wurden die
+behaltenen Punkte für die *damaligen* Phasenzeiten geschützt; eine berichtigte
+Phasenzeit hätte die Höhe kommentarlos gelöscht. Auf Stufe 3 wird ein
+vorhandener Wert deshalb nicht mehr durch `NULL` ersetzt — ein neu gefundener
+sehr wohl. Auf Stufe 1 und 2 unverändert.
+
+#### Der teuerste Fund: die Jobs ändern, was gerade gemessen wird
+
+Der Kreislauf spielt eine Sicherung in ein frisches Konto und exportiert sie
+sofort wieder. Die wiederhergestellten Einsätze sind alt, der Verdichtungsjob
+hält sie für reif, und was älter als sechs Monate ist, wird ausgedünnt. Der
+Vergleich misst dann nicht mehr „kommt zurück, was hineinging", sondern „hat
+der Job dazwischen zugeschlagen".
+
+Der erste Lauf nach AP3 war **sauber — aber nur zufällig**: Der Mindestabstand
+des Huckepack-Wegs hatte gerade gegriffen. Nachgemessen verdichtete ein Lauf
+ohne Pause **125 Spuren** des Umlaufkontos. Eine Zahl, die vom Zufall abhängt,
+ist kein Beleg; deshalb `jobs_pause()`, im Kreislauf gesetzt und im `finally`
+wieder aufgehoben, sichtbar auf der Wartungsseite.
+
+Dieselbe Erfahrung noch einmal, teurer: Der erste Ausdünnungslauf auf dieser
+Entwicklungsinstallation hat **25 Spuren des Referenzkontos** ausgedünnt —
+unwiederbringlich. Die Ausdünnung ist genau dafür gebaut; sie unterscheidet
+nicht zwischen Bestand und Messinstrument. Die Spurprobe überspringt seither
+ausgedünnte Spuren und sagt, wie viele; das Referenzkonto steht seither auf
+156 Stufe-2- und 25 Stufe-3-Spuren.
+
+**Die Lehre daraus gehört ins Vorgehen der Phase, nicht nur in dieses Paket:**
+Ab AP3 verändert die Anwendung ihren eigenen Bestand im Hintergrund. Jedes
+Prüfmittel, das den Bestand misst, muss die Jobs vorher anhalten — sonst misst
+es die Jobs mit.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Zusage der Ausdünnung, ganzer Bestand | `spurprobe` Teil 4 | 156 Spuren, 47 078 Punkte, **0 Verletzungen** von 2,0 / 3,0 m |
+| Höhenermittlung bleibt möglich | dieselbe | **527 von 528** Phasen im ±300-s-Fenster, vorher ebenso viele |
+| Was sie spart, in Byte | dieselbe | 3,73 → 2,75 B je Originalpunkt (**26,4 %** bei 59,3 % weniger Punkten) |
+| Rechenzeit je Spur | dieselbe | langsamste **0,0030 s**; Schranke für 50 000 Punkte: 2,50 s |
+| Gleichstand, keine Höhe, Höhenfalle, Deckel, `n_original` | `spurprobe` Teil 5 | 6 Erwartungen, 0 nicht erfüllt |
+| Gegenprobe „global plus einfügen" | von Hand | 46 Spuren betroffen, **11 Verletzungen**, bis 8,62 / 4,16 m |
+| Gegenprobe „nur zweidimensional" | von Hand | größte senkrechte Abweichung **82,76 m** |
+| Uhr-Schnittstelle über echtes HTTP | `ingestprobe` | **24 Erwartungen, 0 nicht erfüllt** |
+| — Nachzügler an Stufe 2 werden angenommen | dieselbe | stored 10, kein `dropped_points` |
+| — Punkte hinter Stufe 3 verworfen **und** quittiert | dieselbe | dropped 10, stored 0, `next_seq` 220 |
+| — gemischtes Paket an der Grenze | dieselbe | nur die 6 oberhalb `n_original` zählen |
+| — Endlosschleife behoben | dieselbe | `next_seq` 3 statt 2 |
+| — Ortshöhe überlebt eine berichtigte Phasenzeit | dieselbe | 805 vorher, 805 nachher; Gegenprobe Stufe 2 schreibt NULL |
+| Verdichtungslauf am Messstand | von Hand, `memory_limit=64M` | **9395 Spuren in 44,3 s**, 2 936 497 Zeilen weg, Spitze **4,0 MB** |
+| Ausdünnungslauf am Messstand | dieselbe | **4973 Spuren in 15,2 s**, Spitze 4,0 MB, `n_original` unverändert |
+| Stufenverteilung danach | SQL | Stufe 2: 4603 Spuren / 3,90 B je Punkt · Stufe 3: 4973 / **2,24 B je Originalpunkt** (31,6 % behalten) |
+| Blobgröße je 1000 Einsätze | SQL | **1,60 MB** (E-S2-24: ≤ 3 MB) |
+| Lückenzähler | Prüffall | Zeile `seq=5` entfernt → Spur **nicht** verdichtet, `mission:10094` in der Liste, 444 Zeilen unberührt |
+| Jobrahmen unberührt | `jobprobe` | 24 Erwartungen, 0 nicht erfüllt |
+| Kreislauf `edbak` (R24) | `kreislauf.py --frisch` | 286 739 Vergleiche, **0 unerklärt** |
+| Kreislauf `csv` (R24) | dieselbe | 8797 Vergleiche, **0 unerklärt** |
+| Wiederherstellungsprobe (R27) | `probe.php` | 30 Erwartungen, 0 nicht erfüllt |
+| Wartungsseite, acht Breiten | `aufnehmen.mjs --nur 45-` | 8 Bilder, **0 Überlauf / 0 Konsolenfehler / 0 Knöpfe ≠ 44 px**; Bild angesehen, zeigt die Lückenzeile mit `mission:10094` |
+| Wortliste (R28) | `wortliste.py` | **0 / 0 / 0** |
+
+**Nicht geprüft — und das gehört an den Anfang:**
+
+- **Ein Häppchen, das wirklich am Budget abbricht.** Beide Jobs laufen bei
+  diesem Bestand durch (44 s bzw. 15 s über CLI mit 300 s Budget). Der Fall
+  „Budget erschöpft, Marke steht, nächster Lauf macht weiter" ist im Code
+  angelegt und über die Marke belegt, aber nie mit echtem Abbruch gefahren.
+  **Das ist dieselbe offene Zusage wie nach AP2** — sie steht jetzt zum zweiten
+  Mal hier und sollte in AP10 herstellbar gemacht werden.
+- **Echte Nebenläufigkeit** zwischen Job und Upload. Die `seq`-Obergrenze ist
+  die Vorkehrung dagegen; ein Nebenläufigkeitsprüfstand existiert im
+  Repositorium nicht.
+- **Eine Spur mit mehr als 50 000 Punkten.** Der Bestand hat keine. Das
+  Verhalten ist über die Umriss-Prüfung belegt, nicht gefahren.
+- **Der volle Referenz-Sendeplan** (526 Anfragen) gegen den geänderten
+  `ingest.php`. Der Einspiellauf ließ sich nicht wiederholen, ohne das
+  Referenzkonto neu aufzubauen; `tools/ingestprobe/` fährt stattdessen gezielte
+  Grenzfälle über denselben Endpunkt. **Die Mengenprobe steht damit aus.**
+- **Ein echter Cron.**
+
+Dazu eine Zahl, die sich verschoben hat und benannt gehört: Die
+Vollständigkeitsprüfung meldet **233 statt 232** Befunde. Der Unterschied ist
+ein Auslassungszeichen in einem neuen Hinweissatz — richtige Typografie, kein
+Gestaltungsbefund. Der Zähler trennt Prosa und Symbole nicht; das steht seit
+P3/O12 im Backlog (Nr. 42) und ist dort mit dieser Runde fortgeschrieben.

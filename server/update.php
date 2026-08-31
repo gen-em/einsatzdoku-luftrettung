@@ -1683,6 +1683,52 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ],
     ],
+    [
+        'id'    => '2026_09_01_letzter_punkt_am',
+        'web'   => '10.2',
+        'label' => 'Verdichtung: Ankunftszeit des letzten Punktes je Spur (S2/AP3)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions'
+                                AND column_name = 'letzter_punkt_am'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DIE GROESSE, AUF DER E-S2-06 STEHT — und die es bislang nicht gab.
+             *
+             * Die Karenz lautet „final gesetzt und 14 Tage ohne neuen Punkt".
+             * Dafuer braucht es eine ANKUNFTSZEIT, und im ganzen Schema gab es
+             * keine: `track_points.ts` ist die Aufzeichnungszeit,
+             * `missions.created_at` die Anlagezeit der Zeile,
+             * `rest_segments` hatte gar nichts, `devices.last_seen` gilt je
+             * Geraet, `track_blobs.geaendert_am` datiert die Verdichtung.
+             *
+             * Ueber `MAX(ts)` gerechnet waere die Karenz Zierrat, und zwar
+             * genau in dem Fall, fuer den sie gebaut ist: Die Uhr setzt
+             * `final = true` in JEDEM Teilstueck (watch/source/Uploader.mc)
+             * und raeumt erst auf, wenn `next_seq >= pointCount` ist. Eine
+             * Uhr, die drei Wochen ohne Empfang war, schickt Teilstueck 1 mit
+             * `final = true` — und `MAX(ts)` ist dann schon drei Wochen alt.
+             * Der Job verdichtete zwischen Teilstueck 1 und 2.
+             *
+             * Der zweite Grund ist stiller: `ingest.php` schreibt `ts` ohne
+             * Bereichspruefung. Eine Uhr mit falsch gestellter Zeit liefert
+             * `ts` in der Zukunft, und `MAX(ts) < NOW() - 14 DAY` wird dann
+             * NIE wahr — die Spur bliebe fuer immer Stufe 1, ohne dass
+             * irgendetwas anschlaegt.
+             *
+             * OHNE NACHFUELLUNG, mit Absicht: Ein UPDATE aus `MAX(ts)` waere
+             * ein Vollscan ueber Millionen Zeilen, in einer Seite, auf die
+             * jemand wartet. NULL heisst „noch nie gemessen"; der
+             * Verdichtungsjob traegt es beim ersten Hinsehen nach, aus dem
+             * Umriss, den er ohnehin holt, und mit LEAST gegen jetzt begrenzt.
+             * Die Schwaeche der ts-Rechnung gilt damit einmal, fuer den
+             * Altbestand, und ist benannt statt versteckt. */
+            "ALTER TABLE missions      ADD COLUMN letzter_punkt_am DATETIME NULL AFTER final",
+            "ALTER TABLE rest_segments ADD COLUMN letzter_punkt_am DATETIME NULL AFTER final",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 
@@ -2198,13 +2244,25 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
   $jobs = jobs_zustand();
   $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
   $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
+  /* Eine ANGEHALTENE Wartung darf nicht aussehen wie eine arbeitende (S2/AP3).
+   * Die Pause laeuft zwar von selbst ab, aber bis dahin geschieht nichts —
+   * und wer das nicht sieht, sucht den Fehler woanders. */
+  $jobPause = jobs_pause_bis();
   ?>
   <?php ui_karte_start(['titel' => 'Hintergrundjobs',
       'plakette' => $jobs === []
           ? ui_plakette('Migration ausstehend', ['ton' => 'neutral'])
-          : ($jobFehler > 0 ? ui_plakette('scheitert', ['ton' => 'rot'])
-             : ($jobNie === count($jobs) ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
-                                         : ui_plakette('läuft', ['ton' => 'blau'])))]); ?>
+          : ($jobPause !== null ? ui_plakette('angehalten', ['ton' => 'orange'])
+             : ($jobFehler > 0 ? ui_plakette('scheitert', ['ton' => 'rot'])
+                : ($jobNie === count($jobs) ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
+                                            : ui_plakette('läuft', ['ton' => 'blau']))))]); ?>
+    <?php if ($jobPause !== null): ?>
+      <?= ui_meldung_markup('warn', 'Die Wartung ist angehalten bis '
+          . e(fmt_local($jobPause, 'd.m.Y H:i')) . '. Bis dahin wird nichts '
+          . 'verdichtet, ausgedünnt oder aufgeräumt. Die Pause läuft von '
+          . 'selbst ab; aufheben lässt sie sich mit '
+          . '<code>php jobs.php --pause 0</code>.') ?>
+    <?php endif; ?>
     <?php if ($jobs === []): ?>
       <p class="feld-hinweis">Die Tabelle <code>jobs</code> gibt es noch nicht —
          sie kommt mit der Migration oben.</p>
@@ -2229,6 +2287,53 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
         <?= ui_meldung_markup('fehler', (string)$j['letzter_fehler'],
             'Letzter Fehler dieses Jobs.') ?>
       <?php endif; ?>
+      <?php
+        /* WAS LIEGENGEBLIEBEN IST, MIT KENNUNG (S2/AP3, E-S2-06).
+         *
+         * „3 Spuren mit Luecke" gibt der Betreiberin nichts in die Hand,
+         * `mission:412` gibt ihr einen Fall. Die Listen stehen im
+         * Jobzustand — sie fallen im Lauf ohnehin an, ihre Anzeige kostet
+         * also keine einzige zusaetzliche Abfrage. Gekappt bei
+         * JOB_LISTE_MAX Kennungen je Art.
+         *
+         * Angezeigt wird der Stand des letzten VOLLSTAENDIGEN Durchlaufs;
+         * waehrend eines laufenden Durchlaufs zeigte die Liste sonst eine
+         * Mischung, in der behobene Faelle stehenbleiben. */
+        $zst = json_decode((string)($j['zustand'] ?? ''), true);
+        $stand = is_array($zst) ? ($zst['stand'] ?? []) : [];
+        $benennung = [
+            'luecke'      => ['Lücke in der Nummernfolge',
+                              'Diese Spuren werden NICHT verdichtet — die Position im '
+                            . 'Blob ist die Nummer, eine Lücke verschöbe jeden Punkt '
+                            . 'dahinter. Meist eine Uhr, die ein Teilstück nie '
+                            . 'nachgeliefert hat.'],
+            'zu_gross'    => ['Zu viele Punkte',
+                              'Über 50 000 Punkte je Spur. Eine solche Spur ist aus '
+                            . 'einer Sicherung nicht wiederherstellbar; sie bleibt '
+                            . 'deshalb als Zeilen stehen.'],
+            'stufe3'      => ['Punkte auf einer ausgedünnten Spur',
+                              'Erwartet werden hier null. Steht eine Zahl da, nimmt '
+                            . 'die Uhr-Schnittstelle Punkte an, die sie nach der '
+                            . 'Ausdünnung verwerfen sollte.'],
+            'nachzuegler' => ['Wartet auf die Verdichtung',
+                              'Zu diesen Spuren sind noch Punkte nachgekommen. Sie '
+                            . 'werden erst verdichtet und dann ausgedünnt.'],
+            'fehler'      => ['Prüfung nicht bestanden',
+                              'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen. '
+                            . 'Es wurde NICHTS gelöscht und NICHTS ersetzt.'],
+        ];
+        foreach ($benennung as $art => [$titel, $erklaerung]):
+            $liste = $stand[$art] ?? [];
+            if (!$liste) { continue; }
+      ?>
+        <?php ui_zeile([
+            'text'  => $titel,
+            'klein' => $erklaerung . ' — ' . implode(', ', array_slice($liste, 0, 12))
+                     . (count($liste) > 12 ? ' …' : ''),
+            'plaketten' => ui_plakette((string)count($liste),
+                ['ton' => $art === 'nachzuegler' ? 'neutral' : 'warn']),
+        ]); ?>
+      <?php endforeach; ?>
     <?php endforeach; endif; ?>
   <?php ui_karte_ende(); ?>
 

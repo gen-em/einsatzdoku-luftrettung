@@ -1252,5 +1252,52 @@ declare(strict_types=1);
  *
  * AUCH HIER MUSS NACH DEM AUSROLLEN `update.php` AUFGERUFEN WERDEN.
  *
+ * 10.2.0 ist AP3: VERDICHTEN UND AUSDUENNEN. Damit stehen die drei Stufen
+ * aus E-S2-03 wirklich, statt nur beschrieben zu sein. Eine Migration gibt es
+ * (2026_09_01_letzter_punkt_am), und ohne sie laeuft der Verdichtungsjob
+ * nicht.
+ *
+ * ZWEI NEUE JOBS im Katalog aus 10.1.0. `verdichtung` holt abgeschlossene
+ * Spuren aus den Zeilen in den verlustfreien Blob — eine Transaktion je Spur,
+ * Rundlaufpruefung davor. `ausduennen` ersetzt sechs Monate nach Einsatzende
+ * den verlustfreien durch einen ausgeduennten Blob: Douglas-Peucker
+ * dreidimensional, 2 m waagerecht und 3 m senkrecht als GETRENNTE Toleranzen,
+ * und je Phasenzeitpunkt bleibt der zeitnaechste Punkt erhalten, damit die
+ * Hoehenermittlung des Einsatzorts nicht leer ausgeht.
+ *
+ * DIE NEUE SPALTE `letzter_punkt_am` ist die Groesse, auf der die Karenz aus
+ * E-S2-06 steht — und die es bislang nirgends gab. `track_points.ts` ist die
+ * Aufzeichnungszeit, nicht die Ankunftszeit. Ueber sie gerechnet waere die
+ * Karenz Zierrat: Die Uhr setzt `final` in JEDEM Teilstueck, eine Uhr ohne
+ * Empfang laedt ihren Puffer spaeter hoch, und dann ist die
+ * Aufzeichnungszeit schon Wochen alt.
+ *
+ * AUSGEDUENNT WIRD UNWIDERRUFLICH. Deshalb prueft `spur_ausduennung_pruefen()`
+ * vor dem Ersetzen unabhaengig nach, dass kein verworfener Punkt weiter als
+ * zugesagt vom endgueltigen Streckenzug entfernt liegt — nicht aus der
+ * Buchfuehrung der Rekursion, sondern neu gerechnet.
+ *
+ * WAS DIE AUSDUENNUNG WIRKLICH SPART, ist weniger, als die Punktzahl
+ * vermuten laesst: Am Referenzbestand bleiben 38 % der Punkte, aber 74 % der
+ * Bytes — die Ausduennung entfernt genau die vorhersagbaren Punkte, und die
+ * verbleibenden Differenzen packen sich schlechter. Am Messstand sind es 32 %
+ * der Punkte und 57 % der Bytes. Beide Stufen halten E-S2-24 mit Abstand:
+ * gemessen 1,60 MB je 1000 Einsaetzen gegen 3 MB Zielwert.
+ *
+ * `ingest.php` verwirft nach der Ausduennung eingehende Punkte und quittiert
+ * sie trotzdem (E-S2-08), damit die Uhr ihren Puffer leert. Der JSON-Vertrag
+ * bleibt Fassung 1.3; neu ist allein das zusaetzliche Antwortfeld
+ * `dropped_points`. Nebenbei behoben: Scheiterte der LETZTE Punkt eines
+ * Teilstuecks an der Wertepruefung, meldete der Server eine zu kleine Marke —
+ * und die Uhr sandte dasselbe Stueck endlos.
+ *
+ * ZWEI FUNDE aus AP3, beide behoben: `spur_loeschen_nur_zeilen()` loeschte
+ * ALLE Zeilen eines Eigentuemers, auch die, die waehrend des Laufs eintrafen
+ * (jetzt mit verpflichtender seq-Obergrenze); und `compute_site_elevation()`
+ * haette auf einer ausgeduennten Spur eine vorhandene Ortshoehe still durch
+ * NULL ersetzen koennen, sobald jemand eine Phasenzeit berichtigt.
+ *
+ * AUCH HIER MUSS NACH DEM AUSROLLEN `update.php` AUFGERUFEN WERDEN.
+ *
  */
-const WEB_VERSION = '10.1.0';
+const WEB_VERSION = '10.2.0';

@@ -65,6 +65,35 @@ function compute_site_elevation(PDO $pdo, int $missionId): void {
         }
     }
 
+    /* AUF EINER AUSGEDUENNTEN SPUR WIRD KEIN VORHANDENER WERT GELOESCHT
+     * (S2/AP3).
+     *
+     * Diese Funktion laeuft bei JEDEM Speichern im Einsatzformular, und sie
+     * schreibt bedingungslos — auch NULL. Auf einer Spur der Stufe 3 ist das
+     * eine Falle: Die behaltenen Punkte wurden fuer die DAMALIGEN
+     * Phasenzeiten geschuetzt (E-S2-05). Wer einen zwei Jahre alten Einsatz
+     * oeffnet und Phase 5 um zehn Minuten verschiebt, findet im
+     * 300-Sekunden-Fenster moeglicherweise keinen behaltenen Punkt mehr — und
+     * verloere die Ortshoehe still, obwohl er nur eine Zeit berichtigt hat.
+     *
+     * Deshalb: Ein NEUER Wert wird immer geschrieben (auch auf Stufe 3 — eine
+     * nachgetragene Phase soll ihre Hoehe bekommen). Ein vorhandener Wert
+     * wird auf Stufe 3 aber NICHT durch NULL ersetzt. Auf Stufe 1 und 2 bleibt
+     * es beim bisherigen Verhalten: Dort traegt die Spur alle Punkte, ein
+     * leeres Ergebnis ist also die Wahrheit.
+     *
+     * Die Grenze davon steht im Handbuch: Nach der Ausduennung sagt eine
+     * geaenderte Phasenzeit ueber die Ortshoehe nichts mehr. */
+    if ($ele === null) {
+        $stand = spur_stand($pdo, 'mission', $missionId);
+        if (spur_ist_ausgeduennt($stand)) {
+            $q = $pdo->prepare('SELECT site_ele_m FROM missions WHERE id = ?');
+            $q->execute([$missionId]);
+            $alt = $q->fetchColumn();
+            if ($alt !== null && $alt !== false) { return; }
+        }
+    }
+
     $pdo->prepare('UPDATE missions SET site_ele_m = ? WHERE id = ?')
         ->execute([$ele, $missionId]);
 }

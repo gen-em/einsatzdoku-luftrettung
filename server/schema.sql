@@ -287,6 +287,12 @@ CREATE TABLE missions (
   ascent_m   INT UNSIGNED NULL,
   site_ele_m INT NULL,                              -- Hoehe Einsatzort bei PatientInnenkontakt (berechnet, s. site_elevation_lib.php)
   final      TINYINT(1) NOT NULL DEFAULT 0,
+  -- Wann zuletzt ein Punkt EINTRAF (S2/AP3). Nicht track_points.ts --
+  -- das ist die Aufzeichnungszeit. Die Karenz vor der Verdichtung
+  -- (E-S2-06) braucht die Ankunftszeit: Die Uhr setzt final in JEDEM
+  -- Teilstueck, ein spaet hochgeladener Puffer waere sonst im Moment
+  -- des Eintreffens schon 14 Tage still. NULL = noch nie gemessen.
+  letzter_punkt_am DATETIME NULL,
   manual     TINYINT(1) NOT NULL DEFAULT 0,           -- ausschliesslich: Uhr ueberschreibt Metadaten/Phasen/Rea nicht mehr (NICHT "von Hand angelegt" -- dafuer siehe origin)
   origin     ENUM('watch','manual','import') NOT NULL DEFAULT 'watch', -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert
   edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
@@ -386,6 +392,7 @@ CREATE TABLE rest_segments (
   started_at DATETIME NOT NULL,
   ended_at   DATETIME NULL,
   final      TINYINT(1) NOT NULL DEFAULT 0,
+  letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
@@ -583,4 +590,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_30_rechtstexte', 'skipped'),
   -- track_blobs und jobs stehen oben schon im Schema (Web 10.0.0/10.1.0).
   ('2026_08_31_spur_blobs', 'skipped'),
-  ('2026_08_31_jobs', 'skipped');
+  ('2026_08_31_jobs', 'skipped'),
+  -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
+  ('2026_09_01_letzter_punkt_am', 'skipped');

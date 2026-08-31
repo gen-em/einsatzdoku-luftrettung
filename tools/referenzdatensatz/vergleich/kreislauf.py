@@ -28,6 +28,7 @@ import argparse
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 
@@ -197,6 +198,21 @@ def umlauf_csv(a) -> tuple[str, str]:
     return str(quelle), ergebnis["ergebnisdatei"]
 
 
+def jobs_pause(sekunden: int) -> None:
+    """Die Hintergrundjobs anhalten oder wieder freigeben.
+
+    Über die Kommandozeile der Anwendung, nicht per SQL: `jobs.php --pause`
+    ist der eine Weg, und er gilt für alle drei Auslöser.
+    """
+    php = WURZEL.parents[1] / "server" / "jobs.php"
+    e = subprocess.run([shutil.which("php") or "php", str(php), "--pause", str(sekunden)],
+                       text=True, capture_output=True)
+    if e.returncode != 0:
+        raise RuntimeError(f"jobs.php --pause {sekunden} fehlgeschlagen: "
+                           f"{e.stderr.strip() or e.stdout.strip()}")
+    melde("  " + e.stdout.strip())
+
+
 def neueste(ordner: str, muster: str) -> pathlib.Path:
     treffer = sorted(pathlib.Path(ordner).glob(muster))
     if not treffer:
@@ -229,11 +245,33 @@ def main() -> int:
     admin = (a.admin_email, a.admin_passwort)
 
     melde(f"Kreislauf {a.art} — Zielkonto {a.konto}")
-    if a.frisch and konto_loeschen(a.basis, admin, a.konto):
-        melde(f"  Vorhandenes Konto {a.konto} gelöscht.")
-    konto_anlegen(a.basis, admin, a.konto, a.konto_passwort)
 
-    quelle, ergebnis = umlauf_edbak(a) if a.art == "edbak" else umlauf_csv(a)
+    # DIE HINTERGRUNDJOBS ANHALTEN (S2/AP3).
+    #
+    # Seit Web 10.2.0 verdichten und dünnen die Jobs Spuren aus — sie LÖSCHEN
+    # Zeilen und ERSETZEN Blobs. Der Kreislauf spielt eine Sicherung in ein
+    # frisches Konto und exportiert sie sofort wieder; die wiederhergestellten
+    # Einsätze sind alt, der Verdichtungsjob hält sie für reif, und was älter
+    # als sechs Monate ist, wird ausgedünnt. Der Vergleich misst dann nicht
+    # mehr „kommt zurück, was hineinging", sondern „hat der Job dazwischen
+    # zugeschlagen".
+    #
+    # Beim ersten Lauf nach AP3 ging es gut — aber nur, weil der
+    # Mindestabstand des Huckepack-Wegs zufällig gerade griff. Nachgemessen:
+    # ein Lauf ohne Pause verdichtete 125 Spuren des Umlaufkontos.
+    #
+    # Die Pause läuft von selbst ab (jobs_lib.php, JOB_PAUSE_MAX_S); sie wird
+    # unten trotzdem ausdrücklich aufgehoben, damit ein abgebrochener Lauf die
+    # Installation nicht bis zum Ablauf lahmlegt.
+    jobs_pause(1800)
+    try:
+        if a.frisch and konto_loeschen(a.basis, admin, a.konto):
+            melde(f"  Vorhandenes Konto {a.konto} gelöscht.")
+        konto_anlegen(a.basis, admin, a.konto, a.konto_passwort)
+
+        quelle, ergebnis = umlauf_edbak(a) if a.art == "edbak" else umlauf_csv(a)
+    finally:
+        jobs_pause(0)
 
     melde(f"\n[Vergleich] {pathlib.Path(quelle).name} ↔ {pathlib.Path(ergebnis).name}")
     befehl = [sys.executable, str(HIER / "vergleichen.py"), "--art", a.art,

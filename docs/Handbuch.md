@@ -2093,6 +2093,33 @@ hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
 **„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
 Ursache steht in derselben Karte im Klartext.
 
+Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Spuren",
+sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
+(eine Uhr hat ein Teilstück nie nachgeliefert; die Spur bleibt dann so stehen,
+wie sie ist), **zu viele Punkte** (über 50 000 in einer Spur), **Punkte auf
+einer ausgedünnten Spur** (hier sollte immer null stehen) und eine **nicht
+bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
+Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
+frisch ist.
+
+**Was mit alten Spuren geschieht.** Die Anwendung legt GPS-Punkte in drei
+Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
+Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
+sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
+man sieht. **Sechs Monate nach dem Einsatz** wird die Spur ausgedünnt: Es
+bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
+gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
+Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
+danach kleiner** — das ist kein Verlust der Aufzeichnung, sondern ihre
+Verdichtung, und es lässt sich nicht rückgängig machen.
+
+Zwei Dinge, die man dazu wissen sollte: Ändert man bei einem älteren, bereits
+ausgedünnten Einsatz eine **Phasenzeit**, wird die Höhe des Einsatzorts nicht
+neu bestimmt — die Anwendung behält den bisherigen Wert, statt ihn kommentarlos
+zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
+nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
+Punkte werden aber nicht mehr aufgenommen.
+
 Darunter, in **„Wann die Jobs laufen"**, stehen die drei Wege, auf denen diese
 Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse zum
 Kopieren. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die

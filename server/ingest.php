@@ -398,11 +398,52 @@ try {
      * Sie werden gezaehlt und in 'rejected' benannt (seit Web 4.2.0). Sie
      * erneut zu senden brauchte niemand — sie wuerden wieder abgelehnt.
      */
+    /* DER ZUSTAND DER SPUR, EINMAL — vor der Schleife (S2/AP3, E-S2-08).
+     *
+     * `spur_stand()` ERSETZT den bisherigen Aufruf von spur_naechste_seq()
+     * weiter unten, er kommt nicht dazu: zwei Abfragen vorher, zwei nachher.
+     * Gebraucht wird zusaetzlich die STUFE, und die entscheidet, was mit
+     * eingehenden Punkten geschieht. */
+    $stand = spur_stand($pdo, $ownerType, $ownerId);
+
     $stored = 0;
+    $verworfen = 0;
     if ($points) {
         $ins = $pdo->prepare('INSERT INTO track_points (owner_type, owner_id, seq, lat, lon, ele, ts)
                               VALUES (?,?,?,?,?,?,?)');
         foreach ($points as $i => $pt) {
+            $seq = $seqFrom + $i;
+
+            /* DIE REGEL GILT JE PUNKT, NICHT JE ANFRAGE. Ein Teilstueck kann
+             * die Grenze ueberschreiten; das Paket wird dann an n_original
+             * geteilt.
+             *
+             *   seq <  n_original   Wiederholung — still uebergehen.
+             *   seq >= n_original   Stufe 1/2: annehmen (Nachzuegler, E-S2-08)
+             *                       Stufe 3:   verwerfen und zaehlen
+             *
+             * Der untere Teil ist kein Verlust: Die Punkte stehen im Blob.
+             * Bislang fing das der Schluesselkonflikt ab — aber nur, solange
+             * die Zeilen noch dastanden. Nach der Verdichtung gibt es keinen
+             * Konflikt mehr, die Zeile wird angelegt und ist danach
+             * unsichtbar (spur_lesen_viele() uebergeht sie, spur_zahlen()
+             * zaehlt sie nicht) und belegt trotzdem 62,4 Byte. Ausgeloest von
+             * einer Uhr, die ihre Marke verloren hat und ab 0 neu sendet.
+             *
+             * WICHTIG IST DIE STUFE, NICHT „hat einen Blob": Wer nur auf
+             * „Blob vorhanden" prueft, wirft bei Stufe 2 genau die Punkte weg,
+             * die der naechste Verdichtungslauf einarbeiten soll — und
+             * quittiert sie, so dass die Uhr sie loescht. Unwiederbringlich. */
+            if ($seq < $stand['n_original']) { continue; }
+            if (spur_ist_ausgeduennt($stand)) {
+                /* Die Wertepruefung laeuft hier BEWUSST NICHT. Sonst landeten
+                 * planmaessig verworfene Punkte mit krummen Koordinaten in
+                 * 'rejected' und liessen einen normalen Vorgang wie einen
+                 * Datenfehler aussehen. */
+                $verworfen++;
+                continue;
+            }
+
             if (!is_array($pt) || count($pt) < 4) {
                 $pruef->melde('track.points', 'kein Punkt aus vier Werten');
                 continue;
@@ -414,7 +455,7 @@ try {
             $lo = pruef_laenge($pt[1], 'track.lon', $pruef);
             if ($la === null || $lo === null) { continue; }
             try {
-                $ins->execute([$ownerType, $ownerId, $seqFrom + $i, $la, $lo,
+                $ins->execute([$ownerType, $ownerId, $seq, $la, $lo,
                     $pt[2] === null ? null : (float)$pt[2], (int)$pt[3]]);
                 $stored += $ins->rowCount();
             } catch (PDOException $ex) {
@@ -423,6 +464,22 @@ try {
                 if (!ist_dublettenfehler($ex)) { throw $ex; }
             }
         }
+    }
+
+    /* DIE ANKUNFTSZEIT (S2/AP3, Grundlage der Karenz aus E-S2-06).
+     *
+     * `$stored > 0` und nicht `count($points) > 0`: Eine reine Wiederholung
+     * schon gespeicherter Punkte laeuft in den Dublettenzweig und zaehlt
+     * nicht. Sonst hielte eine Uhr, die endlos dasselbe Teilstueck
+     * wiederholt, ihre Einsaetze dauerhaft aus der Verdichtung heraus.
+     *
+     * Eine eigene Anweisung statt eines Feldes im Upsert: Der missions-Upsert
+     * wird bei manual = 1 komplett uebersprungen, Punkte werden aber weiter
+     * angenommen. Hier hinter der Schleife sind alle Wege abgedeckt. */
+    if ($stored > 0) {
+        $tabelle = $ownerType === 'mission' ? 'missions' : 'rest_segments';
+        $pdo->prepare("UPDATE `$tabelle` SET letzter_punkt_am = UTC_TIMESTAMP() WHERE id = ?")
+            ->execute([$ownerId]);
     }
 
     /* ---- Zeitraum des Diensttags fortschreiben (JSON-Vertrag 4.4) ---------
@@ -447,8 +504,25 @@ try {
      * Groessere aus `n_original` des Blobs und der hoechsten Zeilennummer.
      *
      * Fuer die Uhr ist das ununterscheidbar vom bisherigen Verhalten; der
-     * JSON-Vertrag bleibt unveraendert (E-S2-08). */
-    $nextSeq = spur_naechste_seq($pdo, $ownerType, $ownerId);
+     * JSON-Vertrag bleibt unveraendert (E-S2-08).
+     *
+     * DIE UNTERGRENZE `seq_from + Zahl der gesendeten Punkte` ist mit AP3
+     * dazugekommen und gilt ALLGEMEIN, nicht nur nach der Ausduennung
+     * (E-S2-25). Sie ist zugleich die Behebung eines vorhandenen Fehlers:
+     * Scheiterte der LETZTE Punkt eines Teilstuecks an der Wertepruefung,
+     * meldete der Server eine Marke kleiner als die Punktzahl des Pakets —
+     * und die Uhr raeumt erst bei `next_seq >= pointCount` auf
+     * (watch/source/Uploader.mc). Sie sandte dasselbe Stueck endlos.
+     *
+     * Der Preis, offen gesagt: Ein an der Wertepruefung gescheiterter Punkt
+     * kann danach nicht mehr berichtigt nachkommen. Fuer jeden Punkt AUSSER
+     * dem letzten eines Teilstuecks galt das ohnehin schon — die Aenderung
+     * macht das Verhalten einheitlich, nicht schlechter.
+     *
+     * Gezaehlt wird NACH pruef_menge(): Mit der Rohzahl quittierte der Server
+     * Punkte, die er nie gesehen hat. */
+    $nextSeq = max(spur_naechste_seq($pdo, $ownerType, $ownerId),
+                   $seqFrom + count($points));
 
     $pdo->prepare('UPDATE devices SET last_seen = NOW() WHERE id = ?')->execute([$dev['id']]);
     $pdo->commit();
@@ -474,6 +548,16 @@ try {
      * etwas zu berichten gibt (JSON-Vertrag, Abschnitt 5). */
     $antwort = ['ok' => true, 'id' => $ownerId,
                 'stored_points' => $stored, 'next_seq' => $nextSeq];
+    /* Verworfene Punkte NENNEN, aber nicht in 'rejected' (S2/AP3, E-S2-08).
+     *
+     * 'rejected' haengt an $pruef->sauber() und bedeutet laut Vertrag
+     * „verworfene Einzelwerte", also einen Fehler in den Daten. Ein
+     * planmaessiges Verwerfen dort einzutragen liesse jeden Upload einer
+     * ausgeduennten Spur wie einen Datenfehler aussehen. Das Feld erscheint
+     * wie die anderen nur, wenn es etwas zu berichten gibt. */
+    if ($verworfen > 0) {
+        $antwort['dropped_points'] = $verworfen;
+    }
     if (!$pruef->sauber()) {
         $antwort['rejected'] = $pruef->nachUrsache();
     }

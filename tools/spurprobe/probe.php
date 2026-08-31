@@ -161,7 +161,7 @@ try {
             $blob = spur_kodieren($punkte, SPUR_STUFE_ROH);
             spur_blob_schreiben($pdo, $typ, $id, $blob, SPUR_STUFE_ROH,
                                 count($punkte), count($punkte));
-            spur_loeschen_nur_zeilen($pdo, $typ, [$id]);
+            spur_loeschen_nur_zeilen($pdo, $typ, $id, count($punkte));
             $verdichtet++;
         }
     }
@@ -262,6 +262,183 @@ foreach ($vorher['mission'] as $id => $punkte) {
     if (($nachRollback[$id] ?? []) != $punkte) { $gleich = false; break; }
 }
 pruefe($gleich, 'Nach dem Rollback ist der Bestand unveraendert');
+
+/* ---- Teil 4 — Die Ausduennung (Stufe 2 -> 3, AP3) ------------------------- */
+
+echo "\n  Teil 4 — Ausduennung: haelt sie ihre Zusage? (E-S2-05)\n";
+
+/* GERECHNET WIRD AUF DEM BESTAND, GESCHRIEBEN WIRD NICHTS. Die Ausduennung
+ * ersetzt einen Blob unwiderruflich; diese Probe rechnet nur und vergleicht.
+ * Der Job selbst wird von der Jobprobe gefahren. */
+$dpPunkte = 0; $dpBehalten = 0; $dpVerletzt = 0; $dpErste = null;
+$dpBytesV = 0; $dpBytesN = 0; $dpMaxDauer = 0.0; $dpSpuren = 0; $dpSchon = 0;
+$phasenVor = 0; $phasenNach = 0; $phasenGesamt = 0;
+
+/* SCHON AUSGEDUENNTE SPUREN BLEIBEN AUSSEN VOR — und das ist keine Feinheit.
+ * Eine Stufe-3-Spur noch einmal auszuduennen ist nicht die Handlung, um die
+ * es hier geht: Ihre Punkte sind bereits die noetigen, ein zweiter Lauf
+ * behaelt fast alle, und der gemessene Anteil steigt, ohne dass sich etwas
+ * verbessert haette. Genau das ist beim ersten Lauf passiert — 25 Spuren des
+ * Referenzkontos waren vom Job schon ausgeduennt, und der Anteil sprang von
+ * 37,7 auf 43,0 %. Die Zahl war richtig gerechnet und beschrieb etwas
+ * anderes, als ihre Beschriftung sagte.
+ *
+ * Wie viele uebersprungen wurden, steht unten in der Ausgabe. Wer die volle
+ * Zahl braucht, setzt das Referenzkonto vorher neu auf
+ * (tools/referenzdatensatz/einspielen/) und haelt die Jobs dabei an
+ * (php jobs.php --pause 1800). */
+$stufen = [];
+foreach (['mission' => $mIds, 'rest' => $rIds] as $t => $ids) {
+    if (!$ids) { continue; }
+    $platz = implode(',', array_fill(0, count($ids), '?'));
+    $q = $pdo->prepare("SELECT owner_id, stufe FROM track_blobs
+                         WHERE owner_type = ? AND owner_id IN ($platz)");
+    $q->execute(array_merge([$t], $ids));
+    foreach ($q->fetchAll(PDO::FETCH_KEY_PAIR) as $oid => $st) { $stufen["$t:$oid"] = (int)$st; }
+}
+
+foreach ($vorher as $typ => $liste) {
+    foreach ($liste as $id => $punkte) {
+        if (count($punkte) < 3) { continue; }
+        if (($stufen["$typ:$id"] ?? 0) === SPUR_STUFE_DUENN) { $dpSchon++; continue; }
+        $dpSpuren++;
+        $zeiten = spur_schutzzeiten($pdo, $typ, $id);
+
+        $t0 = microtime(true);
+        $behalten = spur_ausduennen($punkte, $zeiten);
+        $dpMaxDauer = max($dpMaxDauer, microtime(true) - $t0);
+
+        $m = spur_ausduennung_pruefen($punkte, $behalten, $zeiten);
+        if ($m !== null) { $dpVerletzt++; if ($dpErste === null) { $dpErste = "$typ/$id: $m"; } }
+
+        $duenn = [];
+        foreach ($behalten as $i) { $duenn[] = $punkte[$i]; }
+        $dpPunkte   += count($punkte);
+        $dpBehalten += count($duenn);
+        $dpBytesV += strlen(spur_kodieren($punkte, SPUR_STUFE_ROH));
+        $dpBytesN += strlen(spur_kodieren($duenn, SPUR_STUFE_DUENN, count($punkte)));
+
+        /* Bleibt die Hoehenermittlung des Einsatzorts moeglich? Sie sucht
+         * +/-SITE_ELE_TOLERANCE_S um den Phasenzeitpunkt; ohne den Schutz der
+         * Phasenpunkte ginge sie leer aus (B-S2-08). */
+        foreach ($zeiten as $ts) {
+            $phasenGesamt++;
+            $nahV = PHP_INT_MAX; foreach ($punkte as $p) { $nahV = min($nahV, abs((int)$p[4] - $ts)); }
+            $nahN = PHP_INT_MAX; foreach ($duenn  as $p) { $nahN = min($nahN, abs((int)$p[4] - $ts)); }
+            if ($nahV <= 300) { $phasenVor++; }
+            if ($nahN <= 300) { $phasenNach++; }
+        }
+    }
+}
+
+pruefe($dpVerletzt === 0,
+       'Kein verworfener Punkt liegt weiter weg als zugesagt',
+       $dpVerletzt === 0
+           ? sprintf('%d Spuren, %d Punkte, 0 Verletzungen von 2,0 m / 3,0 m%s',
+                     $dpSpuren, $dpPunkte,
+                     $dpSchon ? " (+$dpSchon schon ausgeduennt, uebersprungen)" : '')
+           : "$dpVerletzt Spuren — erste: $dpErste");
+
+$anteil = 100 * $dpBehalten / max(1, $dpPunkte);
+pruefe($anteil > 25.0 && $anteil < 60.0,
+       'Der behaltene Anteil liegt im erwarteten Band (E-S2-05: rund 37 %)',
+       sprintf('%.2f %% (%d von %d Punkten)', $anteil, $dpBehalten, $dpPunkte));
+
+pruefe($phasenNach === $phasenVor,
+       'Die Ausduennung nimmt der Hoehenermittlung keinen Phasenpunkt',
+       sprintf('%d von %d Phasen mit Punkt im +/-300-s-Fenster, vorher %d',
+               $phasenNach, $phasenGesamt, $phasenVor));
+
+/* WAS DIE AUSDUENNUNG WIRKLICH SPART, IN BYTE — nicht in Punkten. Die
+ * naheliegende Rechnung „62 % weniger Punkte, also 62 % weniger Platz" ist
+ * falsch: Die Ausduennung entfernt genau die VORHERSAGBAREN Punkte, die
+ * verbleibenden Differenzen sind groesser und lassen sich schlechter packen. */
+pruefe($dpBytesN < $dpBytesV,
+       'Der Blob wird kleiner — aber viel weniger, als die Punktzahl vermuten laesst',
+       sprintf('%.2f -> %.2f B je Originalpunkt (%.1f %% Ersparnis bei %.1f %% weggeworfenen Punkten)',
+               $dpBytesV / max(1, $dpPunkte), $dpBytesN / max(1, $dpPunkte),
+               100 * (1 - $dpBytesN / max(1, $dpBytesV)), 100 - $anteil));
+
+pruefe($dpMaxDauer < 1.0,
+       'Keine Spur des Bestands braucht laenger als eine Sekunde',
+       sprintf('langsamste %.4f s; Schaetzung von spur_ausduenn_dauer_s() fuer '
+             . '50 000 Punkte: %.2f s', $dpMaxDauer, spur_ausduenn_dauer_s(50000)));
+
+/* ---- Die Prueffaelle, die der Referenzbestand NICHT liefert -------------- */
+
+echo "\n  Teil 5 — Kuenstliche Prueffaelle (der Bestand liefert sie nicht)\n";
+
+/** Eine gerade Strecke mit einer Ausbuchtung an einer Stelle. */
+function probe_spur(int $n, callable $abweichung): array {
+    $p = [];
+    for ($i = 0; $i < $n; $i++) {
+        [$dLat, $dEle] = $abweichung($i);
+        $p[] = [$i, 47.0 + $i * 0.0001 + $dLat, 11.0, 700.0 + $dEle, 1750000000 + $i * 10];
+    }
+    return $p;
+}
+
+// (a) Gleichstand: zwei Punkte gleich weit vom Schutzzeitpunkt.
+$g = probe_spur(11, fn($i) => [0.0, 0.0]);
+$mitte = (int)$g[5][4];
+$schutz = spur_schutzpunkte($g, [$mitte + 5]);   // genau zwischen 5 und 6
+pruefe(in_array(5, $schutz, true) && !in_array(6, $schutz, true),
+       'Bei Gleichstand gewinnt der FRUEHERE Punkt (wie site_elevation_lib.php)',
+       'gewaehlt: ' . implode(',', $schutz) . ' (erwartet 0,5,10)');
+
+// (b) Eine Spur ganz ohne Hoehe darf nicht zu 100 % stehenbleiben.
+$ohneHoehe = probe_spur(500, fn($i) => [($i % 50 === 0) ? 0.00003 : 0.0, 0.0]);
+foreach ($ohneHoehe as &$pp) { $pp[3] = null; } unset($pp);
+$kOhne = spur_ausduennen($ohneHoehe, []);
+pruefe(count($kOhne) < count($ohneHoehe) * 0.5,
+       'Eine Spur ohne jede Hoehe wird trotzdem ausgeduennt',
+       sprintf('%d von %d Punkten (%.1f %%)', count($kOhne), count($ohneHoehe),
+               100 * count($kOhne) / count($ohneHoehe)));
+pruefe(spur_ausduennung_pruefen($ohneHoehe, $kOhne, []) === null,
+       'und haelt dabei die waagerechte Zusage ein');
+
+// (c) Ein einzelner hoehenloser Punkt an einer waagerechten Ecke darf den
+//     Hoehentest nicht stilllegen (die Ankerreihe, spur_hoehenanker()).
+$falle = probe_spur(401, function ($i) {
+    $dLat = ($i === 200) ? 0.0005 : 0.0;          // waagerechte Ecke
+    $dEle = ($i === 300) ? 150.0 : 0.0;           // Hoehenspitze, waagerecht unsichtbar
+    return [$dLat, $dEle];
+});
+$falle[200][3] = null;                            // genau dieser Punkt ohne Hoehe
+$kFalle = spur_ausduennen($falle, []);
+$hatSpitze = in_array(300, $kFalle, true);
+pruefe($hatSpitze,
+       'Eine Hoehenspitze hinter einem hoehenlosen Eckpunkt bleibt erhalten',
+       sprintf('%d Punkte behalten, Index 300 %s', count($kFalle),
+               $hatSpitze ? 'dabei' : 'FEHLT — 150 m still verloren'));
+
+// (d) Der Abschnittsdeckel greift und aendert die Zusage nicht.
+$lang = probe_spur(3000, fn($i) => [($i % 2 ? 0.000004 : -0.000004), 0.0]);
+$mitDeckel  = spur_ausduennen($lang, [], SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M, 500);
+$ohneDeckel = spur_ausduennen($lang, [], SPUR_TOL_WAAGERECHT_M, SPUR_TOL_SENKRECHT_M, 0);
+pruefe(spur_ausduennung_pruefen($lang, $mitDeckel, []) === null
+       && count($mitDeckel) >= count($ohneDeckel),
+       'Der Abschnittsdeckel haelt die Zusage und behaelt hoechstens mehr',
+       sprintf('mit Deckel %d, ohne %d Punkte', count($mitDeckel), count($ohneDeckel)));
+
+// (e) n_original ueberlebt die Ausduennung (E-S2-08).
+$eineSpur = null; $eineId = null; $einTyp = null;
+foreach ($vorher as $typ => $liste) {
+    foreach ($liste as $id => $punkte) {
+        if (count($punkte) > 50) { $eineSpur = $punkte; $eineId = $id; $einTyp = $typ; break 2; }
+    }
+}
+if ($eineSpur !== null) {
+    $k = spur_ausduennen($eineSpur, spur_schutzzeiten($pdo, $einTyp, $eineId));
+    $d = []; foreach ($k as $i) { $d[] = $eineSpur[$i]; }
+    $kopf = spur_kopf(spur_kodieren($d, SPUR_STUFE_DUENN, count($eineSpur)));
+    pruefe($kopf['n_original'] === count($eineSpur)
+           && $kopf['n'] === count($d)
+           && $kopf['stufe'] === SPUR_STUFE_DUENN,
+           'Der Stufe-3-Kopf traegt n_original der VOLLEN Spur (E-S2-08)',
+           "n_original={$kopf['n_original']} (Spur " . count($eineSpur) . "), "
+           . "n={$kopf['n']}, stufe={$kopf['stufe']}");
+}
 
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $erwartungen, $offen);
 exit($offen === 0 ? 0 : 1);

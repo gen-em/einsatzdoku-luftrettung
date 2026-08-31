@@ -49,10 +49,22 @@ if ($aufKommandozeile) {
     foreach (array_slice($argv, 1) as $arg) {
         if ($arg === '--hilfe' || $arg === '-h') {
             fwrite(STDOUT, "Aufruf: php jobs.php [jobname …]\n"
+                 . "        php jobs.php --pause <Sekunden>   Jobs anhalten (0 = aufheben)\n"
                  . "Ohne Angabe laufen alle fälligen Jobs.\n"
                  . "Bekannt: " . implode(', ', array_keys(jobs_katalog())) . "\n");
             exit(0);
         }
+        /* --pause: fuer Pruefmittel, die den Bestand messen, waehrend die
+         * Jobs ihn aendern wuerden (S2/AP3). Sie laeuft von selbst ab. */
+        if (str_starts_with($arg, '--pause')) {
+            $s = (int)(explode('=', $arg, 2)[1] ?? ($argv[array_search($arg, $argv, true) + 1] ?? 0));
+            jobs_pause($s);
+            $bis = jobs_pause_bis();
+            fwrite(STDOUT, $bis === null ? "Jobs laufen wieder.\n"
+                                         : "Jobs angehalten bis $bis UTC.\n");
+            exit(0);
+        }
+        if (is_numeric($arg)) { continue; }   // Zahl hinter --pause
         $nur[] = $arg;
     }
     $bericht = jobs_lauf('cli', $nur);

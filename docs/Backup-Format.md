@@ -365,7 +365,28 @@ Format ablegt.
 
 Ab sechs Monaten nach Einsatzende steht in der Datei die **ausgedünnte** Spur
 (Stufe 3, E-S2-13) — die Sicherung nimmt den Datenbankstand und kodiert nicht
-neu.
+neu. Seit Web 10.2.0 tut sie das wirklich; bis dahin war es beschrieben, aber
+es gab keinen Job, der ausdünnte.
+
+**Was das für die Nummern bedeutet.** In einer ausgedünnten Spur sind die `seq`
+der Datei **nicht mehr lückenlos gegen das Original**: Sie zählen die
+gespeicherten Punkte durch, nicht die ursprünglichen. Der Rückweg setzt keine
+bestimmte Nummernfolge voraus, sondern nur Lückenlosigkeit *innerhalb der
+Datei* und keine Dubletten — beides gilt. Die Punktzahl in der Datei ist
+entsprechend kleiner als die ursprünglich aufgezeichnete; gemessen bleiben rund
+32 bis 41 % der Punkte, je nach Bestand.
+
+**Nicht rückgängig zu machen.** Wer eine Sicherung aus einem ausgedünnten
+Bestand einspielt, bekommt die ausgedünnte Spur — das Original ist auf dem
+Server nicht mehr vorhanden. Wer den vollen Stand behalten will, sichert
+**vor** Ablauf der sechs Monate.
+
+**Ein wiederhergestellter Bestand wird von neuem verdichtet und ausgedünnt.**
+Die eingespielten Einsätze tragen ihre alten Daten; der Verdichtungsjob hält
+sie nach der Karenz für reif, und was älter als sechs Monate ist, dünnt der
+Ausdünnungsjob aus. Das ist gewollt (E-S2-03), sollte aber wissen, wer eine
+alte Sicherung zur Ansicht einspielt: `php jobs.php --pause 1800` hält die
+Jobs so lange still (`docs/Technik.md`, 4.97a).
 
 ### SPUR1 von Hand lesen
 

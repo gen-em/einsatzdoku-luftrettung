@@ -32,21 +32,35 @@ Erwartungen erfüllt, `1` = mindestens eine nicht, `2` = Konto nicht gefunden.
 | 1 | Kommt jede Spur unverändert zurück? Was kostet der Blob je Punkt? |
 | 2 | Stehen Punktzahl, Stufe und Auflösung im Kopf — und wird ein Blob mit unbekannter Fassung oder Auflösung **abgelehnt**? |
 | 3 | Liefern `spur_lesen_viele()` und `edbak_build()` vor und nach der Verdichtung dasselbe? Überlebt `next_seq`? Räumt der Löschweg Zeile **und** Blob ab? |
+| 4 | Hält die **Ausdünnung** ihre Zusage (2 m waagerecht / 3 m senkrecht, gegen den *endgültigen* Streckenzug nachgemessen)? Bleibt der Höhenermittlung des Einsatzorts je Phase ein Punkt im ±300-s-Fenster? Was spart sie wirklich — in Byte, nicht in Punkten? |
+| 5 | Die Prüffälle, die der Referenzbestand **nicht liefert**: Gleichstand beim zeitnächsten Punkt, eine Spur ganz ohne Höhe, eine Höhenspitze hinter einem höhenlosen Eckpunkt, der Abschnittsdeckel, `n_original` im Stufe-3-Kopf |
 
 ## Sie ändert nichts
 
 Teil 3 verdichtet wirklich — in einer Transaktion, die am Ende zurückgerollt
 wird, und die letzte Erwartung prüft nach, dass der Bestand danach unverändert
-ist. Das Werkzeug lässt sich deshalb auch gegen einen Bestand fahren, den man
-behalten will.
+ist. Teil 4 rechnet nur und schreibt nichts, Teil 5 arbeitet auf erfundenen
+Spuren. Das Werkzeug lässt sich deshalb auch gegen einen Bestand fahren, den
+man behalten will.
 
 ## Grenzen
 
-- **Die Ausdünnung (Stufe 3) prüft sie nicht.** `spur_ausduennen()` gehört zu
-  AP3 und existiert noch nicht.
+- **Sie dünnt nichts wirklich aus.** Teil 4 *rechnet* die Behalteliste über den
+  ganzen Bestand und prüft sie; geschrieben wird nichts. Dass der Job das
+  Ergebnis auch richtig einträgt, prüft `tools/jobprobe/`; dass die
+  Uhr-Schnittstelle danach richtig antwortet, `tools/ingestprobe/`.
+- **Schon ausgedünnte Spuren überspringt sie** und sagt, wie viele. Eine
+  Stufe-3-Spur noch einmal auszudünnen ist nicht die Handlung, um die es geht:
+  Ihre Punkte sind bereits die nötigen, ein zweiter Lauf behält fast alle, und
+  der gemessene Anteil steigt, ohne dass sich etwas verbessert hätte. Genau das
+  ist beim ersten Lauf passiert — 25 Spuren des Referenzkontos waren vom Job
+  schon ausgedünnt, und der Anteil sprang von 37,7 auf 43,0 %. Die Zahl war
+  richtig gerechnet und beschrieb etwas anderes, als ihre Beschriftung sagte.
+  **Wer die volle Zahl braucht, setzt das Referenzkonto vorher neu auf und hält
+  dabei die Jobs an** (`php jobs.php --pause 1800`).
 - **Der Nachzügler-Fall** — Uhr liefert Punkte nach, während der Blob schon
   steht — wird hier nicht hergestellt. `spur_lesen_viele()` setzt beides
-  zusammen; geprüft ist bislang nur der Weg ohne Nachzügler.
+  zusammen; `tools/ingestprobe/` fährt ihn über echtes HTTP.
 - **Der Vergleichsmaßstab ist der quantisierte Bestand**, nicht der rohe. Das
   Format sagt 10⁻⁶ Grad und 0,1 m zu (F-S2-01); wer gegen die rohe
   `DOUBLE`-Spalte prüfte, prüfte eine Genauigkeit, die nie versprochen war.

@@ -23,9 +23,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung.
-   *In Arbeit als S2/AP3* — dort als Ausdünnung von Stufe 2 auf Stufe 3
-   (`docs/Konzept-S2-Mengen-Spuren-Sicherung.md` 3.1.4).
 3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`).
    *Vorgesehen als S2/AP4.*
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
@@ -228,6 +225,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     - *Wartung.* Sie lag auf dem Weg einer Anfrage und kostete bei 9,46 Mio.
       Zeilen 4,07 s. Seit S2/AP2 (Web 10.1.0) läuft sie in Häppchen mit
       Zeitbudget, drei Auslösern und Fortsetzungsmarke.
+    - *Wachstum gedeckelt.* Seit S2/AP3 (Web 10.2.0) verdichten und dünnen zwei
+      Jobs die Spuren aus. Gemessen am Messstand (5345 Einsätze): **1,60 MB
+      Blobs je 1000 Einsätze** gegen 3 MB Zielwert aus E-S2-24 — dieselbe Menge
+      als Zeilen wären rund 200 MB gewesen.
     - *Ein Fund nebenbei:* Ein gelöschtes Konto ließ seine Spurpunkte liegen —
       am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
       behoben in AP1).
@@ -307,10 +308,19 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12.* P-P3-03 verlangt null. Die Prüfung meldet 158
-    Treffer; 155 davon sind Kommentare oder richtige Typografie (die
-    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der
-    Hinweise, das Malzeichen in „3× RTW"). Drei sind echte Symbole:
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3.* P-P3-03 verlangt
+    null. Die Prüfung meldet **168** Treffer (bei Aufnahme 158); 165 davon
+    sind Kommentare oder richtige Typografie (die Auslassungspunkte der
+    Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise, das Malzeichen in
+    „3× RTW"). Drei sind echte Symbole — dieselben drei wie bei der Aufnahme:
+
+    > **Die Zahl wächst mit dem Text, nicht mit dem Problem.** Jeder neue
+    > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
+    > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
+    > gebracht. Wer die Zahl als Fortschrittsmaß liest, liest sie falsch —
+    > gemeint sind die drei unten. Das Prüfmittel trennt beides nicht, und
+    > das gehört hierhin und nicht in eine Fußnote.
+
 
     - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
       `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
@@ -367,6 +377,28 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+2. **Serverseitige Track-Vereinfachung (Douglas-Peucker) für die
+   Web-Darstellung.**
+   *Erledigt mit Web 10.2.0 (S2/AP3).*
+   Umgesetzt nicht als Vereinfachung für die Anzeige, sondern als **Ausdünnung
+   des Bestands**: Douglas-Peucker dreidimensional, 2 m waagerecht / 3 m
+   senkrecht als getrennte Toleranzen, sechs Monate nach Einsatzende, mit
+   Schutz des ersten und letzten Punktes und je Phasenzeitpunkt des
+   zeitnächsten (E-S2-05).
+
+   Damit ist der Punkt für Bestände ab sechs Monaten gegenstandslos: Es gibt
+   nichts mehr zu vereinfachen, die Spur ist es schon. Für **frische**
+   Einsätze braucht es keine zusätzliche Vereinfachung — die Tagesansicht
+   liegt bei 6 000 bis 10 000 Punkten, unter 1 ms Dekodierzeit, und Leaflet
+   ist damit unkritisch (E-S2-09). Der ursprüngliche Anlass, „die Karte wird
+   langsam", tritt also nicht ein.
+
+   *Gemessen:* 156 Referenzspuren mit 47 078 Punkten, **0 Verletzungen** der
+   Zusage von 2,0 m / 3,0 m, unabhängig gegen den endgültigen Streckenzug
+   nachgemessen; am Messstand 4973 Spuren in 15,2 s. Gegenprobe zur
+   Notwendigkeit der zweiten Toleranz: rein zweidimensional ausgedünnt liegt
+   der schlimmste verworfene Punkt **82,76 m** neben dem Höhenprofil.
 
 39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
     *Erledigt mit Web 9.13.0 (P3/O12).* Der Punkt war eine Frage nach dem
