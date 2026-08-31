@@ -39,6 +39,7 @@ sys.path.insert(0, str(WURZEL / "quelldaten"))
 
 import krypto           # noqa: E402
 import sitzung as sitzungsmodul   # noqa: E402
+from sitzung import fehlertext    # noqa: E402  (eine Stelle, siehe dort)
 
 QUELLE = WURZEL / "quelldaten"
 AUSGABE = WURZEL / "generator" / "ausgabe"
@@ -100,9 +101,8 @@ def stufe_konto(lauf: Lauf, admin: tuple[str, str]) -> None:
         "csrf": a.csrf, "action": "user_add", "email": DEMO_EMAIL, "role": "user"})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
-        fehler = re.search(r'alert-danger[^>]*>(.*?)<', antwort.text, re.S)
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
-                           + (fehler.group(1).strip() if fehler else "unbekannt"))
+                           + (fehlertext(antwort.text) or "unbekannt"))
     lauf.zustand["einrichtungslink"] = f"{lauf.basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto angelegt. Einrichtungslink steht im Zustand.")
     melde(f"  NÄCHSTER SCHRITT (Browser): node passwort_setzen.mjs "
@@ -121,10 +121,9 @@ def stufe_stammdaten(lauf: Lauf) -> None:
         s.csrf_auffrischen("einstellungen.php?t=standorte")
         antwort = s.post("einstellungen.php?t=standorte", {**daten, "csrf": s.csrf})
         # Fehlerkasten seit P3 als Meldungs-Baustein; die alte Klasse davor.
-        fehler = (re.search(r'meldung-fehler[^>]*>.*?<p[^>]*>(.*?)</p>', antwort.text, re.S)
-                  or re.search(r'alert-danger[^>]*>(.*?)</', antwort.text, re.S))
+        fehler = fehlertext(antwort.text)
         if fehler:
-            raise RuntimeError(f"{daten.get('action')}: {fehler.group(1).strip()}")
+            raise RuntimeError(f"{daten.get('action')}: {fehler}")
 
     for b in st["standorte"]:
         speichern({"action": "base_save", "name": b["name"],
@@ -176,9 +175,27 @@ def kennungen(s) -> dict:
     html = s.get("diensttag_neu.php").text
 
     def lesen(feld: str, aufbereiten) -> dict:
-        block = re.search(r'<select name="' + feld + r'".*?</select>', html, re.S)
+        # NICHT auf "<select name=..." verankern. Seit P3/O11 (Web 9.12.0)
+        # rendert der Baustein ui_feld() das Feld als
+        # `<select class="feld-eingabe" id="..." name="...">` — `name` steht
+        # also nicht mehr vorn. Der alte Ausdruck fand nichts mehr, lieferte
+        # ein leeres Verzeichnis, und die Stammdaten-Stufe brach zwei Zeilen
+        # spaeter mit einem KeyError auf den STANDORTNAMEN ab. Die Ursache
+        # stand nirgends: Es sah aus, als fehle ein Standort, der in der
+        # Datenbank laengst lag (F-S2-A).
+        #
+        # Jetzt wird das oeffnende Tag als Ganzes gesucht und darin nach dem
+        # Namen gefragt. Damit ist die Reihenfolge der Attribute egal.
+        block = re.search(r'<select\b[^>]*\bname="' + re.escape(feld)
+                          + r'"[^>]*>.*?</select>', html, re.S)
         if not block:
-            return {}
+            # Kein leeres Verzeichnis zurueckgeben. Ein leeres Verzeichnis ist
+            # von "die Liste ist leer" nicht zu unterscheiden und verschiebt
+            # den Abbruch an eine Stelle, die die Ursache nicht mehr kennt.
+            raise RuntimeError(
+                f"Auswahlliste '{feld}' steht nicht in diensttag_neu.php. "
+                "Vermutlich hat sich das Markup geaendert — dieser Leser haengt "
+                "an der Seite und muss dann nachgezogen werden.")
         gefunden = {}
         for wert, roh in re.findall(r'<option value="(\d+)"[^>]*>\s*(.*?)\s*</option>',
                                     block.group(0), re.S):
@@ -206,9 +223,16 @@ def stufe_geraet(lauf: Lauf) -> None:
     # Geraet unbrauchbar — es laesst sich nicht mehr benutzen und nimmt nur
     # einen Platz der Geraetegrenze weg. Also weg damit, bevor neue entstehen.
     html = s.get("einstellungen.php?t=geraete").text
-    alt_ids = re.findall(r'name="action"\s+value="delete">\s*<input[^>]*name="id"\s+value="(\d+)"',
-                         html) or re.findall(r'name="id"\s+value="(\d+)"[^>]*>\s*<button[^>]*>\s*Löschen',
-                                             html)
+    # UEBER DIE FORMULARKENNUNG, nicht ueber die Nachbarschaft der Felder.
+    # Die Geraeteliste rendert je Geraet ein eigenes Loeschformular
+    # `<form … id="f-devdel-<id>">`; die Knoepfe verweisen mit `form=` darauf
+    # (P3/O11). Die beiden alten Ausdruecke suchten nebeneinanderliegende
+    # <input>-Felder und fanden seither NICHTS — das Aufraeumen lief leer, und
+    # jeder Wiederholungslauf hinterliess ein weiteres unbrauchbares Geraet,
+    # bis die Grenze von fuenf je Konto erreicht war und `add` still scheiterte
+    # (F-S2-A). Die Formularkennung ist der stabilere Anker: Sie traegt die
+    # Geraetekennung selbst.
+    alt_ids = re.findall(r'id="f-devdel-(\d+)"', html)
     for gid in set(alt_ids):
         s.csrf_auffrischen("einstellungen.php?t=geraete")
         s.post("einstellungen.php?t=geraete",
@@ -227,12 +251,31 @@ def stufe_geraet(lauf: Lauf) -> None:
         # angezeigt.
         antwort = s.post("einstellungen.php?t=geraete",
                          {"csrf": s.csrf, "action": "add", "label": beschriftung})
-        # Markup: <p>Geräte-ID: <code>…</code><br>API-Schlüssel: <code>…</code></p>
-        m = re.search(r"Geräte-ID:\s*<code>([^<]+)</code>.*?"
-                      r"API-Schlüssel:\s*<code>([0-9a-f]+)</code>", antwort.text, re.S)
-        if not m:
-            raise RuntimeError("Gerät angelegt, aber Kennung oder Schlüssel nicht gefunden.")
-        geraete[kennung] = {"device_id": m.group(1).strip(), "api_key": m.group(2),
+        # Markup seit P3/O11 (Web 9.12.0) — der Kasten „Zugangsdaten des neuen
+        # Geraets" als Baustein `codeblock`, Titel und Wert als eigene <p>:
+        #   <p class="codeblock-titel">Geräte-ID</p>
+        #   <p class="codeblock-wert">dev-…</p>
+        #   <p class="codeblock-titel">API-Schlüssel</p>
+        #   <p class="codeblock-wert">…</p>
+        # Vorher stand dort <code>…</code>; danach fand dieser Leser nichts
+        # mehr, und das Geraet war mitsamt seinem nur einmal angezeigten
+        # Schluessel verloren (F-S2-A).
+        def wert_nach(titel: str) -> str | None:
+            m = re.search(r'codeblock-titel"[^>]*>\s*' + re.escape(titel)
+                          + r'\s*</p>\s*<p class="codeblock-wert"[^>]*>\s*(.*?)\s*</p>',
+                          antwort.text, re.S)
+            return m.group(1).strip() if m else None
+
+        geraeteId = wert_nach("Geräte-ID")
+        schluessel = wert_nach("API-Schlüssel")
+        if not geraeteId or not schluessel:
+            raise RuntimeError(
+                "Gerät angelegt, aber Kennung oder Schlüssel nicht gefunden"
+                + (f" — Seite meldet: {fehlertext(antwort.text)}"
+                   if fehlertext(antwort.text) else "")
+                + ". Der Schlüssel wird nur EINMAL angezeigt; das Gerät ist damit "
+                  "unbrauchbar und wird beim nächsten Lauf aufgeräumt.")
+        geraete[kennung] = {"device_id": geraeteId, "api_key": schluessel,
                             "label": beschriftung}
         melde(f"  Gerät {kennung}: {geraete[kennung]['device_id']}")
     lauf.zustand["geraete"] = geraete
@@ -408,9 +451,9 @@ def formular_senden(s, liste, zusatz: dict) -> None:
     s.csrf_auffrischen("index.php")
     daten = list(liste) + [(k, str(v)) for k, v in zusatz.items()] + [("csrf", s.csrf)]
     antwort = s.post("einsatz_form.php", daten, allow_redirects=True)
-    fehler = re.search(r'alert-danger[^>]*>(.*?)</', antwort.text, re.S)
+    fehler = fehlertext(antwort.text)
     if fehler:
-        raise RuntimeError(re.sub(r"\s+", " ", fehler.group(1)).strip())
+        raise RuntimeError(fehler)
     return antwort
 
 

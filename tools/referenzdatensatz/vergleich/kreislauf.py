@@ -73,12 +73,24 @@ def lauf(befehl: list[str], **kw) -> subprocess.CompletedProcess:
 UMLAUF_PRAEFIX = "umlauf-"
 
 
-def konto_loeschen(basis: str, admin: tuple[str, str], konto: str) -> bool:
-    """Loescht das Umlaufkonto ueber den Adminbereich, falls es besteht."""
-    if not konto.startswith(UMLAUF_PRAEFIX):
+def konto_loeschen(basis: str, admin: tuple[str, str], konto: str,
+                   praefix: str = UMLAUF_PRAEFIX) -> bool:
+    """Loescht ein PRUEFKONTO ueber den Adminbereich, falls es besteht.
+
+    `praefix` ist der Riegel und hat den Umlauf-Vorgabewert. Ein zweites
+    Werkzeug mit eigenen Pruefkonten (der Messstand aus S2) benennt hier sein
+    eigenes Praefix, statt sich einen zweiten Loeschweg zu schreiben — der
+    waere ein zweiter Weg, den niemand pflegt, und ausgerechnet einer, der
+    Konten loescht. Weggelassen werden darf das Praefix nicht: Ein leerer
+    Riegel ist keiner.
+    """
+    if len(praefix) < 4:
+        raise RuntimeError(
+            f"Das Loeschpraefix '{praefix}' ist zu kurz, um ein Riegel zu sein.")
+    if not konto.startswith(praefix):
         raise RuntimeError(
             f"Dieses Werkzeug loescht nur Konten mit dem Praefix "
-            f"'{UMLAUF_PRAEFIX}'. Angefragt war '{konto}'.")
+            f"'{praefix}'. Angefragt war '{konto}'.")
     s = sitzungsmodul.Sitzung(basis).anmelden(*admin)
     html = s.get("admin_users.php").text
     if konto not in html:
@@ -140,9 +152,8 @@ def konto_anlegen(basis: str, admin: tuple[str, str], konto: str,
                                          "email": konto, "role": "user"})
     m = re.search(r"pw_handling\.php\?token=([0-9a-f]{64})", antwort.text)
     if not m:
-        fehler = re.search(r'alert-danger[^>]*>(.*?)<', antwort.text, re.S)
         raise RuntimeError("Kontoanlage ohne Einrichtungslink: "
-                           + (fehler.group(1).strip() if fehler else "unbekannt"))
+                           + (sitzungsmodul.fehlertext(antwort.text) or "unbekannt"))
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
     lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort],

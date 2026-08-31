@@ -174,6 +174,14 @@ Daten erst nach Server-Bestätigung.
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
+│   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
+│   │                      Referenzsicherung vervielfältigt und über den
+│   │                      REGULÄREN Wiederherstellungsweg eingespielt — und
+│   │                      misst daran die Zielzahlen von S2: Suche,
+│   │                      Tagesansicht, Sichern, Speicherspitzen,
+│   │                      Tabellengrößen. Browserprobe unter CPU-Drossel 6×.
+│   │                      Riegel: füllt nur ein Konto mit dem Präfix
+│   │                      „messstand" (s. LIESMICH.md)
 │   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
 │   │   │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
@@ -2431,6 +2439,18 @@ Referenzbestand neu einspielen
 neu erzeugen, dann ausrollen, dann im Adminbereich zurücksetzen. Die
 Reihenfolge ist wesentlich: Eine Fixture aus einem halb eingespielten Bestand
 sieht vollständig aus und ist es nicht.
+
+**Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
+`cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto
+`messstand@gen-em.org` an, vervielfältigt die Referenzsicherung zu einer Folge
+`.edbak`-Dateien und spielt sie über den **regulären** Wiederherstellungsweg im
+Browser ein — kein SQL. Dauer je nach Rechner rund zehn Minuten; danach misst
+er Suche, Tagesansicht, Sichern (Browser, CPU-Drossel 6×) sowie Tabellengrößen
+und Speicherspitzen (Server). **Niemals gegen die Produktiv- oder
+Referenzinstallation**: Der Riegel des Werkzeugs füllt nur Konten mit dem
+Präfix `messstand` und verlangt für eine fremde Adresse ein ausdrückliches
+`MESSSTAND_FREMDE_INSTALLATION=ja`. Einzelheiten und die Grenzen des
+Prüfmittels: `tools/messstand/LIESMICH.md`.
 
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue

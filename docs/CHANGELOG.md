@@ -11,6 +11,135 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Messstand] — 2026-08-31
+
+**Die Anwendung lässt sich jetzt an 5000 Einsätzen messen — und der erste Lauf
+sagt, wo sie heute bricht.** Weder die Weboberfläche noch die Uhr-App sind
+geändert, deshalb trägt dieser Eintrag keine Versionsnummer (dasselbe Muster
+wie beim Uhr-Prüfstand). Erstes Arbeitspaket der Phase S2.
+
+### Werkzeug — Warum
+
+S2 verspricht, dass 5000 Einsätze in einem Konto tragen. Ein solches
+Versprechen lässt sich nicht durch Nachdenken einlösen: Es braucht einen
+Bestand dieser Größe, und den muss jemand **herstellen** können. Und es braucht
+einen Ausgangswert — „die Sicherung ist jetzt schneller" ist keine Aussage,
+solange niemand weiß, wie langsam sie vorher war und wo genau sie aufgehört hat
+zu funktionieren.
+
+`tools/messstand/` stellt beides her. Der Vervielfältiger baut aus der
+Referenzsicherung eine Folge `.edbak`-Dateien; eingespielt werden sie über den
+**regulären** Wiederherstellungsweg im Browser, nicht per SQL. Das kostet
+Zeit, und es ist der Punkt: Der Einspielweg ist selbst einer der Prüflinge.
+
+### Werkzeug — Die Ausgangsmessung
+
+5002 Einsätze, 3 201 524 Spurpunkte, hergestellt in 245 Sekunden. Gemessen mit
+CPU-Drossel 6× (Referenzgerät nach Z3):
+
+| | heute | Ziel |
+|---|---|---|
+| Speicherspitze `edbak_build()` | **1784 MB** | 64 MB |
+| größte JSON-Zeichenkette im Browser | **138,25 MB** | 10 MB |
+| Haldenspitze beim Sichern | **508 MB** | 100 MB |
+| Spuren je 1000 Einsätze | **38,07 MB** | 3 MB |
+| Sicherungsdatei | 40,5 MB | 25 MB |
+| Tagesansicht bis zur Spur | 4,81 s | 3 s |
+| Suche bis zur ersten Anzeige | 4,53 s | 5 s ✓ |
+| Sicherung erstellen | 109,8 s | 300 s ✓ |
+
+Die Speicherspitze ist die härteste Zahl: `edbak_build()` hält das
+vollständige PHP-Array und die daraus erzeugte JSON-Zeichenkette gleichzeitig.
+Auf geteiltem Webspace mit 128 MB `memory_limit` ist damit bei rund **360
+Einsätzen** Schluss — und zwar als Fatal Error ohne JSON-Antwort, so dass der
+Browser „HTTP 500" meldet und niemand erfährt, dass es an der Menge lag.
+
+Zwei Zahlen des Befunds haben sich dabei **bestätigt**: 62,4 Byte je Zeile in
+`track_points` (angenommen: 62) und 38,07 MB Spuren je 1000 Einsätzen
+(angenommen: 40).
+
+### Werkzeug — Was der Einspiellauf zutage gefördert hat
+
+**Er war kaputt.** Seit P3/O11 (Web 9.12.0) hängen vier Stellen von
+`einspielen.py` an Markup, das sich geändert hat: Der Baustein `ui_feld()`
+rendert `<select>` mit `name` hinter `class` und `id`, Meldungen tragen
+`meldung-fehler` statt `alert-danger`, die Geräteliste führt je Gerät ein
+eigenes Formular, und die Zugangsdaten eines neuen Geräts stehen im Baustein
+`codeblock` statt in `<code>`.
+
+Zwei davon brachen laut ab. **Drei brachen still** — die Fehlerlesung fand
+nichts mehr und meldete damit „kein Fehler", und das Aufräumen der Geräte tat
+nichts, bis die Grenze von fünf Geräten je Konto erreicht war. Der
+Referenzdatensatz war seither nicht mehr **herstellbar**, und weil er als
+Datei ja dalag, ist es niemandem aufgefallen. Ein Bestand, den man nicht neu
+bauen kann, ist ein Einzelstück und kein Prüfmittel.
+
+Alle vier sind nachgezogen; die Fehlerlesung liegt jetzt an **einer** Stelle
+(`sitzung.fehlertext()`) statt an vieren.
+
+**Und derselbe Fund noch einmal im CSV-Kreislauf.** Der Regressionslauf nach
+diesem Paket brachte es ans Licht: `ui_segment()` und `ui_schalter()` machen
+das Kontrollkästchen unsichtbar und stellen ein `<label>` davor —
+`page.check()` klickt aber das Feld und wartet, dass es sichtbar wird. Sieben
+Aufrufe in zwei Werkzeugen liefen deshalb in einen Zeitablauf. Behoben über
+eine gemeinsame Stelle (`browser/bedienen.mjs`), die die Beschriftung klickt
+und danach **belegt**, dass sich der Zustand geändert hat.
+
+Beide Kreisläufe laufen danach wieder: **edbak 286 739 Einzelvergleiche, CSV
+8797 — je 0 unerklärte Abweichungen** (R24). Ebenso R27
+(30 Erwartungen / 15 Einzelprüfungen, 0 Befunde) und R28 (Wortliste 0/0/0).
+
+Wer die Bausteine in `ui.php` anfasst, ändert damit die Angriffsfläche jedes
+Werkzeugs, das die Oberfläche liest oder bedient. Beide Kreisläufe gehören in
+denselben Durchgang — sie sind schnell, und sie sind die einzige Stelle, an
+der so ein Bruch auffällt.
+
+### Werkzeug — Und dreimal dieselbe Falle im Messstand selbst
+
+Der erste Lauf meldete drei Zahlen, die etwas anderes maßen, als sie
+behaupteten. Sie stehen hier, weil sie zusammen die Lehre dieses Pakets sind:
+
+**„5046 Einsätze eingespielt" — angelegt waren 4744.** Addiert worden war die
+erwartete Zahl, nicht die gemeldete. Die Anwendung hatte korrekt berichtet
+(„254 übernommen, 7 übersprungen — Diensttag liegt hier im Papierkorb"), nur
+hat niemand hingesehen. Ursache: Die Referenz trägt einen Diensttag im
+Papierkorb; 58-fach kopiert blockierte er spätere Runden (Regel D1). Der
+Vervielfältiger lässt gelöschte Einträge jetzt draußen, und der Einspiellauf
+liest die Rückmeldung.
+
+**„167 MB Spuren je 1000 Einsätze" — richtig sind 38.** Die Tabelle aller
+Konten, geteilt durch die Einsätze eines Kontos.
+
+**„Startseite 25,6 s, Tagesansicht 30,7 s" — richtig sind 1,4 s und 4,8 s.**
+`waitUntil: 'load'` wartete auf die gesperrten Kartenkacheln. Gemessen war die
+Netzsperre der Umgebung, nicht die Anwendung. Dieselben zwanzig
+Kachelmeldungen standen außerdem als „Konsolenfehler" im Protokoll, weil ihre
+Meldung die Adresse nicht nennt und damit am Filter vorbeikam.
+
+Ein Prüfmittel ist gegen diese Falle nicht sicherer als das, was es prüft.
+Jede Zahl des Messstands benennt jetzt, **was** sie gemessen hat.
+
+### Werkzeug — Zwei Fehlerfunde nebenbei
+
+**Ein Konto löschen lässt seine Positionsdaten liegen.** `track_points` ist
+polymorph und trägt keinen Fremdschlüssel; die Kaskade von `DELETE FROM users`
+nimmt die Punkte nicht mit. Der Kommentar an der Löschstelle behauptet das
+Gegenteil — und ist der Grund, warum es niemandem aufgefallen ist. Der
+Messstand hat es prompt selbst vorgeführt: Zwei gelöschte Konten hinterließen
+**6 202 931 verwaiste Spurpunkte**, rund 380 MB. Der Wartungsjob räumte sie in
+15,18 s ab — beim nächsten Aufruf der Anwendung durch irgendjemanden.
+
+**Dieselbe Zahl, zwei Bedeutungen: 2000 Punkte.** `LIMIT_TRACKPUNKTE` gilt
+beim Upload **je Anfrage** (greift praktisch nie, die Spur wächst über viele
+Pakete unbegrenzt), beim Zurückspielen aber **je Spur** — dort wird alles
+jenseits des 2000. Punktes verworfen. Was die Uhr aufbauen darf, kann die
+Wiederherstellung also nicht zurückbringen. Aufgefallen ist es nie, weil die
+längste Spur des Referenzbestands 1133 Punkte hat.
+
+Beide sind vermerkt und werden in den Paketen behoben, die die betroffenen
+Wege ohnehin anfassen (`docs/Konzept-S2-Mengen-Spuren-Sicherung.md`,
+Abschnitt 8).
+
 ## [Uhr 1.8.2] — 2026-08-30
 
 **Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung

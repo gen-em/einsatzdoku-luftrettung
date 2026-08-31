@@ -23,6 +23,31 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "generat
 import krypto  # noqa: E402
 
 
+def fehlertext(html: str) -> str | None:
+    """Die Fehlermeldung einer Seite lesen — an EINER Stelle.
+
+    WARUM HIER UND NICHT VIERMAL VERTEILT. Bis Web 9.14.0 stand die Suche nach
+    `alert-danger` an vier Stellen dieser Datei. Diese Klasse ist mit P3
+    verschwunden; Meldungen kommen seither aus `ui_meldung_markup()` als
+    `<div class="meldung meldung-fehler" role="alert"><svg…><p>…</p></div>`.
+    Drei der vier Stellen haben danach schlicht NICHTS mehr gefunden — und
+    weil ein nicht gefundener Fehler wie „kein Fehler" aussieht, liefen
+    abgelehnte Formulare als Erfolg durch. Genau das ist die stille Variante
+    des Fundes F-S2-A, und sie ist die gefaehrlichere.
+
+    Beide Fassungen werden gelesen: die heutige und die alte, damit der Lauf
+    auch gegen einen aelteren Stand noch etwas findet.
+    """
+    m = (re.search(r'meldung-fehler[^>]*>.*?<p[^>]*>(.*?)</p>', html, re.S)
+         or re.search(r'alert-danger[^>]*>(.*?)</', html, re.S))
+    if not m:
+        return None
+    # Auszeichnung raus, Leerraum zusammenziehen — die Meldung traegt seit P3
+    # ein <strong> fuer den Auftakt.
+    roh = re.sub(r"<[^>]+>", " ", m.group(1))
+    return re.sub(r"\s+", " ", roh).strip() or None
+
+
 class Sitzung:
     def __init__(self, basis: str) -> None:
         self.basis = basis.rstrip("/")
@@ -92,9 +117,8 @@ class Sitzung:
             "tokens": json.dumps(token_nach),
         }, allow_redirects=True)
         if "login.php" in antwort.url and "Abmelden" not in antwort.text:
-            fehler = re.search(r'class="alert alert-danger"[^>]*>(.*?)<', antwort.text, re.S)
             raise RuntimeError("Anmeldung gescheitert: "
-                               + (fehler.group(1).strip() if fehler else "unbekannt"))
+                               + (fehlertext(antwort.text) or "unbekannt"))
         self.email = email
 
         # Jetzt sagt die angemeldete Seite, welche Rundenzahl dieses Konto
