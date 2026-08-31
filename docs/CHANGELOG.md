@@ -11,6 +11,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 11.1.1] — 2026-08-31
+
+**Eine Datei mit Nutzlast 8 und Punktlisten verlor alle Spuren, ohne ein
+Wort.** Fehlerbehebung, gefunden beim Aufbau des Prüfbestands für AP6
+(F-S2-E). Keine Migration.
+
+### Web — Was passiert ist
+
+Seit Web 11.0.0 sagt Nutzlast 8 zu, dass die Spurpunkte **nicht** im Eintrag
+stehen, sondern als eigene, versiegelte Teile nachkommen. `edbak_restore()`
+entscheidet deshalb an der **Fassung**, welchen Weg es nimmt, und nicht am
+Vorhandensein eines `track`-Feldes — mit gutem Grund: Eine Spur ohne Punkte
+sähe genauso aus wie ein Verweis, und die umgekehrte Verwechslung brächte eine
+echte Fassung-4-Sicherung um alle Spuren.
+
+Die Kehrseite war nicht bedacht. Trägt eine Datei Fassung 8 **und**
+Punktlisten, lief sie in den Verweisweg, fand keine `spur_ref` — und die
+Punkte fielen weg. Der Eintrag entstand ohne Spur, die Meldung lautete
+„fertig".
+
+Solche Dateien schreibt die Anwendung nicht. Diese kam aus
+`tools/messstand/vervielfaeltigen.py`: Das Werkzeug baut den 5000er-Bestand
+aus der Referenz und hat die Fassungsnummer dabei **geerbt** — was stimmte,
+solange die Referenz Nutzlast 7 war, und seit Web 11.0.0 nicht mehr stimmt.
+**Gemessen an einem Lauf: 164 Einsätze angelegt, 91 208 Punkte verloren.**
+Nach der Behebung derselbe Lauf: 66 848 Einsatzpunkte in der Datenbank.
+
+### Web — Was geändert wurde
+
+- **Die Anwendung sagt es.** Der Verweisweg meldet eine vorgefundene
+  Punktliste über die gemeinsame Prüfschicht — dort, wo die Rückmeldung die
+  abgelehnten Angaben ohnehin aufzählt. **Abgewiesen wird die Datei nicht:**
+  Der übrige Bestand ist brauchbar, und ihn wegen der Spuren zu verweigern
+  hieße, aus einem Teilverlust einen Totalverlust zu machen.
+- **Das Werkzeug setzt die Fassung, statt sie zu erben.** Die erzeugte Datei
+  ist einteilig und trägt ihre Punkte selbst — sie ist Nutzlast 7 und wird
+  jetzt auch so ausgezeichnet. Mit NaDoku 1.0 fällt das Altformat weg; dann
+  braucht der Vervielfältiger einen Container-Schreiber in Python
+  (Backlog Nr. 46).
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/wiederherstellungs-probe/`, **Teil 7 neu** | **44** Erwartungen, 0 offen (vorher 40) — darunter die Gegenprobe, dass eine richtige Fassung-8-Datei die Meldung *nicht* bekommt |
+| Gegenprobe am Prüfkonto | vorher **0** Spurpunkte, nachher **66 848** |
+
 ## [Web 11.1.0] — 2026-08-31
 
 **Auch der Kern wird mehrteilig.** Nachschlag zum sechsten Arbeitspaket der

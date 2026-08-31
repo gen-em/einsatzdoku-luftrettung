@@ -418,6 +418,15 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     braucht er einen anderen Weg: entweder einen Container-Schreiber in Python
     oder ein Herstellen des Bestands über die Uhr-Schnittstelle.
 
+    **Diese Abhängigkeit hat schon einmal zugeschlagen** (31.08.2026, F-S2-E):
+    Das Werkzeug erbte die Fassungsnummer aus der Referenz, und seit die
+    Fassung 4 mit Nutzlast 8 ist, schrieb es einteilige Dateien, die
+    `version: 8` nennen. Der Einspielweg nahm daraufhin den Verweisweg und
+    legte 164 Einsätze **ohne Spur** an — 91 208 Punkte weg, Meldung
+    „fertig". Behoben durch `nutzlast["version"] = 7` und eine Meldung in
+    `edbak_restore()`. Die Notiz oben war richtig; sie war nur nicht laut
+    genug, um zu verhindern, dass es passiert.
+
     > **Warum das hier steht und nicht einfach passiert.** Ein Lesezweig, der
     > niemandem mehr auffällt, wird nicht gepflegt und trotzdem mitgeschleppt
     > — und im Ernstfall verlässt sich jemand darauf. Ein Datum, zu dem er

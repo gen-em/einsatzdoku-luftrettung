@@ -617,5 +617,60 @@ $sag('Der Browser zaehlt nach, wie viele Eintraege ein Fenster brachte',
      (bool)preg_match('/statt \$\{soll\} Eintr/u', $browser),
      'Schranke gegen ein zu kurz geliefertes Fenster');
 
+/* ---- Der Widerspruch: Nutzlast 8 MIT Punktlisten (S2/AP6, F-S2-E) ------
+ *
+ * WOFUER. Nutzlast 8 sagt zu, dass die Punkte in eigenen Teilen nachkommen.
+ * Traegt eine Datei beides — Fassung 8 UND `track`-Listen —, wurden die
+ * Punkte bis Web 11.1.0 stillschweigend uebergangen: Der Eintrag entstand
+ * ohne Spur, die Meldung lautete „fertig".
+ *
+ * Gefunden beim Aufbau des Pruefbestands fuer AP6: Der Vervielfaeltiger des
+ * Messstands erbte seit Web 11.0.0 die Fassung aus der Referenz und schrieb
+ * `version: 8` in eine einteilige Datei. Ein Lauf legte 164 Einsaetze an und
+ * verlor 91 208 Punkte.
+ *
+ * Diese Pruefung haelt beides fest: dass die Punkte weiterhin NICHT
+ * geschrieben werden (die Fassung entscheidet, nicht das Feld) und dass es
+ * GESAGT wird. */
+echo "\n  Teil 7 — Nutzlast 8 mit Punktlisten faellt auf (S2/AP6, F-S2-E)\n";
+$uid8 = $konto('probe-widerspruch@example.invalid');
+$stats8 = edbak_restore($uid8, [
+  'version' => 8,
+  'days' => [['id' => 960, 'day' => '2026-07-07', 'kind' => 'ground',
+              'vehicle_name' => 'Probe 8w', 'base_name' => 'Probenstation']],
+  'missions' => [['client_ref' => 'w-m1', 'day_id' => 960,
+                  'started_at' => '2026-07-07 06:00:00',
+                  'ended_at' => '2026-07-07 07:00:00',
+                  'track' => [[0, 47.1, 11.1, 700.0, 1783000000],
+                              [1, 47.2, 11.2, 705.0, 1783000060]]]],
+  'rest_segments' => [['client_ref' => 'w-r1', 'day_id' => 960,
+                       'started_at' => '2026-07-07 08:00:00',
+                       'ended_at' => '2026-07-07 09:00:00',
+                       'track' => [[0, 47.3, 11.3, 710.0, 1783000120]]]],
+]);
+$mid8 = (int)$pdo->query("SELECT id FROM missions
+    WHERE user_id = $uid8 AND client_ref = 'w-m1'")->fetchColumn();
+$sag('Der Eintrag entsteht trotzdem — ein Teilverlust wird kein Totalverlust',
+     ($stats8['missions'] ?? 0) === 1 && ($stats8['rests'] ?? 0) === 1,
+     'Einsaetze ' . ($stats8['missions'] ?? '—') . ', Ruhesegmente '
+     . ($stats8['rests'] ?? '—'));
+$sag('Die Punkte werden NICHT geschrieben (die Fassung entscheidet)',
+     $mid8 > 0 && (spur_zahlen($pdo, 'mission', [$mid8])[$mid8] ?? 0) === 0,
+     'Punkte in der Datenbank: '
+     . ($mid8 > 0 ? (spur_zahlen($pdo, 'mission', [$mid8])[$mid8] ?? 0) : '—'));
+$abgelehnt = $stats8['rejected'] ?? [];
+$treffer = [];
+foreach ($abgelehnt as $grund => $zahl) {
+    if (str_contains((string)$grund, 'Nutzlast 8')) { $treffer[(string)$grund] = $zahl; }
+}
+$sag('...und es wird GESAGT, je Art einmal',
+     count($treffer) === 2 && array_sum($treffer) === 2,
+     $treffer ? json_encode($treffer, JSON_UNESCAPED_UNICODE) : 'KEINE Meldung');
+$sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
+     !array_filter(array_keys((array)($stats['rejected'] ?? [])),
+                   fn($g) => str_contains((string)$g, 'Nutzlast 8')),
+     'aus Teil 5, dieselbe Fassung, aber mit spur_ref');
+$weg($uid8);
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

@@ -731,6 +731,7 @@ Sammelstelle nach K4; bei Übergabe leer.
 | F-S2-B | Kontolöschung lässt Spurpunkte als Waisen liegen — der Kommentar behauptet das Gegenteil | behoben in AP1 |
 | F-S2-C | Die Wiederherstellung schneidet Spuren über 2000 Punkten ab; die Uhr darf sie aber beliebig lang aufbauen | behoben in AP1 (F-S2-02) |
 | F-S2-D | Die Rückfrage vor dem Einspielen kam bei Fassung 4 immer — und die Prüfmittel bemerkten den Abbruch nicht | behoben in AP5b |
+| F-S2-E | Eine Datei mit Nutzlast 8 **und** Punktlisten verlor alle Spuren, ohne ein Wort — und der Messstand schrieb genau solche Dateien | behoben vor AP6 |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -954,6 +955,55 @@ erscheinen als Fenster **innerhalb der Seite**") und zum Grund, aus dem es
 > zweimal, und beim nächsten neuen Meldungstext wäre sie es wieder. Die
 > Anwendung unterscheidet Zwischenstand und Ergebnis bereits im Markup; ein
 > Prüfmittel, das stattdessen Wörter rät, prüft seine eigene Vermutung.
+
+### F-S2-E — Nutzlast 8 mit Punktlisten: 91 208 Punkte, kein Wort
+
+**Gefunden** beim Aufbau des Prüfbestands für AP6. Ein frisch gefülltes
+Prüfkonto hatte 164 Einsätze und 190 Ruhesegmente — und **null Spuren**. Der
+Einspiellauf hatte „164 übernommen" gemeldet.
+
+**Zwei Fehler, und der eine verdeckt den anderen.**
+
+*Der Auslöser liegt im Werkzeug.* `tools/messstand/vervielfaeltigen.py` baut
+den Großbestand, indem es die Nutzlast der Referenz vervielfältigt und als
+einteilige `.edbak` versiegelt. Die Fassungsnummer hat es dabei aus der
+Referenz **geerbt**. Das ging gut, solange die Referenz Nutzlast 7 war; seit
+Web 11.0.0 ist sie Fassung 4 mit Nutzlast **8**. Herausgekommen ist damit
+etwas, das es nicht gibt: eine einteilige Datei, die `version: 8` nennt und
+ihre Punkte trotzdem als `track` in den Einträgen trägt.
+
+*Der Schaden liegt in der Anwendung.* `edbak_restore()` entscheidet zwischen
+Verweisweg und Punktweg **an der Fassung** — mit gutem Grund, denn eine Spur
+ohne Punkte sieht aus wie ein Verweis, und die umgekehrte Verwechslung würde
+eine echte Fassung-8-Datei stillschweigend um alle Spuren bringen. Der
+Kommentar an der Stelle sagt das auch so. Nur: Die Kehrseite war nicht
+bedacht. Eine Datei mit Fassung 8 **und** Punktlisten lief in den Verweisweg,
+fand keine `spur_ref` — und die Punkte fielen weg, ohne dass irgendetwas es
+sagte.
+
+**Gemessen:** 164 Einsätze angelegt, **91 208 Punkte verloren**, Meldung
+„fertig". Nach der Behebung des Werkzeugs derselbe Lauf: **66 848**
+Einsatzpunkte in der Datenbank (der Rest liegt an den Ruhesegmenten).
+
+**Behoben, beidseitig:**
+
+- Das Werkzeug **setzt** die Fassung, statt sie zu erben: Die Datei ist
+  Nutzlast 7 und wird auch so ausgezeichnet.
+- Die Anwendung **sagt es**. Der Verweisweg meldet eine Punktliste über die
+  gemeinsame Prüfschicht — dort, wo die Nutzerin die Ablehnungen ohnehin
+  liest. Abgewiesen wird die Datei nicht: Der übrige Bestand ist brauchbar,
+  und ihn wegen der Spuren zu verweigern hieße, aus einem Teilverlust einen
+  Totalverlust zu machen.
+
+**Belegt** in `tools/wiederherstellungs-probe/`, Teil 7 — vier Erwartungen
+samt Gegenprobe, dass eine richtige Fassung-8-Datei die Meldung **nicht**
+bekommt.
+
+> **Warum das hier steht und nicht nur im Changelog.** Eine Anwendung, die
+> Daten verliert und „fertig" meldet, ist gefährlicher als eine, die
+> abbricht. Dass der Weg hierher über ein Prüfwerkzeug führte, ist die zweite
+> Auskunft: Backlog Nr. 46 hatte notiert, dass der Messstand am Altformat
+> hängt — die Rechnung kam früher als gedacht, und sie kam still.
 
 ### F-S2-02 — Was geschieht mit einer Spur über 2000 Punkten? (entschieden, 31.08.2026)
 

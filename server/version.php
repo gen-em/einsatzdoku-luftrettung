@@ -1432,5 +1432,22 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. Nur das Dateiformat aendert sich, das Datenmodell nicht.
  *
+ * 11.1.1 IST EIN NACHTRAG ZU 11.1.0 (F-S2-E).
+ *
+ * Eine Datei, die Nutzlast 8 nennt UND Punktlisten in den Eintraegen traegt,
+ * verlor beim Einspielen alle Spuren — ohne ein Wort. Der Verweisweg
+ * entscheidet an der Fassung (richtig so: eine Spur ohne Punkte sieht aus wie
+ * ein Verweis), aber die Kehrseite war nicht bedacht.
+ *
+ * Solche Dateien schreibt diese Anwendung nicht; sie kamen aus dem
+ * Vervielfaeltiger des Messstands, der die Fassung aus der Referenz geerbt
+ * hat, seit diese Fassung 4 ist. Gemessen an einem Lauf: 164 Einsaetze
+ * angelegt, 91 208 Punkte verloren, Meldung „fertig".
+ *
+ * Jetzt wird es gesagt — ueber die gemeinsame Pruefschicht, also dort, wo die
+ * Ablehnungen ohnehin stehen. Abgewiesen wird die Datei nicht: Der uebrige
+ * Bestand ist brauchbar, und ihn wegen der Spuren zu verweigern machte aus
+ * einem Teilverlust einen Totalverlust.
+ *
  */
-const WEB_VERSION = '11.1.0';
+const WEB_VERSION = '11.1.1';

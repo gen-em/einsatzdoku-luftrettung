@@ -117,6 +117,25 @@ kann, dass hier nichts kaputtgeht, bricht ab.
   erledigen die geprüften Bausteine des Referenzdatensatzes.
 - **Keine echte Hardware.** Siehe unten.
 
+## Die Fassungsnummer wird gesetzt, nicht geerbt (seit S2/AP6)
+
+`vervielfaeltigen.py` schreibt **einteilige** `.edbak`-Dateien mit
+`track`-Listen in den Einträgen — also **Nutzlast 7**, und es trägt sie
+seitdem auch so ein.
+
+Vorher hat es die Fassungsnummer aus der Referenz übernommen. Das stimmte,
+solange die Referenz Nutzlast 7 war. Seit Web 11.0.0 ist sie Fassung 4 mit
+Nutzlast **8**, und Nutzlast 8 sagt zu, dass die Punkte *nicht* im Eintrag
+stehen. Herausgekommen ist eine Datei, die es nicht gibt: Fassung 8 mit
+Punktlisten. Der Einspielweg nahm den Verweisweg, fand keine `spur_ref` —
+und legte jeden Einsatz **ohne Spur** an. Ein Lauf: 164 Einsätze angelegt,
+**91 208 Punkte verloren**, Meldung „164 übernommen".
+
+Beides ist behoben (F-S2-E): Das Werkzeug setzt die Fassung, und die
+Anwendung meldet eine Punktliste in Nutzlast 8, statt sie zu übergehen.
+**Wer hier etwas ändert, prüfe die Spurzahl im Zielkonto, nicht nur die
+Einsatzzahl** — die Einsätze kommen auch dann an, wenn die Spuren fehlen.
+
 ## Wie der Bestand entsteht
 
 Die Referenz (87 Einsätze, 100 Ruhesegmente, 55 861 Spurpunkte, 16 Diensttage

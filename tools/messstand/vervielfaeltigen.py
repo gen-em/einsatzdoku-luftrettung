@@ -264,6 +264,28 @@ def main() -> int:
         nutzlast = {k: v for k, v in ref.items()
                     if k not in ("days", "missions", "rest_segments")}
         nutzlast["days"], nutzlast["missions"], nutzlast["rest_segments"] = [], [], []
+
+        # DIE FASSUNG WIRD GESETZT, NICHT GEERBT (S2/AP6, F-S2-E).
+        #
+        # Bis hierher wurde `version` aus der Referenz uebernommen. Das ging
+        # gut, solange die Referenz Nutzlast 7 war. Seit Web 11.0.0 ist sie
+        # Fassung 4 mit Nutzlast **8** — und Nutzlast 8 sagt zu, dass die
+        # Punkte NICHT in den Eintraegen stehen, sondern in eigenen Teilen.
+        #
+        # Diese Datei hier ist aber einteilig und traegt ihre Punkte als
+        # `track` in den Eintraegen. Mit `version: 8` nimmt der Einspielweg
+        # deshalb den Verweisweg, findet keine `spur_ref` — und legt jeden
+        # Einsatz OHNE Spur an. Gemessen am ersten Lauf danach: 164 Einsaetze
+        # angelegt, 91 208 Punkte verloren, Meldung „fertig".
+        #
+        # Die Datei IST Nutzlast 7; sie wird jetzt auch so ausgezeichnet.
+        # Die Zusatzfelder `stufe`, `n` und `n_original` bleiben stehen: Sie
+        # stoeren nicht, und der Vergleich fuehrt sie ohnehin in seiner
+        # Ausnahmeliste (edbak-alt_umlauf.json).
+        #
+        # Mit NaDoku 1.0 faellt das Altformat weg; dann braucht dieses
+        # Werkzeug einen Container-Schreiber in Python (Backlog Nr. 46).
+        nutzlast["version"] = 7
         for r in gruppe:
             teil = runde_bauen(ref, r, a.abstand_tage)
             nutzlast["days"] += teil["days"]
