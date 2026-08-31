@@ -419,8 +419,10 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   wählt Blau, damit die Rolle aus 3.1 sichtbar wird; der Unterschied
   steht mit der Freigabe zur Bestätigung. Und die **Bildmarke bleibt auch
   im laufenden Dienst sichtbar**: am Handy im Kopf jeder Ansicht (weiße
-  Fassung), an der Uhr klein am oberen Rand der laufenden Ansichten
-  (Dunkelgrund-Fassung).
+  Fassung), an der Uhr **gut sichtbar am oberen Rand** der laufenden
+  Ansichten (Dunkelgrund-Fassung; Richtwert rund ein Achtel der
+  Displayhöhe — die Startseite trägt sie größer, nach der
+  27-%-Stufung der Garmin).
   **(b) Beide Bildmarken in beiden Modulen, Wahl wie gehabt:** dieselbe
   Dreier-Wahl wie im Web-Konto (Design.md 2.3) und an der Garmin-Uhr
   (`logoWahl`) — in der App mit **Vorgabe „wechselnd"**, in den
