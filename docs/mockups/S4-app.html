@@ -17,7 +17,21 @@
          box-shadow:0 8px 24px rgba(26,5,0,.18)}
   .handy-kopf{background:var(--dunkelblau);color:var(--auf-dunkel);
          padding:var(--abstand-3) var(--abstand-3);font-family:var(--schrift-kopf);
-         font-size:var(--groesse-5)}
+         font-size:var(--groesse-5);display:flex;align-items:center;gap:10px}
+  .handy-kopf img{height:20px;width:auto;display:block}
+  .logo-mitte{align-self:center;height:56px;width:auto;margin:var(--abstand-1) 0}
+  .phase-zeile .phase-zeit{color:var(--blau-tief)}
+  .status-rot{color:var(--rot-tief);font-weight:600}
+  .einstell-zeile{display:flex;justify-content:space-between;align-items:center;
+         gap:var(--abstand-2);min-height:var(--knopf);padding:0 var(--abstand-2);
+         border:var(--strich) solid var(--linie);border-radius:var(--radius);
+         font-size:var(--groesse-2)}
+  .einstell-zeile.an{background:var(--orange-hell);font-weight:600}
+  .einstell-zeile img{height:18px;width:auto}
+  .uhr-logo{height:46px;width:auto}
+  .uhr .blau{color:var(--blau)}
+  .uhr-zeile .zeit{color:var(--blau)}
+  .uhr-zeile.naechste .zeit{color:var(--orange)}
   .handy-inhalt{padding:var(--abstand-3);display:flex;flex-direction:column;
          gap:var(--abstand-3)}
   .handy .knopf{width:100%;justify-content:center}
@@ -88,12 +102,22 @@
   Nur-Aufzeichnen-Modus gibt es gar keinen. Keine Reanimation (bleibt Garmin),
   keine Einsatzverwaltung (bleibt im Browser).</div>
 
+<div class="notiz"><strong>Marke (E-S4-22):</strong> Orange handelt, Blau erklärt
+  und bestätigt (Verbindung, gesetzte Phasenzeiten), Rot warnt — dieselben Rollen
+  wie im Web (Design.md 3.1). Die Bildmarke folgt der Logo-Wahl: Vorgabe
+  „wechselnd" (einmal je App-Start gewürfelt), in den Einstellungen fest auf RTH
+  oder NEF. Im dunkelblauen Kopf die weiße Fassung, auf hellem Grund die farbige;
+  die Uhr zeigt die Dunkelgrund-Fassung (nur die farbtragenden Elemente — die
+  Fassung der Garmin seit 1.10.3, hier deren Originaldatei). Dass
+  Handy (RTH) und Uhr (NEF) hier verschiedene Marken zeigen, ist „wechselnd":
+  jedes Gerät würfelt je Start selbst.</div>
+
 <div class="reihe">
   <div>
     <div class="handy">
-      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-kopf"><img src="../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="">NAdoku</div>
       <div class="handy-inhalt">
-        <p class="status"><span class="punkt punkt-rot"></span> Nicht eingerichtet</p>
+        <p class="status status-rot"><span class="punkt punkt-rot"></span> Nicht eingerichtet</p>
         <p style="margin:0;font-size:var(--groesse-2)">Koppel die App mit deinem
            Konto: Im Browser unter <strong>Einstellungen → Geräte</strong> einen
            Kopplungscode erzeugen.</p>
@@ -108,12 +132,13 @@
 
   <div>
     <div class="handy">
-      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-kopf"><img src="../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="">NAdoku</div>
       <div class="handy-inhalt">
         <p class="status"><span class="punkt punkt-ok"></span> Gekoppelt ·
            einsatz.beispieldomain.de</p>
         <p class="status"><span class="punkt punkt-ok"></span> Alles gesendet</p>
-        <p class="gross">Kein Dienst</p>
+        <img class="logo-mitte" src="../../server/assets/images/gen-em_logo_helicopter.svg" alt="Bildmarke Hubschrauber">
+        <p class="gross" style="align-self:center">Kein Dienst</p>
         <div class="modus" role="radiogroup" aria-label="Aufzeichnungsmodus">
           <span class="an">Mit Phasenknöpfen</span><span>Nur aufzeichnen</span>
         </div>
@@ -128,7 +153,7 @@
 
   <div>
     <div class="handy">
-      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-kopf"><img src="../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="">NAdoku</div>
       <div class="handy-inhalt">
         <p class="status"><span class="punkt punkt-orange"></span> Dienst läuft seit
            07:02 · GPS an</p>
@@ -149,7 +174,7 @@
 
   <div>
     <div class="handy">
-      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-kopf"><img src="../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="">NAdoku</div>
       <div class="handy-inhalt">
         <p class="status"><span class="punkt punkt-orange"></span> Dienst läuft seit
            07:02 · GPS an</p>
@@ -172,17 +197,38 @@
        abschließen" fragt nach und sendet dann <code>final</code> + Endzeit
        (E-S4-21b).</p>
   </div>
+
+  <div>
+    <div class="handy">
+      <div class="handy-kopf"><img src="../../server/assets/images/gen-em_logo_helicopter_weiss.svg" alt="">Einstellungen</div>
+      <div class="handy-inhalt">
+        <p style="margin:0;font-size:var(--groesse-2);font-weight:600">Logo</p>
+        <div class="einstell-zeile an"><span>Wechselnd</span><span class="feld-klein-inline">Vorgabe</span></div>
+        <div class="einstell-zeile"><span>RTH</span><img src="../../server/assets/images/gen-em_logo_helicopter.svg" alt="Hubschrauber"></div>
+        <div class="einstell-zeile"><span>NEF</span><img src="../../server/assets/images/gen-em_logo_nef.svg" alt="Fahrzeug"></div>
+        <p style="margin:0;font-size:var(--groesse-2);font-weight:600">Uhr</p>
+        <div class="einstell-zeile"><span>Sperre nach 10 s</span><span style="color:var(--orange-tief);font-weight:600">an</span></div>
+        <button class="knopf knopf-gefahr" type="button"><span>Gerät trennen</span></button>
+      </div>
+    </div>
+    <p class="bild-unterschrift"><strong>5 — Einstellungen.</strong> Die Logo-Wahl
+       wie im Web-Konto und an der Garmin (E-S4-22): Vorgabe „wechselnd", einmal
+       je App-Start gewürfelt; fest auf RTH oder NEF umstellbar. Dazu die
+       Uhr-Sperre (E-S4-21d) und das Trennen nach den Nr.-14-Regeln (rot:
+       Aufmerksamkeit).</p>
+  </div>
 </div>
 
 <div class="reihe">
   <div>
     <div class="uhr">
+      <img class="uhr-logo" src="../../watch/resources/drawables/logo_boden.png" alt="Bildmarke Fahrzeug (Dunkelgrund-Fassung)">
       <p class="uhr-titel">NAdoku</p>
-      <small>Handy verbunden</small>
+      <small class="blau">Handy verbunden</small>
       <span class="uhr-knopf">Dienst beginnen</span>
       <small>löst am Handy aus</small>
     </div>
-    <p class="bild-unterschrift"><strong>5 — Uhr, vor dem Dienst.</strong> Die Uhr
+    <p class="bild-unterschrift"><strong>6 — Uhr, vor dem Dienst.</strong> Die Uhr
        ist Fernbedienung: kein GPS, keine Zugangsdaten. Ohne erreichbares Handy
        zeigt sie „Handy nicht erreichbar" und puffert die Auslösung (E-S4-10).</p>
   </div>
@@ -193,7 +239,7 @@
       <span class="uhr-knopf">5 · Ankunft<br>PatientIn</span>
       <small>halten: Phasenliste</small>
     </div>
-    <p class="bild-unterschrift"><strong>6 — Uhr, im Einsatz.</strong> Der Durchlauf
+    <p class="bild-unterschrift"><strong>7 — Uhr, im Einsatz.</strong> Der Durchlauf
        wie an der Garmin (E-S4-21b): ein Knopf, nächste Phase; nach Phase 9 wird
        derselbe Knopf zu „Einsatz abschließen". Zeitstempel entstehen auf der Uhr;
        bei Funkabriss steht hier „N gepuffert".</p>
@@ -208,7 +254,7 @@
       <div class="uhr-zeile"><span><span class="nr">6</span>Transportbeginn</span><span class="zeit">–</span></div>
       <small>tippen setzt · Lünette scrollt</small>
     </div>
-    <p class="bild-unterschrift"><strong>7 — Phasenliste.</strong> Übersicht und
+    <p class="bild-unterschrift"><strong>8 — Phasenliste.</strong> Übersicht und
        Direktwahl in einem (E-S4-21c): Zeiten ansehen, Tippen setzt die gewählte
        Phase (eine Korrektur wird zweiter Eintrag, E-R45-12). Unten in der Liste:
        „Einsatz abschließen" für den vorzeitigen Abschluss.</p>
@@ -220,7 +266,7 @@
       <span class="uhr-knopf">Abschließen</span>
       <span class="uhr-knopf uhr-knopf-leise">Zurück</span>
     </div>
-    <p class="bild-unterschrift"><strong>8 — Rückfrage.</strong> Erst die
+    <p class="bild-unterschrift"><strong>9 — Rückfrage.</strong> Erst die
        Bestätigung sendet <code>final</code> + Endzeit — ein versehentlicher
        letzter Tipp beendet nichts (E-S4-21b).</p>
   </div>
@@ -231,7 +277,7 @@
       <small>Phase 5 seit 11:03</small>
       <small>zum Entsperren halten</small>
     </div>
-    <p class="bild-unterschrift"><strong>9 — Gesperrt.</strong> Nach ~10 s ohne
+    <p class="bild-unterschrift"><strong>10 — Gesperrt.</strong> Nach ~10 s ohne
        Bedienung sperrt die Anzeige (E-S4-21d): Phase und Zeit bleiben lesbar,
        Tippen tut nichts, Halten (~1 s) entsperrt — für Touch und eine etwaige
        freie Taste gleichermaßen.</p>

@@ -396,6 +396,37 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   Haltedauer, Sperrfrist und Berührziele sind blind gewählt und am Gerät
   nachzumessen (E-R45-7); sie gehören in den Wear-Teil von
   `docs/Geraete-Eingabe.md`.
+- **E-S4-22 — Marke in der App: alle drei Kernfarben und die Logo-Wahl**
+  (Anweisung vom 31.08.2026). Zwei Teile:
+  **(a) Farbrollen wie im Web** (Design.md 3.1; R8 sinngemäß — in Summe
+  ausgewogen, nicht nur Dunkelblau und Orange): **Orange handelt**
+  (Primärknöpfe, laufender Dienst), **Blau erklärt und bestätigt**
+  (Verbindungs- und Sync-Zustand in Ordnung, gesetzte Phasenzeiten,
+  erklärende Hinweise), **Rot warnt** („Nicht eingerichtet", abgewiesener
+  Schlüssel, „Handy nicht erreichbar"). Die App führt die Werte einmal als
+  Token, mit denselben HEX-Werten wie `:root` im Web; ein eigener Farbwert
+  entsteht nicht.
+  **(b) Beide Bildmarken in beiden Modulen, Wahl wie gehabt:** dieselbe
+  Dreier-Wahl wie im Web-Konto (Design.md 2.3) und an der Garmin-Uhr
+  (`logoWahl`) — in der App mit **Vorgabe „wechselnd"**, in den
+  App-Einstellungen festlegbar auf RTH (Hubschrauber) oder NEF (Fahrzeug).
+  „Wechselnd" wird **einmal je App-Start** gewürfelt und bleibt stehen
+  (Design.md 2.3: „Ein Logo, das bei jedem Seitenaufruf wechselt, ist kein
+  Logo, sondern ein Flackern"). Die Uhr hat keine eigenen Einstellungen:
+  Sie übernimmt die **Einstellung** vom Handy über den Nachrichtenweg
+  (E-S4-10) und würfelt „wechselnd" je Start selbst — wie die Garmin, ohne
+  Abstimmungsbedarf zwischen den Geräten. Die Einsatzregeln aus Design.md
+  2.3 gelten: im dunkelblauen App-Kopf die weiße Fassung, auf hellem Grund
+  die farbige; die Uhr zeigt auf Schwarz die **Dunkelgrund-Fassung** — nur
+  die farbtragenden Elemente, der dunkle Korpus entfällt bzw. wird weiß.
+  Das sind genau die Fassungen der Garmin seit 1.10.3
+  (`watch/resources/drawables/logo_luft.png` / `logo_boden.png`); die
+  Wear-App nutzt dieselben Vorlagen. Die S3-Erkenntnis zur Skalierung
+  (Punkt K: gleiche Höhe lässt die quadratische NEF-Marke kleiner wirken
+  als die 1,60 : 1 breite Luftmarke) gilt in der App von Anfang an —
+  gestuft wird über die Fläche, nicht die Höhe. Ressourcen sind die
+  vorhandenen Dateien (`server/assets/images/gen-em_logo_*.svg`, Rezept
+  `tools/uhr-bilder/`); eine neue Bildsprache entsteht nicht (E-S4-19).
 
 ## 4. Offene Fragen
 
@@ -435,7 +466,8 @@ den Vertrag, D die übergreifende Doku.
 
 **B1 — Gerüst und Probebau.**
 Gradle-Projekt `android/` mit den Modulen `handy/` und `uhr/`, Anwendungs-ID
-und Signaturkonzept (E-S4-01), Versionszählung, Lint; `LIESMICH.md` in
+und Signaturkonzept (E-S4-01), Versionszählung, Lint; Farb-Token und beide
+Bildmarken als Ressourcen (E-S4-22); `LIESMICH.md` in
 `android/` mit Bauanleitung (Container und Arbeitsplatz). Erste Handlung ist
 der **Probebau im Container** — er ist der Nachweis, dass die Netzfreigaben
 tragen; scheitert er, stoppt Block B und die Freigabenliste wird
@@ -460,7 +492,8 @@ Kopplung gegen die Container-Installation.
 Vordergrunddienst (E-S4-05), Ausdünnung, SQLite-Puffer, Dienst
 starten/beenden mit der Moduswahl „Mit Phasenknöpfen / Nur aufzeichnen"
 (E-S4-20), Neustart-Wiederaufnahme (App-Absturz und Handy-Neustart
-während des Dienstes), Erststart-Führung zur Akku-Freistellung.
+während des Dienstes), Erststart-Führung zur Akku-Freistellung; die
+App-Einstellungen (Logo-Wahl E-S4-22, Sperre der Uhr E-S4-21d).
 *Abnahme:* synthetischer Positionsstrom → Punktfolge nach der
 15 m/10 s-Regel (Soll-Zahlen je Strom im Prüfprotokoll);
 Wiederaufnahme-Fälle; ein 12-h-Strom erzeugt eine Punktmenge in der
@@ -495,7 +528,9 @@ Gesendetem (je ein Fall).
 **C1 — Gerüst und Bedienbild.**
 Modul `uhr/`, Oberflächen nach E-S4-11 und dem Bedienmodell E-S4-21:
 Durchlauf-Knopf mit Abschluss-Rückfrage, Phasenliste als Übersicht und
-Direktwahl, Sperre, `WearableButtons`-Abfrage; im Nur-Aufzeichnen-Modus
+Direktwahl, Sperre, `WearableButtons`-Abfrage; Bildmarke auf der
+Startseite nach der vom Handy übernommenen Logo-Wahl und die Farbrollen
+nach E-S4-22; im Nur-Aufzeichnen-Modus
 nur Dienst beginnen/beenden (E-S4-20). Blind gebaut.
 *Abnahme:* Modul baut im selben Gradle-Lauf; die Bedienzustände sind als
 Robolectric-Fälle belegt (Zahl im Prüfprotokoll), darunter je ein Fall:
