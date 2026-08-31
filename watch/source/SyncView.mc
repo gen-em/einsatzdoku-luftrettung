@@ -71,6 +71,42 @@ class SyncView extends WatchUi.View {
             }
         }
 
+        /* --- Kann die Uhr ueberhaupt senden? (Backlog Nr. 11) ---------------
+         *
+         * Die Seite beantwortet die Frage "ist alles uebertragen?". Bis
+         * hierher las sie dafuer allein Model.backlogCount() — und die Zahl
+         * beantwortet eine ANDERE Frage: "liegen abgeschlossene Pakete
+         * bereit?". Vor dem ersten Dienst ist sie zu Recht 0, und daraus wurde
+         * ein gruenes "Sync vollstaendig" ueber einen Weg, den die Uhr nie
+         * benutzt hat — waehrend unten in derselben Anzeige "Erst
+         * Server-Adresse setzen" stand. Zwei Aussagen, die einander
+         * widersprachen, nebeneinander.
+         *
+         * Der gruene Zustand setzt deshalb BEIDES voraus: eine Server-Adresse
+         * (App-Einstellungen) und eine Kopplung. Fehlt eines davon, tritt der
+         * Einrichtungszustand an seine Stelle, und der bisherige Fusszeilen-
+         * hinweis wird zur Hauptaussage.
+         *
+         * Reihenfolge wie bei der Einrichtung selbst — erst die Adresse, dann
+         * koppeln. Ohne Adresse ist Koppeln gar nicht moeglich (Pair.request
+         * bricht ab), ein Hinweis darauf waere also die falsche Reihenfolge.
+         */
+        var schritt = null;                    // null = eingerichtet
+        if (!Uploader.hasServer()) {
+            schritt = "Erst Server-Adresse setzen";
+        } else if (!Uploader.hasCredentials()) {
+            schritt = Input.lSelectHold() + ": Gerät koppeln";
+        }
+        // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
+        // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
+        var open = Model.backlogCount();
+        /* Der Einrichtungszustand ersetzt NUR den gruenen Fall. Liegt ein
+         * Rueckstand vor, bleibt die Zahl die Hauptaussage: Sie ist wahr, sie
+         * ist die dringlichere Information, und der Grund steht dann als
+         * Hinweis darunter. Ein Widerspruch entsteht dabei nicht — es sind
+         * Pakete offen, und daneben steht, warum. */
+        var einrichten = (schritt != null && open == 0);
+
         // --- Unterer Block zuerst -------------------------------------------
         // Meldungen und Version stehen unten. Ihre Zeilenzahl schwankt, deshalb
         // wird ihr Platz VOR dem Mittelblock bestimmt — sonst waechst der untere
@@ -95,25 +131,30 @@ class SyncView extends WatchUi.View {
         if (Cpr.active) {
             lines.add([Cpr.paused ? "REA pausiert" : "REA läuft",
                        Cpr.paused ? Ui.BLAU : Ui.ROT]);
-        } else if (!Uploader.hasServer()) {
-            lines.add(["Erst Server-Adresse setzen", Ui.ROT]);
-        } else if (!Uploader.hasCredentials()) {
-            lines.add([Input.lSelectHold() + ": Gerät koppeln", Ui.ROT]);
+        } else if (schritt != null && !einrichten) {
+            // Steht der Schritt schon in der Mitte, wird er hier NICHT
+            // wiederholt — zweimal dieselbe Zeile auf einem Uhrendisplay ist
+            // verschenkter Platz.
+            lines.add([schritt as Lang.String, Ui.ROT]);
         }
         lines.add(["Version " + Const.APP_VERSION, Graphics.COLOR_DK_GRAY]);
 
         var untenY = h - Ui.s(dc, 22) - lines.size() * hKlein;
 
         // --- Mittelblock ----------------------------------------------------
-        // Rueckstand = nur abgeschlossene, unbestaetigte Pakete — das immer
-        // offene laufende Ruhesegment zaehlt nicht als Rueckstand.
         // Zentriert wird im Raum OBERHALB des unteren Blocks.
-        var open = Model.backlogCount();
         var gGps = Ui.s(dc, 14);
         var hHaken = Ui.s(dc, 26);
-        var blockH = (open == 0)
-            ? hKlein + gGps + hGross + hHaken
-            : hKlein + gGps + hZahl + hMitte;
+        var hZust  = dc.getFontHeight(Graphics.FONT_MEDIUM);
+        var gZust  = Ui.s(dc, 6);              // Zustand -> Weg heraus (eng)
+        var blockH;
+        if (einrichten) {
+            blockH = hKlein + gGps + hZust + gZust + hKlein;
+        } else if (open == 0) {
+            blockH = hKlein + gGps + hGross + hHaken;
+        } else {
+            blockH = hKlein + gGps + hZahl + hMitte;
+        }
         var zone = untenY - Ui.s(dc, 8);
         var y = (zone - blockH) / 2;
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
@@ -122,7 +163,28 @@ class SyncView extends WatchUi.View {
         dc.drawText(cx, y, fKlein, gpsTxt, Graphics.TEXT_JUSTIFY_CENTER);
         y += hKlein + gGps;
 
-        if (open == 0) {
+        if (einrichten) {
+            /* Zwei Zeilen: WAS ist los, und WAS hilft — dasselbe Muster wie
+             * bei der Kopplungsmeldung (Pair.status / Pair.statusHint). Der
+             * Zustand traegt Rot wie ueberall sonst, wo die Einrichtung fehlt
+             * (StartView, Fusszeile dieser Seite); der Weg heraus steht
+             * gedaempft darunter und nimmt dem Zustand nicht die Aufmerksamkeit.
+             *
+             * Kein Haken, kein Symbol: Der Zustand ist weder erledigt noch
+             * fehlgeschlagen — es ist schlicht noch nichts eingerichtet. */
+            var tZ = "Nicht eingerichtet";
+            dc.setColor(Ui.ROT, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y,
+                Ui.fitFont(dc, tZ, y, hZust,
+                           [Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, fKlein]),
+                tZ, Graphics.TEXT_JUSTIFY_CENTER);
+            var sy = y + hZust + gZust;
+            var tS = schritt as Lang.String;
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, sy,
+                Ui.fitFont(dc, tS, sy, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                tS, Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (open == 0) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y, Graphics.FONT_LARGE, "Sync vollständig",
                 Graphics.TEXT_JUSTIFY_CENTER);

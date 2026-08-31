@@ -314,7 +314,21 @@ wischen() {                                  # wischen <x> <vonY> <nachY>
     done
     xdotool mousemove "$x" "$nach"; xdotool mouseup 1
 }
-taste()   { umgebung; xdotool key "${1:?Taste}"; }
+# Tastendruck. Anders als Mausereignisse (die an das Fenster unter dem Zeiger
+# gehen) wertet der Simulator Tasten nur am FOKUSFENSTER — ohne Fenstermanager
+# hat aber keines den Fokus, und der Druck verpufft spurlos. windowfocus setzt
+# ihn ueber XSetInputFocus; windowactivate scheitert hier, weil Xvfb ohne
+# Fenstermanager kein _NET_ACTIVE_WINDOW kennt.
+#
+# Der ERSTE Druck nach dem Laden geht regelmaessig verloren — die App
+# initialisiert noch. Wer sicher gehen will, drueckt zweimal und sieht nach.
+taste()   {
+    umgebung
+    local wid
+    wid=$(xdotool search --onlyvisible --name "CIQ Simulator" 2>/dev/null | head -1)
+    [ -n "$wid" ] && { xdotool windowfocus "$wid" 2>/dev/null; sleep 0.5; }
+    xdotool key "${1:?Taste}"
+}
 
 # Der Simulator legt die App-Einstellungen unter
 # /tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET ab und fuellt sie

@@ -115,16 +115,31 @@ zurückgelegten Kilometer.
 
 **Statistik:** Kennzahlen des laufenden Dienstes.
 
-**Sync:** Zeigt, ob alle abgeschlossenen Pakete beim Server angekommen sind
-(grün „Sync vollständig" mit Haken) oder wie viele noch offen sind, bei
-Problemen mit Fehlergrund. Darunter die **GPS-Güte**: „GPS gut" oder „GPS
-ausreichend" (grün) heißt, dass Positionen aufgezeichnet werden; „GPS zu
-schwach" (rot) bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb
-eines Dienstes steht dort „GPS aus". Unten die App-Version; mit **START
-gedrückt halten** startest du hier die Geräte-Kopplung.
+**Sync:** Beantwortet die Frage, ob alles beim Server angekommen ist. Die
+Seite kennt dafür drei Antworten:
 
-Ist noch keine Server-Adresse hinterlegt, weist die Uhr zuerst darauf hin, sie
-in Garmin Connect einzutragen; erst danach erscheint der Kopplungshinweis.
+| Anzeige | heißt |
+|---|---|
+| Grün „Sync vollständig" mit Haken | Alles übertragen — und die Uhr *kann* übertragen |
+| Orange Zahl, darunter „Pakete offen" | So viele abgeschlossene Pakete warten noch |
+| Rot „Nicht eingerichtet" | Die Uhr kann gar nicht senden; darunter steht, was fehlt |
+
+Der dritte Fall ist der Zustand vor der Einrichtung. Darunter steht der
+nächste Schritt — entweder „Erst Server-Adresse setzen" (das geschieht in
+Garmin Connect, nicht auf der Uhr) oder der Tastenweg zum Koppeln. Die
+Reihenfolge ist zwingend: Ohne Server-Adresse ist Koppeln nicht möglich.
+
+**Grün gibt es also nur, wenn beides steht** — Adresse und Kopplung. Bis Uhr
+1.10.0 erschien „Sync vollständig" auch vor der ersten Einrichtung, weil die
+Seite nur zählte, was zum Senden bereitlag; vor dem ersten Dienst ist das zu
+Recht nichts. Die Aussage war trotzdem falsch: Sie sprach über einen Weg, den
+die Uhr nie benutzt hatte.
+
+Über der Antwort steht die **GPS-Güte**: „GPS gut" oder „GPS ausreichend"
+(grün) heißt, dass Positionen aufgezeichnet werden; „GPS zu schwach" (rot)
+bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb eines Dienstes
+steht dort „GPS aus". Unten die App-Version, bei Problemen der Fehlergrund;
+mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 
 **Reanimation:** siehe 2.3.
 

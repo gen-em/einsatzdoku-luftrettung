@@ -161,6 +161,28 @@ Gemessen am 30.08.2026 mit der Eingabe-Probe auf der Venu 3S:
 | Wischen nach oben | `>> onNextPage` |
 | Halten 1,5 s | `HOLD x= y=` gefolgt von `RELEASE` |
 
+### Tasten sind heikler als Maus
+
+Mausereignisse gehen an das Fenster **unter dem Zeiger** — dafür braucht es
+nichts weiter. Tasten wertet der Simulator dagegen nur am **Fokusfenster**, und
+ohne Fenstermanager hat unter Xvfb keines den Fokus: Der Druck verpufft
+spurlos, ohne Fehlermeldung. `taste` setzt den Fokus deshalb selbst, mit
+`xdotool windowfocus` (nicht `windowactivate` — das verlangt
+`_NET_ACTIVE_WINDOW`, das ein Xvfb ohne Fenstermanager nicht anbietet).
+
+**Der erste Druck nach dem Laden geht trotzdem regelmäßig verloren**, während
+die App noch startet. Am 31.08.2026 hat das zweimal so ausgesehen, als bliebe
+die Anwendung auf dem Startbildschirm stehen. Zweimal drücken und nachsehen:
+
+```bash
+pruefstand.sh taste Down; pruefstand.sh abbild /tmp/a.png
+pruefstand.sh taste Down; pruefstand.sh abbild /tmp/b.png
+```
+
+Gemessen am 31.08.2026 auf der fenix6pro (Fünf-Tasten-Profil): `Down` blättert
+vom Startbildschirm zur Sync-Seite, `Escape` wirkt als BACK — auf dem
+Startbildschirm heißt das `System.exit()`, die App ist danach fort.
+
 ## Grenzen
 
 Was der Prüfstand **nicht** leistet, und woran das liegt:

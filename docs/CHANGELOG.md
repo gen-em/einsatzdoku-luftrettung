@@ -11,6 +11,69 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.10.1] — 2026-08-31
+
+**Die Sync-Seite behauptet nicht mehr „Sync vollständig", wenn die Uhr gar
+nicht senden kann.** Backlog Nr. 11.
+
+### Uhr — Zwei Aussagen, die einander widersprachen
+
+Ohne hinterlegte Server-Adresse zeigte dieselbe Anzeige gleichzeitig das grüne
+„Sync vollständig" mit Haken **und**, drei Zeilen tiefer, „Erst Server-Adresse
+setzen". Dasselbe bei gesetzter Adresse ohne Kopplung.
+
+Die Ursache war keine Nachlässigkeit im Text, sondern eine verwechselte Frage.
+`Model.backlogCount()` beantwortet ausschließlich „liegen abgeschlossene Pakete
+zum Senden bereit?" — vor dem ersten Dienst zu Recht `0`. Die Seite machte
+daraus eine Aussage über den **Übertragungsweg**, den die Uhr zu diesem
+Zeitpunkt nie benutzt hatte. Eine Fehlerzeile, die den Widerspruch aufgelöst
+hätte, gab es nicht: `SyncView.refresh()` stößt `syncAll()` nur bei
+vorhandenem Rückstand an, `Uploader.lastError` blieb also `null`.
+
+### Uhr — Ein dritter Zustand
+
+Der grüne Zustand setzt jetzt **beides** voraus: eine Server-Adresse *und* eine
+Kopplung. Fehlt eines davon und liegt kein Rückstand vor, tritt an seine Stelle
+ein Einrichtungszustand — rot „Nicht eingerichtet", darunter gedämpft der
+nächste Schritt („Erst Server-Adresse setzen" bzw. „START halten: Gerät
+koppeln"). Der bisherige Fußzeilenhinweis **wird damit zur Hauptaussage** und
+wird unten nicht wiederholt; zweimal dieselbe Zeile ist auf einem
+Uhrendisplay verschenkter Platz.
+
+Zwei Entscheidungen dabei, beide im Code vermerkt:
+
+**Der Rückstand behält den Vortritt.** Liegen Pakete offen *und* fehlt die
+Einrichtung, bleibt die Zahl die Hauptaussage und der Hinweis steht darunter.
+Ein Widerspruch entsteht dort nicht — es sind Pakete offen, und daneben steht,
+warum sie liegen bleiben. Der Einrichtungszustand ersetzt also nur den grünen
+Fall, nicht die Zahl.
+
+**Kein neuer Baustein.** Zwei Textzeilen — Zustand rot, Weg heraus in Hellgrau —
+sind genau das Muster, das die Kopplungsmeldung auf derselben Seite seit jeher
+benutzt (`Pair.status` / `Pair.statusHint`). Rot für „Einrichtung fehlt" ist
+dieselbe Farbe wie auf dem Startbildschirm und in der bisherigen Fußzeile: ein
+Zustand, eine Farbe (Uhr-Layoutregeln, Abschnitt 7). Kein Haken, kein Symbol —
+der Zustand ist weder erledigt noch fehlgeschlagen.
+
+### Uhr — Geprüft
+
+Fünf Zustände im Simulator, jeder mit Bildabzug. Die Zustände 4 und 5 über ein
+Probekompilat, dessen `backlogCount()` fest `3` liefert — ein Rückstand lässt
+sich sonst nur über einen vollständigen Dienst herstellen:
+
+| | Einrichtung | Rückstand | Anzeige |
+|---|---|---|---|
+| 1 | nichts | 0 | „Nicht eingerichtet" / „Erst Server-Adresse setzen" |
+| 2 | nur Adresse | 0 | „Nicht eingerichtet" / „START halten: Gerät koppeln" |
+| 3 | vollständig | 0 | grün „Sync vollständig" mit Haken |
+| 4 | vollständig | 3 | „3 / Pakete offen", keine Fußzeile |
+| 5 | nichts | 3 | „3 / Pakete offen" **plus** roter Hinweis unten |
+
+Auf fenix6pro (260 px) alle fünf, auf der Venu 3s (390 px) die Zustände 1 und 3
+— die beiden, deren Blockhöhe sich geändert hat. Die strenge Typprüfung `-l 3`
+meldet unverändert dieselben vier bekannten Fundstellen, keine davon in
+`SyncView.mc`.
+
 ## [Uhr 1.10.0] — 2026-08-31
 
 **Die Bildmarke auf dem Startbildschirm ist wählbar: luft- oder bodengebunden.**

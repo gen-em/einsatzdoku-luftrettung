@@ -28,29 +28,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
-11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
-    kann.** Beobachtet ohne hinterlegte Server-Adresse: Die Seite zeigt
-    gleichzeitig das grüne „Sync vollständig" mit Haken **und** unten den
-    gelben Hinweis „Erst Server-Adresse setzen". Dasselbe tritt auf, wenn die
-    Adresse gesetzt, das Gerät aber noch nicht gekoppelt ist.
-    Ursache: `SyncView.onUpdate` wertet zwei voneinander unabhängige Größen
-    aus und stellt sie unverbunden nebeneinander. `Model.backlogCount()`
-    beantwortet ausschließlich die Frage „liegen abgeschlossene Pakete zum
-    Senden bereit?" — vor dem ersten Dienst ist das zu Recht `0`. Daraus wird
-    im Text aber „vollständig" und damit eine Aussage über den Übertragungsweg,
-    den die Uhr zu diesem Zeitpunkt nie benutzt hat. `Uploader.lastError`
-    bleibt dabei `null`, weil `SyncView.refresh()` `syncAll()` nur bei
-    vorhandenem Rückstand anstößt — es gibt also nicht einmal eine Fehlerzeile,
-    die den Widerspruch auflösen würde.
-    Reine Anzeigefrage, kein Datenverlust: Wird ohne Einrichtung dokumentiert,
-    puffert die Uhr korrekt und der Rückstand erscheint.
-    Richtung der Auflösung: Der grüne Zustand setzt zusätzlich
-    `Uploader.hasServer()` **und** `hasCredentials()` voraus. Fehlt eines von
-    beidem, tritt an seine Stelle ein neutraler Einrichtungs-Zustand, und der
-    heute unten stehende gelbe Hinweis wird zur Hauptaussage der Seite statt
-    zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
-    Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
-    abgebildet und bleibt.
 14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
     abfragen und trennen.** Fall: eine geteilt genutzte Uhr. Wird sie neu
     gekoppelt und schlägt der Vorgang fehl, dokumentiert sie stillschweigend
@@ -879,3 +856,24 @@ zutreffen.
     das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
     wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
     Displays: Nr. 48.
+
+11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
+    kann.**
+    *Erledigt mit Uhr 1.10.1.* Ohne hinterlegte Server-Adresse zeigte dieselbe
+    Anzeige gleichzeitig das grüne „Sync vollständig" mit Haken **und** drei
+    Zeilen tiefer „Erst Server-Adresse setzen"; ebenso bei gesetzter Adresse
+    ohne Kopplung. Ursache war eine verwechselte Frage:
+    `Model.backlogCount()` beantwortet nur „liegen abgeschlossene Pakete zum
+    Senden bereit?" — vor dem ersten Dienst zu Recht `0` —, die Seite machte
+    daraus eine Aussage über den Übertragungsweg.
+    Der grüne Zustand setzt jetzt zusätzlich `hasServer()` **und**
+    `hasCredentials()` voraus. Fehlt eines und liegt kein Rückstand vor, tritt
+    ein dritter Zustand an seine Stelle: rot „Nicht eingerichtet", darunter
+    gedämpft der nächste Schritt. Der bisherige Fußzeilenhinweis wird damit
+    zur Hauptaussage und unten nicht wiederholt.
+    Bei **Rückstand** behält die Zahl den Vortritt und der Hinweis bleibt in
+    der Fußzeile — dort widerspricht sich nichts: Es sind Pakete offen, und
+    daneben steht, warum. Betraf nur `watch/source/SyncView.mc`.
+    *Geprüft:* fünf Zustände im Simulator mit Bildabzug (fenix6pro alle fünf,
+    Venu 3s die beiden mit geänderter Blockhöhe); Rückstand über ein
+    Probekompilat mit fest verdrahtetem `backlogCount() == 3`.
