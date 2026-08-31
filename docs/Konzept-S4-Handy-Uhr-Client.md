@@ -405,7 +405,22 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   erklärende Hinweise), **Rot warnt** („Nicht eingerichtet", abgewiesener
   Schlüssel, „Handy nicht erreichbar"). Die App führt die Werte einmal als
   Token, mit denselben HEX-Werten wie `:root` im Web; ein eigener Farbwert
-  entsteht nicht.
+  entsteht nicht. Drei feste Auftritte, damit die Rollen sichtbar werden
+  (Anweisung vom 31.08.2026): Die **laufende Aufzeichnung** trägt auf
+  jedem laufenden Bildschirm — Handy wie Uhr — einen **roten Punkt**, und
+  **beendende Handlungen sind vollflächig rot** (weiße Schrift auf
+  `--rot`): Einsatz abschließen, Dienst beenden, Gerät trennen und die
+  Abschluss-Bestätigung der Uhr. Das ist bewusst großflächiger als der
+  rote Rahmen des Web-Gefahrknopfs — auf einem Gerät im Einsatz muss die
+  beendende Handlung ohne Lesen erkennbar sein; die Rückfrage (E-S4-21b)
+  fängt den Fehltipp ab. **Auswahl- und Erklärflächen** (Moduswahl, Logo-Wahl,
+  Hinweiskästen) stehen auf **Hellblau** (`--blau-hell`) — bewusst anders
+  als die Wahlliste im Web, die hell-orange wählt (E-P3-20): In der App
+  wählt Blau, damit die Rolle aus 3.1 sichtbar wird; der Unterschied
+  steht mit der Freigabe zur Bestätigung. Und die **Bildmarke bleibt auch
+  im laufenden Dienst sichtbar**: am Handy im Kopf jeder Ansicht (weiße
+  Fassung), an der Uhr klein am oberen Rand der laufenden Ansichten
+  (Dunkelgrund-Fassung).
   **(b) Beide Bildmarken in beiden Modulen, Wahl wie gehabt:** dieselbe
   Dreier-Wahl wie im Web-Konto (Design.md 2.3) und an der Garmin-Uhr
   (`logoWahl`) — in der App mit **Vorgabe „wechselnd"**, in den
@@ -704,8 +719,31 @@ Aus Rahmenplan Abschnitt 7, hier mit Verortung im Paketplan:
 
 ## 10. Fehlerfunde (gesammelt, K4)
 
-Noch keine. Funde während der Umsetzung werden hier gesammelt und nicht
-nebenbei behoben, außer sie blockieren die laufende Arbeit.
+Funde werden hier gesammelt und nicht nebenbei behoben, außer sie
+blockieren die laufende Arbeit.
+
+### B-S4-01 — Logodateien tragen teilweise wieder die alten Farbwerte
+
+Beim Einbinden der Bildmarken in die A0-Mockups nachgemessen (31.08.2026,
+Stand `main` = Web 9.15.0), Füllwerte der SVGs:
+
+| Datei | Befund |
+|---|---|
+| `gen-em_logo_helicopter.svg` | **alle vier Werte alt**: `#587abc`, `#e3322b`, `#f7941d`, Korpus `#1d0e0a` |
+| `gen-em_logo_helicopter_weiss.svg` | Farbelemente alt (`#587abc`, `#e3322b`, `#f7941d`), Weiß in Ordnung |
+| `gen-em_logo_nef.svg` | Farben richtig, Korpus alt (`#1d0e0a` statt `#1A0500`) |
+| `gen-em_logo_nef_weiss.svg` | richtig |
+
+`docs/Design.md` 2.5 erklärt B1 für erledigt („Nachgemessen in
+`gen-em_logo_helicopter.svg`: `#1A0500`, `#4280E5`, `#D63338`, `#FF8F1F`")
+— das trifft auf den heutigen Stand nicht mehr zu: Der Commit
+„Update Logos" (`4ff25af`) hat neue Vektorvorlagen eingespielt und die
+alten Werte damit teilweise zurückgebracht. Die PNG-Ableitungen, Favicons
+und Uhr-Bilder sind **nicht** nachgemessen. Kein S4-Umfang (Web-Bestand);
+nach K4 gesammelt. **Berührung mit S4:** B1 übernimmt die SVGs in die App
+— liegt die Berichtigung bis dahin nicht vor, erbt die App die falschen
+Werte; das gehört vor B1 entschieden. Bei der Behebung `Design.md` 2.5
+mitziehen.
 
 ## 11. Statuspflege
 
