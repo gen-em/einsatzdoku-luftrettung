@@ -1,6 +1,7 @@
 # Konzept S4 — Handy- und Uhr-Client (Android/Wear OS), Schneidewerkzeug und GPX-Import (Zwischenpaket)
 
-**Stand:** 31.08.2026 — Erstfassung, zur Freigabe.
+**Stand:** 31.08.2026 — **freigegeben** (Freigabe des Konzepts und des
+A0-Mockup-Satzes am 31.08.2026; Erstfassung vom selben Tag).
 **Grundlage:** Rahmenplan R45 und R46 mit den vorab gefallenen Beschlüssen
 E-R45-1 bis E-R45-13; Befund am Code auf `main` = Web 9.15.0 / Uhr 2.0.0.
 **Modell:** kein Fable-Schritt (E-R45-10); Umsetzung mit Opus nach K2.
@@ -450,8 +451,9 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
 - **F-S4-A — Mindest-Android-Stand.** Vorschlag: Android 8.0 (`minSdk 26`,
   E-S4-03). Zu bestätigen vom Auftraggeber mit Blick auf die tatsächlichen
   Geräte des Nutzerkreises — ein älteres Gerät im Kreis hieße: Stand senken
-  und die Vordergrunddienst-Pfade dafür gesondert prüfen. **Zu entscheiden
-  vor B1.**
+  und die Vordergrunddienst-Pfade dafür gesondert prüfen.
+  **Entschieden am 31.08.2026: Android 8.0.** E-S4-03 gilt damit bestätigt
+  und unverändert; die Frage ist geschlossen.
 - **F-S4-B — Feldform des `geraet`-Blocks für Handys.** Das
   R42-Kleinstpaket legt fest, welche Felder `pair.php` speichert (Art,
   Bezeichnung). Die Handy-Kopplung übernimmt diese Form; sollte das
@@ -589,8 +591,11 @@ den Konzepttext hinaus und stehen mit der Freigabe zur Entscheidung:
 Beginn/Ende Pflicht und Phasenzeiten optional im Schneide-Bereich (die
 vollständige Phasenliste wohnt im Einsatzformular); Rückgängig als
 Zeilenaktion am geschnittenen Einsatz, nicht im Schneide-Bereich; der
-Download als neutrale Handlung, nicht als Primärknopf. **Die Freigabe
-steht aus.**
+Download als neutrale Handlung, nicht als Primärknopf.
+**Freigegeben am 31.08.2026** — ausdrücklich einschließlich der drei
+Vorschläge und der hellblauen Auswahl in der App (E-S4-22a). A0 ist damit
+erledigt; A2/A3 warten nur noch auf den gemergten S2/S3-Stand und die
+F-S4-C-Entscheidung.
 
 **A1 — QR, APK-Download, Vertrag-Nachtrag.**
 QR auf dem Geräte-Reiter (E-S4-15), Download-Seite und `server/apk/`-Weg
@@ -746,6 +751,9 @@ nach K4 gesammelt. **Berührung mit S4:** B1 übernimmt die SVGs in die App
 — liegt die Berichtigung bis dahin nicht vor, erbt die App die falschen
 Werte; das gehört vor B1 entschieden. Bei der Behebung `Design.md` 2.5
 mitziehen.
+**Entschieden am 31.08.2026: bewusst liegen lassen.** Keine Behebung
+vorab; B1 übernimmt den dann aktuellen Stand der Dateien. Damit der Fund
+nicht verschwindet, ist er als **Backlog Nr. 49** eingetragen.
 
 ## 11. Statuspflege
 
