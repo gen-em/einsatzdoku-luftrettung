@@ -158,9 +158,9 @@ function favicon_tags(): string {
      * und ist der Rueckfall fuer Browser, die kein PNG-Icon nehmen. Eine
      * zweite .ico je Logo waere zwei Dateien fuer einen Rueckfall, den
      * heute kaum ein Browser braucht. */
-    $png = function_exists('logo_stamm') && logo_stamm() === 'gen-em_logo_fahrzeug'
-        ? 'assets/images/favicon-fahrzeug.png'
-        : 'assets/images/favicon.png';
+    $png = function_exists('logo_stamm') && logo_stamm() === 'gen-em_logo_nef'
+        ? 'assets/images/favicon_nef.png'
+        : 'assets/images/favicon_helicopter.png';
 
     // PNG zuerst: Es ist die Fassung, die wir sicher ausliefern. Die .ico ohne
     // sizes-Angabe hinterher — mit sizes="any" wuerden manche Browser sie
@@ -197,7 +197,7 @@ function logo_src(): string {
     $pfad = (string)($CFG['app']['logo_path'] ?? '');
     $eigen = $pfad !== ''
         && !str_contains($pfad, 'gen-em_logo_helicopter')
-        && !str_contains($pfad, 'gen-em_logo_fahrzeug')
+        && !str_contains($pfad, 'gen-em_logo_nef')
         && is_file(__DIR__ . '/' . ltrim($pfad, '/'));
     if ($eigen) { return asset($pfad); }
     $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';

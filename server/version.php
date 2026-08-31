@@ -1204,6 +1204,17 @@ declare(strict_types=1);
  * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
  * 4-px-Schritt nach unten fort.
  *
+ * 9.14.1 — SIEBEN VERWEISE ZEIGTEN AUF GELOESCHTE BILDDATEIEN. Keine
+ * Migration. Der Logo-Wechsel (Commit „Update Logos") hat die Dateien
+ * getauscht, ohne den Code nachzuziehen — und weil ein Push auf main mit
+ * Aenderungen unter server/ sofort deployt, war der Stand live: ui.php lud auf
+ * JEDER Seite ein 404-Favicon, und wer „Fahrzeug" gewaehlt hatte, sah gar kein
+ * Logo. Geaendert hat sich allein der DATEISTAMM; der Einstellungswert heisst
+ * weiter 'fahrzeug' und steht so in users.logo_wahl und
+ * app_state.logo_standard — das spart eine Migration.
+ * (Nachgetragen mit 9.15.0: Der Block fehlte, die Datei fuehrt zu jeder
+ * Nummer einen.)
+ *
  * 9.15.0 — DIE UHR KANN SICH SELBST TRENNEN. Keine Migration.
  *
  * `pair.php` kennt jetzt zwei Anliegen statt einem: koppeln wie bisher, und
