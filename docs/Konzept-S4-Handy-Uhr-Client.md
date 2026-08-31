@@ -420,7 +420,7 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   steht mit der Freigabe zur Bestätigung. Und die **Bildmarke bleibt auch
   im laufenden Dienst sichtbar**: am Handy im Kopf jeder Ansicht (weiße
   Fassung), an der Uhr **gut sichtbar am oberen Rand** der laufenden
-  Ansichten (Dunkelgrund-Fassung; Richtwert rund ein Achtel der
+  Ansichten (Dunkelgrund-Fassung; Richtwert **ein Sechstel** der
   Displayhöhe — die Startseite trägt sie größer, nach der
   27-%-Stufung der Garmin).
   **(b) Beide Bildmarken in beiden Modulen, Wahl wie gehabt:** dieselbe
