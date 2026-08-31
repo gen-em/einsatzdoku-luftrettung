@@ -143,9 +143,9 @@ function ui_favicon(): string
     if (function_exists('favicon_tags')) { return favicon_tags(); }
     // Rueckfall ohne config.php: seitenrelativ. Der Einrichter liegt im selben
     // Verzeichnis wie die Anwendung, damit zeigen die Pfade richtig.
-    return '<link rel="icon" type="image/png" href="assets/images/favicon.png">' . "\n"
+    return '<link rel="icon" type="image/png" href="assets/images/favicon_helicopter.png">' . "\n"
          . '<link rel="icon" href="favicon.ico">'
-         . '<link rel="apple-touch-icon" href="assets/images/favicon.png">';
+         . '<link rel="apple-touch-icon" href="assets/images/favicon_helicopter.png">';
 }
 
 /**

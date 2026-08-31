@@ -11,6 +11,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 9.14.1] — 2026-08-31
+
+**Sieben Verweise zeigten auf gelöschte Bilddateien.** Der Logo-Wechsel
+(Commit „Update Logos") hat die Dateien getauscht, ohne den Code
+nachzuziehen — und weil ein Push auf `main` mit Änderungen unter `server/`
+sofort deployt, war der Stand live.
+
+### Web — Was kaputt war
+
+Aus `gen-em_logo_fahrzeug*` wurde `gen-em_logo_nef*`, aus `favicon.png` und
+`favicon-fahrzeug.png` wurden `favicon_helicopter.png` und `favicon_nef.png`
+— mit Unterstrich statt Bindestrich. Der Code kannte nur die alten Namen:
+
+| Stelle | zeigte auf | Folge |
+|---|---|---|
+| `ui.php` (2×) | `favicon.png` | **jede Seite** lud ein 404-Favicon |
+| `db.php` | `favicon-fahrzeug.png`, `favicon.png` | Favicon fehlte in beiden Zweigen |
+| `session_lib.php` | `gen-em_logo_fahrzeug` | wer „Fahrzeug" gewählt hatte, sah **kein Logo** |
+| `db.php` (`logo_src`) | `gen-em_logo_fahrzeug` | ein eigenes Logo wurde fälschlich als mitgeliefertes erkannt |
+| `update.php` | `gen-em_logo_fahrzeug*.svg` | die Platzhalter-Prüfung lief ins Leere |
+
+### Web — Warum nur die Pfade
+
+Der **Einstellungswert** heißt weiterhin `'fahrzeug'` — er steht so in
+`users.logo_wahl` und `app_state.logo_standard`. Geändert hat sich allein der
+**Dateistamm**. Beides auseinanderzuhalten spart eine Migration gespeicherter
+Werte; `LOGO_WAHLEN` bleibt unverändert, und niemand muss `update.php`
+aufrufen.
+
+### Web — Eine Annahme, die nicht mehr trägt
+
+`logo_platzhalter_liegt()` in `update.php` prüft, ob der NEF-Platzhalter noch
+liegt, und der Kommentar sagte dazu: *„Die echte Datei ersetzt ihn 1:1 —
+gleicher Name, gleicher viewBox, kein Eingriff im Code."* Genau das ist nicht
+eingetreten: Der Ersatz kam unter neuem Namen und mit anderem viewBox
+(400×250 quer wurde zu 420×420 quadratisch). Die Funktion prüft jetzt **beide**
+Namen — eine ältere Installation, die den Platzhalter noch unter dem alten
+Namen trägt, soll den Hinweis weiterhin bekommen.
+
 ## [Uhr 1.8.2] — 2026-08-30
 
 **Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung
@@ -200,6 +239,7 @@ Der Prüfstand ersetzt die echte Uhr nicht, und die Grenzen aus
 4,6 s, keine Kopplung, kein Server. Die App meldet im Simulator „Server fehlt" —
 richtiges Verhalten, kein Fehler. Und ein Lauf zeigt, dass es startet und wie
 es aussieht, nicht dass es richtig ist.
+
 
 ## [Web 9.14.0] — 2026-08-30
 
@@ -6276,7 +6316,6 @@ Zeile in einer Liste, die niemand zählt.
 ### Keine Datenbankänderung
 
 Dieses Paket kommt ohne Migration aus.
-
 
 
 ### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen

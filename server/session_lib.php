@@ -288,5 +288,9 @@ function logo_stamm(): string
      * erst nach der naechsten Anmeldung (siehe logo_sitzung_setzen). */
     $w = (string)($_SESSION['logo_wahl'] ?? '');
     $auf = ($w === 'hubschrauber' || $w === 'fahrzeug') ? $w : logo_standard_aufgeloest();
-    return $auf === 'fahrzeug' ? 'gen-em_logo_fahrzeug' : 'gen-em_logo_helicopter';
+    /* Der EINSTELLUNGSWERT heisst weiter 'fahrzeug' — er steht so in
+     * users.logo_wahl und in app_state.logo_standard. Der DATEISTAMM heisst
+     * seit dem Logo-Wechsel 'gen-em_logo_nef'. Beides auseinanderzuhalten
+     * spart eine Migration gespeicherter Werte. */
+    return $auf === 'fahrzeug' ? 'gen-em_logo_nef' : 'gen-em_logo_helicopter';
 }
