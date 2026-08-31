@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d63338;
+      }
+
+      .cls-2 {
+        stroke: #4280e5;
+      }
+
+      .cls-2, .cls-3, .cls-4 {
+        fill: none;
+        stroke-linecap: round;
+        stroke-width: 11px;
+      }
+
+      .cls-3 {
+        stroke: #d63338;
+      }
+
+      .cls-5, .cls-6 {
+        fill: #fff;
+      }
+
+      .cls-6 {
+        fill-rule: evenodd;
+      }
+
+      .cls-7 {
+        fill: #4280e5;
+      }
+
+      .cls-8 {
+        fill: #ff8f1f;
+      }
+
+      .cls-4 {
+        stroke: #ff8f1f;
+      }
+    </style>
+  </defs>
+  <g id="nef-back-genem">
+    <g>
+      <rect class="cls-7" y="237.5" width="134.67" height="48"/>
+      <rect class="cls-8" x="142.67" y="237.5" width="134.67" height="48"/>
+      <rect class="cls-1" x="285.33" y="237.5" width="134.67" height="48"/>
+      <line class="cls-2" x1="202.17" y1="86.5" x2="188.17" y2="76.5"/>
+      <line class="cls-2" x1="216.5" y1="67.5" x2="207.5" y2="53.5"/>
+      <line class="cls-4" x1="238.97" y1="60.5" x2="238.97" y2="42.5"/>
+      <line class="cls-3" x1="261.5" y1="67.5" x2="270.5" y2="53.5"/>
+      <line class="cls-3" x1="276.14" y1="86.5" x2="290.14" y2="76.5"/>
+    </g>
+  </g>
+  <g id="nef-front_weiss">
+    <g>
+      <path class="cls-6" d="M0,139.5c0-16.57,13.43-30,30-30h265c11,0,20,4,27,12l86,86c8,8,12,14,12,22H0v-90ZM242,140.5h60c7,0,12,3,15,9l27,48c4,7-1,15-9,15h-93c-6,0-10-4-10-10v-52c0-6,4-10,10-10ZM104,139.5h24v24h24v24h-24v24h-24v-24h-24v-24h24v-24Z"/>
+      <path class="cls-5" d="M0,293.5h60.29c-12.72,8.01-21.36,21.14-23.67,36h-16.62c-11,0-20-9-20-20v-16ZM115.71,293.5h183.58c-12.72,8.01-21.36,21.14-23.67,36h-136.24c-2.31-14.86-10.95-27.99-23.67-36ZM354.71,293.5h65.29v16c0,11-9,20-20,20h-21.62c-2.31-14.86-10.95-27.99-23.67-36Z"/>
+      <circle class="cls-5" cx="88" cy="337.5" r="40"/>
+      <circle class="cls-5" cx="327" cy="337.5" r="40"/>
+      <rect class="cls-5" x="203" y="97.5" width="72" height="18" rx="4" ry="4"/>
+      <path class="cls-5" d="M213,99.5c0-14.36,11.64-26,26-26s26,11.64,26,26h-52Z"/>
+    </g>
+  </g>
+</svg>
