@@ -14,11 +14,12 @@ module Model {
     // "Einsatztag starten" und bleibt fuer ALLE Uploads dieses Dienstes
     // unveraendert — gleiches Muster wie client_ref, gleiche Idempotenz.
     //
-    // WOZU. Bis Web 5.10.0 war ein Flugtag ein KALENDERTAG, und der Server
-    // ordnete ueber (Konto, Datum) zu. Seit Web 6.0.0 ist ein Diensttag eine
-    // eigene Zeile: Zwei Dienste an einem Kalendertag sind der vorgesehene Fall
-    // — ein Hubschrauberdienst am Tag, ein NEF-Nachtdienst am Abend. Aus dem
-    // Datum allein laesst sich dann nicht mehr ableiten, welcher gemeint ist.
+    // WOZU. Bis Web 5.10.0 war ein Diensttag (damals noch „Flugtag") ein
+    // KALENDERTAG, und der Server ordnete ueber (Konto, Datum) zu. Seit
+    // Web 6.0.0 ist ein Diensttag eine eigene Zeile: Zwei Dienste an einem
+    // Kalendertag sind der vorgesehene Fall — ein luftgebundener am Tag, ein
+    // bodengebundener am Abend. Aus dem Datum allein laesst sich dann nicht
+    // mehr ableiten, welcher gemeint ist.
     // Die Kennung sagt es.
     //
     // Die Uhr erfaehrt dabei NICHTS ueber die Einsatzart (E21). Sie sagt nur,

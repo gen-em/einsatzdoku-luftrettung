@@ -1,6 +1,6 @@
 <settings>
     <setting propertyKey="@Properties.serverUrl"
-             title="Server-Adresse der eigenen Einsatzdoku (Domain genügt, z. B. einsatz.beispiel.de)">
+             title="Server-Adresse der eigenen Einsatzdoku (Domain genügt, z. B. nadoku.beispieldomain.de)">
         <settingConfig type="alphaNumeric"/>
     </setting>
     <setting propertyKey="@Properties.deviceId"

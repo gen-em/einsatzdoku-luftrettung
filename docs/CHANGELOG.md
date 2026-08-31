@@ -11,6 +11,36 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.11.1] — 2026-08-31
+
+**Die Uhr trägt die Terminologie-Nachträge aus P2 nach.** Kein neues Verhalten
+— vier Textstellen, die seit P2 auf die nächste Uhr-Auslieferung gewartet
+haben.
+
+R29 des Rahmenplans hält es so fest: Die **Umbenennung** der Uhr-Quelltexte
+(Einstiegsklasse `HemsApp`, `@Strings.AppName`) bleibt P6, weil sie das
+Manifest ändert. Aber: *„Steht vor P6 aus anderem Grund eine Uhr-Auslieferung
+an (Backlog Nr. 11 oder 14 in P4), werden Beispieldomain und Kommentare dort
+mitgenommen."* Genau das ist mit 1.10.1 bis 1.11.0 eingetreten.
+
+| Stelle | vorher | jetzt |
+|---|---|---|
+| `settings.xml` (Garmin Connect, **sichtbar**) | `einsatz.beispiel.de` | `nadoku.beispieldomain.de` |
+| `properties.xml` (Kommentar) | `einsatz.beispiel.de` | `nadoku.beispieldomain.de` |
+| `Uploader.mc` (Kommentar) | `luftrettung.net` | `nadoku.beispieldomain.de` |
+| `Model.mc` (Kommentar) | „Flugtag", „Hubschrauberdienst am Tag, NEF-Nachtdienst am Abend" | „Diensttag (damals noch „Flugtag")", „ein luftgebundener am Tag, ein bodengebundener am Abend" |
+
+Die Beispieldomain ist die aus E-P2-03; dass sie den künftigen Namen trägt,
+ist dort ausdrücklich beabsichtigt. Bei `Model.mc` bleibt der alte Begriff
+**einmal als historische Angabe** stehen — der Satz erklärt, was sich mit
+Web 6.0.0 geändert hat, und eine Geschichte umzuschreiben wäre keine
+Terminologiepflege.
+
+**Was bewusst stehen bleibt:** `Flugmodus` in `Util.mc` — das ist der
+Betriebszustand eines Geräts und in der Wortliste als `flugmodus` ausdrücklich
+ausgenommen. Und `HemsApp` samt `manifest.xml`: R29 legt die Umbenennung nach
+P6, weil sie eine eigene Auslieferung nach sich zieht.
+
 ## [Uhr 1.11.0 · Web 9.15.0] — 2026-08-31
 
 **Die Uhr trennt eine bestehende Kopplung ausdrücklich, bevor sie neu

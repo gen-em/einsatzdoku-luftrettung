@@ -213,7 +213,7 @@ module Uploader {
         return u.substring(0, cut) as Lang.String;
     }
 
-    // Toleranz bei der Server-URL: "luftrettung.net" genuegt in den
+    // Toleranz bei der Server-URL: "nadoku.beispieldomain.de" genuegt in den
     // Einstellungen — Schema und /ingest.php werden ergaenzt.
     function _serverUrl() as Lang.String {
         var u = Properties.getValue("serverUrl");
