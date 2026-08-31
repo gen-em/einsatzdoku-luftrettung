@@ -1343,5 +1343,39 @@ declare(strict_types=1);
  * `ui_zeile()` kennt jetzt `attr` — dieselbe Zusatzoption, die `ui_knopf()`
  * und `ui_aktionen()` schon haben. Kein neuer Baustein.
  *
+ * 11.0.0 IST AP5: DIE SICHERUNG WIRD MEHRTEILIG (E-S2-10 bis E-S2-12).
+ * Hauptnummer, weil das Dateiformat der Sicherung wechselt — der erste
+ * Wechsel seit Web 5.0.0.
+ *
+ * WARUM. Eine Sicherung mit 5000 Einsaetzen traegt rund drei Millionen
+ * Spurpunkte. Bis hierher entstand sie als EINE Zeichenkette im Browser und
+ * ging als EIN POST zurueck; beides sprengt jedes Budget, das ein Telefon
+ * oder ein einfacher Webspace hat. Fassung 4 zerlegt sie deshalb in
+ * versiegelte Teile in einem ZIP:
+ *
+ *   manifest.edbak        Teileliste mit SHA-256 je Teil und Sicherungskennung
+ *   kern.edbak            die Nutzlast OHNE Punktlisten
+ *   spuren/0001.edbak …   je Teil eine Liste {spur_ref, SPUR1-Blob}
+ *
+ * JEDES TEIL KENNT SEINEN PLATZ. Die Zusatzdaten der Verschluesselung (AAD)
+ * binden Sicherungskennung, Teilname und Nummer — ein fehlendes, doppeltes,
+ * vertauschtes oder aus einer ANDEREN Sicherung stammendes Teil faellt damit
+ * beim Oeffnen auf und nicht erst beim Datenvergleich. Ohne diese Bindung
+ * liesse sich ein fremdes Spurteil unterschieben: Mit demselben Passwort
+ * ginge es klaglos auf und braechte den Bestand eines anderen Kontos mit.
+ * Das Muster ist von Cryptomator und age abgeschaut.
+ *
+ * EINE PBKDF2 JE VORGANG. Salz und Rundenzahl sind in allen Teilen dieselben;
+ * bei zwoelf Teilen waeren zwoelf Ableitungen zu je 320 000 Runden auf einem
+ * gedrosselten Telefon eine knappe Minute reines Warten — zweimal, beim
+ * Sichern und beim Einspielen.
+ *
+ * DAS ALTFORMAT WIRD WEITER GELESEN, aber nicht mehr geschrieben. Es ist der
+ * Weg, auf dem ein vorhandener Bestand einmal herueberkommt; mit NaDoku 1.0
+ * wird es abgeschafft (Entscheidung vom 31.08.2026, Backlog).
+ *
+ * KEINE MIGRATION. Das Format der Datei aendert sich, das Datenmodell nicht —
+ * `update.php` braucht diesmal niemand aufzurufen.
+ *
  */
-const WEB_VERSION = '10.3.0';
+const WEB_VERSION = '11.0.0';

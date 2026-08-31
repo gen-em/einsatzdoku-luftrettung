@@ -11,6 +11,116 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 11.0.0] — 2026-08-31
+
+**Die Sicherung wird mehrteilig.** Sechstes Arbeitspaket der Phase S2
+(E-S2-10 bis E-S2-12). Hauptnummer, weil das Dateiformat wechselt — der erste
+Wechsel seit Web 5.0.0. **Keine Migration:** Das Format der *Datei* ändert
+sich, das Datenmodell nicht.
+
+### Web — Warum
+
+Eine Sicherung mit 5000 Einsätzen trägt rund drei Millionen Spurpunkte. Bis
+hierher entstand sie als **eine** Zeichenkette im Browser und ging als **ein**
+POST zurück. Beides sprengt jedes Budget, das ein Telefon oder ein einfacher
+Webspace hat — und zwar an der Stelle, an der jemand ohnehin schon beunruhigt
+ist.
+
+### Web — Containerfassung 4
+
+Die `.edbak`-Datei ist jetzt ein ZIP (gespeichert, nicht gepackt — die Teile
+sind bereits gzip und verschlüsselt):
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit |
+| `kern.edbak` | die Nutzlast **ohne** Punktlisten; je spurtragendem Objekt eine `spur_ref` samt Stufe, `n_original` und `n` |
+| `spuren/0001.edbak` … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 2 MB |
+
+**Jedes Teil kennt seinen Platz.** Die Zusatzdaten der Verschlüsselung (AAD)
+binden Sicherungskennung, Teilname und Nummer:
+
+```
+Manifest   EDBAK4|manifest
+jedes Teil EDBAK4|<sicherungskennung>|<name>|<nr>/<gesamt>
+```
+
+Sie stehen **hinter** dem Kopf, nicht an seiner Stelle — der Kopf bleibt
+gebunden wie bisher, der Platz kommt dazu. Damit fällt ein fehlendes,
+doppeltes, vertauschtes oder aus einer **anderen** Sicherung stammendes Teil
+schon beim Öffnen auf. Ohne diese Bindung ließe sich ein fremdes Spurteil
+unterschieben: Mit demselben Passwort ginge es klaglos auf und brächte den
+Bestand eines anderen Kontos mit. Das Muster ist von Cryptomator und age
+abgeschaut, wo der Blockindex aus demselben Grund in die Zusatzdaten wandert.
+
+**Das Fassungsbyte eines Teils ist 0x04**, obwohl der Aufbau derselbe ist wie
+bei Fassung 3. Grund: Die Zusage „AAD = die ersten 13 Bytes" stimmt für ein
+Teil nicht mehr. Wer ein Teil einzeln öffnet — von Hand, mit dem
+Python-Rezept —, bekäme mit 0x03 die Meldung für ein falsches Passwort und
+suchte den Fehler an der falschen Stelle.
+
+**Eine PBKDF2 je Vorgang.** Salz und Rundenzahl stehen in allen Teilen gleich;
+abgeleitet wird einmal. Bei zwölf Teilen wären es sonst zwölf Ableitungen zu
+je 320 000 Runden — auf einem gedrosselten Telefon eine knappe Minute reines
+Warten, und zwar zweimal.
+
+### Web — Das Altformat wird gelesen, nicht mehr geschrieben
+
+Fassung 2 und 3 bleiben lesbar; sie sind der Weg, auf dem ein vorhandener
+Bestand einmal herüberkommt. **Mit NaDoku 1.0 wird das Altformat abgeschafft**
+(Entscheidung vom 31.08.2026) — es steht als Backlog-Eintrag, damit es nicht
+stillschweigend ewig mitläuft.
+
+Umgekehrt gilt weiter, was E-S1-07 sagt: Eine ältere Installation liest eine
+Fassung-4-Datei **nicht** — sie sieht ein ZIP, keine `EDBAK2`-Signatur, und
+sagt das auch.
+
+### Web — Drei Antworten statt einer
+
+Beim Einspielen entscheidet jetzt `EdCrypto.dateiArt()`: `zip` (mehrteilig),
+`edbak` (einteilig), `teil` (ein Stück, das jemand aus dem Archiv gelöst hat)
+oder nichts davon. Ein einzeln gewähltes Teil bekommt deshalb den Satz, der
+weiterhilft, statt „Passwort falsch oder Datei beschädigt".
+
+Dazu ein Wandler für **große** Bytefolgen: Der vorhandene
+(`String.fromCharCode(...bytes)`) breitet jedes Byte als eigenes Argument aus
+und wirft ab einigen zehntausend „Maximum call stack size exceeded". Gemessen:
+Bei 2 MB scheitert er, der neue trägt sie.
+
+### Web — Belegt
+
+Neu: **`tools/containerprobe/`** — sie hält Fassung 4 gegen **drei
+unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
+
+| Wer | Was |
+|---|---|
+| PHP | `spur_lib.php` kodiert echte SPUR1-Blobs |
+| Browser | `crypto.js` + `zipjs.min.js` versiegeln und packen — im **echten Chromium** |
+| Python | `vergleich/lesen.py` öffnet, entsiegelt und dekodiert wieder |
+
+| Prüfung | Zahl |
+|---|---|
+| `containerprobe/probe.mjs` | **31 Erwartungen, 0 nicht erfüllt** |
+| Punkt für Punkt PHP → Browser → Python | **9000 Einzelvergleiche, 0 Abweichungen** |
+| Eine PBKDF2 je Vorgang | ein Salz, eine Rundenzahl über alle Teile; 51 ms für die eine Ableitung |
+| Die Bindung der Teile | vertauscht · falsche Nummer · fremde Sicherung · verfälschtes Byte · falsches Passwort — **je abgewiesen** |
+| Gegenprobe zur Bindung | dasselbe fremde Teil geht **mit seiner eigenen Kennung** auf — der Unterschied liegt an der Bindung, nicht am Schlüssel |
+| Beide Sicherungen tragen einzeln | Prüfsumme allein: gefangen · Zusatzdaten allein (Manifest passend nachgezogen): gefangen |
+| Schadensfälle am Archiv | fehlendes Teil · vertauschte Teile · fremdes Teil · verfälschtes Teil · überzählige Datei · kein Manifest — **je benannt** |
+| ZIP ohne Kompression | Verfahren je Eintrag **0 (gespeichert)**, alle vier |
+| Base64 für 2 MB | 2 796 204 Zeichen im Rundlauf; der alte Wandler scheitert daran |
+| Altformat unverändert lesbar | Referenzdatei Fassung 3, **87 Einsätze, 443 Punkte im ersten** |
+
+> **Eine Zahl, die etwas anderes maß, als ihre Beschriftung sagte** — und
+> deshalb ersetzt wurde: Die erste Fassung der Prüfung „das ZIP packt nicht
+> noch einmal" verglich Dateigrößen und schlug fehl (+57,7 %). Bei drei Teilen
+> zu 500 Byte ist der ZIP-Rahmen größer als jede Ersparnis; gemessen war der
+> Rahmen, nicht das Verfahren. Jetzt wird das Verfahren je Eintrag gelesen.
+
+**Nicht geprüft:** der Weg durch die Anwendung (kommt mit den nächsten
+Schritten des Pakets) · große Dateien (das misst der Messstand) · andere
+Browser als Chromium.
+
 ## [Web 10.3.0] — 2026-08-31
 
 **Eine Spur lässt sich jetzt einzeln herunterladen — und mehrere ausgewählte

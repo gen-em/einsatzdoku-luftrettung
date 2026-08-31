@@ -5,10 +5,19 @@ mehr steht, was sich bei jedem Export aendert.
 
   CSV-Archiv (.zip)   LIESMICH.txt, felder.csv, einsaetze.csv,
                       diensttage.csv, ruhezeiten.csv, tracks/*.gpx
-  Sicherung (.edbak)  Container v3, entsiegelt mit dem Backup-Passwort;
-                      das innere JSON traegt die geschuetzten Angaben im
-                      KLARTEXT (Backup-Format.md 2) — deshalb ist es
-                      vergleichbar, ohne dass Chiffretext angefasst wird.
+  Sicherung (.edbak)  Container v2/v3 (einteilig) oder v4 (ZIP mit
+                      versiegelten Teilen), entsiegelt mit dem
+                      Backup-Passwort; das innere JSON traegt die
+                      geschuetzten Angaben im KLARTEXT (Backup-Format.md 2) —
+                      deshalb ist es vergleichbar, ohne dass Chiffretext
+                      angefasst wird.
+
+Fassung 4 wird beim Lesen wieder ZUSAMMENGESETZT: Die Spuren stehen dort als
+SPUR1-Blobs in eigenen Teilen und werden hier zu `track`-Listen an ihrem
+Einsatz beziehungsweise Ruhesegment aufgeloest. Der gelieferte Baum sieht
+danach aus wie der einer einteiligen Datei — sonst muessten normalisieren.py,
+vergleichen.py und beide Ausnahmelisten zweimal gepflegt werden, und die Zahl
+286 739 waere nicht mehr mit der von gestern vergleichbar.
 """
 from __future__ import annotations
 
@@ -76,6 +85,12 @@ def lesen_edbak(pfad: str, passwort: str) -> dict:
     from cryptography.hazmat.primitives import hashes
 
     roh = open(pfad, "rb").read()
+    # FASSUNGSWEICHE VORN. Fassung 4 ist ein ZIP und beginnt mit "PK"; die
+    # einteiligen Fassungen 2 und 3 mit "EDBAK2". Ohne diese Weiche meldete
+    # das Werkzeug "Keine EDBAK2-Datei (Signatur b'PK\x03\x04')" — richtig
+    # und unbrauchbar.
+    if roh[:2] == b"PK":
+        return lesen_edbak_v4(pfad, passwort)
     if roh[:6] != MAGIE:
         raise ValueError(f"Keine EDBAK2-Datei (Signatur {roh[:6]!r})")
     fassung = roh[7]
@@ -107,3 +122,204 @@ def lesen_edbak(pfad: str, passwort: str) -> dict:
     daten["$container"] = {"fassung": fassung, "gepackt": bool(flag),
                            "runden": runden}
     return daten
+
+
+# ------------------------------------------------------- .edbak Fassung 4
+#
+# Aufbau (docs/Backup-Format.md, Konzept S2 3.2):
+#
+#   ZIP (Speichern ohne Kompression)
+#     manifest.edbak        versiegelt, AAD "EDBAK4|manifest"
+#     kern.edbak            versiegelt, AAD "EDBAK4|<kennung>|kern.edbak|1/N"
+#     spuren/0001.edbak …   versiegelt, AAD "EDBAK4|<kennung>|<name>|<nr>/N"
+#
+# Teilkopf: "EDBAK2" 0x00 0x04 | Flag(1) | Runden(4, BE) | Salt(16) | IV(12)
+# Zusatzdaten (AAD): die ersten 13 Bytes PLUS die Zeichenkette oben.
+#
+# EINE PBKDF2 JE DATEI. Salz und Rundenzahl stehen in jedem Teilkopf gleich;
+# abgeleitet wird einmal, aus dem Manifest, und der Schluessel dann
+# weitergereicht. Bei zwoelf Teilen waeren zwoelf Ableitungen zu je 600 000
+# Runden reine Wartezeit — und das Werkzeug faehrt sie im Kreislauf mehrfach.
+
+MAGIE_TEIL = b"EDBAK2"
+FASSUNG_TEIL = 4
+AAD_MARKE = "EDBAK4"
+
+
+def _teil_kopf(roh: bytes) -> tuple[int, int, bytes]:
+    """Flag, Rundenzahl und Salz eines Teils — ohne zu entsiegeln."""
+    if len(roh) < 41 or roh[:6] != MAGIE_TEIL:
+        raise ValueError("Das ist kein Teil dieser Anwendung")
+    fassung = (roh[6] << 8) | roh[7]
+    if fassung != FASSUNG_TEIL:
+        raise ValueError(f"Unerwartete Teilfassung {fassung} (erwartet {FASSUNG_TEIL})")
+    import struct as _s
+    return roh[8], _s.unpack(">I", roh[9:13])[0], roh[13:29]
+
+
+def _teil_oeffnen(schluessel: bytes, roh: bytes, aad_text: str, was: str) -> bytes:
+    """Ein Teil entsiegeln. Die AAD bindet seinen Platz — s. Kopfkommentar."""
+    import gzip as gziplib
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.exceptions import InvalidTag
+
+    flag, _runden, _salz = _teil_kopf(roh)
+    kopf = roh[:13]
+    iv = roh[29:41]
+    ct = roh[41:]
+    aad = kopf + aad_text.encode("utf-8")
+    try:
+        koerper = AESGCM(schluessel).decrypt(iv, ct, aad)
+    except InvalidTag:
+        # DIE MELDUNG UNTERSCHEIDET. Ein fehlendes, vertauschtes oder fremdes
+        # Teil scheitert an derselben Stelle wie ein falsches Passwort; wer
+        # das nicht auseinanderhaelt, sucht den Fehler beim Passwort.
+        raise ValueError(
+            f"{was} liess sich nicht oeffnen: Passwort falsch, oder das Teil "
+            f"gehoert nicht an diese Stelle (Zusatzdaten {aad_text!r})") from None
+    return gziplib.decompress(koerper) if flag == 1 else koerper
+
+
+def spur1_lesen(blob: bytes) -> list:
+    """SPUR1-Blob zu [[seq, lat, lon, ele|None, ts], ...].
+
+    DAS REZEPT STEHT IN docs/Backup-Format.md UND HIER — und das ist Absicht:
+    Ein Werkzeug, das den Vergleich fuehrt, darf sich nicht auf eine
+    Dokumentation stuetzen, die es selbst pruefen soll. Wer das Format
+    aendert, muss beide Stellen anfassen; genau das ist der Sinn.
+    """
+    import struct
+    import zlib
+
+    if blob[:2] != b"SP":
+        raise ValueError("kein SPUR-Blob")
+    fassung, _stufe, aufl = blob[2], blob[3], blob[4]
+    if fassung != 1 or aufl != 1:
+        raise ValueError(f"SPUR-Fassung {fassung}, Aufloesung {aufl}")
+    _n_original, n = struct.unpack("<II", blob[5:13])
+    roh = zlib.decompress(blob[13:])
+
+    def spalte(pos: int, anzahl: int):
+        werte, lauf = [], 0
+        for d in struct.unpack(f"<{anzahl}i", roh[pos:pos + 4 * anzahl]):
+            lauf += d
+            werte.append(lauf)
+        return werte, pos + 4 * anzahl
+
+    lat, pos = spalte(0, n)
+    lon, pos = spalte(pos, n)
+    bits = roh[pos:pos + (n + 7) // 8]
+    pos += (n + 7) // 8
+    hat = [bool(bits[i // 8] & (1 << (i % 8))) for i in range(n)]
+    hoehen, pos = spalte(pos, sum(hat))
+    ts, pos = spalte(pos, n)
+
+    h = iter(hoehen)
+    return [[i, lat[i] / 1e6, lon[i] / 1e6,
+             (next(h) / 10 if hat[i] else None), ts[i]] for i in range(n)]
+
+
+def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
+    """Eine mehrteilige Sicherung oeffnen und wieder zusammensetzen."""
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.primitives import hashes
+    import base64
+    import hashlib
+
+    with zipfile.ZipFile(pfad) as z:
+        namen = z.namelist()
+        if "manifest.edbak" not in namen:
+            raise ValueError("ZIP ohne manifest.edbak — keine Sicherung Fassung 4")
+
+        roh_manifest = z.read("manifest.edbak")
+        _flag, runden, salz = _teil_kopf(roh_manifest)
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salz,
+                         iterations=runden)
+        schluessel = kdf.derive(passwort.encode("utf-8"))
+
+        manifest = json.loads(_teil_oeffnen(
+            schluessel, roh_manifest, f"{AAD_MARKE}|manifest", "Das Manifest"
+        ).decode("utf-8"))
+
+        teile = manifest.get("teile", [])
+        gesamt = len(teile)
+        pruefsummen_ok = True
+        pruefsummen_fehler = []
+        kern = None
+        spuren: dict = {}
+
+        for nr, t in enumerate(teile, start=1):
+            name = t["name"]
+            if name not in namen:
+                raise ValueError(f"Teil {name} fehlt im Archiv (Manifest nennt es)")
+            roh = z.read(name)
+
+            # SHA-256 DES VERSIEGELTEN TEILS — die zweite, unabhaengige
+            # Sicherung neben der AAD, und sie schlaegt ZUERST zu.
+            #
+            # Beide fangen dieselben Faelle (vertauscht, veraendert, fremd),
+            # aber sie sagen Verschiedenes: Die AAD sagt „liess sich nicht
+            # oeffnen — Passwort oder falscher Platz", die Pruefsumme sagt
+            # „DIESES Teil ist nicht das, das hier stehen soll". Fuer wen
+            # eine Sicherung nicht aufgeht, ist der Unterschied der zwischen
+            # zehnmal Passwort tippen und die richtige Datei suchen.
+            ist = hashlib.sha256(roh).hexdigest()
+            if t.get("sha256") and ist != t["sha256"]:
+                pruefsummen_ok = False
+                pruefsummen_fehler.append(f"{name}: {ist[:16]}… statt {t['sha256'][:16]}…")
+                raise ValueError(
+                    f"Teil {name} ist nicht das, das laut Manifest hier stehen soll: "
+                    f"Pruefsumme {ist[:16]}… statt {t['sha256'][:16]}…. Das Teil ist "
+                    f"veraendert, vertauscht oder stammt aus einer anderen Sicherung.")
+
+            aad = f"{AAD_MARKE}|{manifest['kennung']}|{name}|{nr}/{gesamt}"
+            inhalt = json.loads(_teil_oeffnen(schluessel, roh, aad, f"Teil {name}")
+                                .decode("utf-8"))
+            if t.get("art") == "kern":
+                kern = inhalt
+            else:
+                for eintrag in inhalt.get("spuren", []):
+                    spuren[int(eintrag["spur_ref"])] = base64.b64decode(eintrag["blob"])
+
+        # Fremde Eintraege im Archiv sind ein Befund, kein Achselzucken.
+        ueberzaehlig = sorted(set(namen) - {"manifest.edbak"}
+                              - {t["name"] for t in teile})
+
+    if kern is None:
+        raise ValueError("Kein Kernteil im Manifest")
+
+    # ---- Zusammensetzen: aus spur_ref + Blob wieder eine track-Liste --------
+    #
+    # Der gelieferte Baum soll aussehen wie der einer einteiligen Datei.
+    # Fehlzuordnungen werden GEMELDET und nicht stillschweigend zu einer
+    # leeren Spur: Eine spur_ref ohne Blob und ein Blob ohne Objekt sind
+    # beides Befunde, und beide wuerden sonst als "Spur ist eben leer"
+    # durchgehen.
+    offen = dict(spuren)
+    ohne_blob = []
+    for schluessel_name in ("missions", "rest_segments"):
+        for obj in kern.get(schluessel_name, []):
+            ref = obj.pop("spur_ref", None)
+            if ref is None:
+                continue
+            blob = offen.pop(int(ref), None)
+            if blob is None:
+                if int(obj.get("n", 0) or 0) > 0:
+                    ohne_blob.append(f"{schluessel_name}#{ref}")
+                obj["track"] = []
+                continue
+            obj["track"] = spur1_lesen(blob)
+
+    kern["$container"] = {
+        "fassung": 4,
+        "gepackt": True,
+        "runden": runden,
+        "teile": gesamt,
+        "teilenamen": [t["name"] for t in teile],
+        "pruefsummen_ok": pruefsummen_ok,
+        "pruefsummen_fehler": pruefsummen_fehler,
+        "blobs_ohne_objekt": sorted(offen.keys()),
+        "objekte_ohne_blob": ohne_blob,
+        "ueberzaehlige_dateien": ueberzaehlig,
+    }
+    return kern

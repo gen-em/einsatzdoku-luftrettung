@@ -391,6 +391,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine mittlere Fassung über die volle Breite des Diensttags, über der
     Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
 
+46. **Das Altformat der Sicherung wird mit NaDoku 1.0 abgeschafft.**
+    *Aufgenommen 31.08.2026 (S2/AP5), Entscheidung desselben Tages.* Seit
+    Web 11.0.0 schreibt die Anwendung Containerfassung 4; die einteiligen
+    Fassungen 2 und 3 werden nur noch **gelesen**. Das ist der Weg, auf dem
+    ein vorhandener Bestand einmal herüberkommt — nicht mehr.
+
+    Zu entfernen sind dann: der Lesezweig in `assets/crypto.js`
+    (`openBackup`, Fassung 2 und 3), der Punktlisten-Rückweg in
+    `backup_lib.php` (`$spurSchreiben`, `$insPoint`), die Fassungsweiche in
+    `tools/referenzdatensatz/vergleich/lesen.py` und die einteilige
+    Referenzdatei samt dem Lauf, der sie fährt.
+
+    > **Warum das hier steht und nicht einfach passiert.** Ein Lesezweig, der
+    > niemandem mehr auffällt, wird nicht gepflegt und trotzdem mitgeschleppt
+    > — und im Ernstfall verlässt sich jemand darauf. Ein Datum, zu dem er
+    > verschwindet, ist ehrlicher als ein „bleibt erstmal".
+
+    Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
+    Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
+    konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
+
 ---
 
 ## Erledigt

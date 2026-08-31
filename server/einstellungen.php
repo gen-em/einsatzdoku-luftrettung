@@ -2041,8 +2041,21 @@ ui_seite_start(['titel' => 'Einstellungen']);
       try {
         impState.textContent = 'Datei wird gelesen…';
         const bytes = new Uint8Array(await f.arrayBuffer());
-        if (!EdCrypto.isBackupFile(bytes)) {
+        /* DREI ANTWORTEN STATT EINER (S2/AP5). `isBackupFile()` sagt seit
+           Fassung 4 auch zu einem ZIP ja — die mehrteilige Sicherung IST
+           eins. Damit ein versehentlich gewaehltes CSV-Archiv trotzdem eine
+           brauchbare Auskunft bekommt, entscheidet hier `dateiArt()`:
+           'zip' = mehrteilig, 'edbak' = einteilig, 'teil' = ein Stueck
+           daraus, null = etwas anderes. */
+        const art = EdCrypto.dateiArt(bytes);
+        if (art === null) {
           melde(impState, 'Das ist keine Backup-Datei dieses Programms.', 'fehler');
+          return;
+        }
+        if (art === 'teil') {
+          melde(impState, 'Das ist ein einzelnes Teil einer mehrteiligen Sicherung, '
+                        + 'nicht die Sicherung selbst. Bitte die vollständige '
+                        + '.edbak-Datei auswählen.', 'fehler');
           return;
         }
         impState.textContent = 'Datei wird geöffnet…';

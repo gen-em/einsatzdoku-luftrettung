@@ -471,6 +471,16 @@ const EdCrypto = (() => {
     } else if (version === 3) {
       kopfLen = 13; iter = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
                             .getUint32(9, false);
+    } else if (version === CONTAINER_VERSION_4) {
+      /* EIN TEIL, KEINE DATEI. Fassung 4 liegt als ZIP vor; was hier ankommt,
+       * hat jemand aus dem Archiv herausgeloest. Es liesse sich mit dem
+       * richtigen AAD sogar oeffnen — aber allein ist es kein Bestand: Der
+       * Kern ohne Spurteile ist unvollstaendig, ein Spurteil ohne Kern sind
+       * Zahlen ohne Zuordnung. Die Meldung sagt deshalb, was zu tun ist,
+       * statt beim Passwort zu enden. */
+      throw new Error('Das ist ein einzelnes Teil einer mehrteiligen Sicherung, '
+                    + 'nicht die Sicherung selbst. Bitte die vollständige '
+                    + '.edbak-Datei auswählen — die, die alle Teile enthält.');
     } else {
       // Eine NEUERE Fassung als diese Installation kennt. Die Meldung sagt
       // das auch — sonst sucht jemand den Fehler beim Passwort.
@@ -490,15 +500,233 @@ const EdCrypto = (() => {
     return JSON.parse(td.decode(body));
   }
 
+  /* ---- Containerfassung 4: ein ZIP mit versiegelten Teilen -------------
+   *
+   * WOFUER (Konzept S2, E-S2-10). Eine Sicherung mit 5000 Einsaetzen traegt
+   * rund drei Millionen Spurpunkte. Als EINE Zeichenkette ist das ein
+   * Browserschritt jenseits jedes Budgets — und der Rueckweg ein POST, den
+   * kein Webspace annimmt. Fassung 4 zerlegt die Datei deshalb in Teile:
+   *
+   *   manifest.edbak        Teileliste, SHA-256 je Teil, Sicherungskennung
+   *   kern.edbak            die Nutzlast OHNE Punktlisten
+   *   spuren/0001.edbak …   je Teil eine Liste {spur_ref, blob} (SPUR1)
+   *
+   * JEDES TEIL IST DERSELBE AES-GCM-CONTAINER wie bisher — mit zwei
+   * Unterschieden, und beide haben einen Grund:
+   *
+   * 1. DAS FASSUNGSBYTE IST 0x04. Es koennte bei 0x03 bleiben; der Aufbau
+   *    ist derselbe. Aber die Zusage aus `Backup-Format.md` 1 lautet „AAD =
+   *    die ersten 13 Bytes", und fuer ein Teil stimmt sie nicht mehr (s. 2.).
+   *    Wer ein Teil einzeln oeffnet — von Hand, mit dem Python-Rezept —
+   *    bekaeme mit 0x03 die Meldung fuer ein falsches Passwort und suchte den
+   *    Fehler an der falschen Stelle. Mit 0x04 kann jeder Leser sagen, was es
+   *    wirklich ist: ein Teil, das seinen Platz kennt.
+   *
+   * 2. DIE ZUSATZDATEN TRAGEN DEN PLATZ DES TEILS.
+   *
+   *      Manifest   EDBAK4|manifest
+   *      jedes ...  EDBAK4|<sicherungskennung>|<name>|<nr>/<gesamt>
+   *
+   *    Sie stehen HINTER dem Kopf, nicht an seiner Stelle: AAD = Kopf (13 B)
+   *    + diese Zeichenkette. Der Kopf bleibt damit gebunden wie bisher, und
+   *    der Platz kommt dazu.
+   *
+   *    WAS DAS LEISTET: Ein fehlendes, doppeltes, vertauschtes oder aus einer
+   *    ANDEREN Sicherung stammendes Teil faellt beim Entsiegeln auf — nicht
+   *    erst beim Datenvergleich, und nicht gar nicht. Ohne diese Bindung
+   *    liesse sich `spuren/0003.edbak` einer fremden Sicherung unterschieben;
+   *    sie entsiegelte klaglos (dasselbe Passwort genuegt) und brachte die
+   *    Spuren eines fremden Bestands in dieses Konto. Das Muster ist von
+   *    Cryptomator und age abgeschaut, wo der Blockindex aus demselben Grund
+   *    in die Zusatzdaten wandert.
+   *
+   * 3. EINE PBKDF2 JE VORGANG. Salz und Rundenzahl sind in ALLEN Teilen
+   *    dieselben; der abgeleitete Schluessel entsteht einmal und wird
+   *    weitergereicht (`backupSchluessel()`). Bei zwoelf Teilen waeren zwoelf
+   *    Ableitungen zu je 600 000 Runden auf einem gedrosselten Telefon eine
+   *    knappe Minute reines Warten — und zwar zweimal, beim Sichern und beim
+   *    Einspielen.
+   */
+  const CONTAINER_VERSION_4 = 4;
+  const AAD_MARKE = 'EDBAK4';
+
+  /**
+   * Der Schluessel eines Sicherungsvorgangs — EINMAL ableiten.
+   *
+   * Ohne `salt` entsteht ein neues (Sichern), mit `salt` wird das aus dem
+   * ersten Teil gelesene benutzt (Einspielen).
+   */
+  async function backupSchluessel(password, iter, salt) {
+    pruefeRunden(iter, 'backupSchluessel');
+    const s = salt || crypto.getRandomValues(new Uint8Array(16));
+    return { key: await fileKey(password, s, iter), salt: s, iter };
+  }
+
+  /** Die Zusatzdaten des Manifests. */
+  const aadManifest = () => AAD_MARKE + '|manifest';
+
+  /**
+   * Die Zusatzdaten eines Teils.
+   *
+   * DIE ZEICHENKETTE ENTSTEHT AN EINER STELLE. Sichern und Einspielen muessen
+   * sie bitgleich bauen; zwei Formulierungen laufen beim naechsten Umbau
+   * auseinander, und das Ergebnis waere ein Entsiegelungsfehler, der wie ein
+   * falsches Passwort aussieht.
+   */
+  const aadTeil = (kennung, name, nr, gesamt) =>
+    AAD_MARKE + '|' + kennung + '|' + name + '|' + nr + '/' + gesamt;
+
+  /** Kopf eines Fassung-4-Teils: 6 Magie + 2 Fassung + 1 Flag + 4 Runden. */
+  function kopf4(flag, iter) {
+    const head = new Uint8Array(13);
+    head.set(MAGIC_PRAEFIX, 0);
+    head[6] = 0; head[7] = CONTAINER_VERSION_4;
+    head[8] = flag;
+    new DataView(head.buffer).setUint32(9, iter, false);
+    return head;
+  }
+
+  /** Kopf + AAD-Zeichenkette zu den Zusatzdaten zusammensetzen. */
+  function aadBytes(head, aadText) {
+    const zusatz = te.encode(aadText);
+    const alles = new Uint8Array(head.length + zusatz.length);
+    alles.set(head, 0);
+    alles.set(zusatz, head.length);
+    return alles;
+  }
+
+  /**
+   * Ein Teil versiegeln.
+   *
+   * @param {{key:CryptoKey,salt:Uint8Array,iter:number}} vorgang aus backupSchluessel()
+   * @param {Uint8Array} bytes  der Klartext des Teils
+   * @param {string} aadText    aadManifest() oder aadTeil(...)
+   */
+  async function sealTeil(vorgang, bytes, aadText) {
+    const packed = await gzip(bytes);
+    const flag = packed ? 1 : 0;
+    const body = packed || bytes;
+    const head = kopf4(flag, vorgang.iter);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv, additionalData: aadBytes(head, aadText) },
+      vorgang.key, body));
+    const out = new Uint8Array(13 + 16 + 12 + ct.length);
+    out.set(head, 0); out.set(vorgang.salt, 13); out.set(iv, 29); out.set(ct, 41);
+    return out;
+  }
+
+  /**
+   * Salz und Rundenzahl eines Teils lesen, OHNE zu entsiegeln.
+   *
+   * Das Einspielen braucht beide, bevor es den Schluessel ableiten kann — und
+   * es soll sie aus dem MANIFEST nehmen, dem ersten Teil, den es anfasst.
+   */
+  function teilKopf(bytes) {
+    if (!bytes || bytes.length < 41) { throw new Error('Das Teil ist zu kurz.'); }
+    for (let i = 0; i < 6; i++) {
+      if (bytes[i] !== MAGIC_PRAEFIX[i]) { throw new Error('Das ist kein Teil dieser Anwendung.'); }
+    }
+    const fassung = (bytes[6] << 8) | bytes[7];
+    if (fassung !== CONTAINER_VERSION_4) {
+      throw new Error('Unerwartete Fassung ' + fassung + ' in einem Teil '
+                    + '(erwartet ' + CONTAINER_VERSION_4 + ').');
+    }
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    return { fassung, flag: bytes[8], iter: dv.getUint32(9, false),
+             salt: bytes.slice(13, 29) };
+  }
+
+  /**
+   * Ein Teil oeffnen.
+   *
+   * DIE MELDUNG UNTERSCHEIDET DREI FAELLE, und das ist der Punkt der ganzen
+   * Uebung: „Passwort falsch" fuer alles waere hier die schlechteste aller
+   * Auskuenfte. Wer eine Sicherung einspielt, hat meist keinen zweiten
+   * Versuch — er soll wissen, ob er das Passwort neu tippen oder die Datei
+   * suchen muss.
+   */
+  async function openTeil(vorgang, bytes, aadText, wasIstDas) {
+    const kopf = teilKopf(bytes);
+    const head = bytes.slice(0, 13);
+    let body;
+    try {
+      body = new Uint8Array(await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: bytes.slice(29, 41),
+          additionalData: aadBytes(head, aadText) },
+        vorgang.key, bytes.slice(41)));
+    } catch (e) {
+      throw new Error((wasIstDas || 'Ein Teil der Sicherung') + ' ließ sich nicht '
+        + 'öffnen. Entweder stimmt das Passwort nicht, oder das Teil gehört '
+        + 'nicht an diese Stelle — es kann fehlen, vertauscht sein oder aus '
+        + 'einer anderen Sicherung stammen.');
+    }
+    return kopf.flag === 1 ? await gunzip(body) : body;
+  }
+
+  /** Dasselbe mit JSON darin — der Regelfall fuer Manifest, Kern und Spurteil. */
+  const sealTeilJson = (vorgang, obj, aadText) =>
+    sealTeil(vorgang, te.encode(JSON.stringify(obj)), aadText);
+  const openTeilJson = async (vorgang, bytes, aadText, wasIstDas) =>
+    JSON.parse(td.decode(await openTeil(vorgang, bytes, aadText, wasIstDas)));
+
+  /**
+   * Base64 fuer GROSSE Bytefolgen.
+   *
+   * `toB64()` weiter oben reicht fuer einen `pat_blob` von 300 Byte und NICHT
+   * fuer ein Spurteil von 2 MB: `String.fromCharCode(...bytes)` breitet jedes
+   * Byte als eigenes Argument aus, und ab einigen zehntausend Argumenten wirft
+   * die Laufzeit „Maximum call stack size exceeded" — auf dem einen Browser
+   * frueher als auf dem anderen. Deshalb in Haeppchen.
+   */
+  const B64_HAPPEN = 0x8000;   // 32 768 Byte
+  function toB64Gross(bytes) {
+    let s = '';
+    for (let i = 0; i < bytes.length; i += B64_HAPPEN) {
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + B64_HAPPEN));
+    }
+    return btoa(s);
+  }
+  function fromB64Gross(text) {
+    const roh = atob(text);
+    const out = new Uint8Array(roh.length);
+    for (let i = 0; i < roh.length; i++) { out[i] = roh.charCodeAt(i); }
+    return out;
+  }
+
+  /** SHA-256 als Hex — die Teileliste des Manifests fuehrt sie je Teil. */
+  async function sha256Hex(bytes) {
+    return toHex(await crypto.subtle.digest('SHA-256', bytes));
+  }
+
+  /**
+   * Welche Art Datei ist das?
+   *
+   * 'zip'   beginnt mit „PK" — Fassung 4 (ob wirklich ein `manifest.edbak`
+   *         darin steckt, sagt erst der ZIP-Leser; das gehoert dorthin)
+   * 'edbak' die einteilige Datei der Fassungen 2 und 3
+   * 'teil'  ein einzelnes Teil der Fassung 4, aus dem ZIP herausgeloest
+   * null    etwas anderes
+   */
+  function dateiArt(bytes) {
+    if (!bytes || bytes.length < 41) { return null; }
+    if (bytes[0] === 0x50 && bytes[1] === 0x4B) { return 'zip'; }
+    for (let i = 0; i < 6; i++) { if (bytes[i] !== MAGIC_PRAEFIX[i]) { return null; } }
+    const fassung = (bytes[6] << 8) | bytes[7];
+    if (fassung === CONTAINER_VERSION_4) { return 'teil'; }
+    return fassung >= 2 && fassung <= 99 ? 'edbak' : null;
+  }
+
   /** Ist das eine Backup-Datei dieses Programms? Beide Fassungen. */
   function isBackupFile(bytes) {
-    if (!bytes || bytes.length < 40) return false;
-    for (let i = 0; i < 6; i++) { if (bytes[i] !== MAGIC_PRAEFIX[i]) return false; }
-    const version = (bytes[6] << 8) | bytes[7];
-    // Auch eine unbekannte Fassung ist eine .edbak-Datei. Sie hier abzuweisen
-    // hiesse, sie als "fremde Datei" zu melden statt als "zu neu" — und die
-    // erste Meldung schickt die suchende Person in die falsche Richtung.
-    return version >= 2 && version <= 99;
+    /* SEIT FASSUNG 4 GIBT ES ZWEI GESTALTEN. Die einteilige Datei beginnt mit
+     * „EDBAK2", die mehrteilige mit „PK" — sie ist ein ZIP. Beide sind unsere
+     * Datei; wer hier nur die erste gelten laesst, meldet eine Fassung-4-Datei
+     * als „keine Backup-Datei dieses Programms" und schickt die suchende
+     * Person in die falsche Richtung. Ob im ZIP wirklich ein `manifest.edbak`
+     * steckt, entscheidet der ZIP-Leser und nicht diese Funktion: Sie sieht
+     * nur Bytes, und ein ZIP zu oeffnen ist keine Frage der Krypto. */
+    return dateiArt(bytes) !== null;
   }
 
   return { deriveKeys, encrypt, decrypt, randomHex,
@@ -508,5 +736,9 @@ const EdCrypto = (() => {
            setDataKey, getDataKey, getContentKey, setContentKey, clearSession,
            CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
-           sealBackup, openBackup, isBackupFile };
+           sealBackup, openBackup, isBackupFile,
+           /* Containerfassung 4 (S2/AP5) */
+           CONTAINER_VERSION_4, backupSchluessel, aadManifest, aadTeil,
+           sealTeil, openTeil, sealTeilJson, openTeilJson, teilKopf,
+           toB64Gross, fromB64Gross, sha256Hex, dateiArt };
 })();
