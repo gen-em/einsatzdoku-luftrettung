@@ -165,9 +165,27 @@ def konto_anlegen(basis: str, admin: tuple[str, str], konto: str,
 # ---------------------------------------------------------------- Umlaeufe
 
 def umlauf_edbak(a) -> tuple[str, str]:
-    quelle = neueste(a.referenz, "*.edbak")
+    """Sicherung -> frisches Konto -> Sicherung.
+
+    ZWEI LAEUFE, ZWEI REFERENZEN (S2/AP5):
+
+      --art edbak      Fassung 4 hinein, Fassung 4 heraus. Der Regelfall; hier
+                       ist der Vergleich ein echter Rundlauf.
+      --art edbak-alt  Die einteilige 7.x-Datei hinein, Fassung 4 heraus. Das
+                       ist die R11-Abnahme: Ein vorhandener Bestand muss
+                       einmal herueberkommen. Der Vergleich ist dabei
+                       formatuebergreifend — der Kern der Fassung 4 traegt
+                       `stufe`, `n_original` und `n`, die es in Nutzlast 7
+                       nicht gibt. Diese Zusaetze stehen in der eigenen
+                       Ausnahmeliste, mit Zahl.
+
+    Mit NaDoku 1.0 faellt der zweite Lauf weg (Backlog Nr. 46).
+    """
+    ordnerRef = (pathlib.Path(a.referenz) / "altformat") if a.art == "edbak-alt" \
+                else pathlib.Path(a.referenz)
+    quelle = neueste(str(ordnerRef), "*.edbak")
     melde(f"[Sicherung] Referenz: {quelle.name}")
-    ordner = pathlib.Path(a.ausgabe) / "edbak"
+    ordner = pathlib.Path(a.ausgabe) / a.art
     ordner.mkdir(parents=True, exist_ok=True)
     e = lauf(["node", str(WURZEL / "browser" / "kreislauf_edbak.mjs"),
               a.basis, str(quelle), a.backup_passwort, str(ordner)],
@@ -227,7 +245,7 @@ def main() -> int:
     import os
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--art", choices=["csv", "edbak"], required=True)
+    p.add_argument("--art", choices=["csv", "edbak", "edbak-alt"], required=True)
     p.add_argument("--basis", default="https://127.0.0.1:8443")
     p.add_argument("--referenz", default=str(WURZEL / "referenz"))
     p.add_argument("--ausgabe", default="/tmp/kreislauf")
@@ -269,19 +287,22 @@ def main() -> int:
             melde(f"  Vorhandenes Konto {a.konto} gelöscht.")
         konto_anlegen(a.basis, admin, a.konto, a.konto_passwort)
 
-        quelle, ergebnis = umlauf_edbak(a) if a.art == "edbak" else umlauf_csv(a)
+        quelle, ergebnis = umlauf_csv(a) if a.art == "csv" else umlauf_edbak(a)
     finally:
         jobs_pause(0)
 
     melde(f"\n[Vergleich] {pathlib.Path(quelle).name} ↔ {pathlib.Path(ergebnis).name}")
-    befehl = [sys.executable, str(HIER / "vergleichen.py"), "--art", a.art,
+    # `vergleichen.py` kennt zwei Formate; `edbak-alt` ist eine Herkunft, kein
+    # drittes Format — verglichen werden zwei .edbak-Dateien wie sonst auch.
+    vergleichsart = "csv" if a.art == "csv" else "edbak"
+    befehl = [sys.executable, str(HIER / "vergleichen.py"), "--art", vergleichsart,
               quelle, ergebnis, "--bericht",
               str(pathlib.Path(a.ausgabe) / a.art / "bericht")]
     if pathlib.Path(a.ausnahmen).exists():
         befehl += ["--ausnahmen", a.ausnahmen]
     else:
         melde(f"  (noch keine Ausnahmeliste unter {a.ausnahmen})")
-    if a.art == "edbak":
+    if vergleichsart == "edbak":
         befehl += ["--passwort", a.backup_passwort]
     e = subprocess.run(befehl, text=True)
     return e.returncode
