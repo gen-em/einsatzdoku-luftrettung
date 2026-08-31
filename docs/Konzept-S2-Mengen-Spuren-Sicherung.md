@@ -1723,10 +1723,11 @@ schreiben, sagen genau das.
 - **Nebenläufigkeit** zwischen Abruf und Ausdünnungsjob. Die Probe hält die
   Jobs an, statt den Fall herzustellen.
 
-### AP5 — Containerfassung 4 (in Arbeit, Web 11.0.0)
+### AP5 — Containerfassung 4 (erledigt, Web 11.0.0)
 
-**Stand:** Container, Sichern, Wiederherstellen und der Kreislauf stehen; der
-Messstand und das Prüfdokument fehlen noch. Vier Commits, einer je Schritt.
+**Erledigt.** Container, Sichern, Wiederherstellen, Kreislauf, Dokumentation
+und die Abnahme am 5000er-Bestand. Das Prüfdokument nach K9 gehört ans
+Phasenende (AP10).
 
 #### Vier Entscheidungen, alle vorgelegt
 
@@ -1812,14 +1813,63 @@ den Dingen, die dann fallen.
 | spur/job/ingest/gpx/Wiederherstellung | die Proben | 25 · 24 · 24 · 75 · 30, **je 0 nicht erfüllt** |
 | Wortliste (R28) | `wortliste.py` | 0 / 0 / 0 |
 
+#### Die Abnahme am 5000er-Bestand — und was sie gefunden hat
+
+**Der Kern hat es zuerst nicht geschafft.** Die Spuren waren gelöst, der Kern
+nicht:
+
+| | Kern | PHP-Speicherspitze |
+|---|---|---|
+| vorher (Punktlisten in der Nutzlast) | 94,3 MB | **1076 MB** |
+| Fassung 4, erster Stand | 10,5 MB | **92 MB** |
+| Fassung 4, nach dem Umbau | 10,5 MB | **37,5 MB** |
+
+Mit `php -d memory_limit=64M` brach der erste Stand ab — auf einem Webspace
+mit 64 MB wäre die Sicherung eines 5000er-Kontos gescheitert. Zwei Eingriffe,
+**kein Formatwechsel**: je Eintrag kodieren und freigeben (92 → 75,5 MB), und
+die vier Kindabfragen in Fenstern zu 500 statt über das ganze Konto
+(75,5 → 37,5 MB). Die Abfragen bleiben gebündelt; das N+1 aus M5-12 kommt
+nicht zurück.
+
+> **Der große Umbau war nicht nötig.** Vorgelegt war die Frage, ob Fassung 4
+> auch den Kern in Teile zerlegen muss. Die Antwort lautet nein, und sie ist
+> gemessen: 37,5 von 64 MB. Bei etwa 8500 Einsätzen wäre die Grenze wieder
+> erreicht — dann ist es die richtige Frage, und dann mit einer Zahl.
+
+**Zwei Fehler, die erst dieser Bestand gezeigt hat:**
+
+1. **Eine Mengengrenze an zwei Orten, die nicht zusammenpassten.** Der Browser
+   bündelte die Spurteile nach *Größe* (1,5 MB), der Endpunkt deckelt nach
+   *Anzahl* (500). Kurze Ruhespuren sind klein genug, dass in 1,5 MB weit mehr
+   als 500 passen — das Einspielen brach ab. Der Browser bündelt jetzt nach
+   beidem; dass die Zahlen gleich bleiben, hält die Wiederherstellungsprobe
+   fest (Teil 6).
+2. **Die Wiederaufnahme trug nicht** — der schwerere der beiden. Bricht das
+   Einspielen zwischen Kern und Spurteilen ab, ist beim zweiten Anlauf jeder
+   Eintrag „bereits vorhanden", und die Spurkarte blieb **leer**: Sie wurde
+   nur beim Anlegen gefüllt. **10 431 Spuren** meldeten „ohne zugehörigen
+   Einsatz" und wären nie mehr einzuspielen gewesen. Die Karte wird jetzt auch
+   für übersprungene Einträge gefüllt; nachgewiesen mit einem nachgestellten
+   Abbruch (4636 Spuren gelöscht → 4636 wieder eingespielt).
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Sicherung des 5000er-Bestands, Drossel 6× | `browserprobe.mjs` | **43,6 s** · Halde **58 MB** · JSON **9,39 MB** · PBKDF2 **1** · Datei **10,42 MB** |
+| dieselben Größen in der Ausgangsmessung (AP0) | | 109,8 s · 508 MB · 138,25 MB · 1 · 40,5 MB |
+| Alle vier Z3-Überschreitungen aus AP0 | | **weg** |
+| Serverseitige Spitze beim Kernbau | `memory_limit=64M` | **37,5 MB von 64** |
+| Wiederherstellung des 5000er-Bestands | Kreislauf | 5002 / 5795 / 915 · **10 431 Spuren mit 2 108 077 Punkten in 9 Teilen** |
+| Vergleich danach | `vergleichen.py` | **10 991 557 Einzelvergleiche, 0 unerklärt** |
+| Wiederaufnahme | nachgestellter Abbruch | 4636 gelöscht → **4636 wieder eingespielt** |
+| Wiederherstellungsprobe | `php probe.php` | **38 Erwartungen, 0 nicht erfüllt** (vorher 30) |
+
 **Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
 
-- **Der Großbestand.** 5000 Einsätze sichern und wiederherstellen unter Drossel
-  — die Abnahme von AP5. Der Messstand kann es, gefahren ist es nicht.
-- **Die Wiederaufnahme nach einem echten Abbruch** mitten in den Spurteilen.
-  Der Weg ist gebaut und die Überspringlogik geprüft; der Abbruch selbst ist
-  nicht hergestellt.
+- **Ein Abbruch mitten in einer Anfrage.** Der nachgestellte Abbruch löscht
+  Spuren zwischen zwei vollständigen Läufen; ein Netzabriss mitten im POST ist
+  etwas anderes.
 - **Andere Browser als Chromium.** WebKit und Gecko stehen in dieser Umgebung
   nicht zur Verfügung.
+- **Echte Hardware** statt CPU-Drossel.
 - **Die Admin-Sicherungen.** Sie schreiben weiter das einteilige Format; das
   ist AP6.

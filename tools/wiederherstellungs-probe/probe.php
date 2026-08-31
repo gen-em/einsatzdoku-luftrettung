@@ -489,5 +489,114 @@ $sag('GEGENPROBE: dabei wird nichts als mehrdeutig gemeldet',
      'tag_mehrdeutig=' . ($stats['skipped_reasons']['tag_mehrdeutig'] ?? '—'));
 $weg($uid);
 
+/* ======================================================================
+ * Teil 5 — Nutzlast 8: die Spurkarte und die Wiederaufnahme (S2/AP5)
+ *
+ * Nutzlast 8 traegt keine Punktlisten, sondern je Spur eine `spur_ref`. Der
+ * Rueckweg muss deshalb sagen, unter welcher Kennung er jede angelegt hat —
+ * sonst kann der Browser die Blobs nicht zuordnen.
+ *
+ * DIE ZWEITE ERWARTUNG IST DIE WICHTIGE. Bricht das Einspielen zwischen Kern
+ * und Spurteilen ab, ist beim zweiten Anlauf JEDER Eintrag „bereits
+ * vorhanden". Fuellte die Karte sich dann nicht, waeren die Spuren NIE mehr
+ * einzuspielen — sie meldeten „ohne zugehoerigen Einsatz", und der Bestand
+ * bliebe fuer immer ohne sie.
+ *
+ * Gefunden bei der Abnahme am 5000er-Bestand: 10 431 Spuren „ohne
+ * zugehoerigen Einsatz", nachdem eine Anfrage an einer Mengengrenze
+ * gescheitert war.
+ * ====================================================================== */
+echo "\n  Teil 5 — Nutzlast 8: Spurkarte und Wiederaufnahme (S2/AP5)\n";
+$uid = $konto('probe-spurkarte@example.invalid');
+
+$nutzlast8 = [
+  'version' => 8,
+  'days' => [[
+     'id' => 940, 'day' => '2026-07-05',
+     'started_at' => '2026-07-05 05:00:00', 'ended_at' => '2026-07-05 17:00:00',
+     'kind' => 'ground', 'vehicle_name' => 'Probe 8', 'base_name' => 'Probenstation',
+  ]],
+  'missions' => [
+    ['client_ref' => 's-m1', 'day_id' => 940, 'started_at' => '2026-07-05 06:00:00',
+     'ended_at' => '2026-07-05 07:00:00',
+     'spur_ref' => 1, 'stufe' => 2, 'n_original' => 3, 'n' => 3],
+    ['client_ref' => 's-m2', 'day_id' => 940, 'started_at' => '2026-07-05 08:00:00',
+     'ended_at' => '2026-07-05 09:00:00'],          // ohne Spur: keine spur_ref
+  ],
+  'rest_segments' => [
+    ['client_ref' => 's-r1', 'day_id' => 940, 'started_at' => '2026-07-05 10:00:00',
+     'ended_at' => '2026-07-05 11:00:00',
+     'spur_ref' => 2, 'stufe' => 2, 'n_original' => 2, 'n' => 2],
+  ],
+];
+
+$stats = edbak_restore($uid, $nutzlast8);
+$karte = $stats['spur_karte'] ?? null;
+$sag('Nutzlast 8 wird angenommen und legt an',
+     ($stats['missions'] ?? 0) === 2 && ($stats['rests'] ?? 0) === 1,
+     'Einsaetze ' . ($stats['missions'] ?? '—') . ', Ruhesegmente ' . ($stats['rests'] ?? '—'));
+$sag('Der Rueckweg liefert eine Spurkarte',
+     is_array($karte), $karte === null ? 'keine' : count($karte) . ' Eintraege');
+$sag('Sie nennt nur Objekte MIT spur_ref',
+     is_array($karte) && count($karte) === 2
+       && ($karte[1]['art'] ?? '') === 'mission' && ($karte[2]['art'] ?? '') === 'rest',
+     json_encode($karte));
+
+/* Zweiter Lauf: alles ist „bereits vorhanden" — die Karte muss trotzdem
+ * stehen, sonst gibt es keine Wiederaufnahme. */
+$stats2 = edbak_restore($uid, $nutzlast8);
+$karte2 = $stats2['spur_karte'] ?? null;
+$sag('WIEDERAUFNAHME: der zweite Lauf legt nichts an',
+     ($stats2['missions'] ?? -1) === 0 && ($stats2['rests'] ?? -1) === 0,
+     'uebersprungen ' . ($stats2['missions_skipped'] ?? '—') . '/'
+     . ($stats2['rests_skipped'] ?? '—'));
+$sag('WIEDERAUFNAHME: und liefert dieselbe Spurkarte',
+     $karte2 == $karte,
+     $karte2 === null ? 'keine' : (count($karte2) . ' Eintraege, gleich: '
+       . ($karte2 == $karte ? 'ja' : 'NEIN')));
+
+/* Nutzlast 7 bekommt KEINE Karte — sie traegt ihre Punkte selbst. */
+$uid7 = $konto('probe-nutzlast7@example.invalid');
+$stats7 = edbak_restore($uid7, [
+  'version' => 7,
+  'days' => [['id' => 950, 'day' => '2026-07-06', 'kind' => 'ground',
+              'vehicle_name' => 'Probe 7', 'base_name' => 'Probenstation']],
+  'missions' => [['client_ref' => 'a-m1', 'day_id' => 950,
+                  'started_at' => '2026-07-06 06:00:00',
+                  'ended_at' => '2026-07-06 07:00:00',
+                  'track' => [[0, 47.1, 11.1, 700.0, 1783000000]]]],
+  'rest_segments' => [],
+]);
+$sag('Nutzlast 7 bekommt keine Spurkarte (sie traegt ihre Punkte selbst)',
+     !isset($stats7['spur_karte']),
+     isset($stats7['spur_karte']) ? 'es gibt eine' : 'keine — richtig');
+$sag('und ihre Punkte kommen weiterhin an',
+     spur_zahlen($pdo, 'mission', [(int)$pdo->query("SELECT id FROM missions
+        WHERE user_id = $uid7 AND client_ref = 'a-m1'")->fetchColumn()])[
+        (int)$pdo->query("SELECT id FROM missions
+        WHERE user_id = $uid7 AND client_ref = 'a-m1'")->fetchColumn()] === 1,
+     'Punkte in der Datenbank');
+$weg($uid7);
+$weg($uid);
+
+/* ---- Die Zahl, die den Fehler ausgeloest hat, an beiden Orten ---------- */
+echo "\n  Teil 6 — Eine Mengengrenze, zwei Orte (S2/AP5)\n";
+
+/* WOFUER. Der Browser buendelt die Spurteile fuer den Rueckweg; der Endpunkt
+ * deckelt, wie viele er je Anfrage annimmt. Der erste Entwurf buendelte NUR
+ * nach Groesse — und scheiterte bei der Abnahme am 5000er-Bestand, weil in
+ * 1,5 MB weit mehr als 500 kurze Ruhespuren passen.
+ *
+ * Die Zahl steht seither an zwei Orten, und das ist ein bekannter Mangel.
+ * Diese Pruefung haelt sie zusammen: Laufen sie auseinander, faellt es hier
+ * auf und nicht erst an einem grossen Bestand. */
+$endpunkt = file_get_contents(dirname(__DIR__, 2) . '/server/api/backup_spuren_restore.php');
+$browser  = file_get_contents(dirname(__DIR__, 2) . '/server/einstellungen.php');
+preg_match('/BACKUP_SPUREN_RESTORE_MAX\s*=\s*(\d+)/', $endpunkt, $mE);
+preg_match('/HAPPEN_ZAHL\s*=\s*(\d+)/', $browser, $mB);
+$sag('Endpunkt und Browser nennen dieselbe Hoechstzahl je Anfrage',
+     isset($mE[1], $mB[1]) && $mE[1] === $mB[1],
+     'Endpunkt ' . ($mE[1] ?? '—') . ', Browser ' . ($mB[1] ?? '—'));
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

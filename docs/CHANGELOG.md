@@ -156,6 +156,63 @@ Dazu ein Wandler für **große** Bytefolgen: Der vorhandene
 und wirft ab einigen zehntausend „Maximum call stack size exceeded". Gemessen:
 Bei 2 MB scheitert er, der neue trägt sie.
 
+### Web — Der Kern hat es zuerst nicht geschafft
+
+Die Spuren waren gelöst, der **Kern** nicht. Gemessen am 5000er-Bestand:
+
+| | Kern | PHP-Speicherspitze |
+|---|---|---|
+| vorher (Punktlisten in der Nutzlast) | 94,3 MB | **1076 MB** |
+| Fassung 4, erster Stand | 10,5 MB | **92 MB** |
+| Fassung 4, nach dem Umbau | 10,5 MB | **37,5 MB** |
+
+Mit `php -d memory_limit=64M` brach der erste Stand ab:
+
+```
+PHP Fatal error: Allowed memory size of 67108864 bytes exhausted
+                 in server/backup_lib.php on line 82
+```
+
+Auf einem Webspace mit 64 MB — genau der Sorte, für die diese Anwendung
+gebaut ist — wäre die Sicherung eines 5000er-Kontos gescheitert.
+
+**Zwei Eingriffe, kein Formatwechsel:**
+
+1. **Je Eintrag kodieren und freigeben.** Vorher lagen drei Kopien desselben
+   Bestands im Speicher: die Zeilen aus der Datenbank, das zusammengesetzte
+   Feld und die JSON-Ausgabe. Jetzt wird jeder Einsatz sofort zu JSON und
+   seine Zeile weggeworfen. **92 → 75,5 MB.**
+2. **In Fenstern zu 500 statt über das ganze Konto.** Die vier Abfragen für
+   Phasen, Rettungsmittel, Reanimation und abweichende Besatzung liefen über
+   *alle* Einsätze, und ihre Ergebnisse lagen gleichzeitig da. Sie bleiben
+   gebündelt — das N+1 aus M5-12 kommt nicht zurück —, laufen aber je Fenster:
+   elf Durchgänge zu vier Abfragen statt vier über alles. **75,5 → 37,5 MB.**
+
+Am Dateiformat ändert sich dabei nichts; nur die Reihenfolge der Schlüssel im
+Kopf ist eine andere, und JSON kennt keine Reihenfolge. Die drei Kreisläufe
+messen es nach.
+
+### Web — Zwei Fehler, die erst der 5000er-Bestand gezeigt hat
+
+**Eine Mengengrenze, an zwei Orten, die nicht zusammenpassten.** Der Browser
+bündelte die Spurteile für den Rückweg nach **Größe** (1,5 MB), der Endpunkt
+deckelt nach **Anzahl** (500). Kurze Ruhespuren sind so klein, dass in 1,5 MB
+weit mehr als 500 passen — das Einspielen brach ab mit „Höchstens 500 Spuren
+je Anfrage". Die Meldung war richtig, das Bündeln war falsch. Jetzt bündelt
+der Browser nach beidem; dass die zwei Zahlen gleich bleiben, hält die
+Wiederherstellungsprobe fest.
+
+**Und die Wiederaufnahme trug nicht.** Das ist der schwerere der beiden.
+Bricht das Einspielen zwischen Kern und Spurteilen ab, ist beim zweiten
+Anlauf jeder Eintrag „bereits vorhanden" — und die Spurkarte blieb dann
+**leer**, weil sie nur beim Anlegen gefüllt wurde. Alle Spuren meldeten „ohne
+zugehörigen Einsatz" und wären **nie mehr einzuspielen** gewesen, außer man
+löscht den halben Bestand von Hand. Gesehen an 10 431 Spuren.
+
+Die Karte wird jetzt auch für übersprungene Einträge gefüllt. Nachgewiesen,
+indem ein Abbruch nachgestellt wurde: 4636 Spuren gelöscht, dieselbe Datei
+erneut eingespielt → **4636 Spuren übernommen**, alles andere übersprungen.
+
 ### Web — Belegt
 
 Neu: **`tools/containerprobe/`** — sie hält Fassung 4 gegen **drei
@@ -185,7 +242,14 @@ unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
 | Neue Datei gegen die alte Nutzlast, Punkt für Punkt | **244 905 Einzelvergleiche, 0 Abweichungen** |
 | Sicherung des Demo-Bestands im Browser | 87 Einsätze, 100 Ruhesegmente, 181 Spuren mit 48 981 Punkten — **212,9 kB in 0,2 s, 0 Konsolenfehler** |
 | Kern ohne Spuren gegen Kern mit Spuren | **183 878 statt 2 248 092 Byte (8,2 %)** |
-| spurprobe · jobprobe · ingestprobe · gpxprobe · Wiederherstellungsprobe | 25 · 24 · 24 · 75 · 30 Erwartungen, **je 0 nicht erfüllt** |
+| spurprobe · jobprobe · ingestprobe · gpxprobe · Wiederherstellungsprobe | 25 · 24 · 24 · 75 · **38** Erwartungen, **je 0 nicht erfüllt** |
+| **Der 5000er-Bestand, Drossel 6×** | | |
+| Sicherung erstellen | **43,6 s** (vorher 109,8) · Halde **58 MB** (508) · größte JSON-Zeichenkette **9,39 MB** (138,25) · PBKDF2 **1** · Datei **10,42 MB** (40,5) |
+| Alle vier Z3-Überschreitungen der Ausgangsmessung | **weg** — JSON ≤ 10 MB ✓, Halde ≤ 100 MB ✓, PBKDF2 = 1 ✓, Datei ≤ 25 MB ✓ |
+| Serverseitige Spitze beim Kernbau | **37,5 MB von 64** (vorher 1076 MB) — scharf mit `memory_limit=64M` gefahren |
+| Wiederherstellung des 5000er-Bestands | 5002 Einsätze, 5795 Ruhesegmente, 915 Diensttage, **10 431 Spuren mit 2 108 077 Punkten in 9 Teilen** |
+| Vergleich danach | **10 991 557 Einzelvergleiche, 0 unerklärt** |
+| Wiederaufnahme nach nachgestelltem Abbruch | 4636 Spuren gelöscht → **4636 wieder eingespielt**, alles andere übersprungen |
 
 > **Eine Zahl, die etwas anderes maß, als ihre Beschriftung sagte** — und
 > deshalb ersetzt wurde: Die erste Fassung der Prüfung „das ZIP packt nicht
@@ -202,11 +266,11 @@ unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
 > - Die Höhe des Einsatzortes fiel beim Wiederherstellen weg (oben).
 >   Aufgefallen im Kreislauf, an 79 Zeilen `site_ele_m: 901 → —`.
 
-**Nicht geprüft:** große Bestände (das misst der Messstand, kommt mit dem
-Prüfmittel-Schritt) · andere Browser als Chromium · die Wiederaufnahme nach
-einem echten Abbruch mitten in den Spurteilen (der Weg ist gebaut und die
-Überspringlogik geprüft, der Abbruch selbst nicht hergestellt) · die
-Admin-Sicherungen, die noch das alte Format schreiben (AP6).
+**Nicht geprüft:** andere Browser als Chromium (WebKit und Gecko stehen in
+dieser Umgebung nicht zur Verfügung) · die Admin-Sicherungen, die noch das
+alte Format schreiben (AP6) · ein Abbruch **mitten in einer Anfrage** (der
+nachgestellte Abbruch löscht Spuren zwischen zwei vollständigen Läufen) ·
+echte Hardware statt CPU-Drossel.
 
 ## [Web 10.3.0] — 2026-08-31
 

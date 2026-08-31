@@ -2434,7 +2434,20 @@ ui_seite_start(['titel' => 'Einstellungen']);
         let ohneZiel = 0;
         if (fassung4 && fassung4.spurteile.length) {
           const karte = out.spur_karte || {};
+          /* ZWEI GRENZEN, NICHT EINE. Die Größe deckelt der POST (Z3: 2 MB);
+             die ANZAHL deckelt der Endpunkt (BACKUP_SPUREN_RESTORE_MAX in
+             api/backup_spuren_restore.php), weil je Spur Arbeit anfällt.
+             Der erste Entwurf kannte nur die Größe — und scheiterte bei der
+             Abnahme am 5000er-Bestand: Kurze Ruhespuren sind so klein, dass
+             in 1,5 MB weit mehr als 500 passen. Die Meldung war richtig
+             („Höchstens 500 Spuren je Anfrage"), das Bündeln war falsch.
+
+             DIE ZAHL STEHT AN ZWEI ORTEN, und das ist bekannt: hier und im
+             Endpunkt. `tools/wiederherstellungs-probe/` hält sie zusammen —
+             sie prüft, dass genau BACKUP_SPUREN_RESTORE_MAX durchgeht und
+             eins mehr abgewiesen wird. */
           const HAPPEN = 1.5 * 1024 * 1024;
+          const HAPPEN_ZAHL = 500;
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {
             impState.textContent = `Spuren werden übertragen `
               + `(Teil ${i + 1} von ${fassung4.spurteile.length})…`;
@@ -2464,7 +2477,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
               const ziel = karte[String(e.spur_ref)];
               if (!ziel) { ohneZiel++; continue; }
               const blob = String(e.blob || '');
-              if (groesse + blob.length > HAPPEN) { await senden(); }
+              if (groesse + blob.length > HAPPEN || happen.length >= HAPPEN_ZAHL) {
+                await senden();
+              }
               happen.push({ owner_type: ziel.art, owner_id: ziel.id,
                             blob: blob, n: e.n });
               groesse += blob.length;

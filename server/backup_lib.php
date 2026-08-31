@@ -31,6 +31,20 @@ require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
 
 /**
+ * Wie viele Einsaetze beziehungsweise Ruhesegmente `edbak_build()` auf einmal
+ * zusammensetzt (S2/AP5).
+ *
+ * NICHT DIE ABFRAGEN, SONDERN DER SPEICHER entscheidet diese Zahl. Die
+ * Kindtabellen werden weiterhin gebuendelt geholt — das N+1, das M5-12
+ * abgeschafft hat, kommt nicht zurueck; sie laufen nur je Fenster statt je
+ * Konto. Bei 500 kostet ein 5000er-Bestand elf Durchgaenge zu vier Abfragen
+ * statt vier ueber alles, und die Speicherspitze faellt von 92 MB unter das
+ * Budget von 64 MB (Z3). Gemessen, nicht geschaetzt — die Zahlen stehen im
+ * Konzept S2, AP5.
+ */
+const EDBAK_FENSTER = 500;
+
+/**
  * Inneres Backup-JSON aufbauen.
  *
  * DER PAPIERKORB IST TEIL JEDER SICHERUNG (E-S1-01). Bis Web 7.3.1 filterten
@@ -223,31 +237,69 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
      * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
      * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
      * aendern, und das ist ein eigener Vorgang. */
-    $missionZeilen = $q("SELECT id, $missionSpalten FROM missions
-                         WHERE user_id = ? ORDER BY started_at", [$userId]);
-    $missionIds = array_map(static fn($m) => (int)$m['id'], $missionZeilen);
+    /* IN FENSTERN, NICHT AUF EINMAL (S2/AP5).
+     *
+     * WARUM. Hier standen vier Abfragen ueber ALLE Einsaetze eines Kontos —
+     * Phasen, Rettungsmittel, Reanimation, abweichende Besatzung —, und ihre
+     * Ergebnisse lagen gleichzeitig im Speicher. Am 5000er-Bestand gemessen:
+     * 92 MB Spitze gegen ein Budget von 64 MB (Z3). Mit `memory_limit=64M`
+     * bricht der Lauf ab; die Sicherung eines grossen Kontos scheitert also
+     * auf genau der Sorte Webspace, fuer die diese Anwendung gebaut ist.
+     *
+     * Die Abfragen bleiben gebuendelt — das N+1, das M5-12 abgeschafft hat,
+     * kommt nicht zurueck. Sie laufen nur je Fenster statt je Konto: aus vier
+     * Abfragen werden vier je 500 Einsaetzen, also elf mal vier statt vier.
+     * Das ist der Preis, und er ist klein gegen einen Abbruch.
+     *
+     * Die REIHENFOLGE ist die des Formats und kommt aus der Kennungsabfrage
+     * oben; die Fenster halten sie ein. Sie ist Teil des Dateiformats, nicht
+     * Zufall.
+     */
+    $missionIds = array_map(static fn($r) => (int)$r['id'],
+        $q('SELECT id FROM missions WHERE user_id = ? ORDER BY started_at', [$userId]));
 
-    /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
-     * waren es fuenf Spalten in `missions`; sie stehen deshalb im Format jetzt
-     * als Objekt role_code => name. */
-    $einsatzCrewNach = [];
-    if ($missionIds) {
+    /* Die Spurangaben je Einsatz stehen VOR den Fenstern: `spur_ref` zaehlt
+     * ueber den ganzen Vorgang durch, und die Reihenfolge dieser Nummern ist
+     * die der Einsaetze. Sie kosten wenig — vier Abfragen, kein Punkt. */
+    $spurNachEinsatz = $ohneSpuren ? $umrisse('mission', $missionIds)
+                                   : $spuren('mission', $missionIds);
+
+    /* JE EINSATZ KODIEREN UND FREIGEBEN, statt erst alle zu sammeln.
+     *
+     * Bis Web 11.0.0 stand hier `$missions[] = $m;`, und damit lagen drei
+     * Kopien desselben Bestands im Speicher: die Zeilen aus der Datenbank,
+     * das zusammengesetzte Feld und am Ende die JSON-Ausgabe.
+     *
+     * DAS FORMAT AENDERT SICH DABEI NICHT. Es entsteht dasselbe JSON; nur die
+     * REIHENFOLGE der Schluessel im Kopf ist eine andere, und JSON kennt keine
+     * Reihenfolge. Der Kreislauf misst das nach. */
+    $missionsJson = '';
+    foreach (array_chunk($missionIds, EDBAK_FENSTER) as $fenster) {
+        $zeilen = [];
+        foreach (sql_in_bloecken($pdo,
+                "SELECT id, $missionSpalten FROM missions
+                  WHERE user_id = ? AND id IN ({IDS})", $fenster, [$userId]) as $r) {
+            $zeilen[(int)$r['id']] = $r;
+        }
+
+        /* Abweichende Besatzung je Einsatz (`mission_crew`, E7). Bis Web 5.10.0
+         * waren es fuenf Spalten in `missions`; sie stehen deshalb im Format
+         * jetzt als Objekt role_code => name. */
+        $einsatzCrewNach = [];
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, role_code, name FROM mission_crew
                  WHERE mission_id IN ({IDS}) ORDER BY mission_id, role_code',
-                $missionIds) as $c) {
+                $fenster) as $c) {
             $einsatzCrewNach[(int)$c['mission_id']][(string)$c['role_code']] = $c['name'];
         }
-    }
 
-    // Phasen, Rettungsmittel, Reanimation: je eine Abfrage statt je Einsatz
-    // (M5-12). Die Zuordnung geschieht im Speicher.
-    $phasenNach = $mittelNach = $sitzungenNach = [];
-    if ($missionIds) {
+        // Phasen, Rettungsmittel, Reanimation: je eine Abfrage statt je Einsatz
+        // (M5-12). Die Zuordnung geschieht im Speicher.
+        $phasenNach = $mittelNach = $sitzungenNach = [];
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, phase, occurred_at, lat, lon FROM mission_phases
                  WHERE mission_id IN ({IDS}) ORDER BY mission_id, occurred_at',
-                $missionIds) as $p) {
+                $fenster) as $p) {
             $phasenNach[(int)$p['mission_id']][] = [
                 'phase' => $zahl($p['phase'], true), 'occurred_at' => $p['occurred_at'],
                 'lat' => $zahl($p['lat']), 'lon' => $zahl($p['lon'])];
@@ -255,13 +307,13 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
         foreach (sql_in_bloecken($pdo,
                 'SELECT mission_id, name FROM mission_resources
                  WHERE mission_id IN ({IDS}) ORDER BY mission_id, id',
-                $missionIds) as $r) {
+                $fenster) as $r) {
             $mittelNach[(int)$r['mission_id']][] = (string)$r['name'];
         }
         $sitzungen = sql_in_bloecken($pdo,
             'SELECT id, mission_id, started_at FROM resus_sessions
              WHERE mission_id IN ({IDS}) ORDER BY mission_id, started_at',
-            $missionIds);
+            $fenster);
         $ereignisseNach = [];
         $sitzungsIds = array_map(static fn($s) => (int)$s['id'], $sitzungen);
         if ($sitzungsIds) {
@@ -273,46 +325,54 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
                     'type' => $e['type'], 'occurred_at' => $e['occurred_at']];
             }
         }
-        foreach ($sitzungen as $s) {
-            $sitzungenNach[(int)$s['mission_id']][] = [
-                'started_at' => $s['started_at'],
-                'events'     => $ereignisseNach[(int)$s['id']] ?? [],
+        foreach ($sitzungen as $sz) {
+            $sitzungenNach[(int)$sz['mission_id']][] = [
+                'started_at' => $sz['started_at'],
+                'events'     => $ereignisseNach[(int)$sz['id']] ?? [],
             ];
         }
-    }
-    $spurNachEinsatz = $ohneSpuren ? $umrisse('mission', $missionIds)
-                                   : $spuren('mission', $missionIds);
+        unset($sitzungen, $ereignisseNach, $sitzungsIds);
 
-    foreach ($missionZeilen as $m) {
-        $mid = (int)$m['id'];
-        unset($m['id']);        // nur fuer die Zuordnung gebraucht
-        $m['phases']    = $phasenNach[$mid]    ?? [];
-        $m['resources'] = $mittelNach[$mid]    ?? [];
-        $m['resus']     = $sitzungenNach[$mid] ?? [];
-        $m['crew']      = $einsatzCrewNach[$mid] ?? [];
-        if ($ohneSpuren) {
-            /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe aus
-             * wie „hat keine Spur"; die Fassung sagt, dass die Punkte woanders
-             * stehen. Wer keine Spur hat, bekommt gar keine `spur_ref`. */
-            if (isset($spurNachEinsatz[$mid])) {
-                $m += $spurNachEinsatz[$mid];
-                $spurVerzeichnis[] = ['spur_ref' => $m['spur_ref'], 'art' => 'mission',
-                                      'id' => $mid, 'n' => $m['n']];
+        foreach ($fenster as $mid) {
+            if (!isset($zeilen[$mid])) { continue; }
+            $m = $zeilen[$mid];
+            unset($zeilen[$mid], $m['id']);   // id nur fuer die Zuordnung
+            $m['phases']    = $phasenNach[$mid]    ?? [];
+            $m['resources'] = $mittelNach[$mid]    ?? [];
+            $m['resus']     = $sitzungenNach[$mid] ?? [];
+            $m['crew']      = $einsatzCrewNach[$mid] ?? [];
+            if ($ohneSpuren) {
+                /* KEIN `track` UND KEIN LEERES `track`. Ein leeres Feld saehe
+                 * aus wie „hat keine Spur"; die Fassung sagt, dass die Punkte
+                 * woanders stehen. Wer keine Spur hat, bekommt gar keine
+                 * `spur_ref`. */
+                if (isset($spurNachEinsatz[$mid])) {
+                    $m += $spurNachEinsatz[$mid];
+                    $spurVerzeichnis[] = ['spur_ref' => $m['spur_ref'], 'art' => 'mission',
+                                          'id' => $mid, 'n' => $m['n']];
+                }
+            } else {
+                $m['track'] = $spurNachEinsatz[$mid] ?? [];
             }
-        } else {
-            $m['track'] = $spurNachEinsatz[$mid] ?? [];
+            unset($spurNachEinsatz[$mid]);
+            $missionsJson .= ($missionsJson === '' ? '' : ',')
+                           . json_encode($m, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            unset($m);
         }
-        $missions[] = $m;
+        unset($zeilen, $phasenNach, $mittelNach, $sitzungenNach, $einsatzCrewNach);
     }
+    unset($spurNachEinsatz);
 
-    $rests = [];
+
+    $restsJson = '';
     $restZeilen = $q('SELECT id, client_ref, day_id, started_at, ended_at, final,
                              deleted_at, deleted_with_day
                       FROM rest_segments
                       WHERE user_id = ? ORDER BY started_at', [$userId]);
     $restIds = array_map(static fn($r) => (int)$r['id'], $restZeilen);
     $spurNachRuhe = $ohneSpuren ? $umrisse('rest', $restIds) : $spuren('rest', $restIds);
-    foreach ($restZeilen as $r) {
+    while ($restZeilen) {                       // dieselbe Begruendung wie oben
+        $r = array_shift($restZeilen);
         $rid = (int)$r['id'];
         unset($r['id']);
         if ($ohneSpuren) {
@@ -324,8 +384,12 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
         } else {
             $r['track'] = $spurNachRuhe[$rid] ?? [];
         }
-        $rests[] = $r;
+        unset($spurNachRuhe[$rid]);
+        $restsJson .= ($restsJson === '' ? '' : ',')
+                    . json_encode($r, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        unset($r);
     }
+    unset($restZeilen, $spurNachRuhe);
 
     /* ---- Diensttage -------------------------------------------------------
      *
@@ -526,8 +590,8 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
                                               WHERE user_id = ? ORDER BY name', [$userId]), $baseNameById),
         ],
         'days' => $days,
-        'missions' => $missions,
-        'rest_segments' => $rests,
+        /* `missions` und `rest_segments` stehen hier NICHT — sie sind oben
+         * schon kodiert (s. dort) und werden unten angehaengt. */
     ];
 
     /* DAS VERZEICHNIS DER SPUREN — ein ARBEITSFELD, das nicht in die Datei
@@ -543,7 +607,24 @@ function edbak_build(int $userId, bool $ohneSpuren = false): string {
      * `_patState`). Der Sicherungslauf loescht sie, bevor er versiegelt — und
      * die Containerprobe sieht nach, ob er es getan hat. */
     if ($ohneSpuren) { $data['_spur_index'] = $spurVerzeichnis; }
-    return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    /* DIE AUSGABE WIRD ZUSAMMENGESETZT, nicht in einem Zug kodiert.
+     *
+     * Die beiden grossen Listen liegen bereits als JSON vor; sie noch einmal
+     * durch `json_encode()` zu schicken hiesse, sie ein zweites Mal als Feld
+     * aufzubauen — und genau das sollte der Umbau vermeiden.
+     *
+     * Der Kopf endet auf `}`; die schliessende Klammer wird abgeschnitten,
+     * die Listen angehaengt und sie wieder gesetzt. `$data` traegt immer
+     * mindestens `format` und `version`, ist also nie `{}` — die Pruefung
+     * darunter sagt es trotzdem, statt sich darauf zu verlassen. */
+    $kopf = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($kopf) || substr($kopf, -1) !== '}' || strlen($kopf) < 3) {
+        throw new RuntimeException('Der Kopf der Sicherung liess sich nicht bauen.');
+    }
+    return substr($kopf, 0, -1)
+         . ',"missions":[' . $missionsJson . ']'
+         . ',"rest_segments":[' . $restsJson . ']}';
 }
 
 /* ======================= Import ======================= */
@@ -1220,7 +1301,27 @@ function edbak_restore(int $userId, array $data): array {
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }
             $exists->execute([$userId, (string)($m['client_ref'] ?? '')]);
-            if ($exists->fetchColumn()) {
+            $vorhandenId = $exists->fetchColumn();
+            if ($vorhandenId) {
+                /* DIE SPURKARTE BEKOMMT IHN TROTZDEM (S2/AP5).
+                 *
+                 * Sonst gibt es keine Wiederaufnahme, und das ist kein
+                 * Schoenheitsfehler: Bricht das Einspielen zwischen Kern und
+                 * Spurteilen ab — Netz weg, Fenster zu, ein Fehler wie der,
+                 * der diese Zeilen ausgeloest hat —, dann steht der Bestand,
+                 * und die Spuren fehlen. Beim zweiten Anlauf waere JEDER
+                 * Einsatz „bereits vorhanden", die Karte bliebe leer, und
+                 * alle Spuren meldeten „ohne zugehoerigen Einsatz". Sie
+                 * waeren damit NIE mehr einzuspielen — es sei denn, man
+                 * loescht den halben Bestand von Hand.
+                 *
+                 * Gefunden bei der Abnahme am 5000er-Bestand: 10 431 Spuren
+                 * „ohne zugehoerigen Einsatz", nachdem eine Anfrage an einer
+                 * Mengengrenze gescheitert war. */
+                if (isset($m['spur_ref'])) {
+                    $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission',
+                                                       'id' => (int)$vorhandenId];
+                }
                 $stats['missions_skipped']++; $grund['bereits_vorhanden']++; continue;
             }
 
@@ -1456,7 +1557,13 @@ function edbak_restore(int $userId, array $data): array {
         foreach (($data['rest_segments'] ?? []) as $r) {
             if (!is_array($r)) { $stats['rests_skipped']++; $grund['aufbau']++; continue; }
             $rexists->execute([$userId, (string)($r['client_ref'] ?? '')]);
-            if ($rexists->fetchColumn()) {
+            $vorhandenRId = $rexists->fetchColumn();
+            if ($vorhandenRId) {
+                // Wiederaufnahme, dieselbe Begruendung wie beim Einsatz oben.
+                if (isset($r['spur_ref'])) {
+                    $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest',
+                                                       'id' => (int)$vorhandenRId];
+                }
                 $stats['rests_skipped']++; $grund['bereits_vorhanden']++; continue;
             }
             // Wie beim Einsatz: ohne Diensttag kein Ruhe-Segment (A11), und
