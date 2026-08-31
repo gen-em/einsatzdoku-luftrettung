@@ -48,13 +48,21 @@ Die Ressourcen heißen jetzt `LogoLuft` und `LogoBoden` (Dateien
 `logo_luft.png`, `logo_boden.png`, je in 70 und 105 px). Das kostet ein
 zweites Bild im Kompilat: **+5 888 Byte** auf fenix6pro, +12 864 auf venu3s.
 
-### Uhr — Das Boden-Motiv ist noch ein Platzhalter
+### Uhr — Beide Motive aus der Vektorvorlage
 
-Es ist aus `gen-em_logo_fahrzeug_weiss.svg` der Weboberfläche gerastert und
-trägt sichtbar einen gestrichelten Rahmen; außerdem füllt es das Quadrat nicht
-so aus wie der Hubschrauber, weil das Web-SVG im Querformat liegt. Es ist
-bewusst als Zwischenstand erkennbar. Sobald die endgültige Vorlage vorliegt,
-werden zwei Dateien getauscht — am Code ändert sich nichts.
+Beide Bildmarken sind aus den SVGs der Weboberfläche gerastert
+(`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`), nicht aus
+den alten PNG hochskaliert.
+
+Die Vorlagen haben unterschiedliche Seitenverhältnisse — der Hubschrauber liegt
+quer (400×250), das NEF quadratisch (420×420). Blind in dieselbe Kachel
+gesetzt, wäre das NEF mit 70×57 gegenüber 70×44 deutlich schwerer erschienen.
+Es steht deshalb auf **78 % der Kachelbreite**, womit beide Motive praktisch
+gleich hoch sind: 45 gegen 44 Pixel in der kleinen Stufe, je 66 in der großen.
+
+Auf das Layout wirkt sich die Wahl ohnehin nicht aus: `logoH` liefert die
+**Kachelhöhe**, nicht die Motivhöhe — beide Dateien sind 70×70 beziehungsweise
+105×105, der Rest ist durchsichtig.
 
 ## [Uhr 1.9.0] — 2026-08-30
 

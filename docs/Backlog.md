@@ -873,6 +873,9 @@ zutreffen.
     *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
     heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
     gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
-    **Offen bleibt das Motiv selbst:** Das Boden-Bild ist vorläufig aus dem
-    Web-SVG gerastert, trägt sichtbar einen gestrichelten Rahmen und füllt das
-    Quadrat nicht wie der Hubschrauber. Das gehört zu Nr. 48.
+    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
+    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
+    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
+    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
+    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
+    Displays: Nr. 48.
