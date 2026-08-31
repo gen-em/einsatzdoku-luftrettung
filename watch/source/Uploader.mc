@@ -168,7 +168,11 @@ module Uploader {
         // entsteht eine Pruefung, die der Compiler als unerreichbar meldet.
         var cb = _cb;
         if (cb == null) { cb = new UploaderCb(); _cb = cb; }
-        Communications.makeWebRequest(url, body, opts, cb.method(:onResponse));
+        // Cast wie in Model.save(); hier ist der PolyType
+        // Dictionary<Object, Object>.
+        Communications.makeWebRequest(url,
+            body as Lang.Dictionary<Lang.Object, Lang.Object>,
+            opts, cb.method(:onResponse));
     }
 
     // Zugangsdaten: bevorzugt aus der Kopplung (Storage), sonst aus den

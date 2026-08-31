@@ -11,6 +11,102 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 1.11.0 · Web 9.15.0] — 2026-08-31
+
+**Die Uhr trennt eine bestehende Kopplung ausdrücklich, bevor sie neu
+koppelt.** Backlog Nr. 14. Und die strenge Typprüfung ist zum ersten Mal
+vollständig sauber.
+
+### Uhr — Der Fall ist die geteilt genutzte Uhr
+
+Bis hierher führte „Gerät koppeln" direkt in die Code-Eingabe. Schlug das
+Koppeln fehl — falscher Code, kein Telefon in Reichweite, Gerätegrenze
+erreicht —, blieben die **alten** Zugangsdaten stehen. Die Uhr dokumentierte
+stillschweigend weiter auf das vorherige Konto, und die Person davor bekam
+Einsätze, die sie nicht gefahren ist. Niemand sah es der Uhr an.
+
+Die Reihenfolge ist jetzt **abfragen → trennen → neu koppeln**. Scheitert das
+Koppeln danach, steht die Uhr *sichtbar* ohne Kopplung da — die Sync-Seite
+sagt seit 1.10.1 „Nicht eingerichtet". Die beiden Punkte greifen ineinander:
+Ohne den dritten Zustand der Sync-Seite wäre der getrennte Zustand wieder
+unsichtbar gewesen.
+
+Die Rückfrage ist der vorhandene Baustein `WatchUi.Confirmation`, wie beim
+Einsatzabschluss und beim Verlassen der App — kein neues Element.
+
+### Uhr — Ein Rückstand verhindert das Trennen
+
+Abgeschlossene, noch nicht gesendete Pakete gehören dem **bisherigen** Konto;
+nach einer Neukopplung gingen sie an das neue. Das wäre kein Datenverlust,
+sondern schlimmer — fremde Einsätze in einem fremden Konto. Die Uhr verweigert
+das Trennen deshalb und sagt „Erst 3 Pakete senden / Sonst ans neue Konto".
+
+### Uhr — Lokal wird immer getrennt
+
+Auch wenn der Server nicht antwortet. Andernfalls bliebe eine Uhr ohne Telefon
+in Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr benutzen
+soll — genau der Zustand, den dieser Weg beseitigt. Der Servereintrag steht
+dann noch und belegt einen Geräteplatz; das sagt die zweite Zeile
+(„Nur auf der Uhr getrennt / Gerät im Web löschen"), weil es im Web mit einem
+Klick zu beheben ist.
+
+### Web — `pair.php` kennt zwei Anliegen
+
+Neu `{"aktion":"trennen"}` mit den Kopfzeilen `X-Device-Id` und `X-Api-Key`;
+Antwort `{"ok":true}`. JSON-Vertrag Abschnitt 1b.
+
+**Kein eigener Endpunkt:** Die Adresse kennt die Uhr schon, und der
+Ratenschutz von `pair.php` gilt damit für beide Zweige. Ein zweiter wäre eine
+weitere anmeldungsfreie Tür, die dieselbe Bremse noch einmal bräuchte.
+
+**Gelöscht, nicht deaktiviert:** Ein deaktiviertes Gerät belegt weiter einen
+der `MAX_GERAETE` Plätze — „zu viele Geräte" ist genau der Fehler, in den eine
+geteilte Uhr sonst läuft. Der Fremdschlüssel setzt `device_id` auf `NULL`,
+hochgeladene Daten bleiben.
+
+**E-Mail an den Kontoinhaber**, symmetrisch zum Koppeln: die eine Gelegenheit,
+es zu erfahren, ohne sich zufällig anzumelden. Die Antwortzeit folgt
+`ingest.php` — auch der unbekannte Zweig läuft gegen `AUTH_VERGLEICHSWERT`,
+sonst wäre aus der Dauer ablesbar, welche Gerätekennungen es gibt.
+
+### Uhr — Die letzten vier Meldungen der strengen Typprüfung
+
+`-l 3` stand seit 1.8.2 bei vier Fundstellen, die als „nicht auflösbar"
+notiert waren. Sie sind es doch. Alle vier haben dieselbe Ursache:
+`Storage.setValue()` und `Communications.makeWebRequest()` nehmen einen
+PolyType aus bis zu 16 Alternativen; ein Literal wie
+`{"svc" => …, "day" => …}` hat aber einen **genauen** Typ, und die Prüfung
+sieht nicht, dass der ein Sonderfall des allgemeinen ist. Ein Cast sagt ihr,
+welche Alternative gemeint ist.
+
+Eine der vier war eine echte Verwechslung: `Track.mc` **hatte** bereits einen
+Cast — auf `Application.PropertyValueType`. `Storage.setValue()` verlangt
+`Storage.ValueType`. Ein falscher Cast prüft nichts.
+
+| | vorher | jetzt |
+|---|---|---|
+| Warnungen (`-w`) | 0 | 0 |
+| Strenge Prüfung (`-l 3`) | 4 Fundstellen | **0** |
+| Kosten | — | **0 Byte**, gemessen |
+
+Damit ist auch der letzte Rest von Backlog Nr. 13 erledigt. Der Weg dorthin
+war 226 Meldungen (77 Stellen) → 4 → 0.
+
+### Uhr/Web — Was nicht geprüft werden konnte
+
+**Die Rückfrage selbst ist nicht fotografiert.** Der Simulator beantwortet sie
+im selben Augenblick, in dem sie erscheint: Der lange Druck wird durch eine
+gehaltene Taste erzeugt, und deren Ereignisse treffen die eben erschienene
+Ansicht. Belegt ist sie durch einen Konsolenmitschnitt eines Probekompilats —
+`cred=da` → „Rückfrage" → „trennen" —, durch den Zustand danach („Nicht
+eingerichtet" auf der Sync-Seite) und dadurch, dass es der Baustein ist, der
+in `ClockView` viermal unverändert benutzt wird.
+
+**Die Serverseite ist nicht gegen eine Datenbank gelaufen.** Geprüft sind
+Syntax (`php -l`) und die Ableitung aus `ingest.php` und `einstellungen.php`,
+deren Authentifizierung und Löschweg übernommen sind. Der Zweig braucht eine
+Probe am Produktivstand, bevor man sich auf ihn verlässt.
+
 ## [Uhr 1.10.3] — 2026-08-31
 
 **Die Bildmarke ist auf allen 99 Geräten gleich groß im Verhältnis zum

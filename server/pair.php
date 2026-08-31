@@ -1,9 +1,19 @@
 <?php
 declare(strict_types=1);
 /**
- * Geraete-Kopplung: Die Uhr tauscht einen kurzlebigen Einmal-Code gegen
- * frische Zugangsdaten. POST JSON {"code": "..."} — keine Auth-Header.
- * Antwort: {"device_id": "...", "api_key": "..."}
+ * Geraete-Kopplung. Der Endpunkt kennt zwei Anliegen:
+ *
+ *   KOPPELN   POST JSON {"code": "..."} — keine Auth-Header.
+ *             Antwort: {"device_id": "...", "api_key": "..."}
+ *             Die Uhr tauscht einen kurzlebigen Einmal-Code gegen frische
+ *             Zugangsdaten.
+ *
+ *   TRENNEN   POST JSON {"aktion": "trennen"} mit den Kopfzeilen
+ *             X-Device-Id und X-Api-Key. Antwort: {"ok": true}
+ *             Die Uhr gibt ihre Kopplung zurueck, das Geraet wird geloescht.
+ *             Seit Web 9.15.0, Backlog Nr. 14 — Begruendung am Zweig selbst.
+ *
+ * Der Ratenschutz unten gilt fuer BEIDE Zweige.
  *
  * Dieser Endpunkt ist OHNE ANMELDUNG erreichbar und gibt bei Erfolg
  * Zugangsdaten heraus, mit denen sich Einsaetze in ein fremdes Konto
@@ -61,6 +71,91 @@ if (!rate_erlaubt('pair')) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { abweisen(405, 'method', false); }
 
 $b = json_decode(file_get_contents('php://input'), true);
+
+/* ---- Trennen: die Uhr gibt ihre Kopplung zurueck (Backlog Nr. 14) ---------
+ *
+ * WOZU. Eine geteilt genutzte Uhr wechselt die Person. Bis hierher gab es
+ * dafuer nur den Weg "neuen Code eintippen": Gelang das nicht, dokumentierte
+ * die Uhr stillschweigend weiter auf das VORHERIGE Konto — niemand sah es ihr
+ * an. Die Uhr trennt sich jetzt zuerst ausdruecklich, und erst danach koppelt
+ * sie neu.
+ *
+ * WARUM HIER UND NICHT IN EINEM EIGENEN ENDPUNKT. Die Adresse dieses
+ * Endpunkts kennt die Uhr bereits; ein zweiter waere eine weitere
+ * anmeldungsfreie Tuer, die dieselbe Bremse noch einmal braeuchte. Der
+ * Ratenschutz oben gilt fuer beide Zweige.
+ *
+ * ES WIRD GELOESCHT, NICHT DEAKTIVIERT. Ein deaktiviertes Geraet belegt
+ * weiter einen der MAX_GERAETE Plaetze — und "zu viele Geraete" ist genau der
+ * Fehler, in den eine geteilte Uhr sonst laeuft. Der Fremdschluessel setzt
+ * device_id in Einsaetzen und Segmenten auf NULL; bereits hochgeladene Daten
+ * bleiben unberuehrt (dieselbe Wirkung wie beim Loeschen im Web).
+ *
+ * ANTWORTZEIT wie in ingest.php: Auch der unbekannte Zweig laeuft gegen
+ * AUTH_VERGLEICHSWERT. Sonst waere aus der Dauer ablesbar, welche
+ * Geraetekennungen es gibt — und die Kennung ist die Haelfte dessen, was ein
+ * Upload braucht.
+ */
+if (($b['aktion'] ?? '') === 'trennen') {
+    $devId  = (string)($_SERVER['HTTP_X_DEVICE_ID'] ?? '');
+    $apiKey = (string)($_SERVER['HTTP_X_API_KEY']   ?? '');
+
+    $pdo = db();
+    $st  = $pdo->prepare('SELECT id, user_id, api_key_hash FROM devices WHERE device_id = ?');
+    $st->execute([$devId]);
+    $dev = $st->fetch();
+    if (!$dev) {
+        password_verify($apiKey, AUTH_VERGLEICHSWERT);
+        abweisen(401, 'auth');
+    }
+    if (!password_verify($apiKey, (string)$dev['api_key_hash'])) {
+        abweisen(401, 'auth');
+    }
+
+    try {
+        $pdo->prepare('DELETE FROM devices WHERE id = ?')->execute([(int)$dev['id']]);
+    } catch (Throwable $ex) {
+        error_log('Trennen fehlgeschlagen: ' . $ex->getMessage());
+        rate_gleiche_dauer($t0);
+        http_response_code(500);
+        echo json_encode(['error' => 'server']);
+        exit;
+    }
+
+    rate_erfolg('pair');
+    echo json_encode(['ok' => true]);
+
+    /* Den Kontoinhaber unterrichten — dieselbe Ueberlegung wie beim Koppeln:
+     * Es ist die eine Gelegenheit, es zu erfahren, ohne sich zufaellig
+     * anzumelden. Erst antworten, dann versenden; ein Fehlschlag des Versands
+     * darf die Trennung nicht beruehren, sie ist abgeschlossen. */
+    antwort_abschliessen();
+    try {
+        $ust = $pdo->prepare('SELECT email FROM users WHERE id = ?');
+        $ust->execute([(int)$dev['user_id']]);
+        $mail = $ust->fetchColumn();
+        if ($mail !== false && $mail !== null && $mail !== '') {
+            smtp_send((string)$mail,
+                'Gerät getrennt — Gen-EM Einsatzdokumentation Notarzt',
+                "Hallo,\n\n"
+                . "ein Gerät hat seine Verbindung zu deinem Konto der Gen-EM\n"
+                . "Einsatzdokumentation Notarzt soeben selbst getrennt:\n\n"
+                . "  Geräte-ID: " . $devId . "\n"
+                . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
+                . "Das geschieht, wenn jemand die Uhr an ihr neu koppelt. Bereits\n"
+                . "hochgeladene Einsätze bleiben vollständig erhalten.\n\n"
+                . "War das nicht beabsichtigt, koppel die Uhr einfach wieder:\n"
+                . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"
+                . "Bei Fragen oder Problemen wende dich gerne an philipp@gen-em.org.\n\n"
+                . "Viele Grüße\nGen-EM Einsatzdokumentation Notarzt\n",
+                5);
+        }
+    } catch (Throwable $ex) {
+        error_log('Hinweis auf getrenntes Geraet konnte nicht verschickt werden: ' . $ex->getMessage());
+    }
+    exit;
+}
+
 $code = strtoupper(trim((string)($b['code'] ?? '')));
 
 // Das Muster bildet jetzt das TATSAECHLICHE Alphabet und die TATSAECHLICHE

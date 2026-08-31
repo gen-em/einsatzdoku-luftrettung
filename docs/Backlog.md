@@ -28,12 +28,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
-14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
-    abfragen und trennen.** Fall: eine geteilt genutzte Uhr. Wird sie neu
-    gekoppelt und schlägt der Vorgang fehl, dokumentiert sie stillschweigend
-    weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
-    abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
-    `server/pair.php`.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
     Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
@@ -484,10 +478,19 @@ zutreffen.
     fehlende Parametertypen. Anders als der erste Teil kostet das Platz:
     **+448 Byte** (fenix6pro, fr945) bzw. **+480 Byte** (venu3s). Die vier
     verbliebenen Stellen sind alle `Storage.setValue()` mit Dictionary oder
-    Array; sie aufzulösen hieße, die Datenstruktur zu ändern — für vier
-    Meldungen der falsche Preis. Mit erledigt: `Input.lPageDown()` und
+    Array. Mit erledigt: `Input.lPageDown()` und
     `L_PAGE_DOWN` waren toter Code und sind entfallen, und die Wisch-Kommentare
     an `CprView.onPreviousPage/onNextPage` waren vertauscht.
+    *Abgeschlossen mit Uhr 1.11.0:* **0 Meldungen bei `-l 3`, auf allen 99
+    Geräten.** Die vier galten als „nicht auflösbar, ohne die Datenstruktur zu
+    ändern" — das war falsch. Sie brauchen keine neue Struktur, sondern einen
+    **Cast auf die gemeinte Alternative des PolyType**: `Storage.setValue()`
+    und `makeWebRequest()` nehmen bis zu 16 Typen, ein Literal hat aber einen
+    genauen, und die Prüfung sieht den Sonderfall nicht. Eine der vier war
+    sogar eine Verwechslung — `Track.mc` **hatte** einen Cast, nur auf
+    `Application.PropertyValueType` statt `Storage.ValueType`; ein falscher
+    Cast prüft nichts. Kosten: **0 Byte**, gemessen (Casts sind reine
+    Übersetzungsangelegenheit). Der Weg war 226 Meldungen / 77 Stellen → 4 → 0.
 
 15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
     *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.
@@ -888,3 +891,26 @@ zutreffen.
     *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
     im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
     knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
+
+14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
+    abfragen und trennen.**
+    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
+    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
+    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
+    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
+    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
+    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
+    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
+    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
+    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
+    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
+    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
+    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
+    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
+    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
+    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
+    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
+    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
+    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
+    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
+    `ingest.php`/`einstellungen.php`.

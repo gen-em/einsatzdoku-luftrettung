@@ -159,8 +159,11 @@ module Track {
         var ref = _ref;                             // lokal: s. Hinweis oben
         if (ref == null || _buf.size() == 0) { return; }
         var chunkIdx = (_count - (_buf.size() / 4)) / CHUNK_POINTS;
+        // Cast wie in Model.save(). Er stand hier schon, zeigte aber auf
+        // Application.PropertyValueType — Storage.setValue verlangt
+        // Storage.ValueType. Ein falscher Cast prueft nichts.
         Storage.setValue(ref + "_" + chunkIdx.toString(),
-                         _buf as Lang.Array<Application.PropertyValueType>);
+                         _buf as Lang.Array<Application.Storage.ValueType>);
         // Achtung: Chunks sind nur dann sauber ausgerichtet, wenn immer bei
         // vollem Chunk geflusht wird; Rest-Flush (App-Ende) erzeugt Teilchunk,
         // der beim naechsten Punkt ueberschrieben wuerde -> deshalb nach einem

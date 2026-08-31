@@ -2291,3 +2291,35 @@ liegt und was hilft — in zwei kurzen Zeilen:
 
 Vorher stand dort in all diesen Fällen nur „Kopplung fehlgeschlagen" mit einer
 Zahl.
+
+### 12.1 Eine Uhr an eine andere Person übergeben
+
+Seit Uhr 1.11.0 trennt sich die Uhr **zuerst ausdrücklich**, bevor sie neu
+koppelt. Der Weg dorthin ist derselbe wie beim ersten Mal (Sync-Seite → Gerät
+koppeln; der Tastenweg je Uhr steht in Abschnitt 2.2), aber er beginnt jetzt
+mit einer Rückfrage:
+
+1. **„Kopplung trennen und neu koppeln?"** — Nein lässt alles, wie es ist.
+2. Bei Ja meldet die Uhr **„Getrennt"** und öffnet die Code-Eingabe. Das Gerät
+   verschwindet aus der Geräteliste im Web und gibt seinen Platz frei; die
+   bisherige Kontoinhaberin bekommt eine E-Mail darüber. **Bereits
+   hochgeladene Einsätze bleiben vollständig erhalten.**
+3. Danach wie oben: im Web einen Code erzeugen und eintippen.
+
+Zwei Dinge, die dabei bewusst so sind:
+
+**Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
+die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.
+Die Pakete gehören der bisherigen Person; nach einer Neukopplung landeten sie
+im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand.
+
+**Ohne Verbindung trennt die Uhr trotzdem**, sagt es aber:
+**„Nur auf der Uhr getrennt / Gerät im Web löschen"**. Sonst bliebe eine Uhr
+ohne Telefon in Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr
+benutzen soll. Der Eintrag im Web ist dann noch da und mit einem Klick zu
+entfernen.
+
+**Warum das nötig war:** Bis dahin führte der Weg direkt in die Code-Eingabe.
+Schlug das Koppeln fehl, blieben die alten Zugangsdaten stehen und die Uhr
+dokumentierte stillschweigend weiter auf das vorherige Konto — niemand sah es
+ihr an.

@@ -89,13 +89,30 @@ module Model {
         }
     }
 
+    /* Der Cast am Ende ist kein Schmuck (Backlog Nr. 13, letzter Rest).
+     *
+     * Storage.setValue() nimmt als zweiten Parameter einen PolyType aus 16
+     * Alternativen — darunter Lang.Dictionary<Storage.KeyType,
+     * Storage.ValueType>. Ein Literal wie das hier hat aber den GENAUEN Typ
+     * Dictionary{"svc" as Boolean, "day" as String or Null, ...}, und die
+     * strenge Pruefung (-l 3) sieht nicht, dass der ein Sonderfall des
+     * allgemeinen ist. Sie meldete das als Fehler, obwohl zur Laufzeit nichts
+     * passieren kann.
+     *
+     * Der Cast sagt ihr, WELCHE der 16 Alternativen gemeint ist. Er kostet
+     * NICHTS: gemessen 0 Byte Unterschied im Kompilat, weil Casts eine reine
+     * Angelegenheit der Uebersetzung sind.
+     *
+     * Dieselbe Stelle gibt es in Pair.mc (Zugangsdaten), Track.mc (Punktpuffer,
+     * dort ein Array) und Uploader.mc (der Sendekoerper). Es waren die vier
+     * letzten Meldungen der strengen Pruefung. */
     function save() as Void {
         Storage.setValue(Const.K_STATE, {
             "svc" => serviceActive, "day" => day, "ph" => phase,
             "mis" => mission, "rest" => restSegment,
             "pm" => pendingMissions, "pr" => pendingRest,
             "dm" => dayMissions, "dref" => dayRef
-        });
+        } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
     }
 
     // ---- Dienst-Klammer (Anforderungen 1.1) --------------------------------

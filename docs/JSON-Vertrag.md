@@ -58,6 +58,9 @@ Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 
 ## 1a. Kopplung (`pair.php`) — seit Uhr 1.9.0
 
+`pair.php` kennt **zwei** Anliegen: koppeln (dieser Abschnitt) und trennen
+(Abschnitt 1b).
+
 Die Kopplung ist der einzige Weg, der **ohne** die Header aus Abschnitt 1
 auskommt: Sie erzeugt die Zugangsdaten ja erst. Gesendet wird per POST:
 
@@ -104,6 +107,44 @@ geräteweite Kennung. Für eine Stückzahl-Statistik wird sie nicht gebraucht,
 und in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
 rechtfertigt. Die Zuordnung leistet die `device_id`, die der Server bei der
 Kopplung ohnehin vergibt.
+
+## 1b. Trennen (`pair.php`) — seit Uhr 1.11.0 / Web 9.15.0
+
+Die Uhr gibt ihre Kopplung zurück. POST an **denselben** Endpunkt, diesmal
+**mit** den Headern aus Abschnitt 1:
+
+```json
+{ "aktion": "trennen" }
+```
+
+| Antwort | Bedeutung |
+|---|---|
+| `200 {"ok":true}` | Das Gerät ist gelöscht |
+| `401 {"error":"auth"}` | Kennung oder Schlüssel falsch — wie in Abschnitt 1 |
+| `429 {"error":"zu_viele_versuche"}` | Ratenschutz, gilt für beide Anliegen von `pair.php` |
+
+**Wozu.** Der Fall ist die geteilt genutzte Uhr. Bis Uhr 1.10.3 gab es für den
+Wechsel der Person nur „neuen Code eintippen"; gelang das nicht, dokumentierte
+die Uhr stillschweigend weiter auf das vorherige Konto. Die Reihenfolge ist
+jetzt ausdrücklich **abfragen → trennen → neu koppeln** (Backlog Nr. 14).
+
+**Der Server löscht, er deaktiviert nicht.** Ein deaktiviertes Gerät belegt
+weiter einen der `MAX_GERAETE` Plätze — und „zu viele Geräte" ist genau der
+Fehler, in den eine geteilte Uhr sonst läuft. Der Fremdschlüssel setzt
+`device_id` in Einsätzen und Segmenten auf `NULL`; **bereits hochgeladene
+Daten bleiben vollständig erhalten.**
+
+**Die Uhr trennt sich lokal auch ohne Antwort.** Erreicht sie den Server
+nicht, löscht sie ihre Zugangsdaten trotzdem und sagt es
+(„Nur auf der Uhr getrennt / Gerät im Web löschen"). Andernfalls bliebe eine
+Uhr ohne Telefon in Reichweite dauerhaft an ein Konto gebunden, das sie nicht
+mehr benutzen soll. Der Servereintrag steht dann noch und ist im Web mit einem
+Klick zu entfernen.
+
+**Vor dem Trennen muss der Rückstand leer sein.** Abgeschlossene, noch nicht
+gesendete Pakete gehören dem bisherigen Konto; nach einer Neukopplung gingen
+sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
+`Model.backlogCount() > 0`, und sagt „Erst N Pakete senden".
 
 ## 2. Grundprinzipien
 

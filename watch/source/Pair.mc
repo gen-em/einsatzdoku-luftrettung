@@ -9,6 +9,7 @@ using Toybox.Lang;
 using Toybox.WatchUi;
 using Toybox.Communications;
 using Toybox.Application.Storage;
+using Toybox.Application.Properties;
 using Toybox.System;
 
 // Rueckruf-Traeger (method() existiert nur auf Objekten)
@@ -16,6 +17,26 @@ class PairCb {
     function initialize() { }
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
         Pair.onResponse(code, data);
+    }
+}
+
+// Eigener Traeger fuers Trennen. Zwei Anliegen an denselben Endpunkt brauchen
+// zwei Rueckrufe — sonst muesste die Auswertung raten, worauf sie antwortet.
+class UnpairCb {
+    function initialize() { }
+    function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
+        Pair.onTrennen(code);
+    }
+}
+
+/* Rueckfrage vor dem Trennen. Bewusst der vorhandene Baustein
+ * WatchUi.Confirmation, wie beim Einsatzabschluss und beim Verlassen der App
+ * (ClockView) — eine eigene Ansicht braucht es dafuer nicht. */
+class TrennenDelegate extends WatchUi.ConfirmationDelegate {
+    function initialize() { ConfirmationDelegate.initialize(); }
+    function onResponse(response) as Lang.Boolean {
+        if (response == WatchUi.CONFIRM_YES) { Pair.trennen(); }
+        return true;
     }
 }
 
@@ -48,6 +69,109 @@ module Pair {
         return t.substring(0, ZEILE_MAX - 1) + "…";
     }
     var _cb as PairCb or Null = null;
+    var _ucb as UnpairCb or Null = null;
+
+    /* Einstieg fuer „Gerät koppeln" (Sync-Seite, Auswahltaste halten).
+     *
+     * DER FALL IST DIE GETEILT GENUTZTE UHR (Backlog Nr. 14). Bis hierher
+     * fuehrte der Weg direkt in die Code-Eingabe. Schlug das Koppeln fehl —
+     * falscher Code, kein Telefon in Reichweite, Geraetegrenze erreicht —,
+     * blieben die ALTEN Zugangsdaten stehen und die Uhr dokumentierte
+     * stillschweigend weiter auf das vorherige Konto. Niemand sah es ihr an,
+     * und die Person davor bekam Einsaetze, die sie nicht gefahren ist.
+     *
+     * Die Reihenfolge ist deshalb jetzt ausdruecklich: abfragen -> trennen ->
+     * neu koppeln. Scheitert das Koppeln danach, steht die Uhr SICHTBAR ohne
+     * Kopplung da (die Sync-Seite sagt „Nicht eingerichtet") statt unsichtbar
+     * mit der falschen.
+     *
+     * EIN RUECKSTAND VERHINDERT DAS TRENNEN. Abgeschlossene, noch nicht
+     * gesendete Pakete gehoeren dem BISHERIGEN Konto; nach einer Neukopplung
+     * wuerden sie an das neue gehen. Das waere kein Datenverlust, sondern
+     * schlimmer — fremde Einsaetze in einem fremden Konto. Also erst senden.
+     */
+    function start() as Void {
+        if (!Uploader.hasCredentials()) { openInput(); return; }
+
+        var offen = Model.backlogCount();
+        if (offen > 0) {
+            status = "Erst " + offen.toString()
+                   + (offen == 1 ? " Paket senden" : " Pakete senden");
+            statusHint = "Sonst ans neue Konto";
+            statusKind = :error;
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        WatchUi.pushView(new WatchUi.Confirmation("Kopplung trennen und neu koppeln?"),
+                         new TrennenDelegate(), WatchUi.SLIDE_LEFT);
+    }
+
+    /* Die Kopplung zurueckgeben. Der Server loescht das Geraet, damit es
+     * keinen der MAX_GERAETE Plaetze mehr belegt — sonst liefe eine geteilte
+     * Uhr genau in den Fehler „Zu viele Geräte", den sie vermeiden will. */
+    function trennen() as Void {
+        var cred = Uploader.credentials();
+        var base = Uploader.serverBase();
+        if (cred == null || base.length() == 0) { lokalTrennen(); openInput(); return; }
+
+        status = "Trenne…";
+        statusHint = null;
+        statusKind = :busy;
+        WatchUi.requestUpdate();
+
+        var cb = _ucb;
+        if (cb == null) { cb = new UnpairCb(); _ucb = cb; }
+        Communications.makeWebRequest(
+            base + "pair.php",
+            { "aktion" => "trennen" },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "X-Device-Id"  => cred["d"],
+                    "X-Api-Key"    => cred["k"]
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            cb.method(:onResponse));
+    }
+
+    /* Zugangsdaten auf der Uhr loeschen — beide Wege: die aus der Kopplung
+     * (Storage) und die von Hand eingetragenen (Properties, Alt-Weg). */
+    function lokalTrennen() as Void {
+        Storage.deleteValue("cred");
+        try {
+            Properties.setValue("deviceId", "");
+            Properties.setValue("apiKey", "");
+        } catch (e) {
+            // Alt-Weg nicht beschreibbar: Der Storage-Weg hat Vorrang, die
+            // Kopplung ist damit trotzdem fort.
+        }
+        Uploader.lastError = null;
+    }
+
+    /* LOKAL WIRD IMMER GETRENNT, auch wenn der Server nicht geantwortet hat.
+     *
+     * Andernfalls waere eine Uhr ohne Telefon in Reichweite dauerhaft an ein
+     * Konto gebunden, das sie nicht mehr benutzen soll — der Zustand, den
+     * dieser ganze Weg beseitigt. Bleibt der Servereintrag dabei stehen,
+     * belegt er einen Geraeteplatz; das steht in der zweiten Zeile, weil es
+     * im Web mit einem Klick zu beheben ist. */
+    function onTrennen(code as Lang.Number) as Void {
+        lokalTrennen();
+        if (code == 200) {
+            status = "Getrennt";
+            statusHint = null;
+            statusKind = :ok;
+        } else {
+            status = "Nur auf der Uhr getrennt";
+            statusHint = "Gerät im Web löschen";
+            statusKind = :error;
+        }
+        WatchUi.requestUpdate();
+        openInput();
+    }
 
     function openInput() as Void {
         var tp = new WatchUi.TextPicker("");
@@ -163,9 +287,11 @@ module Pair {
         statusKind = :error;
 
         if (code == 200 && dict != null && dict["device_id"] != null) {
+            // Cast wie in Model.save() — die strenge Pruefung erkennt das
+            // Literal sonst nicht als Sonderfall des PolyType. Kostet 0 Byte.
             Storage.setValue("cred", {
                 "d" => dict["device_id"], "k" => dict["api_key"]
-            });
+            } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
             Uploader.lastError = null;
             status = "Gekoppelt";   // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
             statusKind = :ok;

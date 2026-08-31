@@ -225,9 +225,11 @@ class SyncDelegate extends ActionDelegate {
         _fromStart = fromStart;
     }
 
-    // Geraete-Kopplung: Code-Eingabe oeffnen (START halten bzw. Action halten)
+    // Geraete-Kopplung (START halten bzw. Action halten). NICHT direkt in die
+    // Code-Eingabe: Besteht schon eine Kopplung, fragt Pair.start() zuerst und
+    // trennt sie ausdruecklich — Begruendung dort (Backlog Nr. 14).
     function actSelectLong() as Lang.Boolean {
-        Pair.openInput();
+        Pair.start();
         return true;
     }
 

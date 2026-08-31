@@ -3,7 +3,7 @@ using Toybox.Lang;
 
 module Const {
 
-    const APP_VERSION = "1.10.3";      // bei jedem Release erhoehen
+    const APP_VERSION = "1.11.0";      // bei jedem Release erhoehen
 
     // Werte der App-Einstellung "logoWahl" (properties.xml). Zahlen, weil
     // settingConfig type="list" nur Zahlen einliest.
