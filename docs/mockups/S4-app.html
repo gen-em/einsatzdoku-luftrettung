@@ -55,6 +55,14 @@
          color:var(--dunkelblau);font-weight:600;font-size:var(--groesse-3)}
   .uhr-knopf-leise{background:transparent;border:1px solid #4A443D;color:#fff}
 
+  /* ---- Uhr: Phasenliste und Sperre ------------------------------------- */
+  .uhr-zeile{display:flex;justify-content:space-between;gap:8px;
+         width:160px;font-size:var(--groesse-2)}
+  .uhr-zeile .nr{color:#B9B2A9;font-family:var(--schrift-fest);
+         margin-right:4px}
+  .uhr-zeile .zeit{color:#B9B2A9}
+  .uhr-zeile.naechste,.uhr-zeile.naechste .zeit{color:var(--orange);font-weight:600}
+
   /* ---- Moduswahl (Mockup): eine aus zwei, nebeneinander ---------------- */
   .modus{display:flex;border:1px solid var(--linie-stark);
          border-radius:var(--radius);overflow:hidden}
@@ -161,7 +169,8 @@
     <p class="bild-unterschrift"><strong>4 — Im Einsatz.</strong> Die nächste Phase
        ist der eine große Knopf; jede Zeile darunter setzt ihre Phase direkt
        (Korrekturen erzeugen einen zweiten Eintrag, E-R45-12). „Einsatz
-       abschließen" sendet <code>final</code> + Endzeit.</p>
+       abschließen" fragt nach und sendet dann <code>final</code> + Endzeit
+       (E-S4-21b).</p>
   </div>
 </div>
 
@@ -182,18 +191,64 @@
     <div class="uhr">
       <small>Phase 4 · 10:26</small>
       <span class="uhr-knopf">5 · Ankunft<br>PatientIn</span>
-      <span class="uhr-knopf uhr-knopf-leise">Einsatz abschließen</span>
-      <small>wischen: alle Phasen</small>
+      <small>halten: Phasenliste</small>
     </div>
-    <p class="bild-unterschrift"><strong>6 — Uhr, im Einsatz.</strong> Zeitstempel
-       entstehen auf der Uhr und werden mit Quittung ans Handy gemeldet; bei
-       Funkabriss steht hier „N gepuffert".</p>
+    <p class="bild-unterschrift"><strong>6 — Uhr, im Einsatz.</strong> Der Durchlauf
+       wie an der Garmin (E-S4-21b): ein Knopf, nächste Phase; nach Phase 9 wird
+       derselbe Knopf zu „Einsatz abschließen". Zeitstempel entstehen auf der Uhr;
+       bei Funkabriss steht hier „N gepuffert".</p>
+  </div>
+
+  <div>
+    <div class="uhr">
+      <div class="uhr-zeile"><span><span class="nr">2</span>Alarmierung</span><span class="zeit">10:12</span></div>
+      <div class="uhr-zeile"><span><span class="nr">3</span>Ausrücken</span><span class="zeit">10:15</span></div>
+      <div class="uhr-zeile"><span><span class="nr">4</span>Ank. Einsatzort</span><span class="zeit">10:26</span></div>
+      <div class="uhr-zeile naechste"><span><span class="nr">5</span>Ank. PatientIn</span><span class="zeit">–</span></div>
+      <div class="uhr-zeile"><span><span class="nr">6</span>Transportbeginn</span><span class="zeit">–</span></div>
+      <small>tippen setzt · Lünette scrollt</small>
+    </div>
+    <p class="bild-unterschrift"><strong>7 — Phasenliste.</strong> Übersicht und
+       Direktwahl in einem (E-S4-21c): Zeiten ansehen, Tippen setzt die gewählte
+       Phase (eine Korrektur wird zweiter Eintrag, E-R45-12). Unten in der Liste:
+       „Einsatz abschließen" für den vorzeitigen Abschluss.</p>
+  </div>
+
+  <div>
+    <div class="uhr">
+      <p class="uhr-titel" style="font-size:var(--groesse-4)">Einsatz<br>abschließen?</p>
+      <span class="uhr-knopf">Abschließen</span>
+      <span class="uhr-knopf uhr-knopf-leise">Zurück</span>
+    </div>
+    <p class="bild-unterschrift"><strong>8 — Rückfrage.</strong> Erst die
+       Bestätigung sendet <code>final</code> + Endzeit — ein versehentlicher
+       letzter Tipp beendet nichts (E-S4-21b).</p>
+  </div>
+
+  <div>
+    <div class="uhr">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B9B2A9" stroke-width="2" role="img" aria-label="Gesperrt"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <small>Phase 5 seit 11:03</small>
+      <small>zum Entsperren halten</small>
+    </div>
+    <p class="bild-unterschrift"><strong>9 — Gesperrt.</strong> Nach ~10 s ohne
+       Bedienung sperrt die Anzeige (E-S4-21d): Phase und Zeit bleiben lesbar,
+       Tippen tut nichts, Halten (~1 s) entsperrt — für Touch und eine etwaige
+       freie Taste gleichermaßen.</p>
   </div>
 </div>
 
+<div class="notiz"><strong>Keine verlässliche Hardwaretaste:</strong> Die
+  Ein/Aus-Taste ist für Apps gesperrt; freie Zusatztasten meldet die
+  <code>WearableButtons</code>-Schnittstelle, auf der Galaxy-Watch-Linie ist keine
+  zu erwarten (Home und Zurück sind systemgebunden). Wo eine gemeldet wird, legt
+  die App „nächste Phase" darauf — das Bedienbild kommt mit Touch allein aus
+  (E-S4-21a). Lünette und Krone scrollen nur, lösen nie aus.</div>
+
 <div class="notiz"><strong>Blind gebaut:</strong> Für die Uhr-Bilder gibt es bis zum
-  Gerätetest keine Gegenprobe auf Hardware (E-R45-7) — Rundung, Schriftgrößen und
-  Berührziele sind am Gerät nachzumessen. Die Handy-Bilder prüft der eine
-  S24-Dienst des Auftraggebers.</div>
+  Gerätetest keine Gegenprobe auf Hardware (E-R45-7) — Rundung, Schriftgrößen,
+  Berührziele sowie Haltedauer und Sperrfrist der Sperre sind am Gerät
+  nachzumessen und gehören in den Wear-Teil von <code>Geraete-Eingabe.md</code>.
+  Die Handy-Bilder prüft der eine S24-Dienst des Auftraggebers.</div>
 
 </div></body></html>

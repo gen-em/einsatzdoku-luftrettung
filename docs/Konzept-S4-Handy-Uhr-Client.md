@@ -362,6 +362,40 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   Segment erst, wenn tatsächlich eine Phase gesetzt wird — wie bisher).
   Der Modus wandert über den Nachrichtenweg zur Uhr; sie zeigt dann nur
   Dienst beginnen/beenden.
+- **E-S4-21 — Bedienmodell der Uhr: ein Durchlauf, eine Liste, eine
+  Sperre** (Anweisung vom 31.08.2026). Vier Teile:
+  **(a) Keine verlässliche Hardwaretaste.** Wear-OS-Uhren haben mindestens
+  die Ein/Aus-Taste, und die ist für Apps grundsätzlich gesperrt. Freie
+  Zusatztasten meldet die Plattform über die `WearableButtons`-Schnittstelle
+  (androidx.wear.input) — manche Sportmodelle haben welche, auf der
+  Galaxy-Watch-Linie ist **keine** zu erwarten (Home und Zurück sind
+  systemgebunden); verlässlich weiß es erst die Abfrage am Gerät. Die App
+  fragt ab und legt, wo eine freie Taste gemeldet wird, „nächste Phase"
+  darauf — das Bedienbild hängt aber **nicht** daran: Es muss mit Touch
+  allein vollständig sein. Lünette und Krone scrollen nur und lösen nie
+  eine Handlung aus.
+  **(b) Der Durchlauf** — dasselbe Modell wie START/Action an der Garmin:
+  Im Einsatz trägt die Hauptseite **einen** großen Knopf „nächste Phase"
+  (2 → … → 9), klein darunter die aktuelle Phase mit Zeit. Nach der
+  letzten Phase wird derselbe Knopf zu **„Einsatz abschließen" mit
+  Rückfrage** — erst die Bestätigung sendet `final` + `ended_at`; ein
+  versehentlicher letzter Tipp beendet nichts.
+  **(c) Die Phasenliste — Übersicht und Direktwahl in einem.** Halten des
+  großen Knopfs öffnet die Liste: jede Zeile eine Phase mit ihren
+  gesetzten Zeiten (**ansehen**), Tippen setzt die gewählte Phase jetzt
+  (**direkt wählen**; eine erneut gesetzte Phase ist ein zweiter Eintrag,
+  E-R45-12). Dort steht auch „Einsatz abschließen" für den vorzeitigen
+  Abschluss, mit derselben Rückfrage.
+  **(d) Die Sperre.** Nach kurzer Zeit ohne Bedienung (Richtwert 10 s;
+  in den App-Einstellungen abschaltbar) sperrt die Anzeige: Phase und
+  Zeit bleiben lesbar, unten steht ein Schloss, entsperrt wird durch
+  **Halten** (~1 s); ein Tippen tut gesperrt nichts. Die Sperre gilt für
+  Touch und eine etwaige freie Taste gleichermaßen. Im
+  Always-on-Ruhezustand weckt die erste Berührung ohnehin nur das
+  Display — die Sperre schließt die Lücke im aktiven Zustand.
+  Haltedauer, Sperrfrist und Berührziele sind blind gewählt und am Gerät
+  nachzumessen (E-R45-7); sie gehören in den Wear-Teil von
+  `docs/Geraete-Eingabe.md`.
 
 ## 4. Offene Fragen
 
@@ -445,7 +479,8 @@ Kette) mit je einem Fall.
 **B5 — Phasen und Einsätze am Handy.**
 Phasenknöpfe 2–9, Einsatzbeginn/-abschluss, Lebenszyklus (E-S4-08),
 Phasen-Koordinaten aus der eigenen Spur, `mission`-Uploads mit
-Teil-Uploads; im Nur-Aufzeichnen-Modus sind die Knöpfe ausgeblendet und
+Teil-Uploads; der Einsatzabschluss fragt nach, wie an der Uhr
+(E-S4-21b); im Nur-Aufzeichnen-Modus sind die Knöpfe ausgeblendet und
 der Moduswechsel während des Dienstes verlustfrei (E-S4-20).
 *Abnahme:* Lebenszyklus-Matrix (Phase ohne Einsatz startet Einsatz;
 Abschluss sendet `final` + `ended_at`; Segment davor/danach nahtlos);
@@ -458,12 +493,18 @@ Gesendetem (je ein Fall).
 ### Block C — Wear-OS-App (`android/uhr/`)
 
 **C1 — Gerüst und Bedienbild.**
-Modul `uhr/`, Oberflächen nach E-S4-11 (Dienst, Phasen, Einsatzabschluss,
-Verbindungszustand; im Nur-Aufzeichnen-Modus nur Dienst
-beginnen/beenden, E-S4-20), blind gebaut.
+Modul `uhr/`, Oberflächen nach E-S4-11 und dem Bedienmodell E-S4-21:
+Durchlauf-Knopf mit Abschluss-Rückfrage, Phasenliste als Übersicht und
+Direktwahl, Sperre, `WearableButtons`-Abfrage; im Nur-Aufzeichnen-Modus
+nur Dienst beginnen/beenden (E-S4-20). Blind gebaut.
 *Abnahme:* Modul baut im selben Gradle-Lauf; die Bedienzustände sind als
-Robolectric-Fälle belegt (Zahl im Prüfprotokoll); Bildschirmfotos gibt es
-nicht (kein Emulator) — das steht so im Prüfdokument, nicht verschwiegen.
+Robolectric-Fälle belegt (Zahl im Prüfprotokoll), darunter je ein Fall:
+Durchlauf 2 → 9 und Abschluss nur nach Rückfrage; Direktwahl setzt die
+gewählte Phase, eine Korrektur wird zweiter Eintrag; die Sperre greift
+nach Frist, gesperrtes Tippen tut nichts, Entsperren nur durch Halten;
+mit gemeldeter Taste löst sie „nächste Phase" aus, ohne bleibt alles per
+Touch bedienbar. Bildschirmfotos gibt es nicht (kein Emulator) — das
+steht so im Prüfdokument, nicht verschwiegen.
 
 **C2 — Nachrichtenweg mit Quittung und Puffer.**
 Protokoll nach E-S4-10 auf beiden Seiten (Uhr sendet/puffert, Handy
