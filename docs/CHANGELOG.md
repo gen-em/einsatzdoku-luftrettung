@@ -11,6 +11,107 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 10.0.0] — 2026-08-31
+
+**GPS-Punkte liegen jetzt als Blob statt als Zeile — 62,4 Byte werden 3,58.**
+Zweites Arbeitspaket der Phase S2. Die Hauptnummer steigt, weil sich das
+Datenmodell ändert und eine Migration zwingend ist.
+
+> **Nach dem Ausrollen `update.php` aufrufen.** Ohne die Migration gibt es die
+> Tabelle `track_blobs` nicht, und jeder Spurzugriff scheitert.
+
+### Web — Warum
+
+Spurpunkte sind 93 % des Bestands. Gemessen am Referenzdatensatz kostet eine
+Zeile in `track_points` **62,4 Byte**, derselbe Punkt als Blob **3,58** — ein
+Siebzehntel. Bei 5000 Einsätzen sind das 194 statt 3300 MB, und damit steht
+und fällt die Zusage, dass ein Konto dieser Größe auf geteiltem Webspace
+trägt.
+
+Die Punkte liegen deshalb künftig in drei Stufen: Zeilen als **Eingangspuffer
+der Uhr** (der Upload kommt in Teilstücken, ist idempotent und wiederholbar —
+dafür ist eine Zeilentabelle richtig), danach als verlustfreier Blob, und
+sechs Monate nach Einsatzende ausgedünnt. **Dieses Paket baut das Format und
+den Zugriffsweg; die Wanderung zwischen den Stufen kommt mit den Jobs.**
+
+### Web — Ein Weg, nicht sechs
+
+Sechs Stellen lasen `track_points` per SQL, jede mit einer eigenen Projektion.
+Bliebe das so, müsste jede von ihnen die Stufen kennen — und die erste, die es
+vergisst, zeigt eine leere Spur, ohne dass es auffällt. Alle sechs gehen jetzt
+über `server/spur_lib.php`: Tagesansicht, Einsatzansicht, Export, Sicherung,
+Einsatzort-Höhe und Umdatierung. `CLAUDE.md` trägt das als Pflegepflicht.
+
+**Das Umdatieren eines Diensttags** war ein einziges
+`UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
+Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
+zwei Zeitrechnungen — sichtbar erst als durcheinandergeratene Phasenzuordnung.
+Der Blob wird jetzt gelesen, verschoben und zurückgeschrieben.
+
+**Die Fortsetzungsmarke der Uhr** kam aus `MAX(seq)+1` über die Zeilen. Sobald
+die Punkte im Blob liegen, gibt es diese Zeilen nicht mehr — die Marke fiele
+auf 0, und die Uhr sendete den ganzen Dienst noch einmal. Sie kommt jetzt aus
+`n_original` des Blobs und der höchsten Zeilennummer. Für die Uhr ändert sich
+nichts, der JSON-Vertrag bleibt.
+
+### Web — Was „verlustfrei" heißt
+
+Keine Festkomma-Kodierung ist bitgleich gegen einen beliebigen `DOUBLE`.
+„Verlustfrei" heißt deshalb: innerhalb einer **festgeschriebenen** Auflösung —
+10⁻⁶ Grad (≈ 0,11 m) und 0,1 m Höhe. Sie steht als Kennung im Blob-Kopf, und
+ein Leser, der eine unbekannte Kennung findet, verweigert die Arbeit, statt
+Zahlen mit dem falschen Faktor zu deuten.
+
+Der Konzeptwortlaut sah „Höhe in Metern gerundet" vor. Das wäre nicht nur
+ungenauer gewesen, sondern hätte den Mechanismus stillgelegt: **74,4 % der
+Punkte tragen eine Nachkommastelle**, die Rundlaufprüfung hätte bei drei von
+vier Spuren angeschlagen, und der Verdichtungsjob hätte nie eine Zeile
+gelöscht — stillschweigend. Der Preis der Zehntelmeter sind 7 % Blobgröße.
+
+### Web — Zwei Grenzen, weil es zwei Fragen sind
+
+`LIMIT_TRACKPUNKTE` galt an zwei Stellen, die Verschiedenes meinen: beim
+Upload je **Anfrage** (die Uhr sendet in Stücken zu 500, 2000 sind vierfache
+Reserve), beim Zurückspielen je **ganzer Spur**. Dort war dieselbe Zahl ein
+Datenverlust — was die Uhr über viele Anfragen aufbauen darf, wurde bei 2000
+gekappt; die Datei trug die ganze Spur, zurück kam ihr Anfang. Erreichbar ist
+das ohne weiteres: 2000 Punkte sind zwischen 33 Minuten und 5,5 Stunden
+Aufzeichnung. Aufgefallen ist es nie, weil die längste Referenzspur 1133
+Punkte hat.
+
+Jetzt zwei Konstanten, und die Spurgrenze (50 000) **lehnt ab statt zu
+kappen**: Eine halbe Spur sieht aus wie eine ganze, eine abgelehnte sieht man.
+
+### Web — Ein Konto löschen räumt jetzt seine Spuren ab
+
+`track_points` ist polymorph und trägt keinen Fremdschlüssel; die Kaskade von
+`DELETE FROM users` nahm die Punkte **nicht** mit. Der Kommentar an der
+Löschstelle behauptete das Gegenteil und ist der Grund, warum es niemandem
+aufgefallen ist. Der Messstand hat es vorgeführt: zwei gelöschte Konten,
+**6 202 931 verwaiste Spurpunkte**, rund 380 MB, die erst der nächste
+Tagesjob abräumte. Jetzt gehen Zeilen und Blobs ausdrücklich mit, vor der
+Kaskade; der Wartungsjob bleibt das Sicherheitsnetz und deckt beide Tabellen.
+
+### Web — Belegt
+
+| Prüfung | Zahl |
+|---|---|
+| Rundlauf Punkte → Blob → Punkte, ganzer Referenzbestand | 55 861 Punkte, **0 Abweichungen** |
+| Blobgröße | **3,58 B/Punkt** (Zeilen: 62,4) |
+| Tagesansicht und Einsatzansicht vor/nach Verdichtung | 8 HTTP-Antworten **byteweise gleich** |
+| CSV- und GPX-Export aus Blobs gegen die Referenz | 9589 Vergleiche, **0 Abweichungen**, 171 GPX-Tracks |
+| Sicherung aus vollständig verdichtetem Konto gegen die Referenz | 286 739 Vergleiche, **0 unerklärt** |
+| `spurprobe/probe.php` | 14 Erwartungen, **0 nicht erfüllt** |
+| Kreislauf `edbak` (R24) | 286 739 Vergleiche, 0 unerklärt |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+Das Rezept zum Öffnen eines Blobs von Hand steht in `docs/Backup-Format.md`
+und wurde gegen einen echten Blob gefahren: 1133 Punkte, 0 Abweichungen
+gegenüber dem, was die Anwendung liest.
+
+**Am Dateiformat der Sicherung ändert sich nichts.** Die Spur steht weiterhin
+als `[seq, lat, lon, ele, ts]` je Punkt; die Nutzlast-Fassung bleibt 7.
+
 ## [Werkzeug: Messstand] — 2026-08-31
 
 **Die Anwendung lässt sich jetzt an 5000 Einsätzen messen — und der erste Lauf

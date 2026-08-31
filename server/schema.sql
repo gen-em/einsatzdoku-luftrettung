@@ -460,6 +460,31 @@ CREATE TABLE track_points (
   PRIMARY KEY (owner_type, owner_id, seq)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Spuren als Blob (S2, SPUR1). Seit dieser Fassung ist `track_points` nur
+-- noch der EINGANGSPUFFER der Uhr (Stufe 1); sobald ein Paket abgeschlossen
+-- ist, wandern seine Punkte in eine Zeile hier (Stufe 2), und sechs Monate
+-- nach Einsatzende werden sie ausgeduennt (Stufe 3).
+--
+-- Der Grund ist die Menge: 62,4 Byte je Punkt als Zeile gegen 3,58 als Blob.
+-- Gelesen und geschrieben wird ausschliesslich ueber `spur_lib.php`; das
+-- Format steht dort und in docs/Backup-Format.md.
+--
+-- WIE `track_points` OHNE FREMDSCHLUESSEL, aus demselben Grund (polymorph
+-- ueber owner_type/owner_id). Die Loeschwege raeumen deshalb ausdruecklich
+-- mit; der Wartungsjob ist nur das Sicherheitsnetz (F-S2-B).
+CREATE TABLE track_blobs (
+  owner_type    ENUM('mission','rest') NOT NULL,
+  owner_id      INT UNSIGNED NOT NULL,
+  stufe         TINYINT UNSIGNED NOT NULL,     -- 2 = verlustfrei, 3 = ausgeduennt
+  n_original    INT UNSIGNED NOT NULL,         -- Punktzahl vor der Ausduennung
+  n_gespeichert INT UNSIGNED NOT NULL,
+  blob_daten    MEDIUMBLOB NOT NULL,
+  erstellt_am   DATETIME NOT NULL,
+  geaendert_am  DATETIME NOT NULL,
+  PRIMARY KEY (owner_type, owner_id),
+  KEY stufe_alter (stufe, geaendert_am)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ---------------------------------------------------------------------------
 -- Migrations-Buchfuehrung. Eine frische Installation ist bereits auf dem
 -- Stand aller bisherigen Migrationen, deshalb werden sie hier als erledigt

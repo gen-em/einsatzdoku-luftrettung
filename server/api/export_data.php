@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 /**
  * Export: Rohdaten fuer alle drei Export-Profile (nur lesend).
@@ -307,12 +308,12 @@ function export_meta(array $b, int $userId): never
             $resourcesByMission[(int)$r['mission_id']][] = (string)$r['name'];
         }
 
-        foreach (sql_in_bloecken($pdo,
-                "SELECT owner_id, COUNT(*) AS c FROM track_points
-                 WHERE owner_type = 'mission' AND owner_id IN ({IDS}) GROUP BY owner_id",
-                $ids) as $r) {
-            $trackCountByMission[(int)$r['owner_id']] = (int)$r['c'];
-        }
+        /* Punktzahl je Einsatz ueber spur_lib.php (S2/AP1). Sie steuert den
+         * GPX-Export: export.js fragt nur Einsaetze mit `track_points > 0`
+         * ueberhaupt ab. Stuende hier nach der Verdichtung eine 0, fiele der
+         * Einsatz still aus dem Export heraus — deshalb zaehlt jetzt eine
+         * Stelle, die Zeilen UND Blob kennt. */
+        $trackCountByMission = spur_zahlen($pdo, 'mission', $ids);
 
         $sessionRows = sql_in_bloecken($pdo,
             'SELECT id, mission_id, started_at FROM resus_sessions
@@ -417,15 +418,8 @@ function export_meta(array $b, int $userId): never
     $restRows = $st->fetchAll();
     $restIds = array_map(static fn($r) => (int)$r['id'], $restRows);
 
-    $trackCountByRest = [];
-    if ($restIds) {
-        foreach (sql_in_bloecken($pdo,
-                "SELECT owner_id, COUNT(*) AS c FROM track_points
-                 WHERE owner_type = 'rest' AND owner_id IN ({IDS}) GROUP BY owner_id",
-                $restIds) as $r) {
-            $trackCountByRest[(int)$r['owner_id']] = (int)$r['c'];
-        }
-    }
+    // Punktzahl je Ruhesegment ueber spur_lib.php (S2/AP1), wie oben.
+    $trackCountByRest = $restIds ? spur_zahlen($pdo, 'rest', $restIds) : [];
 
     $rests = array_map(static fn($r) => [
         'id'           => (int)$r['id'],
@@ -493,17 +487,13 @@ function export_track(array $b, int $userId): never
     foreach ($validIds as $id) { $result[(string)$id] = []; }
 
     if ($validIds) {
-        $rows = sql_in_bloecken($pdo,
-            "SELECT owner_id, lat, lon, ele, ts FROM track_points
-             WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq",
-            $validIds, [$ownerType]);
-        foreach ($rows as $r) {
-            $result[(string)(int)$r['owner_id']][] = [
-                (float)$r['lat'],
-                (float)$r['lon'],
-                $r['ele'] !== null ? (float)$r['ele'] : null,
-                (int)$r['ts'],
-            ];
+        /* UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen. Ausgabeform
+         * unveraendert: [lat, lon, ele|null, ts] je Punkt, das ist die Vorlage
+         * fuer <trkpt> in export.js. */
+        foreach (spur_lesen_viele($pdo, $ownerType, $validIds) as $id => $punkte) {
+            foreach ($punkte as $pt) {
+                $result[(string)$id][] = [$pt[1], $pt[2], $pt[3], $pt[4]];
+            }
         }
     }
 

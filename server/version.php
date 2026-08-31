@@ -43,6 +43,26 @@ declare(strict_types=1);
  * JSON-Vertrag 1.3) und der Nachzug der Dokumentation. Ebenfalls OHNE
  * Migration — `day_refs` und die Fremdschluessel auf `days` liegen seit 6.0.0.
  *
+ * 10.0.0 ist der Umbau der SPURSPEICHERUNG (Phase S2). Die Hauptnummer steht
+ * hier fuer das, wofuer sie da ist: ein geaendertes Datenmodell mit
+ * zwingender Migration. Spurpunkte liegen nicht mehr nur als Zeilen in
+ * `track_points`, sondern zusaetzlich als Blob in der neuen Tabelle
+ * `track_blobs` — im Format SPUR1, spaltenweise Differenzen und zlib. Der
+ * Grund ist die Menge: gemessen 62,4 Byte je Punkt als Zeile gegen 3,58 als
+ * Blob, ein Siebzehntel. Bei 5000 Einsaetzen sind das 194 statt 3,3 MB.
+ *
+ * `track_points` bleibt und wird zum EINGANGSPUFFER der Uhr; die Verdichtung
+ * selbst kommt mit AP3. Gelesen und geschrieben wird ausschliesslich ueber
+ * `server/spur_lib.php` — das ist eine Pflegepflicht, keine Empfehlung
+ * (CLAUDE.md 4). Alle sechs bisherigen SQL-Lesestellen sind darauf
+ * umgestellt, ebenso jeder Loeschweg: Weder `track_points` noch
+ * `track_blobs` haengen an einem Fremdschluessel, was hier nicht
+ * ausdruecklich mitgeloescht wird, bleibt als Positionsdatensatz ohne
+ * Eigentuemer liegen (F-S2-B).
+ *
+ * NACH DEM AUSROLLEN MUSS `update.php` AUFGERUFEN WERDEN. Ohne die Migration
+ * gibt es die Tabelle nicht, und jeder Spurzugriff scheitert.
+ *
  * 7.0.0 ist eine Runde an der OBERFLAECHE, und die Hauptnummer steigt trotzdem:
  * Nicht wegen des Datenmodells — es bleibt unangetastet, und eine Migration
  * gibt es NICHT —, sondern weil sich die Wege durch die Anwendung geaendert
@@ -1204,4 +1224,4 @@ declare(strict_types=1);
  * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
  * 4-px-Schritt nach unten fort.
  */
-const WEB_VERSION = '9.14.0';
+const WEB_VERSION = '10.0.0';

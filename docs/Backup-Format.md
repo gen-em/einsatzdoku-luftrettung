@@ -343,6 +343,68 @@ seit Web 4.1.2 auch:
 }
 ```
 
+### Woher die Punkte kommen (seit Web 10.0.0)
+
+**Am Dateiformat ändert sich nichts.** Die Spur steht weiterhin als
+`[seq, lat, lon, ele, ts]` je Punkt in der Zeile ihres Einsatzes oder
+Ruhesegments.
+
+Serverseitig liegen die Punkte seit Web 10.0.0 aber nicht mehr nur als Zeilen
+in `track_points`, sondern je nach Alter als **Blob** in `track_blobs`
+(Format SPUR1, `docs/Technik.md` 4.97). `edbak_build()` liest sie über
+`spur_lib.php` und setzt beide Stufen zusammen; die Sicherung sieht deshalb
+gleich aus, egal in welcher Stufe der Bestand gerade steht.
+
+**Eine Folge davon gehört gesagt:** Die Blob-Stufen legen die Koordinaten mit
+**10⁻⁶ Grad** (≈ 0,11 m) und die Höhe mit **0,1 m** ab. Eine Sicherung aus
+einem verdichteten Bestand trägt also gerundete Werte — nicht, weil die
+Sicherung rundet, sondern weil der Bestand es tut. Nachgemessen: Über den
+Referenzdatensatz (55 861 Punkte) ist die Sicherung vor und nach der
+Verdichtung **identisch**, weil die Uhr ohnehin nicht feiner liefert, als das
+Format ablegt.
+
+Ab sechs Monaten nach Einsatzende steht in der Datei die **ausgedünnte** Spur
+(Stufe 3, E-S2-13) — die Sicherung nimmt den Datenbankstand und kodiert nicht
+neu.
+
+### SPUR1 von Hand lesen
+
+Wer einen Blob außerhalb der Anwendung öffnen will — etwa aus einem
+Komplettbackup der Datenbank —, braucht kein eigenes Werkzeug:
+
+```python
+import struct, zlib
+
+def spur1_lesen(blob: bytes):
+    assert blob[:2] == b"SP", "kein SPUR-Blob"
+    fassung, stufe, aufl = blob[2], blob[3], blob[4]
+    assert fassung == 1 and aufl == 1, f"Fassung {fassung}, Auflösung {aufl}"
+    n_original, n = struct.unpack("<II", blob[5:13])
+    roh = zlib.decompress(blob[13:])
+
+    def spalte(pos, anzahl):
+        werte, lauf = [], 0
+        for d in struct.unpack(f"<{anzahl}i", roh[pos:pos + 4 * anzahl]):
+            lauf += d
+            werte.append(lauf)
+        return werte, pos + 4 * anzahl
+
+    lat, pos = spalte(0, n)
+    lon, pos = spalte(pos, n)
+    bits = roh[pos:pos + (n + 7) // 8]; pos += (n + 7) // 8
+    hat = [bool(bits[i // 8] & (1 << (i % 8))) for i in range(n)]
+    hoehen, pos = spalte(pos, sum(hat))
+    ts, pos = spalte(pos, n)
+
+    h = iter(hoehen)
+    return [(i, lat[i] / 1e6, lon[i] / 1e6,
+             next(h) / 10 if hat[i] else None, ts[i]) for i in range(n)]
+```
+
+Dieselben drei Zeilen gehen in PHP mit `unpack('l*', gzuncompress(...))` und
+in JavaScript mit `DataView` — deshalb ist das Format so und nicht mit einer
+Varint-Kodierung gebaut, die 0,2 Byte je Punkt gespart hätte (E-S2-04).
+
 ### Der Papierkorb in der Datei (seit Version 7)
 
 Drei Felder tragen ihn: `days[].deleted_at`, `missions[].deleted_at` /

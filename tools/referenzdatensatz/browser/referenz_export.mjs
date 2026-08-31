@@ -82,7 +82,7 @@ pruefe(gpxSichtbar, 'GPX-Wahl nicht sichtbar');
 if (gpxSichtbar) { await ankreuzen(seite, '#exp_gpx'); }
 schritt(6, 'GPX-Tracks einschließen: an');
 
-await seite.uncheck('#exp_pw');
+await abwaehlen(seite, '#exp_pw');
 await seite.waitForTimeout(300);
 schritt(7, 'Mit Passwort schützen: AUS (die Referenz muss lesbar bleiben)');
 

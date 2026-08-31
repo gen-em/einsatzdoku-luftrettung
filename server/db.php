@@ -735,6 +735,11 @@ function run_cleanup_if_due(): void {
 
     /* ---- Die einzelnen Schritte, jeder fuer sich ------------------------- */
     $schritte = [
+        /* SEIT S2 ZWEI TABELLEN. `track_blobs` ist wie `track_points`
+         * polymorph und traegt deshalb ebenfalls keinen Fremdschluessel; was
+         * die Loeschwege nicht ausdruecklich mitnehmen, bleibt hier liegen.
+         * Die Loeschwege tun es seit AP1 (spur_loeschen) — dieser Schritt ist
+         * das Sicherheitsnetz, nicht der Hauptweg (E-S2-18, F-S2-B). */
         'verwaiste Spurpunkte (Einsaetze)' => function (PDO $pdo): void {
             $pdo->exec("DELETE tp FROM track_points tp
                         LEFT JOIN missions m ON m.id = tp.owner_id
@@ -744,6 +749,16 @@ function run_cleanup_if_due(): void {
             $pdo->exec("DELETE tp FROM track_points tp
                         LEFT JOIN rest_segments r ON r.id = tp.owner_id
                         WHERE tp.owner_type = 'rest' AND r.id IS NULL");
+        },
+        'verwaiste Spur-Blobs (Einsaetze)' => function (PDO $pdo): void {
+            $pdo->exec("DELETE tb FROM track_blobs tb
+                        LEFT JOIN missions m ON m.id = tb.owner_id
+                        WHERE tb.owner_type = 'mission' AND m.id IS NULL");
+        },
+        'verwaiste Spur-Blobs (Ruhesegmente)' => function (PDO $pdo): void {
+            $pdo->exec("DELETE tb FROM track_blobs tb
+                        LEFT JOIN rest_segments r ON r.id = tb.owner_id
+                        WHERE tb.owner_type = 'rest' AND r.id IS NULL");
         },
         'Kopplungscodes' => function (PDO $pdo): void {
             $pdo->exec("DELETE FROM pair_codes

@@ -700,8 +700,8 @@ Sammelstelle nach K4; bei Übergabe leer.
 | Nr. | Fund | Status |
 |---|---|---|
 | F-S2-A | Die Prüfmittel sind seit P3/O11 an sechs Stellen kaputt: Einspiellauf (4) und CSV-Kreislauf (2) | behoben in AP0 |
-| F-S2-B | Kontolöschung lässt Spurpunkte als Waisen liegen — der Kommentar behauptet das Gegenteil | offen, gehört zu AP2 |
-| F-S2-C | Die Wiederherstellung schneidet Spuren über 2000 Punkten ab; die Uhr darf sie aber beliebig lang aufbauen | offen, gehört zu AP1/AP5 |
+| F-S2-B | Kontolöschung lässt Spurpunkte als Waisen liegen — der Kommentar behauptet das Gegenteil | behoben in AP1 |
+| F-S2-C | Die Wiederherstellung schneidet Spuren über 2000 Punkten ab; die Uhr darf sie aber beliebig lang aufbauen | behoben in AP1 (F-S2-02) |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -815,14 +815,12 @@ Positionsdaten lagen noch vollständig da. Der Wartungsjob hat sie
 anschließend entfernt: **15,18 s für 6 202 931 Zeilen** — in genau der
 Anfrage, die die nächste Nutzerin stellt.
 
-**Erledigt in AP2** zusammen mit E-S2-18: Alle Löschwege löschen künftig
-Zeilen **und** Blob, ausdrücklich und in derselben Transaktion; die
-Waisenprüfung des Jobs bleibt das Sicherheitsnetz und wird nicht der
-Hauptweg. Der Kommentar wird berichtigt — er darf nicht behaupten, was das
-Schema nicht hergibt.
-
-Der Fund wird hier vermerkt und **nicht sofort** behoben (K4); er gehört in
-das Paket, das die Löschwege ohnehin anfasst.
+**Behoben in AP1**, nicht erst in AP2: Das Paket stellt ohnehin alle
+Löschwege auf `spur_lib.php` um, und dort einen Weg auszulassen wäre
+unbegründet gewesen. Alle Löschwege rufen jetzt `spur_loeschen()` — Zeilen
+**und** Blob, ausdrücklich und vor der Kaskade. Der Wartungsjob bleibt das
+Sicherheitsnetz und deckt seit AP1 beide Tabellen. Der Kommentar ist
+berichtigt; er darf nicht behaupten, was das Schema nicht hergibt.
 
 ### F-S2-C — Dieselbe Zahl, zwei Bedeutungen: 2000 Punkte
 
@@ -865,7 +863,7 @@ kein Verzicht." Eine Grenze, die eine Spur beim Zurückspielen **köpft**, ist
 mit dieser Zusage nicht vereinbar — und sie würde in die Blobs
 weitergeschleppt, wenn AP1 sie unbesehen übernimmt.
 
-**Vorschlag zur Entscheidung (F-S2-02, vor AP1):** Die Grenze bleibt als
+**Entschieden als F-S2-02 (31.08.2026), umgesetzt in AP1:** Die Grenze bleibt als
 Schutz gegen eine entgleiste Nutzlast, wird aber auf einen Wert gehoben, der
 eine echte Spur nicht mehr trifft, und sie wird **je Spur** einheitlich
 angewandt — mit einer Ablehnung statt einer Kappung: Eine Spur jenseits der
@@ -874,6 +872,35 @@ Eine halbe Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
 Die Zahl selbst gehört in dieselbe Entscheidung — sie hängt daran, was der
 Blob je Spur tragen soll (`MEDIUMBLOB`, 16 MB, das sind bei 3,56 B/Punkt rund
 4,7 Mio. Punkte; die Grenze wird also nicht vom Format gesetzt).
+
+### F-S2-02 — Was geschieht mit einer Spur über 2000 Punkten? (entschieden, 31.08.2026)
+
+**Die Frage** stellt sich aus F-S2-C: `LIMIT_TRACKPUNKTE` gilt beim Upload je
+Anfrage und beim Zurückspielen je Spur, und im zweiten Fall kappt sie.
+
+**Gemessen** an den 526 Anfragen des Referenzlaufs: höchstens **500** Punkte je
+Anfrage (die Uhr sendet in Stücken zu `UPLOAD_CHUNK_POINTS = 500`), höchstens
+**1133** je Spur. Die Grenze wird vom Referenzbestand also nirgends erreicht —
+deshalb ist sie nie aufgefallen. Erreichbar ist sie trotzdem:
+`THIN_MAX_GAP_S = 10` garantiert einen Punkt alle zehn Sekunden,
+`THIN_MIN_GAP_S = 1` erlaubt einen je Sekunde; 2000 Punkte sind damit zwischen
+**33 Minuten und 5,5 Stunden** Aufzeichnung.
+
+**Entschieden:** zwei Konstanten statt einer.
+
+| Konstante | gilt für | Wert | Verhalten |
+|---|---|---|---|
+| `LIMIT_TRACKPUNKTE_ANFRAGE` | die Punkte einer Anfrage | 2000 | kappt und meldet (wie bisher) |
+| `LIMIT_TRACKPUNKTE_SPUR` | die Punkte einer ganzen Spur | 50 000 | **lehnt die Spur ab** |
+
+50 000 Punkte sind 13,9 Stunden bei einem Punkt je Sekunde — länger als jeder
+Dienst. Als Blob rund 178 KB; `MEDIUMBLOB` trägt 16 MB. Die Zahl schützt vor
+Unfug, nicht vor Betrieb.
+
+**Und sie lehnt ab, statt zu kappen.** Eine halbe Spur sieht aus wie eine
+ganze; eine abgelehnte sieht man. Dafür gibt es `pruef_menge_streng()` neben
+`pruef_menge()` — die Meldung steht wie bisher in der Ablehnungsliste der
+Rückmeldung.
 
 ---
 
@@ -1048,3 +1075,96 @@ zwei Abtastungen.
   vom 30.08.2026).
 - **Die Referenz-`.edbak` wird nicht neu gezogen.** Sie ist die Vorlage des
   Vervielfältigers und die Abnahmedatei für R11; AP0 fasst sie nicht an.
+
+### AP1 — Spurbibliothek und Blob-Format SPUR1 (erledigt, Web 10.0.0)
+
+**Erledigt.** `server/spur_lib.php` steht als einzige Stelle, die SPUR1 liest
+und schreibt; die Tabelle `track_blobs` ist migriert
+(`2026_08_31_spur_blobs`); alle sechs SQL-Lesestellen und alle Löschwege sind
+umgestellt; `tools/spurprobe/probe.php` prüft den Rundlauf nach.
+
+**Hauptversion 10.0.0**, weil sich das Datenmodell ändert und eine Migration
+zwingend ist. Nach dem Ausrollen muss eine Administratorin `update.php`
+aufrufen — ohne die Tabelle scheitert jeder Spurzugriff.
+
+#### Was gebaut wurde
+
+| Was | Wo |
+|---|---|
+| Kodieren, Dekodieren, Kopf lesen | `spur_kodieren()`, `spur_dekodieren()`, `spur_kopf()` |
+| Lesen über beide Stufen, gebündelt | `spur_lesen_viele()`, `spur_lesen()` |
+| Punktzahl ohne Auspacken | `spur_zahlen()` |
+| Fortsetzungsmarke der Uhr | `spur_naechste_seq()` |
+| Schreiben, Löschen | `spur_blob_schreiben()`, `spur_loeschen()`, `spur_loeschen_nur_zeilen()` |
+| Umdatieren | `spur_min_ts()`, `spur_zeit_verschieben()` |
+| Rundlaufprüfung | `spur_rundlauf_pruefen()`, `spur_quantisieren()` |
+
+Die Ausdünnung (`spur_ausduennen()`) gehört zu AP3 und ist hier bewusst
+**nicht** vorweggenommen: Sie braucht die Phasenpunkte des Einsatzes, und die
+kennt die Bibliothek erst, wenn der Job sie ihr gibt.
+
+#### Drei Dinge, die beim Bauen aufgefallen sind
+
+**1. PHPs Ganzzahldivision hat die Rundlaufprüfung stillgelegt.** Der erste
+Lauf meldete Abweichungen bei **175 von 181** Spuren, mit der Meldung
+„Punkt 9: Höhe weicht ab (erwartet 780, gelesen 780)". Dieselbe Zahl, ein
+anderer Typ: `7800 / 10` ist in PHP `int(780)`, `round(780.0*10)/10` ist
+`float(780.0)`, und `!==` prüft den Typ mit. Beide Seiten werden jetzt
+ausdrücklich zu `float`. Hätte die Prüfung nicht über den ganzen Bestand
+laufen müssen, wäre das erst im Betrieb aufgefallen — als Verdichtungsjob, der
+nie eine Zeile löscht.
+
+**2. `sql_in_bloecken()` hat eine andere Signatur, als ich annahm.** Sie nimmt
+die SQL-Vorlage mit `{IDS}` und gibt Zeilen zurück, statt Blöcke zu liefern.
+Die Bibliothek benutzt jetzt den vorhandenen Weg — bis auf die `DELETE`, wo
+die Funktion nicht passt (sie liefert Zeilen, keine Trefferzahl); dort steht
+die Blockung von Hand, mit derselben Blockgröße und einer Begründung daneben.
+
+**3. Und wieder eine Zahl, die etwas anderes maß.** Die Spurprobe prüfte
+„nach der Verdichtung stehen keine Zeilen mehr da" mit
+`SELECT COUNT(*) FROM track_points` — also über alle Konten — und schlug an,
+weil daneben das Messstandkonto 3,2 Mio. Zeilen hält. Verdichtet wurde ein
+Konto. Dritter Fall derselben Sorte in dieser Phase; die Prüfung zählt jetzt
+die Zeilen ihres Kontos.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Rundlauf Punkte → Blob → Punkte | `spurprobe/probe.php` | 181 Spuren, **55 861 Punkte, 0 Abweichungen** |
+| Blobgröße | dieselbe | **3,58 B/Punkt** gegen 62,4 als Zeile |
+| Kopf ohne Auspacken lesbar | dieselbe | 181 Blobs, 0 abweichend |
+| Fremde Formatfassung/Auflösung wird abgelehnt | dieselbe | 3 Prüffälle |
+| Leser vor/nach Verdichtung gleich | dieselbe | 0 Spuren abweichend |
+| `edbak_build()` vor/nach Verdichtung gleich | dieselbe | Paket 2,42 MB, gleich |
+| `next_seq` überlebt die Verdichtung | dieselbe | 0 abweichend |
+| Löschweg lässt weder Zeile noch Blob | dieselbe | erfüllt |
+| Tagesansicht/Einsatzansicht über HTTP | `api/day.php`, `api/mission.php` | 8 Antworten **byteweise gleich** |
+| CSV- und GPX-Export aus Blobs | `vergleichen.py --art csv` | 9589 Vergleiche, **0 Abweichungen**, 171 GPX |
+| Sicherung aus **vollständig verdichtetem** Konto | `vergleichen.py --art edbak` | 286 739 Vergleiche, **0 unerklärt**, 16 erwartet |
+| Kreislauf `edbak` (R24) | `kreislauf.py --frisch` | 286 739 Vergleiche, **0 unerklärt** |
+| Dokumentiertes Python-Rezept gegen echten Blob | von Hand | 1133 Punkte, **0 Abweichungen** |
+| Karten im Browser | Playwright | 13 Spurlinien / 2713 Stützpunkte, **0 Konsolenfehler** |
+| Wortliste (R28) | `wortliste.py` | **0 / 0 / 0** |
+
+**Nicht geprüft:** die Ausdünnung (Stufe 3 — gehört zu AP3, `spur_ausduennen()`
+gibt es noch nicht) · das Verhalten bei einer Spur über 50 000 Punkten (der
+Referenzbestand hat keine; die Grenze ist rechnerisch belegt, nicht gefahren)
+· der Nachzügler-Fall über einen echten Uhr-Upload nach der Verdichtung
+(`spur_lesen_viele()` setzt Blob und Zeilen zusammen, geprüft ist bislang nur
+der Weg ohne Nachzügler) — beides gehört zu AP3.
+
+#### Entscheidungen, die dabei gefallen sind
+
+- **zlib-Stufe 9 statt 6.** 3,58 gegen 3,66 Byte je Punkt, 0,25 gegen 0,21
+  Sekunden für den ganzen Referenzbestand. Verdichtet wird einmal im
+  Hintergrund, gelesen wird oft.
+- **Die Auflösung steht im Kopf**, nicht nur im Code (3.1.2). Sie ist eine
+  Zusage; wer sie ändert, ändert die Bedeutung jedes bereits geschriebenen
+  Blobs.
+- **`spur_loeschen_nur_zeilen()` ist eine eigene Funktion** neben
+  `spur_loeschen()`. Die beiden sehen sich ähnlich und meinen
+  Gegensätzliches; wer sie verwechselt, löscht eine Spur, die bleiben sollte.
+- **Das Referenzkonto bleibt verdichtet.** Es ist der Zustand, den AP3 ohnehin
+  herstellt, und alle folgenden Prüfungen laufen damit gegen Blobs statt
+  gegen Zeilen — die schärfere Probe.

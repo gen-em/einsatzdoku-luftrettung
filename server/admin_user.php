@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
 require_admin();
@@ -311,8 +312,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
                        . '„Sicherungen" nachsehen.';
             } else {
-                // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Diensttage
-                db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
+                /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
+                 *
+                 * Hier stand: „FK-Kaskaden entfernen Einsätze, Segmente,
+                 * Tracks, Geräte, Diensttage". Fuer „Tracks" war das FALSCH,
+                 * und zwar seit jeher: `track_points` ist polymorph
+                 * (owner_type/owner_id) und traegt deshalb KEINEN
+                 * Fremdschluessel — die Kaskade nimmt die Punkte nicht mit.
+                 * Sie blieben als Waisen liegen, bis der Tagesjob das naechste
+                 * Mal lief: fruehestens am naechsten Kalendertag, und nur,
+                 * wenn ueberhaupt jemand die Installation aufrief.
+                 *
+                 * Was dort liegen blieb, sind Positionsdaten — Wohnorte,
+                 * Einsatzorte, Wege. Ein Konto zu loeschen ist die Handlung,
+                 * mit der eine NutzerIn genau das aus der Welt schaffen will.
+                 * Dass es bis zu einen Tag laenger dauerte, war vertretbar;
+                 * dass es niemand wusste, nicht — und der Kommentar hier hat
+                 * dafuer gesorgt, dass es niemand wusste.
+                 *
+                 * Der Messstand hat es vorgefuehrt: Zwei geloeschte Konten
+                 * hinterliessen 6 202 931 verwaiste Spurpunkte, rund 380 MB.
+                 *
+                 * Jetzt gehen Zeilen UND Blobs mit, vor der Kaskade. Der
+                 * Wartungsjob bleibt das Sicherheitsnetz (E-S2-18). */
+                $pdoDel = db();
+                foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tab]) {
+                    $ids = $pdoDel->prepare("SELECT id FROM `$tab` WHERE user_id = ?");
+                    $ids->execute([$uid]);
+                    spur_loeschen($pdoDel, $typ, $ids->fetchAll(PDO::FETCH_COLUMN));
+                }
+                // Der Rest kaskadiert wie bisher.
+                $pdoDel->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');
                 exit;
             }

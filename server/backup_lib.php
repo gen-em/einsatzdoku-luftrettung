@@ -27,6 +27,7 @@ declare(strict_types=1);
  * die Anwendung sie laedt — sonst prueft er seinen eigenen Aufbau mit.
  */
 require_once __DIR__ . '/validate_lib.php';
+require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/mission_fields_lib.php';   // mf_ist_spalte(), mf_ort_spalten()
 
 /**
@@ -96,17 +97,21 @@ function edbak_build(int $userId): string {
      * Die Reihenfolge kommt weiterhin aus dem SQL — sie ist Teil des
      * Dateiformats, nicht Zufall.
      */
+    /* SPUREN UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen.
+     *
+     * Das Dateiformat bleibt, was es war: je Punkt [seq, lat, lon, ele, ts]
+     * (Backup-Format.md). Die Nummer kommt jetzt aus der Position im Blob
+     * beziehungsweise aus der Zeile; sie ist damit weiterhin luecken- und
+     * dublettenfrei, was der Rueckweg voraussetzt. */
     $spuren = function (string $type, array $ids) use ($pdo, $zahl): array {
         $nach = [];
         foreach ($ids as $id) { $nach[$id] = []; }
         if (!$ids) { return $nach; }
-        foreach (sql_in_bloecken($pdo,
-                'SELECT owner_id, seq, lat, lon, ele, ts FROM track_points
-                 WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq',
-                $ids, [$type]) as $p) {
-            $nach[(int)$p['owner_id']][] = [
-                $zahl($p['seq'], true), $zahl($p['lat']), $zahl($p['lon']),
-                $zahl($p['ele']), $zahl($p['ts'], true)];
+        foreach (spur_lesen_viele($pdo, $type, $ids) as $id => $punkte) {
+            foreach ($punkte as $p) {
+                $nach[$id][] = [$zahl($p[0], true), $zahl($p[1]), $zahl($p[2]),
+                                $zahl($p[3]), $zahl($p[4], true)];
+            }
         }
         return $nach;
     };
@@ -1015,7 +1020,21 @@ function edbak_restore(int $userId, array $data): array {
          * innerhalb einer Spur. */
         $spurSchreiben = function (string $typ, int $ownerId, $liste) use ($insPoint, $pruef): void {
             $gesehen = [];
-            foreach (pruef_menge($liste ?? [], LIMIT_TRACKPUNKTE, $typ . '.track', $pruef) as $p) {
+            /* ABLEHNEN STATT KAPPEN (F-S2-02).
+             *
+             * Bis Web 9.14.0 stand hier pruef_menge() mit derselben Konstante,
+             * die ingest.php je ANFRAGE anwendet — hier gilt sie aber je
+             * SPUR. Was die Uhr ueber viele Anfragen aufbauen darf, wurde beim
+             * Zurueckspielen bei 2000 Punkten abgeschnitten; die Datei trug
+             * die ganze Spur, zurueck kam ihr Anfang. In ein frisches Konto
+             * eingespielt war der Verlust endgueltig.
+             *
+             * Jetzt: eigene, hohe Grenze — und eine Spur darueber wird GANZ
+             * abgelehnt und benannt. Eine halbe Spur sieht aus wie eine ganze. */
+            $punkte = pruef_menge_streng($liste ?? [], LIMIT_TRACKPUNKTE_SPUR,
+                                         $typ . '.track', $pruef);
+            if ($punkte === null) { return; }
+            foreach ($punkte as $p) {
                 if (!is_array($p) || count($p) < 5) { continue; }
                 $la = pruef_breite($p[1], $typ . '.track.lat', $pruef);
                 $lo = pruef_laenge($p[2], $typ . '.track.lon', $pruef);

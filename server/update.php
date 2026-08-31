@@ -1590,6 +1590,54 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_08_31_spur_blobs',
+        'web'   => '10.0',
+        'label' => 'Spurspeicherung: Tabelle track_blobs für SPUR1 (S2/AP1)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'track_blobs'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE ZEILE JE SPUR, gleicher Schluessel wie track_points.
+             *
+             * Polymorph wie die Zeilentabelle (owner_type/owner_id): Eine Spur
+             * gehoert entweder zu einem Einsatz oder zu einem Ruhesegment. Und
+             * wie dort gibt es KEINEN Fremdschluessel — MySQL kennt keine
+             * bedingten Fremdschluessel. Das ist eine bewusste Folge, keine
+             * Nachlaessigkeit, und sie hat einen Preis: Beim Loeschen eines
+             * Kontos raeumt die Kaskade diese Tabelle NICHT mit ab. Genau das
+             * ist bei track_points seit jeher so und ist erst in S2
+             * aufgefallen (F-S2-B) — deshalb loeschen die Loeschwege den Blob
+             * ab AP1 ausdruecklich mit, und der Wartungsjob bleibt nur das
+             * Sicherheitsnetz.
+             *
+             * MEDIUMBLOB (16 MB): Bei 3,58 Byte je Punkt sind das rund 4,7
+             * Mio. Punkte je Spur. Die Grenze setzt also nicht das Format,
+             * sondern LIMIT_TRACKPUNKTE_SPUR (50 000, validate_lib.php).
+             *
+             * n_original ist die Punktzahl VOR jeder Ausduennung. Sie steht
+             * zusaetzlich im Blob-Kopf; hier steht sie als SPALTE, damit
+             * next_seq (ingest.php) sie lesen kann, ohne den Blob anzufassen.
+             *
+             * Der Index auf (stufe, geaendert_am) ist fuer die Jobs aus AP3:
+             * Sie suchen „Stufe 2, aelter als sechs Monate" und sollen dafuer
+             * nicht die ganze Tabelle lesen. */
+            "CREATE TABLE track_blobs (
+               owner_type    ENUM('mission','rest') NOT NULL,
+               owner_id      INT UNSIGNED NOT NULL,
+               stufe         TINYINT UNSIGNED NOT NULL,   -- 2 = verlustfrei, 3 = ausgeduennt
+               n_original    INT UNSIGNED NOT NULL,       -- Punktzahl vor der Ausduennung
+               n_gespeichert INT UNSIGNED NOT NULL,
+               blob_daten    MEDIUMBLOB NOT NULL,
+               erstellt_am   DATETIME NOT NULL,
+               geaendert_am  DATETIME NOT NULL,
+               PRIMARY KEY (owner_type, owner_id),
+               KEY stufe_alter (stufe, geaendert_am)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 

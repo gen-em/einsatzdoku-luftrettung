@@ -220,6 +220,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      ergibt kein Bild (F-P3-AQ).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
+│   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
+│   │                      ganzen Referenzbestand: Punkte → Blob → Punkte, dazu
+│   │                      Kopf, Ablehnung fremder Fassungen und die Frage, ob
+│   │                      die Leser vor und nach der Verdichtung dasselbe
+│   │                      liefern. Verdichtet in einer Transaktion, die sie
+│   │                      zurückrollt — ändert nichts (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
@@ -258,7 +264,8 @@ Daten erst nach Server-Bestätigung.
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
-| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen |
+| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen. **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
+| `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Aufräumjob ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel (`kind` = `air`/`ground`, dazu `vehicle_roles` und `vehicle_capabilities`) und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0. **Jeder Eintrag gehört genau einem Standort** (`base_id`, E15) — es gibt keine standortübergreifenden Stammdaten. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
 | `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
@@ -1680,6 +1687,134 @@ Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
 Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
 eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
 wenn nur Verwaltende die Seite erreichen.
+
+### 4.97 Spurspeicherung: drei Stufen und ein Format (ab Web 10.0.0, S2)
+
+**Spurpunkte sind 93 % des Bestands.** Gemessen am Referenzdatensatz kostet
+eine Zeile in `track_points` **62,4 Byte**; derselbe Punkt als Blob kostet
+**3,58** — ein Siebzehntel. Bei 5000 Einsätzen sind das 194 statt 3300 MB.
+Deshalb liegen die Punkte seit S2 in drei Stufen:
+
+| Stufe | Wo | Wann |
+|---|---|---|
+| 1 | Zeilen in `track_points` | solange die Uhr an dem Paket noch sendet |
+| 2 | verlustfreier Blob in `track_blobs` | sobald das Paket abgeschlossen ist |
+| 3 | ausgedünnter Blob | sechs Monate nach Einsatzende |
+
+Stufe 1 bleibt, und zwar aus einem Grund: Der Upload der Uhr kommt in
+Teilstücken, ist idempotent und wiederholbar. Dafür ist eine Zeilentabelle
+richtig; ein Blob müsste bei jedem Teilstück neu geschrieben werden.
+
+**Die Wanderung zwischen den Stufen macht `jobs.php` (AP2/AP3), nicht dieser
+Abschnitt.** Was hier steht, ist das Format und der Zugriffsweg.
+
+#### Der Zugriffsweg: `spur_lib.php`, und sonst nichts
+
+Es gab sechs Stellen, die `track_points` per SQL lasen, jede mit einer eigenen
+Projektion. Bliebe das so, müsste jede von ihnen die Stufen kennen — und die
+erste, die es vergisst, zeigt eine leere Spur, ohne dass es auffällt. Alle
+sechs sind umgestellt:
+
+| Verbraucher | Funktion | Ausgabeform |
+|---|---|---|
+| Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
+| Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
+| Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` |
+| Sicherung (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
+| Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
+| Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
+
+Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
+Fortsetzungsmarke der Uhr (`ingest.php`), `spur_loeschen()` entfernt **Zeilen
+und Blob** und wird von jedem Löschweg gerufen.
+
+**`spur_lesen_viele()` setzt beide Stufen zusammen.** Zwischen Verdichtung und
+Ausdünnung darf die Uhr Punkte nachreichen; sie landen als Zeilen *hinter* dem
+Blob. Wer nur eine der beiden Stellen liest, zeigt eine Spur, der das Ende
+fehlt — ohne Fehlermeldung.
+
+**Das Umdatieren eines Diensttags** war bis Web 9.14.0 ein einziges
+`UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
+Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
+zwei Zeitrechnungen. `spur_zeit_verschieben()` schreibt den Blob deshalb neu.
+
+#### Das Format SPUR1
+
+Kopf unkomprimiert, 13 Byte:
+
+```
+'SP' | Fassung(1) | Stufe(1) | Auflösung(1) | n_original(uint32 LE) | n(uint32 LE)
+```
+
+Danach ein zlib-Strom (Stufe 9) über die Nutzlast, **spaltenweise**:
+
+```
+Breite-Differenzen (int32 LE × n)
+Länge-Differenzen  (int32 LE × n)
+Bitfeld ⌈n/8⌉ Byte — Bit gesetzt = dieser Punkt hat eine Höhe
+Höhen-Differenzen  (int32 LE × Anzahl gesetzter Bits)
+Zeit-Differenzen   (int32 LE × n)
+```
+
+Spaltenweise und nicht punktweise: Nebeneinander stehen dann Werte derselben
+Größenordnung — lauter kleine Breitendifferenzen, dann lauter kleine
+Längendifferenzen. zlib findet darin Muster; in der Reihenfolge
+`lat,lon,ele,ts,lat,lon,…` findet es keine.
+
+`seq` wird **nicht** gespeichert: Die Verdichtung setzt Lückenlosigkeit voraus,
+die Position im Blob *ist* die Nummer.
+
+#### Die Auflösung ist eine Zusage, kein Rechenweg
+
+| Größe | Faktor | Auflösung |
+|---|---|---|
+| Breite, Länge | ×10⁶ | ≈ 0,11 m |
+| Höhe | ×10 | 0,1 m |
+| Zeit | ×1 | 1 s |
+
+**Keine Festkomma-Kodierung ist bitgleich gegen einen beliebigen `DOUBLE`.**
+„Verlustfrei" in Stufe 2 heißt deshalb: verlustfrei *innerhalb dieser
+Auflösung*. Sie steht als Kennung im Kopf, und ein Leser, der eine ihm
+unbekannte Kennung findet, **verweigert die Arbeit** — sonst deutete er Zahlen
+mit dem falschen Faktor, und zwar lautlos.
+
+Die Höhe in ganzen Metern abzulegen wäre nicht nur ungenauer gewesen, sondern
+hätte den Mechanismus stillgelegt: 74,4 % der Punkte des Referenzbestands
+tragen eine Nachkommastelle, die Rundlaufprüfung hätte bei drei von vier
+Spuren angeschlagen, und der Verdichtungsjob hätte nie eine Zeile gelöscht.
+Der Preis der Zehntelmeter sind 7 % Blobgröße.
+
+#### Die Rundlaufprüfung ist die letzte Instanz vor einem DELETE
+
+Die Verdichtung löscht Zeilen. Was danach fehlt, ist weg — es gibt keine
+zweite Quelle. `spur_rundlauf_pruefen()` schreibt den Blob, liest ihn sofort
+wieder und vergleicht Punkt für Punkt; erst bei Gleichheit dürfen die Zeilen
+gehen. Verglichen wird gegen den **quantisierten** Sollwert, nicht gegen die
+rohe `DOUBLE`-Spalte: Die Prüfung belegt, dass Kodieren und Dekodieren
+zueinander passen und kein Punkt verlorengeht, seine Stelle wechselt oder
+seine Reihenfolge verliert — nicht eine Genauigkeit, die das Format nie
+zugesagt hat.
+
+Nachgemessen wird sie mit `php tools/spurprobe/probe.php`; der Lauf arbeitet in
+einer Transaktion, die er am Ende zurückrollt, und ändert deshalb nichts.
+
+#### Zwei Grenzen, weil es zwei Fragen sind
+
+`LIMIT_TRACKPUNKTE` galt bis Web 9.14.0 an zwei Stellen, die Verschiedenes
+meinen. Seit Web 10.0.0 sind es zwei Konstanten (`validate_lib.php`):
+
+| Konstante | gilt für | Wert | Verhalten |
+|---|---|---|---|
+| `LIMIT_TRACKPUNKTE_ANFRAGE` | die Punkte **einer Anfrage** (`ingest.php`) | 2000 | kappt und meldet |
+| `LIMIT_TRACKPUNKTE_SPUR` | die Punkte **einer ganzen Spur** (`backup_lib.php`) | 50 000 | **lehnt die Spur ab** |
+
+Die Uhr sendet in Stücken zu 500 (`UPLOAD_CHUNK_POINTS`), 2000 sind also
+vierfache Reserve. Beim Zurückspielen war dieselbe Zahl dagegen ein
+Datenverlust: Was die Uhr über viele Anfragen aufbauen darf, wurde bei 2000
+gekappt — die Datei trug die ganze Spur, zurück kam ihr Anfang. Eine halbe
+Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
+
+---
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/spur_lib.php';   // Fortsetzungsmarke ueber beide Stufen (S2)
 require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
 
@@ -135,7 +136,9 @@ if ($seqFrom < 0) json_out(['error' => 'payload'], 400);
 // Muss eine LISTE sein: Ein JSON-Objekt mit den Schluesseln "0", "1" wird in
 // PHP zum selben Feldtyp und liefe sonst unbemerkt durch.
 if (!ist_liste($points)) { json_out(['error' => 'payload'], 400); }
-$points = pruef_menge($points, LIMIT_TRACKPUNKTE, 'track.points', $pruef);
+// Die Punkte EINER ANFRAGE (F-S2-02). Die Uhr sendet in Stuecken zu 500;
+// 2000 sind vierfache Reserve und schuetzen vor einer entgleisten Nutzlast.
+$points = pruef_menge($points, LIMIT_TRACKPUNKTE_ANFRAGE, 'track.points', $pruef);
 
 /* Uebergangene Listen (M4-02). Bleibt leer, wenn nichts uebergangen wurde;
  * nur dann erscheinen die Felder kept_* in der Antwort. */
@@ -435,9 +438,17 @@ try {
      * der Fall, den der Testbestand als "Dienst ueber Mitternacht" fuehrt. */
     dt_zeitraum_fortschreiben($pdo, $dayId, $startedAt, $endedAt);
 
-    $q = $pdo->prepare('SELECT COALESCE(MAX(seq)+1, 0) AS next FROM track_points WHERE owner_type = ? AND owner_id = ?');
-    $q->execute([$ownerType, $ownerId]);
-    $nextSeq = (int)$q->fetchColumn();
+    /* DIE FORTSETZUNGSMARKE UEBER spur_lib.php (S2/AP1).
+     *
+     * Bis Web 9.14.0 stand hier `MAX(seq)+1` ueber die Zeilen. Sobald die
+     * Punkte einer abgeschlossenen Spur im Blob liegen, gibt es diese Zeilen
+     * nicht mehr — die Marke fiele auf 0 zurueck, und die Uhr saendte den
+     * ganzen Dienst noch einmal. spur_naechste_seq() nimmt deshalb das
+     * Groessere aus `n_original` des Blobs und der hoechsten Zeilennummer.
+     *
+     * Fuer die Uhr ist das ununterscheidbar vom bisherigen Verhalten; der
+     * JSON-Vertrag bleibt unveraendert (E-S2-08). */
+    $nextSeq = spur_naechste_seq($pdo, $ownerType, $ownerId);
 
     $pdo->prepare('UPDATE devices SET last_seen = NOW() WHERE id = ?')->execute([$dev['id']]);
     $pdo->commit();
