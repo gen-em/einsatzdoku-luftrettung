@@ -54,6 +54,14 @@
          border-radius:var(--radius-rund);background:var(--orange);
          color:var(--dunkelblau);font-weight:600;font-size:var(--groesse-3)}
   .uhr-knopf-leise{background:transparent;border:1px solid #4A443D;color:#fff}
+
+  /* ---- Moduswahl (Mockup): eine aus zwei, nebeneinander ---------------- */
+  .modus{display:flex;border:1px solid var(--linie-stark);
+         border-radius:var(--radius);overflow:hidden}
+  .modus span{flex:1 1 50%;min-height:var(--knopf);display:inline-flex;
+         align-items:center;justify-content:center;text-align:center;
+         font-size:var(--groesse-2);padding:0 var(--abstand-1)}
+  .modus .an{background:var(--orange-hell);font-weight:600}
 </style></head><body>
 <div class="buehne">
 
@@ -65,9 +73,12 @@
    Weboberfläche; auf dem Gerät sind es die Systemschriften.</p>
 
 <div class="notiz"><strong>Grundsatz der Bedienung:</strong> Ein Bildschirm, eine
-  Frage. Vor dem Dienst gibt es genau einen Knopf; im Dienst ist die
-  <strong>nächste Phase</strong> der eine große Knopf, alles andere ist Anzeige.
-  Keine Reanimation (bleibt Garmin), keine Einsatzverwaltung (bleibt im Browser).</div>
+  Frage. Vor dem Dienst gibt es einen Knopf und eine Wahl: <strong>mit
+  Phasenknöpfen</strong> dokumentieren oder <strong>nur aufzeichnen</strong> und
+  später im Browser schneiden (E-S4-20). Im Dienst ist die <strong>nächste
+  Phase</strong> der eine große Knopf, alles andere ist Anzeige — im
+  Nur-Aufzeichnen-Modus gibt es gar keinen. Keine Reanimation (bleibt Garmin),
+  keine Einsatzverwaltung (bleibt im Browser).</div>
 
 <div class="reihe">
   <div>
@@ -95,13 +106,37 @@
            einsatz.beispieldomain.de</p>
         <p class="status"><span class="punkt punkt-ok"></span> Alles gesendet</p>
         <p class="gross">Kein Dienst</p>
+        <div class="modus" role="radiogroup" aria-label="Aufzeichnungsmodus">
+          <span class="an">Mit Phasenknöpfen</span><span>Nur aufzeichnen</span>
+        </div>
         <button class="knopf knopf-primaer" type="button"><span>Dienst beginnen</span></button>
         <p class="status" style="color:var(--gedaempft)">Uhr: Galaxy Watch6 verbunden</p>
       </div>
     </div>
     <p class="bild-unterschrift"><strong>2 — Bereit.</strong> Dienstbeginn geht auch
-       von der Uhr aus (E-R45-13). Die Sync-Zeile kennt die drei Zustände aus
-       Backlog Nr. 11.</p>
+       von der Uhr aus (E-R45-13). Die Moduswahl merkt sich die letzte Entscheidung
+       (E-S4-20); die Sync-Zeile kennt die drei Zustände aus Backlog Nr. 11.</p>
+  </div>
+
+  <div>
+    <div class="handy">
+      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-inhalt">
+        <p class="status"><span class="punkt punkt-orange"></span> Dienst läuft seit
+           07:02 · GPS an</p>
+        <p class="status"><span class="punkt punkt-ok"></span> Alles gesendet</p>
+        <p class="gross" style="font-size:var(--groesse-5)">Nur aufzeichnen</p>
+        <p style="margin:0;font-size:var(--groesse-2)">Die ganze Spur wird
+           aufgezeichnet. Einsätze schneidest du später im Browser heraus —
+           in der Tagesansicht am Ruhesegment.</p>
+        <button class="knopf knopf-neutral" type="button"><span>Doch mit Phasenknöpfen</span></button>
+        <button class="knopf knopf-neutral" type="button"><span>Dienst beenden</span></button>
+      </div>
+    </div>
+    <p class="bild-unterschrift"><strong>3 — Nur aufzeichnen.</strong> Kein Knopf,
+       den man mit Handschuhen versehentlich trifft. Der Wechsel zurück zu den
+       Phasenknöpfen ist jederzeit möglich und verlustfrei (E-S4-20); die Uhr
+       zeigt in diesem Modus nur Dienst beginnen/beenden.</p>
   </div>
 
   <div>
@@ -123,7 +158,7 @@
         <button class="knopf knopf-neutral" type="button"><span>Einsatz abschließen</span></button>
       </div>
     </div>
-    <p class="bild-unterschrift"><strong>3 — Im Einsatz.</strong> Die nächste Phase
+    <p class="bild-unterschrift"><strong>4 — Im Einsatz.</strong> Die nächste Phase
        ist der eine große Knopf; jede Zeile darunter setzt ihre Phase direkt
        (Korrekturen erzeugen einen zweiten Eintrag, E-R45-12). „Einsatz
        abschließen" sendet <code>final</code> + Endzeit.</p>
@@ -138,7 +173,7 @@
       <span class="uhr-knopf">Dienst beginnen</span>
       <small>löst am Handy aus</small>
     </div>
-    <p class="bild-unterschrift"><strong>4 — Uhr, vor dem Dienst.</strong> Die Uhr
+    <p class="bild-unterschrift"><strong>5 — Uhr, vor dem Dienst.</strong> Die Uhr
        ist Fernbedienung: kein GPS, keine Zugangsdaten. Ohne erreichbares Handy
        zeigt sie „Handy nicht erreichbar" und puffert die Auslösung (E-S4-10).</p>
   </div>
@@ -150,7 +185,7 @@
       <span class="uhr-knopf uhr-knopf-leise">Einsatz abschließen</span>
       <small>wischen: alle Phasen</small>
     </div>
-    <p class="bild-unterschrift"><strong>5 — Uhr, im Einsatz.</strong> Zeitstempel
+    <p class="bild-unterschrift"><strong>6 — Uhr, im Einsatz.</strong> Zeitstempel
        entstehen auf der Uhr und werden mit Quittung ans Handy gemeldet; bei
        Funkabriss steht hier „N gepuffert".</p>
   </div>

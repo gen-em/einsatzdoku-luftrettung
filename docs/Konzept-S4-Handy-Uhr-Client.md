@@ -32,6 +32,12 @@ setzt die Zeitstempel auf der Uhr, puffert bei Funkabriss und meldet über den
 Wear Data Layer ans Handy, das quittiert. Die Phasenknöpfe stehen zusätzlich
 auf dem Handy, damit die App auch ohne Uhr vollständig ist.
 
+Das Schneiden ist dabei nicht nur das Sicherheitsnetz für den vergessenen
+Knopf, sondern ein **wählbarer Arbeitsmodus**: Wer im Einsatz keine Knöpfe
+drücken kann oder will — oder keine Uhr hat —, wählt beim Dienstbeginn
+„Nur aufzeichnen" und schneidet die Einsätze später im Browser heraus
+(E-S4-20).
+
 ## 2. Befund (statische Analyse, Stand `main` = Web 9.15.0 / Uhr 2.0.0)
 
 ### 2.1 Der Vertrag trägt den zweiten Client heute schon
@@ -339,6 +345,23 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   vorliegt. Das Launcher-Symbol beider Module entsteht aus der vorhandenen
   NAdoku-Bildmarke (Rezept `tools/uhr-bilder/`); eine neue Bildsprache
   entsteht nicht.
+- **E-S4-20 — „Nur aufzeichnen" als wählbarer Modus** (Anweisung vom
+  31.08.2026). Beim Dienstbeginn wählt die App zwischen **„Mit
+  Phasenknöpfen"** und **„Nur aufzeichnen (später schneiden)"**; Vorgabe
+  ist die zuletzt getroffene Wahl. Im Nur-Aufzeichnen-Modus zeigen Handy
+  **und** Uhr keine Phasenknöpfe — kein versehentlicher Druck mit
+  Handschuhen, ein Bildschirm ohne Frage; der ganze Dienst entsteht als
+  eine `rest_segment`-Kette und die Einsätze werden im Browser
+  herausgeschnitten (E-R45-3). Technisch ist der Modus kein Sonderweg,
+  sondern der benannte Grundzustand: exakt das Verhalten eines Dienstes,
+  in dem nie eine Phase gesetzt wird — am Vertrag, am Server und an der
+  Sendelogik ändert er **nichts**, nur an dem, was der Bildschirm
+  anbietet. Ein **Wechsel während des Dienstes** ist jederzeit möglich und
+  verlustfrei: Er blendet die Knöpfe ein oder aus, bereits Gesendetes
+  bleibt unberührt (ein Umstieg auf „mit Knöpfen" schließt das laufende
+  Segment erst, wenn tatsächlich eine Phase gesetzt wird — wie bisher).
+  Der Modus wandert über den Nachrichtenweg zur Uhr; sie zeigt dann nur
+  Dienst beginnen/beenden.
 
 ## 4. Offene Fragen
 
@@ -401,7 +424,8 @@ Kopplung gegen die Container-Installation.
 
 **B3 — Aufzeichnung und Dienstklammer.**
 Vordergrunddienst (E-S4-05), Ausdünnung, SQLite-Puffer, Dienst
-starten/beenden, Neustart-Wiederaufnahme (App-Absturz und Handy-Neustart
+starten/beenden mit der Moduswahl „Mit Phasenknöpfen / Nur aufzeichnen"
+(E-S4-20), Neustart-Wiederaufnahme (App-Absturz und Handy-Neustart
 während des Dienstes), Erststart-Führung zur Akku-Freistellung.
 *Abnahme:* synthetischer Positionsstrom → Punktfolge nach der
 15 m/10 s-Regel (Soll-Zahlen je Strom im Prüfprotokoll);
@@ -421,17 +445,22 @@ Kette) mit je einem Fall.
 **B5 — Phasen und Einsätze am Handy.**
 Phasenknöpfe 2–9, Einsatzbeginn/-abschluss, Lebenszyklus (E-S4-08),
 Phasen-Koordinaten aus der eigenen Spur, `mission`-Uploads mit
-Teil-Uploads.
+Teil-Uploads; im Nur-Aufzeichnen-Modus sind die Knöpfe ausgeblendet und
+der Moduswechsel während des Dienstes verlustfrei (E-S4-20).
 *Abnahme:* Lebenszyklus-Matrix (Phase ohne Einsatz startet Einsatz;
 Abschluss sendet `final` + `ended_at`; Segment davor/danach nahtlos);
 `mission`-Ketten laufen gegen `ingest.php` wie in B4 (0/0/0); doppelte
-Phaseneinträge bleiben erhalten (E-R45-12 nachgestellt).
+Phaseneinträge bleiben erhalten (E-R45-12 nachgestellt); ein
+Nur-Aufzeichnen-Dienst erzeugt genau eine Segmentkette und keine
+`mission`, und der Moduswechsel mitten im Dienst ändert nichts an bereits
+Gesendetem (je ein Fall).
 
 ### Block C — Wear-OS-App (`android/uhr/`)
 
 **C1 — Gerüst und Bedienbild.**
 Modul `uhr/`, Oberflächen nach E-S4-11 (Dienst, Phasen, Einsatzabschluss,
-Verbindungszustand), blind gebaut.
+Verbindungszustand; im Nur-Aufzeichnen-Modus nur Dienst
+beginnen/beenden, E-S4-20), blind gebaut.
 *Abnahme:* Modul baut im selben Gradle-Lauf; die Bedienzustände sind als
 Robolectric-Fälle belegt (Zahl im Prüfprotokoll); Bildschirmfotos gibt es
 nicht (kein Emulator) — das steht so im Prüfdokument, nicht verschwiegen.
