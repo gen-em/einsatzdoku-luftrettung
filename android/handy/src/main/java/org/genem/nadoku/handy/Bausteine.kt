@@ -191,6 +191,60 @@ fun KnopfNeutral(beschriftung: String, modifier: Modifier = Modifier, aufTippen:
 fun KnopfBeenden(beschriftung: String, modifier: Modifier = Modifier, aufTippen: () -> Unit) =
     Knopfflaeche(beschriftung, Farbe.knopfBeendenFlaeche, Farbe.knopfBeendenSchrift, null, modifier, aufTippen)
 
+/**
+ * Ein Eingabefeld.
+ *
+ * Der Rand ist `--linie-stark` (= `--gedaempft`, 5,66:1) und nicht `--linie`:
+ * An einem Bedienelement ist der Rand die einzige Auskunft darueber, wo es
+ * anfaengt und aufhoert, und dafuer verlangt WCAG 1.4.11 3:1. Dieselbe
+ * Unterscheidung wie im Web (Fund F-P3-K).
+ */
+@Composable
+fun Eingabefeld(
+    wert: String,
+    beschriftung: String,
+    beispiel: String,
+    modifier: Modifier = Modifier,
+    grossschreiben: Boolean = false,
+    aufAenderung: (String) -> Unit,
+) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Abstand.eins)) {
+        Text(text = beschriftung, color = Farbe.gedaempft, fontSize = 13.sp)
+        androidx.compose.foundation.text.BasicTextField(
+            value = wert,
+            onValueChange = aufAenderung,
+            singleLine = true,
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Farbe.asphalt,
+                fontSize = 15.sp,
+                fontFamily = if (grossschreiben) androidx.compose.ui.text.font.FontFamily.Monospace else null,
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Farbe.orange),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                capitalization = if (grossschreiben) {
+                    androidx.compose.ui.text.input.KeyboardCapitalization.Characters
+                } else {
+                    androidx.compose.ui.text.input.KeyboardCapitalization.None
+                },
+                autoCorrectEnabled = false,
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = BEDIENHOEHE)
+                .background(Farbe.schnee, RoundedCornerShape(Radius.klein))
+                .border(1.dp, Farbe.gedaempft, RoundedCornerShape(Radius.klein))
+                .padding(horizontal = Abstand.drei, vertical = Abstand.drei),
+            decorationBox = { innen ->
+                if (wert.isEmpty()) {
+                    Text(text = beispiel, color = Farbe.gedaempft, fontSize = 15.sp)
+                }
+                innen()
+            },
+        )
+    }
+}
+
 /** Eine Karte: Schneeflaeche, Rand aus `--linie`, Inhalt untereinander. */
 @Composable
 fun Karte(modifier: Modifier = Modifier, inhalt: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {

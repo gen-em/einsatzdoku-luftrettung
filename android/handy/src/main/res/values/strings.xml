@@ -18,4 +18,73 @@
     <string name="stand_geruest">Gerüst steht</string>
     <string name="stand_geruest_hinweis">Diese Fassung baut, koppelt aber noch nicht und zeichnet noch nicht auf. Kopplung folgt mit dem nächsten Arbeitspaket.</string>
     <string name="fassung">Fassung %1$s</string>
+
+    <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
+    <string name="sync_nicht_eingerichtet">Nicht eingerichtet</string>
+    <string name="sync_fehlt_server">Trage zuerst die Adresse deines Servers ein.</string>
+    <string name="sync_fehlt_kopplung">Koppel die App mit deinem Konto: Im Browser unter <b>Einstellungen → Geräte</b> einen Kopplungscode erzeugen.</string>
+    <!-- Mehrzahl über <plurals>, nicht über zwei Zeichenketten und ein if:
+         Android kennt die Regeln der Sprache, der Code nicht. -->
+    <plurals name="sync_rueckstand">
+        <item quantity="one">Rückstand %1$d Paket</item>
+        <item quantity="other">Rückstand %1$d Pakete</item>
+    </plurals>
+    <string name="sync_vollstaendig">Alles gesendet</string>
+    <string name="sync_gekoppelt_mit">Gekoppelt · %1$s</string>
+
+    <!-- ==== Kopplung ==================================================== -->
+    <string name="kopplung_titel">Gerät koppeln</string>
+    <string name="kopplung_server">Server-Adresse</string>
+    <string name="kopplung_server_beispiel">einsatz.beispieldomain.de</string>
+    <string name="kopplung_qr">QR-Code scannen</string>
+    <string name="kopplung_von_hand">Code von Hand eingeben</string>
+    <string name="kopplung_code">Kopplungscode</string>
+    <string name="kopplung_code_beispiel">AB3K7Q</string>
+    <string name="kopplung_koppeln">Koppeln</string>
+    <string name="kopplung_laeuft">Kopple …</string>
+    <string name="kopplung_kamera_fehlt">Ohne Kamera-Freigabe geht der Scan nicht. Der Code lässt sich auch von Hand eintippen.</string>
+    <string name="kopplung_qr_zielen">Auf den QR-Code der Geräteseite zielen</string>
+    <string name="kopplung_qr_fremd">Das ist kein Kopplungscode von NAdoku.</string>
+    <string name="kopplung_abbrechen">Abbrechen</string>
+
+    <!-- Ablehnungen: WAS ist los (erste Zeile) und WAS HILFT (zweite).
+         Die Zweiteilung ist von der Garmin-Uhr übernommen (Pair.mc) — dort
+         entstand sie, weil eine lange Meldung auf dem Display abgeschnitten
+         wurde und ausgerechnet der Teil wegfiel, der sagt, was zu tun ist.
+         Am Handy ist der Platz da; die Trennung bleibt trotzdem, weil sie den
+         Text zwingt, beide Fragen zu beantworten. -->
+    <string name="fehler_code_unbrauchbar">Code unvollständig</string>
+    <string name="fehler_code_unbrauchbar_hinweis">Sechs Zeichen, ohne 0, O, 1 und I — die gibt es im Code nicht.</string>
+    <string name="fehler_code_ungueltig">Code ungültig oder abgelaufen</string>
+    <string name="fehler_code_ungueltig_hinweis">Ein Code gilt zehn Minuten und nur einmal. Im Browser einen neuen holen.</string>
+    <string name="fehler_zu_viele_geraete">Zu viele Geräte</string>
+    <string name="fehler_zu_viele_geraete_hinweis">Erst ein Gerät im Browser löschen, dann neu koppeln.</string>
+    <string name="fehler_zu_viele_versuche">Zu viele Versuche</string>
+    <string name="fehler_zu_viele_versuche_hinweis">Später noch einmal — weiteres Tippen hilft jetzt nicht.</string>
+    <string name="fehler_keine_verbindung">Keine Verbindung</string>
+    <string name="fehler_keine_verbindung_hinweis">Adresse richtig? Netz da? Später unverändert erneut versuchen.</string>
+    <string name="fehler_serverfehler">Der Server hat einen Fehler gemeldet</string>
+    <string name="fehler_serverfehler_hinweis">Das liegt nicht am Gerät. Später erneut versuchen.</string>
+    <string name="fehler_unbekannt">Kopplung fehlgeschlagen</string>
+    <string name="fehler_unbekannt_hinweis">Unerwartete Antwort des Servers.</string>
+    <string name="fehler_server_adresse">Server-Adresse unbrauchbar</string>
+    <string name="fehler_server_adresse_hinweis">Zum Beispiel einsatz.beispieldomain.de — Schema und Pfad ergänzt die App.</string>
+
+    <!-- ==== Trennen (E-S4-12, Backlog Nr. 14) =========================== -->
+    <string name="trennen">Gerät trennen</string>
+    <string name="trennen_frage">Kopplung trennen?</string>
+    <string name="trennen_frage_text">Danach dokumentiert dieses Gerät auf kein Konto mehr. Hochgeladene Daten bleiben erhalten.</string>
+    <string name="trennen_ja">Trennen</string>
+    <string name="trennen_nein">Zurück</string>
+    <string name="trennen_erfolg">Getrennt</string>
+    <string name="trennen_nur_lokal">Nur auf dem Gerät getrennt</string>
+    <string name="trennen_nur_lokal_hinweis">Der Servereintrag steht noch und belegt einen Geräteplatz — im Browser mit einem Klick zu entfernen.</string>
+    <plurals name="trennen_rueckstand">
+        <item quantity="one">Erst %1$d Paket senden</item>
+        <item quantity="other">Erst %1$d Pakete senden</item>
+    </plurals>
+    <string name="trennen_rueckstand_hinweis">Sie gehören dem bisherigen Konto. Nach einer Neukopplung gingen sie an das neue.</string>
+
+    <!-- ==== Einstellungen =============================================== -->
+    <string name="einstellungen">Einstellungen</string>
 </resources>

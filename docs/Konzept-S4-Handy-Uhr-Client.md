@@ -463,6 +463,15 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   ergänzt. **Klärt sich mit dem Merge des Kleinstpakets; zu entscheiden
   vor B2** (die App sendet die Felder ab der ersten Kopplung — jede
   Kopplung davor ginge der Statistik verloren, R42).
+  **Vorgelegt und entschieden am 31.08.2026: der Rückfall.** Befund vor B2:
+  Das Kleinstpaket liegt **nicht** auf `main` — `pair.php` liest den Block an
+  keiner Stelle aus, und `devices` hat keine Spalte für Art oder Modell
+  (beides in der Container-Installation nachgesehen, nicht vermutet). Die
+  Sorge aus R42 greift dabei **nicht**: Weil der Server den Block heute
+  verwirft, ginge die Statistik für jede Kopplung vor dem Merge ohnehin
+  verloren — unabhängig davon, was die App sendet. Zu entscheiden war damit
+  allein, welche Feldnamen die App einbackt. Die Form steht als **E-S4-28**
+  in Abschnitt 12; die Frage ist geschlossen.
 - **F-S4-C — Schnitt gegen Nachlieferung: die Idempotenz darf nicht
   brechen.** `ingest.php` hängt Spurpunkte über `seq` an ein Segment an und
   ignoriert bekannte Sequenzen. Wandern beim Schneiden Punktbereiche vom
@@ -958,3 +967,153 @@ Sie füllen die vorhandenen E-Einträge aus und ersetzen keinen davon.
 #### Neue Fehlerfunde (K4, gesammelt in Abschnitt 10)
 
 `B-S4-02` und `B-S4-03` — Beschreibung dort.
+
+### B2 — Kopplung, Trennen, Schlüsselablage · Android 0.2.0 · erledigt
+
+**Was entstanden ist.** Die Kopplung gegen `pair.php` mit Code-Eingabe von
+Hand und QR-Scan (ZXing auf CameraX), das Trennen nach den Nr.-14-Regeln,
+die verschlüsselte Schlüsselablage (E-S4-13), die Sync-Anzeige mit den drei
+Zuständen aus Backlog Nr. 11 — und die Oberfläche dazu: Kopplungsbildschirm,
+Scan-Ansicht, gekoppelte Ansicht mit Trennen.
+
+**Vor Beginn geprüft (Haltepunkt).** Das R42-Kleinstpaket liegt **nicht** auf
+`main`. Nachgewiesen an zwei Stellen, nicht vermutet: `server/pair.php` liest
+`$b['geraet']` an keiner Stelle aus und trägt als Bezeichnung fest `'Uhr'`
+ein; `DESCRIBE devices` in der frischen Container-Installation liefert
+`id, user_id, device_id, api_key_hash, label, active, last_seen, created_at`
+— **keine Spalte für Art oder Modell.** F-S4-B war damit offen und wurde
+vorgelegt.
+
+#### Prüfstand B2
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew clean build`, headless | **BUILD SUCCESSFUL** | fehlerfrei |
+| Lint `handy` | `lintDebug` | **0 Fehler, 18 Warnungen** (alle „neuere Fassung verfügbar", keine andere Art) | 0 Fehler |
+| Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** | 0 Fehler |
+| Prüffälle gesamt | `testDebugUnitTest` **und** `testReleaseUnitTest` | je **56 Fälle, 0 Fehlschläge, 0 Fehler**; ohne laufende Installation 6 übersprungen, mit ihr 0 | alle grün |
+| Kopplung: Erfolg | Prüfserver + `HttpNetzweg` | **1 Fall** — Zugangsdaten im Tresor, POST auf `pair.php`, **ohne** Auth-Kopfzeilen | belegt |
+| Kopplung: `geraet`-Block | Prüfserver, Körper nachgelesen | **1 Fall** — `art:"handy"`, `teil:null`, `hersteller`, `modell`, `br`, `ho`, `touch`, `fw`, `sdk`, `app`; **`ciq` fehlt** | E-S4-28 |
+| Kopplung: Fehlerpfade | Prüfserver | **6 Fälle** — 400 `code`, 404 `invalid`, 409 `device_limit` (Servermeldung durchgereicht), 429 `zu_viele_versuche`, 500 `server`, keine Verbindung | Vertrag 1a |
+| Kopplung: Vorprüfung | Prüfserver, Anfragezähler | **3 Fälle** — Vertipper und die vier ausgeschlossenen Zeichen (0, O, 1, I) gehen **gar nicht erst hinaus** (0 Anfragen); `200` ohne Zugangsdaten gilt nicht als Kopplung | belastet den Ratenschutz nicht |
+| Trennen | Prüfserver | **5 Fälle** — Erfolg (Auth-Kopfzeilen gesetzt, `{"aktion":"trennen"}`), 401 trennt trotzdem lokal, ohne Antwort trennt lokal, **Rückstand sperrt vollständig** (0 Anfragen, Kopplung bleibt stehen), ohne Kopplung geschieht nichts | Vertrag 1b, Nr. 14 |
+| **Server-Rundlauf** | echte Container-Installation, `pair.php` | **6 Fälle, alle grün** — echte Kopplung (`dev-` + 32 Hex, 36 Zeichen), Code nur einmal einlösbar, unbekannter Code abgewiesen, Trennen löscht das Gerät, getrennte Zugangsdaten werden abgewiesen, **`MAX_GERAETE` greift bei 5** und die Servermeldung kommt durch | Abnahme B2 |
+| Zustand danach | `SELECT COUNT(*) FROM devices` | **0** — jeder Fall räumt hinter sich auf; 10 Codes verbraucht | Konto unverändert |
+| Schlüsselablage | Robolectric | **8 Fälle** — Rundlauf, Löschen entfernt auch die Zwischendatei, **jeder Schreibvorgang mit neuem Zufallswert**, beschädigte Ablage gilt als nicht gekoppelt, fremder Schlüssel öffnet nicht, `toString()` verrät nichts | E-S4-13 |
+| **Kein Klartext im Speicherabbild** | Robolectric, ganzes App-Verzeichnis durchsucht | **2 Dateien durchsucht** (`files/tresor.bin` 127 B, `shared_prefs/nadoku.xml` 146 B), **0 Treffer** für Kennung und Schlüssel | 0 |
+| Server-Adresse | reine JVM | **9 Fälle** — Schema ergänzt, `http` → `https`, Endpunkt und Abfrage abgeschnitten, Unterverzeichnis bleibt, IPv4 und `localhost` gültig, 8 unbrauchbare Eingaben abgewiesen | E-S4-12/14 |
+| QR-Inhalt | Robolectric | **4 Fälle** — Gutfall, Normalisierung, 6 fremde Codes geben `null` statt einer Ausnahme, 4 unvollständige ebenso | E-S4-15 |
+| APK | `assembleRelease` | `handy` **8 987 656 B**, `uhr` **18 005 460 B**, beide unsigniert | baut |
+| Fassung im APK | `aapt2 dump badging` | **`versionName='0.2.0'`, Code 200** | E-S4-25 |
+
+**Was der Prüfstand nicht sagt** — an dieser Stelle und nicht in einer
+Fußnote:
+
+- **Der `AndroidKeyStore` ist ungeprüft.** Robolectric bringt ihn nicht mit
+  (`KeyStoreException: AndroidKeyStore not found`), einen Emulator gibt es
+  nicht (E-R45-8). Geprüft ist der ganze Umschlag — AES-256-GCM, frischer
+  Zufallswert, Rundlauf, kein Klartext auf der Platte —, weil er in einer
+  gemeinsamen Oberklasse liegt und im Prüfstand **dieselbe** Klasse läuft wie
+  auf dem Gerät. Ungeprüft ist **genau eine überschriebene Methode**: dass der
+  Schlüssel im Keystore entsteht und nicht exportierbar ist. Sie gehört auf
+  die Prüfliste des Gerätetests.
+- **Die Kamera ist ungeprüft.** `QrKamera` ist eine Hülle um CameraX. Geprüft
+  ist, was dahinterliegt (`QrLeser` auf rohen Helligkeitswerten, `QrInhalt`);
+  dass CameraX Bilder liefert und die Freigabefrage erscheint, zeigt erst das
+  Gerät.
+- **Der Rundlauf lief über Klartext-HTTP**, nicht über HTTPS: Die lokale
+  Installation trägt ein selbstsigniertes Zertifikat, und es dem Prüfstand
+  beizubringen hieße, ihm etwas beizubringen, was die App nie tun darf. Dass
+  die App nur HTTPS spricht, ist in `ServeradresseTest` belegt.
+- **Kein Bildschirmfoto.** Es gibt keinen Emulator; die Oberfläche ist
+  gebaut, aber nicht gesehen worden.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Der Server-Rundlauf brauchte erst eine Installation, und die gab es
+   nicht.** Im Container fehlte MariaDB vollständig (`mysqld_safe: not
+   found`, kein `/var/lib/mysql`); PHP 8.4 mit `pdo_mysql` war da. Aus dem
+   Ubuntu-Archiv nachinstalliert (`archive.ubuntu.com` antwortet; nur die
+   PPAs sind gesperrt), Datenbank angelegt, `install.php` über `curl` mit
+   CSRF und Einrichtungsnachweis durchlaufen. **Nachtrag zur Zuarbeitenliste:
+   „Server-Rundlauf gegen `ingest.php` in der Container-Installation" (2.5)
+   setzt einen Datenbankserver voraus, der nicht im Bild ist.** Der Ablauf
+   steht in `android/LIESMICH.md`; B4 braucht ihn wieder.
+
+2. **Zwei echte Fehler in der Adress-Ergänzung, gefunden von den eigenen
+   Prüffällen.** `HTTPS://…` blieb großgeschrieben stehen, und eine
+   IPv4-Adresse wurde abgewiesen — die Rechnerprüfung verlangte eine
+   Buchstaben-Endung. Beides behoben: Schema und Rechnername werden
+   kleingeschrieben, der Pfad **nicht** (auf einem Linux-Server sind
+   `/NAdoku/` und `/nadoku/` zwei Verzeichnisse), und die Rechnerprüfung
+   kennt jetzt Namen, IPv4 und `localhost`.
+
+3. **Die Rundlauf-Fälle hingen voneinander ab.** `MAX_GERAETE` ist 5, JUnit
+   sichert keine Reihenfolge zu: Der Grenzfall füllte das Konto, und zwei
+   Fälle danach scheiterten an `device_limit` — an einem Zustand, den ein
+   anderer Prüffall hinterlassen hatte. Jetzt räumt jeder Fall hinter sich
+   auf (`@After` trennt, was noch im Tresor steht; der Grenzfall merkt sich
+   die Zugangsdaten und meldet alle wieder ab). Danach: 6 von 6 grün und
+   **0 Geräte** am Konto.
+
+4. **Lint fand zwei echte Lücken in der Oberfläche**, nicht nur
+   Fassungshinweise — beide behoben:
+   - **Das Trennen hatte keine Rückfrage.** Ein vollflächig roter Knopf
+     (E-S4-22a) ohne Rückfrage ist schlimmer als keiner von beidem: Er zieht
+     den Blick an, und ein Fehltipp löschte Kopplung samt Geräteschlüssel.
+     Jetzt mit Rückfrage, wie beim Einsatzabschluss (E-S4-21b) und wie an der
+     Garmin (`Pair.TrennenDelegate`).
+   - **Ein fremder QR-Code meldete „Der Server hat einen Fehler gemeldet".**
+     Es war aber nie eine Anfrage hinausgegangen. Dasselbe bei einer
+     unbrauchbaren Server-Adresse. Beide haben jetzt eigene Zustände
+     (`FremderQr`, `AdresseUnbrauchbar`) mit eigenen Texten.
+   Aufgefallen sind sie als `UnusedResources`: Die Texte dafür waren
+   geschrieben und wurden nirgends benutzt. Dazu drei kleinere Befunde
+   (Mehrzahl über `<plurals>` statt zweier Zeichenketten, `SharedPreferences.edit`,
+   eine wirklich überflüssige Zeichenkette). Von 34 Warnungen blieben 18 —
+   und die 18 sind ausnahmslos Fassungshinweise.
+
+#### Entscheidungen, die in B2 gefallen sind
+
+- **E-S4-28 — Feldform des `geraet`-Blocks für Handys** (Antwort auf F-S4-B,
+  entschieden am 31.08.2026 nach Vorlage des Befunds). Umgesetzt wird der in
+  F-S4-B vorgeschlagene **Rückfall**: die Felder der Uhr, soweit sie an einem
+  Handy dieselbe Bedeutung haben, dazu `hersteller`/`modell` an der Stelle der
+  Teilenummer.
+
+  | Feld | Uhr | Handy |
+  |---|---|---|
+  | `art` | `"uhr"` | **`"handy"`** |
+  | `teil` | Teilenummer | **`null`** |
+  | `hersteller` | — | **`Build.MANUFACTURER`** |
+  | `modell` | — | **`Build.MODEL`** |
+  | `br`, `ho` | Display in px | dito |
+  | `touch` | vorhanden? | `true` |
+  | `fw` | Firmware | **`Build.VERSION.RELEASE`** |
+  | `ciq` | Uhr-Plattform | **entfällt**, dafür **`sdk`** (API-Stufe) |
+  | `app` | App-Fassung | dito |
+
+  `ciq` wird **weggelassen und nicht auf `null` gesetzt**: Ein Feld, das es
+  für diese Geräteart nicht gibt, ist etwas anderes als eines, das das Gerät
+  nicht beantworten kann. Der Vertrag stellt beides frei.
+  **Was das kostet, wenn R42 anders entscheidet:** eine Zeichenkette je Feld
+  in `Geraeteangabe.alsJson()`. Die Feldform steht an genau **einer** Stelle.
+  **Was es heute nicht kostet:** nichts — `pair.php` verwirft den Block
+  ungelesen, bis A1 (oder R42) ihn annimmt. Auch das ist im Rundlauf
+  belegt: Die Kopplung gelingt mit Block, und `devices` hat keine Spalte
+  dafür.
+- **E-S4-29 — Kein Klartext-Ausweg für den Prüfstand.** Der Server-Rundlauf
+  läuft über HTTP gegen `127.0.0.1`, weil die lokale Installation ein
+  selbstsigniertes Zertifikat trägt. Der naheliegende Weg — das Zertifikat in
+  den Vertrauensspeicher des Prüflaufs legen oder die Prüfung abschalten —
+  wird **nicht** gegangen: Ein Prüfstand, der TLS-Prüfungen umgehen kann, ist
+  die Vorlage für eine App, die es auch kann. Stattdessen ist die
+  HTTPS-Pflicht dort belegt, wo sie wohnt (`ServeradresseTest`), und der
+  Rundlauf prüft, was nur er prüfen kann: dass `pair.php` so antwortet, wie
+  die App es erwartet.
+- **E-S4-30 — Die Prüfumgebung bringt keine fremde Bibliothek mit.** Der
+  übliche Weg für HTTP-Prüffälle wäre `MockWebServer` (OkHttp). Damit stünde
+  eine vierte Fremdabhängigkeit in `libs.versions.toml` — der Datei, die die
+  drei zugelassenen aufzählt (E-S4-04). Der Prüfstand bringt stattdessen
+  sechzig Zeilen `ServerSocket` mit (`PruefServer`). Der Gewinn ist nicht die
+  Ersparnis, sondern dass die Liste der Fremdbestandteile die Wahrheit sagt.

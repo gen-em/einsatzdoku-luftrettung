@@ -9,10 +9,10 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket B1.** Das Gerüst steht und baut. Die App kann noch
-> nicht koppeln (B2), nicht aufzeichnen (B3) und nicht senden (B4). Was hier
-> beschrieben ist, gilt für den heutigen Stand — die Abschnitte wachsen mit
-> den Paketen.
+> **Stand: Arbeitspaket B2.** Die App koppelt sich, trennt sich wieder und
+> legt ihren Geräteschlüssel verschlüsselt ab. Sie zeichnet noch nicht auf
+> (B3) und sendet noch nichts (B4); der Rückstand steht deshalb fest auf 0 —
+> die Warteschlange, die ihn zählt, gibt es erst mit B4.
 
 ---
 
@@ -56,18 +56,54 @@ cd android
 ./gradlew lint           # nur Lint (Textbericht unter <modul>/build/reports/)
 ```
 
+### Der Server-Rundlauf
+
+Ein Teil der Prüffälle spricht mit einer **echten Installation** statt mit
+einem nachgestellten Server. Sie laufen nur, wenn man es sagt — ohne
+Installation überspringen sie sich, statt fehlzuschlagen:
+
+```bash
+sh tools/referenzdatensatz/einspielen/lokal_starten.sh
+# Kopplungscodes als Vorbedingung anlegen (sie sind einmal einlösbar):
+mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
+  INSERT INTO pair_codes (user_id, code) VALUES
+   (1,'AB3K7Q'),(1,'CD4M8R'),(1,'EF5N9S'),(1,'GH6P2T'),
+   (1,'LA2B3C'),(1,'LD4E5F'),(1,'LG6H7J'),(1,'LK8L9M'),
+   (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z');" nadoku
+
+cd android
+./gradlew :handy:testDebugUnitTest --rerun-tasks \
+          -Pnadoku.rundlauf=http://127.0.0.1:8080/
+```
+
+**Warum Klartext-HTTP und nicht HTTPS:** Die lokale Installation trägt ein
+selbstsigniertes Zertifikat. Es in den Vertrauensspeicher des Prüflaufs zu
+legen hieße, dem Prüfstand etwas beizubringen, was die App nie tun darf. Dass
+die App **nur** HTTPS spricht (E-S4-14), ist an der Stelle belegt, an der diese
+Regel wohnt — `ServeradresseTest`.
+
+**Warum die Codes von Hand in die Tabelle kommen:** Geprüft wird der Weg
+*App → `pair.php` → `devices`-Zeile*. Wie ein Kopplungscode im Browser
+entsteht, ist nicht Gegenstand dieses Falls, sondern seine Vorbedingung.
+
+Die Fälle **räumen hinter sich auf**: Was sie koppeln, trennen sie wieder.
+Das ist Voraussetzung und nicht Ordnungsliebe — `MAX_GERAETE` ist 5, und JUnit
+sichert keine Reihenfolge zu. Beim ersten Lauf füllte der Grenzfall das Konto,
+und alles danach scheiterte an `device_limit`.
+
 Die APK liegen danach unter
 `handy/build/outputs/apk/release/handy-release-unsigned.apk` und
 `uhr/build/outputs/apk/release/uhr-release-unsigned.apk`.
 
 ### Was der Baulauf heute meldet
 
-Stand B1, `./gradlew clean build` im Container:
+Stand B2 (Android 0.2.0), `./gradlew clean build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **18** | **0** |
+| Prüffälle | **56**, davon 6 übersprungen | keine (kommen mit C1) |
 
 Alle 18 Warnungen sind derselbe Befund in achtzehn Zeilen:
 *„A newer version of … is available"* (`GradleDependency`,
@@ -76,6 +112,9 @@ sämtlich auf `gradle/libs.versions.toml`. Die Nummern dort sind **absichtlich**
 nicht die neuesten; der Grund steht in Abschnitt 4. Sie werden nicht
 stummgeschaltet: Eine unterdrückte Warnung wäre eine Warnung weniger, die
 später auffällt.
+
+Die **6 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
+Installation sind es 56 von 56 (siehe unten).
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -245,6 +284,16 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 - **Die Uhr-App ist blind gebaut.** Rundung, Schriftgrößen, Berührziele,
   Haltedauer und Sperrfrist sind gewählt und am Gerät nachzumessen; sie
   gehören danach in den Wear-Teil von `docs/Geraete-Eingabe.md`.
+- **Der `AndroidKeyStore`.** Robolectric bringt ihn nicht mit
+  (`KeyStoreException: AndroidKeyStore not found`). Geprüft ist deshalb der
+  ganze Umschlag — AES-256-GCM, frischer Zufallswert je Schreibvorgang, der
+  Rundlauf, die Abwesenheit von Klartext im Speicherabbild. **Ungeprüft ist
+  genau eine überschriebene Methode:** dass der Schlüssel im Keystore entsteht
+  und ihn nicht verlässt (`KeystoreTresorschluessel.schluessel()`). Das gehört
+  auf die Prüfliste des Gerätetests.
+- **Die Kamera.** `QrKamera` ist eine Hülle um CameraX; ohne Emulator gibt es
+  keine. Geprüft ist, was dahinterliegt: die Erkennung (`QrLeser`) und die
+  Auswertung des Inhalts (`QrInhalt`).
 
 Geprüft wird deshalb: der Baulauf, Lint, Prüffälle auf der JVM (teils mit
 Robolectric) und — ab B4 — der Rundlauf gegen `ingest.php` in der lokalen

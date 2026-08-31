@@ -21,6 +21,20 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!--
+        Die Kamera dient AUSSCHLIESSLICH dem Kopplungs-QR (E-S4-15), und die
+        Freigabe wird erst in dem Augenblick erfragt, in dem jemand "QR-Code
+        scannen" antippt — nicht beim Erststart. Wer sie ablehnt, tippt den
+        Code von Hand ein; die App bleibt vollstaendig benutzbar.
+
+        `required="false"`: Ein Geraet ohne Kamera kann NAdoku trotzdem
+        benutzen. Mit `true` verschwaende die App im Store fuer solche Geraete
+        — und das waere fuer einen Kameraschwenk, der eine Abkuerzung ist, die
+        falsche Aussage.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/datensicherung"

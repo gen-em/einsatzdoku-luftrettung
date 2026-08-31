@@ -133,6 +133,30 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
+
+            /* DER SERVER-RUNDLAUF IST NICHT TEIL DES NORMALEN LAUFS.
+             *
+             * `KopplungRundlaufTest` spricht mit einer echten Installation
+             * (tools/referenzdatensatz/einspielen/lokal_starten.sh). Wo keine
+             * läuft — auf einem Arbeitsplatz, im CI-Prüftor —, überspringt
+             * sich der Fall selbst statt fehlzuschlagen: Ein Prüffall, der
+             * ohne Zutun rot ist, wird nach der dritten Woche ignoriert.
+             *
+             * Angeschaltet wird er über eine Gradle-Eigenschaft:
+             *   ./gradlew :handy:test -Pnadoku.rundlauf=http://127.0.0.1:8080/
+             *
+             * Sichtbar bleibt er trotzdem: Der Fall meldet sich als
+             * "übersprungen", nicht als "bestanden". */
+            all {
+                it.systemProperty(
+                    "nadoku.rundlauf",
+                    (project.findProperty("nadoku.rundlauf") as String?) ?: "",
+                )
+                it.testLogging {
+                    events("skipped", "failed")
+                    showStandardStreams = true
+                }
+            }
         }
     }
 }
@@ -156,6 +180,19 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Kamera fuer den QR-Scan der Kopplung (E-S4-15). CameraX gehoert zu
+    // AndroidX und faellt damit unter den ersten der drei zugelassenen
+    // Fremdbestandteile (E-S4-04).
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // ZXing: die QR-Erkennung selbst. NUR der Kern -- das Android-Beiwerk
+    // (zxing-android-embedded) braechte eine eigene Activity und eine eigene
+    // Oberflaeche mit; gebraucht wird der Dekodierer.
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
