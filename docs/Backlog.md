@@ -326,6 +326,21 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
     Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
 
+49. **Logodateien tragen teilweise wieder die alten Farbwerte.**
+    *Aufgenommen 31.08.2026, gefunden bei der S4-Konzeptarbeit (B-S4-01 im
+    S4-Konzept).* Der Commit „Update Logos" hat mit den neuen Vektorvorlagen
+    alte Werte zurückgebracht: `gen-em_logo_helicopter.svg` führt `#587abc`,
+    `#e3322b`, `#f7941d` und Korpus `#1d0e0a` (statt `#4280E5`, `#D63338`,
+    `#FF8F1F`, `#1A0500`); die weiße Hubschrauber-Fassung trägt die alten
+    Farbelemente, `gen-em_logo_nef.svg` den alten Korpuswert. Nur
+    `gen-em_logo_nef_weiss.svg` stimmt. `docs/Design.md` 2.5 („B1 erledigt,
+    nachgemessen") trifft auf diesen Stand nicht mehr zu; PNG-Ableitungen,
+    Favicons und Uhr-Bilder sind nicht nachgemessen.
+    **Entschieden am 31.08.2026: bewusst liegen lassen** — keine Behebung
+    vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
+    Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
+    Ableitungen nachmessen.
+
 
 
 ## Erledigt
