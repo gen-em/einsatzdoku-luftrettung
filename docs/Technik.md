@@ -85,7 +85,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
-│   ├── pair.php           Uhr-Kopplung per Code
+│   ├── pair.php           Uhr-Kopplung per Code, und Trennen einer
+│   │                      bestehenden Kopplung (JSON-Vertrag 1a/1b)
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
@@ -1684,7 +1685,11 @@ Die verbindliche Beschreibung steht im JSON-Vertrag, Abschnitt 8.
 
 **Zwei Stellen, an denen die Gleichheit von Antworten zählt.** Der
 Salt-Endpunkt (`auth_salt.php`) und die Kopplung (`pair.php`) sind ohne
-Anmeldung erreichbar. Beide müssen für "gibt es" und "gibt es nicht"
+Anmeldung erreichbar. Bei `pair.php` gilt das seit Web 9.15.0 für **beide**
+Anliegen: Der Trennen-Zweig läuft im unbekannten Fall gegen
+`AUTH_VERGLEICHSWERT`, wie `ingest.php` — sonst wäre aus der Antwortdauer
+ablesbar, welche Gerätekennungen es gibt, und die Kennung ist die Hälfte
+dessen, was ein Upload braucht. Beide müssen für "gibt es" und "gibt es nicht"
 Antworten liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer**
 nicht unterscheiden. Beim Salt war es zuletzt die Länge, die alles verriet:
 Ein echtes Salt hat 32 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas
