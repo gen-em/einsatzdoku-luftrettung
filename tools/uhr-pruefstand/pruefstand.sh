@@ -158,7 +158,11 @@ anzeige_starten() {
         melde "verwaiste Anzeige-Sperre entfernen"
         rm -f "/tmp/.X${n}-lock" "/tmp/.X11-unix/X${n}"
     fi
-    nohup Xvfb "$ANZEIGE" -screen 0 1400x1000x24 >/dev/null 2>&1 &
+    # setsid, nicht nur nohup: In einer Werkzeugumgebung, die jeden Befehl in
+    # einer eigenen Shell ausfuehrt, wird beim Verlassen die ganze Prozessgruppe
+    # abgeraeumt — die Anzeige war dann schon fort, bevor der naechste Befehl
+    # sie brauchte ("unable to open display"). setsid loest sie heraus.
+    setsid nohup Xvfb "$ANZEIGE" -screen 0 1400x1000x24 >/dev/null 2>&1 </dev/null &
     sleep 3
     xdpyinfo -display "$ANZEIGE" >/dev/null 2>&1 \
         || fehler "Anzeige $ANZEIGE liess sich nicht starten"
@@ -168,7 +172,7 @@ simulator_starten() {
     umgebung; anzeige_starten
     pgrep -f "$SDK_DIR/bin/simulator" >/dev/null && { melde "Simulator laeuft bereits"; return; }
     melde "Simulator starten"
-    (cd "$SDK_DIR/bin" && nohup ./simulator >"$BASIS/simulator.log" 2>&1 &)
+    (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
 }
 
@@ -182,6 +186,10 @@ starten() {
 "Kein Kompilat fuer $geraet. Erst uebersetzen:
    $(basename "${BASH_SOURCE[0]}") bauen $geraet"
     umgebung; simulator_starten
+    # s. einstellungen_leeren(): eine stehende .SET-Datei ueberstimmt die
+    # Vorgaben aus properties.xml — das sieht man dem Kompilat nicht an.
+    local set_datei="$EINSTELL_ABLAGE/$(printf '%s' "$geraet" | tr 'a-z' 'A-Z').SET"
+    [ -f "$set_datei" ] && melde "Hinweis: gespeicherte App-Einstellungen aktiv ($(basename "$set_datei")) — 'einstellungen-leeren' setzt sie zurueck"
     # Eine vorherige Sitzung zuerst beenden: monkeydo laeuft weiter, solange die
     # App laeuft, und zwei gleichzeitige Verbindungen blockieren einander.
     pkill -f "monkeydo" 2>/dev/null || true
@@ -308,6 +316,25 @@ wischen() {                                  # wischen <x> <vonY> <nachY>
 }
 taste()   { umgebung; xdotool key "${1:?Taste}"; }
 
+# Der Simulator legt die App-Einstellungen unter
+# /tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET ab und fuellt sie
+# NUR EINMAL aus den Vorgaben der properties.xml. Wer eine Vorgabe aendert und
+# neu uebersetzt, sieht deshalb weiter den alten Wert — die Datei gewinnt.
+# Am 31.08.2026 hat das zwei Laeufe lang dieselbe Bildmarke gezeigt, obwohl das
+# Kompilat die andere trug.
+#
+# Das VERZEICHNIS muss stehen bleiben. Fehlt es ganz, wirft
+# Properties.getValue() einen Fehler, den ein "catch (e)" NICHT faengt: Die App
+# stirbt beim ersten Zeichnen. Ein fehlender SCHLUESSEL dagegen wird sauber
+# gefangen — geprueft mit einer Probe auf "gibtsNicht".
+EINSTELL_ABLAGE=/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS
+
+einstellungen_leeren() {
+    mkdir -p "$EINSTELL_ABLAGE"
+    rm -f "$EINSTELL_ABLAGE"/*.SET
+    melde "App-Einstellungen geleert (Verzeichnis bleibt)"
+}
+
 beenden() {
     pkill -f "$SDK_DIR/bin/simulator" 2>/dev/null || true
     pkill -f "Xvfb $ANZEIGE" 2>/dev/null || true
@@ -354,6 +381,9 @@ Befehle:
   halten <x> <y> [sek]       Touch-Langdruck
   wischen <x> <vonY> <nachY> Wischgeste
   taste <name>               Tastendruck (xdotool-Name, z. B. Return)
+  einstellungen-leeren       gespeicherte App-Einstellungen des Simulators
+                             verwerfen (sonst gewinnen sie ueber
+                             properties.xml)
   beenden                    Simulator und Anzeige beenden
 
 Umgebungsvariablen:
@@ -369,5 +399,7 @@ befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
     aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
+    einstellungen-leeren)
+        einstellungen_leeren ;;
     *) hilfe; exit 1 ;;
 esac

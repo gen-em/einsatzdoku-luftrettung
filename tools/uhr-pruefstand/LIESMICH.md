@@ -53,6 +53,7 @@ tools/uhr-pruefstand/pruefstand.sh pruefen       # Bestand auflisten
 tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro -l 3
 tools/uhr-pruefstand/pruefstand.sh starten fenix6pro
 tools/uhr-pruefstand/pruefstand.sh abbild /tmp/start.png
+tools/uhr-pruefstand/pruefstand.sh einstellungen-leeren
 tools/uhr-pruefstand/pruefstand.sh beenden
 ```
 
@@ -109,6 +110,33 @@ sauber und ist auf dem Gerät **unbedienbar** — genau der Fall, den
 `docs/Geraete-Eingabe.md` für die Venu 3s beschreibt. Die Eingabe-Zuordnung
 bleibt Handarbeit je Klasse, mit `tools/eingabe-probe`.
 
+## App-Einstellungen: der Simulator merkt sie sich
+
+Wer eine Vorgabe in `watch/resources/settings/properties.xml` ändert und neu
+übersetzt, sieht im Simulator trotzdem den **alten** Wert. Der Grund:
+
+```
+/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET
+```
+
+Diese Datei wird beim **ersten** Laden aus den Vorgaben des Kompilats gefüllt
+und danach nicht mehr angefasst — sie gewinnt über jedes weitere Kompilat. Am
+31.08.2026 hat das zwei Läufe lang dieselbe Bildmarke gezeigt, obwohl das
+zweite Kompilat die andere trug; erst `einstellungen-leeren` brachte sie zum
+Vorschein. Vor jedem Lauf, der eine geänderte Vorgabe prüfen soll:
+
+```bash
+pruefstand.sh einstellungen-leeren
+```
+
+**Das Verzeichnis muss stehen bleiben.** Wird es ganz entfernt, wirft
+`Properties.getValue()` einen Fehler, den ein `catch (e)` **nicht** fängt — die
+App stirbt beim ersten Zeichnen, das Display bleibt schwarz. Das ist ein
+Artefakt des Simulators: Auf einem Gerät legt die Installation den Speicher an.
+Ein fehlender **Schlüssel** dagegen wird sauber gefangen (geprüft mit einer
+Probe auf `"gibtsNicht"`, die brav auf die Vorgabe zurückfällt) — der Fall
+„App-Aktualisierung bringt eine neue Einstellung mit" ist also abgedeckt.
+
 ## Bedienung simulieren
 
 Tastendrücke und Touch gehen als X-Ereignisse an das Simulatorfenster:
@@ -150,11 +178,31 @@ Was der Prüfstand **nicht** leistet, und woran das liegt:
   1,2 GB Schriften sind dabei der langsame Teil.
 - **Ein Lauf im Simulator ersetzt das Lesen nicht.** Er zeigt, dass es startet
   und wie es aussieht — nicht, dass es richtig ist.
-- **`starten` kehrt in einer nicht-interaktiven Umgebung nicht immer zurück.**
-  `monkeydo` hält die Verbindung zum Simulator, solange die App läuft; startet
-  man mehrere Geräte in einer Schleife, wartet der Aufrufer unter Umständen auf
-  den Kindprozess, obwohl er abgelöst gestartet wird. Interaktiv fällt das
-  nicht auf. Für einen Reihendurchlauf über mehrere Geräte ist der direkte Weg
+- **Anzeige und Simulator brauchen `setsid`, nicht nur `nohup`.** Eine
+  Werkzeugumgebung, die jeden Befehl in einer eigenen Shell ausführt, räumt
+  beim Verlassen die ganze Prozessgruppe ab — die mit `nohup ... &` gestartete
+  Anzeige war dann schon fort, bevor der nächste Befehl sie brauchte
+  (`unable to open display ":99"`, und der Simulator bricht mit
+  „Can't create a GtkStyleContext without a display connection" ab). Das
+  Skript startet beides deshalb mit `setsid`.
+- **`pkill -f monkeydo` erwischt die eigene Shell**, wenn das Muster im
+  Kommandozeilentext dieser Shell vorkommt — bei einem Aufruf über ein
+  Werkzeug, das den ganzen Befehl in `bash -c` einbettet, ist das die Regel.
+  Der Aufruf endet mit Rückgabewert 144, und nichts läuft. Deshalb steht der
+  Reihendurchlauf in einer **Skriptdatei**: Deren Kommandozeile lautet nur
+  `bash lauf.sh`, das Muster kommt darin nicht vor.
+- **`starten` kehrt nicht zurück, wenn seine Ausgabe in eine Pipe geht.**
+  `monkeydo` erbt die Standardausgabe und hält die Verbindung zum Simulator,
+  solange die App läuft; der Leser am anderen Ende der Pipe wartet folglich auf
+  einen Prozess, der nicht endet — auch wenn `monkeydo` abgelöst gestartet
+  wurde. In eine **Datei** umgeleitet kehrt derselbe Aufruf sofort zurück:
+
+  ```bash
+  pruefstand.sh starten fenix6pro 5 >lauf.log 2>&1 </dev/null   # kehrt zurueck
+  pruefstand.sh starten fenix6pro 5 | tail                      # blockiert
+  ```
+
+  Für einen Reihendurchlauf über mehrere Geräte ist der direkte Weg
   zuverlässiger:
 
   ```bash

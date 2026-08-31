@@ -64,6 +64,48 @@ Auf das Layout wirkt sich die Wahl ohnehin nicht aus: `logoH` liefert die
 **Kachelhöhe**, nicht die Motivhöhe — beide Dateien sind 70×70 beziehungsweise
 105×105, der Rest ist durchsichtig.
 
+### Uhr — Im Simulator nachgesehen (nachgetragen)
+
+Die Bildmarken waren zunächst nur übersetzt, nicht gesehen. Nachgeholt am
+31.08.2026 mit `tools/uhr-pruefstand` auf zwei Geräten und drei Einstellungen —
+**neun Simulatorläufe**, jeder mit Bildabzug:
+
+| Einstellung | fenix6pro (260 px) | venu3s (390 px) |
+|---|---|---|
+| 0 Luftgebunden | Hubschrauber | Hubschrauber |
+| 1 Bodengebunden | Fahrzeug | Fahrzeug |
+| 2 Wechselnd | 4 Starts: 1× Luft, 3× Boden | — |
+
+Dazu **Stufe I über alle 99 Geräte** noch einmal, weil 1.10.0 jedem Kompilat
+ein zweites Bild mitgibt: 99 übersetzt, **0 Fehlschläge**, Größen zwischen
+168 652 B (`fr255`) und 179 996 B (Venu-Reihe). Die 42 Geräte mit genau einer
+Warnung tragen unverändert die Meldung zum hochskalierten Launcher-Symbol
+(Backlog Nr. 48) — **keine neue Warnung** durch die zweite Bildmarke.
+
+Dazu eine Probe auf den Fall, der bei einer **App-Aktualisierung** eintritt:
+Der Schlüssel `logoWahl` steht noch nicht im Einstellungsspeicher. Ein Kompilat,
+das absichtlich `"gibtsNicht"` liest, fällt sauber auf die Vorgabe zurück und
+zeichnet weiter — der `catch (e)` in `Ui.logoRes()` trägt also.
+
+Der Lauf hat **zwei Fallen im Prüfstand selbst** freigelegt, beide jetzt
+behoben und in dessen `LIESMICH.md` festgehalten:
+
+**Der Simulator merkt sich die App-Einstellungen** unter
+`/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET` und füllt die
+Datei **nur beim ersten Laden** aus den Vorgaben des Kompilats. Zwei Läufe
+zeigten deshalb dieselbe Bildmarke, obwohl das zweite Kompilat die andere trug —
+ein falsches Negativ, das ohne Gegenprobe als „die Einstellung wirkt nicht"
+durchgegangen wäre. Neuer Befehl `einstellungen-leeren`; `starten` weist auf
+eine stehende Datei hin. Das **Verzeichnis** bleibt dabei stehen: Fehlt es ganz,
+wirft `Properties.getValue()` einen Fehler, den kein `catch` fängt, und das
+Display bleibt schwarz. Auf einem Gerät kann das nicht eintreten — dort legt
+die Installation den Speicher an.
+
+**Anzeige und Simulator brauchen `setsid`, nicht nur `nohup`.** Eine Umgebung,
+die jeden Befehl in einer eigenen Shell ausführt, räumt beim Verlassen die
+ganze Prozessgruppe ab; die Anzeige war fort, bevor der nächste Befehl sie
+brauchte.
+
 ## [Uhr 1.9.0] — 2026-08-30
 
 **Die App unterstützt 99 statt drei Geräte, und sie sagt beim Koppeln, auf
