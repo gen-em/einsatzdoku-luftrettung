@@ -507,9 +507,14 @@ const EdCrypto = (() => {
    * Browserschritt jenseits jedes Budgets — und der Rueckweg ein POST, den
    * kein Webspace annimmt. Fassung 4 zerlegt die Datei deshalb in Teile:
    *
-   *   manifest.edbak        Teileliste, SHA-256 je Teil, Sicherungskennung
-   *   kern.edbak            die Nutzlast OHNE Punktlisten
-   *   spuren/0001.edbak …   je Teil eine Liste {spur_ref, blob} (SPUR1)
+   *   manifest.edbak          Teileliste, SHA-256 je Teil, Sicherungskennung
+   *   kopf.edbak              Stammdaten, Diensttage, Zahl der Eintraege
+   *   eintraege/0001.edbak …  je 250 Eintraege OHNE Punktlisten
+   *   spuren/0001.edbak …     je Teil eine Liste {spur_ref, blob} (SPUR1)
+   *
+   * Bis Web 11.0.0 stand statt Kopf und Eintragsteilen EIN `kern.edbak`.
+   * Auch der war bei grossen Bestaenden zu gross — fuer den Speicher des
+   * Servers wie fuer einen POST; seit 11.1.0 zerfaellt er in Fenster.
    *
    * JEDES TEIL IST DERSELBE AES-GCM-CONTAINER wie bisher — mit zwei
    * Unterschieden, und beide haben einen Grund:

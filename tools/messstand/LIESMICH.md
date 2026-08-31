@@ -59,12 +59,34 @@ Die sechs Schritte einzeln:
 | `bestand` | `vervielfaeltigen.py` — aus der Referenz eine Folge `.edbak`-Dateien |
 | `einspielen` | `einspielen.mjs` — über den regulären Weg im Browser, mit Zeit- und Haldenmessung je Datei |
 | `browser` | `browserprobe.mjs` — Suche, Tagesansicht, Sichern unter CPU-Drossel |
-| `server` | `serverprobe.py` — Tabellengrößen, `edbak_build()`, Speicherspitze, Waisen-Vollscan |
+| `server` | `serverprobe.py` — Tabellengrößen, `edbak_build()` auf **beiden** Wegen, Speicherspitze, Waisen-Vollscan |
 | `protokoll` | fasst alles zu `messprotokoll.json` zusammen |
 
 Die Ausgabe liegt unter `/tmp/messstand` (`--ausgabe` ändert das); das
 festgehaltene Ergebnis des heutigen Stands steht daneben in
 `ausgangsmessung.md`.
+
+### Warum die Serverprobe `edbak_build()` zweimal misst (seit S2/AP5b)
+
+Es gibt seit Web 11.1.0 zwei Wege, und sie liegen um zwei Größenordnungen
+auseinander:
+
+| Weg | wer geht ihn | gemessen am Messstand |
+|---|---|---|
+| am Stück, **mit** Punktlisten | die Admin-Sicherungen (noch; AP6) | 6,95 s · 94,28 MB · **1077,6 MB** Spitze |
+| Kopf + Fenster zu 250 | die Sicherung der NutzerIn | 1,12 s · größtes Fenster 0,44 MB · **10,0 MB** Spitze |
+
+Stünde nur die erste Zeile da, läse sich das Protokoll so, als brauche jede
+Sicherung ein Gigabyte. Das stimmt für die Admin-Sicherung und ist dort die
+Auskunft — für die Nutzerin stimmt es seit AP5b nicht mehr. **Eine Zahl, die
+nicht dazusagt, welchen Weg sie gemessen hat, ist keine.**
+
+Die zweite Messung läuft in einem **eigenen PHP-Prozess** und mit
+`memory_limit=64M`. Beides mit Grund: `memory_get_peak_usage()` kennt nur ein
+Maximum je Prozess — im selben Lauf gemessen käme für die Fenster die Spitze
+des Baus am Stück heraus. Und der Deckel macht aus „so viel wurde gebraucht"
+ein „es reicht": Bricht der Fensterweg eines Tages ab, steht das im
+Protokoll, statt in einer Zahl unterzugehen.
 
 ## Der Riegel
 

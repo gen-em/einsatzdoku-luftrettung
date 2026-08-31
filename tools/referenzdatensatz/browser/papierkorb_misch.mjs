@@ -231,15 +231,19 @@ await seite.setInputFiles('#bfile', datei);
 await seite.fill('#ipw', bpw);
 await seite.click('#impbtn');
 await rueckfragen();
-let impZustand = '';
-for (let i = 0; i < 100; i++) {
-  await seite.waitForTimeout(3000);
-  impZustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
-  if (/fertig|eingespielt|fehlgeschlagen|Fehler|falsch/i.test(impZustand)) { break; }
-}
+/* Auf die MELDUNG warten, nicht auf einen Wortlaut (S2/AP5b). Begründung
+   ausführlich in kreislauf_edbak.mjs: Ein Fortschrittstext ist reiner Text,
+   ein Ergebnis ist `<div class="meldung meldung-…">`. Der frühere Ausdruck
+   kannte den Abbruch nicht und wartete dann 300 s auf einen Zustand, den es
+   längst gab. */
+const impMeldung = seite.locator('#impstate .meldung');
+try {
+  await impMeldung.first().waitFor({ state: 'attached', timeout: 900000 });
+} catch { /* der Befund unten nennt den letzten Zustand */ }
+const impZustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
+const impTon = (await impMeldung.first().getAttribute('class').catch(() => '') || '');
 schritt(`Eingespielt — ${impZustand}`);
-pruefe(!/fehlgeschlagen|falsch|Fehler/i.test(impZustand),
-       `Einspielen gescheitert: ${impZustand}`);
+pruefe(/meldung-ok/.test(impTon), `Einspielen nicht sauber: ${impZustand || '(kein Ergebnis)'}`);
 pruefe(/In den Papierkorb übernommen/.test(impZustand),
        'Die Rückmeldung nennt den Papierkorbanteil nicht');
 

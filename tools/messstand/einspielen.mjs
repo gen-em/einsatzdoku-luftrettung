@@ -141,25 +141,37 @@ for (const eintrag of verzeichnis.dateien) {
   const haldeVorher = await halde();
   const t0 = Date.now();
 
-  let zustand = '', fehler = null;
+  let zustand = '', fehler = null, tonZuletzt = '';
   try {
     await seite.setInputFiles('#bfile', pfad);
     await seite.fill('#ipw', bpw);
     await seite.click('#impbtn');
     await rueckfragen();
-    // Bis zu 30 Minuten je Datei: Der heutige Weg macht ein INSERT je Punkt.
-    for (let i = 0; i < 600; i++) {
-      await seite.waitForTimeout(3000);
-      zustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
-      if (/fertig|eingespielt|fehlgeschlagen|Fehler|falsch|abgebrochen/i.test(zustand)) break;
-    }
+    /* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT (S2/AP5b).
+     *
+     * Hier stand eine Wortliste. Sie ist zweimal falsch gewesen: einmal, weil
+     * der Abbruchtext keines der Woerter enthielt (kreislauf_edbak.mjs), und
+     * einmal, weil `eingespielt` in einem ZWISCHENstand vorkommen kann und
+     * die Schleife dann zu frueh bricht. Die Anwendung unterscheidet selbst:
+     * Ein Zwischenstand ist reiner Text, ein Ergebnis ist
+     * `<div class="meldung meldung-ok|warn|fehler">`.
+     *
+     * Bis zu 30 Minuten je Datei — bei grossen Bestaenden dauert es. */
+    let ton = '';
+    try {
+      await seite.locator('#impstate .meldung').first()
+        .waitFor({ state: 'attached', timeout: 1800000 });
+      ton = (await seite.locator('#impstate .meldung').first()
+        .getAttribute('class').catch(() => '') || '');
+    } catch { ton = ''; }
+    zustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
+    tonZuletzt = ton;
   } catch (e) {
     fehler = String(e.message || e).slice(0, 400);
   }
   const dauer = (Date.now() - t0) / 1000;
   const haldeNachher = await halde();
-  const geglueckt = !fehler && !/fehlgeschlagen|falsch|Fehler|abgebrochen/i.test(zustand)
-                    && /fertig|eingespielt/i.test(zustand);
+  const geglueckt = !fehler && /meldung-ok/.test(tonZuletzt);
 
   /* WAS DIE ANWENDUNG MELDET, NICHT WAS DIE DATEI ENTHAELT.
    *

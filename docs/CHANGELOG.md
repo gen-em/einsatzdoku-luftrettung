@@ -11,6 +11,108 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 11.1.0] — 2026-08-31
+
+**Auch der Kern wird mehrteilig.** Nachschlag zum sechsten Arbeitspaket der
+Phase S2 (AP5b, E-S2-11, Z3). Nebennummer: Das Format bekommt Teile dazu, das
+Datenmodell bleibt. **Keine Migration.**
+
+### Web — Warum der Kern allein nicht reicht
+
+Web 11.0.0 hatte die Punktlisten aus der Nutzlast geholt. Übrig blieb ein
+`kern.edbak` — beim 5000er-Bestand 10,5 MB, und der ging auf dem Rückweg als
+**ein** POST an den Server. Gegen ein Limit, das niemand kennt: nginx nimmt in
+der Vorgabe 1 MB. Damit wäre die Sicherung genau dort nicht wieder
+einzuspielen gewesen, wo sie herkam.
+
+Der Speicher kommt dazu, wenn auch weniger dramatisch als gedacht.
+**Gemessen** am 31.08.2026 (`memory_get_peak_usage(true)`, PHP-CLI):
+
+| Bestand | Kern am Stück | in Fenstern zu 250 |
+|---|---|---|
+| Demo, 187 Einträge | 0,18 MB Text, **4,0 MB** Spitze | 0,17 MB größtes Fenster, **4,0 MB** |
+| Messstand, 10 797 Einträge | 10,47 MB Text, **39,5 MB** Spitze | 0,44 MB größtes Fenster, **10,0 MB** |
+
+Am Stück wächst die Spitze mit dem Bestand — rund 3,3 kB je Eintrag, aus den
+zwei Messpunkten fortgeschrieben; das Budget von 64 MB (Z3) wäre bei etwa
+18 000 Einträgen erreicht. In Fenstern wächst sie kaum.
+
+**Eine Zahl war dabei falsch weitergetragen worden.** In der Begründung dieses
+Pakets stand zunächst „92 MB gegen ein Budget von 64" — das ist die Zahl aus
+Web 11.0.0, *vor* den Fenstern der Kindtabellen. Nachgemessen am
+tatsächlichen Stand von 11.0.0 waren es 37,5 MB. Der Umbau ist trotzdem
+richtig, aber aus dem POST-Grund und wegen des Wachstums, nicht wegen eines
+Abbruchs, den es nicht gab.
+
+### Web — Die neue Aufteilung
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit, **`unlesbar`** |
+| `kopf.edbak` | Stammdaten, Diensttage, `eintraege_gesamt` |
+| `eintraege/0001.edbak` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
+| `spuren/0001.edbak` … | je Teil eine Liste `{spur_ref, blob}` — unverändert |
+
+**250 Einträge je Fenster**, weil `client_max_body_size` bei nginx in der
+Vorgabe auf 1 MB steht und der Rückweg genau diese Fenster als POST
+zurückschickt: 500 ergäben ein größtes Fenster von 0,87 MB — unter der Grenze,
+aber ohne Reserve; 250 ergeben 0,44 MB in 44 Anfragen.
+
+`kern.edbak` gibt es nicht mehr. Eine solche Datei wird beim Öffnen mit Namen
+abgewiesen; sie kann nur im Werkstattbestand liegen, denn Web 11.0.0 ist nie
+ausgeliefert worden.
+
+### Web — Die Rückfrage kam, wo es nichts zu fragen gab (F-S2-D)
+
+Vor dem Einspielen warnt die Anwendung, wenn eine Sicherung Einsätze enthält,
+deren geschützte Angaben beim *Erstellen* nicht zu entschlüsseln waren: Die
+kommen als Chiffretext an und bleiben hier unlesbar. Beim Altformat wurden sie
+gezählt. Bei Fassung 4 liegen die Einträge zum Zeitpunkt der Frage noch
+versiegelt in ihren Teilen — die Frage steht aber vor dem ersten Schreiben und
+muss dort bleiben. Sie kam deshalb, sobald die Datei aus einem *anderen* Konto
+stammte, und das ist der Regelfall des Einspielens.
+
+Der Erzeuger weiß die Zahl, er hat sie eben gezählt; sie steht jetzt als
+`unlesbar` im Manifest. Fehlt sie, wird weiter gefragt — „nicht erhoben" ist
+etwas anderes als „keine".
+
+**Wie es aufgefallen ist:** Der Kreislauftest lief 300 Sekunden ins Leere. Sein
+Browser verneinte die Frage stillschweigend, und das Werkzeug wartete auf
+Wörter („fertig", „eingespielt"), die im Abbruchtext nicht vorkommen. Danach
+hätte es ein leeres Konto exportiert und verglichen. Beides ist geändert: Der
+Abbruch ist jetzt eine Meldung wie jede andere, und die Werkzeuge warten auf
+**die Meldung**, nicht auf einen Wortlaut.
+
+### Web — Zwei native `confirm()` sind gegangen
+
+Die beiden Rückfragen des Sicherungsbereichs benutzten noch `window.confirm`.
+Browser bieten dort „keine weiteren Dialoge dieser Seite anzeigen" an — genau
+der Grund, aus dem es `assets/confirm.js` gibt. Sie laufen jetzt über
+`window.edConfirm` wie alle anderen.
+
+### Web — Eine Schranke gegen die stille Lücke
+
+Die Exportschleife rückt um `FENSTER` weiter, gleichgültig wie viele Einträge
+zurückkamen. Lieferte ein Fenster weniger, fehlten diese Einträge in der Datei
+— und die Meldung am Ende lautete trotzdem „Fertig". Der Browser zählt jetzt
+nach und bricht mit Namen und Zahl ab. Der Abrufendpunkt weist eine zu große
+`anzahl` ohnehin mit 400 ab; die zweite Schranke hängt nicht davon ab, dass
+die erste bleibt.
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| Kreislauf `edbak` (Fassung 4 → frisches Konto → Fassung 4) | **252 882** Einzelvergleiche, **0** unerklärt, 16 erwartet |
+| Kreislauf `edbak-alt` (Altformat → Fassung 4) | **287 282** Einzelvergleiche, **0** unerklärt, 560 erwartet |
+| Kreislauf `csv` | **8 797** Einzelvergleiche, **0** unerklärt, 859 erwartet |
+| `tools/containerprobe/` (PHP → Chromium → Python) | **32** Erwartungen, 0 offen; 9 000 Punktvergleiche; jetzt mit **zwei** Eintragsteilen |
+| `tools/wiederherstellungs-probe/` | **40** Erwartungen, 0 offen |
+| `tools/spurprobe/` | **25** Erwartungen, 0 offen |
+| Speicher am Messstand | 39,5 MB am Stück → **10,0 MB** in Fenstern, von 64 |
+| **Abnahme am 5000er-Bestand** (5002 Einsätze, 10 797 Einträge) | Sichern 44,8 s · Halde 45 MB · größte Zeichenkette **2,30 MB** (vorher 9,39) · PBKDF2 1 · Datei 10,48 MB |
+| Rundlauf desselben Bestands | 10 431 Spuren mit **2 108 077 Punkten** in 54 Teilen · **10 991 557 Einzelvergleiche, 0 unerklärt** · 0 Konsolenfehler |
+
 ## [Web 11.0.0] — 2026-08-31
 
 **Die Sicherung wird mehrteilig.** Sechstes Arbeitspaket der Phase S2

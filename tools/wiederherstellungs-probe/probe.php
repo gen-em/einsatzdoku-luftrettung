@@ -598,5 +598,24 @@ $sag('Endpunkt und Browser nennen dieselbe Hoechstzahl je Anfrage',
      isset($mE[1], $mB[1]) && $mE[1] === $mB[1],
      'Endpunkt ' . ($mE[1] ?? '—') . ', Browser ' . ($mB[1] ?? '—'));
 
+/* DASSELBE FUER DIE EINTRAGSFENSTER (S2/AP5b). Der Browser holt den Kern in
+ * Fenstern zu FENSTER Eintraegen; `api/backup_data.php` nimmt hoechstens
+ * BACKUP_EINTRAEGE_MAX je Anfrage. Waere FENSTER groesser, antwortete der
+ * Endpunkt mit 400 und die Sicherung braeche ab — laut, aber erst im Betrieb
+ * und ausgerechnet beim grossen Bestand, fuer den die Fenster da sind. */
+$abruf = file_get_contents(dirname(__DIR__, 2) . '/server/api/backup_data.php');
+preg_match('/BACKUP_EINTRAEGE_MAX\s*=\s*(\d+)/', $abruf, $mA);
+preg_match('/const FENSTER\s*=\s*(\d+)/', $browser, $mF);
+$sag('Das Eintragsfenster des Browsers passt in die Grenze des Endpunkts',
+     isset($mA[1], $mF[1]) && (int)$mF[1] >= 1 && (int)$mF[1] <= (int)$mA[1],
+     'Fenster ' . ($mF[1] ?? '—') . ' von hoechstens ' . ($mA[1] ?? '—'));
+
+/* UND DASS DER BROWSER NACHZAEHLT. Die Schleife rueckt um FENSTER weiter,
+ * gleichgueltig wie viel zurueckkam; ohne diese Pruefung fehlten zu kurz
+ * gelieferte Eintraege in der Datei, waehrend die Meldung „Fertig" lautet. */
+$sag('Der Browser zaehlt nach, wie viele Eintraege ein Fenster brachte',
+     (bool)preg_match('/statt \$\{soll\} Eintr/u', $browser),
+     'Schranke gegen ein zu kurz geliefertes Fenster');
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

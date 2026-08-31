@@ -129,9 +129,11 @@ def lesen_edbak(pfad: str, passwort: str) -> dict:
 # Aufbau (docs/Backup-Format.md, Konzept S2 3.2):
 #
 #   ZIP (Speichern ohne Kompression)
-#     manifest.edbak        versiegelt, AAD "EDBAK4|manifest"
-#     kern.edbak            versiegelt, AAD "EDBAK4|<kennung>|kern.edbak|1/N"
-#     spuren/0001.edbak …   versiegelt, AAD "EDBAK4|<kennung>|<name>|<nr>/N"
+#     manifest.edbak         versiegelt, AAD "EDBAK4|manifest"
+#     kopf.edbak             Stammdaten und Diensttage
+#     eintraege/0001.edbak … Einsaetze und Ruhesegmente, in Fenstern
+#     spuren/0001.edbak …    die Spuren als SPUR1-Blobs
+#   AAD je Teil: "EDBAK4|<kennung>|<name>|<nr>/<gesamt>"
 #
 # Teilkopf: "EDBAK2" 0x00 0x04 | Flag(1) | Runden(4, BE) | Salt(16) | IV(12)
 # Zusatzdaten (AAD): die ersten 13 Bytes PLUS die Zeichenkette oben.
@@ -246,6 +248,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
         pruefsummen_ok = True
         pruefsummen_fehler = []
         kern = None
+        eintraege: dict = {"missions": [], "rest_segments": []}
         spuren: dict = {}
 
         for nr, t in enumerate(teile, start=1):
@@ -275,8 +278,20 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
             aad = f"{AAD_MARKE}|{manifest['kennung']}|{name}|{nr}/{gesamt}"
             inhalt = json.loads(_teil_oeffnen(schluessel, roh, aad, f"Teil {name}")
                                 .decode("utf-8"))
-            if t.get("art") == "kern":
+            art = t.get("art")
+            if art == "kopf":
+                # NUR "kopf". Web 11.0.0 hatte hier ein "kern"; diese Fassung
+                # ist nie ausgeliefert worden, und der Browser weist sie ab.
+                # Ein zweiter Leser, der grosszuegiger ist als der erste,
+                # pruefte ein Format, das es nicht gibt.
                 kern = inhalt
+            elif art == "eintraege":
+                # DIE FENSTER WERDEN IN DER REIHENFOLGE DES MANIFESTS
+                # ANEINANDERGEHAENGT. Sie ist die des Formats; eine andere
+                # ergaebe einen Baum, der zwar dieselben Objekte, aber eine
+                # andere Folge traegt — und der Vergleich meldete das zu Recht.
+                eintraege["missions"].extend(inhalt.get("missions", []))
+                eintraege["rest_segments"].extend(inhalt.get("rest_segments", []))
             else:
                 for eintrag in inhalt.get("spuren", []):
                     spuren[int(eintrag["spur_ref"])] = base64.b64decode(eintrag["blob"])
@@ -286,7 +301,12 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                               - {t["name"] for t in teile})
 
     if kern is None:
-        raise ValueError("Kein Kernteil im Manifest")
+        raise ValueError("Kein Kopfteil im Manifest")
+    # Der gelieferte Baum sieht aus wie der einer einteiligen Datei: Kopf und
+    # Eintraege wieder zusammen.
+    kern.setdefault("missions", []).extend(eintraege["missions"])
+    kern.setdefault("rest_segments", []).extend(eintraege["rest_segments"])
+    kern.pop("eintraege_gesamt", None)   # Angabe des Abrufs, kein Inhalt
 
     # ---- Zusammensetzen: aus spur_ref + Blob wieder eine track-Liste --------
     #
@@ -322,7 +342,13 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
         "gepackt": True,
         "runden": runden,
         "teile": gesamt,
+        "eintragsteile": sum(1 for t in teile if t.get("art") == "eintraege"),
         "teilenamen": [t["name"] for t in teile],
+        # Die Zahl, an der der Einspielweg entscheidet, ob er vor unlesbaren
+        # Angaben warnt (S2/AP5b). Hier steht sie, damit ein Lauf sie NENNT
+        # statt sie zu unterstellen: `None` heisst „das Manifest sagt nichts",
+        # und das ist etwas anderes als eine Null.
+        "unlesbar": manifest.get("unlesbar"),
         "pruefsummen_ok": pruefsummen_ok,
         "pruefsummen_fehler": pruefsummen_fehler,
         "blobs_ohne_objekt": sorted(offen.keys()),

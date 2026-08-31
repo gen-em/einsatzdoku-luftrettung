@@ -1357,6 +1357,10 @@ declare(strict_types=1);
  *   kern.edbak            die Nutzlast OHNE Punktlisten
  *   spuren/0001.edbak …   je Teil eine Liste {spur_ref, SPUR1-Blob}
  *
+ * Dieser Zuschnitt hat eine Woche gehalten: Der Kern SELBST ist bei grossen
+ * Bestaenden zu gross — 11.1.0 zerlegt ihn weiter. Wer die Aufteilung sucht,
+ * liest sie dort; die hier genannte gibt es nur noch in diesem Absatz.
+ *
  * JEDES TEIL KENNT SEINEN PLATZ. Die Zusatzdaten der Verschluesselung (AAD)
  * binden Sicherungskennung, Teilname und Nummer — ein fehlendes, doppeltes,
  * vertauschtes oder aus einer ANDEREN Sicherung stammendes Teil faellt damit
@@ -1377,5 +1381,56 @@ declare(strict_types=1);
  * KEINE MIGRATION. Das Format der Datei aendert sich, das Datenmodell nicht —
  * `update.php` braucht diesmal niemand aufzurufen.
  *
+ * 11.1.0 IST AP5b: AUCH DER KERN WIRD MEHRTEILIG (E-S2-11, Z3).
+ *
+ * AP5 hatte die Punktlisten aus dem Kern geholt und in Spurteile gelegt. Was
+ * blieb, war der Kern selbst — und der ist beim 5000er-Bestand 10,5 MB. Auf
+ * dem Rueckweg ginge er als EIN POST von 9,4 MB gegen ein Limit, das niemand
+ * kennt: nginx deckelt in der Vorgabe bei 1 MB. Und im Server kostet der Bau
+ * am Stueck 39,5 MB von 64 (Z3) — noch unter dem Budget, aber wachsend mit
+ * dem Bestand, waehrend ein Fenster gleich gross bleibt.
+ *
+ * Der Kern zerfaellt deshalb in einen Kopf und Eintragsfenster:
+ *
+ *   manifest.edbak            Teileliste mit SHA-256 je Teil und Kennung
+ *   kopf.edbak                Stammdaten, Diensttage, Zahl der Eintraege
+ *   eintraege/0001.edbak …    je 250 Eintraege ohne Punktlisten
+ *   spuren/0001.edbak …       je Teil eine Liste {spur_ref, SPUR1-Blob}
+ *
+ * `kern.edbak` aus 11.0.0 gibt es nicht mehr; eine solche Datei wird beim
+ * Oeffnen mit Namen abgewiesen. Sie kann nur im Werkstattbestand liegen —
+ * 11.0.0 ist nie ausgeliefert worden.
+ *
+ * GEMESSEN am 31.08.2026, `memory_get_peak_usage(true)`:
+ *
+ *                     Demo (187 Eintraege)   Messstand (10 797)
+ *   am Stueck          4,0 MB                39,5 MB
+ *   in Fenstern        4,0 MB                10,0 MB
+ *
+ * Am Stueck sind das rund 3,3 kB je Eintrag; auf 64 MB fortgeschrieben waere
+ * bei etwa 18 000 Eintraegen Schluss. Groesstes Fenster 0,44 MB bei 250
+ * Eintraegen (bei 500 waeren es 0,87 MB — unter nginx' Grenze, aber ohne
+ * Reserve). 10 797 Eintraege ergeben 44 Fenster.
+ *
+ * DIE 92 MB, die hier vorher standen, gehoeren zu AP5 und nicht hierher: Es
+ * war der Stand VOR den Fenstern der Kindtabellen. Beim Nachmessen fuer
+ * dieses Paket kam 37,5 MB heraus — die Zahl war weitergetragen worden, ohne
+ * dass jemand sie noch einmal erhoben hatte.
+ *
+ * ZWEI FEHLER FIELEN DABEI AUF, beide nicht im Umbau:
+ *
+ * 1. Die Rueckfrage vor dem Einspielen kam bei Fassung 4 IMMER, wenn die
+ *    Datei aus einem anderen Konto stammte — also im Regelfall. Sie warnt
+ *    vor Angaben, die unlesbar ankommen; ob es welche gibt, konnte der
+ *    Einspielweg nicht mehr sehen, seit die Eintraege in versiegelten Teilen
+ *    liegen. Der Erzeuger weiss es und schreibt es jetzt ins Manifest
+ *    (`unlesbar`). Ohne die Zahl wird weiter gefragt: „nicht erhoben" ist
+ *    etwas anderes als „keine".
+ * 2. Die beiden Rueckfragen des Sicherungsbereichs benutzten noch das
+ *    native `confirm()` — abschaltbar im Browser, und genau dagegen gibt es
+ *    confirm.js. Sie laufen jetzt ueber `window.edConfirm`.
+ *
+ * KEINE MIGRATION. Nur das Dateiformat aendert sich, das Datenmodell nicht.
+ *
  */
-const WEB_VERSION = '11.0.0';
+const WEB_VERSION = '11.1.0';

@@ -149,6 +149,21 @@ $aus["edbak_build"] = [
     "spitze_mb"      => round(memory_get_peak_usage(true) / 1048576, 1),
     "fehler"         => $fehler];
 
+/* DERSELBE BAU, ABER SO, WIE DIE ANWENDUNG IHN SEIT WEB 11.1.0 GEHT
+ * (S2/AP5b): Kopf und Eintragsfenster einzeln.
+ *
+ * WARUM BEIDE ZAHLEN. Die obige misst den Weg mit Punktlisten am Stueck —
+ * den gehen nur noch die Admin-Sicherungen (AP6), und dort ist die Spitze
+ * die Auskunft. Wer nur sie liest, haelt die Sicherung fuer einen
+ * Gigabyten-Vorgang; das ist sie fuer die Nutzerin seit AP5b nicht mehr.
+ * Eine Zahl, die nicht dazusagt, WELCHEN Weg sie gemessen hat, ist keine.
+ *
+ * ES IST EIN ZWEITER PROZESS, kein zweiter Aufruf: `memory_get_peak_usage()`
+ * kennt nur ein Maximum je Prozess, und der Bau am Stueck hat es gerade auf
+ * ueber ein Gigabyte gesetzt. Im selben Prozess gemessen kaeme fuer die
+ * Fenster dieselbe Zahl heraus — und zwar eine, die nichts ueber sie sagt. */
+$aus["edbak_fenster"] = ["hinweis" => "eigener Prozess, s. serverprobe.py"];
+
 /* Der WARTUNGSJOB, echt gefahren (nur mit --wartung-fahren).
  *
  * Nicht nachgebaut, sondern die Funktion der Anwendung selbst:
@@ -202,6 +217,72 @@ echo json_encode($aus, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
              "EDOKU_WARTUNG": "ja" if wartung else "nein"})
     if e.returncode != 0:
         raise RuntimeError(f"PHP-Messung gescheitert: {e.stderr.strip()[:400]}")
+    return json.loads(e.stdout)
+
+
+def php_fenster_messen(konto: str, fenster: int = 250) -> dict:
+    """Der Sicherungsbau so, wie die Anwendung ihn seit Web 11.1.0 geht.
+
+    EIGENER PROZESS, und das ist der Punkt. `memory_get_peak_usage()` kennt
+    nur EIN Maximum je Prozess; nach dem Bau am Stueck stuende dort schon ueber
+    ein Gigabyte, und die Fenster bekaemen eine Zahl, die nichts ueber sie
+    sagt.
+
+    UND MIT `memory_limit=64M`, nicht mit `-1`. Das ist die Z3-Grenze. Eine
+    Messung ohne Deckel sagt, wie viel gebraucht wurde; eine mit Deckel sagt
+    zusaetzlich, dass es reicht — und faellt auf, wenn es das nicht mehr tut.
+    """
+    skript = r'''<?php
+declare(strict_types=1);
+$wurzel = getenv("EDOKU_WURZEL");
+$konto  = getenv("EDOKU_KONTO");
+$fenster = max(1, (int)getenv("EDOKU_FENSTER"));
+require_once $wurzel . "/config.php";
+require_once $wurzel . "/db.php";
+require_once $wurzel . "/backup_lib.php";
+$pdo = db();
+$st = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+$st->execute([$konto]);
+$userId = (int)$st->fetchColumn();
+if (!$userId) { fwrite(STDERR, "Konto $konto nicht gefunden\n"); exit(2); }
+
+$t0 = microtime(true);
+$kopf = edbak_build($userId, true, ["kopf" => true]);
+$gesamt = (int)(json_decode($kopf, true)["eintraege_gesamt"] ?? 0);
+$kopfMb = strlen($kopf) / 1048576;
+unset($kopf);
+
+$groesstes = 0; $summe = 0; $teile = 0;
+for ($ab = 0; $ab < $gesamt; $ab += $fenster) {
+    $t = edbak_build($userId, true, ["ab" => $ab, "anzahl" => $fenster]);
+    $groesstes = max($groesstes, strlen($t));
+    $summe += strlen($t);
+    $teile++;
+    unset($t);
+}
+echo json_encode([
+    "fenster"          => $fenster,
+    "eintraege_gesamt" => $gesamt,
+    "teile"            => $teile,
+    "dauer_s"          => round(microtime(true) - $t0, 2),
+    "kopf_mb"          => round($kopfMb, 2),
+    "groesstes_mb"     => round($groesstes / 1048576, 2),
+    "summe_mb"         => round($summe / 1048576, 2),
+    "spitze_mb"        => round(memory_get_peak_usage(true) / 1048576, 1),
+    "memory_limit"     => ini_get("memory_limit"),
+], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
+'''
+    e = subprocess.run(
+        ["php", "-d", "memory_limit=64M", "-r", skript.replace("<?php\n", "", 1)],
+        capture_output=True, text=True,
+        env={**__import__("os").environ,
+             "EDOKU_WURZEL": str(SERVER), "EDOKU_KONTO": konto,
+             "EDOKU_FENSTER": str(fenster)})
+    if e.returncode != 0:
+        # EIN ABBRUCH IST HIER DAS ERGEBNIS, kein Werkzeugfehler: Er heisst,
+        # dass der Fensterweg das Budget Z3 nicht mehr haelt.
+        return {"fenster": fenster, "fehler": (e.stderr.strip() or e.stdout.strip())[:400],
+                "memory_limit": "64M"}
     return json.loads(e.stdout)
 
 
@@ -259,9 +340,26 @@ def main() -> int:
                   f"(Zielwert E-S2-24 nach Ausdünnung: ≤ 3 MB)")
         print(f"Datenbank gesamt (alle Konten): {gesamt:.1f} MB")
     b = werte["edbak_build"]
-    print(f"edbak_build(): {b['dauer_s']} s, Paket {b['paket_mb']} MB, "
+    print(f"edbak_build() am Stück, MIT Punktlisten (Admin-Sicherung, AP6): "
+          f"{b['dauer_s']} s, Paket {b['paket_mb']} MB, "
           f"Speicherspitze {b['spitze_mb']} MB (Z3-Grenze: 64 MB)"
           + (f" — FEHLER {b['fehler']}" if b["fehler"] else ""))
+
+    # DER WEG, DEN DIE ANWENDUNG SEIT WEB 11.1.0 GEHT — eigener Prozess mit
+    # memory_limit=64M, s. php_fenster_messen(). Ohne diese Zeile las sich das
+    # Protokoll so, als brauche jede Sicherung ein Gigabyte; das gilt nur noch
+    # fuer die Admin-Sicherung.
+    f = php_fenster_messen(a.konto)
+    werte["edbak_fenster"] = f
+    if f.get("fehler"):
+        print(f"edbak_build() in Fenstern: ABGEBROCHEN bei memory_limit=64M "
+              f"— {f['fehler']}")
+    else:
+        print(f"edbak_build() in Fenstern zu {f['fenster']} (Sicherung der "
+              f"NutzerIn, Web 11.1.0): {f['dauer_s']} s, "
+              f"{f['eintraege_gesamt']} Einträge in {f['teile']} Fenstern, "
+              f"Kopf {f['kopf_mb']} MB, größtes Fenster {f['groesstes_mb']} MB, "
+              f"Speicherspitze {f['spitze_mb']} MB von 64")
     w = werte["wartung_vollscan"]
     print(f"Waisen-Vollscan (B-S2-05): {w['dauer_s']} s über die ganze Tabelle, "
           f"{w['waisen']} verwaiste Einsatzpunkte gefunden")

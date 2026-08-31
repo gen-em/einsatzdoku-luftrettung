@@ -154,8 +154,9 @@ heraus) muss der Wert dagegen **wörtlich** stimmen — dafür ist er da.
 ## Drei Läufe, zwei Referenzen (seit S2/AP5)
 
 Seit Web 11.0.0 schreibt die Anwendung **Containerfassung 4** — ein ZIP mit
-versiegelten Teilen. Damit gibt es zwei Fragen statt einer, und deshalb zwei
-Referenzdateien:
+versiegelten Teilen (`manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`,
+`spuren/NNNN.edbak`; seit Web 11.1.0 auch die Einträge in Fenstern). Damit
+gibt es zwei Fragen statt einer, und deshalb zwei Referenzdateien:
 
 | Lauf | Referenz | Frage |
 |---|---|---|
@@ -172,6 +173,24 @@ einziger Spurpunkt ist darunter**; genau das soll der Lauf belegen.
 > **Er fällt mit NaDoku 1.0 weg**, zusammen mit dem Altformat (Backlog
 > Nr. 46). Bis dahin gehört er in jeden Regressionsdurchgang: Solange die
 > Anwendung verspricht, alte Sicherungen zu lesen, muss das jemand nachmessen.
+
+### Die Läufe warten auf die Meldung, nicht auf einen Wortlaut
+
+`kreislauf_edbak.mjs` wartete auf `/fertig|eingespielt|fehlgeschlagen|Fehler|
+falsch/` im Text von `#impstate`. In S2/AP5b kam ein Ergebnis dazu, das keines
+dieser Wörter enthält — „Abgebrochen — es wurde nichts übernommen." —, und der
+Lauf wartete die vollen 300 Sekunden auf einen Zustand, den es schon gab.
+Danach hätte er ein **leeres** Konto exportiert und verglichen.
+
+Die Anwendung unterscheidet selbst: Ein Zwischenstand wird als reiner Text
+gesetzt, ein Ergebnis über `melde(el, text, ton)` als
+`<div class="meldung meldung-ok|warn|fehler">`. Die Werkzeuge warten deshalb
+auf **dieses Element** und lesen seinen Ton; nur `meldung-ok` gilt als
+bestanden. Ein künftiger Ergebnistext, an den hier niemand gedacht hat, wird
+damit von selbst erkannt.
+
+Wer ein neues Prüfmittel schreibt, das auf ein Ergebnis der Oberfläche wartet:
+**auf `.meldung` warten, nicht auf Wörter.**
 
 **Warum zwei Referenzordner und nicht zwei Dateien nebeneinander.**
 `neueste()` verweigert die Arbeit, wenn im Ordner mehr als eine Datei je

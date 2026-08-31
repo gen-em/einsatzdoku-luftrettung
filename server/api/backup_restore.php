@@ -98,9 +98,14 @@ try {
      * Rueckmeldung an die Nutzerin und wird angezeigt; die Karte ist eine
      * Arbeitsangabe fuer den naechsten Schritt des Browsers (Konzept 3.2.4). */
     $karte = $stats['spur_karte'] ?? null;
-    unset($stats['spur_karte']);
+    $tage  = $stats['day_map'] ?? null;
+    unset($stats['spur_karte'], $stats['day_map']);
     $antwort = ['ok' => true, 'stats' => $stats];
     if ($karte !== null) { $antwort['spur_karte'] = $karte ?: new stdClass(); }
+    /* DIE ZUORDNUNG DER DIENSTTAGE (S2/AP5b). Der Kopf einer Fassung-4-Datei
+     * bringt Stammdaten und Diensttage; die Eintraege kommen danach in
+     * eigenen Anfragen und muessen wissen, an welchen Tag sie gehoeren. */
+    if ($tage !== null) { $antwort['day_map'] = $tage ?: new stdClass(); }
     json_out($antwort);
 } catch (Throwable $ex) {
     json_fehler($ex, 'restore');

@@ -213,7 +213,8 @@ Nummern fortlaufend; die Herkunft aus den Konzeptfragen steht in 2.13.
 
 - **E-S2-10 — Containerfassung 4: ein ZIP mit versiegelten Teilen.** Endung
   bleibt `.edbak`. Inhalt: `manifest.edbak`, `kern.edbak`,
-  `spuren/NNNN.edbak`. Jedes Teil ist ein AES-GCM-Container wie bisher
+  `spuren/NNNN.edbak` — *nach AP5b:* `manifest.edbak`, `kopf.edbak`,
+  `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`. Jedes Teil ist ein AES-GCM-Container wie bisher
   (gleiches Salz, gleiche Runden in jedem Teilkopf — **eine** PBKDF2 je
   Vorgang); die GCM-Zusatzdaten (AAD) binden Sicherungskennung, Teilname und
   Teilnummer/Gesamtzahl, damit ein fehlendes, vertauschtes oder fremdes Teil
@@ -433,6 +434,14 @@ ununterscheidbar vom heutigen Verhalten.
   Geschützte Angaben stehen wie bisher **entschlüsselt** im versiegelten
   Kern (E2E-Ablauf unverändert: der Browser entschlüsselt vor dem
   Versiegeln, verschlüsselt beim Einspielen um).
+
+  > **Nachtrag AP5b (31.08.2026).** Dieser eine Kern hat den Betrieb nicht
+  > erlebt. Er ist beim 5000er-Bestand 10,5 MB und ginge auf dem Rückweg als
+  > **ein** POST gegen ein Limit, das niemand kennt (nginx: 1 MB in der
+  > Vorgabe). Er zerfällt deshalb in `kopf.edbak` (Stammdaten, Diensttage,
+  > `eintraege_gesamt`) und `eintraege/NNNN.edbak` (je 250 Einträge). Der
+  > Rest dieses Abschnitts gilt unverändert. Maßgeblich ist ab hier
+  > `docs/Backup-Format.md` 1.
 - `spuren/0001.edbak` … — versiegelt; je Teil eine Liste
   `{spur_ref, blob}` (SPUR1, Base64), chronologisch, an Spurgrenzen
   geschnitten, Ziel ≤ 2 MB Klartext je Teil.
@@ -630,6 +639,15 @@ wird mit verständlicher Meldung abgewiesen (AAD-Prüffall); Sichern und
 Wiederherstellen des 5 000er-Kontos innerhalb der Zielzahlen E-S2-24 unter
 Drossel; `tools/wiederherstellungs-probe/` grün auf beiden Formaten.
 
+**AP5b — Der Kern in Fenstern** (kam bei der Abnahme von AP5 dazu, nicht
+geplant). Der Kern der Fassung 4 ist beim 5000er-Bestand 10,5 MB und ginge
+als **ein** POST zurück; er zerfällt in `kopf.edbak` und
+`eintraege/NNNN.edbak`. Neuer Abrufweg `?teil=`, neuer Rückweg
+`api/backup_eintraege_restore.php`, `unlesbar` im Manifest.
+*Abnahme:* alle drei Kreisläufe **0 unerklärt**; größtes Fenster unter
+0,5 MB gemessen; Serverspitze am Messstand gemessen; die Prüfmittel warten
+auf die Meldung und nicht auf einen Wortlaut.
+
 **AP6 — Admin-Sicherungen und Speicherverwaltung.** Nach 3.3; Grenze,
 Schwellen, Warnmail (E-S2-15), Aufbewahrung 2 je Konto + manuell.
 *Abnahme:* „Alle sichern“ über 20 Messstand-Konten läuft in Schüben mit
@@ -712,6 +730,7 @@ Sammelstelle nach K4; bei Übergabe leer.
 | F-S2-A | Die Prüfmittel sind seit P3/O11 an sechs Stellen kaputt: Einspiellauf (4) und CSV-Kreislauf (2) | behoben in AP0 |
 | F-S2-B | Kontolöschung lässt Spurpunkte als Waisen liegen — der Kommentar behauptet das Gegenteil | behoben in AP1 |
 | F-S2-C | Die Wiederherstellung schneidet Spuren über 2000 Punkten ab; die Uhr darf sie aber beliebig lang aufbauen | behoben in AP1 (F-S2-02) |
+| F-S2-D | Die Rückfrage vor dem Einspielen kam bei Fassung 4 immer — und die Prüfmittel bemerkten den Abbruch nicht | behoben in AP5b |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -882,6 +901,59 @@ Eine halbe Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
 Die Zahl selbst gehört in dieselbe Entscheidung — sie hängt daran, was der
 Blob je Spur tragen soll (`MEDIUMBLOB`, 16 MB, das sind bei 3,56 B/Punkt rund
 4,7 Mio. Punkte; die Grenze wird also nicht vom Format gesetzt).
+
+### F-S2-D — Eine Warnung ohne Anlass, und ein Prüfmittel, das sie nicht sah
+
+**Gefunden** beim Abschluss von AP5b: Der Kreislauf `edbak` lief 300 Sekunden
+und meldete nichts. Zwei Fehler übereinander, und der zweite verdeckte den
+ersten.
+
+**Der erste: eine Warnung, die im Regelfall kommt.** Vor dem Einspielen fragt
+die Anwendung nach, wenn eine Sicherung Einsätze enthält, deren geschützte
+Angaben schon beim *Erstellen* nicht zu entschlüsseln waren — die kommen hier
+ebenfalls unlesbar an. Beim Altformat wird gezählt: `uebernommenFremd > 0`.
+Bei Fassung 4 liegen die Einträge zum Zeitpunkt der Frage noch versiegelt in
+ihren Teilen, und die Frage steht **vor dem ersten Schreiben** und muss dort
+bleiben. Übrig blieb als Bedingung „die Datei stammt aus einem anderen Konto"
+— und das ist der Regelfall des Einspielens.
+
+Wer eine Sicherung aus einem anderen Konto einspielte, bekam also eine
+Warnung vor einem Verlust, der nicht stattfindet: Die Angaben liegen im
+Klartext in der Datei und werden gleich für dieses Konto neu verschlüsselt.
+
+**Behoben,** indem der Erzeuger die Zahl mitschreibt: `unlesbar` im Manifest.
+Er weiß sie — er hat sie beim Sichern gezählt. Fehlt das Feld, wird gefragt;
+„nicht erhoben" ist etwas anderes als „keine".
+
+**Der zweite: das Prüfmittel wartete auf Wörter.** `kreislauf_edbak.mjs`
+brach seine Warteschleife bei `/fertig|eingespielt|fehlgeschlagen|Fehler|
+falsch/` im Text von `#impstate`. Der Abbruchtext lautet „Abgebrochen — es
+wurde nichts übernommen." und enthält keines dieser Wörter. Der Lauf wartete
+deshalb seine vollen 100 Runden zu 3 s ab und ging danach zum Export über —
+**aus einem leeren Konto**. Der Vergleich hätte den Unterschied gemeldet, aber
+erst zwanzig Minuten später und als Datenbefund, nicht als das, was es war.
+
+Dass die Rückfrage überhaupt unbeantwortet blieb, hat einen dritten Grund:
+Beide Rückfragen des Sicherungsbereichs benutzten noch das **native**
+`window.confirm`. Playwright weist native Dialoge stillschweigend ab. Das
+stand zugleich im Widerspruch zur Zusage des Handbuchs („Alle Rückfragen
+erscheinen als Fenster **innerhalb der Seite**") und zum Grund, aus dem es
+`assets/confirm.js` gibt.
+
+**Behoben, dreifach:**
+
+1. Der Abbruch ist jetzt eine Meldung wie jede andere (`melde(…, 'warn')`),
+   kein Fortschrittstext.
+2. Die Prüfmittel warten auf **das Meldungselement** (`#impstate .meldung`)
+   und lesen seinen Ton; nur `meldung-ok` gilt als bestanden. Umgestellt:
+   `kreislauf_edbak.mjs`, `papierkorb_misch.mjs`, `messstand/einspielen.mjs`.
+3. Beide Rückfragen laufen über `window.edConfirm`. Dass nichts eine dritte
+   verhindert, steht als Backlog Nr. 47.
+
+> **Die Lehre ist nicht „diese Wortliste war unvollständig".** Sie war es
+> zweimal, und beim nächsten neuen Meldungstext wäre sie es wieder. Die
+> Anwendung unterscheidet Zwischenstand und Ergebnis bereits im Markup; ein
+> Prüfmittel, das stattdessen Wörter rät, prüft seine eigene Vermutung.
 
 ### F-S2-02 — Was geschieht mit einer Spur über 2000 Punkten? (entschieden, 31.08.2026)
 
@@ -1873,3 +1945,133 @@ nicht zurück.
 - **Echte Hardware** statt CPU-Drossel.
 - **Die Admin-Sicherungen.** Sie schreiben weiter das einteilige Format; das
   ist AP6.
+
+
+### AP5b — Der Kern in Fenstern (erledigt, Web 11.1.0)
+
+AP5 hatte die Punktlisten aus der Nutzlast geholt. Übrig blieb ein
+`kern.edbak`, und der ist beim 5000er-Bestand 10,5 MB — auf dem Rückweg **ein**
+POST gegen `client_max_body_size`, das bei nginx in der Vorgabe auf 1 MB
+steht. Dieses Paket zerlegt auch ihn.
+
+**Der Aufbau.** `kopf.edbak` (Stammdaten, Diensttage, `eintraege_gesamt`) +
+`eintraege/NNNN.edbak` (je 250 Einträge, Einsätze **und** Ruhesegmente in der
+Ordnung, auf die sich `spur_ref` bezieht) + die Spurteile wie bisher. Der
+Abruf bekam `?teil=kopf` und `?teil=eintraege&ab=&anzahl=`, der Rückweg den
+neuen Endpunkt `api/backup_eintraege_restore.php`; `api/backup_restore.php`
+nimmt jetzt den Kopf und liefert die Zuordnung der Diensttage (`day_map`)
+zurück, die der Server bei jedem Fenster **gegen das Konto prüft**, statt sie
+zu glauben.
+
+**Warum 250 und nicht 500.** Gemessen am 10 797-Einträge-Bestand: 500 ergeben
+ein größtes Fenster von 0,87 MB — unter der Grenze, aber ohne Reserve; 250
+ergeben 0,44 MB in 44 Anfragen. Der Endpunkt nimmt höchstens 1000 und weist
+mehr mit 400 ab.
+
+`kern.edbak` gibt es damit nicht mehr. Web 11.0.0 ist nie ausgeliefert worden;
+beide Leser — Browser und `vergleich/lesen.py` — weisen ein `kern`-Teil
+ausdrücklich ab, statt großzügig zu sein. Ein zweiter Leser, der mehr
+akzeptiert als der erste, prüfte ein Format, das es nicht gibt.
+
+#### Was dabei aufgefallen ist (nicht im Umbau)
+
+1. **Eine Warnung ohne Anlass, ein Prüfmittel, das den Abbruch nicht sah, und
+   zwei native `confirm()`** — drei Fehler übereinander, ausführlich als
+   **F-S2-D** in Abschnitt 8. Kurz: Die Rückfrage vor dem Einspielen kam bei
+   Fassung 4 im Regelfall; der Kreislauf verneinte sie stillschweigend und
+   wartete danach 300 s auf Wörter, die es nicht gab. Behoben durch
+   `unlesbar` im Manifest, durch Warten auf **die Meldung** statt auf einen
+   Wortlaut (drei Werkzeuge umgestellt) und durch `window.edConfirm`.
+
+2. **Die Exportschleife zählte nicht nach.** Sie rückt um `FENSTER` weiter,
+   gleichgültig wie viel zurückkam; ein zu kurz geliefertes Fenster hätte
+   Einträge aus der Datei fallen lassen, während die Meldung „Fertig" lautet.
+   Der Browser zählt jetzt nach; die Wiederherstellungsprobe hält Fenstergröße
+   und Endpunktgrenze zusammen.
+
+3. **Die Containerprobe zählte Teilnummern ab.** `spuren/0001.edbak` war
+   Teil 2 — solange vor den Spurteilen genau ein Teil lag. Sie leitet die
+   Nummern jetzt aus der Teileliste ab und hat eine Gegenprobe bekommen: *an
+   seinem richtigen Platz* geht dasselbe Teil auf. Ohne sie belegte jeder
+   Fehlschlag die Bindung.
+
+#### Eine Zahl war falsch weitergetragen worden
+
+In der Begründung dieses Pakets stand zunächst „92 MB gegen ein Budget von
+64". Beim Nachmessen am **tatsächlichen** Stand von Web 11.0.0 (Git-Worktree
+auf `HEAD`) waren es **37,5 MB**: Die 92 MB stammen aus AP5 und beschreiben
+den Stand *vor* den Fenstern der Kindtabellen. Der Umbau ist trotzdem richtig
+— aber wegen des POST und wegen des Wachstums, nicht wegen eines Abbruchs, den
+es nicht gab. Alle Stellen, die die Zahl trugen, sind berichtigt
+(`api/backup_data.php`, `api/backup_eintraege_restore.php`, `version.php`,
+`einstellungen.php`, `Backup-Format.md`).
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Speicher, Kern am Stück | `memory_get_peak_usage(true)` | Demo (187 Einträge) **4,0 MB** · Messstand (10 797) **39,5 MB** |
+| Speicher, in Fenstern zu 250 | dasselbe, `memory_limit=64M` | Demo **4,0 MB** · Messstand **10,0 MB** |
+| Fenstergrößen am Messstand | | Kopf 0,51 MB · 44 Fenster · größtes **0,44 MB** · Summe 9,96 MB |
+| Kreislauf `edbak` (Fassung 4 → frisches Konto → Fassung 4) | `kreislauf.py` | **252 882** Einzelvergleiche, **0** unerklärt, 16 erwartet |
+| Kreislauf `edbak-alt` (Altformat → Fassung 4) | `kreislauf.py` | **287 282** Einzelvergleiche, **0** unerklärt, 560 erwartet |
+| Kreislauf `csv` | `kreislauf.py` | **8 797** Einzelvergleiche, **0** unerklärt, 859 erwartet |
+| Containerprobe (PHP → Chromium → Python) | `probe.mjs` | **32 Erwartungen, 0 offen**; 9 000 Punktvergleiche; **zwei** Eintragsteile |
+| Wiederherstellungsprobe | `php probe.php` | **40 Erwartungen, 0 offen** (vorher 38) |
+| Spurprobe | `php probe.php` | **25 Erwartungen, 0 offen** |
+| Neue Referenzdatei in der endgültigen Aufteilung | `referenz_export.mjs` | 218 735 B · 187 Einträge · 16 Diensttage · 181 Spuren · 48 981 Punkte · 0 Konsolenfehler |
+
+#### Die Abnahme am 5000er-Bestand, in der neuen Aufteilung
+
+Nicht nur die Serverzahlen: der ganze Weg über die Oberfläche, gegen das
+Messstand-Konto (5002 Einsätze, 10 797 Einträge, 2 108 077 Spurpunkte).
+
+**Sichern** (`browserprobe.mjs`, CPU-Drossel 6×):
+
+| | AP0 (Ausgangsmessung) | AP5 (Web 11.0.0) | **AP5b** | Z3 |
+|---|---|---|---|---|
+| Dauer | 109,8 s | 43,6 s | **44,77 s** | ≤ 5 min |
+| Halde im Browser | 508 MB | 58 MB | **45 MB** | ≤ 100 MB |
+| größte JSON-Zeichenkette | 138,25 MB | 9,39 MB | **2,30 MB** | ≤ 10 MB |
+| PBKDF2 je Vorgang | 1 | 1 | **1** | 1 |
+| größte Antwort | — | — | **0,43 MB** | — |
+| Datei | 40,5 MB | 10,42 MB | **10,48 MB** | ≤ 25 MB |
+
+Die größte Zeichenkette fällt noch einmal auf ein Viertel: Sie ist jetzt ein
+Fenster und nicht mehr der ganze Kern. Die Dauer bleibt gleich — 44 statt 43
+Anfragen mehr kosten nichts Messbares.
+
+**Serverseitig** (`serverprobe.py`, beide Wege getrennt gemessen, jeder im
+eigenen Prozess):
+
+| Weg | Dauer | Paket | Spitze |
+|---|---|---|---|
+| `edbak_build()` am Stück, **mit** Punktlisten (Admin-Sicherung, AP6) | 6,95 s | 94,28 MB | **1077,6 MB** |
+| in Fenstern zu 250 (Sicherung der NutzerIn, ab Web 11.1.0) | 1,12 s | Kopf 0,51 MB, größtes Fenster 0,44 MB | **10,0 MB von 64** |
+
+Die zweite Zeile ist neu in der Serverprobe. Ohne sie las sich das Protokoll,
+als brauche jede Sicherung ein Gigabyte — das gilt seit AP5b nur noch für die
+Admin-Sicherung, und genau das ist AP6.
+
+**Einspielen und Rundlauf** (`kreislauf.py` gegen ein frisches Konto):
+
+| Was | Zahl |
+|---|---|
+| Sicherung eingespielt | 5002 Einsätze · 5795 Ruhesegmente · 915 Diensttage · **10 431 Spuren** |
+| erneut gesichert | 10 797 Einträge · 10 431 Spuren mit **2 108 077 Punkten** in **54 Teilen** · 10,5 MB |
+| Vergleich | **10 991 557 Einzelvergleiche, 0 unerklärt, 0 erwartet** |
+| Konsolenfehler | **0** |
+
+54 Teile = 1 Kopf + 44 Eintragsteile + 9 Spurteile. Eine Regel der
+Ausnahmeliste blieb ungenutzt (`days[].refs[].device_id`), und das ist
+richtig: Das Quellkonto ist selbst durch Wiederherstellungen entstanden, seine
+Diensttage tragen deshalb schon keine Gerätekennung mehr.
+
+**Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
+
+- **Ein Fenster, das zu kurz zurückkommt.** Die neue Schranke ist durch Lesen
+  und durch eine Prüfung auf ihr Vorhandensein belegt, nicht durch einen
+  herbeigeführten Fall.
+- **Ein Abbruch mitten in einer Anfrage** — unverändert wie in AP5.
+- **Andere Browser als Chromium**, **echte Hardware** statt CPU-Drossel und
+  **die Admin-Sicherungen** (AP6) — unverändert wie in AP5.

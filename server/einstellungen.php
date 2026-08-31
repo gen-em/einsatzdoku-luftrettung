@@ -1892,88 +1892,122 @@ ui_seite_start(['titel' => 'Einstellungen']);
          * die ausschließlich die Fehlermeldung enthielt. Sie ließe sich
          * öffnen und wäre erst beim Einspielen als leer zu erkennen,
          * möglicherweise Monate später. */
-        const res = await fetch('api/backup_data.php?ohne_spuren=1');
-        if (!res.ok) {
-          let grund = 'HTTP ' + res.status;
-          try { const j = await res.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
-          throw new Error('Die Daten konnten nicht geladen werden (' + grund + '). '
-                        + 'Es wurde KEINE Datei erzeugt.');
+        /* ---- Der Kopf: Stammdaten, Diensttage, die Zahl der Einträge ---- */
+        async function holeTeil(adresse) {
+          const a = await fetch(adresse);
+          if (!a.ok) {
+            let grund = 'HTTP ' + a.status;
+            try { const j = await a.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
+            throw new Error('Die Daten konnten nicht geladen werden (' + grund + '). '
+                          + 'Es wurde KEINE Datei erzeugt.');
+          }
+          return a.json();
         }
-        const data = await res.json();
 
-        /* Eine FEHLENDE Einsatzliste ist kein leerer Bestand, sondern ein
-         * Fehler: Der Server liefert das Feld immer, notfalls als leere
-         * Liste. Fehlt es, stimmt etwas mit der Antwort nicht. */
-        if (!Array.isArray(data.missions)) {
+        const kopf = await holeTeil('api/backup_data.php?teil=kopf');
+        /* Arbeitsfelder gehören nicht in die Datei — hier steht keines, aber
+           die Regel gilt für jeden Teil und nicht nur für die, bei denen man
+           gerade daran denkt. */
+        for (const k of Object.keys(kopf)) { if (k.startsWith('_')) { delete kopf[k]; } }
+        if (!Array.isArray(kopf.days) || typeof kopf.eintraege_gesamt !== 'number') {
           throw new Error('Die Antwort des Servers ist unvollständig. Es wurde KEINE Datei erzeugt.');
         }
-        if (!data.missions.length && !(data.rest_segments || []).length
-            && !(data.days || []).length) {
+        if (!kopf.eintraege_gesamt && !kopf.days.length) {
           melde(expState, 'Es sind keine Daten vorhanden, die gesichert werden könnten. '
                                + 'Es wurde keine Datei erzeugt.', 'fehler');
           return;
         }
 
-        expState.textContent = 'Geschützte Angaben werden entschlüsselt…';
-        /* Entschlüsseln und zählen an EINER Stelle (M6-06, Baustein B8) — was
-         * mit dem Ergebnis geschieht, bleibt Sache dieser Seite, denn hier ist
-         * es etwas anderes als auf einer Anzeigeseite. */
-        const zahl = await EdPat.entschluessleListe(data.missions || [], key);
-        const n = zahl.ok, unlesbar = zahl.unlesbar;
-        for (const m of (data.missions || [])) {
-          if (m._patState === 'ok') {
-            m.pat = m._pat;
-            /* Das Entfernen des Chiffretexts gehört in DIESEN Zweig.
-             *
-             * Vorher stand es hinter dem Fehlerblock und lief deshalb auch im
-             * Fehlerfall: Ein Einsatz, dessen Angaben sich gerade NICHT
-             * entschlüsseln ließen, verlor beim Sichern seinen Chiffretext —
-             * und die Meldung lautete „Fertig". In der Datenbank lägen die
-             * Daten noch und wären mit dem richtigen Schlüssel lesbar; in der
-             * Datei waren sie weg. Wer den Verdacht hat, dass etwas nicht
-             * stimmt, erstellt als Erstes eine Sicherung — genau die Handlung
-             * vollendete den Verlust. */
-            delete m.pat_blob;
-          } else if (m._patState === 'unlesbar') {
-            /* Nicht lesbar: Chiffretext MITNEHMEN statt verwerfen. Die Datei
-             * trägt die Angaben damit weiterhin, nur eben verschlüsselt.
-             * Zurück in dasselbe Konto gespielt, sind sie wieder lesbar. */
-            m.pat_unreadable = true;
-          }
-          // Arbeitsfelder gehören nicht in die Datei — das Format zählt seine
-          // Spalten auf (M5-07), und das gilt auch hier.
-          delete m._pat; delete m._patState; delete m._patFehler;
-        }
+        /* ---- Die Einträge in Fenstern ------------------------------------
+         *
+         * WARUM NICHT AM STÜCK. Der Kern eines 5000er-Bestands ist 10,5 MB.
+         * Auf dem Rückweg wäre das ein POST von 9,4 MB gegen ein Serverlimit,
+         * das niemand kennt — nginx deckelt in der Vorgabe bei 1 MB. Und im
+         * Server kostet der Bau am Stück 39,5 MB von 64 (Z3), wachsend mit
+         * dem Bestand; in Fenstern sind es 10,0 MB. Beides gemessen am
+         * 31.08.2026, die Zahlen stehen in `api/backup_data.php`.
+         *
+         * WARUM ERST ALLE, DANN VERSIEGELN. Die Zusatzdaten jedes Teils
+         * tragen `<nr>/<gesamt>`; die Gesamtzahl steht erst fest, wenn auch
+         * die Zahl der Spurteile bekannt ist — und die hängt an den
+         * Punktzahlen, die in den Fenstern stehen. Die Fenster liegen dabei
+         * als getrennte Zeichenketten vor, keine davon groß: 44 Stück zu
+         * höchstens 0,44 MB statt einer zu 10,5 MB.
+         */
+        /* 250 EINTRÄGE JE FENSTER — die Zahl kommt von der strengsten
+           verbreiteten Servergrenze, nicht aus dem Gefühl.
+           `client_max_body_size` steht bei nginx in der Vorgabe auf **1 MB**,
+           und der Rückweg schickt genau diese Fenster als POST zurück.
+           Gemessen am 5000er-Bestand: 500 Einträge ergeben ein größtes
+           Fenster von 0,87 MB — unter der Grenze, aber ohne Reserve. Bei 250
+           sind es 0,44 MB in 44 Anfragen. */
+        const FENSTER = 250;
+        const eintragsteile = [];
+        const index = [];
+        let n = 0, unlesbar = 0;
 
-        /* ---- Fassung 4: die Spuren in eigene Teile (S2/AP5) --------------
-         *
-         * Der Kern trägt keine Punktlisten mehr, sondern je Spur eine
-         * `spur_ref`. Die Punkte holt dieser Lauf als SPUR1-Blobs und legt
-         * sie in eigene, versiegelte Teile.
-         *
-         * DAS VERZEICHNIS IST EIN ARBEITSFELD. Es trägt die Datenbank­kennungen,
-         * die zum Holen nötig sind — und die in der Datei nichts zu suchen
-         * haben: Sie gelten nur in der Datenbank, aus der die Sicherung
-         * stammt (E9, E15). Es wird deshalb HIER entfernt, vor allem
-         * Weiteren, damit es keinen Weg gibt, auf dem es doch mitwandert. */
-        const index = Array.isArray(data._spur_index) ? data._spur_index : [];
-        delete data._spur_index;
+        for (let ab = 0; ab < kopf.eintraege_gesamt; ab += FENSTER) {
+          expState.textContent = `Einträge werden geladen (${ab} von ${kopf.eintraege_gesamt})…`;
+          const f = await holeTeil('api/backup_data.php?teil=eintraege'
+                                 + '&ab=' + ab + '&anzahl=' + FENSTER);
+          if (!Array.isArray(f.missions) || !Array.isArray(f.rest_segments)) {
+            throw new Error('Die Antwort des Servers ist unvollständig. '
+                          + 'Es wurde KEINE Datei erzeugt.');
+          }
+          /* NACHZÄHLEN, WAS ANGEKOMMEN IST (S2/AP5b).
+             Die Schleife rückt um FENSTER weiter, gleichgültig wie viel
+             zurückkam. Lieferte ein Fenster weniger — aus welchem Grund auch
+             immer —, fehlten diese Einträge in der Sicherung, und die
+             Meldung am Ende lautete trotzdem „Fertig". Der Endpunkt weist
+             eine zu große `anzahl` heute mit 400 ab, statt still zu kürzen;
+             diese Zeile ist die zweite Schranke, die nicht davon abhängt,
+             dass die erste bleibt. */
+          const bekommen = f.missions.length + f.rest_segments.length;
+          const soll = Math.min(FENSTER, kopf.eintraege_gesamt - ab);
+          if (bekommen !== soll) {
+            throw new Error(`Der Server lieferte für das Fenster ab ${ab} `
+              + `${bekommen} statt ${soll} Einträgen. Es wurde KEINE Datei erzeugt.`);
+          }
+
+          /* Entschlüsseln je Fenster — dieselbe Schleife wie bisher (Baustein
+             B8), nur eben stückweise. Damit ist auch dieser Schritt
+             beschränkt und nicht mehr so groß wie der Bestand. */
+          const zahl = await EdPat.entschluessleListe(f.missions, key);
+          n += zahl.ok; unlesbar += zahl.unlesbar;
+          for (const m of f.missions) {
+            if (m._patState === 'ok') {
+              m.pat = m._pat;
+              /* Das Entfernen des Chiffretexts gehört in DIESEN Zweig: Ein
+                 Einsatz, dessen Angaben sich gerade NICHT entschlüsseln
+                 ließen, verlöre beim Sichern sonst seinen Chiffretext — und
+                 die Meldung lautete „Fertig". */
+              delete m.pat_blob;
+            } else if (m._patState === 'unlesbar') {
+              /* Nicht lesbar: Chiffretext MITNEHMEN statt verwerfen. */
+              m.pat_unreadable = true;
+            }
+            delete m._pat; delete m._patState; delete m._patFehler;
+          }
+
+          for (const e of (f._spur_index || [])) { index.push(e); }
+          delete f._spur_index;      // Arbeitsfeld, gehört nicht in die Datei
+          eintragsteile.push(f);
+        }
 
         /* DIE TEILE WERDEN VORHER GEPLANT, nicht unterwegs gebildet.
          *
          * Grund: Die Zusatzdaten jedes Teils tragen `<nr>/<gesamt>` — die
          * Gesamtzahl muss also feststehen, BEVOR das erste Teil versiegelt
-         * wird. Die Punktzahl je Spur steht im Kern; damit lässt sich die
-         * Einteilung ausrechnen, ohne einen einzigen Blob geholt zu haben.
+         * wird. Die Punktzahl je Spur steht in den Einträgen; damit lässt
+         * sich die Einteilung ausrechnen, ohne einen Blob geholt zu haben.
          *
          * Geschnitten wird an SPURGRENZEN: Eine Spur liegt ganz in einem
-         * Teil. Eine über die Grenze gestückelte Spur wäre nur mit beiden
-         * Teilen brauchbar, und dann hätte die Teilung nichts gebracht.
+         * Teil. Eine über die Grenze gestückelte wäre nur mit beiden Teilen
+         * brauchbar, und dann hätte die Teilung nichts gebracht.
          *
          * 250 000 Punkte je Teil: gemessen kostet ein Punkt 3,56 Byte als
          * SPUR1 (S2/AP1), Base64 macht 4,77 daraus — also rund 1,2 MB je
-         * Teil im Regelfall. Selbst eine sehr sprunghafte Spur mit 6 Byte je
-         * Punkt bliebe unter den 2 MB, die das Ziel sind (Konzept 3.2.1). */
+         * Teil im Regelfall. */
         const TEIL_PUNKTE = 250000;
         const teileplan = [];
         let laufend = [], laufendePunkte = 0;
@@ -1985,12 +2019,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
         }
         if (laufend.length) { teileplan.push(laufend); }
 
-        const gesamt = 1 + teileplan.length;          // kern + Spurteile
+        const gesamt = 1 + eintragsteile.length + teileplan.length;
         const kennung = EdCrypto.randomHex(16);
 
-        /* EINE PBKDF2 FÜR ALLE TEILE (E-S2-10). Bei zwölf Teilen wären es
-         * sonst zwölf Ableitungen zu je KDF_ITER Runden — auf einem
-         * gedrosselten Telefon eine knappe Minute reines Warten. */
+        /* EINE PBKDF2 FÜR ALLE TEILE (E-S2-10). Bei zwanzig Teilen wären es
+         * sonst zwanzig Ableitungen zu je KDF_ITER Runden — auf einem
+         * gedrosselten Telefon Minuten reines Warten. */
         expState.textContent = 'Schlüssel wird abgeleitet…';
         const vorgang = await EdCrypto.backupSchluessel(pw, KDF_ITER);
 
@@ -2011,8 +2045,15 @@ ui_seite_start(['titel' => 'Einstellungen']);
           return bytes.length;
         }
 
-        expState.textContent = 'Kern wird verschlüsselt…';
-        await teilAnhaengen('kern.edbak', 'kern', data);
+        expState.textContent = 'Kopf wird verschlüsselt…';
+        await teilAnhaengen('kopf.edbak', 'kopf', kopf);
+        for (const [i, teil] of eintragsteile.entries()) {
+          expState.textContent = `Einträge werden verschlüsselt `
+            + `(Teil ${i + 1} von ${eintragsteile.length})…`;
+          await teilAnhaengen('eintraege/' + String(i + 1).padStart(4, '0') + '.edbak',
+                              'eintraege', teil);
+          eintragsteile[i] = null;     // versiegelt — die Rohform wird nicht mehr gebraucht
+        }
 
         /* Die Blobs holt der Server in Blöcken; 25 Kennungen je Anfrage,
            dieselbe Zahl wie im Export. */
@@ -2079,12 +2120,21 @@ ui_seite_start(['titel' => 'Einstellungen']);
           kennung: kennung,
           erzeugt_am: new Date().toISOString(),
           web_version: WEB_VERSION,
-          nutzlast: data.version,
+          nutzlast: kopf.version,
           teile: teileliste,
+          eintragsteile: eintragsteile.length,
+          eintraege: kopf.eintraege_gesamt,
           spurteile: teileplan.length,
           spuren: spurenGesamt,
           punkte: punkteGesamt,
-          pat_key_check: data.pat_key_check || null,
+          pat_key_check: kopf.pat_key_check || null,
+          /* WIE VIELE EINSAETZE IHRE ANGABEN VERSCHLUESSELT MITBRINGEN
+             (S2/AP5b). Der Erzeuger weiss es — er hat es eben gezaehlt.
+             Der Einspielweg kann es bei Fassung 4 NICHT mehr feststellen,
+             ohne alle Eintragsteile zu oeffnen; ohne diese Zahl muesste er
+             raten und fragte dann auch dann, wenn es nichts zu fragen gibt
+             (F-S2-D). */
+          unlesbar: unlesbar,
         };
         const manifestBytes = await EdCrypto.sealTeilJson(vorgang, manifest,
           EdCrypto.aadManifest());
@@ -2100,12 +2150,11 @@ ui_seite_start(['titel' => 'Einstellungen']);
         URL.revokeObjectURL(url);
 
         const mb = (blob.size / 1048576).toFixed(1).replace('.', ',');
-        melde(expState, `Fertig: ${(data.missions || []).length} Einsätze `
+        melde(expState, `Fertig: ${kopf.eintraege_gesamt} Einträge `
           + `(davon ${n} mit geschützten Angaben), `
-          + `${(data.rest_segments || []).length} Ruhesegmente, `
-          + `${(data.days || []).length} Diensttage, `
+          + `${(kopf.days || []).length} Diensttage, `
           + `${spurenGesamt} Spuren mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
-          + `in ${teileplan.length} ${teileplan.length === 1 ? 'Teil' : 'Teilen'} `
+          + `in ${gesamt} ${gesamt === 1 ? 'Teil' : 'Teilen'} `
           + `— ${mb} MB.`
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
@@ -2239,9 +2288,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
         EdCrypto.aadManifest(), 'Das Manifest der Sicherung');
 
       const teile = manifest.teile || [];
-      if (!teile.length || teile[0].art !== 'kern') {
+      if (!teile.length || teile[0].art !== 'kopf') {
         await leser.close();
-        throw new Error('Das Manifest nennt keinen Kern — die Sicherung ist unvollständig.');
+        throw new Error('Das Manifest nennt keinen Kopf — die Sicherung ist unvollständig.');
       }
       const fehlend = teile.filter(t => !nach.has(t.name)).map(t => t.name);
       if (fehlend.length) {
@@ -2272,6 +2321,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
 
       return {
         manifest, teile, teilOeffnen,
+        eintragsteile: teile.map((t, i) => (t.art === 'eintraege' ? i : -1)).filter(i => i >= 0),
         spurteile: teile.map((t, i) => (t.art === 'spuren' ? i : -1)).filter(i => i >= 0),
         schliessen: () => leser.close(),
       };
@@ -2314,80 +2364,89 @@ ui_seite_start(['titel' => 'Einstellungen']);
         if (art === 'zip') {
           fassung4 = await fassung4Oeffnen(pw, bytes);
           impState.textContent = `Sicherung vom ${(fassung4.manifest.erzeugt_am || '')
-            .slice(0, 10)} mit ${fassung4.spurteile.length} `
-            + `${fassung4.spurteile.length === 1 ? 'Spurteil' : 'Spurteilen'} — `
-            + 'Kern wird geöffnet…';
+            .slice(0, 10)} mit ${fassung4.eintragsteile.length} Eintrags- und `
+            + `${fassung4.spurteile.length} Spurteilen — Kopf wird geöffnet…`;
           data = await fassung4.teilOeffnen(0);
         } else {
           data = await EdCrypto.openBackup(pw, bytes);
         }
 
-        /* HERKUNFT DER DATEI NENNEN (M5-13).
-         *
-         * Der Block `user` steht seit dem ersten Dateiformat in jeder
-         * Sicherung und wurde beim Einspielen nie angesehen. Wer zwei Konten
-         * betreut oder eine Datei aus einer Übergabe bekommt, hatte damit
-         * keine Möglichkeit zu prüfen, ob es die richtige ist — es blieb der
-         * Dateiname, und der sagt nur das Datum.
-         *
-         * Die Angabe wird ANGEZEIGT, nicht abgefragt: Eine Sicherung in ein
-         * fremdes Konto einzuspielen ist ein vorgesehener Vorgang (deshalb
-         * verschlüsselt der Browser die Angaben neu). Eine Rückfrage an
-         * dieser Stelle wäre eine Warnung vor etwas Erlaubtem — und würde
-         * nach dem dritten Mal weggeklickt. Die Rückfrage bleibt dem Fall
-         * vorbehalten, in dem tatsächlich etwas unlesbar bliebe (unten). */
+        /* HERKUNFT DER DATEI NENNEN (M5-13) — sie steht im Kopf, bei beiden
+           Fassungen an derselben Stelle. */
         const herkunftEl = document.getElementById('impherkunft');
-        const fremdesKonto = data.user && data.user.email
-                             && data.user.email !== KONTO_MAIL;
-        herkunftEl.hidden = false;
-        if (data.user && (data.user.email || data.user.name)) {
-          const wer = data.user.name
-            ? `${data.user.name} (${data.user.email || 'ohne Adresse'})`
-            : data.user.email;
-          const wann = data.created_at ? new Date(data.created_at) : null;
-          const wannText = (wann && !isNaN(wann.getTime()))
-            ? ` vom ${wann.toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE',
-                  { hour: '2-digit', minute: '2-digit' })} Uhr`
-            : '';
-          herkunftEl.textContent = `Sicherung${wannText} aus dem Konto ${wer}.`
-            + (fremdesKonto
-                ? ` Das ist NICHT das angemeldete Konto (${KONTO_MAIL}) — `
-                  + `die geschützten Angaben werden dabei für dieses Konto neu verschlüsselt.`
-                : '');
-        } else {
-          herkunftEl.textContent = 'Die Datei nennt kein Herkunftskonto.';
+        if (herkunftEl) {
+          if (data.user && (data.user.email || data.user.name)) {
+            const wer = data.user.name
+              ? `${data.user.name} (${data.user.email || 'ohne Adresse'})`
+              : data.user.email;
+            const wann = data.created_at ? new Date(data.created_at) : null;
+            const zeit = wann && !isNaN(wann)
+              ? ` vom ${wann.toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE',
+                  { hour: '2-digit', minute: '2-digit' })} Uhr` : '';
+            const fremd = data.user.email && data.user.email !== KONTO_MAIL;
+            herkunftEl.textContent = `Sicherung${zeit} aus dem Konto ${wer}.`
+              + (fremd ? ` Das ist NICHT das angemeldete Konto (${KONTO_MAIL}) — die `
+                       + 'geschützten Angaben werden dabei für dieses Konto neu '
+                       + 'verschlüsselt.' : '');
+            herkunftEl.hidden = false;
+          } else {
+            herkunftEl.hidden = true;
+          }
         }
 
-        impState.textContent = 'Angaben werden für dieses Konto verschlüsselt…';
-
-        /* DREI FÄLLE, und sie müssen auseinandergehalten werden:
-         *
-         *  1. `pat` vorhanden  → beim Sichern lesbar gewesen; für DIESES Konto
-         *     neu verschlüsseln. Deshalb lässt sich eine Sicherung überhaupt
-         *     in ein fremdes Konto einspielen.
-         *  2. `pat_blob` vorhanden, `pat` nicht → beim Sichern NICHT lesbar
-         *     gewesen. Der Chiffretext ist unverändert mitgeführt (seit Web
-         *     4.1.0). Er bleibt, wie er ist — umschlüsseln geht nicht, wir
-         *     haben den Klartext nie gesehen.
-         *  3. weder noch → keine geschützten Angaben.
-         *
-         * Für Fall 2 entscheidet die Prüfsumme, ob die Angaben hier lesbar
-         * sein werden: Stammt die Datei aus DIESEM Konto, sind sie es. Sonst
-         * werden sie übernommen und bleiben unlesbar — das ist immer noch
-         * besser, als sie wegzuwerfen, aber es muss dabeistehen. */
-        let uebernommen = 0, uebernommenFremd = 0;
         const gleichesKonto = PAT_KEY_CHECK != null && data.pat_key_check != null
                               && PAT_KEY_CHECK === data.pat_key_check;
-        for (const m of (data.missions || [])) {
-          if (m.pat && Object.keys(m.pat).length) {
-            m.pat_blob = await EdCrypto.encrypt(key, JSON.stringify(m.pat));
-          } else if (m.pat_blob) {
-            if (gleichesKonto) { uebernommen++; } else { uebernommenFremd++; }
+        let uebernommen = 0, uebernommenFremd = 0;
+
+        /* Geschützte Angaben für DIESES Konto neu verschlüsseln. Bei Fassung 4
+           geschieht das je Eintragsteil (unten); beim Altformat hier, weil
+           dort alles in einer Nutzlast steht. */
+        async function patUmschluesseln(liste) {
+          for (const m of (liste || [])) {
+            if (m.pat && Object.keys(m.pat).length) {
+              m.pat_blob = await EdCrypto.encrypt(key, JSON.stringify(m.pat));
+            } else if (m.pat_blob) {
+              if (gleichesKonto) { uebernommen++; } else { uebernommenFremd++; }
+            }
+            delete m.pat;
+            delete m.pat_unreadable;
           }
-          delete m.pat;
-          delete m.pat_unreadable;
         }
-        if (uebernommenFremd) {
+
+        /* DIE RÜCKFRAGE STEHT VOR DEM ERSTEN SCHREIBEN. Bei Fassung 4 sind die
+           Einsätze noch nicht geöffnet; gefragt wird deshalb anhand der
+           Prüfsumme im Kopf, die genau dafür da ist. Beim Altformat bleibt es
+           bei der gezählten Zahl. */
+        if (!fassung4) { await patUmschluesseln(data.missions); }
+        /* NUR FRAGEN, WENN ES ETWAS ZU FRAGEN GIBT (S2/AP5b, F-S2-D).
+         *
+         * Betroffen sind allein Einsätze, deren geschützte Angaben beim
+         * SICHERN nicht zu entschlüsseln waren und deshalb als Chiffretext in
+         * der Datei liegen — nur die kommen hier unlesbar an. Alle anderen
+         * tragen Klartext und werden gleich für dieses Konto neu
+         * verschlüsselt; bei ihnen geht nichts verloren.
+         *
+         * Beim Altformat wird gezählt, die Einsätze liegen ja vor. Bei
+         * Fassung 4 sind sie zum Zeitpunkt der Frage noch versiegelt — die
+         * Frage steht aber vor dem ersten Schreiben und muss dort bleiben.
+         * Die Zahl kommt deshalb aus dem Manifest.
+         *
+         * WAS DIESE ZEILEN GEKOSTET HABEN: Bis hierher stand hier nur „aus
+         * einem anderen Konto". Das ist bei Fassung 4 der REGELFALL des
+         * Einspielens, und die Rückfrage kam damit bei jeder fremden
+         * Sicherung — auch bei einer, in der jeder Einsatz seine Angaben im
+         * Klartext mitbringt. Der Kreislauftest lief 300 Sekunden ins Leere,
+         * weil sein Browser die Frage verneinte; ein Mensch hätte eine
+         * Warnung vor einem Verlust gelesen, der nicht stattfindet.
+         *
+         * Fehlt die Zahl (Fassung-4-Datei aus einem Stand vor AP5b), wird
+         * gefragt: „nicht erhoben" ist etwas anderes als „keine".
+         */
+        const unlesbarLaut = fassung4 ? fassung4.manifest.unlesbar : undefined;
+        const fremdeAngaben = fassung4
+          ? (!gleichesKonto && (unlesbarLaut === undefined || unlesbarLaut > 0))
+          : uebernommenFremd > 0;
+        if (fremdeAngaben) {
           // Die Prüfsumme sagt, OB die Angaben hier lesbar wären; der
           // user-Block sagt, WOHER sie kommen. Beides gehört in dieselbe
           // Rückfrage, sonst muss man es sich zusammensuchen (M5-13).
@@ -2397,16 +2456,26 @@ ui_seite_start(['titel' => 'Einstellungen']);
             ? 'Die Datei nennt keine Schlüssel-Prüfsumme (vor Web 4.1.1 erstellt), '
               + 'die Zuordnung ist daher unbekannt.'
             : 'Die Datei stammt aus einem anderen Konto.';
-          if (!confirm(`${uebernommenFremd} Einsätze enthalten geschützte Angaben, die `
-              + `beim Erstellen der Sicherung nicht entschlüsselt werden konnten. `
-              + `${w}${woher} Diese Angaben werden übernommen, sind hier aber `
-              + `voraussichtlich NICHT lesbar. Trotzdem fortfahren?`)) {
-            impState.textContent = 'Abgebrochen — es wurde nichts übernommen.';
+          /* `window.edConfirm` statt `confirm` (S2/AP5b). Der native Dialog
+             lässt sich im Browser dauerhaft abschalten („keine weiteren
+             Dialoge dieser Seite anzeigen") — genau das war der Grund, aus
+             dem es confirm.js überhaupt gibt. Diese beiden Stellen im
+             Sicherungsbereich waren die letzten, die daran vorbeigingen. */
+          if (!await window.edConfirm(
+              `Einsätze dieser Sicherung können geschützte Angaben enthalten, `
+              + `die beim Erstellen nicht entschlüsselt werden konnten. `
+              + `${w}${woher} Solche Angaben werden übernommen, sind hier aber `
+              + `voraussichtlich NICHT lesbar. Trotzdem fortfahren?`,
+              'Trotzdem einspielen', 'normal', 'Geschützte Angaben')) {
+            /* ALS MELDUNG, NICHT ALS ZWISCHENSTAND (S2/AP5b). Ein Abbruch
+               ist ein Ergebnis. Solange er wie ein Fortschrittstext aussah,
+               konnte kein Prüfmittel ihn vom Weiterlaufen unterscheiden. */
+            melde(impState, 'Abgebrochen — es wurde nichts übernommen.', 'warn');
             return;
           }
         }
 
-        impState.textContent = 'Daten werden übertragen…';
+        impState.textContent = fassung4 ? 'Kopf wird übertragen…' : 'Daten werden übertragen…';
         const res = await fetch('api/backup_restore.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
@@ -2416,37 +2485,72 @@ ui_seite_start(['titel' => 'Einstellungen']);
         if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
         const s = out.stats;
 
-        /* ---- Die Spuren hinterher (S2/AP5, Konzept 3.2.4) ---------------
+        /* ---- Die Einträge in Fenstern (S2/AP5b) -------------------------
          *
-         * Der Kern liegt; der Server hat gesagt, unter welcher Kennung jede
-         * `spur_ref` angelegt wurde. Jetzt gehen die Blobs zurück, in
-         * Häppchen von höchstens 1,5 MB — die Grenze ist der POST (Z3), und
-         * sie wird hier eingehalten und nicht am Server erhofft.
+         * Der Kopf hat die Diensttage angelegt und sagt, unter welcher
+         * Kennung. Die Zuordnung geht mit jedem Fenster zurück an den Server;
+         * der prüft sie gegen das Konto, statt sie zu glauben.
+         *
+         * DIE ZAHLEN WERDEN AUFADDIERT. `restoreBericht()` bekommt am Ende
+         * eine Summe über alle Fenster — sonst meldete die Anwendung die
+         * Zahlen des letzten Fensters als Ergebnis des Ganzen. */
+        const spurKarte = Object.assign({}, out.spur_karte || {});
+        if (fassung4 && fassung4.eintragsteile.length) {
+          const dayMap = out.day_map || {};
+          for (const [i, ti] of fassung4.eintragsteile.entries()) {
+            impState.textContent = `Einträge werden übertragen `
+              + `(Teil ${i + 1} von ${fassung4.eintragsteile.length})…`;
+            const teil = await fassung4.teilOeffnen(ti);
+            await patUmschluesseln(teil.missions);
+            const a = await fetch('api/backup_eintraege_restore.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+              body: JSON.stringify({ eintraege: teil, day_map: dayMap }),
+            });
+            const o = await a.json();
+            if (!o.ok) {
+              throw new Error('Die Einträge konnten nicht übertragen werden ('
+                + (o.meldung || o.hinweis || o.error || 'HTTP ' + a.status) + '). '
+                + 'Was bis hierher übertragen wurde, ist eingespielt.');
+            }
+            /* Summieren, nicht überschreiben. */
+            for (const k of ['missions', 'missions_skipped', 'rests', 'rests_skipped',
+                             'stammdaten', 'stammdaten_skipped', 'days']) {
+              s[k] = (s[k] || 0) + (o.stats[k] || 0);
+            }
+            for (const k of Object.keys(o.stats.papierkorb || {})) {
+              s.papierkorb[k] = (s.papierkorb[k] || 0) + o.stats.papierkorb[k];
+            }
+            for (const [g, z] of Object.entries(o.stats.skipped_reasons || {})) {
+              s.skipped_reasons = s.skipped_reasons || {};
+              s.skipped_reasons[g] = (s.skipped_reasons[g] || 0) + z;
+            }
+            Object.assign(spurKarte, o.spur_karte || {});
+          }
+        }
+
+        /* ---- Die Spuren hinterher (Konzept 3.2.4) ------------------------
          *
          * WAS SCHIEFGEHEN KANN UND GEMELDET WIRD: eine `spur_ref`, zu der es
-         * keinen angelegten Datensatz gibt (dann wurde der Einsatz beim
-         * Einspielen übersprungen — er war schon da), und eine Spur, die der
-         * Server ablehnt. Beides ist kein Abbruch, aber beides gehört in die
-         * Rückmeldung: Eine Wiederherstellung, die eine Spur still verliert,
-         * ist genau das, wovor eine Sicherung schützen soll. */
+         * keinen Datensatz gibt, und eine Spur, die der Server ablehnt.
+         * Beides ist kein Abbruch, aber beides gehört in die Rückmeldung:
+         * Eine Wiederherstellung, die eine Spur still verliert, ist genau
+         * das, wovor eine Sicherung schützen soll. */
         let spurenGeschrieben = 0, spurenUebersprungen = 0;
         const spurenAbgelehnt = [];
         let ohneZiel = 0;
         if (fassung4 && fassung4.spurteile.length) {
-          const karte = out.spur_karte || {};
           /* ZWEI GRENZEN, NICHT EINE. Die Größe deckelt der POST (Z3: 2 MB);
              die ANZAHL deckelt der Endpunkt (BACKUP_SPUREN_RESTORE_MAX in
              api/backup_spuren_restore.php), weil je Spur Arbeit anfällt.
              Der erste Entwurf kannte nur die Größe — und scheiterte bei der
              Abnahme am 5000er-Bestand: Kurze Ruhespuren sind so klein, dass
-             in 1,5 MB weit mehr als 500 passen. Die Meldung war richtig
-             („Höchstens 500 Spuren je Anfrage"), das Bündeln war falsch.
+             in einem Häppchen weit mehr als 500 passen. Die Größe liegt bei
+             800 kB, also unter nginx' Vorgabe von 1 MB.
 
              DIE ZAHL STEHT AN ZWEI ORTEN, und das ist bekannt: hier und im
-             Endpunkt. `tools/wiederherstellungs-probe/` hält sie zusammen —
-             sie prüft, dass genau BACKUP_SPUREN_RESTORE_MAX durchgeht und
-             eins mehr abgewiesen wird. */
-          const HAPPEN = 1.5 * 1024 * 1024;
+             Endpunkt. `tools/wiederherstellungs-probe/` hält sie zusammen. */
+          const HAPPEN = 800 * 1024;      // unter nginx' Vorgabe von 1 MB
           const HAPPEN_ZAHL = 500;
           for (const [i, teilIndex] of fassung4.spurteile.entries()) {
             impState.textContent = `Spuren werden übertragen `
@@ -2474,7 +2578,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
               happen = []; groesse = 0;
             };
             for (const e of (teil.spuren || [])) {
-              const ziel = karte[String(e.spur_ref)];
+              const ziel = spurKarte[String(e.spur_ref)];
               if (!ziel) { ohneZiel++; continue; }
               const blob = String(e.blob || '');
               if (groesse + blob.length > HAPPEN || happen.length >= HAPPEN_ZAHL) {
@@ -2486,8 +2590,8 @@ ui_seite_start(['titel' => 'Einstellungen']);
             }
             await senden();
           }
-          await fassung4.schliessen();
         }
+        if (fassung4) { await fassung4.schliessen(); }
 
         const spurText = fassung4
           ? ` ${spurenGeschrieben} Spuren übernommen`
@@ -2619,10 +2723,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
               unlesbar++;
             }
           }
-          if (unlesbar && !confirm(`${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
+          if (unlesbar && !await window.edConfirm(
+              `${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
               + `nicht öffnen. Ihre geschützten Angaben bleiben hier unlesbar. `
-              + `Trotzdem einspielen?`)) {
-            fgState.textContent = 'Abgebrochen — es wurde nichts eingespielt.';
+              + `Trotzdem einspielen?`,
+              'Trotzdem einspielen', 'normal', 'Geschützte Angaben')) {
+            melde(fgState, 'Abgebrochen — es wurde nichts eingespielt.', 'warn');
             return;
           }
           fgState.textContent = `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`;

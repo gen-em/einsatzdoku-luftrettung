@@ -66,8 +66,15 @@ console.log(`  Prueffutter aus spur_lib.php: ${futter.spuren.length} Spuren `
 const ordner = mkdtempSync(join(tmpdir(), 'containerprobe-'));
 const browser = await chromium.launch();
 
+/* Auch gegen die HTTPS-Fassung der oertlichen Installation, deren Zeugnis
+   selbst ausgestellt ist. Ohne diese Zeile brach die Probe dort mit
+   ERR_CERT_AUTHORITY_INVALID ab — und man haelt das erst einmal fuer einen
+   Fehler der Anwendung. Nur fuer 127.0.0.1/localhost; fuer eine fremde
+   Adresse bleibt die Pruefung scharf. */
+const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
 try {
-  const seite = await browser.newPage();
+  const kontext = await browser.newContext({ ignoreHTTPSErrors: lokal });
+  const seite = await kontext.newPage();
   /* Auf der echten Installation und nicht auf about:blank: `crypto.subtle`
      gibt es nur in einem sicheren Kontext, und die Skripte sollen so geladen
      werden, wie die Anwendung sie laedt. */
@@ -93,20 +100,38 @@ try {
     berichte.ableitung_ms = Math.round(performance.now() - t0);
     const kennung = EdCrypto.randomHex(16);
 
-    /* Der Kern: die Nutzlast ohne Punktlisten, je Spur nur ihr Verweis. */
-    const kern = {
+    /* Der Kopf: die Nutzlast OHNE Eintraege und ohne Punktlisten. */
+    const kopf = {
       format: 'einsatzdoku-backup', version: 8, app: 'einsatzdoku-notarzt',
       created_at: '2026-08-31T12:00:00+00:00',
       user: { email: 'probe@gen-em.org', name: 'Containerprobe' },
-      missions: futter.spuren.slice(0, 4).map((s, i) => ({
-        client_ref: 'probe-m' + i, started_at: '2026-03-01T06:00:00',
-        spur_ref: s.spur_ref, stufe: s.stufe, n_original: s.n_original, n: s.n,
-      })),
-      rest_segments: futter.spuren.slice(4).map((s, i) => ({
-        client_ref: 'probe-r' + i, started_at: '2026-03-01T08:00:00',
-        spur_ref: s.spur_ref, stufe: s.stufe, n_original: s.n_original, n: s.n,
-      })),
     };
+
+    /* ZWEI EINTRAGSTEILE, nicht eins. Der Leser haengt die Fenster in der
+       Reihenfolge des Manifests aneinander; mit nur einem Teil ist diese
+       Zusage nicht geprueft, sondern nur nicht verletzt. Geschnitten wird
+       hier zwischen Einsaetzen und Ruhesegmenten — im Ernstfall laeuft der
+       Schnitt quer durch beide, und genau das bildet Teil 2 ab: Es traegt
+       den Rest der Einsaetze UND die Ruhesegmente. */
+    const eintragsteile = [
+      {
+        missions: futter.spuren.slice(0, 2).map((s, i) => ({
+          client_ref: 'probe-m' + i, started_at: '2026-03-01T06:00:00',
+          spur_ref: s.spur_ref, stufe: s.stufe, n_original: s.n_original, n: s.n,
+        })),
+        rest_segments: [],
+      },
+      {
+        missions: futter.spuren.slice(2, 4).map((s, i) => ({
+          client_ref: 'probe-m' + (i + 2), started_at: '2026-03-01T06:00:00',
+          spur_ref: s.spur_ref, stufe: s.stufe, n_original: s.n_original, n: s.n,
+        })),
+        rest_segments: futter.spuren.slice(4).map((s, i) => ({
+          client_ref: 'probe-r' + i, started_at: '2026-03-01T08:00:00',
+          spur_ref: s.spur_ref, stufe: s.stufe, n_original: s.n_original, n: s.n,
+        })),
+      },
+    ];
 
     /* Zwei Spurteile, damit „vertauscht" ueberhaupt einen Fall hat. */
     const spurteile = [
@@ -117,14 +142,23 @@ try {
     const teile = [];
     const rohe = {};
     let nr = 1;
-    const gesamt = 1 + spurteile.length;
+    const gesamt = 1 + eintragsteile.length + spurteile.length;
 
-    const kernBytes = await EdCrypto.sealTeilJson(vorgang, kern,
-      EdCrypto.aadTeil(kennung, 'kern.edbak', nr, gesamt));
-    teile.push({ name: 'kern.edbak', art: 'kern',
-                 sha256: await EdCrypto.sha256Hex(kernBytes) });
-    rohe['kern.edbak'] = kernBytes;
+    const kopfBytes = await EdCrypto.sealTeilJson(vorgang, kopf,
+      EdCrypto.aadTeil(kennung, 'kopf.edbak', nr, gesamt));
+    teile.push({ name: 'kopf.edbak', art: 'kopf',
+                 sha256: await EdCrypto.sha256Hex(kopfBytes) });
+    rohe['kopf.edbak'] = kopfBytes;
     nr++;
+
+    for (const [i, t] of eintragsteile.entries()) {
+      const name = 'eintraege/' + String(i + 1).padStart(4, '0') + '.edbak';
+      const b = await EdCrypto.sealTeilJson(vorgang, t,
+        EdCrypto.aadTeil(kennung, name, nr, gesamt));
+      teile.push({ name, art: 'eintraege', sha256: await EdCrypto.sha256Hex(b) });
+      rohe[name] = b;
+      nr++;
+    }
 
     for (const [i, t] of spurteile.entries()) {
       const name = 'spuren/' + String(i + 1).padStart(4, '0') + '.edbak';
@@ -137,16 +171,17 @@ try {
 
     const manifest = {
       format: 'einsatzdoku-backup-manifest', fassung: 4, kennung,
-      erzeugt_am: '2026-08-31T12:00:00+00:00', web_version: '11.0.0',
-      teile, spurteile: spurteile.length, pat_key_check: null,
+      erzeugt_am: '2026-08-31T12:00:00+00:00', web_version: '11.1.0',
+      teile, eintragsteile: eintragsteile.length,
+      spurteile: spurteile.length, pat_key_check: null, unlesbar: 0,
     };
     const manifestBytes = await EdCrypto.sealTeilJson(vorgang, manifest,
       EdCrypto.aadManifest());
 
     /* ---- Rundlauf im Browser selbst ---- */
-    const kernZurueck = await EdCrypto.openTeilJson(vorgang, kernBytes,
-      EdCrypto.aadTeil(kennung, 'kern.edbak', 1, gesamt), 'Der Kern');
-    berichte.rundlauf_kern = JSON.stringify(kernZurueck) === JSON.stringify(kern);
+    const kopfZurueck = await EdCrypto.openTeilJson(vorgang, kopfBytes,
+      EdCrypto.aadTeil(kennung, 'kopf.edbak', 1, gesamt), 'Der Kopf');
+    berichte.rundlauf_kern = JSON.stringify(kopfZurueck) === JSON.stringify(kopf);
 
     /* ---- Alle Teile tragen dasselbe Salz und dieselbe Rundenzahl ---- */
     const koepfe = [manifestBytes, ...Object.values(rohe)].map(b => EdCrypto.teilKopf(b));
@@ -160,33 +195,44 @@ try {
       try { await fn(); return null; } catch (e) { return e.message; }
     }
     const nameA = 'spuren/0001.edbak', nameB = 'spuren/0002.edbak';
+    /* DIE NUMMERN WERDEN ABGELEITET, NICHT ABGEZAEHLT. Hier standen 2 und 3;
+       das stimmte, solange vor den Spurteilen genau EIN Teil lag. Seit der
+       Kopf und die Eintragsteile davorstehen, waere es falsch — und zwar
+       ausgerechnet so, dass die Probe weiter gruen bliebe: Wer eine falsche
+       Nummer einsetzt, bekommt ja gerade den erwarteten Fehlschlag. */
+    const nrVon = (name) => teile.findIndex(t => t.name === name) + 1;
+    const nrA = nrVon(nameA), nrB = nrVon(nameB);
     berichte.vertauscht = await scheitert(() => EdCrypto.openTeilJson(
-      vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameB, 3, gesamt), 'Ein Spurteil'));
+      vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameB, nrB, gesamt), 'Ein Spurteil'));
     berichte.falsche_nummer = await scheitert(() => EdCrypto.openTeilJson(
-      vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameA, 3, gesamt), 'Ein Spurteil'));
+      vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameA, nrA + 1, gesamt), 'Ein Spurteil'));
+    /* Gegenprobe zu beiden: MIT dem richtigen Platz geht dasselbe Teil auf.
+       Ohne sie belegte ein Fehlschlag aus irgendeinem Grund die Bindung. */
+    berichte.richtiger_platz = await scheitert(() => EdCrypto.openTeilJson(
+      vorgang, rohe[nameA], EdCrypto.aadTeil(kennung, nameA, nrA, gesamt), 'Ein Spurteil'));
 
     /* Ein Teil aus einer ZWEITEN Sicherung — dasselbe Passwort, andere
        Kennung. Ohne die Bindung ginge es klaglos auf. */
     const vorgang2 = await EdCrypto.backupSchluessel(pw, runden, vorgang.salt);
     const kennung2 = EdCrypto.randomHex(16);
     const fremdBytes = await EdCrypto.sealTeilJson(vorgang2, spurteile[0],
-      EdCrypto.aadTeil(kennung2, nameA, 2, gesamt));
+      EdCrypto.aadTeil(kennung2, nameA, nrA, gesamt));
     berichte.fremd = await scheitert(() => EdCrypto.openTeilJson(
-      vorgang, fremdBytes, EdCrypto.aadTeil(kennung, nameA, 2, gesamt), 'Ein Spurteil'));
+      vorgang, fremdBytes, EdCrypto.aadTeil(kennung, nameA, nrA, gesamt), 'Ein Spurteil'));
     /* Gegenprobe: MIT seiner eigenen Kennung geht dasselbe Teil auf — der
        Unterschied liegt also wirklich an der Bindung und nicht am Schluessel. */
     berichte.fremd_mit_eigener_kennung = await scheitert(() => EdCrypto.openTeilJson(
-      vorgang, fremdBytes, EdCrypto.aadTeil(kennung2, nameA, 2, gesamt), 'Ein Spurteil'));
+      vorgang, fremdBytes, EdCrypto.aadTeil(kennung2, nameA, nrA, gesamt), 'Ein Spurteil'));
 
     const verbogen = rohe[nameA].slice();
     verbogen[verbogen.length - 20] ^= 0x01;
     berichte.verfaelscht = await scheitert(() => EdCrypto.openTeilJson(
-      vorgang, verbogen, EdCrypto.aadTeil(kennung, nameA, 2, gesamt), 'Ein Spurteil'));
+      vorgang, verbogen, EdCrypto.aadTeil(kennung, nameA, nrA, gesamt), 'Ein Spurteil'));
 
     berichte.falsches_passwort = await scheitert(async () => {
       const v = await EdCrypto.backupSchluessel('etwas ganz anderes', runden, vorgang.salt);
       return EdCrypto.openTeilJson(v, rohe[nameA],
-        EdCrypto.aadTeil(kennung, nameA, 2, gesamt), 'Ein Spurteil');
+        EdCrypto.aadTeil(kennung, nameA, nrA, gesamt), 'Ein Spurteil');
     });
 
     /* ---- Base64 fuer grosse Bytefolgen ---- */
@@ -219,12 +265,12 @@ try {
 
     /* ---- Formaterkennung ---- */
     berichte.art_zip  = EdCrypto.dateiArt(zipBytes);
-    berichte.art_teil = EdCrypto.dateiArt(kernBytes);
+    berichte.art_teil = EdCrypto.dateiArt(kopfBytes);
     berichte.art_alt  = EdCrypto.dateiArt(await EdCrypto.sealBackup(pw, '{"a":1}', runden));
     berichte.art_fremd = EdCrypto.dateiArt(te.encode('irgendein anderer Dateiinhalt hier'));
     berichte.ist_backup_zip  = EdCrypto.isBackupFile(zipBytes);
-    berichte.ist_backup_teil = EdCrypto.isBackupFile(kernBytes);
-    berichte.teil_als_datei = await scheitert(() => EdCrypto.openBackup(pw, kernBytes));
+    berichte.ist_backup_teil = EdCrypto.isBackupFile(kopfBytes);
+    berichte.teil_als_datei = await scheitert(() => EdCrypto.openBackup(pw, kopfBytes));
 
     return { berichte, kennung, manifest,
              zipB64: EdCrypto.toB64Gross(zipBytes),
@@ -240,6 +286,9 @@ try {
   pruefe(!!b.vertauscht, 'Ein VERTAUSCHTES Teil wird abgewiesen',
          (b.vertauscht || '').slice(0, 46) + '…');
   pruefe(!!b.falsche_nummer, 'Dasselbe Teil unter falscher Nummer wird abgewiesen');
+  pruefe(b.richtiger_platz === null,
+         'Gegenprobe: an seinem richtigen Platz geht dasselbe Teil auf',
+         'sonst belegte jeder Fehlschlag die Bindung');
   pruefe(!!b.fremd, 'Ein Teil aus einer FREMDEN Sicherung wird abgewiesen');
   pruefe(b.fremd_mit_eigener_kennung === null,
          'Gegenprobe: mit seiner eigenen Kennung geht es auf',

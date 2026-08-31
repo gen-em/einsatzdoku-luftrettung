@@ -20,7 +20,7 @@ versiegelten Teilen. Die einteiligen Fassungen 2 und 3 werden weiterhin
 
 ---
 
-## 1. Container, Fassung 4 (seit Web 11.0.0)
+## 1. Container, Fassung 4 (seit Web 11.1.0)
 
 ### 1.1 Warum mehrteilig
 
@@ -34,6 +34,26 @@ Fassung 4 zerlegt sie deshalb. **Gemessen** am Referenzbestand (87 Einsätze,
 100 Ruhesegmente, 48 981 Spurpunkte): 218 KB statt 739 KB, also 70 % weniger,
 bei gleichem Inhalt.
 
+**In zwei Schritten, und der zweite steht hier.** Web 11.0.0 holte die
+Punktlisten aus der Nutzlast heraus; übrig blieb ein `kern.edbak`, der beim
+5000er-Bestand selbst 10,5 MB wog. Das ist auf dem Rückweg ein POST von
+9,4 MB gegen ein Limit, das niemand kennt — nginx nimmt in der Vorgabe 1 MB —
+und im Server ein Bau von 39,5 MB gegen ein Budget von 64. Web 11.1.0 zerlegt
+deshalb auch ihn, in einen Kopf und Eintragsfenster. **`kern.edbak` gibt es
+nicht mehr**; eine solche Datei wird beim Öffnen mit Namen abgewiesen. Sie
+kann nur im Werkstattbestand liegen — Web 11.0.0 ist nie ausgeliefert worden.
+
+**Gemessen** am 31.08.2026 (`memory_get_peak_usage(true)`, PHP-CLI):
+
+| Bestand | Kern am Stück | in Fenstern zu 250 |
+|---|---|---|
+| Demo, 187 Einträge | 0,18 MB Text, **4,0 MB** Spitze | 0,17 MB größtes Fenster, **4,0 MB** |
+| Messstand, 10 797 Einträge | 10,47 MB Text, **39,5 MB** Spitze | 0,44 MB größtes Fenster, **10,0 MB** |
+
+Am Stück wächst die Spitze mit dem Bestand — rund 3,3 kB je Eintrag, aus den
+zwei Messpunkten fortgeschrieben; 64 MB wären bei etwa 18 000 Einträgen
+erreicht. In Fenstern wächst sie kaum: Was bleibt, ist die Kennungsliste.
+
 ### 1.2 Aufbau
 
 Ein ZIP, **gespeichert und nicht gepackt** (`level: 0`) — die Teile sind
@@ -43,8 +63,21 @@ nichts:
 | Eintrag | Inhalt |
 |---|---|
 | `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit, Web-Version |
-| `kern.edbak` | die Nutzlast (Abschnitt 2) **ohne** Punktlisten |
-| `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 2 MB |
+| `kopf.edbak` | Stammdaten, Diensttage, `eintraege_gesamt` — die Nutzlast (Abschnitt 2) **ohne** Einträge |
+| `eintraege/0001.edbak`, `eintraege/0002.edbak`, … | je 250 Einträge (Einsätze **und** Ruhesegmente) **ohne** Punktlisten |
+| `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 250 000 Punkte |
+
+**Warum 250 Einträge je Fenster.** Die Zahl kommt von der strengsten
+verbreiteten Servergrenze, nicht aus dem Gefühl: `client_max_body_size` steht
+bei nginx in der Vorgabe auf 1 MB, und der Rückweg schickt genau diese Fenster
+als POST zurück. **Gemessen** am 5000er-Bestand: bei 500 Einträgen ist das
+größte Fenster 0,87 MB — unter der Grenze, aber ohne Reserve; bei 250 sind es
+**0,44 MB** in 44 Anfragen.
+
+**Die Reihenfolge der Einträge ist die Ordnung, auf die sich `spur_ref`
+bezieht** (Abschnitt 2): erst alle Einsätze, dann alle Ruhesegmente, jeweils
+nach Kennung. Ein Fenster ist ein Ausschnitt daraus, kein eigener Zähler —
+deshalb bleibt `spur_ref` über alle Fenster hinweg eindeutig.
 
 Das Manifest steht **physisch zuletzt** im Archiv: Es kennt erst dann alle
 Prüfsummen. Gelesen wird ohnehin nach Namen, nicht nach Reihenfolge.
@@ -57,16 +90,43 @@ Das Manifest im Klartext:
   "fassung": 4,
   "kennung": "9f3c…",              // 16 Byte Zufall, hex — bindet die Teile
   "erzeugt_am": "2026-08-31T12:00:00.000Z",
-  "web_version": "11.0.0",
-  "nutzlast": 8,                   // Fassung des Kerns, s. Abschnitt 2
+  "web_version": "11.1.0",
+  "nutzlast": 8,                   // Fassung der Nutzlast, s. Abschnitt 2
   "teile": [
-    { "name": "kern.edbak",        "art": "kern",   "sha256": "…" },
-    { "name": "spuren/0001.edbak", "art": "spuren", "sha256": "…" }
+    { "name": "kopf.edbak",          "art": "kopf",      "sha256": "…" },
+    { "name": "eintraege/0001.edbak","art": "eintraege", "sha256": "…" },
+    { "name": "spuren/0001.edbak",   "art": "spuren",    "sha256": "…" }
   ],
+  "eintragsteile": 1,
+  "eintraege": 187,                // Einsätze und Ruhesegmente zusammen
   "spurteile": 1,
   "spuren": 181,                   // wie viele Spuren die Datei trägt
   "punkte": 48981,                 // und wie viele Punkte darin stecken
-  "pat_key_check": "3f2a…"         // wie bisher, s. Abschnitt 2
+  "pat_key_check": "3f2a…",        // wie bisher, s. Abschnitt 2
+  "unlesbar": 0                    // s. unten
+}
+```
+
+**Die Reihenfolge in `teile` ist die Reihenfolge der Nummerierung** in den
+Zusatzdaten (Abschnitt 1.4): Teil 1 ist `kopf.edbak`, dann die Eintragsteile,
+dann die Spurteile. Der erste Eintrag **muss** `art: "kopf"` sein; eine Datei,
+die damit nicht anfängt, wird abgewiesen.
+
+**`unlesbar`** zählt die Einsätze, deren geschützte Angaben beim *Sichern*
+nicht zu entschlüsseln waren und deshalb als Chiffretext in der Datei liegen.
+Nur die kommen beim Einspielen unlesbar an; alle anderen tragen Klartext und
+werden für das Zielkonto neu verschlüsselt. Der Einspielweg warnt anhand
+dieser Zahl — er kann sie nicht selbst ermitteln, ohne alle Eintragsteile zu
+öffnen, und die Warnung steht vor dem ersten Schreiben. **Fehlt das Feld**
+(Datei aus einem Stand vor Web 11.1.0), wird gewarnt: „nicht erhoben" ist
+etwas anderes als „keine".
+
+Ein Eintragsteil im Klartext:
+
+```jsonc
+{
+  "missions": [ /* … wie in Abschnitt 2, ohne "track" */ ],
+  "rest_segments": [ /* … */ ]
 }
 ```
 

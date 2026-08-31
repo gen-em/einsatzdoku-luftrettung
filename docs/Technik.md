@@ -128,8 +128,10 @@ Daten erst nach Server-Bestätigung.
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php ·
-│   │                      backup_data.php (Kern, mit `?ohne_spuren=1` ohne
-│   │                      Punktlisten) · backup_restore.php ·
+│   │                      backup_data.php (`?teil=kopf` und
+│   │                      `?teil=eintraege&ab=&anzahl=`, ohne Parameter die
+│   │                      volle Nutzlast) · backup_restore.php (der Kopf) ·
+│   │                      backup_eintraege_restore.php (ein Eintragsfenster) ·
 │   │                      backup_spuren.php und backup_spuren_restore.php
 │   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
@@ -614,21 +616,39 @@ bleibt unverändert. Denselben Weg nutzt auch `install.php`: Der Installer legt
 den Administrator **ohne** Passwort an und zeigt auf der Erfolgsseite den
 Einmal-Link.
 
-**Backup (portabel):** `api/backup_data.php?ohne_spuren=1` liefert den **Kern** —
-alle Daten der NutzerIn ohne Punktlisten, geschützte Angaben weiterhin als
-Chiffretext. Der Browser entschlüsselt sie mit dem Inhaltsschlüssel, ersetzt
+**Backup (portabel):** Der Browser holt den Bestand in Stücken:
+`api/backup_data.php?teil=kopf` gibt Stammdaten, Diensttage und die Zahl der
+Einträge, `?teil=eintraege&ab=…&anzahl=250` dann Fenster von Einsätzen und
+Ruhesegmenten — ohne Punktlisten, geschützte Angaben weiterhin als
+Chiffretext. Er entschlüsselt sie je Fenster mit dem Inhaltsschlüssel, ersetzt
 sie durch Klartext, holt die Spuren blockweise als SPUR1-Blobs
 (`api/backup_spuren.php`, 25 Kennungen je Anfrage) und schreibt daraus ein ZIP
-mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.0.0): Manifest,
-Kern, Spurteile. Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
+mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.1.0):
+`manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`.
+Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
 Sicherungskennung, Teilname und Nummer, und abgeleitet wird **einmal je
 Vorgang**.
 
-Beim Einspielen öffnet der Browser Manifest und Kern, verschlüsselt die
-Angaben mit dem Schlüssel des **Zielkontos** neu und schickt den Kern an
-`api/backup_restore.php`; der Server antwortet mit der Zuordnung
-`spur_ref` → angelegter Datensatz. Danach gehen die Blobs an
+**Warum 250 Einträge je Fenster:** Der Rückweg schickt genau diese Fenster als
+POST zurück, und `client_max_body_size` steht bei nginx in der Vorgabe auf
+1 MB. Gemessen am 10 797-Einträge-Bestand: 250 ergeben 0,44 MB je Fenster in
+44 Anfragen, 500 ergäben 0,87 MB. Der Abrufendpunkt nimmt höchstens 1000 je
+Anfrage und weist mehr mit 400 ab; der Browser zählt zusätzlich nach, wie
+viele ein Fenster gebracht hat.
+
+Beim Einspielen öffnet der Browser Manifest und Kopf, schickt den Kopf an
+`api/backup_restore.php` und bekommt die Zuordnung der Diensttage zurück
+(`day_map`). Dann gehen die Eintragsfenster an
+`api/backup_eintraege_restore.php` — die Angaben vorher mit dem Schlüssel des
+**Zielkontos** neu verschlüsselt —, und der Server antwortet je Fenster mit
+der Zuordnung `spur_ref` → angelegter Datensatz. Zuletzt gehen die Blobs an
 `api/backup_spuren_restore.php` — geprüft, und Vorhandenes übersprungen.
+
+**Die Warnung vor unlesbaren Angaben steht vor dem ersten Schreiben.** Ob es
+etwas zu warnen gibt, kann der Einspielweg bei Fassung 4 nicht mehr selbst
+sehen: Die Einträge liegen zu diesem Zeitpunkt versiegelt in ihren Teilen. Das
+Manifest trägt deshalb `unlesbar` — die Zahl der Einsätze, deren geschützte
+Angaben beim *Sichern* nicht zu entschlüsseln waren. Fehlt sie, wird gewarnt.
 
 Dadurch sind Backups zwischen Konten übertragbar; der Server sieht nie
 Klartext. Die einteiligen Fassungen 2 und 3 werden weiterhin **gelesen** und

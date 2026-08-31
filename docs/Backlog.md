@@ -325,9 +325,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4 und AP5.*
-    P-P3-03 verlangt null. Die Prüfung meldet **189** Treffer (bei Aufnahme
-    158); 186 davon sind Kommentare oder richtige Typografie (die
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5 und
+    AP5b.* P-P3-03 verlangt null. Die Prüfung meldet **192** Treffer (bei
+    Aufnahme 158); 189 davon sind Kommentare oder richtige Typografie (die
     Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
     das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
     bei der Aufnahme:
@@ -336,8 +336,10 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
     > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
     > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
-    > auf 174 (`?art=…&id=…` allein zählt viermal) und S2/AP5 mit den
-    > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189.
+    > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
+    > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189
+    > und S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 —
+    > gemessen gegen den Stand von Web 11.0.0, nicht geschätzt.
     > Wer die Zahl als
     > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
     > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
@@ -424,6 +426,33 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
     Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
     konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
+47. **Nichts hält das native `confirm()` draußen.**
+    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
+    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
+    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
+    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
+    **innerhalb der Seite**."
+
+    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Sicherungsbereich
+    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
+    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
+    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
+    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
+
+    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
+    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
+    — mit Ausnahmeliste für die eine berechtigte Stelle (`confirm.js` selbst
+    benutzt `window.confirm` als Rückfall für Browser ohne `<dialog>`).
+
+    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
+    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
+    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
+    > — also genau dann, wenn niemand hinsieht.
+
+    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
+    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
+    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
+    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
 
 ---
 

@@ -1332,18 +1332,19 @@ jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
 
 **Seit Web 11.0.0 ist die Datei innen mehrteilig.** An der Bedienung ändert
 das nichts — eine Datei, ein Passwort, ein Knopf. Innen liegen jetzt aber ein
-Verzeichnis, ein Kern und die Spuren in eigenen, einzeln verschlüsselten
-Teilen. Der Grund ist die Menge: Bei ein paar tausend Einsätzen sind die
-Spurpunkte der weitaus größte Teil, und in einem Stück brachten sie ältere
-Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt statt ausgeschrieben —
-gemessen am Beispielbestand **218 KB statt 739 KB**, also 70 % weniger.
+Verzeichnis, ein Kopf, die Einträge in Fenstern und die Spuren in eigenen,
+einzeln verschlüsselten Teilen. Der Grund ist die Menge: Bei ein paar tausend
+Einsätzen sind die Spurpunkte der weitaus größte Teil, und in einem Stück
+brachten sie ältere Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt
+statt ausgeschrieben — gemessen am Beispielbestand **218 KB statt 739 KB**,
+also 70 % weniger.
 
 Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
-die Teile mit („Spuren werden geholt (Teil 2 von 5) …"), und die
-Abschlussmeldung nennt Spuren und Punkte.
+die Teile mit („Einträge werden übertragen (Teil 2 von 5) …"), und die
+Abschlussmeldung nennt Einträge, Spuren und Punkte.
 
 **Ältere Sicherungen kannst du weiterhin einspielen.** Umgekehrt gilt das
-nicht: Eine Datei aus Web 11.0.0 lässt sich in einer älteren Installation
+nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
 nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
 Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
 entpackt hast), sagt die Anwendung auch das.
@@ -1360,6 +1361,14 @@ Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
 Schlüssel des Zielkontos neu verschlüsselt.
+
+**Eine Rückfrage vor dem Einspielen — aber nur, wenn es etwas zu fragen gibt.**
+Enthält eine Sicherung Einsätze, deren geschützte Angaben schon beim
+*Erstellen* nicht zu entschlüsseln waren, kommen sie hier ebenfalls unlesbar
+an; davor warnt die Anwendung und fragt nach. Bis Web 11.1.0 kam die Frage
+bei jeder Datei aus einem anderen Konto — also fast immer, und meistens ohne
+Anlass, weil die Angaben ganz normal mitkommen. Jetzt steht die Zahl in der
+Datei, und gefragt wird nur, wenn sie größer als null ist.
 
 Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
