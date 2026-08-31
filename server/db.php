@@ -715,119 +715,30 @@ const RESUS_LABELS = [
  * zwei gleichzeitige Anfragen beide aufraeumen; das ist der teurere Fehler.
  */
 function run_cleanup_if_due(): void {
+    /* SEIT WEB 10.1.0 IST DAS NUR NOCH DER DRITTE AUSLOESER (E-S2-17).
+     *
+     * Die Arbeit steht in `jobs_lib.php` und laeuft in HAEPPCHEN mit
+     * Zeitbudget. Der Grund ist gemessen: Die alte Waisenpruefung war ein
+     * Anti-Join ueber die ganze Tabelle und kostete bei 9,46 Mio. Zeilen
+     * **4,07 Sekunden** — in genau dieser Anfrage. Bei der Zielmenge Z2
+     * (190 Mio. Zeilen) waeren es Minuten, und die erste Nutzerin des Tages
+     * saehe eine haengende Seite, ohne zu erfahren, warum.
+     *
+     * WARUM ES DIESEN WEG WEITERHIN GIBT. Eine frisch aufgesetzte
+     * Installation hat weder Cron noch eingerichteten Abruf. Ohne den
+     * Rueckfall stuende sie still — der Papierkorb bliebe voll, die
+     * Kopplungscodes ewig gueltig. Wer einen der beiden anderen Ausloeser
+     * eingerichtet hat, merkt diesen hier nicht: Dann ist nichts mehr zu tun,
+     * und der Aufruf kostet zwei Abfragen.
+     *
+     * STILL GEGENUEBER DER ANFRAGE, wie bisher. Die Wartung darf keine Seite
+     * kaputtmachen; was scheitert, steht im Fehlerprotokoll UND seit AP2 in
+     * der Tabelle `jobs`, wo die Wartungsseite es zeigt.
+     */
     try {
-        $pdo = db();
-        $today = (new DateTime('now'))->format('Y-m-d');
-        $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute(['last_cleanup']);
-        if ($st->fetchColumn() === $today) { return; }
-
-        // Marke zuerst setzen: verhindert Doppel-Laeufe paralleler Anfragen
-        $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                       ON DUPLICATE KEY UPDATE v = VALUES(v)')
-            ->execute(['last_cleanup', $today]);
+        require_once __DIR__ . '/jobs_lib.php';
+        jobs_lauf('anfrage');
     } catch (Throwable $ex) {
-        // Schon der Anlauf scheitert (Datenbank weg?). Nichts weiter zu tun —
-        // die Marke steht dann auch nicht, der naechste Aufruf versucht es neu.
-        error_log('cleanup: Anlauf fehlgeschlagen: ' . $ex->getMessage());
-        return;
-    }
-
-    /* ---- Die einzelnen Schritte, jeder fuer sich ------------------------- */
-    $schritte = [
-        /* SEIT S2 ZWEI TABELLEN. `track_blobs` ist wie `track_points`
-         * polymorph und traegt deshalb ebenfalls keinen Fremdschluessel; was
-         * die Loeschwege nicht ausdruecklich mitnehmen, bleibt hier liegen.
-         * Die Loeschwege tun es seit AP1 (spur_loeschen) — dieser Schritt ist
-         * das Sicherheitsnetz, nicht der Hauptweg (E-S2-18, F-S2-B). */
-        'verwaiste Spurpunkte (Einsaetze)' => function (PDO $pdo): void {
-            $pdo->exec("DELETE tp FROM track_points tp
-                        LEFT JOIN missions m ON m.id = tp.owner_id
-                        WHERE tp.owner_type = 'mission' AND m.id IS NULL");
-        },
-        'verwaiste Spurpunkte (Ruhesegmente)' => function (PDO $pdo): void {
-            $pdo->exec("DELETE tp FROM track_points tp
-                        LEFT JOIN rest_segments r ON r.id = tp.owner_id
-                        WHERE tp.owner_type = 'rest' AND r.id IS NULL");
-        },
-        'verwaiste Spur-Blobs (Einsaetze)' => function (PDO $pdo): void {
-            $pdo->exec("DELETE tb FROM track_blobs tb
-                        LEFT JOIN missions m ON m.id = tb.owner_id
-                        WHERE tb.owner_type = 'mission' AND m.id IS NULL");
-        },
-        'verwaiste Spur-Blobs (Ruhesegmente)' => function (PDO $pdo): void {
-            $pdo->exec("DELETE tb FROM track_blobs tb
-                        LEFT JOIN rest_segments r ON r.id = tb.owner_id
-                        WHERE tb.owner_type = 'rest' AND r.id IS NULL");
-        },
-        'Kopplungscodes' => function (PDO $pdo): void {
-            $pdo->exec("DELETE FROM pair_codes
-                        WHERE used_at IS NOT NULL
-                           OR created_at < DATE_SUB(NOW(), INTERVAL " . PAIR_TTL_MIN . " MINUTE)");
-        },
-        'Sperrliste geloeschter Kennungen' => function (PDO $pdo): void {
-            $pdo->exec("DELETE FROM deleted_refs
-                        WHERE deleted_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
-        },
-        'Ratenschutz-Zaehler' => function (PDO $pdo): void {
-            // Ein Tag Nachlauf, damit auch der laengste Beobachtungszeitraum
-            // (1 h) sicher abgeschlossen ist.
-            $pdo->exec("DELETE FROM rate_limits
-                        WHERE fenster_start < DATE_SUB(NOW(), INTERVAL 1 DAY)
-                          AND (gesperrt_bis IS NULL OR gesperrt_bis < NOW())");
-        },
-        'Papierkorb' => function (PDO $pdo): void {
-            require_once __DIR__ . '/trash_lib.php';
-            trash_purge_expired($pdo);
-        },
-        'Passwort-Tokens' => function (PDO $pdo): void {
-            $pdo->exec("DELETE FROM password_resets
-                        WHERE used_at IS NOT NULL
-                           OR expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)");
-        },
-        /* ---- Erinnerung an die Administration (E-P3-41, seit Web 9.10.0) --
-         *
-         * DER EINZIGE ZEITGEBER, DEN DIESE INSTALLATION HAT, IST DIESER JOB.
-         * Es laeuft kein Cron; was regelmaessig geschehen soll, muss hier
-         * mitfahren. Der Schritt PLANT nur — verschickt wird nach der Antwort
-         * (register_shutdown_function in adminbackup_lib.php), weil ein
-         * SMTP-Gespraech an dieser Stelle die Seite verzoegern wuerde, auf der
-         * es gerade huckepack sitzt.
-         *
-         * Er steht als letzter Schritt: Was er tut, ist kein Aufraeumen, und
-         * wenn er scheitert, soll wenigstens alles davor gelaufen sein. Wie
-         * jeder Schritt zaehlt ein Fehler hier in `$fehler` und verhindert die
-         * Erfolgsmarke — eine Erinnerung, die dauerhaft nicht zustande kommt,
-         * ist ein Befund und soll auf der Wartungsseite auffallen. */
-        'Erinnerung an die Administration' => function (PDO $pdo): void {
-            require_once __DIR__ . '/adminbackup_lib.php';
-            edbak_erinnerung_planen();
-        },
-    ];
-
-    $fehler = 0;
-    foreach ($schritte as $name => $schritt) {
-        try {
-            $schritt($pdo);
-        } catch (Throwable $ex) {
-            $fehler++;
-            // Still gegenueber der Anfrage, aber nachlesbar. Ohne diese Zeile
-            // war ein dauerhaft scheiternder Aufraeumjob von einem laufenden
-            // nicht zu unterscheiden.
-            error_log('cleanup: Schritt "' . $name . '" fehlgeschlagen: ' . $ex->getMessage());
-        }
-    }
-
-    /* Nur ein vollstaendig durchgelaufener Tag wird als solcher vermerkt.
-     * Der Unterschied zwischen diesem Wert und last_cleanup ist die Antwort
-     * auf "laeuft die Wartung eigentlich noch?" — sie steht in update.php. */
-    if ($fehler === 0) {
-        try {
-            $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
-                           ON DUPLICATE KEY UPDATE v = VALUES(v)')
-                ->execute(['last_cleanup_ok', $today]);
-        } catch (Throwable $ex) {
-            error_log('cleanup: Erfolgsmarke nicht schreibbar: ' . $ex->getMessage());
-        }
+        error_log('cleanup: Job-Einstieg fehlgeschlagen: ' . $ex->getMessage());
     }
 }

@@ -37,7 +37,8 @@ Daten erst nach Server-Bestätigung.
 │                          Pruefung-Sofortpaket-22 (Prüfdokument zu Nr. 22)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
-│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
+│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),
+│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
 │   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
@@ -86,6 +87,12 @@ Daten erst nach Server-Bestätigung.
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
 │   ├── pair.php           Uhr-Kopplung per Code
+│   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
+│   │                       die `track_points`/`track_blobs` anfasst (4.97)
+│   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
+│   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
+│   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
@@ -172,6 +179,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── jobprobe/          prüft den Job-Rahmen (S2/AP2): dass alle drei
+│   │                      Auslöser denselben Rückstand abtragen, dass die
+│   │                      gemeldete Zahl stimmt, dass die Sperre greift und
+│   │                      verfällt, und dass der Huckepack-Weg wenig und
+│   │                      selten trägt. Legt eigene Waisen an und räumt hinter
+│   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
 │   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
@@ -258,14 +271,14 @@ Daten erst nach Server-Bestätigung.
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
+| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
-| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen. **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
-| `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Aufräumjob ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
+| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
+| `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel (`kind` = `air`/`ground`, dazu `vehicle_roles` und `vehicle_capabilities`) und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0. **Jeder Eintrag gehört genau einem Standort** (`base_id`, E15) — es gibt keine standortübergreifenden Stammdaten. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
 | `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
@@ -278,11 +291,12 @@ Daten erst nach Server-Bestätigung.
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
-| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
+| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; der Job `aufraeumen` entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
-| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
+| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -1297,8 +1311,8 @@ den Standard, und genau das soll die Anmeldeseite zeigen.
 Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit Web
 8.0.0 führt sie den Papierkorb und spielt ihn als Papierkorb zurück
 (`docs/Backup-Format.md` 2 und 3). `trash_lib.php` bündelt Umfangsermittlung,
-weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
-`db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
+weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Job
+`aufraeumen` (`jobs_lib.php`) räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
 Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
 sie hängen am Tag und kehren mit ihm zurück.
 
@@ -1512,29 +1526,7 @@ Pflichtangaben werden beim Rückimport **nach** der Parserkette geprüft: Das
 Füllzeichen `-` ist beim Einlesen nicht leer, wird aber zu `null` — die Prüfung
 vor der Kette sieht das nicht.
 
-**Aufräumjob:** `run_cleanup_if_due()` (db.php) läuft max. 1×/Tag, huckepack
-auf `auth_guard.php` (Web) und `ingest.php` (Uhr) — kein Cron nötig. Marke
-`last_cleanup` wird *vor* dem Lauf gesetzt (verhindert Parallel-Läufe);
-entsorgt Trackpunkt-Waisen, alte Reset-Tokens, abgelaufene Kopplungscodes,
-Ratenschutz-Zähler, Einträge der Sperrliste und endgültig fällige
-Papierkorb-Einträge; scheitert **gegenüber der Anfrage** still (Wartung darf
-keine Anfrage brechen).
-
-Seit Web 4.5.1 hat jeder der sieben Schritte einen **eigenen** Fehlerblock, und
-Fehler gehen ins Fehlerprotokoll des Webspace (Suchwort `cleanup:`). Vorher
-teilten sich alle Schritte einen Block: Scheiterte einer, entfielen alle
-folgenden — und weil die Marke bereits stand, lief an diesem Tag nichts mehr.
-Am nächsten Tag scheiterte es an derselben Stelle wieder. Am spürbarsten beim
-Papierkorb, der als vorletzter Schritt stand.
-
-Die Marke bleibt bewusst *vor* der Arbeit. Sie danach zu setzen hieße, dass
-zwei gleichzeitige Anfragen beide aufräumen; das ist der teurere Fehler.
-
-Eine zweite Marke `last_cleanup_ok` hält fest, wann zuletzt ein Lauf
-**vollständig** durchging. `update.php` zeigt beide an — weichen sie
-voneinander ab, scheitert dauerhaft ein Schritt. Ohne diese Auskunft ist ein
-kaputter Aufräumjob von einem laufenden nicht zu unterscheiden, bis irgendwann
-auffällt, dass der Papierkorb seit Monaten nicht geleert wurde.
+**Hintergrundjobs:** siehe Abschnitt 4.97a.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
@@ -1813,6 +1805,160 @@ vierfache Reserve. Beim Zurückspielen war dieselbe Zahl dagegen ein
 Datenverlust: Was die Uhr über viele Anfragen aufbauen darf, wurde bei 2000
 gekappt — die Datei trug die ganze Spur, zurück kam ihr Anfang. Eine halbe
 Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
+
+---
+
+### 4.97a Hintergrundjobs: drei Auslöser, ein Katalog (ab Web 10.1.0, S2)
+
+Diese Anwendung hat bewusst **keinen Cron als Voraussetzung**: Sie soll auf
+einfachem Webspace laufen, und dort gibt es oft keinen. Der einzige Zeitgeber
+war bis Web 10.0.0 `run_cleanup_if_due()` — huckepack auf der Anfrage der
+ersten Nutzerin des Tages. Das trug, solange die Arbeit klein war.
+
+Mit S2 bleibt sie das nicht. Schon die damalige Waisenprüfung war ein
+Anti-Join über die ganze Spurtabelle und kostete gemessen **4,07 s bei
+9,46 Mio. Zeilen** — in genau der Anfrage, die jemand gerade gestellt hatte.
+Bei der Zielmenge Z2 (190 Mio. Zeilen) wären es Minuten.
+
+Deshalb ein Rahmen: `server/jobs_lib.php` (Katalog und Ausführung),
+`server/jobs.php` (Einstieg), Tabelle `jobs` (Zustand).
+
+#### Die drei Auslöser (E-S2-17)
+
+**Einer genügt.** Eingerichtet werden muss keiner — dann läuft die Arbeit
+weiter huckepack mit. Die Wartungsseite (`update.php`) zeigt alle drei mit
+fertigem Befehl bzw. fertiger Adresse.
+
+| Auslöser | Aufruf | Zeitbudget je Lauf | gedacht für |
+|---|---|---|---|
+| `cli` | `* * * * * php …/server/jobs.php` | `JOB_BUDGET_CLI` = 300 s | der **empfohlene** Regelfall |
+| `token` | `https://…/jobs.php?token=…` | `JOB_BUDGET_TOKEN` = 20 s | Hoster ohne CLI-Cron, aber mit „Cronjob per URL" |
+| `anfrage` | `auth_guard.php` → `run_cleanup_if_due()` | `JOB_BUDGET_ANFRAGE` = 3 s | Rückfall, immer eingeschaltet |
+
+Die Budgets sind kein Geschmack: 300 s, weil auf der Kommandozeile niemand
+wartet und meist keine Laufzeitgrenze gilt; 20 s, weil das unter der
+`max_execution_time` liegt, die geteilter Webspace üblicherweise setzt
+(dieselbe Überlegung wie bei „Alle sichern"); 3 s, weil eine Seite, die
+zwanzig Sekunden braucht, weil sie nebenbei aufräumt, kaputt ist — auch wenn
+kein Zeitlimit greift.
+
+Am Huckepack-Weg gilt zusätzlich ein **Mindestabstand** von
+`JOB_ANFRAGE_PAUSE_S` = 5 Minuten je Job. Ohne ihn liefe ein nicht-täglicher
+Job bei *jeder* angemeldeten Anfrage, und jede Seite trüge bis zu drei
+Sekunden Wartung mit. Für `cli` und `token` gilt er nicht: Dort bestimmt der
+Zeitplan die Häufigkeit, und wer jede Minute aufruft, will das auch.
+
+`jobs.php` lädt **ausdrücklich nicht** `auth_guard.php`. Der würde den
+Huckepack-Weg auslösen und damit den Job aus dem Job heraus starten. Der Abruf
+über die Adresse legitimiert sich mit dem Token, nicht mit einer Sitzung — ein
+Zeitplandienst hat keine.
+
+#### Das Token
+
+32 Byte Zufall, hex, in `app_state` unter `jobs_token`; erzeugt beim ersten
+Lesen. **Nicht** in `config.php`: Die Anwendung schreibt diese Datei genau
+einmal, bei der Einrichtung; sie danach anzufassen hieße, auf jedem Webspace
+Schreibrecht auf die eigene Konfiguration zu brauchen — und
+Bestandsinstallationen hätten kein Token, ohne dass jemand sähe, warum.
+
+Wer das Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
+Daten lesen noch schreiben. `jobs.php` prüft es mit `hash_equals`, hinter dem
+Ratenschutz-Topf `pair` (zehn Fehlversuche in zehn Minuten), und gleicht die
+Antwortzeit mit `rate_gleiche_dauer()` an — „Token gibt es gar nicht" darf
+nicht schneller kommen als „Token ist falsch". Gemessen: **403 / 403 / 200**
+für kein, falsches und richtiges Token, die beiden 403 in je **0,351 s**.
+
+**Der Ratenschutz zählt je IP, und das hat eine Folge, die man kennen sollte:**
+Nach zehn Fehlversuchen von derselben Adresse antwortet der Endpunkt zehn
+Minuten lang `429` — auch auf den *richtigen* Aufruf. Wer einen
+Zeitplan-Eintrag mit falschem Token stehen hat, sperrt damit seinen eigenen
+Zeitplan aus; nach dem Berichtigen dauert es zehn Minuten, bis er wieder
+greift. Das ist gewollt: Die Alternative wäre ein Endpunkt, an dem sich ein
+Token ungebremst durchprobieren lässt. Auf der Wartungsseite gibt es
+„Neues Token erzeugen"; das alte wird damit ungültig, und ein bestehender
+Zeitplan-Eintrag läuft danach ins Leere. Der Hinweis steht am Knopf.
+
+#### Häppchen, Zustand, Sperre
+
+Jeder Job bekommt `$zeitLinks()` und hört auf, wenn das Budget zu Ende ist.
+Wo er stehengeblieben ist, merkt er sich als JSON in `jobs.zustand`. Der
+nächste Lauf — gleich welcher Auslöser — macht dort weiter.
+
+Die **Sperre** gegen zwei gleichzeitige Läufe ist ein bedingtes `UPDATE`, nicht
+`SELECT`-dann-`UPDATE`: Letzteres hätte ein Zeitfenster, in dem zwei Anfragen
+beide zu dem Schluss kommen, sie dürften. `laeuft_seit` ist bewusst ein
+**Zeitstempel und kein Flag** — ein Lauf, der mitten im Häppchen abstürzt
+(Speichergrenze, Zeitablauf, abgebrochene Verbindung), ließe ein Flag für immer
+stehen, und der Job liefe nie wieder, stillschweigend. Nach
+`JOB_SPERRE_VERFALL_S` = 1 h gilt eine Sperre als verwaist.
+
+#### Der Katalog
+
+| Job | täglich? | was er tut |
+|---|---|---|
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | Kopplungscodes, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
+| `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
+
+Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
+scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
+bleibt). Der Unterschied ist, dass das Ergebnis jetzt in `jobs` landet und
+nicht nur im Fehlerprotokoll des Webspace.
+
+**AP3 hängt hier Verdichtung und Ausdünnung ein.** Der Rahmen kennt sie nicht;
+er kennt nur diesen Katalog.
+
+#### Die Waisensuche läuft bereichsweise (E-S2-18)
+
+Statt eines Anti-Joins über alles wandert eine Marke über den Primärschlüssel:
+je Häppchen höchstens `JOB_WAISEN_BLOCK` = 2000 Eigentümerkennungen, aus
+`track_points` **und** `track_blobs` (eine Waise kann als Zeile, als Blob oder
+als beides dastehen). Am Tabellenende fängt die Marke wieder von vorn an — ein
+Netz, das einmal durchläuft und dann liegen bleibt, ist keines.
+
+**Ehrlich gemessen ist das bei 3,31 Mio. Zeilen nicht schneller** (je fünf
+Läufe, `memory_limit=64M`, Speicherspitze 2,0 MB):
+
+| | Dauer |
+|---|---|
+| Anti-Join über alles (alt, nur lesend) | **0,78–0,90 s** |
+| bereichsweise, ein vollständiger Durchlauf (neu) | **0,85–1,05 s** |
+
+Der Gewinn ist ein anderer und liegt woanders: Der neue Weg ist **begrenzt**
+(Zeitbudget), **fortsetzbar** (Marke in `jobs.zustand`) und liegt **nicht mehr
+auf dem Weg einer Anfrage**. Genau das ist bei Z2 der Unterschied zwischen
+„läuft eben nebenher" und „die Seite hängt minutenlang, und niemand weiß
+warum".
+
+Seit AP1 räumen die Löschwege ohnehin selbst ab (`spur_loeschen`, F-S2-B).
+Dieser Job ist das Sicherheitsnetz, nicht der Hauptweg.
+
+#### Der angezeigte Rückstand ist der Fortschritt, nicht die Waisenzahl
+
+Die naheliegende Zahl wäre „Eigentümer ohne Zeile in `missions`" — und die
+kostet genau den Vollscan, den dieser Job abschafft. Für eine Anzeige ist das
+der falsche Preis. Angezeigt wird deshalb, wie viele Kennungen die Marke noch
+vor sich hat; beide Abfragen dafür laufen auf dem Primärschlüssel.
+
+Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
+
+- Der Rückstand las den Zustand **aus der Tabelle**, während der frische noch
+  nicht geschrieben war — der Job meldete direkt nach einem vollständigen
+  Durchlauf „Rückstand 33093", also die ganze Tabelle als ausstehend. Die
+  Rückstandsfunktion bekommt den Zustand jetzt übergeben.
+- Eine Marke von 0 war nicht von „noch nie gelaufen" zu unterscheiden. Der
+  Zustand hält deshalb zusätzlich `durch`, ob der Durchlauf zu Ende kam.
+
+#### Sichtbarkeit
+
+`update.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
+Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
+Fehlerprotokoll: Auf geteiltem Hosting kommt an dieses Protokoll nicht jede
+Betreiberin heran, und ein dauerhaft scheiternder Job soll auffallen. Die
+Wartung bleibt **gegenüber der Anfrage still** — sie darf keine Seite
+kaputtmachen.
+
+Die Marken `last_cleanup` und `last_cleanup_ok` in `app_state` sind damit
+entfallen; ihre Auskunft steht vollständiger in `jobs`.
 
 ---
 
@@ -2586,6 +2732,36 @@ Referenzinstallation**: Der Riegel des Werkzeugs füllt nur Konten mit dem
 Präfix `messstand` und verlangt für eine fremde Adresse ein ausdrückliches
 `MESSSTAND_FREMDE_INSTALLATION=ja`. Einzelheiten und die Grenzen des
 Prüfmittels: `tools/messstand/LIESMICH.md`.
+
+**Hintergrundjobs einrichten (empfohlen, seit Web 10.1.0):** Nichts tun ist
+erlaubt — dann läuft die Wartung huckepack auf den Anfragen mit, höchstens 3 s
+je Anfrage und frühestens alle 5 Minuten je Job. Ab einigen hunderttausend
+Spurpunkten sollte trotzdem ein echter Zeitgeber her. Adminbereich →
+**`/update.php`** → Abschnitt **„Wann die Jobs laufen"**; dort stehen Befehl
+und Adresse fertig zum Kopieren:
+
+1. **Kommandozeile** (bevorzugt): `* * * * * php …/server/jobs.php`. Jede
+   Minute ist unbedenklich — ein Lauf ohne Arbeit kostet zwei Abfragen. Die
+   tägliche Aufräumarbeit läuft trotzdem nur einmal am Tag; das entscheidet der
+   Job, nicht der Zeitplan. Einzelne Jobs: `php jobs.php waisen`, Hilfe:
+   `php jobs.php --hilfe`.
+2. **Abruf über die Adresse**, wo es keinen CLI-Cron gibt:
+   `https://…/jobs.php?token=…`. **Die Adresse enthält ein Geheimnis** — nicht
+   in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
+   ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
+
+**Zeitplan-Eintrag antwortet `429` (`zu_viele_versuche`):** Das Token stimmt
+nicht, und zehn Fehlversuche haben die IP für zehn Minuten gesperrt. Adresse
+aus `/update.php` neu kopieren, dann **zehn Minuten warten** — vorher wird auch
+der richtige Aufruf abgewiesen.
+
+**Läuft die Wartung noch?** `/update.php` → Karte **„Hintergrundjobs"**: je Job
+letzter Lauf, Auslöser, Rückstand und letzter Fehler. Plakette „scheitert" =
+mindestens ein Job wirft dauerhaft; der Text steht darunter. Plakette
+„Migration ausstehend" = die Tabelle `jobs` fehlt, also wurde `update.php` nach
+dem Ausrollen von Web 10.1.0 nie ausgeführt. Ein wachsender **Rückstand** beim
+Job `waisen` heißt nicht „kaputt", sondern „kommt am Huckepack-Weg nicht
+hinterher" — dann Punkt 1 oder 2 oben einrichten.
 
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue

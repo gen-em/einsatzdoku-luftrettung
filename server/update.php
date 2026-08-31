@@ -1638,6 +1638,51 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ],
     ],
+    [
+        'id'    => '2026_08_31_jobs',
+        'web'   => '10.1',
+        'label' => 'Job-Einstieg: Tabelle jobs mit Fortsetzungszustand (S2/AP2)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'jobs'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE ZEILE JE JOB, und sie ist mehr als ein Zeitstempel.
+             *
+             * Bis Web 10.0.0 hielt `app_state` zwei Schluessel: den letzten
+             * Versuch und den letzten vollstaendigen Lauf. Das reichte,
+             * solange die Wartung in einem Zug durchlief. Sobald Arbeit in
+             * HAEPPCHEN anfaellt — und das tut sie ab AP3, wenn Millionen
+             * Punkte zu verdichten sind —, braucht jeder Job zusaetzlich:
+             *
+             *   zustand      wo er stehengeblieben ist (JSON, Fortsetzungsmarke)
+             *   rueckstand   wie viel noch aussteht, fuer die Wartungsseite
+             *   ausloeser    wer ihn zuletzt angestossen hat (cli/token/anfrage)
+             *   laeuft_seit  Sperre gegen zwei gleichzeitige Laeufe
+             *
+             * `laeuft_seit` ist bewusst ein Zeitstempel und kein Flag: Ein
+             * Lauf, der mitten im Haeppchen abstuerzt, laesst das Flag sonst
+             * fuer immer stehen, und der Job liefe nie wieder. Mit einem
+             * Zeitstempel gilt eine Sperre nach einer Weile als verwaist.
+             *
+             * `letzter_fehler` steht hier und nicht nur im Fehlerprotokoll des
+             * Webspace: Auf geteiltem Hosting kommt an dieses Protokoll nicht
+             * jede Betreiberin heran, und ein dauerhaft scheiternder Job soll
+             * auf der Wartungsseite auffallen. */
+            "CREATE TABLE jobs (
+               job             VARCHAR(32) NOT NULL PRIMARY KEY,
+               zustand         TEXT NULL,
+               rueckstand      INT UNSIGNED NULL,
+               letzter_lauf    DATETIME NULL,
+               letzter_erfolg  DATETIME NULL,
+               letzter_ausloeser VARCHAR(16) NULL,
+               letzter_fehler  TEXT NULL,
+               erledigt_zuletzt INT UNSIGNED NOT NULL DEFAULT 0,
+               laeuft_seit     DATETIME NULL
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
 ];
 
@@ -1683,6 +1728,28 @@ if ($ausfuehren && !$istCli) { csrf_check(); }
  * fuer eine Einstellung ist ein Menuepunkt, den man einmal braucht und
  * dreihundertmal ueberliest.
  */
+/* Token fuer den Abruf ueber die Adresse neu erzeugen (S2/AP2).
+ *
+ * Ein neues Token macht das alte ungueltig. Das ist der Zweck: Wer den
+ * bisherigen Zeitplan-Eintrag nicht mehr kennt oder ihn kompromittiert
+ * glaubt, dreht hier ab. Die Folge — der alte Eintrag laeuft ins Leere —
+ * steht als Hinweis daneben, damit sie niemanden ueberrascht. */
+$jobsMeldung = null;
+if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['action'] ?? '') === 'jobs_token_neu') {
+    csrf_check();
+    try {
+        require_once __DIR__ . '/jobs_lib.php';
+        jobs_token(true);
+        $jobsMeldung = ['ok', 'Ein neues Token steht bereit. Der bisherige '
+                            . 'Zeitplan-Eintrag funktioniert damit nicht mehr — '
+                            . 'bitte die Adresse dort austauschen.'];
+    } catch (Throwable $ex) {
+        $jobsMeldung = ['fehler', 'Das Token liess sich nicht erzeugen: '
+                                . $ex->getMessage()];
+    }
+}
+
 $logoMeldung = null;
 if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['action'] ?? '') === 'logo_standard') {
@@ -2117,50 +2184,114 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Wartung (M3-05) ------------------------------------------------
-     * Der Aufraeumjob laeuft huckepack auf Anfragen und ist gegenueber der
-     * Anfrage still. Genau deshalb ist ein dauerhaft scheiternder Job von
-     * einem laufenden sonst nicht zu unterscheiden — bis irgendwann auffaellt,
-     * dass der Papierkorb seit Monaten nicht mehr geleert wird.
+  <?php /* ---- Hintergrundjobs (S2/AP2, war: Aufraeumjob M3-05) --------------
      *
-     * Zwei Marken: der letzte VERSUCH und der letzte VOLLSTAENDIGE Lauf.
-     * Klaffen sie auseinander, scheitert mindestens ein Schritt. Die Ursache
-     * steht im Fehlerprotokoll des Webspace. */
-  $wartung = [];
-  foreach (['last_cleanup', 'last_cleanup_ok'] as $k) {
-      $stw = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
-      $stw->execute([$k]);
-      $wartung[$k] = $stw->fetchColumn();
-  }
-  $wVersuch = $wartung['last_cleanup']    ?: null;
-  $wErfolg  = $wartung['last_cleanup_ok'] ?: null;
-  $wOk      = $wVersuch !== null && $wErfolg === $wVersuch;
+     * Bis Web 10.0.0 stand hier EIN Aufraeumjob mit zwei Marken. Seit S2 sind
+     * es mehrere Jobs, die in Haeppchen arbeiten — und die Frage ist nicht
+     * mehr nur „laeuft er?", sondern auch „kommt er hinterher?".
+     *
+     * Der Grund, warum das ueberhaupt sichtbar sein muss, hat sich nicht
+     * geaendert: Die Wartung ist gegenueber der Anfrage still. Ein dauerhaft
+     * scheiternder Job ist von einem laufenden sonst nicht zu unterscheiden —
+     * bis irgendwann auffaellt, dass der Papierkorb seit Monaten voll ist. */
+  require_once __DIR__ . '/jobs_lib.php';
+  $jobs = jobs_zustand();
+  $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
+  $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
   ?>
-  <?php ui_karte_start(['titel' => 'Aufräumjob',
-      'plakette' => $wVersuch === null
-          ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
-          : ($wOk ? ui_plakette('läuft', ['ton' => 'blau'])
-                  : ui_plakette('scheitert', ['ton' => 'rot']))]); ?>
-    <?php
-      ui_zeile(['text' => 'Letzter Versuch',
-                'plaketten' => ui_plakette($wVersuch ?? 'nie',
-                    ['ton' => $wVersuch === null ? 'neutral' : 'blau'])]);
-      ui_zeile(['text' => 'Letzter vollständiger Lauf',
-                'plaketten' => ui_plakette($wErfolg ?? 'nie',
-                    ['ton' => $wErfolg === null ? 'rot' : 'blau'])]);
-    ?>
-    <?php if ($wVersuch === null): ?>
-      <p class="feld-hinweis">Auf einer frischen Installation ist das normal — er
-         startet bei der ersten Anfrage des nächsten Tages.</p>
-    <?php elseif (!$wOk): ?>
-      <?= ui_meldung_markup('warn', $wErfolg === null
-          ? 'Noch kein einziger vollständiger Lauf. Mindestens ein Schritt '
-          . 'scheitert dauerhaft; die Ursache steht im Fehlerprotokoll des '
-          . 'Webspace (Suchwort cleanup:). Solange das so bleibt, wird unter '
-          . 'anderem der Papierkorb nicht geleert.'
-          : 'Es scheitert mindestens ein Schritt — Ursache im Fehlerprotokoll '
-          . 'des Webspace (Suchwort cleanup:).') ?>
+  <?php ui_karte_start(['titel' => 'Hintergrundjobs',
+      'plakette' => $jobs === []
+          ? ui_plakette('Migration ausstehend', ['ton' => 'neutral'])
+          : ($jobFehler > 0 ? ui_plakette('scheitert', ['ton' => 'rot'])
+             : ($jobNie === count($jobs) ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
+                                         : ui_plakette('läuft', ['ton' => 'blau'])))]); ?>
+    <?php if ($jobs === []): ?>
+      <p class="feld-hinweis">Die Tabelle <code>jobs</code> gibt es noch nicht —
+         sie kommt mit der Migration oben.</p>
+    <?php else: foreach ($jobs as $j): ?>
+      <?php
+        $lauf = $j['letzter_lauf'] ? fmt_local((string)$j['letzter_lauf'], 'd.m.Y H:i') : 'nie';
+        $plaketten = ui_plakette($lauf, ['ton' => $j['letzter_lauf'] ? 'blau' : 'neutral']);
+        if ($j['letzter_ausloeser']) {
+            $plaketten .= ui_plakette((string)$j['letzter_ausloeser'], ['ton' => 'neutral']);
+        }
+        if ($j['rueckstand'] !== null && (int)$j['rueckstand'] > 0) {
+            $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'warn']);
+        }
+        if (!empty($j['letzter_fehler'])) {
+            $plaketten .= ui_plakette('Fehler', ['ton' => 'rot']);
+        }
+        ui_zeile(['text' => (string)$j['titel'],
+                  'klein' => (string)$j['beschreibung'],
+                  'plaketten' => $plaketten]);
+      ?>
+      <?php if (!empty($j['letzter_fehler'])): ?>
+        <?= ui_meldung_markup('fehler', (string)$j['letzter_fehler'],
+            'Letzter Fehler dieses Jobs.') ?>
+      <?php endif; ?>
+    <?php endforeach; endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Auslöser (E-S2-17) ---------------------------------------------
+     *
+     * Drei Wege zur selben Arbeit, damit die Hosterwahl offen bleibt. Die
+     * Reihenfolge hier ist die Empfehlung: Kommandozeile zuerst.
+     *
+     * Das Token steht offen auf der Seite — sie ist ohnehin nur der
+     * Administration zugaenglich, und ein Geheimnis, das man erst
+     * aufklappen muss, wird beim Einrichten abgetippt statt kopiert. */
+  $tokenAdresse = null;
+  if ($jobs !== []) {
+      try {
+          $tokenAdresse = rtrim((string)($CFG['app']['base_url'] ?? ''), '/')
+                        . '/jobs.php?token=' . jobs_token();
+      } catch (Throwable $ex) { $tokenAdresse = null; }
+  }
+  ?>
+  <?php ui_karte_start(['titel' => 'Wann die Jobs laufen']); ?>
+    <?php if ($jobsMeldung): ?>
+      <?= ui_meldung_markup($jobsMeldung[0], $jobsMeldung[1]) ?>
     <?php endif; ?>
+    <p class="seiten-erklaerung">Dieselbe Arbeit über drei Wege. <strong>Einer
+       genügt</strong> — eingerichtet werden muss keiner, dann läuft sie
+       huckepack auf den Anfragen mit.</p>
+
+    <h3 class="listen-form-titel">1. Kommandozeile <span class="feld-klein-inline">empfohlen</span></h3>
+    <p class="feld-hinweis">Ein Eintrag im Cron des Webspace. Jede Minute ist
+       unbedenklich: Ein Lauf ohne Arbeit kostet zwei Abfragen.</p>
+    <div class="codeblock">
+      <p class="codeblock-wert">* * * * * php <?= e(__DIR__) ?>/jobs.php</p>
+    </div>
+
+    <h3 class="listen-form-titel">2. Abruf über die Adresse</h3>
+    <p class="feld-hinweis">Wo es keinen Cron auf der Kommandozeile gibt, aber
+       einen zeitgesteuerten Abruf („Cronjob per URL"). Die Adresse enthält ein
+       Geheimnis — sie gehört nicht in eine Mail und nicht in ein Ticket.</p>
+    <?php if ($tokenAdresse !== null): ?>
+      <div class="codeblock">
+        <p class="codeblock-titel">Adresse</p>
+        <p class="codeblock-wert"><?= e($tokenAdresse) ?></p>
+      </div>
+      <form method="post" action="update.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_token_neu">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neues Token erzeugen', 'art' => 'leise',
+                        'typ' => 'submit',
+                        'attr' => ' data-confirm="Das bisherige Token wird damit '
+                                . 'ungültig. Ein bestehender Zeitplan-Eintrag '
+                                . 'läuft danach ins Leere."'
+                                . ' data-confirm-ok="Neu erzeugen"']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
+
+    <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage</h3>
+    <p class="feld-hinweis">Der Rückfall, immer eingeschaltet. Er trägt
+       höchstens <?= (int)JOB_BUDGET_ANFRAGE ?> Sekunden je Anfrage und wiederholt
+       sich frühestens nach <?= (int)(JOB_ANFRAGE_PAUSE_S / 60) ?> Minuten — genug,
+       damit eine Installation ohne jede Einrichtung nicht stillsteht, zu wenig
+       für einen großen Rückstand. Wer 1. oder 2. eingerichtet hat, merkt ihn
+       nicht.</p>
   <?php ui_karte_ende(); ?>
 
   <?php

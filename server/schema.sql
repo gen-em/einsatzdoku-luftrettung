@@ -485,6 +485,25 @@ CREATE TABLE track_blobs (
   KEY stufe_alter (stufe, geaendert_am)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Zustand der Hintergrundjobs (S2, jobs.php). Eine Zeile je Job.
+--
+-- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
+-- jeder Job eine Fortsetzungsmarke (`zustand`, JSON), einen Rueckstand fuer
+-- die Wartungsseite und eine Sperre gegen zwei gleichzeitige Laeufe.
+-- `laeuft_seit` ist ein Zeitstempel und kein Flag: Ein Lauf, der mitten im
+-- Haeppchen abstuerzt, liesse ein Flag fuer immer stehen.
+CREATE TABLE jobs (
+  job               VARCHAR(32) NOT NULL PRIMARY KEY,
+  zustand           TEXT NULL,
+  rueckstand        INT UNSIGNED NULL,
+  letzter_lauf      DATETIME NULL,
+  letzter_erfolg    DATETIME NULL,
+  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage
+  letzter_fehler    TEXT NULL,
+  erledigt_zuletzt  INT UNSIGNED NOT NULL DEFAULT 0,
+  laeuft_seit       DATETIME NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ---------------------------------------------------------------------------
 -- Migrations-Buchfuehrung. Eine frische Installation ist bereits auf dem
 -- Stand aller bisherigen Migrationen, deshalb werden sie hier als erledigt
@@ -561,4 +580,7 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_27_logo_wahl', 'skipped'),
   ('2026_08_28_last_login', 'skipped'),
   -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
-  ('2026_08_30_rechtstexte', 'skipped');
+  ('2026_08_30_rechtstexte', 'skipped'),
+  -- track_blobs und jobs stehen oben schon im Schema (Web 10.0.0/10.1.0).
+  ('2026_08_31_spur_blobs', 'skipped'),
+  ('2026_08_31_jobs', 'skipped');

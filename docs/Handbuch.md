@@ -2087,16 +2087,24 @@ zutrifft:
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
-Unter **„Wartung"** steht seit 4.5.1 zusätzlich, wann der tägliche Aufräumjob
-zuletzt **vollständig** durchgelaufen ist — als zwei Zeilen „Letzter Versuch"
-und „Letzter vollständiger Lauf". Weichen die beiden Daten voneinander ab,
-scheitert einer der Aufräumschritte dauerhaft, und dann wird unter anderem der
-Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
-Webspace unter dem Suchwort `cleanup:`.
+Unter **„Wartung"** steht in der Karte **„Hintergrundjobs"**, ob die
+regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
+hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
+**„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
+Ursache steht in derselben Karte im Klartext.
+
+Darunter, in **„Wann die Jobs laufen"**, stehen die drei Wege, auf denen diese
+Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse zum
+Kopieren. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
+Arbeit in kleinen Portionen auf den Anfragen mit. Wer viele Daten hat, richtet
+besser einen Zeitplan ein, weil der Rückstand sonst wächst; welcher der beiden
+geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört nicht
+in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
+Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
 Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
-Installation, die Umgebung (Mailversand), der Aufräumjob, Einsätze ohne
-Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
+Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
+ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
 ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
 Bestätigung.
 
@@ -2147,11 +2155,11 @@ mit Adresse und Alter der letzten Sicherung — keine Namen und keine Zahlen aus
 den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
 Admins mit gesetztem Passwort.
 
-> **Sie hängt an der Benutzung, nicht an einer Uhr.** Auf diesem Webspace läuft
-> kein Zeitplan; was regelmäßig geschieht, fährt auf dem täglichen Aufräumjob
-> mit, und der startet bei der ersten Anfrage des Tages. Die Erinnerung kommt
-> deshalb höchstens einmal je Woche, nur wenn es etwas zu melden gibt — und nur,
-> wenn die Anwendung in dieser Zeit überhaupt benutzt wurde. Wird sie zwei
+> **Sie hängt an einem Zeitgeber.** Die Erinnerung fährt auf dem täglichen
+> Aufräumjob mit (Wartung → „Hintergrundjobs"). Ist dort ein Zeitplan
+> eingerichtet, kommt sie zuverlässig — höchstens einmal je Woche und nur, wenn
+> es etwas zu melden gibt. Ohne Zeitplan hängt sie an der Benutzung: Der Job
+> startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
 > Wochen nicht angefasst, kommt die Mail zwei Wochen später.
 
 **„Alle sichern"** oben rechts sichert die fälligen Konten, das mit der
@@ -2210,7 +2218,7 @@ anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen kön
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
 
 Seit Web 7.0.0 steht der **Zustand zuerst** (Schlüsselableitung, Umgebung,
-Aufräumjob) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
+Hintergrundjobs) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
 die Seite im Betrieb öffnet. Die Tabelle steht **auf dem Kopf**: neueste Einträge
 oben, mit einer Spalte **„Web"**, die die Fassung nennt, mit der das Update
 ausgeliefert wurde. Der Startknopf steht **über** der Tabelle. Ausgeführt werden

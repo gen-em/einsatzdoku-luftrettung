@@ -23,8 +23,11 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
-3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
+2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung.
+   *In Arbeit als S2/AP3* — dort als Ausdünnung von Stufe 2 auf Stufe 3
+   (`docs/Konzept-S2-Mengen-Spuren-Sicherung.md` 3.1.4).
+3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`).
+   *Vorgesehen als S2/AP4.*
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
@@ -198,7 +201,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Was noch fehlt:** die Serverseite bei vielen EINSÄTZEN. Sie ist die
     einzige Größe, die die Sondierung nicht erreicht — dafür braucht es echte
-    Zeilen. Beschlossen ist
+    Zeilen. Beschlossen war
     dafür ein Werkzeug `tools/lastdatensatz/`, das den vorhandenen Bestand mit
     neuen Dienstdaten vervielfacht (250 / 500 / 1000 / 3500), in **zwei**
     Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und
@@ -209,6 +212,30 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     darf aber niemals mit behaltenem IV und geändertem Klartext geschrieben
     werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
     Kontos gleich mit.
+
+    **Diese Frage wird in der Phase S2 beantwortet, und `tools/lastdatensatz/`
+    ist darin zu `tools/messstand/` geworden** (S2/AP0). Der Weg ist ein
+    anderer als hier beschrieben — nicht neue Dienstdaten erfinden, sondern
+    die Referenzsicherung vervielfältigen und über den **regulären**
+    Wiederherstellungsweg einspielen; damit ist der Einspielweg selbst einer
+    der Prüflinge. Stand: 5002 Einsätze, 3,2 Mio. Spurpunkte, herstellbar in
+    245 s.
+
+    **Was S2 bisher beantwortet hat:**
+
+    - *Speicher.* Spurpunkte sind 93 % des Bestands; als Blob kosten sie
+      3,58 statt 62,4 Byte je Punkt (S2/AP1, Web 10.0.0).
+    - *Wartung.* Sie lag auf dem Weg einer Anfrage und kostete bei 9,46 Mio.
+      Zeilen 4,07 s. Seit S2/AP2 (Web 10.1.0) läuft sie in Häppchen mit
+      Zeitbudget, drei Auslösern und Fortsetzungsmarke.
+    - *Ein Fund nebenbei:* Ein gelöschtes Konto ließ seine Spurpunkte liegen —
+      am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
+      behoben in AP1).
+
+    **Was hier offen bleibt,** bis die Phase durch ist: Zeitraumübersicht und
+    Nachbearbeitung bei dieser Menge, `admin_sicherungen.php` (siehe oben),
+    und die Frage, ob die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht
+    ≤ 3 s, Sicherung ≤ 5 min) gehalten werden.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste

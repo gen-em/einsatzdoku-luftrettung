@@ -152,19 +152,25 @@ $aus["edbak_build"] = [
 /* Der WARTUNGSJOB, echt gefahren (nur mit --wartung-fahren).
  *
  * Nicht nachgebaut, sondern die Funktion der Anwendung selbst:
- * run_cleanup_if_due() ist der einzige Zeitgeber der Installation und laeuft
- * hoechstens einmal je Kalendertag. Fuer die Messung wird die Tagesmarke
- * zurueckgesetzt — das ist derselbe Zustand wie am naechsten Morgen.
+ * run_cleanup_if_due() ist seit Web 10.1.0 der HUCKEPACK-Ausloeser des
+ * Job-Rahmens (jobs_lib.php) — und genau der ist hier die Messgroesse, denn
+ * was er kostet, wartet eine Nutzerin ab.
  *
- * WARUM DAS EINE MESSUNG WERT IST: Der Job laeuft huckepack in der Anfrage
- * der ersten Nutzerin des Tages. Was er kostet, wartet also jemand ab.
+ * ZURUECKGESETZT WIRD DIE FAELLIGKEIT, nicht der Fortschritt: `letzter_lauf`
+ * auf NULL, damit sowohl die Tagesgrenze des Aufraeumjobs als auch der
+ * Mindestabstand des Huckepack-Wegs (JOB_ANFRAGE_PAUSE_S) neu greifen. Das
+ * ist derselbe Zustand wie am naechsten Morgen. Die Fortsetzungsmarke
+ * (`zustand`) bleibt stehen — sie ist Teil dessen, was gemessen werden soll.
+ *
+ * WAS DIE ZAHL BEDEUTET: die Dauer EINES HAEPPCHENS am Huckepack-Weg, nach
+ * oben durch JOB_BUDGET_ANFRAGE begrenzt. Sie ist nicht die Dauer eines
+ * vollstaendigen Durchlaufs; dafuer ist `php jobs.php` da.
  */
 if (getenv("EDOKU_WARTUNG") === "ja") {
     $vorher = zahl($pdo, "SELECT COUNT(*) FROM track_points");
-    $pdo->prepare("DELETE FROM app_state WHERE k IN ('last_cleanup','last_cleanup_ok')")
-        ->execute();
+    try { $pdo->exec("UPDATE jobs SET letzter_lauf = NULL, laeuft_seit = NULL"); }
+    catch (Throwable $ex) { /* vor der Migration gibt es die Tabelle nicht */ }
     $t0 = microtime(true);
-    $spitzeVor = memory_get_peak_usage(true);
     run_cleanup_if_due();
     $aus["wartungsjob"] = [
         "dauer_s" => round(microtime(true) - $t0, 2),
@@ -173,6 +179,11 @@ if (getenv("EDOKU_WARTUNG") === "ja") {
         "spitze_mb" => round(memory_get_peak_usage(true) / 1048576, 1)];
     $aus["wartungsjob"]["entfernt"] =
         $aus["wartungsjob"]["zeilen_vorher"] - $aus["wartungsjob"]["zeilen_nachher"];
+    try {
+        $aus["wartungsjob"]["jobs"] = $pdo->query(
+            "SELECT job, rueckstand, letzter_ausloeser, erledigt_zuletzt, letzter_fehler
+               FROM jobs ORDER BY job")->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $ex) { $aus["wartungsjob"]["jobs"] = null; }
 }
 
 $aus["memory_limit"]      = ini_get("memory_limit");
@@ -201,7 +212,8 @@ def main() -> int:
     p.add_argument("--ausgabe", default="/tmp/messstand/serverprobe.json")
     p.add_argument("--wartung-fahren", action="store_true",
                    help="run_cleanup_if_due() wirklich laufen lassen und messen "
-                        "(setzt die Tagesmarke zurück, LÖSCHT verwaiste Zeilen)")
+                        "(setzt die Fälligkeit der Jobs zurück, LÖSCHT verwaiste "
+                        "Zeilen); misst EIN Häppchen am Huckepack-Weg")
     p.add_argument("--optimieren", action="store_true",
                    help="track_points vorher neu aufbauen (OPTIMIZE TABLE) — "
                         "nur so sind die Bytes je Zeile aussagekräftig")
@@ -255,9 +267,16 @@ def main() -> int:
           f"{w['waisen']} verwaiste Einsatzpunkte gefunden")
     if werte.get("wartungsjob"):
         j = werte["wartungsjob"]
-        print(f"Wartungsjob (run_cleanup_if_due): {j['dauer_s']} s, "
-              f"{j['entfernt']} Zeilen entfernt, Speicherspitze {j['spitze_mb']} MB "
-              f"— das läuft in der Anfrage der ersten Nutzerin des Tages")
+        print(f"Wartung huckepack (run_cleanup_if_due → jobs_lauf('anfrage')): "
+              f"{j['dauer_s']} s für EIN Häppchen "
+              f"(Budget: JOB_BUDGET_ANFRAGE, jobs_lib.php), "
+              f"{j['entfernt']} Zeilen entfernt, "
+              f"Speicherspitze {j['spitze_mb']} MB — so viel trägt die Anfrage "
+              f"einer Nutzerin mit")
+        for jj in (j.get("jobs") or []):
+            print(f"    {jj['job']:<12} erledigt {jj['erledigt_zuletzt']}"
+                  + (f", Rückstand {jj['rueckstand']}" if jj['rueckstand'] is not None else "")
+                  + (f", FEHLER: {jj['letzter_fehler']}" if jj['letzter_fehler'] else ""))
 
     # ERST JETZT schreiben. Die abgeleiteten Werte oben (Zeilenkosten, MB je
     # 1000 Einsaetze) entstehen beim Ausgeben; eine Datei, die vorher

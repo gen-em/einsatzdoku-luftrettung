@@ -11,6 +11,152 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 10.1.0] — 2026-08-31
+
+**Die Wartung liegt nicht mehr auf dem Weg einer Anfrage.** Drittes
+Arbeitspaket der Phase S2. Eine Migration ist zwingend
+(`2026_08_31_jobs`, Tabelle `jobs`).
+
+> **Nach dem Ausrollen `update.php` aufrufen.** Ohne die Tabelle `jobs` läuft
+> kein Wartungsjob mehr — der Papierkorb bliebe voll, Kopplungscodes ewig
+> gültig. Die Wartungsseite sagt das dann auch: Plakette
+> „Migration ausstehend".
+
+### Web — Warum
+
+Der einzige Zeitgeber dieser Installation war `run_cleanup_if_due()` —
+huckepack auf der Anfrage der ersten Nutzerin des Tages. Das trug, solange die
+Arbeit klein war. Sie ist es nicht mehr: Die Waisenprüfung war ein Anti-Join
+über die ganze Spurtabelle und kostete gemessen **4,07 s bei 9,46 Mio.
+Zeilen**, bezahlt von genau der Person, die gerade eine Seite aufgerufen hatte.
+Bei der Zielmenge Z2 (190 Mio. Zeilen) wären es Minuten. Und ab AP3 kommt
+Arbeit dazu, die sich in einer Webanfrage gar nicht erledigen lässt.
+
+### Web — Drei Auslöser, damit die Hosterwahl offen bleibt
+
+Diese Anwendung setzt bewusst keinen Cron voraus; auf einfachem Webspace gibt
+es oft keinen. Deshalb dieselbe Arbeit über drei Wege — **einer genügt**, und
+eingerichtet werden muss keiner:
+
+| Weg | Aufruf | Budget je Lauf |
+|---|---|---|
+| Kommandozeile (empfohlen) | `* * * * * php …/server/jobs.php` | 300 s |
+| Adresse mit Token | `https://…/jobs.php?token=…` | 20 s |
+| Huckepack auf einer Anfrage (Rückfall) | wie bisher, automatisch | 3 s |
+
+Die Wartungsseite zeigt alle drei mit fertigem Befehl bzw. fertiger Adresse.
+Das Token liegt in `app_state` und **nicht** in `config.php`: Die Anwendung
+schreibt diese Datei genau einmal, bei der Einrichtung; sie danach anzufassen
+hieße, auf jedem Webspace Schreibrecht auf die eigene Konfiguration zu
+brauchen — und Bestandsinstallationen hätten kein Token, ohne dass jemand
+sähe, warum. Es wird mit `hash_equals` geprüft, hinter dem Ratenschutz und mit
+angeglichener Antwortzeit; „Token gibt es gar nicht" darf nicht schneller
+kommen als „Token ist falsch".
+
+`jobs.php` lädt **ausdrücklich nicht** `auth_guard.php` — der würde den
+Huckepack-Weg auslösen und den Job aus dem Job heraus starten.
+
+### Web — Der Rückfall ist ein Rückfall geworden
+
+Die erste Fassung lief in eine selbstgestellte Falle: Der Job `waisen` ist
+nicht täglich, sondern läuft, solange es Rückstand gibt — also lief er bei
+**jeder** angemeldeten Anfrage, mit bis zu 18 s Budget. Eine Seite, die
+zwanzig Sekunden braucht, weil sie nebenbei aufräumt, ist kaputt, auch wenn
+kein Zeitlimit greift.
+
+Jetzt trägt der Huckepack-Weg **3 s** und wiederholt sich je Job frühestens
+nach **5 Minuten**. Gemessen: Die eine fällige Anfrage trägt **887 ms** (bei
+diesem Bestand passt ein vollständiger Durchlauf ins Budget), jede weitere
+innerhalb der fünf Minuten **0,5–1,3 ms**. Für `cli` und `token` gilt der
+Abstand nicht: Dort bestimmt der Zeitplan die Häufigkeit, und wer jede Minute
+aufruft, will das auch.
+
+### Web — Häppchen statt Vollscan, und was das wirklich bringt
+
+Jeder Job bekommt ein Zeitbudget, hört auf, wenn es zu Ende ist, und merkt
+sich in `jobs.zustand`, wo er stehengeblieben ist. Die Waisensuche wandert
+dafür bereichsweise über den Primärschlüssel statt als Anti-Join über alles.
+
+**Bei 3,31 Mio. Zeilen ist der neue Weg nicht schneller**, je fünf Läufe:
+
+| | Dauer |
+|---|---|
+| Anti-Join über alles (alt, nur lesend) | **0,78–0,90 s** |
+| bereichsweise, ein vollständiger Durchlauf (neu) | **0,85–1,05 s** |
+
+Das ist die ehrliche Zahl, und sie soll hier stehen: Bei dieser Menge kostet
+der neue Weg eher etwas mehr. Der Gewinn liegt woanders — er ist **begrenzt**,
+**fortsetzbar** und liegt **nicht auf dem Weg einer Anfrage**. Bei Z2 ist das
+der Unterschied zwischen „läuft eben nebenher" und „die Seite hängt
+minutenlang, und niemand weiß warum".
+
+Die Sperre gegen zwei gleichzeitige Läufe ist ein bedingtes `UPDATE` statt
+`SELECT`-dann-`UPDATE` — letzteres hat ein Zeitfenster, in dem zwei Anfragen
+beide zu dem Schluss kommen, sie dürften. `laeuft_seit` ist ein Zeitstempel
+und kein Flag: Ein Lauf, der mitten im Häppchen abstürzt, ließe ein Flag für
+immer stehen, und der Job liefe nie wieder — stillschweigend, was der teuerste
+Fall ist.
+
+### Web — Der Rückstand ist der Fortschritt, nicht die Waisenzahl
+
+Die naheliegende Anzeige wäre „wie viele Waisen gibt es" — und die kostet
+genau den Vollscan, den dieser Job abschafft. Angezeigt wird deshalb, wie weit
+die Marke noch zu laufen hat.
+
+Zwei Fehler steckten hier, beide erst beim Messen aufgefallen und beide vom
+selben Muster: Die Rückstandsfunktion las den Zustand **aus der Tabelle**,
+während der frische noch gar nicht geschrieben war — direkt nach einem
+vollständigen Durchlauf meldete der Job „Rückstand 33093", also die ganze
+Tabelle als ausstehend. Und eine Marke von 0 war nicht von „noch nie gelaufen"
+zu unterscheiden. Beides ist derselbe Reihenfolgefehler, der in AP0 schon
+einmal auftrat (die Serverprobe schrieb ihre Datei, bevor die abgeleiteten
+Werte entstanden waren).
+
+### Web — Sichtbar, weil sie still ist
+
+Die Wartung darf keine Seite kaputtmachen und schweigt deshalb gegenüber der
+Anfrage. Genau darum muss sie woanders sichtbar sein: `update.php` zeigt je Job
+letzten Lauf, Auslöser, Rückstand und letzten Fehler. `letzter_fehler` steht in
+der Tabelle und nicht nur im Fehlerprotokoll des Webspace — an das kommt auf
+geteiltem Hosting nicht jede Betreiberin heran.
+
+Die Marken `last_cleanup` und `last_cleanup_ok` in `app_state` entfallen; ihre
+Auskunft steht vollständiger in `jobs`.
+
+### Web — Belegt
+
+Neu dafür: **`tools/jobprobe/`** — die Probe legt eigene Waisen auf
+Eigentümerkennungen an, die es garantiert nicht gibt, und räumt hinter sich
+auf. Sie läuft nicht in einer zurückgerollten Transaktion, weil die Sperre auf
+`COMMIT` angewiesen ist und ein Rollback über sie nichts beweisen würde.
+
+| Prüfung | Zahl |
+|---|---|
+| `jobprobe/probe.php` | **24 Erwartungen, 0 nicht erfüllt** |
+| Alle drei Auslöser tragen denselben Rückstand ab | je **10 Zeilen + 1 Blob → 0 + 0** |
+| Genaue Zählung (6 Zeilen + 1 Blob gepflanzt) | gemeldet **„erledigt 7"** |
+| Vollständiger Durchlauf, Z3-Rahmen (`memory_limit=64M`) | **0,85–1,05 s** über **3 313 246 Zeilen**, Spitze **2,0 MB** |
+| Anti-Join über alles, dieselbe Tabelle, nur lesend | **0,78–0,90 s** |
+| Huckepack: die eine fällige Anfrage / jede weitere in 5 min | **887 ms** / **0,5–1,3 ms** |
+| HTTP-Weg ohne / mit falschem / mit richtigem Token | **403 / 403 / 200**, beide 403 in **0,351 s** |
+| Ratenschutz am Token-Weg | ab dem **10.** Fehlversuch je IP **429** |
+| Wartungsseite, acht Breiten (360–1920 px) | 8 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| `spurprobe/probe.php` (AP1, unberührt) | 14 Erwartungen, 0 nicht erfüllt |
+| Kreislauf `edbak` (R24) | 286 739 Vergleiche, **0 unerklärt** (16 erwartet) |
+| Kreislauf `csv` (R24) | 8797 Vergleiche, **0 unerklärt** (859 erwartet) |
+| Wiederherstellungsprobe (R27) | 30 Erwartungen, **0 nicht erfüllt** |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+Zum Bild der Wartungsseite: Es wurde **angesehen** und zeigt die Karte
+„Hintergrundjobs" mit beiden Jobs, ihren Zeitstempeln und den Plaketten
+`anfrage` und `cli` — nicht die Anmeldeseite (F-P3-AQ).
+
+**Eine Grenze, die man kennen sollte:** Der Ratenschutz zählt je IP. Kommen
+zehn Fehlversuche von derselben Adresse, ist der Token-Weg für diese IP zehn
+Minuten gesperrt — auch für den richtigen Aufruf. Wer einen Zeitplan-Eintrag
+mit falschem Token stehen hat, sperrt sich damit selbst aus; nach dem
+Berichtigen dauert es zehn Minuten.
+
 ## [Web 10.0.0] — 2026-08-31
 
 **GPS-Punkte liegen jetzt als Blob statt als Zeile — 62,4 Byte werden 3,58.**

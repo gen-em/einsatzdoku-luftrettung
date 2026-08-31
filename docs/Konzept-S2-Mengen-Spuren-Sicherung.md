@@ -1168,3 +1168,155 @@ der Weg ohne Nachzügler) — beides gehört zu AP3.
 - **Das Referenzkonto bleibt verdichtet.** Es ist der Zustand, den AP3 ohnehin
   herstellt, und alle folgenden Prüfungen laufen damit gegen Blobs statt
   gegen Zeilen — die schärfere Probe.
+
+---
+
+### AP2 — Job-Einstieg und Wartung ohne Vollscan (erledigt, Web 10.1.0)
+
+**Erledigt.** `server/jobs_lib.php` (Katalog und Ausführung),
+`server/jobs.php` (Einstieg mit drei Auslösern), Tabelle `jobs`
+(`2026_08_31_jobs`), Wartungsseite umgebaut, `run_cleanup_if_due()` auf den
+Rahmen zurückgeführt, `tools/jobprobe/` als Probe.
+
+**Nebenversion 10.1.0**, obwohl es eine Migration gibt: Weder Datenmodell im
+Sinne der Nutzdaten noch die Wege durch die Anwendung ändern sich — `jobs`
+hält Betriebszustand. Nach dem Ausrollen muss `update.php` trotzdem laufen,
+sonst arbeitet kein Job mehr.
+
+#### Was gebaut wurde
+
+| Was | Wo |
+|---|---|
+| Zeitbudgets je Auslöser | `JOB_BUDGET_CLI/TOKEN/ANFRAGE` = 300 / 20 / 3 s |
+| Mindestabstand am Huckepack-Weg | `JOB_ANFRAGE_PAUSE_S` = 300 s |
+| Verfall einer verwaisten Sperre | `JOB_SPERRE_VERFALL_S` = 3600 s |
+| Katalog | `jobs_katalog()` — `aufraeumen` (täglich), `waisen` (laufend) |
+| Ausführung mit Sperre und Zustand | `jobs_lauf()`, `jobs_einen_lauf()` |
+| Anzeige | `jobs_zustand()` → Karte „Hintergrundjobs" in `update.php` |
+| Token | `jobs_token()`, Schlüssel `jobs_token` in `app_state` |
+| Bereichsweise Waisensuche | `job_waisen()`, `job_waisen_rueckstand()` |
+
+**AP3 hängt Verdichtung und Ausdünnung in `jobs_katalog()` ein.** Der Rahmen
+kennt sie nicht; er kennt nur den Katalog. Das ist der Zweck dieses Pakets.
+
+#### Vier Dinge, die beim Bauen schiefgingen — alle beim Messen aufgefallen
+
+**1. Der Huckepack-Weg wäre zur Last geworden.** Der Job `waisen` ist nicht
+täglich, sondern läuft, solange es Rückstand gibt. Damit lief er bei **jeder**
+angemeldeten Anfrage, mit bis zu 18 s Budget — also genau die Krankheit, die
+dieses Paket heilen soll, nur schlimmer. Das Gegenmittel sind zwei Zahlen:
+3 s Budget und 5 Minuten Mindestabstand, beide nur für `anfrage`. Gemessen
+kostet die eine fällige Anfrage jetzt 887 ms, jede weitere 0,5–1,3 ms.
+
+**2. `job_waisen()` stand zweimal in der Datei**, einmal mit einem wörtlichen
+`$1` als Platzhalter — ein Rest aus einem abgebrochenen Schreibvorgang. PHP
+hätte das beim Laden mit „Cannot redeclare" quittiert; aufgefallen ist es
+trotzdem erst beim ersten Lauf, weil bis dahin niemand die Datei geladen hat.
+Neu geschrieben.
+
+**3. Die Rückstandszahl war der Vollscan, den das Paket abschafft.** Die erste
+Fassung von `job_waisen_rueckstand()` zählte „Eigentümer ohne Zeile in
+`missions`" — also genau den Anti-Join, der weg sollte, nur jetzt bei jeder
+Anzeige. Sie misst jetzt den Fortschritt der Marke, beide Abfragen auf dem
+Primärschlüssel.
+
+**4. Und wieder eine Reihenfolge.** Danach meldete der Job direkt nach einem
+**vollständigen** Durchlauf „Rückstand 33093" — die ganze Tabelle als
+ausstehend. Zwei Ursachen übereinander: Die Rückstandsfunktion las den Zustand
+aus der Tabelle, wo noch der **alte** stand (geschrieben wird er erst danach),
+und eine Marke von 0 war nicht von „noch nie gelaufen" zu unterscheiden. Jetzt
+bekommt sie den frischen Zustand übergeben, und der Zustand hält zusätzlich
+fest, **dass** der Durchlauf zu Ende kam (`durch`).
+
+Punkt 4 ist derselbe Fehler wie in AP0 (die Serverprobe schrieb ihre Datei,
+bevor die abgeleiteten Werte entstanden waren). Das Muster ist inzwischen
+benannt: **Wer eine Kennzahl aus einem Zustand ableitet, muss sagen, welchen
+Stand dieses Zustands er meint.**
+
+#### Die ehrliche Zahl zum bereichsweisen Scan
+
+Bei 3 313 246 Zeilen, je fünf Läufe, `memory_limit=64M`:
+
+| | Dauer |
+|---|---|
+| Anti-Join über alles (alt, nur lesend) | **0,78–0,90 s** |
+| bereichsweise, vollständiger Durchlauf (neu) | **0,85–1,05 s** |
+
+**Der neue Weg ist bei dieser Menge nicht schneller, eher etwas langsamer.**
+Das ist kein Nebenbefund, sondern der Kern: E-S2-18 verspricht keine
+Geschwindigkeit, sondern **Begrenztheit** (Zeitbudget), **Fortsetzbarkeit**
+(Marke in `jobs.zustand`) und die **Trennung vom Anfrageweg**. Bei Z2
+(190 Mio. Zeilen) ist das der Unterschied zwischen „läuft nebenher" und „die
+Seite hängt minutenlang". Wer beim Abschluss der Phase eine Aussage über die
+Geschwindigkeit braucht, muss sie bei Z2 messen, nicht hier.
+
+Speicherspitze: 2,0 MB bei `memory_limit=64M` — die Häppchengröße
+(`JOB_WAISEN_BLOCK` = 2000 Kennungen) hält den Speicher unabhängig von der
+Tabellengröße.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Katalog, Tabelle, Tagesgrenze, Sperre, Token | `jobprobe/probe.php` | **24 Erwartungen, 0 nicht erfüllt** |
+| Alle drei Auslöser tragen denselben Rückstand ab | dieselbe | je **10 Zeilen + 1 Blob → 0 + 0** |
+| Gemeldete Zahl nachgerechnet | dieselbe | 6 Zeilen + 1 Blob → **„erledigt 7"** |
+| Rückstand nach vollständigem Durchlauf | dieselbe | **0**, `durch={mission:true,rest:true}` |
+| Sperre: zweiter Lauf abgewiesen, verwaiste verfällt | dieselbe | beide erfüllt |
+| Huckepack: Budget und Mindestabstand | dieselbe | 1,0 s ≤ 3 s; zweiter Aufruf übersprungen, 0,001 s |
+| Nichts mit Eigentümer verloren | dieselbe | 3 313 246 → **3 313 246** |
+| Vollständiger Durchlauf, Z3-Rahmen | von Hand, `memory_limit=64M` | **0,85–1,05 s**, Spitze **2,0 MB** |
+| Vergleich gegen den alten Anti-Join | dieselbe Tabelle, nur lesend | **0,78–0,90 s** |
+| HTTP: ohne / falsches / richtiges Token | `curl` | **403 / 403 / 200**, beide 403 in **0,351 s** |
+| Ratenschutz am Token-Weg | `curl`, 12 Versuche | ab dem **10.** Fehlversuch **429** |
+| Kommandozeile | `php jobs.php`, `--hilfe`, `jobs.php waisen` | Rückgabewert 0, Bericht je Job |
+| Wartungsseite, acht Breiten 360–1920 px | `screenshots/aufnehmen.mjs --nur 45-` | 8 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Gegenprobe zum Bild (F-P3-AQ) | angesehen | zeigt die Karte „Hintergrundjobs" mit beiden Jobs und den Plaketten `anfrage` / `cli` |
+| Spurprobe (AP1, unberührt) | `spurprobe/probe.php` | 14 Erwartungen, 0 nicht erfüllt |
+| Kreislauf `edbak` (R24) | `kreislauf.py --art edbak --frisch` | 286 739 Vergleiche, **0 unerklärt** (16 erwartet) |
+| Kreislauf `csv` (R24) | `kreislauf.py --art csv --frisch` | 8797 Vergleiche, **0 unerklärt** (859 erwartet) |
+| Wiederherstellungsprobe (R27) | `wiederherstellungs-probe/probe.php` | **30 Erwartungen, 0 nicht erfüllt** |
+| Wortliste (R28) | `wortliste.py` | **0 / 0 / 0** |
+
+**Nicht geprüft — und das gehört an den Anfang, nicht in eine Fußnote:**
+
+- **Das Verhalten bei Z2** (190 Mio. Zeilen). Alle Zeitangaben oben stammen von
+  3,3 Mio. Zeilen. Dass der bereichsweise Scan dort gewinnt, ist gerechnet,
+  nicht gemessen. Ein Messstand dieser Größe steht nicht zur Verfügung.
+- **Ein Häppchen, das am Budget abbricht.** Bei diesem Bestand läuft der
+  Waisenjob in unter einer Sekunde durch; der Fall „Budget erschöpft, Marke
+  steht, nächster Lauf macht weiter" ist im Code angelegt und über die
+  Marke belegt, aber nie mit echtem Abbruch gefahren. **Das ist die Zusage,
+  auf der AP3 aufbaut** — dort muss sie mit echter Verdichtungsarbeit
+  nachgewiesen werden.
+- **Ein echter Cron.** Der CLI-Weg ist von Hand gefahren, nicht aus einer
+  Crontab. Was ein Hoster mit Umgebungsvariablen, Pfaden und PHP-Fassungen
+  anstellt, ist damit nicht abgedeckt.
+- **Der Absturz mitten im Häppchen.** Der Verfall der Sperre ist geprüft,
+  indem `laeuft_seit` zurückdatiert wurde — nicht, indem ein Lauf wirklich
+  abgestürzt ist.
+- **Zwei gleichzeitige Läufe aus zwei Prozessen.** Geprüft ist die Bedingung
+  im `UPDATE` nacheinander, nicht unter echter Nebenläufigkeit.
+
+#### Entscheidungen, die dabei gefallen sind
+
+- **`jobs.php` lädt `auth_guard.php` nicht.** Der würde den Huckepack-Weg
+  auslösen und den Job aus dem Job heraus starten.
+- **Das Token liegt in `app_state`, nicht in `config.php`.** Die Anwendung
+  schreibt diese Datei genau einmal; sie danach anzufassen hieße, auf jedem
+  Webspace Schreibrecht auf die eigene Konfiguration zu brauchen — und
+  Bestandsinstallationen hätten kein Token.
+- **`laeuft_seit` ist ein Zeitstempel, kein Flag.** Ein abgestürzter Lauf
+  würde ein Flag für immer stehen lassen, und der Job liefe nie wieder —
+  stillschweigend.
+- **Die Sperre ist ein bedingtes `UPDATE`**, nicht `SELECT`-dann-`UPDATE`.
+- **Der Rückstand ist der Fortschritt der Marke, nicht die Waisenzahl.** Die
+  richtige Zahl kostet den Vollscan, den dieser Job abschafft.
+- **Der Ratenschutz am Token-Weg sperrt auch den richtigen Aufruf.** Zehn
+  Fehlversuche je IP, dann zehn Minuten Ruhe — bewusst in Kauf genommen; die
+  Alternative wäre ein Endpunkt, an dem sich ein Token durchprobieren lässt.
+  Steht als Betriebshinweis in `docs/Technik.md` (Runbook).
+- **`tools/jobprobe/` läuft NICHT in einer zurückgerollten Transaktion**,
+  anders als die Spurprobe. Die Sperre ist auf `COMMIT` angewiesen; ein
+  Rollback würde über sie nichts beweisen. Stattdessen eigene Waisen oberhalb
+  aller vergebenen Kennungen, mit Aufräumen im `finally`.
