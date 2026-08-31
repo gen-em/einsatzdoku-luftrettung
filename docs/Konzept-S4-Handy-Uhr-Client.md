@@ -457,6 +457,18 @@ auf vorhandenen Bausteinen. Vor der Umsetzung entsteht **ein** Mockup-Satz
 (Tagesansicht mit Schneide-Bedienung, Import-Einstieg, Geräte-Reiter mit
 QR, Download-Seite) und wird ausdrücklich freigegeben (`docs/Design.md` 1;
 CLAUDE.md 5). Ohne Freigabe beginnt A2/A3 nicht.
+**Stand 31.08.2026: Der Satz liegt vor** — `docs/mockups/S4-schneiden.html`
+(Ruhesegment-Karte und Schneide-Bereich), `S4-gpx-import.html` (Dialog),
+`S4-geraete-qr.html` (QR am Codeblock, APK-Karte), je mit Bildern in 900
+und 390 px (Überlauf 0, Konsole 0); dazu `S4-app.html` als Vorschlag für
+Handy- und Uhr-Bedienbild (nicht Design.md-gebunden, keine Freigabepflicht,
+aber dieselbe Gelegenheit für Einwände). Drei Vorschläge darin gehen über
+den Konzepttext hinaus und stehen mit der Freigabe zur Entscheidung:
+Beginn/Ende Pflicht und Phasenzeiten optional im Schneide-Bereich (die
+vollständige Phasenliste wohnt im Einsatzformular); Rückgängig als
+Zeilenaktion am geschnittenen Einsatz, nicht im Schneide-Bereich; der
+Download als neutrale Handlung, nicht als Primärknopf. **Die Freigabe
+steht aus.**
 
 **A1 — QR, APK-Download, Vertrag-Nachtrag.**
 QR auf dem Geräte-Reiter (E-S4-15), Download-Seite und `server/apk/`-Weg

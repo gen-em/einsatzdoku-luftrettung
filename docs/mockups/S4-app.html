@@ -1,0 +1,164 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup S4 — Handy-App und Wear-OS-Uhr (Vorschlag)</title>
+<link rel="stylesheet" href="../../server/assets/style.css">
+<style>
+  body{padding:var(--abstand-5) var(--abstand-4);background:var(--rauch)}
+  .buehne{max-width:1100px;margin:0 auto}
+  .notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);
+         padding:var(--abstand-3);margin:var(--abstand-5) 0 var(--abstand-4);
+         font-size:var(--groesse-2)}
+  .reihe{display:flex;flex-wrap:wrap;gap:var(--abstand-5);align-items:flex-start;
+         margin:0 0 var(--abstand-5)}
+
+  /* ---- Geräterahmen (nur Mockup) --------------------------------------- */
+  .handy{width:300px;border:6px solid var(--dunkelblau);border-radius:28px;
+         background:var(--schnee);overflow:hidden;flex:0 0 auto;
+         box-shadow:0 8px 24px rgba(26,5,0,.18)}
+  .handy-kopf{background:var(--dunkelblau);color:var(--auf-dunkel);
+         padding:var(--abstand-3) var(--abstand-3);font-family:var(--schrift-kopf);
+         font-size:var(--groesse-5)}
+  .handy-inhalt{padding:var(--abstand-3);display:flex;flex-direction:column;
+         gap:var(--abstand-3)}
+  .handy .knopf{width:100%;justify-content:center}
+  .bild-unterschrift{font-size:var(--groesse-2);color:var(--gedaempft);
+         margin:var(--abstand-2) 0 0;max-width:300px}
+
+  .status{display:flex;align-items:center;gap:var(--abstand-2);
+         font-size:var(--groesse-2)}
+  .punkt{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .punkt-rot{background:var(--rot)} .punkt-ok{background:var(--blau)}
+  .punkt-orange{background:var(--orange)}
+
+  .gross{font-family:var(--schrift-kopf);font-size:var(--groesse-6);
+         color:var(--dunkelblau);margin:0}
+  .phasenliste{display:flex;flex-direction:column;gap:var(--abstand-1)}
+  .phase-zeile{display:flex;align-items:center;gap:var(--abstand-2);
+         min-height:var(--knopf);padding:0 var(--abstand-2);
+         border:var(--strich) solid var(--linie);border-radius:var(--radius);
+         font-size:var(--groesse-3)}
+  .phase-zeile.erledigt{color:var(--gedaempft)}
+  .phase-zeile.erledigt .phase-zeit{margin-left:auto}
+  .phase-nr{font-family:var(--schrift-fest);color:var(--gedaempft)}
+
+  /* ---- Wear-OS-Rahmen (rund, dunkel) ----------------------------------- */
+  .uhr{width:250px;height:250px;border-radius:50%;background:#000;
+         border:10px solid #26221E;color:#fff;flex:0 0 auto;
+         display:flex;flex-direction:column;align-items:center;
+         justify-content:center;text-align:center;gap:10px;
+         box-shadow:0 8px 24px rgba(26,5,0,.25)}
+  .uhr small{color:#B9B2A9;font-size:var(--groesse-2);display:block}
+  .uhr-titel{font-family:var(--schrift-kopf);font-size:var(--groesse-5);margin:0}
+  .uhr-knopf{display:inline-flex;align-items:center;justify-content:center;
+         min-height:var(--knopf);padding:0 var(--abstand-4);
+         border-radius:var(--radius-rund);background:var(--orange);
+         color:var(--dunkelblau);font-weight:600;font-size:var(--groesse-3)}
+  .uhr-knopf-leise{background:transparent;border:1px solid #4A443D;color:#fff}
+</style></head><body>
+<div class="buehne">
+
+<h1 class="karte-titel" style="font-size:var(--groesse-6)">Mockup S4 — Handy-App und Wear-OS-Uhr</h1>
+<p class="feld-hinweis">Vorschlag zu Block B/C (E-R45-1, E-S4-05 bis E-S4-11).
+   Anders als die Web-Mockups ist dies <strong>nicht</strong> an
+   <code>Design.md</code> gebunden — die App folgt den Android-Konventionen und
+   übernimmt aus der Marke Farben und Zurückhaltung. Schriften hier sind die der
+   Weboberfläche; auf dem Gerät sind es die Systemschriften.</p>
+
+<div class="notiz"><strong>Grundsatz der Bedienung:</strong> Ein Bildschirm, eine
+  Frage. Vor dem Dienst gibt es genau einen Knopf; im Dienst ist die
+  <strong>nächste Phase</strong> der eine große Knopf, alles andere ist Anzeige.
+  Keine Reanimation (bleibt Garmin), keine Einsatzverwaltung (bleibt im Browser).</div>
+
+<div class="reihe">
+  <div>
+    <div class="handy">
+      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-inhalt">
+        <p class="status"><span class="punkt punkt-rot"></span> Nicht eingerichtet</p>
+        <p style="margin:0;font-size:var(--groesse-2)">Koppel die App mit deinem
+           Konto: Im Browser unter <strong>Einstellungen → Geräte</strong> einen
+           Kopplungscode erzeugen.</p>
+        <button class="knopf knopf-primaer" type="button"><span>QR-Code scannen</span></button>
+        <button class="knopf knopf-neutral" type="button"><span>Code von Hand eingeben</span></button>
+      </div>
+    </div>
+    <p class="bild-unterschrift"><strong>1 — Erststart.</strong> Danach führt die App
+       durch die Freistellung von der Akkuoptimierung (E-S4-05); der Zustand
+       entspricht „Nicht eingerichtet" der Garmin-Sync-Seite.</p>
+  </div>
+
+  <div>
+    <div class="handy">
+      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-inhalt">
+        <p class="status"><span class="punkt punkt-ok"></span> Gekoppelt ·
+           einsatz.beispieldomain.de</p>
+        <p class="status"><span class="punkt punkt-ok"></span> Alles gesendet</p>
+        <p class="gross">Kein Dienst</p>
+        <button class="knopf knopf-primaer" type="button"><span>Dienst beginnen</span></button>
+        <p class="status" style="color:var(--gedaempft)">Uhr: Galaxy Watch6 verbunden</p>
+      </div>
+    </div>
+    <p class="bild-unterschrift"><strong>2 — Bereit.</strong> Dienstbeginn geht auch
+       von der Uhr aus (E-R45-13). Die Sync-Zeile kennt die drei Zustände aus
+       Backlog Nr. 11.</p>
+  </div>
+
+  <div>
+    <div class="handy">
+      <div class="handy-kopf">NAdoku</div>
+      <div class="handy-inhalt">
+        <p class="status"><span class="punkt punkt-orange"></span> Dienst läuft seit
+           07:02 · GPS an</p>
+        <p class="status"><span class="punkt punkt-orange"></span> Rückstand 2 Pakete</p>
+        <p class="gross" style="font-size:var(--groesse-5)">Einsatz · Phase 4 seit 10:26</p>
+        <button class="knopf knopf-primaer" type="button"><span>5 · Ankunft PatientIn</span></button>
+        <div class="phasenliste">
+          <div class="phase-zeile erledigt"><span class="phase-nr">2</span> Alarmierung <span class="phase-zeit">10:12</span></div>
+          <div class="phase-zeile erledigt"><span class="phase-nr">3</span> Ausrücken <span class="phase-zeit">10:15</span></div>
+          <div class="phase-zeile erledigt"><span class="phase-nr">4</span> Ankunft Einsatzort <span class="phase-zeit">10:26</span></div>
+          <div class="phase-zeile"><span class="phase-nr">6</span> Transportbeginn</div>
+          <div class="phase-zeile"><span class="phase-nr">7</span> Ankunft Klinik</div>
+        </div>
+        <button class="knopf knopf-neutral" type="button"><span>Einsatz abschließen</span></button>
+      </div>
+    </div>
+    <p class="bild-unterschrift"><strong>3 — Im Einsatz.</strong> Die nächste Phase
+       ist der eine große Knopf; jede Zeile darunter setzt ihre Phase direkt
+       (Korrekturen erzeugen einen zweiten Eintrag, E-R45-12). „Einsatz
+       abschließen" sendet <code>final</code> + Endzeit.</p>
+  </div>
+</div>
+
+<div class="reihe">
+  <div>
+    <div class="uhr">
+      <p class="uhr-titel">NAdoku</p>
+      <small>Handy verbunden</small>
+      <span class="uhr-knopf">Dienst beginnen</span>
+      <small>löst am Handy aus</small>
+    </div>
+    <p class="bild-unterschrift"><strong>4 — Uhr, vor dem Dienst.</strong> Die Uhr
+       ist Fernbedienung: kein GPS, keine Zugangsdaten. Ohne erreichbares Handy
+       zeigt sie „Handy nicht erreichbar" und puffert die Auslösung (E-S4-10).</p>
+  </div>
+
+  <div>
+    <div class="uhr">
+      <small>Phase 4 · 10:26</small>
+      <span class="uhr-knopf">5 · Ankunft<br>PatientIn</span>
+      <span class="uhr-knopf uhr-knopf-leise">Einsatz abschließen</span>
+      <small>wischen: alle Phasen</small>
+    </div>
+    <p class="bild-unterschrift"><strong>5 — Uhr, im Einsatz.</strong> Zeitstempel
+       entstehen auf der Uhr und werden mit Quittung ans Handy gemeldet; bei
+       Funkabriss steht hier „N gepuffert".</p>
+  </div>
+</div>
+
+<div class="notiz"><strong>Blind gebaut:</strong> Für die Uhr-Bilder gibt es bis zum
+  Gerätetest keine Gegenprobe auf Hardware (E-R45-7) — Rundung, Schriftgrößen und
+  Berührziele sind am Gerät nachzumessen. Die Handy-Bilder prüft der eine
+  S24-Dienst des Auftraggebers.</div>
+
+</div></body></html>
