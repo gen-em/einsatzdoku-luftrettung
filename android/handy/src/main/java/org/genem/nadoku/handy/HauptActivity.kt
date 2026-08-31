@@ -44,9 +44,6 @@ import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.kopplung.Kopplungsdienst
 import org.genem.nadoku.handy.kopplung.Kopplungsergebnis
 import org.genem.nadoku.handy.kopplung.Trennergebnis
-import org.genem.nadoku.handy.tresor.KeystoreTresorschluessel
-import org.genem.nadoku.handy.tresor.Schluesseltresor
-import java.io.File
 import java.time.Instant
 
 /**
@@ -84,19 +81,17 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
     val kontext = LocalContext.current
     val hilfsfaden = rememberCoroutineScope()
 
-    val tresor = remember {
-        Schluesseltresor(
-            File(kontext.applicationContext.filesDir, Schluesseltresor.DATEINAME),
-            KeystoreTresorschluessel(),
-        )
-    }
+    val tresor = app.tresor
     val dienst = remember {
         Kopplungsdienst(
             netzweg = HttpNetzweg(),
             tresor = tresor,
-            // B4 setzt hier die Warteschlange ein. Bis dahin gibt es nichts
-            // zu senden — und eine erfundene Zahl wäre schlimmer als die Null.
-            rueckstand = { 0 },
+            /* DIE RÜCKSTANDSSPERRE IST JETZT ECHT (E-S4-12, Backlog Nr. 14):
+             * Abgeschlossene, noch nicht bestätigte Pakete gehören dem
+             * bisherigen Konto; nach einer Neukopplung gingen sie an das
+             * neue. Das wäre kein Datenverlust, sondern schlimmer — fremde
+             * Einsätze in einem fremden Konto. */
+            rueckstand = { app.puffer.rueckstand() },
         )
     }
     val geraet = remember {
@@ -194,6 +189,8 @@ private fun GekoppelteOberflaeche(
         }
     }
 
+    val rueckstand = remember(takt) { app.puffer.rueckstand() }
+
     val stand = remember(takt, modus, ortungFrei) {
         val laufend = app.klammer.laufenderDienst()
         val offenesPaket = laufend?.let {
@@ -270,7 +267,7 @@ private fun GekoppelteOberflaeche(
             stand = stand,
             serverBasis = serverBasis,
             logoWahl = logoWahl,
-            rueckstand = 0,
+            rueckstand = rueckstand,
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt

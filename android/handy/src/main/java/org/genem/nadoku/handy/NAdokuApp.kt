@@ -5,7 +5,12 @@ import android.content.Context
 import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.dienst.Dienstklammer
 import org.genem.nadoku.handy.dienst.Kennungen
+import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.puffer.Puffer
+import org.genem.nadoku.handy.senden.Sender
+import org.genem.nadoku.handy.tresor.KeystoreTresorschluessel
+import org.genem.nadoku.handy.tresor.Schluesseltresor
+import java.io.File
 
 /**
  * Die eine Stelle, an der die langlebigen Teile der App wohnen.
@@ -32,6 +37,25 @@ class NAdokuApp : Application() {
             puffer = puffer,
             kennungen = Kennungen(einstellungen.kennungszaehler()),
             ausduenner = ausduenner,
+        )
+    }
+
+    val tresor: Schluesseltresor by lazy {
+        Schluesseltresor(File(filesDir, Schluesseltresor.DATEINAME), KeystoreTresorschluessel())
+    }
+
+    /**
+     * Die Warteschlange. Sie lebt hier und nicht im Vordergrunddienst, weil
+     * die halbierte Chunk-Größe (nach einem 413) einen Sendelauf überdauern
+     * soll — sonst liefe die App bei jedem Lauf wieder in denselben 413.
+     */
+    val sender: Sender by lazy {
+        Sender(
+            puffer = puffer,
+            netzweg = HttpNetzweg(),
+            tresor = tresor,
+            basis = { einstellungen.serverBasis },
+            phasenLeser = { paketId -> puffer.phasen(paketId) },
         )
     }
 

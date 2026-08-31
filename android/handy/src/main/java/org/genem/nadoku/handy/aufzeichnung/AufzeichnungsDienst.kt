@@ -13,6 +13,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -22,6 +23,8 @@ import androidx.lifecycle.LifecycleService
 import org.genem.nadoku.R
 import org.genem.nadoku.handy.HauptActivity
 import org.genem.nadoku.handy.NAdokuApp
+import org.genem.nadoku.handy.senden.Sendetakt
+import java.time.Instant
 
 /**
  * Der Vordergrunddienst, der über den ganzen Dienst aufzeichnet (E-S4-05).
@@ -55,6 +58,10 @@ class AufzeichnungsDienst : LifecycleService() {
     private lateinit var app: NAdokuApp
     private var ortung: LocationManager? = null
 
+    private val takt = Sendetakt()
+    private var letzterVersuch: Instant? = null
+    private val taktgeber = Handler(android.os.Looper.getMainLooper())
+
     private val zuhoerer = LocationListener { ort -> aufnehmen(ort) }
 
     override fun onCreate() {
@@ -73,6 +80,7 @@ class AufzeichnungsDienst : LifecycleService() {
 
         starteImVordergrund()
         ortungAnfordern()
+        taktStarten()
 
         /* START_STICKY: Räumt Android den Dienst bei Speicherknappheit ab,
          * startet es ihn wieder — mit `intent == null`, deshalb prüft der
@@ -89,7 +97,49 @@ class AufzeichnungsDienst : LifecycleService() {
 
     override fun onDestroy() {
         ortung?.removeUpdates(zuhoerer)
+        taktgeber.removeCallbacksAndMessages(null)
         super.onDestroy()
+    }
+
+    // ---- Senden ------------------------------------------------------------
+
+    /**
+     * Der 15-Minuten-Takt (E-S4-07).
+     *
+     * Er läuft im Dienst und nicht in der Oberfläche: Gesendet werden muss
+     * auch dann, wenn niemand hinsieht — das ist der ganze Sinn eines
+     * Vordergrunddienstes.
+     */
+    private fun taktStarten() {
+        taktgeber.removeCallbacksAndMessages(null)
+        taktgeber.postDelayed(object : Runnable {
+            override fun run() {
+                sendeWenn(Sendetakt.Ausloeser.TAKT)
+                taktgeber.postDelayed(this, Sendetakt.ABSTAND_S * 1000)
+            }
+        }, Sendetakt.ABSTAND_S * 1000)
+    }
+
+    private fun sendeWenn(ausloeser: Sendetakt.Ausloeser) {
+        val jetzt = Instant.now()
+        if (!takt.faellig(ausloeser, jetzt, letzterVersuch)) return
+        letzterVersuch = jetzt
+        /* Netz gehört nicht auf den Anzeigefaden. Ein eigener Faden je
+         * Sendelauf ist hier richtig: Die Läufe überlappen nicht (der nächste
+         * kommt frühestens in 15 Minuten), und ein Fadenvorrat für einen Lauf
+         * je Viertelstunde wäre Aufwand ohne Gegenwert. */
+        Thread {
+            val bericht = app.sender.sendeAlles()
+            if (bericht.anfragen > 0) {
+                Log.i(
+                    MARKE,
+                    "Sendelauf: ${bericht.anfragen} Anfragen, " +
+                        "${bericht.gesendetePunkte} Punkte, " +
+                        "${bericht.fertigePakete} Pakete fertig, sauber=${bericht.sauber}",
+                )
+            }
+            taktgeber.post { meldungAuffrischen() }
+        }.start()
     }
 
     private fun starteImVordergrund() {
@@ -143,6 +193,10 @@ class AufzeichnungsDienst : LifecycleService() {
 
     private fun beenden() {
         ortung?.removeUpdates(zuhoerer)
+        taktgeber.removeCallbacksAndMessages(null)
+        // Dienstende ist ein Auslöser (E-S4-07): Was jetzt noch liegt, soll
+        // nicht bis zum nächsten Dienst warten.
+        sendeWenn(Sendetakt.Ausloeser.DIENSTENDE)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

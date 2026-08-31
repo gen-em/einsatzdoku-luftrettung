@@ -4,7 +4,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.sqlite.transaction
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
+import org.genem.nadoku.handy.senden.Phaseneintrag
 
 /**
  * Der Puffer: alles, was noch nicht bestätigt beim Server liegt (E-S4-06).
@@ -248,6 +250,143 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 }
             }
         }
+
+    // ---- Phasen (B5; die Tabelle steht seit B3) ----------------------------
+
+    /**
+     * Alle Phasen eines Einsatzes, **in der Reihenfolge ihres Entstehens**.
+     *
+     * MEHRFACHE EINTRÄGE DERSELBEN NUMMER BLEIBEN ERHALTEN (Vertrag 3): Eine
+     * erneut gesetzte Phase ist eine Korrektur und damit eine Information.
+     * Hier wird deshalb nicht gruppiert und nicht entdoppelt — der Vertrag
+     * verbietet es ausdrücklich, und der Server ersetzt die Liste ohnehin
+     * vollständig.
+     */
+    fun phasen(paketId: Long): List<Phaseneintrag> =
+        readableDatabase.rawQuery(
+            "SELECT nummer, at, breite, laenge FROM phase WHERE paket_id = ? ORDER BY id",
+            arrayOf(paketId.toString()),
+        ).use { c ->
+            buildList {
+                while (c.moveToNext()) {
+                    add(
+                        Phaseneintrag(
+                            nummer = c.getInt(0),
+                            at = c.getString(1),
+                            breite = if (c.isNull(2)) null else c.getDouble(2),
+                            laenge = if (c.isNull(3)) null else c.getDouble(3),
+                        )
+                    )
+                }
+            }
+        }
+
+    fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
+        writableDatabase.insertOrThrow(
+            "phase", null,
+            ContentValues().apply {
+                put("paket_id", paketId)
+                put("nummer", nummer)
+                put("at", at)
+                if (breite != null) put("breite", breite)
+                if (laenge != null) put("laenge", laenge)
+                put("quelle", quelle)
+            },
+        )
+    }
+
+    // ---- Buchführung des Sendens (B4) --------------------------------------
+
+    /**
+     * Was der Server bestätigt hat.
+     *
+     * `next_seq` ist die **erste noch nicht gespeicherte** Sequenznummer
+     * (Vertrag 5) — ab ihr sendet die App beim nächsten Mal weiter, und alles
+     * davor darf sie lokal verwerfen. `metadatenBestaetigt` merkt, dass der
+     * Datensatz überhaupt einmal angekommen ist: Ein Paket ohne Punkte
+     * (ein Einsatz, der nur Phasen trägt) hätte sonst nie „Arbeit erledigt".
+     */
+    fun bestaetigungMerken(paketId: Long, naechsteSeq: Long) {
+        writableDatabase.update(
+            "paket",
+            ContentValues().apply {
+                put("bestaetigt_seq", naechsteSeq)
+                put("metadaten_bestaetigt", 1)
+            },
+            "id = ?", arrayOf(paketId.toString()),
+        )
+    }
+
+    /**
+     * 400 vom Server: Die Nachricht ist fehlerhaft und wird **nicht
+     * wiederholt** (Vertrag 5). Sie bleibt liegen — gelöscht wird sie nicht,
+     * weil dann niemand mehr sähe, dass etwas nicht angekommen ist.
+     */
+    fun alsFehlerhaftMerken(paketId: Long) {
+        writableDatabase.update(
+            "paket", ContentValues().apply { put("fehlerhaft", 1) },
+            "id = ?", arrayOf(paketId.toString()),
+        )
+    }
+
+    /**
+     * Ein vollständig bestätigtes, abgeschlossenes Paket entsorgen.
+     *
+     * ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG — dieselbe Regel wie in
+     * `Uploader.mc`. Sie ist der Grund, warum ein Funkabriss nichts kostet:
+     * Solange der Server nicht bestätigt hat, liegt alles noch hier.
+     */
+    fun paketEntsorgen(paketId: Long) {
+        /* IN EINER TRANSAKTION. Bräche der Vorgang zwischen den drei
+         * Löschungen ab, bliebe ein Paket ohne Punkte stehen — oder, schlimmer,
+         * Punkte ohne Paket, die nie wieder jemand sähe. */
+        writableDatabase.transaction {
+            delete("punkt", "paket_id = ?", arrayOf(paketId.toString()))
+            delete("phase", "paket_id = ?", arrayOf(paketId.toString()))
+            delete("paket", "id = ?", arrayOf(paketId.toString()))
+        }
+    }
+
+    /**
+     * Die Warteschlange in ihrer Reihenfolge (E-S4-06, wie `Uploader._findJob`):
+     *
+     *   1. abgeschlossene **Einsätze**
+     *   2. abgeschlossene **Ruhesegmente**
+     *   3. das laufende Paket (Teil-Upload)
+     *
+     * WARUM DIE EINSÄTZE ZUERST: Sie tragen die Dokumentation. Ein Segment
+     * ist eine Spur; ein Einsatz ist ein Einsatz. Geht die Verbindung nach
+     * drei Anfragen wieder verloren, sollen diese drei die wichtigen gewesen
+     * sein.
+     *
+     * Fehlerhafte Pakete (400) sind nicht dabei — sie werden nicht wiederholt.
+     */
+    fun warteschlange(): List<Paketzeile> =
+        readableDatabase.rawQuery(
+            PAKET_SPALTEN + " WHERE fehlerhaft = 0 ORDER BY " +
+                "final DESC, CASE art WHEN 'mission' THEN 0 ELSE 1 END, id",
+            null,
+        ).use { c -> buildList { while (c.moveToNext()) add(zuPaket(c)) } }
+
+    /**
+     * Der Sende-Rückstand: **nur abgeschlossene**, noch nicht vollständig
+     * bestätigte Pakete.
+     *
+     * Das laufende Segment zählt bewusst nicht mit — sonst stünde während des
+     * ganzen Dienstes „Rückstand 1", und die Anzeige verlöre den einen Zweck,
+     * den sie hat (Backlog Nr. 11).
+     */
+    fun rueckstand(): Int =
+        readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM paket p WHERE p.final = 1 AND p.fehlerhaft = 0 AND (" +
+                "p.metadaten_bestaetigt = 0 OR " +
+                "p.bestaetigt_seq < (SELECT COUNT(*) FROM punkt WHERE paket_id = p.id))",
+            null,
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+    /** Hat dieses Paket noch etwas zu senden? */
+    fun hatArbeit(p: Paketzeile): Boolean =
+        !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)
 
     private companion object {
         const val DATEINAME = "puffer.db"

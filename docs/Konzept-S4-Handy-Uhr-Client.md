@@ -1249,3 +1249,101 @@ steckt.
   ist teurer als eine Tabelle, die eine Fassung lang leer steht — und
   `onUpgrade` wirft absichtlich eine Ausnahme, statt zu löschen: Hier liegt
   die einzige Kopie ungesendeter Aufzeichnungen.
+
+### B4 — Senden · Android 0.4.0 · erledigt
+
+**Was entstanden ist.** Die Warteschlange in der Reihenfolge der Uhr
+(abgeschlossene Einsätze → Ruhesegmente → laufendes Paket), das Senden in
+Teilstücken mit `next_seq`-Buchführung, die vier Fehlerpfade des Vertrags,
+die Anzeige von `rejected`/`kept_*`, der 15-Minuten-Takt mit seinen
+Ereignisauslösern — und die **echte Rückstandssperre** des Trennens, die seit
+B2 auf eine Warteschlange gewartet hat.
+
+#### Prüfstand B4
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew build` | **BUILD SUCCESSFUL** | fehlerfrei |
+| Lint | `lintDebug` | `handy` **0 Fehler, 19 Warnungen** (18 Fassungshinweise + `BatteryLife`, Fund B-S4-04); `uhr` **0/0** | 0 Fehler |
+| Prüffälle | `testDebugUnitTest` **und** `testReleaseUnitTest` | je **133 Fälle, 0 Fehlschläge, 0 Fehler**; ohne Installation 9 übersprungen, mit ihr **0** | alle grün |
+| **Rundlauf 12-h-Dienst** | echtes `ingest.php` | **20 Anfragen, 9 505 von 9 505 Punkten**, `rejected` **{}**, `kept_*` **{}**, 400 **0**, Paket entsorgt, Rückstand **0** | 0/0/0 |
+| **Rundlauf kurze Ströme** | echtes `ingest.php`, vier eigene Dienste | **5 Anfragen, 1 624 Punkte** (901+301+91+331), je Strom `rejected` {} und `kept_*` {} | 0/0/0 |
+| **Rundlauf Nachzügler** | echtes `ingest.php` | dieselbe Kette ein zweites Mal: **angenommen, 0 × rejected** — die Idempotenz über (Gerät, `client_ref`, `seq`) trägt | Vertrag 2 |
+| `seq` lückenlos am Server | SQL auf `track_points` | **9 Segmente, alle `lueckenlos`, alle ab `seq` 0** (9 505 · 901 · 901 · 601 · 601 · 331 · 301 · 91 …) | lückenlos |
+| Chunkgrenze | Anfragen des Rundlaufs vermessen | **größtes Teilstück 27 789 B mit 500 Punkten**; Grenze 524 288 B → **5,3 %** ausgeschöpft | ≤ 500 Punkte, < 512 KB |
+| `seq_from` fortlaufend | 901-Punkte-Kette, jede Anfrage nachgelesen | **0 → 500 → 901**, keine Lücke, kein Rücksprung | Vertrag 2 |
+| Auth-Kopfzeilen | jede Anfrage nachgelesen | `X-Device-Id` und `X-Api-Key` an **jeder** Anfrage, POST auf `/ingest.php` | Vertrag 1 |
+| **Funkabriss-Matrix** | Prüfserver, je ein Fall | **5 Fälle** — siehe unten | jeder einzeln grün |
+| — verlorene Antwort | Gegenstelle fällt weg | „später erneut"; **nichts bestätigt, nichts markiert, Paket bleibt liegen** | unverändert erneut |
+| — 401 | | **Lauf pausiert nach genau 1 Anfrage**; nichts bestätigt, **nicht** als fehlerhaft markiert | pausieren |
+| — 400 | | als fehlerhaft markiert, **nicht wiederholt**, aus der Warteschlange, aber **nicht gelöscht** | nicht wiederholen |
+| — 413 | dreimal abgewiesen | Chunk **500 → 250 → 125 → 62**, danach angenommen | halbieren |
+| — 5xx | 503 | „später erneut", nichts markiert, nichts bestätigt | Backoff |
+| — **App-Neustart mitten in der Kette** | Puffer von der Platte neu geöffnet | erster Lauf bestätigt 500, zweiter setzt **bei 500** fort; `seq_from` springt nie zurück, lässt nie eine Lücke | Wiederaufnahme |
+| Warteschlangen-Reihenfolge | Puffer | abgeschlossener **Einsatz vor** abgeschlossenem Ruhesegment | E-S4-06 |
+| Rückstand | Puffer | laufendes Segment **0**; abgeschlossen und ungesendet **1**; nach dem Senden **0**; ein 400-Paket zählt **nicht** mehr mit | Backlog Nr. 11 |
+| Nachrichtenkörper | 8 Fälle gegen den Vertrag | `ended_at` null solange nicht `final`; `day_ref` fehlt ganz, wenn keines da ist; Spurpunkt ist ein **Array aus vier Werten**, `ele` darf null sein; Einsatz trägt Kennzahlen und Phasen; **`resus_sessions` geht gar nicht mit** | Vertrag 3/4 |
+| Antwortauswertung | 5 Fälle | vier Fehlerpfade zugeordnet; **200 ohne `ok` ist kein Erfolg**; `rejected`/`kept_*` machen den Lauf unsauber | Vertrag 5 |
+| Sendetakt | 4 Fälle | jedes Ereignis sendet sofort; der Takt wartet **900 s** | E-S4-07 |
+| APK | `assembleRelease` | `handy` **9 052 248 B**, `uhr` 18 005 464 B | baut |
+
+**Was der Prüfstand nicht sagt:**
+
+- **Der 15-Minuten-Takt läuft im Prüfstand nicht ab.** [Sendetakt] beantwortet
+  die Frage „ist es soweit?" und hält weder Uhr noch Faden — das ist prüfbar.
+  Dass der `Handler` im Vordergrunddienst zwölf Stunden lang alle 15 Minuten
+  auslöst, zeigt nur das Gerät.
+- **Mobilfunk ist nicht Rückschleife.** Der Rundlauf lief über `127.0.0.1`;
+  Paketverlust, Zellwechsel und die Zeitlimits eines realen Netzes sind damit
+  nicht geprüft.
+- **Kein Bildschirmfoto** — es gibt keinen Emulator.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **`HttpURLConnection` wiederholt einen abgebrochenen POST von selbst.** Im
+   Neustart-Fall erschien dieselbe Anfrage zweimal am Prüfserver, ohne dass die
+   App sie zweimal geschickt hätte. Das ist eine Eigenschaft der
+   Java-Umsetzung, keine dieser App — und **schadet nicht**, weil die
+   Idempotenz an (Gerät, `client_ref`, `seq`) hängt: Derselbe Punkt zweimal
+   geschickt wird beim zweiten Mal ignoriert (Vertrag 2). Genau dafür ist sie
+   da. Der Prüffall prüft deshalb, was die App zusichern **muss** — dass
+   `seq_from` nie zurückspringt und nie eine Lücke lässt —, und nicht, was die
+   Laufzeitumgebung tut. Der Rundlauf belegt es zusätzlich am echten Server:
+   dieselbe Kette ein zweites Mal gesendet, **0 × rejected**, nichts doppelt.
+
+2. **Ein Prüffall legte vier Dienste mit derselben Kennung an.** Er baute für
+   jeden einen frischen Kennungszähler — der beginnt wieder bei 1 und liefert
+   mit demselben Zufallsstartwert dieselbe Zeichenkette. Gefangen hat es die
+   `UNIQUE`-Bedingung auf `dienst.dienst_ref`. Das ist genau der Fall, gegen
+   den der **Zählerspeicher** in der App steht (Vertrag 8: „Der Zähler
+   überlebt Neustarts und Zeitsprünge und ist die eigentliche Zusicherung") —
+   der Prüfstand muss ihn also genauso führen wie die App. Behoben; der
+   Kommentar an der Stelle nennt den Grund.
+
+3. **Zwei Erwartungen im Prüffall waren falsch gerechnet**, nicht der Code:
+   9 505 Punkte zu je 500 sind 19 volle Teilstücke und ein Rest — **20**
+   Anfragen, nicht 21.
+
+#### Entscheidungen, die in B4 gefallen sind
+
+- **E-S4-34 — `resus_sessions` geht gar nicht mit, auch nicht als leere
+  Liste.** Die Reanimation bleibt bei der Garmin (E-R45-1); das Handy
+  dokumentiert sie nicht. Eine leere Liste hieße nach Vertrag 3.1 „es gibt
+  keine" — der Server ließe den vorhandenen Stand zwar stehen, meldete es aber
+  als `kept_resus`. Gemeldet würde damit etwas, das nie eine Aussage war. Ein
+  **fehlender Schlüssel** heißt „dazu sage ich nichts", und nur das ist wahr.
+  Belegt: In allen Rundläufen ist `kept_*` leer.
+- **E-S4-35 — Die halbierte Chunk-Größe bleibt halbiert.** Nach einem 413
+  halbiert die App (500 → 250 → …) und setzt **nicht** wieder hoch — wie die
+  Uhr. Sie wieder hochzusetzen hieße, denselben 413 noch einmal zu
+  provozieren; die Ersparnis wäre eine Anfrage, der Preis eine verlorene. Die
+  Größe lebt deshalb im `Sender`, und der lebt in der `Application` — sie
+  überdauert einen Sendelauf, aber nicht den Neustart der App. Das ist die
+  richtige Länge: Ein 413 kommt von der Größe des Körpers, und die hängt am
+  Server, nicht am Gerät.
+- **E-S4-36 — Ein 400-Paket wird markiert, aber nicht gelöscht.** Der Vertrag
+  sagt „nicht wiederholen"; er sagt nicht „wegwerfen". Ein gelöschtes Paket
+  wäre eine Aufzeichnung, von der niemand mehr weiß, dass sie nicht angekommen
+  ist. Es fällt deshalb aus der Warteschlange und aus dem Rückstand — es ist
+  kein Rückstand mehr, sondern ein **Befund** —, bleibt aber im Puffer.
+  (Was die Oberfläche daraus macht, gehört zu D1.)

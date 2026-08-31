@@ -28,6 +28,18 @@ class PruefServer : Closeable {
     var status: Int = 200
     var antwortkoerper: String = """{"ok":true}"""
 
+    /**
+     * Antwort aus der Anfrage gerechnet — für alles, was vom Körper abhängt.
+     *
+     * `ingest.php` antwortet mit `next_seq`, und die hängt daran, wie viele
+     * Punkte ankamen. Ein fester Antworttext könnte das nicht nachstellen, und
+     * eine Kette von Teilstücken bliebe damit ungeprüft.
+     *
+     * Wirft die Funktion, bricht die Verbindung ohne Antwort ab — genau das,
+     * was ein Funkloch mitten in der Kette tut.
+     */
+    var antwortAus: ((koerper: String) -> String)? = null
+
     /** Alles, was hereinkam — die Prüffälle sehen hier nach. */
     val anfragen = CopyOnWriteArrayList<Anfrage>()
 
@@ -74,7 +86,8 @@ class PruefServer : Closeable {
                         }
                         anfragen.add(Anfrage(zeile, kopf, String(puffer, 0, gelesen)))
 
-                        val b = antwortkoerper.toByteArray(Charsets.UTF_8)
+                        val text = antwortAus?.invoke(anfragen.last().koerper) ?: antwortkoerper
+                        val b = text.toByteArray(Charsets.UTF_8)
                         v.getOutputStream().write(
                             ("HTTP/1.1 $status ${text(status)}\r\n" +
                                 "Content-Type: application/json; charset=utf-8\r\n" +

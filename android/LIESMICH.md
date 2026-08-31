@@ -9,10 +9,11 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket B3.** Die App koppelt sich, zeichnet über einen
-> Vordergrunddienst auf und übersteht Absturz und Neustart. Sie **sendet noch
-> nichts** (B4) und kennt noch keine Phasen (B5); der Rückstand steht deshalb
-> fest auf 0 — die Warteschlange, die ihn zählt, gibt es erst mit B4.
+> **Stand: Arbeitspaket B4.** Die App koppelt sich, zeichnet über einen
+> Vordergrunddienst auf, übersteht Absturz und Neustart und **sendet** —
+> in Teilstücken, mit `next_seq`-Buchführung und den vier Fehlerpfaden des
+> Vertrags. Sie kennt noch **keine Phasen** (B5); ein Dienst entsteht heute
+> immer als eine Ruhesegment-Kette.
 
 ---
 
@@ -97,13 +98,13 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand B3 (Android 0.3.0), `./gradlew build` im Container:
+Stand B4 (Android 0.4.0), `./gradlew build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **96**, davon 6 übersprungen | keine (kommen mit C1) |
+| Prüffälle | **133**, davon 9 übersprungen | keine (kommen mit C1) |
 
 Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
 available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
@@ -116,8 +117,8 @@ Betriebsübergang.
 Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
-Die **6 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 96 von 96 (siehe unten).
+Die **9 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
+Installation sind es 133 von 133 (siehe unten).
 
 ### Das SDK ist im Container nicht vorinstalliert
 
