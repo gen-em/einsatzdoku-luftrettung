@@ -1,4 +1,4 @@
-// Einsatzdoku — app-weiter Zustand + Persistenz.
+// NAdoku — app-weiter Zustand + Persistenz.
 // Alles Wichtige liegt in einem Dictionary, das nach jeder Aenderung in den
 // persistenten Storage geschrieben wird -> uebersteht App-/Uhren-Neustart.
 using Toybox.Application.Storage;
@@ -14,11 +14,12 @@ module Model {
     // "Einsatztag starten" und bleibt fuer ALLE Uploads dieses Dienstes
     // unveraendert — gleiches Muster wie client_ref, gleiche Idempotenz.
     //
-    // WOZU. Bis Web 5.10.0 war ein Flugtag ein KALENDERTAG, und der Server
-    // ordnete ueber (Konto, Datum) zu. Seit Web 6.0.0 ist ein Diensttag eine
-    // eigene Zeile: Zwei Dienste an einem Kalendertag sind der vorgesehene Fall
-    // — ein Hubschrauberdienst am Tag, ein NEF-Nachtdienst am Abend. Aus dem
-    // Datum allein laesst sich dann nicht mehr ableiten, welcher gemeint ist.
+    // WOZU. Bis Web 5.10.0 war ein Diensttag (damals noch „Flugtag") ein
+    // KALENDERTAG, und der Server ordnete ueber (Konto, Datum) zu. Seit
+    // Web 6.0.0 ist ein Diensttag eine eigene Zeile: Zwei Dienste an einem
+    // Kalendertag sind der vorgesehene Fall — ein luftgebundener am Tag, ein
+    // bodengebundener am Abend. Aus dem Datum allein laesst sich dann nicht
+    // mehr ableiten, welcher gemeint ist.
     // Die Kennung sagt es.
     //
     // Die Uhr erfaehrt dabei NICHTS ueber die Einsatzart (E21). Sie sagt nur,
@@ -89,13 +90,30 @@ module Model {
         }
     }
 
+    /* Der Cast am Ende ist kein Schmuck (Backlog Nr. 13, letzter Rest).
+     *
+     * Storage.setValue() nimmt als zweiten Parameter einen PolyType aus 16
+     * Alternativen — darunter Lang.Dictionary<Storage.KeyType,
+     * Storage.ValueType>. Ein Literal wie das hier hat aber den GENAUEN Typ
+     * Dictionary{"svc" as Boolean, "day" as String or Null, ...}, und die
+     * strenge Pruefung (-l 3) sieht nicht, dass der ein Sonderfall des
+     * allgemeinen ist. Sie meldete das als Fehler, obwohl zur Laufzeit nichts
+     * passieren kann.
+     *
+     * Der Cast sagt ihr, WELCHE der 16 Alternativen gemeint ist. Er kostet
+     * NICHTS: gemessen 0 Byte Unterschied im Kompilat, weil Casts eine reine
+     * Angelegenheit der Uebersetzung sind.
+     *
+     * Dieselbe Stelle gibt es in Pair.mc (Zugangsdaten), Track.mc (Punktpuffer,
+     * dort ein Array) und Uploader.mc (der Sendekoerper). Es waren die vier
+     * letzten Meldungen der strengen Pruefung. */
     function save() as Void {
         Storage.setValue(Const.K_STATE, {
             "svc" => serviceActive, "day" => day, "ph" => phase,
             "mis" => mission, "rest" => restSegment,
             "pm" => pendingMissions, "pr" => pendingRest,
             "dm" => dayMissions, "dref" => dayRef
-        });
+        } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
     }
 
     // ---- Dienst-Klammer (Anforderungen 1.1) --------------------------------

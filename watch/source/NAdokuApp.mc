@@ -1,9 +1,9 @@
-// Einsatzdoku — App-Einstieg
+// NAdoku — App-Einstieg
 using Toybox.Application;
 using Toybox.Lang;
 using Toybox.WatchUi;
 
-class HemsApp extends Application.AppBase {
+class NAdokuApp extends Application.AppBase {
 
     function initialize() { AppBase.initialize(); }
 

@@ -53,6 +53,7 @@ tools/uhr-pruefstand/pruefstand.sh pruefen       # Bestand auflisten
 tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro -l 3
 tools/uhr-pruefstand/pruefstand.sh starten fenix6pro
 tools/uhr-pruefstand/pruefstand.sh abbild /tmp/start.png
+tools/uhr-pruefstand/pruefstand.sh einstellungen-leeren
 tools/uhr-pruefstand/pruefstand.sh beenden
 ```
 
@@ -65,6 +66,76 @@ Für die Eingabe-Probe genügt ein anderer Jungle-Pfad:
 ```bash
 tools/uhr-pruefstand/pruefstand.sh bauen venu3s tools/eingabe-probe/monkey.jungle
 ```
+
+## Viele Geräte prüfen — zwei Stufen
+
+Über 170 Geräte einzeln durchzuklicken ist weder nötig noch bezahlbar. Der
+Hebel: **Übersetzen ist billig, Simulieren ist teuer.**
+
+| | Aufwand je Gerät | Läuft über | Fängt |
+|---|---|---|---|
+| **Stufe I** `reihe` | ~3 s | **alle** Zielgeräte | fehlende API-Funktionen, fehlende Ressourcen, Speicherbedarf |
+| **Stufe II** `bildreihe` | ~50 s | nur **Vertreter** je Klasse | Layout, Bedienhinweise, Abstürze beim Zeichnen |
+
+```bash
+python3 geraeteklassen.py ~/.Garmin/ConnectIQ/Devices \
+        --vertreter 5 --liste vertreter.txt --alle-liste auswahl.txt
+pruefstand.sh reihe     auswahl.txt          # Stufe I
+pruefstand.sh bildreihe vertreter.txt bilder # Stufe II
+```
+
+### Wonach `geraeteklassen.py` gruppiert
+
+Nicht nach Garmins Katalog, sondern nach den vier Achsen, die **diese App**
+tatsächlich unterscheidet — Herleitung im Kopf des Skripts:
+
+| Achse | Wo im Code |
+|---|---|
+| Displayform | `Ui.chordW()` rechnet eine Kreissehne, nimmt also ein rundes Display an |
+| Schwelle 320 px | `Ui.fontHint()` springt dort von `FONT_TINY` auf `FONT_XTINY` |
+| Eingabe (Touch, Tastenzahl) | `DeviceProfile.HAS_UP_DOWN`, Zuordnung im Jungle |
+| Speicher | `appTypes[watchApp].memoryLimit`; die App belegt im Leerlauf rund 54 kB |
+
+Die Displayhöhe **innerhalb** einer Klasse bildet keine eigene Klasse:
+`Ui.s()` und `Ui.pct()` skalieren stetig. Deshalb zieht das Skript je Klasse
+nicht ein Gerät, sondern eine Spanne — die Höhen-Extreme zuerst, dann
+gleichmäßig aufgefüllt.
+
+### Was der Compiler nicht fängt
+
+Stufe I ist blind für den gefährlichsten Fehler: `base.sourcePath` im Jungle
+steht auf dem **Fünf-Tasten-Profil**. Ein neu eingetragenes Gerät erbt es
+stillschweigend. Für ein Touch-Gerät mit zwei nutzbaren Tasten übersetzt das
+sauber und ist auf dem Gerät **unbedienbar** — genau der Fall, den
+`docs/Geraete-Eingabe.md` für die Venu 3s beschreibt. Die Eingabe-Zuordnung
+bleibt Handarbeit je Klasse, mit `tools/eingabe-probe`.
+
+## App-Einstellungen: der Simulator merkt sie sich
+
+Wer eine Vorgabe in `watch/resources/settings/properties.xml` ändert und neu
+übersetzt, sieht im Simulator trotzdem den **alten** Wert. Der Grund:
+
+```
+/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET
+```
+
+Diese Datei wird beim **ersten** Laden aus den Vorgaben des Kompilats gefüllt
+und danach nicht mehr angefasst — sie gewinnt über jedes weitere Kompilat. Am
+31.08.2026 hat das zwei Läufe lang dieselbe Bildmarke gezeigt, obwohl das
+zweite Kompilat die andere trug; erst `einstellungen-leeren` brachte sie zum
+Vorschein. Vor jedem Lauf, der eine geänderte Vorgabe prüfen soll:
+
+```bash
+pruefstand.sh einstellungen-leeren
+```
+
+**Das Verzeichnis muss stehen bleiben.** Wird es ganz entfernt, wirft
+`Properties.getValue()` einen Fehler, den ein `catch (e)` **nicht** fängt — die
+App stirbt beim ersten Zeichnen, das Display bleibt schwarz. Das ist ein
+Artefakt des Simulators: Auf einem Gerät legt die Installation den Speicher an.
+Ein fehlender **Schlüssel** dagegen wird sauber gefangen (geprüft mit einer
+Probe auf `"gibtsNicht"`, die brav auf die Vorgabe zurückfällt) — der Fall
+„App-Aktualisierung bringt eine neue Einstellung mit" ist also abgedeckt.
 
 ## Bedienung simulieren
 
@@ -90,6 +161,28 @@ Gemessen am 30.08.2026 mit der Eingabe-Probe auf der Venu 3S:
 | Wischen nach oben | `>> onNextPage` |
 | Halten 1,5 s | `HOLD x= y=` gefolgt von `RELEASE` |
 
+### Tasten sind heikler als Maus
+
+Mausereignisse gehen an das Fenster **unter dem Zeiger** — dafür braucht es
+nichts weiter. Tasten wertet der Simulator dagegen nur am **Fokusfenster**, und
+ohne Fenstermanager hat unter Xvfb keines den Fokus: Der Druck verpufft
+spurlos, ohne Fehlermeldung. `taste` setzt den Fokus deshalb selbst, mit
+`xdotool windowfocus` (nicht `windowactivate` — das verlangt
+`_NET_ACTIVE_WINDOW`, das ein Xvfb ohne Fenstermanager nicht anbietet).
+
+**Der erste Druck nach dem Laden geht trotzdem regelmäßig verloren**, während
+die App noch startet. Am 31.08.2026 hat das zweimal so ausgesehen, als bliebe
+die Anwendung auf dem Startbildschirm stehen. Zweimal drücken und nachsehen:
+
+```bash
+pruefstand.sh taste Down; pruefstand.sh abbild /tmp/a.png
+pruefstand.sh taste Down; pruefstand.sh abbild /tmp/b.png
+```
+
+Gemessen am 31.08.2026 auf der fenix6pro (Fünf-Tasten-Profil): `Down` blättert
+vom Startbildschirm zur Sync-Seite, `Escape` wirkt als BACK — auf dem
+Startbildschirm heißt das `System.exit()`, die App ist danach fort.
+
 ## Grenzen
 
 Was der Prüfstand **nicht** leistet, und woran das liegt:
@@ -107,11 +200,31 @@ Was der Prüfstand **nicht** leistet, und woran das liegt:
   1,2 GB Schriften sind dabei der langsame Teil.
 - **Ein Lauf im Simulator ersetzt das Lesen nicht.** Er zeigt, dass es startet
   und wie es aussieht — nicht, dass es richtig ist.
-- **`starten` kehrt in einer nicht-interaktiven Umgebung nicht immer zurück.**
-  `monkeydo` hält die Verbindung zum Simulator, solange die App läuft; startet
-  man mehrere Geräte in einer Schleife, wartet der Aufrufer unter Umständen auf
-  den Kindprozess, obwohl er abgelöst gestartet wird. Interaktiv fällt das
-  nicht auf. Für einen Reihendurchlauf über mehrere Geräte ist der direkte Weg
+- **Anzeige und Simulator brauchen `setsid`, nicht nur `nohup`.** Eine
+  Werkzeugumgebung, die jeden Befehl in einer eigenen Shell ausführt, räumt
+  beim Verlassen die ganze Prozessgruppe ab — die mit `nohup ... &` gestartete
+  Anzeige war dann schon fort, bevor der nächste Befehl sie brauchte
+  (`unable to open display ":99"`, und der Simulator bricht mit
+  „Can't create a GtkStyleContext without a display connection" ab). Das
+  Skript startet beides deshalb mit `setsid`.
+- **`pkill -f monkeydo` erwischt die eigene Shell**, wenn das Muster im
+  Kommandozeilentext dieser Shell vorkommt — bei einem Aufruf über ein
+  Werkzeug, das den ganzen Befehl in `bash -c` einbettet, ist das die Regel.
+  Der Aufruf endet mit Rückgabewert 144, und nichts läuft. Deshalb steht der
+  Reihendurchlauf in einer **Skriptdatei**: Deren Kommandozeile lautet nur
+  `bash lauf.sh`, das Muster kommt darin nicht vor.
+- **`starten` kehrt nicht zurück, wenn seine Ausgabe in eine Pipe geht.**
+  `monkeydo` erbt die Standardausgabe und hält die Verbindung zum Simulator,
+  solange die App läuft; der Leser am anderen Ende der Pipe wartet folglich auf
+  einen Prozess, der nicht endet — auch wenn `monkeydo` abgelöst gestartet
+  wurde. In eine **Datei** umgeleitet kehrt derselbe Aufruf sofort zurück:
+
+  ```bash
+  pruefstand.sh starten fenix6pro 5 >lauf.log 2>&1 </dev/null   # kehrt zurueck
+  pruefstand.sh starten fenix6pro 5 | tail                      # blockiert
+  ```
+
+  Für einen Reihendurchlauf über mehrere Geräte ist der direkte Weg
   zuverlässiger:
 
   ```bash

@@ -115,16 +115,31 @@ zurückgelegten Kilometer.
 
 **Statistik:** Kennzahlen des laufenden Dienstes.
 
-**Sync:** Zeigt, ob alle abgeschlossenen Pakete beim Server angekommen sind
-(grün „Sync vollständig" mit Haken) oder wie viele noch offen sind, bei
-Problemen mit Fehlergrund. Darunter die **GPS-Güte**: „GPS gut" oder „GPS
-ausreichend" (grün) heißt, dass Positionen aufgezeichnet werden; „GPS zu
-schwach" (rot) bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb
-eines Dienstes steht dort „GPS aus". Unten die App-Version; mit **START
-gedrückt halten** startest du hier die Geräte-Kopplung.
+**Sync:** Beantwortet die Frage, ob alles beim Server angekommen ist. Die
+Seite kennt dafür drei Antworten:
 
-Ist noch keine Server-Adresse hinterlegt, weist die Uhr zuerst darauf hin, sie
-in Garmin Connect einzutragen; erst danach erscheint der Kopplungshinweis.
+| Anzeige | heißt |
+|---|---|
+| Grün „Sync vollständig" mit Haken | Alles übertragen — und die Uhr *kann* übertragen |
+| Orange Zahl, darunter „Pakete offen" | So viele abgeschlossene Pakete warten noch |
+| Rot „Nicht eingerichtet" | Die Uhr kann gar nicht senden; darunter steht, was fehlt |
+
+Der dritte Fall ist der Zustand vor der Einrichtung. Darunter steht der
+nächste Schritt — entweder „Erst Server-Adresse setzen" (das geschieht in
+Garmin Connect, nicht auf der Uhr) oder der Tastenweg zum Koppeln. Die
+Reihenfolge ist zwingend: Ohne Server-Adresse ist Koppeln nicht möglich.
+
+**Grün gibt es also nur, wenn beides steht** — Adresse und Kopplung. Bis Uhr
+1.10.0 erschien „Sync vollständig" auch vor der ersten Einrichtung, weil die
+Seite nur zählte, was zum Senden bereitlag; vor dem ersten Dienst ist das zu
+Recht nichts. Die Aussage war trotzdem falsch: Sie sprach über einen Weg, den
+die Uhr nie benutzt hatte.
+
+Über der Antwort steht die **GPS-Güte**: „GPS gut" oder „GPS ausreichend"
+(grün) heißt, dass Positionen aufgezeichnet werden; „GPS zu schwach" (rot)
+bedeutet, dass die Uhr gerade keine Punkte speichert. Außerhalb eines Dienstes
+steht dort „GPS aus". Unten die App-Version, bei Problemen der Fehlergrund;
+mit **START gedrückt halten** startest du hier die Geräte-Kopplung.
 
 **Reanimation:** siehe 2.3.
 
@@ -2245,6 +2260,10 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    Abschnitt 5 der Technik-Doku.*
 2. **Server-Adresse in den Einstellungen der Uhr-App eintragen** — die Domain
    genügt (z. B. `nadoku.beispieldomain.de`).
+   **Die Uhr-App heißt „NAdoku"** — der künftige Name, seit Uhr 2.0.0. Die
+   Weboberfläche und dieses Handbuch tragen noch „Einsatzdoku" und ziehen mit
+   dem v1.0-Schnitt nach; wer die App in der Liste sucht, sucht also nach
+   **NAdoku**.
    *Bei Garmin: in Garmin Connect unter den App-Einstellungen.*
 3. **Im Web einen Kopplungscode erzeugen:** **Einstellungen → „Geräte" →
    „Kopplungscode erzeugen"** — der **6-Zeichen-Code ist 10 Minuten gültig und
@@ -2276,3 +2295,35 @@ liegt und was hilft — in zwei kurzen Zeilen:
 
 Vorher stand dort in all diesen Fällen nur „Kopplung fehlgeschlagen" mit einer
 Zahl.
+
+### 12.1 Eine Uhr an eine andere Person übergeben
+
+Seit Uhr 1.11.0 trennt sich die Uhr **zuerst ausdrücklich**, bevor sie neu
+koppelt. Der Weg dorthin ist derselbe wie beim ersten Mal (Sync-Seite → Gerät
+koppeln; der Tastenweg je Uhr steht in Abschnitt 2.2), aber er beginnt jetzt
+mit einer Rückfrage:
+
+1. **„Kopplung trennen und neu koppeln?"** — Nein lässt alles, wie es ist.
+2. Bei Ja meldet die Uhr **„Getrennt"** und öffnet die Code-Eingabe. Das Gerät
+   verschwindet aus der Geräteliste im Web und gibt seinen Platz frei; die
+   bisherige Kontoinhaberin bekommt eine E-Mail darüber. **Bereits
+   hochgeladene Einsätze bleiben vollständig erhalten.**
+3. Danach wie oben: im Web einen Code erzeugen und eintippen.
+
+Zwei Dinge, die dabei bewusst so sind:
+
+**Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
+die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.
+Die Pakete gehören der bisherigen Person; nach einer Neukopplung landeten sie
+im neuen Konto. Erst senden — die Sync-Seite zeigt den Rückstand.
+
+**Ohne Verbindung trennt die Uhr trotzdem**, sagt es aber:
+**„Nur auf der Uhr getrennt / Gerät im Web löschen"**. Sonst bliebe eine Uhr
+ohne Telefon in Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr
+benutzen soll. Der Eintrag im Web ist dann noch da und mit einem Klick zu
+entfernen.
+
+**Warum das nötig war:** Bis dahin führte der Weg direkt in die Code-Eingabe.
+Schlug das Koppeln fehl, blieben die alten Zugangsdaten stehen und die Uhr
+dokumentierte stillschweigend weiter auf das vorherige Konto — niemand sah es
+ihr an.

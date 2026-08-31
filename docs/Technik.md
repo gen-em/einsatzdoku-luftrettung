@@ -85,7 +85,8 @@ Daten erst nach Server-Bestätigung.
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
-│   ├── pair.php           Uhr-Kopplung per Code
+│   ├── pair.php           Uhr-Kopplung per Code, und Trennen einer
+│   │                      bestehenden Kopplung (JSON-Vertrag 1a/1b)
 │   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
 │   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
@@ -217,6 +218,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── uhr-bilder/        rastert Launcher-Symbole und Bildmarken der Uhr
+│   │                      aus den beiden SVG unter server/assets/images/.
+│   │                      Das Rezept ist aus den vorhandenen Dateien
+│   │                      zurückgerechnet und reproduziert sie bitgleich
+│   │                      (s. LIESMICH.md)
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
@@ -1568,6 +1574,24 @@ Zeitlimit des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist
 das klein, aber nicht null — deshalb steht das Zeitlimit bei der Kopplung, wo
 die Uhr wartet, auf fünf statt fünfzehn Sekunden.
 
+### Was die Uhr beim Koppeln über sich meldet — seit Uhr 1.9.0
+
+Die Kopplung sendet neben dem Code einen Block `geraet` mit Teilenummer,
+Displaymaßen, Touch, Firmware, Plattform- und App-Fassung; die Art steht fest
+auf `"uhr"`. Feldliste und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
+
+**Der Server verwirft den Block derzeit stillschweigend** — die Auswertung ist
+Backlog Nr. 46. Bis dahin sammelt niemand etwas; die Uhr sendet nur.
+
+Zwei Entscheidungen dahinter. Gesendet wird die **Teilenummer**, nicht der
+Modellname: Den kennt die Uhr nicht, `DeviceSettings` führt ihn nicht. Die
+Teilenummer ist eindeutig und serverseitig gegen die Gerätedateien der
+Uhr-Plattform auflösbar (325 Teilenummern auf 173 Modelle, samt Geräteart) — eine
+Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Platz. Und
+**`uniqueIdentifier` wird bewusst nicht gesendet**: eine dauerhafte
+Gerätekennung, die für eine Stückzahl-Statistik nicht gebraucht wird und in
+einer kleinen Gruppe mehr Personenbezug schafft, als die Frage rechtfertigt.
+
 ### Geräte je Konto
 
 Höchstens **fünf** (`MAX_GERAETE` in `db.php`), geprüft beim Koppeln
@@ -1661,7 +1685,11 @@ Die verbindliche Beschreibung steht im JSON-Vertrag, Abschnitt 8.
 
 **Zwei Stellen, an denen die Gleichheit von Antworten zählt.** Der
 Salt-Endpunkt (`auth_salt.php`) und die Kopplung (`pair.php`) sind ohne
-Anmeldung erreichbar. Beide müssen für "gibt es" und "gibt es nicht"
+Anmeldung erreichbar. Bei `pair.php` gilt das seit Web 9.15.0 für **beide**
+Anliegen: Der Trennen-Zweig läuft im unbekannten Fall gegen
+`AUTH_VERGLEICHSWERT`, wie `ingest.php` — sonst wäre aus der Antwortdauer
+ablesbar, welche Gerätekennungen es gibt, und die Kennung ist die Hälfte
+dessen, was ein Upload braucht. Beide müssen für "gibt es" und "gibt es nicht"
 Antworten liefern, die sich in **Länge, Zeichenvorrat, Aufbau und Dauer**
 nicht unterscheiden. Beim Salt war es zuletzt die Länge, die alles verriet:
 Ein echtes Salt hat 32 Hexzeichen, das Pseudo-Salt hatte 64. Wer hier etwas
@@ -2172,7 +2200,7 @@ und genau dann wäre er nötig.
 
 | Datei | Verantwortung |
 |---|---|
-| `HemsApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync) |
+| `NAdokuApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync). Hieß bis Uhr 2.0.0 `HemsApp.mc` |
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
@@ -2311,20 +2339,50 @@ Sonderbehandlung.
 zu:
 
 ```
-fenix6pro.sourcePath = source;source-tasten5
-venu3s.sourcePath    = source;source-tasten3
-venu3s.resourcePath  = resources;resources-venu3s
+fenix6pro.sourcePath   = source;source-tasten5
+venu3s.sourcePath      = source;source-tasten3
+venu3s.resourcePath    = resources;resources-icon70;resources-marke105
 ```
 
 **Nicht** `$(<gerät>.sourcePath);source-tasten5` schreiben. Der Selbstbezug
 fällt auf eine Vorgabe zurück, die alle `source*`-Ordner einsammelt; dann
 landen beide `DeviceProfile.mc` im Build und der Compiler meldet
 `Redefinition of 'HAS_UP_DOWN'`. Dasselbe gilt für `resourcePath` — sonst
-bekäme die Fenix das 70×70-Icon der Venu 3s.
+bekäme die Fenix das Symbol der Venu 3s.
 
 `base.sourcePath` steht auf dem Fünf-Tasten-Profil: Ein Gerät, das jemand ins
 Manifest einträgt ohne hier eine Zeile zu ergänzen, baut damit gegen das
 konservativere Profil.
+
+**Die Ressourcenordner sind nach Größe geschnitten, nicht nach Gerät:**
+
+| Ordner | Inhalt |
+|---|---|
+| `resources` | Grundordner — Launcher-Symbol 40 px, Bildmarke 73 px |
+| `resources-icon<N>` | **nur** das Launcher-Symbol in N Pixeln (35, 36, 54, 56, 60, 61, 65, 70) |
+| `resources-marke<K>` | **nur** die Bildmarke in einer Kachel von K Pixeln |
+
+Getrennt, weil die beiden Größen nicht miteinander laufen: Ein Gerät mit
+60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln Displayhöhe. Die
+Ordnerzahl gewinnt dabei nichts — getrennt 8 + 3, zusammengelegt ebenfalls 11 —,
+wohl aber die Pflege: Zusammengelegt läge dieselbe 101er Kachel in fünf
+Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
+
+Die Symbolgröße ist eine **Vorgabe des Geräts** (`launcherIcon.width` in
+seiner `compiler.json`), keine Wahl; fehlt sie, skaliert `monkeyc` und meldet
+es als Warnung.
+
+Die Kachelgröße der Bildmarke kommt dagegen aus einer Entscheidung: vier
+Stufen (60, 73, 101, 118) über die zehn vorkommenden Displayhöhen, Zielwert
+27 % — das Verhältnis 70/260 des Bezugsgeräts, dem `Ui.s()` ohnehin jede Länge
+folgt. Ein Bitmap kann `Ui.s()` nicht folgen (`dc.drawBitmap` zeichnet 1:1),
+vorgerasterte Stufen holen das nach. Alle 99 Geräte liegen damit zwischen 25,0
+und 28,8 %; vor Uhr 1.10.3 reichte die Spanne von 15 % bis 34 %, weil die
+Zuordnung an der Symbolgröße hing. Begründung der Stufenzahl:
+`tools/uhr-bilder/LIESMICH.md`.
+
+Bilder erzeugen: `tools/uhr-bilder/erzeugen.sh`. Die passenden Jungle-Zeilen:
+`tools/uhr-pruefstand/geraeteklassen.py --bloecke`.
 
 ### 5.2 Neue Zielgeräte prüfen — `tools/eingabe-probe`
 

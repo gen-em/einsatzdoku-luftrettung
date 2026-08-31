@@ -28,35 +28,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
-11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
-    kann.** Beobachtet ohne hinterlegte Server-Adresse: Die Seite zeigt
-    gleichzeitig das grüne „Sync vollständig" mit Haken **und** unten den
-    gelben Hinweis „Erst Server-Adresse setzen". Dasselbe tritt auf, wenn die
-    Adresse gesetzt, das Gerät aber noch nicht gekoppelt ist.
-    Ursache: `SyncView.onUpdate` wertet zwei voneinander unabhängige Größen
-    aus und stellt sie unverbunden nebeneinander. `Model.backlogCount()`
-    beantwortet ausschließlich die Frage „liegen abgeschlossene Pakete zum
-    Senden bereit?" — vor dem ersten Dienst ist das zu Recht `0`. Daraus wird
-    im Text aber „vollständig" und damit eine Aussage über den Übertragungsweg,
-    den die Uhr zu diesem Zeitpunkt nie benutzt hat. `Uploader.lastError`
-    bleibt dabei `null`, weil `SyncView.refresh()` `syncAll()` nur bei
-    vorhandenem Rückstand anstößt — es gibt also nicht einmal eine Fehlerzeile,
-    die den Widerspruch auflösen würde.
-    Reine Anzeigefrage, kein Datenverlust: Wird ohne Einrichtung dokumentiert,
-    puffert die Uhr korrekt und der Rückstand erscheint.
-    Richtung der Auflösung: Der grüne Zustand setzt zusätzlich
-    `Uploader.hasServer()` **und** `hasCredentials()` voraus. Fehlt eines von
-    beidem, tritt an seine Stelle ein neutraler Einrichtungs-Zustand, und der
-    heute unten stehende gelbe Hinweis wird zur Hauptaussage der Seite statt
-    zur Fußnote. Betrifft nur `watch/source/SyncView.mc`; die Reihenfolge der
-    Einrichtungsschritte (erst Adresse, dann Kopplung) ist dort bereits
-    abgebildet und bleibt.
-14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
-    abfragen und trennen.** Fall: eine geteilt genutzte Uhr. Wird sie neu
-    gekoppelt und schlägt der Vorgang fehl, dokumentiert sie stillschweigend
-    weiter auf das vorherige Konto. Gewünscht ist die ausdrückliche Reihenfolge
-    abfragen → trennen → neu koppeln. Betrifft `watch/source/Pair.mc` und
-    `server/pair.php`.
 17. **`ingest.php` hat als einziger anmeldungsfreier Endpunkt keine
     Mengenbremse.** `RATE_GRENZEN` (`ratelimit_lib.php`) kennt keinen Topf
     `ingest`, und die Datei ruft weder `rate_erlaubt()` noch
@@ -336,6 +307,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
+46. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
+    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
+    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
+    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
+    Auflösung der Teilenummer auf Modell und Geräteart über die
+    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
+    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
+    Dateien ziehen), und eine Auswertung in der Weboberfläche.
+    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
+    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
+    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
+    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
+    sie eins.
+    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
+    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
+    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
+    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
+    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
+
+
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
@@ -486,10 +478,19 @@ zutreffen.
     fehlende Parametertypen. Anders als der erste Teil kostet das Platz:
     **+448 Byte** (fenix6pro, fr945) bzw. **+480 Byte** (venu3s). Die vier
     verbliebenen Stellen sind alle `Storage.setValue()` mit Dictionary oder
-    Array; sie aufzulösen hieße, die Datenstruktur zu ändern — für vier
-    Meldungen der falsche Preis. Mit erledigt: `Input.lPageDown()` und
+    Array. Mit erledigt: `Input.lPageDown()` und
     `L_PAGE_DOWN` waren toter Code und sind entfallen, und die Wisch-Kommentare
     an `CprView.onPreviousPage/onNextPage` waren vertauscht.
+    *Abgeschlossen mit Uhr 1.11.0:* **0 Meldungen bei `-l 3`, auf allen 99
+    Geräten.** Die vier galten als „nicht auflösbar, ohne die Datenstruktur zu
+    ändern" — das war falsch. Sie brauchen keine neue Struktur, sondern einen
+    **Cast auf die gemeinte Alternative des PolyType**: `Storage.setValue()`
+    und `makeWebRequest()` nehmen bis zu 16 Typen, ein Literal hat aber einen
+    genauen, und die Prüfung sieht den Sonderfall nicht. Eine der vier war
+    sogar eine Verwechslung — `Track.mc` **hatte** einen Cast, nur auf
+    `Application.PropertyValueType` statt `Storage.ValueType`; ein falscher
+    Cast prüft nichts. Kosten: **0 Byte**, gemessen (Casts sind reine
+    Übersetzungsangelegenheit). Der Weg war 226 Meldungen / 77 Stellen → 4 → 0.
 
 15. **`api/suchindex.php` liefert das Feld `edited`, das niemand liest.**
     *Erledigt mit Web 7.0.0.* Das Feld ist aus SELECT und Antwort entfernt.
@@ -823,3 +824,93 @@ zutreffen.
     nicht als mehrdeutig gemeldet). Am Stand davor fallen drei durch: Der
     Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
     eigener Diensttag, und gemeldet wurde nichts.
+
+47. **Die Uhr kennt die Logo-Wahl nicht.**
+    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
+    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
+    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
+    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
+    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
+    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
+    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
+    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
+    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
+    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
+    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
+    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
+    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
+    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
+    Displays: Nr. 48.
+
+11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
+    kann.**
+    *Erledigt mit Uhr 1.10.1.* Ohne hinterlegte Server-Adresse zeigte dieselbe
+    Anzeige gleichzeitig das grüne „Sync vollständig" mit Haken **und** drei
+    Zeilen tiefer „Erst Server-Adresse setzen"; ebenso bei gesetzter Adresse
+    ohne Kopplung. Ursache war eine verwechselte Frage:
+    `Model.backlogCount()` beantwortet nur „liegen abgeschlossene Pakete zum
+    Senden bereit?" — vor dem ersten Dienst zu Recht `0` —, die Seite machte
+    daraus eine Aussage über den Übertragungsweg.
+    Der grüne Zustand setzt jetzt zusätzlich `hasServer()` **und**
+    `hasCredentials()` voraus. Fehlt eines und liegt kein Rückstand vor, tritt
+    ein dritter Zustand an seine Stelle: rot „Nicht eingerichtet", darunter
+    gedämpft der nächste Schritt. Der bisherige Fußzeilenhinweis wird damit
+    zur Hauptaussage und unten nicht wiederholt.
+    Bei **Rückstand** behält die Zahl den Vortritt und der Hinweis bleibt in
+    der Fußzeile — dort widerspricht sich nichts: Es sind Pakete offen, und
+    daneben steht, warum. Betraf nur `watch/source/SyncView.mc`.
+    *Geprüft:* fünf Zustände im Simulator mit Bildabzug (fenix6pro alle fünf,
+    Venu 3s die beiden mit geänderter Blockhöhe); Rückstand über ein
+    Probekompilat mit fest verdrahtetem `backlogCount() == 3`.
+
+48. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+    *Erledigt mit Uhr 1.10.2 (Symbol) und 1.10.3 (Bildmarke).*
+    **Das Launcher-Symbol** lag in zwei von neun verlangten Größen vor (35, 36,
+    40, 54, 56, 60, 61, 65, 70 px). Die Größe ist keine Wahl, sondern eine
+    Vorgabe des Geräts; fehlt sie, skaliert `monkeyc` und meldet es — 42 der 99
+    Geräte bauten mit genau dieser einen Warnung. Jetzt sind es 0, und es kostet
+    kein Byte: Garmin legt Bitmaps palettiert und in fester Breite ab, der
+    Platzbedarf hängt an den Maßen, nicht am Inhalt.
+    **Die Bildmarke** wird mit `dc.drawBitmap` 1:1 gezeichnet und war über die
+    *Symbolgröße* zugeordnet statt über die Displayhöhe. Spanne über die 99
+    Geräte: 15 % bis 34 % der Displayhöhe, wo die Gestaltung 27 % vorsieht —
+    Venu 3s und Descent G2 teilen sich dasselbe 390-px-Display und zeigten sie
+    in 27 % gegen 18 %. Jetzt vier vorgerasterte Stufen (Kachel 60, 73, 101,
+    118), Spanne 25,0–28,8 %.
+    Freigegeben am 31.08.2026 mit Mockup (Simulatorabzüge, je heute gegen
+    Vorschlag) nach einer Rechnung über 3, 4, 5 und 10 Stufen. Bewusst
+    mitentschieden: Bei vier Stufen fällt das Bezugsgerät mit der
+    260/280-Gruppe zusammen, die Kachel der fenix6pro wächst von 70 auf 73.
+    Das Abnahmekriterium „auf der Fenix verschiebt sich nichts" hat damit eine
+    Ausnahme; sie steht im Kopf von `Ui.mc` und in `docs/Uhr-Layout_Regeln.md`
+    2.1.
+    Neues Werkzeug `tools/uhr-bilder/erzeugen.sh` — das Rezept der Bilder war
+    bis dahin nirgends festgehalten. Es ist aus den vorhandenen Dateien
+    zurückgerechnet und reproduziert sie bitgleich.
+    *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
+    im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
+    knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
+
+14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
+    abfragen und trennen.**
+    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
+    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
+    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
+    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
+    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
+    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
+    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
+    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
+    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
+    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
+    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
+    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
+    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
+    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
+    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
+    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
+    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
+    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
+    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
+    `ingest.php`/`einstellungen.php`.

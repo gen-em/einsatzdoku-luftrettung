@@ -158,7 +158,11 @@ anzeige_starten() {
         melde "verwaiste Anzeige-Sperre entfernen"
         rm -f "/tmp/.X${n}-lock" "/tmp/.X11-unix/X${n}"
     fi
-    nohup Xvfb "$ANZEIGE" -screen 0 1400x1000x24 >/dev/null 2>&1 &
+    # setsid, nicht nur nohup: In einer Werkzeugumgebung, die jeden Befehl in
+    # einer eigenen Shell ausfuehrt, wird beim Verlassen die ganze Prozessgruppe
+    # abgeraeumt — die Anzeige war dann schon fort, bevor der naechste Befehl
+    # sie brauchte ("unable to open display"). setsid loest sie heraus.
+    setsid nohup Xvfb "$ANZEIGE" -screen 0 1400x1000x24 >/dev/null 2>&1 </dev/null &
     sleep 3
     xdpyinfo -display "$ANZEIGE" >/dev/null 2>&1 \
         || fehler "Anzeige $ANZEIGE liess sich nicht starten"
@@ -168,7 +172,7 @@ simulator_starten() {
     umgebung; anzeige_starten
     pgrep -f "$SDK_DIR/bin/simulator" >/dev/null && { melde "Simulator laeuft bereits"; return; }
     melde "Simulator starten"
-    (cd "$SDK_DIR/bin" && nohup ./simulator >"$BASIS/simulator.log" 2>&1 &)
+    (cd "$SDK_DIR/bin" && setsid nohup ./simulator >"$BASIS/simulator.log" 2>&1 </dev/null &)
     sleep 18
 }
 
@@ -182,6 +186,10 @@ starten() {
 "Kein Kompilat fuer $geraet. Erst uebersetzen:
    $(basename "${BASH_SOURCE[0]}") bauen $geraet"
     umgebung; simulator_starten
+    # s. einstellungen_leeren(): eine stehende .SET-Datei ueberstimmt die
+    # Vorgaben aus properties.xml — das sieht man dem Kompilat nicht an.
+    local set_datei="$EINSTELL_ABLAGE/$(printf '%s' "$geraet" | tr 'a-z' 'A-Z').SET"
+    [ -f "$set_datei" ] && melde "Hinweis: gespeicherte App-Einstellungen aktiv ($(basename "$set_datei")) — 'einstellungen-leeren' setzt sie zurueck"
     # Eine vorherige Sitzung zuerst beenden: monkeydo laeuft weiter, solange die
     # App laeuft, und zwei gleichzeitige Verbindungen blockieren einander.
     pkill -f "monkeydo" 2>/dev/null || true
@@ -196,6 +204,89 @@ starten() {
 # Was der Simulator ausgibt: System.println der App, Absturzmeldungen samt
 # Aufrufliste. Nach jeder Bedienung erneut lesen — die Ausgabe waechst.
 konsole() { grep -v 'JAVA_TOOL_OPTIONS' "$BASIS/konsole.log" 2>/dev/null || true; }
+
+# ---- Stufe I: uebersetzen, fuer viele Geraete --------------------------------
+#
+# Uebersetzen ist billig (wenige Sekunden je Geraet) und faengt schon eine
+# Menge: fehlende API-Funktionen, nicht vorhandene Ressourcen, Speicherbedarf.
+# Deshalb laeuft es ueber ALLE Zielgeraete, nicht nur ueber Vertreter.
+reihe() {
+    local liste="${1:?Listendatei fehlt}"; shift || true
+    [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
+    umgebung; mkdir -p "$AUSGABE"
+    # monkeyc braucht eine Grafikumgebung, sobald es das Launcher-Icon auf die
+    # Groesse des Geraets skalieren muss (java.awt.BufferedImage). Fehlt sie,
+    # bricht es mit einem AWTError ab — und zwar OHNE ERROR-Zeile: Das Kompilat
+    # fehlt dann einfach. Geraete, deren Icon exakt passt, bauen durch; der
+    # Ausfall sieht deshalb nach einem Geraeteproblem aus und ist keins.
+    export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+    local ok=0 mangel=0 fehlend=0
+    printf '%-26s %5s %6s %10s  %s\n' "Gerät" "Warn" "Fehler" "Größe" "Anmerkung"
+    printf '%s\n' "----------------------------------------------------------------------"
+    while read -r g; do
+        [ -z "$g" ] && continue
+        if [ ! -f "$GARMIN_HOME/Devices/$g/compiler.json" ]; then
+            printf '%-26s %5s %6s %10s  %s\n' "$g" "-" "-" "-" "Gerätedatei fehlt"
+            fehlend=$((fehlend+1)); continue
+        fi
+        local log="$BASIS/reihe_$g.txt"
+        monkeyc -f "$WURZEL/watch/monkey.jungle" -d "$g" -o "$AUSGABE/$g.prg" \
+                -y "$SCHLUESSEL" -w "$@" >"$log" 2>&1 || true
+        sed -i '/JAVA_TOOL_OPTIONS/d' "$log" 2>/dev/null || true
+        local w e sz
+        w=$(grep -c 'WARNING' "$log" || true)
+        # Ausnahmen der Java-Ebene tragen keine ERROR-Zeile — mitzaehlen,
+        # sonst steht da "0 Fehler" neben einem fehlenden Kompilat.
+        e=$(grep -cE 'ERROR|Exception in thread' "$log" || true)
+        sz=$(stat -c%s "$AUSGABE/$g.prg" 2>/dev/null || echo 0)
+        if [ "$e" -gt 0 ] || [ "$sz" -eq 0 ]; then
+            printf '%-26s %5s %6s %10s  %s\n' "$g" "$w" "$e" "$sz" "FEHLGESCHLAGEN"
+            mangel=$((mangel+1))
+        else
+            printf '%-26s %5s %6s %10s\n' "$g" "$w" "$e" "$sz"
+            ok=$((ok+1))
+        fi
+    done < "$liste"
+    printf '%s\n' "----------------------------------------------------------------------"
+    printf 'übersetzt: %s   fehlgeschlagen: %s   ohne Gerätedatei: %s\n' \
+           "$ok" "$mangel" "$fehlend"
+    [ "$mangel" -eq 0 ] && [ "$fehlend" -eq 0 ]
+}
+
+# ---- Stufe II: im Simulator starten, je Geraet ein Abbild --------------------
+#
+# Teuer (rund eine Minute je Geraet), deshalb nur fuer die Vertreter der
+# Klassen. monkeydo wird bewusst direkt gestartet und wieder beendet statt
+# ueber starten() — in einer Schleife blockiert das sonst (s. LIESMICH).
+bildreihe() {
+    local liste="${1:?Listendatei fehlt}" ziel="${2:-$BASIS/abbilder}"
+    [ -f "$liste" ] || fehler "Liste nicht gefunden: $liste"
+    umgebung; simulator_starten; mkdir -p "$ziel"
+    local wartezeit="${CIQ_WARTEZEIT:-26}"
+    while read -r g; do
+        [ -z "$g" ] && continue
+        if [ ! -f "$AUSGABE/$g.prg" ]; then
+            printf '%-26s %s\n' "$g" "kein Kompilat — erst 'reihe'"; continue
+        fi
+        : >"$BASIS/konsole.log"
+        nohup monkeydo "$AUSGABE/$g.prg" "$g" >"$BASIS/konsole.log" 2>&1 &
+        local md=$!
+        sleep "$wartezeit"
+        xwd -root -display "$ANZEIGE" 2>/dev/null | convert xwd:- "$ziel/$g.png" 2>/dev/null
+        # Absturzmeldungen des Simulators sind die eigentliche Ausbeute
+        local stoerung
+        stoerung=$(grep -c -iE 'error|crash|exception' "$BASIS/konsole.log" 2>/dev/null || true)
+        if [ "${stoerung:-0}" -gt 0 ]; then
+            printf '%-26s %s\n' "$g" "MELDUNG:"
+            konsole | head -6 | sed 's/^/    /'
+        else
+            printf '%-26s %s\n' "$g" "ok"
+        fi
+        kill "$md" 2>/dev/null || true
+        sleep 2
+    done < "$liste"
+    printf 'Abbilder unter %s\n' "$ziel"
+}
 
 # Der Simulator kennt keinen Bildschirmabzug ueber die Kommandozeile — deshalb
 # der Umweg ueber den X-Server. Was hier herauskommt, ist das Fenster, nicht
@@ -223,7 +314,40 @@ wischen() {                                  # wischen <x> <vonY> <nachY>
     done
     xdotool mousemove "$x" "$nach"; xdotool mouseup 1
 }
-taste()   { umgebung; xdotool key "${1:?Taste}"; }
+# Tastendruck. Anders als Mausereignisse (die an das Fenster unter dem Zeiger
+# gehen) wertet der Simulator Tasten nur am FOKUSFENSTER — ohne Fenstermanager
+# hat aber keines den Fokus, und der Druck verpufft spurlos. windowfocus setzt
+# ihn ueber XSetInputFocus; windowactivate scheitert hier, weil Xvfb ohne
+# Fenstermanager kein _NET_ACTIVE_WINDOW kennt.
+#
+# Der ERSTE Druck nach dem Laden geht regelmaessig verloren — die App
+# initialisiert noch. Wer sicher gehen will, drueckt zweimal und sieht nach.
+taste()   {
+    umgebung
+    local wid
+    wid=$(xdotool search --onlyvisible --name "CIQ Simulator" 2>/dev/null | head -1)
+    [ -n "$wid" ] && { xdotool windowfocus "$wid" 2>/dev/null; sleep 0.5; }
+    xdotool key "${1:?Taste}"
+}
+
+# Der Simulator legt die App-Einstellungen unter
+# /tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET ab und fuellt sie
+# NUR EINMAL aus den Vorgaben der properties.xml. Wer eine Vorgabe aendert und
+# neu uebersetzt, sieht deshalb weiter den alten Wert — die Datei gewinnt.
+# Am 31.08.2026 hat das zwei Laeufe lang dieselbe Bildmarke gezeigt, obwohl das
+# Kompilat die andere trug.
+#
+# Das VERZEICHNIS muss stehen bleiben. Fehlt es ganz, wirft
+# Properties.getValue() einen Fehler, den ein "catch (e)" NICHT faengt: Die App
+# stirbt beim ersten Zeichnen. Ein fehlender SCHLUESSEL dagegen wird sauber
+# gefangen — geprueft mit einer Probe auf "gibtsNicht".
+EINSTELL_ABLAGE=/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS
+
+einstellungen_leeren() {
+    mkdir -p "$EINSTELL_ABLAGE"
+    rm -f "$EINSTELL_ABLAGE"/*.SET
+    melde "App-Einstellungen geleert (Verzeichnis bleibt)"
+}
 
 beenden() {
     pkill -f "$SDK_DIR/bin/simulator" 2>/dev/null || true
@@ -271,19 +395,25 @@ Befehle:
   halten <x> <y> [sek]       Touch-Langdruck
   wischen <x> <vonY> <nachY> Wischgeste
   taste <name>               Tastendruck (xdotool-Name, z. B. Return)
+  einstellungen-leeren       gespeicherte App-Einstellungen des Simulators
+                             verwerfen (sonst gewinnen sie ueber
+                             properties.xml)
   beenden                    Simulator und Anzeige beenden
 
 Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
   CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau
   CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s)
+  CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE
 }
 
 befehl="${1:-hilfe}"; shift || true
 case "$befehl" in
-    aufbau|pruefen|bauen|alle|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
+    aufbau|pruefen|bauen|alle|reihe|bildreihe|starten|konsole|abbild|tippen|halten|wischen|taste|beenden|hilfe)
         "$befehl" "$@" ;;
+    einstellungen-leeren)
+        einstellungen_leeren ;;
     *) hilfe; exit 1 ;;
 esac

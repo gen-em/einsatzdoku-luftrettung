@@ -1,9 +1,15 @@
-// Einsatzdoku — zentrale Konstanten (Werte aus Anforderungen v1.0)
+// NAdoku — zentrale Konstanten (Werte aus Anforderungen v1.0)
 using Toybox.Lang;
 
 module Const {
 
-    const APP_VERSION = "1.8.2";      // bei jedem Release erhoehen
+    const APP_VERSION = "2.0.0";      // bei jedem Release erhoehen
+
+    // Werte der App-Einstellung "logoWahl" (properties.xml). Zahlen, weil
+    // settingConfig type="list" nur Zahlen einliest.
+    const LOGO_LUFT      = 0;
+    const LOGO_BODEN     = 1;
+    const LOGO_WECHSELND = 2;
 
     // Phasen 1..9 (Index 0 unbenutzt). Der Einsatz-Abschluss ist KEIN
     // Zeitstempel mehr, sondern eine bestaetigte Aktion (Phase 10 entfaellt).
