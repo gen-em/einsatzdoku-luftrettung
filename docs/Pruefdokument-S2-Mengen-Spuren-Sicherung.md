@@ -120,6 +120,30 @@ Und die Speichergrößen gegen das Z3-Budget von **64 MB**:
 | Admin-Sicherung, Demokonto | 28,1 MB · 2,14 MB Datei | **4,0 MB · 0,22 MB** |
 | Versand von 64 Paketen (63,9 MB) | — | **2,0 MB** (FTP/FTPS), **8,0 MB** (SFTP) |
 
+### 2.4a Die Serverseite (R35, Serverprobe)
+
+| Größe | gemessen | Einordnung |
+|---|---|---|
+| `edbak_build()` **am Stück**, mit Punktlisten | 7,37 s · 94,28 MB Paket · **1 077,6 MB Spitze** | der alte Weg, zum Vergleich mitgemessen |
+| `edbak_build()` **in Fenstern** zu 250 | 1,05 s · 44 Fenster · grösstes **0,44 MB** · **10 MB von 64** | der Weg seit Web 11.1.0 |
+| Waisen-Vollscan (B-S2-05) | **0,109 s** über die ganze Tabelle, 0 Waisen | vorher Minuten befürchtet |
+| Datenbank gesamt | 187,3 MB | alle Konten des Prüfstands |
+
+**Zur Spurgrösse eine Klarstellung, weil die Rohzahl in die Irre führt.** Die
+Serverprobe meldet „8,89 MB je 1000 Einsätze" und warnt selbst dazu: Das ist
+**belegter Tabellenplatz** einschliesslich der Seiten, die frühere Löschungen
+freigegeben haben. Über die Blobs gezählt:
+
+| Stufe | Spuren | Punkte | Blob |
+|---|---:|---:|---:|
+| 2 (verlustfrei) | 1 854 | 910 617 | 3,14 MB |
+| 3 (ausgedünnt) | 2 281 | 361 927 | 2,37 MB |
+
+**1,10 MB je 1000 Einsätze** — gegen den Zielwert **≤ 3 MB** aus E-S2-24, und
+zeichengleich mit der Rechnung aus AP3 (1,09 MB). Dazu 242 155 Punkte, die
+noch als Zeilen im Eingangspuffer liegen und auf die Verdichtung warten; das
+ist der vorgesehene Zustand und kein Rückstand.
+
 ### 2.5 Der Versand (AP7)
 
 64 Pakete zu zusammen 63,9 MB aus 33 Kontoordnern:
