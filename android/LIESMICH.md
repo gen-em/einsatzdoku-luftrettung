@@ -106,7 +106,7 @@ Stand C2 (Android 0.7.0), `./gradlew build` im Container:
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
-| Lint-Warnungen | **19** | **0** |
+| Lint-Warnungen | **18** | **0** |
 | Prüffälle | **167**, davon 12 übersprungen | **53**, davon 0 übersprungen |
 | APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
 
@@ -117,13 +117,14 @@ Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 beim Gerätetest zu achten ist; mit C2 sind rund 1,4 MB Data Layer
 dazugekommen (Handy: 0,5 MB).
 
-Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
-available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
-nicht die neuesten (Abschnitt 4). Die **eine** übrige ist `BatteryLife` und
-gehört zum Fund **B-S4-04** im Konzept: Die Akku-Freistellung, die diese App
-braucht, verstößt gegen die Inhaltsrichtlinie des Play Store — folgenlos,
-solange ohne Store verteilt wird (E-R45-6), und zu entscheiden beim
-Betriebsübergang.
+Alle 18 Warnungen sind derselbe Befund („A newer version of … is available")
+auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich nicht die
+neuesten (Abschnitt 4).
+
+Bis 0.7.3 war eine 19. dabei: `BatteryLife`. Sie ist mit **E-S4-52**
+verschwunden — die App fordert die Akku-Freistellung nicht mehr über den
+gezielten Dialog an, sondern führt zur allgemeinen Liste. Ein Bedienschritt
+mehr, dafür verträgt sie sich mit der Inhaltsrichtlinie des Play Store.
 
 Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.

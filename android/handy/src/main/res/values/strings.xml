@@ -127,8 +127,14 @@
     <string name="ortung_fehlt_hinweis">Ohne Ortungsfreigabe zeichnet die App keine Spur auf. Tippe hier, um sie zu erteilen.</string>
     <string name="ortung_freigeben">Ortung freigeben</string>
     <string name="akku_titel">Von der Akkuoptimierung ausnehmen</string>
-    <string name="akku_hinweis">Android darf Apps im Hintergrund anhalten. Für einen Dienst über zwölf Stunden heißt das: Die Aufzeichnung bricht ab, ohne dass es jemand merkt. Nimm NAdoku von der Optimierung aus.</string>
-    <string name="akku_oeffnen">Einstellung öffnen</string>
+    <!--
+        Der Text nennt jetzt den WEG, weil die App nicht mehr direkt fragen
+        darf (E-S4-52): Sie oeffnet die Liste aller Apps, und darin muss man
+        NAdoku finden. Ohne diesen Satz steht die NutzerIn vor einer langen
+        Liste und weiss nicht, was sie dort soll.
+    -->
+    <string name="akku_hinweis">Android darf Apps im Hintergrund anhalten. Für einen Dienst über zwölf Stunden heißt das: Die Aufzeichnung bricht ab, ohne dass es jemand merkt.\n\nIn der Liste, die sich gleich öffnet: <b>NAdoku</b> suchen und auf <b>Nicht optimieren</b> stellen.</string>
+    <string name="akku_oeffnen">Liste öffnen</string>
     <string name="akku_spaeter">Später</string>
 
     <!-- Einstellungen -->

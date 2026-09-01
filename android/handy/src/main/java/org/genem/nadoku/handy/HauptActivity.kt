@@ -221,7 +221,14 @@ private fun GekoppelteOberflaeche(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { ergebnis ->
         ortungFrei = ergebnis[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
+        /* GEFRAGT WIRD NUR, WENN ES ETWAS ZU TUN GIBT. Steht die Freistellung
+         * schon — etwa weil das Gerät sie von sich aus gewährt oder die
+         * NutzerIn sie früher gesetzt hat —, wäre der Hinweis eine Frage nach
+         * etwas Erledigtem. Das Lesen des Zustands braucht keine Berechtigung
+         * (E-S4-52). */
+        if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt && !akkuFreigestellt(kontext)) {
+            akkuFrageOffen = true
+        }
     }
 
     if (abschlussFrageOffen) {
@@ -354,36 +361,48 @@ private fun noetigeFreigaben(): Array<String> =
     }
 
 /**
- * Die Führung zur Akku-Freistellung (E-S4-05).
+ * Die Führung zur Akku-Freistellung (E-S4-05) — **auf dem Weg, den der Play
+ * Store zulässt** (E-S4-52).
  *
- * SIE FÜHRT HIN UND ERZWINGT NICHTS. Ob die Freistellung hält, zeigt nur das
- * Gerät — und namentlich Samsungs „Apps im Tiefschlaf" ist ein zweiter
- * Schalter an ganz anderer Stelle, den keine App erreicht. Die App fragt
- * deshalb **einmal**, merkt sich das und drängt nicht wieder.
+ * SIE FÜHRT HIN UND ERZWINGT NICHTS. Geöffnet wird die **allgemeine Liste**
+ * der Akku-Ausnahmen; dort sucht die NutzerIn NAdoku selbst heraus. Der
+ * gezielte Dialog (`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) wäre ein
+ * Schritt weniger, verlangt aber eine Berechtigung, die gegen die
+ * Inhaltsrichtlinie des Store verstößt (Fund B-S4-04). Ein Schritt mehr ist
+ * der kleinere Preis als eine App, die nicht verteilt werden darf.
+ *
+ * Ob die Freistellung hält, zeigt ohnehin nur das Gerät — namentlich Samsungs
+ * „Apps im Tiefschlaf" ist ein zweiter Schalter an ganz anderer Stelle, den
+ * keine App erreicht. Die App fragt deshalb **einmal**, merkt sich das und
+ * drängt nicht wieder.
  */
 private fun akkuEinstellungOeffnen(kontext: Context) {
-    val strom = kontext.getSystemService(Context.POWER_SERVICE) as PowerManager
-    val schonFrei = strom.isIgnoringBatteryOptimizations(kontext.packageName)
-    val absicht = if (schonFrei) {
-        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-    } else {
-        /* Der gezielte Weg (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) zeigt
-         * den Dialog direkt. Fehlt er auf dem Gerät — manche Hersteller haben
-         * ihn nicht —, bleibt die allgemeine Liste. */
-        Intent(
-            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-            "package:${kontext.packageName}".toUri(),
-        )
-    }
+    /* EIN EINZIGER WEG, KEIN RÜCKFALL. Die allgemeine Liste gibt es auf jedem
+     * Android ab 6.0; der Rückfall, den die frühere Fassung für fehlende
+     * Hersteller-Dialoge brauchte, ist damit gegenstandslos. */
+    val absicht = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
-        kontext.startActivity(absicht.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        kontext.startActivity(absicht)
     } catch (e: android.content.ActivityNotFoundException) {
+        /* Gibt es auch die allgemeine Liste nicht, bleibt nur die App-Seite.
+         * Von dort führt jedes Android zur Akkueinstellung. */
         kontext.startActivity(
-            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                "package:${kontext.packageName}".toUri(),
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
 }
+
+/**
+ * Steht die Freistellung? **Lesen braucht keine Berechtigung** — nur das
+ * Anfordern über den gezielten Dialog täte es, und den gibt es hier nicht.
+ */
+private fun akkuFreigestellt(kontext: Context): Boolean =
+    (kontext.getSystemService(Context.POWER_SERVICE) as PowerManager)
+        .isIgnoringBatteryOptimizations(kontext.packageName)
 
 /**
  * Die Rückfrage vor einer beendenden Handlung.

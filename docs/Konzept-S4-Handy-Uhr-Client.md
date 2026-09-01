@@ -859,7 +859,7 @@ Uhr zählt der Start. R8 (`isMinifyEnabled`) ist ein **zweiter, unabhängiger**
 Kandidat mit eigenem Preis: Stapelauszüge laufen dann über eine `mapping.txt`,
 die verwahrt werden muss.
 
-### B-S4-04 — Die Akku-Freistellung verträgt sich nicht mit dem Play Store
+### B-S4-04 — Die Akku-Freistellung verträgt sich nicht mit dem Play Store (behoben)
 
 Gefunden von Lint in B3: `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` verstößt gegen
 die Inhaltsrichtlinie des Play Store; erlaubt sind dort nur wenige benannte
@@ -873,10 +873,19 @@ bleibt deshalb **stehen und gezählt**, statt stummgeschaltet zu werden — sie
 ist die Erinnerung an eine Entscheidung, die beim Betriebsübergang nach v1.0
 ansteht.
 
-**Was dann zu entscheiden wäre:** die Freistellung nur noch als Hinweistext
-anbieten (die NutzerIn stellt sie selbst in den Systemeinstellungen ein) statt
-über den gezielten Dialog — das ist richtlinienkonform und einen Schritt
-umständlicher. Kein S4-Umfang; nach K4 gesammelt.
+**Entschieden und behoben in 0.7.4** — auf Ansage, direkt store-fähig zu
+planen (E-S4-52). Die Berechtigung ist aus dem Manifest ausgetragen, der
+gezielte Dialog durch die **allgemeine Liste** ersetzt
+(`ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS`, keine Berechtigung nötig).
+Der Preis ist ein Schritt mehr für die NutzerIn — sie sucht NAdoku in der
+Liste selbst heraus —, und dafür sagt der Text jetzt, wonach:
+„**NAdoku** suchen und auf **Nicht optimieren** stellen."
+
+Zwei Nebenwirkungen, beide gut: Das **Lesen** des Zustands
+(`isIgnoringBatteryOptimizations`) braucht keine Berechtigung, also fragt die
+App jetzt gar nicht erst, wenn die Freistellung schon steht. Und die
+Lint-Bilanz des Handys geht von 19 auf **18 Warnungen** — die verbleibenden 18
+sind ausnahmslos Fassungshinweise.
 
 ### B-S4-05 — Eine nachträgliche Phase wäre liegengeblieben (behoben)
 
@@ -919,8 +928,36 @@ Stellen bereits Ausnahmen führt (`design-bildmarke`, `logowahl-option`,
 `fahrzeugtypen`). Aus C2 stammt kein Treffer.
 
 *Nicht behoben:* `tools/` liegt außerhalb des Schreibrahmens dieser
-Umsetzung. Zu tun ist ein vierter Bereich in `sperrliste.json` samt drei
-Ausnahmen — in Block D oder in einer eigenen Runde.
+Umsetzung. **Vorgemerkt für Block D** (auf Ansage), und dort größer gefasst
+als nur „android nachtragen":
+
+**Der Ort stimmt schon.** `tools/` liegt bereits auf der obersten Ebene neben
+`server/`, `watch/`, `android/` und `docs/` — es ist kein Server-Werkzeug, das
+hochgezogen werden müsste. Was fehlt, ist nicht ein Verzeichnis, sondern eine
+**Bereichsliste**, die alle drei Clients kennt.
+
+**Zu tun in D:**
+
+| | heute | danach |
+|---|---|---|
+| Bereich a | `server/*.php`, `server/api/*.php` | unverändert |
+| Bereich b | `server/assets/*.js` ohne `vendor/` | unverändert |
+| Bereich c | acht normative Dokumente | unverändert |
+| **Bereich d** | — | `android/*/src/main/res/values/strings.xml` (Handy und Uhr) |
+| **Bereich e** | — | `watch/resources/**/*.xml` (Garmin: `strings.xml`, Menütexte) |
+
+Die **Garmin-App ist der interessantere Teil**: `watch/` steht heute
+ausdrücklich auf der Nicht-geprüft-Liste, mit der Begründung, sie „beschreibe
+die Garmin-Uhr als Gegenstand". Das trifft auf `docs/Uhr-Layout_Regeln.md` zu,
+aber **nicht auf die sichtbaren Texte der App selbst** — die liest dieselbe
+NutzerIn, die auch die Weboberfläche liest. Sie sind die ältesten Texte des
+Projekts und damit die wahrscheinlichste Fundstelle.
+
+Der Zerleger (`zerlegen.py`) kennt PHP und JavaScript; für XML und Monkey C
+braucht er je eine Regel oder — einfacher — die Bereiche d und e ziehen nur
+die Textwerte aus dem XML, wo Kommentare ohnehin getrennt stehen. Dazu die
+drei Homonym-Ausnahmen aus der C2-Handzählung (`design-bildmarke`-Art:
+Alternativtext des Luftlogos zweimal, `RTH` als Logowahl).
 
 ### B-S4-07 — Die Kopplungsseite verlangte, was der QR-Code mitbringt (behoben)
 
@@ -2029,3 +2066,37 @@ Handgriff, sobald Block D die Dokumentation zusammenführt.
   Betriebsentscheidung, keine Codefrage.
 - **B-S4-06** (Wortliste erreicht `android/` nicht) — `tools/` liegt
   außerhalb des Schreibrahmens.
+
+### Nachtrag · Android 0.7.4 — store-fähig geplant
+
+**E-S4-52 — Die App plant von vornherein store-fähig, auch wenn sie ohne
+Store verteilt wird.** E-R45-6 sagt: Verteilung per APK vom eigenen Server.
+Daraus folgt **nicht**, dass die App tun darf, was ein Store verbietet — die
+Verteilungsart kann sich ändern, die Bequemlichkeit einer Berechtigung nicht
+rückwirkend.
+
+Konkret fällt `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` weg (Fund B-S4-04). Die
+Führung zur Akku-Freistellung geht über die allgemeine Liste statt über den
+gezielten Dialog: ein Schritt mehr, dafür richtlinienkonform. **Der Erklärtext
+trägt diesen Schritt** — er sagt jetzt, wonach in der Liste zu suchen ist,
+statt nur zu begründen, warum.
+
+Das ist die allgemeinere Regel hinter der Einzelentscheidung: Eine
+Abhängigkeit von einer Ausnahmegenehmigung ist eine Abhängigkeit. Wo der
+richtlinienkonforme Weg einen Bedienschritt kostet und sonst nichts, ist er
+der richtige.
+
+#### Prüfstand 0.7.4
+
+| Prüfung | Ist |
+|---|---|
+| Baulauf | **BUILD SUCCESSFUL** |
+| Prüffälle | **220**, 0 Fehlschläge |
+| Lint `handy` | **0 Fehler, 18 Warnungen** (vorher 19 — `BatteryLife` ist weg) |
+| Lint `uhr` | 0 Fehler, 0 Warnungen |
+| `BatteryLife`-Treffer im Bericht | **0** |
+| Verbleibende Warnungen | **18**, ausnahmslos Fassungshinweise |
+
+**Nicht geprüft** (E-R45-7): ob die allgemeine Liste auf einem Samsung-Gerät
+so heißt und so aussieht, wie der Text es beschreibt, und ob die Freistellung
+dort hält. Beides gehört auf die Prüfliste des Gerätetests.

@@ -70,7 +70,27 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!--
+        REQUEST_IGNORE_BATTERY_OPTIMIZATIONS STEHT HIER BEWUSST NICHT MEHR
+        (Fund B-S4-04, entschieden mit E-S4-52).
+
+        Sie erlaubt den gezielten Dialog "NAdoku von der Optimierung
+        ausnehmen?" — und verstoesst gegen die Inhaltsrichtlinie des Play
+        Store, die dafuer nur wenige benannte Faelle zulaesst (Wecker, VoIP,
+        Geraetesuche). Eine Einsatzdokumentation steht nicht darauf, obwohl
+        genau sie die Freistellung braucht.
+
+        Die App fuehrt stattdessen zur allgemeinen Liste
+        (ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS). Die verlangt KEINE
+        Berechtigung, ist richtlinienkonform und kostet einen Schritt mehr:
+        Die NutzerIn sucht NAdoku selbst heraus. Der Erklaertext in der App
+        sagt genau, wonach.
+
+        Das LESEN des Zustands (PowerManager.isIgnoringBatteryOptimizations)
+        braucht ebenfalls keine Berechtigung — die App kann also weiterhin
+        anzeigen, ob die Freistellung steht.
+    -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
