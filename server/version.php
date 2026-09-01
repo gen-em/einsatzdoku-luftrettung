@@ -1725,5 +1725,36 @@ declare(strict_types=1);
  * dabei entfallen -- am Bild entschieden, denn bei 15 px liest sich der
  * gesperrte Versalsatz als Etikett und konkurriert mit dem Eintrag darunter.
  *
+ * 12.3.0 BRINGT DEN FUENFTEN MELDUNGSTON und raeumt zwei Tabellen auf
+ * (S3/AP5 und die Rueckmeldung vom 01.09.2026).
+ *
+ * NEUE NEBENNUMMER wegen `schutz`: ein Meldungston in der Flaeche von
+ * `fehler`, aber mit role="status" und dem Schloss statt der Warnung. Er ist
+ * fuer eine Meldung da, die DAUERHAFT steht und trotzdem die Farbe des
+ * Ernstfalls braucht -- der Datenschutzhinweis der Spurenseite, dort wo
+ * jemand gleich GPX herunterlaedt. Kein neuer Farbwert.
+ *
+ * DAHINTER STECKT EIN FEHLER, DER LANGE UNSICHTBAR WAR: ui_meldung_markup()
+ * setzte die Klasse aus dem uebergebenen Wort zusammen. Ein Ton, den es nicht
+ * gibt, ergab `meldung-<wort>` ohne Regel im Stylesheet -- einen weissen
+ * Kasten ohne Flaeche und ohne Fehlermeldung. Die Spurenseite trug zwei
+ * Meldungen mit dem Ton „hinweis", den diese Funktion nie gekannt hat. Die
+ * Vollstaendigkeitspruefung kann das nicht finden, weil die Klasse
+ * zusammengesetzt wird; die Funktion prueft den Ton jetzt selbst.
+ *
+ * UND DER SPURENSEITE FEHLTE DAS GERUEST. Sie rief ui_seite_start() und
+ * schrieb ihren Inhalt danach unmittelbar in den <body> -- ohne
+ * ui_geruest_start(). Damit fehlten ihr die Diensttag-Leiste UND der
+ * seitliche Innenabstand: Titel, Karte und Kartenbaustein sassen am blanken
+ * Fensterrand (gemessen auf 412 px: linke Kante 0 statt 12). Der Bilderlauf
+ * hat es nicht gefunden, weil er waagerechten UEBERLAUF misst -- eine Seite
+ * ohne Innenabstand laeuft nicht ueber, sie ist nur randlos.
+ *
+ * DAZU AP5: Fuenf Spalten der NutzerInnen-Liste stehen mittig statt links --
+ * ihre Titel waren seit P3 zentriert und standen ueber nichts. Nr., Beginn
+ * und Alter der Tagesuebersicht ebenso. Die Dauer traegt dort endlich
+ * `zeit-spalte` und bricht nicht mehr nach der Stunde um. Kennzahl-Kacheln
+ * zentrieren ihren Inhalt senkrecht, sobald eine Nachbarkachel hoeher ist.
+ *
  */
-const WEB_VERSION = '12.2.4';
+const WEB_VERSION = '12.3.0';

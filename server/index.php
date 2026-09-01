@@ -243,11 +243,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
           <table class="tabelle" id="missions">
             <thead><tr>
               <th class="streifen-spalte"></th>
-              <th class="sortable zahl-spalte" data-key="no"    data-label="Nr.">Nr.</th>
-              <th class="sortable"             data-key="start" data-label="Beginn">Beginn</th>
-              <th class="sortable zahl-spalte" data-key="dur"   data-label="Dauer">Dauer</th>
-              <th class="sortable"             data-key="site"  data-label="Einsatzort">Einsatzort</th>
-              <th class="sortable zahl-spalte" data-key="age"   data-label="Alter">Alter</th>
+              <th class="sortable mitte-spalte" data-key="no"    data-label="Nr.">Nr.</th>
+              <th class="sortable mitte-spalte" data-key="start" data-label="Beginn">Beginn</th>
+              <th class="sortable zahl-spalte"  data-key="dur"   data-label="Dauer">Dauer</th>
+              <th class="sortable"              data-key="site"  data-label="Einsatzort">Einsatzort</th>
+              <th class="sortable mitte-spalte" data-key="age"   data-label="Alter">Alter</th>
               <th class="sortable"             data-key="dx"    data-label="Diagnose">Diagnose</th>
               <?php /* Spaltentitel aus dem Feldkatalog. Bewusst unmaskiert: Der
                        Wert ist 'day_label' aus mission_fields.php und darf
@@ -385,12 +385,24 @@ function renderMissionTable(){
       const t = (v == null || v === '') ? '' : String(v);
       return `<td class="${d.klasse}${t ? '' : ' dash'}">${t ? esc(t) : '–'}</td>`;
     }).join('');
+    /* NR., BEGINN UND ALTER MITTIG (S3/AP5, Block I). Eine laufende Nummer,
+       eine Uhrzeit und ein Alter sind weder Flietext noch Groessen, die man
+       an einer Kante vergleicht — rechtsbuendig gestellt fluchteten sie an
+       einer Kante, die nichts bedeutet, und der mittige Spaltentitel stand
+       ueber ihnen im Leeren.
+
+       DIE DAUER TRAEGT JETZT AUCH HIER `zeit-spalte`. Sie fehlte an genau
+       dieser Stelle: missiontable.js setzt sie seit F-N1-G, dieser Aufbau
+       der Tagesuebersicht ist ein zweiter, aelterer — und ohne die Klasse
+       brach „1h 06min" in schmaler Spalte nach der Stunde um und las sich
+       wie zwei Angaben. Dass es zwei Aufbauten fuer dieselbe Tabelle gibt,
+       ist der eigentliche Fund (F-S3-A). */
     tr.innerHTML = `<td class="streifen-spalte"><span class="streifen" style="background:${m._col}"></span></td>
-      <td class="zahl-spalte">${m._no}</td>
-      <td>${m.start_hhmm}</td>
-      <td class="zahl-spalte">${EdMissionTable.zelleDauer(m.duration_s)}</td>
+      <td class="mitte-spalte">${m._no}</td>
+      <td class="mitte-spalte">${m.start_hhmm}</td>
+      <td class="zahl-spalte zeit-spalte">${EdMissionTable.zelleDauer(m.duration_s)}</td>
       ${zelleGeschuetzt(m, m._ort)}
-      ${zelleGeschuetzt(m, m._age, null, 'zahl-spalte')}
+      ${zelleGeschuetzt(m, m._age, null, 'mitte-spalte')}
       ${zelleGeschuetzt(m, m._dx)}
       ${dcZellen}
       <td class="zahl-spalte">${EdMissionTable.fmtKmZahl(m.distance_m)}</td>`;

@@ -826,8 +826,47 @@ Soll-Ist-Liste; Prüfliste des Prüfdokuments vollständig.
 ## 8. Fehlerfunde
 
 Während der Umsetzung gefundene Fehler werden hier gesammelt (F-S3-A ff.)
-und nicht sofort behoben, außer der Fund blockiert die laufende Arbeit
-(K4). Bisher: keine.
+und nicht sofort behoben, außer der Fund blockiert die laufende Arbeit (K4).
+
+**F-S3-A — Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
+`assets/missiontable.js` führt die Spaltendefinitionen der drei
+Einsatztabellen an einer Stelle; `index.php` baut seine Zeilen daneben noch
+einmal selbst zusammen (`tr.innerHTML = …`). Die beiden liefen auseinander:
+Die Dauerspalte trug in `missiontable.js` seit F-N1-G die Klasse
+`zeit-spalte`, in `index.php` nicht — deshalb brach dort „1h 06min" um.
+**Behoben ist die Folge** (die Klasse steht jetzt in beiden), **nicht die
+Ursache**. Solange es zwei Aufbauten gibt, wird die nächste Änderung wieder
+nur an einem ankommen. Nicht in S3 zu machen: Die Vereinheitlichung berührt
+Sortierung, Sortierblatt und die Kachelform. **Gehört in den Backlog.**
+
+**F-S3-B — Ein Meldungston, den es nicht gibt, ergab einen ungestalteten
+Kasten.** `ui_meldung_markup()` setzte die Klasse aus dem übergebenen Wort
+zusammen (`'meldung-' . $ton`); ein unbekannter Ton führte zu einer Klasse
+ohne Regel im Stylesheet — weiß, ohne Fläche, ohne Fehlermeldung.
+`tag_spuren.php` benutzte an zwei Stellen den Ton `hinweis`, den es nie gab.
+Die Vollständigkeitsprüfung findet das **nicht**, weil sie Klassen als
+Literale sucht und diese zur Laufzeit entsteht. **Behoben:** Die Funktion
+prüft den Ton selbst und wirft bei einem unbekannten; die beiden Stellen
+tragen jetzt `info` bzw. den neuen Ton `schutz`. Behoben statt gesammelt,
+weil derselbe Fund die Arbeit an derselben Seite blockierte (K4).
+
+**F-S3-C — Der Spurenseite fehlte das Seitengerüst.** `tag_spuren.php` rief
+`ui_seite_start()` und schrieb ihren Inhalt danach unmittelbar in den
+`<body>` — ohne `ui_geruest_start()`. Als einzige angemeldete Seite hatte sie
+damit weder die Diensttag-Leiste noch `.rahmen`/`.inhalt` und deren
+seitlichen Innenabstand; gemessen bei 412 px saß die linke Kante von Titel,
+Karte und Kartenbaustein bei **0 statt 12 px**. **Behoben.**
+
+> **Warum kein Prüfmittel das gefunden hat.** Der Bilderlauf misst
+> waagerechten Überlauf (`scrollWidth > innerWidth`) — eine Seite ohne
+> Innenabstand läuft nicht über, sie ist nur randlos. Die
+> Vollständigkeitsprüfung fragt nach Klassen ohne Regel, nicht nach Seiten
+> ohne Gerüst. Der Stilvergleich misst Markup-Proben, kein
+> zusammengesetztes Seitengerüst. **Gefunden hat es ein Mensch auf einem
+> Telefon.** Das ist die Lücke, die im Prüfdokument benannt gehört, und der
+> Kandidat für ein neues Prüfmittel: „Jede angemeldete Seite ruft
+> `ui_geruest_start()`" ist eine Frage, die sich am Quelltext beantworten
+> lässt. **Gehört in den Backlog.**
 
 ---
 
@@ -1259,3 +1298,73 @@ die Größe**. Mit der Größe ist der Ersatz überflüssig und wird zur Last.
 Zustand — der Bilderlauf nimmt sie über `11-tagesuebersicht-schublade` auf,
 aber die Menüpunkte im Hover- und Fokuszustand sind nicht gemessen. Steht im
 Prüfdokument als Bedienweg.
+
+---
+
+### AP5 — Tabellen und Kacheln (B, I)
+
+**Stand:** erledigt. Web 12.3.0 — zusammen mit zwei Funden aus der
+Rückmeldung vom 01.09.2026 (siehe unten und Abschnitt 8).
+
+#### Was geändert wurde
+
+- **Neue Spaltenklasse `.tabelle td.mitte-spalte`** — die dritte
+  Zellenausrichtung neben links (Text) und rechts (Zahl). Kein neuer
+  Baustein, sondern ein Geschwister von `zahl-spalte` und `haken-spalte`.
+- **NutzerInnen-Liste:** Rolle, Seit, Zuletzt angemeldet, Geräte und
+  Sicherung stehen mittig; Konto bleibt links.
+- **Tagesübersicht:** Nr., Beginn und Alter mittig — in der Kopfzeile **und**
+  in der Zelle. Die Dauer trägt jetzt `zeit-spalte`.
+- **`.kennzahl`** wird zur Flex-Spalte mit `justify-content: center`.
+
+#### Zwei Punkte aus Block B und I, die sich anders darstellten als im Konzept
+
+**Der Zeilentrenner reicht bereits über die volle Breite.** Das Konzept (1.3)
+nennt ihn als Fund am Stand Web 9.14.1. Nachgemessen auf 12.2.4, nicht
+angesehen: Die Trennlinien der Kontentabelle laufen bei 1440 px von **x = 0
+bis x = 2227 von 2228 Bildpunkten** (Bild in doppelter Auflösung, Farbe der
+Linie im Bild gesucht). Sie decken also die volle Tabellenbreite
+einschließlich der „Öffnen"-Spalte. `.tabelle td` trägt den Rand an **jeder**
+Zelle; es gibt keine Ausnahme für die letzte. **Nichts zu tun** — der Punkt
+hat sich zwischen 9.14.1 und 12.2.4 erledigt.
+
+**„Sekundär Transport" trägt schon das weiche Trennzeichen.** Das Konzept
+(1.10) verlangt „Sekundär-" / „transport" mit Trennstrich. `missiontable.js`
+setzt seit F-N1-G `Sekundär&shy;transport` — der Browser trennt mit
+Bindestrich, wenn er muss, und lässt es sonst in einer Zeile. **Nichts zu
+tun.**
+
+**Die Kopfzeile der NutzerInnen-Liste bleibt durchgehend zentriert.** Auch
+über der linksbündigen Konto-Spalte. Das ist F-N1-G aus P3 („der Kopf ist
+keine Zeile der Daten, sondern ihre Beschriftung") und wird hier nicht
+angetastet — das Konzept verlangt für Konto nur, dass der **Inhalt** links
+bleibt. Genannt, damit es nicht als Übersehen gelesen wird.
+
+#### Prüfstand AP5
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | **8 neue Eigenschaften, 0 entfallen, 0 geänderte Werte, 0 Reihenfolgetausch** — die drei `.kennzahl`-Angaben, die vier `.meldung-schutz`-Angaben und `.mitte-spalte` |
+| Zeilentrenner | Bildpunktmessung über den Bilderlauf-Screenshot der Kontentabelle | Linien von x = 0 bis 2227 von 2228 — volle Breite, kein Befund |
+| Spaltenausrichtung Konten | Bedienprobe, `getComputedStyle` je Zelle, vier Breiten (720/1024/1440/1920) | Kopf/Zelle: Rolle `center/center`, Seit `center/center`, Zuletzt `center/center`, Geräte `center/center`, Sicherung `center/center`, Konto `center/start` (gewollt) |
+| Tagesübersicht | dieselbe Probe, fünf Breiten (720…1920) | Nr. und Beginn `mitte-spalte`/`center`, Dauer `zahl-spalte zeit-spalte` mit `white-space: nowrap` |
+| Kacheln senkrecht mittig | Monatsansicht bei 360 px, Luft über/unter dem Inhalt je Kachel gemessen | Kacheln 77 px und 97 px nebeneinander; die niedrigeren zeigen **23/23** statt vorher 13/33. Bei gleich hohen Kacheln unverändert 13/13 |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs`, voller Lauf | 304 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde, gleich der Basis |
+| Texte / Kontraste | `wortliste.py`, `kontrast.py` | 0 / 0 / 0 · 21 Paare, 0 verfehlt |
+
+**Ein Fehlalarm des Bilderlaufs, und woran er lag:** Ein Lauf meldete 47
+fehlende Bilder, 47 Konsolenfehler und 13 Knöpfe mit 35 px. Alle 13 hießen
+„Zur Startseite" und standen auf der **Abbruchseite** — die Seiten hatten
+404 geliefert. Ursache war der **30-Minuten-Reset des Demo-Kontos mitten im
+Lauf**: Er vergibt neue Kennungen, und die vom Lauf zuvor aufgelösten
+Diensttag- und Einsatzkennungen zeigten ins Leere. Nach einem Reset
+unmittelbar vor dem Lauf: 304 Bilder, 0/0/0. Die Zahl 13 war echt gemessen
+und trotzdem keine Aussage über die Anwendung — ein Beispiel dafür, warum zu
+jeder Zahl gehört, **was** sie gemessen hat.
+
+#### Zwei Funde aus der Rückmeldung vom 01.09.2026
+
+Beide betreffen `tag_spuren.php` und sind in Abschnitt 8 als F-S3-B und
+F-S3-C geführt; behoben, weil sie die laufende Arbeit an derselben Seite
+betrafen (K4).

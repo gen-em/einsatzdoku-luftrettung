@@ -943,9 +943,21 @@ function ui_meldung(?string $hinweis, ?string $fehler = null,
 function ui_meldung_markup(string $ton, string $text, string $auftakt = '',
                            string $knopf = ''): string
 {
+    /* FUENF TOENE, UND DIE LISTE IST GESCHLOSSEN (Design.md 9.5). Ein Ton,
+     * den es nicht gibt, ergab bis S3 eine Klasse ohne Regel im Stylesheet —
+     * also einen ungestalteten Kasten, und zwar ohne jede Fehlermeldung. Die
+     * Spurenseite trug so zwei Jahre lang zwei weisse Meldungen mit dem Ton
+     * „hinweis", den diese Funktion nie gekannt hat. Weil die Klasse hier
+     * ZUSAMMENGESETZT wird, sieht die Vollstaendigkeitspruefung sie nicht;
+     * das kann nur diese Stelle selbst pruefen. */
     $symbole = ['fehler' => 'warnung', 'warn' => 'warnung',
-                'ok' => 'haken', 'info' => 'hinweis'];
-    $sym = $symbole[$ton] ?? 'hinweis';
+                'ok' => 'haken', 'info' => 'hinweis', 'schutz' => 'schloss'];
+    if (!isset($symbole[$ton])) {
+        throw new InvalidArgumentException(
+            'Unbekannter Meldungston „' . $ton . '". Erlaubt: '
+            . implode(', ', array_keys($symbole)) . '.');
+    }
+    $sym = $symbole[$ton];
     $m = '<div class="meldung meldung-' . ui_e($ton) . '" role="' . ($ton === 'fehler' ? 'alert' : 'status') . '">';
     $m .= ui_symbol($sym, 'symbol-gross');
     $m .= '<p>';

@@ -1069,6 +1069,17 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .meldung-info .symbol{color:var(--blau-tief)}
 .meldung-ok{background:var(--blau-hell);color:var(--blau-tief)}
 .meldung-ok .symbol{color:var(--blau-tief)}
+/* SCHUTZ — rot, aber kein Fehler (S3, Rueckmeldung vom 01.09.2026). Fuer den
+ * einen Fall, in dem eine Meldung dauerhaft steht und trotzdem die Farbe des
+ * Ernstfalls braucht: ein Datenschutzhinweis an der Stelle, an der jemand
+ * gleich Daten herunterlaedt. Er benutzt die Flaeche und die Schrift von
+ * `fehler` — kein neuer Farbwert —, aber `role="status"` statt `alert`: Was
+ * bei JEDEM Aufruf der Seite dasteht, darf einen Vorleser nicht jedes Mal
+ * unterbrechen. Das Symbol ist das Schloss, nicht die Warnung: Es geht um
+ * Schutzbeduerftigkeit, nicht um einen Fehlgriff. */
+.meldung-schutz{background:var(--rosa);color:var(--rot-tief)}
+.meldung-schutz .symbol{color:var(--rot)}
+.meldung-schutz strong{color:var(--rot-tief)}
 .meldung-warn{background:var(--orange-hell);color:var(--asphalt)}
 .meldung-warn .symbol{color:var(--orange-tief)}
 .meldung-warn strong{color:var(--orange-tief)}
@@ -1307,8 +1318,15 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   grid-template-columns:repeat(2,minmax(0,1fr));
   margin-bottom:var(--abstand-4);
 }
+/* SENKRECHT MITTIG (S3/AP5). Die Kacheln stehen in einem Raster und werden
+ * alle so hoch wie die hoechste — und die ist hoeher, sobald EINE
+ * Beschriftung umbricht („Laengste Flugstrecke · 14.08."). Der Inhalt der
+ * uebrigen klebte dann oben, und eine Reihe gleich hoher Kacheln zeigte
+ * Werte auf verschiedenen Hoehen. `justify-content:center` verteilt die
+ * Restluft nach oben und unten; die Kachel selbst bleibt, wie sie war. */
 .kennzahl{
   position:relative;
+  display:flex;flex-direction:column;justify-content:center;
   padding:var(--abstand-3);
   background:var(--schnee);
   border:var(--strich) solid var(--linie);
@@ -1796,6 +1814,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
 .tabelle td.haken-spalte{text-align:center}
 /* Eine Dauer wie „1h 06min" ist EINE Angabe und wird nicht getrennt. */
 .tabelle td.zeit-spalte{white-space:nowrap}
+/* MITTIG — die dritte Zellenausrichtung neben links (Text) und rechts (Zahl).
+ * Sie ist fuer Spalten da, deren Inhalt WEDER Flietext noch eine Groesse zum
+ * Vergleichen ist: eine Rolle, ein Datum, eine Plakette, eine laufende
+ * Nummer. Solche Werte fluchten nicht sinnvoll an einer Kante, und der
+ * zentrierte Spaltentitel (F-N1-G) stand ueber ihnen im Leeren.
+ * ALS KLASSE, nicht als :nth-child — Spalten der Kontentabelle erscheinen
+ * datengetrieben, und eine Zaehlung rutschte still auf die falsche. */
+.tabelle td.mitte-spalte{text-align:center}
 
 /* Sortieren-Link im Kartenkopf — nur dort, wo es keine Spaltenköpfe gibt. */
 .karte-sortieren{

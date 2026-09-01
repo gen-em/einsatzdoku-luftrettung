@@ -11,6 +11,86 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.3.0] — 2026-09-01
+
+**Ein fünfter Meldungston, zwei aufgeräumte Tabellen und ein Gerüst, das
+gefehlt hat.** Fünftes Arbeitspaket von S3, dazu zwei Funde aus der
+Rückmeldung vom 01.09.2026. Keine Migration, keine Schnittstellenänderung.
+
+### Web — Ein Ton, den es nicht gab, ergab einen weißen Kasten
+
+`ui_meldung_markup()` baute die Klasse aus dem übergebenen Wort zusammen:
+`'meldung-' . $ton`. Ein Ton, den es nicht gibt, führte damit zu einer Klasse
+**ohne Regel im Stylesheet** — ein Kasten ohne Fläche, ohne Farbe, ohne
+Fehlermeldung. Die Spurenseite des Diensttages trug so **zwei** Meldungen mit
+dem Ton `hinweis`, den diese Funktion nie gekannt hat.
+
+Die Vollständigkeitsprüfung kann das nicht finden: Sie sucht Klassen als
+**Literale** im Quelltext, und diese hier entsteht erst zur Laufzeit. Prüfen
+kann es nur die Funktion selbst — sie tut es jetzt und wirft bei einem
+unbekannten Ton.
+
+### Web — `schutz`: rot, und trotzdem kein Fehler
+
+Der Hinweis auf der Spurenseite sagt, dass eine GPX-Datei den Weg bis zum
+Einsatzort trägt und deshalb so zu behandeln ist wie die geschützten Angaben
+selbst. Das ist eine **kritische Datenschutzinformation** an genau der Stelle,
+an der jemand gleich herunterlädt — sie gehört in die Farbe des Ernstfalls.
+
+`fehler` wäre falsch gewesen: Die Meldung steht **dauerhaft**, und
+`role="alert"` ließe jeden Vorleser bei jedem Seitenaufruf unterbrechen. Der
+neue Ton `schutz` benutzt deshalb Fläche und Schrift von `fehler` — **kein
+neuer Farbwert** —, aber `role="status"`, und als Symbol das **Schloss** statt
+der Warnung: Es geht um Schutzbedürftigkeit, nicht um einen Fehlgriff.
+
+### Web — Der Spurenseite fehlte das Seitengerüst
+
+Sie rief `ui_seite_start()` und schrieb ihren Inhalt danach unmittelbar in den
+`<body>` — ohne `ui_geruest_start()`. Als einzige angemeldete Seite der
+Anwendung hatte sie damit **keine Diensttag-Leiste und keinen
+Inhaltsrahmen**: Titel, Karte und Kartenbaustein saßen am blanken Fensterrand.
+Gemessen bei 412 px: linke Kante **0 px statt 12**.
+
+Aufgefallen ist es mobil, wo diese 12 px der Unterschied zwischen „Rand" und
+„kein Rand" sind; am Schreibtisch ging die fehlende Leiste als
+Gestaltungswille durch. **Der Bilderlauf hat es nicht gefunden, und das ist
+kein Versagen des Werkzeugs:** Es misst waagerechten Überlauf
+(`scrollWidth > innerWidth`), und eine Seite ohne Innenabstand läuft nicht
+über — sie ist nur randlos.
+
+### Web — Spaltentitel standen über nichts
+
+In der NutzerInnen-Liste sind die Spaltentitel seit P3 zentriert (F-N1-G),
+die Inhalte von **Rolle, Seit, Zuletzt angemeldet, Geräte** und **Sicherung**
+standen aber links oder rechts. Ein Titel mittig über einer linksbündigen
+Spalte steht über nichts. Alle fünf stehen jetzt mittig — keiner dieser Werte
+ist Fließtext oder eine Größe, die man an einer Kante vergleicht. **Konto
+bleibt linksbündig:** Name und Adresse werden gelesen, nicht verglichen.
+
+Dasselbe in der Tagesübersicht für **Nr., Beginn und Alter**. Gemacht ist es
+über eine Klasse `mitte-spalte`, **nie über `:nth-child`** — die Tabelle der
+Tagesübersicht bekommt ihre hinteren Spalten aus dem Feldkatalog, und eine
+Zählung rutschte still auf die falsche Spalte.
+
+### Web — Die Dauer brach nach der Stunde um
+
+„1h 06min" passte nicht in die schmale Spalte und stand auf zwei Zeilen — was
+sich wie zwei Angaben liest. `missiontable.js` setzt dagegen seit F-N1-G die
+Klasse `zeit-spalte` (`white-space: nowrap`). **Die Tagesübersicht baut ihre
+Zeilen aber selbst**, mit einem zweiten, älteren Aufbau derselben Tabelle —
+und dort fehlte die Klasse. Sie steht jetzt da. Dass es zwei Aufbauten für
+dieselbe Tabelle gibt, ist der eigentliche Fund und liegt als F-S3-A im
+Konzept.
+
+### Web — Kennzahl-Kacheln stehen senkrecht mittig
+
+Die Kacheln der Zeitraumübersicht stehen in einem Raster und werden alle so
+hoch wie die höchste — und die ist höher, sobald **eine** Beschriftung
+umbricht („Längste Flugstrecke · 14.08."). Der Inhalt der übrigen klebte dann
+oben. Gemessen in der schmalen Monatsansicht bei 360 px: Kacheln von 77 und
+97 px Höhe nebeneinander, die niedrigeren vorher **13 px oben / 33 px unten**,
+jetzt **23/23**.
+
 ## [Web 12.2.4] — 2026-09-01
 
 **Navigation und Leistenüberschrift.** Viertes Arbeitspaket von S3. Keine

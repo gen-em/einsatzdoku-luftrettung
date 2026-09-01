@@ -946,7 +946,7 @@ zehn Stellen zurückgenommen.
 
 ### 9.5 Meldung
 
-**Vier Töne**, je mit Symbol und Rolle:
+**Fünf Töne**, je mit Symbol und Rolle — und die Liste ist **geschlossen**:
 
 | Ton | Fläche | Symbol | `role` | wofür |
 |---|---|---|---|---|
@@ -954,6 +954,25 @@ zehn Stellen zurückgenommen.
 | `ok` | Blau hell | Haken | `status` | Vollzug |
 | `warn` | Orange hell | Warnung | `status` | Vorsicht |
 | `fehler` | Rosa | Warnung | `alert` | etwas ist schiefgegangen |
+| `schutz` | Rosa | Schloss | `status` | schutzbedürftige Daten, dauerhaft |
+
+**`schutz` ist rot und trotzdem kein Fehler** (S3, Rückmeldung vom
+01.09.2026). Er ist für den einen Fall da, in dem eine Meldung **dauerhaft**
+steht und trotzdem die Farbe des Ernstfalls braucht: ein Datenschutzhinweis
+an der Stelle, an der jemand gleich Daten herunterlädt. Er benutzt Fläche und
+Schrift von `fehler` — **kein neuer Farbwert** —, aber `role="status"` statt
+`alert`: Was bei jedem Aufruf der Seite dasteht, darf einen Vorleser nicht
+jedes Mal unterbrechen. Das Symbol ist das **Schloss**, nicht die Warnung: Es
+geht um Schutzbedürftigkeit, nicht um einen Fehlgriff.
+
+> **Ein Ton, den es nicht gibt, ergab bis S3 einen ungestalteten Kasten.**
+> `ui_meldung_markup()` setzte die Klasse aus dem übergebenen Wort zusammen;
+> ein Tippfehler oder ein erfundener Ton führte zu `meldung-<wort>` ohne
+> Regel im Stylesheet — weiß, ohne Fläche, ohne Fehlermeldung. Die
+> Spurenseite trug so zwei Meldungen mit dem Ton „hinweis", den es nie gab.
+> Die Vollständigkeitsprüfung sieht solche Klassen nicht, weil sie
+> **zusammengesetzt** werden. Die Funktion prüft den Ton jetzt selbst und
+> wirft bei einem unbekannten.
 
 ```html
 <div class="meldung meldung-warn" role="status">
