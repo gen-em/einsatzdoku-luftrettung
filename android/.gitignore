@@ -22,6 +22,11 @@ build/
 *.apk
 *.aab
 
+# Zwischenspeicher des Kotlin-Uebersetzers (seit Kotlin 2.x). Er entsteht
+# neben build/ und wurde bisher nicht erfasst -- aufgefallen, als ein Baulauf
+# ihn im Arbeitsbaum stehen liess.
+.kotlin/
+
 # Verweis auf das Android-SDK DIESER Maschine. Auf einer anderen ist der Pfad
 # falsch -- der Bauweg liest deshalb ANDROID_HOME (siehe LIESMICH.md).
 local.properties
