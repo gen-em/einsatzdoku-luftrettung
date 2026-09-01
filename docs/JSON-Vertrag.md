@@ -65,6 +65,17 @@ Antwort bei ungültigem Schlüssel: `401 {"error":"auth"}`.
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
 - **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
+- **Die Ablage auf dem Server geht die Uhr nichts an** (Nachtrag S2, ohne
+  Vertragsänderung). Seit Web 10.0.0 liegen Spurpunkte je nach Alter als
+  Zeilen in `track_points` **oder** als komprimierter Blob in `track_blobs`
+  (Format SPUR1), und seit Web 10.2.0 werden sie sechs Monate nach Einsatzende
+  ausgedünnt. **Am Vertrag ändert das nichts:** Die Uhr sendet unverändert
+  Punkte mit `seq`, und der Server antwortet unverändert mit `next_seq`. Was
+  sich geändert hat, ist die *Bedeutung* von `next_seq` — beschrieben in
+  Abschnitt 5. Der Grund, es hier trotzdem zu nennen: Wer den Vertrag liest,
+  um einen Fehler zu suchen, soll wissen, dass hinter „gespeichert" ab dieser
+  Fassung mehr als eine Zeilentabelle steht (Einzelheiten in `docs/Technik.md`,
+  Abschnitt 4.97).
 
 ### 2.1 Dienstkennung `day_ref`
 

@@ -539,6 +539,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     wiegt — die Vermutung „es ist die Krypto" hat sich in AP9 schon einmal
     als falsch erwiesen.
 
+52. **WebDAV als viertes Sicherungsziel.**
+    Aus E-S2-22, dort ausdrücklich in den Backlog verwiesen. Die Schnittstelle
+    `Zielweg` (`sicherungsziel_lib.php`) ist genau dafür gebaut: verbinden,
+    Ordner anlegen, senden, holen, auflisten, löschen — ein vierter Adapter
+    berührt weder den Versandjob noch das Komplettbackup.
+
+    **Warum es trotzdem nicht nebenbei geht:** WebDAV ist HTTP, und die
+    Anwendung hat für ausgehendes HTTP bisher keinen Weg. Nötig wären
+    `ext/curl` (auf Webspace meist da, aber nicht sicher) und eine Entscheidung
+    über die Zertifikatsprüfung — bei FTPS prüft `ext/ftp` nichts, bei WebDAV
+    über curl **kann** man prüfen, und dann sollte man auch. Das ist eine
+    Festlegung und kein Handgriff.
+
+53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
+    Aus E-S2-19. Nächtliche Sicherungen je Konto ohne Browser sind abgelehnt
+    worden, weil der Server den Inhaltsschlüssel nicht hat und ihn nicht
+    bekommen soll. Ein **öffentlicher** Schlüssel je Konto würde die Lücke
+    schließen: Der Server verschlüsselt damit ohne jedes Geheimnis, öffnen kann
+    es nur, wer den privaten Teil hat — die NutzerIn im Browser.
+
+    **Zu entscheiden:** wo der private Teil lebt (unter dem Inhaltsschlüssel
+    verpackt wie `pat_wrap_rc`?), was bei einem Passwortwechsel damit
+    geschieht, und ob eine Sicherung, die niemand außer der NutzerIn öffnen
+    kann, für die Administration überhaupt eine Rückfallebene ist — bei einem
+    verlorenen Konto ist sie es nicht. Genau daran ist E-S2-19 einmal
+    gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
+    nicht weil die Antwort feststünde.
+
 ---
 
 ## Erledigt

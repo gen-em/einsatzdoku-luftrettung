@@ -2600,6 +2600,8 @@ fertig, wurde keine Sekunde dafür verbraucht.
 | geschützte Spalten lesbar | dasselbe | 4,11 → **3,77 s** (Ziel ≤ 5 s) |
 | PBKDF2 auf der Suchseite | Zähler | **0** — unverändert |
 | Kreislauf `edbak` | `kreislauf.py` | **252 882 Einzelvergleiche, 0 unerklärt** |
+| Kreislauf `edbak-alt` (Altformat, R24) | `kreislauf.py` | **287 282 Einzelvergleiche, 0 unerklärt** |
+| Kreislauf `csv` | `kreislauf.py` | **8 797 Einzelvergleiche, 0 unerklärt** |
 
 Alle Zeiten: Median aus drei Läufen, beide Stände unmittelbar nacheinander
 gemessen, Drossel 6×.
