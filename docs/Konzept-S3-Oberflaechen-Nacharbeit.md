@@ -1044,3 +1044,112 @@ aufgesetzt und einmalig belegt:
 
 Die Papierkorbzahlen sind die Kontrolle aus `admin_demo.php`: Stünden sie
 auf null, wäre beim Einspielen etwas übersprungen worden.
+
+---
+
+### AP2 — Rhythmus an den Bausteinen, Formularfuß
+
+**Stand:** erledigt. Web 12.2.2.
+
+#### Was geändert wurde
+
+**13 Stylesheet-Regeln** nach der Arbeitsliste aus AP1 und den Entscheidungen
+F-S3-01 bis F-S3-03: `.karte`, `.meldung`, `.geo`, `.demo-hinweis` auf
+`--abstand-5`; `.feld` auf `--abstand-3`; `.text h1`, `.text h2`,
+`.blatt-titel`, `.listen-form-titel`, `.vorschau > h4` auf `--abstand-2`;
+`label:has(> input[type=checkbox])`/`[type=radio]`, `.suchzeile`,
+`.phasen-eingabe` auf `--abstand-3`. Nicht geändert: `.titelzeile` (F-S3-02)
+und die beiden `li`-Regeln (F-S3-03).
+
+**Eine Regel entfernt:** `.feld-label` stand zweimal, im Formular- und im
+Suchabschnitt. Die zweite setzte nichts, was die erste nicht schon setzte —
+aber eine Abstandsänderung wäre an einer der beiden Stellen hängengeblieben.
+An ihrer Stelle steht jetzt der Hinweis, warum es sie gab.
+
+**Zwölf freistehende Absendeknöpfe** haben den Formularfuß-Baustein bekommen.
+Die Durchsicht lief über alle 60 PHP-Dateien unter `server/` mit einem
+eigenen Sucher: jeder `ui_knopf()`-Aufruf innerhalb eines `<form>`, dessen
+umgebende Hüllen keinen bekannten Fußbereich nennen. 16 Kandidaten, davon
+**12 echte Funde** und **4 richtige Fälle**, die so bleiben:
+
+| Datei | Knopf |
+|---|---|
+| `einstellungen.php` | Profil speichern *(der benannte Fall)* |
+| `einstellungen.php` | Passwort ändern |
+| `install.php` | Einrichten |
+| `admin_sicherungen.php` | Speichern (Regeln) |
+| `admin_sicherungsziele.php` | Serverschlüssel erzeugen und eintragen |
+| `admin_sicherungsziele.php` | Speichern (Versand) |
+| `admin_user.php` | Speichern (Konto) |
+| `admin_user.php` | Konto endgültig löschen |
+| `login.php` | Anmelden |
+| `reset_request.php` | Link anfordern |
+| `pw_handling.php` | Passwort festlegen |
+| `pw_handling.php` | Passwort speichern |
+
+Kein Fund: `index.php` („Verstanden, das war ich"), `diensttag_neu.php`
+(„Zu den Standorten") und `einsatz_form.php` („Entsperren") — alle drei
+sitzen in `.meldung-aktion`, dem Aktionsplatz des Meldungs-Bausteins, und
+sind dort richtig. Dazu `ui.php` (Abbruchseite): ein Verweisknopf in einem
+Absatz, kein Formular.
+
+**Der Geräteabschnitt von `einstellungen.php` ist ausgenommen** (E-S3-03) und
+war in der Durchsicht auch kein Kandidat — seine Knöpfe stehen bereits in
+`.listen-form-fuss`.
+
+#### Entscheidungen und Beobachtungen aus der Umsetzung
+
+**E-S3-14 — „Profil speichern" bekommt `.listen-form-fuss`, nicht
+`ui_speichern_leiste()`.** Naheliegend wäre die klebende Speichern-Leiste
+gewesen: `einsatz_form.php` und `admin_rechtstexte.php` benutzen sie für
+genau diese Lage — ein Formular, das über mehrere Karten läuft. Sie erscheint
+aber erst, wenn `forms.js` das Formular als schmutzig meldet; der Knopf wäre
+danach beim Aufruf der Seite **nicht mehr da**. Das ist eine
+Verhaltensänderung, und S3 führt vier davon, diese nicht. Das Konzept nennt
+zudem ausdrücklich `.listen-form-fuss` als den Formularfuß-Baustein (1.1).
+
+**Der Fuß steht bei zweiteiligen Formularen außerhalb der Karten.** Bei
+„Profil speichern" umfasst das Formular zwei Karten (Angaben, Logo); der
+Knopf gehört zum ganzen Formular, nicht zur Logo-Karte. Er steht deshalb
+nach `ui_karte_ende()`. **Die Ränder fallen dort zusammen:** `.karte` bringt
+24 px nach unten mit, `.listen-form-fuss` 16 px nach oben — benachbarte
+Geschwister-Ränder kollabieren auf das Maximum, also 24 px. Im Bild
+nachgesehen und richtig so: Was dem Knopf vorangeht, ist eine abgeschlossene
+Karte.
+
+**Die beiden negativen Ränder bleiben** (`.seiten-erklaerung`,
+`.kennzahl-mehr-knopf`, je `calc(-1 * var(--abstand-2))`). AP1 hatte sie als
+Verdachtsfälle notiert. Nachgesehen: Beide ziehen einen Block an die
+Titelzeile heran, und die Titelzeile behält nach F-S3-02 ihre 16 px. Sie
+sind damit **kein Symptom mehr, sondern die Umsetzung der Regel**: 16 − 8 =
+8 px, also genau „Überschrift → ihr Inhalt". Ungeprüft gestrichen wären sie
+ein Fehler gewesen.
+
+#### Prüfstand AP2
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade unverändert außer der Soll-Liste | `kaskade.py`, Vergleichsstand aus Git | 640 → 639 Regeln; **14 geänderte Endwerte, 0 entfallen, 0 neu, 0 Reihenfolgetausch** — deckungsgleich mit der Soll-Ist-Liste (13 Regeln, `label:has()` zählt mit zwei Selektoren) |
+| Berechnete Stile im Browser | `stilvergleich.js`, 4 Proben × 13 Breiten | 38 857 Elementmessungen, 2 624 abweichende Elemente |
+| **Vollständige Gegenprobe** dazu | eigener Lauf, der **jede** (Element, Eigenschaft)-Abweichung nennt statt acht Beispielen je Probe | **8 703 942 Einzelmessungen, 6 340 abweichend, 147 verschiedene Paare** — 68 davon `margin`/`margin-bottom` (die beabsichtigten Regeln), 79 `height`/`top`/`inset`/`bottom`/`grid-template-rows` als geometrische Folge. **Keine einzige darüber hinaus.** |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde, **Zeile für Zeile identisch** zur Basis vor AP2 bis auf zwei verschobene Zeilennummern in `admin_user.php` (zwei eingefügte Zeilen) |
+| Alle Seiten, alle Breiten | `tools/screenshots/aufnehmen.mjs` (voller Lauf) | 38 Seiten, **304 Einzelbilder: 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Gegenprobe gegen F-P3-AQ | `md5sum` über alle 304 Bilder | 301 verschiedene. Die drei Dubletten sind **erklärt und richtig**: `10-tagesuebersicht` und `11-tagesuebersicht-schublade` bei 1024, 1280 und 1440 px — oberhalb der Schwelle steht die Leiste fest, es gibt dort keine Schublade. Kein Fall der Art „176-mal die Anmeldeseite". |
+| Texte | `tools/wortliste/wortliste.py` | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen |
+| Kontraste | `tools/screenshots/kontrast.py` | 21 Paare, 0 verfehlt (AP2 ändert keine Farbe — der Lauf belegt, dass es dabei geblieben ist) |
+| Syntax | `php -l` über alle 9 geänderten PHP-Dateien | keine Fehler |
+
+**Ein Messfehler im eigenen Prüfmittel, und er ist der Erwähnung wert:** Die
+erste Fassung der Gegenprobe meldete zwei zusätzliche Paare — `outline` und
+`outline-offset` an einem `<input>`. Ursache war nicht die Änderung, sondern
+die Gegenprobe selbst: Sie hatte die Fokus-Rücknahme des Originalwerkzeugs
+nicht übernommen, und ein Feld mit `autofocus` trug in einem der beiden
+Durchläufe den Fokusring. Mit `blur()` verschwinden beide. Die Zahlen oben
+sind die des korrigierten Laufs.
+
+**Nicht geprüft:** Bedienzustände, die erst durch Klicken entstehen
+(aufgeklappte Aktionsmenüs, geöffnete Dialoge, die schmutzige
+Speichern-Leiste). Der Stilvergleich misst statisches Markup, der Bilderlauf
+den Ruhezustand der Seite. Für AP2 ist das vertretbar — geändert wurden
+ausschließlich Abstände an ruhenden Bausteinen —, es steht aber im
+Prüfdokument als Bedienweg.

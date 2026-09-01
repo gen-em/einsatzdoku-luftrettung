@@ -1233,6 +1233,8 @@ ein echter Fund, kein erfundenes Beispiel:
 | ein Token in `:root`, das niemand benutzt | Sieht aus wie eine Zusage und ist keine. Die Filterleiste war zwei Pakete lang zu schmal. | erzeugte Tokentabelle lesen (F-P3-BC) |
 | eine Aufstellung in einem Rückfragedialog | Ein Dialog mit halbem Bildschirm Text ist keiner mehr. | eine eigene Seite |
 | zwei primäre Knöpfe auf einer Seite | Keiner ist mehr die Haupthandlung. | einer `primaer`, der Rest `neutral` |
+| ein Absendeknopf, der nackt im `<form>` steht | Er bekommt den Abstand, den zufällig das Element davor mitbringt — mal 12, mal 16, mal keinen. „Profil speichern" stand so zwischen `ui_karte_ende()` und `</form>`; die Durchsicht fand zwölf solche Stellen (S3/AP2). | ein `<div class="listen-form-fuss">` darum |
+| ein Abstand, der an der Seite hängt statt am Baustein | Er wirkt an dieser einen Stelle und ist beim nächsten Baustein wieder weg. | die Stufe am Baustein setzen, nach der Rhythmustabelle (Kapitel 6) |
 
 ---
 
@@ -1349,5 +1351,6 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 12.2.2 (S3/AP1–AP2)** | Neuer Abschnitt „Der vertikale Rhythmus" in Kapitel 6: eine Stufe je Beziehung, mit dem Leitgedanken „Bindung ist kleiner als Trennung", der Abgrenzung Zwischenraum gegen Polsterung und zwei Präzisierungen aus echten Fällen (Überschrift mit Bedienelementen; Zeilen in einem Textblock). Platzhalter-Pflegeregel in 9.7, Querverweis in 9.13. Die Titelzeile (9.8) trägt den Abstand darunter jetzt als begründete Ausnahme. Zwei neue Anti-Muster in 9.16. |
 | **Web 9.14.0** | Erste Rückmeldungsrunde nach P3. Neues Token `--symbol-klein` (16 px). Fünf neue Anti-Muster in 9.16, alle aus echten Funden dieser Runde. Kopfleiste: Wortzeichen „Gen-EM Einsatzdoku", Logo 34 px. Segmenttasten ohne geerbten Rand. Neue Regeln: `.symbol-schutz`, `.tagfeld-breit`, `.vehkind`, `.sd-liste`, `.loc-widget`. |
 | **Web 9.13.0 (P3/O12)** | Erstfassung. Ersetzt `docs/Branding.md`. Farben, Schriften und Logo-Regeln von dort übernommen; die Abbildung auf CSS-Variablen (dort Abschnitt 1.3, mit `--ink`, `--navy`, `--accent`, `--muted`) ist entfallen — diese Token gibt es seit Web 9.0.0 nicht mehr. Die offenen Punkte B1 (Logo trägt nicht die Markenwerte), B2 (keine geschlossene Größenskala) und B3 (78 Hexwerte) sind **erledigt** und in 2.5, 5 und 6 als solche vermerkt. |

@@ -859,7 +859,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   background:var(--schnee);
   border:var(--strich) solid var(--linie);
   border-radius:var(--radius-gross);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
 }
 /* flex-wrap: Wird die Zeile zu eng (Titel + Zahl + Sortieren + Nachtragen bei
  * 360 px), bricht die Kopfaktion in eine zweite Zeile um. Ohne wrap schrumpft
@@ -1036,7 +1036,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
   border-radius:var(--radius);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
 }
 /* Der Text braucht eine Mindestbreite, unter der die Aktion in die naechste
  * Zeile umbricht — sonst quetscht ein breiter Knopf den Text auf ein Wort je
@@ -1079,7 +1079,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 }
 .blatt-titel{
   font-size:var(--groesse-5);text-align:center;
-  margin-bottom:var(--abstand-3);
+  margin-bottom:var(--abstand-2);
 }
 .blatt-liste{display:flex;flex-direction:column}
 /* NORMAL STATT FETT (F-N1-F). Die Einträge standen auf 600 — dasselbe
@@ -1121,7 +1121,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  */
-.feld{margin-bottom:var(--abstand-4)}
+.feld{margin-bottom:var(--abstand-3)}
 .feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
 .feld-pflicht{color:var(--rot-tief)}
 .feld-eingabe{
@@ -1308,8 +1308,8 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * Datenschutz (E-P3-12, E-P3-38).
  */
 .text{max-width:var(--lesespalte)}
-.text h1{margin-bottom:var(--abstand-4)}
-.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-3)}
+.text h1{margin-bottom:var(--abstand-2)}
+.text h2{font-size:var(--groesse-5);margin:var(--abstand-5) 0 var(--abstand-2)}
 .text h3{font-size:var(--groesse-4);margin:var(--abstand-4) 0 var(--abstand-2)}
 .text p{font-size:var(--groesse-4);line-height:var(--zeile-lesen);margin-bottom:var(--abstand-3)}
 .text ul,.text ol{margin:0 0 var(--abstand-3) var(--abstand-5);list-style:disc}
@@ -1351,7 +1351,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
 .demo-hinweis{
   display:flex;align-items:center;gap:var(--abstand-3);
   padding:var(--abstand-3) var(--abstand-4);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
   background:var(--orange-hell);
   border-radius:var(--radius);
   font-size:var(--groesse-2);
@@ -1435,7 +1435,7 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   border-radius:var(--radius);
   overflow:hidden;
   background:var(--rauch);
-  margin-bottom:var(--abstand-4);
+  margin-bottom:var(--abstand-5);
   /* EIGENER STAPELKONTEXT. Leaflet vergibt intern z-index bis 1000 — seine
    * Bedienelemente zeichneten über Schublade (60) und Schleier (50), der
    * Kartenpin stand mitten im Menü (Fable-Kontrolle, F-P3-Y). position und
@@ -1518,7 +1518,7 @@ label > textarea{display:block;width:100%;margin-top:var(--abstand-1)}
 label:has(> input[type=checkbox]),
 label:has(> input[type=radio]){
   display:flex;align-items:center;gap:var(--abstand-2);
-  min-height:var(--knopf);margin-bottom:var(--abstand-1);
+  min-height:var(--knopf);margin-bottom:var(--abstand-3);
 }
 summary{cursor:pointer}
 code,kbd,pre{font-family:var(--schrift-fest);font-size:var(--groesse-2)}
@@ -2168,7 +2168,7 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
   display:grid;
   grid-template-columns:minmax(0,1fr) calc(var(--knopf) * 2) var(--knopf);
   gap:var(--abstand-2);align-items:center;
-  margin-bottom:var(--abstand-2);
+  margin-bottom:var(--abstand-3);
 }
 .phasen-eingabe .zeitfeld{text-align:center;width:auto}
 .phasen-eingabe label{margin:0}
@@ -2248,9 +2248,12 @@ button.blatt-zeile{
 .filterfelder .fld-reihe label{display:flex;flex-direction:column;justify-content:flex-end}
 
 /* Beschriftung über einer Gruppe von Bedienelementen (Segmentwahl), dort wo
- * ein <label> nicht taugt: Es kann nur EIN Element beschriften. */
+ * ein <label> nicht taugt: Es kann nur EIN Element beschriften. Die
+ * Beschriftung selbst ist `.feld-label` aus Abschnitt 11 — hier stand sie
+ * bis S3/AP2 ein zweites Mal, mit demselben Wert und ohne font-weight, und
+ * setzte damit nichts, was die erste Regel nicht schon gesetzt hätte. Eine
+ * Änderung am Abstand wäre an einer der beiden Stellen hängengeblieben. */
 .feldblock{margin-bottom:var(--abstand-3)}
-.feld-label{display:block;margin-bottom:var(--abstand-1)}
 
 /* Segmentwahl in der Filterspalte: leiser als die Segmentwahl im Inhalt —
  * hell orange mit orangem Rahmen statt voller Fläche (Mockup 27/28). Bis zu
@@ -2273,7 +2276,7 @@ button.blatt-zeile{
 .filterfuss{display:flex;flex-direction:column;gap:var(--abstand-2)}
 
 /* ---- Suchzeile: Feld und Filterknopf (Mockup 27) ------------------------- */
-.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-2)}
+.suchzeile{display:flex;gap:var(--abstand-2);align-items:stretch;margin-bottom:var(--abstand-3)}
 .suchfeld{position:relative;flex:1 1 auto;display:flex;align-items:center}
 .suchfeld input{
   width:100%;min-height:var(--suchfeld);
@@ -2525,7 +2528,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 .listen-form-titel{
   font-family:var(--schrift-kopf);font-weight:600;
   font-size:var(--groesse-3);color:var(--dunkelblau);
-  margin:0 0 var(--abstand-3);
+  margin:0 0 var(--abstand-2);
 }
 .listen-form-felder{display:grid;gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
@@ -2816,7 +2819,7 @@ a.kennzahl:hover{border-color:var(--blau);text-decoration:none}
   padding:var(--abstand-4);
   margin-top:var(--abstand-3);
 }
-.vorschau > h4{margin-bottom:var(--abstand-3)}
+.vorschau > h4{margin-bottom:var(--abstand-2)}
 /* Der Fließtext darin ist `.text` — aber ohne dessen Lesebreite: Der Kasten
  * IST schon schmal, und eine zweite Begrenzung darin ließe ihn links kleben. */
 .vorschau .text{max-width:none}

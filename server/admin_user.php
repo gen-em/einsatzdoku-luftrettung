@@ -519,7 +519,9 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         </div>
         <?php ui_feld(['name' => 'email', 'label' => 'E-Mail (Anmeldung)', 'art' => 'email',
                        'wert' => (string)$u['email'], 'pflicht' => true]); ?>
-        <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        </div>
       </form>
       <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen: Die Daten sind mit
          dem Passwort der Person Ende-zu-Ende-verschlüsselt. „Passwort zurücksetzen"
@@ -648,8 +650,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
                          'klein' => 'Zur Bestätigung die Adresse des Kontos abtippen.']); ?>
-          <?= ui_knopf(['text' => 'Konto endgültig löschen', 'symbol' => 'korb',
-                        'art' => 'gefahr']) ?>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Konto endgültig löschen', 'symbol' => 'korb',
+                          'art' => 'gefahr']) ?>
+          </div>
         </form>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>

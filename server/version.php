@@ -1688,5 +1688,22 @@ declare(strict_types=1);
  * ui_meldung_markup(), das die vollstaendige Tabelle fuehrt. Betroffen waren
  * gerade die Meldungen, die auffallen sollen.
  *
+ * 12.2.2 SCHREIBT DEN VERTIKALEN RHYTHMUS FEST (S3/AP1 und AP2). Die
+ * Abstandsskala --abstand-1 bis -5 steht seit P3 und wird eingehalten:
+ * gemessen 269 Abstandsdeklarationen, davon KEINE mit einem Rohwert. Was
+ * fehlte, war die Stufe darueber -- eine Regel, WELCHE Stufe WO gilt. Sie
+ * steht jetzt in docs/Design.md, Kapitel 6.
+ *
+ * Der Befund dahinter in einem Satz: .karte und .feld trugen beide 16 px.
+ * Zwei Karten standen genauso weit auseinander wie zwei Felder INNERHALB
+ * einer Karte, und die Flaeche sagte damit nichts mehr darueber, was wozu
+ * gehoert. Jetzt trennen Karten mit 24 px und Felder binden mit 12 px.
+ * Dreizehn Regeln des Stylesheets sind darauf eingestellt, dazu zwoelf
+ * freistehende Absendeknoepfe, die jetzt im Formularfuss-Baustein stehen.
+ *
+ * KORREKTURSTUFE, obwohl es auf jeder Seite zu sehen ist: Es gibt keine neue
+ * Funktion und kein neues Feld, und kein Weg durch die Anwendung hat sich
+ * geaendert. Was sich aendert, ist die Groesse von Zwischenraeumen.
+ *
  */
-const WEB_VERSION = '12.2.1';
+const WEB_VERSION = '12.2.2';

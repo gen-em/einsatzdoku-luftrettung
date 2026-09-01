@@ -773,7 +773,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
         ]); ?>
       <?php ui_karte_ende(); ?>
 
-      <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Profil speichern', 'art' => 'primaer']) ?>
+      </div>
     </form>
 
     <form method="post" id="pwform">
@@ -801,7 +803,9 @@ ui_seite_start(['titel' => 'Einstellungen']);
                        'art' => 'password', 'pflicht' => true,
                        'attr' => ' autocomplete="new-password"']); ?>
       <?php ui_karte_ende(); ?>
-      <?= ui_knopf(['text' => 'Passwort ändern', 'art' => 'primaer']) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Passwort ändern', 'art' => 'primaer']) ?>
+      </div>
       <span class="feld-hinweis" id="pwstate"></span>
     </form>
     <?php /* Ruestzeug der Verschluesselung (Baustein ui_krypto_bootstrap()),

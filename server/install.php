@@ -475,8 +475,10 @@ function render_form(array $v, array $errors, string $nachweis,
         </div>
       <?php ui_karte_ende(); ?>
 
-      <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'breit' => true,
-                    'symbol' => 'haken']) ?>
+      <div class="listen-form-fuss">
+        <?= ui_knopf(['text' => 'Einrichten', 'art' => 'primaer', 'breit' => true,
+                      'symbol' => 'haken']) ?>
+      </div>
     </form>
     <?php
     render_page('Einrichten', ob_get_clean());

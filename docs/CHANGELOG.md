@@ -11,6 +11,95 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.2] — 2026-09-01
+
+**Der vertikale Rhythmus bekommt eine Regel.** Erste zwei Arbeitspakete von
+S3 (Oberflächen-Nacharbeit). Keine Migration, keine Schnittstellenänderung,
+keine neue Funktion — was sich ändert, ist die Größe von Zwischenräumen, und
+zwar auf jeder Seite.
+
+### Web — Warum die Abstände nicht passten, und es lag an keiner Zahl
+
+Die Rückmeldungsliste vom 31.08.2026 fragte: „Warum passen die Abstände
+häufiger nicht? Gibt es dafür keine Definition?" Die Vermutung dahinter —
+irgendwo stünden krumme Werte — ist **nachgemessen falsch**: Von **269**
+Abstandsdeklarationen im Stylesheet zieht **jede einzelne** ihren Wert aus
+`--abstand-1` bis `--abstand-5`; Rohwerte gibt es **null**.
+
+Was fehlte, ist die Stufe darüber: eine Regel, die sagt, **welche** Stufe
+**wo** gilt. Ohne sie wird die Wahl an jeder Stelle einzeln getroffen, und
+das Ergebnis ist genau das, was die Liste bemängelt — Abstände, die alle aus
+derselben Skala kommen und trotzdem nichts miteinander zu tun haben.
+
+Die Regel steht jetzt in `docs/Design.md`, Kapitel 6, mit einer Zeile je
+Beziehung und dem Leitgedanken **Bindung ist kleiner als Trennung**: Was
+zusammengehört, steht enger als das, was sich voneinander absetzt.
+
+### Web — Der Befund in einer Zeile: Karte und Feld standen gleich weit
+
+`.karte` und `.feld` trugen beide `--abstand-4` (16 px). Der Abstand zwischen
+zwei **Karten** war damit genauso groß wie der zwischen zwei **Feldern
+innerhalb** einer Karte — die Fläche sagte nichts mehr darüber, was wozu
+gehört. Das ist die Antwort auf die Frage der Liste, und sie ist genauer als
+„die Abstände passen nicht": Sie passten zueinander, aber sie unterschieden
+nichts.
+
+**Die Anwendung widersprach sich dabei selbst.** Die Grundform `label` trägt
+für dieselbe Beziehung — Feld → nächstes Feld — schon seit P3 12 px. Ein
+Formular aus `<label>`-Grundformen stand also enger als eines aus
+`.feld`-Bausteinen, und beide sahen aus wie ein Formular.
+
+| Beziehung | vorher | nachher |
+|---|---|---|
+| Karte → Karte (`.karte`, `.meldung`, `.geo`, `.demo-hinweis`) | 16 px | **24 px** |
+| Feld → Feld (`.feld`) | 16 px | **12 px** |
+| Überschrift → ihr Inhalt (`.text h1`/`h2`, `.blatt-titel`, `.listen-form-titel`, `.vorschau > h4`) | 12–16 px | **8 px** |
+| Kästchenreihe, Suchzeile, Phasenzeile | 4–8 px | **12 px** |
+
+Insgesamt 13 Regeln. Von 74 Zwischenraum-Deklarationen waren **61 schon
+richtig** — die Skala stand, sie wurde nur nicht durchgehalten.
+
+### Web — Zwei Ausnahmen, beide begründet und beide in der Regel vermerkt
+
+**Die Titelzeile bleibt bei 16 px.** Sie ist keine bloße Überschrift: Neben
+dem Titel stehen Aktionsknöpfe von 44 px Höhe. Acht Pixel darunter stünde ein
+Knopf fast auf der ersten Karte. Wo eine Überschrift Bedienelemente trägt,
+ist die Beziehung nicht „Überschrift → Inhalt", sondern „Gruppe → nächste
+Gruppe".
+
+**Aufzählungen im Fließtext bleiben eng** (4 px). Ein `<li>` im Fließtext ist
+eine **Zeile**, kein Element: Bekäme es den Arbeitsabstand, stünden die
+Punkte einer Liste so weit auseinander wie zwei Absätze — und genau die
+Bindung, die eine Liste zur Liste macht, wäre weg. Betrifft Handbuch,
+Impressum, Datenschutz und die Suchsyntax-Hilfe.
+
+Keine der beiden Ausnahmen ist eine sechste Stufe: Beide ordnen einen Fall
+einer **vorhandenen** Zeile der Tabelle zu.
+
+### Web — Zwölf Absendeknöpfe standen ohne Fuß im Formular
+
+Der Fall, an dem die Liste es festmachte: „Profil speichern" in den
+Einstellungen war ein nackter `ui_knopf()` zwischen `ui_karte_ende()` und
+`</form>`. Der Abstand fehlte nicht, weil eine Zahl falsch war, sondern weil
+an dieser Stelle **kein Baustein benutzt wurde** — obwohl es mit
+`.listen-form-fuss` seit P3 einen Formularfuß gibt, den dreißig andere
+Stellen benutzen.
+
+Die Durchsicht aller Formularseiten fand **zwölf** solche Stellen und keine
+weitere: Profil, Passwort ändern, Einrichter, Sicherungsregeln, Serverschlüssel,
+Versand, Konto speichern, Konto löschen, Anmelden, Link anfordern und zweimal
+Passwort setzen. Alle zwölf haben jetzt denselben Fuß. **Der Geräteabschnitt
+der Einstellungen ist ausgenommen** — S5 ersetzt ihn vollständig, und die
+Bausteinänderung wirkt dort von selbst, sobald S5 mit den Bausteinen baut.
+
+### Web — Eine doppelte Regel weniger
+
+`.feld-label` stand zweimal im Stylesheet, einmal im Formular- und einmal im
+Suchabschnitt, mit demselben Abstand. Die zweite setzte nichts, was die erste
+nicht schon gesetzt hätte — aber eine Änderung am Abstand wäre an einer der
+beiden Stellen hängengeblieben. Sie ist entfallen; an ihrer Stelle steht der
+Hinweis, warum es sie gab.
+
 ## [Web 12.2.1] — 2026-09-01
 
 **Drei kleine Dinge, die täglich auffallen.** Zweite Rückmeldungsrunde nach
