@@ -1,4 +1,4 @@
-// Einsatzdoku — gemeinsame Helfer
+// NAdoku — gemeinsame Helfer
 // HINWEIS: Erster Wurf, noch nicht gegen das SDK kompiliert.
 using Toybox.Time;
 using Toybox.Time.Gregorian;

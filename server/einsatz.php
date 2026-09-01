@@ -22,6 +22,21 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
            Loeschen liegen im Blatt. Der Kopf wird von init() aus der
            API-Antwort gefuellt — dieselbe Arbeitsteilung wie auf der
            Startseite. */ ?>
+  <?php
+    /* DER SPURZUSTAND, EINMAL (S2/AP4, E-S2-09).
+     *
+     * Er entscheidet zweierlei, und die beiden duerfen nicht auseinanderlaufen:
+     * ob es den GPX-Abruf im Aktionsmenue ueberhaupt gibt, und was die Plakette
+     * in der Metazeile sagt. Deshalb hier eine Ermittlung, nicht zwei — die
+     * Plakette bekommt den Wert unten als Konstante, statt ihn noch einmal aus
+     * der API zu holen und dabei vielleicht etwas anderes zu erfahren. */
+    require_once __DIR__ . '/spur_lib.php';
+    $spurStand  = spur_stand(db(), 'mission', $mid);
+    $spurPunkte = $spurStand['stufe'] === 1
+        ? (spur_zahlen(db(), 'mission', [$mid])[$mid] ?? 0)
+        : $spurStand['n_gespeichert'] + max(0, $spurStand['naechste_seq'] - $spurStand['n_original']);
+    $hatSpur = $spurPunkte > 0;
+  ?>
   <div class="titelzeile">
     <a class="rueckweg" id="tagzurueck" href="index.php<?= $missionDayId !== null ? '?d=' . $missionDayId : '' ?>" hidden>
       <?= ui_symbol('winkel', 'symbol-links') ?><span id="tagzurueck-text"></span>
@@ -33,12 +48,48 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
       <div class="titelzeile-aktionen">
         <?= ui_knopf(['text' => 'Bearbeiten', 'art' => 'primaer', 'symbol' => 'stift',
                       'href' => 'einsatz_form.php?id=' . $mid]) ?>
-        <?= ui_aktionen(['id' => 'einsatzblatt', 'titel' => 'Einsatz', 'eintraege' => [
-            ['text' => 'Verschieben', 'symbol' => 'tausch',
-             'href' => 'einsatz_verschieben.php?id=' . $mid],
-            ['text' => 'Löschen', 'symbol' => 'korb', 'gefahr' => true,
-             'href' => 'einsatz_loeschen.php?id=' . $mid],
-        ]]) ?>
+        <?php
+          /* DER GPX-ABRUF STEHT IM VORHANDENEN AKTIONSMENUE (S2/AP4).
+           *
+           * Nicht als eigener Knopf an der Karte: Die Leaflet-Karte dieser
+           * Seite ist kein Baustein `karte`, sondern ein blankes
+           * `<div class="geo">` ohne Kopf und ohne Platz fuer eine Aktion —
+           * ein Knopf dort waere eine neue Darstellung und damit
+           * freigabepflichtig (Design.md 9). Und nicht als zweiter
+           * Primaerknopf neben „Bearbeiten": zwei primaere Knoepfe sind
+           * ausdruecklich ein Anti-Muster.
+           *
+           * OHNE SYMBOL. Der Vorrat hat keines fuer „herunterladen"; ein neues
+           * Zeichen braucht dieselbe Freigabe wie ein neuer Baustein. Der
+           * Export-Knopf traegt aus demselben Grund keines.
+           *
+           * NUR WENN ES EINE SPUR GIBT. Ein Eintrag, der zu einer Fehlermeldung
+           * fuehrt, ist schlechter als keiner. */
+          $eintraege = [
+              ['text' => 'Verschieben', 'symbol' => 'tausch',
+               'href' => 'einsatz_verschieben.php?id=' . $mid],
+          ];
+          if ($hatSpur) {
+              /* MIT RUECKFRAGE, wie beim Export. Der grosse Export laesst vor
+               * dem Schreiben bestaetigen, dass die Datei personenbezogene
+               * Angaben im Klartext traegt (`assets/export.js`, DIALOG_PATIENT)
+               * — eine Spur endet am Einsatzort und tut damit dasselbe. Ohne
+               * die Rueckfrage haette dieselbe Anwendung zwei Tueren mit zwei
+               * verschiedenen Massstaeben. */
+              $eintraege[] = ['text' => 'Spur als GPX',
+                              'href' => 'gpx.php?art=mission&id=' . $mid,
+                              'attr' => 'data-confirm="Die Datei zeigt den '
+                                      . 'gefahrenen oder geflogenen Weg — also '
+                                      . 'auch den Einsatzort — mit Zeitstempeln. '
+                                      . 'Ab dem Speichern schützt die '
+                                      . 'Verschlüsselung dieser Anwendung sie '
+                                      . 'nicht mehr." data-confirm-ok="Herunterladen"'];
+          }
+          $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb', 'gefahr' => true,
+                          'href' => 'einsatz_loeschen.php?id=' . $mid];
+        ?>
+        <?= ui_aktionen(['id' => 'einsatzblatt', 'titel' => 'Einsatz',
+                         'eintraege' => $eintraege]) ?>
       </div>
     </div>
     <p class="titelzeile-unter" id="meta" hidden></p>
@@ -180,6 +231,12 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true]);
 <script src="<?= asset('assets/luftlinie.js') ?>"></script>
 <script>
 const MID = <?= $mid ?>;
+/* Der Spurzustand kommt vom Server (S2/AP4) und nicht aus der API-Antwort:
+   Dasselbe Ergebnis entscheidet oben ueber den Menueeintrag; zwei Quellen
+   koennten auseinanderlaufen. */
+const SPUR = <?= json_encode(['hat' => $hatSpur, 'stufe' => (int)$spurStand['stufe'],
+                              'n' => (int)$spurPunkte,
+                              'n0' => (int)$spurStand['n_original']]) ?>;
 
 // Maskierung: Baustein B7 (assets/html.js). Hier stand eine eigene Fassung
 // ueber ein Hilfselement — sie maskierte drei Zeichen statt fuenf (M6-03).
@@ -510,8 +567,19 @@ async function init(){
   const zeitteil = m.has_p9
     ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
     : `${m.start_hhmm} Uhr – kein Ende`;
+  /* SPUR-PLAKETTE (S2/AP4, E-S2-09): welche Fassung der Spur hier liegt.
+     Sie steht in derselben Zeile wie „Uhr" und „editiert" — auch das sind
+     Aussagen ueber die Beschaffenheit des Datensatzes, nicht ueber den
+     Einsatz. Ohne Spur keine Plakette; ein leeres Etikett erklaert nichts. */
+  const spurPlakette = SPUR.hat
+    ? ' ' + plakette(SPUR.stufe === 3 ? 'orange' : 'neutral',
+        SPUR.stufe === 3
+          ? `Spur ausgedünnt · ${SPUR.n} von ${SPUR.n0} Punkten`
+          : `Spur · ${SPUR.n} Punkte`)
+    : '';
   const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || 'Uhr')
-    + (m.edited ? ' ' + plakette('neutral', 'editiert') : '');
+    + (m.edited ? ' ' + plakette('neutral', 'editiert') : '')
+    + spurPlakette;
   const rest = [];
   if (m.day_vehicle_name) { rest.push(m.day_vehicle_name); }
   if (m.day_base_name) { rest.push(m.day_base_name); }

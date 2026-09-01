@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
+require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
 
 /**
  * SICHERUNGEN — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
@@ -70,6 +71,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $teile[] = 'Aufbewahrung ' . $pakete . ' Pakete';
             }
         }
+        /* ---- Speichergrenze und Warnschwellen (E-S2-15) ---------------- */
+        if ($error === null) {
+            $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
+            if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
+                $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
+            } elseif (abs((float)$gb * 1024 * 1024 * 1024 - edbak_grenze_bytes()) > 1) {
+                edbak_marke_setzen('adminbackup_grenze_gb', (string)(float)$gb);
+                /* DIE GEMELDETEN SCHWELLEN VERGESSEN. Eine neue Grenze macht
+                 * aus denselben Bytes einen anderen Prozentsatz — was bei der
+                 * alten Grenze gemeldet war, ist bei der neuen eine andere
+                 * Aussage. Ohne dieses Zuruecksetzen bliebe eine Warnung aus,
+                 * die nach der Aenderung faellig waere. */
+                edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
+                edbak_marke_setzen('adminbackup_schwellen_offen', '');
+                $teile[] = 'Speichergrenze ' . $gb . ' GB';
+            }
+        }
+        if ($error === null) {
+            $roh = trim((string)($_POST['schwellen'] ?? ''));
+            $neu = [];
+            foreach (explode(',', $roh) as $t) {
+                $t = trim($t);
+                if ($t === '') { continue; }
+                if (!ctype_digit($t) || (int)$t < 1 || (int)$t > 100) {
+                    $error = 'Warnschwellen sind ganze Zahlen zwischen 1 und 100, '
+                           . 'durch Komma getrennt (z. B. „70, 90").';
+                    break;
+                }
+                $neu[(int)$t] = true;
+            }
+            if ($error === null) {
+                $neu = array_keys($neu); sort($neu);
+                if ($neu !== edbak_schwellen()) {
+                    edbak_marke_setzen('adminbackup_schwellen', implode(',', $neu));
+                    edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
+                    edbak_marke_setzen('adminbackup_schwellen_offen', '');
+                    $teile[] = $neu ? 'Warnschwellen ' . implode(' / ', $neu) . ' %'
+                                    : 'Warnschwellen aus';
+                }
+            }
+        }
         if ($error === null) {
             $mailAn = ($_POST['mail'] ?? '') === '1';
             if ($mailAn !== edbak_admin_mail_an()) {
@@ -106,40 +148,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Schuebe im Hintergrund sind auf P5 vertagt (E-P3-41).
      */
     if ($action === 'sichern_alle') {
-        $karte = edbak_staende();
-        $konten = db()->query('SELECT id, account_key FROM users')->fetchAll();
-        $reihe = [];
-        foreach ($konten as $k) {
-            $stand = edbak_stand_aus_karte($k['account_key'], $karte);
-            if ($stand['stand'] === 'ohne_kennung') { continue; }
-            $reihe[] = ['id' => (int)$k['id'],
-                        'alter' => $stand['tage'] === null ? PHP_INT_MAX : (int)$stand['tage']];
-        }
-        usort($reihe, static fn($a, $b) => $b['alter'] <=> $a['alter']);
+        /* EINE WARTESCHLANGE STATT EINER HEURISTIK (S2/AP6).
+         *
+         * Bis Web 12.0.0 gab es keinen Merkzettel: Die Konten wurden nach dem
+         * Alter ihrer letzten Sicherung sortiert, abgearbeitet, bis die Zeit
+         * knapp wurde, und der zweite Klick sollte dort weitermachen, wo der
+         * erste aufhoerte — wer eben gesichert wurde, steht ja hinten.
+         *
+         * Das traegt nur, wenn sich die Konten um mindestens einen ganzen Tag
+         * unterscheiden: gerechnet wird in TAGEN. Wer heute alle Konten
+         * sichert, hat danach lauter Nullen, und bei Gleichstand ist die
+         * Reihenfolge beliebig — der zweite Klick nimmt womoeglich dieselben
+         * Konten noch einmal, und die letzten kommen nie dran.
+         *
+         * Jetzt sagt die Schlange, wer noch offen ist. Sie wird von zwei
+         * Seiten geleert: hier, solange diese Anfrage Zeit hat, und vom
+         * Wartungsjob `adminbackup` in Schueben. */
+        $laufend = edbak_auftrag_lesen();
+        if ($laufend === null) { $laufend = edbak_auftrag_starten(); }
 
-        if (!$reihe) {
+        if ((int)($laufend['ges'] ?? 0) === 0) {
+            edbak_auftrag_schreiben(null);
             $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst die Wartung '
                    . 'aufrufen und die Migration ausführen.';
         } else {
             $t0 = microtime(true);
-            $gut = 0; $schlecht = []; $offen = 0;
-            foreach ($reihe as $n => $r) {
-                if ($n > 0 && microtime(true) - $t0 > SICHERN_BUDGET) {
-                    $offen = count($reihe) - $n;
-                    break;
-                }
-                [$ok, $grund, ] = edbak_sicherung_erzeugen($r['id']);
-                if ($ok) { $gut++; } else { $schlecht[] = $grund; }
-            }
-            $notice = $gut . ' ' . ($gut === 1 ? 'Sicherung' : 'Sicherungen') . ' erzeugt.';
-            if ($offen > 0) {
-                $notice .= ' ' . $offen . ' ' . ($offen === 1 ? 'Konto ist' : 'Konten sind')
-                         . ' noch offen — die Zeit für eine Anfrage reicht nicht für alle. '
-                         . 'Noch einmal auf „Alle sichern" klicken macht dort weiter, wo '
+            $e = edbak_auftrag_schub(
+                static fn(): float => SICHERN_BUDGET - (microtime(true) - $t0), 0.2);
+            $a = $e['auftrag'];
+            $gut = (int)($a['gut'] ?? 0);
+            $gesamt = (int)($a['ges'] ?? 0);
+            $notice = $gut . ' von ' . $gesamt . ' '
+                    . ($gesamt === 1 ? 'Konto gesichert.' : 'Konten gesichert.');
+            if ($e['offen'] > 0) {
+                $notice .= ' ' . $e['offen'] . ' '
+                         . ($e['offen'] === 1 ? 'Konto ist' : 'Konten sind')
+                         . ' noch offen — die Zeit für eine Anfrage reicht nicht für '
+                         . 'alle. Der Wartungsjob macht in Schüben weiter; ein zweiter '
+                         . 'Klick auf „Alle sichern" ebenfalls, und zwar genau dort, wo '
                          . 'dieser Durchgang aufgehört hat.';
             }
-            if ($schlecht) {
-                $error = 'Nicht erzeugt: ' . implode(' · ', array_unique($schlecht));
+            if ($e['meldungen']) {
+                $error = 'Nicht erzeugt (' . (int)($a['feh'] ?? 0) . '): '
+                       . implode(' · ', $e['meldungen']);
             }
         }
     }
@@ -147,7 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Einspielen aus einer Sicherung OHNE KONTO (A8.6) ---------------- */
     if ($action === 'einspielen') {
         $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        /* NUR DER KOPF FUER DIE ENTSCHEIDUNG (S2/AP6). edbak_weg() braucht
+         * Herkunftskennung, Huelle und die Zahl der geschuetzten Angaben —
+         * alles steht im Manifest. Das ganze Paket dafuer zu lesen hiesse bei
+         * einem grossen Konto, 11 MB zu entpacken, um eine Ja/Nein-Frage zu
+         * beantworten. */
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -164,8 +220,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
             } else {
                 try {
-                    $bericht = edbak_restore((int)$ziel['id'], $paket['daten']);
-                    $notice = 'Sicherung eingespielt in ' . $ziel['email'] . '.';
+                    [$okE, $grundE, $bericht] =
+                        edbak_paket_zurueckspielen($kennung, $datei, (int)$ziel['id']);
+                    if ($okE) { $notice = 'Sicherung eingespielt in ' . $ziel['email'] . '.'; }
+                    else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
                            . fehler_kennung($ex, 'adminbackup') . ').';
@@ -177,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
         $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -239,6 +297,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 [$ablageBereit, $ablageGrund] = edbak_ablage_bereit();
 $zahlen    = edbak_stand_zaehlen();
 $ablage    = edbak_ablage_zahlen();
+$speicher  = edbak_speicherstand();
+/* DER DAUERHAFTE HINWEIS OHNE SMTP (E-S2-15). Ist eine Warnschwelle
+ * ueberschritten und laesst sich keine Mail verschicken, steht die Warnung
+ * hier — und zwar so lange, bis sie nicht mehr zutrifft. Eine Warnung, die
+ * nur einmal aufblitzt, waere bei genau der Zielgruppe wirkungslos, die diese
+ * Seite alle paar Wochen aufmacht. */
+$offeneSchwellen = array_values(array_filter(array_map('intval',
+    explode(',', (string)(edbak_marke_lesen('adminbackup_schwellen_offen') ?? '')))));
+$offeneSchwellen = array_values(array_filter($offeneSchwellen,
+    static fn($p) => $speicher['prozent'] >= $p));
+/* Ein laufender Auftrag „Alle sichern" wird ANGEZEIGT, nicht nur abgearbeitet
+ * (E-S2-14: „in Schüben mit Fortschrittsanzeige"). Ohne diese Zeile wäre der
+ * Unterschied zwischen „läuft noch" und „ist liegengeblieben" nicht zu
+ * sehen. */
+$auftrag = edbak_auftrag_lesen();
 $verwaist  = edbak_verwaiste();
 $letzte    = edbak_marke_lesen('adminbackup_last');
 $paketeOhneKonto = array_sum(array_map(static fn($v) => count($v['pakete']), $verwaist));
@@ -269,6 +342,36 @@ ui_seite_start(['titel' => 'Sicherungen']);
   ]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
+  <?php if ($auftrag): ?>
+    <?= ui_meldung_markup('info', ($auftrag['gut'] ?? 0) . ' von '
+        . ($auftrag['ges'] ?? 0) . ' Konten gesichert, '
+        . edbak_auftrag_offen($auftrag) . ' offen'
+        . ((int)($auftrag['feh'] ?? 0) > 0
+            ? ', ' . (int)$auftrag['feh'] . ' gescheitert' : '')
+        . '. Der Wartungsjob arbeitet den Rest in Schüben ab; „Alle sichern" '
+        . 'macht sofort dort weiter.'
+        . (($auftrag['seit'] ?? null)
+            ? ' Begonnen ' . fmt_local(str_replace(['T', 'Z'], [' ', ''],
+                (string)$auftrag['seit']), 'd.m.Y · H:i') . ' Uhr.'
+            : ''), 'Auftrag läuft.') ?>
+  <?php endif; ?>
+  <?php if ($speicher['voll']): ?>
+    <?= ui_meldung_markup('fehler', 'Die Speichergrenze ist erreicht ('
+        . edbak_groesse_text($speicher['bytes']) . ' von '
+        . edbak_groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
+        . 'gesichert. Es wurde nichts gelöscht und nichts überschrieben — bitte '
+        . 'alte Sicherungen entfernen, die Aufbewahrung senken oder die Grenze '
+        . 'erhöhen.') ?>
+  <?php elseif ($offeneSchwellen): ?>
+    <?= ui_meldung_markup('warn', 'Die Ablage hat '
+        . max($offeneSchwellen) . ' % der Speichergrenze erreicht ('
+        . edbak_groesse_text($speicher['bytes']) . ' von '
+        . edbak_groesse_text($speicher['grenze']) . '). '
+        . (smtp_eingerichtet()
+            ? 'Die Warnmail liess sich nicht verschicken.'
+            : 'Es ist kein SMTP eingerichtet, deshalb steht die Warnung hier '
+            . 'und geht nicht per E-Mail heraus.')) ?>
+  <?php endif; ?>
 
   <?php if (!$ablageBereit): ?>
     <?= ui_meldung_markup('fehler', (string)$ablageGrund) ?>
@@ -324,20 +427,41 @@ ui_seite_start(['titel' => 'Sicherungen']);
                          'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
                                   . 'gelöscht — die jüngste und eine freigegebene nie.']); ?>
         </div>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze',
+                         'wert' => rtrim(rtrim(number_format(
+                             edbak_grenze_bytes() / (1024 * 1024 * 1024), 3, ',', ''), '0'), ','),
+                         'klein' => 'GB für alle Sicherungen zusammen. Ist sie '
+                                  . 'erreicht, wird nicht mehr gesichert — es wird '
+                                  . 'nichts gelöscht und nichts überschrieben.']); ?>
+          <?php ui_feld(['name' => 'schwellen', 'label' => 'Warnschwellen',
+                         'wert' => implode(', ', edbak_schwellen()),
+                         'klein' => 'Prozent, durch Komma getrennt. Je Schwelle '
+                                  . 'kommt einmal eine Meldung, nicht bei jedem Lauf.']); ?>
+        </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
                            'klein' => 'Liste der überfälligen Konten, höchstens einmal '
                                     . 'je Woche und nur, wenn es etwas zu melden gibt.']); ?>
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </form>
-      <p class="feld-hinweis"><strong>Es gibt keinen Zeitplan.</strong> Auf diesem
-         Webspace läuft kein Cron; was regelmäßig geschieht, fährt auf dem täglichen
-         Aufräumjob mit, und der startet bei der ersten Anfrage des Tages. Die
-         Erinnerung kommt deshalb, sobald die Anwendung nach Ablauf der Woche
-         wieder benutzt wird — wird sie zwei Wochen nicht angefasst, kommt die
-         Mail zwei Wochen später. Sicherungen selbst entstehen ausschließlich von
-         Hand: hier über „Alle sichern", auf der Kontoseite je Konto oder über
-         die Auswahl in der NutzerInnen-Liste.</p>
+      <?php /* Der frühere Absatz sagte „Es gibt keinen Zeitplan. Auf diesem
+               Webspace läuft kein Cron" — das stimmt seit dem Job-Einstieg
+               (S2/AP2) nicht mehr: `jobs.php` kennt drei Auslöser, und CLI ist
+               der empfohlene Regelfall. Was bleibt, ist der Kern der Aussage —
+               Sicherungen entstehen nicht von selbst. */ ?>
+      <p class="feld-hinweis"><strong>Sicherungen entstehen nicht von selbst.</strong>
+         Sie werden angestoßen: hier über „Alle sichern", auf der Kontoseite je Konto
+         oder über die Auswahl in der NutzerInnen-Liste. Nächtliche Sicherungen je
+         Konto sind bewusst nicht vorgesehen — sie bräuchten den Inhaltsschlüssel,
+         und den hat der Server nicht.
+         <br><br>
+         Was <em>angestoßen</em> ist, arbeitet der Wartungsjob in Schüben ab; die
+         Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
+         eingerichteten Auslöser ab (Wartungsseite: Cron, Token-Aufruf oder
+         huckepack an einer Anfrage). Die wöchentliche Erinnerung fährt auf
+         demselben Weg mit — wird die Anwendung zwei Wochen nicht angefasst,
+         kommt die Mail zwei Wochen später.</p>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>
@@ -355,7 +479,33 @@ ui_seite_start(['titel' => 'Sicherungen']);
                 'klein' => $letzte ? fmt_local($letzte . ' 00:00:00', 'd.m.Y') : 'noch keine',
                 'plaketten' => $letzte ? '' : ui_plakette('nie', ['ton' => 'rot'])]);
       ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage']);
+      /* BELEGUNG GEGEN DIE GRENZE (E-S2-15). Die Zahl misst das GANZE
+         Verzeichnis, nicht nur die Pakete — es fuellt sich auch mit dem,
+         was nicht auf der Paketliste steht. */
+      ui_zeile(['text' => 'Belegt',
+                'klein' => edbak_groesse_text($speicher['bytes']) . ' von '
+                         . edbak_groesse_text($speicher['grenze']) . ' · '
+                         . $speicher['pakete'] . ' Pakete',
+                'plaketten' => $speicher['voll']
+                    ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'rot'])
+                    : ($offeneSchwellen
+                        ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'orange'])
+                        : ui_plakette($speicher['prozent'] . ' %', ['ton' => 'blau']))]);
+      if ($speicher['reste'] > 0) {
+          /* LIEGENGEBLIEBENES WIRD GENANNT (S2/AP6). Bis Web 11.2.0 war ein
+             abgebrochener Lauf unsichtbar: Sein Rest zaehlte auf der Platte,
+             stand in keiner Liste und blockierte das Loeschen des Ordners. */
+          ui_zeile(['text' => 'Reste abgebrochener Läufe',
+                    'klein' => edbak_groesse_text($speicher['sonstige_bytes'])
+                             . ' liegen ausserhalb der Pakete',
+                    'plaketten' => ui_plakette($speicher['reste'] . ' Reste',
+                                               ['ton' => 'orange'])]);
+      }
       ?>
+      <p class="feld-hinweis"><strong>Wohin sie von hier aus gehen</strong>, steht unter
+         <a href="admin_sicherungsziele.php">Sicherungsziele</a> — FTP-, FTPS- oder
+         SFTP-Gegenstellen. Ohne ein solches Ziel liegen die Sicherungen auf
+         demselben Server, dessen Ausfall der Grund für eine Sicherung wäre.</p>
       <p class="feld-hinweis">Die Ablage liegt außerhalb der Auslieferung und wird beim
          Aufspielen einer neuen Fassung nicht angefasst. Sie ist über den Browser nicht
          erreichbar: eine <code>.htaccess</code> sperrt sie, und der Ordnername je Konto

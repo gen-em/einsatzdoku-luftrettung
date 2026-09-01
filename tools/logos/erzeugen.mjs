@@ -39,9 +39,13 @@ const HIER   = dirname(fileURLToPath(import.meta.url));
 const BILDER = join(HIER, '..', '..', 'server', 'assets', 'images');
 
 const KANTE = 64;
+// Namen wie die Dateien im Repositorium. Sie haben sich mit dem echten
+// NEF-Logo geaendert (fahrzeug -> nef, favicon.png -> favicon_helicopter.png);
+// dieses Werkzeug zeigte danach auf Dateien, die es nicht mehr gibt, und ein
+// Aufruf brach mit ENOENT ab.
 const AUFGABEN = [
-  { quelle: 'gen-em_logo_helicopter.svg', ziel: 'favicon.png' },
-  { quelle: 'gen-em_logo_fahrzeug.svg',   ziel: 'favicon-fahrzeug.png' },
+  { quelle: 'gen-em_logo_helicopter.svg', ziel: 'favicon_helicopter.png' },
+  { quelle: 'gen-em_logo_nef.svg',        ziel: 'favicon_nef.png' },
 ];
 
 const browser = await chromium.launch();

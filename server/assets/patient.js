@@ -191,19 +191,49 @@
    * @param {string} ck        Inhaltsschluessel (hex) oder null/leer
    * @returns {Promise<{ok:number, leer:number, unlesbar:number, gesperrt:boolean}>}
    */
+  /* IN STAPELN STATT EINZELN (E-S2-16, S2/AP9).
+   *
+   * Bis Web 12.1.0 lief diese Schleife streng nacheinander: ein `await` je
+   * Datensatz. Bei einem Konto mit 5000 Einsaetzen sind das 5000 Runden
+   * durch die Ereigniswarteschlange, und jede kostet mehr als das
+   * Entschluesseln selbst — GEMESSEN in S2/AP9: 4880 Entschluesselungen
+   * kosteten 387 ms, die Schleife um sie herum 1954 ms.
+   *
+   * ZWEIHUNDERT UND NICHT ALLE AUF EINMAL. `Promise.all` ueber 5000 Eintraege
+   * wuerde 5000 Chiffretexte gleichzeitig in den Speicher heben und die
+   * WebCrypto-Warteschlange in einem Zug fuellen — auf einem Geraet mit
+   * wenig Speicher (Z3) ist das die falsche Richtung. Die Zahl steht so in
+   * E-S2-16.
+   *
+   * DIE REIHENFOLGE DER ZUWEISUNG BLEIBT DIE DER LISTE: Innerhalb eines
+   * Stapels wird gleichzeitig gerechnet, aber Ergebnis j gehoert zu Eintrag j.
+   * Die Zaehlung (`ok`, `leer`, `unlesbar`) ist unveraendert — auch der Fall
+   * „gesperrt" (kein Inhaltsschluessel), der `_patState` setzt und
+   * ABSICHTLICH nicht als `leer` zaehlt.
+   */
+  const STAPEL = 200;
+
   async function entschluessleListe(liste, ck) {
     const zahl = { ok: 0, leer: 0, unlesbar: 0, gesperrt: !ck };
+    const arbeit = [];
     for (const m of (liste || [])) {
       const blob = m && m.pat_blob;
       if (!blob) { m._pat = null; m._patState = 'leer'; zahl.leer++; continue; }
       if (!ck)   { m._pat = null; m._patState = 'leer'; continue; }
-      const r = await entschluessle(ck, blob);
-      m._pat = r.daten;
-      m._patState = r.zustand;
-      // Fehlschlag wird NICHT verschluckt: Der Zustand bleibt am Datensatz
-      // stehen, damit die Anzeige ihn kenntlich machen kann.
-      if (r.zustand === 'unlesbar') { m._patFehler = true; zahl.unlesbar++; }
-      else { zahl.ok++; }
+      arbeit.push(m);
+    }
+    for (let i = 0; i < arbeit.length; i += STAPEL) {
+      const teil = arbeit.slice(i, i + STAPEL);
+      const erg = await Promise.all(teil.map((m) => entschluessle(ck, m.pat_blob)));
+      for (let j = 0; j < teil.length; j++) {
+        const m = teil[j], r = erg[j];
+        m._pat = r.daten;
+        m._patState = r.zustand;
+        // Fehlschlag wird NICHT verschluckt: Der Zustand bleibt am Datensatz
+        // stehen, damit die Anzeige ihn kenntlich machen kann.
+        if (r.zustand === 'unlesbar') { m._patFehler = true; zahl.unlesbar++; }
+        else { zahl.ok++; }
+      }
     }
     return zahl;
   }

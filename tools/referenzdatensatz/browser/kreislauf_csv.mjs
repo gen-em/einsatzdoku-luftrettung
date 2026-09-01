@@ -16,6 +16,10 @@
  *   node kreislauf_csv.mjs [basis] [referenz.zip] [zielordner]
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
+/* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
+ * wird die Beschriftung. Warum und wie: bedienen.mjs. */
+const { ankreuzen, abwaehlen } = await import(
+  new URL('./bedienen.mjs', import.meta.url).href);
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -105,15 +109,15 @@ pruefe(/Fertig/i.test(commitZustand), `Import gescheitert: ${commitZustand}`);
 // ---- Erneut exportieren, mit denselben Einstellungen wie die Referenz ----
 await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
-await seite.check('input[name="exp_zr"][value="all"]');
+await ankreuzen(seite, 'input[name="exp_zr"][value="all"]');
 await seite.selectOption('#exp_fmt', 'b');
 await seite.waitForTimeout(400);
-await seite.check('#exp_pat');
+await ankreuzen(seite, '#exp_pat');
 await seite.waitForTimeout(400);
 if (await seite.locator('#exp_gpx_row').isVisible().catch(() => false)) {
-  await seite.check('#exp_gpx');
+  await ankreuzen(seite, '#exp_gpx');
 }
-await seite.uncheck('#exp_pw');
+await abwaehlen(seite, '#exp_pw');
 await seite.waitForTimeout(300);
 
 const warten = seite.waitForEvent('download', { timeout: 900000 });

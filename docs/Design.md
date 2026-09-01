@@ -297,7 +297,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--schnee` | `#FFFCFA` | 37 |  |
-| `--rauch` | `#F7F5ED` | 22 |  |
+| `--rauch` | `#F7F5ED` | 23 |  |
 | `--sand` | `#D4C7AD` | 8 |  |
 
 **Schrift**
@@ -320,7 +320,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--orange` | `#FF8F1F` | 24 |  |
+| `--orange` | `#FF8F1F` | 25 |  |
 | `--orange-tief` | `#C25A00` | 13 |  |
 | `--orange-hell` | `#FFEBD6` | 18 |  |
 
@@ -367,7 +367,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 53 |  |
-| `--abstand-2` | `8px` | 75 |  |
+| `--abstand-2` | `8px` | 76 |  |
 | `--abstand-3` | `12px` | 99 |  |
 | `--abstand-4` | `16px` | 54 |  |
 | `--abstand-5` | `24px` | 15 |  |
@@ -399,7 +399,7 @@ auseinanderlaufen kann.
 | `--symbol` | `20px` | 10 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 9 | Symbolgröße im Knopf und Kartenkopf |
 | `--strich` | `1px` | 38 | Haarlinie |
-| `--strich-stark` | `2px` | 25 | Aktivstrich, Randstrich, Fokus |
+| `--strich-stark` | `2px` | 26 | Aktivstrich, Randstrich, Fokus |
 | `--radius-rund` | `999px` | 12 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
@@ -456,28 +456,6 @@ auseinanderlaufen kann.
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
 
 **Ungenutzt:** `--spur-1`, `--spur-2`, `--spur-3`, `--spur-4`, `--spur-5`, `--spur-6`, `--spur-7`, `--spur-8`, `--spur-ruhe`, `--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`.
-
-**Zu den ungenutzten Token.** Dreizehn Token haben keinen `var()`-Verweis im
-Stylesheet. Das ist kein Versäumnis, sondern hat zwei Gründe — und der dritte
-Fall zeigt, dass die Zeile trotzdem ernst zu nehmen ist:
-
-- **`--spur-1` bis `--spur-8` und `--spur-ruhe`** liest **JavaScript**:
-  `assets/geo.js` holt sie über `getComputedStyle`, weil die Spurfarben einer
-  Karte nicht in CSS entstehen können. Sie sind benutzt, nur nicht von CSS.
-- **`--s-handy`, `--s-leiste`, `--s-zwei`, `--s-karte-neben`** sind reine
-  Auskunft: Custom Properties funktionieren in `@media`-Abfragen nicht. Die
-  Zahlen stehen deshalb in Abschnitt 18 des Stylesheets ein zweites Mal —
-  dort als Literale. Wer eine Schwelle verschiebt, ändert **beide**.
-- **`--leiste-filter` und `--leiste-filter-schmal`** standen bis O12 ebenfalls
-  in dieser Zeile — und waren dort zu Recht: Die Filterleiste der Suche trug
-  nur `.leiste` und war so breit wie die Tagesliste (220 bzw. 260 px statt der
-  vorgesehenen 240 bzw. 280). Das tote Token war die Quittung für eine Regel,
-  die nie angekommen war (F-P3-BC). Seit O12 sind beide in Gebrauch und stehen
-  darum nicht mehr in der Aufzählung.
-
-Wer die Zeile länger werden sieht, prüft zuerst den dritten Fall.
-
----
 
 ## 5. Schriftskala
 
@@ -655,60 +633,51 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 |---|---|--:|
 | `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 2 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 4 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 5 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 19 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 0 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 20 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 16 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 19 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 13 |
-| `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 20 |
+| `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 24 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 9 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 12 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 2 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 16 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 17 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 9 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 7 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 15 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 16 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 4 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 13 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 8 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 14 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 3 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 8 |
-| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 3 |
-| `schloss.svg` | Tabler Icons „lock" (MIT) | 5 |
+| `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 4 |
+| `schloss.svg` | Tabler Icons „lock" (MIT) | 7 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 11 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 3 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 5 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 9 |
-| `stift.svg` | Tabler Icons „pencil" (MIT) | 6 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 10 |
+| `stift.svg` | Tabler Icons „pencil" (MIT) | 7 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 13 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 4 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 15 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 2 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 13 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 14 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 24 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 25 |
 
 44 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `geraet-entkoppeln`, `luftlinie`, `reanimation`.
-
-Die Spalte **Nennungen** zählt jede Erwähnung des Namens als Zeichenkette in
-PHP und JS, nicht nur `ui_symbol('haus')` — die Kartenschilder in `geo.js`
-reichen den Namen durch eine eigene Funktion, und ein Ausdruck, der nur die
-beiden Erzeuger kennt, meldete `haus` als ungenutzt. Die Zahl ist damit eine
-**Obergrenze** (sie kann ein gleichlautendes Wort mitzählen); eine **0** ist
-dagegen belastbar.
-
----
 
 ## 9. Bausteine
 
@@ -757,35 +726,35 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 54 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 108 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 141 |
-| `ui_symbol()` | `.symbol` | ja (+5 Unterklassen) | 194 |
+| `ui_symbol()` | `.symbol` | ja (+6 Unterklassen) | 194 |
 | `ui_logo()` | — | Hüllenfunktion, kein eigenes Element | 261 |
-| `ui_kopf()` | `.kopf` | ja (+19 Unterklassen) | 317 |
+| `ui_kopf()` | `.kopf` | ja (+21 Unterklassen) | 317 |
 | `ui_geruest_start()` | `.inhalt` | ja | 389 |
 | `ui_leiste_ende()` | `.leiste` | ja (+8 Unterklassen) | 453 |
 | `ui_geruest_ende()` | `.inhalt` | ja | 475 |
 | `ui_leiste_diensttage()` | `.leiste-liste` | ja | 514 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 667 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 732 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 810 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 853 |
-| `ui_meldung_markup()` | `.meldung` | ja (+10 Unterklassen) | 920 |
-| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 954 |
-| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 996 |
-| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1026 |
-| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1077 |
-| `ui_zeile()` | `.zeile` | ja (+11 Unterklassen) | 1093 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1130 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1172 |
-| `ui_feld()` | `.feld` | ja (+17 Unterklassen) | 1236 |
-| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1294 |
-| `ui_segment_markup()` | `.segment` | ja (+24 Unterklassen) | 1338 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 1390 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1434 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1517 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1567 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1608 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1665 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1818 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-block` | ja | 742 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 821 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 864 |
+| `ui_meldung_markup()` | `.meldung` | ja (+10 Unterklassen) | 931 |
+| `ui_knopf()` | `.knopf` | ja (+17 Unterklassen) | 965 |
+| `ui_plakette()` | `.plakette` | ja (+5 Unterklassen) | 1007 |
+| `ui_karte_start()` | `.karte` | ja (+35 Unterklassen) | 1037 |
+| `ui_karte_ende()` | `.karte` | ja (+35 Unterklassen) | 1088 |
+| `ui_zeile()` | `.zeile` | ja (+12 Unterklassen) | 1104 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 1146 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 1188 |
+| `ui_feld()` | `.feld` | ja (+20 Unterklassen) | 1252 |
+| `ui_schalter()` | `.schalter` | ja (+17 Unterklassen) | 1310 |
+| `ui_segment_markup()` | `.segment` | ja (+25 Unterklassen) | 1354 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 1407 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 1451 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 1534 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+21 Unterklassen) | 1584 |
+| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 1625 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 1682 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 1835 |
 
 32 Funktionen mit Markup in `server/ui.php`, davon 5 Hüllenfunktionen ohne eigenes Element.
 
@@ -830,7 +799,26 @@ Plaketten, Aktionen rechts.
 ```
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
-rechts steht, *handelt an ihr*.
+rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
+(Sammelsicherung) und die Spurenliste des Diensttages (mehrere Spuren als eine
+GPX-Datei, seit Web 10.3.0). Ein Eintrag, an dem es nichts auszuwählen gibt,
+bekommt ein **abgeschaltetes** Kästchen und nicht gar keines — ein fehlendes
+ließe die Zeile um seine Breite nach links rutschen, und die Liste sähe
+verrutscht aus.
+
+**`attr` (seit Web 10.3.0)** hängt fertige Attribute an — dieselbe
+Zusatzoption, die `ui_knopf()` und `ui_aktionen()` schon haben. Gebraucht für
+Zeilen, die mit etwas anderem auf der Seite verknüpft sind: die Spurenliste des
+Diensttages trägt darüber `data-spur` und `tabindex`.
+
+**`.zeile-hervor` (seit Web 10.3.0)** hebt eine Zeile hervor, solange etwas
+anderes auf sie zeigt — Rauchfläche plus ein orangener Balken links in
+`--strich-stark`. Kein neuer Farbwert, kein neues Maß, kein eigener Fokusring
+(es gibt **einen** für die ganze Anwendung).
+
+> **Nur für eine Verknüpfung, nicht für einen Zustand.** „Hervorgehoben" heißt
+> *worauf gerade gezeigt wird*, nicht *was ausgewählt ist* und nicht *was
+> wichtig ist*. Für einen Zustand ist die Plakette da (9.6).
 
 ### 9.3 Zeilenaktionen — dieselben Handlungen, zwei Formen
 
@@ -927,6 +915,13 @@ aktuell, freigegeben) · `rot` (Fehleinsatz, kein Ende, nie gesichert, leer).
 sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 (E-P3-17).
 
+> **Es sind genau diese vier Töne.** Ein fünfter Wert erzeugt eine Klasse ohne
+> Regel — die Plakette steht dann ohne Hintergrund da, als bloßer Text. Genau
+> das ist passiert: `warn` wurde an drei Stellen übergeben und fiel niemandem
+> auf, weil der Klassenname zusammengesetzt wird (`'plakette-' . $ton`) und als
+> Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
+> finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
+
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
 Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
@@ -995,6 +990,15 @@ einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
 > steht er am Ende des Formulars in `.listen-form-fuss`, wo man ihn sucht.
 > `data-dirty-track` bleibt trotzdem: Es trägt auch die Verlassen-Warnung und
 > die bedingte Abbrechen-Rückfrage.
+
+**Zweite Verwendung: die Sammelleiste** (`kein_haken`, `form`, `zahl`).
+Derselbe Baustein, anderer Anlass: Nicht ein schmutziges Formular blendet sie
+ein, sondern eine **Auswahl** — und ihr Text ist deren Zahl und deshalb immer
+sichtbar (der Hinweis eines Formulars erscheint erst ab 720 px). Zwei
+Verwendungen: „Auswahl sichern" in der NutzerInnen-Liste (P3/O9b) und
+„Auswahl als GPX" auf der Spurenseite des Diensttages (Web 10.3.0). Mit `form`
+kann sie einem Formular an anderer Stelle der Seite gehören; `kein_haken`
+hängt sie von `forms.js` ab, das dann nichts zu tun hätte.
 
 ### 9.10 Kennzahl
 

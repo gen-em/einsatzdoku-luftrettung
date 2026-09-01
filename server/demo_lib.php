@@ -361,6 +361,15 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
     $pdo->prepare("DELETE tp FROM track_points tp
                    JOIN rest_segments r ON r.id = tp.owner_id
                    WHERE tp.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
+    // Und die Blobs derselben Spuren (S2/AP1). Sie haengen an keinem
+    // Fremdschluessel; ohne diese beiden Anweisungen bliebe der Bestand des
+    // Demo-Kontos nach dem Zuruecksetzen als Waise liegen.
+    $pdo->prepare("DELETE tb FROM track_blobs tb
+                   JOIN missions m ON m.id = tb.owner_id
+                   WHERE tb.owner_type = 'mission' AND m.user_id = ?")->execute([$id]);
+    $pdo->prepare("DELETE tb FROM track_blobs tb
+                   JOIN rest_segments r ON r.id = tb.owner_id
+                   WHERE tb.owner_type = 'rest' AND r.user_id = ?")->execute([$id]);
 
     // Sperrliste haengt an der Geraetekennung, nicht am Konto.
     $pdo->prepare('DELETE dr FROM deleted_refs dr

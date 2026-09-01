@@ -1,0 +1,104 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup S4/A0 — Geräte-Reiter: QR-Kopplung und APK-Download</title>
+<link rel="stylesheet" href="../../server/assets/style.css">
+<style>
+  body{padding:var(--abstand-5) var(--abstand-4);background:var(--rauch)}
+  .buehne{max-width:900px;margin:0 auto}
+  .notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);
+         padding:var(--abstand-3);margin:var(--abstand-5) 0 var(--abstand-4);
+         font-size:var(--groesse-2)}
+
+  /* ---- VORSCHLAG: Codeblock und QR nebeneinander -----------------------
+     Der Codeblock ist der Bestand (E-P3-35); neu ist nur das QR-Bild
+     daneben. Unter 720 px bricht der QR unter den Code. ------------------ */
+  .code-qr{display:flex;flex-wrap:wrap;gap:var(--abstand-4);align-items:center}
+  .code-qr .codeblock{flex:1 1 260px;margin:0}
+  .code-qr-bild{flex:0 0 auto;background:var(--schnee);
+         border:var(--strich) solid var(--linie);border-radius:var(--radius);
+         padding:var(--abstand-2);line-height:0}
+</style></head><body>
+<div class="buehne">
+
+<h1 class="karte-titel" style="font-size:var(--groesse-6)">Mockup S4/A0 — Geräte-Reiter</h1>
+<p class="feld-hinweis">Vorschlag zu E-S4-15/E-S4-16: QR-Code neben dem
+   Kopplungscode und der APK-Download als eigene Karte, beides unter
+   Einstellungen → Geräte.</p>
+
+<div class="notiz"><strong>Was neu ist:</strong> das QR-Bild neben dem bestehenden
+  Codeblock (es trägt Server-Adresse und Code — die Handy-App liest beides mit der
+  Kamera, statt dass jemand abtippt) und die Karte <strong>„NAdoku für
+  Android"</strong>. Der Kartentitel „Gerät koppeln" ist die gerätefreie Fassung
+  von „Uhr koppeln" (E-P2-02); die Bedienwege je Gerät stehen als Zusatz. Das
+  QR-Bild hier ist ein Platzhalter und nicht scanbar.</div>
+
+<section class="karte">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">Gerät koppeln</h2>
+  </div>
+  <div class="karte-inhalt">
+    <p class="feld-hinweis">Erzeuge einen Code und gib ihn auf dem Gerät ein. Das
+       Gerät holt sich seine Zugangsdaten dann selbst — kein Abtippen langer
+       Schlüssel. Der Code ist 10 Minuten gültig und genau einmal verwendbar;
+       ein neuer macht einen vorher erzeugten ungültig.</p>
+    <p class="feld-klein">In der Handy-App: <strong>Koppeln → QR-Code scannen</strong> —
+       oder Server-Adresse und Code von Hand eingeben. Auf Garmin-Uhren führt die
+       Sync-Seite zum Koppeln; die Tastenwege stehen im Handbuch, Abschnitt 2.0.</p>
+
+    <div class="code-qr">
+      <div class="codeblock">
+        <p class="codeblock-titel">Kopplungscode</p>
+        <p class="codeblock-wert">K7M4QP</p>
+        <p class="feld-klein">Gültig bis 14:32 Uhr. Das Gerät erscheint nach der
+           Kopplung unten in der Liste.</p>
+      </div>
+      <div class="code-qr-bild"><img src="S4-qr-platzhalter.svg" alt="QR-Code mit Server-Adresse und Kopplungscode" width="132" height="132"></div>
+    </div>
+
+    <form>
+      <div class="listen-form-fuss">
+        <button class="knopf knopf-primaer" type="button"><span>Kopplungscode erzeugen</span></button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="karte">
+  <div class="karte-kopf">
+    <h2 class="karte-titel">NAdoku für Android</h2>
+  </div>
+  <div class="karte-inhalt">
+    <p class="feld-hinweis">Die Handy-App zeichnet die Spur des Dienstes auf und
+       dokumentiert die Einsatzphasen — am Handy oder an einer verbundenen
+       Wear-OS-Uhr. Sie wird hier verteilt, nicht über einen App-Store.</p>
+
+    <div class="zeile">
+      <div class="zeile-text">
+        <span class="zeile-haupt">nadoku-1.0.0.apk</span>
+        <span class="zeile-klein">12,4 MB · Stand 15.09.2026 · für Android 8.0 oder neuer</span>
+      </div>
+      <div class="zeile-aktionen">
+        <div class="zeile-knoepfe">
+          <a class="knopf knopf-neutral" href="#"><span>Herunterladen</span></a>
+        </div>
+      </div>
+    </div>
+
+    <p class="feld-klein">SHA-256:
+       <code>3f9c 1b7a 92e4 0d5f 8c21 6a0e b374 d9c8 4f02 7e51 a6b3 908d 2c4e f1a7 55d0 8b19</code>
+       — wer der Seite nicht traut, rechnet die Prüfsumme der heruntergeladenen
+       Datei nach.</p>
+    <p class="feld-klein">Beim ersten Öffnen fragt Android nach, ob Installationen
+       aus dieser Quelle erlaubt sind — das ist bei einer Verteilung ohne
+       App-Store der vorgesehene Weg.</p>
+  </div>
+</section>
+
+<div class="notiz"><strong>Bewusst so:</strong> Der Download ist eine
+  <em>neutrale</em> Handlung, kein Primärknopf — die eine Haupthandlung des
+  Reiters bleibt das Erzeugen des Kopplungscodes. Die APK-Datei liegt nur auf dem
+  Server (<code>server/apk/</code>, vom Deploy ausgenommen wie
+  <code>config.php</code>); Version, Größe und Prüfsumme liest die Seite aus der
+  Datei — nichts davon wird von Hand gepflegt.</div>
+
+</div></body></html>

@@ -1,4 +1,4 @@
-// Einsatzdoku — Oberflaeche: Statistik des laufenden Einsatztags
+// NAdoku — Oberflaeche: Statistik des laufenden Einsatztags
 // Einsaetze = abgeschlossene Einsaetze des Tages (Alarmierung + Ende)
 //
 // Ueberschrift, Zahl und Beschriftung bilden einen Block und werden als

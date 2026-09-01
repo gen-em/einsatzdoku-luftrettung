@@ -1203,5 +1203,453 @@ declare(strict_types=1);
  * EIN NEUES TOKEN: `--symbol-klein` (16 px), das Zusatzzeichen an einer
  * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
  * 4-px-Schritt nach unten fort.
+ *
+ * 9.14.1 — SIEBEN VERWEISE ZEIGTEN AUF GELOESCHTE BILDDATEIEN. Keine
+ * Migration. Der Logo-Wechsel (Commit „Update Logos") hat die Dateien
+ * getauscht, ohne den Code nachzuziehen — und weil ein Push auf main mit
+ * Aenderungen unter server/ sofort deployt, war der Stand live: ui.php lud auf
+ * JEDER Seite ein 404-Favicon, und wer „Fahrzeug" gewaehlt hatte, sah gar kein
+ * Logo. Geaendert hat sich allein der DATEISTAMM; der Einstellungswert heisst
+ * weiter 'fahrzeug' und steht so in users.logo_wahl und
+ * app_state.logo_standard — das spart eine Migration.
+ * (Nachgetragen mit 9.15.0: Der Block fehlte, die Datei fuehrt zu jeder
+ * Nummer einen.)
+ *
+ * 9.15.0 — DIE UHR KANN SICH SELBST TRENNEN. Keine Migration.
+ *
+ * `pair.php` kennt jetzt zwei Anliegen statt einem: koppeln wie bisher, und
+ * neu `{"aktion":"trennen"}` mit den Kopfzeilen X-Device-Id und X-Api-Key.
+ * Backlog Nr. 14.
+ *
+ * Der Fall ist die GETEILT GENUTZTE UHR. Bis hierher gab es fuer den Wechsel
+ * der Person nur den Weg „neuen Code eintippen". Gelang das nicht — falscher
+ * Code, kein Telefon in Reichweite, Geraetegrenze erreicht —, dokumentierte
+ * die Uhr stillschweigend weiter auf das VORHERIGE Konto. Niemand sah es ihr
+ * an, und die Person davor bekam Einsaetze, die sie nicht gefahren ist.
+ *
+ * Die Uhr trennt sich deshalb ZUERST ausdruecklich und koppelt erst danach
+ * neu. Schlaegt das Koppeln fehl, steht sie sichtbar ohne Kopplung da statt
+ * unsichtbar mit der falschen (die Sync-Seite sagt seit Uhr 1.10.1 „Nicht
+ * eingerichtet").
+ *
+ * DREI ENTSCHEIDUNGEN AM ZWEIG:
+ *   Loeschen statt deaktivieren   Ein deaktiviertes Geraet belegt weiter einen
+ *                                 der MAX_GERAETE Plaetze — „zu viele Geraete"
+ *                                 ist genau der Fehler, in den eine geteilte
+ *                                 Uhr sonst laeuft. Der Fremdschluessel setzt
+ *                                 device_id auf NULL; hochgeladene Daten
+ *                                 bleiben.
+ *   Kein eigener Endpunkt         Die Adresse kennt die Uhr schon, und der
+ *                                 Ratenschutz von pair.php gilt fuer beide
+ *                                 Zweige. Ein zweiter waere eine weitere
+ *                                 anmeldungsfreie Tuer.
+ *   E-Mail an den Kontoinhaber    Symmetrisch zum Koppeln: die eine
+ *                                 Gelegenheit, es zu erfahren, ohne sich
+ *                                 zufaellig anzumelden.
+ *
+ * Die Antwortzeit folgt ingest.php: Auch der unbekannte Zweig laeuft gegen
+ * AUTH_VERGLEICHSWERT, sonst waere aus der Dauer ablesbar, welche
+ * Geraetekennungen es gibt.
+ * ---------------------------------------------------------------------------
+ *
+ * 10.0.0 ist der Umbau der SPURSPEICHERUNG (Phase S2). Die Hauptnummer steht
+ * hier fuer das, wofuer sie da ist: ein geaendertes Datenmodell mit
+ * zwingender Migration. Spurpunkte liegen nicht mehr nur als Zeilen in
+ * `track_points`, sondern zusaetzlich als Blob in der neuen Tabelle
+ * `track_blobs` — im Format SPUR1, spaltenweise Differenzen und zlib. Der
+ * Grund ist die Menge: gemessen 62,4 Byte je Punkt als Zeile gegen 3,58 als
+ * Blob, ein Siebzehntel. Bei 5000 Einsaetzen sind das 194 statt 3,3 MB.
+ *
+ * `track_points` bleibt und wird zum EINGANGSPUFFER der Uhr; die Verdichtung
+ * selbst kommt mit AP3. Gelesen und geschrieben wird ausschliesslich ueber
+ * `server/spur_lib.php` — das ist eine Pflegepflicht, keine Empfehlung
+ * (CLAUDE.md 4). Alle sechs bisherigen SQL-Lesestellen sind darauf
+ * umgestellt, ebenso jeder Loeschweg: Weder `track_points` noch
+ * `track_blobs` haengen an einem Fremdschluessel, was hier nicht
+ * ausdruecklich mitgeloescht wird, bleibt als Positionsdatensatz ohne
+ * Eigentuemer liegen (F-S2-B).
+ *
+ * NACH DEM AUSROLLEN MUSS `update.php` AUFGERUFEN WERDEN. Ohne die Migration
+ * gibt es die Tabelle nicht, und jeder Spurzugriff scheitert.
+ *
+ * 10.1.0 ist AP2 derselben Phase: DER JOB-EINSTIEG. Keine Hauptnummer, weil
+ * sich weder Datenmodell noch Wege durch die Anwendung aendern — aber eine
+ * Migration gibt es trotzdem (2026_08_31_jobs, Tabelle `jobs`), und ohne sie
+ * laeuft kein Wartungsjob mehr.
+ *
+ * Bis hierher hing die Wartung an einer angemeldeten Anfrage: `db.php` rief
+ * `run_cleanup_if_due()`, und darin standen zwei Anti-Joins ueber die ganze
+ * Spurtabelle. Bei 9,46 Mio. Zeilen dauerte das gemessen 4,07 s — bezahlt von
+ * der NutzerIn, die zufaellig die erste des Tages war. Bei Z2 (190 Mio.
+ * Zeilen) waeren es Minuten.
+ *
+ * Jetzt gibt es einen Rahmen mit drei Ausloesern und EINEM Katalog
+ * (`jobs_lib.php`): Kommandozeile (`php jobs.php`, der Regelfall),
+ * Adresse mit Token (fuer Hoster ohne CLI-Cron) und weiterhin huckepack auf
+ * einer Anfrage — jetzt aber mit 3 s Zeitbudget und fruehestens alle fuenf
+ * Minuten. Jeder Job arbeitet in Haeppchen und merkt sich in `jobs.zustand`,
+ * wo er stehengeblieben ist; die Waisensuche laeuft bereichsweise am
+ * Primaerschluessel entlang statt als Anti-Join ueber alles.
+ *
+ * Ehrlich gemessen ist der bereichsweise Durchlauf bei 3,31 Mio. Zeilen NICHT
+ * schneller (0,85-1,05 s gegen 0,78-0,90 s, je fuenf Laeufe). Der Gewinn ist
+ * ein anderer: Er ist begrenzt, fortsetzbar und liegt nicht mehr auf dem Weg
+ * einer Anfrage. Die eine faellige Anfrage traegt 887 ms, jede weitere
+ * innerhalb von fuenf Minuten 0,5-1,3 ms — vorher waren bis zu 18 Sekunden
+ * Budget je Anfrage moeglich.
+ *
+ * AUCH HIER MUSS NACH DEM AUSROLLEN `update.php` AUFGERUFEN WERDEN.
+ *
+ * 10.2.0 ist AP3: VERDICHTEN UND AUSDUENNEN. Damit stehen die drei Stufen
+ * aus E-S2-03 wirklich, statt nur beschrieben zu sein. Eine Migration gibt es
+ * (2026_09_01_letzter_punkt_am), und ohne sie laeuft der Verdichtungsjob
+ * nicht.
+ *
+ * ZWEI NEUE JOBS im Katalog aus 10.1.0. `verdichtung` holt abgeschlossene
+ * Spuren aus den Zeilen in den verlustfreien Blob — eine Transaktion je Spur,
+ * Rundlaufpruefung davor. `ausduennen` ersetzt sechs Monate nach Einsatzende
+ * den verlustfreien durch einen ausgeduennten Blob: Douglas-Peucker
+ * dreidimensional, 2 m waagerecht und 3 m senkrecht als GETRENNTE Toleranzen,
+ * und je Phasenzeitpunkt bleibt der zeitnaechste Punkt erhalten, damit die
+ * Hoehenermittlung des Einsatzorts nicht leer ausgeht.
+ *
+ * DIE NEUE SPALTE `letzter_punkt_am` ist die Groesse, auf der die Karenz aus
+ * E-S2-06 steht — und die es bislang nirgends gab. `track_points.ts` ist die
+ * Aufzeichnungszeit, nicht die Ankunftszeit. Ueber sie gerechnet waere die
+ * Karenz Zierrat: Die Uhr setzt `final` in JEDEM Teilstueck, eine Uhr ohne
+ * Empfang laedt ihren Puffer spaeter hoch, und dann ist die
+ * Aufzeichnungszeit schon Wochen alt.
+ *
+ * AUSGEDUENNT WIRD UNWIDERRUFLICH. Deshalb prueft `spur_ausduennung_pruefen()`
+ * vor dem Ersetzen unabhaengig nach, dass kein verworfener Punkt weiter als
+ * zugesagt vom endgueltigen Streckenzug entfernt liegt — nicht aus der
+ * Buchfuehrung der Rekursion, sondern neu gerechnet.
+ *
+ * WAS DIE AUSDUENNUNG WIRKLICH SPART, ist weniger, als die Punktzahl
+ * vermuten laesst: Am Referenzbestand bleiben 38 % der Punkte, aber 74 % der
+ * Bytes — die Ausduennung entfernt genau die vorhersagbaren Punkte, und die
+ * verbleibenden Differenzen packen sich schlechter. Am Messstand sind es 32 %
+ * der Punkte und 57 % der Bytes. Beide Stufen halten E-S2-24 mit Abstand:
+ * gemessen 1,60 MB je 1000 Einsaetzen gegen 3 MB Zielwert.
+ *
+ * `ingest.php` verwirft nach der Ausduennung eingehende Punkte und quittiert
+ * sie trotzdem (E-S2-08), damit die Uhr ihren Puffer leert. Der JSON-Vertrag
+ * bleibt Fassung 1.3; neu ist allein das zusaetzliche Antwortfeld
+ * `dropped_points`. Nebenbei behoben: Scheiterte der LETZTE Punkt eines
+ * Teilstuecks an der Wertepruefung, meldete der Server eine zu kleine Marke —
+ * und die Uhr sandte dasselbe Stueck endlos.
+ *
+ * ZWEI FUNDE aus AP3, beide behoben: `spur_loeschen_nur_zeilen()` loeschte
+ * ALLE Zeilen eines Eigentuemers, auch die, die waehrend des Laufs eintrafen
+ * (jetzt mit verpflichtender seq-Obergrenze); und `compute_site_elevation()`
+ * haette auf einer ausgeduennten Spur eine vorhandene Ortshoehe still durch
+ * NULL ersetzen koennen, sobald jemand eine Phasenzeit berichtigt.
+ *
+ * AUCH HIER MUSS NACH DEM AUSROLLEN `update.php` AUFGERUFEN WERDEN.
+ *
+ * 10.3.0 ist AP4: DER GPX-ABRUF (E-S2-09, Backlog Nr. 3). Neue Funktion,
+ * keine Migration.
+ *
+ * Eine Spur laesst sich jetzt einzeln herunterladen — je Einsatz aus dessen
+ * Aktionsmenue, und je Einsatz UND Ruhesegment ueber die neue Seite
+ * `tag_spuren.php`: die Karte des Diensttages, darunter jede Spur als eigene
+ * Zeile mit Stufe, Punktzahl und Abruf. Wer auf eine Zeile zeigt, sieht auf
+ * der Karte, welche Linie gemeint ist.
+ *
+ * DIE SEITE WAR NOETIG, weil Ruhesegmente in der Oberflaeche bis hierher
+ * ueberhaupt keine Identitaet hatten: nur eine schwarze Linie auf der
+ * Tageskarte, ohne Zeile, ohne Popup, und `api/day.php` liefert nicht einmal
+ * ihre Kennung. Ein Knopf je Ruhesegment haette nirgendwo hingekonnt.
+ *
+ * DIE ERSTE DATEI, DIE DIESER SERVER AUSLIEFERT. Alle uebrigen Downloads der
+ * Anwendung entstehen im Browser, und zwar aus gutem Grund: Ihr Inhalt ist
+ * Ende-zu-Ende verschluesselt, der Server KANN ihn nicht zusammensetzen. Fuer
+ * eine Spur gilt das nicht — Spurpunkte sind Klartext, und die Stufe, die
+ * E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server. Dazu ein
+ * Sicherheitsargument: Ein serverseitig gebauter DATEINAME kann keine
+ * geschuetzte Angabe tragen, weil der Server sie nicht lesen kann.
+ *
+ * DIE KENNZEICHNUNG Original/ausgeduennt steht an DREI Stellen: in der Datei
+ * (`<metadata><desc>` und `<trk><desc>`), im Dateinamen — nur der ueberlebt
+ * das Verschieben in einen anderen Ordner — und auf der Seite, vor dem
+ * Herunterladen.
+ *
+ * MEHRERE SPUREN AUF EINMAL: Ein Kaestchen je Zeile, eine Sammelleiste, eine
+ * Datei. Die ausgewaehlten Spuren bleiben darin MEHRERE `<trk>` und werden
+ * nicht zusammengeklebt — sonst zoege jedes Kartenprogramm eine gerade Linie
+ * vom Ende der einen zum Anfang der naechsten, quer ueber das Land. Die Liste
+ * steht dabei chronologisch, wie der Tag verlaufen ist, und nicht nach Art
+ * gruppiert; die Datei folgt derselben Folge.
+ *
+ * NEBENBEI BEHOBEN: `.plakette-warn` gibt es im Stylesheet nicht. Der Ton
+ * `warn` wurde an drei Stellen benutzt, zwei davon aus AP2 und AP3 — die
+ * Plaketten standen dort ohne Hintergrund da. Der Grund, warum es niemandem
+ * auffiel: Der Klassenname wird zusammengesetzt (`'plakette-' . $ton`) und
+ * taucht als Literal nirgends auf, die Vollstaendigkeitspruefung kann ihn also
+ * nicht finden. Der Fall ist in Backlog Nr. 36 vermerkt.
+ *
+ * `ui_zeile()` kennt jetzt `attr` — dieselbe Zusatzoption, die `ui_knopf()`
+ * und `ui_aktionen()` schon haben. Kein neuer Baustein.
+ *
+ * 11.0.0 IST AP5: DIE SICHERUNG WIRD MEHRTEILIG (E-S2-10 bis E-S2-12).
+ * Hauptnummer, weil das Dateiformat der Sicherung wechselt — der erste
+ * Wechsel seit Web 5.0.0.
+ *
+ * WARUM. Eine Sicherung mit 5000 Einsaetzen traegt rund drei Millionen
+ * Spurpunkte. Bis hierher entstand sie als EINE Zeichenkette im Browser und
+ * ging als EIN POST zurueck; beides sprengt jedes Budget, das ein Telefon
+ * oder ein einfacher Webspace hat. Fassung 4 zerlegt sie deshalb in
+ * versiegelte Teile in einem ZIP:
+ *
+ *   manifest.edbak        Teileliste mit SHA-256 je Teil und Sicherungskennung
+ *   kern.edbak            die Nutzlast OHNE Punktlisten
+ *   spuren/0001.edbak …   je Teil eine Liste {spur_ref, SPUR1-Blob}
+ *
+ * Dieser Zuschnitt hat eine Woche gehalten: Der Kern SELBST ist bei grossen
+ * Bestaenden zu gross — 11.1.0 zerlegt ihn weiter. Wer die Aufteilung sucht,
+ * liest sie dort; die hier genannte gibt es nur noch in diesem Absatz.
+ *
+ * JEDES TEIL KENNT SEINEN PLATZ. Die Zusatzdaten der Verschluesselung (AAD)
+ * binden Sicherungskennung, Teilname und Nummer — ein fehlendes, doppeltes,
+ * vertauschtes oder aus einer ANDEREN Sicherung stammendes Teil faellt damit
+ * beim Oeffnen auf und nicht erst beim Datenvergleich. Ohne diese Bindung
+ * liesse sich ein fremdes Spurteil unterschieben: Mit demselben Passwort
+ * ginge es klaglos auf und braechte den Bestand eines anderen Kontos mit.
+ * Das Muster ist von Cryptomator und age abgeschaut.
+ *
+ * EINE PBKDF2 JE VORGANG. Salz und Rundenzahl sind in allen Teilen dieselben;
+ * bei zwoelf Teilen waeren zwoelf Ableitungen zu je 320 000 Runden auf einem
+ * gedrosselten Telefon eine knappe Minute reines Warten — zweimal, beim
+ * Sichern und beim Einspielen.
+ *
+ * DAS ALTFORMAT WIRD WEITER GELESEN, aber nicht mehr geschrieben. Es ist der
+ * Weg, auf dem ein vorhandener Bestand einmal herueberkommt; mit NaDoku 1.0
+ * wird es abgeschafft (Entscheidung vom 31.08.2026, Backlog).
+ *
+ * KEINE MIGRATION. Das Format der Datei aendert sich, das Datenmodell nicht —
+ * `update.php` braucht diesmal niemand aufzurufen.
+ *
+ * 11.1.0 IST AP5b: AUCH DER KERN WIRD MEHRTEILIG (E-S2-11, Z3).
+ *
+ * AP5 hatte die Punktlisten aus dem Kern geholt und in Spurteile gelegt. Was
+ * blieb, war der Kern selbst — und der ist beim 5000er-Bestand 10,5 MB. Auf
+ * dem Rueckweg ginge er als EIN POST von 9,4 MB gegen ein Limit, das niemand
+ * kennt: nginx deckelt in der Vorgabe bei 1 MB. Und im Server kostet der Bau
+ * am Stueck 39,5 MB von 64 (Z3) — noch unter dem Budget, aber wachsend mit
+ * dem Bestand, waehrend ein Fenster gleich gross bleibt.
+ *
+ * Der Kern zerfaellt deshalb in einen Kopf und Eintragsfenster:
+ *
+ *   manifest.edbak            Teileliste mit SHA-256 je Teil und Kennung
+ *   kopf.edbak                Stammdaten, Diensttage, Zahl der Eintraege
+ *   eintraege/0001.edbak …    je 250 Eintraege ohne Punktlisten
+ *   spuren/0001.edbak …       je Teil eine Liste {spur_ref, SPUR1-Blob}
+ *
+ * `kern.edbak` aus 11.0.0 gibt es nicht mehr; eine solche Datei wird beim
+ * Oeffnen mit Namen abgewiesen. Sie kann nur im Werkstattbestand liegen —
+ * 11.0.0 ist nie ausgeliefert worden.
+ *
+ * GEMESSEN am 31.08.2026, `memory_get_peak_usage(true)`:
+ *
+ *                     Demo (187 Eintraege)   Messstand (10 797)
+ *   am Stueck          4,0 MB                39,5 MB
+ *   in Fenstern        4,0 MB                10,0 MB
+ *
+ * Am Stueck sind das rund 3,3 kB je Eintrag; auf 64 MB fortgeschrieben waere
+ * bei etwa 18 000 Eintraegen Schluss. Groesstes Fenster 0,44 MB bei 250
+ * Eintraegen (bei 500 waeren es 0,87 MB — unter nginx' Grenze, aber ohne
+ * Reserve). 10 797 Eintraege ergeben 44 Fenster.
+ *
+ * DIE 92 MB, die hier vorher standen, gehoeren zu AP5 und nicht hierher: Es
+ * war der Stand VOR den Fenstern der Kindtabellen. Beim Nachmessen fuer
+ * dieses Paket kam 37,5 MB heraus — die Zahl war weitergetragen worden, ohne
+ * dass jemand sie noch einmal erhoben hatte.
+ *
+ * ZWEI FEHLER FIELEN DABEI AUF, beide nicht im Umbau:
+ *
+ * 1. Die Rueckfrage vor dem Einspielen kam bei Fassung 4 IMMER, wenn die
+ *    Datei aus einem anderen Konto stammte — also im Regelfall. Sie warnt
+ *    vor Angaben, die unlesbar ankommen; ob es welche gibt, konnte der
+ *    Einspielweg nicht mehr sehen, seit die Eintraege in versiegelten Teilen
+ *    liegen. Der Erzeuger weiss es und schreibt es jetzt ins Manifest
+ *    (`unlesbar`). Ohne die Zahl wird weiter gefragt: „nicht erhoben" ist
+ *    etwas anderes als „keine".
+ * 2. Die beiden Rueckfragen des Sicherungsbereichs benutzten noch das
+ *    native `confirm()` — abschaltbar im Browser, und genau dagegen gibt es
+ *    confirm.js. Sie laufen jetzt ueber `window.edConfirm`.
+ *
+ * KEINE MIGRATION. Nur das Dateiformat aendert sich, das Datenmodell nicht.
+ *
+ * 11.1.1 IST EIN NACHTRAG ZU 11.1.0 (F-S2-E).
+ *
+ * Eine Datei, die Nutzlast 8 nennt UND Punktlisten in den Eintraegen traegt,
+ * verlor beim Einspielen alle Spuren — ohne ein Wort. Der Verweisweg
+ * entscheidet an der Fassung (richtig so: eine Spur ohne Punkte sieht aus wie
+ * ein Verweis), aber die Kehrseite war nicht bedacht.
+ *
+ * Solche Dateien schreibt diese Anwendung nicht; sie kamen aus dem
+ * Vervielfaeltiger des Messstands, der die Fassung aus der Referenz geerbt
+ * hat, seit diese Fassung 4 ist. Gemessen an einem Lauf: 164 Einsaetze
+ * angelegt, 91 208 Punkte verloren, Meldung „fertig".
+ *
+ * Jetzt wird es gesagt — ueber die gemeinsame Pruefschicht, also dort, wo die
+ * Ablehnungen ohnehin stehen. Abgewiesen wird die Datei nicht: Der uebrige
+ * Bestand ist brauchbar, und ihn wegen der Spuren zu verweigern machte aus
+ * einem Teilverlust einen Totalverlust.
+ *
+ * 12.0.0 IST AP6: DIE ADMIN-SICHERUNG WIRD MEHRTEILIG (E-S2-13 bis E-S2-15).
+ *
+ * Hauptnummer aus zwei Gruenden: Das Dateiformat der Admin-Sicherung wechselt
+ * von 1 auf 2, und der erste Lauf danach ENTFERNT die einteiligen Pakete
+ * eines Kontos (Entscheidung vom 31.08.2026). Das ist ein spuerbar
+ * veraenderter Weg durch die Anwendung, kein Feinschliff.
+ *
+ * WARUM. Die Admin-Sicherung war der letzte Weg, der das Budget sprengte —
+ * und zwar nicht knapp. Gemessen am 5000er-Konto: 19,81 s, 94,28 MB Paket,
+ * 1077,6 MB Speicherspitze; mit `memory_limit=64M` (Z3) brach der Lauf in
+ * `spur_lib.php` ab. Auf genau der Sorte Webspace, fuer die diese Anwendung
+ * gebaut ist, war die Admin-Sicherung eines grossen Kontos unmoeglich.
+ *
+ * Der Grund stand in einer Zeile: `json_decode(edbak_build($userId), true)` —
+ * derselbe Bestand als Zeichenkette, als Feld und beim Schreiben noch einmal
+ * als Zeichenkette.
+ *
+ * DAS PAKET IST JETZT EIN ZIP, unversiegelt (es liegt serverseitig und traegt
+ * `pat_blob` als Chiffretext):
+ *
+ *   manifest.json           Umfang, Huellen, Teileliste, `geschuetzte`
+ *   kopf.json               Stammdaten, Diensttage, Zahl der Eintraege
+ *   eintraege/NNNN.json     je 250 Eintraege ohne Punktlisten
+ *   spuren/NNNN.json        je Teil {spur_ref, blob} (SPUR1, Base64)
+ *
+ * GEMESSEN nach dem Umbau, 5000er-Konto: 14,13 s, **24,0 MB von 64**, Datei
+ * **11,42 MB** statt 94,28 — und mit `memory_limit=64M` laeuft es durch.
+ * Demokonto: 28,1 -> 4,0 MB, 2,14 -> 0,22 MB.
+ *
+ * EIN UMWEG, DEN DIE MESSUNG ERZWUNGEN HAT: `ZipArchive::addFromString()`
+ * haelt jede uebergebene Zeichenkette bis zum `close()` im Speicher — damit
+ * laege am Ende doch wieder alles gleichzeitig da. Gemessen an 34,6 MB
+ * Inhalt, je eigener Prozess: `addFromString` 42,0 MB Spitze, `addFile`
+ * **2,0 MB**. Die Teile gehen deshalb einzeln in einen Bauordner und von dort
+ * ins Archiv.
+ *
+ * SPEICHERGRENZE UND SCHWELLEN (E-S2-15). Vorgabe 2 GB, Warnschwellen 70 und
+ * 90 Prozent, beides im Adminbereich einstellbar. Geprueft wird VOR dem Bau:
+ * abgelehnt mit Meldung, nie still verdraengt. Die Zaehlung misst das GANZE
+ * Verzeichnis — es fuellt sich auch mit dem, was nicht auf der Paketliste
+ * steht. Je Schwelle geht einmal eine Meldung heraus, und die Marke wird
+ * NACH dem Versand gesetzt: Scheitert er, kaeme die Warnung sonst nie.
+ *
+ * AUFBEWAHRUNG 2 STATT 3. Das Konzept nennt seit E-S2-14 die Zwei; Code und
+ * drei Dokumente standen auf drei. Eine Installation, die die Einstellung nie
+ * angefasst hat, verliert beim naechsten Sichern je Konto den aeltesten von
+ * drei Staenden — die Rueckmeldung nennt jede verdraengte Datei.
+ *
+ * KEINE MIGRATION. Nur das Dateiformat der Sicherung aendert sich.
+ *
+ * 12.1.0 ist S2/AP7: SICHERUNGSZIELE. Die Sicherungen bleiben nicht mehr auf
+ * demselben Server liegen, dessen Ausfall der Grund fuer eine Sicherung waere
+ * — sie gehen ueber FTP, FTPS oder SFTP auf eine Gegenstelle (E-S2-22).
+ *
+ * DREI ADAPTER HINTER EINER SCHNITTSTELLE (`sicherungsziel_lib.php`): FTP und
+ * FTPS ueber `ext/ftp`, SFTP ueber phpseclib 3.0.57 (MIT, vendoriert unter
+ * `server/vendor/`, docs/Lizenzen.md). Wer eine Datei wegschiebt, sieht das
+ * Protokoll nicht — das Komplettbackup aus AP8 soll dieselbe Schnittstelle
+ * benutzen, ohne davon zu wissen.
+ *
+ * WAS DIE DREI TAUGEN, ohne Beschoenigung: SFTP erkennt den Server am
+ * Fingerabdruck des Hostschluessels wieder und bricht ab, BEVOR ein Passwort
+ * hinausgeht, wenn er sich geaendert hat. FTPS verschluesselt die Leitung,
+ * prueft aber kein Zertifikat — nachgemessen in `tools/versandprobe/` gegen
+ * einen Server mit selbst ausgestelltem Zertifikat ohne Vertrauenskette. FTP
+ * ist Klartext. Die Oberflaeche sagt das an der Stelle, an der man waehlt.
+ *
+ * DER SERVERSCHLUESSEL (E-S2-21) ist neu und liegt in `config.php`, nicht in
+ * der Datenbank: 32 Byte Zufall, AES-256-GCM, der Zweck (Ziel und Feld) in
+ * den Zusatzdaten. Damit sind die Zugangsdaten der Ziele im Datenbankdump
+ * NICHT enthalten, und eine Chiffre laesst sich nicht von einem Ziel auf ein
+ * anderes umhaengen. Neue Installationen bekommen ihn vom Installer;
+ * bestehende tragen ihn ueber die Seite „Sicherungsziele" nach — mit einem
+ * Klick, wenn `config.php` beschreibbar ist, sonst mit einer Zeile von Hand.
+ * ER GEHOERT INS WIEDERANLAUFPAKET (docs/Technik.md, Runbook).
+ *
+ * DER VERSAND ist ein Joblauf (`versand`) und ein Knopf. Was „neu" ist, wird
+ * AM ZIEL abgelesen — Name und Groesse — und nicht in einer Merkliste
+ * gefuehrt, die behauptet „schon versandt", nachdem das Ziel neu aufgesetzt
+ * wurde. Es wird nur ergaenzt; auf dem Ziel loescht diese Anwendung nie
+ * (Backlog Nr. 49). GEMESSEN gegen oertliche Gegenstellen, 64 Pakete zu
+ * 63,89 MB aus 33 Kontoordnern: FTP 0,13 s, FTPS 0,68 s, SFTP 3,08 s;
+ * Speicherspitze 2,0 bzw. 8,0 MB von 64 (Z3). Alle 192 angekommenen Dateien
+ * byteweise verglichen, 0 Abweichungen.
+ *
+ * MIGRATION ZWINGEND: `2026_09_01_sicherungsziele` legt `backup_targets` an.
+ * Ohne sie zeigt die neue Seite einen Hinweis und tut nichts.
+ *
+ * 12.1.1 ist S2/AP9: DIE SUCHE. Zwei Maessigungen aus E-S2-16, beide klein:
+ * `EdCrypto` merkt sich den importierten Schluessel (bei 5000 Einsaetzen
+ * gemessen 4880 Importe fuer denselben Schluessel — jetzt EINER), und
+ * `EdPat.entschluessleListe()` entschluesselt in Stapeln zu 200 statt einzeln
+ * nacheinander (Schleife 1954 -> 958 ms).
+ *
+ * WAS DAS BRINGT, UND WAS NICHT: Bis die geschuetzten Spalten lesbar sind,
+ * 4,11 -> 3,77 s (Drossel 6x, Median von drei Laeufen, beide Staende
+ * unmittelbar nacheinander). Das Ziel von 5 s ist gehalten. Der Loewenanteil
+ * der Zeit liegt aber NICHT im Entschluesseln — Backlog Nr. 51.
+ *
+ * DER GROESSERE FUND STECKT IM PRUEFMITTEL. `entsperren()` in
+ * `tools/messstand/browserprobe.mjs` wartete vier Sekunden auf einen
+ * Entsperr-Dialog, der bei entsperrter Sitzung nie kommt — mitten im
+ * gemessenen Abschnitt. Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und
+ * „Tagesansicht 4,81 s"; beide liegen dicht ueber vier Sekunden, weil beide
+ * `max(4 s, tatsaechliche Dauer)` waren. Das Warten rennt jetzt gegen die
+ * Abschlussbedingung des Schritts.
+ *
+ * KEINE MIGRATION, keine Schnittstellenaenderung.
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * 12.2.0 ist S2/AP8: DIE KOMPLETTSICHERUNG (E-S2-19 bis E-S2-21). Bis hierher
+ * konnte diese Anwendung ein KONTO sichern. Jetzt kann sie die INSTALLATION
+ * sichern: jede Tabelle der Datenbank als SQL-Dump, versiegelt mit dem
+ * Serverschluessel aus 12.1.0, und einen Weg zurueck.
+ *
+ * DREI SCHICHTEN, IN DIESER REIHENFOLGE: SQL-Text (ein Statement je Zeile,
+ * INSERT-Stapel bis 1 MB, Tabellen in einspielbarer Reihenfolge) — gzip — und
+ * darueber das Siegel EDKOMP1 (AES-256-GCM je 256-KB-Block, Blockzaehler und
+ * Endemarkierung in den Zusatzdaten, der Dateikopf ueber seinen SHA-256
+ * mitgebunden). Erzeugt wird in Haeppchen ueber den Job-Einstieg, mit
+ * Fortsetzungszustand in `jobs.zustand` — nie als Array am Stueck.
+ *
+ * ZWEI WEGE HERAUS, und der Unterschied ist der Punkt: „Herunterladen" gibt
+ * den Dump UNVERSCHLUESSELT als `.sql.gz`, damit `mysql` und phpMyAdmin ihn
+ * einspielen koennen (E-S2-20); was das Haus verlaesst — der Versand aufs
+ * Sicherungsziel — ist immer die versiegelte Fassung. Wahlweise gibt es die
+ * Datei unter einer PASSPHRASE (PBKDF2, 320 000 Runden wie im Browser).
+ *
+ * DER RUECKWEG ist `wiederherstellen.php`, die Luecke zwischen `install.php`
+ * (verweigert sich, sobald es eine config.php gibt) und `update.php`
+ * (verlangt eine Anmeldung, die es ohne Konten nicht gibt). Drei Schranken:
+ * die Datenbank muss LEER sein, ein Nachweis wie beim Einrichter (M1-11)
+ * belegt Dateizugriff, und die Datei kommt aus `sicherungen/eingang/` statt
+ * aus einem Formular. Der Migrationslauf laeuft dort BEWUSST NICHT mit — er
+ * gehoert einer angemeldeten Administration, und genau dafuer ist
+ * `update.php` seit M6-01 zweistufig.
+ *
+ * NEU: `server/komplett_lib.php`, `server/admin_komplettsicherung.php`,
+ * `server/wiederherstellen.php`, `tools/komplettprobe/`. Der Job `komplett`
+ * steht im Katalog NACH `versand` — ein frischer Stand geht damit erst im
+ * naechsten Lauf hinaus, dafuer nimmt ihm die schwerste Arbeit der Anwendung
+ * nicht das Budget weg.
+ *
+ * GEMESSEN am Messbestand (5000 Einsaetze, 1 121 802 Zeilen, 34 Tabellen):
+ * 8,5 s in 14 Haeppchen, Speicherspitze 26 von 64 MB (Z3), 122,5 MB SQL ->
+ * 43,7 MB versiegelt. Zurueckgespielt in eine leere Datenbank: 34 von 34
+ * Schemata zeichengleich, 34 von 34 Pruefsummen gleich (CHECKSUM TABLE
+ * EXTENDED).
+ *
+ * KEINE MIGRATION. Die Zaehlweise ist Neben und nicht Haupt, wie schon bei
+ * 12.1.0: ein neues Dateiformat und zwei neue Seiten, aber kein Datenmodell,
+ * das sich aendert, und kein bestehender Weg, der anders verlaeuft.
+ *
  */
-const WEB_VERSION = '9.14.1';
+const WEB_VERSION = '12.2.0';

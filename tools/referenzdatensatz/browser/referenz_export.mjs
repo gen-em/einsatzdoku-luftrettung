@@ -15,6 +15,10 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
+/* Kontrollkästchen und Segmenttasten sind seit P3 unsichtbar; bedient
+ * wird die Beschriftung. Warum und wie: bedienen.mjs. */
+const { ankreuzen, abwaehlen } = await import(
+  new URL('./bedienen.mjs', import.meta.url).href);
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -57,7 +61,7 @@ await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
 schritt(2, 'Einstellungen → Import / Export öffnen');
 
-await seite.check('input[name="exp_zr"][value="all"]');
+await ankreuzen(seite, 'input[name="exp_zr"][value="all"]');
 schritt(3, 'Zeitraum: Alles');
 
 await seite.selectOption('#exp_fmt', 'b');
@@ -67,7 +71,7 @@ schritt(4, 'Format: CSV (Standard)');
 /* Reihenfolge beachten: „Personenbezogene Angaben" schaltet die GPX-Wahl
    überhaupt erst frei (A9 — eine Flugspur endet am Einsatzort). Wer zuerst
    GPX anhakt und danach die Personenangaben, hakt ins Leere. */
-await seite.check('#exp_pat');
+await ankreuzen(seite, '#exp_pat');
 await seite.waitForTimeout(400);
 const patAn = await seite.isChecked('#exp_pat');
 pruefe(patAn, 'Personenbezogene Angaben ließen sich nicht anhaken — Krypto gesperrt?');
@@ -75,10 +79,10 @@ schritt(5, 'Personenbezogene Angaben einschließen: an');
 
 const gpxSichtbar = await seite.locator('#exp_gpx_row').isVisible().catch(() => false);
 pruefe(gpxSichtbar, 'GPX-Wahl nicht sichtbar');
-if (gpxSichtbar) { await seite.check('#exp_gpx'); }
+if (gpxSichtbar) { await ankreuzen(seite, '#exp_gpx'); }
 schritt(6, 'GPX-Tracks einschließen: an');
 
-await seite.uncheck('#exp_pw');
+await abwaehlen(seite, '#exp_pw');
 await seite.waitForTimeout(300);
 schritt(7, 'Mit Passwort schützen: AUS (die Referenz muss lesbar bleiben)');
 

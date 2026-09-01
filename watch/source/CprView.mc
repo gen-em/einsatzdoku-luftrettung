@@ -1,4 +1,4 @@
-// Einsatzdoku — Oberflaeche 3: Reanimation (Anforderungen 1.4)
+// NAdoku — Oberflaeche 3: Reanimation (Anforderungen 1.4)
 //
 // Tasten: kurz UP/DOWN Navigation
 //         kurz START  ohne laufende Rea: Rea beginnen

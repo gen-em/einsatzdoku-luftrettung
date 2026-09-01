@@ -1,0 +1,78 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup S4/A0 — GPX-Import in der Tagesansicht</title>
+<link rel="stylesheet" href="../../server/assets/style.css">
+<style>
+  body{padding:var(--abstand-5) var(--abstand-4);background:var(--rauch)}
+  .buehne{max-width:900px;margin:0 auto}
+  .notiz{background:var(--schnee);border-left:var(--strich-stark) solid var(--orange);
+         padding:var(--abstand-3);margin:var(--abstand-5) 0 var(--abstand-4);
+         font-size:var(--groesse-2)}
+
+  /* Attrappe des Schleiers, damit der Dialog im Mockup sichtbar steht.
+     Im Bestand kommt beides aus .dialog / ::backdrop (Design.md 9.11). */
+  .schleier-attrappe{background:var(--dunkelblau);border-radius:var(--radius);
+         padding:var(--abstand-6) var(--abstand-4);
+         display:flex;justify-content:center}
+  .schleier-attrappe .dialog{display:block;position:static}
+</style></head><body>
+<div class="buehne">
+
+<h1 class="karte-titel" style="font-size:var(--groesse-6)">Mockup S4/A0 — GPX-Import</h1>
+<p class="feld-hinweis">Vorschlag zu E-R45-4: eine Spur aus einer beliebigen
+   Tracker-App wird zum Ruhesegment (zum Schneiden) oder unmittelbar zum Einsatz.</p>
+
+<div class="notiz"><strong>Was neu ist:</strong> ein Eintrag <strong>„GPX
+  importieren"</strong> im Aktionsmenü des Diensttags (zwischen „Einsatz nachtragen"
+  und „Datum ändern") und dieser Dialog. Der Dialog ist der bestehende Baustein aus
+  Design.md 9.11 — am Schreibtisch eine Karte im Schleier (hier gezeigt), mobil
+  dasselbe Markup als Blatt von unten. Der dunkle Grund ist eine Attrappe des
+  Schleiers.</div>
+
+<div class="schleier-attrappe">
+  <dialog class="dialog" open aria-labelledby="gpx-titel">
+    <div class="dialog-kopf"><h2 id="gpx-titel">GPX importieren</h2></div>
+    <div class="dialog-inhalt">
+      <p>Die Spur wird dem Diensttag <strong>15.09.2026</strong> zugeordnet.</p>
+
+      <div class="feld">
+        <label class="feld-label" for="gpx-datei">GPX-Datei</label>
+        <input class="feld-eingabe" type="file" id="gpx-datei" accept=".gpx">
+        <p class="feld-klein">GPX 1.1 mit Zeitstempeln je Punkt. Eine Datei ohne
+           Zeiten wird abgelehnt — ohne sie gibt es keine Reihenfolge und kein
+           Schneiden.</p>
+      </div>
+
+      <div class="feld">
+        <span class="feld-label">Übernehmen als</span>
+        <div class="wahlliste" role="radiogroup" aria-label="Übernehmen als">
+          <input type="radio" class="wahl-box" id="wl-ruhe" name="gpx-ziel" value="ruhe" checked>
+          <label class="wahl-zeile" for="wl-ruhe">
+            <span class="wahl-punkt" aria-hidden="true"></span>
+            <span class="wahl-text">Ruhesegment</span>
+            <span class="wahl-zusatz">die ganze Aufzeichnung; Einsätze danach herausschneiden</span>
+          </label>
+          <input type="radio" class="wahl-box" id="wl-einsatz" name="gpx-ziel" value="einsatz">
+          <label class="wahl-zeile" for="wl-einsatz">
+            <span class="wahl-punkt" aria-hidden="true"></span>
+            <span class="wahl-text">Einsatz</span>
+            <span class="wahl-zusatz">die Datei ist genau ein Einsatz; Phasenzeiten danach im Einsatz</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-fuss">
+      <button class="knopf knopf-leise" type="button"><span>Abbrechen</span></button>
+      <button class="knopf knopf-primaer" type="button"><span>Importieren</span></button>
+    </div>
+  </dialog>
+</div>
+
+<div class="notiz"><strong>Warum ein Dialog und keine Seite:</strong> zwei Angaben
+  (Datei, Ziel), eine Handlung — die Aufstellungs-Regel aus Design.md 9.11 greift
+  nicht. Nach dem Import landet man wieder in der Tagesansicht, wo das neue Segment
+  bzw. der Einsatz an seiner Stelle steht. <strong>Grenzen:</strong> Die Meldung bei
+  zu großer Datei nennt die Grenze in Punkten; ihre Höhe legt die Umsetzung am
+  S2-Messstand fest (E-S4-18).</div>
+
+</div></body></html>

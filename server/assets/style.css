@@ -914,6 +914,21 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
 .zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+/* Zeile hervorgehoben — die Spurliste des Diensttages (S2/AP4).
+ *
+ * Kein neuer Farbwert und kein neues Mass: dieselbe Rauchflaeche, die schon
+ * die neutrale Plakette traegt, plus ein orangener Balken links in
+ * --strich-stark. Der Balken ist die Verbindung zur Karte, auf der die
+ * zugehoerige Linie gleichzeitig dicker wird — beides ohne zusaetzliches
+ * Element und ohne dass die Zeile ihre Hoehe aendert. */
+.zeile-hervor{
+  background:var(--rauch);
+  box-shadow:inset var(--strich-stark) 0 0 var(--orange);
+  padding-left:var(--abstand-2);
+}
+/* Kein eigener Fokusring: Es gibt EINEN fuer die ganze Anwendung
+ * (`:focus-visible` weiter oben), und der greift auch hier. */
+.spur-zeile{cursor:pointer}
 
 /* ---- Titelzeile ---------------------------------------------------------- */
 .titelzeile{margin-bottom:var(--abstand-4)}

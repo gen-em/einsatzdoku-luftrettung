@@ -1,4 +1,4 @@
-// Einsatzdoku — Oberflaeche 1: Uhrzeit + Phase
+// NAdoku — Oberflaeche 1: Uhrzeit + Phase
 //
 // kurz START: naechste Phase (2..9). Nach Phase 9 bleibt der Einsatz offen;
 // kurz START zeigt dann die Bestaetigung "Einsatz beenden & senden?".

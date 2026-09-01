@@ -4,6 +4,7 @@ require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../validate_lib.php';   // liefert $userId
 require_once __DIR__ . '/../mission_fields_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 /**
  * GET  api/day.php            -> { days: [{id, day, …}, …], latest: <id> }
@@ -230,15 +231,22 @@ try {
      * Die Reihenfolge innerhalb eines Besitzers kommt weiterhin aus dem SQL
      * (ORDER BY owner_id, seq); die Zuordnung im Speicher aendert sie nicht.
      */
+    /* SPUREN UEBER spur_lib.php (S2/AP1), nicht mehr per SQL.
+     *
+     * Seit S2 liegen die Punkte je nach Alter als Zeilen (Stufe 1, frischer
+     * Uhr-Upload) ODER als Blob (Stufe 2/3) — und waehrend einer Nachlieferung
+     * als beides. Wer nur eine der beiden Stellen liest, zeigt eine Spur, der
+     * das Ende fehlt, und zwar ohne Fehlermeldung. spur_lesen_viele() setzt
+     * beides zusammen und bleibt dabei bei zwei Abfragen fuer den ganzen Tag.
+     *
+     * Die Ausgabe ist unveraendert [lat, lon] je Punkt: Die Tageskarte
+     * zeichnet eine Linie, sie braucht weder Hoehe noch Zeit. */
     $spurLaden = function (string $ownerType, array $ids): array {
         $nach = [];
         foreach ($ids as $id) { $nach[$id] = []; }
         if (!$ids) { return $nach; }
-        foreach (sql_in_bloecken(db(),
-                'SELECT owner_id, lat, lon FROM track_points
-                 WHERE owner_type = ? AND owner_id IN ({IDS}) ORDER BY owner_id, seq',
-                $ids, [$ownerType]) as $p) {
-            $nach[(int)$p['owner_id']][] = [(float)$p['lat'], (float)$p['lon']];
+        foreach (spur_lesen_viele(db(), $ownerType, $ids) as $id => $punkte) {
+            foreach ($punkte as $pt) { $nach[$id][] = [$pt[1], $pt[2]]; }
         }
         return $nach;
     };
