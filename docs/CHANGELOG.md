@@ -144,11 +144,49 @@ der Funktion.
 - **`install.php` prüft `ext/zip`** — die Sicherung ist jetzt ein ZIP; ohne
   die Erweiterung soll das vor der Einrichtung auffallen, nicht im ersten Lauf.
 
+### Web — Die Freigabe war für niemanden zu sehen (F-S2-F)
+
+Beim Prüfen des Freigabewegs kam heraus, dass er **nie funktioniert hat**. Der
+Kasten „Für dich freigegebene Sicherung" blendet die Frage nach dem
+Wiederherstellungsschlüssel aus, wenn das Paket keine geschützten Angaben
+enthält — über eine Kennung `freigabecodelabel`, die es im Markup nicht gab.
+`getElementById()` lieferte `null`, der Zugriff warf, und die Zeile darunter,
+die den Kasten **sichtbar macht**, kam nie zur Ausführung. Der Fehler landete
+im leeren `catch` von `freigabeLaden()`.
+
+Auffallen konnte das nicht: Die Karte ist im Regelfall verborgen, und
+*verborgen, weil es nichts gibt* sieht genauso aus wie *verborgen, weil das
+Skript abgestürzt ist*.
+
+Das wiegt schwer, weil der Freigabeweg der **einzige** ist, auf dem eine
+Sicherung mit geschützten Angaben in ein neu aufgesetztes Konto kommt: Die
+Administration darf es nicht (E20), nur die NutzerIn kann mit ihrem
+Wiederherstellungsschlüssel umschlüsseln.
+
+Behoben: Die Hülle trägt die Kennung, und der `catch` bleibt zur NutzerIn hin
+still, schreibt aber in die Konsole — damit fällt ein solcher Fall dem
+Bilderlauf auf, ohne dass jemand ohne Freigabe etwas merkt.
+
+**Der Freigabeweg läuft jetzt auch in Fenstern.** Ein Fassung-2-Paket geht
+nicht mehr in einer Antwort heraus; der Browser holt Kopf, Eintragsfenster und
+Spurteile einzeln über `?teil=` und schickt sie über dieselben Endpunkte
+zurück wie eine eigene Sicherung. Der Teilname wird gegen die Teileliste des
+Manifests geprüft — was dort nicht steht, gibt es für diesen Weg nicht.
+
+**Eine Einschränkung, ausdrücklich:** Bei Fassung 1 wird vor dem ersten
+Schreiben gefragt, wenn sich Einsätze mit dem angegebenen Schlüssel nicht
+öffnen lassen. Bei Fassung 2 kann diese Zahl erst feststehen, wenn alle
+Fenster geöffnet sind — also nach dem ersten Schreiben. Die schärfere Schranke
+steht ohnehin davor: Der Wiederherstellungsschlüssel muss die Hülle
+`pat_wrap_rc` öffnen. Einzelne Fehlschläge danach werden am Ende **genannt**,
+mit Zahl und in Orange.
+
 ### Prüfstand
 
 | Mittel | Ergebnis |
 |---|---|
 | `tools/wiederherstellungs-probe/` | **66** Erwartungen, 0 offen (vorher 44) — Teil 8 Rundlauf des Adminpakets, Teil 9 Speichergrenze und Schwellen |
+| Freigabeweg im Browser | Fassung-2-Paket (600 Einträge, 3 Eintragsteile, 1 Spurteil) in ein frisches Konto: **600 Einsätze mit 600 Spuren**, 0 Konsolenfehler |
 | Speicher, 5000er-Konto | 1077,6 MB → **24,0 MB von 64**, mit Deckel geprüft |
 | Bilderlauf `43-sicherungen` | 8 Bilder, **8 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
 

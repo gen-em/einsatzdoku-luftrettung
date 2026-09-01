@@ -189,7 +189,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Einspielen aus einer Sicherung OHNE KONTO (A8.6) ---------------- */
     if ($action === 'einspielen') {
         $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        /* NUR DER KOPF FUER DIE ENTSCHEIDUNG (S2/AP6). edbak_weg() braucht
+         * Herkunftskennung, Huelle und die Zahl der geschuetzten Angaben —
+         * alles steht im Manifest. Das ganze Paket dafuer zu lesen hiesse bei
+         * einem grossen Konto, 11 MB zu entpacken, um eine Ja/Nein-Frage zu
+         * beantworten. */
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -206,8 +211,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
             } else {
                 try {
-                    $bericht = edbak_restore((int)$ziel['id'], $paket['daten']);
-                    $notice = 'Sicherung eingespielt in ' . $ziel['email'] . '.';
+                    [$okE, $grundE, $bericht] =
+                        edbak_paket_zurueckspielen($kennung, $datei, (int)$ziel['id']);
+                    if ($okE) { $notice = 'Sicherung eingespielt in ' . $ziel['email'] . '.'; }
+                    else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
                            . fehler_kennung($ex, 'adminbackup') . ').';
@@ -219,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
         $ziel = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {

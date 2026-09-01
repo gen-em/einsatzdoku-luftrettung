@@ -2092,3 +2092,53 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     return [true, null, $summe];
 }
 
+/**
+ * Ein Paket zurueckspielen — beide Fassungen, eine Tuer (S2/AP6).
+ *
+ * WOFUER. Die Aufrufer im Adminbereich sollen nicht wissen muessen, welche
+ * Fassung vor ihnen liegt. Vor allem sollen sie nicht in Versuchung geraten,
+ * ein Fassung-2-Paket durch den einteiligen Weg zu schicken: Das ginge nicht
+ * schief, sondern STILL schief — jeder Einsatz kaeme an, keine einzige Spur
+ * (F-S2-E).
+ *
+ * Rueckgabe: [bool $ok, ?string $meldung, ?array $bericht].
+ */
+function edbak_paket_zurueckspielen(string $kennung, string $datei, int $zielUserId): array
+{
+    if (edbak_paket_fassung($datei) === 2) {
+        return edbak_paket_einspielen($kennung, $datei, $zielUserId);
+    }
+    $paket = edbak_paket_lesen($kennung, $datei);
+    if ($paket === null) { return [false, 'Die Sicherung liess sich nicht lesen.', null]; }
+    return [true, null, edbak_restore($zielUserId, $paket['daten'] ?? [])];
+}
+
+/**
+ * EIN Teil eines Fassung-2-Pakets, roh (S2/AP6).
+ *
+ * WOFUER. Der Freigabeweg reicht das Paket an den Browser der NutzerIn — sie
+ * ist die Einzige, die die geschuetzten Angaben umschluesseln kann. Bis
+ * Web 12.0.0 ging das in EINER Antwort; beim 5000er-Konto waeren das 94 MB
+ * gewesen, und auf dem Rueckweg ein POST derselben Groesse.
+ *
+ * Der Name wird gegen die Teileliste des Manifests geprueft und nicht gegen
+ * ein Muster: Was nicht im Manifest steht, gibt es fuer diesen Weg nicht.
+ * Damit ist auch ein `../` im Namen erledigt, ohne dass es dafuer eine eigene
+ * Pruefung braeuchte.
+ */
+function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?string
+{
+    if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) { return null; }
+    if (!class_exists('ZipArchive')) { return null; }
+    $pfad = edbak_ordner($kennung) . '/' . $datei;
+    if (!is_file($pfad)) { return null; }
+    $zip = new ZipArchive();
+    if ($zip->open($pfad) !== true) { return null; }
+    $manifest = json_decode((string)$zip->getFromName('manifest.json'), true);
+    $erlaubt = is_array($manifest) ? array_map('strval', (array)($manifest['teile'] ?? [])) : [];
+    if (!in_array($teil, $erlaubt, true)) { $zip->close(); return null; }
+    $roh = $zip->getFromName($teil);
+    $zip->close();
+    return $roh === false ? null : $roh;
+}
+

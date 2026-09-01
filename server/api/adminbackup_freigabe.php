@@ -33,15 +33,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $f = edbak_freigabe_fuer($userId);
     if ($f === null) { json_out(['freigabe' => null]); }
 
-    $paket = edbak_paket_lesen($f['account_key'], $f['datei']);
+    /* ---- Ein Teil, roh (S2/AP6) ----------------------------------------
+     *
+     * Ein Fassung-2-Paket geht nicht mehr in EINER Antwort heraus. Beim
+     * 5000er-Konto waeren das 94 MB gewesen — und auf dem Rueckweg ein POST
+     * derselben Groesse gegen ein Limit, das niemand kennt. Der Browser holt
+     * Kopf, Eintragsfenster und Spurteile einzeln, genau wie beim Einspielen
+     * einer eigenen Sicherung.
+     *
+     * Der Name wird in `edbak_paket_teil_lesen()` gegen die Teileliste des
+     * Manifests geprueft; was dort nicht steht, gibt es hier nicht. */
+    $teil = (string)($_GET['teil'] ?? '');
+    if ($teil !== '') {
+        $roh = edbak_paket_teil_lesen($f['account_key'], $f['datei'], $teil);
+        if ($roh === null) {
+            json_out(['error' => 'teil',
+                      'meldung' => 'Dieser Teil gehört nicht zur freigegebenen '
+                                 . 'Sicherung.'], 404);
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        echo $roh;
+        exit;
+    }
+
+    $paket = edbak_paket_kopf_lesen($f['account_key'], $f['datei']);
     if ($paket === null) {
         json_out(['error' => 'unlesbar',
                   'meldung' => 'Die freigegebene Sicherung lässt sich nicht lesen. '
                              . 'Bitte die Administration verständigen.'], 500);
     }
+    $fassung = (int)($paket['version'] ?? 1);
 
     header('Cache-Control: no-store');
-    json_out([
+    $antwort = [
         'freigabe' => [
             'erstellt'       => $f['erstellt'],
             'erzeugt'        => $paket['erzeugt'] ?? null,
@@ -54,10 +79,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
              * eine Hürde ohne Zweck. */
             'braucht_schluessel' => edbak_paket_hat_geschuetzte($paket),
         ],
+        'fassung'       => $fassung,
         'pat_wrap_rc'   => $paket['schluessel']['pat_wrap_rc'] ?? null,
         'pat_key_check' => $paket['schluessel']['pat_key_check'] ?? null,
-        'daten'         => $paket['daten'] ?? null,
-    ]);
+    ];
+    if ($fassung >= 2) {
+        $antwort['eintragsteile'] = (int)($paket['eintragsteile'] ?? 0);
+        $antwort['spurteile']     = (int)($paket['spurteile'] ?? 0);
+        $antwort['eintraege']     = (int)($paket['eintraege'] ?? 0);
+    } else {
+        /* Fassung 1 geht weiterhin am Stueck heraus — sie liegt ohnehin als
+         * eine Datei da, und es kommen keine neuen dazu. */
+        $ganz = edbak_paket_lesen($f['account_key'], $f['datei']);
+        $antwort['daten'] = $ganz['daten'] ?? null;
+    }
+    json_out($antwort);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -732,6 +732,7 @@ Sammelstelle nach K4; bei Übergabe leer.
 | F-S2-C | Die Wiederherstellung schneidet Spuren über 2000 Punkten ab; die Uhr darf sie aber beliebig lang aufbauen | behoben in AP1 (F-S2-02) |
 | F-S2-D | Die Rückfrage vor dem Einspielen kam bei Fassung 4 immer — und die Prüfmittel bemerkten den Abbruch nicht | behoben in AP5b |
 | F-S2-E | Eine Datei mit Nutzlast 8 **und** Punktlisten verlor alle Spuren, ohne ein Wort — und der Messstand schrieb genau solche Dateien | behoben vor AP6 |
+| F-S2-F | Der Kasten „Für dich freigegebene Sicherung" war für niemanden zu sehen: eine Kennung, die es im Markup nicht gab, und ein `catch`, der alles schluckte | behoben in AP6 |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -1004,6 +1005,70 @@ bekommt.
 > abbricht. Dass der Weg hierher über ein Prüfwerkzeug führte, ist die zweite
 > Auskunft: Backlog Nr. 46 hatte notiert, dass der Messstand am Altformat
 > hängt — die Rechnung kam früher als gedacht, und sie kam still.
+
+### F-S2-F — Die Freigabe war für niemanden zu sehen
+
+**Gefunden** beim Prüfen des Freigabewegs für AP6. Eine Sicherung war
+freigegeben, der Endpunkt antwortete richtig — und im Browser erschien nichts.
+
+**Zwei Fehler, und der zweite hat den ersten unsichtbar gemacht.**
+
+`freigabeLaden()` blendet die Frage nach dem Wiederherstellungsschlüssel aus,
+wenn das Paket keine geschützten Angaben enthält:
+
+```js
+document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;
+fgBox.hidden = false;
+```
+
+**Die Kennung `freigabecodelabel` gab es im Markup nicht.** `ui_feld()` vergibt
+eine Kennung nur am Eingabefeld selbst (`freigabecode`), nicht an der Hülle
+aus Beschriftung, Feld und Erklärung. `getElementById()` lieferte `null`, der
+Zugriff warf — und die Zeile darunter, die den Kasten sichtbar macht, kam nie
+zur Ausführung.
+
+Der `TypeError` landete im `catch` von `freigabeLaden()`, und der war leer:
+
+```js
+} catch (e) {
+  /* Still bleiben: Wer keine Freigabe hat, soll auf dieser Seite auch
+     keinen Fehler über eine Funktion lesen, die ihn nichts angeht. */
+}
+```
+
+Der Gedanke ist richtig. Nur hat der Block danach **jeden** Fehler geschluckt,
+auch den, der die Funktion abschaltet.
+
+**Wie lange.** Die Kennung steht seit Einführung des Freigabewegs im Skript
+und war im Markup nie vorhanden — der Weg dürfte nie funktioniert haben.
+Auffallen konnte es nicht: Die Karte ist im Regelfall verborgen (wer keine
+Freigabe hat, soll sie nicht sehen), und *verborgen, weil es nichts gibt* sieht
+genauso aus wie *verborgen, weil das Skript abgestürzt ist*.
+
+**Was daran schwer wiegt.** Der Freigabeweg ist nicht Zierrat. Er ist der
+**einzige** Weg, eine Sicherung mit geschützten Angaben in ein neu
+aufgesetztes Konto zu bringen: Die Administration darf es nicht (E20), weil
+sie den Inhaltsschlüssel nicht hat; nur die NutzerIn kann mit ihrem
+Wiederherstellungsschlüssel umschlüsseln. Wer in diese Lage kam, bekam den
+Kasten dafür nicht zu sehen.
+
+**Behoben:**
+
+- Die Hülle trägt jetzt die Kennung (`<div id="freigabecodelabel">` um den
+  `ui_feld()`-Aufruf).
+- Der `catch` bleibt still zur NutzerIn hin, schreibt aber in die Konsole.
+  Damit fällt ein solcher Fall dem Bilderlauf und jeder Browserprüfung auf,
+  ohne dass jemand ohne Freigabe etwas merkt.
+
+**Belegt** im Browser: Freigabe eines Fassung-2-Pakets (600 Einträge,
+3 Eintragsteile, 1 Spurteil) in ein frisches Konto — Kopf, drei Fenster, ein
+Spurteil, **600 Einsätze mit 600 Spuren übernommen**, 0 Konsolenfehler,
+Meldung in `meldung-ok`.
+
+> **Die Lehre steht neben der von F-S2-D.** Dort hat ein Prüfmittel auf
+> Wörter gewartet, hier hat ein `catch` einen Absturz zu einem leeren
+> Bildschirm gemacht. Beide Male war der Fehler nicht, dass etwas kaputt war,
+> sondern dass nichts es gesagt hat.
 
 ### F-S2-02 — Was geschieht mit einer Spur über 2000 Punkten? (entschieden, 31.08.2026)
 

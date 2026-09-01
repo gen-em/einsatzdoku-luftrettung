@@ -200,7 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'einspielen') {
         $ziel  = edbak_ziel_konto($uid);
-        $paket = edbak_paket_lesen($kennung, $datei);
+        /* Nur der Kopf: edbak_weg() entscheidet aus dem Manifest (S2/AP6). */
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -217,8 +218,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
             } else {
                 try {
-                    $bericht = edbak_restore($uid, $paket['daten']);
-                    $notice = 'Sicherung eingespielt.';
+                    [$okE, $grundE, $bericht] =
+                        edbak_paket_zurueckspielen($kennung, $datei, $uid);
+                    if ($okE) { $notice = 'Sicherung eingespielt.'; }
+                    else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
                            . fehler_kennung($ex, 'adminbackup') . ').';
@@ -230,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
         $ziel  = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -388,7 +391,7 @@ $zielkonten = $zielkonten->fetchAll();
  *  hoechstens so viele sind, wie die Aufbewahrung zulaesst (Vorgabe drei). */
 function paket_lesbar(string $kennung, string $datei): bool
 {
-    return edbak_paket_lesen($kennung, $datei) !== null;
+    return edbak_paket_kopf_lesen($kennung, $datei) !== null;
 }
 
 $kennung = (string)($u['account_key'] ?? '');

@@ -1715,6 +1715,19 @@ ui_seite_start(['titel' => 'Einstellungen']);
     <div id="freigabebox" hidden>
       <?php ui_karte_start(['titel' => 'Für dich freigegebene Sicherung']); ?>
         <p class="feld-hinweis" id="freigabeinfo"></p>
+        <?php /* DIE HÜLLE TRÄGT DIE KENNUNG, NICHT DAS FELD (F-S2-F).
+                 `freigabeLaden()` blendet die Frage nach dem
+                 Wiederherstellungsschlüssel aus, wenn das Paket keine
+                 geschützten Angaben enthält — dafür braucht es ein Element,
+                 das Beschriftung, Feld und Erklärung zusammen umfasst.
+                 `ui_feld()` vergibt eine Kennung nur am Eingabefeld selbst.
+
+                 Bis Web 12.0.0 sprach das Skript trotzdem `freigabecodelabel`
+                 an. Die Kennung gab es nirgends, der Zugriff warf, und der
+                 Fehler landete im stillen `catch` von `freigabeLaden()` —
+                 zusammen mit der Zeile, die den Kasten sichtbar macht. Die
+                 Freigabe war damit für NIEMANDEN zu sehen. */ ?>
+        <div id="freigabecodelabel">
         <?php ui_feld(['label' => 'Wiederherstellungsschlüssel', 'id' => 'freigabecode',
                        'platzhalter' => 'XXXX-XXXX-XXXX-XXXX',
                        'klein' => 'Der Schlüssel, der bei der Ersteinrichtung einmalig '
@@ -1722,6 +1735,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                                 . 'sich die geschützten Angaben dieser Sicherung von niemandem '
                                 . 'mehr öffnen.',
                        'attr' => ' autocomplete="off"']); ?>
+        </div>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Sicherung einspielen', 'art' => 'primaer',
                         'typ' => 'button', 'attr' => ' id="freigabebtn"']) ?>
@@ -2666,8 +2680,19 @@ ui_seite_start(['titel' => 'Einstellungen']);
         document.getElementById('freigabecodelabel').hidden = !d.freigabe.braucht_schluessel;
         fgBox.hidden = false;
       } catch (e) {
-        /* Still bleiben: Wer keine Freigabe hat, soll auf dieser Seite auch
-           keinen Fehler über eine Funktion lesen, die ihn nichts angeht. */
+        /* STILL, ABER NICHT STUMM (F-S2-F).
+         *
+         * Der Gedanke war richtig: Wer keine Freigabe hat, soll auf dieser
+         * Seite keinen Fehler über eine Funktion lesen, die ihn nichts angeht.
+         * Nur hat dieser Block danach JEDEN Fehler geschluckt — auch den
+         * TypeError einer Kennung, die es im Markup nicht gab, und mit ihm die
+         * Zeile, die den Kasten sichtbar macht. Die Freigabe war für niemanden
+         * zu sehen, und nichts hat es gesagt.
+         *
+         * Die Ausgabe bleibt still; die Konsole bekommt es. Damit fällt es
+         * dem Bilderlauf und jeder Browserprüfung auf, ohne dass eine
+         * NutzerIn ohne Freigabe je etwas merkt. */
+        console.error('Freigabe konnte nicht geladen werden:', e);
       }
     }
     freigabeLaden();
@@ -2676,7 +2701,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
       if (!fgPaket) { return; }
       const daten = fgPaket.daten;
       const braucht = fgPaket.freigabe.braucht_schluessel;
+      /* FASSUNG 1 KOMMT AM STÜCK, FASSUNG 2 IN TEILEN (S2/AP6). Ein
+         Adminpaket ist seit Web 12.0.0 ein mehrteiliges ZIP; beim 5000er-Konto
+         wären es sonst 94 MB in einer Antwort und derselbe Rumpf als POST. */
+      const fassung = Number(fgPaket.fassung || 1);
       try {
+        let altCk = null, eigenerCk = null;
         if (braucht) {
           const code = document.getElementById('freigabecode').value;
           const pruef = EdCrypto.pruefeRecoveryCode(code);
@@ -2691,26 +2721,26 @@ ui_seite_start(['titel' => 'Einstellungen']);
           }
           fgState.textContent = 'Schlüssel wird geprüft…';
           const rcKey = await EdCrypto.recoveryKeyHex(code);
-          let altCk = null;
-          try {
-            altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc);
-          } catch (e) { altCk = null; }
+          try { altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc); }
+          catch (e) { altCk = null; }
           if (!altCk) {
             fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu dieser '
               + 'Sicherung. Es wurde nichts eingespielt.';
             return;
           }
-
-          const eigenerCk = await ck();
+          eigenerCk = await ck();
           if (!eigenerCk) {
             fgState.textContent = 'Die Verschlüsselung ist in dieser Sitzung gesperrt — '
               + 'bitte oben entsperren.';
             return;
           }
+        }
 
-          fgState.textContent = 'Geschützte Angaben werden umgeschlüsselt…';
-          let um = 0, unlesbar = 0;
-          for (const m of (daten.missions || [])) {
+        let um = 0, unlesbar = 0;
+        /* Die Umschlüsselung an EINER Stelle, für beide Fassungen. */
+        const umschluesseln = async (liste) => {
+          if (!braucht) { return; }
+          for (const m of (liste || [])) {
             if (!m.pat_blob) { continue; }
             try {
               const klar = await EdCrypto.decrypt(altCk, m.pat_blob);
@@ -2723,6 +2753,97 @@ ui_seite_start(['titel' => 'Einstellungen']);
               unlesbar++;
             }
           }
+        };
+
+        const holeTeil = async (name) => {
+          const a = await fetch('api/adminbackup_freigabe.php?teil='
+                              + encodeURIComponent(name));
+          if (!a.ok) {
+            let grund = 'HTTP ' + a.status;
+            try { const j = await a.json(); grund = j.meldung || j.error || grund; } catch (e2) {}
+            throw new Error('Der Teil ' + name + ' liess sich nicht laden (' + grund + ').');
+          }
+          return a.json();
+        };
+        const senden = async (adresse, rumpf) => {
+          const a = await fetch(adresse, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
+            body: JSON.stringify(rumpf),
+          });
+          const o = await a.json();
+          if (!o.ok) { throw new Error(o.meldung || o.hinweis || o.error || 'unbekannt'); }
+          return o;
+        };
+
+        let s = null;
+
+        if (fassung >= 2) {
+          /* WARUM HIER KEINE RÜCKFRAGE VOR DEM SCHREIBEN STEHT.
+           *
+           * Bei Fassung 1 liegt alles im Speicher: Es lässt sich zählen, wie
+           * viele Einsätze sich mit diesem Schlüssel NICHT öffnen lassen, und
+           * dann fragen — vor dem ersten Schreiben. Bei Fassung 2 liegen die
+           * Einträge in Fenstern, die einzeln geholt werden; die Zahl stünde
+           * erst fest, wenn alle geöffnet sind, also nach dem ersten
+           * Schreiben. Ein zweiter Durchgang nur zum Zählen hiesse, jedes
+           * Fenster zweimal zu holen und jede Angabe zweimal zu entschlüsseln.
+           *
+           * Die eigentliche Schranke steht ohnehin davor und ist schärfer: Der
+           * Wiederherstellungsschlüssel muss die Hülle `pat_wrap_rc` öffnen.
+           * Tut er das, ist es der richtige Inhaltsschlüssel; einzelne
+           * Fehlschläge danach sind beschädigte Einträge, nicht der falsche
+           * Schlüssel. Sie werden am Ende GENANNT, mit Zahl und in Orange. */
+          fgState.textContent = 'Kopf wird übertragen…';
+          const kopf = await holeTeil('kopf.json');
+          const out0 = await senden('api/backup_restore.php', kopf);
+          s = out0.stats;
+          const dayMap = out0.day_map || {};
+          let karte = Object.assign({}, out0.spur_karte || {});
+
+          const nT = Number(fgPaket.eintragsteile || 0);
+          for (let i = 1; i <= nT; i++) {
+            fgState.textContent = `Einträge werden übertragen (Teil ${i} von ${nT})…`;
+            const name = 'eintraege/' + String(i).padStart(4, '0') + '.json';
+            const teil = await holeTeil(name);
+            await umschluesseln(teil.missions);
+            const o = await senden('api/backup_eintraege_restore.php',
+                                   { eintraege: teil, day_map: dayMap });
+            Object.assign(karte, o.spur_karte || {});
+            for (const [k, v] of Object.entries(o.stats || {})) {
+              if (typeof v === 'number') { s[k] = (s[k] || 0) + v; }
+            }
+          }
+
+          let spurenGeschrieben = 0, ohneZiel = 0;
+          const nS = Number(fgPaket.spurteile || 0);
+          for (let i = 1; i <= nS; i++) {
+            fgState.textContent = `Spuren werden übertragen (Teil ${i} von ${nS})…`;
+            const name = 'spuren/' + String(i).padStart(4, '0') + '.json';
+            const teil = await holeTeil(name);
+            let happen = [], groesse = 0;
+            const schicken = async () => {
+              if (!happen.length) { return; }
+              const o = await senden('api/backup_spuren_restore.php', { spuren: happen });
+              spurenGeschrieben += o.geschrieben || 0;
+              happen = []; groesse = 0;
+            };
+            for (const e of (teil.spuren || [])) {
+              const ziel = karte[String(e.spur_ref)];
+              if (!ziel) { ohneZiel++; continue; }
+              const blob = String(e.blob || '');
+              if (groesse + blob.length > 800 * 1024 || happen.length >= 500) {
+                await schicken();
+              }
+              happen.push({ owner_type: ziel.art, owner_id: ziel.id, blob: blob, n: e.n });
+              groesse += blob.length;
+            }
+            await schicken();
+          }
+          s.spuren_uebernommen = spurenGeschrieben;
+          if (ohneZiel) { s.spuren_ohne_ziel = ohneZiel; }
+        } else {
+          await umschluesseln(daten.missions);
           if (unlesbar && !await window.edConfirm(
               `${unlesbar} Einsätze lassen sich mit diesem Schlüssel `
               + `nicht öffnen. Ihre geschützten Angaben bleiben hier unlesbar. `
@@ -2731,28 +2852,29 @@ ui_seite_start(['titel' => 'Einstellungen']);
             melde(fgState, 'Abgebrochen — es wurde nichts eingespielt.', 'warn');
             return;
           }
-          fgState.textContent = `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`;
-        } else {
-          fgState.textContent = 'Daten werden übertragen…';
+          fgState.textContent = braucht
+            ? `${um} Einsätze umgeschlüsselt. Daten werden übertragen…`
+            : 'Daten werden übertragen…';
+          const out = await senden('api/backup_restore.php', daten);
+          s = out.stats;
         }
 
-        const res = await fetch('api/backup_restore.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
-          body: JSON.stringify(daten)
-        });
-        const out = await res.json();
-        if (!out.ok) { throw new Error(out.meldung || out.hinweis || out.error || 'unbekannt'); }
         await fetch('api/adminbackup_freigabe.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRF': CSRF },
           body: JSON.stringify({ eingeloest: true })
         });
-        const s = out.stats;
-        melde(fgState, 'Fertig: ' + restoreBericht(s, ''), 'ok');
+        const zusatz = (s.spuren_uebernommen !== undefined
+                          ? ` ${s.spuren_uebernommen} Spuren übernommen.` : '')
+                     + (unlesbar
+                          ? ` ACHTUNG: ${unlesbar} Einsätze liessen sich mit diesem `
+                          + `Schlüssel nicht öffnen; ihre geschützten Angaben bleiben `
+                          + `hier unlesbar.` : '');
+        melde(fgState, 'Fertig: ' + restoreBericht(s, zusatz),
+              unlesbar || s.spuren_ohne_ziel ? 'warn' : 'ok');
         document.getElementById('freigabebtn').disabled = true;
       } catch (e) {
-        fgState.textContent = 'Einspielen fehlgeschlagen: ' + e.message;
+        melde(fgState, 'Einspielen fehlgeschlagen: ' + e.message, 'fehler');
       }
     });
     </script>
