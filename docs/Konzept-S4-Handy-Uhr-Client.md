@@ -825,25 +825,39 @@ nicht nebenbei geändert wird. Die Konstante steht an **einer** Stelle
 eine Zeile. **Zu entscheiden vor dem Gerätetest**, weil der S24-Dienst genau
 das prüfen kann, was hier strittig ist.
 
-### B-S4-03 — Das APK der Uhr ist 18 MB groß
+### B-S4-03 — Das APK der Uhr ist 18 MB groß (Ursache in 0.7.3 berichtigt)
 
 Gemessen in B1: `uhr-release-unsigned.apk` = 18 005 460 B (Debug-Fassung
 24 376 580 B), `handy-release-unsigned.apk` = 6 989 468 B. Das Uhr-APK ist
 also **mehr als doppelt so groß wie das Handy-APK** — obwohl die Uhr-App
 weniger tut.
 
-Die Ursache ist bekannt und liegt nicht in eigenem Code: Compose for Wear OS
-bringt einen eigenen vollständigen Satz Bausteine mit, und `isMinifyEnabled`
-steht auf `false` (Begründung in `uhr/proguard-rules.pro`: ein lesbarer
-Stapelauszug ist im Gerätetest mehr wert als ein kleineres APK).
+**Die Ursache, die hier bis 0.7.3 stand, war falsch.** Sie lautete: „Compose
+for Wear OS bringt einen eigenen vollständigen Satz Bausteine mit." Nachgezählt
+im APK stimmt das nicht — die Uhr trägt **weniger** Programmcode als das Handy:
 
-Warum es trotzdem notiert wird: Eine Uhr hat wenig Speicher, und das APK wird
-**per FTPS auf den Server gelegt und von dort heruntergeladen** (E-S4-16) —
-über Mobilfunk. **Zu entscheiden vor der ersten Auslieferung**, nicht jetzt:
-Kandidaten sind R8 für das Release der Uhr (Stapelauszüge dann über die
-`mapping.txt`, die verwahrt werden müsste) oder das Weglassen der
-Compose-Werkzeugvorschau im Release. Kein B1-Umfang — hier steht nur die
-Zahl, damit sie nicht erst beim Hochladen auffällt.
+| | Programmcode (DEX) | im APK | Ablage |
+|---|---|---|---|
+| Uhr (minSdk 30) | 18,00 MB | **18,00 MB** | `STORED`, unkomprimiert |
+| Handy (minSdk 26) | 22,24 MB | 7,81 MB | `DEFLATE`, komprimiert |
+
+Der Unterschied ist die **Verpackung, nicht der Umfang**: Ab `minSdk` 28 legt
+AGP die DEX-Dateien unkomprimiert ab, damit Android sie beim Start direkt aus
+der Datei einblenden kann — schnellerer Start, weniger Arbeitsspeicher, kein
+Entpacken bei der Installation. Auf dem **Gerät** belegt die Handy-App also
+mehr, nicht weniger; nur beim Herunterladen ist die Uhr-Datei größer.
+
+*Gemessen, was eine Zeile bewirkt:* Mit
+`packaging { dex { useLegacyPackaging = true } }` fällt das Uhr-APK von
+**18,59 MB auf 6,75 MB** — der Preis ist genau die Optimierung, die AGP
+absichtlich vornimmt.
+
+**Zu entscheiden vor der ersten Auslieferung**, nicht jetzt, denn es ist ein
+Tausch und kein Fehler: Das APK wird per FTPS auf den Server gelegt und über
+Mobilfunk heruntergeladen (E-S4-16) — dort zählen 12 MB Unterschied. Auf der
+Uhr zählt der Start. R8 (`isMinifyEnabled`) ist ein **zweiter, unabhängiger**
+Kandidat mit eigenem Preis: Stapelauszüge laufen dann über eine `mapping.txt`,
+die verwahrt werden muss.
 
 ### B-S4-04 — Die Akku-Freistellung verträgt sich nicht mit dem Play Store
 
