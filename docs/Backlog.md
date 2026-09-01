@@ -516,6 +516,29 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
     hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
 
+51. **Die Suchseite verarbeitet 5 000 Einträge, um 200 zu zeigen.**
+    Gemessen in S2/AP9 an einem Konto mit 5 002 Einsätzen: Bis die
+    geschützten Spalten lesbar sind, vergehen **3,77 s** (Drossel 6×). Davon
+    entfallen auf das Entschlüsseln der angezeigten Zeilen rund **0,1 s** —
+    der Abstand zwischen „erste Zeile im DOM" (3,67 s) und „lesbar" (3,77 s).
+    Die Zeit geht also fast vollständig für das drauf, was VOR der Tabelle
+    passiert: die Antwort holen und auswerten, den Heuhaufen je Einsatz bauen,
+    filtern, sortieren.
+
+    Und entschlüsselt werden **alle** 5 002 (4 880 mit Block), obwohl nur 200
+    angezeigt werden. Das ist nicht ohne Grund: Die Freitextsuche sucht auch
+    in Diagnose, Alter und Einsatzort, und die stehen im verschlüsselten
+    Block. Ohne Filter braucht es sie aber nicht.
+
+    **Zu entscheiden:** ob die Entschlüsselung auf das verschoben wird, was
+    tatsächlich gebraucht wird — beim Aufbau nur die angezeigten Zeilen, der
+    Rest im Hintergrund oder erst, wenn ein Filter ihn verlangt. Das ist kein
+    Umbau des Suchindex (den schließt E-S2-16 aus), aber eine spürbare
+    Änderung im Verhalten: Ein Filter würde dann beim ersten Mal länger
+    brauchen. Vorher messen, welcher der drei Posten vor der Tabelle wirklich
+    wiegt — die Vermutung „es ist die Krypto" hat sich in AP9 schon einmal
+    als falsch erwiesen.
+
 ---
 
 ## Erledigt

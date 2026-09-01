@@ -11,6 +11,94 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.1.1] — 2026-09-01
+
+**Die Suche, und ein Prüfmittel, das sich selbst gemessen hat.** Neuntes
+Arbeitspaket der Phase S2 (AP9, E-S2-16). Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Was E-S2-16 verlangt
+
+Zwei Mäßigungen, beide klein und beide belegt:
+
+- **`EdCrypto` merkt sich den importierten Schlüssel.** Bis hierher rief jedes
+  `encrypt()` und jedes `decrypt()` sein eigenes `crypto.subtle.importKey()`.
+  Bei einem Konto mit 5 000 Einsätzen waren das **4 880 Importe für denselben
+  Schlüssel**; jetzt ist es **einer**. Gemerkt wird die *Promise* des Imports
+  und nicht der fertige Schlüssel — sonst starten 200 gleichzeitige Aufrufe
+  200 eigene Importe, weil noch keiner fertig ist. Das Fach wird beim
+  Abmelden mit geräumt.
+- **`EdPat.entschluessleListe()` arbeitet in Stapeln zu 200** statt einzeln
+  nacheinander. Die Schleife um die Entschlüsselung kostete mehr als die
+  Entschlüsselung selbst: gemessen **387 ms** für 4 880 Entschlüsselungen und
+  **1 954 ms** für die Runden durch die Ereigniswarteschlange darum herum.
+  Jetzt sind es **958 ms**.
+
+### Web — Was das bringt, und was nicht
+
+| | vorher | nachher |
+|---|---|---|
+| `importKey`-Aufrufe | 4 880 | **1** |
+| `entschluessleListe` | 1 954 ms | **958 ms** |
+| erste Zeile im DOM | 4,02 s | 3,67 s |
+| **geschützte Spalten lesbar** | **4,11 s** | **3,77 s** |
+
+Drossel 6×, Median aus drei Läufen, beide Stände unmittelbar nacheinander
+gemessen. Das Ziel aus E-S2-24 (≤ 5 s) ist gehalten.
+
+**Der Löwenanteil der Zeit liegt aber nicht im Entschlüsseln.** Zwischen
+„erste Zeile im DOM" und „lesbar" liegen 0,1 s — die Entschlüsselung der
+angezeigten Zeilen ist also nicht das Problem. Die 3,67 s davor gehen für das
+drauf, was vor der Tabelle passiert. Das ist **Backlog Nr. 51** und
+ausdrücklich kein Nebenbei-Umbau.
+
+Nebenbei belegt: Die Suche entschlüsselt **alle 5 002 Einträge**, nicht nur
+die 200 angezeigten — die Ausgangsmessung von AP0 nahm das Gegenteil an. Ohne
+Grund ist es nicht (die Freitextsuche sucht in Diagnose, Alter und Ort, und
+die liegen im verschlüsselten Block), ohne Filter aber unnötig.
+
+### Web — Der größere Fund steckte im Prüfmittel
+
+`entsperren()` in `tools/messstand/browserprobe.mjs` wartete **vier Sekunden**
+auf einen Entsperr-Dialog. Ist die Sitzung bereits entsperrt — der Regelfall
+direkt nach dem Anmelden —, kommt der Dialog nie, und die vier Sekunden liefen
+jedes Mal vollständig ab. Sie standen **mitten im gemessenen Abschnitt**.
+
+Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und „Tagesansicht 4,81 s".
+Beide liegen dicht über vier Sekunden, und das ist kein Zufall: Gemessen wurde
+`max(4 s Wartezeit, tatsächliche Dauer)`. Der wahre Wert lag die ganze Zeit
+darunter, und niemand konnte es sehen — die Zahl war plausibel, und eine
+plausible Zahl wird nicht hinterfragt.
+
+Das Warten rennt jetzt gegen die Abschlussbedingung des Schritts: Kommt der
+Dialog zuerst, wird entsperrt; ist der Schritt zuerst fertig, war kein
+Entsperren nötig und es wurde keine Sekunde dafür verbraucht. Der ganze Lauf
+sieht damit anders aus:
+
+| Schritt | AP0 (mit dem Messfehler) | jetzt | Ziel (E-S2-24) |
+|---|---|---|---|
+| Startseite, 500 Tagesverweise | 1,36 s | 1,39 s | — |
+| **Tagesansicht bis zur gezeichneten Spur** | **4,81 s** | **1,17 s** | ≤ 3 s — **gehalten**, nicht 62 % darüber |
+| Suche bis zur ersten Trefferanzeige | 4,53 s | **3,81 s** | ≤ 5 s |
+| Sicherung erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
+
+**Die Tagesansicht war nie über dem Ziel.** Der Befund „62 % darüber" aus
+der Ausgangsmessung löst sich vollständig auf — er war der Timeout. Bei der
+Sicherung geht ein Teil der Verbesserung auf AP5b und AP6 zurück; bei
+Tagesansicht und Suche ist es der Messfehler.
+
+**Dieselbe Falle hat mich beim Nachmessen noch einmal erwischt** — mit acht
+statt vier Sekunden, und ich habe daraufhin zwei Messungen veröffentlicht, die
+nichts als meinen eigenen Timeout maßen. Die Regel aus `CLAUDE.md` Abschnitt 6
+gilt gegen das Prüfmittel genauso wie gegen den Code: Eine Zahl ist erst dann
+ein Beleg, wenn sie benennt, was sie gemessen hat.
+
+### Web — Geprüft
+
+Kreislauf `edbak` über den vollen Referenzbestand: **252 882 Einzelvergleiche,
+0 unerklärte Abweichungen** (16 erwartete) — die Änderung an `crypto.js` und
+`patient.js` berührt den Sicherungs- und Wiederherstellungsweg nicht.
+
 ## [Web 12.1.0] — 2026-09-01
 
 **Sicherungsziele: die Sicherung verlässt das Haus.** Achtes Arbeitspaket der

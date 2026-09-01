@@ -13,6 +13,8 @@ nicht in eine Fußnote:
   drosselt die Rechenzeit — nicht den Speicher, nicht die Grafik, nicht die
   Leitung und nicht den langsameren Flash. Wo eine Zahl knapp unter dem
   Zielwert liegt (Suche: 4,53 s gegen 5 s), ist sie **kein Beleg**.
+  *(Nachtrag S2/AP9: Diese 4,53 s waren zudem zu einem grossen Teil ein
+  Zeitlimit im Pruefmittel — siehe die Berichtigung weiter unten.)*
 - **Die Wiederherstellung wurde ohne Drossel gemessen.** Der Einspiellauf
   fährt den Browser ungedrosselt; die 245 s für 5002 Einsätze sind deshalb
   eine **Untergrenze**.
@@ -55,8 +57,8 @@ Einspielwegs: Er schickt die ganze Datei als **einen** POST.
 |---|---|---|---|
 | Anmelden | 2,36 s | — | |
 | Startseite, 500 Tagesverweise | 1,36 s | — | ✓ |
-| Tagesansicht bis zur gezeichneten Spur | **4,81 s** | ≤ 3 s (E-S2-24) | **62 % darüber** |
-| Suche bis zur ersten Trefferanzeige | **4,53 s** | ≤ 5 s (E-S2-24) | ✓ ohne Reserve |
+| Tagesansicht bis zur gezeichneten Spur | ~~**4,81 s**~~ **1,17 s** | ≤ 3 s (E-S2-24) | ~~62 % darüber~~ **✓** (Berichtigung S2/AP9) |
+| Suche bis zur ersten Trefferanzeige | ~~**4,53 s**~~ **3,81 s** | ≤ 5 s (E-S2-24) | ~~✓ ohne Reserve~~ **✓** (Berichtigung S2/AP9) |
 | Sicherung erstellen | **109,8 s** | ≤ 5 min (E-S2-24) | ✓ |
 
 Und die Gerätebudgets nach Z3, gemessen beim Sichern:
@@ -70,13 +72,52 @@ Und die Gerätebudgets nach Z3, gemessen beim Sichern:
 
 Konsolenfehler: **0**.
 
-**Die Suche ist nicht das Problem, für das sie gehalten wurde.** Sie zeigt
-`5002 · 132.171 km · 200 angezeigt` — die Trefferliste zeigt **200** Zeilen,
-nicht 5002, und nur die werden entschlüsselt. Die 4,53 s sind damit nicht die
-Kosten von 5000 Entschlüsselungen. AP9 (E-S2-16) sollte das prüfen, bevor es
-gegen ein Problem antritt, das anderswo liegt: Der Schlüssel wurde in diesem
-Lauf **kein einziges Mal** neu abgeleitet (PBKDF2 = 0 auf der Suchseite), weil
-er aus der Sitzung kam.
+> **BERICHTIGUNG (S2/AP9, 01.09.2026).** Zwei Aussagen dieses Abschnitts
+> stimmen nicht, und beide sind hier stehengeblieben, weil sie plausibel
+> klangen.
+>
+> **Erstens: Die Zeiten 4,53 s und 4,81 s sind zu hoch.** `entsperren()` in
+> `browserprobe.mjs` wartete vier Sekunden auf einen Entsperr-Dialog, der bei
+> bereits entsperrter Sitzung nie kommt — mitten im gemessenen Abschnitt.
+> Gemessen wurde `max(4 s, tatsächliche Dauer)`. Deshalb liegen ausgerechnet
+> die beiden auffälligen Werte dicht über vier Sekunden. Der ganze Lauf mit
+> der berichtigten Wartelogik, Drossel 6×:
+>
+> | Schritt | AP0 (mit dem Messfehler) | jetzt | Ziel (E-S2-24) |
+> |---|---|---|---|
+> | Startseite, 500 Tagesverweise | 1,36 s | 1,39 s | — |
+> | **Tagesansicht bis zur gezeichneten Spur** | **4,81 s** | **1,17 s** | ≤ 3 s — **gehalten**, nicht 62 % darüber |
+> | Suche bis zur ersten Trefferanzeige | 4,53 s | **3,81 s** | ≤ 5 s |
+> | Sicherung erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
+> 
+> **Die Tagesansicht war nie über dem Ziel.** Der Befund „62 % darüber"
+> löst sich vollständig auf — er war der Timeout. Die Suche liegt mit Reserve
+> unter ihrem Ziel statt „ohne Reserve" darauf.
+>
+> Ein Teil der Verbesserung bei der Sicherung geht auf AP5b und AP6 zurück und
+> nicht auf den Messfehler; bei Tagesansicht und Suche ist es der Timeout.
+>
+> **Zweitens: Es werden sehr wohl alle 5 002 entschlüsselt.** Gezählt:
+> `entschluessleListe` bekommt 5 002 Einträge, `crypto.subtle.decrypt` läuft
+> **4 880-mal** (die übrigen 122 haben keinen Block). Gedeckelt ist die
+> **Anzeige** auf 200, nicht die Entschlüsselung. Der Grund dafür ist
+> sachlich — die Freitextsuche sucht in Diagnose, Alter und Einsatzort, und
+> die liegen im verschlüsselten Block —, ohne Filter aber unnötig
+> (Backlog Nr. 51).
+>
+> Was stimmt: **PBKDF2 = 0** auf der Suchseite. Der Schlüssel kam aus der
+> Sitzung.
+
+**Die Suche ist nicht das Problem, für das sie gehalten wurde** — dieser Satz
+gilt weiterhin, nur mit anderer Begründung als der unten stehenden. Die
+Entschlüsselung der angezeigten Zeilen kostet **0,1 s**; die übrige Zeit geht
+für das drauf, was vor der Tabelle passiert. Der ursprüngliche Wortlaut:
+Sie zeigt `5002 · 132.171 km · 200 angezeigt` — die Trefferliste zeigt **200**
+Zeilen, nicht 5002, und nur die werden entschlüsselt. Die 4,53 s sind damit
+nicht die Kosten von 5000 Entschlüsselungen. AP9 (E-S2-16) sollte das prüfen,
+bevor es gegen ein Problem antritt, das anderswo liegt: Der Schlüssel wurde in
+diesem Lauf **kein einziges Mal** neu abgeleitet (PBKDF2 = 0 auf der
+Suchseite), weil er aus der Sitzung kam.
 
 **Die Tagesansicht liegt über dem Ziel, und zwar ohne Spurmenge.** Der
 gemessene Tag hat 13 Spurlinien, die Antwort wiegt 0,5 MB — die 4,81 s
@@ -145,8 +186,8 @@ nicht sicherer als das, was es prüft.
 | Haldenspitze Browser | 508 MB | 100 MB | **5** |
 | Spuren je 1000 Einsätze | 38,07 MB | 3 MB | **13** |
 | Sicherungsdatei | 40,5 MB | 25 MB | **1,6** |
-| Tagesansicht | 4,81 s | 3 s | **1,6** |
-| Suche | 4,53 s | 5 s | ✓ |
+| Tagesansicht | ~~4,81 s~~ **1,17 s** | 3 s | ~~1,6~~ **✓** |
+| Suche | ~~4,53 s~~ **3,81 s** | 5 s | ✓ |
 | Sicherung erstellen | 109,8 s | 300 s | ✓ |
 | Wiederherstellung | 245 s | 900 s | ✓ (ohne Drossel) |
 

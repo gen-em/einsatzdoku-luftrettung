@@ -75,9 +75,48 @@ const EdCrypto = (() => {
   }
 
   /* ---- AES-256-GCM ----------------------------------------------------- */
+
+  /* DER IMPORTIERTE SCHLUESSEL WIRD GEMERKT (E-S2-16, S2/AP9).
+   *
+   * Bis Web 12.1.0 rief jedes `encrypt()` und jedes `decrypt()` ein eigenes
+   * `crypto.subtle.importKey()`. Bei einem Datensatz faellt das nicht auf;
+   * die Suche eines Kontos mit 5000 Einsaetzen hat es GEMESSEN 4880-mal
+   * getan, fuer denselben Schluessel, mit derselben Verwendung.
+   *
+   * WAS GEMERKT WIRD, IST DAS VERSPRECHEN UND NICHT DER SCHLUESSEL. Im Fach
+   * liegt die Promise, nicht der fertige `CryptoKey`. Der Unterschied zaehlt
+   * genau dann, wenn es darauf ankommt: Beim Entschluesseln in Stapeln
+   * (patient.js) starten 200 Aufrufe gleichzeitig — mit dem fertigen
+   * Schluessel im Fach begaennen alle 200 ihren eigenen Import, weil noch
+   * keiner fertig ist. Mit der Promise warten 199 auf den ersten.
+   *
+   * KEIN SICHERHEITSVERLUST: Der Schluessel liegt ohnehin als Hex vor (das
+   * Fach ist damit sogar die engere Form — der `CryptoKey` ist
+   * `extractable: false`). Das Fach wird beim Abmelden geraeumt
+   * (`clearSession`), damit nach dem Sperren auch dieses Stueck fort ist.
+   *
+   * EIN SCHEITERNDER IMPORT WIRD NICHT GEMERKT: Eine abgelehnte Promise im
+   * Fach waere ein Fehler, der sich nicht mehr abschuetteln laesst — der
+   * Eintrag faellt deshalb wieder heraus.
+   *
+   * Die Obergrenze ist Vorsorge und keine Notwendigkeit: Im Betrieb liegen
+   * hier ein bis zwei Schluessel (Inhaltsschluessel, beim Freigeben zwei).
+   * Ein Weg, der viele verschiedene benutzt, soll das Fach nicht unbemerkt
+   * wachsen lassen. */
+  const SCHLUESSELFACH_MAX = 8;
+  const schluesselfach = new Map();
+
   async function aesKey(keyHex, usages) {
-    return crypto.subtle.importKey('raw', fromHex(keyHex),
-      { name: 'AES-GCM' }, false, usages);
+    const fach = keyHex + '|' + usages.join(',');
+    let versprechen = schluesselfach.get(fach);
+    if (versprechen === undefined) {
+      if (schluesselfach.size >= SCHLUESSELFACH_MAX) { schluesselfach.clear(); }
+      versprechen = crypto.subtle.importKey('raw', fromHex(keyHex),
+        { name: 'AES-GCM' }, false, usages);
+      versprechen.catch(() => schluesselfach.delete(fach));
+      schluesselfach.set(fach, versprechen);
+    }
+    return versprechen;
   }
 
   // Klartext (String) -> base64(iv || ciphertext)
@@ -368,6 +407,13 @@ const EdCrypto = (() => {
     sessionStorage.removeItem(S_CK);
     sessionStorage.removeItem(S_NEU);
     vergissAbleitungen();
+    /* DAS SCHLUESSELFACH GEHOERT MIT GERAEUMT (S2/AP9). Im Regelfall laedt
+       die Seite nach dem Abmelden ohnehin neu, und damit ist der Speicher des
+       Skripts fort. Wird `clearSession()` aber OHNE Seitenwechsel gerufen,
+       laege dort weiterhin ein brauchbarer `CryptoKey` — auffindbar nur mit
+       dem Hex, den niemand mehr hat, aber vorhanden. Dasselbe Argument wie
+       bei 'edk_neu' eine Ebene darueber. */
+    schluesselfach.clear();
   };
 
   /* ---- Backup-Container ------------------------------------------------

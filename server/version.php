@@ -1537,5 +1537,26 @@ declare(strict_types=1);
  * MIGRATION ZWINGEND: `2026_09_01_sicherungsziele` legt `backup_targets` an.
  * Ohne sie zeigt die neue Seite einen Hinweis und tut nichts.
  *
+ * 12.1.1 ist S2/AP9: DIE SUCHE. Zwei Maessigungen aus E-S2-16, beide klein:
+ * `EdCrypto` merkt sich den importierten Schluessel (bei 5000 Einsaetzen
+ * gemessen 4880 Importe fuer denselben Schluessel — jetzt EINER), und
+ * `EdPat.entschluessleListe()` entschluesselt in Stapeln zu 200 statt einzeln
+ * nacheinander (Schleife 1954 -> 958 ms).
+ *
+ * WAS DAS BRINGT, UND WAS NICHT: Bis die geschuetzten Spalten lesbar sind,
+ * 4,11 -> 3,77 s (Drossel 6x, Median von drei Laeufen, beide Staende
+ * unmittelbar nacheinander). Das Ziel von 5 s ist gehalten. Der Loewenanteil
+ * der Zeit liegt aber NICHT im Entschluesseln — Backlog Nr. 51.
+ *
+ * DER GROESSERE FUND STECKT IM PRUEFMITTEL. `entsperren()` in
+ * `tools/messstand/browserprobe.mjs` wartete vier Sekunden auf einen
+ * Entsperr-Dialog, der bei entsperrter Sitzung nie kommt — mitten im
+ * gemessenen Abschnitt. Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und
+ * „Tagesansicht 4,81 s"; beide liegen dicht ueber vier Sekunden, weil beide
+ * `max(4 s, tatsaechliche Dauer)` waren. Das Warten rennt jetzt gegen die
+ * Abschlussbedingung des Schritts.
+ *
+ * KEINE MIGRATION, keine Schnittstellenaenderung.
+ *
  */
-const WEB_VERSION = '12.1.0';
+const WEB_VERSION = '12.1.1';

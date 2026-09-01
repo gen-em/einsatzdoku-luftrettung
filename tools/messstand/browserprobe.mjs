@@ -187,9 +187,41 @@ async function messen(name, tun) {
   return messung;
 }
 
-async function entsperren() {
+/* ENTSPERREN, OHNE DIE MESSUNG ZU VERFAELSCHEN (S2/AP9).
+ *
+ * DIESE FUNKTION HAT VIER MESSWERTE VERDORBEN, und zwar lautlos. Sie wartete
+ * VIER SEKUNDEN auf einen Entsperr-Dialog. Ist die Sitzung bereits entsperrt
+ * — der Regelfall, wenn die Anmeldung unmittelbar davor lag —, kommt der
+ * Dialog nie, und die vier Sekunden liefen JEDES MAL vollstaendig ab. Sie
+ * standen mitten im gemessenen Abschnitt.
+ *
+ * Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und „Tagesansicht 4,81 s".
+ * Beide liegen dicht ueber vier Sekunden, und das ist kein Zufall: Gemessen
+ * wurde `max(4 s Wartezeit, tatsaechliche Dauer)`. Nachgemessen mit dieser
+ * Fassung liegt die Suche bei 3,77 s — der wahre Wert lag die ganze Zeit
+ * UNTER dem, was das Protokoll auswies, und niemand konnte es sehen.
+ *
+ * DIE LEHRE steht in CLAUDE.md, Abschnitt 6, und gilt hier gegen das
+ * Pruefmittel selbst: Eine Zahl ist erst dann ein Beleg, wenn sie benennt,
+ * was sie gemessen hat. Ein Zeitlimit im gemessenen Abschnitt misst sich
+ * selbst.
+ *
+ * JETZT: Der Dialog wird gegen die ABSCHLUSSBEDINGUNG des Schritts gerennt.
+ * Kommt er zuerst, wird entsperrt; ist der Schritt zuerst fertig, war kein
+ * Entsperren noetig und es wurde keine Sekunde dafuer verbraucht.
+ *
+ * @param {Promise} fertig  die Bedingung, auf die der Schritt ohnehin wartet
+ * @returns {Promise<boolean>} ob entsperrt wurde
+ */
+async function entsperren(fertig) {
   const d = seite.locator('dialog.dialog:has-text("entsperren")');
-  try { await d.waitFor({ state: 'visible', timeout: 4000 }); } catch { return false; }
+  const sichtbar = d.waitFor({ state: 'visible', timeout: 300000 })
+                    .then(() => 'dialog', () => 'nichts');
+  const wer = fertig
+    ? await Promise.race([sichtbar, Promise.resolve(fertig).then(() => 'fertig', () => 'fertig')])
+    : await Promise.race([sichtbar,
+        new Promise((r) => setTimeout(() => r('nichts'), 4000))]);
+  if (wer !== 'dialog') { return false; }
   await d.locator('input[type="password"]').fill(kontoPw);
   await d.locator('[data-act="yes"]').click();
   await d.waitFor({ state: 'hidden', timeout: 120000 });
@@ -232,22 +264,24 @@ messungen.push(await messen('Tagesansicht (Spur gezeichnet)', async () => {
   const ziel = await verweis.getAttribute('href').catch(() => null);
   await seite.goto(ziel ? new URL(ziel, `${basis}/`).href : `${basis}/index.php`,
                    { waitUntil: 'domcontentloaded', timeout: 180000 });
-  await entsperren();
-  await seite.locator('.leaflet-overlay-pane path').first()
-             .waitFor({ state: 'attached', timeout: 180000 })
-             .catch(() => { /* ein Tag ohne Spur — dann zählt die Seite selbst */ });
+  const spurDa = seite.locator('.leaflet-overlay-pane path').first()
+                      .waitFor({ state: 'attached', timeout: 180000 })
+                      .catch(() => { /* ein Tag ohne Spur — dann zählt die Seite selbst */ });
+  if (await entsperren(spurDa)) { await spurDa; }
+  await spurDa;
   const spuren = await seite.locator('.leaflet-overlay-pane path').count();
   return { adresse: seite.url().replace(basis, ''), spurlinien: spuren };
 }));
 
 messungen.push(await messen('Suche — erste Trefferanzeige', async () => {
   await seite.goto(`${basis}/suche.php`, { waitUntil: 'domcontentloaded', timeout: 300000 });
-  await entsperren();
   // Auf die erste gefüllte Trefferzeile warten. Nicht auf ein Netzereignis:
   // Die Zeit, um die es geht, ist die bis zur SICHTBAREN Anzeige, und die
   // liegt hinter dem Entschlüsseln.
-  await seite.locator('#suchtable tbody tr, #suchkacheln > *').first()
-             .waitFor({ state: 'attached', timeout: 300000 });
+  const trefferDa = seite.locator('#suchtable tbody tr, #suchkacheln > *').first()
+                         .waitFor({ state: 'attached', timeout: 300000 });
+  if (await entsperren(trefferDa)) { await trefferDa; }
+  await trefferDa;
   const zahl = (await seite.locator('#trefferzahl').textContent().catch(() => '') || '').trim();
   return { trefferzahl: zahl };
 }));

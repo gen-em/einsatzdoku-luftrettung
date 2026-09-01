@@ -2533,3 +2533,100 @@ Protokoll etwas anderes.
   hergestellt worden.
 - **Der Versand über den Cron-Auslöser.** Über die Befehlszeile ist er
   gefahren, am eingerichteten Zeitdienst nicht.
+
+---
+
+### AP9 — Die Suche (erledigt, Web 12.1.1)
+
+**Was E-S2-16 verlangt** — Schlüssel einmal je Sitzung importieren,
+Entschlüsselung in Stapeln von rund 200, kein Umbau des Suchindex — ist
+gebaut. Beides sind wenige Zeilen, beide wirken auf ihren eigenen Zahlen, und
+**beide zielen am Engpass vorbei.** Das ist der eigentliche Ertrag dieses
+Pakets.
+
+#### Der Reihe nach
+
+**1. Der Schlüsselimport lief 4 880-mal für denselben Schlüssel.**
+`aesKey()` in `crypto.js` rief bei jedem `encrypt()` und jedem `decrypt()`
+ein eigenes `crypto.subtle.importKey()`. Jetzt liegt die **Promise** des
+Imports in einem Fach — nicht der fertige Schlüssel, denn 200 gleichzeitige
+Aufrufe würden sonst 200 eigene Importe starten, weil noch keiner fertig ist.
+Geräumt wird das Fach in `clearSession()`.
+
+**2. Die Schleife kostete mehr als die Krypto.** Gemessen: 4 880
+Entschlüsselungen 387 ms, die Runden durch die Ereigniswarteschlange darum
+herum 1 954 ms. Mit Stapeln zu 200: **958 ms**.
+
+**3. Und trotzdem bewegt sich die Gesamtzeit kaum.** 4,11 → 3,77 s bis zu
+lesbaren geschützten Spalten. Denn zwischen „erste Zeile im DOM" (3,67 s) und
+„lesbar" (3,77 s) liegen **0,1 s** — die Entschlüsselung der *angezeigten*
+Zeilen war nie das Problem. Die Zeit geht davor drauf: Antwort holen,
+auswerten, je Einsatz den Heuhaufen bauen, filtern, sortieren.
+**Backlog Nr. 51**, ausdrücklich nicht nebenbei.
+
+#### Zwei Berichtigungen an der Ausgangsmessung
+
+**Die Suche entschlüsselt alle 5 002 Einträge, nicht 200.** AP0 hielt das
+Gegenteil fest. Gezählt: `entschluessleListe` bekommt 5 002,
+`crypto.subtle.decrypt` läuft 4 880-mal. Gedeckelt ist die **Anzeige**.
+
+**Die Zeiten 4,53 s (Suche) und 4,81 s (Tagesansicht) sind zu hoch, weil das
+Prüfmittel sich selbst mitgemessen hat.** `entsperren()` wartete vier
+Sekunden auf einen Entsperr-Dialog, der bei entsperrter Sitzung nie kommt —
+mitten im gemessenen Abschnitt. Gemessen wurde `max(4 s, tatsächliche
+Dauer)`. Dass ausgerechnet die beiden auffälligen Werte dicht über vier
+Sekunden liegen, war das Warnzeichen, das niemand gelesen hat.
+
+> **Und die Falle hat beim Nachmessen sofort wieder zugeschnappt.** Mein
+> erster Anlauf setzte das Limit auf acht Sekunden und maß dreimal 8,46 s —
+> für den alten Stand, für den neuen und sogar mit vollständig
+> abgeschalteter Entschlüsselung. Drei gleiche Zahlen aus drei verschiedenen
+> Ständen sind kein Messergebnis, sondern eine Konstante; ich habe sie
+> trotzdem erst einmal berichtet. Die Regel aus `CLAUDE.md` Abschnitt 6
+> gilt gegen das Prüfmittel wie gegen den Code.
+
+Behoben: Das Warten auf den Dialog rennt gegen die Abschlussbedingung des
+Schritts. Kommt der Dialog zuerst, wird entsperrt; ist der Schritt zuerst
+fertig, wurde keine Sekunde dafür verbraucht.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| `importKey`-Aufrufe je Suchlauf | Haken um `crypto.subtle` | **4 880 → 1** |
+| `entschluessleListe` | dasselbe | **1 954 → 958 ms** |
+| entschlüsselte Einträge | gezählt | **5 002** (4 880 mit Block), Anzeige 200 |
+| erste Zeile im DOM | Playwright, Drossel 6× | 4,02 → **3,67 s** |
+| geschützte Spalten lesbar | dasselbe | 4,11 → **3,77 s** (Ziel ≤ 5 s) |
+| PBKDF2 auf der Suchseite | Zähler | **0** — unverändert |
+| Kreislauf `edbak` | `kreislauf.py` | **252 882 Einzelvergleiche, 0 unerklärt** |
+
+Alle Zeiten: Median aus drei Läufen, beide Stände unmittelbar nacheinander
+gemessen, Drossel 6×.
+
+**Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
+
+- **Eine ruhige Maschine.** Alle Zeiten sind gemessen, während die
+  Bestandsaufnahme für AP8 mit mehreren Agenten lief. Der *Vergleich* trägt
+  (beide Stände unter denselben Bedingungen), die *absolute* Zahl ist nach
+  oben verzerrt. Der Zielwert von 5 s ist damit gehalten, aber mit unbekannter
+  Reserve — die Abnahme gehört auf eine unbelastete Maschine.
+- ~~**Die Tagesansicht.**~~ **Nachgemessen** — und das ist der grösste
+  einzelne Ertrag dieses Pakets. Der vollständige Lauf mit der berichtigten
+  Wartelogik:
+
+| Schritt | AP0 (mit dem Messfehler) | jetzt | Ziel (E-S2-24) |
+|---|---|---|---|
+| Startseite, 500 Tagesverweise | 1,36 s | 1,39 s | — |
+| **Tagesansicht bis zur gezeichneten Spur** | **4,81 s** | **1,17 s** | ≤ 3 s — **gehalten**, nicht 62 % darüber |
+| Suche bis zur ersten Trefferanzeige | 4,53 s | **3,81 s** | ≤ 5 s |
+| Sicherung erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
+
+  **Die Tagesansicht war nie über dem Ziel.** Der Befund „62 % darüber"
+  aus AP0 löst sich vollständig auf — er war der Timeout. Bei der Sicherung
+  geht ein Teil der Verbesserung auf AP5b und AP6 zurück, bei Tagesansicht
+  und Suche ist es der Messfehler.
+- **Ein Konto mit 200 Treffern und aktivem Filter.** Gemessen wurde der
+  Aufbau ohne Filter. Ob ein Freitextfilter über 5 002 entschlüsselte
+  Einträge in der Drossel erträglich bleibt, ist offen — und genau die Frage,
+  an der Backlog Nr. 51 hängt.
