@@ -279,11 +279,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
 │   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
 │   │                      ohne-regel.md (s. LIESMICH.md)
+│   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
+│   │                      (E20): Kasten erscheint, falscher Schlüssel wird
+│   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
+│   │                      entsteht im Browser über assets/crypto.js — PHP
+│   │                      legt sie nur ab (s. LIESMICH.md)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
-│   │                      nicht herstellen kann: Papierkorb-Mischfall und
-│   │                      kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
-│   │                      s. LIESMICH.md)
+│   │                      nicht herstellen kann: Papierkorb-Mischfall,
+│   │                      kaputte Datei, Adminpaket Fassung 2, Speichergrenze
+│   │                      und der Auftrag „Alle sichern" (E-S1-04/19, S2/AP6,
+│   │                      Backlog Nr. 31/35; s. LIESMICH.md)
 │   └── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei

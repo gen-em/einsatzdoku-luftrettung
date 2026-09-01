@@ -2298,12 +2298,15 @@ und bei Gleichstand war sie beliebig. Zugesagt ist jetzt etwas Belastbareres:
 
 **Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
 
-- **Der Freigabeweg MIT Wiederherstellungsschlüssel.** Die Prüfkonten tragen
-  geschützte Angaben, aber ihr Schlüssel wurde beim Einrichten einmalig
-  angezeigt und nicht aufbewahrt. Geprüft ist der Fensterweg mit einer Quelle
-  **ohne** geschützte Angaben; die Umschlüsselung selbst ist gemeinsamer Code
-  beider Fassungen und in der Sache unverändert. **Das ist die größte offene
-  Stelle dieses Pakets.**
+- ~~**Der Freigabeweg MIT Wiederherstellungsschlüssel.**~~ **Nachgeholt** mit
+  `tools/freigabeprobe/` (01.09.2026): **14 Erwartungen, 0 offen.** Die Probe
+  stellt sich ein Konto her, dessen Wiederherstellungsschlüssel sie kennt —
+  Hülle, Prüfsumme und Chiffretext entstehen dabei **im Browser** über
+  `assets/crypto.js`, PHP legt sie nur ab. Belegt sind: Der Kasten erscheint;
+  er fragt nach dem Schlüssel; ein **falscher** wird abgewiesen und schreibt
+  **nichts**; mit dem richtigen kommen Einsatz und Spur an, der Chiffretext
+  ist ein **anderer** als in der Quelle, und er öffnet sich mit dem Schlüssel
+  des **Zielkontos** zu demselben Klartext.
 - **Der Joblauf am echten Auslöser.** Der Schub ist über die Probe belegt
   (mit einer Uhr, die tickt — die erste Fassung der Prüfung gab eine Konstante
   zurück und prüfte damit nichts); ein vollständiger Durchlauf über `jobs.php`

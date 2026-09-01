@@ -211,6 +211,16 @@ Spurteile einzeln über `?teil=` und schickt sie über dieselben Endpunkte
 zurück wie eine eigene Sicherung. Der Teilname wird gegen die Teileliste des
 Manifests geprüft — was dort nicht steht, gibt es für diesen Weg nicht.
 
+**Neu geprüft: der Zweig mit Wiederherstellungsschlüssel.**
+`tools/freigabeprobe/` stellt sich ein Konto her, dessen Schlüssel sie kennt —
+Hülle, Prüfsumme und Chiffretext entstehen dabei **im Browser** über
+`assets/crypto.js`, PHP legt sie nur ab (ein zweiter Rechenweg wäre eine
+zweite Umsetzung derselben Krypto, und die Probe prüfte dann sich selbst).
+Belegt: Ein **falscher** Schlüssel wird abgewiesen und schreibt nichts; mit
+dem richtigen kommen Einsatz und Spur an, der Chiffretext ist ein **anderer**
+als in der Quelle, und er öffnet sich mit dem Schlüssel des **Zielkontos** zu
+demselben Klartext.
+
 **Eine Einschränkung, ausdrücklich:** Bei Fassung 1 wird vor dem ersten
 Schreiben gefragt, wenn sich Einsätze mit dem angegebenen Schlüssel nicht
 öffnen lassen. Bei Fassung 2 kann diese Zahl erst feststehen, wenn alle
@@ -230,6 +240,7 @@ mit Zahl und in Orange.
 | `spurprobe` · `gpxprobe` · `containerprobe` | 25 · 75 · 32 Erwartungen, je 0 offen |
 | Wortliste · Vollständigkeit | 0 Treffer, **0 ungenutzte Ausnahmen** · 260 |
 | Bilderlauf `34-`, `43-` | 16 Bilder, **16 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler |
+| `tools/freigabeprobe/` **neu** | **14** Erwartungen, 0 offen — der Freigabeweg **mit** Wiederherstellungsschlüssel, samt Gegenprobe mit einem falschen |
 | Speicher, 5000er-Konto | 1077,6 MB → **24,0 MB von 64**, mit Deckel geprüft |
 | Bilderlauf `43-sicherungen` | 8 Bilder, **8 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
 
