@@ -1590,7 +1590,216 @@ $MIGRATIONS = [
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
         ],
     ],
+    [
+        'id'    => '2026_08_31_spur_blobs',
+        'web'   => '10.0',
+        'label' => 'Spurspeicherung: Tabelle track_blobs für SPUR1 (S2/AP1)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'track_blobs'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE ZEILE JE SPUR, gleicher Schluessel wie track_points.
+             *
+             * Polymorph wie die Zeilentabelle (owner_type/owner_id): Eine Spur
+             * gehoert entweder zu einem Einsatz oder zu einem Ruhesegment. Und
+             * wie dort gibt es KEINEN Fremdschluessel — MySQL kennt keine
+             * bedingten Fremdschluessel. Das ist eine bewusste Folge, keine
+             * Nachlaessigkeit, und sie hat einen Preis: Beim Loeschen eines
+             * Kontos raeumt die Kaskade diese Tabelle NICHT mit ab. Genau das
+             * ist bei track_points seit jeher so und ist erst in S2
+             * aufgefallen (F-S2-B) — deshalb loeschen die Loeschwege den Blob
+             * ab AP1 ausdruecklich mit, und der Wartungsjob bleibt nur das
+             * Sicherheitsnetz.
+             *
+             * MEDIUMBLOB (16 MB): Bei 3,58 Byte je Punkt sind das rund 4,7
+             * Mio. Punkte je Spur. Die Grenze setzt also nicht das Format,
+             * sondern LIMIT_TRACKPUNKTE_SPUR (50 000, validate_lib.php).
+             *
+             * n_original ist die Punktzahl VOR jeder Ausduennung. Sie steht
+             * zusaetzlich im Blob-Kopf; hier steht sie als SPALTE, damit
+             * next_seq (ingest.php) sie lesen kann, ohne den Blob anzufassen.
+             *
+             * Der Index auf (stufe, geaendert_am) ist fuer die Jobs aus AP3:
+             * Sie suchen „Stufe 2, aelter als sechs Monate" und sollen dafuer
+             * nicht die ganze Tabelle lesen. */
+            "CREATE TABLE track_blobs (
+               owner_type    ENUM('mission','rest') NOT NULL,
+               owner_id      INT UNSIGNED NOT NULL,
+               stufe         TINYINT UNSIGNED NOT NULL,   -- 2 = verlustfrei, 3 = ausgeduennt
+               n_original    INT UNSIGNED NOT NULL,       -- Punktzahl vor der Ausduennung
+               n_gespeichert INT UNSIGNED NOT NULL,
+               blob_daten    MEDIUMBLOB NOT NULL,
+               erstellt_am   DATETIME NOT NULL,
+               geaendert_am  DATETIME NOT NULL,
+               PRIMARY KEY (owner_type, owner_id),
+               KEY stufe_alter (stufe, geaendert_am)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
+    [
+        'id'    => '2026_08_31_jobs',
+        'web'   => '10.1',
+        'label' => 'Job-Einstieg: Tabelle jobs mit Fortsetzungszustand (S2/AP2)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'jobs'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* EINE ZEILE JE JOB, und sie ist mehr als ein Zeitstempel.
+             *
+             * Bis Web 10.0.0 hielt `app_state` zwei Schluessel: den letzten
+             * Versuch und den letzten vollstaendigen Lauf. Das reichte,
+             * solange die Wartung in einem Zug durchlief. Sobald Arbeit in
+             * HAEPPCHEN anfaellt — und das tut sie ab AP3, wenn Millionen
+             * Punkte zu verdichten sind —, braucht jeder Job zusaetzlich:
+             *
+             *   zustand      wo er stehengeblieben ist (JSON, Fortsetzungsmarke)
+             *   rueckstand   wie viel noch aussteht, fuer die Wartungsseite
+             *   ausloeser    wer ihn zuletzt angestossen hat (cli/token/anfrage)
+             *   laeuft_seit  Sperre gegen zwei gleichzeitige Laeufe
+             *
+             * `laeuft_seit` ist bewusst ein Zeitstempel und kein Flag: Ein
+             * Lauf, der mitten im Haeppchen abstuerzt, laesst das Flag sonst
+             * fuer immer stehen, und der Job liefe nie wieder. Mit einem
+             * Zeitstempel gilt eine Sperre nach einer Weile als verwaist.
+             *
+             * `letzter_fehler` steht hier und nicht nur im Fehlerprotokoll des
+             * Webspace: Auf geteiltem Hosting kommt an dieses Protokoll nicht
+             * jede Betreiberin heran, und ein dauerhaft scheiternder Job soll
+             * auf der Wartungsseite auffallen. */
+            "CREATE TABLE jobs (
+               job             VARCHAR(32) NOT NULL PRIMARY KEY,
+               zustand         TEXT NULL,
+               rueckstand      INT UNSIGNED NULL,
+               letzter_lauf    DATETIME NULL,
+               letzter_erfolg  DATETIME NULL,
+               letzter_ausloeser VARCHAR(16) NULL,
+               letzter_fehler  TEXT NULL,
+               erledigt_zuletzt INT UNSIGNED NOT NULL DEFAULT 0,
+               laeuft_seit     DATETIME NULL
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
+    [
+        'id'    => '2026_09_01_letzter_punkt_am',
+        'web'   => '10.2',
+        'label' => 'Verdichtung: Ankunftszeit des letzten Punktes je Spur (S2/AP3)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.columns
+                              WHERE table_schema = DATABASE()
+                                AND table_name = 'missions'
+                                AND column_name = 'letzter_punkt_am'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* DIE GROESSE, AUF DER E-S2-06 STEHT — und die es bislang nicht gab.
+             *
+             * Die Karenz lautet „final gesetzt und 14 Tage ohne neuen Punkt".
+             * Dafuer braucht es eine ANKUNFTSZEIT, und im ganzen Schema gab es
+             * keine: `track_points.ts` ist die Aufzeichnungszeit,
+             * `missions.created_at` die Anlagezeit der Zeile,
+             * `rest_segments` hatte gar nichts, `devices.last_seen` gilt je
+             * Geraet, `track_blobs.geaendert_am` datiert die Verdichtung.
+             *
+             * Ueber `MAX(ts)` gerechnet waere die Karenz Zierrat, und zwar
+             * genau in dem Fall, fuer den sie gebaut ist: Die Uhr setzt
+             * `final = true` in JEDEM Teilstueck (watch/source/Uploader.mc)
+             * und raeumt erst auf, wenn `next_seq >= pointCount` ist. Eine
+             * Uhr, die drei Wochen ohne Empfang war, schickt Teilstueck 1 mit
+             * `final = true` — und `MAX(ts)` ist dann schon drei Wochen alt.
+             * Der Job verdichtete zwischen Teilstueck 1 und 2.
+             *
+             * Der zweite Grund ist stiller: `ingest.php` schreibt `ts` ohne
+             * Bereichspruefung. Eine Uhr mit falsch gestellter Zeit liefert
+             * `ts` in der Zukunft, und `MAX(ts) < NOW() - 14 DAY` wird dann
+             * NIE wahr — die Spur bliebe fuer immer Stufe 1, ohne dass
+             * irgendetwas anschlaegt.
+             *
+             * OHNE NACHFUELLUNG, mit Absicht: Ein UPDATE aus `MAX(ts)` waere
+             * ein Vollscan ueber Millionen Zeilen, in einer Seite, auf die
+             * jemand wartet. NULL heisst „noch nie gemessen"; der
+             * Verdichtungsjob traegt es beim ersten Hinsehen nach, aus dem
+             * Umriss, den er ohnehin holt, und mit LEAST gegen jetzt begrenzt.
+             * Die Schwaeche der ts-Rechnung gilt damit einmal, fuer den
+             * Altbestand, und ist benannt statt versteckt. */
+            "ALTER TABLE missions      ADD COLUMN letzter_punkt_am DATETIME NULL AFTER final",
+            "ALTER TABLE rest_segments ADD COLUMN letzter_punkt_am DATETIME NULL AFTER final",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
+    [
+        'id'    => '2026_09_01_sicherungsziele',
+        'web'   => '12.1',
+        'label' => 'Sicherungsziele: Tabelle backup_targets für FTP, FTPS und SFTP (S2/AP7)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'backup_targets'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOHIN DIE SICHERUNGEN GESCHOBEN WERDEN (E-S2-22).
+             *
+             * DER NAME IST NICHT `transport_dests`, UND ZWAR MIT ABSICHT. Die
+             * Tabelle `transport_dests` gibt es seit Web 4 — sie haelt die
+             * Zielkliniken, also das Transportziel einer Patientin. Das
+             * Konzept nennt das hier ebenfalls „Transportziel"; im Adminbereich
+             * staenden damit zwei verschiedene Dinge unter demselben Wort, und
+             * zwar zwei Klicks voneinander entfernt (Stammdaten gegen
+             * Sicherungen). Deshalb heisst es hier SICHERUNGSZIEL. Der
+             * Unterschied ist in docs/Konzept-S2 unter F-S2-G festgehalten.
+             *
+             * DIE GEHEIMNISSE STEHEN VERSIEGELT DRIN, NIE IM KLARTEXT.
+             * `geheim` und `schluessel` tragen `edsk1:`-Chiffren aus
+             * serverkrypto_lib.php; der Schluessel dazu liegt in config.php und
+             * nicht in dieser Datenbank. Wer den Dump hat, hat die Passwoerter
+             * NICHT. Genau deshalb sind es TEXT-Spalten und keine VARCHAR(190):
+             * Ein privater SSH-Schluessel ist mehrere Kilobyte gross, und
+             * versiegelt wird er nicht kleiner.
+             *
+             * WELCHES DER BEIDEN FELDER GILT, sagt nicht ein Schalter, sondern
+             * der Inhalt: Steht in `schluessel` etwas, wird mit Schluessel
+             * angemeldet und `geheim` ist dessen Passphrase (oft leer). Steht
+             * dort nichts, ist `geheim` das Passwort. Ein zusaetzliches
+             * Art-Feld waere ein dritter Ort fuer dieselbe Aussage — und der
+             * eine, der irgendwann nicht mehr zu den anderen beiden passt.
+             *
+             * `fingerabdruck` ist der SHA-256 des Hostschluessels und gilt nur
+             * fuer SFTP. Er ist der einzige Schutz gegen einen untergeschobenen
+             * Server, den dieses Projekt ueberhaupt haben kann: FTPS ueber
+             * ext/ftp prueft kein Zertifikat (nachgewiesen in
+             * tools/versandprobe/), FTP ist im Klartext. Steht hier nichts,
+             * wird der Fingerabdruck beim naechsten „Verbindung pruefen"
+             * uebernommen; steht etwas, und der Server zeigt einen anderen,
+             * bricht die Verbindung ab.
+             *
+             * `letzter_fehler` steht hier aus demselben Grund wie in `jobs`:
+             * Ein Versand, der seit drei Wochen scheitert, muss in der
+             * Oberflaeche zu sehen sein und nicht nur im Fehlerprotokoll des
+             * Webspace. */
+            "CREATE TABLE backup_targets (
+               id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               name           VARCHAR(190) NOT NULL,
+               protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+               host           VARCHAR(190) NOT NULL,
+               port           SMALLINT UNSIGNED NOT NULL,
+               nutzer         VARCHAR(190) NOT NULL,
+               geheim         TEXT NULL,          -- versiegelt: Passwort oder Passphrase
+               schluessel     TEXT NULL,          -- versiegelt: privater SSH-Schluessel
+               pfad           VARCHAR(255) NOT NULL DEFAULT '/',
+               passiv         TINYINT(1) NOT NULL DEFAULT 1,
+               aktiv          TINYINT(1) NOT NULL DEFAULT 1,
+               fingerabdruck  VARCHAR(190) NULL,
+               letzter_lauf   DATETIME NULL,
+               letzter_erfolg DATETIME NULL,
+               letzter_fehler TEXT NULL,
+               erstellt_am    DATETIME NOT NULL,
+               UNIQUE KEY uq_name (name)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
 ];
 
 /* ---- Zweistufiger Ablauf ---------------------------------------------------
@@ -1635,6 +1844,28 @@ if ($ausfuehren && !$istCli) { csrf_check(); }
  * fuer eine Einstellung ist ein Menuepunkt, den man einmal braucht und
  * dreihundertmal ueberliest.
  */
+/* Token fuer den Abruf ueber die Adresse neu erzeugen (S2/AP2).
+ *
+ * Ein neues Token macht das alte ungueltig. Das ist der Zweck: Wer den
+ * bisherigen Zeitplan-Eintrag nicht mehr kennt oder ihn kompromittiert
+ * glaubt, dreht hier ab. Die Folge — der alte Eintrag laeuft ins Leere —
+ * steht als Hinweis daneben, damit sie niemanden ueberrascht. */
+$jobsMeldung = null;
+if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
+    && ($_POST['action'] ?? '') === 'jobs_token_neu') {
+    csrf_check();
+    try {
+        require_once __DIR__ . '/jobs_lib.php';
+        jobs_token(true);
+        $jobsMeldung = ['ok', 'Ein neues Token steht bereit. Der bisherige '
+                            . 'Zeitplan-Eintrag funktioniert damit nicht mehr — '
+                            . 'bitte die Adresse dort austauschen.'];
+    } catch (Throwable $ex) {
+        $jobsMeldung = ['fehler', 'Das Token liess sich nicht erzeugen: '
+                                . $ex->getMessage()];
+    }
+}
+
 $logoMeldung = null;
 if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
     && ($_POST['action'] ?? '') === 'logo_standard') {
@@ -2074,50 +2305,173 @@ ui_seite_start(['titel' => 'Datenbank-Update']);
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
-  <?php /* ---- Wartung (M3-05) ------------------------------------------------
-     * Der Aufraeumjob laeuft huckepack auf Anfragen und ist gegenueber der
-     * Anfrage still. Genau deshalb ist ein dauerhaft scheiternder Job von
-     * einem laufenden sonst nicht zu unterscheiden — bis irgendwann auffaellt,
-     * dass der Papierkorb seit Monaten nicht mehr geleert wird.
+  <?php /* ---- Hintergrundjobs (S2/AP2, war: Aufraeumjob M3-05) --------------
      *
-     * Zwei Marken: der letzte VERSUCH und der letzte VOLLSTAENDIGE Lauf.
-     * Klaffen sie auseinander, scheitert mindestens ein Schritt. Die Ursache
-     * steht im Fehlerprotokoll des Webspace. */
-  $wartung = [];
-  foreach (['last_cleanup', 'last_cleanup_ok'] as $k) {
-      $stw = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
-      $stw->execute([$k]);
-      $wartung[$k] = $stw->fetchColumn();
-  }
-  $wVersuch = $wartung['last_cleanup']    ?: null;
-  $wErfolg  = $wartung['last_cleanup_ok'] ?: null;
-  $wOk      = $wVersuch !== null && $wErfolg === $wVersuch;
+     * Bis Web 10.0.0 stand hier EIN Aufraeumjob mit zwei Marken. Seit S2 sind
+     * es mehrere Jobs, die in Haeppchen arbeiten — und die Frage ist nicht
+     * mehr nur „laeuft er?", sondern auch „kommt er hinterher?".
+     *
+     * Der Grund, warum das ueberhaupt sichtbar sein muss, hat sich nicht
+     * geaendert: Die Wartung ist gegenueber der Anfrage still. Ein dauerhaft
+     * scheiternder Job ist von einem laufenden sonst nicht zu unterscheiden —
+     * bis irgendwann auffaellt, dass der Papierkorb seit Monaten voll ist. */
+  require_once __DIR__ . '/jobs_lib.php';
+  $jobs = jobs_zustand();
+  $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
+  $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
+  /* Eine ANGEHALTENE Wartung darf nicht aussehen wie eine arbeitende (S2/AP3).
+   * Die Pause laeuft zwar von selbst ab, aber bis dahin geschieht nichts —
+   * und wer das nicht sieht, sucht den Fehler woanders. */
+  $jobPause = jobs_pause_bis();
   ?>
-  <?php ui_karte_start(['titel' => 'Aufräumjob',
-      'plakette' => $wVersuch === null
-          ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
-          : ($wOk ? ui_plakette('läuft', ['ton' => 'blau'])
-                  : ui_plakette('scheitert', ['ton' => 'rot']))]); ?>
-    <?php
-      ui_zeile(['text' => 'Letzter Versuch',
-                'plaketten' => ui_plakette($wVersuch ?? 'nie',
-                    ['ton' => $wVersuch === null ? 'neutral' : 'blau'])]);
-      ui_zeile(['text' => 'Letzter vollständiger Lauf',
-                'plaketten' => ui_plakette($wErfolg ?? 'nie',
-                    ['ton' => $wErfolg === null ? 'rot' : 'blau'])]);
-    ?>
-    <?php if ($wVersuch === null): ?>
-      <p class="feld-hinweis">Auf einer frischen Installation ist das normal — er
-         startet bei der ersten Anfrage des nächsten Tages.</p>
-    <?php elseif (!$wOk): ?>
-      <?= ui_meldung_markup('warn', $wErfolg === null
-          ? 'Noch kein einziger vollständiger Lauf. Mindestens ein Schritt '
-          . 'scheitert dauerhaft; die Ursache steht im Fehlerprotokoll des '
-          . 'Webspace (Suchwort cleanup:). Solange das so bleibt, wird unter '
-          . 'anderem der Papierkorb nicht geleert.'
-          : 'Es scheitert mindestens ein Schritt — Ursache im Fehlerprotokoll '
-          . 'des Webspace (Suchwort cleanup:).') ?>
+  <?php ui_karte_start(['titel' => 'Hintergrundjobs',
+      'plakette' => $jobs === []
+          ? ui_plakette('Migration ausstehend', ['ton' => 'neutral'])
+          : ($jobPause !== null ? ui_plakette('angehalten', ['ton' => 'orange'])
+             : ($jobFehler > 0 ? ui_plakette('scheitert', ['ton' => 'rot'])
+                : ($jobNie === count($jobs) ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
+                                            : ui_plakette('läuft', ['ton' => 'blau']))))]); ?>
+    <?php if ($jobPause !== null): ?>
+      <?= ui_meldung_markup('warn', 'Die Wartung ist angehalten bis '
+          . e(fmt_local($jobPause, 'd.m.Y H:i')) . '. Bis dahin wird nichts '
+          . 'verdichtet, ausgedünnt oder aufgeräumt. Die Pause läuft von '
+          . 'selbst ab; aufheben lässt sie sich mit '
+          . '<code>php jobs.php --pause 0</code>.') ?>
     <?php endif; ?>
+    <?php if ($jobs === []): ?>
+      <p class="feld-hinweis">Die Tabelle <code>jobs</code> gibt es noch nicht —
+         sie kommt mit der Migration oben.</p>
+    <?php else: foreach ($jobs as $j): ?>
+      <?php
+        $lauf = $j['letzter_lauf'] ? fmt_local((string)$j['letzter_lauf'], 'd.m.Y H:i') : 'nie';
+        $plaketten = ui_plakette($lauf, ['ton' => $j['letzter_lauf'] ? 'blau' : 'neutral']);
+        if ($j['letzter_ausloeser']) {
+            $plaketten .= ui_plakette((string)$j['letzter_ausloeser'], ['ton' => 'neutral']);
+        }
+        if ($j['rueckstand'] !== null && (int)$j['rueckstand'] > 0) {
+            $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'orange']);
+        }
+        if (!empty($j['letzter_fehler'])) {
+            $plaketten .= ui_plakette('Fehler', ['ton' => 'rot']);
+        }
+        ui_zeile(['text' => (string)$j['titel'],
+                  'klein' => (string)$j['beschreibung'],
+                  'plaketten' => $plaketten]);
+      ?>
+      <?php if (!empty($j['letzter_fehler'])): ?>
+        <?= ui_meldung_markup('fehler', (string)$j['letzter_fehler'],
+            'Letzter Fehler dieses Jobs.') ?>
+      <?php endif; ?>
+      <?php
+        /* WAS LIEGENGEBLIEBEN IST, MIT KENNUNG (S2/AP3, E-S2-06).
+         *
+         * „3 Spuren mit Luecke" gibt der Betreiberin nichts in die Hand,
+         * `mission:412` gibt ihr einen Fall. Die Listen stehen im
+         * Jobzustand — sie fallen im Lauf ohnehin an, ihre Anzeige kostet
+         * also keine einzige zusaetzliche Abfrage. Gekappt bei
+         * JOB_LISTE_MAX Kennungen je Art.
+         *
+         * Angezeigt wird der Stand des letzten VOLLSTAENDIGEN Durchlaufs;
+         * waehrend eines laufenden Durchlaufs zeigte die Liste sonst eine
+         * Mischung, in der behobene Faelle stehenbleiben. */
+        $zst = json_decode((string)($j['zustand'] ?? ''), true);
+        $stand = is_array($zst) ? ($zst['stand'] ?? []) : [];
+        $benennung = [
+            'luecke'      => ['Lücke in der Nummernfolge',
+                              'Diese Spuren werden NICHT verdichtet — die Position im '
+                            . 'Blob ist die Nummer, eine Lücke verschöbe jeden Punkt '
+                            . 'dahinter. Meist eine Uhr, die ein Teilstück nie '
+                            . 'nachgeliefert hat.'],
+            'zu_gross'    => ['Zu viele Punkte',
+                              'Über 50 000 Punkte je Spur. Eine solche Spur ist aus '
+                            . 'einer Sicherung nicht wiederherstellbar; sie bleibt '
+                            . 'deshalb als Zeilen stehen.'],
+            'stufe3'      => ['Punkte auf einer ausgedünnten Spur',
+                              'Erwartet werden hier null. Steht eine Zahl da, nimmt '
+                            . 'die Uhr-Schnittstelle Punkte an, die sie nach der '
+                            . 'Ausdünnung verwerfen sollte.'],
+            'nachzuegler' => ['Wartet auf die Verdichtung',
+                              'Zu diesen Spuren sind noch Punkte nachgekommen. Sie '
+                            . 'werden erst verdichtet und dann ausgedünnt.'],
+            'fehler'      => ['Prüfung nicht bestanden',
+                              'Die Rundlauf- oder Ausdünnungsprüfung hat angeschlagen. '
+                            . 'Es wurde NICHTS gelöscht und NICHTS ersetzt.'],
+        ];
+        foreach ($benennung as $art => [$titel, $erklaerung]):
+            $liste = $stand[$art] ?? [];
+            if (!$liste) { continue; }
+      ?>
+        <?php ui_zeile([
+            'text'  => $titel,
+            'klein' => $erklaerung . ' — ' . implode(', ', array_slice($liste, 0, 12))
+                     . (count($liste) > 12 ? ' …' : ''),
+            'plaketten' => ui_plakette((string)count($liste),
+                ['ton' => $art === 'nachzuegler' ? 'neutral' : 'orange']),
+        ]); ?>
+      <?php endforeach; ?>
+    <?php endforeach; endif; ?>
+  <?php ui_karte_ende(); ?>
+
+  <?php /* ---- Auslöser (E-S2-17) ---------------------------------------------
+     *
+     * Drei Wege zur selben Arbeit, damit die Hosterwahl offen bleibt. Die
+     * Reihenfolge hier ist die Empfehlung: Kommandozeile zuerst.
+     *
+     * Das Token steht offen auf der Seite — sie ist ohnehin nur der
+     * Administration zugaenglich, und ein Geheimnis, das man erst
+     * aufklappen muss, wird beim Einrichten abgetippt statt kopiert. */
+  $tokenAdresse = null;
+  if ($jobs !== []) {
+      try {
+          $tokenAdresse = rtrim((string)($CFG['app']['base_url'] ?? ''), '/')
+                        . '/jobs.php?token=' . jobs_token();
+      } catch (Throwable $ex) { $tokenAdresse = null; }
+  }
+  ?>
+  <?php ui_karte_start(['titel' => 'Wann die Jobs laufen']); ?>
+    <?php if ($jobsMeldung): ?>
+      <?= ui_meldung_markup($jobsMeldung[0], $jobsMeldung[1]) ?>
+    <?php endif; ?>
+    <p class="seiten-erklaerung">Dieselbe Arbeit über drei Wege. <strong>Einer
+       genügt</strong> — eingerichtet werden muss keiner, dann läuft sie
+       huckepack auf den Anfragen mit.</p>
+
+    <h3 class="listen-form-titel">1. Kommandozeile <span class="feld-klein-inline">empfohlen</span></h3>
+    <p class="feld-hinweis">Ein Eintrag im Cron des Webspace. Jede Minute ist
+       unbedenklich: Ein Lauf ohne Arbeit kostet zwei Abfragen.</p>
+    <div class="codeblock">
+      <p class="codeblock-wert">* * * * * php <?= e(__DIR__) ?>/jobs.php</p>
+    </div>
+
+    <h3 class="listen-form-titel">2. Abruf über die Adresse</h3>
+    <p class="feld-hinweis">Wo es keinen Cron auf der Kommandozeile gibt, aber
+       einen zeitgesteuerten Abruf („Cronjob per URL"). Die Adresse enthält ein
+       Geheimnis — sie gehört nicht in eine Mail und nicht in ein Ticket.</p>
+    <?php if ($tokenAdresse !== null): ?>
+      <div class="codeblock">
+        <p class="codeblock-titel">Adresse</p>
+        <p class="codeblock-wert"><?= e($tokenAdresse) ?></p>
+      </div>
+      <form method="post" action="update.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_token_neu">
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Neues Token erzeugen', 'art' => 'leise',
+                        'typ' => 'submit',
+                        'attr' => ' data-confirm="Das bisherige Token wird damit '
+                                . 'ungültig. Ein bestehender Zeitplan-Eintrag '
+                                . 'läuft danach ins Leere."'
+                                . ' data-confirm-ok="Neu erzeugen"']) ?>
+        </div>
+      </form>
+    <?php endif; ?>
+
+    <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage</h3>
+    <p class="feld-hinweis">Der Rückfall, immer eingeschaltet. Er trägt
+       höchstens <?= (int)JOB_BUDGET_ANFRAGE ?> Sekunden je Anfrage und wiederholt
+       sich frühestens nach <?= (int)(JOB_ANFRAGE_PAUSE_S / 60) ?> Minuten — genug,
+       damit eine Installation ohne jede Einrichtung nicht stillsteht, zu wenig
+       für einen großen Rückstand. Wer 1. oder 2. eingerichtet hat, merkt ihn
+       nicht.</p>
   <?php ui_karte_ende(); ?>
 
   <?php

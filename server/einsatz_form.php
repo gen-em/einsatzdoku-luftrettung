@@ -119,10 +119,11 @@ if ($editing) {
  * wird von der Karte nur nicht mehr gebraucht. */
 $hatTrack = false;
 if ($editing) {
-    $tq = db()->prepare('SELECT COUNT(*) FROM track_points
-                          WHERE owner_type = \'mission\' AND owner_id = ?');
-    $tq->execute([$id]);
-    $hatTrack = (int)$tq->fetchColumn() > 1;
+    // Ueber spur_lib.php: Nach der Verdichtung stuende hier sonst 0, und das
+    // Feld „Abfahrtort" verschwaende aus dem Formular eines Einsatzes, der
+    // sehr wohl eine Spur hat.
+    require_once __DIR__ . '/spur_lib.php';
+    $hatTrack = (spur_zahlen(db(), 'mission', [$id])[$id] ?? 0) > 1;
 }
 
 /* ---- Bezugsdatum der Uhrzeiten -------------------------------------------

@@ -1,1 +1,8 @@
 * text=auto eol=lf
+# Das vendorierte GPX-1.1-Schema wird BYTEWEISE geprueft: `tools/gpxprobe/`
+# rechnet vor jedem Lauf seine SHA-256-Summe nach, weil ein Schemalauf gegen
+# ein veraendertes Schema nichts belegt. Die Regel `* text=auto eol=lf` oben
+# schriebe die 788 CRLF der Originaldatei auf LF um — die Summe stimmte dann
+# auf diesem Rechner (die Arbeitskopie bleibt, wie sie kam) und auf jedem
+# frisch geklonten NICHT. Also: unangetastet lassen.
+tools/gpxprobe/gpx11.xsd -text

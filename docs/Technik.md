@@ -37,7 +37,8 @@ Daten erst nach Server-Bestätigung.
 │                          Pruefung-Sofortpaket-22 (Prüfdokument zu Nr. 22)
 ├── server/                komplette Web-App (wird per FTPS deployt)
 │   ├── version.php        WEB_VERSION (einzige Stelle für die Versionsnummer)
-│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc), Aufräumjob
+│   ├── db.php             PDO, Helfer (e/asset/favicon_tags/logo_src/fmt_local/local_to_utc),
+│   │                       Einstieg der Wartung huckepack (run_cleanup_if_due)
 │   ├── ui.php             Seitenhülle (ui_seite_start/-_ende), Kopf-/Seitenleisten,
 │   │                       Fußzeile, Meldungszeile, Abbruchseite, Krypto-Rüstzeug
 │   ├── auth_guard.php     Session/CSRF/Rollen (Rolle+Existenz je Anfrage aus der DB,
@@ -87,14 +88,60 @@ Daten erst nach Server-Bestätigung.
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
 │   ├── pair.php           Uhr-Kopplung per Code, und Trennen einer
 │   │                      bestehenden Kopplung (JSON-Vertrag 1a/1b)
-│   ├── backup_lib.php     Backup-Serialisierung · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
+│   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
+│   │                       die `track_points`/`track_blobs` anfasst (4.97)
+│   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
+│   │                       EINZIGE Stelle, die GPX schreibt (4.97b)
+│   ├── gpx.php            der Abruf. Bewusst NICHT unter api/: Ein Link, den
+│   │                       eine Nutzerin anklickt, braucht bei Sitzungsende
+│   │                       die Anmeldeseite und kein JSON (4.97b)
+│   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
+│   │                       auf einmal abrufbar: Karte plus chronologische
+│   │                       Liste, Einsätze UND Ruhesegmente (4.97b)
+│   ├── jobs.php           Einstieg der Hintergrundjobs: Kommandozeile, Adresse
+│   │                       mit Token, huckepack auf einer Anfrage (4.97a)
+│   ├── jobs_lib.php       Katalog und Ausführung der Jobs (Häppchen, Zustand,
+│   │                       Sperre)
+│   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
+│   │                       · trash_lib.php Papierkorb-Logik
+│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage (ZIP, Fassung 2),
+│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Sicherungen ohne Konto;
 │   │                       die Konten stehen in admin_users.php, die
 │   │                       Pakete eines Kontos auf dessen Kontoseite
 │   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
+│   │                       · sicherungen/komplett/ die Komplettsicherungen
+│   │                       · sicherungen/eingang/ was wiederhergestellt
+│   │                         werden soll — von Hand dorthin gelegt
+│   ├── sicherungsziel_lib.php  Sicherungsziele (S2/AP7): Schnittstelle
+│   │                       `Zielweg` und drei Adapter — FTP und FTPS über
+│   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
+│   │                       Tabelle backup_targets, „Verbindung prüfen" und
+│   │                       der Versandschub
+│   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
+│   │                       Serverschlüssel nachtragen, Versand ein/aus
+│   ├── komplett_lib.php   Komplettsicherung der Installation (S2/AP8):
+│   │                       eigener SQL-Dump in Häppchen (ein Statement je
+│   │                       Zeile, INSERT-Stapel bis 1 MB, einspielbare
+│   │                       Reihenfolge), gzip, Siegel EDKOMP1; dazu Ablage,
+│   │                       Aufbewahrung, Zeitplan und die Wege heraus
+│   ├── admin_komplettsicherung.php  Adminseite dazu: erzeugen mit Fortschritt,
+│   │                       Zeitplan, Stände herunterladen (unverschlüsselt
+│   │                       für mysql, oder unter einer Passphrase), löschen
+│   ├── wiederherstellen.php  Der Rückweg — die Lücke zwischen install.php
+│   │                       und update.php. Nur bei LEERER Datenbank, mit
+│   │                       Nachweisdatei, liest aus sicherungen/eingang/,
+│   │                       spielt in Durchgängen ein. Kein Hochladen
+│   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
+│   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
+│   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
+│   │                       Server selbst hat — es öffnet keine Patientendaten
+│   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
+│   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
+│   │                       .htaccess, geladen über vendor/laden.php;
+│   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
@@ -112,7 +159,13 @@ Daten erst nach Server-Bestätigung.
 │   ├── admin_rechtstexte.php  Editor dazu (Administration)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
-│   ├── api/               day.php · mission.php · range.php · suchindex.php · backup_data.php · backup_restore.php ·
+│   ├── api/               day.php · mission.php · range.php · suchindex.php ·
+│   │                      backup_data.php (`?teil=kopf` und
+│   │                      `?teil=eintraege&ab=&anzahl=`, ohne Parameter die
+│   │                      volle Nutzlast) · backup_restore.php (der Kopf) ·
+│   │                      backup_eintraege_restore.php (ein Eintragsfenster) ·
+│   │                      backup_spuren.php und backup_spuren_restore.php
+│   │                      (die Spurteile der Fassung 4, S2/AP5) ·
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
@@ -173,8 +226,32 @@ Daten erst nach Server-Bestätigung.
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── gpxprobe/          prüft den GPX-Abruf (S2/AP4): gültig gegen das
+│   │                       vendorierte amtliche GPX-1.1-XSD, Punkt für Punkt
+│   │                       gegen die browsergebauten Referenzdateien,
+│   │                       Kennzeichnung in Datei, Dateiname und Seite
+│   │                       (s. LIESMICH.md)
+│   ├── ingestprobe/       prüft die Uhr-Schnittstelle nach der Ausdünnung
+│   │                      (S2/AP3) über ECHTES HTTP: Nachzügler an Stufe 2
+│   │                      werden angenommen, Punkte hinter einer Stufe-3-Spur
+│   │                      verworfen UND quittiert. Legt ihr eigenes Konto an
+│   │                      und räumt es ab (s. LIESMICH.md)
+│   ├── jobprobe/          prüft den Job-Rahmen (S2/AP2): dass alle drei
+│   │                      Auslöser denselben Rückstand abtragen, dass die
+│   │                      gemeldete Zahl stimmt, dass die Sperre greift und
+│   │                      verfällt, und dass der Huckepack-Weg wenig und
+│   │                      selten trägt. Legt eigene Waisen an und räumt hinter
+│   │                      sich auf — ändert am Bestand nichts (s. LIESMICH.md)
 │   ├── maskierungs-probe/ Vorher/Nachher-Probe zur Maskierung der
 │   │                      Einsatztabelle (Backlog Nr. 22, s. LIESMICH.md)
+│   ├── messstand/         stellt ein Konto mit 5000 Einsätzen her — aus der
+│   │                      Referenzsicherung vervielfältigt und über den
+│   │                      REGULÄREN Wiederherstellungsweg eingespielt — und
+│   │                      misst daran die Zielzahlen von S2: Suche,
+│   │                      Tagesansicht, Sichern, Speicherspitzen,
+│   │                      Tabellengrößen. Browserprobe unter CPU-Drossel 6×.
+│   │                      Riegel: füllt nur ein Konto mit dem Präfix
+│   │                      „messstand" (s. LIESMICH.md)
 │   ├── referenzdatensatz/ erfundener Beispielbestand (16 Diensttage,
 │   │   │                  87 Einsätze) — Demo-Konto UND Regressionsreferenz
 │   │   ├── quelldaten/    die Wahrheit: je Diensttag ein JSON, dazu Schema
@@ -213,11 +290,35 @@ Daten erst nach Server-Bestätigung.
 │   │                      ergibt kein Bild (F-P3-AQ).
 │   │                      kontrast.py rechnet die Kontraste der Token nach
 │   │                      (s. LIESMICH.md)
+│   ├── spurprobe/         prüft den Rundlauf des Blob-Formats SPUR1 über den
+│   │                      ganzen Referenzbestand: Punkte → Blob → Punkte, dazu
+│   │                      Kopf, Ablehnung fremder Fassungen und die Frage, ob
+│   │                      die Leser vor und nach der Verdichtung dasselbe
+│   │                      liefern. Verdichtet in einer Transaktion, die sie
+│   │                      zurückrollt — ändert nichts (s. LIESMICH.md)
 │   ├── stilvergleich/     rechnet nach, dass eine Änderung an style.css das
 │   │                      Erscheinungsbild nicht verändert: Kaskadenvergleich
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── komplettprobe/     fährt den ganzen Zyklus der Komplettsicherung
+│   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
+│   │                      in eine LEERE Datenbank einspielen und Tabelle für
+│   │                      Tabelle vergleichen, aufs Sicherungsziel schieben.
+│   │                      76 Erwartungen. Arbeitet in einer Kopie unter /tmp,
+│   │                      liest aber aus der ECHTEN Datenbank
+│   ├── versandprobe/      prüft die drei Sicherungsziel-Adapter (S2/AP7)
+│   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
+│   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
+│   │                      Versiegelung der Zugangsdaten. 115 Erwartungen.
+│   │                      ZWEI Sätze Gegenstellen, und beide werden
+│   │                      gebraucht: gegenstellen.py (pyftpdlib/paramiko,
+│   │                      portabel) und echte_gegenstellen.sh (vsftpd und
+│   │                      OpenSSH, braucht root) — vsftpd kennt kein MLSD und
+│   │                      fährt damit als einziges den Rückfallzweig der
+│   │                      Verzeichnisliste. Was sie NICHT prüfen kann — ein
+│   │                      echtes Ziel im Internet — steht an erster Stelle
+│   │                      ihrer LIESMICH.md
 │   ├── uhr-bilder/        rastert Launcher-Symbole und Bildmarken der Uhr
 │   │                      aus den beiden SVG unter server/assets/images/.
 │   │                      Das Rezept ist aus den vorhandenen Dateien
@@ -232,11 +333,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      ob jeder Wert in :root steht. Drei Hilfslisten mit
 │   │                      Begründungspflicht: streichliste.md, ausnahmen.md,
 │   │                      ohne-regel.md (s. LIESMICH.md)
+│   ├── freigabeprobe/    der Freigabeweg MIT Wiederherstellungsschlüssel
+│   │                      (E20): Kasten erscheint, falscher Schlüssel wird
+│   │                      abgewiesen, richtiger schlüsselt um. Die Krypto
+│   │                      entsteht im Browser über assets/crypto.js — PHP
+│   │                      legt sie nur ab (s. LIESMICH.md)
 │   ├── wiederherstellungs-probe/
 │   │                      Grenzfälle von edbak_restore(), die der Kreislauf
-│   │                      nicht herstellen kann: Papierkorb-Mischfall und
-│   │                      kaputte Datei (E-S1-04/19, Backlog Nr. 31/35;
-│   │                      s. LIESMICH.md)
+│   │                      nicht herstellen kann: Papierkorb-Mischfall,
+│   │                      kaputte Datei, Adminpaket Fassung 2, Speichergrenze
+│   │                      und der Auftrag „Alle sichern" (E-S1-04/19, S2/AP6,
+│   │                      Backlog Nr. 31/35; s. LIESMICH.md)
 │   └── wortliste/         zählt nach, ob sichtbare Texte und normative
 │                          Dokumentation neutral von Land und Luft sprechen:
 │                          Sperrliste, Ausnahmeliste mit Begründungen, drei
@@ -250,13 +357,14 @@ Daten erst nach Server-Bestätigung.
 |---|---|
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
-| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; Aufräumjob entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
+| `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
 | `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
 | `rest_segments` | Ruhe-Track-Segmente (gleiches Idempotenz-Schema wie Einsätze) |
-| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → Aufräumjob entfernt Waisen |
+| `track_points` | GPS-Punkte für Einsätze **und** Segmente; PK `(owner_type, owner_id, seq)`; bewusst ohne FK (polymorph) → der Job `waisen` entfernt Waisen (4.97a). **Seit Web 10.0.0 nur noch der Eingangspuffer der Uhr** (Stufe 1): Sobald ein Paket abgeschlossen ist, wandern die Punkte in `track_blobs`. Gelesen wird ausschließlich über `spur_lib.php`, nie direkt — siehe Abschnitt 4.97 |
+| `track_blobs` | Dieselben Punkte als **Blob** (Format SPUR1), eine Zeile je Spur, PK `(owner_type, owner_id)`. `stufe` 2 = verlustfrei, 3 = ausgedünnt; `n_original` = Punktzahl **vor** jeder Ausdünnung und damit die Grundlage der Fortsetzungsmarke der Uhr. Wie `track_points` ohne FK (polymorph) — die Löschwege räumen deshalb ausdrücklich mit, der Job `waisen` ist nur das Sicherheitsnetz. Der Grund für die Tabelle ist die Menge: gemessen **62,4 Byte je Punkt als Zeile gegen 3,58 als Blob** |
 | `bases` / `vehicles` / `crew_presets` | Stammdaten: Standorte (mit optionalen Koordinaten), Rettungsmittel (`kind` = `air`/`ground`, dazu `vehicle_roles` und `vehicle_capabilities`) und Besatzungsnamen je Rolle. `vehicles` ersetzt `aircraft` seit Web 6.0.0. **Jeder Eintrag gehört genau einem Standort** (`base_id`, E15) — es gibt keine standortübergreifenden Stammdaten. `user_id` NULL = **zentral** (vom Admin gepflegt), sonst persönlich |
 | `vehicle_roles` / `vehicle_capabilities` | Besetzte Rollen und Fähigkeiten (`winch`, `bergwacht`) je Rettungsmittel. Die Rollenkennungen stammen aus dem festen Katalog `CREW_ROLES` in `db.php`, nicht aus der Datenbank — deshalb VARCHAR und kein ENUM |
 | `user_bases` | Auswahl **zentraler** Standorte je NutzerIn (E16). Nur ausgewählte erscheinen in den Auswahllisten; eigene Standorte brauchen hier keine Zeile |
@@ -269,11 +377,14 @@ Daten erst nach Server-Bestätigung.
 | `day_refs` | Uhr-Kennungen eines Diensttags (`device_id`, `day_ref`). Bewusst eine eigene Tabelle: Nach dem Zusammenführen trägt ein Diensttag legitim **mehrere** Kennungen, und `ingest.php` findet damit ohne jede Umleitungslogik den richtigen Tag. Von Hand angelegte Diensttage haben hier keine Zeile |
 | `day_crew` / `mission_crew` | Besatzung je Rolle, normalisiert (E7). Die **Zeilenmenge** von `day_crew` ist der eingefrorene Rollensatz des Diensttags — auch leere Zeilen gehören dazu, denn sie sagen, welche Rollen der Dienst anbot |
 | `day_capabilities` | Eingefrorene Fähigkeiten des Diensttags. Wird der Windenhaken am Rettungsmittel später entfernt, verlieren alte Einsätze ihre Windenfelder nicht (A13e) |
-| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; Aufräumjob entsorgt Altbestand |
+| `pair_codes` | Kopplungscodes für die Uhr: **6 Zeichen** aus 32 (`PAIR_CHARS` in `db.php`, ohne 0/O und 1/I), **10 Minuten** gültig, **genau einmal** einlösbar, höchstens **ein offener Code je Konto**; die Einmaligkeit wird durch die Reihenfolge „entwerten, dann prüfen“ in `pair.php` durchgesetzt statt bloß zugesichert; Ratenschutz über `rate_limits`; der Job `aufraeumen` entsorgt Altbestand |
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
-| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Aufräumjob entsorgt Altbestand |
+| `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `last_cleanup`, `last_cleanup_ok`, `salt_secret`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). `last_cleanup` = letzter **Versuch** der Wartung, `last_cleanup_ok` = letzter **vollständiger** Lauf (seit Web 4.5.1). Weichen sie voneinander ab, scheitert dauerhaft mindestens ein Aufräumschritt; die Wartungsseite zeigt das an |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Sicherungsziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
+| `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
+| `backup_targets` | Sicherungsziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -567,15 +678,44 @@ bleibt unverändert. Denselben Weg nutzt auch `install.php`: Der Installer legt
 den Administrator **ohne** Passwort an und zeigt auf der Erfolgsseite den
 Einmal-Link.
 
-**Backup (portabel):** `api/backup_data.php` liefert alle Daten der NutzerIn als
-Roh-JSON (geschützte Angaben weiterhin als Chiffretext). Der Browser
-entschlüsselt sie mit dem Inhaltsschlüssel, ersetzt sie durch Klartext und
-versiegelt das Ganze per `EdCrypto.sealBackup()` (AES-256-GCM, PBKDF2 mit der
-Rundenzahl des Kontos — sie steht seit Web 5.0.0 im Dateikopf, gzip via
-CompressionStream) zur `.edbak`-Datei. Beim Import öffnet der Browser
-die Datei, verschlüsselt die Angaben mit dem Schlüssel des **Zielkontos** neu
-und schickt sie an `api/backup_restore.php`. Dadurch sind Backups zwischen
-Konten übertragbar; der Server sieht nie Klartext. Aufbau: `docs/Backup-Format.md`.
+**Backup (portabel):** Der Browser holt den Bestand in Stücken:
+`api/backup_data.php?teil=kopf` gibt Stammdaten, Diensttage und die Zahl der
+Einträge, `?teil=eintraege&ab=…&anzahl=250` dann Fenster von Einsätzen und
+Ruhesegmenten — ohne Punktlisten, geschützte Angaben weiterhin als
+Chiffretext. Er entschlüsselt sie je Fenster mit dem Inhaltsschlüssel, ersetzt
+sie durch Klartext, holt die Spuren blockweise als SPUR1-Blobs
+(`api/backup_spuren.php`, 25 Kennungen je Anfrage) und schreibt daraus ein ZIP
+mit versiegelten Teilen (**Containerfassung 4**, seit Web 11.1.0):
+`manifest.edbak`, `kopf.edbak`, `eintraege/NNNN.edbak`, `spuren/NNNN.edbak`.
+Jedes Teil ist ein AES-GCM-Container; die Zusatzdaten binden
+Sicherungskennung, Teilname und Nummer, und abgeleitet wird **einmal je
+Vorgang**.
+
+**Warum 250 Einträge je Fenster:** Der Rückweg schickt genau diese Fenster als
+POST zurück, und `client_max_body_size` steht bei nginx in der Vorgabe auf
+1 MB. Gemessen am 10 797-Einträge-Bestand: 250 ergeben 0,44 MB je Fenster in
+44 Anfragen, 500 ergäben 0,87 MB. Der Abrufendpunkt nimmt höchstens 1000 je
+Anfrage und weist mehr mit 400 ab; der Browser zählt zusätzlich nach, wie
+viele ein Fenster gebracht hat.
+
+Beim Einspielen öffnet der Browser Manifest und Kopf, schickt den Kopf an
+`api/backup_restore.php` und bekommt die Zuordnung der Diensttage zurück
+(`day_map`). Dann gehen die Eintragsfenster an
+`api/backup_eintraege_restore.php` — die Angaben vorher mit dem Schlüssel des
+**Zielkontos** neu verschlüsselt —, und der Server antwortet je Fenster mit
+der Zuordnung `spur_ref` → angelegter Datensatz. Zuletzt gehen die Blobs an
+`api/backup_spuren_restore.php` — geprüft, und Vorhandenes übersprungen.
+
+**Die Warnung vor unlesbaren Angaben steht vor dem ersten Schreiben.** Ob es
+etwas zu warnen gibt, kann der Einspielweg bei Fassung 4 nicht mehr selbst
+sehen: Die Einträge liegen zu diesem Zeitpunkt versiegelt in ihren Teilen. Das
+Manifest trägt deshalb `unlesbar` — die Zahl der Einsätze, deren geschützte
+Angaben beim *Sichern* nicht zu entschlüsseln waren. Fehlt sie, wird gewarnt.
+
+Dadurch sind Backups zwischen Konten übertragbar; der Server sieht nie
+Klartext. Die einteiligen Fassungen 2 und 3 werden weiterhin **gelesen** und
+nicht mehr geschrieben (bis NaDoku 1.0, Backlog Nr. 46). Aufbau:
+`docs/Backup-Format.md`.
 
 **Versionierung & Zwischenspeicher:** `WEB_VERSION` steht ausschließlich in
 `server/version.php` und erscheint in der Fußzeile. `asset($pfad)` (in
@@ -1288,8 +1428,8 @@ den Standard, und genau das soll die Anmeldeseite zeigen.
 Tagesliste, **Export**) filtern darauf. **Die Sicherung nicht mehr** — seit Web
 8.0.0 führt sie den Papierkorb und spielt ihn als Papierkorb zurück
 (`docs/Backup-Format.md` 2 und 3). `trash_lib.php` bündelt Umfangsermittlung,
-weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Aufräumjob in
-`db.php` räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
+weiches Löschen, Wiederherstellen und endgültiges Entfernen; der Job
+`aufraeumen` (`jobs_lib.php`) räumt nach `TRASH_DAYS` (**90**) endgültig ab. Beim Löschen eines
 Diensttags werden dessen Einsätze/Segmente mit `deleted_with_day = 1` markiert —
 sie hängen am Tag und kehren mit ihm zurück.
 
@@ -1503,29 +1643,7 @@ Pflichtangaben werden beim Rückimport **nach** der Parserkette geprüft: Das
 Füllzeichen `-` ist beim Einlesen nicht leer, wird aber zu `null` — die Prüfung
 vor der Kette sieht das nicht.
 
-**Aufräumjob:** `run_cleanup_if_due()` (db.php) läuft max. 1×/Tag, huckepack
-auf `auth_guard.php` (Web) und `ingest.php` (Uhr) — kein Cron nötig. Marke
-`last_cleanup` wird *vor* dem Lauf gesetzt (verhindert Parallel-Läufe);
-entsorgt Trackpunkt-Waisen, alte Reset-Tokens, abgelaufene Kopplungscodes,
-Ratenschutz-Zähler, Einträge der Sperrliste und endgültig fällige
-Papierkorb-Einträge; scheitert **gegenüber der Anfrage** still (Wartung darf
-keine Anfrage brechen).
-
-Seit Web 4.5.1 hat jeder der sieben Schritte einen **eigenen** Fehlerblock, und
-Fehler gehen ins Fehlerprotokoll des Webspace (Suchwort `cleanup:`). Vorher
-teilten sich alle Schritte einen Block: Scheiterte einer, entfielen alle
-folgenden — und weil die Marke bereits stand, lief an diesem Tag nichts mehr.
-Am nächsten Tag scheiterte es an derselben Stelle wieder. Am spürbarsten beim
-Papierkorb, der als vorletzter Schritt stand.
-
-Die Marke bleibt bewusst *vor* der Arbeit. Sie danach zu setzen hieße, dass
-zwei gleichzeitige Anfragen beide aufräumen; das ist der teurere Fehler.
-
-Eine zweite Marke `last_cleanup_ok` hält fest, wann zuletzt ein Lauf
-**vollständig** durchging. `update.php` zeigt beide an — weichen sie
-voneinander ab, scheitert dauerhaft ein Schritt. Ohne diese Auskunft ist ein
-kaputter Aufräumjob von einem laufenden nicht zu unterscheiden, bis irgendwann
-auffällt, dass der Papierkorb seit Monaten nicht geleert wurde.
+**Hintergrundjobs:** siehe Abschnitt 4.97a.
 
 **Sicherheit:** HTTPS erzwungen (.htaccess), Session-Cookies
 HttpOnly/Secure/SameSite=Strict, CSRF für Formulare (`csrf_field`) und
@@ -1700,6 +1818,1140 @@ Migrationen erst auf eine bestätigte Absendung mit Formular-Token aus; der
 Aufruf zeigt nur an, was anstünde. Migrationen können Spalten löschen, und
 eine unwiderrufliche Handlung auf einen GET hin ist immer falsch — auch dann,
 wenn nur Verwaltende die Seite erreichen.
+
+### 4.97 Spurspeicherung: drei Stufen und ein Format (ab Web 10.0.0, S2)
+
+**Spurpunkte sind 93 % des Bestands.** Gemessen am Referenzdatensatz kostet
+eine Zeile in `track_points` **62,4 Byte**; derselbe Punkt als Blob kostet
+**3,58** — ein Siebzehntel. Bei 5000 Einsätzen sind das 194 statt 3300 MB.
+Deshalb liegen die Punkte seit S2 in drei Stufen:
+
+| Stufe | Wo | Wann |
+|---|---|---|
+| 1 | Zeilen in `track_points` | solange die Uhr an dem Paket noch sendet |
+| 2 | verlustfreier Blob in `track_blobs` | sobald das Paket abgeschlossen ist |
+| 3 | ausgedünnter Blob | sechs Monate nach Einsatzende |
+
+Stufe 1 bleibt, und zwar aus einem Grund: Der Upload der Uhr kommt in
+Teilstücken, ist idempotent und wiederholbar. Dafür ist eine Zeilentabelle
+richtig; ein Blob müsste bei jedem Teilstück neu geschrieben werden.
+
+**Die Wanderung zwischen den Stufen macht `jobs.php` (AP2/AP3), nicht dieser
+Abschnitt.** Was hier steht, ist das Format und der Zugriffsweg.
+
+#### Der Zugriffsweg: `spur_lib.php`, und sonst nichts
+
+Es gab sechs Stellen, die `track_points` per SQL lasen, jede mit einer eigenen
+Projektion. Bliebe das so, müsste jede von ihnen die Stufen kennen — und die
+erste, die es vergisst, zeigt eine leere Spur, ohne dass es auffällt. Alle
+sechs sind umgestellt:
+
+| Verbraucher | Funktion | Ausgabeform |
+|---|---|---|
+| Tagesansicht (`api/day.php`) | `spur_lesen_viele()` | `[lat, lon]` |
+| Einsatzansicht (`api/mission.php`) | `spur_lesen()` | `[lat, lon]` + `ts` für `track_idx` |
+| Export (`api/export_data.php`) | `spur_lesen_viele()`, `spur_zahlen()` | `[lat, lon, ele, ts]` |
+| Sicherung, Nutzlast ≤ 7 (`backup_lib.php`) | `spur_lesen_viele()` | `[seq, lat, lon, ele, ts]` |
+| Sicherung, Fassung 4 (`api/backup_spuren.php`) | `spur_fuer_sicherung_viele()` | SPUR1-Blob, roh |
+| Rückweg der Fassung 4 (`api/backup_spuren_restore.php`) | `spur_blob_pruefen()`, `spur_blob_schreiben()` | — |
+| Einsatzort-Höhe (`site_elevation_lib.php`) | `spur_lesen()` | ein Punkt |
+| Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
+
+Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
+Fortsetzungsmarke der Uhr (`ingest.php`), `spur_loeschen()` entfernt **Zeilen
+und Blob** und wird von jedem Löschweg gerufen.
+
+**`spur_lesen_viele()` setzt beide Stufen zusammen.** Zwischen Verdichtung und
+Ausdünnung darf die Uhr Punkte nachreichen; sie landen als Zeilen *hinter* dem
+Blob. Wer nur eine der beiden Stellen liest, zeigt eine Spur, der das Ende
+fehlt — ohne Fehlermeldung.
+
+**Das Umdatieren eines Diensttags** war bis Web 9.14.0 ein einziges
+`UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
+Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
+zwei Zeitrechnungen. `spur_zeit_verschieben()` schreibt den Blob deshalb neu.
+
+#### Das Format SPUR1
+
+Kopf unkomprimiert, 13 Byte:
+
+```
+'SP' | Fassung(1) | Stufe(1) | Auflösung(1) | n_original(uint32 LE) | n(uint32 LE)
+```
+
+Danach ein zlib-Strom (Stufe 9) über die Nutzlast, **spaltenweise**:
+
+```
+Breite-Differenzen (int32 LE × n)
+Länge-Differenzen  (int32 LE × n)
+Bitfeld ⌈n/8⌉ Byte — Bit gesetzt = dieser Punkt hat eine Höhe
+Höhen-Differenzen  (int32 LE × Anzahl gesetzter Bits)
+Zeit-Differenzen   (int32 LE × n)
+```
+
+Spaltenweise und nicht punktweise: Nebeneinander stehen dann Werte derselben
+Größenordnung — lauter kleine Breitendifferenzen, dann lauter kleine
+Längendifferenzen. zlib findet darin Muster; in der Reihenfolge
+`lat,lon,ele,ts,lat,lon,…` findet es keine.
+
+`seq` wird **nicht** gespeichert: Die Verdichtung setzt Lückenlosigkeit voraus,
+die Position im Blob *ist* die Nummer.
+
+#### Die Auflösung ist eine Zusage, kein Rechenweg
+
+| Größe | Faktor | Auflösung |
+|---|---|---|
+| Breite, Länge | ×10⁶ | ≈ 0,11 m |
+| Höhe | ×10 | 0,1 m |
+| Zeit | ×1 | 1 s |
+
+**Keine Festkomma-Kodierung ist bitgleich gegen einen beliebigen `DOUBLE`.**
+„Verlustfrei" in Stufe 2 heißt deshalb: verlustfrei *innerhalb dieser
+Auflösung*. Sie steht als Kennung im Kopf, und ein Leser, der eine ihm
+unbekannte Kennung findet, **verweigert die Arbeit** — sonst deutete er Zahlen
+mit dem falschen Faktor, und zwar lautlos.
+
+Die Höhe in ganzen Metern abzulegen wäre nicht nur ungenauer gewesen, sondern
+hätte den Mechanismus stillgelegt: 74,4 % der Punkte des Referenzbestands
+tragen eine Nachkommastelle, die Rundlaufprüfung hätte bei drei von vier
+Spuren angeschlagen, und der Verdichtungsjob hätte nie eine Zeile gelöscht.
+Der Preis der Zehntelmeter sind 7 % Blobgröße.
+
+#### Die Rundlaufprüfung ist die letzte Instanz vor einem DELETE
+
+Die Verdichtung löscht Zeilen. Was danach fehlt, ist weg — es gibt keine
+zweite Quelle. `spur_rundlauf_pruefen()` schreibt den Blob, liest ihn sofort
+wieder und vergleicht Punkt für Punkt; erst bei Gleichheit dürfen die Zeilen
+gehen. Verglichen wird gegen den **quantisierten** Sollwert, nicht gegen die
+rohe `DOUBLE`-Spalte: Die Prüfung belegt, dass Kodieren und Dekodieren
+zueinander passen und kein Punkt verlorengeht, seine Stelle wechselt oder
+seine Reihenfolge verliert — nicht eine Genauigkeit, die das Format nie
+zugesagt hat.
+
+Nachgemessen wird sie mit `php tools/spurprobe/probe.php`; der Lauf arbeitet in
+einer Transaktion, die er am Ende zurückrollt, und ändert deshalb nichts.
+
+#### Stufe 3: die Ausdünnung (ab Web 10.2.0, E-S2-05)
+
+Sechs Monate nach Einsatzende wird der verlustfreie Blob durch einen
+ausgedünnten ersetzt. **Das Original ist danach weg** — es gibt keine zweite
+Quelle. Entsprechend viel Prüfung steht davor.
+
+**Das Verfahren** ist Douglas-Peucker, dreidimensional, mit zwei getrennten
+Toleranzen: 2 m waagerecht, 3 m senkrecht (`SPUR_TOL_WAAGERECHT_M` /
+`SPUR_TOL_SENKRECHT_M`). Erhalten bleiben immer: der erste und der letzte
+Punkt sowie **je Phasenzeitpunkt der zeitnächste** — ohne diesen Schutz ginge
+die Höhenermittlung des Einsatzorts (`SITE_ELE_TOLERANCE_S` = ±300 s) leer aus.
+
+**Die beiden Toleranzen sind EIN Lauf, nicht zwei.** Das Abstandsmaß je
+Kandidatenpunkt lautet
+
+```
+s = max( waagerecht / 2 m , senkrecht / 3 m )      behalten, wenn s > 1
+```
+
+`s ≤ 1` gilt genau dann, wenn *beide* Toleranzen eingehalten sind — und `s`
+liefert zugleich die eine Zahl, die Douglas-Peucker für die Wahl des
+Teilungspunkts braucht.
+
+Die naheliegende Alternative — zwei getrennte Läufe, Behaltelisten vereinigen —
+ist **falsch**: Die Vereinigung erzeugt einen dritten Streckenzug, für den
+keiner der beiden Läufe etwas zugesagt hat. Am Referenzbestand gemessen:
+**8,62 m waagerecht und 4,16 m senkrecht** bei zugesagten 2 und 3. Sie behält
+dabei sogar mehr Punkte, sieht also nach der sicheren Wahl aus.
+
+Dass die zweite Toleranz nötig ist, ist ebenfalls gemessen: Rein
+zweidimensional liegt der schlimmste verworfene Punkt **82,76 m** neben dem
+Höhenprofil.
+
+**Pflichtpunkte sind Abschnittsgrenzen, keine Nachträge.** Global ausdünnen und
+die geschützten Punkte hinterher einfügen bricht die Zusage — ein nachträglich
+eingefügter Punkt knickt den Weg zu sich hin. Gemessen: 46 von 181
+Referenzspuren betroffen, **11 mit Zusageverletzung**. Abschnittsweise: 0.
+
+**Fehlende Höhen** (das Bitfeld im Format erlaubt sie) laufen über eine
+Ankerreihe (`spur_hoehenanker()`): Lücken werden über die *Zeit* zwischen den
+nächsten gemessenen Nachbarn linear gefüllt, die Ränder konstant fortgesetzt.
+Trägt die Spur gar keine Höhe, entfällt der Höhentest ganz.
+
+Die naheliegende Regel „fehlt einem Sehnenende die Höhe, entfällt der Höhentest
+für diesen Abschnitt" ist eine Falle: Ein einzelner höhenloser Punkt an einer
+waagerechten Ecke wird zum Teilungspunkt und damit zum Sehnenende *beider*
+Teilstücke — danach ist der Höhentest dort tot. Im Prüffall verschwindet so
+eine 150-m-Spitze vollständig, und eine Prüfung, die solche Abschnitte
+überspringt, meldet dafür 0,0 m Verlust.
+
+#### Douglas-Peucker ist quadratisch — der Deckel und der Stapel
+
+Der schlechteste Fall ist nicht konstruiert: Die Uhr nimmt einen Punkt auf,
+sobald 15 m **oder** 10 s vergangen sind (`watch/source/Track.mc`). Ein längerer
+Schwebeflug mit GPS-Rauschen über 2 m ergibt genau den Zickzack, in dem kein
+Punkt wegfallen darf. Gemessen für **eine** Spur:
+
+| Punkte | ohne Deckel |
+|---|---|
+| 2 000 | 0,198 s |
+| 5 000 | 1,219 s |
+| 10 000 | 4,340 s |
+| 20 000 | 18,658 s |
+| **50 000** | **114,50 s** |
+
+Die Häppchenbudgets sind 3 / 20 / 300 s. Auf dem Token-Weg liefe das in
+`max_execution_time`, und ein Zeitablauf ist **kein `Throwable`**: Der `catch`
+im Job-Rahmen fängt ihn nicht, `laeuft_seit` bleibt stehen, der Job ist eine
+Stunde gesperrt — und stirbt dann wieder. Dauerhafter, unsichtbarer Stillstand
+mit `letzter_fehler = NULL`.
+
+Zwei Vorkehrungen:
+
+- **`SPUR_DP_ABSCHNITT_MAX` = 1000.** Zusätzlich zu den Pflichtpunkten wird
+  alle 1000 Punkte eine Abschnittsgrenze gesetzt. Zulässig, weil zusätzliche
+  Grenzen nur zusätzliche *behaltene* Punkte erzeugen — die Zusage wird nie
+  schwächer. Derselbe Zickzack sinkt damit auf **2,40 s**. Am Normalfall kostet
+  er nichts: eine glatte 50 000-Punkte-Spur braucht *mit* Deckel 0,031 s und
+  behält 786 Punkte, *ohne* 0,161 s und 816. Am Referenzbestand greift er gar
+  nicht (längster Abschnitt 804 Punkte).
+- **Iterativ mit ausdrücklichem Stapel**, und immer die *größere* Hälfte auf den
+  Stapel. Dann ist jedes fortgesetzte Teilstück höchstens halb so lang wie das
+  vorige, und der Stapel hat nie mehr als ⌈log₂ n⌉ = 16 Einträge statt 50 000.
+  Rekursiv wären es 38 MB VM-Stapel (797 Byte je Rahmen, gemessen) gegen ein
+  Z3-Budget von 64 MB.
+
+Beides fällt an einer Prüfung am Referenzbestand **nicht** auf: Dort ist die
+größte erreichte Rekursionstiefe 23. `spur_ausduenn_dauer_s()` rechnet daraus
+eine obere Schranke, mit der ein Häppchen *vorher* entscheiden kann, ob es eine
+Spur noch schafft (vorhergesagt 2,29 s, gemessen 2,40 s).
+
+#### Die Rundlaufprüfung der Stufe 3 ist eine andere
+
+`spur_rundlauf_pruefen()` allein ist hier **wertlos**: Die Behalteliste stammt
+aus `spur_dekodieren()` des Stufe-2-Blobs, ihre Werte liegen also schon auf der
+Formatauflösung; `spur_quantisieren()` ist darauf ein Nulloperator, und der
+Vergleich geht *immer* auf. Er wäre grün, auch wenn die Ausdünnung die halbe
+Spur an der falschen Stelle wegwirft — und er ist die letzte Instanz vor dem
+Ersetzen eines Blobs.
+
+`spur_ausduennung_pruefen()` prüft deshalb fünf Dinge:
+
+1. **Nichts erfunden** — jeder behaltene Punkt ist wertgleich mit einem Punkt
+   der Eingabe an genau diesem Index.
+2. **Reihenfolge und Zeit bleiben** — Indizes streng aufsteigend, Zeit nicht
+   fallend.
+3. **Die Ränder bleiben** — Index 0 und n−1.
+4. **Die Zeitanker bleiben** — zu jedem Schutzzeitpunkt der Index, den die
+   Verbraucher wählen würden (der *früheste* mit kleinstem |Δt|, mit `<`, wie
+   `site_elevation_lib.php` und `api/mission.php` es tun).
+5. **Die Genauigkeit ist eingehalten** — für *jeden* verworfenen Punkt gilt
+   gegen den **endgültigen** Streckenzug, unabhängig nachgemessen und nicht aus
+   der Buchführung der Rekursion übernommen, waagerecht ≤ 2 m und senkrecht
+   ≤ 3 m.
+
+Punkt 5 ist der Kern. Er kostet O(n) mit einem mitwandernden Segmentzeiger und
+fängt jede der 11 Zusageverletzungen des „global plus einfügen"-Wegs.
+
+#### Was die Ausdünnung wirklich spart
+
+Weniger, als die Punktzahl vermuten lässt. Sie entfernt genau die
+**vorhersagbaren** Punkte; die verbleibenden Differenzen sind größer und lassen
+sich schlechter packen.
+
+| Bestand | Punkte bleiben | Bytes bleiben |
+|---|---|---|
+| Referenzkonto (156 Spuren, 47 078 Punkte) | 40,7 % | **73,6 %** |
+| Messstand (4973 Spuren, 1 628 340 Punkte) | 31,6 % | **57,4 %** |
+
+Stufe 2 kostet gemessen 3,90 Byte je Punkt, Stufe 3 **2,24 Byte je
+Originalpunkt** (7,10 je behaltenem). Wer den Erfolg an der Punktzahl misst,
+misst das Falsche. Beide Stufen halten E-S2-24 mit Abstand: **1,60 MB je 1000
+Einsätzen** gegen 3 MB Zielwert.
+
+#### Was nach der Ausdünnung nicht mehr gilt
+
+- **Eine geänderte Phasenzeit sagt über die Ortshöhe nichts mehr.** Die
+  behaltenen Punkte wurden für die *damaligen* Phasenzeiten geschützt.
+  `compute_site_elevation()` läuft bei jedem Speichern und schrieb bis Web
+  10.1.0 bedingungslos, auch `NULL` — wer einen zwei Jahre alten Einsatz
+  öffnet und eine Phase um zehn Minuten verschiebt, hätte die Höhe still
+  verloren. Auf Stufe 3 wird ein vorhandener Wert deshalb **nicht mehr durch
+  `NULL` ersetzt**; ein neu gefundener Wert wird sehr wohl geschrieben. Auf
+  Stufe 1 und 2 bleibt es beim bisherigen Verhalten, denn dort trägt die Spur
+  alle Punkte und ein leeres Ergebnis ist die Wahrheit.
+- **Die angezeigte Punktzahl sinkt.** `spur_zahlen()` liefert
+  `n_gespeichert`; Export, Papierkorb und Tageszuordnung zeigen danach die
+  ausgedünnte Zahl. Das ist richtig — die Datei hat wirklich weniger Punkte —,
+  gehört aber ins Handbuch, sonst liest es sich wie Datenverlust.
+- **Reanimationszeitpunkte sind nicht geschützt.** E-S2-05 nennt nur
+  Phasenzeitpunkte, und heute bindet nichts `resus_sessions` an die Spur. Wer
+  die Hervorhebung später darauf ausweitet, findet für Alteinsätze keinen
+  passenden Punkt mehr. Bewusste Grenze, keine Nachlässigkeit.
+
+#### Zwei Grenzen, weil es zwei Fragen sind
+
+`LIMIT_TRACKPUNKTE` galt bis Web 9.14.0 an zwei Stellen, die Verschiedenes
+meinen. Seit Web 10.0.0 sind es zwei Konstanten (`validate_lib.php`):
+
+| Konstante | gilt für | Wert | Verhalten |
+|---|---|---|---|
+| `LIMIT_TRACKPUNKTE_ANFRAGE` | die Punkte **einer Anfrage** (`ingest.php`) | 2000 | kappt und meldet |
+| `LIMIT_TRACKPUNKTE_SPUR` | die Punkte **einer ganzen Spur** (`backup_lib.php`) | 50 000 | **lehnt die Spur ab** |
+
+Die Uhr sendet in Stücken zu 500 (`UPLOAD_CHUNK_POINTS`), 2000 sind also
+vierfache Reserve. Beim Zurückspielen war dieselbe Zahl dagegen ein
+Datenverlust: Was die Uhr über viele Anfragen aufbauen darf, wurde bei 2000
+gekappt — die Datei trug die ganze Spur, zurück kam ihr Anfang. Eine halbe
+Spur sieht aus wie eine ganze; eine abgelehnte sieht man.
+
+---
+
+### 4.97a Hintergrundjobs: drei Auslöser, ein Katalog (ab Web 10.1.0, S2)
+
+Diese Anwendung hat bewusst **keinen Cron als Voraussetzung**: Sie soll auf
+einfachem Webspace laufen, und dort gibt es oft keinen. Der einzige Zeitgeber
+war bis Web 10.0.0 `run_cleanup_if_due()` — huckepack auf der Anfrage der
+ersten Nutzerin des Tages. Das trug, solange die Arbeit klein war.
+
+Mit S2 bleibt sie das nicht. Schon die damalige Waisenprüfung war ein
+Anti-Join über die ganze Spurtabelle und kostete gemessen **4,07 s bei
+9,46 Mio. Zeilen** — in genau der Anfrage, die jemand gerade gestellt hatte.
+Bei der Zielmenge Z2 (190 Mio. Zeilen) wären es Minuten.
+
+Deshalb ein Rahmen: `server/jobs_lib.php` (Katalog und Ausführung),
+`server/jobs.php` (Einstieg), Tabelle `jobs` (Zustand).
+
+#### Die drei Auslöser (E-S2-17)
+
+**Einer genügt.** Eingerichtet werden muss keiner — dann läuft die Arbeit
+weiter huckepack mit. Die Wartungsseite (`update.php`) zeigt alle drei mit
+fertigem Befehl bzw. fertiger Adresse.
+
+| Auslöser | Aufruf | Zeitbudget je Lauf | gedacht für |
+|---|---|---|---|
+| `cli` | `* * * * * php …/server/jobs.php` | `JOB_BUDGET_CLI` = 300 s | der **empfohlene** Regelfall |
+| `token` | `https://…/jobs.php?token=…` | `JOB_BUDGET_TOKEN` = 20 s | Hoster ohne CLI-Cron, aber mit „Cronjob per URL" |
+| `anfrage` | `auth_guard.php` → `run_cleanup_if_due()` | `JOB_BUDGET_ANFRAGE` = 3 s | Rückfall, immer eingeschaltet |
+
+Die Budgets sind kein Geschmack: 300 s, weil auf der Kommandozeile niemand
+wartet und meist keine Laufzeitgrenze gilt; 20 s, weil das unter der
+`max_execution_time` liegt, die geteilter Webspace üblicherweise setzt
+(dieselbe Überlegung wie bei „Alle sichern"); 3 s, weil eine Seite, die
+zwanzig Sekunden braucht, weil sie nebenbei aufräumt, kaputt ist — auch wenn
+kein Zeitlimit greift.
+
+Am Huckepack-Weg gilt zusätzlich ein **Mindestabstand** von
+`JOB_ANFRAGE_PAUSE_S` = 5 Minuten je Job. Ohne ihn liefe ein nicht-täglicher
+Job bei *jeder* angemeldeten Anfrage, und jede Seite trüge bis zu drei
+Sekunden Wartung mit. Für `cli` und `token` gilt er nicht: Dort bestimmt der
+Zeitplan die Häufigkeit, und wer jede Minute aufruft, will das auch.
+
+`jobs.php` lädt **ausdrücklich nicht** `auth_guard.php`. Der würde den
+Huckepack-Weg auslösen und damit den Job aus dem Job heraus starten. Der Abruf
+über die Adresse legitimiert sich mit dem Token, nicht mit einer Sitzung — ein
+Zeitplandienst hat keine.
+
+#### Das Token
+
+32 Byte Zufall, hex, in `app_state` unter `jobs_token`; erzeugt beim ersten
+Lesen. **Nicht** in `config.php`: Die Anwendung schreibt diese Datei genau
+einmal, bei der Einrichtung; sie danach anzufassen hieße, auf jedem Webspace
+Schreibrecht auf die eigene Konfiguration zu brauchen — und
+Bestandsinstallationen hätten kein Token, ohne dass jemand sähe, warum.
+
+Wer das Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
+Daten lesen noch schreiben. `jobs.php` prüft es mit `hash_equals`, hinter dem
+Ratenschutz-Topf `pair` (zehn Fehlversuche in zehn Minuten), und gleicht die
+Antwortzeit mit `rate_gleiche_dauer()` an — „Token gibt es gar nicht" darf
+nicht schneller kommen als „Token ist falsch". Gemessen: **403 / 403 / 200**
+für kein, falsches und richtiges Token, die beiden 403 in je **0,351 s**.
+
+**Der Ratenschutz zählt je IP, und das hat eine Folge, die man kennen sollte:**
+Nach zehn Fehlversuchen von derselben Adresse antwortet der Endpunkt zehn
+Minuten lang `429` — auch auf den *richtigen* Aufruf. Wer einen
+Zeitplan-Eintrag mit falschem Token stehen hat, sperrt damit seinen eigenen
+Zeitplan aus; nach dem Berichtigen dauert es zehn Minuten, bis er wieder
+greift. Das ist gewollt: Die Alternative wäre ein Endpunkt, an dem sich ein
+Token ungebremst durchprobieren lässt. Auf der Wartungsseite gibt es
+„Neues Token erzeugen"; das alte wird damit ungültig, und ein bestehender
+Zeitplan-Eintrag läuft danach ins Leere. Der Hinweis steht am Knopf.
+
+#### Häppchen, Zustand, Sperre
+
+Jeder Job bekommt `$zeitLinks()` und hört auf, wenn das Budget zu Ende ist.
+Wo er stehengeblieben ist, merkt er sich als JSON in `jobs.zustand`. Der
+nächste Lauf — gleich welcher Auslöser — macht dort weiter.
+
+Die **Sperre** gegen zwei gleichzeitige Läufe ist ein bedingtes `UPDATE`, nicht
+`SELECT`-dann-`UPDATE`: Letzteres hätte ein Zeitfenster, in dem zwei Anfragen
+beide zu dem Schluss kommen, sie dürften. `laeuft_seit` ist bewusst ein
+**Zeitstempel und kein Flag** — ein Lauf, der mitten im Häppchen abstürzt
+(Speichergrenze, Zeitablauf, abgebrochene Verbindung), ließe ein Flag für immer
+stehen, und der Job liefe nie wieder, stillschweigend. Nach
+`JOB_SPERRE_VERFALL_S` = 1 h gilt eine Sperre als verwaist.
+
+#### Der Katalog
+
+| Job | täglich? | was er tut |
+|---|---|---|
+| `aufraeumen` | ja, höchstens 1×/Kalendertag | Kopplungscodes, Sperrliste gelöschter Kennungen, Ratenschutz-Zähler, Papierkorb, Passwort-Tokens, Erinnerung an die Administration |
+| `verdichtung` | nein | Stufe 1 → 2: abgeschlossene Spuren in den verlustfreien Blob (seit Web 10.2.0) |
+| `ausduennen` | nein | Stufe 2 → 3: sechs Monate nach Einsatzende ausdünnen (seit Web 10.2.0) |
+| `waisen` | nein, läuft solange Rückstand da ist | Spurpunkte und Blobs ohne Eigentümer — **bereichsweise** über den Primärschlüssel |
+
+Jeder Aufräumschritt hat weiterhin seinen eigenen Fehlerblock: Einer, der
+scheitert, hält die anderen nicht auf (das war schon seit Web 4.5.1 so und
+bleibt). Der Unterschied ist, dass das Ergebnis jetzt in `jobs` landet und
+nicht nur im Fehlerprotokoll des Webspace.
+
+**Die Reihenfolge ist Absicht.** `jobs_lauf()` arbeitet den Katalog der Reihe
+nach ab und überspringt, was ins Restbudget nicht mehr passt. `waisen` ist ein
+Sicherheitsnetz und kein Hauptweg — die eigentliche Arbeit gehört deshalb nach
+vorn, sonst bekäme sie am Huckepack-Weg (3 s) nur noch den Rest.
+
+#### Verdichtung und Ausdünnung als Jobs (ab Web 10.2.0)
+
+**Der Einstieg der Verdichtung kommt von der PUNKTSEITE**, wie beim
+Waisenjob — und das ist keine Bequemlichkeit. Die Menge „`final = 1` und
+Ankunft älter als 14 Tage" enthält *jeden je abgeschlossenen* Einsatz, auch
+alle längst verdichteten; sie wächst monoton, und ein Index darauf fände bei Z2
+Millionen Zeilen, von denen 99,9 % nichts mehr zu tun haben. Der Punkteinstieg
+dagegen **räumt seinen eigenen Vorrat ab**: Eine verdichtete Spur hat keine
+Zeilen mehr und erscheint nie wieder. Übrig bleibt nur der Rückstand. Der nötige
+Index existiert bereits — der Primärschlüssel.
+
+**Blockgröße 200, und gelesen wird Spur für Spur.** `JOB_WAISEN_BLOCK` (2000)
+ist hier falsch: Der Waisenjob materialisiert nie Punkte, die Verdichtung muss
+jede Kandidatenspur wirklich lesen. Gemessen kostet eine Punktliste in PHP 237
+bis 294 Byte je Punkt; 200 Spuren des Messstands (524 Punkte im Mittel)
+gebündelt zu halten sprengt ein `memory_limit` von 64 MB — nachgemessen mit
+`Allowed memory size exhausted`. Spur für Spur gelesen ist die Spitze die
+**einer** Spur: gemessen 4,0 MB.
+
+**Ablauf je Spur.** Erst der Umriss (`spur_umriss()`, eine Abfrage für den
+ganzen Block: Zeilenzahl, kleinste und größte Nummer, größter Zeitstempel,
+Blobstufe). Daraus wird entschieden, **ohne einen Punkt gelesen zu haben**:
+Eigentümer weg → der Waisenjob räumt · im Papierkorb → nicht anfassen · Stufe 3
+→ nicht anfassen und zählen · über `LIMIT_TRACKPUNKTE_SPUR` → ablehnen und
+benennen · `letzter_punkt_am` fehlt → nachtragen · Karenz nicht abgelaufen →
+liegen lassen · Lücke → benennen. Erst wer alles passiert, kostet einen
+Punktzugriff.
+
+Dann: lesen, kodieren, Rundlauf prüfen — **alles außerhalb der Transaktion**,
+denn `spur_rundlauf_pruefen()` braucht kein PDO. Schlägt sie an, geschieht gar
+nichts. Die Transaktion selbst ist zwei Anweisungen lang, **erst Blob, dann
+Zeilen**: Der Zwischenzustand ist im Code vorgesehen (`spur_lesen_viele()`
+übergeht Zeilen unterhalb `n_original` als Rest eines abgebrochenen Laufs),
+umgekehrt wäre ein Abbruch Datenverlust.
+
+**Die Ausdünnung geht über den Primärschlüssel von `track_blobs`**, nicht über
+den Index `stufe_alter (stufe, geaendert_am)`. Der trägt das Änderungsdatum des
+*Blobs*, nicht das Einsatzende, und ist als Näherung in beide Richtungen
+falsch: Das Einspielen einer Sicherung schreibt einen frischen `geaendert_am`
+auf zwei Jahre alte Punkte, und `spur_zeit_verschieben()` schreibt ihn bei
+jeder Umdatierung neu. Bezugsgröße ist `COALESCE(ended_at, started_at)` —
+`started_at` ist in beiden Tabellen `NOT NULL`, und bei sechs Monaten Frist ist
+der Unterschied zwischen Beginn und Ende Rauschen (und geht in die sichere
+Richtung).
+
+**Nachzügler gehen vor.** Eine Spur mit Stufe-1-Zeilen wird *nicht* ausgedünnt;
+sie gehört der Verdichtung, die Blob und Nachzügler zu einem neuen
+verlustfreien Blob zusammenführt. Sonst nummerierte der Blob 0 … n_gespeichert−1
+und die Nachzügler begännen bei `n_original` — eine Nummernlücke, die der
+Rückweg der Sicherung nicht verträgt.
+
+**Verkettet wird nicht.** Konzept 3.1.4 sah vor, dass die Ausdünnung im selben
+Häppchen hinterherläuft, wenn die Frist schon abgelaufen ist. Dagegen sprach:
+zwei unwiderrufliche Schritte mit zwei verschiedenen Rundlaufbegriffen in einem
+Budgetfenster, deren Scheitern sich hinterher nicht mehr zuordnen lässt.
+Getrennt kostet es einen Jobzyklus. Entschieden am 31.08.2026; das Konzept ist
+an dieser Stelle fortgeschrieben.
+
+Gemessen am Messstand (5345 Einsätze, 3,3 Mio. Punkte, `memory_limit=64M`):
+Verdichtung **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze
+4,0 MB · Ausdünnung **4973 Spuren in 15,2 s**, Spitze 4,0 MB.
+
+#### Die Jobs anhalten (ab Web 10.2.0)
+
+`php jobs.php --pause <Sekunden>` (0 hebt auf). Die Pause gilt für **alle drei
+Auslöser** — sonst räumte ein Cron weg, was gerade gemessen wird — und läuft
+von selbst ab (`JOB_PAUSE_MAX_S` = 2 h); eine Pause ohne Ende wäre eine, die
+jemand vergisst. Die Wartungsseite zeigt sie als eigene Plakette an, damit eine
+laufende Pause nicht wie ein arbeitender Job aussieht.
+
+**Warum es sie gibt.** Seit die Jobs Zeilen löschen und Blobs ersetzen, ändern
+sie den Bestand, während eine Messung darüber läuft. Der Kreislauf spielt eine
+Sicherung in ein frisches Konto und exportiert sie sofort wieder; die
+wiederhergestellten Einsätze sind alt, der Verdichtungsjob hält sie für reif,
+und was älter als sechs Monate ist, wird ausgedünnt. Der Vergleich misst dann
+nicht mehr „kommt zurück, was hineinging", sondern „hat der Job dazwischen
+zugeschlagen". Beim ersten Lauf nach AP3 ging es gut, aber nur **zufällig** —
+nachgemessen verdichtete ein Lauf ohne Pause 125 Spuren des Umlaufkontos.
+
+Im Betrieb ist sie ebenfalls nützlich: Wer eine große Sicherung einspielt, will
+die Jobs so lange still haben.
+
+#### Die Waisensuche läuft bereichsweise (E-S2-18)
+
+Statt eines Anti-Joins über alles wandert eine Marke über den Primärschlüssel:
+je Häppchen höchstens `JOB_WAISEN_BLOCK` = 2000 Eigentümerkennungen, aus
+`track_points` **und** `track_blobs` (eine Waise kann als Zeile, als Blob oder
+als beides dastehen). Am Tabellenende fängt die Marke wieder von vorn an — ein
+Netz, das einmal durchläuft und dann liegen bleibt, ist keines.
+
+**Ehrlich gemessen ist das bei 3,31 Mio. Zeilen nicht schneller** (je fünf
+Läufe, `memory_limit=64M`, Speicherspitze 2,0 MB):
+
+| | Dauer |
+|---|---|
+| Anti-Join über alles (alt, nur lesend) | **0,78–0,90 s** |
+| bereichsweise, ein vollständiger Durchlauf (neu) | **0,85–1,05 s** |
+
+Der Gewinn ist ein anderer und liegt woanders: Der neue Weg ist **begrenzt**
+(Zeitbudget), **fortsetzbar** (Marke in `jobs.zustand`) und liegt **nicht mehr
+auf dem Weg einer Anfrage**. Genau das ist bei Z2 der Unterschied zwischen
+„läuft eben nebenher" und „die Seite hängt minutenlang, und niemand weiß
+warum".
+
+Seit AP1 räumen die Löschwege ohnehin selbst ab (`spur_loeschen`, F-S2-B).
+Dieser Job ist das Sicherheitsnetz, nicht der Hauptweg.
+
+#### Der angezeigte Rückstand ist der Fortschritt, nicht die Waisenzahl
+
+Die naheliegende Zahl wäre „Eigentümer ohne Zeile in `missions`" — und die
+kostet genau den Vollscan, den dieser Job abschafft. Für eine Anzeige ist das
+der falsche Preis. Angezeigt wird deshalb, wie viele Kennungen die Marke noch
+vor sich hat; beide Abfragen dafür laufen auf dem Primärschlüssel.
+
+Zwei Fehler steckten hier beim ersten Anlauf, beide beim Messen aufgefallen:
+
+- Der Rückstand las den Zustand **aus der Tabelle**, während der frische noch
+  nicht geschrieben war — der Job meldete direkt nach einem vollständigen
+  Durchlauf „Rückstand 33093", also die ganze Tabelle als ausstehend. Die
+  Rückstandsfunktion bekommt den Zustand jetzt übergeben.
+- Eine Marke von 0 war nicht von „noch nie gelaufen" zu unterscheiden. Der
+  Zustand hält deshalb zusätzlich `durch`, ob der Durchlauf zu Ende kam.
+
+#### Sichtbarkeit
+
+`update.php` zeigt je Job letzten Lauf, Auslöser, Rückstand und letzten
+Fehler. `letzter_fehler` steht in der Tabelle und nicht nur im
+Fehlerprotokoll: Auf geteiltem Hosting kommt an dieses Protokoll nicht jede
+Betreiberin heran, und ein dauerhaft scheiternder Job soll auffallen. Die
+Wartung bleibt **gegenüber der Anfrage still** — sie darf keine Seite
+kaputtmachen.
+
+Die Marken `last_cleanup` und `last_cleanup_ok` in `app_state` sind damit
+entfallen; ihre Auskunft steht vollständiger in `jobs`.
+
+---
+
+### 4.97b GPX-Abruf je Spur und je Auswahl (ab Web 10.3.0, S2/AP4, E-S2-09)
+
+Eine Spur lässt sich einzeln herunterladen — je Einsatz aus dessen
+Aktionsmenü, und je Einsatz **und Ruhesegment** über `tag_spuren.php`; auf
+derselben Seite lassen sich mehrere ankreuzen und als **eine** Datei laden.
+Der Bauplatz ist `server/gpx_lib.php`; er ist die **einzige** Stelle, die GPX
+schreibt.
+
+| Adresse | liefert |
+|---|---|
+| `gpx.php?art=mission&id=42` | eine Spur |
+| `gpx.php?art=rest&id=17` | eine Ruhespur |
+| `gpx.php?tag=7&auswahl[]=mission-42&auswahl[]=rest-17` | beide in einer Datei |
+
+Der Auswahlweg nimmt `auswahl[]` (so schickt es das Formular) genauso wie
+`auswahl=mission-42,rest-17` (so tippt man es von Hand). Beide gehen durch
+dieselbe Prüfung, dieselbe Datentrennung und dieselbe Bau-Funktion
+(`gpx_bauen_viele()`) — sonst wäre die Auswahl ein zweiter, schwächerer Weg an
+denselben Bestand.
+
+#### Warum serverseitig — und warum das die erste ausgelieferte Datei ist
+
+Bis Web 10.2.0 entstand **jede** Datei, die auf der Platte einer Nutzerin
+landet, im Browser aus einem Blob. Das hat einen Grund und keinen Zufall: Ihr
+Inhalt ist Ende-zu-Ende verschlüsselt, der Server **kann** ihn nicht
+zusammensetzen.
+
+Für eine Spur gilt das nicht. Spurpunkte liegen im Klartext (Backlog Nr. 43),
+und die Stufe, die E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server
+(`spur_stand()`). Der Browser hätte beides nicht: `api/mission.php` liefert die
+Spur als bloße Paare `[lat, lon]` — ohne Höhe, ohne Zeit, ohne Stufe. Ein
+browsergebautes GPX bräuchte also einen neuen, breiteren Abrufweg, nur um
+danach zusammenzusetzen, was auf dem Server schon beieinander liegt.
+
+Den Ausschlag gibt ein Sicherheitsargument: Der **Dateiname** landet im
+Downloadordner, in einem Backup, vielleicht in einer Mail. Serverseitig gebaut
+**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter
+und Einsatzort nicht lesen. Browserseitig gebaut könnte er es.
+
+`gpx.php` prüft die **Datentrennung selbst**: `spur_lib.php` prüft kein
+Eigentum, es nimmt `owner_type` und `owner_id` und liest, was da ist. Erst
+gegen `user_id` und `deleted_at` filtern, dann lesen — dasselbe Muster wie in
+`api/export_data.php`. Und „gehört nicht mir" antwortet **404 wie „gibt es
+nicht"**: Ein eigener Code verriete, dass es die Kennung anderswo gibt.
+
+#### Warum der Abruf nicht unter `api/` liegt
+
+Er lag dort zuerst, und das war falsch. `ist_api_aufruf()` (`auth_guard.php`)
+entscheidet **allein am Pfad**: Enthält er `/api/`, gilt die Anfrage als
+`fetch()` eines Skripts und bekommt bei abgelaufener Sitzung JSON 401 statt
+der Anmeldeseite. Diese Annahme stimmte, solange nichts in der Oberfläche nach
+`api/` **verlinkte** — der GPX-Abruf ist der erste `<a href>`, den eine
+Nutzerin selbst anklickt. Nach einer Mittagspause hätte sie
+`{"error":"session_ende"}` im Browserfenster gesehen.
+
+#### Drei Schranken, die es NICHT gibt — und warum
+
+- **Keine A9-Schranke wie im Export.** `api/export_data.php` verweigert
+  Spurpunkte, solange der Haken „personenbezogene Angaben" fehlt: Ein Export
+  *ohne* diese Angaben ist eine Datei zum Weitergeben, und eine Spur endet am
+  Einsatzort. Hier gibt es diese anonyme Fassung gar nicht — es gibt nur den
+  einen Abruf, und der *ist* die personenbezogene Fassung. Es gäbe keinen
+  Haken zu umgehen.
+- **Keine Sperre auf den Inhaltsschlüssel.** Die Einsatzansicht zeichnet
+  dieselbe Spur bereits auf ihre Karte, ohne dass jemand entsperrt haben muss
+  — die Punkte sind Klartext. Eine Sperre hier wäre Theater: Sie verweigerte
+  die Datei und zeigte den Weg daneben weiter an. Dass die Spur überhaupt
+  unverschlüsselt liegt, ist ein bekannter offener Punkt (**Backlog Nr. 43**)
+  und gehört dorthin, nicht in eine halbe Maßnahme an dieser Stelle.
+- **Keine Mengengrenze aus Rechtsgründen** — es sind die eigenen Spuren. Die
+  Grenze von `GPX_AUSWAHL_MAX` = 100 Spuren je Auswahl steht aus einem anderen
+  Grund da: Die Datei entsteht vollständig im Arbeitsspeicher, weil ihre Länge
+  in die Kopfzeile gehört. Gemessen mit der größten Spur des Referenzbestands
+  (1063 Punkte) kosten hundert Spuren 9,7 MB Datei bei 23,4 MB Spitze — im
+  Budget von 64 MB (Z3). Dazu ein **Ratenschutz** im Topf `pair`, und zwar nur
+  auf Fehlgriffe: Ein gelungener Abruf geht nicht aufs Kontingent, sonst träfe
+  die Bremse die Spurenseite eines Tages mit zwölf Einträgen. Gezählt wird,
+  was auf ein Abtasten fremder Kennungen hindeutet.
+
+**Was die Datei bedeutet, sagt die Oberfläche.** Der Eintrag in der
+Einsatzansicht fragt vor dem Herunterladen zurück — wie der große Export es
+tut —, und über der Liste in `tag_spuren.php` steht derselbe Satz. Eine
+Ruhespur ist dabei ausdrücklich mitgemeint: Sie zeigt den Aufenthalt der
+Besatzung zwischen den Einsätzen.
+
+#### Die Reihenfolge im GPX ist nicht frei
+
+GPX 1.1 beschreibt die Kindelemente als `xsd:sequence`, nicht als
+`xsd:choice`. Zwei Stellen kommen darauf an:
+
+| Typ | Folge | heißt |
+|---|---|---|
+| `metadataType` | name, **desc**, author, copyright, link, **time**, … | `<desc>` steht **vor** `<time>` |
+| `trkType` | **name**, cmt, **desc**, src, link, number, type, ext, **trkseg** | `<desc>` steht zwischen `<name>` und `<trkseg>` |
+
+Wer `<desc>` hinten anhängt, schreibt eine Datei, die wohlgeformt ist, die
+manche Programme klaglos lesen — und die gegen das Schema durchfällt. Kein
+XML-Parser meldet das.
+
+#### Die Kennzeichnung steht an drei Stellen
+
+E-S2-09 verlangt, dass sichtbar ist, welche Fassung der Spur die Datei trägt:
+
+1. **In der Datei**, als `<desc>` in `<metadata>` und in `<trk>` — mit Zahl:
+   „ausgedünnt — 113 von ursprünglich 443 Punkten (Douglas-Peucker, 2 m
+   waagerecht / 3 m senkrecht)".
+2. **Im Dateinamen** (`einsatz_000001_2026-01-17_0605_ausgeduennt.gpx`). Das
+   ist die einzige Kennzeichnung, die das Verschieben in einen anderen Ordner
+   überlebt.
+3. **Auf der Seite**, vor dem Herunterladen. Eine Auszeichnung, die nur in der
+   Datei steht, sieht erst, wer sie schon hat.
+
+Der Dateiname wird auf `[A-Za-z0-9._-]` beschränkt (`gpx_dateiname()`): Er geht
+durch eine HTTP-Kopfzeile, ein Dateisystem und womöglich ein Archiv; ein
+Anführungszeichen oder ein Zeilenumbruch darin wäre eine Einladung zur
+Kopfzeilen-Einschleusung.
+
+#### Die Spurenseite des Diensttages
+
+**Ruhesegmente hatten in der Oberfläche keine Identität.** In der Tagesansicht
+sind sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` liefert
+nicht einmal ihre Kennung. Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+— die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
+
+`tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
+jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit Stufe,
+Punktzahl und Abruf. Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
+auf sie.
+
+**Die Liste steht chronologisch, nicht nach Art gruppiert.** Der erste Entwurf
+listete erst alle Einsätze und dann alle Ruhezeiten — die Reihenfolge, in der
+die beiden Abfragen im Code stehen. So liest sich aber kein Diensttag: Er
+verläuft in *einer* Folge, Ruhezeit, Einsatz, Ruhezeit, Einsatz. Zwei Gruppen
+zwingen dazu, zwischen ihnen hin und her zu rechnen, um zu sehen, was worauf
+folgte. Die laufende Nummer der Einsätze („Einsatz 3") und die Farben auf der
+Karte zählen weiter nur die Einsätze durch und bleiben davon unberührt.
+
+**Serverseitig gerendert**, und das ist Absicht: Die Liste besteht aus dem
+vorhandenen Baustein `ui_zeile()`. Sie im Browser aus Zeichenketten
+nachzubauen hieße, dasselbe Markup ein zweites Mal zu pflegen. An den Browser
+geht nur, was die Karte braucht: die Punktfolgen, und von denen nur der Ort —
+weder Höhe noch Zeit.
+
+Ohne Spur steht der Eintrag trotzdem in der Liste, aber ohne Abruf: Wer einen
+Einsatz sucht und ihn hier nicht fände, hielte die Liste für unvollständig.
+
+#### Mehrere Spuren in einer Datei
+
+Jede Zeile trägt ein Auswahlkästchen, die Sammelleiste darunter lädt die
+angekreuzten als eine Datei. **Kein neuer Baustein:** das Kästchen sitzt in
+`ui_zeile(['vorn' => …])`, die Leiste ist `ui_speichern_leiste()` — dieselben
+zwei Bausteine wie die Sammelaktion der NutzerInnen-Liste (P3/O9b). Ein
+Eintrag ohne Spur bekommt ein abgeschaltetes Kästchen statt gar keines: Ein
+fehlendes ließe die Zeile um seine Breite nach links rutschen.
+
+**Mehrere `<trk>`, kein zusammengeklebtes `<trkseg>`.** GPX 1.1 erlaubt
+beliebig viele `<trk>` in einem Dokument. Zwei Spuren in *ein* `<trkseg>`
+geschrieben ergäbe eine Datei, die jedes Kartenprogramm klaglos öffnet und in
+der es eine gerade Linie vom Ende der einen zum Anfang der nächsten zieht —
+einen Weg, den niemand gefahren ist. Auch mehrere `<trkseg>` in *einem* `<trk>`
+wären falsch: Die meinen Abschnitte **einer** Aufzeichnung mit einer Lücke
+dazwischen, nicht zwei verschiedene Fahrten.
+
+| Frage | Antwort |
+|---|---|
+| Reihenfolge | chronologisch über beide Arten hinweg — dieselbe Folge wie die Liste auf der Seite, aus der ausgewählt wurde. Sortierschlüssel dort wie hier: Beginn, Art, Kennung |
+| Name je Spur | derselbe wie beim Einzelabruf (`Einsatz 42 — 10.05.2026 07:09`), damit man dieselbe Spur in beiden Dateien wiederfindet |
+| Kennzeichnung | jede Spur nennt ihre Stufe an ihrem `<trk>`; der Kopf sagt, was die Datei als Ganzes ist („3 Spuren — 436 Punkte insgesamt · teils ausgedünnt") |
+| Dateiname | `diensttag_2026-05-10_3-spuren_gemischt.gpx` — Datum, Anzahl und Stufe (`original`, `ausgeduennt` oder `gemischt`) |
+| Speicher | `gpx_bauen_viele()` nimmt einen **Generator**, keine Liste: Eine dekodierte Spur kostet rund 4 MB, hundert gleichzeitig sprengten das Budget. Deshalb entstehen die `<trk>` zuerst und der Kopf danach — die Gesamtzahl kennt man erst am Ende, das `<metadata>` steht aber vorn |
+
+**Streng bei der Form, nachsichtig beim Bestand.** Was nicht genau
+`mission-<Zahl>` oder `rest-<Zahl>` ist, kommt nicht von dieser Seite: 400.
+Eine wohlgeformte Kennung, die zu diesem Tag und diesem Konto nicht gehört,
+fällt beim Lesen heraus, ohne dass die ganze Datei scheitert — sie kann aus
+einem Tab stammen, der seit einer Löschung offen steht; wie viele Spuren
+wirklich drin sind, sagen Dateiname und `<desc>`. Ausgeforscht wird dabei
+nichts: Die Abfrage filtert auf `user_id` **und** `day_id`, eine fremde
+Kennung liefert also nie einen Treffer, gleich ob es sie gibt. Bleibt gar
+nichts übrig, ist es doch ein Fehlgriff: 404, und er zählt.
+
+**Ohne JavaScript** bleibt der Einzelabruf. Die Kästchen stehen in einem
+gewöhnlichen GET-Formular und würden auch ohne Skript absenden, aber die
+Sammelleiste erscheint erst, wenn etwas ausgewählt ist — und das entscheidet
+das Skript.
+
+#### Was der Abruf nicht tut
+
+- **Kein leeres GPX.** Eine Datei mit null Punkten sieht aus wie eine Spur, die
+  es gibt — und in einem Kartenprogramm wie ein Fehler des Programms. Der Abruf
+  antwortet 404.
+- **Keine anonyme Fassung.** Der große Export bindet GPX-Spuren an die
+  personenbezogenen Angaben, weil eine Spur am Einsatzort endet. Hier gibt es
+  diese Wahl nicht; stattdessen steht der Satz über der Liste, an der Stelle,
+  an der jemand herunterlädt.
+
+---
+
+### 4.97c Sicherungsziele: die Sicherung verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
+
+Bis Web 12.0.0 entstanden die Admin-Sicherungen unter `server/sicherungen/`
+und blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz —
+aber nicht für den Fall, für den man Sicherungen macht: dass dieser Server weg
+ist. Ab Web 12.1.0 gehen sie auf eine **Gegenstelle**.
+
+#### Der Name
+
+**Sicherungsziel**, nicht Transportziel. `transport_dests` gibt es seit Web 4;
+das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
+Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
+einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
+
+#### Eine Schnittstelle, drei Adapter
+
+`server/sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können
+muss: `verbinden`, `trennen`, `ordner`, `senden`, `holen`, `liste`,
+`loeschen`, `fingerabdruck`. Alle Pfade sind **relativ zum Grundpfad des
+Ziels** — kein Adapter nimmt einen absoluten Pfad, sonst wäre der Grundpfad
+eine Empfehlung und keine Grenze.
+
+| Adapter | Protokoll | Grundlage |
+|---|---|---|
+| `ZielFtp` | FTP und FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
+| `ZielSftp` | SFTP | phpseclib 3 (`server/vendor/`, docs/Lizenzen.md 3a) |
+
+Ein Adapter für FTP **und** FTPS, weil sich genau eine Zeile unterscheidet.
+Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss vom
+Protokoll nichts; ein vierter Adapter (WebDAV, Backlog) soll sie nicht
+anfassen.
+
+#### Was die drei taugen
+
+| | verschlüsselt | erkennt den Server wieder |
+|---|---|---|
+| **SFTP** | ja | **ja** — Fingerabdruck des Hostschlüssels |
+| **FTPS** | ja | nein |
+| **FTP** | **nein** | nein |
+
+Der mittlere Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
+nicht.** Nachgemessen in `tools/versandprobe/` gegen eine Gegenstelle mit
+selbst ausgestelltem Zertifikat ohne Vertrauenskette — die Verbindung kommt
+zustande. Schutz gegen Mitlesen ja, Schutz gegen einen untergeschobenen Server
+nein.
+
+Bei SFTP wird der Fingerabdruck beim ersten `Verbindung prüfen` übernommen und
+danach bei jeder Verbindung verglichen. Passt er nicht, bricht es ab — **vor**
+der Anmeldung. Belegt wird das nicht an der Fehlermeldung, sondern an der
+Gegenstelle: Sie schreibt jeden Anmeldeversuch mit, und ihr Protokoll bleibt
+unverändert (3 Zeilen vorher, 3 nachher). Wer sich bei einem untergeschobenen
+Server anmeldet, hat sein Passwort schon abgegeben, auch wenn er danach
+abbricht.
+
+Wechselt die Gegenstelle ihren Schlüssel, ist der gespeicherte Abdruck falsch
+— und ein falscher Abdruck blockiert jede Verbindung und sieht aus wie ein
+Angriff. Dafür gibt es „Hostschlüssel vergessen"; ausserdem wirft die Seite
+ihn von selbst weg, wenn Rechnername oder Port geändert werden.
+
+#### Der Serverschlüssel (E-S2-21)
+
+`server/serverkrypto_lib.php`. 32 Byte Zufall in **`config.php`**, nicht in der
+Datenbank:
+
+```
+edsk1:base64( nonce(12) ‖ prüfsumme(16) ‖ chiffre )     AES-256-GCM
+Zusatzdaten: 'edsk1|sicherungsziel:<id>:<feld>'
+```
+
+Der Zweck in den Zusatzdaten bindet die Chiffre an **dieses** Ziel und
+**dieses** Feld: Ein versiegeltes Passwort von Ziel 3 lässt sich nicht als
+Passwort von Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen.
+
+Warum `config.php` und nicht die Datenbank: Der Zweck ist der Fall „jemand hat
+die Datenbank". Für das Komplettbackup (AP8) wird es zwingend — dessen Dump
+enthält jede Tabelle.
+
+`sk_oeffnen()` gibt bei Misserfolg **`null`** zurück und unterscheidet nicht,
+warum. Jeder Aufrufer muss das sagen; ein stillschweigend leeres Passwort wäre
+die schlechteste Antwort, denn der Versand liefe dann in ein „Zugang
+verweigert", und niemand käme auf die Ursache.
+
+Neue Installationen bekommen den Schlüssel vom Installer. Bestehende tragen
+ihn auf der Seite „Sicherungsziele" nach — ein Knopf, wenn `config.php`
+beschreibbar ist, sonst eine Zeile von Hand. Der Knopf **ergänzt und ersetzt
+nie** (ein Überschreiben machte jedes versiegelte Feld unlesbar), schreibt in
+eine Nebendatei mit Endung `.php` — eine `config.php.tmp` läge im
+Wurzelverzeichnis des Webservers als lesbarer Text mit dem Datenbankpasswort
+—, führt sie zur Gegenprobe aus und vergleicht sie mit der geltenden Fassung,
+schiebt sie erst dann an ihren Platz und verwirft danach den
+OPcache-Eintrag. Ohne diesen letzten Schritt zeigt die nächste Anfrage wieder
+„Serverschlüssel fehlt": OPcache prüft den Zeitstempel sekundengenau.
+
+#### Der Versand
+
+Ein Joblauf (`versand`, Katalog in `jobs_lib.php`) und ein Knopf „Jetzt
+versenden". Beide gehen durch `sz_versand_schub()`; der Job fragt zusätzlich
+den Schalter `app_state.versand_auto`, der Knopf nicht — dort hat gerade
+jemand geklickt, und das ist die Zustimmung.
+
+**Was „neu" ist, wird am Ziel abgelesen** — Verzeichnisliste, Name **und
+Grösse** — und nicht in einer Merkliste geführt. Eine Merkliste behauptet
+„schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht, das Ziel neu
+aufgesetzt oder der Pfad geändert wurde; diese Art Lüge fällt erst auf, wenn
+man die Sicherung braucht. Die Grösse gehört dazu, weil eine abgebrochene
+Übertragung sonst mit richtigem Namen und falscher Länge für immer als
+erledigt gälte.
+
+**Es wird nur ergänzt.** Auf dem Ziel löscht diese Anwendung nie — auch nicht
+im Sinne der Aufbewahrung „zwei je Konto", die für die Ablage auf diesem
+Server gilt (Backlog Nr. 49).
+
+Die Zeit wird **je Konto** geprüft, nicht je Ziel: Ein Schub, der mitten in
+einer Übertragung von der Zeit eingeholt wird, hinterlässt am Ziel eine halbe
+Datei. Die Reserve ist mit 25 s gross, weil ein SFTP-Verbindungsaufbau in
+reinem PHP über eine Sekunde kostet; am Huckepack-Weg (3 s) fängt der Job
+deshalb gar nicht erst an.
+
+Der Schalter sagt **ob**, nicht **wann**. Wann etwas läuft, entscheidet der
+eingerichtete Auslöser (Abschnitt 4.97a). Eine zweite Uhr in der Datenbank
+wäre eine zweite Wahrheit.
+
+#### „Verbindung prüfen" prüft mehr als die Anmeldung
+
+Verbinden → Probedatei schreiben → Verzeichnis lesen → zurückholen → Byte für
+Byte vergleichen → löschen → trennen. Jeder Schritt steht einzeln in der
+Oberfläche. Eine Anmeldung, die klappt, sagt nichts über Schreibrechte; woran
+es scheitert, erführe man sonst nachts, ohne Zuschauer.
+
+#### Gemessen (S2/AP7)
+
+64 Pakete zu zusammen 63,89 MB aus 33 Kontoordnern, gegen örtliche
+Gegenstellen:
+
+| | Dauer | PHP-Speicherspitze (Budget Z3: 64 MB) |
+|---|---|---|
+| FTP | 0,13 s | 2,0 MB |
+| FTPS | 0,68 s | 2,0 MB |
+| SFTP | 3,08 s | 8,0 MB |
+
+Alle 192 angekommenen Dateien byteweise mit dem Original verglichen: **0
+Abweichungen**. Zweiter Lauf: 0 Dateien, 0,19 s. Eine am Ziel auf 1 000 Byte
+gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
+64). Mit einem Budget von 2 s teilte sich derselbe Lauf in zwei Schübe
+(34 + 30) und war danach vollständig.
+
+`tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
+Versiegelung ab: **115 Erwartungen**, gefahren gegen zwei Sätze Gegenstellen
+— pyftpdlib/paramiko und **vsftpd/OpenSSH**. Beide werden gebraucht: vsftpd
+kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
+`SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
+FTPS 1,85 s, SFTP 0,68 s für dieselben 64 Pakete, 64 von 64 byteweise gleich.
+
+**Der Grundpfad bedeutet je Protokoll etwas anderes.** vsftpd sperrt den
+Nutzer in sein Heimverzeichnis — dort ist `/` die Wurzel. OpenSSH tut das
+nicht — dort ist `/` die Wurzel des Dateisystems. Ein Ziel mit „Pfad = /" legt
+seine Sicherungen bei SFTP also dorthin, wohin der Nutzer im Dateisystem
+zeigt, und nicht in ein Heimverzeichnis.
+
+Was sie nicht prüfen kann — ein echtes Ziel im Internet —, steht an erster
+Stelle ihrer `LIESMICH.md`.
+
+---
+
+### 4.97d Komplettsicherung der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
+
+Die Adminsicherung (Abschnitt „Admin-Sicherungen") sichert ein **Konto**.
+Diese hier sichert die **Installation**: alle Konten, Stammdaten, Geräte,
+Schlüsselhüllen, `app_state`, den Migrationsstand — jede Tabelle, die in
+dieser Datenbank steht. Der Fall, gegen den sie hilft, ist nicht „jemand hat
+sich vertan", sondern „der Webspace ist weg".
+
+Alles darin steht in `server/komplett_lib.php`; die Oberfläche ist
+`admin_komplettsicherung.php`, der Rückweg `wiederherstellen.php`.
+
+#### Was nicht drin ist
+
+`config.php`. Sie trägt das Datenbankpasswort und den Serverschlüssel — also
+genau das, womit sich diese Datei öffnen lässt. Beides in dieselbe Datei zu
+legen hiesse, das Schloss an den Schlüssel zu binden. Sie gehört ins
+Wiederanlaufpaket (Abschnitt 7).
+
+Ebenfalls nicht drin: die Dateiablage unter `sicherungen/`. Die Kontopakete
+sichern nichts, was nicht ohnehin in der Datenbank steht, und würden die Datei
+vervielfachen.
+
+#### Warum ein eigener Dump und nicht `mysqldump`
+
+Auf geteiltem Webspace gibt es keine Kommandozeile und kein `exec()`;
+`mysqldump` ist dort nicht vorhanden und nicht nachrüstbar. Der Dump entsteht
+in PHP, über genau die Verbindung, die die Anwendung ohnehin hat.
+
+#### Die Form: ein Statement je Zeile
+
+Damit lässt sich die Datei zeilenweise abarbeiten — vom Rückweg dieser
+Anwendung genauso wie von `mysql` oder phpMyAdmin. Ein mehrzeiliges Statement
+bräuchte einen SQL-Zerleger, und ein selbstgebauter SQL-Zerleger ist die Sorte
+Code, die genau einmal falsch liegt: wenn ein Semikolon in einer Zeichenkette
+steht.
+
+Daran hängt eine Bedingung: **Kein Literal darf je einen echten Zeilenumbruch
+enthalten.** `komp_quote()` bildet `\n`, `\r`, `\0`, `\x1a`, `'`, `"` und
+`\` ab; die Datei setzt dazu passend `SQL_MODE` ohne `NO_BACKSLASH_ESCAPES`.
+Binärspalten (`track_blobs.blob_daten`) gehen hexadezimal hinaus (`0x…`), eine
+leere als `''` — `0x` ohne Ziffern wäre kein gültiges Literal.
+
+Weiter: INSERT-Stapel bis **1 MB**, Tabellen in einspielbarer Reihenfolge
+(topologisch nach Fremdschlüsseln, mit `FOREIGN_KEY_CHECKS = 0` als Gürtel
+daneben), Kopfkommentare mit Version, Migrationsstand, Zeitpunkt und
+Datenbankserver, und am Ende eine **Endmarke** (`-- EDKOMP-ENDE`). Sie ist der
+Beleg, dass die Datei nicht mitten im Erzeugen abgebrochen ist; ohne sie wäre
+ein halber Dump von einem ganzen nicht zu unterscheiden.
+
+#### Drei Schichten
+
+    1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB
+    2. gzip         je Häppchen ein eigenes gzip-Glied
+    3. EDKOMP1      AES-256-GCM je 256-KB-Block
+
+**Warum je Häppchen ein eigenes gzip-Glied.** Der Dump entsteht in Häppchen
+über mehrere Anfragen (E-S2-20: „nie als Array am Stück"). Ein
+`deflate_init()`-Zustand lässt sich zwischen zwei Anfragen nicht aufbewahren —
+er ist keine Zahl, sondern ein Fenster über die letzten 32 KB. Deshalb
+schliesst jedes Häppchen sein Glied ab und das nächste hängt ein neues an.
+Aneinandergehängte gzip-Glieder sind gültiges gzip; `gunzip`, `zcat` und PHPs
+`gzopen()`/`gzread()` lesen darüber hinweg. Gemessen kostet es 3 045 Byte auf
+45,8 MB.
+
+**Zwei PHP-Funktionen können das nicht, und beide schweigen dabei.**
+Nachgemessen an einer Datei aus 15 Gliedern mit 122 469 394 Byte Klartext:
+`gzdecode()` liefert 13 573 234 Byte (11 %), `inflate_add()` ebenfalls
+13 573 234 — beide ohne Fehler, beide sehen aus wie eine ganze Datei. Nur
+`gzopen()`/`gzread()` liefert alles. In der Anwendung wird deshalb
+ausschliesslich dieser Weg benutzt; der Rückweg entpackt über eine
+Zwischendatei. (Python ist hier gutmütiger: `gzip.open()` **und**
+`gzip.decompress()` lesen alle Glieder.)
+
+Aufgefallen ist es beim Lauf und nicht beim Lesen: Die erste Fassung des
+Rückwegs schob jeden entsiegelten Block durch `inflate_add()` und brach mit
+„data error" ab. Bei einem Dump aus einem Zug wäre der Fehler nie aufgetreten
+— die Komplettprobe fährt darum ausdrücklich einen aus vierzehn Häppchen.
+
+**Warum die Versiegelung ein zweiter Gang ist.** Der Dump wächst zeilenweise,
+die Versiegelung arbeitet in Blöcken fester Grösse. Beides zugleich hiesse,
+einen halb gefüllten Block zwischen zwei Anfragen aufbewahren zu müssen. So
+ist der Zustand der Versiegelung eine einzige Zahl — der Blockindex —, und
+Block *i* deckt die Klartextbytes [i·256 KB, (i+1)·256 KB). Der Klartext-Dump
+liegt für die Dauer des Baus im Bauordner und wird gelöscht, sobald die
+versiegelte Fassung steht.
+
+#### Das Format EDKOMP1
+
+    "EDKOMP1\n"                                       8 Byte
+    <Kopfzeile als JSON>"\n"                          eine Zeile, kein \n darin
+    je Block:  <4 Byte Länge, big endian>
+               <12 Byte Nonce><16 Byte Prüfsumme><N Byte Chiffre>
+
+Zusatzdaten je Block: `edkomp1|<SHA-256 von Magie+Kopfzeile>|<Index>|<0|1>`.
+
+Beides ist nötig. **Ohne Zähler** liessen sich zwei Blöcke vertauschen, und
+die Prüfsumme jedes einzelnen bliebe richtig. **Ohne die Endemarkierung**
+liesse sich die Datei hinten abschneiden, und was übrig bleibt, wäre eine
+gültige, kürzere Sicherung. Der **Dateikopf** hängt über seinen SHA-256 an
+jedem Block: Wer ihn ändert — etwa den Vermerk „mit Passphrase" —, macht damit
+jeden Block unlesbar.
+
+Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
+(Regelfall, `kdf: null`) oder aus einer **Passphrase** abgeleitet (PBKDF2,
+`KDF_ITER_ZIEL` = 320 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
+steht im Kopf; raten muss das niemand.
+
+#### Zwei Wege heraus
+
+- **Herunterladen** gibt den Dump **unverschlüsselt** als `.sql.gz` — die
+  Fassung für `mysql` und phpMyAdmin (E-S2-20). Sie geht an die
+  Administratorin, die sich eben angemeldet hat und ohnehin jede Zeile dieser
+  Datenbank sehen kann.
+- **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase.
+  Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
+  der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
+  Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
+- Was **von selbst** hinausgeht — der Versand aufs Sicherungsziel (4.97c) —
+  ist immer die versiegelte Fassung.
+
+Der Download ist die eine begründete Ausnahme vom Z3-Budget „Serveranfrage
+≤ 30 s": Das Budget gilt der *Arbeit*, ein Download rechnet nicht, sondern
+schiebt Bytes. Ein Abbruch nach 30 s wäre kein Schutz, sondern eine Sicherung,
+die sich bei langsamer Leitung nicht abholen lässt.
+
+**Ohne Serverschlüssel wird gar nicht erst gesichert.** Eine unversiegelte
+Abschrift jeder Tabelle in `sicherungen/` liegen zu lassen unterliefe die
+Ende-zu-Ende-Zusage an der Stelle, an der es am wenigsten auffiele.
+
+#### Der Cursor ist aufgefächert, und das ist gemessen
+
+Der Dump liest jede Tabelle blockweise über den Primärschlüssel. Gemessen an
+`track_points` mit 917 331 Zeilen:
+
+| Bedingung | Plan | Dauer |
+|---|---|---|
+| `WHERE (a,b) > (?,?)` — Zeilenkonstruktor | `type=index` | 0,1486 s |
+| `WHERE a > ? OR (a = ? AND b > ?)` — aufgefächert | `type=range` | 0,0010 s |
+
+MariaDB macht aus dem Zeilenkonstruktor keinen Bereichszugriff, sondern läuft
+den Index von vorn ab — bei 459 Häppchen also 459-mal die halbe Tabelle.
+**Eine Ausnahme:** Steht eine ENUM-Spalte **vorn** im Primärschlüssel, hilft
+auch das Auffächern nichts (`type=index`, 0,0125 s); mit `=` festgenagelt
+greift der Bereichszugriff wieder (0,0005 s). Führende ENUM-Spalten werden
+deshalb über ihre Werteliste durchlaufen — das betrifft `track_points` und
+`track_blobs` mit je zwei Werten.
+
+#### Der Schnappschuss ist nicht scharf
+
+`mysqldump --single-transaction` hält einen Lesestand über den ganzen Lauf.
+Das geht nur **innerhalb einer Verbindung**, und diese Sicherung läuft über
+viele Anfragen. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+oder nicht. Was **nicht** passieren kann, ist eine übersprungene Altzeile: Der
+Cursor läuft über den Primärschlüssel und nicht über `LIMIT/OFFSET`, ein
+gelöschter Vorgänger verschiebt ihn also nicht.
+
+Sichtbar wird das an genau einer Stelle: Die Tabelle `jobs` weicht nach einer
+Rückspielung ab, weil die Sicherung ihren eigenen Fortschritt dort
+mitschreibt. Das ist die harmloseste mögliche Stelle — und zugleich eine, die
+Folgen hat, siehe gleich.
+
+#### Wiederanlauf: zwei Fälle, die auseinandergehalten werden
+
+Der Fortsetzungszustand steht in `jobs.zustand` und wird vom Job-Rahmen erst
+**nach** einem geglückten Häppchen gespeichert. Daraus folgen zwei Zweige:
+
+1. **Die Baudatei ist LÄNGER, als der Zustand kennt.** Ein Häppchen ist
+   mittendrin abgebrochen; seine Zeilen stehen schon da, der Zustand zeigt
+   davor. Der nächste Lauf schneidet auf die gemerkte Länge zurück. Ohne das
+   käme das zweite `DROP TABLE` derselben Tabelle in die Datei und würde beim
+   Einspielen wegwerfen, was das erste Häppchen eingefügt hat — eine
+   Sicherung, die vollständig aussieht und es nicht ist.
+2. **Die Baudatei ist KÜRZER** (oder weg). Dann wird von vorn begonnen. Der
+   Fall tritt regelmässig nach einer Wiederherstellung auf: Die eingespielte
+   Datenbank trägt den Stand „Dump läuft" samt einem Bauordner, den es auf dem
+   neuen Server nie gab. Ohne diesen Zweig hinge der nächste Lauf mitten in
+   der Tabellenliste an eine leere Datei an.
+
+#### Der Job steht nach dem Versand
+
+Im Katalog (4.97a) kommt `komplett` **nach** `versand`. Davor wäre er am
+rechten Platz — was entsteht, ginge im selben Lauf hinaus —, nur bekäme jeder
+Job hinter ihm nur noch, was die schwerste Arbeit der Anwendung übrig lässt.
+Ein Versand, der wochenlang nicht drankommt, wäre der teurere Fehler. Der
+Preis ist ein Lauf Verzögerung; zusätzlich begrenzt sich der Job auf
+`KOMP_LAUF_MAX_S` = 120 s, damit auch `waisen` noch zum Zug kommt.
+
+Der **Plan** (aus / täglich / wöchentlich / monatlich) sagt nicht *wann*,
+sondern *ob*: Er legt fest, wie alt der jüngste Stand höchstens sein darf.
+Wann gearbeitet wird, entscheidet der eingerichtete Auslöser. Zwei Uhren
+nebeneinander wären zwei Wahrheiten (wie E-S2-17).
+
+#### Der Rückweg
+
+`wiederherstellen.php` füllt die Lücke zwischen `install.php` (verweigert
+sich, sobald es eine `config.php` gibt) und `update.php` (verlangt eine
+Anmeldung, die es ohne Konten nicht geben kann). Drei Schranken:
+
+1. **Die Datenbank muss leer sein** — und zwar fürs *Anfangen*. Ab dem
+   zweiten Durchgang ist sie es nicht mehr, weil der erste sie füllt; wer
+   einen Arbeitsstand hat, hat ihn auf einer leeren Datenbank begonnen.
+2. **Ein Nachweis** wie beim Einrichter (M1-11): eine Datei mit zufälligem
+   Namen im Anwendungsverzeichnis, deren Kennung einzutragen ist.
+3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
+   Es gibt hier bewusst kein Hochladen.
+
+Der Ablauf hat zwei Gänge: **A** entsiegelt und entpackt nach
+`eingang/.arbeit/dump.sql`, **B** spielt zeilenweise ein und merkt sich den
+**Byteversatz im Klartext**. Genau dafür gibt es Gang A: In einer gepackten
+Datei kostet ein Sprung an Position *n* das Entpacken der ersten *n* Byte, bei
+jedem Durchgang neu. Der Klartext wird nach dem letzten Durchgang sofort
+gelöscht — er ist eine unverschlüsselte Abschrift jeder Tabelle.
+
+Die `SET`-Zeilen (`FOREIGN_KEY_CHECKS`, `UNIQUE_CHECKS`, `SQL_MODE`) werden
+**je Durchgang neu gesetzt**: Sie gelten je Verbindung, und jeder Durchgang
+ist eine neue Anfrage mit einer neuen. In der Datei stehen sie trotzdem — für
+`mysql` und phpMyAdmin.
+
+**Migrationen laufen dort nicht mit.** `update.php` ist seit M6-01
+zweistufig, weil Migrationen Spalten löschen können. Eine Seite ohne
+Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+heraus. Die Seite vergleicht stattdessen die Web-Fassung des Dumps mit der
+laufenden und schickt zur Wartung.
+
+#### Gemessen (S2/AP8)
+
+Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
+
+| | Wert |
+|---|---|
+| Erzeugen | 8,5 s in **14 Häppchen** (Budget 0,6 s je Häppchen) |
+| Speicherspitze | **26 von 64 MB** (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** |
+| Längste Zeile | 1 048 566 Byte |
+| Öffnen (175 Blöcke) | 0,05 s, Spitze 4 MB |
+| Auspacken über den Rückweg | 1,24 s |
+| Einspielen | 784 Anweisungen in 6,0 s |
+| Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
+
+`tools/komplettprobe/` fährt den ganzen Zyklus: **76 Erwartungen**,
+einschliesslich Versand auf eine echte FTP-Gegenstelle, „halbe Datei liegt
+dort", abgeschnitten an einer Blockgrenze, veränderter Dateikopf und beide
+Wiederanlauf-Zweige. Was sie nicht prüfen kann — die Oberfläche, eine volle
+Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
+an erster Stelle ihrer `LIESMICH.md`.
+
+---
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
@@ -2490,6 +3742,74 @@ neu erzeugen, dann ausrollen, dann im Adminbereich zurücksetzen. Die
 Reihenfolge ist wesentlich: Eine Fixture aus einem halb eingespielten Bestand
 sieht vollständig aus und ist es nicht.
 
+**Ein Konto mit 5000 Einsätzen herstellen (Mengenprüfung, S2/R35):**
+`cd tools/messstand && python3 messen.py --frisch`. Der Lauf legt das Konto
+`messstand@gen-em.org` an, vervielfältigt die Referenzsicherung zu einer Folge
+`.edbak`-Dateien und spielt sie über den **regulären** Wiederherstellungsweg im
+Browser ein — kein SQL. Dauer je nach Rechner rund zehn Minuten; danach misst
+er Suche, Tagesansicht, Sichern (Browser, CPU-Drossel 6×) sowie Tabellengrößen
+und Speicherspitzen (Server). **Niemals gegen die Produktiv- oder
+Referenzinstallation**: Der Riegel des Werkzeugs füllt nur Konten mit dem
+Präfix `messstand` und verlangt für eine fremde Adresse ein ausdrückliches
+`MESSSTAND_FREMDE_INSTALLATION=ja`. Einzelheiten und die Grenzen des
+Prüfmittels: `tools/messstand/LIESMICH.md`.
+
+**Hintergrundjobs einrichten (empfohlen, seit Web 10.1.0):** Nichts tun ist
+erlaubt — dann läuft die Wartung huckepack auf den Anfragen mit, höchstens 3 s
+je Anfrage und frühestens alle 5 Minuten je Job. Ab einigen hunderttausend
+Spurpunkten sollte trotzdem ein echter Zeitgeber her. Adminbereich →
+**`/update.php`** → Abschnitt **„Wann die Jobs laufen"**; dort stehen Befehl
+und Adresse fertig zum Kopieren:
+
+1. **Kommandozeile** (bevorzugt): `* * * * * php …/server/jobs.php`. Jede
+   Minute ist unbedenklich — ein Lauf ohne Arbeit kostet zwei Abfragen. Die
+   tägliche Aufräumarbeit läuft trotzdem nur einmal am Tag; das entscheidet der
+   Job, nicht der Zeitplan. Einzelne Jobs: `php jobs.php waisen`, Hilfe:
+   `php jobs.php --hilfe`.
+2. **Abruf über die Adresse**, wo es keinen CLI-Cron gibt:
+   `https://…/jobs.php?token=…`. **Die Adresse enthält ein Geheimnis** — nicht
+   in eine Mail, nicht in ein Ticket. Ein neues Token macht das alte ungültig;
+   ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
+
+**Spuren werden nicht verdichtet (Rückstand wächst):** `/update.php` → Karte
+„Hintergrundjobs" → Zeile **„Spuren verdichten"**. Darunter steht, was
+liegenbleibt und warum, mit Kennung: *Lücke in der Nummernfolge* (eine Uhr hat
+ein Teilstück nie nachgeliefert — die Spur bleibt als Zeilen stehen, das ist
+richtig so), *Zu viele Punkte* (über 50 000; aus einer Sicherung nicht
+wiederherstellbar), *Punkte auf einer ausgedünnten Spur* (Erwartungswert **0** —
+steht dort eine Zahl, nimmt `ingest.php` an, was es verwerfen sollte),
+*Prüfung nicht bestanden* (es wurde nichts gelöscht und nichts ersetzt).
+
+Ein Rückstand ohne diese Listen ist normal: Er zählt auch, was schlicht noch in
+der **Karenz** ist (14 Tage ohne neuen Punkt nach `final`, sonst 60 Tage) oder
+im Papierkorb liegt.
+
+**Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
+einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
+Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
+ab, und die Wartungsseite zeigt sie an. **Sie ist kein Ersatz für eine
+Sicherung:** Was der Ausdünnungsjob einmal ersetzt hat, ist weg.
+
+**Nach dem Ausrollen von Web 10.2.0 auf einen gewachsenen Bestand:** Der erste
+Verdichtungslauf trägt den ganzen Altbestand ab. Gemessen an 3,3 Mio. Punkten:
+9395 Spuren in 44 s über die Kommandozeile. Am Huckepack-Weg (3 s je Anfrage,
+frühestens alle fünf Minuten) dauert dasselbe Tage — wer den Altbestand zügig
+abgetragen haben will, richtet vorher einen der beiden anderen Auslöser ein
+oder ruft einmal `php jobs.php verdichtung` von Hand auf.
+
+**Zeitplan-Eintrag antwortet `429` (`zu_viele_versuche`):** Das Token stimmt
+nicht, und zehn Fehlversuche haben die IP für zehn Minuten gesperrt. Adresse
+aus `/update.php` neu kopieren, dann **zehn Minuten warten** — vorher wird auch
+der richtige Aufruf abgewiesen.
+
+**Läuft die Wartung noch?** `/update.php` → Karte **„Hintergrundjobs"**: je Job
+letzter Lauf, Auslöser, Rückstand und letzter Fehler. Plakette „scheitert" =
+mindestens ein Job wirft dauerhaft; der Text steht darunter. Plakette
+„Migration ausstehend" = die Tabelle `jobs` fehlt, also wurde `update.php` nach
+dem Ausrollen von Web 10.1.0 nie ausgeführt. Ein wachsender **Rückstand** beim
+Job `waisen` heißt nicht „kaputt", sondern „kommt am Huckepack-Weg nicht
+hinterher" — dann Punkt 1 oder 2 oben einrichten.
+
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
 Uhr = neues Gerät anlegen.
@@ -2520,10 +3840,101 @@ und `SELECT` zogen von selbst nach. Spaltenbreiten nach Position
 (`:nth-child`) gibt es im Stylesheet deshalb nicht mehr — sie zählen Spalten ab
 und rutschen beim Streichen einer Spalte still auf die falsche.
 
-**Backup:** regelmäßiger MySQL-Dump (alle Tabellen; `mysqldump` oder
-Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt
-unberührt. Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten
-idempotent nach, sofern lokal noch vorhanden.
+**Backup (seit Web 12.2.0 aus der Anwendung heraus):** Adminbereich →
+**Komplettsicherung** → *Jetzt sichern*, oder einen Zeitplan setzen
+(täglich/wöchentlich/monatlich). Der Lauf schreibt jede Tabelle als
+versiegelten SQL-Dump nach `server/sicherungen/komplett/`; der Versand aufs
+Sicherungsziel nimmt ihn wie jedes andere Paket mit. Ein Hoster-Backup oder
+ein `mysqldump` von aussen bleibt daneben zulässig und ist nicht überflüssig
+— es läuft auf einem anderen Weg und fällt deshalb nicht mit demselben Fehler
+aus. `config.php` ist in **keiner** dieser Sicherungen enthalten; sie gehört
+ins Wiederanlaufpaket (gleich darunter). Mechanik: Abschnitt 4.97d.
+
+Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten idempotent
+nach, sofern lokal noch vorhanden.
+
+**Wiederanlauf nach einem Totalausfall (seit Web 12.2.0).** In dieser
+Reihenfolge; jeder Schritt setzt den vorigen voraus:
+
+1. **Datenbank anlegen** — leer, aber vorhanden, utf8mb4.
+2. **Anwendungsdateien hochladen** (der Deploy tut das, oder von Hand).
+3. **`config.php` aus dem Wiederanlaufpaket** daneben legen. Datenbankzugang
+   darin auf die neue Datenbank anpassen, den **`server_key` unverändert
+   lassen** — er ist es, der die Sicherung öffnet.
+4. **Die Sicherungsdatei** nach `server/sicherungen/eingang/` legen — per
+   FTP, SFTP oder Dateimanager des Hosters. Vom Sicherungsziel holt man sie
+   sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
+5. **`wiederherstellen.php` aufrufen.** Die Seite nennt eine Nachweisdatei im
+   Anwendungsverzeichnis; deren Kennung eintragen, *Auspacken und prüfen*,
+   dann *Einspielen* — so oft, bis 100 % erreicht sind. Jeder Durchgang macht
+   dort weiter, wo der vorige aufhörte.
+6. **Anmelden** — mit dem Administrationskonto aus der Sicherung; die
+   Passwörter sind dieselben wie vorher.
+7. **Wartung (`update.php`) aufrufen** und den Migrationslauf ausführen.
+   Nicht optional, wenn die Sicherung aus einer älteren Fassung stammt — die
+   Seite sagt es dann auch. Der Lauf passiert dort und nicht in Schritt 5,
+   weil Migrationen Spalten löschen können und dazwischen eine angemeldete
+   Person und ein Knopf gehören (M6-01).
+8. **Aufräumen** — auf `wiederherstellen.php` der gleichnamige Knopf. Er
+   entfernt den ausgepackten Klartext-Dump und die Nachweisdatei. Beides hat
+   danach auf dem Server nichts mehr verloren.
+
+**Was dabei schiefgehen kann, und woran man es erkennt:**
+
+| Meldung | Ursache | Behebung |
+|---|---|---|
+| „Diese Installation ist noch nicht eingerichtet" | keine `config.php` | Schritt 3 nachholen |
+| „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php` passen nicht, oder die Datenbank existiert nicht | Schritt 1 und 3 prüfen |
+| „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Sicherungen* zurückholen |
+| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
+| „Diese Sicherung ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
+| „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
+
+**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
+Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
+
+1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
+   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
+2. **Der Serverschlüssel** darin (`'server_key' => '…'`, 64 Hexzeichen).
+   Er versiegelt die Zugangsdaten der Sicherungsziele und — ab AP8 — das
+   Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
+   einzutragen (verschmerzbar) und ein versiegeltes Komplettbackup **nicht
+   mehr zu öffnen** (nicht verschmerzbar).
+3. **Der Zugang zum Sicherungsziel** — Rechnername, Nutzer, Passwort bzw.
+   privater Schlüssel. Er steht in der Datenbank, aber versiegelt; wer nur
+   den Dump hat und den Serverschlüssel nicht, kommt an die Sicherungen
+   dort nicht heran. Das ist der Sinn der Sache und zugleich der Grund,
+   ihn zusätzlich von Hand zu notieren.
+
+**Probe-Wiederherstellung** ist ein Prüfpunkt und keine Formalie: einmal je
+Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Eine
+Sicherung, die nie zurückgespielt wurde, ist eine Vermutung.
+
+**Serverschlüssel nachtragen (bestehende Installation):** Adminbereich →
+**Sicherungsziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
+zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, bei
+jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
+
+**Sicherungsziel einrichten:** Adminbereich → **Sicherungsziele** → *Ziel
+anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist das einzige der
+drei Protokolle, das den Server am Hostschlüssel wiedererkennt. Danach
+**Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
+vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
+den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
+Zuletzt den Schalter *Sicherungen automatisch versenden* setzen — **wie oft**
+das geschieht, entscheidet der eingerichtete Job-Auslöser (Abschnitt 4.97a).
+
+**„Der Server meldet sich mit einem ANDEREN Hostschlüssel":** Erst klären, ob
+die Gegenstelle ihren Schlüssel tatsächlich gewechselt hat (beim Hoster
+nachfragen, den Abdruck aus einer zweiten Quelle vergleichen —
+`ssh-keyscan <host> | ssh-keygen -lf -` liefert dieselbe Schreibweise). Erst
+dann **Hostschlüssel vergessen**; die nächste Prüfung übernimmt den neuen. Es
+wurde nichts übertragen und kein Passwort gesendet.
+
+**„Die Zugangsdaten dieses Ziels lassen sich nicht entschlüsseln":** In
+`config.php` steht ein anderer Serverschlüssel als der, mit dem sie gespeichert
+wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
+Zugangsdaten am Ziel neu erfassen.
 
 **Wartungsseite, Abschnitt „Schlüsselableitung" (seit Web 5.0.1):** Erscheint
 **nur, wenn es etwas zu melden gibt** — Konten, deren `kdf_iter` nicht in
@@ -2638,8 +4049,9 @@ Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
 
 **Ablage.** `server/sicherungen/<kontokennung>/`, je Ordner eine
 `konto.json` (Begleitdatei **und** Verzeichnis) und höchstens `n` Pakete
-`<zeitstempel>_<zufall>.json` — `n` ist seit Web 9.8.0 eine Einstellung
-(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, Vorgabe 3). Nicht in der Datenbank: Ein Paket liegt bei
+`<zeitstempel>_<zufall>.zip` — `n` ist seit Web 9.8.0 eine Einstellung
+(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, **Vorgabe 2
+seit Web 12.0.0**, vorher 3). Nicht in der Datenbank: Ein Paket liegt bei
 größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
 geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
 Behälter wie das Gesicherte ist keine Rückfallebene.
@@ -2648,6 +4060,33 @@ Behälter wie das Gesicherte ist keine Rückfallebene.
 Nachweisdatei der Ersteinrichtung (M1-11): eine `.htaccess` mit
 `Require all denied`, die `edbak_ablage_bereit()` bei **jedem** Schreibzugriff
 nachlegt, und der nicht erratbare Ordnername.
+
+**Ein Paket ist seit Web 12.0.0 ein ZIP** (Aufbau: `docs/Backup-Format.md` 5).
+Gebaut, gelesen und eingespielt wird in Fenstern zu 250 Einträgen — dieselbe
+Zahl wie bei der Nutzersicherung, hier aber aus einem anderen Grund: Über die
+Leitung geht nichts, es zählt allein der Speicher. **Gemessen** am
+5000er-Bestand: 1077,6 MB → **24,0 MB von 64**, Datei 94,28 → 11,42 MB, Dauer
+19,81 → 14,13 s. Mit `memory_limit=64M` (Z3) brach der Lauf vorher ab.
+
+Ein Umweg, den erst die Messung erzwungen hat: `ZipArchive::addFromString()`
+hält jede übergebene Zeichenkette bis zum `close()` im Speicher (34,6 MB
+Inhalt → 42,0 MB Spitze), `addFile()` streamt von der Platte (**2,0 MB**). Die
+Teile entstehen deshalb einzeln in einem Bauordner `.bau-<8 Hex>/` und gehen
+von dort ins Archiv. Bleibt ein solcher Ordner nach einem Abbruch liegen,
+räumt `edbak_baureste_aufraeumen()` ihn weg — vor jedem Löschen des
+Kontoordners, und er zählt gegen die Speichergrenze mit.
+
+**`ext/zip` ist damit Voraussetzung.** `edbak_ablage_bereit()` prüft es bei
+jedem Schreibzugriff, `install.php` seit Web 12.0.0 schon vor der Einrichtung
+(zusammen mit `zlib`, `openssl`, `mbstring` — vorher prüfte der Installer gar
+keine Erweiterung).
+
+**Speichergrenze und Warnschwellen** (E-S2-15, seit Web 12.0.0): Vorgabe 2 GB
+und 70/90 %, beides im Adminbereich. Geprüft **vor** dem Bau; erreicht heißt
+abgelehnt mit Meldung, nie still verdrängt. Gezählt wird das **ganze**
+Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
+Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
+`docs/Backup-Format.md` 5b.
 
 **`sicherungen/` steht in der `exclude`-Liste von `.github/workflows/deploy.yml`.**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
@@ -2705,8 +4144,33 @@ keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
 
 | Ausnahme | Grund |
 |---|---|
-| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat |
+| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat — das gilt seit Web 12.0.0 auch dann, wenn es noch Fassung 1 ist |
 | ein **freigegebenes** Paket | Die NutzerIn bekommt es im eigenen Backup-Bereich angeboten; es unter ihr wegzuräumen hieße, einen Weg anzubieten, der beim Klick ins Leere läuft |
+
+**Fassung-1-Pakete gehen beim ersten neuen Lauf mit** (Entscheidung vom
+31.08.2026) — aber erst, nachdem das neue Paket geschrieben **und wieder
+gelesen** wurde (`edbak_paket_kopf_lesen()` als Gegenprobe in
+`edbak_sicherung_erzeugen()`). Ein ZIP, das sich nicht öffnen lässt, ist genau
+der Fall, in dem man den alten Stand noch braucht.
+
+### Der Auftrag „Alle sichern" (seit Web 12.0.0)
+
+Er läuft **in Schüben**: von der Schaltfläche, solange die Anfrage Zeit hat
+(`SICHERN_BUDGET`, 20 s), und vom Wartungsjob `adminbackup` weiter. Der
+Merkzettel steht in `app_state.adminbackup_auftrag` und ist **ein Zeiger,
+keine Liste** — `app_state.v` ist `varchar(190)`, eine Liste von Kennungen
+passt dort nicht hinein (Aufbau: `docs/Backup-Format.md` 5c).
+
+Der Job arbeitet **nur auf Auftrag**; nächtliche Sicherungen je Konto sind
+ausdrücklich abgelehnt (E-S2-19). Seine Reserve ist mit 15 s so groß, dass er
+am Huckepack-Weg (`JOB_BUDGET_ANFRAGE` = 3 s) gar nicht erst anfängt — eine
+Anfrage einer NutzerIn soll keine fremde Sicherung mittragen.
+
+**Der Job-Rahmen misst seit Web 12.0.0 auch den Speicher**
+(`jobs_speicher_knapp()`, `JOB_SPEICHER_DECKEL_MB` = 48 von 64). Bis dahin
+zählte nur die Zeit; das reichte, solange jeder Job in Blöcken über Zeilen
+lief. Der Sicherungsjob ist anders: Ein einzelnes Konto kostet beim
+5000er-Bestand 24 MB, und das ist die Größe, an der es klemmt.
 
 Die zweite Ausnahme folgt derselben Regel wie
 `edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr

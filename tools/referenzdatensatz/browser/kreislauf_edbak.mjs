@@ -106,17 +106,39 @@ await seite.setInputFiles('#bfile', quelle);
 await seite.fill('#ipw', bpw);
 await seite.click('#impbtn');
 await rueckfragen();
-for (let i = 0; i < 100; i++) {
-  await seite.waitForTimeout(3000);
-  const s = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
-  if (/fertig|eingespielt|fehlgeschlagen|Fehler|falsch/i.test(s)) { break; }
+
+/* AUF DIE MELDUNG WARTEN, NICHT AUF EINEN WORTLAUT (S2/AP5b, F-S2-D).
+ *
+ * Hier stand `/fertig|eingespielt|fehlgeschlagen|Fehler|falsch/`. Das ist
+ * eine Wette darauf, welche Wörter die Anwendung benutzt — und sie ging
+ * verloren: Der Abbruch heisst „Abgebrochen — es wurde nichts übernommen.",
+ * kommt in keinem dieser Wörter vor, und der Lauf wartete die vollen 300
+ * Sekunden auf einen Zustand, den es schon gab. Danach hätte er ein LEERES
+ * Konto exportiert und verglichen.
+ *
+ * Die Anwendung unterscheidet Zwischenstand und Ergebnis selbst: Ein
+ * Fortschrittstext wird als reiner Text gesetzt, ein Ergebnis über
+ * `melde(el, text, ton)` als `<div class="meldung meldung-ok|warn|fehler">`.
+ * Auf dieses Element wird gewartet — es ist da oder nicht, und es trägt
+ * seinen Ton gleich mit. Ein künftiger Ergebnistext, an den hier niemand
+ * gedacht hat, wird damit von selbst erkannt. */
+const impMeldung = seite.locator('#impstate .meldung');
+try {
+  await impMeldung.first().waitFor({ state: 'attached', timeout: 900000 });
+} catch {
+  pruefe(false, 'Das Einspielen kam in 900 s zu keinem Ergebnis. '
+              + `Letzter Zustand: ${(await seite.locator('#impstate').textContent()
+                  .catch(() => '') || '').trim()}`);
 }
 const impZustand = (await seite.locator('#impstate').textContent().catch(() => '') || '').trim();
+const impTon = (await impMeldung.first().getAttribute('class').catch(() => '') || '');
 const herkunft = (await seite.locator('#impherkunft').textContent().catch(() => '') || '').trim();
 schritt(`Sicherung eingespielt — ${impZustand}`);
 if (herkunft) { console.log(`     Herkunft: ${herkunft}`); }
-pruefe(!/fehlgeschlagen|falsch|Fehler/i.test(impZustand),
-       `Einspielen gescheitert: ${impZustand}`);
+/* Nur `meldung-ok` ist ein bestandenes Einspielen. `meldung-warn` deckt
+   zweierlei ab, das beides kein Erfolg ist: den Abbruch vor dem ersten
+   Schreiben und ein Einspielen mit abgelehnten oder heimatlosen Spuren. */
+pruefe(/meldung-ok/.test(impTon), `Einspielen nicht sauber: ${impZustand}`);
 
 // ---- 4. Aus dem frischen Konto erneut sichern ----------------------------
 await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });

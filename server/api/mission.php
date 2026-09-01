@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';
 require_once __DIR__ . '/../mission_fields_lib.php';
 require_once __DIR__ . '/../diensttag_lib.php';
+require_once __DIR__ . '/../spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 
 // Nur lesen (M3-11) — derselbe Grund wie bei den uebrigen lesenden
 // Endpunkten: Was nichts aendert, beantwortet auch kein POST.
@@ -136,11 +137,12 @@ try {
     $p9->execute([$id]);
     $p9at = $p9->fetchColumn() ?: null;
 
-    $pt = db()->prepare('SELECT lat, lon, ts FROM track_points
-                         WHERE owner_type = \'mission\' AND owner_id = ? ORDER BY seq');
-    $pt->execute([$id]);
-    $punkte = $pt->fetchAll();
-    $track = array_map(fn($p) => [(float)$p['lat'], (float)$p['lon']], $punkte);
+    /* SPUR UEBER spur_lib.php (S2/AP1) — Zeilen und Blob zusammen. Die
+     * Zeitstempel werden weiter gebraucht: Sie bestimmen unten je Phase den
+     * naechstliegenden Punkt (`track_idx`). */
+    $spur = spur_lesen(db(), 'mission', $id);
+    $punkte = array_map(fn($p) => ['lat' => $p[1], 'lon' => $p[2], 'ts' => $p[4]], $spur);
+    $track = array_map(fn($p) => [$p[1], $p[2]], $spur);
 
     /* Je Phase der naechstliegende TRACKPUNKT (nach Zeitstempel): Die
      * Einsatzansicht hebt zum angetippten Eintrag sein Teilstueck der Spur

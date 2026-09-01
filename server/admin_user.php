@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
+require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
 require_admin();
@@ -199,7 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      */
     if ($action === 'einspielen') {
         $ziel  = edbak_ziel_konto($uid);
-        $paket = edbak_paket_lesen($kennung, $datei);
+        /* Nur der Kopf: edbak_weg() entscheidet aus dem Manifest (S2/AP6). */
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -216,8 +218,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
             } else {
                 try {
-                    $bericht = edbak_restore($uid, $paket['daten']);
-                    $notice = 'Sicherung eingespielt.';
+                    [$okE, $grundE, $bericht] =
+                        edbak_paket_zurueckspielen($kennung, $datei, $uid);
+                    if ($okE) { $notice = 'Sicherung eingespielt.'; }
+                    else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
                            . fehler_kennung($ex, 'adminbackup') . ').';
@@ -229,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* ---- Freigeben und widerrufen (A8.6) --------------------------------- */
     if ($action === 'freigeben') {
         $ziel  = edbak_ziel_konto((int)($_POST['ziel_user'] ?? 0));
-        $paket = edbak_paket_lesen($kennung, $datei);
+        $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
@@ -311,8 +315,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
                        . '„Sicherungen" nachsehen.';
             } else {
-                // FK-Kaskaden entfernen Einsätze, Segmente, Tracks, Geräte, Diensttage
-                db()->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
+                /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
+                 *
+                 * Hier stand: „FK-Kaskaden entfernen Einsätze, Segmente,
+                 * Tracks, Geräte, Diensttage". Fuer „Tracks" war das FALSCH,
+                 * und zwar seit jeher: `track_points` ist polymorph
+                 * (owner_type/owner_id) und traegt deshalb KEINEN
+                 * Fremdschluessel — die Kaskade nimmt die Punkte nicht mit.
+                 * Sie blieben als Waisen liegen, bis der Tagesjob das naechste
+                 * Mal lief: fruehestens am naechsten Kalendertag, und nur,
+                 * wenn ueberhaupt jemand die Installation aufrief.
+                 *
+                 * Was dort liegen blieb, sind Positionsdaten — Wohnorte,
+                 * Einsatzorte, Wege. Ein Konto zu loeschen ist die Handlung,
+                 * mit der eine NutzerIn genau das aus der Welt schaffen will.
+                 * Dass es bis zu einen Tag laenger dauerte, war vertretbar;
+                 * dass es niemand wusste, nicht — und der Kommentar hier hat
+                 * dafuer gesorgt, dass es niemand wusste.
+                 *
+                 * Der Messstand hat es vorgefuehrt: Zwei geloeschte Konten
+                 * hinterliessen 6 202 931 verwaiste Spurpunkte, rund 380 MB.
+                 *
+                 * Jetzt gehen Zeilen UND Blobs mit, vor der Kaskade. Der
+                 * Wartungsjob bleibt das Sicherheitsnetz (E-S2-18). */
+                $pdoDel = db();
+                foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tab]) {
+                    $ids = $pdoDel->prepare("SELECT id FROM `$tab` WHERE user_id = ?");
+                    $ids->execute([$uid]);
+                    spur_loeschen($pdoDel, $typ, $ids->fetchAll(PDO::FETCH_COLUMN));
+                }
+                // Der Rest kaskadiert wie bisher.
+                $pdoDel->prepare('DELETE FROM users WHERE id = ?')->execute([$uid]);
                 header('Location: admin_users.php');
                 exit;
             }
@@ -354,11 +387,18 @@ $zielkonten = db()->prepare('SELECT id, email FROM users WHERE id <> ? ORDER BY 
 $zielkonten->execute([$uid]);
 $zielkonten = $zielkonten->fetchAll();
 
-/** Ist das Paket formal lesbar? Liest die Datei — deshalb nur hier, wo es
- *  hoechstens so viele sind, wie die Aufbewahrung zulaesst (Vorgabe drei). */
+/** Ist das Paket formal lesbar?
+ *
+ *  Seit S2/AP6 nur noch der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
+ *  ein paar Kilobyte. Vorher wurde je Paket die ganze Datei gelesen und
+ *  dekodiert — bei einem grossen Konto also, bei jedem Aufruf dieser Seite,
+ *  zweimal 94 MB, nur um zwei Plaketten zu setzen.
+ *
+ *  Fassung 1 muss weiterhin ganz gelesen werden; ihr Format hat keinen
+ *  getrennten Kopf. Solche Pakete verschwinden mit dem ersten neuen Lauf. */
 function paket_lesbar(string $kennung, string $datei): bool
 {
-    return edbak_paket_lesen($kennung, $datei) !== null;
+    return edbak_paket_kopf_lesen($kennung, $datei) !== null;
 }
 
 $kennung = (string)($u['account_key'] ?? '');

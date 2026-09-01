@@ -87,6 +87,16 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   `mission_fields.php` beschrieben; Formular, Speichern, API und Anzeige ziehen
   von selbst nach. Ein neues Feld, das an fünf Stellen von Hand eingebaut wird,
   ist ein Fehler. Vorgehen: `docs/Technik.md`, Abschnitt 7 (Runbook).
+- **Spuren nur über `spur_lib.php`.** Seit Web 10.0.0 liegen GPS-Punkte je
+  nach Alter als Zeilen in `track_points` **oder** als Blob in `track_blobs`
+  (Format SPUR1) — und während einer Nachlieferung als beides. Wer eine der
+  beiden Tabellen unmittelbar per SQL liest, schreibt oder löscht, zeigt oder
+  hinterlässt früher oder später eine halbe Spur, und zwar ohne
+  Fehlermeldung. Es gibt genau einen Weg: `spur_lesen()`,
+  `spur_lesen_viele()`, `spur_zahlen()`, `spur_naechste_seq()`,
+  `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
+  daran vorbeigeht, ist ein Fehler. Format und Begründung:
+  `docs/Technik.md`, Abschnitt 4.97; Nachweis: `php tools/spurprobe/probe.php`.
 
 ## 5. Oberfläche
 

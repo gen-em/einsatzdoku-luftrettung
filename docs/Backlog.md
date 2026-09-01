@@ -23,8 +23,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ## Offen
 
-2. Serverseitige Track-Vereinfachung (Douglas-Peucker) für die Web-Darstellung
-3. GPX-Export (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`)
 8. Content-Security-Policy als zusätzliche Verteidigungslinie.
    Seit Web 5.2.0 eng fassbar: Es wird keine fremde Quelle mehr geladen
    (Nr. 12), die Regel muss also nichts von außen erlauben.
@@ -91,6 +89,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Mittel braucht also eine Ausnahmeliste mit Begründung — wie die
     Streichliste — statt einer Ja/Nein-Regel. Sinnvoll gegen Ende von P3,
     wenn die Klassennamen stehen.
+
+    **Derselbe Fall von der anderen Seite, gefunden in S2/AP4:** `ui_plakette()`
+    setzt ihre Klasse aus dem Ton zusammen — `'plakette-' . $ton`. Der Ton
+    `warn` wurde an drei Stellen übergeben, und `.plakette-warn` gibt es im
+    Stylesheet nicht (gültig sind `neutral`, `orange`, `blau`, `rot`). Die
+    Plaketten standen dort ohne Hintergrund da, als bloßer Text. Zwei der drei
+    Stellen stammten aus AP2 und AP3, also aus derselben Phase; behoben mit
+    Web 10.3.0.
+
+    `tools/vollstaendigkeit/` konnte das nicht finden: Es kennt Klassen im
+    Markup und Klassen im Stylesheet, aber `plakette-warn` taucht als Literal
+    in keinem von beiden auf. Das gesuchte Prüfmittel muss also **beide**
+    Richtungen abdecken — Selektoren, die JavaScript nennt, und Klassennamen,
+    die PHP oder JS zur Laufzeit zusammensetzen. Für den zweiten Fall gibt es
+    einen billigen Sonderweg, der ohne allgemeine Auflösung auskommt: Die
+    Bausteine mit geschlossenem Wertevorrat (`ui_plakette` mit vier Tönen,
+    `ui_knopf` mit fünf Arten, `ui_meldung_markup`) kennen ihre erlaubten Werte
+    selbst — eine Prüfung, die jeden übergebenen Wert gegen diese Liste hält,
+    hätte den Fall sofort gemeldet.
 
 37. **Wie verhält sich die Anwendung, wenn ein Konto über Jahre wächst?**
     Aufgeworfen während P3, dort bewusst **nicht** weiterverfolgt — die Frage
@@ -169,7 +186,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
     **Was noch fehlt:** die Serverseite bei vielen EINSÄTZEN. Sie ist die
     einzige Größe, die die Sondierung nicht erreicht — dafür braucht es echte
-    Zeilen. Beschlossen ist
+    Zeilen. Beschlossen war
     dafür ein Werkzeug `tools/lastdatensatz/`, das den vorhandenen Bestand mit
     neuen Dienstdaten vervielfacht (250 / 500 / 1000 / 3500), in **zwei**
     Verteilungen: realistisch mit rund sechs Einsätzen je Diensttag, und
@@ -180,6 +197,34 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     darf aber niemals mit behaltenem IV und geändertem Klartext geschrieben
     werden: Das bräche die Verschlüsselung für die echten Einsätze desselben
     Kontos gleich mit.
+
+    **Diese Frage wird in der Phase S2 beantwortet, und `tools/lastdatensatz/`
+    ist darin zu `tools/messstand/` geworden** (S2/AP0). Der Weg ist ein
+    anderer als hier beschrieben — nicht neue Dienstdaten erfinden, sondern
+    die Referenzsicherung vervielfältigen und über den **regulären**
+    Wiederherstellungsweg einspielen; damit ist der Einspielweg selbst einer
+    der Prüflinge. Stand: 5002 Einsätze, 3,2 Mio. Spurpunkte, herstellbar in
+    245 s.
+
+    **Was S2 bisher beantwortet hat:**
+
+    - *Speicher.* Spurpunkte sind 93 % des Bestands; als Blob kosten sie
+      3,58 statt 62,4 Byte je Punkt (S2/AP1, Web 10.0.0).
+    - *Wartung.* Sie lag auf dem Weg einer Anfrage und kostete bei 9,46 Mio.
+      Zeilen 4,07 s. Seit S2/AP2 (Web 10.1.0) läuft sie in Häppchen mit
+      Zeitbudget, drei Auslösern und Fortsetzungsmarke.
+    - *Wachstum gedeckelt.* Seit S2/AP3 (Web 10.2.0) verdichten und dünnen zwei
+      Jobs die Spuren aus. Gemessen am Messstand (5345 Einsätze): **1,60 MB
+      Blobs je 1000 Einsätze** gegen 3 MB Zielwert aus E-S2-24 — dieselbe Menge
+      als Zeilen wären rund 200 MB gewesen.
+    - *Ein Fund nebenbei:* Ein gelöschtes Konto ließ seine Spurpunkte liegen —
+      am Messstand 6 202 931 verwaiste Punkte aus zwei Konten (F-S2-B,
+      behoben in AP1).
+
+    **Was hier offen bleibt,** bis die Phase durch ist: Zeitraumübersicht und
+    Nachbearbeitung bei dieser Menge, `admin_sicherungen.php` (siehe oben),
+    und die Frage, ob die Zielzahlen aus E-S2-24 (Suche ≤ 5 s, Tagesansicht
+    ≤ 3 s, Sicherung ≤ 5 min) gehalten werden.
 
 38. **`nb_offen_gesamt()` holt Zeilen, um sie zu zählen.**
     *Gefunden in P3/O11.* Der Eintrag „Zuordnung offen" der Diensttage-Leiste
@@ -251,10 +296,27 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12.* P-P3-03 verlangt null. Die Prüfung meldet 158
-    Treffer; 155 davon sind Kommentare oder richtige Typografie (die
-    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der
-    Hinweise, das Malzeichen in „3× RTW"). Drei sind echte Symbole:
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
+    und AP6.* P-P3-03 verlangt null. Die Prüfung meldet **195** Treffer (bei
+    Aufnahme 158); 192 davon sind Kommentare oder richtige Typografie (die
+    Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
+    das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
+    bei der Aufnahme:
+
+    > **Die Zahl wächst mit dem Text, nicht mit dem Problem.** Jeder neue
+    > Hinweissatz mit Auslassungspunkten erhöht sie um eins; S2/AP3 hat sie
+    > mit einer einzigen neuen Zeile auf der Wartungsseite von 167 auf 168
+    > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
+    > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
+    > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189
+    > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
+    > S2/AP6 mit den Fortschrittsmeldungen des Freigabewegs auf 195 — jedes
+    > Mal gemessen gegen den Stand davor, nicht geschätzt.
+    > Wer die Zahl als
+    > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
+    > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in
+    > eine Fußnote.
+
 
     - `server/einsatz_form.php:1416` — `'✕'` als **Rückfall**, wenn
       `edSymbol()` beim synchronen Aufbau noch nicht geladen ist. Mit
@@ -305,6 +367,214 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     eine mittlere Fassung über die volle Breite des Diensttags, über der
     Liste. Kein Mockup, keine Freigabe — bewusst nicht in dieser Runde.
 
+46. **Das Altformat der Sicherung wird mit NaDoku 1.0 abgeschafft.**
+    *Aufgenommen 31.08.2026 (S2/AP5), Entscheidung desselben Tages.* Seit
+    Web 11.0.0 schreibt die Anwendung Containerfassung 4; die einteiligen
+    Fassungen 2 und 3 werden nur noch **gelesen**. Das ist der Weg, auf dem
+    ein vorhandener Bestand einmal herüberkommt — nicht mehr.
+
+    Zu entfernen sind dann: der Lesezweig in `assets/crypto.js`
+    (`openBackup`, Fassung 2 und 3), der Punktlisten-Rückweg in
+    `backup_lib.php` (`$spurSchreiben`, `$insPoint`), die Annahme von
+    Nutzlast 6 und 7 in `api/backup_restore.php`, die Fassungsweiche in
+    `tools/referenzdatensatz/vergleich/lesen.py`, die einteilige
+    Referenzdatei unter `referenz/altformat/` samt dem Lauf `--art edbak-alt`
+    und seiner Ausnahmeliste.
+
+    **Und der Messstand hängt daran.** `tools/messstand/vervielfaeltigen.py`
+    baut den 5000er-Bestand, indem es die Referenz-Nutzlast vervielfältigt und
+    als einteilige Datei versiegelt; eingespielt wird über den
+    Altformat-Lesepfad. Das ist heute die richtige Wahl (S2/AP5 begründet sie:
+    Gemessen wird das Sichern und Wiederherstellen, und beides läuft in
+    Fassung 4 — der Weg zum Bestand ist selbst ein R11-Prüffall). Zum Stichtag
+    braucht er einen anderen Weg: entweder einen Container-Schreiber in Python
+    oder ein Herstellen des Bestands über die Uhr-Schnittstelle.
+
+    **Diese Abhängigkeit hat schon einmal zugeschlagen** (31.08.2026, F-S2-E):
+    Das Werkzeug erbte die Fassungsnummer aus der Referenz, und seit die
+    Fassung 4 mit Nutzlast 8 ist, schrieb es einteilige Dateien, die
+    `version: 8` nennen. Der Einspielweg nahm daraufhin den Verweisweg und
+    legte 164 Einsätze **ohne Spur** an — 91 208 Punkte weg, Meldung
+    „fertig". Behoben durch `nutzlast["version"] = 7` und eine Meldung in
+    `edbak_restore()`. Die Notiz oben war richtig; sie war nur nicht laut
+    genug, um zu verhindern, dass es passiert.
+
+    > **Warum das hier steht und nicht einfach passiert.** Ein Lesezweig, der
+    > niemandem mehr auffällt, wird nicht gepflegt und trotzdem mitgeschleppt
+    > — und im Ernstfall verlässt sich jemand darauf. Ein Datum, zu dem er
+    > verschwindet, ist ehrlicher als ein „bleibt erstmal".
+
+    Vorher zu klären: Was geschieht mit einer alten Datei nach dem Stichtag?
+    Vorschlag: Die Meldung nennt die letzte Fassung, die sie noch einspielen
+    konnte — so wie es `version_alt` heute für Nutzlasten unter 6 tut.
+47. **Nichts hält das native `confirm()` draußen.**
+    *Aufgenommen 31.08.2026 (S2/AP5b, aus F-S2-D).* `assets/confirm.js` gibt
+    es, weil Browser bei nativen Dialogen „keine weiteren Dialoge dieser
+    Seite anzeigen" anbieten — danach verschwinden Rückfragen stillschweigend. Das
+    Handbuch sagt das auch zu: „Alle Rückfragen erscheinen als Fenster
+    **innerhalb der Seite**."
+
+    Diese Zusage war zwei Jahre lang falsch. Zwei Aufrufe im Sicherungsbereich
+    von `einstellungen.php` benutzten weiter `window.confirm`; aufgefallen ist
+    es erst, als der Kreislauftest daran hängenblieb — Playwright weist native
+    Dialoge stillschweigend ab, und das Einspielen brach ab, ohne dass jemand
+    eine Frage gesehen hätte. Beide sind auf `window.edConfirm` umgestellt.
+
+    Was fehlt, ist die Schranke: eine Prüfung, die `confirm(`, `alert(` und
+    `prompt(` in `server/**/*.php` und `server/assets/*.js` findet und meldet
+    — mit Ausnahmeliste für die eine berechtigte Stelle (`confirm.js` selbst
+    benutzt `window.confirm` als Rückfall für Browser ohne `<dialog>`).
+
+    > **Warum eine Prüfung und nicht nur Aufmerksamkeit.** Der Fehler ist
+    > unsichtbar: Ein natives `confirm()` funktioniert im Alltag, es fällt
+    > erst bei einer abgeschalteten Dialogsorte oder in einem Prüfbrowser auf
+    > — also genau dann, wenn niemand hinsieht.
+
+    Naheliegender Ort: `tools/vollstaendigkeit/`, das ohnehin Markup und
+    Stylesheet gegeneinanderhält, oder ein eigenes kleines Prüfmittel neben
+    `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
+    sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
+
+48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
+    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
+    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
+    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
+    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
+    noch als Spalte in `users`.
+
+    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
+    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
+    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
+    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
+    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
+    endet mit dem Einlösen.
+
+    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
+    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
+    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
+    Parameter; `edbak_verdraengen()` liest ihn.
+
+49. **Aufbewahrung auch auf dem Sicherungsziel.**
+    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
+    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
+    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
+    Sicherungen je Konto und Monat läuft ein Ziel damit über kurz oder lang
+    voll, und niemand merkt es hier.
+
+    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
+    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
+    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
+    diesen Fehler mit hinüber.
+
+    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
+    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
+    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
+    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
+    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
+    Frage vielleicht schon.
+
+50. **Der Versand liest je Konto ein Verzeichnis.**
+    `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
+    Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
+    unauffällig (gemessen: SFTP 3,08 s für 64 Dateien einschliesslich aller
+    Listen); bei dreihundert Konten sind es dreihundert Abfragen je Lauf und je
+    Ziel, über eine Leitung, die kein Loopback ist.
+
+    Der Ausweg ist **nicht** eine Merkliste in der Datenbank — die behauptet
+    „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht oder das
+    Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man die
+    Sicherung braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
+    die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
+    hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
+
+51. **Die Suchseite verarbeitet 5 000 Einträge, um 200 zu zeigen.**
+    Gemessen in S2/AP9 an einem Konto mit 5 002 Einsätzen: Bis die
+    geschützten Spalten lesbar sind, vergehen **3,77 s** (Drossel 6×). Davon
+    entfallen auf das Entschlüsseln der angezeigten Zeilen rund **0,1 s** —
+    der Abstand zwischen „erste Zeile im DOM" (3,67 s) und „lesbar" (3,77 s).
+    Die Zeit geht also fast vollständig für das drauf, was VOR der Tabelle
+    passiert: die Antwort holen und auswerten, den Heuhaufen je Einsatz bauen,
+    filtern, sortieren.
+
+    Und entschlüsselt werden **alle** 5 002 (4 880 mit Block), obwohl nur 200
+    angezeigt werden. Das ist nicht ohne Grund: Die Freitextsuche sucht auch
+    in Diagnose, Alter und Einsatzort, und die stehen im verschlüsselten
+    Block. Ohne Filter braucht es sie aber nicht.
+
+    **Zu entscheiden:** ob die Entschlüsselung auf das verschoben wird, was
+    tatsächlich gebraucht wird — beim Aufbau nur die angezeigten Zeilen, der
+    Rest im Hintergrund oder erst, wenn ein Filter ihn verlangt. Das ist kein
+    Umbau des Suchindex (den schließt E-S2-16 aus), aber eine spürbare
+    Änderung im Verhalten: Ein Filter würde dann beim ersten Mal länger
+    brauchen. Vorher messen, welcher der drei Posten vor der Tabelle wirklich
+    wiegt — die Vermutung „es ist die Krypto" hat sich in AP9 schon einmal
+    als falsch erwiesen.
+
+52. **WebDAV als viertes Sicherungsziel.**
+    Aus E-S2-22, dort ausdrücklich in den Backlog verwiesen. Die Schnittstelle
+    `Zielweg` (`sicherungsziel_lib.php`) ist genau dafür gebaut: verbinden,
+    Ordner anlegen, senden, holen, auflisten, löschen — ein vierter Adapter
+    berührt weder den Versandjob noch das Komplettbackup.
+
+    **Warum es trotzdem nicht nebenbei geht:** WebDAV ist HTTP, und die
+    Anwendung hat für ausgehendes HTTP bisher keinen Weg. Nötig wären
+    `ext/curl` (auf Webspace meist da, aber nicht sicher) und eine Entscheidung
+    über die Zertifikatsprüfung — bei FTPS prüft `ext/ftp` nichts, bei WebDAV
+    über curl **kann** man prüfen, und dann sollte man auch. Das ist eine
+    Festlegung und kein Handgriff.
+
+53. **Konto-Schlüsselpaar für versiegelte Serversicherungen.**
+    Aus E-S2-19. Nächtliche Sicherungen je Konto ohne Browser sind abgelehnt
+    worden, weil der Server den Inhaltsschlüssel nicht hat und ihn nicht
+    bekommen soll. Ein **öffentlicher** Schlüssel je Konto würde die Lücke
+    schließen: Der Server verschlüsselt damit ohne jedes Geheimnis, öffnen kann
+    es nur, wer den privaten Teil hat — die NutzerIn im Browser.
+
+    **Zu entscheiden:** wo der private Teil lebt (unter dem Inhaltsschlüssel
+    verpackt wie `pat_wrap_rc`?), was bei einem Passwortwechsel damit
+    geschieht, und ob eine Sicherung, die niemand außer der NutzerIn öffnen
+    kann, für die Administration überhaupt eine Rückfallebene ist — bei einem
+    verlorenen Konto ist sie es nicht. Genau daran ist E-S2-19 einmal
+    gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
+    nicht weil die Antwort feststünde.
+
+54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
+    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
+    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
+    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
+    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
+    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
+    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+    heraus.
+
+    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
+    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
+    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
+    an der zuerst eine Spalte fehlt.
+
+    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
+    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
+    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
+    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
+    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
+    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
+    nichts an einer Datei mit 37 Migrationen.
+
+55. **Die Komplettsicherung kennt keinen scharfen Schnappschuss.**
+    Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
+    den ganzen Lauf (`--single-transaction`) ginge nur innerhalb EINER
+    Verbindung. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+    oder nicht. Übersprungen wird nichts, was schon dastand — der Cursor läuft
+    über den Primärschlüssel —, aber ein Einsatz, der während des Laufs
+    angelegt wird, kann mit Phasen und ohne Spur in der Datei landen.
+
+    In der Praxis ist das verschmerzbar: Wer nachts sichert, hat das Problem
+    nicht, und die Uhr liefert Fehlendes idempotent nach. **Zu entscheiden:**
+    ob es sich lohnt, den Lauf auf eine Anfrage zu zwingen, sobald die
+    Datenbank klein genug ist (dann wäre er scharf), und wo diese Grenze
+    läge — oder ob stattdessen die Reihenfolge der Tabellen so gewählt wird,
+    dass wenigstens Einsatz und Phasen zusammen fallen.
+
 ---
 
 46. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
@@ -347,6 +617,51 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+2. **Serverseitige Track-Vereinfachung (Douglas-Peucker) für die
+   Web-Darstellung.**
+   *Erledigt mit Web 10.2.0 (S2/AP3).*
+   Umgesetzt nicht als Vereinfachung für die Anzeige, sondern als **Ausdünnung
+   des Bestands**: Douglas-Peucker dreidimensional, 2 m waagerecht / 3 m
+   senkrecht als getrennte Toleranzen, sechs Monate nach Einsatzende, mit
+   Schutz des ersten und letzten Punktes und je Phasenzeitpunkt des
+   zeitnächsten (E-S2-05).
+
+   Damit ist der Punkt für Bestände ab sechs Monaten gegenstandslos: Es gibt
+   nichts mehr zu vereinfachen, die Spur ist es schon. Für **frische**
+   Einsätze braucht es keine zusätzliche Vereinfachung — die Tagesansicht
+   liegt bei 6 000 bis 10 000 Punkten, unter 1 ms Dekodierzeit, und Leaflet
+   ist damit unkritisch (E-S2-09). Der ursprüngliche Anlass, „die Karte wird
+   langsam", tritt also nicht ein.
+
+   *Gemessen:* 156 Referenzspuren mit 47 078 Punkten, **0 Verletzungen** der
+   Zusage von 2,0 m / 3,0 m, unabhängig gegen den endgültigen Streckenzug
+   nachgemessen; am Messstand 4973 Spuren in 15,2 s. Gegenprobe zur
+   Notwendigkeit der zweiten Toleranz: rein zweidimensional ausgedünnt liegt
+   der schlimmste verworfene Punkt **82,76 m** neben dem Höhenprofil.
+
+3. **GPX-Export** (Datenmodell dafür vorbereitet: lat/lon/ele/ts je `seq`).
+   *Erledigt mit Web 10.3.0 (S2/AP4).*
+   Umgesetzt als **Abruf je Spur**, nicht als weiteres Exportprofil: ein
+   Eintrag im Aktionsmenü der Einsatzansicht und die Seite „Spuren des
+   Diensttages" (`tag_spuren.php`), die Einsätze **und Ruhesegmente**
+   chronologisch auflistet, mit der Karte verknüpft und einzeln
+   herunterladbar macht. Wer mehrere ankreuzt, bekommt sie als **eine** Datei
+   mit mehreren `<trk>` — zusammengeklebt würde jedes Kartenprogramm eine
+   gerade Linie vom Ende der einen Spur zum Anfang der nächsten ziehen. GPX
+   gab es vorher nur als Beiwerk im großen Export, im Browser
+   zusammengesetzt.
+
+   Zwei Entscheidungen dabei: Die Datei entsteht **serverseitig** — die erste
+   des Projekts, denn alle übrigen Downloads sind Ende-zu-Ende verschlüsselt
+   und können nur im Browser entstehen; hier ist es umgekehrt, und ein
+   serverseitig gebauter Dateiname kann keine geschützte Angabe tragen. Und
+   die Kennzeichnung Original/ausgedünnt (E-S2-09) steht an **drei** Stellen:
+   in der Datei, im Dateinamen und auf der Seite.
+
+   *Gemessen:* `tools/gpxprobe/` — 47 Erwartungen, 0 nicht erfüllt; gültig
+   gegen das amtliche GPX-1.1-XSD; **174 804 Einzelvergleiche** Punkt für Punkt
+   gegen die browsergebauten Referenzdateien, 0 Abweichungen.
 
 39. **Klassen im Markup ohne Regel im Stylesheet — 29 Stück.**
     *Erledigt mit Web 9.13.0 (P3/O12).* Der Punkt war eine Frage nach dem

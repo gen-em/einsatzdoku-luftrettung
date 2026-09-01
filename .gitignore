@@ -8,6 +8,7 @@ watch/bin/
 server/config.php
 server/install.lock
 server/install-nachweis-*.txt
+server/wiederher-nachweis-*.txt
 
 # Betriebssystem-Kram
 .DS_Store
