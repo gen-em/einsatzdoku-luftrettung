@@ -1368,3 +1368,62 @@ jeder Zahl gehört, **was** sie gemessen hat.
 Beide betreffen `tag_spuren.php` und sind in Abschnitt 8 als F-S3-B und
 F-S3-C geführt; behoben, weil sie die laufende Arbeit an derselben Seite
 betrafen (K4).
+
+---
+
+### AP6 — Einsatzansicht (G)
+
+**Stand:** erledigt. Web 12.3.1.
+
+#### Was geändert wurde
+
+- **Höhe beschriftet:** `Höhe 706 m` statt `706 m` in der Kleinzeile des
+  Einsatzortes. Die Bedingung `kind === 'air'` stand bereits im Code
+  (E-S3-09 war insoweit schon erfüllt) — gefehlt hat nur das Wort.
+- **Plakette „verschlüsselt"** am Block Einsatz; **Schloss** an Name und
+  Geburtsdatum/Alter.
+- **`.symbol-schutz`**: `vertical-align` von `baseline` auf `-0.1em`.
+- **Der Freibanner entfällt** samt der Zeile, die ihn einblendete.
+- **Handbuch** an der betroffenen Stelle umgeschrieben — die Aussage
+  „entsperrt bis zur Abmeldung" bleibt dort, der Satz „Schloss-Symbole an
+  den einzelnen Zeilen gibt es nicht mehr" ist **ausgetragen**, weil er seit
+  diesem Paket falsch wäre.
+
+#### E-S3-16 — Plakette und Schloss schließen einander nicht mehr aus
+
+**Das ist die Umkehr einer P3-Entscheidung und gehört benannt.** F-N1-B hatte
+festgelegt: entweder die Plakette am Kartenkopf **oder** das Schloss an der
+Zeile, nie beides — „in der PatientIn-Karte wäre das Zeichen an jeder Zeile
+Lärm". Die Rückmeldung verlangt beides.
+
+Umgesetzt, weil die Begründung trägt: **Es sind zwei verschiedene
+Auskünfte.** Die Plakette beantwortet „stehen auf dieser Karte geschützte
+Daten?", das Schloss beantwortet „ist *diese* Zeile geschützt?". F-N1-B hat
+die zweite Frage der ersten geopfert. Bei einer Schutzauskunft ist Redundanz
+kein Lärm — dieselbe Überlegung, aus der in derselben Runde der
+Datenschutzhinweis der Spurenseite rot geworden ist.
+
+Vermerkt in `docs/Design.md` 9.6 als ausdrückliche Ablösung von F-N1-B.
+
+#### Prüfstand AP6
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | 643 → 643 Regeln, **1 geänderter Wert** (`.symbol-schutz vertical-align`), 0 entfallen, 0 neu, 0 Reihenfolgetausch |
+| Höhe: Luft gegen Boden | Browserprobe, je ein Einsatz des Demo-Bestands (349 Luft, 365 Boden) | Luft: `Höhe 706 m` gefunden. Boden: **keine** Höhenzeile, und auch kein nacktes „nnn m" (Gegenprobe mit eigenem Muster) |
+| Plaketten | dieselbe Probe, alle sichtbaren Karten | Einsatz **verschlüsselt**, PatientIn **verschlüsselt**, Transport/Besatzung/Phasen ohne — wie vorgesehen |
+| Schlösser | dieselbe Probe | Einsatzort, Beschreibung Einsatzort, Diagnose, Geboren bzw. Alter — je mit `<title>` „Ende-zu-Ende-verschlüsselt" |
+| Schlosslage | Symbolmitte gegen Mitte des Zeilenkastens, sieben Werte durchgemessen | `baseline` −2,0 px · `middle`/`text-bottom`/`sub` +2,0 px · **`-0.1em` −0,5 px** (gegen die Versalmitte +0,5) — gewählt |
+| Freibanner weg | DOM-Abfrage nach `#freibanner` | nicht vorhanden; der Gesperrt-Balken und der Fehlerbalken stehen unverändert im Markup |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Nichts verlorengegangen / Texte | `pruefen.py`, `wortliste.py` | 260 Befunde wie Basis · 0 / 0 / 0 |
+
+**Nicht geprüft und warum:** Das **Schloss an „Name"** ist im Code auf
+demselben Weg gesetzt wie das an „Geboren" (dieselbe Funktion
+`dtGeschuetzt`), stand aber in keinem der beiden geprüften Einsätze im Bild —
+im Demo-Bestand trägt keiner der beiden einen Patientennamen. Beleg ist damit
+der Codeweg, nicht das Bild. Gehört als Bedienweg ins Prüfdokument.
+
+Ebenfalls nicht geprüft: der **gesperrte** Zustand (Balken mit
+Entsperren-Knopf) und der Fehlerzustand. Beide sind unberührt, aber die Probe
+lief angemeldet und entsperrt.

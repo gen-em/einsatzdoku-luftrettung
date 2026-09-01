@@ -1006,6 +1006,14 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > Literal nirgends auftaucht; `tools/vollstaendigkeit/` kann ihn deshalb nicht
 > finden. Behoben mit Web 10.3.0, vermerkt in Backlog Nr. 36.
 
+> **Plakette und Schloss schließen einander nicht mehr aus** (S3/AP6,
+> E-S3-16). F-N1-B hatte in P3 entschieden: entweder die Plakette
+> „verschlüsselt" am Kopf der Karte **oder** das Schloss an der einzelnen
+> Zeile. Seit der Rückmeldung vom 31.08.2026 gilt beides nebeneinander, weil
+> es zwei verschiedene Auskünfte sind: **Die Plakette sagt „hier stehen
+> verschlüsselte Angaben", das Schloss sagt „diese hier."** Bei einer
+> Schutzauskunft ist Redundanz kein Lärm.
+
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
 Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:

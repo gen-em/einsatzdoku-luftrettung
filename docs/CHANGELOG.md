@@ -11,6 +11,63 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.3.1] — 2026-09-01
+
+**Die Einsatzansicht.** Sechstes Arbeitspaket von S3. Eine
+Funktionsänderung (Höhenanzeige), sonst Anzeige. Keine Migration.
+
+### Web — „706 m" sagte nicht, was 706 Meter sind
+
+Unter dem Einsatzort steht eine Kleinzeile mit Höhe und Strecke. Die Strecke
+trug ihr Wort („Strecke 40,9 km"), die Höhe nicht — dort stand nur „706 m",
+direkt daneben. Jetzt **„Höhe 706 m"**.
+
+**Angezeigt wird sie weiterhin nur bei luftgebundenen Diensttagen**
+(`kind = 'air'`). Bodengebunden ist es die Höhe der Straße, und die ist keine
+Auskunft; die Zeile entfällt dort **ersatzlos** — eine leere beschriftete
+Zeile wäre derselbe Fehler in neu. Gespeichert und exportiert wird die Höhe
+unverändert in beiden Fällen; bedingt ist nur die Anzeige.
+
+### Web — Schutz wird jetzt zweimal angezeigt, und das ist Absicht
+
+P3 hatte sich entschieden (F-N1-B): **entweder** die Plakette „verschlüsselt"
+am Kopf der Karte **oder** das Schloss an der einzelnen Zeile, nie beides.
+Die Karte „PatientIn" bekam die Plakette, weil dort alles verschlüsselt ist;
+die drei geschützten Felder der Karte „Einsatz" bekamen Schlösser, weil sie
+zwischen Klartextfeldern stehen.
+
+Die Rückmeldung vom 31.08.2026 dreht das um, und die Begründung trägt: **Die
+Plakette sagt „hier stehen verschlüsselte Angaben", das Schloss sagt „diese
+hier."** Das sind zwei verschiedene Auskünfte, und bei einer Schutzauskunft
+ist Redundanz kein Lärm. Neu sind deshalb:
+
+- die blaue Plakette **„verschlüsselt"** auch am Block **Einsatz**,
+- das Schloss an **Name** und **Geburtsdatum** in der Karte PatientIn.
+
+### Web — Der blaue Balken nach dem Entsperren entfällt
+
+„Geschützte Angaben sind entsperrt, bis du dich abmeldest" stand nach dem
+Entsperren auf **jedem** Einsatz, den man danach öffnete. Eine Bestätigung,
+die von da an immer dasteht, sagt beim zwanzigsten Mal nichts mehr — und
+sichtbar ist der Zustand ohnehin daran, dass die geschützten Angaben
+dastehen.
+
+**Was bleibt:** der Balken für den **gesperrten** Zustand samt
+Entsperren-Knopf und die Fehlermeldung für Angaben, die sich mit dem
+aktuellen Schlüssel nicht lesen lassen. Beide sagen etwas, das man nicht
+sieht. Die Aussage „entsperrt bis zur Abmeldung" ist ins **Handbuch**
+gewandert und dort ausgetragen worden, wo sie die alte Meldung beschrieb.
+
+### Web — Das Schloss saß nicht auf der Höhe des Wortes
+
+`.symbol-schutz` stand auf `vertical-align: baseline` — der Kasten des
+16-px-Symbols auf der Schriftlinie des 15-px-Wortes, und damit sichtbar zu
+hoch. Nachgemessen an einer echten Zeile, Symbolmitte gegen die Mitte des
+Zeilenkastens: `baseline` **−2,0 px**, `middle` (wie auch `text-bottom` und
+`sub`) **+2,0 px**, `-0.1em` **−0,5 px**. Es steht jetzt auf `-0.1em` — die
+Angabe hängt an der Schriftgröße der Zeile und stimmt damit auch dort, wo das
+Schloss in einer anderen Größe steht.
+
 ## [Web 12.3.0] — 2026-09-01
 
 **Ein fünfter Meldungston, zwei aufgeräumte Tabellen und ein Gerüst, das

@@ -1756,5 +1756,29 @@ declare(strict_types=1);
  * `zeit-spalte` und bricht nicht mehr nach der Stunde um. Kennzahl-Kacheln
  * zentrieren ihren Inhalt senkrecht, sobald eine Nachbarkachel hoeher ist.
  *
+ * 12.3.1 RAEUMT DIE EINSATZANSICHT (S3/AP6). Die Hoehe des Einsatzortes stand
+ * als nacktes „706 m" in einer Zeile mit „Strecke 40,9 km" -- der Nachbarwert
+ * trug sein Wort, dieser nicht. Jetzt „Hoehe 706 m". Angezeigt wird sie
+ * weiterhin nur luftgebunden; bodengebunden ist es die Hoehe der Strasse und
+ * die Zeile entfaellt ersatzlos.
+ *
+ * SCHUTZ WIRD REDUNDANT ANGEZEIGT, und das ist die Umkehr von F-N1-B. Dort
+ * galt: entweder die Plakette an der Karte ODER das Schloss an der Zeile,
+ * nie beides. Die Rueckmeldung vom 31.08.2026 will beides, und die
+ * Begruendung traegt: Die Plakette sagt „hier stehen verschluesselte
+ * Angaben", das Schloss sagt „diese hier". Bei einer Schutzauskunft ist
+ * Redundanz kein Laerm. Neu sind die Plakette am Block „Einsatz" und die
+ * Schloesser an Name und Geburtsdatum.
+ *
+ * DER BLAUE BALKEN „Geschuetzte Angaben sind entsperrt, bis du dich
+ * abmeldest" ENTFAELLT. Er stand nach dem Entsperren auf JEDEM Einsatz und
+ * sagte beim zwanzigsten Mal nichts mehr; sichtbar ist der Zustand ohnehin
+ * daran, dass die geschuetzten Angaben dastehen. Der GESPERRT-Balken mit dem
+ * Entsperren-Knopf bleibt, ebenso die Fehlermeldung fuer unlesbare Angaben.
+ * Die Aussage „entsperrt bis zur Abmeldung" steht jetzt im Handbuch.
+ *
+ * Dazu das Schloss senkrecht mittig zum Wort daneben: `vertical-align`
+ * -0.1em statt `baseline`, nachgemessen an einer echten Zeile.
+ *
  */
-const WEB_VERSION = '12.3.0';
+const WEB_VERSION = '12.3.1';

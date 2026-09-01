@@ -538,10 +538,24 @@ img,svg,video{max-width:100%;height:auto}
  * Zeichen der Zusatz. Kleiner als ein gewöhnliches Symbol und in der Farbe
  * der Beschriftung — es soll gefunden werden, wenn man danach sucht, und
  * nicht auffallen, wenn man es nicht tut. */
+/* SENKRECHT MITTIG ZUM TEXT (S3/AP6) — und der Wert ist gemessen, nicht
+ * geraten. Das Schloss ist mit 16 px hoeher als die Versalhoehe des
+ * 15-px-Wortes daneben; `baseline` stellt seinen Kasten auf die Schriftlinie
+ * und schiebt es damit nach oben, `middle` (und ebenso `text-bottom` und
+ * `sub`) um denselben Betrag nach unten. Nachgemessen an einer echten Zeile
+ * der Einsatzansicht, Symbolmitte gegen die Mitte des Zeilenkastens:
+ *
+ *   baseline  -2,0 px      middle  +2,0 px
+ *   -0.1em    -0,5 px      -0.15em +0,3 px      -0.2em  +1,0 px
+ *
+ * -0.1em trifft beide Bezugsgroessen auf einen halben Punkt genau (gegen die
+ * Versalmitte +0,5 px) und ist damit die Wahl. Die Angabe haengt an der
+ * Schriftgroesse der Zeile, nicht an einer festen Pixelzahl — sie stimmt
+ * damit auch dort, wo das Schloss in einer anderen Groesse steht. */
 .symbol-schutz{
   width:var(--symbol-klein);height:var(--symbol-klein);
   margin-left:var(--abstand-1);
-  vertical-align:baseline;
+  vertical-align:-0.1em;
 }
 
 /* ---- Nur für Screenreader ------------------------------------------------

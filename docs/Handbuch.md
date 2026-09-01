@@ -563,12 +563,23 @@ der Uhr aufgezeichneter, später bearbeiteter Einsatz zeigt also „Uhr" **und**
 „editiert", nicht „manuell": „manuell" beschreibt ausschließlich, **wie** ein
 Einsatz entstanden ist, „editiert" ob er danach verändert wurde.
 
-Der Zustand der geschützten Angaben steht als **eine Meldung** über den
-Karten (seit Web 9.3.0): blau „Geschützte Angaben sind entsperrt" nach der
-Anmeldung, mit **Entsperren**-Knopf, solange die Verschlüsselung gesperrt
-ist, und als deutliche Fehlermeldung, falls gespeicherte Angaben mit dem
-aktuellen Schlüssel nicht lesbar sind. Schloss-Symbole an den einzelnen
-Zeilen gibt es nicht mehr — die Meldung sagt es einmal für alle.
+**Solange die Verschlüsselung gesperrt ist**, steht über den Karten eine
+blaue Meldung mit dem **Entsperren**-Knopf. Sind gespeicherte Angaben mit dem
+aktuellen Schlüssel nicht lesbar, steht dort stattdessen eine deutliche
+Fehlermeldung.
+
+**Nach dem Entsperren verschwindet die Meldung** (seit Web 12.3.1). Eine
+Bestätigung, die von da an auf jedem Einsatz steht, sagt beim zwanzigsten
+Mal nichts mehr; sichtbar ist der Zustand ohnehin daran, dass die geschützten
+Angaben dastehen. **Entsperrt bleibt es bis zur Abmeldung** — das Passwort
+ist danach nicht noch einmal nötig.
+
+**Welche Angaben geschützt sind, sagen die Karten selbst:** Die Blöcke
+**Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
+**„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
+Beschreibung, Diagnose, Name, Geburtsdatum — tragen daneben ein kleines
+**Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
+Schloss sagt „diese hier".
 
 Die Angaben selbst stehen in **vier Karten**:
 
