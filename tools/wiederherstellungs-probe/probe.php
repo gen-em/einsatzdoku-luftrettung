@@ -902,5 +902,96 @@ $c = &edbak_marken_speicher(); $c = [];
 edbak_ablage_zahlen(true);
 $weg($q9);
 
+/* ==========================================================================
+ * Teil 10 — Der Auftrag „Alle sichern" (S2/AP6, E-S2-14)
+ *
+ * DREI ZUSAGEN:
+ *
+ *   Jedes Konto genau einmal. Die frühere Fassung hatte keinen Merkzettel,
+ *   sondern sortierte nach dem Alter der letzten Sicherung — gerechnet in
+ *   TAGEN. Wer heute alle Konten sichert, hat danach lauter Nullen; bei
+ *   Gleichstand ist die Reihenfolge beliebig, und die letzten Konten kommen
+ *   nie dran.
+ *
+ *   Ein Abbruch verliert höchstens das laufende Konto. Der Zeiger wird nach
+ *   JEDEM Konto fortgeschrieben.
+ *
+ *   Die Marke passt in die Spalte. `app_state.v` ist varchar(190) — die erste
+ *   Fassung legte die Kennungen aller offenen Konten hinein, das INSERT
+ *   scheiterte, und weil `edbak_marke_setzen()` jeden Fehler schluckte,
+ *   meldete die Schaltfläche „0 von 0 Konten gesichert".
+ * ====================================================================== */
+echo "\n  Teil 10 — Der Auftrag \"Alle sichern\" (S2/AP6)\n";
+
+$sicherAuftrag = $markeVorher($pdo, 'adminbackup_auftrag');
+$pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute(['adminbackup_auftrag']);
+$c = &edbak_marken_speicher(); $c = [];
+
+$a10 = edbak_auftrag_starten();
+$kontenMitKennung = (int)$pdo->query("SELECT COUNT(*) FROM users
+    WHERE account_key IS NOT NULL AND account_key <> ''")->fetchColumn();
+$sag('Der Auftrag umfasst alle Konten mit Kontokennung',
+     (int)$a10['ges'] === $kontenMitKennung,
+     $a10['ges'] . ' von ' . $kontenMitKennung);
+
+$roh10 = (string)$pdo->query("SELECT v FROM app_state WHERE k='adminbackup_auftrag'")
+                     ->fetchColumn();
+$sag('Die Marke steht wirklich in der Datenbank und passt in die Spalte',
+     $roh10 !== '' && strlen($roh10) <= EDBAK_MARKE_MAX,
+     strlen($roh10) . ' von hoechstens ' . EDBAK_MARKE_MAX . ' Zeichen');
+
+/* EINE UHR, DIE TICKT. Die erste Fassung dieser Pruefung gab eine KONSTANTE
+ * zurueck (`fn() => 0.5`); damit war `$zeitLinks() < $reserve` nie wahr, der
+ * Schub lief durch alle 31 Konten, und die Pruefung „hoert dann auf" bestand,
+ * ohne irgendetwas zu pruefen. Jetzt zaehlt sie herunter: genug fuer ein
+ * Konto, danach nicht mehr. */
+$vorher10 = edbak_auftrag_offen($a10);
+$tick = 2;
+$uhr = static function () use (&$tick): float { return $tick-- > 0 ? 9.9 : 0.0; };
+$e10 = edbak_auftrag_schub($uhr, 0.2);
+$sag('Ein knapper Schub sichert wenigstens ein Konto und hoert dann auf',
+     $e10['erledigt'] >= 1 && $e10['erledigt'] < $vorher10 && $e10['offen'] > 0,
+     $e10['erledigt'] . ' erledigt, ' . $e10['offen'] . ' von ' . $vorher10 . ' offen');
+
+/* WIEDERAUFNAHME: Der naechste Schub faengt NICHT von vorn an. */
+$a11 = edbak_auftrag_lesen();
+$sag('Der Zeiger steht auf dem zuletzt gesicherten Konto',
+     is_array($a11) && (int)$a11['cur'] > 0, 'cur=' . ($a11['cur'] ?? '—'));
+$tick = 2;
+$e11 = edbak_auftrag_schub($uhr, 0.2);
+$a12 = edbak_auftrag_lesen();
+$sag('WIEDERAUFNAHME: der zweite Schub nimmt ein ANDERES Konto',
+     is_array($a12) && (int)$a12['cur'] > (int)$a11['cur'],
+     'cur ' . $a11['cur'] . ' -> ' . ($a12['cur'] ?? '—'));
+$sag('...und die Zahl der gesicherten Konten waechst mit',
+     is_array($a12) && (int)$a12['gut'] + (int)$a12['feh']
+       === (int)$a11['gut'] + (int)$a11['feh'] + $e11['erledigt'],
+     'gut+feh ' . ((int)$a11['gut'] + (int)$a11['feh']) . ' -> '
+     . ((int)$a12['gut'] + (int)$a12['feh']));
+
+/* Eine zu lange Marke wird abgewiesen und benannt, nicht still gekuerzt. */
+$sag('Eine zu lange Marke wird abgewiesen, nicht still gekuerzt',
+     edbak_marke_setzen('probe_zu_lang', str_repeat('x', EDBAK_MARKE_MAX + 1)) === false
+       && (int)$pdo->query("SELECT COUNT(*) FROM app_state WHERE k='probe_zu_lang'")
+                   ->fetchColumn() === 0,
+     'nichts geschrieben, Rueckgabe false');
+
+/* Der Job kennt den Auftrag und meldet den Rueckstand. */
+require_once $server . '/jobs_lib.php';
+$sag('Der Job „adminbackup" steht im Katalog',
+     array_key_exists('adminbackup', jobs_katalog()),
+     implode(', ', array_keys(jobs_katalog())));
+$sag('Sein Rueckstand ist die Zahl der offenen Konten',
+     is_array($a12) && job_adminbackup_rueckstand($pdo, []) === edbak_auftrag_offen($a12),
+     (string)(job_adminbackup_rueckstand($pdo, []) ?? '—'));
+$sag('Der Rahmen misst jetzt auch den Speicher, nicht nur die Zeit',
+     function_exists('jobs_speicher_knapp') && !jobs_speicher_knapp(),
+     'Deckel ' . JOB_SPEICHER_DECKEL_MB . ' MB, belegt '
+     . round(memory_get_usage(true) / 1048576, 1) . ' MB');
+
+edbak_auftrag_schreiben(null);
+$markeZurueck($pdo, 'adminbackup_auftrag', $sicherAuftrag);
+$c = &edbak_marken_speicher(); $c = [];
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

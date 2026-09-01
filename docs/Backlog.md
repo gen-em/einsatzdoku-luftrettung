@@ -464,6 +464,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `tools/wortliste/`. Verwandt mit Nr. 36 (Klassennamen, die JavaScript
     sucht): beides sind Zusagen, die im Code stehen und die niemand nachzählt.
 
+48. **Aufbewahrung je Konto einstellbar, nicht nur je Installation.**
+    *Aufgenommen 01.09.2026 (S2/AP6).* E-S2-14 nennt „Standard 2 je Konto,
+    manuell mehr je Konto möglich". Umgesetzt ist die Zahl für die ganze
+    Installation (`app_state.adminbackup_aufbewahrung`); ein Wert je Konto
+    hätte einen Ablageort gebraucht, den es nicht gibt — weder in `konto.json`
+    noch als Spalte in `users`.
+
+    **Wofür es gebraucht wird:** ein Konto, dessen Bestand besonders wertvoll
+    oder besonders bewegt ist, und für das man mehr Stände vorhalten will, ohne
+    die Zahl für alle anzuheben. Heute geht das nur als Umweg — ein Paket, das
+    freigegeben ist, wird von der Verdrängung verschont. Das ist ein
+    Nebeneffekt und kein Ersatz: Die Freigabe ist für etwas anderes da, und sie
+    endet mit dem Einlösen.
+
+    Naheliegender Ort: ein Feld in `konto.json` (die Begleitdatei ist ohnehin
+    das Verzeichnis des Ordners) und ein Zahlenfeld auf der Kontoseite neben
+    „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
+    Parameter; `edbak_verdraengen()` liest ihn.
+
 ---
 
 ## Erledigt

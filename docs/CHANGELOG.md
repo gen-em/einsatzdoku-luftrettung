@@ -103,6 +103,44 @@ Speicher zuläuft, ist es falsch: Scheitert der Versand, stünde die Marke
 trotzdem, und die Warnung käme **nie** — genau in dem Fall, in dem sie
 gebraucht wird.
 
+### Web — „Alle sichern" merkt sich, wie weit es ist
+
+Der Auftrag läuft **in Schüben**: von der Schaltfläche, solange die Anfrage
+Zeit hat, und vom neuen Wartungsjob `adminbackup` weiter. Solange er läuft,
+steht sein Stand oben auf der Seite.
+
+**Bis hierher gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
+ihrer letzten Sicherung sortiert, und der zweite Klick sollte deshalb von
+selbst weitermachen — wer eben gesichert wurde, steht ja hinten. Das trug nur,
+solange sich die Konten um mindestens einen ganzen Tag unterschieden:
+Gerechnet wird in *Tagen*. Wer heute alle Konten sichert, hat danach lauter
+Nullen, und bei Gleichstand ist die Reihenfolge beliebig — die letzten Konten
+kamen unter Umständen nie dran.
+
+Zugesagt ist jetzt etwas Belastbareres: **jedes Konto genau einmal**, und ein
+Abbruch verliert höchstens das laufende (der Zeiger wird nach jedem Konto
+fortgeschrieben).
+
+**Die erste Fassung des Merkzettels ist an der Datenbank gescheitert, und
+zwar lautlos.** Sie legte die Kennungen aller offenen Konten in
+`app_state.adminbackup_auftrag`; die Spalte ist `varchar(190)`, bei 31 Konten
+waren es 350 Zeichen. Das INSERT scheiterte, `edbak_marke_setzen()` schluckte
+jeden Fehler, und die Schaltfläche meldete **„0 von 0 Konten gesichert"** —
+eine Zahl ohne Bezug zur Wirklichkeit. Behoben in beide Richtungen: Der
+Auftrag ist jetzt ein **Zeiger** (`{"cur":137,"ges":31,…}`, 64 Zeichen), und
+`edbak_marke_setzen()` liefert `bool` und schreibt ins Fehlerprotokoll, statt
+zu schweigen.
+
+**Der Job-Rahmen misst jetzt auch den Speicher** (`jobs_speicher_knapp()`,
+48 von 64 MB). Bis dahin zählte nur die Zeit; das reichte, solange jeder Job
+in Blöcken über Zeilen lief. Der Sicherungsjob ist anders: Ein einzelnes Konto
+kostet beim 5000er-Bestand 24 MB. Seine Reserve ist mit 15 s so groß, dass er
+am Huckepack-Weg (3 s) gar nicht erst anfängt — eine Anfrage einer NutzerIn
+soll keine fremde Sicherung mittragen.
+
+**Automatisch entsteht nichts.** Der Job arbeitet nur auf Auftrag; nächtliche
+Sicherungen je Konto sind ausdrücklich abgelehnt (E-S2-19).
+
 ### Web — Aufbewahrung 2 statt 3
 
 Das Konzept nennt seit E-S2-14 die Zwei; Code und drei Dokumente standen auf
@@ -187,6 +225,11 @@ mit Zahl und in Orange.
 |---|---|
 | `tools/wiederherstellungs-probe/` | **66** Erwartungen, 0 offen (vorher 44) — Teil 8 Rundlauf des Adminpakets, Teil 9 Speichergrenze und Schwellen |
 | Freigabeweg im Browser | Fassung-2-Paket (600 Einträge, 3 Eintragsteile, 1 Spurteil) in ein frisches Konto: **600 Einsätze mit 600 Spuren**, 0 Konsolenfehler |
+| „Alle sichern" über 31 Konten | **31 von 31** in 18,3 s, 0 Konsolenfehler |
+| `tools/wiederherstellungs-probe/` nach AP6 | **76** Erwartungen, 0 offen (vor AP6: 44) |
+| `spurprobe` · `gpxprobe` · `containerprobe` | 25 · 75 · 32 Erwartungen, je 0 offen |
+| Wortliste · Vollständigkeit | 0 Treffer, **0 ungenutzte Ausnahmen** · 260 |
+| Bilderlauf `34-`, `43-` | 16 Bilder, **16 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler |
 | Speicher, 5000er-Konto | 1077,6 MB → **24,0 MB von 64**, mit Deckel geprüft |
 | Bilderlauf `43-sicherungen` | 8 Bilder, **8 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
 

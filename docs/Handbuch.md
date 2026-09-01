@@ -2087,9 +2087,10 @@ gesichert*.
   Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
 
 **Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
-drei, einstellbar unter „Sicherungen"); ältere verschwinden beim nächsten
-Sichern. Zwei bleiben immer: die **jüngste** Sicherung und eine, die gerade
-**freigegeben** ist. Nach **Alter** wird nie etwas entfernt.
+**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Sicherungen");
+ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: die **jüngste**
+Sicherung und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
+etwas entfernt.
 
 **Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
 und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
@@ -2243,8 +2244,24 @@ mit genau diesem Filter.
 - **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
   (Vorgabe 30).
 - **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
-  3). Ältere werden beim nächsten Sichern gelöscht; die jüngste und eine
-  freigegebene nie. Bis Web 9.9.0 war das eine feste Zahl im Programm.
+  **2** seit Web 12.0.0, vorher 3). Ältere werden beim nächsten Sichern
+  gelöscht; die jüngste und eine freigegebene nie. Bis Web 9.9.0 war das eine
+  feste Zahl im Programm.
+
+  > **Wer die Zahl nie angefasst hat, verliert beim nächsten Sichern je Konto
+  > den ältesten von drei Ständen.** Das steht hier und nicht im Kleingedruckten:
+  > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
+  > will, trägt drei ein.
+
+- **Speichergrenze** — wie viel Platz alle Sicherungen zusammen belegen dürfen
+  (Vorgabe 2 GB). Ist sie erreicht, wird **nicht mehr gesichert**. Es wird
+  nichts gelöscht und nichts überschrieben — eine Sicherung, die eine andere
+  wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
+- **Warnschwellen** — Prozentwerte, durch Komma getrennt (Vorgabe 70, 90). Je
+  Schwelle kommt **einmal** eine Meldung, nicht bei jedem Lauf. Fällt der
+  Verbrauch wieder darunter, wird beim nächsten Überschreiten erneut gewarnt.
+  Ist kein SMTP eingerichtet, steht die Warnung stattdessen dauerhaft oben auf
+  dieser Seite.
 - **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
 
 **Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
@@ -2259,11 +2276,23 @@ Admins mit gesetztem Passwort.
 > startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
 > Wochen nicht angefasst, kommt die Mail zwei Wochen später.
 
-**„Alle sichern"** oben rechts sichert die fälligen Konten, das mit der
-ältesten Sicherung zuerst. Sind es sehr viele, hört die Reihe nach etwa 20
-Sekunden auf und sagt, wie viele geschafft und wie viele übrig sind — ein
-zweiter Klick macht weiter, und weil das Älteste zuerst kommt, kommt man
-zuverlässig durch.
+**„Alle sichern"** oben rechts sichert **alle** Konten mit Kontokennung. Sind
+es sehr viele, hört die Reihe nach etwa 20 Sekunden auf und sagt, wie viele
+geschafft und wie viele übrig sind. Ein zweiter Klick macht **genau dort**
+weiter, und der Wartungsjob arbeitet den Rest ohnehin in Schüben ab; solange
+ein Auftrag läuft, steht sein Stand oben auf der Seite.
+
+> **Bis Web 11.1.1 gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
+> ihrer letzten Sicherung sortiert, und der zweite Klick sollte deshalb von
+> selbst weitermachen. Das trug nur, solange sich die Konten um mindestens
+> einen ganzen Tag unterschieden — wer heute alle sicherte, hatte danach lauter
+> Nullen, und die letzten Konten kamen unter Umständen nie dran. Jetzt merkt
+> sich der Auftrag, wie weit er ist: **jedes Konto genau einmal**, und ein
+> Abbruch verliert höchstens das laufende.
+
+**Automatisch entsteht keine Sicherung.** Nächtliche Sicherungen je Konto sind
+bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
+Server nicht.
 
 **Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
 und wie viele Konten eine Ablage haben. **Sicherungen ohne Konto** steht

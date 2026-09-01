@@ -148,40 +148,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * Schuebe im Hintergrund sind auf P5 vertagt (E-P3-41).
      */
     if ($action === 'sichern_alle') {
-        $karte = edbak_staende();
-        $konten = db()->query('SELECT id, account_key FROM users')->fetchAll();
-        $reihe = [];
-        foreach ($konten as $k) {
-            $stand = edbak_stand_aus_karte($k['account_key'], $karte);
-            if ($stand['stand'] === 'ohne_kennung') { continue; }
-            $reihe[] = ['id' => (int)$k['id'],
-                        'alter' => $stand['tage'] === null ? PHP_INT_MAX : (int)$stand['tage']];
-        }
-        usort($reihe, static fn($a, $b) => $b['alter'] <=> $a['alter']);
+        /* EINE WARTESCHLANGE STATT EINER HEURISTIK (S2/AP6).
+         *
+         * Bis Web 12.0.0 gab es keinen Merkzettel: Die Konten wurden nach dem
+         * Alter ihrer letzten Sicherung sortiert, abgearbeitet, bis die Zeit
+         * knapp wurde, und der zweite Klick sollte dort weitermachen, wo der
+         * erste aufhoerte — wer eben gesichert wurde, steht ja hinten.
+         *
+         * Das traegt nur, wenn sich die Konten um mindestens einen ganzen Tag
+         * unterscheiden: gerechnet wird in TAGEN. Wer heute alle Konten
+         * sichert, hat danach lauter Nullen, und bei Gleichstand ist die
+         * Reihenfolge beliebig — der zweite Klick nimmt womoeglich dieselben
+         * Konten noch einmal, und die letzten kommen nie dran.
+         *
+         * Jetzt sagt die Schlange, wer noch offen ist. Sie wird von zwei
+         * Seiten geleert: hier, solange diese Anfrage Zeit hat, und vom
+         * Wartungsjob `adminbackup` in Schueben. */
+        $laufend = edbak_auftrag_lesen();
+        if ($laufend === null) { $laufend = edbak_auftrag_starten(); }
 
-        if (!$reihe) {
+        if ((int)($laufend['ges'] ?? 0) === 0) {
+            edbak_auftrag_schreiben(null);
             $error = 'Es gibt kein Konto mit Kontokennung. Bitte zuerst die Wartung '
                    . 'aufrufen und die Migration ausführen.';
         } else {
             $t0 = microtime(true);
-            $gut = 0; $schlecht = []; $offen = 0;
-            foreach ($reihe as $n => $r) {
-                if ($n > 0 && microtime(true) - $t0 > SICHERN_BUDGET) {
-                    $offen = count($reihe) - $n;
-                    break;
-                }
-                [$ok, $grund, ] = edbak_sicherung_erzeugen($r['id']);
-                if ($ok) { $gut++; } else { $schlecht[] = $grund; }
-            }
-            $notice = $gut . ' ' . ($gut === 1 ? 'Sicherung' : 'Sicherungen') . ' erzeugt.';
-            if ($offen > 0) {
-                $notice .= ' ' . $offen . ' ' . ($offen === 1 ? 'Konto ist' : 'Konten sind')
-                         . ' noch offen — die Zeit für eine Anfrage reicht nicht für alle. '
-                         . 'Noch einmal auf „Alle sichern" klicken macht dort weiter, wo '
+            $e = edbak_auftrag_schub(
+                static fn(): float => SICHERN_BUDGET - (microtime(true) - $t0), 0.2);
+            $a = $e['auftrag'];
+            $gut = (int)($a['gut'] ?? 0);
+            $gesamt = (int)($a['ges'] ?? 0);
+            $notice = $gut . ' von ' . $gesamt . ' '
+                    . ($gesamt === 1 ? 'Konto gesichert.' : 'Konten gesichert.');
+            if ($e['offen'] > 0) {
+                $notice .= ' ' . $e['offen'] . ' '
+                         . ($e['offen'] === 1 ? 'Konto ist' : 'Konten sind')
+                         . ' noch offen — die Zeit für eine Anfrage reicht nicht für '
+                         . 'alle. Der Wartungsjob macht in Schüben weiter; ein zweiter '
+                         . 'Klick auf „Alle sichern" ebenfalls, und zwar genau dort, wo '
                          . 'dieser Durchgang aufgehört hat.';
             }
-            if ($schlecht) {
-                $error = 'Nicht erzeugt: ' . implode(' · ', array_unique($schlecht));
+            if ($e['meldungen']) {
+                $error = 'Nicht erzeugt (' . (int)($a['feh'] ?? 0) . '): '
+                       . implode(' · ', $e['meldungen']);
             }
         }
     }
@@ -298,6 +307,11 @@ $offeneSchwellen = array_values(array_filter(array_map('intval',
     explode(',', (string)(edbak_marke_lesen('adminbackup_schwellen_offen') ?? '')))));
 $offeneSchwellen = array_values(array_filter($offeneSchwellen,
     static fn($p) => $speicher['prozent'] >= $p));
+/* Ein laufender Auftrag „Alle sichern" wird ANGEZEIGT, nicht nur abgearbeitet
+ * (E-S2-14: „in Schüben mit Fortschrittsanzeige"). Ohne diese Zeile wäre der
+ * Unterschied zwischen „läuft noch" und „ist liegengeblieben" nicht zu
+ * sehen. */
+$auftrag = edbak_auftrag_lesen();
 $verwaist  = edbak_verwaiste();
 $letzte    = edbak_marke_lesen('adminbackup_last');
 $paketeOhneKonto = array_sum(array_map(static fn($v) => count($v['pakete']), $verwaist));
@@ -328,6 +342,19 @@ ui_seite_start(['titel' => 'Sicherungen']);
   ]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
+  <?php if ($auftrag): ?>
+    <?= ui_meldung_markup('info', ($auftrag['gut'] ?? 0) . ' von '
+        . ($auftrag['ges'] ?? 0) . ' Konten gesichert, '
+        . edbak_auftrag_offen($auftrag) . ' offen'
+        . ((int)($auftrag['feh'] ?? 0) > 0
+            ? ', ' . (int)$auftrag['feh'] . ' gescheitert' : '')
+        . '. Der Wartungsjob arbeitet den Rest in Schüben ab; „Alle sichern" '
+        . 'macht sofort dort weiter.'
+        . (($auftrag['seit'] ?? null)
+            ? ' Begonnen ' . fmt_local(str_replace(['T', 'Z'], [' ', ''],
+                (string)$auftrag['seit']), 'd.m.Y · H:i') . ' Uhr.'
+            : ''), 'Auftrag läuft.') ?>
+  <?php endif; ?>
   <?php if ($speicher['voll']): ?>
     <?= ui_meldung_markup('fehler', 'Die Speichergrenze ist erreicht ('
         . edbak_groesse_text($speicher['bytes']) . ' von '
@@ -418,14 +445,23 @@ ui_seite_start(['titel' => 'Sicherungen']);
                                     . 'je Woche und nur, wenn es etwas zu melden gibt.']); ?>
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </form>
-      <p class="feld-hinweis"><strong>Es gibt keinen Zeitplan.</strong> Auf diesem
-         Webspace läuft kein Cron; was regelmäßig geschieht, fährt auf dem täglichen
-         Aufräumjob mit, und der startet bei der ersten Anfrage des Tages. Die
-         Erinnerung kommt deshalb, sobald die Anwendung nach Ablauf der Woche
-         wieder benutzt wird — wird sie zwei Wochen nicht angefasst, kommt die
-         Mail zwei Wochen später. Sicherungen selbst entstehen ausschließlich von
-         Hand: hier über „Alle sichern", auf der Kontoseite je Konto oder über
-         die Auswahl in der NutzerInnen-Liste.</p>
+      <?php /* Der frühere Absatz sagte „Es gibt keinen Zeitplan. Auf diesem
+               Webspace läuft kein Cron" — das stimmt seit dem Job-Einstieg
+               (S2/AP2) nicht mehr: `jobs.php` kennt drei Auslöser, und CLI ist
+               der empfohlene Regelfall. Was bleibt, ist der Kern der Aussage —
+               Sicherungen entstehen nicht von selbst. */ ?>
+      <p class="feld-hinweis"><strong>Sicherungen entstehen nicht von selbst.</strong>
+         Sie werden angestoßen: hier über „Alle sichern", auf der Kontoseite je Konto
+         oder über die Auswahl in der NutzerInnen-Liste. Nächtliche Sicherungen je
+         Konto sind bewusst nicht vorgesehen — sie bräuchten den Inhaltsschlüssel,
+         und den hat der Server nicht.
+         <br><br>
+         Was <em>angestoßen</em> ist, arbeitet der Wartungsjob in Schüben ab; die
+         Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
+         eingerichteten Auslöser ab (Wartungsseite: Cron, Token-Aufruf oder
+         huckepack an einer Anfrage). Die wöchentliche Erinnerung fährt auf
+         demselben Weg mit — wird die Anwendung zwei Wochen nicht angefasst,
+         kommt die Mail zwei Wochen später.</p>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>

@@ -387,8 +387,15 @@ $zielkonten = db()->prepare('SELECT id, email FROM users WHERE id <> ? ORDER BY 
 $zielkonten->execute([$uid]);
 $zielkonten = $zielkonten->fetchAll();
 
-/** Ist das Paket formal lesbar? Liest die Datei — deshalb nur hier, wo es
- *  hoechstens so viele sind, wie die Aufbewahrung zulaesst (Vorgabe drei). */
+/** Ist das Paket formal lesbar?
+ *
+ *  Seit S2/AP6 nur noch der KOPF: Bei Fassung 2 ist das das Manifest im ZIP,
+ *  ein paar Kilobyte. Vorher wurde je Paket die ganze Datei gelesen und
+ *  dekodiert — bei einem grossen Konto also, bei jedem Aufruf dieser Seite,
+ *  zweimal 94 MB, nur um zwei Plaketten zu setzen.
+ *
+ *  Fassung 1 muss weiterhin ganz gelesen werden; ihr Format hat keinen
+ *  getrennten Kopf. Solche Pakete verschwinden mit dem ersten neuen Lauf. */
 function paket_lesbar(string $kennung, string $datei): bool
 {
     return edbak_paket_kopf_lesen($kennung, $datei) !== null;

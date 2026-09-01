@@ -655,6 +655,14 @@ Fortschritt und Wiederaufnahme; Grenzfall erzeugt Ablehnung mit Meldung;
 Schwellenüberschreitung erzeugt genau eine Mail (bzw. Adminhinweis ohne
 SMTP).
 
+> **„Manuell mehr je Konto" ist nicht umgesetzt.** Die Aufbewahrung ist eine
+> Zahl für die ganze Installation (`app_state.adminbackup_aufbewahrung`); ein
+> Wert je Konto hätte einen Ablageort gebraucht, den es nicht gibt — weder in
+> `konto.json` noch als Spalte. Das steht hier statt in einer Fußnote, weil
+> E-S2-14 es ausdrücklich nennt. Ein Paket lässt sich stattdessen einzeln vor
+> der Verdrängung schützen, indem man es freigibt; das ist ein Umweg und kein
+> Ersatz. **Backlog Nr. 48.**
+
 **AP7 — Transportziele.** Schnittstelle + Adapter FTP/FTPS (`ext/ftp`) und
 SFTP (phpseclib, vendoriert; `docs/Lizenzen.md`); Admin-Pflege mit
 „Verbindung prüfen“; Zugangsdaten unter dem Serverschlüssel (E-S2-21/22).
@@ -2190,3 +2198,118 @@ Diensttage tragen deshalb schon keine Gerätekennung mehr.
 - **Ein Abbruch mitten in einer Anfrage** — unverändert wie in AP5.
 - **Andere Browser als Chromium**, **echte Hardware** statt CPU-Drossel und
   **die Admin-Sicherungen** (AP6) — unverändert wie in AP5.
+
+### AP6 — Admin-Sicherungen und Speicherverwaltung (erledigt, Web 12.0.0)
+
+Die Admin-Sicherung war der letzte Weg, der das Budget sprengte — und zwar
+nicht knapp. **Gemessen** am 5000er-Konto, vor dem Umbau:
+
+| | |
+|---|---|
+| Dauer | 19,81 s |
+| Paket | 94,28 MB |
+| Speicherspitze | **1077,6 MB** |
+| mit `memory_limit=64M` (Z3) | **Abbruch** in `spur_lib.php:218` |
+
+Auf genau der Sorte Webspace, für die diese Anwendung gebaut ist, war die
+Admin-Sicherung eines großen Kontos also **unmöglich**. Der Grund stand in
+einer Zeile: `json_decode(edbak_build($userId), true)` — derselbe Bestand als
+Zeichenkette, als Feld und beim Schreiben noch einmal als Zeichenkette.
+
+#### Vor der Umsetzung: eine Bestandsaufnahme
+
+Sechs Leser über `adminbackup_lib.php`, die Oberfläche, den Job-Rahmen, Mail
+und Einstellungen, die Ablage und die Dokumentation; jeder Befund danach von
+einem zweiten Durchgang gegengelesen, der ihn **widerlegen** sollte.
+**43 Befunde hielten, 5 wurden verworfen.** Die vier Entscheidungen, die daraus
+folgten, hat die Auftraggeberin am 31.08.2026 getroffen:
+
+| Frage | Entscheidung |
+|---|---|
+| Aufbewahrung 2 (Konzept) oder 3 (Code)? | **2**, wie E-S2-14 sagt |
+| Ablageform des mehrteiligen Rohpakets | **Ein unversiegeltes ZIP je Sicherung** |
+| Vorhandene einteilige Pakete | **Beim ersten neuen Lauf ersetzen** |
+| Zuschnitt | **Alles anfassen, was der Umbau berührt** |
+
+#### Das Paket
+
+`manifest.json` · `kopf.json` · `eintraege/NNNN.json` (je 250) ·
+`spuren/NNNN.json`. Gepackt, anders als beim Nutzerformat — dort sind die
+Teile bereits gzip *und* verschlüsselt, hier ist es blankes JSON.
+
+**Ein Umweg, den erst die Messung erzwungen hat.** `ZipArchive::addFromString()`
+hält jede übergebene Zeichenkette bis zum `close()` im Speicher; damit läge am
+Ende doch wieder alles gleichzeitig da. Gemessen an 34,6 MB Inhalt, **je
+eigener Prozess** (die Spitze ist prozessweit — im selben Lauf gemessen hätte
+der zweite Wert nichts gesagt):
+
+| | Inhalt | Spitze |
+|---|---|---|
+| `addFromString` | 34,6 MB | **42,0 MB** |
+| `addFile` | 34,6 MB | **2,0 MB** |
+
+Die Teile entstehen deshalb einzeln in einem Bauordner und gehen von dort ins
+Archiv.
+
+#### Was der Umbau erzwungen hat
+
+- **`edbak_paket_lesen()` verweigert Fassung 2.** Ein mehrteiliges Paket am
+  Stück zu lesen wäre dieselbe Spitze, nur beim Lesen. Eingespielt wird über
+  `edbak_paket_einspielen()`; die Entscheidung *ob* liest nur das Manifest.
+- **`geschuetzte` im Manifest.** `edbak_paket_hat_geschuetzte()` sah in die
+  Einsatzliste des Pakets; im gefensterten Kern steht sie dort nicht mehr.
+  Ohne die Zahl hätte die Funktion still `false` geliefert und die Sperre aus
+  E20 ausgehebelt.
+- **Der Freigabeweg läuft in Fenstern.** Er reichte das ganze Paket in *einer*
+  Antwort heraus und nahm es in *einem* POST zurück.
+
+#### Zwei Fehler, die dabei ans Licht kamen
+
+**F-S2-F — die Freigabe war für niemanden zu sehen** (Abschnitt 8). Eine
+Kennung, die es im Markup nie gab, und ein `catch`, der alles schluckte.
+
+**Die Warteschlange passte nicht in die Spalte.** `app_state.v` ist
+`varchar(190)`; die erste Fassung des Auftrags legte die Kennungen aller
+offenen Konten hinein — bei 31 Konten schon 350 Zeichen. Das INSERT
+scheiterte, `edbak_marke_setzen()` schluckte es, und die Schaltfläche meldete
+**„0 von 0 Konten gesichert"**. Behoben in beide Richtungen: Der Auftrag ist
+jetzt ein **Zeiger**, und die Marke sagt, wenn sie nicht schreiben konnte.
+
+Damit fällt „älteste Sicherung zuerst" weg. Das war ohnehin keine Reihenfolge,
+sondern ein Ersatz für den fehlenden Merkzettel — gerechnet wurde in *Tagen*,
+und bei Gleichstand war sie beliebig. Zugesagt ist jetzt etwas Belastbareres:
+**jedes Konto genau einmal**, und ein Abbruch verliert höchstens das laufende.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Admin-Sicherung, 5000er-Konto | `memory_get_peak_usage(true)` | 19,81 s · 1077,6 MB · 94,28 MB → **14,13 s · 24,0 MB von 64 · 11,42 MB** |
+| dieselbe mit `memory_limit=64M` | | vorher **Abbruch**, jetzt **läuft durch** |
+| Admin-Sicherung, Demokonto (187 Einträge) | | 28,1 → **4,0 MB**, 2,14 → **0,22 MB** |
+| `ZipArchive`: addFromString gegen addFile | je eigener Prozess | 42,0 MB gegen **2,0 MB** bei 34,6 MB Inhalt |
+| Rundlauf des Adminpakets | `wiederherstellungs-probe` Teil 8 | Sicherung → frisches Konto: Einträge, Spuren, Wiederaufnahme, fehlendes Teil |
+| Speichergrenze und Schwellen | Teil 9 | Ablehnung mit Meldung, Reste zählen mit, ohne SMTP ein Hinweis |
+| Auftrag „Alle sichern" | Teil 10 | Zeiger, Wiederaufnahme, Marke **64 von 190 Zeichen** |
+| `wiederherstellungs-probe` gesamt | `php probe.php` | **76 Erwartungen, 0 offen** (vor AP6: 44) |
+| „Alle sichern" über 31 Konten | Browser | **31 von 31** in 18,3 s, 0 Konsolenfehler |
+| Freigabeweg, Fassung 2 | Browser | 600 Einträge · 3 Eintragsteile · 1 Spurteil → **600 Einsätze mit 600 Spuren**, 0 Konsolenfehler |
+| Bilderlauf `34-` und `43-` | `aufnehmen.mjs` | 16 Bilder, **16 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+
+**Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
+
+- **Der Freigabeweg MIT Wiederherstellungsschlüssel.** Die Prüfkonten tragen
+  geschützte Angaben, aber ihr Schlüssel wurde beim Einrichten einmalig
+  angezeigt und nicht aufbewahrt. Geprüft ist der Fensterweg mit einer Quelle
+  **ohne** geschützte Angaben; die Umschlüsselung selbst ist gemeinsamer Code
+  beider Fassungen und in der Sache unverändert. **Das ist die größte offene
+  Stelle dieses Pakets.**
+- **Der Joblauf am echten Auslöser.** Der Schub ist über die Probe belegt
+  (mit einer Uhr, die tickt — die erste Fassung der Prüfung gab eine Konstante
+  zurück und prüfte damit nichts); ein vollständiger Durchlauf über `jobs.php`
+  am Cron ist nicht gefahren.
+- **Die Warnmail selbst.** Ohne eingerichtetes SMTP ist der Hinweisweg
+  geprüft, der Versandweg nicht.
+- **Eine erreichte Speichergrenze im Betrieb.** Geprüft mit einer künstlich
+  auf 1 KB gesetzten Grenze, nicht mit einer vollen Platte.
+

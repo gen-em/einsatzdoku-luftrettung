@@ -1185,15 +1185,47 @@ function edbak_marke_lesen(string $k): ?string
     }
 }
 
-function edbak_marke_setzen(string $k, string $v): void
+/**
+ * Eine Marke schreiben. Liefert, OB es geklappt hat (S2/AP6).
+ *
+ * VORHER WAR DER RUECKGABETYP `void` UND DER `catch` LEER. Der Gedanke war
+ * richtig: Eine nicht schreibbare Marke darf die Sicherung selbst nicht
+ * scheitern lassen. Nur hat der Block danach jeden Fehler geschluckt — auch
+ * den, bei dem ein Wert schlicht nicht in die Spalte passt.
+ *
+ * Genau das ist passiert: `app_state.v` ist `varchar(190)`. Die Warteschlange
+ * von „Alle sichern" war laenger, das INSERT scheiterte, niemand erfuhr davon,
+ * und die Schaltflaeche meldete „0 von 0 Konten gesichert" — eine Zahl, die
+ * nichts mit der Wirklichkeit zu tun hatte. Die Suche danach hat gekostet,
+ * was ein `error_log()` gespart haette.
+ *
+ * DIE LAENGENGRENZE STEHT JETZT AUCH HIER, nicht nur im Schema: Ein zu langer
+ * Wert wird abgewiesen und benannt, statt in einer Datenbankmeldung zu enden,
+ * die je nach Serverbetriebsart mal ein Fehler und mal eine stille Kuerzung
+ * ist. Eine stille Kuerzung waere hier das Schlimmste von allem — ein halbes
+ * JSON, das beim naechsten Lesen als „kein Auftrag" durchgeht.
+ */
+const EDBAK_MARKE_MAX = 190;
+
+function edbak_marke_setzen(string $k, string $v): bool
 {
+    if (strlen($v) > EDBAK_MARKE_MAX) {
+        error_log('adminbackup: Marke "' . $k . '" ist ' . strlen($v)
+                . ' Zeichen lang, erlaubt sind ' . EDBAK_MARKE_MAX . '.');
+        return false;
+    }
     try {
         db()->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
                        ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
         $c = &edbak_marken_speicher();
         $c[$k] = $v;
-    } catch (Throwable) {
-        // Eine nicht schreibbare Marke darf die Sicherung selbst nicht scheitern lassen.
+        return true;
+    } catch (Throwable $ex) {
+        /* Still gegenueber der Anfrage — die Sicherung selbst soll daran nicht
+         * scheitern —, aber nachlesbar. */
+        error_log('adminbackup: Marke "' . $k . '" liess sich nicht schreiben: '
+                . $ex->getMessage());
+        return false;
     }
 }
 
@@ -2140,5 +2172,154 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     $roh = $zip->getFromName($teil);
     $zip->close();
     return $roh === false ? null : $roh;
+}
+
+/* ---- Der Auftrag „Alle sichern" (S2/AP6, E-S2-14) ------------------------
+ *
+ * WARUM EINE WARTESCHLANGE UND KEINE HEURISTIK.
+ *
+ * Bis Web 12.0.0 gab es keinen Merkzettel: „Alle sichern" sortierte die
+ * Konten nach dem Alter ihrer letzten Sicherung, arbeitete ab, bis die Zeit
+ * knapp wurde, und verliess sich darauf, dass ein zweiter Klick dort
+ * weitermacht, wo der erste aufgehoert hat — wer eben gesichert wurde, steht
+ * ja hinten.
+ *
+ * Das traegt nur, wenn sich die Konten um mindestens einen ganzen Tag
+ * unterscheiden: `edbak_stand_aus_karte()` rechnet in TAGEN. Wer heute alle
+ * Konten sichert, hat danach lauter Nullen — und die Sortierung ist bei
+ * Gleichstand beliebig. Der zweite Klick nimmt dann womoeglich dieselben
+ * Konten noch einmal, und die letzten werden nie erreicht.
+ *
+ * Die Warteschlange sagt statt dessen, wer noch dran ist. Sie liegt in
+ * `app_state`, wird nach JEDEM Konto fortgeschrieben (ein abgebrochenes
+ * Haeppchen verliert damit hoechstens das laufende Konto) und wird von zwei
+ * Seiten geleert: von der Schaltflaeche, solange die Anfrage Zeit hat, und
+ * vom Wartungsjob, in Schueben.
+ *
+ * KEINE AUTOMATISCHEN SICHERUNGEN. Der Job arbeitet nur, wenn ein Auftrag
+ * vorliegt — E-S2-19 hat naechtliche Konto-Sicherungen ausdruecklich
+ * abgelehnt. Ohne Auftrag kostet er eine Abfrage.
+ */
+
+const EDBAK_AUFTRAG_SCHLUESSEL = 'adminbackup_auftrag';
+
+/**
+ * EIN ZEIGER, KEINE LISTE — und das ist keine Sparsamkeit, sondern die
+ * Konsequenz aus einem Fehlschlag (S2/AP6).
+ *
+ * Die erste Fassung legte die Kennungen aller offenen Konten als Feld in die
+ * Marke. `app_state.v` ist `varchar(190)`; bei 31 Konten waren es schon 350
+ * Zeichen. Das INSERT scheiterte, `edbak_marke_setzen()` schluckte es, und
+ * die Schaltflaeche meldete „0 von 0 Konten gesichert".
+ *
+ * Ein Zeiger passt immer: Gearbeitet wird in der Reihenfolge der Kennung
+ * (`users.id`), und die Marke merkt sich, wie weit es ist.
+ *
+ * WAS DAMIT WEGFAELLT: „aelteste Sicherung zuerst". Das war ohnehin nie eine
+ * Reihenfolge, sondern ein Ersatz dafuer — gerechnet wurde in TAGEN, und bei
+ * Gleichstand war sie beliebig. Was der Auftrag zusagt, ist etwas anderes und
+ * Belastbareres: JEDES Konto genau einmal, und ein Abbruch verliert
+ * hoechstens das laufende.
+ */
+function edbak_auftrag_lesen(): ?array
+{
+    $roh = edbak_marke_lesen(EDBAK_AUFTRAG_SCHLUESSEL);
+    if ($roh === null || trim($roh) === '') { return null; }
+    $a = json_decode($roh, true);
+    if (!is_array($a) || !isset($a['cur'])) { return null; }
+    return $a + ['cur' => 0, 'ges' => 0, 'gut' => 0, 'feh' => 0, 'seit' => null];
+}
+
+/** Auftrag fortschreiben; null loescht ihn. */
+function edbak_auftrag_schreiben(?array $a): bool
+{
+    return edbak_marke_setzen(EDBAK_AUFTRAG_SCHLUESSEL,
+        $a === null ? '' : (string)json_encode($a, JSON_UNESCAPED_UNICODE));
+}
+
+/** Wie viele Konten mit Kontokennung warten noch? */
+function edbak_auftrag_offen(array $a): int
+{
+    $st = db()->prepare("SELECT COUNT(*) FROM users
+                          WHERE id > ? AND account_key IS NOT NULL AND account_key <> ''");
+    $st->execute([(int)$a['cur']]);
+    return (int)$st->fetchColumn();
+}
+
+/**
+ * Einen Auftrag anlegen.
+ *
+ * Er umfasst alle Konten mit Kontokennung. Die Reihenfolge ist die der
+ * Kennung — stabil, lueckenlos und mit einem Zeiger fortsetzbar. Ein Konto,
+ * das WAEHREND des Auftrags angelegt wird, bekommt eine hoehere Kennung und
+ * faehrt deshalb mit; eines, das geloescht wird, faellt einfach heraus.
+ */
+function edbak_auftrag_starten(): array
+{
+    $ges = (int)db()->query("SELECT COUNT(*) FROM users
+                              WHERE account_key IS NOT NULL AND account_key <> ''")
+                    ->fetchColumn();
+    $a = ['cur' => 0, 'ges' => $ges, 'gut' => 0, 'feh' => 0,
+          'seit' => gmdate('Y-m-d\TH:i:s\Z')];
+    edbak_auftrag_schreiben($a);
+    return $a;
+}
+
+/**
+ * Einen Schub abarbeiten — von der Schaltflaeche wie vom Job.
+ *
+ * @param callable $zeitLinks Sekunden, die noch bleiben.
+ * @param float    $reserve   So viel Zeit muss fuer EIN Konto uebrig sein.
+ * @return array{erledigt:int,offen:int,auftrag:?array}
+ */
+function edbak_auftrag_schub(callable $zeitLinks, float $reserve): array
+{
+    $a = edbak_auftrag_lesen();
+    if ($a === null) { return ['erledigt' => 0, 'offen' => 0, 'auftrag' => null,
+                               'meldungen' => []]; }
+
+    $pdo = db();
+    $naechstes = $pdo->prepare("SELECT id FROM users
+                                 WHERE id > ? AND account_key IS NOT NULL
+                                   AND account_key <> ''
+                                 ORDER BY id LIMIT 1");
+    $n = 0;
+    /* DIE MELDUNGEN DIESES SCHUBS, entdoppelt: Bei erreichter Speichergrenze
+     * scheitert JEDES Konto mit derselben Zeile. Dreihundertmal dieselbe ist
+     * keine Auskunft, sondern eine Wand. Sie gehen an den Aufrufer und nicht
+     * in die Marke — dort waere ihretwegen wieder kein Platz. */
+    $meldungen = [];
+    while (true) {
+        if ($zeitLinks() < $reserve) { break; }
+        /* DER SPEICHER IST HIER DIE ENGERE GRENZE, nicht die Zeit: Ein Konto
+         * mit 5000 Einsaetzen kostet 24 MB. Was darueber liegt, reicht fuer
+         * ein weiteres womoeglich nicht mehr — und ein Abbruch mitten im Bau
+         * kostet mehr als ein Schub, der eines frueher aufhoert. */
+        if (function_exists('jobs_speicher_knapp') && jobs_speicher_knapp()) { break; }
+
+        $naechstes->execute([(int)$a['cur']]);
+        $id = (int)($naechstes->fetchColumn() ?: 0);
+        if ($id === 0) { break; }
+
+        [$ok, $grund, ] = edbak_sicherung_erzeugen($id);
+        if ($ok) { $a['gut']++; }
+        else {
+            $a['feh']++;
+            if ($grund !== null && !in_array($grund, $meldungen, true)) {
+                $meldungen[] = $grund;
+            }
+        }
+        $a['cur'] = $id;
+        $n++;
+        /* NACH JEDEM KONTO FORTSCHREIBEN. Ein Haeppchen, das mittendrin
+         * abbricht, verliert damit hoechstens das laufende Konto — und nicht
+         * den ganzen Schub. */
+        edbak_auftrag_schreiben($a);
+    }
+
+    $offen = edbak_auftrag_offen($a);
+    if ($offen === 0) { edbak_auftrag_schreiben(null); }
+    return ['erledigt' => $n, 'offen' => $offen, 'auftrag' => $a,
+            'meldungen' => $meldungen];
 }
 

@@ -103,7 +103,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Sperre)
 │   ├── backup_lib.php     Backup-Serialisierung (Kern mit oder ohne Spuren)
 │   │                       · trash_lib.php Papierkorb-Logik
-│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage, Übersicht, Freigabe (A8)
+│   ├── adminbackup_lib.php  Admin-Sicherungen: Ablage (ZIP, Fassung 2),
+│   │                       Übersicht, Freigabe, Speichergrenze, Auftrag (A8, S2/AP6)
 │   ├── admin_sicherungen.php  Adminseite dazu — seit Web 9.10.0 nur noch
 │   │                       Regeln, Ablage und Sicherungen ohne Konto;
 │   │                       die Konten stehen in admin_users.php, die
@@ -320,7 +321,7 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe 3; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
 | `schema_migrations` | Buchführung des Migrations-Runners |
@@ -3432,8 +3433,9 @@ Chiffretext, `edbak_restore()` übernimmt ihn unverändert.
 
 **Ablage.** `server/sicherungen/<kontokennung>/`, je Ordner eine
 `konto.json` (Begleitdatei **und** Verzeichnis) und höchstens `n` Pakete
-`<zeitstempel>_<zufall>.json` — `n` ist seit Web 9.8.0 eine Einstellung
-(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, Vorgabe 3). Nicht in der Datenbank: Ein Paket liegt bei
+`<zeitstempel>_<zufall>.zip` — `n` ist seit Web 9.8.0 eine Einstellung
+(`app_state.adminbackup_aufbewahrung`, `edbak_aufbewahrung()`, **Vorgabe 2
+seit Web 12.0.0**, vorher 3). Nicht in der Datenbank: Ein Paket liegt bei
 größeren Beständen im zweistelligen MB-Bereich, `max_allowed_packet` liegt auf
 geteiltem Webspace oft unveränderlich bei 16 MB — und eine Sicherung im selben
 Behälter wie das Gesicherte ist keine Rückfallebene.
@@ -3442,6 +3444,33 @@ Behälter wie das Gesicherte ist keine Rückfallebene.
 Nachweisdatei der Ersteinrichtung (M1-11): eine `.htaccess` mit
 `Require all denied`, die `edbak_ablage_bereit()` bei **jedem** Schreibzugriff
 nachlegt, und der nicht erratbare Ordnername.
+
+**Ein Paket ist seit Web 12.0.0 ein ZIP** (Aufbau: `docs/Backup-Format.md` 5).
+Gebaut, gelesen und eingespielt wird in Fenstern zu 250 Einträgen — dieselbe
+Zahl wie bei der Nutzersicherung, hier aber aus einem anderen Grund: Über die
+Leitung geht nichts, es zählt allein der Speicher. **Gemessen** am
+5000er-Bestand: 1077,6 MB → **24,0 MB von 64**, Datei 94,28 → 11,42 MB, Dauer
+19,81 → 14,13 s. Mit `memory_limit=64M` (Z3) brach der Lauf vorher ab.
+
+Ein Umweg, den erst die Messung erzwungen hat: `ZipArchive::addFromString()`
+hält jede übergebene Zeichenkette bis zum `close()` im Speicher (34,6 MB
+Inhalt → 42,0 MB Spitze), `addFile()` streamt von der Platte (**2,0 MB**). Die
+Teile entstehen deshalb einzeln in einem Bauordner `.bau-<8 Hex>/` und gehen
+von dort ins Archiv. Bleibt ein solcher Ordner nach einem Abbruch liegen,
+räumt `edbak_baureste_aufraeumen()` ihn weg — vor jedem Löschen des
+Kontoordners, und er zählt gegen die Speichergrenze mit.
+
+**`ext/zip` ist damit Voraussetzung.** `edbak_ablage_bereit()` prüft es bei
+jedem Schreibzugriff, `install.php` seit Web 12.0.0 schon vor der Einrichtung
+(zusammen mit `zlib`, `openssl`, `mbstring` — vorher prüfte der Installer gar
+keine Erweiterung).
+
+**Speichergrenze und Warnschwellen** (E-S2-15, seit Web 12.0.0): Vorgabe 2 GB
+und 70/90 %, beides im Adminbereich. Geprüft **vor** dem Bau; erreicht heißt
+abgelehnt mit Meldung, nie still verdrängt. Gezählt wird das **ganze**
+Verzeichnis. Ohne eingerichtetes SMTP (`smtp_eingerichtet()`) steht statt der
+Mail ein dauerhafter Hinweis im Adminbereich. Einzelheiten:
+`docs/Backup-Format.md` 5b.
 
 **`sicherungen/` steht in der `exclude`-Liste von `.github/workflows/deploy.yml`.**
 Das ist keine Feinheit: Der FTP-Deploy synchronisiert `server/` und löscht alles,
@@ -3499,8 +3528,33 @@ keine neue erzeugt wurde — also in der Lage, in der man sie braucht.
 
 | Ausnahme | Grund |
 |---|---|
-| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat |
+| das **jüngste** Paket | Bei einer Aufbewahrung von 0 räumte das Sichern sonst alles weg, was es gerade angelegt hat — das gilt seit Web 12.0.0 auch dann, wenn es noch Fassung 1 ist |
 | ein **freigegebenes** Paket | Die NutzerIn bekommt es im eigenen Backup-Bereich angeboten; es unter ihr wegzuräumen hieße, einen Weg anzubieten, der beim Klick ins Leere läuft |
+
+**Fassung-1-Pakete gehen beim ersten neuen Lauf mit** (Entscheidung vom
+31.08.2026) — aber erst, nachdem das neue Paket geschrieben **und wieder
+gelesen** wurde (`edbak_paket_kopf_lesen()` als Gegenprobe in
+`edbak_sicherung_erzeugen()`). Ein ZIP, das sich nicht öffnen lässt, ist genau
+der Fall, in dem man den alten Stand noch braucht.
+
+### Der Auftrag „Alle sichern" (seit Web 12.0.0)
+
+Er läuft **in Schüben**: von der Schaltfläche, solange die Anfrage Zeit hat
+(`SICHERN_BUDGET`, 20 s), und vom Wartungsjob `adminbackup` weiter. Der
+Merkzettel steht in `app_state.adminbackup_auftrag` und ist **ein Zeiger,
+keine Liste** — `app_state.v` ist `varchar(190)`, eine Liste von Kennungen
+passt dort nicht hinein (Aufbau: `docs/Backup-Format.md` 5c).
+
+Der Job arbeitet **nur auf Auftrag**; nächtliche Sicherungen je Konto sind
+ausdrücklich abgelehnt (E-S2-19). Seine Reserve ist mit 15 s so groß, dass er
+am Huckepack-Weg (`JOB_BUDGET_ANFRAGE` = 3 s) gar nicht erst anfängt — eine
+Anfrage einer NutzerIn soll keine fremde Sicherung mittragen.
+
+**Der Job-Rahmen misst seit Web 12.0.0 auch den Speicher**
+(`jobs_speicher_knapp()`, `JOB_SPEICHER_DECKEL_MB` = 48 von 64). Bis dahin
+zählte nur die Zeit; das reichte, solange jeder Job in Blöcken über Zeilen
+lief. Der Sicherungsjob ist anders: Ein einzelnes Konto kostet beim
+5000er-Bestand 24 MB, und das ist die Größe, an der es klemmt.
 
 Die zweite Ausnahme folgt derselben Regel wie
 `edbak_verzeichnis_abgleichen()`, das eine Freigabe auf eine nicht mehr

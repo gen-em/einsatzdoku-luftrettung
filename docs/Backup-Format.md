@@ -1030,20 +1030,86 @@ Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
 
 ---
 
-## 5. Admin-Sicherung (seit Web 5.9.0)
-
-> **Sie schreibt weiterhin das einteilige Format.** Containerfassung 4 gilt
-> seit Web 11.0.0 für die Sicherung, die eine NutzerIn selbst erstellt; die
-> Serversicherung zieht in AP6 nach (Konzept S2, 3.3). Bis dahin gilt für sie
-> unverändert, was hier steht.
+## 5. Admin-Sicherung, Fassung 2 (seit Web 12.0.0)
 
 Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
-`adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/` als
-unverschlüsseltes JSON. **Warum unverschlüsselt:** Der Server hat keinen
-Schlüssel, mit dem er es versiegeln könnte, ohne ihn ebenfalls zu speichern —
-das wäre ein Schloss mit dem Schlüssel daneben. Geschützt ist die Datei durch
-den Ort (`Require all denied` und der nicht erratbare Ordnername), und die
-empfindlichen Angaben darin stecken ohnehin verschlüsselt.
+`adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/`.
+**Unverschlüsselt:** Der Server hat keinen Schlüssel, mit dem er es versiegeln
+könnte, ohne ihn ebenfalls zu speichern — das wäre ein Schloss mit dem
+Schlüssel daneben. Geschützt ist die Datei durch den Ort (`Require all denied`
+und der nicht erratbare Ordnername), und die empfindlichen Angaben darin
+stecken ohnehin verschlüsselt.
+
+**Seit Web 12.0.0 ist ein Paket ein ZIP** mit dem Namen
+`<zeitstempel>_<8 Hexziffern>.zip`. Die Endung ist zugleich die
+Fassungserkennung: `.json` = die einteilige Fassung 1 (Abschnitt 5a),
+`.zip` = Fassung 2.
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, `geschuetzte` |
+| `kopf.json` | Stammdaten, Diensttage, `eintraege_gesamt` |
+| `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
+| `spuren/0001.json` … | je Teil `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64 |
+
+**Gepackt**, anders als bei der Nutzersicherung: Dort sind die Teile bereits
+gzip *und* verschlüsselt, hier ist es blankes JSON. **Gemessen** am
+5000er-Bestand: 11,42 MB statt 94,28 MB derselben Daten als Fassung 1.
+
+Der Aufbau der Teile ist der der Containerfassung 4 (Abschnitt 1) — nur ohne
+Versiegelung, und `pat_blob` bleibt Chiffretext. Die `spur_ref` ist wie dort
+der **Index des Eintrags über die ganze Sicherung** (erst Einsätze, dann
+Ruhesegmente).
+
+```jsonc
+// manifest.json
+{
+  "format":      "einsatzdoku-adminsicherung",
+  "version":     2,
+  "erzeugt":     "2026-09-01T04:53:17Z",
+  "web_version": "12.0.0",
+  "konto":  { "account_key": "…16 Hexziffern…", "email": "…", "name": "…" },
+  "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…" },
+  "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
+              "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
+  "nutzlast":      8,          // Fassung des Kerns, s. Abschnitt 2
+  "eintraege":     45,         // Einsätze und Ruhesegmente zusammen
+  "eintragsteile": 1,
+  "spurteile":     1,
+  "spuren":        40,
+  "punkte":        12345,
+  "geschuetzte":   38,         // s. unten
+  "teile":     ["kopf.json", "eintraege/0001.json", "spuren/0001.json"],
+  "abgelehnt": []              // Spuren, die der Server nicht kodieren konnte
+}
+```
+
+**`geschuetzte` ist keine Zierde.** Es zählt die Einsätze, deren `pat_blob`
+gesetzt ist. `edbak_paket_hat_geschuetzte()` sah bis Web 11.1.1 in die
+Einsatzliste des Pakets; im gefensterten Kern steht sie dort nicht mehr. Ohne
+die Zahl hätte die Funktion still `false` geliefert und damit die Sperre aus
+E20 ausgehebelt: Ein Paket mit unlesbaren Angaben wäre als „direkt
+einspielbar" durchgegangen. **Fehlt das Feld** in einem Fassung-2-Paket, wird
+vorsichtig entschieden — der teurere Weg ist hier der sichere.
+
+**Ein Fassung-2-Kern darf nicht durch den einteiligen Rückweg.** Er trägt
+Nutzlast 8; die Punkte stehen in eigenen Teilen. Wer ihn an `edbak_restore()`
+übergibt, bekommt jeden Einsatz und **keine einzige Spur** — genau dieser Fall
+ist einmal eingetreten (F-S2-E, 91 208 Punkte). Deshalb:
+`edbak_paket_lesen()` verweigert Fassung 2 ausdrücklich, und eingespielt wird
+über `edbak_paket_einspielen()` bzw. `edbak_paket_zurueckspielen()`.
+
+**Die Ablage kennt zwei weitere Dinge**, die keine Pakete sind und trotzdem
+Platz belegen: `konto.json` (Begleitdatei, s. unten) und Reste abgebrochener
+Läufe — ein Bauordner `.bau-<8 Hex>/` oder eine `<paket>.zip.tmp`. Die
+Speichergrenze (Abschnitt 5b) zählt sie **mit**; die Ordnerlöschung räumt sie
+**mit**.
+
+### 5a. Admin-Sicherung, Fassung 1 (Web 5.9.0 bis 11.1.1)
+
+Wird **gelesen, nicht mehr geschrieben** — und beim ersten Lauf nach dem
+Umstieg entfernt (Entscheidung vom 31.08.2026). Eine einzige JSON-Datei
+`<zeitstempel>_<8 Hexziffern>.json`:
 
 ```json
 {
@@ -1057,16 +1123,72 @@ empfindlichen Angaben darin stecken ohnehin verschlüsselt.
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1,
                               "ruhezeiten": 5 } },
-  "daten":  { … das innere JSON aus Abschnitt 2 … }
+  "daten":  { … das innere JSON aus Abschnitt 2, Nutzlast 7 … }
 }
 ```
 
-**`umfang.papierkorb` seit S1**, additiv — die Paketversion bleibt deshalb 1.
+**`umfang.papierkorb` seit S1**, additiv — die Paketversion blieb deshalb 1.
 Die drei Zahlen darüber zählen den Papierkorb **mit**; ohne den Unterblock
 wäre aus „42 Einsätze" nicht zu erkennen, dass fünf davon gelöscht sind. Bei
 Sicherungen aus der Zeit davor fehlt der Block, und die Anzeige lässt ihn dann
 **weg** statt eine Null zu zeigen: „nicht erhoben" ist etwas anderes als
 „nichts drin".
+
+**Der Kopf lässt sich hier nicht getrennt lesen** — Umschlag und Bestand
+liegen in derselben Struktur. `edbak_paket_kopf_lesen()` muss die ganze Datei
+öffnen und `daten` danach wegwerfen. Das ist einer der Gründe, aus denen
+Fassung 1 nicht bleibt.
+
+### 5b. Speichergrenze und Warnschwellen (seit Web 12.0.0)
+
+`server/sicherungen/` hat eine Grenze — Vorgabe **2 GB**, im Adminbereich
+einstellbar (`app_state.adminbackup_grenze_gb`). **Ist sie erreicht, wird
+abgelehnt mit Meldung; es wird nie still verdrängt** (E-S2-14). Geprüft wird
+**vor** dem Bau: Beim 5000er-Konto kostet er 14 Sekunden, und die erst
+auszugeben und das Ergebnis dann wegzuwerfen wäre bei „Alle sichern" derselbe
+Preis je Konto.
+
+**Gezählt wird das ganze Verzeichnis**, nicht nur die Pakete — es füllt sich
+auch mit Begleitdateien und Resten. Was nicht in Paketen steckt, wird getrennt
+ausgewiesen, damit ein auffälliger Rest auffällt statt in einer Summe
+unterzugehen.
+
+**Warnschwellen** in Prozent, Vorgabe `70, 90`
+(`app_state.adminbackup_schwellen`). Je überschrittener Schwelle geht
+**einmal** eine Meldung an die Admin-Adressen; die Marke wird **nach**
+erfolgreichem Versand gesetzt, nicht davor — scheitert er, käme die Warnung
+sonst nie. Fällt der Verbrauch wieder unter eine Schwelle, wird sie vergessen
+und beim nächsten Überschreiten erneut gemeldet. **Ohne eingerichtetes SMTP**
+(`smtp_eingerichtet()`) wird gar nicht erst versucht; stattdessen steht ein
+dauerhafter Hinweis im Adminbereich.
+
+### 5c. Der Auftrag „Alle sichern" (seit Web 12.0.0)
+
+Er läuft in Schüben: von der Schaltfläche, solange die Anfrage Zeit hat, und
+vom Wartungsjob `adminbackup` weiter. Der Merkzettel steht in
+`app_state.adminbackup_auftrag` und ist **ein Zeiger, keine Liste**:
+
+```json
+{"cur":137,"ges":31,"gut":12,"feh":0,"seit":"2026-09-01T05:00:00Z"}
+```
+
+`cur` ist die zuletzt gesicherte `users.id`; gearbeitet wird in der
+Reihenfolge der Kennung. **Warum ein Zeiger:** `app_state.v` ist
+`varchar(190)`. Die erste Fassung legte die Kennungen aller offenen Konten
+hinein — bei 31 Konten schon 350 Zeichen; das INSERT scheiterte, und weil
+`edbak_marke_setzen()` jeden Fehler schluckte, meldete die Schaltfläche „0 von
+0 Konten gesichert". Beides ist behoben: Der Zeiger passt immer, und die
+Marke sagt jetzt, wenn sie nicht schreiben konnte.
+
+**Was damit wegfällt:** „älteste Sicherung zuerst". Das war ohnehin keine
+Reihenfolge, sondern ein Ersatz für den fehlenden Merkzettel — gerechnet
+wurde in *Tagen*, und bei Gleichstand war sie beliebig. Zugesagt ist jetzt
+etwas Belastbareres: **jedes Konto genau einmal**, und ein Abbruch verliert
+höchstens das laufende.
+
+**Automatisch entsteht nichts.** Der Job arbeitet nur auf Auftrag; nächtliche
+Sicherungen je Konto sind ausdrücklich abgelehnt (E-S2-19) — sie bräuchten den
+Inhaltsschlüssel, und den hat der Server nicht.
 
 **`daten` ist unverändert das Backup-JSON** — mit einem Unterschied zur
 `.edbak`-Datei: Dort ersetzt der Browser `pat_blob` vor dem Versiegeln durch

@@ -85,6 +85,28 @@ const JOB_ANFRAGE_PAUSE_S = 300;
  */
 const JOB_SPERRE_VERFALL_S = 3600;
 
+/**
+ * Ab wie viel belegtem Speicher ein Job sein Haeppchen beendet (S2/AP6).
+ *
+ * DER RAHMEN HAT BIS WEB 12.0.0 NUR DIE ZEIT GEMESSEN. Das reichte, solange
+ * jeder Job in Bloecken ueber Zeilen lief — dort waechst der Speicher mit der
+ * Blockgroesse und nicht mit dem Bestand. Der Sicherungsjob ist anders: Ein
+ * einzelnes Konto kostet beim 5000er-Bestand 24 MB, und das ist die Groesse,
+ * an der es klemmt, nicht die Sekunde.
+ *
+ * 48 von 64 MB (Z3): Was darueber liegt, reicht fuer ein weiteres Konto
+ * womoeglich nicht mehr — und ein Abbruch mitten im Bau kostet mehr als ein
+ * Haeppchen, das eines frueher aufhoert. Gemessen wird `true` (der vom System
+ * belegte Block), denn das ist die Zahl, gegen die `memory_limit` prueft.
+ */
+const JOB_SPEICHER_DECKEL_MB = 48;
+
+/** Ist das Speicherbudget des Haeppchens erschoepft? */
+function jobs_speicher_knapp(): bool
+{
+    return memory_get_usage(true) >= JOB_SPEICHER_DECKEL_MB * 1024 * 1024;
+}
+
 /** Schluessel des Token in `app_state`. */
 const JOB_TOKEN_SCHLUESSEL = 'jobs_token';
 
@@ -200,6 +222,20 @@ function jobs_katalog(): array
             'taeglich'     => false,
             'rueckstand'   => 'job_ausduennen_rueckstand',
             'lauf'         => 'job_ausduennen',
+        ],
+        /* DER SICHERUNGSJOB STEHT VOR `waisen` UND NACH DER SPURARBEIT.
+         *
+         * Er arbeitet nur, wenn ein Auftrag vorliegt („Alle sichern"); ohne
+         * Auftrag kostet er eine Abfrage. Er darf deshalb weit vorn stehen,
+         * ohne den anderen Jobs im Regelfall Budget wegzunehmen — und wenn er
+         * etwas zu tun hat, ist es das, worauf jemand gerade wartet. */
+        'adminbackup' => [
+            'titel'        => 'Sicherungen aller Konten',
+            'beschreibung' => 'Den Auftrag „Alle sichern" in Schüben abarbeiten '
+                            . '— je Konto ein Paket, mit Wiederaufnahme',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_adminbackup_rueckstand',
+            'lauf'         => 'job_adminbackup',
         ],
         'waisen' => [
             'titel'        => 'Verwaiste Spuren',
@@ -1000,3 +1036,36 @@ function job_ausduennen_rueckstand(PDO $pdo, array $z): ?int
 {
     return isset($z['offen']) ? (int)$z['offen'] : null;
 }
+
+/* ---- Job: Sicherungen aller Konten (S2/AP6, E-S2-14) --------------------
+ *
+ * ER ARBEITET NUR AUF AUFTRAG. „Alle sichern" legt eine Warteschlange an
+ * (`edbak_auftrag_starten()`); dieser Job leert sie in Schueben. Ohne Auftrag
+ * kostet er eine Abfrage und meldet „fertig".
+ *
+ * WARUM NICHT AUTOMATISCH. E-S2-19 hat naechtliche Sicherungen je Konto
+ * ausdruecklich abgelehnt (Beschluss 29.08.2026). Der Job ist das Fuhrwerk
+ * fuer die Schaltflaeche, kein Zeitplan.
+ *
+ * DIE RESERVE IST GROSS, und das ist Absicht: Ein Konto mit 5000 Einsaetzen
+ * kostet gemessen 14,13 s. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) faengt
+ * dieser Job deshalb gar nicht erst an — eine Anfrage einer NutzerIn soll
+ * keine fremde Sicherung mittragen.
+ */
+const JOB_ADMINBACKUP_RESERVE_S = 15.0;
+
+function job_adminbackup(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/adminbackup_lib.php';
+    $e = edbak_auftrag_schub($zeitLinks, JOB_ADMINBACKUP_RESERVE_S);
+    return ['zustand' => [], 'erledigt' => $e['erledigt'], 'fertig' => $e['offen'] === 0];
+}
+
+/** Wie viele Konten warten noch? `null` heisst „kein Auftrag". */
+function job_adminbackup_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/adminbackup_lib.php';
+    $a = edbak_auftrag_lesen();
+    return $a === null ? null : edbak_auftrag_offen($a);
+}
+
