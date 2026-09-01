@@ -20,6 +20,14 @@
 <h2>Nachher (Web 7.2.1)</h2>
 <table id="nachher"><tbody></tbody></table>
 
+<!-- symbol.js MUSS mit, und zwar VOR missiontable.js: Seit P3/O11 setzt
+     `zelleGeschuetzt()` fuer einen unlesbaren Datensatz `edSymbol('warnung')`
+     ein, statt ein Unicode-Zeichen hinzuschreiben. Ohne diese Zeile wirft
+     die Probe `edSymbol is not defined`, `window.__fertig` wird nie gesetzt,
+     und `pruefe.mjs` laeuft in sein Zeitlimit — ohne einen einzigen Befund
+     zu melden. Gefunden in S2/AP10; die Probe war seit Web 9.12.0 stumm
+     kaputt. -->
+<script src="../../server/assets/symbol.js"></script>
 <script src="../../server/assets/html.js"></script>
 <script src="../../server/assets/missiontable.js"></script>
 <script>

@@ -41,6 +41,33 @@ require_once $wurzel . '/spur_lib.php';
 
 $pdo = db();
 
+/* ANGEHALTENE JOBS SIND KEIN FEHLSCHLAG, SONDERN EIN ABBRUCHGRUND (S2/AP10).
+ *
+ * `kreislauf.py` haelt die Jobs waehrend seines Laufs an (`jobs_pause(1800)`)
+ * und laesst sie danach wieder los. Wer diese Probe in derselben Zeit faehrt,
+ * bekam bisher ZEHN nicht erfuellte Erwartungen — jede davon mit der Meldung
+ * „angehalten bis ...", und keine davon ein Mangel am Code. Genau so
+ * gemessen am 01.09.2026, waehrend der csv-Kreislauf lief.
+ *
+ * Zehn rote Zeilen, die nichts bedeuten, sind schlimmer als keine Probe: Wer
+ * sie einmal als Rauschen abtut, tut es beim naechsten Mal wieder. Die Probe
+ * sagt deshalb, was los ist, und laeuft gar nicht erst an.
+ */
+$angehalten = jobs_pause_bis();
+if ($angehalten !== null) {
+    fwrite(STDERR, <<<TEXT
+    Die Jobs sind bis $angehalten UTC angehalten — diese Probe kann so nicht
+    laufen und wuerde nur Scheinfehler melden.
+
+    Das macht in aller Regel ein laufender Kreislauf: kreislauf.py haelt sie
+    fuer 1800 s an und gibt sie am Ende wieder frei. Abwarten — oder von Hand
+    freigeben mit einem Aufruf, der server/db.php und server/jobs_lib.php
+    einbindet und jobs_pause(0) ruft.
+
+    TEXT);
+    exit(2);
+}
+
 $erwartungen = 0;
 $offen = 0;
 function pruefe(bool $ok, string $was, string $wert = ''): void {

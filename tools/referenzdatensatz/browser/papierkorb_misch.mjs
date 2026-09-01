@@ -225,6 +225,30 @@ if (!await anmelden(ziel, zielPw)) {
 }
 schritt(`Als ${ziel} anmelden`);
 
+/* AUCH IM ZIELKONTO ZUERST DEN GRUNDSTAND ERHEBEN (S2/AP10).
+ *
+ * Fuer die QUELLE tut diese Probe das seit jeher und begruendet es oben
+ * ausfuehrlich — fuer das ZIEL tat sie es nicht. Sie verglich dessen
+ * Papierkorb ABSOLUT gegen den der Quelle, unter der stillen Annahme, das
+ * Zielkonto sei leer. Das stimmt genau EINMAL: beim allerersten Lauf gegen ein
+ * frisches Konto. `kreislauf.py --art edbak --frisch` baut das QUELLkonto neu
+ * — das Zielkonto `umlauf-misch` raeumt niemand auf, und jeder Lauf laesst
+ * dort einen weiteren eingespielten Bestand liegen.
+ *
+ * Gemessen am 01.09.2026: Beim zweiten Lauf desselben Tages meldete die Probe
+ * SECHS Befunde („Diensttage im Papierkorb: Quelle 2, Ziel 1"), und keiner
+ * davon war ein Mangel der Anwendung. Nachgewiesen mit einer Gegenprobe auf
+ * dem Stand VOR der betreffenden Codeaenderung: dieselben Befunde.
+ *
+ * Verglichen wird deshalb die VERAENDERUNG durch das Einspielen, auf beiden
+ * Seiten. Das ist dieselbe Regel, die die Probe fuer die Quelle schon
+ * anwendet — sie war nur auf halbem Weg stehengeblieben.
+ */
+const zielGrund = await papierkorbZaehlen();
+schritt(`Grundstand des Papierkorbs im Zielkonto: `
+        + `${zielGrund.tage} Diensttag(e), ${zielGrund.einsaetze} einzelne(r) `
+        + `Einsatz/Einsätze`);
+
 await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
 await seite.setInputFiles('#bfile', datei);
@@ -256,11 +280,19 @@ const zielStand = await papierkorbZaehlen();
 schritt(`Papierkorb im Zielkonto: ${zielStand.tage} Diensttag(e), `
         + `${zielStand.einsaetze} einzelne(r) Einsatz/Einsätze`);
 
-pruefe(zielStand.tage === nachher.tage,
-  `Diensttage im Papierkorb: Quelle ${nachher.tage}, Ziel ${zielStand.tage}`);
-pruefe(zielStand.einsaetze === nachher.einsaetze,
-  `Einzeln gelöschte Einsätze im Papierkorb: Quelle ${nachher.einsaetze}, `
-  + `Ziel ${zielStand.einsaetze}. Ein Ziel-Wert von ${nachher.einsaetze - 1} hiesse: `
+const zielZu   = { tage: zielStand.tage - zielGrund.tage,
+                   einsaetze: zielStand.einsaetze - zielGrund.einsaetze };
+const quelleZu = { tage: nachher.tage - grund.tage,
+                   einsaetze: nachher.einsaetze - grund.einsaetze };
+schritt(`Durch das Einspielen dazugekommen: Quelle ${quelleZu.tage} Tag(e) / `
+        + `${quelleZu.einsaetze} Einsatz/Einsätze, Ziel ${zielZu.tage} / ${zielZu.einsaetze}`);
+
+pruefe(zielZu.tage === quelleZu.tage,
+  `Diensttage im Papierkorb: Quelle +${quelleZu.tage}, Ziel +${zielZu.tage} `
+  + `(absolut: ${nachher.tage} gegen ${zielStand.tage})`);
+pruefe(zielZu.einsaetze === quelleZu.einsaetze,
+  `Einzeln gelöschte Einsätze im Papierkorb: Quelle +${quelleZu.einsaetze}, `
+  + `Ziel +${zielZu.einsaetze}. Ein Ziel-Zuwachs von ${quelleZu.einsaetze - 1} hiesse: `
   + `der einzeln gelöschte Einsatz trägt fälschlich deleted_with_day = 1 und ist `
   + `unsichtbar — genau der Fehler F-S1-E.`);
 
