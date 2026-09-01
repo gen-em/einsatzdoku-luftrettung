@@ -24,8 +24,21 @@
  * `kreislauf.py`: Die erste Fassung eines solchen Skripts hat einmal das
  * Referenzkonto erwischt.
  *
- * Aufruf (das Zielkonto muss bestehen und ein Passwort haben — beides macht
- * `python3 vergleich/kreislauf.py --art edbak --frisch` als Nebenwirkung):
+ * DAS ZIELKONTO MUSS LEER SEIN. Das ist keine Bequemlichkeit, sondern folgt
+ * aus dem, was geprueft wird: Der Vergleich haelt den Papierkorb des Ziels
+ * ABSOLUT gegen den der Quelle, und das geht nur auf, wenn das Ziel den ganzen
+ * Bestand frisch bekommt. Traegt es ihn schon, ueberspringt die
+ * Wiederherstellung alles (sie ERGAENZT und ersetzt nicht, E22) — samt des
+ * Papierkorbzustands, um den es hier geht. Die Probe prueft das seit S2/AP10
+ * selbst und bricht mit einer Erklaerung ab, statt sechs Scheinbefunde zu
+ * melden.
+ *
+ * DAS QUELLKONTO braucht den Referenzbestand; `python3
+ * vergleich/kreislauf.py --art edbak --frisch` legt ihn an. Ein LEERES
+ * Zielkonto entsteht ueber denselben Weg wie jedes andere Konto
+ * (`konto_anlegen()` in kreislauf.py) — nur ohne anschliessendes Einspielen.
+ *
+ * Aufruf:
  *
  *   node papierkorb_misch.mjs [basis] [quellkonto] [zielkonto]
  */
@@ -225,29 +238,48 @@ if (!await anmelden(ziel, zielPw)) {
 }
 schritt(`Als ${ziel} anmelden`);
 
-/* AUCH IM ZIELKONTO ZUERST DEN GRUNDSTAND ERHEBEN (S2/AP10).
+/* DIE VORAUSSETZUNG DES ZIELKONTOS PRUEFEN (S2/AP10).
  *
- * Fuer die QUELLE tut diese Probe das seit jeher und begruendet es oben
- * ausfuehrlich — fuer das ZIEL tat sie es nicht. Sie verglich dessen
- * Papierkorb ABSOLUT gegen den der Quelle, unter der stillen Annahme, das
- * Zielkonto sei leer. Das stimmt genau EINMAL: beim allerersten Lauf gegen ein
- * frisches Konto. `kreislauf.py --art edbak --frisch` baut das QUELLkonto neu
- * — das Zielkonto `umlauf-misch` raeumt niemand auf, und jeder Lauf laesst
- * dort einen weiteren eingespielten Bestand liegen.
+ * Der Vergleich weiter unten haelt den Papierkorb des Ziels ABSOLUT gegen den
+ * der Quelle. Das ist richtig — aber nur, wenn das Zielkonto vorher LEER ist:
+ * Dann bekommt es den ganzen Bestand samt Papierkorb, und beide Zahlen muessen
+ * uebereinstimmen.
  *
- * Gemessen am 01.09.2026: Beim zweiten Lauf desselben Tages meldete die Probe
- * SECHS Befunde („Diensttage im Papierkorb: Quelle 2, Ziel 1"), und keiner
- * davon war ein Mangel der Anwendung. Nachgewiesen mit einer Gegenprobe auf
- * dem Stand VOR der betreffenden Codeaenderung: dieselben Befunde.
+ * Diese Voraussetzung stand nirgends und wurde nicht geprueft. Laeuft die
+ * Probe ein zweites Mal gegen dasselbe Zielkonto, meldete sie SECHS Befunde,
+ * darunter den schwersten, den sie kennt (F-S1-E) — und keiner war ein Mangel
+ * der Anwendung. Belegt am 01.09.2026 durch die Rueckmeldung des Einspielens:
  *
- * Verglichen wird deshalb die VERAENDERUNG durch das Einspielen, auf beiden
- * Seiten. Das ist dieselbe Regel, die die Probe fuer die Quelle schon
- * anwendet — sie war nur auf halbem Weg stehengeblieben.
+ *   „0 Einsaetze uebernommen ... Uebersprungen: 87 Einsaetze,
+ *    100 Ruhesegmente — bereits vorhanden 187."
+ *
+ * Der Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt
+ * nicht (E22). Was schon da ist, wird uebersprungen — samt des
+ * Papierkorbzustands, um den es hier geht.
+ *
+ * Sechs rote Zeilen aus einer unerfuellten Voraussetzung sind schlimmer als
+ * gar keine Probe: Der schwerste Befund des Werkzeugs verliert seine
+ * Glaubwuerdigkeit, wenn er auch dann erscheint, wenn nichts kaputt ist.
+ *
+ * ZUM VERGLEICH DIE VERWORFENE ALTERNATIVE: statt absolut die VERAENDERUNG auf
+ * beiden Seiten zu messen. Das klingt sauberer und ist falsch — bei leerem
+ * Ziel waechst dessen Papierkorb um den GANZEN Bestand der Quelle (hier +2),
+ * der der Quelle nur um das eben Geloeschte (+1). Gemessen und verworfen.
  */
 const zielGrund = await papierkorbZaehlen();
 schritt(`Grundstand des Papierkorbs im Zielkonto: `
         + `${zielGrund.tage} Diensttag(e), ${zielGrund.einsaetze} einzelne(r) `
         + `Einsatz/Einsätze`);
+if (zielGrund.tage !== 0 || zielGrund.einsaetze !== 0) {
+  await abbruch(
+    `Das Zielkonto ${ziel} hat schon etwas im Papierkorb `
+    + `(${zielGrund.tage} Diensttag(e), ${zielGrund.einsaetze} Einsatz/Einsätze). `
+    + `Diese Probe braucht ein LEERES Zielkonto — sonst vergleicht sie den `
+    + `Papierkorb der Quelle gegen einen, der schon vorher gefüllt war.\n`
+    + `Abhilfe: ein frisches Konto anlegen (Adresse muss mit 'umlauf-' `
+    + `beginnen) und als drittes Argument übergeben:\n`
+    + `  node papierkorb_misch.mjs <basis> <quellkonto> <frisches-zielkonto>`);
+}
 
 await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
@@ -268,6 +300,42 @@ const impZustand = (await seite.locator('#impstate').textContent().catch(() => '
 const impTon = (await impMeldung.first().getAttribute('class').catch(() => '') || '');
 schritt(`Eingespielt — ${impZustand}`);
 pruefe(/meldung-ok/.test(impTon), `Einspielen nicht sauber: ${impZustand || '(kein Ergebnis)'}`);
+/* DIE VORAUSSETZUNG PRUEFEN, BEVOR GEPRUEFT WIRD (S2/AP10).
+ *
+ * Diese Probe braucht ein Zielkonto, das den Bestand NOCH NICHT hat. Der
+ * Grund liegt in der Wiederherstellung selbst: Sie ERGAENZT und ersetzt nicht
+ * (E22). Was schon da ist, wird uebersprungen — und mit ihm der geaenderte
+ * Papierkorbzustand, um den es hier geht.
+ *
+ * Laeuft die Probe ein zweites Mal gegen dasselbe Zielkonto, meldete sie
+ * SECHS Befunde, darunter den schwersten, den sie kennt (F-S1-E). Keiner
+ * davon war ein Mangel der Anwendung. Belegt am 01.09.2026 durch die
+ * Rueckmeldung des Einspielens selbst:
+ *
+ *   „0 Einsaetze uebernommen, 0 Ruhesegmente, 0 Diensttage.
+ *    Uebersprungen: 87 Einsaetze, 100 Ruhesegmente — bereits vorhanden 187."
+ *
+ * Sechs rote Zeilen aus einer unerfuellten Voraussetzung sind schlimmer als
+ * gar keine Probe: Der schwerste Befund des Werkzeugs verliert seine
+ * Glaubwuerdigkeit, wenn er auch dann erscheint, wenn nichts kaputt ist.
+ *
+ * Also: Hat das Einspielen NICHTS uebernommen, wird hier abgebrochen — mit
+ * dem Weg zum leeren Zielkonto in der Meldung.
+ */
+const nichtsUebernommen = /\b0 Einsätze übernommen/.test(impZustand);
+const allesSchonDa      = /bereits vorhanden/.test(impZustand);
+if (nichtsUebernommen && allesSchonDa) {
+  await abbruch(
+    `Das Zielkonto ${ziel} traegt den Bestand bereits — das Einspielen hat `
+    + `nichts uebernommen ("${impZustand}").\n`
+    + `Diese Probe braucht ein LEERES Zielkonto: Die Wiederherstellung `
+    + `ergaenzt und ersetzt nicht (E22), und was schon da ist, wird `
+    + `uebersprungen — samt des Papierkorbzustands, um den es hier geht.\n`
+    + `Abhilfe: ein frisches Zielkonto anlegen und als drittes Argument `
+    + `uebergeben, oder das vorhandene leeren.\n`
+    + `  node papierkorb_misch.mjs <basis> <quellkonto> <frisches-zielkonto>`);
+}
+
 pruefe(/In den Papierkorb übernommen/.test(impZustand),
        'Die Rückmeldung nennt den Papierkorbanteil nicht');
 
@@ -280,19 +348,12 @@ const zielStand = await papierkorbZaehlen();
 schritt(`Papierkorb im Zielkonto: ${zielStand.tage} Diensttag(e), `
         + `${zielStand.einsaetze} einzelne(r) Einsatz/Einsätze`);
 
-const zielZu   = { tage: zielStand.tage - zielGrund.tage,
-                   einsaetze: zielStand.einsaetze - zielGrund.einsaetze };
-const quelleZu = { tage: nachher.tage - grund.tage,
-                   einsaetze: nachher.einsaetze - grund.einsaetze };
-schritt(`Durch das Einspielen dazugekommen: Quelle ${quelleZu.tage} Tag(e) / `
-        + `${quelleZu.einsaetze} Einsatz/Einsätze, Ziel ${zielZu.tage} / ${zielZu.einsaetze}`);
-
-pruefe(zielZu.tage === quelleZu.tage,
-  `Diensttage im Papierkorb: Quelle +${quelleZu.tage}, Ziel +${zielZu.tage} `
-  + `(absolut: ${nachher.tage} gegen ${zielStand.tage})`);
-pruefe(zielZu.einsaetze === quelleZu.einsaetze,
-  `Einzeln gelöschte Einsätze im Papierkorb: Quelle +${quelleZu.einsaetze}, `
-  + `Ziel +${zielZu.einsaetze}. Ein Ziel-Zuwachs von ${quelleZu.einsaetze - 1} hiesse: `
+pruefe(zielStand.tage === nachher.tage,
+  `Diensttage im Papierkorb: Quelle ${nachher.tage}, Ziel ${zielStand.tage} `
+  + `(Zielkonto war vorher leer)`);
+pruefe(zielStand.einsaetze === nachher.einsaetze,
+  `Einzeln gelöschte Einsätze im Papierkorb: Quelle ${nachher.einsaetze}, `
+  + `Ziel ${zielStand.einsaetze}. Ein Ziel-Wert von ${nachher.einsaetze - 1} hiesse: `
   + `der einzeln gelöschte Einsatz trägt fälschlich deleted_with_day = 1 und ist `
   + `unsichtbar — genau der Fehler F-S1-E.`);
 
