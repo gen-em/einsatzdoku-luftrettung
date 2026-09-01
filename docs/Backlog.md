@@ -612,23 +612,25 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ableitungen nachmessen.
 
 
-56. **Die zweite Rückmeldungsrunde ist nicht im Browser geprüft, und sie steht
-    in keinem Konzept.**
-    *Aufgenommen 01.09.2026, mit Web 12.2.1.* Die drei Punkte der Runde
-    (Dateifeld mittig, Dateiname in den Abschlussmeldungen, Warnzeichen für
-    `warn`) sind gemessen belegt — Stilvergleich, Kaskade, Feldmessung,
-    Wortliste, dazu die Meldungstexte in node durchgespielt. **Was fehlt, ist
-    die Bedienprüfung an der laufenden Anwendung:** In der Umsetzungsumgebung
-    gab es kein MySQL, gemessen wurde am echten Stylesheet mit dem Markup, das
-    `ui_feld()` erzeugt. Nachzuholen ist der Blick auf beide Dateifelder
-    (Backup einspielen, Import), eine erzeugte Sicherung samt Abschlussmeldung,
-    ein Export je Profil und eine Sicherung mit unlesbaren Angaben — dort trägt
-    die Meldung jetzt das Warnzeichen. Der Bilderlauf braucht dieselbe Instanz.
-    **Zweitens:** Beide Oberflächenpunkte stehen nicht in `ToDo_Layout.pdf` —
-    die Liste hat 19 Punkte am Stand Web 9.14.1, diese sind neuer. Sie gehören
-    ins S3-Konzept nachgetragen, damit S3 sie als erledigt vorfindet und nicht
-    ein zweites Mal beschließt (R43 verlangt, dass eine Einzelkorrektur an
-    einer Seite im Konzept benannt wird).
+56. **Die zweite Rückmeldungsrunde steht in keinem Konzept.**
+    *Aufgenommen 01.09.2026 mit Web 12.2.1; der Prüfteil ist am selben Tag
+    erledigt worden, der Konzeptteil ist offen.*
+    Beide Oberflächenpunkte (Dateifeld mittig, Dateiname in den
+    Abschlussmeldungen) stehen nicht in `ToDo_Layout.pdf` — die Liste hat 19
+    Punkte am Stand Web 9.14.1, diese sind neuer. Sie gehören ins S3-Konzept
+    nachgetragen, damit S3 sie als erledigt vorfindet und nicht ein zweites
+    Mal beschließt; R43 verlangt ausdrücklich, dass eine Einzelkorrektur an
+    einer Seite im Konzept benannt wird.
+    **Erledigt ist die Bedienprüfung** (01.09.2026): beide Dateifelder,
+    Sicherung, Export über alle drei Downloadwege, der `warn`-Fall mit
+    Gegenprobe, Bilderlauf (304 Bilder, 0/0/0) und Kontraste (21 Paare, 0
+    verfehlt) — Einzelheiten im Changelog zu 12.2.1.
+    **Und eine Lehre, die über diesen Punkt hinausgeht:** Die Prüfung war nur
+    deshalb offen, weil „ohne MySQL nicht aufrufbar" angenommen statt
+    nachgesehen wurde. Das Projekt fährt lokal seit P1 gegen MariaDB 10.11,
+    und `tools/referenzdatensatz/einspielen/lokal_starten.sh` setzt die
+    Installation in einem Aufruf auf. Wer eine Prüfung für unmöglich hält,
+    sehe zuerst in `tools/` nach.
 
 
 ## Erledigt

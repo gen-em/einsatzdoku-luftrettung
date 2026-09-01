@@ -97,11 +97,22 @@ verwendet werden (14- bzw. 2-mal). Beide nennen jetzt dieselben Arten.
 | Feldmessung | 77 Eigenschaften über 7 Feldarten, genau **eine** Abweichung |
 | Meldungstexte | beide Zweige der Sicherung und alle vier Export-Kombinationen in node durchgespielt |
 
-**Nicht geprüft:** die Seiten in der laufenden Anwendung. Ohne MySQL ließ sich
-die Anwendung in der Umsetzungsumgebung nicht aufrufen; gemessen wurde am
-echten Stylesheet mit dem Markup, das `ui_feld()` erzeugt. Der Bilderlauf
-braucht ebenfalls eine laufende Instanz und blieb deshalb aus. Beides gehört
-in die Bedienprüfung.
+**Nachgetragen am 01.09.2026: an der laufenden Anwendung geprüft.** Die
+Begründung „ohne MySQL nicht aufrufbar" war falsch — das Projekt fährt lokal
+seit P1 gegen **MariaDB 10.11**, und `tools/referenzdatensatz/einspielen/lokal_starten.sh`
+setzt die Installation auf. Nachgeholt:
+
+| Geprüft | Ergebnis |
+|---|---|
+| beide Dateifelder (Backup einspielen, Import) | je 44 px hoch, `line-height: 42px`, Knopf mittig |
+| Sicherung im Demo-Konto | Meldung nennt `einsatzdoku-backup-2026-09-01.edbak` — **derselbe Name wie der tatsächliche Download** |
+| Export, alle drei Downloadwege | Profil A (xlsx), Profil C (zip, verschlüsselt), Profil B (zip-Archiv) — jeder nennt den Namen der Datei, die wirklich ankommt, beim Archivweg den des **Archivs** |
+| `warn` mit unlesbarem Blob | Meldung trägt das **Warndreieck**; Gegenprobe mit der alten Fassung zeigt an derselben Stelle das Hinweiszeichen |
+| Bilderlauf | 304 Einzelbilder, 38 Kontaktbögen — Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0 |
+| Kontraste | 21 Paare gerechnet, 0 verfehlt |
+
+Die Reihenfolge stimmt auch im Fehlerfall: Der Download-Satz steht vor der
+ACHTUNG-Passage, die Warnung bleibt das Letzte.
 
 ## [Web 12.2.0] — 2026-09-01
 
