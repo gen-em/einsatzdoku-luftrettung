@@ -534,6 +534,71 @@ Redesign zurückzunehmen.
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
 
+### Der vertikale Rhythmus
+
+**Die Skala allein genügt nicht.** `--abstand-1` bis `--abstand-5` stehen
+seit P3 und werden eingehalten — nachgemessen in S3/AP1: 269
+Abstandsdeklarationen, davon **null** mit einem Rohwert. Trotzdem passten
+die Abstände sichtbar nicht zusammen, und der Grund ist nicht die Skala,
+sondern die fehlende Stufe darüber: eine Regel, die sagt, **welche Stufe
+wo** gilt. Ohne sie wird die Wahl an jeder Stelle einzeln getroffen — und
+fällt vierundsiebzigmal auf fünf verschiedene Werte, ohne dass ein Muster
+dahintersteht (S3, Rückmeldungsliste vom 31.08.2026, Block A).
+
+**Der Leitgedanke ist einer: Bindung ist kleiner als Trennung.** Was
+zusammengehört, steht enger als das, was sich voneinander absetzt. Wo der
+Abstand zwischen zwei Karten derselbe ist wie der zwischen zwei Feldern
+*innerhalb* einer Karte, sagt die Fläche nichts mehr darüber, was wozu
+gehört — genau das war der Befund.
+
+| Beziehung | Stufe | Begründung |
+|---|---|---|
+| Beschriftung → ihr Feld | `--abstand-1` (4 px) | klebt am Feld; alles Größere ließe die Beschriftung zwischen zwei Feldern schweben |
+| Überschrift → ihr Inhalt | `--abstand-2` (8 px) | bindet; die Überschrift gehört zum Inhalt darunter, nicht in die Mitte zwischen zwei Blöcke |
+| Element → Element derselben Gruppe (Feld → Feld, Zeile → Zeile) | `--abstand-3` (12 px) | der Arbeitsabstand; zugleich die häufigste Wahl im Bestand |
+| Gruppe → nächste Gruppe innerhalb einer Karte; Formular → Formularfuß | `--abstand-4` (16 px) | setzt ab, ohne zu trennen; deckungsgleich mit dem bestehenden `.listen-form-fuss` |
+| Karte → Karte; Inhalt → nächste Abschnittsüberschrift | `--abstand-5` (24 px) | trennt; der Wechsel zwischen Sinneinheiten muss größer sein als jeder Abstand innerhalb |
+
+**Zwei Präzisierungen, beide aus echten Fällen** (S3/AP1, F-S3-02 und
+F-S3-03):
+
+- **Zeile 3 gilt für Bausteine, nicht für Zeilen in einem Textblock.** Ein
+  `<li>` im Fließtext ist eine Zeile, kein Element: Es gehört zum selben
+  zusammenhängenden Text wie die Zeile darüber. Aufzählungen stehen deshalb
+  enger (`--abstand-1`) — bekämen sie den Arbeitsabstand, stünden ihre
+  Punkte so weit auseinander wie zwei Absätze, und genau die Bindung, die
+  eine Liste zur Liste macht, wäre weg.
+- **Trägt eine Überschrift Bedienelemente, gilt Zeile 4 statt Zeile 2.** Die
+  Titelzeile (9.8) ist der Fall: Neben dem Titel stehen dort Knöpfe von
+  44 px Höhe. Acht Pixel darunter stünde ein Knopf fast auf der ersten
+  Karte — die Beziehung ist dann nicht „Überschrift → ihr Inhalt", sondern
+  „Gruppe → nächste Gruppe" (`--abstand-4`). Das ist keine sechste Stufe,
+  sondern dieselbe Zeile 4 auf einen Fall angewandt, den die Tabelle nicht
+  benannt hatte.
+
+**Woran erkenne ich die Beziehung?** Die Frage ist immer dieselbe: *Was ist
+das Nächste, das folgt — gehört es noch zu mir, oder ist es das Nächste?*
+Gehört es noch dazu, steht es enger; ist es das Nächste, steht es weiter.
+Zwei Zeilen weiter unten dieselbe Frage erneut zu stellen, kostet nichts und
+ist der ganze Trick.
+
+**Wofür die Regel gilt und wofür nicht.** Sie regelt den **Zwischenraum**:
+senkrechte `margin` und das `row-gap` einer Spalte oder eines Rasters. Sie
+regelt **nicht die Polsterung** (`padding`) — die gehört zur Form des
+Bausteins, nicht zum Verhältnis zweier Dinge zueinander. Wer `padding` nach
+dieser Tabelle wählt, beantwortet die falsche Frage.
+
+**Keine neuen Token.** Die fünf Stufen decken die fünf Beziehungen. Findet
+sich eine Beziehung, die in keiner Zeile aufgeht, ist das eine Frage an das
+laufende Konzept — keine stille sechste Stufe (E-S3-02).
+
+**Das Anti-Muster dazu**: ein Abstand, der an der **Seite** hängt statt am
+Baustein. Er wirkt einmal richtig und ist beim nächsten Baustein wieder weg;
+die Stelle, an der die Rückmeldungsliste ihn fand, war „Profil speichern" in
+`einstellungen.php` — ein nackter Knopf zwischen `ui_karte_ende()` und
+`</form>`, obwohl es mit `.listen-form-fuss` längst einen Formularfuß gibt
+(9.16).
+
 ---
 
 ## 7. Schwellen
@@ -945,6 +1010,15 @@ Skript.
 </div>
 ```
 
+**Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
+Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort „z. B. Standort
+Kempten", liest ein Teil der NutzerInnen das als die erwartete Antwort und
+ein anderer als Aussage darüber, wer diese Anwendung betreibt. Beides ist
+falsch. Orte, Personen, Kliniken und Rettungsmittel in Platzhaltern sind
+deshalb **erfunden** — erkennbar erfunden, nicht bloß ein anderer echter
+Ort. Die Regel gilt für jedes Formular der Anwendung, auch für den
+Einrichter, und sie gilt ab S3 für jede neue Stelle.
+
 **Das Dateifeld ist der eine Sonderfall.** `input[type=file]` stellt seinen
 nativen Knopf auf die Textzeile, und die steht in einem 44 px hohen Feld ohne
 senkrechte Polsterung ganz oben — gemessen 0 px Luft darüber, 19 px darunter.
@@ -975,6 +1049,11 @@ Seite.
 Die Unterzeile steht **nach** der Hauptzeile, nicht im Flex-Block: Sonst
 bestimmt ihre Breite die des Titelblocks, und die Aktionen brechen unter einen
 kurzen Titel („Einsatz 1"), obwohl neben ihm Platz ist (Fund aus O4).
+
+**Der Abstand darunter ist `--abstand-4`, nicht `--abstand-2`** — die
+begründete Ausnahme des vertikalen Rhythmus (Kapitel 6): Die Titelzeile ist
+eine Überschrift, die Bedienelemente trägt, und der Abstand darunter muss
+den 44-px-Knopf freistellen.
 
 ### 9.9 Speichern-Leiste
 
@@ -1088,6 +1167,11 @@ für den Fall, dass das Bezeichnungsfeld schon existiert und die Kennung
 > **Die Kennung `<praefix>addr` gehört dem Feld, in dem gesucht wird** —
 > nicht irgendeinem Namensfeld daneben. Steht sie zweimal im Markup, findet
 > `getElementById` das erste, und das zweite ist Zierde (F-P3-AI).
+
+**Der Hinweistext ist kein Platzhalter.** „Adresse, Koordinaten oder Plus
+Code" nennt das Format, nicht ein Beispiel. Wo das Ortsfeld doch einen
+Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
+(E-S3-13).
 
 ### 9.14 Abbruchseite
 
