@@ -936,6 +936,48 @@ sehen. Sie prüfen, was die Bedienung *entscheidet*, nicht was auf dem Glas
 *steht*. Der Fund ist das erste Ergebnis der Bildprüfung und das Argument
 dafür, sie einzurichten.
 
+### B-S4-08 — Der Uhr-Knopf hielt die zugesagten 48 dp nicht (behoben)
+
+**Gemessen, nicht gesehen** — das Bild sah gut aus:
+
+| Uhr | Knopfhöhe | Soll |
+|---|---|---|
+| 192 dp (kleine Runduhr) | **35,5 dp** | 48 dp |
+| 227 dp (Galaxy Watch) | 48,0 dp | 48 dp |
+
+`UhrKnopf` setzt `heightIn(min = UHR_BEDIENHOEHE)` mit 48 dp (E-S4-41). Die
+Grundspalte bekam aber die Displayhöhe als feste Obergrenze und **stauchte
+ihre Kinder**, wenn der Inhalt nicht passte; `heightIn(min = …)` beugt sich
+einer kleineren Elternbeschränkung. Betroffen war ausgerechnet die kleine
+Uhr — also genau die, für die die 48 dp gedacht sind. Auf der großen stimmte
+es, weil dort der Platz reichte; ein Prüflauf auf nur einer Größe hätte
+nichts gemerkt.
+
+*Behoben in Android 0.7.2:* Die Grundspalte bekommt `verticalScroll` und misst
+ihre Kinder damit unbeschränkt. Der Knopf steht auf **48,0 dp auf beiden
+Größen**, und was nicht aufs Glas passt, ist durch Wischen erreichbar statt
+still abgeschnitten — auf Wear OS die übliche Bedienung, in `Phasenliste` seit
+C1 benutzt. Die Zusicherung steht jetzt als Zahl im Prüffall
+(`UhrBildTest.pruefeBedienhoehe`), nicht als Absicht im Quelltext.
+
+### B-S4-09 — Die Uhr behauptet „Handy verbunden", bevor sie je gesendet hat
+
+Auf dem ersten Bild der Startseite steht **„Handy verbunden"** — ohne
+gekoppeltes Handy, ohne eine einzige gesendete Nachricht. Ursache ist die
+Vorgabe `handyErreichbar = true` in [Uhrzustand]; die Anzeige unterscheidet
+nicht zwischen „zugestellt" und „noch nie versucht".
+
+Das widerspricht **E-S4-47**, der in C2 ausdrücklich festhält, dass der
+Unterschied angezeigt und nicht geglättet wird. Der Fehler ist harmloser als
+B-S4-08 — er verschweigt keine Aufzeichnungslücke, weil vor dem Dienststart
+nichts aufzuzeichnen ist —, aber er ist dieselbe Art Aussage: eine
+Behauptung über etwas, das die Uhr nicht wissen kann.
+
+**Nicht behoben.** Die saubere Form ist ein dritter Zustand („noch nichts
+gesendet") statt eines Wahrheitswerts; das berührt die Zustandsmaschine und
+ihre Prüffälle und gehört deshalb in einen eigenen Schritt, nicht in eine
+Korrekturfassung.
+
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
@@ -958,8 +1000,13 @@ so entsteht bis dahin keine Datei, an der zwei Zweige gleichzeitig arbeiten).
 
 **Was bis zum Gerätetest offen bleibt** (steht hier vorn, nicht in einer
 Fußnote): echtes GPS, Akkuverhalten, Mobilfunk-Upload, Bluetooth und der Data
-Layer auf Hardware. Es gibt **keinen Emulator** im Container (E-R45-8) und
-damit **keine Bildschirmfotos** dieser App — weder vom Handy noch von der Uhr.
+Layer auf Hardware.
+
+**Der Satz „es gibt keinen Emulator" (E-R45-8) stimmte nicht** und ist mit
+0.7.2 berichtigt — Begründung und Zahlen in E-S4-49. Es gibt seither Bilder
+beider Apps, und das erste hat sofort einen Fehler gezeigt (B-S4-07), das
+zweite einen weiteren (B-S4-08). **E-R45-7 gilt unverändert:** Eine Uhr aus
+Hardware gibt es nicht, und der Data Layer bleibt ungeprüft.
 Die Uhr-App ist vollständig blind gebaut (E-R45-7).
 
 ### B1 — Gerüst und Probebau · Android 0.1.0 · erledigt
@@ -1157,7 +1204,8 @@ Fußnote:
   Installation trägt ein selbstsigniertes Zertifikat, und es dem Prüfstand
   beizubringen hieße, ihm etwas beizubringen, was die App nie tun darf. Dass
   die App nur HTTPS spricht, ist in `ServeradresseTest` belegt.
-- **Kein Bildschirmfoto.** Es gibt keinen Emulator; die Oberfläche ist
+- **Kein Bildschirmfoto** (Stand B3; seit 0.7.2 gäbe es eines, siehe
+  E-S4-49). Die Oberfläche ist
   gebaut, aber nicht gesehen worden.
 
 #### Probleme und wie sie gelöst wurden
@@ -1409,7 +1457,7 @@ B2 auf eine Warteschlange gewartet hat.
 - **Mobilfunk ist nicht Rückschleife.** Der Rundlauf lief über `127.0.0.1`;
   Paketverlust, Zellwechsel und die Zeitlimits eines realen Netzes sind damit
   nicht geprüft.
-- **Kein Bildschirmfoto** — es gibt keinen Emulator.
+- **Kein Bildschirmfoto** (Stand B5; seit 0.7.2 überholt, siehe E-S4-49).
 
 #### Probleme und wie sie gelöst wurden
 
@@ -1588,7 +1636,8 @@ Wirkungen); an der Oberfläche bleibt Zeichnen.
 | Dienst | | Beginnen ohne Rückfrage, **Beenden mit** | beendende Handlung |
 | APK `uhr` | `assembleRelease` | **18 095 596 B**, unsigniert | baut |
 
-**Bildschirmfotos gibt es nicht** — es gibt keinen Emulator (E-R45-8). Das
+**Bildschirmfotos gab es zu C1 nicht** — die Annahme E-R45-8 ist mit 0.7.2
+widerlegt (E-S4-49); zum Zeitpunkt von C1 galt sie noch. Das
 steht hier und wird im Prüfdokument wiederholt, statt verschwiegen zu werden.
 Ungeprüft bleiben damit: die Rundung des Displays, Schriftgrößen,
 Berührziele, ob die Bildmarke in der gewählten Größe trägt, ob `WearableButtons`
@@ -1705,8 +1754,9 @@ reist zur Uhr) nach `gemeinsam/` gewandert.
   Aufzeichnung, wenn der Dienst an der Uhr beginnt. Ob Android das aus einem
   vom System gestarteten Dienst heraus zulässt (Hintergrundstart-Regeln ab
   Android 12), ist eine Gerätefrage.
-- **Bildschirmfotos gibt es weiterhin nicht** (E-R45-8). Die schwebende Zeile
-  ist gewählt und ungesehen.
+- **Bildschirmfotos gab es zu C2 nicht** (E-R45-8, mit 0.7.2 widerlegt —
+  E-S4-49). Die schwebende Zeile ist weiterhin ungesehen: Sie erscheint erst
+  bei unquittiertem Dienststart, und den stellt bislang kein Bildfall her.
 
 #### Probleme und wie sie gelöst wurden
 
@@ -1801,3 +1851,66 @@ nicht *gesehen*.
 **Offen aus derselben Rückfrage:** **F-S4-D** — Garmin und Handy gleichzeitig
 erzeugen zwei Diensttage. Gemessen, in Abschnitt 4 beschrieben, zu entscheiden
 vom Auftraggeber. In B/C ist dazu nichts umgesetzt.
+
+### Nachtrag zu C2 · Android 0.7.2 — das Bildmittel und was es sofort fand
+
+**E-S4-49 — Bilder entstehen mit Robolectric im NATIVE-Grafikmodus; der
+Emulator kommt dazu, wenn das runde Glas zur Frage steht.**
+
+Die Annahme E-R45-8 („kein Emulator im Container") ist **widerlegt**. Fünf
+Wege wurden erprobt, vier funktionieren, jeder mit eigener Gegenprobe:
+
+| Weg | Übernahme in den Hauptbaum | Rundmaske |
+|---|---|---|
+| **Robolectric direkt** *(gewählt)* | **1 Datei, 0 Abhängigkeiten** | nein |
+| **Emulator ohne KVM** *(gewählt, bei Bedarf)* | nichts am Projekt | ja, echt |
+| Roborazzi 1.60.0 | 3 Katalogzeilen + 2 je Modul | ja |
+| Paparazzi 2.0.0-alpha05 | 5 Stücke, Metadatenprüfung aus | ja |
+
+**Warum diese zwei.** Der Direktweg kostet keine einzige neue Abhängigkeit
+(CLAUDE.md 4) und läuft in Sekunden bei jedem Prüflauf mit — er hätte B-S4-08
+gefunden, und er hat es. Der Emulator kostet am Projekt gar nichts und liefert
+das runde Glas echt. Die beiden anderen bringen Fassungsrisiken für einen
+Ertrag, den diese zwei schon liefern: Roborazzi ist ab 1.61.0 mit Kotlin
+2.1.21 unbaubar, Paparazzi ist eine Alpha und verlangt
+`-Xskip-metadata-version-check`, also das Abschalten einer Sicherung.
+
+**Was der Emulator kostet** (gemessen): Boot 197–345 s, Installation eines
+26-MB-APK 207 s, Kaltstart der App 17 s. `-no-window` ist **Pflicht**, nicht
+Bequemlichkeit — die GUI-Binärdatei scheitert an fehlendem `libpulse.so.0`,
+erst mit `-no-window` greift die `-headless`-Variante. Und
+`sys.boot_completed=1` ist **kein** Bereitschaftssignal: Der erste Abzug ist
+schwarz, weil SystemUI im ANR steht.
+
+#### Prüfstand 0.7.2
+
+| Prüfung | Mittel | Ist |
+|---|---|---|
+| Baulauf | `./gradlew build` | **BUILD SUCCESSFUL** |
+| Prüffälle `handy` | | **167**, 0 Fehlschläge, 12 übersprungen (Rundlauf) |
+| Prüffälle `uhr` | | **50**, 0 Fehlschläge (47 + 3 Bildfälle) |
+| Prüffälle gesamt | | **217** |
+| Lint | beide Module | **0 Fehler**; 19 Warnungen (Handy), 0 (Uhr) |
+| **Bedienhöhe 192 dp** | `UhrBildTest` | **35,5 → 48,0 dp** (B-S4-08 behoben) |
+| **Bedienhöhe 227 dp** | | 48,0 → **48,0 dp** (unverändert richtig) |
+| Bildinhalt | eigene Zählung im Prüffall | 984–1 083 Farben, 19,3–24,0 % nicht-Grundfarbe |
+
+**Was die Bilder nicht zeigen** — und das gehört dazu, weil es die Grenze des
+neuen Mittels ist: Der Direktweg malt ein **Quadrat**; die runde Maske legt
+das Gerät an. Beschnitt am Glasrand sieht er nicht. Er zeichnet mit
+Robolectrics Schriften, nicht mit denen von Wear OS, und ohne
+Hardwarebeschleunigung — Schatten und Elevation können fehlen. Und er bildet
+**einen** Android-Stand ab (sdk=34), während die App auf 30 bis 36 läuft.
+
+**Zwei Befunde stehen offen:** der Beschnitt des Knopfes am runden Glas
+(im Emulator und in Paparazzi sichtbar, im Direktweg nicht) und die
+abgeschnittene Zeile „löst am Handy aus". Beide sind Symptome derselben
+Sache: Die Startseite ist auf 192 dp zu voll. Seit 0.7.2 wird nichts mehr
+still gestaucht, aber der Inhalt braucht jetzt Bildlauf — eine Straffung der
+Startseite wäre eine neue Darstellung und bräuchte ein Mockup mit Freigabe
+(CLAUDE.md 5).
+
+**Ein Prüfmittel hat sich selbst korrigiert:** Zwei der gemeldeten Bilder
+waren **bytegleich** (`uhr-boden-192dp` und `uhr-ohne-sperre-192dp`), weil die
+Sperre auf der Startseite gar nicht greift. Der Fall ist ersatzlos gestrichen
+— ein Prüffall, der zweimal dasselbe malt, ist kein zweiter Beleg.

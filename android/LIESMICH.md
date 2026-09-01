@@ -107,10 +107,10 @@ Stand C2 (Android 0.7.0), `./gradlew build` im Container:
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **167**, davon 11 übersprungen | **47**, davon 0 übersprungen |
+| Prüffälle | **167**, davon 12 übersprungen | **50**, davon 0 übersprungen |
 | APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
 
-Zusammen **214 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Zusammen **217 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -129,10 +129,35 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 167 von 167 (siehe unten). Die 47 Fälle der Uhr laufen
+Installation sind es 167 von 167 (siehe unten). Die 50 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
+
+### 2.2 Bilder der Oberfläche, ohne Emulator und ohne Gerät
+
+`UhrBildTest` (Modul `uhr`) baut die Ansicht in einer Robolectric-Activity
+auf, misst und zeichnet sie selbst auf eine Bitmap und legt PNG unter
+`uhr/build/bilder/` ab:
+
+```bash
+./gradlew :uhr:testDebugUnitTest --tests '*UhrBildTest*'
+```
+
+**Null neue Abhängigkeiten** (E-S4-49): `ComposeView` steckt in
+`androidx.compose.ui`, das die App ohnehin einbindet. Der naheliegende Weg
+über `captureToImage()` aus `compose-ui-test` funktioniert unter Robolectric
+**nicht** — er wartet in einer `Thread.sleep`-Schleife auf genau den Faden,
+der zeichnen müsste.
+
+Der Fall **misst mit**, statt nur zu malen: Die Höhe der Knopffläche wird aus
+dem Bild gerechnet und gegen die 48 dp aus E-S4-41 geprüft. Genau das hat
+B-S4-08 gefunden — auf der 192-dp-Uhr waren es 35,5 dp.
+
+**Was diese Bilder nicht zeigen:** ein Quadrat statt des runden Glases (die
+Maske legt das Gerät an), Robolectrics Schriften statt der von Wear OS, keine
+Hardwarebeschleunigung, und **einen** Android-Stand (sdk=34) statt der Spanne
+30 bis 36. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -295,8 +320,12 @@ XML-Ressource führt statt in einem Stylesheet.
 
 Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 
-- **Kein Emulator.** Er braucht KVM; der Container hat es nicht. Es gibt
-  **keine Bildschirmfotos** dieser App.
+- ~~**Kein Emulator.**~~ **Das stimmte nicht** und ist seit 0.7.2 berichtigt.
+  Der Emulator läuft ohne KVM in reiner Software-Emulation; beide Module
+  wurden darin gebootet, bedient und abgezogen. Bilder entstehen im
+  Prüflauf ohne ihn (siehe 2.2). Was er kostet: Boot 197–345 s, Installation
+  eines 26-MB-APK 207 s. `-no-window` ist **Pflicht** — die GUI-Binärdatei
+  scheitert an fehlendem `libpulse.so.0`.
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.

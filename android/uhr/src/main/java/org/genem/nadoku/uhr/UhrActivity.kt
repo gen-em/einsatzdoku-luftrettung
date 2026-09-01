@@ -387,11 +387,33 @@ private fun Verbindungszeile(z: Uhrzustand) {
     )
 }
 
+/**
+ * Die Grundspalte aller Uhr-Ansichten — **mit Bildlauf**.
+ *
+ * DER BILDLAUF IST DIE BEHEBUNG EINES FEHLERS, keine Bequemlichkeit
+ * (Fund B-S4-08). Ohne ihn bekommt die Spalte die Displayhöhe als feste
+ * Obergrenze und **staucht ihre Kinder**, wenn der Inhalt nicht passt. Das
+ * traf ausgerechnet den großen Knopf: `heightIn(min = 48.dp)` in
+ * [UhrKnopf] beugt sich einer kleineren Elternbeschränkung, und auf der
+ * 192-dp-Uhr blieben davon **35,5 dp** übrig — 26 % unter der Zusage aus
+ * E-S4-41, und zwar genau auf den kleinen Uhren, für die die 48 dp gedacht
+ * sind. Auf der 227-dp-Uhr stimmte es, weil dort der Platz reichte.
+ *
+ * Mit Bildlauf misst die Spalte ihre Kinder **unbeschränkt**: Der Knopf
+ * bekommt seine 48 dp, und was nicht auf einmal aufs Glas passt, ist durch
+ * Wischen erreichbar statt still abgeschnitten. Auf Wear OS ist der Bildlauf
+ * die übliche Bedienung; [Phasenliste] benutzt ihn seit C1.
+ *
+ * Gefunden hat das kein Auge, sondern die Messung im Bild
+ * (`UhrBildTest.pruefeBedienhoehe`) — das erste Ergebnis des neuen
+ * Bildmittels (E-S4-49).
+ */
 @Composable
 private fun Spalte(inhalt: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
