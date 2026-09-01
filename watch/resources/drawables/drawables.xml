@@ -1,6 +1,14 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
-    <!-- Bildmarke auf dem Startbildschirm. Groesse geraeteabhaengig:
-         70x70 als Vorgabe, 105x105 fuer die Venu 3s (resources-venu3s). -->
-    <bitmap id="Logo" filename="logo.png"/>
+    <!-- Bildmarke auf dem Startbildschirm, in zwei Motiven: Die Anwendung
+         dokumentiert Einsaetze luft- WIE bodengebunden, und eine Installation,
+         die ueberwiegend am Boden faehrt, soll nicht dauerhaft ein Luftfahrzeug
+         im Kopf tragen — dieselbe Ueberlegung wie bei der Logo-Wahl der
+         Weboberflaeche (session_lib.php) und bei den neutralen Phasen-
+         beschriftungen in Const.mc.
+         Welches gezeigt wird, entscheidet die App-Einstellung "logoWahl".
+         Groesse geraeteabhaengig: 70x70 als Vorgabe, 105x105 fuer Geraete mit
+         70er Launcher-Symbol (resources-icon70). -->
+    <bitmap id="LogoLuft"  filename="logo_luft.png"/>
+    <bitmap id="LogoBoden" filename="logo_boden.png"/>
 </drawables>

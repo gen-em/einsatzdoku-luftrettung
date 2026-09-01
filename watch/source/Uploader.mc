@@ -1,4 +1,4 @@
-// Einsatzdoku — Upload gemaess JSON-Vertrag v1.0.
+// NAdoku — Upload gemaess JSON-Vertrag v1.0.
 // Sendet Einsaetze und Ruhe-Segmente inkrementell (max. 500 Punkte/Request),
 // merkt sich pro Track die bestaetigte next_seq und raeumt nach final+komplett auf.
 using Toybox.Communications;
@@ -168,7 +168,11 @@ module Uploader {
         // entsteht eine Pruefung, die der Compiler als unerreichbar meldet.
         var cb = _cb;
         if (cb == null) { cb = new UploaderCb(); _cb = cb; }
-        Communications.makeWebRequest(url, body, opts, cb.method(:onResponse));
+        // Cast wie in Model.save(); hier ist der PolyType
+        // Dictionary<Object, Object>.
+        Communications.makeWebRequest(url,
+            body as Lang.Dictionary<Lang.Object, Lang.Object>,
+            opts, cb.method(:onResponse));
     }
 
     // Zugangsdaten: bevorzugt aus der Kopplung (Storage), sonst aus den
@@ -209,7 +213,7 @@ module Uploader {
         return u.substring(0, cut) as Lang.String;
     }
 
-    // Toleranz bei der Server-URL: "luftrettung.net" genuegt in den
+    // Toleranz bei der Server-URL: "nadoku.beispieldomain.de" genuegt in den
     // Einstellungen — Schema und /ingest.php werden ergaenzt.
     function _serverUrl() as Lang.String {
         var u = Properties.getValue("serverUrl");

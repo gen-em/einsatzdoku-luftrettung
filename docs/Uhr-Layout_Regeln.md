@@ -72,6 +72,28 @@ nicht möglich: Es gibt genau fünf Textgrößen.
 > **Nicht versuchen**, Schriften über eine eigene Skalierung zu vergrößern.
 > Wer mehr als `FONT_LARGE` braucht, braucht eine eigene Schriftressource.
 
+### 2.1 Bitmaps skalieren ebenfalls nicht
+
+`dc.drawBitmap` zeichnet **1:1**. Eine Bildmarke, die auf der Fenix richtig
+sitzt, ist auf einem 466-Pixel-Display halb so groß wie gedacht — sie kann
+`Ui.s()` nicht folgen, egal wie das Layout gerechnet ist.
+
+Der Ausweg ist Vorrastern: `tools/uhr-bilder/erzeugen.sh` legt die Bildmarke in
+**vier Stufen** ab (Kachel 60, 73, 101, 118), und `monkey.jungle` weist jedem
+Gerät die passende zu. Zielwert sind 27 % der Displayhöhe — das Verhältnis des
+Bezugsgeräts, 70/260. Damit liegen alle 99 Geräte zwischen 25,0 und 28,8 %.
+
+**Das Abnahmekriterium aus Abschnitt 2 gilt hier mit einer Ausnahme.** Die
+Staffelung (Uhr 1.10.3) hat die Kachel auch auf der Fenix 6 Pro verändert, von
+70 auf 73 Pixel — bewusst und ausdrücklich freigegeben: Bei vier Stufen fällt
+das Bezugsgerät mit der 260/280-Gruppe zusammen, und deren gemeinsame Kachel
+ist 73. Wer die Wahl anders trifft (eine Kachel je Displayhöhe), lässt die
+Fenix unberührt, braucht aber acht Ordner statt drei.
+
+Ein `logoH` aus `getHeight()` liefert übrigens die **Kachelhöhe**, nicht die
+Motivhöhe: Die Kacheln sind quadratisch und durchsichtig aufgefüllt. Für die
+Blockrechnung ist das die richtige Zahl.
+
 ---
 
 ## 3. Ziffernschriften

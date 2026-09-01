@@ -1896,17 +1896,22 @@ if (!$istCli && $_SERVER['REQUEST_METHOD'] === 'POST'
 /**
  * Liegt der NEF-Platzhalter noch (E-P3-19)?
  *
- * Die echte Datei ersetzt ihn 1:1 — gleicher Name, gleicher viewBox, kein
- * Eingriff im Code. Damit der Hinweis dann VON SELBST verschwindet, wird nicht
- * eine Zahl im Code gepflegt, sondern die DATEI gefragt: Der Platzhalter
- * traegt das Wort in seinem Kopfkommentar. Gelesen werden nur die ersten 400
- * Byte — der Kommentar steht ganz oben, und die ganze Datei zu lesen waere
+ * Gefragt wird die DATEI, nicht eine Zahl im Code: Der Platzhalter traegt das
+ * Wort in seinem Kopfkommentar, und sobald die echte Datei an seiner Stelle
+ * liegt, verschwindet der Hinweis von selbst. Gelesen werden nur die ersten
+ * 400 Byte — der Kommentar steht ganz oben, und die ganze Datei zu lesen waere
  * fuer eine Ja/Nein-Frage zu viel.
+ *
+ * DIE DATEINAMEN HABEN SICH GEAENDERT. Erwartet wurde ein Ersatz 1:1 unter
+ * gleichem Namen; gekommen ist er als 'gen-em_logo_nef*'. Beide Namen stehen
+ * deshalb in der Liste: Eine aeltere Installation, die noch den Platzhalter
+ * unter dem alten Namen traegt, soll den Hinweis weiterhin bekommen.
  */
 function logo_platzhalter_liegt(): array
 {
     $liegt = [];
-    foreach (['gen-em_logo_fahrzeug.svg', 'gen-em_logo_fahrzeug_weiss.svg'] as $datei) {
+    foreach (['gen-em_logo_nef.svg', 'gen-em_logo_nef_weiss.svg',
+              'gen-em_logo_fahrzeug.svg', 'gen-em_logo_fahrzeug_weiss.svg'] as $datei) {
         $pfad = __DIR__ . '/assets/images/' . $datei;
         if (!is_file($pfad)) { continue; }
         $f = @fopen($pfad, 'rb');

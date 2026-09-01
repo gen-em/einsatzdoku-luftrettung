@@ -1,4 +1,4 @@
-// Einsatzdoku — Pager zwischen den Oberflaechen (Anforderungen 1.2-1.4)
+// NAdoku — Pager zwischen den Oberflaechen (Anforderungen 1.2-1.4)
 using Toybox.WatchUi;
 using Toybox.Lang;
 

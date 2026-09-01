@@ -1,6 +1,6 @@
 <settings>
     <setting propertyKey="@Properties.serverUrl"
-             title="Server-Adresse der eigenen Einsatzdoku (Domain genügt, z. B. einsatz.beispiel.de)">
+             title="Server-Adresse der eigenen NAdoku (Domain genügt, z. B. nadoku.beispieldomain.de)">
         <settingConfig type="alphaNumeric"/>
     </setting>
     <setting propertyKey="@Properties.deviceId"
@@ -14,5 +14,13 @@
     <setting propertyKey="@Properties.touchEnabled"
              title="Touchbedienung verwenden (nur bei Uhren mit Touch und UP/DOWN-Tasten)">
         <settingConfig type="boolean"/>
+    </setting>
+    <setting propertyKey="@Properties.logoWahl"
+             title="Bildmarke auf dem Startbildschirm">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.LogoLuft</listEntry>
+            <listEntry value="1">@Strings.LogoBoden</listEntry>
+            <listEntry value="2">@Strings.LogoWechselnd</listEntry>
+        </settingConfig>
     </setting>
 </settings>

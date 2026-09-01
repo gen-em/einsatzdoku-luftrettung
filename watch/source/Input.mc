@@ -1,4 +1,4 @@
-// Einsatzdoku — Eingabemodell, geraeteuebergreifend.
+// NAdoku — Eingabemodell, geraeteuebergreifend.
 //
 // Die Zielgeraete unterscheiden sich in zwei Achsen: fuenf oder drei Tasten,
 // mit oder ohne Touch. Statt jede Oberflaeche verzweigen zu lassen, uebersetzt

@@ -1204,6 +1204,54 @@ declare(strict_types=1);
  * Beschriftung. Die Symbolskala hiess 20 und 24; 16 setzt sie im selben
  * 4-px-Schritt nach unten fort.
  *
+ * 9.14.1 — SIEBEN VERWEISE ZEIGTEN AUF GELOESCHTE BILDDATEIEN. Keine
+ * Migration. Der Logo-Wechsel (Commit „Update Logos") hat die Dateien
+ * getauscht, ohne den Code nachzuziehen — und weil ein Push auf main mit
+ * Aenderungen unter server/ sofort deployt, war der Stand live: ui.php lud auf
+ * JEDER Seite ein 404-Favicon, und wer „Fahrzeug" gewaehlt hatte, sah gar kein
+ * Logo. Geaendert hat sich allein der DATEISTAMM; der Einstellungswert heisst
+ * weiter 'fahrzeug' und steht so in users.logo_wahl und
+ * app_state.logo_standard — das spart eine Migration.
+ * (Nachgetragen mit 9.15.0: Der Block fehlte, die Datei fuehrt zu jeder
+ * Nummer einen.)
+ *
+ * 9.15.0 — DIE UHR KANN SICH SELBST TRENNEN. Keine Migration.
+ *
+ * `pair.php` kennt jetzt zwei Anliegen statt einem: koppeln wie bisher, und
+ * neu `{"aktion":"trennen"}` mit den Kopfzeilen X-Device-Id und X-Api-Key.
+ * Backlog Nr. 14.
+ *
+ * Der Fall ist die GETEILT GENUTZTE UHR. Bis hierher gab es fuer den Wechsel
+ * der Person nur den Weg „neuen Code eintippen". Gelang das nicht — falscher
+ * Code, kein Telefon in Reichweite, Geraetegrenze erreicht —, dokumentierte
+ * die Uhr stillschweigend weiter auf das VORHERIGE Konto. Niemand sah es ihr
+ * an, und die Person davor bekam Einsaetze, die sie nicht gefahren ist.
+ *
+ * Die Uhr trennt sich deshalb ZUERST ausdruecklich und koppelt erst danach
+ * neu. Schlaegt das Koppeln fehl, steht sie sichtbar ohne Kopplung da statt
+ * unsichtbar mit der falschen (die Sync-Seite sagt seit Uhr 1.10.1 „Nicht
+ * eingerichtet").
+ *
+ * DREI ENTSCHEIDUNGEN AM ZWEIG:
+ *   Loeschen statt deaktivieren   Ein deaktiviertes Geraet belegt weiter einen
+ *                                 der MAX_GERAETE Plaetze — „zu viele Geraete"
+ *                                 ist genau der Fehler, in den eine geteilte
+ *                                 Uhr sonst laeuft. Der Fremdschluessel setzt
+ *                                 device_id auf NULL; hochgeladene Daten
+ *                                 bleiben.
+ *   Kein eigener Endpunkt         Die Adresse kennt die Uhr schon, und der
+ *                                 Ratenschutz von pair.php gilt fuer beide
+ *                                 Zweige. Ein zweiter waere eine weitere
+ *                                 anmeldungsfreie Tuer.
+ *   E-Mail an den Kontoinhaber    Symmetrisch zum Koppeln: die eine
+ *                                 Gelegenheit, es zu erfahren, ohne sich
+ *                                 zufaellig anzumelden.
+ *
+ * Die Antwortzeit folgt ingest.php: Auch der unbekannte Zweig laeuft gegen
+ * AUTH_VERGLEICHSWERT, sonst waere aus der Dauer ablesbar, welche
+ * Geraetekennungen es gibt.
+ * ---------------------------------------------------------------------------
+ *
  * 10.0.0 ist der Umbau der SPURSPEICHERUNG (Phase S2). Die Hauptnummer steht
  * hier fuer das, wofuer sie da ist: ein geaendertes Datenmodell mit
  * zwingender Migration. Spurpunkte liegen nicht mehr nur als Zeilen in

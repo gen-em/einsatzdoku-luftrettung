@@ -1,4 +1,4 @@
-// Einsatzdoku — Reanimationslogik, app-weit (laeuft beim Navigieren weiter).
+// NAdoku — Reanimationslogik, app-weit (laeuft beim Navigieren weiter).
 // Grosser Timer: 2:00-Countdown, vibriert bei 0:00 und BLEIBT stehen.
 // Neustart: lang START oder Menuepunkt "Timer neu starten" — und automatisch
 // bei Rhythmuskontrolle (lang DOWN bzw. Menue) und Defibrillation (Menue).

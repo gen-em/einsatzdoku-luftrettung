@@ -13,13 +13,127 @@ base.sourcePath      = source;source-tasten5
 
 fenix6pro.sourcePath = source;source-tasten5
 fr945.sourcePath     = source;source-tasten5
-venu3s.sourcePath    = source;source-tasten3
 
-# Launcher-Icon und Bildmarke der Venu 3s sind groesser (70x70 statt 40x40).
-# Gleiche Regel: vollstaendig zuweisen. Der spaetere Pfad gewinnt bei
-# gleichnamigen Ressourcen-IDs.
+# Geraete mit Touch und ohne eigene UP/DOWN-Tasten brauchen das
+# Drei-Tasten-Profil. Wer das vergisst, merkt es NICHT beim Uebersetzen:
+# Die App baut sauber und ist auf dem Geraet unbedienbar.
+# Getrennte Ordner statt Kombinationen: Die Ordnerzahl gewinnt dabei nichts
+# (8 + 3 gegen ebenfalls 11), die Pflege schon — zusammengelegt laege dieselbe
+# 101er Kachel in fuenf Ordnern, und eine verschobene Stufengrenze schnitte den
+# ganzen Satz neu.
+#
+# Erzeugt mit: geraeteklassen.py --bloecke
+approachs50.sourcePath = source;source-tasten3
+approachs7042mm.sourcePath = source;source-tasten3
+approachs7047mm.sourcePath = source;source-tasten3
+d2air.sourcePath = source;source-tasten3
+d2airx10.sourcePath = source;source-tasten3
+venu.sourcePath = source;source-tasten3
+venu2.sourcePath = source;source-tasten3
+venu2plus.sourcePath = source;source-tasten3
+venu2s.sourcePath = source;source-tasten3
+venu3.sourcePath = source;source-tasten3
+venu3s.sourcePath = source;source-tasten3
+venud.sourcePath = source;source-tasten3
+vivoactive5.sourcePath = source;source-tasten3
+
+# Launcher-Symbol und Bildmarke: eigene Ressourcenordner je Groesse.
+# Gleiche Regel wie oben bei sourcePath: vollstaendig zuweisen, der spaetere
+# Pfad gewinnt bei gleichnamigen Ressourcen-IDs.
+#
+# resources-icon<N>  traegt NUR das Launcher-Symbol in N Pixeln. Neun Groessen
+#                    verlangen die 99 Geraete (35, 36, 40, 54, 56, 60, 61, 65,
+#                    70); 40 liegt im Grundordner, weil 51 Geraete genau das
+#                    verlangen. Fehlt die passende, skaliert monkeyc und meldet
+#                    es als Warnung — hochskaliert wird das Symbol unscharf.
+# resources-marke<K> traegt NUR die Bildmarke in einer Kachel von K Pixeln.
+#                    VIER Stufen (60, 73, 101, 118) ueber die zehn
+#                    vorkommenden Displayhoehen; 73 liegt im Grundordner, es
+#                    ist die Stufe des Bezugsgeraets fenix6pro. Zielwert sind
+#                    27 % der Displayhoehe. Warum vier und nicht drei, fuenf
+#                    oder zehn: tools/uhr-bilder/erzeugen.sh.
+#
+# Erzeugt mit: geraeteklassen.py --bloecke
+# Die Bilder selbst: tools/uhr-bilder/erzeugen.sh
 base.resourcePath    = resources
 
-fenix6pro.resourcePath = resources
-fr945.resourcePath     = resources
-venu3s.resourcePath    = resources;resources-venu3s
+fr55.resourcePath = resources;resources-icon35;resources-marke60
+fenix5s.resourcePath = resources;resources-icon36;resources-marke60
+fenixchronos.resourcePath = resources;resources-icon36;resources-marke60
+fr255s.resourcePath = resources;resources-marke60
+fr255sm.resourcePath = resources;resources-marke60
+d2delta.resourcePath = resources;resources-marke60
+d2deltapx.resourcePath = resources;resources-marke60
+d2deltas.resourcePath = resources;resources-marke60
+descentmk1.resourcePath = resources;resources-marke60
+descentmk2s.resourcePath = resources;resources-marke60
+fenix5.resourcePath = resources;resources-marke60
+fenix5plus.resourcePath = resources;resources-marke60
+fenix5splus.resourcePath = resources;resources-marke60
+fenix5x.resourcePath = resources;resources-marke60
+fenix5xplus.resourcePath = resources;resources-marke60
+fenix6s.resourcePath = resources;resources-marke60
+fenix6spro.resourcePath = resources;resources-marke60
+fenix7s.resourcePath = resources;resources-marke60
+fenix7spro.resourcePath = resources;resources-marke60
+fr245.resourcePath = resources;resources-marke60
+fr245m.resourcePath = resources;resources-marke60
+fr645.resourcePath = resources;resources-marke60
+fr645m.resourcePath = resources;resources-marke60
+fr745.resourcePath = resources;resources-marke60
+fr935.resourcePath = resources;resources-marke60
+fr945.resourcePath = resources;resources-marke60
+fr945lte.resourcePath = resources;resources-marke60
+marqadventurer.resourcePath = resources;resources-marke60
+marqathlete.resourcePath = resources;resources-marke60
+marqaviator.resourcePath = resources;resources-marke60
+marqcaptain.resourcePath = resources;resources-marke60
+marqcommander.resourcePath = resources;resources-marke60
+marqdriver.resourcePath = resources;resources-marke60
+marqexpedition.resourcePath = resources;resources-marke60
+marqgolfer.resourcePath = resources;resources-marke60
+fr265s.resourcePath = resources;resources-icon60;resources-marke101
+venu2s.resourcePath = resources;resources-icon61;resources-marke101
+approachs50.resourcePath = resources;resources-icon56;resources-marke101
+approachs7042mm.resourcePath = resources;resources-icon60;resources-marke101
+d2air.resourcePath = resources;resources-icon60;resources-marke101
+descentg2.resourcePath = resources;resources-icon60;resources-marke101
+descentmk343mm.resourcePath = resources;resources-icon60;resources-marke101
+epix2pro42mm.resourcePath = resources;resources-icon60;resources-marke101
+fr165.resourcePath = resources;resources-icon54;resources-marke101
+fr165m.resourcePath = resources;resources-icon54;resources-marke101
+fr170.resourcePath = resources;resources-icon54;resources-marke101
+fr170m.resourcePath = resources;resources-icon54;resources-marke101
+fr57042mm.resourcePath = resources;resources-icon54;resources-marke101
+fr70.resourcePath = resources;resources-icon54;resources-marke101
+marq2.resourcePath = resources;resources-icon60;resources-marke101
+marq2aviator.resourcePath = resources;resources-icon60;resources-marke101
+venu.resourcePath = resources;resources-icon60;resources-marke101
+venu3s.resourcePath = resources;resources-icon70;resources-marke101
+venud.resourcePath = resources;resources-icon60;resources-marke101
+vivoactive5.resourcePath = resources;resources-icon56;resources-marke101
+d2airx10.resourcePath = resources;resources-icon70;resources-marke118
+d2mach1.resourcePath = resources;resources-icon60;resources-marke118
+epix2.resourcePath = resources;resources-icon60;resources-marke118
+epix2pro47mm.resourcePath = resources;resources-icon60;resources-marke118
+fenix843mm.resourcePath = resources;resources-icon60;resources-marke118
+fenix943mm.resourcePath = resources;resources-icon60;resources-marke118
+fenix9pro43mm.resourcePath = resources;resources-icon60;resources-marke118
+fenixe.resourcePath = resources;resources-icon60;resources-marke118
+fr265.resourcePath = resources;resources-icon60;resources-marke118
+venu2.resourcePath = resources;resources-icon70;resources-marke118
+venu2plus.resourcePath = resources;resources-icon70;resources-marke118
+approachs7047mm.resourcePath = resources;resources-icon70;resources-marke118
+d2mach2.resourcePath = resources;resources-icon65;resources-marke118
+d2mach2pro.resourcePath = resources;resources-icon65;resources-marke118
+descentmk351mm.resourcePath = resources;resources-icon60;resources-marke118
+epix2pro51mm.resourcePath = resources;resources-icon60;resources-marke118
+fenix847mm.resourcePath = resources;resources-icon65;resources-marke118
+fenix8pro47mm.resourcePath = resources;resources-icon65;resources-marke118
+fenix947mm.resourcePath = resources;resources-icon65;resources-marke118
+fenix9pro47mm.resourcePath = resources;resources-icon65;resources-marke118
+fr57047mm.resourcePath = resources;resources-icon65;resources-marke118
+fr965.resourcePath = resources;resources-icon65;resources-marke118
+fr970.resourcePath = resources;resources-icon65;resources-marke118
+venu3.resourcePath = resources;resources-icon70;resources-marke118
+fenix9pro51mm.resourcePath = resources;resources-icon65;resources-marke118

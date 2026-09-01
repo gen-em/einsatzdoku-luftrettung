@@ -1985,6 +1985,636 @@ Beide sind vermerkt und werden in den Paketen behoben, die die betroffenen
 Wege ohnehin anfassen (`docs/Konzept-S2-Mengen-Spuren-Sicherung.md`,
 Abschnitt 8).
 
+## [Uhr 2.0.0] — 2026-08-31
+
+**Die Uhr-App heißt „NAdoku" und hat eine echte Anwendungs-ID.** Der Rest der
+Umbenennung aus R29, vorgezogen aus P6 — und die Beseitigung eines
+Platzhalters, der nur teurer geworden wäre.
+
+Die Hauptnummer steigt, weil die App danach eine **andere Identität** hat: Für
+die Uhr ist sie eine neue Anwendung, mit eigenen Einstellungen und eigenem
+Speicher. Wer 1.x gekoppelt hatte, koppelt einmal neu und löscht die alte
+Fassung vom Gerät.
+
+### Uhr — Die Anwendungs-ID war ein durchgezählter Platzhalter
+
+Im Manifest stand `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6` — von Hand durchgezählt,
+kein Zufallswert; der Kommentar darüber sagte selbst, sie sei „beim ersten
+Projekt-Setup durch eine eigene zu ersetzen". Die SDK-Beispiele tragen
+durchweg echte UUID, und für den Connect-IQ-Store braucht es eine.
+
+**Warum jetzt und nicht in P6:** Die ID ist die Identität der App auf dem
+Gerät. Ein Wechsel kostet jede gekoppelte Uhr eine Neukopplung — heute ist das
+**eine**, nach der Öffnung sind es alle. Der Kommentar im Manifest hält das
+jetzt fest, samt der Ansage, dass hier nicht mehr geändert wird.
+
+**Was dazu nicht behauptet wird:** Die Folge für den Gerätespeicher ist hier
+**nicht gemessen**. Der Simulator legt seinen App-Speicher unter
+`GARMIN/APPS/DATA/<DATEINAME>.DAT` ab — benannt nach der geladenen `.prg`, nicht
+nach der Anwendungs-ID. Er kann die Frage also gar nicht beantworten, und die
+Annahme oben folgt der Plattformdokumentation, nicht einer eigenen Messung.
+
+### Uhr — Der Name
+
+`@Strings.AppName`, der Titel auf dem Startbildschirm und die Beschriftung der
+Server-Einstellung tragen jetzt **NAdoku**; die Einstiegsklasse heißt
+`NAdokuApp` (`HemsApp.mc` → `NAdokuApp.mc`), und die Dateiköpfe aller 17
+Quelldateien ziehen mit.
+
+**Die Uneinheitlichkeit ist bewusst in Kauf genommen.** R29 hielt die
+Umbenennung in P6, damit Uhr und Web zusammen umziehen; die Uhr geht jetzt
+voran. Das Handbuch sagt es an der Stelle, an der jemand sonst vergeblich
+sucht: In der Geräteliste heißt die App **NAdoku**, im Web steht weiter
+„Einsatzdoku", bis der v1.0-Schnitt nachzieht.
+
+Für das Gerätemenü ist es die **Kurzform** ohne „Gen-EM": Der Träger gehört in
+den Store-Eintrag, nicht auf ein Uhrendisplay, und `nadoku.beispieldomain.de`
+führt dieselbe Kurzform seit P2.
+
+## [Uhr 1.11.1] — 2026-08-31
+
+**Die Uhr trägt die Terminologie-Nachträge aus P2 nach.** Kein neues Verhalten
+— vier Textstellen, die seit P2 auf die nächste Uhr-Auslieferung gewartet
+haben.
+
+R29 des Rahmenplans hält es so fest: Die **Umbenennung** der Uhr-Quelltexte
+(Einstiegsklasse `HemsApp`, `@Strings.AppName`) bleibt P6, weil sie das
+Manifest ändert. Aber: *„Steht vor P6 aus anderem Grund eine Uhr-Auslieferung
+an (Backlog Nr. 11 oder 14 in P4), werden Beispieldomain und Kommentare dort
+mitgenommen."* Genau das ist mit 1.10.1 bis 1.11.0 eingetreten.
+
+| Stelle | vorher | jetzt |
+|---|---|---|
+| `settings.xml` (Garmin Connect, **sichtbar**) | `einsatz.beispiel.de` | `nadoku.beispieldomain.de` |
+| `properties.xml` (Kommentar) | `einsatz.beispiel.de` | `nadoku.beispieldomain.de` |
+| `Uploader.mc` (Kommentar) | `luftrettung.net` | `nadoku.beispieldomain.de` |
+| `Model.mc` (Kommentar) | „Flugtag", „Hubschrauberdienst am Tag, NEF-Nachtdienst am Abend" | „Diensttag (damals noch „Flugtag")", „ein luftgebundener am Tag, ein bodengebundener am Abend" |
+
+Die Beispieldomain ist die aus E-P2-03; dass sie den künftigen Namen trägt,
+ist dort ausdrücklich beabsichtigt. Bei `Model.mc` bleibt der alte Begriff
+**einmal als historische Angabe** stehen — der Satz erklärt, was sich mit
+Web 6.0.0 geändert hat, und eine Geschichte umzuschreiben wäre keine
+Terminologiepflege.
+
+**Was bewusst stehen bleibt:** `Flugmodus` in `Util.mc` — das ist der
+Betriebszustand eines Geräts und in der Wortliste als `flugmodus` ausdrücklich
+ausgenommen. Und `HemsApp` samt `manifest.xml`: R29 legt die Umbenennung nach
+P6, weil sie eine eigene Auslieferung nach sich zieht.
+
+## [Uhr 1.11.0 · Web 9.15.0] — 2026-08-31
+
+**Die Uhr trennt eine bestehende Kopplung ausdrücklich, bevor sie neu
+koppelt.** Backlog Nr. 14. Und die strenge Typprüfung ist zum ersten Mal
+vollständig sauber.
+
+### Uhr — Der Fall ist die geteilt genutzte Uhr
+
+Bis hierher führte „Gerät koppeln" direkt in die Code-Eingabe. Schlug das
+Koppeln fehl — falscher Code, kein Telefon in Reichweite, Gerätegrenze
+erreicht —, blieben die **alten** Zugangsdaten stehen. Die Uhr dokumentierte
+stillschweigend weiter auf das vorherige Konto, und die Person davor bekam
+Einsätze, die sie nicht gefahren ist. Niemand sah es der Uhr an.
+
+Die Reihenfolge ist jetzt **abfragen → trennen → neu koppeln**. Scheitert das
+Koppeln danach, steht die Uhr *sichtbar* ohne Kopplung da — die Sync-Seite
+sagt seit 1.10.1 „Nicht eingerichtet". Die beiden Punkte greifen ineinander:
+Ohne den dritten Zustand der Sync-Seite wäre der getrennte Zustand wieder
+unsichtbar gewesen.
+
+Die Rückfrage ist der vorhandene Baustein `WatchUi.Confirmation`, wie beim
+Einsatzabschluss und beim Verlassen der App — kein neues Element.
+
+### Uhr — Ein Rückstand verhindert das Trennen
+
+Abgeschlossene, noch nicht gesendete Pakete gehören dem **bisherigen** Konto;
+nach einer Neukopplung gingen sie an das neue. Das wäre kein Datenverlust,
+sondern schlimmer — fremde Einsätze in einem fremden Konto. Die Uhr verweigert
+das Trennen deshalb und sagt „Erst 3 Pakete senden / Sonst ans neue Konto".
+
+### Uhr — Lokal wird immer getrennt
+
+Auch wenn der Server nicht antwortet. Andernfalls bliebe eine Uhr ohne Telefon
+in Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr benutzen
+soll — genau der Zustand, den dieser Weg beseitigt. Der Servereintrag steht
+dann noch und belegt einen Geräteplatz; das sagt die zweite Zeile
+(„Nur auf der Uhr getrennt / Gerät im Web löschen"), weil es im Web mit einem
+Klick zu beheben ist.
+
+### Web — `pair.php` kennt zwei Anliegen
+
+Neu `{"aktion":"trennen"}` mit den Kopfzeilen `X-Device-Id` und `X-Api-Key`;
+Antwort `{"ok":true}`. JSON-Vertrag Abschnitt 1b.
+
+**Kein eigener Endpunkt:** Die Adresse kennt die Uhr schon, und der
+Ratenschutz von `pair.php` gilt damit für beide Zweige. Ein zweiter wäre eine
+weitere anmeldungsfreie Tür, die dieselbe Bremse noch einmal bräuchte.
+
+**Gelöscht, nicht deaktiviert:** Ein deaktiviertes Gerät belegt weiter einen
+der `MAX_GERAETE` Plätze — „zu viele Geräte" ist genau der Fehler, in den eine
+geteilte Uhr sonst läuft. Der Fremdschlüssel setzt `device_id` auf `NULL`,
+hochgeladene Daten bleiben.
+
+**E-Mail an den Kontoinhaber**, symmetrisch zum Koppeln: die eine Gelegenheit,
+es zu erfahren, ohne sich zufällig anzumelden. Die Antwortzeit folgt
+`ingest.php` — auch der unbekannte Zweig läuft gegen `AUTH_VERGLEICHSWERT`,
+sonst wäre aus der Dauer ablesbar, welche Gerätekennungen es gibt.
+
+### Uhr — Die letzten vier Meldungen der strengen Typprüfung
+
+`-l 3` stand seit 1.8.2 bei vier Fundstellen, die als „nicht auflösbar"
+notiert waren. Sie sind es doch. Alle vier haben dieselbe Ursache:
+`Storage.setValue()` und `Communications.makeWebRequest()` nehmen einen
+PolyType aus bis zu 16 Alternativen; ein Literal wie
+`{"svc" => …, "day" => …}` hat aber einen **genauen** Typ, und die Prüfung
+sieht nicht, dass der ein Sonderfall des allgemeinen ist. Ein Cast sagt ihr,
+welche Alternative gemeint ist.
+
+Eine der vier war eine echte Verwechslung: `Track.mc` **hatte** bereits einen
+Cast — auf `Application.PropertyValueType`. `Storage.setValue()` verlangt
+`Storage.ValueType`. Ein falscher Cast prüft nichts.
+
+| | vorher | jetzt |
+|---|---|---|
+| Warnungen (`-w`) | 0 | 0 |
+| Strenge Prüfung (`-l 3`) | 4 Fundstellen | **0** |
+| Kosten | — | **0 Byte**, gemessen |
+
+Damit ist auch der letzte Rest von Backlog Nr. 13 erledigt. Der Weg dorthin
+war 226 Meldungen (77 Stellen) → 4 → 0.
+
+### Uhr/Web — Was nicht geprüft werden konnte
+
+**Die Rückfrage selbst ist nicht fotografiert.** Der Simulator beantwortet sie
+im selben Augenblick, in dem sie erscheint: Der lange Druck wird durch eine
+gehaltene Taste erzeugt, und deren Ereignisse treffen die eben erschienene
+Ansicht. Belegt ist sie durch einen Konsolenmitschnitt eines Probekompilats —
+`cred=da` → „Rückfrage" → „trennen" —, durch den Zustand danach („Nicht
+eingerichtet" auf der Sync-Seite) und dadurch, dass es der Baustein ist, der
+in `ClockView` viermal unverändert benutzt wird.
+
+**Die Serverseite ist nicht gegen eine Datenbank gelaufen.** Geprüft sind
+Syntax (`php -l`) und die Ableitung aus `ingest.php` und `einstellungen.php`,
+deren Authentifizierung und Löschweg übernommen sind. Der Zweig braucht eine
+Probe am Produktivstand, bevor man sich auf ihn verlässt.
+
+## [Uhr 1.10.3] — 2026-08-31
+
+**Die Bildmarke ist auf allen 99 Geräten gleich groß im Verhältnis zum
+Display.** Zweite Hälfte von Backlog Nr. 48; damit ist der Punkt erledigt.
+
+### Uhr — Zwei gleiche Displays, zwei Größen
+
+Die Bildmarke wird mit `dc.drawBitmap` **1:1** gezeichnet — ein Bitmap folgt
+`Ui.s()` nicht, egal wie das Layout gerechnet ist. Zugeordnet wurde sie über
+den Ressourcenordner, und der hing an der **Launcher-Symbolgröße**. Mit der
+Displayhöhe hat die aber nichts zu tun.
+
+Das Ergebnis war über die 99 Geräte eine Spanne von **15 % bis 34 %** der
+Displayhöhe, wo die Gestaltung 27 % vorsieht — und, am deutlichsten: Venu 3s
+und Descent G2 haben **dasselbe** 390-px-Display und zeigten die Marke in
+27 % gegen 18 %.
+
+### Uhr — Vier Stufen, gerechnet statt geschätzt
+
+| Kachel | Displayhöhen | Geräte | Anteil |
+|---|---|---|---|
+| 60 | 208–240 | 35 | 25–29 % |
+| **73** | 260–280 | 19 | 26–28 % |
+| 101 | 360–390 | 20 | 26–28 % |
+| 118 | 416–466 | 25 | 25–28 % |
+
+Zielwert sind 27 % — genauer 70/260, das Verhältnis des Bezugsgeräts
+fenix6pro, dem `Ui.s()` ohnehin jede Länge folgt. Für jede Stufenzahl wurde
+die Aufteilung gesucht, die die größte Abweichung klein hält; die Wahl fiel
+auf vier:
+
+| Stufen | Spanne | |
+|---|---|---|
+| vorher | 15–34 % | Zuordnung hing an der Symbolgröße |
+| 3 | 23,6–30,4 % | oben und unten noch deutlich daneben |
+| **4** | **25,0–28,8 %** | gewählt |
+| 5 | 25,3–28,4 % | die fünfte Stufe trägt **ein** Gerät (FR 55) |
+| 10 | 26,8–27,1 % | eine Kachel je Höhe |
+
+### Uhr — Der Preis, ausdrücklich
+
+Bei vier Stufen fällt das Bezugsgerät mit der 260/280-Gruppe zusammen: Die
+Kachel der fenix6pro wächst von 70 auf **73** Pixel, die der Venu 3s schrumpft
+von 105 auf 101. Damit hat das Abnahmekriterium aus dem Kopf von `Ui.mc` —
+„damit bleibt die Fenix pixelgenau wie zuvor" — eine benannte Ausnahme, und sie
+steht jetzt dort. Nur eine Kachel je Displayhöhe hätte sie vermieden, um den
+Preis von acht Ordnern statt drei; die Entscheidung ist bewusst so gefallen.
+Alles Übrige auf der Fenix ist unverändert.
+
+### Uhr — Was es kostet
+
+Die Kompilate ändern sich zwischen **−3 520 B** (fenix7s, Kachel 70 → 60) und
+**+10 992 B** (vivoactive5, 70 → 101), im Mittel +2 613 B. Die kleinen Geräte
+werden also leichter, die großen schwerer — was der Sache nach richtig ist.
+
+Der Speicher zur Laufzeit trägt es mühelos. Auf den beiden knappsten Geräten,
+gemessen im Simulator auf dem Startbildschirm (dort ist die Bildmarke
+geladen — der ungünstigste Fall):
+
+| Gerät | Kachel | belegt |
+|---|---|---|
+| fenix6 (260 px, 128 kB) | 73 | **55,9 / 123,8 kB** |
+| FR 55 (208 px, 128 kB) | 60 | **52,3 / 123,8 kB** |
+
+### Uhr — Nachgerechnet, nicht behauptet
+
+Beim Schreiben der Begründung stellte sich ein Argument aus 1.10.2 als falsch
+heraus: Die getrennten Ordner (`resources-icon<N>` und `resources-marke<K>`)
+sollten Ordner sparen — „18 statt 14". Das galt für eine Kachel je Displayhöhe.
+Bei vier Stufen kommen nur zwölf Paare aus Symbolgröße und Kachel vor, und
+getrennt sind es ebenfalls 11 Ordner. Die Trennung bleibt trotzdem richtig,
+aber aus einem anderen Grund: Zusammengelegt läge dieselbe 101er Kachel in
+fünf Ordnern, und eine verschobene Stufengrenze schnitte den ganzen Satz neu.
+Der Text sagt das jetzt so.
+
+## [Uhr 1.10.2] — 2026-08-31
+
+**Das Launcher-Symbol liegt in allen neun Größen vor, die die 99 Geräte
+verlangen — und es kommt jetzt aus der Vektorvorlage.** Erste Hälfte von
+Backlog Nr. 48; die Staffelung der Bildmarke steht noch aus.
+
+### Uhr — 42 Warnungen, eine Ursache
+
+Im Repositorium lagen zwei Symbolgrößen, 40 und 70 px. Verlangt werden neun:
+35, 36, 40, 54, 56, 60, 61, 65, 70. Die Größe ist keine Wahl, sondern eine
+Vorgabe des Geräts (`launcherIcon.width` in seiner `compiler.json`). Fehlt sie,
+skaliert `monkeyc` und meldet es — **42 der 99 Geräte** bauten mit genau dieser
+einen Warnung, und hochskaliert ist das Symbol unscharf.
+
+Jetzt trägt jede Größe einen eigenen Ordner `resources-icon<N>`. Stufe I meldet
+**0 Warnungen auf allen 99 Geräten**.
+
+**Und es kostet nichts.** Kein einziges der 99 Kompilate ändert seine Größe —
+kein Byte, in keiner Richtung. Garmin legt Bitmaps palettiert und in fester
+Breite ab: Der Platzbedarf hängt an den Maßen, nicht am Inhalt. Ein scharfes
+Symbol ist hier also gratis.
+
+### Uhr — Die Bilder haben endlich ein Rezept
+
+Die PNG unter `watch/resources*/drawables/` sind Ableitungen der beiden SVG in
+`server/assets/images/`. Bis hierher lagen sie ohne Rezept da: Wer eine Größe
+ergänzen wollte, musste raten, mit welcher Breite und welcher Ausrichtung die
+vorhandenen entstanden waren. Genau davor warnt `tools/logos/LIESMICH.md` seit
+P3 für das Favicon — „das PNG ist eine Ableitung und soll keine sein, die
+jemand in einem Bildprogramm nachbaut".
+
+Neues Werkzeug `tools/uhr-bilder/erzeugen.sh`. Sein Rezept ist aus den
+vorhandenen Dateien **zurückgerechnet** und reproduziert sie bitgleich
+(`compare -metric AE` = 0 für alle vier, die es vorher schon gab). Das ist der
+Beleg, dass es das richtige ist und nicht bloß ein ähnliches — an einer Stelle
+hing er an einem einzigen Pixel: Die NEF-Breite ist `int(Kachel × 0,78)`,
+**abgerundet**. Kaufmännisch gerundet ergäbe 70 × 0,78 = 55 statt 54, und der
+Altstand wäre nicht mehr reproduzierbar.
+
+Der einzige beabsichtigte Unterschied betrifft die beiden **Launcher-Symbole**:
+Sie stammten aus der Zeit vor der Vektorumstellung und waren aus einem
+40-px-Bitmap hochskaliert. Sie kommen jetzt aus derselben Vorlage wie alles
+andere (RMSE 5,9 % auf der 70er Fassung, gleiche Zeichnung).
+
+### Uhr — Ordner nach Größe, nicht nach Gerät
+
+`resources-icon70` trug bisher Symbol **und** Bildmarke. Das geht nicht
+weiter: Ein Gerät mit 60-px-Symbol gibt es bei 360, 390, 416 und 454 Pixeln
+Displayhöhe — Symbolgröße und Displayhöhe laufen nicht miteinander. In einem
+Ordner zusammengefasst bräuchte es eine Kombination je Paar, 18 Ordner statt
+14.
+
+Deshalb getrennt: `resources-icon<N>` trägt nur das Symbol,
+`resources-marke<K>` nur die Bildmarke. Der Umbau ist beweisbar folgenlos —
+die 105er Kacheln wurden aus `resources-icon70` nach `resources-marke105`
+verschoben und dort bitgleich neu erzeugt; die sechs betroffenen Geräte sehen
+unverändert aus.
+
+Die passenden Jungle-Zeilen erzeugt `geraeteklassen.py --bloecke`. Der
+`resourcePath`-Block im Jungle ist damit nicht mehr handgeschrieben.
+
+### Uhr — Nebenbei: `tools/logos/erzeugen.mjs` war kaputt
+
+Es zeigte auf `gen-em_logo_fahrzeug.svg` und schrieb `favicon-fahrzeug.png` —
+beide Namen gibt es seit dem Austausch des NEF-Platzhalters nicht mehr; jeder
+Aufruf brach mit `ENOENT` ab. Namen berichtigt, Werkzeug gelaufen: Das Ergebnis
+ist von den Dateien im Repositorium nicht zu unterscheiden (gleiche Zeichnung,
+andere Kantenglättung). Die Dateien selbst bleiben deshalb, wie sie sind.
+
+Der Platzhalter-Abschnitt in der dortigen `LIESMICH.md` beschrieb einen
+Austausch „1:1, gleicher Name, gleicher viewBox". So ist es nicht gekommen —
+der Name wurde ein anderer und der viewBox auch (420 × 420 statt
+400,16 × 249,81). Der Abschnitt hält jetzt fest, was daraus folgte.
+
+## [Uhr 1.10.1] — 2026-08-31
+
+**Die Sync-Seite behauptet nicht mehr „Sync vollständig", wenn die Uhr gar
+nicht senden kann.** Backlog Nr. 11.
+
+### Uhr — Zwei Aussagen, die einander widersprachen
+
+Ohne hinterlegte Server-Adresse zeigte dieselbe Anzeige gleichzeitig das grüne
+„Sync vollständig" mit Haken **und**, drei Zeilen tiefer, „Erst Server-Adresse
+setzen". Dasselbe bei gesetzter Adresse ohne Kopplung.
+
+Die Ursache war keine Nachlässigkeit im Text, sondern eine verwechselte Frage.
+`Model.backlogCount()` beantwortet ausschließlich „liegen abgeschlossene Pakete
+zum Senden bereit?" — vor dem ersten Dienst zu Recht `0`. Die Seite machte
+daraus eine Aussage über den **Übertragungsweg**, den die Uhr zu diesem
+Zeitpunkt nie benutzt hatte. Eine Fehlerzeile, die den Widerspruch aufgelöst
+hätte, gab es nicht: `SyncView.refresh()` stößt `syncAll()` nur bei
+vorhandenem Rückstand an, `Uploader.lastError` blieb also `null`.
+
+### Uhr — Ein dritter Zustand
+
+Der grüne Zustand setzt jetzt **beides** voraus: eine Server-Adresse *und* eine
+Kopplung. Fehlt eines davon und liegt kein Rückstand vor, tritt an seine Stelle
+ein Einrichtungszustand — rot „Nicht eingerichtet", darunter gedämpft der
+nächste Schritt („Erst Server-Adresse setzen" bzw. „START halten: Gerät
+koppeln"). Der bisherige Fußzeilenhinweis **wird damit zur Hauptaussage** und
+wird unten nicht wiederholt; zweimal dieselbe Zeile ist auf einem
+Uhrendisplay verschenkter Platz.
+
+Zwei Entscheidungen dabei, beide im Code vermerkt:
+
+**Der Rückstand behält den Vortritt.** Liegen Pakete offen *und* fehlt die
+Einrichtung, bleibt die Zahl die Hauptaussage und der Hinweis steht darunter.
+Ein Widerspruch entsteht dort nicht — es sind Pakete offen, und daneben steht,
+warum sie liegen bleiben. Der Einrichtungszustand ersetzt also nur den grünen
+Fall, nicht die Zahl.
+
+**Kein neuer Baustein.** Zwei Textzeilen — Zustand rot, Weg heraus in Hellgrau —
+sind genau das Muster, das die Kopplungsmeldung auf derselben Seite seit jeher
+benutzt (`Pair.status` / `Pair.statusHint`). Rot für „Einrichtung fehlt" ist
+dieselbe Farbe wie auf dem Startbildschirm und in der bisherigen Fußzeile: ein
+Zustand, eine Farbe (Uhr-Layoutregeln, Abschnitt 7). Kein Haken, kein Symbol —
+der Zustand ist weder erledigt noch fehlgeschlagen.
+
+### Uhr — Geprüft
+
+Fünf Zustände im Simulator, jeder mit Bildabzug. Die Zustände 4 und 5 über ein
+Probekompilat, dessen `backlogCount()` fest `3` liefert — ein Rückstand lässt
+sich sonst nur über einen vollständigen Dienst herstellen:
+
+| | Einrichtung | Rückstand | Anzeige |
+|---|---|---|---|
+| 1 | nichts | 0 | „Nicht eingerichtet" / „Erst Server-Adresse setzen" |
+| 2 | nur Adresse | 0 | „Nicht eingerichtet" / „START halten: Gerät koppeln" |
+| 3 | vollständig | 0 | grün „Sync vollständig" mit Haken |
+| 4 | vollständig | 3 | „3 / Pakete offen", keine Fußzeile |
+| 5 | nichts | 3 | „3 / Pakete offen" **plus** roter Hinweis unten |
+
+Auf fenix6pro (260 px) alle fünf, auf der Venu 3s (390 px) die Zustände 1 und 3
+— die beiden, deren Blockhöhe sich geändert hat. Die strenge Typprüfung `-l 3`
+meldet unverändert dieselben vier bekannten Fundstellen, keine davon in
+`SyncView.mc`.
+
+## [Uhr 1.10.0] — 2026-08-31
+
+**Die Bildmarke auf dem Startbildschirm ist wählbar: luft- oder bodengebunden.**
+Backlog Nr. 47, entschieden zugunsten der App-Einstellung statt einer
+Server-Übertragung — die Uhr kennt die Kontoeinstellung nicht, und eine
+Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+
+### Uhr — Warum überhaupt
+
+Die Anwendung dokumentiert Einsätze luft- **wie** bodengebunden. Die
+Weboberfläche trägt dem seit Web 9.9.0 Rechnung (`logo_wahl` je Konto,
+`app_state.logo_standard` je Installation) und begründet es dort so:
+„eine Installation, die überwiegend am Boden fährt, soll nicht dauerhaft einen
+Hubschrauber im Kopf tragen." Die Uhr tat bis hierher genau das — bei jedem
+Dienstbeginn, auch im Nachtdienst am Boden. Dieselbe Linie führt `Const.mc`
+seit 1.8.0 bei den Phasenbeschriftungen.
+
+### Uhr — Wie es eingestellt wird
+
+Neue App-Einstellung **„Bildmarke auf dem Startbildschirm"** (Garmin Connect,
+neben Server-Adresse und Touchbedienung) mit drei Werten: *Luftgebunden*
+(Vorgabe), *Bodengebunden*, *Wechselnd*.
+
+Zwei Eigenheiten, beide im Code vermerkt. **Die Property führt Zahlen, keine
+Wörter**: `settingConfig type="list"` liest die Werte als Zahl ein und bricht
+bei Text mit `For input string: "luft"` ab. Die Bedeutung tragen
+`Const.LOGO_LUFT`, `LOGO_BODEN`, `LOGO_WECHSELND`. Und **„Wechselnd" würfelt
+einmal je App-Start**, nicht bei jedem Zeichnen: `onUpdate` läuft ständig neu,
+das Bild spränge sonst mitten im Dienst.
+
+Ein Fehler beim Lesen der Einstellung kostet nichts — die Vorgabe bleibt
+stehen. Die Bildmarke ist Zierde, kein Zugang.
+
+Die Ressourcen heißen jetzt `LogoLuft` und `LogoBoden` (Dateien
+`logo_luft.png`, `logo_boden.png`, je in 70 und 105 px). Das kostet ein
+zweites Bild im Kompilat: **+5 888 Byte** auf fenix6pro, +12 864 auf venu3s.
+
+### Uhr — Beide Motive aus der Vektorvorlage
+
+Beide Bildmarken sind aus den SVGs der Weboberfläche gerastert
+(`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`), nicht aus
+den alten PNG hochskaliert.
+
+Die Vorlagen haben unterschiedliche Seitenverhältnisse — der Hubschrauber liegt
+quer (400×250), das NEF quadratisch (420×420). Blind in dieselbe Kachel
+gesetzt, wäre das NEF mit 70×57 gegenüber 70×44 deutlich schwerer erschienen.
+Es steht deshalb auf **78 % der Kachelbreite**, womit beide Motive praktisch
+gleich hoch sind: 45 gegen 44 Pixel in der kleinen Stufe, je 66 in der großen.
+
+Auf das Layout wirkt sich die Wahl ohnehin nicht aus: `logoH` liefert die
+**Kachelhöhe**, nicht die Motivhöhe — beide Dateien sind 70×70 beziehungsweise
+105×105, der Rest ist durchsichtig.
+
+### Uhr — Im Simulator nachgesehen (nachgetragen)
+
+Die Bildmarken waren zunächst nur übersetzt, nicht gesehen. Nachgeholt am
+31.08.2026 mit `tools/uhr-pruefstand` auf zwei Geräten und drei Einstellungen —
+**neun Simulatorläufe**, jeder mit Bildabzug:
+
+| Einstellung | fenix6pro (260 px) | venu3s (390 px) |
+|---|---|---|
+| 0 Luftgebunden | Hubschrauber | Hubschrauber |
+| 1 Bodengebunden | Fahrzeug | Fahrzeug |
+| 2 Wechselnd | 4 Starts: 1× Luft, 3× Boden | — |
+
+Dazu **Stufe I über alle 99 Geräte** noch einmal, weil 1.10.0 jedem Kompilat
+ein zweites Bild mitgibt: 99 übersetzt, **0 Fehlschläge**, Größen zwischen
+168 652 B (`fr255`) und 179 996 B (Venu-Reihe). Die 42 Geräte mit genau einer
+Warnung tragen unverändert die Meldung zum hochskalierten Launcher-Symbol
+(Backlog Nr. 48) — **keine neue Warnung** durch die zweite Bildmarke.
+
+Dazu eine Probe auf den Fall, der bei einer **App-Aktualisierung** eintritt:
+Der Schlüssel `logoWahl` steht noch nicht im Einstellungsspeicher. Ein Kompilat,
+das absichtlich `"gibtsNicht"` liest, fällt sauber auf die Vorgabe zurück und
+zeichnet weiter — der `catch (e)` in `Ui.logoRes()` trägt also.
+
+Der Lauf hat **zwei Fallen im Prüfstand selbst** freigelegt, beide jetzt
+behoben und in dessen `LIESMICH.md` festgehalten:
+
+**Der Simulator merkt sich die App-Einstellungen** unter
+`/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET` und füllt die
+Datei **nur beim ersten Laden** aus den Vorgaben des Kompilats. Zwei Läufe
+zeigten deshalb dieselbe Bildmarke, obwohl das zweite Kompilat die andere trug —
+ein falsches Negativ, das ohne Gegenprobe als „die Einstellung wirkt nicht"
+durchgegangen wäre. Neuer Befehl `einstellungen-leeren`; `starten` weist auf
+eine stehende Datei hin. Das **Verzeichnis** bleibt dabei stehen: Fehlt es ganz,
+wirft `Properties.getValue()` einen Fehler, den kein `catch` fängt, und das
+Display bleibt schwarz. Auf einem Gerät kann das nicht eintreten — dort legt
+die Installation den Speicher an.
+
+**Anzeige und Simulator brauchen `setsid`, nicht nur `nohup`.** Eine Umgebung,
+die jeden Befehl in einer eigenen Shell ausführt, räumt beim Verlassen die
+ganze Prozessgruppe ab; die Anzeige war fort, bevor der nächste Befehl sie
+brauchte.
+
+## [Web 9.14.1] — 2026-08-31
+
+**Sieben Verweise zeigten auf gelöschte Bilddateien.** Der Logo-Wechsel
+(Commit „Update Logos") hat die Dateien getauscht, ohne den Code
+nachzuziehen — und weil ein Push auf `main` mit Änderungen unter `server/`
+sofort deployt, war der Stand live.
+
+### Web — Was kaputt war
+
+Aus `gen-em_logo_fahrzeug*` wurde `gen-em_logo_nef*`, aus `favicon.png` und
+`favicon-fahrzeug.png` wurden `favicon_helicopter.png` und `favicon_nef.png`
+— mit Unterstrich statt Bindestrich. Der Code kannte nur die alten Namen:
+
+| Stelle | zeigte auf | Folge |
+|---|---|---|
+| `ui.php` (2×) | `favicon.png` | **jede Seite** lud ein 404-Favicon |
+| `db.php` | `favicon-fahrzeug.png`, `favicon.png` | Favicon fehlte in beiden Zweigen |
+| `session_lib.php` | `gen-em_logo_fahrzeug` | wer „Fahrzeug" gewählt hatte, sah **kein Logo** |
+| `db.php` (`logo_src`) | `gen-em_logo_fahrzeug` | ein eigenes Logo wurde fälschlich als mitgeliefertes erkannt |
+| `update.php` | `gen-em_logo_fahrzeug*.svg` | die Platzhalter-Prüfung lief ins Leere |
+
+### Web — Warum nur die Pfade
+
+Der **Einstellungswert** heißt weiterhin `'fahrzeug'` — er steht so in
+`users.logo_wahl` und `app_state.logo_standard`. Geändert hat sich allein der
+**Dateistamm**. Beides auseinanderzuhalten spart eine Migration gespeicherter
+Werte; `LOGO_WAHLEN` bleibt unverändert, und niemand muss `update.php`
+aufrufen.
+
+### Web — Eine Annahme, die nicht mehr trägt
+
+`logo_platzhalter_liegt()` in `update.php` prüft, ob der NEF-Platzhalter noch
+liegt, und der Kommentar sagte dazu: *„Die echte Datei ersetzt ihn 1:1 —
+gleicher Name, gleicher viewBox, kein Eingriff im Code."* Genau das ist nicht
+eingetreten: Der Ersatz kam unter neuem Namen und mit anderem viewBox
+(400×250 quer wurde zu 420×420 quadratisch). Die Funktion prüft jetzt **beide**
+Namen — eine ältere Installation, die den Platzhalter noch unter dem alten
+Namen trägt, soll den Hinweis weiterhin bekommen.
+
+## [Uhr 1.9.0] — 2026-08-30
+
+**Die App unterstützt 99 statt drei Geräte, und sie sagt beim Koppeln, auf
+welchem sie läuft.** Zwei Dinge, die zusammengehören: Wer die Geräteliste
+öffnet, will hinterher wissen, welche davon tatsächlich getragen werden.
+
+### Uhr — Von drei auf 99 Geräten
+
+Die Auswahl folgt abgestimmten Regeln, die als Konstanten in
+`tools/uhr-pruefstand/geraeteklassen.py` stehen: Uhren mit API ≥ 3.1
+(das `minApiLevel` der App) und mindestens 128 kB Speicher, davon die vier
+größten Geräteklassen, dazu alle Fenix ab Fenix 5 und alle Forerunner ab 2018.
+Von 173 Gerätedateien bleiben so **122 taugliche Uhren**, davon sind **99
+ausgewählt** — verteilt auf nur **vier Klassen**.
+
+Bemerkenswert daran: Die Sonderregeln für Fenix und Forerunner bringen **keine
+einzige zusätzliche Klasse**. Sie überlappen vollständig mit den vier größten;
+die vier Klassen allein hätten dieselbe Liste ergeben. Herausgefallen sind 23
+Geräte in acht kleinen Klassen, darunter die einzigen **eckigen** (`venusq`,
+`venusq2`, `venux1`) und die Instinct-Reihe — genau die Formen, für die
+`Ui.chordW()` mit seiner Kreissehnen-Formel nicht gebaut ist.
+
+Die Geräteliste im Manifest ist nach Klassen gruppiert und kommentiert. Die
+Regel darüber hat sich dabei geändert: Sie verlangte, **jedes** neue Gerät
+einzeln auszumessen. Bei 96 neuen ist das weder zu leisten noch sinnvoll — ein
+Gerät zeigt nichts, was sein Klassenvertreter nicht schon zeigt, und die Höhe
+innerhalb einer Klasse skaliert stetig. Gemessen wird jetzt **je Klasse**. Eine
+neue Klasse bleibt dagegen immer eine Messung wert.
+
+### Uhr — Die stille Falle im Jungle
+
+`base.sourcePath` steht auf dem Fünf-Tasten-Profil. Ein neu eingetragenes
+Touch-Gerät ohne eigene UP/DOWN-Tasten erbt es stillschweigend, **übersetzt
+sauber und ist auf dem Gerät unbedienbar** — der Compiler merkt davon nichts.
+Für die 99er-Auswahl brauchen **13 Geräte** deshalb explizit `source-tasten3`:
+die Venu-Reihe, `approachs50`, die Approach S70, `d2air`, `d2airx10` und
+`vivoactive5`.
+
+`resources-venu3s` heißt jetzt `resources-icon70`. Der Ordner trägt die
+70×70-Fassung von Symbol und Bildmarke, und die brauchen sechs Geräte, nicht
+nur die Venu 3s.
+
+### Uhr — Was die Uhr beim Koppeln über sich meldet
+
+`pair.php` bekommt neben dem Code einen Block `geraet`: Teilenummer,
+Displaymaße, Touch, Firmware, Connect-IQ- und App-Fassung. Feldliste und
+Begründungen stehen im JSON-Vertrag, Abschnitt 1a. **Der Server verwirft ihn
+derzeit stillschweigend** — die Auswertung ist Backlog Nr. 46.
+
+Warum überhaupt selbst zählen: Für die Frage, welche Uhren künftig unterstützt
+werden sollen, gibt es keine brauchbare äußere Quelle. Garmin veröffentlicht
+keine modellgenauen Verkaufszahlen, und der Connect-IQ-Store schlüsselt
+Installationen nicht nach Gerät auf — Entwickler fragen das seit Jahren an.
+Wer es wissen will, muss selbst zählen.
+
+Gesendet wird die **Teilenummer**, nicht der Modellname: Den kennt die Uhr
+nicht, `DeviceSettings` führt ihn nicht. Die Teilenummer ist eindeutig und
+serverseitig auflösbar — 325 Teilenummern führen auf 173 Modelle, samt
+Geräteart. Eine Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Ort.
+
+**Nicht gesendet wird `uniqueIdentifier`.** Das ist eine dauerhafte,
+geräteweite Kennung; für eine Stückzahl-Statistik wird sie nicht gebraucht, und
+in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
+rechtfertigt. Die Zuordnung leistet die `device_id`. Aus demselben Grund hält
+Nr. 46 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
+ausgewertet wird.
+
+### Uhr — Was geprüft ist
+
+**Stufe I, alle 99 Geräte übersetzt: 99 erfolgreich, 0 fehlgeschlagen.** 57
+davon ohne jede Warnung, 42 mit genau einer — durchweg die Skalierung des
+Launcher-Symbols. Kein Gerät scheitert an einer fehlenden API-Funktion, keines
+am Speicher. Die Kompilate liegen zwischen 162 940 B (`fr255`) und 179 980 B
+(`approachs7047mm`), im Mittel bei 169 723 B.
+
+**Stufe II, 20 Vertreter im Simulator (5 je Klasse): alle 20 starten und
+rendern den Startbildschirm**, keine Absturzmeldung. Sichtbar bestätigt hat
+sich dabei die Eingabe-Zuordnung: Die Venu-Reihe, `approachs50` und `d2airx10`
+zeigen „Action drücken", die Tastengeräte „START drücken" — das
+Drei-Tasten-Profil greift also dort, wo es soll.
+
+### Uhr — Was dabei offen bleibt
+
+Zwei Punkte, beide Gestaltungsarbeit und deshalb nicht nebenbei entschieden:
+
+**Die Launcher-Symbole sind unvollständig.** Die 99 Geräte verlangen neun
+Größen (35, 36, 40, 54, 56, 60, 61, 65, 70 px); im Repositorium liegen zwei.
+`monkeyc` skaliert und meldet es als Warnung — hochskaliert wird das Symbol
+unscharf. Die Kompilate wachsen davon übrigens nicht nennenswert: Gemessen
+kostet der vollständige 70er-Satz gegenüber dem geerbten 40er **6 432 Byte**,
+und zwar nur in den Geräten, die ihn bekommen. Jedes `.prg` trägt allein seine
+eigenen Ressourcen.
+
+**Die Bildmarke sitzt auf großen Displays zu klein.** Sie wird mit
+`dc.drawBitmap` 1:1 gezeichnet und über die *Launcher-Symbolgröße* zugeordnet
+statt über die Displayhöhe. Das passt bei der Venu 3s zufällig und geht sonst
+auseinander: **37 Geräte** bekämen eine Bildmarke, die nur 15–18 % der
+Displayhöhe einnimmt, wo die bestehende Gestaltung auf 25–27 % ausgelegt ist.
+Auf einer Fenix 9 Pro 51 mm säße das Logo verloren in der Mitte. Die
+Bildschirmfotos aus Stufe II zeigen genau das — auf 208 px sitzt die Bildmarke
+satt, auf 466 px verliert sie sich. Die Lösung wäre eine Staffelung nach
+Displayhöhe in drei Stufen.
+
+Dazu kommt eine Frage, die dabei aufgefallen ist und über die Größen
+hinausgeht: **Die Weboberfläche lässt zwischen Hubschrauber, Fahrzeug und
+„wechselnd" wählen (`logo_wahl`, `app_state.logo_standard`) — die Uhr weiß
+davon nichts.** Sie lädt eine feste `Rez.Drawables.Logo` und führt gar kein
+zweites Motiv mit; keine Schnittstelle überträgt die Wahl. Eine Installation,
+die überwiegend am Boden fährt, sieht auf der Uhr trotzdem bei jedem
+Dienstbeginn einen Hubschrauber. Das widerspricht der Linie, die `Const.mc`
+seit 1.8.0 bei den Phasenbeschriftungen verfolgt und die `session_lib.php` für
+die Weboberfläche ausdrücklich begründet.
 ## [Uhr 1.8.2] — 2026-08-30
 
 **Die strenge Typprüfung (`-l 3`) meldet statt 226 noch 4 Punkte.** Fortsetzung
@@ -2174,6 +2804,7 @@ Der Prüfstand ersetzt die echte Uhr nicht, und die Grenzen aus
 4,6 s, keine Kopplung, kein Server. Die App meldet im Simulator „Server fehlt" —
 richtiges Verhalten, kein Fehler. Und ein Lauf zeigt, dass es startet und wie
 es aussieht, nicht dass es richtig ist.
+
 
 ## [Web 9.14.0] — 2026-08-30
 
@@ -8250,7 +8881,6 @@ Zeile in einer Liste, die niemand zählt.
 ### Keine Datenbankänderung
 
 Dieses Paket kommt ohne Migration aus.
-
 
 
 ### Ein Flugtag im Papierkorb wird nicht mehr stillschweigend übergangen

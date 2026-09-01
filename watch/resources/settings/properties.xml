@@ -1,6 +1,6 @@
 <properties>
     <!-- Adresse der EIGENEN Installation. Die Domain genuegt
-         (z. B. "einsatz.beispiel.de") — Schema und /ingest.php ergaenzt die
+         (z. B. "nadoku.beispieldomain.de") — Schema und /ingest.php ergaenzt die
          App selbst. Vollstaendige URLs bleiben ebenfalls gueltig.
          Bewusst ohne Vorgabewert: Jede Installation hat ihren eigenen Server. -->
     <property id="serverUrl" type="string"></property>
@@ -11,4 +11,14 @@
          (Fenix 7 und neuer). Auf Geraeten ohne UP/DOWN wird der Wert
          ignoriert — ohne Touch waeren sie unbedienbar. -->
     <property id="touchEnabled" type="boolean">true</property>
+    <!-- Welche Bildmarke der Startbildschirm zeigt:
+         0 = luftgebunden (Vorgabe), 1 = bodengebunden, 2 = wechselnd.
+         ZAHLEN, KEINE WOERTER: settingConfig type="list" liest die Werte als
+         Zahl ein und bricht bei Text ab ("For input string: ..."). Die
+         Bedeutung tragen Const.LOGO_* im Code.
+         Die Weboberflaeche kennt dieselbe Wahl je Konto; auf der Uhr wird sie
+         hier gesetzt, weil die Uhr die Kontoeinstellung nicht kennt.
+         "Wechselnd" wuerfelt EINMAL JE APP-START, nicht bei jedem Zeichnen —
+         sonst spraenge das Bild waehrend des Dienstes. -->
+    <property id="logoWahl" type="number">0</property>
 </properties>

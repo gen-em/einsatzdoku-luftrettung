@@ -1,4 +1,4 @@
-// Einsatzdoku — Geometrie-Helfer.
+// NAdoku — Geometrie-Helfer.
 //
 // Alle Oberflaechen waren auf 260x260 (Fenix 6 Pro) ausgemessen. Mit der
 // FR945 (240x240) und der Venu 3s (390x390) kamen zwei weitere Groessen dazu.
@@ -7,13 +7,64 @@
 // v * 260 / 260 == v), skaliert sonst linear mit der Displayhoehe.
 //
 // Damit bleibt die Fenix pixelgenau wie zuvor — das ist Abnahmekriterium.
+//
+// EINE AUSNAHME, seit 1.10.3: Die BILDMARKE kann s() nicht folgen.
+// dc.drawBitmap zeichnet 1:1, ein Bitmap skaliert nicht mit. Sie liegt
+// deshalb in vier vorgerasterten Stufen vor (Kachel 60, 73, 101, 118), die
+// monkey.jungle je Geraet zuweist; Zielwert sind dieselben 27 %, die 70/260
+// ergibt. Auf der Fenix wurde die Kachel dabei von 70 auf 73 Pixel groesser —
+// bewusst und ausdruecklich freigegeben, weil das Bezugsgeraet bei vier Stufen
+// mit der 260/280-Gruppe zusammenfaellt. Alles UEBRIGE auf der Fenix ist
+// unveraendert.
 using Toybox.Graphics;
 using Toybox.Lang;
 using Toybox.Math;
+using Toybox.Application.Properties;
+using Toybox.WatchUi;
 
 module Ui {
 
     const REF = 260;                 // Bezugsgeraet: Fenix 6 Pro
+
+    /* Welche Bildmarke zeigt der Startbildschirm?
+     *
+     * WOZU. Die Anwendung dokumentiert Einsaetze luft- WIE bodengebunden. Die
+     * Weboberflaeche traegt dem seit Web 9.9.0 Rechnung (logo_wahl je Konto,
+     * logo_standard je Installation) — die Uhr zeigte bis 1.9.0 dagegen immer
+     * ein Luftfahrzeug, auch im Nachtdienst am Boden. Die Uhr kennt die
+     * Kontoeinstellung nicht, deshalb steht die Wahl hier in den
+     * App-Einstellungen.
+     *
+     * "wechselnd" faellt EINMAL JE APP-START, nicht bei jedem Zeichnen: Der
+     * Startbildschirm wird bei jedem requestUpdate neu gezeichnet — wuerfelte
+     * man dort, spraenge das Bild waehrend des Dienstes.
+     *
+     * Eine unbekannte oder fehlende Einstellung ergibt die Luft-Variante. Ein
+     * Fehler beim Lesen darf den Startbildschirm nicht kosten: Die Bildmarke
+     * ist Zierde, kein Zugang. */
+    var _logoGewuerfelt as Lang.Number or Null = null;
+
+    function logoRes() as WatchUi.BitmapResource {
+        var wahl = Const.LOGO_LUFT;
+        try {
+            var v = Properties.getValue("logoWahl");
+            if (v instanceof Lang.Number) { wahl = v; }
+        } catch (e) {
+            // Vorgabe bleibt stehen.
+        }
+        if (wahl == Const.LOGO_WECHSELND) {
+            var g = _logoGewuerfelt;
+            if (g == null) {
+                g = (Math.rand() % 2 == 0) ? Const.LOGO_BODEN : Const.LOGO_LUFT;
+                _logoGewuerfelt = g;
+            }
+            wahl = g;
+        }
+        return (wahl == Const.LOGO_BODEN
+                ? WatchUi.loadResource(Rez.Drawables.LogoBoden)
+                : WatchUi.loadResource(Rez.Drawables.LogoLuft))
+               as WatchUi.BitmapResource;
+    }
 
     // Laenge v (in Bezugspixeln) auf das aktuelle Display umrechnen
     function s(dc as Graphics.Dc, v as Lang.Number) as Lang.Number {
