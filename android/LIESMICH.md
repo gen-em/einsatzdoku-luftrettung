@@ -106,7 +106,7 @@ Stand C2 (Android 0.7.0), `./gradlew build` im Container:
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
-| Lint-Warnungen | **18** | **0** |
+| Lint-Warnungen | **14** | **0** |
 | Prüffälle | **167**, davon 12 übersprungen | **53**, davon 0 übersprungen |
 | APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
 
@@ -117,9 +117,18 @@ Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 beim Gerätetest zu achten ist; mit C2 sind rund 1,4 MB Data Layer
 dazugekommen (Handy: 0,5 MB).
 
-Alle 18 Warnungen sind derselbe Befund („A newer version of … is available")
-auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich nicht die
-neuesten (Abschnitt 4).
+Alle 14 Warnungen sind derselbe Befund („A newer version of … is available")
+auf `gradle/libs.versions.toml` — und sie hängen **alle** an einer einzigen
+Entscheidung: AGP 9 und Kotlin 2.4 (Abschnitt 4). Was ohne diesen Schritt
+hochzuziehen war, ist mit 0.7.5 hochgezogen: `wear-input` 1.2.0,
+`play-services-wearable` 20.0.1, `zxing` 3.5.4, `test.ext:junit` 1.3.0 —
+**18 → 14 Warnungen**, Baulauf grün.
+
+**Ein Kopplungshinweis zur Uhr-App:** `androidx.wear.compose` 1.6.2 und die
+Compose-BOM 2026.08.00 verlangen einen neueren Compose-Compiler, der an
+Kotlin hängt; Kotlin 2.4 wiederum verlangt AGP 9. Die vier AndroidX-Bausteine
+(`core-ktx`, `lifecycle`, `activity-compose`, `camera`) ziehen dieselbe Kette.
+Es sind also nicht 14 Entscheidungen, sondern **eine**.
 
 Bis 0.7.3 war eine 19. dabei: `BatteryLife`. Sie ist mit **E-S4-52**
 verschwunden — die App fordert die Akku-Freistellung nicht mehr über den

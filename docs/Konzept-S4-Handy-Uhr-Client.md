@@ -953,11 +953,32 @@ aber **nicht auf die sichtbaren Texte der App selbst** — die liest dieselbe
 NutzerIn, die auch die Weboberfläche liest. Sie sind die ältesten Texte des
 Projekts und damit die wahrscheinlichste Fundstelle.
 
-Der Zerleger (`zerlegen.py`) kennt PHP und JavaScript; für XML und Monkey C
-braucht er je eine Regel oder — einfacher — die Bereiche d und e ziehen nur
-die Textwerte aus dem XML, wo Kommentare ohnehin getrennt stehen. Dazu die
-drei Homonym-Ausnahmen aus der C2-Handzählung (`design-bildmarke`-Art:
-Alternativtext des Luftlogos zweimal, `RTH` als Logowahl).
+**Die Regel, aufgestellt (auf Ansage, 01.09.2026):**
+
+> **Jeder sichtbare Text der Anwendung läuft durch die Wortliste — gleich, in
+> welchem Client er steht.** Ein Bereich fehlt nicht, weil ein Verzeichnis
+> jung ist; er fehlt, weil ihn niemand eingetragen hat. Wer einen Client
+> hinzufügt, trägt seine Textdateien im selben Paket ein, in dem der Client
+> entsteht. Ein Lauf, der einen Client übergeht, meldet keine Null — er
+> meldet gar nichts.
+
+Daraus folgt für die Bereichsliste: **d** (Android, Handy und Uhr) und **e**
+(Garmin) sind keine Erweiterung, sondern das Nachholen einer Pflicht, die mit
+`android/` in B1 entstand und mit `watch/` schon vorher bestand.
+
+**Arbeitsteilung (auf Ansage):** Bereich **d** trägt Block D nach — dort wird
+ohnehin am Server- und Werkzeugcode gearbeitet. Bereich **e**, die **Prüfung
+des Garmin-Uhrcodes, geht an eine andere Instanz**; sie braucht Kenntnis der
+Monkey-C-Ressourcen und der historischen Begriffe, und ihr Ertrag ist
+vermutlich der größere (die ältesten Texte des Projekts). Dieses Konzept
+führt sie deshalb als **Zuarbeit**, nicht als eigenes Paket.
+
+Technisch für **d**: Der Zerleger (`zerlegen.py`) kennt PHP und JavaScript;
+für Android-XML braucht er keine neue Regel, weil `<string>`-Werte und
+Kommentare dort ohnehin getrennt stehen — es genügt, die Textwerte zu ziehen.
+Dazu die drei Homonym-Ausnahmen aus der C2-Handzählung (Alternativtext des
+Luftlogos zweimal, `RTH` als Logowahl), begründet nach demselben Muster wie
+`design-bildmarke` und `fahrzeugtypen`.
 
 ### B-S4-07 — Die Kopplungsseite verlangte, was der QR-Code mitbringt (behoben)
 
@@ -2100,3 +2121,112 @@ der richtige.
 **Nicht geprüft** (E-R45-7): ob die allgemeine Liste auf einem Samsung-Gerät
 so heißt und so aussieht, wie der Text es beschreibt, und ob die Freistellung
 dort hält. Beides gehört auf die Prüfliste des Gerätetests.
+
+---
+
+### Nachtrag · Android 0.7.5 — was ohne AGP 9 hochzuziehen war
+
+Auf die Frage, ob die Fassungshinweise zu beseitigen sind: **vier von
+achtzehn, ja.** `wear-input` 1.2.0, `play-services-wearable` 20.0.1,
+`zxing` 3.5.4 und `test.ext:junit` 1.3.0 laufen ohne Weiteres —
+**18 → 14 Warnungen**, 220 Prüffälle grün, 0 Lint-Fehler.
+
+Die verbleibenden **14 sind nicht vierzehn Entscheidungen, sondern eine:**
+`androidx.wear.compose` 1.6.2 und die Compose-BOM 2026.08.00 verlangen einen
+neueren Compose-Compiler; der hängt an Kotlin, Kotlin 2.4 an AGP 9. Dieselbe
+Kette ziehen `core-ktx`, `lifecycle`, `activity-compose` und die vier
+`camera`-Bausteine. AGP 9 ist ein Umbau der Bau-Sprache (Begründung in B1,
+Abschnitt 4 der `LIESMICH`) — er gehört in eine eigene, absichtliche Runde
+und nicht in eine Korrekturfassung.
+
+**Stummgeschaltet wird weiterhin nichts** (CLAUDE.md 6). Die 14 stehen und
+werden gezählt; sie sind der Preisschild an einer aufgeschobenen
+Entscheidung, und genau das sollen sie sein.
+
+---
+
+## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
+
+Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.
+Dieser Abschnitt hält fest, **was davon die bereits gebaute Umsetzung
+betrifft**. Er ist keine Änderung am Code, sondern die Liste dessen, was
+nachzuziehen ist, sobald das S5-Konzept vorliegt.
+
+### Der Befund in einem Satz
+
+**Die Kopplung ist umgekehrt worden, und mein B2 ist nach dem alten Modell
+gebaut.**
+
+| | gebaut (B2, Android 0.2.0) | R49 / S5 |
+|---|---|---|
+| Wer erzeugt den Code | **das Web** | **das Gerät** |
+| Wer tippt ihn ein | die App (oder scannt ihn) | ein Mensch **im Browser** |
+| Was der QR trägt | Adresse **und** Code | **nur die Adresse**, für Selbsthoster |
+| Server-Adresse | Pflichteingabe | Vorgabe **`nadoku.gen-em.org`** |
+| Bestätigung | keine | **Rückbestätigung am Gerät** mit maskierter E-Mail |
+| `pair.php` | ein Anliegen | **drei**: `start` / `status` / `bestaetigen` |
+| Ausweis des Geräts | der Code | **Kopfzeilen** |
+| Speicherung | `pair_codes` | **Sitzungstabelle** (schwebende Zugangsdaten) |
+
+`E-R45-2` ist damit geändert; `E-S4-12` und `E-S4-15` dieses Konzepts stehen
+auf dem überholten Stand.
+
+### Was das konkret trifft
+
+**Betroffen (wartet auf Vertragsabschnitt 1a aus dem S5-Konzept):**
+
+| Datei | was daran überholt ist |
+|---|---|
+| `kopplung/Kopplungsdienst.kt` | `koppeln(basis, code, geraet)` sendet einen Code, den es künftig zu **empfangen** gilt |
+| `kopplung/QrInhalt.kt` | Format `{"server":…,"code":…}` — der `code` entfällt |
+| `kopplung/Kopplungscode.kt` | Alphabet und Länge bleiben, aber der Code kommt vom Server statt zur NutzerIn |
+| `kopplung/Serveradresse.kt` | braucht eine **Vorgabe**, keine Pflichteingabe |
+| `KopplungAnsicht.kt` | der ganze Bedienweg; die Rückbestätigung fehlt vollständig |
+| `KopplungTest`, `KopplungRundlaufTest`, `QrInhaltTest` | prüfen den alten Ablauf |
+
+**Nicht betroffen — und das ist der größere Teil:** B3 (Aufzeichnung), B4
+(Senden), B5 (Phasen und Einsätze), C1 und C2 hängen an den
+Vertragsabschnitten 3 und 4 (`ingest.php`), nicht an 1a. Der Rahmenplan sagt
+dasselbe: „das Kopplungsmodul von Block B wartet auf das S5-Konzept, B2/B3
+laufen im Übrigen weiter".
+
+Auch der **Geräteblock** nach R42 (E-S4-28: `art`, `hersteller`, `modell`, …)
+bleibt gültig — er wandert nur von `koppeln` nach `bestaetigen`.
+
+### Eine Ironie, die festgehalten gehört
+
+Android **0.7.1** hat die Kopplungsseite verbessert: Das Adressfeld verschwand
+aus der Wahlseite, weil „der QR-Code Adresse **und** Code mitbringt"
+(B-S4-07). Mit R49 stimmt die Hälfte davon nicht mehr — der QR trägt nur die
+Adresse.
+
+Die Änderung war trotzdem richtig und bleibt es: Sie hat ein Feld entfernt,
+das nicht auf die Wahlseite gehört, und das gilt erst recht, wenn es eine
+**Vorgabeadresse** gibt. Die Seite wird mit S5 **einfacher**, nicht
+komplizierter — im Regelfall tippt niemand mehr eine Adresse ein.
+
+### Was daraus folgt
+
+1. **Nichts wird jetzt umgebaut.** Das S5-Konzept entsteht erst nach S2 und
+   dem R42-Kleinstpaket; ein Umbau davor wäre ein zweites Mal am selben Code
+   (K4-Gedanke: sammeln, nicht nebenbei beheben).
+2. **Block A bleibt gesperrt, und zwar doppelt:** durch die fehlende Freigabe
+   und durch den Rahmenplan selbst — „Nicht parallel: S4 Block A zu S2 und
+   S3", weil `spur_lib.php`, Tagesansicht, Geräteseite und der
+   Vertragsnachtrag dieselben Dateien berühren wie S2/AP10 und das
+   Kleinstpaket. Der QR der Geräteseite (A1) trägt außerdem seit R49 einen
+   anderen Inhalt.
+3. **Das Kopplungsmodul wird als Ganzes neu geschnitten**, nicht geflickt.
+   Der Umfang steht oben; er ist überschaubar, weil er sauber in einem Paket
+   liegt.
+4. **Zwei Zahlen zum Umfang:** Die sechs betroffenen Quelldateien umfassen
+   rund 600 Zeilen, die vier Prüfklassen 39 der 220 Prüffälle. Alles andere
+   bleibt.
+
+### Bestätigt durch den Rahmenplan
+
+Was ich gebaut habe, steht dort ausdrücklich als paralleler Weg: „**Jetzt
+parallel zu R42-Kleinstpaket und S2:** … **S4 Blöcke B und C** (Handy- und
+Uhr-App)". Der Schnitt B vor C und die Reihenfolge innerhalb von B waren
+richtig; einzig die Kopplung hätte nach dem Rahmenplan-Schnitt „in Block B
+zuletzt" gehört — was zum Zeitpunkt der Beauftragung so noch nicht dastand.
