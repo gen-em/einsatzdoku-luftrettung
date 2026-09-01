@@ -4,11 +4,13 @@ Zur Phase S2 („Mengen, Spurspeicherung und Sicherung"). Das Prüfprotokoll im
 Konzept beantwortet *„ist es belegt?"*; dieses Dokument beantwortet *„was muss
 ich noch tun?"*.
 
-> **Dieses Dokument ist noch nicht vollständig.** **AP8 (Komplettbackup der
-> Installation) ist nicht gebaut.** Alles, was hier steht, gilt für AP0 bis
-> AP7 und AP9. Die Phase ist damit **nicht abgeschlossen** — was folgt, ist der
-> Stand von zehn Arbeitspaketen, nicht von elf. Kapitel 1 sagt, was das für
-> den Betrieb bedeutet.
+> **Stand: AP0 bis AP9 sind gebaut**, AP10 (Abschluss) läuft. Was hier steht,
+> ist damit vollständig für die Sache — offen sind Doku-Nachträge und die
+> Statuszeile im Rahmenplan, nicht Funktionen.
+>
+> **Der wichtigste Punkt dieses Dokuments ist Nummer 11 der Prüfliste:** den
+> Wiederanlauf einmal wirklich durchspielen. Alles andere ist hier belegt; das
+> nicht, und es lässt sich hier auch nicht belegen. Kapitel 1.1 sagt, warum.
 
 ---
 
@@ -16,18 +18,24 @@ ich noch tun?"*.
 
 Das steht an erster Stelle und nicht in einer Fußnote.
 
-### 1.1 Das Komplettbackup gibt es noch nicht (AP8)
+### 1.1 Der Wiederanlauf ist nie an einem echten Ausfall geprobt worden (AP8)
 
-E-S2-19 bis E-S2-21 sind **nicht umgesetzt**. Es gibt keinen SQL-Dump der
-Installation, keinen Weg „Installation wiederherstellen" und keinen Push eines
-Komplettbackups auf ein Sicherungsziel.
+Das Komplettbackup **gibt es** seit Web 12.2.0, und der ganze Zyklus ist
+maschinell gefahren (Abschnitt 2.7). Was fehlt, ist die eine Prüfung, die
+zählt: **ein Wiederanlauf unter den Bedingungen, unter denen er stattfindet.**
 
-**Was das für den Betrieb heißt:** Die Rückfallebene für den Verlust des
-*Servers* ist weiterhin das, was sie vorher war — ein Datenbank-Dump vom
-Hoster oder von Hand (`docs/Technik.md`, Runbook). Die Admin-Sicherungen je
-Konto decken den Verlust einzelner Daten ab, nicht den der Installation. Das
-Sicherungsziel aus AP7 schiebt heute die **Kontopakete** hinaus; das
-Komplettbackup wird denselben Weg benutzen, sobald es ihn gibt.
+Alles hier ist auf einer Maschine gemessen worden, auf der die Datei, der
+Schlüssel und die Datenbank griffbereit lagen. Der Ernstfall sieht anders aus:
+neuer Webspace, andere Datenbankzugangsdaten, die `config.php` aus einem
+Ordner, den seit Monaten niemand geöffnet hat — und niemand, der nachsehen
+kann, wie es gemeint war. **Prüfliste Punkt 11** führt genau das durch; er ist
+der wichtigste Punkt dieses Dokuments.
+
+Ebenfalls offen: **`wiederherstellen.php` ist nicht angeklickt worden.** Die
+Seite ist über `curl` gegen einen echten PHP-Server gefahren — mit Formularen,
+Sitzung, Nachweis, Mehrfachdurchgang und allen Sonderfällen — und in acht
+Breiten fotografiert. Ein Klickweg dafür bräuchte eine **leere** Datenbank und
+liesse sich deshalb nicht neben der laufenden Installation bauen.
 
 ### 1.2 Kein echtes Sicherungsziel im Internet
 
@@ -177,6 +185,79 @@ hinaus. Der errechnete Fingerabdruck ist zeichengleich mit dem von
 
 ---
 
+### 2.7 Die Komplettsicherung (AP8)
+
+Gemessen am 5000er-Bestand: **1 121 802 Zeilen in 34 Tabellen**, ohne
+Drosselung.
+
+| | Wert | Ziel |
+|---|---|---|
+| Erzeugen | 8,5 s in **14 Häppchen** | in Häppchen, nie am Stück (E-S2-20) |
+| PHP-Speicherspitze je Häppchen | **26 MB** | ≤ 64 MB (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** | — |
+| Längste Zeile | **1 048 566 Byte** | ≤ 1 MB je INSERT-Stapel |
+| Öffnen (175 Blöcke) | 0,05 s, Spitze 4 MB | — |
+| Auspacken über den Rückweg | 1,24 s | — |
+| Einspielen | 784 Anweisungen in 6,0 s | — |
+
+**Der Rundlauf ist auf drei Wegen gefahren** und dreimal verglichen —
+`mysql` von Hand, die Probe zeilenweise, `wiederherstellen.php` gegen einen
+echten PHP-Server:
+
+| Vergleich Quelle ↔ Rückspielung | Ergebnis |
+|---|---|
+| Tabellen | **34 von 34** |
+| Zeilenzahlen | **34 von 34** |
+| `SHOW CREATE TABLE` zeichengleich | **34 von 34** |
+| `CHECKSUM TABLE … EXTENDED` gleich | **34 von 34** |
+| Sammelprüfsumme aller Spur-Blobs | gleich |
+| Sammelprüfsumme aller `lat`/`lon`/`ele` | gleich |
+
+Über `wiederherstellen.php` mit einem Budget von 4 s: **6 Durchgänge**, jeder
+setzte dort auf, wo der vorige aufhörte (48 → 58 → 69 → 78 → 90 → 100 %).
+
+**Was die Prüfmittel sagen:**
+
+| Mittel | Zahl | was es gemessen hat |
+|---|---|---|
+| `tools/komplettprobe/probe.php` | **76 Erwartungen, 0 offen** | Dump, Siegel, Passphrase, Form, Rückspielung, Wiederanlauf, Aufbewahrung, Versand |
+| `tools/komplettprobe/klickweg.mjs` | **17 Prüfungen, 0 Befunde** | Adminseite im Browser: Dialog, Lauf, beide Downloads mit Inhaltsprüfung, kurze Passphrase, Zeitplan |
+| `tools/versandprobe/probe.php` | **115 Erwartungen, 0 offen** | Regression nach den Änderungen an `sicherungsziel_lib.php` |
+| Bilderlauf, 2 Seiten × 8 Breiten | **16 Bilder, 0 Überlauf** | nach einem Fund, siehe unten |
+| Wortliste | **0 / 0 / 0** | Treffer, ungenutzte Ausnahmen, Fallen |
+| Vollständigkeit | **260 Befunde** | unverändert gegenüber dem Stand vor AP8 |
+| Kontraste | **21 Paare, 0 verfehlt** | — |
+
+**Vier Fehler, die die Prüfmittel gefunden haben** und nicht das Lesen:
+
+1. Ein abgebrochenes Häppchen hätte beim nächsten Lauf ein **zweites
+   `DROP TABLE`** derselben Tabelle geschrieben; beim Einspielen wäre
+   weggeworfen worden, was das erste Häppchen eingefügt hat (F-S2-H).
+2. Der Neuanlauf bei verschwundenem Baustand lief in ein `count(null)` — und
+   das ist genau der Zweig, der **nach einer Wiederherstellung** greift
+   (F-S2-I).
+3. Die Schranke „leere Datenbank" galt vor **jedem** Durchgang; leer ist die
+   Datenbank aber nur vor dem ersten. Abbruch bei **91 %** (F-S2-J).
+4. Der Knopf „Versiegelt herunterladen" stand in einer `.fld-reihe` statt im
+   Fussbereich und schob die Seite bei 360, 390 und 420 px auf
+   (**+74 / +59 / +44 px**).
+
+Dazu zwei Funde ausserhalb der Proben: `gzdecode()` und `inflate_add()` lesen
+nur das **erste** gzip-Glied und melden dabei nichts (gemessen: 13 573 234
+statt 122 469 394 Byte) — die Anwendung benutzt deshalb ausschliesslich
+`gzopen()`/`gzread()`. Und der Nachweis der Wiederherstellung entstand bei
+**jedem** Aufruf, auch auf laufenden Installationen, und fehlte in
+`server/.htaccess`.
+
+**Eine Zahl, die erklärt gehört:** Der Klickweg meldet 1 082 238 statt
+1 121 802 Zeilen. Der Unterschied sind **39 690 Spurpunkte**, die der
+Verdichtungsjob während des Laufs aus `track_points` in `track_blobs`
+geschoben hat (+125 Blobs) — er läuft huckepack an den Anfragen mit. Verloren
+ist nichts; die Zahl ist kleiner, weil dieselben Punkte jetzt in weniger
+Zeilen stehen. Genau das ist der Zweck von AP1 und AP3.
+
+---
+
 ## 3. Was im Browser geprüft wurde
 
 - **Sichern und Wiederherstellen** über den regulären Weg, Fassung 4, am
@@ -192,6 +273,16 @@ hinaus. Der errechnete Fingerabdruck ist zeichengleich mit dem von
   Bedienelemente 44 px.
 - **Der Wartungslauf** über die Befehlszeile führt `versand` mit auf
   (`fertig · erledigt 64 · Rückstand 0`).
+- **Komplettsicherung (AP8):** „Jetzt sichern" mit Bestätigungsdialog, Lauf
+  bis zur Meldung, beide Downloads (Inhalt geprüft: gzip-Magie bzw. `EDKOMP1`
+  und `"pbkdf2"` im Kopf), Abweisung einer zu kurzen Passphrase, Zeitplan
+  setzen und zurückstellen. **17 Prüfungen, 0 Befunde, 0 Konsolenfehler**
+  (`tools/komplettprobe/klickweg.mjs`).
+- **`wiederherstellen.php`** gegen einen eigenen PHP-Server auf einer leeren
+  Datenbank — über `curl`, nicht angeklickt: Nachweis richtig und falsch,
+  Auspacken, Einspielen in 6 Durchgängen, abgeschnittene Datei, Fassung mit
+  Passphrase (richtig und falsch), und die Schranke „ist in Betrieb" auf einer
+  gefüllten Datenbank.
 
 ---
 
@@ -353,6 +444,88 @@ gesichert** — und zwar mit einer roten Meldung oben auf der Seite. Es wird
 nichts gelöscht und nichts überschrieben. Ohne eingerichtetes SMTP steht die
 Warnung **nur** dort; die Mail (1.4) ist ungeprüft.
 
+### ☐ 10. Die erste Komplettsicherung erzeugen und den Zeitplan setzen
+
+**Weg:** Einstellungen → Administration → **Komplettsicherung** →
+*Jetzt sichern*. Danach unter *Regeln* den Plan auf **wöchentlich** stellen
+(oder täglich, wenn die Datenbank es hergibt) und speichern.
+
+**Erwartet:** Nach dem Klick steht in der Meldung „Die Komplettsicherung ist
+fertig: … Zeilen aus … Tabellen, … MB". Auf einem grossen Bestand kann statt
+dessen „Der Durchgang ist zu Ende, der Lauf noch nicht" erscheinen — dann
+*Fortsetzen* drücken, bis der Lauf fertig ist. Unter *Stände* steht danach
+ein Eintrag mit Plakette **jüngster**.
+
+**Scheitern erkennst du daran:**
+- **„Es gibt noch keinen Serverschlüssel"** → erst Punkt 2 erledigen. Ohne ihn
+  wird bewusst nicht gesichert; unversiegelt wird eine Abschrift jeder Tabelle
+  nicht abgelegt.
+- **„Die Speichergrenze für Sicherungen ist erreicht"** → Punkt 9. Es wurde
+  nichts gelöscht.
+- Der Lauf bleibt bei „Fortsetzen" stehen und kommt nicht weiter → die
+  Fehlermeldung nennt die Stelle; sie gehört gemeldet.
+
+### ☐ 11. Den Wiederanlauf einmal wirklich durchspielen — der wichtigste Punkt
+
+**Der Punkt aus 1.1.** Er kostet einen Nachmittag und ist der einzige, der
+beantwortet, ob die Sicherung etwas taugt. Eine Sicherung, die nie
+zurückgespielt wurde, ist eine Vermutung.
+
+**Weg** — auf einem **Wegwerf-Webspace** oder örtlich, **niemals** auf der
+Produktion:
+
+1. Leere Datenbank anlegen.
+2. Die Anwendungsdateien hochladen.
+3. Die `config.php` aus dem Wiederanlaufpaket daneben legen; Datenbankzugang
+   anpassen, **`server_key` unverändert lassen**.
+4. Eine `.edk`-Datei nach `server/sicherungen/eingang/` legen — am besten
+   eine, die du vom **Sicherungsziel** geholt hast, nicht vom alten Server.
+5. `wiederherstellen.php` aufrufen, die Kennung aus der Nachweisdatei
+   eintragen, *Auspacken und prüfen*, dann *Einspielen* bis 100 %.
+6. Anmelden. Dann **Wartung** aufrufen und den Migrationslauf ausführen.
+7. Auf `wiederherstellen.php` *Aufräumen* drücken.
+
+**Erwartet:** Nach Schritt 5 „Die Installation steht wieder". Nach Schritt 6
+zeigt die Wartungsseite keine offenen Migrationen mehr. Deine Konten,
+Diensttage und Einsätze sind da; die Patientendaten öffnen sich mit den
+gewohnten Passwörtern.
+
+**Scheitern erkennst du daran** — und die Meldung sagt jeweils, woran es liegt:
+
+| Meldung | was zu tun ist |
+|---|---|
+| „Diese Installation ist noch nicht eingerichtet" | Schritt 3 fehlt |
+| „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php`, oder die Datenbank existiert nicht |
+| „Diese Installation ist in Betrieb" | die Datenbank ist nicht leer — Schritt 1 |
+| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` ist nicht der, mit dem versiegelt wurde |
+| „Diese Sicherung ist unvollständig — die Endmarke fehlt" | die Datei ist beim Erzeugen abgebrochen; einen älteren Stand nehmen |
+| „gescheitert an Anweisung *n*" | halb eingespielt, **nichts zurückgenommen** — Datenbank leeren und von vorn |
+
+**Was du dabei mitprüfst, ohne es zu merken:** ob dein Wiederanlaufpaket
+vollständig ist. Fehlt der Serverschlüssel, merkst du es hier — und nicht an
+dem Tag, an dem es darauf ankommt.
+
+### ☐ 12. Einen Stand herunterladen und von Hand einspielen
+
+**Weg:** Einstellungen → **Komplettsicherung** → *Herunterladen*. Die Datei
+heisst `einsatzdoku-komplett-….sql.gz` und ist **unverschlüsselt**. Dann:
+
+```sh
+gunzip -c einsatzdoku-komplett-….sql.gz | mysql -uNUTZER -p LEEREDATENBANK
+```
+
+**Erwartet:** Rückgabewert 0, keine Ausgabe. Danach stehen alle Tabellen in
+der Zieldatenbank.
+
+**Scheitern erkennst du daran:** `mysql` bricht mit einer Fehlermeldung ab und
+nennt die Zeile. Dann gehört die Datei gemeldet — sie sollte sich einspielen
+lassen, das ist ihr Zweck (E-S2-20).
+
+**Zusätzlich einmal:** *Versiegelt herunterladen* mit einer Passphrase, die
+Datei auf einen anderen Rechner legen und mit dem Python-Weg aus
+`docs/Backup-Format.md` 6.6 öffnen. Damit ist belegt, dass die Datei auch ohne
+diese Anwendung zu öffnen ist — der Fall, in dem es sie nicht mehr gibt.
+
 ---
 
 ## 5. Bekannte offene Punkte
@@ -361,7 +534,9 @@ Kein Grund zur Beunruhigung, aber zu wissen:
 
 | Nr. | Was |
 |---|---|
-| **AP8** | Das Komplettbackup fehlt (1.1) |
+| **Wiederanlauf** | Nie an einem echten Ausfall geprobt (1.1) — Prüfliste Punkt 11 |
+| Backlog **54** | Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang |
+| Backlog **55** | Die Komplettsicherung kennt keinen scharfen Schnappschuss |
 | Backlog **49** | Auf dem Sicherungsziel wird nie aufgeräumt |
 | Backlog **50** | Der Versand liest je Konto ein Verzeichnis — bei hunderten Konten zu messen |
 | Backlog **51** | Die Suchseite verarbeitet 5 000 Einträge, um 200 zu zeigen |
@@ -410,6 +585,26 @@ Zeichen.
 Der Faktor 6 bremst die **Rechenzeit** — nicht den Speicher, nicht die Grafik,
 nicht die Leitung und nicht den langsameren Flash eines echten Geräts. Eine
 Zahl knapp unter dem Zielwert ist damit kein Beleg.
+
+### 6.3a Was die Komplettprobe nicht abdeckt
+
+Sie arbeitet in einer **Kopie** des Serververzeichnisses unter `/tmp`, liest
+aber aus der **echten** Datenbank — ein Dump gegen einen Spielbestand prüfte
+nichts. Daraus folgen ihre Grenzen:
+
+- **Die Oberfläche nur zur Hälfte.** `klickweg.mjs` deckt die Adminseite ab;
+  `wiederherstellen.php` bräuchte eine leere Datenbank und ist deshalb nur
+  über `curl` gefahren.
+- **Keine volle Platte.** Die Speichergrenze ist als Rechnung geprüft.
+- **Kein echter Absturz mitten in der Anfrage.** Nachgestellt ist er (der
+  Zustand wird zurückgedreht, die Datei behält, was das Häppchen schrieb),
+  erlebt nicht.
+- **Kein Migrationslauf.** Er gehört einer angemeldeten Administration.
+- **Nur MariaDB 10.11.** Ob ein anderer Server dieselben `SHOW CREATE TABLE`
+  zurückgibt, ist damit nicht gesagt.
+- **Die Zeiten sind ungedrosselt** und stammen von der
+  Entwicklungsmaschine. Die **Speicherspitze** dagegen ist eine Aussage: Sie
+  hängt an der Häppchengrösse, nicht an der Maschine.
 
 ### 6.4 Was der Bilderlauf nicht sieht
 
