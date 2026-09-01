@@ -1596,3 +1596,87 @@ Gehört als Bedienweg ins Prüfdokument.
 Bild — sie hängen an einem Bestand mit zwei zusammenführbaren Diensttagen,
 der im Demo-Konto nicht ohne Vorarbeit herzustellen ist. Belegt ist der
 gemeinsame Baustein.
+
+---
+
+### AP9 — Suche (J)
+
+**Stand:** erledigt. Web 12.4.0. **Funktionsänderung.**
+
+#### Was geändert wurde
+
+- **`KATALOG_ART`** entsteht in `suche.php` **aus `mission_fields.php`**
+  (samt Unterfeldern, gefiltert über `mf_ist_spalte()`) und nennt je Spalte
+  ihre Art.
+- **14 Filter** tragen jetzt ihre Katalogspalte in der Definition.
+- **`GRUPPE_NUR_WENN` und `FELD_NUR_WENN` sind ersatzlos entfallen**, dazu
+  die alte `gruppenSichtbarkeit()`. An ihre Stelle treten drei kleine
+  Funktionen: `wertGefuellt()` (was heißt „leer" bei dieser Art),
+  `spaltenMitBestand()` (ein Durchgang über den Bestand) und
+  `filterKasten()` (welches Element versteckt wird).
+- Handbuch nachgezogen.
+
+#### E-S3-08, wörtlich und sinngemäß — eine benannte Abweichung
+
+E-S3-08 sagt: „Die Suche fragt den Bestand **einmal je Seitenaufruf ab** —
+**eine** Abfrage über alle katalogisierten Filterfelder, kein
+Feld-für-Feld-Scan."
+
+**Diese Abfrage gibt es bereits, und eine zweite wäre dieselbe Auskunft
+doppelt geholt.** Seit Web 5.10.0 lädt `api/suchindex.php` den **gesamten**
+aktiven Bestand einmal je Seitenaufruf in den Browser — fünf SQL-Abfragen,
+unabhängig von der Zahl der Einsätze, und der Endpunkt nimmt bewusst keine
+Parameter entgegen (die geschützten Felder gehen als Chiffretext mit, der
+Server filtert nicht). Die Suche filtert danach vollständig lokal.
+
+Umgesetzt ist deshalb der **Sinn** des Beschlusses und nicht sein Wortlaut:
+
+| E-S3-08 verlangt | umgesetzt |
+|---|---|
+| einmal je Seitenaufruf abfragen | ja — `api/suchindex.php`, **1** Abruf je Aufruf, im Netzwerkmitschnitt gezählt |
+| eine Abfrage, kein Feld-für-Feld-Scan | ja — **ein** Durchgang über den Bestand für **alle** Spalten, nicht einer je Filter |
+| Regel an der Filtererzeugung aus dem Feldkatalog | ja — `KATALOG_ART` wird aus `mission_fields.php` erzeugt |
+| keine Liste im Code, welche Felder „optional" sind | ja — beide Listen entfallen |
+| Z3-Grenzen halten | ja — **keine** neue Serverabfrage; der Zusatzaufwand ist ein JS-Durchgang von **0,06 ms** bei 82 Einsätzen |
+
+**Der Weg über eine zusätzliche SQL-Abfrage wäre schlechter gewesen:** Er
+holte Auskünfte, die schon im Browser liegen, und die Sichtbarkeit hinge
+danach an zwei Quellen, die auseinanderlaufen können.
+
+#### Ein Punkt aus 3.7, den die Umsetzung anders beantwortet
+
+3.7 nennt als Grenzfall: „Suche per URL-Parameter auf ein ausgeblendetes Feld
+(**wird ignoriert**, kein Fehler)." Der Bestand macht seit Web 5.10.0 das
+Gegenteil, und das ist besser: Der Filter **erscheint**. Ein gesetzter, aber
+unsichtbarer Filter hielte die Trefferliste leer, ohne dass sich finden ließe,
+warum — und ohne dass er sich zurücknehmen ließe. Ihn zu ignorieren hieße,
+einen geteilten Link stillschweigend anders auszuführen, als er lautet.
+**Verhalten beibehalten, im Handbuch beschrieben.**
+
+#### Prüfstand AP9
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Konto **mit** Bestand | Browserprobe, Sichtbarkeit je Block und je Filterkasten gelesen | fünf Blöcke sichtbar, **0** ausgeblendete Filter |
+| Konto **ohne** Bestand (frisches Admin-Konto) | dieselbe Probe | Blöcke **Transport** und **Bergrettung** aus, **12** Filter ausgeblendet; die elf immer sinnvollen bleiben |
+| geteilter Link auf ein ausgeblendetes Feld | `suche.php#wi=j` auf dem leeren Konto | Block Bergrettung kommt zurück, **genau** `f-wi` erscheint, die übrigen elf bleiben aus |
+| **Gegenprobe: Bestand anlegen** | über die Oberfläche: Diensttag anlegen, Einsatz mit Fehleinsatz anlegen, Suche erneut öffnen | vorher `f-fe` **aus**, nachher **an** — und `f-se`, `f-ta`, `f-wi` sowie beide Blöcke bleiben aus. Es erscheint genau das Feld, dessen Spalte Bestand bekommen hat |
+| kein N+1 | Netzwerkmitschnitt je Seitenaufruf | `api/suchindex.php`: **1** Abruf, in allen vier Läufen |
+| Aufwand | `performance.now()` über 200 Durchgänge | **0,06 ms** je Durchgang bei 82 Einsätzen |
+| Konsolenfehler | dieselben Läufe | 0 |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 / 0 / 0 |
+| Nichts verlorengegangen / Texte | `pruefen.py`, `wortliste.py` | 260 wie Basis · 0 / 0 / 0 |
+
+**Nicht geprüft und warum:** Die Messung am **5 000-Einsätze-Konto** (S2,
+`tools/messstand/`) ist **nicht** gefahren. Sie prüft Serverbudgets, und
+dieses Paket fügt **keine** Serverabfrage hinzu — `api/suchindex.php` ist
+unverändert, die Sichtbarkeit entsteht im Browser. Was wächst, ist ein
+JS-Durchgang, der linear mit dem Bestand geht: aus 0,06 ms bei 82 Einsätzen
+folgen rund **4 ms** bei 5 000. Gemessen ist die kleine Zahl, die große ist
+gerechnet — das steht so im Prüfdokument.
+
+**Ebenfalls nicht geprüft:** ein Bestand, in dem eine Auswahlspalte
+ausschließlich den Wert **0** trägt (etwa „0 Cycles" ohne jeden anderen
+Windeneintrag). Der Code behandelt das ausdrücklich — bei einer Auswahl ist
+die Null eine Angabe —, ein solcher Bestand ließ sich aber nicht ohne
+Weiteres herstellen. Bedienweg fürs Prüfdokument.

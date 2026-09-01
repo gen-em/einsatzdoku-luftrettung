@@ -1178,18 +1178,23 @@ auf, in denen etwas gesetzt ist. Alle gesetzten Filter gelten gleichzeitig
 Rettungsmittel, Besatzung, Bergwacht-Bereitschaft, weitere Rettungsmittel und Zielklinik
 enthalten nur, was in deinem Bestand tatsächlich vorkommt.
 
-**Bergrettung nur, wenn es sie gibt.** Der Block erscheint nur dann, wenn
-wenigstens ein Einsatz deines Bestandes eine Winden- oder eine
-Bergwacht-Angabe trägt. Wer nie windet und nie mit der Bergwacht arbeitet, hat
-diese acht Felder also gar nicht erst in der Leiste stehen — sie könnten dort
-nur Filter setzen, die garantiert null Treffer ergeben. Dasselbe gilt seit
-Web 7.0.0 für das einzelne Feld **Fehleinsatz**: Es steht in einem Block, der
-bleiben muss, und erscheint deshalb feldweise nur, wenn im Bestand einer
-dokumentiert ist. Maßgeblich ist der
-**gesamte** Bestand, nicht die aktuelle Trefferliste: Die Leiste verändert sich
-also nicht, während du filterst. Öffnest du einen geteilten Link, der einen
-dieser Filter setzt, bleibt der Block sichtbar — sonst wäre ein Filter gesetzt,
-den du nicht finden und nicht zurücknehmen könntest.
+**Ein Filter erscheint nur, wenn im Bestand etwas dahintersteht** (seit
+Web 12.4.0 für alle Filter, vorher nur für den Block Bergrettung und das Feld
+Fehleinsatz). Wer nie windet, hat die Windenfelder gar nicht erst in der
+Leiste; wer keinen Transport dokumentiert, keine Transportfelder. Sie könnten
+dort nur Filter setzen, die garantiert null Treffer ergeben. **Ein Block
+verschwindet**, sobald alle seine Felder verschwunden sind.
+
+**Immer da bleibt, was immer sinnvoll ist:** Zeitraum, Uhrzeit, Wochentag,
+Strecke, Dauer, Alter, Standort, Rettungsmittel, Art, Besatzung und weitere
+Rettungsmittel. Auf einem frisch angelegten Konto stehen genau diese in der
+Leiste.
+
+Maßgeblich ist der **gesamte** Bestand, nicht die aktuelle Trefferliste: Die
+Leiste verändert sich also nicht, während du filterst. Öffnest du einen
+geteilten Link, der einen ausgeblendeten Filter setzt, erscheint **er** —
+sonst wäre ein Filter gesetzt, den du nicht finden und nicht zurücknehmen
+könntest.
 
 Eine Besonderheit:
 

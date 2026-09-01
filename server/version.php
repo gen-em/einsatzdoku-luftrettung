@@ -1830,5 +1830,30 @@ declare(strict_types=1);
  * Dazu die Wahlliste als schlichte Liste statt vier umrandeter Einzelzeilen:
  * 248 auf 224 px bei gleicher Zeilenhoehe.
  *
+ * 12.4.0 BLENDET FILTER OHNE BESTAND AUS (S3/AP9, E-S3-08) --
+ * FUNKTIONSAENDERUNG, deshalb die Nebennummer.
+ *
+ * Bis hierher galt die Regel fuer den Block „Bergrettung" und das Einzelfeld
+ * „Fehleinsatz", und sie stand als ZWEI HANDGEPFLEGTE LISTEN im Code
+ * (GRUPPE_NUR_WENN, FELD_NUR_WENN) -- genau der Einzelfall-Wildwuchs, den der
+ * Feldkatalog abschaffen sollte. Jedes neue Feld haette einen dritten Eintrag
+ * gebraucht, und wer ihn vergisst, merkt es nie: Ein dauerhaft leerer Filter
+ * sieht aus wie ein Filter.
+ *
+ * JETZT ENTSTEHT DIE REGEL AUS DEM KATALOG. Jeder Filter, der zu einer
+ * Katalogspalte gehoert, traegt sie; KATALOG_ART sagt (aus
+ * mission_fields.php erzeugt), welcher Art sie ist -- denn „gefuellt" heisst
+ * je nach Art etwas anderes: Bei einem Haken zaehlt nur wahr, bei einer
+ * Auswahl ist auch die Null eine Angabe. Ein Filter OHNE Spalte -- Zeitraum,
+ * Uhrzeit, Wochentag, Strecke, Dauer, Alter, Standort, Rettungsmittel,
+ * Besatzung -- ist immer sinnvoll und bleibt. Ein Block verschwindet, wenn
+ * alle seine Filter verschwunden sind; eine eigene Bedingung braucht er nicht
+ * mehr.
+ *
+ * KEINE ZUSAETZLICHE SERVERABFRAGE. Der ganze Bestand liegt seit Web 5.10.0
+ * ohnehin im Browser (api/suchindex.php, einmal je Seitenaufruf, fuenf
+ * SQL-Abfragen unabhaengig von der Zahl der Einsaetze). Die Sichtbarkeit
+ * entsteht in EINEM Durchgang darueber, gemessen 0,06 ms bei 82 Einsaetzen.
+ *
  */
-const WEB_VERSION = '12.3.3';
+const WEB_VERSION = '12.4.0';

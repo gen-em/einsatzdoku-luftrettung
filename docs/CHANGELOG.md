@@ -11,6 +11,60 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.4.0] — 2026-09-01
+
+**Filter erscheinen nur, wenn im Bestand etwas dahintersteht.** Neuntes
+Arbeitspaket von S3. **Funktionsänderung.** Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Bisher galt die Regel für zwei Fälle, und sie stand zweimal im Code
+
+Seit Web 5.10.0 verschwand der Block **Bergrettung**, wenn niemand windet;
+seit Web 7.0.0 auch das Einzelfeld **Fehleinsatz**. Beides stand als
+handgepflegte Liste im Code — `GRUPPE_NUR_WENN` mit einer Bedingung je Block,
+`FELD_NUR_WENN` mit einer je Feld.
+
+Das ist genau der Einzelfall-Wildwuchs, den der Feldkatalog abschaffen sollte:
+Jedes neue Feld hätte einen dritten Eintrag gebraucht, **und wer ihn vergisst,
+merkt es nie** — ein dauerhaft leerer Filter sieht aus wie ein Filter.
+
+### Web — Jetzt entsteht die Regel aus dem Katalog
+
+Jeder Filter, der zu einer Spalte des Feldkatalogs gehört, trägt sie in seiner
+Definition; `KATALOG_ART` — **aus `mission_fields.php` erzeugt**, samt
+Unterfeldern — sagt, welcher Art sie ist. Die Art entscheidet, was „leer"
+heißt: Bei einem **Haken** zählt nur `wahr`, bei einer **Auswahl** ist auch
+die Null eine Angabe („0 Cycles" heißt, dass jemand hingesehen hat).
+
+**Ein Filter ohne Spalte bleibt immer stehen** — Zeitraum, Uhrzeit, Wochentag,
+Strecke, Dauer, Alter, Standort, Rettungsmittel, Art, Besatzung, weitere
+Rettungsmittel. Auf einem frisch angelegten Konto stehen genau diese elf in
+der Leiste, und die Blöcke **Transport** und **Bergrettung** fehlen ganz: Ein
+Block verschwindet, wenn alle seine Filter verschwunden sind, und braucht
+dafür keine eigene Bedingung mehr. `GRUPPE_NUR_WENN` und `FELD_NUR_WENN` sind
+ersatzlos entfallen.
+
+**Gemessen an zwei echten Konten:**
+
+| | Blöcke | ausgeblendete Filter |
+|---|---|---|
+| Konto mit vollem Bestand | alle fünf sichtbar | **0** |
+| frisches Konto ohne Einsatz | Transport und Bergrettung fehlen | **12** |
+| frisches Konto, geteilter Link `#wi=j` | Bergrettung kommt zurück | **11** — genau der gesetzte Filter erscheint |
+
+**Die Gegenprobe in die andere Richtung**, über die Oberfläche gefahren: Auf
+dem leeren Konto einen Diensttag und einen Einsatz **mit Fehleinsatz**
+angelegt — danach steht **genau** der Filter „Fehleinsatz" da, und alle
+übrigen bleiben ausgeblendet.
+
+### Web — Ohne zusätzliche Serverabfrage
+
+Der gesamte Bestand liegt seit Web 5.10.0 ohnehin im Browser
+(`api/suchindex.php`, **einmal** je Seitenaufruf, fünf SQL-Abfragen
+unabhängig von der Zahl der Einsätze). Die Sichtbarkeit entsteht daraus in
+**einem** Durchgang — nicht in einem je Filter. Gemessen **0,06 ms** bei 82
+Einsätzen; der Aufwand wächst linear mit dem Bestand.
+
 ## [Web 12.3.3] — 2026-09-01
 
 **Formularbausteine und Ortssuche.** Achtes Arbeitspaket von S3. Eine
