@@ -313,7 +313,8 @@
   --schalter-breit:46px;               /* der Schalter aus E-P3-28 … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
   --schalter-punkt:20px;               /* 44-px-Zeile passt und greifbar bleibt */
-  --geo-kreis:36px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-kreis:32px;                    /* Einsatzort-Kreis auf der Karte */
+  --geo-schild:36px;                   /* Kästchen für Standort und Zielklinik */
   --geo-ring:3px;                      /* Ringstärke Start/Ende am Schild */
   --anmeldekarte:400px;                /* Karte der Anmeldung (E-P3-38) */
   --zeile-frei:1.4em;                  /* Mindesthöhe der Zustandszeile */
@@ -1911,10 +1912,19 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
  * Ort als Doppelring. Richtungspfeile erscheinen erst ab einer Zoomstufe,
  * bei der sie nicht gedrängt stehen.
  */
+/* KEIN NAMENSSCHILD MEHR (S3/AP7). Die Spalte traegt seit S3 genau ein Kind;
+ * `gap` und `flex-direction` bleiben trotzdem stehen, weil die Ringklassen
+ * darauf aufsetzen und ein Marker mit zwei Kindern jederzeit wiederkommen
+ * kann — dann aber mit ausdruecklichem `iconSize` (siehe geo.js). */
 .geo-schild{display:flex;flex-direction:column;align-items:center;gap:var(--abstand-1)}
+/* ENGER (S3/AP7): 36 statt 44 px. Die 44 kamen von `--knopf` — der Kasten
+ * ist aber kein Bedienelement, sondern eine Zeichnung, und die 44-px-Regel
+ * gilt fuer das, was man DRUECKT. Das Symbol darin bleibt bei 20 px; was
+ * verschwindet, ist Weissraum zwischen Symbol und Rand (12 px ringsum
+ * vorher, 8 px jetzt). */
 .geo-schild-kasten{
   display:flex;align-items:center;justify-content:center;
-  width:var(--knopf);height:var(--knopf);
+  width:var(--geo-schild);height:var(--geo-schild);
   background:var(--schnee);color:var(--dunkelblau);
   border:var(--strich-stark) solid var(--dunkelblau);
   border-radius:var(--radius);
@@ -1936,19 +1946,14 @@ pre{overflow-x:auto;background:var(--rauch);padding:var(--abstand-3);border-radi
              0 0 0 calc(var(--geo-ring) * 3) var(--schnee),
              0 0 0 calc(var(--geo-ring) * 4) var(--rot);
 }
-.geo-schild-text{
-  background:var(--schnee);color:var(--asphalt);
-  font:600 var(--groesse-2)/1.3 var(--schrift-text);
-  padding:var(--abstand-1) var(--abstand-2);
-  border-radius:var(--radius-klein);
-  box-shadow:var(--schatten);
-  white-space:nowrap;
-}
+/* OHNE WEISSE UMRANDUNG UND ETWAS KLEINER (S3/AP7). Der weisse Rand war ein
+ * Rest aus der Zeit vor dem Schatten: Er sollte den Kreis von der Karte
+ * abheben. Das tut der Schatten, und der Rand machte den Kreis zusaetzlich
+ * um 4 px breiter, als er aussah. 32 statt 36 px. */
 .geo-kreis{
   display:flex;align-items:center;justify-content:center;
   width:var(--geo-kreis);height:var(--geo-kreis);
   background:var(--orange);color:var(--dunkelblau);
-  border:var(--strich-stark) solid var(--schnee);
   border-radius:var(--radius-rund);
   box-shadow:var(--schatten);
 }

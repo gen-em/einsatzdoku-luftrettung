@@ -11,6 +11,73 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.3.2] — 2026-09-01
+
+**Der Markerversatz — der eine echte Fehler der Rückmeldungsliste.** Siebtes
+Arbeitspaket von S3. Keine Migration, keine Schnittstellenänderung.
+
+### Web — Warum die Marker beim Herauszoomen nach Osten wanderten
+
+Die Schilder von Standort und Zielklinik saßen umso weiter östlich, je weiter
+herausgezoomt wurde. Die Ursache ist eine **Kette aus drei Gliedern, von
+denen jedes für sich richtig aussah**:
+
+1. `.geo-schild` ist eine Flex-**Spalte** mit `align-items: center`. Ihr
+   Wurzelelement wird damit so breit wie ihr **breitestes** Kind.
+2. Das breiteste Kind war das **Namensschild** (`white-space: nowrap`) —
+   nicht der 44-px-Kasten. Bei „Klinikum Immenstadt" rund 150 px.
+3. `iconSize: null` lässt Leaflet die Größe aus dem Markup nehmen, und
+   `iconAnchor: [22, 22]` verankerte damit 22 px vom linken Rand **des
+   Wurzelelements** — also rund 50 px links der Kastenmitte.
+
+Das ergibt einen **konstanten Pixelversatz**, und genau das machte ihn so
+schwer zu fassen: Herausgezoomt sind dieselben 50 px Kilometer,
+hereingezoomt Meter. Er wuchs mit der Länge des Namens.
+
+**Nachgemessen, nicht angesehen** — Abstand zwischen dem Ankerpunkt der
+Koordinate und der Mitte des gezeichneten Kastens, über sechs Zoomstufen:
+
+| | vorher | nachher |
+|---|---|---|
+| Versatz waagerecht | **51,7 px** | **0,0 px** |
+| Versatz senkrecht | −4,0 px | **0,0 px** |
+| über sechs Zoomstufen | unverändert | unverändert |
+
+### Web — `iconSize` steht jetzt überall ausdrücklich
+
+Mit dem Wegfall der Namensschilder wäre der Versatz von selbst verschwunden.
+**Die Behebung setzt `iconSize` trotzdem** — an allen fünf Markerarten
+(Schild, Einsatzort, Ring, Punkt, Richtungspfeil). Wer dem Marker künftig
+etwas danebenstellt, eine Plakette oder eine Zahl, trüge den Fehler sonst
+wieder ein, und zwar wieder ohne Fehlermeldung.
+
+Die Maße stehen dafür an zwei Stellen — als Zahl in `geo.js` (Leaflet braucht
+sie so) und als Token im Stylesheet. Ein Kommentar an beiden sagt, dass sie
+zusammengehören.
+
+### Web — Die Schilder tragen keinen Namen mehr
+
+Auf einer Karte mit mehreren Markern standen die Namensschilder übereinander
+und verdeckten die Spuren. Das Schild ist jetzt nur noch das Symbol; der Name
+steht im `title` und erscheint als Kurzinfo. Das Kästchen wird dabei enger —
+**36 statt 44 px**, bei gleich großem Symbol: Was verschwindet, ist Weißraum
+zwischen Symbol und Rand (12 px ringsum vorher, 8 px jetzt). Die 44 kamen von
+`--knopf`, und der Kasten ist kein Bedienelement, sondern eine Zeichnung.
+
+### Web — Kein Zielklinik-Schild mehr auf der Tagesübersicht
+
+Die Karte der Tagesübersicht zeigt den ganzen Tag. Bei acht Einsätzen standen
+dort acht Klinik-Schilder zwischen acht Spuren — und die Frage, die diese
+Karte beantwortet, ist „wo war das Rettungsmittel unterwegs", nicht „welche
+Kliniken gibt es". Das Transportziel steht weiterhin in der **Einsatzansicht**,
+wo es zu einem Einsatz gehört. Am Bestand ändert sich nichts.
+
+### Web — Der Einsatzort-Kreis verliert die weiße Umrandung
+
+Sie war ein Rest aus der Zeit vor dem Schatten und sollte den Kreis von der
+Karte abheben; das tut der Schatten. Der Rand machte den Kreis zusätzlich um
+4 px breiter, als er aussah. Jetzt **32 statt 36 px**, ohne Rand.
+
 ## [Web 12.3.1] — 2026-09-01
 
 **Die Einsatzansicht.** Sechstes Arbeitspaket von S3. Eine

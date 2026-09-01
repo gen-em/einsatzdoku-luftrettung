@@ -633,15 +633,13 @@ async function loadDay(dayId){
       EdGeo.pfeile(map, layerGroup, m.track);
       m.track.forEach(p => bounds.push(p));
     }
-    /* Zielklinik-Schild: Klartext, also ohne Freischalten (E40, A13o). Es
-       steht hier und nicht in entschluesselePat() — dort landet nur, was den
-       Schluessel braucht. Der NAME des Ziels liegt verschluesselt; das
-       Schild traegt deshalb kein Namensschild, das Popup nennt den Einsatz. */
-    if (m.dest_lat != null && m.dest_lon != null) {
-      layerGroup.addLayer(EdGeo.markerZiel([m.dest_lat, m.dest_lon], '')
-        .bindPopup(`Einsatz ${m._no}<br>Zielklinik`));
-      bounds.push([m.dest_lat, m.dest_lon]);
-    }
+    /* KEINE ZIELKLINIKEN AUF DER TAGESUEBERSICHT (S3/AP7, E-S3-10). Bis
+       Web 12.3.1 stand hier je Einsatz ein Klinik-Schild. Auf einer Karte,
+       die den GANZEN Tag zeigt, sind das bei acht Einsaetzen acht Schilder
+       zwischen acht Spuren — und die Frage, die diese Karte beantwortet, ist
+       „wo war das Rettungsmittel unterwegs", nicht „welche Kliniken gibt es".
+       Die Zielklinik steht weiterhin in der Einsatzansicht, wo sie zu EINEM
+       Einsatz gehoert. Die Koordinate bleibt im Bestand unberuehrt. */
   });
   renderMissionTable();
   if (PAT_WRAP) { entschluesselePat(); }

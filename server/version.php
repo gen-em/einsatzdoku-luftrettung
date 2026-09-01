@@ -1780,5 +1780,31 @@ declare(strict_types=1);
  * Dazu das Schloss senkrecht mittig zum Wort daneben: `vertical-align`
  * -0.1em statt `baseline`, nachgemessen an einer echten Zeile.
  *
+ * 12.3.2 BEHEBT DEN MARKERVERSATZ (S3/AP7) -- den einen echten Fehler der
+ * Rueckmeldungsliste.
+ *
+ * DER FEHLER: Standort- und Klinik-Schilder sassen umso weiter oestlich, je
+ * weiter herausgezoomt wurde. Drei Glieder, jedes fuer sich richtig:
+ * `.geo-schild` ist eine Flex-SPALTE (wird so breit wie ihr breitestes
+ * Kind), das breiteste Kind war das NAMENSSCHILD (nowrap, bei „Klinikum
+ * Immenstadt" rund 150 px statt 44), und `iconSize: null` liess Leaflet die
+ * Groesse aus dem Markup nehmen -- `iconAnchor: [22, 22]` verankerte damit
+ * rund 50 px links der Kastenmitte. Ein KONSTANTER Pixelversatz:
+ * herausgezoomt sind dieselben 50 px Kilometer, hereingezoomt Meter.
+ *
+ * Nachgemessen im Browser: 51,7 px vorher, 0,0 px nachher, ueber sechs
+ * Zoomstufen unveraendert.
+ *
+ * Die Namensschilder entfallen ohnehin (sie machten die Karte voll und
+ * standen bei mehreren Markern uebereinander); der Name steht jetzt im
+ * title-Attribut. `iconSize` wird TROTZDEM ausdruecklich gesetzt, an ALLEN
+ * fuenf Markerarten -- wer dem Marker kuenftig etwas danebenstellt, traegt
+ * den Fehler sonst wieder ein, und zwar wieder ohne Fehlermeldung.
+ *
+ * Dazu: Das Schildkaestchen wird enger (36 statt 44 px -- es ist eine
+ * Zeichnung und kein Bedienelement, die 44-px-Regel gilt fuer das, was man
+ * drueckt), der Einsatzort-Kreis verliert seine weisse Umrandung und wird
+ * 32 statt 36 px, und die Tagesuebersicht zeigt keine Zielkliniken mehr.
+ *
  */
-const WEB_VERSION = '12.3.1';
+const WEB_VERSION = '12.3.2';

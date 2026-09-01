@@ -451,9 +451,13 @@ Pro Tag:
 - **Karte** mit allen Einsätzen des Tages (jeder in eigener Farbe, beginnend
   mit Orange/Blau/Rot) und dem Ruhe-Track in gedämpftem Graublau. Kleine
   **Richtungspfeile** auf den Spuren zeigen die Bewegungsrichtung.
-  Der **Standort** steht als Haus-Schild auf der Karte, das
-  **Transportziel** jedes Einsatzes als Klinik-Schild, der **Einsatzort**
+  Der **Standort** steht als Haus-Schild auf der Karte, der **Einsatzort**
   als oranger Kreis; Dienstbeginn und -ende tragen Ringe am Standort-Schild.
+  **Transportziele zeigt diese Karte nicht** (seit Web 12.3.2): Sie
+  beantwortet, wo das Rettungsmittel an diesem Tag unterwegs war, und acht
+  Klinik-Schilder zwischen acht Spuren beantworten eine andere Frage. Das
+  Transportziel steht in der Einsatzansicht, wo es zu **einem** Einsatz
+  gehört.
   Einsätze ohne aufgezeichneten Track verbindet eine **gestrichelte
   Luftlinie** in der Farbe des Einsatzes — gestrichelt heißt immer: gerade
   Verbindung, kein aufgezeichneter Weg. Die Karte zoomt automatisch so, dass
@@ -601,7 +605,9 @@ Leere Felder werden nicht angezeigt; eine Karte ganz ohne Inhalt erscheint
 nicht. Die **Karte** (auf dem Handy kompakt zwischen den Angaben und den
 Phasen, ab 1200 px rechts oben und beim Rollen klebend) zeigt den Track mit
 **Richtungspfeilen**, den Standort als Haus-Schild, das Transportziel als
-Klinik-Schild und den Einsatzort als orangen Kreis; **Start und Ende der
+Klinik-Schild und den Einsatzort als orangen Kreis. **Die Schilder tragen
+keinen Namen** (seit Web 12.3.2) — nur das Symbol; der Name erscheint als
+Kurzinfo, wenn der Mauszeiger darauf steht. **Start und Ende der
 Aufzeichnung** tragen einen blauen bzw. roten Ring — am Schild des Ortes,
 an dem die Spur beginnt oder endet, sonst als eigener Ringpunkt; beides am
 selben Ort ergibt einen Doppelring. Einsätze ohne Track zeigt die

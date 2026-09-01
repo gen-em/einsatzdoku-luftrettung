@@ -1427,3 +1427,70 @@ der Codeweg, nicht das Bild. Gehört als Bedienweg ins Prüfdokument.
 Ebenfalls nicht geprüft: der **gesperrte** Zustand (Balken mit
 Entsperren-Knopf) und der Fehlerzustand. Beide sind unberührt, aber die Probe
 lief angemeldet und entsperrt.
+
+---
+
+### AP7 — Karte (H)
+
+**Stand:** erledigt. Web 12.3.2.
+
+#### Was geändert wurde
+
+- **`geo.js`, `schild()`:** kein Namensschild mehr im Markup (nicht per
+  `display:none` — was nicht angezeigt wird, wird nicht erzeugt);
+  `iconSize: [36, 36]`, `iconAnchor: [18, 18]`. Der Name wandert ins
+  `title`-Attribut des Markers.
+- **`iconSize` ausdrücklich an allen fünf Markerarten** — Schild,
+  Einsatzort, Ring, Punkt, Richtungspfeil.
+- **`.geo-schild-kasten`:** 36 statt 44 px (neues Token `--geo-schild`).
+- **`.geo-kreis`:** ohne weiße Umrandung, `--geo-kreis` 36 → 32 px.
+- **`.geo-schild-text`** ist aus dem Stylesheet **ausgetragen**.
+- **`index.php`:** kein Zielklinik-Marker mehr.
+- Handbuch an **beiden** Kartenstellen nachgezogen; Tokentabelle in
+  `Design.md` neu erzeugt (89 statt 88 Token).
+
+#### Die Versatzprobe — mit Gegenprobe
+
+Die Probe braucht das Kartenobjekt nicht: Leaflet setzt die Bildschirmlage
+einer Koordinate als `transform` an das Markerelement, und der **Anker ist
+der Nullpunkt dieser Verschiebung**. Der Versatz ist damit die Strecke
+zwischen diesem Nullpunkt und der Mitte des gezeichneten Kastens — allein am
+DOM messbar, über die Transformationen von Kartenebene und Marker.
+
+Gemessen an der Einsatzansicht (Haus- und Klinik-Schild), sechs Zoomstufen
+über die Zoom-Schaltfläche:
+
+| | waagerecht | senkrecht |
+|---|---|---|
+| **vorher** (nachgestellt: Namensschild „Klinikum Immenstadt", `iconSize` unbestimmt) | **51,7 px** | −4,0 px |
+| **nachher** | **0,0 px** | **0,0 px** |
+
+Beide Werte über **alle sechs Zoomstufen unverändert** — das belegt zugleich
+die Diagnose aus dem Konzept: Es ist ein **konstanter Pixelversatz**, kein
+mit dem Zoom wachsender Fehler. Die 51,7 px bestätigen die Schätzung „rund
+50 px" aus 1.9.
+
+**Die Gegenprobe ist eine Nachstellung, keine Messung am alten Code.** Sie
+setzt Namensschild und unbestimmte Größe im laufenden Browser wieder ein.
+Das ist schwächer als ein Lauf gegen den alten Stand — es zeigt, dass die
+beschriebene Kette den Versatz erzeugt, nicht dass der alte Code genau diese
+Kette hatte. Der Codeweg ist dafür der Beleg: `iconSize: null` und
+`iconAnchor: [22, 22]` stehen im Git-Stand vor diesem Paket.
+
+#### Prüfstand AP7
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | **8 entfallen** (`.geo-schild-text` mit sieben Eigenschaften, `.geo-kreis border`), **1 neu** (`--geo-schild`), **3 geänderte Werte**, 0 Reihenfolgetausch — genau die geplanten |
+| Versatz | eigene DOM-Probe, sechs Zoomstufen, mit Nachstellung des alten Zustands | 51,7 → **0,0 px** |
+| Tagesübersicht ohne Zielkliniken | Marker nach Symbol gezählt | `index.php`: **1 Haus, 0 Klinik**, 6 Einsatzort-Kreise, **0 Namensschilder** |
+| Einsatzansicht unverändert vollständig | dieselbe Zählung | **1 Haus, 1 Klinik**, 1 Kreis, 0 Namensschilder |
+| Maße | `getBoundingClientRect` an den gezeichneten Elementen | Schildkasten **36 × 36**, Einsatzort-Kreis **32 × 32**, `border-width` **0px** |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde wie Basis — `.geo-schild-text` ist aus **Stylesheet und Markup** verschwunden, taucht also in keiner der beiden Listen als Rest auf |
+| Texte | `tools/wortliste/wortliste.py` | 0 / 0 / 0 |
+
+**Nicht geprüft:** Die Ringe (Start/Ende der Spur) liegen als `box-shadow`
+außerhalb des Kastens und ändern seine Größe nicht — nachgelesen, nicht
+gemessen. Ein Einsatz mit Doppelring stand in den geprüften Beständen nicht
+zur Verfügung. Gehört als Bedienweg ins Prüfdokument.

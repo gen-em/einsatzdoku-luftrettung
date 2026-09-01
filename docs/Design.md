@@ -290,7 +290,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/design/tabellen.py — nicht von Hand ändern. -->
 
-88 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+89 Token in 15 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Flächen**
 
@@ -404,7 +404,8 @@ auseinanderlaufen kann.
 | `--schalter-breit` | `46px` | 2 | der Schalter aus E-P3-28 … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
 | `--schalter-punkt` | `20px` | 4 | 44-px-Zeile passt und greifbar bleibt |
-| `--geo-kreis` | `36px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-kreis` | `32px` | 2 | Einsatzort-Kreis auf der Karte |
+| `--geo-schild` | `36px` | 2 | Kästchen für Standort und Zielklinik |
 | `--geo-ring` | `3px` | 10 | Ringstärke Start/Ende am Schild |
 | `--anmeldekarte` | `400px` | 1 | Karte der Anmeldung (E-P3-38) |
 | `--zeile-frei` | `1.4em` | 1 | Mindesthöhe der Zustandszeile |
