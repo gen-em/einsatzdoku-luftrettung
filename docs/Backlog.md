@@ -325,9 +325,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     nicht am Phasenende erledigt.
 
 42. **Drei Unicode-Zeichen stehen noch als Symbol im Markup.**
-    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5 und
-    AP5b.* P-P3-03 verlangt null. Die Prüfung meldet **192** Treffer (bei
-    Aufnahme 158); 189 davon sind Kommentare oder richtige Typografie (die
+    *Aufgenommen in P3/O12, Zahl fortgeschrieben in S2/AP3, AP4, AP5, AP5b
+    und AP6.* P-P3-03 verlangt null. Die Prüfung meldet **193** Treffer (bei
+    Aufnahme 158); 190 davon sind Kommentare oder richtige Typografie (die
     Auslassungspunkte der Fortschrittsmeldungen, die Pfad-Pfeile der Hinweise,
     das Malzeichen in „3× RTW"). Drei sind echte Symbole — dieselben drei wie
     bei der Aufnahme:
@@ -338,8 +338,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     > gebracht, S2/AP4 mit den Kopfkommentaren dreier neuer Dateien von 168
     > auf 174 (`?art=…&id=…` allein zählt viermal), S2/AP5 mit den
     > Fortschrittsmeldungen des Sicherungslaufs („Teil 2 von 5 …") auf 189
-    > und S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 —
-    > gemessen gegen den Stand von Web 11.0.0, nicht geschätzt.
+    > S2/AP5b mit drei Auslassungspunkten in **Kommentaren** auf 192 und
+    > S2/AP6 mit einem weiteren auf 193 — jedes Mal gemessen gegen den Stand
+    > davor, nicht geschätzt.
     > Wer die Zahl als
     > Fortschrittsmaß liest, liest sie falsch — gemeint sind die drei unten.
     > Das Prüfmittel trennt beides nicht, und das gehört hierhin und nicht in

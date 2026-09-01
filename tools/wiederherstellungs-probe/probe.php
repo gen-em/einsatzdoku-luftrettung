@@ -672,5 +672,235 @@ $sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
      'aus Teil 5, dieselbe Fassung, aber mit spur_ref');
 $weg($uid8);
 
+/* ==========================================================================
+ * Teil 8 — Das Adminpaket der Fassung 2: Rundlauf (S2/AP6)
+ *
+ * WOFUER. Die Admin-Sicherung ist seit Web 11.2.0 ein mehrteiliges ZIP und
+ * wird in Fenstern gebaut. Zwei Dinge muessen dabei stimmen, und beide gehen
+ * STILL schief, wenn sie es nicht tun:
+ *
+ *   1. Die Spuren. Ein Fassung-2-Kern traegt Nutzlast 8 — die Punkte stehen
+ *      in eigenen Teilen. Wer ihn durch den einteiligen Weg schickt, bekommt
+ *      jeden Einsatz und keine einzige Spur (F-S2-E, 91 208 Punkte).
+ *   2. Die Sperre aus E20. `edbak_paket_hat_geschuetzte()` sah frueher in die
+ *      Einsatzliste des Pakets; die steht im gefensterten Kern nicht mehr.
+ *      Ohne die Zahl im Manifest liefert sie still `false`, und ein Paket mit
+ *      unlesbaren Angaben ginge als „direkt einspielbar" durch.
+ * ====================================================================== */
+echo "\n  Teil 8 — Adminpaket Fassung 2: Rundlauf (S2/AP6)\n";
+require_once $server . '/adminbackup_lib.php';
+
+$quelle = $konto('probe-adminquelle@example.invalid');
+$kennung = bin2hex(random_bytes(8));
+$pdo->prepare('UPDATE users SET account_key = ?, pat_key_check = ? WHERE id = ?')
+    ->execute([$kennung, str_repeat('a', 32), $quelle]);
+
+/* Bestand ueber den regulaeren Rueckweg anlegen — Nutzlast 7 mit Punkten. */
+edbak_restore($quelle, [
+  'version' => 7,
+  'days' => [['id' => 970, 'day' => '2026-07-08', 'kind' => 'ground',
+              'vehicle_name' => 'Probe A6', 'base_name' => 'Probenstation']],
+  'missions' => [
+    ['client_ref' => 'a-m1', 'day_id' => 970, 'started_at' => '2026-07-08 06:00:00',
+          /* Ein Chiffretext in der Form, die validate_lib.php verlangt
+      * (`edk1:` plus mindestens 40 base64-Zeichen). Inhalt beliebig — er
+      * wird hier nie geoeffnet, und genau das ist der Punkt: Die Sperre aus
+      * E20 haengt daran, DASS er da ist, nicht daran, was drinsteht. */
+     'ended_at' => '2026-07-08 07:00:00',
+     'pat_blob' => 'edk1:' . str_repeat('QUJD', 16),
+     'track' => [[0, 47.10, 11.10, 700.0, 1783100000],
+                 [1, 47.11, 11.11, 705.0, 1783100060],
+                 [2, 47.12, 11.12, 710.0, 1783100120]]],
+    ['client_ref' => 'a-m2', 'day_id' => 970, 'started_at' => '2026-07-08 08:00:00',
+     'ended_at' => '2026-07-08 09:00:00'],                       // ohne Spur
+  ],
+  'rest_segments' => [
+    ['client_ref' => 'a-r1', 'day_id' => 970, 'started_at' => '2026-07-08 10:00:00',
+     'ended_at' => '2026-07-08 11:00:00',
+     'track' => [[0, 47.20, 11.20, 600.0, 1783103000],
+                 [1, 47.21, 11.21, 605.0, 1783103060]]],
+  ],
+]);
+
+[$ok6, $grund6, $info6] = edbak_sicherung_erzeugen($quelle);
+$sag('Die Sicherung entsteht', $ok6 === true, $ok6 ? (string)$info6['datei'] : (string)$grund6);
+$datei6 = $ok6 ? (string)$info6['datei'] : '';
+$sag('Sie ist ein ZIP (Fassung 2 am Namen erkennbar)',
+     $datei6 !== '' && edbak_paket_fassung($datei6) === 2, $datei6 ?: '—');
+
+$manifest = $datei6 ? edbak_paket_kopf_lesen($kennung, $datei6) : null;
+$sag('Das Manifest laesst sich ohne den Bestand lesen',
+     is_array($manifest) && ($manifest['version'] ?? 0) === 2,
+     is_array($manifest) ? 'Fassung ' . $manifest['version'] : 'nicht lesbar');
+$sag('Es nennt Eintraege, Spuren und Punkte',
+     is_array($manifest) && (int)$manifest['eintraege'] === 3
+       && (int)$manifest['spuren'] === 2 && (int)$manifest['punkte'] === 5,
+     is_array($manifest)
+       ? "{$manifest['eintraege']} Eintraege, {$manifest['spuren']} Spuren, {$manifest['punkte']} Punkte"
+       : '—');
+$sag('Es zaehlt die Einsaetze mit geschuetzten Angaben',
+     is_array($manifest) && (int)($manifest['geschuetzte'] ?? -1) === 1,
+     is_array($manifest) ? 'geschuetzte=' . ($manifest['geschuetzte'] ?? '—') : '—');
+$sag('E20-Sperre greift ueber das Manifest, nicht ueber die Einsatzliste',
+     is_array($manifest) && edbak_paket_hat_geschuetzte($manifest) === true,
+     'ein Paket mit Chiffretext gilt als nicht direkt einspielbar');
+
+/* Der Rundlauf: in ein FRISCHES Konto. */
+$ziel6 = $konto('probe-adminziel@example.invalid');
+[$ok7, $grund7, $st7] = $datei6
+    ? edbak_paket_einspielen($kennung, $datei6, $ziel6)
+    : [false, 'keine Datei', null];
+$sag('Das Paket spielt sich in ein frisches Konto ein', $ok7 === true, (string)$grund7);
+$sag('Einsaetze, Ruhesegmente und Diensttage kommen an',
+     is_array($st7) && ($st7['missions'] ?? 0) === 2 && ($st7['rests'] ?? 0) === 1
+       && ($st7['days'] ?? 0) === 1,
+     is_array($st7) ? sprintf('%d/%d/%d', $st7['missions'] ?? 0, $st7['rests'] ?? 0,
+                              $st7['days'] ?? 0) : '—');
+
+/* DIE ENTSCHEIDENDE ZAHL — ueber spur_lib.php gezaehlt, nicht per SQL: Die
+ * Punkte liegen je nach Alter als Zeilen ODER als Blob (CLAUDE.md 4). */
+$mids = $pdo->query("SELECT id FROM missions WHERE user_id = $ziel6 ORDER BY client_ref")
+            ->fetchAll(PDO::FETCH_COLUMN);
+$rids = $pdo->query("SELECT id FROM rest_segments WHERE user_id = $ziel6")
+            ->fetchAll(PDO::FETCH_COLUMN);
+$punkte = array_sum(spur_zahlen($pdo, 'mission', array_map('intval', $mids)))
+        + array_sum(spur_zahlen($pdo, 'rest', array_map('intval', $rids)));
+$sag('UND DIE SPUREN KOMMEN MIT (F-S2-E: hier ging es einmal still verloren)',
+     $punkte === 5, "$punkte von 5 Punkten");
+$sag('Der Lauf meldet, wie viele Spuren er geschrieben hat',
+     is_array($st7) && (int)($st7['spuren']['geschrieben'] ?? -1) === 2
+       && (int)($st7['spuren']['ohne_ziel'] ?? -1) === 0,
+     is_array($st7) ? json_encode($st7['spuren'] ?? null) : '—');
+
+/* WIEDERAUFNAHME: derselbe Lauf noch einmal darf nichts doppeln. */
+[$ok8, , $st8] = edbak_paket_einspielen($kennung, $datei6, $ziel6);
+$sag('WIEDERAUFNAHME: ein zweiter Lauf legt nichts an und ueberschreibt nichts',
+     $ok8 === true && ($st8['missions'] ?? -1) === 0 && ($st8['rests'] ?? -1) === 0
+       && (int)($st8['spuren']['uebersprungen'] ?? -1) === 2,
+     is_array($st8) ? sprintf('angelegt %d/%d, Spuren uebersprungen %d',
+        $st8['missions'] ?? 0, $st8['rests'] ?? 0,
+        $st8['spuren']['uebersprungen'] ?? 0) : '—');
+
+/* Ein fehlendes Teil faellt auf, BEVOR etwas geschrieben wird. */
+$pfad6 = edbak_ordner($kennung) . '/' . $datei6;
+$kaputt = edbak_ordner($kennung) . '/2026-07-08T00-00-00Z_deadbeef.zip';
+copy($pfad6, $kaputt);
+$zz = new ZipArchive(); $zz->open($kaputt);
+$zz->deleteName('spuren/0001.json');
+$zz->close();
+$ziel9 = $konto('probe-adminfehlt@example.invalid');
+[$ok9, $grund9, ] = edbak_paket_einspielen($kennung, basename($kaputt), $ziel9);
+$sag('Ein fehlendes Teil wird benannt und nichts geschrieben',
+     $ok9 === false && str_contains((string)$grund9, 'Teilen')
+       && (int)$pdo->query("SELECT COUNT(*) FROM missions WHERE user_id = $ziel9")
+                   ->fetchColumn() === 0,
+     substr((string)$grund9, 0, 60));
+
+/* Baureste blockieren die Ordnerloeschung nicht mehr. */
+@mkdir(edbak_ordner($kennung) . '/' . EDBAK_BAU_PRAEFIX . 'deadbeef');
+file_put_contents(edbak_ordner($kennung) . '/' . EDBAK_BAU_PRAEFIX . 'deadbeef/0001.part', 'x');
+file_put_contents(edbak_ordner($kennung) . '/rest.tmp', 'x');
+$geloescht = edbak_ordner_loeschen($kennung);
+$sag('Ein liegengebliebener Bauordner blockiert die Loeschung nicht mehr',
+     $geloescht === true && !is_dir(edbak_ordner($kennung)),
+     $geloescht ? 'Ordner weg' : ' NICHT geloescht');
+
+$weg($ziel9); $weg($ziel6); $weg($quelle);
+
+/* ==========================================================================
+ * Teil 9 — Speichergrenze und Schwellen (S2/AP6, E-S2-14/15)
+ *
+ * ZWEI ZUSAGEN STEHEN HIER AUF DEM PRUEFSTAND:
+ *
+ *   „Bei Erreichen der Speichergrenze wird ABGELEHNT MIT MELDUNG, nie still
+ *    verdraengt" (E-S2-14) — die Ablehnung muss VOR dem Bau kommen, sonst
+ *    kostet sie beim grossen Konto vierzehn Sekunden fuer nichts.
+ *
+ *   „Je ueberschrittener Schwelle EINMAL melden" (E-S2-15) — und ohne
+ *    eingerichtetes SMTP stattdessen ein dauerhafter Hinweis.
+ *
+ * Die Marken liegen in app_state und gelten fuer die ganze Installation; sie
+ * werden am Ende dieses Teils wieder auf ihren alten Wert gesetzt.
+ * ====================================================================== */
+echo "\n  Teil 9 — Speichergrenze und Schwellen (S2/AP6)\n";
+
+$markeVorher = static function (PDO $pdo, string $k): ?string {
+    $st = $pdo->prepare('SELECT v FROM app_state WHERE k = ?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    return $v === false ? null : (string)$v;
+};
+$markeZurueck = static function (PDO $pdo, string $k, ?string $v): void {
+    if ($v === null) { $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([$k]); }
+    else {
+        $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
+                       ON DUPLICATE KEY UPDATE v = VALUES(v)')->execute([$k, $v]);
+    }
+};
+$sicher = [];
+foreach (['adminbackup_grenze_gb', 'adminbackup_schwellen',
+          'adminbackup_schwellen_gemeldet', 'adminbackup_schwellen_offen'] as $k) {
+    $sicher[$k] = $markeVorher($pdo, $k);
+}
+
+/* Die Vorgaben stehen, solange nichts gesetzt ist. */
+$pdo->exec("DELETE FROM app_state WHERE k IN ('adminbackup_grenze_gb',
+            'adminbackup_schwellen','adminbackup_schwellen_gemeldet',
+            'adminbackup_schwellen_offen')");
+$c = &edbak_marken_speicher(); $c = [];      // Zwischenspeicher der Marken leeren
+$sag('Ohne Einstellung gilt die Vorgabe: 2 GB',
+     edbak_grenze_bytes() === 2 * 1024 * 1024 * 1024,
+     edbak_groesse_text(edbak_grenze_bytes()));
+$sag('...und die Schwellen 70 und 90 Prozent',
+     edbak_schwellen() === [70, 90], implode(' / ', edbak_schwellen()) . ' %');
+
+/* Die Zaehlung misst das GANZE Verzeichnis, nicht nur die Pakete. */
+$standA = edbak_speicherstand(true);
+$restOrdner = edbak_wurzel() . '/' . EDBAK_BAU_PRAEFIX . 'pruefrest';
+@mkdir(edbak_wurzel(), 0770, true);
+@mkdir($restOrdner);
+file_put_contents($restOrdner . '/gross.part', str_repeat('x', 300000));
+$standB = edbak_speicherstand(true);
+$sag('Ein liegengebliebener Bauordner zaehlt gegen die Grenze mit',
+     $standB['bytes'] - $standA['bytes'] >= 300000,
+     '+' . edbak_groesse_text($standB['bytes'] - $standA['bytes']) . ' erkannt');
+$sag('...und er wird als „sonstiges" ausgewiesen, nicht in den Paketen versteckt',
+     $standB['sonstige_bytes'] >= 300000,
+     edbak_groesse_text($standB['sonstige_bytes']) . ' ausserhalb der Pakete');
+edbak_ordner_leeren($restOrdner); @rmdir($restOrdner);
+
+/* Grenze auf einen Wert, den der vorhandene Bestand schon ueberschreitet. */
+$q9 = $konto('probe-grenze@example.invalid');
+$k9 = bin2hex(random_bytes(8));
+$pdo->prepare('UPDATE users SET account_key = ? WHERE id = ?')->execute([$k9, $q9]);
+edbak_marke_setzen('adminbackup_grenze_gb', '0.000001');   // ~1 KB
+$c = &edbak_marken_speicher(); $c['adminbackup_grenze_gb'] = '0.000001';
+[$okG, $grundG, ] = edbak_sicherung_erzeugen($q9);
+$sag('Bei erreichter Grenze wird ABGELEHNT, nicht verdraengt',
+     $okG === false && str_contains((string)$grundG, 'Speichergrenze'),
+     substr((string)$grundG, 0, 58));
+$sag('...und die Meldung sagt ausdruecklich, dass nichts geloescht wurde',
+     str_contains((string)$grundG, 'NICHTS'), 'E-S2-14: nie still verdraengt');
+$sag('...und es liegt kein halbes Paket herum',
+     !is_dir(edbak_ordner($k9)) || count(edbak_pakete($k9)) === 0,
+     'kein Paket im Kontoordner');
+
+/* Schwellen: ohne eingerichtetes SMTP ein Hinweis, keine Mail. */
+edbak_marke_setzen('adminbackup_grenze_gb', '0.000001');
+$m9 = edbak_schwellen_melden();
+$sag('Ohne eingerichtetes SMTP wird nicht gemailt, sondern vermerkt',
+     smtp_eingerichtet() === false && $m9['gemeldet'] === []
+       && $m9['hinweis'] === [70, 90],
+     'Hinweis fuer ' . implode('/', $m9['hinweis']) . ' %, Mails: '
+     . count($m9['gemeldet']));
+$sag('smtp_eingerichtet() unterscheidet „nicht eingerichtet" von „fehlgeschlagen"',
+     function_exists('smtp_eingerichtet'),
+     'ohne sie kann E-S2-15 seine zwei Wege nicht auseinanderhalten');
+
+foreach ($sicher as $k => $v) { $markeZurueck($pdo, $k, $v); }
+$c = &edbak_marken_speicher(); $c = [];
+edbak_ablage_zahlen(true);
+$weg($q9);
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

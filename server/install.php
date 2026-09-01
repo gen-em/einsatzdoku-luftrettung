@@ -212,6 +212,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_readable($schemaPath)) {
         $errors[] = 'schema.sql wurde nicht gefunden (muss neben install.php liegen).';
     }
+    /* DIE ERWEITERUNGEN, OHNE DIE ES SPAETER KLEMMT (S2/AP6).
+     *
+     * Bis Web 12.0.0 hat der Installer gar keine Erweiterung geprueft. Das
+     * ging gut, solange alles Benoetigte im PHP-Kern steckt — seit die
+     * Admin-Sicherung ein ZIP ist, gilt das nicht mehr. Ohne `ext/zip` faellt
+     * es sonst erst beim ersten Sicherungslauf auf, und dann als „liess sich
+     * nicht schreiben" auf einer Installation, die laengst in Betrieb ist.
+     *
+     * Hier steht die Pruefung deshalb VOR der Einrichtung. Sie ist nicht
+     * vollstaendig — sie nennt, was diese Anwendung nachweislich braucht und
+     * was ein Hoster tatsaechlich abschalten kann. */
+    foreach (['zip' => 'Sicherungen sind ZIP-Dateien (ext/zip, Klasse ZipArchive)',
+              'zlib' => 'Spuren werden komprimiert gespeichert (ext/zlib)',
+              'openssl' => 'Zufall und Pruefsummen (ext/openssl)',
+              'mbstring' => 'Texte in UTF-8 (ext/mbstring)'] as $erw => $wofuer) {
+        if (!extension_loaded($erw)) {
+            $errors[] = 'Die PHP-Erweiterung „' . $erw . '" fehlt: ' . $wofuer
+                      . '. Bitte beim Hoster freischalten lassen.';
+        }
+    }
 
     // DB-Verbindung testen
     $pdo = null;

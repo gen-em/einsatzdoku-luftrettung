@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth_guard.php';
 require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
+require_once __DIR__ . '/smtp.php';        // smtp_eingerichtet() (E-S2-15)
 
 /**
  * SICHERUNGEN — die REGELN, und sonst nichts mehr (E-P3-41, P3/O9c).
@@ -68,6 +69,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($pakete !== edbak_aufbewahrung()) {
                 edbak_marke_setzen('adminbackup_aufbewahrung', (string)$pakete);
                 $teile[] = 'Aufbewahrung ' . $pakete . ' Pakete';
+            }
+        }
+        /* ---- Speichergrenze und Warnschwellen (E-S2-15) ---------------- */
+        if ($error === null) {
+            $gb = str_replace(',', '.', trim((string)($_POST['grenze'] ?? '')));
+            if (!is_numeric($gb) || (float)$gb <= 0 || (float)$gb > 10000) {
+                $error = 'Bitte eine Speichergrenze zwischen 0,1 und 10000 GB angeben.';
+            } elseif (abs((float)$gb * 1024 * 1024 * 1024 - edbak_grenze_bytes()) > 1) {
+                edbak_marke_setzen('adminbackup_grenze_gb', (string)(float)$gb);
+                /* DIE GEMELDETEN SCHWELLEN VERGESSEN. Eine neue Grenze macht
+                 * aus denselben Bytes einen anderen Prozentsatz — was bei der
+                 * alten Grenze gemeldet war, ist bei der neuen eine andere
+                 * Aussage. Ohne dieses Zuruecksetzen bliebe eine Warnung aus,
+                 * die nach der Aenderung faellig waere. */
+                edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
+                edbak_marke_setzen('adminbackup_schwellen_offen', '');
+                $teile[] = 'Speichergrenze ' . $gb . ' GB';
+            }
+        }
+        if ($error === null) {
+            $roh = trim((string)($_POST['schwellen'] ?? ''));
+            $neu = [];
+            foreach (explode(',', $roh) as $t) {
+                $t = trim($t);
+                if ($t === '') { continue; }
+                if (!ctype_digit($t) || (int)$t < 1 || (int)$t > 100) {
+                    $error = 'Warnschwellen sind ganze Zahlen zwischen 1 und 100, '
+                           . 'durch Komma getrennt (z. B. „70, 90").';
+                    break;
+                }
+                $neu[(int)$t] = true;
+            }
+            if ($error === null) {
+                $neu = array_keys($neu); sort($neu);
+                if ($neu !== edbak_schwellen()) {
+                    edbak_marke_setzen('adminbackup_schwellen', implode(',', $neu));
+                    edbak_marke_setzen('adminbackup_schwellen_gemeldet', '');
+                    edbak_marke_setzen('adminbackup_schwellen_offen', '');
+                    $teile[] = $neu ? 'Warnschwellen ' . implode(' / ', $neu) . ' %'
+                                    : 'Warnschwellen aus';
+                }
             }
         }
         if ($error === null) {
@@ -239,6 +281,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 [$ablageBereit, $ablageGrund] = edbak_ablage_bereit();
 $zahlen    = edbak_stand_zaehlen();
 $ablage    = edbak_ablage_zahlen();
+$speicher  = edbak_speicherstand();
+/* DER DAUERHAFTE HINWEIS OHNE SMTP (E-S2-15). Ist eine Warnschwelle
+ * ueberschritten und laesst sich keine Mail verschicken, steht die Warnung
+ * hier — und zwar so lange, bis sie nicht mehr zutrifft. Eine Warnung, die
+ * nur einmal aufblitzt, waere bei genau der Zielgruppe wirkungslos, die diese
+ * Seite alle paar Wochen aufmacht. */
+$offeneSchwellen = array_values(array_filter(array_map('intval',
+    explode(',', (string)(edbak_marke_lesen('adminbackup_schwellen_offen') ?? '')))));
+$offeneSchwellen = array_values(array_filter($offeneSchwellen,
+    static fn($p) => $speicher['prozent'] >= $p));
 $verwaist  = edbak_verwaiste();
 $letzte    = edbak_marke_lesen('adminbackup_last');
 $paketeOhneKonto = array_sum(array_map(static fn($v) => count($v['pakete']), $verwaist));
@@ -269,6 +321,23 @@ ui_seite_start(['titel' => 'Sicherungen']);
   ]); ?>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
+  <?php if ($speicher['voll']): ?>
+    <?= ui_meldung_markup('fehler', 'Die Speichergrenze ist erreicht ('
+        . edbak_groesse_text($speicher['bytes']) . ' von '
+        . edbak_groesse_text($speicher['grenze']) . '). Es wird nicht mehr '
+        . 'gesichert. Es wurde nichts gelöscht und nichts überschrieben — bitte '
+        . 'alte Sicherungen entfernen, die Aufbewahrung senken oder die Grenze '
+        . 'erhöhen.') ?>
+  <?php elseif ($offeneSchwellen): ?>
+    <?= ui_meldung_markup('warn', 'Die Ablage hat '
+        . max($offeneSchwellen) . ' % der Speichergrenze erreicht ('
+        . edbak_groesse_text($speicher['bytes']) . ' von '
+        . edbak_groesse_text($speicher['grenze']) . '). '
+        . (smtp_eingerichtet()
+            ? 'Die Warnmail liess sich nicht verschicken.'
+            : 'Es ist kein SMTP eingerichtet, deshalb steht die Warnung hier '
+            . 'und geht nicht per E-Mail heraus.')) ?>
+  <?php endif; ?>
 
   <?php if (!$ablageBereit): ?>
     <?= ui_meldung_markup('fehler', (string)$ablageGrund) ?>
@@ -324,6 +393,18 @@ ui_seite_start(['titel' => 'Sicherungen']);
                          'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
                                   . 'gelöscht — die jüngste und eine freigegebene nie.']); ?>
         </div>
+        <div class="fld-reihe">
+          <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze',
+                         'wert' => rtrim(rtrim(number_format(
+                             edbak_grenze_bytes() / (1024 * 1024 * 1024), 3, ',', ''), '0'), ','),
+                         'klein' => 'GB für alle Sicherungen zusammen. Ist sie '
+                                  . 'erreicht, wird nicht mehr gesichert — es wird '
+                                  . 'nichts gelöscht und nichts überschrieben.']); ?>
+          <?php ui_feld(['name' => 'schwellen', 'label' => 'Warnschwellen',
+                         'wert' => implode(', ', edbak_schwellen()),
+                         'klein' => 'Prozent, durch Komma getrennt. Je Schwelle '
+                                  . 'kommt einmal eine Meldung, nicht bei jedem Lauf.']); ?>
+        </div>
         <?php ui_schalter(['name' => 'mail', 'label' => 'Erinnerung an Admins per E-Mail',
                            'an' => edbak_admin_mail_an(),
                            'klein' => 'Liste der überfälligen Konten, höchstens einmal '
@@ -355,6 +436,28 @@ ui_seite_start(['titel' => 'Sicherungen']);
                 'klein' => $letzte ? fmt_local($letzte . ' 00:00:00', 'd.m.Y') : 'noch keine',
                 'plaketten' => $letzte ? '' : ui_plakette('nie', ['ton' => 'rot'])]);
       ui_zeile(['text' => 'Ordner', 'klein' => $ablage['ordner'] . ' Konten haben eine Ablage']);
+      /* BELEGUNG GEGEN DIE GRENZE (E-S2-15). Die Zahl misst das GANZE
+         Verzeichnis, nicht nur die Pakete — es fuellt sich auch mit dem,
+         was nicht auf der Paketliste steht. */
+      ui_zeile(['text' => 'Belegt',
+                'klein' => edbak_groesse_text($speicher['bytes']) . ' von '
+                         . edbak_groesse_text($speicher['grenze']) . ' · '
+                         . $speicher['pakete'] . ' Pakete',
+                'plaketten' => $speicher['voll']
+                    ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'rot'])
+                    : ($offeneSchwellen
+                        ? ui_plakette($speicher['prozent'] . ' %', ['ton' => 'orange'])
+                        : ui_plakette($speicher['prozent'] . ' %', ['ton' => 'blau']))]);
+      if ($speicher['reste'] > 0) {
+          /* LIEGENGEBLIEBENES WIRD GENANNT (S2/AP6). Bis Web 11.2.0 war ein
+             abgebrochener Lauf unsichtbar: Sein Rest zaehlte auf der Platte,
+             stand in keiner Liste und blockierte das Loeschen des Ordners. */
+          ui_zeile(['text' => 'Reste abgebrochener Läufe',
+                    'klein' => edbak_groesse_text($speicher['sonstige_bytes'])
+                             . ' liegen ausserhalb der Pakete',
+                    'plaketten' => ui_plakette($speicher['reste'] . ' Reste',
+                                               ['ton' => 'orange'])]);
+      }
       ?>
       <p class="feld-hinweis">Die Ablage liegt außerhalb der Auslieferung und wird beim
          Aufspielen einer neuen Fassung nicht angefasst. Sie ist über den Browser nicht

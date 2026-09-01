@@ -1449,5 +1449,55 @@ declare(strict_types=1);
  * Bestand ist brauchbar, und ihn wegen der Spuren zu verweigern machte aus
  * einem Teilverlust einen Totalverlust.
  *
+ * 12.0.0 IST AP6: DIE ADMIN-SICHERUNG WIRD MEHRTEILIG (E-S2-13 bis E-S2-15).
+ *
+ * Hauptnummer aus zwei Gruenden: Das Dateiformat der Admin-Sicherung wechselt
+ * von 1 auf 2, und der erste Lauf danach ENTFERNT die einteiligen Pakete
+ * eines Kontos (Entscheidung vom 31.08.2026). Das ist ein spuerbar
+ * veraenderter Weg durch die Anwendung, kein Feinschliff.
+ *
+ * WARUM. Die Admin-Sicherung war der letzte Weg, der das Budget sprengte —
+ * und zwar nicht knapp. Gemessen am 5000er-Konto: 19,81 s, 94,28 MB Paket,
+ * 1077,6 MB Speicherspitze; mit `memory_limit=64M` (Z3) brach der Lauf in
+ * `spur_lib.php` ab. Auf genau der Sorte Webspace, fuer die diese Anwendung
+ * gebaut ist, war die Admin-Sicherung eines grossen Kontos unmoeglich.
+ *
+ * Der Grund stand in einer Zeile: `json_decode(edbak_build($userId), true)` —
+ * derselbe Bestand als Zeichenkette, als Feld und beim Schreiben noch einmal
+ * als Zeichenkette.
+ *
+ * DAS PAKET IST JETZT EIN ZIP, unversiegelt (es liegt serverseitig und traegt
+ * `pat_blob` als Chiffretext):
+ *
+ *   manifest.json           Umfang, Huellen, Teileliste, `geschuetzte`
+ *   kopf.json               Stammdaten, Diensttage, Zahl der Eintraege
+ *   eintraege/NNNN.json     je 250 Eintraege ohne Punktlisten
+ *   spuren/NNNN.json        je Teil {spur_ref, blob} (SPUR1, Base64)
+ *
+ * GEMESSEN nach dem Umbau, 5000er-Konto: 14,13 s, **24,0 MB von 64**, Datei
+ * **11,42 MB** statt 94,28 — und mit `memory_limit=64M` laeuft es durch.
+ * Demokonto: 28,1 -> 4,0 MB, 2,14 -> 0,22 MB.
+ *
+ * EIN UMWEG, DEN DIE MESSUNG ERZWUNGEN HAT: `ZipArchive::addFromString()`
+ * haelt jede uebergebene Zeichenkette bis zum `close()` im Speicher — damit
+ * laege am Ende doch wieder alles gleichzeitig da. Gemessen an 34,6 MB
+ * Inhalt, je eigener Prozess: `addFromString` 42,0 MB Spitze, `addFile`
+ * **2,0 MB**. Die Teile gehen deshalb einzeln in einen Bauordner und von dort
+ * ins Archiv.
+ *
+ * SPEICHERGRENZE UND SCHWELLEN (E-S2-15). Vorgabe 2 GB, Warnschwellen 70 und
+ * 90 Prozent, beides im Adminbereich einstellbar. Geprueft wird VOR dem Bau:
+ * abgelehnt mit Meldung, nie still verdraengt. Die Zaehlung misst das GANZE
+ * Verzeichnis — es fuellt sich auch mit dem, was nicht auf der Paketliste
+ * steht. Je Schwelle geht einmal eine Meldung heraus, und die Marke wird
+ * NACH dem Versand gesetzt: Scheitert er, kaeme die Warnung sonst nie.
+ *
+ * AUFBEWAHRUNG 2 STATT 3. Das Konzept nennt seit E-S2-14 die Zwei; Code und
+ * drei Dokumente standen auf drei. Eine Installation, die die Einstellung nie
+ * angefasst hat, verliert beim naechsten Sichern je Konto den aeltesten von
+ * drei Staenden — die Rueckmeldung nennt jede verdraengte Datei.
+ *
+ * KEINE MIGRATION. Nur das Dateiformat der Sicherung aendert sich.
+ *
  */
-const WEB_VERSION = '11.1.1';
+const WEB_VERSION = '12.0.0';

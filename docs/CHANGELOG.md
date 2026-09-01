@@ -11,6 +11,147 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.0.0] — 2026-09-01
+
+**Die Admin-Sicherung wird mehrteilig.** Siebtes Arbeitspaket der Phase S2
+(AP6, E-S2-13 bis E-S2-15). Hauptnummer, weil das Dateiformat der
+Admin-Sicherung von 1 auf 2 wechselt **und** der erste Lauf danach die
+einteiligen Pakete eines Kontos entfernt. **Keine Migration** — nur das
+Dateiformat ändert sich, das Datenmodell nicht.
+
+### Web — Warum
+
+Die Admin-Sicherung war der letzte Weg, der das Budget sprengte, und zwar
+nicht knapp. **Gemessen** am 5000er-Konto:
+
+| | vorher | jetzt |
+|---|---|---|
+| Dauer | 19,81 s | **14,13 s** |
+| Speicherspitze | **1077,6 MB** | **24,0 MB von 64** |
+| mit `memory_limit=64M` (Z3) | **Abbruch** in `spur_lib.php` | läuft durch |
+| Datei | 94,28 MB | **11,42 MB** |
+
+Am Demokonto: 28,1 → 4,0 MB Spitze, 2,14 → 0,22 MB Datei.
+
+Auf genau der Sorte Webspace, für die diese Anwendung gebaut ist, war die
+Admin-Sicherung eines großen Kontos also **unmöglich** — kein theoretisches
+Budget, ein Abbruch. Der Grund stand in einer Zeile:
+`json_decode(edbak_build($userId), true)` — derselbe Bestand als Zeichenkette,
+als Feld und beim Schreiben noch einmal als Zeichenkette.
+
+### Web — Das Paket ist jetzt ein ZIP
+
+Unversiegelt, denn es liegt serverseitig und trägt `pat_blob` ohnehin als
+Chiffretext:
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, **`geschuetzte`** |
+| `kopf.json` | Stammdaten, Diensttage, Zahl der Einträge |
+| `eintraege/0001.json` … | je 250 Einträge **ohne** Punktlisten |
+| `spuren/0001.json` … | je Teil `{spur_ref, blob}` — SPUR1, Base64 |
+
+Gepackt, anders als beim Nutzerformat: Dort sind die Teile bereits gzip *und*
+verschlüsselt, hier ist es blankes JSON. Der Packlauf ist der Grund, aus dem
+dieselben Daten in 11,42 statt 94,28 MB passen.
+
+**Ein Umweg, den erst die Messung erzwungen hat.**
+`ZipArchive::addFromString()` hält jede übergebene Zeichenkette bis zum
+`close()` im Speicher — damit läge am Ende doch wieder alles gleichzeitig da.
+Gemessen an 34,6 MB Inhalt, je eigener Prozess: `addFromString` **42,0 MB**
+Spitze, `addFile` **2,0 MB**. Die Teile gehen deshalb einzeln in einen
+Bauordner und von dort ins Archiv.
+
+**`geschuetzte` im Manifest** ist keine Zierde. `edbak_paket_hat_geschuetzte()`
+sah bis hierher in die Einsatzliste des Pakets; im gefensterten Kern steht sie
+dort nicht mehr. Ohne die Zahl hätte die Funktion still `false` geliefert und
+damit die Sperre aus E20 ausgehebelt: Ein Paket mit unlesbaren Angaben wäre
+als „direkt einspielbar" durchgegangen.
+
+**Und ein Fassung-2-Kern darf nicht durch den einteiligen Weg.** Er trägt
+Nutzlast 8 — die Punkte stehen in eigenen Teilen. Wer ihn durch
+`edbak_restore()` schickt, bekommt jeden Einsatz und keine einzige Spur.
+Genau dieser Fall ist in F-S2-E einmal eingetreten und hat 91 208 Punkte
+gekostet; deshalb gibt es `edbak_paket_einspielen()`, und
+`edbak_paket_lesen()` verweigert Fassung 2 ausdrücklich.
+
+### Web — Speichergrenze und Warnschwellen (E-S2-15)
+
+Vorgabe **2 GB**, Warnschwellen **70 und 90 Prozent**, beides im Adminbereich
+einstellbar. Geprüft wird **vor** dem Bau: abgelehnt mit Meldung, nie still
+verdrängt (E-S2-14). Beim großen Konto spart das 14 Sekunden je abgelehntem
+Lauf — bei „Alle sichern" 14 Sekunden je Konto.
+
+**Die Zählung misst jetzt das ganze Verzeichnis.** Vorher zählte sie nur
+Dateien, die das Paketnamensmuster bestanden; Begleitdateien, `.htaccess` und
+liegengebliebene Reste eines abgebrochenen Laufs waren unsichtbar und
+zählten trotzdem auf der Platte. Für eine Anzeige mag das angehen, für eine
+Speichergrenze nicht. Was nicht in Paketen steckt, wird getrennt ausgewiesen,
+damit ein auffälliger Rest auffällt statt in einer Summe unterzugehen.
+
+**Neu: `smtp_eingerichtet()`.** E-S2-15 verlangt zwei verschiedene Wege — Mail
+an die Admin-Adresse, „ohne eingerichtetes SMTP stattdessen dauerhafter
+Hinweis im Admin-Bereich". Die Anwendung konnte diese beiden Fälle bis hierher
+nicht unterscheiden: `smtp_send()` liefert `false` für „Host falsch",
+„Passwort falsch", „Netz weg" **und** „gar nicht eingerichtet".
+
+**Die Schwellen-Marke wird nach dem Versand gesetzt, nicht davor.** Das
+einzige Vorbild im Haus — die wöchentliche Erinnerungsmail — macht es
+umgekehrt und verwirft dabei den Rückgabewert. Für eine Erinnerung ist das
+vertretbar (die nächste kommt in einer Woche); für eine Warnung, dass der
+Speicher zuläuft, ist es falsch: Scheitert der Versand, stünde die Marke
+trotzdem, und die Warnung käme **nie** — genau in dem Fall, in dem sie
+gebraucht wird.
+
+### Web — Aufbewahrung 2 statt 3
+
+Das Konzept nennt seit E-S2-14 die Zwei; Code und drei Dokumente standen auf
+drei. Der Widerspruch ist zugunsten des Konzepts aufgelöst.
+
+**Was das kostet:** Eine Installation, die die Einstellung nie angefasst hat,
+verliert beim nächsten Sichern je Konto den ältesten von drei Ständen. Das
+geschieht nicht still — die Rückmeldung nennt jede verdrängte Datei. Wer drei
+behalten will, trägt drei ein; die Einstellung gibt es seit Web 9.8.0.
+
+**Einteilige Pakete gehen beim ersten neuen Lauf mit** — aber erst, nachdem
+das neue Paket geschrieben **und wieder gelesen** wurde. Ein ZIP, das sich
+nicht öffnen lässt, ist genau der Fall, in dem man den alten Stand noch
+braucht. Das jüngste Paket bleibt in jedem Fall stehen, auch wenn es Fassung 1
+ist: eine Aufräumung, die aufräumt, bis nichts mehr da ist, wäre das Gegenteil
+der Funktion.
+
+### Web — Was der Umbau nebenbei repariert hat
+
+- **`.tmp`-Reste blockierten dauerhaft die Ordnerlöschung.** Sie standen nicht
+  auf der Weißliste von `edbak_ordner_loeschen()`, und damit ließ sich ein
+  Konto nicht mehr vollständig löschen — an einem Rest, den die Anwendung
+  selbst erzeugt hatte. Der Bauordner trägt jetzt ein erkennbares Präfix und
+  wird vor dem Löschen mit aufgeräumt.
+- **`edbak_ordner_loeschen()` löschte erst und meldete dann Fehlschlag.** Die
+  Prüfung stand *in* der Schleife: Beim fünften Eintrag abzubrechen hieß, die
+  ersten vier bereits gelöscht zu haben. Jetzt entscheidet ein erster
+  Durchgang, ob überhaupt etwas gelöscht wird.
+- **`edbak_groesse_text()` endete bei MB.** Die Grenze wird in GB angegeben;
+  die Meldung hätte „2.048,0 MB von 2.048,0 MB" gelautet.
+- **Der Rückgabewert von `edbak_begleit_schreiben()` wurde verworfen.** Die
+  Sicherung lag dann zwar, aber das Verzeichnis kannte sie nicht — kein
+  Datenverlust, aber eine Auskunft, die fehlt. Wird jetzt gemeldet.
+- **`api/backup_spuren_restore.php` ist von 200 auf 96 Zeilen geschrumpft.**
+  Sein Kern steht als `edbak_spuren_schreiben()` in `backup_lib.php`, weil die
+  Admin-Sicherung ihn ebenfalls braucht. Ein zweiter Weg wäre ein zweiter Ort,
+  an dem Eigentumsprüfung, Blobprüfung und das Überspringen vorhandener
+  Spuren zu vergessen sind.
+- **`install.php` prüft `ext/zip`** — die Sicherung ist jetzt ein ZIP; ohne
+  die Erweiterung soll das vor der Einrichtung auffallen, nicht im ersten Lauf.
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/wiederherstellungs-probe/` | **66** Erwartungen, 0 offen (vorher 44) — Teil 8 Rundlauf des Adminpakets, Teil 9 Speichergrenze und Schwellen |
+| Speicher, 5000er-Konto | 1077,6 MB → **24,0 MB von 64**, mit Deckel geprüft |
+| Bilderlauf `43-sicherungen` | 8 Bilder, **8 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+
 ## [Web 11.1.1] — 2026-08-31
 
 **Eine Datei mit Nutzlast 8 und Punktlisten verlor alle Spuren, ohne ein

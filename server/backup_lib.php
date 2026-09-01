@@ -1846,3 +1846,118 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
     if (!$nurEintraege && isset($data['days'])) { $stats['day_map'] = $dayIdMap; }
     return $stats;
 }
+
+/**
+ * Eine Liste von SPUR1-Blobs in ein Konto schreiben (S2/AP6).
+ *
+ * WOFUER ES DIESE FUNKTION GIBT. Bis Web 11.2.0 stand dieser Ablauf nur in
+ * `api/backup_spuren_restore.php`. Die Admin-Sicherung braucht ihn seit dem
+ * Umbau auf das mehrteilige Rohpaket ebenfalls — und ein zweiter Weg waere
+ * ein zweiter Ort, an dem die drei Dinge unten zu vergessen sind. Der
+ * Endpunkt ist seitdem eine duenne Schale um diese Funktion.
+ *
+ * DREI DINGE, DIE HIER PASSIEREN MUESSEN:
+ *
+ * 1. EIGENTUM PRUEFEN. Jede Kennung wird gegen `user_id` geprueft, auch wenn
+ *    sie aus einer Antwort dieses Servers stammt. Wer sich darauf verlaesst,
+ *    dass nur zurueckkommt, was hinausging, hat einen Weg gebaut, der fremde
+ *    Spuren ueberschreibt.
+ *
+ * 2. DEN BLOB PRUEFEN, BEVOR ER LIEGT (`spur_blob_pruefen()`). Sonst waere
+ *    dies die einzige Stelle der Anwendung, an der ungeprueft Binaerinhalt in
+ *    die Datenbank ginge. CLAUDE.md 4: „alle Schreibwege, ohne Ausnahme".
+ *
+ * 3. VORHANDENE UEBERSPRINGEN. `spur_blob_schreiben()` ist ein Upsert und
+ *    ueberschreibt — an seiner Stelle richtig (der Verdichtungsjob ersetzt
+ *    einen Blob durch den ausgeduennten), hier falsch: Eine abgebrochene
+ *    Wiederherstellung soll sich fortsetzen lassen.
+ *
+ * UND DIE HOEHE DES EINSATZORTS GEHOERT HIERHER, nicht in den Kernlauf. Bei
+ * Nutzlast 7 lagen die Punkte schon in derselben Anfrage; ab Nutzlast 8
+ * kommen sie erst hier an, und der Kernlauf haette eine Spur ohne Punkte vor
+ * sich. Gefunden hat das der Kreislauf: 79 Einsaetze ohne `site_ele_m`,
+ * obwohl die Quelle sie hatte.
+ *
+ * Rumpf je Eintrag: {owner_type, owner_id, blob (Base64), n (optional)}.
+ * Rueckgabe: {geschrieben, uebersprungen, abgelehnt[], hoehe_fehler}.
+ */
+function edbak_spuren_schreiben(PDO $pdo, int $userId, array $liste): array
+{
+    require_once __DIR__ . '/site_elevation_lib.php';
+
+    /* Eigentum in EINER Abfrage je Art, nicht je Spur (M5-12). */
+    $wunsch = ['mission' => [], 'rest' => []];
+    foreach ($liste as $s) {
+        $art = (string)($s['owner_type'] ?? '');
+        $id  = (int)($s['owner_id'] ?? 0);
+        if (isset($wunsch[$art]) && $id > 0) { $wunsch[$art][$id] = true; }
+    }
+    $eigen = ['mission' => [], 'rest' => []];
+    foreach ($wunsch as $art => $ids) {
+        if (!$ids) { continue; }
+        $tabelle = $art === 'mission' ? 'missions' : 'rest_segments';
+        foreach (sql_in_bloecken($pdo,
+            "SELECT id FROM `$tabelle` WHERE user_id = ? AND id IN ({IDS})",
+            array_keys($ids), [$userId]) as $r) {
+            $eigen[$art][(int)$r['id']] = true;
+        }
+    }
+
+    /* Welche Spuren liegen schon? Eine Abfrage je Art — die Wiederaufnahme
+     * soll nicht je Spur nachfragen. */
+    $vorhanden = ['mission' => [], 'rest' => []];
+    foreach ($eigen as $art => $ids) {
+        if (!$ids) { continue; }
+        foreach (spur_blob_lesen_viele($pdo, $art, array_keys($ids)) as $id => $_x) {
+            $vorhanden[$art][$id] = true;
+        }
+    }
+
+    $geschrieben = 0; $uebersprungen = 0; $abgelehnt = []; $hoeheOffen = [];
+
+    foreach ($liste as $s) {
+        $art = (string)($s['owner_type'] ?? '');
+        $id  = (int)($s['owner_id'] ?? 0);
+        if (!isset($eigen[$art][$id])) {
+            /* Fremd, geloescht oder erfunden — dieselbe Antwort, wie ueberall
+             * in dieser Anwendung: Ein eigener Code verriete, welcher Fall es
+             * ist. Gezaehlt wird er trotzdem, sonst faellt ein Fehler nicht
+             * auf. */
+            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id,
+                            'grund' => 'nicht vorhanden'];
+            continue;
+        }
+        if (isset($vorhanden[$art][$id])) { $uebersprungen++; continue; }
+
+        $blob = base64_decode((string)($s['blob'] ?? ''), true);
+        if ($blob === false || $blob === '') {
+            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id,
+                            'grund' => 'kein lesbarer Blob'];
+            continue;
+        }
+        $fehler = spur_blob_pruefen($blob, isset($s['n']) ? (int)$s['n'] : null);
+        if ($fehler !== null) {
+            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id, 'grund' => $fehler];
+            continue;
+        }
+        $kopf = spur_kopf($blob);
+        spur_blob_schreiben($pdo, $art, $id, $blob,
+                            $kopf['stufe'], $kopf['n_original'], $kopf['n']);
+        $vorhanden[$art][$id] = true;    // gegen Dubletten IN DERSELBEN Liste
+        $geschrieben++;
+        if ($art === 'mission') { $hoeheOffen[] = $id; }
+    }
+
+    /* DIE HOEHE NACH DEM SCHREIBEN, nicht mittendrin: Sie liest die Spur, die
+     * gerade erst entstanden ist. Ein Fehlschlag ist kein Grund, den Lauf
+     * scheitern zu lassen — die Angabe ist abgeleitet, die Spur liegt. */
+    $hoeheFehler = 0;
+    foreach (array_unique($hoeheOffen) as $mid) {
+        try { compute_site_elevation($pdo, $mid); }
+        catch (Throwable $ex) { $hoeheFehler++; }
+    }
+
+    return ['geschrieben' => $geschrieben, 'uebersprungen' => $uebersprungen,
+            'abgelehnt' => $abgelehnt, 'hoehe_fehler' => $hoeheFehler];
+}
+

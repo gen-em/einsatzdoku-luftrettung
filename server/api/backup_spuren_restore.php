@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
-require_once __DIR__ . '/../spur_lib.php';
-require_once __DIR__ . '/../site_elevation_lib.php';
+require_once __DIR__ . '/../backup_lib.php';      // edbak_spuren_schreiben()
 
 /**
  * POST api/backup_spuren_restore.php — die Spuren einer Sicherung zurueckspielen.
@@ -74,79 +73,19 @@ try {
                              . ' Spuren je Anfrage.'], 400);
     }
 
-    $pdo = db();
-
-    /* Eigentum in EINER Abfrage je Art, nicht je Spur (M5-12). */
-    $wunsch = ['mission' => [], 'rest' => []];
-    foreach ($liste as $s) {
-        $art = (string)($s['owner_type'] ?? '');
-        $id  = (int)($s['owner_id'] ?? 0);
-        if (isset($wunsch[$art]) && $id > 0) { $wunsch[$art][$id] = true; }
-    }
-    $eigen = ['mission' => [], 'rest' => []];
-    foreach ($wunsch as $art => $ids) {
-        if (!$ids) { continue; }
-        $tabelle = $art === 'mission' ? 'missions' : 'rest_segments';
-        foreach (sql_in_bloecken($pdo,
-            "SELECT id FROM `$tabelle` WHERE user_id = ? AND id IN ({IDS})",
-            array_keys($ids), [$userId]) as $r) {
-            $eigen[$art][(int)$r['id']] = true;
-        }
-    }
-
-    /* Welche Spuren liegen schon? Eine Abfrage je Art — die Wiederaufnahme
-     * soll nicht je Spur nachfragen. */
-    $vorhanden = ['mission' => [], 'rest' => []];
-    foreach ($eigen as $art => $ids) {
-        if (!$ids) { continue; }
-        foreach (spur_blob_lesen_viele($pdo, $art, array_keys($ids)) as $id => $_x) {
-            $vorhanden[$art][$id] = true;
-        }
-    }
-
-    $geschrieben = 0; $uebersprungen = 0; $abgelehnt = []; $hoeheOffen = [];
-
-    foreach ($liste as $s) {
-        $art = (string)($s['owner_type'] ?? '');
-        $id  = (int)($s['owner_id'] ?? 0);
-        if (!isset($eigen[$art][$id])) {
-            /* Fremd, geloescht oder erfunden — dieselbe Antwort, wie ueberall
-             * in dieser Anwendung: Ein eigener Code verriete, welcher Fall es
-             * ist. Gezaehlt wird er trotzdem, sonst faellt ein Fehler im
-             * Browser nicht auf. */
-            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id,
-                            'grund' => 'nicht vorhanden'];
-            continue;
-        }
-        if (isset($vorhanden[$art][$id])) { $uebersprungen++; continue; }
-
-        $blob = base64_decode((string)($s['blob'] ?? ''), true);
-        if ($blob === false || $blob === '') {
-            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id,
-                            'grund' => 'kein lesbarer Blob'];
-            continue;
-        }
-        $fehler = spur_blob_pruefen($blob, isset($s['n']) ? (int)$s['n'] : null);
-        if ($fehler !== null) {
-            $abgelehnt[] = ['owner_type' => $art, 'owner_id' => $id, 'grund' => $fehler];
-            continue;
-        }
-        $kopf = spur_kopf($blob);
-        spur_blob_schreiben($pdo, $art, $id, $blob,
-                            $kopf['stufe'], $kopf['n_original'], $kopf['n']);
-        $vorhanden[$art][$id] = true;    // gegen Dubletten IN DERSELBEN Anfrage
-        $geschrieben++;
-        if ($art === 'mission') { $hoeheOffen[] = $id; }
-    }
-
-    /* DIE HOEHE NACH DEM SCHREIBEN, nicht mittendrin: Sie liest die Spur, die
-     * gerade erst entstanden ist. Ein Fehlschlag ist kein Grund, die Anfrage
-     * scheitern zu lassen — die Angabe ist abgeleitet, die Spur liegt. */
-    $hoeheFehler = 0;
-    foreach (array_unique($hoeheOffen) as $mid) {
-        try { compute_site_elevation($pdo, $mid); }
-        catch (Throwable $ex) { $hoeheFehler++; }
-    }
+    /* DIE ARBEIT STEHT IN backup_lib.php (S2/AP6).
+     *
+     * Sie stand bis Web 11.2.0 hier — und die Admin-Sicherung braucht seit
+     * dem Umbau auf das mehrteilige Rohpaket genau dasselbe. Ein zweiter Weg
+     * waere ein zweiter Ort, an dem die Eigentumspruefung, die Blobpruefung
+     * und das Ueberspringen vorhandener Spuren zu vergessen sind. Dieser
+     * Endpunkt ist seitdem die Schale: Rumpf pruefen, Grenze halten,
+     * antworten. */
+    $e = edbak_spuren_schreiben(db(), $userId, $liste);
+    $geschrieben   = $e['geschrieben'];
+    $uebersprungen = $e['uebersprungen'];
+    $abgelehnt     = $e['abgelehnt'];
+    $hoeheFehler   = $e['hoehe_fehler'];
 
     $antwort = ['ok' => true, 'geschrieben' => $geschrieben,
                 'uebersprungen' => $uebersprungen, 'abgelehnt' => $abgelehnt];
