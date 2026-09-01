@@ -1,7 +1,20 @@
 # Umstellung „Sicherung" → „Backup"
 
-**Stand:** 31.08.2026 · **Zustand:** vorbereitet, nicht umgesetzt ·
-**Umsetzung:** nach S2, in einem Zug
+**Stand:** 01.09.2026 · **Zustand:** vorbereitet, nicht umgesetzt ·
+**Umsetzung:** **nach S3**, in einem Zug
+
+> **Nachtrag 01.09.2026 (Rahmenplan Fassung 13).** Der erste Entwurf sagte
+> „nach S2". Das ist zu früh, und der Grund steht im Rahmenplan selbst: Die
+> Reihenfolge lautet inzwischen **S2 → S5 → S3 → S4**, und die
+> Parallelisierungs-Übersicht (Fassung 10, Abschnitt 5) führt S3 ausdrücklich
+> als **nicht parallel zu S2** — wegen `einstellungen.php`, „auf beiden Seiten".
+> S3 (R43) baut die Seite um, S5 (R49) davor den Geräteabschnitt. Wer die Texte
+> vor S3 umstellt, lässt sie von S3 gleich wieder umschreiben.
+>
+> Dazu zwei Zahlen, die sich seither geändert haben: Der ausgelieferte Stand
+> ist **Web 9.15.0** (nicht 9.14.1), und S2 steht auf seinem Zweig bei
+> **Web 11.0.0**, Arbeitspaket AP5. Die Konfliktspalte unten ist auf diesen
+> Stand nachgemessen — sie ist gewachsen.
 
 Dieses Dokument ist die Vorlage für eine Umstellung, die **noch nicht
 stattgefunden hat**. Es sammelt den Befund, die Grenzen und die Arbeitsliste,
@@ -33,11 +46,11 @@ Umstellung dreht das um. Eine dokumentierte Entscheidung **für** eines von
 beiden gab es bisher nicht; die Terminologie-Phase P2 hat das Wortpaar nicht
 angefasst.
 
-## 2. Warum nach S2 und nicht jetzt
+## 2. Warum nach S3 und nicht jetzt
 
-Die Umstellung liegt zur Hälfte in Dateien, die der S2-Zweig
+Die Umstellung liegt fast vollständig in Dateien, die der S2-Zweig
 (`claude/s2-ansatz-vtnw53`) gleichzeitig hält. Gemessen gegen die Merge-Basis
-862559e:
+862559e, Stand S2/AP5 vom 01.09.2026:
 
 | Datei | Treffer | S2 |
 |---|---|---|
@@ -51,14 +64,22 @@ Die Umstellung liegt zur Hälfte in Dateien, die der S2-Zweig
 | `docs/Backlog.md` | 11 | **hält** |
 | `server/update.php` | 10 | **hält** |
 | `server/validate_lib.php` | 5 | **hält** |
+| `server/einstellungen.php` | 34 | **hält** (AP5) |
+| `server/assets/crypto.js` | 12 | **hält** |
+| `server/ui.php` | 7 | **hält** |
 | `docs/Konzept-P3-Oberflaeche.md` | 68 | frei |
 | `server/adminbackup_lib.php` | 42 | frei |
 | `docs/Konzept-S1-Sicherung-Import.md` | 37 | frei |
-| `server/einstellungen.php` | 34 | frei |
 | `server/admin_sicherungen.php` | 31 | frei |
 | `server/admin_users.php` | 18 | frei |
-| `server/assets/crypto.js` | 12 | frei |
-| `server/ui.php` | 7 | frei |
+
+**Die untere Hälfte dieser Tabelle hat am 31.08.2026 anders ausgesehen.**
+`einstellungen.php`, `crypto.js` und `Design.md` standen dort als frei — S2
+war bei AP2, heute ist es bei AP5, und AP5 ist der Sicherungscontainer. Die
+Messung war zum damaligen Zeitpunkt richtig und ist trotzdem überholt. Daraus
+folgt eine Regel für dieses Dokument: **Eine Konfliktmessung gegen einen
+laufenden Zweig hat ein Verfallsdatum.** Vor der Umsetzung wird neu gemessen,
+nicht abgeschrieben.
 
 **Der Grund gegen eine Teilumstellung ist nicht der Merge-Aufwand, sondern die
 Halbheit.** Wer nur die freien Dateien umstellt, bekommt zwei Adminseiten, die
@@ -205,6 +226,10 @@ soll.
    Verhaltensänderung ist **Korrektur**, nicht Neben — es kommt keine Funktion
    und kein Feld hinzu. Kopfabsatz nicht vergessen; die Erzählung je
    Hauptnummer wird fortgeschrieben.
+   **Die Nummer selbst steht erst bei der Umsetzung fest:** Der ausgelieferte
+   Stand ist heute 9.15.0, S2 vergibt auf seinem Zweig bereits das 11er-Band,
+   und S5 und S3 liegen dazwischen. Hier eine Zahl hineinzuschreiben, wäre
+   geraten — sie wird an der dann ausgelieferten Fassung abgelesen.
 2. **`docs/CHANGELOG.md`**: ein Eintrag, erklärende Prosa mit Begründung — was
    war das Problem (zwei Wörter für dieselbe Sache, auf einem Bildschirm
    nebeneinander), warum diese Lösung, was bleibt bewusst stehen (Abschnitt 3).
