@@ -1154,7 +1154,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                      das Lage-Feld wäre Zierde. */ ?>
             <?php ui_feld(['label' => 'Name', 'name' => 'name', 'id' => 'sdbase-name',
                            'klasse' => 'focus-target', 'pflicht' => true,
-                           'platzhalter' => 'z. B. Standort Kempten',
+                           'platzhalter' => 'z. B. Standort Talwang',
                            'wert' => (string)($editBase['name'] ?? ''),
                            'attr' => ' maxlength="120"']); ?>
             <?php /* Koordinaten optional (E37/E39). Sie sind die Quelle des
@@ -1356,7 +1356,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
               <div class="listen-form-felder">
                 <?php ui_feld(['label' => 'Bezeichnung', 'name' => 'name',
                                'id' => 'vehname-' . $bid, 'pflicht' => true,
-                               'platzhalter' => 'z. B. Christoph 17 oder NEF Kempten 1',
+                               'platzhalter' => 'z. B. Alpenfalke 1 oder NEF Talwang 76/1',
                                'wert' => (string)($evHier['name'] ?? ''),
                                'attr' => ' maxlength="64"']); ?>
                 <?php /* DIE ART IST NICHT VORBELEGT (Web 7.0.0): „luftgebunden"
@@ -1491,7 +1491,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
               <div class="listen-form-felder">
                 <?php ui_feld(['label' => 'Name', 'name' => 'name',
                                'id' => $tdPraefix . '-name', 'pflicht' => true,
-                               'platzhalter' => 'z. B. Klinikum Kempten',
+                               'platzhalter' => 'z. B. Klinikum Westried',
                                'wert' => (string)($etHier['name'] ?? ''),
                                'attr' => ' maxlength="190"']); ?>
                 <?php ui_ortsfeld([
@@ -1539,7 +1539,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                 sd_form([
                     'anker' => $anker . '-res', 'action' => 'res_save', 'base_id' => $bid,
                     'bearbeitet' => $erHier, 'label' => 'Bezeichnung',
-                    'platzhalter' => 'z. B. RTW Kempten',
+                    'platzhalter' => 'z. B. RTW Talwang 76/85',
                     'titel_neu' => 'Rettungsmittel hinzufügen',
                     'titel_bearbeiten' => 'Eintrag bearbeiten',
                 ]); ?>
@@ -1573,7 +1573,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
                   sd_form([
                       'anker' => $anker . '-bw', 'action' => 'bw_save', 'base_id' => $bid,
                       'bearbeitet' => $ewHier, 'label' => 'Bereitschaft',
-                      'platzhalter' => 'z. B. Bereitschaft Oberstdorf',
+                      'platzhalter' => 'z. B. Bergwacht Sonnenau',
                       'titel_neu' => 'Bereitschaft hinzufügen',
                       'titel_bearbeiten' => 'Bereitschaft bearbeiten',
                   ]); ?>

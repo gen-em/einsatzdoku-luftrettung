@@ -1601,7 +1601,7 @@ EdOrtswahl.registriere('start', ortStart);
 
 /* Ortsfelder aus dem Feldkatalog (derzeit die Zielklinik). Sie tragen einen
  * NAMEN und daneben eine Koordinate, deshalb getrennte Suche: „Klinikum
- * Kempten" ist keine Adresse, und eine Adresssuche im selben Feld schriebe den
+ * Talwang" ist keine Adresse, und eine Adresssuche im selben Feld schriebe den
  * Namen weg. Trifft die Eingabe einen Stammdatensatz, kommen dessen Koordinaten
  * mit und bleiben ueberschreibbar (A13l). */
 const LOC_FELDER = <?= json_encode($LOC_FELDER, JSON_UNESCAPED_UNICODE) ?>;

@@ -1782,7 +1782,7 @@ function ui_ortsfeld(array $o): void
     <?php else: ?>
       <?php /* NUR-LAGE-FASSUNG (feld = false): ein Suchfeld ohne Namensfeld.
                Die Verwaltungslisten führen den Namen in einem EIGENEN Feld
-               („Standort Kempten"); hier wird nur die Lage gesucht, und ein
+               („Standort Talwang"); hier wird nur die Lage gesucht, und ein
                Treffer setzt ausschließlich die Koordinaten (ortsfeld.js,
                `getrennteSuche`).
 

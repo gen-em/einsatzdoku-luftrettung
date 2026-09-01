@@ -1806,5 +1806,29 @@ declare(strict_types=1);
  * drueckt), der Einsatzort-Kreis verliert seine weisse Umrandung und wird
  * 32 statt 36 px, und die Tagesuebersicht zeigt keine Zielkliniken mehr.
  *
+ * 12.3.3 LAESST DAS ORTSFELD BEIM TIPPEN SUCHEN (S3/AP8, E-S3-06) --
+ * FUNKTIONSAENDERUNG. Bei Standort und Zielklinik suchte bis hierher nur die
+ * Lupe; O5 hatte das ausdruecklich so entschieden. Fuer einen Weg, den man
+ * zwanzigmal am Tag geht, ist ein Klick eine Handlung zu viel. Drei Grenzen
+ * fassen es ein: 400 ms Entprellung, ab drei Zeichen, hoechstens EINE offene
+ * Anfrage (eine laufende wird abgebrochen). Nachgemessen mit abgefangenen
+ * Anfragen: fluessiges Tippen eines Ortsnamens ergibt genau eine.
+ *
+ * DAS AENDERT EINE ZUSAGE, UND DIE STEHT IN docs/Lizenzen.md 6.2. Dort hiess
+ * es, die Suche laufe nicht bei jedem Tastendruck UND nur auf ausdrueckliches
+ * Ausloesen. Der erste Teil stimmt weiter, der zweite nicht mehr. Der
+ * Abschnitt ist neu geschrieben und nennt die drei Grenzen. Die
+ * E2E-Zusage ist unberuehrt: Gesucht wird, BEVOR aus der Eingabe ein
+ * gespeicherter -- und damit verschluesselter -- Wert wird.
+ *
+ * PLATZHALTER TRAGEN JETZT PHANTASIENAMEN (E-S3-13). „z. B. Standort
+ * Kempten" bevorzugte einen realen Ort und las sich fuer manche als die
+ * erwartete Antwort, fuer andere als Auskunft darueber, wer diese Anwendung
+ * betreibt. Elf Stellen getauscht, mit Namen aus der Welt des
+ * Referenzdatensatzes (Talwang, Westried, Sonnenau, Alpenfalke).
+ *
+ * Dazu die Wahlliste als schlichte Liste statt vier umrandeter Einzelzeilen:
+ * 248 auf 224 px bei gleicher Zeilenhoehe.
+ *
  */
-const WEB_VERSION = '12.3.2';
+const WEB_VERSION = '12.3.3';

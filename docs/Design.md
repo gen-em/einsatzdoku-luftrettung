@@ -1024,7 +1024,7 @@ Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
 | **`.feld`** | Beschriftung plus Eingabe. Die Beschriftung steht in **Normalschrift** — im Bestand waren Feldnamen gesperrte Versalien, das prägende Stilmittel und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21). |
 | **`.schalter`** | **eines** an oder aus. 44-px-Zeile, Beschriftung links, an in Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich (E-P3-28). |
 | **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). |
-| **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). |
+| **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). **Schlichte Liste, keine umrandeten Einzelzeilen** (seit Web 12.3.3): Vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Erkennbar ist die Auswahl am gezeichneten Punkt und an der Fläche der gewählten Zeile — dafür braucht keine Zeile eine Umrandung. |
 
 Alle vier sind aus **echten** `<input>` gebaut: Tastaturbedienung,
 Vorlesezustand und Absenden kommen damit vom Browser und nicht aus einem
@@ -1213,6 +1213,18 @@ für den Fall, dass das Bezeichnungsfeld schon existiert und die Kennung
 Code" nennt das Format, nicht ein Beispiel. Wo das Ortsfeld doch einen
 Platzhalter bekommt, gilt die Regel aus 9.7: erfundener Ort, kein echter
 (E-S3-13).
+
+**Es sucht beim Tippen** (seit Web 12.3.3, E-S3-06) — in **beiden**
+Bedienformen, also auch bei Standort und Zielklinik, wo bis dahin nur die
+Lupe suchte. Drei Grenzen fassen das ein und stehen als Konstanten oben in
+`assets/ortsfeld.js`: **400 ms** Ruhe nach dem letzten Tastendruck, **ab drei
+Zeichen**, **höchstens eine offene Anfrage** (eine laufende wird abgebrochen).
+Die Lupe umgeht die Entprellung, nicht die Mindestlänge.
+
+> **Das ist eine Auskunft an Dritte, und sie steht in `docs/Lizenzen.md` 6.2.**
+> Die Adresssuche geht an Photon; jede Anfrage trägt die eingetippten
+> Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche ganz — die
+> Formaterkennung läuft lokal und hat Vorrang.
 
 ### 9.14 Abbruchseite
 

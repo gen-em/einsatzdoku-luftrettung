@@ -1494,3 +1494,105 @@ Kette hatte. Der Codeweg ist dafür der Beleg: `iconSize: null` und
 außerhalb des Kastens und ändern seine Größe nicht — nachgelesen, nicht
 gemessen. Ein Einsatz mit Doppelring stand in den geprüften Beständen nicht
 zur Verfügung. Gehört als Bedienweg ins Prüfdokument.
+
+---
+
+### AP8 — Formularbausteine und Ortssuche (E)
+
+**Stand:** erledigt. Web 12.3.3.
+
+#### Was geändert wurde
+
+- **`ortsfeld.js`:** Das `input`-Ereignis stößt die Suche jetzt in **beiden**
+  Bedienformen an (vorher `if (nurKoordinaten) { zustand(); }`). Drei
+  benannte Konstanten oben in der Datei: `ENTPRELL_MS = 400`,
+  `MINDESTZEICHEN = 3`, dazu ein `AbortController` für „höchstens eine offene
+  Anfrage". Ein `AbortError` leert die Liste **nicht** — sonst flackerte sie
+  beim flüssigen Tippen.
+- **Elf Platzhalter** auf erfundene Namen getauscht.
+- **`.wahlliste`/`.wahl-zeile`:** ohne Rahmen, ohne eigene Fläche, ohne
+  Zwischenraum; Radius eine Stufe kleiner.
+- **`docs/Lizenzen.md` 6.2** neu geschrieben.
+- **`tools/wortliste/ausnahmen.json`:** eine Regel entfallen.
+
+#### E-S3-06 in Zahlen — die Entprellzeit bleibt bei 400 ms
+
+Das Konzept erlaubt 300–600 ms und verlangt, den Endwert hier festzuhalten:
+**400 ms.** Gemessen wurde mit **abgefangenen** Photon-Anfragen (Antwortzeit
+künstlich auf 120 ms gesetzt), damit der Nachweis nicht am fremden Dienst
+hängt:
+
+| Ortsfeld | flüssig „Talwang" (7 Zeichen à 80 ms) | „Ta" (2 Zeichen) | Lupe |
+|---|---|---|---|
+| Standort (Einstellungen) | **1 Anfrage** | 0 | 1 nach **37 ms** |
+| Zielklinik (Einsatzformular) | **1 Anfrage** | 0 | 1 nach **47 ms** |
+| Einsatzort (Einsatzformular) | **1 Anfrage** | 0 | 1 nach **39 ms** |
+
+Die einzelne Anfrage trug jeweils den **vollständigen** Suchtext („Talwang"),
+nicht ein Bruchstück — das belegt, dass die Entprellung bis zum Ende des
+Tippens hält.
+
+**Ein Zwischenbefund, der Zeit gekostet hat:** Die erste Probe lief auf einem
+**bestehenden** Einsatz und zählte null Anfragen. Das ist kein Fehler,
+sondern die dokumentierte Regel „stehen Koordinaten, ruht die Adresssuche" —
+der Einsatz hatte welche. Die Probe läuft jetzt auf einem **neuen**
+Einsatzformular.
+
+#### Der Platzhalter-Bestand, vollständig erhoben
+
+Erhoben über `grep` auf `'platzhalter' =>` und `placeholder="` in allen
+PHP- und JS-Dateien unter `server/`. **39 Stellen**, davon **11 mit realen
+Orts- oder Organisationsnamen** — alle getauscht:
+
+| Datei | Stellen |
+|---|---|
+| `admin_stammdaten.php` | 5 |
+| `einstellungen.php` | 5 |
+| `mission_fields.php` | 1 |
+
+**Verbleibend und geprüft in Ordnung:** `sicherung.example.de` (reservierte
+Beispieldomäne), `neue@adresse.de`, `z. B. Vorname Nachname`, `z. B.
+Nachname`, `Name der Person`, `z. B. Dienstuhr`, `z. B. Leitstellen-Nr.`,
+`z. B. 07:00`, `hh:mm`, `XXXX-XXXX-XXXX-XXXX`, `ABCD-EFGH-JKMN-PQRS-TVWX`,
+`Tippen zum Suchen, Enter zum Übernehmen`, `Name oder E-Mail`, `Suchen`,
+`wird in der Kopfleiste angezeigt`, `tippen für Vorschläge — auch Koordinaten
+oder Plus Code` — keiner davon nennt einen realen Ort oder eine reale Person.
+
+**Drei Kommentare im Code zitierten den alten Platzhalter** („Standort
+Kempten") und sind mitgezogen — sie hätten sonst einen Text zitiert, den es
+nicht mehr gibt. **Nicht** angefasst: `import_profiles.js` und `update.php`
+nennen „Christoph 17" als reale Fremdbezeichnung (Titel einer fremden
+Exportdatei, Beispiel eines selbstvergebenen Gerätenamens) — das sind keine
+Platzhalter, und ein erfundener Name wäre dort falsch. `geo.js` nennt
+„Klinikum Immenstadt" als Fallbeispiel des behobenen Markerversatzes; das ist
+die Wiedergabe eines Fehlerberichts.
+
+**Ein Nebeneffekt, der die Regel bestätigt:** Die Wortliste führte für den
+Rettungsmittel-Platzhalter eine Ausnahme, weil „Christoph 17" ein Luftbegriff
+ist. „Alpenfalke 1 oder NEF Talwang 76/1" ist von sich aus neutral — die
+Ausnahme ist **ersatzlos entfallen** (66 statt 67 Regeln). Ein Platzhalter,
+der keine Ausnahme braucht, ist der bessere Platzhalter.
+
+#### Prüfstand AP8
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | **4 entfallen** (Rahmen, Fläche, Zwischenraum, Rahmenfarbe der Wahl), **1 geänderter Wert** (Radius), 0 neu, 0 Reihenfolgetausch |
+| Autosuche | Netzwerkmitschnitt mit abgefangenen Anfragen, drei Ortsfelder | 1 / 0 / 1 je Feld — Tabelle oben |
+| Wahlliste | Höhen und Rahmen gemessen, vorher gegen nachher am selben Bild | **248 → 224 px**, Zeilenhöhe unverändert 4 × 44 px, `border-width` **0px** |
+| Wahlliste an allen Stellen | Baustein-Suche | drei Verwendungen: Logo-Wahl (Profil) und zweimal Diensttag-Zusammenführen — die Änderung sitzt am Baustein, alle drei ziehen mit |
+| Texte | `tools/wortliste/wortliste.py` | **0 / 0 / 0** — nach dem Streichen der überflüssigen Ausnahme |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde wie Basis |
+| Syntax | `php -l`, `node --check` | keine Fehler |
+
+**Nicht geprüft:** Das Zusammenspiel mit dem **echten** Photon-Dienst. Die
+Probe fängt die Anfragen ab — das prüft Entprellung, Mindestlänge und Abbruch
+genau, aber nicht, ob die Antwort des echten Dienstes noch richtig gelesen
+wird. Am Antwortformat hat sich nichts geändert; belegt ist es damit nicht.
+Gehört als Bedienweg ins Prüfdokument.
+
+**Ebenfalls nicht geprüft:** die Wahllisten des Diensttag-Zusammenführens im
+Bild — sie hängen an einem Bestand mit zwei zusammenführbaren Diensttagen,
+der im Demo-Konto nicht ohne Vorarbeit herzustellen ist. Belegt ist der
+gemeinsame Baustein.

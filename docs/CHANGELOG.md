@@ -11,6 +11,88 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.3.3] — 2026-09-01
+
+**Formularbausteine und Ortssuche.** Achtes Arbeitspaket von S3. Eine
+**Funktionsänderung** (Autosuche im Ortsfeld) mit einer Folge, die benannt
+gehört. Keine Migration.
+
+### Web — Das Ortsfeld sucht beim Tippen
+
+Bei **Standort** und **Zielklinik** suchte bis hierher nur die Lupe; O5 hatte
+das ausdrücklich so entschieden, weil in diesen Feldern ein **Name** steht und
+keine Adresse. Für einen Weg, den man zwanzigmal am Tag geht, ist ein Klick
+eine Handlung zu viel. Beide Felder suchen jetzt beim Tippen — **die Lupe
+bleibt** als ausdrücklicher Auslöser, und was ein Treffer übernimmt, bleibt
+unterschieden (bei Standort und Zielklinik nur die Koordinaten, nie der Name).
+
+Drei Grenzen fassen das ein, und sie stehen als benannte Konstanten oben in
+`assets/ortsfeld.js` statt verstreut im Code:
+
+| Grenze | Wert | wozu |
+|---|---|---|
+| Entprellung | **400 ms** | beim flüssigen Tippen entsteht **eine** Anfrage, nicht eine je Buchstabe |
+| Mindestlänge | **3 Zeichen** | unter drei Zeichen sucht niemand ernsthaft |
+| offene Anfragen | **höchstens eine** | eine laufende wird abgebrochen; sonst überholen sich zwei Antworten und die Liste zeigt den vorletzten Stand |
+
+Nachgemessen mit abgefangenen Anfragen an allen drei Ortsfeldern (Standort,
+Zielklinik, Einsatzort): flüssiges Tippen von „Talwang" (sieben Zeichen à
+80 ms) ergibt **eine** Anfrage, zwei Zeichen ergeben **keine**, und die Lupe
+löst nach **unter 50 ms** aus.
+
+### Web — Und das ändert eine Zusage in `docs/Lizenzen.md`
+
+Dort stand, die Adresssuche laufe „nicht bei jedem Tastendruck" **und nur auf
+ausdrückliches Auslösen". Der erste Teil stimmt weiter, der zweite nicht mehr.
+Der Abschnitt 6.2 ist deshalb neu geschrieben: Er sagt jetzt, dass das Tippen
+in einem Ortsfeld Suchanfragen an Photon auslöst, nennt die drei Grenzen und
+sagt, warum es sie gibt — Photon ist ein frei betriebener
+Gemeinschaftsdienst, und jede Anfrage trägt die eingetippten Buchstaben zu
+einem Dritten.
+
+**Die Ende-zu-Ende-Verschlüsselung ist davon nicht berührt.** Gesucht wird,
+bevor aus der Eingabe ein gespeicherter — und damit verschlüsselter — Wert
+wird; das war beim Klick auf die Lupe so und ist es beim Tippen. Wer
+Koordinaten von Hand einträgt, einen Plus Code einfügt oder den Ort auf der
+Karte wählt, löst **keine** Anfrage aus.
+
+### Web — Platzhalter tragen jetzt Phantasienamen
+
+„z. B. Standort Kempten" bevorzugte einen realen Ort. Ein Platzhalter ist ein
+**Beispiel**, kein Vorschlag: Ein Teil der NutzerInnen liest ihn als die
+erwartete Antwort, ein anderer als Aussage darüber, wer diese Anwendung
+betreibt. Beides ist falsch.
+
+**Elf Stellen getauscht**, mit Namen aus der Welt des Referenzdatensatzes —
+Talwang, Westried, Sonnenau, Alpenfalke:
+
+| vorher | jetzt |
+|---|---|
+| z. B. Standort Kempten | z. B. Standort Talwang |
+| z. B. Christoph 17 oder NEF Kempten 1 | z. B. Alpenfalke 1 oder NEF Talwang 76/1 |
+| z. B. Klinikum Kempten | z. B. Klinikum Westried |
+| z. B. RTW Kempten | z. B. RTW Talwang 76/85 |
+| z. B. Bereitschaft Oberstdorf | z. B. Bergwacht Sonnenau |
+
+Die Regel steht als Pflegeregel in `docs/Design.md` 9.7 und gilt ab jetzt für
+jede neue Stelle. **Ein Nebeneffekt:** Die Wortliste brauchte für den
+Rettungsmittel-Platzhalter eine Ausnahme, weil „Christoph 17" ein
+Luftbegriff ist. Mit „Alpenfalke 1 oder NEF Talwang 76/1" ist der Platzhalter
+von sich aus neutral — die Ausnahme ist ersatzlos entfallen (66 statt 67
+Regeln).
+
+### Web — Die Wahlliste ist eine Liste, keine Kartensammlung
+
+Jede Zeile trug einen eigenen Rahmen auf eigener Fläche und stand mit 8 px
+Abstand zur nächsten: vier Kästchen untereinander, die aussahen wie vier
+Karten und eine Wahl sind. Rahmen, Fläche und Zwischenraum entfallen; die
+Auswahl zeigt sich weiterhin am gezeichneten Punkt und an der hell orangen
+Fläche der gewählten Zeile. Die Zeilenhöhe bleibt bei 44 px.
+
+Gemessen an der Logo-Wahl: **248 → 224 px** bei unveränderter Zeilenhöhe. Die
+Änderung sitzt am Baustein und trifft damit auch die beiden Wahllisten des
+Diensttag-Zusammenführens.
+
 ## [Web 12.3.2] — 2026-09-01
 
 **Der Markerversatz — der eine echte Fehler der Rückmeldungsliste.** Siebtes
