@@ -1358,6 +1358,14 @@ Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
 die Teile mit („Einträge werden übertragen (Teil 2 von 5) …"), und die
 Abschlussmeldung nennt Einträge, Spuren und Punkte.
 
+**Die Abschlussmeldung nennt außerdem den Dateinamen** (seit Web 12.2.1) —
+etwa `einsatzdoku-backup-2026-09-01.edbak`. Das Herunterladen läuft ohne
+Rückfrage und ohne Ton durch; wer nicht gerade auf die Download-Leiste des
+Browsers sieht, bekommt davon nichts mit. **Wo** die Datei landet, sagt die
+Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
+Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
+für den Datenexport unter **Einstellungen → „Export"**.
+
 **Ältere Sicherungen kannst du weiterhin einspielen.** Umgekehrt gilt das
 nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
 nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.

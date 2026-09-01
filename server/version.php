@@ -1651,5 +1651,42 @@ declare(strict_types=1);
  * 12.1.0: ein neues Dateiformat und zwei neue Seiten, aber kein Datenmodell,
  * das sich aendert, und kein bestehender Weg, der anders verlaeuft.
  *
+ * 12.2.1 IST DIE ZWEITE RUECKMELDUNGSRUNDE nach P3 — drei kleine Dinge an
+ * zwei Seiten, keine Migration, kein neues Feld. Sie sind waehrend S2 auf
+ * einem eigenen Zweig entstanden und bewusst auf Dateien beschraenkt worden,
+ * die S2 nicht hielt; die Buchfuehrung (diese Datei, Changelog, Handbuch,
+ * Backlog) ist deshalb erst jetzt nachgezogen.
+ *
+ * DER AUSWAEHLEN-KNOPF DES DATEIFELDS KLEBTE OBEN. `.feld-eingabe` gibt jedem
+ * Feld 44 px Hoehe und nur waagerechte Polsterung; ein `input[type=file]`
+ * stellt seinen nativen Knopf auf die Textzeile, und die steht damit am
+ * oberen Innenrand — gemessen 0 px Luft darueber, 19 px darunter bei einem
+ * 23 px hohen Knopf. `display:flex; align-items:center` aendert daran NICHTS:
+ * Chromium legt den Schatteninhalt eines Eingabefeldes nicht in einen
+ * Flex-Fluss, nachgemessen blieb es bei 0/19. Was wirkt, ist die Zeilenhoehe
+ * auf den Innenraum — jetzt 10 px oben gegen 9 px unten; mittiger geht es
+ * nicht, der Innenraum ist mit 42 px ungerade. Die 44 px bleiben. Der
+ * Attributselektor ist Abgrenzung, kein Spezifitaetsgewinn: Es gibt keine
+ * Regel `input[type=file]`, gegen die er gewinnen muesste. Getroffen werden
+ * genau die beiden Dateifelder der Anwendung (Backup einspielen, Import).
+ *
+ * DIE ERZEUGTE DATEI SAGTE NICHT, DASS ES SIE GIBT. Sicherung und Datenexport
+ * zaehlten auf, was drinsteht, und schwiegen darueber, dass ein Download
+ * gelaufen ist. Der laeuft ohne Dialog und ohne Ton durch; wer nicht gerade
+ * auf die Leiste des Browsers sieht, sucht anschliessend eine Datei, deren
+ * Namen er nicht kennt. Beide Meldungen nennen ihn jetzt — aus EINER
+ * Variablen, denn zwei getrennte Ausdruecke liefen mit dem naechsten
+ * Tageswechsel auseinander. WO die Datei liegt, sagen sie bewusst nicht: Das
+ * entscheidet die Einstellung des Browsers. Im Export sind es drei Wege mit
+ * drei Namen (Tabelle roh, Tabelle im Archiv, Archiv des Profils B), und beim
+ * Archivweg ist die heruntergeladene Datei das ARCHIV, nicht die Tabelle
+ * darin.
+ *
+ * UND `warn` TRUG DAS FALSCHE ZEICHEN. Der melde()-Nachbau der
+ * Einstellungsseite liess den Ton in den Sonst-Zweig fallen und zeigte das
+ * Hinweiszeichen statt der Warnung — entgegen Design.md 9.5 und entgegen
+ * ui_meldung_markup(), das die vollstaendige Tabelle fuehrt. Betroffen waren
+ * gerade die Meldungen, die auffallen sollen.
+ *
  */
-const WEB_VERSION = '12.2.0';
+const WEB_VERSION = '12.2.1';

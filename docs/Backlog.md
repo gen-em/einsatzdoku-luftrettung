@@ -612,6 +612,24 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Ableitungen nachmessen.
 
 
+56. **Die zweite Rückmeldungsrunde ist nicht im Browser geprüft, und sie steht
+    in keinem Konzept.**
+    *Aufgenommen 01.09.2026, mit Web 12.2.1.* Die drei Punkte der Runde
+    (Dateifeld mittig, Dateiname in den Abschlussmeldungen, Warnzeichen für
+    `warn`) sind gemessen belegt — Stilvergleich, Kaskade, Feldmessung,
+    Wortliste, dazu die Meldungstexte in node durchgespielt. **Was fehlt, ist
+    die Bedienprüfung an der laufenden Anwendung:** In der Umsetzungsumgebung
+    gab es kein MySQL, gemessen wurde am echten Stylesheet mit dem Markup, das
+    `ui_feld()` erzeugt. Nachzuholen ist der Blick auf beide Dateifelder
+    (Backup einspielen, Import), eine erzeugte Sicherung samt Abschlussmeldung,
+    ein Export je Profil und eine Sicherung mit unlesbaren Angaben — dort trägt
+    die Meldung jetzt das Warnzeichen. Der Bilderlauf braucht dieselbe Instanz.
+    **Zweitens:** Beide Oberflächenpunkte stehen nicht in `ToDo_Layout.pdf` —
+    die Liste hat 19 Punkte am Stand Web 9.14.1, diese sind neuer. Sie gehören
+    ins S3-Konzept nachgetragen, damit S3 sie als erledigt vorfindet und nicht
+    ein zweites Mal beschließt (R43 verlangt, dass eine Einzelkorrektur an
+    einer Seite im Konzept benannt wird).
+
 
 ## Erledigt
 
