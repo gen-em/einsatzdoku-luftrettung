@@ -175,10 +175,48 @@ falsches FTP-Passwort meldete „Authentication failed" ohne das Wort Passwort
 „kam nicht zustande" ohne jeden nächsten Schritt — `ftp_connect()` gibt dort
 `false` zurück und schweigt.
 
+### Web — Zwei Sätze Gegenstellen, weil einer nicht reicht
+
+`tools/versandprobe/` stellt die Server selbst hin, und zwar zweimal:
+`gegenstellen.py` in Python (pyftpdlib, paramiko — portabel, ohne Rechte) und
+`echte_gegenstellen.sh` mit **vsftpd und OpenSSH**, also dem, was auf einem
+Webspace tatsächlich läuft.
+
+Beide werden gebraucht, und nicht aus Gründlichkeit: **vsftpd kennt kein
+MLSD.** Der Rückfall auf `NLST` + `SIZE` in `ZielFtp::liste()` ist dadurch
+zum ersten Mal gefahren worden — gegen pyftpdlib allein wäre er nie an die
+Reihe gekommen. Die Probe misst seither, welchen Weg sie genommen hat, statt
+ihn zu vermuten.
+
+Der zweite Satz hat gefunden, was der erste nicht sehen konnte: **zwei
+Fehlermeldungen blieben halb englisch.** vsftpd sagt „Could not create file",
+pyftpdlib sagt „Not enough privileges" — beide Wortlaute kannte die
+Übersetzung nicht, und die Meldung für ein verweigertes Schreiben endete im
+Original. Jede Umsetzung bringt ihr eigenes Vokabular mit.
+
+Vier Nebenwege waren bis dahin unbelegt und sind es nicht mehr: der Listenweg
+ohne MLSD, **aktives** FTP (der Schalter war nur in einer Stellung gefahren),
+ein Grundpfad mit Unterordnern statt `/` — im Betrieb der Normalfall — und
+ein verweigertes Schreiben.
+
+Und der Hostschlüsselwechsel ist jetzt echt: OpenSSH startet mit einem
+zweiten Schlüssel neu, statt dass ein erfundener Fingerabdruck eingesetzt
+wird. Die Verbindung bricht ab, die Meldung nennt beide Abdrücke, und das
+Anmeldeprotokoll des Servers steht vorher wie nachher auf 46 Zeilen. Nebenbei
+eine unabhängige Gegenprobe: Der errechnete Fingerabdruck ist zeichengleich
+mit dem von `ssh-keygen -lf`.
+
+**Ein Unterschied, der im Betrieb Schaden anrichten kann**, ist dabei
+aufgefallen: vsftpd sperrt den Nutzer in sein Heimverzeichnis, dort ist `/`
+die Wurzel. OpenSSH tut das nicht — dort ist `/` die Wurzel des Dateisystems.
+Derselbe Eintrag „Pfad = /" bedeutet je nach Protokoll etwas anderes; die
+LIESMICH sagt es jetzt.
+
 ### Web — Geprüft
 
-`tools/versandprobe/` gegen echte Server auf 127.0.0.1 (FTP, FTPS mit TLS,
-SFTP): **106 Erwartungen, 0 nicht erfüllt**. Im Browser: Serverschlüssel
+`tools/versandprobe/` gegen echte Server auf 127.0.0.1, in beiden Fassungen:
+**115 Erwartungen, 0 nicht erfüllt** — gegen pyftpdlib/paramiko **und** gegen
+vsftpd/OpenSSH. Im Browser: Serverschlüssel
 anlegen, Ziel anlegen, prüfen (6 Schritte), falsches Passwort, versenden (64
 Dateien, 63,9 MB), Rückstand danach 0 — 0 Konsolenfehler, 0 px waagerechter
 Überlauf, Bedienelemente 44 px. Der Wartungslauf über die Befehlszeile führt

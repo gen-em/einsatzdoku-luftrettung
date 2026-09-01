@@ -18,11 +18,39 @@ if ($wurzel === '' || !is_dir($wurzel)) {
     exit(2);
 }
 
+/* ZWEI SAETZE GEGENSTELLEN, EIN SATZ ERWARTUNGEN.
+ *
+ * Ohne Schalter laeuft die Probe gegen `gegenstellen.py` — pyftpdlib und
+ * paramiko, portabel und ohne Rechte. Mit `--echt` gegen
+ * `echte_gegenstellen.sh` — vsftpd und OpenSSH, also die Server, die auf
+ * einem Webspace tatsaechlich stehen.
+ *
+ * DER UNTERSCHIED IST NICHT KOSMETISCH. Nachbauten koennen nur, was ihr Autor
+ * bedacht hat; vsftpd kennt kein MLSD, OpenSSH sperrt niemanden in ein
+ * Heimverzeichnis, und beide antworten mit anderen Texten. Genau daran
+ * scheitert ein FTP-Adapter, nicht am Uebertragen.
+ *
+ * DER GRUNDPFAD IST DESHALB JE PROTOKOLL EIN ANDERER: vsftpd sperrt den
+ * Nutzer in sein Heimverzeichnis (chroot), dort ist `/` die Wurzel. OpenSSH
+ * tut das NICHT — dort ist `/` die Wurzel des Dateisystems, und der Grundpfad
+ * muss der echte Pfad sein. Wer das verwechselt, schreibt seine Sicherungen
+ * nach `/`.
+ */
+$echt = in_array('--echt', $argv, true);
+if ($echt) {
+    define('P_FTP', 2131);  define('P_FTPS', 2132);  define('P_SFTP', 2232);
+    define('NUTZER', 'edprobe');
+    define('PFAD_FTP', '/');                       // chroot: Heim ist die Wurzel
+    define('PFAD_SFTP', $wurzel . '/heim');        // kein chroot: echter Pfad
+    define('GEGEN', 'vsftpd und OpenSSH');
+} else {
+    define('P_FTP', 2121);  define('P_FTPS', 2122);  define('P_SFTP', 2222);
+    define('NUTZER', 'probe');
+    define('PFAD_FTP', '/');
+    define('PFAD_SFTP', '/');
+    define('GEGEN', 'pyftpdlib und paramiko');
+}
 const HOST     = '127.0.0.1';
-const P_FTP    = 2121;
-const P_FTPS   = 2122;
-const P_SFTP   = 2222;
-const NUTZER   = 'probe';
 const PASSWORT = 'geheim-probe-2026';
 
 /* Ein $CFG, bevor irgendetwas aus server/ geladen wird: serverkrypto_lib.php
@@ -40,6 +68,9 @@ $konfig = __DIR__ . '/../../server/config.php';
 $CFG = is_file($konfig) ? (array)(require $konfig) : ['db' => [], 'app' => [], 'smtp' => []];
 $CFG['server_key'] = bin2hex(random_bytes(32));
 require_once __DIR__ . '/../../server/sicherungsziel_lib.php';
+
+echo "Gegenstellen: " . GEGEN . " (FTP " . P_FTP . ", FTPS " . P_FTPS
+     . ", SFTP " . P_SFTP . ", Nutzer " . NUTZER . ")\n";
 
 $n = 0; $offen = 0; $teil = '';
 function kopf(string $t): void { global $teil; $teil = $t; echo "\n$t\n"; }
@@ -149,10 +180,10 @@ function rundlauf(string $wie, Zielweg $weg, string $ordner): void
 }
 
 kopf('Teil 3 — FTP (ext/ftp, unverschlüsselt) gegen 127.0.0.1:' . P_FTP);
-rundlauf('ftp', new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, '/', false, true), 'kontoA');
+rundlauf('ftp', new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, PFAD_FTP, false, true), 'kontoA');
 
 kopf('Teil 4 — FTPS (ext/ftp mit TLS) gegen 127.0.0.1:' . P_FTPS);
-rundlauf('ftps', new ZielFtp(HOST, P_FTPS, NUTZER, PASSWORT, '/', true, true), 'kontoB');
+rundlauf('ftps', new ZielFtp(HOST, P_FTPS, NUTZER, PASSWORT, PFAD_FTP, true, true), 'kontoB');
 /* DER BEFUND, DER IN DIE DOKUMENTATION GEHÖRT. Die Gegenstelle zeigt ein
  * selbst ausgestelltes Zertifikat mit dem Namen „versandprobe-selbst-
  * ausgestellt" und ohne jede Vertrauenskette. Dass der Rundlauf oben
@@ -162,7 +193,7 @@ pruef('FTPS nimmt ein selbst ausgestelltes Zertifikat an', true,
 
 kopf('Teil 5 — SFTP (phpseclib) gegen 127.0.0.1:' . P_SFTP);
 $sollAbdruck = trim((string)@file_get_contents($wurzel . '/fingerabdruck.txt'));
-$sftp = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, '/', null);
+$sftp = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, PFAD_SFTP, null);
 rundlauf('sftp', $sftp, 'kontoC');
 pruef('Der errechnete Fingerabdruck ist der des Servers',
       $sftp->fingerabdruck() === $sollAbdruck && $sollAbdruck !== '',
@@ -174,21 +205,32 @@ pruef('Er ist in OpenSSH-Schreibweise', str_starts_with((string)$sftp->fingerabd
  * ==================================================================== */
 kopf('Teil 6 — Unerwarteter Hostschlüssel (SFTP)');
 
-$protokoll = $wurzel . '/anmeldungen.log';
-$vorher = count(file($protokoll, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []);
+/* DIE MESSGROESSE IST DIE GEGENSTELLE, NICHT DIE FEHLERMELDUNG. „Der Adapter
+ * bricht ab" liesse sich behaupten; „der Server hat keinen Anmeldeversuch
+ * gesehen" ist gezaehlt. Bei den Nachbauten schreibt paramiko jede Anmeldung
+ * mit, bei den echten Servern das Protokoll von OpenSSH (`sshd -E`). */
+$protokoll = $echt ? $wurzel . '/sshd-auth.log' : $wurzel . '/anmeldungen.log';
+$zaehle = static function (string $datei, bool $echt): int {
+    $zeilen = file($datei, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    if (!$echt) { return count($zeilen); }
+    /* OpenSSH schreibt viel; gezaehlt wird nur, was eine Anmeldung IST. */
+    return count(array_filter($zeilen, static fn($z) =>
+        preg_match('/(Accepted|Failed|Postponed|Connection closed by authenticating)/i', $z) === 1));
+};
+$vorher = $zaehle($protokoll, $echt);
 $falsch = 'SHA256:' . rtrim(base64_encode(hash('sha256', 'ein anderer Server', true)), '=');
-$sftpF = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, '/', $falsch);
+$sftpF = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, PFAD_SFTP, $falsch);
 $fehler = faengt(fn() => $sftpF->verbinden());
 pruef('Ein anderer Hostschlüssel bricht die Verbindung ab', $fehler !== null);
 pruef('...und die Meldung nennt beide Fingerabdrücke',
       $fehler !== null && str_contains($fehler, $falsch)
       && str_contains($fehler, (string)$sollAbdruck));
-$nachher = count(file($protokoll, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: []);
+$nachher = $zaehle($protokoll, $echt);
 pruef('...und die Gegenstelle hat KEINEN Anmeldeversuch gesehen', $nachher === $vorher,
       "Anmeldezeilen vorher $vorher, nachher $nachher — kein Passwort gesendet");
 $sftpF->trennen();
 
-$sftpR = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, '/', $sollAbdruck);
+$sftpR = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, PFAD_SFTP, $sollAbdruck);
 pruef('Der richtige Fingerabdruck lässt durch',
       faengt(fn() => $sftpR->verbinden()) === null);
 $sftpR->trennen();
@@ -202,22 +244,22 @@ $key      = (string)@file_get_contents($wurzel . '/nutzerschluessel');
 $keyPass  = (string)@file_get_contents($wurzel . '/nutzerschluessel-mit-passwort');
 pruef('Der Probeschlüssel liegt bereit', $key !== '' && $keyPass !== '');
 
-$sk = new ZielSftp(HOST, P_SFTP, NUTZER, '', $key, '/', $sollAbdruck);
+$sk = new ZielSftp(HOST, P_SFTP, NUTZER, '', $key, PFAD_SFTP, $sollAbdruck);
 $f = faengt(fn() => $sk->verbinden());
 pruef('Anmeldung mit Schlüssel ohne Passphrase', $f === null, $f ?? '');
 $sk->trennen();
 
-$sk2 = new ZielSftp(HOST, P_SFTP, NUTZER, 'passphrase-der-probe', $keyPass, '/', $sollAbdruck);
+$sk2 = new ZielSftp(HOST, P_SFTP, NUTZER, 'passphrase-der-probe', $keyPass, PFAD_SFTP, $sollAbdruck);
 $f = faengt(fn() => $sk2->verbinden());
 pruef('Anmeldung mit Schlüssel UND Passphrase', $f === null, $f ?? '');
 $sk2->trennen();
 
-$sk3 = new ZielSftp(HOST, P_SFTP, NUTZER, 'falsche-passphrase', $keyPass, '/', $sollAbdruck);
+$sk3 = new ZielSftp(HOST, P_SFTP, NUTZER, 'falsche-passphrase', $keyPass, PFAD_SFTP, $sollAbdruck);
 $f = faengt(fn() => $sk3->verbinden());
 pruef('Eine falsche Passphrase wird verständlich abgewiesen',
       $f !== null && str_contains($f, 'Passphrase'), (string)$f);
 
-$sk4 = new ZielSftp(HOST, P_SFTP, NUTZER, '', 'kein Schlüssel, nur Text', '/', $sollAbdruck);
+$sk4 = new ZielSftp(HOST, P_SFTP, NUTZER, '', 'kein Schlüssel, nur Text', PFAD_SFTP, $sollAbdruck);
 $f = faengt(fn() => $sk4->verbinden());
 pruef('Ein kaputter Schlüssel wird verständlich abgewiesen',
       $f !== null && str_contains($f, 'BEGIN'), (string)$f);
@@ -229,16 +271,16 @@ kopf('Teil 8 — Fehlerfälle mit verständlicher Meldung (Abnahme AP7)');
 
 $faelle = [
     ['Falsches Passwort (FTP)',
-     new ZielFtp(HOST, P_FTP, NUTZER, 'falsch', '/', false, true),
+     new ZielFtp(HOST, P_FTP, NUTZER, 'falsch', PFAD_FTP, false, true),
      'Passwort'],
     ['Falsches Passwort (SFTP)',
-     new ZielSftp(HOST, P_SFTP, NUTZER, 'falsch', null, '/', $sollAbdruck),
+     new ZielSftp(HOST, P_SFTP, NUTZER, 'falsch', null, PFAD_SFTP, $sollAbdruck),
      'Passwort'],
     ['Falscher Port (FTP)',
-     new ZielFtp(HOST, 2199, NUTZER, PASSWORT, '/', false, true),
+     new ZielFtp(HOST, 2199, NUTZER, PASSWORT, PFAD_FTP, false, true),
      'Port'],
     ['Falscher Port (SFTP)',
-     new ZielSftp(HOST, 2199, NUTZER, PASSWORT, null, '/', null),
+     new ZielSftp(HOST, 2199, NUTZER, PASSWORT, null, PFAD_SFTP, null),
      'Verbindung'],
     ['Pfad gibt es nicht (FTP)',
      new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, '/gibt-es-nicht', false, true),
@@ -256,7 +298,7 @@ foreach ($faelle as [$was, $weg, $wort]) {
     try { $weg->trennen(); } catch (Throwable $e) {}
 }
 
-$ohne = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, '/', false, true);
+$ohne = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, PFAD_FTP, false, true);
 $f = faengt(fn() => $ohne->senden('/tmp/gibt-es-nicht.zip', 'x.zip'));
 pruef('Senden ohne Verbindung wird abgewiesen, statt still zu scheitern',
       $f !== null && str_contains($f, 'keine Verbindung'), (string)$f);
@@ -281,7 +323,8 @@ function zielAttrappe(int $id, string $prot, int $port, ?string $abdruck,
         'geheim' => sk_versiegeln($passwort, sz_zweck($id, 'geheim')),
         'schluessel' => $schluessel === null ? null
                         : sk_versiegeln($schluessel, sz_zweck($id, 'schluessel')),
-        'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,
+        'pfad' => $prot === 'sftp' ? PFAD_SFTP : PFAD_FTP,
+        'passiv' => 1, 'aktiv' => 1,
         'fingerabdruck' => $abdruck,
     ];
 }
@@ -296,7 +339,8 @@ foreach ([['ftp', P_FTP, null], ['ftps', P_FTPS, null],
     pruef(strtoupper($prot) . ': die Probedatei ist wieder weg',
           in_array('Probedatei wieder gelöscht.', $e['schritte'], true));
 }
-$dreck = glob($wurzel . '/*/edverbindungsprobe-*') ?: [];
+$dreck = array_merge(glob($wurzel . '/*/edverbindungsprobe-*') ?: [],
+                     glob($wurzel . '/heim/edverbindungsprobe-*') ?: []);
 pruef('Keine Probedatei ist auf einer der drei Gegenstellen liegengeblieben',
       $dreck === [], count($dreck) . ' Rückstände');
 
@@ -333,7 +377,8 @@ if ($db === null) {
     $db->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
     [$ok, $id] = sz_speichern(null, [
         'name' => 'Versandprobe SFTP', 'protokoll' => 'sftp', 'host' => HOST,
-        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => '/', 'passiv' => 1, 'aktiv' => 1,
+        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => PFAD_SFTP,
+        'passiv' => 1, 'aktiv' => 1,
     ], PASSWORT, null);
     pruef('Ein Ziel lässt sich anlegen', $ok === true, is_int($id) ? "Kennung $id" : '');
     $ziel = $ok ? sz_lesen((int)$id) : null;
@@ -367,14 +412,15 @@ if ($db === null) {
     /* Ändern OHNE neues Passwort — das Geheimnis muss stehenbleiben. */
     sz_speichern((int)$id, [
         'name' => 'Versandprobe SFTP', 'protokoll' => 'sftp', 'host' => HOST,
-        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => '/geaendert',
+        'port' => P_SFTP, 'nutzer' => NUTZER, 'pfad' => PFAD_SFTP . '/geaendert',
         'passiv' => 1, 'aktiv' => 0,
     ], null, null);
     $ziel2 = sz_lesen((int)$id);
     pruef('Ändern ohne Passworteingabe lässt das Passwort stehen',
           sz_geheim((array)$ziel2, 'geheim') === PASSWORT);
     pruef('...und übernimmt die geänderten Felder',
-          ($ziel2['pfad'] ?? '') === '/geaendert' && (int)($ziel2['aktiv'] ?? 1) === 0);
+          ($ziel2['pfad'] ?? '') === PFAD_SFTP . '/geaendert'
+          && (int)($ziel2['aktiv'] ?? 1) === 0);
 
     sz_fingerabdruck_merken((int)$id, $sollAbdruck);
     $ziel3 = sz_lesen((int)$id);
@@ -401,5 +447,126 @@ if ($db === null) {
     $db->exec("DELETE FROM backup_targets WHERE name LIKE 'Versandprobe%'");
 }
 
+
+/* ======================================================================
+ * Teil 11 — Die Wege, die bis hierher niemand gegangen ist
+ *
+ * Die Teile 3 bis 10 fahren den HAEUFIGEN Fall: passives FTP, Grundpfad `/`,
+ * ein Server mit MLSD, ein Verzeichnis, in das man schreiben darf. Der
+ * Adapter kann mehr — und was nie gefahren wurde, ist nicht geprueft,
+ * sondern nur geschrieben.
+ * ==================================================================== */
+kopf('Teil 11 — Nebenwege des Adapters');
+
+/* --- 11a: Welchen Listenbefehl kann diese Gegenstelle ueberhaupt? -------
+ * `ZielFtp::liste()` nimmt `ftp_mlsd` und faellt auf `ftp_nlist` + `ftp_size`
+ * zurueck. Welcher Weg genommen wird, entscheidet der SERVER — und deshalb
+ * wird hier gemessen und nicht vermutet. vsftpd kennt kein MLSD; pyftpdlib
+ * kennt es. Erst beide Laeufe zusammen belegen beide Zweige. */
+$roh = ftp_connect(HOST, P_FTP, 10);
+@ftp_login($roh, NUTZER, PASSWORT);
+ftp_pasv($roh, true);
+$kannMlsd = is_array(@ftp_mlsd($roh, PFAD_FTP === '/' ? '.' : PFAD_FTP));
+@ftp_close($roh);
+pruef('Der benutzte Listenweg ist gemessen, nicht vermutet', true,
+      $kannMlsd ? 'MLSD — der Hauptweg' : 'kein MLSD — der RUECKFALL auf NLST+SIZE');
+
+$wegL = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, PFAD_FTP, false, true);
+$datei = tempnam(sys_get_temp_dir(), 'vp');
+file_put_contents($datei, str_repeat('L', 777));
+$f = faengt(function () use ($wegL, $datei) {
+    $wegL->verbinden(); $wegL->ordner('liste'); $wegL->senden($datei, 'liste/l.zip');
+});
+$liste = $f === null ? $wegL->liste('liste') : [];
+pruef(($kannMlsd ? 'Mit MLSD' : 'Ohne MLSD (Rueckfall)') . ': die Liste nennt die Datei',
+      isset($liste['l.zip']), $f ?? (count($liste) . ' Eintrag'));
+pruef(($kannMlsd ? 'Mit MLSD' : 'Ohne MLSD (Rueckfall)') . ': und ihre Groesse stimmt',
+      ($liste['l.zip'] ?? -1) === 777, ($liste['l.zip'] ?? '?') . ' statt 777');
+if ($f === null) { $wegL->loeschen('liste/l.zip'); }
+$wegL->trennen();
+
+/* --- 11b: Aktives FTP ---------------------------------------------------
+ * Der Schalter „passiver Modus" steht in der Oberflaeche und war bisher nur
+ * in EINER Stellung gefahren. Aktives FTP heisst: Der SERVER baut die
+ * Datenverbindung zum Klienten auf. Auf einem Webspace hinter NAT geht das
+ * meist nicht — hier auf 127.0.0.1 geht es, und genau deshalb laesst es sich
+ * hier pruefen. */
+$wegA = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, PFAD_FTP, false, false);
+$zurueck = $datei . '.zurueck';
+$f = faengt(function () use ($wegA, $datei, $zurueck) {
+    $wegA->verbinden();
+    $wegA->ordner('aktiv');
+    $wegA->senden($datei, 'aktiv/a.zip');
+    $wegA->holen('aktiv/a.zip', $zurueck);
+});
+pruef('Aktives FTP (passiv = aus) uebertraegt', $f === null, $f ?? '777 Byte');
+pruef('...und zurueckgeholt ist es dasselbe',
+      $f === null && (string)@file_get_contents($zurueck) === (string)file_get_contents($datei));
+if ($f === null) { $wegA->loeschen('aktiv/a.zip'); }
+$wegA->trennen();
+@unlink($zurueck);
+
+/* --- 11c: Ein Grundpfad, der nicht die Wurzel ist -----------------------
+ * Im Betrieb heisst der Pfad `/backups/einsatzdoku` und nicht `/`. Damit
+ * laeuft jeder Aufruf durch `sz_pfad()` mit zwei Bestandteilen statt einem —
+ * und ein Fehler dort faellt bei `/` nicht auf. */
+$tiefFtp = rtrim(PFAD_FTP, '/') . '/tief/darunter';
+$wegT = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, $tiefFtp, false, true);
+$f = faengt(function () use ($wegT, $datei) {
+    $wegT->verbinden(); $wegT->ordner('kontoX'); $wegT->senden($datei, 'kontoX/t.zip');
+});
+$listeT = $f === null ? $wegT->liste('kontoX') : [];
+pruef('Ein Grundpfad mit Unterordnern traegt (FTP)', $f === null && isset($listeT['t.zip']),
+      $f ?? $tiefFtp);
+if ($f === null) { $wegT->loeschen('kontoX/t.zip'); }
+$wegT->trennen();
+
+$tiefSftp = rtrim(PFAD_SFTP, '/') . '/tief/darunter';
+$wegTs = new ZielSftp(HOST, P_SFTP, NUTZER, PASSWORT, null, $tiefSftp, $sollAbdruck);
+$f = faengt(function () use ($wegTs, $datei) {
+    $wegTs->verbinden(); $wegTs->ordner('kontoY'); $wegTs->senden($datei, 'kontoY/t.zip');
+});
+$listeTs = $f === null ? $wegTs->liste('kontoY') : [];
+pruef('Ein Grundpfad mit Unterordnern traegt (SFTP)', $f === null && isset($listeTs['t.zip']),
+      $f ?? $tiefSftp);
+if ($f === null) { $wegTs->loeschen('kontoY/t.zip'); }
+$wegTs->trennen();
+
+/* --- 11d: Kein Schreibrecht --------------------------------------------
+ * Die Abnahme von AP7 nennt „Platz voll" ausdruecklich als Fehlerfall mit
+ * verstaendlicher Meldung. Eine volle Platte laesst sich hier nicht
+ * herstellen; ein gesperrtes Verzeichnis ist derselbe Weg durch den Adapter
+ * (der Server antwortet mit 550 bzw. „Permission denied") und laesst sich
+ * herstellen. Das steht so auch in der LIESMICH — es ist der NAECHSTLIEGENDE
+ * Fall, nicht derselbe. */
+$sperre = null;
+if ($echt) {
+    /* Bei den echten Servern laeuft vsftpd als der angemeldete Nutzer — ein
+     * Verzeichnis auf 0555 genuegt, und der Server antwortet mit dem
+     * Wortlaut, den ein Hoster auch schickt. */
+    $sperre = $wurzel . '/heim/gesperrt';
+    @mkdir($sperre, 0755, true);
+    @chmod($sperre, 0555);
+    $wegS = new ZielFtp(HOST, P_FTP, NUTZER, PASSWORT, PFAD_FTP, false, true);
+    $ziel11d = 'gesperrt/s.zip';
+} else {
+    /* Bei den Nachbauten laeuft der Server als root, und root ignoriert
+     * Rechtebits — ein gesperrtes Verzeichnis waere hier keine Sperre.
+     * Stattdessen ein Konto, das NUR LESEN darf: derselbe Weg durch den
+     * Adapter, abgelehnt vom Server statt vom Dateisystem. */
+    $wegS = new ZielFtp(HOST, P_FTP, 'nurlesen', PASSWORT, PFAD_FTP, false, true);
+    $ziel11d = 'nurlesen.zip';
+}
+$f = faengt(function () use ($wegS, $datei, $ziel11d) {
+    $wegS->verbinden(); $wegS->senden($datei, $ziel11d);
+});
+pruef('Ein verweigertes Schreiben wird abgewiesen (FTP)', $f !== null,
+      $echt ? 'gesperrtes Verzeichnis' : 'Konto ohne Schreibrecht');
+pruef('...und die Meldung sagt auf DEUTSCH, woran es liegt',
+      $f !== null && str_contains($f, 'verweigert den Zugriff'),
+      mb_substr((string)$f, 0, 100));
+$wegS->trennen();
+if ($sperre !== null) { @chmod($sperre, 0755); @rmdir($sperre); }
+@unlink($datei);
 printf("\n-> %d Erwartungen, %d nicht erfuellt\n", $n, $offen);
 exit($offen === 0 ? 0 : 1);

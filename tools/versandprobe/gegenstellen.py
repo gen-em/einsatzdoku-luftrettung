@@ -29,6 +29,7 @@ PORT_FTP  = 2121
 PORT_FTPS = 2122
 PORT_SFTP = 2222
 NUTZER    = 'probe'
+NUTZER_NURLESEN = 'nurlesen'
 PASSWORT  = 'geheim-probe-2026'
 
 # --------------------------------------------------------------------------
@@ -66,6 +67,12 @@ def _ftp_lauf(wurzel, port, tls, zertpfad, passiv_von, passiv_bis):
 
     rechte = DummyAuthorizer()
     rechte.add_user(NUTZER, PASSWORT, wurzel, perm='elradfmwMT')
+    # Ein zweites Konto, das NUR LESEN darf. Es ist die Gegenprobe fuer
+    # „das Ziel verweigert das Schreiben" — ein Fall, den die Abnahme von AP7
+    # ausdruecklich verlangt (Stichwort „Platz voll") und der sich mit
+    # Dateirechten nicht herstellen laesst: Dieser Server laeuft als root, und
+    # root ignoriert Rechtebits. Der Server muss es also selbst ablehnen.
+    rechte.add_user(NUTZER_NURLESEN, PASSWORT, wurzel, perm='elr')
 
     if tls:
         from pyftpdlib.handlers import TLS_FTPHandler
@@ -253,9 +260,12 @@ def main():
         print(__doc__)
         return 2
     wurzel = os.path.abspath(sys.argv[1])
-    os.makedirs(os.path.join(wurzel, 'ftp'), exist_ok=True)
-    os.makedirs(os.path.join(wurzel, 'ftps'), exist_ok=True)
-    os.makedirs(os.path.join(wurzel, 'sftp'), exist_ok=True)
+    for teil in ('ftp', 'ftps', 'sftp'):
+        os.makedirs(os.path.join(wurzel, teil), exist_ok=True)
+        # Ein Grundpfad, der NICHT die Wurzel ist. Im Betrieb heisst er
+        # `/backups/einsatzdoku`; mit `/` allein bleibt die Zusammensetzung
+        # in sz_pfad() ungeprueft.
+        os.makedirs(os.path.join(wurzel, teil, 'tief', 'darunter'), exist_ok=True)
 
     import paramiko
     hostkey_pfad = os.path.join(wurzel, 'hostkey')

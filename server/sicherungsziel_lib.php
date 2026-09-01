@@ -147,8 +147,16 @@ function sz_klartext(string $roh): string
             => 'Nutzername oder Passwort stimmt nicht.',
         '/No space left|552|Quota|quota/i'
             => 'Auf dem Ziel ist kein Platz mehr.',
-        '/Permission denied|550|553|Access is denied/i'
-            => 'Das Ziel verweigert den Zugriff — Pfad und Rechte prüfen.',
+        /* Die letzten drei Wortlaute stammen von vsftpd und sind in der
+         * Versandprobe gegen den ECHTEN Server aufgeschlagen: Es sagt weder
+         * „Permission denied" noch nennt es einen Zahlencode, sondern
+         * „Could not create file." — und die Meldung blieb dadurch halb
+         * englisch. Genau dafuer gibt es den zweiten Satz Gegenstellen. */
+        '/Permission denied|550|553|Access is denied|Could not create file'
+        . '|Could not open file|Failed to open file|Create directory operation failed'
+        . '|Not enough privileges|Operation not permitted/i'
+            => 'Das Ziel verweigert den Zugriff — Pfad und Rechte prüfen. Ist '
+             . 'das Verzeichnis beschreibbar, und ist noch Platz?',
         '/Passive mode|PASV|EPSV/i'
             => 'Der Wechsel in den passiven Modus ist gescheitert — der Schalter '
              . '„passiver Modus" steht vielleicht falsch.',

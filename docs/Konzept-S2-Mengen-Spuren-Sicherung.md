@@ -2457,6 +2457,58 @@ Auge:
 | Erzeugte Tabellen in `Design.md` | `tabellen.py` | alle **vier** Zeichen für Zeichen gleich |
 | Regression | die vorhandenen Proben | `wiederherstellung` **76**, `spur` **25**, `jobs` **24** — je 0 offen |
 
+#### Nachtrag vom 01.09.2026: die Probe läuft jetzt auch gegen echte Server
+
+Der erste Stand prüfte gegen **Nachbauten** (pyftpdlib, paramiko). Auf die
+Frage, ob sich das nicht härter machen lässt, ist ein zweiter Satz
+Gegenstellen entstanden: `tools/versandprobe/echte_gegenstellen.sh` stellt
+**vsftpd** und **OpenSSH** hin — die Server, die auf einem Webspace
+tatsächlich laufen. Beide Sätze werden gebraucht, und zwar nicht aus
+Gründlichkeit, sondern weil sie verschiedene Zweige treffen:
+
+**vsftpd kennt kein MLSD.** Damit ist der Rückfall auf `NLST` + `SIZE` in
+`ZielFtp::liste()` zum ersten Mal gefahren worden — gegen pyftpdlib allein
+wäre er nie an die Reihe gekommen. Die Probe *misst* seither, welchen Weg sie
+genommen hat, statt ihn zu vermuten.
+
+**Was der zweite Satz gefunden hat, obwohl der erste grün war:** Zwei
+Fehlermeldungen blieben halb englisch. vsftpd sagt „Could not create file",
+pyftpdlib sagt „Not enough privileges"; die Übersetzung kannte beide nicht,
+und die Meldung für ein verweigertes Schreiben endete deshalb im Original.
+Beide Wortlaute stehen jetzt im Muster. Das ist genau der Ertrag, den ein
+zweiter Satz Gegenstellen bringen soll: Jede Umsetzung hat ihr eigenes
+Vokabular.
+
+**Vier Nebenwege waren bis dahin unbelegt** und sind es nicht mehr (Teil 11):
+der Listenweg ohne MLSD, **aktives** FTP (der Schalter war nur in einer
+Stellung gefahren), ein Grundpfad mit Unterordnern statt `/` (im Betrieb der
+Normalfall — `sz_pfad()` setzt dann zwei Bestandteile zusammen statt einen),
+und ein verweigertes Schreiben.
+
+**Der Hostschlüsselwechsel ist jetzt echt.** Statt eines erfundenen
+Fingerabdrucks startet OpenSSH mit einem zweiten Schlüssel neu. Ergebnis: Die
+Verbindung bricht ab, die Meldung nennt beide Abdrücke, und das
+Anmeldeprotokoll des Servers steht **vorher wie nachher auf 46 Zeilen** — es
+ging kein Passwort hinaus. Nebenbei eine unabhängige Gegenprobe der eigenen
+Rechnung: Der von `sz_fingerabdruck()` errechnete Wert ist zeichengleich mit
+dem von `ssh-keygen -lf`.
+
+**Ein Unterschied, der im Betrieb Schaden anrichten kann**, ist dabei
+aufgefallen und in der LIESMICH festgehalten: vsftpd sperrt den Nutzer in sein
+Heimverzeichnis, dort ist `/` die Wurzel. OpenSSH tut das nicht — dort ist `/`
+die Wurzel des Dateisystems. Derselbe Eintrag „Pfad = /" bedeutet je nach
+Protokoll etwas anderes.
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| `versandprobe` gegen die Nachbauten | `probe.php` | **115 Erwartungen, 0 offen** |
+| `versandprobe` gegen vsftpd und OpenSSH | `probe.php --echt` | **115 Erwartungen, 0 offen** |
+| Listenweg | gemessen je Lauf | pyftpdlib **MLSD**, vsftpd **Rückfall NLST+SIZE** |
+| Hostschlüsselwechsel (echter zweiter Schlüssel) | OpenSSH-Protokoll | abgewiesen, **46 → 46** Anmeldezeilen |
+| Fingerabdruck gegen `ssh-keygen -lf` | unabhängige Rechnung | zeichengleich |
+| Versand 64 Pakete / 63,9 MB, echte Server | `memory_get_peak_usage(true)` | FTP **0,35 s** · FTPS **1,85 s** · SFTP **0,68 s**, Spitze 2,0 bzw. 8,0 MB von 64 |
+| Angekommene Dateien (OpenSSH) | `cmp` je Datei | **64 von 64 byteweise gleich** |
+
 **Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
 
 - **Ein echtes Ziel im Internet — die Abnahme nach Abschnitt 9 steht aus.**
@@ -2467,13 +2519,17 @@ Auge:
   Tunnel wird auf 443 aufgebaut, auf 21 und 22 sofort zurückgesetzt). **Die
   Abnahme je Protokoll gehört auf die Maschine der Betreiberin oder auf den
   Produktivserver.**
-- **Ein echter Server mit eigenen Eigenheiten.** Geprüft wurde gegen pyftpdlib
-  und paramiko. Andere Antworttexte, fehlendes `MLSD`, aktives statt passives
-  FTP oder ein Pfad mit ungewöhnlichen Zeichen sind damit nicht abgedeckt.
+- ~~**Ein echter Server mit eigenen Eigenheiten.**~~ **Nachgeholt** (siehe
+  Nachtrag oben): vsftpd und OpenSSH, fehlendes MLSD, aktives FTP und ein
+  tiefer Grundpfad sind belegt. Offen bleibt, was diese beiden auch nicht
+  haben: ProFTPD, IIS-FTP, ein Pfad mit ungewöhnlichen Zeichen, ein Server
+  hinter NAT mit einem Portbereich, den die Firewall nicht durchlässt.
 - **Eine langsame oder abreissende Leitung.** Alles lief über Loopback. Der
   Abbruch mitten in der Datei ist *nachgestellt* (gekürzte Datei am Ziel),
   nicht erlebt.
-- **Ein volles Ziel.** Die Meldung für „kein Platz mehr" ist im Fehlertext
-  vorgesehen, aber nicht ausgelöst worden.
+- **Ein volles Ziel.** Geprüft ist der *nächstliegende* Fall — ein
+  Verzeichnis, in das nicht geschrieben werden darf; der Weg durch den Adapter
+  ist derselbe, die Ursache eine andere. Eine wirklich volle Platte ist nicht
+  hergestellt worden.
 - **Der Versand über den Cron-Auslöser.** Über die Befehlszeile ist er
   gefahren, am eingerichteten Zeitdienst nicht.

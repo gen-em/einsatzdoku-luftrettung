@@ -286,12 +286,17 @@ Daten erst nach Server-Bestätigung.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
 │   ├── versandprobe/      prüft die drei Sicherungsziel-Adapter (S2/AP7)
-│   │                      gegen ECHTE Server auf 127.0.0.1 (FTP, FTPS mit
-│   │                      TLS, SFTP): Rundlauf je Protokoll, Fingerabdruck
-│   │                      als Riegel, Fehlerfälle, Versiegelung der
-│   │                      Zugangsdaten. 106 Erwartungen. Was sie NICHT prüfen
-│   │                      kann — ein echtes Ziel im Internet — steht an
-│   │                      erster Stelle ihrer LIESMICH.md
+│   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
+│   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
+│   │                      Versiegelung der Zugangsdaten. 115 Erwartungen.
+│   │                      ZWEI Sätze Gegenstellen, und beide werden
+│   │                      gebraucht: gegenstellen.py (pyftpdlib/paramiko,
+│   │                      portabel) und echte_gegenstellen.sh (vsftpd und
+│   │                      OpenSSH, braucht root) — vsftpd kennt kein MLSD und
+│   │                      fährt damit als einziges den Rückfallzweig der
+│   │                      Verzeichnisliste. Was sie NICHT prüfen kann — ein
+│   │                      echtes Ziel im Internet — steht an erster Stelle
+│   │                      ihrer LIESMICH.md
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
@@ -2634,8 +2639,20 @@ gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
 (34 + 30) und war danach vollständig.
 
 `tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
-Versiegelung ab: **106 Erwartungen**. Was sie nicht prüfen kann — ein echtes
-Ziel im Internet —, steht an erster Stelle ihrer `LIESMICH.md`.
+Versiegelung ab: **115 Erwartungen**, gefahren gegen zwei Sätze Gegenstellen
+— pyftpdlib/paramiko und **vsftpd/OpenSSH**. Beide werden gebraucht: vsftpd
+kennt kein `MLSD` und fährt damit als einziges den Rückfall auf `NLST` +
+`SIZE`; pyftpdlib fährt den Hauptweg. Gegen die echten Server: FTP 0,35 s,
+FTPS 1,85 s, SFTP 0,68 s für dieselben 64 Pakete, 64 von 64 byteweise gleich.
+
+**Der Grundpfad bedeutet je Protokoll etwas anderes.** vsftpd sperrt den
+Nutzer in sein Heimverzeichnis — dort ist `/` die Wurzel. OpenSSH tut das
+nicht — dort ist `/` die Wurzel des Dateisystems. Ein Ziel mit „Pfad = /" legt
+seine Sicherungen bei SFTP also dorthin, wohin der Nutzer im Dateisystem
+zeigt, und nicht in ein Heimverzeichnis.
+
+Was sie nicht prüfen kann — ein echtes Ziel im Internet —, steht an erster
+Stelle ihrer `LIESMICH.md`.
 
 ---
 
