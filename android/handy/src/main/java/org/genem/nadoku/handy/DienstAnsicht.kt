@@ -22,7 +22,7 @@ import org.genem.nadoku.gemeinsam.Bildmarke
 import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.gemeinsam.Motiv
-import org.genem.nadoku.handy.dienst.Modus
+import org.genem.nadoku.gemeinsam.Modus
 
 /** Was die Dienstansicht anzeigen soll — alles, was sie braucht, in einem Stück. */
 data class Dienststand(

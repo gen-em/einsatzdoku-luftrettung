@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Das Schloss der gesperrten Anzeige (E-S4-21d).
+
+    Als Vektor und nicht als Emoji: Ob eine Uhr das Zeichen 🔒 in ihrer
+    Systemschrift führt, weiss niemand — und ein fehlendes Zeichen wird zum
+    leeren Kasten. Genau an der Stelle, die sagen soll „hier tut ein Tippen
+    nichts", wäre das die schlechteste Auskunft.
+
+    Die Form ist die des Mockups (docs/mockups/S4-app.html, Bild 10): Bügel und
+    Korpus, Strichstärke 2, in `—sand` — die Nebenschrift der Uhr.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5,11 h14 a2,2 0 0 1 2,2 v5 a2,2 0 0 1 -2,2 h-14 a2,2 0 0 1 -2,-2 v-5 a2,2 0 0 1 2,-2 z"
+        android:strokeColor="#D4C7AD"
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M8,11 V7 a4,4 0 0 1 8,0 v4"
+        android:strokeColor="#D4C7AD"
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
+</vector>

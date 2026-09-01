@@ -7,7 +7,7 @@ import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.aufzeichnung.Stroeme
 import org.genem.nadoku.handy.dienst.Dienstklammer
 import org.genem.nadoku.handy.dienst.Kennungen
-import org.genem.nadoku.handy.dienst.Modus
+import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer

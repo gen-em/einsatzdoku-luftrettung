@@ -5,6 +5,7 @@ import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Dienstzeile
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer
+import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Phasen
 import java.time.Instant
 

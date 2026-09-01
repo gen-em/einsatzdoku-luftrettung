@@ -9,9 +9,11 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket B5 — Block B ist damit fertig.** Die App koppelt sich,
-> zeichnet auf, dokumentiert Phasen und Einsätze und sendet alles nach dem
-> JSON-Vertrag. Was fehlt, ist die Uhr (Block C) und der Browserteil
+> **Stand: Arbeitspaket C1.** Das Handy koppelt sich, zeichnet auf,
+> dokumentiert Phasen und Einsätze und sendet alles nach dem JSON-Vertrag
+> (Block B, fertig). Die Uhr hat seit C1 ihr Bedienbild — als
+> Zustandsmaschine, blind gebaut und darum in 21 Prüffällen festgeschrieben.
+> Was fehlt, ist der Nachrichtenweg zwischen beiden (C2) und der Browserteil
 > (Block A).
 
 ---
@@ -98,13 +100,20 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand B5 (Android 0.5.0), `./gradlew build` im Container:
+Stand C1 (Android 0.6.0), `./gradlew build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **153**, davon 11 übersprungen | keine (kommen mit C1) |
+| Prüffälle | **153**, davon 11 übersprungen | **21**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 071 984 B** | **18 095 160 B** |
+
+Zusammen **174 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
+Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
+**B-S4-03** im Konzept hält fest, dass 18 MB für eine Uhr viel sind und
+worauf beim Gerätetest zu achten ist.
 
 Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
 available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
@@ -118,7 +127,9 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 153 von 153 (siehe unten).
+Installation sind es 153 von 153 (siehe unten). Die 21 Fälle der Uhr laufen
+immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
+Bedienung *entscheidet*, nicht was sie *zeichnet* (E-S4-40).
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -288,7 +299,12 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
   Hardware.
 - **Die Uhr-App ist blind gebaut.** Rundung, Schriftgrößen, Berührziele,
   Haltedauer und Sperrfrist sind gewählt und am Gerät nachzumessen; sie
-  gehören danach in den Wear-Teil von `docs/Geraete-Eingabe.md`.
+  gehören danach in den Wear-Teil von `docs/Geraete-Eingabe.md`. Geprüft ist
+  seit C1 die Schicht darunter: `Uhrbedienung` ist eine reine
+  Zustandsmaschine ohne Compose-Bezug, und ihre 21 Fälle schreiben das
+  Bedienbild fest, bevor es jemand gesehen hat. Ungeprüft bleibt alles
+  Sichtbare — und die freie Taste: `WearableButtons` meldet im Container
+  keine, der Weg über `onKeyDown` ist ungeprüft.
 - **Der `AndroidKeyStore`.** Robolectric bringt ihn nicht mit
   (`KeyStoreException: AndroidKeyStore not found`). Geprüft ist deshalb der
   ganze Umschlag — AES-256-GCM, frischer Zufallswert je Schreibvorgang, der

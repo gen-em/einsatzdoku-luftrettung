@@ -1,4 +1,4 @@
-package org.genem.nadoku.handy.dienst
+package org.genem.nadoku.gemeinsam
 
 /**
  * Wie dieser Dienst dokumentiert wird (E-S4-20).

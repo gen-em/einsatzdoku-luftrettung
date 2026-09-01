@@ -13,6 +13,29 @@
     <string name="marke_luft_beschreibung">Bildmarke Rettungshubschrauber</string>
     <string name="marke_boden_beschreibung">Bildmarke Notarzteinsatzfahrzeug</string>
 
-    <string name="stand_geruest">Gerüst steht</string>
     <string name="fassung">Fassung %1$s</string>
+
+    <!-- ==== Bedienbild (E-S4-21) ======================================== -->
+    <string name="handy_verbunden">Handy verbunden</string>
+    <string name="handy_nicht_erreichbar">Handy nicht erreichbar</string>
+    <plurals name="gepuffert">
+        <item quantity="one">%1$d gepuffert</item>
+        <item quantity="other">%1$d gepuffert</item>
+    </plurals>
+    <string name="dienst_beginnen">Dienst beginnen</string>
+    <string name="dienst_beenden">Dienst beenden</string>
+    <string name="loest_am_handy_aus">löst am Handy aus</string>
+    <string name="phase_knopf">%1$d · %2$s</string>
+    <string name="phase_seit">Phase %1$d · %2$s</string>
+    <string name="halten_phasenliste">halten: Phasenliste</string>
+    <string name="einsatz_abschliessen">Einsatz abschließen</string>
+    <string name="einsatz_abschliessen_frage">Einsatz\nabschließen?</string>
+    <string name="dienst_beenden_frage">Dienst\nbeenden?</string>
+    <string name="abschliessen">Abschließen</string>
+    <string name="beenden">Beenden</string>
+    <string name="zurueck">Zurück</string>
+    <string name="gesperrt">zum Entsperren halten</string>
+    <string name="gesperrt_beschreibung">Gesperrt</string>
+    <string name="keine_zeit">–</string>
+    <string name="nur_aufzeichnen">Nur aufzeichnen</string>
 </resources>

@@ -1433,3 +1433,86 @@ Die Oberfläche des Phasenteils ist gebaut und **nicht gesehen worden**.
   Information (E-R45-12). Eine Anzeige, die nur die letzte zeigt, verschweigt
   genau das — und die NutzerIn hätte keinen Anhaltspunkt, dass sie zweimal
   gedrückt hat.
+
+### C1 — Uhr: Gerüst und Bedienbild · Android 0.6.0 · erledigt
+
+**Was entstanden ist.** Das Bedienmodell der Uhr nach E-S4-21, vollständig
+und **als Zustandsmaschine ohne Oberfläche** — dazu die Ansichten darauf:
+Startseite mit Bildmarke, Durchlaufknopf mit Abschluss-Rückfrage, Phasenliste
+als Übersicht und Direktwahl, die Sperre, die Abfrage nach einer freien
+Zusatztaste. Im Nur-Aufzeichnen-Modus zeigt die Uhr nur Dienst
+beginnen/beenden.
+
+**Warum die Zustandsmaschine.** Die Uhr ist blind gebaut: kein Emulator
+(E-R45-8), keine Uhr (E-R45-7). Wäre das Bedienmodell in Composables
+verteilt, wäre es **ungeprüft** — und die Abnahme verlangt Bedienzustände als
+Prüffälle. Es ist deshalb eine reine Funktion (Zustand + Ereignis → Zustand +
+Wirkungen); an der Oberfläche bleibt Zeichnen.
+
+#### Prüfstand C1
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew build` — **beide Module in einem Lauf** | **BUILD SUCCESSFUL** | Modul baut mit |
+| Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** | 0 Fehler |
+| Lint `handy` | `lintDebug` | **0 Fehler, 19 Warnungen** (18 Fassungshinweise + `BatteryLife`) | 0 Fehler |
+| Prüffälle `uhr` | `testDebugUnitTest` | **21 Fälle, 0 Fehlschläge, 0 Fehler** | belegt |
+| Prüffälle gesamt | beide Module | **174 Fälle** (153 Handy + 21 Uhr) | — |
+| **(b) Durchlauf 2 → 9** | Zustandsmaschine | acht Drücke ergeben genau `PhaseSetzen(2)` … `PhaseSetzen(9)`; danach `naechstePhase` = **null** | E-S4-21b |
+| **(b) Abschluss nur nach Rückfrage** | | erster Druck erzeugt die Frage und **keine Wirkung**; erst `Bestaetigt` liefert `EinsatzAbschliessen`; `Verworfen` führt zurück, der Einsatz läuft weiter | E-S4-21b |
+| **(c) Direktwahl** | | `ListenwahL(3)` bei laufender Phase 7 → `PhaseSetzen(3)`, Liste schließt | E-S4-21c |
+| **(c) Korrektur = zweiter Eintrag** | dreimal Phase 4 gewählt | **dreimal `PhaseSetzen(4)`** — nichts wird entdoppelt | E-R45-12 |
+| **(c) Halten öffnet die Liste** | | `GrosserKnopfGehalten` → `PHASENLISTE`, keine Wirkung | E-S4-21c |
+| **(d) Sperre greift nach Frist** | 10 000 ms | bei 9 999 ms **nicht** gesperrt, bei 10 000 ms gesperrt | E-S4-21d |
+| **(d) gesperrtes Tippen tut nichts** | fünf Ereignisarten | **alle fünf**: keine Wirkung, Zustand unverändert | E-S4-21d |
+| **(d) Entsperren nur durch Halten** | | 999 ms bleibt gesperrt, 1 000 ms entsperrt, sonst keine Wirkung | E-S4-21d |
+| **(d) Sperre gilt auch für die Taste** | | gesperrte freie Taste wirkt nicht | E-S4-21d |
+| **(d) abschaltbar** | `sperreAn = false` | sperrt nie | E-S4-21d |
+| **(d) Startseite sperrt nicht** | ohne Dienst | sperrt nie — vor dem Dienst gibt es nichts zu verstellen | begründet |
+| **(a) mit Taste** | | `FreieTaste` erzeugt **dieselbe Wirkung und denselben Zustand** wie der große Knopf | E-S4-21a |
+| **(a) ohne Taste** | | ganzer Weg — Phase, Liste, Direktwahl, Abschluss — allein über Touch-Ereignisse durchgespielt | E-S4-21a |
+| Nur-Aufzeichnen | | Phasendruck und freie Taste wirken **nicht**, die Liste öffnet nicht; Dienst beenden geht weiter | E-S4-20 |
+| Dienst | | Beginnen ohne Rückfrage, **Beenden mit** | beendende Handlung |
+| APK `uhr` | `assembleRelease` | **18 095 596 B**, unsigniert | baut |
+
+**Bildschirmfotos gibt es nicht** — es gibt keinen Emulator (E-R45-8). Das
+steht hier und wird im Prüfdokument wiederholt, statt verschwiegen zu werden.
+Ungeprüft bleiben damit: die Rundung des Displays, Schriftgrößen,
+Berührziele, ob die Bildmarke in der gewählten Größe trägt, ob `WearableButtons`
+auf dem Gerät etwas meldet — und ob Haltedauer und Sperrfrist im Einsatz die
+richtigen sind.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Die `--`-Regel aus B1 hat wieder zugeschlagen**, diesmal an `--sand` in
+   einem Kommentar der neuen Vektordatei. Der Baulauf bricht dabei im
+   Ressourcenschritt ab, nicht beim Übersetzen — die Meldung nennt Zeile und
+   Spalte, aber nicht die Regel. Behoben mit demselben Fixer wie in B1. Die
+   Regel steht im Konzept (B1, Punkt 3) und offenbar zu Recht.
+
+2. **Das Schloss war ein Emoji.** Ob eine Uhr 🔒 in ihrer Systemschrift führt,
+   weiß niemand — und ein fehlendes Zeichen wird zum leeren Kasten, ausgerechnet
+   an der Stelle, die sagen soll „hier tut ein Tippen nichts". Ersetzt durch
+   eine Vektordatei nach der Form des Mockups.
+
+#### Entscheidungen, die in C1 gefallen sind
+
+- **E-S4-40 — Das Bedienmodell der Uhr ist eine Zustandsmaschine ohne
+  Oberfläche.** Zustand und Ereignis hinein, Zustand und **Wirkungen** heraus;
+  die Wirkungen (`PhaseSetzen`, `EinsatzAbschliessen`, `DienstBeginnen`,
+  `DienstBeenden`) sind das, was C2 über den Data Layer schickt. Das ist die
+  Antwort auf „blind gebaut": Was ohne Gerät prüfbar sein soll, darf nicht in
+  Composables wohnen. 21 Prüffälle belegen das Bedienbild, bevor es je jemand
+  gesehen hat.
+- **E-S4-41 — An der Uhr ist die Bedienhöhe 48 dp, am Handy bleibt sie 44.**
+  Das ist kein Widerspruch zu `CLAUDE.md` 5, sondern dessen Zweck: Die 44 px
+  sind eine Untergrenze für Maus und Finger am Schreibtisch. An der Uhr trifft
+  ein Finger im Einsatz ein rundes Display, oft mit Handschuh — Androids
+  Empfehlung von 48 dp ist dort die kleinere Zumutung. Am Handy bleibt der
+  Unterschied als Fund **B-S4-02** offen und wird dort entschieden, nicht hier
+  nebenbei.
+- **E-S4-42 — Halten hat zwei Bedeutungen, und der Zustand entscheidet.**
+  Entsperrt öffnet ein Halten die Phasenliste (E-S4-21c), gesperrt entsperrt
+  es (E-S4-21d). Zwei Griffe für zwei Zwecke wären an einem Handgelenk einer
+  zu viel; dass derselbe Griff im gesperrten Zustand etwas anderes tut, ist
+  die einzige Stelle, an der die Sperre überhaupt bedienbar bleibt.

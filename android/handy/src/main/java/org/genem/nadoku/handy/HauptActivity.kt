@@ -37,7 +37,7 @@ import org.genem.nadoku.R
 import org.genem.nadoku.gemeinsam.Farbe
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.aufzeichnung.AufzeichnungsDienst
-import org.genem.nadoku.handy.dienst.Modus
+import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
 import org.genem.nadoku.handy.kopplung.HttpNetzweg

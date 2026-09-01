@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 import org.genem.nadoku.gemeinsam.LogoWahl
 import org.genem.nadoku.handy.dienst.Kennungen
-import org.genem.nadoku.handy.dienst.Modus
+import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.kopplung.Serveradresse
 
 /**
