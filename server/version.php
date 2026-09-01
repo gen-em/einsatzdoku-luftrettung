@@ -1499,5 +1499,43 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION. Nur das Dateiformat der Sicherung aendert sich.
  *
+ * 12.1.0 ist S2/AP7: SICHERUNGSZIELE. Die Sicherungen bleiben nicht mehr auf
+ * demselben Server liegen, dessen Ausfall der Grund fuer eine Sicherung waere
+ * — sie gehen ueber FTP, FTPS oder SFTP auf eine Gegenstelle (E-S2-22).
+ *
+ * DREI ADAPTER HINTER EINER SCHNITTSTELLE (`sicherungsziel_lib.php`): FTP und
+ * FTPS ueber `ext/ftp`, SFTP ueber phpseclib 3.0.57 (MIT, vendoriert unter
+ * `server/vendor/`, docs/Lizenzen.md). Wer eine Datei wegschiebt, sieht das
+ * Protokoll nicht — das Komplettbackup aus AP8 soll dieselbe Schnittstelle
+ * benutzen, ohne davon zu wissen.
+ *
+ * WAS DIE DREI TAUGEN, ohne Beschoenigung: SFTP erkennt den Server am
+ * Fingerabdruck des Hostschluessels wieder und bricht ab, BEVOR ein Passwort
+ * hinausgeht, wenn er sich geaendert hat. FTPS verschluesselt die Leitung,
+ * prueft aber kein Zertifikat — nachgemessen in `tools/versandprobe/` gegen
+ * einen Server mit selbst ausgestelltem Zertifikat ohne Vertrauenskette. FTP
+ * ist Klartext. Die Oberflaeche sagt das an der Stelle, an der man waehlt.
+ *
+ * DER SERVERSCHLUESSEL (E-S2-21) ist neu und liegt in `config.php`, nicht in
+ * der Datenbank: 32 Byte Zufall, AES-256-GCM, der Zweck (Ziel und Feld) in
+ * den Zusatzdaten. Damit sind die Zugangsdaten der Ziele im Datenbankdump
+ * NICHT enthalten, und eine Chiffre laesst sich nicht von einem Ziel auf ein
+ * anderes umhaengen. Neue Installationen bekommen ihn vom Installer;
+ * bestehende tragen ihn ueber die Seite „Sicherungsziele" nach — mit einem
+ * Klick, wenn `config.php` beschreibbar ist, sonst mit einer Zeile von Hand.
+ * ER GEHOERT INS WIEDERANLAUFPAKET (docs/Technik.md, Runbook).
+ *
+ * DER VERSAND ist ein Joblauf (`versand`) und ein Knopf. Was „neu" ist, wird
+ * AM ZIEL abgelesen — Name und Groesse — und nicht in einer Merkliste
+ * gefuehrt, die behauptet „schon versandt", nachdem das Ziel neu aufgesetzt
+ * wurde. Es wird nur ergaenzt; auf dem Ziel loescht diese Anwendung nie
+ * (Backlog Nr. 49). GEMESSEN gegen oertliche Gegenstellen, 64 Pakete zu
+ * 63,89 MB aus 33 Kontoordnern: FTP 0,13 s, FTPS 0,68 s, SFTP 3,08 s;
+ * Speicherspitze 2,0 bzw. 8,0 MB von 64 (Z3). Alle 192 angekommenen Dateien
+ * byteweise verglichen, 0 Abweichungen.
+ *
+ * MIGRATION ZWINGEND: `2026_09_01_sicherungsziele` legt `backup_targets` an.
+ * Ohne sie zeigt die neue Seite einen Hinweis und tut nichts.
+ *
  */
-const WEB_VERSION = '12.0.0';
+const WEB_VERSION = '12.1.0';

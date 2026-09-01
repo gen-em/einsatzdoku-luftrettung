@@ -1730,6 +1730,76 @@ $MIGRATIONS = [
         ],
     ],
     // Naechste Migration hier anhaengen.
+    [
+        'id'    => '2026_09_01_sicherungsziele',
+        'web'   => '12.1',
+        'label' => 'Sicherungsziele: Tabelle backup_targets für FTP, FTPS und SFTP (S2/AP7)',
+        'skip'  => function (PDO $pdo): bool {
+            $q = $pdo->query("SELECT COUNT(*) FROM information_schema.tables
+                              WHERE table_schema = DATABASE() AND table_name = 'backup_targets'");
+            return (int)$q->fetchColumn() > 0;
+        },
+        'sql'   => [
+            /* WOHIN DIE SICHERUNGEN GESCHOBEN WERDEN (E-S2-22).
+             *
+             * DER NAME IST NICHT `transport_dests`, UND ZWAR MIT ABSICHT. Die
+             * Tabelle `transport_dests` gibt es seit Web 4 — sie haelt die
+             * Zielkliniken, also das Transportziel einer Patientin. Das
+             * Konzept nennt das hier ebenfalls „Transportziel"; im Adminbereich
+             * staenden damit zwei verschiedene Dinge unter demselben Wort, und
+             * zwar zwei Klicks voneinander entfernt (Stammdaten gegen
+             * Sicherungen). Deshalb heisst es hier SICHERUNGSZIEL. Der
+             * Unterschied ist in docs/Konzept-S2 unter F-S2-G festgehalten.
+             *
+             * DIE GEHEIMNISSE STEHEN VERSIEGELT DRIN, NIE IM KLARTEXT.
+             * `geheim` und `schluessel` tragen `edsk1:`-Chiffren aus
+             * serverkrypto_lib.php; der Schluessel dazu liegt in config.php und
+             * nicht in dieser Datenbank. Wer den Dump hat, hat die Passwoerter
+             * NICHT. Genau deshalb sind es TEXT-Spalten und keine VARCHAR(190):
+             * Ein privater SSH-Schluessel ist mehrere Kilobyte gross, und
+             * versiegelt wird er nicht kleiner.
+             *
+             * WELCHES DER BEIDEN FELDER GILT, sagt nicht ein Schalter, sondern
+             * der Inhalt: Steht in `schluessel` etwas, wird mit Schluessel
+             * angemeldet und `geheim` ist dessen Passphrase (oft leer). Steht
+             * dort nichts, ist `geheim` das Passwort. Ein zusaetzliches
+             * Art-Feld waere ein dritter Ort fuer dieselbe Aussage — und der
+             * eine, der irgendwann nicht mehr zu den anderen beiden passt.
+             *
+             * `fingerabdruck` ist der SHA-256 des Hostschluessels und gilt nur
+             * fuer SFTP. Er ist der einzige Schutz gegen einen untergeschobenen
+             * Server, den dieses Projekt ueberhaupt haben kann: FTPS ueber
+             * ext/ftp prueft kein Zertifikat (nachgewiesen in
+             * tools/versandprobe/), FTP ist im Klartext. Steht hier nichts,
+             * wird der Fingerabdruck beim naechsten „Verbindung pruefen"
+             * uebernommen; steht etwas, und der Server zeigt einen anderen,
+             * bricht die Verbindung ab.
+             *
+             * `letzter_fehler` steht hier aus demselben Grund wie in `jobs`:
+             * Ein Versand, der seit drei Wochen scheitert, muss in der
+             * Oberflaeche zu sehen sein und nicht nur im Fehlerprotokoll des
+             * Webspace. */
+            "CREATE TABLE backup_targets (
+               id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+               name           VARCHAR(190) NOT NULL,
+               protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+               host           VARCHAR(190) NOT NULL,
+               port           SMALLINT UNSIGNED NOT NULL,
+               nutzer         VARCHAR(190) NOT NULL,
+               geheim         TEXT NULL,          -- versiegelt: Passwort oder Passphrase
+               schluessel     TEXT NULL,          -- versiegelt: privater SSH-Schluessel
+               pfad           VARCHAR(255) NOT NULL DEFAULT '/',
+               passiv         TINYINT(1) NOT NULL DEFAULT 1,
+               aktiv          TINYINT(1) NOT NULL DEFAULT 1,
+               fingerabdruck  VARCHAR(190) NULL,
+               letzter_lauf   DATETIME NULL,
+               letzter_erfolg DATETIME NULL,
+               letzter_fehler TEXT NULL,
+               erstellt_am    DATETIME NOT NULL,
+               UNIQUE KEY uq_name (name)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
 ];
 
 /* ---- Zweistufiger Ablauf ---------------------------------------------------

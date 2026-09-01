@@ -483,6 +483,39 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     „Jetzt sichern". `edbak_aufbewahrung()` bekäme dafür einen optionalen
     Parameter; `edbak_verdraengen()` liest ihn.
 
+49. **Aufbewahrung auch auf dem Sicherungsziel.**
+    Der Versand (Web 12.1.0, S2/AP7) **ergänzt nur**: Auf der Gegenstelle
+    löscht diese Anwendung nie, auch nicht im Sinne der Regel „höchstens zwei
+    je Konto", die für die Ablage auf dem eigenen Server gilt. Bei zwei
+    Sicherungen je Konto und Monat läuft ein Ziel damit über kurz oder lang
+    voll, und niemand merkt es hier.
+
+    Das ist zunächst Absicht und keine Lücke: Der Zweck eines auswärtigen Ziels
+    ist, den Ausfall dieses Servers zu überleben — samt eines Fehlers, der
+    **hier** zu viel löscht. Ein Versand, der drüben aufräumt, trägt genau
+    diesen Fehler mit hinüber.
+
+    **Zu entscheiden** ist deshalb nicht *ob* aufgeräumt wird, sondern wer
+    haftet: eine eigene Zahl je Ziel („dort höchstens N je Konto"), die
+    ausdrücklich eingeschaltet werden muss und nie die Vorgabe ist — oder eine
+    blosse **Anzeige** des Belegten am Ziel, damit die Betreiberin es sieht und
+    dort selbst entscheidet. Der zweite Weg löscht nichts und beantwortet die
+    Frage vielleicht schon.
+
+50. **Der Versand liest je Konto ein Verzeichnis.**
+    `sz_versand_schub()` fragt für jeden Kontoordner die Verzeichnisliste des
+    Ziels ab, um zu erkennen, was dort fehlt. Bei 33 Ordnern ist das
+    unauffällig (gemessen: SFTP 3,08 s für 64 Dateien einschliesslich aller
+    Listen); bei dreihundert Konten sind es dreihundert Abfragen je Lauf und je
+    Ziel, über eine Leitung, die kein Loopback ist.
+
+    Der Ausweg ist **nicht** eine Merkliste in der Datenbank — die behauptet
+    „schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht oder das
+    Ziel neu aufgesetzt wurde, und diese Art Lüge fällt erst auf, wenn man die
+    Sicherung braucht (Begründung in Technik 4.97c). Denkbar ist stattdessen,
+    die Liste je Ziel **einmal rekursiv** zu holen, wo das Protokoll es
+    hergibt, und nur bei Zweifel nachzufragen. Erst messen, dann bauen.
+
 ---
 
 ## Erledigt

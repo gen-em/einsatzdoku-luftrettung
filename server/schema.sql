@@ -450,6 +450,35 @@ CREATE TABLE rate_limits (
   INDEX idx_fenster (fenster_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
+--
+-- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
+-- es um FTP-, FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
+-- Migration 2026_09_01_sicherungsziele und in docs/Konzept-S2 unter F-S2-G.
+--
+-- `geheim` und `schluessel` stehen VERSIEGELT drin (`edsk1:`,
+-- serverkrypto_lib.php). Der Schluessel dazu liegt in config.php, nicht in
+-- dieser Datenbank: Wer den Dump hat, hat die Passwoerter nicht.
+CREATE TABLE backup_targets (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name           VARCHAR(190) NOT NULL,
+  protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+  host           VARCHAR(190) NOT NULL,
+  port           SMALLINT UNSIGNED NOT NULL,
+  nutzer         VARCHAR(190) NOT NULL,
+  geheim         TEXT NULL,          -- versiegelt: Passwort oder Passphrase
+  schluessel     TEXT NULL,          -- versiegelt: privater SSH-Schluessel
+  pfad           VARCHAR(255) NOT NULL DEFAULT '/',
+  passiv         TINYINT(1) NOT NULL DEFAULT 1,
+  aktiv          TINYINT(1) NOT NULL DEFAULT 1,
+  fingerabdruck  VARCHAR(190) NULL,  -- SFTP: SHA-256 des Hostschluessels
+  letzter_lauf   DATETIME NULL,
+  letzter_erfolg DATETIME NULL,
+  letzter_fehler TEXT NULL,
+  erstellt_am    DATETIME NOT NULL,
+  UNIQUE KEY uq_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Kleiner Schluessel/Wert-Speicher fuer App-interne Zustaende (z. B. Wartung)
 CREATE TABLE app_state (
   k VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -592,4 +621,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_31_spur_blobs', 'skipped'),
   ('2026_08_31_jobs', 'skipped'),
   -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
-  ('2026_09_01_letzter_punkt_am', 'skipped');
+  ('2026_09_01_letzter_punkt_am', 'skipped'),
+  -- backup_targets steht oben schon im Schema (Web 12.1.0).
+  ('2026_09_01_sicherungsziele', 'skipped');

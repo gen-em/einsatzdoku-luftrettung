@@ -204,6 +204,12 @@
       "pfad": "admin_sicherungen.php"
     },
     {
+      "name": "43b-sicherungsziele",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_sicherungsziele.php"
+    },
+    {
       "name": "43a-rechtstexte",
       "gruppe": "Administration",
       "rolle": "admin",

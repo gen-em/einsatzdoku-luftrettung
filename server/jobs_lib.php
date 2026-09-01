@@ -237,6 +237,21 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_adminbackup_rueckstand',
             'lauf'         => 'job_adminbackup',
         ],
+        /* DER VERSAND STEHT NACH DEM SICHERN UND VOR `waisen` (S2/AP7).
+         * Nach dem Sichern, weil er schickt, was jenes erzeugt hat — in
+         * derselben Reihenfolge kommt ein frisches Paket noch im selben Lauf
+         * hinaus. Vor `waisen` aus demselben Grund wie dort beschrieben.
+         *
+         * Ohne aktives Ziel kostet er eine Abfrage und ist fertig. */
+        'versand' => [
+            'titel'        => 'Sicherungen versenden',
+            'beschreibung' => 'Neue Pakete auf die aktiven Sicherungsziele '
+                            . 'schieben — nur was dort fehlt, und nichts wird '
+                            . 'dort gelöscht',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_versand_rueckstand',
+            'lauf'         => 'job_versand',
+        ],
         'waisen' => [
             'titel'        => 'Verwaiste Spuren',
             'beschreibung' => 'Spurpunkte und Blobs ohne Eigentümer entfernen '
@@ -1048,7 +1063,7 @@ function job_ausduennen_rueckstand(PDO $pdo, array $z): ?int
  * fuer die Schaltflaeche, kein Zeitplan.
  *
  * DIE RESERVE IST GROSS, und das ist Absicht: Ein Konto mit 5000 Einsaetzen
- * kostet gemessen 14,13 s. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) faengt
+ * kostet gemessen 14,13 s. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) fängt
  * dieser Job deshalb gar nicht erst an — eine Anfrage einer NutzerIn soll
  * keine fremde Sicherung mittragen.
  */
@@ -1067,5 +1082,46 @@ function job_adminbackup_rueckstand(PDO $pdo, array $zustand): ?int
     require_once __DIR__ . '/adminbackup_lib.php';
     $a = edbak_auftrag_lesen();
     return $a === null ? null : edbak_auftrag_offen($a);
+}
+
+
+/* ---- Versand auf die Sicherungsziele (S2/AP7, E-S2-22) ------------------- */
+
+/**
+ * Neue Pakete auf die aktiven Ziele schieben.
+ *
+ * NUR MIT EINGESCHALTETEM SCHALTER. Ein Versand ist eine Verbindung nach
+ * draussen; er passiert nicht, weil jemand einmal ein Ziel eingetragen hat,
+ * sondern weil jemand ihn eingeschaltet hat. Der Knopf „Jetzt versenden"
+ * auf der Zielseite geht denselben Weg und fragt den Schalter NICHT — dort
+ * hat gerade jemand geklickt, und das ist die Zustimmung.
+ *
+ * DIE RESERVE IST GROSS (25 s): Ein SFTP-Verbindungsaufbau kostet in reinem
+ * PHP je nach Schlüssellänge ueber eine Sekunde, und danach soll wenigstens
+ * eine Datei hinausgehen. Am Huckepack-Weg (JOB_BUDGET_ANFRAGE = 3 s) fängt
+ * dieser Job deshalb gar nicht erst an.
+ */
+function job_versand(PDO $pdo, array $zustand, callable $zeitLinks): array
+{
+    require_once __DIR__ . '/sicherungsziel_lib.php';
+    if (!sz_auto_an()) {
+        return ['zustand' => [], 'erledigt' => 0, 'fertig' => true];
+    }
+    $e = sz_versand_schub($zeitLinks, SZ_VERSAND_RESERVE_S);
+    /* Die Fehler stehen am ZIEL (backup_targets.letzter_fehler) und damit auf
+     * der Zielseite. Hier kommen sie zusätzlich in `jobs.letzter_fehler`,
+     * damit die Wartungsseite nicht „grün" meldet, während seit drei
+     * Wochen nichts hinausgeht. */
+    if ($e['fehler'] !== []) {
+        throw new RuntimeException(implode(' | ', array_slice($e['fehler'], 0, 3)));
+    }
+    return ['zustand' => [], 'erledigt' => $e['gesendet'], 'fertig' => $e['fertig']];
+}
+
+/** Wie viele Dateien warten noch? Eine Schätzung — siehe sz_versand_rueckstand(). */
+function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/sicherungsziel_lib.php';
+    return sz_auto_an() ? sz_versand_rueckstand() : null;
 }
 

@@ -683,6 +683,16 @@ function ui_leiste_einstellungen(string $aktiv): void
          * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
         'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
         'admin_sicherungen' => ['admin_sicherungen.php', 'Sicherungen',           'sicherung'],
+        /* SICHERUNGSZIELE STEHEN DIREKT UNTER SICHERUNGEN (S2/AP7). Sie sind
+         * die Fortsetzung derselben Sache: erst die Regeln, dann wohin.
+         * Das Symbol ist `tausch` — dasselbe wie bei Import/Export, und aus
+         * demselben Grund: Es geht in beiden Faellen um Dateien, die das Haus
+         * verlassen oder hereinkommen. Ein NEUES Symbol braeuchte Freigabe mit
+         * Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht hier.
+         *
+         * NICHT „Transportziele" — so heissen unter Stammdaten die
+         * Zielkliniken (F-S2-G). */
+        'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Sicherungsziele', 'tausch'],
         /* Zwischen Sicherungen und Demo-Konto — so steht es in Mockup 35. */
         'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
@@ -744,6 +754,7 @@ function ui_einstellungen_uebersicht(): void
             ['admin_users.php',      'NutzerInnen',           'gruppe'],
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
             ['admin_sicherungen.php','Sicherungen',           'sicherung'],
+            ['admin_sicherungsziele.php', 'Sicherungsziele',   'tausch'],
             ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
             ['update.php',           'Wartung',               'werkzeug'],

@@ -78,6 +78,48 @@ Export enthält die entschlüsselten Angaben. Entstünde er auf dem Server,
 müssten sie dorthin — und damit wäre die Ende-zu-Ende-Verschlüsselung an
 genau der Stelle aufgehoben, an der jemand seine Daten mitnehmen will.
 
+### 3a. Bibliotheken, die auf dem Server laufen
+
+Alle unter `server/vendor/` — getrennt von `assets/vendor/`, weil sie **nicht**
+an den Browser ausgeliefert werden. Eine `.htaccess` im Ordner sperrt den
+Abruf; geladen werden sie über `server/vendor/laden.php`, einen
+zwanzigzeiligen PSR-4-Lader. Es gibt keinen Composer: Auf einem Webspace läuft
+kein `composer install`, und ein erzeugter Composer-Autoloader mit absoluten
+Pfaden gehört nicht ins Repositorium.
+
+| Bibliothek | Version | Lizenz | Verzeichnis | wofür |
+|---|---|---|---|---|
+| **phpseclib** | 3.0.57 | MIT | `vendor/phpseclib3/` | Der SFTP-Adapter der Sicherungsziele (S2/AP7) |
+| **constant_time_encoding** | 2.7.0 | MIT | `vendor/ParagonIE/ConstantTime/` | Von phpseclib vorausgesetzt (genau eine Stelle: `Common/Functions/Strings.php`) |
+
+Herkunft, Commit-Kennung und die Anleitung zum Austausch stehen in
+`server/vendor/HERKUNFT.md`; die Lizenztexte liegen daneben
+(`LIZENZ-phpseclib.txt`, `LIZENZ-constant-time-encoding.txt`). Übernommen sind
+nur die Quellverzeichnisse — Tests, Build-Dateien und `composer.json` nicht.
+
+**Die Prüfsummen stehen nicht im Dateikopf, sondern in zwei Listen.** Bei 338
+bzw. 11 Dateien wäre ein Kopfkommentar je Datei von Hand nicht zu pflegen und
+beim ersten Austausch falsch. Nachrechnen:
+
+```sh
+cd server/vendor
+sha256sum -c phpseclib3.sha256              # 338 Dateien
+sha256sum -c ParagonIE-ConstantTime.sha256  #  11 Dateien
+```
+
+Das ist die einzige Abweichung von der Regel in Abschnitt 2, und sie ist eine
+Verschärfung: Eine Liste prüft jede Datei, ein Kopfkommentar behauptet etwas
+über eine.
+
+**Warum überhaupt eine Fremdbibliothek und nicht `ext/ssh2`:** Die Erweiterung
+ist auf geteiltem Webspace praktisch nie vorhanden und lässt sich dort nicht
+nachinstallieren. phpseclib ist reines PHP und läuft überall, wo diese
+Anwendung läuft. Geladen wird es **nur** vom SFTP-Adapter — eine Seite, die
+keine SFTP-Verbindung aufbaut, lädt keine einzige dieser Dateien.
+
+FTP und FTPS brauchen keine Bibliothek: Sie laufen über die PHP-Erweiterung
+`ftp`, die zum Sprachumfang gehört.
+
 ---
 
 ## 4. Schriften

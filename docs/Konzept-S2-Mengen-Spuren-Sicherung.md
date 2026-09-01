@@ -741,6 +741,7 @@ Sammelstelle nach K4; bei Übergabe leer.
 | F-S2-D | Die Rückfrage vor dem Einspielen kam bei Fassung 4 immer — und die Prüfmittel bemerkten den Abbruch nicht | behoben in AP5b |
 | F-S2-E | Eine Datei mit Nutzlast 8 **und** Punktlisten verlor alle Spuren, ohne ein Wort — und der Messstand schrieb genau solche Dateien | behoben vor AP6 |
 | F-S2-F | Der Kasten „Für dich freigegebene Sicherung" war für niemanden zu sehen: eine Kennung, die es im Markup nicht gab, und ein `catch`, der alles schluckte | behoben in AP6 |
+| F-S2-G | Das Konzept nennt die FTP-Gegenstelle „Transportziel" — dieser Name ist seit Web 4 vergeben (`transport_dests` = Zielklinik). Zwei Dinge, ein Wort, zwei Klicks voneinander entfernt | umbenannt in AP7: **Sicherungsziel** |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -1077,6 +1078,35 @@ Meldung in `meldung-ok`.
 > Wörter gewartet, hier hat ein `catch` einen Absturz zu einem leeren
 > Bildschirm gemacht. Beide Male war der Fehler nicht, dass etwas kaputt war,
 > sondern dass nichts es gesagt hat.
+
+### F-S2-G — Zwei Dinge unter einem Wort: „Transportziel" (entschieden, 01.09.2026)
+
+**Gefunden** beim Beginn von AP7, vor der ersten Zeile Code. E-S2-22 spricht
+von „Transportzielen FTP, FTPS, SFTP". Diesen Namen trägt in dieser Anwendung
+seit Web 4 aber schon etwas anderes: die Tabelle `transport_dests` — die
+**Zielklinik einer Patientin**, gepflegt unter *Stammdaten systemweit*, gefiltert
+in der Suche, ausgewiesen im Export.
+
+**Warum das nicht bloss ein Wortstreit ist.** Beide Dinge leben im
+Adminbereich, zwei Klicks voneinander entfernt. Eine Meldung wie „Das
+Transportziel liess sich nicht speichern" hätte danach zwei mögliche
+Bedeutungen, und dieselbe Zweideutigkeit steckte in jeder Überschrift, jedem
+Handbuchsatz und jedem Backlog-Eintrag der nächsten Jahre. Das ist die Art
+Verwechslung, die man nachträglich nicht mehr auflösen kann, weil beide
+Bedeutungen bereits in Texten stehen.
+
+**Entschieden:** Die Gegenstelle heisst **Sicherungsziel** — in der
+Oberfläche, im Code (`sicherungsziel_lib.php`, Präfix `sz_`) und in der
+Dokumentation. Die Tabelle heisst `backup_targets`, nicht `transport_dests`.
+Die Konzeptvorgabe E-S2-22 bleibt inhaltlich unangetastet; nur ihr Wort wird
+ersetzt. Die Zielseite sagt es zusätzlich in ihrer Unterzeile, und das
+Handbuch tut es auch — wer beides kennt, soll es nicht erst durch Ausprobieren
+auseinanderhalten müssen.
+
+**Die Alternative wäre gewesen**, das ältere Ding umzubenennen (Zielklinik).
+Sie schied aus: `transport_dests` steht in Stammdaten, Suche, Export, Import,
+API und Uhr-Vertrag; eine Umbenennung dort wäre ein Vielfaches an Änderung
+gewesen, und zwar an Wegen, die mit AP7 nichts zu tun haben.
 
 ### F-S2-02 — Was geschieht mit einer Spur über 2000 Punkten? (entschieden, 31.08.2026)
 
@@ -2316,3 +2346,134 @@ und bei Gleichstand war sie beliebig. Zugesagt ist jetzt etwas Belastbareres:
 - **Eine erreichte Speichergrenze im Betrieb.** Geprüft mit einer künstlich
   auf 1 KB gesetzten Grenze, nicht mit einer vollen Platte.
 
+---
+
+### AP7 — Sicherungsziele FTP, FTPS, SFTP (erledigt, Web 12.1.0)
+
+**Was gebaut wurde.** E-S2-22 verlangt eine Transport-Schnittstelle mit drei
+Adaptern, Pflege im Adminbereich mit „Verbindung prüfen" und einen Push über
+den Job-Einstieg; E-S2-21 verlangt den Serverschlüssel in `config.php`, der
+die Zugangsdaten schützt. Beides steht.
+
+Neu: `server/serverkrypto_lib.php` (Serverschlüssel und `edsk1:`-Versiegelung),
+`server/sicherungsziel_lib.php` (Schnittstelle `Zielweg`, `ZielFtp`,
+`ZielSftp`, Datenbankseite, Verbindungsprüfung, Versandschub),
+`server/admin_sicherungsziele.php`, `server/vendor/` (phpseclib 3.0.57 und
+constant_time_encoding 2.7.0, MIT, mit Lader und Prüfsummenlisten), Migration
+`2026_09_01_sicherungsziele` (Tabelle `backup_targets`), Job `versand`.
+
+#### Sieben Entscheidungen, die dabei gefallen sind
+
+**1. „Sicherungsziel" statt „Transportziel" (F-S2-G).** Der Name des Konzepts
+war vergeben. Ein zweites Ding unter demselben Wort, zwei Klicks entfernt, ist
+in einer Fehlermeldung nicht mehr aufzulösen.
+
+**2. Der Serverschlüssel liegt in `config.php`, nicht in der Datenbank.** Der
+Zweck ist der Fall „jemand hat die Datenbank"; für AP8 wird es zwingend, weil
+der Dump jede Tabelle enthält. Der Zweck (Zielkennung und Feldname) geht in die
+Zusatzdaten der Verschlüsselung — damit lässt sich eine Chiffre nicht von einem
+Ziel auf ein anderes umhängen.
+
+**3. Der Nachtrag in `config.php` schreibt, statt nur eine Zeile zu zeigen.**
+Der Weg von Hand bleibt als Rückfall. Geschrieben wird ergänzend (nie
+ersetzend — sonst wäre jedes versiegelte Feld unlesbar), über eine Nebendatei
+mit Endung `.php` (eine `config.php.tmp` läge im Wurzelverzeichnis des
+Webservers als lesbarer Text mit dem Datenbankpasswort), mit Gegenprobe durch
+Ausführen und anschliessendem Verwerfen des OPcache-Eintrags.
+
+**4. Ein Adapter für FTP und FTPS.** Es unterscheidet sie genau eine Zeile.
+Zwei Klassen wären zwei Orte für dieselbe Fehlerbehandlung.
+
+**5. Der Fingerabdruck wird VOR der Anmeldung geprüft.** Wer sich bei einem
+untergeschobenen Server anmeldet, hat sein Passwort schon abgegeben, auch wenn
+er danach abbricht. Gemessen wird das an der Gegenstelle, nicht an der
+Fehlermeldung.
+
+**6. „Neu" wird am Ziel abgelesen, nicht in einer Merkliste geführt.** Eine
+Merkliste behauptet „schon versandt" auch dann noch, wenn die Datei am Ziel
+gelöscht oder das Ziel neu aufgesetzt wurde. Verglichen werden Name **und**
+Grösse — sonst gälte eine abgebrochene Übertragung für immer als erledigt.
+Der Preis ist eine Verzeichnisabfrage je Konto und Ziel (**Backlog Nr. 50**).
+
+**7. Auf dem Ziel wird nie gelöscht.** Die Aufbewahrung „zwei je Konto" gilt
+für die Ablage hier. Ein Versand, der drüben aufräumt, trüge einen Fehler von
+hier mit hinüber — und genau davor soll das Ziel schützen (**Backlog Nr. 49**).
+
+#### Drei Funde aus der eigenen Prüfung
+
+- **`SFTP::TYPE_REGULAR` gibt es nicht.** phpseclib definiert
+  `NET_SFTP_TYPE_REGULAR` als *globale* Konstante beim ersten Erzeugen eines
+  Objekts. Der Fehler schlug erst beim **Auflisten** zu — eine leere
+  Verzeichnisliste hätte den Versand still alles doppelt schicken lassen.
+- **Der Serverschlüssel war nach dem Schreiben eine Anfrage lang unsichtbar.**
+  OPcache prüft den Zeitstempel sekundengenau. Die Seite meldete „steht jetzt
+  in config.php", die nächste Anfrage zeigte wieder „Serverschlüssel fehlt".
+- **Zwei Fehlermeldungen waren unbrauchbar.** Ein falsches FTP-Passwort meldete
+  „Authentication failed" ohne das Wort Passwort (das Muster kannte nur „Login
+  incorrect"); ein geschlossener Port meldete „kam nicht zustande" ohne
+  nächsten Schritt — `ftp_connect()` gibt dort `false` zurück und schweigt.
+
+Dazu zwei Funde im **Bestand**, beide von den Prüfmitteln und nicht vom
+Auge:
+
+- Das Handbuch nannte weiterhin „höchstens drei Sicherungen je Konto". Die
+  Zahl ist seit AP6 zwei; drei Dokumente waren damals nachgezogen worden,
+  dieses vierte nicht. Berichtigt.
+- Die **Tokentabelle in `docs/Design.md` war stehengeblieben**: `--rauch`
+  stand auf 22 Verwendungen, der Erzeuger zählt 23. Nachgerechnet an einem
+  Arbeitsbaum auf HEAD — die Abweichung bestand schon **vor** AP7 und ist
+  nicht durch dieses Paket entstanden. Alle vier erzeugten Tabellen sind jetzt
+  neu gesetzt und stimmen Zeichen für Zeichen mit der Ausgabe von
+  `tools/design/tabellen.py` überein. Genau dafür gibt es das Werkzeug, und
+  genau so fällt eine abgeschriebene Zahl auf.
+
+#### Prüfstand
+
+| Was | Mittel | Zahl |
+|---|---|---|
+| Serverschlüssel, Versiegelung, Zweckbindung | `versandprobe` Teil 1 | 12 Erwartungen — fremder Schlüssel, veränderte Chiffre, 100 000 Zeichen |
+| Namen, Pfade, Fehlertexte | Teil 2 | 11 Erwartungen |
+| FTP-Rundlauf gegen einen echten Server | Teil 3 | 10 Erwartungen, 5 014 Byte hin und zurück |
+| FTPS-Rundlauf | Teil 4 | 10 Erwartungen — **und der Befund: `ext/ftp` nimmt ein selbst ausgestelltes Zertifikat an** |
+| SFTP-Rundlauf und Fingerabdruck | Teil 5 | 12 Erwartungen, Abdruck stimmt mit dem des Servers überein |
+| Unerwarteter Hostschlüssel | Teil 6 | Abbruch — **Anmeldeprotokoll der Gegenstelle: 3 Zeilen vorher, 3 nachher** |
+| Privater Schlüssel, Passphrase | Teil 7 | 6 Erwartungen |
+| Fehlerfälle (Passwort, Port, Pfad, Datei) | Teil 8 | 14 Erwartungen, jede Meldung nennt das richtige Wort |
+| „Verbindung prüfen" für alle drei | Teil 9 | 13 Erwartungen, **0 Rückstände** auf den Gegenstellen |
+| Datenbank: anlegen, ändern, löschen | Teil 10 | 14 Erwartungen — Passwort **nie** im Klartext in der Spalte |
+| `versandprobe` gesamt | `php probe.php` | **106 Erwartungen, 0 offen** |
+| Versand, 64 Pakete / 63,89 MB / 33 Ordner | CLI, `memory_get_peak_usage(true)` | FTP **0,13 s · 2,0 MB** · FTPS **0,68 s · 2,0 MB** · SFTP **3,08 s · 8,0 MB** von 64 |
+| Angekommene Dateien | `cmp` je Datei | **192 von 192 byteweise gleich, 0 Abweichungen** |
+| Zweiter Lauf | | **0 gesendet**, 0,19 s |
+| Halbe Datei am Ziel (auf 1 000 Byte gekürzt) | | **1 von 64** erneut geschickt, danach wieder byteweise gleich |
+| Wiederaufnahme bei 2 s Budget | | **2 Schübe (34 + 30)**, danach vollständig |
+| Joblauf über die Befehlszeile | `php jobs.php` | `versand fertig · erledigt 64 · Rückstand 0` |
+| Bedienweg im Browser | Playwright | Schlüssel anlegen → Ziel anlegen → prüfen (**6 Schritte**) → falsches Passwort → versenden (**64 Dateien, 63,9 MB**) → Rückstand **0** |
+| Oberfläche | dasselbe | **0 px** waagerechter Überlauf, **0** Seitenfehler, Bedienelemente **44 px** |
+| Wortliste | `wortliste.py` | **0 Treffer, 0 ungenutzte Ausnahmen, 0 durchgerutschte Fallen** |
+| Vollständigkeit | `pruefen.py` | **260 Befunde — unverändert gegenüber AP6** |
+| Kontraste | `kontrast.py` | **21 Paare gerechnet, 0 verfehlt** |
+| Bilderlauf `43-` und `43b-` | `aufnehmen.mjs` | 16 Bilder, **16 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Erzeugte Tabellen in `Design.md` | `tabellen.py` | alle **vier** Zeichen für Zeichen gleich |
+| Regression | die vorhandenen Proben | `wiederherstellung` **76**, `spur` **25**, `jobs` **24** — je 0 offen |
+
+**Noch nicht geprüft** (steht hier und nicht in einer Fußnote):
+
+- **Ein echtes Ziel im Internet — die Abnahme nach Abschnitt 9 steht aus.**
+  Aus dem Behälter, in dem gearbeitet wurde, gehen nur Verbindungen auf Port
+  443 hinaus. Nachgemessen mit `github.com:22` als Gegenkontrolle: ein sicher
+  offener Port, der ebenso abgewiesen wird — es ist eine Portsperre und keine
+  Eigenschaft eines Ziels. `ftp.luftrettung.net` ist in der Freigabeliste (der
+  Tunnel wird auf 443 aufgebaut, auf 21 und 22 sofort zurückgesetzt). **Die
+  Abnahme je Protokoll gehört auf die Maschine der Betreiberin oder auf den
+  Produktivserver.**
+- **Ein echter Server mit eigenen Eigenheiten.** Geprüft wurde gegen pyftpdlib
+  und paramiko. Andere Antworttexte, fehlendes `MLSD`, aktives statt passives
+  FTP oder ein Pfad mit ungewöhnlichen Zeichen sind damit nicht abgedeckt.
+- **Eine langsame oder abreissende Leitung.** Alles lief über Loopback. Der
+  Abbruch mitten in der Datei ist *nachgestellt* (gekürzte Datei am Ziel),
+  nicht erlebt.
+- **Ein volles Ziel.** Die Meldung für „kein Platz mehr" ist im Fehlertext
+  vorgesehen, aber nicht ausgelöst worden.
+- **Der Versand über den Cron-Auslöser.** Über die Befehlszeile ist er
+  gefahren, am eingerichteten Zeitdienst nicht.

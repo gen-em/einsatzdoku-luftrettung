@@ -11,6 +11,186 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.1.0] — 2026-09-01
+
+**Sicherungsziele: die Sicherung verlässt das Haus.** Achtes Arbeitspaket der
+Phase S2 (AP7, E-S2-21 und E-S2-22). **Migration zwingend**
+(`2026_09_01_sicherungsziele`); nach dem Deploy muss eine Administratorin
+`update.php` aufrufen, sonst zeigt die neue Seite nur einen Hinweis.
+
+### Web — Warum
+
+Bis hierher entstanden die Admin-Sicherungen unter `server/sicherungen/` und
+blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz und für
+ein verlorenes Passwort — aber nicht für den Fall, für den man Sicherungen
+eigentlich macht: dass dieser Server weg ist. Eine Sicherung, die im selben
+Behälter liegt wie das Gesicherte, ist keine.
+
+### Web — Drei Protokolle, eine Schnittstelle
+
+`sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können muss
+(verbinden, Ordner anlegen, senden, holen, auflisten, löschen), und setzt es
+dreimal um. Wer eine Datei wegschiebt, sieht das Protokoll nicht — das ist
+keine Ästhetik, sondern die Vorbereitung auf AP8: Das Komplettbackup benutzt
+dieselbe Schnittstelle, und ein vierter Adapter (WebDAV, Backlog) soll sie
+nicht anfassen.
+
+Was die drei taugen, in der Reihenfolge der Empfehlung — und ohne
+Beschönigung:
+
+| | verschlüsselt | erkennt den Server wieder |
+|---|---|---|
+| **SFTP** (phpseclib) | ja | **ja**, am Fingerabdruck des Hostschlüssels |
+| **FTPS** (`ext/ftp`) | ja | nein |
+| **FTP** (`ext/ftp`) | **nein** | nein |
+
+Der mittlere Fall ist der, den man leicht überschätzt: `ext/ftp` **prüft das
+Zertifikat nicht**. Das ist keine Vermutung — `tools/versandprobe/` stellt eine
+FTPS-Gegenstelle mit einem selbst ausgestellten Zertifikat ohne jede
+Vertrauenskette hin, und die Verbindung kommt zustande. Schutz gegen Mitlesen
+also ja, Schutz gegen einen untergeschobenen Server nein. Die Auswahl im
+Formular sagt es dort, wo man wählt.
+
+Bei SFTP wird der Fingerabdruck beim ersten Prüfen übernommen und danach bei
+jeder Verbindung verglichen. Passt er nicht, bricht die Verbindung ab — und
+zwar **vor** der Anmeldung. Gemessen wird das nicht an der Fehlermeldung,
+sondern an der Gegenstelle: Sie schreibt jeden Anmeldeversuch mit, und bei
+unerwartetem Hostschlüssel bleibt ihr Protokoll unverändert (3 Zeilen vorher,
+3 Zeilen nachher). Wer sich bei einem untergeschobenen Server anmeldet, hat
+sein Passwort schon abgegeben, auch wenn er danach abbricht.
+
+### Web — Der Serverschlüssel, und warum er in `config.php` liegt
+
+Die Zugangsdaten der Ziele stehen versiegelt in der Datenbank (`edsk1:`,
+AES-256-GCM). Der Schlüssel dazu ist neu und steht in `config.php` — 32 Byte
+Zufall, nicht in einer Tabelle. Der Zweck ist genau der Fall „jemand hat die
+Datenbank": Ein Schlüssel neben dem Chiffretext hilft dann niemandem. Für das
+Komplettbackup aus AP8 wird es zwingend, denn dessen Dump enthält jede
+Tabelle.
+
+Der Zweck (Zielkennung und Feldname) geht in die Zusatzdaten der
+Verschlüsselung. Damit lässt sich das versiegelte Passwort von Ziel 3 nicht
+als Passwort von Ziel 7 einsetzen, obwohl beide mit demselben Schlüssel
+versiegelt sind.
+
+Neue Installationen bekommen ihn vom Installer. Bestehende tragen ihn auf der
+Seite „Sicherungsziele" nach: ein Knopf, wenn `config.php` beschreibbar ist,
+sonst eine Zeile zum Einfügen. Der Knopf ergänzt und ersetzt nie, schreibt in
+eine Nebendatei mit Endung `.php` (eine `config.php.tmp` läge im
+Wurzelverzeichnis des Webservers als lesbarer Text mit dem
+Datenbankpasswort), prüft sie durch Ausführen gegen die gerade geltende
+Fassung und schiebt sie erst dann an ihren Platz.
+
+**Er gehört ins Wiederanlaufpaket.** Ohne ihn sind die Zugangsdaten der Ziele
+neu einzutragen — verschmerzbar — und ein versiegeltes Komplettbackup nicht
+mehr zu öffnen. Das Runbook in `docs/Technik.md` sagt es, der Kopf der
+erzeugten `config.php` sagt es auch: Wer die Datei zum ersten Mal öffnet,
+liest sie und nicht das Runbook.
+
+### Web — Der Versand
+
+Ein Joblauf (`versand`) und ein Knopf. Was „neu" ist, wird **am Ziel**
+abgelesen — Name und Größe — und nicht in einer Merkliste geführt. Eine
+Merkliste behauptet „schon versandt" auch dann noch, wenn die Datei am Ziel
+gelöscht, das Ziel neu aufgesetzt oder der Pfad geändert wurde; diese Art
+Lüge fällt erst auf, wenn man die Sicherung braucht. Der Vergleich schliesst
+die Größe ein, weil eine abgebrochene Übertragung sonst mit dem richtigen
+Namen und der falschen Länge für immer als erledigt gälte.
+
+**Es wird nur ergänzt.** Auf dem Ziel löscht diese Anwendung nie — auch nicht
+im Sinne der Aufbewahrung „zwei je Konto", die für die Ablage auf diesem
+Server gilt. Der Zweck eines auswärtigen Ziels ist, den Ausfall dieses Servers
+zu überleben, samt eines Fehlers, der hier zu viel löscht. Wer dort aufräumen
+will, tut es dort (Backlog Nr. 49).
+
+Gemessen gegen örtliche Gegenstellen, 64 Pakete zu zusammen 63,89 MB aus 33
+Kontoordnern:
+
+| | Dateien | Dauer | PHP-Speicherspitze |
+|---|---|---|---|
+| FTP | 64 | 0,13 s | 2,0 MB von 64 |
+| FTPS | 64 | 0,68 s | 2,0 MB von 64 |
+| SFTP | 64 | 3,08 s | 8,0 MB von 64 |
+
+Alle 192 angekommenen Dateien wurden byteweise mit dem Original verglichen: 0
+Abweichungen. Ein zweiter Lauf sandte 0 Dateien (0,19 s). Eine am Ziel auf
+1 000 Byte gekürzte Datei wurde beim nächsten Lauf einzeln erneut geschickt —
+eine von 64 — und war danach wieder byteweise gleich. Mit einem Budget von 2 s
+teilte sich derselbe Lauf in zwei Schübe (34 + 30 Dateien) und war danach
+vollständig.
+
+Der Schalter „automatisch versenden" sagt **ob**, nicht **wann**: Wann etwas
+läuft, entscheidet der eingerichtete Auslöser auf der Wartungsseite. Eine
+zweite Uhr in der Datenbank wäre eine zweite Wahrheit.
+
+### Web — Was die Prüfung tatsächlich prüft
+
+„Verbindung prüfen" meldet nicht, dass die Anmeldung geklappt hat. Es
+schreibt eine Probedatei, liest sie zurück, vergleicht sie Byte für Byte und
+löscht sie wieder — und zeigt jeden dieser Schritte einzeln an. Eine
+Anmeldung, die klappt, sagt nichts über Schreibrechte; woran es scheitert,
+erfährt man sonst nachts, ohne Zuschauer.
+
+### Web — Was „Sicherungsziel" heisst und warum nicht „Transportziel"
+
+Das Konzept nennt es Transportziel. Diesen Namen trägt seit Web 4 aber schon
+`transport_dests` — die Zielklinik einer Patientin, gepflegt unter
+Stammdaten. Zwei Dinge, zwei Klicks voneinander entfernt, unter einem Wort:
+Das ist die Art Verwechslung, die man in einer Fehlermeldung nicht mehr
+auflösen kann. Also Sicherungsziel (Konzept-S2, F-S2-G).
+
+### Web — Fremdbestandteil
+
+**phpseclib 3.0.57** (MIT, reines PHP) liegt unter `server/vendor/phpseclib3/`,
+dazu **constant_time_encoding 2.7.0** (MIT), das phpseclib an genau einer
+Stelle voraussetzt. Ein zwanzigzeiliger PSR-4-Lader statt Composer — auf einem
+Webspace läuft kein `composer install`. Die Kopfzeile mit Herkunft und
+SHA-256, die `docs/Lizenzen.md` sonst je Datei verlangt, ist hier durch zwei
+Prüfsummenlisten ersetzt (`sha256sum -c`): Bei 349 Dateien wäre sie von Hand
+nicht zu pflegen und beim ersten Austausch falsch.
+
+**`ext/ssh2` wäre die Alternative gewesen** und ist es nicht: Auf geteiltem
+Webspace ist die Erweiterung praktisch nie da und lässt sich dort nicht
+nachinstallieren. phpseclib kostet dafür Rechenzeit — bei einer Handvoll
+Dateien je Nacht fällt das nicht ins Gewicht (3,08 s für 64 MB, siehe oben).
+
+### Web — Zwei Funde aus der eigenen Prüfung
+
+**`SFTP::TYPE_REGULAR` gibt es nicht.** phpseclib definiert
+`NET_SFTP_TYPE_REGULAR` als *globale* Konstante beim ersten Erzeugen eines
+Objekts, nicht als Klassenkonstante. Der Fehler schlug erst beim Auflisten
+zu, nicht beim Übertragen — eine Verzeichnisliste, die leer bleibt, hätte den
+Versand still alles doppelt schicken lassen.
+
+**Der Serverschlüssel war nach dem Schreiben eine Anfrage lang unsichtbar.**
+OPcache merkt sich die übersetzte `config.php` und prüft ihren Zeitstempel
+sekundengenau; wird sie in derselben Sekunde ersetzt, gilt sie als
+unverändert. Die Seite meldete „steht jetzt in config.php", und der
+unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel fehlt". Behoben mit
+`opcache_invalidate()`.
+
+Dazu zwei Fehlermeldungen, die die Probe als unbrauchbar entlarvt hat: Ein
+falsches FTP-Passwort meldete „Authentication failed" ohne das Wort Passwort
+(das Muster kannte nur „Login incorrect"), und ein geschlossener Port meldete
+„kam nicht zustande" ohne jeden nächsten Schritt — `ftp_connect()` gibt dort
+`false` zurück und schweigt.
+
+### Web — Geprüft
+
+`tools/versandprobe/` gegen echte Server auf 127.0.0.1 (FTP, FTPS mit TLS,
+SFTP): **106 Erwartungen, 0 nicht erfüllt**. Im Browser: Serverschlüssel
+anlegen, Ziel anlegen, prüfen (6 Schritte), falsches Passwort, versenden (64
+Dateien, 63,9 MB), Rückstand danach 0 — 0 Konsolenfehler, 0 px waagerechter
+Überlauf, Bedienelemente 44 px. Der Wartungslauf über die Befehlszeile führt
+`versand` mit auf (`fertig · erledigt 64 · Rückstand 0`).
+
+**Was nicht geprüft werden konnte:** ein echtes Ziel im Internet. Aus dem
+Behälter, in dem gearbeitet wurde, gehen nur Verbindungen auf Port 443 hinaus
+— nachgemessen mit `github.com:22` als Gegenkontrolle, einem sicher offenen
+Port, der ebenso abgewiesen wird. Die Abnahme gegen ein echtes Ziel je
+Protokoll steht aus und gehört auf die Maschine der Betreiberin oder auf den
+Produktivserver.
+
 ## [Web 12.0.0] — 2026-09-01
 
 **Die Admin-Sicherung wird mehrteilig.** Siebtes Arbeitspaket der Phase S2

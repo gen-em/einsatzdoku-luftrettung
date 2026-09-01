@@ -223,8 +223,8 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Sicherungen, **Rechtstexte**, Demo-Konto und
-Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+**Stammdaten systemweit**, Sicherungen, **Sicherungsziele**, **Rechtstexte**,
+Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -1469,11 +1469,45 @@ hast, kann die Administration sie zurücknehmen.
   angezeigt und danach nie wieder (Abschnitt 5).
 - Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
   entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **drei** Sicherungen (die Administration kann die
-  Zahl unter „Sicherungen" ändern). Die älteste wird beim nächsten Sichern
-  verdrängt — nach Alter wird dagegen nie etwas entfernt.
+- Je Konto liegen höchstens **zwei** Sicherungen (die Administration kann die
+  Zahl unter „Sicherungen" ändern; bis Web 11.2.0 waren es drei). Die älteste
+  wird beim nächsten Sichern verdrängt — nach Alter wird dagegen nie etwas
+  entfernt.
 - Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
   ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
+- Die Sicherungen können zusätzlich auf einen **anderen Server** geschoben
+  werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Administration.
+
+### 6.2 Wohin die Sicherungen gehen (nur Administration)
+
+Seit Web 12.1.0 kann die Administration unter **Einstellungen →
+Sicherungsziele** eine Gegenstelle eintragen, auf die die Sicherungen
+geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Eine
+Sicherung, die auf demselben Server liegt wie das Gesicherte, hilft nicht,
+wenn dieser Server ausfällt.
+
+Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
+Zielklinik und steht unter Stammdaten.
+
+Was dabei zu wissen ist:
+
+- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
+  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
+  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
+- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
+  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
+- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
+  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
+- Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
+  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
+  Datenbankdump hat, hat die Passwörter nicht.
+- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
+  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
+  alles an, bis dort jemand aufräumt.
+
+Für dein Konto ändert sich dadurch nichts: Der Inhalt der Sicherung bleibt
+verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
+nicht zu öffnen.
 
 ---
 

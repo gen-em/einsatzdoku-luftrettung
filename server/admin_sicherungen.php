@@ -502,6 +502,10 @@ ui_seite_start(['titel' => 'Sicherungen']);
                                                ['ton' => 'orange'])]);
       }
       ?>
+      <p class="feld-hinweis"><strong>Wohin sie von hier aus gehen</strong>, steht unter
+         <a href="admin_sicherungsziele.php">Sicherungsziele</a> — FTP-, FTPS- oder
+         SFTP-Gegenstellen. Ohne ein solches Ziel liegen die Sicherungen auf
+         demselben Server, dessen Ausfall der Grund für eine Sicherung wäre.</p>
       <p class="feld-hinweis">Die Ablage liegt außerhalb der Auslieferung und wird beim
          Aufspielen einer neuen Fassung nicht angefasst. Sie ist über den Browser nicht
          erreichbar: eine <code>.htaccess</code> sperrt sie, und der Ordnername je Konto

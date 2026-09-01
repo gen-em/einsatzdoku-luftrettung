@@ -287,15 +287,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // config.php schreiben + Sperre setzen
     if (!$errors) {
+        /* DER SERVERSCHLUESSEL ENTSTEHT HIER UND NIRGENDWO SONST (E-S2-21,
+         * S2/AP7). Er versiegelt die Zugangsdaten der Sicherungsziele und —
+         * ab AP8 — das Komplettbackup. Eine neue Installation bekommt ihn
+         * mit, ohne dass jemand daran denken muss; bestehende Installationen
+         * tragen ihn ueber die Seite „Sicherungsziele" nach.
+         *
+         * ER GEHOERT INS WIEDERANLAUFPAKET. Steht in docs/Technik.md,
+         * Abschnitt 7, und im Kopf dieser config.php gleich mit — denn wer
+         * die Datei zum ersten Mal oeffnet, liest sie und nicht das Runbook.
+         * Geht er verloren, sind die Zugangsdaten der Ziele neu einzutragen
+         * und ein versiegeltes Komplettbackup ist nicht mehr zu oeffnen. */
         $config = [
             'db'  => ['dsn' => "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
                       'user' => $dbUser, 'pass' => $dbPass],
             'app' => ['base_url' => $baseUrl, 'timezone' => $timezone,
                       'logo_path' => $logoPath, 'max_body_bytes' => 524288],
             'smtp' => $smtp,
+            'server_key' => bin2hex(random_bytes(32)),
         ];
         $php = "<?php\n// Automatisch erzeugt vom Installer am " . date('c') . "\n"
              . "// Diese Datei enthält Zugangsdaten — niemals ins Git-Repo committen!\n"
+             . "// server_key versiegelt die Zugangsdaten der Sicherungsziele und das\n"
+             . "// Komplettbackup. Geht er verloren, sind versiegelte Komplettbackups\n"
+             . "// nicht mehr zu öffnen. Er gehört zusammen mit dieser Datei ins\n"
+             . "// getrennt aufbewahrte Wiederanlaufpaket (docs/Technik.md, Runbook).\n"
              . 'return ' . var_export($config, true) . ";\n";
 
         if (file_put_contents($configPath, $php, LOCK_EX) === false) {

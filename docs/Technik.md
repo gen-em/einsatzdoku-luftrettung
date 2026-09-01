@@ -111,6 +111,21 @@ Daten erst nach Server-Bestätigung.
 │   │                       Pakete eines Kontos auf dessen Kontoseite
 │   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
+│   ├── sicherungsziel_lib.php  Sicherungsziele (S2/AP7): Schnittstelle
+│   │                       `Zielweg` und drei Adapter — FTP und FTPS über
+│   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
+│   │                       Tabelle backup_targets, „Verbindung prüfen" und
+│   │                       der Versandschub
+│   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
+│   │                       Serverschlüssel nachtragen, Versand ein/aus
+│   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
+│   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
+│   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
+│   │                       Server selbst hat — es öffnet keine Patientendaten
+│   ├── vendor/            fremde Bibliotheken, die auf dem SERVER laufen
+│   │                       (phpseclib3, ParagonIE/ConstantTime), gesperrt per
+│   │                       .htaccess, geladen über vendor/laden.php;
+│   │                       Herkunft und Prüfsummen in HERKUNFT.md
 │   ├── validate_lib.php   Gemeinsame Prüfschicht für Einsatzdaten (alle vier Schreibwege)
 │   ├── ratelimit_lib.php  Ratenschutz (Konto + IP, in der Datenbank)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
@@ -270,6 +285,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── versandprobe/      prüft die drei Sicherungsziel-Adapter (S2/AP7)
+│   │                      gegen ECHTE Server auf 127.0.0.1 (FTP, FTPS mit
+│   │                      TLS, SFTP): Rundlauf je Protokoll, Fingerabdruck
+│   │                      als Riegel, Fehlerfälle, Versiegelung der
+│   │                      Zugangsdaten. 106 Erwartungen. Was sie NICHT prüfen
+│   │                      kann — ein echtes Ziel im Internet — steht an
+│   │                      erster Stelle ihrer LIESMICH.md
 │   ├── uhr-pruefstand/    baut SDK und Simulator auf einem nackten Linux-
 │   │                      Rechner auf, übersetzt die Uhr-App und startet
 │   │                      sie ohne Fensteroberfläche (s. Abschnitt 5.2b)
@@ -327,9 +349,10 @@ Daten erst nach Server-Bestätigung.
 | `deleted_refs` | Sperrliste gelöschter `client_ref`s (90 Tage) gegen Wieder-Upload durch die Uhr; `owner_type` unterscheidet Einsatz und Ruhe-Segment — die Liste gilt für **beide** |
 | `rate_limits` | Ratenschutz: Versuche je `topf` (login/salt/reset/pair) und `merkmal` (`ip:…` oder `id:…`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. Seit Web 4.4.0 sind **alle vier Töpfe in Gebrauch**. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand |
 | `rechtstexte` | Impressum und Datenschutzerklärung dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
-| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…`, `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Sicherungsziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Administration ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht `track_points.ts` — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `jobs` | Zustand der Hintergrundjobs (seit Web 10.1.0, S2), eine Zeile je Job. `zustand` = Fortsetzungsmarke als JSON, `rueckstand` = was noch aussteht (für die Wartungsseite), `letzter_ausloeser` = `cli` / `token` / `anfrage`, `letzter_fehler` = warum der letzte Lauf scheiterte, `laeuft_seit` = Sperre gegen zwei gleichzeitige Läufe — bewusst ein **Zeitstempel und kein Flag**, sonst bliebe ein abgestürzter Lauf für immer gesperrt. Siehe Abschnitt 4.97a |
+| `backup_targets` | Sicherungsziele (seit Web 12.1.0, S2/AP7): FTP-, FTPS- oder SFTP-Gegenstelle je Zeile. `geheim` (Passwort oder Passphrase) und `schluessel` (privater SSH-Schlüssel) stehen **versiegelt** darin (`edsk1:`, `serverkrypto_lib.php`); der Schlüssel dazu liegt in `config.php` und damit **nicht im Dump**. Welches Feld gilt, sagt der Inhalt: Steht in `schluessel` etwas, wird damit angemeldet und `geheim` ist dessen Passphrase. `fingerabdruck` = SHA-256 des Hostschlüssels (nur SFTP, Riegel gegen einen untergeschobenen Server). `letzter_fehler` steht dort, damit ein seit Wochen scheiternder Versand in der Oberfläche auffällt. Nicht zu verwechseln mit `transport_dests` — das sind Zielkliniken |
 | `schema_migrations` | Buchführung des Migrations-Runners |
 
 Skalierung: ~2.000–2.500 Punkte je Einsatz; Indizes `(user_id, day)` und der
@@ -2464,6 +2487,158 @@ das Skript.
 
 ---
 
+### 4.97c Sicherungsziele: die Sicherung verlässt das Haus (ab Web 12.1.0, S2/AP7, E-S2-22)
+
+Bis Web 12.0.0 entstanden die Admin-Sicherungen unter `server/sicherungen/`
+und blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz —
+aber nicht für den Fall, für den man Sicherungen macht: dass dieser Server weg
+ist. Ab Web 12.1.0 gehen sie auf eine **Gegenstelle**.
+
+#### Der Name
+
+**Sicherungsziel**, nicht Transportziel. `transport_dests` gibt es seit Web 4;
+das sind die Zielkliniken einer Patientin, gepflegt unter Stammdaten. Zwei
+Dinge unter einem Wort, zwei Klicks voneinander entfernt — das lässt sich in
+einer Fehlermeldung nicht mehr auflösen (Konzept-S2, F-S2-G).
+
+#### Eine Schnittstelle, drei Adapter
+
+`server/sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können
+muss: `verbinden`, `trennen`, `ordner`, `senden`, `holen`, `liste`,
+`loeschen`, `fingerabdruck`. Alle Pfade sind **relativ zum Grundpfad des
+Ziels** — kein Adapter nimmt einen absoluten Pfad, sonst wäre der Grundpfad
+eine Empfehlung und keine Grenze.
+
+| Adapter | Protokoll | Grundlage |
+|---|---|---|
+| `ZielFtp` | FTP und FTPS | PHP-Erweiterung `ftp` (`ftp_ssl_connect`) |
+| `ZielSftp` | SFTP | phpseclib 3 (`server/vendor/`, docs/Lizenzen.md 3a) |
+
+Ein Adapter für FTP **und** FTPS, weil sich genau eine Zeile unterscheidet.
+Das Komplettbackup aus AP8 benutzt dieselbe Schnittstelle und weiss vom
+Protokoll nichts; ein vierter Adapter (WebDAV, Backlog) soll sie nicht
+anfassen.
+
+#### Was die drei taugen
+
+| | verschlüsselt | erkennt den Server wieder |
+|---|---|---|
+| **SFTP** | ja | **ja** — Fingerabdruck des Hostschlüssels |
+| **FTPS** | ja | nein |
+| **FTP** | **nein** | nein |
+
+Der mittlere Fall wird leicht überschätzt: **`ext/ftp` prüft das Zertifikat
+nicht.** Nachgemessen in `tools/versandprobe/` gegen eine Gegenstelle mit
+selbst ausgestelltem Zertifikat ohne Vertrauenskette — die Verbindung kommt
+zustande. Schutz gegen Mitlesen ja, Schutz gegen einen untergeschobenen Server
+nein.
+
+Bei SFTP wird der Fingerabdruck beim ersten `Verbindung prüfen` übernommen und
+danach bei jeder Verbindung verglichen. Passt er nicht, bricht es ab — **vor**
+der Anmeldung. Belegt wird das nicht an der Fehlermeldung, sondern an der
+Gegenstelle: Sie schreibt jeden Anmeldeversuch mit, und ihr Protokoll bleibt
+unverändert (3 Zeilen vorher, 3 nachher). Wer sich bei einem untergeschobenen
+Server anmeldet, hat sein Passwort schon abgegeben, auch wenn er danach
+abbricht.
+
+Wechselt die Gegenstelle ihren Schlüssel, ist der gespeicherte Abdruck falsch
+— und ein falscher Abdruck blockiert jede Verbindung und sieht aus wie ein
+Angriff. Dafür gibt es „Hostschlüssel vergessen"; ausserdem wirft die Seite
+ihn von selbst weg, wenn Rechnername oder Port geändert werden.
+
+#### Der Serverschlüssel (E-S2-21)
+
+`server/serverkrypto_lib.php`. 32 Byte Zufall in **`config.php`**, nicht in der
+Datenbank:
+
+```
+edsk1:base64( nonce(12) ‖ prüfsumme(16) ‖ chiffre )     AES-256-GCM
+Zusatzdaten: 'edsk1|sicherungsziel:<id>:<feld>'
+```
+
+Der Zweck in den Zusatzdaten bindet die Chiffre an **dieses** Ziel und
+**dieses** Feld: Ein versiegeltes Passwort von Ziel 3 lässt sich nicht als
+Passwort von Ziel 7 einsetzen, obwohl beide denselben Schlüssel benutzen.
+
+Warum `config.php` und nicht die Datenbank: Der Zweck ist der Fall „jemand hat
+die Datenbank". Für das Komplettbackup (AP8) wird es zwingend — dessen Dump
+enthält jede Tabelle.
+
+`sk_oeffnen()` gibt bei Misserfolg **`null`** zurück und unterscheidet nicht,
+warum. Jeder Aufrufer muss das sagen; ein stillschweigend leeres Passwort wäre
+die schlechteste Antwort, denn der Versand liefe dann in ein „Zugang
+verweigert", und niemand käme auf die Ursache.
+
+Neue Installationen bekommen den Schlüssel vom Installer. Bestehende tragen
+ihn auf der Seite „Sicherungsziele" nach — ein Knopf, wenn `config.php`
+beschreibbar ist, sonst eine Zeile von Hand. Der Knopf **ergänzt und ersetzt
+nie** (ein Überschreiben machte jedes versiegelte Feld unlesbar), schreibt in
+eine Nebendatei mit Endung `.php` — eine `config.php.tmp` läge im
+Wurzelverzeichnis des Webservers als lesbarer Text mit dem Datenbankpasswort
+—, führt sie zur Gegenprobe aus und vergleicht sie mit der geltenden Fassung,
+schiebt sie erst dann an ihren Platz und verwirft danach den
+OPcache-Eintrag. Ohne diesen letzten Schritt zeigt die nächste Anfrage wieder
+„Serverschlüssel fehlt": OPcache prüft den Zeitstempel sekundengenau.
+
+#### Der Versand
+
+Ein Joblauf (`versand`, Katalog in `jobs_lib.php`) und ein Knopf „Jetzt
+versenden". Beide gehen durch `sz_versand_schub()`; der Job fragt zusätzlich
+den Schalter `app_state.versand_auto`, der Knopf nicht — dort hat gerade
+jemand geklickt, und das ist die Zustimmung.
+
+**Was „neu" ist, wird am Ziel abgelesen** — Verzeichnisliste, Name **und
+Grösse** — und nicht in einer Merkliste geführt. Eine Merkliste behauptet
+„schon versandt" auch dann noch, wenn die Datei am Ziel gelöscht, das Ziel neu
+aufgesetzt oder der Pfad geändert wurde; diese Art Lüge fällt erst auf, wenn
+man die Sicherung braucht. Die Grösse gehört dazu, weil eine abgebrochene
+Übertragung sonst mit richtigem Namen und falscher Länge für immer als
+erledigt gälte.
+
+**Es wird nur ergänzt.** Auf dem Ziel löscht diese Anwendung nie — auch nicht
+im Sinne der Aufbewahrung „zwei je Konto", die für die Ablage auf diesem
+Server gilt (Backlog Nr. 49).
+
+Die Zeit wird **je Konto** geprüft, nicht je Ziel: Ein Schub, der mitten in
+einer Übertragung von der Zeit eingeholt wird, hinterlässt am Ziel eine halbe
+Datei. Die Reserve ist mit 25 s gross, weil ein SFTP-Verbindungsaufbau in
+reinem PHP über eine Sekunde kostet; am Huckepack-Weg (3 s) fängt der Job
+deshalb gar nicht erst an.
+
+Der Schalter sagt **ob**, nicht **wann**. Wann etwas läuft, entscheidet der
+eingerichtete Auslöser (Abschnitt 4.97a). Eine zweite Uhr in der Datenbank
+wäre eine zweite Wahrheit.
+
+#### „Verbindung prüfen" prüft mehr als die Anmeldung
+
+Verbinden → Probedatei schreiben → Verzeichnis lesen → zurückholen → Byte für
+Byte vergleichen → löschen → trennen. Jeder Schritt steht einzeln in der
+Oberfläche. Eine Anmeldung, die klappt, sagt nichts über Schreibrechte; woran
+es scheitert, erführe man sonst nachts, ohne Zuschauer.
+
+#### Gemessen (S2/AP7)
+
+64 Pakete zu zusammen 63,89 MB aus 33 Kontoordnern, gegen örtliche
+Gegenstellen:
+
+| | Dauer | PHP-Speicherspitze (Budget Z3: 64 MB) |
+|---|---|---|
+| FTP | 0,13 s | 2,0 MB |
+| FTPS | 0,68 s | 2,0 MB |
+| SFTP | 3,08 s | 8,0 MB |
+
+Alle 192 angekommenen Dateien byteweise mit dem Original verglichen: **0
+Abweichungen**. Zweiter Lauf: 0 Dateien, 0,19 s. Eine am Ziel auf 1 000 Byte
+gekürzte Datei wurde beim nächsten Lauf **einzeln** erneut geschickt (1 von
+64). Mit einem Budget von 2 s teilte sich derselbe Lauf in zwei Schübe
+(34 + 30) und war danach vollständig.
+
+`tools/versandprobe/` deckt Adapter, Fingerabdruck-Riegel, Fehlerfälle und
+Versiegelung ab: **106 Erwartungen**. Was sie nicht prüfen kann — ein echtes
+Ziel im Internet —, steht an erster Stelle ihrer `LIESMICH.md`.
+
+---
+
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
@@ -3325,6 +3500,52 @@ und rutschen beim Streichen einer Spalte still auf die falsche.
 Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt
 unberührt. Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten
 idempotent nach, sofern lokal noch vorhanden.
+
+**Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
+Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:
+
+1. **`server/config.php`.** Sie steht in `.gitignore` **und** in der
+   Ausnahmeliste des Deploys; es gibt sie also nur auf dem Server.
+2. **Der Serverschlüssel** darin (`'server_key' => '…'`, 64 Hexzeichen).
+   Er versiegelt die Zugangsdaten der Sicherungsziele und — ab AP8 — das
+   Komplettbackup. **Ohne ihn** sind die Zugangsdaten der Ziele neu
+   einzutragen (verschmerzbar) und ein versiegeltes Komplettbackup **nicht
+   mehr zu öffnen** (nicht verschmerzbar).
+3. **Der Zugang zum Sicherungsziel** — Rechnername, Nutzer, Passwort bzw.
+   privater Schlüssel. Er steht in der Datenbank, aber versiegelt; wer nur
+   den Dump hat und den Serverschlüssel nicht, kommt an die Sicherungen
+   dort nicht heran. Das ist der Sinn der Sache und zugleich der Grund,
+   ihn zusätzlich von Hand zu notieren.
+
+**Probe-Wiederherstellung** ist ein Prüfpunkt und keine Formalie: einmal je
+Halbjahr ein Paket vom Ziel holen und in ein Wegwerfkonto einspielen. Eine
+Sicherung, die nie zurückgespielt wurde, ist eine Vermutung.
+
+**Serverschlüssel nachtragen (bestehende Installation):** Adminbereich →
+**Sicherungsziele**. Ist `config.php` beschreibbar, genügt der Knopf; sonst
+zeigt die Seite die fertige Zeile zum Einfügen — **genau eine** eintragen, bei
+jedem Neuladen steht dort eine andere. Danach die Zeile ins Wiederanlaufpaket.
+
+**Sicherungsziel einrichten:** Adminbereich → **Sicherungsziele** → *Ziel
+anlegen*. **SFTP wählen, wenn das Ziel es anbietet** — es ist das einzige der
+drei Protokolle, das den Server am Hostschlüssel wiedererkennt. Danach
+**Verbindung prüfen**: Der Lauf schreibt eine Probedatei, liest sie zurück,
+vergleicht sie und löscht sie wieder; er beantwortet damit auch die Frage nach
+den Schreibrechten. Beim ersten Mal wird der Hostschlüssel übernommen.
+Zuletzt den Schalter *Sicherungen automatisch versenden* setzen — **wie oft**
+das geschieht, entscheidet der eingerichtete Job-Auslöser (Abschnitt 4.97a).
+
+**„Der Server meldet sich mit einem ANDEREN Hostschlüssel":** Erst klären, ob
+die Gegenstelle ihren Schlüssel tatsächlich gewechselt hat (beim Hoster
+nachfragen, den Abdruck aus einer zweiten Quelle vergleichen —
+`ssh-keyscan <host> | ssh-keygen -lf -` liefert dieselbe Schreibweise). Erst
+dann **Hostschlüssel vergessen**; die nächste Prüfung übernimmt den neuen. Es
+wurde nichts übertragen und kein Passwort gesendet.
+
+**„Die Zugangsdaten dieses Ziels lassen sich nicht entschlüsseln":** In
+`config.php` steht ein anderer Serverschlüssel als der, mit dem sie gespeichert
+wurden. Entweder den alten wieder eintragen (Wiederanlaufpaket) oder die
+Zugangsdaten am Ziel neu erfassen.
 
 **Wartungsseite, Abschnitt „Schlüsselableitung" (seit Web 5.0.1):** Erscheint
 **nur, wenn es etwas zu melden gibt** — Konten, deren `kdf_iter` nicht in
