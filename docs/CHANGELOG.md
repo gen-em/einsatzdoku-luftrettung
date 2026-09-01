@@ -11,6 +11,45 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.4] — 2026-09-01
+
+**Navigation und Leistenüberschrift.** Viertes Arbeitspaket von S3. Keine
+Migration, keine Schnittstellenänderung.
+
+### Web — Wenn jede Zeile fett ist, hebt sich keine hervor
+
+Die Menüpunkte der Seitenleiste standen durchgehend auf Schriftschnitt 600 —
+Diensttage wie Einstellungen. Der aktive Punkt musste seine Erkennbarkeit
+allein aus Fläche und orangem Randstrich holen, und der ganze Block wirkte
+schwer. Jetzt steht der Grundschnitt auf 400 und **nur der ausgewählte Punkt
+auf 600**: Die Auszeichnung wandert von „alle" zu „einer".
+
+Dieselbe Überlegung hat P3 schon einmal für die Zeilen des Aktionsblattes
+angestellt (F-N1-F). Die Leiste war damals übersehen worden.
+
+Eine Regel ist dabei entfallen: `.eintrag-leise` setzte `font-weight: 400`,
+solange die Grundform 600 war. Jetzt wäre es eine Dublette — und eine
+Dublette ist nie harmlos, sobald sich die Grundform ändert.
+
+### Web — „Diensttage" wirkte verloren, und es lag nicht an der Ausrichtung
+
+Die Rückmeldung lautete, die Überschrift stehe verloren links oben. Sie bleibt
+**linksbündig** — sie wird größer und dunkler: eine Stufe höher in der
+geschlossenen Skala (15 statt 13 px) und `--asphalt` statt `--gedaempft`.
+Gemessen 19,29:1 gegen die tatsächliche Fläche der Leiste, weit über AA.
+
+**Versalien und Sperrung sind dabei entfallen — entschieden am Bild.** Bei
+13 px trug die Sperrung, weil die Größe allein nicht reichte; sie war der
+Ersatz für die Größe, die jetzt da ist. Bei 15 px in Bricolage 600 liest sich
+„DIENSTTAGE" gesperrt als **Etikett** und steht dem Jahreseintrag „2026"
+darunter an Lautstärke kaum nach — zwei Überschriften statt einer Ordnung.
+Gemischt gesetzt bleibt es eine Überschrift: präsent, aber ersichtlich eine
+Ebene über dem, was sie ordnet.
+
+Der Baustein trägt **vier** Zeilen: Diensttage, Einstellungen, Administration
+und „Filter" in der Suche. Alle vier ziehen mit — das ist beabsichtigt und
+war der Grund, es am Baustein zu machen und nicht an der Diensttag-Leiste.
+
 ## [Web 12.2.3] — 2026-09-01
 
 **Die Sammelleiste bekommt die Form der Karte.** Drittes Arbeitspaket von S3.

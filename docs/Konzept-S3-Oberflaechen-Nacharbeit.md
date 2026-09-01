@@ -1208,3 +1208,54 @@ keine Prüfung.
 **Nicht geprüft:** das Zusammenspiel mit `forms.js` beim Verlassen der Seite
 (Verlassen-Warnung) — unberührt von dieser Änderung, aber nicht nachgefahren.
 Steht im Prüfdokument als Bedienweg.
+
+---
+
+### AP4 — Navigation und Leistenüberschrift (E-R43-2)
+
+**Stand:** erledigt. Web 12.2.4. Der Bildentscheid E-S3-12 (a) ist gefallen.
+
+#### Was geändert wurde
+
+- `.eintrag-text`: `font-weight` 600 → 400; `.eintrag.aktiv .eintrag-text`
+  bekommt 600. Die Auszeichnung wandert von „alle" zu „einer".
+- `.eintrag-leise`: `font-weight: 400` entfernt — seit der Grundschnitt 400
+  ist, wäre es eine Dublette (Anti-Muster in `Design.md` 9.16).
+- `.leiste-kopfzeile`: `--groesse-2` → `--groesse-3`, `--gedaempft` →
+  `--asphalt`; `text-transform: uppercase` und `letter-spacing: .08em`
+  entfallen. Ausrichtung unverändert linksbündig.
+- `docs/Design.md`, Kapitel 5: Die Schriftskala führte die Leistenüberschrift
+  noch bei `--groesse-1` (12 px), während das Stylesheet seit P3 13 px setzt.
+  Beim Nachziehen aufgefallen und mitkorrigiert — jetzt bei `--groesse-3`.
+
+#### E-S3-12 (a): Versalien und Sperrung — entschieden am Bild
+
+Drei Fassungen bei 1440 px in doppelter Auflösung aufgenommen, alle mit
+15 px, Bricolage 600 und `--asphalt`:
+
+| Fassung | Befund |
+|---|---|
+| **a** versal + gesperrt (bisheriger Satz) | „DIENSTTAGE" liest sich als **Etikett**. Es steht dem Jahreseintrag „2026" darunter an Lautstärke kaum nach — zwei Überschriften statt einer Ordnung |
+| **b** gemischt, ohne Sperrung | bleibt eine **Überschrift**: präsent, aber ersichtlich eine Ebene über dem, was sie ordnet |
+| **c** versal, ohne Sperrung | wie a, nur enger — dasselbe Etikett |
+
+**Entschieden: Fassung b.** Die Begründung ist die, die E-S3-12 vorweggenommen
+hat, und sie hat eine Kehrseite, die im Bild sichtbar wird: Bei 13 px **trug**
+die Sperrung, weil die Größe allein nicht reichte — sie war der **Ersatz für
+die Größe**. Mit der Größe ist der Ersatz überflüssig und wird zur Last.
+
+#### Prüfstand AP4
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | **4 entfallen, 1 neu, 3 geänderte Werte, 0 Reihenfolgetausch** — genau die acht geplanten Änderungen, keine neunte |
+| Kontrast der neuen Farbverwendung | `tools/screenshots/kontrast.py`, gegen die tatsächliche Fläche | `--asphalt` auf `--schnee` (Fläche der Leiste): **19,29:1**, Schwelle 4,5 — AA weit übertroffen. 21 Paare, 0 verfehlt |
+| Alle vier Stellen des Bausteins | `grep` über `server/*.php` | Diensttage, Einstellungen, Administration, Filter — alle vier in `ui.php`, alle vier ziehen über dieselbe Klasse mit |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs`, voller Lauf | 304 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde, gleich der Basis |
+| Texte | `tools/wortliste/wortliste.py` | 0 / 0 / 0 |
+
+**Nicht geprüft:** die Leiste als **Schublade** unter 1024 px im geöffneten
+Zustand — der Bilderlauf nimmt sie über `11-tagesuebersicht-schublade` auf,
+aber die Menüpunkte im Hover- und Fokuszustand sind nicht gemessen. Steht im
+Prüfdokument als Bedienweg.

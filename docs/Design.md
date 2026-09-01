@@ -465,9 +465,9 @@ Vollständigkeitsprüfung meldet jede.
 
 | Token | Wert | wofür |
 |---|---|---|
-| `--groesse-1` | 12 px | Plakette, Kleinstzeile, Leistenüberschrift |
+| `--groesse-1` | 12 px | Plakette, Kleinstzeile, Zähler |
 | `--groesse-2` | 13 px | Kleinzeile, Hinweis, Tabelleninhalt |
-| `--groesse-3` | 15 px | Fließtext der Oberfläche |
+| `--groesse-3` | 15 px | Fließtext der Oberfläche, Leistenüberschrift |
 | `--groesse-4` | 16 px | Kartentitel, Knopf |
 | `--groesse-5` | 19 px | Abschnittsüberschrift |
 | `--groesse-6` | 24 px | Seitentitel |

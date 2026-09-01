@@ -694,13 +694,24 @@ img,svg,video{max-width:100%;height:auto}
 /* EINE STUFE GRÖSSER (F-N1-K). Mit 12 px war die Überschrift der Leiste das
  * kleinste Element darin — kleiner als die Gruppen, die sie überschreibt, und
  * kleiner als jede Beschriftung darunter. Eine Überschrift, die von allem
- * überragt wird, das sie ordnet, ordnet nichts. 13 px, weiterhin
- * versalgesetzt und gesperrt: Sie soll den Bereich benennen, nicht mit den
- * Gruppentiteln konkurrieren. */
+ * überragt wird, das sie ordnet, ordnet nichts.
+ *
+ * SEIT S3/AP4 (E-R43-2) EINE STUFE HOEHER: 15 px statt 13, --asphalt statt
+ * --gedaempft. Die Rueckmeldung „wirkt verloren" war ein Problem von Groesse
+ * und Kontrast, nicht von Ausrichtung — linksbuendig bleibt sie.
+ *
+ * VERSALIEN UND SPERRUNG SIND DABEI ENTFALLEN, und das ist am Bild
+ * entschieden (E-S3-12 a): Bei 15 px in Bricolage 600 liest sich
+ * „DIENSTTAGE" gesperrt als ETIKETT und steht dem Jahreseintrag „2026"
+ * darunter an Lautstaerke kaum nach — zwei Ueberschriften statt einer
+ * Ordnung. Gemischt gesetzt bleibt es eine Ueberschrift: praesent, aber
+ * ersichtlich eine Ebene ueber dem, was es ordnet. Bei 13 px trug die
+ * Sperrung noch, weil die Groesse allein nicht reichte; sie war der Ersatz
+ * fuer die Groesse, die jetzt da ist. */
 .leiste-kopfzeile{
-  font-family:var(--schrift-kopf);font-size:var(--groesse-2);
-  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--gedaempft);
+  font-family:var(--schrift-kopf);font-size:var(--groesse-3);
+  font-weight:600;
+  color:var(--asphalt);
   padding:var(--abstand-3) var(--abstand-3) var(--abstand-2);
 }
 .leiste-leer{color:var(--gedaempft);padding:0 var(--abstand-3)}
@@ -813,10 +824,16 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * aus „27.12.2026" ein „27.12.20…" — abgeschnitten wurde also die Auskunft,
  * die den Eintrag überhaupt identifiziert. Der Name absorbiert die Restbreite
  * (E-P3-09: Ellipse am NAMEN, voller Name im Tooltip). */
+/* NORMAL, NICHT FETT (S3/AP4). Alle Eintraege standen auf 600. In einer
+ * Liste, in der JEDE Zeile fett ist, hebt das nichts hervor -- es macht nur
+ * den Block schwer, und der aktive Punkt muss seine Erkennbarkeit allein aus
+ * Flaeche und Randstrich holen. Die Auszeichnung wandert von „alle" zu
+ * „einer": Grundschnitt 400, der aktive Punkt 600. Dieselbe Ueberlegung wie
+ * bei den Blattzeilen (F-N1-F). */
 .eintrag-text{
   flex:1 0 auto;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  font-family:var(--schrift-kopf);font-weight:600;
+  font-family:var(--schrift-kopf);font-weight:400;
 }
 /* Lange Rettungsmittelnamen werden abgeschnitten („NEF Neubran…"); der volle
  * Name steht im Tooltip und im Seitentitel. Unter 1200 px entfällt der Name
@@ -827,7 +844,7 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .eintrag.aktiv{background:var(--orange-hell);border-left-color:var(--orange)}
-.eintrag.aktiv .eintrag-text{color:var(--dunkelblau)}
+.eintrag.aktiv .eintrag-text{color:var(--dunkelblau);font-weight:600}
 
 /* Der Fuß der Leiste: „Zuordnung offen" (rosa mit rotem Zähler, nur solange
  * etwas offen ist), „Diensttag anlegen" (orange), Papierkorb (gedämpft). */
@@ -836,8 +853,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .eintrag-offen .eintrag-text{color:var(--rot-tief)}
 .eintrag-anlegen .symbol,
 .eintrag-anlegen .eintrag-text{color:var(--orange-tief)}
+/* `font-weight:400` stand hier, solange die Grundform 600 war; seit S3/AP4
+ * ist 400 die Grundform und die Angabe waere eine Dublette (9.16). */
 .eintrag-leise .symbol,
-.eintrag-leise .eintrag-text{color:var(--gedaempft);font-weight:400}
+.eintrag-leise .eintrag-text{color:var(--gedaempft)}
 .zaehler{
   flex:0 0 auto;
   min-width:var(--abstand-5);height:var(--abstand-5);padding:0 var(--abstand-1);

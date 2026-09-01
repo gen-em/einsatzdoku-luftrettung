@@ -1713,5 +1713,17 @@ declare(strict_types=1);
  * Reihenfolge im Markup umgedreht: Hinweis zuerst, Knopf danach -- der Knopf
  * steht damit rechts, und die Vorlesereihenfolge stimmt ohne `order`.
  *
+ * 12.2.4 NIMMT DIE AUSZEICHNUNG AUS DER NAVIGATION ZURUECK (S3/AP4,
+ * E-R43-2). Alle Menuepunkte standen fett; in einer Liste, in der jede Zeile
+ * fett ist, hebt das nichts hervor. Jetzt normal, und nur der AKTIVE Punkt
+ * fett -- die Auszeichnung wandert von „alle" zu „einer".
+ *
+ * Die Leistenueberschrift („Diensttage", „Einstellungen", „Administration",
+ * „Filter") wirkte verloren. Das war ein Problem von Groesse und Kontrast,
+ * nicht von Ausrichtung: eine Stufe hoeher (15 statt 13 px) und --asphalt
+ * statt --gedaempft, linksbuendig wie bisher. Versalien und Sperrung sind
+ * dabei entfallen -- am Bild entschieden, denn bei 15 px liest sich der
+ * gesperrte Versalsatz als Etikett und konkurriert mit dem Eintrag darunter.
+ *
  */
-const WEB_VERSION = '12.2.3';
+const WEB_VERSION = '12.2.4';
