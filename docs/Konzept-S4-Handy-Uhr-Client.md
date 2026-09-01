@@ -480,9 +480,13 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   doppelt entstehen noch den Schnitt überschreiben. Die Antwort hängt an
   der S2-Bauform der Spurspeicherung (Blob-Zeilen statt Punktzeilen):
   Kandidaten sind Kopieren mit Herkunftsvermerk statt Verschieben, oder
-  eine Nachliefer-Sperre je geschnittenem Bereich. **Zu entscheiden vor
-  A2, am gemergten S2-Stand; die Entscheidung wird als E-Eintrag
-  nachgetragen** (K6) und mit einem eigenen Prüffall belegt.
+  eine Nachliefer-Sperre je geschnittenem Bereich.
+
+  **Entschieden am 01.09.2026 auf Ansage, als E-S4-53 nachgetragen (K6):**
+  *„Für alles Geschnittene keine Nachlieferung mehr. An den unangetasteten
+  Track darf noch nachgeliefert werden."* Das ist die **Sperre je Bereich**,
+  und zwar in ihrer engen Form — sie gilt dem herausgeschnittenen
+  Sequenzbereich, nicht dem Segment.
 
 - **F-S4-D — Garmin und Handy gleichzeitig im Dienst: es entstehen zwei
   Diensttage.** Aufgekommen als Rückfrage während C2, **gemessen** statt
@@ -2230,3 +2234,101 @@ parallel zu R42-Kleinstpaket und S2:** … **S4 Blöcke B und C** (Handy- und
 Uhr-App)". Der Schnitt B vor C und die Reihenfolge innerhalb von B waren
 richtig; einzig die Kopplung hätte nach dem Rahmenplan-Schnitt „in Block B
 zuletzt" gehört — was zum Zeitpunkt der Beauftragung so noch nicht dastand.
+
+---
+
+## 14. E-S4-53 — Der Schnitt sperrt seinen Bereich, nicht das Segment
+
+**Entschieden am 01.09.2026** (F-S4-C, K6). Die Formulierung der Ansage ist
+zugleich die Regel:
+
+> Für alles Geschnittene keine Nachlieferung mehr. An den unangetasteten
+> Track darf noch nachgeliefert werden.
+
+### Warum das die richtige Antwort ist
+
+Die beiden Kandidaten aus Abschnitt 4 waren **Kopieren mit Herkunftsvermerk**
+und **Sperre je Bereich**. Die Entscheidung nimmt den zweiten Weg und
+schärft ihn an der Stelle, an der er sonst zu grob wäre:
+
+**Nicht das Segment wird gesperrt, sondern der Bereich.** Das ist der
+Unterschied, der im Betrieb zählt. Ein Dienst läuft zwölf Stunden; wer um
+09:30 einen vergessenen Einsatz herausschneidet, ist um 09:31 wieder im
+Dienst, und das Handy liefert weiter. Eine Segmentsperre würde alles danach
+verwerfen — die Aufzeichnung endete am Schnitt, und niemand sähe es.
+
+**Kopieren wurde nicht gewählt, und der Grund ist gut:** Die Punkte lägen
+doppelt (bei rund 9 500 behaltenen Punkten je Zwölf-Stunden-Dienst spürbar),
+und das Ruhesegment behielte die Einsatzfahrt in sich. Wer es später ansieht,
+sähe eine Ruhezeit, in der jemand 40 km gefahren ist. Der Schnitt soll
+trennen, nicht verdoppeln.
+
+### Was daraus für die Bauform folgt
+
+| Regel | Folge |
+|---|---|
+| Punkte **wandern**, sie werden nicht kopiert | kein doppelter Speicher, das Segment zeigt danach die Ruhezeit |
+| Der geschnittene **Sequenzbereich** wird am Quellsegment vermerkt | `ingest.php` muss ihn lesen |
+| Punkte in einem gesperrten Bereich werden **verworfen** | … |
+| … aber der Upload wird **quittiert** | sonst liefert das Gerät endlos nach — dieselbe Regel wie bei der Sperrliste (`deleted_refs`, `ingest.php`) |
+| Alles außerhalb des Bereichs kommt **normal an** | die Aufzeichnung läuft über den Schnitt hinweg weiter |
+| Rückgängig hebt die Sperre **mit** auf | sonst bliebe ein Loch, das niemand mehr füllen kann |
+
+### Was die Umsetzung noch klären muss
+
+Diese Punkte sind **nicht** entschieden und gehören in A2:
+
+1. **Wo der Bereich steht.** Eine eigene Tabelle (`rest_segment_schnitte`
+   mit `seq_von`, `seq_bis`, `mission_id`) oder eine Spalte am Segment.
+   Die Tabelle ist wahrscheinlich richtig — ein Segment kann mehrfach
+   geschnitten werden, und Rückgängig braucht die Zuordnung zum Einsatz.
+2. **Wie `ingest.php` prüft, ohne teurer zu werden.** Der Endpunkt ist der
+   heißeste Schreibweg der Anwendung. Die Prüfung darf keine zweite Abfrage
+   je Punkt sein.
+3. **Was die Antwort meldet.** Der Vertrag kennt `rejected` und `kept_*`;
+   verworfene Punkte in einem geschnittenen Bereich sind weder das eine noch
+   das andere. Wahrscheinlich ein neues Feld, wahrscheinlich ohne
+   Vertragsänderung (der Client muss nichts damit tun).
+4. **Der Prüffall**, den das Konzept verlangt: Schnitt, dann Nachlieferung
+   derselben Sequenzen aus dem Referenzdatensatz — die geschnittenen kommen
+   nicht wieder, die späteren schon. Mit Zahl.
+
+### Nachtrag zur Lage: Block A wartet auf S3
+
+**Ebenfalls am 01.09.2026 entschieden:** S3 wird vorgezogen und beginnt als
+Nächstes. Block A folgt danach, wie der Rahmenplan es ohnehin vorsieht
+(`docs/Rahmenplan.md:1047` — „Nicht parallel: … S4 Block A zu S2 **und
+S3**").
+
+Das ist die teurere, aber richtige Reihenfolge. S3 fasst `index.php`,
+`einstellungen.php`, `ui.php`, `style.css` und `geo.js` an — genau die
+Dateien, in denen die Bedienung von A2 und A3 sitzt. Wer vorher baut, baut
+zweimal.
+
+**Vorarbeit, die dabei nicht verlorengeht** und in dieser Sitzung geleistet
+wurde: Der S2-Stand ist in den Arbeitszweig geholt (konfliktfrei), die
+Prüfumgebung läuft wieder (`cffi` fehlte — damit stand die halbe
+Werkzeugkiste), und der Bestand ist gelesen. Was A2 und A3 brauchen, steht
+fest:
+
+- Eine **Teilfunktion in `spur_lib.php`** — sie fehlt heute; die Datei hat
+  30 Funktionen, keine davon teilt eine Spur oder hängt einen Punktbereich
+  um.
+- Ein **`api/`-Schreibweg über `validate_lib.php`** für Ruhesegmente und für
+  „Einsatz mit fertiger Spur". Es gibt ihn heute nicht: Geschrieben wird nur
+  aus `ingest.php` (Gerät) und `backup_lib.php` (Wiederherstellung).
+- Der **Bestandsweg für den von Hand angelegten Einsatz** aus
+  `einsatz_form.php` — virtuelles Gerät `manual-<userId>`, `origin='manual'`,
+  `manual=1` — ist wörtlich nachzubauen, damit geschnittene Einsätze durch
+  Sicherung und CSV kommen (R24).
+- Der **Feldkatalog** `mission_fields.php` gilt auch hier (CLAUDE.md 4).
+
+**Zwei Funde am freigegebenen Mockup**, die vor A2 zu klären sind:
+`docs/mockups/S4-schneiden.html` benutzt fünfmal `<input type="time">` — das
+tut die Anwendung **nirgends** (E1 verlangt Textfeld plus
+`assets/zeitfeld.js`); und die Klassen `.schnitt-bereich`,
+`.schnitt-felder`, `.schnitt-vorschau` stehen nur im `<style>`-Block des
+Mockups, nicht in `server/assets/style.css`. Der Mockup sagt „Alles darin
+sind vorhandene Bausteine" — das stimmt für Zeile, Feld, Meldung und Knopf,
+nicht für den Behälter und die Zeitleiste. Beides ist `Design.md`-pflichtig
+(CLAUDE.md 5).
