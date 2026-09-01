@@ -683,6 +683,27 @@ function ui_leiste_einstellungen(string $aktiv): void
          * (Segmentwahl in der Titelzeile), nicht in die Leiste. */
         'admin_stammdaten'  => ['admin_stammdaten.php',  'Stammdaten systemweit', 'datenbank'],
         'admin_sicherungen' => ['admin_sicherungen.php', 'Sicherungen',           'sicherung'],
+        /* SICHERUNGSZIELE STEHEN DIREKT UNTER SICHERUNGEN (S2/AP7). Sie sind
+         * die Fortsetzung derselben Sache: erst die Regeln, dann wohin.
+         * Das Symbol ist `tausch` — dasselbe wie bei Import/Export, und aus
+         * demselben Grund: Es geht in beiden Faellen um Dateien, die das Haus
+         * verlassen oder hereinkommen. Ein NEUES Symbol braeuchte Freigabe mit
+         * Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht hier.
+         *
+         * NICHT „Transportziele" — so heissen unter Stammdaten die
+         * Zielkliniken (F-S2-G). */
+        'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Sicherungsziele', 'tausch'],
+        /* KOMPLETTSICHERUNG DIREKT DAHINTER (S2/AP8). Die drei gehoeren
+         * zusammen und stehen in der Reihenfolge, in der man sie braucht:
+         * erst die Regeln fuer die Kontosicherungen, dann wohin sie gehen,
+         * dann die Sicherung der ganzen Installation.
+         *
+         * Das Symbol ist `datenbank` — dasselbe wie bei „Stammdaten
+         * systemweit", und aus dem naheliegenden Grund: Hier wird die
+         * Datenbank als solche gesichert. Ein NEUES Symbol braeuchte Freigabe
+         * mit Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht. */
+        'admin_komplettsicherung' => ['admin_komplettsicherung.php',
+                                      'Komplettsicherung', 'datenbank'],
         /* Zwischen Sicherungen und Demo-Konto — so steht es in Mockup 35. */
         'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
@@ -744,6 +765,8 @@ function ui_einstellungen_uebersicht(): void
             ['admin_users.php',      'NutzerInnen',           'gruppe'],
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
             ['admin_sicherungen.php','Sicherungen',           'sicherung'],
+            ['admin_sicherungsziele.php', 'Sicherungsziele',   'tausch'],
+            ['admin_komplettsicherung.php', 'Komplettsicherung', 'datenbank'],
             ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
             ['update.php',           'Wartung',               'werkzeug'],
@@ -1093,7 +1116,12 @@ function ui_karte_ende(bool $klappbar = false): void
 function ui_zeile(array $o): void
 {
     $k = 'zeile' . (!empty($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
-    echo '<div class="' . $k . '">' . "\n";
+    /* `attr` wie bei ui_knopf() und ui_aktionen(): fertige Attribute, die der
+     * Aufrufer anhaengt — etwa `data-…` und `tabindex` fuer eine Zeile, die
+     * mit etwas anderem auf der Seite verknuepft ist (S2/AP4, tag_spuren.php).
+     * Keine neue Darstellung, nur dieselbe Zusatzoption an einem dritten
+     * Baustein. */
+    echo '<div class="' . $k . '"' . (string)($o['attr'] ?? '') . '>' . "\n";
     /* VORN steht, was VOR dem Text gehört (O9b): in der NutzerInnen-Liste das
      * Auswahlkästchen. Es gehört nicht zu den Aktionen rechts — es wählt die
      * Zeile aus, statt an ihr zu handeln, und in der Tabellenfassung derselben
@@ -1230,15 +1258,27 @@ function ui_aktionen(array $o): string
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  *
- * $o: name, label, wert, art (text|date|time|number|email|password|select|
+ * $o: name, label, wert, art (text|date|number|email|password|file|select|
  *     textarea), optionen, klein, pflicht, attr, klasse, platzhalter
+ *
+ * Die vollständige Liste der Schlüssel steht unten in der Funktion; diese
+ * hier nennt die häufigen. Beide führen dieselben Arten — sie sind schon
+ * einmal auseinandergelaufen: `file` fehlte, `time` stand da, ohne dass es
+ * irgendwo benutzt wird.
  * ------------------------------------------------------------------------ */
 function ui_feld(array $o): void
 {
     /* $o: name, id, label, label_zusatz (gedämpft, in der Beschriftung),
-     *     art (text|email|number|date|select|textarea), wert, optionen,
-     *     zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht, klein,
-     *     klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr */
+     *     art (text|email|number|date|password|file|select|textarea), wert,
+     *     optionen, zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht,
+     *     klein, klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr
+     *
+     * `password` und `file` fehlten in dieser Aufzählung, obwohl beide seit
+     * Langem benutzt werden (14- bzw. 2-mal). Eine Liste, die sich für
+     * vollständig ausgibt und es nicht ist, ist schlechter als keine.
+     * `file` trägt zusätzlich eine eigene Regel im Stylesheet
+     * (input[type=file].feld-eingabe) — ohne sie hängt der native Knopf
+     * am oberen Feldrand. */
     $name = (string)($o['name'] ?? '');
     $id   = (string)($o['id'] ?? ($name !== '' ? 'f-' . preg_replace('/[^\w-]/', '-', $name) : ''));
     $art  = (string)($o['art'] ?? 'text');

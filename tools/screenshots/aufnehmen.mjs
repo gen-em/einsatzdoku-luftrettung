@@ -270,6 +270,7 @@ async function platzhalter() {
        meldete „kein Ueberlauf". Dieselbe Falle wie F-P3-AH und F-P3-AQ, ein
        drittes Mal. */
     '__TAG_ZUSAMMEN__': tag ? `diensttag_zusammenfuehren.php?d=${tag}` : null,
+    '__TAG_SPUREN__':   tag ? `tag_spuren.php?d=${tag}`               : null,
   };
 
   const a = rollen.admin.seite;

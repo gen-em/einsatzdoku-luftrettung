@@ -99,6 +99,15 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              'href' => 'diensttag_datum.php?d=' . (int)$selDay, 'attr' => 'id="daydatelink"'],
             ['text' => 'Anderen Diensttag aufnehmen', 'symbol' => 'ordner-plus',
              'href' => 'diensttag_zusammenfuehren.php?d=' . (int)$selDay, 'attr' => 'id="daymergelink"'],
+            /* SPUREN DES TAGES (S2/AP4). Der Weg zu den GPX-Dateien fuehrt
+             * ueber eine eigene Seite und nicht ueber je einen Knopf an der
+             * Linie: Ruhesegmente haben in der Tagesansicht keine Zeile und
+             * kein Popup, ein Knopf haette dort nirgendwo hingekonnt. Das
+             * Symbol `karte` kommt aus dem vorhandenen Vorrat — fuer
+             * „herunterladen" gibt es keines, und ein neues Zeichen braucht
+             * dieselbe Freigabe wie ein neuer Baustein. */
+            ['text' => 'Spuren als GPX', 'symbol' => 'karte',
+             'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
           ]]) ?>
@@ -548,6 +557,7 @@ async function loadDay(dayId){
   document.getElementById('daydellink').href = 'diensttag_loeschen.php?d=' + d.day_id;
   document.getElementById('daydatelink').href = 'diensttag_datum.php?d=' + d.day_id;
   document.getElementById('daymergelink').href = 'diensttag_zusammenfuehren.php?d=' + d.day_id;
+  document.getElementById('dayspurenlink').href = 'tag_spuren.php?d=' + d.day_id;
   document.getElementById('addmission-menu').href = 'einsatz_form.php?d=' + d.day_id;
   // Das Menü als Ganzes wird sichtbar, nicht die einzelnen Einträge: Ein
   // aufklappbarer Kopf mit leerer Liste wäre ein Angebot ohne Inhalt.

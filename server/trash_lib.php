@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
+
 /**
  * Papierkorb (Soft-Delete) fuer Einsaetze und Diensttage.
  *
@@ -41,8 +43,11 @@ function trash_scope_mission(int $userId, int $id): ?array {
         'mission'  => $m,
         'phasen'   => $one('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?', [$id]),
         'reas'     => $one('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?', [$id]),
-        'punkte'   => $one("SELECT COUNT(*) FROM track_points
-                            WHERE owner_type = 'mission' AND owner_id = ?", [$id]),
+        // Ueber spur_lib.php: Die Punkte liegen seit S2 je nach Alter als
+        // Zeilen oder als Blob. Eine Zahl, die nur die Zeilen zaehlt, stuende
+        // nach der Verdichtung auf 0 — auf der Rueckfrageseite vor dem
+        // ENDGUELTIGEN Loeschen ausgerechnet die beruhigende Zahl.
+        'punkte'   => spur_zahlen(db(), 'mission', [$id])[$id] ?? 0,
     ];
 }
 
@@ -62,15 +67,13 @@ function trash_scope_day(int $userId, int $dayId): array {
 
     $punkte = 0; $phasen = 0; $reas = 0;
     foreach ($mids as $mid) {
-        $punkte += $one("SELECT COUNT(*) FROM track_points
-                         WHERE owner_type = 'mission' AND owner_id = ?", [(int)$mid]);
         $phasen += $one('SELECT COUNT(*) FROM mission_phases WHERE mission_id = ?', [(int)$mid]);
         $reas   += $one('SELECT COUNT(*) FROM resus_sessions WHERE mission_id = ?', [(int)$mid]);
     }
-    foreach ($sids as $sid) {
-        $punkte += $one("SELECT COUNT(*) FROM track_points
-                         WHERE owner_type = 'rest' AND owner_id = ?", [(int)$sid]);
-    }
+    // Punkte gebuendelt ueber spur_lib.php — Zeilen und Blob, und ohne die
+    // Abfrage je Einsatz, die hier bisher stand.
+    $punkte += array_sum(spur_zahlen(db(), 'mission', array_map('intval', $mids)));
+    $punkte += array_sum(spur_zahlen(db(), 'rest', array_map('intval', $sids)));
     $meta = db()->prepare('SELECT * FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NULL');
     $meta->execute([$userId, $dayId]);
 
@@ -221,8 +224,10 @@ function trash_purge_mission(int $userId, int $id): void {
     $pdo->beginTransaction();
     try {
         trash_block_ref($pdo, $m);
-        $pdo->prepare("DELETE FROM track_points WHERE owner_type = 'mission' AND owner_id = ?")
-            ->execute([$id]);
+        // Zeilen UND Blob (E-S2-18). Beide haengen an keinem Fremdschluessel;
+        // was hier nicht ausdruecklich geloescht wird, bleibt als Waise
+        // liegen — Positionsdaten ohne Eigentuemer (F-S2-B).
+        spur_loeschen($pdo, 'mission', [$id]);
         $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([$id]);  // Rest kaskadiert
         $pdo->commit();
     } catch (Throwable $ex) { $pdo->rollBack(); throw $ex; }
@@ -300,23 +305,27 @@ function trash_purge_day(int $userId, int $dayId): void {
         $ms = $pdo->prepare('SELECT id, device_id, client_ref FROM missions
                              WHERE user_id = ? AND day_id = ?');
         $ms->execute([$userId, $dayId]);
+        $mLoeschen = [];
         foreach ($ms->fetchAll() as $m) {
             trash_block_ref($pdo, $m);
-            $pdo->prepare("DELETE FROM track_points WHERE owner_type = 'mission' AND owner_id = ?")
-                ->execute([(int)$m['id']]);
+            $mLoeschen[] = (int)$m['id'];
             $pdo->prepare('DELETE FROM missions WHERE id = ?')->execute([(int)$m['id']]);
         }
+        // Spuren gebuendelt, Zeilen UND Blob (E-S2-18) — statt je Einsatz
+        // einer eigenen DELETE-Anweisung.
+        spur_loeschen($pdo, 'mission', $mLoeschen);
         $ss = $pdo->prepare('SELECT id, device_id, client_ref FROM rest_segments
                              WHERE user_id = ? AND day_id = ?');
         $ss->execute([$userId, $dayId]);
+        $rLoeschen = [];
         foreach ($ss->fetchAll() as $seg) {
             // Auch Ruhe-Segmente sperren — sonst legt die naechste
             // Nachlieferung derselben Uhr sie wieder an.
             trash_block_ref($pdo, $seg, 'rest');
-            $pdo->prepare("DELETE FROM track_points WHERE owner_type = 'rest' AND owner_id = ?")
-                ->execute([(int)$seg['id']]);
+            $rLoeschen[] = (int)$seg['id'];
             $pdo->prepare('DELETE FROM rest_segments WHERE id = ?')->execute([(int)$seg['id']]);
         }
+        spur_loeschen($pdo, 'rest', $rLoeschen);
         $pdo->prepare('DELETE FROM days WHERE user_id = ? AND id = ? AND deleted_at IS NOT NULL')
             ->execute([$userId, $dayId]);
         $pdo->commit();

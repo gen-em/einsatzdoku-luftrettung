@@ -1,0 +1,12 @@
+# Fremde Bibliotheken, die auf dem SERVER laufen — nie über den Browser.
+#
+# Diese Dateien sind PHP; ein Aufruf würde sie ausführen und im Regelfall
+# nichts ausgeben (sie definieren nur Klassen). „Im Regelfall" ist kein
+# Sicherheitsversprechen, deshalb steht die Sperre hier. Die Anwendung lädt
+# sie über vendor/laden.php aus dem Dateisystem, nicht über HTTP — die Sperre
+# stört also nichts.
+Require all denied
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

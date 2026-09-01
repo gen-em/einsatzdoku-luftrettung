@@ -37,9 +37,11 @@ schon durchsetzt und welche noch nicht.
 | Antwortfelder `kept_*` (5) | durchgesetzt |
 | Dienstkennung `day_ref` (2.1) | durchgesetzt seit Web 6.0.0, gesendet ab Uhr 1.8.0 |
 | Rückfallebene über `(Konto, day)` (2.1) | durchgesetzt, **dauerhaft** |
+| Antwortfeld `dropped_points` (5) | durchgesetzt seit Web 10.2.0 |
+| 413 „Uhr halbiert die Chunk-Größe und wiederholt" (5) | **beschrieben, nicht umgesetzt** — `Uploader.mc` setzt bei jedem Fehlercode nur `lastError`, und `UPLOAD_CHUNK_POINTS` ist eine Konstante. Gefunden in S2/AP3; die Anwendung lehnt heute keine Chunk-Größe ab, die die Uhr sendet, deshalb tritt der Fall nicht auf |
 
-Alle Zeilen lauten „durchgesetzt" — die Tabelle beschreibt damit keinen
-Zielzustand mehr, sondern den Stand. Sie bleibt trotzdem stehen, solange der
+Bis auf eine Zeile lauten alle „durchgesetzt" — die Tabelle beschreibt damit
+im Wesentlichen den Stand und keinen Zielzustand mehr. Sie bleibt trotzdem stehen, solange der
 Vertrag Regeln enthält, deren Durchsetzung nicht selbstverständlich ist: Ein
 Client darf sich darauf verlassen, dass ein Verstoß gemeldet wird — und genau
 das sagt diese Tabelle zu.
@@ -153,6 +155,17 @@ sie an das neue. Die Uhr verweigert das Trennen deshalb, solange
 - **Inkrementeller Track:** Track-Punkte werden mit fortlaufender Sequenznummer gesendet. Die Uhr sendet ab `seq_from`; der Server ignoriert bereits bekannte Sequenzen und antwortet mit `next_seq`, ab dem die Uhr weitersenden soll. Nach bestätigtem Empfang darf die Uhr ihren lokalen Puffer bis `next_seq` leeren.
 - **Diensttag:** Feld `day` = Datum des Dienstbeginns (Format `YYYY-MM-DD`); die Uhr bestimmt es einmal bei „Einsatztag starten" und verwendet es für alle Uploads dieses Dienstes. Seit Vertrag 1.3 ist es **nicht mehr der Zuordnungsschlüssel**, sondern nur noch Sortier- und Anzeigedatum — die Zuordnung leistet `day_ref` (Abschnitt 2.1).
 - **Nachzügler:** Bei fehlender Verbindung puffert die Uhr und sendet später identisch nach — keine Sonderfelder nötig.
+- **Die Ablage auf dem Server geht die Uhr nichts an** (Nachtrag S2, ohne
+  Vertragsänderung). Seit Web 10.0.0 liegen Spurpunkte je nach Alter als
+  Zeilen in `track_points` **oder** als komprimierter Blob in `track_blobs`
+  (Format SPUR1), und seit Web 10.2.0 werden sie sechs Monate nach Einsatzende
+  ausgedünnt. **Am Vertrag ändert das nichts:** Die Uhr sendet unverändert
+  Punkte mit `seq`, und der Server antwortet unverändert mit `next_seq`. Was
+  sich geändert hat, ist die *Bedeutung* von `next_seq` — beschrieben in
+  Abschnitt 5. Der Grund, es hier trotzdem zu nennen: Wer den Vertrag liest,
+  um einen Fehler zu suchen, soll wissen, dass hinter „gespeichert" ab dieser
+  Fassung mehr als eine Zeilentabelle steht (Einzelheiten in `docs/Technik.md`,
+  Abschnitt 4.97).
 
 ### 2.1 Dienstkennung `day_ref`
 
@@ -361,7 +374,17 @@ Erfolg (`200`):
 ```
 
 - `id`: Server-ID des Einsatzes/Segments.
-- `next_seq`: erste noch nicht gespeicherte Sequenznummer → Uhr sendet beim nächsten Mal `seq_from = next_seq` und darf lokal alles davor verwerfen.
+- `next_seq`: die erste Sequenznummer, die der Server noch **erwartet** → Uhr
+  sendet beim nächsten Mal `seq_from = next_seq` und darf lokal alles davor
+  verwerfen.
+
+  > **Seit Web 10.2.0 heißt das nicht mehr „noch nicht gespeichert".** Alles
+  > unterhalb `next_seq` ist *erledigt* — gespeichert **oder** endgültig
+  > verworfen. Zwei Fälle führen dazu: ein Punkt, den die Wertprüfung abgelehnt
+  > hat (er stünde sonst dem Aufräumen der Uhr für immer im Weg), und Punkte zu
+  > einer Spur, die der Server nach sechs Monaten ausgedünnt hat (S2, E-S2-08).
+  > Für die Uhr ändert sich nichts: Sie leert ihren Puffer wie bisher.
+  > `next_seq` ist mindestens `seq_from` + Zahl der gesendeten Punkte.
 
 Zusätzlich können auftreten:
 
@@ -370,6 +393,7 @@ Zusätzlich können auftreten:
 | `rejected` | verworfene Einzelwerte, nach Ursache gezählt (z. B. `phases.phase: ausserhalb von 2…9` → 2) |
 | `kept_phases` | die gesendete Phasenliste wurde übergangen (leer oder kürzer als der vorhandene Stand); der Wert nennt die **Anzahl der behaltenen** Einträge |
 | `kept_resus` | dasselbe für die Reanimationssitzungen |
+| `dropped_points` | Punkte, die der Server nach der **Ausdünnung** der Spur nicht mehr annimmt (S2, E-S2-08). Sie sind quittiert; die Uhr darf sie löschen. Erscheint nur, wenn tatsächlich verworfen wurde, und ist **kein** Datenfehler — deshalb steht es nicht in `rejected` |
 
 Ein `ok: true` mit gefülltem `rejected` oder einem `kept_*` bedeutet: Der
 Upload ist angekommen, aber **nicht vollständig übernommen**. Die Uhr sollte

@@ -287,6 +287,12 @@ CREATE TABLE missions (
   ascent_m   INT UNSIGNED NULL,
   site_ele_m INT NULL,                              -- Hoehe Einsatzort bei PatientInnenkontakt (berechnet, s. site_elevation_lib.php)
   final      TINYINT(1) NOT NULL DEFAULT 0,
+  -- Wann zuletzt ein Punkt EINTRAF (S2/AP3). Nicht track_points.ts --
+  -- das ist die Aufzeichnungszeit. Die Karenz vor der Verdichtung
+  -- (E-S2-06) braucht die Ankunftszeit: Die Uhr setzt final in JEDEM
+  -- Teilstueck, ein spaet hochgeladener Puffer waere sonst im Moment
+  -- des Eintreffens schon 14 Tage still. NULL = noch nie gemessen.
+  letzter_punkt_am DATETIME NULL,
   manual     TINYINT(1) NOT NULL DEFAULT 0,           -- ausschliesslich: Uhr ueberschreibt Metadaten/Phasen/Rea nicht mehr (NICHT "von Hand angelegt" -- dafuer siehe origin)
   origin     ENUM('watch','manual','import') NOT NULL DEFAULT 'watch', -- Herkunft: wird beim Anlegen gesetzt und nie wieder geaendert
   edited     TINYINT(1) NOT NULL DEFAULT 0,           -- wurde nach dem Anlegen veraendert
@@ -386,6 +392,7 @@ CREATE TABLE rest_segments (
   started_at DATETIME NOT NULL,
   ended_at   DATETIME NULL,
   final      TINYINT(1) NOT NULL DEFAULT 0,
+  letzter_punkt_am DATETIME NULL,          -- siehe missions (S2/AP3)
   deleted_at       DATETIME NULL,
   deleted_with_day TINYINT(1) NOT NULL DEFAULT 0,
   UNIQUE KEY uq_dev_ref (device_id, client_ref),
@@ -443,6 +450,35 @@ CREATE TABLE rate_limits (
   INDEX idx_fenster (fenster_start)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- SICHERUNGSZIELE: wohin die Sicherungen geschoben werden (S2/AP7, E-S2-22).
+--
+-- Der Name ist nicht `transport_dests` -- das sind die Zielkliniken. Hier geht
+-- es um FTP-, FTPS- und SFTP-Gegenstellen. Begruendung in update.php bei der
+-- Migration 2026_09_01_sicherungsziele und in docs/Konzept-S2 unter F-S2-G.
+--
+-- `geheim` und `schluessel` stehen VERSIEGELT drin (`edsk1:`,
+-- serverkrypto_lib.php). Der Schluessel dazu liegt in config.php, nicht in
+-- dieser Datenbank: Wer den Dump hat, hat die Passwoerter nicht.
+CREATE TABLE backup_targets (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name           VARCHAR(190) NOT NULL,
+  protokoll      ENUM('ftp','ftps','sftp') NOT NULL,
+  host           VARCHAR(190) NOT NULL,
+  port           SMALLINT UNSIGNED NOT NULL,
+  nutzer         VARCHAR(190) NOT NULL,
+  geheim         TEXT NULL,          -- versiegelt: Passwort oder Passphrase
+  schluessel     TEXT NULL,          -- versiegelt: privater SSH-Schluessel
+  pfad           VARCHAR(255) NOT NULL DEFAULT '/',
+  passiv         TINYINT(1) NOT NULL DEFAULT 1,
+  aktiv          TINYINT(1) NOT NULL DEFAULT 1,
+  fingerabdruck  VARCHAR(190) NULL,  -- SFTP: SHA-256 des Hostschluessels
+  letzter_lauf   DATETIME NULL,
+  letzter_erfolg DATETIME NULL,
+  letzter_fehler TEXT NULL,
+  erstellt_am    DATETIME NOT NULL,
+  UNIQUE KEY uq_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Kleiner Schluessel/Wert-Speicher fuer App-interne Zustaende (z. B. Wartung)
 CREATE TABLE app_state (
   k VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -458,6 +494,50 @@ CREATE TABLE track_points (
   ele DOUBLE NULL,
   ts  INT UNSIGNED NOT NULL,                          -- Unix-Epoche (s, UTC)
   PRIMARY KEY (owner_type, owner_id, seq)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Spuren als Blob (S2, SPUR1). Seit dieser Fassung ist `track_points` nur
+-- noch der EINGANGSPUFFER der Uhr (Stufe 1); sobald ein Paket abgeschlossen
+-- ist, wandern seine Punkte in eine Zeile hier (Stufe 2), und sechs Monate
+-- nach Einsatzende werden sie ausgeduennt (Stufe 3).
+--
+-- Der Grund ist die Menge: 62,4 Byte je Punkt als Zeile gegen 3,58 als Blob.
+-- Gelesen und geschrieben wird ausschliesslich ueber `spur_lib.php`; das
+-- Format steht dort und in docs/Backup-Format.md.
+--
+-- WIE `track_points` OHNE FREMDSCHLUESSEL, aus demselben Grund (polymorph
+-- ueber owner_type/owner_id). Die Loeschwege raeumen deshalb ausdruecklich
+-- mit; der Wartungsjob ist nur das Sicherheitsnetz (F-S2-B).
+CREATE TABLE track_blobs (
+  owner_type    ENUM('mission','rest') NOT NULL,
+  owner_id      INT UNSIGNED NOT NULL,
+  stufe         TINYINT UNSIGNED NOT NULL,     -- 2 = verlustfrei, 3 = ausgeduennt
+  n_original    INT UNSIGNED NOT NULL,         -- Punktzahl vor der Ausduennung
+  n_gespeichert INT UNSIGNED NOT NULL,
+  blob_daten    MEDIUMBLOB NOT NULL,
+  erstellt_am   DATETIME NOT NULL,
+  geaendert_am  DATETIME NOT NULL,
+  PRIMARY KEY (owner_type, owner_id),
+  KEY stufe_alter (stufe, geaendert_am)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Zustand der Hintergrundjobs (S2, jobs.php). Eine Zeile je Job.
+--
+-- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
+-- jeder Job eine Fortsetzungsmarke (`zustand`, JSON), einen Rueckstand fuer
+-- die Wartungsseite und eine Sperre gegen zwei gleichzeitige Laeufe.
+-- `laeuft_seit` ist ein Zeitstempel und kein Flag: Ein Lauf, der mitten im
+-- Haeppchen abstuerzt, liesse ein Flag fuer immer stehen.
+CREATE TABLE jobs (
+  job               VARCHAR(32) NOT NULL PRIMARY KEY,
+  zustand           TEXT NULL,
+  rueckstand        INT UNSIGNED NULL,
+  letzter_lauf      DATETIME NULL,
+  letzter_erfolg    DATETIME NULL,
+  letzter_ausloeser VARCHAR(16) NULL,       -- cli | token | anfrage
+  letzter_fehler    TEXT NULL,
+  erledigt_zuletzt  INT UNSIGNED NOT NULL DEFAULT 0,
+  laeuft_seit       DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
@@ -536,4 +616,11 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   ('2026_08_27_logo_wahl', 'skipped'),
   ('2026_08_28_last_login', 'skipped'),
   -- Die Tabelle rechtstexte steht oben schon im Schema (Web 9.11.0).
-  ('2026_08_30_rechtstexte', 'skipped');
+  ('2026_08_30_rechtstexte', 'skipped'),
+  -- track_blobs und jobs stehen oben schon im Schema (Web 10.0.0/10.1.0).
+  ('2026_08_31_spur_blobs', 'skipped'),
+  ('2026_08_31_jobs', 'skipped'),
+  -- letzter_punkt_am steht oben schon an beiden Tabellen (Web 10.2.0).
+  ('2026_09_01_letzter_punkt_am', 'skipped'),
+  -- backup_targets steht oben schon im Schema (Web 12.1.0).
+  ('2026_09_01_sicherungsziele', 'skipped');

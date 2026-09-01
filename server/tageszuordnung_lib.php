@@ -40,6 +40,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/spur_lib.php';   // Spuren: Zeilen UND Blob (S2)
 require_once __DIR__ . '/diensttag_lib.php';
 
 /**
@@ -54,9 +55,6 @@ require_once __DIR__ . '/diensttag_lib.php';
  */
 function tz_tag_umfang(int $userId, int $dayId): array
 {
-    $one = function (string $sql, array $p): int {
-        $s = db()->prepare($sql); $s->execute($p); return (int)$s->fetchColumn();
-    };
     $ids = function (string $tabelle) use ($userId, $dayId): array {
         $s = db()->prepare("SELECT id, deleted_at FROM `$tabelle` WHERE user_id = ? AND day_id = ?");
         $s->execute([$userId, $dayId]);
@@ -66,15 +64,12 @@ function tz_tag_umfang(int $userId, int $dayId): array
     $m = $ids('missions');
     $r = $ids('rest_segments');
 
-    $punkte = 0;
-    foreach ($m as $z) {
-        $punkte += $one("SELECT COUNT(*) FROM track_points
-                         WHERE owner_type = 'mission' AND owner_id = ?", [(int)$z['id']]);
-    }
-    foreach ($r as $z) {
-        $punkte += $one("SELECT COUNT(*) FROM track_points
-                         WHERE owner_type = 'rest' AND owner_id = ?", [(int)$z['id']]);
-    }
+    // Gebuendelt ueber spur_lib.php — Zeilen und Blob, und ohne die Abfrage
+    // je Einsatz beziehungsweise Segment, die hier bisher stand.
+    $punkte = array_sum(spur_zahlen(db(), 'mission',
+                                    array_map(fn($z) => (int)$z['id'], $m)))
+            + array_sum(spur_zahlen(db(), 'rest',
+                                    array_map(fn($z) => (int)$z['id'], $r)));
 
     $offen = fn(array $liste): int => count(array_filter($liste, fn($z) => $z['deleted_at'] === null));
 
@@ -223,17 +218,13 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
      * (rund 1,7 Milliarden) kann das nur ein Altbestand mit Unsinn ausloesen;
      * genau der soll aber nicht als "Verschieben fehlgeschlagen" erscheinen. */
     if ($delta < 0 && ($mIds || $rIds)) {
+        // Ueber spur_lib.php, weil die Punkte seit S2 auch im Blob liegen
+        // koennen — und weil die frueheste Zeit sonst je Spur eine eigene
+        // Abfrage kostete.
         $min = null;
         foreach ([['mission', $mIds], ['rest', $rIds]] as [$typ, $ids]) {
-            foreach ($ids as $id) {
-                $s = $pdo->prepare('SELECT MIN(ts) FROM track_points
-                                    WHERE owner_type = ? AND owner_id = ?');
-                $s->execute([$typ, $id]);
-                $w = $s->fetchColumn();
-                if ($w !== null && $w !== false && ($min === null || (int)$w < $min)) {
-                    $min = (int)$w;
-                }
-            }
+            $w = spur_min_ts($pdo, $typ, $ids);
+            if ($w !== null && ($min === null || $w < $min)) { $min = $w; }
         }
         if ($min !== null && $min + $delta <= 0) {
             return ['ok' => false,
@@ -287,19 +278,18 @@ function tz_tag_datum_aendern(int $userId, int $dayId, string $neuTag): array
                                SET started_at = DATE_ADD(started_at, INTERVAL ? SECOND)
                                WHERE mission_id IN ($platzhalter)")
                     ->execute(array_merge([$delta], $werte));
-                $pdo->prepare("UPDATE track_points SET ts = ts + ?
-                               WHERE owner_type = 'mission' AND owner_id IN ($platzhalter)")
-                    ->execute(array_merge([$delta], $werte));
             }
+            /* SPUREN UEBER spur_lib.php (S2/AP1) — ausserhalb der
+             * Blockschleife, weil die Funktion selbst blockt. Ein blosses
+             * UPDATE auf track_points ginge am Blob vorbei: Die Zeilen
+             * wanderten, die Blobpunkte blieben stehen, und die Spur haette
+             * danach zwei Zeitrechnungen. */
+            spur_zeit_verschieben($pdo, 'mission', $mIds, $delta);
         }
         // 4. Spurpunkte der Ruhesegmente. Leicht zu uebersehen: Sie haengen
         //    nicht an einem Einsatz und tragen die Epoche, kein DATETIME.
         if ($rIds) {
-            foreach (sql_in_bloecke_sql($rIds) as [$platzhalter, $werte]) {
-                $pdo->prepare("UPDATE track_points SET ts = ts + ?
-                               WHERE owner_type = 'rest' AND owner_id IN ($platzhalter)")
-                    ->execute(array_merge([$delta], $werte));
-            }
+            spur_zeit_verschieben($pdo, 'rest', $rIds, $delta);
         }
 
         $pdo->commit();

@@ -124,7 +124,37 @@ const LIMIT_PHASEN      = 500;
 const LIMIT_REA_SESSION = 20;
 const LIMIT_REA_EREIGN  = 200;
 const LIMIT_RESSOURCEN  = 40;
-const LIMIT_TRACKPUNKTE = 2000;
+/* ZWEI GRENZEN, WEIL ES ZWEI FRAGEN SIND (F-S2-02, entschieden 31.08.2026).
+ *
+ * Bis Web 9.14.0 stand hier EINE Konstante, und sie wurde an zwei Stellen
+ * angewandt, die Verschiedenes meinen:
+ *
+ *   ingest.php        die Punkte EINER ANFRAGE. Die Uhr sendet in Stuecken zu
+ *                     UPLOAD_CHUNK_POINTS = 500 (Const.mc); gemessen an den
+ *                     526 Anfragen des Referenzlaufs sind es hoechstens 500.
+ *                     2000 sind also vierfache Reserve — die Grenze greift
+ *                     nie und schuetzt genau davor, wofuer sie da ist: einer
+ *                     entgleisten Nutzlast.
+ *
+ *   backup_lib.php    die Punkte EINER GANZEN SPUR. Und dort war sie ein
+ *                     Datenverlust: Was die Uhr ueber viele Anfragen
+ *                     aufbauen darf, wurde beim Zurueckspielen bei 2000
+ *                     gekappt. Erreichbar ist das ohne weiteres — THIN_MAX_GAP_S
+ *                     garantiert einen Punkt alle 10 s, THIN_MIN_GAP_S erlaubt
+ *                     einen je Sekunde; 2000 Punkte sind damit zwischen 33
+ *                     Minuten und 5,5 Stunden Aufzeichnung. Aufgefallen ist
+ *                     es nie, weil die laengste Referenzspur 1133 Punkte hat.
+ *
+ * Deshalb jetzt getrennt. Und die Spurgrenze KAPPT NICHT MEHR, sondern lehnt
+ * die ganze Spur ab (pruef_menge_streng): Eine halbe Spur sieht aus wie eine
+ * ganze, eine abgelehnte sieht man.
+ *
+ * 50 000 Punkte sind 13,9 Stunden bei einem Punkt je Sekunde — laenger als
+ * jeder Dienst. Als Blob sind das rund 178 KB; MEDIUMBLOB traegt 16 MB. Die
+ * Zahl schuetzt also vor Unfug, nicht vor Betrieb.
+ */
+const LIMIT_TRACKPUNKTE_ANFRAGE = 2000;
+const LIMIT_TRACKPUNKTE_SPUR    = 50000;
 
 /** Wertebereich der Phasennummern. Phase 1 ist "Frei" (kein Zeitstempel),
  *  Phase 10 wurde mit 2026_07_19_phase10_entfernen abgeschafft. */
@@ -559,6 +589,28 @@ function pruef_menge($liste, int $max, string $feld = 'Liste', ?Pruefliste $p = 
  * das geprueft werden, sonst wandert ein Objekt mit den Schluesseln "0", "1"
  * unbemerkt durch die Verarbeitung.
  */
+/**
+ * Wie pruef_menge(), aber ABLEHNEND statt kappend.
+ *
+ * Fuer Listen, bei denen ein abgeschnittener Rest schlimmer ist als gar
+ * keine Uebernahme — allen voran die Spur (F-S2-02). Gibt `null` zurueck,
+ * wenn die Liste zu lang ist; die Meldung steht dann in der Pruefliste und
+ * der Aufrufer ueberspringt den ganzen Datensatz.
+ */
+function pruef_menge_streng($liste, int $max, string $feld = 'Liste',
+                            ?Pruefliste $p = null): ?array
+{
+    if (!is_array($liste)) {
+        if ($liste !== null) { $p?->melde($feld, 'keine Liste'); }
+        return [];
+    }
+    if (count($liste) > $max) {
+        $p?->melde($feld, 'mehr als ' . $max . ' Eintraege — ganz abgelehnt');
+        return null;
+    }
+    return $liste;
+}
+
 function ist_liste($wert): bool
 {
     return is_array($wert) && ($wert === [] || array_is_list($wert));

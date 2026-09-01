@@ -238,8 +238,8 @@ links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie listet Profil,
 **Standorte**, **Rettungsmittel**, Geräte, Backup und Import / Export; Admins
 finden darunter einen zweiten Block **Administration** mit NutzerInnen,
-**Stammdaten systemweit**, Sicherungen, **Rechtstexte**, Demo-Konto und
-Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
+**Stammdaten systemweit**, Sicherungen, **Sicherungsziele**, **Rechtstexte**,
+Demo-Konto und Wartung (Abschnitt 11). Abmelden steht getrennt am Ende und
 fragt sicherheitshalber nach. Bis Web 6.3.0 hieß der Punkt für Standorte und
 Rettungsmittel zusammen „Standortdaten"; der alte Link führt weiterhin zu
 „Standorte".
@@ -428,7 +428,8 @@ als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
 Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a) und **„Tag löschen"** (Abschnitt 8). Auf dem Handy fährt
+(Abschnitt 4.5a), **„Spuren als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig.
 
@@ -495,15 +496,52 @@ Pro Tag:
   steht vollständig in der Einsatzansicht unter **Besatzung** — mit „(abw.)"
   an der betroffenen Rolle (Abschnitt 5). Das Feld selbst ist unverändert.
 
+### 4.1a Spuren des Diensttages
+
+Erreichbar über **„···" → „Spuren als GPX"**. Die Seite zeigt oben die Karte
+des Tages und darunter **jede aufgezeichnete Spur als eigene Zeile**, in der
+Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
+Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
+wo zutreffend, die Plakette **„ausgedünnt"**.
+
+Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
+Klick zoomt auf sie. **GPX** lädt genau diese Spur herunter.
+
+**Mehrere auf einmal.** Links in jeder Zeile steht ein Kästchen. Sobald eines
+angekreuzt ist, erscheint unten eine Leiste — sie sagt, wie viele Spuren
+ausgewählt sind, und **„Auswahl als GPX"** lädt sie als *eine* Datei herunter.
+Die Karte zeigt dabei mit: Was ausgewählt ist, bleibt kräftig, der Rest tritt
+zurück.
+
+In der Datei bleibt jede Spur ein eigener Track — Kartenprogramme zeigen sie
+getrennt an und ziehen keine Verbindungslinie vom Ende der einen zum Anfang
+der nächsten. Der Dateiname nennt Tag und Anzahl,
+z. B. `diensttag_2026-05-10_4-spuren_original.gpx`; sind Original- und
+ausgedünnte Spuren gemischt, heißt er `…_gemischt.gpx`, und jede Spur trägt
+ihre Kennzeichnung in der Datei bei sich.
+
+Ein Eintrag ohne Aufzeichnung steht in der Liste, hat aber ein abgeschaltetes
+Kästchen und keinen Abruf — es gibt an ihm nichts herunterzuladen.
+
+Diese Seite ist die einzige Stelle, an der auch die **Ruhezeiten** einzeln
+greifbar sind — auf der Tagesübersicht sind sie nur eine schwarze Linie auf
+der Karte.
+
+> **Eine Spur zeigt den Weg, also auch den Einsatzort.** Die Datei ist damit
+> so zu behandeln wie die geschützten Angaben selbst, obwohl sie ohne
+> Schlüssel lesbar ist. Der Hinweis steht auf der Seite über der Liste.
+
 ### 4.2 Einsatzansicht
 
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur
 Tagesübersicht. Der Titel heißt „Einsatz N · Uhrzeit" (N = Nummer des Tages
 nach Alarmierungszeit; auf dem Handy nur „Einsatz N"). Rechts daneben:
 **„Bearbeiten"** als oranger Hauptknopf und das Aktionsblatt mit
-**Verschieben** und **Löschen** (mobil „···", am Desktop „Aktionen"; Escape
-schließt, die Tastatur bedient es vollständig — seit Web 9.3.0 dasselbe
-Blatt wie auf der Startseite). In der Unterzeile stehen Zeitspanne — ohne
+**Verschieben**, **Spur als GPX** und **Löschen** (mobil „···", am Desktop
+„Aktionen"; Escape schließt, die Tastatur bedient es vollständig — seit
+Web 9.3.0 dasselbe Blatt wie auf der Startseite). **Spur als GPX** erscheint
+nur, wenn der Einsatz überhaupt eine Spur hat, und lädt sie als GPX-Datei
+herunter — lesbar von jedem Kartenprogramm. In der Unterzeile stehen Zeitspanne — ohne
 Phase 9 „… Uhr – kein Ende" —, das **Herkunftskennzeichen** als Plakette,
 Rettungsmittel und Standort:
 
@@ -512,6 +550,12 @@ Rettungsmittel und Standort:
 | **Uhr** | Von der Uhr aufgezeichnet |
 | **manuell** | Von Hand nachgetragen (Abschnitt 4.5/4.3) |
 | **importiert** | Über Import/Export eingespielt |
+
+Trägt der Einsatz eine Spur, steht dort außerdem, wie viele Punkte sie hat —
+und ob sie noch die **Originalspur** ist oder bereits **ausgedünnt** (das
+geschieht sechs Monate nach dem Einsatz, siehe Abschnitt 9). Bei einer
+ausgedünnten Spur nennt die Plakette beide Zahlen: „Spur ausgedünnt · 113 von
+443 Punkten".
 
 Wurde der Einsatz nach dem Anlegen verändert, erscheint zusätzlich das
 Bearbeitungskennzeichen **„editiert"** — unabhängig von der Herkunft. Ein von
@@ -1296,11 +1340,37 @@ Datei und kann nicht auseinanderlaufen.
 ## 6. Backup
 
 Unter **Einstellungen → „Backup"** (Zahnrad in der Kopfleiste) lädst du alle
-deine Daten als einzelne
-verschlüsselte Datei (`.edbak`) herunter — Passwort frei wählbar, mindestens
-10 Zeichen, wird nirgends gespeichert. In dieser Datei stehen **alle
-geschützten Angaben im Klartext**; zwischen ihnen und jedem, der die Datei in
-die Hand bekommt, steht nur dieses Passwort.
+deine Daten als **eine** verschlüsselte Datei (`.edbak`) herunter — Passwort
+frei wählbar, mindestens 10 Zeichen, wird nirgends gespeichert. In dieser
+Datei stehen **alle geschützten Angaben im Klartext**; zwischen ihnen und
+jedem, der die Datei in die Hand bekommt, steht nur dieses Passwort.
+
+**Seit Web 11.0.0 ist die Datei innen mehrteilig.** An der Bedienung ändert
+das nichts — eine Datei, ein Passwort, ein Knopf. Innen liegen jetzt aber ein
+Verzeichnis, ein Kopf, die Einträge in Fenstern und die Spuren in eigenen,
+einzeln verschlüsselten Teilen. Der Grund ist die Menge: Bei ein paar tausend
+Einsätzen sind die Spurpunkte der weitaus größte Teil, und in einem Stück
+brachten sie ältere Telefone an ihre Grenze. Sie sind jetzt außerdem gepackt
+statt ausgeschrieben — gemessen am Beispielbestand **218 KB statt 739 KB**,
+also 70 % weniger.
+
+Was du davon merkst: Die Statuszeile zählt beim Sichern und beim Einspielen
+die Teile mit („Einträge werden übertragen (Teil 2 von 5) …"), und die
+Abschlussmeldung nennt Einträge, Spuren und Punkte.
+
+**Die Abschlussmeldung nennt außerdem den Dateinamen** (seit Web 12.2.1) —
+etwa `einsatzdoku-backup-2026-09-01.edbak`. Das Herunterladen läuft ohne
+Rückfrage und ohne Ton durch; wer nicht gerade auf die Download-Leiste des
+Browsers sieht, bekommt davon nichts mit. **Wo** die Datei landet, sagt die
+Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
+Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
+für den Datenexport unter **Einstellungen → „Export"**.
+
+**Ältere Sicherungen kannst du weiterhin einspielen.** Umgekehrt gilt das
+nicht: Eine Datei aus Web 11.1.0 lässt sich in einer älteren Installation
+nicht öffnen — sie sagt das aber deutlich, statt „Passwort falsch" zu melden.
+Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
+entpackt hast), sagt die Anwendung auch das.
 
 **Woran du siehst, wie es ausgegangen ist:** Die Rückmeldungen tragen seit
 Web 9.7.2 ihre Farbe. Ein Fehlschlag ist **rot** mit Warnsymbol, ein Ergebnis
@@ -1314,6 +1384,14 @@ Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
 Schlüssel des Zielkontos neu verschlüsselt.
+
+**Eine Rückfrage vor dem Einspielen — aber nur, wenn es etwas zu fragen gibt.**
+Enthält eine Sicherung Einsätze, deren geschützte Angaben schon beim
+*Erstellen* nicht zu entschlüsseln waren, kommen sie hier ebenfalls unlesbar
+an; davor warnt die Anwendung und fragt nach. Bis Web 11.1.0 kam die Frage
+bei jeder Datei aus einem anderen Konto — also fast immer, und meistens ohne
+Anlass, weil die Angaben ganz normal mitkommen. Jetzt steht die Zahl in der
+Datei, und gefragt wird nur, wenn sie größer als null ist.
 
 Der Import ergänzt nur, was fehlt — Vorhandenes bleibt unangetastet, und
 mehrfaches Einspielen derselben Datei ist gefahrlos. Während Export und Import
@@ -1414,11 +1492,94 @@ hast, kann die Administration sie zurücknehmen.
   angezeigt und danach nie wieder (Abschnitt 5).
 - Es wird **nicht automatisch** gesichert. Wann eine Sicherung entsteht,
   entscheidet die Administration von Hand; es gibt nur eine Erinnerung.
-- Je Konto liegen höchstens **drei** Sicherungen (die Administration kann die
-  Zahl unter „Sicherungen" ändern). Die älteste wird beim nächsten Sichern
-  verdrängt — nach Alter wird dagegen nie etwas entfernt.
+- Je Konto liegen höchstens **zwei** Sicherungen (die Administration kann die
+  Zahl unter „Sicherungen" ändern; bis Web 11.2.0 waren es drei). Die älteste
+  wird beim nächsten Sichern verdrängt — nach Alter wird dagegen nie etwas
+  entfernt.
 - Wird dein Konto gelöscht, entscheidet die Administration dabei ausdrücklich,
   ob die Sicherungen mitgehen. Die Vorgabe ist: **mitlöschen**.
+- Die Sicherungen können zusätzlich auf einen **anderen Server** geschoben
+  werden (Abschnitt 6.2). Ob das eingerichtet ist, weiss die Administration.
+
+### 6.2 Wohin die Sicherungen gehen (nur Administration)
+
+Seit Web 12.1.0 kann die Administration unter **Einstellungen →
+Sicherungsziele** eine Gegenstelle eintragen, auf die die Sicherungen
+geschoben werden — per FTP, FTPS oder SFTP. Der Grund ist schlicht: Eine
+Sicherung, die auf demselben Server liegt wie das Gesicherte, hilft nicht,
+wenn dieser Server ausfällt.
+
+Nicht zu verwechseln mit dem **Transportziel** eines Einsatzes — das ist die
+Zielklinik und steht unter Stammdaten.
+
+Was dabei zu wissen ist:
+
+- **SFTP ist die Empfehlung.** Es ist das einzige der drei Protokolle, das den
+  Server beim nächsten Mal wiedererkennt. Meldet sich dort plötzlich ein
+  anderer, bricht die Verbindung ab, bevor ein Passwort hinausgeht.
+- **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht.** Das
+  schützt gegen Mitlesen, nicht gegen einen untergeschobenen Server.
+- **FTP überträgt alles im Klartext**, auch das Passwort. Es steht zur
+  Auswahl, weil einfacher Webspace oft nichts anderes anbietet.
+- Die Zugangsdaten liegen **verschlüsselt** in der Datenbank. Der Schlüssel
+  dazu steht in einer Datei, die nicht mitgesichert wird — wer den
+  Datenbankdump hat, hat die Passwörter nicht.
+- **Auf dem Ziel wird nie etwas gelöscht.** Die Regel „höchstens zwei je
+  Konto" gilt für die Ablage auf dem eigenen Server; drüben sammelt sich
+  alles an, bis dort jemand aufräumt.
+
+Für dein Konto ändert sich dadurch nichts: Der Inhalt der Sicherung bleibt
+verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
+nicht zu öffnen.
+
+### 6.3 Die Komplettsicherung (nur Administration)
+
+Seit Web 12.2.0 gibt es unter **Einstellungen → Komplettsicherung** einen
+zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
+
+| | Sicherung eines Kontos | Komplettsicherung |
+|---|---|---|
+| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
+| hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
+| wo | Einstellungen → Sicherungen | Einstellungen → Komplettsicherung |
+
+**Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
+monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
+Portionen im Hintergrund weiter; wie oft er drankommt, hängt an der Wartung.
+Wer sofort einen Stand will, drückt *Jetzt sichern*.
+
+**Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
+werden nach einem erfolgreichen Lauf gelöscht — hier, nicht auf dem
+Sicherungsziel.
+
+**Zwei Wege heraus:**
+
+- *Herunterladen* gibt die Datei **unverschlüsselt** als `.sql.gz`. Das ist
+  die Fassung, die `mysql` oder phpMyAdmin einspielen kann.
+- *Versiegelt herunterladen* verlangt eine Passphrase und gibt die Datei unter
+  dieser Passphrase verschlossen heraus. Das ist die Fassung zum Weitergeben
+  oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
+  sie verliert, hat die Datei verloren.
+
+Was von selbst auf ein Sicherungsziel geschoben wird, ist immer die
+verschlossene Fassung.
+
+**Das Wichtigste steht nicht in der Datei.** Die Komplettsicherung enthält
+absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
+Schlüssel, mit dem sich die Sicherung öffnen lässt — beides zusammen
+aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
+anderen Ort, zusammen mit dem Zugang zum Sicherungsziel. Diese drei Dinge
+zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt die beste Sicherung
+nichts.
+
+**Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
+gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
+und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
+Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
+die Seite selbst führt durch sie hindurch.
+
+**Einmal im Halbjahr ausprobieren.** Eine Sicherung, die nie zurückgespielt
+wurde, ist eine Vermutung.
 
 ---
 
@@ -2032,9 +2193,10 @@ gesichert*.
   Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
 
 **Aufbewahrung.** Je Konto bleiben die letzten *n* Pakete stehen (Vorgabe:
-drei, einstellbar unter „Sicherungen"); ältere verschwinden beim nächsten
-Sichern. Zwei bleiben immer: die **jüngste** Sicherung und eine, die gerade
-**freigegeben** ist. Nach **Alter** wird nie etwas entfernt.
+**zwei** seit Web 12.0.0, vorher drei — einstellbar unter „Sicherungen");
+ältere verschwinden beim nächsten Sichern. Zwei bleiben immer: die **jüngste**
+Sicherung und eine, die gerade **freigegeben** ist. Nach **Alter** wird nie
+etwas entfernt.
 
 **Konto löschen** entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
 und Geräte endgültig — ohne Papierkorb. Vorher ist zu entscheiden, was mit den
@@ -2102,16 +2264,51 @@ zutrifft:
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig.
 
-Unter **„Wartung"** steht seit 4.5.1 zusätzlich, wann der tägliche Aufräumjob
-zuletzt **vollständig** durchgelaufen ist — als zwei Zeilen „Letzter Versuch"
-und „Letzter vollständiger Lauf". Weichen die beiden Daten voneinander ab,
-scheitert einer der Aufräumschritte dauerhaft, und dann wird unter anderem der
-Papierkorb nicht mehr geleert. Die Ursache steht im Fehlerprotokoll des
-Webspace unter dem Suchwort `cleanup:`.
+Unter **„Wartung"** steht in der Karte **„Hintergrundjobs"**, ob die
+regelmäßige Arbeit noch läuft: je Job wann er zuletzt lief, wer ihn angestoßen
+hat, wie viel noch aussteht und woran der letzte Lauf scheiterte. Steht dort
+**„scheitert"**, wird unter anderem der Papierkorb nicht mehr geleert; die
+Ursache steht in derselben Karte im Klartext.
+
+Was dort **liegenbleibt**, steht mit Kennung darunter — nicht nur „3 Spuren",
+sondern welche. Vier Gründe kommen vor: eine **Lücke in der Nummernfolge**
+(eine Uhr hat ein Teilstück nie nachgeliefert; die Spur bleibt dann so stehen,
+wie sie ist), **zu viele Punkte** (über 50 000 in einer Spur), **Punkte auf
+einer ausgedünnten Spur** (hier sollte immer null stehen) und eine **nicht
+bestandene Prüfung** (dabei wurde nichts gelöscht und nichts ersetzt). Ein
+Rückstand ohne solche Listen ist normal: Er zählt auch mit, was einfach noch zu
+frisch ist.
+
+**Was mit alten Spuren geschieht.** Die Anwendung legt GPS-Punkte in drei
+Stufen ab. Frisch von der Uhr kommen sie als einzelne Punkte; sobald ein
+Einsatz abgeschlossen ist und zwei Wochen nichts mehr nachgekommen ist, werden
+sie zu einem kompakten Paket zusammengefasst — daran ändert sich nichts, was
+man sieht. **Sechs Monate nach dem Einsatz** wird die Spur ausgedünnt: Es
+bleiben die Punkte, die den Weg beschreiben, und die zu den Einsatzphasen
+gehören; dazwischenliegende, die auf der Linie liegen, fallen weg. Auf der
+Karte sieht der Weg danach genauso aus. **Die Punktzahl in Export und GPX ist
+danach kleiner** — das ist kein Verlust der Aufzeichnung, sondern ihre
+Verdichtung, und es lässt sich nicht rückgängig machen.
+
+Zwei Dinge, die man dazu wissen sollte: Ändert man bei einem älteren, bereits
+ausgedünnten Einsatz eine **Phasenzeit**, wird die Höhe des Einsatzorts nicht
+neu bestimmt — die Anwendung behält den bisherigen Wert, statt ihn kommentarlos
+zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
+nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
+Punkte werden aber nicht mehr aufgenommen.
+
+Darunter, in **„Wann die Jobs laufen"**, stehen die drei Wege, auf denen diese
+Arbeit angestoßen werden kann — mit fertigem Befehl bzw. fertiger Adresse zum
+Kopieren. **Eingerichtet werden muss keiner:** Ohne Einrichtung läuft die
+Arbeit in kleinen Portionen auf den Anfragen mit. Wer viele Daten hat, richtet
+besser einen Zeitplan ein, weil der Rückstand sonst wächst; welcher der beiden
+geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört nicht
+in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
+Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
 Unter **„Wartung"** stehen mehrere Auskünfte in eigenen Karten: das Logo der
-Installation, die Umgebung (Mailversand), der Aufräumjob, Einsätze ohne
-Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
+Installation, die Umgebung (Mailversand), die Hintergrundjobs samt ihren Auslösern, Einsätze
+ohne Diensttag und zuunterst das **Datenbank-Update**. Das bloße Öffnen der Seite
 ändert nichts — sie zeigt erst an, was anstünde, und wartet auf eine
 Bestätigung.
 
@@ -2153,8 +2350,24 @@ mit genau diesem Filter.
 - **Erinnerung nach** — nach wie vielen Tagen ein Konto als überfällig gilt
   (Vorgabe 30).
 - **Aufbewahrung je Konto** — wie viele Pakete je Konto liegen bleiben (Vorgabe
-  3). Ältere werden beim nächsten Sichern gelöscht; die jüngste und eine
-  freigegebene nie. Bis Web 9.9.0 war das eine feste Zahl im Programm.
+  **2** seit Web 12.0.0, vorher 3). Ältere werden beim nächsten Sichern
+  gelöscht; die jüngste und eine freigegebene nie. Bis Web 9.9.0 war das eine
+  feste Zahl im Programm.
+
+  > **Wer die Zahl nie angefasst hat, verliert beim nächsten Sichern je Konto
+  > den ältesten von drei Ständen.** Das steht hier und nicht im Kleingedruckten:
+  > Die Rückmeldung des Laufs nennt jede verdrängte Datei, und wer drei behalten
+  > will, trägt drei ein.
+
+- **Speichergrenze** — wie viel Platz alle Sicherungen zusammen belegen dürfen
+  (Vorgabe 2 GB). Ist sie erreicht, wird **nicht mehr gesichert**. Es wird
+  nichts gelöscht und nichts überschrieben — eine Sicherung, die eine andere
+  wegräumt, um selbst zu passen, wäre das Gegenteil einer Rückfallebene.
+- **Warnschwellen** — Prozentwerte, durch Komma getrennt (Vorgabe 70, 90). Je
+  Schwelle kommt **einmal** eine Meldung, nicht bei jedem Lauf. Fällt der
+  Verbrauch wieder darunter, wird beim nächsten Überschreiten erneut gewarnt.
+  Ist kein SMTP eingerichtet, steht die Warnung stattdessen dauerhaft oben auf
+  dieser Seite.
 - **Erinnerung an Admins per E-Mail** — aus Vorsicht standardmäßig **aus**.
 
 **Die Erinnerungsmail** nennt die überfälligen und die nie gesicherten Konten
@@ -2162,18 +2375,30 @@ mit Adresse und Alter der letzten Sicherung — keine Namen und keine Zahlen aus
 den Konten, denn eine Mail liegt unverschlüsselt im Postfach. Sie geht an alle
 Admins mit gesetztem Passwort.
 
-> **Sie hängt an der Benutzung, nicht an einer Uhr.** Auf diesem Webspace läuft
-> kein Zeitplan; was regelmäßig geschieht, fährt auf dem täglichen Aufräumjob
-> mit, und der startet bei der ersten Anfrage des Tages. Die Erinnerung kommt
-> deshalb höchstens einmal je Woche, nur wenn es etwas zu melden gibt — und nur,
-> wenn die Anwendung in dieser Zeit überhaupt benutzt wurde. Wird sie zwei
+> **Sie hängt an einem Zeitgeber.** Die Erinnerung fährt auf dem täglichen
+> Aufräumjob mit (Wartung → „Hintergrundjobs"). Ist dort ein Zeitplan
+> eingerichtet, kommt sie zuverlässig — höchstens einmal je Woche und nur, wenn
+> es etwas zu melden gibt. Ohne Zeitplan hängt sie an der Benutzung: Der Job
+> startet dann bei der ersten Anfrage des Tages, und wird die Anwendung zwei
 > Wochen nicht angefasst, kommt die Mail zwei Wochen später.
 
-**„Alle sichern"** oben rechts sichert die fälligen Konten, das mit der
-ältesten Sicherung zuerst. Sind es sehr viele, hört die Reihe nach etwa 20
-Sekunden auf und sagt, wie viele geschafft und wie viele übrig sind — ein
-zweiter Klick macht weiter, und weil das Älteste zuerst kommt, kommt man
-zuverlässig durch.
+**„Alle sichern"** oben rechts sichert **alle** Konten mit Kontokennung. Sind
+es sehr viele, hört die Reihe nach etwa 20 Sekunden auf und sagt, wie viele
+geschafft und wie viele übrig sind. Ein zweiter Klick macht **genau dort**
+weiter, und der Wartungsjob arbeitet den Rest ohnehin in Schüben ab; solange
+ein Auftrag läuft, steht sein Stand oben auf der Seite.
+
+> **Bis Web 11.1.1 gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
+> ihrer letzten Sicherung sortiert, und der zweite Klick sollte deshalb von
+> selbst weitermachen. Das trug nur, solange sich die Konten um mindestens
+> einen ganzen Tag unterschieden — wer heute alle sicherte, hatte danach lauter
+> Nullen, und die letzten Konten kamen unter Umständen nie dran. Jetzt merkt
+> sich der Auftrag, wie weit er ist: **jedes Konto genau einmal**, und ein
+> Abbruch verliert höchstens das laufende.
+
+**Automatisch entsteht keine Sicherung.** Nächtliche Sicherungen je Konto sind
+bewusst nicht vorgesehen: Sie bräuchten den Inhaltsschlüssel, und den hat der
+Server nicht.
 
 **Ablage** nennt den Pfad, ob er beschreibbar ist, wann zuletzt gesichert wurde
 und wie viele Konten eine Ablage haben. **Sicherungen ohne Konto** steht
@@ -2225,7 +2450,7 @@ anwenden"** führt sie aus. Vorher eine Sicherung erstellen — Migrationen kön
 Spalten und die darin enthaltenen Daten unwiderruflich entfernen.
 
 Seit Web 7.0.0 steht der **Zustand zuerst** (Schlüsselableitung, Umgebung,
-Aufräumjob) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
+Hintergrundjobs) und die Updatetabelle darunter — das ist die Auskunft, wegen der man
 die Seite im Betrieb öffnet. Die Tabelle steht **auf dem Kopf**: neueste Einträge
 oben, mit einer Spalte **„Web"**, die die Fassung nennt, mit der das Update
 ausgeliefert wurde. Der Startknopf steht **über** der Tabelle. Ausgeführt werden

@@ -11,6 +11,2083 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.1] — 2026-09-01
+
+**Drei kleine Dinge, die täglich auffallen.** Zweite Rückmeldungsrunde nach
+P3, an zwei Seiten. Keine Migration, keine Schnittstellenänderung.
+
+Entstanden während S2 auf einem eigenen Zweig und bewusst auf Dateien
+beschränkt, die S2 nicht hielt — die Buchführung ist deshalb erst jetzt
+nachgezogen, nach dem Zusammenführen.
+
+### Web — Der Auswählen-Knopf des Dateifelds klebte oben
+
+`.feld-eingabe` gibt jedem Feld 44 px Höhe und nur waagerechte Polsterung.
+Ein `input[type=file]` stellt seinen nativen Knopf auf die Textzeile, und die
+steht damit am oberen Innenrand: **gemessen 0 px Luft darüber, 19 px
+darunter** bei einem 23 px hohen Knopf. Sichtbar war das auf der
+Backup-Seite, wo das Feld unter einer Beschriftung mit viel Luft steht.
+
+**`display:flex; align-items:center` ändert daran nichts** — Chromium legt
+den Schatteninhalt eines Eingabefeldes nicht in einen Flex-Fluss; nachgemessen
+blieb es bei 0/19. Was wirkt, ist die Zeilenhöhe auf den Innenraum: jetzt
+**10 px oben gegen 9 px unten**. Mittiger geht es nicht, der Innenraum ist mit
+42 px ungerade. Die 44 px aus der Gestaltungsrichtlinie bleiben unberührt.
+
+Der Attributselektor `input[type=file].feld-eingabe` ist **Abgrenzung, kein
+Spezifitätsgewinn**: Es gibt keine Regel `input[type=file]`, gegen die er
+gewinnen müsste. Getroffen werden genau die beiden Dateifelder der Anwendung
+— Backup einspielen und Import.
+
+| | vorher | nachher |
+|---|---|---|
+| Luft über dem Knopf | 0 px | **10 px** |
+| Luft darunter | 19 px | **9 px** |
+| Feldhöhe | 44 px | 44 px |
+
+### Web — Die erzeugte Datei sagte nicht, dass es sie gibt
+
+Sicherung und Datenexport zählten auf, was in der Datei steht, und schwiegen
+darüber, dass ein Download gelaufen ist. Der läuft ohne Dialog und ohne Ton
+durch; wer nicht gerade auf die Leiste des Browsers sieht, merkt nichts davon
+und sucht anschließend eine Datei, deren Namen er nicht kennt.
+
+Beide Meldungen nennen ihn jetzt, und zwar **aus einer Variablen**: Zwei
+getrennte Ausdrücke für Download und Meldung liefen mit dem nächsten
+Tageswechsel auseinander. **Wo** die Datei liegt, sagen sie bewusst nicht —
+das entscheidet die Einstellung des Browsers, und eine Zusage „in deinem
+Download-Ordner" wäre für jeden falsch, der sein Ziel selbst wählt.
+
+Im Export sind es drei Wege mit drei Namen (Tabelle roh, Tabelle im
+verschlüsselten Archiv, Archiv des Profils B); beim Archivweg ist die
+heruntergeladene Datei das **Archiv**, nicht die Tabelle darin. Der Satz steht
+am Ende der Meldung: Was davor steht, beschreibt den Inhalt der Datei, dieser
+ihren Verbleib. In der Sicherung steht er **vor** den ACHTUNG-Blöcken, damit
+eine Warnung das letzte bleibt, was gelesen wird.
+
+### Web — Und `warn` trug das falsche Zeichen
+
+Der `melde()`-Nachbau der Einstellungsseite führte
+`ton === 'fehler' ? 'warnung' : (ton === 'ok' ? 'haken' : 'hinweis')`. Der Ton
+`warn` fiel damit in den Sonst-Zweig und bekam das **Hinweiszeichen** —
+entgegen `Design.md` 9.5 und entgegen `ui_meldung_markup()`, das die
+vollständige Tabelle führt. Betroffen waren gerade die Meldungen, die
+auffallen sollen: eine Sicherung mit unlesbaren geschützten Angaben oder nicht
+mitgesicherten Spuren, abgelehnte Spuren beim Einspielen und auf dem
+Freigabeweg. Der Nachbau führt jetzt dieselbe Tabelle wie der Baustein.
+
+Der zweite Nachbau (`import_ui.js`) hat die Lücke nicht — er kennt den Ton
+`ok` gar nicht und ist für seine Verwendung vollständig. Unangetastet.
+
+### Web — Nebenbei
+
+`ui_feld()` führte seine Feldarten zweimal auf, außen und innen, und die
+Listen waren verschieden: außen fehlte `file` und stand `time`, das nirgends
+benutzt wird; innen fehlten `password` und `file`, obwohl beide seit Langem
+verwendet werden (14- bzw. 2-mal). Beide nennen jetzt dieselben Arten.
+
+### Geprüft
+
+| Mittel | Zahl |
+|---|---|
+| Stilvergleich | 35 763 Elementmessungen über 13 Breiten → **13 Abweichungen**: ein Element, eine Eigenschaft, keine darüber hinaus |
+| Kaskadenvergleich | 637 → 638 Regeln, 0 entfallen, 0 mit anderem Endwert, 0 Reihenfolgetausche |
+| Vollständigkeitsprüfung | 224 Befunde vorher wie nachher, Bericht byteweise gleich |
+| Wortliste | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
+| Feldmessung | 77 Eigenschaften über 7 Feldarten, genau **eine** Abweichung |
+| Meldungstexte | beide Zweige der Sicherung und alle vier Export-Kombinationen in node durchgespielt |
+
+**Nachgetragen am 01.09.2026: an der laufenden Anwendung geprüft.** Die
+Begründung „ohne MySQL nicht aufrufbar" war falsch — das Projekt fährt lokal
+seit P1 gegen **MariaDB 10.11**, und `tools/referenzdatensatz/einspielen/lokal_starten.sh`
+setzt die Installation auf. Nachgeholt:
+
+| Geprüft | Ergebnis |
+|---|---|
+| beide Dateifelder (Backup einspielen, Import) | je 44 px hoch, `line-height: 42px`, Knopf mittig |
+| Sicherung im Demo-Konto | Meldung nennt `einsatzdoku-backup-2026-09-01.edbak` — **derselbe Name wie der tatsächliche Download** |
+| Export, alle drei Downloadwege | Profil A (xlsx), Profil C (zip, verschlüsselt), Profil B (zip-Archiv) — jeder nennt den Namen der Datei, die wirklich ankommt, beim Archivweg den des **Archivs** |
+| `warn` mit unlesbarem Blob | Meldung trägt das **Warndreieck**; Gegenprobe mit der alten Fassung zeigt an derselben Stelle das Hinweiszeichen |
+| Bilderlauf | 304 Einzelbilder, 38 Kontaktbögen — Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0 |
+| Kontraste | 21 Paare gerechnet, 0 verfehlt |
+
+Die Reihenfolge stimmt auch im Fehlerfall: Der Download-Satz steht vor der
+ACHTUNG-Passage, die Warnung bleibt das Letzte.
+
+## [Web 12.2.0] — 2026-09-01
+
+**Die ganze Installation in einer Datei — und ein Weg zurück.** Achtes
+Arbeitspaket der Phase S2 (AP8, E-S2-19 bis E-S2-21). Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Wogegen das hilft
+
+Bis hierher konnte diese Anwendung ein **Konto** sichern. Der Fall, gegen den
+sie damit hilft, heisst „jemand hat sich vertan". Der andere Fall — „der
+Webspace ist weg" — war nicht abgedeckt: Stammdaten, Geräte, Schlüsselhüllen,
+der Migrationsstand und die 33 übrigen Tabellen standen in keiner Sicherung.
+E-S2-19 hat für diesen Fall die Komplettsicherung beschlossen und nächtliche
+Konto-Sicherungen ausdrücklich abgelehnt.
+
+Sie umfasst **jede Tabelle dieser Datenbank**. Nicht enthalten ist
+`config.php` — sie trägt das Datenbankpasswort und den Serverschlüssel, also
+genau das, womit sich die Datei öffnen lässt. Beides in dieselbe Datei zu
+legen hiesse, das Schloss an den Schlüssel zu binden. `config.php` gehört ins
+getrennt aufbewahrte **Wiederanlaufpaket**; das Runbook (`docs/Technik.md`,
+Abschnitt 7) sagt es jetzt ausdrücklich.
+
+### Web — Warum ein eigener Dump und nicht `mysqldump`
+
+Auf geteiltem Webspace gibt es keine Kommandozeile und kein `exec()`;
+`mysqldump` ist dort nicht vorhanden und nicht nachrüstbar. Der Dump entsteht
+deshalb in PHP, über genau die Verbindung, die die Anwendung ohnehin hat.
+
+Seine Form ist absichtlich schlicht: **ein Statement je Zeile**, INSERT-Stapel
+bis 1 MB, Tabellen in einspielbarer Reihenfolge (topologisch nach
+Fremdschlüsseln), Binärspalten hexadezimal. Damit lässt er sich zeilenweise
+abarbeiten — vom Rückweg dieser Anwendung genauso wie von `mysql` oder
+phpMyAdmin. Ein mehrzeiliges Statement bräuchte einen SQL-Zerleger, und ein
+selbstgebauter SQL-Zerleger ist die Sorte Code, die genau einmal falsch liegt:
+wenn ein Semikolon in einer Zeichenkette steht.
+
+### Web — Drei Schichten, und warum die mittlere so aussieht
+
+SQL-Text → gzip → Siegel **EDKOMP1** (AES-256-GCM je 256-KB-Block).
+
+Erzeugt wird in Häppchen über den Job-Einstieg, mit Fortsetzungszustand in
+`jobs.zustand`. Das hat eine Folge, die man sehen muss: Ein
+`deflate_init()`-Zustand lässt sich zwischen zwei Anfragen **nicht**
+aufbewahren — er ist keine Zahl, sondern ein Fenster über die letzten 32 KB.
+Deshalb schliesst jedes Häppchen sein gzip-Glied ab und das nächste hängt ein
+neues an. Aneinandergehängte gzip-Glieder sind gültiges gzip; `gunzip`, `zcat`
+und PHPs `gzopen()`/`gzgets()` lesen darüber hinweg. Der Preis sind einige
+Promille Grösse (gemessen: 3 045 Byte auf 45,8 MB).
+
+**Zwei PHP-Funktionen lesen allerdings nur das erste Glied**, und zwar ohne
+Fehler: nachgemessen an einer Datei aus 15 Gliedern mit 122 469 394 Byte
+Klartext liefern `gzdecode()` und `inflate_add()` je **13 573 234 Byte
+(11 %)** — was dabei herauskommt, sieht aus wie eine ganze Datei. Nur
+`gzopen()`/`gzread()` liefert alles; die Anwendung benutzt ausschliesslich
+diesen Weg. (Python ist gutmütiger: `gzip.open()` und `gzip.decompress()`
+lesen beide alle Glieder.)
+
+Die erste Fassung des Rückwegs schob jeden entsiegelten Block durch
+`inflate_add()` und brach mit „data error" ab; er entpackt jetzt über eine
+Zwischendatei. Bei einem Dump, der in einem Zug entstanden ist, wäre der
+Fehler nie aufgetreten — die Probe fährt deshalb ausdrücklich einen aus
+vierzehn Häppchen.
+
+Das Siegel trägt **Blockzähler und Endemarkierung in den Zusatzdaten** und
+bindet den Dateikopf über seinen SHA-256 mit. Ohne den Zähler liessen sich
+zwei Blöcke vertauschen; ohne die Endemarkierung liesse sich die Datei hinten
+abschneiden, und was übrig bliebe, wäre eine gültige, kürzere Sicherung.
+
+### Web — Zwei Wege heraus, und der Unterschied ist der Punkt
+
+- **„Herunterladen"** gibt den Dump **unverschlüsselt** als `.sql.gz` — genau
+  das, was `mysql` und phpMyAdmin einspielen. Er geht an die Administratorin,
+  die sich eben angemeldet hat und ohnehin jede Zeile dieser Datenbank sehen
+  kann.
+- **„Versiegelt herunterladen"** liefert dieselbe Datei unter einer
+  **Passphrase** (PBKDF2, 320 000 Runden — dieselbe Zahl wie im Browser). Sie
+  wird nicht doppelt verschlüsselt, sondern block für block *umgesiegelt*;
+  der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
+  Datei ist.
+- Was **von selbst** hinausgeht — der Versand aufs Sicherungsziel — ist immer
+  die versiegelte Fassung (E-S2-21).
+
+Ohne Serverschlüssel wird gar nicht erst gesichert. Eine unversiegelte
+Abschrift jeder Tabelle in `sicherungen/` liegen zu lassen unterliefe die
+Ende-zu-Ende-Zusage an der Stelle, an der es am wenigsten auffiele.
+
+### Web — Der Rückweg: `wiederherstellen.php`
+
+Er füllt die Lücke zwischen `install.php` (verweigert sich, sobald es eine
+`config.php` gibt) und `update.php` (verlangt eine Anmeldung, die es ohne
+Konten nicht geben kann). Drei Schranken, jede mit ihrem Grund:
+
+1. **Die Datenbank muss leer sein.** Steht auch nur ein Konto darin, ist diese
+   Installation in Betrieb. Das gilt fürs *Anfangen*: Ab dem zweiten Durchgang
+   ist die Datenbank nicht mehr leer, weil der erste sie füllt — die erste
+   Fassung brach deshalb bei 91 % ab und meldete „Diese Installation ist in
+   Betrieb". Wer einen Arbeitsstand hat, hat ihn auf einer leeren Datenbank
+   begonnen; daran hängt der Unterschied.
+2. **Ein Nachweis** wie beim Einrichter (M1-11): eine Datei mit zufälligem
+   Namen im Anwendungsverzeichnis, deren Kennung einzutragen ist. Ohne ihn
+   wäre die Seite im Zeitfenster zwischen „Datenbank leer" und „erstes Konto"
+   für jeden im Netz offen.
+3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
+   Wer sie dort ablegen kann, hat ohnehin Dateizugriff.
+
+**Der Migrationslauf läuft dort bewusst nicht mit.** `update.php` ist seit
+M6-01 zweistufig, weil Migrationen Spalten löschen können und zwischen
+Anzeigen und Ausführen ein Knopf und eine angemeldete Person gehören. Eine
+Seite ohne Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
+Sicherung heraus. Stattdessen sagt die Seite am Ende, ob der Dump aus einer
+anderen Fassung stammt, und schickt zur Wartung.
+
+### Web — Der Schnappschuss ist nicht scharf, und das steht dran
+
+`mysqldump --single-transaction` hält einen Lesestand über den ganzen Lauf.
+Das geht nur **innerhalb einer Verbindung**, und diese Sicherung läuft über
+viele Anfragen. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+oder nicht. Was **nicht** passieren kann, ist eine übersprungene Altzeile: Der
+Cursor läuft über den Primärschlüssel und nicht über `LIMIT/OFFSET`, ein
+gelöschter Vorgänger verschiebt ihn also nicht.
+
+Der Cursor ist dabei **aufgefächert** (`a > ? OR (a = ? AND b > ?)`) und kein
+Zeilenkonstruktor — gemessen an `track_points` mit 917 331 Zeilen: `type=index`
+und 0,1486 s gegen `type=range` und 0,0010 s. Eine Ausnahme: Steht eine
+ENUM-Spalte **vorn** im Primärschlüssel, hilft auch das Auffächern nichts;
+sie wird deshalb über ihre Werteliste festgenagelt.
+
+### Web — Gemessen
+
+Am Messbestand (5 000 Einsätze, 1 121 802 Zeilen, 34 Tabellen), ohne
+Drosselung:
+
+| | Wert |
+|---|---|
+| Erzeugen | **8,5 s** in **14 Häppchen** |
+| Speicherspitze | **26 von 64 MB** (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** |
+| Längste Zeile | 1 048 566 Byte (Ziel: ≤ 1 MB je Stapel) |
+| Einspielen | 784 Anweisungen in 6,0 s |
+| Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
+
+Die neue **Komplettprobe** (`tools/komplettprobe/`) fährt den ganzen Zyklus:
+**76 Erwartungen, 0 nicht erfüllt** — einschliesslich Versand auf eine echte
+FTP-Gegenstelle und dem Fall „halbe Datei liegt dort". Dazu ein Klickweg im
+Browser (`klickweg.mjs`): **17 Prüfungen, 0 Befunde**, mit beiden Downloads
+und Prüfung ihres Inhalts. Die Versandprobe aus AP7 bleibt bei **115
+Erwartungen, 0 nicht erfüllt**; Wortliste **0/0/0**, Vollständigkeit **260**
+(unverändert), Kontraste **21 Paare, 0 verfehlt**.
+
+Der Bilderlauf über beide neuen Seiten in acht Breiten (**16 Bilder**) fand
+einen Fehler und meldet ihn jetzt nicht mehr: Der Knopf „Versiegelt
+herunterladen" stand in einer `.fld-reihe` statt im Fussbereich und schob die
+Seite bei 360, 390 und 420 px auf (+74/+59/+44 px). In einer `.fld-reihe`
+liegen Felder nebeneinander; ein Knopf darin bekommt keine Umbruchstelle.
+
+### Web — Was die Probe gefunden hat
+
+**Der Neuanlauf lief in ein `count(null)`.** Die Erstbelegung des
+Fortsetzungszustands stand *vor* dem Zweig, der bei verschwundenem Baustand
+ebendiese Marken löscht. Der Zweig ist der, der nach einer Wiederherstellung
+greift: Die Sicherung schreibt ihren eigenen Fortschritt mit, die eingespielte
+Datenbank trägt also den Stand „Dump läuft" samt einem Bauordner, den es auf
+dem neuen Server nie gab. Ohne die Probe wäre das genau einmal aufgefallen —
+beim ersten Wartungslauf nach dem ersten Wiederanlauf.
+
+### Web — Sonst noch
+
+- Der Job `komplett` steht im Katalog **nach** `versand`. Davor wäre er am
+  rechten Platz — was entsteht, ginge im selben Lauf hinaus —, nur bekäme
+  jeder Job hinter ihm nur noch, was die schwerste Arbeit der Anwendung übrig
+  lässt. Der Preis ist ein Lauf Verzögerung. Zusätzlich begrenzt er sich auf
+  zwei Minuten je Lauf.
+- Die Speicherbuchführung zählt Komplettsicherungen **eigens** (`komplett`,
+  `komplett_bytes`) statt sie unter „auffälliger Rest" zu führen. Sie ist die
+  grösste Datei der Ablage; sie als Rest auszuweisen brächte die Speicherseite
+  dazu, einen Fehler zu melden, den es nicht gibt.
+- Neuer Menüpunkt **Komplettsicherung** unter Administration, direkt hinter
+  Sicherungsziele. Symbol `datenbank` aus dem vorhandenen Vorrat.
+
+## [Web 12.1.1] — 2026-09-01
+
+**Die Suche, und ein Prüfmittel, das sich selbst gemessen hat.** Neuntes
+Arbeitspaket der Phase S2 (AP9, E-S2-16). Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Was E-S2-16 verlangt
+
+Zwei Mäßigungen, beide klein und beide belegt:
+
+- **`EdCrypto` merkt sich den importierten Schlüssel.** Bis hierher rief jedes
+  `encrypt()` und jedes `decrypt()` sein eigenes `crypto.subtle.importKey()`.
+  Bei einem Konto mit 5 000 Einsätzen waren das **4 880 Importe für denselben
+  Schlüssel**; jetzt ist es **einer**. Gemerkt wird die *Promise* des Imports
+  und nicht der fertige Schlüssel — sonst starten 200 gleichzeitige Aufrufe
+  200 eigene Importe, weil noch keiner fertig ist. Das Fach wird beim
+  Abmelden mit geräumt.
+- **`EdPat.entschluessleListe()` arbeitet in Stapeln zu 200** statt einzeln
+  nacheinander. Die Schleife um die Entschlüsselung kostete mehr als die
+  Entschlüsselung selbst: gemessen **387 ms** für 4 880 Entschlüsselungen und
+  **1 954 ms** für die Runden durch die Ereigniswarteschlange darum herum.
+  Jetzt sind es **958 ms**.
+
+### Web — Was das bringt, und was nicht
+
+| | vorher | nachher |
+|---|---|---|
+| `importKey`-Aufrufe | 4 880 | **1** |
+| `entschluessleListe` | 1 954 ms | **958 ms** |
+| erste Zeile im DOM | 4,02 s | 3,67 s |
+| **geschützte Spalten lesbar** | **4,11 s** | **3,77 s** |
+
+Drossel 6×, Median aus drei Läufen, beide Stände unmittelbar nacheinander
+gemessen. Das Ziel aus E-S2-24 (≤ 5 s) ist gehalten.
+
+**Der Löwenanteil der Zeit liegt aber nicht im Entschlüsseln.** Zwischen
+„erste Zeile im DOM" und „lesbar" liegen 0,1 s — die Entschlüsselung der
+angezeigten Zeilen ist also nicht das Problem. Die 3,67 s davor gehen für das
+drauf, was vor der Tabelle passiert. Das ist **Backlog Nr. 51** und
+ausdrücklich kein Nebenbei-Umbau.
+
+Nebenbei belegt: Die Suche entschlüsselt **alle 5 002 Einträge**, nicht nur
+die 200 angezeigten — die Ausgangsmessung von AP0 nahm das Gegenteil an. Ohne
+Grund ist es nicht (die Freitextsuche sucht in Diagnose, Alter und Ort, und
+die liegen im verschlüsselten Block), ohne Filter aber unnötig.
+
+### Web — Der größere Fund steckte im Prüfmittel
+
+`entsperren()` in `tools/messstand/browserprobe.mjs` wartete **vier Sekunden**
+auf einen Entsperr-Dialog. Ist die Sitzung bereits entsperrt — der Regelfall
+direkt nach dem Anmelden —, kommt der Dialog nie, und die vier Sekunden liefen
+jedes Mal vollständig ab. Sie standen **mitten im gemessenen Abschnitt**.
+
+Die Ausgangsmessung von AP0 nennt „Suche 4,53 s" und „Tagesansicht 4,81 s".
+Beide liegen dicht über vier Sekunden, und das ist kein Zufall: Gemessen wurde
+`max(4 s Wartezeit, tatsächliche Dauer)`. Der wahre Wert lag die ganze Zeit
+darunter, und niemand konnte es sehen — die Zahl war plausibel, und eine
+plausible Zahl wird nicht hinterfragt.
+
+Das Warten rennt jetzt gegen die Abschlussbedingung des Schritts: Kommt der
+Dialog zuerst, wird entsperrt; ist der Schritt zuerst fertig, war kein
+Entsperren nötig und es wurde keine Sekunde dafür verbraucht. Der ganze Lauf
+sieht damit anders aus:
+
+| Schritt | AP0 (mit dem Messfehler) | jetzt | Ziel (E-S2-24) |
+|---|---|---|---|
+| Startseite, 500 Tagesverweise | 1,36 s | 1,39 s | — |
+| **Tagesansicht bis zur gezeichneten Spur** | **4,81 s** | **1,17 s** | ≤ 3 s — **gehalten**, nicht 62 % darüber |
+| Suche bis zur ersten Trefferanzeige | 4,53 s | **3,81 s** | ≤ 5 s |
+| Sicherung erstellen | 109,8 s | **42,21 s** | ≤ 5 min |
+
+**Die Tagesansicht war nie über dem Ziel.** Der Befund „62 % darüber" aus
+der Ausgangsmessung löst sich vollständig auf — er war der Timeout. Bei der
+Sicherung geht ein Teil der Verbesserung auf AP5b und AP6 zurück; bei
+Tagesansicht und Suche ist es der Messfehler.
+
+**Dieselbe Falle hat mich beim Nachmessen noch einmal erwischt** — mit acht
+statt vier Sekunden, und ich habe daraufhin zwei Messungen veröffentlicht, die
+nichts als meinen eigenen Timeout maßen. Die Regel aus `CLAUDE.md` Abschnitt 6
+gilt gegen das Prüfmittel genauso wie gegen den Code: Eine Zahl ist erst dann
+ein Beleg, wenn sie benennt, was sie gemessen hat.
+
+### Web — Geprüft
+
+Kreislauf `edbak` über den vollen Referenzbestand: **252 882 Einzelvergleiche,
+0 unerklärte Abweichungen** (16 erwartete) — die Änderung an `crypto.js` und
+`patient.js` berührt den Sicherungs- und Wiederherstellungsweg nicht.
+
+## [Web 12.1.0] — 2026-09-01
+
+**Sicherungsziele: die Sicherung verlässt das Haus.** Achtes Arbeitspaket der
+Phase S2 (AP7, E-S2-21 und E-S2-22). **Migration zwingend**
+(`2026_09_01_sicherungsziele`); nach dem Deploy muss eine Administratorin
+`update.php` aufrufen, sonst zeigt die neue Seite nur einen Hinweis.
+
+### Web — Warum
+
+Bis hierher entstanden die Admin-Sicherungen unter `server/sicherungen/` und
+blieben dort. Das ist die Rückfallebene für einen gelöschten Einsatz und für
+ein verlorenes Passwort — aber nicht für den Fall, für den man Sicherungen
+eigentlich macht: dass dieser Server weg ist. Eine Sicherung, die im selben
+Behälter liegt wie das Gesicherte, ist keine.
+
+### Web — Drei Protokolle, eine Schnittstelle
+
+`sicherungsziel_lib.php` beschreibt mit `Zielweg`, was ein Ziel können muss
+(verbinden, Ordner anlegen, senden, holen, auflisten, löschen), und setzt es
+dreimal um. Wer eine Datei wegschiebt, sieht das Protokoll nicht — das ist
+keine Ästhetik, sondern die Vorbereitung auf AP8: Das Komplettbackup benutzt
+dieselbe Schnittstelle, und ein vierter Adapter (WebDAV, Backlog) soll sie
+nicht anfassen.
+
+Was die drei taugen, in der Reihenfolge der Empfehlung — und ohne
+Beschönigung:
+
+| | verschlüsselt | erkennt den Server wieder |
+|---|---|---|
+| **SFTP** (phpseclib) | ja | **ja**, am Fingerabdruck des Hostschlüssels |
+| **FTPS** (`ext/ftp`) | ja | nein |
+| **FTP** (`ext/ftp`) | **nein** | nein |
+
+Der mittlere Fall ist der, den man leicht überschätzt: `ext/ftp` **prüft das
+Zertifikat nicht**. Das ist keine Vermutung — `tools/versandprobe/` stellt eine
+FTPS-Gegenstelle mit einem selbst ausgestellten Zertifikat ohne jede
+Vertrauenskette hin, und die Verbindung kommt zustande. Schutz gegen Mitlesen
+also ja, Schutz gegen einen untergeschobenen Server nein. Die Auswahl im
+Formular sagt es dort, wo man wählt.
+
+Bei SFTP wird der Fingerabdruck beim ersten Prüfen übernommen und danach bei
+jeder Verbindung verglichen. Passt er nicht, bricht die Verbindung ab — und
+zwar **vor** der Anmeldung. Gemessen wird das nicht an der Fehlermeldung,
+sondern an der Gegenstelle: Sie schreibt jeden Anmeldeversuch mit, und bei
+unerwartetem Hostschlüssel bleibt ihr Protokoll unverändert (3 Zeilen vorher,
+3 Zeilen nachher). Wer sich bei einem untergeschobenen Server anmeldet, hat
+sein Passwort schon abgegeben, auch wenn er danach abbricht.
+
+### Web — Der Serverschlüssel, und warum er in `config.php` liegt
+
+Die Zugangsdaten der Ziele stehen versiegelt in der Datenbank (`edsk1:`,
+AES-256-GCM). Der Schlüssel dazu ist neu und steht in `config.php` — 32 Byte
+Zufall, nicht in einer Tabelle. Der Zweck ist genau der Fall „jemand hat die
+Datenbank": Ein Schlüssel neben dem Chiffretext hilft dann niemandem. Für das
+Komplettbackup aus AP8 wird es zwingend, denn dessen Dump enthält jede
+Tabelle.
+
+Der Zweck (Zielkennung und Feldname) geht in die Zusatzdaten der
+Verschlüsselung. Damit lässt sich das versiegelte Passwort von Ziel 3 nicht
+als Passwort von Ziel 7 einsetzen, obwohl beide mit demselben Schlüssel
+versiegelt sind.
+
+Neue Installationen bekommen ihn vom Installer. Bestehende tragen ihn auf der
+Seite „Sicherungsziele" nach: ein Knopf, wenn `config.php` beschreibbar ist,
+sonst eine Zeile zum Einfügen. Der Knopf ergänzt und ersetzt nie, schreibt in
+eine Nebendatei mit Endung `.php` (eine `config.php.tmp` läge im
+Wurzelverzeichnis des Webservers als lesbarer Text mit dem
+Datenbankpasswort), prüft sie durch Ausführen gegen die gerade geltende
+Fassung und schiebt sie erst dann an ihren Platz.
+
+**Er gehört ins Wiederanlaufpaket.** Ohne ihn sind die Zugangsdaten der Ziele
+neu einzutragen — verschmerzbar — und ein versiegeltes Komplettbackup nicht
+mehr zu öffnen. Das Runbook in `docs/Technik.md` sagt es, der Kopf der
+erzeugten `config.php` sagt es auch: Wer die Datei zum ersten Mal öffnet,
+liest sie und nicht das Runbook.
+
+### Web — Der Versand
+
+Ein Joblauf (`versand`) und ein Knopf. Was „neu" ist, wird **am Ziel**
+abgelesen — Name und Größe — und nicht in einer Merkliste geführt. Eine
+Merkliste behauptet „schon versandt" auch dann noch, wenn die Datei am Ziel
+gelöscht, das Ziel neu aufgesetzt oder der Pfad geändert wurde; diese Art
+Lüge fällt erst auf, wenn man die Sicherung braucht. Der Vergleich schliesst
+die Größe ein, weil eine abgebrochene Übertragung sonst mit dem richtigen
+Namen und der falschen Länge für immer als erledigt gälte.
+
+**Es wird nur ergänzt.** Auf dem Ziel löscht diese Anwendung nie — auch nicht
+im Sinne der Aufbewahrung „zwei je Konto", die für die Ablage auf diesem
+Server gilt. Der Zweck eines auswärtigen Ziels ist, den Ausfall dieses Servers
+zu überleben, samt eines Fehlers, der hier zu viel löscht. Wer dort aufräumen
+will, tut es dort (Backlog Nr. 49).
+
+Gemessen gegen örtliche Gegenstellen, 64 Pakete zu zusammen 63,89 MB aus 33
+Kontoordnern:
+
+| | Dateien | Dauer | PHP-Speicherspitze |
+|---|---|---|---|
+| FTP | 64 | 0,13 s | 2,0 MB von 64 |
+| FTPS | 64 | 0,68 s | 2,0 MB von 64 |
+| SFTP | 64 | 3,08 s | 8,0 MB von 64 |
+
+Alle 192 angekommenen Dateien wurden byteweise mit dem Original verglichen: 0
+Abweichungen. Ein zweiter Lauf sandte 0 Dateien (0,19 s). Eine am Ziel auf
+1 000 Byte gekürzte Datei wurde beim nächsten Lauf einzeln erneut geschickt —
+eine von 64 — und war danach wieder byteweise gleich. Mit einem Budget von 2 s
+teilte sich derselbe Lauf in zwei Schübe (34 + 30 Dateien) und war danach
+vollständig.
+
+Der Schalter „automatisch versenden" sagt **ob**, nicht **wann**: Wann etwas
+läuft, entscheidet der eingerichtete Auslöser auf der Wartungsseite. Eine
+zweite Uhr in der Datenbank wäre eine zweite Wahrheit.
+
+### Web — Was die Prüfung tatsächlich prüft
+
+„Verbindung prüfen" meldet nicht, dass die Anmeldung geklappt hat. Es
+schreibt eine Probedatei, liest sie zurück, vergleicht sie Byte für Byte und
+löscht sie wieder — und zeigt jeden dieser Schritte einzeln an. Eine
+Anmeldung, die klappt, sagt nichts über Schreibrechte; woran es scheitert,
+erfährt man sonst nachts, ohne Zuschauer.
+
+### Web — Was „Sicherungsziel" heisst und warum nicht „Transportziel"
+
+Das Konzept nennt es Transportziel. Diesen Namen trägt seit Web 4 aber schon
+`transport_dests` — die Zielklinik einer Patientin, gepflegt unter
+Stammdaten. Zwei Dinge, zwei Klicks voneinander entfernt, unter einem Wort:
+Das ist die Art Verwechslung, die man in einer Fehlermeldung nicht mehr
+auflösen kann. Also Sicherungsziel (Konzept-S2, F-S2-G).
+
+### Web — Fremdbestandteil
+
+**phpseclib 3.0.57** (MIT, reines PHP) liegt unter `server/vendor/phpseclib3/`,
+dazu **constant_time_encoding 2.7.0** (MIT), das phpseclib an genau einer
+Stelle voraussetzt. Ein zwanzigzeiliger PSR-4-Lader statt Composer — auf einem
+Webspace läuft kein `composer install`. Die Kopfzeile mit Herkunft und
+SHA-256, die `docs/Lizenzen.md` sonst je Datei verlangt, ist hier durch zwei
+Prüfsummenlisten ersetzt (`sha256sum -c`): Bei 349 Dateien wäre sie von Hand
+nicht zu pflegen und beim ersten Austausch falsch.
+
+**`ext/ssh2` wäre die Alternative gewesen** und ist es nicht: Auf geteiltem
+Webspace ist die Erweiterung praktisch nie da und lässt sich dort nicht
+nachinstallieren. phpseclib kostet dafür Rechenzeit — bei einer Handvoll
+Dateien je Nacht fällt das nicht ins Gewicht (3,08 s für 64 MB, siehe oben).
+
+### Web — Zwei Funde aus der eigenen Prüfung
+
+**`SFTP::TYPE_REGULAR` gibt es nicht.** phpseclib definiert
+`NET_SFTP_TYPE_REGULAR` als *globale* Konstante beim ersten Erzeugen eines
+Objekts, nicht als Klassenkonstante. Der Fehler schlug erst beim Auflisten
+zu, nicht beim Übertragen — eine Verzeichnisliste, die leer bleibt, hätte den
+Versand still alles doppelt schicken lassen.
+
+**Der Serverschlüssel war nach dem Schreiben eine Anfrage lang unsichtbar.**
+OPcache merkt sich die übersetzte `config.php` und prüft ihren Zeitstempel
+sekundengenau; wird sie in derselben Sekunde ersetzt, gilt sie als
+unverändert. Die Seite meldete „steht jetzt in config.php", und der
+unmittelbar folgende Aufruf zeigte wieder „Serverschlüssel fehlt". Behoben mit
+`opcache_invalidate()`.
+
+Dazu zwei Fehlermeldungen, die die Probe als unbrauchbar entlarvt hat: Ein
+falsches FTP-Passwort meldete „Authentication failed" ohne das Wort Passwort
+(das Muster kannte nur „Login incorrect"), und ein geschlossener Port meldete
+„kam nicht zustande" ohne jeden nächsten Schritt — `ftp_connect()` gibt dort
+`false` zurück und schweigt.
+
+### Web — Zwei Sätze Gegenstellen, weil einer nicht reicht
+
+`tools/versandprobe/` stellt die Server selbst hin, und zwar zweimal:
+`gegenstellen.py` in Python (pyftpdlib, paramiko — portabel, ohne Rechte) und
+`echte_gegenstellen.sh` mit **vsftpd und OpenSSH**, also dem, was auf einem
+Webspace tatsächlich läuft.
+
+Beide werden gebraucht, und nicht aus Gründlichkeit: **vsftpd kennt kein
+MLSD.** Der Rückfall auf `NLST` + `SIZE` in `ZielFtp::liste()` ist dadurch
+zum ersten Mal gefahren worden — gegen pyftpdlib allein wäre er nie an die
+Reihe gekommen. Die Probe misst seither, welchen Weg sie genommen hat, statt
+ihn zu vermuten.
+
+Der zweite Satz hat gefunden, was der erste nicht sehen konnte: **zwei
+Fehlermeldungen blieben halb englisch.** vsftpd sagt „Could not create file",
+pyftpdlib sagt „Not enough privileges" — beide Wortlaute kannte die
+Übersetzung nicht, und die Meldung für ein verweigertes Schreiben endete im
+Original. Jede Umsetzung bringt ihr eigenes Vokabular mit.
+
+Vier Nebenwege waren bis dahin unbelegt und sind es nicht mehr: der Listenweg
+ohne MLSD, **aktives** FTP (der Schalter war nur in einer Stellung gefahren),
+ein Grundpfad mit Unterordnern statt `/` — im Betrieb der Normalfall — und
+ein verweigertes Schreiben.
+
+Und der Hostschlüsselwechsel ist jetzt echt: OpenSSH startet mit einem
+zweiten Schlüssel neu, statt dass ein erfundener Fingerabdruck eingesetzt
+wird. Die Verbindung bricht ab, die Meldung nennt beide Abdrücke, und das
+Anmeldeprotokoll des Servers steht vorher wie nachher auf 46 Zeilen. Nebenbei
+eine unabhängige Gegenprobe: Der errechnete Fingerabdruck ist zeichengleich
+mit dem von `ssh-keygen -lf`.
+
+**Ein Unterschied, der im Betrieb Schaden anrichten kann**, ist dabei
+aufgefallen: vsftpd sperrt den Nutzer in sein Heimverzeichnis, dort ist `/`
+die Wurzel. OpenSSH tut das nicht — dort ist `/` die Wurzel des Dateisystems.
+Derselbe Eintrag „Pfad = /" bedeutet je nach Protokoll etwas anderes; die
+LIESMICH sagt es jetzt.
+
+### Web — Geprüft
+
+`tools/versandprobe/` gegen echte Server auf 127.0.0.1, in beiden Fassungen:
+**115 Erwartungen, 0 nicht erfüllt** — gegen pyftpdlib/paramiko **und** gegen
+vsftpd/OpenSSH. Im Browser: Serverschlüssel
+anlegen, Ziel anlegen, prüfen (6 Schritte), falsches Passwort, versenden (64
+Dateien, 63,9 MB), Rückstand danach 0 — 0 Konsolenfehler, 0 px waagerechter
+Überlauf, Bedienelemente 44 px. Der Wartungslauf über die Befehlszeile führt
+`versand` mit auf (`fertig · erledigt 64 · Rückstand 0`).
+
+**Was nicht geprüft werden konnte:** ein echtes Ziel im Internet. Aus dem
+Behälter, in dem gearbeitet wurde, gehen nur Verbindungen auf Port 443 hinaus
+— nachgemessen mit `github.com:22` als Gegenkontrolle, einem sicher offenen
+Port, der ebenso abgewiesen wird. Die Abnahme gegen ein echtes Ziel je
+Protokoll steht aus und gehört auf die Maschine der Betreiberin oder auf den
+Produktivserver.
+
+## [Web 12.0.0] — 2026-09-01
+
+**Die Admin-Sicherung wird mehrteilig.** Siebtes Arbeitspaket der Phase S2
+(AP6, E-S2-13 bis E-S2-15). Hauptnummer, weil das Dateiformat der
+Admin-Sicherung von 1 auf 2 wechselt **und** der erste Lauf danach die
+einteiligen Pakete eines Kontos entfernt. **Keine Migration** — nur das
+Dateiformat ändert sich, das Datenmodell nicht.
+
+### Web — Warum
+
+Die Admin-Sicherung war der letzte Weg, der das Budget sprengte, und zwar
+nicht knapp. **Gemessen** am 5000er-Konto:
+
+| | vorher | jetzt |
+|---|---|---|
+| Dauer | 19,81 s | **14,13 s** |
+| Speicherspitze | **1077,6 MB** | **24,0 MB von 64** |
+| mit `memory_limit=64M` (Z3) | **Abbruch** in `spur_lib.php` | läuft durch |
+| Datei | 94,28 MB | **11,42 MB** |
+
+Am Demokonto: 28,1 → 4,0 MB Spitze, 2,14 → 0,22 MB Datei.
+
+Auf genau der Sorte Webspace, für die diese Anwendung gebaut ist, war die
+Admin-Sicherung eines großen Kontos also **unmöglich** — kein theoretisches
+Budget, ein Abbruch. Der Grund stand in einer Zeile:
+`json_decode(edbak_build($userId), true)` — derselbe Bestand als Zeichenkette,
+als Feld und beim Schreiben noch einmal als Zeichenkette.
+
+### Web — Das Paket ist jetzt ein ZIP
+
+Unversiegelt, denn es liegt serverseitig und trägt `pat_blob` ohnehin als
+Chiffretext:
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.json` | Umfang, Schlüsselhüllen, Teileliste, **`geschuetzte`** |
+| `kopf.json` | Stammdaten, Diensttage, Zahl der Einträge |
+| `eintraege/0001.json` … | je 250 Einträge **ohne** Punktlisten |
+| `spuren/0001.json` … | je Teil `{spur_ref, blob}` — SPUR1, Base64 |
+
+Gepackt, anders als beim Nutzerformat: Dort sind die Teile bereits gzip *und*
+verschlüsselt, hier ist es blankes JSON. Der Packlauf ist der Grund, aus dem
+dieselben Daten in 11,42 statt 94,28 MB passen.
+
+**Ein Umweg, den erst die Messung erzwungen hat.**
+`ZipArchive::addFromString()` hält jede übergebene Zeichenkette bis zum
+`close()` im Speicher — damit läge am Ende doch wieder alles gleichzeitig da.
+Gemessen an 34,6 MB Inhalt, je eigener Prozess: `addFromString` **42,0 MB**
+Spitze, `addFile` **2,0 MB**. Die Teile gehen deshalb einzeln in einen
+Bauordner und von dort ins Archiv.
+
+**`geschuetzte` im Manifest** ist keine Zierde. `edbak_paket_hat_geschuetzte()`
+sah bis hierher in die Einsatzliste des Pakets; im gefensterten Kern steht sie
+dort nicht mehr. Ohne die Zahl hätte die Funktion still `false` geliefert und
+damit die Sperre aus E20 ausgehebelt: Ein Paket mit unlesbaren Angaben wäre
+als „direkt einspielbar" durchgegangen.
+
+**Und ein Fassung-2-Kern darf nicht durch den einteiligen Weg.** Er trägt
+Nutzlast 8 — die Punkte stehen in eigenen Teilen. Wer ihn durch
+`edbak_restore()` schickt, bekommt jeden Einsatz und keine einzige Spur.
+Genau dieser Fall ist in F-S2-E einmal eingetreten und hat 91 208 Punkte
+gekostet; deshalb gibt es `edbak_paket_einspielen()`, und
+`edbak_paket_lesen()` verweigert Fassung 2 ausdrücklich.
+
+### Web — Speichergrenze und Warnschwellen (E-S2-15)
+
+Vorgabe **2 GB**, Warnschwellen **70 und 90 Prozent**, beides im Adminbereich
+einstellbar. Geprüft wird **vor** dem Bau: abgelehnt mit Meldung, nie still
+verdrängt (E-S2-14). Beim großen Konto spart das 14 Sekunden je abgelehntem
+Lauf — bei „Alle sichern" 14 Sekunden je Konto.
+
+**Die Zählung misst jetzt das ganze Verzeichnis.** Vorher zählte sie nur
+Dateien, die das Paketnamensmuster bestanden; Begleitdateien, `.htaccess` und
+liegengebliebene Reste eines abgebrochenen Laufs waren unsichtbar und
+zählten trotzdem auf der Platte. Für eine Anzeige mag das angehen, für eine
+Speichergrenze nicht. Was nicht in Paketen steckt, wird getrennt ausgewiesen,
+damit ein auffälliger Rest auffällt statt in einer Summe unterzugehen.
+
+**Neu: `smtp_eingerichtet()`.** E-S2-15 verlangt zwei verschiedene Wege — Mail
+an die Admin-Adresse, „ohne eingerichtetes SMTP stattdessen dauerhafter
+Hinweis im Admin-Bereich". Die Anwendung konnte diese beiden Fälle bis hierher
+nicht unterscheiden: `smtp_send()` liefert `false` für „Host falsch",
+„Passwort falsch", „Netz weg" **und** „gar nicht eingerichtet".
+
+**Die Schwellen-Marke wird nach dem Versand gesetzt, nicht davor.** Das
+einzige Vorbild im Haus — die wöchentliche Erinnerungsmail — macht es
+umgekehrt und verwirft dabei den Rückgabewert. Für eine Erinnerung ist das
+vertretbar (die nächste kommt in einer Woche); für eine Warnung, dass der
+Speicher zuläuft, ist es falsch: Scheitert der Versand, stünde die Marke
+trotzdem, und die Warnung käme **nie** — genau in dem Fall, in dem sie
+gebraucht wird.
+
+### Web — „Alle sichern" merkt sich, wie weit es ist
+
+Der Auftrag läuft **in Schüben**: von der Schaltfläche, solange die Anfrage
+Zeit hat, und vom neuen Wartungsjob `adminbackup` weiter. Solange er läuft,
+steht sein Stand oben auf der Seite.
+
+**Bis hierher gab es keinen Merkzettel.** Die Konten wurden nach dem Alter
+ihrer letzten Sicherung sortiert, und der zweite Klick sollte deshalb von
+selbst weitermachen — wer eben gesichert wurde, steht ja hinten. Das trug nur,
+solange sich die Konten um mindestens einen ganzen Tag unterschieden:
+Gerechnet wird in *Tagen*. Wer heute alle Konten sichert, hat danach lauter
+Nullen, und bei Gleichstand ist die Reihenfolge beliebig — die letzten Konten
+kamen unter Umständen nie dran.
+
+Zugesagt ist jetzt etwas Belastbareres: **jedes Konto genau einmal**, und ein
+Abbruch verliert höchstens das laufende (der Zeiger wird nach jedem Konto
+fortgeschrieben).
+
+**Die erste Fassung des Merkzettels ist an der Datenbank gescheitert, und
+zwar lautlos.** Sie legte die Kennungen aller offenen Konten in
+`app_state.adminbackup_auftrag`; die Spalte ist `varchar(190)`, bei 31 Konten
+waren es 350 Zeichen. Das INSERT scheiterte, `edbak_marke_setzen()` schluckte
+jeden Fehler, und die Schaltfläche meldete **„0 von 0 Konten gesichert"** —
+eine Zahl ohne Bezug zur Wirklichkeit. Behoben in beide Richtungen: Der
+Auftrag ist jetzt ein **Zeiger** (`{"cur":137,"ges":31,…}`, 64 Zeichen), und
+`edbak_marke_setzen()` liefert `bool` und schreibt ins Fehlerprotokoll, statt
+zu schweigen.
+
+**Der Job-Rahmen misst jetzt auch den Speicher** (`jobs_speicher_knapp()`,
+48 von 64 MB). Bis dahin zählte nur die Zeit; das reichte, solange jeder Job
+in Blöcken über Zeilen lief. Der Sicherungsjob ist anders: Ein einzelnes Konto
+kostet beim 5000er-Bestand 24 MB. Seine Reserve ist mit 15 s so groß, dass er
+am Huckepack-Weg (3 s) gar nicht erst anfängt — eine Anfrage einer NutzerIn
+soll keine fremde Sicherung mittragen.
+
+**Automatisch entsteht nichts.** Der Job arbeitet nur auf Auftrag; nächtliche
+Sicherungen je Konto sind ausdrücklich abgelehnt (E-S2-19).
+
+### Web — Aufbewahrung 2 statt 3
+
+Das Konzept nennt seit E-S2-14 die Zwei; Code und drei Dokumente standen auf
+drei. Der Widerspruch ist zugunsten des Konzepts aufgelöst.
+
+**Was das kostet:** Eine Installation, die die Einstellung nie angefasst hat,
+verliert beim nächsten Sichern je Konto den ältesten von drei Ständen. Das
+geschieht nicht still — die Rückmeldung nennt jede verdrängte Datei. Wer drei
+behalten will, trägt drei ein; die Einstellung gibt es seit Web 9.8.0.
+
+**Einteilige Pakete gehen beim ersten neuen Lauf mit** — aber erst, nachdem
+das neue Paket geschrieben **und wieder gelesen** wurde. Ein ZIP, das sich
+nicht öffnen lässt, ist genau der Fall, in dem man den alten Stand noch
+braucht. Das jüngste Paket bleibt in jedem Fall stehen, auch wenn es Fassung 1
+ist: eine Aufräumung, die aufräumt, bis nichts mehr da ist, wäre das Gegenteil
+der Funktion.
+
+### Web — Was der Umbau nebenbei repariert hat
+
+- **`.tmp`-Reste blockierten dauerhaft die Ordnerlöschung.** Sie standen nicht
+  auf der Weißliste von `edbak_ordner_loeschen()`, und damit ließ sich ein
+  Konto nicht mehr vollständig löschen — an einem Rest, den die Anwendung
+  selbst erzeugt hatte. Der Bauordner trägt jetzt ein erkennbares Präfix und
+  wird vor dem Löschen mit aufgeräumt.
+- **`edbak_ordner_loeschen()` löschte erst und meldete dann Fehlschlag.** Die
+  Prüfung stand *in* der Schleife: Beim fünften Eintrag abzubrechen hieß, die
+  ersten vier bereits gelöscht zu haben. Jetzt entscheidet ein erster
+  Durchgang, ob überhaupt etwas gelöscht wird.
+- **`edbak_groesse_text()` endete bei MB.** Die Grenze wird in GB angegeben;
+  die Meldung hätte „2.048,0 MB von 2.048,0 MB" gelautet.
+- **Der Rückgabewert von `edbak_begleit_schreiben()` wurde verworfen.** Die
+  Sicherung lag dann zwar, aber das Verzeichnis kannte sie nicht — kein
+  Datenverlust, aber eine Auskunft, die fehlt. Wird jetzt gemeldet.
+- **`api/backup_spuren_restore.php` ist von 200 auf 96 Zeilen geschrumpft.**
+  Sein Kern steht als `edbak_spuren_schreiben()` in `backup_lib.php`, weil die
+  Admin-Sicherung ihn ebenfalls braucht. Ein zweiter Weg wäre ein zweiter Ort,
+  an dem Eigentumsprüfung, Blobprüfung und das Überspringen vorhandener
+  Spuren zu vergessen sind.
+- **`install.php` prüft `ext/zip`** — die Sicherung ist jetzt ein ZIP; ohne
+  die Erweiterung soll das vor der Einrichtung auffallen, nicht im ersten Lauf.
+
+### Web — Die Freigabe war für niemanden zu sehen (F-S2-F)
+
+Beim Prüfen des Freigabewegs kam heraus, dass er **nie funktioniert hat**. Der
+Kasten „Für dich freigegebene Sicherung" blendet die Frage nach dem
+Wiederherstellungsschlüssel aus, wenn das Paket keine geschützten Angaben
+enthält — über eine Kennung `freigabecodelabel`, die es im Markup nicht gab.
+`getElementById()` lieferte `null`, der Zugriff warf, und die Zeile darunter,
+die den Kasten **sichtbar macht**, kam nie zur Ausführung. Der Fehler landete
+im leeren `catch` von `freigabeLaden()`.
+
+Auffallen konnte das nicht: Die Karte ist im Regelfall verborgen, und
+*verborgen, weil es nichts gibt* sieht genauso aus wie *verborgen, weil das
+Skript abgestürzt ist*.
+
+Das wiegt schwer, weil der Freigabeweg der **einzige** ist, auf dem eine
+Sicherung mit geschützten Angaben in ein neu aufgesetztes Konto kommt: Die
+Administration darf es nicht (E20), nur die NutzerIn kann mit ihrem
+Wiederherstellungsschlüssel umschlüsseln.
+
+Behoben: Die Hülle trägt die Kennung, und der `catch` bleibt zur NutzerIn hin
+still, schreibt aber in die Konsole — damit fällt ein solcher Fall dem
+Bilderlauf auf, ohne dass jemand ohne Freigabe etwas merkt.
+
+**Der Freigabeweg läuft jetzt auch in Fenstern.** Ein Fassung-2-Paket geht
+nicht mehr in einer Antwort heraus; der Browser holt Kopf, Eintragsfenster und
+Spurteile einzeln über `?teil=` und schickt sie über dieselben Endpunkte
+zurück wie eine eigene Sicherung. Der Teilname wird gegen die Teileliste des
+Manifests geprüft — was dort nicht steht, gibt es für diesen Weg nicht.
+
+**Neu geprüft: der Zweig mit Wiederherstellungsschlüssel.**
+`tools/freigabeprobe/` stellt sich ein Konto her, dessen Schlüssel sie kennt —
+Hülle, Prüfsumme und Chiffretext entstehen dabei **im Browser** über
+`assets/crypto.js`, PHP legt sie nur ab (ein zweiter Rechenweg wäre eine
+zweite Umsetzung derselben Krypto, und die Probe prüfte dann sich selbst).
+Belegt: Ein **falscher** Schlüssel wird abgewiesen und schreibt nichts; mit
+dem richtigen kommen Einsatz und Spur an, der Chiffretext ist ein **anderer**
+als in der Quelle, und er öffnet sich mit dem Schlüssel des **Zielkontos** zu
+demselben Klartext.
+
+**Eine Einschränkung, ausdrücklich:** Bei Fassung 1 wird vor dem ersten
+Schreiben gefragt, wenn sich Einsätze mit dem angegebenen Schlüssel nicht
+öffnen lassen. Bei Fassung 2 kann diese Zahl erst feststehen, wenn alle
+Fenster geöffnet sind — also nach dem ersten Schreiben. Die schärfere Schranke
+steht ohnehin davor: Der Wiederherstellungsschlüssel muss die Hülle
+`pat_wrap_rc` öffnen. Einzelne Fehlschläge danach werden am Ende **genannt**,
+mit Zahl und in Orange.
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/wiederherstellungs-probe/` | **66** Erwartungen, 0 offen (vorher 44) — Teil 8 Rundlauf des Adminpakets, Teil 9 Speichergrenze und Schwellen |
+| Freigabeweg im Browser | Fassung-2-Paket (600 Einträge, 3 Eintragsteile, 1 Spurteil) in ein frisches Konto: **600 Einsätze mit 600 Spuren**, 0 Konsolenfehler |
+| „Alle sichern" über 31 Konten | **31 von 31** in 18,3 s, 0 Konsolenfehler |
+| `tools/wiederherstellungs-probe/` nach AP6 | **76** Erwartungen, 0 offen (vor AP6: 44) |
+| `spurprobe` · `gpxprobe` · `containerprobe` | 25 · 75 · 32 Erwartungen, je 0 offen |
+| Wortliste · Vollständigkeit | 0 Treffer, **0 ungenutzte Ausnahmen** · 260 |
+| Bilderlauf `34-`, `43-` | 16 Bilder, **16 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler |
+| `tools/freigabeprobe/` **neu** | **14** Erwartungen, 0 offen — der Freigabeweg **mit** Wiederherstellungsschlüssel, samt Gegenprobe mit einem falschen |
+| Speicher, 5000er-Konto | 1077,6 MB → **24,0 MB von 64**, mit Deckel geprüft |
+| Bilderlauf `43-sicherungen` | 8 Bilder, **8 verschiedene Prüfsummen**, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+
+## [Web 11.1.1] — 2026-08-31
+
+**Eine Datei mit Nutzlast 8 und Punktlisten verlor alle Spuren, ohne ein
+Wort.** Fehlerbehebung, gefunden beim Aufbau des Prüfbestands für AP6
+(F-S2-E). Keine Migration.
+
+### Web — Was passiert ist
+
+Seit Web 11.0.0 sagt Nutzlast 8 zu, dass die Spurpunkte **nicht** im Eintrag
+stehen, sondern als eigene, versiegelte Teile nachkommen. `edbak_restore()`
+entscheidet deshalb an der **Fassung**, welchen Weg es nimmt, und nicht am
+Vorhandensein eines `track`-Feldes — mit gutem Grund: Eine Spur ohne Punkte
+sähe genauso aus wie ein Verweis, und die umgekehrte Verwechslung brächte eine
+echte Fassung-4-Sicherung um alle Spuren.
+
+Die Kehrseite war nicht bedacht. Trägt eine Datei Fassung 8 **und**
+Punktlisten, lief sie in den Verweisweg, fand keine `spur_ref` — und die
+Punkte fielen weg. Der Eintrag entstand ohne Spur, die Meldung lautete
+„fertig".
+
+Solche Dateien schreibt die Anwendung nicht. Diese kam aus
+`tools/messstand/vervielfaeltigen.py`: Das Werkzeug baut den 5000er-Bestand
+aus der Referenz und hat die Fassungsnummer dabei **geerbt** — was stimmte,
+solange die Referenz Nutzlast 7 war, und seit Web 11.0.0 nicht mehr stimmt.
+**Gemessen an einem Lauf: 164 Einsätze angelegt, 91 208 Punkte verloren.**
+Nach der Behebung derselbe Lauf: 66 848 Einsatzpunkte in der Datenbank.
+
+### Web — Was geändert wurde
+
+- **Die Anwendung sagt es.** Der Verweisweg meldet eine vorgefundene
+  Punktliste über die gemeinsame Prüfschicht — dort, wo die Rückmeldung die
+  abgelehnten Angaben ohnehin aufzählt. **Abgewiesen wird die Datei nicht:**
+  Der übrige Bestand ist brauchbar, und ihn wegen der Spuren zu verweigern
+  hieße, aus einem Teilverlust einen Totalverlust zu machen.
+- **Das Werkzeug setzt die Fassung, statt sie zu erben.** Die erzeugte Datei
+  ist einteilig und trägt ihre Punkte selbst — sie ist Nutzlast 7 und wird
+  jetzt auch so ausgezeichnet. Mit NaDoku 1.0 fällt das Altformat weg; dann
+  braucht der Vervielfältiger einen Container-Schreiber in Python
+  (Backlog Nr. 46).
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| `tools/wiederherstellungs-probe/`, **Teil 7 neu** | **44** Erwartungen, 0 offen (vorher 40) — darunter die Gegenprobe, dass eine richtige Fassung-8-Datei die Meldung *nicht* bekommt |
+| Gegenprobe am Prüfkonto | vorher **0** Spurpunkte, nachher **66 848** |
+
+## [Web 11.1.0] — 2026-08-31
+
+**Auch der Kern wird mehrteilig.** Nachschlag zum sechsten Arbeitspaket der
+Phase S2 (AP5b, E-S2-11, Z3). Nebennummer: Das Format bekommt Teile dazu, das
+Datenmodell bleibt. **Keine Migration.**
+
+### Web — Warum der Kern allein nicht reicht
+
+Web 11.0.0 hatte die Punktlisten aus der Nutzlast geholt. Übrig blieb ein
+`kern.edbak` — beim 5000er-Bestand 10,5 MB, und der ging auf dem Rückweg als
+**ein** POST an den Server. Gegen ein Limit, das niemand kennt: nginx nimmt in
+der Vorgabe 1 MB. Damit wäre die Sicherung genau dort nicht wieder
+einzuspielen gewesen, wo sie herkam.
+
+Der Speicher kommt dazu, wenn auch weniger dramatisch als gedacht.
+**Gemessen** am 31.08.2026 (`memory_get_peak_usage(true)`, PHP-CLI):
+
+| Bestand | Kern am Stück | in Fenstern zu 250 |
+|---|---|---|
+| Demo, 187 Einträge | 0,18 MB Text, **4,0 MB** Spitze | 0,17 MB größtes Fenster, **4,0 MB** |
+| Messstand, 10 797 Einträge | 10,47 MB Text, **39,5 MB** Spitze | 0,44 MB größtes Fenster, **10,0 MB** |
+
+Am Stück wächst die Spitze mit dem Bestand — rund 3,3 kB je Eintrag, aus den
+zwei Messpunkten fortgeschrieben; das Budget von 64 MB (Z3) wäre bei etwa
+18 000 Einträgen erreicht. In Fenstern wächst sie kaum.
+
+**Eine Zahl war dabei falsch weitergetragen worden.** In der Begründung dieses
+Pakets stand zunächst „92 MB gegen ein Budget von 64" — das ist die Zahl aus
+Web 11.0.0, *vor* den Fenstern der Kindtabellen. Nachgemessen am
+tatsächlichen Stand von 11.0.0 waren es 37,5 MB. Der Umbau ist trotzdem
+richtig, aber aus dem POST-Grund und wegen des Wachstums, nicht wegen eines
+Abbruchs, den es nicht gab.
+
+### Web — Die neue Aufteilung
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit, **`unlesbar`** |
+| `kopf.edbak` | Stammdaten, Diensttage, `eintraege_gesamt` |
+| `eintraege/0001.edbak` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
+| `spuren/0001.edbak` … | je Teil eine Liste `{spur_ref, blob}` — unverändert |
+
+**250 Einträge je Fenster**, weil `client_max_body_size` bei nginx in der
+Vorgabe auf 1 MB steht und der Rückweg genau diese Fenster als POST
+zurückschickt: 500 ergäben ein größtes Fenster von 0,87 MB — unter der Grenze,
+aber ohne Reserve; 250 ergeben 0,44 MB in 44 Anfragen.
+
+`kern.edbak` gibt es nicht mehr. Eine solche Datei wird beim Öffnen mit Namen
+abgewiesen; sie kann nur im Werkstattbestand liegen, denn Web 11.0.0 ist nie
+ausgeliefert worden.
+
+### Web — Die Rückfrage kam, wo es nichts zu fragen gab (F-S2-D)
+
+Vor dem Einspielen warnt die Anwendung, wenn eine Sicherung Einsätze enthält,
+deren geschützte Angaben beim *Erstellen* nicht zu entschlüsseln waren: Die
+kommen als Chiffretext an und bleiben hier unlesbar. Beim Altformat wurden sie
+gezählt. Bei Fassung 4 liegen die Einträge zum Zeitpunkt der Frage noch
+versiegelt in ihren Teilen — die Frage steht aber vor dem ersten Schreiben und
+muss dort bleiben. Sie kam deshalb, sobald die Datei aus einem *anderen* Konto
+stammte, und das ist der Regelfall des Einspielens.
+
+Der Erzeuger weiß die Zahl, er hat sie eben gezählt; sie steht jetzt als
+`unlesbar` im Manifest. Fehlt sie, wird weiter gefragt — „nicht erhoben" ist
+etwas anderes als „keine".
+
+**Wie es aufgefallen ist:** Der Kreislauftest lief 300 Sekunden ins Leere. Sein
+Browser verneinte die Frage stillschweigend, und das Werkzeug wartete auf
+Wörter („fertig", „eingespielt"), die im Abbruchtext nicht vorkommen. Danach
+hätte es ein leeres Konto exportiert und verglichen. Beides ist geändert: Der
+Abbruch ist jetzt eine Meldung wie jede andere, und die Werkzeuge warten auf
+**die Meldung**, nicht auf einen Wortlaut.
+
+### Web — Zwei native `confirm()` sind gegangen
+
+Die beiden Rückfragen des Sicherungsbereichs benutzten noch `window.confirm`.
+Browser bieten dort „keine weiteren Dialoge dieser Seite anzeigen" an — genau
+der Grund, aus dem es `assets/confirm.js` gibt. Sie laufen jetzt über
+`window.edConfirm` wie alle anderen.
+
+### Web — Eine Schranke gegen die stille Lücke
+
+Die Exportschleife rückt um `FENSTER` weiter, gleichgültig wie viele Einträge
+zurückkamen. Lieferte ein Fenster weniger, fehlten diese Einträge in der Datei
+— und die Meldung am Ende lautete trotzdem „Fertig". Der Browser zählt jetzt
+nach und bricht mit Namen und Zahl ab. Der Abrufendpunkt weist eine zu große
+`anzahl` ohnehin mit 400 ab; die zweite Schranke hängt nicht davon ab, dass
+die erste bleibt.
+
+### Prüfstand
+
+| Mittel | Ergebnis |
+|---|---|
+| Kreislauf `edbak` (Fassung 4 → frisches Konto → Fassung 4) | **252 882** Einzelvergleiche, **0** unerklärt, 16 erwartet |
+| Kreislauf `edbak-alt` (Altformat → Fassung 4) | **287 282** Einzelvergleiche, **0** unerklärt, 560 erwartet |
+| Kreislauf `csv` | **8 797** Einzelvergleiche, **0** unerklärt, 859 erwartet |
+| `tools/containerprobe/` (PHP → Chromium → Python) | **32** Erwartungen, 0 offen; 9 000 Punktvergleiche; jetzt mit **zwei** Eintragsteilen |
+| `tools/wiederherstellungs-probe/` | **40** Erwartungen, 0 offen |
+| `tools/spurprobe/` | **25** Erwartungen, 0 offen |
+| Speicher am Messstand | 39,5 MB am Stück → **10,0 MB** in Fenstern, von 64 |
+| **Abnahme am 5000er-Bestand** (5002 Einsätze, 10 797 Einträge) | Sichern 44,8 s · Halde 45 MB · größte Zeichenkette **2,30 MB** (vorher 9,39) · PBKDF2 1 · Datei 10,48 MB |
+| Rundlauf desselben Bestands | 10 431 Spuren mit **2 108 077 Punkten** in 54 Teilen · **10 991 557 Einzelvergleiche, 0 unerklärt** · 0 Konsolenfehler |
+
+## [Web 11.0.0] — 2026-08-31
+
+**Die Sicherung wird mehrteilig.** Sechstes Arbeitspaket der Phase S2
+(E-S2-10 bis E-S2-12). Hauptnummer, weil das Dateiformat wechselt — der erste
+Wechsel seit Web 5.0.0. **Keine Migration:** Das Format der *Datei* ändert
+sich, das Datenmodell nicht.
+
+### Web — Warum
+
+Eine Sicherung mit 5000 Einsätzen trägt rund drei Millionen Spurpunkte. Bis
+hierher entstand sie als **eine** Zeichenkette im Browser und ging als **ein**
+POST zurück. Beides sprengt jedes Budget, das ein Telefon oder ein einfacher
+Webspace hat — und zwar an der Stelle, an der jemand ohnehin schon beunruhigt
+ist.
+
+### Web — Containerfassung 4
+
+Die `.edbak`-Datei ist jetzt ein ZIP (gespeichert, nicht gepackt — die Teile
+sind bereits gzip und verschlüsselt):
+
+| Eintrag | Inhalt |
+|---|---|
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit |
+| `kern.edbak` | die Nutzlast **ohne** Punktlisten; je spurtragendem Objekt eine `spur_ref` samt Stufe, `n_original` und `n` |
+| `spuren/0001.edbak` … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 2 MB |
+
+**Jedes Teil kennt seinen Platz.** Die Zusatzdaten der Verschlüsselung (AAD)
+binden Sicherungskennung, Teilname und Nummer:
+
+```
+Manifest   EDBAK4|manifest
+jedes Teil EDBAK4|<sicherungskennung>|<name>|<nr>/<gesamt>
+```
+
+Sie stehen **hinter** dem Kopf, nicht an seiner Stelle — der Kopf bleibt
+gebunden wie bisher, der Platz kommt dazu. Damit fällt ein fehlendes,
+doppeltes, vertauschtes oder aus einer **anderen** Sicherung stammendes Teil
+schon beim Öffnen auf. Ohne diese Bindung ließe sich ein fremdes Spurteil
+unterschieben: Mit demselben Passwort ginge es klaglos auf und brächte den
+Bestand eines anderen Kontos mit. Das Muster ist von Cryptomator und age
+abgeschaut, wo der Blockindex aus demselben Grund in die Zusatzdaten wandert.
+
+**Das Fassungsbyte eines Teils ist 0x04**, obwohl der Aufbau derselbe ist wie
+bei Fassung 3. Grund: Die Zusage „AAD = die ersten 13 Bytes" stimmt für ein
+Teil nicht mehr. Wer ein Teil einzeln öffnet — von Hand, mit dem
+Python-Rezept —, bekäme mit 0x03 die Meldung für ein falsches Passwort und
+suchte den Fehler an der falschen Stelle.
+
+**Eine PBKDF2 je Vorgang.** Salz und Rundenzahl stehen in allen Teilen gleich;
+abgeleitet wird einmal. Bei zwölf Teilen wären es sonst zwölf Ableitungen zu
+je 320 000 Runden — auf einem gedrosselten Telefon eine knappe Minute reines
+Warten, und zwar zweimal.
+
+### Web — Sichern: Kern, Spurteile, ZIP
+
+Der Sicherungslauf im Browser besteht jetzt aus fünf Schritten statt einem:
+
+1. **Kern holen** — `api/backup_data.php?ohne_spuren=1` liefert dieselbe
+   Nutzlast ohne Punktlisten. Gemessen am Demo-Bestand: **183 878 statt
+   2 248 092 Byte, also 8,2 %**.
+2. **Geschützte Angaben entschlüsseln** — unverändert.
+3. **Teile planen.** 250 000 Punkte je Teil, geschnitten an Spurgrenzen. Die
+   Einteilung steht *vor* dem ersten Abruf fest, weil die Zusatzdaten jedes
+   Teils `<nr>/<gesamt>` tragen — die Gesamtzahl muss also bekannt sein, bevor
+   das erste Teil versiegelt wird. Die Punktzahl je Spur steht im Kern; damit
+   lässt sich das ausrechnen, ohne einen Blob geholt zu haben.
+4. **Blobs holen** — `api/backup_spuren.php`, 25 Kennungen je Anfrage.
+5. **Versiegeln und ins ZIP**, Manifest zuletzt (es kennt dann alle
+   Prüfsummen). Fortschritt je Teil in der Zustandszeile.
+
+**Der neue Endpunkt reicht durch, er packt nicht aus.** Die Fallunterscheidung
+steht in `spur_lib.php` (`spur_fuer_sicherung_viele()`) und nur dort:
+
+| Lage | was geschieht |
+|---|---|
+| kein Zeilen, Blob da | Blob durchreichen, so wie er liegt |
+| Zeilen da (Stufe 1, oder Nachzügler zu Stufe 2) | zusammensetzen und **verlustfrei neu kodieren** |
+| Stufe 3 **mit** Zeilen | abgelehnt und benannt — der ausgedünnte Blob nummeriert nach Position, die Nachzügler tragen Originalnummern; die Vereinigung ist keine Spur |
+| Lücke in den Nummern | abgelehnt und benannt — `spur_kodieren()` speichert die Nummer nicht, die *Position* ist die Nummer |
+| über 50 000 Punkte | abgelehnt und benannt — der Rückweg nähme sie nicht an |
+
+Gelesen wird **Spur für Spur**, nicht der ganze Block auf einmal: 25 Spuren an
+der Obergrenze wären rund 350 MB gegen ein Budget von 64 MB. Am
+Referenzbestand mit höchstens 1133 Punkten je Spur fiele das nie auf.
+
+**Die Zusage „die Sicherung kodiert nicht neu" gilt so nicht mehr**, und das
+ist eine Entscheidung: Eine Spur, die noch als Zeilen liegt (Stufe 1), steht
+in der Datei als Stufe-2-Blob. Ohne das müsste die Datei zwei Spurformen
+führen und zwei Rückwege haben, und der ganze Mengengewinn entfiele für
+frische Bestände — gerade die mit den meisten Punkten. Der Bestand selbst
+bleibt unangetastet; `docs/Backup-Format.md` sagt das jetzt so.
+
+### Web — Wiederherstellen: erst der Kern, dann die Spuren
+
+Der Kern geht als ein POST zurück wie bisher; der Server liefert die
+**Spurkarte** mit — `spur_ref` → angelegter Datensatz. Danach gehen die Blobs
+in Häppchen von höchstens 1,5 MB an `api/backup_spuren_restore.php`.
+
+Drei Dinge, die dabei nicht fehlen dürfen:
+
+- **Eigentum wird geprüft**, obwohl die Kennungen aus der Antwort dieses
+  Servers stammen. Wer sich darauf verlässt, dass der Browser nur zurückgibt,
+  was er bekommen hat, hat eine Schnittstelle gebaut, die fremde Spuren
+  überschreibt.
+- **Der Blob wird geprüft, bevor er liegt** (`spur_blob_pruefen()`): Kopf,
+  Auflösung, Punktzahl gegen die Grenze, Auspacken, Punktzahl gegen den Kopf,
+  Wertebereiche. Für Punktlisten gibt es diese Schicht seit je; ohne sie wäre
+  der Blobweg die einzige Stelle der Anwendung, an der ungeprüfter
+  Binärinhalt in die Datenbank ginge (CLAUDE.md 4).
+- **Vorhandene werden übersprungen.** `spur_blob_schreiben()` ist ein Upsert
+  und überschreibt — an seiner Stelle richtig, hier falsch: Eine abgebrochene
+  Wiederherstellung soll sich fortsetzen lassen.
+
+**Ein Fehler, den der Kreislauf gefunden hat.** Die Höhe des Einsatzortes
+(`site_ele_m`) wird nach dem Einspielen aus der Spur berechnet. Bei Nutzlast 7
+lagen die Punkte da schon; bei Fassung 4 kommen sie erst danach — der
+Kernlauf hatte eine Spur ohne Punkte vor sich und trug nichts ein. **79 von
+87 Einsätzen** kamen ohne Höhe zurück, obwohl die Quelle sie hatte. Kein
+Datenverlust (die Angabe ist abgeleitet), aber ein stiller Unterschied
+zwischen Sicherung und Wiederherstellung — und genau die sucht ein Kreislauf.
+Die Berechnung läuft jetzt, wo die Punkte ankommen.
+
+### Web — Das Altformat wird gelesen, nicht mehr geschrieben
+
+Fassung 2 und 3 bleiben lesbar; sie sind der Weg, auf dem ein vorhandener
+Bestand einmal herüberkommt. **Mit NaDoku 1.0 wird das Altformat abgeschafft**
+(Entscheidung vom 31.08.2026) — es steht als Backlog-Eintrag, damit es nicht
+stillschweigend ewig mitläuft.
+
+Umgekehrt gilt weiter, was E-S1-07 sagt: Eine ältere Installation liest eine
+Fassung-4-Datei **nicht** — sie sieht ein ZIP, keine `EDBAK2`-Signatur, und
+sagt das auch.
+
+### Web — Drei Antworten statt einer
+
+Beim Einspielen entscheidet jetzt `EdCrypto.dateiArt()`: `zip` (mehrteilig),
+`edbak` (einteilig), `teil` (ein Stück, das jemand aus dem Archiv gelöst hat)
+oder nichts davon. Ein einzeln gewähltes Teil bekommt deshalb den Satz, der
+weiterhilft, statt „Passwort falsch oder Datei beschädigt".
+
+Dazu ein Wandler für **große** Bytefolgen: Der vorhandene
+(`String.fromCharCode(...bytes)`) breitet jedes Byte als eigenes Argument aus
+und wirft ab einigen zehntausend „Maximum call stack size exceeded". Gemessen:
+Bei 2 MB scheitert er, der neue trägt sie.
+
+### Web — Der Kern hat es zuerst nicht geschafft
+
+Die Spuren waren gelöst, der **Kern** nicht. Gemessen am 5000er-Bestand:
+
+| | Kern | PHP-Speicherspitze |
+|---|---|---|
+| vorher (Punktlisten in der Nutzlast) | 94,3 MB | **1076 MB** |
+| Fassung 4, erster Stand | 10,5 MB | **92 MB** |
+| Fassung 4, nach dem Umbau | 10,5 MB | **37,5 MB** |
+
+Mit `php -d memory_limit=64M` brach der erste Stand ab:
+
+```
+PHP Fatal error: Allowed memory size of 67108864 bytes exhausted
+                 in server/backup_lib.php on line 82
+```
+
+Auf einem Webspace mit 64 MB — genau der Sorte, für die diese Anwendung
+gebaut ist — wäre die Sicherung eines 5000er-Kontos gescheitert.
+
+**Zwei Eingriffe, kein Formatwechsel:**
+
+1. **Je Eintrag kodieren und freigeben.** Vorher lagen drei Kopien desselben
+   Bestands im Speicher: die Zeilen aus der Datenbank, das zusammengesetzte
+   Feld und die JSON-Ausgabe. Jetzt wird jeder Einsatz sofort zu JSON und
+   seine Zeile weggeworfen. **92 → 75,5 MB.**
+2. **In Fenstern zu 500 statt über das ganze Konto.** Die vier Abfragen für
+   Phasen, Rettungsmittel, Reanimation und abweichende Besatzung liefen über
+   *alle* Einsätze, und ihre Ergebnisse lagen gleichzeitig da. Sie bleiben
+   gebündelt — das N+1 aus M5-12 kommt nicht zurück —, laufen aber je Fenster:
+   elf Durchgänge zu vier Abfragen statt vier über alles. **75,5 → 37,5 MB.**
+
+Am Dateiformat ändert sich dabei nichts; nur die Reihenfolge der Schlüssel im
+Kopf ist eine andere, und JSON kennt keine Reihenfolge. Die drei Kreisläufe
+messen es nach.
+
+### Web — Zwei Fehler, die erst der 5000er-Bestand gezeigt hat
+
+**Eine Mengengrenze, an zwei Orten, die nicht zusammenpassten.** Der Browser
+bündelte die Spurteile für den Rückweg nach **Größe** (1,5 MB), der Endpunkt
+deckelt nach **Anzahl** (500). Kurze Ruhespuren sind so klein, dass in 1,5 MB
+weit mehr als 500 passen — das Einspielen brach ab mit „Höchstens 500 Spuren
+je Anfrage". Die Meldung war richtig, das Bündeln war falsch. Jetzt bündelt
+der Browser nach beidem; dass die zwei Zahlen gleich bleiben, hält die
+Wiederherstellungsprobe fest.
+
+**Und die Wiederaufnahme trug nicht.** Das ist der schwerere der beiden.
+Bricht das Einspielen zwischen Kern und Spurteilen ab, ist beim zweiten
+Anlauf jeder Eintrag „bereits vorhanden" — und die Spurkarte blieb dann
+**leer**, weil sie nur beim Anlegen gefüllt wurde. Alle Spuren meldeten „ohne
+zugehörigen Einsatz" und wären **nie mehr einzuspielen** gewesen, außer man
+löscht den halben Bestand von Hand. Gesehen an 10 431 Spuren.
+
+Die Karte wird jetzt auch für übersprungene Einträge gefüllt. Nachgewiesen,
+indem ein Abbruch nachgestellt wurde: 4636 Spuren gelöscht, dieselbe Datei
+erneut eingespielt → **4636 Spuren übernommen**, alles andere übersprungen.
+
+### Web — Belegt
+
+Neu: **`tools/containerprobe/`** — sie hält Fassung 4 gegen **drei
+unabhängige Umsetzungen**, dieselbe Linie wie die GPX-Probe in AP4:
+
+| Wer | Was |
+|---|---|
+| PHP | `spur_lib.php` kodiert echte SPUR1-Blobs |
+| Browser | `crypto.js` + `zipjs.min.js` versiegeln und packen — im **echten Chromium** |
+| Python | `vergleich/lesen.py` öffnet, entsiegelt und dekodiert wieder |
+
+| Prüfung | Zahl |
+|---|---|
+| `containerprobe/probe.mjs` | **31 Erwartungen, 0 nicht erfüllt** |
+| Punkt für Punkt PHP → Browser → Python | **9000 Einzelvergleiche, 0 Abweichungen** |
+| Eine PBKDF2 je Vorgang | ein Salz, eine Rundenzahl über alle Teile; 51 ms für die eine Ableitung |
+| Die Bindung der Teile | vertauscht · falsche Nummer · fremde Sicherung · verfälschtes Byte · falsches Passwort — **je abgewiesen** |
+| Gegenprobe zur Bindung | dasselbe fremde Teil geht **mit seiner eigenen Kennung** auf — der Unterschied liegt an der Bindung, nicht am Schlüssel |
+| Beide Sicherungen tragen einzeln | Prüfsumme allein: gefangen · Zusatzdaten allein (Manifest passend nachgezogen): gefangen |
+| Schadensfälle am Archiv | fehlendes Teil · vertauschte Teile · fremdes Teil · verfälschtes Teil · überzählige Datei · kein Manifest — **je benannt** |
+| ZIP ohne Kompression | Verfahren je Eintrag **0 (gespeichert)**, alle vier |
+| Base64 für 2 MB | 2 796 204 Zeichen im Rundlauf; der alte Wandler scheitert daran |
+| Altformat unverändert lesbar | Referenzdatei Fassung 3, **87 Einsätze, 443 Punkte im ersten** |
+| **Kreislauf `edbak` in Fassung 4** (sichern → einspielen → sichern) | **252 882 Einzelvergleiche, 0 unerklärt** (16 erwartet) |
+| Kreislauf `csv` | 8797 Einzelvergleiche, **0 unerklärt** (859 erwartet) |
+| Der Rückweg schreibt Blobs, keine Zeilen | 181 Blobs mit **48 981 Punkten**, **0 Zeilen** in `track_points` |
+| Neue Datei gegen die alte Nutzlast, Punkt für Punkt | **244 905 Einzelvergleiche, 0 Abweichungen** |
+| Sicherung des Demo-Bestands im Browser | 87 Einsätze, 100 Ruhesegmente, 181 Spuren mit 48 981 Punkten — **212,9 kB in 0,2 s, 0 Konsolenfehler** |
+| Kern ohne Spuren gegen Kern mit Spuren | **183 878 statt 2 248 092 Byte (8,2 %)** |
+| spurprobe · jobprobe · ingestprobe · gpxprobe · Wiederherstellungsprobe | 25 · 24 · 24 · 75 · **38** Erwartungen, **je 0 nicht erfüllt** |
+| **Der 5000er-Bestand, Drossel 6×** | | |
+| Sicherung erstellen | **43,6 s** (vorher 109,8) · Halde **58 MB** (508) · größte JSON-Zeichenkette **9,39 MB** (138,25) · PBKDF2 **1** · Datei **10,42 MB** (40,5) |
+| Alle vier Z3-Überschreitungen der Ausgangsmessung | **weg** — JSON ≤ 10 MB ✓, Halde ≤ 100 MB ✓, PBKDF2 = 1 ✓, Datei ≤ 25 MB ✓ |
+| Serverseitige Spitze beim Kernbau | **37,5 MB von 64** (vorher 1076 MB) — scharf mit `memory_limit=64M` gefahren |
+| Wiederherstellung des 5000er-Bestands | 5002 Einsätze, 5795 Ruhesegmente, 915 Diensttage, **10 431 Spuren mit 2 108 077 Punkten in 9 Teilen** |
+| Vergleich danach | **10 991 557 Einzelvergleiche, 0 unerklärt** |
+| Wiederaufnahme nach nachgestelltem Abbruch | 4636 Spuren gelöscht → **4636 wieder eingespielt**, alles andere übersprungen |
+
+> **Eine Zahl, die etwas anderes maß, als ihre Beschriftung sagte** — und
+> deshalb ersetzt wurde: Die erste Fassung der Prüfung „das ZIP packt nicht
+> noch einmal" verglich Dateigrößen und schlug fehl (+57,7 %). Bei drei Teilen
+> zu 500 Byte ist der ZIP-Rahmen größer als jede Ersparnis; gemessen war der
+> Rahmen, nicht das Verfahren. Jetzt wird das Verfahren je Eintrag gelesen.
+
+> **Zwei Fehler, die die Prüfmittel gefunden haben — beide meine:**
+>
+> - `spur_umriss()['gesamt']` meint „höchste Punktnummer + 1", nicht
+>   „gespeicherte Punkte". Bei einer ausgedünnten Spur sind das 443 statt 148.
+>   Der Kern hätte für jede ausgedünnte Spur eine Punktzahl genannt, die es in
+>   ihr nicht gibt. Aufgefallen beim Nachmessen gegen den Demo-Bestand.
+> - Die Höhe des Einsatzortes fiel beim Wiederherstellen weg (oben).
+>   Aufgefallen im Kreislauf, an 79 Zeilen `site_ele_m: 901 → —`.
+
+**Nicht geprüft:** andere Browser als Chromium (WebKit und Gecko stehen in
+dieser Umgebung nicht zur Verfügung) · die Admin-Sicherungen, die noch das
+alte Format schreiben (AP6) · ein Abbruch **mitten in einer Anfrage** (der
+nachgestellte Abbruch löscht Spuren zwischen zwei vollständigen Läufen) ·
+echte Hardware statt CPU-Drossel.
+
+## [Web 10.3.0] — 2026-08-31
+
+**Eine Spur lässt sich jetzt einzeln herunterladen — und mehrere ausgewählte
+als eine Datei.** Fünftes Arbeitspaket der Phase S2, und damit ist Backlog
+Nr. 3 erledigt. **Keine Migration.**
+
+### Web — Drei Wege zur Datei
+
+- **Je Einsatz:** ein Eintrag „Spur als GPX" im vorhandenen Aktionsmenü der
+  Einsatzansicht — nur, wenn es eine Spur gibt.
+- **Je Einsatz und je Ruhesegment:** die neue Seite **„Spuren des
+  Diensttages"**, erreichbar aus dem Aktionsmenü des Tages. Sie zeigt die Karte
+  des Tages und darunter jede Spur als eigene Zeile: nummeriert wie in der
+  Tagesansicht, mit Stufe, Punktzahl und Abruf — **chronologisch**, wie der
+  Tag verlaufen ist, und nicht nach Art gruppiert. Wer auf eine Zeile zeigt,
+  sieht auf der Karte, welche Linie gemeint ist; ein Klick zoomt auf sie.
+- **Mehrere auf einmal:** ein Kästchen je Zeile derselben Seite und eine
+  Sammelleiste unten — die ausgewählten Spuren kommen als **eine** Datei.
+
+**Die Seite war nötig, nicht schmückend.** Ruhesegmente hatten in der
+Oberfläche bis hierher überhaupt keine Identität: nur eine schwarze Linie auf
+der Tageskarte, ohne Zeile, ohne Popup — und `api/day.php` liefert nicht einmal
+ihre Kennung. Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt. Die
+Abnahme verlangt den Abruf aber ausdrücklich „je Einsatz **und** je
+Ruhesegment".
+
+### Web — Mehrere Spuren, eine Datei
+
+Wer eine ganze Schicht in ein Kartenprogramm ziehen will, lud bis hierher
+zwölf Dateien einzeln herunter und sortierte sie dort wieder zusammen. Auf der
+Spurenseite trägt jetzt jede Zeile ein Auswahlkästchen; die Sammelleiste
+darunter sagt, wie viele ausgewählt sind, und lädt sie als eine Datei.
+
+**Sie werden nicht zusammengeklebt.** Jede Spur bleibt in der Datei ein
+eigenes `<trk>` — GPX 1.1 erlaubt das ausdrücklich (`maxOccurs="unbounded"`).
+Zwei Spuren in *ein* `<trkseg>` geschrieben ergäbe eine Datei, die jedes
+Kartenprogramm klaglos öffnet und in der es eine gerade Linie quer über das
+Land zieht, vom Ende der einen zum Anfang der nächsten — einen Weg, den
+niemand gefahren ist. Auch mehrere `<trkseg>` in *einem* `<trk>` wären falsch:
+Die meinen Abschnitte **einer** Aufzeichnung mit einer Lücke dazwischen.
+
+Drei Entscheidungen, die dabei fielen:
+
+- **Kein neuer Baustein.** Das Kästchen sitzt in `ui_zeile(['vorn' => …])`,
+  die Leiste ist `ui_speichern_leiste()` — dieselben zwei Bausteine, mit denen
+  die NutzerInnen-Liste seit P3/O9b ihre Sammelaktion baut. Kein neues CSS.
+- **Beide folgen der Zeit.** Die Liste stand zuerst nach Art gruppiert — erst
+  alle Einsätze, dann alle Ruhezeiten, die Reihenfolge der beiden Abfragen im
+  Code. So liest sich kein Diensttag: Er verläuft in *einer* Folge. Seite und
+  Datei sortieren jetzt beide nach Beginn, Art und Kennung, also gleich; die
+  laufende Nummer der Einsätze und die Farben auf der Karte zählen weiter nur
+  die Einsätze durch.
+- **Streng bei der Form, nachsichtig beim Bestand.** Was nicht genau
+  `mission-<Zahl>` oder `rest-<Zahl>` ist, kommt nicht von dieser Seite: 400.
+  Eine wohlgeformte Kennung dagegen, die zu diesem Tag und diesem Konto nicht
+  gehört, fällt beim Lesen heraus, ohne dass die ganze Datei scheitert — sie
+  kann aus einem Tab stammen, der seit einer Löschung offen steht. Wie viele
+  Spuren wirklich drin sind, sagen der Dateiname
+  (`diensttag_2026-05-10_2-spuren_original.gpx`) und das `<desc>` im Kopf.
+  Bleibt nichts übrig, ist es doch ein Fehlgriff: 404, und er zählt.
+
+**Eine Mengengrenze gibt es jetzt doch** — hundert Spuren je Abruf, und zwar
+wegen des Speichers, nicht wegen der Rechte: Die Datei entsteht vollständig im
+Arbeitsspeicher, weil ihre Länge in die Kopfzeile gehört. Gemessen mit der
+größten Spur des Referenzbestands (1063 Punkte von 9581 Spuren, im Mittel 196)
+kosten hundert Spuren **9,7 MB Datei bei 23,4 MB Spitze** — im Budget von
+64 MB (Z3). Die *Punkte* hält dabei immer nur eine Spur: `gpx_bauen_viele()`
+nimmt einen Generator und keine Liste, sonst lägen alle gleichzeitig im
+Speicher (rund 4 MB je dekodierter Spur, S2/AP3).
+
+### Web — Die erste Datei, die dieser Server ausliefert
+
+Alle übrigen Downloads der Anwendung entstehen im Browser, aus einem Blob. Das
+ist kein Zufall, sondern eine Folge der Ende-zu-Ende-Verschlüsselung: Ihr
+Inhalt ist chiffriert, der Server **kann** ihn nicht zusammensetzen.
+
+Für eine Spur gilt das nicht. Spurpunkte sind Klartext, und die Stufe, die
+E-S2-09 sichtbar verlangt, kennt ohnehin nur der Server. Der Browser hätte
+beides nicht: `api/mission.php` liefert die Spur als bloße Paare `[lat, lon]` —
+ohne Höhe, ohne Zeit, ohne Stufe. Ein browsergebautes GPX bräuchte also einen
+neuen, breiteren Abrufweg, nur um anschließend zusammenzusetzen, was auf dem
+Server schon beieinander liegt.
+
+Den Ausschlag gibt ein Sicherheitsargument: Der **Dateiname** landet im
+Downloadordner, in einem Backup, vielleicht in einer Mail. Serverseitig gebaut
+**kann** er keine geschützte Angabe tragen — der Server kann Diagnose, Alter
+und Einsatzort nicht lesen. Browserseitig gebaut könnte er es, und das wäre ein
+neuer Weg, auf dem Klartext das Haus verlässt.
+
+### Web — Die Kennzeichnung steht an drei Stellen
+
+E-S2-09 verlangt, dass sichtbar ist, ob die Datei die Originalspur trägt oder
+die ausgedünnte. Sie steht deshalb:
+
+- in der Datei, als `<desc>` in `<metadata>` **und** in `<trk>` — mit Zahl:
+  „ausgedünnt — 113 von ursprünglich 443 Punkten (Douglas-Peucker, 2 m
+  waagerecht / 3 m senkrecht)";
+- im **Dateinamen** (`einsatz_000001_2026-01-17_0605_ausgeduennt.gpx`) — das
+  ist die einzige Kennzeichnung, die das Verschieben in einen anderen Ordner
+  überlebt;
+- **auf der Seite**, vor dem Herunterladen. Eine Auszeichnung, die nur in der
+  Datei steht, sieht erst, wer sie schon hat.
+
+**Die Reihenfolge im GPX ist nicht frei.** GPX 1.1 beschreibt die
+Kindelemente als `xsd:sequence`: `<desc>` steht in `<metadata>` **vor**
+`<time>` und in `<trk>` zwischen `<name>` und `<trkseg>`. Wer sie hinten
+anhängt, schreibt eine Datei, die manche Programme klaglos lesen und andere
+ablehnen — und die gegen das Schema durchfällt.
+
+### Web — Drei Schranken, die es nicht gibt, und eine, die dazukam
+
+Beim gegnerischen Gegenlesen des Entwurfs kamen vier Fragen auf. Drei sind
+begründet verneint, eine hat zu einer Änderung geführt:
+
+- **Keine A9-Schranke wie im Export.** Der Export verweigert Spurpunkte, solange
+  der Haken „personenbezogene Angaben" fehlt — weil ein Export *ohne* diese
+  Angaben eine Datei zum Weitergeben ist. Beim Einzelabruf gibt es diese anonyme
+  Fassung nicht; es gäbe keinen Haken zu umgehen.
+- **Keine Sperre auf den Inhaltsschlüssel.** Die Einsatzansicht zeichnet
+  dieselbe Spur bereits auf ihre Karte, ohne dass jemand entsperrt haben muss.
+  Eine Sperre wäre Theater: Sie verweigerte die Datei und zeigte den Weg
+  daneben weiter an. Dass die Spur überhaupt unverschlüsselt liegt, ist
+  **Backlog Nr. 43** und gehört dorthin.
+- **Keine Mengengrenze je Anfrage** — es ist eine Spur je Abruf. Dafür ein
+  **Ratenschutz auf Fehlgriffe**: Ein gelungener Abruf geht nicht aufs
+  Kontingent, sonst träfe die Bremse die Spurenseite eines Tages mit zwölf
+  Einträgen.
+- **Geändert: Der Abruf liegt nicht mehr unter `api/`.** `ist_api_aufruf()`
+  entscheidet allein am Pfad — enthält er `/api/`, bekommt eine abgelaufene
+  Sitzung JSON 401 statt der Anmeldeseite. Das stimmte, solange nichts in der
+  Oberfläche nach `api/` **verlinkte**; der GPX-Abruf ist der erste `<a href>`,
+  den eine Nutzerin selbst anklickt. Nach einer Mittagspause hätte sie
+  `{"error":"session_ende"}` im Fenster gesehen.
+
+Dazu zwei Nachbesserungen am Text: Der Eintrag in der Einsatzansicht **fragt
+zurück**, bevor er herunterlädt — wie der große Export es tut; und der Hinweis
+über der Liste nennt jetzt auch **Ruhespuren**, die den Aufenthalt der
+Besatzung zwischen den Einsätzen zeigen.
+
+### Web — Ein Fund beim Einchecken: Git hätte das Schema verändert
+
+Die `.gitattributes` setzen `* text=auto eol=lf`. Das vendorierte GPX-XSD hat
+**788 CRLF** — Git hätte sie beim Einchecken auf LF umgeschrieben, und die
+Datei wäre statt 26 665 nur noch 25 877 Byte groß gewesen. Die Prüfsumme, die
+die Probe bei jedem Lauf nachrechnet, hätte dann nicht mehr gestimmt.
+
+**Die Stelle ist tückisch, weil sie hier nichts gemerkt hätte:** Die
+Arbeitskopie bleibt, wie sie kam. Grün wäre es also weiter gewesen — und auf
+jedem frisch geklonten Arbeitsplatz rot, an der ersten Erwartung der Probe.
+`tools/gpxprobe/gpx11.xsd -text` hält die Datei unangetastet; nachgerechnet
+mit `git checkout-index` in ein leeres Verzeichnis.
+
+### Web — Ein Fehler aus AP2 und AP3, gefunden beim Lesen
+
+**`.plakette-warn` gibt es im Stylesheet nicht.** Gültig sind `neutral`,
+`orange`, `blau`, `rot`; der Ton `warn` wurde an drei Stellen benutzt — zwei
+davon aus dieser Phase, für den Rückstand der Jobs und die Zählerlisten. Diese
+Plaketten standen ohne Hintergrund da, als bloßer Text.
+
+Der Grund, warum es niemandem auffiel, ist der eigentliche Befund: Der
+Klassenname wird **zusammengesetzt** (`'plakette-' . $ton`) und taucht als
+Literal nirgends auf. `tools/vollstaendigkeit/` kann ihn deshalb nicht finden —
+es kennt Klassen im Markup und Klassen im Stylesheet, aber keine, die zur
+Laufzeit entstehen. Das ist dieselbe Lücke, die Backlog **Nr. 36** seit P3/O6
+beschreibt, nur von der anderen Seite; der Eintrag ist um diesen Fall
+erweitert.
+
+Und: Ich hatte das Bild der Wartungsseite angesehen und die farblose Plakette
+übersehen. Ein Bild anzusehen ist nur dann eine Prüfung, wenn man weiß, wonach
+man sieht.
+
+### Web — Was sonst noch dazukam
+
+`ui_zeile()` kennt jetzt `attr` — dieselbe Zusatzoption, die `ui_knopf()` und
+`ui_aktionen()` schon haben, für `data-`-Attribute und `tabindex`. Kein neuer
+Baustein.
+
+Eine Zeile kann hervorgehoben werden (`.zeile-hervor`): dieselbe Rauchfläche
+wie die neutrale Plakette, dazu ein orangener Balken in `--strich-stark`. Kein
+neuer Farbwert, kein neues Maß.
+
+### Web — Belegt
+
+Neu: **`tools/gpxprobe/`**, mit dem **amtlichen GPX-1.1-Schema** von
+TopoGrafix, vendoriert unter `tools/gpxprobe/gpx11.xsd` (26 665 Byte, SHA-256
+`9e4d1988…`, Herkunft und Prüfsumme in `docs/Lizenzen.md` 7.1). Die Probe
+rechnet die Summe bei **jedem** Lauf nach — ein Schemalauf gegen ein
+verändertes Schema belegt nichts. Zur Laufzeit wird die Datei nie geladen; sie
+liegt unter `tools/`, und der Deploy nimmt den Ordner aus.
+
+| Prüfung | Zahl |
+|---|---|
+| `gpxprobe/probe.php` | **75 Erwartungen, 0 nicht erfüllt** |
+| Gültig gegen das amtliche GPX-1.1-XSD | Stufe 2, Stufe 3 und Ruhesegment: **je gültig** |
+| Punkt für Punkt gegen die browsergebauten Referenzdateien | **146 Dateien, 174 804 Einzelvergleiche, 0 Abweichungen** |
+| Sind die Referenzdateien selbst schemagültig? | **171 Dateien, 0 ungültig** — der bestehende Export war also schon korrekt |
+| Punktzahl entspricht der Stufe | 300 von 300 · **56 von 300** |
+| Kennzeichnung in der Datei | je 2 von 2 (`<metadata>` und `<trk>`) |
+| Kennzeichnung im Dateinamen | `…_original.gpx` / `…_ausgeduennt.gpx` |
+| Kennzeichnung auf der Seite | Stufe und Punktzahl stimmen mit der Datei überein |
+| Datentrennung | unangemeldet 302 · fremder Einsatz **404, nicht 403** · Papierkorb 404 · fremder Diensttag 404 |
+| Grenzfälle | keine Spur → 404 statt leerem GPX · unbekannte Art 400 · Kennung 0 400 |
+| Unter `api/` gibt es den Abruf nicht | **404** — sonst wäre Sitzungsende JSON |
+| Ratenschutz | 12 Fehlgriffe → **429**; ein gelungener Abruf zählt nicht mit |
+| Ruhesegment über die Spurenseite | eigener Abruf, schemagültig, `ruhezeit_…gpx` |
+| Auswahl aus drei Spuren | schemagültig · **3 `<trk>`, je 1 `<trkseg>`** — nicht zusammengeklebt |
+| Auswahl gegen die Einzelabrufe | **436 Punkte = 436 Punkte, 1744 Einzelvergleiche, 0 Abweichungen** |
+| Kennzeichnung in der Auswahl | jede Spur nennt ihre Stufe (1× ausgedünnt, 2× Original); der Kopf nennt beide |
+| Reihenfolge auf der Seite | chronologisch, gegen die Datenbank geprüft — eine Ruhezeit **vor** dem ersten Einsatz steht auch davor |
+| Reihenfolge in der Auswahl | dieselbe wie auf der Seite, gegen die Datenbank geprüft |
+| Grenzfälle der Auswahl | Eintrag ohne Spur → kein leeres `<trk>` · fremde Kennung fällt heraus · nur fremde → 404 · `mission-abc` → 400 · > 100 → 400 · fremder Diensttag → 404 |
+| Speicher bei 100 Spuren der größten Art | Datei **9,7 MB**, Spitze **23,4 MB von 64 MB** |
+| Bilderlauf, zwei Seiten × acht Breiten (360–1920 px) | 16 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px**; 16 verschiedene Prüfsummen (Gegenprobe gegen F-P3-AQ) |
+| Bedienzustand im Browser (Chromium, 1280 und 360 px) | Leiste erscheint ab dem ersten Haken, Text „2 Spuren als eine Datei", Download `diensttag_2026-05-10_2-spuren_original.gpx` mit **2 `<trk>`** |
+| Vollständigkeit: Hexfarben, Pixelmaße, Schriftgrößen außerhalb der Token | **je 0** |
+| Vendoriertes Schema nach simuliertem Klon | `git checkout-index` → **26 665 Byte, Summe `9e4d1988…`** |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+**Der Punkt-für-Punkt-Vergleich belegt mehr als der Schemalauf.** Ein Schema
+sagt, dass die Datei richtig *aufgebaut* ist; es sagt nichts darüber, ob die
+richtigen Punkte darin stehen. Zwei unabhängige Umsetzungen — die eine in PHP
+auf dem Server, die andere in JavaScript im Browser —, die auf denselben
+Bestand dieselbe Datei schreiben, sagen genau das.
+
+**Nicht geprüft:** fremde Kartenprogramme (dass eine schemagültige Datei in
+QGIS oder BaseCamp so aussieht wie gemeint, sagt kein Schema) · eine Spur über
+50 000 Punkten · Nebenläufigkeit zwischen Abruf und Ausdünnungsjob · andere
+Browser als Chromium (WebKit und Gecko stehen in dieser Umgebung nicht zur
+Verfügung) · die Auswahl ohne JavaScript (die Kästchen sind ein gewöhnliches
+GET-Formular, aber die Leiste blendet das Skript ein — ohne Skript bleibt der
+Einzelabruf).
+
+**Was das Hervorheben angeht:** Es *ist* jetzt im Browser geprüft, samt der
+Frage, an der es hätte scheitern können — Zeigen und Auswahl greifen beide auf
+die Deckkraft der Linien zu. Gemessen wurden die Deckkräfte aller 15 Linien in
+drei Zuständen: mit Auswahl (`0.95` für die zwei gewählten, `0.25` sonst),
+beim Zeigen auf eine dritte Zeile (nur diese `0.95`) und danach wieder
+(Auswahl unverändert sichtbar). Zwei Funktionen, die beide an derselben Linie
+drehen, hätten einander überschrieben; deshalb zeichnet **eine** Funktion aus
+beiden Zuständen.
+
+## [Web 10.2.0] — 2026-08-31
+
+**Die drei Stufen stehen jetzt wirklich.** Viertes Arbeitspaket der Phase S2.
+Eine Migration ist zwingend (`2026_09_01_letzter_punkt_am`).
+
+> **Nach dem Ausrollen `update.php` aufrufen.** Ohne die neue Spalte kann der
+> Verdichtungsjob nicht entscheiden, wann eine Spur reif ist — er lässt dann
+> alles liegen.
+
+### Web — Was dazugekommen ist
+
+Zwei Jobs im Katalog aus Web 10.1.0:
+
+- **`verdichtung`** holt abgeschlossene Spuren aus den Zeilen in den
+  verlustfreien Blob. Eine Transaktion je Spur, Rundlaufprüfung **vor** dem
+  Löschen (E-S2-07).
+- **`ausduennen`** ersetzt sechs Monate nach Einsatzende den verlustfreien
+  durch einen ausgedünnten Blob: Douglas-Peucker dreidimensional, 2 m
+  waagerecht und 3 m senkrecht als **getrennte** Toleranzen, und je
+  Phasenzeitpunkt bleibt der zeitnächste Punkt erhalten (E-S2-05).
+
+### Web — Die Karenz stand auf einer Größe, die es nicht gab
+
+E-S2-06 sagt: verdichtet wird, was `final` trägt und **14 Tage** keinen neuen
+Punkt mehr bekommen hat. Für diese Regel braucht es eine **Ankunftszeit** — und
+im ganzen Schema gab es keine. `track_points.ts` ist die Aufzeichnungszeit,
+`missions.created_at` die Anlagezeit der Zeile, `rest_segments` hatte gar
+nichts, `devices.last_seen` gilt je Gerät.
+
+Über `MAX(ts)` gerechnet wäre die Karenz **Zierrat gewesen, und zwar genau im
+Fall, für den sie gebaut ist**: Die Uhr setzt `final = true` in *jedem*
+Teilstück und räumt erst auf, wenn `next_seq >= pointCount` ist. Eine Uhr, die
+drei Wochen ohne Empfang war, schickt Teilstück 1 mit `final = true` — und die
+Aufzeichnungszeit ist dann schon drei Wochen alt. Der Job hätte zwischen
+Teilstück 1 und 2 verdichtet.
+
+Deshalb `letzter_punkt_am` auf `missions` und `rest_segments`, gesetzt von
+`ingest.php`, wenn eine Anfrage **tatsächlich** Punkte einfügt (nicht bei einer
+Wiederholung — sonst hielte eine Uhr, die im Kreis sendet, ihre Einsätze ewig
+aus der Verdichtung). Der Altbestand wird **nicht** nachgefüllt: Das wäre ein
+Vollscan über Millionen Zeilen in einer Seite, auf die jemand wartet. `NULL`
+heißt „noch nie gemessen"; der Job trägt es beim ersten Hinsehen nach, aus dem
+Umriss, den er ohnehin holt, und mit `LEAST(…, jetzt)` begrenzt — der Riegel
+gegen eine Uhr, deren Zeit in der Zukunft steht.
+
+### Web — Drei Fallen in der Ausdünnung, alle nachgemessen
+
+**1. Zwei Toleranzen sind nicht zwei Läufe.** Naheliegend wäre: einmal
+waagerecht ausdünnen, einmal senkrecht, die Behaltelisten vereinigen. Die
+Vereinigung erzeugt aber einen **dritten** Streckenzug, für den keiner der
+beiden Läufe etwas zugesagt hat. Gemessen am Referenzbestand: **8,62 m
+waagerechte und 4,16 m senkrechte** Abweichung verworfener Punkte, bei
+zugesagten 2 und 3. Sie behält dabei sogar mehr Punkte, sieht also nach der
+sicheren Wahl aus. Richtig ist **ein** Lauf mit
+`s = max(waagerecht / 2 m, senkrecht / 3 m)`.
+
+Dass die zweite Toleranz überhaupt nötig ist, ist ebenfalls gemessen: Rein
+zweidimensional ausgedünnt liegt der schlimmste verworfene Punkt **82,76 m**
+neben dem Höhenprofil.
+
+**2. Pflichtpunkte sind Abschnittsgrenzen, keine Nachträge.** Global ausdünnen
+und die geschützten Punkte hinterher einfügen bricht die Zusage: Ein
+nachträglich eingefügter Punkt knickt den Weg zu sich hin, und was 1,9 m auf
+der anderen Seite lag, liegt danach fast doppelt so weit weg. Gemessen: **46
+von 181** Referenzspuren bekommen überhaupt einen Punkt nachträglich,
+**11 davon verletzen danach die Zusage**. Abschnittsweise gerechnet: **0
+Verletzungen**.
+
+**3. Fehlende Höhen dürfen den Höhentest nicht stilllegen.** Ein einzelner
+höhenloser Punkt an einer waagerechten Ecke wird zum Teilungspunkt — und damit
+zum Sehnenende beider Teilstücke. Wer dort den Höhentest ausfallen lässt,
+verliert im Prüffall eine **150-m-Spitze** vollständig, und eine Prüfung, die
+solche Abschnitte überspringt, meldet dafür **0,0 m Verlust**. Der Fehler
+versteckt sich in genau der Lücke, die ihn erzeugt. Stattdessen eine
+Ankerreihe, die Lücken über die Zeit füllt.
+
+### Web — Douglas-Peucker ist quadratisch, und das trifft zu
+
+Der schlechteste Fall ist nicht konstruiert: Die Uhr nimmt einen Punkt auf,
+sobald 15 m **oder** 10 s vergangen sind. Ein längerer Schwebeflug mit
+GPS-Rauschen über 2 m ergibt genau den Zickzack, in dem kein Punkt wegfallen
+darf. Gemessen für **eine** solche Spur: 2 000 Punkte 0,198 s · 5 000 1,219 s ·
+10 000 4,340 s · 20 000 18,658 s · **50 000 114,5 s**.
+
+Die Häppchenbudgets sind 3, 20 und 300 s. Auf dem Token-Weg liefe das in
+`max_execution_time` — und ein Zeitablauf ist **kein `Throwable`**: Der `catch`
+im Job-Rahmen fängt ihn nicht, die Laufsperre bleibt stehen, der Job ist eine
+Stunde tot und stirbt dann wieder. Dauerhafter, unsichtbarer Stillstand.
+
+Zwei Gegenmittel, beide gemessen:
+
+- **Iterativ statt rekursiv**, und immer die größere Hälfte auf den Stapel:
+  Der Stapel hat nie mehr als ⌈log₂ n⌉ = 16 Einträge statt 50 000. (Rekursiv
+  wären es 38 MB VM-Stapel bei 797 Byte je Rahmen — gegen ein Z3-Budget von
+  64 MB.)
+- **Ein Deckel auf die Abschnittslänge** (1000 Punkte): Derselbe Fall sinkt von
+  114,5 s auf **2,40 s**. Am Normalfall kostet er nichts — eine glatte
+  50 000-Punkte-Spur braucht *mit* Deckel 0,031 s und behält 786 Punkte, *ohne*
+  0,161 s und 816. Am Referenzbestand greift er gar nicht.
+
+Beides fällt an einer Prüfung am Referenzbestand **nicht** auf: Dort ist die
+größte erreichte Rekursionstiefe 23.
+
+### Web — Was die Ausdünnung wirklich spart
+
+Weniger, als die Punktzahl vermuten lässt. Sie entfernt genau die
+**vorhersagbaren** Punkte; die verbleibenden Differenzen sind größer und lassen
+sich schlechter packen.
+
+| Bestand | Punkte bleiben | Bytes bleiben |
+|---|---|---|
+| Referenzkonto (156 Spuren, 47 078 Punkte) | 40,7 % | **73,6 %** |
+| Messstand (4973 Spuren, 1 628 340 Punkte) | 31,6 % | **57,4 %** |
+
+Wer den Erfolg an der Punktzahl misst, misst das Falsche. Beide Stufen halten
+E-S2-24 trotzdem mit Abstand: gemessen **1,60 MB je 1000 Einsätzen** gegen
+3 MB Zielwert — Stufe 2 kostet 3,90 Byte je Punkt, Stufe 3 **2,24 Byte je
+Originalpunkt**.
+
+### Web — Für die Uhr ändert sich nichts, und das ist geprüft
+
+Nach der Ausdünnung nimmt `ingest.php` eingehende Punkte nicht mehr an —
+**quittiert sie aber**, damit die Uhr ihren Puffer leert (E-S2-08). Die Grenze
+ist die **Stufe**, nicht die Punktzahl: Bei Stufe 2 werden Nachzügler weiter
+angenommen und beim nächsten Verdichtungslauf eingearbeitet. Wer statt der
+Stufe prüfte, ob überhaupt ein Blob dasteht, wirft genau diese Punkte weg — und
+quittiert sie, so dass die Uhr sie löscht.
+
+Der JSON-Vertrag bleibt **Fassung 1.3**; neu ist allein das zusätzliche
+Antwortfeld `dropped_points`, das die Uhr nicht liest.
+
+**Nebenbei behoben:** Scheiterte der *letzte* Punkt eines Teilstücks an der
+Wertprüfung, meldete der Server `next_seq` kleiner als die Punktzahl des
+Pakets. Die Uhr räumt aber erst bei `next_seq >= pointCount` auf — sie sandte
+dasselbe Stück endlos. `next_seq` hat jetzt allgemein die Untergrenze
+`seq_from + gesendete Punkte`.
+
+### Web — Zwei Funde, beide behoben
+
+**`spur_loeschen_nur_zeilen()` löschte zu viel.** Ohne `seq`-Obergrenze nahm
+sie alle Zeilen eines Eigentümers — auch die, die während des Laufs eintrafen.
+Der Job liest die Punkte, `ingest.php` committet dazwischen einen Upload, der
+Job löscht: Ein `DELETE` ist ein *current read* und sieht auch das. Punkte, die
+in keinem Blob stehen, verschwanden still und wurden mit „ok" quittiert. Die
+Obergrenze ist jetzt **verpflichtend** — eine wahlweise ist eine, die vergessen
+wird.
+
+**Die Ortshöhe konnte still verschwinden.** `compute_site_elevation()` läuft bei
+jedem Speichern und schreibt bedingungslos, auch `NULL`. Auf einer
+ausgedünnten Spur wurden die behaltenen Punkte für die *damaligen* Phasenzeiten
+geschützt; wer einen zwei Jahre alten Einsatz öffnet und eine Phase um zehn
+Minuten verschiebt, findet im 300-Sekunden-Fenster womöglich keinen Punkt mehr.
+Auf Stufe 3 wird ein vorhandener Wert deshalb nicht mehr durch `NULL` ersetzt.
+Auf Stufe 1 und 2 bleibt es beim bisherigen Verhalten — dort trägt die Spur
+alle Punkte, ein leeres Ergebnis ist die Wahrheit.
+
+### Web — Die Wartungsseite benennt, was liegenbleibt
+
+Nicht nur „3 Spuren mit Lücke", sondern `mission:412`. Die Listen fallen im
+Lauf ohnehin an; ihre Anzeige kostet keine einzige zusätzliche Abfrage.
+Angezeigt wird der Stand des letzten **vollständigen** Durchlaufs — sonst
+stünde dort eine Mischung, in der behobene Fälle stehenbleiben.
+
+Vier Gründe werden benannt: Lücke in der Nummernfolge, zu viele Punkte
+(> 50 000, aus einer Sicherung nicht wiederherstellbar), Punkte auf einer
+ausgedünnten Spur (Erwartungswert **0**), und eine nicht bestandene Prüfung.
+
+### Werkzeug — Die Jobs lassen sich anhalten
+
+`php jobs.php --pause <Sekunden>` (0 hebt auf). **Gefunden beim Messen:** Der
+Kreislauf spielt eine Sicherung in ein frisches Konto und exportiert sie sofort
+wieder; die wiederhergestellten Einsätze sind alt, der Verdichtungsjob hält sie
+für reif, und was älter als sechs Monate ist, wird ausgedünnt. Der Vergleich
+misst dann nicht mehr „kommt zurück, was hineinging", sondern „hat der Job
+dazwischen zugeschlagen".
+
+Beim ersten Lauf nach AP3 ging es gut — **aber nur zufällig**, weil der
+Mindestabstand des Huckepack-Wegs gerade griff. Nachgemessen: ein Lauf ohne
+Pause verdichtete **125 Spuren** des Umlaufkontos. Der Kreislauf hält die Jobs
+jetzt ausdrücklich an; die Wartungsseite zeigt eine laufende Pause als eigene
+Plakette, damit sie nicht wie ein arbeitender Job aussieht.
+
+Dieselbe Erfahrung noch einmal, teurer: Der erste Lauf des Ausdünnungsjobs auf
+dieser Entwicklungsinstallation hat **25 Spuren des Referenzkontos**
+ausgedünnt — unwiederbringlich. Die Ausdünnung ist genau dafür gebaut; sie
+unterscheidet nicht zwischen Bestand und Messinstrument. Die Spurprobe
+überspringt seither ausgedrückt ausgedünnte Spuren und sagt, wie viele.
+
+### Web — Belegt
+
+Zwei neue Prüfmittel: **`tools/ingestprobe/`** (die Uhr-Schnittstelle über
+echtes HTTP) und ein neuer Teil 4/5 in **`tools/spurprobe/`**.
+
+| Prüfung | Zahl |
+|---|---|
+| `spurprobe/probe.php` | **25 Erwartungen, 0 nicht erfüllt** |
+| Zusage der Ausdünnung am Referenzbestand | 156 Spuren, 47 078 Punkte, **0 Verletzungen** von 2,0 m / 3,0 m |
+| Höhenermittlung nach der Ausdünnung | **527 von 528** Phasen mit Punkt im ±300-s-Fenster — vorher ebenso viele |
+| Gegenprobe „global plus einfügen" | 46 Spuren betroffen, **11 Verletzungen**, bis 8,62 m / 4,16 m |
+| Gegenprobe „nur zweidimensional" | größte senkrechte Abweichung **82,76 m** |
+| Künstliche Prüffälle (Gleichstand, keine Höhe, Höhenfalle, Deckel, `n_original`) | 6 Erwartungen, 0 nicht erfüllt |
+| `ingestprobe/probe.php` | **24 Erwartungen, 0 nicht erfüllt** |
+| `jobprobe/probe.php` | 24 Erwartungen, 0 nicht erfüllt |
+| Verdichtungslauf am Messstand | **9395 Spuren in 44,3 s**, 2 936 497 Zeilen entfernt, Spitze **4,0 MB** |
+| Ausdünnungslauf am Messstand | **4973 Spuren in 15,2 s**, Spitze 4,0 MB, `n_original` unverändert |
+| Blobgröße je 1000 Einsätze | **1,60 MB** (E-S2-24: ≤ 3 MB) |
+| Kreislauf `edbak` (R24) | 286 739 Vergleiche, **0 unerklärt** |
+| Kreislauf `csv` (R24) | 8797 Vergleiche, **0 unerklärt** |
+| Wiederherstellungsprobe (R27) | 30 Erwartungen, 0 nicht erfüllt |
+| Wartungsseite, acht Breiten | 8 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Vendoriertes Schema nach simuliertem Klon | `git checkout-index` → **26 665 Byte, Summe `9e4d1988…`** |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+**Nicht geprüft:** ein Häppchen, das wirklich am Budget abbricht (die Läufe
+gehen bei diesem Bestand durch) · echte Nebenläufigkeit zwischen Job und
+Upload · ein echter Cron · eine Spur mit mehr als 50 000 Punkten (der Bestand
+hat keine; das Verhalten ist über die Umriss-Prüfung belegt, nicht gefahren) ·
+der volle Referenz-Sendeplan über 526 Anfragen gegen den geänderten
+`ingest.php` — dafür fährt `tools/ingestprobe/` gezielte Grenzfälle über
+denselben Endpunkt, die Mengenprobe steht aus.
+
+Die Vollständigkeitsprüfung meldet **233 statt 232** Befunde. Der eine
+Unterschied ist ein Auslassungszeichen in einem neuen Hinweissatz der
+Wartungsseite — richtige Typografie, kein Gestaltungsbefund. Dass dieser
+Zähler Prosa und Symbole nicht trennt, steht seit P3/O12 im Backlog (Nr. 42)
+und ist dort mit dieser Runde fortgeschrieben.
+
+## [Web 10.1.0] — 2026-08-31
+
+**Die Wartung liegt nicht mehr auf dem Weg einer Anfrage.** Drittes
+Arbeitspaket der Phase S2. Eine Migration ist zwingend
+(`2026_08_31_jobs`, Tabelle `jobs`).
+
+> **Nach dem Ausrollen `update.php` aufrufen.** Ohne die Tabelle `jobs` läuft
+> kein Wartungsjob mehr — der Papierkorb bliebe voll, Kopplungscodes ewig
+> gültig. Die Wartungsseite sagt das dann auch: Plakette
+> „Migration ausstehend".
+
+### Web — Warum
+
+Der einzige Zeitgeber dieser Installation war `run_cleanup_if_due()` —
+huckepack auf der Anfrage der ersten Nutzerin des Tages. Das trug, solange die
+Arbeit klein war. Sie ist es nicht mehr: Die Waisenprüfung war ein Anti-Join
+über die ganze Spurtabelle und kostete gemessen **4,07 s bei 9,46 Mio.
+Zeilen**, bezahlt von genau der Person, die gerade eine Seite aufgerufen hatte.
+Bei der Zielmenge Z2 (190 Mio. Zeilen) wären es Minuten. Und ab AP3 kommt
+Arbeit dazu, die sich in einer Webanfrage gar nicht erledigen lässt.
+
+### Web — Drei Auslöser, damit die Hosterwahl offen bleibt
+
+Diese Anwendung setzt bewusst keinen Cron voraus; auf einfachem Webspace gibt
+es oft keinen. Deshalb dieselbe Arbeit über drei Wege — **einer genügt**, und
+eingerichtet werden muss keiner:
+
+| Weg | Aufruf | Budget je Lauf |
+|---|---|---|
+| Kommandozeile (empfohlen) | `* * * * * php …/server/jobs.php` | 300 s |
+| Adresse mit Token | `https://…/jobs.php?token=…` | 20 s |
+| Huckepack auf einer Anfrage (Rückfall) | wie bisher, automatisch | 3 s |
+
+Die Wartungsseite zeigt alle drei mit fertigem Befehl bzw. fertiger Adresse.
+Das Token liegt in `app_state` und **nicht** in `config.php`: Die Anwendung
+schreibt diese Datei genau einmal, bei der Einrichtung; sie danach anzufassen
+hieße, auf jedem Webspace Schreibrecht auf die eigene Konfiguration zu
+brauchen — und Bestandsinstallationen hätten kein Token, ohne dass jemand
+sähe, warum. Es wird mit `hash_equals` geprüft, hinter dem Ratenschutz und mit
+angeglichener Antwortzeit; „Token gibt es gar nicht" darf nicht schneller
+kommen als „Token ist falsch".
+
+`jobs.php` lädt **ausdrücklich nicht** `auth_guard.php` — der würde den
+Huckepack-Weg auslösen und den Job aus dem Job heraus starten.
+
+### Web — Der Rückfall ist ein Rückfall geworden
+
+Die erste Fassung lief in eine selbstgestellte Falle: Der Job `waisen` ist
+nicht täglich, sondern läuft, solange es Rückstand gibt — also lief er bei
+**jeder** angemeldeten Anfrage, mit bis zu 18 s Budget. Eine Seite, die
+zwanzig Sekunden braucht, weil sie nebenbei aufräumt, ist kaputt, auch wenn
+kein Zeitlimit greift.
+
+Jetzt trägt der Huckepack-Weg **3 s** und wiederholt sich je Job frühestens
+nach **5 Minuten**. Gemessen: Die eine fällige Anfrage trägt **887 ms** (bei
+diesem Bestand passt ein vollständiger Durchlauf ins Budget), jede weitere
+innerhalb der fünf Minuten **0,5–1,3 ms**. Für `cli` und `token` gilt der
+Abstand nicht: Dort bestimmt der Zeitplan die Häufigkeit, und wer jede Minute
+aufruft, will das auch.
+
+### Web — Häppchen statt Vollscan, und was das wirklich bringt
+
+Jeder Job bekommt ein Zeitbudget, hört auf, wenn es zu Ende ist, und merkt
+sich in `jobs.zustand`, wo er stehengeblieben ist. Die Waisensuche wandert
+dafür bereichsweise über den Primärschlüssel statt als Anti-Join über alles.
+
+**Bei 3,31 Mio. Zeilen ist der neue Weg nicht schneller**, je fünf Läufe:
+
+| | Dauer |
+|---|---|
+| Anti-Join über alles (alt, nur lesend) | **0,78–0,90 s** |
+| bereichsweise, ein vollständiger Durchlauf (neu) | **0,85–1,05 s** |
+
+Das ist die ehrliche Zahl, und sie soll hier stehen: Bei dieser Menge kostet
+der neue Weg eher etwas mehr. Der Gewinn liegt woanders — er ist **begrenzt**,
+**fortsetzbar** und liegt **nicht auf dem Weg einer Anfrage**. Bei Z2 ist das
+der Unterschied zwischen „läuft eben nebenher" und „die Seite hängt
+minutenlang, und niemand weiß warum".
+
+Die Sperre gegen zwei gleichzeitige Läufe ist ein bedingtes `UPDATE` statt
+`SELECT`-dann-`UPDATE` — letzteres hat ein Zeitfenster, in dem zwei Anfragen
+beide zu dem Schluss kommen, sie dürften. `laeuft_seit` ist ein Zeitstempel
+und kein Flag: Ein Lauf, der mitten im Häppchen abstürzt, ließe ein Flag für
+immer stehen, und der Job liefe nie wieder — stillschweigend, was der teuerste
+Fall ist.
+
+### Web — Der Rückstand ist der Fortschritt, nicht die Waisenzahl
+
+Die naheliegende Anzeige wäre „wie viele Waisen gibt es" — und die kostet
+genau den Vollscan, den dieser Job abschafft. Angezeigt wird deshalb, wie weit
+die Marke noch zu laufen hat.
+
+Zwei Fehler steckten hier, beide erst beim Messen aufgefallen und beide vom
+selben Muster: Die Rückstandsfunktion las den Zustand **aus der Tabelle**,
+während der frische noch gar nicht geschrieben war — direkt nach einem
+vollständigen Durchlauf meldete der Job „Rückstand 33093", also die ganze
+Tabelle als ausstehend. Und eine Marke von 0 war nicht von „noch nie gelaufen"
+zu unterscheiden. Beides ist derselbe Reihenfolgefehler, der in AP0 schon
+einmal auftrat (die Serverprobe schrieb ihre Datei, bevor die abgeleiteten
+Werte entstanden waren).
+
+### Web — Sichtbar, weil sie still ist
+
+Die Wartung darf keine Seite kaputtmachen und schweigt deshalb gegenüber der
+Anfrage. Genau darum muss sie woanders sichtbar sein: `update.php` zeigt je Job
+letzten Lauf, Auslöser, Rückstand und letzten Fehler. `letzter_fehler` steht in
+der Tabelle und nicht nur im Fehlerprotokoll des Webspace — an das kommt auf
+geteiltem Hosting nicht jede Betreiberin heran.
+
+Die Marken `last_cleanup` und `last_cleanup_ok` in `app_state` entfallen; ihre
+Auskunft steht vollständiger in `jobs`.
+
+### Web — Belegt
+
+Neu dafür: **`tools/jobprobe/`** — die Probe legt eigene Waisen auf
+Eigentümerkennungen an, die es garantiert nicht gibt, und räumt hinter sich
+auf. Sie läuft nicht in einer zurückgerollten Transaktion, weil die Sperre auf
+`COMMIT` angewiesen ist und ein Rollback über sie nichts beweisen würde.
+
+| Prüfung | Zahl |
+|---|---|
+| `jobprobe/probe.php` | **24 Erwartungen, 0 nicht erfüllt** |
+| Alle drei Auslöser tragen denselben Rückstand ab | je **10 Zeilen + 1 Blob → 0 + 0** |
+| Genaue Zählung (6 Zeilen + 1 Blob gepflanzt) | gemeldet **„erledigt 7"** |
+| Vollständiger Durchlauf, Z3-Rahmen (`memory_limit=64M`) | **0,85–1,05 s** über **3 313 246 Zeilen**, Spitze **2,0 MB** |
+| Anti-Join über alles, dieselbe Tabelle, nur lesend | **0,78–0,90 s** |
+| Huckepack: die eine fällige Anfrage / jede weitere in 5 min | **887 ms** / **0,5–1,3 ms** |
+| HTTP-Weg ohne / mit falschem / mit richtigem Token | **403 / 403 / 200**, beide 403 in **0,351 s** |
+| Ratenschutz am Token-Weg | ab dem **10.** Fehlversuch je IP **429** |
+| Wartungsseite, acht Breiten (360–1920 px) | 8 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| `spurprobe/probe.php` (AP1, unberührt) | 14 Erwartungen, 0 nicht erfüllt |
+| Kreislauf `edbak` (R24) | 286 739 Vergleiche, **0 unerklärt** (16 erwartet) |
+| Kreislauf `csv` (R24) | 8797 Vergleiche, **0 unerklärt** (859 erwartet) |
+| Wiederherstellungsprobe (R27) | 30 Erwartungen, **0 nicht erfüllt** |
+| Vendoriertes Schema nach simuliertem Klon | `git checkout-index` → **26 665 Byte, Summe `9e4d1988…`** |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+Zum Bild der Wartungsseite: Es wurde **angesehen** und zeigt die Karte
+„Hintergrundjobs" mit beiden Jobs, ihren Zeitstempeln und den Plaketten
+`anfrage` und `cli` — nicht die Anmeldeseite (F-P3-AQ).
+
+**Eine Grenze, die man kennen sollte:** Der Ratenschutz zählt je IP. Kommen
+zehn Fehlversuche von derselben Adresse, ist der Token-Weg für diese IP zehn
+Minuten gesperrt — auch für den richtigen Aufruf. Wer einen Zeitplan-Eintrag
+mit falschem Token stehen hat, sperrt sich damit selbst aus; nach dem
+Berichtigen dauert es zehn Minuten.
+
+## [Web 10.0.0] — 2026-08-31
+
+**GPS-Punkte liegen jetzt als Blob statt als Zeile — 62,4 Byte werden 3,58.**
+Zweites Arbeitspaket der Phase S2. Die Hauptnummer steigt, weil sich das
+Datenmodell ändert und eine Migration zwingend ist.
+
+> **Nach dem Ausrollen `update.php` aufrufen.** Ohne die Migration gibt es die
+> Tabelle `track_blobs` nicht, und jeder Spurzugriff scheitert.
+
+### Web — Warum
+
+Spurpunkte sind 93 % des Bestands. Gemessen am Referenzdatensatz kostet eine
+Zeile in `track_points` **62,4 Byte**, derselbe Punkt als Blob **3,58** — ein
+Siebzehntel. Bei 5000 Einsätzen sind das 194 statt 3300 MB, und damit steht
+und fällt die Zusage, dass ein Konto dieser Größe auf geteiltem Webspace
+trägt.
+
+Die Punkte liegen deshalb künftig in drei Stufen: Zeilen als **Eingangspuffer
+der Uhr** (der Upload kommt in Teilstücken, ist idempotent und wiederholbar —
+dafür ist eine Zeilentabelle richtig), danach als verlustfreier Blob, und
+sechs Monate nach Einsatzende ausgedünnt. **Dieses Paket baut das Format und
+den Zugriffsweg; die Wanderung zwischen den Stufen kommt mit den Jobs.**
+
+### Web — Ein Weg, nicht sechs
+
+Sechs Stellen lasen `track_points` per SQL, jede mit einer eigenen Projektion.
+Bliebe das so, müsste jede von ihnen die Stufen kennen — und die erste, die es
+vergisst, zeigt eine leere Spur, ohne dass es auffällt. Alle sechs gehen jetzt
+über `server/spur_lib.php`: Tagesansicht, Einsatzansicht, Export, Sicherung,
+Einsatzort-Höhe und Umdatierung. `CLAUDE.md` trägt das als Pflegepflicht.
+
+**Das Umdatieren eines Diensttags** war ein einziges
+`UPDATE track_points SET ts = ts + ?`. An einem Blob geht das vorbei: Die
+Zeilen wanderten, die Blobpunkte blieben stehen, und die Spur hätte danach
+zwei Zeitrechnungen — sichtbar erst als durcheinandergeratene Phasenzuordnung.
+Der Blob wird jetzt gelesen, verschoben und zurückgeschrieben.
+
+**Die Fortsetzungsmarke der Uhr** kam aus `MAX(seq)+1` über die Zeilen. Sobald
+die Punkte im Blob liegen, gibt es diese Zeilen nicht mehr — die Marke fiele
+auf 0, und die Uhr sendete den ganzen Dienst noch einmal. Sie kommt jetzt aus
+`n_original` des Blobs und der höchsten Zeilennummer. Für die Uhr ändert sich
+nichts, der JSON-Vertrag bleibt.
+
+### Web — Was „verlustfrei" heißt
+
+Keine Festkomma-Kodierung ist bitgleich gegen einen beliebigen `DOUBLE`.
+„Verlustfrei" heißt deshalb: innerhalb einer **festgeschriebenen** Auflösung —
+10⁻⁶ Grad (≈ 0,11 m) und 0,1 m Höhe. Sie steht als Kennung im Blob-Kopf, und
+ein Leser, der eine unbekannte Kennung findet, verweigert die Arbeit, statt
+Zahlen mit dem falschen Faktor zu deuten.
+
+Der Konzeptwortlaut sah „Höhe in Metern gerundet" vor. Das wäre nicht nur
+ungenauer gewesen, sondern hätte den Mechanismus stillgelegt: **74,4 % der
+Punkte tragen eine Nachkommastelle**, die Rundlaufprüfung hätte bei drei von
+vier Spuren angeschlagen, und der Verdichtungsjob hätte nie eine Zeile
+gelöscht — stillschweigend. Der Preis der Zehntelmeter sind 7 % Blobgröße.
+
+### Web — Zwei Grenzen, weil es zwei Fragen sind
+
+`LIMIT_TRACKPUNKTE` galt an zwei Stellen, die Verschiedenes meinen: beim
+Upload je **Anfrage** (die Uhr sendet in Stücken zu 500, 2000 sind vierfache
+Reserve), beim Zurückspielen je **ganzer Spur**. Dort war dieselbe Zahl ein
+Datenverlust — was die Uhr über viele Anfragen aufbauen darf, wurde bei 2000
+gekappt; die Datei trug die ganze Spur, zurück kam ihr Anfang. Erreichbar ist
+das ohne weiteres: 2000 Punkte sind zwischen 33 Minuten und 5,5 Stunden
+Aufzeichnung. Aufgefallen ist es nie, weil die längste Referenzspur 1133
+Punkte hat.
+
+Jetzt zwei Konstanten, und die Spurgrenze (50 000) **lehnt ab statt zu
+kappen**: Eine halbe Spur sieht aus wie eine ganze, eine abgelehnte sieht man.
+
+### Web — Ein Konto löschen räumt jetzt seine Spuren ab
+
+`track_points` ist polymorph und trägt keinen Fremdschlüssel; die Kaskade von
+`DELETE FROM users` nahm die Punkte **nicht** mit. Der Kommentar an der
+Löschstelle behauptete das Gegenteil und ist der Grund, warum es niemandem
+aufgefallen ist. Der Messstand hat es vorgeführt: zwei gelöschte Konten,
+**6 202 931 verwaiste Spurpunkte**, rund 380 MB, die erst der nächste
+Tagesjob abräumte. Jetzt gehen Zeilen und Blobs ausdrücklich mit, vor der
+Kaskade; der Wartungsjob bleibt das Sicherheitsnetz und deckt beide Tabellen.
+
+### Web — Belegt
+
+| Prüfung | Zahl |
+|---|---|
+| Rundlauf Punkte → Blob → Punkte, ganzer Referenzbestand | 55 861 Punkte, **0 Abweichungen** |
+| Blobgröße | **3,58 B/Punkt** (Zeilen: 62,4) |
+| Tagesansicht und Einsatzansicht vor/nach Verdichtung | 8 HTTP-Antworten **byteweise gleich** |
+| CSV- und GPX-Export aus Blobs gegen die Referenz | 9589 Vergleiche, **0 Abweichungen**, 171 GPX-Tracks |
+| Sicherung aus vollständig verdichtetem Konto gegen die Referenz | 286 739 Vergleiche, **0 unerklärt** |
+| `spurprobe/probe.php` | 14 Erwartungen, **0 nicht erfüllt** |
+| Kreislauf `edbak` (R24) | 286 739 Vergleiche, 0 unerklärt |
+| Vendoriertes Schema nach simuliertem Klon | `git checkout-index` → **26 665 Byte, Summe `9e4d1988…`** |
+| Wortliste (R28) | 0 / 0 / 0 |
+
+Das Rezept zum Öffnen eines Blobs von Hand steht in `docs/Backup-Format.md`
+und wurde gegen einen echten Blob gefahren: 1133 Punkte, 0 Abweichungen
+gegenüber dem, was die Anwendung liest.
+
+**Am Dateiformat der Sicherung ändert sich nichts.** Die Spur steht weiterhin
+als `[seq, lat, lon, ele, ts]` je Punkt; die Nutzlast-Fassung bleibt 7.
+
+## [Werkzeug: Messstand] — 2026-08-31
+
+**Die Anwendung lässt sich jetzt an 5000 Einsätzen messen — und der erste Lauf
+sagt, wo sie heute bricht.** Weder die Weboberfläche noch die Uhr-App sind
+geändert, deshalb trägt dieser Eintrag keine Versionsnummer (dasselbe Muster
+wie beim Uhr-Prüfstand). Erstes Arbeitspaket der Phase S2.
+
+### Werkzeug — Warum
+
+S2 verspricht, dass 5000 Einsätze in einem Konto tragen. Ein solches
+Versprechen lässt sich nicht durch Nachdenken einlösen: Es braucht einen
+Bestand dieser Größe, und den muss jemand **herstellen** können. Und es braucht
+einen Ausgangswert — „die Sicherung ist jetzt schneller" ist keine Aussage,
+solange niemand weiß, wie langsam sie vorher war und wo genau sie aufgehört hat
+zu funktionieren.
+
+`tools/messstand/` stellt beides her. Der Vervielfältiger baut aus der
+Referenzsicherung eine Folge `.edbak`-Dateien; eingespielt werden sie über den
+**regulären** Wiederherstellungsweg im Browser, nicht per SQL. Das kostet
+Zeit, und es ist der Punkt: Der Einspielweg ist selbst einer der Prüflinge.
+
+### Werkzeug — Die Ausgangsmessung
+
+5002 Einsätze, 3 201 524 Spurpunkte, hergestellt in 245 Sekunden. Gemessen mit
+CPU-Drossel 6× (Referenzgerät nach Z3):
+
+| | heute | Ziel |
+|---|---|---|
+| Speicherspitze `edbak_build()` | **1784 MB** | 64 MB |
+| größte JSON-Zeichenkette im Browser | **138,25 MB** | 10 MB |
+| Haldenspitze beim Sichern | **508 MB** | 100 MB |
+| Spuren je 1000 Einsätze | **38,07 MB** | 3 MB |
+| Sicherungsdatei | 40,5 MB | 25 MB |
+| Tagesansicht bis zur Spur | 4,81 s | 3 s |
+| Suche bis zur ersten Anzeige | 4,53 s | 5 s ✓ |
+| Sicherung erstellen | 109,8 s | 300 s ✓ |
+
+Die Speicherspitze ist die härteste Zahl: `edbak_build()` hält das
+vollständige PHP-Array und die daraus erzeugte JSON-Zeichenkette gleichzeitig.
+Auf geteiltem Webspace mit 128 MB `memory_limit` ist damit bei rund **360
+Einsätzen** Schluss — und zwar als Fatal Error ohne JSON-Antwort, so dass der
+Browser „HTTP 500" meldet und niemand erfährt, dass es an der Menge lag.
+
+Zwei Zahlen des Befunds haben sich dabei **bestätigt**: 62,4 Byte je Zeile in
+`track_points` (angenommen: 62) und 38,07 MB Spuren je 1000 Einsätzen
+(angenommen: 40).
+
+### Werkzeug — Was der Einspiellauf zutage gefördert hat
+
+**Er war kaputt.** Seit P3/O11 (Web 9.12.0) hängen vier Stellen von
+`einspielen.py` an Markup, das sich geändert hat: Der Baustein `ui_feld()`
+rendert `<select>` mit `name` hinter `class` und `id`, Meldungen tragen
+`meldung-fehler` statt `alert-danger`, die Geräteliste führt je Gerät ein
+eigenes Formular, und die Zugangsdaten eines neuen Geräts stehen im Baustein
+`codeblock` statt in `<code>`.
+
+Zwei davon brachen laut ab. **Drei brachen still** — die Fehlerlesung fand
+nichts mehr und meldete damit „kein Fehler", und das Aufräumen der Geräte tat
+nichts, bis die Grenze von fünf Geräten je Konto erreicht war. Der
+Referenzdatensatz war seither nicht mehr **herstellbar**, und weil er als
+Datei ja dalag, ist es niemandem aufgefallen. Ein Bestand, den man nicht neu
+bauen kann, ist ein Einzelstück und kein Prüfmittel.
+
+Alle vier sind nachgezogen; die Fehlerlesung liegt jetzt an **einer** Stelle
+(`sitzung.fehlertext()`) statt an vieren.
+
+**Und derselbe Fund noch einmal im CSV-Kreislauf.** Der Regressionslauf nach
+diesem Paket brachte es ans Licht: `ui_segment()` und `ui_schalter()` machen
+das Kontrollkästchen unsichtbar und stellen ein `<label>` davor —
+`page.check()` klickt aber das Feld und wartet, dass es sichtbar wird. Sieben
+Aufrufe in zwei Werkzeugen liefen deshalb in einen Zeitablauf. Behoben über
+eine gemeinsame Stelle (`browser/bedienen.mjs`), die die Beschriftung klickt
+und danach **belegt**, dass sich der Zustand geändert hat.
+
+Beide Kreisläufe laufen danach wieder: **edbak 286 739 Einzelvergleiche, CSV
+8797 — je 0 unerklärte Abweichungen** (R24). Ebenso R27
+(30 Erwartungen / 15 Einzelprüfungen, 0 Befunde) und R28 (Wortliste 0/0/0).
+
+Wer die Bausteine in `ui.php` anfasst, ändert damit die Angriffsfläche jedes
+Werkzeugs, das die Oberfläche liest oder bedient. Beide Kreisläufe gehören in
+denselben Durchgang — sie sind schnell, und sie sind die einzige Stelle, an
+der so ein Bruch auffällt.
+
+### Werkzeug — Und dreimal dieselbe Falle im Messstand selbst
+
+Der erste Lauf meldete drei Zahlen, die etwas anderes maßen, als sie
+behaupteten. Sie stehen hier, weil sie zusammen die Lehre dieses Pakets sind:
+
+**„5046 Einsätze eingespielt" — angelegt waren 4744.** Addiert worden war die
+erwartete Zahl, nicht die gemeldete. Die Anwendung hatte korrekt berichtet
+(„254 übernommen, 7 übersprungen — Diensttag liegt hier im Papierkorb"), nur
+hat niemand hingesehen. Ursache: Die Referenz trägt einen Diensttag im
+Papierkorb; 58-fach kopiert blockierte er spätere Runden (Regel D1). Der
+Vervielfältiger lässt gelöschte Einträge jetzt draußen, und der Einspiellauf
+liest die Rückmeldung.
+
+**„167 MB Spuren je 1000 Einsätze" — richtig sind 38.** Die Tabelle aller
+Konten, geteilt durch die Einsätze eines Kontos.
+
+**„Startseite 25,6 s, Tagesansicht 30,7 s" — richtig sind 1,4 s und 4,8 s.**
+`waitUntil: 'load'` wartete auf die gesperrten Kartenkacheln. Gemessen war die
+Netzsperre der Umgebung, nicht die Anwendung. Dieselben zwanzig
+Kachelmeldungen standen außerdem als „Konsolenfehler" im Protokoll, weil ihre
+Meldung die Adresse nicht nennt und damit am Filter vorbeikam.
+
+Ein Prüfmittel ist gegen diese Falle nicht sicherer als das, was es prüft.
+Jede Zahl des Messstands benennt jetzt, **was** sie gemessen hat.
+
+### Werkzeug — Zwei Fehlerfunde nebenbei
+
+**Ein Konto löschen lässt seine Positionsdaten liegen.** `track_points` ist
+polymorph und trägt keinen Fremdschlüssel; die Kaskade von `DELETE FROM users`
+nimmt die Punkte nicht mit. Der Kommentar an der Löschstelle behauptet das
+Gegenteil — und ist der Grund, warum es niemandem aufgefallen ist. Der
+Messstand hat es prompt selbst vorgeführt: Zwei gelöschte Konten hinterließen
+**6 202 931 verwaiste Spurpunkte**, rund 380 MB. Der Wartungsjob räumte sie in
+15,18 s ab — beim nächsten Aufruf der Anwendung durch irgendjemanden.
+
+**Dieselbe Zahl, zwei Bedeutungen: 2000 Punkte.** `LIMIT_TRACKPUNKTE` gilt
+beim Upload **je Anfrage** (greift praktisch nie, die Spur wächst über viele
+Pakete unbegrenzt), beim Zurückspielen aber **je Spur** — dort wird alles
+jenseits des 2000. Punktes verworfen. Was die Uhr aufbauen darf, kann die
+Wiederherstellung also nicht zurückbringen. Aufgefallen ist es nie, weil die
+längste Spur des Referenzbestands 1133 Punkte hat.
+
+Beide sind vermerkt und werden in den Paketen behoben, die die betroffenen
+Wege ohnehin anfassen (`docs/Konzept-S2-Mengen-Spuren-Sicherung.md`,
+Abschnitt 8).
+
 ## [Uhr 2.0.0] — 2026-08-31
 
 **Die Uhr-App heißt „NAdoku" und hat eine echte Anwendungs-ID.** Der Rest der

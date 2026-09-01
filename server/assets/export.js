@@ -1374,6 +1374,16 @@
                 : 'Einsatzdokumentation ' + dmyDE(von) + ' – ' + dmyDE(bis);
 
             var built;
+            /* Der Name der Datei, die WIRKLICH im Download landet.
+             *
+             * Drei Wege führen hierher — Tabelle roh, Tabelle im verschlüsselten
+             * Archiv, Archiv des Profils B —, und sie liefern verschiedene Namen
+             * und verschiedene Endungen. Beim Archivweg ist es der Name des
+             * ARCHIVS, nicht der Tabelle darin. Der Name wird deshalb dort
+             * festgehalten, wo die Datei entsteht, statt ihn für die Meldung ein
+             * zweites Mal zu berechnen: dateiName() nimmt das heutige Datum,
+             * und ein Export über Mitternacht bekäme sonst zwei Namen. */
+            var geliefert = null;
             if (fmt === 'a' || fmt === 'c') {
                 setState('Datei wird erstellt…');
                 built = (fmt === 'a')
@@ -1382,22 +1392,24 @@
                 var bytesXlsx = XLSX.write(built.wb, { type: 'array', bookType: 'xlsx' });
                 if (pwOn) {
                     setState('Datei wird verschlüsselt…');
+                    geliefert = dateiName(fmt, 'zip', patient, true);
                     await zipAndDownload(
                         [{
                             name: dateiName(fmt, 'xlsx', patient, false),
                             content: new Uint8Array(bytesXlsx)
                         }],
-                        password, dateiName(fmt, 'zip', patient, true));
+                        password, geliefert);
                 } else {
-                    triggerDownload(bytesXlsx, dateiName(fmt, 'xlsx', patient, false), MIME_XLSX);
+                    geliefert = dateiName(fmt, 'xlsx', patient, false);
+                    triggerDownload(bytesXlsx, geliefert, MIME_XLSX);
                 }
             } else {
                 built = await buildProfilB(data, {
                     patient: patient, gpx: gpx, von: von, bis: bis, onProgress: setState
                 });
                 setState('Archiv wird ' + (pwOn ? 'verschlüsselt und ' : '') + 'gepackt…');
-                await zipAndDownload(built.files, pwOn ? password : null,
-                    dateiName(fmt, 'zip', patient, pwOn));
+                geliefert = dateiName(fmt, 'zip', patient, pwOn);
+                await zipAndDownload(built.files, pwOn ? password : null, geliefert);
             }
 
             // Die Trackzahl steht bewusst mit in der Meldung: Ob ein Archiv
@@ -1417,6 +1429,17 @@
                     schluss += ' Keine GPX-Tracks — im gewählten Zeitraum sind '
                              + 'zu keinem Einsatz Trackpunkte gespeichert.';
                 }
+            }
+            /* DASS DIE DATEI DA IST, MUSS DASTEHEN — dieselbe Lücke wie auf der
+             * Sicherungsseite und aus demselben Grund: Der Download läuft ohne
+             * Dialog durch, und die Namen sind hier lang und einander ähnlich
+             * (Profil, Personenbezug und Verschlüsselung stecken darin). Wer
+             * zweimal hintereinander exportiert, braucht den vollen Namen, um zu
+             * wissen, welche der beiden Dateien die eben erzeugte ist.
+             * Ans ENDE, nicht in die Mitte: Die Sätze davor beschreiben den
+             * INHALT der Datei, dieser ihren Verbleib. */
+            if (geliefert) {
+                schluss += ' Die Datei „' + geliefert + '" wurde heruntergeladen.';
             }
             setState(schluss);
         } catch (e) {

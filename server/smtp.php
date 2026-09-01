@@ -90,6 +90,30 @@ function antwort_abschliessen(): bool {
  * Wo doch jemand wartet — die Uhr bei der Kopplung —, gehoert ein kuerzeres
  * Limit hin: Eine Kopplung darf nicht an einem langsamen Mailserver scheitern.
  */
+/**
+ * Ist SMTP ueberhaupt eingerichtet? (S2/AP6)
+ *
+ * WOFUER ES DIESE FUNKTION BRAUCHT. E-S2-15 verlangt zwei verschiedene Wege:
+ * Bei ueberschrittener Speicherschwelle geht eine Mail an die Admin-Adresse —
+ * „ohne eingerichtetes SMTP stattdessen dauerhafter Hinweis im
+ * Admin-Bereich". Die Anwendung konnte diese beiden Faelle bis Web 11.2.0
+ * nicht unterscheiden: `smtp_send()` liefert `false` fuer „Host falsch",
+ * „Passwort falsch", „Netz weg" UND „gar nicht eingerichtet". Ein
+ * Fehlschlagen ist aber etwas anderes als ein Nicht-Eingerichtetsein — beim
+ * ersten soll es einen Versuch und eine Fehlermeldung geben, beim zweiten
+ * gar keinen Versuch und einen stehenden Hinweis.
+ *
+ * GEPRUEFT WIRD DER HOST, nicht die Zugangsdaten: Ein Mailserver ohne
+ * Authentifizierung ist eine gueltige Einrichtung (ein Relay im selben
+ * Rechenzentrum), einer ohne Adresse nicht.
+ */
+function smtp_eingerichtet(): bool
+{
+    $alles = require __DIR__ . '/config.php';
+    $cfg = $alles['smtp'] ?? [];
+    return is_array($cfg) && trim((string)($cfg['host'] ?? '')) !== '';
+}
+
 function smtp_send(string $toEmail, string $subject, string $textBody,
                    int $zeitlimit = 15): bool {
     /* Einmal laden, beides entnehmen (M1-14).

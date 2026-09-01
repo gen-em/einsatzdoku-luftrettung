@@ -26,6 +26,12 @@
       "pfad": "datenschutz.php"
     },
     {
+      "name": "06-wiederherstellen",
+      "gruppe": "Öffentlich",
+      "rolle": "aus",
+      "pfad": "wiederherstellen.php"
+    },
+    {
       "name": "03-abbruchseite",
       "gruppe": "Öffentlich",
       "rolle": "demo",
@@ -119,6 +125,13 @@
       "pfad": "__TAG_ZUSAMMEN__"
     },
     {
+      "name": "21a-tag-spuren",
+      "gruppe": "Inhalt",
+      "rolle": "demo",
+      "pfad": "__TAG_SPUREN__",
+      "karte": true
+    },
+    {
       "name": "22-einsatz-verschieben",
       "gruppe": "Inhalt",
       "rolle": "demo",
@@ -195,6 +208,18 @@
       "gruppe": "Administration",
       "rolle": "admin",
       "pfad": "admin_sicherungen.php"
+    },
+    {
+      "name": "43b-sicherungsziele",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_sicherungsziele.php"
+    },
+    {
+      "name": "43c-komplettsicherung",
+      "gruppe": "Administration",
+      "rolle": "admin",
+      "pfad": "admin_komplettsicherung.php"
     },
     {
       "name": "43a-rechtstexte",
