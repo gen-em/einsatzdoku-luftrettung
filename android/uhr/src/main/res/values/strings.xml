@@ -17,6 +17,12 @@
 
     <!-- ==== Bedienbild (E-S4-21) ======================================== -->
     <string name="handy_verbunden">Handy verbunden</string>
+    <!--
+        Der dritte Fall: Es ist noch nichts hinausgegangen. Weder "verbunden"
+        (eine Behauptung) noch "nicht erreichbar" (eine Warnung ohne Anlass) —
+        sondern schlicht, was zutrifft.
+    -->
+    <string name="handy_unbekannt">noch nichts gesendet</string>
     <string name="handy_nicht_erreichbar">Handy nicht erreichbar</string>
     <!--
         Der schwebende Dienststart (E-S4-10). Er sagt beides in einer Zeile:
@@ -30,7 +36,6 @@
     </plurals>
     <string name="dienst_beginnen">Dienst beginnen</string>
     <string name="dienst_beenden">Dienst beenden</string>
-    <string name="loest_am_handy_aus">löst am Handy aus</string>
     <string name="phase_knopf">%1$d · %2$s</string>
     <string name="phase_seit">Phase %1$d · %2$s</string>
     <string name="halten_phasenliste">halten: Phasenliste</string>

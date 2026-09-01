@@ -107,10 +107,10 @@ Stand C2 (Android 0.7.0), `./gradlew build` im Container:
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **167**, davon 12 übersprungen | **50**, davon 0 übersprungen |
+| Prüffälle | **167**, davon 12 übersprungen | **53**, davon 0 übersprungen |
 | APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
 
-Zusammen **217 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Zusammen **220 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
 **B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
@@ -129,7 +129,7 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 167 von 167 (siehe unten). Die 50 Fälle der Uhr laufen
+Installation sind es 167 von 167 (siehe unten). Die 53 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
 Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
 *zeichnet* (E-S4-40).
@@ -150,12 +150,20 @@ auf, misst und zeichnet sie selbst auf eine Bitmap und legt PNG unter
 **nicht** — er wartet in einer `Thread.sleep`-Schleife auf genau den Faden,
 der zeichnen müsste.
 
-Der Fall **misst mit**, statt nur zu malen: Die Höhe der Knopffläche wird aus
-dem Bild gerechnet und gegen die 48 dp aus E-S4-41 geprüft. Genau das hat
-B-S4-08 gefunden — auf der 192-dp-Uhr waren es 35,5 dp.
+Der Fall **misst mit**, statt nur zu malen — zwei Zusicherungen:
 
-**Was diese Bilder nicht zeigen:** ein Quadrat statt des runden Glases (die
-Maske legt das Gerät an), Robolectrics Schriften statt der von Wear OS, keine
+| Gemessen | Zusage | gefunden |
+|---|---|---|
+| Höhe der Knopffläche | 48 dp (E-S4-41) | B-S4-08: 35,5 dp auf 192 dp |
+| Knopffläche außerhalb des einbeschriebenen Kreises | 0 % | B-S4-08b: 13,55 % Gesamtinhalt, alles im Knopf |
+
+Die runde Maske wird dabei **gerechnet, nicht gemalt**: Der Direktweg zeichnet
+ein Quadrat, aber wo das Glas liegt, ist bekannt. Was außerhalb Farbe trägt,
+sieht auf der Uhr niemand.
+
+Ein Mockup mit Vorher/Nachher-Bildern liegt unter `mockups/`.
+
+**Was diese Bilder nicht zeigen:** Robolectrics Schriften statt der von Wear OS, keine
 Hardwarebeschleunigung, und **einen** Android-Stand (sdk=34) statt der Spanne
 30 bis 36. Wo das runde Glas zur Frage steht, hilft nur der Emulator.
 

@@ -42,6 +42,32 @@ class UhrsteuerungTest {
     private fun meldungen(): List<Uhrmeldung> =
         weg.gesendet.map { Nachrichtenformat.liesMeldung(it.second)!! }
 
+    // ---- Was die Uhr weiss, bevor sie etwas versucht hat --------------------
+
+    /**
+     * **Vor dem ersten Sendeversuch behauptet die Uhr nichts** (Fund B-S4-09).
+     *
+     * Der Anfangszustand ist weder „verbunden" noch „nicht erreichbar",
+     * sondern **unbekannt**. Vorher stand dort `true`, und die Startseite
+     * meldete „Handy verbunden", ohne dass je eine Nachricht hinausgegangen
+     * war — dieselbe Art Aussage, gegen die E-S4-47 gebaut ist.
+     */
+    @Test fun vorDemErstenVersuchIstDerFunkstandUnbekannt() {
+        assertNull("Nichts versucht, nichts behauptet", steuerung.zustand.handyErreichbar)
+        assertEquals(0, steuerung.zustand.gepuffert)
+    }
+
+    /** Der erste Versuch macht daraus eine Beobachtung — in beide Richtungen. */
+    @Test fun derErsteVersuchMachtAusUnbekanntEineBeobachtung() {
+        weg.erreichbar = false
+        steuerung.ereignis(Uhrereignis.Dienstknopf(tipp()))
+        assertEquals("Zugestellt wurde nichts", false, steuerung.zustand.handyErreichbar)
+
+        weg.erreichbar = true
+        steuerung.nachliefern()
+        assertEquals("Jetzt schon", true, steuerung.zustand.handyErreichbar)
+    }
+
     // ---- Dienststart ohne erreichbares Handy --------------------------------
 
     /**
@@ -60,7 +86,7 @@ class UhrsteuerungTest {
         assertTrue("An der Uhr läuft er", z.dienstLaeuft)
         assertFalse("Am Handy noch nicht", z.dienstBestaetigt)
         assertTrue("Und die Uhr sagt es", z.dienstSchwebt)
-        assertFalse(z.handyErreichbar)
+        assertEquals(false, z.handyErreichbar)
         assertEquals("Die Meldung wartet", 1, z.gepuffert)
     }
 

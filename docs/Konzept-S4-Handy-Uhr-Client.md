@@ -960,6 +960,42 @@ still abgeschnitten — auf Wear OS die übliche Bedienung, in `Phasenliste` sei
 C1 benutzt. Die Zusicherung steht jetzt als Zahl im Prüffall
 (`UhrBildTest.pruefeBedienhoehe`), nicht als Absicht im Quelltext.
 
+### B-S4-08b — Der große Knopf wurde vom runden Glas beschnitten (behoben)
+
+Aufgefallen am Emulator-Bild, gemessen im Prüfstand. Der Anteil des Inhalts,
+der außerhalb des einbeschriebenen Kreises liegt:
+
+| Uhr | vorher | nachher |
+|---|---|---|
+| 192 dp | **13,55 %** | **0,00 %** |
+| 227 dp | 1,66 % | **0,00 %** |
+
+Zeilenweise ausgewertet lag der Beschnitt **ausschließlich im Knopf**
+(y 156–188 dp); alles darüber war im Kreis. Ursache war die Anordnung: Der
+Inhalt war höher als das Glas, also begann die Spalte oben und schob den Knopf
+an den unteren Rand — dorthin, wo der Kreis auf 55 dp zusammenläuft.
+
+*Behoben in 0.7.3* durch zwei Maße und eine Reihenfolge, keinen neuen
+Baustein: Der Knopf steht **über** der Verbindungszeile (nahe der Mitte, wo
+der Kreis am breitesten ist), `MARKE_START` geht von 27 % auf 22 %, und „löst
+am Handy aus" ist ersatzlos gestrichen — der Satz lag ohnehin außerhalb des
+Glases und war nie zu sehen. Dieselbe Umstellung in der laufenden Ansicht: die
+Verbindungszeile hinter beide Knöpfe.
+
+**Ein dritter Eingriff wurde verworfen, weil die Messung ihn widerlegt hat.**
+Ein `KNOPF_BREITENANTEIL = 0.86f` sollte Reserve für die Krümmung geben; er
+stand schon im Code und in diesem Abschnitt, bevor er gemessen war. Das Bild
+zeigte dann: Die Umstellung allein bringt den Knopf auf 0,00 %, und der
+schmalere Knopf lässt „Dienst beginnen" **auf zwei Zeilen umbrechen** — er
+löste ein gelöstes Problem und schuf ein neues. Entfernt.
+
+Die Zahl steht jetzt als **Zusicherung** im Prüffall, und zwar für die
+**Knopfflächen**, nicht für jeden Punkt. Das ist die genauere Frage: Ein Stück
+Bildmarke am Rand ist unschön, ein gekappter Knopf ist ein Bedienelement, das
+man nicht trifft. Die laufende Ansicht passt auf der 192-dp-Uhr ohnehin nicht
+ohne Bildlauf (221 dp Inhalt auf 192 dp); dort auf jeden Punkt zu bestehen
+hieße, sie auszudünnen, bis nichts mehr dasteht.
+
 ### B-S4-09 — Die Uhr behauptet „Handy verbunden", bevor sie je gesendet hat
 
 Auf dem ersten Bild der Startseite steht **„Handy verbunden"** — ohne
@@ -973,10 +1009,11 @@ B-S4-08 — er verschweigt keine Aufzeichnungslücke, weil vor dem Dienststart
 nichts aufzuzeichnen ist —, aber er ist dieselbe Art Aussage: eine
 Behauptung über etwas, das die Uhr nicht wissen kann.
 
-**Nicht behoben.** Die saubere Form ist ein dritter Zustand („noch nichts
-gesendet") statt eines Wahrheitswerts; das berührt die Zustandsmaschine und
-ihre Prüffälle und gehört deshalb in einen eigenen Schritt, nicht in eine
-Korrekturfassung.
+*Behoben in 0.7.3* — mit genau dem dritten Zustand: `handyErreichbar` ist
+`Boolean?`, und `null` heißt „noch nichts versucht". Die Startseite sagt dann
+**„noch nichts gesendet"** in Sand statt „Handy verbunden" in Blau. Zwei
+Prüffälle halten es fest: der Anfangszustand behauptet nichts, und der erste
+Sendeversuch macht daraus eine Beobachtung — in beide Richtungen.
 
 ## 11. Statuspflege
 
@@ -1914,3 +1951,67 @@ Startseite wäre eine neue Darstellung und bräuchte ein Mockup mit Freigabe
 waren **bytegleich** (`uhr-boden-192dp` und `uhr-ohne-sperre-192dp`), weil die
 Sperre auf der Startseite gar nicht greift. Der Fall ist ersatzlos gestrichen
 — ein Prüffall, der zweimal dasselbe malt, ist kein zweiter Beleg.
+
+### Nachtrag · Android 0.7.3 — die Startseite passt ins Glas
+
+**E-S4-50 — F-S4-D ist entschieden: Zwei Diensttage bleiben.** Laufen Garmin
+und Handy gleichzeitig, entstehen zwei Diensttage am selben Kalendertag; jedes
+Gerät führt seine eigene `day_ref`, und die Zuordnung ist je Gerät
+geschlüsselt. Gemessen gegen die lokale Installation: zwei Zeilen in `days`,
+je ein Einsatz, nichts überschrieben.
+
+Das bleibt so, und zwar ohne Eingriff. Die Begründung ist, was die Doppelung
+**ist**: zwei getrennte Aufzeichnungen desselben Dienstes, jede vollständig.
+Sie automatisch zu verschmelzen hieße zu raten, welche der beiden Spuren die
+richtige ist — und die Reanimation liegt ohnehin nur auf der Garmin (E-R45-1).
+Wer beide Tage zu einem machen will, hat dafür `dt_zusammenfuehren()` im
+Browser mit einer Vorschau; das ist die Stelle, an der ein Mensch entscheidet.
+Ein stiller Automatismus wäre hier das Gegenteil von Dokumentation. Zu tun
+bleibt ein Satz im Handbuch (Block D).
+
+**E-S4-51 — Auf dem runden Glas entscheidet die Geometrie über die
+Reihenfolge, nicht die Wichtigkeit.** Der Kreis ist in der Mitte am
+breitesten. Bedienelemente gehören dorthin, Statusanzeigen darum herum — sie
+werden gelesen, nicht getroffen. Deshalb steht der große Knopf jetzt **über**
+der Verbindungszeile und nicht darunter. Das ist keine Umgewichtung: Der
+Verbindungszustand bleibt sichtbar, er braucht nur keine Trefferfläche.
+
+#### Prüfstand 0.7.3
+
+| Prüfung | Mittel | Ist |
+|---|---|---|
+| Baulauf | `./gradlew build` | **BUILD SUCCESSFUL** |
+| Prüffälle `uhr` | | **53**, 0 Fehlschläge (50 + 2 für B-S4-09 + 1 Bildfall) |
+| Prüffälle `handy` | | **167**, 0 Fehlschläge |
+| Prüffälle gesamt | | **220** |
+| Lint | beide Module | **0 Fehler** |
+| **Inhalt außerhalb des Glases, Startseite 192 dp** | `UhrBildTest` | **13,55 % → 0,00 %** |
+| **Inhalt außerhalb des Glases, Startseite 227 dp** | | **1,66 % → 0,00 %** |
+| **Knopffläche außerhalb des Glases**, alle drei Bilder | | **0,00 %** |
+| laufende Ansicht, 192 dp, Gesamtinhalt | | 1,74 % (Marke und Text an den Ecken; **kein Knopf**) |
+| Bedienhöhe, Startseite beide Größen | | 48,0 dp (unverändert, E-S4-41) |
+| Bedienhöhe, laufende Ansicht | | 53,5 dp — „Einsatz abschließen" bricht um, also **über** der Zusage |
+| F-S4-D nachgestellt | lokale Installation, `ingest.php` | **2 Diensttage**, je 1 Einsatz, 0 überschrieben |
+
+**Das Mockup liegt bei** — `android/mockups/S4-uhr-startseite.html` samt
+Bild, mit **echten** Prüfstandsbildern statt eines Nachbaus, die runde Maske
+als CSS darübergelegt. Es liegt unter `android/`, weil `docs/mockups/`
+außerhalb des Schreibrahmens dieser Umsetzung liegt; verschieben ist ein
+Handgriff, sobald Block D die Dokumentation zusammenführt.
+
+**Was offen bleibt und warum:**
+
+- **B-S4-01** (Logodateien mit alten Farbwerten) — die Quelldateien liegen
+  außerhalb von `android/`. Der Abgleich der App gegen ihre Vorlagen meldet
+  0 Abweichungen; der Fund betrifft die Vorlagen selbst.
+- **B-S4-02** (44 gegen 48 dp am Handy) — **Vorschlag: es bleibt bei 44 px.**
+  `CLAUDE.md` 5 nennt eine Höhe für die ganze Anwendung, und die
+  Weboberfläche hält sie. Die Uhr ist die begründete Ausnahme (E-S4-41), weil
+  dort ein Finger im Einsatz ein rundes Display trifft. Eine zweite Zahl am
+  Handy einzuführen bräuchte einen Grund, den es nicht gibt. Zur Bestätigung.
+- **B-S4-03** (Uhr-APK 19 MB) — kleiner würde sie nur durch `isMinifyEnabled`,
+  und ProGuard gegen Compose ist kein Nebenbei-Schritt. Eigene Runde.
+- **B-S4-04** (Akku-Freistellung gegen Play-Store-Richtlinie) — eine
+  Betriebsentscheidung, keine Codefrage.
+- **B-S4-06** (Wortliste erreicht `android/` nicht) — `tools/` liegt
+  außerhalb des Schreibrahmens.

@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import org.genem.nadoku.gemeinsam.LogoWahl
+import org.genem.nadoku.gemeinsam.Phasen
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -19,6 +20,12 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
 private const val UhrBausteine_SOLL_DP = 48.0
+
+/**
+ * Die Flächenfarben der Knöpfe: Orange handelt, Rot beendet (E-S4-22a).
+ * An ihnen erkennt die Messung ein Bedienelement im Bild.
+ */
+private val KNOPFFARBEN = setOf(0xFFFF8F1F.toInt(), 0xFFD63338.toInt())
 
 /**
  * Bilder der Uhr-Ansicht OHNE Emulator und ohne Gerät (E-S4-49).
@@ -85,14 +92,69 @@ class UhrBildTest {
          * allein hätte das nicht gezeigt — es sah gut aus. */
         val hoeheDp = knopfhoeheDp(punkte, kante)
 
+        /* DER BESCHNITT WIRD GERECHNET, NICHT GEMALT. Der Direktweg zeichnet
+         * ein Quadrat — die runde Maske legt das Gerät an. Wo sie liegt, ist
+         * aber bekannt: der einbeschriebene Kreis. Was außerhalb davon Farbe
+         * trägt, sieht auf dem Glas niemand. */
+        val drausen = ausserhalbDesGlases(punkte, kante, nurKnoepfe = false)
+        val knopfDrausen = ausserhalbDesGlases(punkte, kante, nurKnoepfe = true)
+
         println(
             "BILD %s | %d Bytes | %dx%d | %d Farben | nicht-Grundfarbe %.2f %% | Knopf %.1f dp"
                 .format(ziel.absolutePath, ziel.length(), kante, kante, zaehlung.size,
-                        anteilFremd, hoeheDp)
+                        anteilFremd, hoeheDp) +
+                " | ausserhalb des Glases %.2f %% (Knoepfe %.2f %%)".format(drausen, knopfDrausen)
         )
         check(ziel.length() > 0L) { "PNG ist leer" }
         check(zaehlung.size > 1) { "$name ist einfarbig — nichts gezeichnet" }
+
+        /* KEIN BEDIENELEMENT DARF AUS DEM GLAS RAGEN.
+         *
+         * Die Zusicherung gilt den KNÖPFEN und nicht jedem Punkt — und das ist
+         * kein Nachlassen, sondern die genauere Frage. Ein Stück Bildmarke am
+         * Rand ist unschön; ein gekappter Knopf ist ein Bedienelement, das man
+         * nicht trifft. Auf der 192-dp-Uhr passt die laufende Ansicht mit zwei
+         * Knöpfen und Zustandszeile ohnehin nicht ohne Bildlauf (221 dp
+         * Inhalt auf 192 dp) — dort auf jeden Punkt zu bestehen hieße, die
+         * Ansicht auszudünnen, bis nichts mehr dasteht.
+         *
+         * Der Gesamtwert wird trotzdem gemeldet: Er ist die Zahl, die B-S4-08b
+         * beziffert hat (13,55 % auf der Startseite, alles davon im Knopf). */
+        check(knopfDrausen == 0.0) {
+            ("%s: %.2f %% der Knopffläche liegen außerhalb des runden Glases " +
+                "(B-S4-08b). Insgesamt außerhalb: %.2f %%.")
+                .format(name, knopfDrausen, drausen)
+        }
         return hoeheDp
+    }
+
+    /**
+     * Wie viel Inhalt liegt **außerhalb des runden Glases**?
+     *
+     * Gezählt werden Punkte, die nicht die Grundfarbe tragen und weiter als
+     * der halbe Kantenmaß vom Mittelpunkt entfernt sind. Auf einer runden Uhr
+     * sind sie unsichtbar — der Rand schneidet sie ab, ohne dass es jemand
+     * merkt. Genau so verschwand „löst am Handy aus", und genau so werden die
+     * Ecken des großen Knopfes gekappt.
+     *
+     * @return Anteil in Prozent der Vordergrundpunkte
+     */
+    private fun ausserhalbDesGlases(punkte: IntArray, kante: Int, nurKnoepfe: Boolean): Double {
+        val grund = punkte.toList().groupingBy { it }.eachCount().maxBy { it.value }.key
+        val r = kante / 2.0
+        var vorne = 0
+        var drausen = 0
+        for (y in 0 until kante) {
+            for (x in 0 until kante) {
+                val farbe = punkte[y * kante + x]
+                if (if (nurKnoepfe) farbe !in KNOPFFARBEN else farbe == grund) continue
+                vorne += 1
+                val dx = x + 0.5 - r
+                val dy = y + 0.5 - r
+                if (dx * dx + dy * dy > r * r) drausen += 1
+            }
+        }
+        return if (vorne == 0) 0.0 else 100.0 * drausen / vorne
     }
 
     /**
@@ -103,11 +165,16 @@ class UhrBildTest {
      * trägt [kante] Punkte für 192 bzw. 227 dp.
      */
     private fun knopfhoeheDp(punkte: IntArray, kante: Int): Double {
-        val orange = 0xFFFF8F1F.toInt()
+        /* ZWEI KNOPFFARBEN, NICHT EINE. Der handelnde Knopf ist orange, der
+         * beendende vollflächig rot (E-S4-22a) — „Einsatz abschließen" und
+         * „Dienst beenden" tragen Rot. Die erste Fassung dieser Messung suchte
+         * nur Orange und meldete für die laufende Ansicht 3,0 dp; das war kein
+         * Fehler der Oberfläche, sondern des Prüfmittels. */
+        val knopffarben = KNOPFFARBEN
         var beste = 0
         var laufend = 0
         for (y in 0 until kante) {
-            val hat = (0 until kante).any { x -> punkte[y * kante + x] == orange }
+            val hat = (0 until kante).any { x -> punkte[y * kante + x] in knopffarben }
             if (hat) { laufend += 1; if (laufend > beste) beste = laufend } else laufend = 0
         }
         val dpJePunkt = (if (kante == 384) 192.0 else 227.0) / kante
@@ -130,6 +197,25 @@ class UhrBildTest {
      * Sperre nur im laufenden Dienst greift — auf der Startseite gibt es
      * nichts zu sperren. Ein Prüffall, der zweimal dasselbe malt, ist kein
      * zweiter Beleg, sondern eine zweite Datei. */
+
+    /**
+     * **Die laufende Ansicht mit dem längsten Text.**
+     *
+     * Nach der letzten Phase wird der große Knopf zu „Einsatz abschließen",
+     * und darunter steht ein zweiter. Wenn der Beschnitt irgendwo zurückkehrt,
+     * dann hier — nur die Startseite zu prüfen hieße, den engsten Fall
+     * auszulassen.
+     */
+    @Test fun laufendeAnsichtMitLangemText() {
+        val z = Uhrzustand(
+            dienstLaeuft = true, einsatzLaeuft = true, laufendePhase = Phasen.LETZTE,
+            laufendeSeit = "09:12", ansicht = Ansicht.LAUFEND,
+        )
+        val dp = male("uhr-laufend-192dp", 384) {
+            UhrOberflaeche(logoWahl = LogoWahl.BODEN, anfang = z)
+        }
+        pruefeBedienhoehe("192 dp, laufend", dp)
+    }
 
     /** Galaxy Watch, 227 dp Rundbild — dieselbe Ansicht, andere Kante. */
     @Test fun groessereUhr() {

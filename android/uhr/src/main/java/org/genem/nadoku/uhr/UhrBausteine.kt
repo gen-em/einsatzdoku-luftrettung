@@ -50,6 +50,7 @@ import org.genem.nadoku.gemeinsam.Farbe
  */
 val UHR_BEDIENHOEHE: Dp = 48.dp
 
+
 /** Der eine große Knopf: Orange handelt, dunkelblaue Schrift (E-P3-15). */
 @Composable
 fun UhrKnopf(

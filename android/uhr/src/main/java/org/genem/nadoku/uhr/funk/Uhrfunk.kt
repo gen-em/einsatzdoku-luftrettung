@@ -35,8 +35,14 @@ class Uhrfunk(
 
     private val kennungen = Kennungen(puffer.kennungsspeicher())
 
-    /** Wurde der letzte Sendeversuch zugestellt? */
-    var handyErreichbar: Boolean = true
+    /**
+     * Wurde der letzte Sendeversuch zugestellt?
+     *
+     * `null`, solange es keinen gab. Ein Vorgabewert `true` wäre eine
+     * Behauptung ohne Beobachtung (B-S4-09), ein Vorgabewert `false` eine
+     * Warnung ohne Anlass.
+     */
+    var handyErreichbar: Boolean? = null
         private set
 
     fun offen(): Int = puffer.anzahl()

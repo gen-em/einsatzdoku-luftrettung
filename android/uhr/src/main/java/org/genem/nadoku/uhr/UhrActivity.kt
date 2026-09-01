@@ -114,13 +114,22 @@ fun UhrOberflaeche(
     freieTasteVorhanden: Boolean = false,
     tasteAnmelden: (() -> Unit) -> Unit = {},
     sperreAn: Boolean = true,
+    /**
+     * Startzustand **ohne** [app] — für Vorschau und Bildprüfstand.
+     *
+     * Er existiert, weil sich sonst nur die Startseite abbilden ließe: Ohne
+     * Handy kommt die Ansicht nie in den laufenden Dienst, und gerade dort
+     * steht der längste Text. Mit [app] wird er ignoriert; dann führt die
+     * Steuerung (E-S4-48).
+     */
+    anfang: Uhrzustand = Uhrzustand(),
 ) {
     /* OHNE [app] BLEIBT DIE ANSICHT FÜR SICH — das ist der Fall der
      * @Preview-Vorschau und nur der. In der App liegt der Zustand in der
      * Steuerung, weil eine Quittung eintreffen kann, während keine Ansicht
      * läuft (E-S4-10). */
     val bedienung = remember(sperreAn) { Uhrbedienung(sperreAn = sperreAn) }
-    var zustand by remember { mutableStateOf(app?.zustand ?: Uhrzustand()) }
+    var zustand by remember { mutableStateOf(app?.zustand ?: anfang) }
 
     DisposableEffect(app) {
         app?.beobachter = { z -> zustand = z }
@@ -209,26 +218,36 @@ private fun Marke(logoWahl: LogoWahl, anteil: Float) {
 @Composable
 private fun Startseite(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereignis) -> Unit) {
     Spalte {
-        // Die Startseite trägt die Marke GRÖSSER — die 27-%-Stufung der
-        // Garmin (E-S4-22a).
+        // Die Startseite trägt die Marke GRÖSSER als die laufenden Ansichten
+        // (E-S4-22a) — seit 0.7.3 mit 22 % statt 27 %, siehe MARKE_START.
         Marke(logoWahl, MARKE_START)
         Text(
             text = stringResource(R.string.app_name),
             color = Farbe.aufDunkel, fontSize = 19.sp, textAlign = TextAlign.Center,
         )
-        // Die Fassung steht auf der Startseite — beim Gerätetest ist die erste
-        // Frage immer, welche gerade draufliegt.
-        Text(
-            text = stringResource(R.string.fassung, BuildConfig.VERSION_NAME),
-            color = Farbe.sand, fontSize = 11.sp, textAlign = TextAlign.Center,
-        )
-        Verbindungszeile(z)
+
+        /* DER KNOPF STEHT ÜBER DER VERBINDUNGSZEILE, und das ist Geometrie,
+         * keine Gewichtung: Der Kreis ist in der Mitte am breitesten. Ein
+         * Bedienelement gehört dorthin, eine Statusanzeige nicht — sie wird
+         * gelesen, nicht getroffen. Vorher stand der Knopf ganz unten, wo der
+         * Kreis auf 55 dp zusammenläuft, und wurde an beiden Seiten gekappt
+         * (Fund B-S4-08b, gemessen: 13,55 % des Inhalts außerhalb des Glases). */
         UhrKnopf(stringResource(R.string.dienst_beginnen)) {
             melde(Uhrereignis.Dienstknopf(System.currentTimeMillis()))
         }
+        Verbindungszeile(z)
+
+        /* Die Fassung steht zuletzt — beim Gerätetest ist sie die erste Frage,
+         * im Betrieb interessiert sie niemanden. Auf der kleinen Uhr ist sie
+         * damit nur noch über den Bildlauf erreichbar; das ist die richtige
+         * Reihenfolge, wenn der Platz nicht für alles reicht.
+         *
+         * „löst am Handy aus" ist ersatzlos gestrichen: Die Verbindungszeile
+         * sagt bereits, dass ein Handy im Spiel ist, und der Satz lag auf der
+         * 192-dp-Uhr ohnehin außerhalb des Glases — er war nie zu sehen. */
         Text(
-            text = stringResource(R.string.loest_am_handy_aus),
-            color = Farbe.sand, fontSize = 12.sp, textAlign = TextAlign.Center,
+            text = stringResource(R.string.fassung, BuildConfig.VERSION_NAME),
+            color = Farbe.sand, fontSize = 11.sp, textAlign = TextAlign.Center,
         )
     }
 }
@@ -250,6 +269,7 @@ private fun LaufendeAnsicht(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereign
                 stringResource(R.string.dienst_beenden),
                 flaeche = Farbe.rot, schrift = Farbe.aufDunkel,
             ) { melde(Uhrereignis.Dienstknopf(System.currentTimeMillis())) }
+            Verbindungszeile(z)
             return@Spalte
         }
 
@@ -273,6 +293,13 @@ private fun LaufendeAnsicht(z: Uhrzustand, logoWahl: LogoWahl, melde: (Uhrereign
         UhrKnopfLeise(stringResource(R.string.dienst_beenden)) {
             melde(Uhrereignis.Dienstknopf(System.currentTimeMillis()))
         }
+
+        /* DIE VERBINDUNGSZEILE STEHT ZULETZT — dieselbe Regel wie auf der
+         * Startseite (E-S4-51): Bedienelemente in die Mitte, wo der Kreis
+         * breit ist, Statusanzeigen an den Rand. Sie stand vorher zwischen
+         * Zustandszeile und Knopf und schob beide Knöpfe nach unten; gemessen
+         * blieben davon 1,66 % des Inhalts außerhalb des Glases. */
+        Verbindungszeile(z)
     }
 }
 
@@ -332,6 +359,7 @@ private fun GesperrteAnsicht(z: Uhrzustand, logoWahl: LogoWahl) {
         )
         Marke(logoWahl, MARKE_LAUFEND)
         Zustandszeile(z)
+        Verbindungszeile(z)
         Text(
             text = stringResource(R.string.gesperrt),
             color = Farbe.sand, fontSize = 12.sp, textAlign = TextAlign.Center,
@@ -351,7 +379,6 @@ private fun Zustandszeile(z: Uhrzustand) {
             color = Farbe.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
         )
     }
-    Verbindungszeile(z)
 }
 
 /**
@@ -374,14 +401,22 @@ private fun Verbindungszeile(z: Uhrzustand) {
     }
     Text(
         text = when {
-            !z.handyErreichbar -> stringResource(R.string.handy_nicht_erreichbar)
+            /* NOCH NICHTS VERSUCHT ist ein eigener Fall und nicht „verbunden".
+             * Beim Start der App weiß die Uhr über das Handy genau nichts —
+             * das zu sagen ist die einzige zutreffende Auskunft (B-S4-09). */
+            z.handyErreichbar == null -> stringResource(R.string.handy_unbekannt)
+            z.handyErreichbar == false -> stringResource(R.string.handy_nicht_erreichbar)
             z.gepuffert > 0 -> androidx.compose.ui.res.pluralStringResource(
                 R.plurals.gepuffert, z.gepuffert, z.gepuffert,
             )
             else -> stringResource(R.string.handy_verbunden)
         },
-        // Rot warnt, Blau bestätigt (E-S4-22a).
-        color = if (z.handyErreichbar) Farbe.blau else Farbe.rot,
+        // Rot warnt, Blau bestätigt, Sand sagt nichts zu (E-S4-22a).
+        color = when (z.handyErreichbar) {
+            null -> Farbe.sand
+            true -> Farbe.blau
+            false -> Farbe.rot
+        },
         fontSize = 12.sp,
         textAlign = TextAlign.Center,
     )
@@ -422,14 +457,17 @@ private fun Spalte(inhalt: @Composable androidx.compose.foundation.layout.Column
 }
 
 /**
- * Die Startseite trägt die Marke nach der **27-%-Stufung der Garmin**
+ * Die Startseite trug die Marke nach der 27-%-Stufung der Garmin; seit 0.7.3
+ * sind es **22 %** — die 27 % stammen von einem Gerät mit anderen
+ * Proportionen und kosteten auf der 192-dp-Uhr genau die Höhe, die der große
+ * Knopf braucht, um im Glas zu bleiben. Die alte Herleitung:
  * (`tools/uhr-bilder`: 70/260 des Bezugsgeräts), die laufenden Ansichten
  * **ein Sechstel** der Displayhöhe (E-S4-22a).
  *
  * Beides ist **blind gewählt** und am Gerät nachzumessen (E-R45-7); es gehört
  * danach in den Wear-Teil von `docs/Geraete-Eingabe.md`.
  */
-const val MARKE_START = 0.27f
+const val MARKE_START = 0.22f
 const val MARKE_LAUFEND = 1f / 6f
 
 @Preview(device = "id:wearos_small_round", showBackground = true)

@@ -46,13 +46,13 @@ class UhrfunkTest {
         f.melde(Ereignisart.DIENST_BEGINNEN, 1_000)
         f.melde(Ereignisart.PHASE, 2_000, phase = 2, einsatzRef = f.einsatzkennung())
 
-        assertFalse("Die Uhr weiss, dass nichts angekommen ist", f.handyErreichbar)
+        assertEquals("Die Uhr weiss, dass nichts angekommen ist", false, f.handyErreichbar)
         assertEquals("Beides wartet", 2, f.offen())
         assertEquals("Auf der Leitung war nichts", 0, weg.gesendet.size)
 
         weg.erreichbar = true
         assertEquals("Beide gehen nach", 2, f.nachliefern())
-        assertTrue(f.handyErreichbar)
+        assertEquals(true, f.handyErreichbar)
         assertEquals("Und beide warten weiter — bis zur Quittung", 2, f.offen())
 
         val nummern = weg.texte().map { Nachrichtenformat.liesMeldung(it.toByteArray())!!.nr }
@@ -88,7 +88,7 @@ class UhrfunkTest {
         val zaehe = Uhrfunk(Uhrpuffer(ablage, Random(7)), einmal)
 
         assertEquals(1, zaehe.nachliefern())
-        assertFalse(zaehe.handyErreichbar)
+        assertEquals(false, zaehe.handyErreichbar)
         assertEquals("Nichts wurde verworfen", 3, zaehe.offen())
         assertEquals(
             "Und der Dienststart war der erste, nicht irgendeiner",

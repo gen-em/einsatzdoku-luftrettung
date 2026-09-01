@@ -45,8 +45,19 @@ data class Uhrzustand(
     /** Wann zuletzt bedient wurde — Grundlage der Sperrfrist. */
     val letzteBedienungMs: Long = 0,
 
-    /** Ist das Handy erreichbar? (E-S4-10) */
-    val handyErreichbar: Boolean = true,
+    /**
+     * Ist das Handy erreichbar? (E-S4-10)
+     *
+     * **`null` heißt „noch nichts versucht"** — und dieser dritte Zustand ist
+     * der Punkt (Fund B-S4-09). Vorher stand hier `true` als Vorgabe, und die
+     * Startseite meldete „Handy verbunden", bevor je eine Nachricht
+     * hinausgegangen war. Das ist dieselbe Art Aussage, gegen die E-S4-47
+     * gebaut ist: eine Behauptung über etwas, das die Uhr nicht wissen kann.
+     *
+     * `true`/`false` sind Beobachtungen am letzten Sendeversuch, keine
+     * Verbindungsanzeige — mehr gibt der Data Layer nicht her.
+     */
+    val handyErreichbar: Boolean? = null,
 
     /** Wie viele Ereignisse warten auf ihre Quittung? (C2) */
     val gepuffert: Int = 0,
