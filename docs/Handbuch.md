@@ -1509,6 +1509,55 @@ Für dein Konto ändert sich dadurch nichts: Der Inhalt der Sicherung bleibt
 verschlüsselt, und ohne deinen Wiederherstellungsschlüssel ist er auch dort
 nicht zu öffnen.
 
+### 6.3 Die Komplettsicherung (nur Administration)
+
+Seit Web 12.2.0 gibt es unter **Einstellungen → Komplettsicherung** einen
+zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
+
+| | Sicherung eines Kontos | Komplettsicherung |
+|---|---|---|
+| enthält | die Daten **einer** NutzerIn | **alle** Konten, Stammdaten, Geräte, Spuren — jede Tabelle |
+| hilft gegen | „jemand hat sich vertan" | „der Server ist weg" |
+| wo | Einstellungen → Sicherungen | Einstellungen → Komplettsicherung |
+
+**Was zu tun ist.** Einen Zeitplan setzen (täglich, wöchentlich oder
+monatlich) — mehr braucht es im Regelfall nicht. Der Lauf arbeitet in kleinen
+Portionen im Hintergrund weiter; wie oft er drankommt, hängt an der Wartung.
+Wer sofort einen Stand will, drückt *Jetzt sichern*.
+
+**Wie viele aufbewahrt werden**, steht daneben; Vorgabe sind zwei. Ältere
+werden nach einem erfolgreichen Lauf gelöscht — hier, nicht auf dem
+Sicherungsziel.
+
+**Zwei Wege heraus:**
+
+- *Herunterladen* gibt die Datei **unverschlüsselt** als `.sql.gz`. Das ist
+  die Fassung, die `mysql` oder phpMyAdmin einspielen kann.
+- *Versiegelt herunterladen* verlangt eine Passphrase und gibt die Datei unter
+  dieser Passphrase verschlossen heraus. Das ist die Fassung zum Weitergeben
+  oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
+  sie verliert, hat die Datei verloren.
+
+Was von selbst auf ein Sicherungsziel geschoben wird, ist immer die
+verschlossene Fassung.
+
+**Das Wichtigste steht nicht in der Datei.** Die Komplettsicherung enthält
+absichtlich *nicht* die Datei `config.php` des Servers. In ihr steht der
+Schlüssel, mit dem sich die Sicherung öffnen lässt — beides zusammen
+aufzubewahren wäre, als klebte der Schlüssel am Schloss. Sie gehört an einen
+anderen Ort, zusammen mit dem Zugang zum Sicherungsziel. Diese drei Dinge
+zusammen heissen **Wiederanlaufpaket**, und ohne sie nützt die beste Sicherung
+nichts.
+
+**Der Weg zurück** heisst `wiederherstellen.php` und wird genau einmal
+gebraucht: wenn alles weg ist. Er arbeitet nur auf einer **leeren** Datenbank
+und verlangt einen Nachweis, dass man Zugriff auf das Verzeichnis der
+Anwendung hat. Die Schritte stehen im Runbook (`docs/Technik.md`, Abschnitt 7);
+die Seite selbst führt durch sie hindurch.
+
+**Einmal im Halbjahr ausprobieren.** Eine Sicherung, die nie zurückgespielt
+wurde, ist eine Vermutung.
+
 ---
 
 ## 7. Import und Export

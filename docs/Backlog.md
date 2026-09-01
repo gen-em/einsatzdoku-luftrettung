@@ -567,6 +567,43 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     gescheitert; der Punkt steht hier, damit die Frage nicht verlorengeht,
     nicht weil die Antwort feststünde.
 
+54. **Der Migrationslauf nach einer Wiederherstellung ist ein zweiter Gang.**
+    Aus S2/AP8. Das Konzept sieht in E-S2-20 vor, dass die Wiederherstellung
+    „danach einen Migrationslauf" ausführt. `wiederherstellen.php` tut das
+    nicht: Es sagt am Ende, ob der Dump aus einer anderen Fassung stammt, und
+    schickt zur Wartung. Der Grund ist gut — `update.php` ist seit M6-01
+    zweistufig, weil Migrationen Spalten löschen können, und eine Seite ohne
+    Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+    heraus.
+
+    Damit bleibt der Schritt aber **an einem Menschen hängen**, und zwar an
+    dem Tag, an dem er am meisten zu tun hat. Wer ihn vergisst, hat eine
+    Installation mit altem Schema und neuem Code — und merkt es an der Stelle,
+    an der zuerst eine Spalte fehlt.
+
+    **Zu entscheiden:** Ob `$MIGRATIONS` und der Ausführungsteil aus
+    `update.php` in eine eigene Datei wandern (dann liesse sich der Lauf von
+    beiden Seiten aufrufen, mit derselben Zweistufigkeit), oder ob
+    `wiederherstellen.php` nach dem Einspielen unmittelbar auf `update.php`
+    weiterleitet und die Anmeldung dazwischen als das genommen wird, was sie
+    ist: die Bestätigung. Die zweite Möglichkeit ist billiger und ändert
+    nichts an einer Datei mit 37 Migrationen.
+
+55. **Die Komplettsicherung kennt keinen scharfen Schnappschuss.**
+    Aus S2/AP8. Der Dump entsteht über mehrere Anfragen; ein Lesestand über
+    den ganzen Lauf (`--single-transaction`) ginge nur innerhalb EINER
+    Verbindung. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+    oder nicht. Übersprungen wird nichts, was schon dastand — der Cursor läuft
+    über den Primärschlüssel —, aber ein Einsatz, der während des Laufs
+    angelegt wird, kann mit Phasen und ohne Spur in der Datei landen.
+
+    In der Praxis ist das verschmerzbar: Wer nachts sichert, hat das Problem
+    nicht, und die Uhr liefert Fehlendes idempotent nach. **Zu entscheiden:**
+    ob es sich lohnt, den Lauf auf eine Anfrage zu zwingen, sobald die
+    Datenbank klein genug ist (dann wäre er scharf), und wo diese Grenze
+    läge — oder ob stattdessen die Reihenfolge der Tabellen so gewählt wird,
+    dass wenigstens Einsatz und Phasen zusammen fallen.
+
 ---
 
 ## Erledigt

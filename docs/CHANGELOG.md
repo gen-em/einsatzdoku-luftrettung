@@ -11,6 +11,185 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.0] — 2026-09-01
+
+**Die ganze Installation in einer Datei — und ein Weg zurück.** Achtes
+Arbeitspaket der Phase S2 (AP8, E-S2-19 bis E-S2-21). Keine Migration, keine
+Schnittstellenänderung.
+
+### Web — Wogegen das hilft
+
+Bis hierher konnte diese Anwendung ein **Konto** sichern. Der Fall, gegen den
+sie damit hilft, heisst „jemand hat sich vertan". Der andere Fall — „der
+Webspace ist weg" — war nicht abgedeckt: Stammdaten, Geräte, Schlüsselhüllen,
+der Migrationsstand und die 33 übrigen Tabellen standen in keiner Sicherung.
+E-S2-19 hat für diesen Fall die Komplettsicherung beschlossen und nächtliche
+Konto-Sicherungen ausdrücklich abgelehnt.
+
+Sie umfasst **jede Tabelle dieser Datenbank**. Nicht enthalten ist
+`config.php` — sie trägt das Datenbankpasswort und den Serverschlüssel, also
+genau das, womit sich die Datei öffnen lässt. Beides in dieselbe Datei zu
+legen hiesse, das Schloss an den Schlüssel zu binden. `config.php` gehört ins
+getrennt aufbewahrte **Wiederanlaufpaket**; das Runbook (`docs/Technik.md`,
+Abschnitt 7) sagt es jetzt ausdrücklich.
+
+### Web — Warum ein eigener Dump und nicht `mysqldump`
+
+Auf geteiltem Webspace gibt es keine Kommandozeile und kein `exec()`;
+`mysqldump` ist dort nicht vorhanden und nicht nachrüstbar. Der Dump entsteht
+deshalb in PHP, über genau die Verbindung, die die Anwendung ohnehin hat.
+
+Seine Form ist absichtlich schlicht: **ein Statement je Zeile**, INSERT-Stapel
+bis 1 MB, Tabellen in einspielbarer Reihenfolge (topologisch nach
+Fremdschlüsseln), Binärspalten hexadezimal. Damit lässt er sich zeilenweise
+abarbeiten — vom Rückweg dieser Anwendung genauso wie von `mysql` oder
+phpMyAdmin. Ein mehrzeiliges Statement bräuchte einen SQL-Zerleger, und ein
+selbstgebauter SQL-Zerleger ist die Sorte Code, die genau einmal falsch liegt:
+wenn ein Semikolon in einer Zeichenkette steht.
+
+### Web — Drei Schichten, und warum die mittlere so aussieht
+
+SQL-Text → gzip → Siegel **EDKOMP1** (AES-256-GCM je 256-KB-Block).
+
+Erzeugt wird in Häppchen über den Job-Einstieg, mit Fortsetzungszustand in
+`jobs.zustand`. Das hat eine Folge, die man sehen muss: Ein
+`deflate_init()`-Zustand lässt sich zwischen zwei Anfragen **nicht**
+aufbewahren — er ist keine Zahl, sondern ein Fenster über die letzten 32 KB.
+Deshalb schliesst jedes Häppchen sein gzip-Glied ab und das nächste hängt ein
+neues an. Aneinandergehängte gzip-Glieder sind gültiges gzip; `gunzip`, `zcat`
+und PHPs `gzopen()`/`gzgets()` lesen darüber hinweg. Der Preis sind einige
+Promille Grösse (gemessen: 3 045 Byte auf 45,8 MB).
+
+**Zwei PHP-Funktionen lesen allerdings nur das erste Glied**, und zwar ohne
+Fehler: nachgemessen an einer Datei aus 15 Gliedern mit 122 469 394 Byte
+Klartext liefern `gzdecode()` und `inflate_add()` je **13 573 234 Byte
+(11 %)** — was dabei herauskommt, sieht aus wie eine ganze Datei. Nur
+`gzopen()`/`gzread()` liefert alles; die Anwendung benutzt ausschliesslich
+diesen Weg. (Python ist gutmütiger: `gzip.open()` und `gzip.decompress()`
+lesen beide alle Glieder.)
+
+Die erste Fassung des Rückwegs schob jeden entsiegelten Block durch
+`inflate_add()` und brach mit „data error" ab; er entpackt jetzt über eine
+Zwischendatei. Bei einem Dump, der in einem Zug entstanden ist, wäre der
+Fehler nie aufgetreten — die Probe fährt deshalb ausdrücklich einen aus
+vierzehn Häppchen.
+
+Das Siegel trägt **Blockzähler und Endemarkierung in den Zusatzdaten** und
+bindet den Dateikopf über seinen SHA-256 mit. Ohne den Zähler liessen sich
+zwei Blöcke vertauschen; ohne die Endemarkierung liesse sich die Datei hinten
+abschneiden, und was übrig bliebe, wäre eine gültige, kürzere Sicherung.
+
+### Web — Zwei Wege heraus, und der Unterschied ist der Punkt
+
+- **„Herunterladen"** gibt den Dump **unverschlüsselt** als `.sql.gz` — genau
+  das, was `mysql` und phpMyAdmin einspielen. Er geht an die Administratorin,
+  die sich eben angemeldet hat und ohnehin jede Zeile dieser Datenbank sehen
+  kann.
+- **„Versiegelt herunterladen"** liefert dieselbe Datei unter einer
+  **Passphrase** (PBKDF2, 320 000 Runden — dieselbe Zahl wie im Browser). Sie
+  wird nicht doppelt verschlüsselt, sondern block für block *umgesiegelt*;
+  der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
+  Datei ist.
+- Was **von selbst** hinausgeht — der Versand aufs Sicherungsziel — ist immer
+  die versiegelte Fassung (E-S2-21).
+
+Ohne Serverschlüssel wird gar nicht erst gesichert. Eine unversiegelte
+Abschrift jeder Tabelle in `sicherungen/` liegen zu lassen unterliefe die
+Ende-zu-Ende-Zusage an der Stelle, an der es am wenigsten auffiele.
+
+### Web — Der Rückweg: `wiederherstellen.php`
+
+Er füllt die Lücke zwischen `install.php` (verweigert sich, sobald es eine
+`config.php` gibt) und `update.php` (verlangt eine Anmeldung, die es ohne
+Konten nicht geben kann). Drei Schranken, jede mit ihrem Grund:
+
+1. **Die Datenbank muss leer sein.** Steht auch nur ein Konto darin, ist diese
+   Installation in Betrieb. Das gilt fürs *Anfangen*: Ab dem zweiten Durchgang
+   ist die Datenbank nicht mehr leer, weil der erste sie füllt — die erste
+   Fassung brach deshalb bei 91 % ab und meldete „Diese Installation ist in
+   Betrieb". Wer einen Arbeitsstand hat, hat ihn auf einer leeren Datenbank
+   begonnen; daran hängt der Unterschied.
+2. **Ein Nachweis** wie beim Einrichter (M1-11): eine Datei mit zufälligem
+   Namen im Anwendungsverzeichnis, deren Kennung einzutragen ist. Ohne ihn
+   wäre die Seite im Zeitfenster zwischen „Datenbank leer" und „erstes Konto"
+   für jeden im Netz offen.
+3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
+   Wer sie dort ablegen kann, hat ohnehin Dateizugriff.
+
+**Der Migrationslauf läuft dort bewusst nicht mit.** `update.php` ist seit
+M6-01 zweistufig, weil Migrationen Spalten löschen können und zwischen
+Anzeigen und Ausführen ein Knopf und eine angemeldete Person gehören. Eine
+Seite ohne Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese
+Sicherung heraus. Stattdessen sagt die Seite am Ende, ob der Dump aus einer
+anderen Fassung stammt, und schickt zur Wartung.
+
+### Web — Der Schnappschuss ist nicht scharf, und das steht dran
+
+`mysqldump --single-transaction` hält einen Lesestand über den ganzen Lauf.
+Das geht nur **innerhalb einer Verbindung**, und diese Sicherung läuft über
+viele Anfragen. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+oder nicht. Was **nicht** passieren kann, ist eine übersprungene Altzeile: Der
+Cursor läuft über den Primärschlüssel und nicht über `LIMIT/OFFSET`, ein
+gelöschter Vorgänger verschiebt ihn also nicht.
+
+Der Cursor ist dabei **aufgefächert** (`a > ? OR (a = ? AND b > ?)`) und kein
+Zeilenkonstruktor — gemessen an `track_points` mit 917 331 Zeilen: `type=index`
+und 0,1486 s gegen `type=range` und 0,0010 s. Eine Ausnahme: Steht eine
+ENUM-Spalte **vorn** im Primärschlüssel, hilft auch das Auffächern nichts;
+sie wird deshalb über ihre Werteliste festgenagelt.
+
+### Web — Gemessen
+
+Am Messbestand (5 000 Einsätze, 1 121 802 Zeilen, 34 Tabellen), ohne
+Drosselung:
+
+| | Wert |
+|---|---|
+| Erzeugen | **8,5 s** in **14 Häppchen** |
+| Speicherspitze | **26 von 64 MB** (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** |
+| Längste Zeile | 1 048 566 Byte (Ziel: ≤ 1 MB je Stapel) |
+| Einspielen | 784 Anweisungen in 6,0 s |
+| Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
+
+Die neue **Komplettprobe** (`tools/komplettprobe/`) fährt den ganzen Zyklus:
+**76 Erwartungen, 0 nicht erfüllt** — einschliesslich Versand auf eine echte
+FTP-Gegenstelle und dem Fall „halbe Datei liegt dort". Dazu ein Klickweg im
+Browser (`klickweg.mjs`): **17 Prüfungen, 0 Befunde**, mit beiden Downloads
+und Prüfung ihres Inhalts. Die Versandprobe aus AP7 bleibt bei **115
+Erwartungen, 0 nicht erfüllt**; Wortliste **0/0/0**, Vollständigkeit **260**
+(unverändert), Kontraste **21 Paare, 0 verfehlt**.
+
+Der Bilderlauf über beide neuen Seiten in acht Breiten (**16 Bilder**) fand
+einen Fehler und meldet ihn jetzt nicht mehr: Der Knopf „Versiegelt
+herunterladen" stand in einer `.fld-reihe` statt im Fussbereich und schob die
+Seite bei 360, 390 und 420 px auf (+74/+59/+44 px). In einer `.fld-reihe`
+liegen Felder nebeneinander; ein Knopf darin bekommt keine Umbruchstelle.
+
+### Web — Was die Probe gefunden hat
+
+**Der Neuanlauf lief in ein `count(null)`.** Die Erstbelegung des
+Fortsetzungszustands stand *vor* dem Zweig, der bei verschwundenem Baustand
+ebendiese Marken löscht. Der Zweig ist der, der nach einer Wiederherstellung
+greift: Die Sicherung schreibt ihren eigenen Fortschritt mit, die eingespielte
+Datenbank trägt also den Stand „Dump läuft" samt einem Bauordner, den es auf
+dem neuen Server nie gab. Ohne die Probe wäre das genau einmal aufgefallen —
+beim ersten Wartungslauf nach dem ersten Wiederanlauf.
+
+### Web — Sonst noch
+
+- Der Job `komplett` steht im Katalog **nach** `versand`. Davor wäre er am
+  rechten Platz — was entsteht, ginge im selben Lauf hinaus —, nur bekäme
+  jeder Job hinter ihm nur noch, was die schwerste Arbeit der Anwendung übrig
+  lässt. Der Preis ist ein Lauf Verzögerung. Zusätzlich begrenzt er sich auf
+  zwei Minuten je Lauf.
+- Die Speicherbuchführung zählt Komplettsicherungen **eigens** (`komplett`,
+  `komplett_bytes`) statt sie unter „auffälliger Rest" zu führen. Sie ist die
+  grösste Datei der Ablage; sie als Rest auszuweisen brächte die Speicherseite
+  dazu, einen Fehler zu melden, den es nicht gibt.
+- Neuer Menüpunkt **Komplettsicherung** unter Administration, direkt hinter
+  Sicherungsziele. Symbol `datenbank` aus dem vorhandenen Vorrat.
+
 ## [Web 12.1.1] — 2026-09-01
 
 **Die Suche, und ein Prüfmittel, das sich selbst gemessen hat.** Neuntes

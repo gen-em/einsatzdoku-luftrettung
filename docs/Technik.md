@@ -111,6 +111,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       Pakete eines Kontos auf dessen Kontoseite
 │   │                       · sicherungen/ die Ablage selbst
 │   │                       (entsteht nur auf dem Server, im Deploy ausgenommen)
+│   │                       · sicherungen/komplett/ die Komplettsicherungen
+│   │                       · sicherungen/eingang/ was wiederhergestellt
+│   │                         werden soll — von Hand dorthin gelegt
 │   ├── sicherungsziel_lib.php  Sicherungsziele (S2/AP7): Schnittstelle
 │   │                       `Zielweg` und drei Adapter — FTP und FTPS über
 │   │                       ext/ftp, SFTP über phpseclib; dazu Pflege in der
@@ -118,6 +121,18 @@ Daten erst nach Server-Bestätigung.
 │   │                       der Versandschub
 │   ├── admin_sicherungsziele.php  Adminseite dazu: Ziele anlegen und prüfen,
 │   │                       Serverschlüssel nachtragen, Versand ein/aus
+│   ├── komplett_lib.php   Komplettsicherung der Installation (S2/AP8):
+│   │                       eigener SQL-Dump in Häppchen (ein Statement je
+│   │                       Zeile, INSERT-Stapel bis 1 MB, einspielbare
+│   │                       Reihenfolge), gzip, Siegel EDKOMP1; dazu Ablage,
+│   │                       Aufbewahrung, Zeitplan und die Wege heraus
+│   ├── admin_komplettsicherung.php  Adminseite dazu: erzeugen mit Fortschritt,
+│   │                       Zeitplan, Stände herunterladen (unverschlüsselt
+│   │                       für mysql, oder unter einer Passphrase), löschen
+│   ├── wiederherstellen.php  Der Rückweg — die Lücke zwischen install.php
+│   │                       und update.php. Nur bei LEERER Datenbank, mit
+│   │                       Nachweisdatei, liest aus sicherungen/eingang/,
+│   │                       spielt in Durchgängen ein. Kein Hochladen
 │   ├── serverkrypto_lib.php  Der Serverschlüssel aus config.php (32 B) und
 │   │                       die Versiegelung `edsk1:` (AES-256-GCM, Zweck in
 │   │                       den Zusatzdaten). Das EINZIGE Geheimnis, das der
@@ -285,6 +300,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      plus berechnete Stile im Browser, 13 Breiten.
 │   │                      Ruhte waehrend P3, in O12 neu geeicht; ab P4 wieder
 │   │                      Pflicht bei CSS-Umbauten (s. LIESMICH.md)
+│   ├── komplettprobe/     fährt den ganzen Zyklus der Komplettsicherung
+│   │                      (S2/AP8): erzeugen in Häppchen, versiegeln, öffnen,
+│   │                      in eine LEERE Datenbank einspielen und Tabelle für
+│   │                      Tabelle vergleichen, aufs Sicherungsziel schieben.
+│   │                      76 Erwartungen. Arbeitet in einer Kopie unter /tmp,
+│   │                      liest aber aus der ECHTEN Datenbank
 │   ├── versandprobe/      prüft die drei Sicherungsziel-Adapter (S2/AP7)
 │   │                      gegen ECHTE Server auf 127.0.0.1: Rundlauf je
 │   │                      Protokoll, Fingerabdruck als Riegel, Fehlerfälle,
@@ -2656,6 +2677,254 @@ Stelle ihrer `LIESMICH.md`.
 
 ---
 
+### 4.97d Komplettsicherung der Installation (ab Web 12.2.0, S2/AP8, E-S2-19 bis E-S2-21)
+
+Die Adminsicherung (Abschnitt „Admin-Sicherungen") sichert ein **Konto**.
+Diese hier sichert die **Installation**: alle Konten, Stammdaten, Geräte,
+Schlüsselhüllen, `app_state`, den Migrationsstand — jede Tabelle, die in
+dieser Datenbank steht. Der Fall, gegen den sie hilft, ist nicht „jemand hat
+sich vertan", sondern „der Webspace ist weg".
+
+Alles darin steht in `server/komplett_lib.php`; die Oberfläche ist
+`admin_komplettsicherung.php`, der Rückweg `wiederherstellen.php`.
+
+#### Was nicht drin ist
+
+`config.php`. Sie trägt das Datenbankpasswort und den Serverschlüssel — also
+genau das, womit sich diese Datei öffnen lässt. Beides in dieselbe Datei zu
+legen hiesse, das Schloss an den Schlüssel zu binden. Sie gehört ins
+Wiederanlaufpaket (Abschnitt 7).
+
+Ebenfalls nicht drin: die Dateiablage unter `sicherungen/`. Die Kontopakete
+sichern nichts, was nicht ohnehin in der Datenbank steht, und würden die Datei
+vervielfachen.
+
+#### Warum ein eigener Dump und nicht `mysqldump`
+
+Auf geteiltem Webspace gibt es keine Kommandozeile und kein `exec()`;
+`mysqldump` ist dort nicht vorhanden und nicht nachrüstbar. Der Dump entsteht
+in PHP, über genau die Verbindung, die die Anwendung ohnehin hat.
+
+#### Die Form: ein Statement je Zeile
+
+Damit lässt sich die Datei zeilenweise abarbeiten — vom Rückweg dieser
+Anwendung genauso wie von `mysql` oder phpMyAdmin. Ein mehrzeiliges Statement
+bräuchte einen SQL-Zerleger, und ein selbstgebauter SQL-Zerleger ist die Sorte
+Code, die genau einmal falsch liegt: wenn ein Semikolon in einer Zeichenkette
+steht.
+
+Daran hängt eine Bedingung: **Kein Literal darf je einen echten Zeilenumbruch
+enthalten.** `komp_quote()` bildet `\n`, `\r`, `\0`, `\x1a`, `'`, `"` und
+`\` ab; die Datei setzt dazu passend `SQL_MODE` ohne `NO_BACKSLASH_ESCAPES`.
+Binärspalten (`track_blobs.blob_daten`) gehen hexadezimal hinaus (`0x…`), eine
+leere als `''` — `0x` ohne Ziffern wäre kein gültiges Literal.
+
+Weiter: INSERT-Stapel bis **1 MB**, Tabellen in einspielbarer Reihenfolge
+(topologisch nach Fremdschlüsseln, mit `FOREIGN_KEY_CHECKS = 0` als Gürtel
+daneben), Kopfkommentare mit Version, Migrationsstand, Zeitpunkt und
+Datenbankserver, und am Ende eine **Endmarke** (`-- EDKOMP-ENDE`). Sie ist der
+Beleg, dass die Datei nicht mitten im Erzeugen abgebrochen ist; ohne sie wäre
+ein halber Dump von einem ganzen nicht zu unterscheiden.
+
+#### Drei Schichten
+
+    1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB
+    2. gzip         je Häppchen ein eigenes gzip-Glied
+    3. EDKOMP1      AES-256-GCM je 256-KB-Block
+
+**Warum je Häppchen ein eigenes gzip-Glied.** Der Dump entsteht in Häppchen
+über mehrere Anfragen (E-S2-20: „nie als Array am Stück"). Ein
+`deflate_init()`-Zustand lässt sich zwischen zwei Anfragen nicht aufbewahren —
+er ist keine Zahl, sondern ein Fenster über die letzten 32 KB. Deshalb
+schliesst jedes Häppchen sein Glied ab und das nächste hängt ein neues an.
+Aneinandergehängte gzip-Glieder sind gültiges gzip; `gunzip`, `zcat` und PHPs
+`gzopen()`/`gzread()` lesen darüber hinweg. Gemessen kostet es 3 045 Byte auf
+45,8 MB.
+
+**Zwei PHP-Funktionen können das nicht, und beide schweigen dabei.**
+Nachgemessen an einer Datei aus 15 Gliedern mit 122 469 394 Byte Klartext:
+`gzdecode()` liefert 13 573 234 Byte (11 %), `inflate_add()` ebenfalls
+13 573 234 — beide ohne Fehler, beide sehen aus wie eine ganze Datei. Nur
+`gzopen()`/`gzread()` liefert alles. In der Anwendung wird deshalb
+ausschliesslich dieser Weg benutzt; der Rückweg entpackt über eine
+Zwischendatei. (Python ist hier gutmütiger: `gzip.open()` **und**
+`gzip.decompress()` lesen alle Glieder.)
+
+Aufgefallen ist es beim Lauf und nicht beim Lesen: Die erste Fassung des
+Rückwegs schob jeden entsiegelten Block durch `inflate_add()` und brach mit
+„data error" ab. Bei einem Dump aus einem Zug wäre der Fehler nie aufgetreten
+— die Komplettprobe fährt darum ausdrücklich einen aus vierzehn Häppchen.
+
+**Warum die Versiegelung ein zweiter Gang ist.** Der Dump wächst zeilenweise,
+die Versiegelung arbeitet in Blöcken fester Grösse. Beides zugleich hiesse,
+einen halb gefüllten Block zwischen zwei Anfragen aufbewahren zu müssen. So
+ist der Zustand der Versiegelung eine einzige Zahl — der Blockindex —, und
+Block *i* deckt die Klartextbytes [i·256 KB, (i+1)·256 KB). Der Klartext-Dump
+liegt für die Dauer des Baus im Bauordner und wird gelöscht, sobald die
+versiegelte Fassung steht.
+
+#### Das Format EDKOMP1
+
+    "EDKOMP1\n"                                       8 Byte
+    <Kopfzeile als JSON>"\n"                          eine Zeile, kein \n darin
+    je Block:  <4 Byte Länge, big endian>
+               <12 Byte Nonce><16 Byte Prüfsumme><N Byte Chiffre>
+
+Zusatzdaten je Block: `edkomp1|<SHA-256 von Magie+Kopfzeile>|<Index>|<0|1>`.
+
+Beides ist nötig. **Ohne Zähler** liessen sich zwei Blöcke vertauschen, und
+die Prüfsumme jedes einzelnen bliebe richtig. **Ohne die Endemarkierung**
+liesse sich die Datei hinten abschneiden, und was übrig bleibt, wäre eine
+gültige, kürzere Sicherung. Der **Dateikopf** hängt über seinen SHA-256 an
+jedem Block: Wer ihn ändert — etwa den Vermerk „mit Passphrase" —, macht damit
+jeden Block unlesbar.
+
+Der Schlüssel ist entweder der **Serverschlüssel** aus `config.php`
+(Regelfall, `kdf: null`) oder aus einer **Passphrase** abgeleitet (PBKDF2,
+`KDF_ITER_ZIEL` = 320 000 Runden, dieselbe Zahl wie im Browser). Was gilt,
+steht im Kopf; raten muss das niemand.
+
+#### Zwei Wege heraus
+
+- **Herunterladen** gibt den Dump **unverschlüsselt** als `.sql.gz` — die
+  Fassung für `mysql` und phpMyAdmin (E-S2-20). Sie geht an die
+  Administratorin, die sich eben angemeldet hat und ohnehin jede Zeile dieser
+  Datenbank sehen kann.
+- **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase.
+  Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
+  der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
+  Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
+- Was **von selbst** hinausgeht — der Versand aufs Sicherungsziel (4.97c) —
+  ist immer die versiegelte Fassung.
+
+Der Download ist die eine begründete Ausnahme vom Z3-Budget „Serveranfrage
+≤ 30 s": Das Budget gilt der *Arbeit*, ein Download rechnet nicht, sondern
+schiebt Bytes. Ein Abbruch nach 30 s wäre kein Schutz, sondern eine Sicherung,
+die sich bei langsamer Leitung nicht abholen lässt.
+
+**Ohne Serverschlüssel wird gar nicht erst gesichert.** Eine unversiegelte
+Abschrift jeder Tabelle in `sicherungen/` liegen zu lassen unterliefe die
+Ende-zu-Ende-Zusage an der Stelle, an der es am wenigsten auffiele.
+
+#### Der Cursor ist aufgefächert, und das ist gemessen
+
+Der Dump liest jede Tabelle blockweise über den Primärschlüssel. Gemessen an
+`track_points` mit 917 331 Zeilen:
+
+| Bedingung | Plan | Dauer |
+|---|---|---|
+| `WHERE (a,b) > (?,?)` — Zeilenkonstruktor | `type=index` | 0,1486 s |
+| `WHERE a > ? OR (a = ? AND b > ?)` — aufgefächert | `type=range` | 0,0010 s |
+
+MariaDB macht aus dem Zeilenkonstruktor keinen Bereichszugriff, sondern läuft
+den Index von vorn ab — bei 459 Häppchen also 459-mal die halbe Tabelle.
+**Eine Ausnahme:** Steht eine ENUM-Spalte **vorn** im Primärschlüssel, hilft
+auch das Auffächern nichts (`type=index`, 0,0125 s); mit `=` festgenagelt
+greift der Bereichszugriff wieder (0,0005 s). Führende ENUM-Spalten werden
+deshalb über ihre Werteliste durchlaufen — das betrifft `track_points` und
+`track_blobs` mit je zwei Werten.
+
+#### Der Schnappschuss ist nicht scharf
+
+`mysqldump --single-transaction` hält einen Lesestand über den ganzen Lauf.
+Das geht nur **innerhalb einer Verbindung**, und diese Sicherung läuft über
+viele Anfragen. Eine Zeile, die währenddessen entsteht, kann enthalten sein
+oder nicht. Was **nicht** passieren kann, ist eine übersprungene Altzeile: Der
+Cursor läuft über den Primärschlüssel und nicht über `LIMIT/OFFSET`, ein
+gelöschter Vorgänger verschiebt ihn also nicht.
+
+Sichtbar wird das an genau einer Stelle: Die Tabelle `jobs` weicht nach einer
+Rückspielung ab, weil die Sicherung ihren eigenen Fortschritt dort
+mitschreibt. Das ist die harmloseste mögliche Stelle — und zugleich eine, die
+Folgen hat, siehe gleich.
+
+#### Wiederanlauf: zwei Fälle, die auseinandergehalten werden
+
+Der Fortsetzungszustand steht in `jobs.zustand` und wird vom Job-Rahmen erst
+**nach** einem geglückten Häppchen gespeichert. Daraus folgen zwei Zweige:
+
+1. **Die Baudatei ist LÄNGER, als der Zustand kennt.** Ein Häppchen ist
+   mittendrin abgebrochen; seine Zeilen stehen schon da, der Zustand zeigt
+   davor. Der nächste Lauf schneidet auf die gemerkte Länge zurück. Ohne das
+   käme das zweite `DROP TABLE` derselben Tabelle in die Datei und würde beim
+   Einspielen wegwerfen, was das erste Häppchen eingefügt hat — eine
+   Sicherung, die vollständig aussieht und es nicht ist.
+2. **Die Baudatei ist KÜRZER** (oder weg). Dann wird von vorn begonnen. Der
+   Fall tritt regelmässig nach einer Wiederherstellung auf: Die eingespielte
+   Datenbank trägt den Stand „Dump läuft" samt einem Bauordner, den es auf dem
+   neuen Server nie gab. Ohne diesen Zweig hinge der nächste Lauf mitten in
+   der Tabellenliste an eine leere Datei an.
+
+#### Der Job steht nach dem Versand
+
+Im Katalog (4.97a) kommt `komplett` **nach** `versand`. Davor wäre er am
+rechten Platz — was entsteht, ginge im selben Lauf hinaus —, nur bekäme jeder
+Job hinter ihm nur noch, was die schwerste Arbeit der Anwendung übrig lässt.
+Ein Versand, der wochenlang nicht drankommt, wäre der teurere Fehler. Der
+Preis ist ein Lauf Verzögerung; zusätzlich begrenzt sich der Job auf
+`KOMP_LAUF_MAX_S` = 120 s, damit auch `waisen` noch zum Zug kommt.
+
+Der **Plan** (aus / täglich / wöchentlich / monatlich) sagt nicht *wann*,
+sondern *ob*: Er legt fest, wie alt der jüngste Stand höchstens sein darf.
+Wann gearbeitet wird, entscheidet der eingerichtete Auslöser. Zwei Uhren
+nebeneinander wären zwei Wahrheiten (wie E-S2-17).
+
+#### Der Rückweg
+
+`wiederherstellen.php` füllt die Lücke zwischen `install.php` (verweigert
+sich, sobald es eine `config.php` gibt) und `update.php` (verlangt eine
+Anmeldung, die es ohne Konten nicht geben kann). Drei Schranken:
+
+1. **Die Datenbank muss leer sein** — und zwar fürs *Anfangen*. Ab dem
+   zweiten Durchgang ist sie es nicht mehr, weil der erste sie füllt; wer
+   einen Arbeitsstand hat, hat ihn auf einer leeren Datenbank begonnen.
+2. **Ein Nachweis** wie beim Einrichter (M1-11): eine Datei mit zufälligem
+   Namen im Anwendungsverzeichnis, deren Kennung einzutragen ist.
+3. **Die Datei kommt aus `sicherungen/eingang/`**, nicht aus einem Formular.
+   Es gibt hier bewusst kein Hochladen.
+
+Der Ablauf hat zwei Gänge: **A** entsiegelt und entpackt nach
+`eingang/.arbeit/dump.sql`, **B** spielt zeilenweise ein und merkt sich den
+**Byteversatz im Klartext**. Genau dafür gibt es Gang A: In einer gepackten
+Datei kostet ein Sprung an Position *n* das Entpacken der ersten *n* Byte, bei
+jedem Durchgang neu. Der Klartext wird nach dem letzten Durchgang sofort
+gelöscht — er ist eine unverschlüsselte Abschrift jeder Tabelle.
+
+Die `SET`-Zeilen (`FOREIGN_KEY_CHECKS`, `UNIQUE_CHECKS`, `SQL_MODE`) werden
+**je Durchgang neu gesetzt**: Sie gelten je Verbindung, und jeder Durchgang
+ist eine neue Anfrage mit einer neuen. In der Datei stehen sie trotzdem — für
+`mysql` und phpMyAdmin.
+
+**Migrationen laufen dort nicht mit.** `update.php` ist seit M6-01
+zweistufig, weil Migrationen Spalten löschen können. Eine Seite ohne
+Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+heraus. Die Seite vergleicht stattdessen die Web-Fassung des Dumps mit der
+laufenden und schickt zur Wartung.
+
+#### Gemessen (S2/AP8)
+
+Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
+
+| | Wert |
+|---|---|
+| Erzeugen | 8,5 s in **14 Häppchen** (Budget 0,6 s je Häppchen) |
+| Speicherspitze | **26 von 64 MB** (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** |
+| Längste Zeile | 1 048 566 Byte |
+| Öffnen (175 Blöcke) | 0,05 s, Spitze 4 MB |
+| Auspacken über den Rückweg | 1,24 s |
+| Einspielen | 784 Anweisungen in 6,0 s |
+| Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
+
+`tools/komplettprobe/` fährt den ganzen Zyklus: **76 Erwartungen**,
+einschliesslich Versand auf eine echte FTP-Gegenstelle, „halbe Datei liegt
+dort", abgeschnitten an einer Blockgrenze, veränderter Dateikopf und beide
+Wiederanlauf-Zweige. Was sie nicht prüfen kann — die Oberfläche, eine volle
+Platte, ein echter Absturz mitten in der Anfrage, der Migrationslauf — steht
+an erster Stelle ihrer `LIESMICH.md`.
+
+---
+
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 
 Der Server kann `missions.pat_blob` nicht lesen. Genau deshalb muss an einer
@@ -3513,10 +3782,55 @@ und `SELECT` zogen von selbst nach. Spaltenbreiten nach Position
 (`:nth-child`) gibt es im Stylesheet deshalb nicht mehr — sie zählen Spalten ab
 und rutschen beim Streichen einer Spalte still auf die falsche.
 
-**Backup:** regelmäßiger MySQL-Dump (alle Tabellen; `mysqldump` oder
-Hoster-Backup). Wiederherstellung: Dump einspielen; `config.php` bleibt
-unberührt. Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten
-idempotent nach, sofern lokal noch vorhanden.
+**Backup (seit Web 12.2.0 aus der Anwendung heraus):** Adminbereich →
+**Komplettsicherung** → *Jetzt sichern*, oder einen Zeitplan setzen
+(täglich/wöchentlich/monatlich). Der Lauf schreibt jede Tabelle als
+versiegelten SQL-Dump nach `server/sicherungen/komplett/`; der Versand aufs
+Sicherungsziel nimmt ihn wie jedes andere Paket mit. Ein Hoster-Backup oder
+ein `mysqldump` von aussen bleibt daneben zulässig und ist nicht überflüssig
+— es läuft auf einem anderen Weg und fällt deshalb nicht mit demselben Fehler
+aus. `config.php` ist in **keiner** dieser Sicherungen enthalten; sie gehört
+ins Wiederanlaufpaket (gleich darunter). Mechanik: Abschnitt 4.97d.
+
+Die Uhr sendet nach einer Wiederherstellung fehlende jüngste Daten idempotent
+nach, sofern lokal noch vorhanden.
+
+**Wiederanlauf nach einem Totalausfall (seit Web 12.2.0).** In dieser
+Reihenfolge; jeder Schritt setzt den vorigen voraus:
+
+1. **Datenbank anlegen** — leer, aber vorhanden, utf8mb4.
+2. **Anwendungsdateien hochladen** (der Deploy tut das, oder von Hand).
+3. **`config.php` aus dem Wiederanlaufpaket** daneben legen. Datenbankzugang
+   darin auf die neue Datenbank anpassen, den **`server_key` unverändert
+   lassen** — er ist es, der die Sicherung öffnet.
+4. **Die Sicherungsdatei** nach `server/sicherungen/eingang/` legen — per
+   FTP, SFTP oder Dateimanager des Hosters. Vom Sicherungsziel holt man sie
+   sich dorthin. Erkannt werden `.edk` (versiegelt), `.sql.gz` und `.sql`.
+5. **`wiederherstellen.php` aufrufen.** Die Seite nennt eine Nachweisdatei im
+   Anwendungsverzeichnis; deren Kennung eintragen, *Auspacken und prüfen*,
+   dann *Einspielen* — so oft, bis 100 % erreicht sind. Jeder Durchgang macht
+   dort weiter, wo der vorige aufhörte.
+6. **Anmelden** — mit dem Administrationskonto aus der Sicherung; die
+   Passwörter sind dieselben wie vorher.
+7. **Wartung (`update.php`) aufrufen** und den Migrationslauf ausführen.
+   Nicht optional, wenn die Sicherung aus einer älteren Fassung stammt — die
+   Seite sagt es dann auch. Der Lauf passiert dort und nicht in Schritt 5,
+   weil Migrationen Spalten löschen können und dazwischen eine angemeldete
+   Person und ein Knopf gehören (M6-01).
+8. **Aufräumen** — auf `wiederherstellen.php` der gleichnamige Knopf. Er
+   entfernt den ausgepackten Klartext-Dump und die Nachweisdatei. Beides hat
+   danach auf dem Server nichts mehr verloren.
+
+**Was dabei schiefgehen kann, und woran man es erkennt:**
+
+| Meldung | Ursache | Behebung |
+|---|---|---|
+| „Diese Installation ist noch nicht eingerichtet" | keine `config.php` | Schritt 3 nachholen |
+| „Die Datenbank antwortet nicht" | Zugangsdaten in `config.php` passen nicht, oder die Datenbank existiert nicht | Schritt 1 und 3 prüfen |
+| „Diese Installation ist in Betrieb" | in der Datenbank stehen schon Konten | Datenbank leeren (bewusste Handlung beim Hoster) oder einzelne Konten über *Sicherungen* zurückholen |
+| „falscher Schlüssel, falsche Passphrase — oder der Dateikopf ist verändert" | der `server_key` in `config.php` ist nicht der, mit dem versiegelt wurde | den richtigen aus dem Wiederanlaufpaket eintragen |
+| „Diese Sicherung ist unvollständig — die Endmarke fehlt" | der Lauf ist beim Erzeugen abgebrochen | einen älteren Stand nehmen |
+| „gescheitert an Anweisung *n*" | halb eingespielt; es wurde **nichts** zurückgenommen | Datenbank leeren und von vorn |
 
 **Das Wiederanlaufpaket (seit Web 12.1.0, E-S2-21).** Getrennt von der
 Anwendung aufbewahren — auf einem anderen Rechner, nicht im selben Backup:

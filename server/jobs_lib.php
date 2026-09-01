@@ -252,6 +252,28 @@ function jobs_katalog(): array
             'rueckstand'   => 'job_versand_rueckstand',
             'lauf'         => 'job_versand',
         ],
+        /* DIE KOMPLETTSICHERUNG STEHT NACH DEM VERSAND, nicht davor — und das
+         * kostet bewusst einen Lauf.
+         *
+         * Davor waere sie am rechten Platz: Was hier entsteht, ginge im selben
+         * Lauf hinaus. Nur ist sie die schwerste Arbeit dieser Anwendung, und
+         * jeder Job hinter ihr bekaeme nur noch, was sie uebrig laesst. Ein
+         * Versand, der wochenlang nicht drankommt, weil vor ihm eine
+         * Datenbank abgeschrieben wird, waere der teurere Fehler: Die
+         * Sicherung laege dann zwar da, aber nur hier.
+         *
+         * Der Preis ist, dass ein frischer Stand erst im NAECHSTEN Lauf
+         * hinausgeht — bei taeglichem Cron also am Tag darauf. Zusaetzlich
+         * begrenzt sich der Job auf KOMP_LAUF_MAX_S, damit auch `waisen`
+         * hinter ihm noch zum Zug kommt. */
+        'komplett' => [
+            'titel'        => 'Komplettsicherung der Installation',
+            'beschreibung' => 'Die ganze Datenbank als versiegelter SQL-Dump '
+                            . '— tabellenweise in Häppchen, mit Wiederaufnahme',
+            'taeglich'     => false,
+            'rueckstand'   => 'job_komplett_rueckstand',
+            'lauf'         => 'job_komplett',
+        ],
         'waisen' => [
             'titel'        => 'Verwaiste Spuren',
             'beschreibung' => 'Spurpunkte und Blobs ohne Eigentümer entfernen '
@@ -1125,3 +1147,38 @@ function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
     return sz_auto_an() ? sz_versand_rueckstand() : null;
 }
 
+
+/* ---- Komplettsicherung der Installation (S2/AP8, E-S2-19 bis E-S2-21) ----- */
+
+/**
+ * Wie viel Zeit ein Lauf hoechstens fuer die Komplettsicherung verwendet.
+ *
+ * OHNE DIESE SCHRANKE FRAESSE SIE DEN GANZEN CLI-LAUF (300 s). Sie arbeitet,
+ * solange sie Zeit hat, und Zeit hat sie auf dem Cron-Weg reichlich — hinter
+ * ihr staende dann `waisen` und kaeme nie dran. Zwei Minuten reichen auf dem
+ * Messbestand (5000 Einsaetze, 1,12 Mio. Zeilen) fuer den ganzen Durchlauf
+ * mit weitem Abstand; eine groessere Datenbank braucht mehrere Laeufe, und
+ * genau dafuer gibt es die Haeppchen.
+ */
+const KOMP_LAUF_MAX_S = 120.0;
+
+function job_komplett(PDO $pdo, array $zustand, callable $zeitLinks, float $reserve = KOMP_RESERVE_S): array
+{
+    require_once __DIR__ . '/komplett_lib.php';
+
+    /* Die eigene Frist: das Kleinere aus Restbudget und KOMP_LAUF_MAX_S. */
+    $start = microtime(true);
+    $eigen = function () use ($zeitLinks, $start): float {
+        return min($zeitLinks(), KOMP_LAUF_MAX_S - (microtime(true) - $start));
+    };
+
+    $e = komp_schub($pdo, $zustand, $eigen, $reserve);
+    return ['zustand' => $zustand, 'erledigt' => $e['erledigt'], 'fertig' => $e['fertig']];
+}
+
+/** Wie viele Tabellen warten noch? `null` heisst „nichts vorgemerkt". */
+function job_komplett_rueckstand(PDO $pdo, array $zustand): ?int
+{
+    require_once __DIR__ . '/komplett_lib.php';
+    return komp_rueckstand_aus($zustand);
+}

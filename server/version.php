@@ -1558,5 +1558,50 @@ declare(strict_types=1);
  *
  * KEINE MIGRATION, keine Schnittstellenaenderung.
  *
+ * ---------------------------------------------------------------------------
+ *
+ * 12.2.0 ist S2/AP8: DIE KOMPLETTSICHERUNG (E-S2-19 bis E-S2-21). Bis hierher
+ * konnte diese Anwendung ein KONTO sichern. Jetzt kann sie die INSTALLATION
+ * sichern: jede Tabelle der Datenbank als SQL-Dump, versiegelt mit dem
+ * Serverschluessel aus 12.1.0, und einen Weg zurueck.
+ *
+ * DREI SCHICHTEN, IN DIESER REIHENFOLGE: SQL-Text (ein Statement je Zeile,
+ * INSERT-Stapel bis 1 MB, Tabellen in einspielbarer Reihenfolge) — gzip — und
+ * darueber das Siegel EDKOMP1 (AES-256-GCM je 256-KB-Block, Blockzaehler und
+ * Endemarkierung in den Zusatzdaten, der Dateikopf ueber seinen SHA-256
+ * mitgebunden). Erzeugt wird in Haeppchen ueber den Job-Einstieg, mit
+ * Fortsetzungszustand in `jobs.zustand` — nie als Array am Stueck.
+ *
+ * ZWEI WEGE HERAUS, und der Unterschied ist der Punkt: „Herunterladen" gibt
+ * den Dump UNVERSCHLUESSELT als `.sql.gz`, damit `mysql` und phpMyAdmin ihn
+ * einspielen koennen (E-S2-20); was das Haus verlaesst — der Versand aufs
+ * Sicherungsziel — ist immer die versiegelte Fassung. Wahlweise gibt es die
+ * Datei unter einer PASSPHRASE (PBKDF2, 320 000 Runden wie im Browser).
+ *
+ * DER RUECKWEG ist `wiederherstellen.php`, die Luecke zwischen `install.php`
+ * (verweigert sich, sobald es eine config.php gibt) und `update.php`
+ * (verlangt eine Anmeldung, die es ohne Konten nicht gibt). Drei Schranken:
+ * die Datenbank muss LEER sein, ein Nachweis wie beim Einrichter (M1-11)
+ * belegt Dateizugriff, und die Datei kommt aus `sicherungen/eingang/` statt
+ * aus einem Formular. Der Migrationslauf laeuft dort BEWUSST NICHT mit — er
+ * gehoert einer angemeldeten Administration, und genau dafuer ist
+ * `update.php` seit M6-01 zweistufig.
+ *
+ * NEU: `server/komplett_lib.php`, `server/admin_komplettsicherung.php`,
+ * `server/wiederherstellen.php`, `tools/komplettprobe/`. Der Job `komplett`
+ * steht im Katalog NACH `versand` — ein frischer Stand geht damit erst im
+ * naechsten Lauf hinaus, dafuer nimmt ihm die schwerste Arbeit der Anwendung
+ * nicht das Budget weg.
+ *
+ * GEMESSEN am Messbestand (5000 Einsaetze, 1 121 802 Zeilen, 34 Tabellen):
+ * 8,5 s in 14 Haeppchen, Speicherspitze 26 von 64 MB (Z3), 122,5 MB SQL ->
+ * 43,7 MB versiegelt. Zurueckgespielt in eine leere Datenbank: 34 von 34
+ * Schemata zeichengleich, 34 von 34 Pruefsummen gleich (CHECKSUM TABLE
+ * EXTENDED).
+ *
+ * KEINE MIGRATION. Die Zaehlweise ist Neben und nicht Haupt, wie schon bei
+ * 12.1.0: ein neues Dateiformat und zwei neue Seiten, aber kein Datenmodell,
+ * das sich aendert, und kein bestehender Weg, der anders verlaeuft.
+ *
  */
-const WEB_VERSION = '12.1.1';
+const WEB_VERSION = '12.2.0';

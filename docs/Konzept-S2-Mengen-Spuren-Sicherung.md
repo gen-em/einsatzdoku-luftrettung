@@ -742,6 +742,9 @@ Sammelstelle nach K4; bei Übergabe leer.
 | F-S2-E | Eine Datei mit Nutzlast 8 **und** Punktlisten verlor alle Spuren, ohne ein Wort — und der Messstand schrieb genau solche Dateien | behoben vor AP6 |
 | F-S2-F | Der Kasten „Für dich freigegebene Sicherung" war für niemanden zu sehen: eine Kennung, die es im Markup nicht gab, und ein `catch`, der alles schluckte | behoben in AP6 |
 | F-S2-G | Das Konzept nennt die FTP-Gegenstelle „Transportziel" — dieser Name ist seit Web 4 vergeben (`transport_dests` = Zielklinik). Zwei Dinge, ein Wort, zwei Klicks voneinander entfernt | umbenannt in AP7: **Sicherungsziel** |
+| F-S2-H | Ein abgebrochenes Häppchen des Dumps hätte beim nächsten Lauf ein zweites `DROP TABLE` derselben Tabelle in die Datei geschrieben — beim Einspielen wäre weggeworfen worden, was das erste Häppchen eingefügt hat | behoben in AP8 (der Zustand führt die Länge des gültigen Teils) |
+| F-S2-I | Der Neuanlauf bei verschwundenem Baustand lief in ein `count(null)`; er ist genau der Zweig, der nach einer Wiederherstellung greift | behoben in AP8, gefunden von `tools/komplettprobe/` |
+| F-S2-J | Die Schranke „leere Datenbank“ galt vor jedem Durchgang der Wiederherstellung — leer ist die Datenbank aber nur vor dem ersten. Abbruch bei 91 % mit der Meldung „Diese Installation ist in Betrieb“ | behoben in AP8 (die Schranke gilt fürs Anfangen) |
 
 ### F-S2-A — Die Prüfmittel hängen an Markup, das P3 verändert hat
 
@@ -2533,6 +2536,163 @@ Protokoll etwas anderes.
   hergestellt worden.
 - **Der Versand über den Cron-Auslöser.** Über die Befehlszeile ist er
   gefahren, am eingerichteten Zeitdienst nicht.
+
+---
+
+### AP8 — Komplettsicherung der Installation (erledigt, Web 12.2.0)
+
+**Was gebaut wurde.** E-S2-19 bis E-S2-21 verlangen eine Sicherung der ganzen
+Installation als eigener SQL-Dump, versiegelt mit dem Serverschlüssel aus AP7,
+erzeugt in Häppchen über den Job-Einstieg, mit einem Rückweg über die App und
+einem Runbook-Kapitel. Alles davon steht.
+
+Neu: `server/komplett_lib.php` (Dump, Siegel EDKOMP1, Auftrag, Zeitplan),
+`server/admin_komplettsicherung.php`, `server/wiederherstellen.php`,
+`tools/komplettprobe/`. Der Job `komplett` steht im Katalog; Versand,
+Speicherbuchführung und Menü sind angeschlossen. **Keine Migration** — die
+Komplettsicherung liegt im Dateisystem, ihr Zustand in `jobs.zustand`.
+
+#### Neun Entscheidungen, die dabei gefallen sind
+
+**1. Ein eigener Dump statt `mysqldump`.** Auf geteiltem Webspace gibt es
+keine Kommandozeile und kein `exec()`. Das war in E-S2-20 vorgesehen; hier ist
+die Bestätigung, dass es auch nötig ist.
+
+**2. Ein Statement je Zeile — und daran hängt alles andere.** Damit lässt sich
+die Datei zeilenweise abarbeiten, ohne SQL-Zerleger. Die Folge ist eine harte
+Bedingung: Kein Literal darf je einen echten Zeilenumbruch enthalten.
+`komp_quote()` ist deshalb eine eigene, lesbare Abbildung und nicht
+`PDO::quote()` — jenes braucht eine offene Verbindung, die der Rückweg später
+nicht mehr hat.
+
+**3. Der Cursor ist aufgefächert, nicht ein Zeilenkonstruktor.** Gemessen an
+`track_points` (917 331 Zeilen): `WHERE (a,b) > (?,?)` gibt `type=index` und
+0,1486 s, `WHERE a > ? OR (a = ? AND b > ?)` gibt `type=range` und 0,0010 s.
+Bei 459 Häppchen ist das der Unterschied zwischen 40 s und einer Sekunde.
+**Eine Ausnahme:** Eine ENUM-Spalte VORN im Primärschlüssel verhindert den
+Bereichszugriff auch bei aufgefächerter Bedingung; sie wird deshalb über ihre
+Werteliste festgenagelt.
+
+**4. Je Häppchen ein eigenes gzip-Glied.** Ein `deflate`-Zustand lässt sich
+zwischen zwei Anfragen nicht aufbewahren. Aneinandergehängte Glieder sind
+gültiges gzip — kosten 3 045 Byte auf 45,8 MB — und `gzopen()`/`gzread()`
+liest darüber hinweg. Der Preis ist eine **Falle**, in die die erste Fassung
+des Rückwegs prompt gelaufen ist: `gzdecode()` und `inflate_add()` sehen nur
+das erste Glied. Nachgemessen: 13 573 234 statt 122 469 394 Byte, ohne Fehler.
+
+**5. Die Versiegelung ist ein zweiter Gang.** Der Dump wächst zeilenweise, das
+Siegel arbeitet in Blöcken fester Grösse; beides zugleich hiesse, einen halb
+gefüllten Block zwischen zwei Anfragen aufzubewahren. So ist der Zustand der
+Versiegelung eine einzige Zahl.
+
+**6. Blockzähler UND Endemarkierung in den Zusatzdaten, plus der Dateikopf.**
+Jedes einzeln reicht nicht: Ohne Zähler liessen sich Blöcke vertauschen, ohne
+Endemarkierung liesse sich die Datei hinten abschneiden, ohne die Bindung an
+den Kopf liesse sich der Kopf austauschen. Alle drei sind in der Probe
+nachgestellt.
+
+**7. Der unverschlüsselte Download ist kein Widerspruch zu E-S2-21.** Jene
+Entscheidung sagt „Pflicht, sobald die Datei das Haus verlässt". Der Download
+geht an die Administratorin, die sich eben angemeldet hat und ohnehin jede
+Zeile sehen kann; E-S2-20 verlangt zugleich ausdrücklich eine Fassung, die
+`mysql` einspielen kann. Was von selbst hinausgeht — der Versand —, ist immer
+versiegelt. **Ohne Serverschlüssel wird gar nicht erst gesichert.**
+
+**8. Der Job steht NACH dem Versand.** Davor wäre er am rechten Platz, aber
+jeder Job hinter ihm bekäme nur, was die schwerste Arbeit der Anwendung übrig
+lässt. Ein Versand, der wochenlang nicht drankommt, wäre der teurere Fehler.
+Der Preis ist ein Lauf Verzögerung.
+
+**9. Der Migrationslauf gehört nicht auf den Rückweg** — Abweichung von
+E-S2-20, und die einzige. `update.php` ist seit M6-01 zweistufig, weil
+Migrationen Spalten löschen können; eine Seite ohne Anmeldung, die sie
+nebenbei mitlaufen liesse, nähme genau diese Sicherung heraus. Die Seite
+vergleicht stattdessen die Web-Fassung und schickt zur Wartung; das Runbook
+führt den Schritt als eigenen auf. **Backlog Nr. 54** hält die Frage offen.
+
+#### Drei Fehler, die erst der Lauf gezeigt hat
+
+**F-S2-H — Der Wiederanlauf hätte eine halbe Sicherung erzeugt.** Der Zustand
+wird vom Job-Rahmen erst nach einem geglückten Häppchen gespeichert. Bricht
+eines mittendrin ab, stehen seine Zeilen schon in der Datei und der Zustand
+zeigt davor — der nächste Lauf schriebe sie ein zweites Mal, samt `DROP TABLE`
+der laufenden Tabelle. Beim Einspielen würfe dieses zweite `DROP` weg, was das
+erste Häppchen eingefügt hat. Behoben: Der Zustand führt die Länge des
+gültigen Teils, und jedes Häppchen schneidet zuerst darauf zurück.
+
+**F-S2-I — Der Neuanlauf lief in ein `count(null)`.** Die Erstbelegung des
+Zustands stand vor dem Zweig, der bei verschwundenem Baustand ebendiese Marken
+löscht. Der Zweig ist der, der **nach einer Wiederherstellung** greift: Die
+Sicherung schreibt ihren eigenen Fortschritt mit, die eingespielte Datenbank
+trägt also „Dump läuft" samt einem Bauordner, den es nie gab. Gefunden von der
+Komplettprobe, Teil 8.
+
+**F-S2-J — Die Schranke „leere Datenbank" blockierte die Wiederherstellung
+selbst.** Sie galt vor jedem Durchgang; leer ist die Datenbank aber nur vor
+dem ersten. Mit einem Budget von vier Sekunden brach die Wiederherstellung bei
+**91 %** ab und meldete „Diese Installation ist in Betrieb". Bei grosszügigem
+Budget reicht ein Durchgang, und der Fehler wäre nie aufgetreten. Behoben: Die
+Schranke gilt fürs Anfangen; wer einen Arbeitsstand hat, hat ihn auf einer
+leeren Datenbank begonnen.
+
+#### Prüfstand
+
+**Maschinell.** `tools/komplettprobe/probe.php` — **76 Erwartungen, 0 nicht
+erfüllt** (mit `--pruefdb` und `--ziel`). `tools/versandprobe/` als Regression
+nach den Änderungen an `sicherungsziel_lib.php`: **115 Erwartungen, 0 nicht
+erfüllt**. Wortliste **0/0/0**, Vollständigkeit **260 Befunde** (unverändert
+gegenüber dem Stand vor AP8), Kontraste **21 Paare, 0 verfehlt**.
+
+**Im Browser.** `tools/komplettprobe/klickweg.mjs` — **17 Prüfungen, 0
+Befunde**: Bestätigungsdialog, Lauf mit Rückmeldung, beide Downloads samt
+Inhaltsprüfung (gzip-Magie bzw. `EDKOMP1` und `"pbkdf2"` im Kopf), Abweisung
+einer zu kurzen Passphrase, Zeitplan setzen und zurückstellen, keine
+Konsolenfehler. Dazu der Bilderlauf über beide neuen Seiten in acht Breiten:
+**16 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** — nach einem
+Fund: Der Knopf „Versiegelt herunterladen" stand in einer `.fld-reihe` statt
+im Fussbereich und schob die Seite bei 360, 390 und 420 px auf (+74/+59/+44).
+
+**Der volle Zyklus**, wie die Abnahme ihn verlangt:
+
+| Schritt | Ergebnis |
+|---|---|
+| Erzeugen (5 000 Einsätze, 1 121 802 Zeilen, 34 Tabellen) | 8,5 s in **14 Häppchen** |
+| Speicherspitze je Häppchen | **26 von 64 MB** (Z3) |
+| SQL / versiegelt | 122,5 MB → **43,7 MB** |
+| Längste Zeile | 1 048 566 Byte (Ziel: ≤ 1 MB je Stapel) |
+| Auf ein FTP-Ziel geschoben | 1 Datei, 43,7 MB, byteweise gleich |
+| Von Hand mit `mysql` eingespielt | 6,9 s, Rückgabewert 0 |
+| Über `wiederherstellen.php` eingespielt | **6 Durchgänge** (Budget 4 s), 784 Anweisungen |
+| Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich |
+
+Die Rückspielung ist auf **drei** Wegen gefahren: `mysql` von Hand, die
+Komplettprobe zeilenweise, und `wiederherstellen.php` im Browser gegen einen
+PHP-Server auf 127.0.0.1 — dort auch die Sonderfälle: falscher Nachweis,
+abgeschnittene Datei, Passphrase-Fassung mit richtiger und falscher
+Passphrase, und die Schranke „in Betrieb" auf einer gefüllten Datenbank.
+
+**Der dokumentierte Python-Weg ist gefahren worden,** nicht abgeschrieben:
+`docs/Backup-Format.md` 6.6 öffnet beide Fassungen und liefert byteweise
+denselben Klartext wie PHP (cryptography 50.0.1).
+
+#### Was nicht geprüft werden konnte
+
+- **`wiederherstellen.php` im Browser.** Die Seite ist über `curl` gegen einen
+  echten PHP-Server gefahren — mit Formularen, Sitzung, Nachweis und allen
+  Sonderfällen — und in acht Breiten fotografiert. Angeklickt hat sie niemand,
+  und ein Klickweg dafür ist auch nicht leicht zu bauen: Er bräuchte eine
+  **leere** Datenbank. Der Bedienweg gehört deshalb in die Prüfliste des
+  Prüfdokuments.
+- **Ein echtes Sicherungsziel im Internet.** Wie in AP7: Der Behälter lässt
+  nur Port 443 hinaus.
+- **Eine volle Platte.** Die Speichergrenze ist als Rechnung geprüft, nicht
+  als Zustand.
+- **Ein echter Absturz mitten in der Anfrage.** Nachgestellt ist er, erlebt
+  nicht.
+- **Ein Migrationslauf nach einer Wiederherstellung.** Er läuft dort nicht
+  mit (Entscheidung 9) und ist auch nicht von Hand nachgefahren worden.
+- **Eine andere Datenbank als MariaDB 10.11.** Der Rundlauf ist auf einem
+  Server gemessen.
 
 ---
 

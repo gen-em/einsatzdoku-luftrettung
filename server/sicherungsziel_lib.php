@@ -981,6 +981,22 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
     }
     sort($ordner);
 
+    /* DIE KOMPLETTSICHERUNG GEHT DENSELBEN WEG (S2/AP8, E-S2-21).
+     *
+     * Sie liegt in `sicherungen/komplett/` und nicht in einem Kontoordner —
+     * `edbak_kennung_gueltig()` weist den Namen ab, die Schleife oben
+     * uebergeht ihn also von selbst. Angehaengt wird er HIER und
+     * ausdruecklich, damit niemand spaeter raetselt, warum die eine Datei,
+     * auf die es beim Ausfall des ganzen Servers ankommt, als einzige liegen
+     * bleibt.
+     *
+     * SIE STEHT VORN. Wenn die Zeit eines Schubes nicht fuer alles reicht,
+     * soll das Uebriggebliebene ein Kontopaket sein und nicht die
+     * Komplettsicherung: Aus ihr laesst sich jedes Konto wiederherstellen,
+     * umgekehrt nicht. */
+    require_once __DIR__ . '/komplett_lib.php';
+    if (is_dir(komp_wurzel())) { array_unshift($ordner, KOMP_ORDNER); }
+
     foreach ($ziele as $z) {
         if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
         $weg = null;
@@ -1002,7 +1018,11 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                  * der mitten in einer Übertragung von der Zeit eingeholt
                  * wird, hinterlässt am Ziel eine halbe Datei. */
                 if ($zeitLinks() < $reserve) { $raus['fertig'] = false; break; }
-                $pakete = edbak_pakete($kennung);
+                $pakete = $kennung === KOMP_ORDNER
+                    ? array_map(fn(array $s): array => ['datei' => $s['datei'],
+                                                        'groesse' => $s['groesse']],
+                                komp_staende())
+                    : edbak_pakete($kennung);
                 if ($pakete === []) { continue; }
                 $weg->ordner($kennung);
                 $dort = $weg->liste($kennung);
@@ -1016,7 +1036,10 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
                      * falschen Länge, und die gälte für immer als erledigt. */
                     $bytes = (int)$p['groesse'];
                     if (isset($dort[$name]) && $dort[$name] === $bytes) { continue; }
-                    $weg->senden(edbak_ordner($kennung) . '/' . $name, $kennung . '/' . $name);
+                    $hier = $kennung === KOMP_ORDNER
+                        ? komp_wurzel() . '/' . $name
+                        : edbak_ordner($kennung) . '/' . $name;
+                    $weg->senden($hier, $kennung . '/' . $name);
                     $raus['gesendet']++;
                     $raus['bytes'] += $bytes;
                     $gesendetHier++;
@@ -1063,6 +1086,11 @@ function sz_versand_rueckstand(): ?int
             if (!edbak_paketname_gueltig($d)) { continue; }
             if ((int)@filemtime($wurzel . '/' . $k . '/' . $d) > $grenze) { $n++; }
         }
+    }
+    /* Die Komplettsicherungen zaehlen mit — sie gehen denselben Weg. */
+    require_once __DIR__ . '/komplett_lib.php';
+    foreach (komp_staende() as $st) {
+        if ((int)@filemtime(komp_wurzel() . '/' . $st['datei']) > $grenze) { $n++; }
     }
     return $n;
 }

@@ -693,6 +693,17 @@ function ui_leiste_einstellungen(string $aktiv): void
          * NICHT „Transportziele" — so heissen unter Stammdaten die
          * Zielkliniken (F-S2-G). */
         'admin_sicherungsziele' => ['admin_sicherungsziele.php', 'Sicherungsziele', 'tausch'],
+        /* KOMPLETTSICHERUNG DIREKT DAHINTER (S2/AP8). Die drei gehoeren
+         * zusammen und stehen in der Reihenfolge, in der man sie braucht:
+         * erst die Regeln fuer die Kontosicherungen, dann wohin sie gehen,
+         * dann die Sicherung der ganzen Installation.
+         *
+         * Das Symbol ist `datenbank` — dasselbe wie bei „Stammdaten
+         * systemweit", und aus dem naheliegenden Grund: Hier wird die
+         * Datenbank als solche gesichert. Ein NEUES Symbol braeuchte Freigabe
+         * mit Mockup (docs/Design.md, Kapitel 9); der Vorrat reicht. */
+        'admin_komplettsicherung' => ['admin_komplettsicherung.php',
+                                      'Komplettsicherung', 'datenbank'],
         /* Zwischen Sicherungen und Demo-Konto — so steht es in Mockup 35. */
         'admin_rechtstexte' => ['admin_rechtstexte.php', 'Rechtstexte',           'rechtstexte'],
         'admin_demo'        => ['admin_demo.php',        'Demo-Konto',            'kolben'],
@@ -755,6 +766,7 @@ function ui_einstellungen_uebersicht(): void
             ['admin_stammdaten.php', 'Stammdaten systemweit', 'datenbank'],
             ['admin_sicherungen.php','Sicherungen',           'sicherung'],
             ['admin_sicherungsziele.php', 'Sicherungsziele',   'tausch'],
+            ['admin_komplettsicherung.php', 'Komplettsicherung', 'datenbank'],
             ['admin_rechtstexte.php','Rechtstexte',           'rechtstexte'],
             ['admin_demo.php',       'Demo-Konto',            'kolben'],
             ['update.php',           'Wartung',               'werkzeug'],

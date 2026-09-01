@@ -18,6 +18,11 @@ versiegelten Teilen. Die einteiligen Fassungen 2 und 3 werden weiterhin
 | 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | ja, bis NaDoku 1.0 |
 | 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | ja, bis NaDoku 1.0 |
 
+**Die Komplettsicherung der INSTALLATION ist etwas anderes** und steht in
+Abschnitt 6: `.edk`, Format `EDKOMP1`, ein SQL-Dump jeder Tabelle statt der
+Daten eines Kontos. Sie hilft gegen „der Webspace ist weg", nicht gegen
+„jemand hat sich vertan".
+
 ---
 
 ## 1. Container, Fassung 4 (seit Web 11.1.0)
@@ -1229,3 +1234,185 @@ Verzeichnis und nicht aus dieser Datei: Ein Eintrag ohne Datei darf keine
 Sicherung vortäuschen, und eine vorhandene Datei darf nicht unsichtbar bleiben,
 weil sie hier fehlt. Ist `konto.json` unlesbar, wird der Ordner mit Hinweis
 aufgeführt statt übergangen.
+
+---
+
+## 6. Komplettsicherung der Installation (`.edk`, EDKOMP1, seit Web 12.2.0)
+
+Die Abschnitte 1 bis 5 beschreiben die Sicherung **eines Kontos**. Dieser
+Abschnitt beschreibt die Sicherung der **Installation**: jede Tabelle der
+Datenbank als SQL-Dump. Sie ist ein anderes Ding mit einem anderen Zweck —
+„der Webspace ist weg" statt „jemand hat sich vertan" — und hat deshalb ein
+eigenes Format. Beschlossen in E-S2-19 bis E-S2-21, gebaut in S2/AP8.
+
+**Nicht enthalten: `config.php`.** Sie trägt das Datenbankpasswort und den
+Serverschlüssel — also genau das, womit sich diese Datei öffnen lässt. Sie
+gehört ins getrennt aufbewahrte Wiederanlaufpaket (`docs/Technik.md`,
+Abschnitt 7).
+
+### 6.1 Drei Schichten
+
+    1. SQL-Text     ein Statement je Zeile, INSERT-Stapel bis 1 MB
+    2. gzip         je Häppchen ein eigenes gzip-Glied
+    3. EDKOMP1      AES-256-GCM je 256-KB-Block
+
+Die zweite Schicht ist eine Folge der dritten Bedingung von E-S2-20 („nie als
+Array am Stück"): Der Dump entsteht in Häppchen über mehrere Anfragen, und ein
+`deflate`-Zustand lässt sich zwischen zwei Anfragen nicht aufbewahren.
+Aneinandergehängte gzip-Glieder sind gültiges gzip — aber nicht jedes Werkzeug
+liest sie. Nachgemessen an einer Datei aus **15 Gliedern**
+(122 469 394 Byte entpackt):
+
+| | liest | |
+|---|---|---|
+| `gunzip` / `zcat` | alles | |
+| PHP `gzopen()` + `gzread()` | alles | 122 469 394 |
+| PHP `gzdecode()` | **nur das erste Glied** | 13 573 234 (11 %) |
+| PHP `inflate_add()` | **nur das erste Glied** | 13 573 234 |
+| Python `gzip.open()` | alles | 122 469 394 |
+| Python `gzip.decompress()` | alles | 122 469 394 |
+
+Die beiden PHP-Wege, die abschneiden, tun es **ohne Fehlermeldung** — heraus
+kommt eine Datei, die aussieht wie eine ganze. In der Anwendung wird deshalb
+ausschliesslich `gzopen()`/`gzread()` benutzt.
+
+### 6.2 Aufbau der `.edk`-Datei
+
+    Offset  Länge  Inhalt
+    0       8      "EDKOMP1\n"
+    8       n      Kopfzeile als JSON, danach "\n" (kein \n innerhalb)
+    …              je Block:
+                     4 Byte  Länge N der Chiffre, big endian (max. 262144)
+                    12 Byte  Nonce
+                    16 Byte  Prüfsumme (GCM-Tag)
+                     N Byte  Chiffre
+
+Der Dateiname ist `JJJJ-MM-TTTHH-MM-SSZ_<8 Hexzeichen>.edk` — Zeitpunkt (UTC,
+sortierbar) plus 32 Bit Zufall. Der Zufall ist die zweite Schranke gegen einen
+Abruf über den Browser; die erste ist `sicherungen/.htaccess`.
+
+### 6.3 Die Kopfzeile
+
+```json
+{
+  "art":       "komplett",
+  "fassung":   1,
+  "erzeugt":   "2026-09-01T09:24:16Z",
+  "web":       "12.2.0",
+  "migration": "2026_09_01_sicherungsziele",
+  "tabellen":  34,
+  "zeilen":    1121802,
+  "roh":       45798320,
+  "block":     262144,
+  "kdf":       null
+}
+```
+
+`kdf: null` heisst **Serverschlüssel** aus `config.php`. Für die Fassung mit
+Passphrase steht dort stattdessen:
+
+```json
+"kdf": { "art": "pbkdf2", "hash": "sha256", "iter": 320000, "salz": "<32 Hexzeichen>" }
+```
+
+`roh` ist die Grösse des gepackten Klartexts (Schicht 2), nicht die des SQL.
+
+### 6.4 Die Zusatzdaten binden Reihenfolge, Ende und Kopf
+
+Je Block:
+
+    edkomp1|<SHA-256 von "EDKOMP1\n" + Kopfzeile + "\n">|<Index>|<0 oder 1>
+
+Die letzte Stelle ist 1 für den **letzten** Block und sonst 0. Alle drei
+Bestandteile sind nötig:
+
+* **Ohne den Index** liessen sich zwei Blöcke vertauschen, und die Prüfsumme
+  jedes einzelnen bliebe richtig.
+* **Ohne die Endemarkierung** liesse sich die Datei hinten abschneiden, und
+  was übrig bleibt, wäre eine gültige, kürzere Sicherung. Nachgemessen: Eine
+  an einer Blockgrenze um zehn Blöcke gekürzte Datei bricht beim Öffnen ab.
+* **Ohne die Bindung an den Kopf** liesse sich der Kopf austauschen — etwa
+  „mit Passphrase" gegen „mit Serverschlüssel". So macht jede Änderung daran
+  jeden Block unlesbar.
+
+Der Leser bestimmt „letzter Block" aus der Dateiposition, nicht aus einer
+Angabe im Kopf. Dadurch fällt jedes Abschneiden auf, egal wo.
+
+### 6.5 Der SQL-Text darin
+
+* **Ein Statement je Zeile.** Damit lässt sich die Datei zeilenweise
+  abarbeiten — ohne SQL-Zerleger. Kein Literal enthält je einen echten
+  Zeilenumbruch (`\n`, `\r`, `\0`, `\x1a`, `'`, `"`, `\` werden abgebildet).
+* **INSERT-Stapel bis 1 MB**, mit ausdrücklicher Spaltenliste.
+* **Binärspalten hexadezimal** (`0x…`), eine leere als `''` — `0x` ohne
+  Ziffern wäre kein gültiges Literal.
+* **Tabellen in einspielbarer Reihenfolge** (topologisch nach
+  Fremdschlüsseln); `SET FOREIGN_KEY_CHECKS = 0` steht daneben als Gürtel.
+* **Kopfkommentare** mit Web-Version, Migrationsstand, Zeitpunkt,
+  Datenbankserver und Tabellenzahl.
+* **Eine Endmarke** am Schluss: `-- EDKOMP-ENDE <n> Zeilen in <m> Tabellen`.
+  Sie ist der Beleg, dass die Datei nicht mitten im Erzeugen abgebrochen ist.
+  Ein `mysqldump` hat sie nicht; der Rückweg verlangt sie deshalb nur bei
+  Dateien, die sich im Kopf als eigene ausweisen.
+
+### 6.6 Von Hand öffnen (Python)
+
+```python
+import hashlib, json, struct, gzip, sys
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+def oeffnen(pfad, schluessel_hex=None, passphrase=None):
+    roh = open(pfad, 'rb').read()
+    assert roh[:8] == b'EDKOMP1\n', 'keine EDKOMP1-Datei'
+    ende = roh.index(b'\n', 8)
+    kopfzeile = roh[8:ende + 1]
+    kopf = json.loads(kopfzeile)
+    bindung = hashlib.sha256(roh[:8] + kopfzeile).hexdigest()
+
+    if kopf['kdf'] is None:
+        schluessel = bytes.fromhex(schluessel_hex)          # server_key aus config.php
+    else:
+        k = kopf['kdf']
+        schluessel = hashlib.pbkdf2_hmac('sha256', passphrase.encode(),
+                                         bytes.fromhex(k['salz']), k['iter'], 32)
+
+    aes = AESGCM(schluessel)
+    pos, i, aus = ende + 1, 0, b''
+    while pos < len(roh):
+        (n,) = struct.unpack('>I', roh[pos:pos + 4]);           pos += 4
+        nonce = roh[pos:pos + 12];                              pos += 12
+        tag   = roh[pos:pos + 16];                              pos += 16
+        chiffre = roh[pos:pos + n];                             pos += n
+        letzte = pos >= len(roh)
+        aad = f"edkomp1|{bindung}|{i}|{1 if letzte else 0}".encode()
+        aus += aes.decrypt(nonce, chiffre + tag, aad)           # Tag hinten anhängen
+        i += 1
+    return aus                    # das gepackte gzip, noch nicht entpackt
+
+open('/tmp/dump.sql.gz', 'wb').write(oeffnen(sys.argv[1], schluessel_hex=sys.argv[2]))
+# danach:  gunzip -c /tmp/dump.sql.gz > /tmp/dump.sql
+#      oder in Python:  gzip.decompress(daten)  bzw.  gzip.open(...)
+```
+
+**Gefahren und nachgemessen** (Web 12.2.0, cryptography 50.0.1, Python 3.13):
+Die Datei mit dem Serverschlüssel und dieselbe Datei unter einer Passphrase
+ergeben denselben Klartext, und der ist byteweise der, den PHP herausgibt.
+
+Python entpackt beide Wege vollständig — `gzip.decompress()` genauso wie
+`gzip.open()`; die Mehrgliedrigkeit ist hier **kein** Stolperstein. Sie ist
+einer in PHP: Dort sehen `gzdecode()` und `inflate_add()` nur das erste Glied,
+und zwar stillschweigend (Tabelle in 6.1).
+
+### 6.7 Der Weg zurück
+
+Drei Wege spielen dieselbe Datei ein:
+
+1. **`mysql`** (oder phpMyAdmin) mit der unverschlüsselt heruntergeladenen
+   Fassung: `mysql -u… -p… DATENBANK < dump.sql`.
+2. **`wiederherstellen.php`** der Anwendung — nur bei leerer Datenbank, mit
+   Nachweisdatei, liest aus `sicherungen/eingang/`, arbeitet in Durchgängen.
+3. **Von Hand** über Abschnitt 6.6 und dann Weg 1.
+
+Nach jedem davon gehört der **Migrationslauf** (`update.php`), wenn der Dump
+aus einer älteren Fassung stammt. Das Runbook (`docs/Technik.md`, Abschnitt 7)
+führt die ganze Reihenfolge auf.

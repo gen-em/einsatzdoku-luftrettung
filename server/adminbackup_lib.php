@@ -1563,7 +1563,8 @@ function edbak_ablage_zahlen(bool $frisch = false): array
 
     $wurzel = edbak_wurzel();
     $z = ['ordner' => 0, 'pakete' => 0, 'bytes' => 0,
-          'sonstige_bytes' => 0, 'reste' => 0];
+          'sonstige_bytes' => 0, 'reste' => 0,
+          'komplett' => 0, 'komplett_bytes' => 0];
     if (!is_dir($wurzel)) { return $letzte = $z; }
 
     /* DAS GANZE VERZEICHNIS, NICHT NUR DIE PAKETE (S2/AP6).
@@ -1607,7 +1608,33 @@ function edbak_ablage_zahlen(bool $frisch = false): array
             }
         }
     }
-    $z['sonstige_bytes'] = max(0, $z['bytes'] - $inPaketen);
+    /* DIE KOMPLETTSICHERUNGEN BEKOMMEN EINE EIGENE ZAHL (S2/AP8).
+     *
+     * Gewogen waren sie schon vorher — `$wiegen` geht ueber den ganzen Baum.
+     * Sie landeten damit aber unter `sonstige_bytes`, und das ist die Zahl,
+     * die auf der Speicherseite „auffaelliger Rest" heisst. Eine
+     * Komplettsicherung ist mit Abstand die groesste Datei der Ablage; sie als
+     * Rest auszuweisen hiesse, die Speicherseite zur Meldung eines Fehlers zu
+     * bringen, den es nicht gibt — und beim naechsten Mal glaubt ihr niemand
+     * mehr. */
+    /* Name und Muster kommen aus `komplett_lib.php` und stehen nicht hier
+     * noch einmal. Das Nachladen mitten in der Funktion ist Absicht: Jene
+     * Datei laedt diese hier, also darf es nicht am Kopf stehen. Zum
+     * Zeitpunkt des AUFRUFS ist beides fertig geladen. */
+    require_once __DIR__ . '/komplett_lib.php';
+    $kompPfad = $wurzel . '/' . KOMP_ORDNER;
+    if (is_dir($kompPfad)) {
+        foreach (scandir($kompPfad) ?: [] as $d) {
+            $voll = $kompPfad . '/' . $d;
+            if (is_file($voll) && komp_name_gueltig($d)) {
+                $z['komplett']++;
+                $z['komplett_bytes'] += (int)@filesize($voll);
+            } elseif (is_dir($voll) && str_starts_with($d, KOMP_BAU_PRAEFIX)) {
+                $z['reste']++;
+            }
+        }
+    }
+    $z['sonstige_bytes'] = max(0, $z['bytes'] - $inPaketen - $z['komplett_bytes']);
     return $letzte = $z;
 }
 
