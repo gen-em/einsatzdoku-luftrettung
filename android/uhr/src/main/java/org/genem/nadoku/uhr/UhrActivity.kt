@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,9 +50,10 @@ import org.genem.nadoku.gemeinsam.Phasen
  * keine Zugangsdaten, keine Reanimation. Was sie tut, ist Zeitstempel setzen
  * und ans Handy melden — das Handy quittiert (E-S4-10, C2).
  *
- * **STAND C1:** Das Bedienbild steht, der Nachrichtenweg noch nicht. Die
- * Wirkungen aus [Uhrbedienung] laufen deshalb noch ins Leere; C2 hängt den
- * Data Layer daran.
+ * **STAND C2:** Bedienbild und Nachrichtenweg stehen. Die Ansicht entscheidet
+ * nichts mehr selbst — sie reicht Ereignisse an [UhrApp] weiter und zeichnet,
+ * was von dort zurückkommt. Der Zustand liegt in [org.genem.nadoku.uhr.funk.Uhrsteuerung],
+ * nicht hier: Eine Quittung kann eintreffen, während gar keine Ansicht läuft.
  *
  * **BLIND GEBAUT.** Es gibt keinen Emulator (E-R45-8) und keine Uhr
  * (E-R45-7). Von dieser Ansicht existiert **kein Bildschirmfoto**. Geprüft
@@ -67,12 +69,26 @@ class UhrActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         freieTaste = Tastenabfrage.freieTaste(this)
+        val app = UhrApp.von(this)
         setContent {
             UhrOberflaeche(
+                app = app,
                 freieTasteVorhanden = freieTaste != null,
                 tasteAnmelden = { aufFreieTaste = it },
             )
         }
+    }
+
+    /**
+     * Beim Öffnen wird nachgeliefert.
+     *
+     * Wer die App aufmacht, hat meistens einen Grund — ein voller Puffer ist
+     * einer davon. Ein eigener Wecker dafür wäre ein Dienst auf der Uhr, also
+     * Akku für einen Fall, den die Nähe zum Handy von selbst auflöst.
+     */
+    override fun onResume() {
+        super.onResume()
+        UhrApp.von(this).nachliefern()
     }
 
     /**
@@ -93,18 +109,27 @@ class UhrActivity : ComponentActivity() {
 
 @Composable
 fun UhrOberflaeche(
+    app: UhrApp? = null,
     logoWahl: LogoWahl = LogoWahl.WECHSELND,
     freieTasteVorhanden: Boolean = false,
     tasteAnmelden: (() -> Unit) -> Unit = {},
     sperreAn: Boolean = true,
 ) {
+    /* OHNE [app] BLEIBT DIE ANSICHT FÜR SICH — das ist der Fall der
+     * @Preview-Vorschau und nur der. In der App liegt der Zustand in der
+     * Steuerung, weil eine Quittung eintreffen kann, während keine Ansicht
+     * läuft (E-S4-10). */
     val bedienung = remember(sperreAn) { Uhrbedienung(sperreAn = sperreAn) }
-    var zustand by remember { mutableStateOf(Uhrzustand()) }
+    var zustand by remember { mutableStateOf(app?.zustand ?: Uhrzustand()) }
+
+    DisposableEffect(app) {
+        app?.beobachter = { z -> zustand = z }
+        onDispose { app?.beobachter = null }
+    }
 
     fun melde(ereignis: Uhrereignis) {
-        // Die Wirkungen gehen in C2 an das Handy; bis dahin bleibt es beim
-        // Zustandswechsel — die Uhr tut selbst nichts (E-S4-11).
-        zustand = bedienung.verarbeite(zustand, ereignis).zustand
+        if (app != null) app.ereignis(ereignis)
+        else zustand = bedienung.verarbeite(zustand, ereignis).zustand
     }
 
     // Die freie Taste tut dasselbe wie der große Knopf (E-S4-21a).
@@ -329,8 +354,24 @@ private fun Zustandszeile(z: Uhrzustand) {
     Verbindungszeile(z)
 }
 
+/**
+ * Was der Funk gerade tut — und **was er noch nicht getan hat**.
+ *
+ * DIE SCHWEBENDE ZEILE IST DER KERN VON E-S4-10 an der Oberfläche: Ein an der
+ * Uhr ausgelöster Dienststart wirkt erst mit der Zustellung; vorher läuft am
+ * Handy kein GPS. Eine Uhr, die in diesem Augenblick nur „Dienst läuft"
+ * zeigte, verschwiege genau die Aufzeichnungslücke, die hinterher niemand
+ * mehr erklären kann. Deshalb steht sie **über** allem anderen, in Rot.
+ */
 @Composable
 private fun Verbindungszeile(z: Uhrzustand) {
+    if (z.dienstSchwebt) {
+        Text(
+            text = stringResource(R.string.dienst_schwebt),
+            color = Farbe.rot, fontSize = 12.sp, textAlign = TextAlign.Center,
+        )
+        return
+    }
     Text(
         text = when {
             !z.handyErreichbar -> stringResource(R.string.handy_nicht_erreichbar)

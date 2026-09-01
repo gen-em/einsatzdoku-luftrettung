@@ -823,6 +823,50 @@ anbieten (die NutzerIn stellt sie selbst in den Systemeinstellungen ein) statt
 über den gezielten Dialog — das ist richtlinienkonform und einen Schritt
 umständlicher. Kein S4-Umfang; nach K4 gesammelt.
 
+### B-S4-05 — Eine nachträgliche Phase wäre liegengeblieben (behoben)
+
+**Gefunden in C2**, als die Abnahme verlangte, dass beim Phasenkonflikt
+Uhr/Handy **beide Einträge gesendet** werden. Gespeichert wurden sie; gesendet
+nicht zwingend.
+
+Der Sender fragt `Puffer.hatArbeit()`, und das prüft zwei Dinge: ob die
+Metadaten je bestätigt wurden und ob es unbestätigte Spurpunkte gibt. Ein
+laufender Einsatz wird während des Dienstes in Teilen hochgeladen; danach
+steht `metadaten_bestaetigt = 1`. Kommt jetzt eine Phase dazu — vom Handy oder
+von der Uhr —, ändert sich **keines von beiden**. Solange weiter Punkte
+eintreffen, fällt es nicht auf; steht das Fahrzeug, bleibt die Phase liegen,
+bis der Einsatz abgeschlossen wird. Im Nur-Aufzeichnen-Betrieb bis zum
+Dienstende.
+
+*Herkunft:* B5 (Web-Fassung nicht betroffen, die Regel gibt es nur im Client).
+*Behoben in C2* und nicht gesammelt, weil die Abnahme von C2 sonst nicht
+erfüllbar gewesen wäre: `phaseAnhaengen` nimmt die Metadaten-Bestätigung in
+derselben Transaktion zurück, in der sie die Phase einfügt. Belegt durch
+`UhrannahmeTest.einPhasenkonfliktErzeugtZweiEintraegeUndBeideGehenRaus`
+(hatArbeit vorher **false**, nachher **true**) und im Rundlauf gegen
+`ingest.php` durch drei Phaseneinträge auf dem Server.
+
+### B-S4-06 — Die Wortliste erreicht `android/` nicht
+
+`tools/wortliste/` prüft drei Bereiche: `server/*.php`, `server/assets/*.js`
+und die normative Dokumentation — zusammen **101 Dateien**. Die sichtbaren
+Texte der App stehen in `android/*/src/main/res/values/strings.xml` und sind
+seit B1 **nie** durch das Werkzeug gelaufen; der Lauf nach C2 meldet 0 Treffer
+und hat dabei keine einzige Zeile der App angesehen. Genau der Fall, vor dem
+`CLAUDE.md` 6 warnt: eine grüne Zahl, die etwas anderes gemessen hat.
+
+*Ersatzweise von Hand nachgezählt* (C2, eigenes Skript gegen dieselbe
+`sperrliste.json`, Großschreibungsregel beachtet): **123 sichtbare Werte in
+zwei Dateien, 3 Treffer** — zweimal „Bildmarke Rettungshubschrauber" (der
+Alternativtext des Luftlogos) und einmal „RTH" (die Bezeichnung der Logowahl).
+Alle drei gehören zur Klasse *Homonym*, für die die Weboberfläche an denselben
+Stellen bereits Ausnahmen führt (`design-bildmarke`, `logowahl-option`,
+`fahrzeugtypen`). Aus C2 stammt kein Treffer.
+
+*Nicht behoben:* `tools/` liegt außerhalb des Schreibrahmens dieser
+Umsetzung. Zu tun ist ein vierter Bereich in `sperrliste.json` samt drei
+Ausnahmen — in Block D oder in einer eigenen Runde.
+
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
@@ -1516,3 +1560,154 @@ richtigen sind.
   es (E-S4-21d). Zwei Griffe für zwei Zwecke wären an einem Handgelenk einer
   zu viel; dass derselbe Griff im gesperrten Zustand etwas anderes tut, ist
   die einzige Stelle, an der die Sperre überhaupt bedienbar bleibt.
+
+### C2 — Nachrichtenweg mit Quittung und Puffer · Android 0.7.0 · erledigt
+
+**Was entstanden ist.** Das Protokoll nach E-S4-10 auf beiden Seiten. Die Uhr
+puffert jedes Bedienereignis, bevor sie es sendet, und liefert unquittierte
+Nachrichten **wortgleich** nach; das Handy übernimmt sie, quittiert mit der
+höchsten **lückenlos** übernommenen Nummer, ergänzt die Phasen-Koordinate aus
+der eigenen Spur und schickt seinen Anzeigestand zurück. Der Data Layer selbst
+ist eine Hülle von rund fünfzig Zeilen ohne eine einzige Entscheidung.
+
+**Wo die Naht liegt — und warum sie dort liegt.** Alles, was schiefgehen
+kann, liegt **über** der Hülle: Puffer, Nummernvergabe, Quittung,
+Nachlieferung, Doppelzustellung, die Buchführung am Handy. Das läuft auf der
+JVM und ist geprüft. Die Hülle selbst ist im Container nicht ausführbar — der
+Data Layer braucht zwei gekoppelte Geräte, und es gibt weder Uhr (E-R45-7)
+noch Emulator (E-R45-8). Je weniger in ihr steht, desto kleiner ist der
+ungeprüfte Rest; deshalb: Knoten holen, senden, Erfolg melden, sonst nichts.
+
+**Das Nachrichtenformat liegt in `gemeinsam/`.** Ein Format, das zwei
+Programme unabhängig voneinander lesen und schreiben, ist zwei Formate,
+sobald sich eines ändert — und der Data Layer meldet keine unverstandene
+Nachricht, er stellt sie zu und niemand tut etwas damit. Mit ihm sind
+`Kennungen` (die `wm-`-Bauform entsteht jetzt auf der Uhr) und `Modus` (er
+reist zur Uhr) nach `gemeinsam/` gewandert.
+
+#### Prüfstand C2
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew build`, beide Module | **BUILD SUCCESSFUL** | baut |
+| Lint `uhr` | `lintDebug` | **0 Fehler, 0 Warnungen** | 0 Fehler |
+| Lint `handy` | `lintDebug` | **0 Fehler, 19 Warnungen** (18 Fassungshinweise + `BatteryLife`; **unverändert** — die neue Bibliothek bringt keine) | 0 Fehler |
+| Prüffälle `uhr` | `testDebugUnitTest` | **47 Fälle, 0 Fehlschläge, 0 übersprungen** (21 aus C1 + 26 neue) | belegt |
+| Prüffälle `handy` | ohne Rundlauf | **167 Fälle, 0 Fehlschläge, 11 übersprungen** | belegt |
+| Prüffälle `handy` | **mit** lokaler Installation | **167 Fälle, 0 Fehlschläge, 0 übersprungen** | belegt |
+| Prüffälle gesamt | beide Module | **214** (167 + 47) | — |
+| **Funkabriss mit Nachlieferung** | Transport-Attrappe | zwei Ereignisse im Funkloch: **0 Bytes auf der Leitung**, beide gepuffert, `handyErreichbar = false`; nach Rückkehr **2 zugestellt**, Reihenfolge 1, 2 | E-S4-10 |
+| … identisch nachgeliefert | Byte-Vergleich | die nachgelieferte Nachricht ist **zeichengleich** mit der ersten | E-S4-10 |
+| … Abriss mittendrin | Attrappe stellt genau 1 zu | **1 zugestellt, 3 bleiben im Puffer**, der Dienststart war der erste | Reihenfolge |
+| **Doppelzustellung nach verlorener Quittung** | Uhr-Seite | ohne Quittung wird dieselbe Nachricht mit **derselben Nummer** erneut gesendet | E-S4-10 |
+| … kein zweiter Einsatz | Handy-Seite, echtes SQLite | zweimal dieselbe Meldung → **1 Einsatz, 1 Phase**, beide Male dieselbe Quittung | E-S4-10 |
+| … der `wm-`-Anker greift auch ohne Buchführung | neue Nummer, gleiche Kennung | **1 Einsatz, 2 Phaseneinträge** (die zweite Nummer war neu — Korrektur, E-R45-12) | E-S4-09 |
+| … auch bei abgeschlossenem Einsatz | Nachzügler nach `EINSATZ_ABSCHLIESSEN` | **kein zweiter Einsatz**; die Phase landet im selben, Reihenfolge 2, 9 | E-S4-09 |
+| **Uhr-Neustart mit gefülltem Puffer** | neues Exemplar über derselben Ablage | **2 Nachrichten unverändert da**, gleiche Uhr-Kennung, nächste Nummer ist **3** und nicht 1 | E-S4-10 |
+| **Phasenkonflikt Uhr/Handy** | Handy 05:10:00, Uhr 05:10:30 | **2 Einträge**, Quellen `handy` und `uhr`, **beide Zeiten erhalten** | E-R45-12 |
+| … und beide werden **gesendet** | `hatArbeit` vor/nach | **false → true**: der bestätigte Einsatz wird wieder sendepflichtig (Fund B-S4-05) | Abnahme |
+| … am Server angekommen | Rundlauf gegen `ingest.php` | **3 Phasenzeilen** in `mission_phases` (2 · 05:02:00 Uhr, 3 · 05:07:00 Handy, 3 · 05:07:30 Uhr), `verworfen={}`, `übergangen={}` | Vertrag 3 |
+| **Dienststart ohne erreichbares Handy** | Uhr-Seite | `dienstLaeuft = true`, `dienstBestaetigt = **false**`, `dienstSchwebt = true`, `gepuffert = 1`; die Uhr zeigt „wartet aufs Handy · keine Aufzeichnung" | E-S4-10 |
+| … Zustellung allein genügt nicht | nach `nachliefern()` | schwebt **weiter** — erst die Quittung (oder eine Standmeldung) beendet es | E-S4-10 |
+| Lücke in der Nummernreihe | 1, dann 3, dann 2 | Quittung bleibt bei **1**, springt mit der 2 auf **3**; Einzelbuchung danach leer | E-S4-10 |
+| Zurückgesetzte Uhr | neue Uhr-Kennung, Nummer 1 | wird **übernommen**, nicht als Doppelzustellung verworfen; zwei Stände nebeneinander | begründet |
+| Zeitmaß | | jede Meldung trägt die **Uhrzeit der Uhr**; `started_at` des Dienstes ist die Auslösezeit (05:00) und nicht die Ankunft (05:20) | E-R45-1 |
+| Keine Zugangsdaten im Format | Schlüssel gezählt | **genau** `uhr, nr, art, zeit, phase, einsatz_ref` — kein `api_key`, keine `device_id`, keine Serveradresse | E-S4-11 |
+| Unbrauchbare Nachricht | vier Formen | **null** statt Ausnahme (ein Absturz beendete den Systemdienst) | robust |
+| Schema-Migration 1 → 2 | Datenbank der alten Fassung von Hand angelegt | Dienst, Paket und **beide Punkte** überstehen sie; die neuen Tabellen sind benutzbar | kein Datenverlust |
+| Farb-, Kontrast-, Bildmarken- und Stromprüfung | `werkzeuge/*` | 0 / 0 / 0 / 0 Abweichungen (16 Farbpaare, 4 Bildmarken, 5 Ströme) | unverändert |
+| Wortliste | `tools/wortliste` | 0 Treffer — **misst `android/` aber nicht** (Fund B-S4-06); von Hand nachgezählt: 123 sichtbare Werte, 3 Treffer, alle aus B2/C1 und derselben Homonym-Klasse wie im Web | siehe Fund |
+| APK | `assembleRelease`, unsigniert | Handy **9 598 911 B**, Uhr **19 491 794 B** | baut |
+
+**Was nicht geprüft ist — und das steht hier, nicht in einer Fußnote:**
+
+- **Der echte Data Layer.** Ob `WearNachrichtenweg` überhaupt zustellt, ob die
+  beiden `WearableListenerService` gerufen werden, ob die Play-Dienste auf der
+  Uhr vorhanden sind, ob Paket- und Signaturgleichheit im Feld greift
+  (E-S4-01) — nichts davon ist ausführbar. Gerätetest.
+- **Die Zeit im Funkloch.** Wie lange `Tasks.await` bei abgeschalteter Uhr
+  wirklich hängt, ob fünf Sekunden zu lang oder zu kurz sind, ob die Uhr
+  dabei spürbar hakt.
+- **Der Nebenlauf.** `UhrApp` fährt einen einzigen Arbeitsfaden, damit
+  Nummernvergabe und Dateischreiben sich nicht in die Quere kommen. Dass das
+  auf dem Gerät reicht — und dass die Anzeige trotzdem flüssig bleibt —
+  zeigt erst die Uhr.
+- **Der Vordergrunddienst, den die Uhr auslöst.** `HandyHorcher` startet die
+  Aufzeichnung, wenn der Dienst an der Uhr beginnt. Ob Android das aus einem
+  vom System gestarteten Dienst heraus zulässt (Hintergrundstart-Regeln ab
+  Android 12), ist eine Gerätefrage.
+- **Bildschirmfotos gibt es weiterhin nicht** (E-R45-8). Die schwebende Zeile
+  ist gewählt und ungesehen.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Die Abnahme verlangte mehr als das Speichern.** „Phasenkonflikt
+   Uhr/Handy (beide Einträge gesendet)" — beim Nachbauen zeigte sich, dass ein
+   Einsatz, dessen Metadaten der Server schon bestätigt hatte, als erledigt
+   galt: `hatArbeit()` zählt Punkte, nicht Phasen. Eine nachträgliche Phase
+   wäre liegengeblieben. Behoben in `phaseAnhaengen` (Fund **B-S4-05**), belegt
+   im Prüfstand und im Rundlauf.
+
+2. **Die Buchführung durfte nicht bei der Nummer allein bleiben.** Der erste
+   Entwurf führte nur die höchste übernommene Nummer. Zwei Fälle brachen ihn:
+   eine **Lücke** in der Reihe (Quittung „bis 6" hieße für die Uhr, dass sie
+   die fehlende 5 löschen darf) und eine **zurückgesetzte Uhr** (ihr Zähler
+   beginnt wieder bei 1, und jedes Ereignis verschwände als vermeintliche
+   Doppelzustellung — unbemerkt, weil alles weiter funktioniert). Beides ist
+   jetzt im Schema abgebildet: Stand **je Uhr**, dazu eine Tabelle der
+   vereinzelten Nummern oberhalb davon.
+
+3. **Damit war eine Schema-Migration fällig** — die erste. `onUpgrade` warf
+   bislang eine Ausnahme, und das war richtig so: Im Puffer liegt die einzige
+   Kopie ungesendeter Aufzeichnungen. Jetzt steht dort ein Schritt 1 → 2, der
+   nur anlegt und nichts anfasst; ein eigener Prüffall legt eine Datenbank der
+   **alten** Fassung an und weist nach, dass Dienst, Paket und Punkte sie
+   überstehen. Für alles andere wirft `onUpgrade` weiter.
+
+4. **Ein Prüffall hat einen Prüffall gefunden.** Der Rundlauf verglich die
+   Phasenquellen **nach** dem Senden — und fand nichts, weil ein vollständig
+   bestätigtes Paket entsorgt wird. Das war kein Fehler im Code, sondern eine
+   falsche Erwartung; sie ist umgestellt (vorher lesen) und die leere Abfrage
+   danach ist jetzt selbst eine Zusicherung: Der Einsatz ist weg, also ist er
+   angekommen.
+
+5. **`Kennungen` musste umziehen.** Die `wm-`-Kennung entsteht laut E-S4-09
+   auf der Uhr; die Klasse lag im Handy-Modul. Zwei Umsetzungen desselben
+   Idempotenz-Ankers wären genau die Art Fehler, die man erst am Datensatz
+   bemerkt. Sie liegt jetzt in `gemeinsam/`, wie `Modus` seit C1.
+
+#### Entscheidungen, die in C2 gefallen sind
+
+- **E-S4-43 — Die Uhr merkt vor dem Senden, und gelöscht wird erst nach der
+  Quittung.** Umgekehrt — senden, und bei Misserfolg merken — verlöre genau
+  die Ereignisse, bei denen das Senden nicht sauber scheitert, sondern hängen
+  bleibt. Gespeichert werden die **fertigen Bytes**, nicht die Absicht
+  dahinter: „identisch nachliefern" ist damit keine Zusage, die man einhalten
+  muss, sondern eine, die man nicht brechen kann.
+- **E-S4-44 — Quittiert wird die höchste *lückenlose* Nummer, und die
+  Buchführung läuft je Uhr.** Beides ist begründet in „Probleme", Punkt 2. Die
+  Uhr-Kennung entsteht bei der ersten Benutzung und lebt in derselben Datei
+  wie der Puffer; sie ist kein Geheimnis und identifiziert kein Gerät, sondern
+  **eine Einrichtung der App auf einer Uhr**.
+- **E-S4-45 — Zwei Böden gegen den zweiten Einsatz.** Die Nummer fängt die
+  Doppelzustellung ab; die `wm-`-Kennung fängt sie auch dann noch ab, wenn die
+  Buchführung fehlt — nach einer Neueinrichtung der Handy-App etwa. Der
+  Vertrag setzt beim Server dieselbe Art doppelten Bodens (Idempotenz über
+  `client_ref`), und aus demselben Grund.
+- **E-S4-46 — Ein Ereignis, das ins Leere läuft, gilt trotzdem als
+  übernommen.** Eine Phase ohne laufenden Dienst bewirkt nichts — würde sie
+  nicht quittiert, lieferte die Uhr sie für immer nach und käme nie weiter.
+  Der Preis ist ein stillschweigend verworfenes Ereignis; der Fall entsteht
+  nur, wenn Uhr und Handy über den Dienstzustand auseinanderlaufen, und dagegen
+  steht die Standmeldung.
+- **E-S4-47 — Der schwebende Dienststart wird angezeigt, nicht geglättet.**
+  Solange das Handy nicht quittiert hat, läuft dort kein GPS. Die Uhr sagt
+  „wartet aufs Handy · keine Aufzeichnung" statt „Dienst läuft" — eine
+  Aufzeichnungslücke, die niemand bemerkt, ist die teuerste Art, freundlich
+  zu sein.
+- **E-S4-48 — Der Anzeigestand kommt vom Handy und führt.** Die Uhr besitzt
+  den Zustand nicht. Nach einem Neustart ihrer App ist ihre Anzeige leer und
+  der Dienst läuft weiter; die Standmeldung stellt sie wieder her. Nicht
+  überschrieben werden die Sperre und eine offene Rückfrage — eine
+  Standmeldung, die mitten in der Abschlussfrage umschaltet, beantwortete sie
+  für den Menschen davor.

@@ -194,6 +194,12 @@ dependencies {
     // Oberflaeche mit; gebraucht wird der Dekodierer.
     implementation(libs.zxing.core)
 
+    // Der Wear Data Layer (E-S4-10): der EINZIGE Grund fuer diese
+    // proprietaere Bibliothek. Beide Module brauchen sie -- die Uhr sendet,
+    // das Handy empfaengt und quittiert. Eintrag in docs/Lizenzen.md folgt in
+    // Block D (E-S4-04); bis dahin fuehrt gradle/libs.versions.toml die Liste.
+    implementation(libs.play.services.wearable)
+
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

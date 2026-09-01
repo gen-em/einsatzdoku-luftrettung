@@ -99,7 +99,7 @@ class Uhrbedienung(
         } else {
             Ergebnis(
                 z.copy(einsatzLaeuft = true, laufendePhase = naechste),
-                listOf(Uhrwirkung.PhaseSetzen(naechste)),
+                listOf(Uhrwirkung.PhaseSetzen(naechste, eroeffnet = !z.einsatzLaeuft)),
             )
         }
     }
@@ -115,7 +115,7 @@ class Uhrbedienung(
         if (!Phasen.uebertragbar(phase)) return Ergebnis(z)
         return Ergebnis(
             z.copy(einsatzLaeuft = true, laufendePhase = phase, ansicht = Ansicht.LAUFEND),
-            listOf(Uhrwirkung.PhaseSetzen(phase)),
+            listOf(Uhrwirkung.PhaseSetzen(phase, eroeffnet = !z.einsatzLaeuft)),
         )
     }
 

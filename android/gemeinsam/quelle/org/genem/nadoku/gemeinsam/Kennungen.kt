@@ -1,4 +1,4 @@
-package org.genem.nadoku.handy.dienst
+package org.genem.nadoku.gemeinsam
 
 import kotlin.random.Random
 

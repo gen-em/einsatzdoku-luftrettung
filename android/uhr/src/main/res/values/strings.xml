@@ -18,6 +18,12 @@
     <!-- ==== Bedienbild (E-S4-21) ======================================== -->
     <string name="handy_verbunden">Handy verbunden</string>
     <string name="handy_nicht_erreichbar">Handy nicht erreichbar</string>
+    <!--
+        Der schwebende Dienststart (E-S4-10). Er sagt beides in einer Zeile:
+        dass die Uhr gemeldet hat, und dass noch NICHTS aufgezeichnet wird.
+        Nur das Erste zu sagen waere die gefaehrlichere Haelfte.
+    -->
+    <string name="dienst_schwebt">wartet aufs Handy · keine Aufzeichnung</string>
     <plurals name="gepuffert">
         <item quantity="one">%1$d gepuffert</item>
         <item quantity="other">%1$d gepuffert</item>

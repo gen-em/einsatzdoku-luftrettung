@@ -18,8 +18,9 @@
     Kopplung — auf eine andere Uhr uebertragen waere er eine Quelle doppelter
     Einsaetze.
 
-    Die Berechtigungen wachsen mit den Paketen: der Data Layer kommt mit C2,
-    die Vibration mit C1.
+    Der Data Layer (C2) braucht KEINE eigene Berechtigung: Er laeuft ueber die
+    Play-Dienste, und die pruefen Paketnamen und Signatur (E-S4-01). Die
+    einzige Berechtigung der Uhr bleibt WAKE_LOCK.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -30,6 +31,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
+        android:name=".uhr.UhrApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/datensicherung"
         android:fullBackupContent="false"
@@ -61,6 +63,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            Der Empfang von Quittung und Anzeigestand (C2, E-S4-10).
+            Begruendung zu `exported` wortgleich im Handy-Manifest.
+
+            Das System startet ihn AUCH OHNE laufende Ansicht — deshalb raeumt
+            sich der Ereignispuffer auch dann auf, wenn niemand hinsieht.
+        -->
+        <service
+            android:name=".uhr.funk.UhrHorcher"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/nadoku" />
+            </intent-filter>
+        </service>
 
     </application>
 

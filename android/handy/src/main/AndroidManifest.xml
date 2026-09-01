@@ -110,6 +110,26 @@
             android:foregroundServiceType="location"
             android:stopWithTask="false" />
 
+        <!--
+            Der Empfang der Uhr-Ereignisse (C2, E-S4-10).
+
+            `exported="true"` ist Pflicht und keine Oeffnung: Der Data Layer
+            der Play-Dienste stellt die Nachricht zu, also muss ein fremder
+            Prozess den Dienst starten duerfen. Wer zustellen darf, ist damit
+            nicht beliebig — der Data Layer liefert NUR zwischen Apps mit
+            gleichem Paketnamen UND gleicher Signatur (E-S4-01). Der
+            `pathPrefix` grenzt zusaetzlich ein: Nachrichten ausserhalb von
+            /nadoku erreichen den Dienst gar nicht erst.
+        -->
+        <service
+            android:name=".handy.uhr.HandyHorcher"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/nadoku" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

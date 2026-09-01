@@ -103,16 +103,68 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         )
         db.execSQL("CREATE INDEX idx_paket_offen ON paket (final, fehlerhaft)")
         db.execSQL("CREATE INDEX idx_phase_paket ON phase (paket_id)")
+        uhrTabellen(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) {
-        /* Es gibt noch keine zweite Fassung. Wenn es eine gibt, wird hier
-         * migriert und NICHT gelöscht: Im Puffer liegt der einzige Ort, an
-         * dem eine noch nicht gesendete Aufzeichnung existiert. */
-        throw IllegalStateException(
-            "Puffer-Schema $alt -> $neu: Es gibt noch keine Migration, und " +
-                "Löschen ist keine. Hier liegt die einzige Kopie ungesendeter Daten."
+    /**
+     * Die Buchführung über die Ereignisse der Uhr (C2, E-S4-10).
+     *
+     * ZWEI TABELLEN UND NICHT EINE: `uhr_stand` führt je Uhr die höchste
+     * **lückenlos** übernommene Nummer, `uhr_ereignis` die vereinzelten
+     * darüber. Kommt Nr. 7, während Nr. 6 fehlt, wandert der Stand nicht
+     * mit — sonst dürfte die Uhr Nr. 6 löschen, und niemand sähe je, dass
+     * sie fehlt. Sobald 6 nachkommt, rückt der Stand auf 7 und beide Zeilen
+     * verschwinden. Die Tabelle bleibt damit klein, ohne dass ein Vergessen
+     * droht.
+     *
+     * `uhr_id` STEHT DABEI, WEIL DIE NUMMER ALLEIN NICHT REICHT: Wird die Uhr
+     * zurückgesetzt, fängt ihr Zähler wieder bei 1 an. Ohne die Kennung hielte
+     * das Handy jedes Ereignis der neu eingerichteten Uhr für eine
+     * Doppelzustellung und verwürfe es **stillschweigend** — der schlimmste
+     * aller Fehler, weil niemand ihn bemerkt.
+     */
+    private fun uhrTabellen(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS uhr_ereignis (
+                uhr_id TEXT    NOT NULL,
+                nr     INTEGER NOT NULL,
+                PRIMARY KEY (uhr_id, nr)
+            )
+            """.trimIndent()
         )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS uhr_stand (
+                uhr_id TEXT    PRIMARY KEY,
+                bis_nr INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+    }
+
+    /**
+     * Migriert — und löscht **nie**. Im Puffer liegt der einzige Ort, an dem
+     * eine noch nicht gesendete Aufzeichnung existiert; ein `DROP TABLE` beim
+     * App-Update wäre der stillste denkbare Datenverlust.
+     *
+     * 1 → 2 (C2): die beiden Tabellen der Uhr-Buchführung kommen hinzu. Sie
+     * sind leer und hängen an nichts — die Migration kann deshalb nichts
+     * verlieren.
+     */
+    override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) {
+        var stand = alt
+        if (stand == 1) {
+            uhrTabellen(db)
+            stand = 2
+        }
+        if (stand != neu) {
+            throw IllegalStateException(
+                "Puffer-Schema $alt -> $neu: Für $stand -> $neu gibt es keine " +
+                    "Migration, und Löschen ist keine. Hier liegt die einzige " +
+                    "Kopie ungesendeter Daten."
+            )
+        }
     }
 
     // ---- Dienst ------------------------------------------------------------
@@ -330,19 +382,47 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             )
         }
 
+    /**
+     * Eine Phase anhängen — und den Datensatz damit **wieder sendepflichtig
+     * machen**.
+     *
+     * DAS ZURÜCKNEHMEN DER BESTÄTIGUNG IST DER PUNKT, nicht ein Nebenzug. Ein
+     * laufender Einsatz wird während des Dienstes in Teilen hochgeladen; danach
+     * steht `metadaten_bestaetigt = 1`. Kommt jetzt eine Phase dazu, hat der
+     * Server einen **veralteten** Stand — und [hatArbeit] sähe das nicht, weil
+     * es nur Punkte zählt. Steht das Fahrzeug (kein neuer Punkt), bliebe die
+     * Phase liegen, bis der Einsatz abgeschlossen wird; im
+     * Nur-Aufzeichnen-Betrieb sogar bis zum Dienstende.
+     *
+     * Der Fehler stammt aus B5 und ist in C2 aufgefallen, als die Abnahme
+     * verlangte, dass beim Phasenkonflikt Uhr/Handy **beide Einträge gesendet**
+     * werden (Fund B-S4-05). Gesendet, nicht nur gespeichert.
+     */
     fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
-        writableDatabase.insertOrThrow(
-            "phase", null,
-            ContentValues().apply {
-                put("paket_id", paketId)
-                put("nummer", nummer)
-                put("at", at)
-                if (breite != null) put("breite", breite)
-                if (laenge != null) put("laenge", laenge)
-                put("quelle", quelle)
-            },
-        )
+        writableDatabase.transaction {
+            insertOrThrow(
+                "phase", null,
+                ContentValues().apply {
+                    put("paket_id", paketId)
+                    put("nummer", nummer)
+                    put("at", at)
+                    if (breite != null) put("breite", breite)
+                    if (laenge != null) put("laenge", laenge)
+                    put("quelle", quelle)
+                },
+            )
+            update(
+                "paket", ContentValues().apply { put("metadaten_bestaetigt", 0) },
+                "id = ?", arrayOf(paketId.toString()),
+            )
+        }
     }
+
+    /** Die Quelle einer Phase (`handy`/`uhr`) — nur für die Prüfung. */
+    fun phasenquellen(paketId: Long): List<String> =
+        readableDatabase.rawQuery(
+            "SELECT quelle FROM phase WHERE paket_id = ? ORDER BY id", arrayOf(paketId.toString()),
+        ).use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
 
     // ---- Buchführung des Sendens (B4) --------------------------------------
 
@@ -437,9 +517,88 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
     fun hatArbeit(p: Paketzeile): Boolean =
         !p.metadatenBestaetigt || p.bestaetigtSeq < punktzahl(p.id)
 
+    // ---- Buchführung über die Uhr (C2, E-S4-10) ----------------------------
+
+    /**
+     * Führt [block] als **einen** Schreibvorgang aus.
+     *
+     * Gebraucht wird das genau einmal, und dort ist es entscheidend: Ein
+     * Uhr-Ereignis zu wirken **und** es als übernommen zu vermerken, muss
+     * ungeteilt geschehen. Bräche der Vorgang dazwischen ab, wäre das
+     * Ereignis entweder zweimal gewirkt (Vermerk fehlt, die Uhr liefert nach)
+     * oder gar nicht (Vermerk steht, gewirkt wurde nichts) — beides
+     * unbemerkbar.
+     */
+    fun <T> imVorgang(block: () -> T): T = writableDatabase.transaction { block() }
+
+    /**
+     * Kennt das Handy dieses Ereignis schon? Dann ist es eine
+     * **Doppelzustellung** nach verlorener Quittung — sie wird quittiert und
+     * nicht noch einmal gewirkt.
+     */
+    fun uhrEreignisBekannt(uhrId: String, nr: Long): Boolean {
+        if (nr <= uhrStand(uhrId)) return true
+        return readableDatabase.rawQuery(
+            "SELECT 1 FROM uhr_ereignis WHERE uhr_id = ? AND nr = ?",
+            arrayOf(uhrId, nr.toString()),
+        ).use { it.moveToFirst() }
+    }
+
+    /**
+     * Ein Ereignis als übernommen vermerken und den Stand nachziehen.
+     *
+     * Der Stand rückt nur so weit, wie die Reihe **lückenlos** ist: Nach 5, 7
+     * steht er auf 5; kommt 6, springt er auf 7. Was er überholt hat, wird
+     * gelöscht — die Einzeltabelle bleibt so klein, ohne dass etwas vergessen
+     * wird.
+     *
+     * @return der neue Stand — genau die Zahl, die in die Quittung gehört.
+     */
+    fun uhrEreignisMerken(uhrId: String, nr: Long): Long {
+        val db = writableDatabase
+        db.insertWithOnConflict(
+            "uhr_ereignis", null,
+            ContentValues().apply {
+                put("uhr_id", uhrId)
+                put("nr", nr)
+            },
+            SQLiteDatabase.CONFLICT_IGNORE,
+        )
+        var stand = uhrStand(uhrId)
+        while (db.rawQuery(
+                "SELECT 1 FROM uhr_ereignis WHERE uhr_id = ? AND nr = ?",
+                arrayOf(uhrId, (stand + 1).toString()),
+            ).use { it.moveToFirst() }
+        ) {
+            stand += 1
+        }
+        db.insertWithOnConflict(
+            "uhr_stand", null,
+            ContentValues().apply {
+                put("uhr_id", uhrId)
+                put("bis_nr", stand)
+            },
+            SQLiteDatabase.CONFLICT_REPLACE,
+        )
+        db.delete("uhr_ereignis", "uhr_id = ? AND nr <= ?", arrayOf(uhrId, stand.toString()))
+        return stand
+    }
+
+    /** Die höchste lückenlos übernommene Nummer dieser Uhr; 0, wenn keine. */
+    fun uhrStand(uhrId: String): Long =
+        readableDatabase.rawQuery(
+            "SELECT bis_nr FROM uhr_stand WHERE uhr_id = ?", arrayOf(uhrId),
+        ).use { if (it.moveToFirst()) it.getLong(0) else 0L }
+
+    /** Die vereinzelt übernommenen Nummern oberhalb des Standes — für die Prüfung. */
+    fun uhrOffeneNummern(uhrId: String): List<Long> =
+        readableDatabase.rawQuery(
+            "SELECT nr FROM uhr_ereignis WHERE uhr_id = ? ORDER BY nr", arrayOf(uhrId),
+        ).use { c -> buildList { while (c.moveToNext()) add(c.getLong(0)) } }
+
     private companion object {
         const val DATEINAME = "puffer.db"
-        const val FASSUNG = 1
+        const val FASSUNG = 2
 
         const val PAKET_SPALTEN =
             "SELECT id, client_ref, art, tag, dienst_ref, begonnen_at, beendet_at, final, " +

@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.dienst.Dienstklammer
-import org.genem.nadoku.handy.dienst.Kennungen
+import org.genem.nadoku.gemeinsam.Kennungen
 import org.genem.nadoku.handy.kopplung.HttpNetzweg
 import org.genem.nadoku.handy.puffer.Puffer
 import org.genem.nadoku.handy.senden.Sender

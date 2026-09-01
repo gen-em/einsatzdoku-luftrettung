@@ -9,12 +9,12 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket C1.** Das Handy koppelt sich, zeichnet auf,
-> dokumentiert Phasen und Einsätze und sendet alles nach dem JSON-Vertrag
-> (Block B, fertig). Die Uhr hat seit C1 ihr Bedienbild — als
-> Zustandsmaschine, blind gebaut und darum in 21 Prüffällen festgeschrieben.
-> Was fehlt, ist der Nachrichtenweg zwischen beiden (C2) und der Browserteil
-> (Block A).
+> **Stand: Arbeitspaket C2 — die Blöcke B und C sind damit fertig.** Das
+> Handy koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und
+> sendet alles nach dem JSON-Vertrag. Die Uhr hat ihr Bedienbild und den
+> Nachrichtenweg dorthin: Sie puffert jedes Ereignis, bis das Handy quittiert,
+> und liefert wortgleich nach. Was fehlt, ist der Browserteil (Block A) und
+> die Übergabe (Block D).
 
 ---
 
@@ -72,7 +72,8 @@ mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
    (1,'AB3K7Q'),(1,'CD4M8R'),(1,'EF5N9S'),(1,'GH6P2T'),
    (1,'LA2B3C'),(1,'LD4E5F'),(1,'LG6H7J'),(1,'LK8L9M'),
    (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z'),
-   (1,'RA2B3C'),(1,'RD4E5F'),(1,'RG6H7J'),(1,'MA2B3C'),(1,'MD4E5F');" nadoku
+   (1,'RA2B3C'),(1,'RD4E5F'),(1,'RG6H7J'),(1,'MA2B3C'),(1,'MD4E5F'),
+   (1,'UA2B3C');" nadoku
 
 cd android
 ./gradlew :handy:testDebugUnitTest --rerun-tasks \
@@ -100,20 +101,21 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand C1 (Android 0.6.0), `./gradlew build` im Container:
+Stand C2 (Android 0.7.0), `./gradlew build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **153**, davon 11 übersprungen | **21**, davon 0 übersprungen |
-| APK (unsigniert, Release) | **9 071 984 B** | **18 095 160 B** |
+| Prüffälle | **167**, davon 11 übersprungen | **47**, davon 0 übersprungen |
+| APK (unsigniert, Release) | **9 598 911 B** | **19 491 794 B** |
 
-Zusammen **174 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
+Zusammen **214 Prüffälle**. Dass die Uhr-APK doppelt so groß ist wie die
 Handy-APK, ist kein Fehler: Compose für Wear OS bringt seine eigene
 Bausteinsammlung mit, und beide Module übersetzen `gemeinsam/` mit. Der Fund
-**B-S4-03** im Konzept hält fest, dass 18 MB für eine Uhr viel sind und
-worauf beim Gerätetest zu achten ist.
+**B-S4-03** im Konzept hält fest, dass das für eine Uhr viel ist und worauf
+beim Gerätetest zu achten ist; mit C2 sind rund 1,4 MB Data Layer
+dazugekommen (Handy: 0,5 MB).
 
 Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
 available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
@@ -127,9 +129,10 @@ Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
 Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 153 von 153 (siehe unten). Die 21 Fälle der Uhr laufen
+Installation sind es 167 von 167 (siehe unten). Die 47 Fälle der Uhr laufen
 immer — sie brauchen weder Server noch Gerät, weil geprüft wird, was die
-Bedienung *entscheidet*, nicht was sie *zeichnet* (E-S4-40).
+Bedienung *entscheidet* und was der Funk *zusichert*, nicht was die Uhr
+*zeichnet* (E-S4-40).
 
 ### Das SDK ist im Container nicht vorinstalliert
 
@@ -297,6 +300,13 @@ Das steht vorn und nicht in einer Fußnote (E-R45-7, E-R45-8):
 - **Kein echtes GPS**, kein Akkuverhalten (namentlich Samsungs „Apps im
   Tiefschlaf"), kein Mobilfunk-Upload, kein Bluetooth, kein Data Layer auf
   Hardware.
+- **Der Wear Data Layer.** Er braucht zwei gekoppelte Geräte und die
+  Play-Dienste; im Container gibt es beides nicht. Ungeprüft sind damit genau
+  drei Klassen: `WearNachrichtenweg` (rund fünfzig Zeilen, keine Entscheidung)
+  und die beiden `WearableListenerService`. **Geprüft ist alles darüber** —
+  Puffer, Nummernvergabe, Quittung, Nachlieferung, Doppelzustellung, die
+  Buchführung am Handy: gegen eine Transport-Attrappe, in 26 Fällen. Genau
+  dafür ist die Naht dort, wo sie ist.
 - **Die Uhr-App ist blind gebaut.** Rundung, Schriftgrößen, Berührziele,
   Haltedauer und Sperrfrist sind gewählt und am Gerät nachzumessen; sie
   gehören danach in den Wear-Teil von `docs/Geraete-Eingabe.md`. Geprüft ist

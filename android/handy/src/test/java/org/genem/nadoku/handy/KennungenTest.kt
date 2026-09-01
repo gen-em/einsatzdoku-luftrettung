@@ -1,9 +1,10 @@
-package org.genem.nadoku.handy.dienst
+package org.genem.nadoku.handy
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.genem.nadoku.gemeinsam.Kennungen
 import kotlin.random.Random
 
 /** Die Client-Kennungen (Vertrag 8, E-S4-09). */

@@ -2,9 +2,7 @@ package org.genem.nadoku.uhr
 
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.gemeinsam.Phasen
-
-/** Eine gesetzte Phase, wie die Uhr sie anzeigt. */
-data class Phasenzeit(val nummer: Int, val hhmm: String)
+import org.genem.nadoku.gemeinsam.Phasenmarke
 
 /** Welche Ansicht die Uhr gerade zeigt. */
 enum class Ansicht {
@@ -38,7 +36,7 @@ data class Uhrzustand(
     val einsatzLaeuft: Boolean = false,
     val laufendePhase: Int = Phasen.FREI,
     val laufendeSeit: String? = null,
-    val phasen: List<Phasenzeit> = emptyList(),
+    val phasen: List<Phasenmarke> = emptyList(),
     val ansicht: Ansicht = Ansicht.START,
 
     /** Die Anzeige ist gesperrt (E-S4-21d). */
@@ -52,7 +50,22 @@ data class Uhrzustand(
 
     /** Wie viele Ereignisse warten auf ihre Quittung? (C2) */
     val gepuffert: Int = 0,
+
+    /**
+     * Hat das Handy den Dienststart übernommen? (E-S4-10)
+     *
+     * DER UNTERSCHIED WIRD ANGEZEIGT UND NICHT VERSCHWIEGEN: „Ein an der Uhr
+     * ausgelöster Dienststart wirkt erst mit Zustellung ans Handy — vorher
+     * läuft dort kein GPS." Solange dies `false` ist, läuft **keine
+     * Aufzeichnung**, und die Uhr sagt das. Eine Uhr, die „Dienst läuft"
+     * zeigt, während nichts aufgezeichnet wird, wäre schlimmer als eine, die
+     * gar nichts zeigt.
+     */
+    val dienstBestaetigt: Boolean = true,
 ) {
+    /** Läuft der Dienst zwar an der Uhr, aber noch nicht am Handy? */
+    val dienstSchwebt: Boolean get() = dienstLaeuft && !dienstBestaetigt
+
     /**
      * Trägt der große Knopf eine nächste Phase — oder den Abschluss?
      *
@@ -104,7 +117,13 @@ sealed interface Uhrereignis {
 
 /** Was das Handy tun soll. Die Uhr tut selbst nichts (E-S4-11). */
 sealed interface Uhrwirkung {
-    data class PhaseSetzen(val phase: Int) : Uhrwirkung
+    /**
+     * @param eroeffnet Diese Phase **beginnt** einen Einsatz — dann bildet die
+     *   Uhr eine `wm-`-Kennung und schickt sie mit (E-S4-09). Sie ist der
+     *   Idempotenz-Anker über den Funkabriss; ohne sie legte das Handy bei
+     *   der Nachlieferung einen zweiten Einsatz an.
+     */
+    data class PhaseSetzen(val phase: Int, val eroeffnet: Boolean) : Uhrwirkung
     data object EinsatzAbschliessen : Uhrwirkung
     data object DienstBeginnen : Uhrwirkung
     data object DienstBeenden : Uhrwirkung

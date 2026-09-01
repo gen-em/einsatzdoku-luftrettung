@@ -2,6 +2,7 @@ package org.genem.nadoku.handy.dienst
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import org.genem.nadoku.gemeinsam.Kennungen
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt

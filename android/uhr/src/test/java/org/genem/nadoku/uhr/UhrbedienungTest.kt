@@ -82,7 +82,7 @@ class UhrbedienungTest {
     @Test fun ohneEinsatzTraegtDerKnopfPhaseZwei() {
         assertEquals(Phasen.ERSTE, imDienst.naechstePhase)
         val e = bedienung.verarbeite(imDienst, Uhrereignis.GrosserKnopf(tick()))
-        assertEquals(listOf(Uhrwirkung.PhaseSetzen(2)), e.wirkungen)
+        assertEquals(listOf(Uhrwirkung.PhaseSetzen(2, eroeffnet = true)), e.wirkungen)
         assertTrue("Die Phase startet den Einsatz", e.zustand.einsatzLaeuft)
     }
 
@@ -107,7 +107,7 @@ class UhrbedienungTest {
         )
         val e = bedienung.verarbeite(z, Uhrereignis.ListenwahL(3, tick()))
 
-        assertEquals(listOf(Uhrwirkung.PhaseSetzen(3)), e.wirkungen)
+        assertEquals(listOf(Uhrwirkung.PhaseSetzen(3, eroeffnet = false)), e.wirkungen)
         assertEquals("Die laufende Phase ist jetzt die gewählte", 3, e.zustand.laufendePhase)
         assertEquals("Und die Liste schließt sich", Ansicht.LAUFEND, e.zustand.ansicht)
     }
@@ -131,7 +131,7 @@ class UhrbedienungTest {
 
         assertEquals(
             "Dreimal gewählt heisst dreimal gemeldet — nichts wird entdoppelt",
-            List(3) { Uhrwirkung.PhaseSetzen(4) }, wirkungen,
+            List(3) { Uhrwirkung.PhaseSetzen(4, eroeffnet = false) }, wirkungen,
         )
     }
 
@@ -231,7 +231,7 @@ class UhrbedienungTest {
         val ueberTaste = bedienung.verarbeite(z, Uhrereignis.FreieTaste(tick()))
         val ueberKnopf = bedienung.verarbeite(z, Uhrereignis.GrosserKnopf(tick()))
 
-        assertEquals(listOf(Uhrwirkung.PhaseSetzen(5)), ueberTaste.wirkungen)
+        assertEquals(listOf(Uhrwirkung.PhaseSetzen(5, eroeffnet = false)), ueberTaste.wirkungen)
         assertEquals(ueberKnopf.wirkungen, ueberTaste.wirkungen)
         assertEquals(ueberKnopf.zustand.laufendePhase, ueberTaste.zustand.laufendePhase)
     }

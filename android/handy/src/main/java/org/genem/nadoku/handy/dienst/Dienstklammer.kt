@@ -1,5 +1,6 @@
 package org.genem.nadoku.handy.dienst
 
+import org.genem.nadoku.gemeinsam.Kennungen
 import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Dienstzeile
@@ -50,12 +51,16 @@ class Dienstklammer(
     /**
      * Dienst beginnen — oder den laufenden zurückgeben (E-R45-13).
      *
+     * @param zeitpunkt bei einem Dienststart **an der Uhr** deren Auslösezeit
+     *   (E-S4-10: „`started_at` ist die Auslösezeit der Uhr"), sonst jetzt.
+     *   Der Unterschied kann Minuten betragen — die Uhr löst im Funkloch aus,
+     *   das Handy erfährt es beim nächsten Kontakt.
      * @return der laufende Dienst und ob er soeben entstanden ist
      */
-    fun beginnen(modus: Modus): Dienstbeginn {
+    fun beginnen(modus: Modus, zeitpunkt: Instant = jetzt()): Dienstbeginn {
         puffer.laufenderDienst()?.let { return Dienstbeginn(it, neu = false) }
 
-        val augenblick = jetzt()
+        val augenblick = zeitpunkt
         val dienstRef = kennungen.dienst()
         val tag = Zeit.tag(augenblick)
         puffer.dienstBeginnen(dienstRef, tag, Zeit.iso(augenblick), modus.gespeichert)
@@ -77,10 +82,9 @@ class Dienstklammer(
      * den Dienst beendet, hat einen abgeschlossenen Einsatz und kein
      * Datenleck in der Warteschlange. Dieselbe Stelle in `Model.endService()`.
      */
-    fun beenden(): Boolean {
+    fun beenden(zeitpunkt: Instant = jetzt()): Boolean {
         val dienst = puffer.laufenderDienst() ?: return false
-        val augenblick = jetzt()
-        val iso = Zeit.iso(augenblick)
+        val iso = Zeit.iso(zeitpunkt)
 
         puffer.offenesPaket(Paketzeile.ART_EINSATZ)?.let { einsatz ->
             puffer.paketSchliessen(
@@ -164,6 +168,11 @@ class Dienstklammer(
      *   welchem Weg er entstand.
      * @param zeitpunkt bei einem Ereignis der Uhr deren Zeitstempel (E-S4-10),
      *   sonst jetzt.
+     * @param einsatzRef bei einem Ereignis der Uhr die dort gebildete
+     *   `wm-`-Kennung (E-S4-09) — **der Idempotenz-Anker über den Funkabriss**:
+     *   Gibt es zu ihr schon einen Einsatz, wird dieser weitergeführt, statt
+     *   ein zweiter angelegt. Vom Handy aus ist sie null, dann bildet die App
+     *   eine `am-`-Kennung.
      * @return `false`, wenn die Nummer nicht übertragbar ist oder kein Dienst
      *   läuft
      */
@@ -171,12 +180,20 @@ class Dienstklammer(
         nummer: Int,
         quelle: String = QUELLE_HANDY,
         zeitpunkt: Instant = jetzt(),
+        einsatzRef: String? = null,
     ): Boolean {
         if (!Phasen.uebertragbar(nummer)) return false
         val dienst = puffer.laufenderDienst() ?: return false
 
+        /* DIE REIHENFOLGE IST DIE AUSSAGE: Ein offener Einsatz führt, denn er
+         * ist der, in dem gerade gearbeitet wird. Erst wenn keiner offen ist,
+         * greift der Anker der Uhr — und findet den Einsatz wieder, den eine
+         * verlorene Quittung schon einmal hat anlegen lassen. Ein bereits
+         * abgeschlossener Einsatz wird dabei bewusst wieder getroffen: Die
+         * nachgelieferte Phase gehört zu ihm und zu keinem neuen. */
         val einsatz = puffer.offenesPaket(Paketzeile.ART_EINSATZ)
-            ?: einsatzBeginnen(dienst.dienstRef, dienst.tag, zeitpunkt)
+            ?: einsatzRef?.let { puffer.paketNach(it) }
+            ?: einsatzBeginnen(dienst.dienstRef, dienst.tag, zeitpunkt, einsatzRef)
 
         /* DIE KOORDINATE KOMMT AUS DER EIGENEN SPUR (E-S4-10): der zeitlich
          * nächste Punkt innerhalb von ± 30 s, sonst null. Eine erfundene
@@ -213,12 +230,12 @@ class Dienstklammer(
      * Strecke und Anstieg werden dabei **eingefroren**: Sie gehören zu diesem
      * Einsatz, auch wenn der Upload erst während des nächsten gelingt.
      */
-    fun einsatzAbschliessen(): Boolean {
+    fun einsatzAbschliessen(zeitpunkt: Instant = jetzt()): Boolean {
         val dienst = puffer.laufenderDienst() ?: return false
         val einsatz = puffer.offenesPaket(Paketzeile.ART_EINSATZ) ?: return false
 
         val letztePhaseNeun = puffer.phasen(einsatz.id).lastOrNull { it.nummer == Phasen.LETZTE }
-        val ende = letztePhaseNeun?.at ?: Zeit.iso(jetzt())
+        val ende = letztePhaseNeun?.at ?: Zeit.iso(zeitpunkt)
 
         puffer.paketSchliessen(
             einsatz.id, ende, ausduenner.streckeM.toInt(), ausduenner.anstiegM.toInt(),
@@ -227,7 +244,7 @@ class Dienstklammer(
         // Danach beginnt das nächste Ruhesegment — die Spur läuft nahtlos
         // weiter, und der Browser findet später keine Lücke.
         ausduenner.kennzahlenZuruecksetzen()
-        ruhesegmentOeffnen(dienst.dienstRef, dienst.tag, jetzt())
+        ruhesegmentOeffnen(dienst.dienstRef, dienst.tag, zeitpunkt)
         return true
     }
 
@@ -240,7 +257,12 @@ class Dienstklammer(
      * dem Augenblick, in dem der Einsatz beginnt — kein Loch dazwischen, kein
      * Überlappen.
      */
-    private fun einsatzBeginnen(dienstRef: String, tag: String, zeitpunkt: Instant): Paketzeile {
+    private fun einsatzBeginnen(
+        dienstRef: String,
+        tag: String,
+        zeitpunkt: Instant,
+        einsatzRef: String? = null,
+    ): Paketzeile {
         val iso = Zeit.iso(zeitpunkt)
         puffer.offenesPaket(Paketzeile.ART_RUHESEGMENT)?.let {
             puffer.paketSchliessen(it.id, iso, null, null)
@@ -250,7 +272,7 @@ class Dienstklammer(
          * Ort. Strecke und Anstieg gehören dem Einsatz, die Spur dem Dienst. */
         ausduenner.kennzahlenZuruecksetzen()
         val id = puffer.paketAnlegen(
-            clientRef = kennungen.einsatz(),
+            clientRef = einsatzRef ?: kennungen.einsatz(),
             art = Paketzeile.ART_EINSATZ,
             tag = tag,
             dienstRef = dienstRef,

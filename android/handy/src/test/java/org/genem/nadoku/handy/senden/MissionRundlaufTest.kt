@@ -6,7 +6,7 @@ import org.genem.nadoku.gemeinsam.Phasen
 import org.genem.nadoku.handy.aufzeichnung.Ausduenner
 import org.genem.nadoku.handy.aufzeichnung.Stroeme
 import org.genem.nadoku.handy.dienst.Dienstklammer
-import org.genem.nadoku.handy.dienst.Kennungen
+import org.genem.nadoku.gemeinsam.Kennungen
 import org.genem.nadoku.gemeinsam.Modus
 import org.genem.nadoku.handy.dienst.Zeit
 import org.genem.nadoku.handy.kopplung.Geraeteangabe
@@ -190,6 +190,98 @@ class MissionRundlaufTest {
             emptyMap<String, Int>(), bericht.uebergangen,
         )
         assertTrue(bericht.sauber)
+    }
+
+    /**
+     * **Der Weg der Uhr endet beim Server** (Abnahme C2, E-S4-10).
+     *
+     * Dieser Fall schließt die Kette, die auf der Uhr beginnt: Ein an der Uhr
+     * ausgelöster Einsatz (`wm-`-Kennung), eine Doppelzustellung nach
+     * verlorener Quittung, ein Phasenkonflikt Uhr/Handy — und dann alles
+     * gegen das echte `ingest.php`.
+     *
+     * WARUM DAS NICHT SCHON DIE ANNAHME BELEGT: `UhrannahmeTest` zeigt, dass
+     * beide Einträge im **Puffer** stehen. Die Abnahme verlangt, dass beide
+     * **gesendet** werden — und genau das war bis C2 nicht der Fall: Ein
+     * Einsatz, dessen Metadaten der Server schon bestätigt hatte, galt als
+     * erledigt, und eine nachträgliche Phase wäre liegengeblieben
+     * (Fund B-S4-05).
+     */
+    @Test fun derWegDerUhrEndetBeimServer() {
+        assertEquals(
+            Kopplungsergebnis.Gekoppelt,
+            Kopplungsdienst(HttpNetzweg(), tresor).koppeln(basis, "UA2B3C", geraet),
+        )
+
+        val k = klammer()
+        val annahme = org.genem.nadoku.handy.uhr.Uhrannahme(puffer, k) { Modus.MIT_PHASENKNOEPFEN }
+        var nr = 0L
+        fun vonDerUhr(art: org.genem.nadoku.gemeinsam.Ereignisart, phase: Int? = null, ref: String? = null, nummer: Long? = null) =
+            annahme.uebernimm(
+                org.genem.nadoku.gemeinsam.Uhrmeldung(
+                    uhrId = "u-1234512345", nr = nummer ?: ++nr, art = art,
+                    zeitMs = uhrzeit.toEpochMilli(), phase = phase, einsatzRef = ref,
+                )
+            )
+
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.DIENST_BEGINNEN)
+        k.positionsfund(
+            org.genem.nadoku.handy.aufzeichnung.Rohpunkt(47.7261, 10.3186, 712.0, Zeit.epoche(uhrzeit))
+        )
+
+        // Die Uhr eröffnet den Einsatz — und liefert dieselbe Nachricht doppelt.
+        uhrzeit = uhrzeit.plusSeconds(120)
+        val wm = "wm-1-1234512345"
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.PHASE, phase = 2, ref = wm, nummer = 2)
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.PHASE, phase = 2, ref = wm, nummer = 2)
+
+        val einsatz = puffer.paketNach(wm)!!
+        assertEquals("Ein Einsatz, eine Phase", 1, puffer.phasen(einsatz.id).size)
+
+        // Ein Teil-Upload dazwischen: Der Server kennt den Einsatz jetzt.
+        val zwischenbericht = sender().sendeAlles()
+        assertTrue(zwischenbericht.sauber)
+
+        // Und JETZT der Phasenkonflikt: Handy und Uhr, dreißig Sekunden auseinander.
+        uhrzeit = uhrzeit.plusSeconds(300)
+        assertTrue(k.phaseSetzen(3))
+        uhrzeit = uhrzeit.plusSeconds(30)
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.PHASE, phase = 3, nummer = 3)
+
+        uhrzeit = uhrzeit.plusSeconds(300)
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.EINSATZ_ABSCHLIESSEN, nummer = 4)
+        uhrzeit = uhrzeit.plusSeconds(300)
+        vonDerUhr(org.genem.nadoku.gemeinsam.Ereignisart.DIENST_BEENDEN, nummer = 5)
+
+        /* VOR DEM SENDEN GELESEN, und das ist kein Zufall: Ein vollständig
+         * bestätigtes, abgeschlossenes Paket wird danach entsorgt — samt
+         * seinen Phasen. Dass hinterher nichts mehr dasteht, ist der Beleg
+         * dafür, dass alles angekommen ist. */
+        val phasen = puffer.phasen(einsatz.id)
+        val quellen = puffer.phasenquellen(einsatz.id)
+        val bericht = sender().sendeAlles()
+
+        println(
+            "Rundlauf Uhr: ${phasen.size} Phaseneinträge ($quellen), " +
+                "${bericht.anfragen} Anfragen, verworfen=${bericht.verworfen}, " +
+                "übergangen=${bericht.uebergangen}"
+        )
+
+        assertEquals("Drei Einträge: 2 (Uhr), 3 (Handy), 3 (Uhr)", 3, phasen.size)
+        assertEquals(listOf(2, 3, 3), phasen.map { it.nummer })
+        assertEquals(
+            listOf(Dienstklammer.QUELLE_UHR, Dienstklammer.QUELLE_HANDY, Dienstklammer.QUELLE_UHR),
+            quellen,
+        )
+        assertEquals(
+            "Und der Einsatz ist danach entsorgt — der Server hat ihn vollständig",
+            null, puffer.paketNach(wm),
+        )
+        assertEquals("0 × rejected", emptyMap<String, Int>(), bericht.verworfen)
+        assertEquals("0 × kept_*", emptyMap<String, Int>(), bericht.uebergangen)
+        assertEquals("0 × 400", 0, bericht.fehlerhaft)
+        assertTrue(bericht.sauber)
+        assertEquals("Nichts bleibt liegen", 0, puffer.rueckstand())
     }
 
     private companion object {
