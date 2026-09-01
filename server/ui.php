@@ -1258,15 +1258,27 @@ function ui_aktionen(array $o): string
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  *
- * $o: name, label, wert, art (text|date|time|number|email|password|select|
+ * $o: name, label, wert, art (text|date|number|email|password|file|select|
  *     textarea), optionen, klein, pflicht, attr, klasse, platzhalter
+ *
+ * Die vollständige Liste der Schlüssel steht unten in der Funktion; diese
+ * hier nennt die häufigen. Beide führen dieselben Arten — sie sind schon
+ * einmal auseinandergelaufen: `file` fehlte, `time` stand da, ohne dass es
+ * irgendwo benutzt wird.
  * ------------------------------------------------------------------------ */
 function ui_feld(array $o): void
 {
     /* $o: name, id, label, label_zusatz (gedämpft, in der Beschriftung),
-     *     art (text|email|number|date|select|textarea), wert, optionen,
-     *     zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht, klein,
-     *     klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr */
+     *     art (text|email|number|date|password|file|select|textarea), wert,
+     *     optionen, zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht,
+     *     klein, klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr
+     *
+     * `password` und `file` fehlten in dieser Aufzählung, obwohl beide seit
+     * Langem benutzt werden (14- bzw. 2-mal). Eine Liste, die sich für
+     * vollständig ausgibt und es nicht ist, ist schlechter als keine.
+     * `file` trägt zusätzlich eine eigene Regel im Stylesheet
+     * (input[type=file].feld-eingabe) — ohne sie hängt der native Knopf
+     * am oberen Feldrand. */
     $name = (string)($o['name'] ?? '');
     $id   = (string)($o['id'] ?? ($name !== '' ? 'f-' . preg_replace('/[^\w-]/', '-', $name) : ''));
     $art  = (string)($o['art'] ?? 'text');

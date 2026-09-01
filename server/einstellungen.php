@@ -1805,7 +1805,18 @@ ui_seite_start(['titel' => 'Einstellungen']);
       if (!el) { return; }
       if (!text) { el.innerHTML = ''; return; }
       if (!ton) { el.textContent = text; return; }
-      const sym = ton === 'fehler' ? 'warnung' : (ton === 'ok' ? 'haken' : 'hinweis');
+      /* SYMBOLE WIE IM BAUSTEIN, nicht ungefähr wie im Baustein.
+       * ui_meldung_markup() (ui.php) führt die Tabelle
+       * ['fehler'=>'warnung','warn'=>'warnung','ok'=>'haken','info'=>'hinweis'],
+       * Design.md 9.5 schreibt sie vor. Dieser Nachbau ließ `warn` in den
+       * Sonst-Zweig fallen und zeigte das Hinweiszeichen — bei genau den
+       * Meldungen, die auffallen sollen. Erreichbar ist der Ton auf dieser
+       * Seite an drei Stellen: unlesbare geschützte Angaben oder eine nicht
+       * mitgesicherte Spur beim Sichern, abgelehnte Spuren beim Einspielen,
+       * dasselbe auf dem Freigabeweg. (Zwei davon kamen mit S2 dazu; als der
+       * Fehler gefunden wurde, war es noch eine.) */
+      const symbole = { fehler: 'warnung', warn: 'warnung', ok: 'haken', info: 'hinweis' };
+      const sym = symbole[ton] || 'hinweis';
       el.innerHTML = '<div class="meldung meldung-' + ton + '" role="'
         + (ton === 'fehler' ? 'alert' : 'status') + '">'
         + edSymbol(sym, 'symbol-gross')
@@ -2159,7 +2170,12 @@ ui_seite_start(['titel' => 'Einstellungen']);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'einsatzdoku-backup-' + new Date().toISOString().slice(0, 10) + '.edbak';
+        /* DER DATEINAME STEHT IN EINER VARIABLEN, weil ihn zwei Stellen
+         * brauchen: der Download und die Meldung darunter. Zwei Ausdrücke
+         * nebeneinander liefen mit dem nächsten Tageswechsel auseinander. */
+        const dateiname = 'einsatzdoku-backup-'
+          + new Date().toISOString().slice(0, 10) + '.edbak';
+        a.download = dateiname;
         a.click();
         URL.revokeObjectURL(url);
 
@@ -2170,6 +2186,22 @@ ui_seite_start(['titel' => 'Einstellungen']);
           + `${spurenGesamt} Spuren mit ${punkteGesamt.toLocaleString('de-DE')} Punkten `
           + `in ${gesamt} ${gesamt === 1 ? 'Teil' : 'Teilen'} `
           + `— ${mb} MB.`
+          /* DASS DIE DATEI DA IST, MUSS DASTEHEN (Rückmeldung nach P3).
+           *
+           * Der Download läuft ohne Dialog und ohne Ton durch; wer nicht
+           * gerade auf die Download-Leiste des Browsers sieht, merkt nichts
+           * davon und sucht anschließend eine Datei, deren Namen er nicht
+           * kennt. Der Name ist deshalb der eigentliche Inhalt dieses Satzes
+           * — „wurde heruntergeladen" allein hilft beim Suchen nicht.
+           *
+           * WO sie liegt, sagt der Satz bewusst NICHT: Das entscheidet die
+           * Einstellung des Browsers, nicht diese Anwendung. Eine Zusage
+           * „in deinem Download-Ordner" wäre für jeden falsch, der sein
+           * Ziel selbst wählt.
+           *
+           * Er steht VOR den ACHTUNG-Blöcken, damit eine Warnung das letzte
+           * bleibt, was gelesen wird. */
+          + ` Die Datei „${dateiname}" wurde heruntergeladen.`
           + (unlesbar
               ? ` ACHTUNG: ${unlesbar} Einsätze ließen sich nicht entschlüsseln. `
                 + 'Ihre Angaben sind verschlüsselt in der Datei enthalten und bleiben '

@@ -11,6 +11,109 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.1] — 2026-09-01
+
+**Drei kleine Dinge, die täglich auffallen.** Zweite Rückmeldungsrunde nach
+P3, an zwei Seiten. Keine Migration, keine Schnittstellenänderung.
+
+Entstanden während S2 auf einem eigenen Zweig und bewusst auf Dateien
+beschränkt, die S2 nicht hielt — die Buchführung ist deshalb erst jetzt
+nachgezogen, nach dem Zusammenführen.
+
+### Web — Der Auswählen-Knopf des Dateifelds klebte oben
+
+`.feld-eingabe` gibt jedem Feld 44 px Höhe und nur waagerechte Polsterung.
+Ein `input[type=file]` stellt seinen nativen Knopf auf die Textzeile, und die
+steht damit am oberen Innenrand: **gemessen 0 px Luft darüber, 19 px
+darunter** bei einem 23 px hohen Knopf. Sichtbar war das auf der
+Backup-Seite, wo das Feld unter einer Beschriftung mit viel Luft steht.
+
+**`display:flex; align-items:center` ändert daran nichts** — Chromium legt
+den Schatteninhalt eines Eingabefeldes nicht in einen Flex-Fluss; nachgemessen
+blieb es bei 0/19. Was wirkt, ist die Zeilenhöhe auf den Innenraum: jetzt
+**10 px oben gegen 9 px unten**. Mittiger geht es nicht, der Innenraum ist mit
+42 px ungerade. Die 44 px aus der Gestaltungsrichtlinie bleiben unberührt.
+
+Der Attributselektor `input[type=file].feld-eingabe` ist **Abgrenzung, kein
+Spezifitätsgewinn**: Es gibt keine Regel `input[type=file]`, gegen die er
+gewinnen müsste. Getroffen werden genau die beiden Dateifelder der Anwendung
+— Backup einspielen und Import.
+
+| | vorher | nachher |
+|---|---|---|
+| Luft über dem Knopf | 0 px | **10 px** |
+| Luft darunter | 19 px | **9 px** |
+| Feldhöhe | 44 px | 44 px |
+
+### Web — Die erzeugte Datei sagte nicht, dass es sie gibt
+
+Sicherung und Datenexport zählten auf, was in der Datei steht, und schwiegen
+darüber, dass ein Download gelaufen ist. Der läuft ohne Dialog und ohne Ton
+durch; wer nicht gerade auf die Leiste des Browsers sieht, merkt nichts davon
+und sucht anschließend eine Datei, deren Namen er nicht kennt.
+
+Beide Meldungen nennen ihn jetzt, und zwar **aus einer Variablen**: Zwei
+getrennte Ausdrücke für Download und Meldung liefen mit dem nächsten
+Tageswechsel auseinander. **Wo** die Datei liegt, sagen sie bewusst nicht —
+das entscheidet die Einstellung des Browsers, und eine Zusage „in deinem
+Download-Ordner" wäre für jeden falsch, der sein Ziel selbst wählt.
+
+Im Export sind es drei Wege mit drei Namen (Tabelle roh, Tabelle im
+verschlüsselten Archiv, Archiv des Profils B); beim Archivweg ist die
+heruntergeladene Datei das **Archiv**, nicht die Tabelle darin. Der Satz steht
+am Ende der Meldung: Was davor steht, beschreibt den Inhalt der Datei, dieser
+ihren Verbleib. In der Sicherung steht er **vor** den ACHTUNG-Blöcken, damit
+eine Warnung das letzte bleibt, was gelesen wird.
+
+### Web — Und `warn` trug das falsche Zeichen
+
+Der `melde()`-Nachbau der Einstellungsseite führte
+`ton === 'fehler' ? 'warnung' : (ton === 'ok' ? 'haken' : 'hinweis')`. Der Ton
+`warn` fiel damit in den Sonst-Zweig und bekam das **Hinweiszeichen** —
+entgegen `Design.md` 9.5 und entgegen `ui_meldung_markup()`, das die
+vollständige Tabelle führt. Betroffen waren gerade die Meldungen, die
+auffallen sollen: eine Sicherung mit unlesbaren geschützten Angaben oder nicht
+mitgesicherten Spuren, abgelehnte Spuren beim Einspielen und auf dem
+Freigabeweg. Der Nachbau führt jetzt dieselbe Tabelle wie der Baustein.
+
+Der zweite Nachbau (`import_ui.js`) hat die Lücke nicht — er kennt den Ton
+`ok` gar nicht und ist für seine Verwendung vollständig. Unangetastet.
+
+### Web — Nebenbei
+
+`ui_feld()` führte seine Feldarten zweimal auf, außen und innen, und die
+Listen waren verschieden: außen fehlte `file` und stand `time`, das nirgends
+benutzt wird; innen fehlten `password` und `file`, obwohl beide seit Langem
+verwendet werden (14- bzw. 2-mal). Beide nennen jetzt dieselben Arten.
+
+### Geprüft
+
+| Mittel | Zahl |
+|---|---|
+| Stilvergleich | 35 763 Elementmessungen über 13 Breiten → **13 Abweichungen**: ein Element, eine Eigenschaft, keine darüber hinaus |
+| Kaskadenvergleich | 637 → 638 Regeln, 0 entfallen, 0 mit anderem Endwert, 0 Reihenfolgetausche |
+| Vollständigkeitsprüfung | 224 Befunde vorher wie nachher, Bericht byteweise gleich |
+| Wortliste | 0 Treffer außerhalb der Ausnahmen, 0 ungenutzte Ausnahmen |
+| Feldmessung | 77 Eigenschaften über 7 Feldarten, genau **eine** Abweichung |
+| Meldungstexte | beide Zweige der Sicherung und alle vier Export-Kombinationen in node durchgespielt |
+
+**Nachgetragen am 01.09.2026: an der laufenden Anwendung geprüft.** Die
+Begründung „ohne MySQL nicht aufrufbar" war falsch — das Projekt fährt lokal
+seit P1 gegen **MariaDB 10.11**, und `tools/referenzdatensatz/einspielen/lokal_starten.sh`
+setzt die Installation auf. Nachgeholt:
+
+| Geprüft | Ergebnis |
+|---|---|
+| beide Dateifelder (Backup einspielen, Import) | je 44 px hoch, `line-height: 42px`, Knopf mittig |
+| Sicherung im Demo-Konto | Meldung nennt `einsatzdoku-backup-2026-09-01.edbak` — **derselbe Name wie der tatsächliche Download** |
+| Export, alle drei Downloadwege | Profil A (xlsx), Profil C (zip, verschlüsselt), Profil B (zip-Archiv) — jeder nennt den Namen der Datei, die wirklich ankommt, beim Archivweg den des **Archivs** |
+| `warn` mit unlesbarem Blob | Meldung trägt das **Warndreieck**; Gegenprobe mit der alten Fassung zeigt an derselben Stelle das Hinweiszeichen |
+| Bilderlauf | 304 Einzelbilder, 38 Kontaktbögen — Überlauf 0, Konsolenfehler 0, Knöpfe ≠ 44 px 0 |
+| Kontraste | 21 Paare gerechnet, 0 verfehlt |
+
+Die Reihenfolge stimmt auch im Fehlerfall: Der Download-Satz steht vor der
+ACHTUNG-Passage, die Warnung bleibt das Letzte.
+
 ## [Web 12.2.0] — 2026-09-01
 
 **Die ganze Installation in einer Datei — und ein Weg zurück.** Achtes
