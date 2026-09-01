@@ -9,11 +9,10 @@ Phasenknöpfe.
 Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Arbeitspaket B4.** Die App koppelt sich, zeichnet über einen
-> Vordergrunddienst auf, übersteht Absturz und Neustart und **sendet** —
-> in Teilstücken, mit `next_seq`-Buchführung und den vier Fehlerpfaden des
-> Vertrags. Sie kennt noch **keine Phasen** (B5); ein Dienst entsteht heute
-> immer als eine Ruhesegment-Kette.
+> **Stand: Arbeitspaket B5 — Block B ist damit fertig.** Die App koppelt sich,
+> zeichnet auf, dokumentiert Phasen und Einsätze und sendet alles nach dem
+> JSON-Vertrag. Was fehlt, ist die Uhr (Block C) und der Browserteil
+> (Block A).
 
 ---
 
@@ -70,7 +69,8 @@ mariadb -e "DELETE FROM pair_codes; DELETE FROM devices;
   INSERT INTO pair_codes (user_id, code) VALUES
    (1,'AB3K7Q'),(1,'CD4M8R'),(1,'EF5N9S'),(1,'GH6P2T'),
    (1,'LA2B3C'),(1,'LD4E5F'),(1,'LG6H7J'),(1,'LK8L9M'),
-   (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z');" nadoku
+   (1,'LN2P3Q'),(1,'LR4S5T'),(1,'LU6V7W'),(1,'LX8Y9Z'),
+   (1,'RA2B3C'),(1,'RD4E5F'),(1,'RG6H7J'),(1,'MA2B3C'),(1,'MD4E5F');" nadoku
 
 cd android
 ./gradlew :handy:testDebugUnitTest --rerun-tasks \
@@ -98,13 +98,13 @@ Die APK liegen danach unter
 
 ### Was der Baulauf heute meldet
 
-Stand B4 (Android 0.4.0), `./gradlew build` im Container:
+Stand B5 (Android 0.5.0), `./gradlew build` im Container:
 
 | | `handy` | `uhr` |
 |---|---|---|
 | Lint-Fehler | **0** | **0** |
 | Lint-Warnungen | **19** | **0** |
-| Prüffälle | **133**, davon 9 übersprungen | keine (kommen mit C1) |
+| Prüffälle | **153**, davon 11 übersprungen | keine (kommen mit C1) |
 
 Von den 19 Warnungen sind **18** derselbe Befund („A newer version of … is
 available") auf `gradle/libs.versions.toml`; die Nummern dort sind absichtlich
@@ -117,8 +117,8 @@ Betriebsübergang.
 Keine der Warnungen wird stummgeschaltet: Eine unterdrückte Warnung ist eine
 Warnung weniger, die später auffällt.
 
-Die **9 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
-Installation sind es 133 von 133 (siehe unten).
+Die **11 übersprungenen** Fälle sind der Server-Rundlauf; mit laufender
+Installation sind es 153 von 153 (siehe unten).
 
 ### Das SDK ist im Container nicht vorinstalliert
 

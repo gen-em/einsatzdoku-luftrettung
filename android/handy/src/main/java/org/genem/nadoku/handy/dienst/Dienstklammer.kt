@@ -5,6 +5,7 @@ import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Dienstzeile
 import org.genem.nadoku.handy.puffer.Paketzeile
 import org.genem.nadoku.handy.puffer.Puffer
+import org.genem.nadoku.gemeinsam.Phasen
 import java.time.Instant
 
 /**
@@ -132,6 +133,131 @@ class Dienstklammer(
         return true
     }
 
+    // ---- Phasen und Einsätze (E-S4-08, B5) ---------------------------------
+
+    /**
+     * Die laufende Phase — die zuletzt gesetzte des laufenden Einsatzes.
+     *
+     * Ohne Einsatz ist es [Phasen.FREI] (1). Das ist ein **Anzeigezustand**
+     * und erzeugt keinen Eintrag (Vertrag 7).
+     */
+    fun laufendePhase(): Int {
+        val einsatz = puffer.offenesPaket(Paketzeile.ART_EINSATZ) ?: return Phasen.FREI
+        return puffer.phasen(einsatz.id).lastOrNull()?.nummer ?: Phasen.FREI
+    }
+
+    /**
+     * Eine Phase setzen — **der Kern des Lebenszyklus** (E-S4-08).
+     *
+     * EINE PHASE 2–9 OHNE LAUFENDEN EINSATZ **STARTET** DEN EINSATZ und
+     * schließt dabei das Ruhesegment. Das ist keine Bequemlichkeit, sondern
+     * die Bedienung: Wer alarmiert wird, drückt „Alarmierung" — und nicht
+     * vorher „Einsatz beginnen". Dieselbe Stelle in `Model.setPhase()`.
+     *
+     * EIN ERNEUT GESETZTE PHASE IST EIN **ZWEITER EINTRAG**, keine Korrektur
+     * am ersten (E-R45-12, Vertrag 3): „Eine erneut gesetzte Phase ist eine
+     * Korrektur und damit eine Information. Kein Client und kein Schreibweg
+     * darf sie entdoppeln."
+     *
+     * @param quelle `handy` oder `uhr` — am Datensatz bleibt ablesbar, auf
+     *   welchem Weg er entstand.
+     * @param zeitpunkt bei einem Ereignis der Uhr deren Zeitstempel (E-S4-10),
+     *   sonst jetzt.
+     * @return `false`, wenn die Nummer nicht übertragbar ist oder kein Dienst
+     *   läuft
+     */
+    fun phaseSetzen(
+        nummer: Int,
+        quelle: String = QUELLE_HANDY,
+        zeitpunkt: Instant = jetzt(),
+    ): Boolean {
+        if (!Phasen.uebertragbar(nummer)) return false
+        val dienst = puffer.laufenderDienst() ?: return false
+
+        val einsatz = puffer.offenesPaket(Paketzeile.ART_EINSATZ)
+            ?: einsatzBeginnen(dienst.dienstRef, dienst.tag, zeitpunkt)
+
+        /* DIE KOORDINATE KOMMT AUS DER EIGENEN SPUR (E-S4-10): der zeitlich
+         * nächste Punkt innerhalb von ± 30 s, sonst null. Eine erfundene
+         * Koordinate wäre schlimmer als keine — der Vertrag lässt null
+         * ausdrücklich zu. */
+        val punkt = puffer.punktNaheZeit(
+            dienst.dienstRef, Zeit.epoche(zeitpunkt), KOORDINATEN_TOLERANZ_S,
+        )
+        puffer.phaseAnhaengen(
+            einsatz.id, nummer, Zeit.iso(zeitpunkt), punkt?.breite, punkt?.laenge, quelle,
+        )
+        return true
+    }
+
+    /**
+     * Der Durchlauf: die nächste Phase (E-S4-21b).
+     *
+     * Nach der letzten gibt es **keine** nächste — dort wird der Knopf zu
+     * „Einsatz abschließen". `null` ist genau diese Auskunft und nicht etwa
+     * ein Rückfall auf Phase 2, der einen Einsatz stillschweigend von vorn
+     * begänne.
+     */
+    fun naechstePhase(): Int? = Phasen.naechste(laufendePhase())
+
+    /**
+     * Den Einsatz abschließen — **ein eigener Bedienschritt**, nie automatisch
+     * (E-S4-08).
+     *
+     * `ended_at` ist die Zeit der **letzten Phase 9**, sonst der Augenblick
+     * des Abschlusses. Der Unterschied ist keine Feinheit: Wer die Endzeit
+     * gesetzt und danach noch fünf Minuten gebraucht hat, um den Knopf zu
+     * finden, hat den Einsatz um 9:12 beendet und nicht um 9:17.
+     *
+     * Strecke und Anstieg werden dabei **eingefroren**: Sie gehören zu diesem
+     * Einsatz, auch wenn der Upload erst während des nächsten gelingt.
+     */
+    fun einsatzAbschliessen(): Boolean {
+        val dienst = puffer.laufenderDienst() ?: return false
+        val einsatz = puffer.offenesPaket(Paketzeile.ART_EINSATZ) ?: return false
+
+        val letztePhaseNeun = puffer.phasen(einsatz.id).lastOrNull { it.nummer == Phasen.LETZTE }
+        val ende = letztePhaseNeun?.at ?: Zeit.iso(jetzt())
+
+        puffer.paketSchliessen(
+            einsatz.id, ende, ausduenner.streckeM.toInt(), ausduenner.anstiegM.toInt(),
+        )
+
+        // Danach beginnt das nächste Ruhesegment — die Spur läuft nahtlos
+        // weiter, und der Browser findet später keine Lücke.
+        ausduenner.kennzahlenZuruecksetzen()
+        ruhesegmentOeffnen(dienst.dienstRef, dienst.tag, jetzt())
+        return true
+    }
+
+    fun einsatzLaeuft(): Boolean = puffer.offenesPaket(Paketzeile.ART_EINSATZ) != null
+
+    /**
+     * Einen Einsatz beginnen: Ruhesegment schließen, Einsatz öffnen.
+     *
+     * DIE REIHENFOLGE IST ES, DIE DIE SPUR NAHTLOS HÄLT: Das Segment endet in
+     * dem Augenblick, in dem der Einsatz beginnt — kein Loch dazwischen, kein
+     * Überlappen.
+     */
+    private fun einsatzBeginnen(dienstRef: String, tag: String, zeitpunkt: Instant): Paketzeile {
+        val iso = Zeit.iso(zeitpunkt)
+        puffer.offenesPaket(Paketzeile.ART_RUHESEGMENT)?.let {
+            puffer.paketSchliessen(it.id, iso, null, null)
+        }
+        /* Die Kennzahlen fangen mit dem Einsatz neu an, die AUSDÜNNUNG nicht:
+         * Sonst entstünde direkt nach dem Schnitt ein zweiter Punkt am selben
+         * Ort. Strecke und Anstieg gehören dem Einsatz, die Spur dem Dienst. */
+        ausduenner.kennzahlenZuruecksetzen()
+        val id = puffer.paketAnlegen(
+            clientRef = kennungen.einsatz(),
+            art = Paketzeile.ART_EINSATZ,
+            tag = tag,
+            dienstRef = dienstRef,
+            begonnenAt = iso,
+        )
+        return checkNotNull(puffer.paket(id))
+    }
+
     /** Strecke und Anstieg seit dem letzten Zurücksetzen — für die Anzeige. */
     fun streckeM(): Double = ausduenner.streckeM
     fun anstiegM(): Double = ausduenner.anstiegM
@@ -146,4 +272,18 @@ class Dienstklammer(
         )
 
     data class Dienstbeginn(val dienst: Dienstzeile, val neu: Boolean)
+
+    companion object {
+        const val QUELLE_HANDY = "handy"
+        const val QUELLE_UHR = "uhr"
+
+        /**
+         * Toleranz für die Phasen-Koordinate (E-S4-10). Bei 1-Hz-Abtastung und
+         * einer Ausdünnung, die spätestens alle 10 s einen Punkt hält, ist der
+         * nächste Punkt normalerweise Sekunden alt. 30 s decken den Fall ab,
+         * dass die Uhr ein gepuffertes Ereignis nachliefert; darüber hinaus
+         * wäre die Koordinate eine Behauptung.
+         */
+        const val KOORDINATEN_TOLERANZ_S = 30L
+    }
 }

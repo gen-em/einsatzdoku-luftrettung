@@ -281,6 +281,55 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             }
         }
 
+    /**
+     * Der Spurpunkt, der einem Zeitpunkt am nächsten liegt — für die
+     * Phasen-Koordinate (E-S4-10).
+     *
+     * Gesucht wird über **alle Pakete dieses Dienstes**, nicht nur über das
+     * eine: Eine Phase, die den Einsatz startet, trägt einen Zeitstempel aus
+     * einem Augenblick, in dem der letzte Punkt noch im **Ruhesegment** lag.
+     * Wer nur im Einsatz suchte, fände dort nichts und schriebe `null` — und
+     * die Koordinate wäre für immer weg.
+     *
+     * `null`, wenn nichts innerhalb der Toleranz liegt. Der Vertrag erlaubt
+     * das ausdrücklich (`lat`/`lon` dürfen null sein) — eine erfundene
+     * Koordinate wäre schlimmer als keine.
+     */
+    fun punktNaheZeit(dienstRef: String?, zeit: Long, toleranzS: Long): Rohpunkt? =
+        /* DIE GRENZEN STEHEN AN DER SPALTE, NICHT IN EINEM AUSDRUCK — und das
+         * ist kein Stilfrage, sondern die Behebung eines Fehlers, den ein
+         * Prüffall gefangen hat.
+         *
+         * `rawQuery` bindet jeden Wert als TEXT. Vergleicht SQLite eine SPALTE
+         * mit Zahlen-Affinität gegen einen Text, wandelt es den Text vorher in
+         * eine Zahl um — `p.zeit >= '1784279400'` tut also das Erwartete. Ein
+         * AUSDRUCK wie `ABS(p.zeit - ?)` hat aber KEINE Affinität, und dann
+         * gilt SQLites Typordnung: **Text ist immer größer als eine Zahl.**
+         * `ABS(...) <= '30'` war damit IMMER wahr, und jede Phase bekam die
+         * Koordinate des nächstbesten Punktes — auch die einer Stunde später.
+         *
+         * Deshalb: filtern an der Spalte, und die Zahl fürs Sortieren
+         * ausdrücklich mit CAST. */
+        readableDatabase.rawQuery(
+            "SELECT p.breite, p.laenge, p.hoehe, p.zeit FROM punkt p " +
+                "JOIN paket k ON k.id = p.paket_id " +
+                "WHERE (k.dienst_ref = ? OR (? IS NULL AND k.dienst_ref IS NULL)) " +
+                "AND p.zeit >= ? AND p.zeit <= ? " +
+                "ORDER BY ABS(p.zeit - CAST(? AS INTEGER)) LIMIT 1",
+            arrayOf(
+                dienstRef, dienstRef,
+                (zeit - toleranzS).toString(), (zeit + toleranzS).toString(),
+                zeit.toString(),
+            ),
+        ).use { c ->
+            if (!c.moveToFirst()) null
+            else Rohpunkt(
+                breite = c.getDouble(0), laenge = c.getDouble(1),
+                hoehe = if (c.isNull(2)) null else c.getDouble(2),
+                zeit = c.getLong(3),
+            )
+        }
+
     fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
         writableDatabase.insertOrThrow(
             "phase", null,

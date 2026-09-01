@@ -167,6 +167,7 @@ private fun GekoppelteOberflaeche(
     var uhrSperre by remember { mutableStateOf(app.einstellungen.uhrSperre) }
     var modus by remember { mutableStateOf(app.einstellungen.letzterModus) }
     var beendenFrageOffen by remember { mutableStateOf(false) }
+    var abschlussFrageOffen by remember { mutableStateOf(false) }
     var akkuFrageOffen by remember { mutableStateOf(false) }
 
     var ortungFrei by remember {
@@ -197,6 +198,8 @@ private fun GekoppelteOberflaeche(
             app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_EINSATZ)
                 ?: app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_RUHESEGMENT)
         }
+        val einsatz = app.puffer.offenesPaket(org.genem.nadoku.handy.puffer.Paketzeile.ART_EINSATZ)
+        val phasen = einsatz?.let { app.puffer.phasen(it.id) }.orEmpty()
         Dienststand(
             laeuft = laufend != null,
             begonnenHhmm = laufend?.let { Zeit.hhmm(Instant.parse(it.begonnenAt)) },
@@ -204,6 +207,13 @@ private fun GekoppelteOberflaeche(
             punkte = offenesPaket?.let { app.puffer.punktzahl(it.id) } ?: 0L,
             streckeKm = "%.1f".format(app.klammer.streckeM() / 1000.0),
             ortungFreigegeben = ortungFrei,
+            einsatzLaeuft = einsatz != null,
+            laufendePhase = app.klammer.laufendePhase(),
+            phaseSeit = phasen.lastOrNull()?.let { Zeit.hhmm(Instant.parse(it.at)) },
+            naechstePhase = app.klammer.naechstePhase(),
+            gesetztePhasen = phasen.map {
+                Phasenzeile(it.nummer, Zeit.hhmm(Instant.parse(it.at)))
+            },
         )
     }
 
@@ -214,6 +224,21 @@ private fun GekoppelteOberflaeche(
         if (ortungFrei && !app.einstellungen.akkuHinweisGezeigt) akkuFrageOffen = true
     }
 
+    if (abschlussFrageOffen) {
+        Rueckfrage(
+            titel = stringResource(R.string.einsatz_abschliessen_frage),
+            text = stringResource(R.string.einsatz_abschliessen_text),
+            ja = stringResource(R.string.einsatz_abschliessen_ja),
+            aufJa = {
+                abschlussFrageOffen = false
+                app.klammer.einsatzAbschliessen()
+                // Einsatzabschluss ist ein Auslöser (E-S4-07).
+                sendeImHintergrund(app)
+                takt++
+            },
+            aufNein = { abschlussFrageOffen = false },
+        )
+    }
     if (beendenFrageOffen) {
         Rueckfrage(
             titel = stringResource(R.string.dienst_beenden_frage),
@@ -222,7 +247,7 @@ private fun GekoppelteOberflaeche(
             aufJa = {
                 beendenFrageOffen = false
                 app.klammer.beenden()
-                AufzeichnungsDienst.beenden(kontext)
+                AufzeichnungsDienst.beenden(kontext)   // beendet und sendet
                 takt++
             },
             aufNein = { beendenFrageOffen = false },
@@ -288,8 +313,26 @@ private fun GekoppelteOberflaeche(
             aufBeenden = { beendenFrageOffen = true },
             aufOrtungFreigeben = { freigabeFrage.launch(noetigeFreigaben()) },
             aufEinstellungen = { ansicht = Ansicht.Einstellungen },
+            aufPhase = { nummer ->
+                app.klammer.phaseSetzen(nummer)
+                // Phasenwechsel ist ein Auslöser (E-S4-07).
+                sendeImHintergrund(app)
+                takt++
+            },
+            aufEinsatzAbschluss = { abschlussFrageOffen = true },
         )
     }
+}
+
+/**
+ * Einen Sendelauf anstoßen, ohne auf ihn zu warten.
+ *
+ * Die Ereignisauslöser aus E-S4-07 — Phasenwechsel und Einsatzabschluss —
+ * kommen aus der Oberfläche; der Takt selbst läuft im Vordergrunddienst.
+ * Gewartet wird nicht: Ein Bedienschritt darf nicht am Netz hängen.
+ */
+private fun sendeImHintergrund(app: NAdokuApp) {
+    Thread { app.sender.sendeAlles() }.start()
 }
 
 /**

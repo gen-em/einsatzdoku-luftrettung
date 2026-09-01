@@ -32,6 +32,11 @@ data class Dienststand(
     val punkte: Long,
     val streckeKm: String,
     val ortungFreigegeben: Boolean,
+    val einsatzLaeuft: Boolean = false,
+    val laufendePhase: Int = org.genem.nadoku.gemeinsam.Phasen.FREI,
+    val phaseSeit: String? = null,
+    val naechstePhase: Int? = null,
+    val gesetztePhasen: List<Phasenzeile> = emptyList(),
 )
 
 /**
@@ -58,6 +63,8 @@ fun DienstAnsicht(
     aufBeenden: () -> Unit,
     aufOrtungFreigeben: () -> Unit,
     aufEinstellungen: () -> Unit,
+    aufPhase: (Int) -> Unit = {},
+    aufEinsatzAbschluss: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxSize().background(Farbe.rauch),
@@ -80,8 +87,11 @@ fun DienstAnsicht(
                     KnopfPrimaer(stringResource(R.string.ortung_freigeben)) { aufOrtungFreigeben() }
                 }
 
-                if (stand.laeuft) LaufenderDienst(stand, logoWahl, aufModus, aufBeenden)
-                else RuhenderDienst(stand, logoWahl, aufModus, aufBeginnen)
+                if (stand.laeuft) {
+                    LaufenderDienst(stand, logoWahl, aufModus, aufBeenden, aufPhase, aufEinsatzAbschluss)
+                } else {
+                    RuhenderDienst(stand, logoWahl, aufModus, aufBeginnen)
+                }
             }
 
             KnopfNeutral(stringResource(R.string.einstellungen)) { aufEinstellungen() }
@@ -165,6 +175,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
     logoWahl: LogoWahl,
     aufModus: (Modus) -> Unit,
     aufBeenden: () -> Unit,
+    aufPhase: (Int) -> Unit,
+    aufEinsatzAbschluss: () -> Unit,
 ) {
     Text(
         text = stringResource(
@@ -181,7 +193,19 @@ private fun androidx.compose.foundation.layout.ColumnScope.LaufenderDienst(
     )
 
     if (stand.modus == Modus.NUR_AUFZEICHNEN) {
+        // KEIN Phasenknopf — kein versehentlicher Druck mit Handschuhen
+        // (E-S4-20).
         Hinweiskasten(stringResource(R.string.modus_nur_aufzeichnen_hinweis))
+    } else {
+        Phasenteil(
+            einsatzLaeuft = stand.einsatzLaeuft,
+            laufendePhase = stand.laufendePhase,
+            laufendeSeit = stand.phaseSeit,
+            naechstePhase = stand.naechstePhase,
+            gesetzte = stand.gesetztePhasen,
+            aufPhase = aufPhase,
+            aufAbschluss = aufEinsatzAbschluss,
+        )
     }
 
     /* DER WECHSEL WÄHREND DES DIENSTES IST VERLUSTFREI (E-S4-20). Er blendet

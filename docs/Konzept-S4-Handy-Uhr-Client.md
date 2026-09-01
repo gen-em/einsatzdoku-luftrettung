@@ -1347,3 +1347,89 @@ B2 auf eine Warteschlange gewartet hat.
   ist. Es fällt deshalb aus der Warteschlange und aus dem Rückstand — es ist
   kein Rückstand mehr, sondern ein **Befund** —, bleibt aber im Puffer.
   (Was die Oberfläche daraus macht, gehört zu D1.)
+
+### B5 — Phasen und Einsätze am Handy · Android 0.5.0 · erledigt
+
+**Was entstanden ist.** Der Lebenszyklus aus `Model.mc`: Eine Phase 2–9 ohne
+laufenden Einsatz startet ihn und schließt das Ruhesegment; der Abschluss ist
+ein eigener Bedienschritt mit Rückfrage; danach beginnt nahtlos das nächste
+Segment. Dazu die Phasen-Koordinaten aus der eigenen Spur, die
+`mission`-Uploads mit Teil-Uploads, und die Oberfläche: ein großer Knopf für
+die nächste Phase, darunter die Liste mit Direktwahl.
+
+**Damit ist Block B abgeschlossen.**
+
+#### Prüfstand B5
+
+| Prüfung | Mittel | Ist | Soll |
+|---|---|---|---|
+| Baulauf | `./gradlew build` | **BUILD SUCCESSFUL** | fehlerfrei |
+| Lint | `lintDebug` | `handy` **0 Fehler, 19 Warnungen** (18 Fassungshinweise + `BatteryLife`); `uhr` **0/0** | 0 Fehler |
+| Prüffälle | `testDebugUnitTest` **und** `testReleaseUnitTest` | je **153 Fälle, 0 Fehlschläge, 0 Fehler**; ohne Installation 11 übersprungen, mit ihr **0** | alle grün |
+| **Lebenszyklus-Matrix** | Robolectric mit echtem SQLite | **18 Fälle** — siehe unten | E-S4-08 |
+| — Phase startet den Einsatz | | Phase 2 ohne Einsatz legt `am-`-Paket an, Phase steht drin | belegt |
+| — Segment schließt nahtlos | | **Segmentende = Einsatzbeginn**, zeichengenau derselbe Zeitstempel; kein zweites Segment offen | kein Loch, kein Überlappen |
+| — zweiter Phasendruck | | startet **keinen** zweiten Einsatz | belegt |
+| — Phasen außerhalb 2–9 | 0, 1, 10, −3, 99 | **alle fünf abgewiesen**, kein Einsatz entsteht | Vertrag 7 |
+| — Durchlauf | | 2 → 3 → … → 9, danach `naechstePhase()` = **null** (dort steht der Abschluss) | E-S4-21b |
+| — **doppelte Einträge** | Phase 4 zweimal gesetzt | **zwei Einträge, beide Zeiten erhalten** | E-R45-12 |
+| — `ended_at` | Phase 9 um 9:12, Abschluss um 9:17 | **9:12:40** — die Zeit der letzten Phase 9, nicht die des Knopfdrucks | E-S4-08 |
+| — ohne Phase 9 | | Abschlusszeitpunkt als Rückfall | belegt |
+| — nach dem Abschluss | | neues Segment, **Einsatzende = Segmentbeginn** | nahtlos |
+| — Kennzahlen | | beim Abschluss **eingefroren** (62 335 m im Rundlauf), für das neue Segment auf 0 | belegt |
+| — Dienstende als Sicherheitsnetz | offener Einsatz | wird **mitgeschlossen**, nichts bleibt offen | `Model.endService()` |
+| — Nur-Aufzeichnen | 12-h-Strom | **0 Einsätze, 1 Ruhesegment** | E-S4-20 |
+| — Moduswechsel | mitten im Dienst | schließt **nichts** von selbst; erst die Phase schließt das Segment; kein Punkt verloren | E-S4-20 |
+| Phasen-Koordinate | Robolectric | aus der eigenen Spur; **null**, wenn nichts in ± 30 s liegt; darf aus dem **Ruhesegment** stammen | E-S4-10 |
+| **Rundlauf `mission`** | echtes `ingest.php` | Dienst mit **3 Einsätzen und 4 Segmenten**, 2 707 Punkte, **10 Anfragen**, `rejected` **{}**, `kept_*` **{}**, 400 **0**, alle Pakete fertig, Rückstand **0** | 0/0/0 |
+| — am Server nachgesehen | SQL | 8 Einsätze, **alle mit `final` und `ended_at`**, je 8 Phasen, `distance_m` 62 335 | belegt |
+| **Rundlauf doppelte Phasen** | echtes `ingest.php` | Phase 4 dreimal gesetzt → am Server **`SELECT … HAVING COUNT(*) > 1` liefert `phase 4: 3 Einträge`**; `kept_phases` leer | E-R45-12 |
+| APK | `assembleRelease` | `handy` **9 071 984 B**, `uhr` 18 005 460 B | baut |
+
+**Was der Prüfstand nicht sagt:** unverändert alles aus B3 und B4 — kein
+Emulator, kein GPS, kein Mobilfunk, kein Bildschirmfoto, kein Akkuverhalten.
+Die Oberfläche des Phasenteils ist gebaut und **nicht gesehen worden**.
+
+#### Probleme und wie sie gelöst wurden
+
+1. **Ein echter Fehler in der Phasen-Koordinate, gefangen von einem
+   Prüffall — und die Ursache ist eine Falle, die jedem SQLite-Zugriff
+   droht.** Die Abfrage lautete
+
+   ```sql
+   WHERE ABS(p.zeit - ?) <= ?          -- Werte als Text gebunden
+   ```
+
+   `rawQuery` bindet **jeden** Wert als TEXT. Vergleicht SQLite eine **Spalte**
+   mit Zahlen-Affinität gegen einen Text, wandelt es den Text vorher in eine
+   Zahl um — deshalb tut `p.zeit >= '1784279400'` das Erwartete, und deshalb
+   sind alle übrigen Abfragen des Puffers in Ordnung. Ein **Ausdruck** wie
+   `ABS(p.zeit - ?)` hat aber **keine Affinität**, und dann gilt SQLites
+   Typordnung: **Text ist immer größer als eine Zahl.** `ABS(…) <= '30'` war
+   damit *immer wahr*.
+
+   **Folge:** Jede Phase hätte die Koordinate des nächstbesten Punktes
+   bekommen — auch die einer Stunde später. Auf dem Gerät wäre das nie
+   aufgefallen: Es gibt immer einen Punkt, die Koordinate sähe plausibel aus,
+   und falsch wäre sie nur um Kilometer. Behoben, indem an der **Spalte**
+   gefiltert wird (`p.zeit >= ? AND p.zeit <= ?`) und die Zahl fürs Sortieren
+   ausdrücklich mit `CAST(? AS INTEGER)` kommt. Der Kommentar an der Stelle
+   nennt den Grund, weil die Falle bei der nächsten Abfrage wieder droht.
+
+#### Entscheidungen, die in B5 gefallen sind
+
+- **E-S4-37 — Es gibt kein „Einsatz beginnen".** Der Einsatz beginnt mit der
+  ersten Phase, und der große Knopf trägt ohne laufenden Einsatz die Phase 2
+  („2 · Alarmierung"). Ein eigener Startknopf wäre ein Bedienschritt mehr in
+  dem Augenblick, in dem am wenigsten Zeit dafür ist — und er wäre der
+  Schritt, den man vergisst. Dieselbe Entscheidung wie an der Garmin.
+- **E-S4-38 — Die Ausdünnung läuft über die Paketgrenze hinweg weiter, die
+  Kennzahlen nicht.** Beim Übergang Ruhesegment → Einsatz wird der Ausdünner
+  **nicht** zurückgesetzt: Sonst entstünde direkt nach dem Schnitt ein zweiter
+  Punkt am selben Ort. Strecke und Anstieg beginnen dagegen neu — sie gehören
+  dem Einsatz, die Spur gehört dem Dienst.
+- **E-S4-39 — Die Phasenliste zeigt alle Zeiten einer Phase, nicht die
+  letzte.** Eine erneut gesetzte Phase ist eine Korrektur und damit eine
+  Information (E-R45-12). Eine Anzeige, die nur die letzte zeigt, verschweigt
+  genau das — und die NutzerIn hätte keinen Anhaltspunkt, dass sie zweimal
+  gedrückt hat.

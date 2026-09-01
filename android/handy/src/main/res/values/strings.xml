@@ -132,5 +132,15 @@
     <string name="an">an</string>
     <string name="aus">aus</string>
     <string name="zurueck">Zurück</string>
+
+    <!-- ==== Phasen und Einsätze (E-S4-08, E-S4-21b) ===================== -->
+    <string name="einsatz_laeuft">Einsatz · %1$s seit %2$s</string>
+    <string name="einsatz_kein">Kein Einsatz</string>
+    <string name="phase_knopf">%1$d · %2$s</string>
+    <string name="einsatz_abschliessen">Einsatz abschließen</string>
+    <string name="einsatz_abschliessen_frage">Einsatz abschließen?</string>
+    <string name="einsatz_abschliessen_text">Danach wird der Einsatz mit Endzeit gesendet. Ein neues Ruhesegment beginnt.</string>
+    <string name="einsatz_abschliessen_ja">Abschließen</string>
+    <string name="phasenliste">Phasen</string>
     <string name="trennen_erst_dienst_beenden">Erst den Dienst beenden. Ein Trennen mitten in der Aufzeichnung risse den laufenden Dienst von seinem Konto ab.</string>
 </resources>
