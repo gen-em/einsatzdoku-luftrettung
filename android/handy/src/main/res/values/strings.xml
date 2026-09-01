@@ -19,7 +19,6 @@
 
     <!-- ==== Sync-Anzeige: die drei Zustände (Backlog Nr. 11) ============ -->
     <string name="sync_nicht_eingerichtet">Nicht eingerichtet</string>
-    <string name="sync_fehlt_server">Trage zuerst die Adresse deines Servers ein.</string>
     <string name="sync_fehlt_kopplung">Koppel die App mit deinem Konto: Im Browser unter <b>Einstellungen → Geräte</b> einen Kopplungscode erzeugen.</string>
     <!-- Mehrzahl über <plurals>, nicht über zwei Zeichenketten und ein if:
          Android kennt die Regeln der Sprache, der Code nicht. -->
@@ -35,7 +34,19 @@
     <string name="kopplung_server">Server-Adresse</string>
     <string name="kopplung_server_beispiel">einsatz.beispieldomain.de</string>
     <string name="kopplung_qr">QR-Code scannen</string>
-    <string name="kopplung_von_hand">Code von Hand eingeben</string>
+    <!--
+        "Adresse UND Code" steht hier ausgeschrieben, und das ist der Kern der
+        Klarstellung: Wer diesen Knopf liest, sieht daran, was ihm der QR-Weg
+        abnimmt. Vorher hiess er nur "Code von Hand eingeben" - dann klingt
+        die Adresse nach etwas, das man ohnehin selbst eintraegt.
+    -->
+    <string name="kopplung_von_hand">Adresse und Code von Hand eingeben</string>
+    <!--
+        Der Hinweis auf der Wahlseite. Er sagt, WOHER der Code kommt und dass
+        der QR-Code die Adresse mitbringt - beides in einem Satz, weil der
+        Kasten sonst zur Anleitung wird.
+    -->
+    <string name="kopplung_hinweis_qr">Im Browser unter <b>Einstellungen → Geräte</b> einen Kopplungscode erzeugen. Sein QR-Code bringt die Server-Adresse gleich mit.</string>
     <string name="kopplung_code">Kopplungscode</string>
     <string name="kopplung_code_beispiel">AB3K7Q</string>
     <string name="kopplung_koppeln">Koppeln</string>

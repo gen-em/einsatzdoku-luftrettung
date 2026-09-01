@@ -484,6 +484,47 @@ nicht wiederholt. Die folgenden Entscheidungen füllen sie aus.
   A2, am gemergten S2-Stand; die Entscheidung wird als E-Eintrag
   nachgetragen** (K6) und mit einem eigenen Prüffall belegt.
 
+- **F-S4-D — Garmin und Handy gleichzeitig im Dienst: es entstehen zwei
+  Diensttage.** Aufgekommen als Rückfrage während C2, **gemessen** statt
+  hergeleitet (lokale Container-Installation, zwei Geräte gekoppelt, beide
+  senden denselben Einsatz für den 01.09.2026):
+
+  | | Diensttag | Einsatz |
+  |---|---|---|
+  | Garmin (`d-41-…`, `m-41-…`) | **53** | 1 |
+  | Handy (`ad-7-…`, `am-7-…`) | **54** | 1 |
+
+  Die Zuordnung hängt an `day_refs`, und die Tabelle ist **je Gerät**
+  geschlüsselt (`WHERE r.device_id = ? AND r.day_ref = ?`). Das Handy findet
+  die Kennung der Garmin nicht und legt über `dt_anlegen()` einen zweiten
+  Diensttag an; dasselbe gilt für die Einsätze, deren Idempotenz über
+  `(device_id, client_ref)` läuft. **Es geht nichts verloren und nichts wird
+  überschrieben — es ist alles doppelt:** zwei Diensttage, zwei
+  Ruhesegment-Ketten, derselbe reale Einsatz zweimal, zwei Spuren desselben
+  Wegs. In der Jahresstatistik zählt er doppelt.
+
+  `dt_zusammenfuehren()` (Nachbarschaft 3 Tage) hängt die Datensätze um —
+  danach steht die Doppelung in **einem** Tag statt in zweien. Zusammengeführt
+  werden Tage, nicht Einsätze; das Nachräumen bleibt von Hand.
+
+  **Der wahrscheinlichste Fall ist nicht der bewusste Parallelbetrieb, sondern
+  der vergessene:** Die Garmin läuft im Spind weiter, das Handy zeichnet auf.
+  Der zweite Diensttag trägt dann eine Spur, die im Schrank liegt.
+
+  *Zu entscheiden vom Auftraggeber*, weil es den Betrieb betrifft und nicht
+  den Code. Kandidaten, keiner davon vorweggenommen:
+  (a) nichts tun und den Fall im Handbuch benennen — die Doppelung ist
+      sichtbar und über das Zusammenführen auflösbar;
+  (b) **Warnung beim Koppeln**: `pair.php` kennt seit R42 die Geräteart und
+      könnte melden „an diesem Konto hängt bereits ein aufzeichnendes Gerät";
+  (c) **Hinweis im Browser**, wenn zwei aktive Diensttage desselben Kontos
+      sich zeitlich überlappen — er träfe auch den vergessenen Fall, den (b)
+      nicht sieht.
+  Der Weg über (c) ist der einzige, der den *vergessenen* Fall erwischt;
+  (b) verhindert nur die absichtliche Doppelkopplung. Eine Umsetzung fiele
+  in Block A oder später — **in B/C ist nichts davon enthalten.**
+
+
 ## 5. Arbeitspakete
 
 Je Paket ein Commit (K7). Die Blöcke folgen dem Rahmenplan-Schnitt; B und C
@@ -866,6 +907,34 @@ Stellen bereits Ausnahmen führt (`design-bildmarke`, `logowahl-option`,
 *Nicht behoben:* `tools/` liegt außerhalb des Schreibrahmens dieser
 Umsetzung. Zu tun ist ein vierter Bereich in `sperrliste.json` samt drei
 Ausnahmen — in Block D oder in einer eigenen Runde.
+
+### B-S4-07 — Die Kopplungsseite verlangte, was der QR-Code mitbringt (behoben)
+
+**Gefunden am ersten Bildschirmfoto der Handy-App**, nicht durch Lesen und
+nicht durch einen Prüffall.
+
+Der Hinweiskasten zeigte „Trage **zuerst** die Adresse deines Servers ein",
+sobald das Adressfeld leer war — beim Erststart also immer. Darunter stand das
+Adressfeld, und **erst darunter** der Knopf „QR-Code scannen". Die Seite las
+sich damit als Reihenfolge: erst Adresse eintippen, dann scannen.
+
+Genau das ist falsch: Der QR-Code trägt nach E-S4-15 **beides**, Adresse und
+Code (`{"server":"…","code":"…"}`), und `KopplungAnsicht` füllt das Feld beim
+Scannen selbst. Die App verlangte als ersten Schritt, was sie einem gerade
+abnehmen wollte. Der Kopfkommentar derselben Datei sagte die Absicht seit B2
+richtig — die Oberfläche sagte das Gegenteil.
+
+*Behoben in Android 0.7.1*, mit vorhandenen Bausteinen (kein neuer Baustein,
+keine Mockup-Pflicht): Das Adressfeld erscheint nur noch auf dem Weg „von
+Hand"; der Hinweis nennt die Herkunft des Codes und dass der QR-Code die
+Adresse mitbringt; der zweite Knopf heißt „Adresse **und** Code von Hand
+eingeben", damit am Knopf ablesbar ist, was der QR-Weg erspart.
+`sync_fehlt_server` ist ausgetragen.
+
+**Was daran über die eine Zeile hinausgeht:** 214 Prüffälle konnten das nicht
+sehen. Sie prüfen, was die Bedienung *entscheidet*, nicht was auf dem Glas
+*steht*. Der Fund ist das erste Ergebnis der Bildprüfung und das Argument
+dafür, sie einzurichten.
 
 ## 11. Statuspflege
 
@@ -1711,3 +1780,24 @@ reist zur Uhr) nach `gemeinsam/` gewandert.
   überschrieben werden die Sperre und eine offene Rückfrage — eine
   Standmeldung, die mitten in der Abschlussfrage umschaltet, beantwortete sie
   für den Menschen davor.
+
+### Nachtrag zu C2 · Android 0.7.1
+
+**Kein neues Arbeitspaket, eine Korrektur.** Behoben ist Fund **B-S4-07** (die
+Kopplungsseite verlangte die Server-Adresse, die der QR-Code mitbringt).
+Geändert: `KopplungAnsicht.kt`, `strings.xml`, `version.properties`.
+
+| Prüfung | Mittel | Ist |
+|---|---|---|
+| Baulauf | `:handy:assembleDebug` | **BUILD SUCCESSFUL** |
+| Lint `handy` | `:handy:lintDebug` | **0 Fehler, 19 Warnungen** — unverändert |
+| Sichtbare Texte | eigene Zählung gegen `sperrliste.json` | 123 Werte, 3 Treffer, alle aus B2/C1 (Fund B-S4-06) |
+
+**Noch nicht geprüft:** ein Bildschirmfoto der geänderten Seite. Die
+Bildprüfung ist noch nicht eingerichtet — die Wege dorthin sind erprobt, aber
+die Gegenprobe läuft noch (siehe unten). Bis dahin ist die Änderung *gelesen*,
+nicht *gesehen*.
+
+**Offen aus derselben Rückfrage:** **F-S4-D** — Garmin und Handy gleichzeitig
+erzeugen zwei Diensttage. Gemessen, in Abschnitt 4 beschrieben, zu entscheiden
+vom Auftraggeber. In B/C ist dazu nichts umgesetzt.

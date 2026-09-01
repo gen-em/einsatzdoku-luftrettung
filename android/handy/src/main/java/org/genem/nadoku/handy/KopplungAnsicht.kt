@@ -79,6 +79,11 @@ fun KopplungAnsicht(
     var adresse by remember(serverBasis) { mutableStateOf(serverBasis.orEmpty()) }
     var code by remember { mutableStateOf("") }
 
+    /* Der Weg „von Hand" umfasst auch die Rückfrage zur unbrauchbaren Adresse:
+     * Wer sie berichtigen soll, muss das Feld sehen, in dem sie steht. */
+    val vonHand = schritt is Kopplungsschritt.VonHand ||
+        schritt is Kopplungsschritt.AdresseUnbrauchbar
+
     if (schritt is Kopplungsschritt.Scannen) {
         QrScanBildschirm(
             aufInhalt = { roh ->
@@ -110,11 +115,18 @@ fun KopplungAnsicht(
                     punktfarbe = Farbe.rot,
                     schriftfarbe = Farbe.rotTief,
                 )
-                // Der Hinweis nennt den NÄCHSTEN Schritt, und der ist ein
-                // anderer, je nachdem was fehlt (Backlog Nr. 11).
+                /* DER HINWEIS NENNT DEN NÄCHSTEN SCHRITT — und der hängt am
+                 * gewählten Weg, nicht daran, ob ein Feld leer ist.
+                 *
+                 * Vorher stand hier „Trage zuerst die Adresse deines Servers
+                 * ein", sobald das Adressfeld leer war. Beim Erststart war es
+                 * immer leer, also stand es immer da — über einem Knopf, der
+                 * die Adresse gerade MITBRINGT (E-S4-15). Die App verlangte
+                 * damit als Erstes genau das, was sie einem abnehmen wollte.
+                 * Aufgefallen ist es erst am Bildschirmfoto (Fund B-S4-07). */
                 Hinweiskasten(
-                    if (adresse.isBlank()) stringResource(R.string.sync_fehlt_server)
-                    else stringResource(R.string.sync_fehlt_kopplung)
+                    if (vonHand) stringResource(R.string.sync_fehlt_kopplung)
+                    else stringResource(R.string.kopplung_hinweis_qr)
                 )
 
                 if (schritt is Kopplungsschritt.Getrennt) {
@@ -132,11 +144,18 @@ fun KopplungAnsicht(
                     )
                 }
 
-                Eingabefeld(
-                    wert = adresse,
-                    beschriftung = stringResource(R.string.kopplung_server),
-                    beispiel = stringResource(R.string.kopplung_server_beispiel),
-                ) { adresse = it }
+                /* DAS ADRESSFELD GEHÖRT ZUM ABTIPPEN, NICHT ZUR WAHL.
+                 * Auf dem QR-Weg füllt es sich von selbst aus dem gescannten
+                 * Inhalt; es vorher zu zeigen, macht es zur Vorbedingung, die
+                 * es nicht ist. Auf dem Weg „von Hand" steht es weiter an
+                 * erster Stelle — dort ist es wirklich der erste Schritt. */
+                if (vonHand) {
+                    Eingabefeld(
+                        wert = adresse,
+                        beschriftung = stringResource(R.string.kopplung_server),
+                        beispiel = stringResource(R.string.kopplung_server_beispiel),
+                    ) { adresse = it }
+                }
 
                 when (schritt) {
                     is Kopplungsschritt.Laeuft ->
@@ -145,7 +164,7 @@ fun KopplungAnsicht(
                             color = Farbe.blauTief, fontSize = 15.sp,
                         )
 
-                    is Kopplungsschritt.VonHand -> {
+                    is Kopplungsschritt.VonHand, is Kopplungsschritt.AdresseUnbrauchbar -> {
                         Eingabefeld(
                             wert = code,
                             beschriftung = stringResource(R.string.kopplung_code),
