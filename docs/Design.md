@@ -1063,6 +1063,19 @@ Hängt an `data-dirty-track` (`assets/forms.js`).
 **Kein „Verwerfen".** Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
 einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
 
+**Sie hat die Form der Karte** (E-R43-1, seit Web 12.2.3): derselbe Radius,
+dieselbe Breite. Bis dahin brach sie mit einem negativen Rand seitlich aus dem
+Inhalt aus und lief ohne Radius von Rand zu Rand — sie wirkte dadurch eckig
+und breiter als die Karte darüber, obwohl sie zu ihr gehört. **Was bleibt, ist
+alles, was die Funktion trägt:** der klebende Sitz, die Trennlinie nach oben
+und der Schatten. Die Leiste soll auffallen, weil sie folgt, nicht weil sie
+anders geschnitten ist.
+
+**Der Knopf steht rechts, die Zählung links daneben.** Im Markup steht der
+Hinweis zuerst — das ist zugleich die Vorlesereihenfolge („12 ausgewählt",
+dann „Auswahl sichern"). Ausgerichtet wird über `justify-content:flex-end`,
+**nicht über `order`**: Sonst liefen Seh- und Vorlesereihenfolge auseinander.
+
 > **Nicht jedes Formular bekommt eine.** Sie gehört zu Formularen, die man
 > *bearbeitet* und deren Stand man verlieren kann. Wo der Knopf das **Ziel des
 > Weges** ist — „Diensttag anlegen", „Einsatz verschieben", „Datum ändern" —

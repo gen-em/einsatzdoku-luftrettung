@@ -1705,5 +1705,13 @@ declare(strict_types=1);
  * Funktion und kein neues Feld, und kein Weg durch die Anwendung hat sich
  * geaendert. Was sich aendert, ist die Groesse von Zwischenraeumen.
  *
+ * 12.2.3 GIBT DER SAMMELLEISTE DIE KARTENFORM (S3/AP3, E-R43-1). Sie brach
+ * mit `margin: <oben> calc(var(--abstand-3) * -1) <unten>` seitlich aus dem Inhalt aus und
+ * lief ohne Radius von Rand zu Rand -- daher der Eindruck „eckig und
+ * breiter". Jetzt Radius und Breite wie die Karte darueber; klebender Sitz,
+ * Trennlinie und Schatten bleiben, denn sie tragen die Funktion. Dazu die
+ * Reihenfolge im Markup umgedreht: Hinweis zuerst, Knopf danach -- der Knopf
+ * steht damit rechts, und die Vorlesereihenfolge stimmt ohne `order`.
+ *
  */
-const WEB_VERSION = '12.2.2';
+const WEB_VERSION = '12.2.3';

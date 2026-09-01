@@ -1153,3 +1153,58 @@ Speichern-Leiste). Der Stilvergleich misst statisches Markup, der Bilderlauf
 den Ruhezustand der Seite. Für AP2 ist das vertretbar — geändert wurden
 ausschließlich Abstände an ruhenden Bausteinen —, es steht aber im
 Prüfdokument als Bedienweg.
+
+---
+
+### AP3 — Sammelleiste (E-R43-1)
+
+**Stand:** erledigt. Web 12.2.3.
+
+#### Was geändert wurde
+
+- `.speichern`: negativer Randausbruch entfällt (`margin: var(--abstand-4) 0 0`),
+  `border-radius: var(--radius-gross)` — Radius und Breite der Karte. Sticky
+  Sitz, obere Trennlinie und Schatten bleiben unverändert.
+- `.speichern-innen`: `justify-content: flex-end`.
+- `ui_speichern_leiste()`: Hinweis vor dem Knopf im Markup.
+
+**Ausgerichtet wird über `justify-content`, nicht über `order`.** Ein `order`
+hätte den Knopf optisch nach rechts geschoben und ihn im Vorlesefluss vorn
+gelassen — die Zahl käme nach der Handlung, auf die sie sich bezieht. Die
+Markup-Reihenfolge ist jetzt zugleich die Vorlesereihenfolge.
+
+#### Prüfstand AP3
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Kaskade | `kaskade.py` | 639 → 639 Regeln; **2 neue Eigenschaften** (`border-radius`, `justify-content`), **1 geänderter Wert** (`margin`), 0 entfallen, 0 Reihenfolgetausch — genau die drei geplanten Änderungen |
+| **Deckt sich die Leiste mit der Karte?** | eigene Bedienprobe in Chromium, gemessen statt gesehen | Spurenseite in **acht** Breiten (360/390/420/720/1024/1280/1440/1920): Breite und linke Kante **auf den Pixel gleich**, `border-radius` 12 px = Karte, `position: sticky`, `border-top` 1 px |
+| Zweite Verwendung: NutzerInnen-Liste | dieselbe Probe, Kästchen angehakt | 720/1024/1920 px: 688@16, 772@236, 1388@396 — deckt sich jeweils mit der Karte |
+| Dritte Verwendung: schmutziges Formular | Einsatzformular (Einsatz 88), Feld geändert | 360/720/1024/1920 px: Leiste deckt sich mit dem Inhaltsrahmen; Radius 12 px; sticky |
+| Vierte Stelle: Rechtstexte | dieselbe Probe | 360/720/1024 deckt sich mit der Karte. Bei **1920 px steht die Leiste mit 1388 px über zwei 686-px-Karten** — kein Fehler: Dort ist der Inhalt zweispaltig, und die Leiste gehört dem Formular, das beide Spalten umfasst. Linke Kante identisch (396 px) |
+| Knopf rechts? | Lage von Knopf und Hinweis verglichen | ab 720 px an allen vier Stellen `Knopf rechts vom Hinweis`; unter 720 px ist der Hinweis ausgeblendet (unverändertes Verhalten seit P3) und der Knopf 100 % breit |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs`, voller Lauf | 304 Bilder, **0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px** |
+| Nichts verlorengegangen | `tools/vollstaendigkeit/pruefen.py` | 260 Befunde, gleich der Basis |
+| Texte | `tools/wortliste/wortliste.py` | 0 / 0 / 0 |
+
+**Zwei Messartefakte, beide aufgeklärt und keines ein Fehler der Anwendung:**
+
+1. Der erste Probelauf meldete vier `HTTP 400`. Ursache war die Probe selbst —
+   sie hatte keine Einsatzkennung gefunden und `einsatz_form.php?id=undefined`
+   aufgerufen. Mit einer echten Kennung (88) verschwinden sie.
+2. Der zweite Lauf meldete `ERR_CONNECTION_RESET`. Das ist die lokale
+   TLS-Terminierung (`socat` vor dem eingebauten PHP-Server), nicht die
+   Anwendung: Derselbe Aufruf über den vollen Bilderlauf ergibt **0**
+   Konsolenfehler auf 304 Bildern.
+
+**Ein Fund an der eigenen Buchführung:** Die Vollständigkeitsprüfung stieg
+kurzzeitig auf 261 Befunde. Gelesen statt gezählt (F-P3-BA) war es ein
+Auslassungszeichen in einem **Kommentar** von `version.php`, den die Prüfung
+als „Unicode-Zeichen als Symbol im Markup" zählt. Der Kommentar ist
+umgeschrieben; 260 stehen wieder. Der Befundtyp ist mit 195 Altfällen
+bekanntes Rauschen — aber eine Zahl, die sich ohne Erklärung bewegt, ist
+keine Prüfung.
+
+**Nicht geprüft:** das Zusammenspiel mit `forms.js` beim Verlassen der Seite
+(Verlassen-Warnung) — unberührt von dieser Änderung, aber nicht nachgefahren.
+Steht im Prüfdokument als Bedienweg.

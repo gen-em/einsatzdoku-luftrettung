@@ -1570,7 +1570,18 @@ function ui_speichern_leiste(array $o = []): void
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
+  <?php /* HINWEIS ZUERST, KNOPF DANACH (E-R43-1). Bis Web 12.2.2 stand der
+           Knopf im Markup vorn und damit links, die Zaehlung rechts davon —
+           umgekehrt zu allem anderen in dieser Oberflaeche, wo die
+           Haupthandlung rechts sitzt. Die Reihenfolge im Markup ist zugleich
+           die Vorlesereihenfolge: erst „12 ausgewaehlt", dann „Auswahl
+           sichern". Ausgerichtet wird ueber `justify-content:flex-end` an
+           `.speichern-innen`, nicht ueber `order` — sonst liefen Seh- und
+           Vorlesereihenfolge auseinander. */ ?>
   <div class="speichern-innen">
+    <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
+       <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
+        ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
     <?= ui_knopf([
         'text' => (string)($o['text'] ?? 'Speichern'),
         'art' => 'primaer', 'symbol' => (string)($o['symbol'] ?? 'haken'),
@@ -1584,9 +1595,6 @@ function ui_speichern_leiste(array $o = []): void
         'attr' => (string)($o['attr'] ?? '')
                 . (!empty($o['form']) ? ' form="' . ui_e((string)$o['form']) . '"' : ''),
     ]) ?>
-    <p class="speichern-hinweis<?= !empty($o['zahl']) ? ' speichern-zahl' : '' ?>"
-       <?= !empty($o['zahl']) ? 'id="' . ui_e((string)$o['zahl']) . '"' : '' ?>><?= ui_e((string)($o['hinweis']
-        ?? 'Es gibt ungespeicherte Änderungen · Strg + Enter speichert')) ?></p>
   </div>
 </div>
 <?php }

@@ -11,6 +11,40 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.2.3] — 2026-09-01
+
+**Die Sammelleiste bekommt die Form der Karte.** Drittes Arbeitspaket von S3.
+Keine Migration, keine Schnittstellenänderung.
+
+### Web — Warum die Leiste „eckig und breiter" wirkte
+
+Sie war es. `.speichern` trug `margin: … calc(var(--abstand-3) * -1)` und
+brach damit seitlich aus dem Inhalt aus; einen Radius hatte sie nicht. Neben
+einer Karte mit 12 px Radius stand also ein Kasten, der breiter war und
+scharfe Ecken hatte — und der trotzdem zu dieser Karte gehört.
+
+Jetzt hat sie **denselben Radius und dieselbe Breite**. Gemessen in acht
+Breiten: linke Kante und Breite der Leiste decken sich mit dem Inhalt auf den
+Pixel genau. **Was bleibt, ist alles, was die Funktion trägt** — der klebende
+Sitz am unteren Rand, die Trennlinie nach oben, der Schatten. Die Leiste soll
+auffallen, weil sie folgt, nicht weil sie anders geschnitten ist.
+
+### Web — Der Knopf steht jetzt rechts
+
+Im Markup stand er vorn und damit links, die Zählung („12 ausgewählt") rechts
+davon — umgekehrt zu allem anderen in dieser Oberfläche, wo die Haupthandlung
+rechts sitzt. Der Hinweis steht jetzt zuerst, der Knopf danach.
+
+Die Ausrichtung läuft über `justify-content:flex-end` und **nicht über
+`order`**: Ein `order` hätte die Seh- von der Vorlesereihenfolge getrennt.
+Wer die Leiste vorgelesen bekommt, hört jetzt erst „12 ausgewählt" und dann
+„Auswahl sichern" — die Zahl, bevor die Handlung kommt, auf die sie sich
+bezieht.
+
+**Der Baustein hat zwei Verwendungen, beide sind geprüft:** die Speichern-Leiste
+eines schmutzigen Formulars (Einsatzformular, Rechtstexte) und die Sammelleiste
+einer Auswahl (NutzerInnen-Liste, Spurenseite des Diensttages).
+
 ## [Web 12.2.2] — 2026-09-01
 
 **Der vertikale Rhythmus bekommt eine Regel.** Erste zwei Arbeitspakete von

@@ -1250,14 +1250,28 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29). */
 .speichern{
   position:sticky;bottom:0;z-index:30;
-  margin:var(--abstand-4) calc(var(--abstand-3) * -1) 0;
+  /* KARTENFORM (E-R43-1). Bis Web 12.2.2 brach die Leiste mit
+   * `margin: … calc(var(--abstand-3) * -1)` seitlich aus dem Inhalt aus und
+   * lief ohne Radius von Rand zu Rand — sie wirkte dadurch „eckig und
+   * breiter" als die Karte darüber, obwohl sie zu ihr gehört. Jetzt Radius
+   * und Breite wie die Karte; der Ausbruch ist ersatzlos entfallen.
+   *
+   * WAS BLEIBT, ist alles, was die FUNKTION traegt: der klebende Sitz, die
+   * Trennlinie nach oben und der Schatten. Die Leiste soll auffallen, weil
+   * sie folgt — nicht, weil sie anders geschnitten ist. */
+  margin:var(--abstand-4) 0 0;
   padding:var(--abstand-3);
   background:var(--schnee);
   border-top:var(--strich) solid var(--linie);
+  border-radius:var(--radius-gross);
   box-shadow:var(--schatten);
 }
+/* KNOPF RECHTS, ZAEHLUNG LINKS DANEBEN. Im Markup steht der Hinweis zuerst
+ * (ui_speichern_leiste), damit die Vorlesereihenfolge stimmt: erst „12
+ * ausgewaehlt", dann „Auswahl sichern". flex-end schiebt das Paar an den
+ * rechten Rand — die Haupthandlung sitzt dort, wo die Hand sie sucht. */
 .speichern-innen{
-  display:flex;align-items:center;gap:var(--abstand-3);
+  display:flex;align-items:center;justify-content:flex-end;gap:var(--abstand-3);
   max-width:var(--rahmen);margin:0 auto;
 }
 .speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
