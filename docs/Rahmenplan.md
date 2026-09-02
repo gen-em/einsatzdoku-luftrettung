@@ -536,7 +536,6 @@ Fassung 21 und 84–88 mit Fassung 22 angelegt.
 | 88 | Kachel „Einsätze je Gerät" in der Zeitraumübersicht der NutzerIn | Backlog-Runde, nach S4-Rest | neue Darstellung: Mockup und Freigabe (R64) |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
-| 64 | Bedienhöhe Android | **erledigt** (S4-Merge, Android 0.7.7) | 48 dp in beiden Modulen, `CLAUDE.md` 5 unterscheidet Web und Android (R58, E-S4-77) |
 | 65 | 14 Fassungshinweise, AGP 9 | Backlog-Runde | eigene Runde nach dem S4-Rest, nur `android/` |
 | 66 | `watch/` läuft nicht durch die Wortliste | S5 | mit der Uhr-Auslieferung |
 | 67 | `csrf_check()` ohne API-Zweig | P5 | CSRF-Umfeld (R21) |
