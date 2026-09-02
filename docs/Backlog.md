@@ -32,6 +32,16 @@ Backlog-Punkte vergibt, prüft vor dem Zusammenführen die Nummernvergabe —
 
 muss leer bleiben.
 
+**Zu den Nummern 63 bis 67 (Rahmenplan Fassung 16, 02.09.2026).** Sie sind
+für den S4-Zweig reserviert. Er hat seine fünf Punkte als 59 bis 63
+angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
+Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
+Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
+Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
+API-Zweig. Die Punkte 68 bis 72 sind mit Fassung 16 angelegt und stehen
+unten; die Zuordnung aller offenen Punkte zu Paketen führt
+`docs/Rahmenplan.md`, Abschnitt 5.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -669,6 +679,75 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
     Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
     Ableitungen nachmessen.
+
+68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
+    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
+    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
+    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
+    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
+    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
+    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
+    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
+    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
+    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
+    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
+    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
+    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
+    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
+    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
+    Zuordnung: Backlog-Runde.
+
+69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
+    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
+    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
+    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
+    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
+    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
+    Import und Sicherung ziehen nach — deshalb ein eigener Punkt und kein
+    Nebenklapp. Zuordnung: Backlog-Runde.
+
+70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
+    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
+    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
+    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
+    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
+    neuer Baustein. Zuordnung: Backlog-Runde.
+
+71. **Regionen mit Unteradmins — verworfen, festgehalten.**
+    *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
+    mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
+    den zentralen Stammdaten: Regionen hängen am zentralen Standort und
+    vererben auf alle Untertypen; `user_regions` n:m, weil NotärztInnen in
+    mehreren Bereichen arbeiten; Unteradmin als Zusatzbefugnis in eigener
+    Tabelle, ausdrücklich ohne Kontoeinblick; null Regionen bedeutet das
+    heutige Verhalten. **Verworfen**, weil im Dienstbetrieb jede NutzerIn
+    ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
+    entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
+    organisierte Träger auftreten. Zuordnung: nach v1.0.
+
+72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
+    Richtung.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
+    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
+    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
+    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
+    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
+    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
+    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
+    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
+    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
+    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
+    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
+    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
+    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
+    `display:inline-block` (oder `block`) setzen, dann im Browser über
+    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
+    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
+    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
+    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
 
 ---
 

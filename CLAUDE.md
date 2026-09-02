@@ -6,7 +6,9 @@ PHP/MySQL-Weboberfläche zeigt und bearbeitet sie. Patientendaten sind
 Ende-zu-Ende-verschlüsselt.
 
 Einstieg in die Sache selbst: `README.md`, dann `docs/Technik.md` (Architektur,
-Verzeichnisstruktur, Abläufe, Betrieb).
+Verzeichnisstruktur, Abläufe, Betrieb). Reihenfolge, Status und
+Programmentscheidungen: `docs/Rahmenplan.md` (Steuerung) und
+`docs/Rahmenplan-Archiv.md` (Werdegang bis Fassung 15).
 
 ---
 
