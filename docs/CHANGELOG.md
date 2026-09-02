@@ -11,6 +11,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Containeraufbau und S5-Anker] — 2026-09-02
+
+**Der Prüfstand ließ sich nicht in einem Zug aufbauen, und niemand hatte es
+je aufgeschrieben.** Weder die Weboberfläche noch die Uhr-App noch die
+Android-Apps sind geändert, deshalb trägt dieser Eintrag keine
+Versionsnummer — wie schon die Einträge vom 30.08. und 02.09.2026.
+
+Anlass war die Vorbereitung der S5-Umsetzung: Bevor der erste Handgriff am
+Code geschieht, sollte belegt sein, dass jedes Prüfmittel des Repositoriums
+in dieser Umgebung tatsächlich läuft. Das war es nicht, und die Gründe waren
+nirgends festgehalten.
+
+### Werkzeug — `tools/containeraufbau/`, weil das Abbild drei Dinge nicht mitbringt
+
+`CLAUDE.md` 6 verlangt `./gradlew build` mit `ANDROID_HOME=/opt/android-sdk`;
+dieses Verzeichnis existierte nicht. Ohne Datenbankserver läuft keine der
+sechs Proben, die eine Installation brauchen. Und `python3-cryptography` lag
+zwar im Abbild, aber ohne `_cffi_backend` — der Import endet dann nicht mit
+einer Fehlermeldung, sondern mit einer Rust-Panik
+(`pyo3_runtime.PanicException`), und wer die liest, sucht den Fehler im
+eigenen Skript statt im Paket. Betroffen waren `kreislauf.py` und
+`einspielen.py`, also ausgerechnet die Regressionspflicht R24.
+
+Das Skript zieht nach, was fehlt, und **nur** das: MariaDB, Android-SDK 36,
+`librsvg2-bin`, `imagemagick`, `socat`, `cffi`. Den Uhr-Prüfstand baut es
+ausdrücklich nicht — der holt sein SDK selbst und braucht dafür eine Adresse,
+die nicht im Repositorium steht.
+
+### Werkzeug — `lokal_einrichten.sh`, weil „im Browser" hier nicht geht
+
+`tools/referenzdatensatz/einspielen/LIESMICH.md` sagte: „Eingerichtet wird
+**einmal** über `install.php` im Browser; das macht dieses Skript nicht." In
+einer Wegwerf-Umgebung ist der Browserweg genau der, den man nicht gehen kann
+— und dann steht man vor einer leeren Datenbank und rät, welche Felder das
+Formular wollte.
+
+Das neue Skript geht **denselben** Weg über HTTP: dieselbe Seite, dasselbe
+Formular, dieselben Prüfungen einschließlich der Nachweisdatei aus M1-11. Was
+es nicht nachbaut, ist der Browserschritt — Passwort, Salz, Inhaltsschlüssel
+und beide Hüllen entstehen weiter ausschließlich mit der WebCrypto des
+Browsers (E-P1-10); dafür ruft es `passwort_setzen.mjs`. Das Demo-Konto
+entsteht über `demo_anlegen()`, dieselbe Funktion, die der Knopf im
+Adminbereich ruft. Kein zweiter Weg, den niemand pflegt.
+
+Die Vorgabewerte sind nicht frei gewählt, sondern die, die `kreislauf.py` und
+`aufnehmen.mjs` ohne Schalter erwarten. Damit läuft nach einem Aufruf jedes
+Werkzeug ohne Zusatzangabe.
+
+### Werkzeug — `tools/s5-anker/`, weil Zeilennummern Belege sind und keine Wegweiser
+
+Das S5-Konzept belegt jede Aussage mit einer Fundstelle samt Zeilennummer.
+Diese Nummern stimmen — nachgelesen wurden alle 38 —, aber sie halten nur bis
+zum nächsten Paket, das dieselben Dateien anfasst. S7 ersetzt „Sicherung"
+durch „Backup" und berührt dabei `einstellungen.php` (46 Treffer),
+`jobs_lib.php` (22), `update.php` (16), `Handbuch.md` (71) und `Technik.md`
+(114).
+
+Das Konzept deswegen umzuschreiben wäre die falsche Antwort. Stattdessen
+83 Muster, die dieselben Stellen am **Text** finden, mit ihrer Sollzeile
+daneben. Der Lauf sagt dann, was gewandert ist (belanglos) und was
+**verschwunden** ist — und Letzteres ist die eigentliche Auskunft: Dort hat
+ein anderes Paket eine Annahme des Konzepts weggeräumt, und der zugehörige
+Absatz ist neu zu lesen, bevor jemand danach baut. Das Verzeichnis wird mit
+dem Abschluss von S5 gelöscht, wie das Konzept selbst (R62).
+
 ## [Werkzeug: Uhr-Prüfstand] — 2026-09-02
 
 **Die Aufbauanleitung führte an zwei Stellen in die Irre.** Weder die

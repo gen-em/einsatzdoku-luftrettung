@@ -254,6 +254,12 @@ Daten erst nach Server-Bestätigung.
 ├── tools/                 Werkzeuge, werden nicht ausgeliefert
 │   ├── abmelde-probe/     zeigt, was der Abmeldeweg im sessionStorage
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
+│   ├── containeraufbau/   zieht in einer Wegwerf-Umgebung nach, was das Abbild
+│   │                      nicht mitbringt: MariaDB, Android-SDK 36,
+│   │                      librsvg/imagemagick, socat, ein brauchbares
+│   │                      python3-cryptography. Baut NICHT den Uhr-Prüfstand
+│   │                      (der holt sein SDK selbst) und richtet NICHT die
+│   │                      Anwendung ein (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
 │   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):
@@ -300,7 +306,10 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  und Prüfung (Abdeckungsmatrix, keine realen Namen)
 │   │   ├── generator/     erzeugt Ingest-Payloads, Formulardaten, CSV, GPX;
 │   │   │                  fester Zufallssamen, zwei Läufe gleiches Ergebnis
-│   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL
+│   │   ├── einspielen/    spielt alles über die REGULÄREN Wege ein, kein SQL;
+│   │   │                  lokal_einrichten.sh baut eine Installation von Null
+│   │   │                  auf (install.php über HTTP, Passwort im Browser,
+│   │   │                  Demo-Konto), lokal_starten.sh fährt sie nur hoch
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
 │   │   │                  Abnahme der Demo-Funktion
@@ -323,6 +332,12 @@ Daten erst nach Server-Bestätigung.
 │   │                      Rechtstexte: 81 Proben in acht Gruppen plus eine
 │   │                      Positivlisten-Schranke ueber JEDE erzeugte Ausgabe
 │   │                      (s. LIESMICH.md)
+│   ├── s5-anker/          hält die Fundstellen des S5-Konzepts am INHALT fest
+│   │                      statt an der Zeilennummer: 83 Muster, je Datei und
+│   │                      Sollzeile. Ein Lauf nach einem fremden Paket sagt,
+│   │                      welche Stelle gewandert ist und welche verschwunden
+│   │                      — Letzteres heißt: Konzeptabsatz neu lesen. Wird mit
+│   │                      dem Abschluss von S5 gelöscht (s. LIESMICH.md)
 │   ├── screenshots/       nimmt alle Seiten in acht Breiten von 360 bis 1920 px
 │   │                      auf, je Seite ein Kontaktbogen; misst dabei
 │   │                      waagerechten Überlauf, Konsolenfehler und Knopfhöhen.
