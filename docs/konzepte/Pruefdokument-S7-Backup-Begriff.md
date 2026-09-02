@@ -9,10 +9,11 @@ beantwortet *„was muss ich noch tun?"*.
 > nach diesem Deploy **nicht** fällig. Die beiden Migrationen aus S4 und S6
 > warten weiterhin auf ihre Bestätigung; daran ändert dieses Paket nichts.
 >
-> **Der wichtigste Punkt dieses Dokuments ist Nummer 1:** einmal ein Backup
-> erstellen und wieder einspielen. Alles Übrige ist hier gemessen; der
-> vollständige Umlauf durch den Browser mit echtem Passwort ist es nur zur
-> Hälfte.
+> **Der wichtigste Punkt dieses Dokuments ist Nummer 4:** ein
+> Komplett-Backup aus der Zeit **vor** diesem Deploy einspielen. Dort liegt
+> das einzige echte Schadenspotenzial dieses Pakets — alles Übrige ist hier
+> gemessen, einschließlich des vollständigen Umlaufs einer Konto-Sicherung
+> durch den Browser (252 882 Einzelvergleiche, 0 unerklärte Abweichungen).
 
 ---
 
@@ -20,36 +21,37 @@ beantwortet *„was muss ich noch tun?"*.
 
 Das steht an erster Stelle und nicht in einer Fußnote.
 
-### 1.1 Der Umlauf einer Konto-Sicherung ist nicht durch den Browser gefahren
+### 1.1 ~~Der Umlauf einer Konto-Sicherung~~ — **doch gefahren**
 
-Erzeugen **und** Einspielen einer `.edbak`-Datei laufen vollständig im
-Browser (WebCrypto); der Server sieht das Passwort nie. Geprüft ist der
-**Weg dorthin**: Die Seite wurde aufgerufen, die Felder gelesen, der
-Einspielweg mit einer kaputten Datei ausgelöst (Meldung „Das ist keine
-Backup-Datei dieses Programms.", 0 Konsolenfehler). **Nicht** gefahren ist
-der volle Umlauf erstellen → herunterladen → einspielen mit einem echten
-Passwort und echten Einsätzen.
+*Hier stand, der volle Umlauf sei nicht gefahren. Das ist überholt.* Der
+Kreislaufvergleich (unten, 1.2) fährt genau ihn: Referenz-Backup in ein
+**frisches** Konto einspielen, dort erneut sichern, beide Dateien Feld für
+Feld vergleichen — alles durch den Browser, mit echtem Passwort und echter
+WebCrypto. Die Meldungen, die S7 angefasst hat, sind dabei gelesen worden:
 
-**Was stattdessen belegt ist:** Das **Admin**-Backup ist erzeugt worden
-(„Backup erzeugt.", Karte danach „Backups 1 · aktuell"), und das
-**Komplett-Backup** ist vollständig durchgelaufen und entsiegelt worden
-(3 264 502 Byte SQL, Endmarke vorhanden). Beide Wege benutzen dieselben
-Meldungstexte. **Prüfliste Punkt 1.**
+> „**Backup eingespielt** — Import fertig: 87 Einsätze übernommen, 100
+> Ruhesegmente, 16 Diensttage … 181 Spuren übernommen."
+> „Herkunft: **Backup** vom 31.8.2026, 17:42 Uhr aus dem Konto
+> demo@gen-em.org."
 
-### 1.2 Der Kreislaufvergleich (R24) ist nicht gefahren
+**Was weiterhin fehlt:** der Weg, den eine einzelne NutzerIn auf **ihrer**
+Backup-Seite geht — Passwort selbst vergeben, Datei herunterladen, in
+dasselbe Konto zurückspielen. Der Kreislauf benutzt ein frisches Konto,
+weil ein Rückspielen in dasselbe Konto von der Dublettenerkennung
+übersprungen würde. **Prüfliste Punkt 1.**
 
-`tools/referenzdatensatz/vergleich/kreislauf.py` ist die Regressionspflicht
-aus `CLAUDE.md` 2.2. Er ist hier **nicht** gelaufen. Begründung, und sie ist
-schwächer als ein Lauf: Dieses Paket ändert **keine Zeile Verhalten** in den
-Wegen, die der Kreislauf misst — es ändert Zeichenketten in Meldungen,
-Beschriftungen und Kommentaren. Die eine Verhaltensänderung des Pakets
-(Backlog Nr. 89) liegt im Wartungsjob und nicht im Sicherungs- oder
-Exportpfad.
+### 1.2 ~~Der Kreislaufvergleich (R24) ist nicht gefahren~~ — **doch gefahren**
 
-**Was stattdessen belegt ist:** `php -l` über alle 41 geänderten
-PHP-Dateien, `node --check` über alle 9 JS-Dateien, `py_compile` und
-`json.load` über die Prüfmittel — sowie ein echter Komplett-Backup-Lauf über
-`php jobs.php` mit 57 796 geschriebenen Zeilen. **Prüfliste Punkt 6.**
+*Auch das ist überholt.* Beide Kreisläufe sind gelaufen, nach der letzten
+Änderung:
+
+| Lauf | Einzelvergleiche | unerklärt | erwartet |
+|---|---|---|---|
+| `--art edbak --frisch` | **252 882** | **0** | 16 |
+| `--art csv --frisch` | **8 797** | **0** | 859 |
+
+Beide mit **0** Konsolenfehlern und **0** Befunden im Browserteil. Damit ist
+die Regressionspflicht aus `CLAUDE.md` 2.2 erfüllt.
 
 ### 1.3 Bedienzustände sind nicht im Bild
 
@@ -107,12 +109,62 @@ Eine Prüfung ohne Zahl ist keine.
 | Verwaiste weibliche Nominalisierungen | eigene Prüfung | **7** Stellen gelesen, **4** behoben |
 | Überschriften in Versalien | eigene Prüfung | **30** Stellen umgestellt, danach **0** |
 | Fehlerklasse „Vorgabewert aus lazy geladener Datei" | eigene Prüfung über alle Signaturen | **1** Stelle in `server/`, behoben |
-| Backlog-Nummern | `grep … | uniq -d` | **0** doppelt |
+| Backlog-Nummern | `grep … \| uniq -d` | **0** doppelt |
+| Umlauf einer Konto-Sicherung | `kreislauf.py --art edbak --frisch` | **252 882** Einzelvergleiche, **0** unerklärt |
+| Umlauf des CSV-Exports | `kreislauf.py --art csv --frisch` | **8 797** Einzelvergleiche, **0** unerklärt |
 | Verbliebene Fundstellen, einzeln zugeordnet | eigene Zählung | siehe Abschnitt 3 |
 
 ### 2a. Bilderlauf
 
-*(Zahlen werden nach dem Lauf eingetragen.)*
+`node tools/screenshots/aufnehmen.mjs`, 38 Seiten in acht Breiten
+(360 · 390 · 420 · 768 · 1024 · 1280 · 1440 · 1920):
+
+| | |
+|---|---|
+| Einzelbilder | **304** |
+| Kontaktbögen | **38** |
+| waagerechter Überlauf | **0** |
+| Konsolenfehler | **0** |
+| Knöpfe ≠ 44 px | **0** |
+
+**Die Gegenprobe aus der LIESMICH ist gefahren** — und sie ist nicht glatt
+aufgegangen, deshalb steht sie hier: 304 Bilder, **301 verschiedene
+Prüfsummen**. Die drei Doppel sind `10-tagesuebersicht` gegen
+`11-tagesuebersicht-schublade` bei 1024, 1280 und 1440 px. Nachgesehen: Ab
+`@media (min-width:1024px)` ist die Schublade eine feste Seitenleiste
+(`.nur-schublade{display:none}`, `style.css` Zeile 1663) — der
+Bedienschritt „Schublade öffnen" hat dort **keine Wirkung**, und dass beide
+Bilder gleich sind, ist richtig. Bei 360, 390, 420 und 768 px unterscheiden
+sie sich, bei 1920 px ebenfalls (Kartenausschnitt). Kein einziges Bild zeigt
+eine **andere** Seite als die gemeinte — das ist die Frage, die diese
+Gegenprobe stellt (F-P3-AQ).
+
+### 2b. Was eine NutzerIn wirklich sieht
+
+Die Zählungen in Abschnitt 3 messen den **Quelltext**. Diese hier misst den
+**sichtbaren Text**: Jede Seite der Bilderlauf-Liste wird im Browser
+aufgerufen und ihr `innerText` durchsucht — mit den Rollen abgemeldet, Demo
+und Admin.
+
+| | |
+|---|---|
+| Seiten im Browser gelesen | **29** (9 mit Laufzeit-Platzhalter übersprungen) |
+| „Backup" im sichtbaren Text | **83** |
+| „Sicherung" im sichtbaren Text | **2** |
+
+**Und beide sind genau die zwei dokumentierten Grenzen:**
+
+1. `admin_sicherungen.php` zeigt den **Ablagepfad**
+   `…/server/sicherungen` — er steht in der Ausnahmeliste des Deploys und
+   bleibt (Grenze 3.1).
+2. `update.php` zeigt die **Migrationskennung**
+   `2026_09_01_sicherungsziele` — ein gespeicherter Name (R5).
+
+Kein dritter Fall. Die neun übersprungenen Seiten tragen Platzhalter, die
+das Bilderlauf-Werkzeug zur Laufzeit auflöst; die für dieses Paket
+wichtigste davon — die **Kontoseite** — ist einzeln geprüft (Karte
+„Backups", „Für dieses Konto gibt es noch kein Backup.", Meldung „Backup
+erzeugt.", Karte danach „Backups 1 · aktuell", 0 Konsolenfehler).
 
 ---
 
@@ -142,7 +194,7 @@ Backlog-Punkte **45 → 7**, `tools/` **188 → 40**, Historie **734 → 734**.
 Je Punkt: Bedienweg, erwartetes Ergebnis, und woran ein Scheitern zu
 erkennen ist.
 
-### ☐ 1. Ein Backup erstellen und wieder einspielen (der Kernpunkt)
+### ☐ 1. Ein Backup erstellen und in DASSELBE Konto einspielen
 
 **Weg:** Anmelden · *Einstellungen → Backup* · Passwort vergeben ·
 **Backup erstellen** · Datei herunterladen · auf derselben Seite unter
@@ -217,16 +269,12 @@ unter Einstellungen → **Backups**".
 **Scheitern:** ein Betreff mit „Sicherungen" — dann ist eine Zeichenkette
 übersehen worden, die kein Werkzeug sieht, weil sie nur im Versand entsteht.
 
-### ☐ 6. Der Kreislaufvergleich (R24)
+### ☑ 6. Der Kreislaufvergleich (R24) — **erledigt**
 
-**Weg:** `python3 tools/referenzdatensatz/vergleich/kreislauf.py --art edbak
---frisch` und dasselbe mit `--art csv`.
-
-**Erwartet:** **0** unerklärte Abweichungen.
-
-**Scheitern:** jede Abweichung, die nicht in den Ausnahmelisten steht. Dieses
-Paket ändert kein Verhalten in diesen Wegen — eine Abweichung wäre deshalb
-ein echter Fund und kein erwarteter.
+Gefahren am 02.09.2026 nach der letzten Änderung: `--art edbak --frisch`
+**252 882** Einzelvergleiche, **0** unerklärt (16 erwartet); `--art csv
+--frisch` **8 797** Einzelvergleiche, **0** unerklärt (859 erwartet). Kein
+Handlungsbedarf; der Punkt steht hier, damit die Zahl auffindbar bleibt.
 
 ### ☐ 7. Das geplante Komplett-Backup im Betrieb
 

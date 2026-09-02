@@ -15,7 +15,7 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | **erledigt** |
 | AP5a | Backlog Nr. 89 beheben (eigener Commit, eigene Korrekturstufe) | **erledigt** |
 | AP6 | `tools/` | **erledigt** |
-| AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
+| AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | **erledigt** |
 | AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
 
 **Wo es hakt:** nichts. Ein **vorbestehender** Fehler ist beim Prüfen
@@ -27,6 +27,58 @@ entgegen der Erwartung steht eine vollständige lokale Installation
 eingespielt: 526 Ingest-Anfragen, 16 Diensttage, 87 Einsätze, 0 Fehler).
 Bilderlauf und Browserprüfung laufen damit wirklich.
 
+## 0z. Prüfprotokoll — ist es belegt?
+
+Alle Läufe auf einer lokalen Installation mit dem Referenzdatensatz
+(526 Ingest-Anfragen, 16 Diensttage, 87 Einsätze, 0 Fehler), nach der
+letzten Änderung (`CLAUDE.md` 6: „Die Prüfmittel laufen zuletzt").
+
+| Mittel | Was es gemessen hat | Zahl |
+|---|---|---|
+| `tools/wortliste/` | Land/Luft-Neutralität in `server/*.php`, `server/api/*.php`, `server/assets/*.js`, acht normativen Dokumenten und beiden Android-`strings.xml` | **0** Treffer außerhalb der Ausnahmen · **0** ungenutzte Ausnahmen (77 Regeln, 77 gegriffen) · **0** durchgerutschte Fallen |
+| `tools/vollstaendigkeit/` | Klassen des Stylesheets und Werte außerhalb `:root` | **272** Befunde — der dokumentierte Stand aus Rahmenplan Fassung 19, unverändert |
+| `tools/screenshots/kontrast.py` | Kontraste der Token gegen die tatsächliche Fläche | **21** Paare, **0** verfehlt |
+| `tools/screenshots/` | 38 Seiten in acht Breiten | **304** Bilder · Überlauf **0** · Konsolenfehler **0** · Knöpfe ≠ 44 px **0** |
+| dessen Gegenprobe | zeigen mehrere Seiten dasselbe Bild? | 304 Bilder, **301** Prüfsummen — die drei Doppel sind erklärt (siehe unten) |
+| **Sichtprobe im Browser** | „Sicherung" im **sichtbaren Text** von 29 Seiten | **2** — beide sind die dokumentierten Grenzen (Ablagepfad, Migrationskennung); **83**× „Backup" |
+| `php -l` / `node --check` / `py_compile` / `json.load` | Syntax aller geänderten Dateien | **0** Fehler |
+| eigene Nachprüfung (9 Muster) | falsch gebeugte Artikel, Adjektive, Relativpronomen | **0** echte Verdachtsstellen |
+| eigene Grenzprüfung | Wortgruppen über Zeichenketten-Grenzen | **3** gefunden, **3** behoben |
+| eigene Pronomenprüfung | Genusfolge über Satzgrenzen | **78** gelesen, **17** behoben |
+| eigene Nominalisierungsprüfung | verwaiste weibliche Formen | **7** gelesen, **4** behoben |
+| eigene Signaturprüfung | Vorgabewert aus lazy geladener Datei | **1** Stelle in `server/`, behoben |
+| `kreislauf.py --art edbak --frisch` | Referenz-Backup → frisches Konto → erneut sichern → Feld für Feld vergleichen, **alles durch den Browser** | **252 882** Einzelvergleiche · **0** unerklärt · 16 erwartet |
+| `kreislauf.py --art csv --frisch` | derselbe Umlauf über den CSV-Weg | **8 797** Einzelvergleiche · **0** unerklärt · 859 erwartet |
+
+**Die drei doppelten Bilder.** `10-tagesuebersicht` und
+`11-tagesuebersicht-schublade` sind bei 1024, 1280 und 1440 px identisch —
+richtig so: Ab `@media (min-width:1024px)` ist die Schublade eine feste
+Seitenleiste, der Bedienschritt hat dort keine Wirkung. Bei 360, 390, 420,
+768 und 1920 px unterscheiden sie sich. **Kein Bild zeigt eine andere Seite
+als die gemeinte** — das ist die Frage, die diese Gegenprobe stellt
+(F-P3-AQ).
+
+**Was im Browser bedient wurde:** die Backup-Seite (Felder gelesen,
+Einspielweg mit kaputter Datei ausgelöst → „Das ist keine Backup-Datei
+dieses Programms."), die Adminübersicht, die NutzerInnen-Liste, die
+Kontoseite (**„Jetzt sichern" ausgelöst → „Backup erzeugt.", Karte danach
+„Backups 1 · aktuell"**), „Backup-Ziele", „Komplett-Backup",
+`wiederherstellen.php` abgemeldet und die Wartungsseite. Überall
+0 Konsolenfehler.
+
+**Damit ist auch der Umlauf einer Konto-Sicherung belegt**, und zwar mit
+genau den Meldungen, die dieses Paket angefasst hat: „**Backup
+eingespielt** — Import fertig: 87 Einsätze übernommen, 100 Ruhesegmente,
+16 Diensttage … 181 Spuren übernommen." und „Herkunft: **Backup** vom
+31.8.2026, 17:42 Uhr aus dem Konto demo@gen-em.org." Die Regressionspflicht
+R24 (`CLAUDE.md` 2.2) ist erfüllt.
+
+**Was am Format bewiesen wurde** (der gefährlichste Punkt, F-S7-04): ein
+echtes Komplett-Backup erzeugt und entsiegelt — **3 264 502 Byte SQL,
+Endmarke vorhanden**, Kopfzeile in der neuen Schreibweise. Die Erkennung in
+`wiederherstellen.php` nimmt neue **und** alte Schreibweise an und weist
+eine fremde `mysqldump`-Kopfzeile weiterhin ab.
+
 ---
 
 ## 0. Die Neuzählung (AP0, 02.09.2026)
@@ -37,7 +89,7 @@ Die Zahlen der Vorlage stammten von Web 9.14.1/9.15.0. `main` steht auf
 
 | Bereich | jetzt | Vorlage |
 |---|---|---|
-| `server/` ohne `vendor/` | **643** | 272 |
+| `server/` ohne `vendor/` | **642** | 272 |
 | — davon in Kommentaren | 374 | — |
 | — davon in Code und sichtbarem Text | 269 | — |
 | `docs/Handbuch.md` | 78 | 48 |
@@ -47,6 +99,14 @@ Die Zahlen der Vorlage stammten von Web 9.14.1/9.15.0. `main` steht auf
 | übrige normative Doku | 15 | — |
 | `tools/` | 188 | nicht erfasst |
 | **Historie** (Changelog 236, Rahmenplan 47, Archiv 107, `konzepte/erledigt/` 344) | 734 | bleibt |
+
+> **Berichtigt am 02.09.2026 (AP7).** Hier stand zuerst **643**. Die Zahl
+> war aus dem Arbeitsbaum gezählt und enthielt `server/config.php` — eine
+> Datei, die nur auf dem Server liegt und für die lokale Prüfinstallation
+> erzeugt worden war. Gegen `origin/main` gezählt, also gegen das
+> Repositorium, sind es **642**. Der Unterschied ist eine Fundstelle und
+> ändert nichts an der Sache; eine Zahl, die sich nicht reproduzieren
+> lässt, ist trotzdem keine.
 
 **Die Verdopplung hat einen Namen: S2.** `komplett_lib.php` (40),
 `admin_komplettsicherung.php` (27), `wiederherstellen.php` (18),
@@ -100,15 +160,27 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
 
 ## 0b. Funde während der Umsetzung
 
-- **F-S7-01 (AP1) — „Sicherung" stand zweimal für *Absicherung*, nicht für
-  ein Backup.** `assets/crypto.js` („Das ist die wichtigste Sicherung dieses
-  Umbaus" — gemeint ist die Absicherung gegen einen stillen Vorgabewert) und
-  `einsatz_loeschen.php` („so greift die Sicherung auch, wenn Dialoge
-  blockiert sind"). Eine mechanische Ersetzung hätte beide zu Unsinn gemacht.
-  Behoben, indem dort **„Absicherung"** steht — das trennt die beiden
-  Bedeutungen dauerhaft. Repo-weit gegengesucht (`Sicherung gegen`,
-  `als Sicherung`, `Sicherung, dass`, `wichtigste Sicherung`, …): keine
-  weiteren Fälle.
+- **F-S7-01 (AP1 bis AP5) — „Sicherung" stand FÜNFMAL für *Absicherung*,
+  nicht für ein Backup.** Eine mechanische Ersetzung hätte jede dieser
+  Stellen zu Unsinn gemacht. Dort steht jetzt **„Absicherung"**; das trennt
+  die beiden Bedeutungen dauerhaft.
+
+  | Fund in | Stelle |
+  |---|---|
+  | `assets/crypto.js` | „Das ist die wichtigste Sicherung dieses Umbaus" — die Absicherung gegen einen stillen Vorgabewert |
+  | `einsatz_loeschen.php` | „so greift die Sicherung auch, wenn Dialoge blockiert sind" |
+  | `wiederherstellen.php` | „nähme genau diese Sicherung heraus" — der Knopf zwischen Anzeigen und Ausführen |
+  | `docs/Technik.md` | dieselbe Stelle, in der Beschreibung |
+  | `docs/Backup-Format.md` | „**Zwei Sicherungen**, und jede trägt für sich" — Manifest-Prüfsumme und Zusatzdaten |
+
+  > **Und hier stand einmal etwas Falsches.** Nach AP1 hieß es an dieser
+  > Stelle: „Repo-weit gegengesucht … keine weiteren Fälle." Das war nach
+  > zwei Funden geschrieben, mit einer Suche nach festen Wendungen
+  > (`Sicherung gegen`, `als Sicherung`, `wichtigste Sicherung`, …) — und
+  > drei der fünf Fälle passten auf keine davon. Gefunden wurden sie nicht
+  > von einem Muster, sondern beim **Lesen jeder geänderten Zeile**. Die
+  > Lehre gehört ins Protokoll, weil sie für die nächste Umbenennung gilt:
+  > Für die Bedeutung eines Wortes gibt es kein Suchmuster.
 - **F-S7-02 (AP1) — Der Platzhalter der Zusatzdaten hieß an zwei Stellen
   verschieden.** `crypto.js` schrieb `EDBAK4|<sicherungskennung>|…`,
   `docs/Backup-Format.md` `EDBAK4|<kennung>|…`; der Code selbst liest
