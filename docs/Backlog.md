@@ -729,11 +729,18 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Nachzählung hat keinen ungeschützten schreibenden Endpunkt gefunden.
     **Zu tun:** entweder denselben `ist_api_aufruf()`-Zweig in `csrf_check()`
     ergänzen, oder die Invariante im Kopf der Funktion festhalten, damit der
-    nächste Endpunkt sie nicht versehentlich bricht. Die ursprüngliche Fassung
-    dieses Punktes nannte „alle sechs schreibenden Endpunkte" — die Zahl
-    stammte von Web 7.2.0 und war schon beim Nachtragen falsch; seither sind
-    unter anderem `api/gpx_import.php` und `api/schneiden.php` dazugekommen.
-    Wer diesen Punkt anfasst, zählt vorher wieder nach.
+    nächste Endpunkt sie nicht versehentlich bricht.
+    **Und eine Lehre über die Sache hinaus.** Die ursprüngliche Fassung dieses
+    Punktes nannte „alle sechs schreibenden Endpunkte". Am 23.08.2026 war das
+    **richtig**: Damals lagen zehn Dateien unter `server/api/`, und genau sechs
+    prüften gegen `HTTP_X_CSRF` (`adminbackup_freigabe`, `backup_restore`,
+    `day`, `export_data`, `import_commit`, `kdf_upgrade`). In den zehn Tagen
+    bis zum Eintragen sind fünf dazugekommen — `backup_eintraege_restore`,
+    `backup_spuren`, `backup_spuren_restore`, `gpx_import`, `schneiden` —, und
+    alle fünf prüfen ebenfalls. Aus sechs wurden elf. **Eine Zahl in einem
+    Backlog-Punkt altert also, während der Punkt liegt**, und sie altert
+    lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
+    vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
 ## Erledigt
 
