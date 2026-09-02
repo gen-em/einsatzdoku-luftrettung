@@ -11,6 +11,85 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Uhr-Prüfstand] — 2026-09-02
+
+**Die Aufbauanleitung führte an zwei Stellen in die Irre.** Weder die
+Weboberfläche noch die Uhr-App sind geändert, deshalb trägt dieser Eintrag
+keine Versionsnummer — wie schon der Eintrag vom 30.08.2026.
+
+Anlass war die Frage, ob das Wissen um diese Umgebung so festgehalten ist, dass
+ein anderer sie nachbauen kann. Beim Nachlesen fielen zwei Fehler auf, die beide
+erst beim Nachbauen weh getan hätten, und einer, der schon weh getan hat.
+
+### Werkzeug — Die Beispieladresse hätte nicht funktioniert
+
+`--cut-dirs=1` stand fest im Skript. Das trägt nur, wenn `Devices/` und
+`Fonts/` in der **Wurzel** des Servers liegen. Die LIESMICH nannte als Beispiel
+`https://beispiel.invalid/ciq` — eine Adresse mit Pfad, und damit landet der
+Baum als `Devices/Devices/<gerät>/` eine Ebene zu tief. `monkeyc` findet dann
+kein einziges Gerät, ohne dass ein Aufruf gescheitert wäre. Das Skript rechnet
+den Wert jetzt aus der Adresse aus; nachgemessen gegen einen örtlichen
+Testserver mit beiden Adressformen, beide legen den Baum richtig ab.
+
+Dazu zwei Anforderungen, die vorher nirgends standen: Die Quelle braucht eine
+eingeschaltete **Verzeichnisauflistung** (ohne sie holt `wget -r` nichts, meldet
+aber nur „nicht abrufbar"), und `aufbau` holt nur die drei Zielgeräte. Für
+Stufe I und `geraeteklassen.py` braucht es den ganzen Bestand — dafür jetzt
+`CIQ_ZIELE=alle`, zum Stand 99 Geräte.
+
+### Werkzeug — Die Dateinamen der Ablagen sagen nichts
+
+Bisher stand hier, der Simulator lege die Einstellungen unter
+`SETTINGS/<GERAET>.SET` ab. Das ist falsch, und der Irrtum hat am 31.08.2026
+eine Messung gekostet: Es sollte festgestellt werden, ob eine geänderte
+Anwendungs-ID einen eigenen Speicher bekommt, und die Antwort schien an den
+Dateinamen ablesbar. Sie ist es nicht.
+
+Gemessen am 02.09.2026 auf der fenix6pro, jeweils mit vorher geleerten Ablagen:
+Zwei Kompilate aus **demselben** Quelltext (`zzprobe.prg`, `qq7.prg`) ergaben
+beide `V2.SET` und `V2.DAT` — den Namen eines viel früher geladenen `v2.prg`.
+Und ein Lauf von `fenix6pro.prg` legte `V2.SET` **und** `UUID_ALT.DAT` an: ein
+Lauf, zwei Namen, keiner davon der des Kompilats. Der Simulator vergibt die
+Namen offenbar aus einem Vorrat früher gesehener Dateien, und das Löschen der
+Dateien räumt diesen Vorrat nicht mit ab.
+
+Daraus folgt die Regel, die jetzt in der LIESMICH steht: Eine Ablage wird
+**ganz** geleert, nie einzeln — ein `rm` auf den erwarteten Namen trifft
+womöglich nichts und misst dann den Zustand des vorigen Laufs. Und die Frage
+nach der Anwendungs-ID bleibt offen; sie ist von außen nicht zu beantworten,
+sondern nur mit einem Zähler **innerhalb** der App.
+
+### Werkzeug — Dazugekommen
+
+`speicher-leeren` räumt `Application.Storage` und setzt die App damit auf
+„frisch installiert" zurück — den Zustand, den ein Gerät nach der Installation
+hat. Vorher gab es das nur für die Einstellungen, und jeder zweite Lauf maß
+deshalb den Zustand des ersten. Belegt: nach dem Räumen zeigte die Sync-Seite
+der fenix6pro „Nicht eingerichtet / Erst Server-Adresse setzen".
+
+Der Hinweis in `starten` nennt jetzt jede vorhandene `.SET`-Datei, statt eine
+nach dem Gerätenamen zu raten — sie hieß nur deshalb meist so, weil der
+Prüfstand seine Kompilate nach dem Gerät benennt.
+
+### Werkzeug — `git status` taugt nicht als Beleg für `uhr-bilder`
+
+Beim Gegenprüfen der S3-Änderung an den Vektorvorlagen meldete Git nach einem
+Lauf von `tools/uhr-bilder/erzeugen.sh` **17 geänderte PNG**. Kein einziger
+Bildpunkt war anders: Das Werkzeug schreibt in jede Datei einen `tIME`-Block
+mit der aktuellen Uhrzeit. Gemessen mit `compare -metric AE` gegen
+`git show HEAD:<pfad>` — 17-mal 0. Der Hinweis steht jetzt in der `LIESMICH.md`
+des Werkzeugs, samt dem Weg, wie man es richtig prüft.
+
+### Werkzeug — Und die Anleitung war nicht auffindbar
+
+`CLAUDE.md` Abschnitt 6 sagte „Es gibt keine automatisierten Tests. Geprüft
+wird durch Lesen und im Browser." — und erwähnte den Uhr-Prüfstand mit keinem
+Wort. Wer nur die Arbeitsanweisung liest, schließt daraus, am Uhr-Code sei
+nichts prüfbar; der Weg über `docs/Technik.md` §5.2b muss erst gefunden werden.
+Das war die eigentliche Lücke: Die Anleitung war vollständig, aber nicht
+auffindbar. Abschnitt 6 nennt den Prüfstand jetzt, samt dem Hinweis, dass die
+Adresse erfragt werden muss.
+
 ## [Web 12.8.0] — 2026-09-02
 
 **Die Android-App wird über die Anwendung selbst verteilt.** Halbes viertes
@@ -3276,7 +3355,7 @@ Probe am Produktivstand, bevor man sich auf ihn verlässt.
 ## [Uhr 1.10.3] — 2026-08-31
 
 **Die Bildmarke ist auf allen 99 Geräten gleich groß im Verhältnis zum
-Display.** Zweite Hälfte von Backlog Nr. 48; damit ist der Punkt erledigt.
+Display.** Zweite Hälfte von Backlog Nr. 61; damit ist der Punkt erledigt.
 
 ### Uhr — Zwei gleiche Displays, zwei Größen
 
@@ -3352,7 +3431,7 @@ Der Text sagt das jetzt so.
 
 **Das Launcher-Symbol liegt in allen neun Größen vor, die die 99 Geräte
 verlangen — und es kommt jetzt aus der Vektorvorlage.** Erste Hälfte von
-Backlog Nr. 48; die Staffelung der Bildmarke steht noch aus.
+Backlog Nr. 61; die Staffelung der Bildmarke steht noch aus.
 
 ### Uhr — 42 Warnungen, eine Ursache
 
@@ -3488,7 +3567,7 @@ meldet unverändert dieselben vier bekannten Fundstellen, keine davon in
 ## [Uhr 1.10.0] — 2026-08-31
 
 **Die Bildmarke auf dem Startbildschirm ist wählbar: luft- oder bodengebunden.**
-Backlog Nr. 47, entschieden zugunsten der App-Einstellung statt einer
+Backlog Nr. 60, entschieden zugunsten der App-Einstellung statt einer
 Server-Übertragung — die Uhr kennt die Kontoeinstellung nicht, und eine
 Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
 
@@ -3554,7 +3633,7 @@ Dazu **Stufe I über alle 99 Geräte** noch einmal, weil 1.10.0 jedem Kompilat
 ein zweites Bild mitgibt: 99 übersetzt, **0 Fehlschläge**, Größen zwischen
 168 652 B (`fr255`) und 179 996 B (Venu-Reihe). Die 42 Geräte mit genau einer
 Warnung tragen unverändert die Meldung zum hochskalierten Launcher-Symbol
-(Backlog Nr. 48) — **keine neue Warnung** durch die zweite Bildmarke.
+(Backlog Nr. 61) — **keine neue Warnung** durch die zweite Bildmarke.
 
 Dazu eine Probe auf den Fall, der bei einer **App-Aktualisierung** eintritt:
 Der Schlüssel `logoWahl` steht noch nicht im Einstellungsspeicher. Ein Kompilat,
@@ -3666,7 +3745,7 @@ nur die Venu 3s.
 `pair.php` bekommt neben dem Code einen Block `geraet`: Teilenummer,
 Displaymaße, Touch, Firmware, Connect-IQ- und App-Fassung. Feldliste und
 Begründungen stehen im JSON-Vertrag, Abschnitt 1a. **Der Server verwirft ihn
-derzeit stillschweigend** — die Auswertung ist Backlog Nr. 46.
+derzeit stillschweigend** — die Auswertung ist Backlog Nr. 59.
 
 Warum überhaupt selbst zählen: Für die Frage, welche Uhren künftig unterstützt
 werden sollen, gibt es keine brauchbare äußere Quelle. Garmin veröffentlicht
@@ -3683,7 +3762,7 @@ Geräteart. Eine Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Ort
 geräteweite Kennung; für eine Stückzahl-Statistik wird sie nicht gebraucht, und
 in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
 rechtfertigt. Die Zuordnung leistet die `device_id`. Aus demselben Grund hält
-Nr. 46 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
+Nr. 59 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
 ausgewertet wird.
 
 ### Uhr — Was geprüft ist

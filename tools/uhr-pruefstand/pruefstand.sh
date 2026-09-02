@@ -93,6 +93,21 @@ schluessel() {
         -in "$BASIS/entwickler.pem" -out "$SCHLUESSEL" -nocrypt 2>/dev/null
 }
 
+# Wieviele Pfadabschnitte hat die Adresse? wget legt den Baum unter dem
+# aktuellen Verzeichnis ab und zaehlt dabei JEDEN Abschnitt der Adresse mit;
+# --cut-dirs muss sie alle abschneiden, den Abschnitt "Devices" eingeschlossen.
+# Fest verdrahtete 1 traegt nur, wenn die Quelle in der Wurzel des Servers
+# liegt — bei https://beispiel.invalid/ciq landet der Baum sonst als
+# Devices/Devices/<geraet>/, und monkeyc findet kein Geraet. Gemessen am
+# 02.09.2026 gegen einen oertlichen Testserver, beide Formen.
+pfadtiefe() {
+    local p="${1#*://}"
+    p="${p#"${p%%/*}"}"          # Host weg
+    p="${p#/}"; p="${p%/}"
+    [ -z "$p" ] && { echo 0; return; }
+    printf '%s\n' "$p" | tr '/' '\n' | grep -c .
+}
+
 # Geraetedateien und Schriften gehoeren Garmin und werden vom SDK-Manager
 # ausgeliefert, der eine Anmeldung verlangt und nur als Fensteranwendung
 # existiert. In einer Wegwerf-Umgebung ist beides nicht zu haben — deshalb der
@@ -101,23 +116,42 @@ schluessel() {
 # die Dateien duerfen nicht oeffentlich weiterverbreitet werden.
 geraetedateien() {
     local fehlt=0
-    for g in $ZIEL_GERAETE; do
-        [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] || fehlt=1
-    done
+    if [ "$ZIEL_GERAETE" = "alle" ]; then
+        # Bei "alle" ist die Frage nicht, ob ein bestimmtes Geraet daliegt,
+        # sondern ob ueberhaupt etwas dasteht — die Liste kennt man ja erst
+        # danach.
+        [ -n "$(ls "$GARMIN_HOME/Devices" 2>/dev/null)" ] || fehlt=1
+    else
+        for g in $ZIEL_GERAETE; do
+            [ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] || fehlt=1
+        done
+    fi
     [ -d "$GARMIN_HOME/Fonts" ] || fehlt=1
     [ "$fehlt" -eq 0 ] && { melde "Geraetedateien und Schriften liegen bereits"; return; }
 
     [ -n "$GERAETE_URL" ] || fehler \
 "Geraetedateien fehlen und CIQ_GERAETE_URL ist nicht gesetzt.
-   Erwartet wird eine Adresse, unter der Devices/ und Fonts/ aus
-   ~/.Garmin/ConnectIQ abrufbar sind. Siehe LIESMICH.md, Abschnitt Quelle."
+   Erwartet wird eine Adresse mit Verzeichnisauflistung, unter der Devices/
+   und Fonts/ aus ~/.Garmin/ConnectIQ abrufbar sind. Die Adresse steht nicht
+   im Repositorium — sie kommt von der Projektleitung. Siehe LIESMICH.md,
+   Abschnitt Quelle."
 
-    melde "Geraetedateien holen ($ZIEL_GERAETE)"
+    local schnitt=$(( $(pfadtiefe "$GERAETE_URL") + 1 ))
     mkdir -p "$GARMIN_HOME/Devices" && cd "$GARMIN_HOME/Devices"
-    for g in $ZIEL_GERAETE; do
-        wget -q -r -np -nH --cut-dirs=1 -R "index.html*" "$GERAETE_URL/Devices/$g/" \
-            || fehler "Geraet $g nicht abrufbar"
-    done
+    if [ "$ZIEL_GERAETE" = "alle" ]; then
+        # Fuer Stufe I und geraeteklassen.py wird der GANZE Bestand gebraucht:
+        # Welche Geraete es gibt, steht nirgends sonst — die Liste ist das
+        # Verzeichnis selbst.
+        melde "Geraetedateien holen (alle)"
+        wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/" \
+            || fehler "Geraeteverzeichnis nicht abrufbar"
+    else
+        melde "Geraetedateien holen ($ZIEL_GERAETE)"
+        for g in $ZIEL_GERAETE; do
+            wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Devices/$g/" \
+                || fehler "Geraet $g nicht abrufbar"
+        done
+    fi
 
     # Die Schriften sind rund 1,2 GB. Welche Datei zu welchem Geraet gehoert,
     # steht nur im Geraeteabbild (.bin) — deshalb wird der ganze Bestand
@@ -125,7 +159,7 @@ geraetedateien() {
     # "Invalid Font Specified" und beendet die App beim ersten Zeichnen.
     melde "Schriften holen (rund 1,2 GB, dauert)"
     mkdir -p "$GARMIN_HOME/Fonts" && cd "$GARMIN_HOME/Fonts"
-    wget -q -r -np -nH --cut-dirs=1 -R "index.html*" "$GERAETE_URL/Fonts/" \
+    wget -q -r -np -nH --cut-dirs="$schnitt" -R "index.html*" "$GERAETE_URL/Fonts/" \
         || fehler "Schriften nicht abrufbar"
     cd - >/dev/null
 }
@@ -188,8 +222,13 @@ starten() {
     umgebung; simulator_starten
     # s. einstellungen_leeren(): eine stehende .SET-Datei ueberstimmt die
     # Vorgaben aus properties.xml — das sieht man dem Kompilat nicht an.
-    local set_datei="$EINSTELL_ABLAGE/$(printf '%s' "$geraet" | tr 'a-z' 'A-Z').SET"
-    [ -f "$set_datei" ] && melde "Hinweis: gespeicherte App-Einstellungen aktiv ($(basename "$set_datei")) — 'einstellungen-leeren' setzt sie zurueck"
+    # WELCHE Datei zu diesem Lauf gehoert, laesst sich NICHT am Namen ablesen
+    # (s. Kopf von einstellungen_leeren), deshalb wird jede gemeldet.
+    # Das || true ist noetig: Ohne .SET-Datei scheitert das ls, und unter
+    # "set -e -o pipefail" nimmt es den ganzen Aufruf mit.
+    local vorhanden
+    vorhanden=$(ls "$EINSTELL_ABLAGE"/*.SET 2>/dev/null | xargs -r -n1 basename | tr '\n' ' ' || true)
+    [ -n "$vorhanden" ] && melde "Hinweis: gespeicherte App-Einstellungen aktiv ($vorhanden) — 'einstellungen-leeren' setzt sie zurueck"
     # Eine vorherige Sitzung zuerst beenden: monkeydo laeuft weiter, solange die
     # App laeuft, und zwei gleichzeitige Verbindungen blockieren einander.
     pkill -f "monkeydo" 2>/dev/null || true
@@ -330,23 +369,44 @@ taste()   {
     xdotool key "${1:?Taste}"
 }
 
-# Der Simulator legt die App-Einstellungen unter
-# /tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET ab und fuellt sie
-# NUR EINMAL aus den Vorgaben der properties.xml. Wer eine Vorgabe aendert und
-# neu uebersetzt, sieht deshalb weiter den alten Wert — die Datei gewinnt.
+# Der Simulator fuehrt ZWEI Ablagen, die jeden Neustart und jedes neue Kompilat
+# ueberleben: die App-Einstellungen (SETTINGS/*.SET, das Gegenstueck zu den
+# Einstellungen in Connect IQ) und den Anwendungsspeicher (DATA/*.DAT samt
+# *.IDX, das Gegenstueck zu Application.Storage).
+#
+# Beide werden NUR EINMAL angelegt. Wer eine Vorgabe in properties.xml aendert
+# und neu uebersetzt, sieht deshalb weiter den alten Wert — die Datei gewinnt.
 # Am 31.08.2026 hat das zwei Laeufe lang dieselbe Bildmarke gezeigt, obwohl das
 # Kompilat die andere trug.
 #
-# Das VERZEICHNIS muss stehen bleiben. Fehlt es ganz, wirft
+# WONACH DIE DATEIEN HEISSEN, WEISS MAN NICHT. Nicht nach dem Geraet und nicht
+# verlaesslich nach dem Kompilat: Am 02.09.2026 ergaben zzprobe.prg und qq7.prg
+# — beide aus demselben Quelltext uebersetzt — jeweils V2.SET und V2.DAT, den
+# Namen eines frueher geladenen v2.prg; uuid_alt.prg dagegen legte UUID_ALT.SET
+# an. Der Name klebt offenbar an der App, nicht an der Datei, und ueberlebt das
+# Loeschen der Ablage. Praktische Folge: Wer eine Ablage leeren will, leert sie
+# GANZ, und liest aus einem Dateinamen NICHT ab, zu welcher App er gehoert.
+#
+# Das VERZEICHNIS muss stehen bleiben. Fehlt SETTINGS ganz, wirft
 # Properties.getValue() einen Fehler, den ein "catch (e)" NICHT faengt: Die App
 # stirbt beim ersten Zeichnen. Ein fehlender SCHLUESSEL dagegen wird sauber
 # gefangen — geprueft mit einer Probe auf "gibtsNicht".
 EINSTELL_ABLAGE=/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS
+SPEICHER_ABLAGE=/tmp/com.garmin.connectiq/GARMIN/APPS/DATA
 
 einstellungen_leeren() {
     mkdir -p "$EINSTELL_ABLAGE"
     rm -f "$EINSTELL_ABLAGE"/*.SET
     melde "App-Einstellungen geleert (Verzeichnis bleibt)"
+}
+
+# Setzt die App auf den Zustand "frisch installiert" zurueck: keine Kopplung,
+# kein Dienst, keine Warteschlange. Ohne das misst jeder zweite Lauf den
+# Zustand des ersten.
+speicher_leeren() {
+    mkdir -p "$SPEICHER_ABLAGE"
+    rm -f "$SPEICHER_ABLAGE"/*.DAT "$SPEICHER_ABLAGE"/*.IDX
+    melde "Anwendungsspeicher geleert (Verzeichnis bleibt)"
 }
 
 beenden() {
@@ -361,10 +421,15 @@ pruefen() {
     printf '%-28s %s\n' "SDK"        "$(monkeyc --version 2>/dev/null || { echo 'FEHLT'; mangel=1; })"
     printf '%-28s %s\n' "Schluessel" "$([ -f "$SCHLUESSEL" ] && echo vorhanden || { echo FEHLT; mangel=1; })"
     printf '%-28s %s\n' "Schriften"  "$(find "$GARMIN_HOME/Fonts" -name '*.cft' 2>/dev/null | wc -l) Dateien"
-    for g in $ZIEL_GERAETE; do
-        printf '%-28s %s\n' "Geraet $g" \
-            "$([ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] && echo vorhanden || { echo FEHLT; mangel=1; })"
-    done
+    if [ "$ZIEL_GERAETE" = "alle" ]; then
+        printf '%-28s %s\n' "Geraete" \
+            "$(find "$GARMIN_HOME/Devices" -name compiler.json 2>/dev/null | wc -l) mit compiler.json"
+    else
+        for g in $ZIEL_GERAETE; do
+            printf '%-28s %s\n' "Geraet $g" \
+                "$([ -f "$GARMIN_HOME/Devices/$g/compiler.json" ] && echo vorhanden || { echo FEHLT; mangel=1; })"
+        done
+    fi
     # grep -c meldet bei null Treffern Rueckgabewert 1 — das ist hier der
     # Gutfall, deshalb der Ausgleich mit true.
     printf '%-28s %s\n' "Simulatorbibliotheken" \
@@ -376,6 +441,9 @@ aufbau() { sdk_holen; bibliotheken; schluessel; geraetedateien; pruefen; }
 
 alle() {
     aufbau
+    # Bei CIQ_ZIELE=alle geht es um die Beschaffung, nicht ums Uebersetzen —
+    # dafuer ist "reihe" da, das eine Geraeteliste bekommt.
+    [ "$ZIEL_GERAETE" = "alle" ] && { melde "CIQ_ZIELE=alle: zum Uebersetzen 'reihe <liste>' benutzen"; return; }
     for g in $ZIEL_GERAETE; do bauen "$g" "$@"; done
 }
 
@@ -398,12 +466,16 @@ Befehle:
   einstellungen-leeren       gespeicherte App-Einstellungen des Simulators
                              verwerfen (sonst gewinnen sie ueber
                              properties.xml)
+  speicher-leeren            Application.Storage des Simulators verwerfen —
+                             die App ist danach "frisch installiert"
   beenden                    Simulator und Anzeige beenden
 
 Umgebungsvariablen:
   CIQ_SDK_VERSION   SDK-Fassung (Vorgabe 9.2.0)
   CIQ_GERAETE_URL   Quelle fuer Devices/ und Fonts/ — ohne sie kein Aufbau
-  CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s)
+  CIQ_ZIELE         Zielgeraete (Vorgabe: fenix6pro fr945 venu3s);
+                    "alle" holt beim Aufbau den ganzen Geraetebestand —
+                    noetig fuer reihe und geraeteklassen.py
   CIQ_WARTEZEIT     Sekunden je Geraet in bildreihe (Vorgabe 26)
   CIQ_BASIS         Ablage (Vorgabe ~/.ciq-pruefstand)
 ENDE
@@ -415,5 +487,7 @@ case "$befehl" in
         "$befehl" "$@" ;;
     einstellungen-leeren)
         einstellungen_leeren ;;
+    speicher-leeren)
+        speicher_leeren ;;
     *) hilfe; exit 1 ;;
 esac

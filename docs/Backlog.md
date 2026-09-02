@@ -12,6 +12,36 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
+**Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
+und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
+Uhr-Auslieferung nach R47 und das Zwischenpaket S2), beide für sich lückenlos
+ab 46; beim Zusammenführen hat diese Datei **keinen Konflikt gemeldet**, weil
+die Einträge an verschiedenen Stellen standen. Vier Nummern trugen danach zwei
+verschiedene Punkte, zwei davon gleichzeitig unter *Offen* und unter
+*Erledigt*.
+
+Umnummeriert wurde die **jüngere** der beiden Reihen, also die aus der
+Uhr-Auslieferung. Der Grund ist nüchtern: Ihre Verweise stehen ausschließlich
+in `docs/`, die der anderen Reihe auch in `server/` — und jede Änderung unter
+`server/` lädt sofort auf den Produktivserver. Jeder der vier Einträge sagt
+unten, welche Nummer er vorher trug, damit ein älterer Verweis auflösbar
+bleibt. **Für künftige Zusammenführungen:** Wer einen Zweig anlegt, der
+Backlog-Punkte vergibt, prüft vor dem Zusammenführen die Nummernvergabe —
+
+    grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d
+
+muss leer bleiben.
+
+**Zu den Nummern 63 bis 67 (Rahmenplan Fassung 16, 02.09.2026).** Sie sind
+für den S4-Zweig reserviert. Er hat seine fünf Punkte als 59 bis 63
+angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
+Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
+Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
+Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
+API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt und stehen
+unten; die Zuordnung aller offenen Punkte zu Paketen führt
+`docs/Rahmenplan.md`, Abschnitt 5.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -340,7 +370,7 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     dorthin führt, und die Koordinate jeder Phase liegen im Klartext. Der Ort
     ist damit nominell geschützt und faktisch rekonstruierbar.
 
-    Die Bestandsaufnahme steht in `docs/Konzept-V1-Ortsdaten.md`: was liegt wo,
+    Die Bestandsaufnahme steht in `docs/konzepte/Konzept-V1-Ortsdaten.md`: was liegt wo,
     was verrät was, was kosten die drei Wege. Kurzfassung — der Server rechnet
     mit den Koordinaten **nicht** (Strecke und Höhenmeter kommen von der Uhr,
     die Phasenzuordnung über Zeitstempel), aber die **Uhr hat keinen
@@ -577,40 +607,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
-46. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
-    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
-    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
-    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
-    Auflösung der Teilenummer auf Modell und Geräteart über die
-    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
-    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
-    Dateien ziehen), und eine Auswertung in der Weboberfläche.
-    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
-    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
-    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
-    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
-    sie eins.
-    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
-    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
-    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
-    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
-    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
-
-49. **Logodateien tragen teilweise wieder die alten Farbwerte.**
-    *Aufgenommen 31.08.2026, gefunden bei der S4-Konzeptarbeit (B-S4-01 im
-    S4-Konzept).* Der Commit „Update Logos" hat mit den neuen Vektorvorlagen
-    alte Werte zurückgebracht: `gen-em_logo_helicopter.svg` führt `#587abc`,
-    `#e3322b`, `#f7941d` und Korpus `#1d0e0a` (statt `#4280E5`, `#D63338`,
-    `#FF8F1F`, `#1A0500`); die weiße Hubschrauber-Fassung trägt die alten
-    Farbelemente, `gen-em_logo_nef.svg` den alten Korpuswert. Nur
-    `gen-em_logo_nef_weiss.svg` stimmt. `docs/Design.md` 2.5 („B1 erledigt,
-    nachgemessen") trifft auf diesen Stand nicht mehr zu; PNG-Ableitungen,
-    Favicons und Uhr-Bilder sind nicht nachgemessen.
-    **Entschieden am 31.08.2026: bewusst liegen lassen** — keine Behebung
-    vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
-    Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
-    Ableitungen nachmessen.
-
 
 57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
     *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
@@ -642,6 +638,47 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
     kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
     von Fehlern statt eines Falls.
+
+
+59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 46. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
+    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
+    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
+    Auflösung der Teilenummer auf Modell und Geräteart über die
+    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
+    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
+    Dateien ziehen), und eine Auswertung in der Weboberfläche.
+    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
+    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
+    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
+    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
+    sie eins.
+    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
+    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
+    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
+    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
+    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
+
+62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    *Aufgenommen 31.08.2026, gefunden bei der S4-Konzeptarbeit (B-S4-01 im
+    S4-Konzept).* Der Commit „Update Logos" hat mit den neuen Vektorvorlagen
+    alte Werte zurückgebracht: `gen-em_logo_helicopter.svg` führt `#587abc`,
+    `#e3322b`, `#f7941d` und Korpus `#1d0e0a` (statt `#4280E5`, `#D63338`,
+    `#FF8F1F`, `#1A0500`); die weiße Hubschrauber-Fassung trägt die alten
+    Farbelemente, `gen-em_logo_nef.svg` den alten Korpuswert. Nur
+    `gen-em_logo_nef_weiss.svg` stimmt. `docs/Design.md` 2.5 („B1 erledigt,
+    nachgemessen") trifft auf diesen Stand nicht mehr zu; PNG-Ableitungen,
+    Favicons und Uhr-Bilder sind nicht nachgemessen.
+    **Entschieden am 31.08.2026: bewusst liegen lassen** — keine Behebung
+    vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
+    Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
+    Ableitungen nachmessen.
 
 63. **Sperrvermerke des Schnitts überstehen die Konto-Sicherung nicht.**
     *Aufgenommen 02.09.2026 als B-S4-10 (S4/A2).*
@@ -742,6 +779,159 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     lautlos: Nichts an ihr sieht falsch aus. Wer diesen Punkt anfasst, zählt
     vorher wieder nach — die Zählung von heute ist morgen genauso alt.
 
+68. **Vorschlagsfelder über `<datalist>` zeigen auf dem Handy nichts an.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers
+    (Rahmenplan Fassung 16).* Die Besatzungsfelder des Diensttags
+    (`index.php`, `renderCrewFields()`) bieten die hinterlegten
+    Crewmitglieder über ein `<datalist>` an, und dasselbe Muster tragen
+    weitere Felder — beobachtet ist der Ausfall an den Crew-Feldern **und**
+    an der Zielklinik. Mobile Browser zeigen `<datalist>`-Vorschläge nicht
+    oder nur nach Tippen und ohne brauchbare Filterung; die Suche in den
+    Stammdaten fällt dort stillschweigend aus, ohne Fehler und ohne Hinweis.
+    **Zu tun:** zuerst **alle** Vorschlagsfelder erheben (`grep -l datalist
+    server/` nennt `index.php`, `einsatz_form.php`, `mission_fields.php`,
+    `ui.php`, `assets/ortsfeld.js`), jedes einzeln am Handy prüfen (Chromium
+    mobil und WebKit), dann auf einen Baustein umstellen, der mobil trägt.
+    Das Ortsfeld sucht seit S3 beim Tippen mit eigener Trefferliste und ist
+    das Muster; ob es selbst noch ein `<datalist>` benutzt, ist Teil der
+    Erhebung. Ein neuer Baustein braucht Mockup und Freigabe (`Design.md` 1).
+    Zuordnung: Backlog-Runde.
+
+69. **Kurzname je Rettungsmittel als Stammdatenfeld.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer im Rahmenplan-Abschnitt
+    P4 geführt.* Leiste, Kacheln und Plaketten zeigen den vollen Namen des
+    Rettungsmittels; auf schmalen Breiten bricht er um oder wird
+    abgeschnitten. Ein Kurzname (etwa „RTH 1", „NEF 2") als eigenes
+    Stammdatenfeld würde an diesen drei Stellen verwendet, der volle Name
+    bleibt in Formularen und Exporten. Schemaänderung, Feldkatalog, Export,
+    Import und Sicherung ziehen nach — deshalb ein eigener Punkt und kein
+    Nebenklapp. Zuordnung: Backlog-Runde.
+
+70. **„Auf der Karte setzen" für Standorte in den Einstellungen.**
+    *Zulieferung aus P3; bis Fassung 16 ohne Nummer.* Die Position eines
+    Standorts wird über die Ortssuche oder von Hand als Koordinate erfasst;
+    das Ortsfeld der Einsätze kann seit P3 die Position auch auf der Karte
+    wählen. Dieselbe Kartenwahl fehlt in den Stammdaten der Standorte.
+    **Zu tun:** den vorhandenen Baustein des Ortsfelds dort einbinden, kein
+    neuer Baustein. Zuordnung: Backlog-Runde.
+
+71. **Regionen mit Unteradmins — verworfen, festgehalten.**
+    *Aus dem Dienstbetriebs-Gespräch vom 30.08.2026 (R39); Nummer vergeben
+    mit Rahmenplan Fassung 16, wie R39 es vorsah.* Das Alternativmodell zu
+    den zentralen Stammdaten: Regionen hängen am zentralen Standort und
+    vererben auf alle Untertypen; `user_regions` n:m, weil NotärztInnen in
+    mehreren Bereichen arbeiten; Unteradmin als Zusatzbefugnis in eigener
+    Tabelle, ausdrücklich ohne Kontoeinblick; null Regionen bedeutet das
+    heutige Verhalten. **Verworfen**, weil im Dienstbetrieb jede NutzerIn
+    ihre Stammdaten selbst pflegt und die zentralen Stammdaten in P5
+    entfallen (R39). Wieder aufzunehmen, falls Wachen oder Verbände als
+    organisierte Träger auftreten. Zuordnung: nach v1.0.
+
+72. **Die Richtungspfeile auf der Spur zeigen teilweise in die falsche
+    Richtung.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers mit
+    Bildschirmfoto (Rahmenplan Fassung 16).* Auf einer Spur, die von Nordwest
+    nach Südost läuft, zeigt der Pfeil senkrecht nach oben. **Wahrscheinliche
+    Ursache, am Code gelesen und nicht im Browser nachgestellt:**
+    `pfeilIcon()` in `assets/geo.js` dreht den Pfeil mit
+    `style="transform:rotate(…deg)"` auf einem `<span class="geo-pfeil">`;
+    die Regel `.geo-pfeil` in `style.css` setzt nur die Farbe, keine
+    Anzeigeart, und die SVG darin ist ebenfalls inline. `transform` wirkt
+    nach CSS-Regel **nicht** auf nicht ersetzte Inline-Elemente — die
+    Drehung wird verworfen, jeder Pfeil steht ungedreht und zeigt nach
+    Norden. „Teilweise falsch" passt dazu: Auf Abschnitten Richtung Norden
+    stimmt der Pfeil zufällig. Die Winkelrechnung selbst
+    (`atan2` plus 90 Grad) ist richtig. **Zu tun:** `.geo-pfeil` auf
+    `display:inline-block` (oder `block`) setzen, dann im Browser über
+    mehrere Zoomstufen und Laufrichtungen prüfen; falls der Pfeil danach
+    immer noch abweicht, die Rechnung gegen die Projektion nachmessen.
+    Prüfmittel: `tools/screenshots/` findet das nicht (misst keinen
+    Winkel), eine Sichtprüfung ist Pflicht. Zuordnung: Backlog-Runde.
+
+73. **Die Filterknöpfe der NutzerInnen-Liste brechen in zwei Zeilen.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* Auf `admin_users.php` stehen die Filter „Alle,
+    Admins, Sicherung überfällig, Nie gesichert, Ohne Gerät" rechts neben
+    dem Suchfeld; bei üblicher Schreibtischbreite fällt „Ohne Gerät" allein
+    in eine zweite Zeile. **Zu tun:** Anordnung im S8-Konzept festlegen —
+    Suchfeld über den Filtern, oder Filter in einer Zeile mit Umbruchregel —
+    und am Baustein umsetzen, nicht an der Seite; `tools/screenshots/` in
+    allen acht Breiten. Zuordnung: S8.
+
+74. **Bedienhöhe am Schreibtisch: müssen es 44 px sein?**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* `CLAUDE.md` 5 und
+    `Design.md` verlangen eine Höhe für Bedienelemente, mobil wie am
+    Schreibtisch. Am Schreibtisch wirken die Knöpfe hoch. **Zu klären im
+    S8-Konzept:** eine zweite Stufe für Zeigergeräte (etwa 36 px, nur über
+    `pointer:fine`) mit Begründung, Kontrastprüfung und Nachtrag in
+    `Design.md` — oder es bleibt bei einer Höhe. Berührt die Messung
+    „Knöpfe ≠ 44 px" in `tools/screenshots/`, die dann zwei Sollwerte
+    kennen muss. Zuordnung: S8 (Entscheidung).
+
+75. **Die Unterpunkte des Admin-Menüs sind fett und nicht einklappbar.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* S3 (Block F) hatte den
+    Fettdruck der Seitenleiste auf den ausgewählten Punkt begrenzt; in der
+    Administration (`ui_leiste_einstellungen()`, `.leiste-liste`) erscheinen
+    die Unterpunkte weiter fett, und die Überschriften der Gruppen heben
+    sich nicht ab. **Zu tun:** nachsehen, ob der Admin-Teil von S3
+    ausgenommen blieb oder eine eigene Regel trägt; Fettdruck nur für den
+    aktiven Punkt; Gruppen ein- und ausklappbar, Zustand je Sitzung merken.
+    Gehört zur Menüstruktur, die S8 ohnehin neu ordnet. Zuordnung: S8.
+
+76. **Der Demo-Reset läuft alle 30 Minuten, auch wenn sich nichts geändert
+    hat.**
+    *Aufgenommen 02.09.2026 als Frage des Auftraggebers (Rahmenplan Fassung
+    16).* `demo_reset_wenn_faellig()` in `demo_lib.php` setzt zeitgesteuert
+    zurück — 30 Minuten relativ zur letzten Aktivität, angestoßen von der
+    nächsten Anfrage —, ohne zu prüfen, ob eine Besucherin etwas verändert
+    hat; `demo_zuruecksetzen()` spielt die Fixture neu ein. **Die Frage:**
+    Ist das ein Aufwand, den es sich zu vermeiden lohnt, oder kann es
+    durchlaufen? **Zu tun:** zuerst messen — Laufzeit und Last eines Resets
+    auf der Produktivinstallation (P-12 hat die Laufzeit einmal geprüft,
+    die Zahl ist nicht festgehalten) —, dann entscheiden: durchlaufen
+    lassen, oder eine Änderungsmarke (Zähler im Schreibweg des Demo-Kontos,
+    Reset nur bei gesetzter Marke). Zuordnung: Backlog-Runde (Messung), die
+    Entscheidung danach.
+
+77. **Die Wartungsseite `update.php` in Unterseiten aufteilen.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* Die Seite trägt heute
+    die Migrationsliste, den Job-Einstieg mit Cron-Zeile und Token-Adresse,
+    die Speichergrenze der Sicherungen und weitere Betriebsangaben auf einer
+    Fläche. **Zu tun:** Schnitt im S8-Konzept (etwa Serverbetrieb und Jobs,
+    Sicherung, Migrationen), dabei entscheiden, ob die Migrationsliste
+    sichtbar bleiben muss — das hängt am Update-Weg ab v1.0 (R60). Handbuch
+    und Technik ziehen nach, die alte Adresse bleibt als Weiterleitung, bis
+    P6 neu aufsetzt. Zuordnung: S8.
+
+78. **Der Wertekasten zeigt Cron-Adresse und Token in der Schriftgröße des
+    Kopplungscodes.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung mit Bildschirmfoto
+    (Rahmenplan Fassung 16).* `.codeblock-wert` (`style.css`) setzt
+    `--groesse-5`, 600 und gesperrt — gedacht für sechs Zeichen
+    Kopplungscode, benutzt aber auch für die Cron-Zeile und die Token-Adresse
+    auf der Wartungsseite, den Setz-Link auf der Kontoseite und die
+    Serverschlüssel-Zeile der Sicherungsziele. Lange Werte brechen in dieser
+    Größe über mehrere Zeilen und wirken unpassend. **Zu tun:** eine zweite
+    Stufe des Bausteins für lange Werte (`--schrift-fest` in `--groesse-2`
+    oder `-3`, ohne Sperrung), Herkunft in `Design.md` nachtragen; der
+    Kopplungscode behält die große Stufe. Darf als Kleinstkorrektur vorab in
+    der Backlog-Runde laufen. Zuordnung: S8.
+
+79. **Sicherungsoptionen: Begriffe und Optionen sind gewachsen wie
+    Wildwuchs.**
+    *Aufgenommen 02.09.2026 (Rahmenplan Fassung 16).* P3 hat Sicherungen je
+    Konto und Sicherungsregeln auf die Kontoseite gelegt, S2 hat
+    Speichergrenze, Warnschwellen, Aufbewahrung, Sicherungsziele, Zeitplan
+    und Komplettsicherung dazugebaut, S7 stellt den Begriff um. Was wo
+    einstellbar ist und wie es heißt, ist nicht mehr aus einem Guss.
+    **Zu tun:** Bestandsaufnahme aller Sicherungsoptionen mit Fundort,
+    Begriff und Zielgruppe; dann eine Ordnung (je Konto gegen je
+    Installation, NutzerIn gegen Admin gegen Betreiberin) und ein
+    Begriffssatz; Handbuch 6 und `Backup-Format.md` nachziehen. Zuordnung:
+    S8, als Kern der Sichtung.
+
+---
+
 ## Erledigt
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
@@ -785,7 +975,7 @@ zutreffen.
     Installation in einem Aufruf auf. Wer eine Prüfung für unmöglich hält,
     sehe zuerst in `tools/` nach.
     **Erledigt mit S3:** Beide Punkte stehen als Abschnitt 1.13 im
-    Konzept `docs/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
+    Konzept `docs/konzepte/erledigt/Konzept-S3-Oberflaechen-Nacharbeit.md` — die Umsetzung hat
     sie damit als erledigt vorgefunden und nicht ein zweites Mal
     beschlossen.
 
@@ -1035,7 +1225,7 @@ zutreffen.
     Die Durchsicht des gesamten Importpfads (32 Ausgabestellen mit
     `innerHTML` o. ä. in 23 eigenen Skriptdateien und allen Seiten unter
     `server/`) ergab **keinen weiteren Fund**; die Liste steht in
-    `docs/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
+    `docs/konzepte/erledigt/Pruefung-Sofortpaket-22.md`. Dabei fiel allerdings `edk_neu` auf —
     das Vormerkfach des Passwortwechsels trug den neuen Datenschlüssel über
     das Abmelden hinaus, was Punkt V-10 des Prüfdokuments P0 verbietet. Auch
     das ist mit dieser Version behoben (eine Zeile in
@@ -1327,23 +1517,6 @@ zutreffen.
     Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
     eigener Diensttag, und gemeldet wurde nichts.
 
-47. **Die Uhr kennt die Logo-Wahl nicht.**
-    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
-    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
-    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
-    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
-    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
-    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
-    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
-    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
-    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
-    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
-    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
-    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
-    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
-    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
-    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
-    Displays: Nr. 48.
 
 11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
     kann.**
@@ -1366,7 +1539,55 @@ zutreffen.
     Venu 3s die beiden mit geänderter Blockhöhe); Rückstand über ein
     Probekompilat mit fest verdrahtetem `backlogCount() == 3`.
 
-48. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+
+14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
+    abfragen und trennen.**
+    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
+    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
+    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
+    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
+    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
+    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
+    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
+    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
+    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
+    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
+    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
+    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
+    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
+    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
+    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
+    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
+    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
+    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
+    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
+    `ingest.php`/`einstellungen.php`.
+
+60. **Die Uhr kennt die Logo-Wahl nicht.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 47. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
+    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
+    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
+    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
+    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
+    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
+    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
+    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
+    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
+    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
+    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
+    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
+    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
+    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
+    Displays: Nr. 48.
+
+61. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 48. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
     *Erledigt mit Uhr 1.10.2 (Symbol) und 1.10.3 (Bildmarke).*
     **Das Launcher-Symbol** lag in zwei von neun verlangten Größen vor (35, 36,
     40, 54, 56, 60, 61, 65, 70 px). Die Größe ist keine Wahl, sondern eine
@@ -1393,26 +1614,3 @@ zutreffen.
     *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
     im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
     knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
-
-14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
-    abfragen und trennen.**
-    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
-    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
-    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
-    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
-    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
-    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
-    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
-    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
-    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
-    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
-    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
-    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
-    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
-    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
-    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
-    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
-    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
-    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
-    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
-    `ingest.php`/`einstellungen.php`.

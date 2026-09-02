@@ -6,7 +6,7 @@ Menschen ohne Garmin: Das **Handy** zeichnet die GPS-Spur über den ganzen
 Dienst auf und sendet sie, die **Wear-OS-Uhr** ist Fernbedienung für die
 Phasenknöpfe.
 
-Grundlage ist `docs/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
+Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
 > **Stand: Arbeitspaket C2 — die Blöcke B und C sind damit fertig.** Das

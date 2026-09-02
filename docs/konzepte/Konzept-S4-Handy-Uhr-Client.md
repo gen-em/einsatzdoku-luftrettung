@@ -16,6 +16,45 @@ als eigene Datei daneben.
 
 ---
 
+## Statusblock (K5, R62)
+
+**Stand: 02.09.2026** · Zweig `claude/s4-android-wear-blocks-b-c-x53l96` ·
+Web **12.8.0** · Android **0.7.7** · Fahrplan **Schritt 1 „S4 Merge"**
+
+**In Arbeit:** der Merge nach `main` — `main` ist geholt, die Konflikte sind
+gelöst, Konzept und Prüfdokument liegen seit diesem Paket in
+`docs/konzepte/` (R62). Was noch fehlt, ist die Freigabe zum Push auf `main`;
+er deployt sofort, und danach muss eine Administratorin **`update.php`**
+aufrufen (Migration `2026_09_02_schnitte`).
+
+**Erledigt:**
+
+| Block | Pakete | Fassung |
+|---|---|---|
+| **B — Handy-App** | B1, B2, B3, B4, B5 | Android 0.1.0–0.5.0 |
+| **C — Wear-OS-App** | C1, C2 | Android 0.6.0–0.7.0 |
+| **A — Browser und Server** | A2a, A2b, A3, A1a | Web 12.5.0–12.8.0 |
+| **D — Abschluss** | D1, D2 | Android 0.7.6 |
+| Nacharbeit | 0.7.1–0.7.5, R58 (0.7.7) | |
+
+**Wo es hakt — drei Dinge, die diese Instanz nicht abschließen kann:**
+
+1. **Der Gerätetest fehlt vollständig.** Es gab kein Telefon und keine Uhr.
+   Was ein Emulator davon abdecken konnte, steht im Prüfdokument 1.1a; der
+   Rest ist die Prüfliste dort.
+2. **Der Data Layer ist auf Hardware ungeprüft.** Zwischen zwei Emulatoren
+   ist er nicht prüfbar — die Wear-OS-Companion-App des Telefons ist in
+   diesem Container nachweislich nicht zu beschaffen (Prüfdokument 1.1a).
+3. **Die halbe A1 liegt.** QR-Kopplungscode und Vertragsnachtrag hängen an
+   S5 und R42; sie sind **Schritt 6**, nicht Schritt 1.
+
+**Nicht in diesem Schritt** (Fahrplan Schritt 6 „S4 Rest"): Kopplungsmodul
+auf Vertragsabschnitt 1a, Adress-QR, Gerätetest S24, Android 1.0.0,
+Changelog-Präfix `Android`, Umsetzung von E-S4-76 (R57). Backlog **63**
+gehört ebenfalls dorthin.
+
+---
+
 ## 1. Ziel
 
 NotärztInnen ohne Garmin-Uhr zeichnen ihre GPS-Spur mit dem **Handy** auf und
@@ -814,7 +853,6 @@ mitziehen.
 **Entschieden am 31.08.2026: bewusst liegen lassen.** Keine Behebung
 vorab; B1 übernimmt den dann aktuellen Stand der Dateien. Damit der Fund
 nicht verschwindet, ist er als **Backlog Nr. 62** eingetragen.
-
 ### B-S4-02 — Bedienhöhe: 44 px der Weboberfläche gegen 48 dp der Android-Vorgabe
 
 Gefunden beim Bau der Handy-Bausteine (B1). `CLAUDE.md` 5 sagt: „Eine Höhe
@@ -1183,12 +1221,11 @@ prüft zusätzlich, ob der Bestand überhaupt Krümmung hat — etwa den Anteil 
 Punkte, die mehr als die Toleranz von der Verbindungslinie ihrer Nachbarn
 abweichen. Ist er nahe null, ist die Spur synthetisch, und die Erwartung
 meldet das statt eines Fehlschlags.
-
 ## 11. Statuspflege
 
 Nach jedem Paket: dieses Konzept fortschreiben (erledigt, Probleme,
 Entscheidungen, Prüfstand). Nach Phasenende: Prüfdokument
-(`docs/Pruefdokument-S4-Handy-Uhr-Client.md`), Statuszeile im Rahmenplan
+(`docs/konzepte/Pruefdokument-S4-Handy-Uhr-Client.md`), Statuszeile im Rahmenplan
 (Abschnitt 6), Changelog-Einträge mit den Präfixen `Web` (Block A) und
 `Android` (Blöcke B/C). Die Entscheidung zu F-S4-A bis F-S4-C wird vor dem
 jeweils betroffenen Paket eingeholt und hier als E-Eintrag nachgetragen
@@ -2833,7 +2870,7 @@ unverändert.
 | `docs/Geraete-Eingabe.md` | **Abschnitt 7** — Wear OS, ausdrücklich als „blind gebaut, am Gerät nachzumessen" gekennzeichnet, mit Prüftabelle |
 | `docs/Backlog.md` | Nr. **60** (44 dp gegen 48 dp), **61** (14 Fassungshinweise = eine Entscheidung), **62** (Garmin-Uhrcode in der Wortliste) |
 | `tools/wortliste/` | Bereich **d**, Art `xml`, zwei Ausnahmen, LIESMICH — eigenes Paket, siehe unten |
-| `docs/Pruefdokument-S4-Handy-Uhr-Client.md` | neu, nach K9 |
+| `docs/konzepte/Pruefdokument-S4-Handy-Uhr-Client.md` | neu, nach K9 |
 
 #### Die AGPL-Frage, ausgeschrieben
 
