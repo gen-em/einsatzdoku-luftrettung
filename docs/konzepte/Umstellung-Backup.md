@@ -13,13 +13,15 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | **erledigt** |
 | AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | **erledigt** — `server/` ist durch |
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | **erledigt** |
+| AP5a | Backlog Nr. 89 beheben (eigener Commit, eigene Korrekturstufe) | **erledigt** |
 | AP6 | `tools/` | offen |
 | AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
 | AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
 
-**Wo es hakt:** nichts an der Umstellung. Ein **vorbestehender** Fehler
-ist beim Prüfen aufgefallen und als Backlog Nr. 89 aufgenommen (F-S7-06):
-Der Job „Komplett-Backup der Installation" läuft seit Web 12.2.0 nie. **Nicht prüfbar in dieser Umgebung:** nichts —
+**Wo es hakt:** nichts. Ein **vorbestehender** Fehler ist beim Prüfen
+aufgefallen (F-S7-06, Backlog Nr. 89: der Job „Komplett-Backup der
+Installation" lief seit Web 12.2.0 nie) und auf Nachfrage des Auftraggebers
+in einem eigenen Commit behoben. **Nicht prüfbar in dieser Umgebung:** nichts —
 entgegen der Erwartung steht eine vollständige lokale Installation
 (MariaDB nachinstalliert, Referenzdatensatz über die regulären Wege
 eingespielt: 526 Ingest-Anfragen, 16 Diensttage, 87 Einsätze, 0 Fehler).

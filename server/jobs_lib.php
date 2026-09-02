@@ -1168,9 +1168,30 @@ function job_versand_rueckstand(PDO $pdo, array $zustand): ?int
  */
 const KOMP_LAUF_MAX_S = 120.0;
 
-function job_komplett(PDO $pdo, array $zustand, callable $zeitLinks, float $reserve = KOMP_RESERVE_S): array
+/* DER VORGABEWERT IST `null` UND NICHT `KOMP_RESERVE_S` — das ist der Kern
+ * eines Fehlers, der von Web 12.2.0 bis 12.9.2 unbemerkt geblieben ist
+ * (Backlog Nr. 89, gefunden in S7).
+ *
+ * `KOMP_RESERVE_S` steht in `komplett_lib.php`, und diese Datei wird erst
+ * IM RUMPF geladen — so, wie es diese Datei mit allen schweren
+ * Abhaengigkeiten haelt (`adminbackup_lib`, `spur_lib`, `sicherungsziel_lib`),
+ * damit eine gewoehnliche Anfrage sie nicht mitschleppt. PHP wertet
+ * Vorgabewerte aber BEIM AUFRUF aus, also vor der ersten Zeile des Rumpfs.
+ * Ein Aufruf ohne viertes Argument — und genau so ruft `jobs.php` — endete
+ * deshalb immer in `Error: Undefined constant "KOMP_RESERVE_S"`.
+ *
+ * WAS DAS GEKOSTET HAT: Das geplante Komplett-Backup lief nie. Der Plan
+ * ("taeglich", "woechentlich", "monatlich") auf `admin_komplettsicherung.php`
+ * war seit S2/AP8 ohne Wirkung; von Hand angestossen lief der Lauf, weil
+ * `komp_schub()` denselben Vorgabewert erst nach dem Laden benutzt. Die
+ * Wartungsseite zeigte den Job als "Fehler" — und niemand hat hingesehen.
+ *
+ * DIE FEHLERKLASSE ist "Vorgabewert aus einer erst im Rumpf geladenen
+ * Datei". Sie ist in `server/` nachgezaehlt: genau diese eine Stelle. */
+function job_komplett(PDO $pdo, array $zustand, callable $zeitLinks, ?float $reserve = null): array
 {
     require_once __DIR__ . '/komplett_lib.php';
+    $reserve ??= KOMP_RESERVE_S;
 
     /* Die eigene Frist: das Kleinere aus Restbudget und KOMP_LAUF_MAX_S. */
     $start = microtime(true);

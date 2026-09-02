@@ -1139,38 +1139,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
     (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
 
-89. **Der Job „Komplett-Backup der Installation" bricht ab, bevor er
-    anfängt — seit Web 12.2.0.**
-    *Aufgenommen 02.09.2026, gefunden in S7 (F-S7-06); der Fehler selbst ist
-    älter und von der Begriffsumstellung unberührt.* `job_komplett()`
-    (`jobs_lib.php`) trägt `float $reserve = KOMP_RESERVE_S` als
-    **Vorgabewert eines Parameters**. Die Konstante steht in
-    `komplett_lib.php`, und diese Datei wird erst **im Rumpf** der Funktion
-    geladen (`require_once`, Zeile 1173). PHP wertet Vorgabewerte beim
-    **Aufruf** aus, also vor der ersten Zeile des Rumpfs — der Aufruf ohne
-    viertes Argument endet deshalb immer in
-    `Error: Undefined constant "KOMP_RESERVE_S"`. Genau so ruft `jobs.php`
-    ihn auf.
-
-    **Wirkung:** Das Komplett-Backup läuft über den Wartungsjob nie. Der
-    Plan („täglich", „wöchentlich", „monatlich") auf
-    `admin_komplettsicherung.php` hat damit seit S2/AP8 keine Wirkung; die
-    Wartungsseite zeigt den Job als „Fehler". Von Hand angestoßen läuft er,
-    weil `komp_schub()` denselben Vorgabewert erst nach dem Laden benutzt.
-    **Gemessen am 02.09.2026** auf der lokalen Installation: Aufruf ohne
-    viertes Argument → `Undefined constant`; mit ausdrücklichem Wert →
-    Lauf ohne Fehler, 3 264 502 Byte SQL, Endmarke vorhanden.
-
-    **Zu tun:** `require_once __DIR__ . '/komplett_lib.php'` an den
-    Dateikopf von `jobs_lib.php` ziehen **oder** den Vorgabewert auf `0.0`
-    setzen und im Rumpf nach dem Laden auf `KOMP_RESERVE_S` heben. Der
-    zweite Weg ist der kleinere Eingriff; der erste beseitigt die
-    Fehlerklasse. Dasselbe Muster gegenprüfen: jede Funktion in
-    `jobs_lib.php`, deren Vorgabewert aus einer erst im Rumpf geladenen
-    Datei stammt. Danach den Job auf der Wartungsseite grün sehen.
-    Zuordnung: Backlog-Runde — vorgezogen, weil ein geplantes Backup,
-    das nie läuft, schlechter ist als keine geplante.
-
 ---
 
 ## Erledigt
@@ -1178,6 +1146,37 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.
+
+89. **Der Job „Komplett-Backup der Installation" brach ab, bevor er
+    anfing — von Web 12.2.0 bis 12.9.2.**
+    *Aufgenommen und erledigt am 02.09.2026 (gefunden in S7 als F-S7-06; der
+    Fehler selbst war von der Begriffsumstellung unberührt).*
+    `job_komplett()` (`jobs_lib.php`) trug `float $reserve = KOMP_RESERVE_S`
+    als **Vorgabewert eines Parameters**. Die Konstante steht in
+    `komplett_lib.php`, und diese Datei wird erst **im Rumpf** geladen — so,
+    wie `jobs_lib.php` es mit allen schweren Abhängigkeiten hält, damit eine
+    gewöhnliche Anfrage sie nicht mitschleppt. PHP wertet Vorgabewerte aber
+    **beim Aufruf** aus, also vor der ersten Zeile des Rumpfs. Der Aufruf
+    ohne viertes Argument — und genau so ruft `jobs.php` — endete deshalb
+    immer in `Error: Undefined constant "KOMP_RESERVE_S"`.
+
+    **Was das gekostet hat:** Das geplante Komplett-Backup lief nie. Der Plan
+    („täglich", „wöchentlich", „monatlich") auf
+    `admin_komplettsicherung.php` war seit S2/AP8 ohne Wirkung. Von Hand
+    angestoßen lief der Lauf, weil `komp_schub()` denselben Vorgabewert erst
+    nach dem Laden benutzt — deshalb ist es niemandem aufgefallen. Die
+    Wartungsseite zeigte den Job als „Fehler"; auch das hat niemand gelesen.
+
+    **Behoben:** Vorgabewert `?float $reserve = null`, Auflösung auf
+    `KOMP_RESERVE_S` im Rumpf **nach** dem `require_once`. Das erhält die
+    Bauweise der Datei (späte Ladung) und beseitigt die Ursache.
+    **Gemessen am 02.09.2026:** vorher Aufruf ohne viertes Argument →
+    `Undefined constant`; nachher → Lauf ohne Fehler. Über `php jobs.php`
+    gefahren: `komplett fertig · erledigt 57796`, erzeugte Datei
+    814 453 Byte, Wartungsseite ohne Fehlerzeile.
+
+    **Die Fehlerklasse ist nachgezählt:** „Vorgabewert aus einer erst im
+    Rumpf geladenen Datei" — in `server/` gibt es genau diese eine Stelle.
 
 59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
     entgegen.**
