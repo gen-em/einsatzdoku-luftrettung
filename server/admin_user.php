@@ -5,8 +5,8 @@ require_once __DIR__ . '/spur_lib.php';   // Spuren loeschen (F-S2-B)
 // Eine Rollenpruefung fuer alle Seiten (M1-15). Hier stand als einziger Stelle
 // eine handgeschriebene Fassung mit eigenem Wortlaut ("Nur fuer Admins.").
 require_admin();
-// Loeschen entscheidet seit Web 5.8.0 auch ueber die Admin-Sicherungen (E25);
-// seit Web 9.8.0 liegen die Sicherungen des Kontos ganz hier (E-P3-41).
+// Loeschen entscheidet seit Web 5.8.0 auch ueber die Admin-Backups (E25);
+// seit Web 9.8.0 liegen die Backups des Kontos ganz hier (E-P3-41).
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';       // Passwort zuruecksetzen
 require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen (S3/AP10)
@@ -23,7 +23,7 @@ require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
  * seine Zeile suchen.
  *
  * Jetzt liegt alles zu EINEM Konto hier: Kontodaten in einem Formular mit
- * einem Speichern, Geraete, Sicherungen, Abonnement (Platz fuer R33) und die
+ * einem Speichern, Geraete, Backups, Abonnement (Platz fuer R33) und die
  * Loeschung als abgesetzte Gefahrenzone. admin_sicherungen.php behaelt nur
  * die REGELN (O9c).
  *
@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'sichern') {
         [$ok, $grund, $erg] = edbak_sicherung_erzeugen($uid);
         if ($ok) {
-            $notice = 'Sicherung erzeugt.'
+            $notice = 'Backup erzeugt.'
                 . (!empty($erg['verdraengt'])
                     ? ' ' . count($erg['verdraengt']) . ' ältere verdrängt.'
                     : '');
@@ -220,13 +220,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      *
      * Auf der Kontoseite gibt es nur ein sinnvolles Ziel — das Konto, dessen
      * Seite man aufhat. Ein Auswahlfeld mit allen Konten stuende hier fuer
-     * einen Fall, den es nicht gibt: Wer eine Sicherung in ein FREMDES Konto
+     * einen Fall, den es nicht gibt: Wer ein Backup in ein FREMDES Konto
      * bringen will, gibt sie frei (unten) oder nimmt den Weg ueber die
-     * verwaisten Sicherungen (admin_sicherungen.php) — dort hat das Paket
+     * verwaisten Backups (admin_sicherungen.php) — dort hat das Paket
      * kein Konto mehr, dem es gehoert.
      *
      * edbak_weg() entscheidet trotzdem: Ein Paket aus einem ANDEREN Konto
-     * (eingespielte Fremdsicherung) darf nicht unmittelbar hierher.
+     * (eingespieltes Fremd-Backup) darf nicht unmittelbar hierher.
      */
     if ($action === 'einspielen') {
         $ziel  = edbak_ziel_konto($uid);
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Die Sicherung liess sich nicht lesen.';
+            $error = 'Das Backup liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Kontos überein — es wurde nichts eingespielt.';
@@ -245,12 +245,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Einspielen nicht möglich. ' . $warum;
             } elseif ($weg === 'freigabe') {
                 $error = 'Unmittelbares Einspielen ist gesperrt. ' . $warum
-                       . ' Bitte stattdessen die Sicherung für dieses Konto freigeben.';
+                       . ' Bitte stattdessen das Backup für dieses Konto freigeben.';
             } else {
                 try {
                     [$okE, $grundE, $bericht] =
                         edbak_paket_zurueckspielen($kennung, $datei, $uid);
-                    if ($okE) { $notice = 'Sicherung eingespielt.'; }
+                    if ($okE) { $notice = 'Backup eingespielt.'; }
                     else { $error = (string)$grundE; }
                 } catch (Throwable $ex) {
                     $error = 'Das Einspielen ist fehlgeschlagen (Kennung '
@@ -267,13 +267,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
         } elseif (!$paket) {
-            $error = 'Die Sicherung liess sich nicht lesen.';
+            $error = 'Das Backup liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt((string)($_POST['confirm_email'] ?? ''), (string)$ziel['email'])) {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht mit der des '
                    . 'Zielkontos überein — es wurde nichts freigegeben.';
         } elseif (edbak_freigeben($kennung, $datei, (int)$ziel['id'])) {
-            $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht die '
-                    . 'Sicherung jetzt im eigenen Backup-Bereich und spielt sie dort '
+            $notice = 'Freigegeben für ' . $ziel['email'] . '. Die NutzerIn sieht das '
+                    . 'Backup jetzt im eigenen Backup-Bereich und spielt es dort '
                     . 'mit ihrem Wiederherstellungsschlüssel ein.';
         } else {
             $error = 'Die Freigabe liess sich nicht speichern.';
@@ -284,10 +284,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else { $error = 'Die Freigabe liess sich nicht widerrufen.'; }
     }
 
-    /* ---- Sicherung loeschen (A8.8) ---------------------------------------
+    /* ---- Backup loeschen (A8.8) ---------------------------------------
      *
      * Die Haerte der Bestaetigung richtet sich danach, was verlorengeht (E24):
-     * Bleibt danach mindestens eine weitere Sicherung dieses Kontos, genuegt
+     * Bleibt danach mindestens ein weiteres Backup dieses Kontos, genuegt
      * die uebliche Rueckfrage. Ist es die LETZTE, ist zusaetzlich die
      * E-Mail-Adresse abzutippen — der Dialog verlangt sie dann.
      */
@@ -299,9 +299,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Die eingegebene E-Mail-Adresse stimmt nicht überein — es wurde '
                    . 'nichts gelöscht.';
         } elseif (edbak_paket_loeschen($kennung, $datei)) {
-            $notice = 'Sicherung gelöscht.';
+            $notice = 'Backup gelöscht.';
         } else {
-            $error = 'Die Sicherung liess sich nicht löschen.';
+            $error = 'Das Backup liess sich nicht löschen.';
         }
     }
 
@@ -317,19 +317,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             /* ÜBER DIE SICHERUNGEN WIRD AUSDRÜCKLICH ENTSCHIEDEN (E25).
              *
              * Bis Web 5.8.0 sagte der Warntext unbedingt zu, dass nach der
-             * Löschung nichts mehr lesbar ist. Sobald Admin-Sicherungen
-             * existieren, wäre das unwahr — die Sicherung überlebt die
-             * Löschung und würde zur verwaisten Sicherung. Genau diese Zusage
+             * Löschung nichts mehr lesbar ist. Sobald Admin-Backups
+             * existieren, wäre das unwahr — das Backup überlebt die
+             * Löschung und würde zum verwaisten Backup. Genau diese Zusage
              * ist aber der Grund, aus dem jemand eine Löschung verlangt.
              *
-             * Umgekehrt ist das Überleben der Sicherung der Zweck der ganzen
+             * Umgekehrt ist das Überleben des Backups der Zweck der ganzen
              * Funktion. Beides verträgt sich nur, wenn die Entscheidung
              * sichtbar getroffen wird. Die Vorbelegung folgt der bisherigen
              * Zusage; das Abweichen ist eine bewusste Handlung.
              *
-             * Die Sicherungen werden VOR dem Löschen der Zeile entfernt: Danach
+             * Die Backups werden VOR dem Löschen der Zeile entfernt: Danach
              * wäre die Kontokennung fort, und der Ordner liesse sich nur noch
-             * über die Übersicht der verwaisten Sicherungen finden. */
+             * über die Übersicht der verwaisten Backups finden. */
             $mitSicherungen = ($_POST['sicherungen_mit'] ?? '1') === '1';
             $sicherungenWeg = false;
             if ($mitSicherungen) {
@@ -338,12 +338,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if ($mitSicherungen && !$sicherungenWeg) {
                 /* Nicht löschen, wenn die Zusage nicht gehalten werden kann.
-                 * Ein Konto zu entfernen und die Sicherung stehen zu lassen,
+                 * Ein Konto zu entfernen und das Backup stehen zu lassen,
                  * OBWOHL das Gegenteil gewählt wurde, wäre die schlechteste
                  * der drei möglichen Ausgänge. */
-                $error = 'Die Sicherungen dieses Kontos liessen sich nicht entfernen — '
+                $error = 'Die Backups dieses Kontos liessen sich nicht entfernen — '
                        . 'das Konto wurde deshalb NICHT gelöscht. Bitte unter '
-                       . '„Sicherungen" nachsehen.';
+                       . '„Backups" nachsehen.';
             } else {
                 /* DIE SPUREN ZUERST, UND AUSDRUECKLICH (F-S2-B, S2/AP1).
                  *
@@ -471,7 +471,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   </form>
   <?php if ($freigabe): ?>
     <form method="post" id="f-widerrufen" hidden
-          data-confirm="Freigabe widerrufen? Die NutzerIn sieht die Sicherung danach nicht mehr."
+          data-confirm="Freigabe widerrufen? Die NutzerIn sieht das Backup danach nicht mehr."
           data-confirm-ok="Widerrufen">
       <?= csrf_field() ?><input type="hidden" name="action" value="widerrufen">
       <input type="hidden" name="id" value="<?= $uid ?>">
@@ -644,21 +644,21 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
 
-    <?php /* ---- Sicherungen -----------------------------------------------
+    <?php /* ---- Backups -----------------------------------------------
              ENTFAELLT BEIM DEMO-KONTO (S3/AP10, E-S3-07): Es wird nicht
              gesichert. Sein Bestand ist erfunden, liegt als Fixture im
              Repositorium und wird alle dreissig Minuten daraus neu
-             hergestellt — eine Sicherung davon waere eine Kopie einer Datei,
+             hergestellt — ein Backup davon waere eine Kopie einer Datei,
              die ohnehin im Git liegt. */ ?>
     <?php if (!$istDemo): ?>
-    <?php ui_karte_start(['titel' => 'Sicherungen', 'zahl' => (string)count($pakete),
+    <?php ui_karte_start(['titel' => 'Backups', 'zahl' => (string)count($pakete),
                           'plakette' => ui_plakette($standText, ['ton' => $standTon])]); ?>
       <?php if ($kennung === ''): ?>
         <?= ui_meldung_markup('warn', 'Diesem Konto fehlt die Kontokennung. Bitte zuerst '
             . 'die Wartung aufrufen und die Migration ausführen — ohne Kennung lässt '
             . 'sich das Konto nicht sichern.') ?>
       <?php elseif (!$pakete): ?>
-        <p class="feld-hinweis">Für dieses Konto gibt es noch keine Sicherung.</p>
+        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Backup.</p>
       <?php endif; ?>
       <?php foreach ($pakete as $i => $p):
         $istFreigabe = $freigabe && ($freigabe['datei'] ?? '') === $p['datei'];
@@ -668,8 +668,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         $plaketten .= $lesbar
             ? ui_plakette('lesbar', ['ton' => 'neutral'])
             : ui_plakette('nicht lesbar', ['ton' => 'rot']);
-        /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST (E24). Bleibt eine weitere
-           Sicherung dieses Kontos stehen, genügt die übliche Rückfrage. */
+        /* HART BESTÄTIGEN, WENN ES DIE LETZTE IST (E24). Bleibt ein weiteres
+           Backup dieses Kontos stehen, genügt die übliche Rückfrage. */
         $hart = count($pakete) === 1;
         ui_zeile([
           'text'  => $zeit,
@@ -687,7 +687,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         ]);
       endforeach; ?>
       <p class="feld-hinweis">Aufbewahrung: die letzten <?= edbak_aufbewahrung() ?> Pakete je
-         Konto (Einstellung unter <a href="admin_sicherungen.php">Sicherungen</a>). Einspielen
+         Konto (Einstellung unter <a href="admin_sicherungen.php">Backups</a>). Einspielen
          ergänzt, ersetzt nicht; die Administration sieht keinen Klartext.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
@@ -722,16 +722,16 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen
            und Geräte <strong>endgültig</strong> — ohne Papierkorb, nicht rückgängig zu
            machen. Ob danach nichts mehr lesbar ist, hängt von der Wahl unten ab:
-           Bleiben die Sicherungen erhalten, überleben sie die Löschung und erscheinen
-           unter „Sicherungen" als Sicherung ohne Konto.</p>
+           Bleiben die Backups erhalten, überleben sie die Löschung und erscheinen
+           unter „Backups" als Backup ohne Konto.</p>
         <form method="post" data-confirm="Konto endgültig löschen?"
               data-confirm-ok="Endgültig löschen">
           <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">
           <input type="hidden" name="id" value="<?= $uid ?>">
-          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Sicherungen dieses Kontos',
+          <?php ui_feld(['name' => 'sicherungen_mit', 'label' => 'Backups dieses Kontos',
                          'art' => 'select', 'wert' => '1', 'optionen' => [
                              '1' => 'mitlöschen (Vorgabe)',
-                             '0' => 'erhalten — erscheinen als Sicherung ohne Konto']]); ?>
+                             '0' => 'erhalten — erscheinen als Backup ohne Konto']]); ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
@@ -753,7 +753,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?= csrf_field() ?><input type="hidden" name="action" value="einspielen">
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
-      <div class="dialog-kopf"><h2>Sicherung einspielen</h2></div>
+      <div class="dialog-kopf"><h2>Backup einspielen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> in
            <strong><?= e((string)$u['email']) ?></strong> einspielen. Vorhandenes bleibt
@@ -777,14 +777,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <input type="hidden" name="datei" data-fuell="datei">
       <input type="hidden" name="hart" data-fuell="hart">
-      <div class="dialog-kopf"><h2>Sicherung löschen</h2></div>
+      <div class="dialog-kopf"><h2>Backup löschen</h2></div>
       <div class="dialog-inhalt">
         <p>Paket <strong data-fuell="zeit"></strong> endgültig entfernen.</p>
         <?php if (count($pakete) === 1): ?>
           <?php ui_feld(['name' => 'confirm_email', 'label' => 'E-Mail-Adresse des Kontos',
                          'pflicht' => true,
                          'attr' => 'autocomplete="off" placeholder="' . e((string)$u['email']) . '"',
-                         'klein' => 'Es ist die letzte Sicherung dieses Kontos — '
+                         'klein' => 'Es ist das letzte Backup dieses Kontos — '
                                   . 'zur Bestätigung die Adresse abtippen.']); ?>
         <?php endif; ?>
       </div>
@@ -803,13 +803,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <input type="hidden" name="id" value="<?= $uid ?>">
       <div class="dialog-kopf"><h2>Für ein Zielkonto freigeben</h2></div>
       <div class="dialog-inhalt">
-        <p>Die freigegebene Sicherung erscheint im Backup-Bereich des Zielkontos.
+        <p>Das freigegebene Backup erscheint im Backup-Bereich des Zielkontos.
            Eingespielt wird sie dort von der NutzerIn selbst, mit ihrem
            Wiederherstellungsschlüssel — die Administration sieht keinen Klartext.</p>
         <?php
         $paketwahl = [];
         foreach ($pakete as $p) { $paketwahl[(string)$p['datei']] = edbak_zeitpunkt_text($p['erzeugt']); }
-        ui_feld(['name' => 'datei', 'label' => 'Sicherung', 'art' => 'select',
+        ui_feld(['name' => 'datei', 'label' => 'Backup', 'art' => 'select',
                  'optionen' => $paketwahl]);
         $zielwahl = ['' => '— Konto wählen —'];
         foreach ($zielkonten as $z) { $zielwahl[(string)$z['id']] = (string)$z['email']; }

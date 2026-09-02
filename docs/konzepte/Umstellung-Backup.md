@@ -9,7 +9,7 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 |---|---|---|
 | AP0 | Neuzählung gegen Web 12.9.2, Entscheidungen E-S7-1 bis E-S7-4 | **erledigt** |
 | AP1 | Backup-Seite der NutzerIn (`einstellungen.php`, `assets/*.js`, `style.css`) | **erledigt** |
-| AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | offen |
+| AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | **erledigt** |
 | AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | offen |
 | AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | offen |
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | offen |
@@ -103,6 +103,17 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   verschieden.** `crypto.js` schrieb `EDBAK4|<sicherungskennung>|…`,
   `docs/Backup-Format.md` `EDBAK4|<kennung>|…`; der Code selbst liest
   `manifest['kennung']`. Auf die normative Fassung angeglichen.
+- **F-S7-03 (AP2) — Eine Wortgruppe kann über eine Zeichenketten-Grenze
+  laufen, und dann sieht sie keine zeilenweise Regel.** In `admin_user.php`
+  und `admin_sicherungen.php` stand
+  `… sieht die '` **Zeilenumbruch** `. 'Sicherung jetzt im eigenen …`.
+  Der Artikel steht in der einen Zeichenkette, das Nomen in der nächsten.
+  Eine eigene Prüfung sucht seither genau dieses Muster über
+  Zeilengrenzen hinweg; sie fand drei Fälle, darunter einen aus AP1
+  (`einstellungen.php`, „passt nicht zu dieser Sicherung"), der der
+  zeilenweisen Nachprüfung entgangen war. Alle drei behoben, samt der
+  Pronomen im selben Satz („spielt **sie** dort ein" → „spielt **es**
+  dort ein").
 
 ---
 

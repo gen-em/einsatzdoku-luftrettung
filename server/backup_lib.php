@@ -53,19 +53,19 @@ const EDBAK_FENSTER = 500;
  * entfallen.
  *
  * WARUM DIE ENTSCHEIDUNG UMGEDREHT WURDE. Die alte Begruendung lautete: „Wer
- * eine Sicherung erstellt, sichert seinen Bestand, nicht seinen Abfall." Das
+ * ein Backup erstellt, sichert seinen Bestand, nicht seinen Abfall." Das
  * klingt einleuchtend und ist trotzdem falsch, denn der Papierkorb ist kein
  * Abfall — er ist ein WIEDERHERSTELLBARER Zustand mit einer laufenden Frist
  * (TRASH_DAYS = 90). Wer am Tag nach einem versehentlichen Loeschen sichert
- * und die Sicherung spaeter zurueckspielt, verliert genau das, was er
- * zurueckholen wollte, und zwar endgueltig und ohne Hinweis. Eine Sicherung
+ * und das Backup spaeter zurueckspielt, verliert genau das, was er
+ * zurueckholen wollte, und zwar endgueltig und ohne Hinweis. Ein Backup
  * ist ein ABBILD; ein Abbild, das einen Teil des Bestands weglaesst, ist
  * keines.
  *
  * KEINE WAHLMOEGLICHKEIT AUF DER SICHERUNGSSEITE (E-S1-02). Ein Haken
  * „Papierkorb mitsichern" verschoebe die Entscheidung auf den Zeitpunkt, an
  * dem am wenigsten ueberlegt wird. Stattdessen nennen die Umfangsangaben
- * (Admin-Tabelle, Freigabe-Hinweis, `umfang.papierkorb` der Admin-Sicherung),
+ * (Admin-Tabelle, Freigabe-Hinweis, `umfang.papierkorb` des Admin-Backups),
  * wie viel davon im Papierkorb liegt.
  *
  * Die Spalten `deleted_at` und `deleted_with_day` standen schon vorher in der
@@ -86,7 +86,7 @@ const EDBAK_FENSTER = 500;
  * und `spur_umriss()` holen sie, ohne einen Punkt zu lesen.
  *
  * WARUM DIE NUMMER FORTLAUFEND IST und nicht die Datenbankkennung: Die
- * Kennung gilt nur in der Datenbank, aus der die Sicherung stammt — dieselbe
+ * Kennung gilt nur in der Datenbank, aus der das Backup stammt — dieselbe
  * Ueberlegung wie beim Diensttag (E9) und beim Standortnamen (E15). `spur_ref`
  * ist eine Nummer DIESES Vorgangs und sonst nichts.
  */
@@ -119,13 +119,13 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *
      * (float)$p['ele'] liefert fuer jede Eingabe klaglos ein Ergebnis: aus
      * "" wird 0.0, aus "Unfug" ebenfalls. Die Hoehe 0 ist aber ein GUELTIGER
-     * Wert (Meereshoehe) — in der Sicherung waere danach nicht mehr zu
+     * Wert (Meereshoehe) — im Backup waere danach nicht mehr zu
      * unterscheiden, ob dort eine gemessene Null stand oder ein Rest, den die
      * Umwandlung erzeugt hat.
      *
      * Aus der Datenbank kommen an dieser Stelle nur Zahlen oder NULL; die
      * Spalten sind DOUBLE. Der Befund zielt auf den Fall, in dem das einmal
-     * nicht mehr stimmt — eine Sicherung ist das letzte, was stillschweigend
+     * nicht mehr stimmt — ein Backup ist das letzte, was stillschweigend
      * Ersatzwerte erfinden darf. */
     $zahl = fn($v, bool $ganz = false) =>
         (is_numeric($v) ? ($ganz ? (int)$v : (float)$v) : null);
@@ -134,9 +134,9 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *
      * Hier stand eine Funktion, die JE EINSATZ und JE RUHESEGMENT eine eigene
      * Abfrage absetzte — zusammen mit Phasen, Rettungsmitteln und Reanimation
-     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EINE Sicherung.
-     * Eine Obergrenze gab es nicht: Die Zahl waechst mit dem Bestand, und die
-     * Sicherung ist genau die Handlung, die jemand ausfuehrt, wenn er ohnehin
+     * waren das bei 1600 Einsaetzen ueber 6000 Abfragen fuer EINE Backup.
+     * Eine Obergrenze gab es nicht: Die Zahl waechst mit dem Bestand, und das
+     * Backup ist genau die Handlung, die jemand ausfuehrt, wenn er ohnehin
      * schon beunruhigt ist.
      *
      * Jetzt: eine Abfrage je Tabelle, in Bloecken (sql_in_bloecken, db.php).
@@ -181,7 +181,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * beiden sind nicht dasselbe: `gesamt` ist die hoechste Punktnummer plus
      * eins — bei einer ausgeduennten Spur also die Zahl VOR der Ausduennung
      * (443 statt der 148, die tatsaechlich gespeichert sind). Der erste Entwurf
-     * hat das verwechselt, und die Sicherung haette fuer jede ausgeduennte Spur
+     * hat das verwechselt, und das Backup haette fuer jede ausgeduennte Spur
      * eine Punktzahl genannt, die es in ihr nicht gibt. */
     $spurVerzeichnis = [];
     $umrisse = function (string $type, array $ids) use ($pdo, &$indexVon): array {
@@ -206,11 +206,11 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* SPALTEN AUFZAEHLEN, NICHT ALLE NEHMEN (M5-07).
      *
      * Vorher stand hier SELECT * und darunter ein unset() fuer die drei
-     * internen Spalten. Das FORMAT der Sicherung war damit nicht definiert,
+     * internen Spalten. Das FORMAT des Backups war damit nicht definiert,
      * sondern ERGAB SICH: Was in der Tabelle stand, landete in der Datei.
      *
      * Zwei Folgen, beide unangenehm:
-     *  - Jede neue Spalte war automatisch in jeder Sicherung — auch eine,
+     *  - Jede neue Spalte war automatisch in jedem Backup — auch eine,
      *    die dort nichts zu suchen hat. Wer eine interne Spalte ergaenzt,
      *    denkt nicht daran, dass er damit das Ausgabeformat aendert.
      *  - Das Wiedereinspielen und der Export prueften gegen eine Liste, die
@@ -231,7 +231,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
     /* NICHT in der Liste, und zwar mit Absicht:
      *
      *   id, user_id, device_id   Interne Verweise. Sie gelten nur in DIESER
-     *                            Datenbank; eine Sicherung soll sich auch in
+     *                            Datenbank; ein Backup soll sich auch in
      *                            eine andere einspielen lassen.
      *
      *   other_resources          TOTE ALTSPALTE. Seit der Migration
@@ -241,14 +241,14 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *                            als 'resources' mitgesichert. Die Spalte
      *                            wurde damals nur nicht geloescht. Mit
      *                            SELECT * ging sie trotzdem in jede
-     *                            Sicherung — ein Feld, das seit Monaten
+     *                            Backup — ein Feld, das seit Monaten
      *                            niemand mehr fuellt und das beim
      *                            Einspielen verworfen wird.
      *
      * WAS BEIM EINSPIELEN NICHT ANKOMMT (vorgefunden, hier nicht geaendert):
      * Der Einspielweg schreibt die Spalten aus mission_fields.php plus
      * pat_blob. site_ele_m steht dort nicht — die Einsatzort-Hoehe wird beim
-     * Uhr-Upload gerechnet, nicht eingegeben. Sie ist in der Sicherung
+     * Uhr-Upload gerechnet, nicht eingegeben. Sie ist im Backup
      * enthalten (die Datei soll den Bestand vollstaendig abbilden), kommt
      * beim Einspielen aber nicht zurueck. Das ist eine Asymmetrie, die dieses
      * Paket nur SICHTBAR macht; sie zu beheben hiesse, den Einspielweg zu
@@ -259,7 +259,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * Phasen, Rettungsmittel, Reanimation, abweichende Besatzung —, und ihre
      * Ergebnisse lagen gleichzeitig im Speicher. Am 5000er-Bestand gemessen:
      * 92 MB Spitze gegen ein Budget von 64 MB (Z3). Mit `memory_limit=64M`
-     * bricht der Lauf ab; die Sicherung eines grossen Kontos scheitert also
+     * bricht der Lauf ab; das Backup eines grossen Kontos scheitert also
      * auf genau der Sorte Webspace, fuer die diese Anwendung gebaut ist.
      *
      * Die Abfragen bleiben gebuendelt — das N+1, das M5-12 abgeschafft hat,
@@ -468,7 +468,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * ANGEZEIGT UND GESICHERT WERDEN DIE SNAPSHOT-SPALTEN (E8): `vehicle_name`
      * und `base_name` stehen im Diensttag selbst. Der frueher noetige Join auf
      * `aircraft` und `bases` ist damit entfallen — und mit ihm die Luecke, dass
-     * ein geloeschtes Rettungsmittel eine Sicherung ohne Bezeichnung hinterliess.
+     * ein geloeschtes Rettungsmittel ein Backup ohne Bezeichnung hinterliess.
      * Die Verweise auf die Stammdaten werden zusaetzlich als NAMEN mitgefuehrt
      * (`vehicle_ref`, `base_ref`), damit das Einspielen sie wieder verknuepfen
      * kann; sie zeigen auf denselben Namen, koennen aber leer sein, wenn der
@@ -688,7 +688,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      *
      * Beides zusammen geht nur so: Die Zuordnung steht getrennt und traegt den
      * Unterstrich, den dieses Projekt fuer Arbeitsfelder benutzt (`_pat`,
-     * `_patState`). Der Sicherungslauf loescht sie, bevor er versiegelt — und
+     * `_patState`). Der Backup-Lauf loescht sie, bevor er versiegelt — und
      * die Containerprobe sieht nach, ob er es getan hat. */
     /* NUR WO ES HINGEHOERT. Im Fenstermodus steht es oben (dort entsteht es);
      * im KOPF hat es nichts zu suchen — er traegt keine Eintraege, das
@@ -708,7 +708,7 @@ function edbak_build(int $userId, bool $ohneSpuren = false,
      * darunter sagt es trotzdem, statt sich darauf zu verlassen. */
     $kopf = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($kopf) || substr($kopf, -1) !== '}' || strlen($kopf) < 3) {
-        throw new RuntimeException('Der Kopf der Sicherung liess sich nicht bauen.');
+        throw new RuntimeException('Der Kopf des Backups liess sich nicht bauen.');
     }
     /* NUR DER KOPF: ohne Eintraege, dafuer mit ihrer Zahl. Der Browser
      * braucht sie, um die Fenster zu planen — und die Teilezahl muss
@@ -819,7 +819,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
      * bekommt volle TRASH_DAYS Tage — dieselbe Linie wie bei `herkunft`.
      *
      * Der Gegenentwurf waere, den Zeitpunkt aus der Datei zu uebernehmen.
-     * Dann koennte eine aeltere Sicherung Eintraege mitbringen, deren Frist
+     * Dann koennte ein aelteres Backup Eintraege mitbringen, deren Frist
      * laengst abgelaufen ist, und der naechste Aufraeumjob loeschte sie
      * endgueltig — eine Wiederherstellung, die einspielt und Stunden spaeter
      * selbst wieder entfernt.
@@ -896,7 +896,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
             if (!$hasDefBase && (int)($b['is_default'] ?? 0)) { $newDefBaseName = $name; }
         }
         /* Standortkennung zum Namen. Der Name ist der portable Schluessel (E15):
-         * Die Kennung aus der Sicherungsdatei gilt nur in der Datenbank, aus der
+         * Die Kennung aus der Backup-Datei gilt nur in der Datenbank, aus der
          * sie stammt. Gesucht wird unter den EIGENEN und den zentralen
          * Standorten — ein zentraler heisst in beiden Installationen gleich. */
         $baseIdByName = function (?string $name) use ($pdo, $userId): ?int {
@@ -1040,7 +1040,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          * ERKANNT WIRD IN ZWEI SCHRITTEN, und der erste ist der belastbare:
          *
          *   1. UEBER DIE EINSAETZE. `client_ref` ist geraeteweit eindeutig und
-         *      wandert unveraendert durch jede Sicherung. Existiert einer der
+         *      wandert unveraendert durch jedes Backup. Existiert einer der
          *      Einsaetze dieses Diensttags im Ziel schon, IST sein `day_id` der
          *      gesuchte Tag — daran gibt es nichts zu raten.
          *   2. UEBER EINEN FINGERABDRUCK aus Datum, Dienstbeginn, Dienstende,
@@ -1171,7 +1171,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
              *     Ohne diese Pruefung tat INSERT IGNORE hier zwar nichts — der
              *     eindeutige Schluessel griff —, aber eben STILL: Der Tag wurde
              *     weder eingespielt noch gezaehlt noch erwaehnt. Wer eine
-             *     Sicherung zurueckspielt und seine Diensttage vermisst, hatte
+             *     Backup zurueckspielt und seine Diensttage vermisst, hatte
              *     keinen Anhaltspunkt.
              *
              * (2) EIN IN DER DATEI GELOESCHTER TAG durchlaeuft die normale
@@ -1247,7 +1247,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
 
             /* Angelegt wird mit den EINGEFRORENEN Angaben aus der Datei (E8) —
              * nicht ueber dt_zuordnen(), das sie aus den heutigen Stammdaten
-             * frisch holen wuerde. Eine Sicherung soll den Bestand abbilden,
+             * frisch holen wuerde. Ein Backup soll den Bestand abbilden,
              * nicht ihn neu ableiten: Ein inzwischen umbenanntes Rettungsmittel
              * traegt in der Datei seinen damaligen Namen, und der gehoert
              * zurueck (A4, A13p). Die Fremdschluessel werden daneben ueber den
@@ -1444,7 +1444,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
          *    Wiederherstellung trugen alle Einsaetze den Zeitpunkt des
          *    Einspielens — am Referenzdatensatz gemessen 79 verschiedene Werte
          *    davor, 5 danach. Die Angabe ist keine fachliche Zeit (das ist
-         *    `started_at`), aber sie ist eine ANGABE, und eine Sicherung, die
+         *    `started_at`), aber sie ist eine ANGABE, und ein Backup, das
          *    eine Angabe stillschweigend fallenlaesst, ist keine. Der Wert
          *    laeuft durch pruef_utc_oder_sql(); ist er unbrauchbar, wird die
          *    Spalte weggelassen und die Datenbank-Vorgabe greift — die Zeile
@@ -1851,7 +1851,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null): array {
  * Eine Liste von SPUR1-Blobs in ein Konto schreiben (S2/AP6).
  *
  * WOFUER ES DIESE FUNKTION GIBT. Bis Web 11.2.0 stand dieser Ablauf nur in
- * `api/backup_spuren_restore.php`. Die Admin-Sicherung braucht ihn seit dem
+ * `api/backup_spuren_restore.php`. Das Admin-Backup braucht ihn seit dem
  * Umbau auf das mehrteilige Rohpaket ebenfalls — und ein zweiter Weg waere
  * ein zweiter Ort, an dem die drei Dinge unten zu vergessen sind. Der
  * Endpunkt ist seitdem eine duenne Schale um diese Funktion.

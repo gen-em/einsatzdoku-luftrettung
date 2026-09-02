@@ -2763,7 +2763,7 @@ ui_seite_start(['titel' => 'Einstellungen']);
           try { altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc); }
           catch (e) { altCk = null; }
           if (!altCk) {
-            fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu dieser '
+            fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu diesem '
               + 'Backup. Es wurde nichts eingespielt.';
             return;
           }
