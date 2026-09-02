@@ -9,6 +9,7 @@ require_admin();
 // seit Web 9.8.0 liegen die Sicherungen des Kontos ganz hier (E-P3-41).
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';       // Passwort zuruecksetzen
+require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen (S3/AP10)
 
 /**
  * KONTOSEITE — die Drehscheibe eines Kontos (E-P3-41, P3/O9).
@@ -49,9 +50,38 @@ $st->execute([$uid]);
 $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
+/* DAS DEMO-KONTO WIRD ZENTRAL VERWALTET (S3/AP10, E-S3-07).
+ *
+ * Es entsteht, setzt sich zurueck und verschwindet ueber den Reiter
+ * „Demo-Konto“ — und nur dort. Was hier haengenbliebe, waere spaetestens
+ * nach dreissig Minuten wieder weg: Der Reset ueberschreibt Konto- und
+ * Schluesselmaterial und loescht den ganzen Bestand. Eine Aenderung, die
+ * lautlos verfaellt, ist schlimmer als eine, die gar nicht erst geht.
+ * Gesichert wird das Konto ebenfalls nicht — der Bestand ist erfunden und
+ * liegt als Fixture im Repositorium.
+ *
+ * DIE SPERRE SITZT HIER, IM SCHREIBWEG, und nicht nur als `disabled` im
+ * Markup. Ein `disabled` ist Kulisse: Ein direkt abgesetzter POST geht daran
+ * vorbei. Die Anzeige weiter unten graut zusaetzlich aus — damit man es
+ * sieht, bevor man es versucht.
+ *
+ * NICHT gesperrt sind die GERAETE-Aktionen: Das Demo-Konto laedt
+ * ausdruecklich zum Koppeln einer Uhr ein, und was dabei entsteht, raeumt
+ * der Reset selbst wieder ab. */
+const DEMO_GESPERRT = ['konto', 'sichern', 'einspielen', 'freigeben',
+                       'widerrufen', 'paket_loeschen', 'user_delete'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $action  = (string)($_POST['action'] ?? '');
+    if (demo_ist_demo($uid) && in_array($action, DEMO_GESPERRT, true)) {
+        $error = 'Das Demo-Konto wird über den Reiter „Demo-Konto“ verwaltet — '
+               . 'Anlegen, Zurücksetzen und Entfernen. Hier lässt es sich weder '
+               . 'ändern noch sichern: Der Reset überschreibt alle dreißig Minuten '
+               . 'Konto und Bestand, und eine Änderung wäre spätestens dann wieder '
+               . 'weg. Gesichert wird es nicht — der Bestand ist erfunden.';
+        $action = '';
+    }
     $kennung = (string)($u['account_key'] ?? '');
     $datei   = (string)($_POST['datei'] ?? '');
 
@@ -139,7 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * schlechteste aller Lagen.
      */
     if ($action === 'pw_reset') {
-        require_once __DIR__ . '/demo_lib.php';
         if (demo_ist_demo($uid)) {
             $error = 'Das Demo-Konto bekommt keinen Setz-Link: Sein Passwort ist '
                    . 'öffentlich und steht im Handbuch (E-P1-19).';
@@ -454,25 +483,37 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php endforeach; ?>
 
   <?php
-  $aktionen = ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
-                        'art' => 'neutral', 'attr' => ' form="f-sichern"']);
+  /* BEIM DEMO-KONTO BLEIBT NUR DER WEG ZUM REITER (S3/AP10). Ein Aktionsmenü
+     voller Einträge, die alle abgewiesen würden, wäre eine Einladung ins
+     Leere — und „Passwort zurücksetzen" hat dort seit E-P1-19 ohnehin keinen
+     Sinn: Das Passwort des Demo-Kontos ist öffentlich und steht im Handbuch. */
+  $istDemoKopf = demo_ist_demo($uid);
+  $aktionen = $istDemoKopf
+      ? ui_knopf(['text' => 'Zum Demo-Konto', 'symbol' => 'kolben',
+                  'art' => 'neutral', 'href' => 'admin_demo.php'])
+      : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
+                  'art' => 'neutral', 'attr' => ' form="f-sichern"']);
   $eintraege = [];
-  if ($pakete) {
-      $eintraege[] = ['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
-                      'href' => '#', 'attr' => 'data-dialog="dlg-freigeben"'];
+  if (!$istDemoKopf) {
+      if ($pakete) {
+          $eintraege[] = ['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
+                          'href' => '#', 'attr' => 'data-dialog="dlg-freigeben"'];
+      }
+      if ($freigabe) {
+          $eintraege[] = ['text' => 'Freigabe widerrufen', 'symbol' => 'schliessen',
+                          'form' => 'f-widerrufen'];
+      }
+      $eintraege[] = ['text' => 'Passwort zurücksetzen', 'symbol' => 'schloss-offen',
+                      'form' => 'f-pwreset'];
+      if (!$istIch) {
+          $eintraege[] = ['text' => 'Konto löschen', 'symbol' => 'korb',
+                          'href' => '#karte-loeschen', 'gefahr' => true];
+      }
   }
-  if ($freigabe) {
-      $eintraege[] = ['text' => 'Freigabe widerrufen', 'symbol' => 'schliessen',
-                      'form' => 'f-widerrufen'];
+  if ($eintraege) {
+      $aktionen .= ui_aktionen(['titel' => 'Konto', 'id' => 'konto-aktionen',
+                                'eintraege' => $eintraege]);
   }
-  $eintraege[] = ['text' => 'Passwort zurücksetzen', 'symbol' => 'schloss-offen',
-                  'form' => 'f-pwreset'];
-  if (!$istIch) {
-      $eintraege[] = ['text' => 'Konto löschen', 'symbol' => 'korb',
-                      'href' => '#karte-loeschen', 'gefahr' => true];
-  }
-  $aktionen .= ui_aktionen(['titel' => 'Konto', 'id' => 'konto-aktionen',
-                            'eintraege' => $eintraege]);
   ui_titelzeile([
       'zurueck'  => ['text' => 'NutzerInnen', 'href' => 'admin_users.php'],
       'titel'    => (string)($u['name'] ?: $u['email']),
@@ -501,14 +542,31 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         . 'Ergänzt, nicht ersetzt — Vorhandenes bleibt stehen.') ?>
   <?php endif; ?>
 
+  <?php $istDemo = demo_ist_demo($uid); ?>
+  <?php if ($istDemo): ?>
+    <?= ui_meldung_markup('info',
+        'Dieses Konto wird über den Reiter „Demo-Konto“ verwaltet: dort wird es '
+      . 'angelegt, zurückgesetzt und entfernt. Ändern und Sichern sind hier '
+      . 'gesperrt — der Reset überschreibt alle dreißig Minuten Konto und '
+      . 'Bestand, und der Bestand ist erfunden.',
+        'Demo-Konto.',
+        ui_knopf(['text' => 'Zum Demo-Konto', 'art' => 'neutral',
+                  'href' => 'admin_demo.php'])) ?>
+  <?php endif; ?>
+
   <div class="form-raster">
   <div class="form-spalte">
 
     <?php /* ---- Konto: ein Formular, ein Speichern ------------------------ */ ?>
     <?php ui_karte_start(['titel' => 'Konto']); ?>
+      <?php /* AUSGEGRAUT BEIM DEMO-KONTO (S3/AP10). Das `disabled` ist die
+               ANZEIGE der Sperre, nicht die Sperre selbst — die sitzt oben im
+               Schreibweg. Beides zusammen: Man sieht es, bevor man es
+               versucht, und ein direkter POST kommt trotzdem nicht durch. */ ?>
       <form method="post">
         <?= csrf_field() ?><input type="hidden" name="action" value="konto">
         <input type="hidden" name="id" value="<?= $uid ?>">
+        <fieldset class="feldsatz-gesperrt" <?= $istDemo ? 'disabled' : '' ?>>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'name', 'label' => 'Name', 'wert' => (string)($u['name'] ?? ''),
                          'attr' => 'maxlength="120" placeholder="z. B. Vorname Nachname"']); ?>
@@ -522,6 +580,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
         </div>
+        </fieldset>
       </form>
       <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen: Die Daten sind mit
          dem Passwort der Person Ende-zu-Ende-verschlüsselt. „Passwort zurücksetzen"
@@ -570,7 +629,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
 
-    <?php /* ---- Sicherungen ----------------------------------------------- */ ?>
+    <?php /* ---- Sicherungen -----------------------------------------------
+             ENTFAELLT BEIM DEMO-KONTO (S3/AP10, E-S3-07): Es wird nicht
+             gesichert. Sein Bestand ist erfunden, liegt als Fixture im
+             Repositorium und wird alle dreissig Minuten daraus neu
+             hergestellt — eine Sicherung davon waere eine Kopie einer Datei,
+             die ohnehin im Git liegt. */ ?>
+    <?php if (!$istDemo): ?>
     <?php ui_karte_start(['titel' => 'Sicherungen', 'zahl' => (string)count($pakete),
                           'plakette' => ui_plakette($standText, ['ton' => $standTon])]); ?>
       <?php if ($kennung === ''): ?>
@@ -619,6 +684,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <?php endif; ?>
       </div>
     <?php ui_karte_ende(); ?>
+    <?php endif; /* !$istDemo */ ?>
 
     <?php /* ---- Abonnement: reservierter Platz (R33) ---------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Abonnement', 'zahl' => 'ab P5']); ?>
@@ -630,7 +696,12 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php /* ---- Gefahrenzone ---------------------------------------------- */ ?>
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
                           'id' => 'karte-loeschen']); ?>
-      <?php if ($istIch): ?>
+      <?php if ($istDemo): ?>
+        <p class="feld-hinweis">Das Demo-Konto wird über den Reiter
+           <a href="admin_demo.php">Demo-Konto</a> entfernt — dort steht
+           „Demo-Konto entfernen“. Hier ginge derselbe Weg an der Buchführung
+           vorbei, die sich merkt, welches Konto das Demo-Konto ist.</p>
+      <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
       <?php else: ?>
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks, Reanimationen

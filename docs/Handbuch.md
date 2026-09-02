@@ -398,6 +398,16 @@ nicht ändern, und „Passwort vergessen" führt für diese Adresse zu nichts.
 Beides ist Absicht — die Zugangsdaten sind öffentlich und müssen es bleiben,
 damit die nächste Person hereinkommt. Alles andere ist offen.
 
+**Und in der Administration** (seit Web 12.4.1): Auf der Kontoseite des
+Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
+**gesperrt**, die Karte „Sicherungen" fehlt dort ganz, und der Anzeigename
+lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
+Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
+Reset — was auf der Kontoseite eingetragen würde, wäre spätestens nach dreißig
+Minuten wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
+Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
+selbst wieder ab.
+
 > **Niemals echte Patienten- oder Einsatzdaten in diesem Konto erfassen.**
 > Es ist die einzige Stelle der Anwendung, an der die Verschlüsselung bewusst
 > ausgesetzt ist: Das Schlüsselmaterial liegt dort auf dem Server, damit die

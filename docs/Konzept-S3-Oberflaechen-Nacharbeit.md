@@ -1680,3 +1680,69 @@ ausschließlich den Wert **0** trägt (etwa „0 Cycles" ohne jeden anderen
 Windeneintrag). Der Code behandelt das ausdrücklich — bei einer Auswahl ist
 die Null eine Angabe —, ein solcher Bestand ließ sich aber nicht ohne
 Weiteres herstellen. Bedienweg fürs Prüfdokument.
+
+---
+
+### AP10 — Demo-Konto (D)
+
+**Stand:** erledigt. Web 12.4.1. **Funktionsänderung.**
+
+#### Was geändert wurde
+
+- **`demo_lib.php`:** neue Konstante `DEMO_NAME = 'Demo NutzerIn'`, gesetzt
+  beim Anlegen **und** beim Zurücksetzen. Der Name kam vorher aus der
+  Fixture — also aus dem Referenzkonto — und hätte sonst beim nächsten Reset
+  wiederkommen müssen.
+- **`admin_user.php`:** `DEMO_GESPERRT` mit sieben Aktionen, abgewiesen
+  **vor** der Verarbeitung; `demo_lib.php` wird jetzt oben eingebunden statt
+  mitten im Aktionsblock.
+- **Anzeige:** Meldung oben mit dem Weg zum Reiter, Kontoformular in einem
+  `<fieldset disabled>`, Karte „Sicherungen" entfällt, Löschkarte erklärt den
+  richtigen Weg, Aktionsmenü auf „Zum Demo-Konto" reduziert.
+- **CSS:** `.feldsatz-gesperrt` — Rücknahme der Browservorgaben für
+  `fieldset` (die Elementregeln sind mit O11 gefallen) plus Deckkraft im
+  gesperrten Zustand.
+- **Rahmenplan R25** und **Handbuch 3.2** nachgetragen.
+
+#### Warum ein `<fieldset>` und nicht `disabled` an jedem Feld
+
+Ein `fieldset[disabled]` sperrt alles darin in einem Zug — auch Felder, die
+später dazukommen. Die Alternative wäre ein Attribut je `ui_feld()`-Aufruf
+gewesen: vier Stellen heute, und die fünfte vergisst jemand. **Der Preis:**
+Die Elementregeln für `fieldset` sind in P3/O11 gefallen, ein blankes
+`<fieldset>` brächte also Rahmen und Polsterung des Browsers mit. Dafür gibt
+es jetzt `.feldsatz-gesperrt` — einschließlich `min-width: 0`, ohne das ein
+`fieldset` seine eingebaute Mindestbreite nach dem Inhalt behält und jedes
+schmale Raster sprengt.
+
+#### Die Geräte-Aktionen bleiben offen
+
+E-S3-07 spricht von „Speicher- und Sicherungsaktionen". `device_toggle` und
+`device_delete` sind bewusst **nicht** gesperrt: Das Demo-Konto lädt
+ausdrücklich zum Koppeln einer Uhr ein („Ausprobieren ist erwünscht — ändern,
+anlegen, löschen, Uhr koppeln"), und was dabei entsteht, räumt der Reset
+selbst wieder ab. Eine Sperre dort nähme dem Konto seinen Zweck.
+
+#### Prüfstand AP10
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Anzeigename | NutzerInnen-Liste, Seitentitel und Überschrift gelesen | dreimal **„Demo NutzerIn"** statt der E-Mail-Adresse |
+| Demo-Kontoseite | Browserprobe, sichtbare Karten und Formularzustand | Karten **Konto · Geräte · Abonnement · Konto löschen** — **„Sicherungen" fehlt**; Formular `disabled`, Deckkraft **0,55**; Aktionsmenü nur **„Zum Demo-Konto"** |
+| Seite bleibt aufrufbar | dieselbe Probe | HTTP 200, Titel „Demo NutzerIn — Konto — Einsatzdoku" |
+| **Sperre im Schreibweg** | **direkte POSTs** an der Oberfläche vorbei, mit gültigem CSRF | `konto`, `sichern`, `user_delete` je **abgewiesen** mit der Meldung (Ton `fehler`); Name des Demo-Kontos danach unverändert |
+| Gegenprobe normales Konto | derselbe POST auf Konto 1 | **durchgelaufen** („Name gespeichert"), Karten und Aktionsmenü unverändert vollständig |
+| Reiter „Demo-Konto" | Anlegen und Zurücksetzen gefahren | funktioniert wie bisher: 15 Diensttage, 82 Einsätze, Papierkorb 5 / 1 / 5 |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 / 0 / 0 |
+| Nichts verlorengegangen / Texte | `pruefen.py`, `wortliste.py` | 260 wie Basis · 0 / 0 / 0 |
+| Konsolenfehler | Browserprobe | 0 |
+
+**Ein Fund an der eigenen Arbeit:** Die erste Fassung der Sperrmeldung trug
+ein gerades `"` als schließendes Anführungszeichen; im Browser stand
+sichtbar `&quot;`. Aufgefallen ist es erst am **Text der Antwort** im
+POST-Protokoll, nicht im Bild — drei Stellen richtiggestellt.
+
+**Nicht geprüft:** die Aktionen `einspielen`, `freigeben`, `widerrufen` und
+`paket_loeschen` mit einem direkten POST. Sie stehen in derselben Liste und
+werden an derselben Stelle abgewiesen wie die drei geprüften; belegt ist
+damit der Codeweg, nicht der Einzelfall. Gehört ins Prüfdokument.

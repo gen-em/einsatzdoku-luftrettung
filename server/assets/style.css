@@ -1166,6 +1166,15 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
  * Tabellenköpfe und Legenden gesperrte Versalien — das prägende Stilmittel
  * und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21).
  */
+/* EIN <fieldset>, DAS NUR GRUPPIERT (S3/AP10). Gebraucht fuer das
+ * `disabled`-Attribut: Es sperrt ein ganzes Formular in einem Zug, statt an
+ * jedem Feld ein Attribut zu setzen. Die Elementregeln fuer fieldset sind mit
+ * O11 gefallen — ohne diese Ruecknahme brachte der Browser seinen eigenen
+ * Rahmen und seine eigene Polsterung mit. `min-width:0` gehoert dazu: Ein
+ * fieldset hat eine eingebaute Mindestbreite nach seinem Inhalt und sprengt
+ * damit sonst jedes schmale Raster. */
+.feldsatz-gesperrt{border:0;padding:0;margin:0;min-width:0}
+.feldsatz-gesperrt[disabled]{opacity:.55}
 .feld{margin-bottom:var(--abstand-3)}
 .feld-label{display:block;font-weight:600;margin-bottom:var(--abstand-1)}
 .feld-pflicht{color:var(--rot-tief)}

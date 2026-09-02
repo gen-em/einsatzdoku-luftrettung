@@ -1855,5 +1855,28 @@ declare(strict_types=1);
  * SQL-Abfragen unabhaengig von der Zahl der Einsaetze). Die Sichtbarkeit
  * entsteht in EINEM Durchgang darueber, gemessen 0,06 ms bei 82 Einsaetzen.
  *
+ * 12.4.1 SPERRT DAS DEMO-KONTO AUF DER KONTOSEITE (S3/AP10, E-S3-07) --
+ * FUNKTIONSAENDERUNG.
+ *
+ * Es wird zentral verwaltet: angelegt, zurueckgesetzt und entfernt ueber den
+ * Reiter „Demo-Konto“. Was auf der Kontoseite haengenbliebe, waere
+ * spaetestens nach dreissig Minuten weg -- der Reset ueberschreibt Konto- und
+ * Schluesselmaterial und loescht den ganzen Bestand. Eine Aenderung, die
+ * lautlos verfaellt, ist schlimmer als eine, die gar nicht erst geht.
+ * Gesichert wird das Konto ebenfalls nicht: Sein Bestand ist erfunden und
+ * liegt als Fixture im Repositorium.
+ *
+ * DIE SPERRE SITZT IM SCHREIBWEG, nicht im Markup. Ein `disabled` allein ist
+ * Kulisse -- ein direkt abgesetzter POST geht daran vorbei. Sieben Aktionen
+ * werden serverseitig abgewiesen (konto, sichern, einspielen, freigeben,
+ * widerrufen, paket_loeschen, user_delete); die Anzeige graut zusaetzlich
+ * aus, damit man es sieht, bevor man es versucht. NICHT gesperrt sind die
+ * Geraete-Aktionen: Das Demo-Konto laedt ausdruecklich zum Koppeln einer Uhr
+ * ein, und was dabei entsteht, raeumt der Reset selbst ab.
+ *
+ * Dazu der Anzeigename „Demo NutzerIn“ statt des Namens aus der Fixture --
+ * gesetzt beim Anlegen UND beim Zuruecksetzen, sonst holte der naechste Reset
+ * den alten zurueck.
+ *
  */
-const WEB_VERSION = '12.4.0';
+const WEB_VERSION = '12.4.1';

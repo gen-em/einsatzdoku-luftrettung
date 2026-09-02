@@ -11,6 +11,50 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.4.1] — 2026-09-02
+
+**Das Demo-Konto lässt sich auf der Kontoseite nicht mehr ändern.** Zehntes
+Arbeitspaket von S3. **Funktionsänderung.** Keine Migration.
+
+### Web — Änderungen am Demo-Konto verfielen lautlos
+
+Das Demo-Konto wird zentral verwaltet: angelegt, zurückgesetzt und entfernt
+über den Reiter **Demo-Konto**. Auf seiner Kontoseite standen trotzdem alle
+Formulare der übrigen Konten — Name, Rolle, E-Mail, Sichern, Einspielen,
+Freigeben, Löschen. Was man dort eintrug, war **spätestens nach dreißig
+Minuten wieder weg**: Der Reset überschreibt Konto- und Schlüsselmaterial und
+löscht den ganzen Bestand. Eine Änderung, die lautlos verfällt, ist schlimmer
+als eine, die gar nicht erst geht.
+
+**Gesichert wird das Konto ebenfalls nicht.** Sein Bestand ist erfunden, liegt
+als Fixture im Repositorium und wird alle dreißig Minuten daraus neu
+hergestellt — eine Sicherung davon wäre die Kopie einer Datei, die ohnehin im
+Git liegt. Die Karte „Sicherungen" entfällt für dieses Konto.
+
+### Web — Die Sperre sitzt im Schreibweg, nicht im Markup
+
+Ein `disabled` am Formular ist **Kulisse**: Ein direkt abgesetzter POST geht
+daran vorbei. Sieben Aktionen werden deshalb **serverseitig** abgewiesen —
+`konto`, `sichern`, `einspielen`, `freigeben`, `widerrufen`,
+`paket_loeschen`, `user_delete` — mit einer Meldung, die sagt, wo es
+stattdessen geht. Die Anzeige graut zusätzlich aus, damit man es sieht, bevor
+man es versucht.
+
+Geprüft mit **direkten POSTs** an der Sitzung vorbei: alle drei getesteten
+Aktionen abgewiesen, der Name des Demo-Kontos danach unverändert. Die
+Gegenprobe an einem normalen Konto ging durch.
+
+**Nicht gesperrt sind die Geräte-Aktionen.** Das Demo-Konto lädt ausdrücklich
+zum Koppeln einer Uhr ein („Ausprobieren ist erwünscht"), und was dabei
+entsteht, räumt der Reset selbst wieder ab.
+
+### Web — „Demo NutzerIn"
+
+Der Anzeigename kam aus der Fixture und war der Name des Referenzkontos, aus
+dem sie erzeugt wurde; in der NutzerInnen-Liste las sich das wie ein
+gewöhnliches Konto. Er heißt jetzt **„Demo NutzerIn"** — gesetzt beim Anlegen
+**und** beim Zurücksetzen, sonst holte der nächste Reset den alten zurück.
+
 ## [Web 12.4.0] — 2026-09-01
 
 **Filter erscheinen nur, wenn im Bestand etwas dahintersteht.** Neuntes

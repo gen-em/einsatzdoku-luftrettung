@@ -59,6 +59,14 @@ const DEMO_K_RESET = 'demo_letzter_reset';
  *  braucht — alles Uebrige der Phase P1 liegt unter tools/ (E-P1-07).
  *  GEPACKT, weil sie roh rund 11 MB misst (im Wesentlichen Spurpunkte) und
  *  bei jedem Deploy ueber FTPS mitgeht. */
+/* ANZEIGENAME DES DEMO-KONTOS (S3/AP10). Er kommt NICHT aus der Fixture:
+ * Dort steht der Name des Referenzkontos, aus dem sie erzeugt wurde, und in
+ * der NutzerInnen-Liste las sich das wie ein gewoehnliches Konto. „Demo
+ * NutzerIn" sagt beim Ueberfliegen, was es ist. Gesetzt wird er beim Anlegen
+ * UND beim Zuruecksetzen — sonst holte der naechste Reset den Fixture-Namen
+ * zurueck. */
+const DEMO_NAME = 'Demo NutzerIn';
+
 function demo_fixture_pfad(): string { return __DIR__ . '/demo/fixture.json.gz'; }
 
 function demo_fixture_vorhanden(): bool { return is_file(demo_fixture_pfad()); }
@@ -243,7 +251,7 @@ function demo_anlegen(): array
                                           role, account_key)
                        VALUES (?,?,?,?,?,?,?,?,?,?)')
             ->execute([
-                (string)$k['email'], $k['name'] ?? null, (string)$k['password_hash'],
+                (string)$k['email'], DEMO_NAME, (string)$k['password_hash'],
                 $k['kdf_salt'] ?? null, (int)($k['kdf_iter'] ?? 0),
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null,
@@ -302,7 +310,7 @@ function demo_zuruecksetzen(): array
                               role = \'user\', session_epoch = session_epoch + 1
                        WHERE id = ?')
             ->execute([
-                (string)$k['email'], $k['name'] ?? null, (string)$k['password_hash'],
+                (string)$k['email'], DEMO_NAME, (string)$k['password_hash'],
                 $k['kdf_salt'] ?? null, (int)($k['kdf_iter'] ?? 0),
                 $k['pat_wrap_pw'] ?? null, $k['pat_wrap_rc'] ?? null,
                 $k['pat_key_check'] ?? null, $k['account_key'] ?? null, $id,
