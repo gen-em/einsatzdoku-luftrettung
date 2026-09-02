@@ -3,10 +3,14 @@ declare(strict_types=1);
 /**
  * Geraete-Kopplung. Der Endpunkt kennt zwei Anliegen:
  *
- *   KOPPELN   POST JSON {"code": "..."} — keine Auth-Header.
+ *   KOPPELN   POST JSON {"code": "...", "geraet": {...}} — keine Auth-Header.
  *             Antwort: {"device_id": "...", "api_key": "..."}
  *             Die Uhr tauscht einen kurzlebigen Einmal-Code gegen frische
- *             Zugangsdaten.
+ *             Zugangsdaten. Der Block "geraet" ist FREIWILLIG und traegt eine
+ *             Selbstauskunft des Geraets (JSON-Vertrag 1a, R42); er wird ueber
+ *             geraete_lib.php gelesen und darf die Kopplung nie zum Scheitern
+ *             bringen. Bis Web 12.9.0 verwarf dieser Endpunkt ihn
+ *             stillschweigend.
  *
  *   TRENNEN   POST JSON {"aktion": "trennen"} mit den Kopfzeilen
  *             X-Device-Id und X-Api-Key. Antwort: {"ok": true}
@@ -39,6 +43,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ratelimit_lib.php';
 require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/geraete_lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -243,12 +248,38 @@ if (geraete_grenze_erreicht($pdo, $ownerId)) {
  */
 $devId = 'dev-' . bin2hex(random_bytes(16));
 $key   = bin2hex(random_bytes(24));
+
+/* ---- Was fuer ein Geraet koppelt hier? (R42, S6) --------------------------
+ *
+ * Die Uhr sendet den Block seit 1.9.0, die Handy-App seit 0.2.0 — bis Web
+ * 12.9.0 ist er hier ins Leere gelaufen. Gelesen wird er ueber
+ * geraete_lib.php; die Datei kennt beide Formen (Teilenummer bei Garmin,
+ * Hersteller/Modell beim Handy) und gibt IMMER drei Werte zurueck.
+ *
+ * DER TRY-BLOCK IST NICHT UEBERVORSICHTIG, SONDERN DIE ZUSAGE DES VERTRAGS:
+ * "Eine Kopplung darf an einer Statistikangabe nie scheitern" (Abschnitt 1a).
+ * geraet_block_lesen() ist so gebaut, dass es nicht wirft — aber die Zusage
+ * soll nicht davon abhaengen, dass das auch nach der naechsten Aenderung noch
+ * stimmt. Am anderen Ende steht eine Notaerztin, die eine Uhr koppeln will,
+ * und drei NULL-Spalten sind ein besserer Ausgang als ein 500er.
+ *
+ * VOR DEM INSERT und nicht danach als UPDATE: Ein zweiter Schreibzugriff
+ * koennte fehlschlagen, nachdem die Zugangsdaten bereits herausgegeben sind —
+ * dann stuende das Geraet ohne Angabe da, und niemand erfuehre davon. */
 try {
-    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label)
-                   VALUES (?,?,?,?)')
+    $geraet = geraet_block_lesen($b['geraet'] ?? null);
+} catch (Throwable $ex) {
+    error_log('Geraeteangabe unlesbar, Kopplung laeuft weiter: ' . $ex->getMessage());
+    $geraet = ['art' => null, 'modell' => null, 'teil' => null];
+}
+
+try {
+    $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label,
+                                        geraet_art, geraet_modell, geraet_teil)
+                   VALUES (?,?,?,?,?,?,?)')
         ->execute([$ownerId, $devId,
                    password_hash($key, PASSWORD_DEFAULT),
-                   /* Nur "Uhr", OHNE Datum.
+                   /* Die Geraeteart als Name, OHNE Datum.
                     *
                     * Der Name trug bis Web 5.0.0 das Kopplungsdatum ('Uhr
                     * (gekoppelt 11.08.2026)'). Dieselbe Angabe steht in
@@ -260,8 +291,14 @@ try {
                     * frueher oder spaeter auseinander: Wer das Geraet
                     * umbenennt, hat ein Datum im Namen, das mit nichts mehr
                     * zusammenhaengt. Der Name ist frei waehlbar, das Datum
-                    * gehoert der Zeile. */
-                   'Uhr']);
+                    * gehoert der Zeile.
+                    *
+                    * BIS WEB 12.9.0 STAND HIER FEST 'Uhr'. Seit der Handy-App
+                    * (S4) war das schlicht falsch: Ein frisch gekoppeltes
+                    * Handy hiess in der Geraeteliste "Uhr". Jetzt folgt die
+                    * Vorgabe der gemeldeten Art. */
+                   geraet_vorgabename($geraet['art']),
+                   $geraet['art'], $geraet['modell'], $geraet['teil']]);
 } catch (Throwable $ex) {
     // Der Code bleibt in diesem Fall verbraucht. Das ist die sichere
     // Richtung: Ein Code, der nach einem Fehlschlag wieder gueltig waere,
@@ -305,9 +342,11 @@ try {
             "Hallo,\n\n"
             . "mit deinem Konto der Gen-EM Einsatzdokumentation Notarzt wurde soeben ein\n"
             . "neues Gerät gekoppelt:\n\n"
+            . "  Gerät:     " . geraet_bezeichnung($geraet['art'], $geraet['modell'],
+                                                        $geraet['teil']) . "\n"
             . "  Geräte-ID: " . $devId . "\n"
             . "  Zeitpunkt: " . fmt_local(gmdate('Y-m-d H:i:s'), 'd.m.Y H:i') . " Uhr\n\n"
-            . "War das deine Uhr, ist alles in Ordnung — du musst nichts tun.\n\n"
+            . "War das dein Gerät, ist alles in Ordnung — du musst nichts tun.\n\n"
             . "War es das nicht, deaktiviere oder lösche das Gerät bitte umgehend unter\n"
             . "Einstellungen → Geräte. Ab diesem Moment kann es keine Daten mehr hochladen.\n"
             . $CFG['app']['base_url'] . "/einstellungen.php?t=geraete\n\n"

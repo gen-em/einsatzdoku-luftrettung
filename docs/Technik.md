@@ -88,8 +88,13 @@ Daten erst nach Server-Bestätigung.
 │   ├── nachbearbeitung.php + nachbearbeitung_lib.php  einmalige Nachträge nach der Migration
 │   ├── einsatz_loeschen.php · diensttag_loeschen.php · papierkorb.php  Löschen mit Vorschau
 │   ├── ingest.php         Uhr-/Fremdquellen-Endpunkt (Auth, Idempotenz)
-│   ├── pair.php           Uhr-Kopplung per Code, und Trennen einer
+│   ├── pair.php           Gerätekopplung per Code, und Trennen einer
 │   │                      bestehenden Kopplung (JSON-Vertrag 1a/1b)
+│   ├── geraete_lib.php    Liest den Block `geraet` einer Kopplung — die
+│   │                      EINZIGE Stelle, die ihn auslegt (Uhr- und
+│   │                      Handy-Form), und die Beschriftungen der Gerätelisten
+│   ├── geraetemodelle.php Teilenummer → Modellname und Geräteart. **ERZEUGT**
+│   │                      (`tools/geraetemodelle/`), nicht von Hand ändern
 │   ├── spur_lib.php       Spurpunkte lesen und schreiben — die EINZIGE Stelle,
 │   │                       die `track_points`/`track_blobs` anfasst (4.97)
 │   ├── gpx_lib.php        GPX 1.1 aus einer oder mehreren Spuren — die
@@ -251,6 +256,18 @@ Daten erst nach Server-Bestätigung.
 │   │                      zurücklässt — Beleg zu V-10 (s. LIESMICH.md)
 │   ├── eingabe-probe/     Connect-IQ-Probe zum Ausmessen des Eingabe-
 │   │                      verhaltens neuer Zielgeräte (s. Abschnitt 5.2)
+│   ├── fristprobe/        belegt die Angleichung der Schlüsselfrist (R44, S6):
+│   │                      spielt eine Schicht durch und zählt, wie oft der
+│   │                      Inhaltsschlüssel neu entpackt werden muss — vorher
+│   │                      17, nachher 1 (s. LIESMICH.md)
+│   ├── geraetemodelle/    erzeugt server/geraetemodelle.php (Teilenummer auf
+│   │                      Modellname) aus den Connect-IQ-Gerätedateien und
+│   │                      löst mit `nachaufloesen.php` bestehende Zeilen
+│   │                      nachträglich auf. Braucht eine Zuarbeit, die nicht
+│   │                      im Repositorium steht (s. LIESMICH.md)
+│   ├── geraeteprobe/      hält das Auslesen des Kopplungsblocks `geraet`
+│   │                      gegen beide Geräteformen und gegen Unsinn (R42, S6);
+│   │                      ohne Datenbank und ohne Gerät (s. LIESMICH.md)
 │   ├── gpxprobe/          prüft den GPX-Abruf (S2/AP4): gültig gegen das
 │   │                       vendorierte amtliche GPX-1.1-XSD, Punkt für Punkt
 │   │                       gegen die browsergebauten Referenzdateien,
@@ -383,7 +400,7 @@ Daten erst nach Server-Bestätigung.
 | `users` | Login (E-Mail = Username), Rolle `user`/`admin`; Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“ |
 | Sicherung | `backup_lib.php` | Das Format ist seit Web 4.5.2 **aufgezählt** statt „alles, was in der Tabelle steht". Neue Spalten sind damit nicht mehr automatisch enthalten — sie einzutragen ist eine Entscheidung. Draußen: `id`/`user_id`/`device_id` (interne Verweise) und `other_resources` (tote Altspalte seit der Migration `2026_07`). **Bekannt:** `site_ele_m` ist in der Sicherung, kommt beim Einspielen aber nicht zurück — der Einspielweg schreibt nur die Felder aus `mission_fields.php` plus `pat_blob`. |
 | `password_resets` | Token-Hashes (sha256); 1 h bei „Passwort vergessen“, 24 h bei Neuanlage und Installation; der Job `aufraeumen` entsorgt Altbestand. Seit Web 4.4.0 gilt **höchstens ein offener Token je Konto**: Eine neue Anforderung entwertet alle vorherigen. Seit Web 4.5.0 entwertet auch **jeder Passwortwechsel** alle offenen Token des Kontos — der 24-Stunden-Einladungslink entsteht auf einem anderen Weg und hätte den soeben gewählten Zustand sonst überschreiben können |
-| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit |
+| `devices` | Upload-Zugang je Gerät: `device_id` (öffentlich, seit Web 4.5.1 aus **16** statt 4 Zufallsbytes — Bestandsgeräte behalten die kurze Kennung) + `api_key_hash`; **`active`-Flag** (deaktivieren statt löschen); virtuelle Geräte `manual-<userId>` für Handeinträge (dauerhaft inaktiv, aus Listen gefiltert). Seit Web 4.4.0 **höchstens `MAX_GERAETE` (5) echte Geräte je Konto**, aktive wie deaktivierte — die virtuellen zählen nicht mit. Seit Web 12.9.0 dazu die **Gerätekennung** (R42): `geraet_art` (`uhr`/`handy`/`sonstiges`), `geraet_modell` (aufgelöster Klarname) und `geraet_teil` (die Rohangabe des Geräts — bei Garmin die Teilenummer, beim Handy Hersteller und Modell). **Alle drei sind dauerhaft NULL-bar**, und das ist keine Nachlässigkeit: Vier Wege legen ein Gerät an — Kopplung, Handanlage, virtuelles Gerät, Demo-Bestand —, und nur die Kopplung weiß etwas über das Gerät. Ein `NOT NULL DEFAULT 'unbekannt'` hätte daraus eine Aussage gemacht, wo keine ist; „unbekannt" ist eine Sache der Anzeige. **Bestandsgeräte bleiben leer**, bis sie neu koppeln — die Angabe entsteht ausschließlich beim Koppeln, und eine bereits gekoppelte Uhr wird nicht rückwirkend gefragt. **Drei Spalten statt der in R42 genannten zwei:** Die Rohangabe steht daneben, weil der Modellname aus einer erzeugten Tabelle stammt und ein künftiges Gerät sonst unwiederbringlich auf „unbekannt" fiele. Siehe Abschnitt 5 |
 | `missions` | Einsatz; `UNIQUE(device_id, client_ref)` = Idempotenz-Anker; **`day_id`** = Fremdschlüssel auf `days` (bis Web 5.10.0: die Spalte `day` mit dem Kalenderdatum); **`manual`-Marker** — ausschließlich Schutz vor Uhr-Überschreiben, NICHT „von Hand angelegt"; **`origin`** (`watch`/`manual`/`import`) = Herkunft, wird beim Anlegen gesetzt und nie wieder geändert; **`edited`** = wurde nach dem Anlegen verändert; `deleted_at`/`deleted_with_day` (Papierkorb); Zusatzfelder lt. `mission_fields.php`; **`site_ele_m`** = berechnete Einsatzort-Höhe (kein Formularfeld, siehe `site_elevation_lib.php`); **`crew_override`** = abweichende Besatzung je Einsatz; die Namen liegen seit Web 6.0.0 in **`mission_crew`** (`mission_id, role_code, name`) statt in fünf festen Spalten — die Tagescrew in `day_crew` bleibt die einzige Wahrheit, solange der Haken nicht gesetzt ist (siehe Abschnitt 4); **`pat_blob`** = E2E-Chiffretext (Name, Geburtsdatum, Alter, Diagnose, Einsatzort, seit Web 2.9.0 auch die Einsatznummer, seit Web 3.3.0 auch die Beschreibung des Einsatzortes — Klartext-Ortsspalten existieren seit der Pflicht-Migration nicht mehr) |
 | `mission_phases` | Phasen-Zeitstempel **2–9** (Mehrfach-Einträge erlaubt und erwünscht — eine erneut gesetzte Phase ist eine Korrektur, keine Dublette) inkl. Position. Eine Phase 10 gibt es nicht; der Abschluss läuft über `final` und `ended_at` |
 | `resus_sessions` / `resus_events` | Reanimationen: **mehrere Sitzungen je Einsatz**, Ereignisse typisiert |
@@ -509,6 +526,31 @@ Inaktivität), der Schlüssel dagegen am `sessionStorage` des jeweiligen Tabs
 aber gesperrt" tritt daher regelmäßig auf: Link im neuen Tab, Browser-Neustart,
 Passwort-Reset ohne Wiederherstellungsschlüssel (der Wrap passt dann nicht mehr,
 `getContentKey()` liefert `null`).
+
+**Beide Fristen messen dasselbe — seit Web 12.9.0 auch wirklich (R44).** Sie
+standen von Anfang an beide auf 30 Minuten, und der Kommentar in `keyguard.js`
+sagte ausdrücklich, sie sollten gleich sein. Sie waren es nicht: `auth_guard.php`
+schreibt `last_seen` bei **jeder Anfrage** — eine Inaktivitätsfrist —, während
+`keyguard.js` seinen Zeitstempel nur beim **Entpacken** setzte und ihn beim
+Treffer im Zwischenspeicher nicht anfasste. Das war eine absolute Frist ab dem
+Entsperren. `contentKey()` erneuert den Zeitstempel jetzt bei jedem Treffer.
+
+**Was der Fristablauf kostete, und was nicht.** Der R44-Eintrag schrieb ihm den
+Entsperrdialog zu; das ist im Rahmenplan-Archiv am 01.09.2026 berichtigt.
+`verwerfeInhalt()` lässt `edk` bewusst liegen, und `getContentKey()` entpackt
+den Inhaltsschlüssel daraus **ohne Passwort** neu — der Ablauf kostete ein
+**stilles Neu-Entpacken**. Zahl dazu: acht Stunden Dienst, alle fünf Minuten
+eine Seite, 97 Aufrufe ohne Pause — **vorher 17 Neu-Entpackungen, nachher 1**
+(`tools/fristprobe/`, dort auch die Gegenprobe, dass die Frist weiterhin
+greift). Der Dialog fällt an der Stelle darüber: wenn `getContentKey()` `null`
+liefert, also in genau den drei aufgezählten Fällen. **Das bleibt so.**
+
+Die Angleichung ist damit Aufräumen und kein Heilmittel — richtig bleibt sie:
+Zwei Uhren, die dieselbe Zahl tragen und Verschiedenes messen, sind eine Falle
+für den nächsten, der sich auf den Kommentar verlässt. Die Gegenrichtung — die
+Sitzung ebenfalls absolut befristen — hätte aktive NutzerInnen mitten in der
+Arbeit abgemeldet. Läuft die Frist wirklich ab, endet die **Sitzung**, und die
+nächste Anfrage landet auf der Anmeldeseite, die die Schlüssel ohnehin räumt.
 
 `unlock.js` exportiert genau eine Funktion:
 
@@ -1718,23 +1760,77 @@ Zeitlimit des Versands belegt. Bei fünf Anforderungen je Stunde und Konto ist
 das klein, aber nicht null — deshalb steht das Zeitlimit bei der Kopplung, wo
 die Uhr wartet, auf fünf statt fünfzehn Sekunden.
 
-### Was die Uhr beim Koppeln über sich meldet — seit Uhr 1.9.0
+### Was ein Gerät beim Koppeln über sich meldet — seit Web 12.9.0 gespeichert
 
-Die Kopplung sendet neben dem Code einen Block `geraet` mit Teilenummer,
-Displaymaßen, Touch, Firmware, Plattform- und App-Fassung; die Art steht fest
-auf `"uhr"`. Feldliste und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
+Die Kopplung sendet neben dem Code einen Block `geraet`. Er kommt in **zwei
+Formen**, weil die Geräte Verschiedenes über sich wissen: Die Garmin-Uhr
+(seit 1.9.0) schickt ihre **Teilenummer** samt Displaymaßen, Touch, Firmware,
+Plattform- und App-Fassung; die Android-Handy-App (seit 0.2.0) schickt
+**Hersteller und Modell** statt der Teilenummer, dazu die API-Stufe. Feldliste
+und Begründungen: `docs/JSON-Vertrag.md`, Abschnitt 1a.
 
-**Der Server verwirft den Block derzeit stillschweigend** — die Auswertung ist
-Backlog Nr. 59. Bis dahin sammelt niemand etwas; die Uhr sendet nur.
+**Bis Web 12.9.0 hat `pair.php` den Block stillschweigend verworfen** — ein
+Jahr lang. Jede Kopplung aus dieser Zeit ist für die Statistik verloren; R42
+hat das vorhergesehen und in Kauf genommen.
 
-Zwei Entscheidungen dahinter. Gesendet wird die **Teilenummer**, nicht der
-Modellname: Den kennt die Uhr nicht, `DeviceSettings` führt ihn nicht. Die
-Teilenummer ist eindeutig und serverseitig gegen die Gerätedateien der
-Uhr-Plattform auflösbar (325 Teilenummern auf 173 Modelle, samt Geräteart) — eine
-Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Platz. Und
-**`uniqueIdentifier` wird bewusst nicht gesendet**: eine dauerhafte
-Gerätekennung, die für eine Stückzahl-Statistik nicht gebraucht wird und in
-einer kleinen Gruppe mehr Personenbezug schafft, als die Frage rechtfertigt.
+**Gespeichert werden drei Spalten, nicht zehn.** `geraet_art`,
+`geraet_modell` und `geraet_teil` an `devices` (Abschnitt 3). Displaymaße,
+Firmware, `ciq`/`sdk` und `app` kommen an und werden **nicht** gespeichert:
+R36 lässt die Gerätekennung als die eine benannte Ausnahme der Formel „es wird
+nichts Neues erfasst" zu, und die Ausnahme ist die Frage „welches Gerät", nicht
+„in welchem Zustand". Backlog Nr. 59 hatte die weiteren Felder vorgeschlagen;
+sie sind damit erledigt und fallen weg.
+
+**Die Auflösung liegt auf dem Server.** Die Uhr kennt ihren Modellnamen nicht,
+`DeviceSettings` führt ihn nicht — eine Modelltabelle auf einem Gerät mit
+128 kB wäre der falsche Platz. Die Teilenummer ist dagegen eindeutig und gegen
+die Gerätedateien der Uhr-Plattform auflösbar (325 Teilenummern auf 173
+Modelle, samt Geräteart). Die Tabelle steht in `server/geraetemodelle.php` und
+ist **erzeugt**: `tools/geraetemodelle/erzeugen.py`, aus denselben Dateien, mit
+denen `tools/uhr-pruefstand/geraeteklassen.py` arbeitet.
+
+> **Die Gerätedateien liegen nicht im Repositorium** — sie gehören Garmin und
+> werden nur vom SDK-Manager ausgeliefert. Ihre Bereitstellung kommt als
+> `CIQ_GERAETE_URL` herein und **muss erfragt werden**
+> (`tools/uhr-pruefstand/LIESMICH.md`). Ohne sie erzeugt
+> `erzeugen.py --leer` eine gültige, leere Tabelle: Die Anwendung läuft
+> vollständig, löst aber nichts auf — jede Teilenummer landet unverändert in
+> `geraet_teil`, und die Geräteliste zeigt „Uhr · 006-B4261-00" statt
+> „Uhr · Venu 3S". Verloren geht dabei nichts; genau dafür steht die Rohangabe
+> in einer eigenen Spalte.
+
+**Bei der Geräteart schlägt die Tabelle die Selbstauskunft.** Die Uhr-App
+sendet `art` fest als `"uhr"` — eine Connect-IQ-App läuft nur auf
+Garmin-Geräten, und Uhr von Radcomputer unterscheiden kann sie nicht. Die
+Gerätedateien können es. Ein Edge, der sich „uhr" nennt, hätte die Statistik
+sonst still verfälscht.
+
+**Der Block ist eine Selbstauskunft, keine geprüfte Wahrheit.** Er kommt von
+einem Gerät, das sich beim Server erst vorstellt. `geraete_lib.php` schneidet
+zu, statt zu glauben: Längen auf die Spaltenbreite (mit `mb_substr` — ein an
+der falschen Stelle abgeschnittenes UTF-8-Zeichen macht die Spalte unlesbar),
+Steuerzeichen zu Leerzeichen, eine Geräteart außerhalb der drei erlaubten
+Werte zu `NULL`. **Eine Kopplung scheitert nie an einer Statistikangabe**
+(JSON-Vertrag 1a): Ein Block, der gar keiner ist, ergibt drei leere Werte und
+keinen Fehler. Nachweis ohne Datenbank: `php tools/geraeteprobe/probe.php`.
+
+**Was bewusst nicht gesendet wird:** `uniqueIdentifier` (Uhr), `ANDROID_ID`,
+IMEI und Seriennummer (Handy) — dauerhafte Gerätekennungen, die für eine
+Stückzahl-Statistik nicht gebraucht werden und in einer kleinen Gruppe mehr
+Personenbezug schaffen, als die Frage rechtfertigt.
+
+**Die Auswertung ist P5** (Geräteverteilung im Betriebslage-Dashboard, R38).
+Vorher muss die **Datenschutzerklärung die Erhebung benennen** (Backlog
+Nr. 80) — bei einer Anwendung, deren Versprechen die
+Ende-zu-Ende-Verschlüsselung ist, gehört das nicht als Nebenprodukt
+eingeführt. Der Text entsteht nach R60/Schritt 10 aus einer Bestandsaufnahme
+des gesamten Projekts, vor v1.0.
+
+**Der Name des Geräts folgt der Art.** Beim Koppeln vergibt `pair.php` als
+Bezeichnung „Uhr", „Handy" oder „Gerät". Bis Web 12.9.0 stand dort fest
+„Uhr" — seit der Handy-App war das schlicht falsch. Wo keine Art gemeldet
+wird, bleibt es bei „Uhr": Ein Gerät ohne Block ist eine Uhr-Fassung vor
+1.9.0, und etwas anderes konnte damals nicht koppeln.
 
 ### Geräte je Konto
 
@@ -3590,7 +3686,7 @@ Die Bausteine im Einzelnen:
 | Fester Vergleichswert | `AUTH_VERGLEICHSWERT` in `db.php` | Ein bcrypt-Hash ohne zugehöriges Geheimnis, damit auch der Zweig „Kennung unbekannt" eine Passwortprüfung rechnet. Ohne ihn beantwortet die Antwortzeit die Frage, welche Konten und Geräte es gibt. |
 | Antwort abschließen | `antwort_abschliessen()` in `smtp.php` | Beendet die Antwort, bevor der Mailversand beginnt. Nimmt dem Versand die messbare Wirkung auf die Antwortzeit. |
 | Schlüssel-Prüfsumme | `assets/crypto.js` | Erkennt, ob ein Inhaltsschlüssel zum Konto gehört. Der Server lernt dadurch nichts über den Schlüssel — er gewinnt nur die Fähigkeit, den einen Fehler zu erkennen, der alles kostet. |
-| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn mit der Sitzungsfrist ablaufen. **Muss vor `unlock.js` geladen werden.** |
+| Schlüsselbindung | `assets/keyguard.js` | Bindet den zwischengespeicherten Inhaltsschlüssel an die Hülle, aus der er stammt, und lässt ihn nach derselben Frist ablaufen wie die Sitzung — **gleitend wie sie**: Jeder Treffer erneuert den Zeitstempel (R44, seit Web 12.9.0). Vorher war es eine feste Frist ab dem Entsperren, und genau daraus entstand der Entsperrdialog mitten in der Arbeit. **Muss vor `unlock.js` geladen werden.** |
 | Fehlerantwort der Endpunkte | `db.php` | `json_fehler()` protokolliert den vollen Ausnahmetext und gibt nach außen nur eine achtstellige Kennung. `fehler_kennung()` für Stellen mit eigener Antwortform (`ingest.php`). |
 | Zeitrechnung | `db.php` | **`TIMESTAMP` und `DATETIME` verhalten sich verschieden, und das ist bei jeder Zeitspalte mitzudenken.** `TIMESTAMP` rechnet MySQL beim Schreiben in UTC um und beim Lesen zurück — der gespeicherte Wert ist unabhängig von der Sitzungszone immer richtig (`pair_codes`, `devices.last_seen`/`created_at`, `users.created_at`, `missions.created_at`, `deleted_refs`). `DATETIME` speichert unverändert, was dasteht; dort entscheidet die Sitzungszone (`rate_limits`, `password_resets.expires_at`, sowie die Einsatz- und Papierkorbzeiten — Letztere werden aber über `local_to_utc()` bzw. `UTC_TIMESTAMP()` befüllt und waren nie zonenabhängig). |
 | Zeitrechnung | `db.php` | Die Verbindung steht seit Web 4.5.2 ausdrücklich auf UTC (`SET time_zone = '+00:00'`). Ohne das käme die Zeitrechnung von `NOW()` aus einer Hoster-Einstellung, und `NOW()` und `UTC_TIMESTAMP()` liefen um den Zonenversatz auseinander. Der Unterschied im Code bleibt: `UTC_TIMESTAMP()` für den Papierkorb (90-Tage-Frist, `TRASH_DAYS`), `NOW()` für Kurzlebiges (Ratenschutz, Token, Kopplungscodes). Die **Anzeige** rechnet in PHP nach `$CFG['app']['timezone']` um. |
@@ -4143,12 +4239,18 @@ gesendet. Der Puffer der Uhr überlebt ihren Neustart.
 
 ### Was die App an den Server schickt
 
-Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. Der Server ist
-geräteneutral und bleibt es — er sieht ein Gerät mit Kennung und
+Nichts Neues: denselben JSON-Vertrag wie die Uhr-App aus Abschnitt 5. **Der
+Ingest ist geräteneutral und bleibt es** — er sieht ein Gerät mit Kennung und
 API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
 Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
-`wm-` für die Uhr); der Vertragsnachtrag dazu steht noch aus (A1, hängt an
-R42).
+`wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im
+JSON-Vertrag, Abschnitt 8 — der Nachtrag hing an R42 und ist mit S6 erledigt.
+
+**Die Kopplung ist seit Web 12.9.0 nicht mehr geräteneutral**, und das ist
+Absicht: `pair.php` liest den Block `geraet` aus und hält fest, was gekoppelt
+hat (R42). Die Neutralität gilt weiterhin für den Upload — dort entscheidet
+nichts am Verhalten des Servers, welcher Client sendet. Beim Koppeln ist die
+Geräteart die Auskunft selbst.
 
 ### Prüfen ohne Gerät
 
@@ -4295,6 +4397,33 @@ hinterher" — dann Punkt 1 oder 2 oben einrichten.
 **Gerät verloren / Schlüssel kompromittiert:** Web → „Geräte" (oder Verwaltung)
 → **Deaktivieren**. Wirkt sofort (Ingest antwortet `403`); Daten bleiben. Neue
 Uhr = neues Gerät anlegen.
+
+**Die Geräteliste sagt bei einem Gerät „Gerät unbekannt":** Kein Fehler.
+Angaben über das Gerät entstehen **ausschließlich beim Koppeln** (seit Web
+12.9.0) — bei einem Gerät, das vorher gekoppelt wurde, von Hand angelegt ist
+oder eine ältere Client-Fassung trägt, gibt es nichts, was der Server wissen
+könnte. Abhilfe ist **Neukopplung**, nicht Nachtragen: Es gibt keinen Weg,
+die Angabe von Hand zu setzen, und das ist Absicht — sie soll eine Auskunft
+des Geräts bleiben und keine Eingabe.
+
+**Ein Uhrmodell erscheint als Teilenummer statt als Name** („Uhr ·
+006-B4261-00"): Die Modelltabelle kennt diese Teilenummer nicht — entweder ist
+das Gerät neuer als die Tabelle, oder sie wurde nie gefüllt. Zwei Schritte:
+
+1. `python3 tools/geraetemodelle/erzeugen.py <Gerätedateien>` neu laufen lassen
+   und ausrollen. Die Gerätedateien liefert nur der SDK-Manager; ihre
+   Bereitstellungsadresse (`CIQ_GERAETE_URL`) steht nicht im Repositorium und
+   **muss erfragt werden**.
+2. `php tools/geraetemodelle/nachaufloesen.php` — zeigt, welche bestehenden
+   Zeilen die neue Tabelle auflöst; `--schreiben` trägt es ein. **Braucht
+   Shell-Zugriff**; ohne ihn holen die Geräte ihre Angabe bei der nächsten
+   Kopplung nach.
+
+**Nichts geht verloren, solange das offen ist** — die Rohangabe steht in
+`devices.geraet_teil`. Zu beachten: Betroffen ist nicht nur der Modellname.
+Solange die Tabelle die Teilenummer nicht kennt, steht in `geraet_art` die
+**ungeprüfte Selbstauskunft** des Geräts, und die Garmin-App sendet dort fest
+`"uhr"` — ein Radcomputer wäre bis zum Nachauflösen als Uhr gezählt.
 
 **Code-Update mit DB-Änderung ausrollen:** pushen (Deploy läuft automatisch)
 → als Admin **`/update.php`** aufrufen → jede Zeile muss die Plakette

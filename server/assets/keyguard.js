@@ -21,6 +21,32 @@
  * liefen bisher auseinander. Hier laufen sie zusammen: Nach derselben Frist
  * ist auch der Schlüssel weg.
  *
+ * DIESELBE ZAHL WAR NICHT DIESELBE FRIST (R44, angeglichen in Web 12.9.0).
+ * Beide standen auf 30 Minuten und maßen trotzdem Verschiedenes:
+ * `auth_guard.php` schreibt `$_SESSION['last_seen']` bei JEDER Anfrage — eine
+ * Inaktivitätsfrist, die sich mit jedem Klick erneuert. Hier dagegen wurde der
+ * Zeitstempel nur beim ENTPACKEN gesetzt; der Treffer im Zwischenspeicher gab
+ * den Schlüssel zurück, ohne ihn anzufassen. Das war eine ABSOLUTE Frist ab
+ * dem Entsperren. Seither erneuert `contentKey()` ihn bei jedem Treffer.
+ *
+ * WAS DAS KOSTETE, UND WAS NICHT. Der R44-Eintrag des Rahmenplans schrieb dem
+ * zu, dass mitten in der Arbeit ein Entsperrdialog erschien. Das trifft NICHT
+ * zu, und es ist im Rahmenplan-Archiv am 01.09.2026 berichtigt:
+ * `verwerfeInhalt()` lässt `edk` bewusst liegen, und `EdCrypto.getContentKey()`
+ * entpackt eine Zeile weiter unten ohne Passwort daraus neu. Der Fristablauf
+ * kostete also ein STILLES NEU-ENTPACKEN, alle 30 Minuten, egal wie
+ * durchgehend gearbeitet wurde — gemessen: 17 statt 1 über acht Stunden
+ * (`tools/fristprobe/`). Der Dialog fällt an einer anderen Stelle: wenn
+ * `contentKey()` null liefert, also bei fehlendem `edk` oder nicht passender
+ * Hülle — neuer Tab, Browser-Neustart, Passwort-Reset. **Das bleibt so**, und
+ * der Tab-Fall ist ausdrücklich gewollt.
+ *
+ * Die Angleichung ist damit Aufräumen und kein Heilmittel — richtig bleibt sie
+ * trotzdem: Zwei Uhren, die dieselbe Zahl tragen und Verschiedenes messen,
+ * sind eine Falle für den nächsten, der sich auf den Kommentar unten verlässt.
+ * Die Gegenrichtung — die Sitzung ebenfalls absolut zu befristen — hätte
+ * aktive NutzerInnen mitten in der Arbeit abgemeldet.
+ *
  * Erwartet aus der Seite: EdCrypto.
  *
  * Diese Datei ändert von sich aus nichts — sie wird von den Anzeigeseiten
@@ -34,7 +60,8 @@ const EdKeyGuard = (() => {
 
   // Muss zu SESSION_TIMEOUT_S in auth_guard.php passen. Bewusst gleich und
   // nicht kürzer: Ein Schlüssel, der VOR der Sitzung abläuft, erzeugt einen
-  // Entsperrdialog mitten in der Arbeit und keinen Sicherheitsgewinn.
+  // Entsperrdialog mitten in der Arbeit und keinen Sicherheitsgewinn. Die
+  // Zahl allein genügte dafür nicht — siehe R44 im Kopf dieser Datei.
   const MAX_ALTER_MS = 1800 * 1000;
 
   function ablegen(bindung) {
@@ -42,6 +69,20 @@ const EdKeyGuard = (() => {
       sessionStorage.setItem(S_BIND, bindung || '');
       sessionStorage.setItem(S_TIME, String(Date.now()));
     } catch (e) { /* Speicher nicht verfügbar — dann gilt der Schlüssel als ungebunden */ }
+  }
+
+  /**
+   * Die Frist von vorn zählen lassen (R44).
+   *
+   * Nur der Zeitstempel, NICHT die Bindung: Die Hülle, aus der der Schlüssel
+   * stammt, hat sich nicht geändert — sie ist ja gerade als passend erkannt
+   * worden. Sie noch einmal zu schreiben wäre ein zweiter Zugriff auf den
+   * Speicher, der nichts ändern kann außer im Fehlerfall.
+   */
+  function anfassen() {
+    try {
+      sessionStorage.setItem(S_TIME, String(Date.now()));
+    } catch (e) { /* Speicher nicht verfügbar — dann läuft die alte Frist weiter */ }
   }
 
   /**
@@ -88,7 +129,12 @@ const EdKeyGuard = (() => {
     const vorhanden = sessionStorage.getItem('pck');
     if (vorhanden) {
       const gebunden = sessionStorage.getItem(S_BIND);
-      if (gebunden === erwartet && frisch()) { return vorhanden; }
+      if (gebunden === erwartet && frisch()) {
+        // Benutzt heißt in Gebrauch: Die Frist zählt ab jetzt neu, damit sie
+        // dasselbe misst wie die der Sitzung — Inaktivität (R44).
+        anfassen();
+        return vorhanden;
+      }
       // Passt nicht oder zu alt: verwerfen statt weiterreichen. NUR den
       // Inhaltsschlüssel — der Datenschlüssel wird gleich zum Entpacken
       // gebraucht.

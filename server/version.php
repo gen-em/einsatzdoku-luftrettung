@@ -2019,5 +2019,46 @@ declare(strict_types=1);
  * (E-S4-15) und der Nachtrag im JSON-Vertrag. Beides haengt an S5 und R42,
  * die noch nicht durch sind.
  *
+ * 12.9.0 NIMMT AN, WAS DIE GERAETE SEIT EINEM JAHR SENDEN (S6, R42 und R44).
+ * Die Uhr schickt beim Koppeln seit 1.9.0 einen Block ueber sich selbst, die
+ * Handy-App seit 0.2.0 — `pair.php` hat ihn stillschweigend verworfen. Jetzt
+ * landet er in drei Spalten an `devices` (Art, Modell, Rohangabe), und die
+ * Geraeteliste sagt, was da eigentlich gekoppelt ist. MIT MIGRATION
+ * (2026_09_02_geraetekennung).
+ *
+ * DIE UHR SENDET IHRE TEILENUMMER, NICHT IHREN MODELLNAMEN — den kennt sie
+ * nicht. Aufgeloest wird sie auf dem Server (`geraetemodelle.php`, erzeugt
+ * aus den Geraetedateien der Uhr-Plattform). Die dritte Spalte haelt die
+ * Rohangabe daneben: Eine Uhr, die es beim Erzeugen der Tabelle noch nicht
+ * gab, fiele sonst dauerhaft auf "unbekannt" — und zwar unwiederbringlich.
+ * Mit der Rohangabe loest `tools/geraetemodelle/nachaufloesen.php` jede Zeile
+ * spaeter erneut auf. Das Werkzeug gehoert zur Sache und nicht zum Komfort:
+ * Bis dahin steht in `geraet_art` die ungepruefte Selbstauskunft, und die
+ * Garmin-App sendet dort fest "uhr" — ein Radcomputer waere falsch gezaehlt.
+ *
+ * DIE TABELLE WIRD VORERST LEER AUSGELIEFERT. Die Geraetedateien liefert nur
+ * der SDK-Manager aus; die Adresse ihrer Bereitstellung steht nicht im
+ * Repositorium (Rahmenplan, Abschnitt 6). Bis dahin zeigt jede
+ * Garmin-Kopplung die Teilenummer statt des Modellnamens.
+ *
+ * NEBENBEI EIN FEHLER AUS S4: Beim Koppeln stand der Name eines Geraets fest
+ * auf "Uhr". Seit es die Handy-App gibt, hiess ein frisch gekoppeltes Handy
+ * in der Geraeteliste "Uhr". Die Vorgabe folgt jetzt der gemeldeten Art.
+ *
+ * UND DIE ZWEITE UHR GEHT JETZT RICHTIG (R44). Sitzung und Inhaltsschluessel
+ * standen beide auf 30 Minuten und massen trotzdem Verschiedenes: die Sitzung
+ * Inaktivitaet (erneuert bei jeder Anfrage), der Schluessel die Zeit seit dem
+ * Entsperren (nie erneuert). `keyguard.js` erneuert den Zeitstempel jetzt bei
+ * jedem Treffer.
+ *
+ * WAS DAS NICHT IST: das Ende des Entsperrdialogs. Der R44-Eintrag schrieb
+ * dem Fristablauf den Dialog zu; das ist im Rahmenplan-Archiv am 01.09.2026
+ * berichtigt worden und stimmt nicht. `verwerfeInhalt()` laesst den
+ * Datenschluessel liegen, und der Inhaltsschluessel wird eine Zeile spaeter
+ * OHNE Passwort neu entpackt — der Ablauf kostete ein stilles Neu-Entpacken,
+ * gemessen 17 statt 1 ueber acht Stunden Dienst (`tools/fristprobe/`). Der
+ * Dialog kommt vom tabweisen sessionStorage und bleibt; er steht jetzt als
+ * gewollte Eigenschaft im Handbuch statt als unerklaerter Fehler.
+ *
  */
-const WEB_VERSION = '12.8.0';
+const WEB_VERSION = '12.9.0';

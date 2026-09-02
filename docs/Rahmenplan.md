@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 17 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 18 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -13,7 +13,9 @@ das Archiv; sein Kopf sagt, welcher alte Abschnitt wo weiterlebt.
 (ausgeliefert; ein Push auf `main` deployt). Der S4-Zweig trägt
 **Web 12.8.0** und **Android 0.7.7**; `main` ist in ihn geholt und die
 Konflikte sind gelöst — der Push auf `main` **wartet auf die Freigabe**, und
-danach ist `update.php` fällig.
+danach ist `update.php` fällig. Darauf aufbauend liegt der S6-Zweig mit
+**Web 12.9.0** (Schritt 2, gebaut) — er bringt eine **zweite** Migration mit;
+nach dem Deploy ist `update.php` einmal für beide fällig.
 
 **So wird gelesen:** Abschnitt 3 sagt, was als Nächstes dran ist und in
 welcher Reihenfolge. Abschnitt 5 sagt, wohin jeder offene Backlog-Punkt
@@ -128,7 +130,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | Schritt | Kennung | Inhalt | Voraussetzung | Konzept | Modell | Status |
 |---|---|---|---|---|---|---|
 | 1 | **S4 — Merge** | Fehlerbehebung abschließen, Backlog-Nummern nachziehen, `main` holen, Merge = Deploy, `update.php` | — | liegt vor | Opus | **in Arbeit** — Zweig fertig (Web 12.8.0, Android 0.7.7), `main` geholt und Konflikte gelöst; **wartet auf die Freigabe zum Push**, `update.php` steht danach aus |
-| 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | offen |
+| 2 | **S6 — Gerätekennung und Schlüsselfrist** | Serverseite von R42, Behebung R44 | Schritt 1 | keins; R42 und R44 sind die Spezifikation | Opus | **gebaut** — Web 12.9.0 auf dem Zweig; wartet auf die Abnahme und auf die Gerätedateien (Abschnitt 6) |
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
@@ -178,19 +180,86 @@ Signaturschlüssel, Gerätetest, Backlog 63.
 
 ### Schritt 2 — S6 Gerätekennung und Schlüsselfrist
 
-**Ziel:** Der Server nimmt an, was die Uhr seit 1.9.0 sendet, und der
-Entsperrdialog erscheint nicht mehr mitten in der Arbeit. **Inhalt:** zwei
-Spalten an `devices` (Art, Modell; fehlend ergibt „unbekannt") ·
-`pair.php` nimmt den `geraet`-Block entgegen — die Uhr-Form (Teilenummer,
-Auflösung auf dem Server) **und** die Handy-Form nach E-S4-28 (Hersteller,
-Modell) · Zeitstempel des Inhaltsschlüssels beim Treffer erneuern, damit
-Sitzung und Schlüssel dieselbe Inaktivitätsfrist messen (R44) · Nachträge
-in JSON-Vertrag 1a, `Geraete-Eingabe.md`, Handbuch (Hinweis „ein Tab, ein
-Schlüssel"). **Kein Konzept, kein Prüfdokument** (Muster R20); Migration →
-`update.php` nach dem Deploy. **Abnahme:** eine Kopplung je Gerätetyp
-zeigt Art und Modell in der Geräteliste; eine Sitzung über mehr als 30
-Minuten mit Bedienung bringt keinen Dialog, ein Leerlauf darüber die
-Abmeldung. **Backlog:** 59.
+**Ziel:** Der Server nimmt an, was die Geräte seit einem Jahr senden, und der
+Entsperrdialog erscheint nicht mehr mitten in der Arbeit. **Kein Konzept, kein
+Prüfdokument** (Muster R20) — dieser Block ist die Spezifikation und zugleich
+das Protokoll.
+
+**Gebaut am 02.09.2026, Web 12.9.0** (Zweig `claude/s6-rahmenplan-umsetzung`):
+
+- **Drei Spalten an `devices`** — `geraet_art`, `geraet_modell`, `geraet_teil`;
+  Migration `2026_09_02_geraetekennung`, Register gegengezählt (39 = 39).
+- **`pair.php` liest den Block** über die neue `geraete_lib.php`: die Uhr-Form
+  (Teilenummer, Auflösung auf dem Server) **und** die Handy-Form nach E-S4-28.
+  Eine Kopplung scheitert nie an einer Statistikangabe.
+- **Auflösung Teilenummer → Modell** in der erzeugten `geraetemodelle.php`,
+  Erzeuger `tools/geraetemodelle/` — samt `nachaufloesen.php`, das bestehende
+  Zeilen nachträglich auflöst, wenn die Tabelle später wächst (E-S6-6).
+- **Anzeige** in beiden Gerätelisten (Einstellungen und Adminbereich), in der
+  vorhandenen Kleinzeile — kein neuer Baustein.
+- **R44 angeglichen:** `keyguard.js` erneuert den Zeitstempel beim Treffer im
+  Zwischenspeicher; damit messen Sitzung und Schlüssel beide Inaktivität.
+  **Nicht mehr, als das ist** — siehe E-S6-4.
+- **Nachträge:** JSON-Vertrag (Fassung 1.4), `Technik.md` (Datenmodell,
+  Verzeichnisstruktur, Kopplung, Abschnitt 5a, Bausteine, Entsperren,
+  Runbook), `Handbuch.md` (Geräteliste, „ein Tab, ein Schlüssel"),
+  `Geraete-Eingabe.md`, `Lizenzen.md` 7a, `android/LIESMICH.md`.
+- **Prüfmittel:** `tools/geraeteprobe/` (neu, 39 Erwartungen), `tools/fristprobe/`
+  (neu, der fehlende Beleg zu R44) und `tools/geraetemodelle/` (neu).
+
+**Drei Entscheidungen sind dabei gefallen, alle als Abweichung von R42 zu
+lesen und deshalb hier festgehalten:**
+
+- **E-S6-1 — drei Spalten statt zwei.** R42 nennt Art und Modell. Die dritte
+  hält die **Rohangabe** des Geräts. Grund: Der Modellname entsteht aus einer
+  erzeugten Tabelle, und die kennt nur, was es beim Erzeugen gab. Ein künftiges
+  Garmin-Gerät fiele sonst dauerhaft und **unwiederbringlich** auf „unbekannt",
+  weil die Teilenummer nirgends mehr stünde.
+- **E-S6-2 — keine weiteren Felder.** Backlog Nr. 59 nannte zusätzlich
+  Displaymaße, Firmware, Plattform- und App-Fassung. Sie kommen an und werden
+  verworfen: R36 lässt die Gerätekennung als die eine benannte Ausnahme zu, und
+  die Ausnahme ist „welches Gerät", nicht „in welchem Zustand".
+- **E-S6-3 — der Vorgabename folgt der Art.** Beim Koppeln stand der Name fest
+  auf „Uhr"; seit der Handy-App war das falsch. Ein Fehler aus S4, hier
+  mitgenommen, weil S6 die Geräteart überhaupt erst kennt.
+- **E-S6-4 — R44 wird als Aufräumen ausgeliefert, nicht als Behebung des
+  Dialogs.** Der R44-Eintrag schreibt dem Fristablauf den Entsperrdialog zu.
+  Das trifft nicht zu, und das Archiv hat es am 01.09.2026 bereits berichtigt;
+  bei der Umsetzung ist es am Code nachgelesen worden: `verwerfeInhalt()` lässt
+  `edk` liegen, `getContentKey()` entpackt ohne Passwort neu. Der Ablauf
+  kostete ein **stilles Neu-Entpacken**. Changelog, Handbuch, `Technik.md` und
+  der Dateikopf sagen das jetzt so — die erste Fassung dieses Pakets hatte den
+  Irrtum wortreich weitergeschrieben.
+- **E-S6-6 — das Nachauflösen wird gebaut, nicht nur versprochen.** Die
+  Begründung für die dritte Spalte (E-S6-1) trägt nur, wenn es ein Programm
+  gibt, das sie später auswertet — `pair.php` löst ausschließlich im Moment
+  der Kopplung auf. Das wiegt schwerer als der fehlende Modellname: Bis dahin
+  steht in `geraet_art` die **ungeprüfte Selbstauskunft** des Geräts, und die
+  Garmin-App sendet dort fest „uhr“. `tools/geraetemodelle/nachaufloesen.php`
+  räumt beides nach; die Rohangabe selbst rührt es nie an. Grenze: Es braucht
+  Shell-Zugriff.
+- **E-S6-5 — die Gerätekennung wird in beiden Listen gekürzt.** Die volle
+  36-Zeichen-Kennung hat keine Umbruchstelle und drückte als Plakette den Text
+  daneben auf ein Wort je Zeile zusammen — bei jedem frisch gekoppelten Gerät,
+  dessen Bezeichnung kurz ist. Im Bilderlauf gesehen, **auch am Stand vor S6**
+  (samt +1 px Überlauf bei 360); die längere Kleinzeile hat es nur sichtbar
+  gemacht. Die Kürzung des Adminbereichs (8 + … + 2) gilt jetzt für beide
+  Listen und steht an einer Stelle.
+
+**Was noch fehlt und keine Codearbeit ist:** `server/geraetemodelle.php` ist
+mit `--leer` erzeugt und enthält **0 Teilenummern**. Die Gerätedateien liegen
+nicht im Repositorium, und ihre Bereitstellungsadresse (`CIQ_GERAETE_URL`) muss
+erfragt werden. Solange sie fehlt, zeigt jede Garmin-Kopplung die Teilenummer
+statt des Modellnamens — die Anwendung läuft vollständig, und **verloren geht
+nichts**: Die Rohangabe steht in der Spalte, ein späterer Lauf löst jede Zeile
+nach. Als Zuarbeit in Abschnitt 6 eingetragen.
+
+**Abnahme:** eine Kopplung je Gerätetyp zeigt Art und Modell in der
+Geräteliste; ein Leerlauf über 30 Minuten führt zur Abmeldung. **Der
+Dialog-Teil der ursprünglichen Abnahme entfällt** (E-S6-4): Er ist vor und nach
+der Änderung grün und belegt nichts. An seine Stelle tritt `tools/fristprobe/`
+— acht Stunden Dienst durchgespielt, vorher 17 Neu-Entpackungen, nachher 1. **Nach dem Deploy muss eine
+Administratorin `update.php` aufrufen.** **Backlog:** 59 erledigt, Rest als 80.
 
 ### Schritt 3 — S5 Konzept
 
@@ -422,7 +491,7 @@ angelegt.
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | Backlog-Runde | Vereinheitlichung |
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag |
-| 59 | Serverseite der Gerätestatistik | **S6** | Auswertung in P5 (R38) |
+| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Speicherung erledigt mit Web 12.9.0; die Datenschutzerklärung ist Vorbedingung der Auswertung (Schritt 10) |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
 | 64 | Bedienhöhe Android | **erledigt** (S4-Merge, Android 0.7.7) | 48 dp in beiden Modulen, `CLAUDE.md` 5 unterscheidet Web und Android (R58, E-S4-77) |
@@ -457,6 +526,9 @@ P0-Bedienprüfung und die P2-Prüfliste bis auf Punkt 4.1.
 | Bestätigung, dass SMTP auf Produktiv eingerichtet ist | S2 Warnmails | — |
 | Bilderlauf für die zweite Logo-Wahl; Autosuche gegen den echten Photon; Bedienzustände | S3-Reste | gelegentlich |
 | Prüfliste S4 (1, 2, 3, 5) am echten Diensttag | Schritt 1 | nach dem Merge |
+| **Adresse der Connect-IQ-Gerätedateien (`CIQ_GERAETE_URL`)** — ohne sie ist `server/geraetemodelle.php` leer (0 Teilenummern). Folge: Jede Garmin-Kopplung erscheint als Teilenummer statt als Modellname — **und `geraet_art` steht auf der ungeprüften Selbstauskunft**, die Garmin-App sendet dort fest „uhr“, ein Radcomputer wäre also falsch gezählt. Die Anwendung läuft vollständig; nachzuholen ist beides mit `php tools/geraetemodelle/nachaufloesen.php` (braucht Shell-Zugriff) | Schritt 2 (S6) | **jetzt** — jede Kopplung bis dahin steht ohne Klarnamen und mit ungeprüfter Art in der Liste |
+| **Abnahme S6:** je eine Kopplung mit Garmin-Uhr und Handy-App (zeigt die Liste Art und Modell?), dazu eine Sitzung über 30 Minuten mit Bedienung (kein Dialog) und ein Leerlauf darüber (Abmeldung) | Schritt 2 (S6) | nach dem Deploy, zusammen mit `update.php` |
+| **Datenschutzerklärung um die Gerätekennung ergänzen** — seit Web 12.9.0 wird beim Koppeln Art und Modell erhoben; Backlog Nr. 80 macht die Nennung zur Vorbedingung der Auswertung. Der Text entsteht nach R60 aus einer Bestandsaufnahme des gesamten Projekts | Schritt 10, vor v1.0 | vor jeder Auswertung (P5) |
 | **Signaturschlüssel des APK verwahren** — erzeugt am 31.08.2026 (RSA 4096, Zertifikat `078c…ad64`, gültig bis 2056), am 02.09.2026 an den Auftraggeber übergeben; er lag bis dahin nur im Ablagefach der Arbeitssitzung | Schritt 6 und jede spätere Auslieferung | **sofort** — ohne genau diesen Schlüssel ist jede spätere Fassung für Android eine andere App |
 | Data Layer Uhr↔Handy auf **echter Hardware** — zwischen zwei Emulatoren nachweislich nicht prüfbar (die Wear-OS-Companion-App des Telefons ist im Baucontainer nicht zu beschaffen) | Schritt 6 | mit der Wear-OS-Uhr |
 | Dienst-Test mit der Handy-App auf dem S24 (zwei bis drei Runden) | Schritt 6 | nach dem ersten APK |
@@ -494,7 +566,7 @@ werden nie neu vergeben.
 | R9 | Registrierung in drei Betriebsarten plus Sicherheitspaket | gilt, P5 (konkretisiert in R37) |
 | R10 | Rollen- und Sichtbarkeitsmodell, auch was der Admin nicht kann | gilt, P5 (R38) |
 | R11 | Kein Migrationspfad; v1.0 liest die 7.x-edbak; Referenzdatei liegt | gilt; Abnahme in P6; seit R60 als einmaliges Einspielen über ein Wegwerf-Formular |
-| R12 | Weitere Clients: Basisfähigkeit, Vertragsreview in P6 | gilt; Payloads und Texte erledigt; 1a kommt aus S5 |
+| R12 | Weitere Clients: Basisfähigkeit, Vertragsreview in P6 | gilt; Payloads und Texte erledigt. **Abschnitt 1a in zwei Stufen:** S6 hat ihn auf den heutigen Stand gebracht (Fassung 1.4 — beide Kopplungsformen, was der Server davon speichert, Präfixe der Android-Apps); **S5 schreibt ihn nach E-R49-7 neu**, weil sich der Kopplungsweg selbst umkehrt. Wer 1a liest, liest bis dahin die S6-Fassung |
 | R13 | Versionshistorische Kommentare am v1.0-Schnitt ersetzen | gilt, P6 (Liste Konzept P2, 10.3) |
 | R14 | Konzepte mit Fable, mechanische Pflege ohne | gilt |
 | R15 | Changelog ab v1.0 als Stichpunkte | gilt, P6 |
@@ -524,9 +596,9 @@ werden nie neu vergeben.
 | R39 | Zentrale Stammdaten entfallen; Regionen-Modell verworfen | gilt, P5; Regionen als Nr. 71 festgehalten |
 | R40 | Deploy-Umbau: Staging ab P5, Neuaufsetzen am P6-Schnitt, CI-Prüftor, Torwächter | gilt |
 | R41 | Recht und Betreiberorganisation vor der Öffnung; Öffnung in Wellen | gilt |
-| R42 | Gerätekennung beim Koppeln | Uhr-Seite erledigt (1.9.0); Serverseite ist **S6**; Auswertung P5 |
+| R42 | Gerätekennung beim Koppeln | Uhr-Seite erledigt (1.9.0); **Speicherung erledigt (Web 12.9.0, S6)** — drei Spalten statt zwei, begründet im Changelog; Auswertung P5 (Backlog 80) |
 | R43 | Zwischenpaket S3 | erledigt |
-| R44 | Inhaltsschlüssel führt eine Inaktivitätsfrist wie die Sitzung | offen, **S6** |
+| R44 | Inhaltsschlüssel führt eine Inaktivitätsfrist wie die Sitzung | **erledigt (Web 12.9.0, S6)** — als Aufräumen, nicht als Behebung des Dialogs (E-S6-4): Der Fristablauf kostete ein stilles Neu-Entpacken, keinen Dialog. Der Dialog kommt vom tabweisen `sessionStorage`, bleibt und steht jetzt im Handbuch |
 | R45 | Zwischenpaket S4 mit E-R45-1 bis E-R45-13 | in Arbeit (Schritte 1 und 6) |
 | R46 | Keine Apple Watch; P7 entfällt | gilt |
 | R47 | Garmin-Uhr-Auslieferung vorgezogen | erledigt (Uhr 1.10.1 bis 1.11.1, Web 9.15.0) |
@@ -698,3 +770,4 @@ Abschnitt 6.
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
 | **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61), Konzeptablage `docs/konzepte/` mit Lebenszyklus und Push je Arbeitspaket (R62, K7 geändert), Bestand nach `docs/konzepte/erledigt/` verschoben; Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
 | **17** | **02.09.2026** | **S4-Merge vorbereitet** (Schritt 1): Backlog des S4-Zweigs auf 63–67 umnummeriert und beide Reihen konfliktfrei zusammengeführt (44 offene Nummern, 0 doppelt); R58 umgesetzt (48 dp, Backlog 64 erledigt), R57 als E-S4-76 eingetragen; Konzept und Prüfdokument nach `docs/konzepte/` verschoben (R62) mit Statusblock; Migrationsregister gegengezählt (38 = 38); Signaturschlüssel des APK an den Auftraggeber übergeben — er war seit B1 erzeugt, aber nie ausgehändigt. Der Push auf `main` steht aus. |
+| **18** | **02.09.2026** | **S6 gebaut** (Schritt 2, Web 12.9.0): drei Spalten an `devices` statt der in R42 genannten zwei (E-S6-1), `pair.php` liest beide Kopplungsformen über die neue `geraete_lib.php`, Modelltabelle als erzeugte Datei mit eigenem Werkzeug samt Nachauflösen (E-S6-6), Art und Modell in beiden Gerätelisten, R44 angeglichen (gleitende Schlüsselfrist) und dabei die Wirkungsaussage des R44-Eintrags berichtigt (E-S6-4, neues Prüfmittel `tools/fristprobe/`: 17 gegen 1 Neu-Entpackung je Schicht); Gerätekennung in beiden Listen gekürzt (E-S6-5, behebt einen Überlauf, den es schon vorher gab); JSON-Vertrag auf Fassung 1.4 (beide Formen, Speicherung, Android-Präfixe — der Nachtrag hing an R42), `Lizenzen.md` 7a für die erzeugte Tabelle; Backlog 59 erledigt, Rest als 80 angelegt; drei Zuarbeiten in Abschnitt 6 (Gerätedateien, S6-Abnahme, Datenschutzerklärung). Migrationsregister gegengezählt (39 = 39). |

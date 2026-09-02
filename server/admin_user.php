@@ -10,6 +10,7 @@ require_admin();
 require_once __DIR__ . '/adminbackup_lib.php';
 require_once __DIR__ . '/smtp.php';       // Passwort zuruecksetzen
 require_once __DIR__ . '/demo_lib.php';   // Demo-Konto erkennen (S3/AP10)
+require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste (S6)
 
 /**
  * KONTOSEITE — die Drehscheibe eines Kontos (E-P3-41, P3/O9).
@@ -405,7 +406,9 @@ $st->execute([$uid]);
 $u = $st->fetch();
 if (!$u) { ui_abbruch(404, 'NutzerIn nicht gefunden.', ['zurueck' => 'admin_users.php', 'zurueck_text' => 'Zu den NutzerInnen']); }
 
-$dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen FROM devices
+$dv = db()->prepare('SELECT id, device_id, label, active, created_at, last_seen,
+                            geraet_art, geraet_modell, geraet_teil
+                     FROM devices
                      WHERE user_id = ? AND device_id NOT LIKE \'manual-%\' ORDER BY created_at');
 $dv->execute([$uid]);
 $devices = $dv->fetchAll();
@@ -603,6 +606,11 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
       <?php endif; ?>
       <?php foreach ($devices as $d):
         $klein = [];
+        /* WAS FUER EIN GERAET (S6/R42) — an erster Stelle, weil es die Frage
+           beantwortet, mit der jemand in den Adminbereich kommt: Womit
+           arbeitet diese NutzerIn? Der Werdegang (gekoppelt, zuletzt gesehen)
+           steht dahinter. */
+        $klein[] = geraet_bezeichnung($d['geraet_art'], $d['geraet_modell'], $d['geraet_teil']);
         if (!empty($d['created_at'])) { $klein[] = 'gekoppelt ' . fmt_local($d['created_at'], 'd.m.Y'); }
         $klein[] = 'zuletzt gesehen ' . (!empty($d['last_seen'])
             ? fmt_local($d['last_seen'], 'd.m.Y') : 'nie');
@@ -612,10 +620,10 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            zweifelsfrei benennen lässt — zwei Geräte können dieselbe
            Bezeichnung tragen. In die Hauptzeile, nicht in die Kleinzeile:
            Sie gehört zum Namen des Geräts, nicht zu seiner Geschichte. */
-        $kennungKurz = (string)$d['device_id'];
-        if (mb_strlen($kennungKurz) > 12) {
-            $kennungKurz = mb_substr($kennungKurz, 0, 8) . '…' . mb_substr($kennungKurz, -2);
-        }
+        /* Seit S6 steht die Rechnung in geraete_lib.php und nicht mehr hier:
+           Der Geraete-Reiter braucht dieselbe Kuerzung, und zwei Fassungen
+           derselben Kennung liefen frueher oder spaeter auseinander. */
+        $kennungKurz = geraet_kennung_kurz((string)$d['device_id']);
         ui_zeile([
           'text'  => (($d['label'] ?? '') !== '' ? (string)$d['label'] . ' · ' : '')
                    . $kennungKurz,

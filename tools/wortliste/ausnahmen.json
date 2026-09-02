@@ -462,6 +462,62 @@
       "zeile": "^\\s*RTH\\s*$",
       "klasse": "Homonym",
       "begruendung": "Die Beschriftung der Logo-Wahl in der App: „RTH“, mit „NEF“ als Gegenstück in derselben Datei. Sie benennt, WELCHES BILD gewählt ist; beide Arten stehen gleichrangig nebeneinander, und genau das ist der Zweck der Wahl. Dieselbe Lage wie logowahl-option in server/einstellungen.php, nur in der App. Der Ausdruck verlangt, dass die ganze Zeile aus „RTH“ besteht — ein RTH in einem Satz wäre etwas anderes und bliebe ein Treffer."
+    },
+    {
+      "id": "technik-geraetekennung",
+      "datei": "docs/Technik.md",
+      "abschnitt": "^### Was ein Gerät beim Koppeln über sich meldet",
+      "klasse": "G",
+      "begruendung": "Der Abschnitt beschreibt, was ein GARMIN-Geraet beim Koppeln sendet und wie der Server seine Teilenummer aufloest (R42, S6). Garmin ist hier der Gegenstand und nicht die bequeme Abkuerzung fuer „Uhr\": Die Teilenummer gibt es nur dort, die Geraetedateien gehoeren Garmin, und der Modellname („Venu 3S\") ist ein Produktname, kein Einsatzbegriff. Plattformspezifisch wie Kapitel 5 (E-P2-15)."
+    },
+    {
+      "id": "vertrag-kopplung-geraeteblock",
+      "datei": "docs/JSON-Vertrag.md",
+      "abschnitt": "^## 1a\\. Kopplung",
+      "klasse": "G",
+      "begruendung": "Abschnitt 1a beschreibt seit Vertragsfassung 1.4 ZWEI Kopplungsformen und muss dafuer beide Plattformen beim Namen nennen — die Garmin-Uhr sendet eine Teilenummer, das Handy Hersteller und Modell. Ein plattformneutraler Wortlaut koennte den Unterschied gar nicht ausdruecken, um den es geht. Der Modellname im Beispiel („Venu 3S\") ist ein Produktname."
+    },
+    {
+      "id": "vertrag-geltungsbereich-clients",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "die Garmin-Uhr, seit S4 auch die Android-Handy-App",
+      "klasse": "G",
+      "begruendung": "Der Geltungsbereich zaehlt auf, WELCHE Clients gegen diesen Vertrag sprechen. Die Aufzaehlung nennt beide gleichrangig; „die Uhr\" allein waere hier falsch, weil es seit S4 zwei sind."
+    },
+    {
+      "id": "vertrag-praefixe-erzeuger",
+      "datei": "docs/JSON-Vertrag.md",
+      "zeile": "\\| Garmin-Uhr-App \\|",
+      "klasse": "G",
+      "begruendung": "Die Praefixtabelle des Abschnitts 8 nennt je Praefix den ERZEUGER. Seit Fassung 1.4 stehen dort drei Clients nebeneinander (Garmin-Uhr-App, Android-Handy-App, Wear-OS-App); „Uhr-App\" allein waere seither mehrdeutig — es gibt zwei Uhr-Apps."
+    },
+    {
+      "id": "lizenzen-modelltabelle",
+      "datei": "docs/Lizenzen.md",
+      "abschnitt": "^## 7a\\. Die Modelltabelle",
+      "klasse": "E",
+      "begruendung": "Wie `lizenzen-garmin`: Eine Lizenzangabe nennt den Rechteinhaber beim Namen. Der Abschnitt grenzt ab, was aus Garmins Connect-IQ-Geraetedateien uebernommen wird und was nicht — ohne den Namen des Rechteinhabers waere das keine Abgrenzung."
+    },
+    {
+      "id": "lizenzen-verlauf-modelltabelle",
+      "datei": "docs/Lizenzen.md",
+      "zeile": "Abschnitt 7a: die erzeugte Modelltabelle",
+      "klasse": "E",
+      "begruendung": "Die Zeile des Aenderungsverlaufs fasst Abschnitt 7a zusammen und nennt dieselbe Herkunft. Eigene Regel, weil der Verlauf am Dateiende und damit ausserhalb des Abschnitts steht."
+    },
+    {
+      "id": "technik-werkzeugbaum-geraetemodelle",
+      "datei": "docs/Technik.md",
+      "zeile": "Modellname\\) aus den Connect-IQ-Gerätedateien",
+      "klasse": "G",
+      "begruendung": "Der Werkzeugbaum beschreibt, WORAUS `tools/geraetemodelle/` seine Tabelle erzeugt. Die Connect-IQ-Geraetedateien sind der Gegenstand des Werkzeugs; ohne ihren Namen sagt die Zeile nicht, was das Werkzeug braucht (und genau danach sucht, wer die Zuarbeit besorgen soll)."
+    },
+    {
+      "id": "technik-runbook-selbstauskunft",
+      "datei": "docs/Technik.md",
+      "zeile": "Garmin-App sendet dort fest",
+      "klasse": "G",
+      "begruendung": "Runbook-Eintrag zur unaufgeloesten Teilenummer. Der Satz sagt, dass GENAU DIESE App `art` fest auf \"uhr\" setzt und die Angabe deshalb ungeprueft ist — die Aussage haengt an der Plattform und liesse sich nicht plattformneutral treffen."
     }
   ]
 }

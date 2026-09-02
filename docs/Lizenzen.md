@@ -355,6 +355,39 @@ Abschnitt 2 bleibt unberührt.
 
 ---
 
+## 7a. Die Modelltabelle der Garmin-Geräte (seit Web 12.9.0)
+
+**Eigener Abschnitt und nicht 7.2**, weil das Gegenteil von Abschnitt 7 gilt:
+Diese Datei **wird ausgeliefert**. Sie gehört zur Anwendung, nicht zum
+Werkzeug — und sie ist aus fremdem Material erzeugt. Beides zusammen macht
+einen Eintrag nötig.
+
+| | |
+|---|---|
+| Datei | `server/geraetemodelle.php` (erzeugt) |
+| Erzeuger | `tools/geraetemodelle/erzeugen.py` |
+| Quelle | Connect-IQ-Gerätedateien von Garmin (`compiler.json` je Gerät) |
+| Übernommen | Teilenummer → Produktname und Gerätegruppe |
+| Nicht übernommen | die Gerätedateien selbst, Auflösungen, Speichergrenzen, Schriften, Bilder |
+
+**Was übernommen wird, sind Sachangaben, keine Datei.** Eine Teilenummer ist
+eine Kennzeichnung eines Produkts, ein Produktname sein Name — beide stehen
+auf der Verpackung und im Datenblatt. Die Tabelle ordnet das eine dem anderen
+zu und ist damit ein Verzeichnis von Tatsachen, nicht eine Vervielfältigung
+der Quelle.
+
+**Die Gerätedateien liegen nicht im Repositorium.** Sie gehören Garmin, das
+Repositorium ist öffentlich, und eine Bereitstellung für den eigenen Gebrauch
+ist etwas anderes als eine Veröffentlichung — dieselbe Überlegung wie beim
+Uhr-Prüfstand (`tools/uhr-pruefstand/LIESMICH.md`). Ihre Bereitstellungsadresse
+(`CIQ_GERAETE_URL`) steht bewusst nicht hier und muss erfragt werden.
+
+**Das Erzeugungswerkzeug fällt unter Abschnitt 7** und wird nicht
+ausgeliefert. Die erzeugte Datei ist reines PHP ohne Abhängigkeit; zur
+Laufzeit wird nichts nachgeladen, die Zusage aus Abschnitt 2 bleibt unberührt.
+
+---
+
 ## 8. Was hier NICHT steht
 
 - **Der Referenzdatensatz** (`tools/referenzdatensatz/`) ist erfunden. Namen,
@@ -373,6 +406,7 @@ Abschnitt 2 bleibt unberührt.
 
 | Fassung | Was |
 |---|---|
+| Web 12.9.0 (S6) | Abschnitt 7a: die erzeugte Modelltabelle `server/geraetemodelle.php`. Sie liegt im ausgelieferten Verzeichnis und stammt aus Garmins Connect-IQ-Gerätedateien — übernommen sind Teilenummern und Produktnamen als Sachangaben, nicht die Dateien selbst. |
 | S4/D2 | `androidx.test:runner` 1.7.0 in Abschnitt 6a — der Läufer für die instrumentierten Prüffälle (Keystore, Wearable-Erreichbarkeit). Test-only, Apache-2.0, nicht im App-APK. |
 | S4/D1 | Abschnitt 6a: die Android-Apps. Vier Fremdbestandteile, drei davon Apache-2.0; die vierte (`play-services-wearable`) ist proprietär und bekommt eine eigene Begründung — sie steckt nicht im APK, ist auf **eine** Datei eingegrenzt, überträgt nichts nach außen, und der Preis (keine Uhr ohne Play-Dienste) steht dabei. |
 | Web 10.3.0 (S2/AP4) | Abschnitt 7.1: das vendorierte GPX-1.1-Schema von TopoGrafix, mit Herkunft und SHA-256. Es liegt unter `tools/` und wird zur Laufzeit nie geladen. |

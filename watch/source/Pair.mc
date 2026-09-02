@@ -194,8 +194,16 @@ module Pair {
      * das der falsche Platz dafuer.
      *
      * Die Art steht fest auf "uhr": Eine Connect-IQ-App laeuft nur auf einem
-     * Garmin-Geraet. Handy und Rechner tauchen in der Statistik ueber die
-     * Web-Zugriffe auf, nicht hier.
+     * Garmin-Geraet. Unterscheiden kann diese App Uhr und Radcomputer nicht —
+     * die Geraetedateien koennen es, deshalb loest der Server die Teilenummer
+     * auf und seine Einstufung schlaegt diese Angabe (Web 12.9.0).
+     *
+     * BIS S6 STAND HIER, Handy und Rechner erschienen "in der Statistik ueber
+     * die Web-Zugriffe, nicht hier". Fuer den Rechner stimmt das weiter, fuer
+     * das HANDY nicht mehr: Seit Android 0.2.0 koppelt die Handy-App ueber
+     * genau diesen Endpunkt und landet in derselben Tabelle
+     * (JSON-Vertrag 1a, Handy-Form). Nur diese Uhr-App kommt dort nie mit
+     * einer anderen Art an.
      *
      * WAS BEWUSST NICHT GESENDET WIRD: `uniqueIdentifier`. Das ist eine
      * dauerhafte, geraeteweite Kennung — fuer eine Stueckzahl-Statistik nicht
