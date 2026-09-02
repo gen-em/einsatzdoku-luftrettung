@@ -913,6 +913,9 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 80. **Auswertung der Gerätestatistik — und die zweite Hälfte der Frage.**
     *Angelegt 02.09.2026 als Rest von Nr. 59 (erledigt mit Web 12.9.0). Die
     Speicherung steht; ausgewertet ist nichts.*
+    **Vorbedingung: Nr. 83.** Was gespeichert wird, überlebt eine
+    Gerätelöschung und eine Wiederherstellung nur zur Hälfte — wer vorher
+    auswertet, zählt an einem Bestand, der still ausdünnt.
     Zu tun: eine **Geräteverteilung** je Art und je Modell im
     Betriebslage-Dashboard (R38, P5), gezählt über echte Geräte — ohne das
     virtuelle Gerät `manual-%`, ohne das Demo-Konto.
@@ -943,6 +946,108 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     — aber nur für Geräte, die **nach** dem Füllen gekoppelt haben. Ältere
     Zeilen tragen die ungeprüfte Selbstauskunft; vor der ersten Auswertung
     deshalb `php tools/geraetemodelle/nachaufloesen.php` fahren.
+
+---
+
+81. **Das App-Symbol wird in der Benachrichtigung falsch dargestellt.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber, mit Bildschirmfoto (Android,
+    laufende Aufzeichnung, 13:16).* In der Benachrichtigungsleiste erscheint
+    die Bildmarke **zu groß und angeschnitten** — der weiße Korpus reicht bis
+    an den Rand der Kachel, die farbigen Flächen sitzen links.
+    **Was geprüft wurde und stimmt** (damit die Suche nicht dort anfängt):
+    Das *Meldungssymbol* in der Statusleiste ist richtig — `symbol_meldung.xml`
+    ist ein einfarbiger Aufnahmepunkt, wie Android es verlangt. Das Manifest
+    zeigt mit `android:icon` und `android:roundIcon` auf `@mipmap/symbol`. Die
+    adaptive Kachel setzt die Marke auf 52 dp Breite in einer 108-dp-Kachel,
+    mittig, weiß auf `marke_dunkelblau`; die PNG-Vorlagen haben einen sauberen
+    Alphakanal (59 % vollständig durchsichtig).
+    **Nachgerechnet:** Die Kachel wurde aus den Quelldateien so zusammengesetzt,
+    wie Android sie zeichnet (108 dp, Vordergrund 52 × 33 dp mittig, sichtbarer
+    Kreis 72 dp) — das Ergebnis ist richtig: weiße Marke auf Dunkelblau, mit
+    Luft zum Rand. **Der Fehler ist aus dem heutigen Quellstand also nicht
+    nachvollziehbar.**
+    **Zu klären, bevor gesucht wird:** Welche App-Fassung liegt auf dem Gerät
+    (Einstellungen → Apps → NAdoku)? Ist es eine ältere als 0.7.7, erklärt das
+    den Befund und der Punkt erledigt sich mit der nächsten Auslieferung. Ist
+    es 0.7.7, liegt es an einem Zeichenweg, der hier nicht nachgebaut wurde —
+    Verdacht dann zuerst auf die `<monochrome>`-Ebene (Android 13+, „Themed
+    Icons") und auf die Symbolform des Herstellers.
+    **Prüfweg:** Am Gerät ansehen, nicht im Emulator — die Symbolform ist eine
+    Herstellereinstellung. Zuordnung: **S4-Rest** (Schritt 6), zusammen mit dem
+    Gerätetest auf dem S24.
+
+82. **Es fehlt die Warnung, dass die Daueraufzeichnung den Akku leert.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber.* Die Handy-App zeichnet über den
+    ganzen Dienst mit `ACCESS_FINE_LOCATION` auf — bei einem Zwölfstundendienst
+    ist das der mit Abstand größte Verbraucher. Gesagt wird es nirgends.
+    **Was es schon gibt, sagt das Gegenteil:** Die Führung zur
+    Akku-Freistellung (E-S4-05, `akku_titel`/`akku_hinweis`) bittet darum, die
+    App **von** der Optimierung auszunehmen, damit die Aufzeichnung nicht
+    abbricht. Sie erklärt also, warum die App Strom ziehen **darf** — nicht,
+    dass sie es in erheblichem Maß **tut**. Wer nur diesen Text liest, hält den
+    leeren Akku am Dienstende für einen Fehler.
+    **Zu entscheiden:** Wo der Hinweis steht. Drei Kandidaten, sie schließen
+    sich nicht aus: (a) im Akku-Dialog als zweiter Absatz — dort steht der
+    Mensch ohnehin und trifft gerade eine Entscheidung; (b) beim ersten
+    „Dienst beginnen" — dort entsteht der Verbrauch; (c) in der laufenden
+    Meldung, die heute „Aufzeichnung läuft seit %1$s · GPS an" sagt.
+    **Nicht als Dauerwarnung.** Ein Hinweis, den man bei jedem Dienstbeginn
+    wegklickt, wird nicht gelesen — dieselbe Überlegung wie beim Hinweis auf
+    neue Geräte (M4-10), der bestätigbar ist.
+    Zuordnung: **S4-Rest** (Schritt 6). Textänderung heißt `tools/wortliste/`
+    fahren, Bereich (d).
+
+83. **Welche Daten von Uhr und Handy wie gespeichert werden, damit sich
+    auswerten lässt, wer womit dokumentiert hat — Diskussion, dann Umsetzung.**
+    *Aufgenommen 02.09.2026 vom Auftraggeber, nach dem Befund unten. Hängt an
+    Nr. 80 (Auswertung) und muss VOR dieser entschieden sein.*
+    Nr. 80 fragt, **wie** ausgewertet wird. Dieser Punkt fragt, **ob die Daten
+    dafür überhaupt haltbar sind**. Sie sind es nur zur Hälfte.
+    **Was trägt** — beides steht als Spalte am Einsatz selbst und ist in der
+    Sicherung: `missions.origin` (`watch` / `manual` / `import`, beim Anlegen
+    gesetzt, nie geändert) und das **Präfix der `client_ref`** (`m-` Garmin-Uhr,
+    `am-`/`ar-`/`ad-` Handy-App, `wm-` Wear, `man-` Formular, `imp-` Import;
+    JSON-Vertrag 8, seit Fassung 1.4). Damit ist „wie viele Einsätze mit dem
+    Webtool" vollständig und „mit welcher Client-Art" grob zu beantworten,
+    ohne eine Zeile Code.
+    **Was nicht trägt:** der Verweis `missions.device_id` → `devices`, an dem
+    seit Web 12.9.0 Art und Modell hängen. Er steht auf `ON DELETE SET NULL`,
+    und drei Wege löschen ein Gerät — einer davon (`pair.php` trennen) ist der
+    **vorgesehene Normalfall** bei einer geteilt genutzten Uhr (Nr. 14).
+    Ausserdem steht `device_id` **nicht in der Sicherung** (bewusst, als
+    interner Verweis).
+    **Gemessen am 02.09.2026** an einem Demo-Konto, das über den regulären
+    Einspielweg entsteht: **82 von 82 Einsätzen und 95 von 95 Ruhesegmenten
+    ohne Geräteverweis** — obwohl 76 davon `origin = 'watch'` tragen. Zum
+    Vergleich: **`day_refs` 16 von 16 mit Verweis**, denn dort steht die
+    *öffentliche* Gerätekennung in der Sicherung und wird beim Einspielen neu
+    verknüpft. Das richtige Muster existiert im Projekt also schon, nur an
+    einer Stelle.
+    **Warum es eilt:** R60 lässt v1.0 mit einem Neuaufsetzen und **einer
+    einmaligen Wiederherstellung** beginnen. Was bis dahin nicht haltbar ist,
+    ist für den Altbestand danach nicht mehr herstellbar.
+    **Drei Wege, zu entscheiden:**
+    (a) **`devices` weich löschen** statt hart — Spalte `geloescht_am`,
+    Zugangsdaten beim Trennen leeren, Zeile aus Listen und aus `MAX_GERAETE`
+    filtern; dazu den Verweis wie bei `day_refs` über die öffentliche Kennung
+    in die Sicherung. Hält ein bereits erlaubtes Datum am Leben und ist damit
+    R36-konform.
+    (b) **Art und Modell auf den Einsatz kopieren** (`missions.geraet_art`).
+    Überlebt alles, auch die Wiederherstellung — ist aber eine
+    Denormalisierung an der größten Tabelle und näher an „etwas Neues
+    erfassen", als R36 zulässt.
+    (c) **Nichts bauen** und nur über `origin` und das Präfix zählen. Kostet
+    nichts, trägt heute, verzichtet aber auf die Modellgenauigkeit.
+    **Eine Statistiktabelle wird für die Zählung selbst nicht gebraucht** — die
+    ist ein `GROUP BY`. Das Problem ist die Haltbarkeit des Verweises, und eine
+    Aggregattabelle löste es nicht, sondern schriebe denselben Verlust nur
+    früher fest.
+    **Mitzudenken:** Eine Wear-OS-Uhr koppelt nicht selbst (E-S4-11), das Handy
+    koppelt für sie — eine solche Installation erscheint ausschließlich als
+    `handy`. Und Geräte, die vor Web 12.9.0 gekoppelt haben, tragen gar keine
+    Angabe.
+    Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
+    danach — jedenfalls vor dem Neuaufsetzen.
 
 ---
 
