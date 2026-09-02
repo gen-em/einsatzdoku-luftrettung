@@ -1,4 +1,4 @@
-/* KLICKWEG DER ADMINSEITE „Komplettsicherung" (S2/AP8).
+/* KLICKWEG DER ADMINSEITE „Komplett-Backup" (S2/AP8).
  * ===========================================================================
  *
  * WOFUER. `probe.php` prueft die Bibliothek darunter; hier wird geklickt. Die
@@ -62,9 +62,9 @@ try {
   pruef('Anmeldung', !seite.url().includes('login.php'), seite.url());
 
   await seite.goto(`${BASIS}/admin_komplettsicherung.php`, { waitUntil: 'domcontentloaded' });
-  pruef('Die Seite ist erreichbar', await seite.locator('h1', { hasText: 'Komplettsicherung' }).count() > 0);
+  pruef('Die Seite ist erreichbar', await seite.locator('h1', { hasText: 'Komplett-Backup' }).count() > 0);
   pruef('Der Menüpunkt ist markiert',
-        await seite.locator('.leiste-liste a.aktiv', { hasText: 'Komplettsicherung' }).count() > 0);
+        await seite.locator('.leiste-liste a.aktiv', { hasText: 'Komplett-Backup' }).count() > 0);
 
   const staendeVor = await seite.locator('.zeile-aktionen').count();
 

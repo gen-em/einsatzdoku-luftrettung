@@ -9,16 +9,16 @@ declare(strict_types=1);
  *
  * WAS HIER ENTSTEHT und warum es NICHT aus der .edbak kommen kann:
  *
- * Die Sicherungsdatei traegt die geschuetzten Angaben im KLARTEXT — der
- * Browser entschluesselt vor dem Versiegeln, damit sich eine Sicherung in
+ * Die Backup-Datei traegt die geschuetzten Angaben im KLARTEXT — der
+ * Browser entschluesselt vor dem Versiegeln, damit sich ein Backup in
  * jedes Konto einspielen laesst. Fuer die Fixture waere das genau falsch:
  * Sie soll den CHIFFRETEXT unveraendert mitfuehren und daneben das
  * Schluesselmaterial, mit dem er lesbar ist. Erst dadurch kann der Server
  * das Konto ohne jede Entschluesselung zuruecksetzen — und erst dadurch ist
  * der Reset schnell genug, um bei jeder Anfrage laufen zu koennen.
  *
- * Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch die
- * Sicherung aufbaut, aber SERVERSEITIG — dort steht `pat_blob` noch als
+ * Die Quelle ist deshalb `edbak_build()`: dieselbe Funktion, die auch das
+ * Backup aufbaut, aber SERVERSEITIG — dort steht `pat_blob` noch als
  * Chiffretext. Genau die Form, die `edbak_restore()` als Spalte wieder
  * annimmt.
  *
@@ -90,7 +90,7 @@ if ($mitKlartext > 0) {
  * Bis Web 7.3.1 stand hier ein Nachlauf-Drehbuch: eine Liste der Kennungen,
  * die der Demo-Reset nach dem Einspielen ueber die regulaeren Loeschwege
  * wieder in den Papierkorb legen sollte. Das war noetig, solange das
- * Sicherungsformat keine geloeschten Eintraege kannte (E-P1-21).
+ * Backup-Format keine geloeschten Eintraege kannte (E-P1-21).
  *
  * Seit Nutzlast 7 traegt `daten` den Papierkorb selbst, und `edbak_restore()`
  * bringt ihn als Papierkorb zurueck. Das Drehbuch ist entfallen (E-S1-10);

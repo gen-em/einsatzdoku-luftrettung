@@ -6,11 +6,11 @@ beide Seiten denselben Fehler machen. Erst ein ZWEITER, unabhaengiger Leser
 sagt, ob die Datei das Format haelt, das dokumentiert ist.
 
 Dieser Leser ist `tools/referenzdatensatz/vergleich/lesen.py` — derselbe, der
-im Kreislauf die Sicherungen vergleicht. Er entsiegelt nach dem Rezept aus
+im Kreislauf die Backups vergleicht. Er entsiegelt nach dem Rezept aus
 `docs/Backup-Format.md` und dekodiert SPUR1 mit einer eigenen Umsetzung.
 
 Dazu die Schadensfaelle: Was passiert, wenn ein Teil FEHLT, wenn zwei
-VERTAUSCHT sind, wenn eines aus einer FREMDEN Sicherung stammt, wenn eine
+VERTAUSCHT sind, wenn eines aus einem FREMDEN Backup stammt, wenn eine
 Pruefsumme im Manifest nicht stimmt und wenn eine Datei zu viel im Archiv
 liegt? Jeder davon muss auffallen — und zwar benannt.
 
@@ -158,7 +158,7 @@ fremd_roh = open(os.path.join(ordner, "fremdes_teil.bin"), "rb").read()
 fremd = umbauen("fremd.edbak",
                 lambda e: [(n, fremd_roh if n == "spuren/0001.edbak" else r) for n, r in e])
 m = scheitert(lambda: lesen.lesen_edbak(fremd, passwort))
-pruefe(bool(m), "Ein Teil aus einer FREMDEN Sicherung faellt auf", (m or "")[:60])
+pruefe(bool(m), "Ein Teil aus einem FREMDEN Backup faellt auf", (m or "")[:60])
 
 
 # EINE PRUEFSUMME IM MANIFEST LAESST SICH NICHT FAELSCHEN, ohne das Passwort
@@ -183,7 +183,7 @@ pruefe(bool(m) and "Pruefsumme" in m,
 
 # UND DIE AAD ALLEIN, ohne die Pruefsumme davor.
 #
-# Die beiden Sicherungen fangen dieselben Faelle; deshalb muss eine Probe
+# Die beiden Backups fangen dieselben Faelle; deshalb muss eine Probe
 # zeigen, dass jede von ihnen fuer sich traegt. Sonst haengt in Wahrheit alles
 # an der Pruefsumme — und die kann jeder mitschreiben, der das Passwort hat.
 #
@@ -242,6 +242,6 @@ kein_manifest = umbauen("ohne_manifest.edbak",
                         lambda e: [x for x in e if x[0] != "manifest.edbak"])
 m = scheitert(lambda: lesen.lesen_edbak(kein_manifest, passwort))
 pruefe(bool(m) and "manifest" in m.lower(),
-       "Ein ZIP ohne Manifest ist keine Sicherung", (m or "")[:52])
+       "Ein ZIP ohne Manifest ist kein Backup", (m or "")[:52])
 
 sys.exit(1 if offen else 0)

@@ -1,7 +1,7 @@
-# Komplettprobe — der volle Zyklus der Komplettsicherung
+# Komplettprobe — der volle Zyklus des Komplett-Backups
 
 Entstanden in S2/AP8. Sie prüft `server/komplett_lib.php` und die Stellen, an
-denen die Komplettsicherung die übrige Anwendung berührt — den Versand
+denen das Komplett-Backup die übrige Anwendung berührt — den Versand
 (`sicherungsziel_lib.php`) und die Speicherbuchführung
 (`adminbackup_lib.php`).
 
@@ -23,7 +23,7 @@ Durchgänge sind Handarbeit. Der Grund ist schlicht: Diese Seite verlangt eine
 ohne die laufende Installation anzufassen.
 
 **Keine volle Platte.** Geprüft ist die Speichergrenze als *Rechnung*
-(zählt die Komplettsicherung mit?), nicht als erlebter Zustand.
+(zählt das Komplett-Backup mit?), nicht als erlebter Zustand.
 
 **Kein wirklicher Absturz mitten in der Anfrage.** Teil 8 stellt ihn nach:
 Der Zustand wird auf den Stand vor dem Häppchen zurückgedreht und die Datei
@@ -57,7 +57,7 @@ vorübergehend und beide wieder zurückgenommen:
 
 Die Zeile `jobs.komplett` fasst sie **nicht** an: Der Zustand des Laufs
 bleibt in einer Variablen der Probe. Deshalb stimmen in Teil 7 auch alle 34
-Prüfsummen — im echten Betrieb weicht `jobs` ab, weil die Sicherung ihren
+Prüfsummen — im echten Betrieb weicht `jobs` ab, weil das Backup ihren
 eigenen Fortschritt mitschreibt.
 
 ## Voraussetzung
@@ -112,7 +112,7 @@ Der Rückgabewert ist 0, wenn alles hält, sonst 1.
 | 7 | **Rückspielung in eine leere Datenbank** und Vergleich Tabelle für Tabelle |
 | 8 | Wiederanlauf: abgeschnittener Rest, verschwundener Baustand |
 | 9 | Aufbewahrung, Verdrängung, Speicherbuchführung, Zeitplan |
-| 10 | Versand aufs Sicherungsziel — auch der Fall „halbe Datei liegt dort" |
+| 10 | Versand aufs Backup-Ziel — auch der Fall „halbe Datei liegt dort" |
 
 Und im Browser (`klickweg.mjs`): Bestätigungsdialog, Lauf mit Rückmeldung,
 beide Downloads (Inhalt geprüft: gzip-Magie bzw. `EDKOMP1` und `"pbkdf2"` im
@@ -124,7 +124,7 @@ zurückstellen, Konsolenfehler.
 **Der Neuanlauf lief in ein `count(null)`.** Die Erstbelegung des Zustands
 (`folge`, `i`, `nach`) stand *vor* dem Zweig, der bei verschwundenem
 Baustand ebendiese Marken löscht. Der Zweig ist der, der nach einer
-Wiederherstellung greift — die Sicherung schreibt ihren eigenen Fortschritt
+Wiederherstellung greift — das Backup schreibt ihren eigenen Fortschritt
 mit, die eingespielte Datenbank trägt also den Stand „Dump läuft" samt einem
 Bauordner, den es auf dem neuen Server nie gab. Ohne die Probe wäre das
 genau einmal aufgefallen: beim ersten Wartungslauf nach dem ersten

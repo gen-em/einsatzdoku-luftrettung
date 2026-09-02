@@ -1,7 +1,7 @@
 """Der Messstand — Klammer über alle Schritte (E-S2-23, R35).
 
 WOFUER. S2 gibt Zielzahlen aus (E-S2-24): Suche unter 5 s, Tagesansicht unter
-3 s, Sicherung unter 5 min, Wiederherstellung unter 15 min, Sicherungsdatei
+3 s, Backup unter 5 min, Wiederherstellung unter 15 min, Backup-Datei
 unter 25 MB, Spuren unter 3 MB je 1000 Einsätzen. Diese Zahlen brauchen zwei
 Dinge: einen Bestand, an dem sie gemessen werden können, und einen
 Ausgangswert, gegen den sich die Verbesserung halten lässt. Beides stellt

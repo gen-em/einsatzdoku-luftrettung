@@ -33,7 +33,7 @@ if ($wurzel === '' || !is_dir($wurzel)) {
  * DER GRUNDPFAD IST DESHALB JE PROTOKOLL EIN ANDERER: vsftpd sperrt den
  * Nutzer in sein Heimverzeichnis (chroot), dort ist `/` die Wurzel. OpenSSH
  * tut das NICHT — dort ist `/` die Wurzel des Dateisystems, und der Grundpfad
- * muss der echte Pfad sein. Wer das verwechselt, schreibt seine Sicherungen
+ * muss der echte Pfad sein. Wer das verwechselt, schreibt seine Backups
  * nach `/`.
  */
 $echt = in_array('--echt', $argv, true);

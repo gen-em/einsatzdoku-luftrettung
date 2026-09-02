@@ -8,7 +8,7 @@
  *                       Absicht: Das Archiv ist die Vergleichsgrundlage der
  *                       Regressionsläufe, und ein Vergleich von Chiffretext
  *                       verglich nur den Zufall der IVs.
- *   <…>.edbak           Sicherung mit dem festen Passwort aus F-P1-01.
+ *   <…>.edbak           Backup mit dem festen Passwort aus F-P1-01.
  *
  * Aufruf:
  *   node referenz_export.mjs [basis] [email] [passwort] [zielordner] [edbak-pw]
@@ -140,10 +140,10 @@ schritt(8, `Export erstellen (${fragenCsv} Rückfragen) → ${nameCsv} — ${zus
 // ---- 2) edbak ------------------------------------------------------------
 await seite.goto(`${basis}/einstellungen.php?t=backup`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
-schritt(9, 'Einstellungen → Sicherung öffnen');
+schritt(9, 'Einstellungen → Backup öffnen');
 
 const gesperrt = await seite.locator('#lockwarn').isVisible().catch(() => false);
-pruefe(!gesperrt, 'Verschlüsselung gesperrt — die Sicherung wäre unvollständig');
+pruefe(!gesperrt, 'Verschlüsselung gesperrt — das Backup wäre unvollständig');
 
 await seite.fill('#bpw1', edbakPw);
 await seite.fill('#bpw2', edbakPw);

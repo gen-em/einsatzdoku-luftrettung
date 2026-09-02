@@ -57,7 +57,7 @@
       "feld": "device_id",
       "art": "wert",
       "nach": "None",
-      "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keiner Sicherung — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Dieselbe Regel wie im Lauf `edbak`."
+      "begruendung": "GEMESSEN 16x (je Diensttag einmal): days[].refs[].device_id wird im frischen Konto null. Geraete stehen in keinem Backup — sie tragen einen API-Schluessel, und ein mitgesichertes Geraet waere ein mitgesicherter Zugang. Die Dienstkennung day_ref selbst bleibt WOERTLICH erhalten; nur ihre Zuordnung zu einem Geraet nicht. Dieselbe Regel wie im Lauf `edbak`."
     }
   ]
 }

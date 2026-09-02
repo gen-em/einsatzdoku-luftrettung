@@ -78,7 +78,7 @@ SCHLUESSEL_CSV = {
     "ruhezeiten": ["diensttag", "beginn"],
     "felder":     ["datei", "feld"],
 }
-# In der Sicherung gibt es einen echten, tragfaehigen Schluessel: client_ref
+# Im Backup gibt es einen echten, tragfaehigen Schluessel: client_ref
 # ist die Referenz, ueber die auch die Dublettenerkennung laeuft.
 SCHLUESSEL_EDBAK = {
     "missions":      ["client_ref"],
@@ -221,7 +221,7 @@ class Vergleich:
                            f"{len(ref[k])} Zeichen", f"{len(ist[k])} Zeichen")
 
     def baum(self, bereich: str, ref, ist, pfad: str = "") -> None:
-        """Freier Vergleich verschachtelter Strukturen (Sicherung).
+        """Freier Vergleich verschachtelter Strukturen (Backup).
 
         Fuer alles, was keine Tabelle mit Schluessel ist: Stammdaten,
         Kopfangaben, Phasenlisten innerhalb eines Einsatzes.

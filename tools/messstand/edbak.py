@@ -1,7 +1,7 @@
-"""Eine Sicherungsdatei SCHREIBEN — das Gegenstück zu `vergleich/lesen.py`.
+"""Eine Backup-Datei SCHREIBEN — das Gegenstück zu `vergleich/lesen.py`.
 
-WOFUER. Der Vervielfältiger (`vervielfaeltigen.py`) baut aus einer echten
-Referenzsicherung einen Großbestand. Er muss die entstandenen Nutzlasten
+WOFUER. Der Vervielfältiger (`vervielfaeltigen.py`) baut aus einem echten
+Referenz-Backup einen Großbestand. Er muss die entstandenen Nutzlasten
 wieder versiegeln, denn eingespielt wird über den **regulären** Weg: der
 Browser öffnet eine `.edbak`, entschlüsselt sie, verschlüsselt die geschützten
 Angaben für das Zielkonto um und schickt sie an `api/backup_restore.php`. Eine
@@ -22,7 +22,7 @@ DAS FORMAT (Fassung 3, `server/assets/crypto.js`, `sealBackup`):
     Schlüssel: PBKDF2-SHA256(Backup-Passwort, Salt, Runden, 256 Bit)
 
 Der Inhalt ist KLARTEXT: Der Browser entschlüsselt vor dem Versiegeln, damit
-sich die Sicherung in jedes Konto einspielen lässt (`Backup-Format.md` 2).
+sich das Backup in jedes Konto einspielen lässt (`Backup-Format.md` 2).
 Dieses Werkzeug fasst deshalb nie einen `edk1:`-Chiffretext an.
 
 WARUM DAS GZIP HIER NACHGEBAUT WIRD UND NICHT WEGGELASSEN. Ohne das Flag wäre
@@ -89,7 +89,7 @@ def schreiben_edbak(daten: dict, passwort: str, runden: int = RUNDEN_VORGABE,
 def rundlauf_pruefen(daten: dict, passwort: str, runden: int = RUNDEN_VORGABE) -> None:
     """Versiegeln, wieder öffnen, vergleichen — bevor die Datei irgendwo landet.
 
-    Eine Sicherungsdatei, die sich nicht öffnen lässt, fällt sonst erst im
+    Eine Backup-Datei, die sich nicht öffnen lässt, fällt sonst erst im
     Browser auf, und dort sieht sie aus wie ein falsches Passwort.
     """
     import tempfile

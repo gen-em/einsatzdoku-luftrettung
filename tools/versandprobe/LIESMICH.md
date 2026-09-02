@@ -1,4 +1,4 @@
-# Versandprobe — die drei Sicherungsziel-Adapter gegen echte Server
+# Versandprobe — die drei Backup-Ziel-Adapter gegen echte Server
 
 Entstanden in S2/AP7. Sie prüft `server/sicherungsziel_lib.php` und
 `server/serverkrypto_lib.php` — Verbindung, Übertragung, Fehlerfälle,
@@ -13,7 +13,7 @@ Port, der ganz sicher offen ist, und auch er wird abgewiesen. Es ist also eine
 Portsperre und keine Eigenschaft des Ziels. **Die Abnahme gegen das echte Ziel
 der Betreiberin gehört deshalb auf deren Maschine oder auf den
 Produktivserver** (Konzept-S2, Abschnitt 9, Zuarbeit) — und sie ist dort ein
-Klick: „Verbindung prüfen" auf der Seite Sicherungsziele.
+Klick: „Verbindung prüfen" auf der Seite Backup-Ziele.
 
 **Keine Übertragung über eine langsame oder abreissende Leitung.** Alles
 läuft über Loopback. Ein Abbruch mitten in der Datei ist deshalb nur
@@ -57,7 +57,7 @@ Vokabular mit, und genau das ist der Grund für den zweiten Satz.
 **Der Grundpfad ist je Protokoll ein anderer, und das ist kein Detail:**
 vsftpd sperrt den Nutzer in sein Heimverzeichnis, dort ist `/` die Wurzel.
 OpenSSH tut das nicht — dort ist `/` die Wurzel des Dateisystems. Wer das
-verwechselt, schreibt seine Sicherungen nach `/`.
+verwechselt, schreibt seine Backups nach `/`.
 
 ## Was sie braucht
 

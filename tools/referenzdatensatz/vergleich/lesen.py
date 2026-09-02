@@ -5,7 +5,7 @@ mehr steht, was sich bei jedem Export aendert.
 
   CSV-Archiv (.zip)   LIESMICH.txt, felder.csv, einsaetze.csv,
                       diensttage.csv, ruhezeiten.csv, tracks/*.gpx
-  Sicherung (.edbak)  Container v2/v3 (einteilig) oder v4 (ZIP mit
+  Backup (.edbak)  Container v2/v3 (einteilig) oder v4 (ZIP mit
                       versiegelten Teilen), entsiegelt mit dem
                       Backup-Passwort; das innere JSON traegt die
                       geschuetzten Angaben im KLARTEXT (Backup-Format.md 2) —
@@ -69,9 +69,9 @@ def lesen_archiv(pfad: str) -> dict:
 # dem die Rundenzahl ueberhaupt in den Kopf gewandert ist (S7).
 #
 # Der Inhalt ist bereits KLARTEXT: Der Browser entschluesselt vor dem
-# Versiegeln, damit sich die Sicherung in jedes Konto einspielen laesst
+# Versiegeln, damit sich das Backup in jedes Konto einspielen laesst
 # (Backup-Format.md 2). Dieses Werkzeug fasst also nie einen `edk1:`-
-# Chiffretext an — ausser dort, wo eine Sicherung ihn als `pat_blob`
+# Chiffretext an — ausser dort, wo ein Backup ihn als `pat_blob`
 # unveraendert mitfuehrt, weil sie ihn beim Export nicht lesen konnte.
 
 MAGIE = b"EDBAK2"
@@ -222,7 +222,7 @@ def spur1_lesen(blob: bytes) -> list:
 
 
 def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
-    """Eine mehrteilige Sicherung oeffnen und wieder zusammensetzen."""
+    """Ein mehrteiliges Backup oeffnen und wieder zusammensetzen."""
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     from cryptography.hazmat.primitives import hashes
     import base64
@@ -231,7 +231,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
     with zipfile.ZipFile(pfad) as z:
         namen = z.namelist()
         if "manifest.edbak" not in namen:
-            raise ValueError("ZIP ohne manifest.edbak — keine Sicherung Fassung 4")
+            raise ValueError("ZIP ohne manifest.edbak — kein Backup Fassung 4")
 
         roh_manifest = z.read("manifest.edbak")
         _flag, runden, salz = _teil_kopf(roh_manifest)
@@ -258,13 +258,13 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
             roh = z.read(name)
 
             # SHA-256 DES VERSIEGELTEN TEILS — die zweite, unabhaengige
-            # Sicherung neben der AAD, und sie schlaegt ZUERST zu.
+            # Backup neben der AAD, und sie schlaegt ZUERST zu.
             #
             # Beide fangen dieselben Faelle (vertauscht, veraendert, fremd),
             # aber sie sagen Verschiedenes: Die AAD sagt „liess sich nicht
             # oeffnen — Passwort oder falscher Platz", die Pruefsumme sagt
             # „DIESES Teil ist nicht das, das hier stehen soll". Fuer wen
-            # eine Sicherung nicht aufgeht, ist der Unterschied der zwischen
+            # ein Backup nicht aufgeht, ist der Unterschied der zwischen
             # zehnmal Passwort tippen und die richtige Datei suchen.
             ist = hashlib.sha256(roh).hexdigest()
             if t.get("sha256") and ist != t["sha256"]:
@@ -273,7 +273,7 @@ def lesen_edbak_v4(pfad: str, passwort: str) -> dict:
                 raise ValueError(
                     f"Teil {name} ist nicht das, das laut Manifest hier stehen soll: "
                     f"Pruefsumme {ist[:16]}… statt {t['sha256'][:16]}…. Das Teil ist "
-                    f"veraendert, vertauscht oder stammt aus einer anderen Sicherung.")
+                    f"veraendert, vertauscht oder stammt aus einem anderen Backup.")
 
             aad = f"{AAD_MARKE}|{manifest['kennung']}|{name}|{nr}/{gesamt}"
             inhalt = json.loads(_teil_oeffnen(schluessel, roh, aad, f"Teil {name}")

@@ -14,7 +14,7 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | **erledigt** — `server/` ist durch |
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | **erledigt** |
 | AP5a | Backlog Nr. 89 beheben (eigener Commit, eigene Korrekturstufe) | **erledigt** |
-| AP6 | `tools/` | offen |
+| AP6 | `tools/` | **erledigt** |
 | AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
 | AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
 
@@ -90,7 +90,13 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   keine sind. Ebenfalls unangetastet bleibt
   `.github/workflows/deploy.yml`: Der Kommentar dort erklärt die
   Ausnahmeliste, und an dieser Datei wird in diesem Paket nichts angefasst
-  (`CLAUDE.md` 3).
+  (`CLAUDE.md` 3). **Nachgetragen in AP6:** Auch die Seitennamen in
+  `tools/screenshots/seiten.json` (`43-sicherungen`, `43b-sicherungsziele`,
+  `43c-komplettsicherung`) bleiben — sie sind **Messidentitäten**, keine
+  Begriffe. `docs/CHANGELOG.md` hält unter genau diesen Namen Prüfzahlen
+  fest („Bilderlauf `43-sicherungen` | 8 Bilder, 8 verschiedene
+  Prüfsummen …"), ebenso das P3-Konzept. Wer sie umbenennt, trennt das
+  Protokoll von dem, was es misst.
 
 ## 0b. Funde während der Umsetzung
 
@@ -175,6 +181,16 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   im Umfeld eines Backups, mit einer Ausschlussliste für die Fälle, in denen
   sich die Form auf ein anderes Wort bezieht (Datei, Fassung, Spur …). Vier
   echte Fälle in Handbuch, Kontenliste und Adminübersicht.
+- **F-S7-12 (AP6) — vier Komposita, die erst hier auftauchten.**
+  „Sicherungsweg", „Sicherungsbau", „Sicherungsordner" und
+  „Sicherungs&shy;kennung" (mit weichem Trennstrich, deshalb von jedem
+  Wortmuster übersehen) kommen nur in den Prüfmitteln vor. Ergänzt.
+- **F-S7-13 (AP6) — die zweite funktional gekoppelte Zeichenkette.**
+  `tools/komplettprobe/probe.php` prüft mit
+  `str_contains($anfang, 'Komplettsicherung der Installation')`, ob der
+  Kopf nach einem verlorenen Baustand wieder am Anfang steht — dieselbe
+  Zeichenkette wie in F-S7-04. Sie kennt jetzt ebenfalls **beide**
+  Schreibweisen, mit demselben Kommentar und derselben Frist (v1.0, R60).
 - **F-S7-11 (AP5) — zwei Regeln konnten einander im Weg stehen.**
   „solche" steht sowohl in der Liste der bestimmten (`die` → `das`) als auch
   der gemischten Artikelwörter. Bei „eine solche Sicherung" griff die erste
