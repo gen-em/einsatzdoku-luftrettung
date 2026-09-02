@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * INSTALLATION WIEDERHERSTELLEN — der Rückweg zur Komplettsicherung
+ * INSTALLATION WIEDERHERSTELLEN — der Rückweg zum Komplett-Backup
  * (E-S2-20, S2/AP8).
  *
  * WOFÜR ES DIESE SEITE GIBT. Der Webspace ist weg. Ein neuer steht, die
@@ -37,7 +37,7 @@ declare(strict_types=1);
  * zwar aus dem Grund, aus dem `update.php` seit M6-01 zweistufig ist —
  * Migrationen können Spalten löschen, und deshalb steht zwischen Anzeigen und
  * Ausführen ein Knopf und eine angemeldete Administratorin. Eine Seite ohne
- * Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Sicherung
+ * Anmeldung, die sie nebenbei mitlaufen liesse, nähme genau diese Absicherung
  * heraus. Stattdessen sagt die Seite am Ende, ob der Dump aus einer anderen
  * Fassung stammt, und schickt zur Wartung. Im Runbook steht derselbe Schritt.
  *
@@ -383,13 +383,26 @@ function wh_auspacken(string $datei, string $passwort, array $stand): array
     /* IST DIE DATEI VOLLSTÄNDIG? Ein Dump AUS DIESER ANWENDUNG trägt eine
      * Endmarke; fehlt sie, ist er mitten im Erzeugen abgebrochen. Ein fremder
      * Dump (`mysqldump`) hat keine — bei dem wird deshalb auch keine
-     * verlangt, und die Seite sagt das offen. */
-    $eigen = str_contains((string)file_get_contents($ziel, false, null, 0, 200),
-                          'Komplettsicherung der Installation');
+     * verlangt, und die Seite sagt das offen.
+     *
+     * ZWEI SCHREIBWEISEN, UND DAS IST KEIN VERSEHEN (S7). Die Kopfzeile ist
+     * zugleich Text für Menschen und Erkennungsmarke für diese Stelle. Mit
+     * der Begriffsumstellung heisst sie „Komplett-Backup der Installation";
+     * jeder Dump, der VOR S7 erzeugt wurde und heute auf einem Server oder
+     * einem Backup-Ziel liegt, trägt aber noch „Komplettsicherung der
+     * Installation". Würde hier nur die neue Schreibweise gesucht, gälte ein
+     * solcher Dump als FREMD — und dann verlangt diese Stelle keine Endmarke
+     * mehr und nähme einen abgebrochenen Stand klaglos an. Das ist der
+     * gefährlichste Fehlschluss, den eine Umbenennung anrichten kann: Sie
+     * schaltet eine Prüfung ab, ohne dass etwas rot wird. Die alte
+     * Schreibweise darf am v1.0-Schnitt weg (R60), nicht vorher. */
+    $anfang = (string)file_get_contents($ziel, false, null, 0, 200);
+    $eigen  = str_contains($anfang, 'Komplett-Backup der Installation')
+           || str_contains($anfang, 'Komplettsicherung der Installation');
     $endmarke = str_contains(wh_schwanz($ziel, 4096), KOMP_ENDMARKE);
     if ($eigen && !$endmarke) {
         @unlink($ziel);
-        throw new RuntimeException('Diese Sicherung ist unvollständig — die Endmarke fehlt. '
+        throw new RuntimeException('Dieses Backup ist unvollständig — die Endmarke fehlt. '
             . 'Sie ist beim Erzeugen abgebrochen und wird nicht eingespielt.');
     }
 
@@ -505,7 +518,7 @@ ui_kopf(['menue' => false]);
 
   <?php ui_titelzeile([
       'titel' => 'Installation wiederherstellen',
-      'unter' => 'Eine Komplettsicherung in eine <strong>leere</strong> Datenbank '
+      'unter' => 'Ein Komplett-Backup in eine <strong>leere</strong> Datenbank '
                . 'einspielen. Diese Seite arbeitet nur, solange es noch kein Konto gibt.',
   ]); ?>
 
@@ -526,7 +539,7 @@ ui_kopf(['menue' => false]);
       Konten. Eine Wiederherstellung würde sie überschreiben, und deshalb passiert
       hier nichts mehr.</p>
       <p class="feld-hinweis">Wer einen einzelnen Stand zurückholen will, tut das
-      angemeldet unter <a href="admin_sicherungen.php">Sicherungen</a>. Wer wirklich
+      angemeldet unter <a href="admin_sicherungen.php">Backups</a>. Wer wirklich
       die ganze Installation ersetzen will, leert die Datenbank vorher mit dem
       Werkzeug des Hosters — eine bewusste Handlung an der richtigen Stelle.</p>
     <?php ui_karte_ende(); ?>
@@ -542,7 +555,7 @@ ui_kopf(['menue' => false]);
                       . ' Anweisungen', ['ton' => 'blau'])]);
         if ($dumpWeb !== '' && $dumpWeb !== WEB_VERSION) {
             ui_zeile(['text' => 'Der Dump stammt aus einer anderen Fassung',
-                      'klein' => 'Sicherung: Web ' . $dumpWeb . ' · hier läuft Web '
+                      'klein' => 'Backup: Web ' . $dumpWeb . ' · hier läuft Web '
                                . WEB_VERSION . '. Der Migrationslauf ist deshalb '
                                . 'nicht optional.',
                       'plaketten' => ui_plakette('Wartung aufrufen', ['ton' => 'orange'])]);
@@ -550,7 +563,7 @@ ui_kopf(['menue' => false]);
         ?>
         <p class="feld-hinweis"><strong>Jetzt in dieser Reihenfolge:</strong></p>
         <p class="feld-hinweis">1. <a href="index.php">Anmelden</a> — mit dem
-        Administrationskonto aus der Sicherung; die Passwörter sind dieselben wie
+        Administrationskonto aus dem Backup; die Passwörter sind dieselben wie
         vorher.<br>
         2. <a href="update.php">Wartung</a> aufrufen und den Migrationslauf ausführen.
         Er läuft hier bewusst nicht mit: Migrationen können Spalten löschen, und
@@ -627,10 +640,10 @@ ui_kopf(['menue' => false]);
       <?php ui_karte_start(['titel' => 'Dateien in „eingang"', 'zahl' => count($quellen)]); ?>
         <?php if ($quellen === []): ?>
           <p class="feld-hinweis">Der Ordner
-          <code>sicherungen/<?= WH_EINGANG ?>/</code> ist leer oder fehlt. Die
-          Sicherung gehört dort hinein — per FTP, SFTP oder Dateimanager des
+          <code>sicherungen/<?= WH_EINGANG ?>/</code> ist leer oder fehlt. Das
+          Backup gehört dort hinein — per FTP, SFTP oder Dateimanager des
           Hosters. Erkannt werden <code>.edk</code> (versiegelte
-          Komplettsicherung), <code>.sql.gz</code> und <code>.sql</code>.</p>
+          Komplett-Backup), <code>.sql.gz</code> und <code>.sql</code>.</p>
           <p class="feld-hinweis">Es gibt hier bewusst kein Hochladen über den
           Browser: Wer die Datei ablegen kann, hat Dateizugriff — und ein
           Upload-Formular auf einer Seite ohne Anmeldung wäre genau die Lücke,
@@ -682,7 +695,7 @@ ui_kopf(['menue' => false]);
       <?php ui_karte_start(['titel' => 'Aufräumen']); ?>
         <p class="feld-hinweis">Entfernt den ausgepackten Klartext-Dump aus
         <code>sicherungen/<?= WH_EINGANG ?>/<?= WH_ARBEIT ?>/</code> und die
-        Nachweisdatei. Die Sicherungsdatei selbst bleibt liegen.</p>
+        Nachweisdatei. Die Backup-Datei selbst bleibt liegen.</p>
         <form method="post">
           <input type="hidden" name="csrf" value="<?= ui_e((string)$_SESSION['wh_csrf']) ?>">
           <input type="hidden" name="action" value="aufraeumen">
@@ -699,14 +712,14 @@ ui_kopf(['menue' => false]);
       <p class="feld-hinweis"><strong>Die Reihenfolge des Wiederanlaufs:</strong>
       Datenbank anlegen (leer) · Anwendungsdateien hochladen ·
       <code>config.php</code> aus dem Wiederanlaufpaket daneben legen ·
-      Sicherungsdatei nach <code>sicherungen/<?= WH_EINGANG ?>/</code> ·
+      Backup-Datei nach <code>sicherungen/<?= WH_EINGANG ?>/</code> ·
       diese Seite · anmelden · <a href="update.php">Wartung</a>. Ausführlich steht
       es im Runbook, <code>docs/Technik.md</code>, Abschnitt 7.</p>
 
       <p class="feld-hinweis"><strong>Der Serverschlüssel entscheidet.</strong> Eine
       <code>.edk</code>-Datei mit dem Vermerk „mit dem Serverschlüssel" lässt sich
       nur mit <em>der</em> <code>config.php</code> öffnen, die beim Erzeugen galt.
-      Ist sie verloren, hilft die Sicherung nicht — deshalb gehört sie ins
+      Ist sie verloren, hilft das Backup nicht — deshalb gehört sie ins
       Wiederanlaufpaket, getrennt vom Server aufbewahrt.</p>
 
       <p class="feld-hinweis"><strong>Es wird nichts zurückgenommen.</strong> Scheitert

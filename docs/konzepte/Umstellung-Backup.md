@@ -10,7 +10,7 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP0 | Neuzählung gegen Web 12.9.2, Entscheidungen E-S7-1 bis E-S7-4 | **erledigt** |
 | AP1 | Backup-Seite der NutzerIn (`einstellungen.php`, `assets/*.js`, `style.css`) | **erledigt** |
 | AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | **erledigt** |
-| AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | offen |
+| AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | **erledigt** |
 | AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | offen |
 | AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | offen |
 | AP6 | `tools/` | offen |
@@ -114,6 +114,27 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   zeilenweisen Nachprüfung entgangen war. Alle drei behoben, samt der
   Pronomen im selben Satz („spielt **sie** dort ein" → „spielt **es**
   dort ein").
+- **F-S7-04 (AP3) — Die Kopfzeile des SQL-Dumps ist zugleich Text und
+  Erkennungsmarke, und eine Umbenennung hätte still eine Prüfung
+  abgeschaltet.** `komplett_lib.php` schreibt
+  `-- Einsatzdokumentation Notarzt — Komplettsicherung der Installation` in
+  den Dump; `wiederherstellen.php` erkennt daran, dass der Dump **aus dieser
+  Anwendung** stammt, und verlangt nur dann die Endmarke. Ein fremder Dump
+  (`mysqldump`) hat keine Endmarke und wird deshalb ohne sie angenommen.
+  Hätte die Umstellung nur die neue Schreibweise gesucht, gälte **jeder vor
+  S7 erzeugte Dump als fremd** — die Vollständigkeitsprüfung wäre für genau
+  die Dateien ausgefallen, die heute auf den Servern liegen, und ein
+  abgebrochener Stand wäre klaglos eingespielt worden. Ohne Fehlermeldung.
+  **Gelöst:** Die Kopfzeile trägt die neue Schreibweise, der Leser erkennt
+  **beide**; die alte darf am v1.0-Schnitt weg (R60), nicht vorher.
+  Derselbe Text steht in `tools/komplettprobe/probe.php` als Prüfbedingung —
+  zieht in AP6 nach.
+- **F-S7-05 (AP3) — dritter Fall von „Sicherung" im Sinne von Absicherung.**
+  `wiederherstellen.php`: „Eine Seite ohne Anmeldung, die sie nebenbei
+  mitlaufen liesse, nähme genau diese Sicherung heraus" — gemeint ist der
+  Knopf zwischen Anzeigen und Ausführen, kein Backup. Ebenfalls zu
+  „Absicherung". Der vierte und letzte Fall (`einsatz_loeschen.php`) wartet
+  auf AP4; danach ist der Bestand durchgesehen.
 
 ---
 

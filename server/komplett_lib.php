@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 /**
- * Komplettsicherung der Installation (S2/AP8, E-S2-19 bis E-S2-21).
+ * Komplett-Backup der Installation (S2/AP8, E-S2-19 bis E-S2-21).
  *
- * WAS SIE IST UND WOGEGEN SIE HILFT. Die Adminsicherung (`adminbackup_lib.php`)
- * sichert ein KONTO. Diese hier sichert die INSTALLATION: alle Konten,
+ * WAS ES IST UND WOGEGEN ES HILFT. Das Admin-Backup (`adminbackup_lib.php`)
+ * sichert ein KONTO. Dieses hier sichert die INSTALLATION: alle Konten,
  * Stammdaten, Geraete, Schluesselhuellen, `app_state`, den Migrationsstand —
- * jede Tabelle, die in dieser Datenbank steht. Der Fall, gegen den sie hilft,
+ * jede Tabelle, die in dieser Datenbank steht. Der Fall, gegen den es hilft,
  * ist nicht „ein Konto hat sich vertan", sondern „der Webspace ist weg".
  *
  * WAS NICHT DRIN IST: `config.php`. Sie traegt das Datenbankpasswort und den
@@ -56,14 +56,14 @@ declare(strict_types=1);
  *
  * DER SCHNAPPSCHUSS IST NICHT SCHARF, UND DAS WIRD HIER GESAGT. `mysqldump`
  * haelt mit `--single-transaction` einen Lesestand ueber den ganzen Lauf.
- * Das geht nur INNERHALB EINER VERBINDUNG, und diese Sicherung laeuft ueber
+ * Das geht nur INNERHALB EINER VERBINDUNG, und dieses Backup laeuft ueber
  * viele Anfragen. Eine Zeile, die waehrend des Laufs entsteht, kann deshalb
  * enthalten sein oder nicht — je nachdem, ob der Cursor an ihrer Stelle schon
  * vorbei war. Was NICHT passieren kann, ist eine uebersprungene Altzeile: Der
  * Cursor laeuft ueber den Primaerschluessel und nicht ueber `LIMIT/OFFSET`,
  * und ein geloeschter Vorgaenger verschiebt ihn deshalb nicht. Fuer den
  * Zweck — „der Webspace ist weg" — ist das die richtige Abwaegung; wer einen
- * scharfen Schnappschuss braucht, faehrt die Sicherung nachts.
+ * scharfen Schnappschuss braucht, faehrt das Backup nachts.
  *
  * DER CURSOR IST AUFGEFAECHERT UND NICHT EIN ZEILENKONSTRUKTOR, und das ist
  * gemessen und kein Geschmack (S2/AP8, 5000er-Bestand, `track_points` mit
@@ -105,7 +105,7 @@ const KOMP_BAU_PRAEFIX = '.bau-';
  */
 const KOMP_AUFBEWAHRUNG_VORGABE = 2;
 
-/** Wurzel der Komplettsicherungen: `sicherungen/komplett/`. */
+/** Wurzel der Komplett-Backups: `sicherungen/komplett/`. */
 function komp_wurzel(): string
 {
     return edbak_wurzel() . '/' . KOMP_ORDNER;
@@ -184,7 +184,7 @@ function komp_staende(): array
     return $raus;
 }
 
-/** Wie viele Staende aufbewahrt werden. Einstellbar wie bei den Kontosicherungen. */
+/** Wie viele Staende aufbewahrt werden. Einstellbar wie bei den Konto-Backups. */
 function komp_aufbewahrung(): int
 {
     $v = (int)(edbak_marke_lesen('komplett_aufbewahrung') ?? 0);
@@ -274,7 +274,7 @@ const KOMP_ZAHL = ['tinyint', 'smallint', 'mediumint', 'int', 'integer', 'bigint
  *
  * SIE WERDEN GEFRAGT UND NICHT AUFGEZAEHLT. Eine fest verdrahtete Liste waere
  * genau einmal richtig — naemlich bis zur naechsten Migration, die eine
- * Tabelle hinzufuegt. Eine Komplettsicherung, die eine Tabelle auslaesst, ist
+ * Tabelle hinzufuegt. Ein Komplett-Backup, das eine Tabelle auslaesst, ist
  * schlimmer als keine: Sie sieht vollstaendig aus.
  *
  * @return array<string,array> je Tabelle:
@@ -479,7 +479,7 @@ function komp_dump_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserv
      * Der naechste Lauf schriebe sie ein zweites Mal — samt `DROP TABLE` und
      * `CREATE TABLE` der gerade laufenden Tabelle. Beim Einspielen wuerde
      * dieses zweite `DROP` genau das wegwerfen, was das erste Haeppchen
-     * eingefuegt hat: eine Sicherung, die vollstaendig aussieht und es nicht
+     * eingefuegt hat: ein Backup, das vollstaendig aussieht und es nicht
      * ist.
      *
      * Deshalb fuehrt der ZUSTAND die Laenge des gueltigen Teils, und jedes
@@ -794,7 +794,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
     try { $server = (string)$pdo->getAttribute(PDO::ATTR_SERVER_VERSION); } catch (Throwable) {}
 
     $raus = [
-        '-- Einsatzdokumentation Notarzt — Komplettsicherung der Installation',
+        '-- Einsatzdokumentation Notarzt — Komplett-Backup der Installation',
         '-- Erzeugt am:        ' . gmdate('Y-m-d\TH:i:s\Z') . ' (UTC)',
         '-- Web-Version:       ' . (defined('WEB_VERSION') ? WEB_VERSION : 'unbekannt'),
         '-- Migrationsstand:   ' . ($stand !== '' ? $stand : 'keiner') . ' (' . $zahl . ' Einträge)',
@@ -826,7 +826,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
 /* ---- Versiegelung: das Format EDKOMP1 ------------------------------------- */
 
 /**
- * Das Dateiformat der versiegelten Komplettsicherung (E-S2-21).
+ * Das Dateiformat des versiegelten Komplett-Backups (E-S2-21).
  *
  *   "EDKOMP1\n"                                       8 Byte
  *   <Kopfzeile als JSON>"\n"                          eine Zeile, kein \n darin
@@ -843,7 +843,7 @@ function komp_kopfzeilen(PDO $pdo, array $tabellen, array $z): array
  *   - ohne Zaehler liessen sich zwei Bloecke vertauschen, und die Prüfsumme
  *     jedes einzelnen bliebe richtig;
  *   - ohne die Endemarkierung liesse sich die Datei hinten abschneiden, und
- *     was uebrig bleibt, waere eine gueltige, kuerzere Sicherung.
+ *     was uebrig bleibt, waere ein gueltiges, kuerzeres Backup.
  *
  * DIE ZUSATZDATEN BINDEN AUCH DEN KOPF, ueber seinen SHA-256. Wer die
  * Kopfzeile aendert — etwa den Vermerk „mit Passphrase" gegen „mit
@@ -1033,7 +1033,7 @@ function komp_siegel_schub(string $quelle, string $ziel, string $schluessel,
 function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
 {
     $k = komp_kopf_lesen($pfad);
-    if ($k === null) { throw new RuntimeException('Das ist keine Komplettsicherung im Format EDKOMP1.'); }
+    if ($k === null) { throw new RuntimeException('Das ist kein Komplett-Backup im Format EDKOMP1.'); }
     $fh = fopen($pfad, 'rb');
     if ($fh === false) { throw new RuntimeException('Die Datei liess sich nicht öffnen.'); }
     fseek($fh, $k['ab']);
@@ -1086,7 +1086,7 @@ function komp_oeffnen(string $pfad, string $schluessel, callable $hinaus): int
  * Reserve fuer ein Haeppchen, in Sekunden.
  *
  * SIE IST SO GROSS, DASS DER HUCKEPACK-WEG GAR NICHT ERST ANFAENGT
- * (`JOB_BUDGET_ANFRAGE` = 3 s). Eine Komplettsicherung ist die schwerste
+ * (`JOB_BUDGET_ANFRAGE` = 3 s). Ein Komplett-Backup ist die schwerste
  * Arbeit dieser Anwendung; sie an der Anfrage einer NutzerIn mitlaufen zu
  * lassen hiesse, eine Seite auf zehn Sekunden zu bringen, damit im
  * Hintergrund die Datenbank abgeschrieben wird.
@@ -1120,7 +1120,7 @@ function komp_plan_setzen(string $plan): bool
 }
 
 /**
- * Ist eine neue Komplettsicherung faellig?
+ * Ist ein neues Komplett-Backup faellig?
  *
  * DER PLAN SAGT NICHT WANN, SONDERN OB — wie beim Versand (E-S2-17). Wann
  * ueberhaupt etwas laeuft, entscheidet der eingerichtete Ausloeser (Cron oder
@@ -1192,19 +1192,19 @@ function komp_zustand_setzen(array $z): bool
  * die Ende-zu-Ende-Zusage an genau der Stelle zu unterlaufen, an der es am
  * wenigsten auffiele. E-S2-21 verlangt die Versiegelung ohnehin, sobald die
  * Datei das Haus verlaesst; hier verlaesst sie es spaetestens mit dem
- * Versand. Der Schlüssel wird auf der Seite „Sicherungsziele" nachgetragen.
+ * Versand. Der Schlüssel wird auf der Seite „Backup-Ziele" nachgetragen.
  */
 function komp_auftrag_starten(): array
 {
     if (!serverschluessel_da()) {
         return ['ok' => false, 'meldung' => 'Es gibt noch keinen Serverschlüssel. '
-            . 'Ohne ihn kann die Komplettsicherung nicht versiegelt werden, und '
+            . 'Ohne ihn kann das Komplett-Backup nicht versiegelt werden, und '
             . 'unversiegelt wird sie nicht abgelegt. Der Schlüssel wird auf der '
-            . 'Seite „Sicherungsziele" eingetragen.'];
+            . 'Seite „Backup-Ziele" eingetragen.'];
     }
     [$bOk, $bMeldung] = komp_bereit();
     if (!$bOk) { return ['ok' => false, 'meldung' => (string)$bMeldung]; }
-    /* DIE SPEICHERGRENZE GILT AUCH HIER (E-S2-15). Eine Komplettsicherung ist
+    /* DIE SPEICHERGRENZE GILT AUCH HIER (E-S2-15). Ein Komplett-Backup ist
      * die groesste einzelne Datei der Ablage; sie an der Grenze vorbei
      * anzulegen hiesse, den Webspace mit genau dem vollzuschreiben, was ihn
      * retten soll. */
@@ -1216,7 +1216,7 @@ function komp_auftrag_starten(): array
     }
     $z = komp_zustand();
     if (in_array($z['stand'] ?? '', ['dump', 'siegel'], true)) {
-        return ['ok' => false, 'meldung' => 'Es läuft bereits eine Komplettsicherung.'];
+        return ['ok' => false, 'meldung' => 'Es läuft bereits ein Komplett-Backup.'];
     }
     $bau = KOMP_BAU_PRAEFIX . bin2hex(random_bytes(4));
     komp_baureste_aufraeumen($bau);
@@ -1230,7 +1230,7 @@ function komp_auftrag_starten(): array
     if (!komp_zustand_setzen($neu)) {
         return ['ok' => false, 'meldung' => 'Der Auftrag liess sich nicht vormerken.'];
     }
-    return ['ok' => true, 'meldung' => 'Die Komplettsicherung ist vorgemerkt. '
+    return ['ok' => true, 'meldung' => 'Das Komplett-Backup ist vorgemerkt. '
         . 'Sie läuft mit dem nächsten Wartungslauf in Häppchen an.'];
 }
 
@@ -1243,11 +1243,11 @@ function komp_auftrag_abbrechen(): array
     }
     $z = komp_zustand();
     if (!in_array($z['stand'] ?? '', ['dump', 'siegel'], true)) {
-        return ['ok' => false, 'meldung' => 'Es läuft keine Komplettsicherung.'];
+        return ['ok' => false, 'meldung' => 'Es läuft kein Komplett-Backup.'];
     }
     if (isset($z['bau'])) { komp_bau_weg((string)$z['bau']); }
     komp_zustand_setzen(['stand' => 'abgebrochen', 'zeit' => gmdate('Y-m-d\TH:i:s\Z')]);
-    return ['ok' => true, 'meldung' => 'Die Komplettsicherung ist abgebrochen; '
+    return ['ok' => true, 'meldung' => 'Das Komplett-Backup ist abgebrochen; '
         . 'der halbe Stand ist entfernt.'];
 }
 
@@ -1305,7 +1305,7 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
         $schluessel = serverschluessel();
         if ($schluessel === null) {
             throw new RuntimeException('Der Serverschlüssel ist verschwunden; '
-                . 'die Sicherung lässt sich nicht versiegeln.');
+                . 'das Backup lässt sich nicht versiegeln.');
         }
         $ziel = $bauPfad . '/ziel.edk';
         $e = komp_siegel_schub($roh, $ziel, $schluessel, (string)$z['kopfzeile'],
@@ -1318,7 +1318,7 @@ function komp_schub(PDO $pdo, array &$z, callable $zeitLinks, float $reserve = K
          * da. */
         $endziel = komp_wurzel() . '/' . (string)$z['name'];
         if (!@rename($ziel, $endziel)) {
-            throw new RuntimeException('Die fertige Sicherung liess sich nicht ablegen: ' . $endziel);
+            throw new RuntimeException('Das fertige Backup liess sich nicht ablegen: ' . $endziel);
         }
         @chmod($endziel, 0640);
         clearstatcache(true, $endziel);
@@ -1398,29 +1398,29 @@ function komp_kdf_runden(): int
 }
 
 /**
- * Eine abgelegte Sicherung entsiegeln und den Klartext hinausgeben.
+ * Ein abgelegtes Backup entsiegeln und den Klartext hinausgeben.
  *
  * DAS IST DIE FASSUNG FUER `mysql` UND phpMyAdmin (E-S2-20). Sie geht nicht
  * ueber die Leitung nach draussen, sondern an die Administratorin, die sich
  * eben angemeldet hat und ohnehin jede Zeile dieser Datenbank sehen kann.
- * Was das Haus verlaesst — der Versand aufs Sicherungsziel — ist immer die
+ * Was das Haus verlaesst — der Versand aufs Backup-Ziel — ist immer die
  * versiegelte Fassung.
  *
  * @param callable $hinaus fn(string $stueck): void
  */
 function komp_ausgeben_klar(string $datei, callable $hinaus): int
 {
-    if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekannte Sicherung.'); }
+    if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekanntes Backup.'); }
     $schluessel = serverschluessel();
     if ($schluessel === null) {
-        throw new RuntimeException('Ohne Serverschlüssel lässt sich die Sicherung nicht öffnen.');
+        throw new RuntimeException('Ohne Serverschlüssel lässt sich das Backup nicht öffnen.');
     }
     return komp_oeffnen(komp_wurzel() . '/' . $datei, $schluessel,
                         function (string $klar) use ($hinaus): void { $hinaus($klar); });
 }
 
 /**
- * Eine abgelegte Sicherung unter einer PASSPHRASE ausgeben (E-S2-21).
+ * Ein abgelegtes Backup unter einer PASSPHRASE ausgeben (E-S2-21).
  *
  * Sie wird dabei nicht doppelt verschlüsselt, sondern UMGESIEGELT: mit dem
  * Serverschlüssel geoeffnet, mit dem abgeleiteten Schluessel wieder
@@ -1438,17 +1438,17 @@ function komp_ausgeben_klar(string $datei, callable $hinaus): int
  */
 function komp_ausgeben_passphrase(string $datei, string $passwort, callable $hinaus): int
 {
-    if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekannte Sicherung.'); }
+    if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekanntes Backup.'); }
     if (strlen($passwort) < 8) {
         throw new RuntimeException('Die Passphrase muss mindestens 8 Zeichen haben.');
     }
     $schluessel = serverschluessel();
     if ($schluessel === null) {
-        throw new RuntimeException('Ohne Serverschlüssel lässt sich die Sicherung nicht öffnen.');
+        throw new RuntimeException('Ohne Serverschlüssel lässt sich das Backup nicht öffnen.');
     }
     $quelle = komp_wurzel() . '/' . $datei;
     $alt = komp_kopf_lesen($quelle);
-    if ($alt === null) { throw new RuntimeException('Das ist keine Komplettsicherung im Format EDKOMP1.'); }
+    if ($alt === null) { throw new RuntimeException('Das ist kein Komplett-Backup im Format EDKOMP1.'); }
 
     $salz   = bin2hex(random_bytes(16));
     $runden = komp_kdf_runden();
