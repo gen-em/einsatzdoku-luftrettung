@@ -43,7 +43,39 @@ tools/uhr-pruefstand/pruefstand.sh aufbau
 **Die Adresse steht bewusst nicht in diesem Repositorium.** Es ist öffentlich,
 die Dateien gehören Garmin, und eine Bereitstellung für den eigenen Gebrauch
 ist etwas anderes als eine Veröffentlichung. Aus demselben Grund werden die
-Dateien nicht eingecheckt.
+Dateien nicht eingecheckt. **Wer hier neu anfängt, hat die Adresse also nicht
+und kann sie sich auch nicht herleiten — sie muss erfragt werden.** Ohne sie
+bricht `aufbau` mit einem Hinweis ab, statt stillschweigend halb zu laufen.
+
+Zwei Anforderungen an die Bereitstellung, beide nicht offensichtlich:
+
+- **Verzeichnisauflistung muss an sein** (Apache `Options +Indexes`, nginx
+  `autoindex on`, oder `python3 -m http.server`). Das Skript geht mit
+  `wget -r` an den Baum; ohne Auflistung findet es keine einzige Datei und
+  meldet trotzdem nicht mehr als „nicht abrufbar".
+- **`Devices/` und `Fonts/` liegen direkt unter der Adresse**, nicht tiefer.
+
+Die Adresse darf einen Pfad haben (`…/ciq`) oder in der Serverwurzel liegen;
+das Skript rechnet `--cut-dirs` aus der Adresse aus. Bis zum 02.09.2026 stand
+dort fest die 1, und damit landete alles unter einer Adresse **mit** Pfad als
+`Devices/Devices/<gerät>/` — der Baum eine Ebene zu tief, `monkeyc` findet kein
+Gerät, und das dokumentierte Beispiel oben war genau dieser Fall. Nachgemessen
+gegen einen örtlichen Testserver mit beiden Adressformen.
+
+### Wieviele Gerätedateien
+
+`aufbau` holt nur die drei Zielgeräte aus `CIQ_ZIELE` — das reicht für Bauen
+und Starten und spart Zeit. Für **Stufe I** (unten) und für
+`geraeteklassen.py` wird dagegen der ganze Bestand gebraucht: Welche Geräte es
+überhaupt gibt, steht nirgends sonst als im Verzeichnis selbst.
+
+```bash
+CIQ_ZIELE=alle tools/uhr-pruefstand/pruefstand.sh aufbau
+```
+
+Zum Stand vom 02.09.2026 sind das 99 Geräte mit `compiler.json`. Die Schriften
+(rund 1,2 GB) kommen in beiden Fällen vollständig — welche Datei zu welchem
+Gerät gehört, steht nur im Geräteabbild.
 
 ## Bedienung
 
@@ -54,6 +86,7 @@ tools/uhr-pruefstand/pruefstand.sh bauen fenix6pro -l 3
 tools/uhr-pruefstand/pruefstand.sh starten fenix6pro
 tools/uhr-pruefstand/pruefstand.sh abbild /tmp/start.png
 tools/uhr-pruefstand/pruefstand.sh einstellungen-leeren
+tools/uhr-pruefstand/pruefstand.sh speicher-leeren
 tools/uhr-pruefstand/pruefstand.sh beenden
 ```
 
@@ -110,26 +143,65 @@ sauber und ist auf dem Gerät **unbedienbar** — genau der Fall, den
 `docs/Geraete-Eingabe.md` für die Venu 3s beschreibt. Die Eingabe-Zuordnung
 bleibt Handarbeit je Klasse, mit `tools/eingabe-probe`.
 
-## App-Einstellungen: der Simulator merkt sie sich
+## Der Simulator merkt sich zwei Dinge
 
-Wer eine Vorgabe in `watch/resources/settings/properties.xml` ändert und neu
-übersetzt, sieht im Simulator trotzdem den **alten** Wert. Der Grund:
+Unter `/tmp/com.garmin.connectiq/GARMIN/APPS/` liegen zwei Ablagen, die jeden
+Neustart des Simulators und jedes neue Kompilat überleben:
 
-```
-/tmp/com.garmin.connectiq/GARMIN/APPS/SETTINGS/<GERAET>.SET
-```
+| Ablage | Inhalt | Gegenstück auf dem Gerät |
+|---|---|---|
+| `SETTINGS/*.SET` | die Werte aus `properties.xml` | Einstellungen in Connect IQ |
+| `DATA/*.DAT` (+ `.IDX`) | alles aus `Application.Storage` | Kopplung, Dienst, Warteschlange |
 
-Diese Datei wird beim **ersten** Laden aus den Vorgaben des Kompilats gefüllt
-und danach nicht mehr angefasst — sie gewinnt über jedes weitere Kompilat. Am
-31.08.2026 hat das zwei Läufe lang dieselbe Bildmarke gezeigt, obwohl das
-zweite Kompilat die andere trug; erst `einstellungen-leeren` brachte sie zum
-Vorschein. Vor jedem Lauf, der eine geänderte Vorgabe prüfen soll:
+Beide werden beim **ersten** Laden gefüllt und danach nicht mehr angefasst —
+sie gewinnen über jedes weitere Kompilat. Wer eine Vorgabe in
+`watch/resources/settings/properties.xml` ändert und neu übersetzt, sieht
+deshalb weiter den **alten** Wert. Am 31.08.2026 hat das zwei Läufe lang
+dieselbe Bildmarke gezeigt, obwohl das zweite Kompilat die andere trug; erst
+`einstellungen-leeren` brachte sie zum Vorschein.
 
 ```bash
-pruefstand.sh einstellungen-leeren
+pruefstand.sh einstellungen-leeren   # vor jedem Lauf mit geänderter Vorgabe
+pruefstand.sh speicher-leeren        # setzt auf "frisch installiert" zurück
 ```
 
-**Das Verzeichnis muss stehen bleiben.** Wird es ganz entfernt, wirft
+`speicher-leeren` ist der Zustand, in dem ein Gerät nach der Installation ist:
+keine Kopplung, kein Dienst, keine Warteschlange. Belegt am 02.09.2026 —
+danach stand auf der Sync-Seite der fenix6pro „Nicht eingerichtet / Erst
+Server-Adresse setzen".
+
+### Die Dateinamen sagen nichts
+
+Naheliegend wäre `<GERAET>.SET`; bis zum 02.09.2026 stand das auch so hier.
+Es stimmt nicht. Gemessen auf der fenix6pro, jeweils mit vorher geleerten
+Ablagen:
+
+| Kompilat | Quelltext | ergibt |
+|---|---|---|
+| `zzprobe.prg` | Uhr 2.0.0 | `V2.SET`, `V2.DAT` |
+| `qq7.prg` | **derselbe** | `V2.SET`, `V2.DAT` |
+| `uuid_alt.prg` | andere Anwendungs-ID | `UUID_ALT.SET` |
+| `fenix6pro.prg` | Uhr 2.0.0 | `V2.SET` **und** `UUID_ALT.DAT` |
+
+Die letzte Zeile ist die entscheidende: **ein einziger Lauf, zwei Namen, keiner
+davon der des Kompilats.** Was da klebt, sind Namen früher geladener Dateien
+(`v2.prg`, `uuid_alt.prg`) — der Simulator vergibt sie offenbar aus einem
+Vorrat und nicht nach der App. Das Löschen der Dateien räumt den Vorrat nicht
+mit ab.
+
+Zwei Regeln folgen daraus:
+
+- **Eine Ablage wird ganz geleert, nie einzeln.** Genau das tun
+  `einstellungen-leeren` und `speicher-leeren`; ein `rm` auf den Namen, den man
+  erwartet, trifft womöglich nichts.
+- **Aus einem Dateinamen lässt sich nicht ablesen, zu welcher App er gehört.**
+  Am 31.08.2026 sollte damit gemessen werden, ob eine geänderte
+  Anwendungs-ID einen eigenen Speicher bekommt. Das ging so nicht: Die Namen
+  antworten auf die Frage nicht. Das Ergebnis blieb offen und ist es weiter —
+  wer es wissen will, braucht einen Weg **innerhalb** der App (etwa einen
+  Zähler, der beim Start hochzählt und angezeigt wird).
+
+**Das Verzeichnis muss stehen bleiben.** Wird `SETTINGS` ganz entfernt, wirft
 `Properties.getValue()` einen Fehler, den ein `catch (e)` **nicht** fängt — die
 App stirbt beim ersten Zeichnen, das Display bleibt schwarz. Das ist ein
 Artefakt des Simulators: Auf einem Gerät legt die Installation den Speicher an.

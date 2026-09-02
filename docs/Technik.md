@@ -3693,7 +3693,11 @@ Der vierte Teil ist der Haken. **Gerätedateien (`Devices/`) und Zeichensätze
 Fensteranwendung mit Garmin-Anmeldung — auf einem Rechner ohne Bildschirm
 nicht zu bedienen. Sie werden deshalb von einer selbst bereitgestellten Quelle
 geholt, deren Adresse in `CIQ_GERAETE_URL` steht und bewusst **nicht** im
-Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Fehlen die
+Repositorium: Es ist öffentlich, und die Dateien gehören Garmin. Wer den
+Prüfstand neu aufsetzt, muss die Adresse also erfragen; die Quelle braucht eine
+eingeschaltete Verzeichnisauflistung, weil das Skript mit `wget -r` an den Baum
+geht. `aufbau` holt nur die drei Zielgeräte — für Stufe I und
+`geraeteklassen.py` braucht es `CIQ_ZIELE=alle`. Fehlen die
 Zeichensätze, übersetzt die App zwar, bricht aber beim ersten Zeichnen mit
 `Invalid Font Specified` ab — der Fehler zeigt auf die eigene Zeile, liegt
 aber an der Umgebung.
@@ -3704,6 +3708,15 @@ holt die 22.04-Stände und legt sie **neben** den Simulator, statt am System zu
 drehen. Und Bedienung wird als X-Ereignis zugestellt — Tastendruck, Tipp,
 Langdruck und Wischgeste kommen so bis in die App durch, gemessen mit der
 Eingabe-Probe (s. `Geraete-Eingabe.md`).
+
+Eine dritte Eigenheit ist beim Messen teuer geworden. Der Simulator führt zwei
+Ablagen, die jedes neue Kompilat überleben — die App-Einstellungen und
+`Application.Storage` — und **ihre Dateinamen sagen nichts darüber aus, zu
+welcher App sie gehören**: Am 02.09.2026 legte ein und derselbe Lauf
+`V2.SET` und `UUID_ALT.DAT` an, beide nach früher geladenen Kompilaten benannt.
+Dagegen helfen `einstellungen-leeren` und `speicher-leeren`, die je eine Ablage
+**ganz** räumen. Wer stattdessen die Datei löscht, deren Namen er erwartet,
+trifft womöglich nichts und misst dann den Zustand des vorigen Laufs.
 
 Die Grenzen bleiben die des Simulators, unverändert: keine echte Hardware,
 keine Systemgesten, kein Server. Ein Lauf zeigt, dass es startet und wie es

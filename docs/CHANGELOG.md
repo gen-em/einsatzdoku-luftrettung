@@ -11,6 +11,66 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Werkzeug: Uhr-Prüfstand] — 2026-09-02
+
+**Die Aufbauanleitung führte an zwei Stellen in die Irre.** Weder die
+Weboberfläche noch die Uhr-App sind geändert, deshalb trägt dieser Eintrag
+keine Versionsnummer — wie schon der Eintrag vom 30.08.2026.
+
+Anlass war die Frage, ob das Wissen um diese Umgebung so festgehalten ist, dass
+ein anderer sie nachbauen kann. Beim Nachlesen fielen zwei Fehler auf, die beide
+erst beim Nachbauen weh getan hätten, und einer, der schon weh getan hat.
+
+### Werkzeug — Die Beispieladresse hätte nicht funktioniert
+
+`--cut-dirs=1` stand fest im Skript. Das trägt nur, wenn `Devices/` und
+`Fonts/` in der **Wurzel** des Servers liegen. Die LIESMICH nannte als Beispiel
+`https://beispiel.invalid/ciq` — eine Adresse mit Pfad, und damit landet der
+Baum als `Devices/Devices/<gerät>/` eine Ebene zu tief. `monkeyc` findet dann
+kein einziges Gerät, ohne dass ein Aufruf gescheitert wäre. Das Skript rechnet
+den Wert jetzt aus der Adresse aus; nachgemessen gegen einen örtlichen
+Testserver mit beiden Adressformen, beide legen den Baum richtig ab.
+
+Dazu zwei Anforderungen, die vorher nirgends standen: Die Quelle braucht eine
+eingeschaltete **Verzeichnisauflistung** (ohne sie holt `wget -r` nichts, meldet
+aber nur „nicht abrufbar"), und `aufbau` holt nur die drei Zielgeräte. Für
+Stufe I und `geraeteklassen.py` braucht es den ganzen Bestand — dafür jetzt
+`CIQ_ZIELE=alle`, zum Stand 99 Geräte.
+
+### Werkzeug — Die Dateinamen der Ablagen sagen nichts
+
+Bisher stand hier, der Simulator lege die Einstellungen unter
+`SETTINGS/<GERAET>.SET` ab. Das ist falsch, und der Irrtum hat am 31.08.2026
+eine Messung gekostet: Es sollte festgestellt werden, ob eine geänderte
+Anwendungs-ID einen eigenen Speicher bekommt, und die Antwort schien an den
+Dateinamen ablesbar. Sie ist es nicht.
+
+Gemessen am 02.09.2026 auf der fenix6pro, jeweils mit vorher geleerten Ablagen:
+Zwei Kompilate aus **demselben** Quelltext (`zzprobe.prg`, `qq7.prg`) ergaben
+beide `V2.SET` und `V2.DAT` — den Namen eines viel früher geladenen `v2.prg`.
+Und ein Lauf von `fenix6pro.prg` legte `V2.SET` **und** `UUID_ALT.DAT` an: ein
+Lauf, zwei Namen, keiner davon der des Kompilats. Der Simulator vergibt die
+Namen offenbar aus einem Vorrat früher gesehener Dateien, und das Löschen der
+Dateien räumt diesen Vorrat nicht mit ab.
+
+Daraus folgt die Regel, die jetzt in der LIESMICH steht: Eine Ablage wird
+**ganz** geleert, nie einzeln — ein `rm` auf den erwarteten Namen trifft
+womöglich nichts und misst dann den Zustand des vorigen Laufs. Und die Frage
+nach der Anwendungs-ID bleibt offen; sie ist von außen nicht zu beantworten,
+sondern nur mit einem Zähler **innerhalb** der App.
+
+### Werkzeug — Dazugekommen
+
+`speicher-leeren` räumt `Application.Storage` und setzt die App damit auf
+„frisch installiert" zurück — den Zustand, den ein Gerät nach der Installation
+hat. Vorher gab es das nur für die Einstellungen, und jeder zweite Lauf maß
+deshalb den Zustand des ersten. Belegt: nach dem Räumen zeigte die Sync-Seite
+der fenix6pro „Nicht eingerichtet / Erst Server-Adresse setzen".
+
+Der Hinweis in `starten` nennt jetzt jede vorhandene `.SET`-Datei, statt eine
+nach dem Gerätenamen zu raten — sie hieß nur deshalb meist so, weil der
+Prüfstand seine Kompilate nach dem Gerät benennt.
+
 ## [Web 12.4.2] — 2026-09-02
 
 **Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes
