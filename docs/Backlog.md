@@ -38,8 +38,8 @@ angelegt, bevor die Entdopplung oben auf `main` lag, und nummeriert sie beim
 Zusammenführen auf 63 bis 67 um: Sperrvermerke des Schnitts in der
 Konto-Sicherung, Bedienhöhe der Android-App, Fassungshinweise im
 Android-Baulauf, Garmin-Uhrcode in der Wortliste, `csrf_check()` ohne
-API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt und stehen
-unten; die Zuordnung aller offenen Punkte zu Paketen führt
+API-Zweig. Die Punkte 68 bis 79 sind mit Fassung 16 angelegt, 80 bis 83 mit
+Fassung 21, 84 bis 88 mit Fassung 22; alle stehen unten; die Zuordnung aller offenen Punkte zu Paketen führt
 `docs/Rahmenplan.md`, Abschnitt 5.
 
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
@@ -1048,10 +1048,101 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     Angabe.
     Zuordnung: **Diskussion in der Planung v1.0 (Schritt 10)**, Umsetzung
     danach — jedenfalls vor dem Neuaufsetzen.
+    **Entschieden am 02.09.2026 (Rahmenplan R64), früher als hier vorgesehen:**
+    **Weg (b)** — `geraet_art` und `geraet_modell` als Momentaufnahme an
+    `missions` und `rest_segments`, beim Anlegen aus `devices` kopiert, in die
+    Sicherung aufgenommen (das Muster von `day_refs`), Bestand per Migration
+    nachgefüllt, solange die Geräte noch stehen; Trennen bleibt Löschen. Dazu
+    **eigene Herkunftswerte** in `origin`: `watch` bleibt für die Garmin-Uhr,
+    neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt
+    beim Anlegen aus Geräteart und `client_ref`-Präfix. Der Einwand an (b)
+    (näher an „etwas Neues erfassen") ist gesehen und so beantwortet: Es sind
+    dieselben Werte wie R42, nur festgehalten; die Datenschutzerklärung nennt
+    sie (Abschnitt 6 des Rahmenplans). Der Preis (Feldkatalog, Export- und
+    Backup-Format, Kreisläufe und Referenz nach R24) ist angenommen und wird
+    mit Nr. 63 in **einer** Formatänderung bezahlt. **Sichtbar** im Dashboard
+    (Nr. 80) **und** je NutzerIn (Nr. 88). Zuordnung damit: **S4-Rest**
+    (Speicherung), P5 (Dashboard), Nr. 88 (Kachel).
+
+84. **Die Android-App kennt nur `nadoku.gen-em.org`.**
+    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (Rahmenplan
+    R63).* Bisher sah R49 die Adresse als **Vorgabewert** vor, den
+    Selbsthoster über den Adress-QR der Geräteseite überschreiben
+    (E-R49-8, E-S4-15). Entschieden: **fest, nicht änderbar.** Adressfeld,
+    Adress-QR und die Adresswahl in der Kopplung entfallen; die Adresse
+    steht als Build-Konstante an einer Stelle, ein Selbsthoster baut sich
+    ein eigenes APK. Die Garmin-Uhr behält ihre Einstellung `serverUrl` mit
+    demselben Vorgabewert — sie hat kein QR und wird über Garmin Connect
+    konfiguriert. **Umsetzung mit dem Kopplungsmodul nach S5**, weil der
+    Bedienweg der Kopplung dort ohnehin neu geschnitten wird. Zuordnung:
+    S4-Rest.
+
+85. **Der Name der Handy-App wird „Gen-EM NAdoku".**
+    *Aufgenommen 02.09.2026, Entscheidung des Auftraggebers (R63).*
+    `android/handy/src/main/res/values/strings.xml` setzt `app_name` auf
+    „NAdoku". Am Handy soll der volle Name mit Bindestrich stehen, wie der
+    Programmname; das Wear-OS-Modul bleibt aus demselben Grund kurz wie die
+    Garmin-Uhr (R48: der Träger gehört in den Store-Eintrag, nicht auf ein
+    Uhrendisplay). Mitzuprüfen: Launcher-Beschriftung, die Benachrichtigung
+    des Vordergrunddienstes und jede Stelle, die den Namen sonst anzeigt.
+    Zuordnung: S4-Rest.
+
+86. **Die Statusleiste überlappt den oberen Rand der Handy-App.**
+    *Aufgenommen 02.09.2026 aus einer Rückmeldung des Auftraggebers.*
+    **Wahrscheinliche Ursache, am Code gelesen und nicht auf dem Gerät
+    nachgestellt:** Das Handy-Modul zielt auf `targetSdk 36`. Seit Android 15
+    (API 35) zeichnet das System Apps mit diesem Ziel randlos, der Inhalt
+    beginnt unter der Statusleiste — und das Modul behandelt nirgends
+    Fenster-Insets (kein `WindowInsets`, kein `safeDrawing`, kein
+    `contentWindowInsets` in `android/handy/src/main`). Die Wear-App ist
+    nicht betroffen: rundes Glas, eigene Bausteine, in 0.7.3 gemessen.
+    **Zu tun:** Insets an der Wurzel der Handy-Oberfläche behandeln
+    (`Scaffold` mit `contentWindowInsets` oder `safeDrawingPadding()` am
+    Wurzelelement), auch für die Navigationsleiste unten; am S24 und im
+    Emulator prüfen, mit Bildabzug oben und unten. Zuordnung: S4-Rest.
+
+87. **Die Weboberfläche als installierbare Web-App auf Android.**
+    *Aufgenommen 02.09.2026 auf Anweisung des Auftraggebers: vor v1.0
+    prüfen, was es braucht, damit Android die Seite aus dem Browser heraus
+    als App auf dem Startbildschirm ablegt.* **Stand heute, am Code
+    gelesen:** kein Web-App-Manifest, kein Service Worker, kein
+    `theme-color`; vorhanden ist allein ein `apple-touch-icon` (`db.php`,
+    je Logo-Wahl). Chrome bietet „App installieren" nur an, wenn ein
+    Manifest mit Name, Startadresse, `display: standalone` und Symbolen in
+    192 und 512 px über HTTPS ausgeliefert wird. Ob zusätzlich ein Service
+    Worker Pflicht ist, hat sich in den Chrome-Fassungen der letzten Jahre
+    geändert — das ist am aktuellen Stand der Chrome-Dokumentation
+    nachzusehen, nicht aus dem Gedächtnis zu beantworten; ohne Service
+    Worker gibt es jedenfalls keine Offline-Seite, nur den Eintrag auf dem
+    Startbildschirm. **Zu prüfen (Erhebung, ein Nachmittag):** Manifest-
+    Felder und Symbolsatz aus den vorhandenen Logos (Rezept wie
+    `tools/uhr-bilder/`) · Umgang mit der Logo-Wahl je Profil — ein
+    Startbildschirm-Symbol ist fest wie das Launcher-Symbol der Uhr (R47),
+    also Vorgabe der Installation · Anmeldung und `sessionStorage`-Schlüssel
+    im Standalone-Fenster (ein Tab, ein Schlüssel, R44) · Wirkung auf die
+    CSP (Nr. 8) und die Zusage „keine fremde Quelle" · Nachweis mit der
+    Installierbarkeits-Diagnose in Chrome und am S24. **Abgrenzung:** Das ist
+    nicht die Android-App aus S4. Die zeichnet GPS auf und braucht dafür
+    einen Vordergrunddienst (E-R45-5: keine PWA für die Aufzeichnung); die
+    Web-App zeigt nur die Oberfläche. Beides nebeneinander ist gewollt.
+    **Entscheidung** über Umfang und Zeitpunkt in der Planung v1.0
+    (Rahmenplan Schritt 10); Umsetzung dann in P6 oder als Kleinpaket davor.
+    Zuordnung: Backlog-Runde (Erhebung), Entscheidung in Schritt 10.
+
+88. **Kachel „Einsätze je Gerät" in der Zeitraumübersicht.**
+    *Aufgenommen 02.09.2026 aus der Entscheidung zu Nr. 83 (R64).* Jede
+    NutzerIn sieht in ihrer Zeitraumübersicht die eigenen Einsätze nach
+    Herkunft: Garmin-Uhr, Handy, Handy mit Wear-Fernbedienung, GPX-Import,
+    Schnitt, von Hand — als Kachel neben den vorhandenen Kennzahlen, mit
+    Modell als Untertitel, wo eines gespeichert ist. **Neue Darstellung:**
+    Mockup und Freigabe nach `Design.md` 1 vor der Umsetzung; Baustein
+    `ui_kennzahl` aus P3 als Ausgangspunkt. Braucht die Spalten aus R64
+    (Nr. 83, S4-Rest). Zuordnung: Backlog-Runde, nach dem S4-Rest.
 
 ---
 
 ## Erledigt
+
 
 Die Nummern bleiben, damit ältere Verweise aus Code und Dokumentation weiter
 zutreffen.

@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 21 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
+**Fassung 22 (02.09.2026)** — Neustrukturierung (Fassung 16). Dieses Dokument steuert
 das Programm: Reihenfolge, Status, programmweite Entscheidungen. Es hält
 nur, was für die nächsten Schritte gebraucht wird. Alles, was bis
 Fassung 15 hier stand — die Fassungsvermerke, die Phasentexte mit ihren
@@ -134,7 +134,7 @@ Rückwärtskompatibilität ab v1.0, auch bei Updates (R60).
 | 3 | **S5 — Kopplung umgekehrt, Konzept** | E-R49-1 bis E-R49-8 ausarbeiten | Schritt 2 | neu | **Fable** (R14) | offen |
 | 4 | **S7 — Backup-Begriff** | Umstellung in einem Zug | Schritt 1; parallel zu 3 | `docs/konzepte/Umstellung-Backup.md` | Opus | offen |
 | 5 | **S5 — Umsetzung** | Server, Web, Uhr, Doku | Schritt 3; DNS `nadoku.gen-em.org` | aus Schritt 3 | Opus | offen |
-| 6 | **S4 — Rest** | Kopplungsmodul, QR, Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
+| 6 | **S4 — Rest** | Kopplungsmodul, feste Server-Adresse, App-Name, Insets, Herkunft je Einsatz (R64), Gerätetest, Android 1.0.0 | Schritt 5 | Konzept S4, Abschnitt 13 | Opus | offen |
 | 7 | **S8 — Einstellungen, Administration und Wartung** | Sichtung und Neuordnung: Sicherungsoptionen, Menüstruktur, Aufteilung der Wartungsseite, Einzelpunkte 73–79 (R61) | Schritte 4 und 6 | neu, mit Mockups | Fable (Konzept) | offen |
 | 8 | **Backlog-Runde** | Einzelpunkte nach Abschnitt 5 | ab Schritt 1, parallel | keins | Opus | offen |
 | 9 | **P5 — Dienstbetrieb** | Registrierung, Rollen, Administration, Betrieb | Schritte 2, 5 und 7; Hosting-Entscheidung; Staging | neu | Fable (Konzept) | offen |
@@ -283,7 +283,9 @@ Server (Sitzungstabelle statt `pair_codes`, drei Anliegen `start`/`status`/
 · Web (Feld „Code vom Gerät", Bestätigungsseite mit Art und Modell,
 „Kopplungscode erzeugen" entfällt, manuelle Anlage bleibt) · Uhr
 (Code-Anzeige, Rückbestätigung mit maskierter E-Mail, Vorgabeadresse
-`nadoku.gen-em.org`, Uhr-Build mit den S3-Kacheln) · Doku. **Abnahme des
+`nadoku.gen-em.org`, Uhr-Build mit den S3-Kacheln) · Doku. Für die
+Android-App gilt R63: feste Adresse ohne Adresswahl; die Garmin-Uhr behält
+Vorgabewert und Einstellung. **Abnahme des
 Konzepts:** Freigabe durch den Auftraggeber. In die S5-Abnahme geht
 **P2-Prüfpunkt 4.1** auf (eine Kopplung mit der Uhr in der Hand, R55).
 
@@ -321,8 +323,15 @@ dem Uhr-Build.
 **Ziel:** Die Android-App wird benutzbar ausgeliefert (1.0.0).
 **Inhalt:** Kopplungsmodul der Handy-App auf Vertragsabschnitt 1a neu
 schneiden (Konzept S4, Abschnitt 13: sechs Quelldateien, rund 600 Zeilen,
-39 von 220 Prüffällen) · Adress-QR auf dem Geräte-Reiter (E-S4-15, nur die
-Server-Adresse) · Hinweis in der Tagesansicht bei zeitlich überlappenden
+39 von 220 Prüffällen) · **feste Server-Adresse `nadoku.gen-em.org`** in der
+Android-App, Adressfeld und Adress-QR entfallen (R63, Nr. 84) · App-Name
+„Gen-EM NAdoku" am Handy, Uhr bleibt „NAdoku" (Nr. 85) · Fenster-Insets
+gegen die Statusleisten-Überlappung (Nr. 86) · **Herkunft und Gerät je
+Einsatz nach R64** (Nr. 83): Momentaufnahme `geraet_art`/`geraet_modell` an
+`missions` und `rest_segments`, `origin` um `android`, `wear`, `schnitt`
+erweitert, Migration füllt den Bestand aus `devices` nach, Feldkatalog,
+Export- und Backup-Format und Kreisläufe (R24) ziehen zusammen mit Nr. 63
+nach — eine Formatänderung, ein Kreislauf · Hinweis in der Tagesansicht bei zeitlich überlappenden
 aktiven Diensttagen samt Handbuchabsatz (R57) · Backlog 63 (Sperrvermerke
 des Schnitts in die Konto-Sicherung) · Signaturschlüssel erzeugen und
 übergeben, erstes signiertes APK · Gerätetest auf dem S24 (zwei bis drei
@@ -400,7 +409,7 @@ Konto** in jeder Betriebsart mitdenken (R25).
 
 **Ziel:** Bevor etwas als v1.0 veröffentlicht wird, noch einmal planen
 statt schneiden (R59, Beschluss vom 02.09.2026). Ein Konzeptgespräch mit
-vier Gegenständen: **Code-Review** — Umfang, Reihenfolge und Form des
+fünf Gegenständen: **Code-Review** — Umfang, Reihenfolge und Form des
 Bug- und Sicherheitsreviews nach R17, was davon vor und was nach dem
 Neuaufsetzen läuft, wie Funde entschieden werden · **Aufteilung in mehrere
 Repositorien** — ob Web/Server, Garmin-Uhr, Android und Werkzeuge getrennt
@@ -414,7 +423,9 @@ Muss die Migrationsliste auf der Wartungsseite sichtbar bleiben? Fest
 steht: ab v1.0 **keine Rückwärtskompatibilität**, auch nicht bei Updates;
 v1.0 beginnt mit dem Neuaufsetzen (R40), und eine ältere Sicherung wird
 genau **einmal** über ein dafür gebautes Formular eingespielt, das danach
-entfällt. Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
+entfällt · **Web-App auf Android** (Nr. 87): Ergebnis der Erhebung, ob und
+mit welchem Umfang die Weboberfläche vor v1.0 aus dem Browser heraus
+installierbar wird (Manifest, Symbole, Service Worker ja oder nein). Dazu die Doku-Anforderungen nach R16, wenn das Gespräch dazu
 noch aussteht.
 
 **Dazu ein Punkt, der genau hierhin gehört und nirgendwo sonst: die
@@ -483,8 +494,8 @@ nach jeder Migration `update.php`.
 ## 5. Zuordnung der offenen Backlog-Punkte
 
 Jeder offene Punkt steht genau einmal. Nummern 63–67 sind für den
-S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit dieser Fassung
-angelegt.
+S4-Zweig reserviert (dort heute 59–63); 68–79 sind mit Fassung 16, 80–83 mit
+Fassung 21 und 84–88 mit Fassung 22 angelegt.
 
 | Nr. | Punkt (kurz) | gehört zu | Bemerkung |
 |---|---|---|---|
@@ -514,10 +525,15 @@ angelegt.
 | 55 | Komplettsicherung ohne scharfen Schnappschuss | nach v1.0 | — |
 | 57 | Tagesübersicht baut ihre Tabelle zweimal | Backlog-Runde | Vereinheitlichung |
 | 58 | Prüfmittel: Seite ohne Gerüst | Backlog-Runde | Prüfmittel, ein Nachmittag |
-| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Speicherung erledigt mit Web 12.9.0; Datenschutzerklärung und Nr. 83 sind Vorbedingungen (Schritt 10) |
+| 80 | Auswertung der Gerätestatistik (Rest von 59) | **P5** | Dashboard je Installation; Datenschutzerklärung ist Vorbedingung (Abschnitt 6); die NutzerInnen-Sicht ist Nr. 88 |
 | 81 | App-Symbol in der Benachrichtigung zu groß und angeschnitten | **S4-Rest** | am Gerät gemeldet; aus dem heutigen Quellstand nicht nachvollziehbar — zuerst die installierte App-Fassung klären |
 | 82 | Warnung fehlt, dass die Daueraufzeichnung den Akku leert | **S4-Rest** | der vorhandene Akku-Dialog (E-S4-05) sagt das Gegenteil: warum die App Strom ziehen darf |
-| 83 | Haltbarkeit der Gerätestatistik: welche Daten wie gespeichert werden | **Schritt 10**, Umsetzung danach | Vorbedingung für 80; muss vor dem Neuaufsetzen (R60) entschieden sein |
+| 83 | Herkunft und Gerät je Einsatz: welche Daten wie gespeichert werden | **S4-Rest** | **entschieden als R64** (02.09.2026): Momentaufnahme am Einsatz, eigene `origin`-Werte, Bestand per Migration nachgefüllt; mit Nr. 63 in einer Formatänderung |
+| 84 | Android-App kennt nur `nadoku.gen-em.org` | S4-Rest | R63; Adressfeld und Adress-QR entfallen; mit dem Kopplungsmodul |
+| 85 | Handy-App heißt „Gen-EM NAdoku", Uhr bleibt „NAdoku" | S4-Rest | R63; eine Zeichenkette plus Sichtprüfung |
+| 86 | Statusleiste überlappt die Handy-App | S4-Rest | wahrscheinlich fehlende Fenster-Insets bei `targetSdk 36`; am Gerät prüfen |
+| 87 | Weboberfläche als installierbare Web-App auf Android | Backlog-Runde (Erhebung), Entscheidung in Schritt 10 | heute kein Manifest, kein Service Worker; vor v1.0 klären |
+| 88 | Kachel „Einsätze je Gerät" in der Zeitraumübersicht der NutzerIn | Backlog-Runde, nach S4-Rest | neue Darstellung: Mockup und Freigabe (R64) |
 | 62 | Logodateien mit alten Farbwerten | Backlog-Runde | `Design.md` 2.5 mitziehen |
 | 63 | Sperrvermerke des Schnitts in der Konto-Sicherung | S4-Rest | `Backup-Format.md`, Kreisläufe |
 | 64 | Bedienhöhe Android | **erledigt** (S4-Merge, Android 0.7.7) | 48 dp in beiden Modulen, `CLAUDE.md` 5 unterscheidet Web und Android (R58, E-S4-77) |
@@ -643,6 +659,8 @@ werden nie neu vergeben.
 | R60 | Ab v1.0 keine Rückwärtskompatibilität, auch bei Updates; v1.0 beginnt mit dem Neuaufsetzen; eine ältere Sicherung wird einmal über ein Wegwerf-Formular eingespielt, danach nie wieder. Der Update-Weg der Installation (Selbstprüfung gegen das Repositorium, Benachrichtigung, Einspielen selbst oder per FTP, Sichtbarkeit der Migrationsliste) wird in der Planung v1.0 entschieden | gilt, Schritt 10 |
 | R61 | Zwischenpaket S8 „Einstellungen, Administration und Wartung": ergebnisoffene Sichtung und Neuordnung vor P5, mit Konzept und Mockups; die Sicherungsoptionen, die Menüstruktur und die Aufteilung der Wartungsseite gehören hinein | gilt, Schritt 7 |
 | R62 | Konzeptablage `docs/konzepte/` mit Lebenszyklus: Statusblock und Push nach jedem Arbeitspaket, damit andere Instanzen den Stand sehen; nach Freigabe des Abschlusses Erledigt-Zeile hier und Löschung des Konzepts; Prüfdokument bleibt bis zur abgehakten Prüfliste; Bestand bis S3 in `docs/konzepte/erledigt/` | gilt (F16), Regel in 2.2 |
+| R63 | Die Android-App kennt nur `nadoku.gen-em.org`, fest und nicht änderbar: Adressfeld, Adress-QR (E-S4-15) und Adresswahl entfallen, Selbsthoster bauen ein eigenes APK. E-R45-2 und E-R49-8 gelten für Android insoweit nicht mehr; die Garmin-Uhr behält Vorgabewert und Einstellung. Dazu: Handy-App heißt „Gen-EM NAdoku", Wear-OS-Uhr bleibt „NAdoku" | gilt, S4-Rest (Nr. 84–86) |
+| R64 | **Herkunft und Gerät je Einsatz** (Beschluss 02.09.2026 zu Nr. 83, Weg b): **(1)** Geräteart und Modell werden beim Anlegen als Momentaufnahme an `missions` und `rest_segments` kopiert, in die Sicherung aufgenommen, der Bestand per Migration aus `devices` nachgefüllt; Trennen bleibt Löschen (R47). **(2)** `origin` bekommt eigene Werte: `watch` bleibt für die Garmin-Uhr, neu `android`, `wear` und `schnitt` neben `manual` und `import`, gesetzt beim Anlegen aus Geräteart und `client_ref`-Präfix; Feldkatalog, Export- und Backup-Format, Kreisläufe (R24) und Referenz ziehen nach. **(3)** Sichtbar im Betriebslage-Dashboard je Installation (Nr. 80, P5) **und** je NutzerIn als Kachel der Zeitraumübersicht (Nr. 88). Keine neue Erhebung über R42 hinaus — dieselben Werte, festgehalten; die Datenschutzerklärung nennt es (R41, Abschnitt 6) | gilt; Speicherung S4-Rest, Dashboard P5, Kachel Nr. 88 |
 
 ## 8. Erledigt — Kurzübersicht
 
@@ -796,7 +814,8 @@ Abschnitt 6.
 | 15 | 02.09.2026 | S2 als ausgeliefert; Backlog 46–49 entdoppelt (→ 59–62); zweite Rückmeldungsrunde; R50 fällig |
 | **16** | **02.09.2026** | **Neustrukturierung:** Archiv abgetrennt (R51), Fahrplan nach Ausführungsreihenfolge, S6 und S7 benannt (R52), P4 aufgelöst (R53), Kurzregister (R54), Prüflisten bereinigt (R55), R56–R58 entschieden, Planungsgespräch vor v1.0 als Schritt 10 (R59), Update-Weg und Ende der Rückwärtskompatibilität ab v1.0 (R60), Zwischenpaket S8 Einstellungen, Administration und Wartung als Schritt 7 (R61), Konzeptablage `docs/konzepte/` mit Lebenszyklus und Push je Arbeitspaket (R62, K7 geändert), Bestand nach `docs/konzepte/erledigt/` verschoben; Statusfehler berichtigt (Kleinstpaket nicht begonnen, S3 ausgeliefert, S4 auf dem Zweig gebaut); Backlog 68–79 angelegt, 63–67 für S4 reserviert |
 | **17** | **02.09.2026** | **S4-Merge vorbereitet** (Schritt 1): Backlog des S4-Zweigs auf 63–67 umnummeriert und beide Reihen konfliktfrei zusammengeführt (44 offene Nummern, 0 doppelt); R58 umgesetzt (48 dp, Backlog 64 erledigt), R57 als E-S4-76 eingetragen; Konzept und Prüfdokument nach `docs/konzepte/` verschoben (R62) mit Statusblock; Migrationsregister gegengezählt (38 = 38); Signaturschlüssel des APK an den Auftraggeber übergeben — er war seit B1 erzeugt, aber nie ausgehändigt. Der Push auf `main` steht aus. |
-| **21** | **02.09.2026** | **Drei Punkte aufgenommen** (Backlog 81–83): App-Symbol in der Benachrichtigung zu groß und angeschnitten (am Gerät gemeldet, aus dem Quellstand nicht nachvollziehbar — die Kachel wurde nachgerechnet, sie stimmt), fehlende Warnung vor dem Akkuverbrauch der Daueraufzeichnung (der vorhandene Akku-Dialog sagt das Gegenteil), und die **Haltbarkeit der Gerätestatistik** als Diskussionspunkt für Schritt 10 — gemessen: 82 von 82 Einsätzen ohne Geräteverweis, weil `ON DELETE SET NULL` gilt und `device_id` nicht in der Sicherung steht. 81 und 82 in den S4-Rest, 83 vor den Neuaufsetzen-Beschluss (R60). |
-| **20** | **02.09.2026** | **Marken- und Schutzrechtszeichen aus den Modellnamen** (Web 12.9.2): 171 der 173 Namen trugen ® oder ™, 194 Vorkommen. Sie gehören nicht uns, sie stören die Zählung (ein Wechsel ® → ™ ergäbe zwei Geräte) und sie kosten Platz. Entfernt wird im Erzeuger, nicht in der erzeugten Datei; `í`, `ē` und der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen. Gegengeprüft: weiterhin 325 Teilenummern auf 173 verschiedene Namen, 0 Zusammenfälle, 0 doppelte Leerzeichen. Keine Migration. |
-| **19** | **02.09.2026** | **Modelltabelle gefüllt** (Web 12.9.1): 325 Teilenummern auf 173 Modelle aus den gelieferten Gerätedateien — die Zuarbeit aus Abschnitt 6 ist erledigt. Die echten Daten haben eine geratene Annahme widerlegt: `geraet_modell` geht von 64 auf 191 Zeichen (E-S6-7, zweite Migration `2026_09_02_geraetemodell_breiter`), weil die Dateien Sammelnamen bis 156 Zeichen führen; gekürzt wird erst für die Anzeige. Dateiweite Wortlisten-Ausnahme für die erzeugte Tabelle (89 Treffer, wie in ihrer LIESMICH vorhergesagt). Register 40 = 40. **Vollständigkeit 266 → 272** — die sechs liegen sämtlich in „Unicode-Zeichen als Symbol im Markup": vier sind Auslassungszeichen in Kommentaren (dieselbe Verwendung wie an drei älteren Stellen in `version.php` und `update.php`), zwei die Kürzungsmarke im Code, die `admin_user.php` schon vor S6 benutzte. Kein neuer Befundtyp; die Kategorie ist Bestand aus P3. |
 | **18** | **02.09.2026** | **S6 gebaut** (Schritt 2, Web 12.9.0): drei Spalten an `devices` statt der in R42 genannten zwei (E-S6-1), `pair.php` liest beide Kopplungsformen über die neue `geraete_lib.php`, Modelltabelle als erzeugte Datei mit eigenem Werkzeug samt Nachauflösen (E-S6-6), Art und Modell in beiden Gerätelisten, R44 angeglichen (gleitende Schlüsselfrist) und dabei die Wirkungsaussage des R44-Eintrags berichtigt (E-S6-4, neues Prüfmittel `tools/fristprobe/`: 17 gegen 1 Neu-Entpackung je Schicht); Gerätekennung in beiden Listen gekürzt (E-S6-5, behebt einen Überlauf, den es schon vorher gab); JSON-Vertrag auf Fassung 1.4 (beide Formen, Speicherung, Android-Präfixe — der Nachtrag hing an R42), `Lizenzen.md` 7a für die erzeugte Tabelle; Backlog 59 erledigt, Rest als 80 angelegt; drei Zuarbeiten in Abschnitt 6 (Gerätedateien, S6-Abnahme, Datenschutzerklärung). Migrationsregister gegengezählt (39 = 39). |
+| **19** | **02.09.2026** | **Modelltabelle gefüllt** (Web 12.9.1): 325 Teilenummern auf 173 Modelle aus den gelieferten Gerätedateien — die Zuarbeit aus Abschnitt 6 ist erledigt. Die echten Daten haben eine geratene Annahme widerlegt: `geraet_modell` geht von 64 auf 191 Zeichen (E-S6-7, zweite Migration `2026_09_02_geraetemodell_breiter`), weil die Dateien Sammelnamen bis 156 Zeichen führen; gekürzt wird erst für die Anzeige. Dateiweite Wortlisten-Ausnahme für die erzeugte Tabelle (89 Treffer, wie in ihrer LIESMICH vorhergesagt). Register 40 = 40. **Vollständigkeit 266 → 272** — die sechs liegen sämtlich in „Unicode-Zeichen als Symbol im Markup": vier sind Auslassungszeichen in Kommentaren (dieselbe Verwendung wie an drei älteren Stellen in `version.php` und `update.php`), zwei die Kürzungsmarke im Code, die `admin_user.php` schon vor S6 benutzte. Kein neuer Befundtyp; die Kategorie ist Bestand aus P3. |
+| **20** | **02.09.2026** | **Marken- und Schutzrechtszeichen aus den Modellnamen** (Web 12.9.2): 171 der 173 Namen trugen ® oder ™, 194 Vorkommen. Sie gehören nicht uns, sie stören die Zählung (ein Wechsel ® → ™ ergäbe zwei Geräte) und sie kosten Platz. Entfernt wird im Erzeuger, nicht in der erzeugten Datei; `í`, `ē` und der Halbgeviertstrich bleiben — sie sind Bestandteil der Namen. Gegengeprüft: weiterhin 325 Teilenummern auf 173 verschiedene Namen, 0 Zusammenfälle, 0 doppelte Leerzeichen. Keine Migration. |
+| **21** | **02.09.2026** | **Drei Punkte aufgenommen** (Backlog 81–83): App-Symbol in der Benachrichtigung zu groß und angeschnitten (am Gerät gemeldet, aus dem Quellstand nicht nachvollziehbar — die Kachel wurde nachgerechnet, sie stimmt), fehlende Warnung vor dem Akkuverbrauch der Daueraufzeichnung (der vorhandene Akku-Dialog sagt das Gegenteil), und die **Haltbarkeit der Gerätestatistik** als Diskussionspunkt für Schritt 10 — gemessen: 82 von 82 Einsätzen ohne Geräteverweis, weil `ON DELETE SET NULL` gilt und `device_id` nicht in der Sicherung steht. 81 und 82 in den S4-Rest, 83 vor den Neuaufsetzen-Beschluss (R60). |
+| **22** | **02.09.2026** | **Android-Rückmeldungen und Gerätestatistik entschieden:** feste Server-Adresse und Name der Android-App (R63); Nr. 83 als R64 entschieden — Momentaufnahme am Einsatz, eigene `origin`-Werte, Umsetzung im S4-Rest zusammen mit Nr. 63; Backlog 84–88 angelegt (feste Adresse, App-Name, Statusleiste, Web-App-Erhebung vor v1.0, NutzerInnen-Kachel); Schritt 6 und Schritt 10 ergänzt; Änderungsverlauf wieder aufsteigend |
