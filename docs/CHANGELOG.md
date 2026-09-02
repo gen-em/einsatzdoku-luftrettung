@@ -11,6 +11,74 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.4.2] — 2026-09-02
+
+**Das Bodenlogo war nie so klein, wie es aussah — es war gepolstert.** Elftes
+Arbeitspaket von S3. Keine Migration.
+
+### Web — Ein Zehntel der Höhe war leer
+
+Das NEF-Logo wirkte neben dem Hubschrauber deutlich kleiner. Die Ursache
+steckte in der Datei: `viewBox="0 0 420 420"`, die **Zeichnung darin aber
+420 × 335 ab y = 42,5** — oben und unten je ein Zehntel leer, ein Artefakt
+des Exports und keine Gestaltungsentscheidung.
+
+Skaliert wird über die **Höhe** (`height: 34px; width: auto`). Ein Zehntel
+dieser Höhe war damit Luft, und das Bild erschien **schmaler und niedriger
+zugleich**:
+
+| bei 34 px Höhe | vorher | nachher |
+|---|---|---|
+| Luftlogo | 54,5 × 34 px · 1 853 px² | 54,5 × 34 px · 1 853 px² |
+| Bodenlogo | 34 × 27,1 px · **921 px²** | **42,6 × 34 px · 1 449 px²** |
+| Flächenverhältnis | **2,01** | **1,28** |
+
+**Eine Feinkorrektur braucht es danach nicht** (E-S3-12 b, am Bild
+entschieden): Die Höhen sind gleich, und das ist es, was das Auge in einer
+Zeile vergleicht. Die verbleibende Breitendifferenz ist der ehrliche
+Unterschied zweier Motive — das eine liegt quer, das andere weniger. **An der Zeichnung ist nichts geändert, nur am Rahmen.**
+
+### Web — Die Kopfleiste reservierte für beide Logos denselben Kasten
+
+`width="54" height="34"` stand fest im Markup. 54 : 34 ist das Verhältnis des
+**Luftlogos**; das Bodenlogo ist bei 34 px Höhe **43 px** breit. Der Browser
+reservierte also einen Kasten, in den das Bild nicht passt, und rückte beim
+Laden nach — ein Layoutsprung, den man nur sieht, wenn man darauf wartet. Die
+Maße kommen jetzt aus `ui_logo_masse()`, je nach gewähltem Logo.
+
+### Web — Eine Falle am Luftlogo, entschärft
+
+Ein blauer Streifen der Zeichnung läuft bis x = 556,7 und damit rund **156
+Einheiten über den Rahmen** (400,16) hinaus. Sichtbar war er nie — ein Clip
+im Inneren schneidet ihn weg. Sichtbar **würde** er, sobald jemand den Rahmen
+weitet, und daran denkt beim Weiten niemand. Ein zusätzlicher Rahmen-Clip
+hält ihn jetzt unabhängig davon drinnen; am Bild ändert sich nichts, geprüft
+durch Vergleich der abgeleiteten Favicons: **bitgleich**.
+
+### Web — Favicons und Uhr-Kacheln neu abgeleitet
+
+Beide Favicons sind neu erzeugt. Der **Inhalt** des Luftlogo-Favicons ist aus
+alter und neuer SVG **identisch**; das Bodenlogo-Favicon ändert sich um 593
+Bildpunkte — der Beschnitt. Dass beide Dateien trotzdem neue Bytes haben,
+liegt am neueren Chromium, mit dem sie gerastert wurden.
+
+Von den **17** Uhr-Bildern ändern sich genau die **vier `logo_boden.png`**;
+die dreizehn aus dem Luftlogo abgeleiteten sind **bildgleich** und bleiben
+unangetastet (ihre Bytes unterschieden sich nur im Zeitstempel-Block des
+PNG). Der 78-%-Faktor für das NEF bleibt richtig — er war schon vorher das
+Verhältnis der beiden Seitenverhältnisse, und daran ändert der Beschnitt
+nichts. **Ausgeliefert werden die Kacheln mit der nächsten Uhr-Fassung
+(S5, E-S3-04); die Uhr-Version steigt hier nicht.**
+
+### Web — Ein Werkzeug, das bei einem Fehlschlag eine Datei schrieb
+
+Beim ersten Anlauf enthielt ein neuer XML-Kommentar in den SVG einen
+doppelten Bindestrich — **XML verbietet das**. Die Dateien waren damit
+ungültig, der Browser zeigte sein Platzhalterbild („kaputtes Bild"), und
+`tools/logos/erzeugen.mjs` fotografierte es, schrieb es als Favicon und
+meldete zufrieden „64 × 64, 865 Bytes". Das Werkzeug sieht jetzt nach, ob das
+Bild überhaupt geladen hat, und **bricht ab, ohne etwas zu schreiben**.
+
 ## [Web 12.4.1] — 2026-09-02
 
 **Das Demo-Konto lässt sich auf der Kontoseite nicht mehr ändern.** Zehntes

@@ -270,6 +270,30 @@ function ui_logo(bool $weiss = false): string
 
 
 /**
+ * Bildmasse des gewaehlten Logos bei gegebener Hoehe: ['breite' => …, 'hoehe' => …].
+ *
+ * WARUM DIE BREITE NICHT FEST STEHEN DARF (S3/AP11). Bis Web 12.4.1 stand in
+ * der Kopfleiste `width="54" height="34"` — fuer BEIDE Logos. 54:34 ist das
+ * Verhaeltnis des Luftlogos; das Bodenlogo ist 420:335 und damit nur 42,6 px
+ * breit. Der Browser reservierte also einen Kasten, in den das Bild nicht
+ * passt, und rueckte beim Laden nach: ein Layoutsprung, den man nur sieht,
+ * wenn man darauf wartet.
+ *
+ * Die Verhaeltnisse stehen HIER als Zahlen und nicht im Stylesheet: Sie sind
+ * eine Eigenschaft der DATEI, nicht der Gestaltung, und `width`/`height` am
+ * Bild-Tag sind das einzige, was der Browser VOR dem Laden kennt.
+ */
+function ui_logo_masse(int $hoehe): array
+{
+    $stamm = function_exists('logo_stamm') ? logo_stamm() : 'gen-em_logo_helicopter';
+    /* Rahmen der SVG, nach dem Beschnitt in S3/AP11 deckungsgleich mit der
+     * Zeichnung: Luft 400,16 x 249,81 · Boden 420 x 335. */
+    $verhaeltnis = str_contains($stamm, 'nef') ? 420 / 335 : 400.16 / 249.81;
+    return ['breite' => (int)round($hoehe * $verhaeltnis), 'hoehe' => $hoehe];
+}
+
+
+/**
  * Artzeichen eines Diensttags — Symbol mit Textalternative.
  *
  * Die EINE Stelle, an der aus `days.kind` ein sichtbares Zeichen wird. Bis
@@ -330,7 +354,9 @@ function ui_kopf(array $o = []): void
     <?php endif; ?>
 
     <a class="kopf-marke" href="index.php">
-      <img src="<?= ui_e(ui_logo(true)) ?>" alt="" width="54" height="34">
+      <?php $lm = ui_logo_masse(34); ?>
+      <img src="<?= ui_e(ui_logo(true)) ?>" alt=""
+           width="<?= $lm['breite'] ?>" height="<?= $lm['hoehe'] ?>">
       <span class="kopf-name">Gen-EM Einsatzdoku</span>
       <?php if ($menue): ?><span class="kopf-nutzer"><?= ui_e(ui_user_label()) ?></span><?php endif; ?>
     </a>

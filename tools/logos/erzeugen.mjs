@@ -62,6 +62,23 @@ for (const { quelle, ziel } of AUFGABEN) {
     `<img src="${daten}" style="width:100%;height:100%;object-fit:contain">` +
     `</body>`);
   await seite.waitForTimeout(150);
+  /* NACHSEHEN, OB DAS BILD UEBERHAUPT GELADEN HAT (S3/AP11).
+   *
+   * Es hatte einmal nicht: Ein XML-Kommentar mit einem doppelten Bindestrich
+   * darin macht die SVG ungueltig — XML verbietet `--` im Kommentar. Der
+   * Browser zeigte daraufhin sein Platzhalterbild („kaputtes Bild"), dieses
+   * Werkzeug fotografierte es, schrieb es als Favicon und meldete
+   * zufrieden „64 x 64, 865 Bytes". Ein Werkzeug, das bei einem Fehlschlag
+   * eine Datei schreibt, ist schlimmer als eines, das nichts tut. */
+  const geladen = await seite.evaluate(() => {
+    const i = document.querySelector('img');
+    return i.complete && i.naturalWidth > 0;
+  });
+  if (!geladen) {
+    throw new Error(quelle + ': liess sich nicht laden — vermutlich keine '
+      + 'gueltige SVG (XML verbietet u. a. `--` im Kommentar). '
+      + 'Es wurde NICHTS geschrieben.');
+  }
   const bild = await seite.screenshot({ omitBackground: true });
   writeFileSync(join(BILDER, ziel), bild);
   console.log(`${quelle}  ->  ${ziel}  (${KANTE} x ${KANTE}, ${bild.length} Bytes)`);

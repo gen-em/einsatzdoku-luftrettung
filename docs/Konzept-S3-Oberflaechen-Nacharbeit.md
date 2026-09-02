@@ -1746,3 +1746,105 @@ POST-Protokoll, nicht im Bild — drei Stellen richtiggestellt.
 `paket_loeschen` mit einem direkten POST. Sie stehen in derselben Liste und
 werden an derselben Stelle abgewiesen wie die drei geprüften; belegt ist
 damit der Codeweg, nicht der Einzelfall. Gehört ins Prüfdokument.
+
+---
+
+### AP11 — Logos, Favicons, Uhr-Kacheln (K)
+
+**Stand:** erledigt. Web 12.4.2. Der Bildentscheid E-S3-12 (b) ist gefallen.
+
+#### Die sechs Schritte aus 3.6, der Reihe nach
+
+**1 — Beschnitt der Boden-SVG.** `viewBox="0 0 420 420"` → `"0 42.5 420 335"`,
+in beiden Fassungen (farbig und weiß). An der Zeichnung nichts geändert.
+`getBBox()` bestätigt: Rahmen und Zeichnung sind jetzt deckungsgleich
+(x = 0, y = 42,5, 420 × 335).
+
+**2 — Aufräumen des Luftlogos.** Nachgemessen: Ein blauer Pfad läuft bis
+x = 556,7 und damit **156,5 Einheiten** über den Rahmen (400,16) hinaus —
+die Zahl aus dem Konzept, bestätigt. Sichtbar ist er nicht; ein Clip im
+Inneren schneidet ihn weg. **Nicht** getan: die Pfaddaten beschneiden — das
+wäre ein Eingriff in die Zeichnung mit ungewissem Ausgang. **Getan:** ein
+zusätzlicher Rahmen-Clip auf der Wurzel, der ihn unabhängig von der viewBox
+drinnen hält. Beleg, dass am Bild nichts hängt: die aus alter und neuer SVG
+abgeleiteten Favicons sind **bitgleich**.
+
+**3 — Bildmaße je Logo.** `ui_logo_masse()` in `ui.php`; die Kopfleiste gibt
+`width` je nach Wahl aus (54 für Luft, 43 für Boden, bei 34 px Höhe).
+**Nicht** geändert: die Anmeldeseiten. Sie binden über `logo_src()` ein, und
+das darf auf eine **eigene** Datei der Installation zeigen (`app.logo_path`)
+— deren Verhältnis kennt niemand, und ein falsch reservierter Kasten wäre
+schlimmer als gar keiner. Dort steht `width:auto` im Stylesheet.
+
+**4 — Favicons.** Neu abgeleitet mit `tools/logos/erzeugen.mjs`.
+
+**5 — Uhr-Kacheln.** `tools/uhr-bilder/erzeugen.sh` gelaufen.
+
+**6 — Nachmessen.** Siehe Prüfstand.
+
+#### E-S3-12 (b): keine Feinkorrektur
+
+| bei 34 px Höhe | vorher | nachher |
+|---|---|---|
+| Luftlogo | 54,5 × 34 px · 1 853 px² | 54,5 × 34 px · 1 853 px² |
+| Bodenlogo | 34 × 27,1 px · **921 px²** | **42,6 × 34 px · 1 449 px²** |
+| Verhältnis | **2,01** | **1,28** |
+
+Die Zahlen treffen die Erwartung des Konzepts (1.12: „42,6 × 34 gegen
+54,5 × 34 px") auf die Nachkommastelle. **Entschieden: keine Feinkorrektur.**
+Am Bild — beide Logos nebeneinander in der Kopfleiste bei dreifacher
+Auflösung — stehen sie gleich hoch und wiegen gleich schwer; das Bodenlogo
+wirkt durch seine geschlossene Form eher etwas kräftiger. Was das Auge in
+einer Zeile vergleicht, ist die Höhe, und die ist gleich. Eine Regel mit der
+56-px-Schranke wird damit nicht gebraucht.
+
+#### Zwei Funde, beide an der eigenen Arbeit
+
+**F-S3-D — XML verbietet `--` im Kommentar, und das Werkzeug schrieb trotzdem
+eine Datei.** Der erste Anlauf setzte einen Herkunftsvermerk in die SVG, mit
+Gedankenstrichen als `--`. Damit waren alle vier Dateien **ungültige XML**.
+Der Browser zeigte sein Platzhalterbild, `tools/logos/erzeugen.mjs`
+fotografierte es, schrieb es als Favicon und meldete „64 × 64, 865 Bytes" —
+Rückgabewert 0. Aufgefallen ist es erst beim Bildvergleich.
+**Behoben zweifach:** die Kommentare enthalten keine doppelten Bindestriche
+mehr, **und** das Werkzeug sieht jetzt nach, ob das Bild geladen hat, und
+bricht ab, ohne etwas zu schreiben. Ein Werkzeug, das bei einem Fehlschlag
+eine Datei schreibt, ist schlimmer als eines, das nichts tut.
+
+**F-S3-E — Die Logotabelle in `Design.md` 2.3 war veraltet.** Sie führte
+`gen-em_logo_fahrzeug.svg`, `favicon.png` und `favicon-fahrzeug.png` —
+Namen, die es seit dem Ersatz des NEF-Platzhalters nicht mehr gibt. Beim
+Nachziehen aufgefallen und mitkorrigiert, samt Rahmenmaßen.
+
+#### Prüfstand AP11
+
+| Was | Womit | Ergebnis |
+|---|---|---|
+| Rahmen = Zeichnung | `getBBox()` im Browser über die Wurzel, alle vier SVG | Boden `viewBox="0 42.5 420 335"`, bbox `x=0 y=42,5 w=420 h=335` — **deckungsgleich**. Luft unverändert 400,16 × 249,81 |
+| Der Überstand des Luftlogos | dieselbe Messung, Element für Element | ein Pfad `.cls-3` bis **x = 556,7**, also 156,5 Einheiten über dem Rahmen |
+| Ändert der Clip das Bild? | Favicon aus **alter** und aus **neuer** SVG mit demselben Chromium erzeugt und verglichen | Luftlogo **bitgleich** · Bodenlogo 593 abweichende Punkte (der Beschnitt) |
+| Logogrößen | gezeichnete Maße bei 34 px und 56 px Höhe | 54,5 × 34 gegen **42,6 × 34** · Flächenverhältnis **1,28** (vorher 2,01) |
+| Bildmaße im Markup | `ui_logo_masse()` gegen die gemessenen Maße | Luft `width=54` (gemessen 54,5) · Boden `width=43` (gemessen 42,6) — Rundung auf die ganze Zahl, wie ein `width`-Attribut es verlangt |
+| Uhr-Kacheln | alle 17 PNG unter `watch/resources*/drawables/` vorher/nachher verglichen | **4 geändert** (genau die `logo_boden.png`), **13 bildgleich**. Die 13 sind zurückgenommen: Ihre Bytes unterschieden sich nur im `tIME`-Block des PNG |
+| Bestätigt das den 78-%-Faktor? | Rechnung gegen die neuen Seitenverhältnisse | ja — der Faktor war schon vorher das Verhältnis der Verhältnisse (0,798 / 0,624 ≈ 0,78); der Beschnitt ändert die Höhe je Breite nicht |
+| Favicon-Bauform | Alphakanal-Kasten der erzeugten PNG | Luft `(0, 12, 64, 52)` unverändert · Boden `(0, 6, 64, 58)` statt `(0, 5, 64, 58)` — eine Zeile, die Rundung des Beschnitts |
+| Alle Seiten | `tools/screenshots/aufnehmen.mjs` | 304 Bilder, 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe ≠ 44 px |
+| Nichts verlorengegangen / Texte | `pruefen.py`, `wortliste.py` | 260 wie Basis · 0 / 0 / 0 |
+
+**Nicht geprüft und warum:**
+
+- **Der Bilderlauf für beide Logo-Wahlen** ist **nicht** gefahren. Die
+  Umstellung der Wahl im Profil ließ sich in der Probe nicht auslösen
+  (die Wahlliste arbeitet mit ausgeblendeten Radios; der Klick auf die Zeile
+  kam nicht durch). Gemessen ist stattdessen die **Geometrie beider SVG**
+  direkt, bei beiden vorkommenden Höhen, und das Bild der Kopfleiste mit
+  beiden Logos nebeneinander. Was fehlt, ist der Nachweis über die echte
+  Einstellung — Bedienweg fürs Prüfdokument.
+- **Die Uhr-Kacheln auf einem Gerät.** `tools/uhr-pruefstand/pruefstand.sh
+  reihe` (übersetzt die App für alle Geräte) ist nicht gelaufen — es fehlt
+  das Garmin-SDK. Die Kacheln sind Ableitungen mit unveränderten Maßen; ein
+  Übersetzungsfehler ist nicht zu erwarten, belegt ist er nicht. **Gehört ins
+  Prüfdokument und in die S5-Uhr-Auslieferung** (E-S3-04).
+- **Backlog Nr. 49 (Logofarben)** ist wie beschlossen **nicht** angefasst
+  (E-S3-05). Der Generatorlauf rastert also mit den heutigen — teils
+  abweichenden — Farbwerten. Das ist bekannt und bleibt so bis S4/B1.

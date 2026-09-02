@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420">
+<!-- Rahmen beschnitten in S3/AP11 (Web 12.4.2): Die Zeichnung misst
+     420 x 335 und begann bei y=42,5; der Rahmen war 420 x 420, also oben
+     und unten je 42,5 Einheiten leer. Ein Artefakt des Exports, keine
+     Gestaltungsentscheidung — und der Grund, warum das Bodenlogo neben
+     dem Luftlogo kleiner wirkte: Skaliert wird ueber die Hoehe, und ein
+     Viertel dieser Hoehe war Luft. AN DER ZEICHNUNG IST NICHTS GEAENDERT,
+     nur am Rahmen. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 42.5 420 335">
   <defs>
     <style>
       .cls-1 {

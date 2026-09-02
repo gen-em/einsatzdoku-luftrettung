@@ -117,13 +117,38 @@ Wiederherstellungsschlüssel, Geräte-ID).
 Es gibt **zwei** Bildmarken, und welche erscheint, ist einstellbar
 (E-P3-19/20):
 
-| Datei | Fassung |
-|---|---|
-| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund |
-| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste |
-| `server/assets/images/gen-em_logo_fahrzeug.svg` | Fahrzeug (NEF), farbig |
-| `server/assets/images/gen-em_logo_fahrzeug_weiss.svg` | Fahrzeug (NEF), weiß |
-| `server/assets/images/favicon.png`, `favicon-fahrzeug.png` | Browser-Symbol je Wahl |
+| Datei | Fassung | Rahmen |
+|---|---|---|
+| `server/assets/images/gen-em_logo_helicopter.svg` | Hubschrauber, farbig — heller Grund | 400,16 × 249,81 |
+| `server/assets/images/gen-em_logo_helicopter_weiss.svg` | Hubschrauber, weiß — Kopfleiste | 400,16 × 249,81 |
+| `server/assets/images/gen-em_logo_nef.svg` | Fahrzeug (NEF), farbig | 420 × 335 |
+| `server/assets/images/gen-em_logo_nef_weiss.svg` | Fahrzeug (NEF), weiß | 420 × 335 |
+| `server/assets/images/favicon_helicopter.png`, `favicon_nef.png` | Browser-Symbol je Wahl, 64 × 64 | — |
+
+**Der Rahmen ist deckungsgleich mit der Zeichnung**, und das ist eine Zusage
+(seit Web 12.4.2). Das NEF-Logo war bis dahin auf ein Quadrat gepolstert
+(`viewBox="0 0 420 420"`, die Zeichnung 420 × 335 ab y = 42,5): oben und
+unten je ein Zehntel leer. Skaliert wird aber über die **Höhe** — ein
+Zehntel dieser Höhe war damit Luft, und das Bodenlogo erschien neben dem
+Luftlogo schmaler **und** niedriger zugleich. Gemessen bei 34 px Höhe:
+1 853 gegen 921 px² sichtbare Fläche, also das Doppelte.
+
+Nach dem Beschnitt: **54,5 × 34 px gegen 42,6 × 34 px**, Flächenverhältnis
+**1,28**. Die verbleibende Differenz ist der ehrliche Unterschied zweier
+Motive — das eine liegt quer, das andere weniger — und **keine
+Feinkorrektur wert** (E-S3-12 b, am Bild entschieden). Die Höhen sind gleich,
+und das ist es, was das Auge in einer Zeile vergleicht.
+
+> **Wer eine dieser SVG anfasst, prüft danach den Rahmen mit `getBBox()`.**
+> Beim Luftlogo läuft ein blauer Streifen rund 156 Einheiten über den Rahmen
+> hinaus; sichtbar ist er nicht — ein Clip schneidet ihn weg —, aber er wird
+> es, sobald jemand den Rahmen weitet. Seit Web 12.4.2 hält ein zusätzlicher
+> Rahmen-Clip ihn unabhängig davon drinnen.
+>
+> **Und XML verbietet `--` im Kommentar.** Eine SVG mit einem doppelten
+> Bindestrich im Kommentar ist ungültig; der Browser zeigt sein
+> Platzhalterbild, und `tools/logos/erzeugen.mjs` fotografierte es früher
+> klaglos als Favicon. Das Werkzeug bricht heute ab (S3/AP11).
 
 **Drei Ebenen der Wahl**, und sie greifen in dieser Reihenfolge:
 

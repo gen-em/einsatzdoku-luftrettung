@@ -1878,5 +1878,29 @@ declare(strict_types=1);
  * gesetzt beim Anlegen UND beim Zuruecksetzen, sonst holte der naechste Reset
  * den alten zurueck.
  *
+ * 12.4.2 BESCHNEIDET DAS BODENLOGO (S3/AP11). Es wirkte neben dem Luftlogo
+ * kleiner, und das lag nicht an einer Regel: Seine viewBox war 420 x 420, die
+ * Zeichnung darin aber 420 x 335 ab y=42,5 -- oben und unten je ein Zehntel
+ * leer, ein Artefakt des Exports. Skaliert wird ueber die HOEHE, also war ein
+ * Zehntel dieser Hoehe Luft. Gemessen bei 34 px: sichtbare Flaeche 1 853
+ * gegen 921 px², das Doppelte.
+ *
+ * Jetzt ist der Rahmen deckungsgleich mit der Zeichnung: 54,5 x 34 gegen
+ * 42,6 x 34 px, Flaechenverhaeltnis 1,28. Eine Feinkorrektur braucht es
+ * nicht -- die Hoehen sind gleich, und die Restdifferenz ist der ehrliche
+ * Unterschied zweier Motive (E-S3-12 b, am Bild entschieden). AN DER
+ * ZEICHNUNG IST NICHTS GEAENDERT, nur am Rahmen.
+ *
+ * DIE KOPFLEISTE GIBT DIE BILDMASSE JETZT JE LOGO AUS. `width="54"
+ * height="34"` galt fuer beide; 54:34 ist das Verhaeltnis des Luftlogos, das
+ * Bodenlogo ist 43 px breit. Der Browser reservierte damit einen Kasten, in
+ * den das Bild nicht passt, und rueckte beim Laden nach.
+ *
+ * Dazu: ein Rahmen-Clip am Luftlogo (ein blauer Streifen laeuft 156 Einheiten
+ * ueber den Rahmen hinaus -- unsichtbar, bis jemand den Rahmen weitet), neu
+ * abgeleitete Favicons und vier neu gerasterte Uhr-Kacheln. Die Uhr-Kacheln
+ * reisen mit der S5-Auslieferung (E-S3-04); die Uhr-Version steigt hier
+ * NICHT.
+ *
  */
-const WEB_VERSION = '12.4.1';
+const WEB_VERSION = '12.4.2';
