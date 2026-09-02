@@ -12,6 +12,26 @@ Eintrag verschwunden; ihr Inhalt ist nicht mehr rekonstruierbar. Sie bleiben
 deshalb dauerhaft frei — weder werden sie neu vergeben noch nachgetragen. Diese
 Notiz steht hier, damit die Frage nicht bei jedem Durchsehen erneut aufkommt.
 
+**Zu den Nummern 59 bis 62 (02.09.2026).** Sie hießen bis dahin 46 bis 49 —
+und zwar ein zweites Mal. Zwei Zweige haben nebeneinander angehängt (die
+Uhr-Auslieferung nach R47 und das Zwischenpaket S2), beide für sich lückenlos
+ab 46; beim Zusammenführen hat diese Datei **keinen Konflikt gemeldet**, weil
+die Einträge an verschiedenen Stellen standen. Vier Nummern trugen danach zwei
+verschiedene Punkte, zwei davon gleichzeitig unter *Offen* und unter
+*Erledigt*.
+
+Umnummeriert wurde die **jüngere** der beiden Reihen, also die aus der
+Uhr-Auslieferung. Der Grund ist nüchtern: Ihre Verweise stehen ausschließlich
+in `docs/`, die der anderen Reihe auch in `server/` — und jede Änderung unter
+`server/` lädt sofort auf den Produktivserver. Jeder der vier Einträge sagt
+unten, welche Nummer er vorher trug, damit ein älterer Verweis auflösbar
+bleibt. **Für künftige Zusammenführungen:** Wer einen Zweig anlegt, der
+Backlog-Punkte vergibt, prüft vor dem Zusammenführen die Nummernvergabe —
+
+    grep -oE '^[0-9]+\.' docs/Backlog.md | tr -d '.' | sort -n | uniq -d
+
+muss leer bleiben.
+
 **Zu den Nummern 1, 9, 10 und 12.** Sie fehlten ebenfalls, waren aber
 rekonstruierbar: Code und Changelog verweisen an neun Stellen namentlich auf
 sie („Backlog Nr. 10"), und aus diesen Fundstellen geht eindeutig hervor,
@@ -577,40 +597,6 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
 
 ---
 
-46. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
-    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
-    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
-    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
-    Auflösung der Teilenummer auf Modell und Geräteart über die
-    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
-    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
-    Dateien ziehen), und eine Auswertung in der Weboberfläche.
-    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
-    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
-    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
-    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
-    sie eins.
-    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
-    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
-    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
-    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
-    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
-
-49. **Logodateien tragen teilweise wieder die alten Farbwerte.**
-    *Aufgenommen 31.08.2026, gefunden bei der S4-Konzeptarbeit (B-S4-01 im
-    S4-Konzept).* Der Commit „Update Logos" hat mit den neuen Vektorvorlagen
-    alte Werte zurückgebracht: `gen-em_logo_helicopter.svg` führt `#587abc`,
-    `#e3322b`, `#f7941d` und Korpus `#1d0e0a` (statt `#4280E5`, `#D63338`,
-    `#FF8F1F`, `#1A0500`); die weiße Hubschrauber-Fassung trägt die alten
-    Farbelemente, `gen-em_logo_nef.svg` den alten Korpuswert. Nur
-    `gen-em_logo_nef_weiss.svg` stimmt. `docs/Design.md` 2.5 („B1 erledigt,
-    nachgemessen") trifft auf diesen Stand nicht mehr zu; PNG-Ableitungen,
-    Favicons und Uhr-Bilder sind nicht nachgemessen.
-    **Entschieden am 31.08.2026: bewusst liegen lassen** — keine Behebung
-    vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
-    Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
-    Ableitungen nachmessen.
-
 
 57. **Die Tagesübersicht baut ihre Einsatztabelle ein zweites Mal.**
     *Aufgenommen 02.09.2026 als F-S3-A (S3/AP5).*
@@ -642,6 +628,49 @@ solche gekennzeichnet. Sie stehen unter *Erledigt*, weil alle vier es sind.
     ausgibt, muss `ui_geruest_start()` und `ui_geruest_ende()` aufrufen. Ein
     kleines Prüfmittel dafür wäre ein Nachmittag und fände die ganze Klasse
     von Fehlern statt eines Falls.
+
+
+59. **Serverseite der Gerätestatistik: `pair.php` nimmt den `geraet`-Block
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 46. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    entgegen.** Die Uhr sendet ihn seit 1.9.0 (JSON-Vertrag 1a), der Server
+    verwirft ihn derzeit stillschweigend. Zu tun: Spalten an `devices`
+    (Teilenummer, Art, Displaymaße, Firmware, CIQ-Fassung, App-Fassung),
+    Auflösung der Teilenummer auf Modell und Geräteart über die
+    Connect-IQ-Gerätedateien (325 Teilenummern → 173 Modelle; die Zuordnung
+    lässt sich mit `tools/uhr-pruefstand/geraeteklassen.py` aus denselben
+    Dateien ziehen), und eine Auswertung in der Weboberfläche.
+    Dazu gehört die zweite Hälfte der Frage: **Uhr, Handy oder Sonstiges.**
+    Die Uhr meldet immer `"uhr"` — Handy und Rechner erscheinen nur über die
+    Web-Zugriffe, also über den User-Agent der Browsersitzung. Beides muss in
+    derselben Statistik zusammenlaufen, sonst zählt man zwei Dinge und nennt
+    sie eins.
+    **Vor der Umsetzung zu klären:** Ein Gerätemodell ist ein schwaches
+    Merkmal, in einer kleinen Gruppe aber möglicherweise identifizierend. Die
+    Datenschutzerklärung muss die Erhebung benennen, bevor sie ausgewertet
+    wird — bei einer Anwendung, deren Versprechen die Ende-zu-Ende-
+    Verschlüsselung ist, gehört das nicht als Nebenprodukt eingeführt.
+
+62. **Logodateien tragen teilweise wieder die alten Farbwerte.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 49. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    *Aufgenommen 31.08.2026, gefunden bei der S4-Konzeptarbeit (B-S4-01 im
+    S4-Konzept).* Der Commit „Update Logos" hat mit den neuen Vektorvorlagen
+    alte Werte zurückgebracht: `gen-em_logo_helicopter.svg` führt `#587abc`,
+    `#e3322b`, `#f7941d` und Korpus `#1d0e0a` (statt `#4280E5`, `#D63338`,
+    `#FF8F1F`, `#1A0500`); die weiße Hubschrauber-Fassung trägt die alten
+    Farbelemente, `gen-em_logo_nef.svg` den alten Korpuswert. Nur
+    `gen-em_logo_nef_weiss.svg` stimmt. `docs/Design.md` 2.5 („B1 erledigt,
+    nachgemessen") trifft auf diesen Stand nicht mehr zu; PNG-Ableitungen,
+    Favicons und Uhr-Bilder sind nicht nachgemessen.
+    **Entschieden am 31.08.2026: bewusst liegen lassen** — keine Behebung
+    vorab; S4/B1 übernimmt den dann aktuellen Stand der Dateien in die App.
+    Bei der Behebung `Design.md` 2.5 mitziehen und alle Fassungen samt
+    Ableitungen nachmessen.
+
+---
 
 ## Erledigt
 
@@ -1210,23 +1239,6 @@ zutreffen.
     Datei-Tag wurde auf den Tag des ersten Treffers verhängt, es entstand kein
     eigener Diensttag, und gemeldet wurde nichts.
 
-47. **Die Uhr kennt die Logo-Wahl nicht.**
-    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
-    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
-    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
-    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
-    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
-    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
-    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
-    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
-    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
-    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
-    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
-    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
-    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
-    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
-    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
-    Displays: Nr. 48.
 
 11. **Sync-Seite meldet „Sync vollständig", obwohl die Uhr gar nicht senden
     kann.**
@@ -1249,7 +1261,55 @@ zutreffen.
     Venu 3s die beiden mit geänderter Blockhöhe); Rückstand über ein
     Probekompilat mit fest verdrahtetem `backlogCount() == 3`.
 
-48. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+
+14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
+    abfragen und trennen.**
+    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
+    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
+    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
+    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
+    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
+    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
+    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
+    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
+    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
+    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
+    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
+    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
+    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
+    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
+    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
+    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
+    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
+    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
+    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
+    `ingest.php`/`einstellungen.php`.
+
+60. **Die Uhr kennt die Logo-Wahl nicht.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 47. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
+    *Erledigt mit Uhr 1.10.0.* Die Weboberfläche ließ zwischen Hubschrauber,
+    Fahrzeug und „wechselnd" wählen, die Uhr zeigte dagegen immer ein
+    Luftfahrzeug — auch im Nachtdienst am Boden. Von den drei erwogenen Wegen
+    ist es der zweite geworden: eine **App-Einstellung auf der Uhr** statt einer
+    Übertragung vom Server. Die Uhr kennt die Kontoeinstellung nicht, und eine
+    Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
+    Neu ist die Einstellung „Bildmarke auf dem Startbildschirm" mit den Werten
+    *Luftgebunden* (Vorgabe), *Bodengebunden* und *Wechselnd*; die Ressourcen
+    heißen `LogoLuft` und `LogoBoden`. Kosten: ein zweites Bild im Kompilat,
+    gemessen +5 888 Byte (fenix6pro) und +12 864 Byte (venu3s).
+    Beide Motive stammen aus den Vektorvorlagen der Weboberfläche
+    (`gen-em_logo_helicopter_weiss.svg`, `gen-em_logo_nef_weiss.svg`). Weil sie
+    unterschiedliche Seitenverhältnisse haben — quer gegen quadratisch —, steht
+    das NEF auf 78 % der Kachelbreite; so sind beide Motive gleich hoch und
+    wirken gleich schwer. Was bleibt, sind die **Größenstufen** für die großen
+    Displays: Nr. 48.
+
+61. **Bildmarke und Launcher-Symbol fehlten in den meisten Größen.**
+    *Bis zum 02.09.2026 trug dieser Punkt die Nummer 48. Sie war durch die
+    Verschmelzung zweier Zweige zweimal vergeben (siehe Kopf dieser Datei);
+    umnummeriert wurde die jüngere der beiden Reihen.*
     *Erledigt mit Uhr 1.10.2 (Symbol) und 1.10.3 (Bildmarke).*
     **Das Launcher-Symbol** lag in zwei von neun verlangten Größen vor (35, 36,
     40, 54, 56, 60, 61, 65, 70 px). Die Größe ist keine Wahl, sondern eine
@@ -1276,26 +1336,3 @@ zutreffen.
     *Geprüft:* Stufe I 99 übersetzt, 0 fehlgeschlagen, 0 Warnungen. Fünf Geräte
     im Simulator, eines je Stufe plus beide 390er. Speicher auf den beiden
     knappsten Geräten gemessen: fenix6 55,9/123,8 kB, FR 55 52,3/123,8 kB.
-
-14. **Kopplungsablauf der Uhr: bestehende Kopplung vor einer Neukopplung
-    abfragen und trennen.**
-    *Erledigt mit Uhr 1.11.0 / Web 9.15.0.* Fall: eine geteilt genutzte Uhr.
-    Wurde sie neu gekoppelt und schlug der Vorgang fehl, dokumentierte sie
-    stillschweigend weiter auf das vorherige Konto — niemand sah es ihr an.
-    Die Reihenfolge ist jetzt ausdrücklich abfragen → trennen → neu koppeln.
-    `pair.php` kennt dafür ein zweites Anliegen `{"aktion":"trennen"}` mit den
-    Kopfzeilen aus JSON-Vertrag Abschnitt 1 (dort neu: Abschnitt 1b). Der
-    Server **löscht** das Gerät statt es zu deaktivieren, sonst belegte es
-    weiter einen der `MAX_GERAETE` Plätze; hochgeladene Daten bleiben.
-    Zwei Entscheidungen dabei: **Ein Rückstand verhindert das Trennen** —
-    offene Pakete gehören dem bisherigen Konto und gingen sonst an das neue.
-    Und **lokal wird immer getrennt**, auch ohne Antwort vom Server; sonst
-    bliebe eine Uhr ohne Telefon in Reichweite dauerhaft an ein Konto
-    gebunden, das sie nicht mehr benutzen soll. Die Uhr sagt beides.
-    Greift in Nr. 11 (Uhr 1.10.1): Ohne den dritten Zustand „Nicht
-    eingerichtet" wäre die getrennte Uhr wieder unsichtbar gewesen.
-    *Geprüft:* Rückstandssperre und Endzustand im Simulator mit Bildabzug;
-    der Weg Rückfrage → Trennen über einen Konsolenmitschnitt (die Rückfrage
-    selbst ließ sich nicht fotografieren, s. Changelog). **Die Serverseite ist
-    nicht gegen eine Datenbank gelaufen** — nur `php -l` und die Ableitung aus
-    `ingest.php`/`einstellungen.php`.

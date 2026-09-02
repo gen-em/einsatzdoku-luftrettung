@@ -2877,7 +2877,7 @@ Probe am Produktivstand, bevor man sich auf ihn verlässt.
 ## [Uhr 1.10.3] — 2026-08-31
 
 **Die Bildmarke ist auf allen 99 Geräten gleich groß im Verhältnis zum
-Display.** Zweite Hälfte von Backlog Nr. 48; damit ist der Punkt erledigt.
+Display.** Zweite Hälfte von Backlog Nr. 61; damit ist der Punkt erledigt.
 
 ### Uhr — Zwei gleiche Displays, zwei Größen
 
@@ -2953,7 +2953,7 @@ Der Text sagt das jetzt so.
 
 **Das Launcher-Symbol liegt in allen neun Größen vor, die die 99 Geräte
 verlangen — und es kommt jetzt aus der Vektorvorlage.** Erste Hälfte von
-Backlog Nr. 48; die Staffelung der Bildmarke steht noch aus.
+Backlog Nr. 61; die Staffelung der Bildmarke steht noch aus.
 
 ### Uhr — 42 Warnungen, eine Ursache
 
@@ -3089,7 +3089,7 @@ meldet unverändert dieselben vier bekannten Fundstellen, keine davon in
 ## [Uhr 1.10.0] — 2026-08-31
 
 **Die Bildmarke auf dem Startbildschirm ist wählbar: luft- oder bodengebunden.**
-Backlog Nr. 47, entschieden zugunsten der App-Einstellung statt einer
+Backlog Nr. 60, entschieden zugunsten der App-Einstellung statt einer
 Server-Übertragung — die Uhr kennt die Kontoeinstellung nicht, und eine
 Einstellung, die man auf der Uhr sieht, gehört auch dorthin.
 
@@ -3155,7 +3155,7 @@ Dazu **Stufe I über alle 99 Geräte** noch einmal, weil 1.10.0 jedem Kompilat
 ein zweites Bild mitgibt: 99 übersetzt, **0 Fehlschläge**, Größen zwischen
 168 652 B (`fr255`) und 179 996 B (Venu-Reihe). Die 42 Geräte mit genau einer
 Warnung tragen unverändert die Meldung zum hochskalierten Launcher-Symbol
-(Backlog Nr. 48) — **keine neue Warnung** durch die zweite Bildmarke.
+(Backlog Nr. 61) — **keine neue Warnung** durch die zweite Bildmarke.
 
 Dazu eine Probe auf den Fall, der bei einer **App-Aktualisierung** eintritt:
 Der Schlüssel `logoWahl` steht noch nicht im Einstellungsspeicher. Ein Kompilat,
@@ -3267,7 +3267,7 @@ nur die Venu 3s.
 `pair.php` bekommt neben dem Code einen Block `geraet`: Teilenummer,
 Displaymaße, Touch, Firmware, Connect-IQ- und App-Fassung. Feldliste und
 Begründungen stehen im JSON-Vertrag, Abschnitt 1a. **Der Server verwirft ihn
-derzeit stillschweigend** — die Auswertung ist Backlog Nr. 46.
+derzeit stillschweigend** — die Auswertung ist Backlog Nr. 59.
 
 Warum überhaupt selbst zählen: Für die Frage, welche Uhren künftig unterstützt
 werden sollen, gibt es keine brauchbare äußere Quelle. Garmin veröffentlicht
@@ -3284,7 +3284,7 @@ Geräteart. Eine Modelltabelle auf einem Gerät mit 128 kB wäre der falsche Ort
 geräteweite Kennung; für eine Stückzahl-Statistik wird sie nicht gebraucht, und
 in einer kleinen Gruppe wäre sie ein Personenbezug mehr, als die Frage
 rechtfertigt. Die Zuordnung leistet die `device_id`. Aus demselben Grund hält
-Nr. 46 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
+Nr. 59 fest, dass die Datenschutzerklärung die Erhebung benennen muss, bevor
 ausgewertet wird.
 
 ### Uhr — Was geprüft ist

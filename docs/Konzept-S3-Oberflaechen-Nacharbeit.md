@@ -100,7 +100,7 @@ Aussehen, und werden einzeln im Browser geprüft:
   nächsten Uhr-Auslieferung, das ist nach R48 die von **S5** (E-S3-04). In
   S3 werden Beschnitt und Generatorlauf gemacht; die Dateien liegen bis
   dahin im Repositorium.
-- Die **Logofarben** — Backlog Nr. 49 (alte Farbwerte in den Vektordateien)
+- Die **Logofarben** — Backlog Nr. 62 (alte Farbwerte in den Vektordateien)
   ist am 31.08.2026 bewusst liegen gelassen worden; S4/B1 übernimmt den dann
   aktuellen Stand. S3 ändert am Bildinhalt nichts, nur am Rahmen (E-S3-05).
 - **P4 Nr. 21** (A4-Restfunde) und die übrigen Backlog-Punkte aus P3.
@@ -356,7 +356,7 @@ Runde, 35 763 Elementmessungen über 13 Breiten, keine darüber hinaus).
   reisen mit der P6-Uhr-Auslieferung (R29) mit" stammt aus Fassung 9 und
   ist von R48 (Fassung 12) überholt — **P6 trägt keine Uhr-Auslieferung
   mehr**; die nächste ist die von S5. E-S3-04 legt das fest.
-- **Backlog Nr. 49 (Logofarben):** bewusst liegen gelassen, S4/B1 übernimmt.
+- **Backlog Nr. 62 (Logofarben):** bewusst liegen gelassen, S4/B1 übernimmt.
   S3 ändert nur den Rahmen (viewBox), keine Farbwerte; der Generatorlauf
   rastert also mit den heutigen — teils falschen — Farben. Das ist bekannt
   und bleibt so bis S4/B1 (E-S3-05).
@@ -424,7 +424,7 @@ umgekehrte Kopplung und Vorgabeadresse). S3 macht Beschnitt und
 Generatorlauf und checkt die PNG ein; ausgeliefert werden sie mit dem
 S5-Uhr-Build.
 
-**E-S3-05 — Logofarben bleiben unangetastet.** Backlog Nr. 49 ist bewusst
+**E-S3-05 — Logofarben bleiben unangetastet.** Backlog Nr. 62 ist bewusst
 liegen gelassen (Beschluss 31.08.2026, S4/B1 übernimmt). S3 nimmt nur den
 leeren Rand aus dem Rahmen und räumt den Überstand des Luftlogos auf; kein
 Farbwert wird berührt. Dass der Generatorlauf mit den heutigen Farbwerten
@@ -1870,7 +1870,7 @@ Nachziehen aufgefallen und mitkorrigiert, samt Rahmenmaßen.
   das Garmin-SDK. Die Kacheln sind Ableitungen mit unveränderten Maßen; ein
   Übersetzungsfehler ist nicht zu erwarten, belegt ist er nicht. **Gehört ins
   Prüfdokument und in die S5-Uhr-Auslieferung** (E-S3-04).
-- **Backlog Nr. 49 (Logofarben)** ist wie beschlossen **nicht** angefasst
+- **Backlog Nr. 62 (Logofarben)** ist wie beschlossen **nicht** angefasst
   (E-S3-05). Der Generatorlauf rastert also mit den heutigen — teils
   abweichenden — Farbwerten. Das ist bekannt und bleibt so bis S4/B1.
 
