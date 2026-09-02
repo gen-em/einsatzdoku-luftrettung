@@ -169,6 +169,7 @@ Daten erst nach Server-Bestätigung.
 │   │                      import_commit.php (Abgleich + Übernahme des Imports) ·
 │   │                      schneiden.php (Einsatz aus einem Ruhesegment schneiden
 │   │                      und zurücknehmen, S4/A2b — siehe 4.97e) ·
+│   │                      gpx_import.php (GPX herein, S4/A3 — siehe 4.97f) ·
 │   │                      export_data.php (nur lesend, Rohdaten für den Export) ·
 │   │                      adminbackup_freigabe.php (freigegebene Sicherung für die NutzerIn)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
@@ -3126,6 +3127,113 @@ Die Bedienung ist im Browser abgenommen (Chromium, lokale Installation):
 über denselben Bereich). Segment 61 → 48 Punkte, Einsatzliste 3 → 4, nach dem
 Rückgängig wieder 61 und 3. Bei 390 px: waagerechter Überlauf 0, alle
 Bedienelemente 44 px.
+
+### 4.97f GPX herein: der Weg zurück (ab Web 12.7.0, S4/A3, E-S4-18)
+
+Das Gegenstück zum Abruf (4.97b). Eine Aufzeichnung, die auf einem anderen
+Gerät entstanden ist, kommt damit in die Anwendung: über **„···" → „GPX
+importieren"** in der Tagesansicht, als Dialog (`Design.md` 9.11).
+
+#### Zwei Ziele
+
+| Ziel | wird | wofür |
+|---|---|---|
+| `ruhe` | ein **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes; die Einsätze schneidet man danach heraus (4.97e). Der Regelfall. |
+| `einsatz` | ein **Einsatz** | Die Datei *ist* genau ein Einsatz; die Phasenzeiten trägt man danach im Formular nach. |
+
+Beide entstehen auf dem Bestandsweg: virtuelles Gerät `manual-<userId>`,
+`client_ref` mit Präfix **`imp-`** wie beim CSV-Import (daran hängt die
+Sperrliste `deleted_refs`), beim Einsatz zusätzlich `origin = 'import'` und
+`manual = 1`. Die Spur wird **gleich als Blob** abgelegt (Stufe 2,
+`n_original` = volle Punktzahl): Eine importierte Spur ist fertig — es kommt
+nichts mehr nach, denn ihr „Gerät" ist eine Datei.
+
+#### Der Leser wohnt beim Schreiber
+
+`gpx_lesen()` steht in `gpx_lib.php`, direkt unter `gpx_bauen()`. GPX hat
+damit genau **eine** Stelle in dieser Anwendung, die es kennt. Ein Leser, der
+woanders wohnt, läuft früher oder später mit anderen Annahmen als der
+Schreiber — und das fällt erst auf, wenn eine Datei durch den einen Weg
+hinaus und den anderen nicht wieder hinein kommt.
+
+**Gelesen wird auf dem Server**, anders als beim CSV-Import. Der Unterschied
+ist der Inhalt: Beim CSV stehen Patientendaten in der Datei, die der Server
+nie sehen darf, also *muss* der Browser lesen. Eine GPX-Datei enthält nichts
+Verschlüsseltes. Und die Ablehnungsregeln sind verbindlich; eine verbindliche
+Regel im Browser ist keine.
+
+Die Datei kommt als Zeichenkette im JSON-Körper, **nicht als Dateiupload**.
+Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg brächte
+`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
+Rechte mit — vier Stellschrauben auf geteiltem Hosting für einen Vorgang, den
+eine Zeichenkette genauso trägt. Der Browser liest mit `FileReader`.
+
+#### Was abgelehnt wird — und warum jede Ablehnung einen Satz mitbringt
+
+| Fall | Antwort |
+|---|---|
+| kein gültiges XML | 422, mit der Fehlerstelle des Parsers |
+| Wurzelelement ≠ `<gpx>` | 422, mit dem tatsächlichen Namen |
+| **`<!DOCTYPE>` vorhanden** | 422 — siehe unten |
+| kein Punkt hat `<time>` | 422, mit der Punktzahl und der Begründung |
+| kein `<trkpt>` | 422 („Wegpunkte und Routen liest dieser Import nicht") |
+| > `LIMIT_TRACKPUNKTE_SPUR` (50 000) | 422, mit Grenze **und** Umrechnung in Stunden |
+| > `GPX_DATEI_MAX` (12 MB) | 422, mit Größe und Grenze |
+
+`gpx_lesen()` wirft mit einem Satz, der einer BedienerIn etwas sagt, und der
+Endpunkt reicht ihn unverändert durch. Das ist Absicht: „Import
+fehlgeschlagen" ließe jemanden dreimal dieselbe Datei wählen, ohne je zu
+erfahren, dass ihr die Zeitstempel fehlen.
+
+> **Kein DOCTYPE — die XXE-Abwehr steht vor dem Parser, nicht darin.**
+> `libxml_disable_entity_loader()` gibt es seit PHP 8 nicht mehr, externe
+> Entitäten lädt libxml seither von sich aus nicht — aber **interne**
+> expandiert es weiterhin, und daraus baut man eine Entitätenbombe ohne eine
+> einzige externe Referenz. Eine GPX-Datei braucht keinen DOCTYPE; wer einen
+> mitschickt, bekommt eine Absage statt einer Auslegung. Dazu `LIBXML_NONET`:
+> kein Netzzugriff, unter keinen Umständen (CLAUDE.md 4 gilt auch für einen
+> Parser).
+
+#### Toleranz, wo sie richtig ist
+
+Angenommen werden **GPX 1.0** und Dateien **ohne Namensraum**: Die Elemente,
+um die es geht, heißen in beiden Fassungen gleich und bedeuten dasselbe. Auf
+1.1 zu bestehen hieße, Dateien abzulehnen, die inhaltlich in Ordnung sind.
+
+Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
+**nach Zeit sortiert**, die Sequenz danach neu vergeben — der Blob speichert
+Differenzen und verlässt sich auf eine aufsteigende Zeitfolge (4.97), und die
+Dateireihenfolge muss nicht die zeitliche sein.
+
+Einzelne unbrauchbare Punkte fallen heraus, ohne die Datei zu verwerfen; ihre
+Zahl steht in der Antwort (`ohne_zeit`, `verworfen`) und in der Rückmeldung an
+die BedienerIn. Die Koordinaten gehen dabei durch `pruef_breite()` /
+`pruef_laenge()` — eine eigene Bereichsprüfung hier wäre eine zweite Wahrheit
+darüber, was ein gültiger Breitengrad ist (CLAUDE.md 4).
+
+> **Attribute über `attributes()`, nie über `$el['lat']`** — eine Falle, in
+> die dieses Paket getreten ist. Nach `children($ns)` schaltet SimpleXML die
+> Namensraum-Umgebung eines Knotens um, **auch für Attribute**. `$pt['lat']`
+> sucht danach ein `lat` im GPX-Namensraum, und ein unpräfigiertes Attribut
+> liegt in **keinem** (XML-Namens-Spezifikation 6.2). Das Ergebnis war kein
+> Fehler, sondern ein leerer String: Jeder Punkt fiel durch die
+> Koordinatenprüfung, und die Meldung lautete „enthält keinen einzigen
+> Trackpunkt" — bei 61 vorhandenen.
+
+#### Nachweis
+
+**Der Leser: 17 Erwartungen, alle erfüllt** — Rundlauf über den Schreiber
+(61 Punkte hinaus, 61 zurück, 0 Abweichungen), sieben Ablehnungsfälle mit
+Prüfung der Meldung, GPX 1.0, Namensraum-freie Dateien, zeitliche Sortierung
+über zwei Segmente. **9 000 Punkte (0,78 MB) in 0,13 s.**
+
+**Im Browser: 17 Erwartungen, alle erfüllt** — Import als Ruhesegment (6 → 7,
+54 Punkte) und als Einsatz (4 → 5), beide Ablehnungsfälle mit sichtbarer
+Begründung, keine unerwarteten Konsolenfehler.
+
+**Der Rundlauf der Abnahme: 12 Erwartungen, alle erfüllt** — importierte Spur
+→ GPX-Abruf → erneut gelesen: 54 Punkte, **0 Abweichungen** gegen die
+Quelldatei, für Segment *und* Einsatz.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 

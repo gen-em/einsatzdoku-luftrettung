@@ -11,6 +11,120 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.7.0] — 2026-09-02
+
+**GPX kommt jetzt auch herein.** Drittes Paket von S4 Block A. Keine
+Migration.
+
+### Web — Das Gegenstück zum Abruf
+
+Seit Web 10.3.0 gehen Spuren als GPX hinaus (S2/AP4). Der Weg zurück fehlte:
+Eine Aufzeichnung, die auf einem anderen Gerät entstanden ist — ein
+Wanderuhr-Track, ein Export aus einer Leitstellensoftware, die eigene
+Sicherung —, kam nicht in die Anwendung.
+
+Über **„···" → „GPX importieren"** in der Tagesansicht, als Dialog: Datei
+wählen, Ziel wählen, fertig. Der Eintrag steht **neben** „Spuren als GPX" —
+hinaus und herein sind dieselbe Sache in zwei Richtungen, und wer den einen
+Weg sucht, sucht dort auch den anderen.
+
+**Zwei Ziele, und die Wahl ist keine Kosmetik** (E-R45-4):
+
+| Ziel | wofür |
+|---|---|
+| **Ruhesegment** | Die Datei ist die Aufzeichnung eines ganzen Dienstes. Die Einsätze schneidet man danach heraus (Web 12.6.0). Der Regelfall. |
+| **Einsatz** | Die Datei *ist* genau ein Einsatz. Die Phasenzeiten trägt man danach im Formular nach. |
+
+### Web — `time` ist Pflicht, und die Ablehnung ist der Punkt
+
+Eine GPX-Datei ohne Zeitstempel wird **abgelehnt**, nicht still angenommen.
+Ohne `<time>` gibt es keine Punktreihenfolge, kein Schneiden und keine
+Phasenzeiten — eine Spur, an der die halbe Anwendung nicht arbeiten kann.
+
+Die Meldung nennt den Grund und die Zahl: *„Kein einziger der 2 Punkte hat
+einen Zeitstempel. Ohne `<time>` gibt es keine Reihenfolge, kein Schneiden
+und keine Phasenzeiten — die Datei wird deshalb nicht angenommen."* Eine
+Meldung wie „Import fehlgeschlagen" ließe jemanden dreimal dieselbe Datei
+wählen, ohne je zu erfahren, woran es liegt.
+
+Ebenso begründet abgelehnt: kaputtes XML (mit der Fehlerstelle des Parsers),
+ein falsches Wurzelelement, eine Datei ohne Trackpunkte (Wegpunkte und Routen
+liest dieser Import nicht), mehr als 50 000 Punkte (die Meldung nennt die
+Grenze *und* rechnet sie in Stunden um) und mehr als 12 MB.
+
+**Und eine Dokumenttyp-Deklaration.** Eine GPX-Datei braucht keinen
+`<!DOCTYPE>`; wer einen mitschickt, bekommt eine Absage statt einer Auslegung.
+Das ist die Abwehr gegen XXE, und sie steht **vor** dem Parser:
+`libxml_disable_entity_loader()` gibt es seit PHP 8 nicht mehr, externe
+Entitäten lädt libxml seither von sich aus nicht — aber *interne* expandiert
+es weiterhin, und daraus baut man eine Entitätenbombe ohne eine einzige
+externe Referenz.
+
+### Web — Toleranz, wo sie richtig ist
+
+Angenommen wird auch **GPX 1.0** und eine Datei **ohne Namensraum**: Die
+Elemente, um die es geht (`trk`, `trkseg`, `trkpt`, `ele`, `time`), heißen in
+beiden Fassungen gleich und bedeuten dasselbe. Auf 1.1 zu bestehen hieße,
+Dateien abzulehnen, die inhaltlich in Ordnung sind.
+
+Mehrere `<trkseg>` oder `<trk>` werden zu **einer** Spur zusammengeführt und
+**nach Zeit sortiert** — die Dateireihenfolge muss nicht die zeitliche sein.
+Einzelne unbrauchbare Punkte (Koordinate außerhalb, Zeit unlesbar) fallen
+heraus, ohne die Datei zu verwerfen; ihre Zahl steht in der Rückmeldung.
+
+### Web — Der Leser wohnt beim Schreiber
+
+`gpx_lesen()` steht in `gpx_lib.php`, direkt unter `gpx_bauen()`. GPX hat
+damit **genau eine Stelle** in dieser Anwendung, die es kennt. Ein Leser, der
+woanders wohnt, läuft früher oder später mit anderen Annahmen als der
+Schreiber — und das fällt erst auf, wenn eine Datei durch den einen Weg
+hinaus und den anderen nicht wieder hinein kommt.
+
+**Gelesen wird auf dem Server, nicht im Browser** — anders als beim
+CSV-Import. Der Unterschied ist der Inhalt: Beim CSV stehen Patientendaten in
+der Datei, die der Server nie sehen darf, also *muss* der Browser lesen. Eine
+GPX-Datei enthält nichts Verschlüsseltes. Und die Ablehnungsregeln sind
+verbindlich; eine verbindliche Regel im Browser ist keine.
+
+Die Datei kommt als Zeichenkette im JSON-Körper, nicht als Dateiupload.
+Diese Anwendung hat nirgends ein `$_FILES`; ein erster Upload-Weg brächte
+`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
+Rechte mit — vier Stellschrauben auf geteiltem Hosting für einen Vorgang, den
+eine Zeichenkette genauso trägt.
+
+### Web — Der Fund: ein leerer String statt eines Fehlers
+
+Nach `children($ns)` schaltet SimpleXML die Namensraum-Umgebung eines Knotens
+um — **auch für Attribute**. `$pt['lat']` sucht danach ein `lat` *im
+GPX-Namensraum*, und ein unpräfigiertes Attribut liegt in **keinem**
+(XML-Namens-Spezifikation 6.2).
+
+Das Ergebnis war kein Fehler, sondern ein leerer String: Die Datei wurde
+gelesen, jeder Punkt fiel durch die Koordinatenprüfung, und die Meldung
+lautete *„enthält keinen einzigen Trackpunkt"* — bei 61 vorhandenen. Genau
+die Art Fehler, die eine Prüfung braucht, um aufzufallen. Behoben über
+`attributes()`; im Code steht die Begründung, damit die nächste Fassung nicht
+zurückfällt.
+
+### Web — Nachweis
+
+**Der Leser: 17 Erwartungen, alle erfüllt.** Darunter der Rundlauf über den
+Schreiber (61 Punkte hinaus, 61 zurück, **0 Abweichungen**), sieben
+Ablehnungsfälle mit Prüfung der Meldung, GPX 1.0 und Namensraum-freie
+Dateien, zeitliche Sortierung über zwei Segmente hinweg. **9 000 Punkte
+(24-h-Dienst in 10-s-Auflösung, 0,78 MB) in 0,13 s.**
+
+**Im Browser: 17 Erwartungen, alle erfüllt.** Import als Ruhesegment (6 → 7
+Segmente, 54 Punkte) und als Einsatz (4 → 5 Einsätze), beide Ablehnungsfälle
+mit sichtbarer Begründung im Dialog, keine unerwarteten Konsolenfehler.
+
+**Der Rundlauf, den die Abnahme verlangt: 12 Erwartungen, alle erfüllt.**
+Importierte Spur → GPX-Abruf → erneut gelesen: **54 Punkte, 0 Abweichungen**
+gegen die Quelldatei, für Segment *und* Einsatz. Beide liegen als
+verlustfreier Blob mit `n_original = 54`; der Einsatz trägt
+`origin = import`, `manual = 1` und die `imp-`-Kennung, und der Diensttag
+umschließt die Spur.
+
 ## [Web 12.6.0] — 2026-09-02
 
 **Der vergessene Einsatz lässt sich jetzt aus dem Ruhesegment

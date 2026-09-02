@@ -1968,5 +1968,31 @@ declare(strict_types=1);
  * zurueck nicht -- die Bedienerin bliebe mit einem Einsatz sitzen, den nur
  * der Papierkorb noch loswird.
  *
+ * 12.7.0 LIEST GPX (S4/A3, E-S4-18) — das Gegenstueck zum Abruf aus S2/AP4.
+ * Eine Spur, die auf einem anderen Geraet entstanden ist, kommt damit herein:
+ * ueber „···" -> „GPX importieren" in der Tagesansicht, als Dialog. Zwei
+ * Ziele, und die Wahl ist keine Kosmetik (E-R45-4): Ein RUHESEGMENT ist die
+ * Aufzeichnung eines ganzen Dienstes, aus der man die Einsaetze danach
+ * herausschneidet (der Regelfall); ein EINSATZ ist eine Datei, die genau
+ * einer ist. Keine Migration.
+ *
+ * `time` IST PFLICHT, und eine Datei ohne Zeitstempel wird mit dieser
+ * Begruendung abgelehnt statt still angenommen: Ohne Zeit gibt es keine
+ * Punktreihenfolge, kein Schneiden und keine Phasenzeiten.
+ *
+ * DER LESER STEHT IN `gpx_lib.php`, neben dem Schreiber. GPX hat damit genau
+ * eine Stelle in dieser Anwendung, die es kennt — ein Leser, der woanders
+ * wohnt, laeuft frueher oder spaeter mit anderen Annahmen als der Schreiber,
+ * und das faellt erst auf, wenn eine Datei hinaus, aber nicht wieder hinein
+ * kommt.
+ *
+ * DIE FALLE, IN DIE DAS PAKET GETRETEN IST: Nach `children($ns)` schaltet
+ * SimpleXML die Namensraum-Umgebung eines Knotens um — AUCH fuer Attribute.
+ * `$pt['lat']` sucht danach ein `lat` IM GPX-Namensraum, und ein
+ * unpraefigiertes Attribut liegt in KEINEM. Das Ergebnis war ein leerer
+ * String, kein Fehler: Jeder Punkt fiel durch die Koordinatenpruefung, und
+ * die Meldung lautete „enthält keinen einzigen Trackpunkt" — bei 61
+ * vorhandenen. Jetzt ueber `attributes()`.
+ *
  */
-const WEB_VERSION = '12.6.0';
+const WEB_VERSION = '12.7.0';

@@ -604,6 +604,43 @@ Schnitt hinweg weiter, und ein Dienst, der um 09:30 geschnitten wurde, zeichnet
 um 09:31 weiter auf. Nimmst du den Schnitt zurück, ist auch die Sperre wieder
 weg.
 
+### 4.1c GPX-Datei importieren
+
+*Seit Web 12.7.0.*
+
+Eine Aufzeichnung, die woanders entstanden ist — auf einer Wanderuhr, als
+Export aus einer anderen Software, aus einer eigenen Sicherung —, lässt sich
+einem Diensttag hinzufügen. Über **„···" → „GPX importieren"**; der Eintrag
+steht direkt neben **„Spuren als GPX"**, denn es ist derselbe Weg in die
+andere Richtung.
+
+**Zwei Möglichkeiten, und die Wahl ist wichtig:**
+
+- **Ruhesegment** — die Datei ist die Aufzeichnung eines **ganzen Dienstes**.
+  Sie wird eine durchgehende Ruhezeit, und die Einsätze schneidest du danach
+  heraus (Abschnitt 4.1b). Das ist der Regelfall.
+- **Einsatz** — die Datei **ist** genau ein Einsatz. Sie wird unmittelbar
+  einer; die Phasenzeiten trägst du danach im Einsatz nach.
+
+**Die Datei muss Zeitstempel haben.** Jeder Punkt braucht ein `<time>`. Ohne
+Zeit gibt es keine Reihenfolge, kein Schneiden und keine Phasenzeiten — eine
+solche Datei wird abgelehnt, und die Meldung sagt genau das. Ebenso abgelehnt
+werden kaputte Dateien, Dateien ohne Track (nur Wegpunkte oder Routen), mehr
+als **50 000 Punkte** (das sind knapp 14 Stunden bei einem Punkt je Sekunde)
+und Dateien über **12 MB**. In jedem Fall steht der Grund im Dialog, und es
+entsteht nichts.
+
+**Was toleriert wird:** GPX 1.0 ebenso wie 1.1, und Dateien ohne
+Namensraumangabe. Mehrere Abschnitte in einer Datei werden zu **einer** Spur
+zusammengeführt und nach Zeit sortiert. Einzelne unbrauchbare Punkte — eine
+Koordinate außerhalb des Erlaubten, eine unlesbare Zeit — fallen heraus, ohne
+die Datei zu verwerfen; wie viele es waren, steht in der Rückmeldung.
+
+Nach dem Import steht das neue Segment beziehungsweise der Einsatz an seiner
+Stelle in der Tagesansicht, und die Rückmeldung nennt Punktzahl und Zeitraum.
+Der Diensttag verlängert sich, wenn die Spur über seinen bisherigen Zeitraum
+hinausreicht.
+
 ### 4.2 Einsatzansicht
 
 Über dem Titel steht der **Rückweg** „‹ Sonntag, 27.12.2026" zurück zur

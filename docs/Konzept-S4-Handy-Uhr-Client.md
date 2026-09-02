@@ -2515,6 +2515,142 @@ in `spur_teilen()` hätte das geworfen.
 
 ---
 
+### A3 — GPX-Import · Web 12.7.0 · erledigt
+
+**Was gebaut ist:**
+
+- `gpx_lesen()` in `server/gpx_lib.php` — der Leser, direkt unter dem
+  Schreiber. Rückgabe in der Form von `spur_lib.php`.
+- `server/api/gpx_import.php` — der Endpunkt, zwei Ziele, alles in einer
+  Transaktion.
+- Der Dialog in `index.php` und seine Bedienung in `assets/schneiden.js`;
+  Einstieg im Aktionsblatt neben „Spuren als GPX".
+
+**Kein neues CSS.** Der Dialog besteht vollständig aus vorhandenen Bausteinen
+(`.dialog`, `.feld`, `.wahlliste`, `.meldung`, `.knopf`) — `Design.md` braucht
+deshalb keinen Eintrag, und die Freigabepflicht aus CLAUDE.md 5 greift nicht.
+
+#### Prüfstand A3
+
+**Zuerst, was nicht geprüft ist:**
+
+- **Die Kreisläufe R24** sind nicht gefahren (`tools/wiederherstellungs-probe/`,
+  `papierkorb_misch.mjs`). Ein importierter Einsatz trägt `origin='import'`,
+  `manual=1` und eine `imp-`-Kennung — dieselben drei Merkmale wie ein
+  CSV-importierter, der die Kreisläufe besteht; belegt ist das hier aber
+  nicht.
+- **Kein Test mit einer fremden GPX-Datei.** Alle Prüfdateien sind entweder
+  vom eigenen Schreiber erzeugt oder von Hand geschrieben. Eine Datei aus
+  Garmin Connect, Komoot oder einer Leitstellensoftware ist nicht durch —
+  das ist der Fall, für den der Import gebaut ist, und er steht aus.
+- **Kein Import über 9 000 Punkte im Browser.** Der Leser ist mit 9 000
+  gemessen (0,13 s), der ganze Weg durch den Browser nicht.
+- **Nur Chromium.**
+
+**Der Leser (`php`, gegen den Bestand und künstliche Fälle): 17 Erwartungen,
+alle erfüllt.**
+
+| Prüfung | Ist |
+|---|---|
+| Rundlauf über den Schreiber | **61 Punkte hinaus, 61 zurück, 0 Abweichungen** (lat/lon auf 10⁻⁶, Höhe auf 0,05 m, ts exakt) |
+| Kaputtes XML | abgelehnt, mit der Fehlerstelle des Parsers |
+| Wurzelelement `<kml>` | abgelehnt, mit dem tatsächlichen Namen |
+| Leere Datei | abgelehnt |
+| **`<!DOCTYPE>` mit interner Entität** | abgelehnt — die XXE-Abwehr steht vor dem Parser |
+| Datei ohne `<time>` | abgelehnt, mit Punktzahl und Begründung |
+| Nur `<wpt>`, kein Track | abgelehnt |
+| 50 005 Punkte | abgelehnt, Meldung nennt Grenze **und** 13,9 Stunden |
+| GPX **1.0** | gelesen, **2 Punkte**, Name übernommen |
+| GPX **ohne Namensraum** | gelesen, **1 Punkt** |
+| Zwei `<trkseg>` in falscher Reihenfolge | zeitlich sortiert, seq **0,1,2** |
+| Einzelne kaputte Punkte | **1 behalten, 1 verworfen, 1 ohne Zeit** — die Datei bleibt |
+| … und die Prüfliste nennt den Grund | `gpx.lat: ausserhalb von ±90` |
+| **9 000 Punkte, 0,78 MB** | **0,13 s** |
+
+**Im Browser (Chromium): 17 Erwartungen, alle erfüllt.**
+
+| Prüfung | Ist |
+|---|---|
+| Dialog öffnet aus dem Aktionsblatt | ja, nennt den Diensttag |
+| „Importieren" gesperrt ohne Datei | ja |
+| Vorgewählt | **Ruhesegment** |
+| Kaputtes XML | Meldung **im Dialog**, Dialog bleibt offen |
+| Datei ohne `<time>` | Begründung statt „fehlgeschlagen" |
+| … und nichts ist entstanden | Segment- und Einsatzzahl unverändert |
+| **Import als Ruhesegment** | 6 → **7** Segmente, **54 Punkte**, Zeile mit „Schneiden" |
+| **Import als Einsatz** | 4 → **5** Einsätze, kein weiteres Segment |
+| Konsolenfehler | **0** unerwartete |
+
+**Der Rundlauf, den die Abnahme verlangt: 12 Erwartungen, alle erfüllt.**
+Importierte Spur → GPX-Abruf (S2/AP4) → erneut gelesen: **54 Punkte, 0
+Abweichungen** gegen die Quelldatei, für Segment *und* Einsatz. Beide liegen
+als Stufe-2-Blob mit `n_original = 54`; der Einsatz trägt `origin=import`,
+`manual=1`, `imp-`-Kennung; der Diensttag umschließt die Spur.
+
+**Prüfmittel:** Wortliste **0/0/0**; Vollständigkeit **266**, unverändert
+gegen A2b (kein neues CSS, keine neue Klasse).
+
+#### Probleme und wie sie gelöst wurden
+
+**Ein leerer String statt eines Fehlers — 61 Punkte, und keiner kam an.** Der
+allererste Rundlauf schlug fehl mit „enthält keinen einzigen Trackpunkt",
+obwohl `count()` an derselben Stelle 61 `<trkpt>` fand. Die Ursache: Nach
+`children($ns)` schaltet SimpleXML die Namensraum-Umgebung eines Knotens um,
+**auch für Attribute**. `$pt['lat']` sucht danach ein `lat` *im
+GPX-Namensraum*, und ein unpräfigiertes Attribut liegt in **keinem**
+(XML-Namens-Spezifikation 6.2).
+
+Was daran lehrreich ist: Es gab keinen Fehler, keine Warnung, keinen leeren
+Rückgabewert an sichtbarer Stelle — nur einen leeren String, der brav durch
+`pruef_breite()` lief und dort korrekt als „keine Zahl" verworfen wurde. Die
+Fehlermeldung am Ende war sachlich falsch und klang plausibel. Behoben über
+`attributes()`, mit der Begründung im Code.
+
+**Die Meldung nannte den Wochentag zweimal.** Der Dialog übernahm den
+Diensttag aus `#daytitle`. Der trägt ihn in zwei Fassungen (lang und kurz,
+eine davon per CSS ausgeblendet), und `textContent` sieht beide:
+„DonnerstagDo, 16.07.2026". Jetzt aus `currentDay` über `fmtDay()`.
+
+**Zwei Fehlschläge, die keine waren.** Der erste Browserlauf meldete „0
+Punkte" für das importierte Segment — das Prüfskript hatte den letzten
+Eintrag der Liste genommen, und die steht nach *Beginn*, nicht nach Kennung;
+die importierte Spur beginnt um 08:23 und liegt damit mitten drin. Der zweite:
+`page.check()` auf ein `.wahl-box`-Radio, das der Baustein per CSS versteckt —
+geklickt wird das Label. Beides Fehler im Prüfmittel, nicht im Code; sie
+stehen hier, weil eine Zahl, die erst nach zwei Korrekturen grün wird,
+erklärt gehört.
+
+#### Entscheidungen, die in A3 gefallen sind
+
+- **E-S4-63 — Der Leser wohnt beim Schreiber** (`gpx_lib.php`). GPX hat damit
+  genau eine Stelle in der Anwendung, die es kennt.
+- **E-S4-64 — Gelesen wird auf dem Server, nicht im Browser** — anders als
+  beim CSV-Import. Der Unterschied ist der Inhalt: Beim CSV stehen
+  Patientendaten in der Datei, die der Server nie sehen darf, also *muss* der
+  Browser lesen. Eine GPX-Datei enthält nichts Verschlüsseltes, und die
+  Ablehnungsregeln sind verbindlich — eine verbindliche Regel im Browser ist
+  keine.
+- **E-S4-65 — Die Datei kommt als Zeichenkette im JSON-Körper, nicht als
+  Dateiupload.** Diese Anwendung hat nirgends ein `$_FILES`; ein erster
+  Upload-Weg brächte vier Stellschrauben auf geteiltem Hosting mit
+  (`upload_max_filesize`, `post_max_size`, temporäre Verzeichnisse und deren
+  Rechte) für einen Vorgang, den eine Zeichenkette genauso trägt.
+- **E-S4-66 — Mengengrenze: `LIMIT_TRACKPUNKTE_SPUR` (50 000) und 12 MB
+  Dateigröße.** Die Punktgrenze ist die bestehende aus `validate_lib.php` —
+  eine zweite Zahl daneben wäre die eine, die irgendwann nicht mehr zur
+  anderen passt. Der Konzeptauftrag („ein 24-h-Dienst in 10-s-Auflösung, rund
+  9 000 Punkte, muss sicher hineinpassen") ist damit fünffach erfüllt und
+  gemessen: 9 000 Punkte in **0,13 s**.
+- **E-S4-67 — GPX 1.0 und Dateien ohne Namensraum werden angenommen.** Die
+  Elemente heißen gleich und bedeuten dasselbe; auf 1.1 zu bestehen hieße,
+  Dateien abzulehnen, die inhaltlich in Ordnung sind.
+- **E-S4-68 — Eine importierte Spur wird gleich als Blob abgelegt** (Stufe 2,
+  `n_original` = volle Punktzahl). Sie ist fertig — ihr „Gerät" ist eine
+  Datei, es kommt nichts nach. Das erspart dem Verdichtungsjob einen Lauf und
+  der Datenbank 62,4 Byte je Punkt.
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.

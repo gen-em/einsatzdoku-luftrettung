@@ -434,6 +434,90 @@ const EdSchnitt = (() => {
     });
   }
 
+  /* ---- GPX-Import (S4/A3, E-S4-18) ------------------------------------------
+   *
+   * Er wohnt in DIESER Datei und nicht in einer eigenen: Er endet dort, wo
+   * der Schnitt anfaengt — die importierte Aufzeichnung wird ein
+   * Ruhesegment, und die Einsaetze schneidet man danach heraus. Beide
+   * bedienen dieselbe Karte, beide laden den Tag danach neu.
+   *
+   * DIE DATEI WIRD NUR GELESEN, NICHT GEPRUEFT. Was eine gueltige GPX-Datei
+   * ist, entscheidet `gpx_lesen()` auf dem Server; hier eine zweite Meinung
+   * einzubauen hiesse, zwei Wahrheiten zu haben — und die schwaechere davon
+   * ist die, die jemand mit den Entwicklerwerkzeugen ausschaltet.
+   */
+  let gpxText = null;
+
+  function gpxFehler(text) {
+    const box = document.getElementById('gpx-fehler');
+    box.hidden = !text;
+    if (text) { box.querySelector('p').textContent = text; }
+  }
+
+  function gpxStarten(dayId, tagText) {
+    const dlg = document.getElementById('gpxdialog');
+    if (!dlg) { return; }
+    const datei = document.getElementById('gpx-datei');
+    const los   = document.getElementById('gpx-los');
+
+    gpxText = null;
+    datei.value = '';
+    los.disabled = true;
+    gpxFehler('');
+    document.getElementById('gpx-tagsatz').textContent =
+      'Die Spur wird dem Diensttag ' + tagText + ' zugeordnet.';
+
+    datei.onchange = () => {
+      const f = datei.files && datei.files[0];
+      gpxText = null; los.disabled = true; gpxFehler('');
+      if (!f) { return; }
+      const leser = new FileReader();
+      leser.onerror = () => gpxFehler('Die Datei ließ sich nicht lesen.');
+      leser.onload = () => { gpxText = String(leser.result); los.disabled = false; };
+      leser.readAsText(f);
+    };
+
+    document.getElementById('gpx-abbrechen').onclick = () => dlg.close();
+    los.onclick = async () => {
+      if (gpxText === null) { return; }
+      los.disabled = true;
+      gpxFehler('');
+      try {
+        const a = await fetch('api/gpx_import.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+                     'X-CSRF': (typeof CSRF === 'string' ? CSRF : '') },
+          body: JSON.stringify({ day_id: dayId, ziel: gpxZiel(), xml: gpxText })
+        });
+        let d = null;
+        try { d = await a.json(); } catch (e) { d = null; }
+        if (!a.ok || !d || d.error) {
+          throw new Error((d && d.meldung) || 'Der Server hat die Datei abgelehnt.');
+        }
+        dlg.close();
+        await neuLaden();
+        let t = d.art === 'mission'
+          ? 'Die Datei ist als Einsatz übernommen — '
+          : 'Die Datei ist als Ruhesegment übernommen — ';
+        t += d.punkte + ' Punkte, ' + d.von + ' bis ' + d.bis + '.';
+        if (d.ohne_zeit) { t += ' ' + d.ohne_zeit + ' Punkte ohne Zeitstempel sind nicht mitgekommen.'; }
+        if (d.verworfen) { t += ' ' + d.verworfen + ' Punkte mit unbrauchbaren Koordinaten ebenfalls nicht.'; }
+        if (d.art === 'rest') { t += ' Einsätze schneidest du jetzt heraus.'; }
+        melde('ok', t);
+      } catch (e) {
+        gpxFehler(e.message);
+        los.disabled = false;
+      }
+    };
+
+    dlg.showModal();
+    datei.focus();
+  }
+
+  function gpxZiel() {
+    return document.getElementById('gpx-einsatz').checked ? 'einsatz' : 'ruhe';
+  }
+
   /**
    * Einmal beim Laden der Seite aufrufen.
    * @param {function(): Promise} laden  holt den Diensttag neu (loadDay)
@@ -443,5 +527,5 @@ const EdSchnitt = (() => {
   /** Nach jedem Laden des Diensttags. */
   function setzen(segmente) { zeichnen(segmente || []); }
 
-  return { starten, setzen, rueckgaengig };
+  return { starten, setzen, rueckgaengig, gpxStarten };
 })();

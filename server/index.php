@@ -108,6 +108,16 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              * dieselbe Freigabe wie ein neuer Baustein. */
             ['text' => 'Spuren als GPX', 'symbol' => 'karte',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
+            /* GPX HEREIN (S4/A3, E-S4-18). Es steht neben „Spuren als GPX" —
+             * hinaus und herein sind dieselbe Sache in zwei Richtungen, und
+             * wer den einen Weg sucht, sucht dort auch den anderen. Kein
+             * Verweis, sondern ein Knopf: Der Import ist ein Dialog auf
+             * dieser Seite (zwei Angaben, eine Handlung, Design.md 9.11) und
+             * kein Seitenwechsel. Symbol `karte` wie beim Abruf; fuer
+             * „hochladen" gibt es keines im Vorrat, und ein neues Zeichen
+             * braucht dieselbe Freigabe wie ein neuer Baustein. */
+            ['text' => 'GPX importieren', 'symbol' => 'karte',
+             'href' => '#', 'attr' => 'id="daygpximport"'],
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
           ]]) ?>
@@ -298,6 +308,51 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true]);
              Tabellenkopf, mobil als Blatt von unten. Die Eintraege baut
              renderMissionTable() aus den Koepfen — eine zweite Spaltenliste
              gaebe es sonst hier. */ ?>
+    <?php /* ---- GPX-Import (S4/A3) ---------------------------------------
+             Ein Dialog und keine Seite: zwei Angaben (Datei, Ziel), eine
+             Handlung — die Aufstellungs-Regel aus Design.md 9.11 greift
+             nicht. Nach dem Import steht man wieder in der Tagesansicht, wo
+             das neue Segment bzw. der Einsatz an seiner Stelle liegt. */ ?>
+    <dialog class="dialog" id="gpxdialog" aria-labelledby="gpx-titel">
+      <div class="dialog-kopf"><h2 id="gpx-titel">GPX importieren</h2></div>
+      <div class="dialog-inhalt">
+        <p id="gpx-tagsatz"></p>
+        <div class="feld">
+          <label class="feld-label" for="gpx-datei">GPX-Datei</label>
+          <input class="feld-eingabe" type="file" id="gpx-datei" accept=".gpx,application/gpx+xml">
+          <p class="feld-klein">GPX mit Zeitstempeln je Punkt. Eine Datei ohne
+             Zeiten wird abgelehnt — ohne sie gibt es keine Reihenfolge und
+             kein Schneiden.</p>
+        </div>
+        <div class="feld">
+          <span class="feld-label">Übernehmen als</span>
+          <div class="wahlliste" role="radiogroup" aria-label="Übernehmen als">
+            <input type="radio" class="wahl-box" id="gpx-ruhe" name="gpx-ziel" value="ruhe" checked>
+            <label class="wahl-zeile" for="gpx-ruhe">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Ruhesegment</span>
+              <span class="wahl-zusatz">die ganze Aufzeichnung; Einsätze danach herausschneiden</span>
+            </label>
+            <input type="radio" class="wahl-box" id="gpx-einsatz" name="gpx-ziel" value="einsatz">
+            <label class="wahl-zeile" for="gpx-einsatz">
+              <span class="wahl-punkt" aria-hidden="true"></span>
+              <span class="wahl-text">Einsatz</span>
+              <span class="wahl-zusatz">die Datei ist genau ein Einsatz; Phasenzeiten danach im Einsatz</span>
+            </label>
+          </div>
+        </div>
+        <div class="meldung meldung-fehler" id="gpx-fehler" role="alert" hidden>
+          <?= ui_symbol('warnung', 'symbol-gross') ?><p></p>
+        </div>
+      </div>
+      <div class="dialog-fuss">
+        <button class="knopf knopf-leise" type="button" id="gpx-abbrechen">
+          <span>Abbrechen</span></button>
+        <button class="knopf knopf-primaer" type="button" id="gpx-los" disabled>
+          <span>Importieren</span></button>
+      </div>
+    </dialog>
+
     <div class="blatt" id="sortblatt" hidden>
       <div class="blatt-griff" aria-hidden="true"></div>
       <h2 class="blatt-titel">Sortieren</h2>
@@ -920,6 +975,18 @@ async function init(){
   });
   /* Derselbe Weg aus dem Aktionsmenue: Blatt schliessen, Formular oeffnen,
      zur Karte rollen. */
+  /* Der GPX-Import: Blatt schliessen, Dialog auf. Der Diensttag steht erst
+     nach `loadDay()` fest — deshalb wird er beim Klick gelesen und nicht
+     beim Verdrahten. */
+  document.getElementById('daygpximport')?.addEventListener('click', ev => {
+    ev.preventDefault();
+    if (window.edBlatt) { edBlatt.zu(); }
+    if (!currentDayId) { return; }
+    /* Das DATUM und nicht der Titel: Der trägt den Wochentag zweimal (lang
+       und kurz, eine der beiden Fassungen ist per CSS ausgeblendet), und
+       `textContent` sieht beide — „DonnerstagDo, 16.07.2026". */
+    EdSchnitt.gpxStarten(currentDayId, fmtDay(currentDay));
+  });
   document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
     ?.addEventListener('click', ev => {
       ev.preventDefault();
