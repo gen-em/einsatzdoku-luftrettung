@@ -11,6 +11,78 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 12.8.0] — 2026-09-02
+
+**Die Android-App wird über die Anwendung selbst verteilt.** Halbes viertes
+Paket von S4 Block A — der QR-Kopplungscode aus derselben Karte fehlt noch,
+er hängt an S5 und R42. Keine Migration.
+
+### Web — Die Karte „NAdoku für Android"
+
+Auf dem Geräte-Reiter, unter der Geräteliste. Sie zeigt, was in
+`server/apk/` **liegt**: Dateiname, Größe, Fassung (aus dem Dateinamen),
+Datum und den vom Server gerechneten **SHA-256** in Vierergruppen — 64 Zeichen
+am Stück sind nicht vergleichbar, wer nachrechnet verliert beim dritten
+Blockwechsel die Stelle.
+
+**Von Hand gepflegt wird nichts.** Eine Versionsangabe, die jemand eintippt,
+stimmt am Tag des Eintippens und danach nie wieder. Die Prüfsumme wird bei
+jedem Aufruf neu gerechnet (bei 7 MB wenige Millisekunden) — ein
+zwischengespeicherter Wert wäre genau die Zahl, die nach einem Austausch der
+Datei noch die alte nennt, und bei einer Prüfsumme ist das schlimmer als
+keine.
+
+**Liegt nichts, erscheint die Karte gar nicht.** Ein Leerzustand „noch keine
+App" wäre auf jeder Installation zu sehen, die keine Android-App verteilt,
+und sagte dort etwas Falsches.
+
+Der Download ist eine **neutrale** Handlung, kein Primärknopf: Die eine
+Haupthandlung des Reiters bleibt „Kopplungscode erzeugen".
+
+### Web — Weder im Repositorium noch im Deploy
+
+`server/apk/` steht in `.gitignore` **und** in der Ausnahmeliste des Deploys.
+Beides ist nötig, und der zweite Eintrag ist der, den man vergisst: Die
+Deploy-Action synchronisiert `server/` und **entfernt, was nicht ausgenommen
+ist** — der nächste Push löschte die Dateien. Dasselbe Muster wie
+`config.php` und `sicherungen/`, inklusive der doppelten Schreibweise
+(`apk/**` und `apk/`), weil die Action Datei- und Verzeichnismuster getrennt
+prüft.
+
+Ein signiertes APK ist ein Erzeugnis, kein Quelltext; eingecheckt wäre es bei
+jeder Fassung ein zweistelliges MB im Verlauf. Hochgeladen wird per FTPS
+durch die Betreiberin.
+
+### Web — Der Name wird nicht geprüft, sondern gesucht
+
+`apk.php` liest den Ordner und wählt aus dem Gelesenen aus. Ein Pfad, den der
+Aufrufer zusammensetzt, kommt damit **nie** an `fopen()` — auch keiner mit
+`..`, keiner mit einem Nullbyte und keiner mit einem Zeilenumbruch für die
+`Content-Disposition`-Kopfzeile. Der Unterschied zu „gefährliche Zeichen
+entfernen" ist, dass hier nichts vergessen werden kann.
+
+Der Abruf liegt **neben** den Seiten und nicht unter `api/`, aus demselben
+Grund wie `gpx.php`: `ist_api_aufruf()` entscheidet am Pfad, und ein
+`<a href>`, den jemand anklickt, bekäme dort nach einer Mittagspause
+`{"error":"session_ende"}` im Browserfenster statt der Anmeldeseite.
+
+### Web — Nachweis
+
+**Im Browser: 10 Erwartungen, alle erfüllt** (gegen eine 7-MB-Attrappe).
+Karte vorhanden, Datei mit **7,0 MB · Fassung 1.0.0 · Stand** genannt,
+Prüfsumme in **16 Vierergruppen**, Download neutral (`knopf-neutral`), Datei
+kommt in **7 340 032 Byte** an, `?d=../config.php` läuft ins Leere, eine
+unbekannte Datei bekommt eine Seite statt eines leeren 404. Keine
+unerwarteten Konsolenfehler.
+
+`git check-ignore` bestätigt die `.gitignore`-Wirkung
+(`.gitignore:28:server/apk/`).
+
+**Nicht geprüft:** Die Deploy-Ausnahme ist am Workflow-Text abgeleitet, nicht
+durchgespielt — ein Trockenlauf bräuchte FTP-Zugangsdaten. Das Muster ist
+zeichengenau das von `sicherungen/`, das im Betrieb steht. Und es gab kein
+echtes APK: geprüft wurde gegen eine Attrappe aus 7 MB Füllbytes.
+
 ## [Web 12.7.0] — 2026-09-02
 
 **GPX kommt jetzt auch herein.** Drittes Paket von S4 Block A. Keine

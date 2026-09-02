@@ -157,6 +157,11 @@ Daten erst nach Server-Bestätigung.
 │   │                      Markdown-Renderer rt_html() — die EINZIGE Stelle des
 │   │                      Projekts, an der aus einer Eingabe HTML wird
 │   ├── admin_rechtstexte.php  Editor dazu (Administration)
+│   ├── apk_lib.php        Was in server/apk/ liegt — Name, Größe, Fassung,
+│   │                       Datum, SHA-256 (S4/A1, siehe 4.97g)
+│   │                       · apk.php liefert die Datei aus
+│   │                       · apk/ die Dateien selbst (entstehen nur auf dem
+│   │                         Server, im Deploy ausgenommen)
 │   ├── install.php        Serverinstallation · update.php Migrations-Runner
 │   ├── smtp.php           SMTPS-Versand + Abschluss der Antwort vor langsamer Arbeit
 │   ├── api/               day.php · mission.php · range.php · suchindex.php ·
@@ -3234,6 +3239,71 @@ Begründung, keine unerwarteten Konsolenfehler.
 **Der Rundlauf der Abnahme: 12 Erwartungen, alle erfüllt** — importierte Spur
 → GPX-Abruf → erneut gelesen: 54 Punkte, **0 Abweichungen** gegen die
 Quelldatei, für Segment *und* Einsatz.
+
+### 4.97g Die Android-App verteilen (ab Web 12.8.0, S4/A1, E-S4-16)
+
+Die App wird über die Anwendung selbst verteilt, nicht über einen App-Store.
+Die Karte **„NAdoku für Android"** auf dem Geräte-Reiter zeigt, was in
+`server/apk/` **liegt** — Name, Größe, Fassung (aus dem Dateinamen), Datum
+und den gerechneten SHA-256.
+
+**Von Hand gepflegt wird nichts.** Eine Versionsangabe, die jemand eintippt,
+stimmt am Tag des Eintippens und danach nie wieder. Die Prüfsumme entsteht bei
+jedem Aufruf neu (bei 7 MB wenige Millisekunden); ein zwischengespeicherter
+Wert wäre genau die Zahl, die nach einem Austausch der Datei noch die alte
+nennt.
+
+Die Fassung kommt aus dem **Dateinamen** (`nadoku-1.0.0.apk`), nicht aus dem
+APK. Sie dort zu lesen hieße, ein ZIP zu öffnen und das Android-Binär-XML des
+Manifests zu entschlüsseln — dafür gäbe es keine Bibliothek im Haus, und eine
+neue Abhängigkeit für eine Anzeige wäre der falsche Preis (CLAUDE.md 4).
+Trägt der Name keine, steht keine da.
+
+#### Zwei Ausnahmelisten, und beide sind nötig
+
+| Ort | Eintrag | ohne ihn |
+|---|---|---|
+| `.gitignore` | `server/apk/` | Ein signiertes APK läge im Verlauf — ein Erzeugnis, kein Quelltext, bei jeder Fassung ein zweistelliges MB |
+| `.github/workflows/deploy.yml` | `apk/**` und `apk/` | **Der nächste Push löschte die Dateien.** Die Action synchronisiert `server/` und entfernt, was nicht ausgenommen ist |
+
+Der zweite ist der, den man vergisst. Dasselbe Muster wie `config.php` und
+`sicherungen/`, inklusive der doppelten Schreibweise: Die Action prüft
+Datei- und Verzeichnismuster getrennt.
+
+Hochgeladen wird per FTPS durch die Betreiberin.
+
+#### Der Name wird nicht geprüft, sondern gesucht
+
+`apk.php` liest den Ordner (`apk_liste()`) und wählt aus dem **Gelesenen**
+aus. Ein Pfad, den der Aufrufer zusammensetzt, kommt damit nie an `fopen()` —
+auch keiner mit `..`, keiner mit einem Nullbyte und keiner mit einem
+Zeilenumbruch für die `Content-Disposition`-Kopfzeile. Der Unterschied zu
+„gefährliche Zeichen entfernen" ist, dass hier nichts vergessen werden kann.
+
+`apk_liste()` nimmt nur `[A-Za-z0-9._-]+\.apk` an. Ein Verzeichnis, in das
+jemand per FTP schreibt, ist kein vertrauenswürdiger Eingang; was nicht auf
+das Muster passt, wird still übergangen (eine `.DS_Store` dort ist keine
+Fehlermeldung wert).
+
+Der Abruf liegt **neben** den Seiten und nicht unter `api/`, aus demselben
+Grund wie `gpx.php` (4.97b): `ist_api_aufruf()` entscheidet am Pfad, und ein
+`<a href>` bekäme dort nach einer Mittagspause `{"error":"session_ende"}` im
+Browserfenster statt der Anmeldeseite. Nur angemeldet, GET, ohne CSRF (M3-11).
+`Cache-Control: private, max-age=86400` und nicht `no-store`: Ein APK ist
+unveränderlich, sobald es liegt — es trägt seine Fassung im Namen, und ein
+Austausch bekommt einen neuen.
+
+#### Nachweis
+
+**Im Browser: 10 Erwartungen, alle erfüllt** (gegen eine 7-MB-Attrappe) —
+Karte vorhanden, „7,0 MB · Fassung 1.0.0 · Stand …", Prüfsumme in 16
+Vierergruppen, Download neutral, Datei kommt in 7 340 032 Byte an,
+`?d=../config.php` läuft ins Leere, unbekannte Datei bekommt eine Seite statt
+eines leeren 404.
+
+**Nicht geprüft:** Die Deploy-Ausnahme ist am Workflow-Text abgeleitet, nicht
+durchgespielt — ein Trockenlauf bräuchte FTP-Zugangsdaten. Und es gab kein
+echtes APK.
 
 ### 4.98 Was im verschlüsselten Block liegt — und was nicht
 

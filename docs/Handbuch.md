@@ -2265,6 +2265,20 @@ im Geräte-Reiter ein Hinweis auf alles, was in den letzten sieben Tagen dazukam
 nichts mehr hochladen. Bereits hochgeladene Daten bleiben erhalten, damit du
 sie in Ruhe ansehen kannst.
 
+### 10.1 Die Android-App herunterladen
+
+*Seit Web 12.8.0.* Unter der Geräteliste steht die Karte **„NAdoku für
+Android"** — sofern die Betreiberin eine App-Datei hinterlegt hat. Sie zeigt
+Dateiname, Größe, Fassung und Stand, dazu die **SHA-256-Prüfsumme**: Wer der
+Seite nicht traut, rechnet sie an der heruntergeladenen Datei nach.
+
+Die App wird hier verteilt und **nicht über einen App-Store**. Beim ersten
+Öffnen fragt Android deshalb nach, ob Installationen aus dieser Quelle
+erlaubt sind — das ist bei einer Verteilung ohne Store der vorgesehene Weg.
+
+Steht die Karte nicht da, liegt auf dieser Installation keine App-Datei. Frag
+die Administration.
+
 ---
 
 ## 11. Administration (nur Admin)

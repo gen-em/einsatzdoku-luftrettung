@@ -2651,6 +2651,93 @@ erklärt gehört.
 
 ---
 
+### A1a — APK-Weg und Downloadseite · Web 12.8.0 · erledigt
+
+**A1 ist geteilt, und die Hälfte ist gesperrt.** Das Paket umfasst laut
+Abschnitt 5 drei Dinge: QR-Kopplungscode (E-S4-15), APK-Weg (E-S4-16) und den
+Nachtrag im JSON-Vertrag. **QR und Vertragsnachtrag hängen an S5 und R42**,
+die nicht durch sind — sie bleiben liegen. Der APK-Weg hängt an nichts und
+ist gebaut.
+
+**Was gebaut ist:**
+
+- `server/apk_lib.php` — liest, was in `server/apk/` liegt: Name, Größe,
+  Fassung (aus dem Dateinamen), Datum, SHA-256.
+- `server/apk.php` — liefert die Datei aus, nur angemeldet.
+- Die Karte „NAdoku für Android" auf dem Geräte-Reiter
+  (`einstellungen.php`).
+- `server/apk/` in `.gitignore` **und** in der Ausnahmeliste des Deploys.
+
+**Kein neues CSS.** Die Karte besteht aus vorhandenen Bausteinen (`.karte`,
+`.zeile`, `.knopf`, `.feld-hinweis`, `.feld-klein`, `<code>`) — `Design.md`
+braucht keinen Eintrag.
+
+#### Prüfstand A1a
+
+**Zuerst, was nicht geprüft ist:**
+
+- **Die Deploy-Ausnahme ist abgeleitet, nicht durchgespielt.** Ein
+  Trockenlauf der Action bräuchte FTP-Zugangsdaten. Die Ableitung am
+  Workflow-Text: `SamKirkland/FTP-Deploy-Action@v4.4.0`, `exclude`-Muster
+  sind relativ zu `local-dir: ./server/` (deshalb steht dort `config.php`
+  ohne Präfix), und `apk/**` + `apk/` ist **zeichengenau** das Muster von
+  `sicherungen/`, das im Betrieb steht. Das ist das stärkste Argument, das
+  hier zu haben ist — es ist kein Beleg.
+- **Es gab kein echtes APK.** Geprüft wurde gegen eine Attrappe aus 7 MB
+  Füllbytes. Ob ein signiertes APK ausgeliefert und von Android angenommen
+  wird, ist Gerätetest.
+- **Der Signaturschlüssel (B1) ist nicht erzeugt.** Er entsteht außerhalb des
+  Repositoriums und wird dem Auftraggeber übergeben (E-R45-6); ohne ihn gibt
+  es keine signierte Datei zum Hochladen.
+
+**Im Browser (Chromium): 10 Erwartungen, alle erfüllt.**
+
+| Prüfung | Ist |
+|---|---|
+| Karte „NAdoku für Android" auf dem Geräte-Reiter | vorhanden |
+| Zeile nennt die Datei | `nadoku-1.0.0.apk` |
+| mit Größe und Fassung | **7,0 MB · Fassung 1.0.0 · Stand 02.09.2026** |
+| Prüfsumme gruppiert | **16 Vierergruppen** |
+| Download ist neutral, kein Primärknopf | `knopf knopf-neutral` |
+| Der Download liefert die Datei | `nadoku-1.0.0.apk` |
+| in voller Größe | **7 340 032 Byte** |
+| `?d=../config.php` | läuft ins Leere |
+| unbekannte Datei | Seite mit Erklärung, kein leeres 404 |
+| Konsolenfehler | **0** unerwartete (dazu 2× die absichtlichen 404) |
+
+`git check-ignore -v server/apk/nadoku-1.0.0.apk` →
+`.gitignore:28:server/apk/`. Wortliste **0/0/0**, Vollständigkeit **266**,
+unverändert.
+
+#### Entscheidungen, die in A1a gefallen sind
+
+- **E-S4-69 — Der Name wird nicht geprüft, sondern gesucht.** `apk.php` liest
+  den Ordner und wählt aus dem Gelesenen aus; ein vom Aufrufer
+  zusammengesetzter Pfad kommt nie an `fopen()`. Der Unterschied zu
+  „gefährliche Zeichen entfernen" ist, dass hier nichts vergessen werden
+  kann.
+- **E-S4-70 — Die Fassung kommt aus dem Dateinamen, nicht aus dem APK.** Sie
+  dort zu lesen hieße, ein ZIP zu öffnen und das Android-Binär-XML des
+  Manifests zu entschlüsseln — eine neue Abhängigkeit für eine Anzeige wäre
+  der falsche Preis (CLAUDE.md 4).
+- **E-S4-71 — Liegt keine Datei, erscheint die Karte gar nicht.** Ein
+  Leerzustand „noch keine App" wäre auf jeder Installation zu sehen, die
+  keine Android-App verteilt, und sagte dort etwas Falsches.
+- **E-S4-72 — Die Prüfsumme wird bei jedem Aufruf gerechnet**, nicht
+  zwischengespeichert. Bei 7 MB kostet das wenige Millisekunden; ein
+  gespeicherter Wert wäre genau die Zahl, die nach einem Austausch der Datei
+  noch die alte nennt — bei einer Prüfsumme schlimmer als keine.
+
+#### Was von A1 offen bleibt
+
+| offen | hängt an |
+|---|---|
+| QR-Kopplungscode auf dem Geräte-Reiter (E-S4-15) | **S5** |
+| JSON-Vertrag: Abschnitt 8 (Präfixe), Abschnitt 1a (Handy-`geraet`-Block, F-S4-B), clientneutrale Einleitung (E-R45-2) | **R42** |
+| `pair.php`-Annahme des Handy-Blocks | **R42** (F-S4-B) |
+
+---
+
 ## 13. Abgleich mit Rahmenplan Fassung 13 (R49) — 01.09.2026
 
 Der Rahmenplan wurde nach der Beauftragung von Block B und C fortgeschrieben.

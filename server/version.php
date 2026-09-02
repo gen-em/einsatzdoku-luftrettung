@@ -1994,5 +1994,30 @@ declare(strict_types=1);
  * die Meldung lautete „enthält keinen einzigen Trackpunkt" — bei 61
  * vorhandenen. Jetzt ueber `attributes()`.
  *
+ * 12.8.0 VERTEILT DIE ANDROID-APP (S4/A1 zur Haelfte, E-S4-16). Der
+ * Geraete-Reiter bekommt die Karte „NAdoku fuer Android": Sie zeigt, was in
+ * `server/apk/` LIEGT — Name, Groesse, Fassung, Datum und den gerechneten
+ * SHA-256. Von Hand gepflegt wird nichts; eine Versionsangabe, die jemand
+ * eintippt, stimmt am Tag des Eintippens und danach nie wieder. Liegt keine
+ * Datei, erscheint die Karte gar nicht.
+ *
+ * DIE DATEI IST WEDER IM REPOSITORIUM NOCH IM DEPLOY. `server/apk/` steht in
+ * `.gitignore` UND in der Ausnahmeliste des Deploys — dasselbe Muster wie
+ * `config.php` und `sicherungen/`, und beides ist noetig: Ohne den zweiten
+ * Eintrag loeschte der naechste Push die Dateien, denn die Action
+ * synchronisiert `server/` und entfernt, was nicht ausgenommen ist.
+ * Hochgeladen wird per FTPS durch die Betreiberin.
+ *
+ * DER NAME WIRD NICHT GEPRUEFT, SONDERN GESUCHT: `apk.php` liest den Ordner
+ * und waehlt daraus aus. Ein Pfad, den der Aufrufer zusammensetzt, kommt
+ * damit nie an `fopen()` — auch keiner mit `..`, keiner mit Nullbyte und
+ * keiner mit einem Zeilenumbruch fuer die Content-Disposition-Kopfzeile. Der
+ * Unterschied zu „gefaehrliche Zeichen entfernen" ist, dass hier nichts
+ * vergessen werden kann.
+ *
+ * WAS AN A1 NOCH FEHLT und hier NICHT dabei ist: der QR-Kopplungscode
+ * (E-S4-15) und der Nachtrag im JSON-Vertrag. Beides haengt an S5 und R42,
+ * die noch nicht durch sind.
+ *
  */
-const WEB_VERSION = '12.7.0';
+const WEB_VERSION = '12.8.0';

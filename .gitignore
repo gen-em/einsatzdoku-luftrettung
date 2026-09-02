@@ -18,6 +18,15 @@ Thumbs.db
 # Repo -- und der Deploy nimmt den Ordner ohnehin von der Synchronisation aus.
 server/sicherungen/
 
+# Die APK-Dateien der Android-Apps (S4/A1, E-S4-16). Sie liegen NUR auf dem
+# Server: Der Betreiber laedt sie per FTPS dorthin, die Downloadseite zeigt,
+# was liegt. Nicht ins Repositorium -- ein signiertes APK ist ein Erzeugnis,
+# kein Quelltext, und es waere bei jeder Fassung ein zweistelliges MB im
+# Verlauf. Der Ordner steht zusaetzlich in der Ausnahmeliste des Deploys
+# (.github/workflows/), sonst loeschte ihn der naechste Push -- dasselbe
+# Muster wie config.php und sicherungen/.
+server/apk/
+
 # Erzeugnisse des Stilvergleichs (tools/stilvergleich/proben.py)
 tools/stilvergleich/pruefstand/
 tools/stilvergleich/__pycache__/
