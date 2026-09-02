@@ -891,7 +891,7 @@ Plaketten, Aktionen rechts.
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
 rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
-(Sammelsicherung) und die Spurenliste des Diensttages (mehrere Spuren als eine
+(Sammel-Backup) und die Spurenliste des Diensttages (mehrere Spuren als eine
 GPX-Datei, seit Web 10.3.0). Ein Eintrag, an dem es nichts auszuwählen gibt,
 bekommt ein **abgeschaltetes** Kästchen und nicht gar keines — ein fehlendes
 ließe die Zeile um seine Breite nach links rutschen, und die Liste sähe
@@ -1378,7 +1378,7 @@ ist das eine Fehlerquelle.
 | Typ | Hülle | Leiste | Beispiele |
 |---|---|---|---|
 | **Inhaltsseite** | `ui_geruest_start(['leiste' => 'diensttage'])` | Diensttage | Tagesübersicht, Einsatzansicht, Formular, Papierkorb, Zeitraum |
-| **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Sicherungen, Wartung |
+| **Einstellungsseite** | `ui_geruest_start(['leiste' => 'einstellungen'])` | Einstellungsmenü | Profil, Standorte, Geräte, Backups, Wartung |
 | **Suchseite** | `ui_geruest_start(['leiste' => 'filter'])` | Filter, von der Seite gefüllt | Suche |
 | **Öffentliche Lesespalte** | `ui_kopf(['menue' => false])` + `.rahmen rahmen-lesespalte` | keine | Impressum, Datenschutz, Abbruchseite |
 | **Anmeldehülle** | `.anmeldung-body` + `<main class="anmeldung">` | keine | Anmeldung, Passwort setzen, Einrichter |

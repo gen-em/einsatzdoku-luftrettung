@@ -41,7 +41,7 @@ liegt auf dem Server, damit die Rücksetzung funktioniert. Näheres im Handbuch
 | [`docs/Lizenzen.md`](docs/Lizenzen.md) | Bibliotheken, Schriften, Symbole und Dienste — Herkunft, Version, Lizenz |
 | [`docs/Geraete-Eingabe.md`](docs/Geraete-Eingabe.md) | gemessenes Eingabeverhalten je Uhrmodell |
 | [`docs/Uhr-Layout_Regeln.md`](docs/Uhr-Layout_Regeln.md) | Layoutregeln der Uhr-Oberflächen |
-| [`docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md`](docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md) | Konzept der Phase S1 (Sicherung und Rückspielweg) |
+| [`docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md`](docs/konzepte/erledigt/Konzept-S1-Sicherung-Import.md) | Konzept der Phase S1 (Backup und Rückspielweg) |
 | [`docs/konzepte/erledigt/Pruefdokument-S1-Sicherung-Import.md`](docs/konzepte/erledigt/Pruefdokument-S1-Sicherung-Import.md) | Prüfdokument dazu: was geprüft ist, was noch zu tun bleibt |
 | [`docs/konzepte/erledigt/Konzept-P2-Terminologie.md`](docs/konzepte/erledigt/Konzept-P2-Terminologie.md) | Konzept der Phase P2 (neutraler Wortlaut Land/Luft) |
 | [`docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md`](docs/konzepte/erledigt/Pruefdokument-P2-Terminologie.md) | Prüfdokument dazu |

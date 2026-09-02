@@ -425,7 +425,7 @@ ui_seite_start(['titel' => 'Backups']);
                          'art' => 'number', 'wert' => (string)edbak_aufbewahrung(),
                          'attr' => 'min="1" max="100"',
                          'klein' => 'Pakete. Ältere werden beim nächsten Sichern '
-                                  . 'gelöscht — die jüngste und eine freigegebene nie.']); ?>
+                                  . 'gelöscht — das jüngste und ein freigegebenes nie.']); ?>
         </div>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'grenze', 'label' => 'Speichergrenze',

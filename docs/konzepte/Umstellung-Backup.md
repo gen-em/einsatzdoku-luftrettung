@@ -12,7 +12,7 @@ S7) · **Umsetzung:** in einem Zug, Zweig `claude/new-session-30byn3`
 | AP2 | Adminbereich Konten (`admin_user.php`, `admin_users.php`, `admin_sicherungen.php`, `adminbackup_lib.php`, `backup_lib.php`, `api/`) | **erledigt** |
 | AP3 | Komplett-Backup und Wiederanlauf (`komplett_lib.php`, `admin_komplettsicherung.php`, `wiederherstellen.php`) | **erledigt** |
 | AP4 | Backup-Ziele, Jobs, Rahmen (`admin_sicherungsziele.php`, `sicherungsziel_lib.php`, `jobs_lib.php`, `ui.php`, `update.php`, `install.php`, Rest) | **erledigt** — `server/` ist durch |
-| AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | offen |
+| AP5 | Dokumentation (Handbuch, Technik, Backup-Format, Export-Format, Design, Lizenzen, README, Backlog) | **erledigt** |
 | AP6 | `tools/` | offen |
 | AP7 | Buchführung (Version, Changelog), Prüfmittel, Prüfdokument | offen |
 | AP8 | Rahmenplan, Löschung dieses Dokuments — **erst nach Freigabe** | offen |
@@ -160,6 +160,25 @@ Getroffen am 02.09.2026, vor der ersten Änderung. Sie ergänzen R56 (Verb
   50 Stellen vor; 11 davon waren echte Fehlbezüge, 39 gingen auf ein
   anderes Wort. Alle 11 behoben. Ohne diese Prüfung wären sie in
   Meldungen stehen geblieben, die eine NutzerIn liest.
+- **F-S7-09 (AP5) — fünfter Bedeutungsfall, diesmal in der
+  Formatbeschreibung.** `docs/Backup-Format.md` 1.4 überschreibt einen
+  Abschnitt mit „**Zwei Sicherungen, und jede trägt für sich**" — gemeint
+  sind die Manifest-Prüfsumme und die Zusatzdaten, also zwei **Absicherungen**
+  gegen vertauschte Teile. Steht jetzt so da.
+- **F-S7-10 (AP5) — verwaiste weibliche Nominalisierungen.** „Je Konto
+  liegen höchstens zwei Backups … **Die älteste** wird beim nächsten Sichern
+  verdrängt." Das Bezugswort steht einen Satz vorher und ist weg; das
+  Zahlwort bleibt. Eine dritte Prüfung sucht deshalb nach freistehenden
+  weiblichen Formen (`die älteste`, `die jüngste`, `eine freigegebene`, …)
+  im Umfeld eines Backups, mit einer Ausschlussliste für die Fälle, in denen
+  sich die Form auf ein anderes Wort bezieht (Datei, Fassung, Spur …). Vier
+  echte Fälle in Handbuch, Kontenliste und Adminübersicht.
+- **F-S7-11 (AP5) — zwei Regeln konnten einander im Weg stehen.**
+  „solche" steht sowohl in der Liste der bestimmten (`die` → `das`) als auch
+  der gemischten Artikelwörter. Bei „eine solche Sicherung" griff die erste
+  Regel zuerst, machte „solches" daraus und liess „eine" stehen: „eine
+  solches Backup". Die Nachprüfung sah es nicht, weil ihr Adjektivmuster nur
+  auf `-e` endete. Beides berichtigt — ein Fall im Handbuch.
 
 ---
 

@@ -229,9 +229,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $t0 = microtime(true);
             $gut = 0; $schlecht = []; $rest = [];
             foreach ($ids as $n => $id) {
-                /* Vor jedem WEITEREN Backup pruefen, nicht nach der
+                /* Vor jedem WEITEREN Backup pruefen, nicht nach dem
                  * letzten: So bricht die Reihe zwischen zwei Backups ab
-                 * und nie mitten in einer. Die erste laeuft immer — sonst
+                 * und nie mitten in einem. Das erste laeuft immer — sonst
                  * koennte eine Anfrage gar nichts tun und trotzdem melden,
                  * sie sei fertig. */
                 if ($n > 0 && microtime(true) - $t0 > KONTEN_SAMMELBUDGET) {

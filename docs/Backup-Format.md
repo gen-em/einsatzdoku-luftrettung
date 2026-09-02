@@ -18,7 +18,7 @@ versiegelten Teilen. Die einteiligen Fassungen 2 und 3 werden weiterhin
 | 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | ja, bis NaDoku 1.0 |
 | 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | ja, bis NaDoku 1.0 |
 
-**Die Komplettsicherung der INSTALLATION ist etwas anderes** und steht in
+**Das Komplett-Backup der INSTALLATION ist etwas anderes** und steht in
 Abschnitt 6: `.edk`, Format `EDKOMP1`, ein SQL-Dump jeder Tabelle statt der
 Daten eines Kontos. Sie hilft gegen „der Webspace ist weg", nicht gegen
 „jemand hat sich vertan".
@@ -29,7 +29,7 @@ Daten eines Kontos. Sie hilft gegen „der Webspace ist weg", nicht gegen
 
 ### 1.1 Warum mehrteilig
 
-Eine Sicherung mit 5000 Einsätzen trägt rund drei Millionen Spurpunkte. Bis
+Ein Backup mit 5000 Einsätzen trägt rund drei Millionen Spurpunkte. Bis
 Web 10.3.0 entstand sie als **eine** JSON-Zeichenkette im Browser und ging als
 **ein** POST zurück. Beides sprengt jedes Budget, das ein Telefon oder ein
 einfacher Webspace hat — und zwar an der Stelle, an der jemand ohnehin schon
@@ -67,7 +67,7 @@ nichts:
 
 | Eintrag | Inhalt |
 |---|---|
-| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Sicherungskennung, Erzeugungszeit, Web-Version |
+| `manifest.edbak` | Teileliste mit SHA-256 je Teil, Backup-Kennung, Erzeugungszeit, Web-Version |
 | `kopf.edbak` | Stammdaten, Diensttage, `eintraege_gesamt` — die Nutzlast (Abschnitt 2) **ohne** Einträge |
 | `eintraege/0001.edbak`, `eintraege/0002.edbak`, … | je 250 Einträge (Einsätze **und** Ruhesegmente) **ohne** Punktlisten |
 | `spuren/0001.edbak`, `spuren/0002.edbak`, … | je Teil eine Liste `{spur_ref, blob}` — SPUR1, Base64, Ziel 250 000 Punkte |
@@ -182,23 +182,23 @@ AAD = die ersten 13 Bytes  ‖  eine der beiden Zeichenketten (UTF-8):
   jedes andere   EDBAK4|<kennung>|<name>|<nr>/<gesamt>
 ```
 
-`<kennung>` ist die Sicherungskennung aus dem Manifest, `<name>` der
+`<kennung>` ist die Backup-Kennung aus dem Manifest, `<name>` der
 Archivname des Teils, `<nr>` seine Stellung in der Teileliste (1-basiert) und
 `<gesamt>` deren Länge. Der Kopf bleibt gebunden wie bisher; der Platz kommt
 dazu.
 
 **Was das leistet:** Ein fehlendes, doppeltes, vertauschtes oder aus einer
-**anderen** Sicherung stammendes Teil fällt beim Entsiegeln auf — nicht erst
+**anderen** Backup stammendes Teil fällt beim Entsiegeln auf — nicht erst
 beim Datenvergleich, und nicht gar nicht. Ohne diese Bindung ließe sich
-`spuren/0003.edbak` einer fremden Sicherung unterschieben; sie entsiegelte
+`spuren/0003.edbak` einem fremden Backup unterschieben; es entsiegelte
 klaglos (dasselbe Passwort genügt) und brächte die Spuren eines fremden
 Bestands mit. Das Muster ist von Cryptomator und age abgeschaut, wo der
 Blockindex aus demselben Grund in die Zusatzdaten wandert.
 
-**Zwei Sicherungen, und jede trägt für sich.** Die SHA-256 aus dem Manifest
+**Zwei Absicherungen, und jede trägt für sich.** Die SHA-256 aus dem Manifest
 fängt dieselben Fälle wie die Zusatzdaten — aber sie sagt Verschiedenes: „Teil
 X ist nicht das, das hier stehen soll" gegen „ließ sich nicht öffnen". Für
-wen eine Sicherung nicht aufgeht, ist das der Unterschied zwischen zehnmal
+wen ein Backup nicht aufgeht, ist das der Unterschied zwischen zehnmal
 Passwort tippen und die richtige Datei suchen. `tools/containerprobe/` weist
 beide **einzeln** nach.
 
@@ -273,8 +273,8 @@ gehen in PHP mit `unpack('l*', gzuncompress(...))` und in JavaScript mit
 
 **Warum die Rundenzahl in den Kopf gehört.** Sie stand bis Web 4.7.0 nur als
 Konstante im Code. Wer sie anhebt, macht damit jede bereits erzeugte
-Sicherungsdatei unlesbar — und zwar ohne Fehlermeldung, die den Grund nennt: Es
-sieht aus wie ein falsches Passwort. Sicherungen werden aber gerade für den
+Backup-Datei unlesbar — und zwar ohne Fehlermeldung, die den Grund nennt: Es
+sieht aus wie ein falsches Passwort. Backups werden aber gerade für den
 Fall aufbewahrt, dass etwas schiefgeht; eine Datei, die genau dann nicht mehr
 aufgeht, ist keine.
 
@@ -336,7 +336,7 @@ Vorher wurde der Chiffretext auch im Fehlerfall entfernt und der Vorgang als
 „Fertig" gemeldet. Das war die gefährlichste Stelle des ganzen Formats: In der
 Datenbank lagen die Daten noch und wären mit dem richtigen Schlüssel lesbar
 gewesen — in der Datei waren sie weg. Und wer den Verdacht hat, dass mit
-seinen Daten etwas nicht stimmt, erstellt als Erstes eine Sicherung. Genau
+seinen Daten etwas nicht stimmt, erstellt als Erstes ein Backup. Genau
 diese Handlung vollendete den Verlust.
 
 **Was mit dem mitgeführten Chiffretext beim Einspielen geschieht:** Er wird
@@ -346,7 +346,7 @@ lesbar.
 
 Ob es dasselbe Konto ist, entscheidet seit Web 4.1.2 das Feld `pat_key_check`
 im Kopf der Datei (siehe Abschnitt 2): Es enthält die Prüfsumme des
-Inhaltsschlüssels, mit dem die Sicherung erstellt wurde. Stimmt sie mit der des
+Inhaltsschlüssels, mit dem das Backup erstellt wurde. Stimmt sie mit der des
 Zielkontos überein, sind die Angaben dort lesbar. Stimmt sie nicht oder fehlt
 sie (Dateien vor Web 4.1.2), fragt das Einspielen ausdrücklich nach und
 übernimmt die Angaben nur nach Bestätigung — sie sind dann vorhanden, aber
@@ -388,7 +388,7 @@ Einträge.
 > wertet `deleted_at` aber nicht aus — er nimmt eine Version-7-Datei an und
 > bringt deren Papierkorb als **aktiven Bestand** zurück. Das lässt sich
 > nachträglich nicht verhindern: Eine Sperre hätte in jenen Ständen stehen
-> müssen. Wer eine Version-7-Sicherung in eine ältere Installation einspielt,
+> müssen. Wer eine Version-7-Backup in eine ältere Installation einspielt,
 > muss damit rechnen und den Papierkorb dort anschließend von Hand leeren.
 
 **Nutzlasten der Version 5 und älter werden nicht mehr eingelesen.** Das ist
@@ -409,7 +409,7 @@ Im Kopf der Datei steht neben `format`, `version`, `created_at` und `user`
 seit Web 4.1.2 auch:
 
 ```jsonc
-  // Prüfsumme des Inhaltsschlüssels, mit dem diese Sicherung erstellt wurde.
+  // Prüfsumme des Inhaltsschlüssels, mit dem dieses Backup erstellt wurde.
   // Dient beim Einspielen der Frage, ob mitgeführter Chiffretext im Zielkonto
   // lesbar wäre. `null` bei Konten aus der Zeit vor Web 4.0.0.
   "pat_key_check": "3f2a…"   // 32 Hexzeichen oder null
@@ -434,7 +434,7 @@ seit Web 4.1.2 auch:
     // Rettungsmittel (bis Version 5: "aircraft" mit der Spalte "registration"
     // und fünf Rollen-Flags). Art, Rollensatz und Fähigkeiten gehören dazu;
     // der Standort steht als NAME, weil Kennungen nur in der Datenbank gelten,
-    // aus der die Sicherung stammt. `kind` ist "air" oder "ground"; zwei
+    // aus der das Backup stammt. `kind` ist "air" oder "ground"; zwei
     // Beispiele, damit beide Arten zu sehen sind.
     //
     // ROLLENKENNUNGEN sind die des Katalogs (CREW_ROLES in server/db.php):
@@ -506,7 +506,7 @@ seit Web 4.1.2 auch:
 
     // Uhr-Kennungen dieses Diensttags. MEHRERE sind zulässig — nach dem
     // Zusammenführen zweier Diensttage trägt der Zieltag die Kennungen beider.
-    // Sie MÜSSEN in die Sicherung: Ohne sie legte ein später eintreffender
+    // Sie MÜSSEN in das Backup: Ohne sie legte ein später eintreffender
     // Upload derselben Uhr den Diensttag nach einer Wiederherstellung erneut
     // an. device_id ist die ÖFFENTLICHE Gerätekennung; null = Gerät gelöscht.
     "refs": [ { "day_ref": "d-41-0938175520", "device_id": "watch-001" } ],
@@ -596,7 +596,7 @@ seit Web 4.1.2 auch:
     // AB NUTZLAST 8: ein Verweis statt der Punkte. Die Spur selbst steht als
     // SPUR1-Blob im Spurteil (Abschnitt 1.2). `spur_ref` ist eine laufende
     // Nummer DIESES Exportvorgangs und sonst nichts — die Datenbankkennung
-    // gälte nur in der Datenbank, aus der die Sicherung stammt (E9, E15).
+    // gälte nur in der Datenbank, aus der das Backup stammt (E9, E15).
     //
     // WER KEINE SPUR HAT, BEKOMMT KEINE `spur_ref`. Ein leeres Feld sähe aus
     // wie „hat keine Spur"; die Fassung sagt, dass die Punkte woanders stehen.
@@ -620,12 +620,12 @@ seit Web 4.1.2 auch:
 
 Serverseitig liegen die Punkte seit Web 10.0.0 nicht mehr nur als Zeilen in
 `track_points`, sondern je nach Alter als **Blob** in `track_blobs` (Format
-SPUR1, `docs/Technik.md` 4.97). **Seit Web 11.0.0 gibt die Sicherung sie
+SPUR1, `docs/Technik.md` 4.97). **Seit Web 11.0.0 gibt das Backup sie
 genauso weiter**, statt sie auszupacken: Der Spurteil trägt den Blob, wie er
 liegt.
 
 **Eine Zusage hat sich dabei geändert, und das gehört gesagt.** Bis Web 10.3.0
-hieß es hier: „die Sicherung nimmt den Datenbankstand und kodiert nicht neu".
+hieß es hier: „das Backup nimmt den Datenbankstand und kodiert nicht neu".
 Das gilt so nicht mehr:
 
 | Bestand | in der Datei |
@@ -654,15 +654,15 @@ in `validate_lib.php`; abgelehnt wird die ganze Spur, nicht gekappt). Jeder
 dieser Fälle wird beim Sichern **benannt**.
 
 **Eine Folge davon gehört gesagt:** Die Blob-Stufen legen die Koordinaten mit
-**10⁻⁶ Grad** (≈ 0,11 m) und die Höhe mit **0,1 m** ab. Eine Sicherung aus
-einem verdichteten Bestand trägt also gerundete Werte — nicht, weil die
-Sicherung rundet, sondern weil der Bestand es tut. Nachgemessen: Über den
-Referenzdatensatz (55 861 Punkte) ist die Sicherung vor und nach der
+**10⁻⁶ Grad** (≈ 0,11 m) und die Höhe mit **0,1 m** ab. Ein Backup aus
+einem verdichteten Bestand trägt also gerundete Werte — nicht, weil das
+Backup rundet, sondern weil der Bestand es tut. Nachgemessen: Über den
+Referenzdatensatz (55 861 Punkte) ist das Backup vor und nach der
 Verdichtung **identisch**, weil die Uhr ohnehin nicht feiner liefert, als das
 Format ablegt.
 
 Ab sechs Monaten nach Einsatzende steht in der Datei die **ausgedünnte** Spur
-(Stufe 3, E-S2-13) — die Sicherung nimmt den Datenbankstand und kodiert nicht
+(Stufe 3, E-S2-13) — das Backup nimmt den Datenbankstand und kodiert nicht
 neu. Seit Web 10.2.0 tut sie das wirklich; bis dahin war es beschrieben, aber
 es gab keinen Job, der ausdünnte.
 
@@ -674,7 +674,7 @@ Datei* und keine Dubletten — beides gilt. Die Punktzahl in der Datei ist
 entsprechend kleiner als die ursprünglich aufgezeichnete; gemessen bleiben rund
 32 bis 41 % der Punkte, je nach Bestand.
 
-**Nicht rückgängig zu machen.** Wer eine Sicherung aus einem ausgedünnten
+**Nicht rückgängig zu machen.** Wer ein Backup aus einem ausgedünnten
 Bestand einspielt, bekommt die ausgedünnte Spur — das Original ist auf dem
 Server nicht mehr vorhanden. Wer den vollen Stand behalten will, sichert
 **vor** Ablauf der sechs Monate.
@@ -682,8 +682,8 @@ Server nicht mehr vorhanden. Wer den vollen Stand behalten will, sichert
 **Ein wiederhergestellter Bestand wird von neuem verdichtet und ausgedünnt.**
 Die eingespielten Einsätze tragen ihre alten Daten; der Verdichtungsjob hält
 sie nach der Karenz für reif, und was älter als sechs Monate ist, dünnt der
-Ausdünnungsjob aus. Das ist gewollt (E-S2-03), sollte aber wissen, wer eine
-alte Sicherung zur Ansicht einspielt: `php jobs.php --pause 1800` hält die
+Ausdünnungsjob aus. Das ist gewollt (E-S2-03), sollte aber wissen, wer ein
+altes Backup zur Ansicht einspielt: `php jobs.php --pause 1800` hält die
 Jobs so lange still (`docs/Technik.md`, 4.97a).
 
 ### SPUR1 von Hand lesen
@@ -738,8 +738,8 @@ beginnt damit neu.
 
 Das ist eine Entscheidung, keine Nachlässigkeit, und sie folgt derselben Linie
 wie `origin`: Der Eintrag **entsteht in dieser Installation neu**. Die
-Gegenrechnung wäre, den alten Zeitpunkt zu übernehmen — dann könnte eine
-Sicherung Einträge mitbringen, deren Frist längst abgelaufen ist, und der
+Gegenrechnung wäre, den alten Zeitpunkt zu übernehmen — dann könnte ein
+Backup Einträge mitbringen, deren Frist längst abgelaufen ist, und der
 nächste Aufräumjob löschte sie endgültig, ohne dass jemand sie je gesehen
 hätte. Eine Wiederherstellung, die Daten einspielt und wenige Stunden später
 selbst wieder entfernt, wäre die schlechtere Bauart.
@@ -929,13 +929,13 @@ seine Zeile beziehungsweise seinen Punkt und erscheint gezählt unter
 
 Seit Web 4.5.2 ist das Format **aufgezählt** statt „alles, was in der Tabelle
 steht". Vorher ergab es sich aus dem Datenbankschema: Jede neue Spalte war
-automatisch in jeder Sicherung, ohne dass das jemand entschieden hätte.
+automatisch in jedem Backup, ohne dass das jemand entschieden hätte.
 
 **Nicht in der Datei:**
 
 - `user_id`, `device_id` sowie die `id` von `missions` und `rest_segments` —
-  interne Verweise. Sie gelten nur in der Datenbank, aus der die Sicherung
-  stammt; eine Sicherung soll sich auch in ein anderes Konto und eine andere
+  interne Verweise. Sie gelten nur in der Datenbank, aus der das Backup
+  stammt; ein Backup soll sich auch in ein anderes Konto und eine andere
   Installation einspielen lassen.
 
   **Ausnahme: `days[].id` steht sehr wohl in der Datei** (`backup_lib.php`,
@@ -981,8 +981,8 @@ dieser Liste. Bis dahin galt: gesichert ja, eingespielt nein — nach einer
 Wiederherstellung trugen alle Einsätze den Zeitpunkt des Einspielens (am
 Referenzdatensatz der Phase P1 gemessen: 79 verschiedene Werte davor, 5
 danach). Der Verlust war folgenlos für die Dokumentation selbst —
-`started_at` ist die fachliche Zeit —, aber er war ein Verlust, und eine
-Sicherung, die eine Angabe stillschweigend fallenlässt, ist keine
+`started_at` ist die fachliche Zeit —, aber er war ein Verlust, und ein
+Backup, das eine Angabe stillschweigend fallenlässt, ist keine
 (Backlog Nr. 25).
 
 Jetzt steht `created_at` als benannte Ausnahmespalte neben `start_src` und
@@ -991,7 +991,7 @@ ist er unbrauchbar, wird die Spalte **weggelassen** statt auf `NULL` gesetzt —
 dann greift die Vorgabe der Datenbank, und die Zeile bleibt. Ein Komfortwert
 darf eine Wiederherstellung nicht kosten.
 
-**Was in der Sicherung gar nicht vorkommt — und deshalb nach einer
+**Was im Backup gar nicht vorkommt — und deshalb nach einer
 Wiederherstellung fehlt:**
 
 Der Abschnitt oben zählt Spalten auf. Diese drei sind ganze Bereiche, und ihr
@@ -1013,9 +1013,9 @@ Fehlen fällt erst auf, wenn man danach sucht:
   ebenfalls weg ist.
 
   **Die Sperrliste ist nicht der Papierkorb**, auch wenn beide mit Löschen zu
-  tun haben. Der Papierkorb gehört dem Konto und steht seit Version 7 in jeder
-  Sicherung; die Sperrliste hängt an einer **Gerätekennung**, und Geräte
-  stehen aus dem Grund darüber in keiner Sicherung. Sie bleibt deshalb
+  tun haben. Der Papierkorb gehört dem Konto und steht seit Version 7 in jedem
+  Backup; die Sperrliste hängt an einer **Gerätekennung**, und Geräte
+  stehen aus dem Grund darüber in keinem Backup. Sie bleibt deshalb
   ausdrücklich draußen. Eine Folge davon gehört dazu: Wiederhergestellte
   Einträge tragen `device_id = NULL`, und wer sie später endgültig löscht,
   füllt damit die Sperrliste nicht (`trash_block_ref()` verlangt eine
@@ -1035,7 +1035,7 @@ Absicht: Es soll eine Entscheidung sein, keine Nebenwirkung.
 
 ---
 
-## 5. Admin-Sicherung, Fassung 2 (seit Web 12.0.0)
+## 5. Admin-Backup, Fassung 2 (seit Web 12.0.0)
 
 Ein anderes Format als die `.edbak`-Datei — es umschliesst sie. Erzeugt von
 `adminbackup_lib.php`, abgelegt unter `server/sicherungen/<kontokennung>/`.
@@ -1057,13 +1057,13 @@ Fassungserkennung: `.json` = die einteilige Fassung 1 (Abschnitt 5a),
 | `eintraege/0001.json` … | je 250 Einträge (Einsätze **und** Ruhesegmente) ohne Punktlisten |
 | `spuren/0001.json` … | je Teil `{spur_ref, blob, stufe, n_original, n}` — SPUR1, Base64 |
 
-**Gepackt**, anders als bei der Nutzersicherung: Dort sind die Teile bereits
+**Gepackt**, anders als bei dem Nutzer-Backup: Dort sind die Teile bereits
 gzip *und* verschlüsselt, hier ist es blankes JSON. **Gemessen** am
 5000er-Bestand: 11,42 MB statt 94,28 MB derselben Daten als Fassung 1.
 
 Der Aufbau der Teile ist der der Containerfassung 4 (Abschnitt 1) — nur ohne
 Versiegelung, und `pat_blob` bleibt Chiffretext. Die `spur_ref` ist wie dort
-der **Index des Eintrags über die ganze Sicherung** (erst Einsätze, dann
+der **Index des Eintrags über das ganze Backup** (erst Einsätze, dann
 Ruhesegmente).
 
 ```jsonc
@@ -1110,7 +1110,7 @@ Läufe — ein Bauordner `.bau-<8 Hex>/` oder eine `<paket>.zip.tmp`. Die
 Speichergrenze (Abschnitt 5b) zählt sie **mit**; die Ordnerlöschung räumt sie
 **mit**.
 
-### 5a. Admin-Sicherung, Fassung 1 (Web 5.9.0 bis 11.1.1)
+### 5a. Admin-Backup, Fassung 1 (Web 5.9.0 bis 11.1.1)
 
 Wird **gelesen, nicht mehr geschrieben** — und beim ersten Lauf nach dem
 Umstieg entfernt (Entscheidung vom 31.08.2026). Eine einzige JSON-Datei
@@ -1135,7 +1135,7 @@ Umstieg entfernt (Entscheidung vom 31.08.2026). Eine einzige JSON-Datei
 **`umfang.papierkorb` seit S1**, additiv — die Paketversion blieb deshalb 1.
 Die drei Zahlen darüber zählen den Papierkorb **mit**; ohne den Unterblock
 wäre aus „42 Einsätze" nicht zu erkennen, dass fünf davon gelöscht sind. Bei
-Sicherungen aus der Zeit davor fehlt der Block, und die Anzeige lässt ihn dann
+Backups aus der Zeit davor fehlt der Block, und die Anzeige lässt ihn dann
 **weg** statt eine Null zu zeigen: „nicht erhoben" ist etwas anderes als
 „nichts drin".
 
@@ -1185,14 +1185,14 @@ hinein — bei 31 Konten schon 350 Zeichen; das INSERT scheiterte, und weil
 0 Konten gesichert". Beides ist behoben: Der Zeiger passt immer, und die
 Marke sagt jetzt, wenn sie nicht schreiben konnte.
 
-**Was damit wegfällt:** „älteste Sicherung zuerst". Das war ohnehin keine
+**Was damit wegfällt:** „ältestes Backup zuerst". Das war ohnehin keine
 Reihenfolge, sondern ein Ersatz für den fehlenden Merkzettel — gerechnet
 wurde in *Tagen*, und bei Gleichstand war sie beliebig. Zugesagt ist jetzt
 etwas Belastbareres: **jedes Konto genau einmal**, und ein Abbruch verliert
 höchstens das laufende.
 
 **Automatisch entsteht nichts.** Der Job arbeitet nur auf Auftrag; nächtliche
-Sicherungen je Konto sind ausdrücklich abgelehnt (E-S2-19) — sie bräuchten den
+Backups je Konto sind ausdrücklich abgelehnt (E-S2-19) — sie bräuchten den
 Inhaltsschlüssel, und den hat der Server nicht.
 
 **`daten` ist unverändert das Backup-JSON** — mit einem Unterschied zur
@@ -1228,19 +1228,19 @@ Sie haben dann auch keine geschützten Angaben.
 ```
 
 Sie hält Name und Adresse fest, **damit die Zuordnung eine Kontolöschung
-überlebt** — genau dafür gibt es den Abschnitt „verwaiste Sicherungen" in der
+überlebt** — genau dafür gibt es den Abschnitt „verwaiste Backups" in der
 Übersicht. Die Liste der Pakete entsteht bei der Anzeige trotzdem aus dem
-Verzeichnis und nicht aus dieser Datei: Ein Eintrag ohne Datei darf keine
-Sicherung vortäuschen, und eine vorhandene Datei darf nicht unsichtbar bleiben,
+Verzeichnis und nicht aus dieser Datei: Ein Eintrag ohne Datei darf kein
+Backup vortäuschen, und eine vorhandene Datei darf nicht unsichtbar bleiben,
 weil sie hier fehlt. Ist `konto.json` unlesbar, wird der Ordner mit Hinweis
 aufgeführt statt übergangen.
 
 ---
 
-## 6. Komplettsicherung der Installation (`.edk`, EDKOMP1, seit Web 12.2.0)
+## 6. Komplett-Backup der Installation (`.edk`, EDKOMP1, seit Web 12.2.0)
 
-Die Abschnitte 1 bis 5 beschreiben die Sicherung **eines Kontos**. Dieser
-Abschnitt beschreibt die Sicherung der **Installation**: jede Tabelle der
+Die Abschnitte 1 bis 5 beschreiben das Backup **eines Kontos**. Dieser
+Abschnitt beschreibt das Backup der **Installation**: jede Tabelle der
 Datenbank als SQL-Dump. Sie ist ein anderes Ding mit einem anderen Zweck —
 „der Webspace ist weg" statt „jemand hat sich vertan" — und hat deshalb ein
 eigenes Format. Beschlossen in E-S2-19 bis E-S2-21, gebaut in S2/AP8.
@@ -1329,7 +1329,7 @@ Bestandteile sind nötig:
 * **Ohne den Index** liessen sich zwei Blöcke vertauschen, und die Prüfsumme
   jedes einzelnen bliebe richtig.
 * **Ohne die Endemarkierung** liesse sich die Datei hinten abschneiden, und
-  was übrig bleibt, wäre eine gültige, kürzere Sicherung. Nachgemessen: Eine
+  was übrig bleibt, wäre ein gültiges, kürzeres Backup. Nachgemessen: Eine
   an einer Blockgrenze um zehn Blöcke gekürzte Datei bricht beim Öffnen ab.
 * **Ohne die Bindung an den Kopf** liesse sich der Kopf austauschen — etwa
   „mit Passphrase" gegen „mit Serverschlüssel". So macht jede Änderung daran
